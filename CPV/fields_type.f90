@@ -7,7 +7,7 @@
 !
       MODULE fields_type
 
-        USE kinds, ONLY: dbl
+        USE kinds, ONLY: DP
         USE parallel_types, ONLY: descriptor, processors_grid
         USE descriptors_module, ONLY: desc_init
         IMPLICIT NONE
@@ -16,12 +16,12 @@
 
         TYPE scalar_field
           TYPE (descriptor) :: desc
-          REAL(dbl), POINTER :: r(:,:,:)
+          REAL(DP), POINTER :: r(:,:,:)
         END TYPE
 
         TYPE chden
           TYPE (descriptor) :: desc
-          REAL(dbl), POINTER :: r(:,:,:)
+          REAL(DP), POINTER :: r(:,:,:)
         END TYPE
 
         INTERFACE allocate_chden
@@ -31,7 +31,7 @@
           MODULE PROCEDURE deallocate_chden_s, deallocate_chden_v
         END INTERFACE
         INTERFACE ASSIGNMENT(=)
-          MODULE PROCEDURE copy_chden_s, copy_chden_v, copy_chden_dbl_s
+          MODULE PROCEDURE copy_chden_s, copy_chden_v, copy_chden_DP_s
         END INTERFACE
 
         !PUBLIC :: scalar_field, chden, allocate_chden, deallocate_chden, &
@@ -109,17 +109,17 @@
           RETURN
         END SUBROUTINE copy_chden_v
 
-        SUBROUTINE copy_chden_dbl_s( rhoa, rb )
+        SUBROUTINE copy_chden_DP_s( rhoa, rb )
           TYPE (chden), INTENT(INOUT) :: rhoa
-          REAL (dbl), INTENT(IN)    :: rb(:,:,:)
+          REAL (DP), INTENT(IN)    :: rb(:,:,:)
           IF( SIZE( rhoa%r, 1) /= SIZE( rb, 1) .OR. &
               SIZE( rhoa%r, 2) /= SIZE( rb, 2) .OR. &
               SIZE( rhoa%r, 3) /= SIZE( rb, 3) ) THEN
-            CALL errore(' charge_density: copy_chden_dbl_s ', ' sizes do not match ', 0)
+            CALL errore(' charge_density: copy_chden_DP_s ', ' sizes do not match ', 0)
           END IF
           rhoa%r = rb
           RETURN
-        END SUBROUTINE copy_chden_dbl_s
+        END SUBROUTINE copy_chden_DP_s
 
 
 

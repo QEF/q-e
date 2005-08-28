@@ -22,7 +22,7 @@
 ! NB: splines are always ``natural splines'', i.e. values of first
 !     derivative at the end-points cannot be specified
 !-----------------------------------------------------------------------------!
-      USE kinds, ONLY : dbl
+      USE kinds, ONLY : DP
 
       IMPLICIT NONE
 
@@ -31,15 +31,15 @@
         spline_int, kill_spline, splineh, splinedx, splintdx, nullify_spline
 
       TYPE spline_data
-        REAL (dbl), POINTER :: x(:)  ! array containing x values
-        REAL (dbl), POINTER :: y(:)  ! array containing y values 
+        REAL (DP), POINTER :: x(:)  ! array containing x values
+        REAL (DP), POINTER :: y(:)  ! array containing y values 
                                      ! y(i) is the function value corresponding
                                      ! to x(i) in the interpolation table
-        REAL (dbl), POINTER :: y2(:) ! second derivative of interpolating function
+        REAL (DP), POINTER :: y2(:) ! second derivative of interpolating function
         INTEGER :: n       ! number of element in the interpolation table
         INTEGER :: pos
-        REAL (dbl) :: h, invh, h26, h16 
-        REAL (dbl) :: xmin, xmax  ! ... added by Carlo Cavazzoni
+        REAL (DP) :: h, invh, h26, h16 
+        REAL (DP) :: xmin, xmax  ! ... added by Carlo Cavazzoni
       END TYPE spline_data
 
 !-----------------------------------------------------------------------------!
@@ -70,7 +70,7 @@
 
         TYPE (spline_data), INTENT (INOUT) :: spl
         INTEGER, INTENT (IN) :: nn
-        REAL(dbl), INTENT (IN), OPTIONAL :: xmin, xmax
+        REAL(DP), INTENT (IN), OPTIONAL :: xmin, xmax
 
         INTEGER err
 
@@ -133,10 +133,10 @@
         IMPLICIT NONE
         TYPE (spline_data), INTENT (INOUT) :: spl
         CHARACTER (len=*), INTENT (IN), OPTIONAL :: endpt
-        REAL (dbl), INTENT (IN), OPTIONAL :: y1a, y1b  ! end point derivative
+        REAL (DP), INTENT (IN), OPTIONAL :: y1a, y1b  ! end point derivative
         INTEGER :: err, i, k, n
-        REAL (dbl) :: p, qn, sig, un, y1l, y1r, dyp, dym, dxp, dxm, dxpm
-        REAL (dbl), POINTER :: ww(:)
+        REAL (DP) :: p, qn, sig, un, y1l, y1r, dyp, dym, dxp, dxm, dxpm
+        REAL (DP), POINTER :: ww(:)
         CHARACTER (len=8) :: ep
         LOGICAL :: reg, lep, rep
 
@@ -243,7 +243,7 @@
         IMPLICIT NONE
 
         TYPE (spline_data), INTENT (IN) :: spl
-        REAL (dbl), INTENT (IN) :: xx
+        REAL (DP), INTENT (IN) :: xx
         INTEGER :: interv
         INTEGER :: khi, klo, i, p, n, k
 
@@ -307,12 +307,12 @@
         IMPLICIT NONE
 
         TYPE (spline_data), INTENT (INOUT) :: spl
-        REAL (dbl), INTENT (IN) :: xx
-        REAL (dbl), INTENT (OUT), OPTIONAL :: y1
-        REAL (dbl) :: spline
+        REAL (DP), INTENT (IN) :: xx
+        REAL (DP), INTENT (OUT), OPTIONAL :: y1
+        REAL (DP) :: spline
 
         INTEGER :: khi, klo
-        REAL (dbl) :: a, b, h, invh, ylo, yhi, y2lo, y2hi, a3ma, b3mb
+        REAL (DP) :: a, b, h, invh, ylo, yhi, y2lo, y2hi, a3ma, b3mb
 
         !  shortcat for regular mesh without table of x values
 
@@ -361,12 +361,12 @@
       FUNCTION splineh(spl,xx,y1)
         IMPLICIT NONE
         TYPE (spline_data), INTENT (IN) :: spl
-        REAL (dbl), INTENT (IN) :: xx
-        REAL (dbl), INTENT (OUT) :: y1
-        REAL (dbl) :: splineh
+        REAL (DP), INTENT (IN) :: xx
+        REAL (DP), INTENT (OUT) :: y1
+        REAL (DP) :: splineh
 
         INTEGER :: khi, klo, i
-        REAL (dbl) :: a, b, h, invh, t, ylo, yhi, y2lo, y2hi, d, d0
+        REAL (DP) :: a, b, h, invh, t, ylo, yhi, y2lo, y2hi, d, d0
 
 ! fast spline for pair potentials without checks
         h = spl%h
@@ -390,11 +390,11 @@
       FUNCTION spline_1(spl,xx)
         IMPLICIT NONE
         TYPE (spline_data), INTENT (INOUT) :: spl
-        REAL (dbl), INTENT (IN) :: xx
-        REAL (dbl) :: spline_1
+        REAL (DP), INTENT (IN) :: xx
+        REAL (DP) :: spline_1
 
         INTEGER :: khi, klo
-        REAL (dbl) :: a, b, h
+        REAL (DP) :: a, b, h
 
         spl%pos = interv(spl,xx)
         klo = spl%pos
@@ -417,9 +417,9 @@
         IMPLICIT NONE
         TYPE (spline_data), INTENT (IN) :: spl
         INTEGER, INTENT (IN) :: p
-        REAL (dbl), INTENT (IN) :: x
-        REAL (dbl) :: stamm
-        REAL (dbl) :: a, b, aa, bb, h
+        REAL (DP), INTENT (IN) :: x
+        REAL (DP) :: stamm
+        REAL (DP) :: a, b, aa, bb, h
 
         h = spl%x(p+1) - spl%x(p)
         b = (x-spl%x(p))/h
@@ -438,11 +438,11 @@
       FUNCTION spline_int(spl,x0,x1)
         IMPLICIT NONE
         TYPE (spline_data), INTENT (INOUT) :: spl
-        REAL (dbl), INTENT (IN) :: x0, x1
-        REAL (dbl) :: spline_int
+        REAL (DP), INTENT (IN) :: x0, x1
+        REAL (DP) :: spline_int
 
         INTEGER :: j, pa, pb
-        REAL (dbl) :: h, vorz, xa, xb, i1, i2
+        REAL (DP) :: h, vorz, xa, xb, i1, i2
 
         vorz = 1
         xa = min(x0,x1)
@@ -541,11 +541,11 @@
         USE kinds
         IMPLICIT NONE
         INTEGER, INTENT(IN)  :: n
-        REAL(dbl),  INTENT(IN)  :: yp1,ypn,xmin,xmax,y(:)
-        REAL(dbl),  INTENT(OUT) :: y2(:)
+        REAL(DP),  INTENT(IN)  :: yp1,ypn,xmin,xmax,y(:)
+        REAL(DP),  INTENT(OUT) :: y2(:)
         INTEGER :: i, k
-        REAL(dbl)  :: p, qn, sig, un, dx
-        REAL(dbl)  :: u(n)
+        REAL(DP)  :: p, qn, sig, un, dx
+        REAL(DP)  :: u(n)
 
         dx = (xmax-xmin)/DBLE(n-1)
         if ( yp1 .gt. 0.99d30 ) then
@@ -581,10 +581,10 @@
         USE kinds
         IMPLICIT NONE
         INTEGER, INTENT(IN)  :: n
-        REAL(dbl),  INTENT(IN)  :: x,xmin,xmax,ya(:),y2a(:)
-        REAL(dbl),  INTENT(OUT) :: y
+        REAL(DP),  INTENT(IN)  :: x,xmin,xmax,ya(:),y2a(:)
+        REAL(DP),  INTENT(OUT) :: y
         INTEGER :: khi,klo
-        REAL(dbl)  :: a,b,h,dx,xhi,xlo
+        REAL(DP)  :: a,b,h,dx,xhi,xlo
         dx  = (xmax-xmin)/DBLE(n-1)
         klo = INT(x/dx)
         khi = klo+1
@@ -608,10 +608,10 @@
 
       SUBROUTINE nr_spline( x, y, n, yp1, ypn, y2 )
       INTEGER :: n
-      REAL(dbl) :: yp1, ypn, x(n), y(n), y2(n)
+      REAL(DP) :: yp1, ypn, x(n), y(n), y2(n)
       INTEGER :: i, k
-      REAL(dbl) :: p, qn, sig, un
-      REAL(dbl) :: u( n )
+      REAL(DP) :: p, qn, sig, un
+      REAL(DP) :: u( n )
       if ( yp1 .gt. 0.99d30 ) then
         y2(1)=0.
         u(1)=0.
@@ -643,9 +643,9 @@
 
       SUBROUTINE nr_splint( xa, ya, y2a, n, x, y )
       INTEGER :: n
-      REAL(dbl) :: x,y,xa(n),y2a(n),ya(n)
+      REAL(DP) :: x,y,xa(n),y2a(n),ya(n)
       INTEGER :: k,khi,klo
-      REAL(dbl) :: a,b,h
+      REAL(DP) :: a,b,h
       klo=1
       khi=n
 1     if (khi-klo.gt.1) then
@@ -669,9 +669,9 @@
 
       SUBROUTINE nr_splie2( x1a, x2a, ya, m, n, y2a )
       INTEGER :: m, n
-      REAL(dbl) :: x1a(m), x2a(n), y2a(m,n), ya(m,n)
+      REAL(DP) :: x1a(m), x2a(n), y2a(m,n), ya(m,n)
       INTEGER :: j,k
-      REAL(dbl) :: y2tmp(n), ytmp(n)
+      REAL(DP) :: y2tmp(n), ytmp(n)
       do j = 1, m
         do k = 1, n
           ytmp(k) = ya(j,k)
@@ -687,9 +687,9 @@
 
       SUBROUTINE nr_splin2( x1a, x2a, ya, y2a, m, n, x1, x2, y )
       INTEGER :: m, n
-      REAL(dbl) :: x1, x2, y, x1a(m), x2a(n), y2a(m,n), ya(m,n)
+      REAL(DP) :: x1, x2, y, x1a(m), x2a(n), y2a(m,n), ya(m,n)
       INTEGER :: j, k
-      REAL(dbl) :: y2tmp( MAX(n,m) ), ytmp( n ), yytmp( MAX(n,m) )
+      REAL(DP) :: y2tmp( MAX(n,m) ), ytmp( n ), yytmp( MAX(n,m) )
       do j = 1, m
         do k = 1, n
           ytmp(k)  = ya(j,k)

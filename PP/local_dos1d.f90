@@ -31,7 +31,7 @@ subroutine local_dos1d (ik, kband, plan)
   ! input: the k point
   ! input: the band
 
-  real(kind=DP) :: plan (nr3)
+  real(DP) :: plan (nr3)
   ! output: the planar average of this state
   !
   !    Additional local variables for Ultrasoft PP's
@@ -55,12 +55,12 @@ subroutine local_dos1d (ik, kband, plan)
   ! counter on g vectors
   ! counter on bands
 
-  real(kind=DP) :: w, w1
+  real(DP) :: w, w1
   ! the weight of one k point
-  real(kind=DP), allocatable :: aux (:)
+  real(DP), allocatable :: aux (:)
   ! auxiliary for rho
 
-  complex(kind=DP), allocatable :: prho (:)
+  complex(DP), allocatable :: prho (:)
   ! complex charge for fft
 
   allocate (prho(nrxx))    

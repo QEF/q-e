@@ -30,16 +30,16 @@ subroutine atomic_wfc (ik, wfcatom)
   !
   integer :: ik
   ! input: k-point
-  complex(kind=DP) :: wfcatom (npwx, natomwfc) ! output: atomic wavefunctions
+  complex(DP) :: wfcatom (npwx, natomwfc) ! output: atomic wavefunctions
   !
   integer :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, &
              i0, i1, i2, i3
   !
-  real(kind=DP), allocatable :: qg(:), ylm (:,:), chiq (:,:,:), aux (:), &
+  real(DP), allocatable :: qg(:), ylm (:,:), chiq (:,:,:), aux (:), &
        gk (:,:), vchi (:)
-  complex(kind=DP), allocatable :: sk (:)
-  real(kind=DP) :: vqint, arg, px, ux, vx, wx
-  complex(kind=DP) :: kphase  , lphase
+  complex(DP), allocatable :: sk (:)
+  real(DP) :: vqint, arg, px, ux, vx, wx
+  complex(DP) :: kphase  , lphase
 
   call start_clock ('atomic_wfc')
 

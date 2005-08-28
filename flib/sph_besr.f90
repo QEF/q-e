@@ -24,7 +24,7 @@ SUBROUTINE sph_besr( msh, r, q, l, jl )
   IMPLICIT NONE  
   !
   INTEGER :: msh, l  
-  REAL(kind=DP) :: r (msh), q, jl (msh)  
+  REAL(DP) :: r (msh), q, jl (msh)  
   !
   INTEGER :: ir, ir0  
   !

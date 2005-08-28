@@ -62,7 +62,7 @@ PROGRAM dos
   IMPLICIT NONE
   CHARACTER(len=256) :: fildos
   CHARACTER(len=256) :: outdir
-  REAL(kind=DP) :: E, DOSofE (2), DOSint, Elw, Eup, DeltaE, Emin, Emax, &
+  REAL(DP) :: E, DOSofE (2), DOSint, Elw, Eup, DeltaE, Emin, Emax, &
                    degauss1
   INTEGER :: nrot, ik, n, ndos, ngauss1, ios
   NAMELIST /inputpp/ outdir, prefix, fildos, degauss, ngauss, &

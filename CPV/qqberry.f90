@@ -40,9 +40,9 @@ subroutine qqberry2( gqq,gqqm, ipol)
   implicit none
 
 
-  complex(kind=8) gqq(nhm,nhm,nas,nsp)
-  complex(kind=8) gqqm(nhm,nhm,nas,nsp)
-  real(kind=8) gmes
+  complex(8) gqq(nhm,nhm,nas,nsp)
+  complex(8) gqqm(nhm,nhm,nas,nsp)
+  real(8) gmes
   integer ipol, lx
 
 
@@ -50,12 +50,12 @@ subroutine qqberry2( gqq,gqqm, ipol)
 
   integer ig, is, iv, jv, i, istart, il,l,ir,    & 
        &     igi,ia
-  real(kind=8), allocatable:: fint(:),jl(:)
-  real(kind=8), allocatable:: qradb2(:,:,:,:) 
-  real(kind=8) c, xg
-  complex(kind=8) qgbs,sig
+  real(8), allocatable:: fint(:),jl(:)
+  real(8), allocatable:: qradb2(:,:,:,:) 
+  real(8) c, xg
+  complex(8) qgbs,sig
   integer ivs, jvs, ivl, jvl, lp
-  real(kind=8), allocatable:: ylm(:,:)
+  real(8), allocatable:: ylm(:,:)
 
   lx = lqmax
 
@@ -238,10 +238,10 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
   implicit none
 
  
-  complex(kind=8) eigr(ngw,nat)
-  complex(kind=8) gqq(nhm,nhm,nas,nsp)
-  complex(kind=8) gqqm(nhm,nhm,nas,nsp)
-  complex(kind=8) gqqm0(nhm,nhm,nas,nsp)
+  complex(8) eigr(ngw,nat)
+  complex(8) gqq(nhm,nhm,nas,nsp)
+  complex(8) gqqm(nhm,nhm,nas,nsp)
+  complex(8) gqqm0(nhm,nhm,nas,nsp)
 
   integer ipol
   
@@ -304,9 +304,9 @@ end subroutine qqupdate
 !
       implicit none
       integer l, mmax
-      real(kind=8)    xg, jl(mmax), r(mmax)
+      real(8)    xg, jl(mmax), r(mmax)
 ! local variables
-      real(kind=8)    eps, xrg, xrg2
+      real(8)    eps, xrg, xrg2
       parameter(eps=1.e-8)
       integer i, ir
 !

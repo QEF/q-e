@@ -37,18 +37,18 @@ SUBROUTINE dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    ! I/O variables first
    !
    INTEGER :: ik, ipol, jpol
-   COMPLEX (kind=DP) :: &
+   COMPLEX (DP) :: &
            dproj(natomwfc,nbnd),   &! output: the derivative of the projection
            wfcatom(npwx,natomwfc), &! input: the atomic wfc
            spsi(npwx,nbnd)          ! input: S|evc>
    INTEGER :: i, ig, jkb2, lmax_wfc, na, m1, ibnd, iwf, nt, ib, ih,jh, &
               nworddw, nworddb
-   REAL (kind=DP) :: xyz(3,3), q, eps, a1, a2
+   REAL (DP) :: xyz(3,3), q, eps, a1, a2
    PARAMETER (eps=1.0e-8)
 
-   COMPLEX (kind=DP) :: ZDOTC
+   COMPLEX (DP) :: ZDOTC
 
-   COMPLEX (kind=DP), ALLOCATABLE :: &
+   COMPLEX (DP), ALLOCATABLE :: &
            dwfc(:,:), aux(:,:), work(:), dbeta(:,:), aux1(:,:), &
            betapsi(:,:), dbetapsi(:,:), wfatbeta(:,:), wfatdbeta(:,:)
 
@@ -62,7 +62,7 @@ SUBROUTINE dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    !       wfatbeta(natomwfc,nhm),! <wfc|beta>
    !       wfatdbeta(natomwfc,nhm)! <wfc|dbeta>
 
-   REAL (kind=DP), ALLOCATABLE :: gk(:,:), qm1(:)
+   REAL (DP), ALLOCATABLE :: gk(:,:), qm1(:)
    !       gk(3,npwx),
    !       qm1(npwx)
    ! xyz are the three unit vectors in the x,y,z directions

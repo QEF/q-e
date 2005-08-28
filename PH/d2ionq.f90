@@ -36,7 +36,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   ! input: the type of each atom
   ! input: the number of modes
 
-  real(kind=DP) :: tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
+  real(DP) :: tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
        at (3, 3), bg (3, 3), omega, alat, gcutm, q (3)
   ! input: the positions of the atoms
   ! input: the coordinates of g vectors
@@ -48,7 +48,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   ! input: the length scale
   ! input: cut-off of g vectors
   ! input: the q vector
-  complex(kind=DP) :: dyn (3 * nat, nmodes), u (3 * nat, nmodes)
+  complex(DP) :: dyn (3 * nat, nmodes), u (3 * nat, nmodes)
   ! output: the ionic part of the dyn. mat
   ! input: the pattern of the modes
   !
@@ -60,12 +60,12 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   integer :: nu_i, nu_j, na, nb, nta, ntb, ng, nrm, nr, icart, &
        jcart, na_icart, na_jcart, nb_icart, nb_jcart
   ! counters
-  real(kind=DP) :: arg, argq, tpiba2, alpha, r (3, mxr), r2 (mxr), &
+  real(DP) :: arg, argq, tpiba2, alpha, r (3, mxr), r2 (mxr), &
        dtau (3), erfc, rmax, rr, upperbound, charge, fac, df, d2f, ar, &
        gtq2, gt2, facq, qrg
   ! auxiliary variables
 
-  complex(kind=DP) :: dy1 (3 * nat, nmodes), dy2 (3 * nat, nmodes), &
+  complex(DP) :: dy1 (3 * nat, nmodes), dy2 (3 * nat, nmodes), &
        dy3 (3 * nat, nmodes), facg, fnat, work
   ! work spaces, factors
 

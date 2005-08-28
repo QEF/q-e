@@ -41,7 +41,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
 !
   implicit none
   logical :: stm_wfc_matching
-  real(kind=DP) :: sample_bias, z, dz, stmdos (nrx1 * nrx2 * nrx3)
+  real(DP) :: sample_bias, z, dz, stmdos (nrx1 * nrx2 * nrx3)
   ! the stm density of states
   !
   !    And here the local variables
@@ -62,16 +62,16 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   ! first band close enough to the specified energy range [down1:up1]
   ! last  band close enough to the specified energy range [down1:up1]
 
-  real(kind=DP) :: emin, emax, fac, wf, wf1, x, y, zz, &
+  real(DP) :: emin, emax, fac, wf, wf1, x, y, zz, &
        w1, w2, up, up1, down, down1, t0, scnds
-  complex(kind=DP), parameter :: i= (0.d0, 1.d0)
+  complex(DP), parameter :: i= (0.d0, 1.d0)
 
-  real(kind=DP), allocatable :: gs (:,:)
-  complex(kind=DP), allocatable :: a (:), psi (:,:)
+  real(DP), allocatable :: gs (:,:)
+  complex(DP), allocatable :: a (:), psi (:,:)
   ! the coefficients of the matching wfc
   ! plane stm wfc
 
-  real(kind=DP), external :: w0gauss
+  real(DP), external :: w0gauss
 
   t0 = scnds ()
   allocate (gs( 2, npwx))    

@@ -22,7 +22,7 @@ program d3toten
   implicit none
   character(len=9) :: cdate, ctime, code = 'D3TOTEN'
   integer :: nu_i, nu_i0, irecv
-  real (kind=DP) :: t0, t1, get_clock
+  real (DP) :: t0, t1, get_clock
 
   external date_and_tim
   !      call sigcatch( )

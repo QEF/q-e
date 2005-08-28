@@ -23,17 +23,17 @@ subroutine compute_chi(lam,ik,ns,xc,lbes4)
        lam      ! the angular momentum
   logical :: &
        lbes4 
-  real(kind=dp) :: &
+  real(DP) :: &
        xc(8)
   !
-  real(kind=dp) :: &
+  real(DP) :: &
        j1(ndm),aux(ndm), &
        b(4),c(4), arow(ndm),brow(ndm),crow(ndm),drow(ndm), &
        b0e, g0, g1, g2, &
        ddx12, &
        x4l6, &
        x6l12, dpoly
-  real(kind=dp), external :: pr, d2pr, dpr
+  real(DP), external :: pr, d2pr, dpr
 
   integer :: &
        n, nstart
@@ -212,8 +212,8 @@ subroutine tridiag(a,b,c,r,u,n)
   implicit none
 
   integer :: n
-  real(kind=dp) :: a(n),b(n),c(n),r(n),u(n)
-  real(kind=dp) :: gam(n), bet
+  real(DP) :: a(n),b(n),c(n),r(n),u(n)
+  real(DP) :: gam(n), bet
 
   integer j
 

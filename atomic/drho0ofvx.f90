@@ -11,10 +11,10 @@ subroutine drho0ofvx(drho,dchi0)
    !
    ! I/O variables
    !
-   real(kind=DP) :: drho(ndm,2), dchi0(ndm,nwfx)
+   real(DP) :: drho(ndm,2), dchi0(ndm,nwfx)
    ! local variables
-   real(kind=DP) :: dvy(ndm), dchi(ndm), int_0_inf_dr,wrk(ndm)
-   real(kind=DP) :: ze2, fac, ocs
+   real(DP) :: dvy(ndm), dchi(ndm), int_0_inf_dr,wrk(ndm)
+   real(DP) :: ze2, fac, ocs
    integer :: i, nu, is
 
    ze2 = - zed * e2

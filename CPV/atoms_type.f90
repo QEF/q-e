@@ -42,22 +42,22 @@
           CHARACTER(LEN=3) :: label(nsx) !  atomic labels
           INTEGER   :: na(nsx)  !   number of atoms per specie
           INTEGER   :: isa(nsx) !   index of the first atom (in the whole list) of a given specie
-          REAL(dbl) :: m(nsx)   !   atomic masses
-          REAL(dbl) :: taur(3,natx)  
-          REAL(dbl) :: taus(3,natx)  
+          REAL(DP) :: m(nsx)   !   atomic masses
+          REAL(DP) :: taur(3,natx)  
+          REAL(DP) :: taus(3,natx)  
           ! ... tau: atomic positions, sorted by specie. Atomic positions of specie "is" are
           !          stored in array elements whose index are "isa(is) ... isa(is)+na(is)-1"
-          REAL(dbl) :: vels(3,natx)  !  scaled velocities, same layout of "tau"
-          REAL(dbl) :: for(3,natx)  !  total force acting on the atom
+          REAL(DP) :: vels(3,natx)  !  scaled velocities, same layout of "tau"
+          REAL(DP) :: for(3,natx)  !  total force acting on the atom
           INTEGER :: mobile(3,natx) !  atomic freedom, same layout of "tau" ( 1 atom can move )
           INTEGER :: ityp(natx)     !  index of the specie to which the atom belong
           LOGICAL :: tscfor         !  indicate if the force are scaled or real
-          REAL(dbl) :: ekin(nsx)    !  kinetic energy per specie
-          REAL(dbl) :: ekint        !  total kinetic energy
+          REAL(DP) :: ekin(nsx)    !  kinetic energy per specie
+          REAL(DP) :: ekint        !  total kinetic energy
         END TYPE atoms_type
 
-! .. 4 int + nsx int + 4 char + 2 ( nsx int ) + nsx dbl + 3 ( 3 dbl natx ) + 3 lg natx +
-! .. natx int + 3 lg + nsx dbl + dbl 
+! .. 4 int + nsx int + 4 char + 2 ( nsx int ) + nsx DP + 3 ( 3 DP natx ) + 3 lg natx +
+! .. natx int + 3 lg + nsx DP + DP 
 
 !  ----------------------------------------------
 !  END manual
@@ -98,9 +98,9 @@
         SUBROUTINE atoms_type_init(atoms, staur, ismbl, label, pma, na, nsp, h)
           USE cell_base, ONLY: s_to_r
           TYPE (atoms_type) :: atoms
-          REAL(dbl), INTENT(IN) :: staur(:,:)
+          REAL(DP), INTENT(IN) :: staur(:,:)
           LOGICAL, INTENT(IN) :: ismbl(:,:)
-          REAL(dbl), INTENT(IN) :: pma(:), h(3,3)
+          REAL(DP), INTENT(IN) :: pma(:), h(3,3)
           INTEGER, INTENT(IN) :: na(:), nsp
           CHARACTER(LEN=3), INTENT(IN) :: label(:)
           INTEGER :: nax, nat

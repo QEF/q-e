@@ -17,7 +17,7 @@
 use ld1inc
 use funct
 implicit none
-      real(kind=dp) :: &
+      real(DP) :: &
              int_0_inf_dr,  &   ! the integral function
              rh(2),rh0(2),  &   ! the charge in a given point
              rhc,           &   ! core charge in a given point
@@ -30,7 +30,7 @@ implicit none
              gi(ndm),       &  ! 
              work(nwfsx)        ! 
 
-      real(kind=dp),allocatable :: &
+      real(DP),allocatable :: &
              f1(:,:),     &   ! auxiliary
              f2(:),      &   ! auxiliary
              f3(:),      &   ! auxiliary
@@ -46,7 +46,7 @@ implicit none
       logical :: &
              gga                ! if true it is a gga calculation
 
-      real(kind=dp), parameter :: fourpi = 4.0_DP * 3.141592653589793_DP  
+      real(DP), parameter :: fourpi = 4.0_DP * 3.141592653589793_DP  
 
       gga=igcx.ne.0.or.igcc.ne.0
       allocate(vgc(ndm,2),stat=ierr)

@@ -28,13 +28,13 @@ SUBROUTINE stres_hub ( sigmah )
    !
    IMPLICIT NONE
    !
-   REAL (kind=DP) :: sigmah(3,3)        ! output: the Hubbard stresses
+   REAL (DP) :: sigmah(3,3)        ! output: the Hubbard stresses
 
    INTEGER :: ipol, jpol, na, nt, is,isi, m1,m2,m3,m4
    INTEGER :: ldim
-   REAL (kind=DP) :: omin1, current_sum, inverse_sum, sum, temp, flag
+   REAL (DP) :: omin1, current_sum, inverse_sum, sum, temp, flag
    LOGICAL :: exst
-   REAL (kind=DP), ALLOCATABLE :: dns(:,:,:,:)
+   REAL (DP), ALLOCATABLE :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat), ! the derivative of the atomic occupations
  
    IF (U_projection .NE. "atomic") CALL errore("stres_hub", &

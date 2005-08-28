@@ -28,14 +28,14 @@ SUBROUTINE poten(vppot,nrz,z)
   INTEGER :: iis, jjs, is(4), js(4), ispin, nspin_eff
   INTEGER, ALLOCATABLE :: ipiv(:) 
 
-  REAL(kind=DP), PARAMETER :: eps = 1.d-8
-  REAL(kind=DP) :: arg, bet, z(nrz+1), zlen
-  REAL(kind=DP), ALLOCATABLE :: gz(:), allv(:), auxr(:)
+  REAL(DP), PARAMETER :: eps = 1.d-8
+  REAL(DP) :: arg, bet, z(nrz+1), zlen
+  REAL(DP), ALLOCATABLE :: gz(:), allv(:), auxr(:)
 
-  COMPLEX(kind=DP), PARAMETER :: cim = (0.d0,1.d0)
-  COMPLEX(kind=DP) :: caux, vppot(nrz,nrx*nry,npol,npol)
-  COMPLEX(kind=DP), ALLOCATABLE :: aux(:), amat(:,:), amat0(:,:)
-  COMPLEX(kind=DP), ALLOCATABLE :: vppot0(:,:,:,:)
+  COMPLEX(DP), PARAMETER :: cim = (0.d0,1.d0)
+  COMPLEX(DP) :: caux, vppot(nrz,nrx*nry,npol,npol)
+  COMPLEX(DP), ALLOCATABLE :: aux(:), amat(:,:), amat0(:,:)
+  COMPLEX(DP), ALLOCATABLE :: vppot0(:,:,:,:)
 
   CALL start_clock('poten')
   ALLOCATE( ipiv( nrz ) )

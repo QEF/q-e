@@ -15,7 +15,7 @@
       FUNCTION rranf()
         USE kinds
         IMPLICIT NONE
-        REAL(dbl) :: rranf
+        REAL(DP) :: rranf
         INTEGER :: kk, m, konst
         DATA m/100001/, konst/125/
         SAVE m, konst
@@ -26,7 +26,7 @@
       END FUNCTION rranf
 
 !-------------------------------------------------------------------------
-      real(kind=8) function randy()
+      real(8) function randy()
 !-------------------------------------------------------------------------
 !
 ! Use machine-specific random-number generator when available
@@ -48,7 +48,7 @@
 !
 #ifndef __USE_SYSTEM_RAND
       integer m, ia, ic, ntab
-      real(kind=8) rm
+      real(8) rm
       parameter (ntab=97,m=714025,ia=1366,ic=150889,rm=1.0/m)
       integer ir(ntab), iff, idum, j, iy
       data iff /0/, idum/0/
@@ -83,8 +83,8 @@ function rndm ()
   implicit none
   integer :: irand
   common/random_number/ irand
-  real(kind=DP) :: rndm, shuffle (32)
-  real(kind=DP), external :: rndx
+  real(DP) :: rndm, shuffle (32)
+  real(DP), external :: rndx
   integer :: i
   logical :: first
   data first / .true. /
@@ -115,7 +115,7 @@ function rndx (irand)
   USE kinds
   implicit none
   integer :: im, ia, iq, ir, irand, is, it
-  real(kind=DP) :: rndx, obm
+  real(DP) :: rndx, obm
   logical :: first
   data first / .true. /
   save im, ia, iq, ir, obm, first
@@ -148,7 +148,7 @@ subroutine set_rndm_seed(iseed)
   implicit none
   integer :: irand,iseed
   common/random_number/ irand
-  real(kind=DP) :: dummy, rndm
+  real(DP) :: dummy, rndm
   if (iseed.le.0) call errore('set_rndm_seed', &
                   'seed should be a positive integer',1)
 ! make sure rndm() has been called already once !

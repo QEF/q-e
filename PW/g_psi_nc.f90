@@ -23,16 +23,16 @@ subroutine g_psi_nc (lda, n, m, npol, psi, e)
   ! input: the number of bands
   ! input: the number of coordinates of psi
   ! local variable: counter of coordinates of psi
-  real(kind=DP) :: e (m)
+  real(DP) :: e (m)
   ! input: the eigenvectors
-  complex(kind=DP) :: psi (lda, npol, m)
+  complex(DP) :: psi (lda, npol, m)
   ! inp/out: the psi vector
   !
   !    Local variables
   !
-  real(kind=DP), parameter :: eps = 1.0d-4
+  real(DP), parameter :: eps = 1.0d-4
   ! a small number
-  real(kind=DP) :: x, scala, denm
+  real(DP) :: x, scala, denm
   integer :: k, i
   ! counter on psi functions
   ! counter on G vectors

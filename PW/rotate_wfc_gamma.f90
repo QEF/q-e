@@ -34,15 +34,15 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
     ! output number of states
   LOGICAL :: overlap
     ! if .FALSE. : S|psi> not needed
-  COMPLEX(KIND=DP) :: psi(npwx,nstart), evc(npwx,nbnd)
+  COMPLEX(DP) :: psi(npwx,nstart), evc(npwx,nbnd)
     ! input and output eigenvectors (may overlap)
-  REAL(KIND=DP) :: e(nbnd)
+  REAL(DP) :: e(nbnd)
     ! eigenvalues
   !
   ! ... auxiliary variables:
   !
-  COMPLEX(KIND=DP), ALLOCATABLE :: aux(:,:)
-  REAL(KIND=DP),    ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:), en(:)
+  COMPLEX(DP), ALLOCATABLE :: aux(:,:)
+  REAL(DP),    ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:), en(:)
   !
   !
   ALLOCATE( aux(  npwx, nstart ) )    

@@ -105,16 +105,16 @@ CONTAINS
     USE kinds
     !
     INTEGER,          INTENT(IN)           :: iunit, nat
-    REAL(dbl),        INTENT(IN)           :: tau( :, : )
+    REAL(DP),        INTENT(IN)           :: tau( :, : )
     CHARACTER(LEN=3), INTENT(IN), OPTIONAL :: what
     INTEGER,          INTENT(IN), OPTIONAL :: nfi
-    REAL(dbl),        INTENT(IN), OPTIONAL :: tps
+    REAL(DP),        INTENT(IN), OPTIONAL :: tps
     CHARACTER(LEN=3), INTENT(IN), OPTIONAL :: label( : )
-    REAL(dbl),        INTENT(IN), OPTIONAL :: fact
+    REAL(DP),        INTENT(IN), OPTIONAL :: fact
     INTEGER,          INTENT(IN), OPTIONAL :: sort( : )
     !
     INTEGER   :: ia, k
-    REAL(dbl) :: f
+    REAL(DP) :: f
     !
     IF( PRESENT( fact ) ) THEN 
        f = fact
@@ -165,9 +165,9 @@ CONTAINS
     USE kinds
     !
     INTEGER,   INTENT(IN)           :: iunit
-    REAL(dbl), INTENT(IN)           :: h(3,3)
+    REAL(DP), INTENT(IN)           :: h(3,3)
     INTEGER,   INTENT(IN), OPTIONAL :: nfi
-    REAL(dbl), INTENT(IN), OPTIONAL :: tps
+    REAL(DP), INTENT(IN), OPTIONAL :: tps
     !
     INTEGER :: i, j
     !
@@ -194,9 +194,9 @@ CONTAINS
     USE kinds
     !
     INTEGER,   INTENT(IN)           :: iunit
-    REAL(dbl), INTENT(IN)           :: str(3,3)
+    REAL(DP), INTENT(IN)           :: str(3,3)
     INTEGER,   INTENT(IN), OPTIONAL :: nfi
-    REAL(dbl), INTENT(IN), OPTIONAL :: tps
+    REAL(DP), INTENT(IN), OPTIONAL :: tps
     !
     INTEGER :: i, j
     !

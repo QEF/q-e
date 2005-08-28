@@ -28,7 +28,7 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !     input variables
   !
   integer :: nrot, s (3, 3, 48), nat, ityp (nat), nr1, nr2, nr3
-  real(kind=DP) :: tau (3, nat), at (3, 3), bg (3, 3)
+  real(DP) :: tau (3, nat), at (3, 3), bg (3, 3)
   ! nrot : order of the parent group
   ! s    : symmetry operations of parent group
   ! nat  : number of atoms in the unit cell
@@ -52,10 +52,10 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !
   integer :: na, kpol, nb, irot, i, j
   ! counters
-  real(kind=DP) , allocatable :: xau (:,:), rau (:,:)
+  real(DP) , allocatable :: xau (:,:), rau (:,:)
   ! atomic coordinates in crystal axis
   logical :: fractional_translations
-  real(kind=DP) :: ft (3), ft1, ft2, ft3
+  real(DP) :: ft (3), ft1, ft2, ft3
   !
   external checksym
   !

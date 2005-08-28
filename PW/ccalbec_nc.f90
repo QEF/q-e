@@ -25,12 +25,12 @@ subroutine ccalbec_nc (nkb, npwx, npw, npol, nbnd, bec, vkb, psi)
   ! input: the length of the vectors
   ! input: the number of bands
   ! input: number of coorrdinates of wfc
-  complex(kind=DP) :: vkb (npwx,nkb),psi(npwx,npol,nbnd),bec(nkb,npol,nbnd)
+  complex(DP) :: vkb (npwx,nkb),psi(npwx,npol,nbnd),bec(nkb,npol,nbnd)
   ! input: the FT of the beta functions
   ! input: the wavefunctions
   ! output: dot product of the beta and the wavefunctions
-  complex(kind=DP) :: alpha, beta
-  complex(kind=DP), external :: ZDOTC
+  complex(DP) :: alpha, beta
+  complex(DP), external :: ZDOTC
   !
   if (nkb.eq.0) return
 

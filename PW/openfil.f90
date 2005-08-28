@@ -31,7 +31,7 @@ SUBROUTINE openfil()
   !
   LOGICAL       :: exst
   INTEGER       :: ierr
-  REAL(KIND=DP) :: edum(1,1), wdum(1,1)
+  REAL(DP) :: edum(1,1), wdum(1,1)
   !
   !
   ! ... nwordwfc is the record length for the direct-access file

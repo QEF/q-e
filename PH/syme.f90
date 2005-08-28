@@ -23,8 +23,8 @@ subroutine syme (dvsym)
   use phcom
   implicit none
 
-  complex(kind=DP) :: dvsym (nrx1, nrx2, nrx3, nspin, 3)
-  complex(kind=DP), allocatable ::  aux (:,:,:,:)
+  complex(DP) :: dvsym (nrx1, nrx2, nrx3, nspin, 3)
+  complex(DP), allocatable ::  aux (:,:,:,:)
   ! the potential to symmetrize
   ! auxiliary quantity
 

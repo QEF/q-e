@@ -29,7 +29,7 @@ subroutine dynmat0
   integer :: nu_i, nu_j, na_icart, nb_jcart
   ! counters
 
-  complex(kind=DP) :: wrk, dynwrk (3 * nat, 3 * nat)
+  complex(DP) :: wrk, dynwrk (3 * nat, 3 * nat)
   ! auxiliary space
 
   call start_clock ('dynmat0')

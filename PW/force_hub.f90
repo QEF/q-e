@@ -36,17 +36,17 @@ SUBROUTINE force_hub(forceh)
    USE atom,                 ONLY : nchi, lchi, oc
 
    IMPLICIT NONE
-   REAL (kind=DP) :: forceh(3,nat)  ! output: the Hubbard forces
+   REAL (DP) :: forceh(3,nat)  ! output: the Hubbard forces
 
-   COMPLEX (kind=DP), ALLOCATABLE :: &
+   COMPLEX (DP), ALLOCATABLE :: &
              proj(:,:), wfcatom(:,:), spsi(:,:)
    !         proj(natomwfc,nbnd), wfcatom(npwx,natomwfc), spsi(npwx,nbnd)
-   REAL (kind=DP), ALLOCATABLE :: dns(:,:,:,:)
+   REAL (DP), ALLOCATABLE :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
    INTEGER, ALLOCATABLE :: offset(:)
    ! offset(nat) : offset of d electrons of atom d in the natomwfc ordering
 
-   COMPLEX (kind=DP) :: c_one, c_zero
+   COMPLEX (DP) :: c_one, c_zero
 
    INTEGER :: alpha, na, nt, is, m1, m2, ipol, ldim, l, n, ik
    INTEGER :: counter

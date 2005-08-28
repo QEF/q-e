@@ -9,7 +9,7 @@
 !=----------------------------------------------------------------------------=!
    MODULE gvecw
 !=----------------------------------------------------------------------------=!
-     USE kinds, ONLY: dbl
+     USE kinds, ONLY: DP
 
      IMPLICIT NONE
      SAVE
@@ -23,27 +23,27 @@
      INTEGER :: ng0  = 0  ! first G-vector with nonzero modulus
                        ! needed in the parallel case (G=0 is on one node only!)
 
-     REAL(dbl) :: ecutw = 0.0d0
-     REAL(dbl) :: gcutw = 0.0d0
+     REAL(DP) :: ecutw = 0.0d0
+     REAL(DP) :: gcutw = 0.0d0
 
      !   values for costant cut-off computations
 
-     REAL(dbl) :: ecfix = 0.0d0     ! value of the constant cut-off
-     REAL(dbl) :: ecutz = 0.0d0     ! height of the penalty function (above ecfix)
-     REAL(dbl) :: ecsig = 0.0d0     ! spread of the penalty function around ecfix
+     REAL(DP) :: ecfix = 0.0d0     ! value of the constant cut-off
+     REAL(DP) :: ecutz = 0.0d0     ! height of the penalty function (above ecfix)
+     REAL(DP) :: ecsig = 0.0d0     ! spread of the penalty function around ecfix
      LOGICAL   :: tecfix = .FALSE.  ! .TRUE. if constant cut-off is in use
 
      ! augmented cut-off for k-point calculation
 
-     REAL(dbl) :: ekcut = 0.0d0  
-     REAL(dbl) :: gkcut = 0.0d0
+     REAL(DP) :: ekcut = 0.0d0  
+     REAL(DP) :: gkcut = 0.0d0
     
      ! array of G vectors module plus penalty function for constant cut-off 
      ! simulation.
      !
      ! ggp = g + ( agg / tpiba**2 ) * ( 1 + erf( ( tpiba2 * g - e0gg ) / sgg ) )
 
-     REAL(dbl), ALLOCATABLE, TARGET :: ggp(:)
+     REAL(DP), ALLOCATABLE, TARGET :: ggp(:)
 
    CONTAINS
 
@@ -58,7 +58,7 @@
 !=----------------------------------------------------------------------------=!
    MODULE gvecp
 !=----------------------------------------------------------------------------=!
-     USE kinds, ONLY: dbl
+     USE kinds, ONLY: DP
 
      IMPLICIT NONE
      SAVE
@@ -70,8 +70,8 @@
      INTEGER :: ngml = 0  ! number of G-vector shells up to ngw
      INTEGER :: ngmx = 0  ! maximum local number of G vectors
 
-     REAL(dbl) :: ecutp = 0.0d0
-     REAL(dbl) :: gcutp = 0.0d0
+     REAL(DP) :: ecutp = 0.0d0
+     REAL(DP) :: gcutp = 0.0d0
 
 !=----------------------------------------------------------------------------=!
    END MODULE gvecp
@@ -80,7 +80,7 @@
 !=----------------------------------------------------------------------------=!
    MODULE gvecs
 !=----------------------------------------------------------------------------=!
-     USE kinds, ONLY: dbl
+     USE kinds, ONLY: DP
 
      IMPLICIT NONE
      SAVE
@@ -94,10 +94,10 @@
 
      INTEGER, ALLOCATABLE :: nps(:), nms(:)
 
-     REAL(dbl) :: ecuts = 0.0d0
-     REAL(dbl) :: gcuts = 0.0d0
+     REAL(DP) :: ecuts = 0.0d0
+     REAL(DP) :: gcuts = 0.0d0
 
-     REAL(dbl) :: dual = 0.0d0
+     REAL(DP) :: dual = 0.0d0
      LOGICAL   :: doublegrid = .FALSE.
 
    CONTAINS
@@ -114,7 +114,7 @@
 !=----------------------------------------------------------------------------=!
    MODULE gvecb
 !=----------------------------------------------------------------------------=!
-     USE kinds, ONLY: dbl
+     USE kinds, ONLY: DP
 
      IMPLICIT NONE
      SAVE
@@ -126,18 +126,18 @@
      INTEGER :: ngbl = 0  ! number of G-vector shells up to ngw
      INTEGER :: ngbx = 0  ! maximum local number of G vectors
 
-     REAL(dbl), ALLOCATABLE :: gb(:), gxb(:,:), glb(:)
+     REAL(DP), ALLOCATABLE :: gb(:), gxb(:,:), glb(:)
      INTEGER, ALLOCATABLE :: npb(:), nmb(:), iglb(:)
      INTEGER, ALLOCATABLE :: mill_b(:,:)
 
-     REAL(dbl) :: ecutb = 0.0d0
-     REAL(dbl) :: gcutb = 0.0d0
+     REAL(DP) :: ecutb = 0.0d0
+     REAL(DP) :: gcutb = 0.0d0
 
    CONTAINS
 
      SUBROUTINE gvecb_set( ecut, tpibab )
        IMPLICIT NONE
-       REAL(dbl), INTENT(IN) :: ecut, tpibab
+       REAL(DP), INTENT(IN) :: ecut, tpibab
          ecutb = ecut
          gcutb = ecut / tpibab / tpibab
        RETURN
@@ -162,7 +162,7 @@
    MODULE reciprocal_vectors
 !=----------------------------------------------------------------------------=!
 
-     USE kinds, ONLY: dbl
+     USE kinds, ONLY: DP
      USE gvecp
      USE gvecb
      USE gvecs
@@ -181,19 +181,19 @@
 
      !     G^2 in increasing order (in units of tpiba2=(2pi/a)^2)
      !
-     REAL(dbl), ALLOCATABLE, TARGET :: g(:) 
+     REAL(DP), ALLOCATABLE, TARGET :: g(:) 
 
      !     shells of G^2
      !
-     REAL(dbl), ALLOCATABLE, TARGET :: gl(:) 
+     REAL(DP), ALLOCATABLE, TARGET :: gl(:) 
 
      !     G-vectors cartesian components ( units tpiba =(2pi/a)  )
      !
-     REAL(dbl), ALLOCATABLE, TARGET :: gx(:,:) 
+     REAL(DP), ALLOCATABLE, TARGET :: gx(:,:) 
 
      !     g2_g    = all G^2 in increasing order, replicated on all procs
      !
-     REAL(dbl), ALLOCATABLE, TARGET :: g2_g(:)
+     REAL(DP), ALLOCATABLE, TARGET :: g2_g(:)
 
      !     mill_g  = miller index of G vecs (increasing order), replicated on all procs
      !
@@ -220,9 +220,9 @@
 
      !     bi  = base vector used to generate the reciprocal space
      !
-     REAL(dbl) :: bi1(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-     REAL(dbl) :: bi2(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-     REAL(dbl) :: bi3(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+     REAL(DP) :: bi1(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+     REAL(DP) :: bi2(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+     REAL(DP) :: bi3(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
 
    CONTAINS
 

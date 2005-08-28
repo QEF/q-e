@@ -20,11 +20,11 @@ MODULE splinelib
       !
       IMPLICIT NONE
       !
-      REAL (KIND=DP), INTENT(IN)  :: xdata(:), ydata(:)
-      REAL (KIND=DP), INTENT(OUT) :: d2y(:)
+      REAL (DP), INTENT(IN)  :: xdata(:), ydata(:)
+      REAL (DP), INTENT(OUT) :: d2y(:)
       INTEGER                     :: i, k, old_num_of_images
-      REAL (KIND=DP)              :: p, qn, sig, un
-      REAL (KIND=DP)              :: u(1000)
+      REAL (DP)              :: p, qn, sig, un
+      REAL (DP)              :: u(1000)
       !
       !
       old_num_of_images = SIZE( ydata )
@@ -61,11 +61,11 @@ MODULE splinelib
       !
       IMPLICIT NONE
       !
-      REAL (KIND=DP), INTENT(IN)  :: xdata(:), ydata(:), d2y(:)
-      REAL (KIND=DP), INTENT(IN)  :: x
-      REAL (KIND=DP)              :: splint
+      REAL (DP), INTENT(IN)  :: xdata(:), ydata(:), d2y(:)
+      REAL (DP), INTENT(IN)  :: x
+      REAL (DP)              :: splint
       INTEGER                     :: k, khi, klo, dim
-      REAL (KIND=DP)              :: a, b, h
+      REAL (DP)              :: a, b, h
       !
       !
       dim = SIZE( xdata )
@@ -93,8 +93,8 @@ MODULE splinelib
            !
            IMPLICIT NONE
            !
-           REAL (KIND=DP), INTENT(IN)  :: xx(:)
-           REAL (KIND=DP), INTENT(IN)  :: x
+           REAL (DP), INTENT(IN)  :: xx(:)
+           REAL (DP), INTENT(IN)  :: x
            INTEGER                     :: locate
            INTEGER                     :: n, jl, jm, ju
            LOGICAL                     :: ascnd
@@ -148,10 +148,10 @@ MODULE splinelib
       !
       IMPLICIT NONE
       !
-      REAL (KIND=DP), INTENT(IN)   :: old_mesh(:), new_mesh(:)
-      REAL (KIND=DP), INTENT(IN)   :: old_vect(:,:)
-      REAL (KIND=DP), INTENT(OUT)  :: new_vect(:,:)
-      REAL (KIND=DP), ALLOCATABLE  :: d2y(:)
+      REAL (DP), INTENT(IN)   :: old_mesh(:), new_mesh(:)
+      REAL (DP), INTENT(IN)   :: old_vect(:,:)
+      REAL (DP), INTENT(OUT)  :: new_vect(:,:)
+      REAL (DP), ALLOCATABLE  :: d2y(:)
       INTEGER                      :: dim, i, j
       INTEGER                      :: old_num_of_images, new_num_of_images
       !

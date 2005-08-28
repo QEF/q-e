@@ -19,7 +19,7 @@ subroutine nodeno(snlo,jj1,jj2,nodes,idim1)
   !
   !   wavefunction array
   !
-  real(kind=dp) :: snlo(idim1)
+  real(DP) :: snlo(idim1)
 
   integer :: i
   !

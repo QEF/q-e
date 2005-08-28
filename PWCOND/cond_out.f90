@@ -26,9 +26,9 @@ subroutine cond_out ()
   if(ikind.eq.0) then
     write(stdout,'(''----- Complex band structure calculation -----'')')
   elseif(ikind.eq.1) then
-    write(stdout,'(''--- T calc. with identical leads (ikind=1) --- '')')
+    write(stdout,'(''--- T calc. with identical leads (i1) --- '')')
   elseif(ikind.eq.2) then
-    write(stdout,'(''--- T calc. with different leads (ikind=2) --- '')')
+    write(stdout,'(''--- T calc. with different leads (i2) --- '')')
   endif
 
   if(nspin.eq.2) then

@@ -43,12 +43,12 @@ SUBROUTINE REDIS(state)
   type(ptr) :: state(0:sm_p)
 
 
-  real(kind=8), allocatable :: t_state(:,:)
-  real(kind=8), allocatable :: state_out(:,:)
+  real(8), allocatable :: t_state(:,:)
+  real(8), allocatable :: state_out(:,:)
 
-  real(kind=8) :: dis(0:sm_p),dis_out(0:sm_p)
-  real(kind=8) :: monitor(sm_p)
-  real(kind=8) :: tmp
+  real(8) :: dis(0:sm_p),dis_out(0:sm_p)
+  real(8) :: monitor(sm_p)
+  real(8) :: tmp
 
 
 
@@ -213,9 +213,9 @@ SUBROUTINE MESH(monitor,dis,dis_out)
   IMPLICIT NONE
 
   integer :: i,is,ia,sm_k,j,info 
-  real(kind=8) :: monitor(sm_p),dis(0:sm_p),dis_out(0:sm_p)
-  real(kind=8) :: d(sm_p-1),e(sm_p-2),b(0:sm_p)
-  real(kind=8) :: tmp(sm_p),tmp2(0:sm_p)
+  real(8) :: monitor(sm_p),dis(0:sm_p),dis_out(0:sm_p)
+  real(8) :: d(sm_p-1),e(sm_p-2),b(0:sm_p)
+  real(8) :: tmp(sm_p),tmp2(0:sm_p)
 
 
   ! A.    PREPARATION ==============================================================
@@ -324,8 +324,8 @@ SUBROUTINE INTPOL(md,n0,xi0,x0,n1,xi1,x1)
   IMPLICIT NONE
   integer :: jlo,kk,k,i,j,n1,n0
   integer, intent(in) :: md
-  real(kind=8) :: xi0(0:n0),x0(md,0:n0),xi1(0:n1),x1(md,0:n1)
-  real(kind=8) :: xx(mi),dy
+  real(8) :: xi0(0:n0),x0(md,0:n0),xi1(0:n1),x1(md,0:n1)
+  real(8) :: xx(mi),dy
 
   DO i=1,n1-1
 
@@ -363,7 +363,7 @@ SUBROUTINE INTPOL_HUNT(xx,n,x,jlo)
 
   IMPLICIT NONE
   integer :: inc,jhi,jlo,n,jm
-  real(kind=8) :: x,xx(n)
+  real(8) :: x,xx(n)
   integer :: skip
   logical :: ascnd
 
@@ -454,8 +454,8 @@ SUBROUTINE INTPOL_POLINT(xa,ya,n,x,y,dy)
   integer, parameter :: nmax=10
   integer, intent(in) :: n
   integer :: i,ns,m
-  real(kind=8) :: dy,x,y,xa(n),ya(n)
-  real(kind=8) :: den,dif,dift,ho,hp,w,c(nmax),d(nmax)
+  real(8) :: dy,x,y,xa(n),ya(n)
+  real(8) :: den,dif,dift,ho,hp,w,c(nmax),d(nmax)
 
   ns = 1
   dif = abs(x-xa(1))

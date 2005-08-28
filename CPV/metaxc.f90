@@ -14,17 +14,17 @@ SUBROUTINE tpssmeta(nnr, nspin,grho,rho,kedtau,etxc)
   !
   ! input
   integer nspin , nnr
-  real(kind=8)  grho(nnr,3,nspin), rho(nnr,nspin),kedtau(nnr,nspin)
+  real(8)  grho(nnr,3,nspin), rho(nnr,nspin),kedtau(nnr,nspin)
   ! output: excrho: exc * rho ;  E_xc = \int excrho(r) d_r
   ! output: rhor:   contains the exchange-correlation potential
-  real(kind=8)  etxc
-  REAL(kind=8) :: zeta, rh, grh2
+  real(8)  etxc
+  REAL(8) :: zeta, rh, grh2
   INTEGER :: k, ipol, is
-  REAL(kind=8) :: grho2 (2), sx, sc, v1x, v2x, v3x,v1c, v2c, v3c, &
+  REAL(8) :: grho2 (2), sx, sc, v1x, v2x, v3x,v1c, v2c, v3c, &
        v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw ,v2cup(3),v2cdw(3), &
        v3xup, v3xdw,grhoup(3),grhodw(3),&
   segno, arho, atau
-  REAL(kind=8), PARAMETER :: epsr = 1.0d-6, epsg = 1.0d-10
+  REAL(8), PARAMETER :: epsr = 1.0d-6, epsg = 1.0d-10
   etxc = 0.d0
   ! calculate the gradient of rho+rho_core in real space
   DO k = 1, nnr
@@ -121,8 +121,8 @@ subroutine tpsscxc(rho,grho,tau, &
   !
   implicit none  
 
-  real(kind=8) :: rho, grho, tau,sx, sc, v1x, v2x,v3x,v1c,v2c,v3c
-  real(kind=8) :: small  
+  real(8) :: rho, grho, tau,sx, sc, v1x, v2x,v3x,v1c,v2c,v3c
+  real(8) :: small  
   parameter (small = 1.d-10) 
   ! exchange
   if (rho.le.small) then  
@@ -159,20 +159,20 @@ subroutine metax(rho,grho2,tau,ex,v1x,v2x,v3x)
   !  input grho2 is |\nabla rho|^2
   implicit none
   !  INPUT
-  real(kind=8) rho,grho2,tau,rs
+  real(8) rho,grho2,tau,rs
   !  OUTPUT
-  real(kind=8) ex,v1x,v2x,v3x
+  real(8) ex,v1x,v2x,v3x
   !  LOCAL
-  real(kind=8) vx_unif,ex_unif
+  real(8) vx_unif,ex_unif
   !  ex_unif:   lda \epsilon_x(rho)
   !  ec_unif:   lda \epsilon_c(rho)
-  real(kind=8) small, pi34, third
+  real(8) small, pi34, third
   parameter (small=1.d-10)
   parameter (pi34 = 0.6203504908994d0, third = 1.d0 / 3.d0)
   !  fx=Fx(p,z)
   !  fxp=d Fx / d p
   !  fxz=d Fx / d z
-  real(kind=8) fx,f1x,f2x,f3x
+  real(8) fx,f1x,f2x,f3x
  
   !  ==--------------------------------------------------------------==
   if(abs(tau).lt.small) then
@@ -201,22 +201,22 @@ subroutine metac(rho,grho2,tau,ec,v1c,v2c,v3c)
   !==   ------------------------------------------------------------------
   implicit none
   !  INPUT
-  real(kind=8) rho, grho2, tau
+  real(8) rho, grho2, tau
   !  OUTPUT
-  real(kind=8) ec, v1c,v2c,v3c
+  real(8) ec, v1c,v2c,v3c
   !  LOCAL
-  real(kind=8) z,z2,tauw,ec_rev,rs
-  real(kind=8) d1rev, d2rev, d3rev
+  real(8) z,z2,tauw,ec_rev,rs
+  real(8) d1rev, d2rev, d3rev
   !  d1ec=  D ec_rev / D rho
   !  d2ec=  D ec_rev / D |D rho/ D r| / |\nabla rho|
   !  d3ec=  D ec_rev / D tau
-  real(kind=8) cf1,cf2,cf3
-  real(kind=8) v1c_pbe, v2c_pbe, ec_pbe
-  real(kind=8) v1c_sum, v2c_sum, ec_sum
-  real(kind=8) vc_unif,ec_unif
-  real(kind=8) dd,cab,cabone
-  real(kind=8) rhoup,grhoup,dummy
-  real(kind=8) small, pi34,third
+  real(8) cf1,cf2,cf3
+  real(8) v1c_pbe, v2c_pbe, ec_pbe
+  real(8) v1c_sum, v2c_sum, ec_sum
+  real(8) vc_unif,ec_unif
+  real(8) dd,cab,cabone
+  real(8) rhoup,grhoup,dummy
+  real(8) small, pi34,third
   parameter(small=1.0d-10)
   parameter (pi34= 0.75d0/3.141592653589793d+00, &
        third=1.d0/3.d0)
@@ -300,23 +300,23 @@ subroutine metaFX(rho,grho2,tau,fx,f1x,f2x,f3x)
   implicit none
   !  INPUT
   !  charge density, square of gradient of rho, and kinetic energy density
-  real(kind=8) rho, grho2, tau
+  real(8) rho, grho2, tau
   !  OUTPUT
   !  fx = Fx(p,z)
   !  f1x=D (Fx) / D rho
   !  f2x=D (Fx) / D ( D rho/D r_alpha) /|nabla rho|
   !  f3x=D (Fx) / D tau
-  real(kind=8) fx, f1x, f2x, f3x
+  real(8) fx, f1x, f2x, f3x
   !  LOCAL
-  real(kind=8) x, p, z, qb, al, localdp, dz
-  real(kind=8) dfdx, dxdp, dxdz, dqbdp, daldp, dqbdz, daldz
-  real(kind=8) fxp, fxz  ! fxp =D fx /D p
-  real(kind=8) tauw, tau_unif
+  real(8) x, p, z, qb, al, localdp, dz
+  real(8) dfdx, dxdp, dxdz, dqbdp, daldp, dqbdz, daldz
+  real(8) fxp, fxz  ! fxp =D fx /D p
+  real(8) tauw, tau_unif
   !  work variables
-  real(kind=8) xf1,xf2
-  real(kind=8) xfac1, xfac2, xfac3,xfac4,xfac5,xfac6,xfac7,z2
+  real(8) xf1,xf2
+  real(8) xfac1, xfac2, xfac3,xfac4,xfac5,xfac6,xfac7,z2
   !
-  real(kind=8) pi, THRD, ee, cc, kk, bb,miu,fac1,small
+  real(8) pi, THRD, ee, cc, kk, bb,miu,fac1,small
   parameter(pi=3.141592653589793d0)
   parameter(THRD=0.3333333333333333d0)
   parameter(ee=1.537d0)
@@ -412,7 +412,7 @@ subroutine tpsscx_spin(rhoup,rhodw,grhoup2,grhodw2,tauup,taudw,sx,&
   !
   !     dummy arguments
   !
-  real(kind=8) :: rhoup, rhodw, grhoup2, grhodw2, sx, v1xup, v1xdw, &
+  real(8) :: rhoup, rhodw, grhoup2, grhodw2, sx, v1xup, v1xdw, &
        v2xup, v2xdw
   ! up and down charge
   ! up and down gradient of the charge
@@ -420,11 +420,11 @@ subroutine tpsscx_spin(rhoup,rhodw,grhoup2,grhodw2,tauup,taudw,sx,&
   ! derivatives of exchange wr. rho
   ! derivatives of exchange wr. grho
   !
-  real(kind=8):: tauup,taudw, &! up and down kinetic energy density 
+  real(8):: tauup,taudw, &! up and down kinetic energy density 
        v3xup,v3xdw         ! derivatives of exchange wr. tau
-  real(kind=8) :: small  
+  real(8) :: small  
   parameter (small = 1.d-10)  
-  real(kind=8) :: rho, sxup, sxdw  
+  real(8) :: rho, sxup, sxdw  
   !
   ! exchange
   rho = rhoup + rhodw  
@@ -465,15 +465,15 @@ subroutine tpsscc_spin(rho,zeta,grhoup,grhodw, &
 !
 !     dummy arguments
 !
-  real(kind=8) :: rho, zeta, grhoup(3),grhodw(3), sc, v1cup, v1cdw, v2c  
+  real(8) :: rho, zeta, grhoup(3),grhodw(3), sc, v1cup, v1cdw, v2c  
   ! the total charge
   ! the magnetization
   ! the gradient of the charge
   ! exchange and correlation energies
   ! derivatives of correlation wr. rho
   ! derivatives of correlation wr. grho
-  real(kind=8) :: atau,v2cup(3),v2cdw(3),v3c,grho_vec(3),grho !grho=grho2
-  real(kind=8) :: small  
+  real(8) :: atau,v2cup(3),v2cdw(3),v3c,grho_vec(3),grho !grho=grho2
+  real(8) :: small  
   integer :: ipol
   parameter (small = 1.d-10)  
   !
@@ -509,30 +509,30 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
 !---------------------------------------------------------------
   implicit none
 !     input
-  real(kind=8) :: rho, zeta,grhoup(3),grhodw(3), tau
+  real(8) :: rho, zeta,grhoup(3),grhodw(3), tau
 !     output
-  real(kind=8) :: sc, v1up, v1dw, v2up(3), v2dw(3), v3
+  real(8) :: sc, v1up, v1dw, v2up(3), v2dw(3), v3
 !     local
-  real(kind=8) :: rhoup, rhodw,tauw,grhovec(3),grho2,grho,&
+  real(8) :: rhoup, rhodw,tauw,grhovec(3),grho2,grho,&
        grhoup2,grhodw2
   !grhovec   vector gradient of rho
   !grho    mod of gradient of rho
-  real(kind=8) :: ec_u, vcup_u, vcdw_u 
-  real(kind=8) :: ec_pbe, v1up_pbe, v1dw_pbe,v2up_pbe(3),v2dw_pbe(3)
-  real(kind=8) :: ecup_0, v1up_0, v2up_0(3),v2_tmp
-  real(kind=8) :: ecdw_0, v1dw_0, v2dw_0(3)
-  real(kind=8) :: ec_rev, cab, aa, bb, aa2
-  real(kind=8) :: z2,z,ca0,dca0da,dcabda,dcabdb
-  real(kind=8) :: term(3),term1,term2,term3
-  real(kind=8) :: drev1up, drev1dw,drev2up(3),drev2dw(3),drev3
-  real(kind=8) :: sum, dsum1up, dsum1dw,dsum2up(3),dsum2dw(3)
-  real(kind=8) :: dcab1up, dcab1dw,dcab2up(3),dcab2dw(3)
-  real(kind=8) :: db1up,   db1dw,  db2up(3),  db2dw(3)
-  real(kind=8) :: da1up,   da1dw
-  real(kind=8) :: ecup_til,ecdw_til
-  real(kind=8) :: v1up_uptil, v1up_dwtil, v2up_uptil(3),v2up_dwtil(3)
-  real(kind=8) :: v1dw_uptil, v1dw_dwtil, v2dw_uptil(3),v2dw_dwtil(3)
-  real(kind=8) :: small, pi34, p43, third, fac
+  real(8) :: ec_u, vcup_u, vcdw_u 
+  real(8) :: ec_pbe, v1up_pbe, v1dw_pbe,v2up_pbe(3),v2dw_pbe(3)
+  real(8) :: ecup_0, v1up_0, v2up_0(3),v2_tmp
+  real(8) :: ecdw_0, v1dw_0, v2dw_0(3)
+  real(8) :: ec_rev, cab, aa, bb, aa2
+  real(8) :: z2,z,ca0,dca0da,dcabda,dcabdb
+  real(8) :: term(3),term1,term2,term3
+  real(8) :: drev1up, drev1dw,drev2up(3),drev2dw(3),drev3
+  real(8) :: sum, dsum1up, dsum1dw,dsum2up(3),dsum2dw(3)
+  real(8) :: dcab1up, dcab1dw,dcab2up(3),dcab2dw(3)
+  real(8) :: db1up,   db1dw,  db2up(3),  db2dw(3)
+  real(8) :: da1up,   da1dw
+  real(8) :: ecup_til,ecdw_til
+  real(8) :: v1up_uptil, v1up_dwtil, v2up_uptil(3),v2up_dwtil(3)
+  real(8) :: v1dw_uptil, v1dw_dwtil, v2dw_uptil(3),v2dw_dwtil(3)
+  real(8) :: small, pi34, p43, third, fac
   parameter(small=1.0d-10, &
        fac=3.09366772628013593097d0**2)
 !     fac = (3*PI**2)**(2/3)

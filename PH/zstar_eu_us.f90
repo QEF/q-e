@@ -27,18 +27,18 @@ subroutine zstar_eu_us
   integer :: ik,  ig, ir, is, i,j 
   integer :: iuhxc, lrhxc
   !
-  real(kind = dp) :: weight
+  real(DP) :: weight
   !
-  complex(kind = dp) , allocatable :: dbecsum(:,:,:,:), aux1 (:)
+  complex(DP) , allocatable :: dbecsum(:,:,:,:), aux1 (:)
   ! the becsum with dpsi
   ! auxillary work space for fft
-  complex(kind=DP) , pointer ::      &
+  complex(DP) , pointer ::      &
       dvscf(:,:,:), &
       dvscfins (:,:,:)    ! change of the scf potential (smooth)
-  complex(kind =dp), allocatable :: pdsp(:,:)
-  complex(kind =dp), allocatable :: drhoscfh (:,:,:)
-  complex(kind =dp), allocatable :: dbecsum2 (:,:,:,:)
-  complex(kind =dp), allocatable :: dvkb (:,:,:)
+  complex(DP), allocatable :: pdsp(:,:)
+  complex(DP), allocatable :: drhoscfh (:,:,:)
+  complex(DP), allocatable :: dbecsum2 (:,:,:,:)
+  complex(DP), allocatable :: dvkb (:,:,:)
   integer :: npe, irr1, imode1
 
 #ifdef TIMINIG_ZSTAR_US
@@ -163,7 +163,7 @@ subroutine zstar_eu_us
         do jpol = 1, 3
            zstareu0(jpol,mode) =  zstareu0(jpol,mode) -                   &
                dot_product(dvscf(1:nrxx,1,jpol),drhoscfh(1:nrxx,1,imode)) &
-               * omega / real(nr1*nr2*nr3, kind = dp) 
+               * omega / DBLE(nr1*nr2*nr3) 
         end do
      end do
      imode1 = imode1 + npert (irr)

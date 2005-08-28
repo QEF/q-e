@@ -30,7 +30,7 @@
 
 
 
-   REAL(dbl) FUNCTION nlrh_m( c0, cdesc, tforce, atoms, occ, bec, becdr, eigr )
+   REAL(DP) FUNCTION nlrh_m( c0, cdesc, tforce, atoms, occ, bec, becdr, eigr )
 
       !  this routine computes:
       !  Kleinman-Bylander pseudopotential terms (see nlsm1,nlsm1_kp)
@@ -52,24 +52,24 @@
 
       ! ... declare subroutine arguments
 
-      COMPLEX(dbl)                          :: eigr(:,:)     ! exp(i G dot r)
-      COMPLEX(dbl),           INTENT(INOUT) :: c0(:,:,:,:)   ! wave functions
+      COMPLEX(DP)                          :: eigr(:,:)     ! exp(i G dot r)
+      COMPLEX(DP),           INTENT(INOUT) :: c0(:,:,:,:)   ! wave functions
       TYPE (wave_descriptor), INTENT(IN)    :: cdesc         ! wave functions descriptor
-      REAL(dbl),           INTENT(IN)       :: occ(:,:,:)    ! occupations
+      REAL(DP),           INTENT(IN)       :: occ(:,:,:)    ! occupations
       LOGICAL,               INTENT(IN)     :: tforce        ! if .TRUE. compute forces on ions
       TYPE(atoms_type),      INTENT(INOUT)  :: atoms         ! ions structure
-      REAL(dbl)                             :: bec(:,:)
-      REAL(dbl)                             :: becdr(:,:,:)
+      REAL(DP)                             :: bec(:,:)
+      REAL(DP)                             :: becdr(:,:,:)
 
-      REAL(dbl)    :: ennl
+      REAL(DP)    :: ennl
       EXTERNAL     :: ennl
 
       ! ... declare other variables
       !
       INTEGER      :: iss, iss_wfc, i, j
-      REAL(dbl)    :: etmp
-      REAL(dbl), ALLOCATABLE :: btmp( :, :, : )
-      REAL(dbl), ALLOCATABLE :: fion( :, : )
+      REAL(DP)    :: etmp
+      REAL(DP), ALLOCATABLE :: btmp( :, :, : )
+      REAL(DP), ALLOCATABLE :: fion( :, : )
 
 !  end of declarations
 !  ----------------------------------------------
@@ -161,17 +161,17 @@
       IMPLICIT NONE
 
       ! ...   declare subroutine arguments
-      COMPLEX(dbl)  :: eigr(:,:)          ! exp(i G dot r)
+      COMPLEX(DP)  :: eigr(:,:)          ! exp(i G dot r)
       TYPE(atoms_type),      INTENT(INOUT)  :: atoms         ! ions structure
-      COMPLEX(dbl),    INTENT(INOUT)  :: c0(:,:,:,:)  ! wave functions
+      COMPLEX(DP),    INTENT(INOUT)  :: c0(:,:,:,:)  ! wave functions
       TYPE (wave_descriptor),  INTENT(IN)  :: cdesc  ! wave functions
-      REAL(dbl),      INTENT(IN)  :: wsg(:,:) ! Kleinman-Bylander inverse
+      REAL(DP),      INTENT(IN)  :: wsg(:,:) ! Kleinman-Bylander inverse
                                               ! denominators
                                               ! <Y phi | V | phi Y>**(-1)
       ! ...   Kleinman-Bylander factors, with and without k points
       TYPE (projector), INTENT(OUT) :: fnl(:,:)
       ! ...   Kleinman-Bylander products <Y phi V | exp(i(k+G) dot r)>
-      REAL(dbl), INTENT(IN) :: wnl(:,:,:,:)
+      REAL(DP), INTENT(IN) :: wnl(:,:,:,:)
       ! ...   declare other variables
       INTEGER      :: ik, ispin, ispin_wfc
 
@@ -193,7 +193,7 @@
 
 !  ----------------------------------------------
 
-   REAL(dbl) FUNCTION nl_energy_m(fnl, atoms, occ, wsg)
+   REAL(DP) FUNCTION nl_energy_m(fnl, atoms, occ, wsg)
 
       !  this routine computes:
       !  enl: nonlocal potential contribution to total energy (see ene_nl,ene_nl_kp)
@@ -207,14 +207,14 @@
       IMPLICIT NONE
 
       ! ... declare subroutine arguments
-      REAL(dbl),    INTENT(IN)    :: occ(:,:,:) ! occupations
+      REAL(DP),    INTENT(IN)    :: occ(:,:,:) ! occupations
       TYPE(atoms_type),  INTENT(IN) :: atoms    ! ions structure
-      REAL(dbl),      INTENT(IN)    :: wsg(:,:) ! Kleinman-Bylander inverse
+      REAL(DP),      INTENT(IN)    :: wsg(:,:) ! Kleinman-Bylander inverse
                                                 ! denominators <Y phi | V | phi Y>**(-1)
       TYPE (projector) :: fnl(:,:) ! ... Kleinman-Bylander factors
 
       ! ... declare other variables
-      REAL(dbl)    :: enl
+      REAL(DP)    :: enl
       INTEGER      :: ik, ispin
 
 
@@ -259,20 +259,20 @@
 
       IMPLICIT NONE
 
-      COMPLEX(dbl)  :: eigr(:,:)          ! exp(i G dot r)
+      COMPLEX(DP)  :: eigr(:,:)          ! exp(i G dot r)
       TYPE(atoms_type),       INTENT(INOUT) :: atoms ! ions structure
-      COMPLEX(dbl),            INTENT(INOUT) :: c0(:,:,:)     ! wave functions
+      COMPLEX(DP),            INTENT(INOUT) :: c0(:,:,:)     ! wave functions
       TYPE (wave_descriptor), INTENT(IN)    :: cdesc     ! wave functions desc.
-      REAL(dbl),            INTENT(IN)    :: occ(:,:)       ! occupations
-      REAL(dbl),              INTENT(IN)    :: wsg(:,:)  ! KB inverse denominators <Y phi | V | phi Y>**(-1)
+      REAL(DP),            INTENT(IN)    :: occ(:,:)       ! occupations
+      REAL(DP),              INTENT(IN)    :: wsg(:,:)  ! KB inverse denominators <Y phi | V | phi Y>**(-1)
       TYPE (projector),       INTENT(INOUT) :: fnl(:)   ! KB factors
-      REAL(dbl),              INTENT(IN) :: wnl(:,:,:,:)    ! KB products <Y phi V | exp(i(k+G) dot r)>
+      REAL(DP),              INTENT(IN) :: wnl(:,:,:,:)    ! KB products <Y phi V | exp(i(k+G) dot r)>
       INTEGER, INTENT(IN) :: ispin
 
       ! ... declare other variables
       TYPE (projector) :: dfnl
-      COMPLEX(dbl) :: ctmp
-      REAL(dbl)    :: temp, fac, tt, fsum, enl
+      COMPLEX(DP) :: ctmp
+      REAL(DP)    :: temp, fac, tt, fsum, enl
       INTEGER      :: me, ib, ia, k, isa, igh, is, ik
 
 
@@ -354,25 +354,25 @@
 
       ! ... declare subroutine arguments
       INTEGER, INTENT(IN) :: ispin
-      COMPLEX(dbl),      INTENT(INOUT) :: c(:,:)
+      COMPLEX(DP),      INTENT(INOUT) :: c(:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE(atoms_type), INTENT(INOUT) :: atoms ! ions structure
-      REAL(dbl), INTENT(IN)           :: wnl(:,:,:)
-      REAL(dbl)                       :: g2(:), gx(:,:)
+      REAL(DP), INTENT(IN)           :: wnl(:,:,:)
+      REAL(DP)                       :: g2(:), gx(:,:)
       TYPE (projector), INTENT(OUT)   :: fnl
-      COMPLEX(dbl) :: eigr(:,:)
+      COMPLEX(DP) :: eigr(:,:)
 
       ! ... declare other variables
       INTEGER :: is, igh, isa, iss, ia, ig, nb, iy
       INTEGER :: l, ll, m, ngw, lda, ldw, ldf, ih, iv
-      REAL(dbl), ALLOCATABLE :: gwork(:,:)
-      REAL(dbl) :: ftmp
-      COMPLEX(dbl), ALLOCATABLE :: gxtmp(:)
-      COMPLEX(dbl), ALLOCATABLE :: auxc(:,:)
-      COMPLEX(dbl), PARAMETER :: ONE  = (1.0d0,0.0d0)
-      COMPLEX(dbl), PARAMETER :: ZERO = (0.0d0,0.0d0)
+      REAL(DP), ALLOCATABLE :: gwork(:,:)
+      REAL(DP) :: ftmp
+      COMPLEX(DP), ALLOCATABLE :: gxtmp(:)
+      COMPLEX(DP), ALLOCATABLE :: auxc(:,:)
+      COMPLEX(DP), PARAMETER :: ONE  = (1.0d0,0.0d0)
+      COMPLEX(DP), PARAMETER :: ZERO = (0.0d0,0.0d0)
       ! ... i^l
-      COMPLEX(dbl), PARAMETER :: csign(0:3) = (/ (1.0d0, 0.0d0), &
+      COMPLEX(DP), PARAMETER :: csign(0:3) = (/ (1.0d0, 0.0d0), &
           (0.0d0,1.0d0), (-1.0d0,0.0d0), (0.0d0,-1.0d0) /)
 
       ngw = cdesc%ngwl
@@ -474,23 +474,23 @@
       IMPLICIT   NONE
 
       ! ... declare subroutine arguments
-      COMPLEX(dbl), INTENT(IN) :: c(:,:)
+      COMPLEX(DP), INTENT(IN) :: c(:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE (projector), INTENT(OUT) :: dfnl
       TYPE(atoms_type), INTENT(INOUT) :: atoms ! ions structure
-      REAL(dbl), INTENT(IN) :: wnl(:,:,:), g2(:), gx(:,:)
-      COMPLEX(dbl), INTENT(IN) :: eigr(:,:)
+      REAL(DP), INTENT(IN) :: wnl(:,:,:), g2(:), gx(:,:)
+      COMPLEX(DP), INTENT(IN) :: eigr(:,:)
       INTEGER, INTENT(IN) :: kk
       INTEGER, INTENT(IN) :: ispin
 
       ! ... declare other variables
-      REAL(dbl), ALLOCATABLE :: gwork(:,:)
+      REAL(DP), ALLOCATABLE :: gwork(:,:)
       INTEGER :: is, ia, igh, isa, ig, iss, ll, l, m, ngw, nb, lda, ldw, ldf
       INTEGER :: iy, ih, iv
-      COMPLEX(dbl), ALLOCATABLE :: auxc(:,:), gxtmp(:)
-      COMPLEX(dbl), PARAMETER :: ONE  = (1.0d0,0.0d0), ZERO = (0.0d0,0.0d0)
+      COMPLEX(DP), ALLOCATABLE :: auxc(:,:), gxtmp(:)
+      COMPLEX(DP), PARAMETER :: ONE  = (1.0d0,0.0d0), ZERO = (0.0d0,0.0d0)
       ! ... (-i) * i^l
-      COMPLEX(dbl), PARAMETER :: csign(0:3) = (/ (0.0d0,-1.0d0), &
+      COMPLEX(DP), PARAMETER :: csign(0:3) = (/ (0.0d0,-1.0d0), &
         (1.0d0,0.0d0), (0.0d0,1.0d0), (-1.0d0,0.0d0) /)
 
 

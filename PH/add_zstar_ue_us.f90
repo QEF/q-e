@@ -28,10 +28,10 @@ subroutine add_zstar_ue_us(imode0,npe)
   
   integer :: ik, jpol, nrec, mode, ipert, ibnd, jbnd, i,j 
 
-  real(kind = dp) :: weight
+  real(DP) :: weight
 
-  complex(kind=DP), allocatable :: pdsp(:,:)
-  complex(kind=DP), allocatable :: dvkb(:,:,:)
+  complex(DP), allocatable :: pdsp(:,:)
+  complex(DP), allocatable :: dvkb(:,:,:)
   !  auxiliary space for <psi|ds/du|psi>
 
   ! 

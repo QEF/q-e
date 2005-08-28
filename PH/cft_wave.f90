@@ -26,7 +26,7 @@ subroutine cft_wave (evc_g, evc_r, isw)
   implicit none
 
   integer :: isw
-  complex(kind=DP) :: evc_g (npwx), evc_r (nrxxs)
+  complex(DP) :: evc_g (npwx), evc_r (nrxxs)
 
   integer :: ir, ig
 

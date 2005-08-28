@@ -38,7 +38,7 @@
           INTEGER nel   ! number of electrons per unit cell
           INTEGER nb_l  ! local number of bands
           INTEGER nb_g  ! global number of bands
-          REAL(dbl), POINTER :: s(:) ! occupation numbers
+          REAL(DP), POINTER :: s(:) ! occupation numbers
         END TYPE band
 
 !  END manual

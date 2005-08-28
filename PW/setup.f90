@@ -83,7 +83,7 @@ SUBROUTINE setup()
   !
   ! ... local variables
   !
-  REAL(KIND=DP), PARAMETER :: &
+  REAL(DP), PARAMETER :: &
       rcut = 10.D0,   &!  cut-off radius for radial integrations
       eps  = 1.0D-12   !  small number
   INTEGER :: & 
@@ -109,7 +109,7 @@ SUBROUTINE setup()
       so(npsx),       &!
       minus_q,        &!
       ltest            !
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
       vionl,       &   !
       iocc             !
   INTEGER, EXTERNAL :: &
@@ -913,7 +913,7 @@ FUNCTION n_atom_wfc( nat, npsx, ityp, nchix, nchi, oc, lchi, jchi )
   !
   INTEGER       :: n_atom_wfc
   INTEGER       :: nat, npsx, ityp(nat), nchix, nchi(npsx), lchi(nchix,npsx)
-  REAL(KIND=DP) :: oc(nchix,npsx), jchi(nchix,npsx)
+  REAL(DP) :: oc(nchix,npsx), jchi(nchix,npsx)
   INTEGER       :: na, nt, n
   !
   !

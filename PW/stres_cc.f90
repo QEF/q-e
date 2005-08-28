@@ -27,13 +27,13 @@ subroutine stres_cc (sigmaxcc)
   !
   implicit none
   ! output
-  real(kind=DP) :: sigmaxcc (3, 3)
+  real(DP) :: sigmaxcc (3, 3)
   ! local variables
 
   integer :: nt, ng, l, m, ir
   ! counters
-  real(kind=DP) :: fact, sigmadiag
-  real(kind=DP) , allocatable:: rhocg (:), vxc (:,:)
+  real(DP) :: fact, sigmadiag
+  real(DP) , allocatable:: rhocg (:), vxc (:,:)
 
   sigmaxcc(:,:) = 0.d0
   do nt = 1, ntyp

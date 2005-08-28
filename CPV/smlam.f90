@@ -39,17 +39,17 @@ SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
   integer :: n_const,exit_sign
   integer, intent(out) :: con_ite
 
-  real(kind=8), intent(out) :: err_const(sm_p)
-  real(kind=8) :: cons_c 
+  real(8), intent(out) :: err_const(sm_p)
+  real(8) :: cons_c 
 
   type(ptr) :: statep(0:sm_p)
   type(ptr) :: state(0:sm_p)
   type(ptr) :: tan(0:sm_p)
 
-  real(kind=8) :: mov(3,natx,0:sm_p) 
-  real(kind=8) :: lambda(0:sm_p), dotp1, dotp2
-  real(kind=8) :: dalpha(0:sm_p),t_alpha
-  real(kind=8), ALLOCATABLE :: dotp1a(:), dotp2a(:), lam_f(:), lam_b(:)
+  real(8) :: mov(3,natx,0:sm_p) 
+  real(8) :: lambda(0:sm_p), dotp1, dotp2
+  real(8) :: dalpha(0:sm_p),t_alpha
+  real(8), ALLOCATABLE :: dotp1a(:), dotp2a(:), lam_f(:), lam_b(:)
 
   !_______________________________________
   !***************************************
@@ -266,12 +266,12 @@ SUBROUTINE CALC(state,n_const,exit_sign,err_const,cons)
   integer, intent(out) :: exit_sign
   integer, intent(in) :: n_const
 
-  real(kind=8), intent(out) :: err_const(sm_p)
-  real(kind=8), intent(out) :: cons
+  real(8), intent(out) :: err_const(sm_p)
+  real(8), intent(out) :: cons
 
-  real(kind=8) :: state(3,natx,0:sm_p),temp(3,natx)
-  real(kind=8) :: dalpha(0:sm_p),t_alpha,alpha(0:sm_p)
-  real(kind=8) :: diff, total
+  real(8) :: state(3,natx,0:sm_p),temp(3,natx)
+  real(8) :: dalpha(0:sm_p),t_alpha,alpha(0:sm_p)
+  real(8) :: diff, total
 
 
   ! ... ARC C ... 
@@ -337,7 +337,7 @@ SUBROUTINE CALC(state,n_const,exit_sign,err_const,cons)
   exit_sign = 0
 
   DO sm_k=1,sm_p
-     diff = DABS(dalpha(sm_k) - 1.d0/dble(sm_p))
+     diff = DABS(dalpha(sm_k) - 1.d0/DBLE(sm_p))
      err_const(sm_k) = diff
      IF(diff <= tol) ace = ace+1
   ENDDO
@@ -357,7 +357,7 @@ SUBROUTINE CALC(state,n_const,exit_sign,err_const,cons)
      total = total + (dalpha(sm_k)*t_alpha)**2.d0
   ENDDO
 
-  cons = total/dble(sm_p)
+  cons = total/DBLE(sm_p)
 
   call stop_clock( 'calc')
   RETURN

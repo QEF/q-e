@@ -24,7 +24,7 @@ subroutine rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)
   integer :: nrm, mxr
   ! output: the number of vectors in the spher
   ! input: the maximum number of vectors
-  real(kind=DP) :: r (3, mxr), r2 (mxr), at (3, 3), bg (3, 3), dtau (3), &
+  real(DP) :: r (3, mxr), r2 (mxr), at (3, 3), bg (3, 3), dtau (3), &
        rmax
   ! output: coordinates of vectors R+tau_s-tau
   ! output: square modulus of vectors R+tau_s-
@@ -50,7 +50,7 @@ subroutine rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)
   ! index of swapping
   ! used for swapping
 
-  real(kind=DP) :: t (3), tt, swap, DNRM2
+  real(DP) :: t (3), tt, swap, DNRM2
   ! buffer contains the actual r
   ! buffer cotains the modulus of actual r
   ! used for swapping

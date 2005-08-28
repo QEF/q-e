@@ -57,9 +57,9 @@ SUBROUTINE add_efield(rho,vpoten,etotefield,iflag)
   !
   ! I/O variables
   !
-  REAL(KIND=DP) :: rho(nrxx,nspin) ! the density whose dipole is computed
-  REAL(KIND=DP) :: vpoten(nrxx) ! the ef is added to this potential
-  REAL(KIND=DP) :: etotefield   ! the contribution to etot due to ef
+  REAL(DP) :: rho(nrxx,nspin) ! the density whose dipole is computed
+  REAL(DP) :: vpoten(nrxx) ! the ef is added to this potential
+  REAL(DP) :: etotefield   ! the contribution to etot due to ef
 
   INTEGER :: iflag
   !
@@ -67,9 +67,9 @@ SUBROUTINE add_efield(rho,vpoten,etotefield,iflag)
   !
   INTEGER :: npoints, nmax, ndesc
   INTEGER :: ii, ij, ik, itmp, ir, izlb, izub, na, ipol, n3
-  REAL(KIND=DP) :: length, vamp, value
-  REAL(KIND=DP) :: dip, dipion, bmod, z0
-  REAL(KIND=DP) :: deltal
+  REAL(DP) :: length, vamp, value
+  REAL(DP) :: dip, dipion, bmod, z0
+  REAL(DP) :: deltal
 
   LOGICAL :: first=.TRUE.
   SAVE first

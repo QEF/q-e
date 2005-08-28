@@ -43,20 +43,20 @@ subroutine gener_pseudo
        nnode, &  ! the number of nodes of phi
        lam       ! the angular momentum
 
-  real(kind=dp) ::    &
+  real(DP) ::    &
        xc(8),        &  ! parameters of bessel functions
        gi(ndm,2),    &  ! auxiliary to compute the integrals
        sum, db, work(nwfsx) ! work space
 
-  real(kind=dp), allocatable :: &
+  real(DP), allocatable :: &
        b(:,:), binv(:,:) ! the B matrix and its inverse
 
-  real(kind=dp) ::    &
+  real(DP) ::    &
        aekin(nwfsx,nwfsx),  & ! AE kinetic energies
        pskin(nwfsx,nwfsx),  & ! PS kinetic energies
        kindiff(nwfsx,nwfsx)   ! AE-PS k.e.
 
-  real(kind=dp), external ::    &
+  real(DP), external ::    &
        int_0_inf_dr    ! the function calculating the integral 
 
   integer :: &

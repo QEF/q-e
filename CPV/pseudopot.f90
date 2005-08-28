@@ -19,7 +19,7 @@ MODULE pseudopotential
 
   ! ...   declare modules
 
-  USE kinds,   ONLY: dbl
+  USE kinds,   ONLY: DP
   USE splines, ONLY: spline_data
   USE betax,   ONLY: pstab_size => mmx
   USE read_pseudo_module_fpmd, ONLY: nspnl
@@ -40,7 +40,7 @@ MODULE pseudopotential
   TYPE (spline_data), ALLOCATABLE :: rhoc1_sp(:)
   TYPE (spline_data), ALLOCATABLE :: rhocp_sp(:)
   !
-  REAL(dbl), ALLOCATABLE :: xgtab(:)
+  REAL(DP), ALLOCATABLE :: xgtab(:)
   LOGICAL                :: tpstab
 
   PRIVATE
@@ -96,7 +96,7 @@ CONTAINS
      use atom,       only: numeric
      implicit none
      integer :: is, iv, jv
-     real(dbl) :: fac
+     real(DP) :: fac
      !
      if( allocated( dvan ) ) deallocate( dvan )
      allocate( dvan( nhm, nhm, nsp ) )
@@ -299,9 +299,9 @@ CONTAINS
       !
       IMPLICIT none
       !
-      REAL(dbl), INTENT(IN) :: hg(:)
-      REAL(dbl), INTENT(IN) :: xgtabmax
-      REAL(dbl) :: xgmax
+      REAL(DP), INTENT(IN) :: hg(:)
+      REAL(DP), INTENT(IN) :: xgtabmax
+      REAL(DP) :: xgmax
 
       chkpstab = .FALSE.
       !
@@ -327,10 +327,10 @@ CONTAINS
       USE mp_global, ONLY: mpime, group, nproc
       USE reciprocal_vectors, ONLY: g
       !
-      REAL(dbl), INTENT(OUT)  :: xgmax, xgmin, xgtabmax
+      REAL(DP), INTENT(OUT)  :: xgmax, xgmin, xgtabmax
       !
       INTEGER    :: ig, nval
-      REAL(dbl)  :: xg, dxg, res
+      REAL(DP)  :: xg, dxg, res
       !
       IF( .NOT. ALLOCATED( xgtab ) )     ALLOCATE( xgtab( pstab_size ) )
       nval = pstab_size
@@ -370,9 +370,9 @@ CONTAINS
       IMPLICIT NONE
 
       INTEGER    :: is, ig
-      REAL(dbl)  :: xgmax, xgmin
+      REAL(DP)  :: xgmax, xgmin
       LOGICAL    :: compute_tab
-      REAL(dbl)  :: xgtabmax = 0.0d0
+      REAL(DP)  :: xgtabmax = 0.0d0
       !
       compute_tab = chkpstab( g, xgtabmax ) 
       !
@@ -443,9 +443,9 @@ CONTAINS
       IMPLICIT NONE
 
       INTEGER   :: is
-      REAL(dbl) :: xgmax, xgmin
+      REAL(DP) :: xgmax, xgmin
       LOGICAL    :: compute_tab
-      REAL(dbl)  :: xgtabmax = 0.0d0
+      REAL(DP)  :: xgtabmax = 0.0d0
       !
       compute_tab = chkpstab( g, xgtabmax )
       !
@@ -510,11 +510,11 @@ CONTAINS
 
         IMPLICIT NONE
 
-        REAL(dbl), ALLOCATABLE :: fintl(:,:)
+        REAL(DP), ALLOCATABLE :: fintl(:,:)
         INTEGER    :: is, l, i, nbetax
-        REAL(dbl)  :: xgmax, xgmin
+        REAL(DP)  :: xgmax, xgmin
         LOGICAL    :: compute_tab
-        REAL(dbl)  :: xgtabmax = 0.0d0
+        REAL(DP)  :: xgtabmax = 0.0d0
 
         nbetax = MAXVAL( nbeta( 1:nsp ) )
 
@@ -607,12 +607,12 @@ CONTAINS
 
       IMPLICIT NONE
 
-      REAL(dbl), INTENT(OUT) :: wsg( :, : )
-      REAL(dbl), INTENT(OUT) :: wnl( :, :, :, : )
+      REAL(DP), INTENT(OUT) :: wsg( :, : )
+      REAL(DP), INTENT(OUT) :: wnl( :, :, :, : )
 
       ! ... declare other variables
       !
-      REAL(dbl) :: xg
+      REAL(DP) :: xg
       INTEGER   :: iv, is, ik, ig, l
 
       !  end of declarations
@@ -683,10 +683,10 @@ CONTAINS
 
       IMPLICIT NONE
 
-      REAL(dbl), INTENT(OUT) :: wnla(:,:,:)
+      REAL(DP), INTENT(OUT) :: wnla(:,:,:)
       !
       INTEGER   :: is, l, ig
-      REAL(dbl) :: xg
+      REAL(DP) :: xg
       !
       !  end of declarations
       !  
@@ -744,8 +744,8 @@ CONTAINS
       LOGICAL, INTENT(IN) :: tpre
       !
       INTEGER :: is, iv, l, il, ltmp, i0, ir
-      REAL(dbl), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:)
-      REAL(dbl) :: xg, xrg
+      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:)
+      REAL(DP) :: xg, xrg
       !
       IF( ALLOCATED( betagx  ) ) DEALLOCATE( betagx )
       IF( ALLOCATED( dbetagx ) ) DEALLOCATE( dbetagx )
@@ -862,8 +862,8 @@ CONTAINS
       LOGICAL, INTENT(IN) :: tpre
       !
       INTEGER :: is, iv, l, il, ltmp, i0, ir, jv
-      REAL(dbl), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:)
-      REAL(dbl) :: xg, xrg
+      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:)
+      REAL(DP) :: xg, xrg
 
       IF( ALLOCATED(  qradx ) ) DEALLOCATE(  qradx )
       IF( ALLOCATED( dqradx ) ) DEALLOCATE( dqradx )
@@ -981,7 +981,7 @@ CONTAINS
 
     SUBROUTINE interpolate_beta( tpre )
 
-      USE kinds, ONLY : dbl
+      USE kinds, ONLY : DP
       USE control_flags, only: iprsta
       USE constants, only: pi, fpi
       USE io_global, only: stdout
@@ -996,8 +996,8 @@ CONTAINS
 
       LOGICAL, INTENT(IN) :: tpre
  
-      REAL(dbl), ALLOCATABLE ::  ylm(:,:), dylm(:,:,:,:)
-      REAL(dbl) :: c, gg, betagl, dbetagl
+      REAL(DP), ALLOCATABLE ::  ylm(:,:), dylm(:,:,:,:)
+      REAL(DP) :: c, gg, betagl, dbetagl
       INTEGER   :: is, iv, lp, ig, jj, i, j
 
       ALLOCATE( ylm( ngw, (lmaxkb+1)**2 ) )
@@ -1103,10 +1103,10 @@ CONTAINS
       LOGICAL, INTENT(IN) :: tpre
 
       integer  is, l, lp, ig, ir, iv, jv, ijv, i,j, jj, ierr
-      real(kind=8), allocatable:: fint(:), jl(:), dqradb(:,:,:,:,:)
-      real(kind=8), allocatable:: ylmb(:,:), dylmb(:,:,:,:)
-      complex(kind=8), allocatable:: dqgbs(:,:,:)
-      real(kind=8) xg, c, betagl, dbetagl, gg
+      real(8), allocatable:: fint(:), jl(:), dqradb(:,:,:,:,:)
+      real(8), allocatable:: ylmb(:,:), dylmb(:,:,:,:)
+      complex(8), allocatable:: dqgbs(:,:,:)
+      real(8) xg, c, betagl, dbetagl, gg
 !
 !
       allocate( ylmb( ngb, lmaxq*lmaxq ), STAT=ierr )
@@ -1257,7 +1257,7 @@ CONTAINS
     SUBROUTINE exact_beta( tpre )
 
       USE control_flags, only : iprsta
-      USE kinds,         ONLY : dbl
+      USE kinds,         ONLY : DP
       USE constants,     only : pi, fpi
       USE io_global,     only : stdout
       USE gvecw,         only : ngw
@@ -1277,13 +1277,13 @@ CONTAINS
 
       LOGICAL, INTENT(IN) :: tpre
  
-      REAL(dbl), ALLOCATABLE ::  ylm(:,:), dylm(:,:,:,:)
-      REAL(dbl) :: c, gg, betagl, dbetagl
+      REAL(DP), ALLOCATABLE ::  ylm(:,:), dylm(:,:,:,:)
+      REAL(DP) :: c, gg, betagl, dbetagl
       INTEGER :: is, iv, lp, ig, jj, i, j
       INTEGER :: l, il, ltmp, i0, ir
-      REAL(dbl), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:)
-      REAL(dbl), ALLOCATABLE :: betagx ( :, :, : ), dbetagx( :, :, : )
-      REAL(dbl) :: xg, xrg
+      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:)
+      REAL(DP), ALLOCATABLE :: betagx ( :, :, : ), dbetagx( :, :, : )
+      REAL(DP) :: xg, xrg
 
       ALLOCATE( ylm( ngw, (lmaxkb+1)**2 ) )
       ALLOCATE( betagx ( ngw, nhm, nsp ) )

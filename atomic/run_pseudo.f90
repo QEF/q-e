@@ -24,7 +24,7 @@ subroutine run_pseudo
        is, &    ! counter on spin
        nbf      ! number of beta functions
 
-  real(kind=dp) :: &
+  real(DP) :: &
        vaux(ndm),  &   ! auxiliary variable
        vnew(ndm,2)   ! the potential
 
@@ -34,7 +34,7 @@ subroutine run_pseudo
   logical :: &
        conv       ! if true convergence reached
 
-  real(kind=dp) :: &
+  real(DP) :: &
        nvalts,                  & ! number of valence electrons for this conf.
        dddnew(nwfsx,nwfsx,2),   & ! the new D coefficients
        ocstart(nwfsx),          & ! guess for the occupations
@@ -43,7 +43,7 @@ subroutine run_pseudo
   integer :: &
        iswstart(nwfsx)            ! guess for the starting spins
 
-  real(kind=dp), parameter :: thresh=1.e-10_dp
+  real(DP), parameter :: thresh=1.e-10_dp
   integer, parameter :: itmax=200
 
   !

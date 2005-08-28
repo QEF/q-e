@@ -55,12 +55,12 @@ SUBROUTINE dynamics()
   !
   ! ... local variables
   !
-  REAL(KIND=DP), ALLOCATABLE :: tau_old(:,:), tau_new(:,:), vel(:,:), acc(:,:)
-  REAL(KIND=DP), ALLOCATABLE :: mass(:)
-  REAL(KIND=DP)              :: ekin, etotold
-  REAL(KIND=DP)              :: total_mass, temp_new, &
+  REAL(DP), ALLOCATABLE :: tau_old(:,:), tau_new(:,:), vel(:,:), acc(:,:)
+  REAL(DP), ALLOCATABLE :: mass(:)
+  REAL(DP)              :: ekin, etotold
+  REAL(DP)              :: total_mass, temp_new, &
                                 elapsed_time, norm_of_dtau
-  REAL(KIND=DP)              :: ml(3), mlt
+  REAL(DP)              :: ml(3), mlt
   INTEGER                    :: i, na
   LOGICAL                    :: exst
   !
@@ -371,11 +371,11 @@ SUBROUTINE dynamics()
        !
        ! ... local variables
        !
-       REAL (KIND=DP) :: norm_acc, acc_versor(3,nat)
+       REAL (DP) :: norm_acc, acc_versor(3,nat)
        !
        ! ... external functions
        !
-       REAL (KIND=DP), EXTERNAL :: DNRM2, DDOT
+       REAL (DP), EXTERNAL :: DNRM2, DDOT
        !
        !
        norm_acc = DNRM2( 3*nat, acc, 1 )
@@ -406,10 +406,10 @@ SUBROUTINE dynamics()
        IMPLICIT NONE
        !
        INTEGER                :: na, nb
-       REAL(KIND=DP)          :: total_mass, aux, velox, ek, &
+       REAL(DP)          :: total_mass, aux, velox, ek, &
                                  ml(3), dir_x, dir_y, dir_z, module
        !  
-       REAL(KIND=DP),EXTERNAL :: rndm
+       REAL(DP),EXTERNAL :: rndm
        !
        !    
        aux = temperature / convert_E_to_temp
@@ -510,9 +510,9 @@ SUBROUTINE dynamics()
        !
        IMPLICIT NONE
        !
-       REAL(KIND=DP), INTENT(IN) :: system_temp, required_temp
+       REAL(DP), INTENT(IN) :: system_temp, required_temp
        !
-       REAL(KIND=DP) :: aux
+       REAL(DP) :: aux
        !
        !
        ! ... rescale the velocities by a factor 3 / 2KT / Ek

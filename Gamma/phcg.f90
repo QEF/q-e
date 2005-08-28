@@ -22,9 +22,9 @@ PROGRAM phcg
 
   IMPLICIT NONE
 
-  REAL(kind=DP), ALLOCATABLE :: dchi_dtau(:,:,:,:), dynout(:,:)
-  REAL(kind=DP), ALLOCATABLE :: w2(:)
-  REAL(kind=DP):: max_seconds = 1.D+6
+  REAL(DP), ALLOCATABLE :: dchi_dtau(:,:,:,:), dynout(:,:)
+  REAL(DP), ALLOCATABLE :: w2(:)
+  REAL(DP):: max_seconds = 1.D+6
   CHARACTER(len=9) :: cdate, ctime, code = 'PHCG'
   LOGICAL :: exst
   INTEGER :: i
@@ -109,9 +109,9 @@ SUBROUTINE cg_dchi(dchi_dtau)
   USE cgcom
 
   IMPLICIT NONE
-  REAL(kind=DP) :: dchi_dtau(3,3,3,nat)
+  REAL(DP) :: dchi_dtau(3,3,3,nat)
   !
-  REAL(kind=DP) :: delta4(4), coeff4(4), delta2(2), coeff2(2), &
+  REAL(DP) :: delta4(4), coeff4(4), delta2(2), coeff2(2), &
        delta, coeff, convfact
   INTEGER iudyn, nd, na, ipol, nd_, na_, ipol_, jpol, kpol
   LOGICAL :: exst
@@ -263,7 +263,7 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
   !
   IMPLICIT NONE
   !
-  REAL(kind=DP) :: w2(3*nat), dynout(3*nat,3*nat), chi(3,3)
+  REAL(DP) :: w2(3*nat), dynout(3*nat,3*nat), chi(3,3)
   !
   LOGICAL :: exst
   INTEGER :: na, i,j,  nt, iudyn, mode_done
@@ -396,7 +396,7 @@ SUBROUTINE cg_neweps
   IMPLICIT NONE
 
   INTEGER :: i, j
-  REAL(kind=DP) :: rhotot, dmxc, chi(3,3)
+  REAL(DP) :: rhotot, dmxc, chi(3,3)
   !
   !  recalculate self-consistent potential etc
   !
@@ -517,11 +517,11 @@ SUBROUTINE raman_cs(dynout,dchi_dtau)
   USE pwcom
   USE cgcom
   !
-  REAL(kind=DP) :: dynout(3*nat,3*nat), dchi_dtau(3,3,3,nat)
+  REAL(DP) :: dynout(3*nat,3*nat), dchi_dtau(3,3,3,nat)
   !
   INTEGER :: nu, na, ipol, jpol, lpol
-  REAL(kind=DP), ALLOCATABLE :: raman_activity(:,:,:)
-  REAL(kind=DP), PARAMETER   :: r1fac = 911.444
+  REAL(DP), ALLOCATABLE :: raman_activity(:,:,:)
+  REAL(DP), PARAMETER   :: r1fac = 911.444
   !
   !   conversion factor from (Ry au for mass)^(-1) to amu(-1)
   !
@@ -562,10 +562,10 @@ SUBROUTINE raman_cs2(w2,dynout)
   !
   IMPLICIT NONE
   !
-  REAL(kind=DP) :: dynout(3*nat,3*nat), w2(3*nat)
+  REAL(DP) :: dynout(3*nat,3*nat), w2(3*nat)
   !
-  REAL(kind=DP), ALLOCATABLE :: raman_activity(:,:,:), infrared(:)
-  REAL(kind=DP) :: delta4(4), coeff4(4), delta2(2), coeff2(2), &
+  REAL(DP), ALLOCATABLE :: raman_activity(:,:,:), infrared(:)
+  REAL(DP) :: delta4(4), coeff4(4), delta2(2), coeff2(2), &
        delta, norm, coeff, convfact
   LOGICAL :: exst
   INTEGER iudyn, nd, nu, nd_, nu_, na, ipol, jpol
@@ -573,8 +573,8 @@ SUBROUTINE raman_cs2(w2,dynout)
   DATA delta4/-2.d0, -1.d0, 1.d0, 2.d0/
   DATA coeff4/ 0.08333333333333d0,-0.66666666666666d0,              &
        &       0.66666666666667d0,-0.08333333333337d0 /
-  REAL(kind=8):: polar(3), rydcm1, cm1thz, freq, r1fac, cmfac, irfac
-  REAL(kind=8):: alpha, beta2
+  REAL(8):: polar(3), rydcm1, cm1thz, freq, r1fac, cmfac, irfac
+  REAL(8):: alpha, beta2
   !
   CALL start_clock('raman_cs2')
   !

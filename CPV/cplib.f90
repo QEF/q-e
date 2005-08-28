@@ -23,11 +23,11 @@
 !
       implicit none
       integer, intent(in) :: n_atomic_wfc
-      complex(kind=8), intent(in) ::  eigr(ngw,nat)
-      complex(kind=8), intent(out):: wfc(ngw,n_atomic_wfc)
+      complex(8), intent(in) ::  eigr(ngw,nat)
+      complex(8), intent(out):: wfc(ngw,n_atomic_wfc)
 !
       integer :: natwfc, ndm, is, ia, ir, nb, l, m, lm, i, lmax_wfc, isa
-      real(kind=8), allocatable::  ylm(:,:), q(:), jl(:), vchi(:),      &
+      real(8), allocatable::  ylm(:,:), q(:), jl(:), vchi(:),      &
      &     chiq(:)
 !
 ! calculate max angular momentum required in wavefunctions
@@ -104,8 +104,8 @@
       use para_mod
       implicit none
       integer, intent(in):: nfft, irb(3)
-      real(kind=8), intent(in):: qv(2,nnrb)
-      complex(kind=8), intent(inout):: vr(nnr)
+      real(8), intent(in):: qv(2,nnrb)
+      complex(8), intent(inout):: vr(nnr)
 !
       integer ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
 
@@ -154,8 +154,8 @@
       use para_mod
       implicit none
       integer, intent(in):: irb(3)
-      complex(kind=8), intent(in):: qv(nnrb)
-      complex(kind=8), intent(inout):: v(nnr)
+      complex(8), intent(in):: qv(nnrb)
+      complex(8), intent(inout):: v(nnr)
 !
       integer ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
 
@@ -188,7 +188,7 @@
       end subroutine box2grid2
 !
 !-----------------------------------------------------------------------
-      real(kind=8) function boxdotgrid(irb,nfft,qv,vr)
+      real(8) function boxdotgrid(irb,nfft,qv,vr)
 !-----------------------------------------------------------------------
 !
 ! Calculate \sum_i qv(r_i)*vr(r_i)  with r_i on box grid
@@ -205,7 +205,7 @@
       use para_mod
       implicit none
       integer, intent(in):: nfft, irb(3)
-      real(kind=8), intent(in):: qv(2,nnrb), vr(nnr)
+      real(8), intent(in):: qv(2,nnrb), vr(nnr)
 !
       integer ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
 !
@@ -258,11 +258,11 @@
       use mp, only: mp_sum
 !
       implicit none
-      complex(kind=8) c0(ngw,n), phi(ngw,n), betae(ngw,nhsa)
-      real(kind=8)    ema0bg(ngw), bec(nhsa,n), emtot
+      complex(8) c0(ngw,n), phi(ngw,n), betae(ngw,nhsa)
+      real(8)    ema0bg(ngw), bec(nhsa,n), emtot
 ! local variables
       integer is, iv, jv, ia, inl, jnl, i, j
-      real(kind=8) qtemp(nhsavb,n) ! automatic array
+      real(8) qtemp(nhsavb,n) ! automatic array
 !
       call start_clock( 'calphi' )
       phi(:,:) = (0.d0, 0.d0)
@@ -329,7 +329,7 @@
       return
       end subroutine calphi
 !-----------------------------------------------------------------------
-      real(kind=8) function cscnorm(bec,cp,i)
+      real(8) function cscnorm(bec,cp,i)
 !-----------------------------------------------------------------------
 !     requires in input the updated bec(i)
 !
@@ -344,12 +344,12 @@
 !
       implicit none
       integer i
-      real(kind=8) bec(nhsa,n)
-      complex(kind=8) cp(ngw,n)
+      real(8) bec(nhsa,n)
+      complex(8) cp(ngw,n)
 !
       integer ig, is, iv, jv, ia, inl, jnl
-      real(kind=8) rsum
-      real(kind=8), allocatable:: temp(:)
+      real(8) rsum
+      real(8), allocatable:: temp(:)
 !
 !
       allocate(temp(ngw))
@@ -397,14 +397,14 @@
 !
       implicit none
 ! input
-      complex(kind=8) c(ngw,nx)
+      complex(8) c(ngw,nx)
 ! output
-      real(kind=8) dekin(3,3)
+      real(8) dekin(3,3)
 ! local
       integer j, k, ig, i
-      real(kind=8), allocatable:: gtmp(:)
-      real(kind=8) sk(n)  ! automatic array
-      real(kind=8) :: ga, dggp, efac
+      real(8), allocatable:: gtmp(:)
+      real(8) sk(n)  ! automatic array
+      real(8) :: ga, dggp, efac
 !
       allocate (gtmp(ngw))
       dekin=0.d0
@@ -459,13 +459,13 @@
 
       implicit none
 ! input
-      complex(kind=8) rhotmp(ng), drhotmp(ng,3,3), vtemp(ng), sfac(ngs,nsp)
-      real(kind=8) eh
+      complex(8) rhotmp(ng), drhotmp(ng,3,3), vtemp(ng), sfac(ngs,nsp)
+      real(8) eh
 ! output
-      real(kind=8) dh(3,3)
+      real(8) dh(3,3)
 ! local
       integer i, j, ig, is
-      real(kind=8) wz
+      real(8) wz
 !
 !     wz = factor for g.neq.0 because of c*(g)=c(-g)
 !
@@ -526,12 +526,12 @@
 
       implicit none
 ! input
-      complex(kind=8) rhotmp(ng), drhotmp(ng,3,3), vtemp(ng), sfac(ngs,nsp)
+      complex(8) rhotmp(ng), drhotmp(ng,3,3), vtemp(ng), sfac(ngs,nsp)
 ! output
-      real(kind=8) dps(3,3)
+      real(8) dps(3,3)
 ! local
       integer i, j, ig, is
-      real(kind=8) wz
+      real(8) wz
 !
 !     wz = factor for g.neq.0 because of c*(g)=c(-g)
 !
@@ -590,16 +590,16 @@
 !
       implicit none
 !
-      complex(kind=8) betae(ngw,nhsa), c(ngw), ca(ngw), df(ngw), da(ngw)
-      real(kind=8) bec(nhsa,n), v(nnrsx,nspin)
+      complex(8) betae(ngw,nhsa), c(ngw), ca(ngw), df(ngw), da(ngw)
+      real(8) bec(nhsa,n), v(nnrsx,nspin)
       integer i
 ! local variables
       integer iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
-      real(kind=8) fi, fip, dd
-      complex(kind=8) fp,fm,ci
-      real(kind=8) af(nhsa), aa(nhsa) ! automatic arrays
-      complex(kind=8)  dtemp(ngw)    !
-      complex(kind=8), allocatable :: psi(:)
+      real(8) fi, fip, dd
+      complex(8) fp,fm,ci
+      real(8) af(nhsa), aa(nhsa) ! automatic arrays
+      complex(8)  dtemp(ngw)    !
+      complex(8), allocatable :: psi(:)
 !
 !
       call start_clock( 'dforce' ) 
@@ -757,12 +757,12 @@
 !
       implicit none
 !
-      complex(kind=8)  eigr(ngw,nat), cp(ngw,n)
+      complex(8)  eigr(ngw,nat), cp(ngw,n)
 ! local variables
-      real(kind=8) rsum, csc(n) ! automatic array
-      complex(kind=8) temp(ngw) ! automatic array
+      real(8) rsum, csc(n) ! automatic array
+      complex(8) temp(ngw) ! automatic array
  
-      real(kind=8), allocatable::  becp(:,:)
+      real(8), allocatable::  becp(:,:)
       integer i,kmax,nnn,k,ig,is,ia,iv,jv,inl,jnl
 !
       allocate(becp(nhsa,n))
@@ -845,17 +845,17 @@
       implicit none
 ! input
       integer, intent(in) ::  irb(3,nat)
-      real(kind=8), intent(in)::  rhor(nnr,nspin)
-      real(kind=8) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
-      complex(kind=8), intent(in)::  eigrb(ngb,nat), rhog(ng,nspin)
+      real(8), intent(in)::  rhor(nnr,nspin)
+      real(8) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
+      complex(8), intent(in)::  eigrb(ngb,nat), rhog(ng,nspin)
 ! local
       integer i, j, isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,   &
      &     isa, ia, ir, irb3, imin3, imax3
-      real(kind=8) sum, dsum
-      complex(kind=8) fp, fm, ci
-      complex(kind=8), allocatable :: v(:)
-      complex(kind=8), allocatable:: dqgbt(:,:)
-      complex(kind=8), allocatable :: qv(:)
+      real(8) sum, dsum
+      complex(8) fp, fm, ci
+      complex(8), allocatable :: v(:)
+      complex(8), allocatable:: dqgbt(:,:)
+      complex(8), allocatable :: qv(:)
 !
 !
       do j=1,3
@@ -1059,7 +1059,7 @@
 
 !
 !-----------------------------------------------------------------------
-      real(kind=8) function enkin(c)
+      real(8) function enkin(c)
 !-----------------------------------------------------------------------
 !
 ! calculation of kinetic energy term
@@ -1074,10 +1074,10 @@
 
       implicit none
 ! input
-      complex(kind=8) c(ngw,nx)
+      complex(8) c(ngw,nx)
 ! local
       integer ig, i
-      real(kind=8) sk(n)  ! automatic array
+      real(8) sk(n)  ! automatic array
 !
 !
       do i=1,n
@@ -1112,13 +1112,13 @@
       use ions_base, only: nsp, na, rcmax, zv
       implicit none
 ! input
-      real(kind=8) tau0(3,natx)
+      real(8) tau0(3,natx)
 ! output
-      real(kind=8) fion(3,natx), dsr(3,3), esr
+      real(8) fion(3,natx), dsr(3,3), esr
 ! local variables
       integer i,j,k,l,m, ii, lax, inf, isak, isaj
-      real(kind=8) rlm(3), rckj, rlmn, arg, addesr, addpre, repand, fxx
-      real(kind=8), external :: erfc
+      real(8) rlm(3), rckj, rlmn, arg, addesr, addpre, repand, fxx
+      real(8), external :: erfc
 !
 !
       esr=0.d0
@@ -1196,17 +1196,17 @@
 !
       implicit none
 ! input
-      complex(kind=8) rhotemp(ng), rhog(ng,nspin), vtemp(ng),           &
+      complex(8) rhotemp(ng), rhog(ng,nspin), vtemp(ng),           &
      &           ei1(-nr1:nr1,nat),                                 &
      &           ei2(-nr2:nr2,nat),                                 &
      &           ei3(-nr3:nr3,nat)
 ! output
-      real(kind=8) fion1(3,natx)
+      real(8) fion1(3,natx)
 ! local
       integer ig, is, isa, ism, ia, ix, iss, isup, isdw
       integer i, j, k
-      real(kind=8)  wz
-      complex(kind=8) eigrx, vcgs, cnvg, cvn
+      real(8)  wz
+      complex(8) eigrx, vcgs, cnvg, cvn
 !
 !     wz = factor for g.neq.0 because of c*(g)=c(-g)
 !
@@ -1269,8 +1269,8 @@
 !
       implicit none
 !
-      complex(kind=8) eigr(ngw,nat), cm(ngw,n)
-      real(kind=8)    sigma, auxf
+      complex(8) eigr(ngw,nat), cm(ngw,n)
+      real(8)    sigma, auxf
       integer nband, is, ia, ig, isa
 !
       sigma=12.0
@@ -1380,11 +1380,11 @@
       implicit none
 !
       integer i
-      complex(kind=8) betae(ngw,nhsa)
-      real(kind=8)  bec(nhsa,n), cp(2,ngw,n)
-      real(kind=8)  csc(nx)
+      complex(8) betae(ngw,nhsa)
+      real(8)  bec(nhsa,n), cp(2,ngw,n)
+      real(8)  csc(nx)
       integer k, kmax,ig, is, iv, jv, ia, inl, jnl
-      real(kind=8) rsum, temp(ngw) ! automatic array
+      real(8) rsum, temp(ngw) ! automatic array
 !
 !     calculate csc(k)=<cp(i)|cp(k)>,  k<i
 !
@@ -1461,11 +1461,11 @@
 !
       implicit none
 !
-      real(kind=8)  bec(nhsa,n)
-      complex(kind=8)   cp(ngw,n), betae(ngw,nhsa)
+      real(8)  bec(nhsa,n)
+      complex(8)   cp(ngw,n), betae(ngw,nhsa)
 !
-      real(kind=8) :: anorm, cscnorm
-      real(kind=8), allocatable :: csc( : )
+      real(8) :: anorm, cscnorm
+      real(8), allocatable :: csc( : )
       integer :: i,k
       external cscnorm
 !
@@ -1503,9 +1503,9 @@
       implicit none
 !
       integer mesh
-      real(kind=8) z, cmesh, r(mesh)
+      real(8) z, cmesh, r(mesh)
 !
-      real(kind=8) deltax
+      real(8) deltax
       integer nblock,i,j,k
 !
       nblock = mesh/40
@@ -1533,10 +1533,10 @@
 !
       implicit none
       integer mesh
-      real(kind=8) cmesh, func(mesh), asum
+      real(8) cmesh, func(mesh), asum
 !
       integer i, j, k, i1, nblock
-      real(kind=8) a1, a2e, a2o, a2es, h
+      real(8) a1, a2e, a2o, a2es, h
 !
       a1=0.0
       a2e=0.0
@@ -1583,12 +1583,12 @@
 
       implicit none
 ! input
-      real(kind=8), intent(in):: tau0(3,natx)
+      real(8), intent(in):: tau0(3,natx)
 ! output
       integer, intent(out):: irb(3,nat)
-      real(kind=8), intent(out):: taub(3,natx)
+      real(8), intent(out):: taub(3,natx)
 ! local
-      real(kind=8) x(3), xmod
+      real(8) x(3), xmod
       integer nr(3), nrb(3), xint, is, ia, i, isa
 !
       nr (1)=nr1
@@ -1700,17 +1700,17 @@
       implicit none
 ! input
       integer irb(3,nat)
-      real(kind=8) rhovan(nhm*(nhm+1)/2,nat,nspin)
-      complex(kind=8) eigrb(ngb,nat)
-      real(kind=8)  vr(nnr,nspin)
+      real(8) rhovan(nhm*(nhm+1)/2,nat,nspin)
+      complex(8) eigrb(ngb,nat)
+      real(8)  vr(nnr,nspin)
 ! output
-      real(kind=8)  fion(3,natx)
+      real(8)  fion(3,natx)
 ! local
       integer isup,isdw,iss, iv,ijv,jv, ik, nfft, isa, ia, is, ig
       integer irb3, imin3, imax3
-      real(kind=8)  fvan(3,natx,nsx), fac, fac1, fac2, boxdotgrid
-      complex(kind=8) ci, facg1, facg2
-      complex(kind=8), allocatable :: qv(:)
+      real(8)  fvan(3,natx,nsx), fac, fac1, fac2, boxdotgrid
+      complex(8) ci, facg1, facg2
+      complex(8), allocatable :: qv(:)
       external boxdotgrid
 !
       call start_clock( 'newd' )
@@ -1943,11 +1943,11 @@
       use constants, only: pi, fpi
 !
       implicit none
-      real(kind=8) bec(nhsa,n), becdr(nhsa,n,3), lambda(nx,nx)
-      real(kind=8) fion(3,natx)
+      real(8) bec(nhsa,n), becdr(nhsa,n,3), lambda(nx,nx)
+      real(8) fion(3,natx)
 !
       integer k, is, ia, iv, jv, i, j, inl, isa
-      real(kind=8) temp(nx,nx), tmpbec(nhm,nx),tmpdr(nx,nhm) ! automatic arrays
+      real(8) temp(nx,nx), tmpbec(nhm,nx),tmpdr(nx,nhm) ! automatic arrays
 !
       call start_clock( 'nlfl' )
       do k=1,3
@@ -2030,19 +2030,19 @@
 !
       implicit none
 !
-      complex(kind=8)   cp(ngw,n), phi(ngw,n), eigr(ngw,nat)
-      real(kind=8) x0(nx,nx), diff, ccc, eps, delt
+      complex(8)   cp(ngw,n), phi(ngw,n), eigr(ngw,nat)
+      real(8) x0(nx,nx), diff, ccc, eps, delt
       integer iter, max
-      real(kind=8) bephi(nhsa,n), becp(nhsa,n)
+      real(8) bephi(nhsa,n), becp(nhsa,n)
 !
-      real(kind=8), allocatable :: diag(:), work1(:), work2(:), xloc(:,:), &
+      real(8), allocatable :: diag(:), work1(:), work2(:), xloc(:,:), &
                                    tmp1(:,:), tmp2(:,:), dd(:,:), x1(:,:), &
                                    rhos(:,:), rhor(:,:), con(:,:), u(:,:), &
                                    sig(:,:), rho(:,:), tau(:,:)
 
 ! the above are all automatic arrays
       integer istart, nss, ifail, i, j, iss, iv, jv, ia, is, inl, jnl
-      real(kind=8), allocatable:: qbephi(:,:), qbecp(:,:)
+      real(8), allocatable:: qbephi(:,:), qbecp(:,:)
 
       allocate( diag(nx), work1(nx), work2(nx), xloc(nx,nx), tmp1(nx,nx),    &
                 tmp2(nx,nx), dd(nx,nx), x1(nx,nx), rhos(nx,nx), rhor(nx,nx), &
@@ -2243,11 +2243,11 @@
 !
       implicit none
 ! input
-      real(kind=8) rin(3), a1(3),a2(3),a3(3), ainv(3,3)
+      real(8) rin(3), a1(3),a2(3),a3(3), ainv(3,3)
 ! output
-      real(kind=8) rout(3)
+      real(8) rout(3)
 ! local
-      real(kind=8) x,y,z
+      real(8) x,y,z
 !
 ! bring atomic positions to crystal axis
 !
@@ -2285,11 +2285,11 @@
       use uspp_param, only: nh
 !
       implicit none
-      complex(kind=8) eigr(ngw,nat)
-      complex(kind=8) betae(ngw,nhsa)
+      complex(8) eigr(ngw,nat)
+      complex(8) betae(ngw,nhsa)
 !
       integer is, iv, ia, inl, ig, isa
-      complex(kind=8) ci
+      complex(8) ci
 !
       call start_clock( 'prefor' )
       isa = 0
@@ -2325,13 +2325,13 @@
       use atom
 !
       implicit none
-      complex(kind=8), intent(in) :: c(ngw,nx), eigr(ngw,nat),      &
+      complex(8), intent(in) :: c(ngw,nx), eigr(ngw,nat),      &
      &                               betae(ngw,nhsa)
 !
-      complex(kind=8), allocatable:: wfc(:,:), swfc(:,:), becwfc(:,:)
-      real(kind=8), allocatable   :: overlap(:,:), e(:), z(:,:),        &
+      complex(8), allocatable:: wfc(:,:), swfc(:,:), becwfc(:,:)
+      real(8), allocatable   :: overlap(:,:), e(:), z(:,:),        &
      &                               proj(:,:), temp(:)
-      real(kind=8)                :: somma
+      real(8)                :: somma
       integer n_atomic_wfc
       integer is, ia, nb, l, m, k, i
 !
@@ -2465,11 +2465,11 @@
       implicit none
       integer, intent(in)           :: nspin, nx, ngw, nupdwn(nspin),   &
      &                                 iupdwn(nspin)
-      real   (kind=8), intent(in)   :: lambda(nx,nx), f(nx)
-      complex(kind=8), intent(inout):: c(ngw,nx)
+      real   (8), intent(in)   :: lambda(nx,nx), f(nx)
+      complex(8), intent(inout):: c(ngw,nx)
 
-      real(kind=8)                :: lambdar(nx,nx), wr(nx), zr(nx,nx)
-      complex(kind=8), allocatable:: csave(:,:)
+      real(8)                :: lambdar(nx,nx), wr(nx), zr(nx,nx)
+      complex(8), allocatable:: csave(:,:)
       integer                     :: iss, n, j, i, i0
 !
       do iss=1,nspin
@@ -2517,12 +2517,12 @@
 
 ! input
       integer nmin, nmax, gstart, ngw
-      real(kind=8) ampre
+      real(8) ampre
 ! output
-      complex(kind=8) c(ngw,nmax)
+      complex(8) c(ngw,nmax)
 ! local
       integer i,j
-      real(kind=8) ranf1, randy, ranf2, ampexp
+      real(8) ranf1, randy, ranf2, ampexp
 !
       CALL wave_rand_init( c )
 !      do i=nmin,nmax
@@ -2546,11 +2546,11 @@
 !
       implicit none
       integer, intent(in)           :: n, ldh
-      complex(kind=8), intent(inout):: h(ldh,n)
-      real   (kind=8), intent(out)  :: e(n)
-      complex(kind=8), intent(out)  :: v(ldh,n)
+      complex(8), intent(inout):: h(ldh,n)
+      real   (8), intent(out)  :: e(n)
+      complex(8), intent(out)  :: v(ldh,n)
 !
-      real(kind=8) fv1(n), fv2(n)
+      real(8) fv1(n), fv2(n)
       integer ierr
 !
       call rs(ldh,n,h,e,1,v,fv1,fv2,ierr)
@@ -2599,18 +2599,18 @@
       use funct, only: ismeta
 !
       implicit none
-      real(kind=8) bec(nhsa,n), rhovan(nhm*(nhm+1)/2,nat,nspin)
-      real(kind=8) rhor(nnr,nspin), rhos(nnrsx,nspin)
-      real(kind=8) enl, ekin
-      complex(kind=8) eigrb(ngb,nat), c(ngw,nx), rhog(ng,nspin)
+      real(8) bec(nhsa,n), rhovan(nhm*(nhm+1)/2,nat,nspin)
+      real(8) rhor(nnr,nspin), rhos(nnrsx,nspin)
+      real(8) enl, ekin
+      complex(8) eigrb(ngb,nat), c(ngw,nx), rhog(ng,nspin)
       integer irb(3,nat), nfi
 ! local variables
       integer iss, isup, isdw, iss1, iss2, ios, i, ir, ig
-      real(kind=8) rsumr(2), rsumg(2), sa1, sa2
-      real(kind=8) rnegsum, rmin, rmax, rsum
-      real(kind=8), external :: enkin, ennl
-      complex(kind=8) ci,fp,fm
-      complex(kind=8), allocatable :: psi(:), psis(:)
+      real(8) rsumr(2), rsumg(2), sa1, sa2
+      real(8) rnegsum, rmin, rmax, rsum
+      real(8), external :: enkin, ennl
+      complex(8) ci,fp,fm
+      complex(8), allocatable :: psi(:), psis(:)
 !
 !
       call start_clock( 'rhoofr' )
@@ -2793,7 +2793,7 @@
          if(iprsta.ge.3)then
             do iss=1,nspin
                rsumg(iss)=omega*DBLE(rhog(1,iss))
-               rsumr(iss)=SUM(rhor(:,iss))*omega/dble(nr1*nr2*nr3)
+               rsumr(iss)=SUM(rhor(:,iss))*omega/DBLE(nr1*nr2*nr3)
             end do
 
             if ( gstart /= 2 ) then
@@ -2831,8 +2831,8 @@
 !
       if(iprsta.ge.2) then
          call checkrho(nnr,nspin,rhor,rmin,rmax,rsum,rnegsum)
-         rnegsum=rnegsum*omega/dble(nr1*nr2*nr3)
-         rsum=rsum*omega/dble(nr1*nr2*nr3)
+         rnegsum=rnegsum*omega/DBLE(nr1*nr2*nr3)
+         rsum=rsum*omega/DBLE(nr1*nr2*nr3)
          WRITE( stdout,'(a,4(1x,f12.6))')                                     &
      &     ' rhoofr: rmin rmax rnegsum rsum  ',rmin,rmax,rnegsum,rsum
       end if
@@ -2841,7 +2841,7 @@
 
          do iss=1,nspin
             rsumg(iss)=omega*DBLE(rhog(1,iss))
-            rsumr(iss)=SUM(rhor(:,iss),1)*omega/dble(nr1*nr2*nr3)
+            rsumr(iss)=SUM(rhor(:,iss),1)*omega/DBLE(nr1*nr2*nr3)
          end do
 
          if (gstart.ne.2) then
@@ -2899,10 +2899,10 @@
       implicit none
 !
       integer nss, ist
-      complex(kind=8)   cp(ngw,n), phi(ngw,n)
-      real(kind=8)       bephi(nhsa,n), qbecp(nhsa,n), rho(nx,nx)
+      complex(8)   cp(ngw,n), phi(ngw,n)
+      real(8)       bephi(nhsa,n), qbecp(nhsa,n), rho(nx,nx)
       integer i, j
-      real(kind=8)    tmp1(nx,nx) ! automatic array
+      real(8)    tmp1(nx,nx) ! automatic array
 !
       rho (:,:) = 0.d0
 !
@@ -2981,19 +2981,19 @@
 !
       implicit none
 !
-      real(kind=8) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
+      real(8) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
       integer, intent(in) :: irb(3,nat)
-      complex(kind=8), intent(in):: eigrb(ngb,nat)
-      real(kind=8), intent(inout):: rhor(nnr,nspin)
-      complex(kind=8),  intent(inout):: rhog(ng,nspin)
+      complex(8), intent(in):: eigrb(ngb,nat)
+      real(8), intent(inout):: rhor(nnr,nspin)
+      complex(8),  intent(inout):: rhog(ng,nspin)
 !
       integer isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,           &
      &     isa, ia, ir, irb3, imin3, imax3
-      real(kind=8) sumrho
-      complex(kind=8) ci, fp, fm, ca
-      complex(kind=8), allocatable::  qgbt(:,:)
-      complex(kind=8), allocatable:: v(:)
-      complex(kind=8), allocatable:: qv(:)
+      real(8) sumrho
+      complex(8) ci, fp, fm, ca
+      complex(8), allocatable::  qgbt(:,:)
+      complex(8), allocatable:: v(:)
+      complex(8), allocatable:: qv(:)
 !
       if (nvb.eq.0) return
       call start_clock( 'rhov' )
@@ -3255,14 +3255,14 @@
       implicit none
 ! input
       integer, intent(in)         :: n_atomic_wfc
-      complex(kind=8), intent(in) :: betae(ngw,nhsa),                   &
+      complex(8), intent(in) :: betae(ngw,nhsa),                   &
      &                               wfc(ngw,n_atomic_wfc)
-      real(kind=8), intent(in)    :: becwfc(nhsa,n_atomic_wfc)
+      real(8), intent(in)    :: becwfc(nhsa,n_atomic_wfc)
 ! output
-      complex(kind=8), intent(out):: swfc(ngw,n_atomic_wfc)
+      complex(8), intent(out):: swfc(ngw,n_atomic_wfc)
 ! local
       integer is, iv, jv, ia, inl, jnl, i
-      real(kind=8) qtemp(nhsavb,n_atomic_wfc)
+      real(8) qtemp(nhsavb,n_atomic_wfc)
 !
       swfc=0.d0
 !
@@ -3314,11 +3314,11 @@
       implicit none
 !
       integer nss, ist
-      complex(kind=8)  cp(ngw,n)
-      real(kind=8) becp(nhsa,n), qbecp(nhsa,n), sig(nx,nx)
+      complex(8)  cp(ngw,n)
+      real(8) becp(nhsa,n), qbecp(nhsa,n), sig(nx,nx)
 !
       integer i, j
-      real(kind=8)    tmp1(nx,nx) ! automatic array
+      real(8)    tmp1(nx,nx) ! automatic array
 !
       sig = 0.d0
       call MXMA(cp(1,ist),2*ngw,1,cp(1,ist),1,2*ngw,                    &
@@ -3404,12 +3404,12 @@
 !
       implicit none
 ! input
-      real(kind=8) bec(nhsa,n), rhor(nnr,nspin)
-      complex(kind=8) c(ngw,nx)
+      real(8) bec(nhsa,n), rhor(nnr,nspin)
+      complex(8) c(ngw,nx)
 ! local variables
       integer nup, ndw, ir, i, j, jj, ig, ia, is, iv, jv, inl, jnl
-      real(kind=8) spin0, spin1, spin2, fup, fdw
-      real(kind=8), allocatable:: overlap(:,:), temp(:)
+      real(8) spin0, spin1, spin2, fup, fdw
+      real(8), allocatable:: overlap(:,:), temp(:)
       logical frac
 !
 !
@@ -3528,10 +3528,10 @@
 !
       implicit none
       integer nss, ist
-      complex(kind=8) phi(ngw,n)
-      real(kind=8)  bephi(nhsa,n), qbephi(nhsa,n), tau(nx,nx)
+      complex(8) phi(ngw,n)
+      real(8)  bephi(nhsa,n), qbephi(nhsa,n), tau(nx,nx)
       integer i, j
-      real(kind=8)    tmp1(nx,nx) ! automatic array
+      real(8)    tmp1(nx,nx) ! automatic array
 !
       tau = 0.d0
       call MXMA(phi(1,ist),2*ngw,1,phi(1,ist),1,2*ngw,                  &
@@ -3595,13 +3595,13 @@
 !
       implicit none
 !
-      complex(kind=8) cp(ngw,n), phi(ngw,n)
-      real(kind=8)   bec(nhsa,n), x0(nx,nx), ccc
-      real(kind=8)   bephi(nhsa,n), becp(nhsa,n)
+      complex(8) cp(ngw,n), phi(ngw,n)
+      real(8)   bec(nhsa,n), x0(nx,nx), ccc
+      real(8)   bephi(nhsa,n), becp(nhsa,n)
 ! local variables
       integer i, j, ig, is, iv, ia, inl
-      real(kind=8) wtemp(n,nhsa) ! automatic array
-      complex(kind=8), allocatable :: wrk2(:,:)
+      real(8) wtemp(n,nhsa) ! automatic array
+      complex(8), allocatable :: wrk2(:,:)
 !
 !     lagrange multipliers
 !
@@ -3712,17 +3712,17 @@
 !
       logical tlast,tfirst
       integer nfi
-      real(kind=8)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx)
-      real(kind=8)  rhoc(nnr), tau0(3,natx)
-      complex(kind=8) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
+      real(8)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx)
+      real(8)  rhoc(nnr), tau0(3,natx)
+      complex(8) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
      &                ei3(-nr3:nr3,nat), eigrb(ngb,nat),        &
      &                rhog(ng,nspin), sfac(ngs,nsp)
 !
       integer irb(3,nat), iss, isup, isdw, ig, ir,i,j,k,is, ia
-      real(kind=8) fion1(3,natx), vave, ebac, wz, eh
-      complex(kind=8)  fp, fm, ci
-      complex(kind=8), allocatable :: v(:), vs(:)
-      complex(kind=8), allocatable :: rhotmp(:), vtemp(:), drhotmp(:,:,:)
+      real(8) fion1(3,natx), vave, ebac, wz, eh
+      complex(8)  fp, fm, ci
+      complex(8), allocatable :: v(:), vs(:)
+      complex(8), allocatable :: rhotmp(:), vtemp(:), drhotmp(:,:,:)
 !
       call start_clock( 'vofrho' )
       ci=(0.,1.)
@@ -3914,7 +3914,7 @@
 !
 !     calculation of average potential
 !
-         vave=SUM(rhor(:,iss))/dble(nr1*nr2*nr3)
+         vave=SUM(rhor(:,iss))/DBLE(nr1*nr2*nr3)
       else
          isup=1
          isdw=2
@@ -3932,7 +3932,7 @@
 !     calculation of average potential
 !
          vave=(SUM(rhor(:,isup))+SUM(rhor(:,isdw)))       &
-     &        /2.0/dble(nr1*nr2*nr3)
+     &        /2.0/DBLE(nr1*nr2*nr3)
       endif
       call reduce(1,vave)
 !     ===================================================================
@@ -4035,9 +4035,9 @@
 !
       implicit none
       integer nnr, nspin
-      real(kind=8) rhor(nnr,nspin), rmin, rmax, rsum, rnegsum
+      real(8) rhor(nnr,nspin), rmin, rmax, rsum, rnegsum
 !
-      real(kind=8) roe
+      real(8) roe
       integer ir, iss
 !
       rsum   =0.0
@@ -4106,24 +4106,24 @@
 !
       logical tlast,tfirst
       integer nfi
-      real(kind=8)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx)
-      real(kind=8)  rhoc(nnr), tau0(3,natx)
-      complex(kind=8) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
+      real(8)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx)
+      real(8)  rhoc(nnr), tau0(3,natx)
+      complex(8) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
      &                ei3(-nr3:nr3,nat), eigrb(ngb,nat),        &
      &                rhog(ng,nspin), sfac(ngs,nsp)
 !
       integer irb(3,nat), iss, isup, isdw, ig, ir,i,j,k,is, ia
-      real(kind=8) fion1(3,natx), ebac, wz, eh
-      complex(kind=8)  fp, fm, ci
-      complex(kind=8), allocatable :: v(:), vs(:)
-      complex(kind=8), allocatable:: rhotmp(:), vtemp(:), drhotmp(:,:,:)
+      real(8) fion1(3,natx), ebac, wz, eh
+      complex(8)  fp, fm, ci
+      complex(8), allocatable :: v(:), vs(:)
+      complex(8), allocatable:: rhotmp(:), vtemp(:), drhotmp(:,:,:)
 
 ! Makov Payne Variables
 !
-      real(kind=8) dipole,quadrupole
-      real(kind=8) E_dip,E_quad,en1,en2
-      real(kind=8), allocatable:: rhortot(:)
-      real(kind=8) alpha
+      real(8) dipole,quadrupole
+      real(8) E_dip,E_quad,en1,en2
+      real(8), allocatable:: rhortot(:)
+      real(8) alpha
 
 !
       call start_clock( 'vofrho_wf' )
@@ -4526,15 +4526,15 @@
       use electrons_base, only: qbac
 !
       implicit none
-      real(kind=8), parameter :: debye=1./0.39344, angs=1./0.52917726
+      real(8), parameter :: debye=1./0.39344, angs=1./0.52917726
 !
-      real(kind=8)  dipole,quadrupole,mu(3),quad(6)
-      real(kind=8)  ax,ay,az,XG0,YG0,ZG0,X,Y,Z,D,s,rzero,x0,y0,z0
-      real(kind=8)  en1,en2, pass1, pass2, pass3
-      real(kind=8)  rhortot(nnr)
-!     real(kind=8), allocatable:: x(:),y(:),z(:)
-      real(kind=8), allocatable:: dip(:)
-      integer (kind=4) ix,ir, i, j, k
+      real(8)  dipole,quadrupole,mu(3),quad(6)
+      real(8)  ax,ay,az,XG0,YG0,ZG0,X,Y,Z,D,s,rzero,x0,y0,z0
+      real(8)  en1,en2, pass1, pass2, pass3
+      real(8)  rhortot(nnr)
+!     real(8), allocatable:: x(:),y(:),z(:)
+      real(8), allocatable:: dip(:)
+      integer (4) ix,ir, i, j, k
 !
       allocate(dip(nnr))
 

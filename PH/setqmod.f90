@@ -21,7 +21,7 @@ subroutine setqmod (ngm, xq, g, qmod, qpg)
   ! input: the number of G vectors
 
 
-  real(kind=DP) :: xq (3), g (3, ngm), qmod (ngm), qpg (3, ngm)
+  real(DP) :: xq (3), g (3, ngm), qmod (ngm), qpg (3, ngm)
   ! input: the q vector
   ! input: the G vectors
   ! output: the modulus of the G vectors

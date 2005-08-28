@@ -222,55 +222,55 @@ SUBROUTINE c_phase
    INTEGER :: nstring
    INTEGER :: nt
    LOGICAL :: lodd
-   REAL(KIND=DP) :: dk(3)
-   REAL(KIND=DP) :: dkmod
-   REAL(KIND=DP) :: el_loc
-   REAL(KIND=DP) :: eps
-   REAL(KIND=DP) :: fac
-   REAL(KIND=DP) :: g2kin_bp(npwx)
-   REAL(KIND=DP) :: gpar(3)
-   REAL(KIND=DP) :: gtr(3)
-   REAL(KIND=DP) :: gvec
-   REAL(KIND=DP), ALLOCATABLE :: loc_k(:)
-   REAL(KIND=DP) , ALLOCATABLE :: pdl_elec(:)
-   REAL(KIND=DP) :: pdl_elec_dw
-   REAL(KIND=DP) :: pdl_elec_tot
-   REAL(KIND=DP) :: pdl_elec_up
-   REAL(KIND=DP) :: pdl_ion(nat)
-   REAL(KIND=DP) :: pdl_ion_dw
-   REAL(KIND=DP) :: pdl_ion_tot
-   REAL(KIND=DP) :: pdl_ion_up
-   REAL(KIND=DP) :: pdl_tot
-   REAL(KIND=DP) , ALLOCATABLE :: phik(:)
-   REAL(KIND=DP) :: phidw
-   REAL(KIND=DP) :: phiup
-   REAL(KIND=DP) :: rmod
-   REAL(KIND=DP) :: qrad_dk(nbrx,nbrx,lmaxq,ntyp)
-   REAL(KIND=DP) :: upol(3)
-   REAL(KIND=DP) :: weight
-   REAL(KIND=DP), ALLOCATABLE :: wstring(:)
-   REAL(KIND=DP) :: ylm_dk(lmaxq*lmaxq)
-   REAL(KIND=DP) :: zeta_mod
-   COMPLEX(KIND=DP) :: aux(ngm)
-   COMPLEX(KIND=DP) :: aux0(ngm)
-   COMPLEX(KIND=DP) :: becp0(nkb,nbnd)
-   COMPLEX(KIND=DP) :: becp_bp(nkb,nbnd)
-   COMPLEX(KIND=DP) :: cdet(2)
-   COMPLEX(KIND=DP) :: cdwork(nbnd)
-   COMPLEX(KIND=DP) :: cave
-   COMPLEX(KIND=DP) :: cave_dw
-   COMPLEX(KIND=DP) :: cave_up
-   COMPLEX(KIND=DP) , ALLOCATABLE :: cphik(:)
-   COMPLEX(KIND=DP) :: det
-   COMPLEX(KIND=DP) :: dtheta
-   COMPLEX(KIND=DP) :: mat(nbnd,nbnd)
-   COMPLEX(KIND=DP) :: pref
-   COMPLEX(KIND=DP) :: psi(npwx,nbnd)
-   COMPLEX(KIND=DP) :: q_dk(nhm,nhm,ntyp)
-   COMPLEX(KIND=DP) :: struc(nat)
-   COMPLEX(KIND=DP) :: theta0
-   COMPLEX(KIND=DP) :: ZDOTC
-   COMPLEX(KIND=DP) :: zeta
+   REAL(DP) :: dk(3)
+   REAL(DP) :: dkmod
+   REAL(DP) :: el_loc
+   REAL(DP) :: eps
+   REAL(DP) :: fac
+   REAL(DP) :: g2kin_bp(npwx)
+   REAL(DP) :: gpar(3)
+   REAL(DP) :: gtr(3)
+   REAL(DP) :: gvec
+   REAL(DP), ALLOCATABLE :: loc_k(:)
+   REAL(DP) , ALLOCATABLE :: pdl_elec(:)
+   REAL(DP) :: pdl_elec_dw
+   REAL(DP) :: pdl_elec_tot
+   REAL(DP) :: pdl_elec_up
+   REAL(DP) :: pdl_ion(nat)
+   REAL(DP) :: pdl_ion_dw
+   REAL(DP) :: pdl_ion_tot
+   REAL(DP) :: pdl_ion_up
+   REAL(DP) :: pdl_tot
+   REAL(DP) , ALLOCATABLE :: phik(:)
+   REAL(DP) :: phidw
+   REAL(DP) :: phiup
+   REAL(DP) :: rmod
+   REAL(DP) :: qrad_dk(nbrx,nbrx,lmaxq,ntyp)
+   REAL(DP) :: upol(3)
+   REAL(DP) :: weight
+   REAL(DP), ALLOCATABLE :: wstring(:)
+   REAL(DP) :: ylm_dk(lmaxq*lmaxq)
+   REAL(DP) :: zeta_mod
+   COMPLEX(DP) :: aux(ngm)
+   COMPLEX(DP) :: aux0(ngm)
+   COMPLEX(DP) :: becp0(nkb,nbnd)
+   COMPLEX(DP) :: becp_bp(nkb,nbnd)
+   COMPLEX(DP) :: cdet(2)
+   COMPLEX(DP) :: cdwork(nbnd)
+   COMPLEX(DP) :: cave
+   COMPLEX(DP) :: cave_dw
+   COMPLEX(DP) :: cave_up
+   COMPLEX(DP) , ALLOCATABLE :: cphik(:)
+   COMPLEX(DP) :: det
+   COMPLEX(DP) :: dtheta
+   COMPLEX(DP) :: mat(nbnd,nbnd)
+   COMPLEX(DP) :: pref
+   COMPLEX(DP) :: psi(npwx,nbnd)
+   COMPLEX(DP) :: q_dk(nhm,nhm,ntyp)
+   COMPLEX(DP) :: struc(nat)
+   COMPLEX(DP) :: theta0
+   COMPLEX(DP) :: ZDOTC
+   COMPLEX(DP) :: zeta
 
 
 !  -------------------------------------------------------------------------   !
@@ -812,15 +812,15 @@ SUBROUTINE c_phase
 !  --- Give polarization in units of (e/Omega).bohr ---
    fac=rmod
    WRITE( stdout,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  (e/Omega).bohr')") &
-        fac*pdl_tot,fac*dble(mod_tot)
+        fac*pdl_tot,fac*DBLE(mod_tot)
 !  --- Give polarization in units of e.bohr ---
    fac=rmod/omega
    WRITE( stdout,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  e/bohr^2')") &
-        fac*pdl_tot,fac*dble(mod_tot)
+        fac*pdl_tot,fac*DBLE(mod_tot)
 !  --- Give polarization in SI units (C/m^2) ---
    fac=(rmod/omega)*(1.60097E-19_dp/5.29177E-11_dp**2)
    WRITE( stdout,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  C/m^2')") &
-        fac*pdl_tot,fac*dble(mod_tot)
+        fac*pdl_tot,fac*DBLE(mod_tot)
 !  --- Write polarization direction ---
    WRITE( stdout,"(/,8X,'The polarization direction is:  ( ', &
        &  F7.5,' , ',F7.5,' , ',F7.5,' )'))") upol(1),upol(2),upol(3)

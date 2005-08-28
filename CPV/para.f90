@@ -98,11 +98,11 @@ end module para_mod
       use grid_dimensions, only: nr1x, nr2x, nr3x, nnr => nnrx
       implicit none
       integer unit, nspin
-      real(kind=8) rhor(nnr,nspin)
+      real(8) rhor(nnr,nspin)
 !
       integer ir, is
       integer root, proc, ierr, n, displs(nproc), sendcount(nproc)
-      real(kind=8), allocatable:: rhodist(:)
+      real(8), allocatable:: rhodist(:)
 !
 !
       if (me.eq.1) allocate(rhodist(nr1x*nr2x*nr3x))
@@ -154,11 +154,11 @@ end module para_mod
       use gvecw , only : ngw
       implicit none
       integer unit, nspin
-      real(kind=8) rhor(nnr,nspin)
+      real(8) rhor(nnr,nspin)
 !
       integer ir, is
       integer root, proc, ierr, displs(nproc), recvcount(nproc)
-      real(kind=8), allocatable:: rhodist(:)
+      real(8), allocatable:: rhodist(:)
 !
 !
       if (me.eq.1) allocate(rhodist(nr1x*nr2x*nr3x))
@@ -240,11 +240,11 @@ end module para_mod
 !
       implicit none
       integer size
-      real(kind=8)  ps(size)
+      real(8)  ps(size)
 !
       integer ierr, n, nbuf
       integer, parameter:: MAXB=10000
-      real(kind=8) buff(MAXB)
+      real(8) buff(MAXB)
 !
       if (nproc.le.1) return
       if (size.le.0) return
@@ -342,11 +342,11 @@ end module para_mod
       implicit none
 
       integer unit, nspin
-      real(kind=8) rhos2(nnrs)
+      real(8) rhos2(nnrs)
 !
       integer ir, is
       integer root, proc, ierr, displs(nproc), recvcount(nproc)
-      real(kind=8), allocatable:: rhodist(:)
+      real(8), allocatable:: rhodist(:)
 !
 !
       if (me.eq.1) allocate(rhodist(nr1sx*nr2sx*nr3sx))
@@ -409,16 +409,16 @@ end module para_mod
       integer specie(100)!specie atomica da modificare 
       integer i, j, k, ir, ia, is, ityp(natx), nat00, tp(3)
       integer ir1, ir2, ir3, ip1, ip2, ip3, ipn
-      real(kind=8) tau0(3,natx), tau00(3,natx), rho(nnr)
-      real(kind=8) h(3,3), l1, l2, l3, shift(3), maxr, minr, cm(3)
-      real(kind=8) ll1, ll2, ll3, tot_m
-      real(kind=8), allocatable:: rho_aux(:)
+      real(8) tau0(3,natx), tau00(3,natx), rho(nnr)
+      real(8) h(3,3), l1, l2, l3, shift(3), maxr, minr, cm(3)
+      real(8) ll1, ll2, ll3, tot_m
+      real(8), allocatable:: rho_aux(:)
 
       integer :: isa
 
 #ifdef __PARA
       integer ip, ierr, incr(nproc), displs(nproc)
-      real(kind=8), allocatable:: rhow(:)
+      real(8), allocatable:: rhow(:)
 #endif
 
 #ifdef __PARA

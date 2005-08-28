@@ -30,7 +30,7 @@ subroutine d3matrix
   ! counter on atomic type
   ! generic counter
 
-  real (kind = dp) :: sxq (3, 48)
+  real (DP) :: sxq (3, 48)
   ! list of vectors in the star of q
   !
   ! Symmetrizes the dynamical matrix w.r.t. the small group of q

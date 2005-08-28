@@ -28,14 +28,14 @@ subroutine addusforce (forcenl)
   !
   implicit none
   !
-  real(kind=DP) :: forcenl (3, nat)
+  real(DP) :: forcenl (3, nat)
   ! local variables
   integer :: ig, ir, dim, nt, ih, jh, ijh, ipol, is, na
-  complex(kind=DP):: cfac
-  real(kind=DP) :: fact, DDOT
+  complex(DP):: cfac
+  real(DP) :: fact, DDOT
   ! work space
-  complex(kind=DP), allocatable :: aux(:,:), aux1(:,:), vg(:), qgm(:)
-  real(kind=DP) , allocatable :: ddeeq(:,:,:,:), qmod(:), ylmk0(:,:)
+  complex(DP), allocatable :: aux(:,:), aux1(:,:), vg(:), qgm(:)
+  real(DP) , allocatable :: ddeeq(:,:,:,:), qmod(:), ylmk0(:,:)
 
   !
   if (.not.okvan) return

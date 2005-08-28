@@ -17,10 +17,10 @@
       implicit none
 ! input
       integer, intent(in) :: nspin, nx, nupdwn(nspin), iupdwn(nspin)
-      real(kind=8), intent(in) :: lambda(nx,nx)
+      real(8), intent(in) :: lambda(nx,nx)
 ! local variables
-      real(kind=8), allocatable :: lambdar(:,:)
-      real(kind=8) wr(nx), fv1(nx),fm1(2,nx), zr
+      real(8), allocatable :: lambdar(:,:)
+      real(8) wr(nx), fv1(nx),fm1(2,nx), zr
       integer iss,j,i,ierr
 !
       do iss=1,nspin

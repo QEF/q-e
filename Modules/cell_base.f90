@@ -10,7 +10,7 @@
   MODULE cell_base
 !------------------------------------------------------------------------------!
 
-      USE kinds, ONLY : dbl
+      USE kinds, ONLY : DP
 !
       IMPLICIT NONE
       SAVE
@@ -21,45 +21,45 @@
 ! ...  the cell in the real space
 
         TYPE boxdimensions
-          REAL(dbl) :: a(3,3)    ! direct lattice generators
-          REAL(dbl) :: m1(3,3)   ! reciprocal lattice generators
-          REAL(dbl) :: omega     ! cell volume = determinant of a
-          REAL(dbl) :: g(3,3)    ! metric tensor
-          REAL(dbl) :: gvel(3,3) ! metric velocity
-          REAL(dbl) :: pail(3,3) ! stress tensor
-          REAL(dbl) :: hmat(3,3) ! cell parameters ( transpose of "a" )
-          REAL(dbl) :: hvel(3,3) ! cell velocity
-          REAL(dbl) :: hinv(3,3)
-          REAL(dbl) :: deth
+          REAL(DP) :: a(3,3)    ! direct lattice generators
+          REAL(DP) :: m1(3,3)   ! reciprocal lattice generators
+          REAL(DP) :: omega     ! cell volume = determinant of a
+          REAL(DP) :: g(3,3)    ! metric tensor
+          REAL(DP) :: gvel(3,3) ! metric velocity
+          REAL(DP) :: pail(3,3) ! stress tensor
+          REAL(DP) :: hmat(3,3) ! cell parameters ( transpose of "a" )
+          REAL(DP) :: hvel(3,3) ! cell velocity
+          REAL(DP) :: hinv(3,3)
+          REAL(DP) :: deth
           INTEGER :: perd(3)
         END TYPE boxdimensions
 
-        REAL(dbl) :: alat = 0.0d0   !  lattice parameter, often used to scale quantities
+        REAL(DP) :: alat = 0.0d0   !  lattice parameter, often used to scale quantities
                                     !  or in combination to other parameters/constants
                                     !  to define new units
 
         !  celldm are che simulation cell parameters
 
-        REAL(dbl) :: celldm(6) = (/ 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0 /)
+        REAL(DP) :: celldm(6) = (/ 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0 /)
 
         !  a1, a2 and a3 are the simulation cell base vector as calculated from celldm
 
-        REAL(dbl) :: a1(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-        REAL(dbl) :: a2(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-        REAL(dbl) :: a3(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+        REAL(DP) :: a1(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+        REAL(DP) :: a2(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+        REAL(DP) :: a3(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
         
         !  b1, b2 and b3 are the simulation reciprocal lattice vectors
 
-        REAL(dbl) :: b1(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-        REAL(dbl) :: b2(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-        REAL(dbl) :: b3(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+        REAL(DP) :: b1(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+        REAL(DP) :: b2(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+        REAL(DP) :: b3(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
 
-        REAL(dbl) :: ainv(3,3) = 0.0d0
+        REAL(DP) :: ainv(3,3) = 0.0d0
 
-        REAl(dbl) :: omega = 0.0d0  !  volume of the simulation cell
+        REAl(DP) :: omega = 0.0d0  !  volume of the simulation cell
 
-        REAL(dbl) :: tpiba  = 0.0d0   !  = 2 PI / alat
-        REAL(dbl) :: tpiba2 = 0.0d0   !  = ( 2 PI / alat ) ** 2
+        REAL(DP) :: tpiba  = 0.0d0   !  = 2 PI / alat
+        REAL(DP) :: tpiba2 = 0.0d0   !  = ( 2 PI / alat ) ** 2
 
         !  direct lattice vectors and reciprocal lattice vectors
         !  The folloving relations should alwais be kept valid
@@ -72,28 +72,28 @@
         !  bg( :, 2 ) = b2( : )
         !  bg( :, 3 ) = b3( : )
 
-        REAL(dbl) :: at(3,3) = RESHAPE( (/ 0.0d0 /), (/ 3, 3 /), (/ 0.0d0 /) )
-        REAL(dbl) :: bg(3,3) = RESHAPE( (/ 0.0d0 /), (/ 3, 3 /), (/ 0.0d0 /) )
+        REAL(DP) :: at(3,3) = RESHAPE( (/ 0.0d0 /), (/ 3, 3 /), (/ 0.0d0 /) )
+        REAL(DP) :: bg(3,3) = RESHAPE( (/ 0.0d0 /), (/ 3, 3 /), (/ 0.0d0 /) )
 
         INTEGER          :: ibrav      ! index of the bravais lattice
         CHARACTER(len=9) :: symm_type  ! 'cubic' or 'hexagonal' when ibrav=0
 
-        REAL(dbl) :: h(3,3)    = 0.0d0 ! simulation cell at time t 
-        REAL(dbl) :: hold(3,3) = 0.0d0 ! simulation cell at time t-delt
-        REAL(dbl) :: hnew(3,3) = 0.0d0 ! simulation cell at time t+delt
-        REAL(dbl) :: velh(3,3) = 0.0d0 ! simulation cell velocity
-        REAL(dbl) :: deth      = 0.0d0 ! determinant of h ( cell volume )
+        REAL(DP) :: h(3,3)    = 0.0d0 ! simulation cell at time t 
+        REAL(DP) :: hold(3,3) = 0.0d0 ! simulation cell at time t-delt
+        REAL(DP) :: hnew(3,3) = 0.0d0 ! simulation cell at time t+delt
+        REAL(DP) :: velh(3,3) = 0.0d0 ! simulation cell velocity
+        REAL(DP) :: deth      = 0.0d0 ! determinant of h ( cell volume )
 
         INTEGER   :: iforceh(3,3) = 1  ! if iforceh( i, j ) = 0 then h( i, j ) 
                                        ! is not allowed to move
         LOGICAL   :: thdiag = .FALSE.  ! True if only cell diagonal elements 
                                        ! should be updated
 
-        REAL(dbl) :: wmass = 0.0d0     ! cell fictitious mass
-        REAL(dbl) :: press = 0.0d0     ! external pressure 
+        REAL(DP) :: wmass = 0.0d0     ! cell fictitious mass
+        REAL(DP) :: press = 0.0d0     ! external pressure 
 
-        REAL(dbl) :: frich  = 0.0d0    ! firction parameter for cell damped dynamics
-        REAL(dbl) :: greash = 1.0d0    ! greas parameter for damped dynamics
+        REAL(DP) :: frich  = 0.0d0    ! firction parameter for cell damped dynamics
+        REAL(DP) :: greash = 1.0d0    ! greas parameter for damped dynamics
 
         LOGICAL :: tcell_base_init = .FALSE.
 
@@ -130,8 +130,8 @@
 !------------------------------------------------------------------------------!
 
         SUBROUTINE dgcell( gcdot, box_tm1, box_t0, delt )
-          REAL(dbl), INTENT(OUT) :: GCDOT(3,3)
-          REAL(dbl), INTENT(IN) :: delt
+          REAL(DP), INTENT(OUT) :: GCDOT(3,3)
+          REAL(DP), INTENT(IN) :: delt
           type (boxdimensions), intent(in) :: box_tm1, box_t0
             !
             GCDOT = 2.0d0 * ( box_t0%g - box_tm1%g ) / delt - box_t0%gvel
@@ -152,7 +152,7 @@
 
         SUBROUTINE cell_init_ht( box, ht )
           TYPE (boxdimensions) :: box
-          REAL(dbl) :: ht(3,3)
+          REAL(DP) :: ht(3,3)
             box%a = ht
             box%hmat = TRANSPOSE( ht )
             CALL gethinv( box )
@@ -167,7 +167,7 @@
 
         SUBROUTINE cell_init_a( box, a1, a2, a3 )
           TYPE (boxdimensions) :: box
-          REAL(dbl) :: a1(3), a2(3), a3(3)
+          REAL(DP) :: a1(3), a2(3), a3(3)
           INTEGER :: i
             DO i=1,3
               box%a(1,I) = A1(I)     ! this is HT: the row are the lattice vectors
@@ -188,8 +188,8 @@
 !------------------------------------------------------------------------------!
 
         SUBROUTINE r_to_s1 (r,s,box)
-          REAL(dbl), intent(out) ::  S(3)
-          REAL(dbl), intent(in) :: R(3)
+          REAL(DP), intent(out) ::  S(3)
+          REAL(DP), intent(in) :: R(3)
           type (boxdimensions), intent(in) :: box
           integer i,j
           DO I=1,3
@@ -204,10 +204,10 @@
 !------------------------------------------------------------------------------!
 
         SUBROUTINE r_to_s3 ( r, s, na, nsp, hinv )
-          REAL(dbl), intent(out) ::  S(:,:)
+          REAL(DP), intent(out) ::  S(:,:)
           INTEGER, intent(in) ::  na(:), nsp
-          REAL(dbl), intent(in) :: R(:,:)
-          REAL(dbl), intent(in) :: hinv(:,:)    ! hinv = TRANSPOSE( box%m1 )
+          REAL(DP), intent(in) :: R(:,:)
+          REAL(DP), intent(in) :: hinv(:,:)    ! hinv = TRANSPOSE( box%m1 )
           integer :: i, j, ia, is, isa
           isa = 0
           DO is = 1, nsp
@@ -227,9 +227,9 @@
 !------------------------------------------------------------------------------!
 
         SUBROUTINE r_to_s1b ( r, s, hinv )
-          REAL(dbl), intent(out) ::  S(:)
-          REAL(dbl), intent(in) :: R(:)
-          REAL(dbl), intent(in) :: hinv(:,:)    ! hinv = TRANSPOSE( box%m1 )
+          REAL(DP), intent(out) ::  S(:)
+          REAL(DP), intent(in) :: R(:)
+          REAL(DP), intent(in) :: hinv(:,:)    ! hinv = TRANSPOSE( box%m1 )
           integer :: i, j
           DO I=1,3
             S(I) = 0.D0
@@ -244,8 +244,8 @@
 !------------------------------------------------------------------------------!
 
         SUBROUTINE s_to_r1 (S,R,box)
-          REAL(dbl), intent(in) ::  S(3)
-          REAL(dbl), intent(out) :: R(3)
+          REAL(DP), intent(in) ::  S(3)
+          REAL(DP), intent(out) :: R(3)
           type (boxdimensions), intent(in) :: box
           integer i,j
           DO I=1,3
@@ -260,9 +260,9 @@
 !------------------------------------------------------------------------------!
 
         SUBROUTINE s_to_r1b (S,R,h)
-          REAL(dbl), intent(in) ::  S(3)
-          REAL(dbl), intent(out) :: R(3)
-          REAL(dbl), intent(in) :: h(:,:)    ! h = TRANSPOSE( box%a )
+          REAL(DP), intent(in) ::  S(3)
+          REAL(DP), intent(out) :: R(3)
+          REAL(DP), intent(in) :: h(:,:)    ! h = TRANSPOSE( box%a )
           integer i,j
           DO I=1,3
             R(I) = 0.D0
@@ -276,10 +276,10 @@
 !------------------------------------------------------------------------------!
 
         SUBROUTINE s_to_r3 ( S, R, na, nsp, h )
-          REAL(dbl), intent(in) ::  S(:,:)
+          REAL(DP), intent(in) ::  S(:,:)
           INTEGER, intent(in) ::  na(:), nsp
-          REAL(dbl), intent(out) :: R(:,:)
-          REAL(dbl), intent(in) :: h(:,:)    ! h = TRANSPOSE( box%a )
+          REAL(DP), intent(out) :: R(:,:)
+          REAL(DP), intent(in) :: h(:,:)    ! h = TRANSPOSE( box%a )
           integer :: i, j, ia, is, isa
           isa = 0
           DO is = 1, nsp
@@ -304,8 +304,8 @@
       SUBROUTINE gethinv(box)
         IMPLICIT NONE
         TYPE (boxdimensions), INTENT (INOUT) :: box
-        REAL (dbl), DIMENSION (3,3) :: hmat, hmati
-        REAL (dbl) :: odet
+        REAL (DP), DIMENSION (3,3) :: hmat, hmati
+        REAL (DP) :: odet
 
         hmat = box%hmat
         box%deth = hmat(1,1)*(hmat(2,2)*hmat(3,3)-hmat(2,3)*hmat(3,2)) + &
@@ -313,7 +313,7 @@
           hmat(1,3)*(hmat(2,1)*hmat(3,2)-hmat(2,2)*hmat(3,1))
         IF (box%deth<1.E-10) & 
           CALL errore('gethinv', 'box determinant too small', 1)
-        odet = 1._dbl/box%deth
+        odet = 1._DP/box%deth
         hmati(1,1) = (hmat(2,2)*hmat(3,3)-hmat(2,3)*hmat(3,2))*odet
         hmati(2,2) = (hmat(1,1)*hmat(3,3)-hmat(1,3)*hmat(3,1))*odet
         hmati(3,3) = (hmat(1,1)*hmat(2,2)-hmat(1,2)*hmat(2,1))*odet
@@ -338,15 +338,15 @@
       FUNCTION pbc(rin,box,nl) RESULT (rout)
         IMPLICIT NONE
         TYPE (boxdimensions) :: box
-        REAL (dbl) :: rin(3)
-        REAL (dbl) :: rout(3), s(3)
+        REAL (DP) :: rin(3)
+        REAL (DP) :: rout(3), s(3)
         INTEGER, OPTIONAL :: nl(3)
 
         s = matmul(box%hinv(:,:),rin)
         s = s - box%perd*nint(s)
         rout = matmul(box%hmat(:,:),s)
         IF (present(nl)) THEN
-          s = dble(nl)
+          s = DBLE(nl)
           rout = rout + matmul(box%hmat(:,:),s)
         END IF
       END FUNCTION pbc
@@ -356,8 +356,8 @@
           SUBROUTINE get_cell_param(box,cell,ang)
           IMPLICIT NONE
           TYPE(boxdimensions), INTENT(in) :: box
-          REAL(dbl), INTENT(out), DIMENSION(3) :: cell
-          REAL(dbl), INTENT(out), DIMENSION(3), OPTIONAL :: ang
+          REAL(DP), INTENT(out), DIMENSION(3) :: cell
+          REAL(DP), INTENT(out), DIMENSION(3), OPTIONAL :: ang
 ! This code gets the cell parameters given the h-matrix:
 ! a
           cell(1)=sqrt(box%hmat(1,1)*box%hmat(1,1)+box%hmat(2,1)*box%hmat(2,1) &
@@ -381,7 +381,7 @@
            ang(3)=acos((box%hmat(1,2)*box%hmat(1,3)+ &
                         box%hmat(2,2)*box%hmat(2,3) &
                       +box%hmat(3,2)*box%hmat(3,3))/(cell(2)*cell(3)))
-!           ang=ang*180.0_dbl/pi
+!           ang=ang*180.0_DP/pi
 
           ENDIF
           END SUBROUTINE get_cell_param
@@ -393,9 +393,9 @@
 ! ... variables system
         USE kinds
         INTEGER, INTENT(IN)  :: M
-        REAL(dbl),  INTENT(IN)  :: X1,Y1,Z1
-        REAL(dbl),  INTENT(OUT) :: X2,Y2,Z2
-        REAL(dbl) MIC
+        REAL(DP),  INTENT(IN)  :: X1,Y1,Z1
+        REAL(DP),  INTENT(OUT) :: X2,Y2,Z2
+        REAL(DP) MIC
         MIC = DBLE(M)
         X2 = X1 - DNINT(X1/MIC)*MIC
         Y2 = Y1 - DNINT(Y1/MIC)*MIC
@@ -410,9 +410,9 @@
 ! ... variables system
         USE kinds
         INTEGER, INTENT(IN)  :: m
-        REAL(dbl),  INTENT(IN)  :: v(3)
-        REAL(dbl),  INTENT(OUT) :: w(3)
-        REAL(dbl) :: MIC
+        REAL(DP),  INTENT(IN)  :: v(3)
+        REAL(DP),  INTENT(OUT) :: w(3)
+        REAL(DP) :: MIC
         MIC = DBLE(M)
         w(1) = v(1) - DNINT(v(1)/MIC)*MIC
         w(2) = v(2) - DNINT(v(2)/MIC)*MIC
@@ -431,19 +431,19 @@
 
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: ibrav_
-    REAL(dbl), INTENT(IN) :: celldm_ (6)
+    REAL(DP), INTENT(IN) :: celldm_ (6)
     LOGICAL, INTENT(IN) :: trd_ht
     CHARACTER(LEN=*), INTENT(IN) :: cell_symmetry
-    REAL(dbl), INTENT(IN) :: rd_ht (3,3)
+    REAL(DP), INTENT(IN) :: rd_ht (3,3)
     CHARACTER(LEN=*), INTENT(IN) :: cell_units
-    REAL(dbl), INTENT(IN) :: a_ , b_ , c_ , cosab, cosac, cosbc
+    REAL(DP), INTENT(IN) :: a_ , b_ , c_ , cosab, cosac, cosbc
     CHARACTER(LEN=*), INTENT(IN) :: cell_dofree
-    REAL(dbl),  INTENT(IN) :: wc_ , frich_ , greash_ , total_ions_mass
-    REAL(dbl),  INTENT(IN) :: press_  ! external pressure from imput ( GPa )
+    REAL(DP),  INTENT(IN) :: wc_ , frich_ , greash_ , total_ions_mass
+    REAL(DP),  INTENT(IN) :: press_  ! external pressure from imput ( GPa )
 
 
-    REAL(dbl) :: b1(3), b2(3), b3(3)
-    REAL(dbl) :: a, b, c, units
+    REAL(DP) :: b1(3), b2(3), b3(3)
+    REAL(DP) :: a, b, c, units
     INTEGER   :: j
 
     !
@@ -673,9 +673,9 @@
     USE control_flags, ONLY: iprsta
 
     IMPLICIT NONE
-    REAL(dbl), INTENT(IN) :: ht (3,3)
+    REAL(DP), INTENT(IN) :: ht (3,3)
 
-    REAL(dbl) :: b1(3), b2(3), b3(3)
+    REAL(DP) :: b1(3), b2(3), b3(3)
     INTEGER   :: j
 
     alat   =  sqrt( ht(1,1)*ht(1,1) + ht(1,2)*ht(1,2) + ht(1,3)*ht(1,3) )
@@ -746,12 +746,12 @@
 !------------------------------------------------------------------------------!
 
   SUBROUTINE cell_steepest( hnew, h, delt, iforceh, fcell )
-    REAL(kind=8), INTENT(OUT) :: hnew(3,3)
-    REAL(kind=8), INTENT(IN) :: h(3,3), fcell(3,3)
+    REAL(8), INTENT(OUT) :: hnew(3,3)
+    REAL(8), INTENT(IN) :: h(3,3), fcell(3,3)
     INTEGER,      INTENT(IN) :: iforceh(3,3)
-    REAL(kind=8), INTENT(IN) :: delt
+    REAL(8), INTENT(IN) :: delt
     INTEGER      :: i, j
-    REAL(kind=8) :: dt2
+    REAL(8) :: dt2
     dt2 = delt * delt
     DO j=1,3
       DO i=1,3
@@ -765,14 +765,14 @@
 !------------------------------------------------------------------------------!
 
   SUBROUTINE cell_verlet( hnew, h, hold, delt, iforceh, fcell, frich, tnoseh, hnos )
-    REAL(kind=8), INTENT(OUT) :: hnew(3,3)
-    REAL(kind=8), INTENT(IN) :: h(3,3), hold(3,3), hnos(3,3), fcell(3,3)
+    REAL(8), INTENT(OUT) :: hnew(3,3)
+    REAL(8), INTENT(IN) :: h(3,3), hold(3,3), hnos(3,3), fcell(3,3)
     INTEGER,      INTENT(IN) :: iforceh(3,3)
-    REAL(kind=8), INTENT(IN) :: frich, delt
+    REAL(8), INTENT(IN) :: frich, delt
     LOGICAL,      INTENT(IN) :: tnoseh
 
-    REAL(kind=8) :: htmp(3,3)
-    REAL(kind=8) :: verl1, verl2, verl3, dt2, ftmp
+    REAL(8) :: htmp(3,3)
+    REAL(8) :: verl1, verl2, verl3, dt2, ftmp
     INTEGER      :: i, j
   
     dt2 = delt * delt
@@ -802,11 +802,11 @@
 !------------------------------------------------------------------------------!
 
   subroutine cell_hmove( h, hold, delt, iforceh, fcell )
-    real(kind=8), intent(out) :: h(3,3)
-    real(kind=8), intent(in) :: hold(3,3), fcell(3,3)
-    real(kind=8), intent(in) :: delt
+    real(8), intent(out) :: h(3,3)
+    real(8), intent(in) :: hold(3,3), fcell(3,3)
+    real(8), intent(in) :: delt
     integer, intent(in) :: iforceh(3,3)
-    real(kind=8) :: dt2by2, fac
+    real(8) :: dt2by2, fac
     integer :: i, j
     dt2by2 = .5d0 * delt * delt
     fac = dt2by2
@@ -821,9 +821,9 @@
 !------------------------------------------------------------------------------!
 
   subroutine cell_force( fcell, ainv, stress, omega, press, wmass )
-    real(kind=8), intent(out) :: fcell(3,3)
-    real(kind=8), intent(in) :: stress(3,3), ainv(3,3)
-    real(kind=8), intent(in) :: omega, press, wmass
+    real(8), intent(out) :: fcell(3,3)
+    real(8), intent(in) :: stress(3,3), ainv(3,3)
+    real(8), intent(in) :: omega, press, wmass
     integer      :: i, j
     do j=1,3
       do i=1,3
@@ -842,14 +842,14 @@
 !------------------------------------------------------------------------------!
 
   subroutine cell_move( hnew, h, hold, delt, iforceh, fcell, frich, tnoseh, vnhh, velh, tsdc )
-    real(kind=8), intent(out) :: hnew(3,3)
-    real(kind=8), intent(in) :: h(3,3), hold(3,3), fcell(3,3)
-    real(kind=8), intent(in) :: vnhh(3,3), velh(3,3)
+    real(8), intent(out) :: hnew(3,3)
+    real(8), intent(in) :: h(3,3), hold(3,3), fcell(3,3)
+    real(8), intent(in) :: vnhh(3,3), velh(3,3)
     integer,      intent(in) :: iforceh(3,3)
-    real(kind=8), intent(in) :: frich, delt
+    real(8), intent(in) :: frich, delt
     logical,      intent(in) :: tnoseh, tsdc
 
-    real(kind=8) :: hnos(3,3)
+    real(8) :: hnos(3,3)
 
     if( tnoseh ) then
       hnos = vnhh * velh
@@ -870,8 +870,8 @@
 
   subroutine cell_gamma( hgamma, ainv, h, velh )
     implicit none
-    real(kind=8) :: hgamma(3,3)
-    real(kind=8), intent(in) :: ainv(3,3), h(3,3), velh(3,3)
+    real(8) :: hgamma(3,3)
+    real(8), intent(in) :: ainv(3,3), h(3,3), velh(3,3)
     integer :: i,j,k,l,m
          do i=1,3
             do j=1,3
@@ -893,8 +893,8 @@
   subroutine cell_kinene( ekinh, temphh, velh )
     use constants, only: factem
     implicit none
-    real(kind=8), intent(out) :: ekinh, temphh(3,3)
-    real(kind=8), intent(in)  :: velh(3,3)
+    real(8), intent(out) :: ekinh, temphh(3,3)
+    real(8), intent(in)  :: velh(3,3)
     integer :: i,j
     ekinh = 0.0d0
     do j=1,3
@@ -909,7 +909,7 @@
 !------------------------------------------------------------------------------!
 
   function cell_alat( )
-    real(dbl) :: cell_alat
+    real(DP) :: cell_alat
     if( .NOT. tcell_base_init ) &
       call errore( ' cell_alat ', ' alat has not been set ', 1 )
     cell_alat = alat
@@ -926,24 +926,24 @@
   MODULE cell_nose
 !------------------------------------------------------------------------------!
 
-      USE kinds, ONLY : dbl
+      USE kinds, ONLY : DP
 !
       IMPLICIT NONE
       SAVE
 
-      REAL(dbl) :: xnhh0(3,3) = 0.0d0
-      REAL(dbl) :: xnhhm(3,3) = 0.0d0
-      REAL(dbl) :: xnhhp(3,3) = 0.0d0
-      REAL(dbl) :: vnhh(3,3)  = 0.0d0
-      REAL(dbl) :: temph      = 0.0d0  !  Thermostat temperature (from input)
-      REAL(dbl) :: fnoseh     = 0.0d0  !  Thermostat frequency (from input)
-      REAL(dbl) :: qnh        = 0.0d0  !  Thermostat mass (computed)
+      REAL(DP) :: xnhh0(3,3) = 0.0d0
+      REAL(DP) :: xnhhm(3,3) = 0.0d0
+      REAL(DP) :: xnhhp(3,3) = 0.0d0
+      REAL(DP) :: vnhh(3,3)  = 0.0d0
+      REAL(DP) :: temph      = 0.0d0  !  Thermostat temperature (from input)
+      REAL(DP) :: fnoseh     = 0.0d0  !  Thermostat frequency (from input)
+      REAL(DP) :: qnh        = 0.0d0  !  Thermostat mass (computed)
 
 CONTAINS
 
   subroutine cell_nose_init( temph_init, fnoseh_init )
      USE constants, ONLY: factem, pi, terahertz
-     REAL(dbl), INTENT(IN) :: temph_init, fnoseh_init
+     REAL(DP), INTENT(IN) :: temph_init, fnoseh_init
      ! set thermostat parameter for cell
      qnh    = 0.0d0
      temph  = temph_init
@@ -953,7 +953,7 @@ CONTAINS
   end subroutine cell_nose_init
 
   subroutine cell_nosezero( vnhh, xnhh0, xnhhm )
-    real(dbl), intent(out) :: vnhh(3,3), xnhh0(3,3), xnhhm(3,3)
+    real(DP), intent(out) :: vnhh(3,3), xnhh0(3,3), xnhhm(3,3)
     xnhh0=0.0d0
     xnhhm=0.0d0
     vnhh =0.0d0
@@ -962,8 +962,8 @@ CONTAINS
 
   subroutine cell_nosevel( vnhh, xnhh0, xnhhm, delt )
     implicit none
-    real(kind=8), intent(inout) :: vnhh(3,3)
-    real(kind=8), intent(in) :: xnhh0(3,3), xnhhm(3,3), delt
+    real(8), intent(inout) :: vnhh(3,3)
+    real(8), intent(in) :: xnhh0(3,3), xnhhm(3,3), delt
     vnhh(:,:)=2.*(xnhh0(:,:)-xnhhm(:,:))/delt-vnhh(:,:)
     return
   end subroutine cell_nosevel
@@ -971,8 +971,8 @@ CONTAINS
   subroutine cell_noseupd( xnhhp, xnhh0, xnhhm, delt, qnh, temphh, temph, vnhh )
     use constants, only: factem
     implicit none
-    real(kind=8), intent(out) :: xnhhp(3,3), vnhh(3,3)
-    real(kind=8), intent(in) :: xnhh0(3,3), xnhhm(3,3), delt, qnh, temphh(3,3), temph
+    real(8), intent(out) :: xnhhp(3,3), vnhh(3,3)
+    real(8), intent(in) :: xnhh0(3,3), xnhhm(3,3), delt, qnh, temphh(3,3), temph
     integer :: i, j
     do j=1,3
       do i=1,3
@@ -984,13 +984,13 @@ CONTAINS
   end subroutine cell_noseupd
 
   
-  real(kind=8) function cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
+  real(8) function cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
     use constants, only: factem
     implicit none
-    real(kind=8) :: qnh, vnhh( 3, 3 ), temph, xnhh0( 3, 3 )
+    real(8) :: qnh, vnhh( 3, 3 ), temph, xnhh0( 3, 3 )
     integer :: iforceh( 3, 3 )
     integer :: i, j
-    real(kind=8) :: enij
+    real(8) :: enij
     cell_nose_nrg = 0.0d0
     do i=1,3
       do j=1,3
@@ -1004,9 +1004,9 @@ CONTAINS
   subroutine cell_nose_shiftvar( xnhhp, xnhh0, xnhhm )
     !  shift values of nose variables to start a new step
     implicit none
-    real(kind=8), intent(out) :: xnhhm(3,3)
-    real(kind=8), intent(inout) :: xnhh0(3,3)
-    real(kind=8), intent(in) :: xnhhp(3,3)
+    real(8), intent(out) :: xnhhm(3,3)
+    real(8), intent(inout) :: xnhh0(3,3)
+    real(8), intent(in) :: xnhhp(3,3)
       xnhhm = xnhh0
       xnhh0 = xnhhp
     return
@@ -1023,7 +1023,7 @@ CONTAINS
       IMPLICIT NONE
 
       INTEGER   :: nsvar, i
-      REAL(dbl) :: wnoseh
+      REAL(DP) :: wnoseh
 
       IF( tnoseh ) THEN
         !

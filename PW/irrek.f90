@@ -28,9 +28,9 @@ subroutine irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, &
   ! inverse of the elements of the symmetry group
   ! partition of the elements of the symmetry group into left cosets,
   ! as given by SUBROUTINE COSET
-  real(kind=DP), intent(inout) :: xk (3, npk), wk (npk)
+  real(DP), intent(inout) :: xk (3, npk), wk (npk)
   ! special points and weights
-  real(kind=DP), intent(in) :: at (3, 3), bg (3, 3)
+  real(DP), intent(in) :: at (3, 3), bg (3, 3)
   ! basis vectors of the Bravais and reciprocal lattice
   logical, intent(in) :: minus_q
   ! .true. if symmetries q = -q+G are acceptable
@@ -40,7 +40,7 @@ subroutine irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, &
   integer :: nks0, jk, kpol, irot, jrot, ncos, jc, ic, isym
   ! nks0: used to save the initial number of k-points
   ! ncos: total number of cosets
-  real(kind=DP) :: xkg (3), xks (3, 48), w (48), sw, one
+  real(DP) :: xkg (3), xks (3, 48), w (48), sw, one
   ! coordinates of the k point in crystal axis
   ! coordinates of the rotated k point
   ! weight of each coset

@@ -25,13 +25,13 @@ program plotrho
        nxmax = 128, nymax = 128, nlevelx = 19, nax = 130
   integer :: ityp (nax), nxi, nyi, nx, ny, i, j, k, nlevels, na, &
        nat, ierr, ilen
-  real(kind=DP) :: rhoi (0:nximax, 0:nyimax), xi (0:nximax), yi (0: &
+  real(DP) :: rhoi (0:nximax, 0:nyimax), xi (0:nximax), yi (0: &
        nyimax), rhoo (0:nxmax, 0:nymax), x (0:nxmax), y (0:nymax), &
        z (0:nlevelx), wrk (nwrk), xmin, xmax, ymin, ymax, rhomin, &
        rhomax, rhoomin, rhoomax
-  real(kind=DP) :: xdim, ydim, xs, ys
-  real(kind=DP) :: r0 (3), tau1 (3), tau2 (3), tau (3, nax)
-  real(kind=DP) :: at (3, 3), a0
+  real(DP) :: xdim, ydim, xs, ys
+  real(DP) :: r0 (3), tau1 (3), tau2 (3), tau (3, nax)
+  real(DP) :: at (3, 3), a0
   character (len=256) :: filename, fileout, ans * 1
   logical :: logarithmic_scale
 
@@ -89,13 +89,13 @@ program plotrho
   xmin = xi (0)
   xmax = xi (nxi)
   do i = 0, nx
-     x (i) = (xi (nxi) - xi (0) ) * dble (i) / dble (nx)
+     x (i) = (xi (nxi) - xi (0) ) * DBLE (i) / DBLE (nx)
   enddo
 
   ymin = yi (0)
   ymax = yi (nyi)
   do i = 0, ny
-     y (i) = (yi (nyi) - yi (0) ) * dble (i) / dble (ny)
+     y (i) = (yi (nyi) - yi (0) ) * DBLE (i) / DBLE (ny)
   enddo
 #ifdef __AIX
   call dcsin2 (xi, yi, rhoi, nxi + 1, nyi + 1, nximax + 1, x, y, nx &
@@ -133,11 +133,11 @@ program plotrho
   if (logarithmic_scale) then
      do k = 0, nlevels - 1
         z (k) = exp (log (rhoomin) + (log (rhoomax) - log (rhoomin) ) &
-             * dble (k) / (nlevels - 1) )
+             * DBLE (k) / (nlevels - 1) )
      enddo
   else
      do k = 0, nlevels - 1
-        z (k) = rhoomin + (rhoomax - rhoomin) * dble (k) / (nlevels - 1)
+        z (k) = rhoomin + (rhoomax - rhoomin) * DBLE (k) / (nlevels - 1)
      enddo
   endif
 
@@ -185,14 +185,14 @@ subroutine cplot (d, imax, jmax, x, xmin, xmax, iub, y, ymin, &
   USE kinds, only: DP
   implicit none
   integer :: imax, jmax, iub, jub, nc
-  real(kind=DP) :: d (0:imax, 0:jmax), x (0:imax), y (0:jmax), z (0:nc)
-  real(kind=DP) :: xmin, xmax, ymin, ymax, xdim, ydim, xs, ys
+  real(DP) :: d (0:imax, 0:jmax), x (0:imax), y (0:jmax), z (0:nc)
+  real(DP) :: xmin, xmax, ymin, ymax, xdim, ydim, xs, ys
 
   character (len=*) :: filename, str
   integer, parameter :: ncmax = 19
   integer :: i, j, k
-  real(kind=DP) :: gray (0:ncmax), dim
-  real(kind=DP) :: cm = 28.453, width=0.5, gray0=1.0, deltagray=0.7
+  real(DP) :: gray (0:ncmax), dim
+  real(DP) :: cm = 28.453, width=0.5, gray0=1.0, deltagray=0.7
   !  cm   : number of points per cm
   !  width: linewidth of the contour plot for PostScript printer
 
@@ -252,10 +252,10 @@ subroutine cplot (d, imax, jmax, x, xmin, xmax, iub, y, ymin, &
 
   call hatch (0.d0, xdim, 0.d0, ydim)
   do i = 0, iub
-     x (i) = xdim * dble (i) / iub
+     x (i) = xdim * DBLE (i) / iub
   enddo
   do j = 0, jub
-     y (j) = ydim * dble (j) / jub
+     y (j) = ydim * DBLE (j) / jub
   enddo
 
   call conrec (imax, iub, jmax, jub, x, y, d, nc, z)
@@ -281,12 +281,12 @@ subroutine conrec (imax, iub, jmax, jub, x, y, d, nc, z)
   implicit none
   integer :: imax, iub, jmax, jub, nc
 
-  real(kind=DP) :: d (0:imax, 0:jmax), x (0:imax), y (0:jmax), z (0:nc)
+  real(DP) :: d (0:imax, 0:jmax), x (0:imax), y (0:jmax), z (0:nc)
   integer, parameter :: ncmax = 19
   character (len=4) :: triangle (0:ncmax), trapez (0:ncmax)
-  real(kind=DP) :: h (0:4), xh (0:4), yh (0:4)
-  real(kind=DP) :: x1, y1, x2, y2, x3, y3, x4, y4, dx, dy, xx, yy, dmin, dmax
-  real(kind=DP) :: cm = 28.453
+  real(DP) :: h (0:4), xh (0:4), yh (0:4)
+  real(DP) :: x1, y1, x2, y2, x3, y3, x4, y4, dx, dy, xx, yy, dmin, dmax
+  real(DP) :: cm = 28.453
   !   cm : conversion factor from cm to points for PostScript
   integer :: ish (0:4), im (0:3), jm (0:3), castab (0:2, 0:2, 0:2)
   integer :: i, j, k, m, m1, m2, m3, npoint, icase, levelin, nolevel
@@ -574,11 +574,11 @@ subroutine atomi (nat, tau, ityp, at, a0, r0, tau1, tau2, xdim, ydim)
   USE kinds, only: DP
   implicit none
   integer :: nat, ityp (nat)
-  real(kind=DP) :: tau (3, nat), at (3, 3), r0 (3), tau1 (3), tau2 (3), a0
-  real(kind=DP) :: xdim, ydim
+  real(DP) :: tau (3, nat), at (3, 3), r0 (3), tau1 (3), tau2 (3), a0
+  real(DP) :: xdim, ydim
   integer :: n1, n2, n3, i, n
-  real(kind=DP) :: r (3), ri (3), tau1n, tau2n, delta0, r1, r2, r3
-  real(kind=DP) :: delta = 1.0, cm = 28.453
+  real(DP) :: r (3), ri (3), tau1n, tau2n, delta0, r1, r2, r3
+  real(DP) :: delta = 1.0, cm = 28.453
   !
   delta0 = delta / a0
   tau1n = sqrt (tau1 (1) **2 + tau1 (2) **2 + tau1 (3) **2)
@@ -643,8 +643,8 @@ end subroutine atomi
 subroutine hatch (x1, x2, y1, y2)
   USE kinds, only: DP
   implicit none
-  real(kind=DP) :: x1, x2, y1, y2
-  real(kind=DP) :: cm =  28.453, delta = 0.2, dim
+  real(DP) :: x1, x2, y1, y2
+  real(DP) :: cm =  28.453, delta = 0.2, dim
   integer :: nhach, n
 
   write (1, '(a)') '% Beginning of hatching'
@@ -690,13 +690,13 @@ subroutine psplot ( d, imax, x, iub, y, jub, nlevels, z, &
   implicit none
   integer, parameter :: ncontourmax=100, npointmax=500, nmaxtypes=8
   integer :: imax, iub, jub, nlevels
-  real(kind=DP) :: d(0:imax,0:jub), x(0:imax), y(0:jub), z(0:nlevels), &
+  real(DP) :: d(0:imax,0:jub), x(0:imax), y(0:jub), z(0:nlevels), &
        xdim, ydim, xs, ys
   !
-  real(kind=DP) :: line(2,npointmax,ncontourmax), work(2,npointmax), &
+  real(DP) :: line(2,npointmax,ncontourmax), work(2,npointmax), &
        segments(2,2,npointmax*ncontourmax), yy, dy
   integer :: npoints(ncontourmax), ncontours, i, j, k, l, npts
-  real(kind=DP), parameter :: cm = 28.453
+  real(DP), parameter :: cm = 28.453
   logical ::  lwork(npointmax*ncontourmax)
   character (len=256) :: filename, linetype(nmaxtypes)
   data linetype &
@@ -742,10 +742,10 @@ subroutine psplot ( d, imax, x, iub, y, jub, nlevels, z, &
        xdim/2, ydim+1.5
   !
   do i=0,iub
-     x(i)=xdim*dble(i)/iub
+     x(i)=xdim*DBLE(i)/iub
   end do
   do j=0,jub
-     y(j)=ydim*dble(j)/jub
+     y(j)=ydim*DBLE(j)/jub
   end do
 
   do k=1,nlevels-1
@@ -799,13 +799,13 @@ subroutine findcontours (d, imax, iub, jub, x, y, z, segments, work, &
   implicit none
   integer :: imax, iub, jub, npointmax, ncontourmax,  ncontours, &
        npoints(ncontourmax)
-  real(kind=DP) :: d(0:imax,0:jub),x(0:iub), y(0:jub), z, &
+  real(DP) :: d(0:imax,0:jub),x(0:iub), y(0:jub), z, &
        line(2,npointmax,ncontourmax), segments(2,2,npointmax*ncontourmax)
  logical :: done(npointmax*ncontourmax)
   !
   integer :: i, j, m, i0, j0, m0, nsegments, nsegmax, nseg, nnext, npts, &
        isame, inext, nleft
-  real(kind=DP) :: epsx, epsy, work(2,npointmax)
+  real(DP) :: epsx, epsy, work(2,npointmax)
   logical :: found, start_from_boundary, hit_boundary, loop_closed
 
   nsegmax=npointmax*ncontourmax
@@ -934,10 +934,10 @@ subroutine triangle ( d, x, y, z, imax, iub, jub, i0, j0, m0, found, line )
   USE kinds, only : DP
   implicit none
   integer :: imax, iub, jub, i0, j0, m0
-  real(kind=DP) :: d(0:imax,0:jub), x(0:iub), y(0:jub), z, line(2,2)
+  real(DP) :: d(0:imax,0:jub), x(0:iub), y(0:jub), z, line(2,2)
   logical :: found
   !
-  real(kind=DP) :: h(0:4), xh(0:4), yh(0:4), dmin, dmax
+  real(DP) :: h(0:4), xh(0:4), yh(0:4), dmin, dmax
   integer :: m, icase, m1, m2, m3, i, j, k, ish(0:4), castab(-1:1,-1:1,-1:1)
   data (((castab(i,j,k),k=-1,1),j=-1,1),i=-1,1) / &
        0 , 0 , 8 , 0 , 2 , 5 , 7 , 6 , 9 , 0 , 3 , 4 , &

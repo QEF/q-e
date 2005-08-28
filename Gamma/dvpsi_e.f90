@@ -25,10 +25,10 @@ subroutine dvpsi_e(kpoint,ipol)
   implicit none
   integer :: kpoint, ipol
   integer :: i,l, na,nt, ibnd,jbnd, info, ih,jkb, iter
-  real(kind=DP) :: upol(3,3)
-  real(kind=DP), allocatable :: gk(:,:), q(:), overlap(:,:), &
+  real(DP) :: upol(3,3)
+  real(DP), allocatable :: gk(:,:), q(:), overlap(:,:), &
        becp_(:,:), dbec(:,:), dbec_(:,:)
-  complex(kind=DP), allocatable :: dvkb(:,:), dvkb1(:,:), work(:,:), &
+  complex(DP), allocatable :: dvkb(:,:), dvkb1(:,:), work(:,:), &
        &           gr(:,:), h(:,:)
   logical:: precondition, orthonormal,startwith0
   external H_h

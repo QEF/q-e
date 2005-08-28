@@ -19,8 +19,8 @@ subroutine kbloch(ntot, val)
   integer ::    &
          ntot,  &  ! number of Bloch states
          in
-  real(kind=DP) :: rho, g1, g2, k1, k2
-  complex(kind=DP) ::  &
+  real(DP) :: rho, g1, g2, k1, k2
+  complex(DP) ::  &
          val(ntot) ! complex k values
 
   do in=1, ntot

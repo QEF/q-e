@@ -30,16 +30,16 @@ subroutine rotate_wfc_nc &
   logical :: overlap
   ! if .false. : S|psi> not needed
 
-  complex(kind=DP) :: psi (npwx, npol, nstart), evc (npwx, npol, nbnd),ZDOTC
+  complex(DP) :: psi (npwx, npol, nstart), evc (npwx, npol, nbnd),ZDOTC
   ! input and output eigenvectors (may overlap)
 
-  real(kind=DP) :: e (nbnd)
+  real(DP) :: e (nbnd)
   ! eigenvalues
 
   ! auxiliary variables:
-  complex(kind=DP), allocatable :: hpsi (:,:,:), spsi (:,:,:), &
+  complex(DP), allocatable :: hpsi (:,:,:), spsi (:,:,:), &
        hc (:,:), sc (:,:), vc (:,:) 
-  real(kind=DP), allocatable :: en (:)
+  real(DP), allocatable :: en (:)
   external ZDOTC
   !
   !

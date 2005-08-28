@@ -21,10 +21,10 @@ SUBROUTINE d3_init
   IMPLICIT NONE
 
   INTEGER :: nt, irr, irr1, ipert, imode0, errcode
-  REAL (kind = dp) :: work (3)
+  REAL (DP) :: work (3)
 
-  COMPLEX (kind = dp), ALLOCATABLE :: drhoscf (:,:)
-  COMPLEX (kind = dp), ALLOCATABLE :: drhoscf2 (:,:,:)
+  COMPLEX (DP), ALLOCATABLE :: drhoscf (:,:)
+  COMPLEX (DP), ALLOCATABLE :: drhoscf2 (:,:,:)
 
   ALLOCATE (drhoscf( nrxx, 3))    
 

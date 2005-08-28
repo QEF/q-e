@@ -31,7 +31,7 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
     ! input: dimension of psi
     ! input: first vector to orthogonalize
     ! input: last vector to orthogonalize
-  COMPLEX(KIND=DP) :: psi(lda,nvecx), spsi(lda,nvecx), hpsi(lda,nvecx)
+  COMPLEX(DP) :: psi(lda,nvecx), spsi(lda,nvecx), hpsi(lda,nvecx)
     ! input/output: the vectors to be orthogonalized
   !
   ! ... parameters
@@ -45,9 +45,9 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
     ! counter on vectors
     ! counter on vectors
     ! counter on errors
-  REAL(KIND=DP) :: psi_norm
+  REAL(DP) :: psi_norm
     ! the norm of a vector
-  REAL(KIND=DP), EXTERNAL :: DDOT
+  REAL(DP), EXTERNAL :: DDOT
     ! function computing the dot product of two vectros
   !
   !
@@ -77,7 +77,7 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
        !
        IMPLICIT NONE
        !
-       REAL (KIND=DP), ALLOCATABLE :: ps(:)
+       REAL (DP), ALLOCATABLE :: ps(:)
          ! the scalar products
        !
        !
@@ -158,9 +158,9 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
        !
        IMPLICIT NONE
        !
-       COMPLEX(KIND=DP), ALLOCATABLE :: ps(:)
+       COMPLEX(DP), ALLOCATABLE :: ps(:)
          ! the scalar products
-       COMPLEX(KIND=DP) ::  ZDOTC
+       COMPLEX(DP) ::  ZDOTC
          ! function which computes scalar products
        !
        !

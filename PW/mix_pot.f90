@@ -37,7 +37,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !
   character (len=256) :: file_extension
   integer :: ndim, iter, n_iter
-  real(kind=DP) :: vout (ndim), vin (ndim), alphamix, dr2, tr2
+  real(DP) :: vout (ndim), vin (ndim), alphamix, dr2, tr2
   logical :: conv
   !
   !   Here the local variables
@@ -50,15 +50,15 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
        ipos, inext, ndimtot
   ! work space containing info from previous iterations:
   ! must be kept in memory and saved between calls if file_extension=' '
-  real(kind=DP), allocatable, save :: df (:,:), dv (:,:)
+  real(DP), allocatable, save :: df (:,:), dv (:,:)
   !
-  real(kind=DP), allocatable :: vinsave (:)
-  real(kind=DP) :: beta (maxter, maxter), gamma, work (maxter), norm
+  real(DP), allocatable :: vinsave (:)
+  real(DP) :: beta (maxter, maxter), gamma, work (maxter), norm
   logical :: saveonfile, opnd, exst
-  real(kind=DP) :: DDOT, DNRM2
+  real(DP) :: DDOT, DNRM2
   external DDOT, DNRM2
   ! adjustable parameters as suggested in the original paper
-  real(kind=DP) w (maxter), w0
+  real(DP) w (maxter), w0
   data w0 / 0.01d0 /, w / maxter * 1.d0 /
   !
   !

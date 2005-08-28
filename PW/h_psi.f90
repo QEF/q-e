@@ -41,8 +41,8 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   ! ... input/output arguments
   !
   INTEGER          :: lda, n, m
-  COMPLEX(KIND=DP) :: psi(lda,m) 
-  COMPLEX(KIND=DP) :: hpsi(lda,m)   
+  COMPLEX(DP) :: psi(lda,m) 
+  COMPLEX(DP) :: hpsi(lda,m)   
   !
   !
   CALL start_clock( 'h_psi' )

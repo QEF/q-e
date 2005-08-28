@@ -81,10 +81,10 @@ SUBROUTINE compute_casino
        nk, ngtot, ig7, ikk, nt, ijkb0, ikb, ih, jh, jkb 
   INTEGER, ALLOCATABLE :: INDEX(:), igtog(:)
   LOGICAL :: exst, found
-  REAL(kind=DP) :: ek, eloc, enl, charge, etotefield
-  COMPLEX(kind=DP), ALLOCATABLE :: aux(:), hpsi(:,:)
+  REAL(DP) :: ek, eloc, enl, charge, etotefield
+  COMPLEX(DP), ALLOCATABLE :: aux(:), hpsi(:,:)
   INTEGER :: ios
-  REAL (KIND=DP), EXTERNAL :: ewald
+  REAL (DP), EXTERNAL :: ewald
 
   CALL init_us_1
   CALL newd

@@ -27,7 +27,7 @@ subroutine sym_and_write_zue
   ! counter on atoms and modes
   ! counter on modes
 
-  real(kind=DP) :: work (3, 3, nat)
+  real(DP) :: work (3, 3, nat)
   ! auxiliary space (note the order of indices)
   !
 #ifdef __PARA

@@ -35,20 +35,20 @@ program chdens
   integer :: ounit, iflag, ios, ipol, nfile, ifile, nx, ny, nz, &
        na, ir, i, j, ig, output_format, plot_num
 
-  real(kind=DP) :: e1(3), e2(3), e3(3), x0 (3), radius, m1, m2, m3, &
+  real(DP) :: e1(3), e2(3), e3(3), x0 (3), radius, m1, m2, m3, &
        weight (nfilemax), epsilon
 
   character (len=256) :: fileout, filepol, filename (nfilemax)
 
-  real(kind=DP) :: celldms (6), gcutmsa, duals, ecuts, zvs(ntypx), ats(3,3)
-  real(kind=DP), allocatable :: taus (:,:), rhor(:)
+  real(DP) :: celldms (6), gcutmsa, duals, ecuts, zvs(ntypx), ats(3,3)
+  real(DP), allocatable :: taus (:,:), rhor(:)
   integer :: ibravs, nrx1sa, nrx2sa, nrx3sa, nr1sa, nr2sa, nr3sa, &
        ntyps, nats
   integer, allocatable :: ityps (:)
   character (len=3) :: atms(ntypx)
   character (len=256) :: filepp(nfilemax)
-  real(kind=DP) :: rhodum, rhotot
-  complex(kind=DP), allocatable:: rhog (:)
+  real(DP) :: rhodum, rhotot
+  complex(DP), allocatable:: rhog (:)
   ! rho or polarization in G space
   logical :: fast3d
 
@@ -377,17 +377,17 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   ! type of plot
   ! output unit
 
-  real(kind=DP) :: e (3), x0 (3), m1, alat, g (3, ngm)
+  real(DP) :: e (3), x0 (3), m1, alat, g (3, ngm)
   ! vector defining the line
   ! origin of the line
   ! modulus of e
   ! lattice parameter
   ! G-vectors
 
-  complex(kind=DP) :: rhog (ngm)
+  complex(DP) :: rhog (ngm)
   ! rho or polarization in G space
   integer :: i, ig
-  real(kind=DP) :: rhomin, rhomax, rhoint, rhoim, xi, yi, zi, deltax, arg, gr
+  real(DP) :: rhomin, rhomax, rhoint, rhoim, xi, yi, zi, deltax, arg, gr
   ! minimum value of the charge
   ! maximum value of the charge
   ! integrated charge
@@ -397,7 +397,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   ! the argument of the exponential
   ! |G|*|r|
 
-  complex(kind=DP) :: rho0g, carica (nx)
+  complex(DP) :: rho0g, carica (nx)
 
   deltax = m1 / (nx - 1)
   carica(:) = (0.d0,0.d0)
@@ -464,7 +464,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   !
   if (iflag == 1) then
      do i = 1, nx
-        write (ounit, '(2f20.10)') deltax*dble(i-1), DBLE(carica(i))
+        write (ounit, '(2f20.10)') deltax*DBLE(i-1), DBLE(carica(i))
      enddo
   else
      rhoint = 0.d0
@@ -473,7 +473,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
         !       simple trapezoidal rule: rhoint=int carica(i) r^2(i) dr
         !
         rhoint = rhoint + DBLE(carica(i)) * (i-1)**2 * (deltax*alat)**3 
-        write (ounit, '(3f20.10)') deltax*dble(i-1), DBLE(carica(i)), rhoint
+        write (ounit, '(3f20.10)') deltax*DBLE(i-1), DBLE(carica(i)), rhoint
      enddo
 
   endif
@@ -499,7 +499,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
   ! output unit
   ! output format
   character(len=3) :: atm(*) ! atomic symbols
-  real(kind=DP) :: e1(3), e2(3), x0(3), m1, m2, g(3,ngm), alat, &
+  real(DP) :: e1(3), e2(3), x0(3), m1, m2, g(3,ngm), alat, &
        tau(3,nat), at(3,3)
   ! vectors e1, e2 defining the plane
   ! origin
@@ -507,17 +507,17 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
   ! modulus of e2
   ! G-vectors
 
-  complex(kind=DP) :: rhog (ngm)
+  complex(DP) :: rhog (ngm)
   ! rho or polarization in G space
   integer :: i, j, ig
 
-  real(kind=DP) :: rhomin, rhomax, rhoim, deltax, deltay
+  real(DP) :: rhomin, rhomax, rhoim, deltax, deltay
   ! minimum value of the charge
   ! maximum value of the charge
   ! integrated imaginary charge
   ! steps along e1
   ! steps along e2
-  complex(kind=DP), allocatable :: eigx (:), eigy (:), carica(:,:)
+  complex(DP), allocatable :: eigx (:), eigy (:), carica(:,:)
 
   allocate (eigx(  nx))    
   allocate (eigy(  ny))    
@@ -626,16 +626,16 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, rhog, output_format, ounit)
   ! number of G vectors
   ! output unit
 
-  real(kind=DP) :: x0, g (3, ngm)
+  real(DP) :: x0, g (3, ngm)
   ! radius of the sphere
   ! G-vectors
 
-  complex(kind=DP) :: rhog (ngm)
+  complex(DP) :: rhog (ngm)
   ! rho or polarization in G space
   integer :: i, j, ig
 
-  real(kind=DP), allocatable :: r (:,:,:)
-  real(kind=DP) :: theta, phi, rhomin, rhomax, rhoim, deltax, deltay
+  real(DP), allocatable :: r (:,:,:)
+  real(DP) :: theta, phi, rhomin, rhomax, rhoim, deltax, deltay
   ! the point in space
   ! the position on the sphere
   ! minimum value of the charge
@@ -643,8 +643,8 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, rhog, output_format, ounit)
   ! integrated imaginary charge
   ! steps along e1
   ! steps along e2
-  complex(kind=DP), allocatable :: carica (:,:)
-  complex(kind=DP) :: eig
+  complex(DP), allocatable :: carica (:,:)
+  complex(DP) :: eig
 
   allocate (carica( nx , ny))    
   allocate (r (3, nx , ny))    
@@ -739,7 +739,7 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
   ! output unit
   character(len=3) :: atm(*)
 
-  real(kind=DP) :: alat, tau(3,nat), at(3,3), g(3,ngm), x0(3), &
+  real(DP) :: alat, tau(3,nat), at(3,3), g(3,ngm), x0(3), &
                    e1(3), e2(3), e3(3), m1, m2, m3
   ! lattice parameter
   ! atomic positions
@@ -749,16 +749,16 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
   ! vectors e1,e2,e3 defining the parallelepiped
   ! moduli of e1,e2,e3
 
-  complex(kind=DP) :: rhog (ngm)
+  complex(DP) :: rhog (ngm)
   ! rho or polarization in G space
   integer :: i, j, k, ig
 
-  real(kind=DP) :: rhomin, rhomax, rhotot, rhoabs, deltax, deltay, deltaz
+  real(DP) :: rhomin, rhomax, rhotot, rhoabs, deltax, deltay, deltaz
   ! min, max value of the charge, total charge, total absolute charge
   ! steps along e1, e2, e3
-  complex(kind=DP), allocatable :: eigx (:), eigy (:), eigz (:)
-  real(kind=DP), allocatable :: carica (:,:,:)
-  real(kind=dp) :: omega
+  complex(DP), allocatable :: eigx (:), eigy (:), eigz (:)
+  real(DP), allocatable :: carica (:,:,:)
+  real(DP) :: omega
   integer :: ipol, na
 
   allocate (eigx(  nx))    
@@ -852,14 +852,14 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
        output_format, ounit
   character(len=3) :: atm(*)
 
-  real(kind=DP) :: alat, tau (3, nat), at (3, 3), rho(nrx1,nrx2,nrx3), &
+  real(DP) :: alat, tau (3, nat), at (3, 3), rho(nrx1,nrx2,nrx3), &
        bg (3, 3), e1(3), e2(3), e3(3), x0 (3), m1, m2, m3
 
   integer :: nx, ny, nz, nx0, ny0, nz0, nx1, ny1, nz1, i, j, k, i1, j1, k1
-  real(kind=DP) :: rhomin, rhomax, rhotot, rhoabs
-  real(kind=DP), allocatable :: carica (:,:,:)
-  real(kind=DP) :: deltax, deltay, deltaz
-  real(kind=dp) :: omega
+  real(DP) :: rhomin, rhomax, rhotot, rhoabs
+  real(DP), allocatable :: carica (:,:,:)
+  real(DP) :: deltax, deltay, deltaz
+  real(DP) :: omega
   integer :: ipol, na
 
   ! find FFT grid point closer to X0 (origin of the parallelepiped)
@@ -964,7 +964,7 @@ subroutine write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
   USE kinds, only : DP
   implicit none
   integer :: nat, ityp (nat), nx, ny, nz, ounit
-  real(kind=DP) :: alat, tau (3, nat), at (3, 3), rhomax, x0 (3), &
+  real(DP) :: alat, tau (3, nat), at (3, 3), rhomax, x0 (3), &
        m1, m2, m3, carica (nx, ny, nz)
   character(len=3) :: atm(*)
   !
@@ -973,8 +973,8 @@ subroutine write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
   integer :: natoms
   character(len=2) type (MAXATOMS)
   integer :: n1, n2, n3, na, i
-  real(kind=DP) :: atoms (3, MAXATOMS), r (3), x, y, z
-  real(kind=DP) :: sidex, sidey, sidez
+  real(DP) :: atoms (3, MAXATOMS), r (3), x, y, z
+  real(DP) :: sidex, sidey, sidez
   !
   !   sides of the parallelepiped in A
   !

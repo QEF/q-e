@@ -58,7 +58,7 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   ! input: main switch of the program; used whe
   !        xq<>0 to restrict the small group of
 
-  real(kind=DP) :: at (3, 3), bg (3, 3), tau (3, nat), xk (3, npk), &
+  real(DP) :: at (3, 3), bg (3, 3), tau (3, nat), xk (3, npk), &
        wk (npk), xq (3), m_loc(3,nat)
   ! input: direct lattice vectors
   ! input: reciprocal lattice vectors
@@ -77,7 +77,7 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   !    And then the local variables
   !
 
-  real(kind=DP), allocatable :: rtau (:,:,:)
+  real(DP), allocatable :: rtau (:,:,:)
   ! direct translations of each point
   integer :: table (48, 48), irot, jrot, ipol, jpol, invs (3, 3, 48) &
        , irg (48), temp, na

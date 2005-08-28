@@ -286,13 +286,13 @@
 
       USE kinds
       IMPLICIT NONE
-      REAL(dbl) miller2gsq
+      REAL(DP) miller2gsq
 !  declare subroutine arguments
       INTEGER i,j,k
-      REAL(dbl) b1(3), b2(3), b3(3)
+      REAL(DP) b1(3), b2(3), b3(3)
 
 !  declare other variables
-      REAL(dbl) gsq
+      REAL(DP) gsq
 
 !  end of declarations
 !  ----------------------------------------------

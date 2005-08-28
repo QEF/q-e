@@ -19,8 +19,8 @@ subroutine remove_atomic_rho
   integer :: ir
   ! do-loop variable on FFT grid
 
-  real(kind=DP), allocatable :: work (:)
-  real(kind=DP)          :: charge
+  real(DP), allocatable :: work (:)
+  real(DP)          :: charge
   ! workspace, is the difference between t
   ! charge density and the atomic one at t
   ! charge

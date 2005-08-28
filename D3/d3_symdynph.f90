@@ -32,13 +32,13 @@ subroutine d3_symdynph (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   ! input: the inverse of each matrix
   ! input: the order of the small gro
   ! input: the rotation sending q ->
-  real (kind = dp) :: xq (3), rtau (3, 48, nat)
+  real (DP) :: xq (3), rtau (3, 48, nat)
   ! input: the q point
   ! input: the R associated at each t
 
   logical :: minus_q
   ! input: true if a symmetry q->-q+G
-  complex (kind = dp) :: phi (3, 3, 3, nat, nat, nat)
+  complex (DP) :: phi (3, 3, 3, nat, nat, nat)
   ! inp/out: the matrix to symmetrize
   !
   !   local variables
@@ -49,12 +49,12 @@ subroutine d3_symdynph (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   integer, allocatable:: iflb (:,:,:)
   ! used to account for symmetrized elements
 
-  real (kind = dp) :: arg
+  real (DP) :: arg
   ! the argument of the phase
 
-  complex (kind = dp), allocatable :: phip (:,:,:,:,:,:)
+  complex (DP), allocatable :: phip (:,:,:,:,:,:)
   ! work space
-  complex (kind = dp) :: work (3, 3, 3), fase, faseq (48)
+  complex (DP) :: work (3, 3, 3), fase, faseq (48)
   ! the phase factor
   ! the phases for each symmetry
 

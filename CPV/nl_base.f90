@@ -12,7 +12,7 @@
  MODULE nl_base
 !----------------------------------
 
-   USE kinds, ONLY : dbl
+   USE kinds, ONLY : DP
 
    IMPLICIT NONE
    SAVE
@@ -26,7 +26,7 @@
 !----------------------------------
 
 
-   REAL(dbl) FUNCTION ene_nl(fnl, wsg, fi, nspnl, na)
+   REAL(DP) FUNCTION ene_nl(fnl, wsg, fi, nspnl, na)
 
       !  this function computes and returns the nonlocal contribution to total
       !  energy, for both Gamma point and Kpoints calculations
@@ -46,13 +46,13 @@
       USE control_flags,    ONLY: gamma_only
 
       TYPE (projector), INTENT(IN) :: fnl
-      REAL(dbl),        INTENT(IN) :: wsg(:,:), fi(:)
+      REAL(DP),        INTENT(IN) :: wsg(:,:), fi(:)
       INTEGER,          INTENT(IN) :: nspnl
       INTEGER,          INTENT(IN) :: na(:)
 
       INTEGER   :: igh, isa, is, ia, ib, nb, ngh
-      REAL(dbl) :: enl, fsum
-      COMPLEX(dbl) :: tt
+      REAL(DP) :: enl, fsum
+      COMPLEX(DP) :: tt
 
 
       IF( gamma_only ) THEN
@@ -109,7 +109,7 @@
       !     input : beta(ig,l,is), eigr, c
       !     output: becp as parameter
       !
-      USE kinds,      ONLY : dbl, dp
+      USE kinds,      ONLY : DP, dp
       USE mp,         ONLY : mp_sum
       USE mp_global,  ONLY : nproc
       USE ions_base,  only : na, nax, nat
@@ -123,13 +123,13 @@
       implicit none
 
       integer,   intent(in)  :: n, nspmn, nspmx
-      real(dbl), intent(in)  :: eigr( 2, ngw, nat ), c( 2, ngw, n )
-      real(dbl), intent(out) :: becp( nkb, n )
+      real(DP), intent(in)  :: eigr( 2, ngw, nat ), c( 2, ngw, n )
+      real(DP), intent(out) :: becp( nkb, n )
       !
-      complex(dbl), allocatable :: wrk2(:,:)
+      complex(DP), allocatable :: wrk2(:,:)
 !
       integer    :: isa, ig, is, iv, ia, l, ixr, ixi, inl, i
-      real(dbl)  :: signre, signim, arg
+      real(DP)  :: signre, signim, arg
 !
       call start_clock( 'nlsm1' )
 
@@ -227,7 +227,7 @@
       !     output: becdr
       !
  
-      USE kinds,      ONLY : dbl, dp
+      USE kinds,      ONLY : DP, dp
       use ions_base,  only : nax, nsp, na, nat
       use uspp,       only : nhtol, beta  !, nkb
       use cvan,       only : ish
@@ -241,15 +241,15 @@
       implicit none
     
       integer,   intent(in)  :: ngw, nkb, n
-      real(dbl), intent(in)  :: eigr(2,ngw,nat), c(2,ngw,n)
-      real(dbl), intent(out) :: becdr(nkb,n,3)
+      real(DP), intent(in)  :: eigr(2,ngw,nat), c(2,ngw,n)
+      real(DP), intent(out) :: becdr(nkb,n,3)
       logical,   intent(in)  :: tred
       !
-      real(dbl),    allocatable :: gk(:)
-      complex(dbl), allocatable :: wrk2(:,:)
+      real(DP),    allocatable :: gk(:)
+      complex(DP), allocatable :: wrk2(:,:)
       !
       integer   :: ig, is, iv, ia, k, l, ixr, ixi, inl, isa
-      real(dbl) :: signre, signim, arg
+      real(DP) :: signre, signim, arg
 !
       call start_clock( 'nlsm2' )
 
@@ -328,12 +328,12 @@
 
 
 !-----------------------------------------------------------------------
-   real(kind=8) function ennl( rhovan, bec )
+   real(8) function ennl( rhovan, bec )
 !-----------------------------------------------------------------------
       !
       ! calculation of nonlocal potential energy term
       !
-      use kinds,          only : dbl
+      use kinds,          only : DP
       use cvan,           only : ish
       use uspp_param,     only : nhm, nh
       use uspp,           only : nkb, dvan
@@ -344,12 +344,12 @@
       !
       ! input
       !
-      real(dbl) :: bec( nkb, n )
-      real(dbl) :: rhovan( nhm*(nhm+1)/2, nat, nspin )
+      real(DP) :: bec( nkb, n )
+      real(DP) :: rhovan( nhm*(nhm+1)/2, nat, nspin )
       !
       ! local
       !
-      real(dbl) :: sum, sums(2)
+      real(DP) :: sum, sums(2)
       integer   :: is, iv, jv, ijv, inl, jnl, isa, ism, ia, iss, i
       !
       ennl = 0.d0
@@ -395,7 +395,7 @@
       !
       !     contribution to fion due to nonlocal part
       !
-      use kinds,          only : dbl
+      use kinds,          only : DP
       use uspp,           only : nkb, dvan, deeq
       use uspp_param,     only : nhm, nh
       use cvan,           only : ish, nvb
@@ -405,12 +405,12 @@
 !
       implicit none
 
-      real(dbl), intent(in)  :: bec( nkb, n ), becdr( nkb, n, 3 )
-      real(dbl), intent(out) :: fion( 3, nat )
+      real(DP), intent(in)  :: bec( nkb, n ), becdr( nkb, n, 3 )
+      real(DP), intent(out) :: fion( 3, nat )
 !
       integer   :: k, is, ia, isa, iss, inl, iv, jv, i
-      real(dbl) :: temp
-      real(dbl) :: tmpbec(nhm,n), tmpdr(nhm,n) ! automatic arrays
+      real(DP) :: temp
+      real(DP) :: tmpbec(nhm,n), tmpdr(nhm,n) ! automatic arrays
 
       do k = 1, 3
          !
@@ -473,7 +473,7 @@
       !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
       !
       
-      USE kinds,          ONLY : dbl
+      USE kinds,          ONLY : DP
       use ions_base,      only : na, nat
       use io_global,      only : stdout
       use cvan,           only : ish
@@ -486,8 +486,8 @@
       implicit none
       !
       integer,      intent(in)  :: nspmn, nspmx
-      real(dbl),    intent(out) :: bec( nkb, n )
-      complex(dbl), intent(in)  :: c( ngw, n ), eigr( ngw,nat )
+      real(DP),    intent(out) :: bec( nkb, n )
+      complex(DP), intent(in)  :: c( ngw, n ), eigr( ngw,nat )
 
       ! local variables
 
@@ -533,7 +533,7 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
   !
   !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
   !
-  USE kinds,      ONLY : dbl, dp
+  USE kinds,      ONLY : DP, dp
   use mp,         only : mp_sum
   use mp_global,  only : nproc
   use ions_base,  only : na, nax, nat
@@ -547,15 +547,15 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
   !
   integer,      intent(in)  :: ngw, nkb, n
   integer,      intent(in)  :: nspmn, nspmx
-  complex(dbl), intent(in)  :: c(ngw,n)
-  real(dbl),    intent(in)  :: eigr(2,ngw,nat)
-  real(dbl),    intent(out) :: dbec( nkb, n, 3, 3 )
+  complex(DP), intent(in)  :: c(ngw,n)
+  real(DP),    intent(in)  :: eigr(2,ngw,nat)
+  real(DP),    intent(out) :: dbec( nkb, n, 3, 3 )
   logical,      intent(in)  :: tred
   !
-  complex(dbl), allocatable :: wrk2(:,:)
+  complex(DP), allocatable :: wrk2(:,:)
   !
   integer   :: ig, is, iv, ia, l, ixr, ixi, inl, i, j, ii, isa
-  real(dbl) :: signre, signim, arg
+  real(DP) :: signre, signim, arg
   !
   allocate( wrk2( ngw, nax ) )
   !
@@ -634,7 +634,7 @@ subroutine dennl( bec, denl )
   !  compute the contribution of the non local part of the
   !  pseudopotentials to the derivative of E with respect to h
   !
-  USE kinds,      ONLY : dbl
+  USE kinds,      ONLY : DP
   use cvan,       only : ish
   use uspp_param, only : nh
   use uspp,       only : nkb, dvan
@@ -646,10 +646,10 @@ subroutine dennl( bec, denl )
 
   implicit none
 
-  real(dbl), intent(in)  :: bec( nkb, n )
-  real(dbl), intent(out) :: denl( 3, 3 )
+  real(DP), intent(in)  :: bec( nkb, n )
+  real(DP), intent(out) :: denl( 3, 3 )
 
-  real(dbl) :: dsum(3,3),dsums(2,3,3)
+  real(DP) :: dsum(3,3),dsums(2,3,3)
   integer   :: is, iv, jv, ijv, inl, jnl, isa, ism, ia, iss, i,j,k
   !
   denl=0.d0
@@ -705,7 +705,7 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   !
   !     contribution to fion due to nonlocal part
   !
-  USE kinds,          ONLY : dbl
+  USE kinds,          ONLY : DP
   use uspp,           only : nhsa=>nkb, dvan, deeq
   use uspp_param,     only : nhm, nh
   use cvan,           only : ish, nvb
@@ -716,15 +716,15 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   !
   implicit none
   !
-  real(dbl),    intent(in)  :: bec( nhsa, n ), c( 2, ngw, n )
-  real(dbl),    intent(out) :: becdr( nhsa, n, 3 )
-  complex(dbl), intent(in)  :: eigr( ngw, nat )
-  real(dbl),    intent(out) :: fion( 3, nat )
+  real(DP),    intent(in)  :: bec( nhsa, n ), c( 2, ngw, n )
+  real(DP),    intent(out) :: becdr( nhsa, n, 3 )
+  complex(DP), intent(in)  :: eigr( ngw, nat )
+  real(DP),    intent(out) :: fion( 3, nat )
   !
   integer   :: k, is, ia, isa, iss, inl, iv, jv, i
-  real(dbl) :: temp
+  real(DP) :: temp
   !
-  real(dbl), allocatable :: tmpbec(:,:), tmpdr(:,:) 
+  real(DP), allocatable :: tmpbec(:,:), tmpdr(:,:) 
   !
   call start_clock( 'nlfq' )
   !

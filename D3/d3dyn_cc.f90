@@ -26,7 +26,7 @@ subroutine d3dyn_cc
   integer :: na, nta, ig, ir, i_cart, j_cart, k_cart, na_i, na_j, &
        na_k, nu_i, nu_j, nu_k, na_icart, nb_jcart, nc_kcart
 
-  real (kind = dp) :: rhox, arhox, ex, ec, vx, vc, arg
+  real (DP) :: rhox, arhox, ex, ec, vx, vc, arg
   ! the total charge in each point
   ! the absolute value of the charge
   ! local exchange energy
@@ -35,8 +35,8 @@ subroutine d3dyn_cc
   ! local correlation potential
   ! argument of the phase factor
 
-  complex (kind = dp) ::  exc, work, work0, work1, work2, work3
-  complex (kind = dp), allocatable :: drc_exp (:,:), aux (:), d3dyn0 (:,:,:), &
+  complex (DP) ::  exc, work, work0, work1, work2, work3
+  complex (DP), allocatable :: drc_exp (:,:), aux (:), d3dyn0 (:,:,:), &
        d3dyn1 (:,:,:), d3dyn2 (:,:,:), d3dyn3 (:,:,:), d3dyn4 (:,:,:)
 
   if (.not.nlcc_any) return

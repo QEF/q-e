@@ -28,7 +28,7 @@ subroutine checksym (ir, nat, ityp, xau, rau, ft, sym, irt)
   ! input: the type of each atom
   ! output: the rotated of each atom
   ! input: the rotation to be tested
-  real(kind=DP) :: xau (3, nat), rau (3, nat), ft (3)
+  real(DP) :: xau (3, nat), rau (3, nat), ft (3)
   ! input: the initial vectors
   ! input: the rotated vectors
   ! input: the possible fractionary translat

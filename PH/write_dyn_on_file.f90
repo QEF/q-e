@@ -14,9 +14,9 @@ subroutine write_dyn_on_file (xq, phi, nat, iudyn)
   integer :: iudyn, nat
   ! unit number
   ! number of atom in the unit cell
-  complex(kind=DP) :: phi (3, 3, nat, nat)
+  complex(DP) :: phi (3, 3, nat, nat)
   !  the dynamical matrix
-  real(kind=DP) :: xq (3)
+  real(DP) :: xq (3)
   ! the q vector
   ! local variables
 

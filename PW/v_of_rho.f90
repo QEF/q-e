@@ -32,7 +32,7 @@ SUBROUTINE v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
     ! input: the number of G vectors
     ! input: correspondence G <-> FFT
     ! input: first nonzero G-vector
-  REAL (KIND=DP), INTENT(IN) :: rho(nrxx,nspin), rho_core(nrxx), g(3,ngm), &
+  REAL (DP), INTENT(IN) :: rho(nrxx,nspin), rho_core(nrxx), g(3,ngm), &
                                 gg(ngm), alat, omega
     ! input: the valence charge
     ! input: the core charge
@@ -40,7 +40,7 @@ SUBROUTINE v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
     ! input: the norm of G vector
     ! input: the length of the cell
     ! input: the volume of the cell
-  REAL (KIND=DP), INTENT(OUT) :: vtxc, etxc, ehart, charge, etotefield, &
+  REAL (DP), INTENT(OUT) :: vtxc, etxc, ehart, charge, etotefield, &
                                  v(nrxx,nspin) 
     ! output: the integral V_xc * rho
     ! output: the E_xc energy
@@ -109,7 +109,7 @@ SUBROUTINE v_xc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
     ! the total dimension
     ! the number of G vectors
     ! correspondence G <-> FFT
-  REAL (KIND=DP), INTENT(IN) :: rho(nrxx,nspin), rho_core(nrxx), &
+  REAL (DP), INTENT(IN) :: rho(nrxx,nspin), rho_core(nrxx), &
                                 g(3,ngm), alat, omega
     ! the valence charge
     ! the core charge
@@ -117,14 +117,14 @@ SUBROUTINE v_xc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
     ! the length of the cell
     ! the volume of the cell
   !
-  REAL (KIND=DP), INTENT(OUT) :: v(nrxx,nspin), vtxc, etxc
+  REAL (DP), INTENT(OUT) :: v(nrxx,nspin), vtxc, etxc
     ! V_xc potential
     ! integral V_xc * rho
     ! E_xc energy
   !
   ! ... local variables
   !
-  REAL (KIND=DP) :: rhox, arhox, zeta, amag, vs, ex, ec, vx(2), vc(2), &
+  REAL (DP) :: rhox, arhox, zeta, amag, vs, ex, ec, vx(2), vc(2), &
                     rhoneg(2)
     ! the total charge in each point
     ! the absolute value of the charge
@@ -140,7 +140,7 @@ SUBROUTINE v_xc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
     ! counter on nspin
     ! number of points with wrong zeta/charge
   !
-  REAL (KIND=DP), PARAMETER :: vanishing_charge = 1.D-10, &
+  REAL (DP), PARAMETER :: vanishing_charge = 1.D-10, &
                                vanishing_mag    = 1.D-20
   !
   !
@@ -320,14 +320,14 @@ SUBROUTINE v_h( rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, &
   INTEGER, INTENT(IN) :: nspin, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                          nrxx, ngm, gstart, nl(ngm)
   !
-  REAL (KIND=DP), INTENT(IN) :: rho(nrxx,nspin), gg(ngm), alat, omega
+  REAL (DP), INTENT(IN) :: rho(nrxx,nspin), gg(ngm), alat, omega
   !
-  REAL (KIND=DP), INTENT(OUT) :: v(nrxx,nspin), ehart, charge
+  REAL (DP), INTENT(OUT) :: v(nrxx,nspin), ehart, charge
   !
   ! ... local variables
   !
-  REAL (KIND=DP)              :: fac
-  REAL (KIND=DP), ALLOCATABLE :: aux(:,:), aux1(:,:)
+  REAL (DP)              :: fac
+  REAL (DP), ALLOCATABLE :: aux(:,:), aux1(:,:)
   INTEGER                     :: ir, is, ig
   !
   !

@@ -14,8 +14,8 @@ function bessj(n,x)
   implicit none
   integer, parameter :: iacc=40 
   integer :: n, j, jsum, m   
-  real(kind=DP), parameter :: bigno=1.d10, bigni=1.d-10
-  real(kind=DP) :: x, bessj, bessj0, bessj1, bj, bjm, bjp, &
+  real(DP), parameter :: bigno=1.d10, bigni=1.d-10
+  real(DP) :: x, bessj, bessj0, bessj1, bj, bjm, bjp, &
                    sum, tox, ans
      
   if (n.lt.2) then 
@@ -69,7 +69,7 @@ end function bessj
 
 function bessj0(x)
   USE kinds, only : DP
-  real(kind=DP) :: x, ax, xx, z, y, ans, ans1, ans2, bessj0
+  real(DP) :: x, ax, xx, z, y, ans, ans1, ans2, bessj0
 
   if (abs(x).lt.8.d0) then
      y=x**2
@@ -98,7 +98,7 @@ end function bessj0
 
 function bessj1(x)
   USE kinds, only : DP
-  real(kind=DP) :: x, ax, xx, y, ans, ans1, ans2, bessj1      
+  real(DP) :: x, ax, xx, y, ans, ans1, ans2, bessj1      
 
   if (abs(x).le.8.d0) then
      y=x**2

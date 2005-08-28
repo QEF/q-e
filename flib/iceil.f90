@@ -13,7 +13,7 @@
       integer i,j
       real*8 a
 
-      a = dble(i)/dble(j)
+      a = DBLE(i)/DBLE(j)
    
       iceil = CEILING(a)
 

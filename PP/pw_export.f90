@@ -52,19 +52,19 @@
 !
       INTEGER, INTENT(IN) :: iuni
       INTEGER, INTENT(IN) :: ik, nk, kunit, ispin, nspin
-      COMPLEX(dbl), INTENT(IN) :: wf0(:,:)
-      COMPLEX(dbl), INTENT(IN) :: wfm(:,:)
+      COMPLEX(DP), INTENT(IN) :: wf0(:,:)
+      COMPLEX(DP), INTENT(IN) :: wfm(:,:)
       INTEGER, INTENT(IN) :: ngw   ! 
       INTEGER, INTENT(IN) :: nbnd
       INTEGER, INTENT(IN) :: ngwl
       INTEGER, INTENT(IN) :: igl(:)
-      REAL(dbl), INTENT(IN) :: scal
+      REAL(DP), INTENT(IN) :: scal
       LOGICAL, INTENT(IN) :: t0, tm
 
       INTEGER :: i, j, ierr, idum = 0
       INTEGER :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx
       INTEGER :: npool, ipmask( nproc ), ipsour
-      COMPLEX(dbl), ALLOCATABLE :: wtmp(:)
+      COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       INTEGER, ALLOCATABLE :: igltot(:)
 
       CHARACTER(LEN=20) :: section_name = 'wfc'

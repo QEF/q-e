@@ -30,8 +30,8 @@ subroutine cft_1 (f, m, n, nx, sgn, fout)
   integer :: m, n, nx, sgn
   integer :: on (2), naux1, isign, itype, i
   parameter (naux1 = 20000)
-  real (kind=DP) :: aux1 (naux1, 2)
-  complex (kind=DP) :: f (nx * m), fout (nx * m)
+  real (DP) :: aux1 (naux1, 2)
+  complex (DP) :: f (nx * m), fout (nx * m)
   external DSCAL
   data on / 0, 0 /
 
@@ -71,12 +71,12 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
 USE kinds, only : DP
   implicit none
   integer :: n1, n2, mplane, nx1, nx2, sgn
-  complex (kind=DP) :: f (nx1 * nx2 * mplane)
+  complex (DP) :: f (nx1 * nx2 * mplane)
   !
   integer :: isign, itype, on1 (2), on2 (2), m, i, k, istrt, naux1, &
        naux2
   parameter (naux1 = 20000, naux2 = 10000)
- real (kind=DP) :: aux1 (naux1, 2, 2), fj (naux2)
+ real (DP) :: aux1 (naux1, 2, 2), fj (naux2)
   !
   ! NOTA BENE: aux1 should be dimensioned aux1(??)
   !              fj should be dimensioned fj(2*n2)
@@ -148,15 +148,15 @@ end subroutine cft_2
       IMPLICIT NONE
 !
       INTEGER                :: m, n, nx, sgn
-      COMPLEX(kind=DP)       :: f(nx * m), fout(nx * m)
+      COMPLEX(DP)       :: f(nx * m), fout(nx * m)
 !
 ! Local parameters
 !
       INTEGER                :: isign, itype, isys(0:1), i
       INTEGER, PARAMETER     :: naux1=20000, nwork=20000
       INTEGER, SAVE          :: on(2)
-      REAL(kind=DP), SAVE    :: aux1(naux1, 2)
-      REAL(kind=DP)          :: dummy, scale, work(nwork)
+      REAL(DP), SAVE    :: aux1(naux1, 2)
+      REAL(DP)          :: dummy, scale, work(nwork)
       DATA                      on / 0, 0 / 
 !
       isys(0) = 1
@@ -204,7 +204,7 @@ end subroutine cft_2
       IMPLICIT NONE
 ! 
       INTEGER                :: n1, n2, mplane, nx1, nx2, sgn
-      COMPLEX(kind=DP)       :: f(nx1 * nx2 * mplane),                  &
+      COMPLEX(DP)       :: f(nx1 * nx2 * mplane),                  &
      &                          fout(nx1 * nx2 * mplane)
 ! 
 ! Local parameters
@@ -212,8 +212,8 @@ end subroutine cft_2
       INTEGER                :: isign, itype, i, k, istrt, isys(0:1)
       INTEGER, PARAMETER     :: naux1 = 20000, nwork=20000
       INTEGER, SAVE          :: on1(2), on2(2)
-      REAL(kind=DP), SAVE    :: aux1(naux1, 2, 2)
-      REAL(kind=DP)          :: dummy, scale, work(nwork)
+      REAL(DP), SAVE    :: aux1(naux1, 2, 2)
+      REAL(DP)          :: dummy, scale, work(nwork)
       DATA                      on1 / 0, 0 /, on2 / 0, 0 /
 !
 ! Statements

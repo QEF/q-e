@@ -39,16 +39,16 @@
         PRIVATE
 
 ! ...   declare module-scope variables
-        REAL(dbl)  :: achmix
-        REAL(dbl)  :: g1met2
-        REAL(dbl)  :: g0chmix2
+        REAL(DP)  :: achmix
+        REAL(DP)  :: g1met2
+        REAL(DP)  :: g0chmix2
         INTEGER    :: daamax
 
-        REAL(dbl), ALLOCATABLE :: aa_save(:,:)
-        COMPLEX(dbl), ALLOCATABLE :: rho(:,:)
-        COMPLEX(dbl), ALLOCATABLE :: rr(:,:)
-        COMPLEX(dbl), ALLOCATABLE :: chmix(:)
-        COMPLEX(dbl), ALLOCATABLE :: metric(:)
+        REAL(DP), ALLOCATABLE :: aa_save(:,:)
+        COMPLEX(DP), ALLOCATABLE :: rho(:,:)
+        COMPLEX(DP), ALLOCATABLE :: rr(:,:)
+        COMPLEX(DP), ALLOCATABLE :: chmix(:)
+        COMPLEX(DP), ALLOCATABLE :: metric(:)
 
 ! ...   end of module-scope declarations
 !  ----------------------------------------------
@@ -67,8 +67,8 @@
 !  ----------------------------------------------
 
         SUBROUTINE charge_mix_setup(achmix_inp, g0chmix2_inp, daamax_inp, g1met2_inp)
-          REAL(dbl), INTENT(IN) ::  achmix_inp, g0chmix2_inp
-          REAL(dbl), INTENT(IN) ::  g1met2_inp
+          REAL(DP), INTENT(IN) ::  achmix_inp, g0chmix2_inp
+          REAL(DP), INTENT(IN) ::  g1met2_inp
           INTEGER, INTENT(IN) :: daamax_inp
           achmix = achmix_inp
           g0chmix2 = g0chmix2_inp
@@ -160,17 +160,17 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      REAL(dbl), INTENT(INOUT) :: rhoe(:,:,:)
-      REAL(dbl), INTENT(OUT) ::  drho
+      REAL(DP), INTENT(INOUT) :: rhoe(:,:,:)
+      REAL(DP), INTENT(OUT) ::  drho
       INTEGER, INTENT(IN) :: nfi
 
 ! ... declare other variables
-      COMPLEX(dbl) :: dr
-      COMPLEX(dbl) :: rhoout(ngm)
-      REAL(dbl) :: g02, g12, ar, den, num, rsc
-      REAL(dbl) :: alpha(daamax)
-      REAL(dbl), ALLOCATABLE :: aa(:,:)
-      REAL(dbl), ALLOCATABLE :: rho_old(:,:,:)
+      COMPLEX(DP) :: dr
+      COMPLEX(DP) :: rhoout(ngm)
+      REAL(DP) :: g02, g12, ar, den, num, rsc
+      REAL(DP) :: alpha(daamax)
+      REAL(DP), ALLOCATABLE :: aa(:,:)
+      REAL(DP), ALLOCATABLE :: rho_old(:,:,:)
       INTEGER :: ns, sp, is, ism, i, ig
       LOGICAL, SAVE :: tfirst = .TRUE.
       INTEGER, SAVE :: dimaa, dimaaold, nrho_t, ierr
@@ -331,13 +331,13 @@
 
 ! ...     declare subroutine arguments
           INTEGER dimaa
-          REAL(dbl) :: aa(:,:)
+          REAL(DP) :: aa(:,:)
 
 ! ...     declare other variables
-          REAL(dbl) ::  scr1(SIZE(aa,1),SIZE(aa,2))
-          REAL(dbl) ::  scr2(SIZE(aa,1),SIZE(aa,2))
-          REAL(dbl) ::  scr3(4*SIZE(aa,1))
-          REAL(dbl) ::  cond, toleig
+          REAL(DP) ::  scr1(SIZE(aa,1),SIZE(aa,2))
+          REAL(DP) ::  scr2(SIZE(aa,1),SIZE(aa,2))
+          REAL(DP) ::  scr3(4*SIZE(aa,1))
+          REAL(DP) ::  cond, toleig
           INTEGER   ::  info, iopt, mrank
 
 ! ... end of declarations

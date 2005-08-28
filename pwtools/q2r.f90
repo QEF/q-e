@@ -12,8 +12,8 @@ Module dynamicalq
   ! All variables read from file that need dynamical allocation
   !
   USE kinds, ONLY: DP
-  COMPLEX(KIND=DP), ALLOCATABLE :: phiq(:,:,:,:,:) 
-  REAL(KIND=DP), ALLOCATABLE ::  tau(:,:), zeu(:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: phiq(:,:,:,:,:) 
+  REAL(DP), ALLOCATABLE ::  tau(:,:), zeu(:,:,:)
   INTEGER, ALLOCATABLE ::  ityp(:)
   !
 end Module dynamicalq
@@ -76,7 +76,7 @@ PROGRAM q2r
   IMPLICIT NONE
   !
   INTEGER,       PARAMETER :: ntypx = 10
-  REAL(kind=DP), PARAMETER :: eps=1.D-5, eps12=1.d-12
+  REAL(DP), PARAMETER :: eps=1.D-5, eps12=1.d-12
   INTEGER                  :: nr1, nr2, nr3, nr(3)
   !     dimensions of the FFT grid formed by the q-point grid
   !
@@ -94,11 +94,11 @@ PROGRAM q2r
   INTEGER :: gid, ibrav, ierr
   !
   INTEGER, ALLOCATABLE ::  nc(:,:,:)
-  COMPLEX(KIND=DP), ALLOCATABLE :: phid(:,:,:,:,:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: phid(:,:,:,:,:,:,:)
   !
-  REAL(KIND=DP) :: celldm(6), at(3,3), bg(3,3)
-  REAL(KIND=DP) :: q(3,48),omega, xq, amass(ntypx), resi
-  REAL(KIND=DP) :: epsil(3,3)
+  REAL(DP) :: celldm(6), at(3,3), bg(3,3)
+  REAL(DP) :: q(3,48),omega, xq, amass(ntypx), resi
+  REAL(DP) :: epsil(3,3)
   !
   !
   NAMELIST / input / fildyn, flfrc, zasr
@@ -303,14 +303,14 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
   ! I/O variables
   LOGICAL :: lrigid
   INTEGER :: nqs, ntyp, nat, ibrav
-  REAL(KIND=DP) :: epsil(3,3)
-  REAL(KIND=DP) :: xq(3,48), celldm(6), amass(ntyp)
+  REAL(DP) :: epsil(3,3)
+  REAL(DP) :: xq(3,48), celldm(6), amass(ntyp)
   CHARACTER(LEN=3) atm(ntyp)
   ! local variables
   INTEGER :: ntyp1,nat1,ibrav1,ityp1
   INTEGER :: i, j, na, nb, nt
-  REAL(KIND=DP) :: tau1(3), amass1, celldm1(6), q2
-  REAL(KIND=DP) :: phir(3),phii(3)
+  REAL(DP) :: tau1(3), amass1, celldm1(6), q2
+  REAL(DP) :: phir(3),phii(3)
   CHARACTER(LEN=75) :: line
   CHARACTER(LEN=3)  :: atm1
   LOGICAL, SAVE :: first =.TRUE.
@@ -428,8 +428,8 @@ SUBROUTINE trasl( phid, phiq, nq, nr1, nr2, nr3, nat, m1, m2, m3 )
   !
   IMPLICIT NONE
   INTEGER, intent(in) ::  nr1, nr2, nr3, m1, m2, m3, nat, nq 
-  COMPLEX(KIND=DP), intent(in) :: phiq(3,3,nat,nat,48)
-  COMPLEX(KIND=DP), intent(out) :: phid(nr1,nr2,nr3,3,3,nat,nat)
+  COMPLEX(DP), intent(in) :: phiq(3,3,nat,nat,48)
+  COMPLEX(DP), intent(out) :: phid(nr1,nr2,nr3,3,3,nat,nat)
   !
   INTEGER :: j1,j2,  na1, na2
   !
@@ -465,9 +465,9 @@ SUBROUTINE tolerant_cft3( f, nr1, nr2, nr3, iflg )
 
   IMPLICIT NONE
   INTEGER :: nr1,nr2,nr3,iflg
-  COMPLEX(KIND=DP) :: f(nr1,nr2,nr3)
+  COMPLEX(DP) :: f(nr1,nr2,nr3)
 #if defined __FFT_MODULE_DRV
-  COMPLEX(KIND=DP) :: ftmp(nr1*nr2*nr3)
+  COMPLEX(DP) :: ftmp(nr1*nr2*nr3)
 #endif
   INTEGER :: i0,i1,i2,i3
   !
@@ -521,17 +521,17 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
   integer ibrav,nr1,nr2,nr3,nr,m,p,k,l,q,r
   integer n,i,j,n1,n2,n3,na,nb,nat,axis,i1,j1,na1
   !
-  real(kind=8) sum, zeu(3,3,nat)
-  real(kind=8) tau(3,nat), zeu_new(3,3,nat)
+  real(8) sum, zeu(3,3,nat)
+  real(8) tau(3,nat), zeu_new(3,3,nat)
   !
-  real(kind=8) zeu_u(6*3,3,3,nat)
+  real(8) zeu_u(6*3,3,3,nat)
   ! These are the "vectors" associated with the sum rules on effective charges
   !
   integer zeu_less(6*3),nzeu_less,izeu_less
   ! indices of vectors zeu_u that are not independent to the preceding ones,
   ! nzeu_less = number of such vectors, izeu_less = temporary parameter
   !
-  real(kind=8) zeu_w(3,3,nat), zeu_x(3,3,nat),scal,norm2
+  real(8) zeu_w(3,3,nat), zeu_x(3,3,nat),scal,norm2
   ! temporary vectors and parameters
 
   ! Initialization.
@@ -714,9 +714,9 @@ subroutine sp_zeu(zeu_u,zeu_v,nat,scal)
   !
   implicit none
   integer i,j,na,nat
-  real(kind=8) zeu_u(3,3,nat)
-  real(kind=8) zeu_v(3,3,nat)
-  real(kind=8) scal  
+  real(8) zeu_u(3,3,nat)
+  real(8) zeu_v(3,3,nat)
+  real(8) scal  
   !
   !
   scal=0.0d0

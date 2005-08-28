@@ -26,11 +26,11 @@
       use control_flags, only: iprint, iprsta
 !
       implicit none
-      complex(kind=8) c0(ngw,n), phi(ngw,n), betae(ngw,nhsa)
-      real(kind=8)    bec(nhsa,n), emtot
+      complex(8) c0(ngw,n), phi(ngw,n), betae(ngw,nhsa)
+      real(8)    bec(nhsa,n), emtot
 ! local variables
       integer is, iv, jv, ia, inl, jnl, i, j
-      real(kind=8) qtemp(nhsavb,n) ! automatic array
+      real(8) qtemp(nhsavb,n) ! automatic array
 !
       phi = 0.0d0
 !
@@ -108,7 +108,7 @@
 
       implicit none
       integer iss, nss, istart, i, j, k
-      real(kind=8) zmat(nudx,nudx,nspin), fmat(nudx,nudx,nspin),        &
+      real(8) zmat(nudx,nudx,nspin), fmat(nudx,nudx,nspin),        &
    &                fdiag(nx)
 
       do iss=1,nspin
@@ -144,9 +144,9 @@
 
       implicit none
       integer iss, nss, istart, i, j, k, ni, nj, is, jv, ia, jnl
-      real(kind=8) z0(nudx,nudx,nspin)
-      real(kind=8) bec(nhsa,n), becdiag(nhsa,n)
-      complex(kind=8) c0(ngw,nx), c0diag(ngw,nx)
+      real(8) z0(nudx,nudx,nspin)
+      real(8) bec(nhsa,n), becdiag(nhsa,n)
+      complex(8) c0(ngw,nx), c0diag(ngw,nx)
 
       c0diag(:,ni+istart-1) = 0.0d0
         do iss=1,nspin
@@ -192,10 +192,10 @@
 !
       implicit none
       integer nx,n,naux,ndim,iopt,iflag,k,i,j,info
-      real(kind=8)   dval(n)
-      real(kind=8) amat(nx,n), dvec(nx,n)
-      real(kind=8), allocatable::  ap(:)
-      real(kind=8), allocatable::  aux(:)
+      real(8)   dval(n)
+      real(8) amat(nx,n), dvec(nx,n)
+      real(8), allocatable::  ap(:)
+      real(8), allocatable::  aux(:)
 
 
       ndim=(n*(n+1))/2
@@ -242,7 +242,7 @@
 
       implicit none
       integer iss, nss, istart, i, j, k
-      real(kind=8) zmat(nudx,nudx,nspin), fmat(nudx,nudx,nspin),         &
+      real(8) zmat(nudx,nudx,nspin), fmat(nudx,nudx,nspin),         &
     &   fdiag(nx)
 
       do iss=1,nspin
@@ -266,8 +266,8 @@
 !trova il minimo di parabola
       
       implicit none
-      real(kind=8) ene0,dene0,ene1,passop,passo,stima
-      real(kind=8) a,b,c!a*x^2+b*x+c
+      real(8) ene0,dene0,ene1,passop,passo,stima
+      real(8) a,b,c!a*x^2+b*x+c
       
       c=ene0
       b=dene0
@@ -316,12 +316,12 @@ subroutine pc2(a,beca,b,becb)
                            
       implicit none        
                            
-      complex(kind=8) a(ngw,n), b(ngw,n)
+      complex(8) a(ngw,n), b(ngw,n)
                      
-      real(kind=8)    beca(nhsa,n),becb(nhsa,n)
+      real(8)    beca(nhsa,n),becb(nhsa,n)
 ! local variables
       integer is, iv, jv, ia, inl, jnl, i, j,ig
-      real(kind=8) sca
+      real(8) sca
       do i=1,n
          do j=1,n
             sca=0.
@@ -389,11 +389,11 @@ subroutine pcdaga2(a,as ,b )
 
       implicit none
 
-      complex(kind=8) a(ngw,n), b(ngw,n), as(ngw,n)
-      real(kind=8)    beca(nhsa,n),becb(nhsa,n)
+      complex(8) a(ngw,n), b(ngw,n), as(ngw,n)
+      real(8)    beca(nhsa,n),becb(nhsa,n)
       ! local variables
       integer is, iv, jv, ia, inl, jnl, i, j,ig
-      real(kind=8) sca
+      real(8) sca
       !
       do i=1,n
          do j=1,n

@@ -14,7 +14,7 @@
 !  this module contains the definitions of several TYPE structures,
 !  together with their allocation/deallocation routines
 
-        USE kinds, ONLY: dbl
+        USE kinds, ONLY: DP
         USE parameters, ONLY: ndmx, cp_lmax
 
         IMPLICIT NONE
@@ -32,22 +32,22 @@
           LOGICAL  :: tvanp             ! .true. if Ultrasoft
           LOGICAL :: nlcc               ! Non linear core corrections
           CHARACTER(LEN=20) :: dft      ! Exch-Corr type
-          REAL(dbl) :: zp               ! z valence
-          REAL(dbl) :: etotps           ! total energy
-          REAL(dbl) :: ecutwfc          ! suggested cut-off for wfc
-          REAL(dbl) :: ecutrho          ! suggested cut-off for rho
+          REAL(DP) :: zp               ! z valence
+          REAL(DP) :: etotps           ! total energy
+          REAL(DP) :: ecutwfc          ! suggested cut-off for wfc
+          REAL(DP) :: ecutrho          ! suggested cut-off for rho
 
           LOGICAL :: has_so             ! if .true. includes spin-orbit
-          REAL(dbl) :: xmin             ! the minimum x of the linear mesh
-          REAL(dbl) :: rmax             ! the maximum radius of the mesh
-          REAL(dbl) :: zmesh            ! the nuclear charge used for mesh
-          REAL(dbl) :: dx               ! the deltax of the linear mesh
+          REAL(DP) :: xmin             ! the minimum x of the linear mesh
+          REAL(DP) :: rmax             ! the maximum radius of the mesh
+          REAL(DP) :: zmesh            ! the nuclear charge used for mesh
+          REAL(DP) :: dx               ! the deltax of the linear mesh
           INTEGER, POINTER :: nn(:)      ! nn(nwfc)
-          REAL(dbl), POINTER :: rcut(:)  ! cut-off radius(nbeta)
-          REAL(dbl), POINTER :: rcutus(:)! cut-off ultrasoft radius (nbeta)
-          REAL(dbl), POINTER :: epseu(:) ! energy (nwfc)
-          REAL(dbl), POINTER :: jchi(:)  ! jchi(nwfc)
-          REAL(dbl), POINTER :: jjj(:)   ! jjj(nbeta)
+          REAL(DP), POINTER :: rcut(:)  ! cut-off radius(nbeta)
+          REAL(DP), POINTER :: rcutus(:)! cut-off ultrasoft radius (nbeta)
+          REAL(DP), POINTER :: epseu(:) ! energy (nwfc)
+          REAL(DP), POINTER :: jchi(:)  ! jchi(nwfc)
+          REAL(DP), POINTER :: jjj(:)   ! jjj(nbeta)
 
           INTEGER :: nv                 ! UPF file version number
           INTEGER :: lmax               ! maximum angular momentum component
@@ -57,24 +57,24 @@
           CHARACTER(LEN=2), POINTER :: els(:)  ! els(nwfc)
           CHARACTER(LEN=2), POINTER :: els_beta(:)  ! els(nbeta)
           INTEGER, POINTER :: lchi(:)   ! lchi(nwfc)
-          REAL(dbl), POINTER :: oc(:)   ! oc(nwfc)
-          REAL(dbl), POINTER :: r(:)    ! r(mesh)
-          REAL(dbl), POINTER :: rab(:)  ! rab(mesh)
-          REAL(dbl), POINTER :: rho_atc(:) ! rho_atc(mesh)
-          REAL(dbl), POINTER :: vloc(:)    ! vloc(mesh)
+          REAL(DP), POINTER :: oc(:)   ! oc(nwfc)
+          REAL(DP), POINTER :: r(:)    ! r(mesh)
+          REAL(DP), POINTER :: rab(:)  ! rab(mesh)
+          REAL(DP), POINTER :: rho_atc(:) ! rho_atc(mesh)
+          REAL(DP), POINTER :: vloc(:)    ! vloc(mesh)
           INTEGER, POINTER :: lll(:)       ! lll(nbeta)
           INTEGER, POINTER :: kkbeta(:)    ! kkbeta(nbeta)
-          REAL(dbl), POINTER :: beta(:,:)  ! beta(mesh,nbeta)
+          REAL(DP), POINTER :: beta(:,:)  ! beta(mesh,nbeta)
           INTEGER :: nd
-          REAL(dbl), POINTER :: dion(:,:)  ! dion(nbeta,nbeta)
+          REAL(DP), POINTER :: dion(:,:)  ! dion(nbeta,nbeta)
           INTEGER :: nqf
           INTEGER :: nqlc
-          REAL(dbl), POINTER :: rinner(:)  ! rinner(0:2*lmax)
-          REAL(dbl), POINTER :: qqq(:,:)   ! qqq(nbeta,nbeta)
-          REAL(dbl), POINTER :: qfunc(:,:,:) ! qfunc(mesh,nbeta,nbeta)
-          REAL(dbl), POINTER :: qfcoef(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
-          REAL(dbl), POINTER :: chi(:,:) !  chi(mesh,nwfc)
-          REAL(dbl), POINTER :: rho_at(:) !  rho_at(mesh)
+          REAL(DP), POINTER :: rinner(:)  ! rinner(0:2*lmax)
+          REAL(DP), POINTER :: qqq(:,:)   ! qqq(nbeta,nbeta)
+          REAL(DP), POINTER :: qfunc(:,:,:) ! qfunc(mesh,nbeta,nbeta)
+          REAL(DP), POINTER :: qfcoef(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
+          REAL(DP), POINTER :: chi(:,:) !  chi(mesh,nwfc)
+          REAL(DP), POINTER :: rho_at(:) !  rho_at(mesh)
         END TYPE
 
 
@@ -89,24 +89,24 @@
           INTEGER :: lll(cp_lmax)
           INTEGER :: nchan
           INTEGER :: mesh
-          REAL(dbl) ::  zv
-          REAL(dbl) ::  dx            ! r(i) = cost * EXP( xmin + dx * (i-1) )
-          REAL(dbl) ::  rab(ndmx)
-          REAL(dbl) ::  rw(ndmx)
-          REAL(dbl) ::  vnl(ndmx, cp_lmax)
-          REAL(dbl) ::  vloc(ndmx)
-          REAL(dbl) ::  vrps(ndmx, cp_lmax)
-          REAL(dbl) ::  wgv(cp_lmax)
-          REAL(dbl) ::  rc(2)
-          REAL(dbl) ::  wrc(2)
-          REAL(dbl) ::  rcl(3,3)
-          REAL(dbl) ::  al(3,3)
-          REAL(dbl) ::  bl(3,3)
+          REAL(DP) ::  zv
+          REAL(DP) ::  dx            ! r(i) = cost * EXP( xmin + dx * (i-1) )
+          REAL(DP) ::  rab(ndmx)
+          REAL(DP) ::  rw(ndmx)
+          REAL(DP) ::  vnl(ndmx, cp_lmax)
+          REAL(DP) ::  vloc(ndmx)
+          REAL(DP) ::  vrps(ndmx, cp_lmax)
+          REAL(DP) ::  wgv(cp_lmax)
+          REAL(DP) ::  rc(2)
+          REAL(DP) ::  wrc(2)
+          REAL(DP) ::  rcl(3,3)
+          REAL(DP) ::  al(3,3)
+          REAL(DP) ::  bl(3,3)
           INTEGER :: nrps                     ! number of atomic wave function
           INTEGER :: lrps(cp_lmax)            ! angular momentum
-          REAL(dbl) :: oc(cp_lmax)            ! occupation for each rps
-          REAL(dbl) :: rps(ndmx, cp_lmax)  ! atomic pseudo wave function
-          REAL(dbl) :: rhoc(ndmx)          ! core charge
+          REAL(DP) :: oc(cp_lmax)            ! occupation for each rps
+          REAL(DP) :: rps(ndmx, cp_lmax)  ! atomic pseudo wave function
+          REAL(DP) :: rhoc(ndmx)          ! core charge
         END TYPE pseudo_ncpp
 
 !  ----------------------------------------------

@@ -28,24 +28,24 @@ subroutine solve_e2
   USE check_stop, ONLY: time_max => max_seconds
   implicit none
 
-  real(kind=DP) ::  thresh, weight, avg_iter, dr2
+  real(DP) ::  thresh, weight, avg_iter, dr2
   ! convergence threshold for the solution of the
   ! linear system
   ! used for summation over k points
   ! average number of iterations
   ! convergence limit
 
-  complex(kind=DP) , pointer :: dvscfin (:,:,:), dvscfins (:,:,:)
+  complex(DP) , pointer :: dvscfin (:,:,:), dvscfins (:,:,:)
   ! change of the scf potential (input)
   ! change of the scf potential (smooth)
 
-  complex(kind=DP) , allocatable :: dvscfout (:,:,:), dbecsum (:,:), &
+  complex(DP) , allocatable :: dvscfout (:,:,:), dbecsum (:,:), &
                                     aux1 (:)
   ! change of the scf potential (output)
   ! auxiliary space
   ! auxiliary space
 
-  complex(kind=DP) :: ZDOTC
+  complex(DP) :: ZDOTC
   ! the scalar product function
 
   logical :: exst
@@ -63,7 +63,7 @@ subroutine solve_e2
   ! the record number
   ! integer variable for I/O control
 
-  real(kind=DP) :: tcpu, get_clock
+  real(DP) :: tcpu, get_clock
   ! timing variables
 
   character (len=256) :: flmixdpot

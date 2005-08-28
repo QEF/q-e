@@ -41,15 +41,15 @@ implicit none
 
   integer :: alpha, k, kz, ig, ign, igphi, il, il1, nbb, itp, &
              indexr, iz, lb, ir, nmesh, nmeshs, tblm(4)
-  real(kind=DP), parameter :: eps=1.d-8
-  complex(kind=DP), parameter :: cim=(0.d0, 1.d0)
-  real(kind=DP) :: gn, s1, s2, cs, sn, cs2, sn2, arg, rz, dz1, zr, &
+  real(DP), parameter :: eps=1.d-8
+  complex(DP), parameter :: cim=(0.d0, 1.d0)
+  real(DP) :: gn, s1, s2, cs, sn, cs2, sn2, arg, rz, dz1, zr, &
                    dr, z0, dz,  bessj, taunew(4), r(ndmx),         &
                    rab(ndmx), betar(ndmx)   
-  real(kind=DP), allocatable :: x1(:), x2(:), x3(:), x4(:)
-  real(kind=DP), allocatable :: fx1(:), fx2(:), fx3(:), fx4(:), zsl(:)
-  complex(kind=DP) :: exg, cong, xfact, w0(nz1, ngper, 5)
-  complex(kind=DP), allocatable :: wadd(:,:)
+  real(DP), allocatable :: x1(:), x2(:), x3(:), x4(:)
+  real(DP), allocatable :: fx1(:), fx2(:), fx3(:), fx4(:), zsl(:)
+  complex(DP) :: exg, cong, xfact, w0(nz1, ngper, 5)
+  complex(DP), allocatable :: wadd(:,:)
 
 
   allocate( x1(0:ndmx) )
@@ -227,7 +227,7 @@ function indexr(zz, ndim, r)
   implicit none
 
   integer :: iz, ndim, indexr
-  real(kind=DP) :: zz, r(ndim) 
+  real(DP) :: zz, r(ndim) 
 !
 !     abs(zz)<r(indexr)
 !

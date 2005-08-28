@@ -32,7 +32,7 @@ MODULE cp_restart
         c04, cm4, c02, cm2, mat_z )
       !
       USE iotk_module
-      USE kinds, ONLY: dbl
+      USE kinds, ONLY: DP
       USE io_global, ONLY: ionode, ionode_id, stdout
       USE control_flags, ONLY: gamma_only, force_pairing
       USE io_files, ONLY: iunpun, xmlpun, psfile, pseudo_dir, prefix
@@ -58,44 +58,44 @@ MODULE cp_restart
       CHARACTER(LEN=*), INTENT(IN) :: scradir
       LOGICAL, INTENT(IN) :: ascii
       INTEGER, INTENT(IN) :: nfi    !  index of the current step
-      REAL(dbl), INTENT(IN) :: simtime   !  simulated time
-      REAL(dbl), INTENT(IN) :: acc(:)   !  
+      REAL(DP), INTENT(IN) :: simtime   !  simulated time
+      REAL(DP), INTENT(IN) :: acc(:)   !  
       INTEGER, INTENT(IN) :: nk    !  number of kpoints
-      REAL(dbl), INTENT(IN) :: xk(:,:) ! k points coordinates 
-      REAL(dbl), INTENT(IN) :: wk(:)   ! k points weights
-      REAL(dbl), INTENT(IN) :: ht(3,3) ! 
-      REAL(dbl), INTENT(IN) :: htm(3,3) ! 
-      REAL(dbl), INTENT(IN) :: htvel(3,3) ! 
-      REAL(dbl), INTENT(IN) :: gvel(3,3) ! 
-      REAL(dbl), INTENT(IN) :: xnhh0(3,3) ! 
-      REAL(dbl), INTENT(IN) :: xnhhm(3,3) ! 
-      REAL(dbl), INTENT(IN) :: vnhh(3,3) ! 
-      REAL(dbl), INTENT(IN) :: taui(:,:) ! 
-      REAL(dbl), INTENT(IN) :: cdmi(:) ! 
-      REAL(dbl), INTENT(IN) :: stau0(:,:) ! 
-      REAL(dbl), INTENT(IN) :: svel0(:,:) ! 
-      REAL(dbl), INTENT(IN) :: staum(:,:) ! 
-      REAL(dbl), INTENT(IN) :: svelm(:,:) ! 
-      REAL(dbl), INTENT(IN) :: force(:,:) ! 
-      REAL(dbl), INTENT(IN) :: xnhp0(:)  ! 
-      REAL(dbl), INTENT(IN) :: xnhpm(:)  ! 
-      REAL(dbl), INTENT(IN) :: vnhp(:) ! 
+      REAL(DP), INTENT(IN) :: xk(:,:) ! k points coordinates 
+      REAL(DP), INTENT(IN) :: wk(:)   ! k points weights
+      REAL(DP), INTENT(IN) :: ht(3,3) ! 
+      REAL(DP), INTENT(IN) :: htm(3,3) ! 
+      REAL(DP), INTENT(IN) :: htvel(3,3) ! 
+      REAL(DP), INTENT(IN) :: gvel(3,3) ! 
+      REAL(DP), INTENT(IN) :: xnhh0(3,3) ! 
+      REAL(DP), INTENT(IN) :: xnhhm(3,3) ! 
+      REAL(DP), INTENT(IN) :: vnhh(3,3) ! 
+      REAL(DP), INTENT(IN) :: taui(:,:) ! 
+      REAL(DP), INTENT(IN) :: cdmi(:) ! 
+      REAL(DP), INTENT(IN) :: stau0(:,:) ! 
+      REAL(DP), INTENT(IN) :: svel0(:,:) ! 
+      REAL(DP), INTENT(IN) :: staum(:,:) ! 
+      REAL(DP), INTENT(IN) :: svelm(:,:) ! 
+      REAL(DP), INTENT(IN) :: force(:,:) ! 
+      REAL(DP), INTENT(IN) :: xnhp0(:)  ! 
+      REAL(DP), INTENT(IN) :: xnhpm(:)  ! 
+      REAL(DP), INTENT(IN) :: vnhp(:) ! 
       INTEGER,   INTENT(IN) :: nhpcl ! 
-      REAL(dbl), INTENT(IN) :: occ0(:,:,:) ! 
-      REAL(dbl), INTENT(IN) :: occm(:,:,:) ! 
-      REAL(dbl), INTENT(IN) :: lambda0(:,:) ! 
-      REAL(dbl), INTENT(IN) :: lambdam(:,:) ! 
-      REAL(dbl), INTENT(IN) :: xnhe0 ! 
-      REAL(dbl), INTENT(IN) :: xnhem ! 
-      REAL(dbl), INTENT(IN) :: vnhe ! 
-      REAL(dbl), INTENT(IN) :: ekincm ! 
-      REAL(dbl), INTENT(IN) :: et(:,:,:) ! 
-      REAL(dbl), INTENT(IN) :: rho(:,:) ! 
-      COMPLEX(dbl), OPTIONAL, INTENT(IN) :: c04(:,:,:,:) ! 
-      COMPLEX(dbl), OPTIONAL, INTENT(IN) :: cm4(:,:,:,:) ! 
-      COMPLEX(dbl), OPTIONAL, INTENT(IN) :: c02(:,:) ! 
-      COMPLEX(dbl), OPTIONAL, INTENT(IN) :: cm2(:,:) ! 
-      REAL(dbl), OPTIONAL, INTENT(IN) :: mat_z(:,:,:) ! 
+      REAL(DP), INTENT(IN) :: occ0(:,:,:) ! 
+      REAL(DP), INTENT(IN) :: occm(:,:,:) ! 
+      REAL(DP), INTENT(IN) :: lambda0(:,:) ! 
+      REAL(DP), INTENT(IN) :: lambdam(:,:) ! 
+      REAL(DP), INTENT(IN) :: xnhe0 ! 
+      REAL(DP), INTENT(IN) :: xnhem ! 
+      REAL(DP), INTENT(IN) :: vnhe ! 
+      REAL(DP), INTENT(IN) :: ekincm ! 
+      REAL(DP), INTENT(IN) :: et(:,:,:) ! 
+      REAL(DP), INTENT(IN) :: rho(:,:) ! 
+      COMPLEX(DP), OPTIONAL, INTENT(IN) :: c04(:,:,:,:) ! 
+      COMPLEX(DP), OPTIONAL, INTENT(IN) :: cm4(:,:,:,:) ! 
+      COMPLEX(DP), OPTIONAL, INTENT(IN) :: c02(:,:) ! 
+      COMPLEX(DP), OPTIONAL, INTENT(IN) :: cm2(:,:) ! 
+      REAL(DP), OPTIONAL, INTENT(IN) :: mat_z(:,:,:) ! 
       !
       CHARACTER(LEN=256)      :: dirname, filename, rho_file
       CHARACTER(iotk_attlenx) :: attr
@@ -108,13 +108,13 @@ MODULE cp_restart
       INTEGER, ALLOCATABLE :: mill(:,:)
       INTEGER, ALLOCATABLE :: ftmp(:,:)
       INTEGER, ALLOCATABLE :: ityp(:)
-      REAL(dbl), ALLOCATABLE :: tau(:,:)
-      REAL(dbl), ALLOCATABLE :: rhosum(:)
-      REAL(dbl) :: omega, htm1(3,3), h(3,3)
-      REAL(dbl) :: a1(3), a2(3), a3(3)
-      REAL(dbl) :: b1(3), b2(3), b3(3)
-      REAL(dbl) :: nelec
-      REAL(dbl) :: scalef
+      REAL(DP), ALLOCATABLE :: tau(:,:)
+      REAL(DP), ALLOCATABLE :: rhosum(:)
+      REAL(DP) :: omega, htm1(3,3), h(3,3)
+      REAL(DP) :: a1(3), a2(3), a3(3)
+      REAL(DP) :: b1(3), b2(3), b3(3)
+      REAL(DP) :: nelec
+      REAL(DP) :: scalef
       LOGICAL   :: lsda
 
       !
@@ -576,7 +576,7 @@ MODULE cp_restart
         vnhe, ekincm, c04, cm4, c02, cm2, mat_z )
       !
       USE iotk_module
-      USE kinds, ONLY: dbl
+      USE kinds, ONLY: DP
       USE io_global, ONLY: ionode, ionode_id, stdout
       USE parser, ONLY: int_to_char
       USE control_flags, ONLY: gamma_only, force_pairing
@@ -601,45 +601,45 @@ MODULE cp_restart
       CHARACTER(LEN=*), INTENT(IN) :: scradir
       LOGICAL, INTENT(IN) :: ascii
       INTEGER, INTENT(INOUT) :: nfi    !  index of the current step
-      REAL(dbl), INTENT(INOUT) :: simtime   !  simulated time
-      REAL(dbl), INTENT(INOUT) :: acc(:)   !
+      REAL(DP), INTENT(INOUT) :: simtime   !  simulated time
+      REAL(DP), INTENT(INOUT) :: acc(:)   !
       INTEGER, INTENT(IN) :: nk    !  number of kpoints
-      REAL(dbl), INTENT(INOUT) :: xk(:,:) ! k points coordinates
-      REAL(dbl), INTENT(INOUT) :: wk(:)   ! k points weights
-      REAL(dbl), INTENT(INOUT) :: ht(3,3) !
-      REAL(dbl), INTENT(INOUT) :: htm(3,3) !
-      REAL(dbl), INTENT(INOUT) :: htvel(3,3) !
-      REAL(dbl), INTENT(INOUT) :: gvel(3,3) !
-      REAL(dbl), INTENT(INOUT) :: xnhh0(3,3) !
-      REAL(dbl), INTENT(INOUT) :: xnhhm(3,3) !
-      REAL(dbl), INTENT(INOUT) :: vnhh(3,3) !
-      REAL(dbl), INTENT(INOUT) :: taui(:,:) !
-      REAL(dbl), INTENT(INOUT) :: cdmi(:) !
-      REAL(dbl), INTENT(INOUT) :: stau0(:,:) !
-      REAL(dbl), INTENT(INOUT) :: svel0(:,:) !
-      REAL(dbl), INTENT(INOUT) :: staum(:,:) !
-      REAL(dbl), INTENT(INOUT) :: svelm(:,:) !
-      REAL(dbl), INTENT(INOUT) :: force(:,:) ! 
-      REAL(dbl), INTENT(INOUT) :: xnhp0(:) !     
-      REAL(dbl), INTENT(INOUT) :: xnhpm(:) ! 
-      REAL(dbl), INTENT(INOUT) :: vnhp(:) !  
+      REAL(DP), INTENT(INOUT) :: xk(:,:) ! k points coordinates
+      REAL(DP), INTENT(INOUT) :: wk(:)   ! k points weights
+      REAL(DP), INTENT(INOUT) :: ht(3,3) !
+      REAL(DP), INTENT(INOUT) :: htm(3,3) !
+      REAL(DP), INTENT(INOUT) :: htvel(3,3) !
+      REAL(DP), INTENT(INOUT) :: gvel(3,3) !
+      REAL(DP), INTENT(INOUT) :: xnhh0(3,3) !
+      REAL(DP), INTENT(INOUT) :: xnhhm(3,3) !
+      REAL(DP), INTENT(INOUT) :: vnhh(3,3) !
+      REAL(DP), INTENT(INOUT) :: taui(:,:) !
+      REAL(DP), INTENT(INOUT) :: cdmi(:) !
+      REAL(DP), INTENT(INOUT) :: stau0(:,:) !
+      REAL(DP), INTENT(INOUT) :: svel0(:,:) !
+      REAL(DP), INTENT(INOUT) :: staum(:,:) !
+      REAL(DP), INTENT(INOUT) :: svelm(:,:) !
+      REAL(DP), INTENT(INOUT) :: force(:,:) ! 
+      REAL(DP), INTENT(INOUT) :: xnhp0(:) !     
+      REAL(DP), INTENT(INOUT) :: xnhpm(:) ! 
+      REAL(DP), INTENT(INOUT) :: vnhp(:) !  
       INTEGER,   INTENT(INOUT) :: nhpcl !  
-      REAL(dbl), INTENT(INOUT) :: occ0(:,:,:) !
-      REAL(dbl), INTENT(INOUT) :: occm(:,:,:) !
-      REAL(dbl), INTENT(INOUT) :: lambda0(:,:) !
-      REAL(dbl), INTENT(INOUT) :: lambdam(:,:) !
-      REAL(dbl), INTENT(INOUT) :: b1(3) !
-      REAL(dbl), INTENT(INOUT) :: b2(3) !
-      REAL(dbl), INTENT(INOUT) :: b3(3) !
-      REAL(dbl), INTENT(INOUT) :: xnhe0 !
-      REAL(dbl), INTENT(INOUT) :: xnhem !
-      REAL(dbl), INTENT(INOUT) :: vnhe !  
-      REAL(dbl), INTENT(INOUT) :: ekincm !  
-      COMPLEX(dbl), OPTIONAL, INTENT(INOUT) :: c04(:,:,:,:) ! 
-      COMPLEX(dbl), OPTIONAL, INTENT(INOUT) :: cm4(:,:,:,:) ! 
-      COMPLEX(dbl), OPTIONAL, INTENT(INOUT) :: c02(:,:) ! 
-      COMPLEX(dbl), OPTIONAL, INTENT(INOUT) :: cm2(:,:) ! 
-      REAL(dbl),    OPTIONAL, INTENT(INOUT) :: mat_z(:,:,:) ! 
+      REAL(DP), INTENT(INOUT) :: occ0(:,:,:) !
+      REAL(DP), INTENT(INOUT) :: occm(:,:,:) !
+      REAL(DP), INTENT(INOUT) :: lambda0(:,:) !
+      REAL(DP), INTENT(INOUT) :: lambdam(:,:) !
+      REAL(DP), INTENT(INOUT) :: b1(3) !
+      REAL(DP), INTENT(INOUT) :: b2(3) !
+      REAL(DP), INTENT(INOUT) :: b3(3) !
+      REAL(DP), INTENT(INOUT) :: xnhe0 !
+      REAL(DP), INTENT(INOUT) :: xnhem !
+      REAL(DP), INTENT(INOUT) :: vnhe !  
+      REAL(DP), INTENT(INOUT) :: ekincm !  
+      COMPLEX(DP), OPTIONAL, INTENT(INOUT) :: c04(:,:,:,:) ! 
+      COMPLEX(DP), OPTIONAL, INTENT(INOUT) :: cm4(:,:,:,:) ! 
+      COMPLEX(DP), OPTIONAL, INTENT(INOUT) :: c02(:,:) ! 
+      COMPLEX(DP), OPTIONAL, INTENT(INOUT) :: cm2(:,:) ! 
+      REAL(DP),    OPTIONAL, INTENT(INOUT) :: mat_z(:,:,:) ! 
 
       !
       CHARACTER(LEN=256) :: dirname, kdirname, filename
@@ -650,7 +650,7 @@ MODULE cp_restart
       INTEGER            :: k1, k2, k3
       INTEGER            :: nk1, nk2, nk3
       INTEGER            :: i, j, ispin, ig, nspin_wfc, ierr, ik
-      REAL(dbl)          :: omega, htm1( 3, 3 ), hinv( 3, 3 ), scalef
+      REAL(DP)          :: omega, htm1( 3, 3 ), hinv( 3, 3 ), scalef
       LOGICAL            :: found
       LOGICAL            :: tread_cm
       INTEGER, ALLOCATABLE    :: mill(:,:)
@@ -664,19 +664,19 @@ MODULE cp_restart
       INTEGER          :: nat_ , nsp_, na_
       INTEGER          :: nk_ , ik_ , nt_
       LOGICAL          :: gamma_only_ 
-      REAL(dbl)        :: alat_ , a1_ (3), a2_ (3), a3_ (3)
-      REAL(dbl)        :: pmass_ , zv_ 
-      REAL(dbl)        :: celldm_ ( 6 )
+      REAL(DP)        :: alat_ , a1_ (3), a2_ (3), a3_ (3)
+      REAL(DP)        :: pmass_ , zv_ 
+      REAL(DP)        :: celldm_ ( 6 )
       INTEGER          :: ispin_ , nspin_ , ngwt_ , nbnd_ 
-      REAL(dbl)        :: nelec_
-      REAL(dbl)        :: scalef_
-      REAL(dbl)        :: wk_
+      REAL(DP)        :: nelec_
+      REAL(DP)        :: scalef_
+      REAL(DP)        :: wk_
       INTEGER          :: nhpcl_ 
       INTEGER          :: ib 
-      REAL(dbl)        :: amass_ ( ntypx )
+      REAL(DP)        :: amass_ ( ntypx )
       INTEGER,   ALLOCATABLE   :: ityp_ ( : ) 
       INTEGER,   ALLOCATABLE   :: isrt_ ( : ) 
-      REAL(dbl), ALLOCATABLE   :: tau_ ( :, : ) 
+      REAL(DP), ALLOCATABLE   :: tau_ ( :, : ) 
       INTEGER,   ALLOCATABLE   :: if_pos_ ( :, : ) 
       CHARACTER(LEN=256)       :: psfile_ ( ntypx )
       CHARACTER(LEN=80)        :: pos_unit
@@ -1116,7 +1116,7 @@ MODULE cp_restart
 
     SUBROUTINE cp_read_wfc( ndr, scradir, ik, nk, ispin, nspin, c2, c4, tag )
       !
-      USE kinds, ONLY: dbl
+      USE kinds, ONLY: DP
       USE io_global, ONLY: ionode, ionode_id, stdout
       USE electrons_base, ONLY: nbnd, iupdwn
       USE reciprocal_vectors, ONLY: ngwt, ngw, ig_l2g
@@ -1125,13 +1125,13 @@ MODULE cp_restart
       INTEGER, INTENT(IN) :: ndr
       CHARACTER(LEN=*), INTENT(IN) :: scradir
       CHARACTER, INTENT(IN) :: tag
-      COMPLEX(dbl), OPTIONAL, INTENT(OUT) :: c2(:,:) !
-      COMPLEX(dbl), OPTIONAL, INTENT(OUT) :: c4(:,:,:,:) !
+      COMPLEX(DP), OPTIONAL, INTENT(OUT) :: c2(:,:) !
+      COMPLEX(DP), OPTIONAL, INTENT(OUT) :: c4(:,:,:,:) !
       INTEGER, INTENT(IN) :: ik, ispin, nk, nspin
       !
       CHARACTER(LEN=256) :: dirname, filename
       INTEGER :: ib, kunit , ispin_ , nspin_ , ngwt_ , nbnd_
-      REAL(dbl) :: scalef
+      REAL(DP) :: scalef
       !
       kunit = 1
       !
@@ -1170,7 +1170,7 @@ MODULE cp_restart
       ( ndr, scradir, ascii, ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh )
       !
       USE iotk_module
-      USE kinds, ONLY: dbl
+      USE kinds, ONLY: DP
       USE io_global, ONLY: ionode, ionode_id, stdout
       USE parser, ONLY: int_to_char
       USE io_files, ONLY: iunpun, xmlpun
@@ -1180,13 +1180,13 @@ MODULE cp_restart
       INTEGER, INTENT(IN) :: ndr
       CHARACTER(LEN=*), INTENT(IN) :: scradir
       LOGICAL, INTENT(IN) :: ascii
-      REAL(dbl), INTENT(INOUT) :: ht(3,3) !
-      REAL(dbl), INTENT(INOUT) :: htm(3,3) !
-      REAL(dbl), INTENT(INOUT) :: htvel(3,3) !
-      REAL(dbl), INTENT(INOUT) :: gvel(3,3) !
-      REAL(dbl), INTENT(INOUT) :: xnhh0(3,3) !
-      REAL(dbl), INTENT(INOUT) :: xnhhm(3,3) !
-      REAL(dbl), INTENT(INOUT) :: vnhh(3,3) !
+      REAL(DP), INTENT(INOUT) :: ht(3,3) !
+      REAL(DP), INTENT(INOUT) :: htm(3,3) !
+      REAL(DP), INTENT(INOUT) :: htvel(3,3) !
+      REAL(DP), INTENT(INOUT) :: gvel(3,3) !
+      REAL(DP), INTENT(INOUT) :: xnhh0(3,3) !
+      REAL(DP), INTENT(INOUT) :: xnhhm(3,3) !
+      REAL(DP), INTENT(INOUT) :: vnhh(3,3) !
       !
       CHARACTER(LEN=256) :: dirname, filename
       INTEGER :: strlen
@@ -1197,10 +1197,10 @@ MODULE cp_restart
       ! Variables read for testing pourposes
       !
       INTEGER          :: ibrav_
-      REAL(dbl)        :: alat_
-      REAL(dbl)        :: celldm_ ( 6 )
-      REAL(dbl)        :: a1_ ( 3 ), a2_ ( 3 ), a3_ ( 3 )
-      REAL(dbl)        :: b1_ ( 3 ), b2_ ( 3 ), b3_ ( 3 )
+      REAL(DP)        :: alat_
+      REAL(DP)        :: celldm_ ( 6 )
+      REAL(DP)        :: a1_ ( 3 ), a2_ ( 3 ), a3_ ( 3 )
+      REAL(DP)        :: b1_ ( 3 ), b2_ ( 3 ), b3_ ( 3 )
       CHARACTER(LEN=9) :: symm_type_
 
       dirname  = restart_dir( scradir, ndr ) 
@@ -1320,7 +1320,7 @@ MODULE cp_restart
     SUBROUTINE write_wfc(iuni, ik, nk, kunit, ispin, nspin, wf, ngw, nbnd, igl, &
                          ngwl, filename, scalef )
 !
-      USE kinds, ONLY: dbl
+      USE kinds, ONLY: DP
       USE mp_wave
       USE mp,        ONLY: mp_sum, mp_get, mp_bcast, mp_max
       USE mp_global, ONLY: mpime, nproc, root, me_pool, my_pool_id, &
@@ -1332,18 +1332,18 @@ MODULE cp_restart
 !
       INTEGER, INTENT(IN) :: iuni
       INTEGER, INTENT(IN) :: ik, nk, kunit, ispin, nspin
-      COMPLEX(dbl), INTENT(IN) :: wf(:,:)
+      COMPLEX(DP), INTENT(IN) :: wf(:,:)
       INTEGER, INTENT(IN) :: ngw   ! 
       INTEGER, INTENT(IN) :: nbnd
       INTEGER, INTENT(IN) :: ngwl
       INTEGER, INTENT(IN) :: igl(:)
       CHARACTER(LEN=256), INTENT(IN) :: filename
-      REAL(dbl), INTENT(IN) :: scalef
+      REAL(DP), INTENT(IN) :: scalef
 
       INTEGER :: i, j, ierr
       INTEGER :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx
       INTEGER :: npool, ipmask( nproc ), ipsour
-      COMPLEX(dbl), ALLOCATABLE :: wtmp(:)
+      COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       INTEGER, ALLOCATABLE :: igltot(:)
       INTEGER                       :: ierr_iotk
       CHARACTER(LEN=iotk_attlenx)   :: attr
@@ -1490,7 +1490,7 @@ MODULE cp_restart
     SUBROUTINE read_wfc( iuni, ik, nk, kunit, ispin, nspin, wf, ngw, nbnd, igl, &
                          ngwl, filename, scalef )
 !
-      USE kinds, ONLY: dbl
+      USE kinds, ONLY: DP
       USE mp_wave
       USE mp, ONLY: mp_sum, mp_put, mp_bcast, mp_max, mp_get
       USE mp_global, ONLY: mpime, nproc, root, me_pool, my_pool_id, &
@@ -1501,20 +1501,20 @@ MODULE cp_restart
       IMPLICIT NONE
 !
       INTEGER, INTENT(IN) :: iuni
-      COMPLEX(dbl), INTENT(OUT) :: wf(:,:)
+      COMPLEX(DP), INTENT(OUT) :: wf(:,:)
       INTEGER, INTENT(IN) :: ik, nk
       INTEGER, INTENT(INOUT) :: kunit
       INTEGER, INTENT(INOUT) :: ngw, nbnd, ispin, nspin
       INTEGER, INTENT(IN) :: ngwl
       INTEGER, INTENT(IN) :: igl(:)
       CHARACTER(LEN=256), INTENT(IN)    :: filename
-      REAL(dbl), INTENT(OUT) :: scalef
+      REAL(DP), INTENT(OUT) :: scalef
       INTEGER                       :: ierr_iotk
       CHARACTER(LEN=iotk_attlenx)   :: attr
 
 
       INTEGER :: i, j
-      COMPLEX(dbl), ALLOCATABLE :: wtmp(:)
+      COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       INTEGER, ALLOCATABLE :: igltot(:)
       INTEGER :: ierr
 
@@ -1679,14 +1679,14 @@ MODULE cp_restart
     SUBROUTINE read_cell( ibrav, symm_type, celldm, alat, a1, a2, a3, b1, b2, b3 )
       !
       USE iotk_module
-      USE kinds,       ONLY: dbl
+      USE kinds,       ONLY: DP
       USE io_files,    ONLY: iunpun
       !
       INTEGER,   INTENT(OUT) :: ibrav
       CHARACTER(LEN=*), INTENT(OUT) :: symm_type
-      REAL(dbl), INTENT(OUT) :: celldm( 6 ), alat
-      REAL(dbl), INTENT(OUT) :: a1( 3 ), a2( 3 ), a3( 3 )
-      REAL(dbl), INTENT(OUT) :: b1( 3 ), b2( 3 ), b3( 3 )
+      REAL(DP), INTENT(OUT) :: celldm( 6 ), alat
+      REAL(DP), INTENT(OUT) :: a1( 3 ), a2( 3 ), a3( 3 )
+      REAL(DP), INTENT(OUT) :: b1( 3 ), b2( 3 ), b3( 3 )
       !
       CHARACTER(LEN=256)      :: bravais_lattice
       CHARACTER(iotk_attlenx) :: attr
@@ -1758,15 +1758,15 @@ MODULE cp_restart
     SUBROUTINE read_ions( nsp, nat, atm, ityp, psfile, amass, tau, if_pos, pos_unit, ierr )
       !
       USE iotk_module
-      USE kinds,       ONLY: dbl
+      USE kinds,       ONLY: DP
       USE io_files,    ONLY: iunpun
       !
       INTEGER,            INTENT(OUT) :: nsp, nat
       CHARACTER(LEN=3),   INTENT(OUT) :: atm( : )
       INTEGER,            INTENT(OUT) :: ityp( : )
       CHARACTER(LEN=256), INTENT(OUT) :: psfile( : )
-      REAL(dbl),          INTENT(OUT) :: amass( : )
-      REAL(dbl),          INTENT(OUT) :: tau( :, : )
+      REAL(DP),          INTENT(OUT) :: amass( : )
+      REAL(DP),          INTENT(OUT) :: tau( :, : )
       INTEGER,            INTENT(OUT) :: if_pos( :, : )
       INTEGER,            INTENT(OUT) :: ierr
       CHARACTER(LEN=*),   INTENT(OUT) :: pos_unit

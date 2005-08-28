@@ -21,13 +21,13 @@ subroutine psyme2 (dvtosym)
   USE pfft,      ONLY : npp, ncplane
   implicit none
 
-  complex(kind=DP) :: dvtosym (nrxx, 6)
+  complex(DP) :: dvtosym (nrxx, 6)
   ! the potential to symmetrize
   !-local variable
 
   integer :: i, is, iper, npp0
 
-  complex(kind=DP), allocatable :: ddvtosym (:,:)
+  complex(DP), allocatable :: ddvtosym (:,:)
   ! the potential to symmetrize
 
   allocate (ddvtosym ( nrx1 * nrx2 * nrx3, 6))

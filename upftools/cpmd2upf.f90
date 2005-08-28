@@ -48,19 +48,19 @@ module cpmd
   character (len=80) title
   !
   integer :: ixc
-  real(kind=8) :: alphaxc
+  real(8) :: alphaxc
   integer :: z, zv
   !
   integer :: mesh_
-  real(kind=8) :: amesh
-  real(kind=8), allocatable :: r_(:)
+  real(8) :: amesh
+  real(8), allocatable :: r_(:)
   !
   integer ::lmax_
-  real(kind=8), allocatable :: vnl(:,:)
-  real(kind=8), allocatable :: chi_(:,:)
+  real(8), allocatable :: vnl(:,:)
+  real(8), allocatable :: chi_(:,:)
   !
   logical :: nlcc_
-  real(kind=8), allocatable :: rho_atc_(:)
+  real(8), allocatable :: rho_atc_(:)
   !
   integer :: maxinfo_, info_lines_
   parameter (maxinfo_ = 100)
@@ -81,7 +81,7 @@ subroutine read_cpmd(iunps)
   integer :: i, l, ios
   character (len=80) line
   character (len=4) token
-  real (kind=8) :: vnl0(0:3)
+  real (8) :: vnl0(0:3)
   logical, external :: matches
   integer, external :: locate
   !
@@ -203,9 +203,9 @@ subroutine convert_cpmd
   use cpmd
   use upf
   implicit none
-  real(kind=8), parameter :: rmax = 10.0
-  real(kind=8), allocatable :: aux(:)
-  real(kind=8) :: vll
+  real(8), parameter :: rmax = 10.0
+  real(8), allocatable :: aux(:)
+  real(8) :: vll
   character (len=20):: dft  
   character (len=2), external :: atom_name
   integer :: lloc, kkbeta, my_lmax

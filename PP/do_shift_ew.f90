@@ -31,7 +31,7 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
 
   logical :: gamma_only
 
-  real(kind=DP) :: tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
+  real(DP) :: tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
        at (3, 3), bg (3, 3), omega, alat, gcutm, delta_zv(ntyp),  &
        shift_ion(nat)
   ! input: the positions of the atoms in the cell
@@ -43,15 +43,15 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
   ! input: the volume of the unit cell
   ! input: lattice parameter
   ! input: cut-off of g vectors
-  real(kind=DP) :: ewald
+  real(DP) :: ewald
   ! output: the ewald energy
   !
   !    here the local variables
   !
   integer, parameter :: mxr = 50
   ! the maximum number of R vectors included in r
-  real(kind=DP), parameter :: tpi = 2.d0 * 3.141592653589793d0
-  real(kind=DP), parameter :: e2 = 2.d0
+  real(DP), parameter :: tpi = 2.d0 * 3.141592653589793d0
+  real(DP), parameter :: e2 = 2.d0
   ! the square of the electron charge (Ry atomic units)
   integer :: ng, nr, na, nb, nt, nrm, ipol
   ! counter over reciprocal G vectors
@@ -62,7 +62,7 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
   ! number of R vectors included in r sum
   ! counter on polarization
 
-  real(kind=DP) :: charge, tpiba2, ewaldg, ewaldr, dtau (3), alpha, &
+  real(DP) :: charge, tpiba2, ewaldg, ewaldr, dtau (3), alpha, &
        r (3, mxr), r2 (mxr), rmax, rr, upperbound, fact, arg
   ! total ionic charge in the cell
   ! length in reciprocal space
@@ -75,8 +75,8 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
   ! the maximum radius to consider real space sum
   ! buffer variable
   ! used to optimize alpha
-  complex(kind=DP), allocatable :: rhon(:)
-  real(kind=DP), external :: erfc
+  complex(DP), allocatable :: rhon(:)
+  real(DP), external :: erfc
 
   allocate (rhon(ngm))
 

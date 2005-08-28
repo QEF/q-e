@@ -21,14 +21,14 @@ SUBROUTINE psyme (dvtosym)
   !
   IMPLICIT NONE
   !
-  COMPLEX(kind=DP) :: dvtosym (nrxx, nspin, 3)
+  COMPLEX(DP) :: dvtosym (nrxx, nspin, 3)
     ! the potential to symmetrize
     !-local variable
   !
 #if defined (__PARA)
   !
   INTEGER :: i, is, iper, npp0
-  COMPLEX(kind=DP), ALLOCATABLE :: ddvtosym (:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: ddvtosym (:,:,:)
     ! the potential to symmet
   !
   !

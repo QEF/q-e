@@ -7,7 +7,7 @@
 !
 MODULE ensemble_dft
 
-  USE kinds, ONLY: dbl
+  USE kinds, ONLY: DP
 
   IMPLICIT NONE
   SAVE
@@ -24,61 +24,61 @@ MODULE ensemble_dft
                                            !  5 => cold smearing i
                                            !  6 => cold smearing ii
                                            ! (only 2 works).
-      real(dbl) :: etemp      = 0       ! smearing temperature.
-      real(dbl) :: ef         = 0       ! Fermi energy (relevant if tgrand=.true.).
+      real(DP) :: etemp      = 0       ! smearing temperature.
+      real(DP) :: ef         = 0       ! Fermi energy (relevant if tgrand=.true.).
       logical      :: tdynz      = .false. ! whether to do dynamics for the
                                            ! rotational degrees of freedom.
       logical      :: tdynf      = .false. ! whether to do dynamics for the
                                            ! unitary degrees of freedom.
-      real(dbl) :: zmass      = 0       ! mass for the rotational degrees of freedom
+      real(DP) :: zmass      = 0       ! mass for the rotational degrees of freedom
                                            ! in CP Lagrangian.
-      real(dbl) :: fmass      = 0       ! mass for the occupational degrees of freedom
+      real(DP) :: fmass      = 0       ! mass for the occupational degrees of freedom
                                            ! in CP Lagrangian.
-      real(dbl) :: fricz      = 0       ! unitary degrees of freedom damping.
-      real(dbl) :: fricf      = 0       ! occupational degrees of freedom damping.
+      real(DP) :: fricz      = 0       ! unitary degrees of freedom damping.
+      real(DP) :: fricf      = 0       ! occupational degrees of freedom damping.
 
 !***ensemble-DFT
-      real(dbl), allocatable::                 bec0(:,:)
-      real(dbl), allocatable::                 becm(:,:)
-      real(dbl), allocatable::           becdrdiag(:,:,:)
-      real(dbl), allocatable::                  z0(:,:,:)
-      real(dbl), allocatable::                  id(:,:,:)
-      real(dbl), allocatable::               fion2(:,:)
-      complex(dbl), allocatable::             c0diag(:,:)
-      real(dbl), allocatable::               becdiag(:,:)
-      real(dbl), allocatable::               c0hc0(:,:,:)
-      real(dbl), allocatable::              c0h0c0(:,:,:)
-      real(dbl), allocatable::             c0hxcc0(:,:,:)
-      complex(dbl), allocatable::               h0c0(:,:)
-      complex(dbl), allocatable::              hxcc0(:,:)
-      real(dbl), allocatable::                  z1(:,:,:)
-      real(dbl), allocatable::                  zx(:,:,:)
-      real(dbl), allocatable::                 zxt(:,:,:)
-      real(dbl), allocatable::                zaux(:,:,:)
-      real(dbl), allocatable::                    dval(:)
-      real(dbl), allocatable::                      e0(:)
-      real(dbl), allocatable::                      e1(:)
-      real(dbl), allocatable::                      ex(:)
-      real(dbl), allocatable::                      dx(:)
-      real(dbl), allocatable::                      f0(:)
-      real(dbl), allocatable::                      f1(:)
-      real(dbl), allocatable::                      fx(:)
-      real(dbl), allocatable::                    faux(:)
-      real(dbl), allocatable::               fmat0(:,:,:)
-      real(dbl), allocatable::               fmat1(:,:,:)
-      real(dbl), allocatable::               fmatx(:,:,:)
-      real(dbl), allocatable::               dfmat(:,:,:)
-      real(dbl), allocatable::                     v0s(:)
-      real(dbl), allocatable::                 vhxcs(:,:)
-      real(dbl), allocatable::               epsi0(:,:,:)
-      real(dbl) :: atot0,atot1,atotmin,etot0,etot1,etotmin
-      real(dbl) :: ef1,enocc
-      real(dbl) :: dadx1,dedx1,dentdx1,eqa,eqb,eqc
-      real(dbl) :: etot2,entropy2
-      real(dbl) :: f2,x,xx,xmin
-      complex(dbl) :: c0doti,c0dotk
+      real(DP), allocatable::                 bec0(:,:)
+      real(DP), allocatable::                 becm(:,:)
+      real(DP), allocatable::           becdrdiag(:,:,:)
+      real(DP), allocatable::                  z0(:,:,:)
+      real(DP), allocatable::                  id(:,:,:)
+      real(DP), allocatable::               fion2(:,:)
+      complex(DP), allocatable::             c0diag(:,:)
+      real(DP), allocatable::               becdiag(:,:)
+      real(DP), allocatable::               c0hc0(:,:,:)
+      real(DP), allocatable::              c0h0c0(:,:,:)
+      real(DP), allocatable::             c0hxcc0(:,:,:)
+      complex(DP), allocatable::               h0c0(:,:)
+      complex(DP), allocatable::              hxcc0(:,:)
+      real(DP), allocatable::                  z1(:,:,:)
+      real(DP), allocatable::                  zx(:,:,:)
+      real(DP), allocatable::                 zxt(:,:,:)
+      real(DP), allocatable::                zaux(:,:,:)
+      real(DP), allocatable::                    dval(:)
+      real(DP), allocatable::                      e0(:)
+      real(DP), allocatable::                      e1(:)
+      real(DP), allocatable::                      ex(:)
+      real(DP), allocatable::                      dx(:)
+      real(DP), allocatable::                      f0(:)
+      real(DP), allocatable::                      f1(:)
+      real(DP), allocatable::                      fx(:)
+      real(DP), allocatable::                    faux(:)
+      real(DP), allocatable::               fmat0(:,:,:)
+      real(DP), allocatable::               fmat1(:,:,:)
+      real(DP), allocatable::               fmatx(:,:,:)
+      real(DP), allocatable::               dfmat(:,:,:)
+      real(DP), allocatable::                     v0s(:)
+      real(DP), allocatable::                 vhxcs(:,:)
+      real(DP), allocatable::               epsi0(:,:,:)
+      real(DP) :: atot0,atot1,atotmin,etot0,etot1,etotmin
+      real(DP) :: ef1,enocc
+      real(DP) :: dadx1,dedx1,dentdx1,eqa,eqb,eqc
+      real(DP) :: etot2,entropy2
+      real(DP) :: f2,x,xx,xmin
+      complex(DP) :: c0doti,c0dotk
       integer ::  niter,nss,istart,il
-      real(dbl) :: gibbsfe
+      real(DP) :: gibbsfe
 
 
 CONTAINS
@@ -86,10 +86,10 @@ CONTAINS
 
   SUBROUTINE compute_entropy( entropy, f, nspin )
     implicit none
-    real(dbl), intent(out) :: entropy
-    real(dbl), intent(in) :: f
+    real(DP), intent(out) :: entropy
+    real(DP), intent(in) :: f
     integer, intent(in) :: nspin
-    real(dbl) :: f2
+    real(DP) :: f2
     entropy=0.0
     if ((f.gt.1.0d-20).and.(f.lt.(2.0/DBLE(nspin)-1.0d-20))) then
        f2=DBLE(nspin)*f/2.0
@@ -101,10 +101,10 @@ CONTAINS
 
   SUBROUTINE compute_entropy2( entropy, f, n, nspin )
     implicit none
-    real(dbl), intent(out) :: entropy
-    real(dbl), intent(in) :: f(:)
+    real(DP), intent(out) :: entropy
+    real(DP), intent(in) :: f(:)
     integer, intent(in) :: n, nspin
-    real(dbl) :: f2
+    real(DP) :: f2
     integer :: i
     entropy=0.0
     do i=1,n
@@ -120,10 +120,10 @@ CONTAINS
 
   SUBROUTINE compute_entropy_der( ex, fx, n, nspin )
     implicit none
-    real(dbl), intent(out) :: ex(:)
-    real(dbl), intent(in) :: fx(:)
+    real(DP), intent(out) :: ex(:)
+    real(DP), intent(in) :: fx(:)
     integer, intent(in) :: n, nspin
-    real(dbl) :: f2,xx
+    real(DP) :: f2,xx
     integer :: i
     !     calculation of the entropy derivative at x
     do i=1,n
@@ -172,8 +172,8 @@ CONTAINS
     CHARACTER(LEN=*), INTENT(IN) :: occupation_dynamics_
     CHARACTER(LEN=*), INTENT(IN) :: smearing_
     INTEGER, INTENT(IN) :: n_inner_
-    REAL(dbl), INTENT(IN) :: fermi_energy_ , rotmass_ , occmass_ , rotation_damping_
-    REAL(dbl), INTENT(IN) :: occupation_damping_ , degauss_
+    REAL(DP), INTENT(IN) :: fermi_energy_ , rotmass_ , occmass_ , rotation_damping_
+    REAL(DP), INTENT(IN) :: occupation_damping_ , degauss_
 
       SELECT CASE ( TRIM( occupations_ ) )
           !

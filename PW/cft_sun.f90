@@ -25,13 +25,13 @@ subroutine cft_1 (f, m, n, nx, sgn, fout)
   implicit none
 
   integer :: m, n, nx, sgn
-  complex (kind=DP) :: f (nx * m), fout (nx * m)
+  complex (DP) :: f (nx * m), fout (nx * m)
 !
 ! Local variables
 !
   integer :: on (2), naux1, isign, itype, i
   parameter (naux1 = 20000)
-  real (kind=DP) :: aux1 (naux1, 2)
+  real (DP) :: aux1 (naux1, 2)
   external zffti, zfftb, zfftf, zdscal
   data on / 0, 0 /
 
@@ -78,14 +78,14 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
 USE kinds, only : DP
   implicit none
   integer :: n1, n2, mplane, nx1, nx2, sgn
-  complex (kind=DP) :: f (nx1 * nx2 * mplane)
+  complex (DP) :: f (nx1 * nx2 * mplane)
 !
 ! Local variables
 !
   integer :: isign, itype, on1 (2), on2 (2), m, i, k, istrt, naux1, &
        naux2
   parameter (naux1 = 20000, naux2 = 10000)
- real (kind=DP) :: aux1 (naux1, 2, 2), fj (naux2)
+ real (DP) :: aux1 (naux1, 2, 2), fj (naux2)
   !
   !
   external zffti, zfftb, zfftf, zdscal

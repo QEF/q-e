@@ -33,7 +33,7 @@ PROGRAM postproc
   INTEGER :: plot_num, kpoint, kband, spin_component, ios
   LOGICAL :: stm_wfc_matching, lsign
 
-  REAL(kind=DP) :: emin, emax, sample_bias, z, dz, epsilon
+  REAL(DP) :: emin, emax, sample_bias, z, dz, epsilon
   ! directory for temporary files
   CHARACTER(len=256) :: outdir
 

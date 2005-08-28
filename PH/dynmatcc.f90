@@ -19,11 +19,11 @@ subroutine dynmatcc
   use phcom
   implicit none
 
-  complex(kind=DP) ::  dynwrk (3 * nat, 3 * nat),  wrk, exc
-  complex(kind=DP), allocatable :: vxc (:), work(:)
+  complex(DP) ::  dynwrk (3 * nat, 3 * nat),  wrk, exc
+  complex(DP), allocatable :: vxc (:), work(:)
   ! exchange and correlation potential
-  real(kind=DP), allocatable :: v (:,:)
-  real(kind=DP) :: q0(3), arg, etxcd, vtxcd
+  real(DP), allocatable :: v (:,:)
+  real(DP) :: q0(3), arg, etxcd, vtxcd
   !
   integer :: i, j, ir, is, isup, isdw, ig, na, nb, nta, ntb, na_i, na_j, &
        nb_j, na_icart, nb_jcart, nu_i, nu_j

@@ -13,11 +13,11 @@ MODULE g_psi_mod
   !
   IMPLICIT NONE
   !
-  REAL(KIND=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
     h_diag (:),&   ! diagonal part of the Hamiltonian
     s_diag (:)     ! diagonal part of the overlap matrix
   !
-  REAL(KIND=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
     h_diag_nc (:,:),&   ! diagonal part of the Hamiltonian
     s_diag_nc (:,:)     ! diagonal part of the overlap matrix
   !

@@ -21,11 +21,11 @@ subroutine setup_dgc
   use funct
   implicit none
   integer :: k, is
-  real(kind=DP) :: grho2 (2), rh, zeta, grh2, fac, sx, sc, &
+  real(DP) :: grho2 (2), rh, zeta, grh2, fac, sx, sc, &
        v1x, v2x, v1c, v2c, vrrx, vsrx, vssx, vrrc, vsrc, vssc, v1xup, &
        v1xdw, v2xup, v2xdw, v1cup, v1cdw, vrrxup, vrrxdw, vrsxup, vrsxdw, &
        vssxup, vssxdw, vrrcup, vrrcdw, vrscup, vrscdw, vrzcup, vrzcdw
-  real (kind=DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
+  real (DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
 
   if (igcx == 0 .and. igcc == 0) return
   allocate (dvxc_rr(  nrxx , nspin , nspin))    

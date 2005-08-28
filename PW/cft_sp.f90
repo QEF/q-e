@@ -25,10 +25,10 @@ subroutine cft_1 (f, m, n, nx, sgn, fout)
   implicit none
   integer :: m, n, nx, sgn
 
-  complex (kind=8) :: f (nx * m), fout (nx * m)
+  complex (8) :: f (nx * m), fout (nx * m)
   integer :: sign, isign, op (2), om (2), naux1, naux2, itype
   parameter (naux1 = 20000, naux2 = 20000)
-  real (kind=8) :: aux1p (naux1, 2), aux1m (naux1, 2), aux2 (naux2), &
+  real (8) :: aux1p (naux1, 2), aux1m (naux1, 2), aux2 (naux2), &
        scale
   external DSCAL
   data op, om / 0, 0, 0, 0 /
@@ -80,11 +80,11 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
   implicit none
   integer :: n1, n2, mplane, nx1, nx2, sgn
 
-  complex (kind=8) :: f (nx1 * nx2 * mplane)
+  complex (8) :: f (nx1 * nx2 * mplane)
   integer :: isign, itype, o1p, o2p, o1m, o2m, m, incx2, incx1, k, &
        istrt, naux1, naux2
   parameter (naux1 = 20000, naux2 = 20000)
-  real (kind=8) :: aux1p (naux1, 2), aux1m (naux1, 2), aux2 (naux2), &
+  real (8) :: aux1p (naux1, 2), aux1m (naux1, 2), aux2 (naux2), &
        scale
   external DSCAL
   data o1p, o2p, o1m, o2m / 0, 0, 0, 0 /
@@ -184,11 +184,11 @@ subroutine cft_2s (f, mplane, n1, n2, nx1, nx2, sgn, planes)
   implicit none
   integer :: n1, n2, mplane, nx1, nx2, sgn, planes (nx1)
 
-  complex (kind=8) :: f (nx1 * nx2 * mplane)
+  complex (8) :: f (nx1 * nx2 * mplane)
   integer :: isign, itype, o1p, o2p, o1m, o2m, m, incx2, incx1, k, &
        i, istrt, naux1, naux2
   parameter (naux1 = 20000, naux2 = 20000)
-  real (kind=8) :: aux1p (naux1, 2), aux1m (naux1, 2), aux2 (naux2), &
+  real (8) :: aux1p (naux1, 2), aux1m (naux1, 2), aux2 (naux2), &
        scale
   external DSCAL
   data o1p, o2p, o1m, o2m / 0, 0, 0, 0 /

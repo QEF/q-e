@@ -29,11 +29,11 @@ subroutine q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   ! symmetry op. giving the rotated q
   ! index of -q in the star (0 if non present)
   ! unit number
-  complex(kind=DP) :: dyn (3 * nat, 3 * nat)
+  complex(DP) :: dyn (3 * nat, 3 * nat)
   ! the input dynamical matrix. if imq.ne.0 the
   ! output matrix is symmetrized w.r.t. time-reversal
 
-  real(kind=DP) :: at (3, 3), bg (3, 3), rtau (3, 48, nat), sxq (3, 48)
+  real(DP) :: at (3, 3), bg (3, 3), rtau (3, 48, nat), sxq (3, 48)
   ! direct lattice vectors
   ! reciprocal lattice vectors
   ! for each atom and rotation gives the R vector involved
@@ -44,7 +44,7 @@ subroutine q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   ! counters
   ! nsq: number of sym.op. giving each q in the list
 
-  complex(kind=DP) :: phi (3, 3, nat, nat), phi2 (3, 3, nat, nat)
+  complex(DP) :: phi (3, 3, nat, nat), phi2 (3, 3, nat, nat)
   ! work space
   !
   ! Sets number of symmetry operations giving each q in the list

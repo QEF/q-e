@@ -9,14 +9,14 @@
       MODULE runcg_ion_module
 ! ---------------------------------------------------------------------- !
 
-        USE kinds, ONLY: dbl
+        USE kinds, ONLY: DP
 
         IMPLICIT NONE
         SAVE
  
         PRIVATE
 
-        REAL(dbl) :: old_clock_value = 0.0d0
+        REAL(DP) :: old_clock_value = 0.0d0
 
         LOGICAL :: cg_prn = .FALSE. 
 
@@ -64,52 +64,52 @@
       TYPE (atoms_type) :: atomsp
       TYPE (atoms_type) :: atoms0
       TYPE (atoms_type) :: atomsm
-      COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cp(:,:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cp(:,:,:,:)
       TYPE (wave_descriptor) :: cdesc
       TYPE (charge_descriptor) :: desc
-      REAL(dbl) :: rhoe(:,:,:,:)
-      REAL(dbl) :: bec(:,:)
-      REAL(dbl) :: becdr(:,:,:)
-      COMPLEX(dbl) :: eigr(:,:)
-      COMPLEX(dbl) :: ei1(:,:)
-      COMPLEX(dbl) :: ei2(:,:)
-      COMPLEX(dbl) :: ei3(:,:)
-      COMPLEX(dbl) :: sfac(:,:)
+      REAL(DP) :: rhoe(:,:,:,:)
+      REAL(DP) :: bec(:,:)
+      REAL(DP) :: becdr(:,:,:)
+      COMPLEX(DP) :: eigr(:,:)
+      COMPLEX(DP) :: ei1(:,:)
+      COMPLEX(DP) :: ei2(:,:)
+      COMPLEX(DP) :: ei3(:,:)
+      COMPLEX(DP) :: sfac(:,:)
       TYPE (boxdimensions), INTENT(INOUT) ::  ht
-      REAL(dbl)  :: occ(:,:,:)
+      REAL(DP)  :: occ(:,:,:)
       TYPE (dft_energy_type) :: edft
 
-      REAL(dbl)    :: ei(:,:,:)
-      REAL(dbl)    :: vpot(:,:,:,:)
+      REAL(DP)    :: ei(:,:,:)
+      REAL(DP)    :: vpot(:,:,:,:)
 
       INTEGER, INTENT(IN) :: maxnstep, maxiter
-      REAL(dbl), INTENT(IN) :: sdthr, etol, ftol
+      REAL(DP), INTENT(IN) :: sdthr, etol, ftol
 
       ! ... declare other variables
 
       LOGICAL :: ttsde, ttprint, ttforce, ttstress, ttortho
       LOGICAL :: tbad
-      REAL(dbl) :: timepre, s0, s1, s2, s3, s4, s5, s6, seconds_per_iter
-      REAL(dbl) :: dene, eold, timerd, timeorto, ekinc
+      REAL(DP) :: timepre, s0, s1, s2, s3, s4, s5, s6, seconds_per_iter
+      REAL(DP) :: dene, eold, timerd, timeorto, ekinc
 
-      REAL(dbl)    :: gg, ggo, dgg, emin, demin, gam, fp, fret
-      REAL(dbl) :: lambda, fions(3), dumm
+      REAL(DP)    :: gg, ggo, dgg, emin, demin, gam, fp, fret
+      REAL(DP) :: lambda, fions(3), dumm
 
-      REAL(dbl), POINTER :: hacca(:,:)
-      REAL(dbl), POINTER :: gnew(:,:)
-      REAL(dbl), POINTER :: xi(:,:)
+      REAL(DP), POINTER :: hacca(:,:)
+      REAL(DP), POINTER :: gnew(:,:)
+      REAL(DP), POINTER :: xi(:,:)
 
       INTEGER :: i, iter, ierr, is, ia, isa, k, j
 
-      REAL(dbl) :: displ, amtot
+      REAL(DP) :: displ, amtot
 
-      REAL(dbl) :: eps = 1.0d-20
+      REAL(DP) :: eps = 1.0d-20
 
-      REAL(dbl) ::  avgs(nacx)
-      REAL(dbl) ::  avgs_this_run(nacx)
+      REAL(DP) ::  avgs(nacx)
+      REAL(DP) ::  avgs_this_run(nacx)
       INTEGER   ::  nat
 
-      REAL(dbl), EXTERNAL :: cclock
+      REAL(DP), EXTERNAL :: cclock
 
 
 ! ... end of declarations
@@ -308,46 +308,46 @@
         IMPLICIT NONE
 
 ! ...   ARGUMENTS
-        REAL(dbl) :: emin
+        REAL(DP) :: emin
         TYPE (atoms_type) :: atomsp
         TYPE (atoms_type) :: atoms0
-        COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:)
-        COMPLEX(dbl), INTENT(INOUT) :: cp(:,:,:,:)
-        COMPLEX(dbl), INTENT(INOUT) :: cm(:,:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: cp(:,:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: cm(:,:,:,:)
         TYPE (wave_descriptor) :: cdesc
         TYPE (charge_descriptor) :: desc
-        REAL(dbl) :: rhoe(:,:,:,:)
-        COMPLEX(dbl) :: eigr(:,:)
-        COMPLEX(dbl) :: ei1(:,:)
-        COMPLEX(dbl) :: ei2(:,:)
-        COMPLEX(dbl) :: ei3(:,:)
-        COMPLEX(dbl) :: sfac(:,:)
+        REAL(DP) :: rhoe(:,:,:,:)
+        COMPLEX(DP) :: eigr(:,:)
+        COMPLEX(DP) :: ei1(:,:)
+        COMPLEX(DP) :: ei2(:,:)
+        COMPLEX(DP) :: ei3(:,:)
+        COMPLEX(DP) :: sfac(:,:)
         TYPE (boxdimensions), INTENT(INOUT) ::  ht
-        REAL(dbl)  :: occ(:,:,:)
+        REAL(DP)  :: occ(:,:,:)
         TYPE (dft_energy_type) :: edft
-        REAL (dbl) ::  hacca(:,:)
-        REAL (dbl), INTENT(in) ::  vpot(:,:,:,:)
-        REAL(dbl) :: bec(:,:)
-        REAL(dbl) :: becdr(:,:,:)
+        REAL (DP) ::  hacca(:,:)
+        REAL (DP), INTENT(in) ::  vpot(:,:,:,:)
+        REAL(DP) :: bec(:,:)
+        REAL(DP) :: becdr(:,:,:)
 
-        REAL(dbl)    :: ei(:,:,:)
+        REAL(DP)    :: ei(:,:,:)
 
         INTEGER :: maxnstep
-        REAL(dbl) :: sdthr
-        REAL(dbl) :: displ
+        REAL(DP) :: sdthr
+        REAL(DP) :: displ
 
 !
 ! ... LOCALS
 !
 
-        REAL(dbl) :: GOLD, GLIMIT, TINY, CGOLD, ZEPS
+        REAL(DP) :: GOLD, GLIMIT, TINY, CGOLD, ZEPS
         INTEGER   :: itmax
         PARAMETER (GOLD=1.618034D0, GLIMIT=100.D0, TINY=1.D-20)
         PARAMETER (ITMAX=20, CGOLD=.3819660D0,ZEPS=1.0D-10)
 
-        REAL(dbl) :: ax, bx, cx, fa, fb, fc, dum, u, fu ,r, q, ulim
-        REAL(dbl) :: x, p, v, w, e, fw, fv, xm, tol1, tol2, a, b, etemp, d
-        REAL(dbl) :: fx, xmin, brent, eold, tol
+        REAL(DP) :: ax, bx, cx, fa, fb, fc, dum, u, fu ,r, q, ulim
+        REAL(DP) :: x, p, v, w, e, fw, fv, xm, tol1, tol2, a, b, etemp, d
+        REAL(DP) :: fx, xmin, brent, eold, tol
         LOGICAL   :: tbrent
         INTEGER   :: iter, i, j
 
@@ -507,15 +507,15 @@
 
     CONTAINS
 
-       REAL(dbl) FUNCTION cgenergy( hstep )
+       REAL(DP) FUNCTION cgenergy( hstep )
 
-         REAL(dbl) :: hstep
+         REAL(DP) :: hstep
 
          ! ... LOCALS
 
            INTEGER      ia, is, isa, k
            LOGICAL      ttprint, ttforce, ttstress, tcel, ttortho, doions
-           REAL(dbl) :: fions(3), dumm
+           REAL(DP) :: fions(3), dumm
 
          ! ... SUBROUTINE BODY
 

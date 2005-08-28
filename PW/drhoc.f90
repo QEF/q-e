@@ -22,7 +22,7 @@ integer :: ngl, mesh
                                ! input: the number of g shell
                                ! input: the number of radial mesh points
 
-real(kind=DP) :: gl (ngl), r (mesh), rab (mesh), rhoc (mesh), omega, &
+real(DP) :: gl (ngl), r (mesh), rab (mesh), rhoc (mesh), omega, &
  tpiba2, a_nlcc, b_nlcc, alpha_nlcc, rhocg (ngl)
                                ! input: the number of G shells
                                ! input: the radial mesh
@@ -39,14 +39,14 @@ logical :: numeric
 !
 !     two parameters
 !
-real(kind=DP) :: pi, fpi
+real(DP) :: pi, fpi
 parameter (pi = 3.14159265358979d0, fpi = 4.d0 * pi)
 !
 !     here the local variables
 !
 
-real(kind=DP) :: gx, g2a, rhocg1
-real(kind=DP), allocatable ::  aux (:)
+real(DP) :: gx, g2a, rhocg1
+real(DP), allocatable ::  aux (:)
                                  ! the modulus of g for a given shell
                                  ! the argument of the exponential
                                  ! the fourier transform

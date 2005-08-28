@@ -20,18 +20,18 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   !
   integer :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, nl (ngm), &
        nspin
-  real(kind=DP) :: rho (nrxx, nspin), grho (3, nrxx, nspin), &
+  real(DP) :: rho (nrxx, nspin), grho (3, nrxx, nspin), &
        dvxc_rr(nrxx, nspin, nspin), dvxc_sr (nrxx, nspin, nspin), &
        dvxc_ss (nrxx,nspin, nspin), dvxc_s (nrxx, nspin, nspin),&
        g (3, ngm), xq(3), alat, omega
-  complex(kind=DP) :: drho (nrxx, nspin), dvxc (nrxx, nspin)
+  complex(DP) :: drho (nrxx, nspin), dvxc (nrxx, nspin)
 
-  real(kind=DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
-  real(kind=DP) :: grho2
-  complex(kind=DP) :: s1
-  complex(kind=DP) :: a (2, 2, 2), b (2, 2, 2, 2), c (2, 2, 2), &
+  real(DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
+  real(DP) :: grho2
+  complex(DP) :: s1
+  complex(DP) :: a (2, 2, 2), b (2, 2, 2, 2), c (2, 2, 2), &
                       ps (2, 2), ps1 (3, 2, 2), ps2 (3, 2, 2, 2)
-  complex(kind=DP), allocatable  :: gdrho (:,:,:), h (:,:,:), dh (:)
+  complex(DP), allocatable  :: gdrho (:,:,:), h (:,:,:), dh (:)
   integer :: k, ipol, is, js, ks, ls
 
   allocate (gdrho( 3, nrxx , nspin))    
@@ -159,11 +159,11 @@ subroutine qgradient (xq, nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
   USE constants, ONLY: tpi
   implicit none
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm)
-  complex(kind=DP) :: a (nrxx), ga (3, nrxx)
-  real(kind=DP) :: g (3, ngm), alat, xq (3)
+  complex(DP) :: a (nrxx), ga (3, nrxx)
+  real(DP) :: g (3, ngm), alat, xq (3)
   integer :: n, ipol
-  real(kind=DP) :: tpiba
-  complex(kind=DP), allocatable :: aux (:), gaux (:)
+  real(DP) :: tpiba
+  complex(DP), allocatable :: aux (:), gaux (:)
 
   allocate (gaux(  nrxx))    
   allocate (aux (  nrxx))    
@@ -201,12 +201,12 @@ subroutine qgrad_dot (xq, nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
   USE constants, ONLY: tpi
   implicit none
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm)
-  complex(kind=DP) :: a (3, nrxx), da (nrxx)
+  complex(DP) :: a (3, nrxx), da (nrxx)
 
-  real(kind=DP) :: xq (3), g (3, ngm), alat
+  real(DP) :: xq (3), g (3, ngm), alat
   integer :: n, ipol
-  real(kind=DP) :: tpiba
-  complex(kind=DP), allocatable :: aux (:)
+  real(DP) :: tpiba
+  complex(DP), allocatable :: aux (:)
 
   allocate (aux (nrxx))
   tpiba = tpi / alat

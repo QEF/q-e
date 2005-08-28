@@ -192,9 +192,9 @@
 
       IMPLICIT NONE
 
-      REAL(dbl) :: tau( :, : )
-      REAL(dbl) :: fion( :, : )
-      REAL(dbl) :: etot
+      REAL(DP) :: tau( :, : )
+      REAL(DP) :: fion( :, : )
+      REAL(DP) :: etot
 
 ! ... declare functions
 
@@ -204,15 +204,15 @@
       INTEGER :: n1, n2, n3
       INTEGER :: n1s, n2s, n3s
 
-      REAL(dbl) :: ekinc, ekcell, ekinp, erhoold, maxfion
-      REAL(dbl) :: derho
-      REAL(dbl) :: ekincs( nspinx )
-      REAL(dbl) :: s1, s2, s3, s4, s5, s6, s7, s8
-      REAL(dbl) :: timernl, timerho, timevof, timepre
-      REAL(dbl) :: timeform, timerd, timeorto, timeloop
-      REAL(dbl) :: ekmt(3,3) = 0.0d0
-      REAL(dbl) :: hgamma(3,3) = 0.0d0
-      REAL(dbl) :: temphh(3,3) = 0.0d0
+      REAL(DP) :: ekinc, ekcell, ekinp, erhoold, maxfion
+      REAL(DP) :: derho
+      REAL(DP) :: ekincs( nspinx )
+      REAL(DP) :: s1, s2, s3, s4, s5, s6, s7, s8
+      REAL(DP) :: timernl, timerho, timevof, timepre
+      REAL(DP) :: timeform, timerd, timeorto, timeloop
+      REAL(DP) :: ekmt(3,3) = 0.0d0
+      REAL(DP) :: hgamma(3,3) = 0.0d0
+      REAL(DP) :: temphh(3,3) = 0.0d0
 
       LOGICAL :: ttforce, ttdiis
       LOGICAL :: ttprint, ttsave, ttdipole, ttoptical, ttexit
@@ -222,9 +222,9 @@
       LOGICAL :: ttionstep
       LOGICAL :: tconv_cg
 
-      REAL(dbl) :: vnosee, vnosep
+      REAL(DP) :: vnosee, vnosep
 
-      REAL(dbl), EXTERNAL  :: cclock
+      REAL(DP), EXTERNAL  :: cclock
 
       !
       ! ... end of declarations
@@ -236,16 +236,16 @@
 
       erhoold   = 1.0d+20  ! a very large number
       ekincs    = 0.0d0
-      ekinc     = 0.0_dbl
-      ekcell    = 0.0_dbl
-      timepre   = 0.0_dbl
-      timernl   = 0.0_dbl
-      timerho   = 0.0_dbl
-      timevof   = 0.0_dbl
-      timerd    = 0.0_dbl
-      timeorto  = 0.0_dbl
-      timeform  = 0.0_dbl
-      timeloop  = 0.0_dbl
+      ekinc     = 0.0_DP
+      ekcell    = 0.0_DP
+      timepre   = 0.0_DP
+      timernl   = 0.0_DP
+      timerho   = 0.0_DP
+      timevof   = 0.0_DP
+      timerd    = 0.0_DP
+      timeorto  = 0.0_DP
+      timeform  = 0.0_DP
+      timeloop  = 0.0_DP
       nstep_this_run  = 0
 
       MAIN_LOOP: DO 

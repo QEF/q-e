@@ -22,7 +22,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   ! the number of perturbations
   ! the representation under conside
 
-  complex(kind=DP) :: dvtosym (nrx1, nrx2, nrx3, nspin, nper)
+  complex(DP) :: dvtosym (nrx1, nrx2, nrx3, nspin, nper)
   ! the potential to symmetriz
 
   integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, &
@@ -40,13 +40,13 @@ subroutine symdvscf (nper, irr, dvtosym)
   ! counter on symmetries
   ! the rotation
 
-  real(kind=DP) :: g1 (48), g2 (48), g3 (48), in1, in2, in3
+  real(DP) :: g1 (48), g2 (48), g3 (48), in1, in2, in3
   ! used to construct the phases
   ! auxiliary variables
 
-  complex(kind=DP), allocatable :: dvsym (:,:,:,:)
+  complex(DP), allocatable :: dvsym (:,:,:,:)
   ! the symmetrized potential
-  complex(kind=DP) ::  aux2, term (3, 48), phase (48)
+  complex(DP) ::  aux2, term (3, 48), phase (48)
   ! auxiliary space
   ! the multiplication factor
   ! the phase factor

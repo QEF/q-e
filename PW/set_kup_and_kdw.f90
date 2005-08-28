@@ -30,7 +30,7 @@ subroutine set_kup_and_kdw (xk, wk, isk, nks, npk)
   ! input: maximum allowed number of k-points
   ! output: spin associated to a given k-point
   ! input-output: starting and ending number of k-points 
-  real(kind=DP) :: xk (3, npk), wk (npk)
+  real(DP) :: xk (3, npk), wk (npk)
   ! input-output: coordinates of k points
   ! input-output: weights of k points
   !

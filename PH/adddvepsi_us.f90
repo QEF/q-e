@@ -20,10 +20,10 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
   implicit none
 
   integer, intent(in) :: ipol, kpoint
-  complex(kind=dp), intent(in) :: becp2(nkb,nbnd)
+  complex(DP), intent(in) :: becp2(nkb,nbnd)
 
-  real(kind=dp) :: fact
-  complex(kind=dp), allocatable :: ps(:)
+  real(DP) :: fact
+  complex(DP), allocatable :: ps(:)
   integer:: ijkb0, nt, na, ih, jh, ikb, jkb, ibnd
 
   allocate (ps(nbnd))    

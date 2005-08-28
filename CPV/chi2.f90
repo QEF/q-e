@@ -14,8 +14,8 @@
 
         PRIVATE
  
-        COMPLEX(dbl), allocatable :: VLOCAL(:)
-        COMPLEX(dbl), allocatable :: RHOCHI(:)
+        COMPLEX(DP), allocatable :: VLOCAL(:)
+        COMPLEX(DP), allocatable :: RHOCHI(:)
         logical :: tchi2
 
         PUBLIC :: allocate_chi2, deallocate_chi2
@@ -48,13 +48,13 @@
 
 !---------------------------------------------------ARGUMENT
       type (boxdimensions), intent(in) :: box
-      REAL(dbl) GXR,GYR,GZR
+      REAL(DP) GXR,GYR,GZR
 !---------------------------------------------------COMMON 
 
 
-      COMPLEX(dbl) :: CHI(3,3,3)
-      COMPLEX(dbl) :: ctmp
-      REAL(dbl)    :: omega
+      COMPLEX(DP) :: CHI(3,3,3)
+      COMPLEX(DP) :: ctmp
+      REAL(DP)    :: omega
       INTEGER      :: idum, ig, i, j, k, l, m, s
       INTEGER      :: NFI, ierr
  

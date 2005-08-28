@@ -26,9 +26,9 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, mode)
   integer :: ik
   ! input: the k point
 
-  real(kind=DP) :: weight
+  real(DP) :: weight
   ! input: the weight of the k point
-  complex(kind=DP) :: drhoscf (nrxxs), dbecsum (nhm*(nhm+1)/2,nat)
+  complex(DP) :: drhoscf (nrxxs), dbecsum (nhm*(nhm+1)/2,nat)
   ! output: the change of the charge densit
   ! inp/out: the accumulated dbec
   integer :: mode
@@ -36,10 +36,10 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, mode)
   !   here the local variable
   !
 
-  real(kind=DP) :: wgt
+  real(DP) :: wgt
   ! the effective weight of the k point
 
-  complex(kind=DP), allocatable  :: psi (:), dpsic (:)
+  complex(DP), allocatable  :: psi (:), dpsic (:)
   ! the wavefunctions in real space
   ! the change of wavefunctions in real space
 

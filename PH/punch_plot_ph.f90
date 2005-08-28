@@ -41,18 +41,18 @@ SUBROUTINE punch_plot_ph()
   CHARACTER(len=80) :: filin
   ! complete name of the file
 
-  REAL(kind=DP), ALLOCATABLE :: raux (:)
+  REAL(DP), ALLOCATABLE :: raux (:)
   ! auxiliary vector
 
-  COMPLEX(kind=DP) :: ps, ZDOTC
-  COMPLEX(kind=DP), ALLOCATABLE :: aux (:,:,:), aux1 (:,:)
+  COMPLEX(DP) :: ps, ZDOTC
+  COMPLEX(DP), ALLOCATABLE :: aux (:,:,:), aux1 (:,:)
   ! the scalar product
   ! scalar product function
   ! auxiliary space to rotate the
   ! induced charge
 #if defined (__PARA)
   ! auxiliary vector
-  REAL(kind=DP), ALLOCATABLE :: raux1 (:)
+  REAL(DP), ALLOCATABLE :: raux1 (:)
 #endif
 
   IF (fildrho.EQ.' ') RETURN

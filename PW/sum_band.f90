@@ -56,7 +56,7 @@ SUBROUTINE sum_band()
     ! counter on g vectors
     ! counter on bands
     ! counter on k points  
-  real (kind=DP) demet_up, demet_dw
+  real (DP) demet_up, demet_dw
   !
   !
   CALL start_clock( 'sum_band' )
@@ -249,9 +249,9 @@ SUBROUTINE sum_band()
        !
        ! ... local variables
        !
-       REAL(KIND=DP) :: w1, w2
+       REAL(DP) :: w1, w2
        ! weights
-       REAL(KIND=DP), ALLOCATABLE :: becp(:,:)
+       REAL(DP), ALLOCATABLE :: becp(:,:)
        ! contains <beta|psi>
        !
        !
@@ -425,12 +425,12 @@ SUBROUTINE sum_band()
        !
        ! ... local variables
        !
-       REAL(KIND=DP) :: w1
+       REAL(DP) :: w1
        ! weights
-       COMPLEX(KIND=DP), ALLOCATABLE :: becp(:,:), becp_nc(:,:,:)
+       COMPLEX(DP), ALLOCATABLE :: becp(:,:), becp_nc(:,:,:)
        ! contains <beta|psi>
        !
-       COMPLEX(KIND=DP), ALLOCATABLE :: be1(:,:), be2(:,:)
+       COMPLEX(DP), ALLOCATABLE :: be1(:,:), be2(:,:)
        !
        INTEGER :: ipol, kh, kkb, is1, is2
        !

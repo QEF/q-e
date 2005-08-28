@@ -37,7 +37,7 @@
           USE descriptors_module, ONLY: pblas_descriptor
           TYPE (real_parallel_matrix) :: a
           CHARACTER(len=*), INTENT(IN) :: comment
-          REAL (dbl), ALLOCATABLE :: work(:)
+          REAL (DP), ALLOCATABLE :: work(:)
           INTEGER :: desc_a(9)
           CALL pblas_descriptor(desc_a, a%desc)
           ALLOCATE(work(a%desc%nxblk))
@@ -99,13 +99,13 @@
           TYPE (real_parallel_matrix) :: a, b, c
           CHARACTER(LEN=*), INTENT(IN) :: transa, transb
           LOGICAL, INTENT(IN), OPTIONAL :: eq_dist
-          REAL(dbl), INTENT(IN), OPTIONAL :: alphax, betax
+          REAL(DP), INTENT(IN), OPTIONAL :: alphax, betax
           INTEGER, INTENT(IN), OPTIONAL :: iax, jax, ibx, jbx, icx, jcx
           INTEGER :: desc_a(9), desc_b(9), desc_c(9)
           INTEGER :: ia, ja, ib, jb, ic, jc, k
-          REAL(dbl) :: alpha, beta
+          REAL(DP) :: alpha, beta
           ia = 1; ja = 1; ib = 1; jb = 1; ic = 1; jc = 1
-          alpha = 1.0_dbl; beta = 0.0_dbl
+          alpha = 1.0_DP; beta = 0.0_DP
           IF(PRESENT(iax)) ia = iax
           IF(PRESENT(jax)) ja = jax
           IF(PRESENT(ibx)) ib = ibx
@@ -146,13 +146,13 @@
           USE descriptors_module, ONLY: pblas_descriptor
 
           TYPE (real_parallel_matrix) :: a, c
-          REAL(dbl), INTENT(IN), OPTIONAL :: alphax, betax
+          REAL(DP), INTENT(IN), OPTIONAL :: alphax, betax
           INTEGER, INTENT(IN), OPTIONAL :: iax, jax, icx, jcx
           INTEGER :: desc_a(9), desc_c(9)
           INTEGER :: ia, ja, ic, jc
-          REAL(dbl) :: alpha, beta
+          REAL(DP) :: alpha, beta
           ia = 1; ja = 1; ic = 1; jc = 1
-          alpha = 1.0_dbl; beta = 0.0_dbl
+          alpha = 1.0_DP; beta = 0.0_DP
           IF(PRESENT(iax)) ia = iax
           IF(PRESENT(jax)) ja = jax
           IF(PRESENT(icx)) ic = icx
@@ -175,7 +175,7 @@
           USE io_global, ONLY: stdout
           CHARACTER(LEN=*), INTENT(IN) :: uplo
           TYPE (real_parallel_matrix) :: a
-          REAL(dbl), INTENT(IN) :: w(:)
+          REAL(DP), INTENT(IN) :: w(:)
           TYPE (real_parallel_matrix), OPTIONAL :: z
           INTEGER, INTENT(IN), OPTIONAL :: iax, jax, izx, jzx
           INTEGER :: desc_a(9), desc_z(9)
@@ -183,9 +183,9 @@
           INTEGER :: lwork, info, mw, nz, liwork, iwork_size
           INTEGER, ALLOCATABLE :: ifail(:), iclustr(:)
           INTEGER, ALLOCATABLE :: iwork(:)
-          REAL(dbl), ALLOCATABLE :: rwork(:)
-          REAL(dbl) :: zdum, rdum, rwork_size, dum
-          REAL(dbl), ALLOCATABLE :: gap(:) 
+          REAL(DP), ALLOCATABLE :: rwork(:)
+          REAL(DP) :: zdum, rdum, rwork_size, dum
+          REAL(DP), ALLOCATABLE :: gap(:) 
           CHARACTER(LEN=1) :: jobz
 
           ia = 1; ja = 1; iz = 1; jz = 1

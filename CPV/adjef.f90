@@ -19,7 +19,7 @@
 !  ----------------------------------------------
 !  routines in this file:
 !  SUBROUTINE adjef(nk,e,wk,wke,fke,ef,qtot,ne,temp,sume,nspin)
-!  REAL(dbl) FUNCTION stepf(x)
+!  REAL(DP) FUNCTION stepf(x)
 !  ----------------------------------------------
 !  BEGIN manual
 
@@ -42,17 +42,17 @@
 
 ! ... declare subroutine arguments
       INTEGER ne,nk,nspin
-      REAL(dbl) ef,qtot,temp,sume
-      REAL(dbl) e(ne,nk,nspin),wke(ne,nk,nspin)
-      REAL(dbl) wk(nk),fke(ne,nk,nspin)
-      REAL(dbl), PARAMETER  :: tol = 1.d-10
+      REAL(DP) ef,qtot,temp,sume
+      REAL(DP) e(ne,nk,nspin),wke(ne,nk,nspin)
+      REAL(DP) wk(nk),fke(ne,nk,nspin)
+      REAL(DP), PARAMETER  :: tol = 1.d-10
       INTEGER, PARAMETER :: nitmax = 100
 
 ! ... declare functions
-      REAL(dbl) stepf
+      REAL(DP) stepf
 
 ! ... declare other variables
-      REAL(dbl) sumq,emin,emax,fac,t,drange
+      REAL(DP) sumq,emin,emax,fac,t,drange
       INTEGER ik,ispin,ie,iter
 
 !  end of declarations
@@ -125,10 +125,10 @@
 !      FUNCTION stepf(x)
 !      USE kinds
 !      IMPLICIT NONE
-!      REAL(dbl) stepf
-!      REAL(dbl) x
-!      REAL(dbl), PARAMETER :: c = 0.5641895835d0
-!      REAL(dbl) derfc
+!      REAL(DP) stepf
+!      REAL(DP) x
+!      REAL(DP), PARAMETER :: c = 0.5641895835d0
+!      REAL(DP) derfc
 !      stepf=derfc(x)
 !!     stepf=derfc(x)-c*x*dexp(-x*x)
 !      RETURN
@@ -137,7 +137,7 @@
       DOUBLE PRECISION FUNCTION stepf(x)
       USE kinds
       IMPLICIT NONE
-      REAL(dbl) c,x,erfc
+      REAL(DP) c,x,erfc
       PARAMETER (c=0.5641895835D0)
 !     stepf=erfc(x)
       stepf=1.d0/(exp(min(x,100.d0))+1.d0)
@@ -168,12 +168,12 @@
       IMPLICIT NONE
 
       integer nx,nel
-      real(dbl) E(nx),FKE(nx),temp,sume,ef,tol
+      real(DP) E(nx),FKE(nx),temp,sume,ef,tol
       integer nitmax
       PARAMETER (TOL=1.D-10,NITMAX=100)
       integer iter,ie
-      real(dbl) t,emin,emax,stepf
-      real(dbl) sumq,fac,qtot,drange
+      real(DP) t,emin,emax,stepf
+      real(DP) sumq,fac,qtot,drange
       QTOT=DBLE(NEL)
       SUMQ=0.D0
       SUME=0.D0

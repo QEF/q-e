@@ -34,7 +34,7 @@ subroutine compute_alphasum
   ! counter on polarizations
   ! counter on bands
 
-  real(kind=DP) :: wgg1
+  real(DP) :: wgg1
   ! auxiliary weight
 
 

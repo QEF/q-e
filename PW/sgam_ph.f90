@@ -29,7 +29,7 @@ integer :: nsym, s (3, 3, 48), nat, irt (48, nat)
                                    ! input: number of atoms in the unit
                                    ! input: for each atom gives the rota
 
-real(kind=DP) :: at (3, 3), bg (3, 3), tau (3, nat), rtau (3, 48, nat)
+real(DP) :: at (3, 3), bg (3, 3), tau (3, nat), rtau (3, 48, nat)
                                    ! input: direct lattice vectors
                                    ! input: reciprocal lattice vectors
                                    ! input: coordinates of the atoms
@@ -45,8 +45,8 @@ integer :: na, isym, nb, ipol
                                    ! buffer for atom
                                    ! counter on polarization
 
-real(kind=DP) , allocatable :: xau (:,:), rau (:,:)
-real(kind=DP) :: ft (3)
+real(DP) , allocatable :: xau (:,:), rau (:,:)
+real(DP) :: ft (3)
                                    ! atomic coordinates in crystal axis
                                    ! rotated atomic coordinates
                                    ! fractionary translation

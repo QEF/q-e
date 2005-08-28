@@ -16,11 +16,11 @@ function d2mxc (rho)
   USE kinds, ONLY: DP
   implicit none
   !
-  real (kind=DP) :: rho, d2mxc
+  real (DP) :: rho, d2mxc
   ! input: the charge density ( positive )
   ! output: the second derivative of the xc potent
 
-  real (kind=DP) :: b1, b2, gc, a, b, c, d, pi, thofpi_3, fpioth_3, &
+  real (DP) :: b1, b2, gc, a, b, c, d, pi, thofpi_3, fpioth_3, &
        thopi_3, tm1, tm2, tm3, tm4, tm5, tm6
   ! parameters defining the functionals
   !
@@ -42,7 +42,7 @@ function d2mxc (rho)
        36.85150d0, tm2 = 105.59107916d0, tm3 = 122.996139546115d0, tm4 = &
        71.30831794516d0, tm5 = 20.4812455967d0, tm6 = 2.371792877056d0)
 
-  real (kind=DP) :: rs, x, den
+  real (DP) :: rs, x, den
 
   rs = thofpi_3 * (1.d0 / rho) **0.3333333333333333d0
   if (rs.ge.1.d0) then

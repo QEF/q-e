@@ -28,7 +28,7 @@ SUBROUTINE dqrhod2v (ipert, drhoscf)
   !
   INTEGER :: ipert
   ! index of the perturbation associated with drho
-  COMPLEX (kind = dp) :: drhoscf (nrxx)
+  COMPLEX (DP) :: drhoscf (nrxx)
   ! the variation of the charge density
   !
   ! local variables
@@ -37,12 +37,12 @@ SUBROUTINE dqrhod2v (ipert, drhoscf)
        ik, ikk, ikq, ig, ibnd, nu_i, nu_j, nu_k, ikb, jkb, nrec, ios
   ! counters
 
-  REAL (kind = dp) :: gtau, wgg
+  REAL (DP) :: gtau, wgg
   ! the product G*\tau_s
   ! the weight of a K point
 
-  COMPLEX (kind = dp) :: ZDOTC, fac, alpha (8), work
-  COMPLEX (kind = dp), ALLOCATABLE :: d3dywrk (:,:), work0 (:), &
+  COMPLEX (DP) :: ZDOTC, fac, alpha (8), work
+  COMPLEX (DP), ALLOCATABLE :: d3dywrk (:,:), work0 (:), &
        work1 (:), work2 (:), work3 (:), work4 (:), work5 (:), work6 (:)
   ! work space
 

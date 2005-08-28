@@ -19,18 +19,18 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   ! Input
   !
   integer :: lmax2, ng
-  real(kind=DP) :: g (3, ng), gg (ng)
+  real(DP) :: g (3, ng), gg (ng)
   !
   ! Output
   !
-  real(kind=DP) :: ylm (ng,lmax2)
+  real(DP) :: ylm (ng,lmax2)
   !
   ! local variables
   !
-  real(kind=DP), parameter :: pi = 3.14159265358979d0, fpi = 4.d0 * pi, &
+  real(DP), parameter :: pi = 3.14159265358979d0, fpi = 4.d0 * pi, &
        eps = 1.0d-9
-  real(kind=DP), allocatable :: cost (:), phi (:), P(:,:,:)
-  real(kind=DP) :: c, gmod
+  real(DP), allocatable :: cost (:), phi (:), P(:,:,:)
+  real(DP) :: c, gmod
   integer :: lmax, ig, l, m, lm
   integer, external:: fact, semifact
   !
@@ -72,7 +72,7 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   !
   lm = 0
   do l = 0, lmax
-     c = sqrt (dble(2*l+1) / fpi)
+     c = sqrt (DBLE(2*l+1) / fpi)
      if ( l == 0 ) then
         P (:,0,0) = 1.d0
      else if ( l == 1 ) then
@@ -86,7 +86,7 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
            P(:,l,m) = (cost(:)*(2*l-1)*P(:,l-1,m) - (l+m-1)*P(:,l-2,m))/(l-m)
         end do
         P(:,l,l-1) = cost(:) * (2*l-1) * P(:,l-1,l-1)
-        P(:,l,l)   = (-1)**l * semifact(2*l-1) * (max(0.d0,1.d0-cost(:)**2))**(dble(l)/2)
+        P(:,l,l)   = (-1)**l * semifact(2*l-1) * (max(0.d0,1.d0-cost(:)**2))**(DBLE(l)/2)
      end if
      !
      ! Y_lm, m = 0
@@ -99,13 +99,13 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
         ! Y_lm, m > 0
         !
         lm = lm + 1
-        ylm (:, lm) = c * sqrt(dble(fact(l-m))/dble(fact(l+m))) * &
+        ylm (:, lm) = c * sqrt(DBLE(fact(l-m))/DBLE(fact(l+m))) * &
              sqrt(2.d0) * P(:,l,m) * cos (m*phi(:))
         !
         ! Y_lm, m < 0
         !
         lm = lm + 1
-        ylm (:, lm) = c * sqrt(dble(fact(l-m))/dble(fact(l+m))) * &
+        ylm (:, lm) = c * sqrt(DBLE(fact(l-m))/DBLE(fact(l+m))) * &
              sqrt(2.d0) * P(:,l,m) * sin (m*phi(:))
      end do
   end do

@@ -26,8 +26,8 @@ subroutine init_at_1()
   !
   integer :: n_starting_wfc, nt, nb, iq, ir, l, startq, lastq, ndm
   !
-  real(kind=DP), allocatable :: aux (:), vchi (:)
-  real(kind=DP) :: vqint, pref, q
+  real(DP), allocatable :: aux (:), vchi (:)
+  real(DP) :: vqint, pref, q
 
   call start_clock ('init_at_1')
 

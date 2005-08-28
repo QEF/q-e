@@ -99,23 +99,23 @@ SUBROUTINE projection (first_band, last_band)
   INTEGER :: ik, ia, ib, na, nt, n, m, l, nwfc, lmax_wfc, &
              ldim1, ldim2, lwork, i, j, info, counter, counter_ldau
   LOGICAL :: exst 
-  COMPLEX(kind=DP), ALLOCATABLE :: proj (:,:,:)
-  COMPLEX(kind=DP), ALLOCATABLE :: wfcatom (:,:) 
+  COMPLEX(DP), ALLOCATABLE :: proj (:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:) 
   INTEGER, ALLOCATABLE :: INDEX(:) 
   ! 
-  COMPLEX(kind=DP), ALLOCATABLE ::  proj0(:,:) 
+  COMPLEX(DP), ALLOCATABLE ::  proj0(:,:) 
   ! Some workspace for k-point calculation ... 
-  REAL   (kind=DP), ALLOCATABLE :: rproj0(:,:) 
+  REAL   (DP), ALLOCATABLE :: rproj0(:,:) 
   ! ... or for gamma-point. 
-  COMPLEX(KIND=DP), ALLOCATABLE :: pp(:,:), u_m(:,:), w_m(:,:), work(:)
+  COMPLEX(DP), ALLOCATABLE :: pp(:,:), u_m(:,:), w_m(:,:), work(:)
   ! the overlap matrix pp
   ! left unitary matrix in the SVD of sp_m
   ! right unitary matrix in the SVD of sp_m
   ! workspace for ZGESVD
-  REAL(KIND=DP), ALLOCATABLE :: ew(:), rwork(:)
+  REAL(DP), ALLOCATABLE :: ew(:), rwork(:)
   ! the eigenvalues of pp
   ! workspace for ZGESVD
-  REAL (kind=DP) :: capel
+  REAL (DP) :: capel
   ! 
   WRITE( stdout, '(/5x,"Calling projection .... ")') 
   IF ( gamma_only ) WRITE( stdout, '(5x,"gamma-point specific algorithms are used")') 

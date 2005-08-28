@@ -21,10 +21,10 @@ subroutine set_kplusb (ibrav, xk, wk, b_length, nks, npk, lcart)
   
   integer :: npk, nks, ibrav
   
-  real (kind = dp), intent(in) :: b_length
+  real (DP), intent(in) :: b_length
   ! input: length of the b_vector
 
-  real(kind=DP), intent(inout):: xk (3, npk), wk (npk)
+  real(DP), intent(inout):: xk (3, npk), wk (npk)
   ! input-output: coordinates of k points
   ! input-output: weights of k points
   
@@ -33,7 +33,7 @@ subroutine set_kplusb (ibrav, xk, wk, b_length, nks, npk, lcart)
   !        else in directions of the nearest neighbor k-points
 
   integer :: i, ik
-  real(kind = dp), allocatable, dimension(:,:) :: b 
+  real(DP), allocatable, dimension(:,:) :: b 
 
   if (lcart) then
      if (7 * nks.gt.npk) call errore ('set_kplusb', 'too many k points', &

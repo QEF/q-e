@@ -15,12 +15,12 @@ subroutine write_ramtns (iudyn, ramtns)
   !
   implicit none
   integer, intent(in) :: iudyn  ! unit
-  real(kind=DP), intent(in) :: ramtns(3, 3, 3, nat) ! raman tensor
+  real(DP), intent(in) :: ramtns(3, 3, 3, nat) ! raman tensor
 
   ! local variables
   integer :: na, ic, jc, kc
   ! counters
-  real (kind=DP), parameter ::   convfact = 0.529177**2
+  real (DP), parameter ::   convfact = 0.529177**2
   ! conversion factor from au^2 to A^2
   !
   ! write raman tensor (D chi/d tau in A^2) to iudyn

@@ -51,7 +51,7 @@
      LOGICAL, INTENT(IN) :: tpre
      !
      INTEGER :: is, ig
-     REAL(dbl) :: xg, cost1
+     REAL(DP) :: xg, cost1
      !
      IF( tpstab ) THEN
         !
@@ -114,13 +114,13 @@
      implicit none
 
      integer :: nsp
-     COMPLEX(dbl) :: rhoetg(:)
-     REAL(dbl)    :: rhoetr(:,:,:)
-     REAL(dbl)    :: rhoc(:,:)
-     COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
+     COMPLEX(DP) :: rhoetg(:)
+     REAL(DP)    :: rhoetr(:,:,:)
+     REAL(DP)    :: rhoc(:,:)
+     COMPLEX(DP), INTENT(IN) :: sfac(:,:)
           
-     COMPLEX(dbl), ALLOCATABLE :: vtemp(:)
-     REAL(dbl) :: fac
+     COMPLEX(DP), ALLOCATABLE :: vtemp(:)
+     REAL(DP) :: fac
      integer :: is, ig
 
      ALLOCATE( vtemp( ngm ) )
@@ -169,18 +169,18 @@
 
      TYPE (atoms_type), INTENT(IN) :: atoms    !   atomic positions
      TYPE (boxdimensions), INTENT(IN) :: ht    !   cell parameters
-     COMPLEX(dbl) :: ei1( -nr1:nr1, nat)                  !   
-     COMPLEX(dbl) :: ei2( -nr2:nr2, nat)                  !   
-     COMPLEX(dbl) :: ei3( -nr3:nr3, nat)                  !   
+     COMPLEX(DP) :: ei1( -nr1:nr1, nat)                  !   
+     COMPLEX(DP) :: ei2( -nr2:nr2, nat)                  !   
+     COMPLEX(DP) :: ei3( -nr3:nr3, nat)                  !   
      LOGICAL      :: tnlcc(:)                  !   NLCC flags
-     REAL(dbl)    :: fion(:,:)                 !   ionic forces
-     REAL(dbl)    :: rhoc1(:,:)                !   derivative of the core charge
-     COMPLEX(dbl) :: vxc(:,:)                  !   XC potential
+     REAL(DP)    :: fion(:,:)                 !   ionic forces
+     REAL(DP)    :: rhoc1(:,:)                !   derivative of the core charge
+     COMPLEX(DP) :: vxc(:,:)                  !   XC potential
 
      INTEGER :: ig, ig1, ig2, ig3, isa, ia, is, ispin, nspin
-     COMPLEX(dbl) :: gxc, gyc, gzc, tx, ty, tz, teigr, cxc
-     COMPLEX(dbl), ALLOCATABLE :: ftmp(:,:)
-     REAL(dbl) :: cost
+     COMPLEX(DP) :: gxc, gyc, gzc, tx, ty, tz, teigr, cxc
+     COMPLEX(DP), ALLOCATABLE :: ftmp(:,:)
+     REAL(DP) :: cost
 
      IF( ANY( tnlcc ) ) then
 
@@ -198,7 +198,7 @@
          isa = 1
          DO is = 1, atoms%nsp
            IF ( tnlcc(is) ) THEN
-             CXC = 0.0_dbl
+             CXC = 0.0_DP
              DO ispin = 1, nspin
                CXC = CXC + rhoc1( ig, is ) * CONJG( vxc( ig, ispin ) )
              END DO
@@ -266,10 +266,10 @@
             nr1x, nr2x, nr3x, nnr => nnrx
 !
       implicit none
-      real(kind=8), intent(in)   :: rhoc(nnr)
-      real(kind=8), intent(inout):: rhor(nnr,nspin)
-      complex(kind=8), intent(inout)::  rhog(ngm,nspin)
-      complex(kind=8), allocatable :: wrk1( : )
+      real(8), intent(in)   :: rhoc(nnr)
+      real(8), intent(inout):: rhor(nnr,nspin)
+      complex(8), intent(inout)::  rhog(ngm,nspin)
+      complex(8), allocatable :: wrk1( : )
 !
       integer ig, ir, iss, isup, isdw
 !
@@ -335,20 +335,20 @@
 
 ! input
       integer, intent(in)        :: irb(3,nat)
-      complex(kind=8), intent(in):: eigrb(ngb,nat)
-      real(kind=8), intent(in)   :: vxc(nnr,nspin)
+      complex(8), intent(in):: eigrb(ngb,nat)
+      real(8), intent(in)   :: vxc(nnr,nspin)
 ! output
-      real(kind=8), intent(inout):: fion1(3,natx)
+      real(8), intent(inout):: fion1(3,natx)
 ! local
       integer iss, ix, ig, is, ia, nfft, irb3, imin3, imax3, isa
-      real(kind=8) fcc(3,natx), fac, boxdotgrid
-      complex(kind=8) ci, facg
-      complex(kind=8), allocatable :: qv(:)
+      real(8) fcc(3,natx), fac, boxdotgrid
+      complex(8) ci, facg
+      complex(8), allocatable :: qv(:)
       external  boxdotgrid
 !
       call start_clock( 'forcecc' )
       ci = (0.d0,1.d0)
-      fac = omega/dble(nr1*nr2*nr3*nspin)
+      fac = omega/DBLE(nr1*nr2*nr3*nspin)
       fcc = 0.d0
 
       allocate( qv( nnrb ) )
@@ -439,14 +439,14 @@
       implicit none
 ! input
       integer, intent(in)        :: irb(3,nat)
-      complex(kind=8), intent(in):: eigrb(ngb,nat)
+      complex(8), intent(in):: eigrb(ngb,nat)
 ! output
-      real(kind=8), intent(out)  :: rhoc(nnr)
+      real(8), intent(out)  :: rhoc(nnr)
 ! local
       integer nfft, ig, is, ia, irb3, imin3, imax3, isa
-      complex(kind=8) ci
-      complex(kind=8), allocatable :: wrk1(:)
-      complex(kind=8), allocatable :: qv(:)
+      complex(8) ci
+      complex(8), allocatable :: wrk1(:)
+      complex(8), allocatable :: qv(:)
 !
       call start_clock( 'set_cc' )
       ci=(0.,1.)

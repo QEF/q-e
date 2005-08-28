@@ -25,13 +25,13 @@ subroutine vhpsi_nc (ldap, np, mp, psip, hpsi)
   USE gvect,   ONLY : gstart
   implicit none
   integer :: ldap, np, mp
-  complex(kind=DP) :: psip (ldap,1, mp), hpsi (ldap,1, mp)
+  complex(DP) :: psip (ldap,1, mp), hpsi (ldap,1, mp)
   !
   integer :: ibnd, i, na, nt, n, counter, m1, m2, l
   integer, allocatable ::  offset (:)
   ! offset of localized electrons of atom na in the natomwfc ordering
-  complex(kind=DP) :: ZDOTC, temp
-  complex(kind=DP), allocatable ::  proj (:,:)
+  complex(DP) :: ZDOTC, temp
+  complex(DP), allocatable ::  proj (:,:)
   !
   allocate ( offset(nat), proj(natomwfc,mp) ) 
   counter = 0  

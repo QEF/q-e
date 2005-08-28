@@ -17,7 +17,7 @@ subroutine dynmat_init
   use pwcom
   use cgcom
   implicit none
-  real(kind=DP), allocatable:: dyn0(:,:),dyn1(:,:), dyncc(:,:)
+  real(DP), allocatable:: dyn0(:,:),dyn1(:,:), dyncc(:,:)
   integer :: i,j, na,nb
   !
   call start_clock('dynmat_init')

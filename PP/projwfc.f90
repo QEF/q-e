@@ -78,7 +78,7 @@ PROGRAM projwfc
   IMPLICIT NONE 
   CHARACTER (len=256) :: filpdos, io_choice 
   CHARACTER (len=256) :: outdir 
-  REAL (kind=DP)      :: Emin, Emax, DeltaE, degauss1, smoothing
+  REAL (DP)      :: Emin, Emax, DeltaE, degauss1, smoothing
   INTEGER :: ngauss1, ios
   !
   NAMELIST / inputpp / outdir, prefix, ngauss, degauss,&
@@ -170,7 +170,7 @@ MODULE projections
   END TYPE wfc_label 
   TYPE(wfc_label), ALLOCATABLE :: nlmchi(:) 
 
-  REAL (kind=DP), ALLOCATABLE :: proj (:,:,:)
+  REAL (DP), ALLOCATABLE :: proj (:,:,:)
 
 END MODULE projections
 !
@@ -201,14 +201,14 @@ SUBROUTINE projwave( )
   !
   INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, lm, nwfc,& 
        nwfc1, lmax_wfc, is 
-  REAL(kind=DP), ALLOCATABLE :: e (:)
-  COMPLEX(kind=DP), ALLOCATABLE :: wfcatom (:,:)
-  COMPLEX(kind=DP), ALLOCATABLE :: overlap(:,:), work(:,:),work1(:), proj0(:,:)
+  REAL(DP), ALLOCATABLE :: e (:)
+  COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
+  COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:),work1(:), proj0(:,:)
   ! Some workspace for k-point calculation ... 
-  REAL   (kind=DP), ALLOCATABLE ::roverlap(:,:),          rwork1(:),rproj0(:,:)
+  REAL   (DP), ALLOCATABLE ::roverlap(:,:),          rwork1(:),rproj0(:,:)
   ! ... or for gamma-point. 
-  REAL(kind=DP), ALLOCATABLE :: charges(:,:,:), proj1 (:)
-  REAL(kind=DP) :: psum, totcharge(nspinx)
+  REAL(DP), ALLOCATABLE :: charges(:,:,:), proj1 (:)
+  REAL(DP) :: psum, totcharge(nspinx)
   INTEGER, ALLOCATABLE :: INDEX(:) 
   ! 
   ! 
@@ -575,7 +575,7 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, filpdos)
   !
   IMPLICIT NONE 
   CHARACTER (len=256) :: filpdos
-  REAL(kind=DP) :: Emin, Emax, DeltaE
+  REAL(DP) :: Emin, Emax, DeltaE
   !
   CHARACTER (len=33) :: filextension 
   CHARACTER (len=256):: fileout
@@ -583,10 +583,10 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, filpdos)
   ! 
   INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, lm, &
        c_tab, nwfc, ne, ie_mid, ie_delta, ie, is 
-  REAL(kind=DP) :: etev, delta, Elw, Eup 
-  REAL(kind=DP), ALLOCATABLE :: dostot(:,:), pdos(:,:,:), pdostot(:,:), &
+  REAL(DP) :: etev, delta, Elw, Eup 
+  REAL(DP), ALLOCATABLE :: dostot(:,:), pdos(:,:,:), pdostot(:,:), &
        ldos(:,:)
-  REAL(kind=DP), EXTERNAL :: w0gauss 
+  REAL(DP), EXTERNAL :: w0gauss 
   ! 
   ! 
   ! find band extrema 

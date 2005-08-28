@@ -20,7 +20,7 @@ subroutine rotatef(app, bpp, bf, anlp, bnlp, bnlf, intw1, intw2,    &
   implicit none
   integer :: norbf, n2d, norbnow, lam, n, n1, iorb, iorb1, npol, info
   integer, allocatable :: ipiv(:) 
-  complex(kind=DP) ::                                   &
+  complex(DP) ::                                   &
           app(n2d, n2d),       &      ! coeff. of local functions 
           bpp(n2d, n2d),       &      !          -- 
           bf(n2d, n2d),        &      !          -- 
@@ -29,8 +29,8 @@ subroutine rotatef(app, bpp, bf, anlp, bnlp, bnlf, intw1, intw2,    &
           bnlf(n2d, norbnow*npol),  &      !          --  
           intw1(norbf*npol, 2*n2d), &      ! integral of loc. fun. 
           intw2(norbf*npol, norbf*npol)    ! integral of nonloc. fun.   
-  complex(kind=DP), allocatable :: x(:), y(:), h(:,:), aux(:,:)
-  complex(kind=DP), parameter :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
+  complex(DP), allocatable :: x(:), y(:), h(:,:), aux(:,:)
+  complex(DP), parameter :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
 
   call start_clock('rotatef')
   allocate( x( n2d ) )
@@ -108,10 +108,10 @@ subroutine rotateb (app, bpp, af, intw1, n2d, norbf, norbnow, npol)
 
   integer :: norbf, n2d, norbnow, lam, n, n1, iorb, npol, info
   integer, allocatable :: ipiv(:) 
-  complex(kind=DP) :: app(n2d,n2d), af(n2d,n2d), bpp(n2d,n2d), &
+  complex(DP) :: app(n2d,n2d), af(n2d,n2d), bpp(n2d,n2d), &
                       intw1(norbf*npol,2*n2d) 
-  complex(kind=DP), allocatable :: x(:), y(:), h(:,:), aux(:,:), aux1(:,:)
-  complex(kind=DP), parameter :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
+  complex(DP), allocatable :: x(:), y(:), h(:,:), aux(:,:), aux1(:,:)
+  complex(DP), parameter :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
 
   call start_clock('rotateb')
   allocate( x( n2d ) )

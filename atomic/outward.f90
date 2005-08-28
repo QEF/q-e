@@ -10,12 +10,12 @@ subroutine outward(y,f,g,mesh,imatch,ncross)
    ! I/O variables
    !
    integer :: mesh,imatch, ncross
-   real (kind=DP) :: y(ndm), f(ndm), g(ndm)
+   real (DP) :: y(ndm), f(ndm), g(ndm)
    !
    ! local variables
    !
    integer :: n
-   real (kind=DP) :: ymx
+   real (DP) :: ymx
 
    if (ndm.lt.mesh) stop ' outward : ndm .lt. mesh !!!!'
    !

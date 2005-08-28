@@ -47,10 +47,10 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
   implicit none
       
       
-  complex(kind=8) c0(ngw, n), betae(ngw,nhsa), df(ngw),&
+  complex(8) c0(ngw, n), betae(ngw,nhsa), df(ngw),&
        &   gqq(nhm,nhm,nas,nsp),gqqm(nhm,nhm,nas,nsp),&
        &   qmat(nx,nx)
-  real(kind=8) bec0(nhsa,n),&
+  real(8) bec0(nhsa,n),&
        &   dq2(nat,nhm,nhm,nspin),  gmes
 
   integer i, ipol, ctabin(ngw,2)
@@ -59,10 +59,10 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
 
   integer j,k,ig,iv,jv,ix,jx,is,ia, isa,iss,iss1,mism
   integer ir,ism,itemp,itempa,jnl,inl
-  complex(kind=8) ci ,fi, fp, fm
-  real(kind=8) afr(nhsa), dd
-  complex(kind=8)  afrc(nhsa)
-  complex(kind=8), allocatable::  dtemp(:)
+  complex(8) ci ,fi, fp, fm
+  real(8) afr(nhsa), dd
+  complex(8)  afrc(nhsa)
+  complex(8), allocatable::  dtemp(:)
 
   allocate( dtemp(ngw))
 
@@ -174,10 +174,10 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
 
    implicit none
 
-   complex(kind=8) detq
-   real(kind=8) enb
+   complex(8) detq
+   real(8) enb
    integer ipol
-   real(kind=8) gmes
+   real(8) gmes
 
      
    if(ipol.eq.1) then

@@ -13,11 +13,11 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
 #include "f_defs.h"
   use kinds, only: dp
   implicit none
-  real(kind=dp), parameter :: e2=2.d0, pi=3.14159265358979d0, fpi=4.d0*pi
+  real(DP), parameter :: e2=2.d0, pi=3.14159265358979d0, fpi=4.d0*pi
   integer ::  nr1, nr2, nr3    !  FFT grid
   integer ::  nat              ! number of atoms 
-  complex(kind=dp) :: dyn(3,3,nat,nat) ! dynamical matrix
-  real(kind=dp) &
+  complex(DP) :: dyn(3,3,nat,nat) ! dynamical matrix
+  real(DP) &
        q(3),           &! q-vector
        tau(3,nat),     &! atomic positions
        epsil(3,3),     &! dielectric constant tensor
@@ -28,14 +28,14 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   !
   ! local variables
   !
-  real(kind=dp) zag(3),zbg(3),zcg(3),&! eff. charges  times g-vector
+  real(DP) zag(3),zbg(3),zcg(3),&! eff. charges  times g-vector
        geg              !  <q+G| epsil | q+G>
   integer :: na,nb,nc, i,j, im, m1, m2, m3
   integer :: nrx1, nrx2, nrx3, nmegax
   integer, parameter :: nrx=16
-  real(kind=dp), save :: gmega(3,(2*nrx+1)*(2*nrx+1)*(2*nrx+1))
-  real(kind=dp) :: alph, fac,g1,g2,g3, fnat(3), facgd, arg
-  complex(kind=dp) :: facg
+  real(DP), save :: gmega(3,(2*nrx+1)*(2*nrx+1)*(2*nrx+1))
+  real(DP) :: alph, fac,g1,g2,g3, fnat(3), facgd, arg
+  complex(DP) :: facg
   !
   ! Check if some dimensions should not be taken into account:
   ! e.g. if nr1=1 and nr2=1, then the G-vectors run along nr3 only.
@@ -163,7 +163,7 @@ subroutine nonanal(nat, nat_blk, itau_blk, epsil, q, zeu, omega, dyn )
   !
   use kinds, only: dp
  implicit none
- real(kind=dp), parameter :: e2=2.d0, pi=3.14159265358979d0, fpi=4.d0*pi
+ real(DP), parameter :: e2=2.d0, pi=3.14159265358979d0, fpi=4.d0*pi
  integer, intent(in) :: nat, nat_blk, itau_blk(nat)
  !  nat: number of atoms in the cell (in the supercell in the case
  !       of a dyn.mat. constructed in the mass approximation)
@@ -172,15 +172,15 @@ subroutine nonanal(nat, nat_blk, itau_blk, epsil, q, zeu, omega, dyn )
  !  itau_blk(na): atom in the original cell corresponding to 
  !                atom na in the supercell
  !
- complex(kind=dp), intent(inout) :: dyn(3,3,nat,nat) ! dynamical matrix
- real(kind=dp), intent(in) :: q(3),  &! polarization vector
+ complex(DP), intent(inout) :: dyn(3,3,nat,nat) ! dynamical matrix
+ real(DP), intent(in) :: q(3),  &! polarization vector
       &       epsil(3,3),     &! dielectric constant tensor
       &       zeu(3,3,nat_blk),   &! effective charges tensor
       &       omega            ! unit cell volume
  !
  ! local variables
  !
- real(kind=dp) zag(3),zbg(3),  &! eff. charges  times g-vector
+ real(DP) zag(3),zbg(3),  &! eff. charges  times g-vector
       &       qeq              !  <q| epsil | q>
  integer na,nb,              &! counters on atoms
       &  na_blk,nb_blk,      &! as above for the original cell
@@ -227,15 +227,15 @@ subroutine dyndiag (nat,ntyp,amass,ityp,dyn,w2,z)
   implicit none
   ! input
   integer nat, ntyp, ityp(nat)
-  complex(kind=dp) dyn(3,3,nat,nat)
-  real(kind=dp) amass(ntyp)
+  complex(DP) dyn(3,3,nat,nat)
+  real(DP) amass(ntyp)
   ! output
-  real(kind=dp) w2(3*nat)
-  complex(kind=dp) z(3*nat,3*nat)
+  real(DP) w2(3*nat)
+  complex(DP) z(3*nat,3*nat)
   ! local
-  real(kind=dp) diff, dif1, difrel
+  real(DP) diff, dif1, difrel
   integer nat3, na, nta, ntb, nb, ipol, jpol, i, j
-  complex(kind=dp), allocatable :: dyn2(:,:)
+  complex(DP), allocatable :: dyn2(:,:)
   !
   !  fill the two-indices dynamical matrix
   !
@@ -318,12 +318,12 @@ subroutine writemodes (nax,nat,q,w2,z,iout)
   implicit none
   ! input
   integer nax, nat, iout
-  real(kind=dp) q(3), w2(3*nat)
-  complex(kind=dp) z(3*nax,3*nat)
+  real(DP) q(3), w2(3*nat)
+  complex(DP) z(3*nax,3*nat)
   ! local
   integer nat3, na, nta, ipol, i, j
-  real(kind=dp):: freq(3*nat)
-  real(kind=dp):: rydthz,rydcm1,cm1thz,znorm
+  real(DP):: freq(3*nat)
+  real(DP):: rydthz,rydcm1,cm1thz,znorm
   !
   nat3=3*nat
   !
@@ -379,15 +379,15 @@ subroutine writemolden (flmol, gamma, nat, atm, a0, tau, ityp, w2, z)
   implicit none
   ! input
   integer :: nat, ityp(nat)
-  real(kind=dp) :: a0, tau(3,nat), w2(3*nat)
-  complex(kind=dp) :: z(3*nat,3*nat)
+  real(DP) :: a0, tau(3,nat), w2(3*nat)
+  complex(DP) :: z(3*nat,3*nat)
   character(len=50) :: flmol
   character(len=3) :: atm(*)
   logical :: gamma
   ! local
   integer :: nat3, na, nta, ipol, i, j, iout
-  real(kind=dp) :: freq(3*nat)
-  real(kind=dp) :: rydcm1, znorm
+  real(DP) :: freq(3*nat)
+  real(DP) :: rydcm1, znorm
   !
   if (flmol.eq.' ') then
      return
@@ -449,14 +449,14 @@ subroutine writexsf (xsffile, gamma, nat, atm, a0, at, tau, ityp, z)
   implicit none
   ! input
   integer :: nat, ityp(nat)
-  real(kind=dp) :: a0, tau(3,nat), at(3,3)
-  complex(kind=dp) :: z(3*nat,3*nat)
+  real(DP) :: a0, tau(3,nat), at(3,3)
+  complex(DP) :: z(3*nat,3*nat)
   character(len=50) :: xsffile
   character(len=3) :: atm(*)
   logical :: gamma
   ! local
   integer :: nat3, na, nta, ipol, i, j, iout
-  real(kind=dp) :: znorm
+  real(DP) :: znorm
   !
   if (xsffile == ' ') then
      return
@@ -519,11 +519,11 @@ subroutine cdiagh2 (n,h,ldh,e,v)
   integer          n,       &! dimension of the matrix to be diagonalized
        &           ldh       ! leading dimension of h, as declared
   ! in the calling pgm unit
-  complex(kind=dp)  h(ldh,n)  ! matrix to be diagonalized
+  complex(DP)  h(ldh,n)  ! matrix to be diagonalized
   !
   ! on OUTPUT
-  real(kind=dp)     e(n)      ! eigenvalues
-  complex(kind=dp)  v(ldh,n)  ! eigenvectors (column-wise)
+  real(DP)     e(n)      ! eigenvalues
+  complex(DP)  v(ldh,n)  ! eigenvectors (column-wise)
   !
   ! LOCAL variables (LAPACK version)
   !
@@ -532,8 +532,8 @@ subroutine cdiagh2 (n,h,ldh,e,v)
        &           nb,      &! block size
        &           info      ! flag saying if the exec. of libr. routines was ok
   !
-  real(kind=dp), allocatable::   rwork(:)
-  complex(kind=dp), allocatable:: work(:)
+  real(DP), allocatable::   rwork(:)
+  complex(DP), allocatable:: work(:)
   !
   !     check for the block size
   !

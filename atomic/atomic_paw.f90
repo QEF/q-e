@@ -38,10 +38,10 @@ MODULE atomic_paw
   PRIVATE
   SAVE
   !
-  REAL(KIND=dp), PARAMETER :: ZERO=0._dp, ONE=1._dp, TWO=2._dp, HALF=0.5_dp
+  REAL(dp), PARAMETER :: ZERO=0._dp, ONE=1._dp, TWO=2._dp, HALF=0.5_dp
   !
   ! TEMP, to be substituted by module constants
-  REAL(KIND=dp), PARAMETER :: &
+  REAL(dp), PARAMETER :: &
        PI=3.14159265358979323846_dp, FPI=4._dp*PI, E2=2._dp, EPS8=1.0e-8_dp
   !
   !============================================================================
@@ -49,22 +49,22 @@ MODULE atomic_paw
   ! Type describing a PAW dataset
   !
   TYPE :: paw_t
-     REAL (KIND=dp) :: zval
-     REAL (KIND=dp) :: z
-     REAL (KIND=dp) :: zmesh
+     REAL (dp) :: zval
+     REAL (dp) :: z
+     REAL (dp) :: zmesh
      CHARACTER(LEN=80) :: dft
      INTEGER        :: mesh      ! the size of the mesh
-     REAL (KIND=dp) :: r (ndm)   ! the mesh
-     REAL (KIND=dp) :: r2 (ndm)  ! r^2
-     REAL (KIND=dp) :: sqr (ndm) ! sqrt(r)
-     REAL (KIND=dp) :: dx        ! log(r(i+1))-log(r(i))
+     REAL (dp) :: r (ndm)   ! the mesh
+     REAL (dp) :: r2 (ndm)  ! r^2
+     REAL (dp) :: sqr (ndm) ! sqrt(r)
+     REAL (dp) :: dx        ! log(r(i+1))-log(r(i))
      LOGICAL :: nlcc ! nonlinear core correction
      INTEGER :: nwfc ! number of wavefunctions/projectors
      INTEGER :: lmax ! maximum angular momentum of projectors
      INTEGER :: l(nwfsx) ! angular momentum of projectors
      INTEGER :: ikk(nwfsx) ! cutoff radius for the projectors
      INTEGER :: irc ! r(irc) = radius of the augmentation sphere
-     REAL (KIND=dp) :: &
+     REAL (dp) :: &
           oc (nwfsx), & ! the occupations
           enl (nwfsx), & ! the energy of the wavefunctions
           aewfc (ndm,nwfsx), &  ! all-electron wavefunctions
@@ -104,26 +104,26 @@ CONTAINS
   SUBROUTINE new_paw_hamiltonian (veffps_, ddd_, etot_, &
        pawset_, nwfc_, l_, nspin_, spin_, oc_, pswfc_, eig_)
     IMPLICIT NONE
-    REAL(KIND=dp), INTENT(OUT) :: veffps_(ndm,2)
-    REAL(KIND=dp), INTENT(OUT) :: ddd_(nwfsx,nwfsx,2)
-    REAL(KIND=dp), INTENT(OUT) :: etot_
+    REAL(dp), INTENT(OUT) :: veffps_(ndm,2)
+    REAL(dp), INTENT(OUT) :: ddd_(nwfsx,nwfsx,2)
+    REAL(dp), INTENT(OUT) :: etot_
     TYPE(paw_t),   INTENT(IN)  :: pawset_
     INTEGER,       INTENT(IN)  :: nwfc_
     INTEGER,       INTENT(IN)  :: l_(nwfsx)
     INTEGER,       INTENT(IN)  :: nspin_
     INTEGER,       INTENT(IN)  :: spin_(nwfsx)
-    REAL(KIND=dp), INTENT(IN)  :: oc_(nwfsx)
-    REAL(KIND=dp), INTENT(IN)  :: pswfc_(ndm,nwfsx)
-    REAL(KIND=dp), INTENT(IN)  :: eig_(nwfsx)
+    REAL(dp), INTENT(IN)  :: oc_(nwfsx)
+    REAL(dp), INTENT(IN)  :: pswfc_(ndm,nwfsx)
+    REAL(dp), INTENT(IN)  :: eig_(nwfsx)
     !
-    REAL(KIND=dp) :: &                                        ! one center:
+    REAL(dp) :: &                                        ! one center:
          eps,             e1,             e1ps,             & ! energies;
                           veff1(ndm,2),   veff1ps(ndm,2),   & ! eff potentials;
          chargeps(ndm,2), charge1(ndm,2), charge1ps(ndm,2), & ! charges.
          projsum(nwfsx,nwfsx,2), eigsum !  sum of projections, sum of eigenval.
     !
     INTEGER :: ns, ns1, is
-    REAL(KIND=dp) :: aux(ndm)
+    REAL(dp) :: aux(ndm)
     !
     ! Compute the valence charges
     CALL compute_charges(projsum, chargeps, charge1, charge1ps, &
@@ -169,34 +169,34 @@ CONTAINS
     USE funct
     IMPLICIT NONE
     TYPE(paw_t),   INTENT(OUT) :: pawset_
-    REAL(KIND=dp), INTENT(IN)  :: zval
+    REAL(dp), INTENT(IN)  :: zval
     INTEGER,       INTENT(IN)  :: mesh
-    REAL(KIND=dp), INTENT(IN)  :: r(ndm)
-    REAL(KIND=dp), INTENT(IN)  :: r2(ndm), sqr(ndm), dx
+    REAL(dp), INTENT(IN)  :: r(ndm)
+    REAL(dp), INTENT(IN)  :: r2(ndm), sqr(ndm), dx
     INTEGER,       INTENT(IN)  :: irc
     INTEGER,       INTENT(IN)  :: ikk(nwfsx)
     INTEGER,       INTENT(IN)  :: nbeta
     INTEGER,       INTENT(IN)  :: lls(nwfsx)
-    REAL(KIND=dp), INTENT(IN)  :: ocs(nwfsx)
-    REAL(KIND=dp), INTENT(IN)  :: enls(nwfsx)
-    REAL(KIND=dp), INTENT(IN)  :: psipaw(ndm,nwfsx)
-    REAL(KIND=dp), INTENT(IN)  :: phis(ndm,nwfsx)
-    REAL(KIND=dp), INTENT(IN)  :: betas(ndm,nwfsx)
-    REAL(KIND=dp), INTENT(IN)  :: qvan(ndm,nwfsx,nwfsx)
-    REAL(KIND=dp), INTENT(IN)  :: kindiff(nwfsx,nwfsx)
+    REAL(dp), INTENT(IN)  :: ocs(nwfsx)
+    REAL(dp), INTENT(IN)  :: enls(nwfsx)
+    REAL(dp), INTENT(IN)  :: psipaw(ndm,nwfsx)
+    REAL(dp), INTENT(IN)  :: phis(ndm,nwfsx)
+    REAL(dp), INTENT(IN)  :: betas(ndm,nwfsx)
+    REAL(dp), INTENT(IN)  :: qvan(ndm,nwfsx,nwfsx)
+    REAL(dp), INTENT(IN)  :: kindiff(nwfsx,nwfsx)
     LOGICAL,       INTENT(IN)  :: nlcc
-    REAL(KIND=dp), INTENT(IN)  :: aerhoc(ndm)
-    REAL(KIND=dp), INTENT(IN)  :: psrhoc(ndm)
-    REAL(KIND=dp), INTENT(IN)  :: aevtot(ndm)
-    REAL(KIND=dp), INTENT(IN)  :: psvtot(ndm)
+    REAL(dp), INTENT(IN)  :: aerhoc(ndm)
+    REAL(dp), INTENT(IN)  :: psrhoc(ndm)
+    REAL(dp), INTENT(IN)  :: aevtot(ndm)
+    REAL(dp), INTENT(IN)  :: psvtot(ndm)
     LOGICAL,INTENT(IN),OPTIONAL:: do_write_dataset
     !
-    REAL(kind=dp), EXTERNAL :: int_0_inf_dr
-    REAL(KIND=dp) :: vps(ndm,2), projsum(nwfsx,nwfsx,2), ddd(nwfsx,nwfsx,2)
+    REAL(DP), EXTERNAL :: int_0_inf_dr
+    REAL(dp) :: vps(ndm,2), projsum(nwfsx,nwfsx,2), ddd(nwfsx,nwfsx,2)
     INTEGER :: ns, ns1, n, l
-    REAL(KIND=dp) :: aux(ndm), aux2(ndm,2), raux
-    REAL(KIND=dp) :: aecharge(ndm,2), pscharge(ndm,2)
-    REAL(KIND=dp) :: etot
+    REAL(dp) :: aux(ndm), aux2(ndm,2), raux
+    REAL(dp) :: aecharge(ndm,2), pscharge(ndm,2)
+    REAL(dp) :: etot
     INTEGER :: nspin=1, spin(nwfsx)=1
     CHARACTER(LEN=4) :: shortname
     !
@@ -337,17 +337,17 @@ CONTAINS
     USE funct, ONLY : which_dft
     IMPLICIT NONE
     TYPE(paw_t),   INTENT(IN)  :: pawset_
-    REAL(KIND=dp), INTENT(OUT) :: zval
+    REAL(dp), INTENT(OUT) :: zval
     INTEGER,       INTENT(OUT) :: mesh
-    REAL(KIND=dp), INTENT(OUT) :: r(ndm)
-    REAL(KIND=dp), INTENT(OUT) :: r2(ndm), sqr(ndm), dx
+    REAL(dp), INTENT(OUT) :: r(ndm)
+    REAL(dp), INTENT(OUT) :: r2(ndm), sqr(ndm), dx
     INTEGER,       INTENT(OUT) :: nbeta
     INTEGER,       INTENT(OUT) :: lls(nwfsx)
     INTEGER,       INTENT(OUT) :: ikk(nwfsx)
     INTEGER,       INTENT(OUT) :: pseudotype
-    REAL(KIND=dp), INTENT(OUT) :: betas(ndm,nwfsx)
-    REAL(KIND=dp), INTENT(OUT) :: qq(nwfsx,nwfsx)
-    REAL(KIND=dp), INTENT(OUT) :: qvan(ndm,nwfsx,nwfsx)
+    REAL(dp), INTENT(OUT) :: betas(ndm,nwfsx)
+    REAL(dp), INTENT(OUT) :: qq(nwfsx,nwfsx)
+    REAL(dp), INTENT(OUT) :: qvan(ndm,nwfsx,nwfsx)
     INTEGER :: ns, ns1
     !
     zval=pawset_%zval
@@ -458,18 +458,18 @@ CONTAINS
   SUBROUTINE compute_charges (projsum_, chargeps_, charge1_, charge1ps_, &
        pawset_, nwfc_, l_, nspin_, spin_, oc_, pswfc_ )
     IMPLICIT NONE
-    REAL(KIND=dp), INTENT(OUT) :: projsum_(nwfsx,nwfsx,2)
-    REAL(KIND=dp), INTENT(OUT) :: chargeps_(ndm,2)
-    REAL(KIND=dp), INTENT(OUT) :: charge1_(ndm,2)
-    REAL(KIND=dp), INTENT(OUT) :: charge1ps_(ndm,2)
+    REAL(dp), INTENT(OUT) :: projsum_(nwfsx,nwfsx,2)
+    REAL(dp), INTENT(OUT) :: chargeps_(ndm,2)
+    REAL(dp), INTENT(OUT) :: charge1_(ndm,2)
+    REAL(dp), INTENT(OUT) :: charge1ps_(ndm,2)
     TYPE(paw_t),   INTENT(IN)  :: pawset_
     INTEGER,       INTENT(IN)  :: nwfc_
     INTEGER,       INTENT(IN)  :: l_(nwfsx)
     INTEGER,       INTENT(IN)  :: nspin_
     INTEGER,       INTENT(IN)  :: spin_(nwfsx)
-    REAL(KIND=dp), INTENT(IN)  :: oc_(nwfsx)
-    REAL(KIND=dp), INTENT(IN)  :: pswfc_(ndm,nwfsx)
-    REAL(KIND=dp) :: augcharge(ndm,2)
+    REAL(dp), INTENT(IN)  :: oc_(nwfsx)
+    REAL(dp), INTENT(IN)  :: pswfc_(ndm,nwfsx)
+    REAL(dp) :: augcharge(ndm,2)
     CALL compute_projsum(projsum_,pawset_,nwfc_,l_,spin_,pswfc_,oc_)
     !WRITE (6200,'(20e20.10)') ((projsum(ns,ns1),ns=1,ns1),ns1=1,pawset_%nwfc)
     CALL compute_sumwfc2(chargeps_,pawset_,nwfc_,pswfc_,oc_,spin_)
@@ -494,18 +494,18 @@ CONTAINS
        pawset_, vcharge_, nlcc_, ccharge_, nspin_, energies_ )
     USE funct, ONLY: igcx, igcc
     IMPLICIT NONE
-    REAL(KIND=dp), INTENT(OUT) :: totenergy_       ! H+XC+DC
-    REAL(KIND=dp), INTENT(OUT) :: veff_(ndm,2)     ! effective potential
+    REAL(dp), INTENT(OUT) :: totenergy_       ! H+XC+DC
+    REAL(dp), INTENT(OUT) :: veff_(ndm,2)     ! effective potential
     TYPE(paw_t),   INTENT(IN)  :: pawset_          ! the PAW dataset
-    REAL(KIND=dp), INTENT(IN)  :: vcharge_(ndm,2)  ! valence charge
+    REAL(dp), INTENT(IN)  :: vcharge_(ndm,2)  ! valence charge
     LOGICAL,       INTENT(IN)  :: nlcc_            ! non-linear core correction
-    REAL(KIND=dp), INTENT(IN)  :: ccharge_(ndm)    ! core charge
+    REAL(dp), INTENT(IN)  :: ccharge_(ndm)    ! core charge
     INTEGER,       INTENT(IN)  :: nspin_           ! 1 for LDA, 2 for LSDA
-    REAL(KIND=dp), INTENT(OUT), OPTIONAL :: energies_(4) ! Etot,H,XC,DC terms
+    REAL(dp), INTENT(OUT), OPTIONAL :: energies_(4) ! Etot,H,XC,DC terms
     !
-    REAL(KIND=dp), PARAMETER :: rho_eq_0(ndm) = ZERO ! ccharge=0 when nlcc=.f.
+    REAL(dp), PARAMETER :: rho_eq_0(ndm) = ZERO ! ccharge=0 when nlcc=.f.
     !
-    REAL(KIND=dp) :: &
+    REAL(dp) :: &
          eh, exc, edc, & ! hartree, xc and double counting energies
          rhovtot(ndm), & ! total valence charge
          aux(ndm),     & ! auxiliary to compute integrals
@@ -519,7 +519,7 @@ CONTAINS
     !
     INTEGER :: ns, i, is
     INTEGER :: lsd
-    REAL(kind=dp), EXTERNAL :: int_0_inf_dr, exc_t
+    REAL(DP), EXTERNAL :: int_0_inf_dr, exc_t
     !
     ! Set up total valence charge
     rhovtot(1:pawset_%mesh) = vcharge_(1:pawset_%mesh,1)
@@ -588,15 +588,15 @@ CONTAINS
   !
   SUBROUTINE compute_nonlocal_coeff(ddd_, pawset_, nspin_, veffps_, veff1_, veff1ps_)
     IMPLICIT NONE
-    REAL(KIND=dp), INTENT(OUT) :: ddd_(nwfsx,nwfsx,2)
+    REAL(dp), INTENT(OUT) :: ddd_(nwfsx,nwfsx,2)
     TYPE(paw_t),   INTENT(IN)  :: pawset_
     INTEGER,       INTENT(IN)  :: nspin_
-    REAL(KIND=dp), INTENT(IN)  :: veffps_(ndm,2)
-    REAL(KIND=dp), INTENT(IN)  :: veff1_(ndm,2)
-    REAL(KIND=dp), INTENT(IN)  :: veff1ps_(ndm,2)
+    REAL(dp), INTENT(IN)  :: veffps_(ndm,2)
+    REAL(dp), INTENT(IN)  :: veff1_(ndm,2)
+    REAL(dp), INTENT(IN)  :: veff1ps_(ndm,2)
     INTEGER :: is, ns, ns1
-    REAL(KIND=dp) :: aux(ndm)
-    REAL(kind=dp), EXTERNAL :: int_0_inf_dr
+    REAL(dp) :: aux(ndm)
+    REAL(DP), EXTERNAL :: int_0_inf_dr
     !
     ! D^ = Int Q*v~
     ! D1-D1~ = kindiff + Int[ae*v1*ae - ps*v1~*ps - augfun*v~1]
@@ -658,11 +658,11 @@ CONTAINS
   !
   SUBROUTINE compute_sumwfc2(charge_, pawset_, nwfc_, wfc_, oc_, spin_)
     IMPLICIT NONE
-    REAL(KIND=dp), INTENT(OUT) :: charge_(ndm,2)
+    REAL(dp), INTENT(OUT) :: charge_(ndm,2)
     TYPE(paw_t),   INTENT(IN)  :: pawset_
     INTEGER,       INTENT(IN)  :: nwfc_
-    REAL(KIND=dp), INTENT(IN)  :: wfc_(ndm,nwfsx)
-    REAL(KIND=dp), INTENT(IN)  :: oc_(nwfsx)
+    REAL(dp), INTENT(IN)  :: wfc_(ndm,nwfsx)
+    REAL(dp), INTENT(IN)  :: oc_(nwfsx)
     INTEGER,       INTENT(IN)  :: spin_(nwfsx)
     INTEGER :: ns
     charge_(1:pawset_%mesh,:)=ZERO
@@ -677,16 +677,16 @@ CONTAINS
   ! Compute Sum_n oc_n <pswfc_n|proj_i> <proj_j|pswfc_n>
   !
   SUBROUTINE compute_projsum (projsum_, pawset_, nwfc_, l_, spin_, pswfc_, oc_)
-    REAL(KIND=dp), INTENT(OUT) :: projsum_(nwfsx,nwfsx,2)
+    REAL(dp), INTENT(OUT) :: projsum_(nwfsx,nwfsx,2)
     TYPE(paw_t),   INTENT(IN)  :: pawset_
     INTEGER,       INTENT(IN)  :: nwfc_
     INTEGER,       INTENT(IN)  :: l_(nwfsx)
     INTEGER,       INTENT(IN)  :: spin_(nwfsx)
-    REAL(KIND=dp), INTENT(IN)  :: pswfc_(ndm,nwfsx)
-    REAL(KIND=dp), INTENT(IN)  :: oc_(nwfsx)
-    REAL(KIND=dp) :: proj_dot_wfc(nwfsx,nwfsx), aux(ndm)
+    REAL(dp), INTENT(IN)  :: pswfc_(ndm,nwfsx)
+    REAL(dp), INTENT(IN)  :: oc_(nwfsx)
+    REAL(dp) :: proj_dot_wfc(nwfsx,nwfsx), aux(ndm)
     INTEGER :: ns, ns1, nf, nr, is, nst
-    REAL(kind=dp), EXTERNAL :: int_0_inf_dr
+    REAL(DP), EXTERNAL :: int_0_inf_dr
     ! Compute <projector|wavefunction>
     DO ns=1,pawset_%nwfc
        DO nf=1,nwfc_
@@ -724,12 +724,12 @@ CONTAINS
   !
   SUBROUTINE compute_augcharge(augcharge_, pawset_, projsum_, nspin_)
     IMPLICIT NONE
-    REAL(KIND=dp), INTENT(OUT) :: augcharge_(ndm,2)
+    REAL(dp), INTENT(OUT) :: augcharge_(ndm,2)
     TYPE(paw_t),   INTENT(IN)  :: pawset_
-    REAL(KIND=dp), INTENT(IN)  :: projsum_(nwfsx,nwfsx,2)
+    REAL(dp), INTENT(IN)  :: projsum_(nwfsx,nwfsx,2)
     INTEGER,       INTENT(IN)  :: nspin_
     INTEGER :: ns, ns1, is
-    REAL(KIND=dp) :: factor
+    REAL(dp) :: factor
     augcharge_=ZERO
     DO is=1,nspin_
        DO ns=1,pawset_%nwfc
@@ -753,13 +753,13 @@ CONTAINS
   !
   SUBROUTINE compute_onecenter_charge(charge1_, pawset_, projsum_, nspin_, which_wfc)
     IMPLICIT NONE
-    REAL(KIND=dp),   INTENT(OUT) :: charge1_(ndm,2)
+    REAL(dp),   INTENT(OUT) :: charge1_(ndm,2)
     TYPE(paw_t),     INTENT(IN)  :: pawset_
-    REAL(KIND=dp),   INTENT(IN)  :: projsum_(nwfsx,nwfsx,2)
+    REAL(dp),   INTENT(IN)  :: projsum_(nwfsx,nwfsx,2)
     INTEGER,         INTENT(IN)  :: nspin_
     CHARACTER(LEN=2),INTENT(IN)  :: which_wfc
     INTEGER :: ns, ns1, is
-    REAL(KIND=dp) :: factor
+    REAL(dp) :: factor
     charge1_=ZERO
     DO is=1,nspin_
        DO ns=1,pawset_%nwfc

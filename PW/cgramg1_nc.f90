@@ -28,7 +28,7 @@ subroutine cgramg1_nc (lda, nvecx, n, start, finish, psi, spsi, hpsi, npol)
   ! input: first vector to orthogonalize
   ! input: last vector to orthogonalize
   ! input: number of coordonates of wfc
-  complex(kind=DP) :: psi(lda,npol,nvecx), spsi(lda,npol,nvecx), hpsi(lda, &
+  complex(DP) :: psi(lda,npol,nvecx), spsi(lda,npol,nvecx), hpsi(lda, &
        npol,nvecx)
   ! inp/out: the vectors to be orthogonalized
   !
@@ -36,7 +36,7 @@ subroutine cgramg1_nc (lda, nvecx, n, start, finish, psi, spsi, hpsi, npol)
   !
   integer :: ierrx
   ! maximum number of errors
-  real(kind=DP) :: eps
+  real(DP) :: eps
   ! a small number
   parameter (ierrx = 3, eps = 1.0d-6)
   !
@@ -46,12 +46,12 @@ subroutine cgramg1_nc (lda, nvecx, n, start, finish, psi, spsi, hpsi, npol)
   ! counter on vectors
   ! counter on vectors
   ! counter on errors
-  complex(kind=DP), allocatable :: ps (:)
-  complex(kind=DP) ::  ZDOTC
+  complex(DP), allocatable :: ps (:)
+  complex(DP) ::  ZDOTC
   ! the scalar products
   ! function which computes scalar products
 
-  real(kind=DP) :: norm, DDOT
+  real(DP) :: norm, DDOT
   ! the norm of a vector
   ! function computing the dot product of two v
 

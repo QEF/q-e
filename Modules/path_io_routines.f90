@@ -114,7 +114,7 @@ MODULE path_io_routines
        !    
        INTEGER              :: i, j, ia, ierr
        CHARACTER (LEN=256)  :: input_line
-       REAL (KIND=DP)       :: val
+       REAL (DP)       :: val
        LOGICAL              :: exists
        LOGICAL, EXTERNAL    :: matches
        !
@@ -565,10 +565,10 @@ MODULE path_io_routines
        !
        ! ... local variables
        !
-       REAL (KIND=DP)              :: R, delta_R, x, delta_x
-       REAL (KIND=DP), ALLOCATABLE :: d_R(:)
-       REAL (KIND=DP), ALLOCATABLE :: a(:), b(:), c(:), d(:), F(:)
-       REAL (KIND=DP)              :: ener, ener_0
+       REAL (DP)              :: R, delta_R, x, delta_x
+       REAL (DP), ALLOCATABLE :: d_R(:)
+       REAL (DP), ALLOCATABLE :: a(:), b(:), c(:), d(:), F(:)
+       REAL (DP)              :: ener, ener_0
        INTEGER                     :: i, j, n, atom, image
        INTEGER, PARAMETER          :: max_i = 100
        !
@@ -750,7 +750,7 @@ MODULE path_io_routines
        ! ... local variables
        !
        INTEGER        :: mode, image
-       REAL (KIND=DP) :: inter_image_distance
+       REAL (DP) :: inter_image_distance
        !
        !
        IF ( .NOT. meta_ionode ) RETURN 

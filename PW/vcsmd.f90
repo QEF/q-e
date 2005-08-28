@@ -61,7 +61,7 @@ SUBROUTINE vcsmd()
   !
   ! ... local variables
   !
-  REAL(KIND=DP) :: p,            & ! virial pressure
+  REAL(DP) :: p,            & ! virial pressure
                    vcell,        & ! cell volume
                    avec(3,3),    & ! at(3,3) * alat
                    aveci(3,3),   & ! avec at t-dt
@@ -71,14 +71,14 @@ SUBROUTINE vcsmd()
                    avec0(3,3),   & ! avec at t = 0
                    sig0(3,3),    & ! sigma at t=0
                    v0              ! volume at t=0
-  REAL(KIND=DP), ALLOCATABLE ::      &
+  REAL(DP), ALLOCATABLE ::      &
                    rat(:,:),     & ! atomic positions (lattice coord)
                    rati(:,:),    & ! rat at previous step
                    ratd(:,:),    & ! rat derivatives at current step
                    rat2d(:,:),   & ! rat 2nd derivatives at current step
                    rat2di(:,:),  & ! rat 2nd derivatives at previous step
                    tauold(:,:,:)   ! additional  history variables
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
            avmod(3), theta(3,3), & ! used to monitor cell dynamics
            enew, e_start,        & ! DFT energy at current and first step
            eold,                 & ! DFT energy at previous step

@@ -88,29 +88,29 @@ CONTAINS
     !
     INTEGER, INTENT(in) :: ndw
     CHARACTER(len=*), INTENT(in) :: what
-    REAL(kind=DP), INTENT(in) :: et_g(:,:), wg_g(:,:)
+    REAL(DP), INTENT(in) :: et_g(:,:), wg_g(:,:)
     INTEGER, INTENT(in) :: kunit
     !
     INTEGER :: ik, i, ibnd, ia, ispin, ldim, npwt
     LOGICAL :: exst
     LOGICAL :: twrite
-    REAL(kind=DP) :: trutime
+    REAL(DP) :: trutime
     INTEGER :: nelu
     INTEGER :: neld
     INTEGER :: na(nsx)
     INTEGER :: ngk_g( npk )
     INTEGER :: ngk_l( npk )
-    REAL(kind=DP) :: acc(nacx)
-    REAL(kind=DP) :: ekincm, ecutrho
-    REAL(kind=DP), ALLOCATABLE :: stau0(:,:), staum(:,:)
-    REAL(kind=DP), ALLOCATABLE :: svel0(:,:), svelm(:,:), tautmp(:,:)
-    REAL(kind=DP) :: xnosp, xnos0, xnosm, xnosm2, cdmi(3)
+    REAL(DP) :: acc(nacx)
+    REAL(DP) :: ekincm, ecutrho
+    REAL(DP), ALLOCATABLE :: stau0(:,:), staum(:,:)
+    REAL(DP), ALLOCATABLE :: svel0(:,:), svelm(:,:), tautmp(:,:)
+    REAL(DP) :: xnosp, xnos0, xnosm, xnosm2, cdmi(3)
     CHARACTER(len=3) :: atom_label(nsx)
-    REAL(kind=DP), DIMENSION(3,3) :: ht0, htm, htm2, htvel, xhnosp, xhnos0, xhnosm, xhnosm2
+    REAL(DP), DIMENSION(3,3) :: ht0, htm, htm2, htvel, xhnosp, xhnos0, xhnosm, xhnosm2
     LOGICAL :: tscal, tocc, tlam, teig, tmill
-    REAL(kind=DP) :: xenos0, xenosm, xenosm2, xenosp
-    REAL(kind=DP) :: bg1_(3), bg2_(3), bg3_(3)
-    REAL(kind=DP), ALLOCATABLE :: occtmp(:), lambda(:,:), g_g(:)
+    REAL(DP) :: xenos0, xenosm, xenosm2, xenosp
+    REAL(DP) :: bg1_(3), bg2_(3), bg3_(3)
+    REAL(DP), ALLOCATABLE :: occtmp(:), lambda(:,:), g_g(:)
     INTEGER :: strlen
     INTEGER, ALLOCATABLE :: mill(:,:)
     INTEGER :: ngm_p( nproc_pool )
@@ -118,7 +118,7 @@ CONTAINS
     LOGICAL :: twf0, twfm, tupf
     INTEGER :: nkl, nkr, nkbl, iks, ike, npw_g, ipol, j
     INTEGER :: npool, ipmask( nproc ), ipsour
-    REAL(kind=DP) :: wfc_scal
+    REAL(DP) :: wfc_scal
 
     LOGICAL :: twrhead, twrxdim, twrcell, twrpos, twrpseudo, twrchden
     LOGICAL :: twrocc, twrgvec, twrgkvec, twrwfc, twrsym
@@ -126,7 +126,7 @@ CONTAINS
     INTEGER :: iunps, ios, flen, ierr
     LOGICAL :: opnd
     LOGICAL :: lgamma
-    COMPLEX(KIND=DP), ALLOCATABLE :: wfc_restart(:,:)
+    COMPLEX(DP), ALLOCATABLE :: wfc_restart(:,:)
     TYPE (pseudo_upf) :: upf
 
     EXTERNAL DSCAL
@@ -616,34 +616,34 @@ CONTAINS
     INTEGER, INTENT(in) :: ndr, nsizwfc, iunitwfc
     INTEGER, INTENT(out) :: ierr
     CHARACTER(len=*), INTENT(in) :: what
-    REAL(kind=DP), INTENT(inout) :: et_g(:,:), wg_g(:,:)
+    REAL(DP), INTENT(inout) :: et_g(:,:), wg_g(:,:)
     INTEGER, INTENT(inout) :: kunit
     !
     !
     LOGICAL :: exst
-    REAL(kind=DP), ALLOCATABLE :: stau0(:,:), staum(:,:), amass_(:)
-    REAL(kind=DP), ALLOCATABLE :: svel0(:,:), svelm(:,:), tautmp(:,:), force_(:,:)
-    REAL(kind=DP) :: xnosp, xnos0, xnosm, xnosm2, cdmi(3)
+    REAL(DP), ALLOCATABLE :: stau0(:,:), staum(:,:), amass_(:)
+    REAL(DP), ALLOCATABLE :: svel0(:,:), svelm(:,:), tautmp(:,:), force_(:,:)
+    REAL(DP) :: xnosp, xnos0, xnosm, xnosm2, cdmi(3)
     CHARACTER(len=3) :: atom_label(nsx)
-    REAL(kind=DP), DIMENSION(3,3) :: ht0, htm, htm2, htvel, xhnosp, xhnos0, xhnosm, xhnosm2
+    REAL(DP), DIMENSION(3,3) :: ht0, htm, htm2, htvel, xhnosp, xhnos0, xhnosm, xhnosm2
     LOGICAL :: tscal
-    REAL(kind=DP) :: xenos0, xenosm, xenosm2, xenosp
+    REAL(DP) :: xenos0, xenosm, xenosm2, xenosp
     INTEGER, ALLOCATABLE :: ityp_(:)
 
     INTEGER :: nelu_, neld_, nacx_, kunit_
     INTEGER :: na_(nsx), ngk_l(npk), ngk_g(npk)
-    REAL(kind=DP) :: trutime_, ecutrho_, ekincm_
-    REAL(kind=DP) :: acc_(nacx), bg_(3,3)
+    REAL(DP) :: trutime_, ecutrho_, ekincm_
+    REAL(DP) :: acc_(nacx), bg_(3,3)
     CHARACTER(len=80) :: title_, crystal_
     CHARACTER(len=256) :: tmp_dir_
-    REAL(kind=DP), ALLOCATABLE :: occtmp(:), lambda(:,:)
+    REAL(DP), ALLOCATABLE :: occtmp(:), lambda(:,:)
 
     INTEGER :: ntau
     INTEGER :: i, ispin, ik, ispin_, nspin_, ik_, nkstot_, nat_, ntyp_
     INTEGER :: nbnd_
 
-    REAL(kind=DP) :: nelec_
-    REAL(kind=DP) :: xenos0_, xenosm_, xenosm2_, xenosp_
+    REAL(DP) :: nelec_
+    REAL(DP) :: xenos0_, xenosm_, xenosm2_, xenosp_
     LOGICAL :: tocc, tlam, teig, tmill, twf0, twfm, tigl
     INTEGER :: ldim, flen
     INTEGER :: nkl, nkr, nkbl, iks, ike
@@ -653,8 +653,8 @@ CONTAINS
     INTEGER :: npw, npw_g, ipol, j
     LOGICAL :: lgamma
 
-    REAL(kind=DP) :: wfc_scal
-    COMPLEX(KIND=DP), ALLOCATABLE :: wfc_restart(:,:)
+    REAL(DP) :: wfc_scal
+    COMPLEX(DP), ALLOCATABLE :: wfc_restart(:,:)
 
     TYPE( pseudo_upf ) :: upf
 
@@ -1196,16 +1196,16 @@ CONTAINS
     !
     INTEGER, INTENT(in) :: ndr
     INTEGER, INTENT(out)       :: ibrav, nat, ierr
-    REAL(kind=DP), INTENT(out) :: alat, at(:,:), tau(:,:)
+    REAL(DP), INTENT(out) :: alat, at(:,:), tau(:,:)
     !
     LOGICAL :: tread, exst
-    REAL(kind=DP), ALLOCATABLE :: stau0(:,:), staum(:,:), amass_(:)
-    REAL(kind=DP), ALLOCATABLE :: svel0(:,:), svelm(:,:), tautmp(:,:), force_(:,:)
-    REAL(kind=DP) :: xnosp, xnos0, xnosm, xnosm2, cdmi(3)
+    REAL(DP), ALLOCATABLE :: stau0(:,:), staum(:,:), amass_(:)
+    REAL(DP), ALLOCATABLE :: svel0(:,:), svelm(:,:), tautmp(:,:), force_(:,:)
+    REAL(DP) :: xnosp, xnos0, xnosm, xnosm2, cdmi(3)
     CHARACTER(len=3) :: atom_label( nsx )
-    REAL(kind=DP), DIMENSION(3,3) :: ht0, htm, htm2, htvel, xhnosp, xhnos0, xhnosm, xhnosm2
+    REAL(DP), DIMENSION(3,3) :: ht0, htm, htm2, htvel, xhnosp, xhnos0, xhnosm, xhnosm2
     LOGICAL :: tscal
-    REAL(kind=DP) :: xenos0, xenosm, xenosm2, xenosp
+    REAL(DP) :: xenos0, xenosm, xenosm2, xenosp
     INTEGER, ALLOCATABLE :: ityp_(:)
 
     INTEGER :: istep_, nr1_, nr2_, nr3_, nr1s_, nr2s_, nr3s_, ngm_, ngmg_, nkstot_
@@ -1215,21 +1215,21 @@ CONTAINS
     INTEGER :: ntetra_, natomwfc_, modenum_
     INTEGER :: Hubbard_lmax_
     INTEGER :: npwx_, nbndx_, nrx1_, nrx2_, nrx3_, nrxx_, nrx1s_, nrx2s_, nrx3s_, nrxxs_
-    REAL(kind=DP) :: trutime_, nelec_, ecutwfc_, ecutrho_, alat_, ekincm_
-    REAL(kind=DP) :: degauss_, gcutm_, gcutms_, dual_
-    REAL(kind=DP) :: acc_(nacx)
+    REAL(DP) :: trutime_, nelec_, ecutwfc_, ecutrho_, alat_, ekincm_
+    REAL(DP) :: degauss_, gcutm_, gcutms_, dual_
+    REAL(DP) :: acc_(nacx)
     LOGICAL :: lgauss_, ltetra_, doublegrid_, lstres_, lforce_, tupf_, &
          lgamma_, noncolin_, lspinorb_, lda_plus_u_
     CHARACTER(len=80) :: title_, crystal_
     CHARACTER(len=256) :: tmp_dir_
 
-    REAL(kind=DP) :: celldm_(6)
+    REAL(DP) :: celldm_(6)
     INTEGER :: ibrav_
     INTEGER :: ntau
 
     LOGICAL :: tfixed_occ_, tefield_, dipfield_
     INTEGER :: edir_
-    REAL(kind=DP) :: emaxpos_, eopreg_, eamp_
+    REAL(DP) :: emaxpos_, eopreg_, eamp_
     LOGICAL :: twfcollect_ 
     !
     ! ... end of declarations

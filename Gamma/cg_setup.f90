@@ -27,10 +27,10 @@ SUBROUTINE cg_setup
   INTEGER :: i, l, nt, kpoint
   LOGICAL :: exst
   CHARACTER (len=256) :: filint
-  REAL(kind=DP) :: rhotot, dmxc
+  REAL(DP) :: rhotot, dmxc
   EXTERNAL dmxc
   INTEGER       :: ndr, kunittmp, ierr
-  REAL(KIND=DP) :: edum(1,1), wdum(1,1)
+  REAL(DP) :: edum(1,1), wdum(1,1)
   !
   CALL start_clock('cg_setup')
   !

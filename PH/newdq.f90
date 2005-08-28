@@ -28,7 +28,7 @@ subroutine newdq (dvscf, npe)
   integer :: npe
   ! input: the number of perturbations
 
-  complex(kind=DP) :: dvscf (nrxx, nspin, npe)
+  complex(DP) :: dvscf (nrxx, nspin, npe)
   ! input: the change of the self
   ! consistent pot.
   !
@@ -37,15 +37,15 @@ subroutine newdq (dvscf, npe)
   integer :: na, ig, nt, ir, ipert, is, ih, jh
   ! countera
 
-  real(kind=DP), allocatable :: qmod (:), qg (:,:), ylmk0 (:,:)
+  real(DP), allocatable :: qmod (:), qg (:,:), ylmk0 (:,:)
   ! the modulus of q+G
   ! the values of q+G
   ! the spherical harmonics
 
-  complex(kind=DP), external :: ZDOTC
+  complex(DP), external :: ZDOTC
   ! the scalar product function
 
-  complex(kind=DP), allocatable :: aux1 (:), aux2 (:,:), veff (:), qgm(:)
+  complex(DP), allocatable :: aux1 (:), aux2 (:,:), veff (:), qgm(:)
   ! work space
 
   if (.not.okvan) return

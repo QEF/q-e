@@ -13,28 +13,28 @@
       !  This module contains the basis vector of the small sub-cell (small box)
       !  used for charge augmentation process
 
-      USE kinds, ONLY : dbl
+      USE kinds, ONLY : DP
 !
       IMPLICIT NONE
       SAVE
 
         !  a1, a2 and a3 are the simulation cell base vector as calculated from celldm
 
-      REAL(dbl) :: a1b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-      REAL(dbl) :: a2b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-      REAL(dbl) :: a3b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+      REAL(DP) :: a1b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+      REAL(DP) :: a2b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+      REAL(DP) :: a3b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
 
-      REAL(dbl) :: b1b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-      REAL(dbl) :: b2b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-      REAL(dbl) :: b3b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+      REAL(DP) :: b1b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+      REAL(DP) :: b2b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+      REAL(DP) :: b3b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
 
-      REAL(dbl) :: ainvb(3,3) = 0.0d0
+      REAL(DP) :: ainvb(3,3) = 0.0d0
 
-      REAl(dbl) :: omegab = 0.0d0  !  volume of the small boxes 
+      REAl(DP) :: omegab = 0.0d0  !  volume of the small boxes 
 
-      REAL(dbl) :: tpibab = 0.0d0
+      REAL(DP) :: tpibab = 0.0d0
 
-      REAL(dbl) :: alatb  = 0.0d0
+      REAL(DP) :: alatb  = 0.0d0
 
 !------------------------------------------------------------------------------!
    CONTAINS
@@ -45,7 +45,7 @@
        USE constants, ONLY: pi
        USE io_global, ONLY: stdout
        IMPLICIT NONE
-       REAL(dbl), INTENT(IN) :: alat, omega, a1(3), a2(3), a3(3), rat1, rat2, rat3
+       REAL(DP), INTENT(IN) :: alat, omega, a1(3), a2(3), a3(3), rat1, rat2, rat3
        INTEGER :: i
 
        alatb  = alat * rat1

@@ -9,14 +9,14 @@
       MODULE runsd_module
 ! ---------------------------------------------------------------------- !
 
-        USE kinds, ONLY: dbl
+        USE kinds, ONLY: DP
 
         IMPLICIT NONE
         SAVE
 
         PRIVATE
 
-        REAL(dbl), PRIVATE :: old_clock_value = 0.0d0
+        REAL(DP), PRIVATE :: old_clock_value = 0.0d0
 
         PUBLIC :: runsd
 
@@ -59,39 +59,39 @@
 ! ... declare subroutine arguments
       LOGICAL   :: tortho, tprint, tforce, tcel, doions
       TYPE (atoms_type), INTENT(INOUT) :: atoms_0
-      COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cp(:,:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cp(:,:,:,:)
       TYPE (wave_descriptor) :: cdesc
-      REAL(dbl) :: rhoe(:,:,:,:)
-      COMPLEX(dbl) :: sfac(:,:)
+      REAL(DP) :: rhoe(:,:,:,:)
+      COMPLEX(DP) :: sfac(:,:)
       TYPE (charge_descriptor) :: desc
-      COMPLEX(dbl) :: eigr(:,:)
-      COMPLEX(dbl) :: ei1(:,:)
-      COMPLEX(dbl) :: ei2(:,:)
-      COMPLEX(dbl) :: ei3(:,:)
+      COMPLEX(DP) :: eigr(:,:)
+      COMPLEX(DP) :: ei1(:,:)
+      COMPLEX(DP) :: ei2(:,:)
+      COMPLEX(DP) :: ei3(:,:)
       TYPE (boxdimensions), INTENT(INOUT) ::  ht0
-      REAL(dbl)  :: occ(:,:,:)
-      REAL(dbl) :: bec(:,:)
-      REAL(dbl) :: becdr(:,:,:)
+      REAL(DP)  :: occ(:,:,:)
+      REAL(DP) :: bec(:,:)
+      REAL(DP) :: becdr(:,:,:)
       TYPE (dft_energy_type) :: edft
 
-      REAL(dbl)    :: ei(:,:,:)
-      REAL(dbl)    :: vpot(:,:,:,:)
+      REAL(DP)    :: ei(:,:,:)
+      REAL(DP)    :: vpot(:,:,:,:)
 
       INTEGER   :: maxnstep   !  maximum number of iteration
-      REAL(dbl) :: sdthr      !  threshold for convergence 
+      REAL(DP) :: sdthr      !  threshold for convergence 
 
 ! ... declare other variables
       LOGICAL :: ttsde, ttprint, ttforce, ttstress, gzero, ttortho
       LOGICAL :: gammasym
 
-      REAL(dbl) :: timepre, s0, s1, s2, s3, s4, s5, s6, seconds_per_iter
-      REAL(dbl) :: eold, timerd, timeorto, ekinc, vnosee
-      REAL(dbl) :: ekincs( cdesc%nspin )
-      REAL(dbl) :: ekinc_old, emin, demin
+      REAL(DP) :: timepre, s0, s1, s2, s3, s4, s5, s6, seconds_per_iter
+      REAL(DP) :: eold, timerd, timeorto, ekinc, vnosee
+      REAL(DP) :: ekincs( cdesc%nspin )
+      REAL(DP) :: ekinc_old, emin, demin
 
       INTEGER :: ispin, nspin, iter, ierr
 
-      REAL(dbl), EXTERNAL :: cclock
+      REAL(DP), EXTERNAL :: cclock
 
 ! ... end of declarations
 !  ----------------------------------------------

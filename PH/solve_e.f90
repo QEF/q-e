@@ -34,24 +34,24 @@ subroutine solve_e
   
   implicit none
 
-  real(kind=DP) ::  thresh, anorm, averlt, dr2
+  real(DP) ::  thresh, anorm, averlt, dr2
   ! thresh: convergence threshold
   ! anorm : the norm of the error
   ! averlt: average number of iterations
   ! dr2   : self-consistency error
-  real(kind=DP), allocatable :: h_diag (:,:), eprec(:)
+  real(DP), allocatable :: h_diag (:,:), eprec(:)
   ! h_diag: diagonal part of the Hamiltonian
   ! eprec : array fo preconditioning
 
-  complex(kind=DP) , pointer ::      &
+  complex(DP) , pointer ::      &
                    dvscfin (:,:,:),  & ! change of the scf potential (input)
                    dvscfins (:,:,:)    ! change of the scf potential (smooth)
-  complex(kind=DP) , allocatable ::   &
+  complex(DP) , allocatable ::   &
                    dvscfout (:,:,:), & ! change of the scf potential (output)
                    dbecsum(:,:,:,:), & ! the becsum with dpsi
                    auxg (:), aux1 (:),  ps (:,:)
 
-  complex(kind=DP) :: ZDOTC      ! the scalar product function
+  complex(DP) :: ZDOTC      ! the scalar product function
 
   logical :: conv_root, exst
   ! conv_root: true if linear system is converged
@@ -61,7 +61,7 @@ subroutine solve_e
   ! counters
   integer :: ltaver, lintercall
 
-  real(kind=DP) :: tcpu, get_clock
+  real(DP) :: tcpu, get_clock
   ! timing variables
 
   character (len=256) :: flmixdpot
@@ -323,7 +323,7 @@ subroutine solve_e
 
      call newdq(dvscfin,3)
 
-     averlt = dble (ltaver) / dble (lintercall)
+     averlt = DBLE (ltaver) / DBLE (lintercall)
   
      tcpu = get_clock ('PHONON')
      WRITE( stdout, '(/,5x," iter # ",i3," total cpu time : ",f7.1, &

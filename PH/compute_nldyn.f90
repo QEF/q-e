@@ -24,20 +24,20 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   use phcom
   implicit none
 
-  complex(kind=DP) :: becq (nkb, nbnd, nksq), alpq (nkb, nbnd, 3, nksq), &
+  complex(DP) :: becq (nkb, nbnd, nksq), alpq (nkb, nbnd, 3, nksq), &
        wdyn (3 * nat, 3 * nat)
   ! input: the becp with psi_{k+q}
   ! input: the alphap with psi_{k}
   ! output: the term of the dynamical matrix
 
-  real(kind=DP) :: wgg (nbnd, nbnd, nksq)
+  real(DP) :: wgg (nbnd, nbnd, nksq)
   ! input: the weights
 
-  complex(kind=DP) :: ps, aux1 (nbnd), aux2 (nbnd)
-  complex(kind=DP), allocatable ::  ps1 (:,:),&
+  complex(DP) :: ps, aux1 (nbnd), aux2 (nbnd)
+  complex(DP), allocatable ::  ps1 (:,:),&
        ps2 (:,:,:), ps3 (:,:), ps4 (:,:,:)
   ! work space
-  complex(kind=DP) ::  dynwrk (3 * nat, 3 * nat)
+  complex(DP) ::  dynwrk (3 * nat, 3 * nat)
   ! auxiliary dynamical matrix
 
   integer :: ik, ikk, ikq, ibnd, jbnd, ijkb0, ijkb0b, ih, jh, ikb, &

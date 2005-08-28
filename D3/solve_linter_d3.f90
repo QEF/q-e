@@ -44,7 +44,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   ! input: the position of the modes
   ! input: a switch
 
-  real (kind = dp) :: thresh, wg1, wg2, wwg, deltae, theta, anorm, averlt, &
+  real (DP) :: thresh, wg1, wg2, wwg, deltae, theta, anorm, averlt, &
        eprec, aux_avg (2), tcpu, xq_ (3)
   ! the convergence threshold
   ! weight for metals
@@ -57,20 +57,20 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   ! cut-off for preconditioning
   ! auxiliary variable for avg. iter. coun
 
-  real (kind = dp), external :: w0gauss, wgauss, get_clock
+  real (DP), external :: w0gauss, wgauss, get_clock
   ! function computing the delta function
   ! function computing the theta function
   ! cpu time
 
-  complex (kind = dp) ::  ps (nbnd), dbecsum, psidvpsi
+  complex (DP) ::  ps (nbnd), dbecsum, psidvpsi
   ! the scalar products
   ! dummy variable
   ! auxiliary dpsi dV matrix element between k+q  and  k wavefunctions
-  complex (kind = dp), external ::  ZDOTC
+  complex (DP), external ::  ZDOTC
 
-  real (kind = dp), allocatable :: h_diag (:,:)
+  real (DP), allocatable :: h_diag (:,:)
   ! the diagonal part of the Hamiltonian
-  complex (kind = dp), allocatable :: drhoscf (:,:), dvloc (:,:),  &
+  complex (DP), allocatable :: drhoscf (:,:), dvloc (:,:),  &
        spsi (:), auxg (:), dpsiaux (:,:)
   ! the variation of the charge
   ! variation of local part of the potential
@@ -300,8 +300,8 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
 #endif
 
   if (lmetq0) call set_efsh (drhoscf, imode0, irr, npe)
-  aux_avg (1) = dble (ltaver)
-  aux_avg (2) = dble (lintercall)
+  aux_avg (1) = DBLE (ltaver)
+  aux_avg (2) = DBLE (lintercall)
   call poolreduce (2, aux_avg)
 
   averlt = aux_avg (1) / aux_avg (2)

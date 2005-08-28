@@ -29,7 +29,7 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
   ! input: the order of the small group
   ! input: the rotation sending q -> -q
 
-  complex(kind=DP) :: wdyn (3, 3, nat, nat)
+  complex(DP) :: wdyn (3, 3, nat, nat)
   ! output: random matrix
   logical :: lgamma, minus_q
   ! input: if true q=0
@@ -41,8 +41,8 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
   ! counters
   ! ira:   rotated atom
   ! iramq: rotated atom with the q->-q+G symmetry
-  real(kind=DP) :: arg
-  real(kind=DP), EXTERNAL :: rndm
+  real(DP) :: arg
+  real(DP), EXTERNAL :: rndm
   ! a function generating a random number
   !
   !

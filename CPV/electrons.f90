@@ -35,9 +35,9 @@
         INTEGER, ALLOCATABLE :: ib_owner(:)
         INTEGER, ALLOCATABLE :: ib_local(:)
 
-        REAL(dbl), ALLOCATABLE :: ei(:,:,:)
-        REAL(dbl), ALLOCATABLE :: ei_emp(:,:,:)
-        REAL(dbl), ALLOCATABLE :: pmss(:)
+        REAL(DP), ALLOCATABLE :: ei(:,:,:)
+        REAL(DP), ALLOCATABLE :: ei_emp(:,:,:)
+        REAL(DP), ALLOCATABLE :: pmss(:)
 
 !  ...  Fourier acceleration
 
@@ -66,7 +66,7 @@
      !
      !  Calculate: PMSS = EMASS * (2PI/Alat)^2 * |G|^2 / ECUTMASS 
      !
-     REAL(dbl), INTENT(IN) :: ema0bg(:)
+     REAL(DP), INTENT(IN) :: ema0bg(:)
      INTEGER,   INTENT(IN) :: ngw
      INTEGER :: ierr
      !
@@ -88,7 +88,7 @@
 
      USE io_global, ONLY: stdout, ionode
 
-     REAL(dbl) :: occ(:,:,:)
+     REAL(DP) :: occ(:,:,:)
      INTEGER   :: ik, i, nk, ispin
 
      IF( SIZE( occ, 1 ) < nbnd ) &
@@ -125,7 +125,7 @@
      !
      USE io_global, ONLY: stdout, ionode
      !
-     REAL(dbl) :: occ(:,:,:)
+     REAL(DP) :: occ(:,:,:)
      INTEGER   :: ik, i, nk, ispin
      !
      IF( ionode ) THEN
@@ -207,7 +207,7 @@
 
      IMPLICIT NONE
      INTEGER, INTENT(IN) :: n_emp_
-     REAL(dbl),  INTENT(IN) :: emass_inp, ecutmass_inp
+     REAL(DP),  INTENT(IN) :: emass_inp, ecutmass_inp
      INTEGER, INTENT(IN) :: nkp
      INTEGER :: ierr, i
  
@@ -223,18 +223,18 @@
      IF( ALLOCATED( ei ) ) DEALLOCATE( ei )
      ALLOCATE( ei( nbnd, nkp, nspin ), STAT=ierr)
      IF( ierr/=0 ) CALL errore( ' electrons ',' allocating ei ',ierr)
-     ei = 0.0_dbl
+     ei = 0.0_DP
 
      IF( ALLOCATED( ei_emp ) ) DEALLOCATE( ei_emp )
      IF( n_emp > 0 ) THEN
        ALLOCATE( ei_emp( n_emp, nkp, nspin ), STAT=ierr)
        IF( ierr/=0 ) CALL errore( ' electrons ',' allocating ei_emp ',ierr)
-       ei_emp = 0.0_dbl
+       ei_emp = 0.0_DP
      END IF
 
      ecutmass = ecutmass_inp
      emass    = emass_inp
-     IF ( ecutmass < 0.0_dbl ) &
+     IF ( ecutmass < 0.0_DP ) &
        CALL errore(' electrons ',' ecutmass out of range ' , 0)
 
      band_first = .FALSE.
@@ -263,24 +263,24 @@
       
 
 ! ... ARGUMENTS
-          REAL(dbl), INTENT(IN) :: f(:)
+          REAL(DP), INTENT(IN) :: f(:)
           LOGICAL, INTENT(IN) :: tortho, gamma_symmetry
-          REAL(dbl), INTENT(INOUT)     ::  gam(:,:)
-          COMPLEX(dbl),  INTENT(INOUT) :: cgam(:,:)
-          REAL(dbl)  ::  ei(:)
+          REAL(DP), INTENT(INOUT)     ::  gam(:,:)
+          COMPLEX(DP),  INTENT(INOUT) :: cgam(:,:)
+          REAL(DP)  ::  ei(:)
           INTEGER, INTENT(IN) :: nei
 
       
 ! ... LOCALS
           INTEGER :: i, nrl, n, ierr
           INTEGER,     ALLOCATABLE :: index(:)
-          REAL(dbl),   ALLOCATABLE :: ftmp(:)
+          REAL(DP),   ALLOCATABLE :: ftmp(:)
 
-          REAL(dbl),   ALLOCATABLE :: vv(:,:)
-          REAL(dbl),   ALLOCATABLE :: aux(:)
-          REAL(dbl),    ALLOCATABLE :: g(:,:)
-          COMPLEX(dbl), ALLOCATABLE :: cg(:,:)
-          COMPLEX(dbl), ALLOCATABLE :: caux(:)
+          REAL(DP),   ALLOCATABLE :: vv(:,:)
+          REAL(DP),   ALLOCATABLE :: aux(:)
+          REAL(DP),    ALLOCATABLE :: g(:,:)
+          COMPLEX(DP), ALLOCATABLE :: cg(:,:)
+          COMPLEX(DP), ALLOCATABLE :: caux(:)
 !
 ! ... SUBROUTINE BODY
 !    
@@ -367,7 +367,7 @@
 
             ALLOCATE(index(n), STAT=ierr)
             IF( ierr/=0 ) CALL errore( ' eigs ',' allocating index ',ierr )
-            ei = 0.0_dbl
+            ei = 0.0_DP
             DO i = 1, n
               IF ( ib_owner(i) == mpime ) THEN
                 IF ( gamma_symmetry ) THEN
@@ -440,9 +440,9 @@
           USE mp_global, ONLY: mpime, nproc, group
           USE mp, ONLY: mp_sum
           IMPLICIT NONE
-          COMPLEX(dbl), INTENT(INOUT)  :: cgam(:,:)
-          COMPLEX(dbl), INTENT(OUT), OPTIONAL :: caux(:)
-          REAL(dbl), INTENT(IN)  :: f(:)
+          COMPLEX(DP), INTENT(INOUT)  :: cgam(:,:)
+          COMPLEX(DP), INTENT(OUT), OPTIONAL :: caux(:)
+          REAL(DP), INTENT(IN)  :: f(:)
           INTEGER n, nrl, i, j, k, jl
           nrl = SIZE(cgam, 1)
           n   = SIZE(cgam, 2)
@@ -482,9 +482,9 @@
           USE mp_global, ONLY: mpime, nproc, group
           USE mp, ONLY: mp_sum
           IMPLICIT NONE
-          REAL(dbl), INTENT(INOUT)  :: gam(:,:)
-          REAL(dbl), INTENT(OUT), OPTIONAL :: aux(:)
-          REAL(dbl), INTENT(IN)  :: f(:)
+          REAL(DP), INTENT(INOUT)  :: gam(:,:)
+          REAL(DP), INTENT(OUT), OPTIONAL :: aux(:)
+          REAL(DP), INTENT(IN)  :: f(:)
           INTEGER n, nrl, i, j, k, jl
           nrl = SIZE(gam, 1)
           n   = SIZE(gam, 2)
@@ -541,18 +541,18 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      REAL(dbl) :: occ(:,:,:)
-      REAL(dbl) ef, qtot, temp, sume
-      REAL(dbl) eig(:,:,:), wke(:,:,:)
-      REAL(dbl), PARAMETER  :: tol = 1.d-10
+      REAL(DP) :: occ(:,:,:)
+      REAL(DP) ef, qtot, temp, sume
+      REAL(DP) eig(:,:,:), wke(:,:,:)
+      REAL(DP), PARAMETER  :: tol = 1.d-10
       INTEGER,   PARAMETER  :: nitmax = 100
       INTEGER ne, nk, nspin
 
 ! ... declare functions
-      REAL(dbl) stepf
+      REAL(DP) stepf
 
 ! ... declare other variables
-      REAL(dbl) sumq,emin,emax,fac,t,drange
+      REAL(DP) sumq,emin,emax,fac,t,drange
       INTEGER ik,ispin,ie,iter
 
 !  end of declarations
@@ -636,13 +636,13 @@
 
      INTEGER :: nfi
      INTEGER :: irb(:,:)
-     COMPLEX(dbl) :: c0( :, :, :, : )
-     REAL(dbl) :: bec( :, : ), rhor( :, : ), rhos( :, : ), lambda( :, : ), lambdap( :, : )
-     REAL(dbl) :: tau0( :, : ), h( 3, 3 )
-     COMPLEX(dbl) :: eigrb( :, : ), rhog( :, : )
+     COMPLEX(DP) :: c0( :, :, :, : )
+     REAL(DP) :: bec( :, : ), rhor( :, : ), rhos( :, : ), lambda( :, : ), lambdap( :, : )
+     REAL(DP) :: tau0( :, : ), h( 3, 3 )
+     COMPLEX(DP) :: eigrb( :, : ), rhog( :, : )
 
-     real(dbl), allocatable:: rhodip(:,:)
-     real(dbl) :: dipol( 3 )
+     real(DP), allocatable:: rhodip(:,:)
+     real(DP) :: dipol( 3 )
      LOGICAL, SAVE :: lprimo
      INTEGER :: i
 

@@ -24,7 +24,7 @@ function w1gauss (x, n)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: w1gauss, x
+  real(DP) :: w1gauss, x
   ! output: the value of the function
   ! input: the point where to compute the function
 
@@ -34,7 +34,7 @@ function w1gauss (x, n)
   !    here the local variables
   !
 
-  real(kind=DP) :: a, hp, arg, hpm1, hd, pi, f, onemf, xp
+  real(DP) :: a, hp, arg, hpm1, hd, pi, f, onemf, xp
   ! the coefficients a_n
   ! the hermite function
   ! the argument of the exponential
@@ -81,13 +81,13 @@ function w1gauss (x, n)
   ni = 0
   a = 1.d0 / sqrt (pi)
   do i = 1, n
-     hd = 2.0d0 * x * hp - 2.0d0 * dble (ni) * hd
+     hd = 2.0d0 * x * hp - 2.0d0 * DBLE (ni) * hd
      ni = ni + 1
      hpm1 = hp
-     hp = 2.0d0 * x * hd-2.0d0 * dble (ni) * hp
+     hp = 2.0d0 * x * hd-2.0d0 * DBLE (ni) * hp
      ni = ni + 1
-     a = - a / (dble (i) * 4.0d0)
-     w1gauss = w1gauss - a * (0.5d0 * hp + dble (ni) * hpm1)
+     a = - a / (DBLE (i) * 4.0d0)
+     w1gauss = w1gauss - a * (0.5d0 * hp + DBLE (ni) * hpm1)
   enddo
   return
 

@@ -50,22 +50,22 @@ subroutine init_us_1
   integer :: nt, ih, jh, nb, mb, nmb, l, m, ir, iq, is, startq, &
        lastq, ilast, ndm
   ! various counters
-  real(kind=DP), allocatable :: aux (:), aux1 (:), besr (:), qtot (:,:,:)
+  real(DP), allocatable :: aux (:), aux1 (:), besr (:), qtot (:,:,:)
   ! various work space
-  real(kind=DP) :: prefr, pref, q, qi
+  real(DP) :: prefr, pref, q, qi
   ! the prefactor of the q functions
   ! the prefactor of the beta functions
   ! the modulus of g for each shell
   ! q-point grid for interpolation
-  real(kind=DP), allocatable :: ylmk0 (:)
+  real(DP), allocatable :: ylmk0 (:)
   ! the spherical harmonics
-  real(kind=DP) ::  vll (0:lmaxx), vqint, sqrt2, j
+  real(DP) ::  vll (0:lmaxx), vqint, sqrt2, j
   ! the denominator in KB case
   ! interpolated value
   integer :: n1, m0, m1, n, li, mi, vi, vj, ijs, is1, is2, &
              lk, mk, vk, kh, lh, sph_ind
-  complex(kind=DP) :: coeff, qgm(1)
-  real(kind=dp) :: spinor, ji, jk
+  complex(DP) :: coeff, qgm(1)
+  real(DP) :: spinor, ji, jk
 
   call start_clock ('init_us_1')
   !

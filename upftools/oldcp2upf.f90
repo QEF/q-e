@@ -44,10 +44,10 @@ module oldcp
   !
   ! All variables read from old CP90 file format
   !
-  real(kind=8) :: amesh, z, zv
+  real(8) :: amesh, z, zv
   integer :: exfact, lloc, nbeta_, mesh_
-  real(kind=8) :: wrc1, rc1, wrc2, rc2, rcl(3,3), al(3,3), bl(3,3)
-  real(kind=8), allocatable :: r_(:), vnl(:,:), chi_(:,:)
+  real(8) :: wrc1, rc1, wrc2, rc2, rcl(3,3), al(3,3), bl(3,3)
+  real(8), allocatable :: r_(:), vnl(:,:), chi_(:,:)
   !
   !------------------------------
 
@@ -61,7 +61,7 @@ subroutine read_oldcp(iunps)
   implicit none
   integer :: iunps
   !
-  real(kind=8), external :: erf
+  real(8), external :: erf
   integer :: i, l, j, jj
   !
   read(iunps,*, end=10, err=10) z, zv, nbeta_, lloc, exfact
@@ -110,9 +110,9 @@ subroutine convert_oldcp
   use oldcp
   use upf
   implicit none
-  real(kind=8), parameter :: rmax = 10.0
-  real(kind=8), allocatable :: aux(:)
-  real(kind=8) :: vll
+  real(8), parameter :: rmax = 10.0
+  real(8), allocatable :: aux(:)
+  real(8) :: vll
   character (len=20):: dft  
   character (len=2), external :: atom_name
   integer :: kkbeta

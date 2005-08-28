@@ -32,12 +32,12 @@ MODULE geomcell_cond
      nz1           !  number of subslabs in the slab
   INTEGER, ALLOCATABLE :: &
      ninsh(:)      !  number of G in shell
-  REAL(kind=DP)    :: &
+  REAL(DP)    :: &
      bdl,      &   !  right boundary of the left lead
      bds,      &   !        -||-     of the scatt. region 
      bdr,      &   !        -||-     of the right lead
      sarea         !  the cross section
-  REAL(kind=DP), ALLOCATABLE ::  &
+  REAL(DP), ALLOCATABLE ::  &
      zl(:),    &   !  the division in the z direction of the left lead
      zs(:),    &   !             -||-                 of the scatt. reg.
      zr(:),    &   !             -||-                 of the right lead 
@@ -72,7 +72,7 @@ MODULE orbcell_cond
      crosl(:,:),       &  ! 1 if the orbital crosses the slab - for the left lead
      cross(:,:),       &  !                -||-                 for the scatt. reg. 
      crosr(:,:)           !                -||-                 for the right lead
-  REAL(kind=DP) ::     &
+  REAL(DP) ::     &
      rl(ndmx,npsx),          &  ! radial mesh for the left lead
      rs(ndmx,npsx),          &  !      -||-   for the scatt. reg.
      rr(ndmx,npsx),          &  !      -||-   for the right lead
@@ -82,14 +82,14 @@ MODULE orbcell_cond
      betarl(ndmx,nbrx,npsx), &  ! beta functions for the left lead
      betars(ndmx,nbrx,npsx), &  !      -||-      for the scatt. reg.
      betarr(ndmx,nbrx,npsx)     !      -||-      for the right lead
-  REAL(kind=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
      taunewl(:,:),  &  ! center of each orbital and its radius - left lead
      taunews(:,:),  &  !                 -||-                  - scatt. reg. 
      taunewr(:,:),  &  !                 -||-                  - right lead
      zpseul(:,:,:), &  ! coefficients of nonlocal pseudopotential - left lead
      zpseus(:,:,:), &  !                 -||-                     - scatt. reg.
      zpseur(:,:,:)     !                 -||-                     - right lead
-  COMPLEX(kind=DP), ALLOCATABLE :: &
+  COMPLEX(DP), ALLOCATABLE :: &
      zpseul_nc(:,:,:,:), &! coefficients of nonlocal PP (nc case) - left lead
      zpseus_nc(:,:,:,:), &!              -||-                     - scatt. reg. 
      zpseur_nc(:,:,:,:)   !              -||-                     - right lead 
@@ -102,7 +102,7 @@ MODULE eigen_cond
   !   Eigenvalue equation for local potential
   SAVE
   !
-  COMPLEX(kind=DP), ALLOCATABLE  :: &
+  COMPLEX(DP), ALLOCATABLE  :: &
      vppotl(:,:,:,:),  & ! Fourier comp. of local potential in each slab - left lead
      vppots(:,:,:,:),  & !             -||-                              - scatt. reg. 
      vppotr(:,:,:,:),  & !             -||-                              - right lead
@@ -113,7 +113,7 @@ MODULE eigen_cond
      zks(:,:),         & !             -||-                                 - scatt. reg.
      zkr(:,:),         & !             -||-                                 - right lead
      newbg(:,:)          ! reduced basis set --> exp(G)
-  REAL(kind=DP), ALLOCATABLE ::  &
+  REAL(DP), ALLOCATABLE ::  &
      zkrl(:,:),        & ! 2d eigenvalues - left lead
      zkrs(:,:),        & !     -||-       - scatt. reg. 
      zkrr(:,:)           !     -||-       - right lead 
@@ -131,7 +131,7 @@ MODULE control_cond
      ikind,       &    ! the kind of calculation
      nenergy,     &    ! number of energies computed
      iofspin           ! spin index for calculation
-  REAL(kind=DP)  :: &
+  REAL(DP)  :: &
      efl,           &  ! the Ef of the left lead
      efs,           &  ! the Ef of the scatt. reg.
      efr,           &  ! the Ef of the right lead 
@@ -143,7 +143,7 @@ MODULE control_cond
      delgep,        &  ! infinitesimal for GEP
      epsproj,       &  ! accuracy of n2d reduction
      cutplot           ! cutoff of Im(k) for CB plotting
-  REAL(kind=DP), ALLOCATABLE  :: &
+  REAL(DP), ALLOCATABLE  :: &
      earr(:),       &  ! energy array
      tran_tot(:)       ! transmission array
   LOGICAL        :: &
@@ -163,7 +163,7 @@ MODULE scattnl_cond
   !
   SAVE
   !
-  COMPLEX(KIND=DP), ALLOCATABLE :: &
+  COMPLEX(DP), ALLOCATABLE :: &
        fun0(:,:),      &!  local fun. on         left boundary
        fun1(:,:),      &!       --              right boundary
        fund0(:,:),     &!  local fun.' on        left boundary
@@ -188,7 +188,7 @@ MODULE cb_cond
   INTEGER :: &
        nchanl,         &!  number of prop. channels in the left lead
        nchanr           !            -- || --              right lead     
-  COMPLEX(KIND=DP), ALLOCATABLE :: &
+  COMPLEX(DP), ALLOCATABLE :: &
        kvall(:),       &!  k           for the left lead 
        kfunl(:,:),     &!  phi_k(z=d)  for the left lead
        kfundl(:,:),    &!  phi_k'(z=d) for the left lead

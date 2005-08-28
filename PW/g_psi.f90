@@ -24,14 +24,14 @@ SUBROUTINE g_psi( lda, n, m, psi, e )
     ! input: the leading dimension of psi
     ! input: the real dimension of psi
     ! input: the number of bands
-  REAL(KIND=DP) :: e(m)
+  REAL(DP) :: e(m)
     ! input: the eigenvalues
-  COMPLEX(KIND=DP) :: psi(lda,m)
+  COMPLEX(DP) :: psi(lda,m)
     ! input/output: the psi vector
   !
   ! ... Local variables
   !
-  REAL(KIND=DP) :: x, scala, denm
+  REAL(DP) :: x, scala, denm
   INTEGER :: k, i
     ! counter on psi functions
     ! counter on G vectors

@@ -103,12 +103,12 @@
 
         TYPE real_parallel_vector
           TYPE (descriptor), POINTER :: desc
-          REAL (dbl), POINTER :: v(:)
+          REAL (DP), POINTER :: v(:)
         END TYPE
 
         TYPE complex_parallel_vector
           TYPE (descriptor), POINTER :: desc
-          COMPLEX (dbl), POINTER :: v(:)
+          COMPLEX (DP), POINTER :: v(:)
         END TYPE
 
 
@@ -119,12 +119,12 @@
 
         TYPE real_parallel_matrix
           TYPE (descriptor), POINTER :: desc
-          REAL (dbl), POINTER :: m(:,:)
+          REAL (DP), POINTER :: m(:,:)
         END TYPE
 
         TYPE complex_parallel_matrix
           TYPE (descriptor), POINTER :: desc
-          COMPLEX (dbl), POINTER :: m(:,:)
+          COMPLEX (DP), POINTER :: m(:,:)
         END TYPE
 
 
@@ -135,12 +135,12 @@
 
         TYPE real_parallel_tensor
           TYPE (descriptor), POINTER :: desc
-          REAL (dbl), POINTER :: t(:,:,:)
+          REAL (DP), POINTER :: t(:,:,:)
         END TYPE
 
         TYPE complex_parallel_tensor
           TYPE (descriptor), POINTER :: desc
-          COMPLEX (dbl), POINTER :: t(:,:,:)
+          COMPLEX (DP), POINTER :: t(:,:,:)
         END TYPE
 
 

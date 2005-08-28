@@ -21,7 +21,7 @@ subroutine compute_becalp (becq, alpq)
   use phcom
   implicit none
 
-  complex(kind=DP) :: becq(nkb, nbnd, nksq), alpq(nkb,nbnd,3,nksq)
+  complex(DP) :: becq(nkb, nbnd, nksq), alpq(nkb,nbnd,3,nksq)
   ! the becp with psi_{k+q}
   ! the alphap with psi_{k+q}
 
@@ -30,8 +30,8 @@ subroutine compute_becalp (becq, alpq)
   ! counter on polarizations, bands and
   ! used for i/o control
 
-  complex(kind=DP) :: fact
-  complex(kind=DP), allocatable :: aux (:,:)
+  complex(DP) :: fact
+  complex(DP), allocatable :: aux (:,:)
   !
   if (lgamma) return
 

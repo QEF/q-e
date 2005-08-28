@@ -24,10 +24,10 @@ subroutine ch_psi_all2 (n, h, ah, e, ik, m)
   ! input: the number of bands
   ! input: the k point
 
-  real (kind = dp) :: e (m)
+  real (DP) :: e (m)
   ! input: the eigenvalue
 
-  complex (kind = dp) :: h (npwx, m), ah (npwx, m)
+  complex (DP) :: h (npwx, m), ah (npwx, m)
   ! input: the vector
   ! output: the operator applied to the vector
   !
@@ -39,7 +39,7 @@ subroutine ch_psi_all2 (n, h, ah, e, ik, m)
   ! the point k+q
   ! counter on G vetors
 
-  complex (kind = dp), allocatable :: ps (:,:), hpsi (:,:), spsi (:,:)
+  complex (DP), allocatable :: ps (:,:), hpsi (:,:), spsi (:,:)
   ! scalar products
   ! the product of the Hamiltonian and h
   ! the product of the S matrix and h

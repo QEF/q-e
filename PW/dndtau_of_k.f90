@@ -27,14 +27,14 @@ SUBROUTINE dndtau_of_k(dns,ldim,offset,proj,wfcatom,spsi,alpha,ipol,ik)
    INTEGER ::  alpha, ipol, &
                ik, ibnd, is, na, nt, m1, m2
    INTEGER :: ldim
-   REAL (kind=DP) :: &
+   REAL (DP) :: &
              dns(ldim,ldim,nspin,nat)
    INTEGER :: offset(nat)
    ! offset(nat): offset of d electrons of atom d in the natomwfc ordering
-   COMPLEX (kind=DP) :: &
+   COMPLEX (DP) :: &
              proj(natomwfc,nbnd), wfcatom(npwx,natomwfc), spsi(npwx,nbnd)
-!   COMPLEX (kind=DP) :: ZDOTC, c_one, c_zero
-   COMPLEX (kind=DP), ALLOCATABLE :: &
+!   COMPLEX (DP) :: ZDOTC, c_one, c_zero
+   COMPLEX (DP), ALLOCATABLE :: &
                       dproj(:,:)
    !                  dproj(natomwfc,nbnd)
 

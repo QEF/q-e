@@ -24,7 +24,7 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
   INTEGER :: nper, irr
     ! the number of perturbations
     ! the representation under consideration
-  COMPLEX(kind=DP) :: dvtosym (nrxx, nspin, nper)
+  COMPLEX(DP) :: dvtosym (nrxx, nspin, nper)
     ! the potential to symmetrize
     !-local variable
   !
@@ -32,7 +32,7 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
   !
   INTEGER :: i, is, iper, npp0
 
-  COMPLEX(kind=DP), ALLOCATABLE :: ddvtosym (:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: ddvtosym (:,:,:)
   ! the potential to symm
 
 

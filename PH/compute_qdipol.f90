@@ -21,8 +21,8 @@ subroutine compute_qdipol
 
   implicit none
 
-  real(kind=dp), allocatable :: qrad2(:,:,:), qtot(:,:,:), aux(:)
-  real(kind=dp) :: fact
+  real(DP), allocatable :: qrad2(:,:,:), qtot(:,:,:), aux(:)
+  real(DP) :: fact
   integer :: nt, l, ir, nb, mb, ilast, ipol, ih, ivl, jh, jvl, lp, ndm
 
   call start_clock('cmpt_qdipol')

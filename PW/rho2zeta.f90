@@ -28,7 +28,7 @@ SUBROUTINE rho2zeta( rho, rho_core, nrxx, nspin, iop )
     ! the number of spin polarizations
     ! the fft grid dimension
     ! the counter for fft grid
-  REAL(kind=DP) :: rho(nrxx,nspin), rho_core(nrxx), &
+  REAL(DP) :: rho(nrxx,nspin), rho_core(nrxx), &
                    rho_up, rho_dw, zeta, rhox
     ! the scf charge density
     ! the core charge density

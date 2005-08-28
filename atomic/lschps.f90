@@ -23,18 +23,18 @@ subroutine lschps(mode,z,ammax,al,mmax,nin,mch,n,l,e,u,r,v)
   !
   use kinds, only : DP
   implicit none
-  real(kind=dp),parameter:: e2=2.0_dp
-  real(kind=dp), external:: aei, aeo, aii, aio
-  real(kind=dp):: al, als, ammax,  cn
-  real(kind=dp):: de, e, emax, emin
-  real(kind=dp):: eps, fss, gamma, ro, sc
-  real(kind=dp):: sls, sn, tfapot, uld, uout,  upin, upout
-  real(kind=dp):: xkap, z
+  real(DP),parameter:: e2=2.0_dp
+  real(DP), external:: aei, aeo, aii, aio
+  real(DP):: al, als, ammax,  cn
+  real(DP):: de, e, emax, emin
+  real(DP):: eps, fss, gamma, ro, sc
+  real(DP):: sls, sn, tfapot, uld, uout,  upin, upout
+  real(DP):: xkap, z
   integer:: i, it, l, mch, mmax, mode, n, nin, nint, node, ndm, ierr
 
-  real(kind=dp):: r(mmax),v(mmax),u(mmax)
+  real(DP):: r(mmax),v(mmax),u(mmax)
   ! these arrays are used as work space
-  real(kind=dp),allocatable :: up(:),upp(:),cf(:),dv(:),fr(:),frp(:)
+  real(DP),allocatable :: up(:),upp(:),cf(:),dv(:),fr(:),frp(:)
 
   allocate(up(mmax), stat=ierr)
   allocate(upp(mmax), stat=ierr)
@@ -298,7 +298,7 @@ function aei(y,j)
   use kinds, only : DP
   implicit none
   integer j
-  real(kind=dp):: y(j+3), aei
+  real(DP):: y(j+3), aei
   !
   aei=-(4.16666666667e-2_dp)*(55.0_dp*y(j)-59.0_dp*y(j+1) &
        +37.0_dp*y(j+2)-9.0_dp*y(j+3))
@@ -313,7 +313,7 @@ function aeo(y,j)
   use kinds, only : DP
   implicit none
   integer:: j   
-  real(kind=dp):: y(j), aeo
+  real(DP):: y(j), aeo
   !
   aeo=(4.16666666667e-2_dp)*(55.0_dp*y(j)-59.0_dp*y(j-1) &
        +37.0_dp*y(j-2)-9.0_dp*y(j-3))
@@ -325,7 +325,7 @@ function aii(y,j)
   use kinds, only : DP
   implicit none
   integer:: j
-  real(kind=dp) :: y(j+2), aii
+  real(DP) :: y(j+2), aii
   !
   aii=-(4.16666666667e-2_dp)*(9.0_dp*y(j-1)+19.0_dp*y(j) &
        -5.0_dp*y(j+1)+y(j+2))
@@ -337,7 +337,7 @@ function aio(y,j)
   use kinds, only : DP
   implicit none
   integer :: j
-  real(kind=dp):: y(j+1), aio
+  real(DP):: y(j+1), aio
   !
   aio=(4.16666666667e-2_dp)*(9.0_dp*y(j+1)+19.0_dp*y(j) &
        -5.0_dp*y(j-1)+y(j-2))

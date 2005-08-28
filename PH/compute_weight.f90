@@ -19,15 +19,15 @@ subroutine compute_weight (wgg)
   use phcom
   implicit none
 
-  real(kind=DP) :: wgg (nbnd, nbnd, nksq)
+  real(DP) :: wgg (nbnd, nbnd, nksq)
   ! output: the weights
 
   integer :: ik, ikk, ikq, ibnd, jbnd
   ! counters
-  real(kind=DP) :: wg1, wg2, theta
+  real(DP) :: wg1, wg2, theta
   ! auxiliary variables
-  real(kind=DP), external :: wgauss
-  real(kind=DP), parameter :: eps = 1.0d-12
+  real(DP), external :: wgauss
+  real(DP), parameter :: eps = 1.0d-12
   !
   !     the weights are computed for each k point ...
   !

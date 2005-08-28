@@ -43,7 +43,7 @@
 
         PRIVATE
 
-        REAL(dbl), ALLOCATABLE :: rho_save( :, :, :, : )
+        REAL(DP), ALLOCATABLE :: rho_save( :, :, :, : )
    
 ! ...   declare module-scope variables
         LOGICAL :: tguess
@@ -84,31 +84,31 @@
           IMPLICIT NONE
 
 ! ...     declare subroutine arguments
-          COMPLEX(dbl), INTENT(INOUT) ::  c0(:,:,:,:)
-          COMPLEX(dbl), INTENT(INOUT) ::  cm(:,:,:,:)
+          COMPLEX(DP), INTENT(INOUT) ::  c0(:,:,:,:)
+          COMPLEX(DP), INTENT(INOUT) ::  cm(:,:,:,:)
           TYPE (wave_descriptor), INTENT(IN) ::  cdesc
           LOGICAL, INTENT(IN) :: tk
 
 ! ...     declare other variables
-          COMPLEX(dbl) :: ctemp( cdesc%ngwl )
-          REAL(dbl)    :: alpha
+          COMPLEX(DP) :: ctemp( cdesc%ngwl )
+          REAL(DP)    :: alpha
 
-          REAL(dbl), ALLOCATABLE :: uu(:,:) 
-          REAL(dbl), ALLOCATABLE :: a(:,:)  
-          REAL(dbl), ALLOCATABLE :: ap(:,:) 
-          COMPLEX(dbl), ALLOCATABLE :: cuu(:,:) 
-          COMPLEX(dbl), ALLOCATABLE :: ca(:,:)  
-          COMPLEX(dbl), ALLOCATABLE :: cap(:,:) 
+          REAL(DP), ALLOCATABLE :: uu(:,:) 
+          REAL(DP), ALLOCATABLE :: a(:,:)  
+          REAL(DP), ALLOCATABLE :: ap(:,:) 
+          COMPLEX(DP), ALLOCATABLE :: cuu(:,:) 
+          COMPLEX(DP), ALLOCATABLE :: ca(:,:)  
+          COMPLEX(DP), ALLOCATABLE :: cap(:,:) 
 
-          COMPLEX(dbl), ALLOCATABLE :: crot(:,:) 
-          REAL(dbl),   ALLOCATABLE :: aloc(:,:)
-          COMPLEX(dbl), ALLOCATABLE :: caloc(:,:)
-          REAL(dbl),   ALLOCATABLE :: evloc(:,:)
-          COMPLEX(dbl), ALLOCATABLE :: cevloc(:,:)
-          REAL(dbl),   ALLOCATABLE :: e(:)
+          COMPLEX(DP), ALLOCATABLE :: crot(:,:) 
+          REAL(DP),   ALLOCATABLE :: aloc(:,:)
+          COMPLEX(DP), ALLOCATABLE :: caloc(:,:)
+          REAL(DP),   ALLOCATABLE :: evloc(:,:)
+          COMPLEX(DP), ALLOCATABLE :: cevloc(:,:)
+          REAL(DP),   ALLOCATABLE :: e(:)
 
-          REAL(dbl)   costh2 ( cdesc%ngwl )
-          REAL(dbl)   costemp( cdesc%ngwl )
+          REAL(DP)   costh2 ( cdesc%ngwl )
+          REAL(DP)   costemp( cdesc%ngwl )
 
           INTEGER jl, i,j,k,ig,h,n,ngw,nrl,ik,nk
           INTEGER   nproc,mpime,gid
@@ -259,15 +259,15 @@
              USE charge_types, ONLY: charge_descriptor
 
 ! ...        declare subroutine argument
-             REAL(dbl), INTENT(OUT) :: rho(:,:,:,:)
+             REAL(DP), INTENT(OUT) :: rho(:,:,:,:)
              TYPE (charge_descriptor), INTENT(IN) :: desc
-             COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:), cm(:,:,:,:)
+             COMPLEX(DP), INTENT(IN) :: c0(:,:,:,:), cm(:,:,:,:)
              TYPE (wave_descriptor), INTENT(IN) :: cdesc
              TYPE (boxdimensions), INTENT(IN) :: ht
-             REAL(dbl), INTENT(IN) :: occ(:,:,:)
+             REAL(DP), INTENT(IN) :: occ(:,:,:)
 
 ! ...        declare other variables
-             REAL(dbl), ALLOCATABLE :: rho0( :, :, :, : )
+             REAL(DP), ALLOCATABLE :: rho0( :, :, :, : )
 
              LOGICAL, SAVE :: tfirst = .TRUE.
              INTEGER :: ispin, nspin, nx, ny, nz
@@ -313,8 +313,8 @@
 ! ...   declare subroutine arguments
         INTEGER, INTENT(IN) :: n,ngw
         LOGICAL, INTENT(IN) :: gzero 
-        COMPLEX(dbl), INTENT(IN) :: a(ngw,*),b(ngw,*)
-        COMPLEX(dbl), INTENT(OUT) :: lambda(n,n)
+        COMPLEX(DP), INTENT(IN) :: a(ngw,*),b(ngw,*)
+        COMPLEX(DP), INTENT(OUT) :: lambda(n,n)
 
 ! ...   declare other variables
         INTEGER   nproc,mpime,gid
@@ -344,11 +344,11 @@
 ! ... declare subroutine arguments
       INTEGER n,ngw
       LOGICAL gzero 
-      COMPLEX(dbl) a(ngw,*),b(ngw,*)
-      REAL(dbl) lambda(n,n)
+      COMPLEX(DP) a(ngw,*),b(ngw,*)
+      REAL(DP) lambda(n,n)
 
 ! ... declare other variables
-      REAL(dbl), ALLOCATABLE :: tmp(:,:)
+      REAL(DP), ALLOCATABLE :: tmp(:,:)
 
       INTEGER i,j,jp1,jp2
       INTEGER nproc,mpime,gid

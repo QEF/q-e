@@ -13,7 +13,7 @@ subroutine write_results
   implicit none
 
   integer :: is, i, j, n, m, im(40), l, ios
-  real(kind=dp):: work(ndm), dum, int_0_inf_dr, ravg, r2avg, sij, ene, mm
+  real(DP):: work(ndm), dum, int_0_inf_dr, ravg, r2avg, sij, ene, mm
   logical :: ok, oep
   !
   !

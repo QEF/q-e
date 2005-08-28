@@ -21,14 +21,14 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
   USE kinds, only : DP
   implicit none
   integer npw, npwx, nbnd, nbndx, niter, iter
-  real(kind=DP) :: diagonal(npw), e(nbnd), overlap(nbndx,nbnd)
-  complex(kind=DP) :: x(npwx,nbnd), b(npwx,nbnd), u(npwx,nbnd),          &
+  real(DP) :: diagonal(npw), e(nbnd), overlap(nbndx,nbnd)
+  complex(DP) :: x(npwx,nbnd), b(npwx,nbnd), u(npwx,nbnd),          &
        h(npwx,nbnd),Ah(npwx,nbnd),evc(npwx,nbnd), pu(npwx,nbnd)
   logical :: orthonormal, precondition,startwith0
   !
   integer :: ibnd, jbnd, i, info
-  real(kind=DP) :: lagrange(nbnd,nbnd)
-  real(kind=DP) :: lambda, u_u, uu0, u_A_h, alfa, eps, uu(nbnd), DDOT
+  real(DP) :: lagrange(nbnd,nbnd)
+  real(DP) :: lambda, u_u, uu0, u_A_h, alfa, eps, uu(nbnd), DDOT
   external DDOT, operator
   !
   call start_clock('cgsolve')

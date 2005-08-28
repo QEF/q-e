@@ -24,8 +24,8 @@ subroutine write_ns
   ! counters on atoms and their type
   ! counters on d components
   integer, parameter :: ldmx = 7
-  complex(kind=DP) :: f (ldmx, ldmx), vet (ldmx, ldmx)
-  real(kind=DP) :: lambda (ldmx), nsum, nsuma
+  complex(DP) :: f (ldmx, ldmx), vet (ldmx, ldmx)
+  real(DP) :: lambda (ldmx), nsum, nsuma
 
   WRITE( stdout,*) 'enter write_ns'
 

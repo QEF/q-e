@@ -22,7 +22,7 @@ subroutine save_in_cbands (iter, ik_, dr2)
   ! last completed iteration
   logical :: exst
 
-  real(kind=DP) :: dr2
+  real(DP) :: dr2
   if (reduce_io) return
   !
   ! open recover file

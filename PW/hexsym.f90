@@ -18,7 +18,7 @@ subroutine hexsym (at, is, isname, nrot)
   !
   !     first the input variables
   !
-  real(kind=DP) :: at (3, 3)
+  real(DP) :: at (3, 3)
   ! input: the direct lattice vectors
   integer :: is (3, 3, 48), nrot
   ! output: the symmetry matrices
@@ -30,12 +30,12 @@ subroutine hexsym (at, is, isname, nrot)
   !
   ! sin3 = sin(pi/3), cos3 = cos(pi/3), msin3 = -sin(pi/3), mcos3 = -sin(pi/3)
   !
-  real(kind=DP), parameter :: sin3 = 0.866025403784438597d0, cos3 = 0.5d0, &
+  real(DP), parameter :: sin3 = 0.866025403784438597d0, cos3 = 0.5d0, &
                              msin3 =-0.866025403784438597d0, mcos3 = -0.5d0
   !
   !   and the local variables
   !
-  real(kind=DP) :: s (3, 3, 12), overlap (3, 3), rat (3), rot (3, 3), &
+  real(DP) :: s (3, 3, 12), overlap (3, 3), rat (3), rot (3, 3), &
        value
   ! the s matrices in real variables
   ! overlap matrix between direct lattice
@@ -124,7 +124,7 @@ subroutine hexsym (at, is, isname, nrot)
         do kpol = 1, 3
            value = overlap (jpol, 1) * rot (1, kpol) + overlap (jpol, 2) &
                 * rot (2, kpol) + overlap (jpol, 3) * rot (3, kpol)
-           if (abs (dble (nint (value) ) - value) > 1.0d-8) then
+           if (abs (DBLE (nint (value) ) - value) > 1.0d-8) then
               !
               ! if a noninteger is obtained, this implies that this operation
               ! is not a symmetry operation for the given lattice

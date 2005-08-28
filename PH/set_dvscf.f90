@@ -19,8 +19,8 @@
   use phcom
   implicit none
 
-  complex(kind=DP) :: dvscfs (nrxxs,3)
-  complex(kind=DP) , allocatable :: derho (:,:)
+  complex(DP) :: dvscfs (nrxxs,3)
+  complex(DP) , allocatable :: derho (:,:)
   integer :: ipl
   !  counter on the polarizations
 

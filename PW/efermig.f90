@@ -16,11 +16,11 @@ subroutine efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, Ef, is, isk)
   implicit none
   !  I/O variables
   integer, intent(in) :: nks, nbnd, Ngauss, is, isk(nks)
-  real(kind=DP), intent(in) :: wk (nks), et (nbnd, nks), Degauss, nelec
-  real(kind=DP), intent(out) :: Ef
+  real(DP), intent(in) :: wk (nks), et (nbnd, nks), Degauss, nelec
+  real(DP), intent(out) :: Ef
   ! internal variables
-  real(kind=DP) :: Eup, Elw, sumkup, sumklw, sumkmid
-  real(kind=DP), external::  sumkg
+  real(DP) :: Eup, Elw, sumkup, sumklw, sumkmid
+  real(DP), external::  sumkg
   integer :: i, kpoint
   !
   !      find bounds for the Fermi energy. Very safe choice!

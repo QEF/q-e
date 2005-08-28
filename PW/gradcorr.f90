@@ -26,23 +26,23 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   INTEGER,        INTENT(IN)    :: nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                                    nrxx, ngm, nl(ngm), nspin
-  REAL (KIND=DP), INTENT(IN)    :: rho_core(nrxx), g(3,ngm), alat, omega
-  REAL (KIND=DP), INTENT(OUT)   :: v(nrxx,nspin), vtxc, etxc
-  REAL (KIND=DP), INTENT(INOUT) :: rho(nrxx,nspin)
+  REAL (DP), INTENT(IN)    :: rho_core(nrxx), g(3,ngm), alat, omega
+  REAL (DP), INTENT(OUT)   :: v(nrxx,nspin), vtxc, etxc
+  REAL (DP), INTENT(INOUT) :: rho(nrxx,nspin)
   !
   INTEGER :: k, ipol, is, nspin0
   !
-  REAL (KIND=DP), ALLOCATABLE :: grho(:,:,:), h(:,:,:), dh(:)
-  REAL (KIND=DP), ALLOCATABLE :: rhoout(:,:), segni(:), vgg(:,:), vsave(:,:)
+  REAL (DP), ALLOCATABLE :: grho(:,:,:), h(:,:,:), dh(:)
+  REAL (DP), ALLOCATABLE :: rhoout(:,:), segni(:), vgg(:,:), vsave(:,:)
   !
-  REAL (KIND=DP) :: grho2(2), sx, sc, v1x, v2x, v1c, v2c, &
+  REAL (DP) :: grho2(2), sx, sc, v1x, v2x, v1c, v2c, &
                     v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw , &
                     etxcgc, vtxcgc, segno, arho, fac, zeta, rh, grh2, amag 
   !
-  REAL (KIND=DP) :: v2cup, v2cdw,  v2cud, rup, rdw, &
+  REAL (DP) :: v2cup, v2cdw,  v2cud, rup, rdw, &
                     grhoup, grhodw, grhoud, grup, grdw
 
-  REAL (KIND=DP), PARAMETER :: epsr = 1.D-6, &
+  REAL (DP), PARAMETER :: epsr = 1.D-6, &
                                epsg = 1.D-10
   !
   !
@@ -317,11 +317,11 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   !
   INTEGER,        INTENT(IN)     :: nrx1, nrx2, nrx3, nr1, nr2, nr3, &
                                     nrxx, ngm, nl(ngm)
-  REAL (KIND=DP), INTENT(IN)     :: a(nrxx), g(3,ngm), alat
-  REAL (KIND=DP), INTENT(OUT)    :: ga(3,nrxx)
+  REAL (DP), INTENT(IN)     :: a(nrxx), g(3,ngm), alat
+  REAL (DP), INTENT(OUT)    :: ga(3,nrxx)
   !
   INTEGER                        :: n, ipol
-  COMPLEX (KIND=DP), ALLOCATABLE :: aux(:), gaux(:)
+  COMPLEX (DP), ALLOCATABLE :: aux(:), gaux(:)
   !
   !
   ALLOCATE(  aux( nrxx ) )
@@ -384,11 +384,11 @@ SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   !
   INTEGER,        INTENT(IN)     :: nrx1, nrx2, nrx3, nr1, nr2, nr3, &
                                     nrxx, ngm, nl(ngm)
-  REAL (KIND=DP), INTENT(IN)     :: a(3,nrxx), g(3,ngm), alat
-  REAL (KIND=DP), INTENT(OUT)    :: da(nrxx)
+  REAL (DP), INTENT(IN)     :: a(3,nrxx), g(3,ngm), alat
+  REAL (DP), INTENT(OUT)    :: da(nrxx)
   !
   INTEGER                        :: n, ipol
-  COMPLEX (KIND=DP), ALLOCATABLE :: aux(:), gaux(:)
+  COMPLEX (DP), ALLOCATABLE :: aux(:), gaux(:)
   !
   !
   ALLOCATE(  aux( nrxx ) )

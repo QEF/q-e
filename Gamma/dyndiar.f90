@@ -18,12 +18,12 @@ subroutine dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   USE io_global,  ONLY : stdout
   implicit none
   integer :: nmodes, nat3, nat,ityp(nat), iudyn
-  real(kind=DP):: dyn(nat3,nmodes), u(nat3,nmodes), amass(*)
-  real(kind=DP):: dynout(nat3,nmodes), w2(nat3)
+  real(DP):: dyn(nat3,nmodes), u(nat3,nmodes), amass(*)
+  real(DP):: dynout(nat3,nmodes), w2(nat3)
   !
   integer:: nu_i, nu_j, mu, na, nb, nt, i, j
-  real(kind=DP), allocatable :: m(:,:), z(:,:)
-  real(kind=DP) :: rydthz, rydcm1, w1, unorm, sum, dif
+  real(DP), allocatable :: m(:,:), z(:,:)
+  real(DP) :: rydthz, rydcm1, w1, unorm, sum, dif
   !
   allocate  ( m  ( nat3, nat3))    
   allocate  ( z  ( nat3, nat3))    

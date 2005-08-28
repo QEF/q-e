@@ -41,16 +41,16 @@
           LOGICAL, INTENT(IN) :: tk    !  if true use the full space grid
           INTEGER, INTENT(IN) :: ub(:) !  upper bounds for i-th grid dimension
           INTEGER, INTENT(IN) :: lb(:) !  lower bounds for i-th grid dimension
-          REAL(dbl) , INTENT(IN) :: b1(:), b2(:), b3(:) ! reciprocal space base vectors
-          REAL(dbl) , INTENT(IN) :: gcut   ! cut-off for potentials
-          REAL(dbl) , INTENT(IN) :: gcutw  ! cut-off for plane waves
-          REAL(dbl) , INTENT(IN) :: gcuts  ! cut-off for smooth mesh
+          REAL(DP) , INTENT(IN) :: b1(:), b2(:), b3(:) ! reciprocal space base vectors
+          REAL(DP) , INTENT(IN) :: gcut   ! cut-off for potentials
+          REAL(DP) , INTENT(IN) :: gcutw  ! cut-off for plane waves
+          REAL(DP) , INTENT(IN) :: gcuts  ! cut-off for smooth mesh
           INTEGER, INTENT(OUT) :: st( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
           INTEGER, INTENT(OUT) :: stw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
           INTEGER, INTENT(OUT) :: sts(lb(1): ub(1), lb(2):ub(2) ) ! stick map for smooth mesh
 
           INTEGER :: i, j, k, kip
-          REAL(dbl) :: gsq
+          REAL(DP) :: gsq
 
           stw  = 0
           st   = 0
@@ -194,10 +194,10 @@
     LOGICAL, INTENT(IN) :: lgamma !  if true use gamma point simmetry
     INTEGER, INTENT(IN) :: ub(:)  !  upper bounds for i-th grid dimension
     INTEGER, INTENT(IN) :: lb(:)  !  lower bounds for i-th grid dimension
-    REAL(dbl) , INTENT(IN) :: b1(:), b2(:), b3(:) ! reciprocal space base vectors
-    REAL(dbl) , INTENT(IN) :: gcutm  ! cut-off for potentials
-    REAL(dbl) , INTENT(IN) :: gkcut  ! cut-off for plane waves
-    REAL(dbl) , INTENT(IN) :: gcutms  ! cut-off for smooth mesh
+    REAL(DP) , INTENT(IN) :: b1(:), b2(:), b3(:) ! reciprocal space base vectors
+    REAL(DP) , INTENT(IN) :: gcutm  ! cut-off for potentials
+    REAL(DP) , INTENT(IN) :: gkcut  ! cut-off for plane waves
+    REAL(DP) , INTENT(IN) :: gcutms  ! cut-off for smooth mesh
     !
     INTEGER, INTENT(OUT) :: ngm, ngms
     !
@@ -206,7 +206,7 @@
     INTEGER, INTENT(OUT) :: stw( lb(2) : ub(2), lb(3) : ub(3) ) 
 
     INTEGER :: i1, i2, i3, n1, n2, n3
-    REAL(dbl) :: amod
+    REAL(DP) :: amod
 
     ngm = 0
     ngms = 0
@@ -275,7 +275,7 @@
         INTEGER, INTENT(OUT) :: index(:)                
 
         INTEGER :: mc, nr3x, ic
-        REAL(dbl), ALLOCATABLE :: aux(:)
+        REAL(DP), ALLOCATABLE :: aux(:)
 
         nr3x = MAXVAL( ngc(1:nct) ) + 1
 
@@ -559,7 +559,7 @@
           nr1, nr2, nr3, nr1x, nr2x, nr3x, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, &
           ngw, ngm, ngs )
 
-          USE kinds, ONLY: dbl
+          USE kinds, ONLY: DP
           USE mp_global, ONLY: mpime, nproc, group
           USE mp, ONLY: mp_max
           USE control_flags, ONLY: gamma_only
@@ -570,8 +570,8 @@
 
 
           TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfftp, dffts
-          REAL(dbl), INTENT(IN) :: a1(3), a2(3), a3(3), alat
-          REAL(dbl), INTENT(IN) :: gcut, gkcut, gcuts
+          REAL(DP), INTENT(IN) :: a1(3), a2(3), a3(3), alat
+          REAL(DP), INTENT(IN) :: gcut, gkcut, gcuts
           INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x
           INTEGER, INTENT(IN) :: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
           INTEGER, INTENT(OUT) :: ngw, ngm, ngs
@@ -580,7 +580,7 @@
 ! ...     tk  logical flag, TRUE if the symulation does not have the
 ! ...         GAMMA symmetry
 
-          REAL(dbl) :: b1(3), b2(3), b3(3)
+          REAL(DP) :: b1(3), b2(3), b3(3)
 ! ...     b1, b2, b3 reciprocal space base vectors.
 
           INTEGER :: ub(3), lb(3)

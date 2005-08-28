@@ -7,15 +7,15 @@
 !
     MODULE util
 
-      USE kinds, ONLY : dbl
+      USE kinds, ONLY : DP
       IMPLICIT NONE
       SAVE
 
       PRIVATE
 
       INTEGER, PARAMETER :: i4b = kind(0)
-      INTEGER, PARAMETER :: sp = kind(1._dbl)
-      INTEGER, PARAMETER :: spc = kind((1._dbl,1._dbl))
+      INTEGER, PARAMETER :: sp = kind(1._DP)
+      INTEGER, PARAMETER :: spc = kind((1._DP,1._DP))
       INTEGER, PARAMETER :: lgt = kind(.TRUE.)
 
       INTERFACE swap

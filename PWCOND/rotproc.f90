@@ -42,7 +42,7 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
   INTEGER :: k, ig, n, lam, lam1, iorb, iorb1, norbf, norb, n2d,  &
              ibound, numb, ninsl, ib, icolor, ikey, new_comm, info
   INTEGER, ALLOCATABLE :: ipiv(:) 
-  COMPLEX(kind=DP) :: fun0(n2d, 2*n2d),    & ! phi_n(0) 
+  COMPLEX(DP) :: fun0(n2d, 2*n2d),    & ! phi_n(0) 
                       fund0(n2d, 2*n2d),   & ! phi'_n(0)  
                       fun1(n2d, 2*n2d),    & ! phi_n(d) 
                       fund1(n2d, 2*n2d),   & ! phi'_n(d) 
@@ -53,7 +53,7 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
                       intw1(norbf*npol, 2*n2d), & ! integrals on phi_n 
                       intw2(norbf*npol, norbf*npol) ! integrals on phi_alpha
 
-  COMPLEX(kind=DP), ALLOCATABLE :: x(:), y(:), amat(:,:), vec(:,:),  &
+  COMPLEX(DP), ALLOCATABLE :: x(:), y(:), amat(:,:), vec(:,:),  &
                                amat_aux(:,:), vec_aux(:,:)
 
 #ifdef __PARA

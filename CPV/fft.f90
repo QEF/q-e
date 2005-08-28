@@ -35,14 +35,14 @@
        MODULE PROCEDURE pinvfft2
      END INTERFACE
 
-     REAL(dbl)  :: total_fft_wf_time = 0.0d0
+     REAL(DP)  :: total_fft_wf_time = 0.0d0
      INTEGER    :: number_of_fft_wf  = 0
-     REAL(dbl)  :: total_fft_time = 0.0d0
+     REAL(DP)  :: total_fft_time = 0.0d0
      INTEGER    :: number_of_fft  = 0
      LOGICAL    :: first          = .true.
      LOGICAL    :: tk             = .false.
 
-     REAL(dbl), EXTERNAL :: cclock
+     REAL(DP), EXTERNAL :: cclock
 
      PUBLIC :: pfwfft, pinvfft, fft_closeup, fft_setup
      PUBLIC :: pw_fwfft, pw_invfft, fft_time_stat
@@ -96,7 +96,7 @@
      USE fft_base, ONLY: fft_timing
 
      INTEGER, INTENT(IN) :: nstep
-     REAL(dbl)           :: tloop, tav, ttot
+     REAL(DP)           :: tloop, tav, ttot
      INTEGER :: i, j
 
      ttot   = total_fft_wf_time
@@ -154,11 +154,11 @@
 
       IMPLICIT NONE
 
-      COMPLEX(dbl), INTENT(INOUT) :: cpsi(:,:,:)
-      COMPLEX(dbl), INTENT(OUT) :: C(:)
-      COMPLEX(dbl), ALLOCATABLE :: psi(:,:,:)
-      COMPLEX(dbl), ALLOCATABLE :: zwrk(:) 
-      REAL(dbl) :: t1
+      COMPLEX(DP), INTENT(INOUT) :: cpsi(:,:,:)
+      COMPLEX(DP), INTENT(OUT) :: C(:)
+      COMPLEX(DP), ALLOCATABLE :: psi(:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: zwrk(:) 
+      REAL(DP) :: t1
       INTEGER :: ierr
 
       t1 = cclock()
@@ -221,12 +221,12 @@
 
       IMPLICIT NONE
 
-      REAL(dbl),  INTENT(IN) :: A(:,:,:)
-      COMPLEX(dbl) :: C(:)
+      REAL(DP),  INTENT(IN) :: A(:,:,:)
+      COMPLEX(DP) :: C(:)
 
-      COMPLEX(dbl), allocatable :: psi(:,:,:)
-      COMPLEX(dbl), ALLOCATABLE :: zwrk(:) 
-      REAL(dbl) :: t1
+      COMPLEX(DP), allocatable :: psi(:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: zwrk(:) 
+      REAL(DP) :: t1
       INTEGER :: ierr, ig, k, is
 
       T1 = cclock()
@@ -287,14 +287,14 @@
 
       IMPLICIT NONE
 
-      REAL(dbl), INTENT(INOUT)  :: C(:,:,:)
-      REAL(dbl), INTENT(IN), OPTIONAL :: ALPHA
-      COMPLEX(dbl), INTENT(IN) :: A(:)
+      REAL(DP), INTENT(INOUT)  :: C(:,:,:)
+      REAL(DP), INTENT(IN), OPTIONAL :: ALPHA
+      COMPLEX(DP), INTENT(IN) :: A(:)
 
       INTEGER :: ierr
-      COMPLEX(dbl), ALLOCATABLE :: psi(:,:,:)
-      COMPLEX(dbl), ALLOCATABLE :: zwrk(:) 
-      REAL(dbl) t1
+      COMPLEX(DP), ALLOCATABLE :: psi(:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: zwrk(:) 
+      REAL(DP) t1
 !
       T1 = cclock()
 
@@ -368,13 +368,13 @@
      USE fft_base, ONLY: dffts
      USE mp_global, ONLY: mpime
 
-     COMPLEX(dbl) :: C(:)
-     COMPLEX(dbl), OPTIONAL :: CA(:)
-     COMPLEX(dbl) :: psi(:,:,:)
-     REAL(dbl)  :: T1
+     COMPLEX(DP) :: C(:)
+     COMPLEX(DP), OPTIONAL :: CA(:)
+     COMPLEX(DP) :: psi(:,:,:)
+     REAL(DP)  :: T1
      INTEGER :: ierr
-     COMPLEX(dbl), ALLOCATABLE :: psitmp(:,:,:)
-     COMPLEX(dbl), ALLOCATABLE :: zwrk(:) 
+     COMPLEX(DP), ALLOCATABLE :: psitmp(:,:,:)
+     COMPLEX(DP), ALLOCATABLE :: zwrk(:) 
 
      t1 = cclock()
 
@@ -439,11 +439,11 @@
      USE fft_base, ONLY: dffts
      USE mp_global, ONLY: mpime
 
-     COMPLEX(dbl), INTENT(IN) :: C(:)
-     COMPLEX(dbl), INTENT(IN), OPTIONAL :: CA(:)
-     COMPLEX(dbl) :: psi(:,:,:)
-     COMPLEX(dbl), ALLOCATABLE :: zwrk(:) 
-     REAL(dbl) :: T1
+     COMPLEX(DP), INTENT(IN) :: C(:)
+     COMPLEX(DP), INTENT(IN), OPTIONAL :: CA(:)
+     COMPLEX(DP) :: psi(:,:,:)
+     COMPLEX(DP), ALLOCATABLE :: zwrk(:) 
+     REAL(DP) :: T1
 
      IF ( first ) &
        CALL errore(' pw_invfft 1 ',' fft not initialized ', 1 )
@@ -515,7 +515,7 @@
       use para_mod, only: dfftp
       use fft_scalar, only: cfft3d
 
-      complex(kind=8) f(nr1x*nr2x*nr3x)
+      complex(8) f(nr1x*nr2x*nr3x)
       integer nr1,nr2,nr3,nr1x,nr2x,nr3x
       call start_clock( 'fft' )
 #ifdef __PARA
@@ -540,7 +540,7 @@
 !
       use fft_scalar, only: cfft3d
       integer nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3
-      complex(kind=8) f(nr1bx*nr2bx*nr3bx)
+      complex(8) f(nr1bx*nr2bx*nr3bx)
 
 !     in a parallel execution, not all processors calls this routine
 !     then we should avoid clocks, otherwise the program hangs in print_clock
@@ -575,7 +575,7 @@
       use fft_cp, only: cfft_cp
       use para_mod, only: dffts
       use fft_scalar, only: cfft3d
-      complex(kind=8) f(nr1sx*nr2sx*nr3sx)
+      complex(8) f(nr1sx*nr2sx*nr3sx)
       integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
       call start_clock( 'ffts' )
 #ifdef __PARA
@@ -602,7 +602,7 @@
       use fft_cp, only: cfft_cp
       use para_mod, only: dffts
       use fft_scalar, only: cfft3d, cfft3ds
-      complex(kind=8) f(nr1sx*nr2sx*nr3sx)
+      complex(8) f(nr1sx*nr2sx*nr3sx)
       integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
       call start_clock('fftw')
 #ifdef __PARA
@@ -631,7 +631,7 @@
       use fft_cp, only: cfft_cp
       use para_mod, only: dfftp
       use fft_scalar, only: cfft3d
-      complex(kind=8) f(nr1x*nr2x*nr3x)
+      complex(8) f(nr1x*nr2x*nr3x)
       integer nr1,nr2,nr3,nr1x,nr2x,nr3x
       call start_clock( 'fft' )
 #ifdef __PARA
@@ -657,7 +657,7 @@
       use fft_cp, only: cfft_cp
       use para_mod, only: dffts
       use fft_scalar, only: cfft3d
-      complex(kind=8) f(nr1sx*nr2sx*nr3sx)
+      complex(8) f(nr1sx*nr2sx*nr3sx)
       integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
       call start_clock( 'ffts' )
 #ifdef __PARA
@@ -683,7 +683,7 @@
       use fft_cp, only: cfft_cp
       use para_mod, only: dffts
       use fft_scalar, only: cfft3d, cfft3ds
-      complex(kind=8) f(nr1sx*nr2sx*nr3sx)
+      complex(8) f(nr1sx*nr2sx*nr3sx)
       integer nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx
       call start_clock( 'fftw' )
 #ifdef __PARA
@@ -710,7 +710,7 @@
 !
       use fft_scalar, only: cfft3d
       integer nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3
-      complex(kind=8) f(nr1bx*nr2bx*nr3bx)
+      complex(8) f(nr1bx*nr2bx*nr3bx)
       call start_clock(' ivfftbold ' )
 
 #ifdef __PARA
@@ -735,14 +735,14 @@
        !
        use recvecs_indexes, only: nm, np
        use gvecs, only: nms, nps
-       use kinds, only: dbl
+       use kinds, only: DP
 
        implicit none
 
-       complex(dbl) :: psi(*), c(*), ca(*)
+       complex(DP) :: psi(*), c(*), ca(*)
        integer, intent(in) :: nnr, ng, iflg
 
-       complex(dbl), parameter :: ci=(0.0d0,1.0d0)
+       complex(DP), parameter :: ci=(0.0d0,1.0d0)
        integer :: ig
        
          psi( 1 : nnr ) = 0.0d0
@@ -819,14 +819,14 @@
 
        use recvecs_indexes, only: nm, np
        use gvecs, only: nms, nps
-       use kinds, only: dbl
+       use kinds, only: DP
 
        implicit none
 
-       complex(dbl) :: psi(*), c(*), ca(*)
+       complex(DP) :: psi(*), c(*), ca(*)
        integer, intent(in) :: nnr, ng, iflg
 
-       complex(dbl), parameter :: ci=(0.0d0,1.0d0)
+       complex(DP), parameter :: ci=(0.0d0,1.0d0)
        integer :: ig
 
          !

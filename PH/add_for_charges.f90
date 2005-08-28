@@ -26,7 +26,7 @@ subroutine add_for_charges (ik, uact)
   integer :: ik, mode
   ! input: the k point
   ! input: the actual perturbation
-  complex(kind=DP) :: uact (3 * nat)
+  complex(DP) :: uact (3 * nat)
   ! input: the pattern of displacements
   !
   !   And the local variables
@@ -49,13 +49,13 @@ subroutine add_for_charges (ik, uact)
   ! counter on m index
   ! counter on polarizations
 
-  real(kind=DP), parameter :: eps = 1.d-12
+  real(DP), parameter :: eps = 1.d-12
 
-  complex(kind=DP), allocatable :: ps1 (:,:), ps2 (:,:,:), aux (:)
+  complex(DP), allocatable :: ps1 (:,:), ps2 (:,:,:), aux (:)
   ! the scalar product
   ! the scalar product
   ! a mesh space for psi
-  complex(kind=dp), allocatable :: bedp(:,:), aux1(:,:), alphapp(:,:,:)
+  complex(DP), allocatable :: bedp(:,:), aux1(:,:), alphapp(:,:,:)
 
   logical :: ok
   ! used to save time

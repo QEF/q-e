@@ -11,7 +11,7 @@
     MODULE brillouin
 ! 
 !------------------------------------------------------------------------------!
-      USE kinds, ONLY : dbl
+      USE kinds, ONLY : DP
       USE mp, ONLY : mp_bcast
 ! ... 
 !
@@ -26,18 +26,18 @@
         LOGICAL :: gamma_only
         INTEGER :: nk1, nk2, nk3
         INTEGER :: k1, k2, k3
-        REAL (dbl) :: shift(3)
+        REAL (DP) :: shift(3)
         LOGICAL :: symmetry
         INTEGER :: wfn_type
         INTEGER :: nkpt
-        REAL (dbl), DIMENSION (:), POINTER :: weight
-        REAL (dbl), DIMENSION (:,:), POINTER :: xk
+        REAL (DP), DIMENSION (:), POINTER :: weight
+        REAL (DP), DIMENSION (:,:), POINTER :: xk
       END TYPE kpoints
 !------------------------------------------------------------------------------!
 
       TYPE (kpoints) :: kp
-      REAL (dbl), ALLOCATABLE , TARGET :: weight(:)
-      REAL (dbl), ALLOCATABLE , TARGET :: xk(:,:)
+      REAL (DP), ALLOCATABLE , TARGET :: weight(:)
+      REAL (DP), ALLOCATABLE , TARGET :: xk(:,:)
 
 
       PUBLIC :: kpoints, kpoint_info, kpoint_setup, kp
@@ -65,9 +65,9 @@
         INTEGER :: nk1, nk2, nk3
         INTEGER :: k1, k2, k3
         INTEGER :: nkpt_in
-        REAL (dbl) :: weight_in(:)
-        REAL (dbl) :: xk_in(:,:)
-        REAL (dbl) :: weight_sum
+        REAL (DP) :: weight_in(:)
+        REAL (DP) :: xk_in(:,:)
+        REAL (DP) :: weight_sum
 
         kp%scheme = 'gamma'
         kp%symmetry = .FALSE.
@@ -112,8 +112,8 @@
           ALLOCATE( xk(3,1), weight(1) )
           kp%xk => xk
           kp%weight => weight
-          kp%xk = 0.0_dbl
-          kp%weight = 1.0_dbl
+          kp%xk = 0.0_DP
+          kp%weight = 1.0_DP
           kp%gamma_only = .TRUE.
         CASE ('monkhorst-pack')
           kp%nk1 = nk1

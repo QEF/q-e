@@ -54,19 +54,19 @@ CONTAINS
 ! ... declare module-scope variables
 
 ! ... declare subroutine arguments
-      COMPLEX(dbl), INTENT(OUT) :: cm(:,:,:,:), c0(:,:,:,:), ce(:,:,:,:)
+      COMPLEX(DP), INTENT(OUT) :: cm(:,:,:,:), c0(:,:,:,:), ce(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
 
-      REAL(dbl) :: rranf
+      REAL(DP) :: rranf
       EXTERNAL rranf
 
 ! ... declare other variables
       INTEGER :: ig_local
       INTEGER :: ntest, i, ig, j, ib, ik, ispin, nspin
-      REAL(dbl) ::  rranf1, rranf2, ampre, rsum
-      REAL(dbl) ::  rc0rc0, anorm
-      COMPLEX(dbl) :: ctmp
-      COMPLEX(dbl), ALLOCATABLE :: pwt( : )
+      REAL(DP) ::  rranf1, rranf2, ampre, rsum
+      REAL(DP) ::  rc0rc0, anorm
+      COMPLEX(DP) :: ctmp
+      COMPLEX(DP), ALLOCATABLE :: pwt( : )
 
 ! ... end of declarations
 !  ----------------------------------------------
@@ -155,7 +155,7 @@ CONTAINS
       IMPLICIT NONE
 
       ! ... declare subroutine arguments
-      COMPLEX(dbl), INTENT(OUT) :: cm(:,:,:,:), c0(:,:,:,:), ce(:,:,:,:)
+      COMPLEX(DP), INTENT(OUT) :: cm(:,:,:,:), c0(:,:,:,:), ce(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
 
       ! ... declare other variables

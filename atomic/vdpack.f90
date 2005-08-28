@@ -20,7 +20,7 @@ subroutine vdpack (ndim, ndimx, nwf, nwfx, nspin, v, d, vd, sflag)
   implicit none
   integer :: ndim, ndimx, nwf, nwfx, nspin, is, n, i, ns, ns1
   character(len=4) :: sflag
-  real(kind=DP) :: v(ndimx,2), d(nwfx,nwfx,2), vd(ndimx*2+nwfx*nwfx*2)
+  real(DP) :: v(ndimx,2), d(nwfx,nwfx,2), vd(ndimx*2+nwfx*nwfx*2)
   select case (sflag)
   case ("PACK")
      i=1

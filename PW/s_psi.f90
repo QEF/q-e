@@ -41,7 +41,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   ! ... First the dummy variables
   !
   INTEGER          :: lda, n, m
-  COMPLEX(KIND=DP) :: psi(lda,m), spsi(lda,m)
+  COMPLEX(DP) :: psi(lda,m), spsi(lda,m)
   !
   CALL start_clock( 's_psi' )  
   !
@@ -75,7 +75,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        !
        INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd
          ! counters
-       REAL(KIND=DP), ALLOCATABLE :: ps(:,:)
+       REAL(DP), ALLOCATABLE :: ps(:,:)
          ! the product vkb and psi
        !
        !
@@ -148,7 +148,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        !
        INTEGER :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd
          ! counters
-       COMPLEX(KIND=DP), ALLOCATABLE :: ps(:,:)
+       COMPLEX(DP), ALLOCATABLE :: ps(:,:)
          ! the product vkb and psi
        !
        !

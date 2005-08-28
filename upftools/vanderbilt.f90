@@ -16,9 +16,9 @@ module Vanderbilt
   integer :: nvalps, nang, nbeta_, kkbeta, nchi, ifpcor, keyps, &
        mesh_, iver(3), idmy(3), nnlz, ifqopt, nqf_, irel,  npf, &
        nlc, lloc
-  real(kind=8) ::  z_, zp_, exfact, etot, eloc, rcloc_, rpcor, &
+  real(8) ::  z_, zp_, exfact, etot, eloc, rcloc_, rpcor, &
        qtryc, ptryc, rinner1_
-  real(kind=8), allocatable::  wwnlps(:), eeps(:), rinner_(:), rc(:), &
+  real(8), allocatable::  wwnlps(:), eeps(:), rinner_(:), rc(:), &
        beta(:,:), ddd0(:,:), ddd(:,:), qqq_(:,:), eee(:), rho_atc_(:), &
        r_(:), rab_(:), rho_at_(:), qfunc_(:,:,:), vloc(:), vloc_(:), &
        wf(:,:), qfcoef_(:,:,:,:)
@@ -35,7 +35,7 @@ subroutine read_uspp(iunit)
   integer :: iunit
   !
   integer :: i, j, k, lp
-  real(kind=8) :: rinner1
+  real(8) :: rinner1
   !
   !
   read (iunit) (iver(i),i=1,3),(idmy(i),i=1,3)
@@ -136,7 +136,7 @@ subroutine read_vdb(iunit)
   integer :: iunit
   !
   integer :: i, j, k, lp
-  real(kind=8) :: rinner1
+  real(8) :: rinner1
   !
   !
   read(iunit, *) (iver(i),i=1,3),(idmy(i),i=1,3)
@@ -238,7 +238,7 @@ subroutine convert_uspp
   implicit none
   integer i
   character(len=1), dimension(0:3) :: convel=(/'S','P','D','F'/)
-  real(kind=8), parameter:: pi=3.141592653589793d0
+  real(8), parameter:: pi=3.141592653589793d0
 
   write(generated, '("Generated using Vanderbilt code, version ",3i3)') iver
   write(date_author,'("Author: unknown    Generation date:",3i5)') idmy

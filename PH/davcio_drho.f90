@@ -27,14 +27,14 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
   IMPLICIT NONE
   !
   INTEGER          :: iunit, lrec, nrec, isw
-  COMPLEX(KIND=DP) :: drho(nrxx,nspin)
+  COMPLEX(DP) :: drho(nrxx,nspin)
   !
 #ifdef __PARA
   !
   ! ... local variables
   !
   INTEGER                        :: itmp, proc, is, dim
-  COMPLEX(KIND=DP), ALLOCATABLE  :: ddrho(:,:)
+  COMPLEX(DP), ALLOCATABLE  :: ddrho(:,:)
   !
   !
   ALLOCATE( ddrho( nrx1 * nrx2 * nrx3 , nspin) )

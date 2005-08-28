@@ -20,7 +20,7 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
        lmax,&    ! output: the maximum angular momentum
        lloc      ! output: the local potential
 
-  real(kind=dp) ::       &
+  real(DP) ::       &
        zed,            & ! input: the atomic charge
        zval,           & ! output: the valence charge
        xmin,dx,        & ! output: the mesh 
@@ -43,7 +43,7 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
        ios, i, l, k, ir, iunps, mesh1, &
        nbeta,nlc,nnl   
 
-  real(kind=dp) :: &
+  real(DP) :: &
        vnloc, a_core, b_core, &
        alfa_core, xmax, &
        cc(2),alpc(2),alc(6,0:3),alps(3,0:3),erf 
@@ -51,7 +51,7 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
   logical :: &
        bhstype, numeric
 
-  real(kind=dp), parameter :: fourpi=4.0_dp*3.141592653589793_dp
+  real(DP), parameter :: fourpi=4.0_dp*3.141592653589793_dp
 
   character(len=3)  title_pseudo*70, cdum
 

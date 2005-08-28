@@ -22,7 +22,7 @@ program wannier
   !
   implicit none
   integer , dimension(3):: nk
-  real(kind=8), dimension(3):: s0
+  real(8), dimension(3):: s0
   integer :: ik, i, kunittmp
   CHARACTER(LEN=4) :: spin_component
   integer :: ispinw
@@ -126,16 +126,16 @@ subroutine write_wannier (nk, s0, kunit, ispinw)
 
   implicit none
   integer , dimension(3):: nk
-  real(kind=8), dimension(3):: s0
+  real(8), dimension(3):: s0
   integer :: kunit
   integer :: ispinw
 
   integer :: i, j, k, ig, ik, ibnd, na, ngg, ikw
   integer, allocatable :: kisort(:)
-  real(kind=8), allocatable :: ei_k(:,:)
-  real(kind=8), allocatable :: ei_kw(:,:)
-  real(kind=8), allocatable :: rat(:,:,:)
-  real(kind=8) :: hmat(3,3), rr(3)
+  real(8), allocatable :: ei_k(:,:)
+  real(8), allocatable :: ei_kw(:,:)
+  real(8), allocatable :: rat(:,:,:)
+  real(8) :: hmat(3,3), rr(3)
   integer, allocatable :: natom(:)
   integer :: npool, nkbl, nkl, nkr, npwx_g
   integer :: ike, iks, npw_g, ispin
@@ -144,7 +144,7 @@ subroutine write_wannier (nk, s0, kunit, ispinw)
   integer, allocatable :: itmp( :, : )
   integer, allocatable :: igwk( : )
 
-  real(kind=8) :: wfc_scal 
+  real(8) :: wfc_scal 
   logical :: twf0, twfm, twrite_wfc
 
   IF( nkstot > 0 ) THEN

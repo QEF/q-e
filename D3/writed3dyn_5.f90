@@ -35,9 +35,9 @@ SUBROUTINE writed3dyn_5 (d3dyn_x, filename, isw)
   ! index on modes
   ! index on modes
 
-  COMPLEX (kind = dp) :: d3dyn_x (3 * nat, 3 * nat, 3 * nat), work
+  COMPLEX (DP) :: d3dyn_x (3 * nat, 3 * nat, 3 * nat), work
   ! input: the third derivative of the dynamical matrix
-  COMPLEX (kind = dp), ALLOCATABLE :: aux (:,:,:)
+  COMPLEX (DP), ALLOCATABLE :: aux (:,:,:)
   ! auxiliary space
 
   CHARACTER (len=*) :: filename

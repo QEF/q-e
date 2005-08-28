@@ -18,17 +18,17 @@
 
         PRIVATE
         
-        REAL(dbl) :: old_clock_value = -1.0d0
+        REAL(DP) :: old_clock_value = -1.0d0
 
-        REAL(dbl) :: timeform = 0.0d0, &
+        REAL(DP) :: timeform = 0.0d0, &
                      timernl = 0.0d0,  &
                      timerho = 0.0d0,  &
                      timevof = 0.0d0,  &
                      timerd = 0.0d0
-        REAL(dbl) :: timeorto = 0.0d0, timeloop = 0.0d0
+        REAL(DP) :: timeorto = 0.0d0, timeloop = 0.0d0
         INTEGER   :: timecnt = 0
 
-        REAL(dbl), EXTERNAL :: cclock
+        REAL(DP), EXTERNAL :: cclock
 
 
         PUBLIC :: printout, printmain
@@ -71,21 +71,21 @@
 
       INTEGER, INTENT(IN) :: nfi
       TYPE (atoms_type)   :: atoms
-      REAL(dbl)           :: ekinc, ekcell
+      REAL(DP)           :: ekinc, ekcell
       LOGICAL             :: tprint
       type (boxdimensions), intent(in) :: ht
-      REAL(dbl) :: avgs(:), avgs_run(:)
+      REAL(DP) :: avgs(:), avgs_run(:)
       TYPE (dft_energy_type) :: edft
 !
 ! ...
       INTEGER   :: is, ia, k, i, j, ik, isa, iunit, nfill, nempt
-      REAL(dbl) :: tau(3), vel(3), stress_tensor(3,3), temps( atoms%nsp )
-      REAL(dbl) :: tempp, econs, ettt, out_press, ekinpr, enosee
-      REAL(dbl) :: enthal, totalmass, enoseh, temphc, enosep
-      REAL(dbl) :: dis(atoms%nsp), h(3,3)
+      REAL(DP) :: tau(3), vel(3), stress_tensor(3,3), temps( atoms%nsp )
+      REAL(DP) :: tempp, econs, ettt, out_press, ekinpr, enosee
+      REAL(DP) :: enthal, totalmass, enoseh, temphc, enosep
+      REAL(DP) :: dis(atoms%nsp), h(3,3)
       LOGICAL   :: tfile, topen, ttsic
       CHARACTER(LEN=3), ALLOCATABLE :: labelw( : )
-      REAL(dbl), ALLOCATABLE :: tauw( :, : )
+      REAL(DP), ALLOCATABLE :: tauw( :, : )
       INTEGER   :: old_nfi = -1
 
       ! ...   Subroutine Body
@@ -471,12 +471,12 @@
 
       IMPLICIT NONE
 
-      REAL(dbl) :: timeform_ , timernl_ , timerho_ , timevof_ , timerd_
-      REAL(dbl) :: timeorto_ , timeloop_
+      REAL(DP) :: timeform_ , timernl_ , timerho_ , timevof_ , timerd_
+      REAL(DP) :: timeorto_ , timeloop_
       LOGICAL, INTENT(IN) :: timing, tprint, texit
 
-      REAL(dbl)  :: timeav
-      REAL(dbl), SAVE :: timesum = 0.0d0
+      REAL(DP)  :: timeav
+      REAL(DP), SAVE :: timesum = 0.0d0
       INTEGER, SAVE   :: index   = 0
       CHARACTER(LEN=256) :: file_name
 
@@ -575,16 +575,16 @@
       USE gvecp, ONLY: ngm
 
       TYPE (charge_descriptor), INTENT(IN) :: desc
-      REAL(dbl), INTENT(IN) :: rhoe(:,:,:,:)
-      COMPLEX(dbl), INTENT(IN) ::  sfac(:,:)
+      REAL(DP), INTENT(IN) :: rhoe(:,:,:,:)
+      COMPLEX(DP), INTENT(IN) ::  sfac(:,:)
 
       INTEGER :: nspin, ispin, ip, nsp, ngx_l, ng, is, ig
-      COMPLEX(dbl), ALLOCATABLE :: rhoeg(:,:)
-      COMPLEX(dbl), ALLOCATABLE :: rhoeg_rcv(:,:)
-      REAL   (dbl), ALLOCATABLE :: hg_rcv(:)
-      REAL   (dbl), ALLOCATABLE :: gx_rcv(:,:)
+      COMPLEX(DP), ALLOCATABLE :: rhoeg(:,:)
+      COMPLEX(DP), ALLOCATABLE :: rhoeg_rcv(:,:)
+      REAL   (DP), ALLOCATABLE :: hg_rcv(:)
+      REAL   (DP), ALLOCATABLE :: gx_rcv(:,:)
       INTEGER     , ALLOCATABLE :: ig_rcv(:)
-      COMPLEX(dbl), ALLOCATABLE :: sfac_rcv(:,:)
+      COMPLEX(DP), ALLOCATABLE :: sfac_rcv(:,:)
 
         nspin = SIZE(rhoe,4)
         nsp   = SIZE(sfac,2)
@@ -655,9 +655,9 @@
 
       INTEGER, INTENT(IN) :: nfi, nstep_run
       LOGICAL, INTENT(IN) :: rhoout
-      REAL(dbl), intent(in) :: rhoe(:,:,:,:)
+      REAL(DP), intent(in) :: rhoe(:,:,:,:)
       TYPE (charge_descriptor), intent(in) :: desc
-      REAL (dbl) :: avgs(:), avgs_run(:)
+      REAL (DP) :: avgs(:), avgs_run(:)
       TYPE (atoms_type) :: atoms
       TYPE (boxdimensions), intent(in) :: ht
  
@@ -719,7 +719,7 @@
 
    SUBROUTINE cp_print_rho(nfi, bec, c0, eigr, irb, eigrb, rhor, rhog, rhos, lambdap, lambda, tau0, h )
    
-     use kinds, only: dbl
+     use kinds, only: DP
      use ensemble_dft, only: tens, ismear, z0, c0diag, becdiag, dval, zaux, e0, zx
      use electrons_base, only: nx => nbspx, n => nbsp, ispin => fspin, f, nspin
      use electrons_base, only: nel, iupdwn, nupdwn, nudx, nelt
@@ -734,11 +734,11 @@
 
      INTEGER :: nfi
      INTEGER :: irb(:,:)
-     COMPLEX(dbl) :: c0( :, :, :, : )
-     REAL(dbl) :: bec( :, : ), rhor( :, : ), rhos( :, : ), lambda( :, : ), lambdap( :, : )
-     REAL(dbl) :: tau0( :, : ), h( 3, 3 )
-     COMPLEX(dbl) :: eigrb( :, : ), rhog( :, : )
-     COMPLEX(dbl) :: eigr( :, : )
+     COMPLEX(DP) :: c0( :, :, :, : )
+     REAL(DP) :: bec( :, : ), rhor( :, : ), rhos( :, : ), lambda( :, : ), lambdap( :, : )
+     REAL(DP) :: tau0( :, : ), h( 3, 3 )
+     COMPLEX(DP) :: eigrb( :, : ), rhog( :, : )
+     COMPLEX(DP) :: eigr( :, : )
 
      INTEGER :: is, istart, nss, i, j
      LOGICAL, SAVE :: trhor_save

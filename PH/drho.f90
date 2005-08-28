@@ -35,13 +35,13 @@ subroutine drho
   ! the number of points
   ! counter on modes
 
-  real(kind=DP), allocatable :: wgg (:,:,:)
+  real(DP), allocatable :: wgg (:,:,:)
   ! the weight of each point
 
 
-  complex(kind=DP) :: ZDOTC, wdyn (3 * nat, 3 * nat)
-  complex(kind=DP), pointer :: becq (:,:,:), alpq (:,:,:,:)
-  complex(kind=DP), allocatable :: dvlocin (:), drhous (:,:,:),&
+  complex(DP) :: ZDOTC, wdyn (3 * nat, 3 * nat)
+  complex(DP), pointer :: becq (:,:,:), alpq (:,:,:,:)
+  complex(DP), allocatable :: dvlocin (:), drhous (:,:,:),&
        drhoust (:,:,:), dbecsum(:,:,:,:)
   ! auxiliary to store bec at k+q
   ! auxiliary to store alphap at

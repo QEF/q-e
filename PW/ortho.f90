@@ -24,7 +24,7 @@ subroutine ortho
   implicit none
   integer :: ik
 
-  complex(kind=DP), allocatable :: sevc (:,:), dummy (:,:)
+  complex(DP), allocatable :: sevc (:,:), dummy (:,:)
 
   allocate (sevc ( npwx , nbnd))    
   allocate (dummy( npwx , nbnd))    

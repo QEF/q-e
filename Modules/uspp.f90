@@ -16,7 +16,7 @@ MODULE uspp_param
   !
   CHARACTER(LEN=2 ) ::  psd(npsx)   ! name of the pseudopotential
 
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
        dion(nbrx,nbrx,npsx),       &! D_{mu,nu} parameters (in the atomic case)
        betar(ndmx,nbrx,npsx),      &! radial beta_{mu} functions
        jjj(nbrx,npsx),             &! total angular momentum of the beta function
@@ -63,7 +63,7 @@ MODULE uspp
   INTEGER ::             &! for each pair of combined momenta lm(1),lm(2): 
        lpx(nlx,nlx),     &! maximum combined angular momentum LM
        lpl(nlx,nlx,mx)    ! list of combined angular momenta  LM
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
        ap(lqmax*lqmax,nlx,nlx)
   ! Clebsch-Gordan coefficients for spherical harmonics
   !
@@ -78,16 +78,16 @@ MODULE uspp
   LOGICAL :: &
        okvan              ! if .TRUE. at least one pseudo is Vanderbilt
   !
-  COMPLEX(KIND=DP), ALLOCATABLE, TARGET :: &
+  COMPLEX(DP), ALLOCATABLE, TARGET :: &
        vkb(:,:)                ! all beta functions in reciprocal space
-  REAL(KIND=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
        dvan(:,:,:),           &! the D functions of the solid
        deeq(:,:,:,:),         &! the integral of V_eff and Q_{nm} 
        becsum(:,:,:),         &! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
        qq(:,:,:),             &! the q functions in the solid
        nhtoj(:,:)              ! correspondence n <-> total angular momentum
   !
-  COMPLEX(KIND=DP), ALLOCATABLE :: & ! variables for spin-orbit/noncolinear case:
+  COMPLEX(DP), ALLOCATABLE :: & ! variables for spin-orbit/noncolinear case:
        qq_so(:,:,:,:),           &! Q_{nm}
        dvan_so(:,:,:,:),         &! D_{nm}
        deeq_nc(:,:,:,:)           ! \int V_{eff}(r) Q_{nm}(r) dr 
@@ -95,7 +95,7 @@ MODULE uspp
   ! spin-orbit coupling: qq and dvan are complex, qq has additional spin index
   ! noncolinear magnetism: deeq is complex (even in absence of spin-orbit)
   !
-  REAL(KIND=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
        beta(:,:,:)           ! beta functions for CP (without struct.factor)
   !
 CONTAINS
@@ -126,12 +126,12 @@ CONTAINS
     ! local variables
     !
     integer :: llx, l, li, lj
-    real(kind=DP) , allocatable :: r(:,:), rr(:), ylm(:,:), mly(:,:)
+    real(DP) , allocatable :: r(:,:), rr(:), ylm(:,:), mly(:,:)
     ! an array of random vectors: r(3,llx)
     ! the norm of r: rr(llx)
     ! the real spherical harmonics for array r: ylm(llx,llx)
     ! the inverse of ylm considered as a matrix: mly(llx,llx)
-    real(kind=DP) :: dum
+    real(DP) :: dum
     !
     if (lli < 0) call errore('aainit','lli not allowed',lli)
 
@@ -199,15 +199,15 @@ CONTAINS
     !
     integer :: llx         ! input: the dimension of r and rr
     
-    real(kind=DP) :: &
+    real(DP) :: &
          r(3,llx),  &! output: an array of random vectors
          rr(llx)    ! output: the norm of r
     !
     ! here the local variables
     !
     integer :: ir
-    real(kind=DP) :: costheta, sintheta, phi
-    real(kind=DP), external :: rndm
+    real(DP) :: costheta, sintheta, phi
+    real(DP), external :: rndm
     
     do ir = 1, llx
        costheta = 2.d0 * rndm() - 1.d0
@@ -234,7 +234,7 @@ CONTAINS
          llx,         &! the dimension of ylm and mly
          l,li,lj       ! the arguments of the array ap
     
-    real(kind=DP) :: &
+    real(DP) :: &
          compute_ap,  &! this function
          ylm(llx,llx),&! the real spherical harmonics for array r
          mly(llx,llx)  ! the inverse of ylm considered as a matrix

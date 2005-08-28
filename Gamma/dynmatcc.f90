@@ -17,13 +17,13 @@ subroutine dynmatcc(dyncc)
   USE wavefunctions_module,  ONLY: psic
   use cgcom
   implicit none
-  real(kind=DP):: dyncc(3*nat,nmodes)
+  real(DP):: dyncc(3*nat,nmodes)
   !
   integer:: i,j,na,nb,nta,ntb,ir,ig,nt, nu_i,nu_j,mu_i,mu_j
-  complex(kind=DP), pointer:: vxc(:), work1(:), gc(:,:)
-  complex(kind=DP) :: exc
-  real(kind=DP), allocatable:: drhocc(:), dyncc1(:,:,:,:)
-  real(kind=DP) :: exg
+  complex(DP), pointer:: vxc(:), work1(:), gc(:,:)
+  complex(DP) :: exc
+  real(DP), allocatable:: drhocc(:), dyncc1(:,:,:,:)
+  real(DP) :: exg
   !
   !
   dyncc(:,:) = 0.d0

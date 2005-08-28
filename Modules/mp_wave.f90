@@ -31,8 +31,8 @@
 
       IMPLICIT NONE
 
-      COMPLEX(dbl), intent(in) :: PW(:)
-      COMPLEX(dbl), intent(out) :: PWT(:)
+      COMPLEX(DP), intent(in) :: PW(:)
+      COMPLEX(DP), intent(out) :: PWT(:)
       INTEGER, INTENT(IN) :: mpime     ! index of the calling processor ( starting from 0 )
       INTEGER, INTENT(IN) :: nproc     ! number of processors
       INTEGER, INTENT(IN) :: root      ! root processor ( the one that should receive the data )
@@ -41,7 +41,7 @@
       INTEGER, INTENT(IN) :: ngwl
 
       INTEGER, ALLOCATABLE :: ig_ip(:)
-      COMPLEX(dbl), ALLOCATABLE :: pw_ip(:)
+      COMPLEX(DP), ALLOCATABLE :: pw_ip(:)
 
       INTEGER :: ierr, i, ip, ngw_ip, ngw_lmax, itmp, igwx, gid
 
@@ -137,15 +137,15 @@
       USE parallel_include
       IMPLICIT NONE
 
-      COMPLEX(dbl), INTENT(OUT) :: PW(:)
-      COMPLEX(dbl), INTENT(IN) :: PWT(:)
+      COMPLEX(DP), INTENT(OUT) :: PW(:)
+      COMPLEX(DP), INTENT(IN) :: PWT(:)
       INTEGER, INTENT(IN) :: mpime, nproc, root
       INTEGER, OPTIONAL, INTENT(IN) :: comm    ! communicator
       INTEGER, INTENT(IN) :: ig_l2g(:)
       INTEGER, INTENT(IN) :: ngwl
 
       INTEGER, ALLOCATABLE :: ig_ip(:)
-      COMPLEX(dbl), ALLOCATABLE :: pw_ip(:)
+      COMPLEX(DP), ALLOCATABLE :: pw_ip(:)
 
       INTEGER ierr, i, ngw_ip, ip, ngw_lmax, ngw_g, gid, igwx, itmp
 
@@ -234,14 +234,14 @@
 
       IMPLICIT NONE
 
-      REAL(dbl), INTENT(IN) :: rho(:)
-      REAL(dbl), INTENT(OUT) :: rhot(:)
+      REAL(DP), INTENT(IN) :: rho(:)
+      REAL(DP), INTENT(OUT) :: rhot(:)
       INTEGER, INTENT(IN) :: mpime, nproc, root
       INTEGER, INTENT(IN) :: ig_l2g(:)
       INTEGER, INTENT(IN) :: ngl
 
       INTEGER, ALLOCATABLE :: ig_ip(:)
-      REAL(dbl), ALLOCATABLE :: rho_ip(:)
+      REAL(DP), ALLOCATABLE :: rho_ip(:)
 
       INTEGER :: ierr, i, ip, ng_ip, ng_lmax, ng_g
 
@@ -321,8 +321,8 @@
       USE parallel_include
       IMPLICIT NONE
 
-      REAL(dbl), INTENT(OUT) :: rho(:)
-      REAL(dbl), INTENT(IN) :: rhot(:)
+      REAL(DP), INTENT(OUT) :: rho(:)
+      REAL(DP), INTENT(IN) :: rhot(:)
       INTEGER, INTENT(IN) :: mpime, nproc, root
       INTEGER, INTENT(IN) :: ig_l2g(:)
       INTEGER, INTENT(IN) :: ngl
@@ -334,7 +334,7 @@
 #endif
 
       INTEGER, ALLOCATABLE :: ig_ip(:)
-      COMPLEX(dbl), ALLOCATABLE :: rho_ip(:)
+      COMPLEX(DP), ALLOCATABLE :: rho_ip(:)
 
 #if defined __MPI
 
@@ -599,17 +599,17 @@
       integer :: icntix        !   total number of G-vec to be exchanged
       INTEGER, INTENT(IN) :: nproc, mpime, group
 
-      COMPLEX(dbl) :: c(:)
-      COMPLEX(dbl) :: ctmp(:)
+      COMPLEX(DP) :: c(:)
+      COMPLEX(DP) :: ctmp(:)
       integer  ::  ngw
 
       integer :: i, inl, ig, icsize
       INTEGER :: me, idest, isour, ierr
 
-      COMPLEX(dbl), ALLOCATABLE :: my_buffer( : )
+      COMPLEX(DP), ALLOCATABLE :: my_buffer( : )
 #if ! (defined __SHMEM && defined __ALTIX) || ! (defined __SHMEM && defined __ORIGIN)
-      COMPLEX(dbl), ALLOCATABLE :: mp_snd_buffer( : )
-      COMPLEX(dbl), ALLOCATABLE :: mp_rcv_buffer( : )
+      COMPLEX(DP), ALLOCATABLE :: mp_snd_buffer( : )
+      COMPLEX(DP), ALLOCATABLE :: mp_rcv_buffer( : )
 #endif
       INTEGER, ALLOCATABLE :: ibuf(:)
 

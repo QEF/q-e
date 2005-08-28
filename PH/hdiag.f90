@@ -26,14 +26,14 @@ subroutine hdiag( max_iter, avg_iter, xk_, et_ )
   !
   integer :: max_iter
   ! maximum number of iterations
-  real(kind=DP) :: avg_iter, xk_(3), et_(nbnd)
+  real(DP) :: avg_iter, xk_(3), et_(nbnd)
   ! iteration number in the diagonalization
   ! k-point
   ! eigenvalues of the diagonalization
   !
   !     Local variables:
   !
-  real(kind=DP) :: cg_iter, erf
+  real(DP) :: cg_iter, erf
   ! number of iteration in CG
   ! error function
   integer :: ig, ntry, notconv

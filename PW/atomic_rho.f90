@@ -43,14 +43,14 @@ subroutine atomic_rho (rhoa, nspina)
   !
   integer :: nspina
   ! the number of spin polarizations
-  real(kind=DP) :: rhoa (nrxx, nspina)
+  real(DP) :: rhoa (nrxx, nspina)
   ! the output atomic charge
   !
   ! local variables
   !
-  real(kind=DP) :: rhoneg, rhoima, gx
-  real(kind=DP), allocatable :: rhocgnt (:), aux (:)
-  complex(kind=DP), allocatable :: rhocg (:,:), strf_at(:,:)
+  real(DP) :: rhoneg, rhoima, gx
+  real(DP), allocatable :: rhocgnt (:), aux (:)
+  complex(DP), allocatable :: rhocg (:,:), strf_at(:,:)
   integer :: ir, is, ig, igl, nt, ndm
   !
   ! superposition of atomic charges contained in the array rho_at

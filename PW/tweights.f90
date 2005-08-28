@@ -15,11 +15,11 @@ subroutine tweights (nks, nspin, nbnd, nelec, ntetra, tetra, et, &
   implicit none
   ! I/O variables
   integer, intent(in) :: nks, nspin, nbnd, ntetra, tetra (4, ntetra)
-  real(kind=DP), intent(in) :: et (nbnd, nks), nelec
-  real(kind=DP), intent(out) :: wg (nbnd, nks), ef
+  real(DP), intent(in) :: et (nbnd, nks), nelec
+  real(DP), intent(out) :: wg (nbnd, nks), ef
   integer, intent(in) :: is, isk(nks)
   ! local variables
-  real(kind=DP) :: e1, e2, e3, e4, c1, c2, c3, c4, etetra (4), dosef
+  real(DP) :: e1, e2, e3, e4, c1, c2, c3, c4, etetra (4), dosef
   integer :: ik, ibnd, nt, nk, ns, i, kp1, kp2, kp3, kp4, itetra (4)
 
   ! Calculate the Fermi energy ef

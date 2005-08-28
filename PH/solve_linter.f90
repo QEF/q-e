@@ -53,36 +53,36 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   ! input: the number of perturbation
   ! input: the position of the modes
 
-  complex(kind=DP) :: drhoscf (nrxx, nspin, npe)
+  complex(DP) :: drhoscf (nrxx, nspin, npe)
   ! output: the change of the scf charge
 
-  real(kind=DP) , allocatable :: h_diag (:,:),eprec (:)
+  real(DP) , allocatable :: h_diag (:,:),eprec (:)
   ! h_diag: diagonal part of the Hamiltonian
   ! eprec : array for preconditioning
-  real(kind=DP) :: thresh, anorm, averlt, dr2
+  real(DP) :: thresh, anorm, averlt, dr2
   ! thresh: convergence threshold
   ! anorm : the norm of the error
   ! averlt: average number of iterations
   ! dr2   : self-consistency error
-  real(kind=DP) :: dos_ef, wg1, w0g, wgp, wwg, weight, deltae, theta, &
+  real(DP) :: dos_ef, wg1, w0g, wgp, wwg, weight, deltae, theta, &
        aux_avg (2)
   ! Misc variables for metals
   ! dos_ef: density of states at Ef
-  real(kind=DP), external :: w0gauss, wgauss
+  real(DP), external :: w0gauss, wgauss
   ! functions computing the delta and theta function
 
-  complex(kind=DP), pointer :: dvscfin(:,:,:), dvscfins (:,:,:)
+  complex(DP), pointer :: dvscfin(:,:,:), dvscfins (:,:,:)
   ! change of the scf potential (input): complete, smooth part only
-  complex(kind=DP), allocatable :: drhoscfh (:,:,:), dvscfout (:,:,:)
+  complex(DP), allocatable :: drhoscfh (:,:,:), dvscfout (:,:,:)
   ! change of rho / scf potential (output)
   ! change of scf potential (output)
-  complex(kind=DP), allocatable :: ldos (:,:), ldoss (:,:),&
+  complex(DP), allocatable :: ldos (:,:), ldoss (:,:),&
        dbecsum (:,:,:,:), auxg (:), aux1 (:), ps (:,:)
   ! Misc work space
   ! ldos : local density of states af Ef
   ! ldoss: as above, without augmentation charges
   ! dbecsum: the derivative of becsum
-  complex(kind=DP) :: ZDOTC
+  complex(DP) :: ZDOTC
   ! the scalar product function
 
   logical :: conv_root,  & ! true if linear system is converged
@@ -106,7 +106,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
              ios,        & ! integer variable for I/O control
              mode          ! mode index
 
-  real(kind=DP) :: tcpu, get_clock ! timing variables
+  real(DP) :: tcpu, get_clock ! timing variables
 
   character (len=256) :: flmixdpot ! name of the file with the mixing potential
 
@@ -485,12 +485,12 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
      call newdq (dvscfin, npe)
 #ifdef __PARA
-     aux_avg (1) = dble (ltaver)
-     aux_avg (2) = dble (lintercall)
+     aux_avg (1) = DBLE (ltaver)
+     aux_avg (2) = DBLE (lintercall)
      call poolreduce (2, aux_avg)
      averlt = aux_avg (1) / aux_avg (2)
 #else
-     averlt = dble (ltaver) / lintercall
+     averlt = DBLE (ltaver) / lintercall
 #endif
      tcpu = get_clock ('PHONON')
 

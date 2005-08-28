@@ -28,7 +28,7 @@ subroutine stress
   !
   implicit none
   !
-  real(kind=DP) :: sigmakin (3, 3), sigmaloc (3, 3), sigmahar (3, 3), &
+  real(DP) :: sigmakin (3, 3), sigmaloc (3, 3), sigmahar (3, 3), &
        sigmaxc (3, 3), sigmaxcc (3, 3), sigmaewa (3, 3), sigmanlc (3, 3), &
        sigmabare (3, 3), sigmah (3, 3)
   integer :: l, m

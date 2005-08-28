@@ -27,7 +27,7 @@ subroutine restart_in_electrons (iter, ik_, dr2)
   logical :: exst
 
 
-  real(kind=DP) :: dr2
+  real(DP) :: dr2
   call seqopn (iunres, 'restart', 'unformatted', exst)
 
   if (.not.exst) goto 10

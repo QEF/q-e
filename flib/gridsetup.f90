@@ -28,7 +28,7 @@
         npcol = 1
         nprow = 1
       else
-        sqrtnp = int( sqrt( dble(nproc) ) + 1 )
+        sqrtnp = int( sqrt( DBLE(nproc) ) + 1 )
         do i=1,sqrtnp
           if(mod(nproc,i).eq.0) nprow = i
         end do

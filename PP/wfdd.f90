@@ -19,8 +19,8 @@ module wanpar
 ! b1,b2,b3: the reciprocal lattice
 ! alat:     the lattice parameter
 ! a1,a2,a3: the real-space lattice
-  real(kind=8) :: wfdt, maxwfdt, b1(3), b2(3), b3(3), alat
-  real(kind=8) :: a1(3), a2(3), a3(3), tolw
+  real(8) :: wfdt, maxwfdt, b1(3), b2(3), b3(3), alat
+  real(8) :: a1(3), a2(3), a3(3), tolw
 
 ! wfg:      the G vectors involoved in general symmetry calculation
 !           the units are b1, b2, b3.
@@ -29,7 +29,7 @@ module wanpar
   integer, allocatable :: wfg(:,:)
 
 ! weight:   the weight of each G vectors
-  real(kind=8), allocatable :: weight(:)
+  real(8), allocatable :: weight(:)
 !
 ! These are the Input variables for Damped Dynamics
 !
@@ -39,7 +39,7 @@ module wanpar
 !               any other number = damped dynamics
 ! fric:         damping coefficient, b/w 0 and 1
 ! nsteps:       Max No. of MD Steps
-  real(kind=8) :: q, dt, fric
+  real(8) :: q, dt, fric
   integer :: cgordd, nsteps
 
 
@@ -73,25 +73,25 @@ program wf
 !  implicit none
   integer :: f3(nw), f4(nw), i,j,inw
   integer ,intent(in) :: m
-  real(kind=8), intent(inout) :: Umat(m,m)
-  complex(kind=8), intent(inout) :: Omat(nw,m,m)
-  complex(kind=8) :: U2(m,m),U3(m,m)
+  real(8), intent(inout) :: Umat(m,m)
+  complex(8), intent(inout) :: Omat(nw,m,m)
+  complex(8) :: U2(m,m),U3(m,m)
   integer :: adjust,ini, ierr1,nnn
-  real(kind=8), allocatable, dimension(:) :: wr
-  real(kind=8), allocatable, dimension(:,:) :: W
-  real(kind=8) :: t0, U(m,m), t2
-  real(kind=8) :: A(m,m),oldt0,Wm(m,m),U1(m,m)
-  real(kind=8) :: Aminus(m,m), Aplus(m,m),f2(3*m-2)
-!  real(kind=8) :: Aminus(m,m), Aplus(m,m),f2(4*m)
-  real(kind=8) :: temp(m,m)
-  complex(kind=8) :: d(m,m), alpha, beta1, ci
-  complex(kind=8) :: f1(2*m-1), wp(m*(m+1)/2),z(m,m)
-  complex(kind=8), allocatable, dimension(:, :) :: X1
-  complex(kind=8), allocatable, dimension(:, :, :) :: Oc
-  real(kind=8) , allocatable , dimension(:) :: mt
-  real(kind=8), parameter :: autoaf=0.529177d0
-  real(kind=8) :: spread, sp, pi2, oldspread
-  real(kind=8) :: wfc(3,n), gr(nw,3)
+  real(8), allocatable, dimension(:) :: wr
+  real(8), allocatable, dimension(:,:) :: W
+  real(8) :: t0, U(m,m), t2
+  real(8) :: A(m,m),oldt0,Wm(m,m),U1(m,m)
+  real(8) :: Aminus(m,m), Aplus(m,m),f2(3*m-2)
+!  real(8) :: Aminus(m,m), Aplus(m,m),f2(4*m)
+  real(8) :: temp(m,m)
+  complex(8) :: d(m,m), alpha, beta1, ci
+  complex(8) :: f1(2*m-1), wp(m*(m+1)/2),z(m,m)
+  complex(8), allocatable, dimension(:, :) :: X1
+  complex(8), allocatable, dimension(:, :, :) :: Oc
+  real(8) , allocatable , dimension(:) :: mt
+  real(8), parameter :: autoaf=0.529177d0
+  real(8) :: spread, sp, pi2, oldspread
+  real(8) :: wfc(3,n), gr(nw,3)
 
   alpha=(1.d0,0.d0)
   beta1=(0.d0,0.d0)
@@ -363,21 +363,21 @@ program wf
 !
   implicit none
 !
-  real(kind=8), parameter :: autoaf=0.529177d0
+  real(8), parameter :: autoaf=0.529177d0
   integer, intent(in) :: m
-  complex(kind=8), intent(in) :: Omat(nw, m, m)
-  real(kind=8), intent(inout) :: Umat(m,m)
+  complex(8), intent(in) :: Omat(nw, m, m)
+  real(8), intent(inout) :: Umat(m,m)
 !
   integer :: i, j, k, l, ig, ierr, ti, tj, tk, inw, ir, adjust
   integer :: f3(nw), f4(nw), istep
-  real(kind=8) :: slope, slope2, t1, t2, t3, pi2, mt(nw),t21,temp1,maxdt
-  real(kind=8) :: U(m,m), wfc(3, m), Wm(m,m), schd(m,m), f2(3*m-2), gr(nw, 3)
-  real(kind=8) :: Uspin2(m,m),temp2,wfdtold,oldt1,t01, d3(m,m), d4(m,m), U1(m,m)
-  real(kind=8), allocatable, dimension(:) :: wr
-  real(kind=8), allocatable, dimension(:,:) :: W
-  complex(kind=8) :: ci, ct1, ct2, ct3, z(m, m), X(m, m), d(m,m), d2(m,m)
-  complex(kind=8) :: f1(2*m-1), wp(m*(m+1)/2), Oc(nw, m, m), alpha, beta1
-  complex(kind=8) ::  Oc2(nw, m, m),wp1(m*(m+1)/2), X1(m,m), U2(m,m), U3(m,m)
+  real(8) :: slope, slope2, t1, t2, t3, pi2, mt(nw),t21,temp1,maxdt
+  real(8) :: U(m,m), wfc(3, m), Wm(m,m), schd(m,m), f2(3*m-2), gr(nw, 3)
+  real(8) :: Uspin2(m,m),temp2,wfdtold,oldt1,t01, d3(m,m), d4(m,m), U1(m,m)
+  real(8), allocatable, dimension(:) :: wr
+  real(8), allocatable, dimension(:,:) :: W
+  complex(8) :: ci, ct1, ct2, ct3, z(m, m), X(m, m), d(m,m), d2(m,m)
+  complex(8) :: f1(2*m-1), wp(m*(m+1)/2), Oc(nw, m, m), alpha, beta1
+  complex(8) ::  Oc2(nw, m, m),wp1(m*(m+1)/2), X1(m,m), U2(m,m), U3(m,m)
 
 !
   ci=(0.d0,1.d0)

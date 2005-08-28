@@ -40,26 +40,26 @@ subroutine dir_outward(idim1,mesh,lcur,jcur,e0,dx,snl,r,rab,ruae)
 use kinds, only : DP
 implicit none
 integer :: idim1 
-real(kind=dp) :: r(idim1),     &   ! the radial mesh
+real(DP) :: r(idim1),     &   ! the radial mesh
                  rab(idim1),   &   ! derivative of the radial mesh
                  ruae(idim1),  &   ! the all electron potential
                  snl(idim1,2)       ! the wavefunction
 
-real(kind=dp) :: e0,       &     ! the starting energy eigenvalue
+real(DP) :: e0,       &     ! the starting energy eigenvalue
                  dx,       &     ! dx mesh value
                  jcur            ! the j of the state
                   
 integer ::  mesh,  &          ! the dimension of the mesh 
             lcur              ! the l of the state
 
-real(kind=dp) :: tbya, abyt,        &  
+real(DP) :: tbya, abyt,        &  
                  zz(idim1,2,2),     &
                  tolinf,alpha2,alpha,  &
                  yy(idim1,2),       &
                  vzero,             &
                  f0,f1,f2,g0,g1,g2, &
                  ecur                
-real(kind=dp) :: r2(idim1), f(idim1), int_0_inf_dr
+real(DP) :: r2(idim1), f(idim1), int_0_inf_dr
 
 integer :: ir,    &     ! counter
            ig,    &     ! auxiliary
@@ -93,7 +93,7 @@ yy = 0.0_DP
 !         ===================
 !
 do ir = 1,mesh
-   zz(ir,1,1) = rab(ir) * dble(kcur) / r(ir)
+   zz(ir,1,1) = rab(ir) * DBLE(kcur) / r(ir)
    zz(ir,2,2) = - zz(ir,1,1)
    zz(ir,1,2) = - rab(ir) * ( ecur - ruae(ir) / r(ir) ) * abyt
    zz(ir,2,1) = - zz(ir,1,2) + rab(ir) * tbya
@@ -129,10 +129,10 @@ else
    g0 = 0
 endif
  
-f1 = - (ecur-vzero) * abyt * g0 / dble( ig - kcur + 1 )
-g1 = (ecur-vzero+tbya**2) * abyt * f0 / dble( ig + kcur + 1 )
-f2 = - (ecur-vzero) * abyt * g1 / dble( ig - kcur + 2 )
-g2 = (ecur-vzero+tbya**2) * abyt * f1 / dble( ig + kcur + 2 )
+f1 = - (ecur-vzero) * abyt * g0 / DBLE( ig - kcur + 1 )
+g1 = (ecur-vzero+tbya**2) * abyt * f0 / DBLE( ig + kcur + 1 )
+f2 = - (ecur-vzero) * abyt * g1 / DBLE( ig - kcur + 2 )
+g2 = (ecur-vzero+tbya**2) * abyt * f1 / DBLE( ig + kcur + 2 )
 !
 !
 do ir = 1,5

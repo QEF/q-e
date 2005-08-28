@@ -35,7 +35,7 @@ subroutine checkallsym (nsym, s, nat, tau, ityp, at, bg, nr1, nr2, &
   ! k-th symmetry operation, referred to the
   ! crystal axis and in units at/nr (0-nr-1)
 
-  real(kind=DP) :: tau (3, nat), at (3, 3), bg (3, 3)
+  real(DP) :: tau (3, nat), at (3, 3), bg (3, 3)
   ! input: cartesian coordinates of the atoms
   ! input: basis of the real-space lattice
   ! input:  "   "   "  reciprocal-space lattic
@@ -50,14 +50,14 @@ subroutine checkallsym (nsym, s, nat, tau, ityp, at, bg, nr1, nr2, &
 
   logical :: loksym (48)
 
-  real(kind=DP) :: sx (3, 3), ft (3), ps
-  real(kind=DP) , allocatable :: xau(:,:), rau(:,:)
+  real(DP) :: sx (3, 3), ft (3), ps
+  real(DP) , allocatable :: xau(:,:), rau(:,:)
   ! symmetry operation in cartesian axis
   ! atomic coordinate referred to the crystal
   ! crystal coordinates of a rotated atom
   ! actual fractionary translation
   ! scalar product
-  real(kind=DP), parameter :: eps = 1.0d-7
+  real(DP), parameter :: eps = 1.0d-7
   ! a small number
 
   external checksym
@@ -121,9 +121,9 @@ subroutine checkallsym (nsym, s, nat, tau, ityp, at, bg, nr1, nr2, &
 
      enddo
 
-     ft (1) = ftau (1, isym) / dble (nr1)
-     ft (2) = ftau (2, isym) / dble (nr2)
-     ft (3) = ftau (3, isym) / dble (nr3)
+     ft (1) = ftau (1, isym) / DBLE (nr1)
+     ft (2) = ftau (2, isym) / DBLE (nr2)
+     ft (3) = ftau (3, isym) / DBLE (nr3)
 
      call checksym (isym, nat, ityp, xau, rau, ft, loksym, irt)
      if (.not.loksym (isym) ) call errore ('checkallsym', &

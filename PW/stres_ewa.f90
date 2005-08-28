@@ -29,7 +29,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
 
   logical :: gamma_only
 
-  real(kind=DP) :: tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
+  real(DP) :: tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
        at (3, 3), bg (3, 3), omega, alat, gcutm, sigmaewa (3, 3)
   ! input: the positions of the atoms in the cell
   ! input: the coordinates of G vectors
@@ -46,7 +46,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
   integer, parameter :: mxr = 50
   ! the maximum number of R vectors included in r sum
-  real(kind=DP), parameter :: e2 = 2.d0, eps = 1.0d-6, &
+  real(DP), parameter :: e2 = 2.d0, eps = 1.0d-6, &
        tpi = 2.d0 * 3.141592653589793d0
   ! e2 = e^2 (Ry atomic units)
   ! eps = convergence tolerance
@@ -59,7 +59,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! counter on atoms
   ! number of R vectors included in r sum
 
-  real(kind=DP) :: charge, arg, tpiba2, dtau (3), alpha, r (3, mxr), &
+  real(DP) :: charge, arg, tpiba2, dtau (3), alpha, r (3, mxr), &
        r2 (mxr), rmax, rr, upperbound, fact, fac, g2, g2a, sdewald, sewald
   ! total ionic charge in the cell
   ! the argument of the phase
@@ -74,8 +74,8 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! auxiliary variables
   ! diagonal term
   ! nondiagonal term
-  complex(kind=DP) :: rhostar
-  real(kind=DP), external :: erfc
+  complex(DP) :: rhostar
+  real(DP), external :: erfc
   ! the erfc function
   !
   tpiba2 = (tpi / alat) **2

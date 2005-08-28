@@ -27,17 +27,17 @@ subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
 
   implicit none
 
-  real(kind=8) tau0(3,*)
-  real(kind=8) fion(3,*)
-  real(kind=8) enbi, evalue
+  real(8) tau0(3,*)
+  real(8) fion(3,*)
+  real(8) enbi, evalue
   integer ipol, isa
   logical tfor
 
 !local variables
-  real(kind=8) gmes
-  real(kind=8) pola
+  real(8) gmes
+  real(8) pola
   integer is, ia
-  complex(kind=8) temp, ci
+  complex(8) temp, ci
 
   temp = (0.,0.)
   ci = (0.,1.)
@@ -85,9 +85,9 @@ end subroutine berryion
       use ions_base, only: na, nsp, zv
 !
       implicit none
-      real(kind=8) tau(3,*), cdz(3)
+      real(8) tau(3,*), cdz(3)
 ! local variables
-      real(kind=8) zmas
+      real(8) zmas
       integer is,i,ia,isa
 !
       zmas=0.0
@@ -126,13 +126,13 @@ end subroutine berryion
 
           implicit none
 
-          real(kind=8) fion(3,*)
+          real(8) fion(3,*)
           integer ipol!el. field polarization
 
 
           integer i,ia,is,isa
-          real(kind=8) fcm!force appplied on center of mass
-          real(kind=8) tch!total charge
+          real(8) fcm!force appplied on center of mass
+          real(8) tch!total charge
 
           fcm=0.d0
           tch=0.d0

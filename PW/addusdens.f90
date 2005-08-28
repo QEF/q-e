@@ -34,12 +34,12 @@ subroutine addusdens
   integer :: ig, na, nt, ih, jh, ijh, is
   ! counters
 
-  real(kind=DP), allocatable :: qmod (:), ylmk0 (:,:)
+  real(DP), allocatable :: qmod (:), ylmk0 (:,:)
   ! the modulus of G
   ! the spherical harmonics
 
-  complex(kind=DP) :: skk
-  complex(kind=DP), allocatable ::  aux (:,:), qgm(:)
+  complex(DP) :: skk
+  complex(DP), allocatable ::  aux (:,:), qgm(:)
   ! work space for rho(G,nspin)
   ! Fourier transform of q
 

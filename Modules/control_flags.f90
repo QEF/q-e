@@ -26,9 +26,9 @@ MODULE control_flags
      !
      LOGICAL   :: active
      INTEGER   :: nstep
-     REAL(dbl) :: ekin
-     REAL(dbl) :: derho
-     REAL(dbl) :: force
+     REAL(DP) :: ekin
+     REAL(DP) :: derho
+     REAL(DP) :: force
      !
   END TYPE convergence_criteria
   !
@@ -37,8 +37,8 @@ MODULE control_flags
      LOGICAL   :: active
      INTEGER   :: nstepix
      INTEGER   :: nstepex
-     REAL(dbl) :: ionthr
-     REAL(dbl) :: elethr
+     REAL(DP) :: ionthr
+     REAL(DP) :: elethr
      !
   END TYPE ionic_conjugate_gradient
   !
@@ -140,12 +140,12 @@ MODULE control_flags
   ! ... Wave function randomization
   !
   LOGICAL   :: trane = .FALSE.
-  REAL(dbl) :: ampre = 0.D0
+  REAL(DP) :: ampre = 0.D0
   !
   ! ... Ionic position randomization
   !
   LOGICAL   :: tranp(nsx) = .FALSE.
-  REAL(dbl) :: amprp(nsx) = 0.D0
+  REAL(DP) :: amprp(nsx) = 0.D0
   !
   ! ... Read the cell from standard input
   !
@@ -174,9 +174,9 @@ MODULE control_flags
   LOGICAL   :: tnosep = .FALSE.
   LOGICAL   :: tcap   = .FALSE.
   LOGICAL   :: tcp    = .FALSE.
-  REAL(dbl) :: tolp   = 0.D0   !  tolerance for temperature variation
+  REAL(DP) :: tolp   = 0.D0   !  tolerance for temperature variation
   !
-  REAL(dbl), PUBLIC :: &
+  REAL(DP), PUBLIC :: &
        ekin_conv_thr = 0.D0, &!  conv. threshold for fictitious e. kinetic energy
        etot_conv_thr = 0.D0, &!  conv. threshold for DFT energy
        forc_conv_thr = 0.D0   !  conv. threshold for atomic forces
@@ -214,7 +214,7 @@ MODULE control_flags
     niter,            &! the maximum number of iteration
     nmix,             &! the number of iteration kept in the history
     imix               ! the type of mixing (0=plain,1=TF,2=local-TF)
-  REAL(KIND=DP), PUBLIC  :: &
+  REAL(DP), PUBLIC  :: &
     mixing_beta,      &! the mixing parameter
     tr2                ! the convergence threshold for potential
   LOGICAL, PUBLIC :: &
@@ -222,7 +222,7 @@ MODULE control_flags
   !
   ! ... pw diagonalization
   !
-  REAL(KIND=DP), PUBLIC  :: &
+  REAL(DP), PUBLIC  :: &
     ethr               ! the convergence threshold for eigenvalues  
   INTEGER, PUBLIC :: &
     david,            &! used on Davidson diagonalization
@@ -233,7 +233,7 @@ MODULE control_flags
   !
   ! ... wfc and rho extrapolation
   !
-  REAL(KIND=DP), PUBLIC  :: &
+  REAL(DP), PUBLIC  :: &
     alpha0,           &! the mixing parameters for the extrapolation
     beta0              ! of the starting potential
   INTEGER, PUBLIC :: &
@@ -248,7 +248,7 @@ MODULE control_flags
     istep              ! current ionic step  
   LOGICAL, PUBLIC :: &
     conv_ions          ! if .TRUE. ionic convergence has been reached
-  REAL(KIND=DP), PUBLIC  :: &
+  REAL(DP), PUBLIC  :: &
     upscale            ! maximum reduction of convergence threshold
   !
   ! ... system's symmetries
@@ -275,7 +275,7 @@ MODULE control_flags
     wg_set = .FALSE.   ! if .TRUE. the occupations are known
   !
   INTEGER   :: ortho_max = 0    ! maximum number of iterations in routine ortho
-  REAL(dbl) :: ortho_eps = 0.D0 ! threshold for convergence in routine ortho
+  REAL(DP) :: ortho_eps = 0.D0 ! threshold for convergence in routine ortho
   !
   ! ...  end of module-scope declarations
   ! 

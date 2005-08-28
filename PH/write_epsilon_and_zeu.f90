@@ -16,7 +16,7 @@ subroutine write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
   ! unit number
   ! number of atom in the unit cell
 
-  real(kind=DP) :: zstareu (3, 3, nat), epsilon (3, 3)
+  real(DP) :: zstareu (3, 3, nat), epsilon (3, 3)
   !  the effective charges
   !  the dielectric tensor
   ! local variables

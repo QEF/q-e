@@ -17,9 +17,9 @@ subroutine iweights (nks, wk, nbnd, nelec, et, Ef, wg, is, isk)
   implicit none
   !
   integer, intent(in) :: nks, nbnd, is, isk(nks)
-  real(kind=DP), intent(in) :: wk (nks), et(nbnd, nks), nelec
-  real(kind=DP), intent(out) :: wg (nbnd, nks), Ef
-  real(kind=DP) :: degspin 
+  real(DP), intent(in) :: wk (nks), et(nbnd, nks), nelec
+  real(DP), intent(out) :: wg (nbnd, nks), Ef
+  real(DP) :: degspin 
   integer :: kpoint, ibnd
 
   degspin=2.d0

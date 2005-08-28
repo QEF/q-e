@@ -56,18 +56,18 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   CHARACTER(len=*) :: filplot
   INTEGER :: kpoint, kband, spin_component, plot_num
   LOGICAL :: stm_wfc_matching, lsign
-  REAL(kind=DP) :: sample_bias, z, dz, dummy
-  REAL(kind=DP) :: emin, emax, wf, charge, epsilon
+  REAL(DP) :: sample_bias, z, dz, dummy
+  REAL(DP) :: emin, emax, wf, charge, epsilon
 
   INTEGER :: is, ik, ibnd, ir, ninter, nspin_eff, ipol
 #ifdef __PARA
   ! auxiliary vector (parallel case)
-  REAL(kind=DP), ALLOCATABLE :: raux1 (:)
+  REAL(DP), ALLOCATABLE :: raux1 (:)
 
 #endif
   ! auxiliary vector
-  REAL(kind=DP), ALLOCATABLE :: raux (:)
-  REAL(kind=DP), ALLOCATABLE :: averag (:,:,:), plan (:,:,:)
+  REAL(DP), ALLOCATABLE :: raux (:)
+  REAL(DP), ALLOCATABLE :: averag (:,:,:), plan (:,:,:)
 
 
   IF (filplot == ' ') RETURN
@@ -296,7 +296,7 @@ SUBROUTINE polarization ( spin_component, ipol, epsilon, raux )
   !
   IMPLICIT NONE
   INTEGER :: spin_component, ipol, ig
-  REAL(kind=DP) :: epsilon, raux (nrxx)
+  REAL(DP) :: epsilon, raux (nrxx)
   !
   IF (ipol < 1 .OR. ipol > 3) CALL errore('polarization', &
        'wrong component',1)

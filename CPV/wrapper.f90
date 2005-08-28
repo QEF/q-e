@@ -22,13 +22,13 @@
 
       implicit none
       integer na, iad, nb, ibd, nc, icd, nar, nac, nbc
-      real(kind=8) a(iad,nac), b(ibd,nbc), c(icd,nbc)
+      real(8) a(iad,nac), b(ibd,nbc), c(icd,nbc)
       character(len=1) mode1, mode2
       integer lda, ldb
 !
 !  fortran equivalent (a,b,c are one-dimensional arrays)
 !
-!      real(kind=8) a(iad*nac), b(ibd*nbc), c(icd*nbc)
+!      real(8) a(iad*nac), b(ibd*nbc), c(icd*nbc)
 !      integer i,j,k
 !
 !      do j=1,nbc

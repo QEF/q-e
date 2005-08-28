@@ -15,7 +15,7 @@
 !------------------------------------------------------------------------------!
     MODULE mp
 !------------------------------------------------------------------------------!
-      USE kinds,     ONLY : dbl, i4b
+      USE kinds,     ONLY : DP, i4b
       USE io_global, ONLY : stdout
       USE parallel_include
       IMPLICIT NONE
@@ -153,8 +153,8 @@
 !..Carlo Cavazzoni
       SUBROUTINE mp_gather_cvv(mydata, alldata, root, gid)
         IMPLICIT NONE
-        COMPLEX(dbl), INTENT(IN) :: mydata(:)
-        COMPLEX(dbl), INTENT(OUT) :: alldata(:)
+        COMPLEX(DP), INTENT(IN) :: mydata(:)
+        COMPLEX(DP), INTENT(OUT) :: alldata(:)
         INTEGER, INTENT(IN) :: root
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -180,8 +180,8 @@
 !..Carlo Cavazzoni
       SUBROUTINE mp_gather_rvv(mydata, alldata, root, gid)
         IMPLICIT NONE
-        REAL(dbl), INTENT(IN) :: mydata(:)
-        REAL(dbl), INTENT(OUT) :: alldata(:)
+        REAL(DP), INTENT(IN) :: mydata(:)
+        REAL(DP), INTENT(OUT) :: alldata(:)
         INTEGER, INTENT(IN) :: root
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -445,7 +445,7 @@
 !
       SUBROUTINE mp_bcast_r1(msg,source,gid)
         IMPLICIT NONE
-        REAL (dbl) :: msg
+        REAL (DP) :: msg
         INTEGER :: msglen, source
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -466,7 +466,7 @@
 !
       SUBROUTINE mp_bcast_rv(msg,source,gid)
         IMPLICIT NONE
-        REAL (dbl) :: msg(:)
+        REAL (DP) :: msg(:)
         INTEGER :: source
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -488,7 +488,7 @@
 !
       SUBROUTINE mp_bcast_rm(msg,source,gid)
         IMPLICIT NONE
-        REAL (dbl) :: msg(:,:)
+        REAL (DP) :: msg(:,:)
         INTEGER :: source
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -511,7 +511,7 @@
 !
       SUBROUTINE mp_bcast_rt(msg,source,gid)
         IMPLICIT NONE
-        REAL (dbl) :: msg(:,:,:)
+        REAL (DP) :: msg(:,:,:)
         INTEGER :: source
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -534,7 +534,7 @@
 !
       SUBROUTINE mp_bcast_r4d(msg, source, gid)
         IMPLICIT NONE
-        REAL (dbl) :: msg(:,:,:,:)
+        REAL (DP) :: msg(:,:,:,:)
         INTEGER :: source
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -555,7 +555,7 @@
 !
       SUBROUTINE mp_bcast_c1(msg,source,gid)
         IMPLICIT NONE
-        COMPLEX (dbl) :: msg
+        COMPLEX (DP) :: msg
         INTEGER :: source
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -574,7 +574,7 @@
 !------------------------------------------------------------------------------!
       SUBROUTINE mp_bcast_cv(msg,source,gid)
         IMPLICIT NONE
-        COMPLEX (dbl) :: msg(:)
+        COMPLEX (DP) :: msg(:)
         INTEGER :: source
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -594,7 +594,7 @@
 !------------------------------------------------------------------------------!
       SUBROUTINE mp_bcast_cm(msg,source,gid)
         IMPLICIT NONE
-        COMPLEX (dbl) :: msg(:,:)
+        COMPLEX (DP) :: msg(:,:)
         INTEGER :: source
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -614,7 +614,7 @@
 !------------------------------------------------------------------------------!
       SUBROUTINE mp_bcast_ct(msg,source,gid)
         IMPLICIT NONE
-        COMPLEX (dbl) :: msg(:,:,:)
+        COMPLEX (DP) :: msg(:,:,:)
         INTEGER :: source
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -635,7 +635,7 @@
 !------------------------------------------------------------------------------!
       SUBROUTINE mp_bcast_c4d(msg,source,gid)
         IMPLICIT NONE
-        COMPLEX (dbl) :: msg(:,:,:,:)
+        COMPLEX (DP) :: msg(:,:,:,:)
         INTEGER :: source
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -900,7 +900,7 @@
 ! Carlo Cavazzoni
 !
       SUBROUTINE mp_get_rv(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
-        REAL (dbl) :: msg_dest(:), msg_sour(:)
+        REAL (DP) :: msg_dest(:), msg_sour(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -948,7 +948,7 @@
 ! Carlo Cavazzoni
 !
       SUBROUTINE mp_get_rm(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
-        REAL (dbl) :: msg_dest(:,:), msg_sour(:,:)
+        REAL (DP) :: msg_dest(:,:), msg_sour(:,:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -997,7 +997,7 @@
 ! Carlo Cavazzoni
 !
       SUBROUTINE mp_get_cv(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
-        COMPLEX (dbl) :: msg_dest(:), msg_sour(:)
+        COMPLEX (DP) :: msg_dest(:), msg_sour(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -1138,7 +1138,7 @@
 !
 !
       SUBROUTINE mp_put_rv(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
-        REAL (dbl) :: msg_dest(:), msg_sour(:)
+        REAL (DP) :: msg_dest(:), msg_sour(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -1183,7 +1183,7 @@
 !
 !
       SUBROUTINE mp_put_rm(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
-        REAL (dbl) :: msg_dest(:,:), msg_sour(:,:)
+        REAL (DP) :: msg_dest(:,:), msg_sour(:,:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -1229,7 +1229,7 @@
 !
 !
       SUBROUTINE mp_put_cv(msg_dest, msg_sour, mpime, sour, dest, ip, gid)
-        COMPLEX (dbl) :: msg_dest(:), msg_sour(:)
+        COMPLEX (DP) :: msg_dest(:), msg_sour(:)
         INTEGER, INTENT(IN) :: dest, sour, ip, mpime
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
@@ -1389,11 +1389,11 @@
 
       SUBROUTINE mp_sum_r1(msg,gid)
         IMPLICIT NONE
-        REAL (dbl), INTENT (INOUT) :: msg
+        REAL (DP), INTENT (INOUT) :: msg
         INTEGER, OPTIONAL, INTENT (IN) :: gid
         INTEGER :: group
         INTEGER :: msglen, ierr
-        REAL (dbl) :: res
+        REAL (DP) :: res
 #if defined(__MPI)
         msglen = 1
         group = mpi_comm_world
@@ -1410,11 +1410,11 @@
 
       SUBROUTINE mp_sum_rv(msg,gid)
         IMPLICIT NONE
-        REAL (dbl), INTENT (INOUT) :: msg(:)
+        REAL (DP), INTENT (INOUT) :: msg(:)
         INTEGER, OPTIONAL, INTENT (IN) :: gid
         INTEGER :: group
         INTEGER :: msglen, ierr
-        REAL (dbl), ALLOCATABLE :: res(:)
+        REAL (DP), ALLOCATABLE :: res(:)
 #if defined(__MPI)
         msglen = size(msg)
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8930)
@@ -1436,12 +1436,12 @@
 
       SUBROUTINE mp_sum_rm(msg, gid)
         IMPLICIT NONE
-        REAL (dbl), INTENT (INOUT) :: msg(:,:)
+        REAL (DP), INTENT (INOUT) :: msg(:,:)
         INTEGER, OPTIONAL, INTENT (IN) :: gid
         INTEGER :: group
         INTEGER :: msglen, m1, m2, ierr, i, j, k
-        REAL (dbl), ALLOCATABLE :: res(:,:)
-        REAL (dbl), ALLOCATABLE :: resv(:)
+        REAL (DP), ALLOCATABLE :: res(:,:)
+        REAL (DP), ALLOCATABLE :: resv(:)
 #if defined(__MPI)
         msglen = size(msg)
         group = mpi_comm_world
@@ -1468,8 +1468,8 @@
 
       SUBROUTINE mp_sum_rmm(msg, res, root, gid)
         IMPLICIT NONE
-        REAL (dbl), INTENT (IN) :: msg(:,:)
-        REAL (dbl), INTENT (OUT) :: res(:,:)
+        REAL (DP), INTENT (IN) :: msg(:,:)
+        REAL (DP), INTENT (OUT) :: res(:,:)
         INTEGER, OPTIONAL, INTENT (IN) :: root
         INTEGER, OPTIONAL, INTENT (IN) :: gid
         INTEGER :: group
@@ -1505,11 +1505,11 @@
 
       SUBROUTINE mp_sum_rt(msg,gid)
         IMPLICIT NONE
-        REAL (dbl), INTENT (INOUT) :: msg(:,:,:)
+        REAL (DP), INTENT (INOUT) :: msg(:,:,:)
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER :: msglen, m1, m2, m3, ierr
-        REAL (dbl), ALLOCATABLE :: res(:,:,:)
+        REAL (DP), ALLOCATABLE :: res(:,:,:)
 #if defined(__MPI)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
@@ -1533,11 +1533,11 @@
 
       SUBROUTINE mp_sum_c1(msg,gid)
         IMPLICIT NONE
-        COMPLEX (dbl), INTENT (INOUT) :: msg
+        COMPLEX (DP), INTENT (INOUT) :: msg
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER :: msglen, ierr
-        COMPLEX (dbl) :: res
+        COMPLEX (DP) :: res
 
 #if defined(__MPI)
         msglen = 2
@@ -1554,11 +1554,11 @@
 
       SUBROUTINE mp_sum_cv(msg,gid)
         IMPLICIT NONE
-        COMPLEX (dbl), INTENT (INOUT) :: msg(:)
+        COMPLEX (DP), INTENT (INOUT) :: msg(:)
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER :: msglen, ierr
-        COMPLEX (dbl), ALLOCATABLE :: res(:)
+        COMPLEX (DP), ALLOCATABLE :: res(:)
 #if defined(__MPI)
         msglen = 2*size(msg)
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8934)
@@ -1579,11 +1579,11 @@
 
       SUBROUTINE mp_sum_cm(msg, gid)
         IMPLICIT NONE
-        COMPLEX (dbl), INTENT (INOUT) :: msg(:,:)
+        COMPLEX (DP), INTENT (INOUT) :: msg(:,:)
         INTEGER, OPTIONAL, INTENT (IN) :: gid
         INTEGER :: group
         INTEGER :: msglen, m1, m2, ierr
-        COMPLEX (dbl), ALLOCATABLE :: res(:,:)
+        COMPLEX (DP), ALLOCATABLE :: res(:,:)
 #if defined(__MPI)
         msglen = 2*size(msg)
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8935)
@@ -1607,8 +1607,8 @@
 
       SUBROUTINE mp_sum_cmm(msg, res, gid)
         IMPLICIT NONE
-        COMPLEX (dbl), INTENT (IN) :: msg(:,:)
-        COMPLEX (dbl), INTENT (OUT) :: res(:,:)
+        COMPLEX (DP), INTENT (IN) :: msg(:,:)
+        COMPLEX (DP), INTENT (OUT) :: res(:,:)
         INTEGER, OPTIONAL, INTENT (IN) :: gid
         INTEGER :: group
         INTEGER :: msglen, ierr
@@ -1633,11 +1633,11 @@
 !
       SUBROUTINE mp_sum_ct(msg,gid)
         IMPLICIT NONE
-        COMPLEX (dbl), INTENT (INOUT) :: msg(:,:,:)
+        COMPLEX (DP), INTENT (INOUT) :: msg(:,:,:)
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER :: i, msglen, ierr
-        COMPLEX (dbl), ALLOCATABLE :: res(:,:,:)
+        COMPLEX (DP), ALLOCATABLE :: res(:,:,:)
 #if defined(__MPI)
         msglen = 2 * SIZE(msg)
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8937)
@@ -1661,11 +1661,11 @@
 !
       SUBROUTINE mp_sum_c4d(msg,gid)
         IMPLICIT NONE
-        COMPLEX (dbl), INTENT (INOUT) :: msg(:,:,:,:)
+        COMPLEX (DP), INTENT (INOUT) :: msg(:,:,:,:)
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER :: i, msglen, ierr
-        COMPLEX (dbl), ALLOCATABLE :: res(:,:,:,:)
+        COMPLEX (DP), ALLOCATABLE :: res(:,:,:,:)
 #if defined(__MPI)
         msglen = 2*size(msg)
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8938)
@@ -1734,11 +1734,11 @@
 
       SUBROUTINE mp_max_r(msg,gid)
         IMPLICIT NONE
-        REAL (dbl), INTENT (INOUT) :: msg
+        REAL (DP), INTENT (INOUT) :: msg
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER :: msglen, ierr
-        REAL (dbl) :: res
+        REAL (DP) :: res
 #if defined(__MPI)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
@@ -1753,11 +1753,11 @@
 !------------------------------------------------------------------------------!
       SUBROUTINE mp_max_rv(msg,gid)
         IMPLICIT NONE
-        REAL (dbl), INTENT (INOUT) :: msg(:)
+        REAL (DP), INTENT (INOUT) :: msg(:)
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER :: msglen, ierr
-        REAL (dbl), ALLOCATABLE :: res(:)
+        REAL (DP), ALLOCATABLE :: res(:)
 #if defined(__MPI)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
@@ -1817,11 +1817,11 @@
 !------------------------------------------------------------------------------!
       SUBROUTINE mp_min_r(msg,gid)
         IMPLICIT NONE
-        REAL (dbl), INTENT (INOUT) :: msg
+        REAL (DP), INTENT (INOUT) :: msg
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER :: msglen, ierr
-        REAL (dbl) :: res
+        REAL (DP) :: res
 #if defined(__MPI)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
@@ -1836,11 +1836,11 @@
 !------------------------------------------------------------------------------!
       SUBROUTINE mp_min_rv(msg,gid)
         IMPLICIT NONE
-        REAL (dbl), INTENT (INOUT) :: msg(:)
+        REAL (DP), INTENT (INOUT) :: msg(:)
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER :: msglen, ierr
-        REAL (dbl), ALLOCATABLE :: res(:)
+        REAL (DP), ALLOCATABLE :: res(:)
 #if defined(__MPI)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid

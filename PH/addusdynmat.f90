@@ -24,7 +24,7 @@ subroutine addusdynmat (dynwrk)
   use phcom
   implicit none
 
-  complex(kind=DP) :: dynwrk (3 * nat, 3 * nat)
+  complex(DP) :: dynwrk (3 * nat, 3 * nat)
   ! inp/out: the dynamical matrix
 
   integer :: ipol, jpol, np, na, nb, nu_i, nu_j, ih, jh, ijh, dim, &
@@ -37,7 +37,7 @@ subroutine addusdynmat (dynwrk)
   ! composed dimension of the beta
   ! counter on spin
 
-  complex(kind=DP) :: term (3, 3), dyn1 (3 * nat, 3 * nat)
+  complex(DP) :: term (3, 3), dyn1 (3 * nat, 3 * nat)
   ! auxiliary space
   ! auxiliary dynamical matrix
 

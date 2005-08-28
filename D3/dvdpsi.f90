@@ -23,23 +23,23 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
   implicit none
   integer :: nu_i
   ! input: the mode under consideration
-  real (kind=DP) :: xq_ (3)
+  real (DP) :: xq_ (3)
   ! input: coordinates of the q point describing the perturbation
-  complex (kind=DP) :: dvloc (nrxx), psi_ (npwx, nbnd), dvpsi_ (npwx, nbnd)
+  complex (DP) :: dvloc (nrxx), psi_ (npwx, nbnd), dvpsi_ (npwx, nbnd)
   ! input: local part of the KS potential
   ! input: wavefunction
   ! output: variation of the KS potential applied to psi_
-  complex(kind=DP) :: vkb_(npwx,nkb), vkbq_(npwx,nkb)
+  complex(DP) :: vkb_(npwx,nkb), vkbq_(npwx,nkb)
   !
   ! Local variables
   !
   integer :: na, mu, ig, igg, ir, ibnd, nt, ikb, jkb
   ! counters
-  complex (kind=DP), pointer :: u_x (:,:)
+  complex (DP), pointer :: u_x (:,:)
   ! the transformation modes patterns
-  complex (kind=DP), allocatable :: aux (:), ps (:,:), wrk2 (:)
+  complex (DP), allocatable :: aux (:), ps (:,:), wrk2 (:)
   ! work space
-  complex (kind=DP) , external:: ZDOTC
+  complex (DP) , external:: ZDOTC
   logical :: q_eq_zero
   !
   allocate  (aux( nrxx))    

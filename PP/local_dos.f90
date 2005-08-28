@@ -47,9 +47,9 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   !
   integer :: iflag, kpoint, kband
   !
-  real(kind=DP) :: emin, emax
+  real(DP) :: emin, emax
   ! output as determined by iflag
-  real(kind=DP) :: dos (nrxx)
+  real(DP) :: dos (nrxx)
 
   logical :: lsign    ! if true and k=gamma and iflag=0 
                       ! write |psi|^2 * sign(psi)
@@ -60,12 +60,12 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   ! counters for US PPs
   integer :: ir, is, ig, ibnd, ik, irm, isup, isdw, ipol, kkb, is1, is2
   ! counters
-  real(kind=DP) :: w, w1, modulus, maxmod
-  real(kind=DP), allocatable :: rbecp(:,:), segno(:)
-  complex(kind=DP), allocatable :: becp(:,:),  &
+  real(DP) :: w, w1, modulus, maxmod
+  real(DP), allocatable :: rbecp(:,:), segno(:)
+  complex(DP), allocatable :: becp(:,:),  &
                                    becp_nc(:,:,:), be1(:,:), be2(:,:)
-  complex(kind=DP) :: phase 
-  real(kind=DP), external :: w0gauss, w1gauss
+  complex(DP) :: phase 
+  real(DP), external :: w0gauss, w1gauss
   !
   ! input checks
   !

@@ -38,9 +38,9 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
     ! maximum dimension of the reduced basis set :
     !    (the basis set is refreshed when its dimension would exceed nvecx)
     ! k-point considered
-  COMPLEX (KIND=DP), INTENT(INOUT) :: evc(ndmx,npol,nvec)
+  COMPLEX (DP), INTENT(INOUT) :: evc(ndmx,npol,nvec)
     !  evc contains the  refined estimates of the eigenvectors  
-  REAL (KIND=DP), INTENT(IN) :: ethr
+  REAL (DP), INTENT(IN) :: ethr
     ! energy threshold for convergence :
     !   root improvement is stopped, when two consecutive estimates of the root
     !   differ by less than ethr.
@@ -53,7 +53,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   ! ... on OUTPUT
   !
-  REAL(KIND=DP), INTENT(OUT) :: e(nvec)
+  REAL(DP), INTENT(OUT) :: e(nvec)
     ! contains the estimated roots.
   INTEGER, INTENT(OUT) :: dav_iter, notcnv
     ! integer number of iterations performed
@@ -70,26 +70,26 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
     ! counter on the reduced basis vectors
     ! adapted ndim and ndmx
     ! do-loop counters
-  COMPLEX (KIND=DP), ALLOCATABLE :: hc(:,:),  sc(:,:), vc(:,:)
+  COMPLEX (DP), ALLOCATABLE :: hc(:,:),  sc(:,:), vc(:,:)
     ! Hamiltonian on the reduced basis
     ! S matrix on the reduced basis
     ! the eigenvectors of the Hamiltonian
-  COMPLEX(KIND=DP), ALLOCATABLE :: psi(:,:,:), hpsi(:,:,:), spsi(:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: psi(:,:,:), hpsi(:,:,:), spsi(:,:,:)
     ! work space, contains psi
     ! the product of H and psi
     ! the product of S and psi
-  COMPLEX(KIND=DP) :: eau
+  COMPLEX(DP) :: eau
     ! auxiliary complex variable
-  REAL(KIND=DP), ALLOCATABLE :: ew(:)
+  REAL(DP), ALLOCATABLE :: ew(:)
     ! eigenvalues of the reduced hamiltonian
   LOGICAL, ALLOCATABLE  :: conv(:)
     ! true if the root is converged
-  REAL (KIND=DP) :: empty_ethr 
+  REAL (DP) :: empty_ethr 
     ! threshold for empty bands
   !
   ! ... Called routines:
   !
-  REAL(KIND=DP), EXTERNAL :: DDOT
+  REAL(DP), EXTERNAL :: DDOT
   !
   EXTERNAL  h_psi,    s_psi,    g_psi
   EXTERNAL  h_psi_nc, s_psi_nc, g_psi_nc

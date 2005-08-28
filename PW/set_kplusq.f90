@@ -29,7 +29,7 @@ subroutine set_kplusq (xk, wk, xq, nks, npk)
   integer :: npk, nks
   ! input-output: maximum allowed number of k
   ! input-output: starting and ending number of
-  real(kind=DP) :: xk (3, npk), wk (npk), eps, xq (3)
+  real(DP) :: xk (3, npk), wk (npk), eps, xq (3)
   ! input-output: coordinates of k points
   ! input-output: weights of k points
   ! the smallest xq

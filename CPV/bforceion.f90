@@ -34,17 +34,17 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
 
   implicit none
 
-  real(kind=8) evalue
-  complex(kind=8) qmatinv(nx,nx),gqq(nhm,nhm,nas,nsp)
-  real(kind=8) bec0(nhsa,n),becdr(nhsa,n,3)
-  real(kind=8) fion(3,*)
+  real(8) evalue
+  complex(8) qmatinv(nx,nx),gqq(nhm,nhm,nas,nsp)
+  real(8) bec0(nhsa,n),becdr(nhsa,n,3)
+  real(8) fion(3,*)
   integer ipol
   logical tfor
 
 !local variables
 
-  complex(kind=8) ci, temp, temp1,temp2,temp3
-  real(kind=8) gmes
+  complex(8) ci, temp, temp1,temp2,temp3
+  real(8) gmes
   integer iv,jv,ia,is,k,i,j,isa,ilm,jlm,inl,jnl,ism
       
   if(.not. tfor) return

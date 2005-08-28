@@ -16,7 +16,7 @@ subroutine symtns (phi, nsym, s)
 USE kinds
 implicit none
 integer :: nsym, s (3, 3, 48), isym, i, j, k, l
-real(kind=DP) :: phi (3, 3), work (3, 3)
+real(DP) :: phi (3, 3), work (3, 3)
 external DSCAL, DCOPY
 !
 if (nsym.eq.1) return

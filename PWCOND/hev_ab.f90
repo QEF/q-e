@@ -23,13 +23,13 @@ subroutine hev_ab (n, amt, lda, eigen, veigen, el, eh, m)
        info       ! -1 --> all eigenvalues are computed    
 
   integer, allocatable :: iwork(:), ifail(:)
-  real(kind=DP) ::  &
+  real(DP) ::  &
        eigen(n),    & ! eigenvalues
        el, eh,      & ! interval for eigenvalue searching
        abstol         ! accuracy for eigenvalues 
-  real(kind=DP), allocatable  :: rwork(:)
-  complex(kind=DP), allocatable :: work(:)
-  complex(kind=DP) ::  &
+  real(DP), allocatable  :: rwork(:)
+  complex(DP), allocatable :: work(:)
+  complex(DP) ::  &
        amt(lda, n),    &   ! A
        veigen(lda, n)      ! X
 

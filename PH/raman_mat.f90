@@ -36,22 +36,22 @@ subroutine raman_mat
   ! counter on atomic displacement mode
   ! record number
 
-  real(kind=DP) , allocatable :: wrk (:,:,:), matram(:,:,:,:), matw(:,:,:,:,:)
+  real(DP) , allocatable :: wrk (:,:,:), matram(:,:,:,:), matw(:,:,:,:,:)
   ! working array
   ! the Raman-tensor: the first two indexes referes to the electric fields,
   !                   the last two to the atomic displacemts
   ! components of the Raman-tensor: used only for testing purposes
-  real(kind=DP) :: weight, tmp
+  real(DP) :: weight, tmp
   ! weight in the summation over k-points
   ! working space
 
-  complex(kind=DP) , allocatable :: uact(:,:), chif(:,:,:),            &
+  complex(DP) , allocatable :: uact(:,:), chif(:,:,:),            &
                      depsi (:,:,:), auxg(:), evc_sw (:,:), aux1 (:,:), &
                      ps (:,:,:,:), becp1_sw (:,:), alphap_sw (:,:,:)
   ! pattern of atomic displacements
   ! array of wavefunctions
   ! swap space
-  complex(kind=DP) :: tmpc, ZDOTC
+  complex(DP) :: tmpc, ZDOTC
   ! the scalar product function
 
   allocate (wrk       (6,3*nat,2)   )
@@ -309,7 +309,7 @@ subroutine write_raman (matram)
   USE ramanm
   implicit none
 
-  real(kind=DP) :: matram(3,3,3,nat)
+  real(DP) :: matram(3,3,3,nat)
 
   integer :: icr, iat, ipa
   character (len=2) :: ch(3), ch2(6)

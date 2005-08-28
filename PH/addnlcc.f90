@@ -24,7 +24,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   ! input: the number of perturbations
   ! input: the change of density due to perturbatio
 
-  complex(kind=DP) :: drhoscf (nrxx, nspin, npertx)
+  complex(DP) :: drhoscf (nrxx, nspin, npertx)
 
   integer :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
   ! the total number of points
@@ -34,14 +34,14 @@ subroutine addnlcc (imode0, drhoscf, npe)
   ! counter on real space points
   ! counter on modes
 
-  complex(kind=DP) :: ZDOTC, dyn1 (3 * nat, 3 * nat)
+  complex(DP) :: ZDOTC, dyn1 (3 * nat, 3 * nat)
   ! the scalar product function
   ! auxiliary dynamical matrix
-  complex(kind=DP), allocatable :: drhoc (:), dvaux (:,:)
+  complex(DP), allocatable :: drhoc (:), dvaux (:,:)
   ! the change of the core
   ! the change of the potential
 
-  real(kind=DP) :: fac
+  real(DP) :: fac
   ! auxiliary factor
 
 

@@ -20,7 +20,7 @@
 
 ! ...   declare modules
 
-        USE kinds, ONLY: dbl
+        USE kinds, ONLY: DP
         USE io_files, ONLY: pseudounit
         USE pseudo_types, ONLY: pseudo_ncpp, pseudo_upf
         USE pseudo_types, ONLY: nullify_pseudo_upf, deallocate_pseudo_upf
@@ -31,7 +31,7 @@
 
         PRIVATE
 
-        REAL(dbl) :: TOLMESH = 1.d-5
+        REAL(DP) :: TOLMESH = 1.d-5
         INTEGER   :: nspnl = 0  ! number of non local species
 
         TYPE (pseudo_ncpp), ALLOCATABLE, TARGET :: ap(:)
@@ -154,11 +154,11 @@ END SUBROUTINE check_types_order
 
 !=----------------------------------------------------------------------------=!
 
-REAL(dbl) FUNCTION calculate_dx( a, m )
-  REAL(dbl), INTENT(IN) :: a(:)
+REAL(DP) FUNCTION calculate_dx( a, m )
+  REAL(DP), INTENT(IN) :: a(:)
   INTEGER, INTENT(IN) :: m 
   INTEGER :: n
-  REAL(dbl) :: ra, rb 
+  REAL(DP) :: ra, rb 
   n = MIN( SIZE( a ), m )
   ra = a(1)
   rb = a(n)
@@ -404,10 +404,10 @@ END FUNCTION calculate_dx
 
         TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
         INTEGER   :: ir, mesh, lmax, l, n, il, ib, ll
-        REAL(dbl) :: xmin, zmesh, dx, x
+        REAL(DP) :: xmin, zmesh, dx, x
 
 ! ...   declare external function
-        REAL(dbl) :: erf, erfc
+        REAL(DP) :: erf, erfc
         EXTERNAL erf, erfc
 
         IF( ap%mesh == 0 ) THEN
@@ -588,7 +588,7 @@ SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
 !
   CHARACTER(LEN=80) :: input_line
   INTEGER :: i, j, m, strlen, info, nf, mesh
-  REAL(dbl) :: rdum
+  REAL(DP) :: rdum
 
 ! ... read atomic wave functions
 ! ... nchan : indicate number of atomic wave functions ( s p d )
@@ -596,7 +596,7 @@ SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
   ierr = 0
   err_msg = ' error while reading atomic wf '
 
-  ap%rps  = 0.0_dbl
+  ap%rps  = 0.0_DP
   ap%nrps = 0
   ap%oc   = 0.0d0
 
@@ -868,7 +868,7 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
   !     Local variables
   !
   integer :: il, ir, ic
-  real(dbl), allocatable :: fint(:)
+  real(DP), allocatable :: fint(:)
   !
   zv(is)     = ap%zv
   tvanp(is)  = .FALSE.
@@ -1163,7 +1163,7 @@ SUBROUTINE read_atomic_cc( iunit, ap, err_msg, ierr )
 !
   CHARACTER(LEN=80) :: input_line
   INTEGER :: j, mesh
-  REAL(dbl) :: rdum
+  REAL(DP) :: rdum
 
 ! ... read atomic core
 
@@ -1226,8 +1226,8 @@ END SUBROUTINE read_atomic_cc
       integer is, iunps
 !
       integer meshp, ir, ib, il, i, j, jj
-      real(kind=8), allocatable:: fint(:), vnl(:)
-      real(kind=8) rdum, alpha, z, zval, cmeshp, exfact
+      real(8), allocatable:: fint(:), vnl(:)
+      real(8) rdum, alpha, z, zval, cmeshp, exfact
 !
 ! nlcc is unfortunately not read from file
 !
@@ -1428,7 +1428,7 @@ END SUBROUTINE read_atomic_cc
      &       ndum,      &! dummy integer variable
      &       l,         &! counter on angular momentum
      &       ikk         ! the kkbeta for each beta
-      real(kind=8)                                                      &
+      real(8)                                                      &
      &       x,         &! auxiliary variable
      &       etotps,    &! total energy of the pseudoatom
      &       rdum        ! dummy real variable
@@ -1439,7 +1439,7 @@ END SUBROUTINE read_atomic_cc
       character(len=75)                                                 &
      &       titleps    ! the title of the pseudo
 !
-      real(kind=8)  xmin, zmesh, dx,&! mesh parameters
+      real(8)  xmin, zmesh, dx,&! mesh parameters
      &        oc(nchix,nsx),  &! occupancies
      &        rsatom(ndmx)    ! charge density of pseudoatom
       integer mfxcx, mfxcc,   &!
@@ -1674,7 +1674,7 @@ END SUBROUTINE read_atomic_cc
 !   They are used only for the pseudopotential report. They are no 
 !   longer used in the rest of the code.
 !
-      real(kind=DP)                                                     &
+      real(DP)                                                     &
      &       exfact,        &! index of the exchange and correlation used 
      &       etotpseu,      &! total pseudopotential energy
      &       wwnl(nchix),   &! the occupation of the valence states

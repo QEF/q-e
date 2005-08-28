@@ -19,8 +19,8 @@
 
       SUBROUTINE mspharm( lm1x, ngw, gx, gg, ylm)
         INTEGER, INTENT(IN) :: lm1x, ngw
-        REAL(dbl), INTENT(IN) :: gx(:,:), gg(:)
-        REAL(dbl), INTENT(OUT) :: ylm(:,:)
+        REAL(DP), INTENT(IN) :: gx(:,:), gg(:)
+        REAL(DP), INTENT(OUT) :: ylm(:,:)
         INTEGER :: l, m, iy
         iy  = 0
 !        DO l = 0, lm1x
@@ -57,9 +57,9 @@
 
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: NG, M, L
-        REAL(dbl), INTENT(OUT) :: S(:)
-        REAL(dbl), INTENT(IN) :: G(:,:), GSQM(:)
-        REAL(dbl) :: x,y,z,r,r2
+        REAL(DP), INTENT(OUT) :: S(:)
+        REAL(DP), INTENT(IN) :: G(:,:), GSQM(:)
+        REAL(DP) :: x,y,z,r,r2
         INTEGER :: i, mm
 
         MM = M + L + 1
@@ -139,7 +139,7 @@
             CALL errore(' spharm ',' angular momuntum not implementent ',l)
         END SELECT
 
-        s( 1:ng ) = s( 1:ng ) * sqrt ( dble(2*l+1) / fpi)
+        s( 1:ng ) = s( 1:ng ) * sqrt ( DBLE(2*l+1) / fpi)
 
         RETURN
       END SUBROUTINE spharm
@@ -155,8 +155,8 @@
       SUBROUTINE set_pmtm(pm,pmtm)
 
       IMPLICIT NONE
-      REAL(dbl) P_M(3,3),T_M(3,3)
-      REAL(dbl) PM(3,3),PMTM(6,3,3)
+      REAL(DP) P_M(3,3),T_M(3,3)
+      REAL(DP) PM(3,3),PMTM(6,3,3)
       INTEGER A,M1,M2,KK
 
       INTEGER, dimension(6), parameter :: ALPHA = (/ 1,2,3,2,3,3 /)
@@ -209,8 +209,8 @@
       SUBROUTINE set_dmqm(dm,dmqm)
 
       IMPLICIT NONE
-      REAL(dbl) D_M(3,3,5),Q_M(3,3,5)
-      REAL(dbl) DM(6,5),DMQM(6,5,5)
+      REAL(DP) D_M(3,3,5),Q_M(3,3,5)
+      REAL(DP) DM(6,5),DMQM(6,5,5)
       INTEGER A,M1,M2,KK
 
       INTEGER, dimension(6), parameter :: ALPHA = (/ 1,2,3,2,3,3 /)
@@ -295,8 +295,8 @@
       SUBROUTINE set_fmrm(fm,fmrm)
 
       IMPLICIT NONE
-      REAL(dbl) :: F_M(3,3,3,7), R_M(3,3,3,7)
-      REAL(dbl) :: FM(3,3,3,7), FMRM(6,7,7)
+      REAL(DP) :: F_M(3,3,3,7), R_M(3,3,3,7)
+      REAL(DP) :: FM(3,3,3,7), FMRM(6,7,7)
       INTEGER :: M1,M2,KK,s,k
 
       INTEGER, dimension(6), parameter :: ALPHA = (/ 1,2,3,2,3,3 /)

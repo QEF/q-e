@@ -20,7 +20,7 @@ subroutine chargeps(nwff,lli,jji,oci,iswfi)
        iswfi(nwff),& ! input: their spin
        lli(nwff)     ! input: their angular momentum
 
-  real(kind=dp) ::  &
+  real(DP) ::  &
        jji(nwff), & ! input: their total angular momentum
        oci(nwff)    ! input: the occupation
 
@@ -29,7 +29,7 @@ subroutine chargeps(nwff,lli,jji,oci,iswfi)
        n,n1,n2,&   ! counters on beta and mesh function
        ns,nst,ikl  ! counter on wavefunctions
 
-  real(kind=dp) ::    &
+  real(DP) ::    &
        work(nwfsx), & ! auxiliary variable for becp
        int_0_inf_dr,& ! integration function
        gi(ndm)        ! used to compute the integrals

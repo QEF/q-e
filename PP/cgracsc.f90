@@ -33,7 +33,7 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
   ! input: the type of each atom
   ! input: the number of beta for each ty
 
-  complex(kind=DP) :: bec1 (nkb), bec2 (nkb), psi1 (npw), psi2 (npw), &
+  complex(DP) :: bec1 (nkb), bec2 (nkb), psi1 (npw), psi2 (npw), &
        cgracsc
   ! input: the product of beta and psi1
   ! input: the product of beta and psi2
@@ -41,7 +41,7 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
   ! input: the second wavefunction
   ! output: the value of the scalar produ
 
-  real(kind=DP) :: qq (nhm, nhm, ntyp)
+  real(DP) :: qq (nhm, nhm, ntyp)
   ! input: the q values defining S
   logical :: tvanp (ntyp)
   ! input: if true the pseudo is vanderb
@@ -58,7 +58,7 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
   ! counter on solid beta functions
   ! counter on solid beta functions
 
-  complex(kind=DP) :: scal, ZDOTC
+  complex(DP) :: scal, ZDOTC
   !
   scal = ZDOTC (npw, psi1, 1, psi2, 1)
 #ifdef __PARA
@@ -121,7 +121,7 @@ function cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
   ! input: the type of each atom
   ! input: the number of beta for each ty
 
-  complex(kind=DP) :: bec1 (nkb,npol), bec2 (nkb,npol), &
+  complex(DP) :: bec1 (nkb,npol), bec2 (nkb,npol), &
                       psi1 (npw,npol), psi2 (npw,npol), cgracsc_nc
   ! input: the product of beta and psi1
   ! input: the product of beta and psi2
@@ -144,7 +144,7 @@ function cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
   ! counter on solid beta functions
   ! counter on solid beta functions
 
-  complex(kind=DP) :: scal, ZDOTC
+  complex(DP) :: scal, ZDOTC
   !
   scal = ZDOTC (npw*npol, psi1, 1, psi2, 1)
 #ifdef __PARA

@@ -20,11 +20,11 @@ subroutine trnvect (vect, at, bg, iflag)
   integer :: iflag
   ! input: gives the versus of the transformati
 
-  real(kind=DP) :: vect (3), at (3, 3), bg (3, 3)
+  real(DP) :: vect (3), at (3, 3), bg (3, 3)
   ! inp/out: the vector to transform
   ! input: direct lattice vectors
   ! input: reciprocal lattice vectors
-  real(kind=DP) :: work (3)
+  real(DP) :: work (3)
   ! a working array
 
   integer :: ipol, ialpha

@@ -15,10 +15,10 @@ subroutine vxc_t(rho,rhoc,lsd,vxc)
   use kinds, only : DP
   implicit none
   integer:: lsd
-  real(kind=dp):: vxc(2), rho(2),rhoc,arho,zeta
-  real(kind=dp):: vx(2), vc(2), ex, ec
+  real(DP):: vxc(2), rho(2),rhoc,arho,zeta
+  real(DP):: vx(2), vc(2), ex, ec
   !
-  real(kind=dp), parameter :: e2=2.0_dp, eps=1.e-30_dp
+  real(DP), parameter :: e2=2.0_dp, eps=1.e-30_dp
 
   vxc(1)=0.0_dp
   if (lsd.eq.1) vxc(2)=0.0_dp

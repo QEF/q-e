@@ -29,12 +29,12 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
        iok,   & ! output: if 0 the calculation in this routine is ok
        lam      ! input: the angular momentum
 
-  real(kind=dp) :: &
+  real(DP) :: &
        xc(ncn),& ! output: the values of qi
        logderae  ! input: the logarithmic derivative
 
 
-  real(kind=dp) ::   &
+  real(DP) ::   &
        j1(ncmax),& ! the bessel function in three points
        qmax,qmin,& ! the limits of the q search
        logdermax,logdermin,& ! the maximum and minimum logder
@@ -135,7 +135,7 @@ end subroutine find_qi
 function compute_log(j1,rj,dx)
   use kinds, only : DP
   implicit none
-  real(kind=dp) ::   &
+  real(DP) ::   &
        compute_log, &
        deriv_7pts,  &
        dx,          &

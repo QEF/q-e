@@ -33,7 +33,7 @@ subroutine gtable( ipol, ctable)
 !local variables
   integer i,j,k, ig, jg
   logical found
-  real(kind=8) test
+  real(8) test
 
   test=0.
 
@@ -150,7 +150,7 @@ subroutine gtablein( ipol, ctabin)
 !local variables
   integer i,j,k, ig, jg
   logical found
-  real(kind=8) test
+  real(8) test
 
   test=0.
 

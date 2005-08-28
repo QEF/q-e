@@ -32,7 +32,7 @@ subroutine dynmatrix
   ! isq: index of q in the star of a given sym.op.
   ! imq: index of -q in the star of q (0 if not present)
 
-  real(kind=DP) :: sxq (3, 48)
+  real(DP) :: sxq (3, 48)
   ! list of vectors in the star of q
   !
   !     Puts all noncomputed elements to zero

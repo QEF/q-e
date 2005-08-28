@@ -42,8 +42,8 @@ SUBROUTINE read_file
   INTEGER, PARAMETER :: nax =1000 ! an unlikely large number of atoms
   INTEGER :: i, ik, ibnd, ios, ierr
   !
-  REAL(kind=DP), ALLOCATABLE :: et_g(:,:), wg_g(:,:)
-  REAL(kind=DP) :: rdum(1,1)
+  REAL(DP), ALLOCATABLE :: et_g(:,:), wg_g(:,:)
+  REAL(DP) :: rdum(1,1)
   INTEGER :: kunittmp
   !
   ! choose the fortran unit to attach to the file

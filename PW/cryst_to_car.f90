@@ -23,13 +23,13 @@ subroutine cryst_to_cart (nvec, vec, trmat, iflag)
   ! nvec:  number of vectors (atomic positions or k-points)
   !        to be transformed from crystal to cartesian and vice versa
   ! iflag: gives the direction of the transformation
-  real(kind=DP), intent(in) :: trmat (3, 3)
+  real(DP), intent(in) :: trmat (3, 3)
   ! trmat: transformation matrix
   ! if iflag=1:
   !    trmat = at ,  basis of the real-space lattice,       for atoms   or
   !          = bg ,  basis of the reciprocal-space lattice, for k-points
   ! if iflag=-1: the opposite
-  real(kind=DP), intent(inout) :: vec (3, nvec)
+  real(DP), intent(inout) :: vec (3, nvec)
   ! coordinates of the vector (atomic positions or k-points) to be
   ! transformed - overwritten on output
   !
@@ -38,7 +38,7 @@ subroutine cryst_to_cart (nvec, vec, trmat, iflag)
   integer :: nv, kpol
   ! counter on vectors
   ! counter on polarizations
-  real(kind=DP) :: vau (3)
+  real(DP) :: vau (3)
   ! workspace
   !
   !     Compute the cartesian coordinates of each vectors

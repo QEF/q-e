@@ -10,7 +10,7 @@ subroutine vpack (ndim, ndimx, nspin, vin, vout, iflag)
   implicit none
   integer :: ndim, ndimx, nspin, iflag, n
 
-  real(kind=DP) :: vin (ndimx * nspin), vout (ndimx * nspin)
+  real(DP) :: vin (ndimx * nspin), vout (ndimx * nspin)
   if (nspin.eq.1.or.ndim.eq.ndimx) return
   if (iflag.eq.1) then
      do n = 1, ndim

@@ -18,7 +18,7 @@ program efg
 
   implicit none
   character (len=256) :: filerec(ntypx)
-  real(kind=DP) :: Q(ntypx), rc(ntypx,0:lmaxx)
+  real(DP) :: Q(ntypx), rc(ntypx,0:lmaxx)
   integer :: ios
   integer :: nt, il
 
@@ -86,15 +86,15 @@ subroutine do_efg(Q)
   use symme , only: nsym, s, irt
   implicit none
 
-  real(kind=DP) :: Q(ntypx), eta, Cq
-  real(kind=DP) :: fac, trace, arg, e2
+  real(DP) :: Q(ntypx), eta, Cq
+  real(DP) :: fac, trace, arg, e2
   integer :: alpha, beta, ig, na, i
-  complex(kind=DP), allocatable:: aux(:)
-  complex(kind=DP), allocatable:: efgg_el(:,:,:),efgr_el(:,:,:)
-  complex(kind=DP), allocatable:: efg_io(:,:,:)
-  real(kind=DP), allocatable:: zion(:), efg_corr_tens(:,:,:), efg(:,:,:)
-  real(kind=DP):: efg_eig(3), v(3)
-  complex(kind=DP) :: work(3,3), efg_vect(3,3)
+  complex(DP), allocatable:: aux(:)
+  complex(DP), allocatable:: efgg_el(:,:,:),efgr_el(:,:,:)
+  complex(DP), allocatable:: efg_io(:,:,:)
+  real(DP), allocatable:: zion(:), efg_corr_tens(:,:,:), efg(:,:,:)
+  real(DP):: efg_eig(3), v(3)
+  complex(DP) :: work(3,3), efg_vect(3,3)
 
   allocate(aux(nrxx))
   allocate(efgg_el(nrxx,3,3))
@@ -278,10 +278,10 @@ subroutine efg_correction(efg_corr_tens)
   integer :: j, ill, nt, ibnd, il1, il2, ik, iat, nbs1, nbs2, kkpsi
   integer :: lm,l,m,m1,m2,lm1,lm2, l1, l2,m3,m4,n,n1,nrc
   integer :: ijkb0,ijkb,ih,jh,na,np,ikb,jkb
-  real(kind=dp), allocatable :: at_efg(:,:,:), work(:)
-  real(kind=dp) ,intent(out):: efg_corr_tens(3,3,nat)
-  complex(kind=dp) , allocatable :: efg_corr(:,:)
-  real(kind=dp) :: rc
+  real(DP), allocatable :: at_efg(:,:,:), work(:)
+  real(DP) ,intent(out):: efg_corr_tens(3,3,nat)
+  complex(DP) , allocatable :: efg_corr(:,:)
+  real(DP) :: rc
 
   allocate (efg_corr(lmaxx**2,nat))
 

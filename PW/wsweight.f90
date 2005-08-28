@@ -12,7 +12,7 @@ subroutine wsinit(rws,nrwsx,nrws,atw)
   USE kinds, only : DP
   implicit none
   integer i, ii, ir, jr, kr, nrws, nrwsx, nx
-  real(kind=dp) rt, eps, rws(0:3,nrwsx), atw(3,3)
+  real(DP) rt, eps, rws(0:3,nrwsx), atw(3,3)
   parameter (eps=1.0d-6,nx=2)
   ii = 1
   do ir=-nx,nx
@@ -40,7 +40,7 @@ function wsweight(r,rws,nrws)
   USE kinds, only : dp
   implicit none
   integer ir, nreq, nrws
-  real(kind=dp) r(3), rrt, ck, eps, rws(0:3,nrws), wsweight
+  real(DP) r(3), rrt, ck, eps, rws(0:3,nrws), wsweight
   parameter (eps=1.0d-6)
 !
   wsweight = 0.d0
@@ -51,6 +51,6 @@ function wsweight(r,rws,nrws)
      if ( ck .gt. eps ) return
      if ( abs(ck) .lt. eps ) nreq = nreq + 1
   end do
-  wsweight = 1.d0/dble(nreq)
+  wsweight = 1.d0/DBLE(nreq)
   return
 end function wsweight

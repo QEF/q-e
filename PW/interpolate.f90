@@ -22,11 +22,11 @@ subroutine interpolate (v, vs, iflag)
   USE gsmooth,ONLY: nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,nrxxs,ngms, &
        nls, nlsm, doublegrid
   implicit none
-  real(kind=DP) :: v (nrxx), vs (nrxxs)
+  real(DP) :: v (nrxx), vs (nrxxs)
   ! function on thick mesh
   ! function on smooth mesh
 
-  complex(kind=DP), allocatable :: aux (:), auxs (:)
+  complex(DP), allocatable :: aux (:), auxs (:)
   ! work array on thick mesh
   ! work array on smooth mesh
 
@@ -109,14 +109,14 @@ subroutine cinterpolate (v, vs, iflag)
   USE gvect,  ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm
   USE gsmooth,ONLY: nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,nrxxs,ngms, &
        nls, nlsm, doublegrid
-  complex(kind=DP) :: v (nrxx), vs (nrxxs)
+  complex(DP) :: v (nrxx), vs (nrxxs)
   ! function on thick mesh
   ! function on smooth mesh
 
   integer :: iflag
   ! gives the direction of the interpolation
 
-  complex(kind=DP), allocatable :: aux (:), auxs (:)
+  complex(DP), allocatable :: aux (:), auxs (:)
   ! work array on thick mesh
   ! work array on smooth mesh
 

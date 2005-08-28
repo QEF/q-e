@@ -55,7 +55,7 @@ SUBROUTINE set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 ! output: the symmetry sending q -> -q+
 ! output: the number of irr. representa
 
-  REAL(kind=DP) :: xq (3), rtau (3, 48, nat), at (3, 3), bg (3, 3), &
+  REAL(DP) :: xq (3), rtau (3, 48, nat), at (3, 3), bg (3, 3), &
        gi (3, 48), gimq (3)
 ! input: the q point
 ! input: the R associated to each tau
@@ -64,7 +64,7 @@ SUBROUTINE set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 ! output: [S(irotq)*q - q]
 ! output: [S(irotmq)*q + q]
 
-  COMPLEX(kind=DP) :: u (3 * nat, 3 * nat),         &
+  COMPLEX(DP) :: u (3 * nat, 3 * nat),         &
        t (max_irr_dim, max_irr_dim, 48, 3 * nat),   &
        tmq (max_irr_dim, max_irr_dim, 3 * nat)
 ! output: the pattern vectors
@@ -75,7 +75,7 @@ SUBROUTINE set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 !   here the local variables
 !
-  REAL(kind=DP), PARAMETER :: tpi = 2.0d0 * 3.14159265358979d0
+  REAL(DP), PARAMETER :: tpi = 2.0d0 * 3.14159265358979d0
 
   INTEGER :: na, nb, imode, jmode, ipert, jpert, nsymtot, imode0, &
        irr, ipol, jpol, isymq, irot, sna
@@ -94,12 +94,12 @@ SUBROUTINE set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
   ! counter on rotations
   ! the rotated atom
 
-  REAL(kind=DP) :: eigen (3 * nat), modul, arg
+  REAL(DP) :: eigen (3 * nat), modul, arg
 ! the eigenvalues of dynamical ma
 ! the modulus of the mode
 ! the argument of the phase
 
-  COMPLEX(kind=DP) :: wdyn (3, 3, nat, nat), phi (3 * nat, 3 * nat), &
+  COMPLEX(DP) :: wdyn (3, 3, nat, nat), phi (3 * nat, 3 * nat), &
        wrk_u (3, nat), wrk_ru (3, nat), fase
 ! the dynamical matrix
 ! the bi-dimensional dynamical ma

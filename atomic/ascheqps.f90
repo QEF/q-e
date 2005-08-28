@@ -33,7 +33,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
        lls(nbeta),&! for each beta the angular momentum
        ikk(nbeta) ! for each beta the point where it become zero
 
-  real(kind=dp) :: &
+  real(DP) :: &
        e,de,    &     ! output eigenvalue
        dx,      &  ! linear delta x for radial mesh
        jam, &      ! j angular momentum
@@ -51,7 +51,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   !
   integer, parameter :: maxter=100
 
-  real(kind=dp) :: &
+  real(DP) :: &
        sqlhf,      &  ! the term for angular momentum in equation
        det,detup,detlw,detold, &! the determinant
        eup0,elw0,  &  ! limits imposed by node counter
@@ -70,7 +70,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   !
   !  set up constants and allocate variables the 
   !
-  sqlhf=(dble(lam)+0.5_DP)**2
+  sqlhf=(DBLE(lam)+0.5_DP)**2
   !
   !     first try to find the zero with newton method
   !

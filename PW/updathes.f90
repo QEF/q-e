@@ -16,11 +16,11 @@ subroutine updathes (nax3, nat3, oldforce, force, hessm1, dtau)
    implicit none
    integer :: nat3, nax3
 
-   real(kind=DP) :: hessm1(nax3,nat3), dtau(nat3), force(nat3), oldforce(nat3)
+   real(DP) :: hessm1(nax3,nat3), dtau(nat3), force(nat3), oldforce(nat3)
    integer :: i, j
                                                     ! work arrays
-   real(kind=DP) :: fac1, fac2, DDOT
-   real(kind=DP), allocatable ::  hdg (:), u (:)
+   real(DP) :: fac1, fac2, DDOT
+   real(DP), allocatable ::  hdg (:), u (:)
    external DAXPY, DDOT, DGEMV
 
    allocate ( hdg(nat3),u(nat3) )

@@ -20,14 +20,14 @@ subroutine rhod2vkb(dyn0)
   use cgcom
   !
   implicit none
-  real(kind=DP) :: dyn0(3*nat,3*nat)
+  real(DP) :: dyn0(3*nat,3*nat)
   !
   integer :: i, ih, ibnd, na, nt, nu_i,nu_j,mu_i,mu_j, ir, ng, jkb, kpoint, &
        ipol, jpol, ijpol
-  real(kind=DP) :: weight, fac, gtau
-  real(kind=DP), allocatable :: dynloc(:,:), dynkb(:,:)
-  complex(kind=DP), allocatable :: dvkb(:,:)
-  real (kind=DP), allocatable :: becp(:,:), becp1(:,:,:), becp2(:,:,:)
+  real(DP) :: weight, fac, gtau
+  real(DP), allocatable :: dynloc(:,:), dynkb(:,:)
+  complex(DP), allocatable :: dvkb(:,:)
+  real (DP), allocatable :: becp(:,:), becp1(:,:,:), becp2(:,:,:)
   !
   call start_clock('rhod2vkb')
   !

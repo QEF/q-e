@@ -27,7 +27,7 @@ subroutine symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, &
   ! input: the order of the small gro
   ! input: the symmetry q -> -q+G
 
-  real(kind=DP) :: xq (3), rtau (3, 48, nat), at (3, 3), bg (3, 3)
+  real(DP) :: xq (3), rtau (3, 48, nat), at (3, 3), bg (3, 3)
   ! input: the coordinates of q
   ! input: the R associated at each r
   ! input: direct lattice vectors
@@ -36,7 +36,7 @@ subroutine symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, &
   logical :: minus_q
   ! input: if true symmetry sends q->
 
-  complex(kind=DP) :: dyn (3 * nat, 3 * nat), u (3 * nat, 3 * nat)
+  complex(DP) :: dyn (3 * nat, 3 * nat), u (3 * nat, 3 * nat)
   ! inp/out: matrix to symmetrize
   ! input: the patterns
 
@@ -50,7 +50,7 @@ subroutine symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, &
   ! counter on modes
   ! counter on modes
 
-  complex(kind=DP) :: work, wrk (3, 3), phi (3, 3, nat, nat)
+  complex(DP) :: work, wrk (3, 3), phi (3, 3, nat, nat)
   ! auxiliary variable
   ! auxiliary variable
   ! the dynamical matrix

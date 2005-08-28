@@ -18,8 +18,8 @@
 
         PRIVATE
 
-        REAL(dbl)          :: start_seconds
-        REAL(dbl)          :: start_cclock_val
+        REAL(DP)          :: start_seconds
+        REAL(DP)          :: start_cclock_val
 
         PUBLIC :: environment_start
         PUBLIC :: environment_end
@@ -42,7 +42,7 @@
           USE cp_version
 
           LOGICAL    :: texst
-          REAL(dbl)  :: elapsed_seconds, cclock
+          REAL(DP)  :: elapsed_seconds, cclock
           EXTERNAL      elapsed_seconds, cclock
           INTEGER    :: nchar
           CHARACTER(LEN=80) :: uname
@@ -129,9 +129,9 @@
           USE io_global, ONLY: stdout, ionode
           USE control_flags, ONLY: program_name
 
-          REAL(dbl)  :: total_seconds
+          REAL(DP)  :: total_seconds
 
-          REAL(dbl)  :: elapsed_seconds
+          REAL(DP)  :: elapsed_seconds
           EXTERNAL      elapsed_seconds
 
           IF(ionode) THEN

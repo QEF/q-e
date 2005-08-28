@@ -30,7 +30,7 @@ subroutine force_cc (forcecc)
   !
   !   first the dummy variable
   !
-  real(kind=DP) :: forcecc (3, nat)
+  real(DP) :: forcecc (3, nat)
   ! output: the local forces on atoms
 
   integer :: ipol, ig, ir, nt, na
@@ -41,10 +41,10 @@ subroutine force_cc (forcecc)
   ! counter on atoms
 
 
-  real(kind=DP), allocatable :: vxc (:,:), rhocg (:)
+  real(DP), allocatable :: vxc (:,:), rhocg (:)
   ! exchange-correlation potential
   ! radial fourier trasform of rho core
-  real(kind=DP)  ::  arg, fact
+  real(DP)  ::  arg, fact
 
   !
   forcecc(:,:) = 0.d0

@@ -22,15 +22,15 @@ subroutine grad(ik,phi,dir,dphi)
 ! input
   integer, intent(in) :: ik,  & ! kpoint
                          dir    ! direction of the gradient
-  complex(kind=dp), intent(in) :: phi(npwx,nbnd)
+  complex(DP), intent(in) :: phi(npwx,nbnd)
   
 ! output
 
-  complex(kind=dp), intent(out):: dphi(npwx,nbnd)
+  complex(DP), intent(out):: dphi(npwx,nbnd)
 
 ! local variable
   integer :: ig
-  real(kind=DP), allocatable  :: gk (:,:)
+  real(DP), allocatable  :: gk (:,:)
 
   allocate (gk(3,npwx))
 !  dphi=(0.d0,0.d0)

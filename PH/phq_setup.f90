@@ -55,7 +55,7 @@ subroutine phq_setup
   
   implicit none
 
-  real(kind=DP) :: rhotot, rhoup, rhodw, target, small, fac, xmax, emin, &
+  real(DP) :: rhotot, rhoup, rhodw, target, small, fac, xmax, emin, &
        emax, dmxc
   ! total charge
   ! total up charge

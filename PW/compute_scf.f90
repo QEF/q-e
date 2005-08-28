@@ -53,13 +53,13 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! ... local variables definition
   !
   INTEGER                    :: image, ia, istat
-  REAL (KIND=DP)             :: tcpu 
+  REAL (DP)             :: tcpu 
   CHARACTER (LEN=256)        :: tmp_dir_saved
   LOGICAL                    :: file_exists, opnd   
-  REAL(KIND=DP), ALLOCATABLE :: tauold(:,:,:)
+  REAL(DP), ALLOCATABLE :: tauold(:,:,:)
     ! previous positions of atoms (needed for extrapolation)
   !
-  REAL (KIND=DP), EXTERNAL :: get_clock
+  REAL (DP), EXTERNAL :: get_clock
   !
   !
   istep = istep_path + 1

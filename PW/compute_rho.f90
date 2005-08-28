@@ -17,22 +17,22 @@
    implicit none
    integer :: nrxx  ! input: the dimension of the mesh
          
-   real(kind=dp) ::  rho(nrxx,4),segni(nrxx),rhoout(nrxx,2)
+   real(DP) ::  rho(nrxx,4),segni(nrxx),rhoout(nrxx,2)
                  ! input: the four components of the charge 
                  ! output: keep track of the spin direction
                  ! output: the spin up and spin down charge
 
-   complex(kind=dp) :: umat(2,2),rhom(2,2),re(2,2)
+   complex(DP) :: umat(2,2),rhom(2,2),re(2,2)
                     ! the rotation matrix
                     ! the density matrix
                     ! the rotated density matrix
 
-   real(kind=dp) :: theta,phi        ! the two angles of the rotation matrix
-   real(kind=dp) :: ct,st,cp,sp      ! sinus and cosinus of theta or phi
-   real(kind=dp) :: pi,eps,amag      ! pi, a small number and the atan function 
-   real(kind=dp) :: mx,my,mz         ! magnetization
-   real(kind=dp) :: ux,uy,uz         ! magnetization
-   real(kind=dp) :: ux0,uy0,uz0      ! magnetization
+   real(DP) :: theta,phi        ! the two angles of the rotation matrix
+   real(DP) :: ct,st,cp,sp      ! sinus and cosinus of theta or phi
+   real(DP) :: pi,eps,amag      ! pi, a small number and the atan function 
+   real(DP) :: mx,my,mz         ! magnetization
+   real(DP) :: ux,uy,uz         ! magnetization
+   real(DP) :: ux0,uy0,uz0      ! magnetization
 
    logical :: negative
    integer :: ir           ! counter on mesh points

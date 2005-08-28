@@ -78,7 +78,7 @@
 #endif
 
       INTEGER   :: N
-      REAL(dbl) :: A(N,*), C(N,*), B(N,*)
+      REAL(DP) :: A(N,*), C(N,*), B(N,*)
 
       CHARACTER*1, INTENT(IN) :: TRANSA, TRANSB
 
@@ -92,8 +92,8 @@
       INTEGER :: NB, IB_S, NB_SOUR, IB_SOUR, IBUF
       INTEGER :: nproc, mpime, q, r
 
-      REAL(dbl) :: auxa( MATMUL_SIZE )
-      REAL(dbl) :: auxb( MATMUL_SIZE )
+      REAL(DP) :: auxa( MATMUL_SIZE )
+      REAL(DP) :: auxb( MATMUL_SIZE )
   
       SAVE :: auxa, auxb
 
@@ -246,7 +246,7 @@
       IMPLICIT NONE
 
       INTEGER   :: N
-      REAL(dbl) :: A(N,*), C(N,*), B(N,*)
+      REAL(DP) :: A(N,*), C(N,*), B(N,*)
 
       CHARACTER*1, INTENT(IN) :: TRANSA, TRANSB
 
@@ -258,8 +258,8 @@
       INTEGER :: NB, IB_S, NB_SOUR, IB_SOUR, IBUF
       INTEGER :: nproc, mpime, q, r
 
-      REAL(dbl) :: auxa( MATMUL_SIZE )
-      REAL(dbl) :: auxb( MATMUL_SIZE )
+      REAL(DP) :: auxa( MATMUL_SIZE )
+      REAL(DP) :: auxb( MATMUL_SIZE )
   
       SAVE :: auxa, auxb
 
@@ -382,11 +382,11 @@
 #endif
 
       INTEGER      :: N
-      COMPLEX(dbl) :: A(N,*), C(N,*), B(N,*)
+      COMPLEX(DP) :: A(N,*), C(N,*), B(N,*)
 
       CHARACTER*1  :: TRANSA, TRANSB
-      COMPLEX(dbl) :: zero = (0.0d0,0.0d0)
-      COMPLEX(dbl) :: one = (1.0d0,0.0d0)
+      COMPLEX(DP) :: zero = (0.0d0,0.0d0)
+      COMPLEX(DP) :: one = (1.0d0,0.0d0)
 
 #if defined __MPI
 
@@ -397,8 +397,8 @@
       INTEGER :: ME, I, II, J, JJ, IP, SOUR, DEST, INFO, IERR, ioff
       INTEGER :: NB_SOUR,IB_SOUR,IBUF,NB,IB_S,LDX
       INTEGER :: nproc, mpime, r, q
-      COMPLEX(dbl) :: auxa(MATMUL_SIZE)
-      COMPLEX(dbl) :: auxb(MATMUL_SIZE)
+      COMPLEX(DP) :: auxa(MATMUL_SIZE)
+      COMPLEX(DP) :: auxb(MATMUL_SIZE)
 
       save :: auxa, auxb
 
@@ -597,7 +597,7 @@
       INTEGER PSYNC_BC(SHMEM_BCAST_SYNC_SIZE)
       INTEGER PSYNC_B(SHMEM_BARRIER_SYNC_SIZE)
       INTEGER PSYNC_STA(SHMEM_REDUCE_SYNC_SIZE)
-      REAL(dbl)  pWrk(MAX(PTRED_WORK_SIZE,SHMEM_REDUCE_MIN_WRKDATA_SIZE))
+      REAL(DP)  pWrk(MAX(PTRED_WORK_SIZE,SHMEM_REDUCE_MIN_WRKDATA_SIZE))
       DATA PSYNC_BC /SHMEM_BCAST_SYNC_SIZE*SHMEM_SYNC_VALUE/
       DATA PSYNC_B /SHMEM_BARRIER_SYNC_SIZE*SHMEM_SYNC_VALUE/
       DATA PSYNC_STA /SHMEM_REDUCE_SYNC_SIZE*SHMEM_SYNC_VALUE/
@@ -607,21 +607,21 @@
 
       INTEGER :: N, NRL, LDA, LDV
       INTEGER :: NPROC, ME
-      REAL(dbl) :: A(LDA,N), D(N), E(N), V(LDV,N)
+      REAL(DP) :: A(LDA,N), D(N), E(N), V(LDV,N)
 !
-      REAL(dbl) :: DDOT
+      REAL(DP) :: DDOT
 !
-      REAL(dbl) :: g, scale, sigma, kappa, f, h, tmp
-      REAL(dbl) :: u(PTRED_WORK_SIZE)
-      REAL(dbl) :: p(PTRED_WORK_SIZE)
-      REAL(dbl) :: vtmp(PTRED_WORK_SIZE)
+      REAL(DP) :: g, scale, sigma, kappa, f, h, tmp
+      REAL(DP) :: u(PTRED_WORK_SIZE)
+      REAL(DP) :: p(PTRED_WORK_SIZE)
+      REAL(DP) :: vtmp(PTRED_WORK_SIZE)
 
-      REAL(dbl) :: tu, tp, one_over_h
-      REAL(dbl) :: one_over_scale
-      REAL(dbl) :: ul(PTRED_WORK_SIZE)
-      REAL(dbl) :: pl(PTRED_WORK_SIZE)
+      REAL(DP) :: tu, tp, one_over_h
+      REAL(DP) :: one_over_scale
+      REAL(DP) :: ul(PTRED_WORK_SIZE)
+      REAL(DP) :: pl(PTRED_WORK_SIZE)
 #if (defined __SHMEM && defined __ALTIX) || (defined __SHMEM && defined __ORIGIN)
-      REAL(dbl), SAVE :: d_tmp(PTRED_WORK_SIZE)
+      REAL(DP), SAVE :: d_tmp(PTRED_WORK_SIZE)
 #endif
       integer :: l, i, j, k, t, tl, ierr
       integer :: kl, jl, ks, lloc
@@ -1025,8 +1025,8 @@
       IMPLICIT NONE
 
       INTEGER n,nrl,ldz
-      REAL(dbl) d(n),e(n)
-      REAL(dbl) z(ldz,n)
+      REAL(DP) d(n),e(n)
+      REAL(DP) z(ldz,n)
 
       INTEGER FV_WORK_SIZE
       INTEGER CSV_WORK_SIZE
@@ -1034,11 +1034,11 @@
       PARAMETER ( CSV_WORK_SIZE = 2000 )
 
       INTEGER i,iter,mk,k,l,m
-      REAL(dbl) b,dd,f,g,p,r,c,s
-      REAL(dbl) cv(CSV_WORK_SIZE)
-      REAL(dbl) sv(CSV_WORK_SIZE)
-      REAL(dbl) fv1(FV_WORK_SIZE)
-      REAL(dbl) fv2(FV_WORK_SIZE)
+      REAL(DP) b,dd,f,g,p,r,c,s
+      REAL(DP) cv(CSV_WORK_SIZE)
+      REAL(DP) sv(CSV_WORK_SIZE)
+      REAL(DP) fv1(FV_WORK_SIZE)
+      REAL(DP) fv2(FV_WORK_SIZE)
 
 
       save cv,sv,fv1,fv2,b,dd,f,g,p,r,c,s
@@ -1156,13 +1156,13 @@
       USE kinds
       IMPLICIT NONE
       INTEGER n,ldv,nrl
-      REAL(dbl) d(n),v(ldv,n)
+      REAL(DP) d(n),v(ldv,n)
 
       INTEGER i,j,k
-      REAL(dbl) p
+      REAL(DP) p
       save i,j,k
       save p
-!      REAL(dbl) fv(nrl)
+!      REAL(DP) fv(nrl)
 
       do 13 i=1,n-1
         k=i
@@ -1196,8 +1196,8 @@
       FUNCTION pythag(a,b)
       USE kinds
       IMPLICIT NONE
-      REAL(dbl) a,b,pythag
-      REAL(dbl) absa,absb
+      REAL(DP) a,b,pythag
+      REAL(DP) absa,absb
       absa=abs(a)
       absb=abs(b)
       if(absa.gt.absb)then
@@ -1251,11 +1251,11 @@
         IMPLICIT NONE
         
         INTEGER, INTENT(IN) :: iopt, n, nproc, mpime
-        REAL(dbl) :: a(n,n), d(n), ev(n,n)
+        REAL(DP) :: a(n,n), d(n), ev(n,n)
 
-        REAL(dbl), ALLOCATABLE :: aloc(:,:)
-        REAL(dbl), ALLOCATABLE :: evloc(:,:)
-        REAL(dbl), ALLOCATABLE :: e(:)
+        REAL(DP), ALLOCATABLE :: aloc(:,:)
+        REAL(DP), ALLOCATABLE :: evloc(:,:)
+        REAL(DP), ALLOCATABLE :: e(:)
 
         INTEGER :: nrl, i, j, jl, ierr
 
@@ -1328,8 +1328,8 @@
         IMPLICIT NONE
         CHARACTER :: JOBZ
         INTEGER   :: lda, ldz, nrl, n, nproc, mpime
-        REAL(dbl) :: ap( lda, * ), w( * ), z( ldz, * )
-        REAL(dbl) :: sd( n )
+        REAL(DP) :: ap( lda, * ), w( * ), z( ldz, * )
+        REAL(DP) :: sd( n )
         CALL ptredv(ap, lda, w, sd, z, ldz, nrl, n, nproc, mpime)
         CALL ptqliv(w, sd, n, z, ldz, nrl)
         CALL peigsrtv(w, z, ldz, n, nrl)
@@ -1344,8 +1344,8 @@
         IMPLICIT NONE
         CHARACTER ::       JOBZ, UPLO
         INTEGER   ::       IOPT, INFO, LDZ, N
-        REAL(dbl) ::  AP( * ), W( * ), Z( LDZ, * )
-        REAL(dbl), ALLOCATABLE :: WORK(:)
+        REAL(DP) ::  AP( * ), W( * ), Z( LDZ, * )
+        REAL(DP), ALLOCATABLE :: WORK(:)
 
         ALLOCATE( work( 3*n ) )
 
@@ -1394,17 +1394,17 @@
         IMPLICIT NONE
 
         INTEGER, INTENT(IN) :: iflg, n, nproc, mpime
-        REAL(dbl)    :: d(n)
-        COMPLEX(dbl) :: a(n,n),ev(n,n)
+        REAL(DP)    :: d(n)
+        COMPLEX(DP) :: a(n,n),ev(n,n)
 
         INTEGER :: i, j, k, nrl, iopt, ierr
         INTEGER :: info = 0
 
-        COMPLEX(dbl), ALLOCATABLE :: aloc(:)
-        COMPLEX(dbl), ALLOCATABLE :: ap(:,:)
-        COMPLEX(dbl), ALLOCATABLE :: vp(:,:)
-        REAL(dbl), ALLOCATABLE :: rwork(:)
-        COMPLEX(dbl), ALLOCATABLE :: cwork(:)
+        COMPLEX(DP), ALLOCATABLE :: aloc(:)
+        COMPLEX(DP), ALLOCATABLE :: ap(:,:)
+        COMPLEX(DP), ALLOCATABLE :: vp(:,:)
+        REAL(DP), ALLOCATABLE :: rwork(:)
+        COMPLEX(DP), ALLOCATABLE :: cwork(:)
 
 ! ...   end of declarations
 !  ----------------------------------------------
@@ -1551,8 +1551,8 @@
       INTEGER            LDA, N, NRL, NPROC, ME
 !     ..
 !     .. Array Arguments ..
-      REAL(dbl)             D( * ), E( * )
-      COMPLEX(dbl)         AP(LDA, * ), TAU( * )
+      REAL(DP)             D( * ), E( * )
+      COMPLEX(DP)         AP(LDA, * ), TAU( * )
 !     ..
 !
 !  Purpose
@@ -1571,7 +1571,7 @@
 !  NRL     (input) INTEGER
 !          The number of local rows of the matrix AP. NRL >= 0.
 !
-!  AP      (input/output) COMPLEX(dbl) array, dimension (LDA,N)
+!  AP      (input/output) COMPLEX(DP) array, dimension (LDA,N)
 !          On entry, the Hermitian matrix AP.
 !          The rows of the matrix are distributed among processors
 !          with blocking factor 1.
@@ -1602,7 +1602,7 @@
 !          The off-diagonal elements of the tridiagonal matrix T:
 !          E(i) = A(i+1,i) 
 !
-!  TAU     (output) COMPLEX(dbl) array, dimension (N-1)
+!  TAU     (output) COMPLEX(DP) array, dimension (N-1)
 !          The __SCALAR factors of the elementary reflectors (see Further
 !          Details).
 !
@@ -1633,40 +1633,40 @@
 !
 !     .. Parameters ..
 
-      COMPLEX(dbl)  ONE, ZERO, HALF
+      COMPLEX(DP)  ONE, ZERO, HALF
       PARAMETER   ( ONE = ( 1.0D+0, 0.0D+0 ),ZERO = ( 0.0D+0, 0.0D+0 ),  &
      &             HALF = ( 0.5D+0, 0.0D+0 ) )
-      REAL(dbl)      RONE, RZERO
+      REAL(DP)      RONE, RZERO
       PARAMETER   ( RONE = 1.0D+0, RZERO = 0.0D+0 ) 
 
 
       INTEGER QI
       INTEGER IL(N+1)
       INTEGER OW(N+1)  
-      COMPLEX(dbl) CTMP
-      COMPLEX(dbl) CTMPV(N+1)
-      COMPLEX(dbl) TAUL(N+1)
-      COMPLEX(dbl) APKI(N+1)
-      REAL(dbl)     TMP
-      REAL(dbl)     TMPV(N+1)
+      COMPLEX(DP) CTMP
+      COMPLEX(DP) CTMPV(N+1)
+      COMPLEX(DP) TAUL(N+1)
+      COMPLEX(DP) APKI(N+1)
+      REAL(DP)     TMP
+      REAL(DP)     TMPV(N+1)
 
 !     ..
 !     .. Local __SCALARs ..
       INTEGER            J, I, I1, K, I2, NI1, JL
       INTEGER            KL, J1
-      COMPLEX(dbl)         ALPHA, TAUI
+      COMPLEX(DP)         ALPHA, TAUI
       INTEGER            KNT, IERR
-      REAL(dbl)             ALPHI, ALPHR, BETA, RSAFMN, SAFMIN, XNORM
+      REAL(DP)             ALPHI, ALPHR, BETA, RSAFMN, SAFMIN, XNORM
 !     ..
 !     .. External Subroutines ..
       EXTERNAL           ZAXPY
       EXTERNAL           ZDSCAL, ZSCAL                                          
 !     ..
 !     .. External Functions ..
-      COMPLEX(dbl)         ZDOTC
+      COMPLEX(DP)         ZDOTC
       EXTERNAL           ZDOTC
-      REAL(dbl)             DLAMCH, DLAPY3, DZNRM2
-      COMPLEX(dbl)         ZLADIV
+      REAL(DP)             DLAMCH, DLAPY3, DZNRM2
+      COMPLEX(DP)         ZLADIV
       EXTERNAL           DLAMCH, DLAPY3, DZNRM2, ZLADIV
 !     ..
 !     .. Intrinsic Functions ..
@@ -2019,7 +2019,7 @@
       INTEGER            INFO, LDQ, N, LDA, NRL, NPROC, ME
 !     ..
 !     .. Array Arguments ..
-      COMPLEX(dbl)         AP(LDA, * ), Q( LDQ, * ), TAU( * )
+      COMPLEX(DP)         AP(LDA, * ), Q( LDQ, * ), TAU( * )
 !     ..
 !
 !  Purpose
@@ -2040,7 +2040,7 @@
 !  NRL     (input) INTEGER
 !          The number of local rows of the matrix AP. NRL >= 0.
 !
-!  AP      (input) COMPLEX(dbl) array, dimension (LDA,N)
+!  AP      (input) COMPLEX(DP) array, dimension (LDA,N)
 !          The vectors which define the elementary reflectors, as
 !          returned by PZHPTRD.
 !          The rows of the matrix are distributed among processors
@@ -2058,11 +2058,11 @@
 !  LDA     (input) INTEGER
 !          Leading dimension of the local matrix AP, LDA > NRL
 !
-!  TAU     (input) COMPLEX(dbl) array, dimension (N-1)
+!  TAU     (input) COMPLEX(DP) array, dimension (N-1)
 !          TAU(i) must contain the __SCALAR factor of the elementary
 !          reflector H(i), as returned by PZHPTRD.
 !
-!  Q       (output) COMPLEX(dbl) array, dimension (LDQ,N)
+!  Q       (output) COMPLEX(DP) array, dimension (LDQ,N)
 !          The N-by-N unitary matrix Q.
 !          The rows of the matrix are distributed among processors
 !          in the same way of the matrix AP
@@ -2080,15 +2080,15 @@
 !
 !     .. Parameters ..
 
-      COMPLEX(dbl)         ONE, ZERO
+      COMPLEX(DP)         ONE, ZERO
       PARAMETER          ( ONE = (1.0D+0,0.0D+0), ZERO = (0.0D+0,0.0D+0) ) 
 
       INTEGER QI
       INTEGER IL(N+1)
       INTEGER OW(N+1)
-      COMPLEX(dbl) CTMP
-      COMPLEX(dbl) CTMPV(N+1)
-      COMPLEX(dbl) WORK(N+1)
+      COMPLEX(DP) CTMP
+      COMPLEX(DP) CTMPV(N+1)
+      COMPLEX(DP) WORK(N+1)
 
 !     ..
 !     .. Local __SCALARs ..
@@ -2263,8 +2263,8 @@
       INTEGER            LDZ, N, NRL, NPROC, ME
 !     ..
 !     .. Array Arguments ..
-      REAL(dbl)   D( * ), E( * )
-      COMPLEX(dbl)         Z( LDZ, * )
+      REAL(DP)   D( * ), E( * )
+      COMPLEX(DP)         Z( LDZ, * )
 !     ..
 !
 !  Purpose
@@ -2304,7 +2304,7 @@
 !          matrix.
 !          On exit, E has been destroyed.
 !
-!  Z       (input/output) COMPLEX(dbl) array, dimension (LDZ, N)
+!  Z       (input/output) COMPLEX(DP) array, dimension (LDZ, N)
 !          On entry, if  COMPZ = 'V', then Z contains the unitary
 !          matrix used in the reduction to tridiagonal form.
 !          On exit if COMPZ = 'V', Z contains the
@@ -2336,10 +2336,10 @@
 !  =====================================================================
 !
 !     .. Parameters ..
-      REAL(dbl)   ZERO, ONE, TWO, THREE, CTEMP, STEMP
+      REAL(DP)   ZERO, ONE, TWO, THREE, CTEMP, STEMP
       PARAMETER          ( ZERO = 0.0D0, ONE = 1.0D0, TWO = 2.0D0, &
      &                   THREE = 3.0D0 )
-      COMPLEX(dbl)         CZERO, CONE,ZTEMP
+      COMPLEX(DP)         CZERO, CONE,ZTEMP
       PARAMETER          ( CZERO = ( 0.0D0, 0.0D0 ), CONE = ( 1.0D0, 0.0D0 ) )
       INTEGER            MAXIT
       PARAMETER          ( MAXIT = 30 )
@@ -2348,18 +2348,18 @@
       INTEGER QI, KL, INFO
       INTEGER IL(N+1)
       INTEGER OW(N+1)
-      REAL(dbl)  WORK(2*N)
+      REAL(DP)  WORK(2*N)
 
 !     .. Local __SCALARs ..
       INTEGER            I, ICOMPZ, II, ISCALE, J, JTOT, K, L, L1, LEND, &
      &                   LENDM1, LENDP1, LENDSV, LM1, LSV, M, MM, MM1,   &
      &                   NM1, NMAXIT
-      REAL(dbl)   ANORM, B, C, EPS, EPS2, F, G, P, R, RT1, RT2,   &
+      REAL(DP)   ANORM, B, C, EPS, EPS2, F, G, P, R, RT1, RT2,   &
      &                   S, SAFMAX, SAFMIN, SSFMAX, SSFMIN, TST
 !     ..
 !     .. External Functions ..
       LOGICAL            LSAME
-      REAL(dbl)   DLAMCH, DLANST, DLAPY2
+      REAL(DP)   DLAMCH, DLANST, DLAPY2
       EXTERNAL           LSAME, DLAMCH, DLANST, DLAPY2
 !     ..
 !     .. External Subroutines ..
@@ -2796,10 +2796,10 @@
 
         CHARACTER ::       JOBZ, UPLO
         INTEGER   ::       IOPT, INFO, LDZ, N
-        COMPLEX(dbl) ::  AP( * ), Z( LDZ, * )
-        REAL(dbl) ::  W( * )
-        REAL(dbl), ALLOCATABLE :: RWORK(:)
-        COMPLEX(dbl), ALLOCATABLE :: ZWORK(:)
+        COMPLEX(DP) ::  AP( * ), Z( LDZ, * )
+        REAL(DP) ::  W( * )
+        REAL(DP), ALLOCATABLE :: RWORK(:)
+        COMPLEX(DP), ALLOCATABLE :: ZWORK(:)
 
 #if defined __AIX
 
@@ -2831,10 +2831,10 @@
         IMPLICIT NONE
         CHARACTER :: JOBZ
         INTEGER   :: lda, ldz, nrl, n, nproc, mpime
-        COMPLEX(dbl) :: ap( lda, * ), z( ldz, * )
-        REAL(dbl) :: w( * )
-        REAL(dbl) :: rwork( n )
-        COMPLEX(dbl) :: cwork( n )
+        COMPLEX(DP) :: ap( lda, * ), z( ldz, * )
+        REAL(DP) :: w( * )
+        REAL(DP) :: rwork( n )
+        COMPLEX(DP) :: cwork( n )
 
         CALL pzhptrd( n, nrl, ap, lda, w, rwork, cwork, nproc, mpime)
         IF( jobz == 'V' .OR. jobz == 'v' ) THEN

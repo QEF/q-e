@@ -24,7 +24,7 @@ subroutine lderivps
        nbf,   &      ! number of b functions
        n,ie          ! generic counters
 
-  real(kind=dp) ::  &
+  real(DP) ::  &
        ze2,     &    ! the nuclear charge in Ry units
        jam,     &    ! the total angular momentum
        e,       &    ! the eigenvalue
@@ -34,13 +34,13 @@ subroutine lderivps
        xl1, x4l6, ddx12, &
        x6l12, x8l20
 
-  real(kind=dp),allocatable :: &
+  real(DP),allocatable :: &
        dlchis(:,:), &  ! the logarithmic derivatives
        vaux(:),     &  ! auxiliary: the potential 
        aux(:),      &  ! the square of the wavefunction
        al(:)           ! the known part of the differential equation
 
-  real(kind=dp), external ::           &
+  real(DP), external ::           &
        compute_log, &
        int_0_inf_dr
 

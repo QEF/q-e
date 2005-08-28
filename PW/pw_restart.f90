@@ -860,7 +860,7 @@ MODULE pw_restart
       !
       INTEGER                     :: i
       CHARACTER(LEN=iotk_attlenx) :: attr
-      REAL (KIND=DP)              :: tmp(3)
+      REAL (DP)              :: tmp(3)
       !
       !
       IF ( ionode ) THEN
@@ -918,7 +918,7 @@ MODULE pw_restart
       CHARACTER(LEN=*), INTENT(IN) :: dirname
       !
       CHARACTER(LEN=iotk_attlenx) :: attr
-      REAL(KIND=DP)               :: ecutrho
+      REAL(DP)               :: ecutrho
       !
       !
       IF ( ionode ) THEN
@@ -1634,7 +1634,7 @@ MODULE pw_restart
       !
       INTEGER,            INTENT(IN) :: iuni
       INTEGER,            INTENT(IN) :: ik, nk, kunit, ispin, nspin
-      COMPLEX(KIND=DP),   INTENT(IN) :: wf0(:,:)
+      COMPLEX(DP),   INTENT(IN) :: wf0(:,:)
       INTEGER,            INTENT(IN) :: ngw
       INTEGER,            INTENT(IN) :: nbnd
       INTEGER,            INTENT(IN) :: ngwl
@@ -1643,12 +1643,12 @@ MODULE pw_restart
       !
       !  scale factor, usually  1.0 for pw and 1/SQRT( omega ) CP
       !
-      REAL(KIND=DP),      INTENT(IN) :: scalef    
+      REAL(DP),      INTENT(IN) :: scalef    
       !
       INTEGER                       :: i, j, ierr
       INTEGER                       :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx
       INTEGER                       :: npool, ipmask(nproc), ipsour
-      COMPLEX(KIND=DP), ALLOCATABLE :: wtmp(:)
+      COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       INTEGER                       :: ierr_iotk
       CHARACTER(LEN=iotk_attlenx)   :: attr
       !
@@ -1820,7 +1820,7 @@ MODULE pw_restart
       !
       INTEGER,            INTENT(IN)    :: iuni
       INTEGER,            INTENT(INOUT) :: ik, nk, kunit, ispin, nspin
-      COMPLEX(KIND=DP),   INTENT(OUT)   :: wf(:,:)
+      COMPLEX(DP),   INTENT(OUT)   :: wf(:,:)
       INTEGER,            INTENT(INOUT) :: ngw
       INTEGER,            INTENT(INOUT) :: nbnd
       INTEGER,            INTENT(IN)    :: ngwl
@@ -1831,7 +1831,7 @@ MODULE pw_restart
       INTEGER                       :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx
       INTEGER                       :: igwx_
       INTEGER                       :: npool, ipmask(nproc), ipsour
-      COMPLEX(KIND=DP), ALLOCATABLE :: wtmp(:)
+      COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       INTEGER                       :: ierr_iotk
       CHARACTER(LEN=iotk_attlenx)   :: attr
       !

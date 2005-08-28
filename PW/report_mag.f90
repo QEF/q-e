@@ -22,7 +22,7 @@
       USE scf,        ONLY : rho
       use noncollin_module
       implicit none
-      real(kind=dp)  ::    theta,phi,norm,norm1
+      real(DP)  ::    theta,phi,norm,norm1
       integer     :: i,ipol,iat
 !
 ! get_local integrates on the previously determined points

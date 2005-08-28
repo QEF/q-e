@@ -29,18 +29,18 @@ subroutine set_rhoc
   !
   implicit none
   !
-  real(kind=DP), parameter :: eps = 1.d-10
+  real(DP), parameter :: eps = 1.d-10
 
-  complex(kind=DP) , allocatable :: aux (:)
+  complex(DP) , allocatable :: aux (:)
   ! used for the fft of the core charge
 
-  real(kind=DP) , allocatable ::  rhocg(:)
+  real(DP) , allocatable ::  rhocg(:)
   ! the radial fourier trasform
-  real(kind=DP) ::  rhoima, rhoneg, rhorea
+  real(DP) ::  rhoima, rhoneg, rhorea
   ! used to check the core charge
-  real(kind=DP) ::  vtxcc
+  real(DP) ::  vtxcc
   ! dummy xc energy term
-  real(kind=DP) , allocatable ::  dum(:,:)
+  real(DP) , allocatable ::  dum(:,:)
   ! dummy array containing rho=0
 
   integer :: ir, nt, ng

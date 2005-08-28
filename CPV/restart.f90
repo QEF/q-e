@@ -62,7 +62,7 @@
   MODULE restart_file
 !=----------------------------------------------------------------------------=!
 
-  USE kinds, ONLY: dbl
+  USE kinds, ONLY: DP
 
   IMPLICIT NONE
 
@@ -70,7 +70,7 @@
 
   SAVE
 
-  REAL(dbl) :: cclock
+  REAL(DP) :: cclock
   EXTERNAL  :: cclock
 
   PUBLIC :: writefile, readfile
@@ -107,31 +107,31 @@
 !
       implicit none
       integer, INTENT(IN) :: ndw, nfi
-      real(kind=8), INTENT(IN) :: h(3,3), hold(3,3)
-      complex(kind=8), INTENT(IN) :: c0(:,:), cm(:,:)
-      real(kind=8), INTENT(IN) :: tausm(:,:), taus(:,:), fion(:,:)
-      real(kind=8), INTENT(IN) :: vels(:,:), velsm(:,:)
-      real(kind=8), INTENT(IN) :: acc(:), lambda(:,:), lambdam(:,:)
-      real(kind=8), INTENT(IN) :: xnhe0, xnhem, vnhe, ekincm
-      real(kind=8), INTENT(IN) :: xnhp0(:), xnhpm(:), vnhp(:)
+      real(8), INTENT(IN) :: h(3,3), hold(3,3)
+      complex(8), INTENT(IN) :: c0(:,:), cm(:,:)
+      real(8), INTENT(IN) :: tausm(:,:), taus(:,:), fion(:,:)
+      real(8), INTENT(IN) :: vels(:,:), velsm(:,:)
+      real(8), INTENT(IN) :: acc(:), lambda(:,:), lambdam(:,:)
+      real(8), INTENT(IN) :: xnhe0, xnhem, vnhe, ekincm
+      real(8), INTENT(IN) :: xnhp0(:), xnhpm(:), vnhp(:)
       integer,      INTENT(in) :: nhpcl
-      real(kind=8), INTENT(IN) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-      real(kind=8), INTENT(in) :: ecut, ecutw, delt
-      real(kind=8), INTENT(in) :: pmass(:)
-      real(kind=8), INTENT(in) :: celldm(:)
-      real(kind=8), INTENT(in) :: tps
-      real(kind=8), INTENT(in) :: rho(:,:)
+      real(8), INTENT(IN) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
+      real(8), INTENT(in) :: ecut, ecutw, delt
+      real(8), INTENT(in) :: pmass(:)
+      real(8), INTENT(in) :: celldm(:)
+      real(8), INTENT(in) :: tps
+      real(8), INTENT(in) :: rho(:,:)
       integer, INTENT(in) :: ibrav
-      real(kind=8), INTENT(in) :: occ_f(:)
-      real(kind=8), INTENT(in) :: mat_z(:,:,:)
+      real(8), INTENT(in) :: occ_f(:)
+      real(8), INTENT(in) :: mat_z(:,:,:)
 
-      real(kind=8) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
+      real(8) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       integer :: nk = 1, ispin, i, ib
-      real(kind=8) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
-      real(kind=8) :: cdmi_ (3) = 0.0d0
-      real(kind=8), ALLOCATABLE :: taui_ (:,:) 
-      real(kind=8), ALLOCATABLE :: occ_ ( :, :, : )
-      real(kind=8) :: htm1(3,3), omega
+      real(8) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
+      real(8) :: cdmi_ (3) = 0.0d0
+      real(8), ALLOCATABLE :: taui_ (:,:) 
+      real(8), ALLOCATABLE :: occ_ ( :, :, : )
+      real(8) :: htm1(3,3), omega
 
 !
 ! Do not write restart file if the unit number 
@@ -206,30 +206,30 @@
 !
       implicit none
       integer :: ndr, nfi, flag
-      real(kind=8) :: h(3,3), hold(3,3)
-      complex(kind=8) :: c0(:,:), cm(:,:)
-      real(kind=8) :: tausm(:,:),taus(:,:), fion(:,:)
-      real(kind=8) :: vels(:,:), velsm(:,:)
-      real(kind=8) :: acc(:),lambda(:,:), lambdam(:,:)
-      real(kind=8) :: xnhe0,xnhem,vnhe
-      real(kind=8) :: xnhp0(:), xnhpm(:), vnhp(:)
+      real(8) :: h(3,3), hold(3,3)
+      complex(8) :: c0(:,:), cm(:,:)
+      real(8) :: tausm(:,:),taus(:,:), fion(:,:)
+      real(8) :: vels(:,:), velsm(:,:)
+      real(8) :: acc(:),lambda(:,:), lambdam(:,:)
+      real(8) :: xnhe0,xnhem,vnhe
+      real(8) :: xnhp0(:), xnhpm(:), vnhp(:)
       integer, INTENT(inout) :: nhpcl
-      real(kind=8) :: ekincm
-      real(kind=8) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-      real(kind=8), INTENT(in) :: ecut, ecutw, delt
-      real(kind=8), INTENT(in) :: pmass(:)
-      real(kind=8), INTENT(in) :: celldm(6)
+      real(8) :: ekincm
+      real(8) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
+      real(8), INTENT(in) :: ecut, ecutw, delt
+      real(8), INTENT(in) :: pmass(:)
+      real(8), INTENT(in) :: celldm(6)
       integer, INTENT(in) :: ibrav
-      real(kind=8), INTENT(OUT) :: tps
-      real(kind=8), INTENT(INOUT) :: mat_z(:,:,:), occ_f(:)
+      real(8), INTENT(OUT) :: tps
+      real(8), INTENT(INOUT) :: mat_z(:,:,:), occ_f(:)
       !
-      real(kind=8) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
+      real(8) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       integer :: nk = 1, ispin, i, ib
-      real(kind=8) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
-      real(kind=8) :: cdmi_ (3) = 0.0d0
-      real(kind=8), ALLOCATABLE :: taui_ (:,:)
-      real(kind=8), ALLOCATABLE :: occ_ ( :, :, : )
-      real(kind=8) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
+      real(8) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
+      real(8) :: cdmi_ (3) = 0.0d0
+      real(8), ALLOCATABLE :: taui_ (:,:)
+      real(8), ALLOCATABLE :: occ_ ( :, :, : )
+      real(8) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
 
 
       IF( flag == -1 ) THEN
@@ -323,23 +323,23 @@
         IMPLICIT NONE 
  
         INTEGER, INTENT(IN) :: nfi
-        COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:), cm(:,:,:,:) 
-        REAL(dbl), INTENT(IN) :: occ(:,:,:)
+        COMPLEX(DP), INTENT(IN) :: c0(:,:,:,:), cm(:,:,:,:) 
+        REAL(DP), INTENT(IN) :: occ(:,:,:)
         TYPE (boxdimensions), INTENT(IN) :: ht_m, ht_0
         TYPE (atoms_type), INTENT(IN) :: atoms_0, atoms_m
-        REAL(dbl), INTENT(IN) :: rho(:,:,:,:)
+        REAL(DP), INTENT(IN) :: rho(:,:,:,:)
         TYPE (charge_descriptor), INTENT(IN) :: desc
         TYPE (wave_descriptor) :: cdesc
-        REAL(dbl), INTENT(INOUT) :: vpot(:,:,:,:)
+        REAL(DP), INTENT(INOUT) :: vpot(:,:,:,:)
                                                                         
-        REAL(dbl), INTENT(IN) :: taui(:,:)
-        REAL(dbl), INTENT(IN) :: acc(:), cdmi(:) 
-        REAL(dbl), INTENT(IN) :: trutime
+        REAL(DP), INTENT(IN) :: taui(:,:)
+        REAL(DP), INTENT(IN) :: acc(:), cdmi(:) 
+        REAL(DP), INTENT(IN) :: trutime
 
-        REAL(dbl), ALLOCATABLE :: lambda(:,:)
-        REAL(dbl), ALLOCATABLE :: rhow(:,:)
-        REAL(dbl) S0, S1
-        REAL(dbl) :: ekincm
+        REAL(DP), ALLOCATABLE :: lambda(:,:)
+        REAL(DP), ALLOCATABLE :: rhow(:,:)
+        REAL(DP) S0, S1
+        REAL(DP) :: ekincm
         INTEGER   :: i, j, k, iss, ir
              
         s0 = cclock()
@@ -433,28 +433,28 @@
         IMPLICIT NONE 
  
         INTEGER, INTENT(OUT) :: nfi
-        COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:) 
-        REAL(dbl), INTENT(INOUT) :: occ(:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:) 
+        REAL(DP), INTENT(INOUT) :: occ(:,:,:)
         TYPE (boxdimensions), INTENT(INOUT) :: ht_m, ht_0
         TYPE (atoms_type), INTENT(INOUT) :: atoms_0, atoms_m
-        REAL(dbl), INTENT(INOUT) :: rho(:,:,:,:)
+        REAL(DP), INTENT(INOUT) :: rho(:,:,:,:)
         TYPE (charge_descriptor), INTENT(IN) :: desc
         TYPE (wave_descriptor) :: cdesc
-        REAL(dbl), INTENT(INOUT) :: vpot(:,:,:,:)
+        REAL(DP), INTENT(INOUT) :: vpot(:,:,:,:)
                                                                         
-        REAL(dbl), INTENT(OUT) :: taui(:,:)
-        REAL(dbl), INTENT(OUT) :: acc(:), cdmi(:) 
-        REAL(dbl), INTENT(OUT) :: trutime
+        REAL(DP), INTENT(OUT) :: taui(:,:)
+        REAL(DP), INTENT(OUT) :: acc(:), cdmi(:) 
+        REAL(DP), INTENT(OUT) :: trutime
 
 
-        REAL(dbl) :: s0, s1
-        REAL(dbl), ALLOCATABLE :: lambda_ ( : , : )
-        REAL(dbl) :: ekincm
-        REAL(dbl) :: hp0_ (3,3)
-        REAL(dbl) :: hm1_ (3,3)
-        REAL(dbl) :: gvel_ (3,3)
-        REAL(dbl) :: hvel_ (3,3)
-        REAL(dbl) :: b1(3), b2(3), b3(3)
+        REAL(DP) :: s0, s1
+        REAL(DP), ALLOCATABLE :: lambda_ ( : , : )
+        REAL(DP) :: ekincm
+        REAL(DP) :: hp0_ (3,3)
+        REAL(DP) :: hm1_ (3,3)
+        REAL(DP) :: gvel_ (3,3)
+        REAL(DP) :: hvel_ (3,3)
+        REAL(DP) :: b1(3), b2(3), b3(3)
         LOGICAL :: tens = .FALSE.
 
         CALL mp_barrier()

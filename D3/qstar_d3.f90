@@ -28,10 +28,10 @@ subroutine qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   ! index of -q in the star (0 if nont present)
   ! unit number
 
-  complex (kind = dp) :: d3dyn (3 * nat, 3 * nat, 3 * nat)
+  complex (DP) :: d3dyn (3 * nat, 3 * nat, 3 * nat)
   ! the dynmatrix derivative
 
-  real (kind = dp) :: at (3, 3), bg (3, 3), rtau (3, 48, nat), sxq (3, 48)
+  real (DP) :: at (3, 3), bg (3, 3), rtau (3, 48, nat), sxq (3, 48)
   ! direct lattice vectors
   ! reciprocal lattice vectors
   ! position of rotated atoms for each sym.op.
@@ -44,7 +44,7 @@ subroutine qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
   integer :: iq, nsq, isym, na, nb, nc, icar, jcar, kcar, i, j, k
   ! counters
 
-  complex (kind = dp), allocatable :: phi (:,:,:,:,:,:), phi2 (:,:,:,:,:,:)
+  complex (DP), allocatable :: phi (:,:,:,:,:,:), phi2 (:,:,:,:,:,:)
   ! work space
 
   allocate  (phi (3,3,3,nat,nat,nat))    

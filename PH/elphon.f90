@@ -25,7 +25,7 @@ SUBROUTINE elphon()
   ! counter on the representations
   ! counter on the modes
   ! the change of Vscf due to perturbations
-  COMPLEX(kind=DP), POINTER :: dvscfin(:,:,:), dvscfins (:,:,:)
+  COMPLEX(DP), POINTER :: dvscfin(:,:,:), dvscfins (:,:,:)
 
   CALL start_clock ('elphon')
 
@@ -78,16 +78,16 @@ SUBROUTINE readmat (iudyn, ibrav, celldm, nat, ntyp, ityp, omega, &
   IMPLICIT NONE
   ! Input
   INTEGER :: iudyn, ibrav, nat, ntyp, ityp (nat)
-  REAL(kind=DP) :: celldm (6), amass (ntyp), tau (3, nat), q (3), &
+  REAL(DP) :: celldm (6), amass (ntyp), tau (3, nat), q (3), &
        omega
   ! output
-  REAL(kind=DP) :: w2 (3 * nat)
-  COMPLEX(kind=DP) :: dyn (3 * nat, 3 * nat)
+  REAL(DP) :: w2 (3 * nat)
+  COMPLEX(DP) :: dyn (3 * nat, 3 * nat)
   ! local (control variables)
   INTEGER :: ntyp_, nat_, ibrav_, ityp_
-  REAL(kind=DP) :: celldm_ (6), amass_, tau_ (3), q_ (3)
+  REAL(DP) :: celldm_ (6), amass_, tau_ (3), q_ (3)
   ! local
-  REAL(kind=DP) :: dynr (2, 3, nat, 3, nat)
+  REAL(DP) :: dynr (2, 3, nat, 3, nat)
   CHARACTER(len=80) :: line
   CHARACTER(len=3)  :: atm
   INTEGER :: nt, na, nb, naa, nbb, nu, mu, i, j
@@ -176,12 +176,12 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
   IMPLICIT NONE
   !
   INTEGER :: npe, imode0
-  COMPLEX(kind=DP) :: dvscfins (nrxxs, nspin, npe)
+  COMPLEX(DP) :: dvscfins (nrxxs, nspin, npe)
   ! LOCAL variables
   INTEGER :: ik, ikk, ikq, ipert, mode, nrec, ibnd, jbnd, ir, ig, &
        ios
-  COMPLEX(kind=DP) , ALLOCATABLE :: aux1 (:), elphmat (:,:,:)
-  COMPLEX(kind=DP) :: ZDOTC
+  COMPLEX(DP) , ALLOCATABLE :: aux1 (:), elphmat (:,:,:)
+  COMPLEX(DP) :: ZDOTC
   !
   ALLOCATE (aux1    ( nrxxs))    
   ALLOCATE (elphmat ( nbnd , nbnd , npe))    
@@ -305,16 +305,16 @@ SUBROUTINE elphsum
   !
   IMPLICIT NONE
   ! eps = 20 cm^-1, in Ry
-  REAL(kind=DP) :: eps
+  REAL(DP) :: eps
   PARAMETER (eps = 20.d0 / 13.6058d0 / 8065.5d0)
   !
   INTEGER :: ik, ikk, ikq, isig, ibnd, jbnd, ipert, jpert, nu, mu, &
        vu, ngauss1, nsig, iuelph, ios
-  REAL(kind=DP) :: weight, w0g1, w0g2, w0gauss, degauss1, dosef, dos_ef, &
+  REAL(DP) :: weight, w0g1, w0g2, w0gauss, degauss1, dosef, dos_ef, &
        ef1, phase_space, lambda, gamma
   EXTERNAL dos_ef
   !
-  COMPLEX(kind=DP) :: el_ph_sum (3*nat,3*nat)
+  COMPLEX(DP) :: el_ph_sum (3*nat,3*nat)
 
   !
   WRITE (6, '(5x,"electron-phonon interaction  ..."/)')
@@ -468,12 +468,12 @@ FUNCTION dos_ef (ngauss, degauss, ef, et, wk, nks, nbnd)
   !
   USE kinds, ONLY : DP
   IMPLICIT NONE
-  REAL(kind=DP) :: dos_ef
+  REAL(DP) :: dos_ef
   INTEGER :: ngauss, nbnd, nks
-  REAL(kind=DP) :: et (nbnd, nks), wk (nks), ef, degauss
+  REAL(DP) :: et (nbnd, nks), wk (nks), ef, degauss
   !
   INTEGER :: ik, ibnd
-  REAL(kind=DP) :: w0gauss
+  REAL(DP) :: w0gauss
   !
   !     Compute DOS at E_F (states per Ry per unit cell)
   !

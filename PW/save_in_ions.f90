@@ -23,7 +23,7 @@ subroutine save_in_ions
   logical :: exst
 
 
-  real(kind=DP) :: dr2
+  real(DP) :: dr2
   if (reduce_io.or..not.lscf) return
   !
   ! open recover file

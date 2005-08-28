@@ -29,7 +29,7 @@ SUBROUTINE cft_3( f, n1, n2, n3, nx1, nx2, nx3, igrid, sign )
   IMPLICIT NONE
   !
   INTEGER          :: n1, n2, n3, nx1, nx2, nx3, sign, igrid
-  COMPLEX(KIND=DP) :: f( nx1*nx2*nx3 )
+  COMPLEX(DP) :: f( nx1*nx2*nx3 )
   !
   !
   !   sign = +-1 : complete 3d fft (for rho and for the potential)
@@ -69,10 +69,10 @@ SUBROUTINE cft_3( f, n1, n2, n3, nx1, nx2, nx3, igrid, sign )
   IMPLICIT NONE
   !
   INTEGER            :: n1, n2, n3, nx1, nx2, nx3, sign, igrid
-  COMPLEX(KIND=DP)   :: f( nx1 * nx2 * nx3 )
+  COMPLEX(DP)   :: f( nx1 * nx2 * nx3 )
   INTEGER            :: isign
   INTEGER, PARAMETER :: naux = 60000
-  REAL(KIND=DP)      :: aux(naux), scale
+  REAL(DP)      :: aux(naux), scale
   !
   !
   IF ( sign /= - 1 .AND. sign /= 1 ) &
@@ -116,15 +116,15 @@ END SUBROUTINE cft_3
       IMPLICIT NONE
 !
       INTEGER                :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
-      COMPLEX(kind=DP)       :: f(nm1, nm2, nm3)
+      COMPLEX(DP)       :: f(nm1, nm2, nm3)
 !
 ! Local parameters
 !
       INTEGER                    :: isys(0:1)
       INTEGER, PARAMETER         :: ngrid = 2, nmax=1000, nwork=1000
       LOGICAL, SAVE              :: first(ngrid)
-      REAL(kind=DP), SAVE        :: aux(nmax, ngrid)
-      REAL(kind=DP)              :: dummy, scale, work(nwork)
+      REAL(DP), SAVE        :: aux(nmax, ngrid)
+      REAL(DP)              :: dummy, scale, work(nwork)
       DATA                          first / ngrid * .TRUE. /
 !
 ! Statements
@@ -160,11 +160,11 @@ SUBROUTINE cft_3( f, n1, n2, n3, nm1, nm2, nm3, igrid, sign )
   IMPLICIT NONE
   !
   INTEGER                :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
-  COMPLEX(KIND=DP)       :: f( nm1, nm2, nm3 )
+  COMPLEX(DP)       :: f( nm1, nm2, nm3 )
   INTEGER, PARAMETER     :: ngrid = 2, nmax = 1000
   LOGICAL, SAVE          :: first( ngrid )
-  COMPLEX(KIND=DP), SAVE :: aux( nmax, ngrid )
-  REAL(KIND=DP)          :: fac
+  COMPLEX(DP), SAVE :: aux( nmax, ngrid )
+  REAL(DP)          :: fac
   !
   DATA first / ngrid * .TRUE. /
   !
@@ -210,7 +210,7 @@ SUBROUTINE cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   IMPLICIT NONE
   !
   INTEGER          :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
-  COMPLEX(KIND=DP) :: f( nm1, nm2, nm3 )
+  COMPLEX(DP) :: f( nm1, nm2, nm3 )
   INTEGER          :: ier
   !
   !
@@ -348,7 +348,7 @@ SUBROUTINE cft_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   ! input: grid used (1=thick, 2=smooth)
   ! input: the sign of the transformation
 
-  REAL(KIND=DP) :: f (2, nrx1, nrx2, nrx3)
+  REAL(DP) :: f (2, nrx1, nrx2, nrx3)
   ! inp/out: the function to transform
   INTEGER, PARAMETER :: ngrid = 2, nmax = 256
   ! max number of different grid allowed
@@ -359,7 +359,7 @@ SUBROUTINE cft_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign)
   ! the jump between fft arrays
   ! how many fft
 
-  REAL(KIND=DP), SAVE :: trig1 (2 * nmax, ngrid), trig2 (2 * nmax, ngrid), &
+  REAL(DP), SAVE :: trig1 (2 * nmax, ngrid), trig2 (2 * nmax, ngrid), &
        trig3 (2 * nmax, ngrid), fact
   !
   !    trigonometric factors
@@ -443,8 +443,8 @@ MODULE afftnec
   !
   DATA first/ngrid*.TRUE./
   !
-  REAL(KIND=DP), DIMENSION(ngrid) :: fact
-  REAL(KIND=DP), ALLOCATABLE, TARGET, DIMENSION(:,:) :: auxp
+  REAL(DP), DIMENSION(ngrid) :: fact
+  REAL(DP), ALLOCATABLE, TARGET, DIMENSION(:,:) :: auxp
   INTEGER, TARGET, DIMENSION(dim_iw,ngrid) :: iw0
   !
 END MODULE afftnec
@@ -471,9 +471,9 @@ SUBROUTINE cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
        &       sign,&      ! input: the sign of the transformation
        &       ierr,&      ! 
        isw 
-  COMPLEX(KIND=DP) :: &       
+  COMPLEX(DP) :: &       
        &       f(nrx1,nrx2,nrx3)    ! inp/out: the function to transform
-  COMPLEX(KIND=DP), ALLOCATABLE, DIMENSION(:,:,:) :: f1 ! for ASL Library FFT routines 
+  COMPLEX(DP), ALLOCATABLE, DIMENSION(:,:,:) :: f1 ! for ASL Library FFT routines 
 #ifdef ASL
   INTEGER, POINTER, DIMENSION(:) :: iw
 #if defined MICRO
@@ -481,8 +481,8 @@ SUBROUTINE cft_3(f,nr1,nr2,nr3,nrx1,nrx2,nrx3,igrid,sign)
   INTEGER :: nbtasks
 #endif
 #endif
-  REAL(KIND=DP), POINTER, DIMENSION(:) :: cw1
-  COMPLEX(KIND=DP), DIMENSION(:), ALLOCATABLE :: cw2   
+  REAL(DP), POINTER, DIMENSION(:) :: cw1
+  COMPLEX(DP), DIMENSION(:), ALLOCATABLE :: cw2   
 
   !     allocate auxp at the first call (independently of the grid)
   IF (.NOT.ALLOCATED(auxp)) THEN
@@ -599,15 +599,15 @@ SUBROUTINE cft_3 (f, n1, n2, n3, nx1, nx2, nx3, igrid, sign)
   IMPLICIT NONE
 
   INTEGER :: n1, n2, n3, nx1, nx2, nx3, sign, igrid
-  COMPLEX(KIND=DP) :: f ( nx1 , nx2 , nx3 )
+  COMPLEX(DP) :: f ( nx1 , nx2 , nx3 )
 
   EXTERNAL zfft3i, zfft3f, zfft3b, zdscal
 !
 ! Local variables
 !
   INTEGER :: lwork
-  COMPLEX(KIND=DP) ::  work ( 4*(nx1 + nx2 + nx3) + 45 )
-  REAL(KIND=DP) :: scale
+  COMPLEX(DP) ::  work ( 4*(nx1 + nx2 + nx3) + 45 )
+  REAL(DP) :: scale
 
   lwork = 4 * ( nx1 + nx2 + nx3 ) + 45
 
@@ -641,7 +641,7 @@ SUBROUTINE cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   IMPLICIT NONE
   INTEGER :: n1, n2, n3, nm1, nm2, nm3, igrid, sign
 
-  COMPLEX(KIND=DP) :: f (nm1, nm2, nm3)
+  COMPLEX(DP) :: f (nm1, nm2, nm3)
   STRUCTURE / DXML_Z_FFT_STRUCTURE /
   INTEGER :: N
   LOGICAL :: STRIDE_1_FLAG
@@ -668,7 +668,7 @@ SUBROUTINE cft_3 (f, n1, n2, n3, nm1, nm2, nm3, igrid, sign)
   PARAMETER (ngrid = 2)
   record / DXML_Z_FFT_STRUCTURE / fft_struct (ngrid)
   INTEGER :: status, zfft_init_3d, zfft_exit_3d
-  REAL(KIND=DP) :: norm
+  REAL(DP) :: norm
   CHARACTER (len=1) :: direction
   LOGICAL :: first (ngrid)
   DATA first / ngrid * .TRUE. /
@@ -714,9 +714,9 @@ SUBROUTINE cft_3( ac, n1, n2, n3, nm1, nm2, nm3, igrid, isign )
   !
   INTEGER            :: n1,n2,n3,nm1,nm2,nm3,igrid,isign
   INTEGER, PARAMETER :: ngrid=2, nmax=256
-  REAL(KIND=DP)      ::  ac(2,nm1,nm2,nm3)
-  REAL(KIND=DP)      :: workarray(2*nm1*nm2*nm3)
-  REAL(KIND=DP)      :: trig(2*3*nmax+2*120,ngrid),norm(ngrid)
+  REAL(DP)      ::  ac(2,nm1,nm2,nm3)
+  REAL(DP)      :: workarray(2*nm1*nm2*nm3)
+  REAL(DP)      :: trig(2*3*nmax+2*120,ngrid),norm(ngrid)
   INTEGER            :: iopt,ierr,trigdim(ngrid)
   INTEGER            :: idim(3,ngrid)
   CHARACTER(LEN=2)   :: init

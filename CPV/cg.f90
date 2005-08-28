@@ -13,31 +13,31 @@ MODULE cg_module
 
       logical      :: tcg        = .false.   ! se vero fa gradiente coniugato
       integer      :: maxiter    = 20      !numero massimo interazioni c.g.
-      real(kind=8) :: etresh    = 1.d-5    !soglia convergenza c.g.
-      real(kind=8) :: passop    =0.3d0    !passetto per gradiente coniugato
+      real(8) :: etresh    = 1.d-5    !soglia convergenza c.g.
+      real(8) :: passop    =0.3d0    !passetto per gradiente coniugato
 
 !***
 !***  Conjugate Gradient
 !***
-      real(kind=8)  esse,essenew !fattori cg
-      COMPLEX(kind=8), ALLOCATABLE :: gi(:,:)!coniugati
-      COMPLEX(kind=8), ALLOCATABLE :: hi(:,:)!gradienti di ricerca
-      COMPLEX(kind=8), ALLOCATABLE :: c0old(:,:)!vecchie funzioni d'onda, per estrapolazione
-      COMPLEX(kind=8), ALLOCATABLE :: hpsi(:,:) !termini H|Psi_i>
-      real(kind=8)  ene0,ene1,dene0,enever,enesti !energie per minimizazzione lineare lungo hi
-      real(kind=8)  passof,passov !passo effettivo stimato durante minimizzazione
+      real(8)  esse,essenew !fattori cg
+      COMPLEX(8), ALLOCATABLE :: gi(:,:)!coniugati
+      COMPLEX(8), ALLOCATABLE :: hi(:,:)!gradienti di ricerca
+      COMPLEX(8), ALLOCATABLE :: c0old(:,:)!vecchie funzioni d'onda, per estrapolazione
+      COMPLEX(8), ALLOCATABLE :: hpsi(:,:) !termini H|Psi_i>
+      real(8)  ene0,ene1,dene0,enever,enesti !energie per minimizazzione lineare lungo hi
+      real(8)  passof,passov !passo effettivo stimato durante minimizzazione
       integer itercg !numero iterazione
       logical ltresh!flag per convergenza su energia
-      real(kind=8) passo!passo per arrivare a  minimo
-      real(kind=8) etotnew,etotold!per vedere convergenza
-      real(kind=8) spasso!segno passetto
+      real(8) passo!passo per arrivare a  minimo
+      real(8) etotnew,etotold!per vedere convergenza
+      real(8) spasso!segno passetto
       logical tcutoff!convergenza energia per togliere cutoff
-      real(kind=8), ALLOCATABLE :: emme(:,:)!matrice per convergenza spinta
+      real(8), ALLOCATABLE :: emme(:,:)!matrice per convergenza spinta
       logical restartcg!se vero ricomincia gradiente coniugato da steepest descend
       integer numok!numero volte differenza energia sotto treshhold
-      real(kind=8) pcnum,pcden!per calcolare preconditioning
+      real(8) pcnum,pcden!per calcolare preconditioning
       integer iter3!per tentativi ciclo3
-      real(kind=8) ebanda!energia banda per preconditioning
+      real(8) ebanda!energia banda per preconditioning
       logical ene_ok!se vero l'energia ha passato il test, non deve ricalcolare
       integer ninner_ef!per conteggio ciclo interno, usato per stati eccitati
 
@@ -46,10 +46,10 @@ CONTAINS
 
 
   SUBROUTINE cg_init( tcg_ , maxiter_ , etresh_ , passop_ )
-    USE kinds, ONLY: dbl
+    USE kinds, ONLY: DP
     LOGICAL, INTENT(IN) :: tcg_
     INTEGER, INTENT(IN) :: maxiter_
-    REAL(dbl), INTENT(IN) :: etresh_ , passop_
+    REAL(DP), INTENT(IN) :: etresh_ , passop_
     tcg=tcg_
     maxiter=maxiter_
     etresh=etresh_
@@ -99,7 +99,7 @@ CONTAINS
     use gvecw, only: ngw
     use electrons_base, only: n => nbsp
     IMPLICIT NONE
-    COMPLEX(kind=8) :: c0( :, :, :, : )
+    COMPLEX(8) :: c0( :, :, :, : )
     INTEGER :: nfi
     LOGICAL :: tfirst
     INTEGER :: i, ig

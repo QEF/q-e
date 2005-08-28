@@ -56,20 +56,20 @@
 !
       logical tlast,tfirst
       integer nfi
-      real(kind=8) rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx),&
+      real(8) rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx),&
      &             v0s(nnrsx), vhxcs(nnrsx,nspin)
-      real(kind=8)  rhoc(nnr), tau0(3,natx)
-      complex(kind=8) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
+      real(8)  rhoc(nnr), tau0(3,natx)
+      complex(8) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
      &                ei3(-nr3:nr3,nat), eigrb(ngb,nat),        &
      &                rhog(ngm,nspin), sfac(ngs,nsp)
 !
       integer irb(3,nat), iss, isup, isdw, ig, ir,i,j,k,is, ia
-      real(kind=8) fion1(3,natx), vave, ebac, wz, eh
-      complex(kind=8)  fp, fm, ci
-      complex(kind=8), allocatable :: v(:), vs(:)
-      complex(kind=8), allocatable :: rhotmp(:), vtemp(:), drhotmp(:,:,:)
+      real(8) fion1(3,natx), vave, ebac, wz, eh
+      complex(8)  fp, fm, ci
+      complex(8), allocatable :: v(:), vs(:)
+      complex(8), allocatable :: rhotmp(:), vtemp(:), drhotmp(:,:,:)
       
-!     complex(kind=8), allocatable:: vtemp1(:,:)
+!     complex(8), allocatable:: vtemp1(:,:)
 !
       ci=(0.,1.)
 !

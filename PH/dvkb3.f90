@@ -24,13 +24,13 @@ subroutine dvkb3(kpoint,dvkb)
   implicit none
 
   integer, intent(in) :: kpoint
-  complex(kind=DP), intent(out) :: dvkb (npwx,nkb,3)
+  complex(DP), intent(out) :: dvkb (npwx,nkb,3)
 
   integer :: jpol,  nt, na, ikb, jkb, ibnd, ig
 
-  real(kind=DP), allocatable  :: gk (:,:)
+  real(DP), allocatable  :: gk (:,:)
 
-  complex(kind=DP), allocatable :: work (:,:)
+  complex(DP), allocatable :: work (:,:)
 
   if (this_dvkb3_is_on_file(kpoint)) then
      call davcio (dvkb, lrdvkb3, iudvkb3, kpoint, -1)

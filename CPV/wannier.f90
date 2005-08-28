@@ -13,15 +13,15 @@
 MODULE efcalc
   !----------------------------------------------------------------------------
   !
-  USE kinds,        ONLY : dbl
+  USE kinds,        ONLY : DP
   USE io_global,    ONLY : stdout
   USE wannier_base, ONLY : wf_efield, wf_switch
   USE wannier_base, ONLY : efx0, efy0, efz0, efx1, efy1, efz1, sw_len
   !
   IMPLICIT NONE
   !
-  REAL(KIND=dbl)              :: efx, efy, efz, sw_step
-  REAL(KIND=dbl), ALLOCATABLE :: xdist(:), ydist(:), zdist(:)
+  REAL(DP)              :: efx, efy, efz, sw_step
+  REAL(DP), ALLOCATABLE :: xdist(:), ydist(:), zdist(:)
   !
   CONTAINS
   !
@@ -63,7 +63,7 @@ MODULE efcalc
     !
     IMPLICIT NONE
     !
-    REAL(KIND=dbl) :: fion(:,:), zv(:)
+    REAL(DP) :: fion(:,:), zv(:)
     INTEGER        :: na(:), nsp
     INTEGER        :: is, ia, isa
     !
@@ -97,11 +97,11 @@ END MODULE efcalc
 MODULE tune
   !--------------------------------------------------------------------------
   !
-  USE kinds, ONLY : dbl
+  USE kinds, ONLY : DP
   !
   LOGICAL        :: shift
   INTEGER        :: npts, av0, av1, xdir, ydir, zdir, start
-  REAL(KIND=dbl) :: alpha, b
+  REAL(DP) :: alpha, b
   !
 END MODULE tune
 !
@@ -115,18 +115,18 @@ MODULE wannier_module
   ! ... overwritten to be the potential.
   ! ...                                                             -M.S
   !
-  USE kinds, ONLY : dbl
+  USE kinds, ONLY : DP
   !
   IMPLICIT NONE
   !
   SAVE
   !
   LOGICAL                        :: what1, wann_calc
-  REAL(KIND=dbl)                 :: wfx, wfy, wfz, ionx, iony, ionz
-  REAL(KIND=dbl),    ALLOCATABLE :: utwf(:,:)
-  REAL(KIND=dbl),    ALLOCATABLE :: wfc(:,:)
-  REAL(KIND=dbl),    ALLOCATABLE :: rhos1(:,:), rhos2(:,:)
-  COMPLEX(KIND=dbl), ALLOCATABLE :: rhogdum(:,:)
+  REAL(DP)                 :: wfx, wfy, wfz, ionx, iony, ionz
+  REAL(DP),    ALLOCATABLE :: utwf(:,:)
+  REAL(DP),    ALLOCATABLE :: wfc(:,:)
+  REAL(DP),    ALLOCATABLE :: rhos1(:,:), rhos2(:,:)
+  COMPLEX(DP), ALLOCATABLE :: rhogdum(:,:)
   !
   CONTAINS
   !
@@ -168,16 +168,16 @@ MODULE electric_field_module
   !
   ! ... 1 Volt / meter  = 1/(5.1412*1.e+11) a.u.
   !
-  USE kinds, ONLY : dbl
+  USE kinds, ONLY : DP
   !
   IMPLICIT NONE
   !
   SAVE
   !
   LOGICAL        :: field_tune, ft
-  REAL(KIND=dbl) :: efe_elec, efe_ion, prefactor, e_tuned(3)
-  REAL(KIND=dbl) :: tt(3), cdmm(3), tt2(3)
-  REAL(KIND=dbl) :: par, alen, blen, clen, rel1(3), rel2(3)
+  REAL(DP) :: efe_elec, efe_ion, prefactor, e_tuned(3)
+  REAL(DP) :: tt(3), cdmm(3), tt2(3)
+  REAL(DP) :: par, alen, blen, clen, rel1(3), rel2(3)
   !
 END MODULE electric_field_module
 !
@@ -185,7 +185,7 @@ END MODULE electric_field_module
 MODULE wannier_subroutines
   !--------------------------------------------------------------------------
   !
-  USE kinds,     ONLY : dbl, dp
+  USE kinds,     ONLY : DP, dp
   USE io_global, ONLY : stdout
   !
   IMPLICIT NONE
@@ -206,9 +206,9 @@ MODULE wannier_subroutines
     IMPLICIT NONE
     !
     INTEGER        :: ibrav
-    REAL(KIND=dbl) :: a1(3), a2(3), a3(3)
-    REAL(KIND=dbl) :: b1(3), b2(3), b3(3)
-    REAL(KIND=dbl) :: alat
+    REAL(DP) :: a1(3), a2(3), a3(3)
+    REAL(DP) :: b1(3), b2(3), b3(3)
+    REAL(DP) :: alat
     !
     INTEGER :: i
     !
@@ -296,13 +296,13 @@ MODULE wannier_subroutines
     IMPLICIT NONE
     !
     LOGICAL, INTENT(in) :: tfirst
-    COMPLEX(KIND=dbl)   :: cm(:,:,:,:)
-    REAL(KIND=dbl)      :: bec(:,:), becdr(:,:,:)
-    COMPLEX(KIND=dbl)   :: eigrb(:,:), eigr(:,:)
+    COMPLEX(DP)   :: cm(:,:,:,:)
+    REAL(DP)      :: bec(:,:), becdr(:,:,:)
+    COMPLEX(DP)   :: eigrb(:,:), eigr(:,:)
     INTEGER             :: irb(:,:)
-    REAL(KIND=dbl)      :: taub(:,:)
+    REAL(DP)      :: taub(:,:)
     INTEGER             :: ibrav
-    REAL(KIND=dbl)      :: b1(:), b2(:), b3(:)
+    REAL(DP)      :: b1(:), b2(:), b3(:)
     !
     ! ... Get Wannier centers for the first step if wf_efield=true
     !
@@ -335,8 +335,8 @@ MODULE wannier_subroutines
     !
     IMPLICIT NONE
     !
-    COMPLEX(KIND=dbl) :: rhog(:,:)
-    REAL(KIND=dbl)    :: tau0(:,:)
+    COMPLEX(DP) :: rhog(:,:)
+    REAL(DP)    :: tau0(:,:)
     !
     ! ... Tune the Electric field
     !
@@ -360,7 +360,7 @@ MODULE wannier_subroutines
     !
     IMPLICIT NONE
     !
-    COMPLEX(KIND=dbl) :: rhog(:,:)
+    COMPLEX(DP) :: rhog(:,:)
     !
     ! ... Write chargedensity in g-space
     !
@@ -391,17 +391,17 @@ MODULE wannier_subroutines
     !
     LOGICAL, INTENT(IN) :: tfirst
     INTEGER             :: nfi
-    COMPLEX(KIND=dbl)   :: cm(:,:,:,:)
-    REAL(KIND=dbl)      :: bec(:,:), becdr(:,:,:)
-    REAL(KIND=dbl)      :: rhovan(:,:,:)
-    COMPLEX(KIND=dbl)   :: eigrb(:,:), eigr(:,:)
+    COMPLEX(DP)   :: cm(:,:,:,:)
+    REAL(DP)      :: bec(:,:), becdr(:,:,:)
+    REAL(DP)      :: rhovan(:,:,:)
+    COMPLEX(DP)   :: eigrb(:,:), eigr(:,:)
     INTEGER             :: irb(:,:)
-    REAL(KIND=dbl)      :: taub(:,:)
+    REAL(DP)      :: taub(:,:)
     INTEGER             :: ibrav
-    REAL(KIND=dbl)      :: b1(:), b2(:), b3(:)
-    COMPLEX(KIND=dbl)   :: rhog(:,:)
-    REAL(KIND=dbl)      :: rhor(:,:), rhos(:,:)
-    REAL(KIND=dbl)      :: enl, ekin 
+    REAL(DP)      :: b1(:), b2(:), b3(:)
+    COMPLEX(DP)   :: rhog(:,:)
+    REAL(DP)      :: rhor(:,:), rhos(:,:)
+    REAL(DP)      :: enl, ekin 
     !
     INTEGER :: i, j
     !
@@ -466,15 +466,15 @@ MODULE wannier_subroutines
     IMPLICIT NONE
     !
     INTEGER :: nfi
-    REAL(KIND=dbl) :: rhos(:,:)
-    REAL(KIND=dbl) :: bec(:,:)
-    REAL(KIND=dbl) :: deeq(:,:,:,:)
-    COMPLEX(KIND=dbl) :: betae(:,:)
-    COMPLEX(KIND=dbl) :: c0( :, : ), c2( : ), c3( : )
-    COMPLEX(KIND=dbl) :: cm( :, : )
-    REAL(KIND=dbl) :: emadt2(:)
-    REAL(KIND=dbl) :: emaver(:)
-    REAL(KIND=dbl) :: verl1, verl2
+    REAL(DP) :: rhos(:,:)
+    REAL(DP) :: bec(:,:)
+    REAL(DP) :: deeq(:,:,:,:)
+    COMPLEX(DP) :: betae(:,:)
+    COMPLEX(DP) :: c0( :, : ), c2( : ), c3( : )
+    COMPLEX(DP) :: cm( :, : )
+    REAL(DP) :: emadt2(:)
+    REAL(DP) :: emaver(:)
+    REAL(DP) :: verl1, verl2
     INTEGER :: i, ir
     !
     ! ... Potential for electric field
@@ -592,7 +592,7 @@ MODULE wannier_subroutines
     !
     IMPLICIT NONE
     !
-    REAL(KIND=dbl) :: enthal, tau0(:,:)
+    REAL(DP) :: enthal, tau0(:,:)
     INTEGER        :: i, is, ia, isa
     !
     IF(wf_efield) THEN
@@ -663,24 +663,24 @@ MODULE wannier_subroutines
     IMPLICIT NONE
     !
     INTEGER           :: nfi
-    COMPLEX(KIND=dbl) :: c0(:,:,:,:)
-    COMPLEX(KIND=dbl) :: cm(:,:,:,:)
-    REAL(KIND=dbl)    :: bec(:,:), becdr(:,:,:)
-    COMPLEX(KIND=dbl) :: eigrb(:,:), eigr(:,:)
+    COMPLEX(DP) :: c0(:,:,:,:)
+    COMPLEX(DP) :: cm(:,:,:,:)
+    REAL(DP)    :: bec(:,:), becdr(:,:,:)
+    COMPLEX(DP) :: eigrb(:,:), eigr(:,:)
     INTEGER           :: irb(:,:)
-    REAL(KIND=dbl)    :: taub(:,:)
+    REAL(DP)    :: taub(:,:)
     INTEGER           :: ibrav
-    REAL(KIND=dbl)    :: b1(:), b2(:), b3(:)
-    REAL(KIND=dbl)    :: taus(:,:), tausm(:,:), vels(:,:), velsm(:,:)
-    REAL(KIND=dbl)    :: acc(:)
-    REAL(KIND=dbl)    :: lambda(:,:), lambdam(:,:)
-    REAL(KIND=dbl)    :: xnhe0, xnhem, vnhe, xnhp0(:), xnhpm(:), vnhp(:), ekincm
+    REAL(DP)    :: b1(:), b2(:), b3(:)
+    REAL(DP)    :: taus(:,:), tausm(:,:), vels(:,:), velsm(:,:)
+    REAL(DP)    :: acc(:)
+    REAL(DP)    :: lambda(:,:), lambdam(:,:)
+    REAL(DP)    :: xnhe0, xnhem, vnhe, xnhp0(:), xnhpm(:), vnhp(:), ekincm
     INTEGER           :: nhpcl
-    REAL(KIND=dbl)    :: velh(:,:)
-    REAL(KIND=dbl)    :: xnhh0(:,:), xnhhm(:,:), vnhh(:,:)
-    REAL(KIND=dbl)    :: ecut, ecutw, delt, celldm(:)
-    REAL(KIND=dbl)    :: fion(:,:), tps
-    REAL(KIND=dbl)    :: mat_z(:,:,:), occ_f(:), rho(:,:)
+    REAL(DP)    :: velh(:,:)
+    REAL(DP)    :: xnhh0(:,:), xnhhm(:,:), vnhh(:,:)
+    REAL(DP)    :: ecut, ecutw, delt, celldm(:)
+    REAL(DP)    :: fion(:,:), tps
+    REAL(DP)    :: mat_z(:,:,:), occ_f(:), rho(:,:)
     !
     !
     ! ... More Wannier Function Options

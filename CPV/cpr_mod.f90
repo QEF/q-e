@@ -9,12 +9,12 @@
 MODULE stre
   !----------------------------------------------------------------------------
   !
-  USE kinds, ONLY : dbl
+  USE kinds, ONLY : DP
   !
   IMPLICIT NONE 
   SAVE
   !
-  REAL(KIND=dbl) :: stress(3,3)
+  REAL(DP) :: stress(3,3)
   !
 END MODULE stre
 !
@@ -22,12 +22,12 @@ END MODULE stre
 MODULE dqrad_mod
   !----------------------------------------------------------------------------
   !
-  USE kinds, ONLY : dbl
+  USE kinds, ONLY : DP
   !
   IMPLICIT NONE 
   SAVE
   !
-  REAL(KIND=dbl), ALLOCATABLE :: dqrad(:,:,:,:,:,:,:)
+  REAL(DP), ALLOCATABLE :: dqrad(:,:,:,:,:,:,:)
   !
   CONTAINS
   !
@@ -43,14 +43,14 @@ END MODULE dqrad_mod
 module betax
   !----------------------------------------------------------------------------
   !
-  USE kinds, ONLY : dbl
+  USE kinds, ONLY : DP
   !
   IMPLICIT NONE 
   SAVE
   !
   INTEGER                    :: mmx = 5000
-  REAL(KIND=dbl)             :: refg
-  REAL(KIND=dbl),ALLOCATABLE :: betagx(:,:,:), dbetagx(:,:,:), &
+  REAL(DP)             :: refg
+  REAL(DP),ALLOCATABLE :: betagx(:,:,:), dbetagx(:,:,:), &
                                 qradx(:,:,:,:,:), dqradx(:,:,:,:,:)
   !
   CONTAINS
@@ -70,7 +70,7 @@ END MODULE betax
 MODULE cpr_subroutines
   !----------------------------------------------------------------------------
   !
-  USE kinds, ONLY : dbl
+  USE kinds, ONLY : DP
   !
   IMPLICIT NONE
   SAVE
@@ -78,7 +78,7 @@ MODULE cpr_subroutines
   CONTAINS
   !
   subroutine compute_stress( stress, detot, h, omega )
-    real(kind=8) :: stress(3,3), detot(3,3), h(3,3), omega
+    real(8) :: stress(3,3), detot(3,3), h(3,3), omega
     integer :: i, j
          do i=1,3
             do j=1,3
@@ -91,7 +91,7 @@ MODULE cpr_subroutines
 
   subroutine print_atomic_var( var, na, nsp, head, iunit )
     use io_global, only: stdout
-    real(kind=8) :: var(:,:)
+    real(8) :: var(:,:)
     integer :: na(:), nsp
     integer, optional :: iunit
     character(len=*), optional :: head
@@ -116,7 +116,7 @@ MODULE cpr_subroutines
 
   subroutine print_cell_var( var, head, iunit )
     use io_global, only: stdout
-    real(kind=8) :: var(3,3)
+    real(8) :: var(3,3)
     integer, optional :: iunit
     character(len=*), optional :: head
     integer :: i, j, iu
@@ -145,10 +145,10 @@ MODULE cpr_subroutines
     !
     IMPLICIT NONE
     !
-    REAL(KIND=dbl), INTENT(INOUT) :: tausp(:,:)
+    REAL(DP), INTENT(INOUT) :: tausp(:,:)
     INTEGER,        INTENT(IN)    :: iforce(:,:)
     INTEGER,        INTENT(IN)    :: na(:), nsp
-    REAL(KIND=dbl), INTENT(IN)    :: cdm(:), cdm0(:)
+    REAL(DP), INTENT(IN)    :: cdm(:), cdm0(:)
     !
     INTEGER :: i, ia, is, isa
     !
@@ -180,12 +180,12 @@ MODULE cpr_subroutines
     use mp, only: mp_sum
     use reciprocal_vectors, only: gstart
     use wave_base, only: wave_speed2
-    real(kind=8), intent(out) :: ekincm
-    real(kind=8), intent(in)  :: ema0bg(:), delt, emass
-    complex(kind=8), intent(in)  :: c0(:,:,:,:), cm(:,:,:,:)
+    real(8), intent(out) :: ekincm
+    real(8), intent(in)  :: ema0bg(:), delt, emass
+    complex(8), intent(in)  :: c0(:,:,:,:), cm(:,:,:,:)
     integer, intent(in) :: ngw, n
-    real(kind=8), allocatable :: emainv(:)
-    real(kind=8) :: ftmp
+    real(8), allocatable :: emainv(:)
+    real(8) :: ftmp
     integer :: i
 
     ALLOCATE( emainv( ngw ) )
@@ -210,12 +210,12 @@ MODULE cpr_subroutines
     use mp, only: mp_sum
     use reciprocal_vectors, only: gstart
     use wave_base, only: wave_speed2
-    real(kind=8), intent(out) :: ekincm
-    real(kind=8), intent(in)  :: ema0bg(:), delt, emass
-    complex(kind=8), intent(in)  :: c0(:,:), cm(:,:)
+    real(8), intent(out) :: ekincm
+    real(8), intent(in)  :: ema0bg(:), delt, emass
+    complex(8), intent(in)  :: c0(:,:), cm(:,:)
     integer, intent(in) :: ngw, n
-    real(kind=8), allocatable :: emainv(:)
-    real(kind=8) :: ftmp
+    real(8), allocatable :: emainv(:)
+    real(8) :: ftmp
     integer :: i
 
     ALLOCATE( emainv( ngw ) )
@@ -239,7 +239,7 @@ MODULE cpr_subroutines
  
   subroutine print_lambda( lambda, n, nshow, ccc, iunit )
     use io_global, only: stdout, ionode
-    real(kind=8), intent(in) :: lambda(:,:), ccc
+    real(8), intent(in) :: lambda(:,:), ccc
     integer, intent(in) :: n, nshow
     integer, intent(in), optional :: iunit
     integer :: nnn, j, un, i
@@ -263,8 +263,8 @@ MODULE cpr_subroutines
   end subroutine print_lambda
 
    subroutine add_thermal_stress( stress, pmass, omega, h, vels, nsp, na )
-     real(kind=8) :: stress(3,3)
-     real(kind=8), intent(in) :: pmass(:), omega, h(3,3), vels(:,:)
+     real(8) :: stress(3,3)
+     real(8), intent(in) :: pmass(:), omega, h(3,3), vels(:,:)
      integer, intent(in) :: nsp, na(:)
      integer :: i, j, is, ia, isa
      isa = 0

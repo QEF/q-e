@@ -34,7 +34,7 @@ SUBROUTINE force_us( forcenl )
   !
   ! ... the dummy variable
   !
-  REAL(KIND=DP) :: forcenl(3,nat)
+  REAL(DP) :: forcenl(3,nat)
   ! output: the nonlocal contribution
   !
   !
@@ -60,11 +60,11 @@ SUBROUTINE force_us( forcenl )
        !
        IMPLICIT NONE
        !
-       REAL(KIND=DP), ALLOCATABLE    :: becp(:,:), dbecp (:,:,:)
+       REAL(DP), ALLOCATABLE    :: becp(:,:), dbecp (:,:,:)
        ! auxiliary variables contain <beta|psi> and <dbeta|psi>
-       COMPLEX(KIND=DP), ALLOCATABLE :: vkb1(:,:)
+       COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)
        ! auxiliary variable contains g*|beta>
-       REAL(KIND=DP) :: ps
+       REAL(DP) :: ps
        INTEGER       :: ik, ipol, ibnd, ig, ih, jh, na, nt, ikb, jkb, ijkb0
        ! counters
        !
@@ -192,13 +192,13 @@ SUBROUTINE force_us( forcenl )
        !  
        IMPLICIT NONE
        !
-       COMPLEX(KIND=DP), ALLOCATABLE :: becp(:,:), dbecp(:,:,:)
-       COMPLEX(KIND=DP), ALLOCATABLE :: becp_nc(:,:,:), dbecp_nc(:,:,:,:)
+       COMPLEX(DP), ALLOCATABLE :: becp(:,:), dbecp(:,:,:)
+       COMPLEX(DP), ALLOCATABLE :: becp_nc(:,:,:), dbecp_nc(:,:,:,:)
        ! auxiliary variable contains <beta|psi> and <dbeta|psi>
-       COMPLEX(KIND=DP), ALLOCATABLE :: vkb1(:,:)
+       COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)
        ! auxiliary variable contains g*|beta>
-       COMPLEX(KIND=DP) :: psc(2,2), fac
-       REAL(KIND=DP) :: ps
+       COMPLEX(DP) :: psc(2,2), fac
+       REAL(DP) :: ps
        INTEGER       :: ik, ipol, ibnd, ig, ih, jh, na, nt, ikb, jkb, ijkb0, &
                         is, js
        ! counters

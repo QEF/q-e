@@ -16,7 +16,7 @@ subroutine trntns (phi, at, bg, iflg)
   USE kinds
   implicit none
   integer :: iflg, i, j, k, l
-  real(kind=DP) :: phi (3, 3), wrk (3, 3), at (3, 3), bg (3, 3)
+  real(DP) :: phi (3, 3), wrk (3, 3), at (3, 3), bg (3, 3)
   !
   if (iflg.gt.0) then
      !

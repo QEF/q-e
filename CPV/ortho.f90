@@ -27,24 +27,24 @@
 
        INTEGER :: ortho_tune = 16
 
-       REAL(dbl) :: one, zero, two, mone, mtwo
+       REAL(DP) :: one, zero, two, mone, mtwo
        PARAMETER ( one = 1.0d0, zero = 0.0d0, two = 2.0d0, mone = -1.0d0 )
        PARAMETER ( mtwo = -2.0d0 )
-       COMPLEX(dbl) :: cone, czero, mcone
+       COMPLEX(DP) :: cone, czero, mcone
        PARAMETER ( cone = (1.0d0, 0.0d0), czero = (0.0d0, 0.0d0) )
        PARAMETER ( mcone = (-1.0d0, 0.0d0) )
-       REAL(dbl) :: small = 1.0d-14
+       REAL(DP) :: small = 1.0d-14
 
-       REAL(dbl) :: timrhos = 0.0d0
-       REAL(dbl) :: timsigs = 0.0d0
-       REAL(dbl) :: timdiag = 0.0d0
-       REAL(dbl) :: timtras1 = 0.0d0
-       REAL(dbl) :: timiter = 0.0d0
-       REAL(dbl) :: timbtra = 0.0d0
-       REAL(dbl) :: timtot = 0.0d0
+       REAL(DP) :: timrhos = 0.0d0
+       REAL(DP) :: timsigs = 0.0d0
+       REAL(DP) :: timdiag = 0.0d0
+       REAL(DP) :: timtras1 = 0.0d0
+       REAL(DP) :: timiter = 0.0d0
+       REAL(DP) :: timbtra = 0.0d0
+       REAL(DP) :: timtot = 0.0d0
        INTEGER   :: timcnt = 0
 
-       REAL(dbl), EXTERNAL :: cclock
+       REAL(DP), EXTERNAL :: cclock
 
        INTERFACE ortho
          MODULE PROCEDURE ortho_s, ortho_v, ortho_m
@@ -64,9 +64,9 @@
          USE wave_types, ONLY: wave_descriptor
          USE mp_global, ONLY: nproc
 
-         COMPLEX(dbl), INTENT(INOUT) :: c0(:,:), cp(:,:)
+         COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cp(:,:)
          TYPE (wave_descriptor), INTENT(IN) :: cdesc
-         REAL(dbl) :: pmss(:), emass
+         REAL(DP) :: pmss(:), emass
          LOGICAL, INTENT(OUT), OPTIONAL :: success
          INTEGER, INTENT(IN) :: ispin
          INTEGER :: iter
@@ -102,9 +102,9 @@
 
        SUBROUTINE ortho_v( ispin, c0, cp, cdesc, pmss, emass)
          USE wave_types, ONLY: wave_descriptor
-         COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:), cp(:,:,:)
+         COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:), cp(:,:,:)
          TYPE (wave_descriptor), INTENT(IN) :: cdesc
-         REAL(dbl) :: pmss(:), emass
+         REAL(DP) :: pmss(:), emass
          INTEGER, INTENT(IN) :: ispin
          INTEGER :: ik
          DO ik = 1, cdesc%nkl
@@ -118,9 +118,9 @@
        SUBROUTINE ortho_m(c0, cp, cdesc, pmss, emass)
          USE wave_types, ONLY: wave_descriptor
          USE control_flags, ONLY: force_pairing
-         COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:), cp(:,:,:,:)
+         COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:), cp(:,:,:,:)
          TYPE (wave_descriptor), INTENT(IN) :: cdesc
-         REAL(dbl) :: pmss(:), emass
+         REAL(DP) :: pmss(:), emass
          INTEGER :: ik, ispin, nspin
          nspin = cdesc%nspin
          IF( force_pairing ) nspin = 1
@@ -163,9 +163,9 @@
       IMPLICIT  NONE
 
 ! ... Arguments
-      COMPLEX(dbl), INTENT(INOUT) :: c0(:,:), cp(:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cp(:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      REAL(dbl), INTENT(IN) ::  pmss(:), emass
+      REAL(DP), INTENT(IN) ::  pmss(:), emass
       INTEGER, INTENT(IN) :: ispin
       
 ! ... Functions
@@ -175,7 +175,7 @@
 
 #if defined __SHMEM
       INTEGER         :: err
-      REAL(dbl)       :: s(SIZE(c0,2), SIZE(c0,2)),                     &
+      REAL(DP)       :: s(SIZE(c0,2), SIZE(c0,2)),                     &
      &                   sig(SIZE(c0,2), SIZE(c0,2)),                   &
      &                   rho(SIZE(c0,2), SIZE(c0,2)),                   &
      &                   tmass(SIZE(c0,2), SIZE(c0,2)),                 &
@@ -184,18 +184,18 @@
      &                   (p_tmass,tmass), (p_target,TEMP)
       COMMON /sym_heap3/ p_source, p_sig, p_rho, p_tmass, p_target
 #else
-      REAL(dbl),   ALLOCATABLE :: s(:,:), sig(:,:), rho(:,:), tmass(:,:), temp(:,:)
+      REAL(DP),   ALLOCATABLE :: s(:,:), sig(:,:), rho(:,:), tmass(:,:), temp(:,:)
 #endif
-      REAL(dbl),   ALLOCATABLE :: x0(:,:), temp1(:,:)
-      REAL(dbl),   ALLOCATABLE :: x1(:,:), rhoa(:,:)
-      REAL(dbl),   ALLOCATABLE :: sigd(:), rhod(:), aux(:)
-      REAL(dbl)                :: pwrk(1) 
-      REAL(dbl) :: difgam, rhosigd
-      REAL(dbl) :: s0, s1, s2, s3, s4, s5, s6, s7, s8, s9
-      REAL(dbl) :: fact, one_by_emass, den
+      REAL(DP),   ALLOCATABLE :: x0(:,:), temp1(:,:)
+      REAL(DP),   ALLOCATABLE :: x1(:,:), rhoa(:,:)
+      REAL(DP),   ALLOCATABLE :: sigd(:), rhod(:), aux(:)
+      REAL(DP)                :: pwrk(1) 
+      REAL(DP) :: difgam, rhosigd
+      REAL(DP) :: s0, s1, s2, s3, s4, s5, s6, s7, s8, s9
+      REAL(DP) :: fact, one_by_emass, den
       INTEGER   :: nrl,is,jl, n, ngw, nx, naux, i, j, iopt, k, info, iter
       LOGICAL   :: gzero
-      REAL(dbl) :: sqrtfact
+      REAL(DP) :: sqrtfact
 
 ! ...   Subroutine body
 
@@ -341,7 +341,7 @@
           DO i = 1, n        
             den = (rhod(i)+sigd(i)+rhod(j)+sigd(j))
             IF( ABS( den ) <= small ) den = SIGN( small, den )
-            x1(i,j) = sig(i,j) - temp1(i,j) - 0.5_dbl * (x1(i,j)+temp(i,j))
+            x1(i,j) = sig(i,j) - temp1(i,j) - 0.5_DP * (x1(i,j)+temp(i,j))
             x1(i,j) = x1(i,j) / den
             difgam = MAX( ABS(x1(i,j)-x0(i,j)), difgam )
           END DO
@@ -454,9 +454,9 @@
       IMPLICIT  NONE
 
 ! ... Arguments
-      COMPLEX(dbl), INTENT(INOUT) :: c0(:,:), cp(:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cp(:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      REAL(dbl), INTENT(IN) ::  pmss(:), emass
+      REAL(DP), INTENT(IN) ::  pmss(:), emass
       INTEGER, INTENT(IN) :: ispin
       
 ! ... Functions
@@ -464,13 +464,13 @@
   
 ! ... Locals
 
-      REAL(dbl), ALLOCATABLE :: S(:,:), TEMP(:,:)
-      REAL(dbl), ALLOCATABLE :: x0(:,:), temp1(:,:)
-      REAL(dbl), ALLOCATABLE :: x1(:,:), rhoa(:,:)
-      REAL(dbl), ALLOCATABLE :: sigd(:), rhod(:), aux(:)
-      REAL(dbl) :: DIFGAM, RHOSIGD
-      REAL(dbl) :: s0, s1, s2, s3, s4, s5, s6, s7, s8, s9
-      REAL(dbl) :: fact, den
+      REAL(DP), ALLOCATABLE :: S(:,:), TEMP(:,:)
+      REAL(DP), ALLOCATABLE :: x0(:,:), temp1(:,:)
+      REAL(DP), ALLOCATABLE :: x1(:,:), rhoa(:,:)
+      REAL(DP), ALLOCATABLE :: sigd(:), rhod(:), aux(:)
+      REAL(DP) :: DIFGAM, RHOSIGD
+      REAL(DP) :: s0, s1, s2, s3, s4, s5, s6, s7, s8, s9
+      REAL(DP) :: fact, den
       integer   :: nrl, n, ngw, I, ii, J, K, ITER
 
       TYPE (real_parallel_matrix) :: sigt, rhot, tmasst
@@ -585,7 +585,7 @@
           DO i = 1, nrl
             den = (rhod(ii)+sigd(ii)+rhod(j)+sigd(j))
             IF( ABS( den ) <= small ) den = SIGN( small, den )
-            x1(i,j) = sigt%m(i,j) - temp1(i,j) - 0.5_dbl * (x1(i,j)+temp(i,j))
+            x1(i,j) = sigt%m(i,j) - temp1(i,j) - 0.5_DP * (x1(i,j)+temp(i,j))
             x1(i,j) = x1(i,j) / den
             difgam = MAX( ABS(x1(i,j)-x0(i,j)), difgam )
             ii = ii + nproc
@@ -668,8 +668,8 @@
 
 
 ! ... Arguments
-      COMPLEX(dbl) ::  C0(:,:), CP(:,:)
-      REAL(dbl)    ::  PMSS(:), EMASS
+      COMPLEX(DP) ::  C0(:,:), CP(:,:)
+      REAL(DP)    ::  PMSS(:), EMASS
       
   
 ! ... Locals
@@ -677,47 +677,47 @@
 #if defined __SHMEM
 
       pointer (p_source,S)
-      COMPLEX(dbl) S( SIZE(c0,2), SIZE(c0,2))
+      COMPLEX(DP) S( SIZE(c0,2), SIZE(c0,2))
       pointer (p_sig,sig)
-      COMPLEX(dbl) SIG( SIZE(c0,2), SIZE(c0,2))
+      COMPLEX(DP) SIG( SIZE(c0,2), SIZE(c0,2))
       pointer (p_rho,rho)
-      COMPLEX(dbl) RHO( SIZE(c0,2), SIZE(c0,2))
+      COMPLEX(DP) RHO( SIZE(c0,2), SIZE(c0,2))
       pointer (p_tmass,tmass)
-      COMPLEX(dbl) TMASS( SIZE(c0,2), SIZE(c0,2))
+      COMPLEX(DP) TMASS( SIZE(c0,2), SIZE(c0,2))
       pointer (p_target,TEMP)
-      COMPLEX(dbl) TEMP( SIZE(c0,2), SIZE(c0,2))
+      COMPLEX(DP) TEMP( SIZE(c0,2), SIZE(c0,2))
       integer err
       pointer (p_pWrk,pWrk)
-      COMPLEX(dbl)  pWrk(1) 
+      COMPLEX(DP)  pWrk(1) 
 
 #else
 
-      COMPLEX(dbl) SIG( SIZE(c0,2), SIZE(c0,2))
-      COMPLEX(dbl) RHO( SIZE(c0,2), SIZE(c0,2))
-      COMPLEX(dbl) S( SIZE(c0,2), SIZE(c0,2))
-      COMPLEX(dbl) TEMP( SIZE(c0,2), SIZE(c0,2))
-      COMPLEX(dbl) TMASS( SIZE(c0,2), SIZE(c0,2))
-      COMPLEX(dbl) pWrk(1) 
+      COMPLEX(DP) SIG( SIZE(c0,2), SIZE(c0,2))
+      COMPLEX(DP) RHO( SIZE(c0,2), SIZE(c0,2))
+      COMPLEX(DP) S( SIZE(c0,2), SIZE(c0,2))
+      COMPLEX(DP) TEMP( SIZE(c0,2), SIZE(c0,2))
+      COMPLEX(DP) TMASS( SIZE(c0,2), SIZE(c0,2))
+      COMPLEX(DP) pWrk(1) 
 
 #endif
 
-      COMPLEX(dbl)    X0( SIZE(c0,2), SIZE(c0,2))
-      COMPLEX(dbl)    TEMP1( SIZE(c0,2),MAX( SIZE(c0,2),4))
-      COMPLEX(dbl)    BLAM( SIZE(c0,2), SIZE(c0,2))
-      COMPLEX(dbl)    CLAM( SIZE(c0,2), SIZE(c0,2))
-      COMPLEX(dbl)    X1( SIZE(c0,2), SIZE(c0,2))
-      COMPLEX(dbl)    RHOA( SIZE(c0,2), SIZE(c0,2))
-      REAL(dbl)        SIGD( SIZE(c0,2))
-      REAL(dbl)        RHOD( SIZE(c0,2))
-      COMPLEX(dbl),   ALLOCATABLE :: AUX(:)
-      COMPLEX(dbl),   ALLOCATABLE :: DIAG(:,:)
-      COMPLEX(dbl),   ALLOCATABLE :: vv(:,:)
-      COMPLEX(dbl),   ALLOCATABLE :: sd(:)
+      COMPLEX(DP)    X0( SIZE(c0,2), SIZE(c0,2))
+      COMPLEX(DP)    TEMP1( SIZE(c0,2),MAX( SIZE(c0,2),4))
+      COMPLEX(DP)    BLAM( SIZE(c0,2), SIZE(c0,2))
+      COMPLEX(DP)    CLAM( SIZE(c0,2), SIZE(c0,2))
+      COMPLEX(DP)    X1( SIZE(c0,2), SIZE(c0,2))
+      COMPLEX(DP)    RHOA( SIZE(c0,2), SIZE(c0,2))
+      REAL(DP)        SIGD( SIZE(c0,2))
+      REAL(DP)        RHOD( SIZE(c0,2))
+      COMPLEX(DP),   ALLOCATABLE :: AUX(:)
+      COMPLEX(DP),   ALLOCATABLE :: DIAG(:,:)
+      COMPLEX(DP),   ALLOCATABLE :: vv(:,:)
+      COMPLEX(DP),   ALLOCATABLE :: sd(:)
        
       INTEGER ::  IDAMAX 
       INTEGER ::  N, NGW, NX, I, J, K, ITER
-      REAL(dbl)  DIFGAM,RHOSIGD
-      REAL(dbl)  S1,S2,S3,S4,s5,s6,s7,s8
+      REAL(DP)  DIFGAM,RHOSIGD
+      REAL(DP)  S1,S2,S3,S4,s5,s6,s7,s8
 
 ! ... Subroutine body
 
@@ -759,7 +759,7 @@
 !.....INITIALIZE RHO AND SIG
 
       ALLOCATE(AUX(NGW))
-      AUX(:) = CMPLX( EMASS / PMSS(:), 0.0_dbl)
+      AUX(:) = CMPLX( EMASS / PMSS(:), 0.0_DP)
       DO I=1,N
         C0(:,I) = C0(:,I) * AUX(:)
       END DO
@@ -940,9 +940,9 @@
       IMPLICIT  NONE
 
 ! ... Arguments
-      COMPLEX(dbl), INTENT(INOUT) :: c0(:,:), cp(:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cp(:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      REAL (dbl)  :: PMSS(:), EMASS
+      REAL (DP)  :: PMSS(:), EMASS
       INTEGER, INTENT(IN) :: ispin
       
   
@@ -954,8 +954,8 @@
       INTEGER IDAMAX 
       INTEGER I,J,K,II,JJ,IP,JP
       INTEGER ITER
-      REAL (dbl)  ::  S1,S2,S3,S4,S5,S6,S7,S8
-      REAL (dbl)  ::  fact,ONE_BY_EMASS
+      REAL (DP)  ::  S1,S2,S3,S4,S5,S6,S7,S8
+      REAL (DP)  ::  fact,ONE_BY_EMASS
 
 !     .. Local Scalars ..
       INTEGER :: MYCOL, MYROW, NB, NPCOL, NPROW, NRL, NCL, RSRC, CSRC, N
@@ -968,9 +968,9 @@
       TYPE (real_parallel_matrix) :: st, sigt, rhoat, tmasst, tempt, &
         temp1t, x0t, x1t
 
-      REAL (dbl)  :: SIGD( SIZE( c0, 2 ) )
-      REAL (dbl)  :: RHOD( SIZE( c0, 2 ) )
-      REAL (dbl)  :: DIFGAM
+      REAL (DP)  :: SIGD( SIZE( c0, 2 ) )
+      REAL (DP)  :: RHOD( SIZE( c0, 2 ) )
+      REAL (DP)  :: DIFGAM
 
 
 
@@ -1030,7 +1030,7 @@
       CALL ptranspose(rhoat, tempt)
       DO J = 1, NCL
         DO I = 1, NRL
-          TEMPT%m(i,j) = 0.5_dbl * ( rhoat%m(i,j) + tempt%m(i,j) ) 
+          TEMPT%m(i,j) = 0.5_DP * ( rhoat%m(i,j) + tempt%m(i,j) ) 
           rhoat%m(i,j) = rhoat%m(i,j) - tempt%m(i,j)
         END DO
       END DO
@@ -1079,7 +1079,7 @@
         CALL pmatmul(tmasst,x0t,tempt,'t','n')
 
         DO I=1,N
-          SIGD(I)  = 0.0_dbl
+          SIGD(I)  = 0.0_DP
           II = INDXG2L( I, NB, MYROW, 0, NPROW )
           JJ = INDXG2L( I, NB, MYCOL, 0, NPCOL )
           IP = INDXG2P( I, NB, MYROW, 0, NPROW )

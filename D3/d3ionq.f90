@@ -35,7 +35,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   ! input: the type of each atom
   ! input: the number of modes
 
-  real (kind = dp) :: tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
+  real (DP) :: tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
        at (3, 3), bg (3, 3), omega, alat, gcutm, q (3)
   ! input: the positions of the atoms
   ! input: the coordinates of g vectors
@@ -48,7 +48,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   ! input: cut-off of g vectors
   ! input: the q vector
 
-  complex (kind = dp) :: d3dyn (3 * nat, nmodes, 3 * nat), &
+  complex (DP) :: d3dyn (3 * nat, nmodes, 3 * nat), &
        u (3 * nat, nmodes), ug0 (3 * nat, nmodes)
   ! output: derivative of the dyn. matrix
   ! input: the pattern of the modes
@@ -65,17 +65,17 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
        jcart, kcart, na_icart, nb_jcart, nc_kcart
   ! counters
 
-  real (kind = dp) :: arg, argq, tpiba2, tpiba3, alpha, &
+  real (DP) :: arg, argq, tpiba2, tpiba3, alpha, &
        upperbound, charge, fac, gtq2, gt2, facq, d2f, d3f, rmax, &
        r (3, mxr), r2 (mxr), dtau (3), rr, ar, qrg
   ! auxilary variables
-  real (kind = dp), external ::  erfc
+  real (DP), external ::  erfc
 
-  complex (kind = dp), allocatable :: d3dy1 (:,:,:), d3dy2 (:,:,:), d3dy3 (:,:,:)
+  complex (DP), allocatable :: d3dy1 (:,:,:), d3dy2 (:,:,:), d3dy3 (:,:,:)
   ! first term dynamical matrix
   ! second term dynamical matrix
   ! third term dynamical matrix
-  complex (kind = dp) :: facg, fnat,  work
+  complex (DP) :: facg, fnat,  work
   ! a phase with g
   ! a phase with the atoms
   ! work space

@@ -18,7 +18,7 @@ subroutine write_config_to_file
   logical :: exst
   integer :: iunit
   integer :: kunittmp
-  real(kind=DP) :: et_g(1,1), wg_g(1,1)
+  real(DP) :: et_g(1,1), wg_g(1,1)
 
   !
   ! do not modify the file if in a non-scf run..

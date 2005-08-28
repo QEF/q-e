@@ -9,7 +9,7 @@
   MODULE cell_module
 !------------------------------------------------------------------------------!
 
-      USE kinds, ONLY : dbl
+      USE kinds, ONLY : DP
       USE cell_base, ONLY: boxdimensions, alat, celldm, a1, a2, a3
       USE cell_base, ONLY: s_to_r, cell_init, pbcs, gethinv
       USE cell_base, ONLY: r_to_s, pbc, get_cell_param, dgcell, updatecell
@@ -35,7 +35,7 @@
 
 
         SUBROUTINE get_lattice_vectors(a1_out,a2_out,a3_out)
-          REAL(dbl), intent(out) :: a1_out(3), a2_out(3), a3_out(3)
+          REAL(DP), intent(out) :: a1_out(3), a2_out(3), a3_out(3)
             a1_out   = a1
             a2_out   = a2
             a3_out   = a3
@@ -45,7 +45,7 @@
 !------------------------------------------------------------------------------!
 
         SUBROUTINE get_celldm( ibrav_out, celldm_out)
-          REAL(dbl), intent(out) :: celldm_out(6)
+          REAL(DP), intent(out) :: celldm_out(6)
           INTEGER, intent(out) :: ibrav_out
             ibrav_out  = ibrav
             celldm_out = celldm
@@ -64,9 +64,9 @@
 
           LOGICAL :: tsdc
           TYPE (boxdimensions) :: box_tm1, box_t0, box_tp1
-          REAL(dbl) :: velh(3,3)
+          REAL(DP) :: velh(3,3)
           
-          REAL(dbl) :: fcell(3,3)
+          REAL(DP) :: fcell(3,3)
 
           IF( wc == 0.0d0 ) &
             CALL errore( ' movecell ',' cell mass is 0 ! ', 1 )

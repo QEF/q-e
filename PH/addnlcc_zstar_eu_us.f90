@@ -20,16 +20,16 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
   
   IMPLICIT NONE
   
-  COMPLEX(kind=DP) :: drhoscf (nrxx,nspin,3)
+  COMPLEX(DP) :: drhoscf (nrxx,nspin,3)
 
 
   INTEGER :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
   INTEGER :: imode0, npe, ipol
 
-  REAL(kind=DP) :: fac
+  REAL(DP) :: fac
   
-  COMPLEX(kind=DP), DIMENSION(nrxx) :: drhoc
-  COMPLEX(kind=DP), DIMENSION(nrxx,nspin) :: dvaux
+  COMPLEX(DP), DIMENSION(nrxx) :: drhoc
+  COMPLEX(DP), DIMENSION(nrxx,nspin) :: dvaux
 
   IF (.NOT.nlcc_any) RETURN
 
@@ -80,7 +80,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            
            DO is = 1, nspin
               zstareu0(ipol,mode) = zstareu0(ipol,mode) -                  &
-                   omega * fac / REAL(nrtot, kind = dp) *         &
+                   omega * fac / REAL(nrtot, DP) *         &
                    DOT_PRODUCT(dvaux(1:nrxx,is),drhoc(1:nrxx)) 
            END DO
         END DO

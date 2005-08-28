@@ -42,7 +42,7 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   ! output: the symmetry sending q -> -q+
   ! output: the number of irr. representa
 
-  real(kind=DP) :: xq (3), rtau (3, 48, nat), at (3, 3), bg (3, 3), &
+  real(DP) :: xq (3), rtau (3, 48, nat), at (3, 3), bg (3, 3), &
        gi (3, 48), gimq (3)
   ! input: the q point
   ! input: the R associated to each tau
@@ -51,7 +51,7 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   ! output: [S(irotq)*q - q]
   ! output: [S(irotmq)*q + q]
 
-  complex(kind=DP) :: u(3*nat, 3*nat), t(max_irr_dim, max_irr_dim, 48, 3*nat),&
+  complex(DP) :: u(3*nat, 3*nat), t(max_irr_dim, max_irr_dim, 48, 3*nat),&
        tmq (max_irr_dim, max_irr_dim, 3 * nat)
   ! output: the pattern vectors
   ! output: the symmetry matrices
@@ -65,11 +65,11 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
        ipol, jpol, isymq, irot, sna
   ! counters and auxilary variables
 
-  real(kind=DP) :: modul, arg
+  real(DP) :: modul, arg
   ! the modulus of the mode
   ! the argument of the phase
 
-  complex(kind=DP) :: wrk_u (3, nat), wrk_ru (3, nat), fase
+  complex(DP) :: wrk_u (3, nat), wrk_ru (3, nat), fase
   ! one pattern
   ! the rotated of one pattern
   ! the phase factor

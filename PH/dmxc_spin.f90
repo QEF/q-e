@@ -19,7 +19,7 @@ subroutine dmxc_spin (rhoup, rhodw, dmuxc_uu, dmuxc_ud, dmuxc_du, &
   ! I/O variables
 
 
-  real(kind=DP) :: rhoup, rhodw, dmuxc_uu, dmuxc_ud, dmuxc_du, dmuxc_dd
+  real(DP) :: rhoup, rhodw, dmuxc_uu, dmuxc_ud, dmuxc_du, dmuxc_dd
   ! input: the up charge density
   ! input: the dw charge density
   ! output: the up-up derivative of the xc en
@@ -30,15 +30,15 @@ subroutine dmxc_spin (rhoup, rhodw, dmuxc_uu, dmuxc_ud, dmuxc_du, &
 
   !-auxiliary variables
 
-  real(kind=DP) :: rhotot, rs, zeta, fz, fz1, fz2, ex, vx, ecu, ecp, vcu, &
+  real(DP) :: rhotot, rs, zeta, fz, fz1, fz2, ex, vx, ecu, ecp, vcu, &
        vcp, dmcu, dmcp, dpz, dpz_polarized, aa, bb, cc
-  real(kind=DP) :: dr, dz, ec, vxupm, vxdwm, vcupm, vcdwm, rho, vxupp, &
+  real(DP) :: dr, dz, ec, vxupm, vxdwm, vcupm, vcdwm, rho, vxupp, &
        vxdwp, vcupp, vcdwp
 
 
   integer :: iflg
   !-parameters
-  real(kind=DP) :: small, e2, pi34, third, p43, p49, m23
+  real(DP) :: small, e2, pi34, third, p43, p49, m23
   parameter (small = 1.d-30, e2 = 2.d0)
 
   parameter (pi34 = 0.75d0 / 3.141592653589793d+00, third = 1.d0 / &
@@ -140,14 +140,14 @@ function dpz_polarized (rs, iflg)
 !
 USE kinds, only : DP
 implicit none
-real(kind=DP) :: rs, dpz_polarized
+real(DP) :: rs, dpz_polarized
                              ! input : the value of rs
                              ! output: the derivative of the corr. poten
 
 integer :: iflg
                              ! input : flag to choose the functional for
 
-real(kind=DP) :: b1, b2, a1, a2, gc, a, b, c, d, pi, fpi
+real(DP) :: b1, b2, a1, a2, gc, a, b, c, d, pi, fpi
                              !\
                              ! \
                              !  \
@@ -164,7 +164,7 @@ parameter (a = 0.01555d0, b = - 0.0269d0, c = 0.0007d0, d = &
  7.0d0 * b1 / 6.d0, a2 = 4.d0 * b2 / 3.d0, pi = 3.14159265358979d0, &
  fpi = 4.d0 * pi)
 
-real(kind=DP) :: x, den, dmx, dmrs
+real(DP) :: x, den, dmx, dmrs
                               ! auxiliary variable
                               ! auxiliary variable
                               ! auxiliary variable

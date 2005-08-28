@@ -106,39 +106,39 @@
 ! ... declare subroutine arguments
       LOGICAL    :: tcel, tprint, doions
       TYPE (atoms_type) :: atoms
-      COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cgrad(:,:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cgrad(:,:,:,:)
       TYPE (wave_descriptor) :: cdesc
-      REAL(dbl) :: rhoe(:,:,:,:)
-      REAL(dbl) :: bec(:,:)
-      REAL(dbl) :: becdr(:,:,:)
-      COMPLEX(dbl) :: sfac(:,:)
-      COMPLEX(dbl) :: eigr(:,:)
-      COMPLEX(dbl) :: ei1(:,:)
-      COMPLEX(dbl) :: ei2(:,:)
-      COMPLEX(dbl) :: ei3(:,:)
+      REAL(DP) :: rhoe(:,:,:,:)
+      REAL(DP) :: bec(:,:)
+      REAL(DP) :: becdr(:,:,:)
+      COMPLEX(DP) :: sfac(:,:)
+      COMPLEX(DP) :: eigr(:,:)
+      COMPLEX(DP) :: ei1(:,:)
+      COMPLEX(DP) :: ei2(:,:)
+      COMPLEX(DP) :: ei3(:,:)
       TYPE (charge_descriptor) :: desc
       TYPE (boxdimensions), INTENT(INOUT) ::  ht0
-      REAL(dbl)  :: fi(:,:,:)
+      REAL(DP)  :: fi(:,:,:)
       TYPE (dft_energy_type) :: edft
 
-      REAL(dbl)    :: eig(:,:,:)
-      REAL(dbl)    :: vpot(:,:,:,:) 
+      REAL(DP)    :: eig(:,:,:)
+      REAL(DP)    :: vpot(:,:,:,:) 
 
 ! ... declare other variables
       INTEGER ig, ib, j, k, ik, ngw, i, is, nrt, istate, nrl, ndiis, nowv
       INTEGER idiis
       LOGICAL tlimit
-      REAL(dbl)  fions(3) 
-      REAL(dbl)  timepre,s1,s2,s3,s4,s5
-      REAL(dbl)  dene,etot_m,cnorm, drho
-      REAL(dbl)  ekinc,svar1,svar2,svar3_0
-      REAL(dbl)  efermi, sume, entk, rhos, eold, dum_kin, nel
-      REAL(dbl)  wke( cdesc%ldb, cdesc%nkl, cdesc%nspin )
-      REAL(dbl),    ALLOCATABLE :: lambda(:,:), fs(:,:,:)
-      COMPLEX(dbl), ALLOCATABLE :: clambda(:,:,:)
-      COMPLEX(dbl), ALLOCATABLE :: c0rot(:,:)
+      REAL(DP)  fions(3) 
+      REAL(DP)  timepre,s1,s2,s3,s4,s5
+      REAL(DP)  dene,etot_m,cnorm, drho
+      REAL(DP)  ekinc,svar1,svar2,svar3_0
+      REAL(DP)  efermi, sume, entk, rhos, eold, dum_kin, nel
+      REAL(DP)  wke( cdesc%ldb, cdesc%nkl, cdesc%nspin )
+      REAL(DP),    ALLOCATABLE :: lambda(:,:), fs(:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: clambda(:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: c0rot(:,:)
 
-      REAL(dbl), EXTERNAL :: cclock
+      REAL(DP), EXTERNAL :: cclock
 
 
 ! ... end of declarations
@@ -458,23 +458,23 @@
 ! ... declare subroutine arguments
       LOGICAL   :: tprint, tcel, doions
       TYPE (atoms_type) :: atoms
-      COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cgrad(:,:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cgrad(:,:,:,:)
       TYPE (wave_descriptor) :: cdesc
-      REAL(dbl) :: rhoe(:,:,:,:)
+      REAL(DP) :: rhoe(:,:,:,:)
       TYPE (charge_descriptor) :: desc
-      COMPLEX(dbl) :: eigr(:,:)
-      COMPLEX(dbl) :: ei1(:,:)
-      COMPLEX(dbl) :: ei2(:,:)
-      COMPLEX(dbl) :: ei3(:,:)
-      COMPLEX(dbl) :: sfac(:,:)
+      COMPLEX(DP) :: eigr(:,:)
+      COMPLEX(DP) :: ei1(:,:)
+      COMPLEX(DP) :: ei2(:,:)
+      COMPLEX(DP) :: ei3(:,:)
+      COMPLEX(DP) :: sfac(:,:)
       TYPE (boxdimensions), INTENT(INOUT) ::  ht0
-      REAL(dbl)  :: fi(:,:,:)
-      REAL(dbl)  :: bec(:,:)
-      REAL(dbl)  :: becdr(:,:,:)
+      REAL(DP)  :: fi(:,:,:)
+      REAL(DP)  :: bec(:,:)
+      REAL(DP)  :: becdr(:,:,:)
       TYPE (dft_energy_type) :: edft
 
-      REAL(dbl)    :: eig(:,:,:)
-      REAL(dbl)    :: vpot(:,:,:,:)
+      REAL(DP)    :: eig(:,:,:)
+      REAL(DP)    :: vpot(:,:,:,:)
 
 ! ... declare other variables
       LOGICAL :: tlimit, tsteep
@@ -484,17 +484,17 @@
       INTEGER nfi_l,nrt,istate
       INTEGER nspin
       INTEGER nx,nrl, ndiis,nowv, isteep
-      REAL(dbl)  ekinc(2), svar1, svar2, svar3_0
-      REAL(dbl)  timepre, s0, s1, s2, s3, s4, s5
-      REAL(dbl) :: seconds_per_iter, old_clock_value
-      REAL(dbl)  dene, etot_m, cnorm,  drho
-      REAL(dbl)  efermi, sume, entk,rhos
-      REAL(dbl)  eold, timerd, timeorto
-      REAL(dbl), ALLOCATABLE :: lambda(:,:)
-      COMPLEX(dbl), ALLOCATABLE :: clambda(:,:,:)
-      COMPLEX(dbl), ALLOCATABLE :: c0rot(:,:)
+      REAL(DP)  ekinc(2), svar1, svar2, svar3_0
+      REAL(DP)  timepre, s0, s1, s2, s3, s4, s5
+      REAL(DP) :: seconds_per_iter, old_clock_value
+      REAL(DP)  dene, etot_m, cnorm,  drho
+      REAL(DP)  efermi, sume, entk,rhos
+      REAL(DP)  eold, timerd, timeorto
+      REAL(DP), ALLOCATABLE :: lambda(:,:)
+      COMPLEX(DP), ALLOCATABLE :: clambda(:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: c0rot(:,:)
 
-      REAL(dbl), EXTERNAL :: cclock
+      REAL(DP), EXTERNAL :: cclock
 
 
 ! ... end of declarations
@@ -646,7 +646,7 @@
 ! ...   initialize lambda to the identity matrix
         USE kinds
         USE mp_global, ONLY: mpime, nproc
-        COMPLEX(dbl) :: clambda(:,:,:)
+        COMPLEX(DP) :: clambda(:,:,:)
         INTEGER ik, ib, ibl, nrl, nk
           nrl = SIZE(clambda, 1)
           nk  = SIZE(clambda, 3)
@@ -667,7 +667,7 @@
 ! ...   initialize lambda to the identity matrix
         USE kinds
         USE mp_global, ONLY: mpime, nproc
-        REAL(dbl) :: lambda(:,:)
+        REAL(DP) :: lambda(:,:)
         INTEGER ik, ib, ibl, nrl, nk
           nrl = SIZE(lambda, 1)
           lambda = 0.d0
@@ -707,13 +707,13 @@
         IMPLICIT NONE
 
 ! ...   ARGUMENTS
-        COMPLEX(dbl), INTENT(inout) ::  c(:,:,:,:)
-        COMPLEX(dbl), INTENT(inout) ::  eforce(:,:,:,:)
+        COMPLEX(DP), INTENT(inout) ::  c(:,:,:,:)
+        COMPLEX(DP), INTENT(inout) ::  eforce(:,:,:,:)
         TYPE (wave_descriptor), INTENT(in) :: cdesc
-        REAL (dbl), INTENT(in) ::  vpot(:,:,:,:), fi(:,:,:)
-        REAL (dbl) ::  bec(:,:)
+        REAL (DP), INTENT(in) ::  vpot(:,:,:,:), fi(:,:,:)
+        REAL (DP) ::  bec(:,:)
         LOGICAL, INTENT(IN) :: TORTHO
-        COMPLEX(dbl) :: eigr(:,:)
+        COMPLEX(DP) :: eigr(:,:)
         TYPE(atoms_type), INTENT(INOUT)  :: atoms     
 
 ! ...   LOCALS
@@ -722,8 +722,8 @@
         INTEGER     ig, iprinte, iks, nrl, jl, ibl
         LOGICAL     gamma_symmetry, gzero
 
-        REAL(dbl),    ALLOCATABLE :: gam(:,:)
-        COMPLEX(dbl), ALLOCATABLE :: cgam(:,:)
+        REAL(DP),    ALLOCATABLE :: gam(:,:)
+        COMPLEX(DP), ALLOCATABLE :: cgam(:,:)
 
 ! ...   SUBROUTINE BODY
 !

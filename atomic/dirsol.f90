@@ -40,12 +40,12 @@ subroutine dirsol(idim1,mesh,ncur,lcur,jcur,it,e0,thresh,dx,snl,r,rab,ruae)
 use kinds, only : DP
 implicit none
 integer :: idim1 
-real(kind=dp) :: r(idim1),     &   ! the radial mesh
+real(DP) :: r(idim1),     &   ! the radial mesh
                  rab(idim1),   &   ! derivative of the radial mesh
                  ruae(idim1),  &   ! the all electron potential
                  snl(idim1,2)       ! the wavefunction
 
-real(kind=dp) :: e0,       &     ! the starting energy eigenvalue
+real(DP) :: e0,       &     ! the starting energy eigenvalue
                  dx,       &     ! dx mesh value
                  jcur,     &     ! the j of the state
                  thresh
@@ -55,7 +55,7 @@ integer ::  mesh,  &          ! the dimension of the mesh
             ncur,  &          ! the n of the state
             lcur              ! the l of the state
 
-real(kind=dp) :: tbya, abyt,        &  
+real(DP) :: tbya, abyt,        &  
                  emin, emax,        &
                  zz(idim1,2,2),     &
                  tolinf,alpha2,alpha,  &
@@ -67,7 +67,7 @@ real(kind=dp) :: tbya, abyt,        &
                  factor,            &
                  ecur,              &
                  xw, decur, decurp          
-real(kind=dp) :: r2(idim1), f(idim1), int_0_inf_dr
+real(DP) :: r2(idim1), f(idim1), int_0_inf_dr
 
 integer :: itmax, &     ! maximum number of iterations
            iter,  &     ! current iteration
@@ -113,7 +113,7 @@ do iter = 1,itmax
 !
   if ( iter .eq. 1 ) then
     do ir = 1,mesh
-       zz(ir,1,1) = rab(ir) * dble(kcur) / r(ir)
+       zz(ir,1,1) = rab(ir) * DBLE(kcur) / r(ir)
        zz(ir,2,2) = - zz(ir,1,1)
     enddo
   endif
@@ -183,10 +183,10 @@ do iter = 1,itmax
      g0 = 0
   endif
  
-  f1 = - (ecur-vzero) * abyt * g0 / dble( ig - kcur + 1 )
-  g1 = (ecur-vzero+tbya**2) * abyt * f0 / dble( ig + kcur + 1 )
-  f2 = - (ecur-vzero) * abyt * g1 / dble( ig - kcur + 2 )
-  g2 = (ecur-vzero+tbya**2) * abyt * f1 / dble( ig + kcur + 2 )
+  f1 = - (ecur-vzero) * abyt * g0 / DBLE( ig - kcur + 1 )
+  g1 = (ecur-vzero+tbya**2) * abyt * f0 / DBLE( ig + kcur + 1 )
+  f2 = - (ecur-vzero) * abyt * g1 / DBLE( ig - kcur + 2 )
+  g2 = (ecur-vzero+tbya**2) * abyt * f1 / DBLE( ig + kcur + 2 )
 !
 !
   do ir = 1,5
@@ -213,7 +213,7 @@ do iter = 1,itmax
   do ir = ninf,ninf-4,-1
      alpha = sqrt( ruae(ir) / r(ir) - ecur )
      yy(ir,2) = exp ( - alpha * ( r(ir) - r(nctp) ) )
-     yy(ir,1) = ( dble(kcur)/r(ir) - alpha ) * yy(ir,2)*tbya / &
+     yy(ir,1) = ( DBLE(kcur)/r(ir) - alpha ) * yy(ir,2)*tbya / &
   &               ( ecur - ruae(ir)/r(ir) + tbya ** 2 )
   enddo
 !

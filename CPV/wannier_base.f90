@@ -9,7 +9,7 @@
 MODULE wannier_base
   !----------------------------------------------------------------------------
   !
-  USE kinds, ONLY : dbl
+  USE kinds, ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -18,17 +18,17 @@ MODULE wannier_base
   LOGICAL              :: wf_efield
   LOGICAL              :: wf_switch
   INTEGER              :: sw_len
-  REAL(KIND=dbl)       :: efx0, efy0, efz0
-  REAL(KIND=dbl)       :: efx1, efy1, efz1
+  REAL(DP)       :: efx0, efy0, efz0
+  REAL(DP)       :: efx1, efy1, efz1
   LOGICAL              :: wfsd
-  REAL(KIND=dbl)       :: wfdt
-  REAL(KIND=dbl)       :: maxwfdt
-  REAL(KIND=dbl)       :: wf_q
-  REAL(KIND=dbl)       :: wf_friction
+  REAL(DP)       :: wfdt
+  REAL(DP)       :: maxwfdt
+  REAL(DP)       :: wf_q
+  REAL(DP)       :: wf_friction
   INTEGER              :: nit
   INTEGER              :: nsd
   INTEGER              :: nsteps
-  REAL(KIND=dbl)       :: tolw
+  REAL(DP)       :: tolw
   LOGICAL              :: adapt
   INTEGER              :: calwf
   INTEGER              :: nwf
@@ -43,10 +43,10 @@ MODULE wannier_base
   INTEGER, ALLOCATABLE           :: indexplus(:,:), indexminus(:,:)
   INTEGER, ALLOCATABLE           :: indexplusz(:), indexminusz(:)
   INTEGER, ALLOCATABLE           :: tag(:,:), tagp(:,:)
-  REAL(KIND=dbl),    ALLOCATABLE :: weight(:)            ! weights of G vectors
-  REAL(KIND=dbl),    ALLOCATABLE :: gnx(:,:)
+  REAL(DP),    ALLOCATABLE :: weight(:)            ! weights of G vectors
+  REAL(DP),    ALLOCATABLE :: gnx(:,:)
   INTEGER ,          ALLOCATABLE :: gnn(:,:)
-  COMPLEX(KIND=dbl), ALLOCATABLE :: expo(:,:)
+  COMPLEX(DP), ALLOCATABLE :: expo(:,:)
   !
   CONTAINS
     !
@@ -63,17 +63,17 @@ MODULE wannier_base
       LOGICAL,          INTENT(IN) :: wf_efield_
       LOGICAL,          INTENT(IN) :: wf_switch_
       INTEGER,          INTENT(IN) :: sw_len_
-      REAL(KIND=dbl),   INTENT(IN) :: efx0_, efy0_, efz0_
-      REAL(KIND=dbl),   INTENT(IN) :: efx1_, efy1_, efz1_
+      REAL(DP),   INTENT(IN) :: efx0_, efy0_, efz0_
+      REAL(DP),   INTENT(IN) :: efx1_, efy1_, efz1_
       LOGICAL,          INTENT(IN) :: wfsd_
-      REAL(KIND=dbl),   INTENT(IN) :: wfdt_
-      REAL(KIND=dbl),   INTENT(IN) :: maxwfdt_
-      REAL(KIND=dbl),   INTENT(IN) :: wf_q_
-      REAL(KIND=dbl),   INTENT(IN) :: wf_friction_
+      REAL(DP),   INTENT(IN) :: wfdt_
+      REAL(DP),   INTENT(IN) :: maxwfdt_
+      REAL(DP),   INTENT(IN) :: wf_q_
+      REAL(DP),   INTENT(IN) :: wf_friction_
       INTEGER,          INTENT(IN) :: nit_
       INTEGER,          INTENT(IN) :: nsd_
       INTEGER,          INTENT(IN) :: nsteps_
-      REAL(KIND=dbl),   INTENT(IN) :: tolw_
+      REAL(DP),   INTENT(IN) :: tolw_
       LOGICAL,          INTENT(IN) :: adapt_
       INTEGER,          INTENT(IN) :: calwf_
       INTEGER,          INTENT(IN) :: nwf_

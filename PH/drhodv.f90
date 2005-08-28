@@ -26,7 +26,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   ! input: number of perturbations of this represent
   ! input: the initial position of the mode
 
-  complex(kind=DP) :: drhoscf (nrxx, nspin, npertx)
+  complex(DP) :: drhoscf (nrxx, nspin, npertx)
   ! the change of density due to perturbations
 
   integer :: mu, ik, ikq, ig, nu_i, nu_j, na_jcart, ibnd, nrec, &
@@ -34,9 +34,9 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   ! counters
   ! ikk: record position for wfc at k
 
-  complex(kind=DP) :: fact, ps, dynwrk (3 * nat, 3 * nat), &
+  complex(DP) :: fact, ps, dynwrk (3 * nat, 3 * nat), &
        wdyn (3 * nat, 3 * nat), ZDOTC
-  complex(kind=DP), allocatable ::  aux (:,:), dbecq (:,:,:), &
+  complex(DP), allocatable ::  aux (:,:), dbecq (:,:,:), &
        dalpq (:,:,:,:)
   ! work space
   !

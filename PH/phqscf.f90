@@ -31,7 +31,7 @@ SUBROUTINE phqscf
   ! number of representation computed
   ! counter on the modes
 
-  REAL(kind=DP) :: tcpu, get_clock
+  REAL(DP) :: tcpu, get_clock
   ! timing variables
 
   LOGICAL :: exst
@@ -40,7 +40,7 @@ SUBROUTINE phqscf
   EXTERNAL get_clock
   ! the change of density due to perturbations
 
-  COMPLEX(kind=DP), ALLOCATABLE :: drhoscf (:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: drhoscf (:,:,:)
 
   CALL start_clock ('phqscf')
   !

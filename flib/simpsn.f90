@@ -17,7 +17,7 @@ subroutine simpson (mesh, func, rab, asum)
   implicit none
   integer :: i, mesh
 
-  real(kind=DP) :: rab (mesh), func (mesh), f1, f2, f3, r12, asum
+  real(DP) :: rab (mesh), func (mesh), f1, f2, f3, r12, asum
   !     routine assumes that mesh is an odd number so run check
   !     if ( mesh+1 - ( (mesh+1) / 2 ) * 2 .ne. 1 ) then
   !       write(*,*) '***error in subroutine radlg'
@@ -44,9 +44,9 @@ subroutine simpson_cp90( mesh, func, rab, intg )
 
   implicit none
   integer mesh
-  real(kind=8)  func(mesh), rab(mesh), intg
+  real(8)  func(mesh), rab(mesh), intg
 
-  real(kind=8) c(4)
+  real(8) c(4)
   integer I
 
   if ( mesh .lt. 8 ) call errore ('simpson','few mesh points',8)
@@ -83,10 +83,10 @@ end subroutine simpson_cp90
       USE kinds
       IMPLICIT NONE
       INTEGER, INTENT(IN) ::  N
-      REAL(dbl), INTENT(IN)  ::  func(N), dx
-      REAL(dbl), INTENT(OUT) ::  S
+      REAL(DP), INTENT(IN)  ::  func(N), dx
+      REAL(DP), INTENT(OUT) ::  S
 
-      REAL(dbl) :: C1,C2,C3,C4
+      REAL(DP) :: C1,C2,C3,C4
       PARAMETER(C1=109.d0/48.d0,C2=-5.d0/48.d0, C3=63.d0/48.d0,C4=49.d0/48.d0)
       INTEGER I
 

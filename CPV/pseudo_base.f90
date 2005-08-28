@@ -62,14 +62,14 @@
 
 ! ...   declare subroutine arguments
         TYPE (pseudo_ncpp), INTENT(IN) :: ap
-        REAL(dbl), INTENT(IN) :: hg(:)
-        REAL(dbl), INTENT(OUT) :: wnl(:,:)
+        REAL(DP), INTENT(IN) :: hg(:)
+        REAL(DP), INTENT(OUT) :: wnl(:,:)
 
 ! ...   declare other variables
-        REAL(dbl), ALLOCATABLE :: fint(:,:)
-        REAL(dbl)  :: xg, dx
+        REAL(DP), ALLOCATABLE :: fint(:,:)
+        REAL(DP)  :: xg, dx
         INTEGER :: ig, mmax, nbeta, l, ind
-        REAL(dbl), ALLOCATABLE :: ftest(:,:)
+        REAL(DP), ALLOCATABLE :: ftest(:,:)
 
 ! ...   end of declarations
 !  ----------------------------------------------
@@ -127,12 +127,12 @@
 
 ! ...   declare subroutine arguments
         TYPE (pseudo_ncpp), INTENT(IN) :: ap
-        REAL(dbl), INTENT(IN)  :: hg(:)
-        REAL(dbl), INTENT(OUT) :: wnla(:,:)
+        REAL(DP), INTENT(IN)  :: hg(:)
+        REAL(DP), INTENT(OUT) :: wnla(:,:)
 
 ! ...   declare other variables
-        REAL(dbl), ALLOCATABLE :: fint(:,:)
-        REAL(dbl)  xg, dx
+        REAL(DP), ALLOCATABLE :: fint(:,:)
+        REAL(DP)  xg, dx
         INTEGER ig,mmax,gstart,nbeta
         INTEGER l,ll
         INTEGER ir
@@ -186,7 +186,7 @@
         !           = (integral) rho_cc(r) j_0(r,G) r**2 dr/dx dx
         ! drhocb(G) = (integral) rho_cc(r) dj_0(r,G)/dG r**2 dr
 
-        use kinds,         only: dbl
+        use kinds,         only: DP
         use constants,     only: fpi
         use control_flags, only: iprsta
         use io_global,     only: stdout
@@ -196,18 +196,18 @@
         integer,   intent(in)  :: mesh
         integer,   intent(in)  :: ngb
         integer,   intent(in)  :: what
-        real(dbl), intent(out) :: rhocb( ngb )
-        real(dbl), intent(out) :: drhocb( ngb )
-        real(dbl), intent(in)  :: rho_atc( mesh )
-        real(dbl), intent(in)  :: r( mesh )
-        real(dbl), intent(in)  :: rab( mesh )
-        real(dbl), intent(in)  :: gb( ngb )
-        real(dbl), intent(in)  :: omegab
-        real(dbl), intent(in)  :: tpibab2
+        real(DP), intent(out) :: rhocb( ngb )
+        real(DP), intent(out) :: drhocb( ngb )
+        real(DP), intent(in)  :: rho_atc( mesh )
+        real(DP), intent(in)  :: r( mesh )
+        real(DP), intent(in)  :: rab( mesh )
+        real(DP), intent(in)  :: gb( ngb )
+        real(DP), intent(in)  :: omegab
+        real(DP), intent(in)  :: tpibab2
         
         integer :: ig, ir
-        real(dbl), allocatable :: fint(:), jl(:), djl(:)
-        real(dbl) :: c, xg
+        real(DP), allocatable :: fint(:), jl(:), djl(:)
+        real(DP) :: c, xg
       
         allocate(fint(mesh))
         allocate(jl(mesh))
@@ -267,17 +267,17 @@
       subroutine compute_rhops( rhops, drhops, zv, rcmax, g, omega, tpiba2, ngs, tpre )
 !-----------------------------------------------------------------------
 !
-        use kinds, only: dbl
+        use kinds, only: DP
         !
         implicit none
         integer,   intent(in)  :: ngs
         logical,   intent(in)  :: tpre
-        real(dbl), intent(in)  ::  g( ngs )
-        real(dbl), intent(out) ::  rhops( ngs )
-        real(dbl), intent(out) :: drhops( ngs )
-        real(dbl), intent(in)  :: zv, rcmax, omega, tpiba2
+        real(DP), intent(in)  ::  g( ngs )
+        real(DP), intent(out) ::  rhops( ngs )
+        real(DP), intent(out) :: drhops( ngs )
+        real(DP), intent(in)  :: zv, rcmax, omega, tpiba2
         !
-        real(dbl) :: r2new
+        real(DP) :: r2new
         integer   :: ig
         !
         r2new = 0.25 * tpiba2 * rcmax**2
@@ -302,14 +302,14 @@
         USE constants, ONLY: pi
         !
         IMPLICIT NONE
-        REAL (dbl) :: compute_eself
+        REAL (DP) :: compute_eself
         !
         INTEGER,    INTENT(IN) :: nsp
         INTEGER,    INTENT(IN) :: na( nsp )
-        REAL (dbl), INTENT(IN) :: zv( nsp )
-        REAL (dbl), INTENT(IN) :: rcmax( nsp )
+        REAL (DP), INTENT(IN) :: zv( nsp )
+        REAL (DP), INTENT(IN) :: rcmax( nsp )
         !
-        REAL (dbl) :: eself
+        REAL (DP) :: eself
         INTEGER :: is
         !
         eself = 0.0d0
@@ -334,7 +334,7 @@
         !         also calculated the derivative of vps with respect to
         !         g^2 (dvps)
         !
-        use kinds, only: dbl
+        use kinds, only: DP
         use constants, only: pi, fpi, gsmall
         !
         implicit none
@@ -342,19 +342,19 @@
         integer,   intent(in)  :: mesh
         logical,   intent(in)  :: oldvan
         logical,   intent(in)  :: tpre
-        real(dbl), intent(in)  ::  g( ngs )
-        real(dbl), intent(in)  ::  r( mesh )
-        real(dbl), intent(in)  ::  rab( mesh )
-        real(dbl), intent(in)  ::  vloc_at( mesh )
-        real(dbl), intent(out) ::  vps( ngs )
-        real(dbl), intent(out) :: dvps( ngs )
-        real(dbl), intent(in)  :: zv, rcmax, omega, tpiba2, cmesh
+        real(DP), intent(in)  ::  g( ngs )
+        real(DP), intent(in)  ::  r( mesh )
+        real(DP), intent(in)  ::  rab( mesh )
+        real(DP), intent(in)  ::  vloc_at( mesh )
+        real(DP), intent(out) ::  vps( ngs )
+        real(DP), intent(out) :: dvps( ngs )
+        real(DP), intent(in)  :: zv, rcmax, omega, tpiba2, cmesh
         !
-        real(dbl) :: xg
+        real(DP) :: xg
         integer   :: ig, ir, irmax
-        real(kind=8), allocatable:: f(:),vscr(:), figl(:)
-        real(kind=8), allocatable:: df(:), dfigl(:)
-        real(kind=8), external :: erf
+        real(8), allocatable:: f(:),vscr(:), figl(:)
+        real(8), allocatable:: df(:), dfigl(:)
+        real(8), external :: erf
 !
         allocate( figl(ngs), f(mesh), vscr(mesh) )
         if (tpre) then
@@ -468,22 +468,22 @@
         !
         ! bhs pseudopotentials (fourier transformed analytically)
 
-        use kinds, only: dbl
+        use kinds, only: DP
         use constants, only: pi, fpi, gsmall
         !
         implicit none
         integer,   intent(in)  :: ngs, gstart
         logical,   intent(in)  :: tpre
-        real(dbl), intent(in)  ::  g( ngs )
-        real(dbl), intent(in)  ::  rc1, rc2
-        real(dbl), intent(in)  ::  wrc1, wrc2
-        real(dbl), intent(in)  ::  rcl( 3 ), al( 3 ), bl( 3 )
-        real(dbl), intent(out) ::  vps( ngs )
-        real(dbl), intent(out) :: dvps( ngs )
-        real(dbl), intent(in)  :: zv, rcmax, omega, tpiba2
+        real(DP), intent(in)  ::  g( ngs )
+        real(DP), intent(in)  ::  rc1, rc2
+        real(DP), intent(in)  ::  wrc1, wrc2
+        real(DP), intent(in)  ::  rcl( 3 ), al( 3 ), bl( 3 )
+        real(DP), intent(out) ::  vps( ngs )
+        real(DP), intent(out) :: dvps( ngs )
+        real(DP), intent(in)  :: zv, rcmax, omega, tpiba2
         !
-        real(dbl) :: r2max, r21, r22, gps, sfp, r2l, ql, el, par, sp
-        real(dbl) :: emax, e1, e2, fpibg, dgps, dsfp
+        real(DP) :: r2max, r21, r22, gps, sfp, r2l, ql, el, par, sp
+        real(DP) :: emax, e1, e2, fpibg, dgps, dsfp
         integer   :: ib, ig
 
         r2max = rcmax**2

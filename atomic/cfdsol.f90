@@ -38,9 +38,9 @@ subroutine cfdsol(zz,yy,jj1,jj2,idim1)
   use kinds, only : DP
   implicit none
   integer :: idim1, jj1, jj2, ip
-  real(kind=dp):: zz(idim1,2,2),yy(idim1,2)
-  real(kind=dp):: fa(0:5),fb(0:5),abp(1:5),amc(0:4)
-  real(kind=dp):: arp, brp
+  real(DP):: zz(idim1,2,2),yy(idim1,2)
+  real(DP):: fa(0:5),fb(0:5),abp(1:5),amc(0:4)
+  real(DP):: arp, brp
 
   integer :: isgn, i, j
   !
@@ -105,8 +105,8 @@ subroutine cfdsol(zz,yy,jj1,jj2,idim1)
        arp = yy(j-isgn,1)
        brp = yy(j-isgn,2)
        do i = 1,5
-          arp = arp + dble(isgn) * abp(i) * fa(i)
-          brp = brp + dble(isgn) * abp(i) * fb(i)
+          arp = arp + DBLE(isgn) * abp(i) * fa(i)
+          brp = brp + DBLE(isgn) * abp(i) * fb(i)
        enddo
 
        fa(0) = zz(j,1,1) * arp + zz(j,1,2) * brp
@@ -117,8 +117,8 @@ subroutine cfdsol(zz,yy,jj1,jj2,idim1)
        yy(j,1) = yy(j-isgn,1)
        yy(j,2) = yy(j-isgn,2)
        do i = 0,4,1
-          yy(j,1) = yy(j,1) + dble(isgn) * amc(i) * fa(i)
-          yy(j,2) = yy(j,2) + dble(isgn) * amc(i) * fb(i)
+          yy(j,1) = yy(j,1) + DBLE(isgn) * amc(i) * fa(i)
+          yy(j,2) = yy(j,2) + DBLE(isgn) * amc(i) * fb(i)
        enddo
        !
        !       book keeping

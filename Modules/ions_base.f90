@@ -10,7 +10,7 @@
   MODULE ions_base
 !------------------------------------------------------------------------------!
 
-      USE kinds,      ONLY : dbl
+      USE kinds,      ONLY : DP
       USE parameters, ONLY : nsx, natx, ntypx
 !
       IMPLICIT NONE
@@ -30,20 +30,20 @@
       !     pmass(is) = mass (converted to a.u.) of ions
       !     rcmax(is) = Ewald radius (for ion-ion interactions)
 
-      REAL(dbl) :: zv(nsx)    = 0.0d0
-      REAL(dbl) :: pmass(nsx) = 0.0d0
-      REAL(dbl) :: amass(nsx) = 0.0d0
-      REAL(dbl) :: rcmax(nsx) = 0.0d0
+      REAL(DP) :: zv(nsx)    = 0.0d0
+      REAL(DP) :: pmass(nsx) = 0.0d0
+      REAL(DP) :: amass(nsx) = 0.0d0
+      REAL(DP) :: rcmax(nsx) = 0.0d0
 
       !     ityp( i ) = the type of i-th atom in stdin
       !     atm( j )  = name of the type of the j-th atomic specie
       !     tau( 1:3, i ) = position of the i-th atom
 
       INTEGER,   ALLOCATABLE :: ityp(:)
-      REAL(dbl), ALLOCATABLE :: tau(:,:)     !  initial positions read from stdin (in bohr)
-      REAL(dbl), ALLOCATABLE :: vel(:,:)     !  initial velocities read from stdin (in bohr)
-      REAL(dbl), ALLOCATABLE :: tau_srt(:,:) !  tau sorted by specie in bohr
-      REAL(dbl), ALLOCATABLE :: vel_srt(:,:) !  vel sorted by specie in bohr
+      REAL(DP), ALLOCATABLE :: tau(:,:)     !  initial positions read from stdin (in bohr)
+      REAL(DP), ALLOCATABLE :: vel(:,:)     !  initial velocities read from stdin (in bohr)
+      REAL(DP), ALLOCATABLE :: tau_srt(:,:) !  tau sorted by specie in bohr
+      REAL(DP), ALLOCATABLE :: vel_srt(:,:) !  vel sorted by specie in bohr
       INTEGER,   ALLOCATABLE :: ind_srt(:)   !  index of tau sorted by specie
       INTEGER,   ALLOCATABLE :: ind_bck(:)   !  reverse of ind_srt
       CHARACTER(LEN=3)       :: atm( ntypx ) 
@@ -56,8 +56,8 @@
       INTEGER :: fixatom   = -1            ! to be removed
       INTEGER :: ndofp     = -1            ! ionic degree of freedom
 
-      REAL(dbl) :: fricp   ! friction parameter for damped dynamics
-      REAL(dbl) :: greasp  ! friction parameter for damped dynamics
+      REAL(DP) :: fricp   ! friction parameter for damped dynamics
+      REAL(DP) :: greasp  ! friction parameter for damped dynamics
 
       ! ... taui = real ionic positions in the center of mass reference
       ! ... system at istep = 0
@@ -66,15 +66,15 @@
       ! ... first index: x,y,z, second index: atom sortred by specie with respect input
       ! ... this array is saved in the restart file
 
-      REAL(dbl), ALLOCATABLE ::  taui(:,:)
+      REAL(DP), ALLOCATABLE ::  taui(:,:)
 
       ! ... cdmi = center of mass reference system (related to the taui)
       ! ... this vector is computed when NBEG = -1, NBEG = 0 and TAURDR = .TRUE.
       ! ... this array is saved in the restart file
 
-      REAL(dbl) :: cdmi(3), cdm(3)
+      REAL(DP) :: cdmi(3), cdm(3)
       !
-      REAL(KIND=dbl) :: fion(3,natx), fionm(3,natx)
+      REAL(DP) :: fion(3,natx), fionm(3,natx)
 
       LOGICAL :: tions_base_init = .FALSE.
       LOGICAL, PRIVATE :: tdebug = .FALSE.
@@ -95,8 +95,8 @@
 
     SUBROUTINE packtau( taup, tau, na, nsp )
       IMPLICIT NONE
-      REAL(dbl), INTENT(OUT) :: taup( :, : )
-      REAL(dbl), INTENT(IN) :: tau( :, :, : )
+      REAL(DP), INTENT(OUT) :: taup( :, : )
+      REAL(DP), INTENT(IN) :: tau( :, :, : )
       INTEGER, INTENT(IN) :: na( : ), nsp
       INTEGER :: is, ia, isa
       isa = 0
@@ -113,8 +113,8 @@
 
     SUBROUTINE unpacktau( tau, taup, na, nsp )
       IMPLICIT NONE
-      REAL(dbl), INTENT(IN) :: taup( :, : )
-      REAL(dbl), INTENT(OUT) :: tau( :, :, : )
+      REAL(DP), INTENT(IN) :: taup( :, : )
+      REAL(DP), INTENT(OUT) :: tau( :, :, : )
       INTEGER, INTENT(IN) :: na( : ), nsp
       INTEGER :: is, ia, isa
       isa = 0
@@ -131,9 +131,9 @@
 
     SUBROUTINE sort_tau( tausrt, isrt, tau, isp, nat, nsp )
       IMPLICIT NONE
-      REAL(dbl), INTENT(OUT) :: tausrt( :, : )
+      REAL(DP), INTENT(OUT) :: tausrt( :, : )
       INTEGER, INTENT(OUT) :: isrt( : )
-      REAL(dbl), INTENT(IN) :: tau( :, : )
+      REAL(DP), INTENT(IN) :: tau( :, : )
       INTEGER, INTENT(IN) :: nat, nsp, isp( : )
       INTEGER :: ina( nsp ), na( nsp )
       INTEGER :: is, ia
@@ -168,9 +168,9 @@
 
     SUBROUTINE unsort_tau( tau, tausrt, isrt, nat )
       IMPLICIT NONE
-      REAL(dbl), INTENT(IN) :: tausrt( :, : )
+      REAL(DP), INTENT(IN) :: tausrt( :, : )
       INTEGER, INTENT(IN) :: isrt( : )
-      REAL(dbl), INTENT(OUT) :: tau( :, : )
+      REAL(DP), INTENT(OUT) :: tau( :, : )
       INTEGER, INTENT(IN) :: nat
       INTEGER :: isa, ia
       DO isa = 1, nat
@@ -193,14 +193,14 @@
 
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: nsp_ , nat_ , na_ (:) , ityp_ (:)
-      REAL(dbl), INTENT(IN) :: tau_(:,:)
-      REAL(dbl), INTENT(IN) :: vel_(:,:)
-      REAL(dbl), INTENT(IN) :: amass_(:)
+      REAL(DP), INTENT(IN) :: tau_(:,:)
+      REAL(DP), INTENT(IN) :: vel_(:,:)
+      REAL(DP), INTENT(IN) :: amass_(:)
       CHARACTER(LEN=*), INTENT(IN) :: atm_ (:)
       CHARACTER(LEN=*), INTENT(IN) :: tau_units_
       INTEGER, INTENT(IN) :: if_pos_ (:,:)
-      REAL(dbl), INTENT(IN) :: alat_ , a1_(3) , a2_(3) , a3_(3)
-      REAL(dbl), INTENT(IN) :: rcmax_ (:)
+      REAL(DP), INTENT(IN) :: alat_ , a1_(3) , a2_(3) , a3_(3)
+      REAL(DP), INTENT(IN) :: rcmax_ (:)
       INTEGER :: i, ia, is
 
       nsp = nsp_
@@ -405,11 +405,11 @@
 
     SUBROUTINE ions_vel3( vel, taup, taum, na, nsp, dt )
       IMPLICIT NONE
-      REAL(dbl) :: vel(:,:), taup(:,:), taum(:,:)
+      REAL(DP) :: vel(:,:), taup(:,:), taum(:,:)
       INTEGER :: na(:), nsp
-      REAL(dbl) :: dt
+      REAL(DP) :: dt
       INTEGER :: ia, is, i, isa
-      REAL(dbl) :: fac
+      REAL(DP) :: fac
       fac  = 1.0d0 / ( dt * 2.0d0 )
       isa = 0
       DO is = 1, nsp
@@ -427,11 +427,11 @@
 
     SUBROUTINE ions_vel2( vel, taup, taum, nat, dt )
       IMPLICIT NONE
-      REAL(dbl) :: vel(:,:), taup(:,:), taum(:,:)
+      REAL(DP) :: vel(:,:), taup(:,:), taum(:,:)
       INTEGER :: nat
-      REAL(dbl) :: dt
+      REAL(DP) :: dt
       INTEGER :: ia, i
-      REAL(dbl) :: fac
+      REAL(DP) :: fac
       fac  = 1.0d0 / ( dt * 2.0d0 )
       DO ia = 1, nat
         DO i = 1, 3
@@ -445,11 +445,11 @@
 
     SUBROUTINE cofmass1( tau, pmass, na, nsp, cdm )
       IMPLICIT NONE
-      REAL(dbl), INTENT(IN) :: tau(:,:,:), pmass(:)
-      REAL(dbl), INTENT(OUT) :: cdm(3)
+      REAL(DP), INTENT(IN) :: tau(:,:,:), pmass(:)
+      REAL(DP), INTENT(OUT) :: cdm(3)
       INTEGER, INTENT(IN) :: na(:), nsp
 
-      REAL(dbl) :: tmas
+      REAL(DP) :: tmas
       INTEGER :: is, i, ia
 !
       tmas=0.0
@@ -474,11 +474,11 @@
 
     SUBROUTINE cofmass2( tau, pmass, na, nsp, cdm )
       IMPLICIT NONE
-      REAL(dbl), INTENT(IN) :: tau(:,:), pmass(:)
-      REAL(dbl), INTENT(OUT) :: cdm(3)
+      REAL(DP), INTENT(IN) :: tau(:,:), pmass(:)
+      REAL(DP), INTENT(OUT) :: cdm(3)
       INTEGER, INTENT(IN) :: na(:), nsp
 
-      REAL(dbl) :: tmas
+      REAL(DP) :: tmas
       INTEGER :: is, i, ia, isa
 !
       tmas=0.0
@@ -516,12 +516,12 @@
          USE io_global, ONLY: stdout
 
          IMPLICIT NONE
-         REAL(dbl) :: hinv(3,3)
-         REAL(dbl) :: tau(:,:)
+         REAL(DP) :: hinv(3,3)
+         REAL(DP) :: tau(:,:)
          INTEGER, INTENT(IN) :: ifor(:,:), na(:), nsp
          LOGICAL, INTENT(IN) :: tranp(:)
-         REAL(dbl), INTENT(IN) :: amprp(:)
-         REAL(dbl) :: oldp(3), rand_disp(3), rdisp(3)
+         REAL(DP), INTENT(IN) :: amprp(:)
+         REAL(DP) :: oldp(3), rand_disp(3), rdisp(3)
          INTEGER :: k, is, isa, isa_s, isa_e, isat
 
          WRITE( stdout, 600 )
@@ -559,10 +559,10 @@
 
   SUBROUTINE ions_kinene( ekinp, vels, na, nsp, h, pmass )
     IMPLICIT NONE
-    real( kind=8 ), intent(out) :: ekinp     !  ionic kinetic energy
-    real( kind=8 ), intent(in) :: vels(:,:)  !  scaled ionic velocities
-    real( kind=8 ), intent(in) :: pmass(:)   !  ionic masses
-    real( kind=8 ), intent(in) :: h(:,:)     !  simulation cell
+    real( 8 ), intent(out) :: ekinp     !  ionic kinetic energy
+    real( 8 ), intent(in) :: vels(:,:)  !  scaled ionic velocities
+    real( 8 ), intent(in) :: pmass(:)   !  ionic masses
+    real( 8 ), intent(in) :: h(:,:)     !  simulation cell
     integer, intent(in) :: na(:), nsp
     integer :: i, j, is, ia, ii, isa
     ekinp = 0.0d0
@@ -591,16 +591,16 @@
     !
     implicit none
     !
-    real( kind=8 ), intent(out) :: ekinpr, tempp
-    real( kind=8 ), intent(out) :: temps(:)
-    real( kind=8 ), intent(out) :: ekin2nhp(:)
-    real( kind=8 ), intent(in)  :: vels(:,:)
-    real( kind=8 ), intent(in)  :: pmass(:)
-    real( kind=8 ), intent(in)  :: h(:,:)
+    real( 8 ), intent(out) :: ekinpr, tempp
+    real( 8 ), intent(out) :: temps(:)
+    real( 8 ), intent(out) :: ekin2nhp(:)
+    real( 8 ), intent(in)  :: vels(:,:)
+    real( 8 ), intent(in)  :: pmass(:)
+    real( 8 ), intent(in)  :: h(:,:)
     integer,        intent(in)  :: na(:), nsp, ndega, nhpdim, atm2nhp(:)
     !
     integer        :: nat, i, j, is, ia, ii, isa
-    real( kind=8 ) :: cdmvel(3), eks, eks1
+    real( 8 ) :: cdmvel(3), eks, eks1
     !
     call ions_cofmass( vels, pmass, na, nsp, cdmvel )
     !
@@ -652,8 +652,8 @@
 !------------------------------------------------------------------------------!
 
   subroutine ions_thermal_stress( stress, pmass, omega, h, vels, nsp, na )
-    real(kind=8), intent(inout) :: stress(3,3)
-    real(kind=8), intent(in)  :: pmass(:), omega, h(3,3), vels(:,:)
+    real(8), intent(inout) :: stress(3,3)
+    real(8), intent(in)  :: pmass(:), omega, h(3,3), vels(:,:)
     integer, intent(in) :: nsp, na(:)
     integer :: i, j, is, ia, isa
     isa    = 0
@@ -679,15 +679,15 @@
     use constants, only: pi, factem
     implicit none
     logical, intent(in) :: tcap
-    real(kind=8), intent(inout) :: taup(:,:)
-    real(kind=8), intent(in) :: tau0(:,:), taum(:,:), fion(:,:)
-    real(kind=8), intent(in) :: delt, pmass(:), tempw, tempp
+    real(8), intent(inout) :: taup(:,:)
+    real(8), intent(in) :: tau0(:,:), taum(:,:), fion(:,:)
+    real(8), intent(in) :: delt, pmass(:), tempw, tempp
     integer, intent(in) :: na(:), nsp
     integer, intent(in) :: iforce(:,:)
 
-    real(kind=8) :: alfap, qr(3), alfar, gausp
-    real(kind=8) :: dt2by2, ftmp
-    real(kind=8) :: randy
+    real(8) :: alfap, qr(3), alfar, gausp
+    real(8) :: dt2by2, ftmp
+    real(8) :: randy
     integer :: i, ia, is, nat, isa
 
     dt2by2 = .5d0 * delt * delt
@@ -740,8 +740,8 @@
 
   subroutine ions_shiftvar( varp, var0, varm )
     implicit none
-    real(kind=8), intent(in) :: varp(:,:)
-    real(kind=8), intent(out) :: varm(:,:), var0(:,:)
+    real(8), intent(in) :: varp(:,:)
+    real(8), intent(out) :: varm(:,:), var0(:,:)
       varm = var0
       var0 = varp
     return

@@ -9,7 +9,7 @@ subroutine set_sl3(sl3,lmax)
    ! I/O variables
    !
    integer :: lmax
-   real (kind=DP) :: sl3(0:2*lmax,0:2*lmax,0:2*lmax)
+   real (DP) :: sl3(0:2*lmax,0:2*lmax,0:2*lmax)
    !
    ! local variables
    !

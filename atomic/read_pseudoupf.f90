@@ -30,7 +30,7 @@ subroutine read_pseudoupf
   !     Local variables
   !
   integer :: nb, ios
-  real(kind=dp) :: fpi
+  real(DP) :: fpi
   TYPE (pseudo_upf) :: upf
   !
   !

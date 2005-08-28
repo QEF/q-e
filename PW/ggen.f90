@@ -33,12 +33,12 @@ SUBROUTINE ggen()
   !
   !     here a few local variables
   !
-  REAL(kind=DP) ::  t (3), tt, swap, dnorm
-  REAL(kind=DP), ALLOCATABLE ::  esort (:)
+  REAL(DP) ::  t (3), tt, swap, dnorm
+  REAL(DP), ALLOCATABLE ::  esort (:)
   !
   INTEGER :: ngmx, n1, n2, n3, n1s, n2s, n3s
   !
-  REAL(kind=DP), ALLOCATABLE :: g2sort_g(:)
+  REAL(DP), ALLOCATABLE :: g2sort_g(:)
   ! array containing all g vectors, on all processors: replicated data
   INTEGER, ALLOCATABLE :: mill_g(:,:)
   ! array containing all g vectors generators, on all processors:

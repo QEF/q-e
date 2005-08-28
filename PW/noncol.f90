@@ -27,7 +27,7 @@ MODULE noncollin_module
   LOGICAL :: &
       noncolin              !  true if noncollinear magnetism is allowed
   !
-  REAL (KIND=DP) :: &
+  REAL (DP) :: &
       angle1(ntypx),       &!  Define the polar coordinates of the starting
       angle2(ntypx),       &!  magnetization's direction for each atom
       mcons(3,ntypx),      &!  constrained values for local variables
@@ -39,7 +39,7 @@ MODULE noncollin_module
       lambda                !  prefactor in the penalty functional 
                             !  for constraints
   !
-  REAL (KIND=DP), ALLOCATABLE :: &
+  REAL (DP), ALLOCATABLE :: &
       factlist(:,:),       &! weightenig factors for local integrations
       r_loc(:),            &! local integrated charge 
       m_loc(:,:)            ! local integrated magnetization

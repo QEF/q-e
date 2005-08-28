@@ -32,16 +32,16 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
    !  I/O variables
    !
    integer :: ik, natw, lmax_wfc
-   real (kind=DP) :: u(3)
-   complex (kind=DP) :: dwfcat(npwx,natw)
+   real (DP) :: u(3)
+   complex (DP) :: dwfcat(npwx,natw)
    !
    ! local variables
    !
    integer :: ig, na, nt, nb, l, lm, m, i, iig, ipol, iatw, i0, i1, i2, i3
-   real (kind=DP) :: arg, vqint, px, ux, vx, wx
-   complex (kind=8) :: phase, pref
+   real (DP) :: arg, vqint, px, ux, vx, wx
+   complex (8) :: phase, pref
 
-   real (kind=DP), allocatable :: q(:), gk(:,:), dylm(:,:), dylm_u(:,:), &
+   real (DP), allocatable :: q(:), gk(:,:), dylm(:,:), dylm_u(:,:), &
                    vchi(:), auxjl(:), chiq(:,:,:)
    !          q(npw), gk(3,npw),
    !          dylm  (npw,(lmax_wfc+1)**2),
@@ -49,7 +49,7 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
    !          vchi(ndm),
    !          auxjl(ndm),
    !          chiq(npwx,nchix,ntyp),
-   complex (kind=DP), allocatable :: sk(:)
+   complex (DP), allocatable :: sk(:)
    !          sk(npw)
 
    allocate ( q(npw), gk(3,npw), chiq(npwx,nchix,ntyp) )

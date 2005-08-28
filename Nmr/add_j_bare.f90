@@ -17,13 +17,13 @@ subroutine add_j_bare (phi1, phi2, weight, rho)
   
   implicit none
 
-  complex(kind=DP), intent(in):: phi1(npwx,nbnd), phi2(npwx,nbnd) 
-  real (kind=DP) :: weight
-  complex(kind=DP), intent(inout):: rho(nrxx)
+  complex(DP), intent(in):: phi1(npwx,nbnd), phi2(npwx,nbnd) 
+  real (DP) :: weight
+  complex(DP), intent(inout):: rho(nrxx)
 
 
   !local variable
-  complex(kind=DP), allocatable :: aux1(:),aux2(:)
+  complex(DP), allocatable :: aux1(:),aux2(:)
 
   integer :: i,ibnd
 

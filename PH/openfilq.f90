@@ -39,7 +39,7 @@ SUBROUTINE openfilq()
   LOGICAL :: exst
   ! logical variable to check file existe
   !
-  REAL(kind=DP) :: edum(1,1), wdum(1,1)
+  REAL(DP) :: edum(1,1), wdum(1,1)
   INTEGER :: ndr, ierr, kunittmp
 
   IF (LEN_TRIM(prefix) == 0) CALL errore ('openfilq', 'wrong prefix', 1)

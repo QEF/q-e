@@ -11,20 +11,20 @@ subroutine dfx_new(dchi0, vx)
    ! 
    ! I/O variables
    !
-   real(kind=DP) :: dchi0(ndm,nwfx), vx(ndm,2)
+   real(DP) :: dchi0(ndm,nwfx), vx(ndm,2)
    !
    ! local variables
    ! 
    integer, parameter :: niterx = 12 ! 6, 12, 24
-   real(kind=DP) :: drho0(ndm,2),appchim1(ndm,2), vslater(ndm,2)
-   real(kind=DP) :: int_0_inf_dr
-   real(kind=DP) :: vvx(ndm,2,niterx),drhox(ndm,2,niterx), dvh(ndm,2,niterx), &
+   real(DP) :: drho0(ndm,2),appchim1(ndm,2), vslater(ndm,2)
+   real(DP) :: int_0_inf_dr
+   real(DP) :: vvx(ndm,2,niterx),drhox(ndm,2,niterx), dvh(ndm,2,niterx), &
                     dvh0(ndm,2), aux(ndm), drho1(ndm,2), dvh1(ndm,2)
-   real(kind=DP) :: a(niterx,niterx), inva(niterx,niterx), &
+   real(DP) :: a(niterx,niterx), inva(niterx,niterx), &
                     b1(niterx), b2(niterx), c, c1, work(niterx), x(niterx), uno
    integer :: iwork(niterx), info, iterx
    integer :: i, iter, j, jter, k, nu, is
-   real(kind=DP) :: third, fac, capel
+   real(DP) :: third, fac, capel
    logical :: first = .true.
    save first
 

@@ -166,7 +166,7 @@ subroutine occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw)
   use kinds, only : DP
   implicit none
   integer :: nwf, nwfx, nn(nwfx), ll(nwfx), isw(nwfx)
-  real(kind=dp) :: oc(nwfx), jj(nwfx)
+  real(DP) :: oc(nwfx), jj(nwfx)
   character(len=2) :: el(nwfx)
 
   integer :: nwftot, nwf0, n, m
@@ -224,7 +224,7 @@ subroutine occ_spinorbps(nwf,nwfx,el,nn,ll,jj,oc,rcut,rcutus,enls,isw)
   use kinds, only : DP
   implicit none
   integer :: nwf, nwfx, nn(nwfx), ll(nwfx), isw(nwfx)
-  real(kind=dp) :: oc(nwfx), jj(nwfx), rcut(nwfx), rcutus(nwfx), enls(nwfx)
+  real(DP) :: oc(nwfx), jj(nwfx), rcut(nwfx), rcutus(nwfx), enls(nwfx)
   character(len=2) :: el(nwfx)
 
   integer :: nwftot, nwf0, n, m

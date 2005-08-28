@@ -24,7 +24,7 @@ subroutine run_test
        nc    ! counter on configurations
   integer :: ios
   character(len=1) :: nch
-  real(kind=dp) :: dum
+  real(DP) :: dum
 
   file_tests = trim(prefix)//'.test'
   open(unit=13, file=file_tests, iostat=ios, err=1111, status='unknown')

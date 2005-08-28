@@ -15,14 +15,14 @@ MODULE int_global_variables
   INTEGER                      :: N, dim
   INTEGER                      :: old_num_of_images, new_num_of_images
   INTEGER                      :: first_image, last_image
-  REAL (KIND=DP), ALLOCATABLE  :: old_pos(:,:), new_pos(:,:)
-  REAL (KIND=DP), ALLOCATABLE  :: old_PES_gradient(:,:), new_PES_gradient(:,:)
+  REAL (DP), ALLOCATABLE  :: old_pos(:,:), new_pos(:,:)
+  REAL (DP), ALLOCATABLE  :: old_PES_gradient(:,:), new_PES_gradient(:,:)
   INTEGER,        ALLOCATABLE  :: fix_atom(:)
-  REAL (KIND=DP), ALLOCATABLE  :: old_V(:), new_V(:) 
-  REAL (KIND=DP), ALLOCATABLE  :: d_R(:)
-  REAL (KIND=DP), ALLOCATABLE  :: a(:), b(:), c(:), d(:), F(:)
-  REAL (KIND=DP), ALLOCATABLE  :: old_mesh(:), new_mesh(:)
-  REAL (KIND=DP), ALLOCATABLE  :: tangent(:)
+  REAL (DP), ALLOCATABLE  :: old_V(:), new_V(:) 
+  REAL (DP), ALLOCATABLE  :: d_R(:)
+  REAL (DP), ALLOCATABLE  :: a(:), b(:), c(:), d(:), F(:)
+  REAL (DP), ALLOCATABLE  :: old_mesh(:), new_mesh(:)
+  REAL (DP), ALLOCATABLE  :: tangent(:)
   CHARACTER(LEN=256)           :: old_restart_file, new_restart_file
   !
 END MODULE int_global_variables
@@ -44,7 +44,7 @@ PROGRAM images_interpolator
   INTEGER             :: i, j, ia
   INTEGER             :: istep, nstep, suspended_image
   INTEGER             :: ierr
-  REAL (KIND=DP)      :: R, delta_R, x
+  REAL (DP)      :: R, delta_R, x
   LOGICAL             :: no_interpolation
   LOGICAL, EXTERNAL   :: matches 
   CHARACTER (LEN=20)  :: cell_parameters

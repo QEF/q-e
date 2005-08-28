@@ -52,12 +52,12 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   INTEGER :: ik_, iter
     ! k-point already done
     ! current iterations
-  REAL(KIND=DP) :: dr2
+  REAL(DP) :: dr2
     ! current accuracy of self-consistency
   !
   ! ... local variables
   !
-  REAL(KIND=DP) :: avg_iter, cg_iter, v_of_0
+  REAL(DP) :: avg_iter, cg_iter, v_of_0
     ! average number of iterations
     ! number of iterations in Conjugate-Gradient
     ! the average of the potential
@@ -76,7 +76,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   !
   ! ... external functions
   !
-  REAL(KIND=DP), EXTERNAL :: erf
+  REAL(DP), EXTERNAL :: erf
     ! error function  
   !
   !

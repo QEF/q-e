@@ -38,7 +38,7 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vloc_at, &
   ! input: numeric, the dimensions of the mesh
   ! input: numeric, number of mesh points for radial integration
 
-  real(kind=DP) :: cc (2), alpc (2), alps (3, 0:3), aps (6, 0:3), &
+  real(DP) :: cc (2), alpc (2), alps (3, 0:3), aps (6, 0:3), &
        zp, rab (mesh), r (mesh), vloc_at (mesh), tpiba2, omega, gl (ngl), &
        vloc (ngl)
   ! input: analytic, c of the erf functions
@@ -56,14 +56,14 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vloc_at, &
   logical :: numeric
   ! input: if true the pseudo is numeric
   !
-  real(kind=DP), parameter :: pi = 3.14159265358979d0, fpi= 4.d0 * pi, &
+  real(DP), parameter :: pi = 3.14159265358979d0, fpi= 4.d0 * pi, &
                               e2 = 2.d0, eps= 1.d-8
   !    local variables
   !
-  real(kind=DP) :: vlcp, fac, den1, den2, g2a, gx
-  real(kind=DP), allocatable :: aux (:), aux1 (:)
+  real(DP) :: vlcp, fac, den1, den2, g2a, gx
+  real(DP), allocatable :: aux (:), aux1 (:)
   !  auxiliary variables
-  real(kind=DP), external :: erf
+  real(DP), external :: erf
   integer :: i, igl, igl0, l, ir
   ! counter on erf functions or gaussians
   ! counter on g shells vectors

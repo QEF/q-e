@@ -39,7 +39,7 @@ subroutine data_structure( lgamma )
   ! counters on G space
   !
 
-  real(kind=DP) :: amod
+  real(DP) :: amod
   ! modulus of G vectors
 
   integer, allocatable :: st(:,:), stw(:,:), sts(:,:) 
@@ -48,7 +48,7 @@ subroutine data_structure( lgamma )
   integer :: ub(3), lb(3)  
   ! upper and lower bounds for maps
 
-  real(kind=DP) :: gkcut
+  real(DP) :: gkcut
   ! cut-off for the wavefunctions
 
   integer :: np, nps1, nq, nqs, max1, min1, max2, min2, kpoint, m1, &

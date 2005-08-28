@@ -16,7 +16,7 @@ function w_1gauss (x, n)
 !
 USE kinds, only : DP
 implicit none
-real (kind = dp) :: w_1gauss, x
+real (DP) :: w_1gauss, x
                        ! output: the value of the function
                       ! input: the point where to compute the function
 
@@ -25,7 +25,7 @@ integer :: n
 !
 !    here the local variables
 !
-real (kind = dp) :: a, arg, hp, hd, pi, aux1, aux2
+real (DP) :: a, arg, hp, hd, pi, aux1, aux2
                       ! the coefficients a_n
                       ! the argument of the exponential
                       ! the hermite function

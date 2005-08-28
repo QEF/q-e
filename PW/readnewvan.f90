@@ -42,7 +42,7 @@ subroutine readnewvan (is, iunps)
   ! counter on angular momentum
   ! the kkbeta for each beta
 
-  real(kind=DP) :: x, etotps, rdum
+  real(DP) :: x, etotps, rdum
   ! auxiliary variable
   ! total energy of the pseudoatom
   ! dummy real variable
@@ -167,7 +167,7 @@ subroutine readnewvan (is, iunps)
   !    compute the radial mesh
   !
   do ir = 1, mesh (is)
-     x = xmin (is) + dble (ir - 1) * dx (is)
+     x = xmin (is) + DBLE (ir - 1) * dx (is)
      r (ir, is) = exp (x) / zmesh (is)
      rab (ir, is) = dx (is) * r (ir, is)
   enddo

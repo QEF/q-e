@@ -22,10 +22,10 @@ subroutine read_ncpp (np, iunps)
   !
   integer :: iunps, np
   !
-  real(kind=DP) :: x, vll
-  real(kind=DP), allocatable:: vnl(:,:)
-  real(kind=DP), parameter :: rcut = 10.d0, e2 = 2.d0
-  real(kind=DP), external :: erf
+  real(DP) :: x, vll
+  real(DP), allocatable:: vnl(:,:)
+  real(DP), parameter :: rcut = 10.d0, e2 = 2.d0
+  real(DP), external :: erf
   integer :: nb, ios, i, l, ir
   logical :: bhstype
   !
@@ -125,7 +125,7 @@ subroutine read_ncpp (np, iunps)
   !    compute the radial mesh
   !
   do ir = 1, mesh (np)
-     x = xmin (np) + dble (ir - 1) * dx (np)
+     x = xmin (np) + DBLE (ir - 1) * dx (np)
      r (ir, np) = exp (x) / zmesh (np)
      rab (ir, np) = dx (np) * r (ir, np)
   enddo

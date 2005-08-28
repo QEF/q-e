@@ -40,13 +40,13 @@
 
         !! ...    quantities related to k+G vectors
 
-        REAL(dbl), ALLOCATABLE :: gkcutz_l(:,:) ! smooth cutoff factor index: G vector
+        REAL(DP), ALLOCATABLE :: gkcutz_l(:,:) ! smooth cutoff factor index: G vector
                                                 ! first index: G vector
                                                 ! second index: k point
 
-        REAL(dbl), ALLOCATABLE :: gkmask_l(:,:) ! cutoff mask
-        REAL(dbl), ALLOCATABLE :: gk_l(:,:)     ! length squared of k+G
-        REAL(dbl), ALLOCATABLE :: gkx_l(:,:,:)  ! components of k+G
+        REAL(DP), ALLOCATABLE :: gkmask_l(:,:) ! cutoff mask
+        REAL(DP), ALLOCATABLE :: gk_l(:,:)     ! length squared of k+G
+        REAL(DP), ALLOCATABLE :: gkx_l(:,:,:)  ! components of k+G
                                                 ! first index: G vector
                                                 ! second index: x,y,z
                                                 ! third index: k point
@@ -67,7 +67,7 @@
 
    SUBROUTINE recvecs_units( alat )
      USE constants, ONLY: tpi
-     REAL(dbl) :: alat
+     REAL(DP) :: alat
      IF( alat == 0.0d0 ) &
        CALL errore(' recvecs_units ', ' alat is zero ! ', 1 )
      tpiba = tpi / alat
@@ -115,10 +115,10 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      REAL(dbl) :: xk(3, SIZE(kp%xk, 2) )
+      REAL(DP) :: xk(3, SIZE(kp%xk, 2) )
 
 ! ... declare external function
-      REAL(dbl) :: erf, erfc
+      REAL(DP) :: erf, erfc
       EXTERNAL erf, erfc
 
 ! ... declare other variables

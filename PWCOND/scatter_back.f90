@@ -22,9 +22,9 @@ subroutine scatter_back(psiper, zk, app, bpp, an, bn, af, ci, di, &
   
   integer :: kp, n, lam, lam1, k, iorb, kin, kfin, norb,        &
              nrz, nrzp, iorba, cros(norb,nrz)
-  real(kind=DP) :: dz
-  complex(kind=DP), parameter :: cim=(0.d0, 1.d0), one=(1.d0,0.d0)
-  complex(kind=DP) :: c, s1, s2, s3, s4, ZDOTC, CONJG,          & 
+  real(DP) :: dz
+  complex(DP), parameter :: cim=(0.d0, 1.d0), one=(1.d0,0.d0)
+  complex(DP) :: c, s1, s2, s3, s4, ZDOTC, CONJG,          & 
                       psiper(n2d,n2d,nrzp), zk(n2d,nrzp),       &
                       app(n2d,n2d), an(n2d,n2d), bn(n2d,n2d),   &
                       bpp(n2d,n2d), af(n2d,n2d),                &

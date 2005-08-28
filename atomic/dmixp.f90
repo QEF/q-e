@@ -42,15 +42,15 @@ subroutine dmixp (nmsh,a,b,beta,tr2,in,id,r2,conv)
   implicit none
   integer :: nmsh, id, in, ierr
   logical :: conv
-  real(kind=dp):: a (nmsh), b (nmsh), r2, tr2, beta
+  real(DP):: a (nmsh), b (nmsh), r2, tr2, beta
 
   ! detol: if det < d11*d22*detol we assume that the det = 0
   !        in this case only last iteration is used for
   !        computation of the new input vector
 
-  real(kind=dp), parameter:: detol =1.0e-9_DP
-  real(kind=dp):: t1,t2, d11,d22,d12, aa2,det,dett,rd1m,rd2m, ddot
-  real(kind=dp),allocatable:: c(:), d(:), a1(:), a2(:), b1(:), b2(:)
+  real(DP), parameter:: detol =1.0e-9_DP
+  real(DP):: t1,t2, d11,d22,d12, aa2,det,dett,rd1m,rd2m, ddot
+  real(DP),allocatable:: c(:), d(:), a1(:), a2(:), b1(:), b2(:)
   integer:: i
   external ddot, trns
   save c, d, a1, a2, b1, b2
@@ -60,7 +60,7 @@ subroutine dmixp (nmsh,a,b,beta,tr2,in,id,r2,conv)
   conv=.false.
   call trns(a,b,-1.0_DP,nmsh)
   ! Now: a = r(l) == (V_out-V_in)(l)
-  r2 = ddot(nmsh,a,1,a,1)/dble(nmsh)
+  r2 = ddot(nmsh,a,1,a,1)/DBLE(nmsh)
 
   if(r2.lt.tr2) then
      conv=.true.
@@ -178,7 +178,7 @@ subroutine trns(a,b,c,n)
   use kinds, only : DP
   implicit none
   integer:: n,i
-  real(kind=dp):: a(n),b(n),c
+  real(DP):: a(n),b(n),c
   do i=1,n
      a(i)=a(i)+c*b(i)
   end do

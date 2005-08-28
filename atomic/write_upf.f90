@@ -96,7 +96,7 @@ end subroutine write_upf
     !
     character (len=4) :: shortname
     character (len=2), external :: atom_name
-    real(kind=dp) ecutrho, ecutwfc
+    real(DP) ecutrho, ecutwfc
     integer :: nb, ios, nv  
     !
     !
@@ -192,7 +192,7 @@ end subroutine write_upf
     integer :: ounps  
     !
     integer :: ir, ios  
-    real(kind=dp) :: fpi
+    real(DP) :: fpi
 
     fpi=16.0_DP*atan(1.0_DP)
 

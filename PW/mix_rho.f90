@@ -41,15 +41,15 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   INTEGER :: &
     iter,                  &!  (in)  counter of the number of iterations
     n_iter                  !  (in)  numb. of iterations used in mixing
-  COMPLEX(KIND=DP) :: &
+  COMPLEX(DP) :: &
     rhocin (ngm,nspin), &
     rhocout(ngm,nspin)
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
     nsout(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat), &!
     nsin(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat),  &!
     alphamix,              &! (in) mixing factor
     dr2                     ! (out) the estimated errr on the energy
-  REAL (KIND=DP) :: &
+  REAL (DP) :: &
     tr2_min       ! estimated error from diagonalization. If the estimated scf 
                   ! error is smaller than this, exit: a more accurate 
                   ! diagonalization is needed
@@ -73,12 +73,12 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
     iwork(maxmix), &! dummy array used as output by libr. routines
     info,          &! flag saying if the exec. of libr. routines was ok
     ldim            ! 2 * Hubbard_lmax + 1
-  COMPLEX(KIND=DP), ALLOCATABLE :: &
+  COMPLEX(DP), ALLOCATABLE :: &
     rhoinsave(:,:),     &! rhoinsave(ngm,nspin): work space
     rhoutsave(:,:),     &! rhoutsave(ngm,nspin): work space
     nsinsave(:,:,:,:),  &!
     nsoutsave(:,:,:,:)   !
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
     betamix(maxmix,maxmix), &
     gamma0,                 &
     work(maxmix),           &
@@ -91,16 +91,16 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   !
   INTEGER, SAVE :: &
     mixrho_iter = 0    ! history of mixing
-  COMPLEX(KIND=DP), ALLOCATABLE, SAVE :: &
+  COMPLEX(DP), ALLOCATABLE, SAVE :: &
     df(:,:,:),        &! information from preceding iterations
     dv(:,:,:)          !     "  "       "     "        "  "
-  REAL(KIND=DP), ALLOCATABLE, SAVE :: &
+  REAL(DP), ALLOCATABLE, SAVE :: &
     df_ns(:,:,:,:,:), &! idem 
     dv_ns(:,:,:,:,:)   ! idem
   !
   ! ... external functions
   !
-  REAL(KIND=DP), EXTERNAL :: rho_dot_product, ns_dot_product
+  REAL(DP), EXTERNAL :: rho_dot_product, ns_dot_product
   !
   !
   CALL start_clock( 'mix_rho' )
@@ -404,13 +404,13 @@ FUNCTION rho_dot_product( rho1, rho2 ) RESULT( rho_ddot )
   !
   ! ... I/O variables
   !
-  COMPLEX(KIND=DP), INTENT(IN) :: rho1(ngm,nspin), rho2(ngm,nspin)
+  COMPLEX(DP), INTENT(IN) :: rho1(ngm,nspin), rho2(ngm,nspin)
   !
-  REAL(KIND=DP)                :: rho_ddot
+  REAL(DP)                :: rho_ddot
   !
   ! ... and the local variables
   !
-  REAL(KIND=DP) :: fac   ! a multiplicative factors
+  REAL(DP) :: fac   ! a multiplicative factors
   INTEGER       :: ig, gi
   !
   !
@@ -508,9 +508,9 @@ FUNCTION ns_dot_product( ns1, ns2 )
   !
   ! ... I/O variables
   !
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
     ns_dot_product                           ! (out) the function value
-  REAL(KIND=DP), INTENT(IN) :: &
+  REAL(DP), INTENT(IN) :: &
     ns1(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat), &
     ns2(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)  ! (in) the two ns 
   !
@@ -562,12 +562,12 @@ SUBROUTINE approx_screening( drho )
   !
   ! ... I/O variables
   !
-  COMPLEX(KIND=DP) :: &
+  COMPLEX(DP) :: &
     drho(ngm,nspin) ! (in/out)
   !
   ! ... and the local variables
   !
-  REAL(KIND=DP) :: rrho, rmag, rs, agg0
+  REAL(DP) :: rrho, rmag, rs, agg0
   INTEGER       :: ig
   !
   !
@@ -617,7 +617,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   ! ... I/O variables
   !
-  COMPLEX(KIND=DP) :: &
+  COMPLEX(DP) :: &
     drho(ngm,nspin), rhobest(ngm,nspin)
   !
   ! ... and the local variables
@@ -626,25 +626,25 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   INTEGER :: &
     iwork(mmx), i, j, m, info, nspin_save
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
     rs, min_rs, max_rs, avg_rsm1, target, dr2_best, ccc, cbest, l2smooth
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
     aa(mmx,mmx), invaa(mmx,mmx), bb(mmx), work(mmx), vec(mmx), agg0
-  COMPLEX(KIND=DP), ALLOCATABLE :: &
+  COMPLEX(DP), ALLOCATABLE :: &
     v(:,:),     &! v(ngm,mmx)
     w(:,:),     &! w(ngm,mmx)
     dv(:),      &! dv(ngm)
     vbest(:),   &! vbest(ngm)
     wbest(:)     ! wbest(ngm)
-  REAL(KIND=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
     alpha(:)     ! alpha(nrxx)
   !
-  COMPLEX(KIND=DP) :: rrho, rmag
+  COMPLEX(DP) :: rrho, rmag
   INTEGER          :: ir, ig
   !
-  REAL(KIND=DP), PARAMETER :: one_third = 1.D0 / 3.D0
+  REAL(DP), PARAMETER :: one_third = 1.D0 / 3.D0
   !
-  REAL(KIND=DP), EXTERNAL :: rho_dot_product
+  REAL(DP), EXTERNAL :: rho_dot_product
   !
   !
   IF ( nspin == 4 ) CALL errore ('approx_screening2', &

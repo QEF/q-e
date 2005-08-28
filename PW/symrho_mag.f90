@@ -27,12 +27,12 @@ subroutine symrho_mag (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
   ! input: the symmetry matrices
   ! input: the fractionary translations
   !
-  REAL(KIND=DP) :: bg(3,3), at(3,3)
-  real(kind=DP) :: rho (nrx1, nrx2, nrx3, 3)
+  REAL(DP) :: bg(3,3), at(3,3)
+  real(DP) :: rho (nrx1, nrx2, nrx3, 3)
   ! inp/out: the charge density
   integer , allocatable :: symflag (:,:,:)
   integer :: ri (48), rj (48), rk (48), kpol, i, j, k, isym
-  real(kind=DP) :: sumx, sumy, sumz, mag(3), magrot(3)
+  real(DP) :: sumx, sumy, sumz, mag(3), magrot(3)
   ! auxiliary variables
 
   if (nsym.eq.1) return

@@ -12,13 +12,13 @@ subroutine dvex(nu,dvy)
    ! I/O variables
    !
    integer :: nu
-   real (kind=DP) :: dvy(ndm)
+   real (DP) :: dvy(ndm)
    !
    ! local variables
    !
    integer :: i, mu, l0, l1, l2, l3
-   real (kind=DP) :: wrk(ndm), wrk1(ndm)
-   real (kind=DP) :: fac, sss, ocs, doc, half
+   real (DP) :: wrk(ndm), wrk1(ndm)
+   real (DP) :: fac, sss, ocs, doc, half
    !
    do i=1,mesh
       dvy(i)=0.0d0

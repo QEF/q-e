@@ -23,8 +23,8 @@ subroutine syme2 (dvsym)
   USE ramanm, ONLY: jab
   implicit none
 
-  complex(kind=DP) :: dvsym (nrx1, nrx2, nrx3, 6)
-  complex(kind=DP), allocatable :: aux (:,:,:,:)
+  complex(DP) :: dvsym (nrx1, nrx2, nrx3, 6)
+  complex(DP), allocatable :: aux (:,:,:,:)
   ! the function to symmetrize
   ! auxiliary space
 

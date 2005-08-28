@@ -18,7 +18,7 @@ subroutine newd_at
   integer :: &
        ib,jb,n,is,nst
 
-  real(kind=dp) :: &
+  real(DP) :: &
        int_0_inf_dr, &   ! the integral function
        gi(ndm)          ! the gi function
 

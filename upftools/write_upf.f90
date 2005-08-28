@@ -12,9 +12,9 @@ module upf
   !
   ! pp_info
   integer :: rel
-  real(kind=8) :: rcloc
+  real(8) :: rcloc
   integer :: nwfs
-  real(kind=8), allocatable :: oc(:), rcut(:), rcutus(:), epseu(:)
+  real(8), allocatable :: oc(:), rcut(:), rcutus(:), epseu(:)
   character(len=2), allocatable :: els(:)
   integer, allocatable:: lchi (:), nns (:)
   !
@@ -25,37 +25,37 @@ module upf
   integer :: iexch, icorr, igcx, igcc
   integer :: lmax, mesh, nbeta, ntwfc
   logical :: nlcc
-  real(kind=8) :: zp, ecutrho, ecutwfc, etotps
-  real(kind=8), allocatable :: ocw(:)
+  real(8) :: zp, ecutrho, ecutwfc, etotps
+  real(8), allocatable :: ocw(:)
   character(len=2), allocatable :: elsw(:)
   integer, allocatable:: lchiw(:)
   !
   ! pp_mesh
-  real(kind=8), allocatable :: r(:), rab(:)
+  real(8), allocatable :: r(:), rab(:)
   !
   ! pp_nlcc
-  real(kind=8), allocatable :: rho_atc(:)
+  real(8), allocatable :: rho_atc(:)
   !
   ! pp_local
-  real(kind=8), allocatable ::  vloc0(:)
+  real(8), allocatable ::  vloc0(:)
   !
   ! pp_nonlocal
   ! pp_beta
-  real(kind=8), allocatable :: betar(:,:)
+  real(8), allocatable :: betar(:,:)
   integer, allocatable:: lll(:), ikk2(:)  
   ! pp_dij
-  real(kind=8), allocatable :: dion(:,:)
+  real(8), allocatable :: dion(:,:)
   ! pp_qij
   integer ::  nqf, nqlc
-  real(kind=8), allocatable :: rinner(:), qqq(:,:), qfunc(:,:,:)
+  real(8), allocatable :: rinner(:), qqq(:,:), qfunc(:,:,:)
   ! pp_qfcoef
-  real(kind=8), allocatable :: qfcoef(:,:,:,:)
+  real(8), allocatable :: qfcoef(:,:,:,:)
   !
   ! pp_pswfc
-  real(kind=8), allocatable :: chi(:,:)
+  real(8), allocatable :: chi(:,:)
   !
   ! pp_rhoatom
-  real(kind=8), allocatable :: rho_at(:)
+  real(8), allocatable :: rho_at(:)
 end module upf
 !
 subroutine write_upf(ounps)

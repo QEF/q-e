@@ -10,10 +10,10 @@ subroutine dgcxc (r, s2, vrrx, vsrx, vssx, vrrc, vsrc, vssc)
 !-----------------------------------------------------------------------
 USE kinds, only : DP
 implicit none
-real(kind=DP) :: r, s2, vrrx, vsrx, vssx, vrrc, vsrc, vssc
-real(kind=DP) :: dr, s, ds
+real(DP) :: r, s2, vrrx, vsrx, vssx, vrrc, vsrc, vssc
+real(DP) :: dr, s, ds
 
-real(kind=DP) :: sx, sc, v1xp, v2xp, v1cp, v2cp, v1xm, v2xm, v1cm, &
+real(DP) :: sx, sc, v1xp, v2xp, v1cp, v2cp, v1xm, v2xm, v1cm, &
  v2cm
 s = sqrt (s2)
 dr = min (1.d-4, 1.d-2 * r)

@@ -136,7 +136,7 @@ subroutine c_transpose (a, lda, b, ldb, n, m, itype, info)
 
   endif
 
-  info = int (dble (s3 - s2) * 3.333d-3)
+  info = int (DBLE (s3 - s2) * 3.333d-3)
   return
 
 end subroutine c_transpose

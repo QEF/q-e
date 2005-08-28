@@ -32,14 +32,14 @@
      USE fft_scalar, ONLY: cft_1z, cft_2xy
      USE mp_global, ONLY: mpime, nproc
      USE fft_types, ONLY: fft_dlay_descriptor
-     USE kinds, ONLY: dbl
+     USE kinds, ONLY: DP
 
      IMPLICIT NONE
      INTEGER, INTENT(IN) :: isign
      TYPE (fft_dlay_descriptor), INTENT(IN) ::  dfft
      INTEGER, INTENT(IN) :: mode
-     COMPLEX (dbl) :: R( dfft%nnr )
-     COMPLEX (dbl) :: C( dfft%nr3x * dfft%nst )
+     COMPLEX (DP) :: R( dfft%nnr )
+     COMPLEX (DP) :: C( dfft%nr3x * dfft%nst )
 
 
 !    R( * )   3D real space grid, 3rd dimension is 
@@ -71,8 +71,8 @@
      LOGICAL, SAVE :: reinit
      INTEGER, SAVE :: FFT_MODE = 0
      INTEGER :: ierr
-     REAL(dbl) :: s1, s2, s3, s4, s5
-     REAL(dbl), EXTERNAL :: cclock
+     REAL(DP) :: s1, s2, s3, s4, s5
+     REAL(DP), EXTERNAL :: cclock
 
      INTEGER, PARAMETER :: FFT_MODE_WAVE = 2
      INTEGER, PARAMETER :: FFT_MODE_POTE = 1
@@ -213,8 +213,8 @@ CONTAINS
       implicit none
       integer, intent(in) :: nr1,nr2,nr3,nr1x,nr2x,nr3x,sign
       type (fft_dlay_descriptor), intent(in) :: dfft
-      complex(kind=8) :: f( dfft%nnr )
-      complex(kind=8), allocatable :: aux( : )
+      complex(8) :: f( dfft%nnr )
+      complex(8), allocatable :: aux( : )
 
       integer  mc, i, j, ii, proc, k, nppx, me
       integer planes(nr1x)
@@ -333,7 +333,7 @@ END MODULE fft_cp
 !     
       implicit none
       integer nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3,sign
-      complex(kind=8) f(nr1bx*nr2bx*nr3bx)
+      complex(8) f(nr1bx*nr2bx*nr3bx)
 !     
       integer ir3, ibig3, imin3, imax3, np3
 !     

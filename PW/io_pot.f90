@@ -27,10 +27,10 @@ SUBROUTINE io_pot( iop, extension, pot, nc )
     ! option: write if + 1,  read if - 1
     ! number of components and index for them
   CHARACTER (LEN=*) :: extension
-  REAL(KIND=DP)     :: pot(nrxx,nc)
+  REAL(DP)     :: pot(nrxx,nc)
   LOGICAL           :: exst
 #if defined (__PARA)
-  REAL(KIND=DP), ALLOCATABLE :: allv(:,:)
+  REAL(DP), ALLOCATABLE :: allv(:,:)
 #endif
   !
   ! 

@@ -12,7 +12,7 @@ subroutine plot_whole_cell (alat, at, nat, tau, atm, ityp, &
   integer          :: nat, ityp (nat), output_format, ounit
   integer          :: nrx1, nrx2, nrx3, nr1, nr2, nr3
   character(len=3) :: atm(*)
-  real(kind=DP)    :: alat, tau (3, nat), at (3, 3), rho(2, nrx1,nrx2,nrx3)
+  real(DP)    :: alat, tau (3, nat), at (3, 3), rho(2, nrx1,nrx2,nrx3)
 
   if ( output_format .eq. 3 ) then
      !

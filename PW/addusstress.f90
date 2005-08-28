@@ -26,7 +26,7 @@ subroutine addusstres (sigmanlc)
   !
   implicit none
   !
-  real(kind=DP) :: sigmanlc (3, 3)
+  real(DP) :: sigmanlc (3, 3)
   ! the nonlocal stress
 
   integer :: ig, ir, dim, nt, ih, jh, ijh, ipol, jpol, is, na
@@ -41,14 +41,14 @@ subroutine addusstres (sigmanlc)
   ! counter on polarizations
   ! counter on spin polarizations
   ! counter on atoms
-  complex(kind=DP), allocatable :: aux(:,:), aux1(:), vg(:), qgm(:)
-  complex(kind=DP)              :: cfac
+  complex(DP), allocatable :: aux(:,:), aux1(:), vg(:), qgm(:)
+  complex(DP)              :: cfac
   ! used to contain the potential
   ! used to compute a product
   ! used to contain the structure fac
 
-  real(kind=DP)               :: ps, DDOT, sus(3,3)
-  real(kind=DP) , allocatable :: qmod(:), ylmk0(:,:), dylmk0(:,:)
+  real(DP)               :: ps, DDOT, sus(3,3)
+  real(DP) , allocatable :: qmod(:), ylmk0(:,:), dylmk0(:,:)
   ! the integral
   ! the ultrasoft part of the stress
   ! the modulus of G

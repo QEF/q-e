@@ -24,19 +24,19 @@
 
         LOGICAL   :: tvhmean
         INTEGER   :: vhnr, vhiunit
-        REAL(dbl) :: vhrmin, vhrmax
+        REAL(DP) :: vhrmin, vhrmax
         CHARACTER :: vhasse
 
         INTEGER   :: iesr
 
-        REAL(dbl)  :: timtot, timfwft, timesr, timsumg, timforc, timinvft, timscat
-        REAL(dbl)  :: timxc, timhar, timstr
+        REAL(DP)  :: timtot, timfwft, timesr, timsumg, timforc, timinvft, timscat
+        REAL(DP)  :: timxc, timhar, timstr
         INTEGER    :: timcnt = 0
 
         PUBLIC :: vofrhos, potential_init, potential_print_info, &
                   kspotential, print_vofrho_time, localisation
 
-        REAL(dbl), EXTERNAL :: cclock
+        REAL(DP), EXTERNAL :: cclock
 
 !=----------------------------------------------------------------------------=!
   CONTAINS
@@ -47,7 +47,7 @@
 
           LOGICAL, INTENT(IN) :: tvhmean_inp
           INTEGER, INTENT(IN) :: vhnr_inp, vhiunit_inp
-          REAL(dbl), INTENT(IN)  :: vhrmin_inp, vhrmax_inp
+          REAL(DP), INTENT(IN)  :: vhrmin_inp, vhrmax_inp
           CHARACTER, INTENT(IN) :: vhasse_inp
           INTEGER, INTENT(IN) :: iesr_inp
 
@@ -105,13 +105,13 @@
         USE reciprocal_vectors, ONLY: gstart, gx, g
         USE gvecp, ONLY: ngm
 
-        REAL(dbl),    INTENT(IN)   :: RHOPS(:,:)
-        COMPLEX(dbl), INTENT(IN)   :: RHOEG(:)
-        COMPLEX(dbl), INTENT(IN)   :: sfac(:,:)
+        REAL(DP),    INTENT(IN)   :: RHOPS(:,:)
+        COMPLEX(DP), INTENT(IN)   :: RHOEG(:)
+        COMPLEX(DP), INTENT(IN)   :: sfac(:,:)
 
-        COMPLEX(dbl) :: fpi_tpiba2, rp, vcg
-        REAL(dbl)    :: gxt, dr, r
-        REAL(dbl), ALLOCATABLE :: vrmean(:) 
+        COMPLEX(DP) :: fpi_tpiba2, rp, vcg
+        REAL(DP)    :: gxt, dr, r
+        REAL(DP), ALLOCATABLE :: vrmean(:) 
         
         INTEGER :: ig, is, iasse, ipiano1, ipiano2
         INTEGER :: ir
@@ -194,22 +194,22 @@
         LOGICAL   :: tcel
         INTEGER,              INTENT(IN)    :: nfi
         TYPE (atoms_type),    INTENT(INOUT) :: atoms
-        COMPLEX(dbl),         INTENT(INOUT) :: c0(:,:,:,:)
+        COMPLEX(DP),         INTENT(INOUT) :: c0(:,:,:,:)
         TYPE (wave_descriptor),  INTENT(IN) :: cdesc
-        REAL(dbl) :: rhoe(:,:,:,:)
-        COMPLEX(dbl) :: ei1(:,:)
-        COMPLEX(dbl) :: ei2(:,:)
-        COMPLEX(dbl) :: ei3(:,:)
-        COMPLEX(dbl) :: eigr(:,:)
+        REAL(DP) :: rhoe(:,:,:,:)
+        COMPLEX(DP) :: ei1(:,:)
+        COMPLEX(DP) :: ei2(:,:)
+        COMPLEX(DP) :: ei3(:,:)
+        COMPLEX(DP) :: eigr(:,:)
         TYPE (boxdimensions), INTENT(INOUT) ::  ht
-        REAL(dbl), INTENT(IN) :: fi(:,:,:)
-        REAL(dbl) :: bec(:,:)
-        REAL(dbl) :: becdr(:,:,:)
+        REAL(DP), INTENT(IN) :: fi(:,:,:)
+        REAL(DP) :: bec(:,:)
+        REAL(DP) :: becdr(:,:,:)
         TYPE (dft_energy_type) :: edft
-        REAL(dbl)    :: vpot(:,:,:,:)
-        COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
+        REAL(DP)    :: vpot(:,:,:,:)
+        COMPLEX(DP), INTENT(IN) :: sfac(:,:)
         LOGICAL, INTENT(IN) :: tforce, tstress, tprint
-        REAL(dbl), INTENT(OUT) :: timepre
+        REAL(DP), INTENT(OUT) :: timepre
         TYPE (charge_descriptor),  INTENT(IN) :: desc
 
         edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fi, bec, becdr, eigr)
@@ -275,58 +275,58 @@
 
 ! ... declare subroutine arguments
       LOGICAL, INTENT(IN) :: tprint, tfor, thdyn, tforce
-      REAL(dbl) :: vpot(:,:,:,:)
+      REAL(DP) :: vpot(:,:,:,:)
 
       TYPE (atoms_type), INTENT(INOUT) :: atoms
-      REAL(dbl),    INTENT(IN) :: fi(:,:,:)
-      REAL(dbl) :: bec(:,:)
-      COMPLEX(dbl) :: ei1(:,:)
-      COMPLEX(dbl) :: ei2(:,:)
-      COMPLEX(dbl) :: ei3(:,:)
-      COMPLEX(dbl) :: eigr(:,:)
-      COMPLEX(dbl),    INTENT(IN) :: c0(:,:,:,:)
+      REAL(DP),    INTENT(IN) :: fi(:,:,:)
+      REAL(DP) :: bec(:,:)
+      COMPLEX(DP) :: ei1(:,:)
+      COMPLEX(DP) :: ei2(:,:)
+      COMPLEX(DP) :: ei3(:,:)
+      COMPLEX(DP) :: eigr(:,:)
+      COMPLEX(DP),    INTENT(IN) :: c0(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE (charge_descriptor),    INTENT(IN) :: desc
       TYPE (boxdimensions),    INTENT(INOUT) :: box
       TYPE (dft_energy_type) :: edft
-      REAL(dbl) :: rhoe(:,:,:,:)
-      COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
+      REAL(DP) :: rhoe(:,:,:,:)
+      COMPLEX(DP), INTENT(IN) :: sfac(:,:)
 
       TYPE (dft_energy_type) :: edft_self
 
-      REAL(dbl) :: timepre
+      REAL(DP) :: timepre
 
 ! ... declare functions
-      REAL(dbl)  DDOT
+      REAL(DP)  DDOT
 
 ! ... declare other variables
 
-      COMPLEX(dbl), ALLOCATABLE :: vloc(:), self_vloc(:)
-      COMPLEX(dbl), ALLOCATABLE :: rho12(:), rhoeg(:,:), self_rhoeg(:)
-      COMPLEX(dbl), ALLOCATABLE :: rhoetg(:,:)
-      REAL(dbl), ALLOCATABLE :: rhoetr(:,:,:,:)
-      REAL(dbl), ALLOCATABLE :: fion_vdw(:,:)
-      REAL(dbl), ALLOCATABLE :: grho(:,:,:,:,:)
-      REAL(dbl), ALLOCATABLE :: v2xc(:,:,:,:,:)
-      REAL(dbl), ALLOCATABLE :: fion(:,:)
+      COMPLEX(DP), ALLOCATABLE :: vloc(:), self_vloc(:)
+      COMPLEX(DP), ALLOCATABLE :: rho12(:), rhoeg(:,:), self_rhoeg(:)
+      COMPLEX(DP), ALLOCATABLE :: rhoetg(:,:)
+      REAL(DP), ALLOCATABLE :: rhoetr(:,:,:,:)
+      REAL(DP), ALLOCATABLE :: fion_vdw(:,:)
+      REAL(DP), ALLOCATABLE :: grho(:,:,:,:,:)
+      REAL(DP), ALLOCATABLE :: v2xc(:,:,:,:,:)
+      REAL(DP), ALLOCATABLE :: fion(:,:)
 
-      REAL(dbl), ALLOCATABLE :: self_rho(:,:,:,:)
-      REAL(dbl), ALLOCATABLE :: self_vpot(:,:,:,:)
-      REAL(dbl), ALLOCATABLE :: self_grho(:,:,:,:,:)
-      REAL(dbl), ALLOCATABLE :: self_v2xc(:,:,:,:,:)
+      REAL(DP), ALLOCATABLE :: self_rho(:,:,:,:)
+      REAL(DP), ALLOCATABLE :: self_vpot(:,:,:,:)
+      REAL(DP), ALLOCATABLE :: self_grho(:,:,:,:,:)
+      REAL(DP), ALLOCATABLE :: self_v2xc(:,:,:,:,:)
 
-      REAL(dbl) ::  pail(3,3)
+      REAL(DP) ::  pail(3,3)
 
-      COMPLEX(dbl) :: self_ehtep,ehtep
-      REAL(dbl)    :: self_sxcp, self_vxc
+      COMPLEX(DP) :: self_ehtep,ehtep
+      REAL(DP)    :: self_sxcp, self_vxc
 
-      REAL(dbl)  :: summing1, summing2
+      REAL(DP)  :: summing1, summing2
 
-      COMPLEX(dbl) :: ehp, eps
+      COMPLEX(DP) :: ehp, eps
 
-      REAL(dbl)  :: dum, sxcp, vxc, ehr, strvxc
-      REAL(dbl)  :: omega, desr(6), pesum(16)
-      REAL(dbl)  :: s0, s1, s2, s3, s4, s5, s6, s7, s8
+      REAL(DP)  :: dum, sxcp, vxc, ehr, strvxc
+      REAL(DP)  :: omega, desr(6), pesum(16)
+      REAL(DP)  :: s0, s1, s2, s3, s4, s5, s6, s7, s8
 
       LOGICAL :: ttstress, ttforce, ttscreen, ttsic, tgc
 
@@ -432,8 +432,8 @@
 
 ! ... compute kinetic energy
 
-      edft%ekin  = 0.0_dbl
-      edft%emkin = 0.0_dbl
+      edft%ekin  = 0.0_DP
+      edft%emkin = 0.0_DP
       edft%ekin  = dft_kinetic_energy(c0, cdesc, fi, edft%emkin)
 
       IF(tprint) THEN
@@ -843,19 +843,19 @@
       USE constants, ONLY: gsmall, pi
       USE cell_base, ONLY: tpiba2
       
-      REAL(dbl), INTENT(IN) :: hg(:)
+      REAL(DP), INTENT(IN) :: hg(:)
       TYPE (boxdimensions),    INTENT(IN) :: box
       TYPE (charge_descriptor),    INTENT(IN) :: desc
-      COMPLEX(dbl) :: screen_coul(:)
+      COMPLEX(DP) :: screen_coul(:)
 
 ! ... declare external function
-      REAL(dbl) :: erf, erfc
+      REAL(DP) :: erf, erfc
       EXTERNAL erf, erfc
 
 ! ... Locals
-      REAL(dbl), ALLOCATABLE :: grr(:,:,:)
-      COMPLEX(dbl), ALLOCATABLE :: grg(:)
-      REAL(dbl) :: rc, r(3), s(3), rmod, g2, rc2, arg, omega, fact
+      REAL(DP), ALLOCATABLE :: grr(:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: grg(:)
+      REAL(DP) :: rc, r(3), s(3), rmod, g2, rc2, arg, omega, fact
       INTEGER   :: ig, i, j, k
       INTEGER   :: nr1_l, nr2_l, nr3_l, nr1_g, nr2_g, nr3_g
       INTEGER   :: ir1, ir2, ir3
@@ -983,33 +983,33 @@
       TYPE (charge_descriptor), INTENT(IN) :: desc
       LOGICAL      :: ttforce
       LOGICAL      :: tscreen
-      REAL(dbl)    :: fion(:,:)
-      REAL(dbl)    :: rhops(:,:), vps(:,:)
-      COMPLEX(dbl) :: vloc(:)
-      COMPLEX(dbl) :: rhoeg(:,:)
-      COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
-      REAL(dbl)    :: ehte, ehti
-      COMPLEX(dbl) :: eh, eps
-      COMPLEX(dbl) :: ei1(-nr1:nr1,nat)
-      COMPLEX(dbl) :: ei2(-nr2:nr2,nat)
-      COMPLEX(dbl) :: ei3(-nr3:nr3,nat)
-      COMPLEX(dbl) :: eigr(:,:)
+      REAL(DP)    :: fion(:,:)
+      REAL(DP)    :: rhops(:,:), vps(:,:)
+      COMPLEX(DP) :: vloc(:)
+      COMPLEX(DP) :: rhoeg(:,:)
+      COMPLEX(DP), INTENT(IN) :: sfac(:,:)
+      REAL(DP)    :: ehte, ehti
+      COMPLEX(DP) :: eh, eps
+      COMPLEX(DP) :: ei1(-nr1:nr1,nat)
+      COMPLEX(DP) :: ei2(-nr2:nr2,nat)
+      COMPLEX(DP) :: ei3(-nr3:nr3,nat)
+      COMPLEX(DP) :: eigr(:,:)
 
 ! ... Locals
 
       INTEGER      :: is, ia, isa, ig, ig1, ig2, ig3, nspin, ispin
-      REAL(dbl)    :: fpibg, cost, omega
-      COMPLEX(dbl) :: cxc, rhet, rhog, vp, rp, gxc, gyc, gzc
-      COMPLEX(dbl) :: teigr, cnvg, cvn, tx, ty, tz, vscreen
-      COMPLEX(dbl), ALLOCATABLE :: ftmp(:,:)
-      COMPLEX(dbl), ALLOCATABLE :: screen_coul(:)
+      REAL(DP)    :: fpibg, cost, omega
+      COMPLEX(DP) :: cxc, rhet, rhog, vp, rp, gxc, gyc, gzc
+      COMPLEX(DP) :: teigr, cnvg, cvn, tx, ty, tz, vscreen
+      COMPLEX(DP), ALLOCATABLE :: ftmp(:,:)
+      COMPLEX(DP), ALLOCATABLE :: screen_coul(:)
 
 ! ... Subroutine body ...
 
       nspin = SIZE(rhoeg,2)
       IF(TTFORCE) THEN
         ALLOCATE( ftmp(3, SIZE(fion, 2) ) )
-        ftmp = CMPLX(0.0_dbl,0.0_dbl)
+        ftmp = CMPLX(0.0_DP,0.0_DP)
       END IF
 
       IF( tscreen ) THEN
@@ -1159,14 +1159,14 @@
 ! ... ARGUMENTS 
       
       TYPE (atoms_type) :: atoms
-      REAL(dbl) :: ESR
-      REAL(dbl) :: DESR(:)
-      REAL(dbl) :: FION(:,:)
+      REAL(DP) :: ESR
+      REAL(DP) :: DESR(:)
+      REAL(DP) :: FION(:,:)
       LOGICAL   :: TSTRESS
       TYPE (boxdimensions), INTENT(in) :: ht
 
 ! ... declare external function
-      REAL(dbl) :: erf, erfc
+      REAL(DP) :: erf, erfc
       EXTERNAL erf, erfc
 
       
@@ -1178,15 +1178,15 @@
       INTEGER :: iakl, iajm
       LOGICAL :: split, tzero, tshift
       INTEGER, ALLOCATABLE   :: iatom(:,:)
-      REAL(dbl), ALLOCATABLE :: zv2(:,:)
-      REAL(dbl), ALLOCATABLE :: rc(:,:)  
-      REAL(dbl), ALLOCATABLE :: fionloc(:,:,:) 
-      REAL(dbl)  :: RXLM(3), SXLM(3)
-      REAL(dbl)  :: xlm, ylm, zlm, erre2, rlm, arg, esrtzero
-      REAL(dbl)  :: addesr, addpre, repand, fxx
-      REAL(dbl)  :: rckj_m1
-      REAL(dbl)  :: zvk, zvj, zv2_kj
-      REAL(dbl)  :: fact_pre
+      REAL(DP), ALLOCATABLE :: zv2(:,:)
+      REAL(DP), ALLOCATABLE :: rc(:,:)  
+      REAL(DP), ALLOCATABLE :: fionloc(:,:,:) 
+      REAL(DP)  :: RXLM(3), SXLM(3)
+      REAL(DP)  :: xlm, ylm, zlm, erre2, rlm, arg, esrtzero
+      REAL(DP)  :: addesr, addpre, repand, fxx
+      REAL(DP)  :: rckj_m1
+      REAL(DP)  :: zvk, zvj, zv2_kj
+      REAL(DP)  :: fact_pre
 
       INTEGER, DIMENSION(6), PARAMETER :: ALPHA = (/ 1,2,3,2,3,3 /)
       INTEGER, DIMENSION(6), PARAMETER :: BETA  = (/ 1,1,1,2,2,3 /)
@@ -1217,9 +1217,9 @@
       ALLOCATE( rc( atoms%nsp, atoms%nsp ) )
       ALLOCATE( zv2( atoms%nsp, atoms%nsp ) )
       ALLOCATE( fionloc( 3, atoms%nax, atoms%nsp ) )
-      rc      = 0.0_dbl
-      zv2     = 0.0_dbl
-      fionloc = 0.0_dbl
+      rc      = 0.0_DP
+      zv2     = 0.0_DP
+      fionloc = 0.0_DP
 
       !  Here pre-compute some factors
 
@@ -1252,11 +1252,11 @@
         END DO
       END DO
 
-      xlm     = 1.0_dbl
-      ylm     = 1.0_dbl
-      zlm     = 1.0_dbl
-      ESR     = 0.0_dbl
-      DESR    = 0.0_dbl
+      xlm     = 1.0_DP
+      ylm     = 1.0_DP
+      zlm     = 1.0_DP
+      ESR     = 0.0_DP
+      DESR    = 0.0_DP
 
       ! NA_LOC = LOCALDIM(npt,NPROC,ME)
       NA_LOC = local_dimension( npt, 1, mpime, 0, nproc, BLOCK_PARTITION_SHAPE)
@@ -1272,12 +1272,12 @@
         m = iatom(4,ia)
 
         zv2_kj   = zv2(k,j)
-        rckj_m1  = 1.0_dbl / rc(k,j)
-        fact_pre = (2.0_dbl * zv2_kj * sqrtpm1) * rckj_m1
+        rckj_m1  = 1.0_DP / rc(k,j)
+        fact_pre = (2.0_DP * zv2_kj * sqrtpm1) * rckj_m1
 
         IF( (l.EQ.m) .AND. (k.EQ.j)) THEN      
 ! ...     same atoms
-          xlm=0.0_dbl; ylm=0.0_dbl; zlm=0.0_dbl; tzero=.TRUE.
+          xlm=0.0_DP; ylm=0.0_DP; zlm=0.0_DP; tzero=.TRUE.
         ELSE
 ! ...     different atoms
           iakl = atoms%isa(k) + l - 1
@@ -1377,17 +1377,17 @@
       TYPE (boxdimensions), INTENT(in) :: ht
       TYPE (charge_descriptor), INTENT(IN) :: desc
       LOGICAL      :: tscreen
-      COMPLEX(dbl) :: vloc(:)
-      COMPLEX(dbl) :: rhoeg(:)
-      COMPLEX(dbl) :: ehte
+      COMPLEX(DP) :: vloc(:)
+      COMPLEX(DP) :: rhoeg(:)
+      COMPLEX(DP) :: ehte
 
 ! ... Locals
 
       INTEGER      :: ig
-      REAL(dbl)    :: fpibg, omega
-      COMPLEX(dbl) :: rhog
-      COMPLEX(dbl) :: vscreen
-      COMPLEX(dbl), ALLOCATABLE :: screen_coul(:)
+      REAL(DP)    :: fpibg, omega
+      COMPLEX(DP) :: rhog
+      COMPLEX(DP) :: vscreen
+      COMPLEX(DP), ALLOCATABLE :: screen_coul(:)
 
 ! ... Subroutine body ...
 
@@ -1470,7 +1470,7 @@
 
 ! ... Arguments
 
-      COMPLEX(dbl), INTENT(IN) :: wfc(:)
+      COMPLEX(DP), INTENT(IN) :: wfc(:)
       TYPE (atoms_type), INTENT(in) :: atoms_m
       TYPE (boxdimensions), INTENT(in) :: ht
       TYPE (charge_descriptor), INTENT(IN) :: desc
@@ -1478,17 +1478,17 @@
 
 ! ... Locals
 
-      REAL(dbl)    :: ehte
+      REAL(DP)    :: ehte
       INTEGER      :: ig, at, ia, is, isa_input, isa_sorted, isa_loc
-      REAL(dbl)    :: fpibg, omega, aRe, aR2, R(3)
+      REAL(DP)    :: fpibg, omega, aRe, aR2, R(3)
       INTEGER      :: Xmin, Ymin, Zmin, Xmax, Ymax, Zmax
       INTEGER      :: nr1_l, nr2_l, nr3_l
-      REAL(dbl)    :: work, work2
-      COMPLEX(dbl) :: rhog
-      REAL(dbl), ALLOCATABLE :: density(:,:,:), psi(:,:,:)
-      COMPLEX(dbl), ALLOCATABLE :: k_density(:), cpsi(:,:,:)
-      COMPLEX(dbl) :: vscreen
-      COMPLEX(dbl), ALLOCATABLE :: screen_coul(:)
+      REAL(DP)    :: work, work2
+      COMPLEX(DP) :: rhog
+      REAL(DP), ALLOCATABLE :: density(:,:,:), psi(:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: k_density(:), cpsi(:,:,:)
+      COMPLEX(DP) :: vscreen
+      COMPLEX(DP), ALLOCATABLE :: screen_coul(:)
       INTEGER :: nr1x, nr2x, nr3x
 
 ! ... Subroutine body ...

@@ -31,7 +31,7 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
   ! input: the displacement pattern
 
 
-  real(kind=DP) :: xq (3), rtau (3, 48, nat), bg (3, 3), at (3, 3)
+  real(DP) :: xq (3), rtau (3, 48, nat), bg (3, 3), at (3, 3)
   ! input: the q point
   ! input: the translations of each atom
   ! input: the reciprocal lattice vectors
@@ -49,16 +49,16 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
   ! counter on polarizations
   ! counter on polarizations
 
-  real(kind=DP), parameter :: tpi = 2.0d0 * 3.14159265358979d0
-  real(kind=DP) :: arg
+  real(DP), parameter :: tpi = 2.0d0 * 3.14159265358979d0
+  real(DP) :: arg
   ! auxiliary
 
-  complex(kind=DP), allocatable :: u (:,:)
+  complex(DP), allocatable :: u (:,:)
   ! the original pattern
-  complex(kind=DP)              :: fase, sum
+  complex(DP)              :: fase, sum
   ! the phase of the mode
   ! check for orthogonality
-  complex(kind=DP), allocatable :: work_u (:,:), work_ru (:,:)
+  complex(DP), allocatable :: work_u (:,:), work_ru (:,:)
   ! the working pattern
   ! the rotated working pattern
 

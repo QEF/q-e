@@ -18,8 +18,8 @@ subroutine tra_write_matrix (alpha, adyn, u, nat)
   !
   integer :: i, j, na, nb, nat
   integer :: icart, jcart, mu, nu
-  complex(kind=DP) :: adyn (3 * nat, 3 * nat), u (3 * nat, 3 * nat)
-  complex(kind=DP) :: wdyn (3, 3, nat, nat), work
+  complex(DP) :: adyn (3 * nat, 3 * nat), u (3 * nat, 3 * nat)
+  complex(DP) :: wdyn (3, 3, nat, nat), work
   character (len=*) :: alpha
   WRITE( stdout, * ) nat
   do i = 1, 3 * nat

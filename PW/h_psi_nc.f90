@@ -32,7 +32,7 @@ subroutine h_psi_nc (lda, n, m, psi, hpsi)
   implicit none
   !
   integer :: lda, n, m
-  complex(kind=DP) :: psi(lda,npol,m), hpsi(lda,npol,m),&
+  complex(DP) :: psi(lda,npol,m), hpsi(lda,npol,m),&
                       sup, sdwn
   !
   integer :: ibnd,j,ipol

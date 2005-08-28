@@ -20,13 +20,13 @@ subroutine generate_dynamical_matrix   &
   implicit none
   integer :: nat, nsym, n_diff_sites, irt(48,nat), &
        equiv_atoms(nat,nat), s(3,3,48),  has_equivalent(nat)
-  real(kind=DP) :: dyn(3*nat,3*nat), at(3,3), bg(3,3)
+  real(DP) :: dyn(3*nat,3*nat), at(3,3), bg(3,3)
   !
   integer :: isym, na, nb, ni, nj, sni, snj, smu_i, smu_j,  &
        i, j, k, l, mu_k, mu_l
   integer table(48,48), invs(3,3,48)
-  real(kind=DP), allocatable :: irreducible_dyn(:,:)
-  real(kind=DP) :: work(3,3)
+  real(DP), allocatable :: irreducible_dyn(:,:)
+  real(DP) :: work(3,3)
   logical :: no_equivalent_atoms
   integer, allocatable ::done(:,:)
   !

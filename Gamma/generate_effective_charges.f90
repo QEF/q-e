@@ -20,7 +20,7 @@ subroutine generate_effective_charges &
        s(3,3,48), has_equivalent(nat)
   integer :: isym, na, ni, nj, sni, i, j, k, l
   integer :: table(48,48), invs(3,3,48)
-  real(kind=DP) :: zstar(3,3,nat), at(3,3), bg(3,3)
+  real(DP) :: zstar(3,3,nat), at(3,3), bg(3,3)
   logical :: done(nat), no_equivalent_atoms
   !
   no_equivalent_atoms=.true.

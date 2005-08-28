@@ -21,9 +21,9 @@ SUBROUTINE solve_ph ( )
   IMPLICIT NONE
 
   INTEGER :: nu, i, ibnd, jbnd, info, iter, mode_done, kpoint
-  REAL(kind=DP), ALLOCATABLE ::  diag(:)
-  COMPLEX(kind=DP), ALLOCATABLE :: gr(:,:), h(:,:), work(:,:)
-  REAL(kind=DP), ALLOCATABLE :: overlap(:,:)
+  REAL(DP), ALLOCATABLE ::  diag(:)
+  COMPLEX(DP), ALLOCATABLE :: gr(:,:), h(:,:), work(:,:)
+  REAL(DP), ALLOCATABLE :: overlap(:,:)
   LOGICAL :: orthonormal, precondition, startwith0, exst
   EXTERNAL A_h
   !
@@ -143,10 +143,10 @@ SUBROUTINE set_asr(nat,nasr,dyn)
   !
   IMPLICIT NONE
   INTEGER nat, nasr
-  REAL(kind=8) :: dyn(3*nat,3*nat)
+  REAL(8) :: dyn(3*nat,3*nat)
   !
   INTEGER na, nb, i,j
-  REAL(kind=8) :: sum
+  REAL(8) :: sum
 
   IF (nasr.LE.0 .OR. nasr.GT.nat) RETURN
   DO j=1,3

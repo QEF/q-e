@@ -16,24 +16,24 @@ function dmxc (rho)
   implicit none
   ! I/O variables
 
-  real(kind=DP) :: rho, dmxc
+  real(DP) :: rho, dmxc
   ! input: the charge density ( positive )
   ! output: the derivative of the xc potential
 
 
-  real(kind=DP) :: dr, vxp, vcp, vxm, vcm, ex, ec
+  real(DP) :: dr, vxp, vcp, vxm, vcm, ex, ec
   ! delta rrho for numerical derivatives
   ! the potentials for + charge
   ! the potentials for - charge
   ! the energy
   ! DFT functional
   ! auxiliary variables
-  real(kind=DP) :: vx, rs, dpz
+  real(DP) :: vx, rs, dpz
 
 
   integer :: iflg
   ! parameters
-  real(kind=DP) :: small, e2, pi34, third
+  real(DP) :: small, e2, pi34, third
   parameter (small = 1.d-30, e2 = 2.d0)
 
   parameter (pi34 = 0.75d0 / 3.141592653589793d+00, third = 1.d0 / &
@@ -80,14 +80,14 @@ function dpz (rs, iflg)
 !
 USE kinds, only : DP
 implicit none
-real(kind=DP) :: rs, dpz
+real(DP) :: rs, dpz
                              ! input : the value of rs
                              ! output: the derivative of the corr. poten
 
 integer :: iflg
                              ! input : flag to choose the functional for
 
-real(kind=DP) :: b1, b2, a1, a2, gc, a, b, c, d, pi, fpi
+real(DP) :: b1, b2, a1, a2, gc, a, b, c, d, pi, fpi
                              !\
                              ! \
                              !  \
@@ -104,7 +104,7 @@ parameter (a = 0.0311d0, b = - 0.048d0, c = 0.0020d0, d = - &
  7.0d0 * b1 / 6.d0, a2 = 4.d0 * b2 / 3.d0, pi = 3.14159265358979d0, &
  fpi = 4.d0 * pi)
 
-real(kind=DP) :: x, den, dmx, dmrs
+real(DP) :: x, den, dmx, dmrs
                               ! auxiliary variable
                               ! auxiliary variable
                               ! auxiliary variable

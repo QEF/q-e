@@ -14,8 +14,8 @@ subroutine dos_g (et, nspin, nbnd, nks, wk, Degauss, ngauss, E, dosg)
   implicit none
   integer :: nspin, nks, nbnd, ngauss
 
-  real(kind=DP) :: wk (nks), et (nbnd, nks), Degauss, E, dosg (2)
-  real(kind=DP) :: w0gauss
+  real(DP) :: wk (nks), et (nbnd, nks), Degauss, E, dosg (2)
+  real(DP) :: w0gauss
   integer :: n, ns, nk0, nk, ik
   integer :: nspin0
   external w0gauss

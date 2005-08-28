@@ -49,8 +49,8 @@ SUBROUTINE potinit()
   !
   ! ... local variables
   !
-  REAL (KIND=DP) :: charge           ! the starting charge
-  REAL (KIND=DP) :: etotefield       ! 
+  REAL (DP) :: charge           ! the starting charge
+  REAL (DP) :: etotefield       ! 
   INTEGER        :: ios
   INTEGER        :: ldim             ! integer variable for I/O control
   LOGICAL        :: exst 

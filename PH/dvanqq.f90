@@ -31,20 +31,20 @@ subroutine dvanqq
   integer :: na, nb, ig, nta, ntb, ir, ih, jh, ijh, ipol, jpol, is
   ! counters
 
-  real(kind=DP), allocatable :: qmod (:), qmodg (:), qpg (:,:), &
+  real(DP), allocatable :: qmod (:), qmodg (:), qpg (:,:), &
        ylmkq (:,:), ylmk0 (:,:)
   ! the modulus of q+G
   ! the modulus of G
   ! the  q+G vectors
   ! the spherical harmonics
 
-  complex(kind=DP) :: fact, fact1, ZDOTC
-  complex(kind=DP), allocatable :: aux1 (:), aux2 (:),&
+  complex(DP) :: fact, fact1, ZDOTC
+  complex(DP), allocatable :: aux1 (:), aux2 (:),&
        aux3 (:), aux5 (:), veff (:,:), sk(:)
   ! work space
-  complex(kind=DP), allocatable, target :: qgm(:)
+  complex(DP), allocatable, target :: qgm(:)
   ! the augmentation function at G
-  complex(kind=DP), pointer :: qgmq (:)
+  complex(DP), pointer :: qgmq (:)
   ! the augmentation function at q+G
 
   if (recover) return

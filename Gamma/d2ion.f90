@@ -19,12 +19,12 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   USE io_global,  ONLY : stdout
   implicit none
   integer :: nat, ntyp, ngm, ityp(nat), nmodes, has_equivalent(nat)
-  real(kind=DP)::  tau(3,nat), g(3,ngm), gg(ngm), zv(ntyp), &
+  real(DP)::  tau(3,nat), g(3,ngm), gg(ngm), zv(ntyp), &
        u(3*nat,nmodes), dyn(3*nat,nmodes), at(3,3), bg(3,3), omega, alat
   !
   integer :: nu_i,nu_j, mu_i,mu_j, na,nb, nta,ntb, ng, mxr, nrm, nr, i
   parameter(mxr=50)
-  real(kind=DP) :: facg(nat), arg, tpi, fpi, tpiba2, e2, alpha,    &
+  real(DP) :: facg(nat), arg, tpi, fpi, tpiba2, e2, alpha,    &
        r(3,mxr), r2(mxr), dtau(3), erfc, rmax, rr,                 &
        upperbound, charge, gt2, fac, fnat, df, d2f, ar
   parameter(e2=2.0, tpi=2.0*3.14159265358979d0 )

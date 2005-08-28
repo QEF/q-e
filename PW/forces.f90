@@ -39,7 +39,7 @@ SUBROUTINE forces()
   !
   IMPLICIT NONE
   !
-  REAL(KIND=DP), ALLOCATABLE :: forcenl (:,:), &
+  REAL(DP), ALLOCATABLE :: forcenl (:,:), &
                                 forcelc (:,:), &
                                 forcecc (:,:), &
                                 forceion (:,:), &
@@ -47,7 +47,7 @@ SUBROUTINE forces()
                                 forceh(:,:)
   !
   ! nonlocal, local, core-correction, ewald, and scf correction terms
-  REAL(KIND=DP) :: sum, sumscf
+  REAL(DP) :: sum, sumscf
   !
   INTEGER :: ipol, na
   ! counter on polarization

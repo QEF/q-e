@@ -24,9 +24,9 @@
         PRIVATE
  
         INTEGER   :: max_emp = 0    !  maximum number of iterations
-        REAL(dbl) :: ethr_emp       !  threshold for convergence
-        REAL(dbl) :: delt_emp       !  delt for the empty states updating
-        REAL(dbl) :: emass_emp      !  fictitious mass for the empty states
+        REAL(DP) :: ethr_emp       !  threshold for convergence
+        REAL(DP) :: delt_emp       !  delt for the empty states updating
+        REAL(DP) :: emass_emp      !  fictitious mass for the empty states
 
         LOGICAL :: prn_emp       = .FALSE.
 
@@ -60,7 +60,7 @@
         SUBROUTINE empty_init( max_emp_ , delt_emp_ , ethr_emp_ )
 
           INTEGER, INTENT(IN) :: max_emp_
-          REAL(dbl), INTENT(IN) :: delt_emp_ , ethr_emp_
+          REAL(DP), INTENT(IN) :: delt_emp_ , ethr_emp_
 
           delt_emp  = delt_emp_
           emass_emp = 200.0d0
@@ -88,7 +88,7 @@
 
         IMPLICIT none
 
-        COMPLEX(dbl), INTENT(INOUT) :: c_emp(:,:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: c_emp(:,:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wempt
 
         LOGICAL :: exst
@@ -96,7 +96,7 @@
         INTEGER :: ngw_rd, ne_rd(2), nk_rd, nspin_rd
         INTEGER :: nk, ne(2), ngwm_g, nspin
 
-        COMPLEX(dbl), ALLOCATABLE :: ctmp(:)
+        COMPLEX(DP), ALLOCATABLE :: ctmp(:)
 !
 ! ... Subroutine Body
 !
@@ -183,12 +183,12 @@
         USE io_files, ONLY: scradir
         USE reciprocal_vectors, ONLY: ig_l2g
 
-        COMPLEX(dbl), INTENT(IN) :: c_emp(:,:,:,:)
+        COMPLEX(DP), INTENT(IN) :: c_emp(:,:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wempt
 
         INTEGER :: ig, i, ik, nl, ne(2), ngwm_g, nk, ispin, nspin, ngw
         LOGICAL :: exst
-        COMPLEX(dbl), ALLOCATABLE :: ctmp(:)
+        COMPLEX(DP), ALLOCATABLE :: ctmp(:)
 !
 ! ... Subroutine Body
 !
@@ -252,20 +252,20 @@
       USE mp, ONLY: mp_sum
       USE mp_global, ONLY: nproc, mpime, group
 
-      REAL(dbl) SQRT, DNRM2
+      REAL(DP) SQRT, DNRM2
       
 ! ... ARGUMENTS
       LOGICAL, INTENT(IN) :: TORTHO
-      COMPLEX(dbl), INTENT(INOUT) :: CF(:,:), CE(:,:)
+      COMPLEX(DP), INTENT(INOUT) :: CF(:,:), CE(:,:)
       type (wave_descriptor), INTENT(IN) :: wfill, wempt
       INTEGER, INTENT(IN) :: ispin
 
 ! ... LOCALS
       INTEGER      :: i, j, ig, NF, NE, NGW, ldw
-      REAL(dbl)    :: ANORM
-      REAL(dbl)   , ALLOCATABLE :: SF(:),  SE(:),  TEMP(:)
-      COMPLEX(dbl), ALLOCATABLE :: CSF(:), CSE(:), CTEMP(:)
-      COMPLEX(dbl) :: czero, cone, cmone
+      REAL(DP)    :: ANORM
+      REAL(DP)   , ALLOCATABLE :: SF(:),  SE(:),  TEMP(:)
+      COMPLEX(DP), ALLOCATABLE :: CSF(:), CSE(:), CTEMP(:)
+      COMPLEX(DP) :: czero, cone, cmone
 !
 ! ... SUBROUTINE BODY
 !
@@ -369,11 +369,11 @@
         USE wave_functions, ONLY: wave_rand_init
 
 ! ...   Arguments
-        COMPLEX(dbl), INTENT(INOUT) :: c_occ(:,:,:,:), c_emp(:,:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: c_occ(:,:,:,:), c_emp(:,:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
-        REAL(dbl)                  :: ampre  
+        REAL(DP)                  :: ampre  
 
-        REAL(dbl) :: rranf
+        REAL(DP) :: rranf
         EXTERNAL rranf
 
 ! ...   Locals
@@ -381,7 +381,7 @@
         INTEGER   :: ngw, ngwt
         INTEGER   :: ib, ik, ispin, ispin_wfc
         LOGICAL   :: tortho = .FALSE.
-        COMPLEX(dbl), ALLOCATABLE :: pwt( : )
+        COMPLEX(DP), ALLOCATABLE :: pwt( : )
 !
 ! ...   Subroutine body
 
@@ -452,12 +452,12 @@
 
 ! ... ARGUMENTS
 !
-      COMPLEX(dbl), INTENT(INOUT) ::  c_occ(:,:,:,:), c_emp(:,:,:,:)
+      COMPLEX(DP), INTENT(INOUT) ::  c_occ(:,:,:,:), c_emp(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) ::  wfill, wempt
       TYPE (atoms_type), INTENT(INOUT) :: atoms ! ions structure
-      REAL (dbl), INTENT(IN) ::   vpot(:,:,:,:)
+      REAL (DP), INTENT(IN) ::   vpot(:,:,:,:)
       LOGICAL, INTENT(IN) :: tortho
-      COMPLEX(dbl) :: eigr(:,:)
+      COMPLEX(DP) :: eigr(:,:)
 !
 ! ... LOCALS
 !
@@ -466,13 +466,13 @@
       INTEGER   ::  nspin, ispin, ispin_wfc
       INTEGER   ::  n_occ( wfill%nspin )
       INTEGER   ::  ig, iprinte, iks, nrl, jl, ngw
-      REAL(dbl) ::  dek, ekinc, ekinc_old
-      REAL(dbl) :: ampre
-      REAL(dbl), ALLOCATABLE :: dt2bye( : )
-      REAL(dbl), PARAMETER :: small    = 1.0d-14
-      REAL(dbl), ALLOCATABLE :: bece( :, : )
-      COMPLEX(dbl), ALLOCATABLE :: eforce(:,:,:,:), cp_emp(:,:,:,:)
-      REAL(dbl), ALLOCATABLE :: fi(:,:,:)
+      REAL(DP) ::  dek, ekinc, ekinc_old
+      REAL(DP) :: ampre
+      REAL(DP), ALLOCATABLE :: dt2bye( : )
+      REAL(DP), PARAMETER :: small    = 1.0d-14
+      REAL(DP), ALLOCATABLE :: bece( :, : )
+      COMPLEX(DP), ALLOCATABLE :: eforce(:,:,:,:), cp_emp(:,:,:,:)
+      REAL(DP), ALLOCATABLE :: fi(:,:,:)
       LOGICAL       :: gamma
       LOGICAL, SAVE :: exst
 !
@@ -611,13 +611,13 @@
 
 ! ... ARGUMENTS
 
-      COMPLEX(dbl), INTENT(inout) ::  c_emp(:,:,:,:)
+      COMPLEX(DP), INTENT(inout) ::  c_emp(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) ::  wempt
-      REAL (dbl), INTENT(in) ::  vpot(:,:,:,:), fi(:,:,:)
-      COMPLEX (dbl) ::  eforce(:,:,:,:)
+      REAL (DP), INTENT(in) ::  vpot(:,:,:,:), fi(:,:,:)
+      COMPLEX (DP) ::  eforce(:,:,:,:)
       LOGICAL, INTENT(IN) :: TORTHO
-      COMPLEX(dbl) :: eigr(:,:)
-      REAL (dbl) :: bece(:,:)
+      COMPLEX(DP) :: eigr(:,:)
+      REAL (DP) :: bece(:,:)
 !
 ! ... LOCALS
 !
@@ -625,8 +625,8 @@
       INTEGER     i, ngw, nspin, ispin
       LOGICAL     gamma
 
-      REAL(dbl),    ALLOCATABLE :: gam(:,:)
-      COMPLEX(dbl) :: cgam(1,1)
+      REAL(DP),    ALLOCATABLE :: gam(:,:)
+      COMPLEX(DP) :: cgam(1,1)
 
 !
 ! ... SUBROUTINE BODY

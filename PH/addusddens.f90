@@ -33,7 +33,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   ! input: if zero does not compute drho
   ! input: the number of perturbations
 
-  complex(kind=DP) :: drhoscf (nrxx, nspin, npe), &
+  complex(DP) :: drhoscf (nrxx, nspin, npe), &
                       dbecsum (nhm*(nhm+1)/2, nat, nspin, npe)
   ! inp/out: change of the charge density
   !input: sum over kv of bec
@@ -57,14 +57,14 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   ! counter on spin
   ! counter on combined beta functions
 
-  real(kind=DP), allocatable  :: qmod (:), qpg (:,:), ylmk0 (:,:)
+  real(DP), allocatable  :: qmod (:), qpg (:,:), ylmk0 (:,:)
   ! the modulus of q+G
   ! the values of q+G
   ! the spherical harmonics
 
-  complex(kind=DP) :: fact, zsum, bb, alpha, alpha_0, u1, u2, u3
+  complex(DP) :: fact, zsum, bb, alpha, alpha_0, u1, u2, u3
   ! auxiliary variables
-  complex(kind=DP), allocatable ::  sk (:), qgm(:), drhous (:,:), aux (:,:,:)
+  complex(DP), allocatable ::  sk (:), qgm(:), drhous (:,:), aux (:,:,:)
   ! the structure factor
   ! q_lm(G)
   ! contain the charge of drho

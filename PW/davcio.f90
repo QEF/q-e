@@ -22,7 +22,7 @@ SUBROUTINE davcio( vect, nword, unit, nrec, io )
     ! input: the unit where to read/write
     ! input: the record where to read/write
     ! input: flag if < 0 reading if > 0 writing
-  REAL(KIND=DP), INTENT(INOUT) :: vect(nword)
+  REAL(DP), INTENT(INOUT) :: vect(nword)
    ! input/output: the vector to read/write
   !
   INTEGER :: ios

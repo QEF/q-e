@@ -15,7 +15,7 @@
 !  this module handles the reading of pseudopotential data
 
 ! ...   declare modules
-        USE kinds, ONLY: dbl
+        USE kinds, ONLY: DP
         IMPLICIT NONE
         SAVE
 

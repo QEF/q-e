@@ -205,20 +205,20 @@
       INTEGER, INTENT(IN) :: nr1, nr2, nr3
       INTEGER, INTENT(IN) :: nr1s, nr2s, nr3s
       INTEGER, INTENT(IN) :: ng_g
-      REAL(dbl), INTENT(IN) :: trutim  ! true time since last 'from_scratch'
-      REAL(dbl), INTENT(IN) :: ecutwfc, ecutrho  ! wfc and density cutoff
-      REAL(dbl), INTENT(IN) :: nel
+      REAL(DP), INTENT(IN) :: trutim  ! true time since last 'from_scratch'
+      REAL(DP), INTENT(IN) :: ecutwfc, ecutrho  ! wfc and density cutoff
+      REAL(DP), INTENT(IN) :: nel
       INTEGER, INTENT(IN) :: nk_g  ! global number of k points
       INTEGER, INTENT(IN) :: nspin, nbnd, nelu, neld, nat, ntyp
       INTEGER, INTENT(IN) :: ngwk_g(:)
       INTEGER, INTENT(IN) :: na(:)
-      REAL(dbl), INTENT(IN) :: acc(:)
+      REAL(DP), INTENT(IN) :: acc(:)
       INTEGER, INTENT(IN) :: nacc
-      REAL(dbl), INTENT(IN) :: alat
-      REAL(dbl), INTENT(IN) :: ekinc
+      REAL(DP), INTENT(IN) :: alat
+      REAL(DP), INTENT(IN) :: ekinc
 
       INTEGER, INTENT(IN) ::  kunit, k1, k2, k3, nk1, nk2, nk3
-      REAL(dbl), INTENT(IN) :: dgauss
+      REAL(DP), INTENT(IN) :: dgauss
       INTEGER, INTENT(IN) :: ngauss
       LOGICAL, INTENT(IN) :: lgauss
       INTEGER, INTENT(IN) :: ntetra
@@ -226,7 +226,7 @@
 
       INTEGER, INTENT(IN) :: natomwfc
       LOGICAL, INTENT(IN) :: doublegrid
-      REAL(dbl), INTENT(IN) :: gcutm, gcuts, dual
+      REAL(DP), INTENT(IN) :: gcutm, gcuts, dual
       INTEGER, INTENT(IN) :: modenum
 
       LOGICAL, INTENT(IN) :: lstres
@@ -248,9 +248,9 @@
       LOGICAL, INTENT(IN) :: tefield
       LOGICAL, INTENT(IN) :: dipfield
       INTEGER, INTENT(IN) :: edir
-      REAL(dbl), INTENT(IN) :: emaxpos
-      REAL(dbl), INTENT(IN) :: eopreg
-      REAL(dbl), INTENT(IN) :: eamp
+      REAL(DP), INTENT(IN) :: emaxpos
+      REAL(DP), INTENT(IN) :: eopreg
+      REAL(DP), INTENT(IN) :: eamp
       LOGICAL, INTENT(IN) :: twfcollect
 
       INTEGER :: i, j
@@ -334,18 +334,18 @@
       INTEGER, INTENT(OUT) :: nfi
       INTEGER, INTENT(OUT) :: nr1, nr2, nr3, ng_g
       INTEGER, INTENT(OUT) :: nr1s, nr2s, nr3s
-      REAL(dbl), INTENT(OUT) :: trutim
-      REAL(dbl), INTENT(OUT) :: ecutwfc, ecutrho
-      REAL(dbl), INTENT(OUT) :: nel
+      REAL(DP), INTENT(OUT) :: trutim
+      REAL(DP), INTENT(OUT) :: ecutwfc, ecutrho
+      REAL(DP), INTENT(OUT) :: nel
       INTEGER, INTENT(OUT) :: nk_g, nspin, nbnd, nelu, neld, nat, ntyp
       INTEGER, INTENT(OUT) :: ngwk_g(:)
       INTEGER, INTENT(OUT) :: na(:)
-      REAL(dbl), INTENT(OUT) :: acc(:)
+      REAL(DP), INTENT(OUT) :: acc(:)
       INTEGER, INTENT(OUT) :: nacc
-      REAL(dbl), INTENT(OUT) :: alat
-      REAL(dbl), INTENT(OUT) :: ekinc
+      REAL(DP), INTENT(OUT) :: alat
+      REAL(DP), INTENT(OUT) :: ekinc
       INTEGER, INTENT(OUT) ::  kunit, k1, k2, k3, nk1, nk2, nk3
-      REAL(dbl), INTENT(OUT) :: dgauss
+      REAL(DP), INTENT(OUT) :: dgauss
       INTEGER, INTENT(OUT) :: ngauss
       LOGICAL, INTENT(OUT) :: lgauss
       INTEGER, INTENT(OUT) :: ntetra
@@ -353,7 +353,7 @@
 
       INTEGER, INTENT(OUT) :: natomwfc
       LOGICAL, INTENT(OUT) :: doublegrid
-      REAL(dbl), INTENT(OUT) :: gcutm, gcuts, dual
+      REAL(DP), INTENT(OUT) :: gcutm, gcuts, dual
       INTEGER, INTENT(OUT) :: modenum
 
       LOGICAL, INTENT(OUT) :: lstres
@@ -371,9 +371,9 @@
       LOGICAL, INTENT(OUT) :: tefield
       LOGICAL, INTENT(OUT) :: dipfield
       INTEGER, INTENT(OUT) :: edir
-      REAL(dbl), INTENT(OUT) :: emaxpos
-      REAL(dbl), INTENT(OUT) :: eopreg
-      REAL(dbl), INTENT(OUT) :: eamp
+      REAL(DP), INTENT(OUT) :: emaxpos
+      REAL(DP), INTENT(OUT) :: eopreg
+      REAL(DP), INTENT(OUT) :: eamp
       LOGICAL, INTENT(OUT) :: twfcollect
 
       CHARACTER(LEN=80)  :: t_, c_
@@ -682,8 +682,8 @@
       INTEGER, INTENT(IN) :: ntyp
       INTEGER, INTENT(IN) :: Hubbard_lmax
       INTEGER, INTENT(IN) :: Hubbard_l(:)
-      REAL(dbl), INTENT(IN) :: Hubbard_U(:)
-      REAL(dbl), INTENT(IN) :: Hubbard_alpha(:)
+      REAL(DP), INTENT(IN) :: Hubbard_U(:)
+      REAL(DP), INTENT(IN) :: Hubbard_alpha(:)
 
       INTEGER :: i
       CHARACTER(LEN=30) :: sub_name = ' write_restart_ldaU '
@@ -747,8 +747,8 @@
       INTEGER, INTENT(OUT) :: ntyp
       INTEGER, INTENT(OUT) :: Hubbard_lmax
       INTEGER, INTENT(OUT) :: Hubbard_l(:)
-      REAL(dbl), INTENT(OUT) :: Hubbard_U(:)
-      REAL(dbl), INTENT(OUT) :: Hubbard_alpha(:)
+      REAL(DP), INTENT(OUT) :: Hubbard_U(:)
+      REAL(DP), INTENT(OUT) :: Hubbard_alpha(:)
 
       INTEGER :: i
       LOGICAL :: twrite_
@@ -1022,22 +1022,22 @@
       IMPLICIT NONE
 !
       INTEGER, INTENT(IN) :: iuni
-      REAL(dbl), INTENT(IN) :: zmesh, xmin, dx
-      REAL(dbl), INTENT(IN) :: r(:), rab(:), vloc_at(:), chi(:,:)
-      REAL(dbl), INTENT(IN) :: oc(:), rho_at(:), rho_atc(:)
+      REAL(DP), INTENT(IN) :: zmesh, xmin, dx
+      REAL(DP), INTENT(IN) :: r(:), rab(:), vloc_at(:), chi(:,:)
+      REAL(DP), INTENT(IN) :: oc(:), rho_at(:), rho_atc(:)
       INTEGER, INTENT(IN) :: mesh, msh, nchi, lchi(:)
-      REAL(dbl), INTENT(IN) :: jchi(:)
+      REAL(DP), INTENT(IN) :: jchi(:)
       LOGICAL, INTENT(IN) :: numeric
-      REAL(dbl), INTENT(IN) :: cc(2), alpc(2), zp, aps(6,0:3), alps(3,0:3), zv
+      REAL(DP), INTENT(IN) :: cc(2), alpc(2), zp, aps(6,0:3), alps(3,0:3), zv
       INTEGER, INTENT(IN) :: nlc, nnl, lmax, lloc
-      REAL(dbl), INTENT(IN) :: dion(:,:), betar(:,:), qqq(:,:), qfunc(:,:,:)
-      REAL(dbl), INTENT(IN) :: qfcoef(:,:,:,:), rinner(:)
+      REAL(DP), INTENT(IN) :: dion(:,:), betar(:,:), qqq(:,:), qfunc(:,:,:)
+      REAL(DP), INTENT(IN) :: qfcoef(:,:,:,:), rinner(:)
       INTEGER, INTENT(IN) :: nh, nbeta, kkbeta, nqf, nqlc, ifqopt, lll(:), iver(3)
-      REAL(dbl), INTENT(IN) :: jjj(:)
+      REAL(DP), INTENT(IN) :: jjj(:)
       LOGICAL, INTENT(IN) :: tvanp, okvan, newpseudo
       INTEGER, INTENT(IN) :: iexch, icorr, igcx, igcc
       LOGICAL, INTENT(IN) :: lsda
-      REAL(dbl), INTENT(IN) :: a_nlcc, b_nlcc, alpha_nlcc
+      REAL(DP), INTENT(IN) :: a_nlcc, b_nlcc, alpha_nlcc
       LOGICAL, INTENT(IN) :: nlcc
       CHARACTER(LEN=2), INTENT(IN) :: psd
 !
@@ -1142,10 +1142,10 @@
       LOGICAL :: tvanp             ! .true. if Ultrasoft
       LOGICAL :: nlcc               ! Non linear core corrections
       CHARACTER(LEN=20) :: dft      ! Exch-Corr type
-      REAL(dbl) :: zp               ! z valence
-      REAL(dbl) :: etotps           ! total energy
-      REAL(dbl) :: ecutwfc          ! suggested cut-off for wfc
-      REAL(dbl) :: ecutrho          ! suggested cut-off for rho
+      REAL(DP) :: zp               ! z valence
+      REAL(DP) :: etotps           ! total energy
+      REAL(DP) :: ecutwfc          ! suggested cut-off for wfc
+      REAL(DP) :: ecutrho          ! suggested cut-off for rho
       INTEGER :: nv                 ! UPF file version number
       INTEGER :: lmax               ! maximum angular momentum component
       INTEGER :: mesh               ! number of point in the radial mesh
@@ -1153,26 +1153,26 @@
       INTEGER :: nbeta              ! number of projectors
       CHARACTER(LEN=2) :: els(:)  ! els(nwfc)
       INTEGER :: lchi(:)   ! lchi(nwfc)
-      REAL(dbl) :: jchi(:)   ! jchi(nwfc)
-      REAL(dbl) :: oc(:)   ! oc(nwfc)
-      REAL(dbl) :: r(:)    ! r(mesh)
-      REAL(dbl) :: rab(:)  ! rab(mesh)
-      REAL(dbl) :: rho_atc(:) ! rho_atc(mesh)
-      REAL(dbl) :: vloc(:)    ! vloc(mesh)
+      REAL(DP) :: jchi(:)   ! jchi(nwfc)
+      REAL(DP) :: oc(:)   ! oc(nwfc)
+      REAL(DP) :: r(:)    ! r(mesh)
+      REAL(DP) :: rab(:)  ! rab(mesh)
+      REAL(DP) :: rho_atc(:) ! rho_atc(mesh)
+      REAL(DP) :: vloc(:)    ! vloc(mesh)
       INTEGER :: lll(:)       ! lll(nbeta)
-      REAL(dbl) :: jjj(:)     ! jjj(nbeta)
+      REAL(DP) :: jjj(:)     ! jjj(nbeta)
       INTEGER :: kkbeta(:)    ! kkbeta(nbeta)
-      REAL(dbl) :: beta(:,:)  ! beta(mesh,nbeta)
+      REAL(DP) :: beta(:,:)  ! beta(mesh,nbeta)
       INTEGER :: nd
-      REAL(dbl) :: dion(:,:)  ! dion(nbeta,nbeta)
+      REAL(DP) :: dion(:,:)  ! dion(nbeta,nbeta)
       INTEGER :: nqf
       INTEGER :: nqlc
-      REAL(dbl) :: rinner(:)  ! rinner(0:2*lmax)
-      REAL(dbl) :: qqq(:,:)   ! qqq(nbeta,nbeta)
-      REAL(dbl) :: qfunc(:,:,:) ! qfunc(mesh,nbeta,nbeta)
-      REAL(dbl) :: qfcoef(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
-      REAL(dbl) :: chi(:,:) !  chi(mesh,nwfc)
-      REAL(dbl) :: rho_at(:) !  rho_at(mesh)
+      REAL(DP) :: rinner(:)  ! rinner(0:2*lmax)
+      REAL(DP) :: qqq(:,:)   ! qqq(nbeta,nbeta)
+      REAL(DP) :: qfunc(:,:,:) ! qfunc(mesh,nbeta,nbeta)
+      REAL(DP) :: qfcoef(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
+      REAL(DP) :: chi(:,:) !  chi(mesh,nwfc)
+      REAL(DP) :: rho_at(:) !  rho_at(mesh)
 !
       INTEGER :: idum = 0
       CHARACTER(LEN=30) :: sub_name = ' write_restart_pseudo '
@@ -1291,23 +1291,23 @@
 
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
-      REAL(dbl), INTENT(OUT) :: zmesh, xmin, dx
-      REAL(dbl), INTENT(OUT) :: r(:), rab(:), vloc_at(:), chi(:,:)
-      REAL(dbl), INTENT(OUT) :: oc(:), rho_at(:), rho_atc(:)
+      REAL(DP), INTENT(OUT) :: zmesh, xmin, dx
+      REAL(DP), INTENT(OUT) :: r(:), rab(:), vloc_at(:), chi(:,:)
+      REAL(DP), INTENT(OUT) :: oc(:), rho_at(:), rho_atc(:)
       INTEGER, INTENT(OUT) :: mesh, msh, nchi, lchi(:)
-      REAL(dbl), INTENT(OUT) :: jchi(:)
+      REAL(DP), INTENT(OUT) :: jchi(:)
       LOGICAL, INTENT(OUT) :: numeric
-      REAL(dbl), INTENT(OUT) :: cc(2), alpc(2), zp, aps(6,0:3), alps(3,0:3), zv
+      REAL(DP), INTENT(OUT) :: cc(2), alpc(2), zp, aps(6,0:3), alps(3,0:3), zv
       INTEGER, INTENT(OUT) :: nlc, nnl, lmax, lloc
-      REAL(dbl), INTENT(OUT) :: dion(:,:), betar(:,:), qqq(:,:), qfunc(:,:,:)
-      REAL(dbl), INTENT(OUT) :: qfcoef(:,:,:,:), rinner(:)
+      REAL(DP), INTENT(OUT) :: dion(:,:), betar(:,:), qqq(:,:), qfunc(:,:,:)
+      REAL(DP), INTENT(OUT) :: qfcoef(:,:,:,:), rinner(:)
       INTEGER, INTENT(OUT) :: nh, nbeta, kkbeta, nqf, nqlc, ifqopt, &
                               lll(:), iver(:)
-      REAL(dbl), INTENT(OUT) :: jjj(:)
+      REAL(DP), INTENT(OUT) :: jjj(:)
       LOGICAL, INTENT(OUT) :: tvanp, okvan, newpseudo
       INTEGER, INTENT(OUT) :: iexch, icorr, igcx, igcc
       LOGICAL, INTENT(OUT) :: lsda
-      REAL(dbl), INTENT(OUT) :: a_nlcc, b_nlcc, alpha_nlcc
+      REAL(DP), INTENT(OUT) :: a_nlcc, b_nlcc, alpha_nlcc
       LOGICAL, INTENT(OUT) :: nlcc
       CHARACTER(LEN=2), INTENT(OUT) :: psd
      
@@ -1488,10 +1488,10 @@
       LOGICAL :: tvanp             ! .true. if Ultrasoft
       LOGICAL :: nlcc               ! Non linear core corrections
       CHARACTER(LEN=20) :: dft      ! Exch-Corr type
-      REAL(dbl) :: zp               ! z valence
-      REAL(dbl) :: etotps           ! total energy
-      REAL(dbl) :: ecutwfc          ! suggested cut-off for wfc
-      REAL(dbl) :: ecutrho          ! suggested cut-off for rho
+      REAL(DP) :: zp               ! z valence
+      REAL(DP) :: etotps           ! total energy
+      REAL(DP) :: ecutwfc          ! suggested cut-off for wfc
+      REAL(DP) :: ecutrho          ! suggested cut-off for rho
       INTEGER :: nv                 ! UPF file version number
       INTEGER :: lmax               ! maximum angular momentum component
       INTEGER :: mesh               ! number of point in the radial mesh
@@ -1499,26 +1499,26 @@
       INTEGER :: nbeta              ! number of projectors
       CHARACTER(LEN=2) :: els(:)  ! els(nwfc)
       INTEGER :: lchi(:)   ! lchi(nwfc)
-      REAL(dbl) :: jchi(:)   ! jchi(nwfc)
-      REAL(dbl) :: oc(:)   ! oc(nwfc)
-      REAL(dbl) :: r(:)    ! r(mesh)
-      REAL(dbl) :: rab(:)  ! rab(mesh)
-      REAL(dbl) :: rho_atc(:) ! rho_atc(mesh)
-      REAL(dbl) :: vloc(:)    ! vloc(mesh)
+      REAL(DP) :: jchi(:)   ! jchi(nwfc)
+      REAL(DP) :: oc(:)   ! oc(nwfc)
+      REAL(DP) :: r(:)    ! r(mesh)
+      REAL(DP) :: rab(:)  ! rab(mesh)
+      REAL(DP) :: rho_atc(:) ! rho_atc(mesh)
+      REAL(DP) :: vloc(:)    ! vloc(mesh)
       INTEGER :: lll(:)       ! lll(nbeta)
-      REAL(dbl) :: jjj(:)    ! jjj(nbeta)
+      REAL(DP) :: jjj(:)    ! jjj(nbeta)
       INTEGER :: kkbeta(:)    ! kkbeta(nbeta)
-      REAL(dbl) :: beta(:,:)  ! beta(mesh,nbeta)
+      REAL(DP) :: beta(:,:)  ! beta(mesh,nbeta)
       INTEGER :: nd
-      REAL(dbl) :: dion(:,:)  ! dion(nbeta,nbeta)
+      REAL(DP) :: dion(:,:)  ! dion(nbeta,nbeta)
       INTEGER :: nqf
       INTEGER :: nqlc
-      REAL(dbl) :: rinner(:)  ! rinner(0:2*lmax)
-      REAL(dbl) :: qqq(:,:)   ! qqq(nbeta,nbeta)
-      REAL(dbl) :: qfunc(:,:,:) ! qfunc(mesh,nbeta,nbeta)
-      REAL(dbl) :: qfcoef(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
-      REAL(dbl) :: chi(:,:) !  chi(mesh,nwfc)
-      REAL(dbl) :: rho_at(:) !  rho_at(mesh)
+      REAL(DP) :: rinner(:)  ! rinner(0:2*lmax)
+      REAL(DP) :: qqq(:,:)   ! qqq(nbeta,nbeta)
+      REAL(DP) :: qfunc(:,:,:) ! qfunc(mesh,nbeta,nbeta)
+      REAL(DP) :: qfcoef(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
+      REAL(DP) :: chi(:,:) !  chi(mesh,nwfc)
+      REAL(DP) :: rho_at(:) !  rho_at(mesh)
 !
 !
 !
@@ -1714,8 +1714,8 @@
 
       INTEGER, INTENT(IN) :: iuni
       INTEGER, INTENT(IN) :: ng
-      REAL(dbl), INTENT(IN) :: bi1(3), bi2(3), bi3(3)
-      REAL(dbl), INTENT(IN) :: b1(3), b2(3), b3(3)
+      REAL(DP), INTENT(IN) :: bi1(3), bi2(3), bi3(3)
+      REAL(DP), INTENT(IN) :: b1(3), b2(3), b3(3)
       INTEGER, INTENT(IN) :: mill(:,:)
       LOGICAL, INTENT(IN) :: tmill
       INTEGER :: idum = 0
@@ -1795,8 +1795,8 @@
       INTEGER, INTENT(IN) :: iuni
       LOGICAL, INTENT(IN) :: tmill
       INTEGER,   INTENT(OUT) :: ng
-      REAL(dbl), INTENT(OUT) :: b1(3), b2(3), b3(3)
-      REAL(dbl), INTENT(OUT) :: bi1(3), bi2(3), bi3(3)
+      REAL(DP), INTENT(OUT) :: b1(3), b2(3), b3(3)
+      REAL(DP), INTENT(OUT) :: bi1(3), bi2(3), bi3(3)
       INTEGER,   INTENT(OUT) :: mill(:,:)
 
       INTEGER :: i, j
@@ -1908,8 +1908,8 @@
       INTEGER, INTENT(IN) :: iuni
       ! ... INTEGER, INTENT(IN) :: igk(:)
       INTEGER, INTENT(IN) :: ik, nk, ngwk, isk
-      REAL(dbl), INTENT(IN) :: xk(3)
-      REAL(dbl), INTENT(IN) :: wk
+      REAL(DP), INTENT(IN) :: xk(3)
+      REAL(DP), INTENT(IN) :: wk
       INTEGER :: i, idum = 0
       CHARACTER(LEN=20) :: section_name = 'gkvec'
 
@@ -1966,8 +1966,8 @@
       INTEGER, INTENT(IN) :: iuni
       ! ... INTEGER, INTENT(INOUT) :: igk(:)
       INTEGER,   INTENT(OUT) :: ngwk, ik, nk, isk
-      REAL(dbl), INTENT(OUT) :: xk(3)
-      REAL(dbl), INTENT(OUT) :: wk
+      REAL(DP), INTENT(OUT) :: xk(3)
+      REAL(DP), INTENT(OUT) :: wk
 
       INTEGER :: ised( 4 )
 
@@ -2068,15 +2068,15 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       INTEGER, INTENT(IN) :: ibrav
-      REAL(dbl), INTENT(IN) :: celldm(6)
-      REAL(dbl), INTENT(IN) :: ht0(3,3)
-      REAL(dbl), INTENT(IN) :: htm(3,3)
-      REAL(dbl), INTENT(IN) :: htm2(3,3)
-      REAL(dbl), INTENT(IN) :: htvel(3,3)
-      REAL(dbl), INTENT(IN) :: xnosp(3,3)
-      REAL(dbl), INTENT(IN) :: xnos0(3,3)
-      REAL(dbl), INTENT(IN) :: xnosm(3,3)
-      REAL(dbl), INTENT(IN) :: xnosm2(3,3)
+      REAL(DP), INTENT(IN) :: celldm(6)
+      REAL(DP), INTENT(IN) :: ht0(3,3)
+      REAL(DP), INTENT(IN) :: htm(3,3)
+      REAL(DP), INTENT(IN) :: htm2(3,3)
+      REAL(DP), INTENT(IN) :: htvel(3,3)
+      REAL(DP), INTENT(IN) :: xnosp(3,3)
+      REAL(DP), INTENT(IN) :: xnos0(3,3)
+      REAL(DP), INTENT(IN) :: xnosm(3,3)
+      REAL(DP), INTENT(IN) :: xnosm2(3,3)
       INTEGER :: i
       CHARACTER(LEN=20) :: section_name = 'cell'
 
@@ -2134,15 +2134,15 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
       INTEGER,   INTENT(OUT) :: ibrav
-      REAL(dbl), INTENT(OUT) :: celldm(6)
-      REAL(dbl), INTENT(OUT) :: ht0(3,3)
-      REAL(dbl), INTENT(OUT) :: htm(3,3)
-      REAL(dbl), INTENT(OUT) :: htm2(3,3)
-      REAL(dbl), INTENT(OUT) :: htvel(3,3)
-      REAL(dbl), INTENT(OUT) :: xnosp(3,3)
-      REAL(dbl), INTENT(OUT) :: xnos0(3,3)
-      REAL(dbl), INTENT(OUT) :: xnosm(3,3)
-      REAL(dbl), INTENT(OUT) :: xnosm2(3,3)
+      REAL(DP), INTENT(OUT) :: celldm(6)
+      REAL(DP), INTENT(OUT) :: ht0(3,3)
+      REAL(DP), INTENT(OUT) :: htm(3,3)
+      REAL(DP), INTENT(OUT) :: htm2(3,3)
+      REAL(DP), INTENT(OUT) :: htvel(3,3)
+      REAL(DP), INTENT(OUT) :: xnosp(3,3)
+      REAL(DP), INTENT(OUT) :: xnos0(3,3)
+      REAL(DP), INTENT(OUT) :: xnosm(3,3)
+      REAL(DP), INTENT(OUT) :: xnosm2(3,3)
 
       INTEGER :: i
       LOGICAL :: twrite_
@@ -2233,22 +2233,22 @@
       INTEGER, INTENT(IN) :: iuni
       LOGICAL, INTENT(IN) :: tscal
       CHARACTER(LEN=*), INTENT(IN) :: label(:)
-      REAL(dbl), INTENT(IN) :: stau0(:,:)
-      REAL(dbl), INTENT(IN) :: svel0(:,:)
-      REAL(dbl), INTENT(IN) :: staum(:,:)
-      REAL(dbl), INTENT(IN) :: svelm(:,:)
-      REAL(dbl), INTENT(IN) :: taui(:,:)
-      REAL(dbl), INTENT(IN) :: fion(:,:)
-      REAL(dbl), INTENT(IN) :: cdmi(:)
+      REAL(DP), INTENT(IN) :: stau0(:,:)
+      REAL(DP), INTENT(IN) :: svel0(:,:)
+      REAL(DP), INTENT(IN) :: staum(:,:)
+      REAL(DP), INTENT(IN) :: svelm(:,:)
+      REAL(DP), INTENT(IN) :: taui(:,:)
+      REAL(DP), INTENT(IN) :: fion(:,:)
+      REAL(DP), INTENT(IN) :: cdmi(:)
       INTEGER, INTENT(IN) :: nat
       INTEGER, INTENT(IN) :: ntyp
       INTEGER, INTENT(IN) :: ityp(:)
       INTEGER, INTENT(IN) :: na(:)
-      REAL(dbl), INTENT(IN) :: mass(:)
-      REAL(dbl), INTENT(IN) :: xnosp
-      REAL(dbl), INTENT(IN) :: xnos0
-      REAL(dbl), INTENT(IN) :: xnosm
-      REAL(dbl), INTENT(IN) :: xnosm2
+      REAL(DP), INTENT(IN) :: mass(:)
+      REAL(DP), INTENT(IN) :: xnosp
+      REAL(DP), INTENT(IN) :: xnos0
+      REAL(DP), INTENT(IN) :: xnosm
+      REAL(DP), INTENT(IN) :: xnosm2
 
       INTEGER :: i,j
       CHARACTER(LEN=4) :: label_(ntyp)
@@ -2354,22 +2354,22 @@
       INTEGER, INTENT(IN) :: iuni
       LOGICAL, INTENT(OUT) :: tscal
       CHARACTER(LEN=*), INTENT(OUT) :: label(:)
-      REAL(dbl), INTENT(OUT) :: stau0(:,:)
-      REAL(dbl), INTENT(OUT) :: svel0(:,:)
-      REAL(dbl), INTENT(OUT) :: staum(:,:)
-      REAL(dbl), INTENT(OUT) :: svelm(:,:)
-      REAL(dbl), INTENT(OUT) :: taui(:,:)
-      REAL(dbl), INTENT(OUT) :: fion(:,:)
-      REAL(dbl), INTENT(OUT) :: cdmi(:)
+      REAL(DP), INTENT(OUT) :: stau0(:,:)
+      REAL(DP), INTENT(OUT) :: svel0(:,:)
+      REAL(DP), INTENT(OUT) :: staum(:,:)
+      REAL(DP), INTENT(OUT) :: svelm(:,:)
+      REAL(DP), INTENT(OUT) :: taui(:,:)
+      REAL(DP), INTENT(OUT) :: fion(:,:)
+      REAL(DP), INTENT(OUT) :: cdmi(:)
       INTEGER, INTENT(OUT) :: nat
       INTEGER, INTENT(OUT) :: ntyp
       INTEGER, INTENT(OUT) :: ityp(:)
       INTEGER, INTENT(OUT) :: na(:)
-      REAL(dbl), INTENT(OUT) :: mass(:)
-      REAL(dbl), INTENT(OUT) :: xnosp
-      REAL(dbl), INTENT(OUT) :: xnos0
-      REAL(dbl), INTENT(OUT) :: xnosm
-      REAL(dbl), INTENT(OUT) :: xnosm2
+      REAL(DP), INTENT(OUT) :: mass(:)
+      REAL(DP), INTENT(OUT) :: xnosp
+      REAL(DP), INTENT(OUT) :: xnos0
+      REAL(DP), INTENT(OUT) :: xnosm
+      REAL(DP), INTENT(OUT) :: xnosm2
 
       INTEGER   :: i, j
       CHARACTER(LEN=4) :: label_( nsx )
@@ -2518,26 +2518,26 @@
       IMPLICIT NONE
 !
       INTEGER, INTENT(IN) :: iuni
-      REAL(dbl), INTENT(IN) :: occ(:)
-      REAL(dbl), INTENT(IN) :: occm(:)
-      REAL(dbl), INTENT(IN) :: lambda(:,:)
-      REAL(dbl), INTENT(IN) :: lambdam(:,:)
-      REAL(dbl), INTENT(IN) :: eig(:)
-      REAL(dbl), INTENT(IN) :: weig(:)
+      REAL(DP), INTENT(IN) :: occ(:)
+      REAL(DP), INTENT(IN) :: occm(:)
+      REAL(DP), INTENT(IN) :: lambda(:,:)
+      REAL(DP), INTENT(IN) :: lambdam(:,:)
+      REAL(DP), INTENT(IN) :: eig(:)
+      REAL(DP), INTENT(IN) :: weig(:)
       LOGICAL, INTENT(IN) :: tocc, tlam, teig
       INTEGER, INTENT(IN) :: nbnd, ldim
       INTEGER, INTENT(IN) :: ispin
       INTEGER, INTENT(IN) :: nspin
       INTEGER, INTENT(IN) :: ik
       INTEGER, INTENT(IN) :: nk
-      REAL(dbl), INTENT(IN) :: nel
+      REAL(DP), INTENT(IN) :: nel
       INTEGER, INTENT(IN) :: nelu
       INTEGER, INTENT(IN) :: neld
-      REAL(dbl), INTENT(IN) :: xnosp
-      REAL(dbl), INTENT(IN) :: xnos0
-      REAL(dbl), INTENT(IN) :: xnosm
-      REAL(dbl), INTENT(IN) :: xnosm2
-      REAL(dbl), INTENT(IN) :: ef
+      REAL(DP), INTENT(IN) :: xnosp
+      REAL(DP), INTENT(IN) :: xnos0
+      REAL(DP), INTENT(IN) :: xnosm
+      REAL(DP), INTENT(IN) :: xnosm2
+      REAL(DP), INTENT(IN) :: ef
 
       INTEGER :: i, l, idum = 0
       CHARACTER(LEN=30) :: sub_name = ' write_restart_electrons '
@@ -2669,27 +2669,27 @@
       IMPLICIT NONE
 !
       INTEGER, INTENT(IN) :: iuni
-      REAL(dbl), INTENT(OUT) :: occ(:)
-      REAL(dbl), INTENT(OUT) :: occm(:)
-      REAL(dbl), INTENT(OUT) :: eig(:)
-      REAL(dbl), INTENT(OUT) :: weig(:)
-      REAL(dbl), INTENT(OUT) :: lambda(:,:)
-      REAL(dbl), INTENT(OUT) :: lambdam(:,:)
+      REAL(DP), INTENT(OUT) :: occ(:)
+      REAL(DP), INTENT(OUT) :: occm(:)
+      REAL(DP), INTENT(OUT) :: eig(:)
+      REAL(DP), INTENT(OUT) :: weig(:)
+      REAL(DP), INTENT(OUT) :: lambda(:,:)
+      REAL(DP), INTENT(OUT) :: lambdam(:,:)
       INTEGER, INTENT(OUT) :: ldim
       INTEGER, INTENT(OUT) :: nbnd
       INTEGER, INTENT(OUT) :: ispin
       INTEGER, INTENT(OUT) :: nspin
       INTEGER, INTENT(OUT) :: ik
       INTEGER, INTENT(OUT) :: nk
-      REAL(dbl), INTENT(OUT) :: nel
+      REAL(DP), INTENT(OUT) :: nel
       INTEGER, INTENT(OUT) :: nelu
       INTEGER, INTENT(OUT) :: neld
-      REAL(dbl), INTENT(OUT) :: xnosp
-      REAL(dbl), INTENT(OUT) :: xnos0
-      REAL(dbl), INTENT(OUT) :: xnosm
-      REAL(dbl), INTENT(OUT) :: xnosm2
+      REAL(DP), INTENT(OUT) :: xnosp
+      REAL(DP), INTENT(OUT) :: xnos0
+      REAL(DP), INTENT(OUT) :: xnosm
+      REAL(DP), INTENT(OUT) :: xnosm2
       LOGICAL, INTENT(IN) :: tocc, tlam, teig
-      REAL(dbl), INTENT(OUT) :: ef
+      REAL(DP), INTENT(OUT) :: ef
 
       INTEGER :: i, j, k, l
       LOGICAL :: tocc_, tlam_, teig_
@@ -2877,19 +2877,19 @@
 !
       INTEGER, INTENT(IN) :: iuni
       INTEGER, INTENT(IN) :: ik, nk, kunit, ispin, nspin
-      COMPLEX(dbl), INTENT(IN) :: wf0(:,:)
-      COMPLEX(dbl), INTENT(IN) :: wfm(:,:)
+      COMPLEX(DP), INTENT(IN) :: wf0(:,:)
+      COMPLEX(DP), INTENT(IN) :: wfm(:,:)
       INTEGER, INTENT(IN) :: ngw   ! 
       INTEGER, INTENT(IN) :: nbnd
       INTEGER, INTENT(IN) :: ngwl
       INTEGER, INTENT(IN) :: igl(:)
-      REAL(dbl), INTENT(IN) :: scal
+      REAL(DP), INTENT(IN) :: scal
       LOGICAL, INTENT(IN) :: t0, tm
 
       INTEGER :: i, j, ierr, idum = 0
       INTEGER :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx
       INTEGER :: npool, ipmask( nproc ), ipsour
-      COMPLEX(dbl), ALLOCATABLE :: wtmp(:)
+      COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       INTEGER, ALLOCATABLE :: igltot(:)
 
       CHARACTER(LEN=20) :: section_name = 'wfc'
@@ -3071,17 +3071,17 @@
       IMPLICIT NONE
 !
       INTEGER, INTENT(IN) :: iuni
-      COMPLEX(dbl), INTENT(INOUT) :: wf0(:,:)
-      COMPLEX(dbl), INTENT(INOUT) :: wfm(:,:)
+      COMPLEX(DP), INTENT(INOUT) :: wf0(:,:)
+      COMPLEX(DP), INTENT(INOUT) :: wfm(:,:)
       INTEGER, INTENT(IN) :: ik, nk, kunit
       INTEGER, INTENT(OUT) :: ngw, nbnd, ispin, nspin
-      REAL(dbl), INTENT(OUT) :: scal
+      REAL(DP), INTENT(OUT) :: scal
       INTEGER, INTENT(IN) :: ngwl
       INTEGER, INTENT(IN) :: igl(:)
       LOGICAL, INTENT(INOUT) :: t0, tm
 
       INTEGER :: i, j, idum
-      COMPLEX(dbl), ALLOCATABLE :: wtmp(:)
+      COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       INTEGER, ALLOCATABLE :: igltot(:)
       LOGICAL :: t0_, tm_
       LOGICAL :: twrite_
@@ -3322,12 +3322,12 @@
       USE mp, ONLY: mp_bcast
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
-      COMPLEX(dbl), INTENT(IN) :: rhog(:)
-      COMPLEX(dbl), INTENT(IN) :: vg(:)
+      COMPLEX(DP), INTENT(IN) :: rhog(:)
+      COMPLEX(DP), INTENT(IN) :: vg(:)
       INTEGER, INTENT(IN) :: ispin, nspin, ng, ngl, igl(:)
       LOGICAL, INTENT(IN) :: tr, tv
       INTEGER :: i, is
-      COMPLEX(dbl), ALLOCATABLE :: vtmp(:)
+      COMPLEX(DP), ALLOCATABLE :: vtmp(:)
       INTEGER :: idum = 0
       CHARACTER(LEN=20) :: section_name = 'charge'
 
@@ -3402,14 +3402,14 @@
 
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni
-      COMPLEX(dbl), INTENT(OUT) :: rhog(:)
-      COMPLEX(dbl), INTENT(OUT) :: vg(:)
+      COMPLEX(DP), INTENT(OUT) :: rhog(:)
+      COMPLEX(DP), INTENT(OUT) :: vg(:)
       INTEGER, INTENT(IN) :: ngl, igl(:)
       INTEGER, INTENT(OUT) :: ispin, nspin, ng
       LOGICAL, INTENT(INOUT) :: tr, tv
       INTEGER :: i, j, k, is
       LOGICAL :: tr_, tv_
-      COMPLEX(dbl), ALLOCATABLE :: vtmp(:)
+      COMPLEX(DP), ALLOCATABLE :: vtmp(:)
 
       LOGICAL :: twrite_
       INTEGER :: idum, ierr

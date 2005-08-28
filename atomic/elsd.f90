@@ -22,15 +22,15 @@ use ld1inc, only: vx
 implicit none
 integer:: ndm,mesh,nwf,i,n,ll(nwf),lam,lmax,lsd,nspin,is
 logical:: nlcc, gga, oep
-real(kind=dp):: zed, int_0_inf_dr, rh(2),rhc,vxc,exc,vxcp(2), &
+real(DP):: zed, int_0_inf_dr, rh(2),rhc,vxc,exc,vxcp(2), &
           etot,encl,epseu,ekin,ehrt,ecxc,evxt
-real(kind=dp):: enl(nwf),oc(nwf), rhotot, exc_t, &
+real(DP):: enl(nwf),oc(nwf), rhotot, exc_t, &
           r(ndm),r2(ndm),dx, rho(ndm,2),zeta(ndm), &
           vxt(ndm),vnl(ndm,0:3),vh(ndm)
-real(kind=dp),allocatable :: f1(:), f2(:), f3(:), f4(:)
-real(kind=dp),allocatable :: vgc(:,:), egc(:), rhoc(:)
+real(DP),allocatable :: f1(:), f2(:), f3(:), f4(:)
+real(DP),allocatable :: vgc(:,:), egc(:), rhoc(:)
 integer:: mgcx,mgcc,ierr
-real(kind=dp),parameter :: fourpi = 4.0_DP * 3.141592653589793_DP  
+real(DP),parameter :: fourpi = 4.0_DP * 3.141592653589793_DP  
 
 gga=igcx.ne.0.or.igcc.ne.0
 oep=iexch.eq.4

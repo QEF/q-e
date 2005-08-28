@@ -103,8 +103,8 @@ MODULE path_opt_routines
        IMPLICIT NONE
        !
        INTEGER, INTENT(IN) :: index
-       REAL (KIND=DP)      :: force_versor(dim)
-       REAL (KIND=DP)      :: vel_component
+       REAL (DP)      :: force_versor(dim)
+       REAL (DP)      :: vel_component
        !
        !
        IF ( frozen(index) ) RETURN
@@ -153,12 +153,12 @@ MODULE path_opt_routines
        !
        IMPLICIT NONE
        !
-       REAL (KIND=DP), ALLOCATABLE :: t(:), g(:), s(:,:)
+       REAL (DP), ALLOCATABLE :: t(:), g(:), s(:,:)
        INTEGER                     :: k, i, j, I_in, I_fin
-       REAL (KIND=DP)              :: s_norm, coeff, norm_g
+       REAL (DP)              :: s_norm, coeff, norm_g
        LOGICAL                     :: exists
        !
-       REAL (KIND=DP), PARAMETER   :: step_max = 0.6D0
+       REAL (DP), PARAMETER   :: step_max = 0.6D0
        INTEGER,        PARAMETER   :: broyden_ndim = 5
        !
        !

@@ -32,11 +32,11 @@ SUBROUTINE bfgs()
   INTEGER :: iunit          ! unit for file containing bfgs info
   INTEGER :: nax3,        & ! 3 times the total number of atoms (nat)
        na, i          ! counters
-  REAL(KIND=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
        hessm1 (:,:),& ! current estimate of hessian^-1
        dtau (:,:),  & ! direction (versor) for line minimization
        oldforce (:,:) ! gradient along minimization direction
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
        detot,       & ! forces at previous line minimum (LM)
        deold,       & ! as above at previous LM
        eold,        & ! energy at previous LM
@@ -47,7 +47,7 @@ SUBROUTINE bfgs()
   LOGICAL :: exst,       & ! test variable on existence of bfgs file
        minimum_ok    ! true if linmin found a good line minimum
   !
-  REAL(KIND=DP) :: DDOT
+  REAL(DP) :: DDOT
   !
   !
   ! ... the constrain on fixed coordinates is implemented setting to zero

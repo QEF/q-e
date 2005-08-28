@@ -15,9 +15,9 @@ MODULE nmr_mod
   !
   INTEGER, ALLOCATABLE :: &
        igk_q(:)             !  correspondence k+q+G <-> G
-  REAL(KIND=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
        g2kin_q(:)             !  kinetic energy for k+q
-  COMPLEX(KIND=DP), ALLOCATABLE :: &
+  COMPLEX(DP), ALLOCATABLE :: &
        vkb_q(:,:)           ! all beta functions in reciprocal space for k+q
 
   CONTAINS

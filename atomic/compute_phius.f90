@@ -19,7 +19,7 @@
 use ld1inc
   implicit none
 
-      real(kind=dp) :: &
+      real(DP) :: &
                fae,    & ! the value of the all-electron function
                f1ae,   & ! its first derivative
                xc(8),  & ! the coefficients of the fit
@@ -33,14 +33,14 @@ use ld1inc
                lam       ! the angular momentum
 
 
-      real(kind=dp) :: &
+      real(DP) :: &
                f1aep1,f1aem1,jnor, &  ! auxilairy quantities
                bm(2),  &              ! the derivative of the bessel
                ff,     &              ! contain deltah corrections
                fact(2), &             ! factor of normalization
                j1(ndm,8)             ! the bessel functions
      
-      real(kind=dp) :: &
+      real(DP) :: &
             deriv_7pts, deriv2_7pts
 
 

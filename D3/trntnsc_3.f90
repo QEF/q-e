@@ -21,10 +21,10 @@ subroutine trntnsc_3 (phi, at, bg, iflg)
   integer :: iflg
   ! input: gives the versus of the trans.
 
-  complex (kind = dp) :: phi (3, 3, 3)
+  complex (DP) :: phi (3, 3, 3)
   ! inp/out: the matrix to transform
 
-  real (kind = dp) :: at (3, 3), bg (3, 3)
+  real (DP) :: at (3, 3), bg (3, 3)
   ! input: the direct lattice vectors
   ! input: the reciprocal lattice
 
@@ -32,7 +32,7 @@ subroutine trntnsc_3 (phi, at, bg, iflg)
   !
   !  counters on polarizations
   !
-  complex (kind = dp) :: wrk (3, 3, 3)
+  complex (DP) :: wrk (3, 3, 3)
   ! a work array
 
   if (iflg.gt.0) then

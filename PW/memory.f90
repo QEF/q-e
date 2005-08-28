@@ -60,7 +60,7 @@ subroutine setup2()
   !
   implicit none
   !
-  real(kind=DP) :: omegaBZ
+  real(DP) :: omegaBZ
   integer :: nb, nt
   !
   !     calculate the number of beta functions for each atomic type
@@ -135,14 +135,14 @@ subroutine memory_estimate ( )
   ! integer overflow for very large jobs
   !
 #if defined (FUJ64)|| defined (__ALPHA) || defined (__SX6) || defined(__LINUX64) || defined(__SGI64)
-  real(kind=DP), parameter :: real_size = 8, int_size = 8
+  real(DP), parameter :: real_size = 8, int_size = 8
 #else
-  real(kind=DP), parameter :: real_size = 8, int_size = 4
+  real(DP), parameter :: real_size = 8, int_size = 4
 #endif
-  real(kind=DP), parameter :: comp_size = 2*real_size
-  real(kind=DP) :: total_mem, scalable_mem, nonscalable_mem
-  real(kind=DP) :: scalable_wspace, nonscalable_wspace
-  real(kind=DP) :: wspace_diago, wspace_mix, diis_steps
+  real(DP), parameter :: comp_size = 2*real_size
+  real(DP) :: total_mem, scalable_mem, nonscalable_mem
+  real(DP) :: scalable_wspace, nonscalable_wspace
+  real(DP) :: wspace_diago, wspace_mix, diis_steps
   !
   ! fixed memory, or memory allocated in iosys, setup
   !

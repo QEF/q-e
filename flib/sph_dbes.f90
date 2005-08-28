@@ -19,11 +19,11 @@ SUBROUTINE sph_dbes( MMAX, R, XG, L, DJL )
   IMPLICIT NONE
   !
   INTEGER       :: MMAX, L
-  REAL(KIND=DP) :: XG
-  REAL(KIND=DP) :: DJL(MMAX), R(MMAX)
+  REAL(DP) :: XG
+  REAL(DP) :: DJL(MMAX), R(MMAX)
   !
   INTEGER       :: IR
-  REAL(KIND=DP) :: XRG, XRG2
+  REAL(DP) :: XRG, XRG2
   !
   !
   IF ( L == 1 ) THEN                      !   S  PART

@@ -26,15 +26,15 @@ subroutine ewald_dipole (tens,dipole)
   !
   implicit none
   !
-  real(kind=DP) :: dipole(ntyp),charge, eta, arg, upperbound, temp
-  complex(kind=DP) :: tens(nat,3,3)
-  complex(kind=DP) :: rhon
-  real(kind=DP), external :: erfc
-  complex(kind=DP), allocatable:: ewaldg(:,:,:), ewaldr(:,:,:)
+  real(DP) :: dipole(ntyp),charge, eta, arg, upperbound, temp
+  complex(DP) :: tens(nat,3,3)
+  complex(DP) :: rhon
+  real(DP), external :: erfc
+  complex(DP), allocatable:: ewaldg(:,:,:), ewaldr(:,:,:)
   integer :: alpha, beta, na, ng, nt, ipol, nb, nrm, nr
 
   integer, parameter :: mxr = 50
-  real (kind=DP) :: r(3,mxr), r2(mxr), rmax, rr, dtau(3)
+  real (DP) :: r(3,mxr), r2(mxr), rmax, rr, dtau(3)
 
   allocate (ewaldg(nat,3,3))
   allocate (ewaldr(nat,3,3))

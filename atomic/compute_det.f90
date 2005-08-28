@@ -30,7 +30,7 @@ subroutine compute_det(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
        lls(nbeta),&! for each beta the angular momentum
        ikk(nbeta) ! for each beta the point where it become zero
 
-  real(kind=dp) :: &
+  real(DP) :: &
        e,       &  ! output eigenvalue
        dx,      &  ! linear delta x for radial mesh
        jam,     &  ! the j of this calculation
@@ -45,7 +45,7 @@ subroutine compute_det(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   !
   !    the local variables
   !
-  real(kind=dp) :: &
+  real(DP) :: &
        ddx12,      &  ! dx**2/12 used for Numerov integration
        sqlhf,      &  ! the term for angular momentum in equation
        xl1, x4l6, x6l12, x8l20, &! used for starting series expansion
@@ -56,7 +56,7 @@ subroutine compute_det(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
        int_0_inf_dr, & ! the integral function
        wron1          ! the value of the wronskian
 
-  real(kind=dp),allocatable :: &
+  real(DP),allocatable :: &
        bm(:,:),amat(:,:), &! matrix to compute det
        y(:),     & ! the regular solution
        yi(:),    & ! the irregular solution
@@ -91,7 +91,7 @@ subroutine compute_det(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   ddx12=dx*dx/12.0_dp
   l1=lam+1
   nst=l1*2
-  sqlhf=(dble(lam)+0.5_dp)**2
+  sqlhf=(DBLE(lam)+0.5_dp)**2
   xl1=lam+1
   x4l6=4*lam+6
   x6l12=6*lam+12

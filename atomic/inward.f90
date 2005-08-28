@@ -11,13 +11,13 @@ subroutine inward(y,f,g,mesh,imatch)
    ! I/O variables
    !
    integer :: mesh, imatch
-   real(kind=DP) :: y(ndm), f(ndm), g(ndm)
+   real(DP) :: y(ndm), f(ndm), g(ndm)
    !
    ! local variables
    !
    integer :: imp1, imp2, nm1, n
-   real(kind=DP) :: di, ff, expn
-   real(kind=DP) :: el(ndm),c(ndm)
+   real(DP) :: di, ff, expn
+   real(DP) :: el(ndm),c(ndm)
 
    if (ndm.lt.mesh) stop ' inward : ndm .lt. mesh !!!!'
 ! set up el, and c vectors

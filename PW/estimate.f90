@@ -13,7 +13,7 @@ subroutine estimate (hessm1, nax3, nat, nat3)
   USE kinds
   implicit none
   integer :: nax3, nat3, nat, i
-  real(kind=DP) :: hessm1 (nax3, nat3)
+  real(DP) :: hessm1 (nax3, nat3)
 
   hessm1(:,:) = 0.d0
   do i = 1, nat3

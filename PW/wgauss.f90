@@ -22,7 +22,7 @@ function wgauss (x, n)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: wgauss, x
+  real(DP) :: wgauss, x
   ! output: the value of the function
   ! input: the argument of the function
   integer :: n
@@ -31,7 +31,7 @@ function wgauss (x, n)
   !    the local variables
   !
 
-  real(kind=DP) :: a, hp, arg, maxarg, hd, pi, gauss_freq, erf, xp
+  real(DP) :: a, hp, arg, maxarg, hd, pi, gauss_freq, erf, xp
   ! the coefficient a_n
   ! the hermitean function
   ! the argument of the exponential
@@ -79,11 +79,11 @@ function wgauss (x, n)
   ni = 0
   a = 1.d0 / sqrt (pi)
   do i = 1, n
-     hd = 2.0d0 * x * hp - 2.0d0 * dble (ni) * hd
+     hd = 2.0d0 * x * hp - 2.0d0 * DBLE (ni) * hd
      ni = ni + 1
-     a = - a / (dble (i) * 4.0d0)
+     a = - a / (DBLE (i) * 4.0d0)
      wgauss = wgauss - a * hd
-     hp = 2.0d0 * x * hd-2.0d0 * dble (ni) * hp
+     hp = 2.0d0 * x * hd-2.0d0 * DBLE (ni) * hp
      ni = ni + 1
   enddo
   return

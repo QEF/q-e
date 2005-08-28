@@ -36,7 +36,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   integer :: j
   ! do loop index
 
-  complex(kind=DP) :: psi (lda, m), hpsi (lda, m), spsi (lda, m)
+  complex(DP) :: psi (lda, m), hpsi (lda, m), spsi (lda, m)
   ! input: the functions where to apply H and S
   ! output: H times psi
   ! output: S times psi (Us PP's only)

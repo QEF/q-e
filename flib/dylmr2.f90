@@ -23,7 +23,7 @@ subroutine dylmr2 (nylm, ngy, g, gg, dylm, ipol)
   ! input: number of spherical harmonics
   ! input: the number of g vectors to compute
   ! input: desired polarization
-  real(kind=DP) :: g (3, ngy), gg (ngy), dylm (ngy, nylm)
+  real(DP) :: g (3, ngy), gg (ngy), dylm (ngy, nylm)
   ! input: the coordinates of g vectors
   ! input: the moduli of g vectors
   ! output: the spherical harmonics derivatives
@@ -34,8 +34,8 @@ subroutine dylmr2 (nylm, ngy, g, gg, dylm, ipol)
   ! counter on g vectors
   ! counter on l,m component
 
-  real(kind=DP), parameter :: delta = 1.d-5
-  real(kind=DP), allocatable :: dg (:), dgi (:), gx (:,:), ggx (:), ylmaux (:,:)
+  real(DP), parameter :: delta = 1.d-5
+  real(DP), allocatable :: dg (:), dgi (:), gx (:,:), ggx (:), ylmaux (:,:)
   ! dg is the finite increment for numerical derivation:
   ! dg = delta |G| = delta * sqrt(gg)
   ! dgi= 1 /(delta * sqrt(gg))

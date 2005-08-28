@@ -39,24 +39,24 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
   implicit none
 
     
-  real(kind=8) bec0(nhsa,n)
-  complex(kind=8)   gqq(nhm,nhm,nas,nsp)
-  complex(kind=8) c0(ngw,nx),  qmat(nx,nx), detq
+  real(8) bec0(nhsa,n)
+  complex(8)   gqq(nhm,nhm,nas,nsp)
+  complex(8) c0(ngw,nx),  qmat(nx,nx), detq
   integer ctable(ngw,2)
 
 !local variables
   integer ig,ix,jx, iv,jv,is,ia,i,ierr,matz
-  complex(kind=8) sca
-  real(kind=8) ar(nx,nx),ai(nx,nx),wr(nx),wi(nx),zr(nx,nx), &
+  complex(8) sca
+  real(8) ar(nx,nx),ai(nx,nx),wr(nx),wi(nx),zr(nx,nx), &
        &zi(nx,nx),fv1(nx),fv2(nx),fv3(nx)
-  real(kind=8) norm, cost, det
-  complex(kind=8) im, qmat2(nx,nx)
+  real(8) norm, cost, det
+  complex(8) im, qmat2(nx,nx)
 
   integer ipiv(nx,nx),info
-  complex(kind=8) work(nx),cdet
+  complex(8) work(nx),cdet
   integer ii!to compute determinant from LU decomposition
   integer ism,isa,inl,jnl
-  real(kind=8) nexl!number of exchanged lines in LU decomposition
+  real(8) nexl!number of exchanged lines in LU decomposition
 
 !  do ix=1,nx
 !     do jx=1,nx

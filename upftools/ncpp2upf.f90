@@ -48,19 +48,19 @@ module ncpp
   !
   character(len=20) :: dft_
   character(len=2)  :: psd_
-  real(kind=8) :: zp_
+  real(8) :: zp_
   integer nlc, nnl, lmax_, lloc, nchi
   logical :: numeric, bhstype, nlcc_
-  real(kind=8) :: alpc(2), cc(2), alps(3,0:3), aps(6,0:3)
-  real(kind=8) :: a_nlcc, b_nlcc, alpha_nlcc
+  real(8) :: alpc(2), cc(2), alps(3,0:3), aps(6,0:3)
+  real(8) :: a_nlcc, b_nlcc, alpha_nlcc
 
-  real(kind=8) :: zmesh, xmin, dx
-  real(kind=8), allocatable::  r_(:), rab_(:)
+  real(8) :: zmesh, xmin, dx
+  real(8), allocatable::  r_(:), rab_(:)
   integer :: mesh_
 
-  real(kind=8), allocatable::  vnl(:,:), rho_atc_(:), rho_at_(:)
+  real(8), allocatable::  vnl(:,:), rho_atc_(:), rho_at_(:)
   integer, allocatable:: lchi_(:)
-  real(kind=8), allocatable:: chi_(:,:),  oc_(:)
+  real(8), allocatable:: chi_(:,:),  oc_(:)
 
 end module ncpp
 ! 
@@ -75,8 +75,8 @@ subroutine read_ncpp(iunps)
   !
   character(len=1), dimension(0:3) :: convel=(/'S','P','D','F'/)
   character(len=2) :: label
-  real(kind=8), parameter:: pi=3.141592653589793d0
-  real (kind=8) :: x, erf
+  real(8), parameter:: pi=3.141592653589793d0
+  real (8) :: x, erf
   integer :: l, i, ir, nb, n
   character (len=255) line
   external erf
@@ -260,9 +260,9 @@ subroutine convert_ncpp
                     funct_igcx => igcx, &
                     funct_igcc => igcc
   implicit none
-  real(kind=8), parameter :: rmax = 10.0
-  real(kind=8), allocatable :: aux(:)
-  real(kind=8) :: vll
+  real(8), parameter :: rmax = 10.0
+  real(8), allocatable :: aux(:)
+  real(8) :: vll
   integer :: kkbeta, l, iv, ir, i
 
   write(generated, '("Generated using ld1 code (maybe, or maybe not)")')

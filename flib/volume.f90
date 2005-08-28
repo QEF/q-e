@@ -17,7 +17,7 @@ subroutine volume (alat, a1, a2, a3, omega)
   !
   !     First the I/O variables
   !
-  real(kind=DP) :: alat, a1 (3), a2 (3), a3 (3), omega
+  real(DP) :: alat, a1 (3), a2 (3), a3 (3), omega
   ! input:  lattice parameter (unit length)
   ! input: the first lattice vector
   ! input: the second lattice vector
@@ -27,7 +27,7 @@ subroutine volume (alat, a1, a2, a3, omega)
   !    Here the local variables required by the routine
   !
 
-  real(kind=DP) :: s
+  real(DP) :: s
   ! the sign of a permutation
   integer :: i, j, k, l, iperm
   !\

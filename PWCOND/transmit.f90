@@ -24,10 +24,10 @@ implicit none
   integer :: ik, ien, n, iorb, iorb1, iorb2, iorba, ipol, nt, &
              ih, ih1, ig, ntran, ij, is, js, info
   integer, allocatable :: ipiv(:)
-  real(kind=DP) :: tk, tj, tij, eev
-  real(kind=DP), allocatable :: zps(:,:), eigen(:)
-  complex(kind=DP) :: x1, x2, xi1(2)
-  complex(kind=DP), allocatable :: amat(:,:), vec1(:,:), &
+  real(DP) :: tk, tj, tij, eev
+  real(DP), allocatable :: zps(:,:), eigen(:)
+  complex(DP) :: x1, x2, xi1(2)
+  complex(DP), allocatable :: amat(:,:), vec1(:,:), &
                      tmat(:,:), veceig(:,:), zps_nc(:,:), &
                      vec2(:,:), smat(:,:)
 

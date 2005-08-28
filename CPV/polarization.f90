@@ -24,9 +24,9 @@
 
         !  variables used for the dipole moment
 
-        REAL(dbl) :: p0( 3 ), p( 3 ), pdipole( 3 ), pdipolt( 3 ), pdipole0( 3 )
-        REAL(dbl) :: cost1, cost2, cost3, fac, bgm1( 3, 3 ), bg( 3, 3 )
-        REAL(dbl) :: d1old, d2old, d3old
+        REAL(DP) :: p0( 3 ), p( 3 ), pdipole( 3 ), pdipolt( 3 ), pdipole0( 3 )
+        REAL(DP) :: cost1, cost2, cost3, fac, bgm1( 3, 3 ), bg( 3, 3 )
+        REAL(DP) :: d1old, d2old, d3old
         LOGICAL :: first = .TRUE.
 
         PUBLIC :: deallocate_polarization, ddipole
@@ -57,7 +57,7 @@
 
       IMPLICIT NONE 
 
-      COMPLEX(dbl) ZDOTU, ZDOTC
+      COMPLEX(DP) ZDOTU, ZDOTC
 !
 ! ... ARGUMENTS
 !
@@ -65,7 +65,7 @@
       type (boxdimensions) box
       type (atoms_type) atoms
       LOGICAL TFOR
-      COMPLEX(dbl) C2(NGWX,NX)
+      COMPLEX(DP) C2(NGWX,NX)
       INTEGER ISTEP
 
 
@@ -73,18 +73,18 @@
 ! ... LOCALS
 !
 
-      REAL(dbl)  TAUP(3, atoms%nax, atoms%nsp)
-      REAL(dbl)  d1,d2,d3
-      REAL(dbl)  rb1,rb2,rb3
-      REAL(dbl)  rb1m1,rb2m1,rb3m1
-      REAL(dbl)  rdummy
-      REAL(dbl)  bg(3,3), b1(3),b2(3),b3(3)
+      REAL(DP)  TAUP(3, atoms%nax, atoms%nsp)
+      REAL(DP)  d1,d2,d3
+      REAL(DP)  rb1,rb2,rb3
+      REAL(DP)  rb1m1,rb2m1,rb3m1
+      REAL(DP)  rdummy
+      REAL(DP)  bg(3,3), b1(3),b2(3),b3(3)
 !
-      COMPLEX(dbl) DUMM(NX,NX),DET,AUX(2*NX),PTEMP(NGWX)
-      COMPLEX(dbl) DETC(2),ZTMP
+      COMPLEX(DP) DUMM(NX,NX),DET,AUX(2*NX),PTEMP(NGWX)
+      COMPLEX(DP) DETC(2),ZTMP
       integer ipiv(nx),info
 !
-      REAL(dbl)  omega
+      REAL(DP)  omega
       integer i,j,is,in2,in1,me, isa
 
 !

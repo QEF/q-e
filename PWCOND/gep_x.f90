@@ -15,14 +15,14 @@ subroutine gep_x(n, amt, bmt, eigen, veigen)
   implicit none  
 
   integer :: i, n, info, lwork
-  complex(kind=DP) :: trywork
-  real(kind=DP), allocatable :: rwork(:)
-  complex(kind=DP) ::                                   &
+  complex(DP) :: trywork
+  real(DP), allocatable :: rwork(:)
+  complex(DP) ::                                   &
                  amt(n,n),  &  ! A
                  bmt(n,n),  &  ! B
                  eigen(n),  &  ! lambda 
                  veigen(n,n)   ! X
-  complex(kind=DP), allocatable :: alpha(:), beta(:), work(:)
+  complex(DP), allocatable :: alpha(:), beta(:), work(:)
 
   allocate( alpha( n ) )
   allocate( beta( n ) )

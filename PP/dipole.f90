@@ -45,8 +45,8 @@ program dipole
 
   implicit none
 
-  real(kind=DP) :: x0 (3), dipol(0:3), quadrupol
-  real(kind=DP), allocatable :: rhor(:)
+  real(DP) :: x0 (3), dipol(0:3), quadrupol
+  real(DP), allocatable :: rhor(:)
   integer :: ios, plot_num
   character (len=256) :: filepp
 
@@ -133,10 +133,10 @@ subroutine dipole_fast (alat, at, bg, omega, nat, tau, nrx1, nrx2, nrx3, &
   USE kinds, only : DP
   implicit none
   integer :: nat, nrx1, nrx2, nrx3, nr1, nr2, nr3
-  real(kind=DP) :: alat, omega, tau (3, nat), at (3, 3), bg (3, 3), &
+  real(DP) :: alat, omega, tau (3, nat), at (3, 3), bg (3, 3), &
        rhor(nrx1,nrx2,nrx3), x0 (3), dipol(0:3), quadrupol
 
-  real(kind=DP) :: r(3), w1, w2, w3
+  real(DP) :: r(3), w1, w2, w3
   integer :: i,j,k, i0,j0,k0, i1,j1,k1, nr1m,nr2m,nr3m, ipol
 
   dipol=0.d0
@@ -236,10 +236,10 @@ subroutine write_dipol(x0,dipol_el,quadrupol_el,tau,nat,alat,zv, &
   implicit none
 
   integer :: nat, ntyp, ityp(nat), ibrav
-  real(kind=dp) :: dipol_el(0:3), quadrupol_el, tau(3,nat), zv(ntyp), alat
-  real(kind=dp) :: x0(3)
-  real(kind=dp) :: debye, dipol_ion(3), quadrupol_ion, dipol(3), quadrupol
-  real(kind=DP) :: rhotot, zvtot, corr1, corr2, qq, AA, BB
+  real(DP) :: dipol_el(0:3), quadrupol_el, tau(3,nat), zv(ntyp), alat
+  real(DP) :: x0(3)
+  real(DP) :: debye, dipol_ion(3), quadrupol_ion, dipol(3), quadrupol
+  real(DP) :: rhotot, zvtot, corr1, corr2, qq, AA, BB
 
   integer :: na, ipol
 
@@ -247,7 +247,7 @@ subroutine write_dipol(x0,dipol_el,quadrupol_el,tau,nat,alat,zv, &
   !  differs from the "traditional" one found in the literature. See
   !  Lento, Mozos, Nieminen, J. Phys.: Condens. Matter 14 (2002), 2637-2645
 
-  real(kind=DP), parameter:: Madelung(3) = (/ 2.8373, 2.8883, 2.885/)
+  real(DP), parameter:: Madelung(3) = (/ 2.8373, 2.8883, 2.885/)
 
   !
   !   compute ion dipole moments

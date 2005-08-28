@@ -25,13 +25,13 @@ subroutine cft_1 (f, m, n, nx, sgn, fout)
   implicit none
   integer :: m, n, nx, sgn
 
-  complex (kind=8) :: f (nx * m), fout (nx * m)
+  complex (8) :: f (nx * m), fout (nx * m)
   integer :: sign, isign, on (2), naux1, naux2, itype, i
   parameter (naux1 = 20000, naux2 = 10000)
   !
   ! NOTA BENE: naux1 and naux2 should be checked
   !
-  real (kind=8) :: aux1 (naux1, 2), aux2 (naux2), scale
+  real (8) :: aux1 (naux1, 2), aux2 (naux2), scale
   external DSCAL
   data on / 0, 0 /
 
@@ -69,7 +69,7 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
   !
   !----------------------------------------------------------------------
   implicit none
-  complex (kind=8) :: f (nx1 * nx2 * mplane)
+  complex (8) :: f (nx1 * nx2 * mplane)
   integer :: n1, n2, mplane, nx1, nx2, sgn
   integer :: sign, isign, o1p, o2p, o1m, o2m, m, k, istrt, naux1, &
        naux2, i
@@ -77,9 +77,9 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
   !
   ! NOTA BENE: naux1 and naux2 should be checked
   !
-  real (kind=8) :: aux1p (naux1, 2), aux1m (naux1, 2), aux2 (naux2), &
+  real (8) :: aux1p (naux1, 2), aux1m (naux1, 2), aux2 (naux2), &
        scale
-  complex (kind=8) :: fj (naux2)
+  complex (8) :: fj (naux2)
   ! NOTA BENE: fj should be dimensioned fj(2*n2)
   external DSCAL
   data o1p, o2p, o1m, o2m / 0, 0, 0, 0 /

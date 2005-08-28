@@ -28,8 +28,8 @@ subroutine drhod2v
   !
   implicit none
   integer :: irr, irr1, imode0, ipert, ir
-  real (kind = dp) :: xq0 (3)
-  complex (kind = dp), allocatable :: drhoscf (:)
+  real (DP) :: xq0 (3)
+  complex (DP), allocatable :: drhoscf (:)
   ! the change of density due to perturbations
 
   allocate  (drhoscf( nrxx))    

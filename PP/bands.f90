@@ -94,20 +94,20 @@ SUBROUTINE punch_band (filband, spin_component)
 
   IMPLICIT NONE
   CHARACTER (len=*) :: filband
-  REAL(kind=DP) :: proold
+  REAL(DP) :: proold
   ! the best overlap product
-  COMPLEX(kind=DP) :: pro
+  COMPLEX(DP) :: pro
   ! the product of wavefunctions
   INTEGER :: spin_component
 
-  COMPLEX(kind=DP), ALLOCATABLE :: psiold (:,:), old (:), new (:)
+  COMPLEX(DP), ALLOCATABLE :: psiold (:,:), old (:), new (:)
   ! psiold: eigenfunctions at previous k-point, ordered
   ! old, new: contain one band resp. at previous and current k-point
-  COMPLEX(kind=DP), ALLOCATABLE :: becp(:,:), becpold (:,:)
+  COMPLEX(DP), ALLOCATABLE :: becp(:,:), becpold (:,:)
   ! becp   : <psi|beta> at current  k-point
   ! becpold: <psi|beta> at previous k-point
-  COMPLEX(KIND=DP), ALLOCATABLE :: psiold_nc (:,:,:), old_nc(:,:), new_nc(:,:)
-  COMPLEX(KIND=DP), ALLOCATABLE :: becp_nc(:,:,:), becpold_nc(:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: psiold_nc (:,:,:), old_nc(:,:), new_nc(:,:)
+  COMPLEX(DP), ALLOCATABLE :: becp_nc(:,:,:), becpold_nc(:,:,:)
   ! as above for the noncolinear case
   INTEGER :: ibnd, jbnd, ik, ikb, ig, npwold, ios, nks1, nks2, ipol
   ! counters
@@ -121,10 +121,10 @@ SUBROUTINE punch_band (filband, spin_component)
   ! ndeg : number of degenerate states
   INTEGER, ALLOCATABLE :: degeneracy(:), degbands(:,:), INDEX(:)
   ! degbands keeps track of which states are degenerate
-  REAL(kind=DP), ALLOCATABLE:: edeg(:)
-  REAL(kind=DP), PARAMETER :: eps = 0.001
+  REAL(DP), ALLOCATABLE:: edeg(:)
+  REAL(DP), PARAMETER :: eps = 0.001
   ! threshold (Ry) for degenerate states 
-  COMPLEX(kind=DP), EXTERNAL :: cgracsc, cgracsc_nc
+  COMPLEX(DP), EXTERNAL :: cgracsc, cgracsc_nc
  ! scalar product with the S matrix
 
   IF (filband == ' ') RETURN

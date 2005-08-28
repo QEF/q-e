@@ -48,7 +48,7 @@ subroutine adddvscf (ipert, ik)
   ! counter on the k points
   ! counter on vkb
   ! counter on vkb
-  complex(kind=DP) :: sum
+  complex(DP) :: sum
   ! auxiliary variable
 
   if (.not.okvan) return

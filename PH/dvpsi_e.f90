@@ -35,18 +35,18 @@ subroutine dvpsi_e (ik, ipol)
   integer :: ig, na, ibnd, jbnd, ikb, jkb, nt, lter, ih, jh, ijkb0, nrec
   ! counters
 
-  real(kind=DP), allocatable  :: gk (:,:), h_diag (:,:),  eprec (:)
+  real(DP), allocatable  :: gk (:,:), h_diag (:,:),  eprec (:)
   ! the derivative of |k+G|
-  real(kind=DP) ::   anorm, thresh
+  real(DP) ::   anorm, thresh
   ! preconditioning cut-off
   ! the desired convergence of linter
 
   logical :: conv_root
   ! true if convergence has been achieved
 
-  complex(kind=DP), allocatable :: ps2(:,:,:), dvkb (:,:), dvkb1 (:,:), &
+  complex(DP), allocatable :: ps2(:,:,:), dvkb (:,:), dvkb1 (:,:), &
        work (:,:), becp2(:,:), spsi(:,:), ps(:,:)
-  complex(kind=DP), external :: ZDOTC
+  complex(DP), external :: ZDOTC
   ! the scalar products
   external ch_psi_all, cg_psi
   !

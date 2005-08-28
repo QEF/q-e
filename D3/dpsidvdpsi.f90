@@ -22,9 +22,9 @@ subroutine dpsidvdpsi (nu_q0)
   integer :: nu_q0
 !
   integer :: ik, ikk, ikq, ig, ibnd, nu_i, nu_j, nu_z, nrec, ios
-  real (kind = dp) :: zero (3), wgauss, wga (nbnd), wg1
-  complex (kind = dp) :: wrk, ZDOTC
-  complex (kind = dp), allocatable :: dqpsi (:,:), dvloc (:), d3dyn1 (:,:,:), &
+  real (DP) :: zero (3), wgauss, wga (nbnd), wg1
+  complex (DP) :: wrk, ZDOTC
+  complex (DP), allocatable :: dqpsi (:,:), dvloc (:), d3dyn1 (:,:,:), &
        d3dyn2 (:,:,:), d3dyn3 (:,:,:)
 
 

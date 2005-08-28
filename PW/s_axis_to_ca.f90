@@ -23,7 +23,7 @@ subroutine s_axis_to_cart (s, sr, at, bg)
   !
   integer :: s (3, 3)
   ! input: matrix in crystal axis
-  real(kind=DP) :: sr (3, 3), at (3, 3), bg (3, 3)
+  real(DP) :: sr (3, 3), at (3, 3), bg (3, 3)
   ! output: matrix in cartesian axis
   ! input: direct lattice vectors
   ! input: reciprocal lattice vectors
@@ -41,7 +41,7 @@ subroutine s_axis_to_cart (s, sr, at, bg)
         do kpol = 1, 3
            do lpol = 1, 3
               sr (apol, bpol) = sr (apol, bpol) + at (apol, kpol) * &
-                   dble ( s (lpol, kpol) ) * bg (bpol, lpol)
+                   DBLE ( s (lpol, kpol) ) * bg (bpol, lpol)
            enddo
         enddo
      enddo

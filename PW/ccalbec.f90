@@ -30,7 +30,7 @@ SUBROUTINE ccalbec( nkb, npwx, npw, nbnd, bec, vkb, psi )
     ! input: the maximum number of plane waves
     ! input: the length of the vectors
     ! input: the number of bands
-  COMPLEX(KIND=DP) ::  vkb(npwx,nkb), psi(npwx,nbnd), bec(nkb,nbnd)
+  COMPLEX(DP) ::  vkb(npwx,nkb), psi(npwx,nbnd), bec(nkb,nbnd)
     ! input: the FT of the beta functions
     ! input: the wavefunctions
     ! output: dot product of the beta and the wavefunctions

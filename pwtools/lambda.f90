@@ -16,13 +16,13 @@ program elph
   integer, parameter:: npk=200, nsigx=50, nmodex=100, nex=200
   integer :: nks, ios, iuelph, ngauss, ngauss1, ngaussq, nsig, nmodes
   integer :: ik, ng, mu, nu, i
-  real(kind=8) :: q(3,npk), wk(npk), degauss(nsigx), w2(nmodex), &
+  real(8) :: q(3,npk), wk(npk), degauss(nsigx), w2(nmodex), &
        dosef(nsigx), ef(nsigx), lambdaq(nmodex,nsigx),  &
        lambda(nsigx), alpha2F(nex,nsigx), logavg
-  real(kind=8) qread(3), dosef1, ef1, degauss1, gammaq, lambda2, &
+  real(8) qread(3), dosef1, ef1, degauss1, gammaq, lambda2, &
        degaussq, emax, deltae, e, omega, sum
   character(len=256) :: filelph
-  real(kind=8), external :: w0gauss
+  real(8), external :: w0gauss
 
   ! INPUT from standard input:
   !    emax  degaussq  ngaussq

@@ -9,7 +9,7 @@
 subroutine zvscal(n,lda,m,v,zin,zout)
   implicit none
   integer :: n, lda, m
-  real(kind=8) :: v(n), zin(2,lda,m), zout(2,lda,m)
+  real(8) :: v(n), zin(2,lda,m), zout(2,lda,m)
   integer :: i,j
   !
   do j = 1,m

@@ -24,12 +24,12 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   !
   !   the dummy variables
   !
-  complex(kind=DP) :: dbecsum (nhm*(nhm+1)/2, nat), psi(npwx,nbnd)
+  complex(DP) :: dbecsum (nhm*(nhm+1)/2, nat), psi(npwx,nbnd)
   ! inp/out: the sum kv of bec *
   ! input  : contains delta psi
   integer :: ik
   ! input: the k point
-  real(kind=DP) :: wgt
+  real(DP) :: wgt
   ! input: the weight of this k point
   !
   !     here the local variables
@@ -48,10 +48,10 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   ! divide among processors the sum
   ! auxiliary variable for counting
 
-  real(kind=DP) :: w
+  real(DP) :: w
   ! the weight of the k point
 
-  complex(kind=DP), allocatable :: dbecq (:,:)
+  complex(DP), allocatable :: dbecq (:,:)
   ! the change of becq
 
   if (.not.okvan) return

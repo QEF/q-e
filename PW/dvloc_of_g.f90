@@ -27,7 +27,7 @@ subroutine dvloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, &
   ! input: numeric, the dimensions of the mes
   ! number of mesh points for radial integrat
 
-  real(kind=DP) :: cc (2), alpc (2), alps (3, 0:3), aps (6, 0:3), &
+  real(DP) :: cc (2), alpc (2), alps (3, 0:3), aps (6, 0:3), &
        zp, rab (mesh), r (mesh), vloc_at (mesh), tpiba2, omega, gl (ngl), &
        dvloc (ngl)
   ! input: analytic, c of the erf functions
@@ -47,12 +47,12 @@ subroutine dvloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, &
   !
   !    and the local variables
   !
-  real(kind=DP), parameter ::pi = 3.14159265358979d0, fpi = 4.d0 * pi, &
+  real(DP), parameter ::pi = 3.14159265358979d0, fpi = 4.d0 * pi, &
        e2 = 2.d0, eps = 1.d-8
   !
-  real(kind=DP) :: vlcp, g2a, gx
-  real(kind=DP), allocatable ::  aux (:), aux1 (:)
-  real(kind=DP), external ::  erf
+  real(DP) :: vlcp, g2a, gx
+  real(DP), allocatable ::  aux (:), aux1 (:)
+  real(DP), external ::  erf
 
   integer :: i, igl, igl0, l
   ! counter on erf functions or gaussians

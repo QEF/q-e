@@ -11,7 +11,7 @@
 MODULE cp_main_variables
   !----------------------------------------------------------------------------
   !
-  USE kinds,             ONLY : dbl
+  USE kinds,             ONLY : DP
   USE parameters,        ONLY : natx, nsx, nacx
   USE control_flags,     ONLY : program_name
   USE metagga,           ONLY : ismeta, kedtaur, kedtaus, kedtaug
@@ -29,10 +29,10 @@ MODULE cp_main_variables
   ! ...  G = reciprocal lattice vectors
   ! ...  R_I = ionic positions
   !
-  COMPLEX(dbl), ALLOCATABLE :: eigr(:,:)        ! exp (i G   dot R_I)
-  COMPLEX(dbl), ALLOCATABLE :: ei1(:,:)         ! exp (i G_x dot x_I)
-  COMPLEX(dbl), ALLOCATABLE :: ei2(:,:)         ! exp (i G_y dot y_I)
-  COMPLEX(dbl), ALLOCATABLE :: ei3(:,:)         ! exp (i G_z dot z_I)
+  COMPLEX(DP), ALLOCATABLE :: eigr(:,:)        ! exp (i G   dot R_I)
+  COMPLEX(DP), ALLOCATABLE :: ei1(:,:)         ! exp (i G_x dot x_I)
+  COMPLEX(DP), ALLOCATABLE :: ei2(:,:)         ! exp (i G_y dot y_I)
+  COMPLEX(DP), ALLOCATABLE :: ei3(:,:)         ! exp (i G_z dot z_I)
   !
   ! ... structure factors (summed over atoms of the same kind)
   !
@@ -40,12 +40,12 @@ MODULE cp_main_variables
   ! s       = index of the atomic specie
   ! R_(s,I) = position of the I-th atom of the "s" specie
   !
-  COMPLEX(KIND=dbl), ALLOCATABLE:: sfac(:,:)
+  COMPLEX(DP), ALLOCATABLE:: sfac(:,:)
   !
   ! ... indexes, positions, and structure factors for the box grid
   !
-  REAL(KIND=dbl)                 :: taub(3,natx)
-  COMPLEX(KIND=dbl), ALLOCATABLE :: eigrb(:,:)
+  REAL(DP)                 :: taub(3,natx)
+  COMPLEX(DP), ALLOCATABLE :: eigrb(:,:)
   INTEGER,           ALLOCATABLE :: irb(:,:)
   ! 
   ! ... nonlocal projectors:
@@ -55,19 +55,19 @@ MODULE cp_main_variables
   ! ...    rhovan= \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
   ! ...    deeq  = \int V_eff(r) q_lm(r) dr
   !
-  REAL(KIND=dbl), ALLOCATABLE :: bec(:,:), becdr(:,:,:)
-  REAL(KIND=dbl), ALLOCATABLE :: bephi(:,:), becp(:,:)
+  REAL(DP), ALLOCATABLE :: bec(:,:), becdr(:,:,:)
+  REAL(DP), ALLOCATABLE :: bephi(:,:), becp(:,:)
   !
   ! ... mass preconditioning
   !
-  REAL(KIND=dbl), ALLOCATABLE :: ema0bg(:)
+  REAL(DP), ALLOCATABLE :: ema0bg(:)
   !
   ! ... constraints (lambda at t, lambdam at t-dt, lambdap at t+dt)
   !
-  REAL(KIND=dbl), ALLOCATABLE :: lambda(:,:), lambdam(:,:), lambdap(:,:)
+  REAL(DP), ALLOCATABLE :: lambda(:,:), lambdam(:,:), lambdap(:,:)
   !
-  REAL(KIND=dbl) :: acc(nacx)
-  REAL(KIND=dbl) :: acc_this_run(nacx)
+  REAL(DP) :: acc(nacx)
+  REAL(DP) :: acc_this_run(nacx)
   !
   ! atomic positions
   !
@@ -79,21 +79,21 @@ MODULE cp_main_variables
   !
   ! charge densities and potentials
   !
-  REAL(dbl), ALLOCATABLE :: rhoe(:,:,:,:)     ! charge density in real space
-  REAL(dbl), ALLOCATABLE :: vpot(:,:,:,:)
+  REAL(DP), ALLOCATABLE :: rhoe(:,:,:,:)     ! charge density in real space
+  REAL(DP), ALLOCATABLE :: vpot(:,:,:,:)
   TYPE (charge_descriptor)  :: desc           ! charge density descriptor
   !
   ! rhog  = charge density in g space
   ! rhor  = charge density in r space (dense grid)
   ! rhos  = charge density in r space (smooth grid)
   !
-  COMPLEX(KIND=dbl), ALLOCATABLE :: rhog(:,:)
-  REAL(KIND=dbl),    ALLOCATABLE :: rhor(:,:), rhos(:,:)
+  COMPLEX(DP), ALLOCATABLE :: rhog(:,:)
+  REAL(DP),    ALLOCATABLE :: rhor(:,:), rhos(:,:)
   !
   TYPE (wave_descriptor) :: wfill, wempt    ! wave function descriptor
                                             ! for filled and empty states
   !
-  REAL(dbl), ALLOCATABLE :: occn(:,:,:)     ! occupation numbers for filled state
+  REAL(DP), ALLOCATABLE :: occn(:,:,:)     ! occupation numbers for filled state
   !
   TYPE (dft_energy_type) :: edft
   !

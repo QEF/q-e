@@ -19,7 +19,7 @@ integer :: l, &            ! orbital angular momentum
            m, &            ! projection of the total angular momentum+-1/2
            spin            ! 1 or 2 select the component
 
-real(kind=dp) :: j         ! total angular momentum
+real(DP) :: j         ! total angular momentum
 
 if (spin.ne.1.and.spin.ne.2) call errore('sph_ind','spin direction unknown',1)
 if (m.lt.-l-1.or.m.gt.l) call errore('sph_ind','m not allowed',1)

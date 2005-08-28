@@ -40,16 +40,16 @@ SUBROUTINE punch_plot_e()
   ! used to compose the name
   ! complete name of the file
 
-  REAL(kind=DP), ALLOCATABLE  :: raux (:)
+  REAL(DP), ALLOCATABLE  :: raux (:)
   ! auxiliary vector
 
-  COMPLEX(kind=DP), ALLOCATABLE :: aux (:,:), aux1 (:,:)
+  COMPLEX(DP), ALLOCATABLE :: aux (:,:), aux1 (:,:)
   ! auxiliary space to rotate the
   ! induced charge
 
 #if defined (__PARA)
   ! auxiliary vector
-  REAL(kind=DP), ALLOCATABLE :: raux1 (:)
+  REAL(DP), ALLOCATABLE :: raux1 (:)
 #endif
 
   IF (fildrho.EQ.' ') RETURN

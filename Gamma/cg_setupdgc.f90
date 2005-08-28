@@ -18,7 +18,7 @@ subroutine cg_setupdgc
   !
   implicit none
   integer k, is
-  real(kind=DP) &
+  real(DP) &
        &       grho2(2), rh, zeta, grh2, epsr, epsg, fac,                 &
        &       sx,sc,v1x,v2x,v1c,v2c,vrrx,vsrx,vssx,                      &
        &       vrrc,vsrc,vssc,                                            &
@@ -41,7 +41,7 @@ subroutine cg_setupdgc
   !
   !    add rho_core
   !
-  fac=1.d0/dble(nspin)
+  fac=1.d0/DBLE(nspin)
   if (nlcc_any) then
      do is=1,nspin
         do k=1,nrxx

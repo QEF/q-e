@@ -37,14 +37,14 @@ subroutine s_psi_nc (lda, n, m, psi, spsi )
   !     First the dummy variables
   !
   integer :: lda, n, m
-  complex(kind=DP) :: psi (lda, npol, m), spsi (lda,npol, m)
-  complex(kind=DP), external ::  ZDOTU
+  complex(DP) :: psi (lda, npol, m), spsi (lda,npol, m)
+  complex(DP), external ::  ZDOTU
   !
   !    here the local variables
   !
   integer :: ikb, jkb, ih, jh, na, nt, ijkb0, ibnd, ipol
   ! counters
-  complex(kind=DP), allocatable :: ps (:,:,:)
+  complex(DP), allocatable :: ps (:,:,:)
   ! the product vkb and psi
   call start_clock ('s_psi')
   !

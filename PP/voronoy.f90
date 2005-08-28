@@ -38,10 +38,10 @@ PROGRAM voronoy
   IMPLICIT NONE
   INTEGER :: nr1big, nr2big, nr3big, nrx1big
   INTEGER :: n, i, j, ng, na, plot_num
-  REAL(kind=DP) :: total_charge, rhodum
+  REAL(DP) :: total_charge, rhodum
   INTEGER, ALLOCATABLE :: nlbig (:)
-  REAL(kind=DP), ALLOCATABLE :: partial_charge (:)
-  COMPLEX(kind=DP), ALLOCATABLE :: rhobig (:)
+  REAL(DP), ALLOCATABLE :: partial_charge (:)
+  COMPLEX(DP), ALLOCATABLE :: rhobig (:)
   CHARACTER(len=256) :: filename
   !
   CALL start_postproc (nd_nmbr)
@@ -134,7 +134,7 @@ SUBROUTINE get_fftindex (g, ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, at, nl)
   USE kinds, ONLY: DP
   IMPLICIT NONE
   INTEGER :: nr1, nr2, nr3, nrx1, nrx2, nrx3, ngm
-  REAL(kind=DP) :: g (3, ngm), at (3, 3)
+  REAL(DP) :: g (3, ngm), at (3, 3)
   INTEGER :: nl (ngm)
   INTEGER :: n1, n2, n3, ng
   !
@@ -166,9 +166,9 @@ SUBROUTINE rhor_to_rhobig (ngm, nr1, nr2, nr3, nrx1, nl, rho, &
   IMPLICIT NONE
   INTEGER :: ngm, nr1, nr2, nr3, nrx1, nl (ngm), nr1big, nr2big, &
        nr3big, nrx1big, nlbig (ngm)
-  REAL(kind=DP) :: rho (nrx1 * nr2 * nr3)
-  COMPLEX(kind=DP) :: rhobig (nrx1big * nr2big * nr3big)
-  COMPLEX(kind=DP), ALLOCATABLE :: aux (:)
+  REAL(DP) :: rho (nrx1 * nr2 * nr3)
+  COMPLEX(DP) :: rhobig (nrx1big * nr2big * nr3big)
+  COMPLEX(DP), ALLOCATABLE :: aux (:)
   INTEGER :: nr, ng
 
   ALLOCATE (aux(nrx1 * nr2 * nr3))    
@@ -199,11 +199,11 @@ SUBROUTINE calculate_partial_charges (nat, tau, at, bg, nrx1big, &
   USE kinds, ONLY: DP
   IMPLICIT NONE
   INTEGER :: nat, nrx1big, nr1big, nr2big, nr3big
-  REAL(kind=DP) :: at (3, 3), bg (3, 3), tau (3, nat), partial_charge(nat)
+  REAL(DP) :: at (3, 3), bg (3, 3), tau (3, nat), partial_charge(nat)
 
-  COMPLEX(kind=DP) :: rhobig (nrx1big, nr2big, nr3big)
+  COMPLEX(DP) :: rhobig (nrx1big, nr2big, nr3big)
   INTEGER :: atom (nat), equidistant, n1, n2, n3, na, i
-  REAL(kind=DP) :: r (3), dr (3), distance (nat), relative_distance
+  REAL(DP) :: r (3), dr (3), distance (nat), relative_distance
   !
   !
   DO na = 1, nat

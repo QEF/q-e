@@ -23,7 +23,7 @@ subroutine setqf (qfcoef, rho, r, nqf, ltot, mesh)
   ! input: the number of coefficients
   ! input: the angular momentum
   ! input: the number of mesh point
-  real(kind=DP) :: r (mesh), qfcoef (nqf), rho (mesh)
+  real(DP) :: r (mesh), qfcoef (nqf), rho (mesh)
   ! input: the radial mesh
   ! input: the coefficients of Q
   ! output: the function to be computed
@@ -34,7 +34,7 @@ subroutine setqf (qfcoef, rho, r, nqf, ltot, mesh)
   ! counter on  mesh points
   ! counter on the coeffients
 
-  real(kind=DP) :: rr
+  real(DP) :: rr
   ! the square of the radius
   do ir = 1, mesh
      rr = r (ir) **2

@@ -14,7 +14,7 @@ MODULE path_routines
   ! ... the NEB implementation into the FPMD code
   !
   USE io_global,  ONLY : stdout
-  USE kinds,      ONLY : dbl
+  USE kinds,      ONLY : DP
   USE constants,  ONLY : au, bohr_radius_angs, eV_to_kelvin
   USE path_base,  ONLY : initialize_path, search_mep
   !

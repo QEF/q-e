@@ -30,7 +30,7 @@ SUBROUTINE openfil_pp()
   !
   LOGICAL       :: exst
   INTEGER       :: ndr, kunittmp, ierr
-  REAL(KIND=DP) :: edum(1,1), wdum(1,1)
+  REAL(DP) :: edum(1,1), wdum(1,1)
   
   twfcollect=.false.
   !

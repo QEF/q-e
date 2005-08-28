@@ -33,11 +33,11 @@ subroutine xc (rho, ex, ec, vx, vc)
   use funct
   implicit none
 
-  real(kind=DP) :: rho, ec, vc, ex, vx
+  real(DP) :: rho, ec, vc, ex, vx
   !
-  real(kind=DP), parameter :: small = 1.d-10,  third = 1.d0 / 3.d0, &
+  real(DP), parameter :: small = 1.d-10,  third = 1.d0 / 3.d0, &
        pi34 = 0.6203504908994d0  ! pi34=(3/4pi)^(1/3)
-  real(kind=DP) :: rs
+  real(DP) :: rs
   !
   if (rho <= small) then
      ec = 0.0d0
@@ -111,8 +111,8 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
   USE kinds
   implicit none
 
-  real(kind=DP) :: rho, grho, sx, sc, v1x, v2x, v1c, v2c
-  real(kind=DP), parameter:: small = 1.d-10
+  real(DP) :: rho, grho, sx, sc, v1x, v2x, v1c, v2c
+  real(DP), parameter:: small = 1.d-10
 
   ! exchange
   if (rho <= small) then
@@ -166,8 +166,8 @@ subroutine slater (rs, ex, vx)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rs, ex, vx
-  real(kind=DP), parameter  :: f= -0.687247939924714d0, alpha = 2.0d0/3.0d0
+  real(DP) :: rs, ex, vx
+  real(DP), parameter  :: f= -0.687247939924714d0, alpha = 2.0d0/3.0d0
   ! f = -9/8*(3/2pi)^(2/3)
   !
   ex = f * alpha / rs
@@ -184,8 +184,8 @@ subroutine slater1(rs, ex, vx)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rs, ex, vx
-  real(kind=DP), parameter  :: f= -0.687247939924714d0, alpha = 1.0d0
+  real(DP) :: rs, ex, vx
+  real(DP), parameter  :: f= -0.687247939924714d0, alpha = 1.0d0
   !
   ex = f * alpha / rs
   vx = 4.d0 / 3.d0 * f * alpha / rs
@@ -200,11 +200,11 @@ subroutine slater_rxc (rs, ex, vx)
   !
   USE kinds
   IMPLICIT none
-  real (kind=DP):: rs, ex, vx
+  real (DP):: rs, ex, vx
   !
-  real(kind=DP), PARAMETER :: ZERO=0.D0, ONE=1.D0, PFIVE=.5D0, &
+  real(DP), PARAMETER :: ZERO=0.D0, ONE=1.D0, PFIVE=.5D0, &
        OPF=1.5D0, C014=0.014D0, pi = 3.14159265358979d0
-  real (kind=DP):: trd, ftrd, tftm, a0, alp, z, fz, fzp, vxp, exp, &
+  real (DP):: trd, ftrd, tftm, a0, alp, z, fz, fzp, vxp, exp, &
        beta, sb, alb
   !
   TRD = ONE/3
@@ -242,11 +242,11 @@ subroutine pz (rs, iflag, ec, vc)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rs, ec, vc
+  real(DP) :: rs, ec, vc
   integer :: iflag
   !
-  real(kind=DP) :: a (2), b (2), c (2), d (2), gc (2), b1 (2), b2 (2)
-  real(kind=DP) :: lnrs, rs12, ox, dox
+  real(DP) :: a (2), b (2), c (2), d (2), gc (2), b1 (2), b2 (2)
+  real(DP) :: lnrs, rs12, ox, dox
   !
   data a / 0.0311d0, 0.031091d0 /, b / -0.048d0, -0.046644d0 /, &
        c / 0.0020d0, 0.00419d0 /, d / -0.0116d0, -0.00983d0 /
@@ -281,10 +281,10 @@ subroutine vwn (rs, ec, vc)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rs, ec, vc
-  real(kind=DP) :: a, b, c, x0
+  real(DP) :: rs, ec, vc
+  real(DP) :: a, b, c, x0
   parameter (a = 0.0310907, b = 3.72744, c = 12.9352, x0 = -0.10498)
-  real(kind=DP) :: q, f1, f2, f3, rs12, fx, qx, tx, tt
+  real(DP) :: q, f1, f2, f3, rs12, fx, qx, tx, tt
   !
   q = sqrt (4.d0 * c - b * b)
   f1 = 2.d0 * b / q
@@ -311,13 +311,13 @@ subroutine lyp (rs, ec, vc)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rs, ec, vc
-  real(kind=DP) :: a, b, c, d, pi43
+  real(DP) :: rs, ec, vc
+  real(DP) :: a, b, c, d, pi43
   parameter (a = 0.04918d0, b = 0.132d0 * 2.87123400018819108d0)
   ! pi43 = (4pi/3)^(1/3)
   parameter (pi43 = 1.61199195401647d0, c = 0.2533d0 * pi43, d = &
        0.349d0 * pi43)
-  real(kind=DP) :: ecrs, ox
+  real(DP) :: ecrs, ox
   !
   ecrs = b * exp ( - c * rs)
   ox = 1.d0 / (1.d0 + d * rs)
@@ -335,15 +335,15 @@ subroutine pw (rs, iflag, ec, vc)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rs, ec, vc
+  real(DP) :: rs, ec, vc
   integer :: iflag
   !
-  real(kind=DP) :: a, b1, b2, c0, c1, c2, c3, d0, d1
+  real(DP) :: a, b1, b2, c0, c1, c2, c3, d0, d1
   parameter (a = 0.031091d0, b1 = 7.5957d0, b2 = 3.5876d0, c0 = a, &
        c1 = 0.046644d0, c2 = 0.00664d0, c3 = 0.01043d0, d0 = 0.4335d0, &
        d1 = 1.4408d0)
-  real(kind=DP) :: lnrs, rs12, rs32, rs2, om, dom, olog
-  real(kind=DP) :: a1 (2), b3 (2), b4 (2)
+  real(DP) :: lnrs, rs12, rs32, rs2, om, dom, olog
+  real(DP) :: a1 (2), b3 (2), b4 (2)
   data a1 / 0.21370d0, 0.026481d0 /, b3 / 1.6382d0, -0.46647d0 /, &
        b4 / 0.49294d0, 0.13354d0 /
   !
@@ -386,8 +386,8 @@ subroutine wigner (rs, ec, vc)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rs, ec, vc
-  real(kind=DP) :: pi34, rho13
+  real(DP) :: rs, ec, vc
+  real(DP) :: pi34, rho13
   parameter (pi34 = 0.6203504908994d0)
   ! pi34=(3/4pi)^(1/3), rho13=rho^(1/3)
   !
@@ -406,8 +406,8 @@ subroutine hl (rs, ec, vc)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rs, ec, vc
-  real(kind=DP) :: a, x
+  real(DP) :: rs, ec, vc
+  real(DP) :: a, x
   !
   a = log (1.0d0 + 21.d0 / rs)
   x = rs / 21.0d0
@@ -425,8 +425,8 @@ subroutine gl (rs, ec, vc)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rs, vc, ec
-  real(kind=DP) :: c, r, x
+  real(DP) :: rs, vc, ec
+  real(DP) :: c, r, x
   parameter (c = 0.0333, r = 11.4)
   ! c=0.0203, r=15.9 for the paramagnetic case
   !
@@ -446,12 +446,12 @@ subroutine becke88 (rho, grho, sx, v1x, v2x)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rho, grho, sx, v1x, v2x
-  real(kind=DP) :: beta, third, two13
+  real(DP) :: rho, grho, sx, v1x, v2x
+  real(DP) :: beta, third, two13
   parameter (beta = 0.0042d0)
   parameter (third = 1.d0 / 3.d0, two13 = 1.259921049894873d0)
   ! two13 = 2^(1/3)
-  real(kind=DP) :: rho13, rho43, xs, xs2, sa2b8, shm1, dd, dd2, ee
+  real(DP) :: rho13, rho43, xs, xs2, sa2b8, shm1, dd, dd2, ee
   !
   rho13 = rho**third
   rho43 = rho13**4
@@ -477,15 +477,15 @@ subroutine ggax (rho, grho, sx, v1x, v2x)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rho, grho, sx, v1x, v2x
-  real(kind=DP) :: f1, f2, f3, f4, f5
+  real(DP) :: rho, grho, sx, v1x, v2x
+  real(DP) :: f1, f2, f3, f4, f5
   parameter (f1 = 0.19645d0, f2 = 7.7956d0, f3 = 0.2743d0, f4 = &
        0.1508d0, f5 = 0.004d0)
-  real(kind=DP) :: fp1, fp2
+  real(DP) :: fp1, fp2
   parameter (fp1 = -0.019292021296426d0, fp2 = 0.161620459673995d0)
   ! fp1 = -3/(16 pi)*(3 pi^2)^(-1/3)
   ! fp2 = (1/2)(3 pi^2)**(-1/3)
-  real(kind=DP) :: rhom43, s, s2, s3, s4, exps, as, sa2b8, shm1, bs, das, &
+  real(DP) :: rhom43, s, s2, s3, s4, exps, as, sa2b8, shm1, bs, das, &
        dbs, dls
   !
   rhom43 = rho** ( - 4.d0 / 3.d0)
@@ -515,16 +515,16 @@ subroutine perdew86 (rho, grho, sc, v1c, v2c)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rho, grho, sc, v1c, v2c
-  real(kind=DP) :: p1, p2, p3, p4, pc1, pc2, pci
+  real(DP) :: rho, grho, sc, v1c, v2c
+  real(DP) :: p1, p2, p3, p4, pc1, pc2, pci
   parameter (p1 = 0.023266d0, p2 = 7.389d-6, p3 = 8.723d0, p4 = &
        0.472d0)
   parameter (pc1 = 0.001667d0, pc2 = 0.002568d0, pci = pc1 + pc2)
-  real(kind=DP) :: third, pi34
+  real(DP) :: third, pi34
   parameter (third = 1.d0 / 3.d0, pi34 = 0.6203504908994d0)
   ! pi34=(3/4pi)^(1/3)
-  real(kind=DP) :: rho13, rho43, rs, rs2, rs3, cna, cnb, cn, drs
-  real(kind=DP) :: dcna, dcnb, dcn, phi, ephi
+  real(DP) :: rho13, rho43, rs, rs2, rs3, cna, cnb, cn, drs
+  real(DP) :: dcna, dcnb, dcn, phi, ephi
   !
   rho13 = rho**third
   rho43 = rho13**4
@@ -556,10 +556,10 @@ subroutine glyp (rho, grho, sc, v1c, v2c)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rho, grho, sc, v1c, v2c
-  real(kind=DP) :: a, b, c, d
+  real(DP) :: rho, grho, sc, v1c, v2c
+  real(DP) :: a, b, c, d
   parameter (a = 0.04918d0, b = 0.132d0, c = 0.2533d0, d = 0.349d0)
-  real(kind=DP) :: rhom13, rhom43, rhom53, om, xl, ff, dom, dxl
+  real(DP) :: rhom13, rhom43, rhom53, om, xl, ff, dom, dxl
   !
   rhom13 = rho** ( - 1.d0 / 3.d0)
   om = exp ( - c * rhom13) / (1.d0 + d * rhom13)
@@ -586,20 +586,20 @@ subroutine ggac (rho, grho, sc, v1c, v2c)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rho, grho, sc, v1c, v2c
-  real(kind=DP) :: al, pa, pb, pc, pd, cx, cxc0, cc0
+  real(DP) :: rho, grho, sc, v1c, v2c
+  real(DP) :: al, pa, pb, pc, pd, cx, cxc0, cc0
   parameter (al = 0.09d0, pa = 0.023266d0, pb = 7.389d-6, pc = &
        8.723d0, pd = 0.472d0)
   parameter (cx = -0.001667d0, cxc0 = 0.002568d0, cc0 = - cx + cxc0)
-  real(kind=DP) :: third, pi34, nu, be, xkf, xks
+  real(DP) :: third, pi34, nu, be, xkf, xks
   parameter (third = 1.d0 / 3.d0, pi34 = 0.6203504908994d0)
   parameter (nu = 15.755920349483144d0, be = nu * cc0)
   parameter (xkf = 1.919158292677513d0, xks = 1.128379167095513d0)
   ! pi34=(3/4pi)^(1/3),  nu=(16/pi)*(3 pi^2)^(1/3)
   ! xkf=(9 pi/4)^(1/3), xks= sqrt(4/pi)
-  real(kind=DP) :: kf, ks, rs, rs2, rs3, ec, vc, t, expe, af, bf, y, xy, &
+  real(DP) :: kf, ks, rs, rs2, rs3, ec, vc, t, expe, af, bf, y, xy, &
        qy, s1
-  real(kind=DP) :: h0, dh0, ddh0, ee, cn, dcn, cna, dcna, cnb, dcnb, h1, &
+  real(DP) :: h0, dh0, ddh0, ee, cn, dcn, cna, dcna, cnb, dcnb, h1, &
        dh1, ddh1
   !
   rs = pi34 / rho**third
@@ -648,13 +648,13 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rho, grho, sx, v1x, v2x
+  real(DP) :: rho, grho, sx, v1x, v2x
   ! input: charge and squared gradient
   ! output: energy
   ! output: potential
   integer :: iflag
   ! local variables
-  real(kind=DP) :: kf, agrho, s1, s2, ds, dsg, exunif, fx
+  real(DP) :: kf, agrho, s1, s2, ds, dsg, exunif, fx
   ! (3*pi2*|rho|)^(1/3)
   ! |grho|
   ! |grho|/(2*kf*|rho|)
@@ -663,13 +663,13 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   ! n*ds/d(gn)
   ! exchange energy LDA part
   ! exchange energy gradient part
-  real(kind=DP) :: dxunif, dfx, f1, f2, f3, dfx1
+  real(DP) :: dxunif, dfx, f1, f2, f3, dfx1
   ! numerical coefficients (NB: c2=(3 pi^2)^(1/3) )
-  real(kind=DP) :: pi, third, c1, c2, c5
+  real(DP) :: pi, third, c1, c2, c5
   parameter (pi = 3.14159265358979d0, third = 1.d0 / 3.d0, c1 = &
        0.75d0 / pi, c2 = 3.093667726280136d0, c5 = 4.d0 * third)
   ! parameters of the functional
-  real(kind=DP) :: k (2), mu
+  real(DP) :: k (2), mu
   data k / 0.804d0, 1.2450D0 /, mu / 0.21951d0 /
   !
   agrho = sqrt (grho)
@@ -709,15 +709,15 @@ subroutine pbec (rho, grho, sc, v1c, v2c)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rho, grho, sc, v1c, v2c
-  real(kind=DP) :: ga, be
+  real(DP) :: rho, grho, sc, v1c, v2c
+  real(DP) :: ga, be
   parameter (ga = 0.031091d0, be = 0.066725d0)
-  real(kind=DP) :: third, pi34, xkf, xks
+  real(DP) :: third, pi34, xkf, xks
   parameter (third = 1.d0 / 3.d0, pi34 = 0.6203504908994d0)
   parameter (xkf = 1.919158292677513d0, xks = 1.128379167095513d0)
   ! pi34=(3/4pi)^(1/3), xkf=(9 pi/4)^(1/3), xks= sqrt(4/pi)
-  real(kind=DP) :: kf, ks, rs, ec, vc, t, expe, af, bf, y, xy, qy
-  real(kind=DP) :: s1, h0, dh0, ddh0
+  real(DP) :: kf, ks, rs, ec, vc, t, expe, af, bf, y, xy, qy
+  real(DP) :: s1, h0, dh0, ddh0
   !
   rs = pi34 / rho**third
   call pw (rs, 1, ec, vc)
@@ -757,12 +757,12 @@ subroutine hcth(rho,grho,sx,v1x,v2x)
   !--------------------------------------------------------------------------
   USE kinds
   implicit none
-  real(kind=DP) :: rho, grho, sx, v1x, v2x
+  real(DP) :: rho, grho, sx, v1x, v2x
 
-  real(kind=DP), parameter :: pi=3.141592653589793d0, o3=1.0d0/3.0d0,&
+  real(DP), parameter :: pi=3.141592653589793d0, o3=1.0d0/3.0d0,&
        o34=4.0d0/3.0d0, fr83=8.d0/3.d0
-  real(kind=DP) :: cg0(6), cg1(6), caa(6), cab(6), cx(6)
-  real(kind=DP) :: r3q2, r3pi, gr, rho_o3, rho_o34, xa, xa2, ra, rab, &
+  real(DP) :: cg0(6), cg1(6), caa(6), cab(6), cx(6)
+  real(DP) :: r3q2, r3pi, gr, rho_o3, rho_o34, xa, xa2, ra, rab, &
        dra_drho, drab_drho, g, dg, era1, dera1_dra, erab0, derab0_drab, &
        ex, dex_drho, uaa, uab, ux, ffaa, ffab,  dffaa_drho, dffab_drho,&
        denaa, denab, denx, f83rho, bygr, gaa, gab, gx, taa, tab, txx, &
@@ -863,8 +863,8 @@ end subroutine hcth
 subroutine pwcorr(r,c,g,dg)
   USE kinds
   implicit none
-  real(kind=DP) :: r, g, dg, c(6)
-  real(kind=DP) :: r12, r32, r2, rb, drb, sb
+  real(DP) :: r, g, dg, c(6)
+  real(DP) :: r12, r32, r2, rb, drb, sb
 
   r12=dsqrt(r)
   r32=r*r12
@@ -891,14 +891,14 @@ subroutine optx(rho,grho,sx,v1x,v2x)
 !--------------------------------------------------------------------------
   use kinds, only: DP
   implicit none
-  real(kind=DP) :: rho, grho, sx, v1x, v2x
+  real(DP) :: rho, grho, sx, v1x, v2x
 
-  real(kind=DP), parameter :: small=1.D-30, smal2=1.D-10
+  real(DP), parameter :: small=1.D-30, smal2=1.D-10
 !.......coefficients and exponents....................
-  real(kind=DP), parameter :: o43=4.0d0/3.0d0, two13=1.259921049894873D0, &
+  real(DP), parameter :: o43=4.0d0/3.0d0, two13=1.259921049894873D0, &
        two53=3.174802103936399D0, gam=0.006D0, a1cx=0.9784571170284421D0,&
        a2=1.43169D0 
-  real(kind=DP) :: gr, rho43, xa, gamx2, uden, uu
+  real(DP) :: gr, rho43, xa, gamx2, uden, uu
   !.......OPTX in compact form..........................
   if(rho <= small) then
      sx=0.0D0

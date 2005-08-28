@@ -60,24 +60,24 @@
  
 !  END manual
 
-          USE kinds,           ONLY: dbl, DP
+          USE kinds,           ONLY: DP, DP
           USE constants,       ONLY: tpi
 
           ! ...     declare subroutine arguments
 
           INTEGER, INTENT(IN) :: nat
           INTEGER, INTENT(IN) :: nr1, nr2, nr3
-          COMPLEX(dbl) :: ei1( -nr1 : nr1, nat )
-          COMPLEX(dbl) :: ei2( -nr2 : nr2, nat )
-          COMPLEX(dbl) :: ei3( -nr3 : nr3, nat )
-          COMPLEX(dbl) :: eigr( :, : )
-          REAL(dbl) :: taus( 3, nat )
+          COMPLEX(DP) :: ei1( -nr1 : nr1, nat )
+          COMPLEX(DP) :: ei2( -nr2 : nr2, nat )
+          COMPLEX(DP) :: ei3( -nr3 : nr3, nat )
+          COMPLEX(DP) :: eigr( :, : )
+          REAL(DP) :: taus( 3, nat )
           INTEGER      :: mill( :, : )
 
           ! ...     declare other variables
 
-          COMPLEX(dbl) :: ctep1, ctep2, ctep3, ctem1, ctem2, ctem3
-          REAL(dbl) :: ar1, ar2, ar3
+          COMPLEX(DP) :: ctep1, ctep2, ctep3, ctem1, ctem2, ctem3
+          REAL(DP) :: ar1, ar2, ar3
           INTEGER :: i, j, k, isa
           INTEGER :: ig, ig1, ig2, ig3, ngw
 
@@ -178,7 +178,7 @@
 !  ----------------------------------------------
 !  END manual
 
-      USE kinds,            ONLY: dbl, DP
+      USE kinds,            ONLY: DP, DP
       USE ions_base,        ONLY: nat, na, nsp
       use grid_dimensions,  only: nr1, nr2, nr3
 
@@ -186,12 +186,12 @@
 
       ! ... declare subroutine arguments
       !
-      COMPLEX(dbl) :: ei1( -nr1 : nr1, nat )
-      COMPLEX(dbl) :: ei2( -nr2 : nr2, nat )
-      COMPLEX(dbl) :: ei3( -nr3 : nr3, nat )
+      COMPLEX(DP) :: ei1( -nr1 : nr1, nat )
+      COMPLEX(DP) :: ei2( -nr2 : nr2, nat )
+      COMPLEX(DP) :: ei3( -nr3 : nr3, nat )
       INTEGER      :: mill( :, : )
       INTEGER      :: ngm
-      COMPLEX(dbl), INTENT(OUT) :: sfac(:,:)
+      COMPLEX(DP), INTENT(OUT) :: sfac(:,:)
 
       ! ... declare other variables
       !
@@ -245,13 +245,13 @@
       use phase_factors_module, only: phfacs
 !
       implicit none
-      real(kind=8) tau0(3,nat)
+      real(8) tau0(3,nat)
 !
-      complex(kind=8) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),      &
+      complex(8) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),      &
      &                ei3(-nr3:nr3,nat), eigr(ngw,nat)
 !
       integer :: i, isa
-      real(kind=8), allocatable :: taus(:,:)
+      real(8), allocatable :: taus(:,:)
 !
       allocate( taus(3,nat) )
 !
@@ -285,12 +285,12 @@
       use phase_factors_module, only: phfacs
 !                 
       implicit none    
-      real(kind=8) :: taub(3,nat)
-      complex(kind=8) :: eigrb(ngb,nat)
+      real(8) :: taub(3,nat)
+      complex(8) :: eigrb(ngb,nat)
 ! local           
       integer :: i,j,k, is, ia, ig, isa
-      complex(kind=8), allocatable:: ei1b(:,:), ei2b(:,:), ei3b(:,:)
-      real(kind=8), allocatable :: taus(:,:)
+      complex(8), allocatable:: ei1b(:,:), ei2b(:,:), ei3b(:,:)
+      real(8), allocatable :: taus(:,:)
 !
       if(nr1b.lt.3) call errore(' phbox ',' nr1b too small ',nr1b)
       if(nr2b.lt.3) call errore(' phbox ',' nr2b too small ',nr2b)

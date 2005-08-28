@@ -21,9 +21,9 @@ subroutine dielec(do_zstar)
   !
   integer :: ibnd,ipol,jpol,na,nu,kpoint
   character(len=7) :: filbar, fildwf
-  real(kind=DP) ::  w, weight
-  real(kind=DP), allocatable ::  work(:,:)
-  complex(kind=DP), allocatable :: dpsi2(:,:), dpsi3(:,:)
+  real(DP) ::  w, weight
+  real(DP), allocatable ::  work(:,:)
+  complex(DP), allocatable :: dpsi2(:,:), dpsi3(:,:)
   logical :: done
   !
   call start_clock('dielec')

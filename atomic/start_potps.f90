@@ -26,7 +26,7 @@ subroutine start_potps
        nnode,  &     ! the number of nodes in lambda
        ik,ikus,lam,nwf0 ! initial phi
 
-  real(kind=dp) ::    &
+  real(DP) ::    &
        xc(8),       & ! coefficients of bessel
        gi(ndm),     & ! auxiliary
        int_0_inf_dr,& ! integral function

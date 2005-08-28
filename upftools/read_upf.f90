@@ -27,37 +27,37 @@ module pseudo
   character (len=20):: dft(npsx)
   integer :: lmax(npsx), mesh(npsx), nbeta(npsx), ntwfc(npsx)
   logical :: nlcc(npsx), isus(npsx)
-  real(kind=8) :: zp(npsx), ecutrho, ecutwfc, etotps
-  real(kind=8) :: oc(nchix,npsx)
+  real(8) :: zp(npsx), ecutrho, ecutwfc, etotps
+  real(8) :: oc(nchix,npsx)
   character(len=2) :: els(nchix,npsx)
   integer :: lchi(nchix,npsx)
   !
   ! pp_mesh
-  real(kind=8) :: r(ndm,npsx), rab(ndm,npsx)
+  real(8) :: r(ndm,npsx), rab(ndm,npsx)
   !   pp_nlcc
-  real(kind=8) :: rho_atc(ndm,npsx)
+  real(8) :: rho_atc(ndm,npsx)
   !
   ! pp_local
-  real(kind=8) ::  vloc0(ndm,npsx)
+  real(8) ::  vloc0(ndm,npsx)
   !
   ! pp_nonlocal
   ! pp_beta
-  real(kind=8) :: betar(ndm, nbrx, npsx)
+  real(8) :: betar(ndm, nbrx, npsx)
   integer :: lll(nbrx,npsx), ikk2(nbrx,npsx)  
   ! pp_dij
-  real(kind=8) :: dion(nbrx,nbrx,npsx)
+  real(8) :: dion(nbrx,nbrx,npsx)
   ! pp_qij
   integer ::  nqf(npsx), nqlc(npsx)
-  real(kind=8) :: rinner(lqmax,npsx), qqq(nbrx,nbrx,npsx), &
+  real(8) :: rinner(lqmax,npsx), qqq(nbrx,nbrx,npsx), &
        qfunc(ndm,nbrx,nbrx,npsx)
   ! pp_qfcoef
-  real(kind=8) :: qfcoef(nqfx,lqmax,nbrx,nbrx,npsx)
+  real(8) :: qfcoef(nqfx,lqmax,nbrx,nbrx,npsx)
   !
   ! pp_pswfc
-  real(kind=8) :: chi(ndm,nchix,npsx)
+  real(8) :: chi(ndm,nchix,npsx)
   !
   ! pp_rhoatom
-  real(kind=8) :: rho_at(ndm,npsx)
+  real(8) :: rho_at(ndm,npsx)
 end module pseudo
 !
 !---------------------------------------------------------------------

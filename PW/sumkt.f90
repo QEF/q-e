@@ -13,13 +13,13 @@ function sumkt (et, nbnd, nks, nspin, ntetra, tetra, e, is, isk)
   USE kinds
   implicit none
   ! output variable
-  real(kind=DP) :: sumkt
+  real(DP) :: sumkt
   ! input variable
   integer, intent(in) :: nbnd, nks, nspin, ntetra, tetra (4, ntetra)
-  real(kind=DP), intent(in) :: et (nbnd, nks), e
+  real(DP), intent(in) :: et (nbnd, nks), e
   integer, intent(in) :: is, isk
   ! local variables
-  real(kind=DP) :: etetra (4), e1, e2, e3, e4
+  real(DP) :: etetra (4), e1, e2, e3, e4
   integer :: nt, nk, ns, ibnd, i
 
 
@@ -85,9 +85,9 @@ subroutine piksort (n, a)
   implicit none
   integer :: n
 
-  real(kind=DP) :: a (n)
+  real(DP) :: a (n)
   integer :: i, j
-  real(kind=DP) :: temp
+  real(DP) :: temp
   !
   do j = 2, n
      temp = a (j)

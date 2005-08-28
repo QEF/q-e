@@ -32,16 +32,16 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   ! input: the second index of Q
   ! input: the number of the pseudopotential
 
-  real(kind=DP) :: ylmk0 (ngy, lmaxq * lmaxq), qmod (ngy)
+  real(DP) :: ylmk0 (ngy, lmaxq * lmaxq), qmod (ngy)
   ! the spherical harmonics
   ! input: moduli of the q+g vectors
-  complex(kind=DP) :: qg (ngy)
+  complex(DP) :: qg (ngy)
   ! output: the fourier transform of interest
   !
   !     here the local variables
   !
 
-  complex(kind=DP) :: sig
+  complex(DP) :: sig
   ! (-i)^L
 
   integer :: nb, mb, nmb, ivl, jvl, ig, lp, l, lm, i0, i1, i2, i3
@@ -56,7 +56,7 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   ! the possible LM's compatible with ih,j
   ! counters for interpolation table
 
-  real(kind=DP) :: sixth, dqi, qm, px, ux, vx, wx, uvx, pwx, work
+  real(DP) :: sixth, dqi, qm, px, ux, vx, wx, uvx, pwx, work
   ! 1 divided by six
   ! 1 divided dq
   ! qmod/dq

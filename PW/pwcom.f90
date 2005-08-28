@@ -34,7 +34,7 @@ MODULE dynam
   !
   SAVE
   !
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
        dt,            &! time step
        temperature,   &! starting temperature
        delta_T         ! rate of thermalization
@@ -74,21 +74,21 @@ MODULE gvect
        nl(:),         &! correspondence fft <-> array of G vectors
        nlm(:),        &! same for gamma point calculation
        igtongl(:)      ! correspondence shells of G <-> G
-  REAL(KIND=DP), ALLOCATABLE, TARGET :: &
+  REAL(DP), ALLOCATABLE, TARGET :: &
        g(:,:),        &! coordinates of G vectors
        gg(:)           ! modulus G^2 of G vectors
                        ! G vectors are in order of increasing |G|
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
        ecutwfc         ! energy cut-off
-  REAL(KIND=DP), POINTER :: &
+  REAL(DP), POINTER :: &
        gl(:)           ! the modulus of g in each shell
-  REAL (KIND=DP) :: &
+  REAL (DP) :: &
        gcutm,         &! cut-off for G vectors
        dual,          &! link between G of wavefunctions and charge
        ecfixed,       &!
        qcutz,         &! For the modified Ekin functional
        q2sigma         !
-  complex(KIND=DP), ALLOCATABLE :: &
+  complex(DP), ALLOCATABLE :: &
        eigts1(:,:),   &!
        eigts2(:,:),   &! the phases e^{-iG*tau_s}
        eigts3(:,:)     !
@@ -127,7 +127,7 @@ MODULE gsmooth
        nlsm(:)       ! the same for gamma point calculation
   LOGICAL :: &
        doublegrid    ! .TRUE. if we use a double grid
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
        gcutms        ! the cut-off of the smooth mesh
   !
 END MODULE gsmooth
@@ -142,7 +142,7 @@ MODULE klist
   !
   SAVE
   !
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
        xk(3,npk),      &! coordinates of k points
        wk(npk),        &! weight of k points
        xqq(3),         &! coordinates of q point (used with iswitch=-2)
@@ -177,7 +177,7 @@ MODULE lsda_mod
   !
   LOGICAL :: &
        lsda
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
        magtot,                       &! total magnetization
        absmag,                       &! total absolute magnetization  
        starting_magnetization(ntypx)  ! the magnetization used to start with
@@ -235,13 +235,13 @@ MODULE pseud
   !
   SAVE
   !
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
        cc(2,npsx),            &! the coefficients of the erf functions
        alpc(2,npsx),          &! the alpha of the erf functions
        zp(npsx),              &! the charge of the pseudopotential
        aps(6,0:3,npsx),       &! the a_l coefficient
        alps(3,0:3,npsx)        ! the b_l coefficient
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
        a_nlcc(npsx),         &! nonlinear core correction coefficients:
        b_nlcc(npsx),         &! rho_c(r) = (a_c + b_c*r^2) exp(-alpha_c*r^2)
        alpha_nlcc(npsx)       ! 
@@ -262,9 +262,9 @@ MODULE vlocal
   !
   SAVE
   !
-  COMPLEX(KIND=DP), ALLOCATABLE :: &
+  COMPLEX(DP), ALLOCATABLE :: &
        strf(:,:)              ! the structure factor
-  REAL(KIND=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
        vloc(:,:),            &! the local potential for each atom type
        vnew(:,:)              ! V_out - V_in, needed in scf force correction
   !
@@ -288,7 +288,7 @@ MODULE wvfct
        igk(:),           &! correspondence k+G <-> G
        igk_l2g(:,:)       ! correspondence local index k+G <-> global G index
                           ! see also ig_l2g
-  REAL(KIND=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
        et(:,:),          &! eigenvalues of the hamiltonian
        wg(:,:),          &! the weight of each k point and band
        g2kin(:)           ! kinetic energy
@@ -306,7 +306,7 @@ MODULE ener
   !
   SAVE
   !
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
        etot,           &! the total energy of the solid
        eband,          &! the band energy
        deband,         &! correction for variational energy
@@ -329,9 +329,9 @@ MODULE force_mod
   !
   SAVE
   !
-  REAL(KIND=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
        force(:,:)       ! the force on each atom
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
        sigma(3,3)       ! the stress acting on the system
   LOGICAL :: &
        lforce,         &! if .TRUE. compute the forces
@@ -348,7 +348,7 @@ MODULE scf
   !
   SAVE
   !
-  REAL(KIND=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
        rho(:,:),       &! the charge density in real space
        vr(:,:),        &! the Hartree + xc potential in real space
        vltot(:),       &! the local potential in real space
@@ -368,7 +368,7 @@ MODULE relax
   !
   LOGICAL :: &                   ! if .TRUE. start the structural optimization
        restart_bfgs              ! from the results of a previous run
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
        epse,                    &! threshold on total energy
        epsf,                    &! threshold on forces
        dtau_ref,                &! estimation of dtau
@@ -386,7 +386,7 @@ MODULE cellmd
   !
   SAVE
   !
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
        press, cmass,     &! target pressure and cell mass,
        at_old(3,3),      &! the lattice vectors at the previous ste
        omega_old,        &! the cell volume at the previous step
@@ -431,9 +431,9 @@ MODULE us
   INTEGER :: &
        nqxq,             &! size of interpolation table
        nqx                ! number of interpolation points
-  REAL(KIND=DP), PARAMETER:: &
+  REAL(DP), PARAMETER:: &
        dq = 0.01D0           ! space between points in the pseudopotential tab.
-  REAL(KIND=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
        qrad(:,:,:,:),         &! radial FT of Q functions
        tab(:,:,:),            &! interpolation table for PPs
        tab_at(:,:,:)           ! interpolation table for atomic wfc
@@ -450,13 +450,13 @@ MODULE ldaU
   !
   SAVE
   !
-  COMPLEX(KIND=DP), ALLOCATABLE :: &
+  COMPLEX(DP), ALLOCATABLE :: &
        swfcatom(:,:),   &      ! orthogonalized atomic wfcs
        swfcatom_nc(:,:,:)      ! orthogonalized atomic wfcs noncollinear case
-  REAL(KIND=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
        ns(:,:,:,:),          &! the occupation matrix used in h_psi
        nsnew(:,:,:,:)         ! the occupation matrix computed by at
-  REAL(KIND=DP) :: &       
+  REAL(DP) :: &       
        d1(3,3,48),           &! matrices for rotating spherical     
        d2(5,5,48),           &! harmonics                           
        d3(7,7,48),           &! 
@@ -491,12 +491,12 @@ MODULE extfield
        dipfield       ! if .TRUE. the dipole field is subtracted
   INTEGER :: &
        edir           ! direction of the field
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
       emaxpos,       &! position of the maximum of the field (0<emaxpos<1)
       eopreg,        &! amplitude of the inverse region (0<eopreg<1)
       eamp,          &! field amplitude (in a.u.) (1 a.u. = 51.44 10^11 V/m)
       etotefield      ! energy correction due to the field
-  REAL(KIND=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
       forcefield(:,:)
   !
 END MODULE extfield
@@ -528,7 +528,7 @@ MODULE fixed_occ
   !
   SAVE
   !
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
        f_inp(nbndxx,nspinx)   ! the occupations for each spin
   LOGICAL :: &
        tfixed_occ             ! if .TRUE. the occupations are fixed.
@@ -545,9 +545,9 @@ MODULE spin_orb
   LOGICAL :: &
       lspinorb, domag    ! if .TRUE. this is a spin-robit calculation
 
-  COMPLEX (kind=dp) :: rot_ylm(2*lmaxx+1,2*lmaxx+1)  ! transform real
+  COMPLEX (DP) :: rot_ylm(2*lmaxx+1,2*lmaxx+1)  ! transform real
                          ! spherical harmonics into complex ones
-  COMPLEX (kind=dp), ALLOCATABLE :: fcoef(:,:,:,:,:) ! function needed to
+  COMPLEX (DP), ALLOCATABLE :: fcoef(:,:,:,:,:) ! function needed to
                          ! account for spinors.
 END MODULE spin_orb
 !
@@ -566,9 +566,9 @@ MODULE bp
        gdir,        &! G-vector for polarization calculation
        nppstr,      &! number of k-points (parallel vector)
        nberrycic     !numer of cycles for cobergence in electric field without changing the selfconsistent charge
-  REAL(kind=DP) :: efield, & ! electric field intensity in a.u.
+  REAL(DP) :: efield, & ! electric field intensity in a.u.
             berry_dip !actual dipole along the gdir direction
-  COMPLEX(kind=DP), ALLOCATABLE , TARGET :: evcel(:,:) ! wave function for calculating the electric field operator
+  COMPLEX(DP), ALLOCATABLE , TARGET :: evcel(:,:) ! wave function for calculating the electric field operator
 
 !
 END MODULE bp

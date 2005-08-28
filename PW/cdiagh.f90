@@ -25,13 +25,13 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
   INTEGER :: n, &               ! dimension of the matrix to be diagonalized
              ldh                ! leading dimension of h, as declared in
                                 ! the calling pgm unit
-  COMPLEX(KIND=DP) :: &
+  COMPLEX(DP) :: &
            h(ldh,n)             ! matrix to be diagonalized
   !
   ! ... on OUTPUT
   !
-  REAL(KIND=DP)    :: e(n)      ! eigenvalues
-  COMPLEX(KIND=DP) :: v(ldh,n)  ! eigenvectors (column-wise)
+  REAL(DP)    :: e(n)      ! eigenvalues
+  COMPLEX(DP) :: v(ldh,n)  ! eigenvectors (column-wise)
   !
   !
   CALL start_clock( 'cdiagh' )  
@@ -73,7 +73,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
       ! ... local variables (ESSL version)
       !
       INTEGER                       :: naux, i, j, ij
-      COMPLEX(KIND=DP), ALLOCATABLE :: hp(:), aux(:)
+      COMPLEX(DP), ALLOCATABLE :: hp(:), aux(:)
       !
       !
       naux = 4 * n
@@ -129,10 +129,10 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
       ! ... local variables (Cray Eispack/Scilib version)
       !
       INTEGER       :: i, j, k, info
-      REAL(KIND=DP) :: ar(ldh,n), ai(ldh,n), zr(ldh,n), zi(ldh,n)
+      REAL(DP) :: ar(ldh,n), ai(ldh,n), zr(ldh,n), zi(ldh,n)
         ! real and imaginary part of  h(ldh,n) and of  v(ldh,n)
         ! (used as auxiliary arrays)
-      REAL(KIND=DP) :: rwork(2,ldh), work(ldh)
+      REAL(DP) :: rwork(2,ldh), work(ldh)
       !
       !
       ar =  DBLE( h )
@@ -158,15 +158,15 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
       !
       IMPLICIT NONE
       ! workaround for Intel ifc8 bug:
-      COMPLEX(KIND=DP) :: v(ldh,n)
+      COMPLEX(DP) :: v(ldh,n)
       !
       ! ... local variables (LAPACK version)
       !
       INTEGER :: lwork, nb, info
       INTEGER, EXTERNAL :: ILAENV
         ! ILAENV returns optimal block size "nb"
-      REAL(KIND=DP),    ALLOCATABLE :: rwork(:)
-      COMPLEX(KIND=DP), ALLOCATABLE :: work(:)
+      REAL(DP),    ALLOCATABLE :: rwork(:)
+      COMPLEX(DP), ALLOCATABLE :: work(:)
       !
       !
       ! ... check for the block size

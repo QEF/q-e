@@ -35,13 +35,13 @@ subroutine dvpsi_e2
   ! counter on points of the real-space mesh
   ! counter on bands
   ! the record number
-  real(kind=DP), allocatable  :: raux6 (:,:), d2muxc (:)
+  real(DP), allocatable  :: raux6 (:,:), d2muxc (:)
   ! function on the real space smooth-mesh
   ! second derivative of the XC-potential 
-  real(kind=DP) ::  d2mxc, rhotot
+  real(DP) ::  d2mxc, rhotot
   ! external function
   ! total charge on a point
-  complex(kind=DP), allocatable :: depsi (:,:,:), auxg (:,:), auxs1 (:), &
+  complex(DP), allocatable :: depsi (:,:,:), auxg (:,:), auxs1 (:), &
                auxs2 (:), aux3s (:,:), aux3 (:,:), ps (:,:,:,:)
   ! d |psi> / dE  (E=electric field)
   ! chi-wavefunction
@@ -49,10 +49,10 @@ subroutine dvpsi_e2
   ! function on the real space smooth-mesh
   ! function on the real space smooth-mesh
   ! function on the real space thick-mesh
-  complex(kind=DP), pointer :: aux6s (:,:), aux6 (:,:)
+  complex(DP), pointer :: aux6s (:,:), aux6 (:,:)
   ! function on the real space smooth-mesh
   ! function on the real space thick-mesh
-  complex(kind=DP) :: tmp, weight, ZDOTC
+  complex(DP) :: tmp, weight, ZDOTC
   ! working space              
   ! weight in k-point summation
   ! the scalar product function

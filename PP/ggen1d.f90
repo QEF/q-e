@@ -22,7 +22,7 @@ subroutine ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
   ! output: the correspondence with the shells
   ! output: correspondence 1D FFT mesh G with array
 
-  real(kind=DP) :: g1d (3, nr3), gg1d (nr3)
+  real(DP) :: g1d (3, nr3), gg1d (nr3)
   ! output: ngm1d 3D vectors with the 1D G of this
   ! output: ngm1d scalars with the modulus of 1D G
   !
@@ -33,7 +33,7 @@ subroutine ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)
   ! counter on 3D vectors
   ! counter on 1D vectors
 
-  real(kind=DP), parameter :: eps = 1.d-12
+  real(DP), parameter :: eps = 1.d-12
 
 
   g1d(:,:) = 0.d0

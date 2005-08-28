@@ -26,9 +26,9 @@
           SAVE
           PRIVATE
 
-          REAL(dbl) :: frice  = 0.0d0   !  friction parameter for electronic 
+          REAL(DP) :: frice  = 0.0d0   !  friction parameter for electronic 
                                         !  damped dynamics
-          REAL(dbl) :: grease = 0.0d0   !  friction parameter for electronic 
+          REAL(DP) :: grease = 0.0d0   !  friction parameter for electronic 
                                         !  damped dynamics
 
           PUBLIC :: dotp, hpsi, rande_base, gram_kp_base, gram_gamma_base
@@ -58,15 +58,15 @@
 
       SUBROUTINE gram_kp_base(wf, gid)
         USE mp, ONLY: mp_sum
-        COMPLEX(dbl) :: wf(:,:)
+        COMPLEX(DP) :: wf(:,:)
         INTEGER, INTENT(IN) :: gid
-        COMPLEX(dbl), PARAMETER :: one  = ( 1.d0,0.d0)
-        COMPLEX(dbl), PARAMETER :: onem = (-1.d0,0.d0)
-        COMPLEX(dbl), PARAMETER :: zero = ( 0.d0,0.d0)
-        REAL(dbl), PARAMETER :: small = 1.d-16
-        REAL(dbl)    :: DZNRM2
-        COMPLEX(dbl), ALLOCATABLE :: s(:)
-        REAL(dbl)    :: anorm
+        COMPLEX(DP), PARAMETER :: one  = ( 1.d0,0.d0)
+        COMPLEX(DP), PARAMETER :: onem = (-1.d0,0.d0)
+        COMPLEX(DP), PARAMETER :: zero = ( 0.d0,0.d0)
+        REAL(DP), PARAMETER :: small = 1.d-16
+        REAL(DP)    :: DZNRM2
+        COMPLEX(DP), ALLOCATABLE :: s(:)
+        REAL(DP)    :: anorm
         INTEGER      :: ib, ig, ngw, nb
         ngw = SIZE(wf, 1)
         nb  = SIZE(wf, 2)
@@ -115,18 +115,18 @@
         USE mp, ONLY: mp_sum
         USE mp_global, ONLY: mpime
 
-        COMPLEX(dbl), INTENT(INOUT) :: wf(:,:)
+        COMPLEX(DP), INTENT(INOUT) :: wf(:,:)
         INTEGER, INTENT(IN) :: gid
         LOGICAL, INTENT(IN) :: gzero
 
-        REAL(dbl), PARAMETER :: one  =  1.d0
-        REAL(dbl), PARAMETER :: two  =  2.d0
-        REAL(dbl), PARAMETER :: onem = -1.d0
-        REAL(dbl), PARAMETER :: zero =  0.d0
-        REAL(dbl), PARAMETER :: small = 1.d-16
-        REAL(dbl)  :: DNRM2
-        REAL(dbl), ALLOCATABLE  :: s(:)
-        REAL(dbl)  :: anorm, wftmp
+        REAL(DP), PARAMETER :: one  =  1.d0
+        REAL(DP), PARAMETER :: two  =  2.d0
+        REAL(DP), PARAMETER :: onem = -1.d0
+        REAL(DP), PARAMETER :: zero =  0.d0
+        REAL(DP), PARAMETER :: small = 1.d-16
+        REAL(DP)  :: DNRM2
+        REAL(DP), ALLOCATABLE  :: s(:)
+        REAL(DP)  :: anorm, wftmp
         INTEGER    :: ib, ig, nwfr, ngw, nb
 
         ngw  = SIZE(wf, 1)
@@ -174,12 +174,12 @@
 
       IMPLICIT NONE
 
-      COMPLEX(dbl) :: ZDOTC
+      COMPLEX(DP) :: ZDOTC
 
-      COMPLEX(dbl) :: c(:,:)
-      COMPLEX(dbl) :: dc(:)
+      COMPLEX(DP) :: c(:,:)
+      COMPLEX(DP) :: dc(:)
 
-      COMPLEX(dbl), DIMENSION( SIZE( c, 2 ) ) :: hpsi_kp
+      COMPLEX(DP), DIMENSION( SIZE( c, 2 ) ) :: hpsi_kp
 
       INTEGER :: jb, ngw, nx
 
@@ -209,13 +209,13 @@
 
       IMPLICIT NONE
 
-      COMPLEX(dbl) :: c(:,:)
-      COMPLEX(dbl) :: dc(:)
+      COMPLEX(DP) :: c(:,:)
+      COMPLEX(DP) :: dc(:)
       LOGICAL, INTENT(IN) :: gzero
 
-      REAL(dbl), DIMENSION( SIZE( c, 2 ) ) :: hpsi_gamma
+      REAL(DP), DIMENSION( SIZE( c, 2 ) ) :: hpsi_gamma
 
-      COMPLEX(dbl) :: ZDOTC
+      COMPLEX(DP) :: ZDOTC
 
       INTEGER :: jb, ngw, nx
 
@@ -261,13 +261,13 @@
         IMPLICIT NONE
 
 ! ...   declare subroutine arguments
-        COMPLEX(dbl) :: cgrad(:,:,:)
+        COMPLEX(DP) :: cgrad(:,:,:)
         LOGICAL, INTENT(IN) :: gzero
-        REAL(dbl), INTENT(OUT) :: gemax, cnorm
+        REAL(DP), INTENT(OUT) :: gemax, cnorm
 
 ! ...   declare other variables
         INTEGER    :: imx, IZAMAX, i, nb, ngw
-        REAL(dbl)  :: gemax_l
+        REAL(DP)  :: gemax_l
 
 ! ...   end of declarations
 !  ----------------------------------------------
@@ -315,14 +315,14 @@
         IMPLICIT NONE
 
 ! ...   declare subroutine arguments
-        COMPLEX(dbl) :: cgrad(:,:,:)
-        REAL(dbl), INTENT(IN)  :: weight(:)
-        REAL(dbl), INTENT(OUT) :: gemax, cnorm
+        COMPLEX(DP) :: cgrad(:,:,:)
+        REAL(DP), INTENT(IN)  :: weight(:)
+        REAL(DP), INTENT(OUT) :: gemax, cnorm
 
 ! ...   declare other variables
         INTEGER    :: nb, ngw, nk, iabs, IZAMAX, i, ik
-        REAL(dbl)  :: gemax_l, cnormk
-        COMPLEX(dbl) :: ZDOTC
+        REAL(DP)  :: gemax_l, cnormk
+        COMPLEX(DP) :: ZDOTC
 
 ! ...   end of declarations
 !  ----------------------------------------------
@@ -363,13 +363,13 @@
 !==----------------------------------------------==!
 !==----------------------------------------------==!
 
-          REAL(dbl) FUNCTION wdot_gamma(gzero, ng, a, b)
+          REAL(DP) FUNCTION wdot_gamma(gzero, ng, a, b)
 
             LOGICAL, INTENT(IN) :: gzero
-            COMPLEX(dbl) :: a(:), b(:)
+            COMPLEX(DP) :: a(:), b(:)
             INTEGER, OPTIONAL, INTENT(IN) :: ng
 
-            REAL(dbl) :: DDOT
+            REAL(DP) :: DDOT
             INTEGER :: n
 
             n = MIN( SIZE(a), SIZE(b) )
@@ -391,7 +391,7 @@
 !==----------------------------------------------==!
 !==----------------------------------------------==!
 
-          REAL(dbl) FUNCTION dotp_gamma(gzero, ng, a, b)
+          REAL(DP) FUNCTION dotp_gamma(gzero, ng, a, b)
 
 ! ... Compute the dot product between distributed complex vectors "a" and "b"
 ! ... representing HALF-SPACE complex wave functions, with the G-point symmetry
@@ -404,12 +404,12 @@
             USE mp_global, ONLY: group
             USE mp, ONLY: mp_sum
 
-            REAL(dbl) :: DDOT
-            REAL(dbl) :: dot_tmp
+            REAL(DP) :: DDOT
+            REAL(DP) :: dot_tmp
             INTEGER, INTENT(IN) :: ng
             LOGICAL, INTENT(IN) :: gzero
 
-            COMPLEX(dbl) :: a(:), b(:)
+            COMPLEX(DP) :: a(:), b(:)
             INTEGER :: n
 
             n = MIN( SIZE(a), SIZE(b) )
@@ -438,7 +438,7 @@
 !==----------------------------------------------==!
 !==----------------------------------------------==!
 
-          REAL(dbl) FUNCTION dotp_gamma_n(gzero, a, b)
+          REAL(DP) FUNCTION dotp_gamma_n(gzero, a, b)
 
 ! ...  Compute the dot product between distributed complex vectors "a" and "b"
 ! ...  representing HALF-SPACE complex wave functions, with the G-point symmetry
@@ -448,11 +448,11 @@
             USE mp_global, ONLY: group
             USE mp, ONLY: mp_sum
 
-            REAL(dbl) :: DDOT
-            REAL(dbl) :: dot_tmp
+            REAL(DP) :: DDOT
+            REAL(DP) :: dot_tmp
             LOGICAL, INTENT(IN) :: gzero
 
-            COMPLEX(dbl) :: a(:), b(:)
+            COMPLEX(DP) :: a(:), b(:)
             INTEGER :: n
 
             n = MIN( SIZE(a), SIZE(b) )
@@ -469,7 +469,7 @@
 !==----------------------------------------------==!
 !==----------------------------------------------==!
 
-          COMPLEX(dbl) FUNCTION dotp_kp(ng, a, b)
+          COMPLEX(DP) FUNCTION dotp_kp(ng, a, b)
 
 ! ...  Compute the dot product between distributed complex vectors "a" and "b"
 ! ...  representing FULL-SPACE complex wave functions 
@@ -477,11 +477,11 @@
             USE mp_global, ONLY: group
             USE mp, ONLY: mp_sum
 
-            COMPLEX(dbl) :: ZDOTC
+            COMPLEX(DP) :: ZDOTC
             INTEGER, INTENT(IN) :: ng
-            COMPLEX(dbl) :: a(:),b(:)
+            COMPLEX(DP) :: a(:),b(:)
 
-            COMPLEX(dbl) :: dot_tmp
+            COMPLEX(DP) :: dot_tmp
             INTEGER      :: n
 
             n = MIN( SIZE(a), SIZE(b) )
@@ -501,7 +501,7 @@
 !==----------------------------------------------==!
 !==----------------------------------------------==!
 
-          COMPLEX(dbl) FUNCTION dotp_kp_n(a, b)
+          COMPLEX(DP) FUNCTION dotp_kp_n(a, b)
 
 ! ...  Compute the dot product between distributed complex vectors "a" and "b"
 ! ...  representing FULL-SPACE complex wave functions 
@@ -509,10 +509,10 @@
             USE mp_global, ONLY: group
             USE mp, ONLY: mp_sum
 
-            COMPLEX(dbl) ZDOTC
-            COMPLEX(dbl), INTENT(IN) :: a(:),b(:)
+            COMPLEX(DP) ZDOTC
+            COMPLEX(DP), INTENT(IN) :: a(:),b(:)
 
-            COMPLEX(dbl) :: dot_tmp
+            COMPLEX(DP) :: dot_tmp
             INTEGER :: n
 
             n = MIN( SIZE(a), SIZE(b) )
@@ -531,16 +531,16 @@
 !==----------------------------------------------==!
 !==----------------------------------------------==!
 
-          COMPLEX(dbl) FUNCTION wdot_kp(ng, a, b)
+          COMPLEX(DP) FUNCTION wdot_kp(ng, a, b)
 
 ! ...  Compute the dot product between complex vectors "a" and "b"
 ! ...  representing FULL-SPACE complex wave functions 
 ! ...  Note this is a _SCALAR_ subroutine
 
-            COMPLEX(dbl) :: a(:), b(:)
+            COMPLEX(DP) :: a(:), b(:)
             INTEGER, INTENT(IN), OPTIONAL :: ng
 
-            COMPLEX(dbl) :: ZDOTC
+            COMPLEX(DP) :: ZDOTC
             INTEGER :: n
 
             n = MIN( SIZE(a), SIZE(b) )
@@ -564,15 +564,15 @@
 
       IMPLICIT NONE
 ! ... declare subroutine arguments
-      COMPLEX(dbl)          :: wf(:,:)
-      REAL(dbl), INTENT(IN) :: ampre
+      COMPLEX(DP)          :: wf(:,:)
+      REAL(DP), INTENT(IN) :: ampre
 
-      REAL(dbl) :: rranf
+      REAL(DP) :: rranf
       EXTERNAL rranf
 
 ! ... declare other variables
       INTEGER i, j
-      REAL(dbl)  rranf1, rranf2
+      REAL(DP)  rranf1, rranf2
 ! ... end of declarations
 !  ----------------------------------------------
       DO i = 1, SIZE(wf, 2)
@@ -594,13 +594,13 @@
 
       IMPLICIT NONE
 ! ... declare subroutine arguments
-      COMPLEX(dbl)          :: wf(:)
-      REAL(dbl), INTENT(IN) :: ampre
-      REAL(dbl) :: rranf
+      COMPLEX(DP)          :: wf(:)
+      REAL(DP), INTENT(IN) :: ampre
+      REAL(DP) :: rranf
       EXTERNAL rranf
 ! ... declare other variables
       INTEGER j
-      REAL(dbl)  rranf1, rranf2
+      REAL(DP)  rranf1, rranf2
 ! ... end of declarations
 !  ----------------------------------------------
       DO j = 1, SIZE( wf )
@@ -615,17 +615,17 @@
 !==----------------------------------------------==!
 
 
-       REAL(dbl) FUNCTION scalw(gzero, RR1, RR2, metric)
+       REAL(DP) FUNCTION scalw(gzero, RR1, RR2, metric)
 
          USE mp_global, ONLY: group
          USE mp, ONLY: mp_sum
 
          IMPLICIT NONE
 
-         COMPLEX(dbl), INTENT(IN) :: rr1(:), rr2(:), metric(:)
+         COMPLEX(DP), INTENT(IN) :: rr1(:), rr2(:), metric(:)
          LOGICAL, INTENT(IN) :: gzero
          INTEGER :: ig, gstart, ngw
-         REAL(dbl) :: rsc
+         REAL(DP) :: rsc
 
          ngw = MIN( SIZE(rr1), SIZE(rr2), SIZE(metric) )
          rsc = 0.d0
@@ -649,10 +649,10 @@
 
    SUBROUTINE wave_steepest( CP, C0, dt2m, grad)
       IMPLICIT NONE
-      COMPLEX(dbl), INTENT(OUT) :: CP(:)
-      COMPLEX(dbl), INTENT(IN) :: C0(:)
-      COMPLEX(dbl), INTENT(IN) :: grad(:)
-      REAL(dbl), INTENT(IN) ::  dt2m(:)
+      COMPLEX(DP), INTENT(OUT) :: CP(:)
+      COMPLEX(DP), INTENT(IN) :: C0(:)
+      COMPLEX(DP), INTENT(IN) :: grad(:)
+      REAL(DP), INTENT(IN) ::  dt2m(:)
         CP( : )  = C0( : )  + dt2m(:) * grad(:)
       RETURN
    END SUBROUTINE wave_steepest
@@ -662,10 +662,10 @@
 
    SUBROUTINE wave_verlet( cm, c0, ver1, ver2, ver3, grad)
       IMPLICIT NONE
-      COMPLEX(dbl), INTENT(INOUT) :: cm(:)
-      COMPLEX(dbl), INTENT(IN) :: c0(:)
-      COMPLEX(dbl), INTENT(IN) :: grad(:)
-      REAL(dbl), INTENT(IN) ::  ver1, ver2, ver3(:)
+      COMPLEX(DP), INTENT(INOUT) :: cm(:)
+      COMPLEX(DP), INTENT(IN) :: c0(:)
+      COMPLEX(DP), INTENT(IN) :: grad(:)
+      REAL(DP), INTENT(IN) ::  ver1, ver2, ver3(:)
         cm( : )  = ver1 * c0( : ) + ver2 * cm( : ) + &
                    ver3( : ) * grad( : )
       RETURN
@@ -677,12 +677,12 @@
 
    FUNCTION wave_speed2( cp, cm, wmss, fact )
      IMPLICIT NONE
-     COMPLEX(dbl), INTENT(IN) :: cp(:)
-     COMPLEX(dbl), INTENT(IN) :: cm(:)
-     REAL(dbl) :: wmss(:), fact
-     REAL(dbl) :: wave_speed2
-     REAL(dbl) :: ekinc
-     COMPLEX(dbl) :: speed
+     COMPLEX(DP), INTENT(IN) :: cp(:)
+     COMPLEX(DP), INTENT(IN) :: cm(:)
+     REAL(DP) :: wmss(:), fact
+     REAL(DP) :: wave_speed2
+     REAL(DP) :: ekinc
+     COMPLEX(DP) :: speed
      INTEGER :: j
      speed  = ( cp(1) - cm(1) )
      ekinc  = fact * wmss(1) * CONJG( speed ) * speed

@@ -25,7 +25,7 @@ subroutine symram (phi, nsym, s, nat, irt)
   ! input: the number of atoms
   ! input: correspondence between rotated atoms
 
-  real(kind=DP) :: phi (3, 3, 3, nat)
+  real(DP) :: phi (3, 3, 3, nat)
   ! matrix to symmetrize
 
   integer :: isym, i, j, k, l, m, n, na, sna
@@ -34,7 +34,7 @@ subroutine symram (phi, nsym, s, nat, irt)
   ! counter on atoms
   ! the rotated atom
 
-  real(kind=DP) :: work (3, 3, 3, nat)
+  real(DP) :: work (3, 3, 3, nat)
   ! auxiliary work space
   !
   if (nsym == 1) return

@@ -25,7 +25,7 @@ subroutine symvect (nat, vect, nsym, s, irt)
               nsym,            & ! input: the number of symmetries
               irt (48, nat),   & ! input: for each atom gives the rotated
               s (3, 3, 48)       ! input: the rotation matrices
-   real(kind=DP) :: vect(3,nat)  ! inp/out: the vector to rotate
+   real(DP) :: vect(3,nat)  ! inp/out: the vector to rotate
    !
    !   the local variables
    !
@@ -34,7 +34,7 @@ subroutine symvect (nat, vect, nsym, s, irt)
               isym,            & ! counter on symmetries
               ipol               ! counter on polarization
 
-   real(kind=DP), allocatable :: work (:,:)
+   real(DP), allocatable :: work (:,:)
 
    external DCOPY, DSCAL
 

@@ -19,12 +19,12 @@ subroutine pw_dot(sum_over_nodes,n,m,a,lda,b,ldb,c)
   ! input
   integer :: n, m, lda, ldb
   character(len=1) sum_over_nodes
-  complex(kind=DP) :: a(lda,m), b(ldb,m)
+  complex(DP) :: a(lda,m), b(ldb,m)
   ! output
-  real(kind=DP) :: c(m)
+  real(DP) :: c(m)
   ! local
   integer i
-  real(kind=DP), EXTERNAL :: DDOT
+  real(DP), EXTERNAL :: DDOT
   !
   do i= 1,m
      c(i) = 2.d0*DDOT(2*n,a(1,i),1,b(1,i),1)

@@ -20,10 +20,10 @@ subroutine addusldos (ldos, becsum1)
   USE wavefunctions_module,  ONLY: psic
   USE uspp_param, ONLY: lmaxq, tvanp, nh, nhm
   implicit none
-  complex(kind=DP) :: ldos (nrxx, nspin)
+  complex(DP) :: ldos (nrxx, nspin)
   ! local density of states
 
-  real(kind=DP) :: becsum1 ( (nhm * (nhm + 1) ) / 2, nat, nspin)
+  real(DP) :: becsum1 ( (nhm * (nhm + 1) ) / 2, nat, nspin)
   ! input: the becsum1 ter
   !
   !     here the local variables
@@ -32,11 +32,11 @@ subroutine addusldos (ldos, becsum1)
   integer :: ig, na, nt, ih, jh, ijh, is, ir
   ! counters
 
-  real(kind=DP), allocatable :: ylmk0 (:,:), qmod (:)
+  real(DP), allocatable :: ylmk0 (:,:), qmod (:)
   ! the spherical harmonics
   ! the modulus of G
 
-  complex(kind=DP), allocatable :: aux (:,:), qgm (:)
+  complex(DP), allocatable :: aux (:,:), qgm (:)
   ! work space
 
   allocate (aux ( ngm , nspin))    

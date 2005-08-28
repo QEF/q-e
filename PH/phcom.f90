@@ -28,14 +28,14 @@ MODULE modes
   INTEGER :: npertx, invs(48)
   ! max number of perturbations per IR
   ! the inver of each matrix
-  REAL (KIND=DP), ALLOCATABLE :: rtau(:,:,:) !3, 48, nat)
+  REAL (DP), ALLOCATABLE :: rtau(:,:,:) !3, 48, nat)
   ! coordinates of direct translations
-  REAL (kind=DP) :: gi(3,48), gimq(3)
+  REAL (DP) :: gi(3,48), gimq(3)
   ! the possible G associated to each symmetry
   ! the G associated to the symmetry q<->-q+G
   INTEGER, PARAMETER :: max_irr_dim = 4    ! maximal allowed dimension for
                                            ! irreducible representattions
-  COMPLEX (KIND=DP), POINTER :: &
+  COMPLEX (DP), POINTER :: &
        u(:,:),                     &!  3 * nat, 3 * nat),
        ubar(:),                    &!  3 * nat), &
        t(:,:,:,:),                 &! max_irr_dim, max_irr_dim, 48,3 * nat),
@@ -57,12 +57,12 @@ MODULE dynmat
   !
   SAVE
   !
-  COMPLEX (KIND=DP), ALLOCATABLE :: &
+  COMPLEX (DP), ALLOCATABLE :: &
        dyn00(:,:),           &! 3 * nat, 3 * nat),
        dyn(:,:)               ! 3 * nat, 3 * nat)
   ! the initial dynamical matrix
   ! the dynamical matrix
-  REAL (kind=DP), ALLOCATABLE :: &
+  REAL (DP), ALLOCATABLE :: &
        w2(:)                  ! 3 * nat)
   ! omega^2
   !
@@ -81,9 +81,9 @@ MODULE qpoint
   INTEGER :: nksq, npwq
   ! the real number of k points
   ! the number of plane waves for q
-  REAL (kind=DP) :: xq(3)
+  REAL (DP) :: xq(3)
   ! the coordinates of the q point
-  COMPLEX (KIND=DP), ALLOCATABLE :: eigqts(:) ! nat)
+  COMPLEX (DP), ALLOCATABLE :: eigqts(:) ! nat)
   ! the phases associated to the q
   !
 END MODULE qpoint
@@ -96,15 +96,15 @@ MODULE eqv
   !
   SAVE
   !
-  COMPLEX (KIND=DP), POINTER :: evq(:,:)
+  COMPLEX (DP), POINTER :: evq(:,:)
   !
   ! ... The variable describing the linear response problem 
   !
-  COMPLEX (KIND=DP), ALLOCATABLE :: dvpsi(:,:), dpsi(:,:)
+  COMPLEX (DP), ALLOCATABLE :: dvpsi(:,:), dpsi(:,:)
   ! the product of dV psi
   ! the change of the wavefunctions
-  REAL (KIND=DP), ALLOCATABLE :: dmuxc(:,:,:)        ! nrxx, nspin, nspin),
-  REAL (KIND=DP), ALLOCATABLE, TARGET :: vlocq(:,:)  ! ngm, ntyp)
+  REAL (DP), ALLOCATABLE :: dmuxc(:,:,:)        ! nrxx, nspin, nspin),
+  REAL (DP), ALLOCATABLE, TARGET :: vlocq(:,:)  ! ngm, ntyp)
   ! the derivative of the xc potential
   ! the local potential at q+G
   !
@@ -118,14 +118,14 @@ MODULE efield_mod
   !  
   SAVE
   !
-  REAL (kind=DP) :: epsilon (3, 3)
-  REAL (kind=DP), ALLOCATABLE :: &
+  REAL (DP) :: epsilon (3, 3)
+  REAL (DP), ALLOCATABLE :: &
        zstareu(:,:,:),       &! 3, 3, nat),
        zstarue(:,:,:)         ! 3, nat, 3)
   ! the dielectric constant
   ! the effective charges Z(E,Us) (E=scf,Us=bare)
   ! the effective charges Z(Us,E) (Us=scf,E=bare)
-  COMPLEX (KIND=DP), ALLOCATABLE :: &
+  COMPLEX (DP), ALLOCATABLE :: &
        zstareu0(:,:),        &! 3, 3 * nat),
        zstarue0(:,:)          ! 3 * nat, 3)
   ! the effective charges
@@ -140,7 +140,7 @@ MODULE nlcc_ph
   !
   SAVE
   !
-  COMPLEX (KIND=DP), ALLOCATABLE, TARGET :: drc(:,:) ! ngm, ntyp)
+  COMPLEX (DP), ALLOCATABLE, TARGET :: drc(:,:) ! ngm, ntyp)
   ! contain the rhoc (without structure fac) for all atomic types
   LOGICAL :: nlcc_any
   ! .T. if any atom-type has nlcc
@@ -155,7 +155,7 @@ MODULE gc_ph
   !
   SAVE
   !
-  REAL (KIND=DP), ALLOCATABLE :: &
+  REAL (DP), ALLOCATABLE :: &
        grho(:,:,:),              &! 3, nrxx, nspin),
        dvxc_rr(:,:,:),           &! nrxx, nspin, nspin), &
        dvxc_sr(:,:,:),           &! nrxx, nspin, nspin),
@@ -177,17 +177,17 @@ MODULE phus
   !
   SAVE
   !
-  REAL (KIND=DP), ALLOCATABLE :: &
+  REAL (DP), ALLOCATABLE :: &
        alphasum(:,:,:,:),   &! nhm*(nhm+1)/2,3,nat,nspin)
                              ! used to compute modes
        dpqq(:,:,:,:)         ! dipole moment of each Q
-  COMPLEX (KIND=DP), ALLOCATABLE :: &
+  COMPLEX (DP), ALLOCATABLE :: &
        int1(:,:,:,:,:),     &! nhm, nhm, 3, nat, nspin),&
        int2(:,:,:,:,:),     &! nhm, nhm, 3,nat, nat),&
        int3(:,:,:,:,:),     &! nhm, nhm, max_irr_dim, nat, nspin),&
        int4(:,:,:,:,:),     &! nhm*(nhm+1)/2, 3, 3, nat, nspin),&
        int5(:,:,:,:,:)       ! nhm*(nhm+1)/2, 3, 3, nat, nat),&
-  COMPLEX (KIND=DP), ALLOCATABLE, TARGET :: &
+  COMPLEX (DP), ALLOCATABLE, TARGET :: &
        becp1(:,:,:),        &! nkbtot, nbnd, nksq),&
        alphap(:,:,:,:)       ! nkbtot, nbnd, 3, nksq)
   ! integrals of dQ and V_eff
@@ -244,9 +244,9 @@ MODULE control_ph
   ! occupated bands in metals
   ! starting representation
   ! maximum number of representation
-  real(kind = dp) :: tr2_ph
+  real(DP) :: tr2_ph
   ! threshold for phonon calculation
-  REAL (KIND=DP) :: alpha_mix(maxter), time_now, alpha_pv
+  REAL (DP) :: alpha_mix(maxter), time_now, alpha_pv
   ! the mixing parameter
   ! CPU time up to now
   ! the alpha value for shifting the bands
@@ -338,7 +338,7 @@ MODULE disp
     ! number of q-points in each direction
   INTEGER :: nqs
     ! number of q points to be calculated 
-  REAL (KIND=DP), ALLOCATABLE :: x_q(:,:)
+  REAL (DP), ALLOCATABLE :: x_q(:,:)
     ! coordinates of the q points
   !
 END MODULE disp

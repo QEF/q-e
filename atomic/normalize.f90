@@ -21,7 +21,7 @@ subroutine normalize
        n,n1,n2, &   ! counters on beta and mesh function
        ns,nst,ikl  ! counter on wavefunctions
 
-  real(kind=dp) :: &
+  real(DP) :: &
        work(nwfsx), & ! auxiliary variable for becp
        work1,       & ! the norm
        int_0_inf_dr,& ! integration function

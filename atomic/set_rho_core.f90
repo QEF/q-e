@@ -16,10 +16,10 @@ subroutine set_rho_core
   use ld1inc
   implicit none
 
-  real(kind=dp) :: drho, const, br1, br2, pi, &
+  real(DP) :: drho, const, br1, br2, pi, &
        eps1, eps2, br12, a, b, eps12, totrho
-  real(kind=dp), allocatable:: rhov(:), rhoco(:)
-  real(kind=dp), external :: int_0_inf_dr
+  real(DP), allocatable:: rhov(:), rhoco(:)
+  real(DP), external :: int_0_inf_dr
   integer :: i, ik, n, ns, ios
 
   if (nlcc) then

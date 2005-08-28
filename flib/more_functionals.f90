@@ -21,14 +21,14 @@
 !   ==--------------------------------------------------------------==
 
       USE funct, ONLY: igcc
-      USE kinds, ONLY: dbl
+      USE kinds, ONLY: DP
       IMPLICIT NONE
-      REAL(dbl) :: RHOA,RHOB,GRHOAA,GRHOBB,GRHOAB
-      REAL(dbl) :: SC,V1CA,V2CA,V1CB,V2CB,V2CAB
+      REAL(DP) :: RHOA,RHOB,GRHOAA,GRHOBB,GRHOAB
+      REAL(DP) :: SC,V1CA,V2CA,V1CB,V2CB,V2CAB
 
       ! ... Gradient Correction for correlation
 
-      REAL(dbl) :: SMALL, RHO
+      REAL(DP) :: SMALL, RHO
       PARAMETER(SMALL=1.D-20)
 
       SC=0.0D0
@@ -56,9 +56,9 @@
 !     ==  C. LEE, W. YANG, AND R.G. PARR, PRB 37, 785 (1988)          ==
 !     ==  THIS IS ONLY THE LDA PART                                   ==
 !     ==--------------------------------------------------------------==
-      USE kinds, ONLY: dbl
-      IMPLICIT REAL(dbl) (A-H,O-Z), INTEGER (I-N)
-      REAL(dbl) :: a, b, c, d, cf, small
+      USE kinds, ONLY: DP
+      IMPLICIT REAL(DP) (A-H,O-Z), INTEGER (I-N)
+      REAL(DP) :: a, b, c, d, cf, small
       PARAMETER (SMALL=1.D-24)
       PARAMETER (A=0.04918D0,B=0.132D0,C=0.2533D0,D=0.349D0)
       PARAMETER (CF=2.87123400018819108D0)
@@ -95,11 +95,11 @@
 !     ==--------------------------------------------------------------==
 !     ==  PADE APPROXIMATION                                          ==
 !     ==--------------------------------------------------------------==
-      USE kinds, ONLY: dbl
-      IMPLICIT REAL(dbl) (A-H,O-Z), INTEGER (I-N)
-      REAL(dbl) :: a0, a1, a2, a3, b1, b2, b3, b4
-      REAL(dbl) :: da0, da1, da2, da3, db1, db2, db3, db4
-      REAL(dbl) :: rsfac, fsfac
+      USE kinds, ONLY: DP
+      IMPLICIT REAL(DP) (A-H,O-Z), INTEGER (I-N)
+      REAL(DP) :: a0, a1, a2, a3, b1, b2, b3, b4
+      REAL(DP) :: da0, da1, da2, da3, db1, db2, db3, db4
+      REAL(DP) :: rsfac, fsfac
       PARAMETER (A0=.4581652932831429d0,A1=2.217058676663745d0, &
            A2=0.7405551735357053d0,A3=0.01968227878617998d0)
       PARAMETER (B1=1.0D0,B2=4.504130959426697d0, &
@@ -145,10 +145,10 @@
       SUBROUTINE LSD_GLYP(RA,RB,GRHOAA,GRHOAB,GRHOBB,SC,  &
                                             V1CA,V2CA,V1CB,V2CB,V2CAB)
 !     ==--------------------------------------------------------------==
-      USE kinds, ONLY: dbl
+      USE kinds, ONLY: DP
 ! LEE, YANG PARR: GRADIENT CORRECTION PART
-      IMPLICIT REAL(dbl) (A-H,O-Z), INTEGER (I-N)
-      REAL(dbl) :: a, b, c, d
+      IMPLICIT REAL(DP) (A-H,O-Z), INTEGER (I-N)
+      REAL(DP) :: a, b, c, d
       PARAMETER(A=0.04918D0,B=0.132D0,C=0.2533D0,D=0.349D0)
 !     ==--------------------------------------------------------------==
       RHO=RA+RB
@@ -205,36 +205,36 @@
       implicit none
 ! input
       integer nspin, nnr
-      real(kind=8) gradr(nnr,3,nspin), rhor(nnr,nspin)
+      real(8) gradr(nnr,3,nspin), rhor(nnr,nspin)
 ! output
 ! on output: rhor contains the exchange-correlation potential
-      real(kind=8)  exc
+      real(8)  exc
 ! local
       integer isdw, isup, isign, ir
 !
-      real(kind=8) abo, agdr, agdr2, agr, agr2, agur, agur2, arodw,     &
+      real(8) abo, agdr, agdr2, agr, agr2, agur, agur2, arodw,     &
      &      arodw2, aroe, aroe2, aroup, aroup2, ax
-      real(kind=8) byagdr, byagr, byagur, cden, cf, cl1, cl11, cl2,     &
+      real(8) byagdr, byagr, byagur, cden, cf, cl1, cl11, cl2,     &
      &      cl21, cl22, cl23, cl24, cl25, cl26, cl27, clyp, csum
-      real(kind=8) dddn, dexcdg, dexcdgd, dexcdgu, df1d, df1u, df2d,    &
+      real(8) dddn, dexcdg, dexcdgd, dexcdgu, df1d, df1u, df2d,    &
      &     df2u, dfd, dfnum1d, dfnum1u, dfnum2d, dfnum2u, dfs, dfu,     &
      &     dfxdd, dfxdg, dfxdgd, dfxdgu, dfxdu, dilta, dilta119, dl1dn, &
      &     dl1dnd, dl1dnu, dl2dd, dl2dg, dl2dgd, dl2dgu, dl2dn,         &
      &     dl2dnd, dl2dnd1, dl2dnu, dl2dnu1, dl2do, dlt, dodn,          &
      &     disign, dwsign, dys, dysd, dysu
-      real(kind=8) ex, excupdt, exd, exu, fac1, fac2, factor1, factor2, &
+      real(8) ex, excupdt, exd, exu, fac1, fac2, factor1, factor2, &
      &     fx, fxd, fxden, fxdend, fxdenu, fxnum, fxnumd, fxnumu, fxu
-      real(kind=8) gkf, gkfd, gkfu, grdx, grdy, grdz, grux, gruy, gruz, &
+      real(8) gkf, gkfd, gkfu, grdx, grdy, grdz, grux, gruy, gruz, &
      &     grx, gry, grz
-      real(kind=8) omiga, pd, pi2, pider2, piexch, pu
-      real(kind=8) rhodw, rhoup, roe, roedth, roeth, roeuth, rometh
-      real(kind=8) s, s2, sd, sd2, sddw, sdup, su, su2, sysl, sysld, syslu
-      real(kind=8) t113, upsign, usign
-      real(kind=8) x1124, x113, x118, x13, x143, x19, x23, x43,         &
+      real(8) omiga, pd, pi2, pider2, piexch, pu
+      real(8) rhodw, rhoup, roe, roedth, roeth, roeuth, rometh
+      real(8) s, s2, sd, sd2, sddw, sdup, su, su2, sysl, sysld, syslu
+      real(8) t113, upsign, usign
+      real(8) x1124, x113, x118, x13, x143, x19, x23, x43,         &
      &     x4718, x53, x672, x718, x772, x83
-      real(kind=8) ys, ysd, ysl, ysld, yslu, ysr, ysrd, ysru, ysu   
+      real(8) ys, ysd, ysl, ysld, yslu, ysr, ysrd, ysru, ysu   
 !===========================================================================
-      real(kind=8) bb1, bb2, bb5, aa, bb, cc, dd, delt, eps
+      real(8) bb1, bb2, bb5, aa, bb, cc, dd, delt, eps
       parameter(bb1=0.19644797,bb2=0.2742931,bb5=7.79555418,            &
      &     aa=0.04918,                                                  &
      &     bb=0.132,cc=0.2533,dd=0.349,delt=1.0e-12,eps=1.0e-14)
@@ -564,15 +564,15 @@
       implicit none
 ! input
       integer nspin, nnr
-      real(kind=8)  gradr(nnr,3,nspin), rhor(nnr,nspin)
+      real(8)  gradr(nnr,3,nspin), rhor(nnr,nspin)
 ! output: excrho: exc * rho ;  E_xc = \int excrho(r) d_r
 ! output: rhor:   contains the exchange-correlation potential
-      real(kind=8)  excrho
+      real(8)  excrho
 ! local
       integer ir, icar, iss, isup, isdw, nspinx
-      real(kind=8) lim1, lim2
+      real(8) lim1, lim2
       parameter ( lim1=1.d-8, lim2=1.d-8, nspinx=2 )
-      real(kind=8) zet, arho(nspinx), grad(3,nspinx), agrad(nspinx),    &
+      real(8) zet, arho(nspinx), grad(3,nspinx), agrad(nspinx),    &
      &     arhotot, gradtot(3), agradtot,                               &
      &     scl, scl1, wrkup, wrkdw,                                     &
      &     exrho(nspinx), dexdrho(nspinx), dexdg(nspinx),               &
@@ -691,21 +691,21 @@
 ! input
 ! input rho:     charge density
 ! input agrad:   abs(grad rho)
-      real(kind=8) rho, agrad
+      real(8) rho, agrad
 ! ouput
 ! output ex: Ex[rho,grad_rho] = \int ex dr
 ! output dexdrho: d ex / d rho
 ! output dexdg:   d ex / d grad_rho(i) = dexdg*grad_rho(i)/abs(grad_rho)
-      real(kind=8) ex, dexdrho, dexdg
+      real(8) ex, dexdrho, dexdg
 ! local
-      real(kind=8) thrd, thrd4, pi32td, ax, al, um, uk, ul
+      real(8) thrd, thrd4, pi32td, ax, al, um, uk, ul
       parameter(thrd=.33333333333333333333d0,thrd4=4.d0/3.d0)
       parameter(pi32td=3.09366772628014d0) ! pi32td=(3.d0*pi*pi)**0.333d0
       parameter(al=0.161620459673995d0)    ! al=1.0/(2.0*(pi32)**0.333d0)
       parameter(ax=-0.738558766382022405884230032680836d0)
       parameter(um=0.2195149727645171d0,uk=0.8040d0,ul=um/uk)
 !
-      real(kind=8) rhothrd, exunif, dexunif, kf, s, s2, p0, fxpbe, fs
+      real(8) rhothrd, exunif, dexunif, kf, s, s2, p0, fxpbe, fs
 !----------------------------------------------------------------------
 ! construct LDA exchange energy density
 !
@@ -760,9 +760,9 @@
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
       implicit none
-      real(kind=8) rho, agrad, zet, ectot, decup, decdn, decdg
+      real(8) rho, agrad, zet, ectot, decup, decdn, decdg
       integer nspin
-      real(kind=8) pi, pi32, alpha, thrd, thrdm, thrd2, sixthm, thrd4,  &
+      real(8) pi, pi32, alpha, thrd, thrdm, thrd2, sixthm, thrd4,  &
      &     gam, fzz, gamma, bet, delt, eta
 ! thrd*=various multiples of 1/3
 ! numbers for use in LSD energy spin-interpolation formula, [c](9).
@@ -784,11 +784,11 @@
       parameter(gamma=0.03109069086965489503494086371273d0)
       parameter(bet=0.06672455060314922d0,delt=bet/gamma)
       parameter(eta=1.d-12)
-      real(kind=8) g, fk, rs, sk, twoksg, t
-      real(kind=8) rtrs, eu, eurs, ep, eprs, alfm, alfrsm, z4, f, ec
-      real(kind=8) ecrs, fz, eczet, comm, vcup, vcdn, g3, pon, b, b2, t2, t4
-      real(kind=8) q4, q5, h, g4, t6, rsthrd, gz, fac
-      real(kind=8) bg, bec, q8, q9, hb, hrs, hz, ht, pref
+      real(8) g, fk, rs, sk, twoksg, t
+      real(8) rtrs, eu, eurs, ep, eprs, alfm, alfrsm, z4, f, ec
+      real(8) ecrs, fz, eczet, comm, vcup, vcdn, g3, pon, b, b2, t2, t4
+      real(8) q4, q5, h, g4, t6, rsthrd, gz, fac
+      real(8) bg, bec, q8, q9, hb, hrs, hz, ht, pref
 !----------------------------------------------------------------------
       if (nspin.eq.1) then
          g=1.d0
@@ -895,8 +895,8 @@
 ! K. Burke, May 11, 1996.
 !
       implicit none
-      real(kind=8) a, a1, b1, b2, b3, b4, rtrs, gg, ggrs
-      real(kind=8) q0, q1, q2, q3
+      real(8) a, a1, b1, b2, b3, b4, rtrs, gg, ggrs
+      real(8) q0, q1, q2, q3
 !
       q0 = -2.d0*a*(1.d0+a1*rtrs*rtrs)
       q1 = 2.d0*a*rtrs*(b1+rtrs*(b2+rtrs*(b3+b4*rtrs)))
@@ -918,18 +918,18 @@
       implicit none
 ! input
       integer nspin, nnr
-      real(kind=8) gradr(nnr,3,nspin), rhor(nnr,nspin)
+      real(8) gradr(nnr,3,nspin), rhor(nnr,nspin)
 ! output
-      real(kind=8) exc
+      real(8) exc
 ! local
       integer isup, isdw, ir
-      real(kind=8) rhoup, rhodw, roe, aroe, rs, zeta
-      real(kind=8) grxu, gryu, grzu, grhou, grxd, gryd, grzd, grhod, grho
-      real(kind=8) ex, ec,vc, sc, v1x, v2x, v1c, v2c
-      real(kind=8) ecrs, eczeta
-      real(kind=8) exup, vcup, v1xup, v2xup, v1cup
-      real(kind=8) exdw, vcdw, v1xdw, v2xdw, v1cdw
-      real(kind=8) pi34, third, small
+      real(8) rhoup, rhodw, roe, aroe, rs, zeta
+      real(8) grxu, gryu, grzu, grhou, grxd, gryd, grzd, grhod, grho
+      real(8) ex, ec,vc, sc, v1x, v2x, v1c, v2c
+      real(8) ecrs, eczeta
+      real(8) exup, vcup, v1xup, v2xup, v1cup
+      real(8) exdw, vcdw, v1xdw, v2xdw, v1cdw
+      real(8) pi34, third, small
       parameter (pi34=0.75d0/3.141592653589793d+00,third=1.d0/3.d0)
       parameter(small=1.d-10)
 !
@@ -1033,13 +1033,13 @@
 !
       implicit none
 !  input
-      real(kind=8) rho, grho
+      real(8) rho, grho
 !  output
-      real(kind=8) ex, v1x, v2x
+      real(8) ex, v1x, v2x
 ! local
-      real(kind=8) ex0, kf, s, s2, s4, f, fs, p0,p1,p2,p3,p4,p5,p6,p7
+      real(8) ex0, kf, s, s2, s4, f, fs, p0,p1,p2,p3,p4,p5,p6,p7
 ! parameters
-      real(kind=8) a1, a2, a3, a4, a, b1, bx, pi34, thrd, thrd4
+      real(8) a1, a2, a3, a4, a, b1, bx, pi34, thrd, thrd4
       parameter(a1=0.19645d0,a2=0.27430d0,a=7.7956d0,a4=100.d0)
 ! for becke exchange, set a3=b1=0
       parameter(a3=0.15084d0,b1=0.004d0)
@@ -1105,17 +1105,17 @@
 !
       implicit none
 ! input
-      real(kind=8) rs, grho, ec, ecrs
+      real(8) rs, grho, ec, ecrs
 ! output
-      real(kind=8) h, v1c, v2c
+      real(8) h, v1c, v2c
 ! local
-      real(kind=8) rho, t, ks,  bet, delt, pon, b, b2, t2, t4, t6
-      real(kind=8) q4, q5, q6, q7, q8, q9, r0, r1, r2, r3, r4, rs2, rs3
-      real(kind=8) ccrs, rsthrd, fac, bec, coeff, cc
-      real(kind=8) h0, h0b, h0rs, h0t, h1, h1t, h1rs, hrs, ht
+      real(8) rho, t, ks,  bet, delt, pon, b, b2, t2, t4, t6
+      real(8) q4, q5, q6, q7, q8, q9, r0, r1, r2, r3, r4, rs2, rs3
+      real(8) ccrs, rsthrd, fac, bec, coeff, cc
+      real(8) h0, h0b, h0rs, h0t, h1, h1t, h1rs, hrs, ht
 ! parameters
-      real(kind=8) nu, cc0, cx, alf, c1, c2, c3, c4, c5, c6, a4
-      real(kind=8) ax, pi34
+      real(8) nu, cc0, cx, alf, c1, c2, c3, c4, c5, c6, a4
+      real(8) ax, pi34
       parameter(nu=15.75592d0,cc0=0.004235d0,cx=-0.001667212d0)
       parameter(c1=0.002568d0,c2=0.023266d0,c3=7.389d-6,c4=8.723d0)
       parameter(c5=0.472d0,c6=7.389d-2,a4=100.d0, alf=0.09d0)
@@ -1193,18 +1193,18 @@
 !
       implicit none
 ! input
-      real(kind=8) rs, zeta, grho, ec, ecrs, eczeta
+      real(8) rs, zeta, grho, ec, ecrs, eczeta
 ! output
-      real(kind=8) h, v1cup, v1cdn, v2c
+      real(8) h, v1cup, v1cdn, v2c
 ! local
-      real(kind=8) rho, g, t, ks, gz, bet, delt, g3, g4, pon, b, b2, t2, t4, t6
-      real(kind=8) q4, q5, q6, q7, q8, q9, r0, r1, r2, r3, r4, rs2, rs3
-      real(kind=8) ccrs, rsthrd, fac, bg, bec, coeff, cc
-      real(kind=8) h0, h0b, h0rs, h0z, h0t, h1, h1t, h1rs, h1z
-      real(kind=8) hz, hrs, ht, comm, pref
+      real(8) rho, g, t, ks, gz, bet, delt, g3, g4, pon, b, b2, t2, t4, t6
+      real(8) q4, q5, q6, q7, q8, q9, r0, r1, r2, r3, r4, rs2, rs3
+      real(8) ccrs, rsthrd, fac, bg, bec, coeff, cc
+      real(8) h0, h0b, h0rs, h0z, h0t, h1, h1t, h1rs, h1z
+      real(8) hz, hrs, ht, comm, pref
 ! parameters
-      real(kind=8) nu, cc0, cx, alf, c1, c2, c3, c4, c5, c6, a4
-      real(kind=8) thrdm, thrd2, ax, pi34, eta
+      real(8) nu, cc0, cx, alf, c1, c2, c3, c4, c5, c6, a4
+      real(8) thrdm, thrd2, ax, pi34, eta
       parameter(nu=15.75592d0,cc0=0.004235d0,cx=-0.001667212d0)
       parameter(c1=0.002568d0,c2=0.023266d0,c3=7.389d-6,c4=8.723d0)
       parameter(c5=0.472d0,c6=7.389d-2,a4=100.d0, alf=0.09d0)
@@ -1293,13 +1293,13 @@
 !
       implicit none
 ! input
-      real(kind=8) rs
+      real(8) rs
 ! output
-      real(kind=8) ec, vc, ecrs
+      real(8) ec, vc, ecrs
 !  local
-      real(kind=8) q0, rs12, q1, q2, q3
+      real(8) q0, rs12, q1, q2, q3
 ! parameters
-      real(kind=8) a, a1, b1, b2, b3, b4
+      real(8) a, a1, b1, b2, b3, b4
       parameter(a =0.0310907d0, a1=0.21370d0, b1=7.5957d0,              &
      &          b2=3.5876d0,    b3=1.6382d0,  b4=0.49294d0)
 !
@@ -1327,24 +1327,24 @@
 !
       implicit none
 ! input
-      real(kind=8) rs, zeta
+      real(8) rs, zeta
 ! output
-      real(kind=8) ec, vcup, vcdn, ecrs, eczeta
+      real(8) ec, vcup, vcdn, ecrs, eczeta
 ! local
-      real(kind=8) f, eu, ep, eurs, eprs, alfm, alfrsm, z4, fz, comm
-      real(kind=8) rs12, q0, q1, q2, q3
+      real(8) f, eu, ep, eurs, eprs, alfm, alfrsm, z4, fz, comm
+      real(8) rs12, q0, q1, q2, q3
 ! parameters
-      real(kind=8) gam, fzz, thrd, thrd4
+      real(8) gam, fzz, thrd, thrd4
       parameter(gam=0.5198421d0,fzz=1.709921d0)
       parameter(thrd=0.333333333333d0,thrd4=1.333333333333d0)
 !
-      real(kind=8) au, au1, bu1, bu2, bu3, bu4
+      real(8) au, au1, bu1, bu2, bu3, bu4
       parameter(au =0.0310907d0, au1=0.21370d0, bu1=7.5957d0,           &
      &          bu2=3.5876d0,    bu3=1.6382d0,  bu4=0.49294d0)
-      real(kind=8) ap, ap1, bp1, bp2, bp3, bp4
+      real(8) ap, ap1, bp1, bp2, bp3, bp4
       parameter(ap =0.01554535d0,ap1=0.20548d0, bp1=14.1189d0,          &
      &          bp2=6.1977d0,    bp3=3.3662d0,  bp4=0.62517d0 )
-      real(kind=8) am, am1, bm1, bm2, bm3, bm4
+      real(8) am, am1, bm1, bm2, bm3, bm4
       parameter(am =0.0168869d0, am1=0.11125d0, bm1=10.357d0,           &
      &          bm2=3.6231d0,    bm3=0.88026d0, bm4=0.49671d0 )
 !
@@ -1402,19 +1402,19 @@
       implicit none
 !
       integer nspin, nnr
-      real(kind=8) gradr(nnr,3), rhor(nnr), exc
+      real(8) gradr(nnr,3), rhor(nnr), exc
 !
-      real(kind=8) bb1, bb2, bb3, bb4, bb5, alfa, beta, cc0, cc1, delt, &
+      real(8) bb1, bb2, bb3, bb4, bb5, alfa, beta, cc0, cc1, delt, &
      &     c1, c2, c3, c4, c5, c6, c7, a, alfa1, bt1, bt2, bt3, bt4
       parameter(bb1=0.19645,bb2=0.27430,bb3=-0.15084,bb4=0.004,         &
      & bb5=7.7956,alfa=0.09,beta=0.0667263212,cc0=15.75592,             &
      & cc1=0.003521,c1=0.001667,c2=0.002568,c3=0.023266,c4=7.389e-6,    &
      & c5=8.723,c6=0.472,c7=7.389e-2,a=0.0621814,alfa1=0.2137,          &
      & bt1=7.5957,bt2=3.5876,bt3=1.6382,bt4=0.49294,delt=1.0e-12) 
-      real(kind=8) x13, x43, x76, pi2, ax, pider1, pider2, pider3,      &
+      real(8) x13, x43, x76, pi2, ax, pider1, pider2, pider3,      &
      &     abder1, abder2, abder3
       integer isign, ir
-      real(kind=8)                                                      &
+      real(8)                                                      &
      &     aexp, abig, abig2, agr, aroe, byagr, ccr, ccrnum, ccrden,    &
      &     dfxd, dfxdg, dys, dfs, dh1ds, dh1dg, dh1d, dh1dt, dexcdg,    &
      &     dexcd, dh1drs, dh0da, dadec, decdrs, decd, dh0dg, dcdrs,     &
@@ -1619,26 +1619,26 @@
       implicit none
 !
       integer nnr, nspin
-      real(kind=8) rhor(nnr,nspin), exc
+      real(8) rhor(nnr,nspin), exc
 ! local variables
       integer ir, iflg, isup, isdw
-      real(kind=8) roe, aroe, rs, rsl, rsq, ecca, vcca, eccp, vccp,    &
+      real(8) roe, aroe, rs, rsl, rsq, ecca, vcca, eccp, vccp,    &
      &     zeta, onemz, zp, zm, fz, dfzdz, exc1, vxc1, vxc2
 ! constants
-      real(kind=8) x76, x43, x13
+      real(8) x76, x43, x13
       parameter(x76=7.d0/6.d0, x43=4.d0/3.d0, x13=1.d0/3.d0)
-      real(kind=8) ax
+      real(8) ax
       parameter (ax = -0.916330586d0)
 ! Perdew and Zunger parameters
-      real(kind=8) ap, bp, cp, dp, af, bf, cf, df,                      &
+      real(8) ap, bp, cp, dp, af, bf, cf, df,                      &
      &     bp1, cp1, dp1, bf1, cf1, df1
       parameter                                                         &
      &( ap=0.03110*2.0, bp=-0.0480*2.0, cp=0.0020*2.0, dp=-0.0116*2.0   &
      &, af=0.01555*2.0, bf=-0.0269*2.0, cf=0.0007*2.0, df=-0.0048*2.0   &
      &, bp1=bp-ap/3.0, cp1=2.0*cp/3.0, dp1=(2.0*dp-cp)/3.0              &
      &, bf1=bf-af/3.0, cf1=2.0*cf/3.0, df1=(2.0*df-cf)/3.0 )
-      real(kind=8) va(2), vb(2), vc(2), vd(2), vbt1(2), vbt2(2)
-      real(kind=8)  a(2), b(2), c(2), d(2), g(2), b1(2), b2(2)
+      real(8) va(2), vb(2), vc(2), vd(2), vbt1(2), vbt2(2)
+      real(8)  a(2), b(2), c(2), d(2), g(2), b1(2), b2(2)
       data va/ap ,af /, vb/bp1,bf1/, vc/cp1,cf1/, vd/dp1,df1/,          &
      &     vbt1/1.0529,1.3981/, vbt2/0.3334,0.2611/
       data a/0.0622,0.0311/, b/-0.096,-0.0538/, c/0.0040,0.0014/,       &
@@ -1733,28 +1733,28 @@
 !=----------------------------------------------------------------------------=!
 
 subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
-  use kinds, only: dbl
+  use kinds, only: DP
   use funct
   implicit none
   integer, intent(in) :: nnr
   integer, intent(in) :: nspin
-  real(dbl), intent(in) :: grhor( nnr, 3, nspin )
-  real(dbl) :: h( nnr, nspin, nspin )
-  real(dbl), intent(in) :: rhor( nnr, nspin )
-  real(dbl) :: v( nnr, nspin )
-  real(dbl) :: etxc
+  real(DP), intent(in) :: grhor( nnr, 3, nspin )
+  real(DP) :: h( nnr, nspin, nspin )
+  real(DP), intent(in) :: rhor( nnr, nspin )
+  real(DP) :: v( nnr, nspin )
+  real(DP) :: etxc
   integer :: ir, is, isup, isdw, k
-  real(dbl) :: rho, rup, rdw, ex, ec, vx(2), vc(2)
-  real(dbl) :: rh, grh2, zeta, vxup, vxdw, vcup, vcdw
-  real(dbl) :: grho, sx, sc, v1x, v2x, v1c, v2c
-  real(dbl) :: rhox, arhox, e2, sx_dbg, sc_dbg
-  real(dbl) :: grho2(2), arho, segno
-  real(dbl) :: v1xup, v1xdw, v2xup, v2xdw
-  real(dbl) :: v1cup, v1cdw
-  real(dbl) :: grhoup, grhodw, grhoud
-  real(dbl) :: v2cup, v2cdw, v2cud
+  real(DP) :: rho, rup, rdw, ex, ec, vx(2), vc(2)
+  real(DP) :: rh, grh2, zeta, vxup, vxdw, vcup, vcdw
+  real(DP) :: grho, sx, sc, v1x, v2x, v1c, v2c
+  real(DP) :: rhox, arhox, e2, sx_dbg, sc_dbg
+  real(DP) :: grho2(2), arho, segno
+  real(DP) :: v1xup, v1xdw, v2xup, v2xdw
+  real(DP) :: v1cup, v1cdw
+  real(DP) :: grhoup, grhodw, grhoud
+  real(DP) :: v2cup, v2cdw, v2cud
   integer :: neg(3), ipol
-  real(dbl), parameter :: epsr = 1.0d-10, epsg = 1.0d-10
+  real(DP), parameter :: epsr = 1.0d-10, epsg = 1.0d-10
   logical :: debug_xc = .false.
 
   !
@@ -1940,18 +1940,18 @@ end subroutine exch_corr_wrapper
 !=----------------------------------------------------------------------------=!
 
 subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
-  use kinds, only: dbl
+  use kinds, only: DP
   use funct
   implicit none
   integer, intent(in) :: nnr
   integer, intent(in) :: nspin
-  real(dbl) :: grhor( nnr, 3, nspin )
-  real(dbl) :: rhor( nnr, nspin )
-  real(dbl) :: etxc
+  real(DP) :: grhor( nnr, 3, nspin )
+  real(DP) :: rhor( nnr, nspin )
+  real(DP) :: etxc
   integer :: k, ipol
-  real(dbl) ::  grup, grdw
-  real(dbl), allocatable :: v(:,:)
-  real(dbl), allocatable :: h(:,:,:)
+  real(DP) ::  grup, grdw
+  real(DP), allocatable :: v(:,:)
+  real(DP), allocatable :: h(:,:,:)
   !
   allocate( v( nnr, nspin ) )
   if( igcx > 0 .or. igcc > 0 ) then

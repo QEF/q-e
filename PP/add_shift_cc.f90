@@ -29,7 +29,7 @@ subroutine add_shift_cc (shift_cc)
   !   first the dummy variable
   !
 
-  real(kind=DP) :: shift_cc (nat)
+  real(DP) :: shift_cc (nat)
   ! output: the local forces on atoms
 
   integer :: ig, ir, nt, na
@@ -39,10 +39,10 @@ subroutine add_shift_cc (shift_cc)
   ! counter on atoms
 
 
-  real(kind=DP), allocatable :: vxc (:,:), rhocg (:), shift_(:)
+  real(DP), allocatable :: vxc (:,:), rhocg (:), shift_(:)
   ! exchange-correlation potential
   ! radial fourier trasform of rho core
-  real(kind=DP)  ::  arg, fact
+  real(DP)  ::  arg, fact
   !
   do nt = 1, ntyp
      if (nlcc (nt) ) goto 15

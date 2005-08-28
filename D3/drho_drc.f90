@@ -26,17 +26,17 @@ SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
 
   INTEGER :: iudrho_x
   !input: the unit containing the charge variation
-  REAL (kind = dp) :: xq_x (3), scale
+  REAL (DP) :: xq_x (3), scale
   !input: q point
   !input: drhocore will be added to the valence charge scaled by this factor
-  COMPLEX (kind = dp) :: u_x (3 * nat, 3 * nat), drc_x (ngm, ntyp)
+  COMPLEX (DP) :: u_x (3 * nat, 3 * nat), drc_x (ngm, ntyp)
   !input: the transformation modes patterns
   !input: contain the rhoc (without structu
 
   INTEGER :: ipert, na, mu, nt, ig, errcode
-  REAL (kind = dp) :: gtau
-  COMPLEX (kind = dp) :: guexp
-  COMPLEX (kind = dp), ALLOCATABLE :: drhoc (:), drhov (:), uact (:)
+  REAL (DP) :: gtau
+  COMPLEX (DP) :: guexp
+  COMPLEX (DP), ALLOCATABLE :: drhoc (:), drhov (:), uact (:)
 
 
   ALLOCATE  (drhoc( nrxx))    

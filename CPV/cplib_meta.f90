@@ -24,12 +24,12 @@
 !
       implicit none
 !
-      complex(kind=8) c(ngw), ca(ngw), df(ngw), da(ngw),psi(nnrs)
+      complex(8) c(ngw), ca(ngw), df(ngw), da(ngw),psi(nnrs)
       integer iss1, iss2
-      real(kind=8) fi, fip
+      real(8) fi, fip
 ! local variables
       integer ir,ig, ipol !metagga
-      complex(kind=8) fp,fm,ci
+      complex(8) fp,fm,ci
 !
 !
       ci=(0.0,1.0)
@@ -88,9 +88,9 @@
 ! local variables
       integer iss, isup, isdw, iss1, iss2, ios, i, ir, ig
       integer ipol, ix,iy, ipol2xy(3,3)
-      real(kind=8) sa1, sa2
-      complex(kind=8) ci,fp,fm,c(ngw,nx)
-      complex(kind=8) psi(nnr), psis(nnrsx)
+      real(8) sa1, sa2
+      complex(8) ci,fp,fm,c(ngw,nx)
+      complex(8) psi(nnr), psis(nnrsx)
 !
 !
       ci=(0.0,1.0)
@@ -276,9 +276,9 @@
       implicit none
 !
       integer iss, isup, isdw, ig, ir,i,j,k,is, ia
-      real(kind=8) dkedxc(3,3) !metagga
-      complex(kind=8)  fp, fm, ci
-      complex(kind=8)  v(nnr), vs(nnrs)
+      real(8) dkedxc(3,3) !metagga
+      complex(8)  fp, fm, ci
+      complex(8)  v(nnr), vs(nnrs)
 !
       ci=(0.,1.)
 

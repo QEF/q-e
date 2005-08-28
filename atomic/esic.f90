@@ -15,10 +15,10 @@ subroutine esic
   ! output
   ! local
   integer:: n, i
-  real(kind=dp), parameter :: fourpi=4.0_DP*3.141592653589793_DP
-  real(kind=dp) :: int_0_inf_dr,vxup,vxdw,vcup,vcdw,ex,ec,deksic  
-  real(kind=dp) :: work1(ndm),v(ndm),vsic(ndm)
-  real(kind=dp) :: egc(ndm)
+  real(DP), parameter :: fourpi=4.0_DP*3.141592653589793_DP
+  real(DP) :: int_0_inf_dr,vxup,vxdw,vcup,vcdw,ex,ec,deksic  
+  real(DP) :: work1(ndm),v(ndm),vsic(ndm)
+  real(DP) :: egc(ndm)
   external int_0_inf_dr
   !
   deksic = 0.0_DP

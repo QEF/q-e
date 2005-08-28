@@ -17,11 +17,11 @@ logical function eqvect (x, y, f)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: x (3), y (3), f (3)
+  real(DP) :: x (3), y (3), f (3)
   ! input: input vector
   ! input: second input vector
   ! input: fractionary translation
-  real(kind=DP) :: accep
+  real(DP) :: accep
   ! acceptance parameter
   parameter (accep = 1.0d-5)
   !

@@ -28,13 +28,13 @@ subroutine d3vrho
        ik, ikk, ig, ibnd, ikb, jkb, ios, igg, ia
   ! counters
 
-  real (kind = dp) :: gtau, fac, wgg
+  real (DP) :: gtau, fac, wgg
   ! the product G*\tau_s
   ! auxiliary variable
   ! the true weight of a K point
 
-  complex (kind = dp) :: alpha (8), ZDOTC, work
-  complex (kind = dp), allocatable :: d3dynwrk (:,:,:), d3dynwrk2 (:,:,:), &
+  complex (DP) :: alpha (8), ZDOTC, work
+  complex (DP), allocatable :: d3dynwrk (:,:,:), d3dynwrk2 (:,:,:), &
        rhog (:), work1 (:,:), work2 (:,:), work3 (:)
 
   allocate  (rhog( nrxx))    

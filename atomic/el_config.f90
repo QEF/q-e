@@ -19,7 +19,7 @@ subroutine el_config(config,all_elec,nwf,el,nn,ll,oc,isw)
   ! output: atomic states
   character(len=2) :: el(nwfx)
   integer :: nwf, nn(nwfx), ll(nwfx), isw(nwfx)
-  real(kind=dp) :: oc(nwfx)
+  real(DP) :: oc(nwfx)
   ! local variables
   integer ::  i, n, l, len, n0, first, start(nwfx), finish(nwfx)
   character ::  occup*10, core*2, prev*1, curr*1
@@ -27,7 +27,7 @@ subroutine el_config(config,all_elec,nwf,el,nn,ll,oc,isw)
   ! core states
   character(len=2) :: elc(15)
   integer :: nwfc, nnc(15), llc(15)
-  real(kind=dp) :: occ(15)
+  real(DP) :: occ(15)
   data elc/'1S','2S','2P','3S','3P','4S','4P','3D','5S','5P','4D', &
        &   '6S','6P','5D','4F'/
   data nnc/1 ,2 ,2 ,3 ,3 ,4 ,4 ,3 ,5 ,5 ,4 ,6 ,6 ,5 ,4 /

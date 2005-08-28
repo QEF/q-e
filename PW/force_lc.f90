@@ -31,7 +31,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
 
   logical :: gamma_only
 
-  real(kind=DP) :: tau (3, nat), g (3, ngm), vloc (ngl, * ), &
+  real(DP) :: tau (3, nat), g (3, ngm), vloc (ngl, * ), &
        rho (nrxx, nspin), alat, omega
   ! input: the coordinates of the atoms
   ! input: the coordinates of G vectors
@@ -40,7 +40,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   ! input: the length measure
   ! input: the volume of the cell
 
-  real(kind=DP) :: forcelc (3, nat)
+  real(DP) :: forcelc (3, nat)
   ! output: the local forces on atoms
 
   integer :: ipol, ig, na
@@ -48,10 +48,10 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   ! counter on G vectors
   ! counter on atoms
 
-  real(kind=DP), allocatable :: aux (:,:)
+  real(DP), allocatable :: aux (:,:)
   ! auxiliary space for FFT
-  real(kind=DP) :: arg, fact
-  real(kind=DP) , parameter :: tpi = 2.d0 * 3.14159265358979d0
+  real(DP) :: arg, fact
+  real(DP) , parameter :: tpi = 2.d0 * 3.14159265358979d0
   !
   ! contribution to the force from the local part of the bare potential
   ! F_loc = Omega \Sum_G n*(G) d V_loc(G)/d R_i

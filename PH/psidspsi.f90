@@ -30,7 +30,7 @@ subroutine psidspsi (ik, uact, pdsp)
 
   integer, intent(in) :: ik
   ! input: the k point
-  complex(kind=DP) :: uact (3 * nat), pdsp(nbnd,nbnd)
+  complex(DP) :: uact (3 * nat), pdsp(nbnd,nbnd)
   ! input: the pattern of displacements
   ! output: <psi|ds/du|psi>
   !
@@ -54,9 +54,9 @@ subroutine psidspsi (ik, uact, pdsp)
   ! counter on m index
   ! counter on polarizations
 
-  real(kind=DP), parameter :: eps = 1.d-12
+  real(DP), parameter :: eps = 1.d-12
 
-  complex(kind=DP), ALLOCATABLE :: ps1 (:,:), ps2 (:,:,:), aux (:), aux1(:,:), dspsi(:,:)
+  complex(DP), ALLOCATABLE :: ps1 (:,:), ps2 (:,:,:), aux (:), aux1(:,:), dspsi(:,:)
   ! the scalar product
   ! the scalar product
   ! a mesh space for psi

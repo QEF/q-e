@@ -69,35 +69,35 @@ MODULE diis_base
     ! number of trial steps per sweep
   INTEGER,        PARAMETER :: ncgbnd = 2
     ! number of empty bands used by the holes filler
-  REAL (KIND=DP), PARAMETER :: sweeps_lambda = 2.D0
+  REAL (DP), PARAMETER :: sweeps_lambda = 2.D0
     ! sweeps step-length  
-  REAL (KIND=DP), PARAMETER :: diis_lambda = 2.5D0
+  REAL (DP), PARAMETER :: diis_lambda = 2.5D0
     ! diis step-length  
-  REAL (KIND=DP), PARAMETER :: ortho_win_min = 0.03674930873264048097D0 
+  REAL (DP), PARAMETER :: ortho_win_min = 0.03674930873264048097D0 
     ! minimum energy window (Ry) for orthogonalization
-  REAL (KIND=DP), PARAMETER :: holes_filler_ethr = 1.D-6
+  REAL (DP), PARAMETER :: holes_filler_ethr = 1.D-6
     ! convergence threshold for the holes filler
-  REAL (KIND=DP), PARAMETER :: empty_bands_ethr_min = 1.D-5
+  REAL (DP), PARAMETER :: empty_bands_ethr_min = 1.D-5
     ! minimum convergence threshold on empty bands
   !
   ! ... module variables
   !
-  REAL (KIND=DP) :: ortho_win
+  REAL (DP) :: ortho_win
     ! energy window (Ry) for orthogonalization
-  REAL (KIND=DP) :: empty_ethr 
+  REAL (DP) :: empty_ethr 
     ! threshold for empty bands
-  COMPLEX (KIND=DP), ALLOCATABLE :: hpsi(:,:), spsi(:,:), aux(:,:)
+  COMPLEX (DP), ALLOCATABLE :: hpsi(:,:), spsi(:,:), aux(:,:)
     ! the product of H and psi
     ! the product of S and psi
     ! auxiliary work-space
-  COMPLEX (KIND=DP), ALLOCATABLE :: psi_old(:,:,:), hpsi_old(:,:,:), &
+  COMPLEX (DP), ALLOCATABLE :: psi_old(:,:,:), hpsi_old(:,:,:), &
                                     spsi_old(:,:,:)
     ! DIIS-workspace: old eigenvectors
     ! DIIS-workspace: old product of H and psi
     ! DIIS-workspace: old product of S and psi
-  REAL (KIND=DP), ALLOCATABLE :: e_old(:,:)
+  REAL (DP), ALLOCATABLE :: e_old(:,:)
     ! DIIS-workspace: old eigenvalues
-  REAL (KIND=DP), ALLOCATABLE :: e_ref(:)
+  REAL (DP), ALLOCATABLE :: e_ref(:)
     ! eigenvalues of the previous iteration  
   INTEGER :: nbase
     ! counter on the reduced basis vectors
@@ -169,12 +169,12 @@ MODULE diis_base
       LOGICAL                          :: no_holes
       INTEGER,           INTENT(IN)    :: ndmx, nbnd
       INTEGER,           INTENT(INOUT) :: btype(nbnd)
-      REAL (KIND=DP),    INTENT(INOUT) :: e(nbnd)
-      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+      REAL (DP),    INTENT(INOUT) :: e(nbnd)
+      COMPLEX (DP), INTENT(INOUT) :: psi(ndmx,nbnd)
       !
       INTEGER                        :: ib, i, j, moved, btype_tmp
-      REAL (KIND=DP)                 :: e_tmp, local_ethr
-      COMPLEX (KIND=DP), ALLOCATABLE :: psi_tmp(:), hpsi_tmp(:), spsi_tmp(:)
+      REAL (DP)                 :: e_tmp, local_ethr
+      COMPLEX (DP), ALLOCATABLE :: psi_tmp(:), hpsi_tmp(:), spsi_tmp(:)
       !
       !
       ALLOCATE( psi_tmp(  ndmx ) )
@@ -295,7 +295,7 @@ MODULE diis_base
       !
       INTEGER,           INTENT(IN)    :: order  
       INTEGER,           INTENT(IN)    :: nbnd
-      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(:,:)
+      COMPLEX (DP), INTENT(INOUT) :: psi(:,:)
       INTEGER,           INTENT(INOUT) :: notcnv
       !
       INTEGER :: ib

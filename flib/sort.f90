@@ -10,7 +10,7 @@
       USE kinds
       USE constants, only: eps8
       implicit none
-      REAL(dbl) :: a, b, r
+      REAL(DP) :: a, b, r
       r = abs(a-b)
       if( r .lt.  eps8 ) then
         cpgt = .false.
@@ -23,7 +23,7 @@
       USE kinds
       USE constants, only: eps8
       implicit none
-      REAL(dbl) :: a, b, r
+      REAL(DP) :: a, b, r
       r = abs(a-b)
       if( r .lt.  eps8 ) then
         cplt = .false.
@@ -64,11 +64,11 @@ subroutine hpsort_eps (n, ra, ind, eps)
   !-input/output variables
   integer, intent(in) :: n  
   integer, intent(inout) :: ind (n)  
-  real(dbl), intent(inout) :: ra (n)
-  real(dbl), intent(in) :: eps
+  real(DP), intent(inout) :: ra (n)
+  real(DP), intent(in) :: eps
   !-local variables
   integer :: i, ir, j, l, iind  
-  real(dbl) :: rra  
+  real(DP) :: rra  
   ! initialize index array
   if (ind (1) .eq.0) then  
      do i = 1, n  
@@ -144,7 +144,7 @@ contains
   !  compare two real number and return the result
 
   logical function hslt( a, b )
-    REAL(dbl) :: a, b
+    REAL(DP) :: a, b
     if( abs(a-b) <  eps ) then
       hslt = .false.
     else
@@ -186,10 +186,10 @@ subroutine hpsort (n, ra, ind)
   !-input/output variables
   integer :: n  
   integer :: ind (n)  
-  real(dbl) :: ra (n)  
+  real(DP) :: ra (n)  
   !-local variables
   integer :: i, ir, j, l, iind  
-  real(dbl) :: rra  
+  real(DP) :: rra  
   ! initialize index array
   if (ind (1) .eq.0) then  
      do i = 1, n  
@@ -402,7 +402,7 @@ end subroutine ihpsort
                  IY, INTEST, K, IFK, K1, IP, LNGTH
       
       logical :: cpgt,cplt
-      REAL(dbl) :: COUNT(N),AV,X
+      REAL(DP) :: COUNT(N),AV,X
       
       INTEGER :: INDEX(N)
       DIMENSION :: MARK(50)
@@ -713,7 +713,7 @@ end subroutine ihpsort
       INTEGER :: N, MARK, I, M, LA, IS, IF, MLOOP, IFKA, IS1, J, INT, &
                  IY, INTEST, K, IFK, K1, IP, LNGTH
       
-      REAL(dbl) COUNT(N),AV,X
+      REAL(DP) COUNT(N),AV,X
       
       INTEGER INDEX(N)
       DIMENSION MARK(50)
@@ -866,8 +866,8 @@ end subroutine ihpsort
 !  to be sorted.
       implicit none
       integer n, index(n)
-      real(kind=8) count(n)
-      real(kind=8) av, x
+      real(8) count(n)
+      real(8) av, x
       integer k1, ifk, lngth, ip, k, int, ifka, intest, iy
       integer i, m, la, is, if, mloop, ifca, is1, j, mark(50)
 !  set index array to original order .

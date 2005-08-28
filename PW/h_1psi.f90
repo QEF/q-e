@@ -19,7 +19,7 @@ SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
   IMPLICIT NONE
   !
   INTEGER           :: lda, n
-  COMPLEX (KIND=DP) :: psi(n), hpsi(n), spsi(n)
+  COMPLEX (DP) :: psi(n), hpsi(n), spsi(n)
   !
   !
   CALL start_clock( 'h_1psi' )

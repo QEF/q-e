@@ -20,7 +20,7 @@ subroutine symd0rho (max_irr_dim, nper, irr, d0rho, s, ftau, nsymq, &
   ! nper: the number of perturbations
   ! irr: the representation under consideration
 
-  complex (kind = dp) :: d0rho (nrx1, nrx2, nrx3, nper),        &
+  complex (DP) :: d0rho (nrx1, nrx2, nrx3, nper),        &
        t (max_irr_dim, max_irr_dim, 48, 3 * nat)
   ! charge variation to symmetrize
 
@@ -28,7 +28,7 @@ subroutine symd0rho (max_irr_dim, nper, irr, d0rho, s, ftau, nsymq, &
   !  ri, rj, rk: rotated points
   !  counters
 
-  complex (kind = dp), allocatable :: aux1 (:,:,:,:)
+  complex (DP), allocatable :: aux1 (:,:,:,:)
   ! the symmetrized charge
 
 

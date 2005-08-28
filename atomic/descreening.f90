@@ -26,13 +26,13 @@ subroutine descreening
        lam,   &  ! the angular momentum
        ind
 
-  real(kind=dp) :: &
+  real(DP) :: &
        vaux(ndm,2),&   ! work space
        phist(ndm,nwfsx)! auxiliary to save the phi
 
-  real(kind=dp), external :: int_0_inf_dr ! the integral function
+  real(DP), external :: int_0_inf_dr ! the integral function
 
-  real(kind=dp), parameter :: &
+  real(DP), parameter :: &
        thresh= 1.e-12_dp          ! threshold for selfconsistency
 
   integer  :: &

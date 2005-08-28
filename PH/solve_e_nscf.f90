@@ -30,11 +30,11 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   ! input: k-point under consideration
   ! input: polarization of the electric field
 
-  real(kind=DP) :: thresh, avg_iter
+  real(DP) :: thresh, avg_iter
   ! input: convergence threshold
   ! in/out: # of diagonalization iterations
 
-  complex(kind=DP) :: dvscfs (nrxxs, 3), auxr(nrxxs)
+  complex(DP) :: dvscfs (nrxxs, 3), auxr(nrxxs)
   ! input: potential on the smooth grid
   ! auxiliary work space
 

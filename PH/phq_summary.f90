@@ -47,7 +47,7 @@ subroutine phq_summary
   ! counter on irreducible representation
   ! the first mode
 
-  real(kind=DP) :: ft1, ft2, ft3, sr (3, 3), xkg (3)
+  real(DP) :: ft1, ft2, ft3, sr (3, 3), xkg (3)
   ! fractionary translation
   ! fractionary translation
   ! fractionary translation

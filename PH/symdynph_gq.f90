@@ -32,13 +32,13 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   ! input: the inverse of each matrix
   ! input: the order of the small gro
   ! input: the rotation sending q ->
-  real(kind=DP) :: xq (3), rtau (3, 48, nat)
+  real(DP) :: xq (3), rtau (3, 48, nat)
   ! input: the q point
   ! input: the R associated at each t
 
   logical :: minus_q
   ! input: true if a symmetry q->-q+G
-  complex(kind=DP) :: phi (3, 3, nat, nat)
+  complex(DP) :: phi (3, 3, nat, nat)
   ! inp/out: the matrix to symmetrize
   !
   !   local variables
@@ -47,10 +47,10 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
        iflb (nat, nat)
   ! counters, indices, work space
 
-  real(kind=DP) :: arg
+  real(DP) :: arg
   ! the argument of the phase
 
-  complex(kind=DP) :: phip (3, 3, nat, nat), work (3, 3), fase, faseq (48)
+  complex(DP) :: phip (3, 3, nat, nat), work (3, 3), fase, faseq (48)
   ! work space, phase factors
   !
   !    We start by imposing hermiticity

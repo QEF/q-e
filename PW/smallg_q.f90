@@ -21,7 +21,7 @@ subroutine smallg_q (xq, modenum, at, bg, nrot, s, ftau, nr1, nr2, &
   USE kinds
   implicit none
 
-  real(kind=DP) :: bg (3, 3), at (3, 3), xq (3)
+  real(DP) :: bg (3, 3), at (3, 3), xq (3)
   ! input: the reciprocal lattice vectors
   ! input: the direct lattice vectors
   ! input: the q point of the crystal
@@ -43,7 +43,7 @@ subroutine smallg_q (xq, modenum, at, bg, nrot, s, ftau, nr1, nr2, &
   !  local variables
   !
 
-  real(kind=DP) :: aq (3), raq (3), zero (3)
+  real(DP) :: aq (3), raq (3), zero (3)
   ! q vector in crystal basis
   ! the rotated of the q vector
   ! the zero vector
@@ -79,7 +79,7 @@ subroutine smallg_q (xq, modenum, at, bg, nrot, s, ftau, nr1, nr2, &
      raq(:) = 0.d0
      do ipol = 1, 3
         do jpol = 1, 3
-           raq(ipol) = raq(ipol) + dble( s(ipol,jpol,irot) ) * aq( jpol)
+           raq(ipol) = raq(ipol) + DBLE( s(ipol,jpol,irot) ) * aq( jpol)
         enddo
      enddo
      sym (irot) = eqvect (raq, aq, zero)

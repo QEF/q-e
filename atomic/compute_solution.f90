@@ -34,7 +34,7 @@ subroutine compute_solution(nn,lam,jam,e,mesh,ndm,dx,r, &
        lls(nbeta),&! for each beta the angular momentum
        ikk(nbeta) ! for each beta the point where it become zero
 
-  real(kind=dp) :: &
+  real(DP) :: &
        e,       &  ! output eigenvalue
        dx,      &  ! linear delta x for radial mesh
        jam,     &  ! j angular momentum
@@ -50,7 +50,7 @@ subroutine compute_solution(nn,lam,jam,e,mesh,ndm,dx,r, &
   !
   !    the local variables
   !
-  real(kind=dp) :: &
+  real(DP) :: &
        ddx12,      &  ! dx**2/12 used for Numerov integration
        sqlhf,      &  ! the term for angular momentum in equation
        xl1, x4l6, x6l12, x8l20,& ! used for starting series expansion
@@ -66,7 +66,7 @@ subroutine compute_solution(nn,lam,jam,e,mesh,ndm,dx,r, &
        yln, xp, expn,& ! used to compute the tail of the solution
        int_0_inf_dr  ! integral function
 
-  real(kind=dp), allocatable :: &
+  real(DP), allocatable :: &
        f(:),    &   ! the f function
        el(:),c(:) ! auxiliary for inward integration
 
@@ -95,7 +95,7 @@ subroutine compute_solution(nn,lam,jam,e,mesh,ndm,dx,r, &
   ddx12=dx*dx/12.0_dp
   l1=lam+1
   nst=l1*2
-  sqlhf=(dble(lam)+0.5_dp)**2
+  sqlhf=(DBLE(lam)+0.5_dp)**2
   xl1=lam+1
   x4l6=4*lam+6
   x6l12=6*lam+12

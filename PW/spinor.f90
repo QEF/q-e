@@ -14,13 +14,13 @@ function spinor(l,j,m,spin)
 use kinds
 implicit none
 
-real(kind=dp) :: spinor    
+real(DP) :: spinor    
 integer :: l, &            ! orbital angular momentum
            m, &            ! projection of the total angular momentum+-1/2
            spin            ! 1 or 2 select the component
 
-real(kind=dp) :: j         ! total angular momentum
-real(kind=dp) :: denom     ! denominator
+real(DP) :: j         ! total angular momentum
+real(DP) :: denom     ! denominator
 
 if (spin.ne.1.and.spin.ne.2) call errore('spinor','spin direction unknown',1)
 if (m.lt.-l-1.or.m.gt.l) call errore('spinor','m not allowed',1)

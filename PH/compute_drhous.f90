@@ -28,7 +28,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   !     the dummy variables
   !
 
-  complex(kind=DP) :: dbecsum (nhm * (nhm + 1) / 2, nat, nspin, 3 * nat) &
+  complex(DP) :: dbecsum (nhm * (nhm + 1) / 2, nat, nspin, 3 * nat) &
        , drhous (nrxxs, nspin, 3 * nat), becq (nkb, nbnd, nksq), &
        alpq (nkb, nbnd, 3, nksq)
   !output:the derivative of becsum
@@ -36,7 +36,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   ! input: the becp with psi_{k+q}
   ! input: the alphap with psi_{k+q}
 
-  real(kind=DP) :: wgg (nbnd, nbnd, nksq)
+  real(DP) :: wgg (nbnd, nbnd, nksq)
   ! input: the weights
 
   integer :: ipert, mode, ik, ikq, ikk, is, ig, nu_i, ibnd, ios
@@ -51,10 +51,10 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   ! counter on the bands
   ! integer variable for I/O control
 
-  real(kind=DP) :: weight
+  real(DP) :: weight
   ! the weight of the k point
 
-  complex(kind=DP), allocatable :: evcr (:,:)
+  complex(DP), allocatable :: evcr (:,:)
   ! the wavefunctions in real space
 
   if (.not.okvan) return

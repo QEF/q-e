@@ -29,7 +29,7 @@ subroutine drho_cc (iflag)
 
   implicit none
   integer :: iflag
-  real (kind = dp) :: xq0 (3), scale
+  real (DP) :: xq0 (3), scale
 
   if (.not.nlcc_any) return
   if (iflag.eq. - 1) then

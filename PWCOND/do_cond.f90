@@ -24,7 +24,7 @@ SUBROUTINE do_cond(nodenumber)
   IMPLICIT NONE
 
   CHARACTER(len=3) nodenumber
-  REAL(kind=DP) :: wtot
+  REAL(DP) :: wtot
   INTEGER :: ik, ien, ios 
 
   NAMELIST /inputcond/ outdir, prefixt, prefixl, prefixs, prefixr,     &

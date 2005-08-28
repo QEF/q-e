@@ -28,7 +28,7 @@ subroutine sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !     input variables
   !
   integer :: nrot, s (3, 3, 48), nat, ityp (nat), nr1, nr2, nr3
-  REAL(KIND=DP) :: m_loc(3,nat), tau (3, nat), at (3, 3), bg (3, 3)
+  REAL(DP) :: m_loc(3,nat), tau (3, nat), at (3, 3), bg (3, 3)
   ! nrot : order of the parent group
   ! s    : symmetry operations of parent group
   ! nat  : number of atoms in the unit cell
@@ -52,10 +52,10 @@ subroutine sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !
   integer :: na, kpol, nb, irot, i, j
   ! counters
-  real(kind=DP) , allocatable :: xau (:,:), rau (:,:), mxau(:,:), mrau(:,:)
+  real(DP) , allocatable :: xau (:,:), rau (:,:), mxau(:,:), mrau(:,:)
   ! atomic coordinates in crystal axis
   logical :: fractional_translations
-  real(kind=DP) :: ft (3), ft1, ft2, ft3
+  real(DP) :: ft (3), ft1, ft2, ft3
   !
   external checksym
   !
@@ -223,14 +223,14 @@ subroutine checksym_mag (ir, nat, ityp, xau, rau, ft, sym, irt, mxau, mrau)
   ! input: the type of each atom
   ! output: the rotated of each atom
   ! input: the rotation to be tested
-  real(kind=DP) :: xau (3, nat), rau (3, nat), ft (3)
+  real(DP) :: xau (3, nat), rau (3, nat), ft (3)
   ! input: the initial vectors
   ! input: the rotated vectors
   ! input: the possible fractionary translat
-  REAL(KIND=DP) :: mxau(3,nat), mrau(3,nat)
+  REAL(DP) :: mxau(3,nat), mrau(3,nat)
   ! input: the rotated vectors
   ! input: the possible fractionary translation
-  REAL(KIND=DP), PARAMETER :: mt(3) = (/0,0,0/)
+  REAL(DP), PARAMETER :: mt(3) = (/0,0,0/)
   logical :: sym (48)
   ! output: if true this is a symmetry opera
   !

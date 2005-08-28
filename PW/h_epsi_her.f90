@@ -31,7 +31,6 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
   USE bp
   USE basis
   USE klist
-  USE constants
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
   USE ions_base, ONLY: ityp, tau, nat,ntyp => nsp
   USE io_files, ONLY: iunefield, nwordwfc
@@ -45,13 +44,13 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
   INTEGER :: nbande!numero bande da processare
   INTEGER :: ik! kapa punto
   
-  COMPLEX(kind=DP) :: psi (lda, nbande ), hpsi (lda,nbande)
+  COMPLEX(DP) :: psi (lda, nbande ), hpsi (lda,nbande)
   !
 !  --- Internal definitions ---
 
-   COMPLEX(kind=DP), ALLOCATABLE  :: evct(:,:)!per funzioni d'onda temporanee
-   COMPLEX(kind=DP), ALLOCATABLE  :: evcp(:,:)!per gradiente ik+1
-   COMPLEX(kind=DP), ALLOCATABLE  :: evcm(:,:)!per gradiente ik-1
+   COMPLEX(DP), ALLOCATABLE  :: evct(:,:)!per funzioni d'onda temporanee
+   COMPLEX(DP), ALLOCATABLE  :: evcp(:,:)!per gradiente ik+1
+   COMPLEX(DP), ALLOCATABLE  :: evcm(:,:)!per gradiente ik-1
    INTEGER :: i
    INTEGER :: igk1(npwx)
    INTEGER :: igk0(npwx)

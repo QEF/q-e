@@ -44,7 +44,7 @@ subroutine setlocq (xq, lloc, lmax, numeric, mesh, msh, rab, r, &
   ! input: numeric, the dimensions of the mes
   ! input: mesh points for radial integration
 
-  real(kind=DP) :: xq (3), cc (2), alpc (2), alps (3, 0:3), aps (6, 0:3), &
+  real(DP) :: xq (3), cc (2), alpc (2), alps (3, 0:3), aps (6, 0:3), &
        zp, rab (mesh), r (mesh), vloc_at(mesh), tpiba2, omega, g (3, ngm), &
        vloc (ngm)
   ! input: the q point
@@ -66,12 +66,12 @@ subroutine setlocq (xq, lloc, lmax, numeric, mesh, msh, rab, r, &
   !
   !    and the local variables
   !
-  real(kind=DP), parameter :: eps = 1.d-8
-  real(kind=DP) :: vlcp, vloc0, fac, den1, den2, g2a, g2a1, aux (mesh), &
+  real(DP), parameter :: eps = 1.d-8
+  real(DP) :: vlcp, vloc0, fac, den1, den2, g2a, g2a1, aux (mesh), &
        aux1 (mesh), gx
   ! auxiliary variables
   ! gx = modulus of g vectors
-  real(kind=DP), external :: erf
+  real(DP), external :: erf
   ! the erf function
   integer :: i, ig, l, ipol, ir
   ! counters

@@ -37,14 +37,14 @@ SUBROUTINE orthoatwfc
   ! counter on bands
   INTEGER :: nchi_, lchi_ (nchix)
   LOGICAL :: exst
-  REAL(kind=DP) :: t0, scnds
+  REAL(DP) :: t0, scnds
   ! cpu time spent
   LOGICAL :: orthogonalize_wfc
      
-  COMPLEX(kind=DP) :: temp, t (5)
-  COMPLEX(kind=DP) , ALLOCATABLE :: wfcatom (:,:), work (:,:), overlap (:,:)
-  COMPLEX(kind=DP), ALLOCATABLE :: wfcatom_nc(:,:,:)
-  REAL(kind=DP) , ALLOCATABLE :: e (:)
+  COMPLEX(DP) :: temp, t (5)
+  COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:), work (:,:), overlap (:,:)
+  COMPLEX(DP), ALLOCATABLE :: wfcatom_nc(:,:,:)
+  REAL(DP) , ALLOCATABLE :: e (:)
 
   t0 = scnds ()
   

@@ -67,13 +67,13 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
              nbnd, & ! input: the number of bands
              ik      ! input: the k point
 
-  real(kind=DP) :: &
+  real(DP) :: &
              e(nbnd), & ! input: the actual eigenvalue
              anorm,   & ! output: the norm of the error in the solution
              h_diag(ndmx,nbnd), & ! input: an estimate of ( H - \epsilon )
              ethr       ! input: the required precision
 
-  complex(kind=DP) :: &
+  complex(DP) :: &
              dpsi (ndmx, nbnd), & ! output: the solution of the linear syst
              d0psi (ndmx, nbnd)   ! input: the known term
 
@@ -90,20 +90,20 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   integer , allocatable :: conv (:)
   ! if 1 the root is converged
 
-  complex(kind=DP), allocatable :: g (:,:), t (:,:), h (:,:), hold (:,:)
+  complex(DP), allocatable :: g (:,:), t (:,:), h (:,:), hold (:,:)
   !  the gradient of psi
   !  the preconditioned gradient
   !  the delta gradient
   !  the conjugate gradient
   !  work space
-  complex(kind=DP) ::  dcgamma, dclambda, ZDOTC
+  complex(DP) ::  dcgamma, dclambda, ZDOTC
   !  the ratio between rho
   !  step length
   !  the scalar product
-  real(kind=DP), allocatable :: rho (:), rhoold (:), eu (:), a(:), c(:)
+  real(DP), allocatable :: rho (:), rhoold (:), eu (:), a(:), c(:)
   ! the residue
   ! auxiliary for h_diag
-  real(kind=DP) :: kter_eff
+  real(DP) :: kter_eff
   ! account the number of iterations with b
   ! coefficient of quadratic form
   !

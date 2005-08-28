@@ -27,7 +27,7 @@ subroutine integrate_outward (lam,jam,e,mesh,ndm,dx,r,r2,sqr,f, &
        lls(nbeta),&! for each beta the angular momentum
        ik         ! the last integration point
 
-  real(kind=dp) :: &
+  real(DP) :: &
        e,       &  ! output eigenvalue
        dx,      &  ! linear delta x for radial mesh
        jam,     &  ! j angular momentum
@@ -52,7 +52,7 @@ subroutine integrate_outward (lam,jam,e,mesh,ndm,dx,r,r2,sqr,f, &
 
   integer, allocatable :: iwork(:) ! auxiliary space  
 
-  real(kind=dp) :: &
+  real(DP) :: &
        b0e,     & ! the expansion of the known part
        ddx12,   & ! the deltax enetering the equations
        x4l6,    & ! auxiliary for small r expansion
@@ -60,7 +60,7 @@ subroutine integrate_outward (lam,jam,e,mesh,ndm,dx,r,r2,sqr,f, &
        delta,xc(4),& ! auxiliary for starting values of eta
        int_0_inf_dr  ! the integral function
 
-  real(kind=dp), allocatable :: &
+  real(DP), allocatable :: &
        el(:), &  ! auxiliary for integration
        cm(:,:), &! the linear system
        bm(:), & ! the known part of the linear system

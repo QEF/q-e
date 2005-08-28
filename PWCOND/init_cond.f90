@@ -30,12 +30,12 @@ subroutine init_cond (nregion, flag)
   integer :: nregion, iregion, nrztot, iz, naux, k, mmax, &
              nt, ib, ir, nrz1, info, na        
   integer :: ipol1, ipol2
-  real(kind=DP), parameter :: epsbeta=1.d-4, eps=1.d-8
-  real(kind=DP) :: zlen, dz1, dz2, bd1, bd2, bd3, bd4, bd5, &
+  real(DP), parameter :: epsbeta=1.d-4, eps=1.d-8
+  real(DP) :: zlen, dz1, dz2, bd1, bd2, bd3, bd4, bd5, &
                    bmax, ledge, redge   
-  real(kind=DP), allocatable :: ztot(:), rsph(:,:), dwid(:), &
+  real(DP), allocatable :: ztot(:), rsph(:,:), dwid(:), &
               nrzreg(:)   
-  complex(kind=DP), allocatable :: vppottot(:,:,:,:)
+  complex(DP), allocatable :: vppottot(:,:,:,:)
   character(len=14) :: extension
 
   nrx = nr1s
@@ -272,8 +272,8 @@ subroutine potz_split(vppottot,ztot,vppot,z,nrztot,nrz,nrxy,npol,iz0)
   use kinds, only : DP 
   implicit none
   integer :: nrztot, nrz, nrxy, npol, iz0, iz, ixy, ipol1, ipol2
-  real(kind=DP) :: ztot(nrztot+1), z(nrz+1), zinit
-  complex(kind=DP) ::   vppottot (nrztot, nrxy, npol, npol), &
+  real(DP) :: ztot(nrztot+1), z(nrz+1), zinit
+  complex(DP) ::   vppottot (nrztot, nrxy, npol, npol), &
                         vppot (nrz, nrxy, npol, npol) 
   do iz = 1, nrz
    do ixy = 1, nrxy

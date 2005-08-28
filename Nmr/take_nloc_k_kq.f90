@@ -28,18 +28,18 @@ subroutine take_nloc_k_kq(kpoint, kpoint_q, phi, jpol, duk)
   implicit none
 
   integer, intent(in) :: kpoint,kpoint_q
-  real(kind=DP) :: ej(3)
-  complex(kind=DP), intent(in) :: phi (npwx,nbnd)
-  complex(kind=DP), intent(out) :: duk (npwx,nbnd)
+  real(DP) :: ej(3)
+  complex(DP), intent(in) :: phi (npwx,nbnd)
+  complex(DP), intent(out) :: duk (npwx,nbnd)
 
   integer :: i, jpol,  nt, na, ikb, jkb, ibnd, jbnd, ig, ijkb0, ih, jh
 
-  real(kind=DP), allocatable  :: gk (:,:), gk_q (:,:), g2kin(:), g2kin_q(:)
+  real(DP), allocatable  :: gk (:,:), gk_q (:,:), g2kin(:), g2kin_q(:)
 
-  complex(kind=DP), allocatable :: ps(:,:), work (:,:), work_q (:,:)
-  complex(kind=DP), allocatable :: becp2(:,:), dvkb(:,:), dvkb1(:,:)
+  complex(DP), allocatable :: ps(:,:), work (:,:), work_q (:,:)
+  complex(DP), allocatable :: becp2(:,:), dvkb(:,:), dvkb1(:,:)
 
-  complex(kind=DP), external :: ZDOTC
+  complex(DP), external :: ZDOTC
 
 
   allocate (work(npwx,nkb))    

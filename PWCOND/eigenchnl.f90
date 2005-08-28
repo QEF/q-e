@@ -17,12 +17,12 @@ implicit none
   integer ::  i, j, j1, info
   integer ::  nchanl, &  ! number of channels in the left tip
               nchanr     !     ------------         right tip  
-  real(kind=DP) :: eigen(nchanl)       ! eigenvalues 
-  complex(kind=DP) ::   &
+  real(DP) :: eigen(nchanl)       ! eigenvalues 
+  complex(DP) ::   &
               tchan(nchanr, nchanl), & ! T matrix
               vec(nchanl, nchanl),   & ! eigenvectors
               x1, x2
-  complex(kind=DP), allocatable :: amat(:,:)
+  complex(DP), allocatable :: amat(:,:)
 
   allocate( amat(  nchanl, nchanl ) )
 

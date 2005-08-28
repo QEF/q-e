@@ -64,26 +64,26 @@
 ! ...   declare subroutine arguments
 
       LOGICAL :: ttprint, tortho, tsde
-      COMPLEX(dbl) :: cm(:,:,:,:), c0(:,:,:,:), cp(:,:,:,:)
+      COMPLEX(DP) :: cm(:,:,:,:), c0(:,:,:,:), cp(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      COMPLEX(dbl)  ::  eigr(:,:)
-      REAL(dbl), INTENT(IN)  ::  fi(:,:,:)
-      REAL(dbl), INTENT(IN)  ::  bec(:,:)
+      COMPLEX(DP)  ::  eigr(:,:)
+      REAL(DP), INTENT(IN)  ::  fi(:,:,:)
+      REAL(DP), INTENT(IN)  ::  bec(:,:)
       TYPE (boxdimensions), INTENT(IN)  ::  ht
-      REAL (dbl) ::  vpot(:,:,:,:)
-      REAL(dbl) :: ei(:,:,:)
-      REAL(dbl) :: timerd, timeorto
-      REAL(dbl) :: ekinc(:)
-      REAL(dbl), INTENT(IN) :: vnosee
+      REAL (DP) ::  vpot(:,:,:,:)
+      REAL(DP) :: ei(:,:,:)
+      REAL(DP) :: timerd, timeorto
+      REAL(DP) :: ekinc(:)
+      REAL(DP), INTENT(IN) :: vnosee
 
 ! ...   declare other variables
-      REAL(dbl) :: s1, s2, s3, s4
+      REAL(DP) :: s1, s2, s3, s4
       INTEGER :: ik, nx, nb_lx, ierr, nkl, is
 
-      COMPLEX(dbl), ALLOCATABLE :: cgam(:,:,:)
-      REAL(dbl),    ALLOCATABLE :: gam(:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: cgam(:,:,:)
+      REAL(DP),    ALLOCATABLE :: gam(:,:,:)
 
-      REAL(dbl), EXTERNAL :: cclock
+      REAL(DP), EXTERNAL :: cclock
 
 ! ...   end of declarations
 !  ----------------------------------------------
@@ -185,24 +185,24 @@
 
 ! ...   declare subroutine arguments
 
-      COMPLEX(dbl) :: cm(:,:,:,:), c0(:,:,:,:), cp(:,:,:,:)
-      COMPLEX(dbl) :: cgam(:,:,:)
-      REAL(dbl)    :: gam(:,:,:)
+      COMPLEX(DP) :: cm(:,:,:,:), c0(:,:,:,:), cp(:,:,:,:)
+      COMPLEX(DP) :: cgam(:,:,:)
+      REAL(DP)    :: gam(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      COMPLEX(dbl) :: eigr(:,:)
-      REAL(dbl), INTENT(IN)  ::  fi(:,:,:)
-      REAL (dbl) ::  vpot(:,:,:,:)
-      REAL (dbl), INTENT(IN) ::  bec(:,:)
-      REAL(dbl), INTENT(IN) :: vnosee
+      COMPLEX(DP) :: eigr(:,:)
+      REAL(DP), INTENT(IN)  ::  fi(:,:,:)
+      REAL (DP) ::  vpot(:,:,:,:)
+      REAL (DP), INTENT(IN) ::  bec(:,:)
+      REAL(DP), INTENT(IN) :: vnosee
       LOGICAL, OPTIONAL, INTENT(IN) :: lambda, fromscra, diis, restart
 
 ! ...   declare other variables
-      REAL(dbl) ::  svar1, svar2, tmpfac, annee
+      REAL(DP) ::  svar1, svar2, tmpfac, annee
       INTEGER :: i, ig, nx, ngw, nb, ierr, is
       INTEGER :: iflag
 
-      COMPLEX(dbl), ALLOCATABLE :: c2(:), c3(:)
-      REAL(dbl),    ALLOCATABLE :: svar3(:)
+      COMPLEX(DP), ALLOCATABLE :: c2(:), c3(:)
+      REAL(DP),    ALLOCATABLE :: svar3(:)
       LOGICAL :: tlam, ttsde
 
 
@@ -375,38 +375,38 @@
 ! ...   declare subroutine arguments
 
       LOGICAL :: ttprint, tortho, tsde
-      COMPLEX(dbl) :: cm(:,:,:,:), c0(:,:,:,:), cp(:,:,:,:)
+      COMPLEX(DP) :: cm(:,:,:,:), c0(:,:,:,:), cp(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      COMPLEX(dbl)  ::  eigr(:,:)
-      REAL(dbl), INTENT(INOUT) ::  fi(:,:,:)
+      COMPLEX(DP)  ::  eigr(:,:)
+      REAL(DP), INTENT(INOUT) ::  fi(:,:,:)
       TYPE (boxdimensions), INTENT(IN)  ::  ht
-      REAL (dbl) ::  vpot(:,:,:,:)
-      REAL(dbl) :: ei(:,:,:)
-      REAL(dbl), INTENT(IN) :: bec(:,:)
-      REAL(dbl) :: timerd, timeorto
-      REAL(dbl) :: ekinc(:)
-      REAL(dbl), INTENT(IN) :: vnosee
+      REAL (DP) ::  vpot(:,:,:,:)
+      REAL(DP) :: ei(:,:,:)
+      REAL(DP), INTENT(IN) :: bec(:,:)
+      REAL(DP) :: timerd, timeorto
+      REAL(DP) :: ekinc(:)
+      REAL(DP), INTENT(IN) :: vnosee
 
 ! ...   declare other variables
-      REAL(dbl) :: s3, s4
-      REAL(dbl) ::  svar1, svar2, tmpfac, annee
+      REAL(DP) :: s3, s4
+      REAL(DP) ::  svar1, svar2, tmpfac, annee
       INTEGER :: i, ik,ig, nx, ngw, nb, j, nb_g, nb_lx, ierr, nkl, ibl
       INTEGER :: ispin_wfc
-      REAL(dbl), ALLOCATABLE :: occup(:,:), occdown(:,:), occsum(:)
-      REAL(dbl) :: intermed, intermed2
-      COMPLEX(dbl) ::  intermed3, intermed4
+      REAL(DP), ALLOCATABLE :: occup(:,:), occdown(:,:), occsum(:)
+      REAL(DP) :: intermed, intermed2
+      COMPLEX(DP) ::  intermed3, intermed4
 
 
-      COMPLEX(dbl), ALLOCATABLE :: c2(:)
-      COMPLEX(dbl), ALLOCATABLE :: c3(:)
-      COMPLEX(dbl), ALLOCATABLE :: c4(:)
-      COMPLEX(dbl), ALLOCATABLE :: c5(:)
-      COMPLEX(dbl), ALLOCATABLE :: cgam(:,:)
-      REAL(dbl),    ALLOCATABLE :: svar3(:)
-      REAL(dbl),    ALLOCATABLE :: gam(:,:)
-      REAL(dbl),    ALLOCATABLE :: ei_t(:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: c2(:)
+      COMPLEX(DP), ALLOCATABLE :: c3(:)
+      COMPLEX(DP), ALLOCATABLE :: c4(:)
+      COMPLEX(DP), ALLOCATABLE :: c5(:)
+      COMPLEX(DP), ALLOCATABLE :: cgam(:,:)
+      REAL(DP),    ALLOCATABLE :: svar3(:)
+      REAL(DP),    ALLOCATABLE :: gam(:,:)
+      REAL(DP),    ALLOCATABLE :: ei_t(:,:,:)
 
-      REAL(dbl), EXTERNAL :: cclock
+      REAL(DP), EXTERNAL :: cclock
 
 ! ...   end of declarations
 !  ----------------------------------------------
@@ -722,18 +722,18 @@
      !
      IMPLICIT NONE
      integer, intent(in) :: nfi
-     real(kind=8) :: fccc, ccc
-     real(kind=8) :: ema0bg(:), dt2bye
-     real(kind=8) :: rhos(:,:)
-     real(kind=8) :: bec(:,:)
-     complex(kind=8) :: c0(:,:), cm(:,:)
+     real(8) :: fccc, ccc
+     real(8) :: ema0bg(:), dt2bye
+     real(8) :: rhos(:,:)
+     real(8) :: bec(:,:)
+     complex(8) :: c0(:,:), cm(:,:)
      logical, optional, intent(in) :: fromscra
      logical, optional, intent(in) :: restart
      !
-     real(kind=8) ::  verl1, verl2, verl3
-     real(kind=8), allocatable:: emadt2(:)
-     real(kind=8), allocatable:: emaver(:)
-     complex(kind=8), allocatable:: c2(:), c3(:)
+     real(8) ::  verl1, verl2, verl3
+     real(8), allocatable:: emadt2(:)
+     real(8), allocatable:: emaver(:)
+     complex(8), allocatable:: c2(:), c3(:)
      integer :: i
      integer :: iflag
      logical :: ttsde

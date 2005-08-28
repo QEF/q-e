@@ -28,13 +28,13 @@ subroutine psymd0rho (nper, irr, dvtosym)
   ! the number of perturbations
   ! the representation under consideration
 
-  complex (kind = dp) :: dvtosym (nrxx, nper)
+  complex (DP) :: dvtosym (nrxx, nper)
   ! the potential to symmetrize
 
   ! local variables
 
   integer :: i, iper, npp0
-  complex (kind = dp),pointer  :: ddvtosym (:,:)
+  complex (DP),pointer  :: ddvtosym (:,:)
   ! the potential to symmetrize
 
 !  if (nsymq.eq.1.and. (.not.minus_q) ) return

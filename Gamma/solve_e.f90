@@ -20,9 +20,9 @@ subroutine solve_e
   implicit none
   !
   integer :: ipol, nrec, i, ibnd, jbnd, info, iter, kpoint
-  real(kind=DP), allocatable ::diag(:)
-  complex(kind=DP), allocatable :: gr(:,:), h(:,:), work(:,:)
-  real(kind=DP), allocatable :: overlap(:,:)
+  real(DP), allocatable ::diag(:)
+  complex(DP), allocatable :: gr(:,:), h(:,:), work(:,:)
+  real(DP), allocatable :: overlap(:,:)
   logical :: orthonormal, precondition,startwith0,here
   character(len=7) :: fildwf, filbar
   external A_h

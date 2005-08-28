@@ -39,21 +39,21 @@
 
       TYPE (atoms_type), intent(in) :: atoms
       type(boxdimensions), intent(in) :: box
-      REAL(dbl), intent(out) :: evdw
-      REAL(dbl), intent(out) :: fion(:,:)
+      REAL(DP), intent(out) :: evdw
+      REAL(DP), intent(out) :: fion(:,:)
 
-      REAL(dbl) alp,rcc,rcut,cutoff
+      REAL(DP) alp,rcc,rcut,cutoff
       parameter (alp=2.d0,rcc=6.5d0,rcut=3.0d0,cutoff=14.0d0) 
 
-      REAL(dbl) csp11, csp12, csp22
+      REAL(DP) csp11, csp12, csp22
       parameter (csp11=1.0191452D0, csp12=0.2239317D0, csp22=0.04364401D0)
 
-      REAL(dbl) au
+      REAL(DP) au
       parameter (au=0.529177D0 )
 
-      REAL(dbl) sij(3),rij(3),sij_image(3) 
-      REAL(dbl) csp1, dist, ff,dist6,fun,fact,cont
-      REAL(dbl) force( 3, atoms%nat )
+      REAL(DP) sij(3),rij(3),sij_image(3) 
+      REAL(DP) csp1, dist, ff,dist6,fun,fact,cont
+      REAL(DP) force( 3, atoms%nat )
       integer i,j,is,js,ia,ja,ix,iy,iz,iesr
       logical:: tzero,tshift
 
@@ -163,9 +163,9 @@
         function cutofun_vdw(xin) 
         implicit none 
 
-        REAL(dbl) cutofun_vdw
-        REAL(dbl), intent(in) :: xin
-        REAL(dbl) x
+        REAL(DP) cutofun_vdw
+        REAL(DP), intent(in) :: xin
+        REAL(DP) x
 
         if( xin .gt. 30.d0 ) then
           x = 30.d0
@@ -181,9 +181,9 @@
         function dcutofun_vdw(xin) 
         implicit none 
 
-        REAL(dbl) dcutofun_vdw
-        REAL(dbl), intent(in) :: xin
-        REAL(dbl) x
+        REAL(DP) dcutofun_vdw
+        REAL(DP), intent(in) :: xin
+        REAL(DP) x
 
         if( xin .gt. 30.d0 ) then
           x = 30.d0
@@ -202,8 +202,8 @@
       subroutine baricentro(bar,vectors,nvec)
       implicit none
       integer, intent(in) :: nvec
-      REAL(dbl), intent(out) :: bar(3)
-      REAL(dbl), intent(in) :: vectors(3,nvec)
+      REAL(DP), intent(out) :: bar(3)
+      REAL(DP), intent(in) :: vectors(3,nvec)
       integer i,j
       do i = 1,3
         bar(i) = 0.0d0
@@ -215,9 +215,9 @@
       return
       end subroutine baricentro
 
-      REAL(dbl) function distanza(u,v)
+      REAL(DP) function distanza(u,v)
       implicit none
-      REAL(dbl) u(3),v(3)
+      REAL(DP) u(3),v(3)
       distanza = (u(1)-v(1))**2 + (u(2)-v(2))**2 + (u(3)-v(3))**2
       distanza = sqrt(distanza)
       return
@@ -225,29 +225,29 @@
 
 
 
-!      REAL(dbl) FUNCTION VDW_FORCES(C6,IESR,FION,STAU0,NA,NAX,NSP)
+!      REAL(DP) FUNCTION VDW_FORCES(C6,IESR,FION,STAU0,NA,NAX,NSP)
 !
 !      USE cell_module, only: R_TO_S, S_TO_R
 !
 !      implicit none
 !
-!      REAL(dbl) c6
+!      REAL(DP) c6
 !      integer iesr
-!      REAL(dbl) fion(3,nax,nsp)
-!      REAL(dbl) stau0(3,nax,nsp)
+!      REAL(DP) fion(3,nax,nsp)
+!      REAL(DP) stau0(3,nax,nsp)
 !      integer na(nsp)
 !      integer nax,nsp
 !
-!      REAL(dbl)  EVDW
-!      REAL(dbl)  distanza
+!      REAL(DP)  EVDW
+!      REAL(DP)  distanza
 !      integer i,j,k,ix,iy,iz,infm,m,l,ishft,im
-!      REAL(dbl) XLM, YLM, ZLM, ZERO
-!      REAL(dbl) SXLM(3),RXLM(3),ERRE2,RLM,ADDEVDW,ADDPRE
-!      REAL(dbl) FXX, REPAND
-!      REAL(dbl) molbar(3,NAX)
-!      REAL(dbl) molecola(3,NAX),tau(3),rdis
-!      REAL(dbl) fmol(3,NAX)
-!      REAL(dbl) bond_len_au
+!      REAL(DP) XLM, YLM, ZLM, ZERO
+!      REAL(DP) SXLM(3),RXLM(3),ERRE2,RLM,ADDEVDW,ADDPRE
+!      REAL(DP) FXX, REPAND
+!      REAL(DP) molbar(3,NAX)
+!      REAL(DP) molecola(3,NAX),tau(3),rdis
+!      REAL(DP) fmol(3,NAX)
+!      REAL(DP) bond_len_au
 !      integer iatmol(NAX,NSP),imol,nmol,natmol
 !      logical TZERO
 !
@@ -345,21 +345,21 @@
 !
 !      implicit none
 !
-!      REAL(dbl) c6
+!      REAL(DP) c6
 !      integer iesr
-!      REAL(dbl) stau0(3,nax,nsp)
-!      REAL(dbl) dvdw(6)
+!      REAL(DP) stau0(3,nax,nsp)
+!      REAL(DP) dvdw(6)
 !      integer na(nsp)
 !      integer nax,nsp
 !
-!      REAL(dbl)  distanza
+!      REAL(DP)  distanza
 !      integer i,j,k,ix,iy,iz,infm,m,l,ishft,im
-!      REAL(dbl) XLM, YLM, ZLM, ZERO
-!      REAL(dbl) SXLM(3),RXLM(3),ERRE2,RLM,ADDEVDW,ADDPRE
-!      REAL(dbl) FXX, REPAND
-!      REAL(dbl) molbar(3,NAX)
-!      REAL(dbl) molecola(3,NAX),tau(3),rdis
-!      REAL(dbl) bond_len_au
+!      REAL(DP) XLM, YLM, ZLM, ZERO
+!      REAL(DP) SXLM(3),RXLM(3),ERRE2,RLM,ADDEVDW,ADDPRE
+!      REAL(DP) FXX, REPAND
+!      REAL(DP) molbar(3,NAX)
+!      REAL(DP) molecola(3,NAX),tau(3),rdis
+!      REAL(DP) bond_len_au
 !      integer iatmol(NAX,NSP),imol,nmol,natmol
 !      integer alpha(6),beta(6)
 !      logical TZERO

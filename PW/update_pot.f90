@@ -173,11 +173,11 @@ SUBROUTINE extrapolate_charge( rho_extr )
   !
   INTEGER, INTENT(IN) :: rho_extr
   !
-  REAL(KIND=DP), ALLOCATABLE :: work(:), work1(:)
+  REAL(DP), ALLOCATABLE :: work(:), work1(:)
     ! work is the difference between charge density and atomic charge 
     !   at time t
     ! work1 is the same thing at time t-dt
-  REAL(KIND=DP) :: charge
+  REAL(DP) :: charge
   !
   INTEGER :: ir, is
   !
@@ -373,16 +373,16 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
     ! number of zero 'eigenvalues' of the s_m matrix
     ! used by singular value decomposition (ZGESVD)
     ! flag returned by ZGESVD
-  COMPLEX(KIND=DP), ALLOCATABLE :: s_m(:,:), sp_m(:,:), &
+  COMPLEX(DP), ALLOCATABLE :: s_m(:,:), sp_m(:,:), &
                                    u_m(:,:), w_m(:,:), work(:)
     ! the overlap matrix s (eq. 3.24)
     ! its dagger
     ! left unitary matrix in the SVD of sp_m
     ! right unitary matrix in the SVD of sp_m
     ! workspace for ZGESVD
-  COMPLEX(KIND=DP), ALLOCATABLE :: evcold(:,:)
+  COMPLEX(DP), ALLOCATABLE :: evcold(:,:)
     ! wavefunctions at previous iteration
-  REAL(KIND=DP), ALLOCATABLE :: ew(:), rwork(:)
+  REAL(DP), ALLOCATABLE :: ew(:), rwork(:)
     ! the eigenvalues of s_m
     ! workspace for ZGESVD
   LOGICAL :: exst

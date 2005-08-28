@@ -27,24 +27,24 @@ subroutine localdos (ldos, ldoss, dos_ef)
   USE io_files, ONLY: iunigk
   implicit none
 
-  complex(kind=DP) :: ldos (nrxx, nspin), ldoss (nrxxs, nspin)
+  complex(DP) :: ldos (nrxx, nspin), ldoss (nrxxs, nspin)
   ! output: the local density of states at Ef
   ! output: the local density of states at Ef without augmentation
-  real(kind=DP) :: dos_ef
+  real(DP) :: dos_ef
   ! output: the density of states at Ef
   !
   !    local variables for Ultrasoft PP's
   !
   integer :: ikb, jkb, ijkb0, ih, jh, na, ijh, nt
   ! counters
-  real(kind=DP), allocatable :: becsum1 (:,:,:)
-  complex(kind=DP), allocatable :: becp(:,:)
+  real(DP), allocatable :: becsum1 (:,:,:)
+  complex(DP), allocatable :: becp(:,:)
   !
   ! local variables
   !
-  real(kind=DP) :: weight, w1, wdelta
+  real(DP) :: weight, w1, wdelta
   ! weights
-  real(kind=DP), external :: w0gauss
+  real(DP), external :: w0gauss
   !
   integer :: ik, is, ig, ibnd, j
   ! counters

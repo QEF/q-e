@@ -31,9 +31,9 @@ subroutine add_zstar_ue (imode0, npe)
   ! counter on modes
   ! counter on k points
 
-  real(kind=DP) :: weight
+  real(DP) :: weight
 
-  complex(kind=DP) :: ZDOTC
+  complex(DP) :: ZDOTC
 
   call start_clock('add_zstar_ue')
   if (nksq.gt.1) rewind (iunigk)

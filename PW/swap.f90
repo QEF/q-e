@@ -17,7 +17,7 @@ subroutine swap (n, x, x1)
   !
   integer :: n
   ! input: dimension of the vector
-  real(kind=DP) :: x (n), x1 (n)
+  real(DP) :: x (n), x1 (n)
   ! I/O: the vectors
   !
   !   local variables
@@ -25,7 +25,7 @@ subroutine swap (n, x, x1)
   integer :: i
   ! counter on the elements
 
-  real(kind=DP) :: xswap
+  real(DP) :: xswap
   ! work
   do i = 1, n
      xswap = x (i)

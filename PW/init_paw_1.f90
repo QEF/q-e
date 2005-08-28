@@ -34,20 +34,20 @@ subroutine init_paw_1
   integer :: nt, ih, jh, nb, mb, nmb, l, m, ir, iq, is, startq, &
        lastq, ilast,  na, j, n1, n2, ndm, nrs, nrc
   ! various counters
-  real(kind=DP), allocatable :: aux (:), aux1 (:), besr (:), qtot (:,:,:)
+  real(DP), allocatable :: aux (:), aux1 (:), besr (:), qtot (:,:,:)
   ! various work space
-  real(kind=DP) :: prefr, pref, q, qi, norm
+  real(DP) :: prefr, pref, q, qi, norm
   ! the prefactor of the q functions
   ! the prefactor of the beta functions
   ! the modulus of g for each shell
   ! q-point grid for interpolation
-  real(kind=DP), allocatable :: ylmk0 (:), s(:,:), sinv(:,:)
+  real(DP), allocatable :: ylmk0 (:), s(:,:), sinv(:,:)
   ! the spherical harmonics
-  real(kind=DP) ::  vll (0:lmaxx),vqint
+  real(DP) ::  vll (0:lmaxx),vqint
   ! the denominator in KB case
   ! interpolated value
 
-  real(kind=DP) rc,rs,pow
+  real(DP) rc,rs,pow
   call start_clock ('init_paw_1')
   !
   !    Initialization of the variables
@@ -231,13 +231,13 @@ subroutine step_f(f2,f,r,nrs,nrc,pow,mesh)
 
   implicit none
   integer :: mesh
-  real(kind=dp), Intent(out):: f2(mesh)
-  real(kind=dp), Intent(in) :: f(mesh), r(mesh)
-  real(kind=dp), Intent(in) :: pow
+  real(DP), Intent(out):: f2(mesh)
+  real(DP), Intent(in) :: f(mesh), r(mesh)
+  real(DP), Intent(in) :: pow
   integer :: nrs, nrc 
 
   Integer :: n,i
-  real(kind=dp) :: rcp, rsp
+  real(DP) :: rcp, rsp
  
   rcp = r(nrc)
   rsp = r(nrs)

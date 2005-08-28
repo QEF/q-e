@@ -35,15 +35,15 @@ SUBROUTINE scala_cdiag (n, a, ilda, w, z, ildz)
   !
   INTEGER :: n, ilda, ildz
     ! input: size of the matrix to diagonalize
-  REAL (kind=DP) :: w (n)
+  REAL (DP) :: w (n)
    ! output: eigenvalues
-  COMPLEX (kind=DP) :: a (ilda, n), z (ildz, n)
+  COMPLEX (DP) :: a (ilda, n), z (ildz, n)
    ! input: matrix to diagonalize
    ! output: eigenvectors
   !
 #if defined (__T3E)
   !  
-  REAL (kind=DP) :: zero, mone
+  REAL (DP) :: zero, mone
     ! zero
     ! minus one
 
@@ -78,19 +78,19 @@ SUBROUTINE scala_cdiag (n, a, ilda, w, z, ildz)
   ! clustering of eigenvalues
   ! on output tells which eigenvalues not conv
 
-  REAL (kind=DP) :: gap (maxprocs), abstol
+  REAL (DP) :: gap (maxprocs), abstol
   ! gap between eigenvalues
   ! absolute tolerance (see man pcheevx)
   ! local matrices of this proc
-  COMPLEX (KIND=DP), ALLOCATABLE::at (:, :)
+  COMPLEX (DP), ALLOCATABLE::at (:, :)
 
-  COMPLEX (KIND=DP), ALLOCATABLE::zt (:, :)
+  COMPLEX (DP), ALLOCATABLE::zt (:, :)
   ! some variables needed to determine the workspace's size
 
   INTEGER :: nn, np, np0, npo, nq0, mq0
-  COMPLEX (KIND=DP), ALLOCATABLE::work (:)
+  COMPLEX (DP), ALLOCATABLE::work (:)
   ! work space
-  REAL (kind=DP), ALLOCATABLE::rwork (:)
+  REAL (DP), ALLOCATABLE::rwork (:)
   INTEGER, ALLOCATABLE::iwork (:)
   INTEGER :: pslamch, iceil, numroc
 

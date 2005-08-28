@@ -82,35 +82,35 @@
 
 #elif defined __AIX
 
-        REAL (dbl) :: fw_table( ltabl, 3, ndims )
-        REAL (dbl) :: bw_table( ltabl, 3, ndims )
-        REAL (dbl) :: work( lwork ) 
+        REAL (DP) :: fw_table( ltabl, 3, ndims )
+        REAL (DP) :: bw_table( ltabl, 3, ndims )
+        REAL (DP) :: work( lwork ) 
 
         !   Array containing FFT factors + workspace
 
 #elif defined __COMPLIB 
 
-        REAL (dbl) :: work(lwork) 
-        REAL (dbl) :: tablez(ltabl,ndims)
-        REAL (dbl) :: tablex(ltabl,ndims)
-        REAL (dbl) :: tabley(ltabl,ndims)
+        REAL (DP) :: work(lwork) 
+        REAL (DP) :: tablez(ltabl,ndims)
+        REAL (DP) :: tablex(ltabl,ndims)
+        REAL (DP) :: tabley(ltabl,ndims)
 
         !   Array containing FFT factors + workspace
 
 #elif defined __SCSL
 
-        COMPLEX (dbl) :: work(lwork) 
-        REAL    (dbl) :: tablez(ltabl,ndims)
-        REAL    (dbl) :: tablex(ltabl,ndims)
-        REAL    (dbl) :: tabley(ltabl,ndims)
-        REAL (dbl)    :: DUMMY
+        COMPLEX (DP) :: work(lwork) 
+        REAL    (DP) :: tablez(ltabl,ndims)
+        REAL    (DP) :: tablex(ltabl,ndims)
+        REAL    (DP) :: tabley(ltabl,ndims)
+        REAL (DP)    :: DUMMY
         INTEGER       :: isys(0:1)
 
         !   Array containing FFT factors + workspace
 
 #endif
 
-        REAL (dbl) :: scale
+        REAL (DP) :: scale
 
 
 
@@ -139,8 +139,8 @@
 
      INTEGER, INTENT(IN) :: sgn
      INTEGER, INTENT(IN) :: nsl, nz, ldc
-     COMPLEX (dbl) :: c(:), cout(:) 
-     REAL(dbl)  :: tscale
+     COMPLEX (DP) :: c(:), cout(:) 
+     REAL(DP)  :: tscale
      INTEGER    :: i, j, err, idir, ip, isign
      INTEGER, SAVE :: zdims( 3, ndims ) = -1
      INTEGER, SAVE :: icurrent = 1
@@ -318,15 +318,15 @@
 
      INTEGER, INTENT(IN) :: sgn, ldx, ldy, nx, ny, nzl
      INTEGER, OPTIONAL, INTENT(IN) :: pl2ix(:)
-     COMPLEX (dbl) :: r( : )
+     COMPLEX (DP) :: r( : )
      INTEGER :: i, k, j, err, idir, ip, isign, kk
-     REAL(dbl) :: tscale
+     REAL(DP) :: tscale
      INTEGER, SAVE :: icurrent = 1
      INTEGER, SAVE :: dims( 4, ndims) = -1
      LOGICAL :: dofft( nfftx )
      INTEGER, PARAMETER  :: stdout = 6
 #if defined __SCSL
-     COMPLEX(dbl)           :: XY(nx+nx*ny)
+     COMPLEX(DP)           :: XY(nx+nx*ny)
 #endif
 
 #if defined __HPM
@@ -616,9 +616,9 @@
      IMPLICIT NONE
 
      INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x, sgn 
-     COMPLEX (dbl) :: f(:)
+     COMPLEX (DP) :: f(:)
      INTEGER :: i, k, j, err, idir, ip, isign
-     REAL(dbl) :: tscale
+     REAL(DP) :: tscale
      INTEGER, SAVE :: icurrent = 1
      INTEGER, SAVE :: dims(3,ndims) = -1
 
@@ -631,7 +631,7 @@
 
 #elif defined __COMPLIB || defined __SCSL
 
-      real(kind=8), save :: table( 3 * ltabl,  ndims )
+      real(8), save :: table( 3 * ltabl,  ndims )
 
 #endif
 
@@ -808,7 +808,7 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
   !   physical dimensions of the f array
   !   sign of the transformation
 
-  complex(dbl) :: f ( nrx1 * nrx2 * nrx3 )
+  complex(DP) :: f ( nrx1 * nrx2 * nrx3 )
   integer :: do_fft_x(:), do_fft_y(:)
   !
   ! the fft array
@@ -819,7 +819,7 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
   !
   integer :: m, incx1, incx2
   INTEGER :: i, k, j, err, idir, ip, isign, ii, jj
-  REAL(dbl) :: tscale
+  REAL(DP) :: tscale
   INTEGER, SAVE :: icurrent = 1
   INTEGER, SAVE :: dims(3,ndims) = -1
 
@@ -1052,10 +1052,10 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
 !
       implicit none
       integer n1,n2,n3,n1x,n2x,n3x,imin3,imax3,sgn
-      complex(kind=8) :: f(:)
+      complex(8) :: f(:)
 
       integer isign, naux, ibid, nplanes, nstart, k
-      real(dbl) :: tscale
+      real(DP) :: tscale
 
       integer :: ip, i
       integer, save :: icurrent = 1
@@ -1068,22 +1068,22 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, sign, do_fft_x, do_fft_y
 
 #elif defined __AIX
 
-      real(kind=8), save :: aux3( ltabl, ndims )
-      real(kind=8), save :: aux2( ltabl, ndims )
-      real(kind=8), save :: aux1( ltabl, ndims )
+      real(8), save :: aux3( ltabl, ndims )
+      real(8), save :: aux2( ltabl, ndims )
+      real(8), save :: aux1( ltabl, ndims )
 
 #elif defined __COMPLIB
 
-      real(kind=8), save :: bw_coeffz( ltabl,  ndims )
-      real(kind=8), save :: bw_coeffy( ltabl,  ndims )
-      real(kind=8), save :: bw_coeffx( ltabl,  ndims )
+      real(8), save :: bw_coeffz( ltabl,  ndims )
+      real(8), save :: bw_coeffy( ltabl,  ndims )
+      real(8), save :: bw_coeffx( ltabl,  ndims )
 
 #elif defined __SCSL
 
-      real(kind=8), save :: bw_coeffz( ltabl,  ndims )
-      real(kind=8), save :: bw_coeffy( ltabl,  ndims )
-      real(kind=8), save :: bw_coeffx( ltabl,  ndims )
-      complex(kind=8)    :: fy(n2 + n1x * n2), fz(n3 + n1x * n2x * n3)
+      real(8), save :: bw_coeffz( ltabl,  ndims )
+      real(8), save :: bw_coeffy( ltabl,  ndims )
+      real(8), save :: bw_coeffx( ltabl,  ndims )
+      complex(8)    :: fy(n2 + n1x * n2), fz(n3 + n1x * n2x * n3)
       INTEGER            :: j
 
 #endif

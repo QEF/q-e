@@ -22,10 +22,10 @@ subroutine cg_psi (lda, n, m, psi, h_diag)
   ! input: the real dimension of the vector
   ! input: the number of vectors
 
-  complex(kind=DP) :: psi (lda, m)
+  complex(DP) :: psi (lda, m)
   ! inp/out: the vector to be preconditioned
 
-  real(kind=DP) :: h_diag (lda, m)
+  real(DP) :: h_diag (lda, m)
   ! input: the preconditioning vector
 
   integer :: k, i

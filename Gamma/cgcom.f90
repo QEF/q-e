@@ -52,9 +52,9 @@ MODULE dielectric
   !
   SAVE
   !
-  REAL(kind=DP) :: &
+  REAL(DP) :: &
       epsilon0(3,3)  
-  REAL(kind=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
       zstar(:,:,:)
   !    
 END MODULE dielectric
@@ -67,7 +67,7 @@ MODULE modes1
   !
   INTEGER :: &
       nmodes
-  REAL(kind=DP), ALLOCATABLE :: & 
+  REAL(DP), ALLOCATABLE :: & 
       dyn(:,:),   &!
       u(:,:)       !
   !
@@ -82,7 +82,7 @@ MODULE cgconv
   INTEGER :: &
       niter_ph
   !    
-  REAL(KIND = DP) :: tr2_ph
+  REAL(DP) :: tr2_ph
   !
 END MODULE cgconv
 !
@@ -92,10 +92,10 @@ MODULE AA
   !
   SAVE
   !
-  COMPLEX(KIND=DP), ALLOCATABLE, TARGET :: &
+  COMPLEX(DP), ALLOCATABLE, TARGET :: &
        aux2(:),   &!
        aux3(:)     !
-  REAL(KIND=DP), ALLOCATABLE, TARGET :: &
+  REAL(DP), ALLOCATABLE, TARGET :: &
        auxr(:)     !
   !     
 END MODULE AA
@@ -106,7 +106,7 @@ MODULE dmu
   !
   SAVE
   !
-  REAL(KIND=DP), ALLOCATABLE:: &
+  REAL(DP), ALLOCATABLE:: &
        dmuxc(:),        &!  d V_xc / d rho
        grho(:,:,:),     &!  gradient of the unperturbed density
        dvxc_rr(:,:,:),  &!
@@ -122,7 +122,7 @@ MODULE phon
   !
   SAVE
   !
-  COMPLEX(KIND=DP), ALLOCATABLE:: &
+  COMPLEX(DP), ALLOCATABLE:: &
        dvpsi(:,:),      &!
        dpsi(:,:)         !
   !     
@@ -154,7 +154,7 @@ MODULE diffs
        nderiv,     &!
        first,      &!
        last         !
-  REAL(kind=DP) :: &
+  REAL(DP) :: &
        deltatau     !
   !     
 END MODULE diffs

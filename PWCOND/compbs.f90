@@ -31,19 +31,19 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
   integer :: ik, i, j, kin, kfin, ig, info, lam, n, iorb, iorb1, &
              iorb2, aorb, borb, nt, startk, lastk, nchan, nb, ih, &
              ih1, ij, is, js 
-  real(kind=DP), parameter :: eps=1.d-8
-  real(kind=DP) :: raux, DDOT
-  real(kind=DP), allocatable :: zpseu(:,:,:), zps(:,:)
-  complex(kind=DP), parameter :: cim=(0.d0,1.d0) 
-  complex(kind=DP) :: x1, x2, x3, x4, y1, y2, y3, y4,                  &
+  real(DP), parameter :: eps=1.d-8
+  real(DP) :: raux, DDOT
+  real(DP), allocatable :: zpseu(:,:,:), zps(:,:)
+  complex(DP), parameter :: cim=(0.d0,1.d0) 
+  complex(DP) :: x1, x2, x3, x4, y1, y2, y3, y4,                  &
             kval(2*(n2d+npol*nocros)), kfun(n2d,2*(n2d+npol*nocros)),  &
             kint(nocros*npol,2*(n2d+npol*nocros)),  &
             kcoef(nocros*npol,2*(n2d+npol*nocros)), &
             kfund(n2d,2*(n2d+npol*nocros))   
-  complex(kind=DP), allocatable :: amat(:,:), bmat(:,:), vec(:,:), &
+  complex(DP), allocatable :: amat(:,:), bmat(:,:), vec(:,:), &
                                    zpseu_nc(:,:,:,:),              &
                                    zps_nc(:,:), aux(:,:) 
-  complex(kind=DP), parameter :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
+  complex(DP), parameter :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
   LOGICAL :: exst
 
   call start_clock('compbs')

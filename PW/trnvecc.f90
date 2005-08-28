@@ -20,11 +20,11 @@ subroutine trnvecc (u, at, bg, iflg)
   integer :: iflg
   ! input: gives the versus of the transformatio
 
-  real(kind=DP) :: at (3, 3), bg (3, 3)
+  real(DP) :: at (3, 3), bg (3, 3)
   ! input: the direct lattice vectors
   ! input: the reciprocal lattice vectors
 
-  complex(kind=DP) :: u (3)
+  complex(DP) :: u (3)
   ! inp/out: the vector to transform
 
   integer :: i, j, k
@@ -32,7 +32,7 @@ subroutine trnvecc (u, at, bg, iflg)
   !  counter on polarizations
   !/
 
-  complex(kind=DP) :: wrk (3)
+  complex(DP) :: wrk (3)
   ! auxiliary variable
   if (iflg.gt.0) then
      !

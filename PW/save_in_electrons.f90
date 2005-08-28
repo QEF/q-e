@@ -25,7 +25,7 @@ subroutine save_in_electrons (iter, dr2)
   logical :: exst
 
 
-  real(kind=DP) :: dr2
+  real(DP) :: dr2
   if (reduce_io) return
   !
   ! open recover file

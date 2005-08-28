@@ -13,13 +13,13 @@
       implicit none
 
       integer nax,nsp,na(nsp)
-      REAL(dbl) fnew(3,nax,nsp)
-      REAL(dbl) fold(3,nax,nsp)
+      REAL(DP) fnew(3,nax,nsp)
+      REAL(DP) fold(3,nax,nsp)
 
-      REAL(dbl) df
+      REAL(DP) df
 
       integer is,ia,j,nat
-      REAL(dbl) diffnorm, normold, normnew
+      REAL(DP) diffnorm, normold, normnew
 
 
       nat = 0

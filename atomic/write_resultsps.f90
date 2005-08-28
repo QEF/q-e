@@ -13,7 +13,7 @@ subroutine write_resultsps
   implicit none
 
   integer :: i, j, n, m, l, ios
-  real(kind=dp) :: work(ndm), int_0_inf_dr, ravg, sij
+  real(DP) :: work(ndm), int_0_inf_dr, ravg, sij
   !
   !
   write(6,110)

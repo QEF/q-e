@@ -37,12 +37,12 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
              ioins, ilocros, irocros, orbin, orbfin, ib, lsr, nrz,  &
              m, k, ipol, iorb, iorb1, is     
   integer, allocatable :: orbind(:,:), tblm(:,:), cros(:,:), natih(:,:)
-  real(kind=DP), parameter :: eps=1.d-8
-  real(kind=DP) :: ledge, redge, ledgel, redgel, ledger, redger, &
+  real(DP), parameter :: eps=1.d-8
+  real(DP) :: ledge, redge, ledgel, redgel, ledger, redger, &
                    bd1, bd2, zlen, z(nrz+1), rsph(nbrx, npsx)   
-  real(kind=DP), allocatable :: taunew(:,:), zpseu(:,:,:)
+  real(DP), allocatable :: taunew(:,:), zpseu(:,:,:)
 
-  complex(kind=DP), allocatable :: zpseu_nc(:,:,:,:)
+  complex(DP), allocatable :: zpseu_nc(:,:,:,:)
 
   allocate ( orbind(nat,nbrx) )
   orbind = -1
@@ -397,7 +397,7 @@ use kinds, only : dp
 implicit none
 
 integer :: natih1(2),natih2(2),tblm1(4),tblm2(4)
-real(kind=dp) ::taunew1(4),taunew2(4), rdum
+real(DP) ::taunew1(4),taunew2(4), rdum
 
 integer :: i, idum
 

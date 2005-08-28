@@ -16,13 +16,13 @@
         PRIVATE
 
         INTEGER :: nfreq
-        REAL(dbl) :: maxdie ! Hartree units
-        REAL(dbl) :: ddie  ! Hartree units
-        REAL(dbl) :: temperature  ! Kelvin
-        REAL(dbl), PARAMETER :: small_freq = 1.d-6      ! Hartree units
+        REAL(DP) :: maxdie ! Hartree units
+        REAL(DP) :: ddie  ! Hartree units
+        REAL(DP) :: temperature  ! Kelvin
+        REAL(DP), PARAMETER :: small_freq = 1.d-6      ! Hartree units
 
-        COMPLEX(dbl), ALLOCATABLE :: dielec_total(:)
-        REAL(dbl), ALLOCATABLE :: sigma_total(:)
+        COMPLEX(DP), ALLOCATABLE :: dielec_total(:)
+        REAL(DP), ALLOCATABLE :: sigma_total(:)
         INTEGER, ALLOCATABLE :: n_total(:)
 
         PUBLIC :: optical_setup, optical_closeup, opticalp, write_dielec
@@ -31,8 +31,8 @@
 
         SUBROUTINE optical_setup(woptical, noptical, boptical)
           USE constants, ONLY: au
-          REAL(dbl), INTENT(IN) :: woptical
-          REAL(dbl), INTENT(IN) :: boptical
+          REAL(DP), INTENT(IN) :: woptical
+          REAL(DP), INTENT(IN) :: boptical
           INTEGER, INTENT(IN) :: noptical
           IF( noptical < 1 ) THEN
             CALL errore(' optical_properties: optical_setup ',' noptical out of range ',noptical)
@@ -86,25 +86,25 @@
           INTEGER, INTENT(IN) :: nfi
           TYPE(boxdimensions), INTENT(IN) :: box
           TYPE(atoms_type), INTENT(INOUT) :: atoms ! ions structure
-          COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:)
-          COMPLEX(dbl), INTENT(INOUT) :: ce(:,:,:,:)
+          COMPLEX(DP), INTENT(IN) :: c0(:,:,:,:)
+          COMPLEX(DP), INTENT(INOUT) :: ce(:,:,:,:)
           TYPE(wave_descriptor), INTENT(IN) :: wempt, wfill
-          REAL(dbl), INTENT(IN) :: occ(:,:,:)
-          REAL (dbl), INTENT(in) ::   vpot(:,:,:,:)
-          REAL (dbl) ::   bec(:,:)
-          COMPLEX(dbl) :: eigr(:,:)
+          REAL(DP), INTENT(IN) :: occ(:,:,:)
+          REAL (DP), INTENT(in) ::   vpot(:,:,:,:)
+          REAL (DP) ::   bec(:,:)
+          COMPLEX(DP) :: eigr(:,:)
 
           INTEGER :: nspin, ispin, ngw, nb_l, nk, ngw_g
           INTEGER :: ie, if, nf, ne, ik, idie, ig, ierr
-          COMPLEX(dbl), ALLOCATABLE :: eforce(:,:,:)
-          REAL (dbl), ALLOCATABLE ::   bece(:,:)
-          REAL(dbl) :: curr(3), currt, wef
-          COMPLEX(dbl) :: ccurr(3), ccurrt
-          COMPLEX(dbl), ALLOCATABLE :: diet(:), cf(:,:,:,:)
+          COMPLEX(DP), ALLOCATABLE :: eforce(:,:,:)
+          REAL (DP), ALLOCATABLE ::   bece(:,:)
+          REAL(DP) :: curr(3), currt, wef
+          COMPLEX(DP) :: ccurr(3), ccurrt
+          COMPLEX(DP), ALLOCATABLE :: diet(:), cf(:,:,:,:)
           INTEGER :: cif, cie
-          REAL(dbl), ALLOCATABLE :: sigma(:), fi(:), eig(:), ff(:,:)
+          REAL(DP), ALLOCATABLE :: sigma(:), fi(:), eig(:), ff(:,:)
           INTEGER, ALLOCATABLE :: ndiet(:)
-          REAL(dbl) :: FACT, ef, beta
+          REAL(DP) :: FACT, ef, beta
           LOGICAL :: gamma_symmetry, gzero
 
 ! ...     SUBROUTINE BODY
@@ -363,8 +363,8 @@
           USE mp, ONLY: mp_sum
 
           INTEGER, INTENT(IN) :: nfi
-          REAL(dbl), INTENT(IN) :: tm
-          REAL(dbl) :: w
+          REAL(DP), INTENT(IN) :: tm
+          REAL(DP) :: w
           INTEGER :: i, ierr
 
 #if defined __CONDUCTIVITY

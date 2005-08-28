@@ -42,7 +42,7 @@ integer :: nsymq, nat, s (3, 3, 48), ityp (nat), nr1, nr2, nr3, &
                            ! output: for each atom gives the rotated ato
                            ! output: fractionary translation of each sym
 
-real (kind = dp) :: at (3, 3), bg (3, 3), tau (3, nat)
+real (DP) :: at (3, 3), bg (3, 3), tau (3, nat)
                            ! input: direct lattice vectors
                            ! input: reciprocal lattice vectors
                            ! input: coordinates of atomic positions

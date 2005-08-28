@@ -20,11 +20,11 @@ SUBROUTINE psymrho( rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
   IMPLICIT NONE
   !
   INTEGER        :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau
-  REAL (KIND=DP) :: rho(nxx)
+  REAL (DP) :: rho(nxx)
   !
 #if defined  (__PARA)
   !
-  REAL (KIND=DP), ALLOCATABLE :: rrho(:)
+  REAL (DP), ALLOCATABLE :: rrho(:)
   !
   !
   ALLOCATE (rrho( nrx1 * nrx2 * nrx3))    

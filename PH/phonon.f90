@@ -45,9 +45,9 @@ PROGRAM phonon
   INTEGER :: iq, iq_start, iustat, ierr
   INTEGER :: nks_start
     ! number of initial k points
-  REAL(KIND = DP), ALLOCATABLE :: wk_start(:)
+  REAL(DP), ALLOCATABLE :: wk_start(:)
     ! initial weight of k points
-  REAL(KIND = DP), ALLOCATABLE :: xk_start(:,:)
+  REAL(DP), ALLOCATABLE :: xk_start(:,:)
     ! initial coordinates of k points
   LOGICAL :: exst
   CHARACTER (LEN=9)   :: code = 'PHONON'

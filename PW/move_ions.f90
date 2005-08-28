@@ -48,12 +48,12 @@ SUBROUTINE move_ions()
   !
   LOGICAL, SAVE              :: lcheck_mag = .TRUE.
     ! .TRUE. if the check of zero absolute magnetization is required
-  REAL(KIND=DP), ALLOCATABLE :: tauold(:,:,:)
+  REAL(DP), ALLOCATABLE :: tauold(:,:,:)
     ! previous positions of atoms
   INTEGER                    :: na  
-  REAL(KIND=DP)              :: energy_error, gradient_error
+  REAL(DP)              :: energy_error, gradient_error
   LOGICAL                    :: step_accepted, exst
-  REAL(KIND=DP), ALLOCATABLE :: pos(:), gradient(:)
+  REAL(DP), ALLOCATABLE :: pos(:), gradient(:)
   !
   !
   ! ... only one node does the calculation in the parallel case
@@ -289,8 +289,8 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   IMPLICIT NONE
   !
   INTEGER       :: nat, na, ipol
-  REAL(KIND=DP) :: chi, alpha0, beta0, tau(3,nat), tauold(3,nat,3)
-  REAL(KIND=DP) :: a11, a12, a21, a22, b1, b2, c, det
+  REAL(DP) :: chi, alpha0, beta0, tau(3,nat), tauold(3,nat,3)
+  REAL(DP) :: a11, a12, a21, a22, b1, b2, c, det
   !
   !
   IF ( history < 2 ) THEN

@@ -19,8 +19,8 @@ module exx
   logical:: lexx=.true. ! if .true. exx is used
 
   integer :: currentk
-  real (kind=DP):: exxalfa=0.d0 ! 1 if exx, 0 elsewhere
-  real (kind=DP):: yukawa = 0.d0
+  real (DP):: exxalfa=0.d0 ! 1 if exx, 0 elsewhere
+  real (DP):: yukawa = 0.d0
   logical:: exxstart=.false. !1 if initialited
   integer:: iunexx
   integer :: exx_nwordwfc
@@ -30,9 +30,9 @@ module exx
   integer :: nq1=1, nq2=1, nq3=1 ! integers defining the X integration mesh
   integer :: nqs=1               ! number of points in the q-gridd
   integer :: nkqs                ! total number of different k+q
-  real (kind=DP), allocatable :: &
+  real (DP), allocatable :: &
              xkq(:,:)            ! xkq(3,nkqs) the auxiliary k+q set
-  real (kind=DP), allocatable :: &
+  real (DP), allocatable :: &
              x_occupation(:,:)   ! x_occupation(nbnd,nks) the weight of 
                                  ! auxiliary functions in the density matrix
   !
@@ -46,7 +46,7 @@ module exx
   integer, allocatable :: index_xk(:)    ! index_xk(nkqs)  
   integer, allocatable :: index_sym(:)   ! index_sym(nkqs)
 
-  real (kind=DP):: exxdiv ! 1 if exx, 0 elsewhere
+  real (DP):: exxdiv ! 1 if exx, 0 elsewhere
 
 contains
   !------------------------------------------------------------------------
@@ -64,7 +64,7 @@ contains
 
      implicit none
      integer :: ik, ig
-     REAL(KIND=DP) :: alpha, norm
+     REAL(DP) :: alpha, norm
 
      wg = 0.d0
      wg(1,1:nks/2) = 1.d0 * wk(1:nks/2)
@@ -114,10 +114,10 @@ contains
   integer :: iq1, iq2, iq3, isym, ik, ikq, iq, max_nk, temp_nkqs
   integer, allocatable :: temp_index_xk(:), temp_index_sym(:)
   integer, allocatable :: temp_index_ikq(:), new_ikq(:)
-  real (kind=DP), allocatable :: temp_xkq(:,:)
+  real (DP), allocatable :: temp_xkq(:,:)
   logical:: xk_not_found
-  real (kind=DP) :: sxk(3), dxk(3), xk_cryst(3)
-  real (kind=DP) :: eps, dq1, dq2, dq3
+  real (DP) :: sxk(3), dxk(3), xk_cryst(3)
+  real (DP) :: eps, dq1, dq2, dq3
   logical:: no_pool_para
 
   call start_clock ('exx_grid')
@@ -189,9 +189,9 @@ contains
   !
   ! define the q-mesh step-sizes
   !
-  dq1= 1.d0/dble(nq1)
-  dq2= 1.d0/dble(nq2)
-  dq3= 1.d0/dble(nq3)
+  dq1= 1.d0/DBLE(nq1)
+  dq2= 1.d0/DBLE(nq2)
+  dq3= 1.d0/DBLE(nq3)
   !
   ! allocate and fill the array index_xkq(nks,nqs)
   !
@@ -281,13 +281,13 @@ contains
   USE lsda_mod,  ONLY : nspin
   USE klist
   implicit none
-  real (kind=DP) :: sxk(3), dxk(3), xk_cryst(3), xkk_cryst(3)
+  real (DP) :: sxk(3), dxk(3), xk_cryst(3), xkk_cryst(3)
   integer :: iq1, iq2, iq3, isym, ik, ikk, ikq, iq
-  real (kind=DP) :: eps, dq1, dq2, dq3
+  real (DP) :: eps, dq1, dq2, dq3
   eps = 1.d-6
-  dq1= 1.d0/dble(nq1)
-  dq2= 1.d0/dble(nq2)
-  dq3= 1.d0/dble(nq3)
+  dq1= 1.d0/DBLE(nq1)
+  dq2= 1.d0/DBLE(nq2)
+  dq3= 1.d0/DBLE(nq3)
 
   do ik =1, nks
      xk_cryst(:) = at(1,:)*xk(1,ik) + at(2,:)*xk(2,ik) + at(3,:)*xk(3,ik)
@@ -357,7 +357,7 @@ contains
     implicit none
     integer :: ios, ik,ibnd, i, j, k, ir, ri, rj, rk, isym, ikq
     integer :: h_ibnd, half_nbnd
-    COMPLEX(KIND=DP),allocatable :: temppsic(:), psic(:), tempevc(:,:)
+    COMPLEX(DP),allocatable :: temppsic(:), psic(:), tempevc(:,:)
     logical, allocatable :: present(:)
     logical :: exst
     integer, allocatable :: rir(:,:)
@@ -509,18 +509,18 @@ contains
 
     implicit none
     INTEGER          :: lda, n, m, kpsi
-    COMPLEX(KIND=DP) :: psi(lda,m) 
-    COMPLEX(KIND=DP) :: hpsi(lda,m)
+    COMPLEX(DP) :: psi(lda,m) 
+    COMPLEX(DP) :: hpsi(lda,m)
 
     ! local variables
-    COMPLEX(KIND=DP), allocatable :: tempphic(:), temppsic(:), result(:)
-    COMPLEX(KIND=DP), allocatable :: rhoc(:), vc(:)
-    real (kind=DP),   allocatable :: fac(:)
+    COMPLEX(DP), allocatable :: tempphic(:), temppsic(:), result(:)
+    COMPLEX(DP), allocatable :: rhoc(:), vc(:)
+    real (DP),   allocatable :: fac(:)
     integer          :: ibnd, ik, im , ig, ir,  ikq, iq, isym
     integer          :: h_ibnd, half_nbnd, ibndp1
-    real(kind=DP) :: x1, x2
-    real(kind=DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, e2  = 2.d0
-    real(kind=DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), alpha
+    real(DP) :: x1, x2
+    real(DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, e2  = 2.d0
+    real(DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), alpha
 
     call start_clock ('vexx')
 
@@ -650,10 +650,10 @@ contains
     USE lsda_mod,   ONLY : lsda, current_spin, isk
 
     implicit none
-    REAL (KIND=DP)   :: exxenergy,  energy
+    REAL (DP)   :: exxenergy,  energy
     INTEGER          :: ibnd, ik
-    COMPLEX(KIND=DP) :: vxpsi ( npwx, nbnd ), psi(npwx,nbnd)
-    COMPLEX(KIND=DP) :: ZDOTC
+    COMPLEX(DP) :: vxpsi ( npwx, nbnd ), psi(npwx,nbnd)
+    COMPLEX(DP) :: ZDOTC
 
     call start_clock ('exxenergy')
 
@@ -710,18 +710,18 @@ contains
     USE gvect,     ONLY : g, nl
 
     implicit none
-    REAL (KIND=DP)   :: exxenergy2,  energy
+    REAL (DP)   :: exxenergy2,  energy
     INTEGER          :: n, m, kpsi
 
     ! local variables
-    COMPLEX(KIND=DP), allocatable :: tempphic(:), temppsic(:)
-    COMPLEX(KIND=DP), allocatable :: rhoc(:)
-    real (kind=DP),   allocatable :: fac(:)
+    COMPLEX(DP), allocatable :: tempphic(:), temppsic(:)
+    COMPLEX(DP), allocatable :: rhoc(:)
+    real (DP),   allocatable :: fac(:)
     integer          :: jbnd, ibnd, ik, ikk, ig, ir,  ikq, iq, isym
     integer          :: half_nbnd, h_ibnd
-    real(kind=DP)    :: x1, x2
-    real(kind=DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, e2  = 2.d0
-    real(kind=DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), alpha, vc
+    real(DP)    :: x1, x2
+    real(DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, e2  = 2.d0
+    real(DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), alpha, vc
 
     call start_clock ('exxen2')
 
@@ -855,15 +855,15 @@ contains
      USE wvfct,     ONLY : gamma_only
 
      implicit none
-     real(kind=DP) :: exx_divergence
+     real(DP) :: exx_divergence
 
      ! local variables
      integer :: iq1,iq2,iq3, ig
-     real(kind=DP) :: div, dq1, dq2, dq3, xq(3), q, qq, tpiba2, alpha
-     real(kind=DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, e2  = 2.d0
+     real(DP) :: div, dq1, dq2, dq3, xq(3), q, qq, tpiba2, alpha
+     real(DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, e2  = 2.d0
 
      integer :: nqq, iq
-     real(kind=DP) :: aa, dq
+     real(DP) :: aa, dq
 
      call start_clock ('exx_div')
 
@@ -871,9 +871,9 @@ contains
 
      alpha  = 10.d0 * tpiba2 / ecutwfc
 
-     dq1= 1.d0/dble(nq1)
-     dq2= 1.d0/dble(nq2) 
-     dq3= 1.d0/dble(nq3) 
+     dq1= 1.d0/DBLE(nq1)
+     dq2= 1.d0/DBLE(nq2) 
+     dq3= 1.d0/DBLE(nq3) 
 
      div = 0.d0
      do iq1=1,nq1

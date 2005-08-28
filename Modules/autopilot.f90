@@ -103,21 +103,21 @@ MODULE autopilot
   !     &CONTROL
   INTEGER   :: rule_isave(max_event_step)
   INTEGER   :: rule_iprint(max_event_step)
-  REAL(dbl) :: rule_dt(max_event_step)
+  REAL(DP) :: rule_dt(max_event_step)
   !     &SYSTEM
 
   !     &ELECTRONS
-  REAL(dbl)         :: rule_emass(max_event_step)
+  REAL(DP)         :: rule_emass(max_event_step)
   CHARACTER(LEN=80) :: rule_electron_dynamics(max_event_step)
-  REAL(dbl)         :: rule_electron_damping(max_event_step)
+  REAL(DP)         :: rule_electron_damping(max_event_step)
 
 
   !     &IONS
   CHARACTER(LEN=80) :: rule_ion_dynamics(max_event_step)
-  REAL(dbl)         :: rule_ion_damping(max_event_step)
+  REAL(DP)         :: rule_ion_damping(max_event_step)
   CHARACTER(LEN=80) :: rule_ion_temperature(max_event_step)
 
-  REAL(dbl) :: rule_tempw(max_event_step)
+  REAL(DP) :: rule_tempw(max_event_step)
   !     &CELL
 
   !     &PHONON
@@ -666,7 +666,7 @@ CONTAINS
     CHARACTER(LEN=32) :: value
     INTEGER   :: int_value
     REAL      :: real_value
-    REAL(DBL) :: realdbl_value
+    REAL(DP) :: realDP_value
     LOGICAL   :: logical_value
     LOGICAL   :: assigned
     LOGICAL, EXTERNAL  :: matches
@@ -698,8 +698,8 @@ CONTAINS
        event_dt(event) = .true.
        write(*,*) 'RULE_DT', rule_dt(event), 'EVENT', event
     ELSEIF ( matches( "EMASS", var ) ) THEN
-       read(value, *) realdbl_value
-       rule_emass(event)  = realdbl_value
+       read(value, *) realDP_value
+       rule_emass(event)  = realDP_value
        event_emass(event) = .true.
     ELSEIF ( matches( "ELECTRON_DYNAMICS", var ) ) THEN
        read(value, *) value
@@ -711,8 +711,8 @@ CONTAINS
        rule_electron_dynamics(event)  = value
        event_electron_dynamics(event) = .true.
     ELSEIF ( matches( "ELECTRON_DAMPING", var ) ) THEN
-       read(value, *) realdbl_value
-       rule_electron_damping(event)  = realdbl_value
+       read(value, *) realDP_value
+       rule_electron_damping(event)  = realDP_value
        event_electron_damping(event) = .true.
     ELSEIF ( matches( "ION_DYNAMICS", var ) ) THEN
        read(value, *) value
@@ -724,8 +724,8 @@ CONTAINS
        rule_ion_dynamics(event)  = value
        event_ion_dynamics(event) = .true.
     ELSEIF ( matches( "ION_DAMPING", var ) ) THEN
-       read(value, *) realdbl_value
-       rule_ion_damping(event)  = realdbl_value
+       read(value, *) realDP_value
+       rule_ion_damping(event)  = realDP_value
        event_ion_damping(event) = .true.
     ELSEIF ( matches( "ION_TEMPERATURE", var ) ) THEN
        read(value, *) value
@@ -737,8 +737,8 @@ CONTAINS
        rule_ion_temperature(event)  = value
        event_ion_temperature(event) = .true.
     ELSEIF ( matches( "TEMPW", var ) ) THEN
-       read(value, *) realdbl_value
-       rule_tempw(event)  = realdbl_value
+       read(value, *) realDP_value
+       rule_tempw(event)  = realDP_value
        event_tempw(event) = .true.
     ELSE
        CALL auto_error( 'autopilot', ' ASSIGN_RULE: FAILED  '//trim(var)//' '//trim(value) )
@@ -901,8 +901,8 @@ CONTAINS
        ion_temperature = rule_ion_temperature(event_index)
        select case ( ion_temperature ) 
           !         temperature control of ions via nose' thermostat
-          !         tempw (real(dbl))  frequency (in which units?)
-          !         fnosep (real(dbl))  temperature (in which units?)
+          !         tempw (real(DP))  frequency (in which units?)
+          !         fnosep (real(DP))  temperature (in which units?)
        case ('NOSE')
           tnosep = .true.
           tcp = .false.

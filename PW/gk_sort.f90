@@ -25,7 +25,7 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
     ! input        : the number of g vectors
     ! input/output : the number of k+G vectors inside the "ecut sphere"
     ! output       : the correspondence k+G <-> G
-  REAL(KIND=DP) :: k(3), g(3,ngm), ecut, gk(npwx)
+  REAL(DP) :: k(3), g(3,ngm), ecut, gk(npwx)
     ! input  : the k point
     ! input  : the coordinates of G vectors
     ! input  : the cut-off energy
@@ -36,7 +36,7 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
   INTEGER :: ng, nk
     ! counter on   G vectors
     ! counter on k+G vectors
-  REAL(KIND=DP) :: q, q2x
+  REAL(DP) :: q, q2x
     ! |k+G|^2
     ! upper bound for |G|
   !

@@ -24,20 +24,20 @@ subroutine compute_phipot(lam,ik,nwf0,ns,xc)
        ns,    &  ! the function to pseudize
        nwf0,  &  !
        lam       ! the angular momentum
-  real(kind=dp) :: &
+  real(DP) :: &
        xc(8)
   !
-  real(kind=dp), parameter :: pi=3.14159265358979_dp
-  real(kind=dp) :: &
+  real(DP), parameter :: pi=3.14159265358979_dp
+  real(DP) :: &
        fae,    & ! the value of the all-electron function
        ff,     & ! compute the second derivative
        signo,  & ! the sign of the ae wfc
        wmax,   & !
        den,    & ! denominator
        faenor    ! the norm of the function
-  real(kind=dp), external :: int_0_inf_dr, pr, d2pr, dpr
+  real(DP), external :: int_0_inf_dr, pr, d2pr, dpr
 
-  real(kind=dp) :: &
+  real(DP) :: &
        jnor,psnor,fact(4), f2aep,f2aem,f3ae, &
        gi(ndm),j1(ndm,4),cm(10),bm(4),ze2,cn(6),c2, &
        delta, chir(ndm,nwfx), dpoly, &

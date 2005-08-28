@@ -12,12 +12,12 @@ subroutine drhoofv(drho,v)
    !
    ! I/O variables
    !
-   real (kind=DP) :: drho(ndm,2), v(ndm,2)
+   real (DP) :: drho(ndm,2), v(ndm,2)
    !
    ! local variables
    !
-   real (kind=DP) :: dvy(ndm), dchi(ndm), int_0_inf_dr, wrk(ndm)
-   real (kind=DP) :: ze2, fac
+   real (DP) :: dvy(ndm), dchi(ndm), int_0_inf_dr, wrk(ndm)
+   real (DP) :: ze2, fac
    integer :: i, nu, is
 
    ze2 = -zed*e2

@@ -26,8 +26,8 @@
 
         PRIVATE
 
-        REAL(dbl), PARAMETER :: zero = 0.0_dbl
-        REAL(dbl), PARAMETER :: one = 1.0_dbl
+        REAL(DP), PARAMETER :: zero = 0.0_DP
+        REAL(DP), PARAMETER :: one = 1.0_DP
 
 !  end of module-scope declarations
 !  ----------------------------------------------
@@ -64,13 +64,13 @@
       IMPLICIT NONE
       
       TYPE (atoms_type),    INTENT(IN) :: atoms
-      REAL(dbl),            INTENT(IN) :: rho(:,:,:,:)
+      REAL(DP),            INTENT(IN) :: rho(:,:,:,:)
       TYPE (charge_descriptor),    INTENT(IN) :: desc
       TYPE (boxdimensions), INTENT(IN) :: ht
       INTEGER,              INTENT(IN) :: nfi
 
-      REAL(dbl), ALLOCATABLE :: comp(:), send(:)
-      REAL(dbl) :: rpos(3), charge, omega, fact
+      REAL(DP), ALLOCATABLE :: comp(:), send(:)
+      REAL(DP) :: rpos(3), charge, omega, fact
       CHARACTER(LEN=256) filename
       INTEGER   :: i, j, k, ispin, nspin, nxl, nyl, nzl, nx, ny, nz, nl
       INTEGER, ALLOCATABLE :: nzl_proc( : )
@@ -211,7 +211,7 @@
       TYPE (atoms_type),    INTENT(IN) :: atoms
       TYPE (boxdimensions), INTENT(IN) :: ht
       INTEGER :: i, j, k
-      REAL(dbl) :: rpos(3)
+      REAL(DP) :: rpos(3)
         
       WRITE(rhounit,30) nfi
       DO i = 1, 3
@@ -248,11 +248,11 @@
 
         IMPLICIT NONE
 
-        REAL(dbl), INTENT(IN) :: omega 
-        REAL(dbl) :: rsum(:)
-        REAL(dbl), INTENT(IN) :: rhoe(:,:,:,:)
+        REAL(DP), INTENT(IN) :: omega 
+        REAL(DP) :: rsum(:)
+        REAL(DP), INTENT(IN) :: rhoe(:,:,:,:)
         TYPE (charge_descriptor), INTENT(IN) :: desc
-        REAL(dbl) :: rsum1
+        REAL(DP) :: rsum1
         INTEGER :: i, j, k, ispin, nspin, nr1, nr2, nr3, ierr
         INTEGER :: nxl, nyl, nzl
 
@@ -300,7 +300,7 @@
 !=----------------------------------------------------------------------=!
 
 
-      REAL(dbl) FUNCTION dft_total_charge( ispin, c, cdesc, fi )
+      REAL(DP) FUNCTION dft_total_charge( ispin, c, cdesc, fi )
 
 !  This subroutine compute the Total Charge in reciprocal space
 !  ------------------------------------------------------------
@@ -309,14 +309,14 @@
 
         IMPLICIT NONE
 
-        COMPLEX(dbl), INTENT(IN) :: c(:,:)
+        COMPLEX(DP), INTENT(IN) :: c(:,:)
         INTEGER, INTENT(IN) :: ispin
         TYPE (wave_descriptor), INTENT(IN) :: cdesc
-        REAL (dbl),  INTENT(IN) :: fi(:)
+        REAL (DP),  INTENT(IN) :: fi(:)
         INTEGER   :: ib, igs
-        REAL(dbl) :: rsum
-        COMPLEX(dbl) :: wdot
-        COMPLEX(dbl) :: ZDOTC
+        REAL(DP) :: rsum
+        COMPLEX(DP) :: wdot
+        COMPLEX(DP) :: ZDOTC
         EXTERNAL ZDOTC
 
 ! ... end of declarations
@@ -398,10 +398,10 @@
 ! ... declare subroutine arguments
 
     INTEGER,              INTENT(IN) :: nfi
-    COMPLEX(dbl)                     :: c0(:,:,:,:)
+    COMPLEX(DP)                     :: c0(:,:,:,:)
     TYPE (boxdimensions), INTENT(IN) :: box
-    REAL(dbl),          INTENT(IN) :: fi(:,:,:)
-    REAL(dbl),            INTENT(OUT) :: rhoe(:,:,:,:)
+    REAL(DP),          INTENT(IN) :: fi(:,:,:)
+    REAL(DP),            INTENT(OUT) :: rhoe(:,:,:,:)
     TYPE (charge_descriptor),    INTENT(IN) :: desc
     TYPE (wave_descriptor), INTENT(IN) :: cdesc
 
@@ -409,10 +409,10 @@
 
     INTEGER :: i, is1, is2, j, k, ib, ik, nb, nxl, nyl, nzl, ispin
     INTEGER :: nr1x, nr2x, nr3x, nspin, nbnd, nnr
-    REAL(dbl)  :: r2, r1, coef3, coef4, omega, rsumg( nspinx ), rsumgs
-    REAL(dbl)  :: fact, rsumr( nspinx )
-    REAL(dbl), ALLOCATABLE :: rho(:,:,:)
-    COMPLEX(dbl), ALLOCATABLE :: psi2(:,:,:)
+    REAL(DP)  :: r2, r1, coef3, coef4, omega, rsumg( nspinx ), rsumgs
+    REAL(DP)  :: fact, rsumr( nspinx )
+    REAL(DP), ALLOCATABLE :: rho(:,:,:)
+    COMPLEX(DP), ALLOCATABLE :: psi2(:,:,:)
     INTEGER :: ierr, ispin_wfc
     LOGICAL :: ttprint
 
@@ -654,13 +654,13 @@
 
      IMPLICIT NONE
 
-     COMPLEX(dbl), INTENT(IN)  :: rhoeg(:)    ! charge density (Reciprocal Space)
-     REAL(dbl), INTENT(IN)  :: gx(:,:)        ! cartesian components of G-vectors
-     REAL(dbl),  INTENT(OUT) :: grho(:,:,:,:) ! charge density gradient
+     COMPLEX(DP), INTENT(IN)  :: rhoeg(:)    ! charge density (Reciprocal Space)
+     REAL(DP), INTENT(IN)  :: gx(:,:)        ! cartesian components of G-vectors
+     REAL(DP),  INTENT(OUT) :: grho(:,:,:,:) ! charge density gradient
 
      INTEGER :: ig, ipol, ierr
-     COMPLEX(dbl), ALLOCATABLE :: tgrho(:)
-     COMPLEX(dbl)              :: rg
+     COMPLEX(DP), ALLOCATABLE :: tgrho(:)
+     COMPLEX(DP)              :: rg
 
      ! ...
 
@@ -707,12 +707,12 @@
       implicit none
 ! input
       integer nspin
-      complex(kind=8) rhog(ng,nspin)
+      complex(8) rhog(ng,nspin)
 ! output
-      real(kind=8)    gradr(nnr,3,nspin)
+      real(8)    gradr(nnr,3,nspin)
 ! local
-      complex(kind=8), allocatable :: v(:)
-      complex(kind=8) ci
+      complex(8), allocatable :: v(:)
+      complex(8) ci
       integer iss, ig, ir
 !
 !

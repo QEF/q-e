@@ -17,7 +17,7 @@
  
         PRIVATE
 
-        REAL(dbl) :: small = 1.0d-14
+        REAL(DP) :: small = 1.0d-14
 
         PUBLIC :: bessel1, bessel2, bessel3
 
@@ -42,16 +42,16 @@
 
 ! ... Argument Variables
 
-      REAL(dbl), INTENT(IN)  :: XG
-      REAL(dbl), INTENT(IN)  :: RW(:)
-      REAL(dbl), INTENT(OUT) :: JL(:)
-      REAL(dbl), INTENT(OUT) :: DJL(:)
+      REAL(DP), INTENT(IN)  :: XG
+      REAL(DP), INTENT(IN)  :: RW(:)
+      REAL(DP), INTENT(OUT) :: JL(:)
+      REAL(DP), INTENT(OUT) :: DJL(:)
       INTEGER, INTENT(IN) :: MMAX
 
 ! ... Local Variables
 
-      REAL(dbl) :: ARG_S(MMAX)
-      REAL(dbl) :: XRGM1(MMAX)
+      REAL(DP) :: ARG_S(MMAX)
+      REAL(DP) :: XRGM1(MMAX)
       INTEGER :: IR
 
 ! ... Subroutine Body
@@ -92,19 +92,19 @@
 
 ! ... Argument Variables
 
-      REAL(dbl), INTENT(IN)  :: XG
-      REAL(dbl), INTENT(IN)  :: RW(:)
-      REAL(dbl), INTENT(OUT) :: FINT(:,:)
+      REAL(DP), INTENT(IN)  :: XG
+      REAL(DP), INTENT(IN)  :: RW(:)
+      REAL(DP), INTENT(OUT) :: FINT(:,:)
       INTEGER,   INTENT(IN)  :: INDL(:), LNL, MMAX
 
 ! ... Local Variables
 
-      REAL(dbl) :: ARG_S(MMAX)
-      REAL(dbl) :: XRGM1(MMAX)
-      REAL(dbl) :: J0(MMAX)
-      REAL(dbl) :: J1(MMAX)
-      REAL(dbl) :: J2(MMAX)
-      REAL(dbl) :: J3(MMAX)
+      REAL(DP) :: ARG_S(MMAX)
+      REAL(DP) :: XRGM1(MMAX)
+      REAL(DP) :: J0(MMAX)
+      REAL(DP) :: J1(MMAX)
+      REAL(DP) :: J2(MMAX)
+      REAL(DP) :: J3(MMAX)
       INTEGER :: IR, L, LL, LMAX
 
 ! ... Subroutine Body
@@ -178,19 +178,19 @@
 
 ! ... Argument Variables
 
-      REAL(dbl), INTENT(IN)  ::  XG
-      REAL(dbl), INTENT(IN)  ::  RW(:)
-      REAL(dbl), INTENT(OUT)  ::  FINT(:,:)
+      REAL(DP), INTENT(IN)  ::  XG
+      REAL(DP), INTENT(IN)  ::  RW(:)
+      REAL(DP), INTENT(OUT)  ::  FINT(:,:)
       INTEGER, INTENT(IN) ::  INDL(:), LNL, MMAX
 
 ! ... Local Variables
 
-      REAL(dbl) :: XRG(MMAX)
-      REAL(dbl) :: XRGM1(MMAX)
-      REAL(dbl) :: F0(MMAX)
-      REAL(dbl) :: F1(MMAX)
-      REAL(dbl) :: F2(MMAX)
-      REAL(dbl) :: F3(MMAX)
+      REAL(DP) :: XRG(MMAX)
+      REAL(DP) :: XRGM1(MMAX)
+      REAL(DP) :: F0(MMAX)
+      REAL(DP) :: F1(MMAX)
+      REAL(DP) :: F2(MMAX)
+      REAL(DP) :: F3(MMAX)
       INTEGER :: IR, L, LL, LMAX
 
 ! ... Subroutine Body

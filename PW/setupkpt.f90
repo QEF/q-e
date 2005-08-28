@@ -28,7 +28,7 @@ subroutine setupkpoint (s, nrot, xk, wk, nks, npk, nk1, nk2, nk3, &
   ! input: hexagonal or cubic type
   ! input: the symmetry matrices
 
-  real(kind=DP) :: at (3, 3), bg (3, 3), xk (3, npk), wk (npk)
+  real(DP) :: at (3, 3), bg (3, 3), xk (3, npk), wk (npk)
   ! input: direct and reciprocal lattice ve
   ! output: k points and weights
 
@@ -37,7 +37,7 @@ subroutine setupkpoint (s, nrot, xk, wk, nks, npk, nk1, nk2, nk3, &
 
   parameter (npkk = 100000)
 
-  real(kind=DP) :: xknew (3, npkk), xkk (npkk), esort (npkk), d (3), &
+  real(DP) :: xknew (3, npkk), xkk (npkk), esort (npkk), d (3), &
        dnorm, dk (3), buffer (3), swap, ui, uj, uk, eps
   ! the unreduced points
   ! their modulus
@@ -203,14 +203,14 @@ subroutine modulo2 (vect, bg, modulo, d, esort)
   USE kinds, only : DP
   implicit none
 
-  real(kind=DP) :: vect (3), bg (3, 3), d (3), esort, modulo
+  real(DP) :: vect (3), bg (3, 3), d (3), esort, modulo
   ! input: the vector
   ! input: the basis
   ! input: direction for ordering
   ! output: the projected modulus
   ! output: the modulus
 
-  real(kind=DP) :: buffer (3)
+  real(DP) :: buffer (3)
   ! auxiliary
 
 
@@ -240,8 +240,8 @@ subroutine prodotto3dk (a, v, w)
   USE kinds, only : DP
   implicit none
   integer :: a (3, 3)
-  real(kind=DP) :: v (3)
-  real(kind=DP) :: w (3)
+  real(DP) :: v (3)
+  real(DP) :: w (3)
 
   integer :: l
   do l = 1, 3

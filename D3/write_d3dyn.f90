@@ -18,9 +18,9 @@ subroutine write_d3dyn (xq, phi, nat, iudyn, wrmode)
   integer :: iudyn, nat
   ! unit number
   ! number of atom in the unit cell
-  complex (kind = dp) :: phi (3, 3, 3, nat, nat, nat)
+  complex (DP) :: phi (3, 3, 3, nat, nat, nat)
   !  derivative of the dynamical matrix
-  real (kind = dp) :: xq (3)
+  real (DP) :: xq (3)
   ! the q vector
   logical :: wrmode (3 * nat)
   ! if .true. this mode is to be written

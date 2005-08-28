@@ -18,10 +18,10 @@ subroutine scf
 
   logical:: conv
   integer:: nerr, nstop, n, i, is, id, nin, mch
-  real(kind=dp) ::  vnew(ndm,2), rhoc1(ndm), ze2
-  real(kind=dp), allocatable ::  vsic(:,:), vsicnew(:), vhn1(:), egc(:)
+  real(DP) ::  vnew(ndm,2), rhoc1(ndm), ze2
+  real(DP), allocatable ::  vsic(:,:), vsicnew(:), vhn1(:), egc(:)
   integer, parameter :: maxter=200
-  real(kind=dp), parameter :: thresh=1.0e-10_dp
+  real(DP), parameter :: thresh=1.0e-10_dp
   !
   ! 
   ze2 = - zed * e2

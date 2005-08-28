@@ -82,7 +82,7 @@ SUBROUTINE reduce( dim, ps )
   IMPLICIT NONE
   !
   INTEGER            :: dim
-  REAL (KIND=DP)     :: ps(dim)
+  REAL (DP)     :: ps(dim)
   !
 #if defined (__PARA)  
   !
@@ -92,11 +92,11 @@ SUBROUTINE reduce( dim, ps )
 # if (defined __SHMEM && defined __ALTIX) || (defined __SHMEM && defined __ORIGIN)
   INTEGER            :: sym_len
   LOGICAL            :: first
-  REAL (KIND=DP)     :: buff(*), snd_buff(*)
+  REAL (DP)     :: buff(*), snd_buff(*)
   POINTER               (buff_p, buff), (snd_buff_p, snd_buff)
   COMMON /sym_heap1/    buff_p, snd_buff_p, sym_len, first
 # else
-  REAL (KIND=DP)     :: buff(maxb)  
+  REAL (DP)     :: buff(maxb)  
 # endif
   !
 # if defined (__SHMEM)
@@ -288,12 +288,12 @@ SUBROUTINE poolreduce( dim, ps )
   IMPLICIT NONE
   !
   INTEGER            :: dim
-  REAL (KIND=DP)     :: ps(dim)
+  REAL (DP)     :: ps(dim)
   !
 #if defined (__PARA)  
   !
   INTEGER, PARAMETER :: maxb = 10000
-  REAL (KIND=DP)     :: buff(maxb)
+  REAL (DP)     :: buff(maxb)
   INTEGER            :: info, nbuf, n
   !
   !
@@ -356,7 +356,7 @@ SUBROUTINE gather( f_in, f_out )
   !
   IMPLICIT NONE
   !
-  REAL (KIND=DP) :: f_in(nxx), f_out(*)
+  REAL (DP) :: f_in(nxx), f_out(*)
   !
 #if defined (__PARA)  
   !
@@ -414,7 +414,7 @@ SUBROUTINE cgather_sym( f_in, f_out )
   !
   IMPLICIT NONE
   !
-  COMPLEX(KIND=DP) :: f_in(nxx), f_out(*)
+  COMPLEX(DP) :: f_in(nxx), f_out(*)
   !
 #if defined (__PARA)  
   !
@@ -478,7 +478,7 @@ SUBROUTINE scatter( f_in, f_out )
   !
   IMPLICIT NONE
   !
-  REAL (KIND=DP) :: f_in(*), f_out(nxx)
+  REAL (DP) :: f_in(*), f_out(nxx)
   !
 #if defined (__PARA)  
   !
@@ -543,7 +543,7 @@ SUBROUTINE poolscatter( nsize, nkstot, f_in, nks, f_out )
     ! first dimension of vectors f_in and f_out
     ! number of k-points per pool
     ! total number of k-points
-  REAL (KIND=DP) :: f_in(nsize,nkstot), f_out(nsize,nks)
+  REAL (DP) :: f_in(nsize,nkstot), f_out(nsize,nks)
     ! input  ( contains values for all k-point )
     ! output ( only for k-points of mypool )
   !
@@ -622,7 +622,7 @@ SUBROUTINE fft_scatter1( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign )
   IMPLICIT NONE
   !
   INTEGER        :: nrx3, nxx_, sign, ncp_(maxproc), npp_(maxproc)
-  REAL (KIND=DP) :: f_in(2*nxx_), f_aux(2*nxx_)
+  REAL (DP) :: f_in(2*nxx_), f_aux(2*nxx_)
   !
 #if defined (__PARA)  
   !
@@ -758,12 +758,12 @@ SUBROUTINE poolextreme( ps, iflag )
   IMPLICIT NONE
   !
   INTEGER        :: iflag
-  REAL (KIND=DP) :: ps
+  REAL (DP) :: ps
   !
 #if defined (__PARA)  
   !
   INTEGER        :: info
-  REAL (KIND=DP) :: psr 
+  REAL (DP) :: psr 
   !
   !
   IF ( npool <= 1 ) RETURN
@@ -809,7 +809,7 @@ SUBROUTINE poolrecover( vec, length, nkstot, nks )
   IMPLICIT NONE
   !
   INTEGER        :: length, nks, nkstot
-  REAL (KIND=DP) :: vec(length,nkstot)
+  REAL (DP) :: vec(length,nkstot)
   !
 #if defined (__PARA)  
   !
@@ -958,12 +958,12 @@ SUBROUTINE extreme( ps, iflag )
   !
   IMPLICIT NONE
   !
-  REAL (KIND=DP) :: ps
+  REAL (DP) :: ps
   INTEGER        :: iflag
   !
 #if defined (__PARA)  
   !
-  REAL (KIND=DP) :: psr
+  REAL (DP) :: psr
   INTEGER        :: info
   !
   !

@@ -37,8 +37,8 @@ SUBROUTINE make_pointlists
   INTEGER index0,index,indproc,iat,ir,iat1
   INTEGER i,j,k,i0,j0,k0,ipol,ishift(3)
 
-  REAL(kind=dp) :: posi(3),distance,shift(3),scalprod, distmin
-  REAL(kind=dp), ALLOCATABLE :: tau0(:,:)
+  REAL(DP) :: posi(3),distance,shift(3),scalprod, distmin
+  REAL(DP), ALLOCATABLE :: tau0(:,:)
 
   IF (.NOT.(noncolin)) RETURN
   WRITE( stdout,*) "  Generating pointlists ..."

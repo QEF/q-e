@@ -48,17 +48,17 @@ subroutine linmin (xold, eold, deold, xtot, etot, detot, xnew, &
   USE kinds
   implicit none
   !  Input
-  real(kind=DP) :: xold, eold, deold, xtot, etot, detot
+  real(DP) :: xold, eold, deold, xtot, etot, detot
   !  Output
   logical :: minimum_ok
-  real(kind=DP) :: xnew
+  real(DP) :: xnew
   !  Local
   ! maximum allowed step size
-  real(kind=DP) :: xmax
+  real(DP) :: xmax
   parameter (xmax = 10.d0)
 
 
-  real(kind=DP) :: b, c, c2, d, dbc2, dx, x, enew
+  real(DP) :: b, c, c2, d, dbc2, dx, x, enew
   WRITE( stdout, 100) eold, etot, deold, detot
   if (deold.gt.0) call errore ('linmin', 'search direction is up-hill &
        &', 1)

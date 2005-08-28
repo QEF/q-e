@@ -39,11 +39,11 @@
       IMPLICIT NONE
 
       INTEGER :: ld, n, mrank, info, iopt
-      REAL(dbl) :: cond, toleig
+      REAL(DP) :: cond, toleig
 
-      REAL(dbl)  :: a(ld,n), u(ld,n), v(ld,n), work(4*n)
-      REAL(dbl)  :: zero=0.0d0
-      REAL(dbl)  :: one=1.0d0
+      REAL(DP)  :: a(ld,n), u(ld,n), v(ld,n), work(4*n)
+      REAL(DP)  :: zero=0.0d0
+      REAL(DP)  :: one=1.0d0
 
       INTEGER :: n3, i, j, k, m
 
@@ -118,11 +118,11 @@
       IMPLICIT NONE
 
       INTEGER :: ld, n, mrank, info, iopt
-      REAL(dbl) :: cond, toleig
+      REAL(DP) :: cond, toleig
 
-      COMPLEX(dbl) a(ld,n),u(ld,n),v(ld,n),work(4*n)
-      REAL(dbl)  :: zero=0.0d0
-      REAL(dbl)  :: one=1.0d0
+      COMPLEX(DP) a(ld,n),u(ld,n),v(ld,n),work(4*n)
+      REAL(DP)  :: zero=0.0d0
+      REAL(DP)  :: one=1.0d0
 
       INTEGER :: n3, i, j, k, m 
 
@@ -284,14 +284,14 @@
 
       USE kinds
       INTEGER LDX,N,P,LDU,LDV,JOB,INFO
-      REAL(dbl) X(LDX,1),S(1),E(1),U(LDU,1),V(LDV,1),WORK(1)
+      REAL(DP) X(LDX,1),S(1),E(1),U(LDU,1),V(LDV,1),WORK(1)
 
 !     INTERNAL VARIABLES
 !
       INTEGER I,ITER,J,JOBU,K,KASE,KK,L,LL,LLS,LM1,LP1,LS,LU,M,MAXIT, &
      &        MM,MM1,MP1,NCT,NCTP1,NCU,NRT,NRTP1
-      REAL(dbl)  DDOT,T,R
-      REAL(dbl)  B,C,CS,EL,EMM1,F,G,DNRM2,SCALE,SHIFT,SL,SM,SN, &
+      REAL(DP)  DDOT,T,R
+      REAL(DP)  B,C,CS,EL,EMM1,F,G,DNRM2,SCALE,SHIFT,SL,SM,SN, &
      &                 SMM1,T1,TEST,ZTEST
       LOGICAL WANTU,WANTV
 !

@@ -26,11 +26,11 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   ! input: the k point
   ! input: the mode which is computed
 
-  real(kind=DP) :: weight, wgg (nbnd, nbnd, nksq)
+  real(DP) :: weight, wgg (nbnd, nbnd, nksq)
   ! input: the weight of the k point
   ! input: the weights
 
-  complex(kind=DP) :: evcr (nrxxs, nbnd), drhoscf (nrxxs), &
+  complex(DP) :: evcr (nrxxs, nbnd), drhoscf (nrxxs), &
        dbecsum(nhm * (nhm + 1) / 2, nat), becq (nkb, nbnd, nksq), &
        alpq (nkb, nbnd, 3, nksq)
   ! input: the wavefunctions at k in real
@@ -41,10 +41,10 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   !
   !   here the local variable
   !
-  real(kind=DP) :: wgt
+  real(DP) :: wgt
   ! the effective weight of the k point
 
-  complex(kind=DP), allocatable :: ps1 (:,:), dpsir (:)
+  complex(DP), allocatable :: ps1 (:,:), dpsir (:)
   ! auxiliary space
   ! the change of wavefunctions in real sp
 

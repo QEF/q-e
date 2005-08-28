@@ -12,14 +12,14 @@ function scnds ()
   !
   use kinds, ONLY: DP
   implicit none
-  real(kind=DP) :: scnds
+  real(DP) :: scnds
   !
 #if defined(__PGI) || defined(__ALPHA)
-  real(kind=4) :: etime, tarry(2)
+  real(4) :: etime, tarry(2)
   ! etime:  system function, returns the CPU time in sec.
   ! PGI compiler has no intrinsic f90 cpu_time
 #endif
-  real(kind=DP) :: t0, t1
+  real(DP) :: t0, t1
   ! t0 contains the time of the first call
   ! t1 contains the present time
   logical :: first=.true.

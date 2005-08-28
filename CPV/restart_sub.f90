@@ -34,7 +34,7 @@ MODULE from_restart_module
                               becp, velh, dt2bye, fionm, ekincm )
     !--------------------------------------------------------------------------
     !
-    USE kinds,                ONLY : dbl
+    USE kinds,                ONLY : DP
     USE control_flags,        ONLY : tranp, trane, trhor, iprsta, tpre, &
                                      tzeroc, tzerop, tzeroe, tfor, thdyn, &
                                      lwf,  tprnfor, tortho, tv0rd, amprp, &
@@ -72,34 +72,34 @@ MODULE from_restart_module
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh, cell_nosezero
     USE phase_factors_module, ONLY : strucf
     !
-    COMPLEX(KIND=dbl) :: eigr(:,:), ei1(:,:), ei2(:,:), ei3(:,:)
-    COMPLEX(KIND=dbl) :: eigrb(:,:)
+    COMPLEX(DP) :: eigr(:,:), ei1(:,:), ei2(:,:), ei3(:,:)
+    COMPLEX(DP) :: eigrb(:,:)
     INTEGER           :: irb(:,:)
-    REAL(KIND=dbl)    :: bec(:,:), fion(:,:), becdr(:,:,:), fionm(:,:)
-    REAL(KIND=dbl)    :: taub(:,:)
-    REAL(KIND=dbl)    :: b1(:), b2(:), b3(:)
+    REAL(DP)    :: bec(:,:), fion(:,:), becdr(:,:,:), fionm(:,:)
+    REAL(DP)    :: taub(:,:)
+    REAL(DP)    :: b1(:), b2(:), b3(:)
     INTEGER           :: nfi
     LOGICAL           :: tfirst
-    COMPLEX(KIND=dbl) :: sfac(:,:)
-    COMPLEX(KIND=dbl) :: rhog(:,:)
-    REAL(KIND=dbl)    :: rhor(:,:), rhos(:,:), rhoc(:)
-    REAL(KIND=dbl)    :: stress(:,:), detot(:,:), enthal, ekincm
-    REAL(KIND=dbl)    :: lambda(:,:), lambdam(:,:), lambdap(:,:)
-    REAL(KIND=dbl)    :: ema0bg(:)
-    REAL(KIND=dbl)    :: dbec(:,:,:,:)
-    REAL(KIND=dbl)    :: bephi(:,:), becp(:,:)
-    REAL(KIND=dbl)    :: velh(3,3)
-    REAL(KIND=dbl)    :: dt2bye
+    COMPLEX(DP) :: sfac(:,:)
+    COMPLEX(DP) :: rhog(:,:)
+    REAL(DP)    :: rhor(:,:), rhos(:,:), rhoc(:)
+    REAL(DP)    :: stress(:,:), detot(:,:), enthal, ekincm
+    REAL(DP)    :: lambda(:,:), lambdam(:,:), lambdap(:,:)
+    REAL(DP)    :: ema0bg(:)
+    REAL(DP)    :: dbec(:,:,:,:)
+    REAL(DP)    :: bephi(:,:), becp(:,:)
+    REAL(DP)    :: velh(3,3)
+    REAL(DP)    :: dt2bye
     !
-    REAL(KIND=dbl),    ALLOCATABLE :: emadt2(:), emaver(:)
-    COMPLEX(KIND=dbl), ALLOCATABLE :: c2(:), c3(:)
-    REAL(KIND=dbl)                 :: verl1, verl2
-    REAL(KIND=dbl)                 :: bigr
+    REAL(DP),    ALLOCATABLE :: emadt2(:), emaver(:)
+    COMPLEX(DP), ALLOCATABLE :: c2(:), c3(:)
+    REAL(DP)                 :: verl1, verl2
+    REAL(DP)                 :: bigr
     INTEGER                        :: i, j, iter
     LOGICAL                        :: tlast = .FALSE.
-    REAL(KIND=dbl)                 :: fcell(3,3)
-    REAL(KIND=dbl)                 :: fccc = 0.D0
-    REAL(KIND=dbl)                 :: ccc
+    REAL(DP)                 :: fcell(3,3)
+    REAL(DP)                 :: fccc = 0.D0
+    REAL(DP)                 :: ccc
     !
     !
     ! ... We are restarting from file recompute ainv
@@ -322,7 +322,7 @@ MODULE from_restart_module
                               bec, c0, cm, ei1, ei2, ei3, sfac, eself )
     !--------------------------------------------------------------------------
     !
-    USE kinds,                ONLY : dbl
+    USE kinds,                ONLY : DP
     USE control_flags,        ONLY : trane, trhor, iprsta, tpre
     USE uspp,                 ONLY : vkb, nkb
     USE ions_base,            ONLY : na, nsp
@@ -339,17 +339,17 @@ MODULE from_restart_module
     IMPLICIT NONE
     !
     LOGICAL           :: tfirst
-    REAL(KIND=dbl)    :: taus(:,:), tau0(:,:)
-    REAL(KIND=dbl)    :: h(3,3)
-    COMPLEX(KIND=dbl) :: eigr(:,:)
-    REAL(KIND=dbl)    :: bec(:,:)
-    COMPLEX(KIND=dbl) :: c0(:,:)
-    COMPLEX(KIND=dbl) :: cm(:,:)
-    COMPLEX(KIND=dbl) :: ei1(:,:)
-    COMPLEX(KIND=dbl) :: ei2(:,:)
-    COMPLEX(KIND=dbl) :: ei3(:,:)
-    COMPLEX(KIND=dbl) :: sfac(:,:)
-    REAL(KIND=dbl)    :: eself
+    REAL(DP)    :: taus(:,:), tau0(:,:)
+    REAL(DP)    :: h(3,3)
+    COMPLEX(DP) :: eigr(:,:)
+    REAL(DP)    :: bec(:,:)
+    COMPLEX(DP) :: c0(:,:)
+    COMPLEX(DP) :: cm(:,:)
+    COMPLEX(DP) :: ei1(:,:)
+    COMPLEX(DP) :: ei2(:,:)
+    COMPLEX(DP) :: ei3(:,:)
+    COMPLEX(DP) :: sfac(:,:)
+    REAL(DP)    :: eself
     INTEGER           :: j
     !
     !
@@ -399,7 +399,7 @@ MODULE from_restart_module
     ! ... this routine recreates the starting configuration from a 
     ! ... restart file
     !
-    USE kinds,                 ONLY : dbl
+    USE kinds,                 ONLY : DP
     USE phase_factors_module,  ONLY : strucf, phfacs
     USE time_step,             ONLY : delt
     USE charge_density,        ONLY : rhoofr
@@ -441,30 +441,30 @@ MODULE from_restart_module
     IMPLICIT NONE
     !
     INTEGER                          :: nfi
-    REAL(KIND=dbl)                   :: acc(nacx)
-    COMPLEX(KIND=dbl)                :: sfac(:,:)
+    REAL(DP)                   :: acc(nacx)
+    COMPLEX(DP)                :: sfac(:,:)
     TYPE(atoms_type)                 :: atoms_0, atoms_m
-    COMPLEX(KIND=dbl)                :: eigr(:,:)
-    COMPLEX(KIND=dbl)                :: ei1(:,:)
-    COMPLEX(KIND=dbl)                :: ei2(:,:)
-    COMPLEX(KIND=dbl)                :: ei3(:,:)
-    COMPLEX(KIND=dbl), INTENT(INOUT) :: cm(:,:,:,:), c0(:,:,:,:)
-    REAL(KIND=dbl)                   :: fi(:,:,:)
+    COMPLEX(DP)                :: eigr(:,:)
+    COMPLEX(DP)                :: ei1(:,:)
+    COMPLEX(DP)                :: ei2(:,:)
+    COMPLEX(DP)                :: ei3(:,:)
+    COMPLEX(DP), INTENT(INOUT) :: cm(:,:,:,:), c0(:,:,:,:)
+    REAL(DP)                   :: fi(:,:,:)
     TYPE(boxdimensions)              :: ht_m, ht_0
-    REAL(KIND=dbl)                   :: rhoe(:,:,:,:)
+    REAL(DP)                   :: rhoe(:,:,:,:)
     TYPE(charge_descriptor)          :: desc
     TYPE(wave_descriptor)            :: cdesc
-    REAL(KIND=dbl)                   :: bec(:,:)
-    REAL(KIND=dbl)                   :: becdr(:,:,:)
-    REAL(KIND=dbl)                   :: vpot(:,:,:,:)
+    REAL(DP)                   :: bec(:,:)
+    REAL(DP)                   :: becdr(:,:,:)
+    REAL(DP)                   :: vpot(:,:,:,:)
     TYPE(dft_energy_type)            :: edft
     !
     INTEGER           :: ig, ib, i, j, k, ik, nb, is, ia, ierr, isa
     LOGICAL           :: ttforce
-    REAL(KIND=dbl)    :: timepre, vdum = 0.D0
-    REAL(KIND=dbl)    :: stau(3), rtau(3), hinv(3,3)
-    COMPLEX(KIND=dbl) :: cgam(1,1,1)
-    REAL(KIND=dbl)    :: gam(1,1,1)
+    REAL(DP)    :: timepre, vdum = 0.D0
+    REAL(DP)    :: stau(3), rtau(3), hinv(3,3)
+    COMPLEX(DP) :: cgam(1,1,1)
+    REAL(DP)    :: gam(1,1,1)
     !
     !
     ! ... if tbeg .eq. true ht_0 is not read from the restart file, and

@@ -24,16 +24,16 @@ subroutine gramsh (n, nvec, nstart, nfinish,         &
      ivec,           &  ! counter on vectors
      ic,             &  ! coordinates
      ivecp              ! counter on vectors    
-  real(kind=DP) ::   &
+  real(DP) ::   &
      epsproj,        &  ! accuracy
      norm,           &  ! the norm of a vector
      DDOT               ! to compute the dot product of two vectors  
-  real(kind=DP), parameter :: eps=1.d-8
-  complex(kind=DP) :: &
+  real(DP), parameter :: eps=1.d-8
+  complex(DP) :: &
      psibase(n,n),    & ! i/o:basis vector set
      psiprob(n,nvec), & ! i/o:vectors to be orthog. and added to psibas
      ZDOTC              ! to compute scalar products
-  complex(kind=DP), allocatable ::  &
+  complex(DP), allocatable ::  &
      ps(:)                        ! the scalar products  
 
   allocate( ps( n ) )

@@ -22,7 +22,7 @@ MODULE read_namelists_module
   SAVE
   !
   PRIVATE
-  REAL (KIND=DP), PARAMETER :: SM_NOT_SET=-20.d0
+  REAL (DP), PARAMETER :: SM_NOT_SET=-20.d0
   !
   PUBLIC :: read_namelists, SM_NOT_SET
   !

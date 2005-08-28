@@ -25,9 +25,9 @@ subroutine dvscf (nu_i, dvloc, xq_x)
   implicit none
   integer :: nu_i
   ! input: mode under consideration
-  real (kind = dp) :: xq_x (3)
+  real (DP) :: xq_x (3)
   ! input: coordinates of the q point
-  complex (kind = dp) :: dvloc (nrxx)
+  complex (DP) :: dvloc (nrxx)
   ! output: local part of the variation
   !         of the K_S potential
   !
@@ -38,17 +38,17 @@ subroutine dvscf (nu_i, dvloc, xq_x)
   ! unit containing the charge variation
   ! countes
 
-  real (kind=DP) :: qg2, gtau
+  real (DP) :: qg2, gtau
   ! the modulus of (q+G)^2
   ! auxiliary variable: g*tau
 
-  complex (kind=DP) ::  guexp
+  complex (DP) ::  guexp
   ! auxiliary variable: g*u*exp(gtau)
 
-  real (kind=DP), pointer :: vloc_x (:,:)
+  real (DP), pointer :: vloc_x (:,:)
   ! the local potential at G+q
-  complex (kind=DP), pointer :: u_x(:,:), drc_x (:,:)
-  complex (kind=DP), allocatable :: aux1 (:), aux2 (:)
+  complex (DP), pointer :: u_x(:,:), drc_x (:,:)
+  complex (DP), allocatable :: aux1 (:), aux2 (:)
   ! the transformation modes patterns
   ! contain drho_core for all atomic types
   logical :: q_eq_zero

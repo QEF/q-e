@@ -22,11 +22,11 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
   use funct
   implicit none
 
-  real(kind=DP) :: rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw
+  real(DP) :: rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw
   !
-  real(kind=DP), parameter :: small= 1.d-10, third = 1.d0/3.d0, &
+  real(DP), parameter :: small= 1.d-10, third = 1.d0/3.d0, &
        pi34= 0.6203504908994d0 ! pi34=(3/4pi)^(1/3)
-  real(kind=DP) :: rs
+  real(DP) :: rs
   !
   if (rho <= small) then
      ec = 0.0d0
@@ -82,7 +82,7 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, sx, v1xup, &
   !
   !     dummy arguments
   !
-  real(kind=DP) :: rhoup, rhodw, grhoup2, grhodw2, sx, v1xup, v1xdw, &
+  real(DP) :: rhoup, rhodw, grhoup2, grhodw2, sx, v1xup, v1xdw, &
        v2xup, v2xdw
   ! up and down charge
   ! up and down gradient of the charge
@@ -90,8 +90,8 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, sx, v1xup, &
   ! derivatives of exchange wr. rho
   ! derivatives of exchange wr. grho
   !
-  real(kind=DP), parameter :: small = 1.d-10
-  real(kind=DP) :: rho, sxup, sxdw
+  real(DP), parameter :: small = 1.d-10
+  real(DP) :: rho, sxup, sxdw
   integer :: iflag
   !
   !
@@ -180,7 +180,7 @@ subroutine gcc_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   !
   !     dummy arguments
   !
-  real(kind=DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
+  real(DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
   ! the total charge
   ! the magnetization
   ! the gradient of the charge squared
@@ -188,7 +188,7 @@ subroutine gcc_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   ! derivatives of correlation wr. rho
   ! derivatives of correlation wr. grho
 
-  real(kind=DP), parameter :: small = 1.d-10, epsr=1.d-6
+  real(DP), parameter :: small = 1.d-10, epsr=1.d-6
   !
   !
   if ( abs(zeta) > 1.d0 ) then
@@ -234,14 +234,14 @@ subroutine pz_polarized (rs, ec, vc)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rs, ec, vc
-  real(kind=DP) :: a, b, c, d, gc, b1, b2
+  real(DP) :: rs, ec, vc
+  real(DP) :: a, b, c, d, gc, b1, b2
   parameter (a = 0.01555d0, b = - 0.0269d0, c = 0.0007d0, d = &
        - 0.0048d0, gc = - 0.0843d0, b1 = 1.3981d0, b2 = 0.2611d0)
-  real(kind=DP) :: lnrs, rs12, ox, dox
+  real(DP) :: lnrs, rs12, ox, dox
   LOGICAL       :: xc_rel
-  REAL(KIND=DP), PARAMETER :: xcprefact = 0.022575584, pi34 = 0.6203504908994d0 
-  REAL(KIND=DP) :: betha, etha, csi, prefact
+  REAL(DP), PARAMETER :: xcprefact = 0.022575584, pi34 = 0.6203504908994d0 
+  REAL(DP) :: betha, etha, csi, prefact
   !
   if (rs.lt.1.0d0) then
      ! high density formula
@@ -276,10 +276,10 @@ subroutine pz_spin (rs, zeta, ec, vcup, vcdw)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rs, zeta, ec, vcup, vcdw
+  real(DP) :: rs, zeta, ec, vcup, vcdw
   !
-  real(kind=DP) :: ecu, vcu, ecp, vcp, fz, dfz
-  real(kind=DP) :: p43, third
+  real(DP) :: ecu, vcu, ecp, vcp, fz, dfz
+  real(DP) :: p43, third
   parameter (p43 = 4.0d0 / 3.d0, third = 1.d0 / 3.d0)
   !
   ! unpolarized part (Perdew-Zunger formula)
@@ -307,32 +307,32 @@ subroutine pw_spin (rs, zeta, ec, vcup, vcdw)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rs, zeta, ec, vcup, vcdw
+  real(DP) :: rs, zeta, ec, vcup, vcdw
   ! xc parameters, unpolarised
-  real(kind=DP) :: a, a1, b1, b2, b3, b4, c0, c1, c2, c3, d0, d1
+  real(DP) :: a, a1, b1, b2, b3, b4, c0, c1, c2, c3, d0, d1
   parameter (a = 0.031091d0, a1 = 0.21370d0, b1 = 7.5957d0, b2 = &
        3.5876d0, b3 = 1.6382d0, b4 = 0.49294d0, c0 = a, c1 = 0.046644d0, &
        c2 = 0.00664d0, c3 = 0.01043d0, d0 = 0.4335d0, d1 = 1.4408d0)
   ! xc parameters, polarised
-  real(kind=DP) :: ap, a1p, b1p, b2p, b3p, b4p, c0p, c1p, c2p, c3p, d0p, &
+  real(DP) :: ap, a1p, b1p, b2p, b3p, b4p, c0p, c1p, c2p, c3p, d0p, &
        d1p
   parameter (ap = 0.015545d0, a1p = 0.20548d0, b1p = 14.1189d0, b2p &
        = 6.1977d0, b3p = 3.3662d0, b4p = 0.62517d0, c0p = ap, c1p = &
        0.025599d0, c2p = 0.00319d0, c3p = 0.00384d0, d0p = 0.3287d0, d1p &
        = 1.7697d0)
   ! xc parameters, antiferro
-  real(kind=DP) :: aa, a1a, b1a, b2a, b3a, b4a, c0a, c1a, c2a, c3a, d0a, &
+  real(DP) :: aa, a1a, b1a, b2a, b3a, b4a, c0a, c1a, c2a, c3a, d0a, &
        d1a
   parameter (aa = 0.016887d0, a1a = 0.11125d0, b1a = 10.357d0, b2a = &
        3.6231d0, b3a = 0.88026d0, b4a = 0.49671d0, c0a = aa, c1a = &
        0.035475d0, c2a = 0.00188d0, c3a = 0.00521d0, d0a = 0.2240d0, d1a &
        = 0.3969d0)
-  real(kind=DP) :: fz0
+  real(DP) :: fz0
   parameter (fz0 = 1.709921d0)
-  real(kind=DP) :: rs12, rs32, rs2, zeta2, zeta3, zeta4, fz, dfz
-  real(kind=DP) :: om, dom, olog, epwc, vpwc
-  real(kind=DP) :: omp, domp, ologp, epwcp, vpwcp
-  real(kind=DP) :: oma, doma, ologa, alpha, vpwca
+  real(DP) :: rs12, rs32, rs2, zeta2, zeta3, zeta4, fz, dfz
+  real(DP) :: om, dom, olog, epwc, vpwc
+  real(DP) :: omp, domp, ologp, epwcp, vpwcp
+  real(DP) :: oma, doma, ologa, alpha, vpwca
   !
   !     if(rs.lt.0.5d0) then
   ! high density formula (not implemented)
@@ -404,16 +404,16 @@ subroutine becke88_spin (rho, grho, sx, v1x, v2x)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rho, grho, sx, v1x, v2x
+  real(DP) :: rho, grho, sx, v1x, v2x
   ! input: charge
   ! input: gradient
   ! output: the up and down energies
   ! output: first part of the potential
   ! output: the second part of the potential
   !
-  real(kind=DP) :: beta, third
+  real(DP) :: beta, third
   parameter (beta = 0.0042d0, third = 1.d0 / 3.d0)
-  real(kind=DP) :: rho13, rho43, xs, xs2, sa2b8, shm1, dd, dd2, ee
+  real(DP) :: rho13, rho43, xs, xs2, sa2b8, shm1, dd, dd2, ee
   !
   rho13 = rho**third
   rho43 = rho13**4
@@ -439,17 +439,17 @@ subroutine perdew86_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
-  real(kind=DP) :: p1, p2, p3, p4, pc1, pc2, pci
+  real(DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
+  real(DP) :: p1, p2, p3, p4, pc1, pc2, pci
   parameter (p1 = 0.023266d0, p2 = 7.389d-6, p3 = 8.723d0, p4 = &
        0.472d0)
   parameter (pc1 = 0.001667d0, pc2 = 0.002568d0, pci = pc1 + pc2)
-  real(kind=DP) :: third, pi34
+  real(DP) :: third, pi34
   parameter (third = 1.d0 / 3.d0, pi34 = 0.6203504908994d0)
   ! pi34=(3/4pi)^(1/3)
   !
-  real(kind=DP) :: rho13, rho43, rs, rs2, rs3, cna, cnb, cn, drs
-  real(kind=DP) :: dcna, dcnb, dcn, phi, ephi, dd, ddd
+  real(DP) :: rho13, rho43, rs, rs2, rs3, cna, cnb, cn, drs
+  real(DP) :: dcna, dcnb, dcn, phi, ephi, dd, ddd
   !
   rho13 = rho**third
   rho43 = rho13**4
@@ -490,19 +490,19 @@ subroutine ggac_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
-  real(kind=DP) :: al, pa, pb, pc, pd, cx, cxc0, cc0
+  real(DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
+  real(DP) :: al, pa, pb, pc, pd, cx, cxc0, cc0
   parameter (al = 0.09d0, pa = 0.023266d0, pb = 7.389d-6, pc = &
        8.723d0, pd = 0.472d0)
   parameter (cx = - 0.001667d0, cxc0 = 0.002568d0, cc0 = - cx + &
        cxc0)
-  real(kind=DP) :: third, pi34, nu, be, xkf, xks
+  real(DP) :: third, pi34, nu, be, xkf, xks
   parameter (third = 1.d0 / 3.d0, pi34 = 0.6203504908994d0)
   parameter (nu = 15.755920349483144d0, be = nu * cc0)
   parameter (xkf = 1.919158292677513d0, xks = 1.128379167095513d0)
   ! pi34=(3/4pi)^(1/3),  nu=(16/pi)*(3 pi^2)^(1/3)
   ! xkf=(9 pi/4)^(1/3), xks= sqrt(4/pi)
-  real(kind=DP) :: kf, ks, rs, rs2, rs3, ec, vcup, vcdw, t, expe, af, y, &
+  real(DP) :: kf, ks, rs, rs2, rs3, ec, vcup, vcdw, t, expe, af, y, &
        xy, qy, s1, h0, ddh0, ee, cn, dcn, cna, dcna, cnb, dcnb, h1, dh1, &
        ddh1, fz, fz2, fz3, fz4, dfz, bfup, bfdw, dh0up, dh0dw, dh0zup, &
        dh0zdw, dh1zup, dh1zdw
@@ -570,16 +570,16 @@ subroutine pbec_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
-  real(kind=DP) :: ga, be
+  real(DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
+  real(DP) :: ga, be
   parameter (ga = 0.031091d0, be = 0.066725d0)
-  real(kind=DP) :: third, pi34, xkf, xks
+  real(DP) :: third, pi34, xkf, xks
   parameter (third = 1.d0 / 3.d0, pi34 = 0.6203504908994d0)
   parameter (xkf = 1.919158292677513d0, xks = 1.128379167095513d0)
   ! pi34=(3/4pi)^(1/3), xkf=(9 pi/4)^(1/3), xks= sqrt(4/pi)
-  real(kind=DP) :: kf, ks, rs, ec, vcup, vcdw, t, expe, af, y, xy, qy, &
+  real(DP) :: kf, ks, rs, ec, vcup, vcdw, t, expe, af, y, xy, qy, &
        s1, h0, ddh0
-  real(kind=DP) :: fz, fz2, fz3, fz4, dfz, bfup, bfdw, dh0up, dh0dw, &
+  real(DP) :: fz, fz2, fz3, fz4, dfz, bfup, bfdw, dh0up, dh0dw, &
        dh0zup, dh0zdw
   !
   rs = pi34 / rho**third
@@ -629,12 +629,12 @@ subroutine slater_spin (rho, zeta, ex, vxup, vxdw)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: rho, zeta, ex, vxup, vxdw
-  real(kind=DP) :: f, alpha, third, p43
+  real(DP) :: rho, zeta, ex, vxup, vxdw
+  real(DP) :: f, alpha, third, p43
   parameter (f = - 1.10783814957303361d0, alpha = 2.0d0 / 3.0d0)
   ! f = -9/8*(3/pi)^(1/3)
   parameter (third = 1.d0 / 3.d0, p43 = 4.d0 / 3.d0)
-  real(kind=DP) :: exup, exdw, rho13
+  real(DP) :: exup, exdw, rho13
   !
   rho13 = ( (1.d0 + zeta) * rho) **third
   exup = f * alpha * rho13
@@ -654,11 +654,11 @@ SUBROUTINE slater_rxc_spin ( rho, Z, ex, vxup, vxdw )
   !
   USE kinds
   IMPLICIT none
-  real (kind=DP):: rho, ex, vxup, vxdw
+  real (DP):: rho, ex, vxup, vxdw
   !
-  real(kind=DP), PARAMETER :: ZERO=0.D0, ONE=1.D0, PFIVE=.5D0, &
+  real(DP), PARAMETER :: ZERO=0.D0, ONE=1.D0, PFIVE=.5D0, &
        OPF=1.5D0, C014=0.014D0, pi = 3.14159265358979d0
-  real (kind=DP):: rs, trd, ftrd, tftm, a0, alp, z, fz, fzp, vxp, exp, &
+  real (DP):: rs, trd, ftrd, tftm, a0, alp, z, fz, fzp, vxp, exp, &
        beta, sb, alb, vxf, exf
 
   TRD = ONE/3
@@ -704,11 +704,11 @@ subroutine slater1_spin (rho, zeta, ex, vxup, vxdw)
   !
   use kinds, only: dp
   implicit none
-  real(kind=DP) :: rho, zeta, ex, vxup, vxdw
-  real(kind=DP), parameter :: f = - 1.10783814957303361d0, alpha = 1.0d0, &
+  real(DP) :: rho, zeta, ex, vxup, vxdw
+  real(DP), parameter :: f = - 1.10783814957303361d0, alpha = 1.0d0, &
        third = 1.d0 / 3.d0, p43 = 4.d0 / 3.d0
   ! f = -9/8*(3/pi)^(1/3)
-  real(kind=DP) :: exup, exdw, rho13
+  real(DP) :: exup, exdw, rho13
   !
   rho13 = ( (1.d0 + zeta) * rho) **third
   exup = f * alpha * rho13

@@ -31,7 +31,7 @@ subroutine add_shift_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
 
   logical :: gamma_only
 
-  real(kind=DP) :: tau (3, nat), g (3, ngm), vloc (ngl, * ), &
+  real(DP) :: tau (3, nat), g (3, ngm), vloc (ngl, * ), &
        rho (nrxx, nspin), alat, omega
   ! input: the coordinates of the atoms
   ! input: the coordinates of G vectors
@@ -40,17 +40,17 @@ subroutine add_shift_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   ! input: the length measure
   ! input: the volume of the cell
 
-  real(kind=DP) :: shift_lc ( nat)
+  real(DP) :: shift_lc ( nat)
   ! output: the local forces on atoms
 
   integer :: ig, na
   ! counter on G vectors
   ! counter on atoms
 
-  real(kind=DP), allocatable :: aux (:,:), shift_(:)
+  real(DP), allocatable :: aux (:,:), shift_(:)
   ! auxiliary space for FFT
-  real(kind=DP) :: arg, fact
-  real(kind=DP) , parameter :: tpi = 2.d0 * 3.14159265358979d0
+  real(DP) :: arg, fact
+  real(DP) , parameter :: tpi = 2.d0 * 3.14159265358979d0
   !
   ! contribution to the force from the local part of the bare potential
   ! F_loc = Omega \Sum_G n*(G) d V_loc(G)/d R_i

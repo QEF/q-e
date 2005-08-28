@@ -23,7 +23,7 @@ subroutine ascheqlocps(nn,lam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
        mesh, &     ! size of radial mesh
        ndm         ! maximum radial mesh 
 
-  real(kind=dp) :: &
+  real(DP) :: &
        e,       &  ! output eigenvalue
        dx,      &  ! linear delta x for radial mesh
        r(mesh), &  ! radial mesh
@@ -37,7 +37,7 @@ subroutine ascheqlocps(nn,lam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   !
   integer :: maxter=100       ! maximum number of iterations
 
-  real(kind=dp) :: &
+  real(DP) :: &
        ddx12,      &   ! dx**2/12 used for Numerov integration
        sqlhf,      &   ! the term for angular momentum in equation
        xl1, x4l6, x6l12, x8l20,& ! used for starting series expansion
@@ -53,7 +53,7 @@ subroutine ascheqlocps(nn,lam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
        yln, xp, expn,& ! used to compute the tail of the solution
        int_0_inf_dr   ! integral function
 
-  real(kind=dp),allocatable :: &
+  real(DP),allocatable :: &
        f(:), &       ! the f function
        el(:),c(:),&  ! auxiliary for inward integration
        yi(:)         ! the irregular solution
@@ -84,7 +84,7 @@ subroutine ascheqlocps(nn,lam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   ddx12=dx*dx/12.0_dp
   l1=lam+1
   nst=l1*2
-  sqlhf=(dble(lam)+0.5_dp)**2
+  sqlhf=(DBLE(lam)+0.5_dp)**2
   xl1=lam+1
   x4l6=4*lam+6
   x6l12=6*lam+12
@@ -176,7 +176,7 @@ subroutine ascheqlocps(nn,lam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
         !  value. increase abs(e)
         !
         eup=e
-        rap=(dble(ncross+l1)/dble(nn))**2
+        rap=(DBLE(ncross+l1)/DBLE(nn))**2
         e=(e-vpot(mesh))*rap+vpot(mesh)
         if(e.lt.elw) e=0.9_dp*elw+0.1_dp*eup
         if(e.gt.eup) e=0.1_dp*elw+0.9_dp*eup
@@ -188,7 +188,7 @@ subroutine ascheqlocps(nn,lam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
         !  value. decrease abs(e)
         !
         elw=e
-        rap=(dble(ncross+l1)/dble(nn))**2
+        rap=(DBLE(ncross+l1)/DBLE(nn))**2
         e=(e-vpot(mesh))*rap+vpot(mesh)
         if(e.gt.eup) e=0.9_dp*eup+0.1_dp*elw
         if(e.lt.elw) e=0.1_dp*eup+0.9_dp*elw

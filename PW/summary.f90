@@ -57,17 +57,17 @@ SUBROUTINE summary()
     ! counter on types
     ! counter on angular momenta
     ! total number of G-vectors (parallel executio
-  REAL(KIND=DP) :: sr(3,3), ft1, ft2, ft3
+  REAL(DP) :: sr(3,3), ft1, ft2, ft3
     ! symmetry matrix in real axes
     ! fractionary translation
-  REAL(KIND=DP), ALLOCATABLE :: xau(:,:)
+  REAL(DP), ALLOCATABLE :: xau(:,:)
     ! atomic coordinate referred to the crystal axes
-  REAL(KIND=DP) :: xkg(3)
+  REAL(DP) :: xkg(3)
     ! coordinates of the k point in crystal axes
   CHARACTER :: mixing_style * 9
   CHARACTER :: ps * 5
     ! name of pseudo type
-  REAL(KIND=DP) :: xp
+  REAL(DP) :: xp
     ! fraction contributing to a given atom type (obsolescent)
   !
   ! ... we start with a general description of the run

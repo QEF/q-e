@@ -17,7 +17,7 @@ subroutine h_1psi_nc (lda, n, npol, psi, hpsi, spsi)
   implicit none
   !
   integer :: lda, n, npol
-  complex(kind=DP) :: psi (lda,npol), hpsi (lda,npol), spsi(lda,npol)
+  complex(DP) :: psi (lda,npol), hpsi (lda,npol), spsi(lda,npol)
   !
   call start_clock ('h_1psi')
   call h_psi_nc (lda, n, 1, psi, hpsi)

@@ -32,11 +32,11 @@ subroutine force_corr (forcescc)
   !
   implicit none
   !
-  real(kind=DP) :: forcescc (3, nat)
+  real(DP) :: forcescc (3, nat)
   !
-  real(kind=DP), allocatable :: rhocgnt (:), aux (:)
+  real(DP), allocatable :: rhocgnt (:), aux (:)
   ! work space
-  real(kind=DP) ::  gx, arg, fact
+  real(DP) ::  gx, arg, fact
   ! temp factors
   integer :: ir, isup, isdw, ig, igl0, nt, na, ipol, ndm
   ! counters

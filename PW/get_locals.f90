@@ -25,10 +25,10 @@
       use noncollin_module
 
       implicit none
-      real(kind=DP) ::   &
+      real(DP) ::   &
           rholoc(nat),   &     ! integrated charge arount the atoms
           magloc(3,nat)        ! integrated magnetic moment around the atom
-      real(kind=DP) :: rho (nrxx, nspin)
+      real(DP) :: rho (nrxx, nspin)
       integer iat,i,ipol
 
       do iat = 1,nat

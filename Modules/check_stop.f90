@@ -22,7 +22,7 @@ MODULE check_stop
   !
   SAVE
   !
-  REAL(dbl)        :: max_seconds = 1.D+7
+  REAL(DP)        :: max_seconds = 1.D+7
   LOGICAL, PRIVATE :: tinit = .FALSE.
   !
   !
@@ -39,10 +39,10 @@ MODULE check_stop
        !
        IMPLICIT NONE
        !
-       REAL(dbl), INTENT(IN) :: val
+       REAL(DP), INTENT(IN) :: val
        LOGICAL               :: tex
-       REAL(dbl)             :: seconds
-       REAL(dbl)             :: elapsed_seconds
+       REAL(DP)             :: seconds
+       REAL(DP)             :: elapsed_seconds
        EXTERNAL                 elapsed_seconds
        !
        IF( tinit ) &
@@ -85,8 +85,8 @@ MODULE check_stop
        INTEGER, OPTIONAL, INTENT(IN) :: inunit
        INTEGER                       :: unit
        LOGICAL                       :: check_stop_now, tex
-       REAL(dbl)                     :: seconds
-       REAL(dbl)                     :: elapsed_seconds
+       REAL(DP)                     :: seconds
+       REAL(DP)                     :: elapsed_seconds
        EXTERNAL                         elapsed_seconds
        !
        !

@@ -262,7 +262,7 @@ SUBROUTINE iosys()
   INTEGER             :: unit = 5, &
                          i, ia, ios, is, image, nt
   LOGICAL             :: ltest
-  REAL(kind=DP)       :: theta, phi
+  REAL(DP)       :: theta, phi
   !
   !
   CALL getenv( 'HOME', pseudo_dir )

@@ -38,7 +38,7 @@ subroutine plan_avg (averag, plan, ninter)
   implicit none
   integer :: ninter
   ! output: the number of planes
-  real(kind=DP) :: averag (nat, nbnd, nkstot), plan (nr3, nbnd, nkstot)
+  real(DP) :: averag (nat, nbnd, nkstot), plan (nr3, nbnd, nkstot)
   ! output: the average charge on ea
   ! output: the planar average
   !
@@ -54,7 +54,7 @@ subroutine plan_avg (averag, plan, ninter)
   ! starting point of each plane
   ! the number of tau per plane
 
-  real(kind=DP) :: sp_min, avg (nat), z1 (nat), sum, zdim
+  real(DP) :: sp_min, avg (nat), z1 (nat), sum, zdim
   ! minimum plane distance
   ! the average position of each plane
   ! auxiliary for coordinates

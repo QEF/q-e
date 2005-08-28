@@ -64,7 +64,7 @@
 SUBROUTINE cprmain( tau, fion_out, etot_out )
   !----------------------------------------------------------------------------
   !
-  USE kinds,                    ONLY : dbl
+  USE kinds,                    ONLY : DP
   USE constants,                ONLY : bohr_radius_angs, uma_au
   USE control_flags,            ONLY : iprint, isave, thdyn, tpre, tbuff,      &
                                        iprsta, trhor, tfor, tvlocw, trhow,     &
@@ -187,9 +187,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   ! ... input/output variables
   !
-  REAL(KIND=dbl), INTENT(INOUT) :: tau(3,nat)
-  REAL(KIND=dbl), INTENT(OUT)   :: fion_out(3,nat)
-  REAL(KIND=dbl), INTENT(OUT)   :: etot_out
+  REAL(DP), INTENT(INOUT) :: tau(3,nat)
+  REAL(DP), INTENT(OUT)   :: fion_out(3,nat)
+  REAL(DP), INTENT(OUT)   :: etot_out
   !
   ! ... control variables
   !
@@ -199,26 +199,26 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   ! ... forces on ions
   !
-  REAL(KIND=dbl) :: maxfion
+  REAL(DP) :: maxfion
   !
   ! ... work variables
   !
-  REAL(KIND=dbl) :: tempp, savee, saveh, savep, epot, epre, &
+  REAL(DP) :: tempp, savee, saveh, savep, epot, epre, &
                     enow, econs, econt, ettt, ccc, bigr, dt2bye
-  REAL(KIND=dbl) :: ekinc0, ekinp, ekinpr, ekinc
-  REAL(KIND=dbl) :: temps(nsx)
-  REAL(KIND=dbl) :: ekinh, temphc, temp1, temp2, randy
-  REAL(KIND=dbl) :: delta_etot
-  REAL(KIND=dbl) :: ftmp, enb, enbi
+  REAL(DP) :: ekinc0, ekinp, ekinpr, ekinc
+  REAL(DP) :: temps(nsx)
+  REAL(DP) :: ekinh, temphc, temp1, temp2, randy
+  REAL(DP) :: delta_etot
+  REAL(DP) :: ftmp, enb, enbi
   INTEGER        :: is, nacc, ia, j, iter, i, isa, ipos
   INTEGER        :: k, ii, l, m
   !
-  REAL(KIND=dbl) :: hgamma(3,3), temphh(3,3)
-  REAL(KIND=dbl) :: fcell(3,3)
+  REAL(DP) :: hgamma(3,3), temphh(3,3)
+  REAL(DP) :: fcell(3,3)
   !
-  REAL(KIND=dbl) :: stress_gpa(3,3), thstress(3,3)
+  REAL(DP) :: stress_gpa(3,3), thstress(3,3)
   !
-  REAL(KIND=dbl), ALLOCATABLE :: tauw(:,:)  
+  REAL(DP), ALLOCATABLE :: tauw(:,:)  
     ! temporary array used to printout positions
   CHARACTER(LEN=3) :: labelw( natx )
   !

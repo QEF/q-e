@@ -30,26 +30,26 @@
        INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
        INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
 
-       REAL(dbl),  DIMENSION(3,3), PARAMETER :: delta = reshape &
-         ( (/ 1.0_dbl, 0.0_dbl, 0.0_dbl, &
-              0.0_dbl, 1.0_dbl, 0.0_dbl, &
-              0.0_dbl, 0.0_dbl, 1.0_dbl  &
+       REAL(DP),  DIMENSION(3,3), PARAMETER :: delta = reshape &
+         ( (/ 1.0_DP, 0.0_DP, 0.0_DP, &
+              0.0_DP, 1.0_DP, 0.0_DP, &
+              0.0_DP, 0.0_DP, 1.0_DP  &
             /), (/ 3, 3 /) )
 
 ! ...  dalbe(:) = delta(alpha(:),beta(:))
-       REAL(dbl),  DIMENSION(6), PARAMETER :: dalbe = &
-         (/ 1.0_dbl, 0.0_dbl, 0.0_dbl, 1.0_dbl, 0.0_dbl, 1.0_dbl /)
+       REAL(DP),  DIMENSION(6), PARAMETER :: dalbe = &
+         (/ 1.0_DP, 0.0_DP, 0.0_DP, 1.0_DP, 0.0_DP, 1.0_DP /)
 
-       REAL(dbl) :: timeek = 0.0d0
-       REAL(dbl) :: timeex = 0.0d0
-       REAL(dbl) :: timeesr = 0.0d0
-       REAL(dbl) :: timeeh = 0.0d0
-       REAL(dbl) :: timeel = 0.0d0
-       REAL(dbl) :: timeenl = 0.0d0
-       REAL(dbl) :: timetot = 0.0d0
+       REAL(DP) :: timeek = 0.0d0
+       REAL(DP) :: timeex = 0.0d0
+       REAL(DP) :: timeesr = 0.0d0
+       REAL(DP) :: timeeh = 0.0d0
+       REAL(DP) :: timeel = 0.0d0
+       REAL(DP) :: timeenl = 0.0d0
+       REAL(DP) :: timetot = 0.0d0
        INTEGER   :: timcnt = 0
 
-       REAL(dbl), EXTERNAL  :: cclock
+       REAL(DP), EXTERNAL  :: cclock
 
      CONTAINS
 
@@ -84,25 +84,25 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      REAL(dbl) :: pail(:,:), desr(:), strvxc
-      REAL(dbl) :: grho(:,:,:,:,:), v2xc(:,:,:,:,:)
-      REAL(dbl) :: bec(:,:)
-      COMPLEX(dbl) :: rhoeg(:,:), vxc(:,:)
-      COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
-      REAL(dbl), INTENT(IN) :: occ(:,:,:)
-      COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:)
+      REAL(DP) :: pail(:,:), desr(:), strvxc
+      REAL(DP) :: grho(:,:,:,:,:), v2xc(:,:,:,:,:)
+      REAL(DP) :: bec(:,:)
+      COMPLEX(DP) :: rhoeg(:,:), vxc(:,:)
+      COMPLEX(DP), INTENT(IN) :: sfac(:,:)
+      REAL(DP), INTENT(IN) :: occ(:,:,:)
+      COMPLEX(DP), INTENT(IN) :: c0(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE (boxdimensions), INTENT(IN) :: box
-      COMPLEX(dbl) :: eigr(:,:)
+      COMPLEX(DP) :: eigr(:,:)
       TYPE (dft_energy_type) :: edft
 
 ! ... declare other variables
-      REAL(dbl) :: s1, s2, s3, s4, s5, s6, s7, s8, s0
+      REAL(DP) :: s1, s2, s3, s4, s5, s6, s7, s8, s0
 
-      REAL(dbl), DIMENSION (6) :: dekin, deht, deps, denl, dexc, dvdw
-      REAL(dbl), DIMENSION (3,3) :: paiu
-      REAL(dbl), ALLOCATABLE :: gagx_l(:,:)
-      REAL(dbl) :: omega, ehr
+      REAL(DP), DIMENSION (6) :: dekin, deht, deps, denl, dexc, dvdw
+      REAL(DP), DIMENSION (3,3) :: paiu
+      REAL(DP), ALLOCATABLE :: gagx_l(:,:)
+      REAL(DP) :: omega, ehr
 
       INTEGER k, ig
 
@@ -260,46 +260,46 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      REAL(dbl), INTENT(IN) :: occ(:,:,:)
-      COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:)
+      REAL(DP), INTENT(IN) :: occ(:,:,:)
+      COMPLEX(DP), INTENT(IN) :: c0(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      REAL(dbl), INTENT(OUT) :: denl(:)
-      REAL(dbl), INTENT(IN) :: gagx_l(:,:)
-      COMPLEX(dbl), INTENT(IN) :: eigr(:,:)
-      REAL(dbl) :: bec(:,:)
-      REAL(dbl), INTENT(IN) :: enl
-      REAL(dbl) :: htm1(3,3)
+      REAL(DP), INTENT(OUT) :: denl(:)
+      REAL(DP), INTENT(IN) :: gagx_l(:,:)
+      COMPLEX(DP), INTENT(IN) :: eigr(:,:)
+      REAL(DP) :: bec(:,:)
+      REAL(DP), INTENT(IN) :: enl
+      REAL(DP) :: htm1(3,3)
 
 ! ... declare functions
-      REAL(dbl)  DDOT
+      REAL(DP)  DDOT
 
 ! ... declare other variables
       INTEGER :: is, l, ll, me, al, be, s, k
       INTEGER :: ir, kk, m, mm, isa, ig, iy, iv, iyy, ih, ihh
       INTEGER :: ia, in, i, iss, nx, ispin, ngw, j, inl
       INTEGER :: iss_wfc, ispin_wfc, mi(16), igh(0:3)
-      REAL(dbl)  xg,xrg,arg,wnd,wnd1,wnd2,temp,tt1,fac,tt2
-      REAL(dbl)  temp2, fg, gmod, anm, sgn
-      REAL(dbl)  pm(3,3), pmtm(6,3,3)
-      REAL(dbl)  dm(6,5), dmqm(6,5,5)
-      REAL(dbl)  fm(3,3,3,7), fmrm(6,7,7)
-      REAL(dbl)  facty(16)
-      REAL(dbl)  denl_new(3,3), detmp(3,3)
+      REAL(DP)  xg,xrg,arg,wnd,wnd1,wnd2,temp,tt1,fac,tt2
+      REAL(DP)  temp2, fg, gmod, anm, sgn
+      REAL(DP)  pm(3,3), pmtm(6,3,3)
+      REAL(DP)  dm(6,5), dmqm(6,5,5)
+      REAL(DP)  fm(3,3,3,7), fmrm(6,7,7)
+      REAL(DP)  facty(16)
+      REAL(DP)  denl_new(3,3), detmp(3,3)
       LOGICAL :: new_stress = .false.
 
-      COMPLEX(dbl), ALLOCATABLE :: auxc(:,:)
-      REAL(dbl), ALLOCATABLE :: wnla(:,:,:)
-      REAL(dbl), ALLOCATABLE :: wnl(:,:,:,:)
-      REAL(dbl), ALLOCATABLE :: wsg(:,:)
-      REAL(dbl), ALLOCATABLE :: btmp(:,:,:,:)
-      REAL(dbl), ALLOCATABLE :: fnls(:,:)
-      REAL(dbl), ALLOCATABLE :: fnlb(:,:,:,:)
-      REAL(dbl), ALLOCATABLE :: gspha(:,:)
-      REAL(dbl), ALLOCATABLE :: gwtmp(:)
-      REAL(dbl), PARAMETER :: twothird = 2.0d0/3.0d0
-      COMPLEX(dbl), PARAMETER :: uimag = (0.0d0,1.0d0)
+      COMPLEX(DP), ALLOCATABLE :: auxc(:,:)
+      REAL(DP), ALLOCATABLE :: wnla(:,:,:)
+      REAL(DP), ALLOCATABLE :: wnl(:,:,:,:)
+      REAL(DP), ALLOCATABLE :: wsg(:,:)
+      REAL(DP), ALLOCATABLE :: btmp(:,:,:,:)
+      REAL(DP), ALLOCATABLE :: fnls(:,:)
+      REAL(DP), ALLOCATABLE :: fnlb(:,:,:,:)
+      REAL(DP), ALLOCATABLE :: gspha(:,:)
+      REAL(DP), ALLOCATABLE :: gwtmp(:)
+      REAL(DP), PARAMETER :: twothird = 2.0d0/3.0d0
+      COMPLEX(DP), PARAMETER :: uimag = (0.0d0,1.0d0)
 ! ... (i)^l
-      COMPLEX(dbl), PARAMETER :: csign(0:3) = (/ (1.0d0, 0.0d0), &
+      COMPLEX(DP), PARAMETER :: csign(0:3) = (/ (1.0d0, 0.0d0), &
           (0.0d0,1.0d0), (-1.0d0,0.0d0), (0.0d0, -1.0d0) /)
 
 
@@ -340,7 +340,7 @@
       IF(gzero) THEN
         denl = - enl * dalbe
       ELSE
-        denl = 0.0_dbl
+        denl = 0.0_DP
       END IF
   
       ngw = cdesc%ngwl
@@ -570,17 +570,17 @@
 
 ! ... declare subroutine arguments
       TYPE (boxdimensions), INTENT(IN) :: ht
-      REAL(dbl),     INTENT(OUT) :: deps(:)
-      REAL(dbl),     INTENT(IN) ::  gagx_l(:,:)
-      COMPLEX(dbl),  INTENT(IN) ::  rhoeg(:,:)
-      COMPLEX(dbl),  INTENT(IN) ::  sfac(:,:)
-      REAL(dbl),     INTENT(IN) ::  dvps(:,:)
-      REAL(dbl),     INTENT(IN) ::  epseu
+      REAL(DP),     INTENT(OUT) :: deps(:)
+      REAL(DP),     INTENT(IN) ::  gagx_l(:,:)
+      COMPLEX(DP),  INTENT(IN) ::  rhoeg(:,:)
+      COMPLEX(DP),  INTENT(IN) ::  sfac(:,:)
+      REAL(DP),     INTENT(IN) ::  dvps(:,:)
+      REAL(DP),     INTENT(IN) ::  epseu
 
 ! ... declare other variables
       INTEGER :: ig,k,is, ispin, nspin
-      REAL(dbl) :: omega
-      COMPLEX(dbl) :: rhets, depst(6)
+      REAL(DP) :: omega
+      COMPLEX(DP) :: rhets, depst(6)
 
 !  end of declarations
 !  ----------------------------------------------
@@ -606,9 +606,9 @@
       END DO
 
       IF(gzero) THEN
-        deps = 2.0_dbl * omega * REAL(depst) - epseu * dalbe
+        deps = 2.0_DP * omega * REAL(depst) - epseu * dalbe
       ELSE
-        deps = 2.0_dbl * omega * REAL(depst)
+        deps = 2.0_DP * omega * REAL(depst)
       END IF
 
       RETURN
@@ -642,22 +642,22 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      REAL(dbl), INTENT(OUT) :: dekin(:)
-      COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:)
+      REAL(DP), INTENT(OUT) :: dekin(:)
+      COMPLEX(DP), INTENT(IN) :: c0(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      REAL(dbl), INTENT(IN) :: occ(:,:,:)
-      REAL(dbl) gagx_l(:,:)
+      REAL(DP), INTENT(IN) :: occ(:,:,:)
+      REAL(DP) gagx_l(:,:)
 
 ! ... declare other variables
-      REAL(dbl)  :: sk(6), scg, efac
-      REAL(dbl), ALLOCATABLE :: arg(:)
+      REAL(DP)  :: sk(6), scg, efac
+      REAL(DP), ALLOCATABLE :: arg(:)
       INTEGER    :: ib, ig, ispin, nspin, ispin_wfc
 
 ! ... end of declarations
 !  ----------------------------------------------
 
       nspin = cdesc%nspin
-      dekin = 0.0_dbl
+      dekin = 0.0_DP
       ALLOCATE( arg( cdesc%ldg ) ) 
 
       efac = 2.0d0 * ecutz / ecsig / SQRT(pi)
@@ -674,7 +674,7 @@
         ispin_wfc = ispin
         IF( force_pairing ) ispin_wfc = 1
         DO ib = 1, cdesc%nbl( ispin )
-          sk = 0.0_dbl
+          sk = 0.0_DP
           DO ig = gstart, cdesc%ngwl
             scg = arg(ig) * CONJG( c0(ig,ib,1,ispin_wfc) ) * c0(ig,ib,1,ispin_wfc)
             sk(1)  = sk(1) + scg * gagx_l(1,ig)
@@ -687,7 +687,7 @@
           dekin = dekin  + occ(ib,1,ispin) * sk
         END DO
       END DO
-      dekin = - 2.0_dbl * dekin
+      dekin = - 2.0_DP * dekin
       DEALLOCATE(arg) 
       RETURN
       END SUBROUTINE stress_kin
@@ -713,21 +713,21 @@
 !---------------------------------------------------ARGUMENT
 
       type (boxdimensions) :: box
-      REAL(dbl)    :: DEHT(:), EHR, GAgx_L(:,:)
-      COMPLEX(dbl) :: RHOEG(:,:)
-      COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
+      REAL(DP)    :: DEHT(:), EHR, GAgx_L(:,:)
+      COMPLEX(DP) :: RHOEG(:,:)
+      COMPLEX(DP), INTENT(IN) :: sfac(:,:)
 
 !---------------------------------------------------LOCAL
 
-      COMPLEX(dbl)    CHGM1,DEHC(6)
-      COMPLEX(dbl)    RHOP,RHOPR,CFPIBG
-      COMPLEX(dbl)    RHET,RHOG,RHETS,RHOGS
-      COMPLEX(dbl)    CFACT
-      REAL(dbl)        r2,hgm1
-      REAL(dbl)        HG_TPIBA2,fpibg
-      REAL(dbl)        ONE_BY_OMEGA
-      REAL(dbl)        ONE_BY_TPIBA2
-      REAL(dbl)        omega
+      COMPLEX(DP)    CHGM1,DEHC(6)
+      COMPLEX(DP)    RHOP,RHOPR,CFPIBG
+      COMPLEX(DP)    RHET,RHOG,RHETS,RHOGS
+      COMPLEX(DP)    CFACT
+      REAL(DP)        r2,hgm1
+      REAL(DP)        HG_TPIBA2,fpibg
+      REAL(DP)        ONE_BY_OMEGA
+      REAL(DP)        ONE_BY_TPIBA2
+      REAL(DP)        omega
 
       INTEGER       ig, is, k, ispin, nspin
 
@@ -749,7 +749,7 @@
           RHOPR = RHOPR + sfac( IG, is ) * RHOPS(IG,is) * rcmax(is)**2 * 0.5D0
         END DO
         HGM1   = 1.D0 / g(IG) / TPIBA2 
-        RHET   = 0.0_dbl
+        RHET   = 0.0_DP
         DO ispin = 1, nspin
           RHET   = RHET + RHOEG(ig,ispin)
         END DO
@@ -759,9 +759,9 @@
       END DO
 
       if (mpime.EQ.0) then
-        deht = 2.0_dbl * omega * REAL(dehc) - ehr * dalbe
+        deht = 2.0_DP * omega * REAL(dehc) - ehr * dalbe
       else
-        deht = 2.0_dbl * omega * REAL(dehc)
+        deht = 2.0_DP * omega * REAL(dehc)
       end if
 
       RETURN
@@ -771,9 +771,9 @@
 
       SUBROUTINE stress_debug(dekin, deht, dexc, desr, deps, denl, htm1)
         USE io_global, ONLY: stdout
-        REAL(dbl) :: dekin(:), deht(:), dexc(:), desr(:), deps(:), denl(:)
-        REAL(dbl) :: detot( 6 ), htm1(3,3)
-        REAL(dbl) :: detmp(3,3)
+        REAL(DP) :: dekin(:), deht(:), dexc(:), desr(:), deps(:), denl(:)
+        REAL(DP) :: detot( 6 ), htm1(3,3)
+        REAL(DP) :: detmp(3,3)
         INTEGER :: k, i, j
         detot = dekin + deht + dexc + desr + deps + denl
         WRITE( stdout,106) detot

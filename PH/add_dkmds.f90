@@ -24,22 +24,22 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
   implicit none
 
   integer, intent(in) :: kpoint, jpol
-  complex(kind=DP), intent(in) :: uact (3 * nat)
-  complex(kind=DP), intent(in) :: dvkb (npwx,nkb,3)
+  complex(DP), intent(in) :: uact (3 * nat)
+  complex(DP), intent(in) :: dvkb (npwx,nkb,3)
 
-  complex(kind=dp) :: becp2(nkb,nbnd)
+  complex(DP) :: becp2(nkb,nbnd)
 
-  real(kind=DP), parameter :: eps = 1.d-12
+  real(DP), parameter :: eps = 1.d-12
 
   integer :: ipol, ijkb0, nt, na, ih, jh, ikb, jkb, ibnd, ig, igg, mu
 
-  real(kind=dp) :: fact
+  real(DP) :: fact
 
   logical :: ok
 
-  complex(kind=dp), allocatable :: ps1(:,:), ps2(:,:,:) 
-  complex(kind=DP), allocatable :: alphadk(:,:,:)
-  complex(kind=DP), allocatable :: aux(:), aux1(:,:)
+  complex(DP), allocatable :: ps1(:,:), ps2(:,:,:) 
+  complex(DP), allocatable :: alphadk(:,:,:)
+  complex(DP), allocatable :: aux(:), aux1(:,:)
 
 
   integer :: i,j 

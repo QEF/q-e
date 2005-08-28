@@ -21,9 +21,9 @@ subroutine stres_knl (sigmanlc, sigmakin)
   USE wvfct,                ONLY: npw, npwx, nbnd, gamma_only, igk, wg
   USE wavefunctions_module, ONLY: evc
   implicit none
-  real(kind=DP) :: sigmanlc (3, 3), sigmakin (3, 3)
-  real(kind=DP), allocatable :: gk (:,:), kfac (:)
-  real(kind=DP) :: twobysqrtpi, gk2, arg
+  real(DP) :: sigmanlc (3, 3), sigmakin (3, 3)
+  real(DP), allocatable :: gk (:,:), kfac (:)
+  real(DP) :: twobysqrtpi, gk2, arg
   integer :: kpoint, l, m, i, ibnd
 
   allocate (gk(  3, npwx))    

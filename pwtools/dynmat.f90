@@ -10,8 +10,8 @@ Module dynamical
   ! All variables read from file that need dynamical allocation
   !
   USE kinds, ONLY: DP
-  complex(kind=DP), allocatable :: dyn(:,:,:,:)
-  real(kind=DP), allocatable :: tau(:,:),  zstar(:,:,:), dchi_dtau(:,:,:,:)
+  complex(DP), allocatable :: dyn(:,:,:,:)
+  real(DP), allocatable :: tau(:,:),  zstar(:,:,:), dchi_dtau(:,:,:,:)
   integer, allocatable :: ityp(:)
   !
 end Module dynamical
@@ -69,6 +69,7 @@ end Module dynamical
 !                    (default: filmol='dynmat.axsf') 
 !
 #include "f_defs.h"
+      USE kinds, ONLY: DP
       use dynamical
       !
       implicit none
@@ -77,10 +78,10 @@ end Module dynamical
       character(len=3) :: atm(ntypx)
       character(len=10) :: asr
       logical :: lread, gamma
-      complex(kind=8), allocatable :: z(:,:)
-      real(kind=8) :: amass(ntypx), amass_(ntypx), eps0(3,3), a0, omega, &
+      complex(DP), allocatable :: z(:,:)
+      real(DP) :: amass(ntypx), amass_(ntypx), eps0(3,3), a0, omega, &
            at(3,3), amconv, q(3), q_(3)
-      real(kind=8), allocatable :: w2(:)
+      real(DP), allocatable :: w2(:)
       integer, allocatable :: itau(:)
       integer :: nat, na, nt, ntyp, nu, iout, axis, nax
       namelist /input/ amass, asr, axis, fildyn, filout, filmol, filxsf, q
@@ -168,11 +169,11 @@ end Module dynamical
       integer, intent(in) :: axis
       integer, intent(inout) :: nat, ntyp
       character(len=3), intent(out) ::  atm(ntyp)
-      real(kind=DP), intent(out) :: amass(ntyp), a0, at(3,3), omega, &
+      real(DP), intent(out) :: amass(ntyp), a0, at(3,3), omega, &
            eps0(3,3), q(3)
       !
       character(len=80) :: line
-      real(kind=DP) :: celldm(6), sum, dyn0r(3,3,2)
+      real(DP) :: celldm(6), sum, dyn0r(3,3,2)
       integer :: ibrav, nt, na, nb, naa, nbb, i, j, k
       logical :: qfinito, noraman
       !
@@ -284,15 +285,15 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
  implicit none
  ! input
  integer, intent(in) :: nat
- real(kind=DP) omega, w2(3*nat), zstar(3,3,nat), eps0(3,3), &
+ real(DP) omega, w2(3*nat), zstar(3,3,nat), eps0(3,3), &
       dchi_dtau(3,3,3,nat), chi(3,3)
- complex(kind=DP) z(3*nat,3*nat)
+ complex(DP) z(3*nat,3*nat)
  ! local
  integer na, nu, ipol, jpol, lpol
  logical noraman
- real(kind=DP), allocatable :: infrared(:), raman(:,:,:)
- real(kind=DP):: polar(3), rydcm1, cm1thz, freq, r1fac, irfac
- real(kind=DP):: cmfac, alpha, beta2
+ real(DP), allocatable :: infrared(:), raman(:,:,:)
+ real(DP):: polar(3), rydcm1, cm1thz, freq, r1fac, irfac
+ real(DP):: cmfac, alpha, beta2
  !
  !  conversion factors Ry => THz, Ry=>cm^(-1) e cm^(-1)=>THz
  !
@@ -416,13 +417,13 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
   implicit none
   character(len=10), intent(in) :: asr
   integer, intent(in) :: axis, nat
-  real(kind=DP), intent(in) :: tau(3,nat)
-  real(kind=DP), intent(inout) :: zeu(3,3,nat)
-  complex(kind=DP), intent(inout) :: dyn(3,3,nat,nat)
+  real(DP), intent(in) :: tau(3,nat)
+  real(DP), intent(inout) :: zeu(3,3,nat)
+  complex(DP), intent(inout) :: dyn(3,3,nat,nat)
   !
   integer :: i,j,n,m,p,k,l,q,r,na, nb, na1, i1, j1
-  real(kind=DP) dynr_new(2,3,3,nat,nat), zeu_new(3,3,nat)
-  real(kind=DP), allocatable :: u(:,:,:,:,:)
+  real(DP) dynr_new(2,3,3,nat,nat), zeu_new(3,3,nat)
+  real(DP), allocatable :: u(:,:,:,:,:)
   ! These are the "vectors" associated with the sum rules
   !
   integer u_less(6*3*nat),n_less,i_less
@@ -430,24 +431,24 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
   ! n_less = number of such vectors, i_less = temporary parameter
   !
   integer ind_v(9*nat*nat,2,4)
-  real(kind=DP) v(9*nat*nat,2)
+  real(DP) v(9*nat*nat,2)
   ! These are the "vectors" associated with symmetry conditions, coded by 
   ! indicating the positions (i.e. the four indices) of the non-zero elements
   ! (there should be only 2 of them) and the value of that element.
   ! We do so in order to use limit the amount of memory used. 
   !
-  real(kind=DP) w(3,3,nat,nat), x(3,3,nat,nat)
-  real(kind=DP) sum, scal, norm2
+  real(DP) w(3,3,nat,nat), x(3,3,nat,nat)
+  real(DP) sum, scal, norm2
   ! temporary vectors and parameters  
   !
-  real(kind=DP) zeu_u(6*3,3,3,nat)
+  real(DP) zeu_u(6*3,3,3,nat)
   ! These are the "vectors" associated with the sum rules on effective charges
   !
   integer zeu_less(6*3),nzeu_less,izeu_less
   ! indices of the vectors zeu_u that are not independent to the preceding
   ! ones, nzeu_less = number of such vectors, izeu_less = temporary parameter
   !
-  real(kind=DP) zeu_w(3,3,nat), zeu_x(3,3,nat)
+  real(DP) zeu_w(3,3,nat), zeu_x(3,3,nat)
   ! temporary vectors
   !
   ! Initialization
@@ -846,9 +847,9 @@ subroutine sp_zeu(zeu_u,zeu_v,nat,scal)
   USE kinds, ONLY: DP
   implicit none
   integer i,j,na,nat
-  real(kind=DP) zeu_u(3,3,nat)
-  real(kind=DP) zeu_v(3,3,nat)
-  real(kind=DP) scal  
+  real(DP) zeu_u(3,3,nat)
+  real(DP) zeu_v(3,3,nat)
+  real(DP) scal  
   !
   !
   scal=0.0d0
@@ -875,9 +876,9 @@ subroutine sp1(u,v,nat,scal)
   USE kinds, ONLY: DP
   implicit none
   integer i,j,na,nb,nat
-  real(kind=DP) u(3,3,nat,nat)
-  real(kind=DP) v(3,3,nat,nat)
-  real(kind=DP) scal  
+  real(DP) u(3,3,nat,nat)
+  real(DP) v(3,3,nat,nat)
+  real(DP) scal  
   !
   !
   scal=0.0d0
@@ -907,10 +908,10 @@ subroutine sp2(u,v,ind_v,nat,scal)
   USE kinds, ONLY: DP
   implicit none
   integer i,nat
-  real(kind=DP) u(3,3,nat,nat)
+  real(DP) u(3,3,nat,nat)
   integer ind_v(2,4)
-  real(kind=DP) v(2)
-  real(kind=DP) scal  
+  real(DP) v(2)
+  real(DP) scal  
   !
   !
   scal=0.0d0
@@ -934,9 +935,9 @@ subroutine sp3(u,v,i,na,nat,scal)
   USE kinds, ONLY: DP
   implicit none
   integer i,j,na,nb,nat
-  real(kind=DP) u(3,3,nat,nat)
-  real(kind=DP) v(3,3,nat,nat)
-  real(kind=DP) scal  
+  real(DP) u(3,3,nat,nat)
+  real(DP) v(3,3,nat,nat)
+  real(DP) scal  
   !
   !
   scal=0.0d0

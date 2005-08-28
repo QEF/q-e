@@ -21,10 +21,10 @@ subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, is, isk)
   ! input: the number of spin components
   ! input: the number of tetrahedra
   ! input: the vertices of a tetrahedron
-  real(kind=DP), intent(in) :: et (nbnd, nks), nelec
+  real(DP), intent(in) :: et (nbnd, nks), nelec
   ! input: the eigenvalues
   ! input: the number of electrons
-  real(kind=DP), intent(out) :: ef
+  real(DP), intent(out) :: ef
   ! output: the fermi energy
   integer, intent(in) :: is, isk(nks)
   !
@@ -33,7 +33,7 @@ subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, is, isk)
   integer :: maxiter
   ! the maximum number of iterations in
 
-  real(kind=DP) :: rydtoev, eps
+  real(DP) :: rydtoev, eps
   ! the transformation Ry to eV
   ! a small quantity
   parameter (maxiter = 300, rydtoev = 13.6058d0, eps = 1.0d-10)
@@ -45,7 +45,7 @@ subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, is, isk)
   ! counter on k points
   ! counter on iterations
 
-  real(kind=DP) :: elw, eup, sumkup, sumklw, sumkt, sumkmid
+  real(DP) :: elw, eup, sumkup, sumklw, sumkt, sumkmid
   ! the lower limit of the fermi ener
   ! the upper limit of the fermi ener
   ! the number of states with eup
@@ -53,7 +53,7 @@ subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, is, isk)
   ! the sum over the states below E_f
   ! the number of states with ef
 
-  real(kind=DP) :: efbetter, better
+  real(DP) :: efbetter, better
   external sumkt
   !
   !      find bounds for the Fermi energy.

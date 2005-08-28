@@ -69,14 +69,14 @@ SUBROUTINE electrons()
   ! ... a few local variables
   !  
 #if defined (EXX)
-  REAL (KIND=DP) :: dexx
-  REAL (KIND=DP) :: fock0,  fock1,  fock2
+  REAL (DP) :: dexx
+  REAL (DP) :: fock0,  fock1,  fock2
 #endif
   INTEGER :: &
       ngkp(npk)        !  number of plane waves summed on all nodes
   CHARACTER (LEN=256) :: &
       flmix            !
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
       dr2,            &!  the norm of the diffence between potential
       charge,         &!  the total charge
       mag,            &!  local magnetization
@@ -93,11 +93,11 @@ SUBROUTINE electrons()
       ik_              !  used to read ik from restart file
   INTEGER :: &
       ldim2           !
-  REAL (KIND=DP) :: &
+  REAL (DP) :: &
        tr2_min,      &! estimated error on energy coming from diagonalization
        descf          ! correction for variational energy
 
-  REAL (KIND=DP), ALLOCATABLE :: &
+  REAL (DP), ALLOCATABLE :: &
       wg_g(:,:)        ! temporary array used to recover from pools array wg,
                        ! and then print occupations on stdout
   LOGICAL :: &
@@ -105,15 +105,15 @@ SUBROUTINE electrons()
   !
   ! ... external functions
   !
-  REAL (KIND=DP), EXTERNAL :: ewald, get_clock
+  REAL (DP), EXTERNAL :: ewald, get_clock
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  COMPLEX (KIND=DP), ALLOCATABLE :: rhog(:,:)
-  COMPLEX (KIND=DP), ALLOCATABLE :: rhognew(:,:)
-  REAL (KIND=DP), ALLOCATABLE :: rhonew(:,:)
+  COMPLEX (DP), ALLOCATABLE :: rhog(:,:)
+  COMPLEX (DP), ALLOCATABLE :: rhognew(:,:)
+  REAL (DP), ALLOCATABLE :: rhonew(:,:)
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  !
   ! PU added for electric field
-  COMPLEX(kind=DP), ALLOCATABLE  :: psi(:,:)
+  COMPLEX(DP), ALLOCATABLE  :: psi(:,:)
   INTEGER inberry
 
   !
@@ -928,7 +928,7 @@ SUBROUTINE electrons()
        !
        IMPLICIT NONE
        !   
-       REAL (KIND=DP) :: delta_e
+       REAL (DP) :: delta_e
        !
        INTEGER :: ipol
        !
@@ -960,7 +960,7 @@ SUBROUTINE electrons()
        !
        IMPLICIT NONE
        !   
-       REAL(kind=DP) :: delta_escf
+       REAL(DP) :: delta_escf
        !
        INTEGER :: ipol
        !

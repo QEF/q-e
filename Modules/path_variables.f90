@@ -54,7 +54,7 @@ MODULE path_variables
                                   ! ( dim - #( of fixed coordinates ) )
        suspended_image            ! last image for which scf has not been
                                   ! achieved
-  REAL (KIND=DP) :: &
+  REAL (DP) :: &
        ds,                       &! the optimization step
        path_thr,                 &! convergence threshold
        damp,                     &! damp coefficient
@@ -77,11 +77,11 @@ MODULE path_variables
   !
   ! ... "general" real space arrays
   !
-  REAL (KIND=DP), ALLOCATABLE :: &
+  REAL (DP), ALLOCATABLE :: &
        pes(:),                   &! the potential enrgy along the path
        norm_tangent(:),          &!
        error(:)                   ! the error from the true MEP
-  REAL (KIND=DP), ALLOCATABLE :: &
+  REAL (DP), ALLOCATABLE :: &
        pos(:,:),                 &! 
        grad_pes(:,:),            &!
        tangent(:,:)               !
@@ -98,7 +98,7 @@ MODULE path_variables
   INTEGER :: &
        Emax_index                 ! index of the image with the highest energy
   !
-  REAL (KIND=DP) :: &
+  REAL (DP) :: &
        k_max,                    &! 
        k_min,                    &!
        Eref,                     &!
@@ -107,13 +107,13 @@ MODULE path_variables
   !
   ! ... real space arrays
   !
-  REAL (KIND=DP), ALLOCATABLE :: &
+  REAL (DP), ALLOCATABLE :: &
        elastic_grad(:),          &!
        mass(:),                  &! atomic masses
        k(:),                     &!  
        react_coord(:),           &! the reaction coordinate (in bohr)
        norm_grad(:)               !
-  REAL (KIND=DP), ALLOCATABLE :: &
+  REAL (DP), ALLOCATABLE :: &
        vel(:,:),                 &! 
        grad(:,:),                &!
        lang(:,:)                  ! langevin random force
@@ -126,18 +126,18 @@ MODULE path_variables
        Nft,                      &! number of discretization points in the
                                   ! discrete fourier transform
        Nft_smooth                 ! smooth real-space grid
-  REAL (KIND=DP) :: &
+  REAL (DP) :: &
        ft_coeff                   ! normalization in fourier transformation
   !
   !
   ! ... real space arrays
   !
-  REAL (KIND=DP), ALLOCATABLE :: &
+  REAL (DP), ALLOCATABLE :: &
        pos_star(:,:)              !
   !
   ! ... reciprocal space arrays
   !
-  REAL (KIND=DP), ALLOCATABLE :: &
+  REAL (DP), ALLOCATABLE :: &
        ft_pos(:,:)                ! fourier components of the path
   !
   ! ... Y. Kanai variabiles for combined smd/cp dynamics :
@@ -160,7 +160,7 @@ MODULE path_variables
        smd_wfreq,                  &!
        smd_lmfreq,                 &
        smd_maxlm                    ! max_ite = # of such iteration allowed
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
        smd_tol,                    &! tolrance on const in terms of
                                     ! [alpha(k) - alpha(k-1)] - 1/sm_P
        smd_ene_ini = 1.D0,         &
@@ -168,7 +168,7 @@ MODULE path_variables
   !
   TYPE smd_ptr
     !
-    REAL(KIND=DP), POINTER :: d3(:,:)
+    REAL(DP), POINTER :: d3(:,:)
     !
   END TYPE smd_ptr
   !

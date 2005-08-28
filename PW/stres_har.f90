@@ -23,8 +23,8 @@ subroutine stres_har (sigmahar)
   USE wavefunctions_module,    ONLY : psic
   implicit none
   !
-  real(kind=DP) :: sigmahar (3, 3), shart, g2
-  real(kind=DP), parameter :: eps = 1.d-8
+  real(DP) :: sigmahar (3, 3), shart, g2
+  real(DP), parameter :: eps = 1.d-8
   integer :: is, ig, igl0, l, m
 
   sigmahar(:,:) = 0.d0

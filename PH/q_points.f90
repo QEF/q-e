@@ -20,7 +20,7 @@ SUBROUTINE q_points ( )
   
   integer :: i, iq, ierr, iudyn = 26
 
-  real(kind = dp), allocatable, dimension(:) :: wq  
+  real(DP), allocatable, dimension(:) :: wq  
 
   logical :: exist_gamma
 

@@ -29,7 +29,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   ! input: starting position of this represe
   ! input: the number of perturbations
 
-  complex(kind=DP) :: dvscfin (nrxx, nspin, npe)
+  complex(DP) :: dvscfin (nrxx, nspin, npe)
   ! input: the change of V_Hxc
 
   integer :: ipert, irr1, mode0, mu, is, nu_i, nu_j, nrtot
@@ -37,11 +37,11 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   ! mode0: starting position of the represention
   ! nrtot: the total number of mesh points
 
-  complex(kind=DP) :: dyn1 (3 * nat, 3 * nat)
+  complex(DP) :: dyn1 (3 * nat, 3 * nat)
   ! the dynamical matrix
-  complex(kind=DP), allocatable ::  drhous (:,:,:)
+  complex(DP), allocatable ::  drhous (:,:,:)
   ! the change of the charge
-  complex(kind=DP), external :: ZDOTC
+  complex(DP), external :: ZDOTC
 
   if (.not.okvan) return
   call start_clock ('drhodvus')

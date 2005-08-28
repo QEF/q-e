@@ -16,7 +16,7 @@ subroutine hartree(k,nst,mesh,r,r2,sqr,dx,f,vh)
        nst, & ! input: at low r, f goes as r**nst
        mesh   ! input: the dimension of the mesh
 
-  real(kind=dp)::        &
+  real(DP)::        &
        r(mesh),   &  ! input: the radial mesh
        r2(mesh),  &  ! input: the square of the 
                      !        radial mesh
@@ -35,7 +35,7 @@ subroutine hartree(k,nst,mesh,r,r2,sqr,dx,f,vh)
                  ! allocation control
        i         ! counter
 
-  real(kind=dp)::        &
+  real(DP)::        &
        c0,c2,c3, & ! coefficients of the polynomial
                    ! expansion close to r=0
        ch,       & ! dx squared / 12.0
@@ -48,7 +48,7 @@ subroutine hartree(k,nst,mesh,r,r2,sqr,dx,f,vh)
        vhim1, vhi  ! variables for the right hand 
                    ! side
 
-  real(kind=dp), allocatable:: &
+  real(DP), allocatable:: &
        d(:), &       ! the diagonal elements of 
                      ! the tridiagonal sys.
        e(:)          ! the off diagonal elements 
@@ -88,7 +88,7 @@ subroutine hartree(k,nst,mesh,r,r2,sqr,dx,f,vh)
   !  Set the main auxiliary parameters
   !
   ch=dx*dx/12.0_dp
-  xkh2=ch*(dble(k)+0.5_dp)**2
+  xkh2=ch*(DBLE(k)+0.5_dp)**2
   ei=1.0_dp-xkh2
   di=-(2.0_dp+10.0_dp*xkh2)
   !

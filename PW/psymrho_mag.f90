@@ -23,8 +23,8 @@ SUBROUTINE psymrho_mag (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau, &
   !
   INTEGER :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau, i
 
-  REAL (KIND=DP) :: rho(nxx,3), at(3,3), bg(3,3)
-  REAL (kind=DP), ALLOCATABLE :: rrho (:,:)
+  REAL (DP) :: rho(nxx,3), at(3,3), bg(3,3)
+  REAL (DP), ALLOCATABLE :: rrho (:,:)
   !
   !
   ALLOCATE (rrho( nrx1 * nrx2 * nrx3, 3))    

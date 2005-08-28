@@ -16,14 +16,14 @@ subroutine invmat (n, a, a_inv, da)
   USE kinds
   implicit none
   integer :: n
-  real(kind=DP), DIMENSION (n,n) :: a, a_inv
-  real(kind=DP) :: da
+  real(DP), DIMENSION (n,n) :: a, a_inv
+  real(DP) :: da
   !
   integer :: info, lda, lwork, ipiv (n)
   ! info=0: inversion was successful
   ! lda   : leading dimension (the same as n)
   ! ipiv  : work space for pivoting (assumed of length lwork=n)
-  real(kind=DP) :: work (n) 
+  real(DP) :: work (n) 
   ! more work space
   !
   lda = n

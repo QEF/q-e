@@ -19,10 +19,10 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
   implicit none
   !
   integer :: lda, n, m
-  complex(kind=DP) :: psi (lda, m), hpsi (lda, m)
-  real(kind=DP) :: v(nrxxs)
+  complex(DP) :: psi (lda, m), hpsi (lda, m)
+  real(DP) :: v(nrxxs)
   !
-  complex(kind=DP) :: fp, fm
+  complex(DP) :: fp, fm
   integer :: ibnd, j
   ! counters
 

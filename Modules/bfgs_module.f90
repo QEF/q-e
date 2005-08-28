@@ -57,7 +57,7 @@ MODULE bfgs_module
   !
   SAVE
   !
-  REAL(KIND=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
       pos_p(:),               &! positions at the previous iteration
       grad_p(:),              &! gradients at the previous iteration
       inv_hess(:,:),          &! inverse of the hessian matrix ( updated
@@ -67,7 +67,7 @@ MODULE bfgs_module
       pos_old(:,:),           &! list of m old positions
       grad_old(:,:),          &! list of m old gradients
       pos_best(:)              !
-  REAL(KIND=DP) :: &   
+  REAL(DP) :: &   
       trust_radius,           &! displacement along the bfgs direction
       trust_radius_old,       &! old displacement along the bfgs direction
       energy_p                 ! energy at the previous iteration
@@ -81,13 +81,13 @@ MODULE bfgs_module
   INTEGER :: &
       bfgs_ndim                ! dimension of the subspace for L-BFGS
                                ! fixed to 1 for standard BFGS algorithm
-  REAL(KIND=DP)  :: &
+  REAL(DP)  :: &
       trust_radius_max,       &! maximum allowed displacement
       trust_radius_min,       &! minimum allowed displacement
       trust_radius_ini,       &! initial displacement
       trust_radius_end         ! bfgs stops when trust_radius is less than
                                ! this value
-  REAL(KIND=DP)  :: &
+  REAL(DP)  :: &
       w_1,                    &! parameters for Wolfe conditions
       w_2                      ! parameters for Wolfe conditions
   !
@@ -124,25 +124,25 @@ MODULE bfgs_module
       !
       ! ... input/output arguments
       !
-      REAL(KIND=DP),     INTENT(INOUT) :: pos(:)
-      REAL(KIND=DP),     INTENT(INOUT) :: energy       
-      REAL(KIND=DP),     INTENT(INOUT) :: grad(:)
+      REAL(DP),     INTENT(INOUT) :: pos(:)
+      REAL(DP),     INTENT(INOUT) :: energy       
+      REAL(DP),     INTENT(INOUT) :: grad(:)
       CHARACTER (LEN=*), INTENT(IN)    :: scratch
       INTEGER,           INTENT(IN)    :: stdout
-      REAL(KIND=DP),     INTENT(IN)    :: energy_thr, grad_thr  
-      REAL(KIND=DP),     INTENT(OUT)   :: energy_error, grad_error       
+      REAL(DP),     INTENT(IN)    :: energy_thr, grad_thr  
+      REAL(DP),     INTENT(OUT)   :: energy_error, grad_error       
       LOGICAL,           INTENT(OUT)   :: step_accepted, conv_bfgs
       !
       ! ... local variables
       !
       INTEGER       :: dim, i, j
       LOGICAL       :: lwolfe
-      REAL(KIND=DP) :: dE0s, den
+      REAL(DP) :: dE0s, den
       !
-      REAL (KIND=DP), ALLOCATABLE :: res(:,:), overlap(:,:), work(:)
+      REAL (DP), ALLOCATABLE :: res(:,:), overlap(:,:), work(:)
       INTEGER,        ALLOCATABLE :: iwork(:)
       INTEGER                     :: k, k_m, info
-      REAL(KIND=DP)               :: gamma0
+      REAL(DP)               :: gamma0
       !
       !
       dim = SIZE( pos )
@@ -456,12 +456,12 @@ MODULE bfgs_module
       !
       IMPLICIT NONE
       !
-      REAL(KIND=DP),     INTENT(IN)    :: pos(:)
-      REAL(KIND=DP),     INTENT(IN)    :: grad(:)
+      REAL(DP),     INTENT(IN)    :: pos(:)
+      REAL(DP),     INTENT(IN)    :: grad(:)
       CHARACTER (LEN=*), INTENT(IN)    :: scratch
       INTEGER,           INTENT(IN)    :: dim
       INTEGER,           INTENT(IN)    :: stdout
-      REAL(KIND=DP),     INTENT(INOUT) :: energy
+      REAL(DP),     INTENT(INOUT) :: energy
       !
       ! ... local variables
       !
@@ -551,9 +551,9 @@ MODULE bfgs_module
       !
       IMPLICIT NONE
       !
-      REAL(KIND=DP),     INTENT(IN) :: pos(:)       
-      REAL(KIND=DP),     INTENT(IN) :: energy       
-      REAL(KIND=DP),     INTENT(IN) :: grad(:)       
+      REAL(DP),     INTENT(IN) :: pos(:)       
+      REAL(DP),     INTENT(IN) :: energy       
+      REAL(DP),     INTENT(IN) :: grad(:)       
       CHARACTER (LEN=*), INTENT(IN) :: scratch
       !
       !
@@ -579,16 +579,16 @@ MODULE bfgs_module
       !
       IMPLICIT NONE
       !
-      REAL(KIND=DP), INTENT(IN)  :: pos(:)
-      REAL(KIND=DP), INTENT(IN)  :: grad(:)   
+      REAL(DP), INTENT(IN)  :: pos(:)
+      REAL(DP), INTENT(IN)  :: grad(:)   
       INTEGER,       INTENT(IN)  :: dim
       INTEGER,       INTENT(IN)  :: stdout
       !
       ! ... local variables
       !
-      REAL(KIND=DP) :: y(dim), s(dim), Hs(dim), Hy(dim), yH(dim), aux(dim)
-      REAL(KIND=DP) :: H_bfgs(dim,dim), H_ms(dim,dim)
-      REAL(KIND=DP) :: sdoty, coeff
+      REAL(DP) :: y(dim), s(dim), Hs(dim), Hy(dim), yH(dim), aux(dim)
+      REAL(DP) :: H_bfgs(dim,dim), H_ms(dim,dim)
+      REAL(DP) :: sdoty, coeff
       !
       !
       s(:) = pos(:)  - pos_p(:)
@@ -661,8 +661,8 @@ MODULE bfgs_module
       !
       IMPLICIT NONE
       !
-      REAL(KIND=DP), INTENT(IN)  :: energy       
-      REAL(KIND=DP), INTENT(IN)  :: grad(:)              
+      REAL(DP), INTENT(IN)  :: energy       
+      REAL(DP), INTENT(IN)  :: grad(:)              
       LOGICAL,       INTENT(OUT) :: lwolfe
       !
       !
@@ -680,14 +680,14 @@ MODULE bfgs_module
       IMPLICIT NONE
       !
       LOGICAL,       INTENT(IN)  :: lwolfe
-      REAL(KIND=DP), INTENT(IN)  :: energy    
-      REAL(KIND=DP), INTENT(IN)  :: grad(:)                         
+      REAL(DP), INTENT(IN)  :: energy    
+      REAL(DP), INTENT(IN)  :: grad(:)                         
       INTEGER,       INTENT(IN)  :: dim   
       INTEGER,       INTENT(IN)  :: stdout
       !
       ! ... local variables
       !
-      REAL(KIND=DP) :: a
+      REAL(DP) :: a
       LOGICAL       :: ltest
       !
       !
@@ -741,7 +741,7 @@ MODULE bfgs_module
       !
       IMPLICIT NONE
       !
-      REAL(KIND=DP),     INTENT(IN) :: energy  
+      REAL(DP),     INTENT(IN) :: energy  
       INTEGER,           INTENT(IN) :: stdout         
       CHARACTER (LEN=*), INTENT(IN) :: scratch       
       !       

@@ -43,7 +43,7 @@ subroutine set_pseudo_upf (is, upf)
   !
   implicit none
   !
-  real(kind=dbl), parameter :: rcut = 10.d0
+  real(DP), parameter :: rcut = 10.d0
   integer :: is, ir
   !
   !     Local variables

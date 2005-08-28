@@ -12,7 +12,7 @@ subroutine write_matrix (alpha, wdyn, nat)
   USE kinds, only : DP
   implicit none
   integer :: i, j, na, nb, nat
-  complex(kind=DP) :: wdyn (3, 3, nat, nat)
+  complex(DP) :: wdyn (3, 3, nat, nat)
 
   character (len=*) :: alpha
   WRITE( stdout, '(a)') alpha

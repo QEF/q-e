@@ -31,7 +31,7 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   integer :: ik, mode
   ! input: the k point
   ! input: the actual perturbation
-  complex(kind=DP) :: uact (3 * nat)
+  complex(DP) :: uact (3 * nat)
   ! input: the pattern of displacements
   logical :: addnlcc
   !
@@ -47,10 +47,10 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   ! counter on bands
   ! counter on real mesh
 
-  complex(kind=DP) :: gtau, gu, fact, u1, u2, u3, gu0
-  complex(kind=DP) , allocatable, target :: aux (:)
-  complex(kind=DP) , allocatable :: aux1 (:), aux2 (:)
-  complex(kind=DP) , pointer :: auxs (:)
+  complex(DP) :: gtau, gu, fact, u1, u2, u3, gu0
+  complex(DP) , allocatable, target :: aux (:)
+  complex(DP) , allocatable :: aux1 (:), aux2 (:)
+  complex(DP) , pointer :: auxs (:)
   ! work space
 
   call start_clock ('dvqpsi_us')

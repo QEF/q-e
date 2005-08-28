@@ -27,14 +27,14 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
   implicit none
   !
   integer :: ldap, np, mp
-  complex(kind=DP) :: psip (ldap, mp), hpsi (ldap, mp)
+  complex(DP) :: psip (ldap, mp), hpsi (ldap, mp)
   !
   integer :: ibnd, i, na, nt, n, counter, m1, m2, l
   integer, allocatable ::  offset (:)
   ! offset of localized electrons of atom na in the natomwfc ordering
-  complex(kind=DP) :: ZDOTC, temp
-  real(kind=DP), external :: DDOT
-  complex(kind=DP), allocatable ::  proj (:,:)
+  complex(DP) :: ZDOTC, temp
+  real(DP), external :: DDOT
+  complex(DP), allocatable ::  proj (:,:)
   !
   allocate ( offset(nat), proj(natomwfc,mp) ) 
   counter = 0  

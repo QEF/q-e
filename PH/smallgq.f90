@@ -27,7 +27,7 @@ subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
   USE kinds, only : DP
   implicit none
 
-  real(kind=DP) :: bg (3, 3), at (3, 3), xq (3), gi (3, 48), gimq (3)
+  real(DP) :: bg (3, 3), at (3, 3), xq (3), gi (3, 48), gimq (3)
   ! input: the reciprocal lattice vectors
   ! input: the direct lattice vectors
   ! input: the q point of the crystal
@@ -45,7 +45,7 @@ subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
   ! input: .t. if sym.ops. such that Sq=-q+G are searched for
   ! output: .t. if such a symmetry has been found
 
-  real(kind=DP) :: wrk (3), aq (3), raq (3), zero (3)
+  real(DP) :: wrk (3), aq (3), raq (3), zero (3)
   ! additional space to compute gi and gimq
   ! q vector in crystal basis
   ! the rotated of the q vector

@@ -29,7 +29,7 @@ subroutine gen_us_dj (ik, dvkb)
   implicit none
   !
   integer :: ik
-  complex(kind=DP) :: dvkb (npwx, nkb)
+  complex(DP) :: dvkb (npwx, nkb)
   !
   ! local variables
   !
@@ -41,19 +41,19 @@ subroutine gen_us_dj (ik, dvkb)
   ! index of the first nonzero point in the r
   ! counter on atomic type
 
-  real(kind=DP) :: arg, px, ux, vx, wx
+  real(DP) :: arg, px, ux, vx, wx
   ! argument of the atomic phase factor
 
-  complex(kind=DP) :: phase, pref
+  complex(DP) :: phase, pref
   ! atomic phase factor
   ! prefactor
 
   integer :: na, i, l, iig, lm
-  real(kind=DP), allocatable :: djl (:,:,:), ylm (:,:), q (:), gk (:,:)
-  real(kind=DP) ::  qt, dv, eps
+  real(DP), allocatable :: djl (:,:,:), ylm (:,:), q (:), gk (:,:)
+  real(DP) ::  qt, dv, eps
   parameter (eps = 1.0e-8)
 
-  complex(kind=DP), allocatable :: sk (:)
+  complex(DP), allocatable :: sk (:)
 
   call start_clock('stres_us31')
 

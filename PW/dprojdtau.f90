@@ -36,18 +36,18 @@ SUBROUTINE dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
               alpha,   &! input: the displaced atom
               ipol,    &! input: the component of displacement
               offset    ! input: the offset of the wfcs of the atom "alpha"
-   COMPLEX (kind=DP) :: &
+   COMPLEX (DP) :: &
            wfcatom(npwx,natomwfc), &! input: the atomic wfc
            spsi(npwx,nbnd),        &! input: S|evc>
            dproj(natomwfc,nbnd)     ! output: the derivative of the projection
 
    INTEGER :: ig, jkb2, na, m1, ibnd, iwf, nt, ib, ih,jh, ldim
 
-   REAL (kind=DP) :: gvec, a1, a2
+   REAL (DP) :: gvec, a1, a2
 
-   COMPLEX (kind=DP):: ZDOTC
+   COMPLEX (DP):: ZDOTC
 
-   COMPLEX (kind=DP), ALLOCATABLE :: dwfc(:,:), work(:), dbeta(:), &
+   COMPLEX (DP), ALLOCATABLE :: dwfc(:,:), work(:), dbeta(:), &
                                      betapsi(:,:), dbetapsi(:,:), &
                                      wfatbeta(:,:), wfatdbeta(:,:)
    !      dwfc(npwx,ldim),       ! the derivative of the atomic d wfc

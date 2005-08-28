@@ -30,9 +30,9 @@ subroutine gen_dpdvp
 
   integer :: ik, ikk, ikq, ig, nrec, nu_i, nu_j, ibnd, jbnd, ios
 
-  real (kind = dp) :: zero (3)
-  complex (kind = dp) :: ZDOTC
-  complex (kind = dp), allocatable :: dvloc (:), dpsidvpsi (:,:)
+  real (DP) :: zero (3)
+  complex (DP) :: ZDOTC
+  complex (DP), allocatable :: dvloc (:), dpsidvpsi (:,:)
 
 
   if (degauss.eq.0.d0) return

@@ -14,7 +14,7 @@ SUBROUTINE init_run()
   ! ... this routine initialise the cp code and allocates (calling the
   ! ... appropriate routines) the memory
   !
-  USE kinds,                    ONLY : dbl
+  USE kinds,                    ONLY : DP
   USE control_flags,            ONLY : nbeg, nomore, lwf, iprsta, &
                                        ndr, tfor, tprnfor, tpre, program_name, &
                                        force_pairing, newnfi, tnewnfi

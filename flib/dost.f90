@@ -14,10 +14,10 @@ subroutine dos_t (et, nspin, nbnd, nks, ntetra, tetra, e, dost)
   implicit none
   integer :: nspin, nbnd, nks, ntetra, tetra (4, ntetra)
 
-  real(kind=DP) :: et (nbnd, nks), e, dost (2)
+  real(DP) :: et (nbnd, nks), e, dost (2)
   integer :: itetra (4), nk, ns, nt, ibnd, i
 
-  real(kind=DP) :: etetra (4), e1, e2, e3, e4
+  real(DP) :: etetra (4), e1, e2, e3, e4
   integer :: nspin0, nspin1
 
   nspin0=nspin

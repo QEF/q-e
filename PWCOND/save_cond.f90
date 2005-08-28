@@ -29,12 +29,12 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
 
   integer :: lsr, nrz, nocros, noins, norb, i, j, k, l, m     
   logical :: lwrite
-  REAL(kind=DP) :: ef, r(ndmx,npsx), rab(ndmx,npsx),    &
+  REAL(DP) :: ef, r(ndmx,npsx), rab(ndmx,npsx),    &
                    betar(ndmx,nbrx,npsx) 
   integer, ALLOCATABLE :: ind(:,:), tblm(:,:), cros(:,:)
-  REAL(kind=DP), ALLOCATABLE :: z(:), zpseu(:,:,:), re(:,:,:,:), &
+  REAL(DP), ALLOCATABLE :: z(:), zpseu(:,:,:), re(:,:,:,:), &
                                 im(:,:,:,:), c(:), taunew(:,:)
-  COMPLEX(kind=DP), ALLOCATABLE :: vppot(:,:,:,:), zpseu_nc(:,:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: vppot(:,:,:,:), zpseu_nc(:,:,:,:)
 
 
   character(len=2) :: ext

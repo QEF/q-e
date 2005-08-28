@@ -7,13 +7,13 @@
 !
 program xctest
   USE mp, ONLY: mp_start, mp_end
-  use kinds, only: dbl
+  use kinds, only: DP
   use funct
   implicit none
   integer :: nnr = 1000
   integer :: nspin = 2
-  real(dbl), allocatable :: rhor( :, : )
-  real(dbl), allocatable :: grhor( :, :, : )
+  real(DP), allocatable :: rhor( :, : )
+  real(DP), allocatable :: grhor( :, :, : )
 
   
   CALL mp_start()
@@ -38,21 +38,21 @@ program xctest
 end program xctest
 
 subroutine test_gcxc( nnr, nspin, rhor, grhor )
-  use kinds, only: dbl
+  use kinds, only: DP
   use funct
   implicit none
   integer, intent(in) :: nnr, nspin
-  real(dbl) :: rhor( nnr, nspin )
-  real(dbl) :: grhor( nnr, 3, nspin )
+  real(DP) :: rhor( nnr, nspin )
+  real(DP) :: grhor( nnr, 3, nspin )
   !
-  real(dbl), parameter :: epsr = 1.0d-10, epsg = 1.0d-10
-  real(dbl), parameter :: e2   = 1.0d0
-  real(dbl) :: grho2( nspin )
-  real(dbl) :: arho, segno
-  real(dbl) :: sx_w, sc_w, v1x_w, v2x_w, v1c_w, v2c_w
-  real(dbl) :: sx, sc, v1x, v2x, v1c, v2c
-  real(dbl) :: sx_m, sc_m, v1x_m, v2x_m, v1c_m, v2c_m
-  real(dbl) :: sx_d, sc_d, v1x_d, v2x_d, v1c_d, v2c_d
+  real(DP), parameter :: epsr = 1.0d-10, epsg = 1.0d-10
+  real(DP), parameter :: e2   = 1.0d0
+  real(DP) :: grho2( nspin )
+  real(DP) :: arho, segno
+  real(DP) :: sx_w, sc_w, v1x_w, v2x_w, v1c_w, v2c_w
+  real(DP) :: sx, sc, v1x, v2x, v1c, v2c
+  real(DP) :: sx_m, sc_m, v1x_m, v2x_m, v1c_m, v2c_m
+  real(DP) :: sx_d, sc_d, v1x_d, v2x_d, v1c_d, v2c_d
   integer :: k, is, ipol
 
     do k = 1, nnr
@@ -119,16 +119,16 @@ end subroutine test_gcxc
 !
 
 subroutine test_xc( nnr, nspin, rhor, grhor )
-  use kinds, only: dbl
+  use kinds, only: DP
   use funct
   implicit none
   integer, intent(in) :: nnr, nspin
-  real(dbl) :: rhor( nnr, nspin )
-  real(dbl) :: grhor( nnr, 3, nspin )
+  real(DP) :: rhor( nnr, nspin )
+  real(DP) :: grhor( nnr, 3, nspin )
   !
-  real(dbl) :: rhon( nnr, nspin )
-  real(dbl) :: grhon( nnr, 3, nspin )
-  real(dbl) :: exc, excn, rhod, grhod
+  real(DP) :: rhon( nnr, nspin )
+  real(DP) :: grhon( nnr, 3, nspin )
+  real(DP) :: exc, excn, rhod, grhod
   integer :: ir, is, ipol
 
   rhon = rhor

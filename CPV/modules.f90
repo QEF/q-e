@@ -10,7 +10,7 @@ module bhs
   use parameters, only: nsx
   implicit none
   save
-  real(kind=8) :: rc1(nsx), rc2(nsx), wrc1(nsx), wrc2(nsx), &
+  real(8) :: rc1(nsx), rc2(nsx), wrc1(nsx), wrc2(nsx), &
        rcl(3,nsx,3), al(3,nsx,3), bl(3,nsx,3)
   integer :: lloc(nsx)
 end module bhs
@@ -24,10 +24,10 @@ module core
   !     rhocg  = core charge in G space  (dense grid)
   !     drhocg = derivative of core charge in G space (used for stress) 
   logical :: nlcc_any
-  real(kind=8), allocatable:: rhocb(:,:)
-  real(kind=8), allocatable:: rhoc(:)
-  real(kind=8), allocatable:: rhocg(:,:)
-  real(kind=8), allocatable:: drhocg(:,:)
+  real(8), allocatable:: rhocb(:,:)
+  real(8), allocatable:: rhoc(:)
+  real(8), allocatable:: rhocg(:,:)
+  real(8), allocatable:: drhocg(:,:)
 contains
   subroutine allocate_core( nnrx, ngs, ngb, nsp )
      integer, intent(in) :: nnrx, ngs, ngb, nsp
@@ -126,12 +126,12 @@ module local_pseudo
   !    rhops = ionic pseudocharges (for Ewald term)
   !    vps   = local pseudopotential in G space for each species
   !
-  real(kind=8), allocatable:: rhops(:,:), vps(:,:)
+  real(8), allocatable:: rhops(:,:), vps(:,:)
   !
   !    drhops = derivative of rhops respect to G^2
   !    dvps   = derivative of vps respect to G^2
   !
-  real(kind=8),allocatable:: dvps(:,:), drhops(:,:)
+  real(8),allocatable:: dvps(:,:), drhops(:,:)
   !
 contains
   !
@@ -156,7 +156,7 @@ end module local_pseudo
 module qgb_mod
   implicit none
   save
-  complex(kind=8), allocatable :: qgb(:,:,:)
+  complex(8), allocatable :: qgb(:,:,:)
 contains
   subroutine deallocate_qgb_mod
       IF( ALLOCATED( qgb ) ) DEALLOCATE( qgb )
@@ -166,7 +166,7 @@ end module qgb_mod
 module qradb_mod
   implicit none
   save
-  real(kind=8), allocatable:: qradb(:,:,:,:,:)
+  real(8), allocatable:: qradb(:,:,:,:,:)
 contains
   subroutine deallocate_qradb_mod
       IF( ALLOCATED( qradb ) ) DEALLOCATE( qradb )
@@ -177,8 +177,8 @@ end module qradb_mod
 module derho
   implicit none
   save
-  complex(kind=8),allocatable:: drhog(:,:,:,:)
-  real(kind=8),allocatable::     drhor(:,:,:,:)
+  complex(8),allocatable:: drhog(:,:,:,:)
+  real(8),allocatable::     drhor(:,:,:,:)
 contains
   subroutine deallocate_derho
       IF( ALLOCATED( drhog ) ) DEALLOCATE( drhog )
@@ -189,12 +189,12 @@ end module derho
 MODULE metagga  !metagga
   use funct, only : ismeta
   !the variables needed for meta-GGA
-  REAL(kind=8), ALLOCATABLE :: &
+  REAL(8), ALLOCATABLE :: &
        kedtaus(:,:), &! KineticEnergyDensity in real space,smooth grid
        kedtaur(:,:), &! real space, density grid
        crosstaus(:,:,:), &!used by stress tensor,in smooth grid
        dkedtaus(:,:,:,:)  !derivative of kedtau wrt h on smooth grid
-  COMPLEX(kind=8) , ALLOCATABLE :: &
+  COMPLEX(8) , ALLOCATABLE :: &
        kedtaug(:,:),    & !KineticEnergyDensity in G space
        gradwfc(:,:)    !used by stress tensor
 contains
@@ -208,14 +208,14 @@ END MODULE metagga  !end metagga
 module dener
   implicit none
   save
-  real(kind=8) detot(3,3), dekin(3,3), dh(3,3), dps(3,3), &
+  real(8) detot(3,3), dekin(3,3), dh(3,3), dps(3,3), &
   &       denl(3,3), dxc(3,3), dsr(3,3)
 end module dener
 
 module dqgb_mod
   implicit none
   save
-  complex(kind=8),allocatable:: dqgb(:,:,:,:,:)
+  complex(8),allocatable:: dqgb(:,:,:,:,:)
 contains
   subroutine deallocate_dqgb_mod
       IF( ALLOCATED( dqgb ) ) DEALLOCATE( dqgb )
@@ -225,7 +225,7 @@ end module dqgb_mod
 module cdvan
   implicit none
   save
-  real(kind=8),allocatable:: dbeta(:,:,:,:,:), dbec(:,:,:,:), &
+  real(8),allocatable:: dbeta(:,:,:,:,:), dbec(:,:,:,:), &
                              drhovan(:,:,:,:,:)
 contains
   subroutine deallocate_cdvan
@@ -240,15 +240,15 @@ MODULE ncpp
   !
   ! norm-conserving pseudo-potentials, Kleinman-Bylander factors 
   !
-  USE kinds, ONLY: dbl
+  USE kinds, ONLY: DP
   IMPLICIT NONE
   SAVE
-  REAL(dbl), ALLOCATABLE :: wsg(:,:)     ! inverse of Kleinman-Bylander
+  REAL(DP), ALLOCATABLE :: wsg(:,:)     ! inverse of Kleinman-Bylander
                                          !   denominators
                                          ! <Y phi | V | phi Y>**(-1)
                                          !   first index: orbital
                                          !   second index: atomic species
-  REAL(dbl), ALLOCATABLE :: wnl(:,:,:,:) ! Kleinman-Bylander products
+  REAL(DP), ALLOCATABLE :: wnl(:,:,:,:) ! Kleinman-Bylander products
                                          ! <Y phi | V | exp(i(k+G) dot r)>
                                          !   first index: G vector
                                          !   second index: orbital
@@ -318,8 +318,8 @@ module qrl_mod
 ! qrl       q(r) functions (old format)
 ! cmesh     used only for Herman-Skillman mesh (old format)
 !
-  real(kind=8) :: qrl(ndmx,nbrx,nbrx,lqmax,nsx)
-  real(kind=8) :: cmesh(nsx)
+  real(8) :: qrl(ndmx,nbrx,nbrx,lqmax,nsx)
+  real(8) :: cmesh(nsx)
 
 end module qrl_mod
 

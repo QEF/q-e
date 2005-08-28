@@ -87,31 +87,31 @@
 !
       integer :: nfi
       logical :: tfirst , tlast
-      complex(kind=8) :: eigr(ngw,nat)
-      real(kind=8) :: bec(nhsa,n)
-      real(kind=8) :: becdr(nhsa,n,3)
+      complex(8) :: eigr(ngw,nat)
+      real(8) :: bec(nhsa,n)
+      real(8) :: becdr(nhsa,n,3)
       integer irb(3,nat)
-      complex(kind=8) :: eigrb(ngb,nat)
-      real(kind=8) :: rhor(nnr,nspin)
-      real(kind=8) :: rhog(ngm,nspin)
-      real(kind=8) :: rhos(nnrsx,nspin)
-      real(kind=8) :: rhoc(nnr)
-      complex(kind=8) :: ei1(-nr1:nr1,nat)
-      complex(kind=8) :: ei2(-nr2:nr2,nat)
-      complex(kind=8) :: ei3(-nr3:nr3,nat)
-      complex(kind=8) :: sfac( ngs, nsp )
-      real(kind=8) :: fion(3,natx)
-      real(kind=8) :: ema0bg(ngw)
-      real(kind=8) :: lambdap(nx,nx)
-      real(kind=8) :: lambda(nx,nx)
+      complex(8) :: eigrb(ngb,nat)
+      real(8) :: rhor(nnr,nspin)
+      real(8) :: rhog(ngm,nspin)
+      real(8) :: rhos(nnrsx,nspin)
+      real(8) :: rhoc(nnr)
+      complex(8) :: ei1(-nr1:nr1,nat)
+      complex(8) :: ei2(-nr2:nr2,nat)
+      complex(8) :: ei3(-nr3:nr3,nat)
+      complex(8) :: sfac( ngs, nsp )
+      real(8) :: fion(3,natx)
+      real(8) :: ema0bg(ngw)
+      real(8) :: lambdap(nx,nx)
+      real(8) :: lambda(nx,nx)
 !
 !
       integer :: i, j, ig, k, is, ia, iv, jv, il
       integer :: inl, jnl, niter, istart, nss
-      real(kind=8) :: enb, enbi, x
-      complex(kind=8) :: c2( ngw )
-      complex(kind=8) :: c3( ngw )
-      real(kind=8) :: gamma, entmp, sta
+      real(8) :: enb, enbi, x
+      complex(8) :: c2( ngw )
+      complex(8) :: c3( ngw )
+      real(8) :: gamma, entmp, sta
 !
 !
 

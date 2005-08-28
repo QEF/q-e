@@ -24,7 +24,7 @@ subroutine setlocal
   USE scf,       ONLY : rho
   !
   implicit none
-  complex(kind=DP), allocatable :: aux (:)
+  complex(DP), allocatable :: aux (:)
   ! auxiliary variable
   integer :: nt, ng, ir
   ! counter on atom types

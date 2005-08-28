@@ -17,9 +17,9 @@
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: n
       INTEGER :: i
-      REAL(dbl), INTENT(IN) :: alpha 
-      REAL(dbl), INTENT(IN) :: v(*)
-      REAL(dbl), INTENT(OUT) :: av(*)
+      REAL(DP), INTENT(IN) :: alpha 
+      REAL(DP), INTENT(IN) :: v(*)
+      REAL(DP), INTENT(OUT) :: av(*)
 
 #if defined __BENCHLIB
 

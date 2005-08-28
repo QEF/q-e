@@ -16,9 +16,9 @@ MODULE mytime
   SAVE
   !
   INTEGER,        PARAMETER :: maxclock = 100
-  REAL (KIND=DP), PARAMETER :: notrunning = - 1.D0
+  REAL (DP), PARAMETER :: notrunning = - 1.D0
   ! 
-  REAL (KIND=DP)     :: myclock(maxclock), t0(maxclock)
+  REAL (DP)     :: myclock(maxclock), t0(maxclock)
   CHARACTER (LEN=12) :: clock_label(maxclock)
   INTEGER            :: called(maxclock)
   !
@@ -67,7 +67,7 @@ SUBROUTINE start_clock( label )
   !
   IMPLICIT NONE
   !
-  REAL (KIND=DP)    :: scnds
+  REAL (DP)    :: scnds
   CHARACTER (LEN=*) :: label
   INTEGER           :: n
   !
@@ -123,7 +123,7 @@ SUBROUTINE stop_clock( label )
   !
   IMPLICIT NONE
   !
-  REAL (KIND=DP)    :: scnds
+  REAL (DP)    :: scnds
   CHARACTER (LEN=*) :: label
   INTEGER           :: n
   !
@@ -221,9 +221,9 @@ SUBROUTINE print_this_clock( n )
   !
   IMPLICIT NONE
   !
-  REAL(KIND=DP) :: scnds
+  REAL(DP) :: scnds
   INTEGER       :: n
-  REAL(KIND=DP) :: elapsed_cpu_time, nsec
+  REAL(DP) :: elapsed_cpu_time, nsec
   INTEGER       :: nday, nhour, nmin
   !
   !
@@ -340,8 +340,8 @@ FUNCTION get_clock( label )
   !
   IMPLICIT NONE
   !
-  REAL(KIND=DP)     :: get_clock
-  REAL(KIND=DP)     :: scnds
+  REAL(DP)     :: get_clock
+  REAL(DP)     :: scnds
   CHARACTER (LEN=*) :: label
   INTEGER           :: n
   !

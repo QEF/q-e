@@ -34,11 +34,11 @@ SUBROUTINE newd()
   !
   INTEGER :: ig, nt, ih, jh, na, is, nht
     ! counters on g vectors, atom type, beta functions x 2, atoms, spin
-  COMPLEX(KIND=DP), ALLOCATABLE :: aux(:,:), qgm(:), qgm_na(:)
+  COMPLEX(DP), ALLOCATABLE :: aux(:,:), qgm(:), qgm_na(:)
     ! work space
-  REAL(KIND=DP), ALLOCATABLE :: ylmk0(:,:), qmod(:)
+  REAL(DP), ALLOCATABLE :: ylmk0(:,:), qmod(:)
     ! spherical harmonics, modulus of G
-  REAL(KIND=DP) :: fact, DDOT
+  REAL(DP) :: fact, DDOT
   !
   !
   IF ( .NOT. okvan ) THEN

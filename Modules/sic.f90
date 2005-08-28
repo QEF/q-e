@@ -10,7 +10,7 @@
   MODULE sic_module
 !------------------------------------------------------------------------------!
 
-      USE kinds, ONLY: dbl
+      USE kinds, ONLY: DP
       USE parameters, ONLY: natx
 !
       IMPLICIT NONE
@@ -20,9 +20,9 @@
       INTEGER :: nat_localisation = 0 
       LOGICAL :: print_localisation = .FALSE. ! Calculates hartree energy around specified atoms
       INTEGER :: self_interaction = 0 
-      REAL(dbl) :: si_epsilon = 0.0d0
-      REAL(dbl) :: rad_localisation = 0.0d0
-      REAL(dbl), ALLOCATABLE :: pos_localisation(:,:)
+      REAL(DP) :: si_epsilon = 0.0d0
+      REAL(DP) :: rad_localisation = 0.0d0
+      REAL(DP), ALLOCATABLE :: pos_localisation(:,:)
 
 !------------------------------------------------------------------------------!
   CONTAINS
@@ -34,8 +34,8 @@
       INTEGER, INTENT(IN) :: nat_
       INTEGER, INTENT(IN) :: id_loc_ (:)
       CHARACTER(LEN=*), INTENT(IN) :: sic_
-      REAL(dbl), INTENT(IN) :: sic_epsilon_
-      REAL(dbl), INTENT(IN) :: sic_rloc_
+      REAL(DP), INTENT(IN) :: sic_epsilon_
+      REAL(DP), INTENT(IN) :: sic_rloc_
 
       select case ( TRIM( sic_ ) )
         case ( 'sic_pz' ) 

@@ -25,9 +25,9 @@ subroutine dielec
   ! counter on polarizations
   ! counter on records
   ! counter on k points
-  real(kind=DP) :: w, weight
+  real(DP) :: w, weight
 
-  complex(kind=DP) :: ZDOTC
+  complex(DP) :: ZDOTC
 
   call start_clock ('dielec')
   epsilon(:,:) = 0.d0

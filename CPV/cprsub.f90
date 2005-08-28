@@ -17,7 +17,7 @@ subroutine formf( tfirst, eself )
   !         also calculated the derivative of vps with respect to
   !         g^2 (dvps)
   ! 
-  USE kinds,           ONLY : dbl
+  USE kinds,           ONLY : DP
   use mp,              ONLY : mp_sum
   use control_flags,   ONLY : iprint, tpre, iprsta
   use io_global,       ONLY : stdout
@@ -37,11 +37,11 @@ subroutine formf( tfirst, eself )
   !
   implicit none
   logical      :: tfirst
-  real(dbl)    :: eself
+  real(DP)    :: eself
   !
-  real(dbl)    :: vpsum, rhopsum
+  real(DP)    :: vpsum, rhopsum
   integer      :: is, ig
-  REAL(dbl)    :: cost1, xg
+  REAL(DP)    :: cost1, xg
 
   call start_clock( 'formf' )
   !
@@ -173,7 +173,7 @@ subroutine nlfh( bec, dbec, lambda )
   !
   !     contribution to the internal stress tensor due to the constraints
   !
-  USE kinds,          ONLY : dbl
+  USE kinds,          ONLY : DP
   use cvan,           ONLY : nvb, ish
   use uspp,           ONLY : nhsa => nkb, qq
   use uspp_param,     ONLY : nh, nhm
@@ -185,12 +185,12 @@ subroutine nlfh( bec, dbec, lambda )
 !
   implicit none
 
-  real(dbl), intent(in) ::  bec(nhsa,n), dbec(nhsa,n,3,3), lambda(nx,nx)
+  real(DP), intent(in) ::  bec(nhsa,n), dbec(nhsa,n,3,3), lambda(nx,nx)
 !
   integer   :: i, j, ii, jj, inl, iv, jv, ia, is
-  real(dbl) :: fpre(3,3)
+  real(DP) :: fpre(3,3)
   !
-  REAL(dbl), ALLOCATABLE :: tmpbec(:,:), tmpdh(:,:), temp(:,:)
+  REAL(DP), ALLOCATABLE :: tmpbec(:,:), tmpdh(:,:), temp(:,:)
   !
   ALLOCATE ( tmpbec(nhm,nx), tmpdh(nx,nhm), temp(nx,nx) )
   !
@@ -304,9 +304,9 @@ subroutine nlinit
       implicit none
 !
       integer  is, il, l, ir, iv, jv, lm, ind, ltmp, i0
-      real(kind=8), allocatable:: fint(:), jl(:),  jltmp(:), djl(:),    &
+      real(8), allocatable:: fint(:), jl(:),  jltmp(:), djl(:),    &
      &              dfint(:)
-      real(kind=8) xg, xrg, fac
+      real(8) xg, xrg, fac
 
       IF( ionode ) THEN
         WRITE( stdout, 100 )
@@ -391,7 +391,7 @@ subroutine qvan2b(ngy,iv,jv,is,ylm,qg)
   !
   !     q(g,l,k) = sum_lm (-i)^l ap(lm,l,k) yr_lm(g^) qrad(g,l,l,k)
   !
-  USE kinds,         ONLY : dbl
+  USE kinds,         ONLY : DP
   use control_flags, ONLY : iprint, tpre
   use qradb_mod,     ONLY : qradb
   use uspp,          ONLY : nlx, lpx, lpl, ap, indv, nhtolm
@@ -401,11 +401,11 @@ subroutine qvan2b(ngy,iv,jv,is,ylm,qg)
   implicit none
   !
   integer,      intent(in)  :: ngy, iv, jv, is
-  real(dbl),    intent(in)  :: ylm( ngb, lmaxq*lmaxq )
-  complex(dbl), intent(out) :: qg( ngb )
+  real(DP),    intent(in)  :: ylm( ngb, lmaxq*lmaxq )
+  complex(DP), intent(out) :: qg( ngb )
 !
   integer      :: ivs, jvs, ivl, jvl, i, ii, ij, l, lp, ig
-  complex(dbl) :: sig
+  complex(DP) :: sig
   ! 
   !       iv  = 1..8     s_1 p_x1 p_z1 p_y1 s_2 p_x2 p_z2 p_y2
   !       ivs = 1..4     s_1 s_2 p_1 p_2
@@ -466,7 +466,7 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
   !
   !     dq(i,j) derivatives wrt to h(i,j) of q(g,l,k) calculated in qvan2b
   !
-  USE kinds,         ONLY : dbl
+  USE kinds,         ONLY : DP
   use control_flags, ONLY : iprint, tpre
   use qradb_mod,     ONLY : qradb
   use uspp,          ONLY : nlx, lpx, lpl, ap, indv, nhtolm
@@ -477,11 +477,11 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
   implicit none
 
   integer,      intent(in)  :: ngy, iv, jv, is
-  REAL(dbl),    INTENT(IN)  :: ylm( ngb, lmaxq*lmaxq ), dylm( ngb, lmaxq*lmaxq, 3, 3 )
-  complex(dbl), intent(out) :: dqg( ngb, 3, 3 )
+  REAL(DP),    INTENT(IN)  :: ylm( ngb, lmaxq*lmaxq ), dylm( ngb, lmaxq*lmaxq, 3, 3 )
+  complex(DP), intent(out) :: dqg( ngb, 3, 3 )
 
   integer      :: ivs, jvs, ivl, jvl, i, ii, ij, l, lp, ig
-  complex(dbl) :: sig
+  complex(DP) :: sig
   !
   ! 
   !       iv  = 1..8     s_1 p_x1 p_z1 p_y1 s_2 p_x2 p_z2 p_y2
@@ -552,16 +552,16 @@ subroutine dylmr2_( nylm, ngy, g, gg, ainv, dylm )
   ! dylmr2  calculates d Y_{lm} /d G_ipol
   ! dylmr2_ calculates G_ipol \sum_k h^(-1)(jpol,k) (dY_{lm} /dG_k)
   !
-  USE kinds, ONLY: dbl
+  USE kinds, ONLY: DP
 
   implicit none
   !
   integer,   intent(IN)  :: nylm, ngy
-  real(dbl), intent(IN)  :: g (3, ngy), gg (ngy), ainv(3,3)
-  real(dbl), intent(OUT) :: dylm (ngy, nylm, 3, 3)
+  real(DP), intent(IN)  :: g (3, ngy), gg (ngy), ainv(3,3)
+  real(DP), intent(OUT) :: dylm (ngy, nylm, 3, 3)
   !
   integer :: ipol, jpol, lm
-  real(dbl), allocatable :: dylmaux (:,:,:)
+  real(DP), allocatable :: dylmaux (:,:,:)
   !
   allocate ( dylmaux(ngy,nylm,3) )
   !

@@ -18,8 +18,8 @@
           SUBROUTINE simpsn(inte,n,cl,s)
             USE kinds
             INTEGER, INTENT(IN) ::  N
-            REAL(dbl), INTENT(IN)  ::  INTE(N), cl
-            REAL(dbl), INTENT(OUT) ::  S
+            REAL(DP), INTENT(IN)  ::  INTE(N), cl
+            REAL(DP), INTENT(OUT) ::  S
           END SUBROUTINE simpsn
         END INTERFACE 
 
@@ -27,8 +27,8 @@
 !          SUBROUTINE splinedx(xmin,xmax,y,n,yp1,ypn,y2)
 !            USE kinds
 !            INTEGER, INTENT(IN)  :: n
-!            REAL(dbl),  INTENT(IN)  :: yp1,ypn,xmin,xmax,y(n)
-!            REAL(dbl),  INTENT(OUT) :: y2(n) 
+!            REAL(DP),  INTENT(IN)  :: yp1,ypn,xmin,xmax,y(n)
+!            REAL(DP),  INTENT(OUT) :: y2(n) 
 !          END SUBROUTINE splinedx
 !        END INTERFACE 
 !
@@ -36,17 +36,17 @@
 !          SUBROUTINE splintdx(xmin,xmax,ya,y2a,n,x,y)
 !            USE kinds
 !            INTEGER, INTENT(IN)  :: n
-!            REAL(dbl),  INTENT(IN)  :: x,xmin,xmax,ya(n),y2a(n)
-!            REAL(dbl),  INTENT(OUT) :: y 
+!            REAL(DP),  INTENT(IN)  :: x,xmin,xmax,ya(n),y2a(n)
+!            REAL(DP),  INTENT(OUT) :: y 
 !          END SUBROUTINE splintdx
 !        END INTERFACE 
 
         INTERFACE
           FUNCTION miller2gsqr(i,j,k,b1,b2,b3)
             USE kinds
-            REAL(dbl) :: miller2gsqr
+            REAL(DP) :: miller2gsqr
             INTEGER, INTENT(IN) :: i,j,k
-            REAL(dbl),  INTENT(IN) :: b1(3), b2(3), b3(3) 
+            REAL(DP),  INTENT(IN) :: b1(3), b2(3), b3(3) 
           END FUNCTION miller2gsqr
         END INTERFACE 
 

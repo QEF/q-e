@@ -21,7 +21,7 @@ subroutine integrate_inward(e,mesh,ndm,dx,r,r2,sqr,f, &
        ndm,   &    ! maximum radial mesh
        ik          ! the matching point
 
-  real(kind=dp) :: &
+  real(DP) :: &
        e,       &  ! output eigenvalue
        dx,      &  ! linear delta x for radial mesh
        r(mesh), &  ! radial mesh
@@ -31,7 +31,7 @@ subroutine integrate_inward(e,mesh,ndm,dx,r,r2,sqr,f, &
        y(mesh), &  ! the output solution
        c(mesh),el(mesh) ! auxiliary space
 
-  real(kind=dp) :: &
+  real(DP) :: &
        rstart,  &  ! the starting r of the inward integration
        di,      &  ! auxiliary for integration  
        expn        ! exponential for tail of wavefunction

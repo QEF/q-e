@@ -36,8 +36,8 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
   ! ... I/O variables
   !
   INTEGER,          INTENT(IN)  :: lda, n, m
-  COMPLEX(KIND=DP), INTENT(IN)  :: psi(lda,m) 
-  COMPLEX(KIND=DP), INTENT(OUT) :: hpsi(lda,m)  
+  COMPLEX(DP), INTENT(IN)  :: psi(lda,m) 
+  COMPLEX(DP), INTENT(OUT) :: hpsi(lda,m)  
   !
   ! ... here the local variables
   !
@@ -70,7 +70,7 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
        USE becmod,    ONLY: rbecp
        !
        IMPLICIT NONE
-       REAL(KIND=DP), ALLOCATABLE :: ps (:,:)
+       REAL(DP), ALLOCATABLE :: ps (:,:)
        !
        !
        IF ( nkb == 0 ) RETURN
@@ -130,7 +130,7 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
        USE becmod,    ONLY: becp
        !
        IMPLICIT NONE
-       cOMPLEX(KIND=DP), ALLOCATABLE :: ps (:,:)
+       cOMPLEX(DP), ALLOCATABLE :: ps (:,:)
        !
        !
        IF ( nkb == 0 ) RETURN

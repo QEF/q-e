@@ -42,15 +42,15 @@ SUBROUTINE new_ns()
   !    "    "  spins
   ! offset of d electrons of atom d
   ! in the natomwfc ordering
-  REAL(kind=DP) , ALLOCATABLE :: nr (:,:,:,:)
-  REAL(kind=DP) ::  t0, scnds
+  REAL(DP) , ALLOCATABLE :: nr (:,:,:,:)
+  REAL(DP) ::  t0, scnds
   ! cpu time spent
 
-  REAL(kind=DP), EXTERNAL :: DDOT
-  COMPLEX(kind=DP) :: ZDOTC
-  COMPLEX(kind=DP) , ALLOCATABLE :: proj(:,:)
+  REAL(DP), EXTERNAL :: DDOT
+  COMPLEX(DP) :: ZDOTC
+  COMPLEX(DP) , ALLOCATABLE :: proj(:,:)
 
-  REAL(kind=DP) :: psum
+  REAL(DP) :: psum
 
   t0 = scnds ()  
   ldim = 2 * Hubbard_lmax + 1

@@ -56,7 +56,7 @@ SUBROUTINE d3_setup()
   !
   IMPLICIT NONE
   !
-  REAL (kind = dp) :: rhotot, rhoup, rhodw, TARGET, small, fac, xmax, emin, &
+  REAL (DP) :: rhotot, rhoup, rhodw, TARGET, small, fac, xmax, emin, &
        emax, dmxc, wrk
   ! total charge
   ! total up charge

@@ -17,11 +17,11 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
   use funct
   implicit none
   integer :: n
-  real(kind=dp):: vhn1(ndm),vhn2(ndm), egc(ndm)
+  real(DP):: vhn1(ndm),vhn2(ndm), egc(ndm)
   !
   integer :: i, is
-  real(kind=dp):: rh(2), rhc, exc_t, vxcp(2)
-  real(kind=dp):: vgc(ndm,2),  egc0(ndm), rhotot(ndm,2)
+  real(DP):: rh(2), rhc, exc_t, vxcp(2)
+  real(DP):: vgc(ndm,2),  egc0(ndm), rhotot(ndm,2)
   logical :: gga
 
   vhn1=0.0_dp

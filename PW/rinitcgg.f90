@@ -27,19 +27,19 @@ SUBROUTINE rinitcgg( npwx, npw, nstart, nbnd, psi, evc, e )
     ! leading dimension of matrix psi, as declared in the calling pgm unit
     ! input number of states
     ! output number of states
-  COMPLEX (KIND=DP) :: psi(npwx,nstart), evc(npwx,nbnd)
+  COMPLEX (DP) :: psi(npwx,nstart), evc(npwx,nbnd)
     ! input and output eigenvectors (may overlap) 
-  REAL(KIND=DP) :: e(nbnd)
+  REAL(DP) :: e(nbnd)
     ! eigenvalues
   !
   !... local variables
   !
   INTEGER                        :: m, i, j, npw2, npwx2
-  REAL (KIND=DP)                 :: rtmp(2)
-  COMPLEX (KIND=DP), ALLOCATABLE :: aux(:,:)
-  COMPLEX (KIND=DP), ALLOCATABLE :: ctmp(:)
-  REAL (KIND=DP),    ALLOCATABLE :: hr(:,:,:), sr(:,:)
-  REAL (KIND=DP),    ALLOCATABLE :: en(:)
+  REAL (DP)                 :: rtmp(2)
+  COMPLEX (DP), ALLOCATABLE :: aux(:,:)
+  COMPLEX (DP), ALLOCATABLE :: ctmp(:)
+  REAL (DP),    ALLOCATABLE :: hr(:,:,:), sr(:,:)
+  REAL (DP),    ALLOCATABLE :: en(:)
   !
   !
   CALL start_clock( 'wfcrot1' )

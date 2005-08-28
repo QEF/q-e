@@ -21,7 +21,7 @@ function w0gauss (x, n)
   !
   USE kinds
   implicit none
-  real(kind=DP) :: w0gauss, x
+  real(DP) :: w0gauss, x
   ! output: the value of the function
   ! input: the point where to compute the function
 
@@ -30,7 +30,7 @@ function w0gauss (x, n)
   !
   !    here the local variables
   !
-  real(kind=DP) :: a, arg, hp, hd, pi
+  real(DP) :: a, arg, hp, hd, pi
   ! the coefficients a_n
   ! the argument of the exponential
   ! the hermite function
@@ -70,10 +70,10 @@ function w0gauss (x, n)
   ni = 0
   a = 1.0 / sqrt (pi)
   do i = 1, n
-     hd = 2.0d0 * x * hp - 2.0d0 * dble (ni) * hd
+     hd = 2.0d0 * x * hp - 2.0d0 * DBLE (ni) * hd
      ni = ni + 1
-     a = - a / (dble (i) * 4.0d0)
-     hp = 2.0d0 * x * hd-2.0d0 * dble (ni) * hp
+     a = - a / (DBLE (i) * 4.0d0)
+     hp = 2.0d0 * x * hd-2.0d0 * DBLE (ni) * hp
      ni = ni + 1
      w0gauss = w0gauss + a * hp
   enddo

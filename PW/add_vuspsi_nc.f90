@@ -34,13 +34,13 @@ subroutine add_vuspsi_nc (lda, n, m, psi, hpsi )
   !     First the dummy variables
   !
   integer :: lda, n, m
-  complex(kind=DP) :: psi (lda, npol, m), hpsi (lda,npol, m)
+  complex(DP) :: psi (lda, npol, m), hpsi (lda,npol, m)
   !
   !    here the local variables
   !
   integer :: jkb, ikb, ih, jh, na, nt, ijkb0, ibnd,ispin,ipol
   ! counters
-  complex(kind=DP), allocatable :: ps (:,:,:)
+  complex(DP), allocatable :: ps (:,:,:)
   ! the product vkb and psi
   !
 

@@ -188,9 +188,9 @@ MODULE xml_io_base
       !
       INTEGER,          INTENT(IN) :: ibrav
       CHARACTER(LEN=*), INTENT(IN) :: symm_type
-      REAL(KIND=DP),    INTENT(IN) :: celldm(6), alat
-      REAL(KIND=DP),    INTENT(IN) :: a1(3), a2(3), a3(3)
-      REAL(KIND=DP),    INTENT(IN) :: b1(3), b2(3), b3(3)
+      REAL(DP),    INTENT(IN) :: celldm(6), alat
+      REAL(DP),    INTENT(IN) :: a1(3), a2(3), a3(3)
+      REAL(DP),    INTENT(IN) :: b1(3), b2(3), b3(3)
       !
       CHARACTER(LEN=256) :: bravais_lattice
       !
@@ -269,8 +269,8 @@ MODULE xml_io_base
       CHARACTER(LEN=*), INTENT(IN) :: psfile(:)
       CHARACTER(LEN=*), INTENT(IN) :: pseudo_dir
       CHARACTER(LEN=*), INTENT(IN) :: dirname
-      REAL(KIND=DP),    INTENT(IN) :: amass(:)
-      REAL(KIND=DP),    INTENT(IN) :: tau(:,:)
+      REAL(DP),    INTENT(IN) :: amass(:)
+      REAL(DP),    INTENT(IN) :: tau(:,:)
       INTEGER,          INTENT(IN) :: if_pos(:,:)
       CHARACTER(LEN=*), INTENT(IN) :: pos_unit
       !
@@ -343,7 +343,7 @@ MODULE xml_io_base
       CHARACTER(LEN=*), INTENT(IN) :: sname(:)
       !
       INTEGER        :: i
-      REAL (KIND=DP) :: tmp(3)
+      REAL (DP) :: tmp(3)
       !
       !
       CALL iotk_write_begin( iunpun, "SYMMETRIES" )
@@ -387,7 +387,7 @@ MODULE xml_io_base
       INTEGER,       INTENT(IN) :: npwx, nr1, nr2, nr3, ngm_g, &
                                    nr1s, nr2s, nr3s, ngms_g, nr1b, nr2b, nr3b
       INTEGER,       INTENT(IN) :: itmp(:,:)
-      REAL(KIND=DP), INTENT(IN) :: ecutwfc, dual
+      REAL(DP), INTENT(IN) :: ecutwfc, dual
       LOGICAL,       INTENT(IN) :: gamma_only, lgvec
       !
       !
@@ -473,7 +473,7 @@ MODULE xml_io_base
       INTEGER,                 INTENT(IN) :: nsp
       INTEGER,       OPTIONAL, INTENT(IN) :: Hubbard_lmax
       INTEGER,       OPTIONAL, INTENT(IN) :: Hubbard_l(:)
-      REAL(KIND=DP), OPTIONAL, INTENT(IN) :: Hubbard_U(:), Hubbard_alpha(:)
+      REAL(DP), OPTIONAL, INTENT(IN) :: Hubbard_U(:), Hubbard_alpha(:)
       !
       !
       CALL iotk_write_begin( iunpun, "EXCHANGE_CORRELATION" )
@@ -515,7 +515,7 @@ MODULE xml_io_base
       !
       LOGICAL,                 INTENT(IN) :: lgauss, ltetra, tfixed_occ, lsda
       INTEGER,       OPTIONAL, INTENT(IN) :: ngauss, ntetra, nelup, neldw
-      REAL(KIND=DP), OPTIONAL, INTENT(IN) :: degauss, f_inp(:,:)      
+      REAL(DP), OPTIONAL, INTENT(IN) :: degauss, f_inp(:,:)      
       !
       !
       CALL iotk_write_begin( iunpun, "OCCUPATIONS" )
@@ -558,7 +558,7 @@ MODULE xml_io_base
       !------------------------------------------------------------------------
       !
       INTEGER,       INTENT(IN) :: num_k_points
-      REAL(KIND=DP), INTENT(IN) :: xk(:,:), wk(:)
+      REAL(DP), INTENT(IN) :: xk(:,:), wk(:)
       !
       INTEGER :: ik
       !
@@ -593,7 +593,7 @@ MODULE xml_io_base
       !   all processors, avoiding an overall collect of the charge density
       !   on a single proc.
       !
-      USE kinds,     ONLY : dbl
+      USE kinds,     ONLY : DP
       USE io_files,  ONLY : rhounit
       USE io_global, ONLY : ionode, ionode_id
       USE mp,        ONLY : mp_sum, mp_get, mp_bcast, mp_max
@@ -606,14 +606,14 @@ MODULE xml_io_base
       INTEGER,           INTENT(IN) :: nr1, nr2, nr3
       INTEGER,           INTENT(IN) :: nr1x, nr2x
       CHARACTER(LEN=*),  INTENT(IN) :: rho_file
-      REAL(dbl),         INTENT(IN) :: rho( : )
+      REAL(DP),         INTENT(IN) :: rho( : )
       INTEGER, OPTIONAL, INTENT(IN) :: ipp( : )
       INTEGER, OPTIONAL, INTENT(IN) :: npp( : )
       !
       INTEGER :: ierr, i, j, k, kk, ldr, ip
       INTEGER                       :: ierr_iotk
       CHARACTER(LEN=iotk_attlenx)   :: attr
-      REAL(dbl), ALLOCATABLE        :: rho_plane( : )
+      REAL(DP), ALLOCATABLE        :: rho_plane( : )
       INTEGER,   ALLOCATABLE        :: kowner( : )
    
    

@@ -25,7 +25,7 @@ subroutine init_ns
    !
    implicit none
 
-   real(kind=DP) :: totoc
+   real(DP) :: totoc
 
    integer :: na, nt, is, m1, majs, mins, i
    logical :: nm        ! true if the atom is non magnetic

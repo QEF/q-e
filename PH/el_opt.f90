@@ -26,13 +26,13 @@ subroutine el_opt
 
   logical wr_all
   integer :: ik, ir, ipa, ipb, ipc, nrec, ibnd, jbnd, il, ntm
-  real(kind=DP) :: weight, fac, elop_ (3, 3, 3, 3), ps3 (3, 3, 3)
-  real(kind=DP) :: d2mxc, rhotot
+  real(DP) :: weight, fac, elop_ (3, 3, 3, 3), ps3 (3, 3, 3)
+  real(DP) :: d2mxc, rhotot
   ! external function
   ! total charge on a point
-  real(kind=DP), allocatable :: d2muxc (:)
-  complex(kind=DP) :: ps(3, 6), ZDOTC, tmp
-  complex(kind=DP) , allocatable :: chif(:,:,:), depsi (:,:,:), aux3 (:,:)
+  real(DP), allocatable :: d2muxc (:)
+  complex(DP) :: ps(3, 6), ZDOTC, tmp
+  complex(DP) , allocatable :: chif(:,:,:), depsi (:,:,:), aux3 (:,:)
 
   call start_clock('el_opt')
   elop_(:,:,:,:) = 0.d0

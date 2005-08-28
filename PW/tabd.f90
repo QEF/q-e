@@ -17,7 +17,7 @@ subroutine tabd (nt, occ_loc)
   USE kinds, ONLY: DP
   USE uspp_param, ONLY: psd
   implicit none
-  real(kind=DP) :: occ_loc
+  real(DP) :: occ_loc
   ! output: the total number of d electrons
 
   integer :: nt

@@ -63,7 +63,7 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   !     square-free factors must be .le. 210
   !
   USE kinds
-  implicit real(kind=DP)(a - h, o - z)
+  implicit real(DP)(a - h, o - z)
   dimension a ( * ), b ( * )
   dimension nfac (11), np (209)
   !     array storage for maximum prime factor of 23
@@ -90,7 +90,7 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   kspan = ks
   nn = nt - inc
   jc = ks / n
-  radf = rad * dble (jc) * 0.5d0
+  radf = rad * DBLE (jc) * 0.5d0
   i = 0
   jf = 0
   !     determine the factors of n
@@ -135,7 +135,7 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   j = j - 1
   if (j.ne.0) goto 90
   !     compute fourier transform
-100 sd = radf / dble (kspan)
+100 sd = radf / DBLE (kspan)
   cd = 2.0d0 * sin (sd) **2
   sd = sin (sd+sd)
   kk = 1
@@ -324,7 +324,7 @@ subroutine cft (a, b, ntot, n, nspan, isn)
   if (k.eq.5) goto 510
   if (k.eq.jf) goto 640
   jf = k
-  s1 = rad / dble (k)
+  s1 = rad / DBLE (k)
   c1 = cos (s1)
   s1 = sin (s1)
   if (jf.gt.maxf) goto 998

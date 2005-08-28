@@ -12,8 +12,8 @@ program fqha
   !
   implicit none
   integer, parameter:: ndivx=10000
-  real(kind=8) :: dos(ndivx),nu(ndivx),T,a1,a2,a3,Ftot,norm,F0
-  real(kind=8) :: de, emax
+  real(8) :: dos(ndivx),nu(ndivx),T,a1,a2,a3,Ftot,norm,F0
+  real(8) :: de, emax
   integer :: i,ndiv
   character(len=256) :: filename
   !

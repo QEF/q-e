@@ -28,16 +28,16 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
     ! dimension of the matrix to be diagonalized
     ! number of eigenstates to be calculated
     ! leading dimension of h, as declared in the calling pgm unit
-  REAL(KIND=DP) :: h(ldh,n)
+  REAL(DP) :: h(ldh,n)
     ! matrix to be diagonalized
-  REAL(KIND=DP) :: s(ldh,n)
+  REAL(DP) :: s(ldh,n)
     ! overlap matrix
   !
   ! ... on OUTPUT
   !
-  REAL(KIND=DP) :: e(n)
+  REAL(DP) :: e(n)
     ! eigenvalues
-  REAL(KIND=DP) :: v(ldh,m)
+  REAL(DP) :: v(ldh,m)
     ! eigenvectors (column-wise)
   !
   ! ... LOCAL variables
@@ -47,7 +47,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
     ! mm = number of calculated eigenvectors
   EXTERNAL                      ILAENV
   INTEGER, ALLOCATABLE       :: iwork(:), ifail(:)
-  REAL(KIND=DP), ALLOCATABLE :: sdum(:,:), hdum(:,:),  work(:)
+  REAL(DP), ALLOCATABLE :: sdum(:,:), hdum(:,:),  work(:)
   LOGICAL                    :: all_eigenvalues
   !
   !

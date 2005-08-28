@@ -21,8 +21,8 @@ subroutine ns_adj
    !
    integer, parameter:: ldim=7
    integer :: na,nt,is,m1,m2,majs,mins,adjs,mol(ldim),nel,i,j,l,index(ldim) 
-   real(kind=DP) :: totoc, delta,lambda(ldim) 
-   complex(kind=DP) :: vet(ldim,ldim), f(ldim,ldim), temp
+   real(DP) :: totoc, delta,lambda(ldim) 
+   complex(DP) :: vet(ldim,ldim), f(ldim,ldim), temp
    logical :: adjust
  
    if (ALL(starting_ns == -1.d0)) return

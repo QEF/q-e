@@ -17,8 +17,8 @@
 !  (describe briefly what this module does...)
 !  ----------------------------------------------
 !  routines in this module:
-!  REAL(dbl) FUNCTION dft_kinetic_energy(c,hg,f,nb)
-!  REAL(dbl) FUNCTION cp_kinetic_energy(cp,cm,pmss,emass,delt)
+!  REAL(DP) FUNCTION dft_kinetic_energy(c,hg,f,nb)
+!  REAL(DP) FUNCTION cp_kinetic_energy(cp,cm,pmss,emass,delt)
 !  SUBROUTINE rande(cm,ampre)
 !  SUBROUTINE gram(cp)
 !  SUBROUTINE update_wave_functions(cm,c0,cp)
@@ -70,7 +70,7 @@
 !  ----------------------------------------------
 
 
-    REAL(dbl) FUNCTION dft_kinetic_energy(c0, cdesc, f, xmkin)
+    REAL(DP) FUNCTION dft_kinetic_energy(c0, cdesc, f, xmkin)
 
 !  This function compute the Total Quanto-Mechanical Kinetic Energy of the Kohn-Sham
 !  wave function
@@ -86,13 +86,13 @@
 
         IMPLICIT NONE
 
-        COMPLEX(dbl), INTENT(IN) :: c0(:,:,:,:)       !  wave functions coefficients
+        COMPLEX(DP), INTENT(IN) :: c0(:,:,:,:)       !  wave functions coefficients
         TYPE (wave_descriptor), INTENT(IN) :: cdesc   !  descriptor of c0
-        REAL(dbl), INTENT(IN) :: f(:,:,:)             !  occupation numbers
-        REAL(dbl), OPTIONAL, INTENT(INOUT) :: xmkin
+        REAL(DP), INTENT(IN) :: f(:,:,:)             !  occupation numbers
+        REAL(DP), OPTIONAL, INTENT(INOUT) :: xmkin
 
         INTEGER    :: ib, ik, ispin, ispin_wfc
-        REAL(dbl)  :: xkin, fact, xkins, xmkins
+        REAL(DP)  :: xkin, fact, xkins, xmkins
 
 ! ... end of declarations
 !  ----------------------------------------------
@@ -142,7 +142,7 @@
 !=----------------------------------------------------------------------------=!
 
 
-      REAL(dbl) FUNCTION dft_weighted_kinene( ispin, c, cdesc, g2, fi)
+      REAL(DP) FUNCTION dft_weighted_kinene( ispin, c, cdesc, g2, fi)
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
@@ -150,12 +150,12 @@
         USE wave_types, ONLY: wave_descriptor
         USE electrons_module, ONLY: pmss
 
-        COMPLEX(dbl), INTENT(IN) :: c(:,:)
+        COMPLEX(DP), INTENT(IN) :: c(:,:)
         INTEGER, INTENT( IN ) :: ispin
         TYPE (wave_descriptor), INTENT(IN) :: cdesc
-        REAL (dbl), INTENT(IN) :: fi(:), g2(:)
+        REAL (DP), INTENT(IN) :: fi(:), g2(:)
         INTEGER    ib, ig
-        REAL(dbl)  skm, xmkin
+        REAL(DP)  skm, xmkin
 ! ... end of declarations
 
         xmkin = 0.0d0
@@ -198,18 +198,18 @@
 
 !=----------------------------------------------------------------------------=!
 
-      REAL(dbl) FUNCTION dft_kinetic_energy_s( ispin, c, cdesc, g2, fi)
+      REAL(DP) FUNCTION dft_kinetic_energy_s( ispin, c, cdesc, g2, fi)
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
 
         USE wave_types, ONLY: wave_descriptor
-        COMPLEX(dbl), INTENT(IN) :: c(:,:)
+        COMPLEX(DP), INTENT(IN) :: c(:,:)
         INTEGER, INTENT( IN ) :: ispin
         TYPE (wave_descriptor), INTENT(IN) :: cdesc
-        REAL (dbl),  INTENT(IN) :: fi(:), g2(:)
+        REAL (DP),  INTENT(IN) :: fi(:), g2(:)
         INTEGER    ib, ig, igs
-        REAL(dbl)  sk1, xkin
+        REAL(DP)  sk1, xkin
 ! ... end of declarations
 
         xkin = 0.0d0
@@ -263,10 +263,10 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      COMPLEX(dbl), INTENT(INOUT) :: cm(:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: cm(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       INTEGER, INTENT(IN) :: ispin
-      REAL(dbl) ampre
+      REAL(DP) ampre
 
 ! ... declare other variables
       INTEGER ik
@@ -294,9 +294,9 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      COMPLEX(dbl), INTENT(INOUT) :: cm(:,:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: cm(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      REAL(dbl) ampre
+      REAL(DP) ampre
 
 ! ... declare other variables
       INTEGER :: ik, ispin, nspin
@@ -328,10 +328,10 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      COMPLEX(dbl), INTENT(INOUT) :: cm(:,:)
+      COMPLEX(DP), INTENT(INOUT) :: cm(:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       INTEGER, INTENT(IN) :: ispin
-      REAL(dbl) ampre
+      REAL(DP) ampre
 
       CALL rande_base( cm(:,:), ampre )
 
@@ -348,10 +348,10 @@
 
       IMPLICIT NONE
 
-      COMPLEX(dbl), INTENT(INOUT) :: c(:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c(:,:)
       INTEGER, INTENT(IN) :: ispin
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      REAL(dbl), INTENT(IN) :: kmask(:)
+      REAL(DP), INTENT(IN) :: kmask(:)
       INTEGER :: i
 
         IF( .NOT. cdesc%gamma ) THEN
@@ -381,9 +381,9 @@
    SUBROUTINE fixwave_v ( ispin, c, cdesc, kmask )
       USE wave_types, ONLY: wave_descriptor
       IMPLICIT NONE
-      COMPLEX(dbl), INTENT(INOUT) :: c(:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      REAL(dbl), INTENT(IN) :: kmask(:,:)
+      REAL(DP), INTENT(IN) :: kmask(:,:)
       INTEGER, INTENT(IN) :: ispin
       INTEGER :: i
         DO i = 1, cdesc%nkl
@@ -398,9 +398,9 @@
       USE wave_types, ONLY: wave_descriptor
       USE control_flags, ONLY: force_pairing
       IMPLICIT NONE
-      COMPLEX(dbl), INTENT(INOUT) :: c(:,:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      REAL(dbl), INTENT(IN) :: kmask(:,:)
+      REAL(DP), INTENT(IN) :: kmask(:,:)
       INTEGER :: i, j, nspin
       !
       nspin = cdesc%nspin
@@ -416,7 +416,7 @@
 
 !=----------------------------------------------------------------------------=!
 
-   REAL(dbl) FUNCTION cp_kinetic_energy( ispin, cp, cm, cdesc, pmss, delt)
+   REAL(DP) FUNCTION cp_kinetic_energy( ispin, cp, cm, cdesc, pmss, delt)
 
 !  (describe briefly what this routine does...)
 !  if ekinc_fp will hold the full electron kinetic energy (paired and unpaired) and
@@ -433,15 +433,15 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      COMPLEX(dbl), INTENT(IN) :: cp(:,:,:), cm(:,:,:)
+      COMPLEX(DP), INTENT(IN) :: cp(:,:,:), cm(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       INTEGER, INTENT( IN ) :: ispin
-      REAL(dbl), INTENT(IN) :: delt
-      REAL(dbl) :: pmss(:)
+      REAL(DP), INTENT(IN) :: delt
+      REAL(DP) :: pmss(:)
 
 ! ... declare other variables
-      COMPLEX(dbl) speed
-      REAL(dbl)  ekinc, ekinct, dt2, fact
+      COMPLEX(DP) speed
+      REAL(DP)  ekinc, ekinct, dt2, fact
       INTEGER    ib, j, ik
 
 ! ... end of declarations
@@ -486,7 +486,7 @@
       IMPLICIT NONE
 
 ! ... declare other variables
-      COMPLEX(dbl), INTENT(INOUT) :: cp(:,:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: cp(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       INTEGER :: ik, ispin, n, nspin
 
@@ -521,7 +521,7 @@
       IMPLICIT NONE
 
 ! ... declare other variables
-      COMPLEX(dbl), INTENT(INOUT) :: cp(:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: cp(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       INTEGER, INTENT(IN) :: ispin
       INTEGER :: ik
@@ -554,7 +554,7 @@
       IMPLICIT NONE
 
 ! ... declare other variables
-      COMPLEX(dbl), INTENT(INOUT) :: cp(:,:)
+      COMPLEX(DP), INTENT(INOUT) :: cp(:,:)
       INTEGER, INTENT(IN) :: ispin
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       INTEGER :: n
@@ -582,9 +582,9 @@
 
       IMPLICIT NONE
 
-      COMPLEX(dbl), INTENT(IN) :: cp(:,:,:,:)
-      COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:,:)
-      COMPLEX(dbl), INTENT(OUT) :: cm(:,:,:,:)
+      COMPLEX(DP), INTENT(IN) :: cp(:,:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:)
+      COMPLEX(DP), INTENT(OUT) :: cm(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
 
       INTEGER :: ispin, ik, nspin
@@ -632,16 +632,16 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      COMPLEX(dbl), INTENT(INOUT) :: c0(:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       INTEGER, INTENT(IN) :: ispin
-      REAL(dbl) :: lambda(:,:)
-      REAL(dbl) :: eig(:)
+      REAL(DP) :: lambda(:,:)
+      REAL(DP) :: eig(:)
 
 ! ... declare other variables
       INTEGER   ::  nx, ngw, nrl
-      COMPLEX(dbl), ALLOCATABLE :: c0rot(:,:)
-      REAL(dbl), ALLOCATABLE :: uu(:,:), vv(:,:)
+      COMPLEX(DP), ALLOCATABLE :: c0rot(:,:)
+      REAL(DP), ALLOCATABLE :: uu(:,:), vv(:,:)
       INTEGER   :: i, j, k, ip
       INTEGER   :: jl, nrl_ip
 
@@ -717,16 +717,16 @@
 ! ... declare subroutine arguments
       INTEGER, INTENT(IN) :: ik
       INTEGER, INTENT(IN) :: ispin
-      COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      COMPLEX(dbl)  :: lambda(:,:)
-      REAL(dbl)      :: eig(:)
+      COMPLEX(DP)  :: lambda(:,:)
+      REAL(DP)      :: eig(:)
 
 ! ... declare other variables
       INTEGER   ngw, nx
-      COMPLEX(dbl), ALLOCATABLE :: c0rot(:,:)
-      COMPLEX(dbl), ALLOCATABLE :: vv(:,:)
-      COMPLEX(dbl), ALLOCATABLE :: uu(:,:)
+      COMPLEX(DP), ALLOCATABLE :: c0rot(:,:)
+      COMPLEX(DP), ALLOCATABLE :: vv(:,:)
+      COMPLEX(DP), ALLOCATABLE :: uu(:,:)
       INTEGER   i,j,jl,nrl,ip,nrl_ip
 
 ! ... end of declarations
@@ -801,16 +801,16 @@
         IMPLICIT NONE
 
 ! ...   declare subroutine arguments
-        COMPLEX(dbl), INTENT(INOUT) :: a(:,:), b(:,:)
+        COMPLEX(DP), INTENT(INOUT) :: a(:,:), b(:,:)
         TYPE (wave_descriptor), INTENT(IN) :: adesc, bdesc
-        REAL(dbl), OPTIONAL :: lambda(:,:)
+        REAL(DP), OPTIONAL :: lambda(:,:)
         INTEGER, INTENT( IN ) :: ispin
 
 ! ...   declare other variables
-        REAL(dbl), ALLOCATABLE :: ee(:)
+        REAL(DP), ALLOCATABLE :: ee(:)
         INTEGER :: i, j, ngwc, jl
         INTEGER :: nstate_a, nstate_b
-        COMPLEX(dbl) :: alp
+        COMPLEX(DP) :: alp
 
 ! ... end of declarations
 !  ----------------------------------------------
@@ -861,12 +861,12 @@
         IMPLICIT NONE
 
 ! ...   declare subroutine arguments
-        COMPLEX(dbl), INTENT(INOUT) :: a(:,:), b(:,:), c(:,:)
+        COMPLEX(DP), INTENT(INOUT) :: a(:,:), b(:,:), c(:,:)
         TYPE (wave_descriptor), INTENT(IN) :: adesc, bdesc, cdesc
         INTEGER, INTENT( IN ) :: ispin
 
 ! ...   declare other variables
-        COMPLEX(dbl), ALLOCATABLE :: ee(:)
+        COMPLEX(DP), ALLOCATABLE :: ee(:)
         INTEGER :: i, j, ngwc, jl
         INTEGER :: nstate_a, nstate_b, nstate_c
 
@@ -925,14 +925,14 @@
         IMPLICIT NONE
 
 ! ...   declare subroutine arguments
-        COMPLEX(dbl), INTENT(INOUT) :: a(:,:,:), b(:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: a(:,:,:), b(:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: adesc, bdesc
-        COMPLEX(dbl), OPTIONAL  :: lambda(:,:)
+        COMPLEX(DP), OPTIONAL  :: lambda(:,:)
         INTEGER, INTENT(IN) :: ik
         INTEGER, INTENT(IN) :: ispin
 
 ! ...   declare other variables
-        COMPLEX(dbl), ALLOCATABLE :: ee(:)
+        COMPLEX(DP), ALLOCATABLE :: ee(:)
         INTEGER      :: ngwc, i, j
         INTEGER      :: nstate_a, nstate_b
 
@@ -989,15 +989,15 @@
 ! ... declare module-scope variables
 
 ! ... declare subroutine arguments 
-      COMPLEX(dbl), INTENT(OUT) :: cm(:,:)
+      COMPLEX(DP), INTENT(OUT) :: cm(:,:)
       
-      REAL(dbl) :: rranf
+      REAL(DP) :: rranf
       EXTERNAL rranf
 
 ! ... declare other variables
       INTEGER :: ntest, ig, ib
-      REAL(dbl) ::  rranf1, rranf2, ampre
-      COMPLEX(dbl), ALLOCATABLE :: pwt( : )
+      REAL(DP) ::  rranf1, rranf2, ampre
+      COMPLEX(DP), ALLOCATABLE :: pwt( : )
 
 ! ... end of declarations
 !  ----------------------------------------------
@@ -1074,7 +1074,7 @@
 
      SUBROUTINE interpolate_lambda( lambdap, lambda, lambdam )
        IMPLICIT NONE
-       REAL(dbl) :: lambdap(:,:), lambda(:,:), lambdam(:,:) 
+       REAL(DP) :: lambdap(:,:), lambda(:,:), lambdam(:,:) 
        !
        ! interpolate new lambda at (t+dt) from lambda(t) and lambda(t-dt):
        !
@@ -1092,12 +1092,12 @@
        USE wave_base, ONLY: hpsi
        USE wave_types, ONLY: wave_descriptor
        IMPLICIT NONE
-       REAL(dbl) :: lambda(:,:)
-       COMPLEX(dbl) :: c0(:,:), c2(:)
+       REAL(DP) :: lambda(:,:)
+       COMPLEX(DP) :: c0(:,:), c2(:)
        TYPE (wave_descriptor), INTENT(IN) :: cdesc
        INTEGER :: i
        !
-       REAL(dbl), ALLOCATABLE :: prod(:)
+       REAL(DP), ALLOCATABLE :: prod(:)
        INTEGER :: ibl
        !
        ALLOCATE( prod( SIZE( c0, 2 ) ) )
@@ -1118,12 +1118,12 @@
        USE wave_base, ONLY: hpsi
        USE wave_types, ONLY: wave_descriptor
        IMPLICIT NONE
-       COMPLEX(dbl) :: lambda(:,:)
-       COMPLEX(dbl) :: c0(:,:), c2(:)
+       COMPLEX(DP) :: lambda(:,:)
+       COMPLEX(DP) :: c0(:,:), c2(:)
        TYPE (wave_descriptor), INTENT(IN) :: cdesc
        INTEGER :: i
        !
-       COMPLEX(dbl), ALLOCATABLE :: prod(:)
+       COMPLEX(DP), ALLOCATABLE :: prod(:)
        INTEGER :: ibl
        !
        ALLOCATE( prod( SIZE( c0, 2 ) ) )

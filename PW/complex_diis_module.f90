@@ -40,15 +40,15 @@ MODULE complex_diis_module
   !
   SAVE
   !
-  COMPLEX (KIND=DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
+  COMPLEX (DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
     ! H matrix on the reduced basis
     ! S matrix on the reduced basis
     ! the eigenvectors of the Hamiltonian
   !
   ! ... external functions
   !
-  REAL (KIND=DP),    EXTERNAL :: DDOT
-  COMPLEX (KIND=DP), EXTERNAL :: ZDOTC  
+  REAL (DP),    EXTERNAL :: DDOT
+  COMPLEX (DP), EXTERNAL :: ZDOTC  
   !
   ! ... module procedures :
   !
@@ -75,9 +75,9 @@ MODULE complex_diis_module
         ! scf iteration
       INTEGER, INTENT(INOUT) :: btype(nbnd)
         ! band type ( 1 = occupied, 0 = empty )
-      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+      COMPLEX (DP), INTENT(INOUT) :: psi(ndmx,nbnd)
         !  psi contains the refined estimates of the eigenvectors
-      REAL (KIND=DP), INTENT(INOUT) :: e(nbnd)
+      REAL (DP), INTENT(INOUT) :: e(nbnd)
         ! contains the estimated eigenvalues
       INTEGER, INTENT(OUT) :: diis_iter
         ! average number of iterations performed per band
@@ -272,9 +272,9 @@ MODULE complex_diis_module
         ! integer number of searched low-lying roots
       INTEGER, INTENT(INOUT) :: btype(nbnd)
         ! band type ( 1 = occupied, 0 = empty )
-      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+      COMPLEX (DP), INTENT(INOUT) :: psi(ndmx,nbnd)
         !  psi contains the refined estimates of the eigenvectors
-      REAL (KIND=DP), INTENT(INOUT) :: e(nbnd)
+      REAL (DP), INTENT(INOUT) :: e(nbnd)
         ! contains the estimated eigenvalues
       INTEGER, INTENT(INOUT) :: diis_iter  
         ! average number of iterations performed per band         
@@ -284,7 +284,7 @@ MODULE complex_diis_module
       INTEGER        :: sweep, trial_step
       INTEGER        :: ib
       INTEGER        :: notcnv
-      REAL (KIND=DP) :: psiSpsi
+      REAL (DP) :: psiSpsi
       !
       !
       sweep = 0
@@ -477,9 +477,9 @@ MODULE complex_diis_module
         ! leading dimension of matrix psi, as declared in the calling pgm unit
       INTEGER, INTENT(INOUT) :: btype(nbnd_diis)
         ! band type ( 1 = occupied, 0 = empty )
-      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx,nbnd_diis)
+      COMPLEX (DP), INTENT(INOUT) :: psi(ndmx,nbnd_diis)
         !  psi contains the refined estimates of the eigenvectors
-      REAL (KIND=DP), INTENT(INOUT) :: e(nbnd_diis)
+      REAL (DP), INTENT(INOUT) :: e(nbnd_diis)
         ! contains the estimated eigenvalues
       INTEGER, INTENT(INOUT) :: diis_iter  
         ! average number of iterations performed per band                 
@@ -488,8 +488,8 @@ MODULE complex_diis_module
       !
       INTEGER           :: kter, ib, jb
       INTEGER           :: notcnv
-      REAL (KIND=DP)    :: psi_norm
-      COMPLEX (KIND=DP) :: overlap
+      REAL (DP)    :: psi_norm
+      COMPLEX (DP) :: overlap
       !
       !
 #if defined (WINDOW_ORTHO)
@@ -716,15 +716,15 @@ MODULE complex_diis_module
           IMPLICIT NONE
           !
           INTEGER                        :: ib, n, dim, dim_new
-          REAL (KIND=DP)                 :: psiSpsi
-          REAL (KIND=DP),    ALLOCATABLE :: e_small(:)
-          COMPLEX (KIND=DP), ALLOCATABLE :: rc_small(:,:), &
+          REAL (DP)                 :: psiSpsi
+          REAL (DP),    ALLOCATABLE :: e_small(:)
+          COMPLEX (DP), ALLOCATABLE :: rc_small(:,:), &
                                             vc_small(:,:)
-          COMPLEX (KIND=DP), ALLOCATABLE :: all_psi(:,:),  &
+          COMPLEX (DP), ALLOCATABLE :: all_psi(:,:),  &
                                             all_hpsi(:,:), &
                                             all_spsi(:,:), &
                                             all_res(:,:)
-          COMPLEX (KIND=DP), ALLOCATABLE :: ps(:)
+          COMPLEX (DP), ALLOCATABLE :: ps(:)
           !
           !
           dim     = MIN( ( nbase - 1 ), diis_ndim1 )
@@ -896,9 +896,9 @@ MODULE complex_diis_module
       ! ... I/O variables 
       !
       INTEGER,           INTENT(IN)    :: ndmx, ndim, nbnd
-      REAL (KIND=DP),    INTENT(IN)    :: precondition(ndim)
-      COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx,nbnd)
-      REAL (KIND=DP),    INTENT(INOUT) :: e(nbnd)
+      REAL (DP),    INTENT(IN)    :: precondition(ndim)
+      COMPLEX (DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+      REAL (DP),    INTENT(INOUT) :: e(nbnd)
       INTEGER,           INTENT(INOUT) :: diis_iter
         ! average number of iterations performed per band                       
       !
@@ -906,13 +906,13 @@ MODULE complex_diis_module
       !
       INTEGER                       :: i, j, ib
       INTEGER                       :: cgter, holes_filler_iter
-      COMPLEX(KIND=DP), ALLOCATABLE :: lagrange(:), g(:), &
+      COMPLEX(DP), ALLOCATABLE :: lagrange(:), g(:), &
                                        cg(:), scg(:), ppsi(:), g0(:)
-      REAL(KIND=DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, &
+      REAL(DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, &
                                        gg1, theta, cg0, e0, es(2)
-      REAL(KIND=DP)                 :: rr, arg
+      REAL(DP)                 :: rr, arg
       !
-      REAL(KIND=DP), EXTERNAL :: rndm
+      REAL(DP), EXTERNAL :: rndm
       !
       !
       ALLOCATE( scg(  ndmx ) )    

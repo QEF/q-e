@@ -49,8 +49,8 @@
       implicit none
 ! 
       integer  :: i
-      real(kind=8) :: rat1, rat2, rat3
-      real(kind=8) :: b1(3), b2(3), b3(3)
+      real(8) :: rat1, rat2, rat3
+      real(8) :: b1(3), b2(3), b3(3)
       integer :: ng_ , ngs_ , ngm_ , ngw_
 
       IF( ionode ) THEN
@@ -228,8 +228,8 @@
       ! local
       !
       integer :: i, j
-      real(kind=8) :: gvel(3,3)
-      real(kind=8) :: xnhh0(3,3), xnhhm(3,3), vnhh(3,3), velh(3,3)
+      real(8) :: gvel(3,3)
+      real(8) :: xnhh0(3,3), xnhhm(3,3), vnhh(3,3), velh(3,3)
 
       IF( .NOT. tcell_base_init ) &
          CALL errore( ' init_geometry ', ' cell_base_init has not been call yet! ', 1 )
@@ -328,11 +328,11 @@
       !
       implicit none
       !
-      real(kind=8) :: h(3,3)
+      real(8) :: h(3,3)
 
       ! local
       !
-      real(kind=8) :: gmax, b1(3), b2(3), b3(3)
+      real(8) :: gmax, b1(3), b2(3), b3(3)
       !
       !  re-initialize the cell base module with the new geometry
       !

@@ -24,12 +24,12 @@ subroutine write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
   implicit none
   integer          :: nat, ityp(nat), ounit, nrx1, nrx2, nrx3
   character(len=3) :: atm(*)
-  real(kind=DP)    :: alat, tau(3,nat), at(3,3), bg(3,3), rho(nrx1,nrx2,nrx3)
+  real(DP)    :: alat, tau(3,nat), at(3,3), bg(3,3), rho(nrx1,nrx2,nrx3)
 
   ! --
   integer          :: i, nt, i1, i2, i3, at_num
   integer, external:: atomic_number
-  real(kind=DP)    :: at_chrg, tpos(3), inpos(3)
+  real(DP)    :: at_chrg, tpos(3), inpos(3)
 
 !C     WRITE A FORMATTED 'DENSITY-STYLE' CUBEFILE VERY SIMILAR
 !C     TO THOSE CREATED BY THE GAUSSIAN PROGRAM OR THE CUBEGEN UTILITY.

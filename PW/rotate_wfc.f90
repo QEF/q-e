@@ -30,15 +30,15 @@ SUBROUTINE rotate_wfc( npwx, npw, nstart, nbnd, psi, overlap, evc, e )
     ! output number of states
   LOGICAL :: overlap
     ! if .FALSE. : S|psi> not needed
-  COMPLEX(KIND=DP) :: psi(npwx,nstart), evc(npwx,nbnd)
+  COMPLEX(DP) :: psi(npwx,nstart), evc(npwx,nbnd)
     ! input and output eigenvectors (may overlap)
-  REAL(KIND=DP) :: e(nbnd)
+  REAL(DP) :: e(nbnd)
     ! eigenvalues
   !
   ! ... local variables
   !
-  COMPLEX(KIND=DP), ALLOCATABLE :: aux(:,:), hc(:,:), sc(:,:), vc(:,:)
-  REAL(KIND=DP),    ALLOCATABLE :: en(:)
+  COMPLEX(DP), ALLOCATABLE :: aux(:,:), hc(:,:), sc(:,:), vc(:,:)
+  REAL(DP),    ALLOCATABLE :: en(:)
   !
   !
   CALL start_clock( 'wfcrot' )

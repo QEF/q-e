@@ -19,10 +19,10 @@ function int1d(fun, zk, dz, dz1, nz1, tpiba, sign)
       ik,     &        ! counter on slab points
       nz1,    &        ! input: the number of integration points
       sign             ! input: the sign of the exponential
-  real(kind=DP), parameter :: eps=1.d-8
-  real(kind=DP) :: tpi, dz, dz1, tpiba 
-  complex(kind=DP), parameter :: cim = (0.d0,1.d0)
-  complex(kind=DP) ::  &
+  real(DP), parameter :: eps=1.d-8
+  real(DP) :: tpi, dz, dz1, tpiba 
+  complex(DP), parameter :: cim = (0.d0,1.d0)
+  complex(DP) ::  &
       zk,              & ! the exponential k
       fun(nz1),        & ! the beta function on the slab points
       fact,fact0,      & ! auxiliary
@@ -60,11 +60,11 @@ function int2d(fun1, fun2, int1, int2, fact1, fact2, zk, dz1, tpiba, nz1 )
   integer ::    &
      nz1,       &  ! number of points for the slab integration 
      ik, ik1       ! counters on the slab points
-  real(kind=DP), parameter :: eps=1.d-8
-  real(kind=DP),parameter :: tpi=2.d0*3.141592653589793d0
-  real(kind=DP) :: dz1, tpiba
-  complex(kind=DP), parameter :: cim=(0.d0,1.d0), one=(1.d0,0.d0)
-  complex(kind=DP) ::       &
+  real(DP), parameter :: eps=1.d-8
+  real(DP),parameter :: tpi=2.d0*3.141592653589793d0
+  real(DP) :: dz1, tpiba
+  complex(DP), parameter :: cim=(0.d0,1.d0), one=(1.d0,0.d0)
+  complex(DP) ::       &
      fun1(nz1), fun2(nz1),  &  ! the two arrays to be integrated
      int1(nz1), int2(nz1),  &  ! auxiliary arrays for integration
      fact1(nz1), fact2(nz1),&
@@ -108,7 +108,7 @@ subroutine setint(fun,int1,int2,fact1,fact2,nz1)
   integer ::    &
      nz1,       &  ! number of points for the slab integration 
      ik            ! counters on the slab points
-  complex(kind=DP) ::       &
+  complex(DP) ::       &
      fun(nz1),              &  ! the arrays to be integrated
      int1(nz1), int2(nz1),  &  ! auxiliary arrays for integration
      fact1(nz1), fact2(nz1)    !

@@ -23,7 +23,7 @@ module ld1inc
   character(len=2) ::&
        el(nwfx)        !  the label of the states
 
-  real(kind=dp) ::   &
+  real(DP) ::   &
        jj(nwfx),     & ! the total angular momentum
        oc(nwfx),     & ! the occupations of the all-electron atom
        oc_old(nwfx), & ! saves the occupations of the all-electron 
@@ -31,7 +31,7 @@ module ld1inc
        enne,         & ! the number of electrons
        sl3(0:lmx2,0:lmx2,0:lmx2)
 
-  real(kind=dp)::          &
+  real(DP)::          &
        enl(nwfx),          & ! the energies of the all-electron atom
        psi(ndm,2,nwfx),    & ! the all-electron (dirac) wavefunctions
                              ! psi(:,1,n) = major component for state n 
@@ -48,7 +48,7 @@ module ld1inc
   integer :: &
        mesh     ! the number of mesh points
 
-  real(kind=dp) :: &
+  real(DP) :: &
        r(ndm),     & ! the radial mesh
        r2(ndm),    & ! the square of the radial mesh 
        rab(ndm),   & ! d r(x) / d x where x is the linear grid
@@ -64,7 +64,7 @@ module ld1inc
        nld,  &  ! computes the log der of the last nld wavefunctions
        npte     ! number of energy points
 
-  real(kind=dp) :: &
+  real(DP) :: &
        rlderiv,    & ! the radius of logarithmic derivatives
        eminld,     & ! the minimum energy
        emaxld,     & ! the maximum energy
@@ -87,7 +87,7 @@ module ld1inc
   character(len=2) :: &
        els(nwfsx)       !  the label of the states
 
-  real(kind=dp) ::       &
+  real(DP) ::       &
        enls(nwfsx),      & ! the energies of the pseudo atom
        jjs(nwfsx),       & ! the j of each wavefunction (only rel=2)
        ocs(nwfsx),       & ! the occupations of the pseudo atom
@@ -125,7 +125,7 @@ module ld1inc
   character(len=2) ::  &
        eltsc(nwfsx,ncmax1)     !  the labels for each configuration
 
-  real(kind=dp) ::              &
+  real(DP) ::              &
        rcuttsc(nwfsx,ncmax1),   & ! the cut-off radius of each configuration
        rcutustsc(nwfsx,ncmax1), & ! cut-off radius for us
        jjtsc(nwfsx,ncmax1),     & ! the j of a configuration 
@@ -139,7 +139,7 @@ module ld1inc
        iswts(nwfsx), &   ! spin of the wfc. if(.not.lsd) all 1 (default)
        nwfts             ! the number of pseudo wavefunctions
 
-  real(kind=dp) ::        &
+  real(DP) ::        &
        phits(ndm,nwfsx),   & ! the pseudo wavefunctions
        rcutts(nwfsx),      & ! cut-off radius for test wavefunction
        rcutusts(nwfsx),    & ! us cut-off radii for test wavefunct.
@@ -161,7 +161,7 @@ module ld1inc
   ! 1 scalar relativistic calculation
   ! 2 calculation with the full dirac equation
 
-  real(kind=dp) :: &
+  real(DP) :: &
        beta,       &   ! the mixing parameter
        tr2,        &   ! the required precision of the scf
        eps0            ! the reached precision of the scf
@@ -174,7 +174,7 @@ module ld1inc
        nlc,    &  ! number of core functions
        nnl        ! number of angular momentum functions
 
-  real(kind=dp) ::     &
+  real(DP) ::     &
        cc(2),          & ! the coeffients of the core part
        alpc(2),        & ! the alpha parameters of the core
        alc(6,0:3),     & ! the coefficients of the pseudopotential
@@ -182,7 +182,7 @@ module ld1inc
   !
   !   the energy parameters
   !
-  real(kind=dp) :: &
+  real(DP) :: &
        etot,       &    ! total energy
        etot0,      &    ! save the total energy
        ekin,       &    ! kinetic energy
@@ -198,7 +198,7 @@ module ld1inc
   !
   !  variable for nlcc
   !
-  real(kind=dp) :: &
+  real(DP) :: &
        rcore,      &  ! the points where core charge is smooth
        rhoc(ndm)      ! the core charge
 
@@ -207,7 +207,7 @@ module ld1inc
   !
   !  the potential for the scf
   !
-  real(kind=dp) ::   &
+  real(DP) ::   &
        vpot(ndm,2),  & ! the all-electron scf potential
        vxt(ndm),     & ! the external potential
        vh(ndm),      & ! the hartree potential
@@ -222,7 +222,7 @@ module ld1inc
        lpaw        ! if true generate or test a PAW dataset
   type(paw_t) :: &
        pawsetup    ! the PAW dataset
-  real(kind=dp) ::       &
+  real(DP) ::       &
        psipaw(ndm,nwfsx),& ! the all-electron wavefunctions for any beta
        aeccharge(ndm),   & ! true, not smoothened, AE core charge for PAW
        psccharge(ndm)      ! smoothened core charge for PAW

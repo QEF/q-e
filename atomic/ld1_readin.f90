@@ -23,7 +23,7 @@ subroutine ld1_readin
        c1,    &          ! counter
        ios               ! I/O control
 
-  real(kind=dp) :: &
+  real(DP) :: &
        edum(nwfsx), zdum        ! auxiliary
 
   character(len=80) :: config, configts(ncmax1)
@@ -120,13 +120,13 @@ subroutine ld1_readin
   call which_dft(dft)
 
   if (zed == 0.0_dp .and. atom /= ' ') then
-     zed = dble(atomic_number(atom))
+     zed = DBLE(atomic_number(atom))
   else if (zed /= 0.0_dp .and. atom == ' ') then
-     if(dble(int(zed)) /= zed .or. zed < 1.0_dp .or. zed > 100) &
+     if(DBLE(int(zed)) /= zed .or. zed < 1.0_dp .or. zed > 100) &
           call errore('ld1_readin','wrong zed',1)
      atom = atom_name(nint(zed))
   else
-     zdum = dble(atomic_number(atom))
+     zdum = DBLE(atomic_number(atom))
      if (zdum /= zed) call errore &
           ('ld1_readin','inconsistent Z/atom specification',nint(zdum))
   end if
@@ -458,7 +458,7 @@ subroutine occ_spin(nwf,nwfx,el,nn,ll,oc,isw)
   use kinds, only : DP
   implicit none
   integer :: nwf, nwfx, nn(nwfx), ll(nwfx), isw(nwfx)
-  real(kind=dp) :: oc(nwfx)
+  real(DP) :: oc(nwfx)
   character(len=2) :: el(nwfx)
 
   integer :: nwf0, n, n1
@@ -518,7 +518,7 @@ subroutine read_config(rel, lsd, nwf, el, nn, ll, oc, isw, jj)
   ! output: atomic states
   character(len=2) :: el(nwfx)
   integer :: nwf, nn(nwfx), ll(nwfx), isw(nwfx)
-  real(kind=dp) :: oc(nwfx), jj(nwfx)
+  real(DP) :: oc(nwfx), jj(nwfx)
   ! local variables
   integer :: ios, n, ncheck
   character (len=2) :: label
@@ -584,7 +584,7 @@ subroutine read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
   ! output: atomic states
   character(len=2) :: els(nwfsx)
   integer :: nwfs, nns(nwfsx), lls(nwfsx), isws(nwfsx)
-  real(kind=dp) :: ocs(nwfsx), jjs(nwfsx), enls(nwfsx), &
+  real(DP) :: ocs(nwfsx), jjs(nwfsx), enls(nwfsx), &
        rcut(nwfsx), rcutus(nwfsx)
   ! local variables
   integer :: ios, n

@@ -153,19 +153,19 @@
         IMPLICIT NONE
 
 ! ...   declare subroutine arguments
-        COMPLEX(dbl), INTENT(INOUT) ::  c(:,:,:)
+        COMPLEX(DP), INTENT(INOUT) ::  c(:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: cdesc
         INTEGER, INTENT(IN) :: ispin
 
 ! ...   descriptor of the electronic state distribution
                                        
-        COMPLEX(dbl) :: eforces(:,:,:)
+        COMPLEX(DP) :: eforces(:,:,:)
 
 ! ...   declare other variables
         INTEGER ::  ik, ib, nk, ngw, nb_g, nrl, ibl
-        COMPLEX(dbl), ALLOCATABLE :: cgam(:,:)
-        REAL(dbl),    ALLOCATABLE :: gam(:,:)
-        REAL(dbl),    ALLOCATABLE :: eig(:)
+        COMPLEX(DP), ALLOCATABLE :: cgam(:,:)
+        REAL(DP),    ALLOCATABLE :: gam(:,:)
+        REAL(DP),    ALLOCATABLE :: eig(:)
         LOGICAL :: tortho = .TRUE.
 
 ! ...   end of declarations
@@ -234,11 +234,11 @@
         IMPLICIT NONE
 
 ! ...   declare subroutine arguments
-        COMPLEX(dbl), INTENT(INOUT) :: cf(:,:,:,:), ce(:,:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: cf(:,:,:,:), ce(:,:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
-        COMPLEX(dbl)  ::  eigr(:,:)
-        REAL(dbl), INTENT(IN)  ::  occ(:,:,:), bec(:,:)
-        REAL (dbl) ::  vpot(:,:,:,:)
+        COMPLEX(DP)  ::  eigr(:,:)
+        REAL(DP), INTENT(IN)  ::  occ(:,:,:), bec(:,:)
+        REAL (DP) ::  vpot(:,:,:,:)
 
 ! ...   declare other variables
         INTEGER ::  i, ik, ib, nk, ig, ngw, nb_g, nb_l, ispin, nspin, iks
@@ -247,12 +247,12 @@
         CHARACTER(LEN=4) :: nom
         CHARACTER(LEN=256) :: file_name
         CHARACTER(LEN=10), DIMENSION(2) :: spin_name
-        REAL(dbl) :: s0, s1, s2, s3
+        REAL(DP) :: s0, s1, s2, s3
 
-        COMPLEX(dbl), ALLOCATABLE :: eforce(:,:,:)
-        REAL(dbl), ALLOCATABLE :: fi(:,:)
+        COMPLEX(DP), ALLOCATABLE :: eforce(:,:,:)
+        REAL(DP), ALLOCATABLE :: fi(:,:)
 
-        REAL(dbl), EXTERNAL :: cclock
+        REAL(DP), EXTERNAL :: cclock
 
 
 ! ...   end of declarations
@@ -396,11 +396,11 @@
         IMPLICIT NONE
 
 ! ...   declare subroutine arguments
-        COMPLEX(dbl), INTENT(INOUT) :: cf(:,:,:,:), ce(:,:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: cf(:,:,:,:), ce(:,:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
-        COMPLEX(dbl)  ::  eigr(:,:)
-        REAL(dbl), INTENT(IN)  ::  occ(:,:,:), bec(:,:)
-        REAL (dbl) ::  vpot(:,:,:,:)
+        COMPLEX(DP)  ::  eigr(:,:)
+        REAL(DP), INTENT(IN)  ::  occ(:,:,:), bec(:,:)
+        REAL (DP) ::  vpot(:,:,:,:)
 
 ! ...   declare other variables
         INTEGER ::  i, ik, ib, nk, ig, ngw, nb_g, nb_l, iks, nb, ispin
@@ -408,12 +408,12 @@
         CHARACTER(LEN=4) :: nom
         CHARACTER(LEN=256) :: file_name
         CHARACTER(LEN=10), DIMENSION(2) :: spin_name
-        REAL(dbl) :: s0, s1, s2, s3
+        REAL(DP) :: s0, s1, s2, s3
 
-        COMPLEX(dbl), ALLOCATABLE :: eforce(:,:,:,:)
-        REAL(dbl), ALLOCATABLE :: fi(:,:)
+        COMPLEX(DP), ALLOCATABLE :: eforce(:,:,:,:)
+        REAL(DP), ALLOCATABLE :: fi(:,:)
 
-        REAL(dbl), EXTERNAL :: cclock
+        REAL(DP), EXTERNAL :: cclock
 
 
 ! ...   end of declarations
@@ -558,14 +558,14 @@
 
         IMPLICIT NONE
 
-        COMPLEX(dbl), INTENT(IN) :: psi(:)
+        COMPLEX(DP), INTENT(IN) :: psi(:)
         CHARACTER(LEN=*) :: file_name
-        COMPLEX(dbl), ALLOCATABLE :: zcomp(:)
-        REAL(dbl), ALLOCATABLE :: rcomp2(:)
-        COMPLEX(dbl), ALLOCATABLE :: psi2(:,:,:)
+        COMPLEX(DP), ALLOCATABLE :: zcomp(:)
+        REAL(DP), ALLOCATABLE :: rcomp2(:)
+        COMPLEX(DP), ALLOCATABLE :: psi2(:,:,:)
         INTEGER   ::  nr1_l, nr2_l, nr3_l, nr1_g, nr2_g, nr3_g
         INTEGER   ::  i, j, k, istr, izl
-        REAL(dbl) :: charge
+        REAL(DP) :: charge
         LOGICAL   :: top
 
         nr1_g = dfftp%nr1

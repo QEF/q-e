@@ -21,13 +21,13 @@
 
        LOGICAL :: timing = .false.
 
-       REAL(dbl) :: one, zero, two, minus_one, minus_two
+       REAL(DP) :: one, zero, two, minus_one, minus_two
        PARAMETER ( one = 1.0d0, zero = 0.0d0, two = 2.0d0, minus_one = -1.0d0 )
        PARAMETER ( minus_two = -2.0d0 )
-       COMPLEX(dbl) :: cone, czero, mcone
+       COMPLEX(DP) :: cone, czero, mcone
        PARAMETER ( cone = (1.0d0, 0.0d0), czero = (0.0d0, 0.0d0) )
        PARAMETER ( mcone = (-1.0d0, 0.0d0) )
-       REAL(dbl) :: small = 1.0d-14
+       REAL(DP) :: small = 1.0d-14
 
 #if defined __AIX
        INTEGER, PARAMETER :: nrlx_tune = 128
@@ -59,7 +59,7 @@
        SUBROUTINE sqr_dmatmul(transa,transb,a,b,c)
 ! ...    Multiply square matrices A, B and return the result in C
          USE mp_global, ONLY: nproc
-         REAL(dbl) :: c(:,:), a(:,:), b(:,:)
+         REAL(DP) :: c(:,:), a(:,:), b(:,:)
          CHARACTER*1 :: transa, transb
          INTEGER :: n
          n = SIZE(c,1)
@@ -74,7 +74,7 @@
        SUBROUTINE sqr_cmatmul(transa,transb,a,b,c)
 ! ...    Multiply square matrices A, B and return the result in C
          USE mp_global, ONLY: nproc
-         COMPLEX(dbl) :: c(:,:), a(:,:), b(:,:)
+         COMPLEX(DP) :: c(:,:), a(:,:), b(:,:)
          CHARACTER*1 transa, transb
          INTEGER :: n
          n = SIZE(c,1)
@@ -97,12 +97,12 @@
 
          USE mp_global, ONLY: nproc, mpime
          USE mp, ONLY: mp_sum
-         REAL(dbl) :: rhod(:)
-         REAL(dbl) :: temp(:,:), s(:,:), pwrk(:)
+         REAL(DP) :: rhod(:)
+         REAL(DP) :: temp(:,:), s(:,:), pwrk(:)
 
-         REAL(dbl),   ALLOCATABLE :: aux(:)
-         REAL(dbl),   ALLOCATABLE :: diag(:,:)
-         REAL(dbl),   ALLOCATABLE :: vv(:,:)
+         REAL(DP),   ALLOCATABLE :: aux(:)
+         REAL(DP),   ALLOCATABLE :: diag(:,:)
+         REAL(DP),   ALLOCATABLE :: vv(:,:)
          INTEGER :: n, nrl
 
          n = SIZE(temp,1)
@@ -154,14 +154,14 @@
          USE mp, ONLY: mp_sum
          IMPLICIT NONE
 
-         REAL(dbl)    :: d(:)
-         COMPLEX(dbl) :: a(:,:), ev(:,:)
+         REAL(DP)    :: d(:)
+         COMPLEX(DP) :: a(:,:), ev(:,:)
 
          INTEGER :: n, nrl
 
-         COMPLEX(dbl), ALLOCATABLE :: aloc(:)
-         COMPLEX(dbl), ALLOCATABLE :: ap(:,:)
-         COMPLEX(dbl), ALLOCATABLE :: vp(:,:)
+         COMPLEX(DP), ALLOCATABLE :: aloc(:)
+         COMPLEX(DP), ALLOCATABLE :: ap(:,:)
+         COMPLEX(DP), ALLOCATABLE :: vp(:,:)
 
 ! ...   end of declarations
 !  ----------------------------------------------
@@ -220,8 +220,8 @@
 
       IMPLICIT NONE
 
-      COMPLEX(dbl)        :: CP(:,:)
-      REAL(dbl)           :: SIG(:,:), PWRK(1)
+      COMPLEX(DP)        :: CP(:,:)
+      REAL(DP)           :: SIG(:,:), PWRK(1)
       INTEGER, INTENT(IN) :: nb, ngw
       INTEGER :: i, ldc, twongw, j, k, lds, n
 
@@ -279,7 +279,7 @@
       IMPLICIT NONE
 
       INTEGER, INTENT( IN ) :: nx, ngw
-      COMPLEX(dbl) :: cp(:,:), sig(:,:), pwrk(1)
+      COMPLEX(DP) :: cp(:,:), sig(:,:), pwrk(1)
       INTEGER :: i, j, ldc, lds
 
       ldc = SIZE( cp, 1 )
@@ -335,9 +335,9 @@
 
       IMPLICIT  NONE
 
-      COMPLEX(dbl) :: CP(:,:), C0(:,:)
-      REAL(dbl)    :: RHO(:,:), TMASS(:,:)
-      REAL(dbl)    :: pWrk(1)
+      COMPLEX(DP) :: CP(:,:), C0(:,:)
+      REAL(DP)    :: RHO(:,:), TMASS(:,:)
+      REAL(DP)    :: pWrk(1)
       INTEGER, INTENT(IN) :: ngw, nb
 
       INTEGER ::  i, j, ldc, ldr, tngw, n
@@ -388,9 +388,9 @@
       IMPLICIT  NONE
 
       INTEGER :: nx, ngw
-      COMPLEX(dbl) :: cp(:,:), c0(:,:)
-      COMPLEX(dbl) :: rho(:,:), tmass(:,:)
-      COMPLEX(dbl) :: pwrk(1)
+      COMPLEX(DP) :: cp(:,:), c0(:,:)
+      COMPLEX(DP) :: rho(:,:), tmass(:,:)
+      COMPLEX(DP) :: pwrk(1)
       INTEGER  :: i, j, ldc, ldr
 
       ldc = SIZE( c0, 1 )
@@ -439,12 +439,12 @@
 
       IMPLICIT NONE
 
-      REAL (dbl) :: PMSS(:), EMASS
+      REAL (DP) :: PMSS(:), EMASS
       TYPE (real_parallel_matrix) ::  sig
       TYPE (real_parallel_matrix) ::  rho
       TYPE (real_parallel_matrix) ::  tmass
-      COMPLEX (dbl) :: CP(:,:)
-      COMPLEX (dbl) :: C0(:,:)
+      COMPLEX (DP) :: CP(:,:)
+      COMPLEX (DP) :: C0(:,:)
       LOGICAL, INTENT(IN) :: gzero
       INTEGER, INTENT(IN) :: ngw, nx
 
@@ -453,12 +453,12 @@
       INTEGER IP,JP,NIB, NJB, JP1, JP2, IOFF1, IOFF2, IOFF3
       INTEGER RSRC, CSRC, npz, mez
       INTEGER INDXL2G, INDXG2L, INDXG2P 
-      REAL(dbl) DDOT
-      REAL(dbl), allocatable :: SIGTMP(:)
-      real(dbl), allocatable :: CTMP(:,:)
-      real(dbl), allocatable :: ebpmss(:)
-      real(dbl) sqrtfact
-      COMPLEX (dbl) :: C0ji
+      REAL(DP) DDOT
+      REAL(DP), allocatable :: SIGTMP(:)
+      real(DP), allocatable :: CTMP(:,:)
+      real(DP), allocatable :: ebpmss(:)
+      real(DP) sqrtfact
+      COMPLEX (DP) :: C0ji
       INTEGER :: ldc
 
 !
@@ -489,7 +489,7 @@
       DEALLOCATE( ebpmss )
 
 
-      sqrtfact = sqrt(0.5_dbl)
+      sqrtfact = sqrt(0.5_DP)
       IF(gzero) THEN
         DO I = 1, N
           CTMP(I,1) = sqrtfact * CTMP(I,1)
@@ -597,12 +597,12 @@
 
       IMPLICIT NONE
 
-      REAL (dbl) :: PMSS(:), EMASS
+      REAL (DP) :: PMSS(:), EMASS
       TYPE (real_parallel_matrix) ::  sig
       TYPE (real_parallel_matrix) ::  rho
       TYPE (real_parallel_matrix) ::  tmass
-      COMPLEX (dbl) :: CP(:,:)
-      COMPLEX (dbl) :: C0(:,:)
+      COMPLEX (DP) :: CP(:,:)
+      COMPLEX (DP) :: C0(:,:)
       LOGICAL, INTENT(IN) :: gzero
       INTEGER, INTENT(IN) :: ngw, nx
 
@@ -611,9 +611,9 @@
       INTEGER :: ip, ldc
       INTEGER :: nngw, npz, mez, nproc, mpime
       INTEGER :: nrl_ip, nrlx
-      REAL(dbl), ALLOCATABLE :: RTMP(:,:,:)
-      REAL(dbl), ALLOCATABLE :: ebpmss(:)
-      REAL(dbl) :: sqrtfact
+      REAL(DP), ALLOCATABLE :: RTMP(:,:,:)
+      REAL(DP), ALLOCATABLE :: ebpmss(:)
+      REAL(DP) :: sqrtfact
 
 !
 !     SUBROUTINE BODY
@@ -781,9 +781,9 @@
 
       IMPLICIT NONE
       TYPE (real_parallel_matrix) :: RHO
-      COMPLEX (dbl) :: CP(:,:)
-      COMPLEX (dbl) :: C0(:,:)
-      REAL (dbl)  :: PMSS(:), EMASS
+      COMPLEX (DP) :: CP(:,:)
+      COMPLEX (DP) :: C0(:,:)
+      REAL (DP)  :: PMSS(:), EMASS
       INTEGER, INTENT(IN) :: ngw, nx
 
       INTEGER I,J,NPROW, NPCOL, MYROW, MYCOL, CURROW, CURCOL
@@ -791,9 +791,9 @@
       INTEGER IP,JP,NIB, NJB, JP1, JP2, IOFF1, IOFF2, IOFF3
       INTEGER RSRC, CSRC, npz, mez, ldc
       INTEGER INDXL2G, INDXG2L, INDXG2P 
-      REAL (dbl)  :: DDOT
-      REAL (dbl)  :: FACT,ONE_BY_EMASS
-      REAL (dbl), allocatable :: SIGTMP(:)
+      REAL (DP)  :: DDOT
+      REAL (DP)  :: FACT,ONE_BY_EMASS
+      REAL (DP), allocatable :: SIGTMP(:)
 
 !
 !     SUBROUTINE BODY
@@ -883,9 +883,9 @@
 
       IMPLICIT NONE
       TYPE (real_parallel_matrix) :: RHO
-      COMPLEX (dbl) :: CP(:,:)
-      COMPLEX (dbl) :: C0(:,:)
-      REAL (dbl)  :: PMSS(:), EMASS
+      COMPLEX (DP) :: CP(:,:)
+      COMPLEX (DP) :: C0(:,:)
+      REAL (DP)  :: PMSS(:), EMASS
       INTEGER, INTENT(IN) :: ngw, nx
 
       INTEGER I,J,NPROW, NPCOL, MYROW, MYCOL
@@ -893,11 +893,11 @@
       INTEGER ip, nngw, nrlx
       INTEGER npz, mez, mpime, nproc, ldc
 
-      REAL (dbl)  :: DDOT
-      REAL (dbl)  :: FACT,ONE_BY_EMASS
-      REAL (dbl), allocatable :: SIGTMP(:)
-      REAL (dbl), allocatable :: rtmp(:,:)
-      COMPLEX (dbl), allocatable :: cc(:,:)
+      REAL (DP)  :: DDOT
+      REAL (DP)  :: FACT,ONE_BY_EMASS
+      REAL (DP), allocatable :: SIGTMP(:)
+      REAL (DP), allocatable :: rtmp(:,:)
+      COMPLEX (DP), allocatable :: cc(:,:)
 
 !
 !     SUBROUTINE BODY
@@ -997,8 +997,8 @@
 
       SUBROUTINE prpack( ap, a)
         USE mp_global, ONLY: mpime, nproc
-        REAL(dbl), INTENT(IN) :: a(:,:)
-        REAL(dbl), INTENT(OUT) :: ap(:,:)
+        REAL(DP), INTENT(IN) :: a(:,:)
+        REAL(DP), INTENT(OUT) :: ap(:,:)
         INTEGER :: i, j, jl
         DO i = 1, SIZE( ap, 2)
            j = mpime + 1
@@ -1012,8 +1012,8 @@
 
       SUBROUTINE pzpack( ap, a)
         USE mp_global, ONLY: mpime, nproc
-        COMPLEX(dbl), INTENT(IN) :: a(:,:)
-        COMPLEX(dbl), INTENT(OUT) :: ap(:,:)
+        COMPLEX(DP), INTENT(IN) :: a(:,:)
+        COMPLEX(DP), INTENT(OUT) :: ap(:,:)
         INTEGER :: i, j, jl
         DO i = 1, SIZE( ap, 2)
            j = mpime + 1
@@ -1027,8 +1027,8 @@
 
       SUBROUTINE prunpack( a, ap)
         USE mp_global, ONLY: mpime, nproc
-        REAL(dbl), INTENT(IN) :: ap(:,:)
-        REAL(dbl), INTENT(OUT) :: a(:,:)
+        REAL(DP), INTENT(IN) :: ap(:,:)
+        REAL(DP), INTENT(OUT) :: a(:,:)
         INTEGER :: i, j, jl
         DO i = 1, SIZE(a, 2)
           DO j = 1, SIZE(a, 1)
@@ -1045,8 +1045,8 @@
 
       SUBROUTINE pzunpack( a, ap)
         USE mp_global, ONLY: mpime, nproc
-        COMPLEX(dbl), INTENT(IN) :: ap(:,:)
-        COMPLEX(dbl), INTENT(OUT) :: a(:,:)
+        COMPLEX(DP), INTENT(IN) :: ap(:,:)
+        COMPLEX(DP), INTENT(OUT) :: a(:,:)
         INTEGER :: i, j, jl
         DO i = 1, SIZE(a, 2)
           DO j = 1, SIZE(a, 1)
@@ -1062,8 +1062,8 @@
       END SUBROUTINE pzunpack
 
       SUBROUTINE rpack( ap, a)
-        REAL(dbl), INTENT(IN) :: a(:,:)
-        REAL(dbl), INTENT(OUT) :: ap(:)
+        REAL(DP), INTENT(IN) :: a(:,:)
+        REAL(DP), INTENT(OUT) :: ap(:)
         INTEGER :: i, j, k
         K = 0
         DO J = 1, SIZE(a, 2)
@@ -1076,8 +1076,8 @@
       END SUBROUTINE rpack
 
       SUBROUTINE zpack( ap, a)
-        COMPLEX(dbl), INTENT(IN) :: a(:,:)
-        COMPLEX(dbl), INTENT(OUT) :: ap(:)
+        COMPLEX(DP), INTENT(IN) :: a(:,:)
+        COMPLEX(DP), INTENT(OUT) :: ap(:)
         INTEGER :: i, j, k
         K=0
         DO J = 1, SIZE(a, 2)

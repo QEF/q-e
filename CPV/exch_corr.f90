@@ -10,7 +10,7 @@
 !=----------------------------------------------------------------------------=!
 #include "f_defs.h"
 
-        USE kinds, ONLY: dbl
+        USE kinds, ONLY: DP
 
         IMPLICIT NONE
         SAVE
@@ -19,7 +19,7 @@
 
 ! ... Gradient Correction & exchange and correlation
 
-        REAL(dbl), PARAMETER :: small_rho = 1.0d-10
+        REAL(DP), PARAMETER :: small_rho = 1.0d-10
 
         PUBLIC :: v2gc, exch_corr_energy, stress_xc
 
@@ -39,18 +39,18 @@
 !                                                                       
           implicit none
 !                                                                       
-          REAL(dbl) ::  vpot(:,:,:,:)
-          REAL(dbl), intent(in)  ::  v2xc(:,:,:,:,:)
-          REAL(dbl), intent(in)  ::  grho(:,:,:,:,:)
-          REAL(dbl), intent(in)  ::  rhoer(:,:,:,:)
+          REAL(DP) ::  vpot(:,:,:,:)
+          REAL(DP), intent(in)  ::  v2xc(:,:,:,:,:)
+          REAL(DP), intent(in)  ::  grho(:,:,:,:,:)
+          REAL(DP), intent(in)  ::  rhoer(:,:,:,:)
 !                                                                       
           integer :: ig, ipol, nxl, nyl, nzl, i, j, k, is, js, nspin
           integer :: ldx, ldy, ldz
-          COMPLEX(dbl), allocatable ::  psi(:,:,:)
-          COMPLEX(dbl), allocatable ::  vtemp(:)
-          COMPLEX(dbl), allocatable ::  vtemp_pol(:)
-          REAL(dbl), ALLOCATABLE :: v(:,:,:)
-          REAL(dbl) :: fac
+          COMPLEX(DP), allocatable ::  psi(:,:,:)
+          COMPLEX(DP), allocatable ::  vtemp(:)
+          COMPLEX(DP), allocatable ::  vtemp_pol(:)
+          REAL(DP), ALLOCATABLE :: v(:,:,:)
+          REAL(DP) :: fac
 ! ...                                                                   
           ldx   = dfftp%nr1x
           ldy   = dfftp%nr2x
@@ -125,12 +125,12 @@
 
         IMPLICIT NONE
 !
-        REAL(dbl) ::  v2xc(:,:,:,:,:)
-        REAL(dbl) ::  grho(:,:,:,:,:)
-        REAL(dbl) ::  gcpail(6)
-        REAL(dbl) ::  omega
+        REAL(DP) ::  v2xc(:,:,:,:,:)
+        REAL(DP) ::  grho(:,:,:,:,:)
+        REAL(DP) ::  gcpail(6)
+        REAL(DP) ::  omega
 !
-        REAL(dbl) :: stre, grhoi, grhoj
+        REAL(DP) :: stre, grhoi, grhoj
         INTEGER :: i, j, k, ipol, jpol, ic, nxl, nyl, nzl, is, js, nspin
         INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
         INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
@@ -180,22 +180,22 @@
 
       type (boxdimensions), intent(in) :: box
       LOGICAL :: tnlcc(:)
-      COMPLEX(dbl) :: vxc(:,:)
-      COMPLEX(dbl), INTENT(IN) :: sfac(:,:)
-      REAL(dbl) :: dexc(:), strvxc
-      REAL(dbl) :: grho(:,:,:,:,:)
-      REAL(dbl) :: v2xc(:,:,:,:,:)
-      REAL(dbl) :: GAgx_L(:,:)
-      REAL(dbl) :: rhocp(:,:)
+      COMPLEX(DP) :: vxc(:,:)
+      COMPLEX(DP), INTENT(IN) :: sfac(:,:)
+      REAL(DP) :: dexc(:), strvxc
+      REAL(DP) :: grho(:,:,:,:,:)
+      REAL(DP) :: v2xc(:,:,:,:,:)
+      REAL(DP) :: GAgx_L(:,:)
+      REAL(DP) :: rhocp(:,:)
 
       INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
       INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
       ! ...  dalbe(:) = delta(alpha(:),beta(:))
-      REAL(dbl),  DIMENSION(6), PARAMETER :: dalbe = &
-         (/ 1.0_dbl, 0.0_dbl, 0.0_dbl, 1.0_dbl, 0.0_dbl, 1.0_dbl /)
+      REAL(DP),  DIMENSION(6), PARAMETER :: dalbe = &
+         (/ 1.0_DP, 0.0_DP, 0.0_DP, 1.0_DP, 0.0_DP, 1.0_DP /)
 
-      COMPLEX(dbl) :: tex1, tex2, tex3
-      REAL(dbl) :: gcpail(6), omega
+      COMPLEX(DP) :: tex1, tex2, tex3
+      REAL(DP) :: gcpail(6), omega
       INTEGER :: ig, k, is, ispin, nspin
 
       omega = box%deth
@@ -209,20 +209,20 @@
       IF ( ANY( tnlcc ) ) THEN
 
         DO ig = gstart, ngm
-          tex1 = (0.0_dbl , 0.0_dbl)
+          tex1 = (0.0_DP , 0.0_DP)
           DO is=1,nsp
             IF ( tnlcc(is) ) THEN
               tex1 = tex1 + sfac( ig, is ) * CMPLX(rhocp(ig,is), 0.d0)
             END IF
           END DO
-          tex2 = 0.0_dbl
+          tex2 = 0.0_DP
           DO ispin = 1, nspin
             tex2 = tex2 + CONJG( vxc(ig, ispin) )
           END DO
           tex3 = DBLE(tex1 * tex2) / SQRT( g( ig ) ) / tpiba
           dexc = dexc + tex3 * gagx_l(:,ig)
         END DO
-        dexc = dexc * 2.0_dbl * omega
+        dexc = dexc * 2.0_DP * omega
 
       END IF
 
@@ -245,18 +245,18 @@
 
      SUBROUTINE exch_corr_energy(rhoetr, rhoetg, grho, vpot, sxc, vxc, v2xc)
 
-        USE kinds, ONLY: dbl
+        USE kinds, ONLY: DP
         USE grid_dimensions, ONLY: nr1l, nr2l, nr3l
         USE funct, ONLY: igcx, igcc 
 
-        REAL (dbl) :: rhoetr(:,:,:,:)
-        COMPLEX(dbl) :: rhoetg(:,:)
-        REAL (dbl) :: grho(:,:,:,:,:)
-        REAL (dbl) :: vpot(:,:,:,:)
-        REAL (dbl) :: sxc              ! E_xc   energy
-        REAL (dbl) :: vxc              ! SUM ( v(r) * rho(r) )
-        REAL (dbl) :: v2xc(:,:,:,:,:)
-        REAL (dbl) :: ddot
+        REAL (DP) :: rhoetr(:,:,:,:)
+        COMPLEX(DP) :: rhoetg(:,:)
+        REAL (DP) :: grho(:,:,:,:,:)
+        REAL (DP) :: vpot(:,:,:,:)
+        REAL (DP) :: sxc              ! E_xc   energy
+        REAL (DP) :: vxc              ! SUM ( v(r) * rho(r) )
+        REAL (DP) :: v2xc(:,:,:,:,:)
+        REAL (DP) :: ddot
 
         INTEGER :: nspin, nnr, ispin, j, k, i
 
@@ -339,14 +339,14 @@
       integer nspin
 ! rhog contains the charge density in G space
 ! rhor contains the charge density in R space
-      complex(kind=8) rhog(ng,nspin)
+      complex(8) rhog(ng,nspin)
 ! output
 ! rhor contains the exchange-correlation potential
-      real(kind=8) rhor(nnr,nspin), dxc(3,3), exc
+      real(8) rhor(nnr,nspin), dxc(3,3), exc
 ! local
       integer i,j,ir
-      real(kind=8) dexc(3,3)
-      real(kind=8), allocatable:: gradr(:,:,:)
+      real(8) dexc(3,3)
+      real(8), allocatable:: gradr(:,:,:)
 !
 !     filling of gradr with the gradient of rho using fft's
 !
@@ -363,7 +363,7 @@
 
       call mp_sum( exc )
 
-      exc=exc*omega/dble(nr1*nr2*nr3)
+      exc=exc*omega/DBLE(nr1*nr2*nr3)
 !
 ! exchange-correlation contribution to pressure
 !
@@ -423,12 +423,12 @@
       implicit none  
 ! input                   
       integer nspin
-      real(kind=8)  gradr(nnr,3,nspin), rhor(nnr,nspin), dexc(3,3)
-      complex(kind=8) rhog(ng,nspin)
+      real(8)  gradr(nnr,3,nspin), rhor(nnr,nspin), dexc(3,3)
+      complex(8) rhog(ng,nspin)
 !
-      complex(kind=8), allocatable:: v(:)
-      complex(kind=8), allocatable:: x(:), vtemp(:)
-      complex(kind=8)  ci, fp, fm
+      complex(8), allocatable:: v(:)
+      complex(8), allocatable:: x(:), vtemp(:)
+      complex(8)  ci, fp, fm
       integer iss, ig, ir, i,j
 !
       allocate(v(nnr))

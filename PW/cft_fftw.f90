@@ -19,8 +19,8 @@ subroutine cft_1 (f, m, n, nx, isign, fout)
   implicit none
   integer :: m, n, nx, isign
 
-  complex (kind=DP) :: f (nx * m), fout (nx * m)
-  real (kind=DP) :: fac
+  complex (DP) :: f (nx * m), fout (nx * m)
+  real (DP) :: fac
   integer :: ibid
   !
   ! initialization variables
@@ -44,7 +44,7 @@ subroutine cft_1 (f, m, n, nx, isign, fout)
   call FFTW_F77 (plan (ibid), m, f, 1, nx, fout, 1, nx)
   !
   if (isign.eq. - 1) then
-     fac = 1.0 / dble (n)
+     fac = 1.0 / DBLE (n)
      call DSCAL (2 * nx * m, fac, fout, 1)
 
   endif
@@ -62,8 +62,8 @@ subroutine cft_1s (f, m, n, nx, isign, fout)
   implicit none
   integer :: m, n, nx, isign
 
-  complex (kind=DP) :: f (nx * m), fout (nx * m)
-  real (kind=DP) :: fac
+  complex (DP) :: f (nx * m), fout (nx * m)
+  real (DP) :: fac
   integer :: isign1, ibid
   !
   ! initialization variables
@@ -89,7 +89,7 @@ subroutine cft_1s (f, m, n, nx, isign, fout)
   call FFTW_F77 (plan (ibid), m, f, 1, nx, fout, 1, nx)
   !
   if (isign1.eq. - 1) then
-     fac = 1.0 / dble (n)
+     fac = 1.0 / DBLE (n)
      call DSCAL (2 * nx * m, fac, fout, 1)
 
   endif
@@ -109,12 +109,12 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, isign)
   USE kinds, only : DP
   implicit none
   integer :: n1, n2, mplane, nx1, nx2, isign
-  complex (kind=DP) :: f (nx1 * nx2 * mplane)
+  complex (DP) :: f (nx1 * nx2 * mplane)
   !
   integer, parameter :: nmax = 256
-  complex (kind=DP) :: fout (nmax)
+  complex (DP) :: fout (nmax)
   integer :: ibid, isign1, i, k
-  real (kind=DP) :: fac
+  real (DP) :: fac
   external DSCAL
   !
   ! initialization variables
@@ -168,7 +168,7 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, isign)
              fout, 0, 0)
      enddo
      !
-     fac = 1.0 / dble (n1 * n2)
+     fac = 1.0 / DBLE (n1 * n2)
      call DSCAL (2 * nx1 * nx2 * mplane, fac, f, 1)
      !
 
@@ -187,10 +187,10 @@ subroutine cft_2s (f, mplane, n1, n2, nx1, nx2, isign, planes)
   USE kinds, only : DP
   implicit none
   integer :: n1, n2, mplane, nx1, nx2, isign, planes (nx1)
-  complex (kind=DP) :: f (nx1 * nx2 * mplane)
+  complex (DP) :: f (nx1 * nx2 * mplane)
   integer, parameter :: nmax = 256
-  complex (kind=DP) :: fout (nmax)
-  real (kind=DP) :: fac
+  complex (DP) :: fout (nmax)
+  real (DP) :: fac
   integer :: ibid, isign1, i, k, m, istrt
   !
   ! initialization variables
@@ -260,7 +260,7 @@ subroutine cft_2s (f, mplane, n1, n2, nx1, nx2, isign, planes)
         endif
      enddo
      !
-     fac = 1.0 / dble (n1 * n2)
+     fac = 1.0 / DBLE (n1 * n2)
      call DSCAL (2 * nx1 * nx2 * mplane, fac, f, 1)
      !
 

@@ -23,8 +23,8 @@ subroutine dielec_test
   implicit none
 
   integer :: ibnd, ipol, jpol, nrec, ik, i1, i2
-  real(kind=DP) :: w_, weight, tmp
-  complex(kind=DP) :: ZDOTC
+  real(DP) :: w_, weight, tmp
+  complex(DP) :: ZDOTC
 
   epsilon (:,:) = 0.d0
   if (nksq > 1) rewind (unit=iunigk)

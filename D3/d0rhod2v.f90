@@ -28,7 +28,7 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
   IMPLICIT NONE
   !
   INTEGER :: ipert              ! index of the perturbation associated with drho
-  COMPLEX (kind = dp) :: drhoscf (nrxx) ! the variation of the charge density
+  COMPLEX (DP) :: drhoscf (nrxx) ! the variation of the charge density
   !
   INTEGER :: icart,           & ! counter on polarizations
              jcart,           & ! counter on polarizations
@@ -48,11 +48,11 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
              nrec,            & ! record position of dwfc
              ios                ! integer variable for I/O control
 
-  REAL (kind = dp) :: gtau,           & ! the product G*\tau_s
+  REAL (DP) :: gtau,           & ! the product G*\tau_s
               wgg               ! the weight of a K point
 
-  COMPLEX (kind = dp) :: ZDOTC, d3dywrk (3*nat,3*nat), fac, alpha(8), work
-  COMPLEX (kind = dp), ALLOCATABLE :: work0 (:), work1 (:), work2 (:), &
+  COMPLEX (DP) :: ZDOTC, d3dywrk (3*nat,3*nat), fac, alpha(8), work
+  COMPLEX (DP), ALLOCATABLE :: work0 (:), work1 (:), work2 (:), &
                                       work3 (:), work4 (:), work5 (:), &
                                       work6 (:)
   ! auxiliary space

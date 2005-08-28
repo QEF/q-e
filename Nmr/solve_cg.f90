@@ -22,12 +22,12 @@ subroutine solve_cg(dev,ik, dpsi)
   implicit none
   integer :: ik
   integer :: lter, ibnd, ig, jbnd
-  real(kind=DP) :: thresh, anorm, emin, emax, alpha_pv
+  real(DP) :: thresh, anorm, emin, emax, alpha_pv
   logical :: conv_root
-  complex(kind=dp) :: dpsi(npwx,nbnd), dev(npwx,nbnd)
-  real(kind=DP), allocatable :: h_diag (:,:), eprec(:)
-  complex(kind=dp), allocatable ::  auxg(:), ps(:)
-  complex(kind=DP) :: ZDOTC
+  complex(DP) :: dpsi(npwx,nbnd), dev(npwx,nbnd)
+  real(DP), allocatable :: h_diag (:,:), eprec(:)
+  complex(DP), allocatable ::  auxg(:), ps(:)
+  complex(DP) :: ZDOTC
   external ch_psi_all, cg_psi
 
 

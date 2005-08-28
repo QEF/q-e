@@ -21,8 +21,8 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
   USE cond, only : sarea
   implicit none
 
-  real(kind=DP), parameter :: eps=1.d-4 
-  complex(kind=DP), parameter :: cim=(0.d0, 1.d0) 
+  real(DP), parameter :: eps=1.d-4 
+  complex(DP), parameter :: cim=(0.d0, 1.d0) 
   integer ::                                     & 
       n2d,     &  ! 2D-dimension  
       noins,   &  ! number of interior orbitals 
@@ -33,9 +33,9 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
       nst,     &  ! number of Bloch states =2*(n2d+nocros) 
       nchan,   &  ! number of propagating channels
       info, i, j, k, n, iorb, n1, il, ir, in
-  real(kind=DP) ::    &
+  real(DP) ::    &
       k1, k2
-  complex(kind=DP) ::                           &  
+  complex(DP) ::                           &  
       kfun(n2d, nst),                           & ! phi_k(d)
       kfund(n2d, nst),                          & ! phi'_k(d)
       vec(2*n2d+npol*norb, nst),             & ! exp. coeff. for phi_k 
@@ -44,8 +44,8 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
       z, z1, ZDOTC
   integer, allocatable ::   &
       ncond(:)    ! channel --> Bloch state correspondence 
-  real(kind=DP), allocatable :: ej(:), kcur(:)
-  complex(kind=DP), allocatable :: kval1(:), vec1(:,:), kcoef(:,:), &
+  real(DP), allocatable :: ej(:), kcur(:)
+  complex(DP), allocatable :: kval1(:), vec1(:,:), kcoef(:,:), &
                                kcuroff(:,:), valj(:,:) 
 
   noins = norb-2*nocros

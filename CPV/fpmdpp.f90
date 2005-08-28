@@ -32,11 +32,11 @@ PROGRAM fpmd_postproc
   INTEGER                    :: nr1, nr2, nr3, ns1, ns2, ns3
   INTEGER                    :: np1, np2, np3, np, ispin
   INTEGER, ALLOCATABLE       :: ityp(:)
-  REAL(kind=DP)              :: at(3, 3), atinv(3, 3)
-  REAL(kind=DP)              :: rhof, rhomax, rhomin, rhoc(6)
-  REAL(kind=DP), ALLOCATABLE :: rho_in(:,:,:), rho_out(:,:,:)
-  REAL(kind=DP), ALLOCATABLE :: tau_in(:,:), tau_out(:,:)
-  REAL(kind=DP), ALLOCATABLE :: sigma(:,:), force(:,:)
+  REAL(DP)              :: at(3, 3), atinv(3, 3)
+  REAL(DP)              :: rhof, rhomax, rhomin, rhoc(6)
+  REAL(DP), ALLOCATABLE :: rho_in(:,:,:), rho_out(:,:,:)
+  REAL(DP), ALLOCATABLE :: tau_in(:,:), tau_out(:,:)
+  REAL(DP), ALLOCATABLE :: sigma(:,:), force(:,:)
 
   CHARACTER(len=256) :: prefix, filepp, fileout, output
   CHARACTER(len=256) :: filecel, filepos, filefor, filepdb
@@ -44,10 +44,10 @@ PROGRAM fpmd_postproc
   INTEGER            :: nframes
   INTEGER            :: ios
 
-  REAL(kind=DP) :: x, y, z, fx, fy, fz
+  REAL(DP) :: x, y, z, fx, fy, fz
   INTEGER       :: i, j, k, n, ix, iy, iz
 
-  REAL(kind=DP) :: euler(6)
+  REAL(DP) :: euler(6)
 
   NAMELIST /inputpp/ prefix, filepp, fileout, output, &
                      lcharge, lforces, ldynamics, lpdb, lrotation, &
@@ -276,17 +276,17 @@ SUBROUTINE read_fpmd( lforces, lcharge, cunit, punit, funit, dunit, &
 
   INTEGER, PARAMETER :: DP = KIND(0.0d0)
 
-  REAL(kind=DP), PARAMETER :: bohr = 0.529177d0
+  REAL(DP), PARAMETER :: bohr = 0.529177d0
 
   LOGICAL, INTENT(in)        :: lforces, lcharge
   INTEGER, INTENT(in)        :: cunit, punit, funit, dunit
   INTEGER, INTENT(in)        :: natoms, nr1, nr2, nr3, ispin
-  REAL(kind=DP), INTENT(out) :: at(3, 3), tau(3, natoms), force(3, natoms)
-  REAL(kind=DP), INTENT(out) :: rho(nr1, nr2, nr3)
+  REAL(DP), INTENT(out) :: at(3, 3), tau(3, natoms), force(3, natoms)
+  REAL(DP), INTENT(out) :: rho(nr1, nr2, nr3)
 
   INTEGER       :: i, j, ix, iy, iz
-  REAL(kind=DP) :: rhomin, rhomax, rhof
-  REAL(kind=DP) :: x, y, z, fx, fy, fz
+  REAL(DP) :: rhomin, rhomax, rhof
+  REAL(DP) :: x, y, z, fx, fy, fz
 
   ! read cell vectors
   READ(cunit,*)
@@ -350,10 +350,10 @@ SUBROUTINE inverse( at, atinv )
 
   INTEGER, PARAMETER :: DP = KIND(0.0d0)
 
-  REAL(kind=DP), INTENT(in)  :: at(3, 3)
-  REAL(kind=DP), INTENT(out) :: atinv(3, 3)
+  REAL(DP), INTENT(in)  :: at(3, 3)
+  REAL(DP), INTENT(out) :: atinv(3, 3)
 
-  REAL(kind=DP) :: det
+  REAL(DP) :: det
 
   atinv(1, 1) = at(2, 2) * at(3, 3) - at(2, 3) * at(3, 2)
   atinv(2, 1) = at(2, 3) * at(3, 1) - at(2, 1) * at(3, 3)
@@ -382,11 +382,11 @@ SUBROUTINE at_to_euler( at, euler )
 
   INTEGER, PARAMETER :: DP = KIND(0.0d0)
 
-  REAL(kind=DP), INTENT(in)  :: at(3, 3)
-  REAL(kind=DP), INTENT(out) :: euler(6)
+  REAL(DP), INTENT(in)  :: at(3, 3)
+  REAL(DP), INTENT(out) :: euler(6)
 
-  REAL(kind=DP), PARAMETER :: rad2deg = 180.0d0 / 3.14159265358979323846d0
-  REAL(kind=DP) :: dot(3, 3)
+  REAL(DP), PARAMETER :: rad2deg = 180.0d0 / 3.14159265358979323846d0
+  REAL(DP) :: dot(3, 3)
   INTEGER :: i, j
 
   DO i = 1, 3
@@ -414,12 +414,12 @@ SUBROUTINE euler_to_at( euler, at )
 
   INTEGER, PARAMETER :: DP = KIND(0.0d0)
 
-  REAL(kind=DP), PARAMETER :: deg2rad = 3.14159265358979323846d0 / 180.0d0
+  REAL(DP), PARAMETER :: deg2rad = 3.14159265358979323846d0 / 180.0d0
 
-  REAL(kind=DP), INTENT(in)  :: euler(6)
-  REAL(kind=DP), INTENT(out) :: at(3, 3)
+  REAL(DP), INTENT(in)  :: euler(6)
+  REAL(DP), INTENT(out) :: at(3, 3)
 
-  REAL(kind=DP) :: cos_ab, cos_ac, cos_bc, temp1, temp2
+  REAL(DP) :: cos_ab, cos_ac, cos_bc, temp1, temp2
 
   cos_bc = COS(euler(4) * deg2rad)
   cos_ac = COS(euler(5) * deg2rad)
@@ -450,12 +450,12 @@ SUBROUTINE scale_charge( rho_in, rho_out, nr1, nr2, nr3, ns1, ns2, ns3, &
   INTEGER, PARAMETER :: DP = KIND(0.0d0)
 
   INTEGER, INTENT(in)        :: nr1, nr2, nr3, ns1, ns2, ns3, np1, np2, np3
-  REAL(kind=DP), INTENT(in)  :: rho_in( nr1, nr2, nr3 )
-  REAL(kind=DP), INTENT(out) :: rho_out( ns1, ns2, ns3 )
+  REAL(DP), INTENT(in)  :: rho_in( nr1, nr2, nr3 )
+  REAL(DP), INTENT(out) :: rho_out( ns1, ns2, ns3 )
 
   INTEGER       :: i, j, k
   INTEGER       :: i0(ns1), j0(ns2), k0(ns3), i1(ns1), j1(ns2), k1(ns3)
-  REAL(kind=DP) :: x0(ns1), y0(ns2), z0(ns3), x1(ns1), y1(ns2), z1(ns3)
+  REAL(DP) :: x0(ns1), y0(ns2), z0(ns3), x1(ns1), y1(ns2), z1(ns3)
 
   ! precompute interpolation data
   DO i = 1, ns1
@@ -496,7 +496,7 @@ SUBROUTINE scale_linear( n, nr, ns, np, n0, n1, r0, r1 )
 
   INTEGER, INTENT(in)        :: n, nr, ns, np
   INTEGER, INTENT(out)       :: n0, n1
-  REAL(kind=DP), INTENT(out) :: r0, r1
+  REAL(DP), INTENT(out) :: r0, r1
 
   ! map new grid point onto old grid
   ! mapping is: 1 --> 1, ns+1 --> (nr*np)+1
@@ -523,8 +523,8 @@ SUBROUTINE write_xsf( ldynamics, lforces, lcharge, ounit, n, at, &
   LOGICAL, INTENT(in)       :: ldynamics, lforces, lcharge
   INTEGER, INTENT(in)       :: ounit, n, natoms, ityp(natoms)
   INTEGER, INTENT(in)       :: nr1, nr2, nr3
-  REAL(kind=DP), INTENT(in) :: at(3, 3), tau(3, natoms), force(3, natoms)
-  REAL(kind=DP), INTENT(in) :: rho(nr1, nr2, nr3)
+  REAL(DP), INTENT(in) :: at(3, 3), tau(3, natoms), force(3, natoms)
+  REAL(DP), INTENT(in) :: rho(nr1, nr2, nr3)
 
   INTEGER :: i, j, ix, iy, iz
 
@@ -588,10 +588,10 @@ SUBROUTINE write_grd( ounit, at, rho, nr1, nr2, nr3 )
 
   INTEGER, INTENT(in)       :: ounit
   INTEGER, INTENT(in)       :: nr1, nr2, nr3
-  REAL(kind=DP), INTENT(in) :: at(3, 3), rho(nr1, nr2, nr3)
+  REAL(DP), INTENT(in) :: at(3, 3), rho(nr1, nr2, nr3)
 
   INTEGER       :: i, j, k
-  REAL(kind=DP) :: euler(6)
+  REAL(DP) :: euler(6)
 
   CALL at_to_euler( at, euler )
 
@@ -612,7 +612,7 @@ SUBROUTINE write_pdb( bunit, at, tau, natoms, ityp, euler, lrotation )
 
   INTEGER, INTENT(in)       :: bunit, natoms
   INTEGER, INTENT(in)       :: ityp(natoms)
-  REAL(kind=DP), INTENT(in) :: at(3, 3), tau(3, natoms), euler(6)
+  REAL(DP), INTENT(in) :: at(3, 3), tau(3, natoms), euler(6)
   LOGICAL, INTENT(in)       :: lrotation
 
   INTEGER     :: i, j

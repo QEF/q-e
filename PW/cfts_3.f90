@@ -49,13 +49,13 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign, do_fft_x, do
   ! the planes to transform
 #ifndef __SX4 
 #ifndef __AIX
-  complex(kind=DP) :: f (nrx1, nr2, nr3)
+  complex(DP) :: f (nrx1, nr2, nr3)
   call errore('cfts_3','routine called by wrong architecture', 1)
 #endif
 #endif
 
 #ifdef __AIX
-  complex(kind=DP) :: f (nrx1, nr2, nr3)
+  complex(DP) :: f (nrx1, nr2, nr3)
   ! the fft array
   !
   ! ESSL fft's require a different initialization for sign=-1 and sign=1
@@ -65,11 +65,11 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign, do_fft_x, do
   integer :: naux1, naux2
   parameter (naux1 = 20000, naux2 = 20000)
   integer :: m, incx1, incx2, isign
-  real(kind=DP) :: aux2 (naux2), scale, sum
+  real(DP) :: aux2 (naux2), scale, sum
 
   external dscal, dcft
   integer :: ibid
-  real(kind=DP), save :: aux1 (naux1, 3, 2)
+  real(DP), save :: aux1 (naux1, 3, 2)
   logical, save :: first (3, 2)
   data first / 6 * .true. /
 
@@ -193,7 +193,7 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign, do_fft_x, do
 
 #ifdef __SX4
 
-  real(kind=DP) :: f (2, nrx1, nrx2, nrx3)
+  real(DP) :: f (2, nrx1, nrx2, nrx3)
   ! inp/out: the function to transform
 
   integer, save :: nr1s, nr2s, nr3s, inc, jump, lot
@@ -204,7 +204,7 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign, do_fft_x, do
   ! the jump between fft arrays
   ! how many fft
 
-  real(kind=DP), allocatable, save :: trig1 (2 * nr1), trig2 (2 * nr2), &
+  real(DP), allocatable, save :: trig1 (2 * nr1), trig2 (2 * nr2), &
        trig3 (2 * nr3), fact
   !
   !    trigonometric factors
@@ -220,7 +220,7 @@ subroutine cfts_3 (f, nr1, nr2, nr3, nrx1, nrx2, nrx3, igrid, sign, do_fft_x, do
   !    test the sign and put the correct normalization on f
   !
   if (sign.eq. - 1) then
-     fact = 1.d0 / dble (nr1 * nr2 * nr3)
+     fact = 1.d0 / DBLE (nr1 * nr2 * nr3)
      call sscal (2 * nrx1 * nrx2 * nrx3, fact, f, 1)
   elseif (sign.ne.1) then
      call errore ('cft_3', 'wrong sign', 1)

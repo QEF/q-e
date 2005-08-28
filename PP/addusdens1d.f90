@@ -40,7 +40,7 @@ subroutine addusdens1d (plan, prho)
   ! the correspondence 1D with the 3D shells
   ! correspondence 1D FFT mesh G with array G
 
-  real(kind=DP) :: plan (nr3), dimz, g1d (3, nr3), gg1d (nr3), qmod (nr3), &
+  real(DP) :: plan (nr3), dimz, g1d (3, nr3), gg1d (nr3), qmod (nr3), &
        qgr (nr3), qgi (nr3), ylmk0 (nr3, lmaxq * lmaxq)
   !  the planar average
   !  dimension along z
@@ -51,12 +51,12 @@ subroutine addusdens1d (plan, prho)
   ! imaginary part of qg
   ! the spherical harmonics
 
-  complex(kind=DP) :: skk, prho (nrxx), qg (nrx3)
+  complex(DP) :: skk, prho (nrxx), qg (nrx3)
   ! auxiliary variable
   ! auxiliary space for the charge
   ! auxiliary variable for FFT
   ! auxiliary variable for rho(G,nspin)
-  complex(kind=DP), allocatable :: qgm(:), aux (:)
+  complex(DP), allocatable :: qgm(:), aux (:)
 
 
   call ggen1d (ngm1d, g1d, gg1d, ig1dto3d, nl1d, igtongl1d)

@@ -23,7 +23,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   integer :: mode
   ! input: the mode to do
 
-  complex(kind=DP) :: dvscf (nrxx, nspin)
+  complex(DP) :: dvscf (nrxx, nspin)
   ! input: the change of the charge,
   ! output: change of the potential
 
@@ -35,11 +35,11 @@ subroutine dv_of_drho (mode, dvscf, flag)
   ! counter on spin polarizations
   ! counter on g vectors
 
-  real(kind=DP) :: qg2, fac
+  real(DP) :: qg2, fac
   ! the modulus of (q+G)^2
   ! the structure factor
 
-  complex(kind=DP), allocatable :: dvaux (:,:), drhoc (:)
+  complex(DP), allocatable :: dvaux (:,:), drhoc (:)
   ! auxiliary variable for potential
   !  the change of the core charge
 

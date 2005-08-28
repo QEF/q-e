@@ -30,20 +30,20 @@ subroutine gen_us_dy (ik, u, dvkb)
   implicit none
   !
   integer :: ik
-  real(kind=DP) :: u (3)
+  real(DP) :: u (3)
 
-  complex(kind=DP) :: dvkb (npwx, nkb)
+  complex(DP) :: dvkb (npwx, nkb)
   integer :: na, nt, nb, ih, l, lm, ikb, iig, ipol, i0, i1, i2, &
        i3, ig
-  real(kind=DP), allocatable :: gk(:,:), q (:)
-  real(kind=DP) :: px, ux, vx, wx, arg
+  real(DP), allocatable :: gk(:,:), q (:)
+  real(DP) :: px, ux, vx, wx, arg
 
-  real(kind=DP), allocatable :: vkb0 (:,:,:), dylm (:,:), dylm_u (:,:)
+  real(DP), allocatable :: vkb0 (:,:,:), dylm (:,:), dylm_u (:,:)
   ! dylm = d Y_lm/dr_i in cartesian axes
   ! dylm_u as above projected on u
 
-  complex(kind=DP), allocatable :: sk (:)
-  complex(kind=DP) :: phase, pref
+  complex(DP), allocatable :: sk (:)
+  complex(DP) :: phase, pref
 
   dvkb(:,:) = (0.d0, 0.d0)
   if (lmaxkb.le.0) return

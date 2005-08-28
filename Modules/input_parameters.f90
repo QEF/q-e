@@ -161,7 +161,7 @@ MODULE input_parameters
           !  .TRUE.  write the atomic forces to standard output every "iprint" steps
           !  .FALSE. do not write atomic forces to stdout
 
-        REAL(dbl) :: dt = 1.0d0
+        REAL(DP) :: dt = 1.0d0
           ! time step of the CP molecular dynamics simulation, 
           ! in atomic units ( 1 a.u. of time = 2.4189 * 10^-17 s ),
           ! for non CP calculations, this represents the time advancing parameter.
@@ -202,23 +202,23 @@ MODULE input_parameters
           ! files. When possible put this directory in the fastest available
           ! filesystem ( not NFS! )
 
-        REAL(dbl) :: max_seconds = 1.0d+7
+        REAL(DP) :: max_seconds = 1.0d+7
           ! smoothly terminate program after the specified number of seconds
           ! this parameter is typically used to prevent an hard kill from
           ! the queuing system.
 
-        REAL(dbl) :: ekin_conv_thr = 1.0d-5
+        REAL(DP) :: ekin_conv_thr = 1.0d-5
           ! convergence criterion, minimizing the electrons this criterion is met 
           ! when "ekin < ekin_conv_thr"
           ! convergence is achieved when all criteria are met
 
-        REAL(dbl) :: etot_conv_thr = 1.0d-4
+        REAL(DP) :: etot_conv_thr = 1.0d-4
           ! convergence criterion, minimizing the ions this criterion is met
           ! when "etot(n+1)-etot(n) < etot_conv_thr", where "n" is the step index,
           ! and "etot" the DFT energy
           ! convergence is achieved when all criteria are met
 
-        REAL(dbl) :: forc_conv_thr = 1.0d-3
+        REAL(DP) :: forc_conv_thr = 1.0d-3
           ! convergence criterion, minimizing the ions this criterion is met
           ! when "MAXVAL(fion) < forc_conv_thr", where fion are the atomic forces
           ! convergence is achieved when all criteria are met
@@ -296,7 +296,7 @@ MODULE input_parameters
           !       to put constraints on the cell symmetries, therefore an 
           !       ibrav = 14 is used
 
-        REAL(dbl) :: celldm(6) = 0.0d0
+        REAL(DP) :: celldm(6) = 0.0d0
           ! dimensions of the cell 
           !   celldm(1) = a
           !   celldm(2) = b/a
@@ -322,15 +322,15 @@ MODULE input_parameters
         INTEGER :: nbnd = 0
           ! number of electronic states, this parameter is MANDATORY in FPMD
 
-        REAL(dbl):: nelec = 0.d0
+        REAL(DP):: nelec = 0.d0
           ! number of electrons, this parameter is MANDATORY in FPMD
           ! may be fractionary in PW, but not in CP and FPMD !
 
-        REAL(dbl) :: ecutwfc = 0.0d0
+        REAL(DP) :: ecutwfc = 0.0d0
           ! energy cutoff for wave functions in k-space ( in Rydbergs )
           ! this parameter is MANDATORY in FPMD
 
-        REAL(dbl) :: ecutrho = 0.0d0
+        REAL(DP) :: ecutrho = 0.0d0
           ! energy cutoff for charge density in k-space ( in Rydbergs )
           ! by default its value is "4 * ecutwfc"
 
@@ -367,7 +367,7 @@ MODULE input_parameters
         CHARACTER(LEN=80) :: smearing = 'gaussian'
           ! smearing = 'gaussian', 'methfessel-paxton', 'marzari-vanderbilt', 'fermi-dirac'
 
-        REAL(dbl) :: degauss = 0.0d0
+        REAL(DP) :: degauss = 0.0d0
           ! parameter for the smearing functions
           ! NOT used in FPMD-N
 
@@ -377,7 +377,7 @@ MODULE input_parameters
           ! "nspin = 2" for LSD simulations
           ! "nspin = 4" for NON COLLINEAR simulations
 
-        REAL(dbl) :: nelup = 0.d0, neldw = 0.d0
+        REAL(DP) :: nelup = 0.d0, neldw = 0.d0
           ! meaningful only if "nspin = 2", 
           ! "nelup" is the number of electrons with spin up
           ! "neldw" is the number of electrons with spin down
@@ -387,7 +387,7 @@ MODULE input_parameters
           ! do not use symmetry
           ! NOT used in FPMD-N
 
-        REAL(dbl) :: ecfixed = 0.0d0, qcutz = 0.0d0, q2sigma = 0.0d0
+        REAL(DP) :: ecfixed = 0.0d0, qcutz = 0.0d0, q2sigma = 0.0d0
           ! parameters for constant cut-off simulations
           ! "ecfixed" is the value (in Rydbergs) of the constant-cutoff 
           ! "qcutz" and "q2sigma" are the height and the width (in Rydbergs) 
@@ -405,19 +405,19 @@ MODULE input_parameters
           ! 'LDA'   use LDA xc functional: the xc potential is
           !         calculated through an interpolation table
 
-        REAL(dbl) :: starting_magnetization( nsx ) = 0.0d0
+        REAL(DP) :: starting_magnetization( nsx ) = 0.0d0
           ! ONLY PWSCF
 
         LOGICAL :: lda_plus_u = .FALSE.
           ! ONLY PWSCF
 
-        REAL(dbl) :: starting_ns_eigenvalue(lqmax,nspinx,nsx)=-1.0
+        REAL(DP) :: starting_ns_eigenvalue(lqmax,nspinx,nsx)=-1.0
           ! ONLY PWSCF
 
-        REAL(dbl) :: hubbard_u(nsx) = 0.0d0
+        REAL(DP) :: hubbard_u(nsx) = 0.0d0
           ! ONLY PWSCF
 
-        REAL(dbl) :: hubbard_alpha(nsx) = 0.0d0
+        REAL(DP) :: hubbard_alpha(nsx) = 0.0d0
           ! ONLY PWSCF
 
         CHARACTER(LEN=80) :: U_projection_type = 'atomic'
@@ -429,41 +429,41 @@ MODULE input_parameters
 
         INTEGER :: nqx1 = 1, nqx2 = 1, nqx3=1
           ! ONLY PWSCF
-        REAL(dbl) :: yukawa = 0.d0
+        REAL(DP) :: yukawa = 0.d0
           ! ONLY PWSCF
 #endif
 
-        REAL(dbl) :: a = 0.0d0
+        REAL(DP) :: a = 0.0d0
 
-        REAL(dbl) :: c = 0.0d0
+        REAL(DP) :: c = 0.0d0
 
-        REAL(dbl) :: b = 0.0d0
+        REAL(DP) :: b = 0.0d0
 
-        REAL(dbl) :: cosab = 0.0d0
+        REAL(DP) :: cosab = 0.0d0
 
-        REAL(dbl) :: cosac = 0.0d0
+        REAL(DP) :: cosac = 0.0d0
 
-        REAL(dbl) :: cosbc = 0.0d0
+        REAL(DP) :: cosbc = 0.0d0
 
         INTEGER   :: edir = 0
  
-        REAL(dbl) :: emaxpos = 0.0d0
+        REAL(DP) :: emaxpos = 0.0d0
 
-        REAL(dbl) :: eopreg = 0.0d0
+        REAL(DP) :: eopreg = 0.0d0
 
-        REAL(dbl) :: eamp = 0.0d0 
+        REAL(DP) :: eamp = 0.0d0 
 
         LOGICAL :: noncolin = .FALSE.
 
         LOGICAL :: lspinorb = .FALSE.
 
-        REAL(dbl) :: lambda = 1.0D0
+        REAL(DP) :: lambda = 1.0D0
 
-        REAL(dbl) :: fixed_magnetization(3) = 0.0D0 
+        REAL(DP) :: fixed_magnetization(3) = 0.0D0 
 
-        REAL(dbl) :: angle1(nsx) = 0.0D0
+        REAL(DP) :: angle1(nsx) = 0.0D0
 
-        REAL(dbl) :: angle2(nsx) = 0.0D0
+        REAL(DP) :: angle2(nsx) = 0.0D0
 
         INTEGER :: report = 1
   
@@ -493,7 +493,7 @@ MODULE input_parameters
 !          of angle1, and the penalty functional is:
 !  - LAMBDA * SUM_{itype} ( mag_mom(3,itype)/mag_mom_tot - cos(angle1(ityp) )**2
 !
-        REAL(dbl) :: B_field(3) = 0.0D0 
+        REAL(DP) :: B_field(3) = 0.0D0 
 !
 ! A fixed magnetic field defined by the vector B_field is added
 ! to the exchange and correlation magnetic field.
@@ -519,7 +519,7 @@ MODULE input_parameters
                                                !!sIcorrection only on xc by MAC: 
                                                !!rhopaired==rhodown since that the charge more is defined in the highest level and up
                                                !!rhounpaired==rhoup-rhodown 
-        REAL(dbl) :: sic_epsilon   = 1.0d0
+        REAL(DP) :: sic_epsilon   = 1.0d0
 
         LOGICAL   :: force_pairing = .FALSE.
           !  FORCEPAIRING 
@@ -550,12 +550,12 @@ MODULE input_parameters
 !  ELECTRONS Namelist Input Parameters
 !=----------------------------------------------------------------------------=!
 
-        REAL(dbl) :: emass = 0.0d0
+        REAL(DP) :: emass = 0.0d0
           ! effective electron mass in the CP Lagrangian, 
           ! in atomic units ( 1 a.u. of mass = 1/1822.9 a.m.u. = 9.10939 * 10^-31 kg )
           ! Typical values in CP simulation are between 100. and 1000.
 
-        REAL(dbl) :: emass_cutoff = 0.0d0
+        REAL(DP) :: emass_cutoff = 0.0d0
           ! mass cut-off (in Rydbergs) for the Fourier acceleration
           ! effective mass is rescaled for "G" vector components with kinetic 
           ! energy above "emass_cutoff" 
@@ -567,7 +567,7 @@ MODULE input_parameters
           !  'Gram-Schmidt'  use Gram-Schmidt algorithm
           !  'ortho'         use iterative algorithm 
 
-        REAL(dbl) :: ortho_eps = 1.d-8
+        REAL(DP) :: ortho_eps = 1.d-8
           ! meaningful only if orthogonalization = 'ortho'
           ! tolerance for iterative orthonormalization,
           ! a value of 1.d-8 is usually sufficent
@@ -597,7 +597,7 @@ MODULE input_parameters
         DATA electron_dynamics_allowed &
           / 'default', 'sd', 'cg', 'damp', 'verlet', 'none', 'diis' /
 
-        REAL(dbl) :: electron_damping = 0.0d0
+        REAL(DP) :: electron_damping = 0.0d0
           ! meaningful only if " electron_dynamics = 'damp' "
           ! damping frequency times delta t, optimal values could be
           ! calculated with the formula
@@ -617,12 +617,12 @@ MODULE input_parameters
           ! 'rescaling'      control electronic temperature via velocities rescaling 
           ! 'not_controlled' electronic temperature is not controlled
 
-        REAL(dbl) :: ekincw = 0.0d0
+        REAL(DP) :: ekincw = 0.0d0
           ! meaningful only with "electron_temperature /= 'not_controlled' "
           ! value of the average kinetic energy (in atomic units) forced
           ! by the temperature control
 
-        REAL(dbl) :: fnosee = 0.0d0
+        REAL(DP) :: fnosee = 0.0d0
           ! meaningful only with "electron_temperature = 'nose' "
           ! oscillation frequency of the nose thermostat (in terahertz) 
 
@@ -632,11 +632,11 @@ MODULE input_parameters
           ! 'atomic'   start from superposition of atomic wave functions
           ! 'random'   start from random wave functions
 
-        REAL(dbl) :: ampre = 0.0d0
+        REAL(DP) :: ampre = 0.0d0
           ! meaningful only if "startingwfc = 'random'", amplitude of the
           ! randomization ( allowed values: 0.0 - 1.0 )
 
-        REAL(dbl) :: grease = 0.0d0
+        REAL(DP) :: grease = 0.0d0
           ! a number <= 1, very close to 1: the damping in electronic
           ! damped dynamics is multiplied at each time step by "grease"
           ! (avoids overdamping close to convergence: Obsolete ?)
@@ -652,17 +652,17 @@ MODULE input_parameters
           ! maximum number of iteration in the empty states calculation
           ! default is 100
 
-        REAL(dbl) :: empty_states_delt = 1.0d0
+        REAL(DP) :: empty_states_delt = 1.0d0
           ! meaningful only with "empty_states_nbnd > 0 "
           ! fictitious time step to be used in the empty states iteration
           ! default value is "dt"
 
-        REAL(dbl) :: empty_states_emass = 500.0d0
+        REAL(DP) :: empty_states_emass = 500.0d0
           ! meaningful only with "empty_states_nbnd > 0 "
           ! fictitious electronic mass to be used in the empty states iteration
           ! default value is "emass"
 
-        REAL(dbl) :: empty_states_ethr = 1.d-4
+        REAL(DP) :: empty_states_ethr = 1.d-4
           ! meaningful only with "empty_states_nbnd > 0 "
           ! wave function gradient threshold, for convergence of empty states
           ! default value is ekin_conv_thr
@@ -677,13 +677,13 @@ MODULE input_parameters
           ! number of steepest descendent step after a reset of the diis
           ! iteration, default value is 3
 
-        REAL(dbl) :: diis_hcut = 0.d0
+        REAL(DP) :: diis_hcut = 0.d0
           ! meaningful only with " electron_dynamics = 'diis' "
           ! energy cutoff (a.u.), above which an approximate diagonal
           ! hamiltonian is used in finding the direction to the minimum
           ! default is "1.0"
 
-        REAL(dbl) :: diis_wthr = 1.d-4
+        REAL(DP) :: diis_wthr = 1.d-4
           ! meaningful only with " electron_dynamics = 'diis' "
           ! convergence threshold for wave function 
           ! this criterion is satisfied when the maximum change
@@ -691,7 +691,7 @@ MODULE input_parameters
           ! is less than this threshold
           ! default value is ekin_conv_thr
 
-        REAL(dbl) :: diis_delt = 1.0d0
+        REAL(DP) :: diis_delt = 1.0d0
           ! meaningful only with " electron_dynamics = 'diis' "
           ! electronic time step used in the steepest descendent step
           ! default is "dt"
@@ -706,7 +706,7 @@ MODULE input_parameters
           ! if "diis_rot = .TRUE." enable diis with charge mixing and rotations
           ! default is "diis_rot = .FALSE."
 
-        REAL(dbl) :: diis_fthr = 1.d-3
+        REAL(DP) :: diis_fthr = 1.d-3
           ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
           ! convergence threshold for ionic force 
           ! this criterion is satisfied when the maximum change
@@ -714,16 +714,16 @@ MODULE input_parameters
           ! is less than this threshold
           ! default value is "0.0"
 
-        REAL(dbl) :: diis_temp = 0.0d0
+        REAL(DP) :: diis_temp = 0.0d0
           ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
           ! electronic temperature, significant only if ???
 
-        REAL(dbl) :: diis_achmix  = 0.0d0
+        REAL(DP) :: diis_achmix  = 0.0d0
           ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
           ! "A" parameter in the charge mixing formula
           ! chmix = A * G^2 / (G^2 + G0^2) , G represents reciprocal lattice vectors
 
-        REAL(dbl) :: diis_g0chmix  = 0.0d0
+        REAL(DP) :: diis_g0chmix  = 0.0d0
           ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
           ! "G0^2" parameter in the charge mixing formula
 
@@ -731,7 +731,7 @@ MODULE input_parameters
           ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
           ! dimension of the charge mixing
 
-        REAL(dbl) :: diis_g1chmix = 0.0d0
+        REAL(DP) :: diis_g1chmix = 0.0d0
           ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
           ! "G1^2" parameter in the charge mixing formula
           ! metric = (G^2 + G1^2) / G^2 , G represents reciprocal lattice vectors
@@ -742,7 +742,7 @@ MODULE input_parameters
           ! then every "diis_nrot(2)", and at the end every "diis_nrot(3)",
           ! depending on "diis_rothr"
 
-        REAL(dbl) :: diis_rothr(3) = 1.d-4
+        REAL(DP) :: diis_rothr(3) = 1.d-4
           ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
           ! threshold on the charge difference between two diis step
           ! when max charge difference is less than "diis_rothr(1)", switch
@@ -752,7 +752,7 @@ MODULE input_parameters
           ! finally when the max charge difference is less than "diis_nrot(3)"
           ! convergence is achieved
 
-        REAL(dbl) :: diis_ethr = 1.d-4
+        REAL(DP) :: diis_ethr = 1.d-4
           ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
           ! convergence threshold for energy
           ! this criterion is satisfied when the change
@@ -770,7 +770,7 @@ MODULE input_parameters
           ! define how to mix wave functions
           ! NOT used in FPMD
 
-        REAL(dbl) :: mixing_beta = 0.0d0
+        REAL(DP) :: mixing_beta = 0.0d0
           ! parameter for wave function mixing
           ! NOT used in FPMD
 
@@ -783,7 +783,7 @@ MODULE input_parameters
           ! NOTA: 'david' e 'david_overlap' per eliminare la variabile "loverlap"
           ! NOT used in FPMD
 
-        REAL(dbl) :: diago_thr_init = 0.D0
+        REAL(DP) :: diago_thr_init = 0.D0
           ! convergence threshold for the firts iterative diagonalization.
           ! NOT used in FPMD
 
@@ -796,7 +796,7 @@ MODULE input_parameters
         INTEGER :: diago_diis_ndim = 10
           ! NOT used in FPMD
 
-        REAL(dbl) :: conv_thr = 1.d-6
+        REAL(DP) :: conv_thr = 1.d-6
           ! convergence threshold in electronic ONLY minimizations
           ! NOT used in FPMD
 
@@ -814,7 +814,7 @@ MODULE input_parameters
         LOGICAL :: tgrand = .FALSE.
           ! whether to do grand-canonical calculations.
 
-        REAL(dbl) :: fermi_energy = 0.0d0
+        REAL(DP) :: fermi_energy = 0.0d0
           ! chemical potential of the grand-canonical ensemble.
 
         CHARACTER(LEN=80) :: rotation_dynamics = "line-minimization"
@@ -823,16 +823,16 @@ MODULE input_parameters
         CHARACTER(LEN=80) :: occupation_dynamics = "line-minimization"
           ! evolution of the occupational degrees of freedom.
 
-        REAL(dbl) :: rotmass = 0
+        REAL(DP) :: rotmass = 0
           ! mass for the rotational degrees of freedom.
 
-        REAL(dbl) :: occmass = 0
+        REAL(DP) :: occmass = 0
           ! mass for the occupational degrees of freedom.
 
-        REAL(dbl) :: occupation_damping = 0
+        REAL(DP) :: occupation_damping = 0
           ! damping for the rotational degrees of freedom.
 
-        REAL(dbl) :: rotation_damping = 0
+        REAL(DP) :: rotation_damping = 0
           ! damping for the occupational degrees of freedom.
 
         LOGICAL :: tcg = .true. 
@@ -841,16 +841,16 @@ MODULE input_parameters
         INTEGER :: maxiter = 40
           ! numero massime iterazioni 
 
-        REAL(dbl)  :: etresh =0.1d-6 
+        REAL(DP)  :: etresh =0.1d-6 
           ! treshhold su energia 
 
-        REAL(dbl) :: passop =0.3 
+        REAL(DP) :: passop =0.3 
           ! passetto per ricerca minimo
 
         INTEGER  :: epol = 3
           ! direzione campo elettrico
 
-        REAL(dbl) :: efield =0.d0 
+        REAL(DP) :: efield =0.d0 
           ! electric field intensity in atomic units
 
 
@@ -904,11 +904,11 @@ MODULE input_parameters
                                     'bfgs', 'old-bfgs', 'constrained-damp', &
                                     'constrained-verlet', 'beeman' /
 
-        REAL(dbl) :: ion_radius(nsx) = 0.5d0
+        REAL(DP) :: ion_radius(nsx) = 0.5d0
           ! pseudo-atomic radius of the i-th atomic species
           ! (for Ewald summation), values between 0.5 and 2.0 are usually used.
 
-        REAL(dbl) :: ion_damping = 0.2d0
+        REAL(DP) :: ion_damping = 0.2d0
           ! meaningful only if " ion_dynamics = 'damp' "
           ! damping frequency times delta t, optimal values could be
           ! calculated with the formula
@@ -940,12 +940,12 @@ MODULE input_parameters
           !                  see parameter "tolp"
           ! 'not_controlled' ionic temperature is not controlled
 
-        REAL(dbl) :: tempw = 300.0d0
+        REAL(DP) :: tempw = 300.0d0
           ! meaningful only with "ion_temperature /= 'not_controlled' "
           ! value of the ionic temperature (in Kelvin) forced
           ! by the temperature control
 
-        REAL(dbl) :: fnosep( nhclm )  = 50.0d0
+        REAL(DP) :: fnosep( nhclm )  = 50.0d0
           ! meaningful only with "ion_temperature = 'nose' "
           ! oscillation frequency of the nose thermostat (in terahertz) 
           ! nhclm is a max length for the chain
@@ -961,7 +961,7 @@ MODULE input_parameters
           ! this is the parameter to control active degrees of freedom
           ! used for temperature control and the Nose-Hoover chains
 
-        REAL(dbl) :: tolp = 50.0d0
+        REAL(DP) :: tolp = 50.0d0
           ! meaningful only with "ion_temperature = 'rescaling' "
           ! tolerance (in Kelvin) of the rescaling. When ionic temperature
           ! differs from "tempw" more than "tolp" apply rescaling.
@@ -971,14 +971,14 @@ MODULE input_parameters
           ! .TRUE.   randomize ionic positions ( see "amprp" )
           ! .FALSE.  do nothing
 
-        REAL(dbl) :: amprp(nsx) = 0.0d0
+        REAL(DP) :: amprp(nsx) = 0.0d0
           ! amprp(i) meaningful only if "tranp(i) = .TRUE.", amplitude of the
           ! randomization ( allowed values: 0.0 - 1.0 ) for the i-th atomic specie.
           ! Add to the positions a random displacements vector ( in bohr radius )
           ! defined as:  amprp( i ) * ( X, Y, Z )
           ! where X, Y, Z are pseudo random number in the interval [ -0.5 , 0.5 ]
 
-        REAL(dbl) :: greasp = 0.0d0
+        REAL(DP) :: greasp = 0.0d0
           ! same as "grease", for ionic damped dynamics
           ! NOT used in FPMD
 
@@ -988,7 +988,7 @@ MODULE input_parameters
         INTEGER   :: ion_maxstep = 1000
           ! maximum number of step in ionic minimization
 
-        REAL(dbl) :: upscale = 0.0d0
+        REAL(DP) :: upscale = 0.0d0
           ! This variable is NOT used in FPMD
 
         CHARACTER(LEN=80) :: pot_extrapolation = 'default', &
@@ -1000,7 +1000,7 @@ MODULE input_parameters
         ! ... delta_T, nraise are used to change the temperature in PWscf
         !
         
-        REAL(KIND=DP) :: delta_t = 1.D0
+        REAL(DP) :: delta_t = 1.D0
         
         INTEGER :: nraise
         
@@ -1065,17 +1065,17 @@ MODULE input_parameters
         DATA opt_scheme_allowed / 'quick-min', 'damped-dyn', 'broyden', &
                                   'mol-dyn', 'sd', 'langevin' /  
 
-        REAL (KIND=DP)  :: damp = 1.D0
+        REAL (DP)  :: damp = 1.D0
           ! meaningful only when minimization_scheme = 'damped-verlet'
         
-        REAL (KIND=DP)  :: temp_req = 0.D0
+        REAL (DP)  :: temp_req = 0.D0
           ! meaningful only when minimization_scheme = 'sim-annealing'
 
-        REAL (KIND=DP)  :: ds = 1.5D0
+        REAL (DP)  :: ds = 1.5D0
 
-        REAL (KIND=DP)  :: k_max = 0.1D0, k_min = 0.1D0
+        REAL (DP)  :: k_max = 0.1D0, k_min = 0.1D0
 
-        REAL (KIND=DP)  :: path_thr = 0.05D0
+        REAL (DP)  :: path_thr = 0.05D0
 
         !
         ! ... variables added for new BFGS algorithm
@@ -1083,15 +1083,15 @@ MODULE input_parameters
         
         INTEGER ::  bfgs_ndim = 1
                             
-        REAL(KIND=DP)  :: trust_radius_max = 0.5D0
-        REAL(KIND=DP)  :: trust_radius_min = 1.D-5
-        REAL(KIND=DP)  :: trust_radius_ini = 0.5D0
-        REAL(KIND=DP)  :: trust_radius_end = 1.D-7
+        REAL(DP)  :: trust_radius_max = 0.5D0
+        REAL(DP)  :: trust_radius_min = 1.D-5
+        REAL(DP)  :: trust_radius_ini = 0.5D0
+        REAL(DP)  :: trust_radius_end = 1.D-7
                                
-        REAL(KIND=DP)  :: w_1 = 0.5D-1
-        REAL(KIND=DP)  :: w_2 = 0.5D0 
+        REAL(DP)  :: w_1 = 0.5D-1
+        REAL(DP)  :: w_2 = 0.5D0 
 
-        REAL(KIND=DP)  :: sic_rloc = 0.0d0
+        REAL(DP)  :: sic_rloc = 0.0d0
 
         !
         ! ...  variable added for SMD  ( Y.K. 04/15/2004 )
@@ -1121,7 +1121,7 @@ MODULE input_parameters
         INTEGER :: smd_lmfreq = 1
           ! Frequencey of computing the Lag. mul.
   
-        REAL (KIND=DP) :: smd_tol = 0.0001
+        REAL (DP) :: smd_tol = 0.0001
           ! Tolerance in constraints in units of
           ! [alpha(k)-alpha(k-1)] - 1/SM_P      
           !
@@ -1140,10 +1140,10 @@ MODULE input_parameters
          ! smlm  for SMD.
          ! splc  for future sp locater using SMD.
   
-        REAL (KIND=DP) :: smd_ene_ini = 1.D0
-        REAL (KIND=DP) :: smd_ene_fin = 1.D0
+        REAL (DP) :: smd_ene_ini = 1.D0
+        REAL (DP) :: smd_ene_fin = 1.D0
         !
-        REAL (KIND=DP) :: smd_spal = 1.D0
+        REAL (DP) :: smd_spal = 1.D0
  
         NAMELIST / ions / phase_space, ion_dynamics, ion_radius, ion_damping,  &
                           ion_positions, ion_velocities, ion_temperature,      &
@@ -1189,10 +1189,10 @@ MODULE input_parameters
           ! 'zero'    restart setting cell velocitiy to zero
           ! 'default' restart using cell velocity of the previous run
 
-        REAL(dbl) :: press = 0.0d0
+        REAL(DP) :: press = 0.0d0
           ! external pressure (in GPa, remember 1 kbar = 10^8 Pa)
 
-        REAL(dbl) :: wmass = 0.0d0
+        REAL(DP) :: wmass = 0.0d0
           ! effective cell mass in the Parrinello-Rahman Lagrangian (in atomic units)
           ! of the order of magnitude of the total atomic mass
           ! (sum of the mass of the atoms) within the simulation cell.
@@ -1207,16 +1207,16 @@ MODULE input_parameters
           ! 'not_controlled' cell temperature is not controlled
           ! NOT used in FPMD
 
-        REAL(dbl) :: temph = 0.0d0
+        REAL(DP) :: temph = 0.0d0
           ! meaningful only with "cell_temperature /= 'not_controlled' "
           ! value of the cell temperature (in Kelvin) forced
           ! by the temperature control
 
-        REAL(dbl) :: fnoseh = 1.0d0
+        REAL(DP) :: fnoseh = 1.0d0
           ! meaningful only with "cell_temperature = 'nose' "
           ! oscillation frequency of the nose thermostat (in terahertz) 
 
-        REAL(dbl) :: greash = 0.0d0
+        REAL(DP) :: greash = 0.0d0
           ! same as "grease", for cell damped dynamics
 
         CHARACTER(LEN=80) :: cell_dofree = 'all'
@@ -1232,13 +1232,13 @@ MODULE input_parameters
           ! 'yz'     only the "y" and "z" axis are moved, angles are unchanged
           ! 'xyz'    "x", "y" and "z" axis are moved, angles are unchanged
 
-        REAL(dbl) :: cell_factor = 0.0d0
+        REAL(DP) :: cell_factor = 0.0d0
           ! NOT used in FPMD
 
         INTEGER   :: cell_nstepe = 1
           ! number of electronic steps for each cell step
 
-        REAL(dbl) :: cell_damping = 0.0d0
+        REAL(DP) :: cell_damping = 0.0d0
           ! meaningful only if " cell_dynamics = 'damp' "
           ! damping frequency times delta t, optimal values could be
           ! calculated with the formula
@@ -1261,10 +1261,10 @@ MODULE input_parameters
         INTEGER :: nq1, nq2, nq3
         ! number of q points in each direction
         
-        REAL(dbl) :: xqq(3) = 0.0d0
+        REAL(DP) :: xqq(3) = 0.0d0
           ! coordinates of q point for phonon calculation
 
-        REAL(dbl) :: tr2_ph
+        REAL(DP) :: tr2_ph
 
         NAMELIST / phonon / modenum, xqq, nq1, nq2, nq3, tr2_ph
 
@@ -1272,7 +1272,7 @@ MODULE input_parameters
 !  RAMAN Namelist Input Parameters
 !=----------------------------------------------------------------------------=!
  
-         REAL(dbl) :: b_length
+         REAL(DP) :: b_length
            ! length of the b-vector
          LOGICAL :: lcart
            ! cartesian directions
@@ -1288,21 +1288,21 @@ MODULE input_parameters
           !
           INTEGER :: sw_len
           !
-          REAL(KIND=dbl) :: efx0, efy0, efz0
-          REAL(KIND=dbl) :: efx1, efy1, efz1
+          REAL(DP) :: efx0, efy0, efz0
+          REAL(DP) :: efx1, efy1, efz1
           !
           LOGICAL :: wfsd
           !
-          REAL(KIND=dbl) :: wfdt
-          REAL(KIND=dbl) :: maxwfdt
-          REAL(KIND=dbl) :: wf_q
-          REAL(KIND=dbl) :: wf_friction
+          REAL(DP) :: wfdt
+          REAL(DP) :: maxwfdt
+          REAL(DP) :: wf_q
+          REAL(DP) :: wf_friction
           !
           INTEGER :: nit
           INTEGER :: nsd
           INTEGER :: nsteps
           !
-          REAL(KIND=dbl) :: tolw
+          REAL(DP) :: tolw
           !
           LOGICAL :: adapt
           !
@@ -1334,14 +1334,14 @@ MODULE input_parameters
 !
         CHARACTER(LEN=3)  :: atom_label(nsx) = 'XX'  ! label of the atomic species being read
         CHARACTER(LEN=80) :: atom_pfile(nsx) = 'YY'  ! pseudopotential file name
-        REAL(dbl)         :: atom_mass(nsx)  = 0.0d0 ! atomic mass of the i-th atomic species
+        REAL(DP)         :: atom_mass(nsx)  = 0.0d0 ! atomic mass of the i-th atomic species
           ! in atomic mass units: 1 a.m.u. = 1822.9 a.u. = 1.6605 * 10^-27 kg
         LOGICAL   :: taspc = .FALSE.
 
 !
 !    ATOMIC_POSITIONS
 !
-        REAL(dbl) :: rd_pos(3,natx) = 0.0d0 ! unsorted position from input
+        REAL(DP) :: rd_pos(3,natx) = 0.0d0 ! unsorted position from input
         INTEGER   :: sp_pos(natx)   = 0
         INTEGER   :: if_pos(3,natx) = 1
         INTEGER   :: id_loc(natx)   = 0
@@ -1355,14 +1355,14 @@ MODULE input_parameters
         ! ... variable added for NEB  ( C.S. 17/10/2003 )
         !
  
-        REAL (KIND=DP), ALLOCATABLE :: pos(:,:) 
+        REAL (DP), ALLOCATABLE :: pos(:,:) 
 
         
 
 !
 !    ION_VELOCITIES
 !
-        REAL(dbl) :: rd_vel(3,natx) = 0.0d0   ! unsorted velocities from input
+        REAL(DP) :: rd_vel(3,natx) = 0.0d0   ! unsorted velocities from input
         INTEGER   :: sp_vel(natx)   = 0 
         LOGICAL   :: tavel          = .FALSE.
 
@@ -1371,7 +1371,7 @@ MODULE input_parameters
 !
 ! ...   k-points inputs
         LOGICAL :: tk_inp = .FALSE.
-        REAL(dbl) :: xk(3,npkx) = 0.0d0, wk(npkx) = 0.0d0
+        REAL(DP) :: xk(3,npkx) = 0.0d0, wk(npkx) = 0.0d0
         INTEGER :: nkstot = 0, nk1 = 0, nk2 = 0, nk3 = 0, k1 = 0, k2 = 0, k3 = 0
         CHARACTER(LEN=80) :: k_points = 'gamma'
           ! k_points = 'automatic' | 'crystal' | 'tpiba' | 'gamma'*
@@ -1397,7 +1397,7 @@ MODULE input_parameters
 !
 !    OCCUPATIONS
 !
-        REAL(dbl) :: f_inp(nbndxx, nspinx) = 0.0d0
+        REAL(DP) :: f_inp(nbndxx, nspinx) = 0.0d0
         LOGICAL   :: tf_inp = .FALSE.
 
 !
@@ -1406,14 +1406,14 @@ MODULE input_parameters
 ! ...   card planar mean of the Hartree potential
         LOGICAL :: tvhmean_inp = .FALSE.
         INTEGER :: vhnr_inp = 0, vhiunit_inp = 0
-        REAL(dbl)  :: vhrmin_inp = 0.0d0, vhrmax_inp = 0.0d0
+        REAL(DP)  :: vhrmin_inp = 0.0d0, vhrmax_inp = 0.0d0
         CHARACTER :: vhasse_inp = 'X'
 
 !
 !    OPTICAL
 !
         LOGICAL :: toptical_card = .FALSE.
-        REAL(dbl) :: woptical = 0.0d0, boptical = 0.0d0
+        REAL(DP) :: woptical = 0.0d0, boptical = 0.0d0
         INTEGER   :: noptical = 0
 
 !
@@ -1430,12 +1430,12 @@ MODULE input_parameters
 !    NEIGHBOURS
 !
        LOGICAL :: tneighbo = .FALSE.
-       REAL(dbl) :: neighbo_radius = 0.0d0
+       REAL(DP) :: neighbo_radius = 0.0d0
 
 !
 !    CELL_PARAMETERS
 !
-       REAL(dbl) :: rd_ht(3,3) = 0.0d0
+       REAL(DP) :: rd_ht(3,3) = 0.0d0
        CHARACTER(len=80) :: cell_symmetry = 'none'
        CHARACTER(LEN=80) :: cell_units = 'alat'
        LOGICAL   :: trd_ht = .FALSE.
@@ -1450,10 +1450,10 @@ MODULE input_parameters
 !    CONSTRAINTS
 !
       INTEGER         :: nconstr_inp               = 0
-      REAL (KIND=dbl) :: constr_tol_inp            = 0.D0
+      REAL (DP) :: constr_tol_inp            = 0.D0
       INTEGER         :: constr_type_inp(natx)     = 0
-      REAL (KIND=dbl) :: constr_inp(4,natx)        = 0
-      REAL (KIND=dbl) :: constr_target(natx)       = 0.D0
+      REAL (DP) :: constr_inp(4,natx)        = 0
+      REAL (DP) :: constr_target(natx)       = 0.D0
       LOGICAL         :: constr_target_set(natx)   = .FALSE.
 
 !

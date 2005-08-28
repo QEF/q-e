@@ -23,11 +23,11 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
   implicit none
 
   integer :: ik
-  complex(kind=DP) :: dvscfs(nrxxs,3), chif(npwx,nbnd,6), depsi(npwx,nbnd,3), &
+  complex(DP) :: dvscfs(nrxxs,3), chif(npwx,nbnd,6), depsi(npwx,nbnd,3), &
             auxr(nrxxs), auxg(npwx)
 
-  complex(kind=DP) :: tmp, ZDOTC
-  complex(kind=DP) , allocatable :: ps1(:,:,:), ps2(:,:,:), &
+  complex(DP) :: tmp, ZDOTC
+  complex(DP) , allocatable :: ps1(:,:,:), ps2(:,:,:), &
                      ps3(:,:,:,:), ps4(:,:,:), au2r(:)
   integer :: ip, jp, ib, jb, ipa, ipb, nrec, ir, ig
 

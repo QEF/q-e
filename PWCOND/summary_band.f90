@@ -20,7 +20,7 @@ subroutine summary_band(ik,ien)
 
   character(len=14) :: extension
   integer ::  i, ik, ien, nstl, nstr 
-  real(kind=DP) :: dim, dre, eev
+  real(DP) :: dim, dre, eev
 
   eev = earr(ien)
 

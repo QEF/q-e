@@ -10,9 +10,9 @@
 !
 module g0aux
   USE kinds, only: DP
-  real(kind=DP), pointer:: vlocg0(:,:) ! local potential at q+G for q=0
-  complex(kind=DP), pointer:: vkb0 (:,:) ! contains beta functions at q=0
-  complex(kind=DP), pointer:: d0rc(:,:)! contain the rhoc for q=0
+  real(DP), pointer:: vlocg0(:,:) ! local potential at q+G for q=0
+  complex(DP), pointer:: vkb0 (:,:) ! contains beta functions at q=0
+  complex(DP), pointer:: d0rc(:,:)! contain the rhoc for q=0
 end module g0aux
 !
 !   the units of the files and the record lengths
@@ -37,7 +37,7 @@ module modesg0
              nirrg0          ! the number of irreducible representation
 !
   integer, pointer :: npertg0(:)  ! the number of perturbations per IR
-  complex(kind=DP), pointer :: ug0(:,:), tg0(:,:,:,:)
+  complex(DP), pointer :: ug0(:,:), tg0(:,:,:,:)
  ! ug0: transformation modes patterns
  ! tg0: the symmetry in the base of pattern (q=0)
 end module modesg0
@@ -46,7 +46,7 @@ end module modesg0
 !
 module d3aux
   USE kinds, only: DP
-  complex(kind=DP), allocatable :: &
+  complex(DP), allocatable :: &
        d3dyn_aux1(:,:,:), d3dyn_aux2(:,:,:), d3dyn_aux3(:,:,:), &
        d3dyn_aux4(:,:,:), d3dyn_aux5(:,:,:), d3dyn_aux6(:,:,:), &
        d3dyn_aux7(:,:,:), d3dyn_aux8(:,:,:), d3dyn_aux9(:,:,:)
@@ -56,12 +56,12 @@ end module d3aux
 !
 module thirdorder
   USE kinds, only: DP
-  complex(kind=DP), allocatable ::  d3dyn(:,:,:)
+  complex(DP), allocatable ::  d3dyn(:,:,:)
   ! third order dynamical matrix
-  complex(kind=DP), allocatable :: psidqvpsi(:,:)
+  complex(DP), allocatable :: psidqvpsi(:,:)
   !    <psi| dqV |psi>
-  real(kind=DP) :: ethr_ph ! eigenvalues convergence threshold
-  real(kind=DP), allocatable ::  ef_sh(:) ! E_Fermi shift
+  real(DP) :: ethr_ph ! eigenvalues convergence threshold
+  real(DP), allocatable ::  ef_sh(:) ! E_Fermi shift
   integer :: istop
   logical :: wraux, recv
 end module thirdorder
@@ -70,7 +70,7 @@ end module thirdorder
 !
 module testvar
   USE kinds, only: DP
-  real(kind=DP) :: testreal(50)
+  real(DP) :: testreal(50)
   integer :: testint(50)
   logical :: testflag(50)
 end module testvar

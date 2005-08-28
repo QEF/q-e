@@ -13,17 +13,17 @@ subroutine sort_gvec( ng, g2, mill )
   !
   !     first the input variables
   !
-  use kinds, ONLY: dbl
+  use kinds, ONLY: DP
   use constants, ONLY: eps8
   implicit none
   INTEGER, INTENT(IN) :: ng
-  REAL(dbl) :: g2( ng )
+  REAL(DP) :: g2( ng )
   INTEGER   :: mill( 3, ng )
 
-  REAL(dbl), ALLOCATABLE :: gsort( : )
+  REAL(DP), ALLOCATABLE :: gsort( : )
   INTEGER, ALLOCATABLE :: index( : )
   INTEGER :: ig, icurr, it, im
-  REAL(dbl) :: gsq
+  REAL(DP) :: gsq
 
   ALLOCATE( gsort( ng ) )
   ALLOCATE( index( ng ) )

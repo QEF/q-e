@@ -49,21 +49,21 @@ module fhi
   !
 
   type angular_comp
-     real(kind=8), pointer     :: pot(:)
-     real(kind=8), pointer     :: wfc(:)
-     real(kind=8), pointer     :: grid(:)
-     real(kind=8)              :: amesh
+     real(8), pointer     :: pot(:)
+     real(8), pointer     :: wfc(:)
+     real(8), pointer     :: grid(:)
+     real(8)              :: amesh
      integer             :: nmesh
      integer             :: lcomp
   end type angular_comp
 
   !------------------------------
 
-  real(kind=8) :: Zval           ! valence charge
+  real(8) :: Zval           ! valence charge
   integer      :: lmax_          ! max l-component used
 
   logical      :: nlcc_
-  real(kind=8), allocatable :: rho_atc_(:) ! core  charge
+  real(8), allocatable :: rho_atc_(:) ! core  charge
 
   type (angular_comp), pointer :: comp(:)  ! PP numerical info
                                            ! (wfc, grid, potentials...)
@@ -79,7 +79,7 @@ subroutine read_fhi(iunps)
   implicit none
   integer, parameter    :: Nl=7  ! max number of l-components
   integer :: iunps
-  real(kind=8) :: r, rhoc, drhoc, d2rhoc
+  real(8) :: r, rhoc, drhoc, d2rhoc
   !
   
   integer               :: l, i, idum, mesh
@@ -158,9 +158,9 @@ subroutine convert_fhi
                     funct_igcx => igcx, &
                     funct_igcc => igcc
   implicit none
-  real(kind=8), parameter :: rmax = 10.0
-  real(kind=8), allocatable :: aux(:)
-  real(kind=8) :: vll
+  real(8), parameter :: rmax = 10.0
+  real(8), allocatable :: aux(:)
+  real(8) :: vll
   character (len=20):: dft  
   integer :: lloc, kkbeta
   integer :: l, i, ir, iv

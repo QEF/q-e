@@ -16,12 +16,12 @@ subroutine gep_gep(n, amt, bmt, eigen, veigen)
 implicit none  
   integer :: i, n
   integer, allocatable :: ipiv(:) 
-  complex(kind=DP) ::  &
+  complex(DP) ::  &
         amt(n,n),      & ! A  
         bmt(n,n),      & ! B  
         eigen(n),      & ! lambda 
         veigen(n,n)      ! X
-  complex(kind=DP), allocatable ::                      & 
+  complex(DP), allocatable ::                      & 
         alpha(:), beta(:)
 
   do i=1, n

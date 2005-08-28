@@ -39,7 +39,7 @@ subroutine readvan (is, iunps)
   !   longer used in the rest of the code.
   !
 
-  real(kind=DP) :: exfact, etotpseu, wwnl (nchix), ee (nchix), eloc, &
+  real(DP) :: exfact, etotpseu, wwnl (nchix), ee (nchix), eloc, &
        dummy, rc (lmaxx + 1), eee (nbrx), ddd (nbrx, nbrx), rcloc, ru(ndmx)
   ! index of the exchange and correlation use
   ! total pseudopotential energy

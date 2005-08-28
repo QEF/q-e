@@ -16,8 +16,8 @@
 
         TYPE projector
           LOGICAL :: gamma_symmetry
-          REAL(dbl), POINTER    :: r(:,:,:)
-          COMPLEX(dbl), POINTER :: c(:,:,:)
+          REAL(DP), POINTER    :: r(:,:,:)
+          COMPLEX(DP), POINTER :: c(:,:,:)
         END TYPE
 
         TYPE (projector), ALLOCATABLE :: fnl( :, : )

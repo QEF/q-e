@@ -20,7 +20,7 @@ module pseudodata
          ntwfc             ! Number of occupied states
   character(len=2) :: &
         els(nchix)         ! The name of the state(sp notation) 
-  real(kind=DP)    :: &
+  real(DP)    :: &
          rcut(nchix),&     ! Pseudization cutoff radius
          rcloc,&           ! Local potential cutoff radius
          rcutus(nchix),&   ! US Pseudization cutoff radii

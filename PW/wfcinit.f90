@@ -76,12 +76,12 @@ SUBROUTINE wfcinit()
          !    "     "  plane waves
          !    "     "  polarization
          ! number of starting wavefunctions
-       COMPLEX(KIND=DP), ALLOCATABLE :: wfcatom(:,:)
+       COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:)
          ! atomic wfcs for initialization
-       REAL(KIND=DP), ALLOCATABLE :: etatom(:)
+       REAL(DP), ALLOCATABLE :: etatom(:)
          ! atomic eigenvalues
-       REAL(KIND=DP) :: rr, arg
-       REAL(KIND=DP) :: rndm
+       REAL(DP) :: rr, arg
+       REAL(DP) :: rndm
        EXTERNAL         rndm
          ! random function generation
        !
@@ -252,12 +252,12 @@ SUBROUTINE wfcinit()
          !    "     "  plane waves
          !    "     "  polarization
          ! number of starting wavefunctions
-       COMPLEX(KIND=DP), ALLOCATABLE :: wfcatom(:,:), wfcatom_nc(:,:,:)
+       COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:), wfcatom_nc(:,:,:)
          !  atomic wfcs for initialization
-       REAL(KIND=DP), ALLOCATABLE :: etatom(:)
+       REAL(DP), ALLOCATABLE :: etatom(:)
          ! atomic eigenvalues
-       REAL (KIND=DP) :: rr, arg
-       REAL (KIND=DP) :: rndm
+       REAL (DP) :: rr, arg
+       REAL (DP) :: rndm
        EXTERNAL          rndm
          !  random function generation
        !

@@ -28,17 +28,17 @@ subroutine lderiv
        ios,    &   ! used for I/O control
        n,ie        ! generic counter 
 
-  real(kind=dp) ::           &
+  real(DP) ::           &
        aux(ndm),         & ! the square of the wavefunction
        aux_dir(ndm,2),   & ! the square of the wavefunction
        ze2,              & ! the nuclear charge in Ry units
        e,                & ! the eigenvalue
        j                   ! total angular momentum for log_der
 
-  real(kind=dp), external ::           &
+  real(DP), external ::           &
       compute_log 
 
-  real(kind=dp), allocatable ::        &
+  real(DP), allocatable ::        &
        dlchi(:, :)         ! the logarithmic derivative
 
   character(len=256) :: flld

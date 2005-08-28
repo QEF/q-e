@@ -13,23 +13,23 @@
 !  END manual
 
 ! ... declare modules
-      USE kinds, ONLY: dbl
+      USE kinds, ONLY: DP
       USE mp, ONLY: mp_max, mp_min, mp_sum
       USE mp_global, ONLY: mpime, nproc, group
 
       IMPLICIT NONE
 
       INTEGER, INTENT(OUT) :: nr1, nr2, nr3, ng
-      REAL(dbl), INTENT(IN) :: alat, a1(3), a2(3), a3(3), gcut, qk(3)
+      REAL(DP), INTENT(IN) :: alat, a1(3), a2(3), a3(3), gcut, qk(3)
 
 ! ... declare other variables
       INTEGER :: i, j, k
       INTEGER :: nr1x, nr2x, nr3x
       INTEGER :: nr1tab, nr2tab, nr3tab, nr
       INTEGER :: nb(3)
-      REAL(dbl) :: gsq, sqgc
-      REAL(dbl) :: c(3), g(3)
-      REAL(dbl) :: b1(3), b2(3), b3(3)
+      REAL(DP) :: gsq, sqgc
+      REAL(DP) :: c(3), g(3)
+      REAL(DP) :: b1(3), b2(3), b3(3)
       LOGICAL :: tqk
 
 ! ... end of declarations
@@ -126,9 +126,9 @@
 !  this function calculates the dot product of two vectors
 !  ----------------------------------------------
       
-      REAL(dbl) dot_prod
+      REAL(DP) dot_prod
 ! ... declare function arguments
-      REAL(dbl) a(3),b(3)     
+      REAL(DP) a(3),b(3)     
 
 ! ... evaluate dot product
       dot_prod=a(1)*b(1)+a(2)*b(2)+a(3)*b(3)
@@ -143,9 +143,9 @@
 !  this function calculates the norm of a vector
 !  ----------------------------------------------
 
-      REAL(dbl) vec_mod
+      REAL(DP) vec_mod
 ! ... declare function argument
-      REAL(dbl) a(3)
+      REAL(DP) a(3)
 
 ! ... evaluate norm
       vec_mod=sqrt(a(1)*a(1)+a(2)*a(2)+a(3)*a(3))
@@ -162,7 +162,7 @@
 !  ----------------------------------------------
 
 ! ... declare subroutine arguments
-      REAL(dbl) a(3),b(3),c(3)
+      REAL(DP) a(3),b(3),c(3)
 
 ! ... evaluate cross product
       c(1) = a(2)*b(3)-a(3)*b(2)
@@ -185,12 +185,12 @@
 
       implicit none
 ! input
-      real(kind=8) a1(3), a2(3), a3(3), alat, gcut
+      real(8) a1(3), a2(3), a3(3), alat, gcut
 ! input/output
       integer nr1, nr2, nr3
 ! local
       integer minr1, minr2, minr3
-      real(kind=8) a1n, a2n, a3n
+      real(8) a1n, a2n, a3n
 !
 !
       a1n=sqrt(a1(1)**2+a1(2)**2+a1(3)**2)/alat

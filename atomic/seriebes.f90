@@ -17,7 +17,7 @@ subroutine seriesbes(fun,r,r2,npt,xc)
        npt,  &        ! the number of points  
        npt2          ! intermediate point
 
-  real(kind=dp) :: &
+  real(DP) :: &
        fun(npt),   &  ! the function
        r(npt),     &  ! the mesh     
        r2(npt),    &  ! the mesh     

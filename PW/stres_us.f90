@@ -29,7 +29,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   ! ... First the dummy variables
   !  
   INTEGER       :: ik
-  REAL(KIND=DP) :: sigmanlc(3,3), gk(3,npw)
+  REAL(DP) :: sigmanlc(3,3), gk(3,npw)
   !
   !
   IF ( gamma_only ) THEN
@@ -58,12 +58,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        INTEGER                       :: na, np, ibnd, ipol, jpol, l, i, &
                                         ikb, jkb, ih, jh, ijkb0
-       REAL(KIND=DP)                 :: fac, xyz(3,3), q, evps, DDOT
-       REAL(KIND=DP), ALLOCATABLE    :: qm1(:)
-       REAL(KIND=DP), ALLOCATABLE    :: becp(:,:)
-       COMPLEX(KIND=DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
+       REAL(DP)                 :: fac, xyz(3,3), q, evps, DDOT
+       REAL(DP), ALLOCATABLE    :: qm1(:)
+       REAL(DP), ALLOCATABLE    :: becp(:,:)
+       COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
        ! dvkb contains the derivatives of the kb potential
-       COMPLEX(KIND=DP)              :: ps
+       COMPLEX(DP)              :: ps
        ! xyz are the three unit vectors in the x,y,z directions
        DATA xyz / 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 /
        !
@@ -260,12 +260,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        INTEGER                       :: na, np, ibnd, ipol, jpol, l, i, &
                                         ikb, jkb, ih, jh, ijkb0
-       REAL(KIND=DP)                 :: fac, xyz (3, 3), q, evps, DDOT
-       REAL(KIND=DP), ALLOCATABLE    :: qm1(:)
-       COMPLEX(KIND=DP), ALLOCATABLE :: becp(:,:)
-       COMPLEX(KIND=DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
+       REAL(DP)                 :: fac, xyz (3, 3), q, evps, DDOT
+       REAL(DP), ALLOCATABLE    :: qm1(:)
+       COMPLEX(DP), ALLOCATABLE :: becp(:,:)
+       COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
        ! dvkb contains the derivatives of the kb potential
-       COMPLEX(KIND=DP)              :: ps
+       COMPLEX(DP)              :: ps
        ! xyz are the three unit vectors in the x,y,z directions
        DATA xyz / 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 /
        !

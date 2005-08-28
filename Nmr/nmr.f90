@@ -44,15 +44,15 @@ program nmr
  integer :: iperm1, p1, b1
 
 
- complex (kind=dp), allocatable :: dpsi(:,:), phi(:), phi1(:), j_bare(:,:,:) 
- complex (kind=DP), allocatable :: dev (:,:), dev2(:,:), auxg (:)&
+ complex (DP), allocatable :: dpsi(:,:), phi(:), phi1(:), j_bare(:,:,:) 
+ complex (DP), allocatable :: dev (:,:), dev2(:,:), auxg (:)&
       , tmp1(:), tmp2(:)
- complex (kind=dp) :: kkterm_hh(3,3), kkterm_vv(3,3), dchi, &
+ complex (DP) :: kkterm_hh(3,3), kkterm_vv(3,3), dchi, &
       chihh(3,3), chivv(3,3)
 
- real (kind=dp) :: emin, emax, chi_macro, test 
+ real (DP) :: emin, emax, chi_macro, test 
 
- complex (kind=dp) :: ZDOTC
+ complex (DP) :: ZDOTC
 
 !
  namelist / inputnmr / prefix, filerec, outdir

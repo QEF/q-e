@@ -78,7 +78,7 @@ PROGRAM average
   ! counter on mesh points
   ! counters on directions
 
-  REAL(kind=DP) :: rhodum, awin, deltaz, weight (nfilemax), gre(npixmax), &
+  REAL(DP) :: rhodum, awin, deltaz, weight (nfilemax), gre(npixmax), &
        gim(npixmax), macros(npixmax)
   ! length of the window
   ! the delta on the thick mesh
@@ -86,13 +86,13 @@ PROGRAM average
   ! the function to average in thick mesh (real part)
   ! the function to average in thick mesh (im. part)
   ! the macroscopic average
-  REAL(kind=DP), ALLOCATABLE :: funcr (:), funci (:)
+  REAL(DP), ALLOCATABLE :: funcr (:), funci (:)
   ! the function to average (real part)
   ! the function to average (im. part)
 
-  REAL(kind=DP) :: celldms (6), gcutmsa, duals, ecuts, zvs (ntypx), ats(3,3)
-  REAL(kind=DP) :: leng
-  REAL(kind=DP), ALLOCATABLE :: taus (:,:)
+  REAL(DP) :: celldms (6), gcutmsa, duals, ecuts, zvs (ntypx), ats(3,3)
+  REAL(DP) :: leng
+  REAL(DP), ALLOCATABLE :: taus (:,:)
   INTEGER, ALLOCATABLE :: ityps (:)
   CHARACTER (len=3) :: atms(ntypx)
 

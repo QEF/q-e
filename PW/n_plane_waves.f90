@@ -18,13 +18,13 @@ subroutine n_plane_waves (ecutwfc, tpiba2, nks, nkstot, xk, g, ngm, &
   implicit none
   ! input
   integer :: nks, nkstot, ngm
-  real(kind=DP) :: ecutwfc, tpiba2, xk (3, nks), g (3, ngm)
+  real(DP) :: ecutwfc, tpiba2, xk (3, nks), g (3, ngm)
   ! output
   integer :: npwx, ngk (nkstot)
   ! local
   integer :: nk, ng
 
-  real(kind=DP) :: q2
+  real(DP) :: q2
   npwx = 0
   do nk = 1, nks
      ngk (nk) = 0

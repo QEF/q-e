@@ -24,7 +24,7 @@ subroutine usnldiag (h_diag, s_diag)
   !
   !    here the dummy variables
   !
-  real(kind=DP) :: h_diag (npw), s_diag (npw)
+  real(DP) :: h_diag (npw), s_diag (npw)
   ! input/output: the diagonal part of the hamiltonian
   ! output: the diagonal part of the S matrix
   !
@@ -32,7 +32,7 @@ subroutine usnldiag (h_diag, s_diag)
   !
   integer :: ikb, jkb, ih, jh, na, nt, ig, ijkb0
   ! counters
-  real(kind=DP) :: ps1, ps2, ar
+  real(DP) :: ps1, ps2, ar
   !
   ! initialise s_diag
   !

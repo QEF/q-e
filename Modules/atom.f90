@@ -16,7 +16,7 @@ MODULE atom
   !
   SAVE
   !
-  REAL(KIND=DP) :: &
+  REAL(DP) :: &
        zmesh(npsx),              &! the atomic charge for mesh generation
        xmin(npsx),               &! initial linear mesh point
        dx(npsx),                 &! linear interval for logaritmic mesh

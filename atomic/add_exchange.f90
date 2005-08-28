@@ -13,13 +13,13 @@ subroutine add_exchange ( energy )
    !
    ! I/O variables
    !
-   real (kind=DP) :: energy
+   real (DP) :: energy
    !
    ! local variables
    !
    integer :: i, l0, l1, l2, l3, nu, mu, nst, is, half
-   real (kind=DP) :: ex_hf, ocs, doc, sss, fac, sxc, sxc1
-   real (kind=DP) :: wrk(ndm), wrk1(ndm), wrk2(ndm), int_0_inf_dr, enzhf(nwfx)
+   real (DP) :: ex_hf, ocs, doc, sss, fac, sxc, sxc1
+   real (DP) :: wrk(ndm), wrk1(ndm), wrk2(ndm), int_0_inf_dr, enzhf(nwfx)
 !
    ex_hf = 0.0
    do nu=1,nwf

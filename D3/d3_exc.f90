@@ -28,10 +28,10 @@ SUBROUTINE d3_exc
   IMPLICIT NONE
   
   INTEGER :: errcode, ir, ipert, jpert, kpert, npert1, npert2
-  REAL (kind = dp) :: d2mxc, rhotot, xq0 (3)
-  REAL (kind = dp), ALLOCATABLE :: d2muxc (:)
-  COMPLEX (kind = dp) :: aux
-  COMPLEX (kind = dp), ALLOCATABLE :: work1 (:), work2 (:), &
+  REAL (DP) :: d2mxc, rhotot, xq0 (3)
+  REAL (DP), ALLOCATABLE :: d2muxc (:)
+  COMPLEX (DP) :: aux
+  COMPLEX (DP), ALLOCATABLE :: work1 (:), work2 (:), &
                                       work3 (:), d3dyn1 (:,:,:)
 
   ALLOCATE (d2muxc( nrxx))    

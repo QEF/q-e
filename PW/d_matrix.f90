@@ -14,7 +14,7 @@ subroutine d_matrix (dy1, dy2, dy3)
   USE cell_base, ONLY : at, bg
   USE symme, ONLY:  nsym, s
   implicit none
-  real(kind=DP) :: dy1 (3, 3, 48), dy2 (5, 5, 48), dy3 (7, 7, 48)
+  real(DP) :: dy1 (3, 3, 48), dy2 (5, 5, 48), dy3 (7, 7, 48)
   !
   integer, parameter :: maxl = 3, maxm = 2*maxl+1, &
        maxlm = (maxl+1)*(maxl+1)
@@ -22,11 +22,11 @@ subroutine d_matrix (dy1, dy2, dy3)
   ! maxm = number of m components for l=maxl
   ! maxlm= number of l,m spherical harmonics for l <= maxl
   integer :: m, n, ipol, isym
-  real(kind=DP) :: ylm(maxm, maxlm),  yl1 (3, 3), yl2(5, 5), yl3(7,7), &
+  real(DP) :: ylm(maxm, maxlm),  yl1 (3, 3), yl2(5, 5), yl3(7,7), &
        yl1_inv (3, 3), yl2_inv(5, 5),  yl3_inv(7, 7), ylms(maxm, maxlm), &
        rl(3,maxm), rrl (maxm), srl(3,maxm), scart (3, 3), delta(7,7), capel
-  real(kind=DP), parameter :: eps = 1.0d-9
-  real(kind=DP), external :: rndm, DDOT
+  real(DP), parameter :: eps = 1.0d-9
+  real(DP), external :: rndm, DDOT
   !
   !  randomly distributed points on a sphere
   !

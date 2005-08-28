@@ -14,7 +14,7 @@
       use kinds, only : DP
       implicit none
       integer::  ibound, ndm, mesh, i
-      real(kind=dp) :: zmesh, xmin, xmax, x, dx, rmax, &
+      real(DP) :: zmesh, xmin, xmax, x, dx, rmax, &
              r(ndm), r2(ndm), rab(mesh), sqr(ndm)
 !      
       xmax=log(rmax*zmesh)
@@ -28,7 +28,7 @@
       if(ibound == 1) xmin=xmax-dx*(mesh-1)
 !
       do i=1,mesh
-         x=xmin+dble(i-1)*dx
+         x=xmin+DBLE(i-1)*dx
          r(i)=exp(x)/zmesh
          rab(i)=(r(i)+exp(xmin)/zmesh)*dx
          !!! r(i)=exp(xmin)*(exp((i-1)*dx)-1.0_dp)/zmesh

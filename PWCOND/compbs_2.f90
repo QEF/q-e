@@ -26,10 +26,10 @@ subroutine compbs_2(nocros, norb, n2d, ntot, amat, bmat, &
   integer :: info, ishift, i, j, k, l
   integer, allocatable :: ipiv(:)
   logical :: llapack
-  complex(kind=DP) :: amat(2*n2d+norb, 2*n2d+norb),  &
+  complex(DP) :: amat(2*n2d+norb, 2*n2d+norb),  &
                       bmat(2*n2d+norb, 2*n2d+norb),  &
                       vec(2*n2d+norb, ntot), kval(ntot) 
-  complex(kind=DP), allocatable :: amt(:,:), bmt(:,:),  &
+  complex(DP), allocatable :: amt(:,:), bmt(:,:),  &
                       auxa(:), auxb(:), auxc(:),    &
                       hmat(:,:), hmt(:,:), vecaux(:,:)
 

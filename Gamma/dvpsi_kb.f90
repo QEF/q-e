@@ -22,10 +22,10 @@ subroutine dvpsi_kb(kpoint,nu)
   !
   implicit none
   integer :: ibnd, ir, ih, jkb, ik, na, nu, ng, mu, nt, kpoint
-  complex(kind=DP), pointer:: work(:,:), workcc(:), dvloc(:), dvb_cc(:)
-  complex(kind=DP) :: exc
-  real(kind=DP), pointer :: bec1(:,:), bec2(:,:), dv(:)
-  real(kind=DP) :: gu, gtau
+  complex(DP), pointer:: work(:,:), workcc(:), dvloc(:), dvb_cc(:)
+  complex(DP) :: exc
+  real(DP), pointer :: bec1(:,:), bec2(:,:), dv(:)
+  real(DP) :: gu, gtau
   logical :: has_nlcc
  !
   call start_clock('dvpsi_kb')

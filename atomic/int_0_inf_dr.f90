@@ -17,8 +17,8 @@ function int_0_inf_dr(f,r,r2,dx,mesh,nst)
   use kinds, only : DP
   implicit none
   integer :: mesh, nst, i
-  real(kind=dp):: int_0_inf_dr, f(mesh), r(mesh),  r2(mesh), dx
-  real(kind=dp):: fs(4), b(4), sum1
+  real(DP):: int_0_inf_dr, f(mesh), r(mesh),  r2(mesh), dx
+  real(DP):: fs(4), b(4), sum1
   !
   !      series development: contribution for small r
   !

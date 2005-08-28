@@ -19,7 +19,7 @@ SUBROUTINE io_pattern (fildrho,nirr,npert,u,iflag)
 !   the i/o variables first
 !
   INTEGER :: nirr, npert(3*nat), iflag
-  COMPLEX(kind=DP) :: u(3*nat,3*nat)
+  COMPLEX(DP) :: u(3*nat,3*nat)
   CHARACTER (len=*)  ::  fildrho   ! name of the file
   CHARACTER (len=256)::  filname   ! complete name of the file
 !

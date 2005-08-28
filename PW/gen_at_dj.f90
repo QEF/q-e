@@ -32,19 +32,19 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
    !  I/O variables
    !
    integer :: kpoint, natw, lmax_wfc
-   complex (kind=DP) :: dwfcat(npwx,natw)
+   complex (DP) :: dwfcat(npwx,natw)
    !
    ! local variables
    !
    integer :: l, na, nt, nb, iatw, iig, i, ig, i0, i1, i2 ,i3, m, lm
-   real (kind=DP) :: eps, dv, qt, arg, px, ux, vx, wx
+   real (DP) :: eps, dv, qt, arg, px, ux, vx, wx
    parameter (eps=1.0e-8)
-   complex (kind=DP) :: phase, pref
-   real (kind=DP), allocatable :: gk(:,:), q(:), ylm(:,:), djl(:,:,:)
+   complex (DP) :: phase, pref
+   real (DP), allocatable :: gk(:,:), q(:), ylm(:,:), djl(:,:,:)
    !          gk(3,npw), q(npw),
    !          ylm(npw,(lmax_wfc+1)**2),
    !          djl(npw,nchix,ntyp)
-   complex (kind=DP), allocatable :: sk(:)
+   complex (DP), allocatable :: sk(:)
    !          sk(npw)
 
    allocate ( ylm (npw,(lmax_wfc+1)**2) , djl (npw,nchix,ntyp) )

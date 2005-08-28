@@ -16,10 +16,10 @@ subroutine xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
   implicit none
   integer          :: nat, ityp (nat), ounit
   character(len=3) :: atm(*)
-  real(kind=DP)    :: alat, tau (3, nat), at (3, 3)
+  real(DP)    :: alat, tau (3, nat), at (3, 3)
   ! --
   integer          :: i, j, n
-  real(kind=DP)    :: at1 (3, 3)
+  real(DP)    :: at1 (3, 3)
   ! convert lattice vectors to ANGSTROM units ...
   do i=1,3
      do j=1,3
@@ -54,7 +54,7 @@ subroutine xsf_fast_datagrid_3d &
   USE kinds, only : DP
   implicit none
   integer       :: nrx1, nrx2, nrx3, nr1, nr2, nr3, ounit
-  real(kind=DP) :: alat, at (3, 3), rho(nrx1,nrx2,nrx3)
+  real(DP) :: alat, at (3, 3), rho(nrx1,nrx2,nrx3)
   ! --
   integer       :: i1, i2, i3, ix, iy, iz, count, i, ii, &
        ind_x(10), ind_y(10),ind_z(10)
@@ -117,7 +117,7 @@ subroutine xsf_datagrid_2d (rho, nx, ny, m1, m2, x0, e1, e2, alat, ounit)
   USE kinds, only : DP
   implicit none
   integer       :: nx, ny, ounit
-  real(kind=DP) :: m1, m2, alat, x0(3), e1(3), e2(3), rho(2, nx, ny)
+  real(DP) :: m1, m2, alat, x0(3), e1(3), e2(3), rho(2, nx, ny)
   ! --
   integer       :: ix, iy, count, i, ind_x(10), ind_y(10)
 
@@ -162,7 +162,7 @@ subroutine xsf_datagrid_3d &
   USE kinds, only : DP
   implicit none
   integer       :: nx, ny, nz, ounit
-  real(kind=DP) :: m1, m2, m3, alat, x0(3), e1(3),e2(3),e3(3), rho(nx, ny, nz)
+  real(DP) :: m1, m2, m3, alat, x0(3), e1(3),e2(3),e3(3), rho(nx, ny, nz)
   ! --
   integer       :: ix, iy, iz, count, i, ind_x(10), ind_y(10), ind_z(10)
 

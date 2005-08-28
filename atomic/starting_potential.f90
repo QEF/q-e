@@ -19,9 +19,9 @@ subroutine starting_potential &
   use kinds, only : DP
   implicit none
   integer :: nwf, nn(nwf), ll(nwf), ndm, mesh, n, i, nspin
-  real(kind=dp) :: r(ndm), vpot(ndm,2), vxt(ndm), enl(nwf), oc(nwf), &
+  real(DP) :: r(ndm), vpot(ndm,2), vxt(ndm), enl(nwf), oc(nwf), &
        zed, zval, zz, zen, enne, t,x, vext
-  real(kind=dp), parameter :: e2 = 2.0_dp
+  real(DP), parameter :: e2 = 2.0_dp
   external vext
   !
   enne = 0.0_dp

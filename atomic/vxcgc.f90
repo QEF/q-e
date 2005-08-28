@@ -21,17 +21,17 @@ subroutine vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc)
   use kinds, only : DP
   implicit none
   integer :: ndm,mesh,nspin,ndm1
-  real(kind=dp) :: r(mesh), r2(mesh), rho(ndm,2), rhoc(ndm), &
+  real(DP) :: r(mesh), r2(mesh), rho(ndm,2), rhoc(ndm), &
        vgc(ndm,2), egc(ndm)
 
   integer :: i, is, ierr
-  real(kind=dp) :: sx,sc,v1x,v2x,v1c,v2c,aux,gaux
-  real(kind=dp) :: v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw
-  real(kind=dp) :: segno, arho, grho2(2)
-  real(kind=dp) :: rh, zeta, grh2
-  real(kind=dp),parameter :: eps=1.e-12_dp, fourpi=3.14159265358979_DP*4.0_DP
+  real(DP) :: sx,sc,v1x,v2x,v1c,v2c,aux,gaux
+  real(DP) :: v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw
+  real(DP) :: segno, arho, grho2(2)
+  real(DP) :: rh, zeta, grh2
+  real(DP),parameter :: eps=1.e-12_dp, fourpi=3.14159265358979_DP*4.0_DP
 
-  real(kind=dp), pointer :: grho(:,:), h(:,:), dh(:)
+  real(DP), pointer :: grho(:,:), h(:,:), dh(:)
   !
   !      First compute the charge and the charge gradient, assumed  
   !      to have spherical symmetry. The gradient is the derivative of

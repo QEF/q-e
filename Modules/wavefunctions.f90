@@ -9,35 +9,35 @@
 !=----------------------------------------------------------------------------=!
    MODULE wavefunctions_module
 !=----------------------------------------------------------------------------=!
-     USE kinds, ONLY :  DP, dbl
+     USE kinds, ONLY :  DP, DP
 
      IMPLICIT NONE
      SAVE
 
      !
-     COMPLEX(KIND=DP), ALLOCATABLE, TARGET :: &
+     COMPLEX(DP), ALLOCATABLE, TARGET :: &
        evc(:,:)     ! wavefunctions in the PW basis
 
      !
-     COMPLEX(KIND=DP) , ALLOCATABLE, TARGET :: &
+     COMPLEX(DP) , ALLOCATABLE, TARGET :: &
        psic(:)      ! additional memory for FFT
 
 
      ! three index wave functions, for non colinear code
      !
-     COMPLEX(KIND=DP), ALLOCATABLE, TARGET :: &
+     COMPLEX(DP), ALLOCATABLE, TARGET :: &
        evc_nc(:,:,:)     !  wavefunctions in the PW basis
      !
-     COMPLEX(KIND=DP), ALLOCATABLE, TARGET :: &
+     COMPLEX(DP), ALLOCATABLE, TARGET :: &
        psic_nc(:,:)      !  additional memory for FFT
      !     
 
      ! electronic wave functions, FPMD code
      !
-     COMPLEX(dbl), ALLOCATABLE :: c0(:,:,:,:)  ! wave functions at time t
-     COMPLEX(dbl), ALLOCATABLE :: cm(:,:,:,:)  ! wave functions at time t-delta t
-     COMPLEX(dbl), ALLOCATABLE :: cp(:,:,:,:)  ! wave functions at time t+delta t
-     COMPLEX(dbl), ALLOCATABLE :: ce(:,:,:,:)  ! empty states wave func. at time t
+     COMPLEX(DP), ALLOCATABLE :: c0(:,:,:,:)  ! wave functions at time t
+     COMPLEX(DP), ALLOCATABLE :: cm(:,:,:,:)  ! wave functions at time t-delta t
+     COMPLEX(DP), ALLOCATABLE :: cp(:,:,:,:)  ! wave functions at time t+delta t
+     COMPLEX(DP), ALLOCATABLE :: ce(:,:,:,:)  ! empty states wave func. at time t
 
    CONTAINS
 

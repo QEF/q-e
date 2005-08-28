@@ -31,7 +31,7 @@ SUBROUTINE openfild3
   LOGICAL :: exst
   ! logical variable to check file existe
   INTEGER       :: ndr, kunittmp, ierr
-  REAL(KIND=DP) :: edum(1,1), wdum(1,1)
+  REAL(DP) :: edum(1,1), wdum(1,1)
 
   twfcollect=.FALSE.
 

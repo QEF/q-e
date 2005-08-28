@@ -19,7 +19,7 @@ subroutine drhodv(nu_i)
   integer :: nu_i
   !
   integer :: nu_j, ibnd, kpoint
-  real(kind=DP) :: dynel(nmodes), work(nbnd)
+  real(DP) :: dynel(nmodes), work(nbnd)
   !
   call start_clock('drhodv')
   !

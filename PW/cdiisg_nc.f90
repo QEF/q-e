@@ -35,14 +35,14 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
   ! band type (0=occupied, 1=empty)
   ! scf iteration
   ! number of coordinates of wfc
-  real(kind=DP) :: ethr
+  real(DP) :: ethr
   ! energy threshold for convergence
   !   root improvement is stopped, when two consecutive estimates of the root
   !   differ by less than ethr.
   ! on OUTPUT
-  complex(kind=DP) :: evc (ndmx, npol, nvec)
+  complex(DP) :: evc (ndmx, npol, nvec)
   !  evc   contains the  refined estimates of the eigenvectors
-  real(kind=DP) :: e (nvec), diis_iter
+  real(DP) :: e (nvec), diis_iter
   ! contains the estimated roots.
   ! average number of iterations performed per band
   integer :: notcnv
@@ -59,24 +59,24 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
   ! dimension of the reduced basis
   ! counter on the reduced basis vectors
   ! do-loop counters
-  complex(kind=DP), allocatable :: rc (:,:),  hc (:,:), sc (:,:), &
+  complex(DP), allocatable :: rc (:,:),  hc (:,:), sc (:,:), &
        vc (:), vcn(:,:)
   ! <res_i|res_j> matrix
   ! H matrix on the reduced basis
   ! S matrix on the reduced basis
   ! the eigenvectors of the Hamiltonian
   ! workspace
-  complex(kind=DP), allocatable :: psi(:,:,:),hpsi(:,:,:),spsi(:,:,:),res(:,:,:)
+  complex(DP), allocatable :: psi(:,:,:),hpsi(:,:,:),spsi(:,:,:),res(:,:,:)
   ! work space, contains psi
   ! the product of H and psi
   ! the product of S and psi
   ! residual vector
-  complex(kind=DP) :: hevc(ndmx, npol, nvec), sevc(ndmx, npol, nvec)
+  complex(DP) :: hevc(ndmx, npol, nvec), sevc(ndmx, npol, nvec)
   ! the product of H and the best estimate of the eigenvectors evc
   ! the product of S and the best estimate of the eigenvectors evc
-  real(kind=DP), allocatable :: ew (:)
+  real(DP), allocatable :: ew (:)
   ! eigenvalues of the reduced hamiltonian
-  real(kind=DP) :: ec, snorm, snorm0, lam, ew0, denm, x
+  real(DP) :: ec, snorm, snorm0, lam, ew0, denm, x
   ! dummy variable
   ! squared norm of current residual
   ! squared norm of initial residual calculated with the old evc
@@ -84,7 +84,7 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
   ! variables for teter preconditioning (not used)
   logical :: verb, test_new_preconditioning_nc 
   ! controlling verbosity of printout
-  complex(kind=DP), external ::  ZDOTC
+  complex(DP), external ::  ZDOTC
   external h_1psi_nc, cdiagh
 
   call start_clock ('diis')

@@ -18,7 +18,7 @@ subroutine recips (a1, a2, a3, b1, b2, b3)
   !
   use kinds, ONLY: DP
   implicit none
-  real(kind=DP) :: a1 (3), a2 (3), a3 (3), b1 (3), b2 (3), b3 (3)
+  real(DP) :: a1 (3), a2 (3), a3 (3), b1 (3), b2 (3), b3 (3)
   ! input: first direct lattice vector
   ! input: second direct lattice vector
   ! input: third direct lattice vector
@@ -28,7 +28,7 @@ subroutine recips (a1, a2, a3, b1, b2, b3)
   !
   !   then the local variables
   !
-  real(kind=DP) :: den, s
+  real(DP) :: den, s
   ! the denominator
   ! the sign of the permutations
   integer :: iperm, i, j, k, l, ipol

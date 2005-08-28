@@ -18,14 +18,14 @@ subroutine kpoint_grid &
   implicit none
   ! INPUT:
   integer nrot, s(3,3,48), npk, k1, k2, k3, nk1, nk2, nk3
-  real(kind=DP) bg(3,3)
+  real(DP) bg(3,3)
   ! OUTPUT:
   integer nks
-  real(kind=DP)  xk(3,npk), wk(npk)
+  real(DP)  xk(3,npk), wk(npk)
   ! LOCAL:
-  real(kind=DP), parameter :: eps=1.0e-5
-  real(kind=DP) xkr(3), deltap(3), deltam(3), fact, xx, yy, zz
-  real(kind=DP), allocatable:: xkg(:,:), wkk(:)
+  real(DP), parameter :: eps=1.0e-5
+  real(DP) xkr(3), deltap(3), deltam(3), fact, xx, yy, zz
+  real(DP), allocatable:: xkg(:,:), wkk(:)
   integer nkr, i,j,k, ns, n, nk
   integer, allocatable :: equiv(:)
   logical :: in_the_list
@@ -40,9 +40,9 @@ subroutine kpoint_grid &
            !  this is nothing but consecutive ordering
            n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
            !  xkg are the components of the complete grid in crystal axis
-           xkg(1,n) = dble(i-1)/nk1 + dble(k1)/2/nk1
-           xkg(2,n) = dble(j-1)/nk2 + dble(k2)/2/nk2
-           xkg(3,n) = dble(k-1)/nk3 + dble(k3)/2/nk3
+           xkg(1,n) = DBLE(i-1)/nk1 + DBLE(k1)/2/nk1
+           xkg(2,n) = DBLE(j-1)/nk2 + DBLE(k2)/2/nk2
+           xkg(3,n) = DBLE(k-1)/nk3 + DBLE(k3)/2/nk3
         end do
      end do
   end do
@@ -151,13 +151,13 @@ subroutine tetrahedra ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
   ! INPUT:
   integer nks, nsym, s(3,3,48), npk, k1, k2, k3, nk1, nk2, nk3, ntetra
   logical minus_q
-  real(kind=DP) :: at(3,3), bg(3,3), xk(3,npk), wk(npk)
+  real(DP) :: at(3,3), bg(3,3), xk(3,npk), wk(npk)
   ! OUTPUT:
   integer tetra(4,ntetra)
   ! LOCAL:
-  real(kind=DP) :: xkr(3), deltap(3), deltam(3)
-  real(kind=DP), parameter:: eps=1.0d-5
-  real(kind=DP), allocatable :: xkg(:,:)
+  real(DP) :: xkr(3), deltap(3), deltam(3)
+  real(DP), parameter:: eps=1.0d-5
+  real(DP), allocatable :: xkg(:,:)
   integer :: nkr, i,j,k, ns, n, nk, ip1,jp1,kp1, &
        n1,n2,n3,n4,n5,n6,n7,n8
   integer, allocatable:: equiv(:)
@@ -175,9 +175,9 @@ subroutine tetrahedra ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
            !  this is nothing but consecutive ordering
            n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
            !  xkg are the components of the complete grid in crystal axis
-           xkg(1,n) = dble(i-1)/nk1 + dble(k1)/2/nk1
-           xkg(2,n) = dble(j-1)/nk2 + dble(k2)/2/nk2
-           xkg(3,n) = dble(k-1)/nk3 + dble(k3)/2/nk3
+           xkg(1,n) = DBLE(i-1)/nk1 + DBLE(k1)/2/nk1
+           xkg(2,n) = DBLE(j-1)/nk2 + DBLE(k2)/2/nk2
+           xkg(3,n) = DBLE(k-1)/nk3 + DBLE(k3)/2/nk3
         end do
      end do
   end do

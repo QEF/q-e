@@ -29,7 +29,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! input: first non-zero G vector
   logical :: gamma_only
 
-  real(kind=DP) :: factor, tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
+  real(DP) :: factor, tau (3, nat), g (3, ngm), gg (ngm), zv (ntyp), &
        at (3, 3), bg (3, 3), omega, gcutm, alat
   ! input: the coordinates of the atoms
   ! input: the G vectors
@@ -41,16 +41,16 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! input: cut-off of g vectors
   ! input: the edge of the cell
   !
-  complex(kind=DP) :: strf (ngm, ntyp)
+  complex(DP) :: strf (ngm, ntyp)
   ! input: the structure factor on the potential
   !
-  real(kind=DP) :: forceion (3, nat)
+  real(DP) :: forceion (3, nat)
   ! output: the ewald part of the forces
   !
   integer, parameter :: mxr=50
   ! the maximum number of R vectors
 
-  real(kind=DP), parameter :: e2=2.d0, tpi = 2.d0 * 3.14159265358979d0
+  real(DP), parameter :: e2=2.d0, tpi = 2.d0 * 3.14159265358979d0
   ! the square of the electron charge
   ! two times pi
 
@@ -63,7 +63,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! the number of R vectors for real space su
   ! counter on polarization
 
-  real(kind=DP) :: sumnb, arg, tpiba2, alpha, dtau (3), r (3, mxr), &
+  real(DP) :: sumnb, arg, tpiba2, alpha, dtau (3), r (3, mxr), &
        r2 (mxr), erfc, rmax, rr, charge, upperbound, fact
   ! auxiliary variable for speed
   ! the argument of the exponential
@@ -78,7 +78,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! the total charge
   ! used to determine alpha
 
-  complex(kind=DP), allocatable :: aux (:)
+  complex(DP), allocatable :: aux (:)
   ! auxiliary space
   !
   forceion(:,:) = 0.d0

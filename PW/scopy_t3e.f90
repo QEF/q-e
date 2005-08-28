@@ -17,8 +17,8 @@ subroutine scopy_t3e (n, a, ia, b, ib)
   integer,  intent (in) ::n
   integer,  intent (in) ::ia
   integer,  intent (in) ::ib
-  real(kind=DP) :: b (n)
-  real(kind=DP) :: a (n)
+  real(DP) :: b (n)
+  real(DP) :: a (n)
 
   integer :: lputp
   include "mpp/shmem.fh"

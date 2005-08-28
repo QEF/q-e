@@ -75,8 +75,8 @@ MODULE path_base
         ! ... specify the calling program
       !
       INTEGER                     :: i
-      REAL (KIND=DP)              :: inter_image_dist, k_ratio
-      REAL (KIND=DP), ALLOCATABLE :: d_R(:,:), image_spacing(:)
+      REAL (DP)              :: inter_image_dist, k_ratio
+      REAL (DP), ALLOCATABLE :: d_R(:,:), image_spacing(:)
       CHARACTER (LEN=20)          :: num_of_images_char, nstep_path_char
       LOGICAL                     :: lexists
       !
@@ -385,7 +385,7 @@ MODULE path_base
           !
           IMPLICIT NONE
           !
-          REAL (KIND=DP) :: s
+          REAL (DP) :: s
           INTEGER        :: i, j
           !
           ! ... linear interpolation
@@ -471,9 +471,9 @@ MODULE path_base
       !
       ! ... local variables
       !
-      REAL (KIND=DP) :: V_previous, V_actual, V_next
-      REAL (KIND=DP) :: abs_next, abs_previous
-      REAL (KIND=DP) :: delta_V_max, delta_V_min
+      REAL (DP) :: V_previous, V_actual, V_next
+      REAL (DP) :: abs_next, abs_previous
+      REAL (DP) :: delta_V_max, delta_V_min
       !
       !
       ! ... NEB definition of the tangent
@@ -550,8 +550,8 @@ MODULE path_base
       ! ... local variables
       !
       INTEGER       :: i
-      REAL(KIND=DP) :: delta_E
-      REAL(KIND=DP) :: k_sum, k_diff
+      REAL(DP) :: delta_E
+      REAL(DP) :: k_sum, k_diff
       !
       !
       ! ... standard neb ( with springs )
@@ -647,7 +647,7 @@ MODULE path_base
       !
       INTEGER,        INTENT(IN) :: image
       INTEGER                    :: n
-      REAL (KIND=DP)             :: s, pi_n
+      REAL (DP)             :: s, pi_n
       !
       !
       s = DBLE( image - 1 ) / DBLE( num_of_images - 1 )
@@ -773,11 +773,11 @@ MODULE path_base
       !
       IMPLICIT NONE
       !
-      REAL (KIND=DP), OPTIONAL, INTENT(OUT) :: err_out
+      REAL (DP), OPTIONAL, INTENT(OUT) :: err_out
       !
       INTEGER        :: i, n
       INTEGER        :: N_in, N_fin, free_me, num_of_scf_images
-      REAL (KIND=DP) :: err_max
+      REAL (DP) :: err_max
       !
       !
       IF ( first_last_opt ) THEN
@@ -860,11 +860,11 @@ MODULE path_base
       !
       IMPLICIT NONE
       !
-      REAL (KIND=DP) :: gaussian_vect(dim)
-      REAL (KIND=DP) :: x1, x2, w, coeff
+      REAL (DP) :: gaussian_vect(dim)
+      REAL (DP) :: x1, x2, w, coeff
       INTEGER        :: i
       !
-      REAL (KIND=DP), EXTERNAL :: rndm
+      REAL (DP), EXTERNAL :: rndm
       !
       !
       coeff = SQRT( 2.D0 * temp_req )
@@ -1028,7 +1028,7 @@ MODULE path_base
       !
       ! ... external functions
       !
-      REAL (KIND=DP), EXTERNAL :: get_clock
+      REAL (DP), EXTERNAL :: get_clock
       !
       !
       conv_path = .FALSE.
@@ -1298,7 +1298,7 @@ MODULE path_base
       IMPLICIT NONE
       !
       LOGICAL                    :: check_exit
-      REAL (KIND=DP), INTENT(IN) :: err_max
+      REAL (DP), INTENT(IN) :: err_max
       LOGICAL                    :: exit_condition
       !
       !

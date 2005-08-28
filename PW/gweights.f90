@@ -15,12 +15,12 @@ subroutine gweights (nks, wk, nbnd, nelec, degauss, ngauss, &
   implicit none
   !
   integer, intent(in) :: nks, nbnd, ngauss
-  real(kind=DP), intent(in) :: wk (nks), et (nbnd, nks), nelec, degauss
-  real(kind=DP), intent(out) :: wg (nbnd, nks), ef, demet
+  real(DP), intent(in) :: wk (nks), et (nbnd, nks), nelec, degauss
+  real(DP), intent(out) :: wg (nbnd, nks), ef, demet
   integer, intent(in) :: is, isk(nks)
   !
   integer :: kpoint, ibnd
-  real(kind=DP) , external :: wgauss, w1gauss
+  real(DP) , external :: wgauss, w1gauss
 
   ! Calculate the Fermi energy ef
 

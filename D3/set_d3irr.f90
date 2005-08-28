@@ -36,10 +36,10 @@ subroutine set_d3irr
   ! work array
   ! work array
 
-  real (kind = dp) :: zero (3), w_gi (3, 48), w_gimq (3)
+  real (DP) :: zero (3), w_gi (3, 48), w_gimq (3)
   ! a null vector
   ! work array
-  complex (kind = dp) :: w_tmq (max_irr_dim, max_irr_dim, 3 * nat)
+  complex (DP) :: w_tmq (max_irr_dim, max_irr_dim, 3 * nat)
   ! work array
 
   logical :: w_minus_q

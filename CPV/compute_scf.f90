@@ -35,14 +35,14 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   LOGICAL, INTENT(OUT)  :: stat
   ! 
   INTEGER                     :: image
-  REAL (KIND=DP)              :: tcpu 
+  REAL (DP)              :: tcpu 
   CHARACTER (LEN=256)         :: outdir_saved
   LOGICAL                     :: file_exists, opnd, tstop 
-  REAL (KIND=DP), ALLOCATABLE :: tau(:,:)
-  REAL (KIND=DP), ALLOCATABLE :: fion(:,:)
-  REAL (KIND=DP)              :: etot
+  REAL (DP), ALLOCATABLE :: tau(:,:)
+  REAL (DP), ALLOCATABLE :: fion(:,:)
+  REAL (DP)              :: etot
   INTEGER                     :: ia, is, isa, ipos
-  REAL (KIND=DP), EXTERNAL    :: get_clock
+  REAL (DP), EXTERNAL    :: get_clock
   !
   !
   stat = .TRUE.

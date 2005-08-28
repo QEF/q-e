@@ -12,7 +12,7 @@ Module ifconstants
   ! All variables read from file that need dynamical allocation
   !
   USE kinds, ONLY: DP
-  REAL(KIND=DP), ALLOCATABLE :: frc(:,:,:,:,:,:,:), tau_blk(:,:),  zeu(:,:,:)
+  REAL(DP), ALLOCATABLE :: frc(:,:,:,:,:,:,:), tau_blk(:,:),  zeu(:,:,:)
   ! frc : interatomic force constants in real space
   ! tau_blk : atomic positions for the original cell
   ! zeu : effective charges for the original cell
@@ -103,17 +103,17 @@ PROGRAM matdyn
   !
   INTEGER:: nax, nax_blk
   INTEGER, PARAMETER:: ntypx=10, nrwsx=200
-  REAL(KIND=DP), PARAMETER :: eps=1.0e-6,  rydcm1 = 13.6058*8065.5, &
+  REAL(DP), PARAMETER :: eps=1.0e-6,  rydcm1 = 13.6058*8065.5, &
        amconv = 1.66042e-24/9.1095e-28*0.5
   INTEGER :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ntetra, ibrav
   CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos
   CHARACTER(LEN=10)  :: asr
   LOGICAL :: dos, has_zstar
-  COMPLEX(KIND=DP), ALLOCATABLE :: dyn(:,:,:,:), dyn_blk(:,:,:,:)
-  COMPLEX(KIND=DP), ALLOCATABLE :: z(:,:)
-  REAL(KIND=DP), ALLOCATABLE:: tau(:,:), q(:,:), w2(:,:), freq(:,:)
+  COMPLEX(DP), ALLOCATABLE :: dyn(:,:,:,:), dyn_blk(:,:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: z(:,:)
+  REAL(DP), ALLOCATABLE:: tau(:,:), q(:,:), w2(:,:), freq(:,:)
   INTEGER, ALLOCATABLE:: tetra(:,:), ityp(:), itau_blk(:)
-  REAL(KIND=DP) :: at(3,3), bg(3,3), omega,alat, &! cell parameters and volume
+  REAL(DP) :: at(3,3), bg(3,3), omega,alat, &! cell parameters and volume
                   at_blk(3,3), bg_blk(3,3),  &! original cell
                   omega_blk,                 &! original cell volume
                   epsil(3,3),                &! dielectric tensor
@@ -128,7 +128,7 @@ PROGRAM matdyn
   !
   LOGICAL :: readtau
   !
-  REAL(KIND=DP) :: qhat(3), qh, deltaE, Emin, Emax, E, DOSofE(1)
+  REAL(DP) :: qhat(3), qh, deltaE, Emin, Emax, E, DOSofE(1)
   INTEGER :: n, i, j, it, nq, nqx, na, nb, ndos, iout
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, at, dos, deltaE,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau
@@ -402,12 +402,12 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   ! I/O variable
   CHARACTER(LEN=256) flfrc
   INTEGER ibrav, nr1,nr2,nr3,nat, ntyp
-  REAL(KIND=DP) alat, at(3,3), epsil(3,3)
+  REAL(DP) alat, at(3,3), epsil(3,3)
   LOGICAL has_zstar
   ! local variables
   INTEGER i, j, na, nb, m1,m2,m3
   INTEGER ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
-  REAL(KIND=DP) amass(ntyp), amass_from_file, celldm(6), omega
+  REAL(DP) amass(ntyp), amass_from_file, celldm(6), omega
   INTEGER nt
   CHARACTER(LEN=3) atm
   !
@@ -494,12 +494,12 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws)
   IMPLICIT NONE
   INTEGER nr1, nr2, nr3, nat, n1, n2, n3, &
           ipol, jpol, na, nb, m1, m2, m3, nint, i,j, nrws
-  COMPLEX(KIND=DP) dyn(3,3,nat,nat)
-  REAL(KIND=DP) frc(nr1,nr2,nr3,3,3,nat,nat), tau(3,nat), q(3), arg, &
+  COMPLEX(DP) dyn(3,3,nat,nat)
+  REAL(DP) frc(nr1,nr2,nr3,3,3,nat,nat), tau(3,nat), q(3), arg, &
                at(3,3), bg(3,3), r(3), weight, r_ws(3),  &
                total_weight, rws(0:3,nrws)
-  REAL(KIND=DP), PARAMETER:: tpi = 2.0*3.14159265358979d0
-  REAL(KIND=DP), EXTERNAL :: wsweight
+  REAL(DP), PARAMETER:: tpi = 2.0*3.14159265358979d0
+  REAL(DP), EXTERNAL :: wsweight
   !
   DO na=1, nat
      DO nb=1, nat
@@ -562,25 +562,25 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
   USE kinds,      ONLY : DP
   !
   IMPLICIT NONE
-  REAL(KIND=DP), PARAMETER :: tpi=2.d0*3.14159265358979d0
+  REAL(DP), PARAMETER :: tpi=2.d0*3.14159265358979d0
   !
   ! I/O variables
   !
   INTEGER:: nr1, nr2, nr3, nat, nat_blk, nsc, nrws, itau_blk(nat)
-  REAL(KIND=DP) :: q(3), tau(3,nat), at(3,3), bg(3,3), alat,      &
+  REAL(DP) :: q(3), tau(3,nat), at(3,3), bg(3,3), alat,      &
                   epsil(3,3), zeu(3,3,nat_blk), rws(0:3,nrws),   &
                   frc(nr1,nr2,nr3,3,3,nat_blk,nat_blk)
-  REAL(KIND=DP) :: tau_blk(3,nat_blk), at_blk(3,3), bg_blk(3,3), omega_blk
-  COMPLEX(KIND=DP) dyn_blk(3,3,nat_blk,nat_blk)
-  COMPLEX(KIND=DP) ::  dyn(3,3,nat,nat)
+  REAL(DP) :: tau_blk(3,nat_blk), at_blk(3,3), bg_blk(3,3), omega_blk
+  COMPLEX(DP) dyn_blk(3,3,nat_blk,nat_blk)
+  COMPLEX(DP) ::  dyn(3,3,nat,nat)
   LOGICAL has_zstar
   !
   ! local variables
   !
-  REAL(KIND=DP) :: arg
-  COMPLEX(KIND=DP) :: cfac(nat)
+  REAL(DP) :: arg
+  COMPLEX(DP) :: cfac(nat)
   INTEGER :: i,j,k, na,nb, na_blk, nb_blk, iq
-  REAL(KIND=DP) qp(3), qbid(3,nsc) ! automatic array
+  REAL(DP) qp(3), qbid(3,nsc) ! automatic array
   !
   !
   CALL q_gen(nsc,qbid,at_blk,bg_blk,at,bg)
@@ -640,12 +640,12 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   IMPLICIT NONE
   CHARACTER (LEN=10) :: asr
   INTEGER :: nr1, nr2, nr3, nat, ibrav
-  REAL(KIND=DP) :: frc(nr1,nr2,nr3,3,3,nat,nat), zeu(3,3,nat),tau(3,nat)
+  REAL(DP) :: frc(nr1,nr2,nr3,3,3,nat,nat), zeu(3,3,nat),tau(3,nat)
   !
   INTEGER :: axis, n, i, j, na, nb, n1,n2,n3, m,p,k,l,q,r, i1,j1,na1
-  REAL(KIND=DP) :: frc_new(nr1,nr2,nr3,3,3,nat,nat), zeu_new(3,3,nat)
+  REAL(DP) :: frc_new(nr1,nr2,nr3,3,3,nat,nat), zeu_new(3,3,nat)
   type vector
-     real(kind=DP),pointer :: vec(:,:,:,:,:,:,:)
+     real(DP),pointer :: vec(:,:,:,:,:,:,:)
   end type vector
   ! 
   type (vector) u(6*3*nat)
@@ -656,24 +656,24 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   ! n_less = number of such vectors, i_less = temporary parameter
   !
   integer ind_v(9*nat*nat*nr1*nr2*nr3,2,7)
-  real(kind=DP) v(9*nat*nat*nr1*nr2*nr3,2)
+  real(DP) v(9*nat*nat*nr1*nr2*nr3,2)
   ! These are the "vectors" associated with symmetry conditions, coded by 
   ! indicating the positions (i.e. the seven indices) of the non-zero elements (there
   ! should be only 2 of them) and the value of that element. We do so in order
   ! to limit the amount of memory used. 
   !
-  real(kind=DP) w(nr1,nr2,nr3,3,3,nat,nat), x(nr1,nr2,nr3,3,3,nat,nat)
+  real(DP) w(nr1,nr2,nr3,3,3,nat,nat), x(nr1,nr2,nr3,3,3,nat,nat)
   ! temporary vectors and parameters  
-  real(kind=DP) :: scal,norm2, sum
+  real(DP) :: scal,norm2, sum
   !
-  real(kind=DP) zeu_u(6*3,3,3,nat)
+  real(DP) zeu_u(6*3,3,3,nat)
   ! These are the "vectors" associated with the sum rules on effective charges
   !
   integer zeu_less(6*3),nzeu_less,izeu_less
   ! indices of the vectors zeu_u that are not independent to the preceding ones,
   ! nzeu_less = number of such vectors, izeu_less = temporary parameter
   !
-  real(kind=DP) zeu_w(3,3,nat), zeu_x(3,3,nat)
+  real(DP) zeu_w(3,3,nat), zeu_x(3,3,nat)
   ! temporary vectors
 
 
@@ -1133,9 +1133,9 @@ subroutine sp_zeu(zeu_u,zeu_v,nat,scal)
   USE kinds, ONLY: DP
   implicit none
   integer i,j,na,nat
-  real(kind=DP) zeu_u(3,3,nat)
-  real(kind=DP) zeu_v(3,3,nat)
-  real(kind=DP) scal  
+  real(DP) zeu_u(3,3,nat)
+  real(DP) zeu_v(3,3,nat)
+  real(DP) scal  
   !
   !
   scal=0.0d0
@@ -1162,9 +1162,9 @@ subroutine sp1(u,v,nr1,nr2,nr3,nat,scal)
   USE kinds, ONLY: DP
   implicit none
   integer nr1,nr2,nr3,i,j,na,nb,n1,n2,n3,nat
-  real(kind=DP) u(nr1,nr2,nr3,3,3,nat,nat)
-  real(kind=DP) v(nr1,nr2,nr3,3,3,nat,nat)
-  real(kind=DP) scal  
+  real(DP) u(nr1,nr2,nr3,3,3,nat,nat)
+  real(DP) v(nr1,nr2,nr3,3,3,nat,nat)
+  real(DP) scal  
   !
   !
   scal=0.0d0
@@ -1200,10 +1200,10 @@ subroutine sp2(u,v,ind_v,nr1,nr2,nr3,nat,scal)
   USE kinds, ONLY: DP
   implicit none
   integer nr1,nr2,nr3,i,nat
-  real(kind=DP) u(nr1,nr2,nr3,3,3,nat,nat)
+  real(DP) u(nr1,nr2,nr3,3,3,nat,nat)
   integer ind_v(2,7)
-  real(kind=DP) v(2)
-  real(kind=DP) scal  
+  real(DP) v(2)
+  real(DP) scal  
   !
   !
   scal=0.0d0
@@ -1228,9 +1228,9 @@ subroutine sp3(u,v,i,na,nr1,nr2,nr3,nat,scal)
   USE kinds, ONLY: DP
   implicit none
   integer nr1,nr2,nr3,i,j,na,nb,n1,n2,n3,nat
-  real(kind=DP) u(nr1,nr2,nr3,3,3,nat,nat)
-  real(kind=DP) v(nr1,nr2,nr3,3,3,nat,nat)
-  real(kind=DP) scal  
+  real(DP) u(nr1,nr2,nr3,3,3,nat,nat)
+  real(DP) v(nr1,nr2,nr3,3,3,nat,nat)
+  real(DP) scal  
   !
   !
   scal=0.0d0
@@ -1260,13 +1260,13 @@ SUBROUTINE q_gen(nsc,qbid,at_blk,bg_blk,at,bg)
   !
   IMPLICIT NONE
   INTEGER :: nsc
-  REAL(KIND=DP) qbid(3,nsc), at_blk(3,3), bg_blk(3,3), at(3,3), bg(3,3)
+  REAL(DP) qbid(3,nsc), at_blk(3,3), bg_blk(3,3), at(3,3), bg(3,3)
   !
   INTEGER, PARAMETER:: nr1=4, nr2=4, nr3=4, &
                        nrm=(2*nr1+1)*(2*nr2+1)*(2*nr3+1)
-  REAL(KIND=DP), PARAMETER:: eps=1.0e-7
+  REAL(DP), PARAMETER:: eps=1.0e-7
   INTEGER :: i, j, k,i1, i2, i3, idum(nrm), iq
-  REAL(KIND=DP) :: qnorm(nrm), qbd(3,nrm) ,qwork(3), delta
+  REAL(DP) :: qnorm(nrm), qbd(3,nrm) ,qwork(3), delta
   LOGICAL lbho
   !
   i = 0
@@ -1344,10 +1344,10 @@ SUBROUTINE check_at(at,bg_blk,alat,omega)
   !
   IMPLICIT NONE
   !
-  REAL(KIND=DP) :: at(3,3), bg_blk(3,3), alat, omega
-  REAL(KIND=DP) :: work(3,3)
+  REAL(DP) :: at(3,3), bg_blk(3,3), alat, omega
+  REAL(DP) :: work(3,3)
   INTEGER :: i,j
-  REAL(KIND=DP), PARAMETER :: small=1.d-6
+  REAL(DP), PARAMETER :: small=1.d-6
   !
   work(:,:) = at(:,:)
   CALL cryst_to_cart(3,work,bg_blk,-1)
@@ -1377,11 +1377,11 @@ SUBROUTINE set_tau (nat, nat_blk, at, at_blk, tau, tau_blk, &
   !
   IMPLICIT NONE
   INTEGER nat, nat_blk,ityp(nat),ityp_blk(nat_blk), itau_blk(nat)
-  REAL(KIND=DP) at(3,3),at_blk(3,3),tau(3,nat),tau_blk(3,nat_blk)
+  REAL(DP) at(3,3),at_blk(3,3),tau(3,nat),tau_blk(3,nat_blk)
   !
-  REAL(KIND=DP) bg(3,3), r(3) ! work vectors
+  REAL(DP) bg(3,3), r(3) ! work vectors
   INTEGER i,i1,i2,i3,na,na_blk
-  REAL(KIND=DP) small
+  REAL(DP) small
   INTEGER NN1,NN2,NN3
   PARAMETER (NN1=8, NN2=8, NN3=8, small=1.d-8)
   !
@@ -1433,12 +1433,12 @@ SUBROUTINE read_tau &
   IMPLICIT NONE
   !
   INTEGER nat, nat_blk, ntyp, ityp(nat),itau_blk(nat)
-  REAL(KIND=DP) bg_blk(3,3),tau(3,nat),tau_blk(3,nat_blk)
+  REAL(DP) bg_blk(3,3),tau(3,nat),tau_blk(3,nat_blk)
   !
-  REAL(KIND=DP) r(3) ! work vectors
+  REAL(DP) r(3) ! work vectors
   INTEGER i,na,na_blk
   !
-  REAL(KIND=DP) small
+  REAL(DP) small
   PARAMETER ( small = 1.d-6 )
   !
   DO na=1,nat
@@ -1473,7 +1473,7 @@ SUBROUTINE write_tau(fltau,nat,tau,ityp)
   IMPLICIT NONE
   !
   INTEGER nat, ityp(nat)
-  REAL(KIND=DP) tau(3,nat)
+  REAL(DP) tau(3,nat)
   CHARACTER(LEN=*) fltau
   !
   INTEGER i,na
@@ -1497,14 +1497,14 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
   IMPLICIT NONE
   ! input 
   INTEGER :: ibrav, nat, nk1, nk2, nk3, ntetra, ityp(*)
-  REAL(KIND=DP) :: at(3,3), bg(3,3), tau(3,nat)
+  REAL(DP) :: at(3,3), bg(3,3), tau(3,nat)
   ! output 
   INTEGER :: nqx, nq, tetra(4,ntetra)
-  REAL(KIND=DP) :: q(3,nqx)
+  REAL(DP) :: q(3,nqx)
   ! local
   INTEGER :: nrot, nsym, s(3,3,48), ftau(3,48), irt(48,nat)
   LOGICAL :: minus_q, invsym
-  REAL(KIND=DP) :: xqq(3), wk(nqx), mdum(3,nat)
+  REAL(DP) :: xqq(3), wk(nqx), mdum(3,nat)
   CHARACTER(LEN=45)   ::  sname(48)
   !
   xqq (:) =0.d0

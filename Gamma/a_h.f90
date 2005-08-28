@@ -26,12 +26,12 @@ subroutine A_h(e,h,ah)
   !
   implicit none
   integer :: j, jkb, ibnd, na,nt,ih
-  real(kind=DP) :: e(nbnd)
-  complex(kind=DP) :: h(npwx,nbnd), ah(npwx,nbnd)
+  real(DP) :: e(nbnd)
+  complex(DP) :: h(npwx,nbnd), ah(npwx,nbnd)
   !
-  complex(kind=DP) :: fp, fm
-  complex(kind=DP), pointer :: dpsic(:), drhoc(:), dvxc(:)
-  real(kind=DP), pointer  :: dv(:), drho(:)
+  complex(DP) :: fp, fm
+  complex(DP), pointer :: dpsic(:), drhoc(:), dvxc(:)
+  real(DP), pointer  :: dv(:), drho(:)
   !
   call start_clock('a_h')
   !

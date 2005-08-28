@@ -27,11 +27,11 @@ SUBROUTINE pw_gemm( sum_over_nodes, na, nb, n, a, lda, b, ldb, c, ldc )
   !
   INTEGER          :: na, nb, n, lda, ldb, ldc
   CHARACTER(LEN=1) :: sum_over_nodes
-  COMPLEX(KIND=DP) :: a(lda,na), b(ldb,nb)
+  COMPLEX(DP) :: a(lda,na), b(ldb,nb)
   !
   ! ... output
   !
-  REAL(KIND=DP)    :: c(ldc,nb)
+  REAL(DP)    :: c(ldc,nb)
   !
   !
   IF ( na == 0 .OR. nb == 0 ) RETURN

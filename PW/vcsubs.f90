@@ -54,7 +54,7 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
   USE kinds
   implicit none
   !
-  real(kind=DP) :: pi, twopi, zero, um, dois, tres, quatro, seis
+  real(DP) :: pi, twopi, zero, um, dois, tres, quatro, seis
   parameter (pi = 3.141592653589793d0, twopi = 2.0d0 * pi)
   parameter (zero = 0.0d0, um = 1.0d0, dois = 2.0d0, tres = 3.0d0, &
        quatro = 4.0d0, seis = 6.0d0)
@@ -63,21 +63,21 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
   !
 
   integer :: mxdatm, mxdtyp
-  real(kind=DP) :: avec (3, 3), avecd (3, 3), avec2d (3, 3), avec2di (3, &
+  real(DP) :: avec (3, 3), avecd (3, 3), avec2d (3, 3), avec2di (3, &
        3), aveci (3, 3), g (3, 3), gm1 (3, 3), gd (3, 3), sigma (3, 3), &
        sigav (3, 3), gmgd (3, 3), avec0 (3, 3), sig0 (3, 3), avmod (3), &
        theta (3, 3), pim (3, 3), piml (3, 3), frr (3, 3)
   !
   integer :: ityp (mxdatm), natot
-  real(kind=DP) :: atmass (mxdtyp), rat (3, mxdatm), ratd (3, mxdatm), &
+  real(DP) :: atmass (mxdtyp), rat (3, mxdatm), ratd (3, mxdatm), &
        rati (3, mxdatm), rat2d (3, mxdatm), rat2di (3, mxdatm)
   !
-  real(kind=DP) :: force (3, mxdatm), d2 (3, 3)
+  real(DP) :: force (3, mxdatm), d2 (3, 3)
   !
-  real(kind=DP) :: vx2 (mxdtyp), vy2 (mxdtyp), vz2 (mxdtyp)
-  real(kind=DP) :: rms (mxdtyp), vmean (mxdtyp), ekin (mxdtyp)
+  real(DP) :: vx2 (mxdtyp), vy2 (mxdtyp), vz2 (mxdtyp)
+  real(DP) :: rms (mxdtyp), vmean (mxdtyp), ekin (mxdtyp)
 
-  real(kind=DP) :: ptmass, boltz, ekint, ut, factem, etot, tr, ekk, etl, &
+  real(DP) :: ptmass, boltz, ekint, ut, factem, etot, tr, ekk, etl, &
        cmass, uta, enew, v0, eka, utl, ekla, eta, dt, vcell, p, press, &
        temp, ww, pv
 
@@ -434,7 +434,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   USE constants, ONLY: eps16
   implicit none
   !
-  real(kind=DP) :: pi, twopi, zero, um, dois, tres, quatro, seis
+  real(DP) :: pi, twopi, zero, um, dois, tres, quatro, seis
   parameter (pi = 3.141592653589793d0, twopi = 2.0d0 * pi)
   parameter (zero = 0.0d0, um = 1.0d0, dois = 2.0d0, tres = 3.0d0, &
        quatro = 4.0d0, seis = 6.0d0)
@@ -444,10 +444,10 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   integer :: mxdatm, mxdtyp
 
   integer :: ityp (mxdatm)
-  real(kind=DP) :: avec (3, 3), rat (3, mxdatm)
+  real(DP) :: avec (3, 3), rat (3, mxdatm)
   !
 
-  real(kind=DP) :: atmass (mxdtyp), ratd (3, mxdatm), rat2d (3, mxdatm), &
+  real(DP) :: atmass (mxdtyp), ratd (3, mxdatm), rat2d (3, mxdatm), &
        avecd (3, 3), avec2d (3, 3), g (3, 3), gm1 (3, 3), gd (3, 3), &
        sigma (3, 3), avec0 (3, 3), sig0 (3, 3), avmod (3), theta (3, 3), &
        pim (3, 3), piml (3, 3), frr (3, 3), rati (3, mxdatm), rat2di (3, &
@@ -456,13 +456,13 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   integer :: i, j, k, l, m, na, nt, nst, natot, nzero, ntimes, &
        ntcheck, ntype, i_update, n_update
 
-  real(kind=DP) :: factem, avpv, boltz, ptmass, pv, ww, ts, xx, alpha, x, &
+  real(DP) :: factem, avpv, boltz, ptmass, pv, ww, ts, xx, alpha, x, &
        tr, tnew, tolp, temp, avk, avu, ekk, avp, ack, acu, acpv, acp, dt, &
        p, enew, v0, vcell, press, ut, etl, etot, ekint, utl, uta, cmass, &
        eka, ekla, eta
   logical :: symmetrize_stress
   !
-  real(kind=DP) :: force (3, mxdatm), d2 (3, 3)
+  real(DP) :: force (3, mxdatm), d2 (3, 3)
   !
   factem = 1.57889d5
   boltz = um / factem
@@ -754,17 +754,17 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   ack = ack + ekint
   acp = acp + p
   acpv = acpv + pv
-  avu = acu / dble (nzero)
-  avk = ack / dble (nzero)
-  avp = acp / dble (nzero)
-  avpv = acpv / dble (nzero)
+  avu = acu / DBLE (nzero)
+  avk = ack / DBLE (nzero)
+  avp = acp / DBLE (nzero)
+  avpv = acpv / DBLE (nzero)
   !
   !       choose # of degrees of freedom and calculate tnew
   !
   if (calc (1:1) .ne.'m') then
-     tnew = dois / tres / dble (natot + 1) * avk / boltz
+     tnew = dois / tres / DBLE (natot + 1) * avk / boltz
   else
-     tnew = dois / tres / dble (natot - 1) * avk / boltz
+     tnew = dois / tres / DBLE (natot - 1) * avk / boltz
   endif
   !
   !       careful with zero temperature
@@ -948,10 +948,10 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
   !
 
   integer :: mxdtyp, mxdatm
-  real(kind=DP) :: atmass (mxdtyp)
-  real(kind=DP) :: v (3, mxdatm), p (3)
-  real(kind=DP) :: vx2 (mxdtyp), vy2 (mxdtyp), vz2 (mxdtyp)
-  real(kind=DP) :: rms (mxdtyp), vmean (mxdtyp), ekin (mxdtyp)
+  real(DP) :: atmass (mxdtyp)
+  real(DP) :: v (3, mxdatm), p (3)
+  real(DP) :: vx2 (mxdtyp), vy2 (mxdtyp), vz2 (mxdtyp)
+  real(DP) :: rms (mxdtyp), vmean (mxdtyp), ekin (mxdtyp)
   !
 
   integer :: ityp (mxdatm), natot
@@ -959,10 +959,10 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
   integer :: na, nt, j, k, ntype, iseed, natom
 
 
-  real(kind=DP) :: ran3, vfac, sig, tfac, vr, atemp, eps, temp, ekint, t, &
+  real(DP) :: ran3, vfac, sig, tfac, vr, atemp, eps, temp, ekint, t, &
        factem, ptmass, boltz
-  real(kind=DP) :: b0, b1, c0, c1
-  real(kind=DP) :: zero, um, dois, tres
+  real(DP) :: b0, b1, c0, c1
+  real(DP) :: zero, um, dois, tres
   data b0, b1, c0, c1 / 2.30753d0, 0.27061d0, 0.99229d0, 0.04481d0 /
   data zero, um, dois, tres / 0.d0, 1.d0, 2.d0, 3.0d0 /
   !
@@ -1037,9 +1037,9 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
               p (3) = p (3) + v (3, na)
            endif
         enddo
-        p (1) = p (1) / dble (natom)
-        p (2) = p (2) / dble (natom)
-        p (3) = p (3) / dble (natom)
+        p (1) = p (1) / DBLE (natom)
+        p (2) = p (2) / DBLE (natom)
+        p (3) = p (3) / DBLE (natom)
         !
         !       zero linear momentum for atom type nt
         !
@@ -1064,7 +1064,7 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
      !
      !     rescale velocities to give correct temperature
      !
-     atemp = dois * ekint / tres / dble (natot - 1) / boltz
+     atemp = dois * ekint / tres / DBLE (natot - 1) / boltz
      tfac = dsqrt (t / atemp)
      if (temp.lt.1d-14) tfac = zero
      !         WRITE( stdout,*) 'atemp = ',atemp,' k'
@@ -1093,12 +1093,12 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
         enddo
 
         if (natom.gt.0) then
-           vmean (nt) = vmean (nt) / dble (natom)
+           vmean (nt) = vmean (nt) / DBLE (natom)
            rms (nt) = dsqrt ( (vx2 (nt) + vy2 (nt) + vz2 (nt) ) /  &
-                      dble ( natom) )
-           vx2 (nt) = dsqrt (vx2 (nt) / dble (natom) )
-           vy2 (nt) = dsqrt (vy2 (nt) / dble (natom) )
-           vz2 (nt) = dsqrt (vz2 (nt) / dble (natom) )
+                      DBLE ( natom) )
+           vx2 (nt) = dsqrt (vx2 (nt) / DBLE (natom) )
+           vy2 (nt) = dsqrt (vy2 (nt) / DBLE (natom) )
+           vz2 (nt) = dsqrt (vz2 (nt) / DBLE (natom) )
         else
            vmean (nt) = zero
            rms (nt) = zero
@@ -1147,14 +1147,14 @@ subroutine sigp (avec, avecd, avec2d, sigma, vcell)
   USE kinds, only : DP
   implicit none
   !
-  real(kind=DP) :: avec (3, 3), avecd (3, 3), avec2d (3, 3), sigmap (3, &
+  real(DP) :: avec (3, 3), avecd (3, 3), avec2d (3, 3), sigmap (3, &
        3, 3, 3), sigmad (3, 3), sigma (3, 3), e (3, 3), fp (3, 3, 3, 3), &
        fd (3, 3), fm1 (3, 3), fm (3, 3), sm (3, 3), avint (3, 3), &
        vcell
   !
 
   integer :: i, j, k, l, m, n
-  real(kind=DP) :: zero, dois
+  real(DP) :: zero, dois
   parameter (zero = 0.d0, dois = 2.d0)
   !
   ! sigmap_ijkl = d sigma_ij / d h_kl
@@ -1305,15 +1305,15 @@ subroutine updg (avec, avecd, g, gd, gm1, gmgd, sigma, vcell)
   USE kinds, only : DP
   implicit none
   !
-  real(kind=DP) :: pi, twopi, eps, zero, um, dois, tres
+  real(DP) :: pi, twopi, eps, zero, um, dois, tres
   parameter (pi = 3.141592653589793e0, twopi = 2.0e0 * pi)
   parameter (eps = 1.0d-14)
   parameter (zero = 0.0d0, um = 1.0d0, dois = 2.0d0, tres = 3.0d0)
   !
-  real(kind=DP) :: avec (3, 3), avecd (3, 3), sigma (3, 3)
-  real(kind=DP) :: g (3, 3), gd (3, 3), gmgd (3, 3), gm1 (3, 3)
+  real(DP) :: avec (3, 3), avecd (3, 3), sigma (3, 3)
+  real(DP) :: g (3, 3), gd (3, 3), gmgd (3, 3), gm1 (3, 3)
 
-  real(kind=DP) :: vcell
+  real(DP) :: vcell
   integer :: i, j, m
   !
   !     compute the lattice wave-vectors/twopi and the cell volume
@@ -1396,10 +1396,10 @@ subroutine setg (avec, g)
   USE kinds, only : DP
   implicit none
   !
-  real(kind=DP) :: zero
+  real(DP) :: zero
   parameter (zero = 0.0d0)
   !
-  real(kind=DP) :: avec (3, 3), g (3, 3)
+  real(DP) :: avec (3, 3), g (3, 3)
   integer :: i, j, m
   !
   !     calculate g
@@ -1421,7 +1421,7 @@ subroutine setg (avec, g)
 end subroutine setg
 !*
 !*
-real(kind=8) function ran3 (idum)
+real(8) function ran3 (idum)
   USE kinds, only : DP
   implicit none
 
@@ -1429,7 +1429,7 @@ real(kind=8) function ran3 (idum)
   !         implicit real*4(m)
   !         parameter (mbig=4000000.,mseed=1618033.,mz=0.,fac=2.5e-7)
   integer :: mbig, mseed, mz
-  real(kind=DP) :: fac
+  real(DP) :: fac
   parameter (mbig = 1000000000, mseed = 161803398, mz = 0, fac = 1.d-9)
 
   integer :: ma (55), iff, k, inext, inextp, ii, mj, idum, i, mk

@@ -29,14 +29,14 @@ subroutine compute_dvloc (mode, dvlocin)
   integer :: mode
   ! input: the actual perturbation
 
-  complex(kind=DP) :: dvlocin (nrxxs)
+  complex(DP) :: dvlocin (nrxxs)
   ! output: the change of the local potential
   !
   !   And the local variables
   !
   integer :: na, nt, mu, ig, ibnd, ir
   ! counters
-  complex(kind=DP) :: gtau, gu, fact, u1, u2, u3, gu0
+  complex(DP) :: gtau, gu, fact, u1, u2, u3, gu0
   ! auxiliary variables
 
   call start_clock ('com_dvloc')

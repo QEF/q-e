@@ -19,10 +19,10 @@ subroutine dpsidpsidv
 
   implicit none
   integer :: ik, ikk, ikq, ibnd, jbnd, nu_i, nu_j, nu_z, nrec
-  real (kind = dp) :: wgauss, wga (nbnd), wgq (nbnd), w0gauss, w0g (nbnd), &
+  real (DP) :: wgauss, wga (nbnd), wgq (nbnd), w0gauss, w0g (nbnd), &
        deltae, wg1, wg2, wwg
-  complex (kind = dp) :: wrk, wrk0, ZDOTC
-  complex (kind = dp), allocatable :: dqpsi (:,:), ps1_ij (:,:), ps1_ji (:,:),&
+  complex (DP) :: wrk, wrk0, ZDOTC
+  complex (DP), allocatable :: dqpsi (:,:), ps1_ij (:,:), ps1_ji (:,:),&
        ps3_ij (:,:), ps2_ji (:,:), d3dyn1 (:,:,:), d3dyn2 (:,:,:),&
        d3dyn3 (:,:,:)
 

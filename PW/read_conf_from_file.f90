@@ -96,8 +96,8 @@ subroutine read_config_from_file()
 
   ! parameter indicating from where to restart
   integer :: nat_, ibrav_, ierr
-  real(kind=DP) :: alat_, at_(3,3)
-  real(kind=DP) :: tau_(3,nat)
+  real(DP) :: alat_, at_(3,3)
+  real(DP) :: tau_(3,nat)
   logical exst
 
   if (trim(startingconfig).ne.'file') return

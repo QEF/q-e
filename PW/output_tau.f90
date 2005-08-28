@@ -19,7 +19,7 @@ SUBROUTINE output_tau( plot_lattice )
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN)         :: plot_lattice
-  REAL (KIND=DP), ALLOCATABLE :: tau_out(:,:)
+  REAL (DP), ALLOCATABLE :: tau_out(:,:)
   INTEGER                     :: na, i, k
   !
   !

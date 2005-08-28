@@ -34,7 +34,7 @@ subroutine gridsetup_local (nproc, nprow, npcol)
   integer :: sqrtnp, i
   ! the maximum size to check
   ! counter
-  sqrtnp = int (sqrt (dble (nproc) ) + 1)
+  sqrtnp = int (sqrt (DBLE (nproc) ) + 1)
   do i = 1, sqrtnp
      if (mod (nproc, i) .eq.0) nprow = i
   enddo
@@ -73,7 +73,7 @@ subroutine eigen (n, aout, ldaout, a, desca, work)
   !     ..
   !     .. Array Arguments ..
   integer :: desca ( * )
-  complex (kind=8) :: aout (ldaout, * ), a ( * ), work ( * )
+  complex (8) :: aout (ldaout, * ), a ( * ), work ( * )
   !     ..
   !     .. Parameters ..
   integer :: block_cyclic_2d, csrc_, ctxt_, dlen_, dtype_, lld_, &

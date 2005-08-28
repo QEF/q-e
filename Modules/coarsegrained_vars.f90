@@ -17,13 +17,13 @@ MODULE coarsegrained_vars
   INTEGER, PARAMETER :: max_shake_iter = 5
   INTEGER, PARAMETER :: num_acc        = 8
   !
-  REAL (KIND=DP), PARAMETER :: fe_step     = 0.2D0
-  REAL (KIND=DP), PARAMETER :: fe_grad_thr = 1.D-4
+  REAL (DP), PARAMETER :: fe_step     = 0.2D0
+  REAL (DP), PARAMETER :: fe_grad_thr = 1.D-4
   !
-  REAL (KIND=DP), ALLOCATABLE :: dfe_acc(:,:)
-  REAL (KIND=DP), ALLOCATABLE :: fe_grad(:)
-  REAL (KIND=DP), ALLOCATABLE :: new_target(:)
-  REAL (KIND=DP), ALLOCATABLE :: to_target(:)
+  REAL (DP), ALLOCATABLE :: dfe_acc(:,:)
+  REAL (DP), ALLOCATABLE :: fe_grad(:)
+  REAL (DP), ALLOCATABLE :: new_target(:)
+  REAL (DP), ALLOCATABLE :: to_target(:)
   !
   CONTAINS
     !

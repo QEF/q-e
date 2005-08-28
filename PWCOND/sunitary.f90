@@ -18,9 +18,9 @@ implicit none
   integer ::  info, i, j, k
   integer ::  nchanl, &  ! number of channels in the left tip
               nchanr     !     ------------         right tip
-  real(kind=DP), parameter :: eps=1.d-4
-  real(kind=DP) :: raux, raux1
-  complex(kind=DP) ::   &
+  real(DP), parameter :: eps=1.d-4
+  real(DP) :: raux, raux1
+  complex(DP) ::   &
               s, smat(nchanl+nchanr, nchanl)    ! S matrix
 
   info = 0

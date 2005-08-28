@@ -15,10 +15,10 @@ subroutine find_coefficients &
   use kinds, only : DP
   implicit none
   integer ndm, lam, ipvt(6), ik
-  real(kind=dp):: vpot(ndm), psi(ndm), r(ndm), dx, energy, &
+  real(DP):: vpot(ndm), psi(ndm), r(ndm), dx, energy, &
        c(6), c2, amat(6,6), y(6), rc, aenorm
   integer i, info, n, nmax, ndiv
-  real(kind=dp):: c2o, dc2, newvalue, oldvalue, precision, &
+  real(DP):: c2o, dc2, newvalue, oldvalue, precision, &
        funz, rndm
   !
   do i = 1,6
@@ -83,7 +83,7 @@ subroutine fill_matrix(amat,rc,l)
   !
   use kinds, only : DP
   implicit none
-  real(kind=dp) :: amat(6,6),rc
+  real(DP) :: amat(6,6),rc
   integer :: l
   !      
   !     this routine fills the matrix with the coefficients taken
@@ -129,9 +129,9 @@ subroutine eval_coeff (r,psi,ik,l,energy,dx,vpot,y)
   use kinds, only : DP
   implicit none
   integer :: ik,l,lp1
-  real(kind=dp):: r(ik+3),psi(ik+3),vpot(ik+3),energy,dx,y(6)
-  real(kind=dp) p,dpp,d,vae,dvae,ddvae,rc,rc2,rc3
-  real(kind=dp)  deriv_7pts,deriv2_7pts
+  real(DP):: r(ik+3),psi(ik+3),vpot(ik+3),energy,dx,y(6)
+  real(DP) p,dpp,d,vae,dvae,ddvae,rc,rc2,rc3
+  real(DP)  deriv_7pts,deriv2_7pts
   external deriv_7pts,deriv2_7pts
   !
   !   evaluer p et p' ( dpp )
@@ -179,7 +179,7 @@ function deriv2_7pts(f,ik,rc,h)
   use kinds, only : DP
   implicit none
   integer :: a(7),n,nm,i,ik
-  real(kind=dp) :: f(ik+3),rc,h,sum,sum1,deriv_7pts,deriv2_7pts
+  real(DP) :: f(ik+3),rc,h,sum,sum1,deriv_7pts,deriv2_7pts
   !      coefficients for the formula in abramowitz & stegun p.914
   !      the formula is used for 7 points.
   data a/4,-54,540,-980,540,-54,4/   ! these are coefficients
@@ -210,7 +210,7 @@ function deriv_7pts(f,ik,rc,h)
   use kinds, only : DP
   implicit none
   integer :: a(7),n,ik,i
-  real(kind=dp) :: f(ik+3),rc,h,sum,deriv_7pts
+  real(DP) :: f(ik+3),rc,h,sum,deriv_7pts
   !      coefficients for the formula in abramowitz & stegun p.914
   data a/-12,108,-540,0,540,-108,12/
 
@@ -242,7 +242,7 @@ function funz(amat,ipvt,y,rc,ik,aenorm,x,c,c2,  &
   use kinds, only : DP
   implicit none
   integer :: ndm,lam,ipvt(6),ik,mesh,i,istart,info
-  real(kind=dp) :: funz, x, c(6), c2, amat(6,6), y(6), rc, aenorm, &
+  real(DP) :: funz, x, c(6), c2, amat(6,6), y(6), rc, aenorm, &
        r(ndm), dx, chip2, psnorm, f0, f1, f2
   external chip2
 
@@ -277,7 +277,7 @@ function chip2(c,c2,l,r)
   ! --------------------------------------------------------
   use kinds, only : DP
   implicit none
-  real(kind=dp):: chip2,c(6),c2,r,r2
+  real(DP):: chip2,c(6),c2,r,r2
   integer :: l
 
   r2 = r**2
@@ -299,8 +299,8 @@ function der3num(r,f,ik,nm,h)
   use kinds, only : DP
   implicit none
   integer :: nm, ik,i
-  real(kind=dp)::  r(nm),f(nm), y(7), h, deriv_7pts, deriv2_7pts
-  real(kind=dp) :: der3num
+  real(DP)::  r(nm),f(nm), y(7), h, deriv_7pts, deriv2_7pts
+  real(DP) :: der3num
 
   do i=1,7
      y(i) = deriv2_7pts(f,i+ik-4,r(i+ik-4),h)
@@ -317,7 +317,7 @@ function der4num(r,f,ik,nm,h)
   use kinds, only : DP
   implicit none
   integer:: nm,i,ik
-  real(kind=dp) :: der4num, r(nm),f(nm),y(7),h,deriv2_7pts
+  real(DP) :: der4num, r(nm),f(nm),y(7),h,deriv2_7pts
 
   do i=1,7
      y(i) = deriv2_7pts(f,i+ik-4,r(i+ik-4),h)
@@ -336,7 +336,7 @@ function der3an(l,c,c2,rc)
   use kinds, only : DP
   implicit none
   integer :: l
-  real(kind=dp):: c(6), c2, rc,pr,dexpr,d2expr,d3expr, der3an
+  real(DP):: c(6), c2, rc,pr,dexpr,d2expr,d3expr, der3an
   external pr,dexpr,d2expr,d3expr
 
   der3an= (l-1)*l*(l+1)*rc**(l-2) *exp(pr(c,c2,rc)) +     &
@@ -356,7 +356,7 @@ function der4an(l,c,c2,rc)
   use kinds, only : DP
   implicit none
   integer l
-  real(kind=dp):: c(6), c2, rc,pr,dexpr,d2expr,d3expr,d4expr,der4an
+  real(DP):: c(6), c2, rc,pr,dexpr,d2expr,d3expr,d4expr,der4an
   external pr,dexpr,d2expr,d3expr,d4expr
 
   der4an = (l-2)*(l-1)*l*(l+1)*rc**(l-3) * exp(pr(c,c2,rc)) +   &
@@ -375,7 +375,7 @@ function dexpr(c,c2,rc)
   !
   use kinds, only : DP
   implicit none
-  real(kind=dp) ::  c(6), c2, rc, pr, dpr, dexpr
+  real(DP) ::  c(6), c2, rc, pr, dpr, dexpr
   external pr, dpr
 
   dexpr= exp(pr(c,c2,rc)) * dpr(c,c2,rc)
@@ -390,7 +390,7 @@ function d2expr(c,c2,rc)
   !
   use kinds, only : DP
   implicit none
-  real(kind=dp) ::  c(6), c2, rc, pr, dpr, d2pr, d2expr
+  real(DP) ::  c(6), c2, rc, pr, dpr, d2pr, d2expr
   external pr, dpr, d2pr
 
   d2expr= exp(pr(c,c2,rc)) * ( dpr(c,c2,rc)**2+d2pr(c,c2,rc) )
@@ -405,7 +405,7 @@ function d3expr(c,c2,rc)
   !
   use kinds, only : DP
   implicit none
-  real(kind=dp)::  c(6), c2, rc, pr, dpr, d2pr, d3pr, d3expr
+  real(DP)::  c(6), c2, rc, pr, dpr, d2pr, d3pr, d3expr
   external pr, dpr, d2pr, d3pr
 
   d3expr= exp(pr(c,c2,rc)) * (   dpr(c,c2,rc)**3  &
@@ -422,7 +422,7 @@ function d4expr(c,c2,rc)
   !
   use kinds, only : DP
   implicit none
-  real(kind=dp)::  c(6), c2, rc, pr,  dpr, d2pr, d3pr, d4pr, d4expr
+  real(DP)::  c(6), c2, rc, pr,  dpr, d2pr, d3pr, d4pr, d4expr
   external pr, dpr, d2pr, d3pr, d4pr
 
   d4expr= exp(pr(c,c2,rc)) * (     dpr(c,c2,rc)**4 &
@@ -443,7 +443,7 @@ function pr(c,c2,x)
   !            +c(6) x^12 + c2*x^2 + c(1)
   use kinds, only : DP
   implicit none
-  real(kind=dp) :: c(6), c2, x, y, pr
+  real(DP) :: c(6), c2, x, y, pr
 
   y = x*x
   pr = (((((c(6)*y+c(5))*y+c(4))*y+c(3))*y+c(2))*y+c2)*y &
@@ -456,7 +456,7 @@ function dpr(c,c2,x)
   ! --------------------------------------------------------
   use kinds, only : DP
   implicit none
-  real(kind=dp) :: c(6),c2,x,dpr
+  real(DP) :: c(6),c2,x,dpr
 
   dpr  = 2*c2*x + 4*c(2)*x**3 + 6*c(3)*x**5 + 8*c(4)*x**7 &
        + 10*c(5)*x**9 + 12*c(6)*x**11
@@ -468,7 +468,7 @@ function d2pr(c,c2,x)
   ! --------------------------------------------------------
   use kinds, only : DP
   implicit none
-  real(kind=dp) :: c(6),c2,x,d2pr
+  real(DP) :: c(6),c2,x,d2pr
 
   d2pr = 2*c2 + 12*c(2)*x**2 + 30*c(3)*x**4 + 56*c(4)*x**6 &
        + 90*c(5)*x**8 + 132*c(6)*x**10
@@ -480,7 +480,7 @@ function d3pr(c,c2,x)
   ! --------------------------------------------------------
   use kinds, only : DP
   implicit none
-  real(kind=dp) :: c(6),c2,x,d3pr
+  real(DP) :: c(6),c2,x,d3pr
 
   d3pr  = 24*c(2)*x + 120*c(3)*x**3 + 336*c(4)*x**5 &
        + 720*c(5)*x**7 + 1320*c(6)*x**9
@@ -492,7 +492,7 @@ function d4pr(c,c2,x)
   ! --------------------------------------------------------
   use kinds, only : DP
   implicit none
-  real(kind=dp) :: c(6),c2,x,d4pr
+  real(DP) :: c(6),c2,x,d4pr
 
   d4pr  = 24.0_dp*c(2) + 360.0_dp*c(3)*x**2 + 1680.0_dp*c(4)*x**4 &
        + 5040.0_dp*c(5)*x**6 + 11880.0_dp*c(6)*x**8

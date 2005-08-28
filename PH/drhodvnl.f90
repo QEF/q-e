@@ -27,15 +27,15 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
   ! input: the number of perturbations
   ! input: the initial mode
 
-  complex(kind=DP) :: dbecq (nkb, nbnd, nper), dalpq (nkb, nbnd,3, nper),&
+  complex(DP) :: dbecq (nkb, nbnd, nper), dalpq (nkb, nbnd,3, nper),&
           wdyn (3 * nat, 3 * nat)
   ! input: the becp with psi_{k+q}
   ! input: the alphap with psi_{k}
   ! output: the term of the dynamical matryx
 
-  complex(kind=DP) :: ps, dynwrk (3 * nat, 3 * nat)
+  complex(DP) :: ps, dynwrk (3 * nat, 3 * nat)
   ! dynamical matrix
-  complex(kind=DP) , allocatable :: ps1 (:,:), ps2 (:,:,:)
+  complex(DP) , allocatable :: ps1 (:,:), ps2 (:,:,:)
 
   integer :: ibnd, ijkb0, ijkb0b, ih, jh, ikb, jkb, ipol, jpol, &
        startb, lastb, iper, na, nb, nt, ntb, mu, nu

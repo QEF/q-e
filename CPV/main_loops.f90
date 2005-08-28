@@ -17,7 +17,7 @@
 SUBROUTINE smd_loop( nloop )
   !----------------------------------------------------------------------------
   !
-  USE kinds,            ONLY : dbl
+  USE kinds,            ONLY : DP
   USE ions_base,        ONLY : nat
   USE control_flags,    ONLY : tprnfor
   USE input_parameters, ONLY : ion_positions, rd_pos, num_of_images
@@ -27,9 +27,9 @@ SUBROUTINE smd_loop( nloop )
   INTEGER, INTENT(IN) :: nloop
   !
   INTEGER                     :: iloop, sm_p 
-  REAL(KIND=dbl), ALLOCATABLE :: tau(:,:,: )
-  REAL(KIND=dbl), ALLOCATABLE :: fion(:,:,:)
-  REAL(KIND=dbl), ALLOCATABLE :: etot(:) 
+  REAL(DP), ALLOCATABLE :: tau(:,:,: )
+  REAL(DP), ALLOCATABLE :: fion(:,:,:)
+  REAL(DP), ALLOCATABLE :: etot(:) 
   !
   !
   sm_p = num_of_images - 1
@@ -94,7 +94,7 @@ END SUBROUTINE neb_loop
 SUBROUTINE cpr_loop( nloop )
   !----------------------------------------------------------------------------
   !
-  USE kinds,            ONLY : dbl
+  USE kinds,            ONLY : DP
   USE ions_base,        ONLY : nat
   USE control_flags,    ONLY : tprnfor
   USE input_parameters, ONLY : ion_positions, rd_pos
@@ -104,9 +104,9 @@ SUBROUTINE cpr_loop( nloop )
   INTEGER, INTENT(IN) :: nloop
   !
   INTEGER                     :: iloop
-  REAL(KIND=dbl), ALLOCATABLE :: tau(:,:)
-  REAL(KIND=dbl), ALLOCATABLE :: fion(:,:)
-  REAL(KIND=dbl)              :: etot
+  REAL(DP), ALLOCATABLE :: tau(:,:)
+  REAL(DP), ALLOCATABLE :: fion(:,:)
+  REAL(DP)              :: etot
   !
   !
   IF ( nat > 0 ) THEN
@@ -140,7 +140,7 @@ END SUBROUTINE cpr_loop
 SUBROUTINE fpmd_loop( iloop )
   !----------------------------------------------------------------------------
   !
-  USE kinds,            ONLY : dbl
+  USE kinds,            ONLY : DP
   USE main_module,      ONLY : cpmain
   USE input_parameters, ONLY : restart_mode
   USE io_files,         ONLY : outdir
@@ -153,9 +153,9 @@ SUBROUTINE fpmd_loop( iloop )
   !
   CHARACTER(LEN=256), SAVE :: outdir_orig
   !
-  REAL(KIND=dbl), ALLOCATABLE :: tau(:,:)
-  REAL(KIND=dbl), ALLOCATABLE :: fion(:,:)
-  REAL(KIND=dbl)              :: etot
+  REAL(DP), ALLOCATABLE :: tau(:,:)
+  REAL(DP), ALLOCATABLE :: fion(:,:)
+  REAL(DP)              :: etot
   !
   !
   IF ( iloop == 1 ) outdir_orig = outdir

@@ -29,14 +29,14 @@ SUBROUTINE dynmat_us()
   ! counters
   ! ikk: record position of wfc at k
 
-  REAL(kind=DP) :: gtau, fac, wgg
+  REAL(DP) :: gtau, fac, wgg
   ! the product G*\tau_s
   ! auxiliary variable
   ! the true weight of a K point
 
-  COMPLEX(kind=DP) :: work, dynwrk (3 * nat, 3 * nat)
+  COMPLEX(DP) :: work, dynwrk (3 * nat, 3 * nat)
   ! work space
-  COMPLEX(kind=DP), ALLOCATABLE :: rhog (:), &
+  COMPLEX(DP), ALLOCATABLE :: rhog (:), &
        gammap (:,:,:,:), aux1 (:,:), work1 (:), work2 (:)
   ! fourier transform of rho
   ! the second derivative of the beta

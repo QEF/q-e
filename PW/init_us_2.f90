@@ -29,20 +29,20 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   integer :: npw_, igk_ (npw_)
   ! input: number of PW's
   ! input: indices of q+G
-  real(kind=DP) :: q_(3)
+  real(DP) :: q_(3)
   ! input: q vector
-  complex(kind=DP) :: vkb_ (npwx, nkb)
+  complex(DP) :: vkb_ (npwx, nkb)
   ! output: beta functions
   !
   !     Local variables
   !
   integer :: i0,i1,i2,i3, ig, l, lm, na, nt, nb, ih, jkb
 
-  real(kind=DP) :: px, ux, vx, wx, arg
-  real(kind=DP), allocatable :: gk (:,:), qg (:), vq (:), ylm (:,:), vkb1(:,:)
+  real(DP) :: px, ux, vx, wx, arg
+  real(DP), allocatable :: gk (:,:), qg (:), vq (:), ylm (:,:), vkb1(:,:)
 
-  complex(kind=DP) :: phase, pref
-  complex(kind=DP), allocatable :: sk(:)
+  complex(DP) :: phase, pref
+  complex(DP), allocatable :: sk(:)
   !
   !
   if (lmaxkb.lt.0) return

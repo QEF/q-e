@@ -22,20 +22,20 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
   ! input: the number of perturbation
   ! input: the position of the current mode
   ! input: index of the current irr. rep.
-  complex (kind = dp) :: drhoscf (nrxx, npe)
+  complex (DP) :: drhoscf (nrxx, npe)
   ! input: variation of the charge density
 
   integer :: ipert, ik, ikk, ibnd
   ! counters
-  complex (kind = dp) :: delta_n, def (npertx)
+  complex (DP) :: delta_n, def (npertx)
   ! the change in electron number
   ! the change of the Fermi energy for each perturbation
-  real (kind = dp) :: weight, wdelta
+  real (DP) :: weight, wdelta
   ! kpoint weight
   ! delta function weight
-  real (kind = dp), save :: dos_ef
+  real (DP), save :: dos_ef
   ! density of states at Ef
-  real (kind = dp), external :: w0gauss
+  real (DP), external :: w0gauss
   logical, save :: first = .true.
   ! Used for initialization
   !

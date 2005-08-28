@@ -29,15 +29,15 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
     ! dimension of the matrix to be diagonalized
     ! number of eigenstates to be calculate
     ! leading dimension of h, as declared in the calling pgm unit
-  COMPLEX(KIND=DP) :: h(ldh,n), s(ldh,n)
+  COMPLEX(DP) :: h(ldh,n), s(ldh,n)
     ! matrix to be diagonalized
     ! overlap matrix
   !
   ! ... on OUTPUT
   !
-  REAL(KIND=DP) :: e(n)
+  REAL(DP) :: e(n)
     ! eigenvalues
-  COMPLEX(KIND=DP) :: v(ldh,m)
+  COMPLEX(DP) :: v(ldh,m)
     ! eigenvectors (column-wise)
   !
   ! ... LOCAL variables
@@ -47,8 +47,8 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   INTEGER, EXTERNAL :: ILAENV
     ! ILAENV returns optimal block size "nb"
   INTEGER,          ALLOCATABLE :: iwork(:), ifail(:)
-  REAL(KIND=DP),    ALLOCATABLE :: rwork(:)
-  COMPLEX(KIND=DP), ALLOCATABLE :: sdum(:,:), hdum(:,:),  work(:)
+  REAL(DP),    ALLOCATABLE :: rwork(:)
+  COMPLEX(DP), ALLOCATABLE :: sdum(:,:), hdum(:,:),  work(:)
   LOGICAL :: all_eigenvalues
   !
   !

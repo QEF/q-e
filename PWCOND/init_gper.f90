@@ -17,9 +17,9 @@ subroutine init_gper(ik)
   implicit none
   integer :: ipol, igper, icount, ik, k, ig, i, il, j, jl, iw 
   integer, allocatable :: nshell(:,:)
-  real(kind=DP) :: norm2
-  real(kind=DP), parameter :: eps=1.d-8
-  real(kind=DP), allocatable :: gnorm2(:)
+  real(DP) :: norm2
+  real(DP), parameter :: eps=1.d-8
+  real(DP), allocatable :: gnorm2(:)
 
   allocate( gnorm2( nrx * nry ) ) 
   allocate( nshell( nrx, nry ) )

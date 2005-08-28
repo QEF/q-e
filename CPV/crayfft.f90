@@ -14,19 +14,19 @@
 !
       implicit none
       integer nr1, nr2, nr3, nr1x, nr2x, nr3x, isign
-      real(kind=8)    f(2,nr1x*nr2x*nr3x)
+      real(8)    f(2,nr1x*nr2x*nr3x)
 !
 ! initialization variables
 !
       logical first
       data first/.true./
       integer ifax1(19), ifax2(19), ifax3(19)
-      real(kind=8), allocatable :: trig1(:), trig2(:), trig3(:)
+      real(8), allocatable :: trig1(:), trig2(:), trig3(:)
 !
 ! work variables
 !
-      real(kind=8), allocatable:: work(:)
-      real(kind=8) fac
+      real(8), allocatable:: work(:)
+      real(8) fac
       integer inc, jump, lot, i, istart
       integer, save :: nr1_old = -1
       integer, save :: nr2_old = -1
@@ -99,19 +99,19 @@
 !
       implicit none
       integer nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isign
-      real(kind=8) f(2,nr1bx*nr2bx*nr3bx)
+      real(8) f(2,nr1bx*nr2bx*nr3bx)
 !
 ! initialization variables
 !
       logical first
       data first/.true./
       integer ifax1(19), ifax2(19), ifax3(19)
-      real(kind=8), allocatable :: trig1(:), trig2(:), trig3(:)
+      real(8), allocatable :: trig1(:), trig2(:), trig3(:)
 !
 ! work variables
 !
-      real(kind=8), allocatable:: work(:)
-      real(kind=8)  fac
+      real(8), allocatable:: work(:)
+      real(8)  fac
       integer inc, jump, lot, i, istart
       integer, save :: nr1b_old = -1
       integer, save :: nr2b_old = -1
@@ -174,19 +174,19 @@
 !
       implicit none
       integer nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, isign
-      real(kind=8) f(2,nr1sx*nr2sx*nr3sx)
+      real(8) f(2,nr1sx*nr2sx*nr3sx)
 !
 ! initialization variables
 !
       logical first
       data first/.true./
       integer ifax1(19), ifax2(19), ifax3(19)
-      real(kind=8), allocatable :: trig1(:), trig2(:), trig3(:)
+      real(8), allocatable :: trig1(:), trig2(:), trig3(:)
 !
 ! work variables
 !
-      real(kind=8), allocatable:: work(:)
-      real(kind=8) fac
+      real(8), allocatable:: work(:)
+      real(8) fac
       integer inc, jump, lot, i, istart
       integer, save :: nr1s_old = -1
       integer, save :: nr2s_old = -1

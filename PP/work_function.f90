@@ -22,12 +22,12 @@ SUBROUTINE work_function (wf)
 
   IMPLICIT NONE
 
-  REAL(kind=DP) :: wmean1, wmean2, meancharge, wx1, wx2, wxm, vx, vc, ex, &
+  REAL(DP) :: wmean1, wmean2, meancharge, wx1, wx2, wxm, vx, vc, ex, &
                    ec, rhox, rs, vcca, wf, etxc, vtxc
   INTEGER :: n1, n2, ni, nmean
   LOGICAL :: exst
-  REAL(kind=DP), ALLOCATABLE :: raux1 (:), vaux1 (:), vaux2(:), aux (:)
-  REAL(kind=DP), ALLOCATABLE :: vxc(:,:)
+  REAL(DP), ALLOCATABLE :: raux1 (:), vaux1 (:), vaux2(:), aux (:)
+  REAL(DP), ALLOCATABLE :: vxc(:,:)
   ! auxiliary vectors for charge and potential
 
   ALLOCATE (raux1( nrx1 * nrx2 * nrx3))    

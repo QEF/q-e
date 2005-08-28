@@ -44,15 +44,15 @@ MODULE path_reparametrisation
       ! ... local variables
       !
       INTEGER        :: i, j
-      REAL(KIND=DP)  :: delta_R
-      REAL (KIND=DP) :: change_image_thr
-      REAL (KIND=DP) :: multistep_coeff = 2.D0
+      REAL(DP)  :: delta_R
+      REAL (DP) :: change_image_thr
+      REAL (DP) :: multistep_coeff = 2.D0
       INTEGER        :: new_num_of_images
       INTEGER        :: N_in, N_fin
       INTEGER        :: init_num_of_images = 3
       !
-      REAL (KIND=DP), ALLOCATABLE  :: new_pos(:,:)
-      REAL (KIND=DP), ALLOCATABLE  :: old_mesh(:), new_mesh(:)
+      REAL (DP), ALLOCATABLE  :: new_pos(:,:)
+      REAL (DP), ALLOCATABLE  :: old_mesh(:), new_mesh(:)
       !
       !
       new_num_of_images = num_of_images
@@ -179,8 +179,8 @@ MODULE path_reparametrisation
       !
       IMPLICIT NONE
       !
-      REAL (KIND=DP) :: change_image_thr
-      REAL (KIND=DP) :: multistep_coeff = 2.D0
+      REAL (DP) :: change_image_thr
+      REAL (DP) :: multistep_coeff = 2.D0
       INTEGER        :: new_num_of_images
       LOGICAL        :: images_updated
       INTEGER        :: N_in, N_fin
@@ -286,8 +286,8 @@ MODULE path_reparametrisation
       !
       IMPLICIT NONE
       !
-      REAL (KIND=DP), ALLOCATABLE :: r_h(:), r_n(:), delta_pos(:)
-      REAL (KIND=DP)              :: x, delta_x
+      REAL (DP), ALLOCATABLE :: r_h(:), r_n(:), delta_pos(:)
+      REAL (DP)              :: x, delta_x
       INTEGER                     :: i, j, n
       !
       !
@@ -342,8 +342,8 @@ MODULE path_reparametrisation
       !
       IMPLICIT NONE
       !
-      REAL (KIND=DP), ALLOCATABLE :: r_h(:), r_n(:), delta_pos(:)
-      REAL (KIND=DP)              :: x, delta_x, s, s_image, pi_n
+      REAL (DP), ALLOCATABLE :: r_h(:), r_n(:), delta_pos(:)
+      REAL (DP)              :: x, delta_x, s, s_image, pi_n
       INTEGER                     :: i, j, n, image
       !
       !
@@ -426,7 +426,7 @@ MODULE path_reparametrisation
       IMPLICIT NONE
       !
       INTEGER        :: j, n
-      REAL (KIND=DP) :: x, coeff, inv_Nft
+      REAL (DP) :: x, coeff, inv_Nft
       !
       !
       inv_Nft = 1.D0 / DBLE( Nft )

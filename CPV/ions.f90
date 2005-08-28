@@ -30,7 +30,7 @@
 !  SUBROUTINE ions_print_info(tfor,tsdp,tzerop,tv0rd,nv0rd,nbeg, &
 !                             taurdr,iunit)
 !  SUBROUTINE deallocate_ions
-!  REAL(dbl) FUNCTION moveions(tsdp,thdyn,nfi,htm,ht0)
+!  REAL(DP) FUNCTION moveions(tsdp,thdyn,nfi,htm,ht0)
 !  SUBROUTINE update_ions
 !  SUBROUTINE velocity_scaling(nfi,delt,ht)
 !  ----------------------------------------------
@@ -96,14 +96,14 @@
         IMPLICIT NONE
 
 ! ... declare subroutine arguments
-        REAL(dbl), INTENT(IN) :: taus(:,:)   !  scaled positions
+        REAL(DP), INTENT(IN) :: taus(:,:)   !  scaled positions
         INTEGER,   INTENT(IN) :: na(:)       !  number of atoms x specie
         INTEGER,   INTENT(IN) :: nsp         !  number of specie
-        REAL(dbl), INTENT(IN) :: rcutg       !  radius to compute neighbour
-        REAL(dbl), INTENT(IN) :: ht(3,3)     !  system cell
+        REAL(DP), INTENT(IN) :: rcutg       !  radius to compute neighbour
+        REAL(DP), INTENT(IN) :: ht(3,3)     !  system cell
     
 ! ... declare other variables
-        REAL(dbl) :: rcutg2, sdist(3), rdist(3), xlm, ylm, zlm, erre2, erre
+        REAL(DP) :: rcutg2, sdist(3), rdist(3), xlm, ylm, zlm, erre2, erre
         INTEGER :: is1, ia, ja, is2
         INTEGER, ALLOCATABLE :: icoor( :, : ), isa( : )
         INTEGER :: is1ia, is2ja
@@ -205,14 +205,14 @@
       IMPLICIT NONE
  
 ! ... declare subroutine arguments
-      REAL(dbl) :: anner
+      REAL(DP) :: anner
       TYPE (boxdimensions), INTENT(IN) :: ht
       TYPE (atoms_type), INTENT(IN) :: atoms_0, atoms_m
       TYPE (atoms_type) :: atoms_p
 
 ! ... declare other variables
-      REAL(dbl) :: fions(3)
-      REAL(dbl) :: alfap, dt2hbm, dt2
+      REAL(DP) :: fions(3)
+      REAL(DP) :: alfap, dt2hbm, dt2
       INTEGER   :: k, j, i, isa
  
 ! ... end of declarations
@@ -222,7 +222,7 @@
       alfap = .5d0 * SQRT(anner)
       isa   = 0
       DO k = 1, atoms_0%nsp
-        dt2hbm = 0.5_dbl * dt2 / atoms_0%m(k)
+        dt2hbm = 0.5_DP * dt2 / atoms_0%m(k)
         DO j = 1, atoms_0%na(k)
           isa = isa + 1
           CALL r_to_s( atoms_0%for(:,isa), fions, ht)
@@ -260,11 +260,11 @@
 ! ...   declare subroutine arguments
         TYPE (boxdimensions), INTENT(IN) :: ht
         TYPE (atoms_type), INTENT(IN) :: atoms
-        REAL (dbl), INTENT(OUT) :: dis(:)
-        REAL (dbl), INTENT(IN)  :: tau_ref(:,:)
+        REAL (DP), INTENT(OUT) :: dis(:)
+        REAL (DP), INTENT(IN)  :: tau_ref(:,:)
 
 ! ...   declare other variables
-        REAL(dbl) :: sdist(3), rdist(3), r2, cdm(3)
+        REAL(DP) :: sdist(3), rdist(3), r2, cdm(3)
         INTEGER   :: i, j, k, isa
 
 ! ...   end of declarations
@@ -276,8 +276,8 @@
           CALL errore(' displacement ',' size of dis too small ', 1)
         isa = 0
         DO k = 1, atoms%nsp
-          dis(k) = 0.0_dbl
-          r2     = 0.0_dbl
+          dis(k) = 0.0_DP
+          r2     = 0.0_DP
           DO j = 1, atoms%na(k)
             isa = isa + 1
             sdist = atoms%taus(:,isa) - cdm
@@ -309,10 +309,10 @@
 ! ...   declare subroutine arguments
         TYPE (boxdimensions), INTENT(IN) :: ht
         TYPE (atoms_type), INTENT(IN) :: atoms
-        REAL(dbl) :: cdm_ref(3)
+        REAL(DP) :: cdm_ref(3)
 
 ! ...   declare other variables
-        REAL(dbl)  :: r2, cdm0(3),rcdm0(3), rcdmi(3)
+        REAL(DP)  :: r2, cdm0(3),rcdm0(3), rcdmi(3)
 
 ! ...   end of declarations
 !  ----------------------------------------------
@@ -341,11 +341,11 @@
 
         TYPE (atoms_type) :: atoms_m, atoms_0
         TYPE (boxdimensions) :: ht_0
-        REAL(dbl), INTENT(IN) :: delt
-        REAL(dbl), INTENT(IN) :: vel_srt( :, : )
+        REAL(DP), INTENT(IN) :: delt
+        REAL(DP), INTENT(IN) :: vel_srt( :, : )
         
         INTEGER :: i, ia, nat
-        REAL(dbl) :: sv0( 3 )
+        REAL(DP) :: sv0( 3 )
 
         nat = atoms_0%nat
 
@@ -386,10 +386,10 @@
 ! ...   declare subroutine arguments
         TYPE(boxdimensions), INTENT(IN) :: ht
         TYPE (atoms_type) :: atoms
-        REAL(dbl) :: cdm_ref(:), tau_ref(:,:)
+        REAL(DP) :: cdm_ref(:), tau_ref(:,:)
 
 ! ...   declare other variables
-        REAL(dbl) :: sdist(3)
+        REAL(DP) :: sdist(3)
         INTEGER :: isa
 
         CALL ions_cofmass(atoms%taus, atoms%m, atoms%na, atoms%nsp, cdm_ref)
@@ -411,8 +411,8 @@
          IMPLICIT NONE
 !
          TYPE (atoms_type)    :: atoms_0, atoms_p, atoms_m
-         REAL(dbl), INTENT(IN) :: h( 3, 3 )
-         REAL(dbl), INTENT(IN) :: stau(:,:)
+         REAL(DP), INTENT(IN) :: h( 3, 3 )
+         REAL(DP), INTENT(IN) :: stau(:,:)
          CHARACTER(LEN=3), INTENT(IN) :: atml(:)
          INTEGER, INTENT(IN) :: ind_srt( : )
          INTEGER, INTENT(IN) :: if_pos( :, : )
@@ -460,7 +460,7 @@
 
 !  --------------------------------------------------------------------------   
 
-   REAL(dbl) FUNCTION moveions(TSDP, thdyn, NFI, atoms_m, atoms_0, atoms_p, htm, ht0, vnosep)
+   REAL(DP) FUNCTION moveions(TSDP, thdyn, NFI, atoms_m, atoms_0, atoms_p, htm, ht0, vnosep)
 
       !  Moves the ions
 
@@ -481,13 +481,13 @@
       TYPE (boxdimensions), INTENT(IN)    :: htm
       TYPE (boxdimensions), INTENT(INOUT) :: ht0
       TYPE (atoms_type) :: atoms_m, atoms_0, atoms_p
-      REAL(dbl), INTENT(IN) :: vnosep
+      REAL(DP), INTENT(IN) :: vnosep
 
 ! ... declare other variables
-      REAL(dbl), DIMENSION(3,3) :: annep, svarps, tmat, svarpd, gcm1, gcdot
-      REAL(dbl), DIMENSION(3)   :: fions, svel, rvel, stp, tau_diff
-      REAL(dbl)                 :: const, dumm, vrnos, gfact, ffact, dt2bym
-      REAL(dbl)                 :: fordt2, dt2, delthal
+      REAL(DP), DIMENSION(3,3) :: annep, svarps, tmat, svarpd, gcm1, gcdot
+      REAL(DP), DIMENSION(3)   :: fions, svel, rvel, stp, tau_diff
+      REAL(DP)                 :: const, dumm, vrnos, gfact, ffact, dt2bym
+      REAL(DP)                 :: fordt2, dt2, delthal
       INTEGER :: i, j, k, l, is, ia, isa
 
 
@@ -515,7 +515,7 @@
 
       IF( tdampions ) THEN
 
-          gfact = 1.0_dbl / (1.0_dbl + fricp )
+          gfact = 1.0_DP / (1.0_DP + fricp )
           isa = 0
           DO is = 1, atoms_0%nsp
             dt2bym = dt2 / atoms_0%m(is)
@@ -614,11 +614,11 @@
               CALL r_to_s( atoms_0%for(:,isa), fions, ht0 )
               tau_diff = (atoms_0%taus(:,isa) - atoms_m%taus(:,isa))
               DO k = 1, 3
-                stp(k) = 2.0_dbl * tau_diff(k) + dt2bym * fions(k)
+                stp(k) = 2.0_DP * tau_diff(k) + dt2bym * fions(k)
               END DO
               DO k = 1, 3
                 IF ( atoms_0%mobile(k,isa) > 0 ) THEN
-                  ffact = 0.0_dbl
+                  ffact = 0.0_DP
                   DO l = 1, 3
                     ffact = ffact + svarpd(k,l) * stp(l)
                   END DO
@@ -716,19 +716,19 @@
       type (boxdimensions), intent(in) :: ht
       type (atoms_type) :: atoms_m, atoms_0, atoms_p
       LOGICAL, INTENT(IN) :: tcap
-      REAL(dbl), INTENT(IN) :: delt
+      REAL(DP), INTENT(IN) :: delt
 !
 ! ... Locals
 !
-      REAL(dbl) :: tempp, temp1, temp2
-      REAL(dbl), ALLOCATABLE :: fions(:,:)
+      REAL(DP) :: tempp, temp1, temp2
+      REAL(DP), ALLOCATABLE :: fions(:,:)
       INTEGER :: isa
 !
 ! ... Subroutine body
 !
 
         tempp   = atoms_0%ekint * factem
-        tempp   = tempp * 2.0_dbl / atoms_0%doft
+        tempp   = tempp * 2.0_DP / atoms_0%doft
         temp1   = tempw + tolp
         temp2   = tempw - tolp
         isa     = 0
@@ -753,7 +753,7 @@
 
 !  BEGIN manual -------------------------------------------------------------   
 
-      REAL(dbl) FUNCTION max_ion_forces( atoms )
+      REAL(DP) FUNCTION max_ion_forces( atoms )
 
 !  Descrive briefly what it does
 !  --------------------------------------------------------------------------   
@@ -762,7 +762,7 @@
         IMPLICIT NONE 
         TYPE (atoms_type) :: atoms
         INTEGER :: ia
-        REAL(dbl) :: fmax
+        REAL(DP) :: fmax
         fmax = 0.0d0
         DO ia = 1, atoms%nat
           IF( atoms%mobile(1, ia) > 0 ) fmax = MAX( fmax, ABS( atoms%for(1, ia) ) )
@@ -792,7 +792,7 @@
 
         IMPLICIT NONE
 
-        REAL(dbl), INTENT(OUT) :: pos(:,:), fion(:,:)
+        REAL(DP), INTENT(OUT) :: pos(:,:), fion(:,:)
         TYPE (atoms_type), INTENT(IN) :: atoms
         TYPE (boxdimensions), INTENT(IN) :: ht
         INTEGER, INTENT(IN) :: isrt( : )

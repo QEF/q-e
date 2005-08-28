@@ -13,7 +13,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   !
   ! ... main subroutine for SMD by Yosuke Kanai
   !
-  USE kinds,                    ONLY : dbl
+  USE kinds,                    ONLY : DP
   USE control_flags,            ONLY : iprint, isave, thdyn, tpre, tbuff, &
                                        iprsta, trhor, tfor, tvlocw, trhow,     &
                                        taurdr, tprnfor, tsdc, ndr, ndw, nbeg,  &
@@ -100,9 +100,9 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   ! output variables
   !
   INTEGER :: nat_out
-  REAL(KIND=dbl) :: tau( 3, nat_out, 0:* )
-  REAL(KIND=dbl) :: fion_out( 3, nat_out, 0:* )
-  REAL(KIND=dbl) :: etot_out( 0:* )
+  REAL(DP) :: tau( 3, nat_out, 0:* )
+  REAL(DP) :: fion_out( 3, nat_out, 0:* )
+  REAL(DP) :: etot_out( 0:* )
   !
   !
   ! control variables
@@ -111,20 +111,20 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   LOGICAL tfirst, tlast
   LOGICAL tstop
   LOGICAL tconv
-  REAL(KIND=dbl) :: delta_etot
+  REAL(DP) :: delta_etot
   !
   !
   ! work variables
   !
-  COMPLEX(KIND=dbl) :: speed
-  REAL(KIND=dbl) :: vnhp(nhclm,smx), xnhp0(nhclm,smx), xnhpm(nhclm,smx), &
+  COMPLEX(DP) :: speed
+  REAL(DP) :: vnhp(nhclm,smx), xnhp0(nhclm,smx), xnhpm(nhclm,smx), &
                     tempp(smx), xnhe0(smx), fccc(smx), xnhem(smx), vnhe(smx),  &
                     epot(smx), xnhpp(nhclm,smx), xnhep(smx), epre(smx), enow(smx),   &
                     econs(smx), econt(smx), ccc(smx)
-  REAL(KIND=dbl) :: temps(nsx) 
-  REAL(KIND=dbl) :: verl1, verl2, verl3, anor, saveh, tps, bigr, dt2,            &
+  REAL(DP) :: temps(nsx) 
+  REAL(DP) :: verl1, verl2, verl3, anor, saveh, tps, bigr, dt2,            &
                     dt2by2, twodel, gausp, dt2bye, dt2hbe, savee, savep
-  REAL(KIND=dbl) :: ekinc0(smx), ekinp(smx), ekinpr(smx), ekincm(smx),   &
+  REAL(DP) :: ekinc0(smx), ekinp(smx), ekinpr(smx), ekincm(smx),   &
                     ekinc(smx), pre_ekinc(smx), enthal(smx)
   !
   INTEGER  ::is, nacc, ia, j, iter, i, isa, ipos
@@ -132,40 +132,40 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   !
   ! work variables, 2
   !
-  REAL(KIND=dbl) :: fcell(3,3), hgamma(3,3)
-  REAL(KIND=dbl) :: cdm(3)
-  REAL(KIND=dbl) :: qr(3)
-  REAL(KIND=dbl) :: temphh(3,3)
-  REAL(KIND=dbl) :: thstress(3,3) 
+  REAL(DP) :: fcell(3,3), hgamma(3,3)
+  REAL(DP) :: cdm(3)
+  REAL(DP) :: qr(3)
+  REAL(DP) :: temphh(3,3)
+  REAL(DP) :: thstress(3,3) 
   !
   INTEGER        :: k, ii, l, m
-  REAL(KIND=dbl) :: ekinh, alfar, temphc, alfap, temp1, temp2, randy
-  REAL(KIND=dbl) :: ftmp
+  REAL(DP) :: ekinh, alfar, temphc, alfap, temp1, temp2, randy
+  REAL(DP) :: ftmp
 
   CHARACTER(len=256) :: filename
   CHARACTER(len=256) :: dirname
   INTEGER            :: strlen, dirlen
   CHARACTER(len=2)   :: unitsmw, unitnum 
   !
-  REAL(KIND=dbl) :: t_arc_pre, t_arc_now, t_arc_tot
+  REAL(DP) :: t_arc_pre, t_arc_now, t_arc_tot
   INTEGER        :: sm_k,sm_file,sm_ndr,sm_ndw,unico,unifo,unist
   INTEGER        :: smpm,con_ite
-  REAL(KIND=dbl) :: workvec(3,natx,nsx)
+  REAL(DP) :: workvec(3,natx,nsx)
   !
-  REAL(KIND=dbl), ALLOCATABLE :: deviation(:)
-  REAL(KIND=dbl), ALLOCATABLE :: maxforce(:)
-  REAL(KIND=dbl), ALLOCATABLE :: arc_now(:)
-  REAL(KIND=dbl), ALLOCATABLE :: arc_tot(:)
-  REAL(KIND=dbl), ALLOCATABLE :: arc_pre(:)
-  REAL(KIND=dbl), ALLOCATABLE :: paraforce(:)
-  REAL(KIND=dbl), ALLOCATABLE :: err_const(:)
+  REAL(DP), ALLOCATABLE :: deviation(:)
+  REAL(DP), ALLOCATABLE :: maxforce(:)
+  REAL(DP), ALLOCATABLE :: arc_now(:)
+  REAL(DP), ALLOCATABLE :: arc_tot(:)
+  REAL(DP), ALLOCATABLE :: arc_pre(:)
+  REAL(DP), ALLOCATABLE :: paraforce(:)
+  REAL(DP), ALLOCATABLE :: err_const(:)
   INTEGER,        ALLOCATABLE :: pvvcheck(:)
   !
   TYPE(smd_ptr), ALLOCATABLE :: p_tau0(:)
   TYPE(smd_ptr), ALLOCATABLE :: p_taup(:)
   TYPE(smd_ptr), ALLOCATABLE :: p_tan(:)
   !
-  REAL(KIND=dbl), ALLOCATABLE :: mat_z(:,:,:)
+  REAL(DP), ALLOCATABLE :: mat_z(:,:,:)
   !
   !
   !     CP loop starts here

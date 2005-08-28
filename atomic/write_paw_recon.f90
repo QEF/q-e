@@ -13,7 +13,7 @@ use funct
 implicit none
 
       integer :: i, j, n, m, l, ios, iae, isign
-      real(kind=dp) ::  wmax
+      real(DP) ::  wmax
 
       open(unit=51,file=file_recon,status='unknown', err=1111, &
            iostat=ios,form='formatted')

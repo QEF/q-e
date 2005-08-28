@@ -13,10 +13,10 @@ function exc_t(rho,rhoc,lsd)
   use kinds, only : DP
   implicit none
   integer:: lsd
-  real(kind=dp) :: exc_t, rho(2),arho,rhot, zeta,rhoc
-  real(kind=dp) :: ex, ec, vx(2), vc(2)
+  real(DP) :: exc_t, rho(2),arho,rhot, zeta,rhoc
+  real(DP) :: ex, ec, vx(2), vc(2)
 
-  real(kind=dp),parameter:: e2 =2.0_DP
+  real(DP),parameter:: e2 =2.0_DP
 
   exc_t=0.0_DP
 

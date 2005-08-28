@@ -10,19 +10,19 @@ subroutine green(y,lam,e,dvy,chi,vpot,ze2)
    ! I/O variables
    !
    integer :: lam
-   real(kind=DP) :: y(ndm), chi(ndm), dvy(ndm), vpot(ndm)
-   real(kind=DP) :: e, ze2
+   real(DP) :: y(ndm), chi(ndm), dvy(ndm), vpot(ndm)
+   real(DP) :: e, ze2
    !
    ! local variables
    !
    integer :: i, l1, ncross, imatch
-   real(kind=DP) :: f(ndm), g(ndm)
-   real(kind=DP) :: work(ndm), int_0_inf_dr
-   real(kind=DP) :: a(0:3), b(0:3), c0, c1, c2, c3, c4, b0e
-   real(kind=DP) :: rr1, rr2
-   real(kind=DP) :: ddx12, sqlhf, xl1, x4l6, x6l12, x8l20
-   real(kind=DP) :: gi, gim1
-   real(kind=DP) :: fac
+   real(DP) :: f(ndm), g(ndm)
+   real(DP) :: work(ndm), int_0_inf_dr
+   real(DP) :: a(0:3), b(0:3), c0, c1, c2, c3, c4, b0e
+   real(DP) :: rr1, rr2
+   real(DP) :: ddx12, sqlhf, xl1, x4l6, x6l12, x8l20
+   real(DP) :: gi, gim1
+   real(DP) :: fac
    !      parameter(ndm=700)
    !      common/radmes/ xmin,zmesh,dx,r(ndm),r2(ndm),sqr(ndm),rmax,mesh
    !     +  /potentials/ vpot(ndm),vnew(ndm),vh(ndm),vx(ndm),vold(ndm)

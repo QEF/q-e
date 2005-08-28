@@ -24,7 +24,7 @@ logical function lchk_tauxk (nvec, vec, trmat)
   !
   integer :: nvec
   ! input: number of vectors (atom. pos. or k-p
-  real(kind=DP) :: vec (3, nvec), trmat (3, 3)
+  real(DP) :: vec (3, nvec), trmat (3, 3)
   ! input: cryst./cart. coord. of the vectors
   !               (atom. pos. or k-points)
   ! input: transf. matrix
@@ -39,14 +39,14 @@ logical function lchk_tauxk (nvec, vec, trmat)
   ! first counter on vectors
   ! second counter on vectors
   ! counter on polarizations
-  real(kind=DP), allocatable :: vaux (:,:)
+  real(DP), allocatable :: vaux (:,:)
   ! auxiliary vectors (atom. coord. or k-points in cryst. units)
-  real(kind=DP) :: vdf (3)
+  real(DP) :: vdf (3)
   ! auxiliary vector
   !
   !   Here, set the value of the acceptance parameter
   !
-  real(kind=DP), parameter :: accep = 1.0d-5
+  real(DP), parameter :: accep = 1.0d-5
   !
   !
   !   allocate work space
@@ -70,7 +70,7 @@ logical function lchk_tauxk (nvec, vec, trmat)
      do nv2 = nv1 + 1, nvec
         do kpol = 1, 3
            vdf (kpol) = vaux (kpol, nv2) - vaux (kpol, nv1)
-           vdf (kpol) = abs (vdf (kpol) - dble (nint (vdf (kpol) ) ) )
+           vdf (kpol) = abs (vdf (kpol) - DBLE (nint (vdf (kpol) ) ) )
         enddo
         if ( (vdf (1) < accep) .and. (vdf (2) < accep) .and. &
              (vdf (3) < accep) ) then

@@ -18,7 +18,7 @@ subroutine pseudovloc
   use ld1inc
   implicit none
 
-  real(kind=dp) :: &
+  real(DP) :: &
        fae,   &  ! the value of the all-electron function
        f1ae,  &  ! its first derivative
        f2ae,  &  ! the second derivative
@@ -30,7 +30,7 @@ subroutine pseudovloc
        iok,  &  ! if 0 there are no problems
        ik       ! the point corresponding to rc
 
-  real(kind=dp) ::             &
+  real(DP) ::             &
        f1aep1,f1aem1,jnor, &  ! auxilairy quantities
        p1aep1, p1aem1,     &  ! derivatives of the bessel functions
        xc(8),              &  ! the coefficients of the fit
@@ -38,7 +38,7 @@ subroutine pseudovloc
        vaux(ndm,2),        &  ! keeps the potential
        j1(ndm,4)              ! the bessel functions
 
-  real(kind=dp) :: &
+  real(DP) :: &
        deriv_7pts, deriv2_7pts
 
 

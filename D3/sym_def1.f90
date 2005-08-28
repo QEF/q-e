@@ -23,7 +23,7 @@ subroutine sym_def1 (def, irr)
   integer :: irr
   ! input: the representation under consideration
 
-  complex (kind = dp) :: def (npertx)
+  complex (DP) :: def (npertx)
   ! inp/out: the fermi energy changes
 
   integer :: ipert, jpert, isym, irot
@@ -32,7 +32,7 @@ subroutine sym_def1 (def, irr)
   ! counter on symmetries
   ! the rotation
 
-  complex (kind = dp) :: w_def (npertx)
+  complex (DP) :: w_def (npertx)
   ! the fermi energy changes (work array)
 
   do ipert = 1, npertg0 (irr)

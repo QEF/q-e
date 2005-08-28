@@ -16,13 +16,13 @@ function sumkg (et, nbnd, nks, wk, degauss, ngauss, e, is, isk)
   USE kinds
   implicit none
   ! Output variable
-  real(kind=DP) :: sumkg
+  real(DP) :: sumkg
   ! Input variables
   integer, intent(in) :: nks, nbnd, ngauss
   ! input: the total number of K points
   ! input: the number of bands
   ! input: the type of smearing
-  real(kind=DP), intent(in) :: wk (nks), et (nbnd, nks), degauss, e
+  real(DP), intent(in) :: wk (nks), et (nbnd, nks), degauss, e
   ! input: the weight of the k points
   ! input: the energy eigenvalues
   ! input: gaussian broadening
@@ -31,9 +31,9 @@ function sumkg (et, nbnd, nks, wk, degauss, ngauss, e, is, isk)
   !
   ! local variables
   !
-  real(kind=DP), external :: wgauss
+  real(DP), external :: wgauss
   ! function which compute the smearing
-  real(kind=DP) ::sum1
+  real(DP) ::sum1
   integer :: ik, ibnd
   ! counter on k points
   ! counter on the band energy

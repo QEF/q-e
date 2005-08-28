@@ -53,9 +53,9 @@ module rrkj3
   integer :: pseudotype_, iexch_, icorr_, igcx_, igcc_, mesh_, &
        nwfs_, nbeta_, lmax_
   logical :: rel_, nlcc_
-  real (kind=8) :: zp_, etotps_, xmin, rmax, zmesh, dx, rcloc_
+  real (8) :: zp_, etotps_, xmin, rmax, zmesh, dx, rcloc_
   integer, allocatable:: lchi_(:), nns_(:), ikk2_(:)
-  real (kind=8), allocatable :: rcut_(:), rcutus_(:), oc_(:), &
+  real (8), allocatable :: rcut_(:), rcutus_(:), oc_(:), &
        beta(:,:), dion_(:,:), qqq_(:,:), ddd(:,:), qfunc_(:,:,:), &
        rho_atc_(:), rho_at_(:), chi_(:,:), vloc_(:)
 end module rrkj3
@@ -160,8 +160,8 @@ subroutine convert_rrkj
   use upf
   implicit none
   integer i, n
-  real(kind=8), parameter:: pi=3.141592653589793d0
-  real(kind=8) :: x
+  real(8), parameter:: pi=3.141592653589793d0
+  real(8) :: x
 
 
   write(generated, '("Generated using Andrea Dal Corso code (rrkj3)")')

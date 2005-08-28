@@ -30,12 +30,12 @@ subroutine struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, &
   ! input: fft dimension along y
   ! input: fft dimension along z
 
-  real(kind=DP) :: bg (3, 3), tau (3, nat), g (3, ngm)
+  real(DP) :: bg (3, 3), tau (3, nat), g (3, ngm)
   ! input: reciprocal crystal basis vectors
   ! input: the positions of the atoms in the c
   ! input: the coordinates of the g vectors
 
-  complex(kind=DP) :: strf (ngm, ntyp),        &
+  complex(DP) :: strf (ngm, ntyp),        &
                       eigts1 ( -nr1:nr1, nat), &
                       eigts2 ( -nr2:nr2, nat), &
                       eigts3 ( -nr3:nr3, nat)
@@ -55,7 +55,7 @@ subroutine struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, &
   ! counter over fft dimension along z
   ! counter over polarizations
 
-  real(kind=DP) :: tpi, arg, bgtau (3)
+  real(DP) :: tpi, arg, bgtau (3)
   ! two times pi
   ! the argument of the exponent
   ! scalar product of bg and tau

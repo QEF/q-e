@@ -43,11 +43,11 @@ SUBROUTINE cft3( f, n1, n2, n3, nx1, nx2, nx3, sign )
   IMPLICIT NONE
   !
   INTEGER,          INTENT(IN)    :: n1, n2, n3, nx1, nx2, nx3, sign
-  COMPLEX(KIND=DP), INTENT(INOUT) :: f(nxx)
+  COMPLEX(DP), INTENT(INOUT) :: f(nxx)
   !
   INTEGER                        :: nxx_save, mc, i, j, ii, iproc, nppx
   INTEGER                        :: me_p
-  COMPLEX(KIND=DP), ALLOCATABLE  :: aux(:)
+  COMPLEX(DP), ALLOCATABLE  :: aux(:)
   !
   !
   CALL start_clock( 'cft3' )
@@ -173,7 +173,7 @@ SUBROUTINE cft3( f, n1, n2, n3, nx1, nx2, nx3, sign )
   IMPLICIT NONE
   !
   INTEGER,          INTENT(IN)    :: n1, n2, n3, nx1, nx2, nx3, sign
-  COMPLEX(KIND=DP), INTENT(INOUT) :: f(nx1*nx2*nx3)
+  COMPLEX(DP), INTENT(INOUT) :: f(nx1*nx2*nx3)
   !
   !
   CALL start_clock( 'cft3' )

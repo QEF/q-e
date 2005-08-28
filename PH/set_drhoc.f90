@@ -23,7 +23,7 @@ subroutine set_drhoc (q)
   !
   !     here the local variables
   !
-  real(kind=DP) :: gq2, g2a, gx, rhocgnt, rhocgip, q (3)
+  real(DP) :: gq2, g2a, gx, rhocgnt, rhocgip, q (3)
 
   integer :: ir, ng, nt
   ! counter on radial mesh points
@@ -32,7 +32,7 @@ subroutine set_drhoc (q)
   logical :: some_numeric
   ! .true. if some nlcc-pseudo is numeric
   ! in this case an auxiliary vector is needed
-  real(kind=DP), allocatable :: aux (:)
+  real(DP), allocatable :: aux (:)
 
   call start_clock('set_drhoc')
   !

@@ -9,7 +9,7 @@
   MODULE electrons_base
 !------------------------------------------------------------------------------!
 
-      USE kinds, ONLY: dbl
+      USE kinds, ONLY: DP
 !
       IMPLICIT NONE
       SAVE
@@ -29,8 +29,8 @@
 
       LOGICAL :: telectrons_base_initval = .FALSE.
 
-      REAL(dbl), ALLOCATABLE :: f(:)   ! occupation numbers ( at gamma )
-      REAL(dbl) :: qbac = 0.0d0        ! background neutralizing charge
+      REAL(DP), ALLOCATABLE :: f(:)   ! occupation numbers ( at gamma )
+      REAL(DP) :: qbac = 0.0d0        ! background neutralizing charge
       INTEGER, ALLOCATABLE :: fspin(:) ! spin of each state
 !
 !------------------------------------------------------------------------------!
@@ -45,13 +45,13 @@
       USE io_global, ONLY: stdout
       USE control_flags, ONLY: iprsta
 
-      REAL(dbl), INTENT(IN) :: zv_ (:)
+      REAL(DP), INTENT(IN) :: zv_ (:)
       INTEGER, INTENT(IN) :: na_ (:) , nsp_
-      REAL(dbl), INTENT(IN) :: nelec_ , nelup_ , neldw_
+      REAL(DP), INTENT(IN) :: nelec_ , nelup_ , neldw_
       INTEGER, INTENT(IN) :: nbnd_ , nspin_
       CHARACTER(LEN=*), INTENT(IN) :: occupations_
-      REAL(dbl), INTENT(IN) :: f_inp(:,:)
-      REAL(dbl) :: nelec, nelup, neldw, ocp, fsum
+      REAL(DP), INTENT(IN) :: f_inp(:,:)
+      REAL(DP) :: nelec, nelup, neldw, ocp, fsum
       INTEGER   :: iss, i, in
 
       nspin = nspin_
@@ -315,21 +315,21 @@
   MODULE electrons_nose
 !------------------------------------------------------------------------------!
 
-      USE kinds, ONLY: dbl
+      USE kinds, ONLY: DP
 !
       IMPLICIT NONE
       SAVE
 
-      REAL(dbl) :: fnosee   = 0.0d0   !  frequency of the thermostat ( in THz )
-      REAL(dbl) :: qne      = 0.0d0   !  mass of teh termostat
-      REAL(dbl) :: ekincw   = 0.0d0   !  kinetic energy to be kept constant
+      REAL(DP) :: fnosee   = 0.0d0   !  frequency of the thermostat ( in THz )
+      REAL(DP) :: qne      = 0.0d0   !  mass of teh termostat
+      REAL(DP) :: ekincw   = 0.0d0   !  kinetic energy to be kept constant
 
-      REAL(dbl) :: xnhe0   = 0.0d0   
-      REAL(dbl) :: xnhep   = 0.0d0   
-      REAL(dbl) :: xnhem   = 0.0d0   
-      REAL(dbl) :: vnhe    = 0.0d0
+      REAL(DP) :: xnhe0   = 0.0d0   
+      REAL(DP) :: xnhep   = 0.0d0   
+      REAL(DP) :: xnhem   = 0.0d0   
+      REAL(DP) :: vnhe    = 0.0d0
       
-      REAL(dbl) :: fccc    = 0.0d0
+      REAL(DP) :: fccc    = 0.0d0
 !
 !------------------------------------------------------------------------------!
   CONTAINS
@@ -337,7 +337,7 @@
 
   subroutine electrons_nose_init( ekincw_ , fnosee_ )
      USE constants, ONLY: factem, pi, terahertz
-     REAL(dbl), INTENT(IN) :: ekincw_, fnosee_
+     REAL(DP), INTENT(IN) :: ekincw_, fnosee_
      ! set thermostat parameter for electrons
      qne     = 0.0d0
      ekincw  = ekincw_
@@ -354,8 +354,8 @@
   function electrons_nose_nrg( xnhe0, vnhe, qne, ekincw )
     !  compute energy term for nose thermostat
     implicit none
-    real(kind=8) :: electrons_nose_nrg
-    real(kind=8), intent(in) :: xnhe0, vnhe, qne, ekincw
+    real(8) :: electrons_nose_nrg
+    real(8), intent(in) :: xnhe0, vnhe, qne, ekincw
       !
       electrons_nose_nrg = 0.5d0 * qne * vnhe * vnhe + 2.0d0 * ekincw * xnhe0
       !
@@ -365,9 +365,9 @@
   subroutine electrons_nose_shiftvar( xnhep, xnhe0, xnhem )
     !  shift values of nose variables to start a new step
     implicit none
-    real(kind=8), intent(out) :: xnhem
-    real(kind=8), intent(inout) :: xnhe0
-    real(kind=8), intent(in) :: xnhep
+    real(8), intent(out) :: xnhem
+    real(8), intent(inout) :: xnhe0
+    real(8), intent(in) :: xnhep
       !
       xnhem = xnhe0
       xnhe0 = xnhep
@@ -377,16 +377,16 @@
 
   subroutine electrons_nosevel( vnhe, xnhe0, xnhem, delt )
     implicit none
-    real(kind=8), intent(inout) :: vnhe
-    real(kind=8), intent(in) :: xnhe0, xnhem, delt 
+    real(8), intent(inout) :: vnhe
+    real(8), intent(in) :: xnhe0, xnhem, delt 
     vnhe=2.*(xnhe0-xnhem)/delt-vnhe
     return
   end subroutine electrons_nosevel
 
   subroutine electrons_noseupd( xnhep, xnhe0, xnhem, delt, qne, ekinc, ekincw, vnhe )
     implicit none
-    real(kind=8), intent(out) :: xnhep, vnhe
-    real(kind=8), intent(in) :: xnhe0, xnhem, delt, qne, ekinc, ekincw
+    real(8), intent(out) :: xnhep, vnhe
+    real(8), intent(in) :: xnhe0, xnhem, delt, qne, ekinc, ekincw
     xnhep = 2.0d0 * xnhe0 - xnhem + 2.0d0 * ( delt**2 / qne ) * ( ekinc - ekincw )
     vnhe  = ( xnhep - xnhem ) / ( 2.0d0 * delt )
     return
@@ -403,7 +403,7 @@
       IMPLICIT NONE
 
       INTEGER   :: nsvar, i
-      REAL(dbl) :: wnosee
+      REAL(DP) :: wnosee
 
       IF( tnosee ) THEN
         !

@@ -12,10 +12,10 @@ MODULE ramanm
   !
   SAVE
   !
-  REAL (KIND=dp) :: eth_rps, eth_ns
-  REAL (kind=DP), ALLOCATABLE ::  ramtns (:,:,:,:)
+  REAL (dp) :: eth_rps, eth_ns
+  REAL (DP), ALLOCATABLE ::  ramtns (:,:,:,:)
   ! raman tensor (3, 3, 3, nat)
-  REAL (kind=DP) :: eloptns (3,3,3), dek
+  REAL (DP) :: eloptns (3,3,3), dek
   ! electro-optic tensor
   ! delta_xk used for wavefunctions derivation
 

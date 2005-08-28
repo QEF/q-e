@@ -29,7 +29,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! input: atomic type
   ! input: the mode to be done
   ! input: fft grid dimensions
-  real(kind=DP) :: xq (3), at (3, 3), bg (3, 3), tau (3, nat)
+  real(DP) :: xq (3), at (3, 3), bg (3, 3), tau (3, nat)
   ! input: q vector
   ! input: direct lattice vectors
   ! input: reciprocal lattice vectors
@@ -51,7 +51,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! output: index of q in the star for a given sym
   ! output: index of -q in the star (0 if not present)
 
-  real(kind=DP) :: rtau (3, 48, nat), sxq (3, 48)
+  real(DP) :: rtau (3, 48, nat), sxq (3, 48)
   ! output: for each atom and rotation gives the R vector involved
   ! output: list of vectors in the star of q
   !
@@ -67,7 +67,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! generic counter
   ! number of dummy k-points
   ! maximum allowed number of dummy k-points
-  real(kind=DP) :: saq (3, 48), aq (3), raq (3), xk0 (3), wk(1), zero (3), &
+  real(DP) :: saq (3, 48), aq (3), raq (3), xk0 (3), wk(1), zero (3), &
        mdum(3,nat)
   ! auxiliary list of q (crystal coordinates)
   ! input q in crystal coordinates

@@ -24,12 +24,12 @@ subroutine sph_bes (msh, r, q, l, jl)
   implicit none
   !
   integer :: msh, l
-  real(kind=DP) :: r (msh), q, jl (msh)
+  real(DP) :: r (msh), q, jl (msh)
   !
   integer :: ir0
   !
 #if defined (__MASS)
-  real(kind=DP) :: qr(msh), sin_qr(msh), cos_qr(msh)
+  real(DP) :: qr(msh), sin_qr(msh), cos_qr(msh)
 #endif
   !
   if (abs (q) < eps14) then

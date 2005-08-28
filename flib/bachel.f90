@@ -18,7 +18,7 @@ subroutine bachel (alps, aps, npseu, lmax)
   integer :: npseu, lmax (npseu)
   ! input:  number of pseudopotential
   ! input:  max. angul. momentum of the ps
-  real(kind=DP) :: alps (3, 0:3, npseu), aps (6, 0:3, npseu)
+  real(DP) :: alps (3, 0:3, npseu), aps (6, 0:3, npseu)
   ! input:  the b_l coefficient
   ! in/out: the a_l coefficient
   !
@@ -29,11 +29,11 @@ subroutine bachel (alps, aps, npseu, lmax)
   ! aux. var. (max. ang. mom. of a fix. ps
   ! counter on angular momentum
   !
-  real(kind=DP) :: pi
+  real(DP) :: pi
   ! pi constant
   parameter (pi = 3.141592653589793d0)
 
-  real(kind=DP) :: s (6, 6), alpl, alpi, ail
+  real(DP) :: s (6, 6), alpl, alpi, ail
   ! auxiliary array
   ! first real aux. var. (fix. value of al
   ! second real aux. var. (fix. value of a

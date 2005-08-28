@@ -29,7 +29,7 @@
 !------------------------------------------------------------------------------!
 
       USE io_global,  ONLY :  stdout
-      USE kinds, ONLY : dbl
+      USE kinds, ONLY : DP
       USE parallel_include
 
 #if defined __SHMEM
@@ -50,7 +50,7 @@
 
 #if defined __SHMEM
 #if defined __ALTIX || defined __ORIGIN
-          COMPLEX (dbl)     :: mp_snd_buffer(mp_bufsize_msgmax),        &
+          COMPLEX (DP)     :: mp_snd_buffer(mp_bufsize_msgmax),        &
      &                         mp_rcv_buffer(mp_bufsize_msgmax)
           POINTER              (mp_p_snd_buffer,mp_snd_buffer),         &
      &                         (mp_p_rcv_buffer,mp_rcv_buffer)
@@ -58,14 +58,14 @@
 #else
           pointer (mp_p_snd_buffer,mp_snd_buffer)
           pointer (mp_p_rcv_buffer,mp_rcv_buffer)
-          complex (dbl) :: mp_snd_buffer(1)
-          complex (dbl) :: mp_rcv_buffer(1)
+          complex (DP) :: mp_snd_buffer(1)
+          complex (DP) :: mp_rcv_buffer(1)
 #endif
 #else
           integer :: mp_p_snd_buffer = 0
           integer :: mp_p_rcv_buffer = 0
-          complex (dbl), allocatable :: mp_snd_buffer(:)
-          complex (dbl), allocatable :: mp_rcv_buffer(:)
+          complex (DP), allocatable :: mp_snd_buffer(:)
+          complex (DP), allocatable :: mp_rcv_buffer(:)
 #endif
           PUBLIC :: mp_snd_buffer, mp_rcv_buffer, &
                     mp_p_snd_buffer, mp_p_rcv_buffer
@@ -182,7 +182,7 @@
 #  if defined __SHMEM
 
       pointer (p_pWrk,pWrk)
-      REAL(dbl)  pWrk(1)
+      REAL(DP)  pWrk(1)
       INTEGER :: nproc, num_pes
 
       nproc = num_pes()
@@ -233,8 +233,8 @@
 
       IMPLICIT NONE
 
-      COMPLEX(dbl) :: mp_snd_buffer(:)
-      COMPLEX(dbl) :: mp_rcv_buffer(:)
+      COMPLEX(DP) :: mp_snd_buffer(:)
+      COMPLEX(DP) :: mp_rcv_buffer(:)
 
       INTEGER :: ierr, nproc, i
       INTEGER :: msg_size

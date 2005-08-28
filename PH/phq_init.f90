@@ -56,9 +56,9 @@ SUBROUTINE phq_init()
     ! index for wavefunctions at k
     ! counter on atoms
     ! counter on G vectors
-  REAL(KIND=DP) :: arg
+  REAL(DP) :: arg
     ! the argument of the phase
-  COMPLEX(KIND=DP), ALLOCATABLE :: aux1(:,:)
+  COMPLEX(DP), ALLOCATABLE :: aux1(:,:)
     ! used to compute alphap
   !
   !

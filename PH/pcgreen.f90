@@ -28,7 +28,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   integer :: ik
   ! input: k-point under consideration
 
-  real(kind=DP) :: avg_iter, thresh, et_ (nbnd)
+  real(DP) :: avg_iter, thresh, et_ (nbnd)
   ! in/out: # of diagonalization iterations
   ! input: convergence threshold
   ! input: eigenvalues of the hamiltonian
@@ -44,17 +44,17 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   ! counter on G-points
   ! # of diagonalization iterations
 
-  real(kind=DP) :: anorm
+  real(DP) :: anorm
   ! the norm of the error
 
-  real(kind=DP) , allocatable :: h_diag(:,:), eprec(:)
+  real(DP) , allocatable :: h_diag(:,:), eprec(:)
   ! the diagonal part of the Hamiltonian
   ! cut-off for preconditioning
 
-  complex(kind=DP) :: ZDOTC
+  complex(DP) :: ZDOTC
   ! the scalar product function
 
-  complex(kind=DP) , allocatable :: ps(:,:), auxg (:)
+  complex(DP) , allocatable :: ps(:,:), auxg (:)
   ! auxiliary work space
 
   external   ch_psi_all, cg_psi

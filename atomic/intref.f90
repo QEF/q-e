@@ -23,7 +23,7 @@
               mesh,    &     ! the mesh size
               lam           ! the angular momentum
 
-      real(kind=dp) :: &
+      real(DP) :: &
               r(mesh),r2(mesh),sqr(mesh),dx, & ! the radial mesh
               vpot(mesh), &   ! the local potential
               chi(mesh),  &   ! the solution
@@ -34,14 +34,14 @@
               ierr,  &      ! used to control allocation
               n             ! generic counter 
 
-      real(kind=dp) :: &
+      real(DP) :: &
               lamsq,   &     ! combined angular momentum
               b(0:3),c(4), &   ! used for starting guess of the solution 
               b0e, rr1,rr2,& ! auxiliary
               xl1, x4l6, &
               x6l12, x8l20   !
 
-      real(kind=dp),allocatable :: &
+      real(DP),allocatable :: &
               al(:)      ! the known part of the differential equation
 
       allocate(al(mesh),stat=ierr)

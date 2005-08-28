@@ -36,7 +36,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   ! check for number of atoms
   logical :: exst
 
-  real(kind=DP) :: dr2, charge, etotefield
+  real(DP) :: dr2, charge, etotefield
   call seqopn (iunres, 'restart', 'unformatted', exst)
 
   if (.not.exst) goto 10

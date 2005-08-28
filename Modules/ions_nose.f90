@@ -9,7 +9,7 @@
   MODULE ions_nose
 !------------------------------------------------------------------------------!
 
-      USE kinds, ONLY: dbl
+      USE kinds, ONLY: DP
       USE parameters, ONLY: nhclm, natx
 !
       IMPLICIT NONE
@@ -37,13 +37,13 @@
       INTEGER   :: nhpcl, ndega, nhpdim, nhptyp, nhpend
       INTEGER   :: atm2nhp(natx)
       INTEGER, ALLOCATABLE   :: anum2nhp(:)
-      REAL(dbl), ALLOCATABLE :: vnhp(:), xnhp0(:), xnhpm(:), xnhpp(:), &
+      REAL(DP), ALLOCATABLE :: vnhp(:), xnhp0(:), xnhpm(:), xnhpp(:), &
       ekin2nhp(:), gkbt2nhp(:), qnp(:), qnp_(:)
 
-      REAL(dbl) :: gkbt = 0.0d0
-      REAL(dbl) :: kbt = 0.0d0
-      REAL(dbl) :: tempw = 0.0d0
-      REAL(dbl) :: fnosep( nhclm ) = 0.0d0
+      REAL(DP) :: gkbt = 0.0d0
+      REAL(DP) :: kbt = 0.0d0
+      REAL(DP) :: tempw = 0.0d0
+      REAL(DP) :: fnosep( nhclm ) = 0.0d0
 
 !------------------------------------------------------------------------------!
   CONTAINS 
@@ -53,7 +53,7 @@
     use constants,      only: factem, pi, terahertz
     use control_flags,  only: tnosep
     use ions_base,      only: ndofp, tions_base_init, nsp, nat, na
-    real(KIND=dbl), intent(in)  :: tempw_ , fnosep_(:) 
+    real(DP), intent(in)  :: tempw_ , fnosep_(:) 
     integer, intent(in) :: nhpcl_ , nhptyp_ , ndega_
     integer :: nsvar, i, j, iat, is, ia
 
@@ -146,7 +146,7 @@
           if( fnosep(i) > 0.0d0 ) then
             qnp_(i) = 2.d0 * tempw / factem / ( fnosep(i) * ( 2.d0 * pi ) * terahertz )**2
           else
-            qnp_(i) = qnp_(1) / dble(ndega)
+            qnp_(i) = qnp_(1) / DBLE(ndega)
           endif
         enddo
       endif
@@ -220,7 +220,7 @@
       IMPLICIT NONE
 
       INTEGER   :: nsvar, i, j
-      REAL(dbl) :: wnosep
+      REAL(DP) :: wnosep
 
       IF( tnosep ) THEN
         !
@@ -264,8 +264,8 @@
 
   subroutine ions_nosevel( vnhp, xnhp0, xnhpm, delt, nhpcl, nhpdim )
     implicit none
-    real(KIND=dbl), intent(inout) :: vnhp(nhpcl,nhpdim)
-    real(KIND=dbl), intent(in) :: xnhp0(nhpcl,nhpdim), xnhpm(nhpcl,nhpdim), delt
+    real(DP), intent(inout) :: vnhp(nhpcl,nhpdim)
+    real(DP), intent(in) :: xnhp0(nhpcl,nhpdim), xnhpm(nhpcl,nhpdim), delt
     integer, intent(in) :: nhpcl, nhpdim
     integer :: i,j
     do j=1,nhpdim
@@ -284,12 +284,12 @@
 
  subroutine ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim, nhpend )
     implicit none
-    real(KIND=dbl), intent(out) :: xnhpp(nhpcl,nhpdim), vnhp(nhpcl,nhpdim)
-    real(KIND=dbl), intent(in) :: xnhp0(nhpcl,nhpdim), xnhpm(nhpcl,nhpdim), delt, qnp(nhpcl,nhpdim), gkbt2nhp(:), kbt
-    real(KIND=dbl), intent(inout) :: ekin2nhp(:)
+    real(DP), intent(out) :: xnhpp(nhpcl,nhpdim), vnhp(nhpcl,nhpdim)
+    real(DP), intent(in) :: xnhp0(nhpcl,nhpdim), xnhpm(nhpcl,nhpdim), delt, qnp(nhpcl,nhpdim), gkbt2nhp(:), kbt
+    real(DP), intent(inout) :: ekin2nhp(:)
     integer, intent(in) :: nhpcl, nhpdim, nhpend
     integer :: i, j
-    real(KIND=dbl) :: dt2, zetfrc, vp1dlt, ekinend, vp1dend
+    real(DP) :: dt2, zetfrc, vp1dlt, ekinend, vp1dend
 
 
     ekinend = 0.0d0
@@ -337,12 +337,12 @@
 
   
 
-  real(KIND=dbl) function ions_nose_nrg( xnhp0, vnhp, qnp, gkbt2nhp, kbt, nhpcl, nhpdim )
+  real(DP) function ions_nose_nrg( xnhp0, vnhp, qnp, gkbt2nhp, kbt, nhpcl, nhpdim )
     implicit none
     integer :: nhpcl, nhpdim
-    real(KIND=dbl) :: gkbt2nhp(:), qnp(nhpcl,nhpdim),vnhp(nhpcl,nhpdim),xnhp0(nhpcl,nhpdim),kbt
+    real(DP) :: gkbt2nhp(:), qnp(nhpcl,nhpdim),vnhp(nhpcl,nhpdim),xnhp0(nhpcl,nhpdim),kbt
     integer :: i,j
-    real(KIND=dbl) :: stmp
+    real(DP) :: stmp
     !
     stmp = 0.0d0
     do j=1,nhpdim
@@ -362,8 +362,8 @@
   subroutine ions_nose_shiftvar( xnhpp, xnhp0, xnhpm )
     !  shift values of nose variables to start a new step
     implicit none
-    real(KIND=dbl), intent(inout) :: xnhpm(:), xnhp0(:)
-    real(KIND=dbl), intent(in)  :: xnhpp(:)
+    real(DP), intent(inout) :: xnhpm(:), xnhp0(:)
+    real(DP), intent(in)  :: xnhpp(:)
       !
       xnhpm = xnhp0
       xnhp0 = xnhpp

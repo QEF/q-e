@@ -28,11 +28,11 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
   ! input: the types of atoms
   ! input: the unit with the dynamical matrix
 
-  real(kind=DP) :: xq (3), amass (ntyp), w2 (3 * nat)
+  real(DP) :: xq (3), amass (ntyp), w2 (3 * nat)
   ! input: q vector
   ! input: the masses
   ! output: the frequencies squared
-  complex(kind=DP) :: dyn (3 * nat, nmodes)
+  complex(DP) :: dyn (3 * nat, nmodes)
   ! input: the dynamical matrix
   !
   !   here the local variables
@@ -40,13 +40,13 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
   integer :: nta, ntb, nu_i, nu_j, mu, na, nb, i
   ! counters
 
-  real(kind=DP) :: rydthz, rydcm1, w1, unorm
+  real(DP) :: rydthz, rydcm1, w1, unorm
   ! conversion from a.u. to terahertz
   ! conversion from a.u. to cm^-1
   ! the frequency
   ! norm of u
 
-  complex(kind=DP) :: z (3 * nat, 3 * nat)
+  complex(DP) :: z (3 * nat, 3 * nat)
   ! the eigenvectors
 
   !

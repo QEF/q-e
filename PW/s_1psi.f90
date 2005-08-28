@@ -21,7 +21,7 @@ SUBROUTINE s_1psi( lda, n, psi, spsi )
   IMPLICIT NONE
   !
   INTEGER          :: lda, n
-  COMPLEX(KIND=DP) :: psi(n), spsi(n)
+  COMPLEX(DP) :: psi(n), spsi(n)
   !
   !
   CALL start_clock( 's_1psi' )

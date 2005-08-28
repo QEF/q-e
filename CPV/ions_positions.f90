@@ -9,16 +9,16 @@
 MODULE ions_positions
 !------------------------------------------------------------------------------!
   !
-  USE kinds,      ONLY : dbl
+  USE kinds,      ONLY : DP
   USE parameters, ONLY : natx
   !
   IMPLICIT NONE
   !
   ! ... Atomic positions arrays used in the cp codes during the dynamic
   !
-  REAL(KIND=dbl) :: tau0(3,natx), taum(3,natx),  taup(3,natx)
-  REAL(KIND=dbl) :: taus(3,natx), tausm(3,natx), tausp(3,natx)
-  REAL(KIND=dbl) :: vels(3,natx), velsm(3,natx), velsp(3,natx)
+  REAL(DP) :: tau0(3,natx), taum(3,natx),  taup(3,natx)
+  REAL(DP) :: taus(3,natx), tausm(3,natx), tausp(3,natx)
+  REAL(DP) :: vels(3,natx), velsm(3,natx), velsp(3,natx)
   !
   CONTAINS 
   !
@@ -26,13 +26,13 @@ MODULE ions_positions
   SUBROUTINE ions_hmove( taus, tausm, iforce, pmass, fion, ainv, delt, na, nsp )
     !--------------------------------------------------------------------------
     !
-    REAL(KIND=dbl), INTENT(IN)  :: tausm(:,:), pmass(:), fion(:,:)
+    REAL(DP), INTENT(IN)  :: tausm(:,:), pmass(:), fion(:,:)
     INTEGER,        INTENT(IN)  :: iforce(:,:)
-    REAL(KIND=dbl), INTENT(IN)  :: ainv(3,3), delt
-    REAL(KIND=dbl), INTENT(OUT) :: taus(:,:) 
+    REAL(DP), INTENT(IN)  :: ainv(3,3), delt
+    REAL(DP), INTENT(OUT) :: taus(:,:) 
     INTEGER,        INTENT(IN)  :: na(:), nsp
     INTEGER                     :: is, ia, i, isa
-    REAL(KIND=dbl)              :: dt2by2, fac, fions(3)
+    REAL(DP)              :: dt2by2, fac, fions(3)
     !
     !
     dt2by2 = 0.5D0 * delt * delt
@@ -73,20 +73,20 @@ MODULE ions_positions
     !
     IMPLICIT NONE
     !
-    REAL(KIND=dbl), INTENT(IN)    :: taus(:,:), tausm(:,:), pmass(:), fion(:,:)
+    REAL(DP), INTENT(IN)    :: taus(:,:), tausm(:,:), pmass(:), fion(:,:)
     INTEGER,        INTENT(IN)    :: iforce(:,:)
-    REAL(KIND=dbl), INTENT(IN)    :: ainv(3,3), delt
-    REAL(KIND=dbl), INTENT(OUT)   :: tausp(:,:)
+    REAL(DP), INTENT(IN)    :: ainv(3,3), delt
+    REAL(DP), INTENT(OUT)   :: tausp(:,:)
     INTEGER,        INTENT(IN)    :: na(:), nsp, nhpcl, nhpdim, atm2nhp(:)
-    REAL(KIND=dbl), INTENT(IN)    :: fricp, hgamma(3,3), vels(:,:)
+    REAL(DP), INTENT(IN)    :: fricp, hgamma(3,3), vels(:,:)
     LOGICAL,        INTENT(IN)    :: tsdp, tnosep
-    REAL(KIND=dbl), INTENT(INOUT) :: fionm(:,:)
-    REAL(KIND=dbl), INTENT(IN)    :: vnhp(nhpcl,nhpdim)
-    REAL(KIND=dbl), INTENT(OUT)   :: velsp(:,:)
-    REAL(KIND=dbl), INTENT(IN)    :: velsm(:,:)
+    REAL(DP), INTENT(INOUT) :: fionm(:,:)
+    REAL(DP), INTENT(IN)    :: vnhp(nhpcl,nhpdim)
+    REAL(DP), INTENT(OUT)   :: velsp(:,:)
+    REAL(DP), INTENT(IN)    :: velsm(:,:)
     INTEGER                       :: is, ia, i, isa
-    REAL(KIND=dbl)                :: dt2by2, fac, dt2, twodel
-    REAL(KIND=dbl)                :: verl1, verl2, verl3
+    REAL(DP)                :: dt2by2, fac, dt2, twodel
+    REAL(DP)                :: verl1, verl2, verl3
     !
     !
     dt2by2 = 0.5D0 * delt * delt

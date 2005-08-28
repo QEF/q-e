@@ -63,16 +63,16 @@ subroutine dhdrhopsi
   ! number of the record
   ! max number of iterations in diagonalization
 
-  real(kind=DP) , allocatable ::  et_sw(:)
+  real(DP) , allocatable ::  et_sw(:)
   ! swap space for diagonalization eigenvalues
 
-  real(kind=DP) :: xk_sw (3), avg_iter1, avg_iter2, tmpr
+  real(DP) :: xk_sw (3), avg_iter1, avg_iter2, tmpr
   ! swap space for k-points
   ! average iteration # in the psi  diagonalizat.
   ! average iteration # in the dpsi diagonalizat.
   ! working space
 
-  complex(kind=DP) , allocatable :: ev_sw (:,:),  chif (:,:,:),  &
+  complex(DP) , allocatable :: ev_sw (:,:),  chif (:,:,:),  &
          depsi (:,:,:), auxg(:), dvscfs (:,:), &
          auxr (:), au2r (:), ps0 (:), ps1 (:,:), ps2 (:,:,:), &
          becp1_sw (:,:)
@@ -85,7 +85,7 @@ subroutine dhdrhopsi
   ! potential on the smooth grid
   ! auxiliary wavefunct. in real space
   ! scalar products
-  complex(kind=DP) :: itdba, tmpc, ZDOTC
+  complex(DP) :: itdba, tmpc, ZDOTC
   ! i / ( 2 * delta_xk )
   ! working space
   ! the scalar product function

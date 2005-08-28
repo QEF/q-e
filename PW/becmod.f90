@@ -12,9 +12,9 @@ MODULE becmod
   !
   SAVE
   ! variables containing <beta|psi>
-  REAL(KIND=DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
        rbecp(:,:) !   <beta|psi> for real (at Gamma) wavefunctions 
-  COMPLEX(KIND=DP), ALLOCATABLE ::  &
+  COMPLEX(DP), ALLOCATABLE ::  &
        becp (:,:), &            !  as above for complex wavefunctions
        becp_nc(:,:,:)           !  as above for spinors
   !

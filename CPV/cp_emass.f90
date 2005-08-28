@@ -13,13 +13,13 @@
     !  This module contains variable and functions relative to the
     !  Car-Parrinello fictitious electronic masse
 
-      USE kinds, ONLY: dbl
+      USE kinds, ONLY: DP
 !
       IMPLICIT NONE
       SAVE
 
-      REAL(dbl) :: emass        = 1.0d0    !  fictitious electronic mass ( mu )
-      REAL(dbl) :: emass_cutoff = 1.0d0    !  kinetic energy cutoff for plane
+      REAL(DP) :: emass        = 1.0d0    !  fictitious electronic mass ( mu )
+      REAL(DP) :: emass_cutoff = 1.0d0    !  kinetic energy cutoff for plane
                                            !  waves to be used for Fourier acceleration
                                            !  preconditioning
 
@@ -30,8 +30,8 @@
     SUBROUTINE emass_precond( ema0bg, ggp, ngw, tpiba2, emaec )
       USE control_flags, ONLY: iprsta
       IMPLICIT NONE
-      REAL(dbl), INTENT(OUT) :: ema0bg(:)
-      REAL(dbl), INTENT(IN) :: ggp(:), tpiba2, emaec
+      REAL(DP), INTENT(OUT) :: ema0bg(:)
+      REAL(DP), INTENT(IN) :: ggp(:), tpiba2, emaec
       INTEGER, INTENT(IN) :: ngw
       INTEGER :: i
       !  mass preconditioning: ema0bg(i) = ratio of emass(g=0) to emass(g)

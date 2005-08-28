@@ -30,7 +30,7 @@ subroutine addusddense (drhoscf, dbecsum)
   ! input: if zero does not compute drho
   ! input: the number of perturbations
 
-  complex(kind=DP) :: drhoscf(nrxx,nspin,3), dbecsum(nhm*(nhm+1)/2,nat,nspin,3)
+  complex(DP) :: drhoscf(nrxx,nspin,3), dbecsum(nhm*(nhm+1)/2,nat,nspin,3)
 
   ! inp/out: change of the charge density
   ! input: sum over kv of bec
@@ -42,12 +42,12 @@ subroutine addusddense (drhoscf, dbecsum)
 
   ! counters
 
-  real(kind=DP), allocatable  :: qmod(:), ylmk0(:,:)
+  real(DP), allocatable  :: qmod(:), ylmk0(:,:)
   ! the modulus of q+G
   ! the spherical harmonics
 
-  complex(kind=DP) :: zsum
-  complex(kind=DP), allocatable ::  sk (:), qg (:), qgm (:), aux (:,:,:)
+  complex(DP) :: zsum
+  complex(DP), allocatable ::  sk (:), qg (:), qgm (:), aux (:,:,:)
   ! the structure factor
   ! work space
 

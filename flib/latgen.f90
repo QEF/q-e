@@ -29,12 +29,12 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
   use kinds, only: DP
   implicit none
   integer ibrav
-  real(kind=DP) celldm(6), a1(3), a2(3), a3(3), omega
+  real(DP) celldm(6), a1(3), a2(3), a3(3), omega
   !
-  real(kind=DP), parameter:: sr2 = 1.414213562373d0, &
+  real(DP), parameter:: sr2 = 1.414213562373d0, &
                              sr3 = 1.732050807569d0
   integer i,j,k,l,iperm,ir
-  real(kind=DP) term, cbya, s, term1, term2, singam, sen
+  real(DP) term, cbya, s, term1, term2, singam, sen
   !
   if(ibrav == 0) go to 100
   !

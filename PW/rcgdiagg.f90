@@ -28,28 +28,28 @@ SUBROUTINE rcgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
   !
   INTEGER,           INTENT(IN)    :: ndmx, ndim, nbnd, maxter
   INTEGER,           INTENT(IN)    :: btype(nbnd)
-  REAL (KIND=DP),    INTENT(IN)    :: precondition(ndim), ethr
-  COMPLEX (KIND=DP), INTENT(INOUT) :: psi(ndmx,nbnd)
-  REAL (KIND=DP),    INTENT(INOUT) :: e(nbnd)
+  REAL (DP),    INTENT(IN)    :: precondition(ndim), ethr
+  COMPLEX (DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+  REAL (DP),    INTENT(INOUT) :: e(nbnd)
   INTEGER,           INTENT(OUT)   :: notconv
-  REAL (KIND=DP),    INTENT(OUT)   :: avg_iter
+  REAL (DP),    INTENT(OUT)   :: avg_iter
   !
   ! ... local variables
   !
   INTEGER                        :: i, j, m, iter, moved
-  REAL (KIND=DP),    ALLOCATABLE :: lagrange(:)
-  COMPLEX (KIND=DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:), &
+  REAL (DP),    ALLOCATABLE :: lagrange(:)
+  COMPLEX (DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:), &
                                     scg(:), ppsi(:), g0(:)  
-  REAL (KIND=DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, gg1, &
+  REAL (DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, gg1, &
                                     cg0, e0, es(2)
-  REAL (KIND=DP)                 :: theta, cost, sint, cos2t, sin2t
+  REAL (DP)                 :: theta, cost, sint, cos2t, sin2t
   LOGICAL                        :: reorder
   INTEGER                        :: ndim2, ndmx2
-  REAL (KIND=DP)                 :: empty_ethr
+  REAL (DP)                 :: empty_ethr
   !
   ! ... external functions
   !
-  REAL (KIND=DP), EXTERNAL :: DDOT
+  REAL (DP), EXTERNAL :: DDOT
   !
   !
   CALL start_clock( 'rcgdiagg' )

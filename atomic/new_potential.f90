@@ -20,12 +20,12 @@ subroutine new_potential &
   implicit none
   logical :: nlcc, gga, oep
   integer :: ndm,mesh,lsd,latt,i,is,nu, nspin, ierr
-  real(kind=dp):: rho(ndm,2),r(ndm),r2(ndm),vxcp(2), &
+  real(DP):: rho(ndm,2),r(ndm),r2(ndm),vxcp(2), &
        sqr(ndm),vnew(ndm,2),vxt(ndm),vh(ndm), rhoc(ndm)
-  real(kind=dp):: zed,enne,dx,rh(2),rhc
-  real(kind=dp),allocatable:: vgc(:,:), egc(:), rhotot(:)
-!  real(kind=dp),allocatable:: vx(:,:)
-  real(kind=dp),allocatable:: dchi0(:,:)
+  real(DP):: zed,enne,dx,rh(2),rhc
+  real(DP),allocatable:: vgc(:,:), egc(:), rhotot(:)
+!  real(DP),allocatable:: vx(:,:)
+  real(DP),allocatable:: dchi0(:,:)
 
   gga=igcx.ne.0.or.igcc.ne.0
   oep=iexch.eq.4

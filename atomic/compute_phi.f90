@@ -28,11 +28,11 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
        iflag,&   ! if 1 print
        iok       ! output: number of nodes of the pseudized wavefunction
 
-  real(kind=dp) :: &
+  real(DP) :: &
        xc(8), occ
   !
-  real(kind=dp), parameter :: pi=3.14159265358979_DP
-  real(kind=dp) :: &
+  real(DP), parameter :: pi=3.14159265358979_DP
+  real(DP) :: &
        fae,    & ! the value of the all-electron function
        f1ae,   & ! its first derivative
        f2ae,   & ! the second derivative
@@ -44,14 +44,14 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
        isign,   &! sign of the max of the ae-wfc
        m, n, nst, nnode, nc, nc1, ij, imax, iq, i
 
-  real(kind=dp) :: &
+  real(DP) :: &
        chir(ndm,nwfx), chi_dir(ndm,2), gi(ndm), j1(ndm,4), &
        f1aep1, f1aem1, jnor, psnor, fact(4), &
        cm(10), bm(4), ze2, cn(6), c2, &
        delta, a, b, c, deter, gamma, &
        lamda0, lamda3, lamda4, mu0, mu4, s0, s4, t0, t4
 
-  real(kind=dp), external :: deriv_7pts, deriv2_7pts, int_0_inf_dr, pr
+  real(DP), external :: deriv_7pts, deriv2_7pts, int_0_inf_dr, pr
   integer ::  &
        nbes   ! number of Bessel functions to be used
 

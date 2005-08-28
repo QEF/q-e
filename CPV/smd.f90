@@ -58,30 +58,30 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   ! input/output
   integer ibrav, ndr, nbeg, iforce(3,natx)
   logical tfirst
-  real(kind=8) celldm(6), ecut, ecutw
-  real(kind=8) delt
+  real(8) celldm(6), ecut, ecutw
+  real(8) delt
   ! local
-  real(kind=8) randy
+  real(8) randy
   integer i, j, ia, is, nfi, isa, isat
 
 
   ! YK
   ! present in the call to read(p)file, not actually used
-  !      complex(kind=8) c0(1,1),cm(1,1)
-  !      real(kind=8) taum(1,1,1),vel(1,1,1),velm(1,1,1),acc(nacx)
-  !      real(kind=8) lambda(1,1),lambdam(1,1)
-  !      real(kind=8) xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp, ekincm
-  !      real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-  !      real(kind=8) fion(1,1,1)
+  !      complex(8) c0(1,1),cm(1,1)
+  !      real(8) taum(1,1,1),vel(1,1,1),velm(1,1,1),acc(nacx)
+  !      real(8) lambda(1,1),lambdam(1,1)
+  !      real(8) xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp, ekincm
+  !      real(8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
+  !      real(8) fion(1,1,1)
 
   ! YK
-  complex(kind=8) c0(ngw,nx),cm(ngw,nx)
-  real(kind=8) taum(3,natx),vel(3,natx),velm(3,natx),acc(nacx)
-  real(kind=8) lambda(nx,nx),lambdam(nx,nx)
-  real(kind=8) xnhe0,xnhem,vnhe,xnhp0(nhclm),xnhpm(nhclm),vnhp(nhclm), ekincm
-  real(kind=8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-  real(kind=8) fion(3,natx),tps
-  real(kind=8) mat_z(1,1,1)
+  complex(8) c0(ngw,nx),cm(ngw,nx)
+  real(8) taum(3,natx),vel(3,natx),velm(3,natx),acc(nacx)
+  real(8) lambda(nx,nx),lambdam(nx,nx)
+  real(8) xnhe0,xnhem,vnhe,xnhp0(nhclm),xnhpm(nhclm),vnhp(nhclm), ekincm
+  real(8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
+  real(8) fion(3,natx),tps
+  real(8) mat_z(1,1,1)
   integer      nhpcl
   !
 
@@ -173,8 +173,8 @@ SUBROUTINE TANGENT(state,tan)
   type(ptr) :: state(0:sm_p)
   type(ptr) :: tan(0:sm_p)
 
-  real(kind=8) :: ene1,ene2,tmp1,tmp2
-  real(kind=8), parameter :: zero = 1.d-15
+  real(8) :: ene1,ene2,tmp1,tmp2
+  real(8), parameter :: zero = 1.d-15
 
   ! ---------------------------- !
 
@@ -326,9 +326,9 @@ SUBROUTINE PERP(vec,tan,paraforce)
 
   integer :: i,is,ia,isa
 
-  real(kind=8) :: vec(3,natx),tan(3,natx)
-  real(kind=8) :: paraforce
-  real(kind=8) :: dotp
+  real(8) :: vec(3,natx),tan(3,natx)
+  real(8) :: paraforce
+  real(8) :: dotp
 
   !----------------------------------------------
 
@@ -393,7 +393,7 @@ SUBROUTINE LINEARP(state)
 
   type(ptr) :: state(0:sm_p)
 
-  real(kind=8) :: ratio
+  real(8) :: ratio
 
   ! -------------------------------------
 
@@ -452,8 +452,8 @@ SUBROUTINE ARC(state,alpha,t_alpha,key)
 
   type(ptr) :: state(0:sm_p)
 
-  real(kind=8), intent(out) :: alpha(0:sm_p),t_alpha 
-  real(kind=8) :: tmp(3,natx), dalpha(0:sm_p) 
+  real(8), intent(out) :: alpha(0:sm_p),t_alpha 
+  real(8) :: tmp(3,natx), dalpha(0:sm_p) 
 
   ! -------------------------------------------------
 
@@ -555,8 +555,8 @@ SUBROUTINE ABSVEC(vec,norm)
   IMPLICIT NONE
 
   integer :: i,is,ia,isa
-  real(kind=8),intent(in) :: vec(3,natx)
-  real(kind=8),intent(out) :: norm 
+  real(8),intent(in) :: vec(3,natx)
+  real(8),intent(out) :: norm 
 
 
   norm = 0.d0
@@ -601,8 +601,8 @@ SUBROUTINE IMPOSECD(state,als,bes,chs)
 
   integer :: i,is,ia
   integer,intent(in) :: als,bes,chs
-  real(kind=8) :: state(3,natx)
-  real(kind=8) :: dotp,theta,mag1,mag2
+  real(8) :: state(3,natx)
+  real(8) :: dotp,theta,mag1,mag2
 
 
   write(stdout,*) " STARTCOORD used : ",als,bes,chs
@@ -714,13 +714,13 @@ subroutine rot(state,phi,direction)
   integer :: i,j,k,isa
   integer :: ia,is,nat
   integer :: a,b,c
-  real(kind=8) :: rotm(3,3,3)
-  real(kind=8) :: state(3,natx)
-  real(kind=8), allocatable :: cd(:,:)
-  real(kind=8), allocatable :: newcd(:,:)
-  real(kind=8) :: tmp
-  real(kind=8), intent(in) :: phi
-  real(kind=8), parameter :: zero = 1.d-10
+  real(8) :: rotm(3,3,3)
+  real(8) :: state(3,natx)
+  real(8), allocatable :: cd(:,:)
+  real(8), allocatable :: newcd(:,:)
+  real(8) :: tmp
+  real(8), intent(in) :: phi
+  real(8), parameter :: zero = 1.d-10
   character,intent(in) :: direction
 
 
@@ -839,8 +839,8 @@ SUBROUTINE TRAN(state,dist,direction)
   IMPLICIT NONE
 
   integer :: i,j,k,is,ia,isa
-  real(kind=8) :: state(3,natx)
-  real(kind=8),intent(in) :: dist 
+  real(8) :: state(3,natx)
+  real(8),intent(in) :: dist 
   character,intent(in) :: direction
 
   write(stdout,*) "TRAN : ", direction
@@ -873,10 +873,10 @@ SUBROUTINE DISTATOMS(state,mindist,isa1,isa2)
   use parameters, only: nsx,natx
   use cell_base, only: ainv, a1, a2, a3
 
-  real(kind=8),intent(in) :: state(3,natx)
-  real(kind=8),intent(out) :: mindist
+  real(8),intent(in) :: state(3,natx)
+  real(8),intent(out) :: mindist
   integer,intent(out) :: isa1, isa2
-  real(kind=8) :: dist, in(3), out(3) 
+  real(8) :: dist, in(3), out(3) 
   integer :: is, ia, iis, iia, isa, iisa
 
   mindist  = 1.d10
@@ -936,14 +936,14 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
   LOGICAL, intent(in) :: stcd
 
   TYPE(ptr), allocatable :: p_tau0(:) 
-  real (kind=8), allocatable :: guess(:,:,:)
-  real (kind=8), allocatable :: guess2(:,:,:)
-  real (kind=8), allocatable :: arc_in(:)
-  real (kind=8), allocatable :: arc_out(:)
-  real (kind=8), allocatable :: darc(:)
+  real (8), allocatable :: guess(:,:,:)
+  real (8), allocatable :: guess2(:,:,:)
+  real (8), allocatable :: arc_in(:)
+  real (8), allocatable :: arc_out(:)
+  real (8), allocatable :: darc(:)
 
-  real (kind=8), intent(in) :: alat
-  real (kind=8) :: trashd
+  real (8), intent(in) :: alat
+  real (8) :: trashd
 
   ! key = 1  : SMOPT
   ! key = 2  : LINI
@@ -1139,7 +1139,7 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
 
 
      DO sm_k=0,sm_p
-        arc_out(sm_k) = dble(sm_k) * 1.d0/dble(sm_p)
+        arc_out(sm_k) = DBLE(sm_k) * 1.d0/DBLE(sm_p)
      ENDDO
 
      ! ... Arc of kwon points

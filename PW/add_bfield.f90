@@ -26,12 +26,12 @@ USE noncollin_module, ONLY : magtot_nc, bfield, lambda, i_cons, mcons, &
                              pointlist, pointnum, factlist 
 IMPLICIT NONE
   !
-REAL(KIND=dp) :: v(nrxx, nspin), rho(nrxx,nspin)
-REAL(KIND=dp) :: ma, xx, fact, m1(3), m_loc(3,nat), r_loc(nat)
+REAL(dp) :: v(nrxx, nspin), rho(nrxx,nspin)
+REAL(dp) :: ma, xx, fact, m1(3), m_loc(3,nat), r_loc(nat)
 
 
 INTEGER :: ir, ipol, nt, na
-REAL(KIND=DP) :: etcon
+REAL(DP) :: etcon
 
 
 IF (i_cons==0) RETURN

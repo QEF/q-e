@@ -32,7 +32,7 @@ SUBROUTINE from_scratch_fpmd   &
         fi, ht, atoms, bec, becdr, vpot, edft )
 
 
-      USE kinds,            ONLY : dbl
+      USE kinds,            ONLY : DP
       USE wave_types,       ONLY : wave_descriptor
       USE wave_functions,   ONLY : gram, fixwave
       USE wave_base,        ONLY : wave_steepest
@@ -66,23 +66,23 @@ SUBROUTINE from_scratch_fpmd   &
 
       IMPLICIT NONE
 
-      COMPLEX(dbl) :: eigr(:,:)
-      COMPLEX(dbl) :: ei1(:,:)
-      COMPLEX(dbl) :: ei2(:,:)
-      COMPLEX(dbl) :: ei3(:,:)
-      COMPLEX(dbl) :: sfac(:,:)
-      REAL(dbl)    :: rhoe(:,:,:,:)
-      REAL(dbl)    :: bec(:,:)
-      REAL(dbl)    :: becdr(:,:,:)
-      REAL(dbl)    :: fi(:,:,:)
-      REAL(dbl)    ::  vpot(:,:,:,:)
+      COMPLEX(DP) :: eigr(:,:)
+      COMPLEX(DP) :: ei1(:,:)
+      COMPLEX(DP) :: ei2(:,:)
+      COMPLEX(DP) :: ei3(:,:)
+      COMPLEX(DP) :: sfac(:,:)
+      REAL(DP)    :: rhoe(:,:,:,:)
+      REAL(DP)    :: bec(:,:)
+      REAL(DP)    :: becdr(:,:,:)
+      REAL(DP)    :: fi(:,:,:)
+      REAL(DP)    ::  vpot(:,:,:,:)
       TYPE (atoms_type)      :: atoms
       TYPE (dft_energy_type) :: edft
       TYPE (boxdimensions)   :: ht 
       TYPE (charge_descriptor), INTENT(IN) :: desc
       TYPE (wave_descriptor),   INTENT(IN) :: cdesc, edesc
-      COMPLEX(dbl),             INTENT(INOUT) :: cm(:,:,:,:), c0(:,:,:,:)
-      COMPLEX(dbl),             INTENT(INOUT) :: cp(:,:,:,:), ce(:,:,:,:)
+      COMPLEX(DP),             INTENT(INOUT) :: cm(:,:,:,:), c0(:,:,:,:)
+      COMPLEX(DP),             INTENT(INOUT) :: cp(:,:,:,:), ce(:,:,:,:)
 
       ! ... declare other variables
 
@@ -90,12 +90,12 @@ SUBROUTINE from_scratch_fpmd   &
       LOGICAL, PARAMETER :: ttprint = .TRUE.
       INTEGER, PARAMETER :: nfi = 0
 
-      COMPLEX(dbl) :: cgam(1,1,1)
-      REAL (dbl)   :: gam(1,1,1)
+      COMPLEX(DP) :: cgam(1,1,1)
+      REAL (DP)   :: gam(1,1,1)
       INTEGER      :: ierr
-      REAL(dbl)    :: timepre, vdum
-      REAL(dbl)    :: s4, s5, cclock
-      REAL(dbl)    :: adum( nacx )
+      REAL(DP)    :: timepre, vdum
+      REAL(DP)    :: s4, s5, cclock
+      REAL(DP)    :: adum( nacx )
       !
       !  initialize wave functions
       !
@@ -210,35 +210,35 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst,    &
     USE electrons_base, ONLY: f, nspin
     USE phase_factors_module, ONLY: strucf
 
-    COMPLEX(kind=8) :: eigr(:,:), ei1(:,:),  ei2(:,:),  ei3(:,:)
-    COMPLEX(kind=8) :: eigrb(:,:)
-    REAL(kind=8) :: bec(:,:), fion(:,:), becdr(:,:,:), fionm(:,:)
-    REAL(kind=8) :: eself
-    REAL(kind=8) :: taub(:,:)
-    REAL(kind=8) :: b1(:), b2(:), b3(:)
+    COMPLEX(8) :: eigr(:,:), ei1(:,:),  ei2(:,:),  ei3(:,:)
+    COMPLEX(8) :: eigrb(:,:)
+    REAL(8) :: bec(:,:), fion(:,:), becdr(:,:,:), fionm(:,:)
+    REAL(8) :: eself
+    REAL(8) :: taub(:,:)
+    REAL(8) :: b1(:), b2(:), b3(:)
     INTEGER :: irb(:,:)
     INTEGER :: nfi, iforce(:,:)
     LOGICAL :: tfirst
-    COMPLEX(kind=8) :: sfac(:,:)
-    COMPLEX(kind=8) :: rhog(:,:)
-    REAL(kind=8) :: rhor(:,:), rhos(:,:), rhoc(:), enl, ekin
-    REAL(kind=8) :: stress(:,:), detot(:,:), enthal, etot
-    REAL(kind=8) :: lambda(:,:), lambdam(:,:), lambdap(:,:)
-    REAL(kind=8) :: ema0bg(:)
-    REAL(kind=8) :: dbec(:,:,:,:)
-    REAL(kind=8) :: delt
-    REAL(kind=8) :: bephi(:,:), becp(:,:)
-    REAL(kind=8) :: velh(:,:)
-    REAL(kind=8) :: dt2bye, xnhe0, xnhem, vnhe, ekincm
+    COMPLEX(8) :: sfac(:,:)
+    COMPLEX(8) :: rhog(:,:)
+    REAL(8) :: rhor(:,:), rhos(:,:), rhoc(:), enl, ekin
+    REAL(8) :: stress(:,:), detot(:,:), enthal, etot
+    REAL(8) :: lambda(:,:), lambdam(:,:), lambdap(:,:)
+    REAL(8) :: ema0bg(:)
+    REAL(8) :: dbec(:,:,:,:)
+    REAL(8) :: delt
+    REAL(8) :: bephi(:,:), becp(:,:)
+    REAL(8) :: velh(:,:)
+    REAL(8) :: dt2bye, xnhe0, xnhem, vnhe, ekincm
 
 
-    REAL(kind=8), ALLOCATABLE :: emadt2(:), emaver(:)
-    COMPLEX(kind=8), ALLOCATABLE :: c2(:), c3(:)
-    REAL(kind=8) :: verl1, verl2
-    REAL(kind=8) :: bigr
+    REAL(8), ALLOCATABLE :: emadt2(:), emaver(:)
+    COMPLEX(8), ALLOCATABLE :: c2(:), c3(:)
+    REAL(8) :: verl1, verl2
+    REAL(8) :: bigr
     INTEGER :: i, j, iter
     LOGICAL :: tlast = .FALSE.
-    REAL(kind=8) :: fcell(3,3), ccc, dt2hbe, enb, enbi, fccc
+    REAL(8) :: fcell(3,3), ccc, dt2hbe, enb, enbi, fccc
 
     !
     !

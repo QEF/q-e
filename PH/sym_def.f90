@@ -23,7 +23,7 @@ subroutine sym_def (def, irr)
   integer :: irr
   ! input: the representation under consideration
 
-  complex(kind=DP) :: def (npertx)
+  complex(DP) :: def (npertx)
   ! inp/out: the fermi energy changes
 
   integer :: ipert, jpert, isym, irot
@@ -32,7 +32,7 @@ subroutine sym_def (def, irr)
   ! counter on symmetries
   ! the rotation
 
-  complex(kind=DP) :: w_def (npertx)
+  complex(DP) :: w_def (npertx)
   ! the fermi energy changes (work array)
 
   if (nsymq == 1 .and. (.not.minus_q) ) return

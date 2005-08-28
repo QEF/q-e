@@ -13,7 +13,7 @@ subroutine cft3sp (f,n1,n2,n3,nx1,nx2,nx3,sign)
 !
   implicit none
   integer :: n1, n2, n3, nx1, nx2, nx3, sign
-  complex(kind=kind(0.d0)) ::  f(nx1*nx2*nx3)
+  complex(kind(0.d0)) ::  f(nx1*nx2*nx3)
 
   if (sign.eq.1) then
      call cft_3(f,n1,n2,n3,nx1,nx2,nx3,2, 1)

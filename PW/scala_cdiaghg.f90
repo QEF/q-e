@@ -44,10 +44,10 @@ SUBROUTINE scala_cdiaghg (n, a, ilda, b, ildb, w, z, ildz)
   ! input: size of the matrix to diagonalize
   ! input: see before
 
-  REAL (kind=DP) :: w (n)
+  REAL (DP) :: w (n)
   ! output: eigenvalues
 
-  COMPLEX (kind=DP) :: a (ilda, n), b (ildb, n), z (ildz, n)
+  COMPLEX (DP) :: a (ilda, n), b (ildb, n), z (ildz, n)
   ! input: matrix to diagonalize
   ! input: overlap matrix
   ! output: eigenvectors
@@ -58,7 +58,7 @@ SUBROUTINE scala_cdiaghg (n, a, ilda, b, ildb, w, z, ildz)
 #define PCHEGVX pzhegvx
 #endif
   !
-  REAL (kind=DP) :: zero, mone
+  REAL (DP) :: zero, mone
   ! zero
   ! minus one
 
@@ -93,26 +93,26 @@ SUBROUTINE scala_cdiaghg (n, a, ilda, b, ildb, w, z, ildz)
   ! clustering of eigenvalues
   ! on output tells which eigenvalues not conv
 
-  REAL (kind=DP) :: gap (maxprocs)
+  REAL (DP) :: gap (maxprocs)
   ! gap between eigenvalues
-  COMPLEX (kind=DP), ALLOCATABLE::at (:, :)
+  COMPLEX (DP), ALLOCATABLE::at (:, :)
   ! local matrices of this p
-  COMPLEX (kind=DP), ALLOCATABLE::bt (:, :)
+  COMPLEX (DP), ALLOCATABLE::bt (:, :)
 
-  COMPLEX (kind=DP), ALLOCATABLE::zt (:, :)
+  COMPLEX (DP), ALLOCATABLE::zt (:, :)
   ! some variables needed to determine the workspace's size
 
   INTEGER :: nn, np, npO, nq0, mq0
-  COMPLEX (kind=DP), ALLOCATABLE::work (:)
+  COMPLEX (DP), ALLOCATABLE::work (:)
   ! work space
-  REAL (kind=DP), ALLOCATABLE::rwork (:)
+  REAL (DP), ALLOCATABLE::rwork (:)
   INTEGER, ALLOCATABLE::iwork (:)
   INTEGER :: PSLAMCH, iceil, numroc
 
   EXTERNAL PSLAMCH, iceil, numroc
   INTEGER :: iws, first
 
-  REAL (kind=DP) :: time1, time2, tt
+  REAL (DP) :: time1, time2, tt
   IF (n.GT.maxn) CALL errore ('scala_cdiaghg', 'n is too large', n)
   !
   !   Ask for the number of processors

@@ -25,10 +25,10 @@
 !=----------------------------------------------------------------------------=!
 
     FUNCTION greenf( x, rc )
-      REAL(dbl) :: greenf
-      REAL(dbl), INTENT(IN) :: x, rc
+      REAL(DP) :: greenf
+      REAL(DP), INTENT(IN) :: x, rc
 ! ... declare external function
-      REAL(dbl) :: erf, erfc
+      REAL(DP) :: erf, erfc
       EXTERNAL erf, erfc
 
       greenf = erf( x / rc ) / x + erfc( x / rc ) / x

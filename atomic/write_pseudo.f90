@@ -16,11 +16,11 @@ subroutine write_pseudo &
   use kinds, only : DP
   implicit none
   integer :: ndm, mesh, nwfps, lmin,lmax,lloc,nlc,nnl,nwfs,lls(nwfs)
-  real(kind=dp) :: zed, zval, xmin,dx, cc(2),alpc(2),alc(6,0:3), &
+  real(DP) :: zed, zval, xmin,dx, cc(2),alpc(2),alc(6,0:3), &
        alps(3,0:3), phis(ndm,nwfs), ocs(nwfs), &
        r(ndm), r2(ndm), vnl(ndm,0:3), rhoc(ndm), erf, etots
   integer ios, mdum, i, l, k, n, ir, iunps, nb, ldum
-  real(kind=dp) :: zdum, fourpi, vnloc,a_core, b_core,  &
+  real(DP) :: zdum, fourpi, vnloc,a_core, b_core,  &
        alfa_core, dum, xdum, dxdum, rdum, vpsloc(ndm)
   logical nlcc, bhstype, numeric
   parameter(fourpi=4.0_dp*3.141592653589793_dp)

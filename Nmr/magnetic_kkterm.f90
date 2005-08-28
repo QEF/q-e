@@ -11,8 +11,8 @@ subroutine magnetic_kkterm(ik,outvv, outhh)
 
 !*******************************************************************
 
-  use kinds,                only: dp
-  use wvfct,               only: npw, npwx, nbnd
+  use kinds,                only: DP
+  use wvfct,                only: npw, npwx, nbnd
   use wavefunctions_module, only: evc
   use klist,                only: wk
   use control_ph,           only: alpha_pv
@@ -24,15 +24,15 @@ subroutine magnetic_kkterm(ik,outvv, outhh)
 
 ! output
 
-  complex(kind=dp), intent(out) :: outvv(3,3), outhh(3,3)
+  complex(DP), intent(out) :: outvv(3,3), outhh(3,3)
 
 ! local
 
   integer :: p0,p1,             &  !direction
        ibnd,i
   
-  complex(kind=dp), allocatable :: dev(:,:), dpsi(:,:) 
-  complex(kind=dp) :: ZDOTC
+  complex(DP), allocatable :: dev(:,:), dpsi(:,:) 
+  complex(DP), external :: ZDOTC
   
 
   allocate (dev(npwx,nbnd))
@@ -55,7 +55,7 @@ subroutine magnetic_kkterm(ik,outvv, outhh)
         do ibnd=1,nbnd
            outvv(p0,p1) = outvv(p0,p1) + &
                 ZDOTC(npw,evc(1,ibnd),1,dev(1,ibnd),1) &
-                * wk(ik) / real(nbnd, dp)
+                * wk(ik) / DBLE(nbnd)
         enddo
 
         dev=(0.d0,0.d0)
@@ -63,7 +63,7 @@ subroutine magnetic_kkterm(ik,outvv, outhh)
         do ibnd=1,nbnd
            outhh(p0,p1) = outhh(p0,p1) + &
                 ZDOTC(npw,evc(1,ibnd),1,dev(1,ibnd),1) &
-                * wk(ik) / real(nbnd, dp)
+                * wk(ik) / DBLE(nbnd)
         enddo
         
      enddo

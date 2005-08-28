@@ -27,11 +27,11 @@ subroutine symrho (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
   ! input: the symmetry matrices
   ! input: the fractionary translations
   !
-  real(kind=DP) :: rho (nrx1, nrx2, nrx3)
+  real(DP) :: rho (nrx1, nrx2, nrx3)
   ! inp/out: the charge density
   integer , allocatable :: symflag (:,:,:)
   integer :: ri (48), rj (48), rk (48), i, j, k, isym
-  real(kind=DP) :: sum
+  real(DP) :: sum
 
   if (nsym.eq.1) return
 

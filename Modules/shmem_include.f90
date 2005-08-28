@@ -37,8 +37,8 @@
          INTEGER PSYNCB(SHMEM_BARRIER_SYNC_SIZE)
          INTEGER PSYNCC(SHMEM_COLLECT_SYNC_SIZE)
          INTEGER PSYNC_STA(SHMEM_REDUCE_SYNC_SIZE)
-         REAL(dbl), SAVE :: mp_shmem_buffer(mp_shmem_bufsize)
-         REAL(dbl), SAVE :: mp_shmem_work(mp_shmem_bufsize)
+         REAL(DP), SAVE :: mp_shmem_buffer(mp_shmem_bufsize)
+         REAL(DP), SAVE :: mp_shmem_work(mp_shmem_bufsize)
 
          DATA PSYNC_STA /SHMEM_REDUCE_SYNC_SIZE*SHMEM_SYNC_VALUE/
          DATA PSYNCB /SHMEM_BARRIER_SYNC_SIZE*SHMEM_SYNC_VALUE/

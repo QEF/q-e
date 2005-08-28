@@ -50,23 +50,23 @@
         LOGICAL :: o_diis, oqnr_diis, treset_diis
         LOGICAL :: tfortr_diis
         INTEGER :: max_diis, nreset, maxnstep
-        REAL(dbl) :: hthrs_diis, tol_diis, delt_diis
+        REAL(DP) :: hthrs_diis, tol_diis, delt_diis
 
-        REAL(dbl) :: diis_fthr
+        REAL(DP) :: diis_fthr
 
         ! ...   declare module-scope variables
         INTEGER    :: srot0, srot, sroti, srotf
-        REAL(dbl)  :: tolene, tolrho, tolrhof, tolrhoi
-        REAL(dbl)  :: temp_elec
+        REAL(DP)  :: tolene, tolrho, tolrhof, tolrhoi
+        REAL(DP)  :: temp_elec
 
 
-        REAL(dbl) :: dethr
+        REAL(DP) :: dethr
 
         COMPLEX(sgl), ALLOCATABLE :: parame(:,:,:,:)
         COMPLEX(sgl),  ALLOCATABLE :: grade(:,:,:,:)
 
         LOGICAL    :: updstrfac
-        REAL(dbl)  :: gemax
+        REAL(DP)  :: gemax
 
         PUBLIC :: diis_setup, diis_print_info, allocate_diis
         PUBLIC :: delt_diis, deallocate_diis
@@ -90,12 +90,12 @@
             tolrho_inp, tolrhoi_inp, tolrhof_inp, tolene_inp)
 
             LOGICAL, INTENT(IN) :: o_diis_inp, oqnr_diis_inp
-            REAL(dbl), INTENT(IN) :: diis_fthr_inp
+            REAL(DP), INTENT(IN) :: diis_fthr_inp
             INTEGER, INTENT(IN) :: max_diis_inp, reset_diis_inp, maxnstep_inp
-            REAL(dbl), INTENT(IN) :: hthrs_diis_inp, tol_diis_inp, delt_diis_inp
+            REAL(DP), INTENT(IN) :: hthrs_diis_inp, tol_diis_inp, delt_diis_inp
             INTEGER, INTENT(IN) :: srot0_inp, sroti_inp, srotf_inp
-            REAL(dbl), INTENT(IN) ::  temp_inp
-            REAL(dbl), INTENT(IN) ::  tolene_inp, tolrho_inp, tolrhof_inp, tolrhoi_inp
+            REAL(DP), INTENT(IN) ::  temp_inp
+            REAL(DP), INTENT(IN) ::  tolene_inp, tolrho_inp, tolrhof_inp, tolrhoi_inp
 
             temp_elec = temp_inp
             srot0 = srot0_inp
@@ -215,14 +215,14 @@
         IMPLICIT NONE
 
 ! ...   declare subroutine arguments
-        COMPLEX(dbl), INTENT(IN) :: c(:,:)
+        COMPLEX(DP), INTENT(IN) :: c(:,:)
         TYPE (wave_descriptor), INTENT(IN) :: cdesc
         LOGICAL, INTENT(IN) :: tprint
-        REAL(dbl), INTENT(OUT) :: gemax, cnorm
+        REAL(DP), INTENT(OUT) :: gemax, cnorm
 
 ! ...   declare other variables
         INTEGER    :: iabs, izamax, i, nb, ngw
-        REAL(dbl)  :: gemax_l
+        REAL(DP)  :: gemax_l
 
 ! ...   end of declarations
 !  ----------------------------------------------
@@ -264,16 +264,16 @@
         IMPLICIT NONE
 
 ! ...   declare subroutine arguments
-        COMPLEX(dbl), INTENT(IN) :: c(:,:,:)
+        COMPLEX(DP), INTENT(IN) :: c(:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: cdesc
-        REAL(dbl), INTENT(IN)  :: weight(:)
-        REAL(dbl), INTENT(OUT) :: gemax, cnorm
+        REAL(DP), INTENT(IN)  :: weight(:)
+        REAL(DP), INTENT(OUT) :: gemax, cnorm
         LOGICAL,   INTENT(IN)  :: tprint
 
 ! ...   declare other variables
         INTEGER    :: iabs, izamax, i, ik
-        REAL(dbl)  :: gemax_l, cnormk
-        COMPLEX(dbl) :: zdotc
+        REAL(DP)  :: gemax_l, cnormk
+        COMPLEX(DP) :: zdotc
 
 ! ...   end of declarations
 !  ----------------------------------------------
@@ -326,15 +326,15 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      REAL(dbl) :: svar2
-      REAL(dbl) :: vps(:,:)
-      REAL(dbl) :: vpp(:)
-      COMPLEX(dbl) :: sfac(:,:)
-      COMPLEX(dbl) :: eigr(:,:)
+      REAL(DP) :: svar2
+      REAL(DP) :: vps(:,:)
+      REAL(DP) :: vpp(:)
+      COMPLEX(DP) :: sfac(:,:)
+      COMPLEX(DP) :: eigr(:,:)
       INTEGER, OPTIONAL, INTENT(IN) :: ik
 
 ! ... declare other variables
-      REAL(dbl)  vp,ftpi,arg
+      REAL(DP)  vp,ftpi,arg
       INTEGER l,ll,i,ig,igh,is,m,j, ikk, ih, iv
 
 ! ... end of declarations
@@ -393,9 +393,9 @@
       SUBROUTINE fermi_diis( ent, occ, nb, nel, eig, wke, efermi, sume, temp)
         USE brillouin, ONLY: kpoints, kp
         USE electrons_module, ONLY: fermi_energy
-        REAL(dbl)   :: occ(:,:,:)
-        REAL(dbl)   :: wke(:,:,:)
-        REAL(dbl)   :: eig(:,:,:), efermi, sume, ent, temp, entk, qtot
+        REAL(DP)   :: occ(:,:,:)
+        REAL(DP)   :: wke(:,:,:)
+        REAL(DP)   :: eig(:,:,:), efermi, sume, ent, temp, entk, qtot
         INTEGER :: ik, ispin, nel, nb
 
         qtot = DBLE( nel ) 
@@ -436,30 +436,30 @@
 ! max_diis (integer ) max number of stored wave functions
 ! oqnr_diis   (logical ) if .true. use an appx. ham. as guess
 ! treset (logical ) if .true. reset DIIS
-! tol_diis   (REAL(dbl)  ) convergence tolerance
-! hthrs_diis  (REAL(dbl)  ) minimum value for a hessel matrix elm.
-! etot   (REAL(dbl)  ) Kohn-Sham energy
+! tol_diis   (REAL(DP)  ) convergence tolerance
+! hthrs_diis  (REAL(DP)  ) minimum value for a hessel matrix elm.
+! etot   (REAL(DP)  ) Kohn-Sham energy
 
-      COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:), cgrad(:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:), cgrad(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      COMPLEX(dbl) :: sfac(:,:) 
-      COMPLEX(dbl) :: eigr(:,:) 
+      COMPLEX(DP) :: sfac(:,:) 
+      COMPLEX(DP) :: eigr(:,:) 
       LOGICAL, INTENT(OUT) :: doions
       LOGICAL, INTENT(INOUT) :: treset
-      REAL(dbl) :: gemax, etot, svar0, svarm, svar2
-      REAL(dbl) :: f(:), vps(:,:)
-      REAL(dbl) :: eold
+      REAL(DP) :: gemax, etot, svar0, svarm, svar2
+      REAL(DP) :: f(:), vps(:,:)
+      REAL(DP) :: eold
       INTEGER ::  ndiis, nowv
 
 ! ... declare other variables
-      COMPLEX(dbl), ALLOCATABLE :: cm(:,:) !  cm(ngw,c0(1)%nb_l)
-      REAL(dbl),    ALLOCATABLE :: bc(:,:) !  bc(max_diis+1,max_diis+1)
-      REAL(dbl),    ALLOCATABLE :: vc(:)   !  vc(max_diis+1)
-      REAL(dbl),    ALLOCATABLE :: fm1(:)
-      REAL(dbl),    ALLOCATABLE :: vpp(:)  !  vpp(ngw)
-      REAL(dbl)    cnorm
-      REAL(dbl)    var2,rc0rc0,ff,vvpp,fff,rri
-      REAL(dbl)    rrj,rii,rij,r1,r2
+      COMPLEX(DP), ALLOCATABLE :: cm(:,:) !  cm(ngw,c0(1)%nb_l)
+      REAL(DP),    ALLOCATABLE :: bc(:,:) !  bc(max_diis+1,max_diis+1)
+      REAL(DP),    ALLOCATABLE :: vc(:)   !  vc(max_diis+1)
+      REAL(DP),    ALLOCATABLE :: fm1(:)
+      REAL(DP),    ALLOCATABLE :: vpp(:)  !  vpp(ngw)
+      REAL(DP)    cnorm
+      REAL(DP)    var2,rc0rc0,ff,vvpp,fff,rri
+      REAL(DP)    rrj,rii,rij,r1,r2
       LOGICAL   teinc
       INTEGER   istate, nsize, i, j, l, k, ik, ierr
       INTEGER, SAVE :: prevv
@@ -653,29 +653,29 @@
 ! max_diis (integer ) maximum number of stored wave functions
 ! oqnr_diis   (logical ) if .TRUE. use an approximated Hamiltonian as guess
 ! treset (logical ) if .TRUE. reset DIIS
-! tol_diis   (REAL(dbl)  ) convergence tolerance
-! hthrs_diis  (REAL(dbl)  ) minimum value for a Hessian matrix element
-! etot   (REAL(dbl)  ) Kohn-Sham energy
+! tol_diis   (REAL(DP)  ) convergence tolerance
+! hthrs_diis  (REAL(DP)  ) minimum value for a Hessian matrix element
+! etot   (REAL(DP)  ) Kohn-Sham energy
 
-      COMPLEX(dbl), INTENT(INOUT) :: c0(:,:,:), cgrad(:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:), cgrad(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      COMPLEX(dbl) :: sfac(:,:) 
-      COMPLEX(dbl) :: eigr(:,:) 
+      COMPLEX(DP) :: sfac(:,:) 
+      COMPLEX(DP) :: eigr(:,:) 
       LOGICAL, INTENT(OUT) :: doions
       LOGICAL, INTENT(INOUT) :: treset
-      REAL(dbl)  gemax, etot, svar0, svarm, svar2
-      REAL(dbl)  occ(:,:)
-      REAL(dbl)  vps(:,:)
-      REAL(dbl)  eold
+      REAL(DP)  gemax, etot, svar0, svarm, svar2
+      REAL(DP)  occ(:,:)
+      REAL(DP)  vps(:,:)
+      REAL(DP)  eold
       INTEGER    istate,ndiis,nowv
 
 ! ... declare other variables
-      COMPLEX(dbl), ALLOCATABLE :: cm(:,:)
-      COMPLEX(dbl), ALLOCATABLE :: bc(:,:), vc(:)
-      REAL(dbl), ALLOCATABLE :: vpp(:), fm1(:)
-      REAL(dbl)    cnorm
-      REAL(dbl)    var2,rc0rc0,ff,vvpp,fff,rri
-      REAL(dbl)    rrj,rii,rij,r1,r2
+      COMPLEX(DP), ALLOCATABLE :: cm(:,:)
+      COMPLEX(DP), ALLOCATABLE :: bc(:,:), vc(:)
+      REAL(DP), ALLOCATABLE :: vpp(:), fm1(:)
+      REAL(DP)    cnorm
+      REAL(DP)    var2,rc0rc0,ff,vvpp,fff,rri
+      REAL(DP)    rrj,rii,rij,r1,r2
       LOGICAL :: teinc
       INTEGER   nsize, i, j, l, k, ik, ierr
       INTEGER, SAVE :: prevv
@@ -867,8 +867,8 @@
         SUBROUTINE update_diis_buffers( c, cgrad, cdesc, nowv)
           USE wave_types, ONLY: wave_descriptor
           IMPLICIT NONE
-          COMPLEX(dbl), INTENT(IN) :: cgrad(:,:,:)
-          COMPLEX(dbl), INTENT(INOUT) :: c(:,:,:)
+          COMPLEX(DP), INTENT(IN) :: cgrad(:,:,:)
+          COMPLEX(DP), INTENT(INOUT) :: c(:,:,:)
           TYPE (wave_descriptor), INTENT(IN) :: cdesc
           INTEGER, INTENT(IN) :: nowv
           INTEGER :: ik, ib
@@ -887,10 +887,10 @@
         SUBROUTINE diis_steepest(c, cgrad, cdesc, var2)
           USE wave_types, ONLY: wave_descriptor
           IMPLICIT NONE
-          COMPLEX(dbl), INTENT(IN) :: cgrad(:,:,:)
-          COMPLEX(dbl), INTENT(INOUT) :: c(:,:,:)
+          COMPLEX(DP), INTENT(IN) :: cgrad(:,:,:)
+          COMPLEX(DP), INTENT(INOUT) :: c(:,:,:)
           TYPE (wave_descriptor), INTENT(IN) :: cdesc
-          REAL(dbl), INTENT(IN) :: var2
+          REAL(DP), INTENT(IN) :: var2
           INTEGER :: ik
           DO ik = 1, cdesc%nkl
             c(:,:,ik) = c(:,:,ik) + var2 * cgrad(:,:,ik)
@@ -926,12 +926,12 @@
 
 ! ... declare subroutine arguments
       INTEGER, INTENT(IN) :: ldb, ndim
-      REAL(dbl) :: b(:,:), v(:)
+      REAL(DP) :: b(:,:), v(:)
 
 ! ... declare other variables
 
       INTEGER :: i, j, k, info
-      REAL(dbl) :: ap(ndim*(ndim+1)/2)
+      REAL(DP) :: ap(ndim*(ndim+1)/2)
       INTEGER :: ipiv(ndim)
 
 ! ... end of declarations
@@ -975,13 +975,13 @@
 
 ! ... declare subroutine arguments
       INTEGER, INTENT(IN) :: ldb, ndim
-      COMPLEX(dbl) :: b(:,:), v(:)
+      COMPLEX(DP) :: b(:,:), v(:)
 
 ! ... declare other variables
 
       INTEGER :: ipvt(ndim)
       INTEGER :: ipiv(ndim)
-      COMPLEX(dbl) :: ap(ndim*(ndim+1)/2)
+      COMPLEX(DP) :: ap(ndim*(ndim+1)/2)
       INTEGER :: i,j,k,info
 
 ! ... end of declarations

@@ -35,18 +35,18 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   ! input: the number of the pseudopotential
   ! input: the polarization of the derivative
 
-  real(kind=DP) :: ylmk0 (ngy, lmaxq * lmaxq), dylmk0 (ngy, lmaxq * lmaxq), &
+  real(DP) :: ylmk0 (ngy, lmaxq * lmaxq), dylmk0 (ngy, lmaxq * lmaxq), &
        qmod (ngy)
   ! the spherical harmonics
   ! the spherical harmonics derivetives
   ! input: moduli of the q+g vectors
-  complex(kind=DP) :: dqg (ngy)
+  complex(DP) :: dqg (ngy)
   ! output: the fourier transform of interest
   !
   !     here the local variables
   !
 
-  complex(kind=DP) :: sig
+  complex(DP) :: sig
   ! (-i)^L
 
   integer :: nb, mb, nmb, ivl, jvl, ig, lp, l, lm, i0, i1, i2, i3
@@ -61,7 +61,7 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   ! the possible LM's compatible with ih,j
   ! counters for interpolation table
 
-  real(kind=DP) :: sixth, dqi, qm, px, ux, vx, wx, uvx, pwx, work, work1
+  real(DP) :: sixth, dqi, qm, px, ux, vx, wx, uvx, pwx, work, work1
   ! 1 divided by six
   ! 1 divided dq
   ! qmod/dq

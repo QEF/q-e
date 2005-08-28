@@ -33,7 +33,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    ! I/O variables first
    !
    INTEGER :: ipol, jpol, ldim
-   REAL (kind=DP) :: dns(ldim,ldim,nspin,nat)
+   REAL (DP) :: dns(ldim,ldim,nspin,nat)
    !
    ! local variable
    !
@@ -41,11 +41,11 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
               ibnd,  & !    "    "  bands
               is,    & !    "    "  spins
               i, na, nt, n, counter, m1, m2, l
-   COMPLEX (kind=DP) :: ZDOTC
+   COMPLEX (DP) :: ZDOTC
 
    INTEGER, ALLOCATABLE :: offset(:)
    ! offset(nat)  ! offset of d electrons of atom d in the natomwfc ordering
-   COMPLEX (kind=DP), ALLOCATABLE :: &
+   COMPLEX (DP), ALLOCATABLE :: &
                       proj(:,:), wfcatom(:,:), spsi(:,:), dproj(:,:)
    ! proj(natomwfc,nbnd), wfcatom(npwx,natomwfc),
    ! spsi(npwx,nbnd), dproj(natomwfc,nbnd)

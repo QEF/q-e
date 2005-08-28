@@ -44,7 +44,7 @@ SUBROUTINE do_initial_state (excite)
   !
   integer :: excite(ntypx)
   integer, allocatable :: ityp_gs(:), ityp_excited(:)
-  REAL(KIND=DP), ALLOCATABLE :: shift(:), &
+  REAL(DP), ALLOCATABLE :: shift(:), &
                                 shift_ef (:), &
                                 shift_nl (:), &
                                 shift_lc (:), &
@@ -54,7 +54,7 @@ SUBROUTINE do_initial_state (excite)
                                 delta_zv(:)
   !
   ! nonlocal, local, core-correction, ewald, and scf correction terms
-  REAL(KIND=DP) :: ryd_to_ev
+  REAL(DP) :: ryd_to_ev
   parameter ( ryd_to_ev = 13.6058d0)
   !
   INTEGER :: ipol, na, nt, ik

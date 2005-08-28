@@ -63,12 +63,12 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
    implicit none
 !
    integer nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
-   real(kind=8) b1b(3), b2b(3), b3b(3), gcutb
+   real(8) b1b(3), b2b(3), b3b(3), gcutb
 !
    integer, allocatable:: index(:)
    integer n1pb, n2pb, n3pb, n1mb, n2mb, n3mb
    integer it, icurr, nr1m1, nr2m1, nr3m1, ir, ig, i,j,k, itv(3), idum, ip
-   real(kind=8) t(3), g2
+   real(8) t(3), g2
 !
       nr1m1=nr1b-1
       nr2m1=nr2b-1
@@ -93,7 +93,7 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
                if(i.eq.0.and.j.eq.0.and.k.lt.0) go to 20
                g2=0.d0
                do ir=1,3
-                  t(ir) = dble(i)*b1b(ir) + dble(j)*b2b(ir) + dble(k)*b3b(ir)
+                  t(ir) = DBLE(i)*b1b(ir) + DBLE(j)*b2b(ir) + DBLE(k)*b3b(ir)
                   g2=g2+t(ir)*t(ir)
                end do
                if(g2.gt.gcutb) go to 20
@@ -134,7 +134,7 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
                if(i.eq.0.and.j.eq.0.and.k.lt.0) go to 25
                g2=0.d0
                do ir=1,3
-                  t(ir) = dble(i)*b1b(ir) + dble(j)*b2b(ir) + dble(k)*b3b(ir)
+                  t(ir) = DBLE(i)*b1b(ir) + DBLE(j)*b2b(ir) + DBLE(k)*b3b(ir)
                   g2=g2+t(ir)*t(ir)
                end do
                if(g2.gt.gcutb) go to 25
@@ -266,8 +266,8 @@ end subroutine ggenb
       use gvecb
 !
       implicit none
-      real(kind=8), intent(in) :: alatb, b1b_ (3), b2b_ (3), b3b_ (3)
-      real(kind=8) :: b1b(3), b2b(3), b3b(3)
+      real(8), intent(in) :: alatb, b1b_ (3), b2b_ (3), b3b_ (3)
+      real(8) :: b1b(3), b2b(3), b3b(3)
 !
       integer i, i1,i2,i3,ig
 
@@ -387,8 +387,8 @@ end subroutine ggenb
       !
       implicit none
       !
-      real(kind=8) :: b1(3), b2(3), b3(3), gcut, gcuts, gcutw
-      real(kind=8) :: t(3), g2
+      real(8) :: b1(3), b2(3), b3(3), gcut, gcuts, gcutw
+      real(8) :: t(3), g2
       logical      :: lgam
       integer      :: nr1,nr2,nr3, nr1s,nr2s,nr3s
       integer      :: n1p, n2p, n3p, n1m, n2m, n3m
@@ -573,14 +573,14 @@ SUBROUTINE gcount( ng, ngs, ngw, b1, b2, b3, nr1, nr2, nr3, gcut, gcuts, gcutw, 
 
   INTEGER ng, ngs, ngw
   integer nr1,nr2,nr3
-  real(kind=8) b1(3), b2(3), b3(3), gcut, gcuts, gcutw
+  real(8) b1(3), b2(3), b3(3), gcut, gcuts, gcutw
   INTEGER :: isind(*), ldis
   LOGICAL :: lgam
 
   INTEGER :: nr1m1, nr2m1, nr3m1
   INTEGER :: i, j, k, n1p, n2p, ir
 
-  real(kind=8) :: g2, t(3)
+  real(8) :: g2, t(3)
 
   if( gcut < gcuts ) call errore(' gcount ', ' gcut .lt. gcuts ', 1 )
 
@@ -630,7 +630,7 @@ SUBROUTINE gcount( ng, ngs, ngw, b1, b2, b3, nr1, nr2, nr3, gcut, gcuts, gcutw, 
 
                g2=0.d0
                do ir=1,3
-                  t(ir) = dble(i)*b1(ir) + dble(j)*b2(ir) + dble(k)*b3(ir)
+                  t(ir) = DBLE(i)*b1(ir) + DBLE(j)*b2(ir) + DBLE(k)*b3(ir)
                   g2=g2+t(ir)*t(ir)
                end do
                if(g2.gt.gcut) cycle loop_z
@@ -656,15 +656,15 @@ SUBROUTINE gglobal( ng_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
 
   INTEGER :: ng_g
   INTEGER :: mill_g(3,*)
-  real(kind=8) :: g2_g(*)
+  real(8) :: g2_g(*)
   integer :: nr1, nr2, nr3
-  real(kind=8) :: b1(3), b2(3), b3(3), gcut
+  real(8) :: b1(3), b2(3), b3(3), gcut
   LOGICAL :: lgam
 
   INTEGER :: nr1m1, nr2m1, nr3m1
   INTEGER :: i, j, k, ir, ng, ig
 
-  real(kind=8) :: g2, t(3)
+  real(8) :: g2, t(3)
 
 
       nr1m1=nr1-1
@@ -685,7 +685,7 @@ SUBROUTINE gglobal( ng_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
                if( lgam .AND. (i.eq.0.and.j.eq.0.and.k.lt.0)) cycle loopz
                g2=0.d0
                do ir=1,3
-                  t(ir) = dble(i)*b1(ir)+dble(j)*b2(ir)+dble(k)*b3(ir)
+                  t(ir) = DBLE(i)*b1(ir)+DBLE(j)*b2(ir)+DBLE(k)*b3(ir)
                   g2=g2+t(ir)*t(ir)
                end do
                if(g2 <= gcut) then
@@ -728,7 +728,7 @@ SUBROUTINE glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, isi
 
   INTEGER :: ng_g, ng
   INTEGER :: mill_g(3,*), ig_l2g(*), mill_l(3,*)
-  real(kind=8) :: g2_g(*), g(*)
+  real(8) :: g2_g(*), g(*)
   integer :: nr1, nr2, nr3, isind(*), ldis
 
   INTEGER :: i, j, k, ig, n1p, n2p, ng_l
@@ -948,7 +948,7 @@ SUBROUTINE gshcount( ngl, ngsl, ngwl, igl, ng, g, gcuts, gcutw )
   INTEGER :: ngl, ngsl, ngwl
   INTEGER :: igl(*)
   INTEGER :: ng
-  REAL(kind=8) :: g(*), gcuts, gcutw
+  REAL(8) :: g(*), gcuts, gcutw
 
   INTEGER :: ig
 
@@ -990,9 +990,9 @@ END SUBROUTINE gshcount
       use gvecw, only: ggp, ecutz, ecsig, ecfix
       implicit none
 !
-      real(kind=8) :: alat, b1_(3),b2_(3),b3_(3), gmax
-      real(kind=8), external :: erf
-      real(kind=8) :: b1(3),b2(3),b3(3), tpiba2, gcutz
+      real(8) :: alat, b1_(3),b2_(3),b3_(3), gmax
+      real(8), external :: erf
+      real(8) :: b1(3),b2(3),b3(3), tpiba2, gcutz
 !
       integer i1,i2,i3,ig
 
@@ -1035,17 +1035,17 @@ END SUBROUTINE gshcount
 !
 !     re-generation of little box g-vectors
 !
-          USE kinds, ONLY: dbl
+          USE kinds, ONLY: DP
           USE grid_dimensions, only: nr1, nr2, nr3
           USE smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
           USE small_box, only: a1b, a2b, a3b, ainvb, omegab, tpibab
           USE constants, ONLY: pi
 
           IMPLICIT NONE
-          REAL(dbl) :: a1( 3 ), a2( 3 ), a3( 3 ), omega, alat
+          REAL(DP) :: a1( 3 ), a2( 3 ), a3( 3 ), omega, alat
 
           INTEGER :: i
-          REAL(dbl) :: alatb, b1b(3),b2b(3),b3b(3)
+          REAL(DP) :: alatb, b1b(3),b2b(3),b3b(3)
 
           alatb  = alat / nr1*nr1b
           tpibab = 2.d0*pi / alatb
@@ -1077,7 +1077,7 @@ END SUBROUTINE gshcount
 
         SUBROUTINE ecutoffs_setup( ecutwfc, ecutrho, ecfixed, qcutz, q2sigma )
  
-          USE kinds, ONLY: dbl
+          USE kinds, ONLY: DP
           USE constants, ONLY: eps8
           USE gvecw, ONLY: ecutw
           USE gvecw, ONLY: ecfix, ecutz, ecsig
@@ -1086,7 +1086,7 @@ END SUBROUTINE gshcount
           use betax, only: mmx, refg
 
           IMPLICIT NONE
-          REAL(dbl), INTENT(IN) ::  ecutwfc, ecutrho, ecfixed, qcutz, q2sigma
+          REAL(DP), INTENT(IN) ::  ecutwfc, ecutrho, ecfixed, qcutz, q2sigma
 
           ecutw = ecutwfc
 
@@ -1133,7 +1133,7 @@ END SUBROUTINE gshcount
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
 
-          USE kinds, ONLY: dbl
+          USE kinds, ONLY: DP
           USE gvecw, ONLY: ecutwfc => ecutw,  gcutw
           USE gvecp, ONLY: ecutrho => ecutp,  gcutp
           USE gvecs, ONLY: ecuts, gcuts
@@ -1145,15 +1145,15 @@ END SUBROUTINE gshcount
           IMPLICIT NONE
 
 ! ...     declare subroutine arguments
-          REAL(dbl), INTENT(IN) :: alat
+          REAL(DP), INTENT(IN) :: alat
           LOGICAL, INTENT(IN) :: tk_inp
           INTEGER, INTENT(IN) :: nk_inp
-          REAL(dbl), INTENT(IN) :: kpoints_inp(3,*)
+          REAL(DP), INTENT(IN) :: kpoints_inp(3,*)
 
 ! ...     declare other variables
           INTEGER   :: i
-          REAL(dbl) :: kcut, ksq
-          REAL(dbl) :: tpiba
+          REAL(DP) :: kcut, ksq
+          REAL(DP) :: tpiba
 
 !  end of declarations
 !  ----------------------------------------------
@@ -1173,7 +1173,7 @@ END SUBROUTINE gshcount
           gcutp = ecutrho / tpiba**2  ! potential cut-off
           gcuts = ecuts   / tpiba**2  ! smooth mesh cut-off
 
-          kcut = 0.0_dbl
+          kcut = 0.0_DP
           IF ( tk_inp ) THEN
 ! ...       augment plane wave cutoff to include all k+G's
             DO i = 1, nk_inp

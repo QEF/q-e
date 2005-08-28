@@ -27,7 +27,7 @@ subroutine compute_becsum
 
   integer :: ik, ikk, ikq, ijkb0, ijh, ikb, jkb, ih, jh, na, nt, ibnd
   ! counter on k points, beta functions, atoms and bands
-  real(kind=DP) :: wgg1 ! auxiliary weight
+  real(DP) :: wgg1 ! auxiliary weight
 
   if (.not.okvan) return
   becsum (:,:,:) = 0.d0

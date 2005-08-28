@@ -33,8 +33,8 @@
         PRIVATE
 
 !  ...  declare module-scope variables
-        REAL(dbl)  :: delthal, twodelt, fordt2, dt2, dt2by2, delt
-        REAL(dbl)  :: tps ! elapsed simulated time in picoseconds
+        REAL(DP)  :: delthal, twodelt, fordt2, dt2, dt2by2, delt
+        REAL(DP)  :: tps ! elapsed simulated time in picoseconds
 
         PUBLIC :: set_time_step, tps, delt, twodelt, dt2, dt2by2
 
@@ -48,14 +48,14 @@
 !  ----------------------------------------------
         SUBROUTINE set_time_step(dt)
 
-           REAL(dbl), INTENT(IN) :: dt
+           REAL(DP), INTENT(IN) :: dt
 
            delt    = dt
            dt2     = dt ** 2
-           fordt2  = 4.0_dbl * dt2
-           delthal = 0.5_dbl * delt
-           twodelt = 2.0_dbl * delt
-           dt2by2  = 0.5_dbl * dt2
+           fordt2  = 4.0_DP * dt2
+           delthal = 0.5_DP * delt
+           twodelt = 2.0_DP * delt
+           dt2by2  = 0.5_DP * dt2
            tps     = 0.0 
 
            RETURN

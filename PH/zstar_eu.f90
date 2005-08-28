@@ -26,9 +26,9 @@ subroutine zstar_eu
   integer :: ibnd, ipol, jpol, icart, na, nu, mu, imode0, irr, &
        imode, nrec, mode, ik
   ! counters
-  real(kind=DP) :: work (3, 3, nat), weight
+  real(DP) :: work (3, 3, nat), weight
   !  auxiliary space
-  complex(kind=DP), external :: ZDOTC
+  complex(DP), external :: ZDOTC
   !  scalar product
   !
   call start_clock ('zstar_eu')

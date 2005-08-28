@@ -31,12 +31,12 @@
 
 module fpmd2upf_module
 
-  USE kinds, ONLY: dbl
+  USE kinds, ONLY: DP
 
   implicit none
   save
 
-  REAL(dbl), PRIVATE :: TOLMESH = 1.d-5
+  REAL(DP), PRIVATE :: TOLMESH = 1.d-5
 
 contains
 
@@ -117,11 +117,11 @@ contains
         USE pseudo_types, ONLY: pseudo_ncpp
         TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
         INTEGER :: ir, mesh, lmax, l, n, il, ib, ll
-        REAL(dbl) :: xmin, zmesh, dx, x
-        REAL(dbl) :: pi        = 3.14159265358979323846_dbl
+        REAL(DP) :: xmin, zmesh, dx, x
+        REAL(DP) :: pi        = 3.14159265358979323846_DP
 
 ! ...   declare external function
-        REAL(dbl) :: erf, erfc
+        REAL(DP) :: erf, erfc
         EXTERNAL erf, erfc
 
         IF( ap%mesh == 0 ) THEN
@@ -175,15 +175,15 @@ contains
         TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
         INTEGER, INTENT(IN) :: uni
         INTEGER, INTENT(OUT) :: ierr
-        REAL(dbl) :: pi        = 3.14159265358979323846_dbl
-        REAL(dbl) :: chi( SIZE(ap%rps, 1), SIZE(ap%rps, 2) )
-        REAL(dbl) :: vnl( SIZE(ap%vnl, 1), SIZE(ap%vnl, 2) )
-        REAL(dbl) :: rho_core( SIZE(ap%rhoc, 1) )
-        REAL(dbl) :: r, ra, rb, fac
-        REAL(dbl) :: oc( SIZE(ap%rps, 2) )
-        REAL(dbl) :: enl( SIZE(ap%rps, 2) )
-        REAL(dbl) :: zmesh, xmin, dx, etot
-        REAL(dbl) :: zval
+        REAL(DP) :: pi        = 3.14159265358979323846_DP
+        REAL(DP) :: chi( SIZE(ap%rps, 1), SIZE(ap%rps, 2) )
+        REAL(DP) :: vnl( SIZE(ap%vnl, 1), SIZE(ap%vnl, 2) )
+        REAL(DP) :: rho_core( SIZE(ap%rhoc, 1) )
+        REAL(DP) :: r, ra, rb, fac
+        REAL(DP) :: oc( SIZE(ap%rps, 2) )
+        REAL(DP) :: enl( SIZE(ap%rps, 2) )
+        REAL(DP) :: zmesh, xmin, dx, etot
+        REAL(DP) :: zval
         INTEGER   :: nn(SIZE(ap%rps, 2)), ll(SIZE(ap%rps, 2))
         INTEGER   :: nwf, mesh, i, j, in1, in2, in3, in4, m
         INTEGER   :: lmax, nlc, nnl, lloc, l, il
@@ -409,11 +409,11 @@ contains
 
 !=----------------------------------------------------------------------------=!
 
-      REAL(dbl) FUNCTION calculate_dx( a, m )
-        REAL(dbl), INTENT(IN) :: a(:)
+      REAL(DP) FUNCTION calculate_dx( a, m )
+        REAL(DP), INTENT(IN) :: a(:)
         INTEGER, INTENT(IN) :: m 
         INTEGER :: n
-        REAL(dbl) :: ra, rb 
+        REAL(DP) :: ra, rb 
           n = MIN( SIZE( a ), m )
           ra = a(1)
           rb = a(n)
@@ -434,7 +434,7 @@ SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
 !
   CHARACTER(LEN=80) :: input_line
   INTEGER :: i, j, m, strlen, info, nf, mesh
-  REAL(dbl) :: rdum
+  REAL(DP) :: rdum
 
 ! ... read atomic wave functions
 ! ... nchan : indicate number of atomic wave functions ( s p d )
@@ -442,7 +442,7 @@ SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
   ierr = 0
   err_msg = ' error while reading atomic wf '
 
-  ap%rps  = 0.0_dbl
+  ap%rps  = 0.0_DP
   ap%nrps = 0
   ap%oc   = 0.0d0
   ap%lrps = 0
@@ -722,7 +722,7 @@ SUBROUTINE read_atomic_cc( iunit, ap, err_msg, ierr)
 !
   CHARACTER(LEN=80) :: input_line
   INTEGER :: j, mesh
-  REAL(dbl) :: rdum
+  REAL(DP) :: rdum
 
 ! ... read atomic core
 
@@ -784,11 +784,11 @@ program fpmd2upf
   TYPE (pseudo_ncpp) :: ap
   CHARACTER(LEN=256) :: psfile
   CHARACTER(LEN=2)   :: wfl( 10 )
-  REAL(kind=8)       :: wfoc( 10 )
+  REAL(8)       :: wfoc( 10 )
   INTEGER :: nsp, nspnl, i, lloc, l, ir, iv, kkbeta
-  REAL(kind=8) :: rmax = 10
-  REAL(kind=8) :: vll
-  REAL(kind=8), allocatable :: aux(:)
+  REAL(8) :: rmax = 10
+  REAL(8) :: vll
+  REAL(8), allocatable :: aux(:)
 
   namelist / fpmd_pseudo / psfile, nwfs, wfl, wfoc, psd, &
                            iexch, icorr, igcx, igcc, zp
@@ -926,7 +926,7 @@ subroutine simpson2(mesh,func,rab,asum)
   implicit none
 
   integer :: i, mesh
-  real(kind=8) ::  rab(mesh), func(mesh), f1, f2, f3, r12, asum
+  real(8) ::  rab(mesh), func(mesh), f1, f2, f3, r12, asum
 
       !     routine assumes that mesh is an odd number so run check
       !     if ( mesh+1 - ( (mesh+1) / 2 ) * 2 .ne. 1 ) then

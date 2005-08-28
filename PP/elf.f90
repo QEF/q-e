@@ -46,14 +46,14 @@ subroutine do_elf (elf)
   ! I/O variables
   !
   implicit none
-  real(kind=DP) :: elf (nrxx)
+  real(DP) :: elf (nrxx)
   !
   ! local variables
   !
   integer :: i, j, k, ng, ibnd, ik, is
-  real(kind=DP) :: gv(3), w1, d, fac
-  real(kind=DP), allocatable :: kkin (:), tbos (:)
-  complex(kind=DP), allocatable :: aux (:), aux2 (:)
+  real(DP) :: gv(3), w1, d, fac
+  real(DP), allocatable :: kkin (:), tbos (:)
+  complex(DP), allocatable :: aux (:), aux2 (:)
   !
   call errore ('do_elf', 'elf + US not fully implemented', - 1)
   !

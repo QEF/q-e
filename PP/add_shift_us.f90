@@ -32,7 +32,7 @@ SUBROUTINE add_shift_us( shift_nl )
   !
   ! ... the dummy variable
   !
-  REAL(KIND=DP) :: shift_nl(nat)
+  REAL(DP) :: shift_nl(nat)
   ! output: the nonlocal contribution
   !
   !
@@ -58,9 +58,9 @@ SUBROUTINE add_shift_us( shift_nl )
        !
        IMPLICIT NONE
        !
-       REAL(KIND=DP), ALLOCATABLE    :: becp(:,:), shift_(:)
+       REAL(DP), ALLOCATABLE    :: becp(:,:), shift_(:)
        ! auxiliary variables contain <beta|psi> 
-       REAL(KIND=DP) :: ps
+       REAL(DP) :: ps
        INTEGER       :: ik, ibnd, ig, ih, jh, na, nt, ikb, jkb, ijkb0
        ! counters
        !
@@ -146,12 +146,12 @@ SUBROUTINE add_shift_us( shift_nl )
        !  
        IMPLICIT NONE
        !
-       REAL(KIND=DP), ALLOCATABLE :: shift_(:)
+       REAL(DP), ALLOCATABLE :: shift_(:)
        ! auxiliary variable 
-       COMPLEX(KIND=DP), ALLOCATABLE :: becp(:,:) 
+       COMPLEX(DP), ALLOCATABLE :: becp(:,:) 
        !  contains products of wavefunctions and beta
 
-       REAL(KIND=DP) :: ps
+       REAL(DP) :: ps
        INTEGER       :: ik, ibnd, ig, ih, jh, na, nt, ikb, jkb, ijkb0
        ! counters
        !

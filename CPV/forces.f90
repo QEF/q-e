@@ -20,10 +20,10 @@
        PRIVATE
 
 ! ... i^l imaginary unit to the angular momentum
-       COMPLEX(dbl), PARAMETER :: cimgl(0:3) = (/ (1.0d0,0.0d0), &
+       COMPLEX(DP), PARAMETER :: cimgl(0:3) = (/ (1.0d0,0.0d0), &
          (0.0d0,1.0d0), (-1.0d0,0.0d0), (0.0d0,-1.0d0) /)
-       COMPLEX(dbl), PARAMETER :: czero = (0.0_dbl,0.0_dbl)
-       REAL(dbl),    PARAMETER :: rzero =  0.0_dbl
+       COMPLEX(DP), PARAMETER :: czero = (0.0_DP,0.0_DP)
+       REAL(DP),    PARAMETER :: rzero =  0.0_DP
 
        PUBLIC :: dforce, dforce_all
 
@@ -40,18 +40,18 @@
       IMPLICIT NONE
 
       ! ... declare subroutine arguments
-      COMPLEX(dbl), INTENT(OUT) :: dco(:), dce(:)
-      COMPLEX(dbl), INTENT(IN)  :: co(:), ce(:)
-      REAL(dbl),    INTENT(IN)  :: fio, fie
-      REAL(dbl),    INTENT(IN)  :: v(:,:,:)
-      REAL(dbl),    INTENT(IN)  :: hg(:)
-      COMPLEX(dbl), OPTIONAL    :: psi_stored(:,:,:)
+      COMPLEX(DP), INTENT(OUT) :: dco(:), dce(:)
+      COMPLEX(DP), INTENT(IN)  :: co(:), ce(:)
+      REAL(DP),    INTENT(IN)  :: fio, fie
+      REAL(DP),    INTENT(IN)  :: v(:,:,:)
+      REAL(DP),    INTENT(IN)  :: hg(:)
+      COMPLEX(DP), OPTIONAL    :: psi_stored(:,:,:)
 
       ! ... declare other variables
       !
-      COMPLEX(dbl), ALLOCATABLE :: psi(:,:,:)
-      COMPLEX(dbl) :: fp, fm, aro, are
-      REAL(dbl)    :: fioby2, fieby2, arg
+      COMPLEX(DP), ALLOCATABLE :: psi(:,:,:)
+      COMPLEX(DP) :: fp, fm, aro, are
+      REAL(DP)    :: fioby2, fieby2, arg
       INTEGER      :: ig
 
       !  end of declarations
@@ -107,17 +107,17 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      REAL(dbl), INTENT(IN) :: wnl(:,:,:)
-      COMPLEX(dbl), INTENT(IN) :: eigr(:,:)
-      REAL(dbl), INTENT(IN) :: fio, fie, fnlo(:,:), fnle(:,:), wsg(:,:)
-      COMPLEX(dbl)  :: df(:), da(:)
-      REAL(dbl), INTENT(IN) :: hg(:)
-      REAL(dbl), INTENT(IN) :: gx(:,:)
+      REAL(DP), INTENT(IN) :: wnl(:,:,:)
+      COMPLEX(DP), INTENT(IN) :: eigr(:,:)
+      REAL(DP), INTENT(IN) :: fio, fie, fnlo(:,:), fnle(:,:), wsg(:,:)
+      COMPLEX(DP)  :: df(:), da(:)
+      REAL(DP), INTENT(IN) :: hg(:)
+      REAL(DP), INTENT(IN) :: gx(:,:)
 
 ! ... declare other variables
-      COMPLEX(dbl), ALLOCATABLE :: temp(:,:)
-      REAL(dbl),    ALLOCATABLE :: gwork(:,:)
-      REAL(dbl) :: t1, fac
+      COMPLEX(DP), ALLOCATABLE :: temp(:,:)
+      REAL(DP),    ALLOCATABLE :: gwork(:,:)
+      REAL(DP) :: t1, fac
       INTEGER   :: igh, ll, is, isa, ig, l, m, ngw, nngw, iy, ih, iv
       INTEGER   :: inl
 
@@ -190,16 +190,16 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      COMPLEX(dbl), INTENT(IN) :: eigr(:,:)
-      REAL(dbl), INTENT(IN) :: fio, fie
-      COMPLEX(dbl)  :: df(:), da(:)
-      REAL(dbl), INTENT(IN) :: beco(:)
-      REAL(dbl), INTENT(IN) :: bece(:)
+      COMPLEX(DP), INTENT(IN) :: eigr(:,:)
+      REAL(DP), INTENT(IN) :: fio, fie
+      COMPLEX(DP)  :: df(:), da(:)
+      REAL(DP), INTENT(IN) :: beco(:)
+      REAL(DP), INTENT(IN) :: bece(:)
 
 ! ... declare other variables
-      COMPLEX(dbl), ALLOCATABLE :: temp(:,:)
-      REAL(dbl) :: t1
-      REAL(dbl) :: sgn
+      COMPLEX(DP), ALLOCATABLE :: temp(:,:)
+      REAL(DP) :: t1
+      REAL(DP) :: sgn
       INTEGER   :: l, is, ig, ngw, iv, inl, isa
 
 !  end of declarations
@@ -266,14 +266,14 @@
        IMPLICIT NONE
        !
        INTEGER,      INTENT(IN)  :: ib, iss     ! band and spin index
-       COMPLEX(dbl), INTENT(IN)  :: c(:,:)
-       COMPLEX(dbl), INTENT(OUT) :: df(:), da(:)
-       REAL (dbl),   INTENT(IN)  :: v(:,:,:), bec(:,:), f(:)
-       COMPLEX(dbl), INTENT(IN)  :: eigr(:,:)
+       COMPLEX(DP), INTENT(IN)  :: c(:,:)
+       COMPLEX(DP), INTENT(OUT) :: df(:), da(:)
+       REAL (DP),   INTENT(IN)  :: v(:,:,:), bec(:,:), f(:)
+       COMPLEX(DP), INTENT(IN)  :: eigr(:,:)
        type (wave_descriptor), INTENT(IN) :: cdesc
        !
-       COMPLEX(dbl), ALLOCATABLE :: dum( : )   
-       ! COMPLEX(dbl) :: df_( SIZE( df ) ) , da_( SIZE( da ) )   ! DEBUG
+       COMPLEX(DP), ALLOCATABLE :: dum( : )   
+       ! COMPLEX(DP) :: df_( SIZE( df ) ) , da_( SIZE( da ) )   ! DEBUG
        !
        INTEGER :: ig, in
        !
@@ -325,12 +325,12 @@
         IMPLICIT NONE
 
         INTEGER,                INTENT(IN)    :: ispin
-        COMPLEX(dbl),           INTENT(INOUT) :: c(:,:)
+        COMPLEX(DP),           INTENT(INOUT) :: c(:,:)
         type (wave_descriptor), INTENT(IN)    :: cdesc
-        REAL(dbl),              INTENT(IN)    :: vpot(:,:,:), f(:)
-        COMPLEX(dbl),           INTENT(OUT)   :: cgrad(:,:)
-        COMPLEX(dbl),           INTENT(IN)    :: eigr(:,:)
-        REAL(dbl),              INTENT(IN)    :: bec(:,:)
+        REAL(DP),              INTENT(IN)    :: vpot(:,:,:), f(:)
+        COMPLEX(DP),           INTENT(OUT)   :: cgrad(:,:)
+        COMPLEX(DP),           INTENT(IN)    :: eigr(:,:)
+        REAL(DP),              INTENT(IN)    :: bec(:,:)
        
         INTEGER :: ib
         !

@@ -26,12 +26,12 @@
 
 ! ...  declare subroutine arguments
        INTEGER nx
-       REAL(dbl)  f(nx),temp,ent
+       REAL(DP)  f(nx),temp,ent
 
 ! ...  declare other variables
        INTEGER i
-       REAL(dbl) fm
-       REAL(dbl), PARAMETER :: eps = 1.0e-10
+       REAL(DP) fm
+       REAL(DP), PARAMETER :: eps = 1.0e-10
 
 !  end of declarations
 !  ----------------------------------------------
@@ -51,7 +51,7 @@
        implicit none
        integer nx
        integer i
-       real(dbl)  f(nx),temp,ent, fm,eps
+       real(DP)  f(nx),temp,ent, fm,eps
        parameter(eps=1.e-10)
 
        ent=0.d0

@@ -25,8 +25,8 @@ SUBROUTINE local
   IMPLICIT NONE 
   
   INTEGER :: ig, il, k, kin, kfin
-  REAL(kind=DP) :: edummy
-  COMPLEX(kind=DP), ALLOCATABLE :: psibase(:,:)  
+  REAL(DP) :: edummy
+  COMPLEX(DP), ALLOCATABLE :: psibase(:,:)  
   LOGICAL :: exst
 
 !
@@ -172,12 +172,12 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
              ios, index, number, nprob, nteam, nteamnow,     &
              status, info, kin, kfin, is, js
   INTEGER, ALLOCATABLE :: fftxy(:,:)
-  REAL(kind=DP) :: edummy
-  REAL(kind=DP), ALLOCATABLE :: el(:), gp(:)
-  complex(kind=DP) :: psibase(ngper*npol,ngper*npol),   &
+  REAL(DP) :: edummy
+  REAL(DP), ALLOCATABLE :: el(:), gp(:)
+  complex(DP) :: psibase(ngper*npol,ngper*npol),   &
                       vppot(nrz,nrx*nry,npol,npol), aij, xfact, ZDOTC
-  COMPLEX(kind=DP), ALLOCATABLE :: amat(:,:), psiprob(:,:)  
-  COMPLEX(kind=DP),PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
+  COMPLEX(DP), ALLOCATABLE :: amat(:,:), psiprob(:,:)  
+  COMPLEX(DP),PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
 
 
   ALLOCATE( gp( 2 ) )
@@ -301,12 +301,12 @@ subroutine local_2(nrz, nrzp, vppot, psiper, zkr)
   INTEGER :: i, il, j, jl, ixy, ig, jg, ipol, igper, k, kp, &
              ios, info, index, number, kin, kfin, is, js 
   INTEGER, ALLOCATABLE :: fftxy(:,:)
-  REAL(kind=DP) :: zkr(n2d,nrzp)
-  REAL(kind=DP), ALLOCATABLE :: gp(:)
-  complex(kind=DP) :: psiper(n2d,n2d,nrzp),   &
+  REAL(DP) :: zkr(n2d,nrzp)
+  REAL(DP), ALLOCATABLE :: gp(:)
+  complex(DP) :: psiper(n2d,n2d,nrzp),   &
                       vppot(nrz,nrx*nry,npol,npol), aij, ZDOTC
-  COMPLEX(kind=DP), ALLOCATABLE :: amat(:,:), amat1(:,:), ymat(:,:)  
-  COMPLEX(kind=DP),PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
+  COMPLEX(DP), ALLOCATABLE :: amat(:,:), amat1(:,:), ymat(:,:)  
+  COMPLEX(DP),PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
 
   allocate( gp( 2 ) )
   allocate( fftxy(-nrx:nrx, -nry:nry) )
@@ -400,7 +400,7 @@ FUNCTION number(gp, at, fftxy, nrx, nry)
   IMPLICIT NONE
   INTEGER :: nrx, nry, fftxy(-nrx:nrx, -nrx:nry), &
              number, n1, n2
-  REAL(kind=KIND(0.d0)) :: gp(2), at(3,3), x1, x2 
+  REAL(KIND(0.d0)) :: gp(2), at(3,3), x1, x2 
 
   x1=gp(1)*at(1,1)+gp(2)*at(2,1)
   x2=gp(1)*at(1,2)+gp(2)*at(2,2) 

@@ -17,7 +17,7 @@ subroutine dgcxc_spin (rup, rdw, gup, gdw, vrrxup, vrrxdw, vrsxup, &
 !
 USE kinds, only : DP
 implicit none
-real(kind=DP) :: rup, rdw, gup (3), gdw (3), vrrxup, vrrxdw, vrsxup, &
+real(DP) :: rup, rdw, gup (3), gdw (3), vrrxup, vrrxdw, vrsxup, &
  vrsxdw, vssxup, vssxdw, vrrcup, vrrcdw, vrscup, vrscdw, vssc, &
  vrzcup, vrzcdw
                                    ! input: the charges and the gradient
@@ -29,7 +29,7 @@ real(kind=DP) :: rup, rdw, gup (3), gdw (3), vrrxup, vrrxdw, vrsxup, &
 !
 !    local variables
 !
-real(kind=DP) :: r, zeta, sup2, sdw2, s2, s, sup, sdw, dr, dzeta, ds, &
+real(DP) :: r, zeta, sup2, sdw2, s2, s, sup, sdw, dr, dzeta, ds, &
  drup, drdw, dsup, dsdw, sx, sc, v1xupp, v1xdwp, v2xupp, v2xdwp, &
  v1xupm, v1xdwm, v2xupm, v2xdwm, v1cupp, v1cdwp, v2cp, v1cupm, &
  v1cdwm, v2cm
@@ -42,7 +42,7 @@ real(kind=DP) :: r, zeta, sup2, sdw2, s2, s, sup, sdw, dr, dzeta, ds, &
                                           ! exchange potentials
                                           ! coorelation potentials
                                           ! coorelation potentials
-real(kind=DP) :: eps
+real(DP) :: eps
 
 parameter (eps = 1.d-6)
 r = rup + rdw

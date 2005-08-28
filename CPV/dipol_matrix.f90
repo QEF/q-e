@@ -32,15 +32,15 @@
       integer specie(100)!specie atomica da modificare 
       integer i, j, k, ir, ia, is, ityp(natx), nat00, tp(3), isa
       integer ir1, ir2, ir3, ip1, ip2, ip3, ipn
-      real(kind=8) tau0(3,natx), tau00(3,natx), rho(nnr)
-      real(kind=8) h(3,3), l1, l2, l3, shift(3), maxr, minr, cm(3)
-      real(kind=8) ll1, ll2, ll3, tot_m
-      real(kind=8) rho_aux
-      real(kind=8) dipol(3)!vettore di dipolo Int_R rho(r)r
+      real(8) tau0(3,natx), tau00(3,natx), rho(nnr)
+      real(8) h(3,3), l1, l2, l3, shift(3), maxr, minr, cm(3)
+      real(8) ll1, ll2, ll3, tot_m
+      real(8) rho_aux
+      real(8) dipol(3)!vettore di dipolo Int_R rho(r)r
 
 #ifdef __PARA
       integer ip, ierr, incr(nproc), displs(nproc)
-      real(kind=8), allocatable:: rhow(:)
+      real(8), allocatable:: rhow(:)
 #endif
 
 

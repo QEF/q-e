@@ -16,57 +16,57 @@
         PRIVATE
 
         TYPE dft_energy_type
-          REAL(dbl)  :: ETOT
-          REAL(dbl)  :: SKIN
-          REAL(dbl)  :: EMKIN
-          REAL(dbl)  :: SELF_SXC
-          REAL(dbl)  :: SXC
-          REAL(dbl)  :: EHT
-          REAL(dbl)  :: EH
-          REAL(dbl)  :: SELF_EHTE
-          REAL(dbl)  :: EHTE
-          REAL(dbl)  :: EHTI
-          REAL(dbl)  :: EPSEU
-          REAL(dbl)  :: ENL
-          REAL(dbl)  :: ENT
-          REAL(dbl)  :: VXC
-          REAL(dbl)  :: EXC
-          REAL(dbl)  :: ESELF
-          REAL(dbl)  :: ESR
-          REAL(dbl)  :: EVDW
-          REAL(dbl)  :: EBAND
-          REAL(dbl)  :: EKIN
-          REAL(dbl)  :: ATOT     ! Ensamble DFT
-          REAL(dbl)  :: ENTROPY  ! Ensamble DFT
-          REAL(dbl)  :: EGRAND   ! Ensamble DFT
-          REAL(dbl)  :: VAVE   ! Ensamble DFT
+          REAL(DP)  :: ETOT
+          REAL(DP)  :: SKIN
+          REAL(DP)  :: EMKIN
+          REAL(DP)  :: SELF_SXC
+          REAL(DP)  :: SXC
+          REAL(DP)  :: EHT
+          REAL(DP)  :: EH
+          REAL(DP)  :: SELF_EHTE
+          REAL(DP)  :: EHTE
+          REAL(DP)  :: EHTI
+          REAL(DP)  :: EPSEU
+          REAL(DP)  :: ENL
+          REAL(DP)  :: ENT
+          REAL(DP)  :: VXC
+          REAL(DP)  :: EXC
+          REAL(DP)  :: ESELF
+          REAL(DP)  :: ESR
+          REAL(DP)  :: EVDW
+          REAL(DP)  :: EBAND
+          REAL(DP)  :: EKIN
+          REAL(DP)  :: ATOT     ! Ensamble DFT
+          REAL(DP)  :: ENTROPY  ! Ensamble DFT
+          REAL(DP)  :: EGRAND   ! Ensamble DFT
+          REAL(DP)  :: VAVE   ! Ensamble DFT
         END TYPE
 
-        REAL(dbl)  :: EHTE = 0.0_dbl
-        REAL(dbl)  :: SELF_EHTE = 0.0_dbl
-        REAL(dbl)  :: EHTI = 0.0_dbl
-        REAL(dbl)  :: EH = 0.0_dbl
-        REAL(dbl)  :: EHT = 0.0_dbl
-        REAL(dbl)  :: SXC = 0.0_dbl
-        REAL(dbl)  :: SELF_SXC = 0.0_dbl
-        REAL(dbl)  :: EKIN = 0.0_dbl
-        REAL(dbl)  :: ESELF = 0.0_dbl
-        REAL(dbl)  :: EVDW = 0.0_dbl
-        REAL(dbl)  :: EPSEU = 0.0_dbl
-        REAL(dbl)  :: ENT = 0.0_dbl
-        REAL(dbl)  :: ETOT = 0.0_dbl
-        REAL(dbl)  :: ENL = 0.0_dbl
-        REAL(dbl)  :: ESR = 0.0_dbl
-        REAL(dbl)  :: EXC = 0.0_dbl
-        REAL(dbl)  :: VXC = 0.0_dbl
-        REAL(dbl)  :: SELF_VXC = 0.0_dbl
-        REAL(dbl)  :: EBAND = 0.0_dbl
-        REAL(dbl)  :: ATOT = 0.0_dbl
-        REAL(dbl)  :: ENTROPY = 0.0_dbl
-        REAL(dbl)  :: EGRAND = 0.0_dbl
-        REAL(dbl)  :: VAVE = 0.0_dbl    ! average potential
+        REAL(DP)  :: EHTE = 0.0_DP
+        REAL(DP)  :: SELF_EHTE = 0.0_DP
+        REAL(DP)  :: EHTI = 0.0_DP
+        REAL(DP)  :: EH = 0.0_DP
+        REAL(DP)  :: EHT = 0.0_DP
+        REAL(DP)  :: SXC = 0.0_DP
+        REAL(DP)  :: SELF_SXC = 0.0_DP
+        REAL(DP)  :: EKIN = 0.0_DP
+        REAL(DP)  :: ESELF = 0.0_DP
+        REAL(DP)  :: EVDW = 0.0_DP
+        REAL(DP)  :: EPSEU = 0.0_DP
+        REAL(DP)  :: ENT = 0.0_DP
+        REAL(DP)  :: ETOT = 0.0_DP
+        REAL(DP)  :: ENL = 0.0_DP
+        REAL(DP)  :: ESR = 0.0_DP
+        REAL(DP)  :: EXC = 0.0_DP
+        REAL(DP)  :: VXC = 0.0_DP
+        REAL(DP)  :: SELF_VXC = 0.0_DP
+        REAL(DP)  :: EBAND = 0.0_DP
+        REAL(DP)  :: ATOT = 0.0_DP
+        REAL(DP)  :: ENTROPY = 0.0_DP
+        REAL(DP)  :: EGRAND = 0.0_DP
+        REAL(DP)  :: VAVE = 0.0_DP    ! average potential
         
-        REAL(KIND=dbl) :: enthal, ekincm
+        REAL(DP) :: enthal, ekincm
 
         PUBLIC :: dft_energy_type, total_energy, eig_total_energy, &
                   print_energies, debug_energies
@@ -85,10 +85,10 @@
         SUBROUTINE total_energy( edft, omega, vvxc, eps, self_vxc_in, nnr)
 
           TYPE (dft_energy_type) :: edft
-          REAL(dbl), INTENT(IN) :: OMEGA, VVXC
-          REAL(dbl) :: VXC
-          REAL(dbl) :: self_vxc_in
-          COMPLEX(dbl), INTENT(IN) :: EPS
+          REAL(DP), INTENT(IN) :: OMEGA, VVXC
+          REAL(DP) :: VXC
+          REAL(DP) :: self_vxc_in
+          COMPLEX(DP), INTENT(IN) :: EPS
           INTEGER, INTENT(IN) :: nnr 
 
           eself = edft%eself
@@ -128,9 +128,9 @@
 
         SUBROUTINE eig_total_energy(ei)
           IMPLICIT NONE
-          REAL(dbl), INTENT(IN) :: ei(:)
+          REAL(DP), INTENT(IN) :: ei(:)
           INTEGER :: i
-          REAL(dbl) etot_band, EII
+          REAL(DP) etot_band, EII
           eband = 0.0d0
           do i = 1, SIZE(ei)
             eband = eband + ei(i) * 2.0d0 
@@ -152,7 +152,7 @@
           LOGICAL, INTENT(IN) :: tsic
           TYPE (dft_energy_type), OPTIONAL, INTENT(IN) :: edft
           INTEGER, OPTIONAL, INTENT(IN) :: iprsta
-          REAL ( dbl ) :: EHT
+          REAL ( DP ) :: EHT
 
           IF( PRESENT ( edft ) ) THEN
               WRITE( stdout,  * )

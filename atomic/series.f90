@@ -12,9 +12,9 @@ subroutine series(f,r,r2,b)
   !
   use kinds, only : DP
   implicit none
-  real(kind=dp):: dr21,dr31,dr32,dr41,dr42,dr43,df21,df32,df43, &
+  real(DP):: dr21,dr31,dr32,dr41,dr42,dr43,df21,df32,df43, &
        ddf42,ddf31 
-  real(kind=dp):: f(4),r(4),r2(4),b(0:3)
+  real(DP):: f(4),r(4),r2(4),b(0:3)
   dr21=r(2)-r(1)
   dr31=r(3)-r(1)
   dr32=r(3)-r(2)

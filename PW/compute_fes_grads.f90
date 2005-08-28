@@ -48,14 +48,14 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   INTEGER, INTENT(IN)  :: N_in, N_fin
   LOGICAL, INTENT(OUT) :: stat
   INTEGER              :: image, iter, counter
-  REAL (KIND=DP)       :: tcpu, error
+  REAL (DP)       :: tcpu, error
   CHARACTER (LEN=256)  :: tmp_dir_saved, filename
   LOGICAL              :: opnd, file_exists, ldamped_saved
   LOGICAL              :: tfirst
-  REAL(KIND=DP), ALLOCATABLE :: tauold(:,:,:)
+  REAL(DP), ALLOCATABLE :: tauold(:,:,:)
     ! previous positions of atoms (needed for extrapolation)
   !
-  REAL (KIND=DP), EXTERNAL :: get_clock
+  REAL (DP), EXTERNAL :: get_clock
   !
   !
   CALL flush_unit( iunpath )

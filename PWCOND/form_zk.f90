@@ -14,8 +14,8 @@ subroutine form_zk(n2d, nrzp, zkr, zk, e, tpiba)
   USE kinds, only : DP 
   implicit none
   integer :: nrzp, n2d, n, k 
-  real(kind=DP) :: zkr(n2d,nrzp), e, ed, tpiba
-  complex(kind=DP) :: zk(n2d,nrzp)
+  real(DP) :: zkr(n2d,nrzp), e, ed, tpiba
+  complex(DP) :: zk(n2d,nrzp)
 
   do k=1, nrzp
     do n=1, n2d

@@ -22,7 +22,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   ! ... routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
   !
-  USE kinds,                    ONLY : dbl
+  USE kinds,                    ONLY : DP
   USE constants,                ONLY : pi, tpi
   USE ions_base,                ONLY : nsp, na, nax, nat
   USE parameters,               ONLY : natx, nsx
@@ -51,24 +51,24 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   IMPLICIT NONE
   !
   INTEGER,           INTENT(IN)    :: irb(3,nat), jw, ibrav
-  REAL(KIND=dbl),    INTENT(INOUT) :: bec(nkb,nbsp), becdr(nkb,nbsp,3)
-  REAL(KIND=dbl),    INTENT(IN)    :: b1(3), b2(3), b3(3), taub(3,nax)
-  COMPLEX(KIND=dbl), INTENT(INOUT) :: c(ngw,nbspx)
-  COMPLEX(KIND=dbl), INTENT(IN)    :: eigr(ngw,nat), eigrb(ngb,nat)
-  REAL(KIND=dbl),    INTENT(INOUT) :: Uall(nbsp,nbsp)
+  REAL(DP),    INTENT(INOUT) :: bec(nkb,nbsp), becdr(nkb,nbsp,3)
+  REAL(DP),    INTENT(IN)    :: b1(3), b2(3), b3(3), taub(3,nax)
+  COMPLEX(DP), INTENT(INOUT) :: c(ngw,nbspx)
+  COMPLEX(DP), INTENT(IN)    :: eigr(ngw,nat), eigrb(ngb,nat)
+  REAL(DP),    INTENT(INOUT) :: Uall(nbsp,nbsp)
   !
-  REAL(KIND=dbl)    :: becwf(nkb,nbsp), temp3(nkb,nbsp)
-  COMPLEX(KIND=dbl) :: cwf(ngw,nbspx), bec2(nbsp), bec3(nbsp), bec2up(nupdwn(1))
-  COMPLEX(KIND=dbl) :: bec2dw(nupdwn(2)), bec3up(nupdwn(1)), bec3dw(nupdwn(2))
+  REAL(DP)    :: becwf(nkb,nbsp), temp3(nkb,nbsp)
+  COMPLEX(DP) :: cwf(ngw,nbspx), bec2(nbsp), bec3(nbsp), bec2up(nupdwn(1))
+  COMPLEX(DP) :: bec2dw(nupdwn(2)), bec3up(nupdwn(1)), bec3dw(nupdwn(2))
   !
-  COMPLEX(KIND=dbl), ALLOCATABLE :: c_m(:,:), c_p(:,:), c_psp(:,:)
-  COMPLEX(KIND=dbl), ALLOCATABLE :: c_msp(:,:)
+  COMPLEX(DP), ALLOCATABLE :: c_m(:,:), c_p(:,:), c_psp(:,:)
+  COMPLEX(DP), ALLOCATABLE :: c_msp(:,:)
   INTEGER,           ALLOCATABLE :: tagz(:)
-  REAL(KIND=dbl),    ALLOCATABLE :: Uspin(:,:)
-  COMPLEX(KIND=dbl), ALLOCATABLE :: X(:,:), X1(:,:), Xsp(:,:), X2(:,:), X3(:,:)
-  COMPLEX(KIND=dbl), ALLOCATABLE :: O(:,:,:), Ospin(:,:,:), Oa(:,:,:)
-  COMPLEX(KIND=dbl), ALLOCATABLE :: qv(:)
-  REAL(KIND=dbl),    ALLOCATABLE :: gr(:,:), mt(:), W(:,:), wr(:)
+  REAL(DP),    ALLOCATABLE :: Uspin(:,:)
+  COMPLEX(DP), ALLOCATABLE :: X(:,:), X1(:,:), Xsp(:,:), X2(:,:), X3(:,:)
+  COMPLEX(DP), ALLOCATABLE :: O(:,:,:), Ospin(:,:,:), Oa(:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: qv(:)
+  REAL(DP),    ALLOCATABLE :: gr(:,:), mt(:), W(:,:), wr(:)
   INTEGER,           ALLOCATABLE :: f3(:)
   !
   LOGICAL           :: what1
@@ -76,17 +76,17 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                        ierr, ti, tj, tk, iv, jv, inw, iqv, ibig1, ibig2, &
                        ibig3, ir1, ir2, ir3, ir, clwf, m,  &
                        ib, jb, total, nstat, jj, ngpww, irb3
-  REAL(KIND=dbl)    :: t1, t2, t3, taup(3)
-  COMPLEX(KIND=dbl) :: qvt
-  REAL (KIND=dbl)   :: temp_vec(3)
+  REAL(DP)    :: t1, t2, t3, taup(3)
+  COMPLEX(DP) :: qvt
+  REAL (DP)   :: temp_vec(3)
   INTEGER           :: adjust,ini, ierr1,nnn
-  COMPLEX(KIND=dbl) :: U2(nbsp,nbsp)
+  COMPLEX(DP) :: U2(nbsp,nbsp)
   INTEGER           :: igx, igy, igz
-  REAL(KIND=dbl)    :: wfcx, wfcy, wfcz
-  REAL(KIND=dbl)    :: wfc(3,nbsp)
-  REAL(KIND=dbl)    :: te(6)
+  REAL(DP)    :: wfcx, wfcy, wfcz
+  REAL(DP)    :: wfc(3,nbsp)
+  REAL(DP)    :: te(6)
   
-  COMPLEX(KIND=dbl), EXTERNAL :: boxdotgridcplx
+  COMPLEX(DP), EXTERNAL :: boxdotgridcplx
   !
 #if defined (__PARA)
   !
@@ -102,10 +102,10 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   INTEGER :: sendcount1(nproc), sdispls1(nproc)
   INTEGER :: sendcount2(nproc), sdispls2(nproc)
   !
-  COMPLEX(KIND=dbl), ALLOCATABLE :: psitot(:,:), psitot_pl(:,:)
-  COMPLEX(KIND=dbl), ALLOCATABLE :: psitot1(:), psitot_p(:)
-  COMPLEX(KIND=dbl), ALLOCATABLE :: psitot_mi(:,:)
-  COMPLEX(KIND=dbl), ALLOCATABLE :: psitot_m(:)
+  COMPLEX(DP), ALLOCATABLE :: psitot(:,:), psitot_pl(:,:)
+  COMPLEX(DP), ALLOCATABLE :: psitot1(:), psitot_p(:)
+  COMPLEX(DP), ALLOCATABLE :: psitot_mi(:,:)
+  COMPLEX(DP), ALLOCATABLE :: psitot_m(:)
   INTEGER,           ALLOCATABLE :: ns(:)
   !
 #endif
@@ -1258,7 +1258,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   ! ... obtain the wannier function at time(t+delta). It also updates the
   ! ... quantities bec and becdr
   !
-  USE kinds,            ONLY : dbl, dp
+  USE kinds,            ONLY : DP, dp
   USE io_global,        ONLY : stdout
   USE wannier_base,     ONLY : wf_friction, nsteps, tolw, adapt, wf_q, &
                                weight, nw, wfdt
@@ -1273,25 +1273,25 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   !
   INTEGER :: f3(nw), f4(nw), i,j,inw
   INTEGER ,INTENT(in) :: m
-  REAL(KIND=dbl), INTENT(in) :: b1(3),b2(3),b3(3)
-  REAL(KIND=dbl), INTENT(inout) :: Umat(m,m)
-  COMPLEX(KIND=dbl), INTENT(inout) :: Omat(nw,m,m)
-  COMPLEX(KIND=dbl) :: U2(m,m),U3(m,m)
+  REAL(DP), INTENT(in) :: b1(3),b2(3),b3(3)
+  REAL(DP), INTENT(inout) :: Umat(m,m)
+  COMPLEX(DP), INTENT(inout) :: Omat(nw,m,m)
+  COMPLEX(DP) :: U2(m,m),U3(m,m)
   INTEGER :: adjust,ini, ierr1,nnn
-  REAL(KIND=dbl), ALLOCATABLE, DIMENSION(:) :: wr
-  REAL(KIND=dbl), ALLOCATABLE, DIMENSION(:,:) :: W
-  REAL(KIND=dbl) :: t0, fric,U(m,m), t2
-  REAL(KIND=dbl) :: A(m,m),oldt0,Wm(m,m),U1(m,m)
-  REAL(KIND=dbl) :: Aminus(m,m), Aplus(m,m),f2(4*m)
-  REAL(KIND=dbl) :: temp(m,m)
-  COMPLEX(KIND=dbl) :: d(m,m)
-  COMPLEX(KIND=dbl) :: f1(2*m-1), wp(m*(m+1)/2),z(m,m)
-  COMPLEX(KIND=dbl), ALLOCATABLE, DIMENSION(:, :) :: X1
-  COMPLEX(KIND=dbl), ALLOCATABLE, DIMENSION(:, :, :) :: Oc
-  REAL(KIND=dbl) , ALLOCATABLE , DIMENSION(:) :: mt
-  REAL(KIND=dbl), PARAMETER :: autoaf=0.529177d0
-  REAL(KIND=dbl) :: spread, sp
-  REAL(KIND=dbl) :: wfc(3,nbsp), gr(nw,3)
+  REAL(DP), ALLOCATABLE, DIMENSION(:) :: wr
+  REAL(DP), ALLOCATABLE, DIMENSION(:,:) :: W
+  REAL(DP) :: t0, fric,U(m,m), t2
+  REAL(DP) :: A(m,m),oldt0,Wm(m,m),U1(m,m)
+  REAL(DP) :: Aminus(m,m), Aplus(m,m),f2(4*m)
+  REAL(DP) :: temp(m,m)
+  COMPLEX(DP) :: d(m,m)
+  COMPLEX(DP) :: f1(2*m-1), wp(m*(m+1)/2),z(m,m)
+  COMPLEX(DP), ALLOCATABLE, DIMENSION(:, :) :: X1
+  COMPLEX(DP), ALLOCATABLE, DIMENSION(:, :, :) :: Oc
+  REAL(DP) , ALLOCATABLE , DIMENSION(:) :: mt
+  REAL(DP), PARAMETER :: autoaf=0.529177d0
+  REAL(DP) :: spread, sp
+  REAL(DP) :: wfc(3,nbsp), gr(nw,3)
   !
   !
   ALLOCATE(mt(nw))
@@ -1522,7 +1522,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   !----------------------------------------------------------------------------
   !
   USE io_global,          ONLY : stdout
-  USE kinds,              ONLY : dbl, dp
+  USE kinds,              ONLY : DP, dp
   USE reciprocal_vectors, ONLY : gx, mill_l, gstart
   USE gvecw,              ONLY : ngw
   USE electrons_base,     ONLY : nbsp
@@ -1535,7 +1535,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   !
   IMPLICIT NONE
   !
-  REAL(KIND=dbl), INTENT(in) :: b1(3),b2(3),b3(3)
+  REAL(DP), INTENT(in) :: b1(3),b2(3),b3(3)
 #ifdef __PARA
   INTEGER :: ntot, proc, ierr, root, i,j,inw,ngppp(nproc)
   INTEGER :: ii,ig,recvcount(nproc), sendcount(nproc),displs(nproc)
@@ -1543,12 +1543,12 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   INTEGER :: ierr, i,j,inw, ntot
   INTEGER :: ii,ig
 #endif
-  REAL (KIND=dbl), ALLOCATABLE:: bigg(:,:)
+  REAL (DP), ALLOCATABLE:: bigg(:,:)
   INTEGER, ALLOCATABLE :: bign(:,:)
   INTEGER :: igcount,nw1,jj,nw2, in, kk, ibrav
   INTEGER, ALLOCATABLE :: i_1(:), j_1(:), k_1(:)
   INTEGER :: ti, tj, tk
-  REAL(KIND=dbl) ::t1, vt, err1, err2, err3
+  REAL(DP) ::t1, vt, err1, err2, err3
   INTEGER :: ti1,tj1,tk1, clwf
   !
   !
@@ -2514,7 +2514,7 @@ END SUBROUTINE wfunc_init
 SUBROUTINE grid_map()
   !----------------------------------------------------------------------------
   !
-  USE kinds,                  ONLY : dbl, dp
+  USE kinds,                  ONLY : DP, dp
   USE efcalc,                 ONLY : xdist, ydist, zdist
   USE smooth_grid_dimensions, ONLY : nnrsx, nr1s, nr2s, nr3s, &
                                      nr1sx, nr2sx, nr3sx
@@ -2562,17 +2562,17 @@ SUBROUTINE tric_wts( rp1, rp2, rp3, alat, wts )
   ! ... R.P. translations in the WF calculation in the case
   ! ... of ibrav=0 or ibrav=14
   !
-  USE kinds,     ONLY : dbl, dp
+  USE kinds,     ONLY : DP, dp
   USE constants, ONLY : pi
   USE cell_base, ONLY : tpiba, tpiba2
   !
   IMPLICIT NONE
   !
-  REAL(KIND=dbl), INTENT(IN)  :: rp1(3), rp2(3), rp3(3)
-  REAL(KIND=dbl), INTENT(IN)  :: alat
-  REAL(KIND=dbl), INTENT(OUT) :: wts(6)
+  REAL(DP), INTENT(IN)  :: rp1(3), rp2(3), rp3(3)
+  REAL(DP), INTENT(IN)  :: alat
+  REAL(DP), INTENT(OUT) :: wts(6)
   ! 
-  REAL(KIND=dbl) :: b1x, b2x, b3x, b1y, b2y, b3y, b1z, b2z, b3z
+  REAL(DP) :: b1x, b2x, b3x, b1y, b2y, b3y, b1z, b2z, b3z
   INTEGER        :: i
   !
   !
@@ -2647,7 +2647,7 @@ END SUBROUTINE tric_wts
 SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
   !----------------------------------------------------------------------------
   !
-  USE kinds,                  ONLY : dbl, dp
+  USE kinds,                  ONLY : DP, dp
   USE io_global,              ONLY : stdout
   USE constants,              ONLY : fpi
   USE wannier_base,           ONLY : expo
@@ -2658,7 +2658,7 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
   IMPLICIT NONE
 
   INTEGER ir1, ir2, ir3, ibig3 , inw
-  REAL(KIND=dbl) x
+  REAL(DP) x
   INTEGER , INTENT(in) :: nw1, i_1(nw1), j_1(nw1), k_1(nw1)
   ALLOCATE(expo(nnrx,nw1))
 
@@ -2700,7 +2700,7 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   !
   !      use ion_parameters
   !
-  USE kinds,                    ONLY : dbl, dp
+  USE kinds,                    ONLY : DP, dp
   USE grid_dimensions,          ONLY : nnrx, nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE smallbox_grid_dimensions, ONLY : nnrbx, nr1b, nr2b, nr3b, &
                                        nr1bx, nr2bx, nr3bx
@@ -2709,8 +2709,8 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   IMPLICIT NONE
   !
   INTEGER,           INTENT(IN):: irb(3)
-  COMPLEX(KIND=dbl), INTENT(IN):: qv(nnrbx), vr(nnrx)
-  COMPLEX(KIND=dbl)            :: boxdotgridcplx
+  COMPLEX(DP), INTENT(IN):: qv(nnrbx), vr(nnrx)
+  COMPLEX(DP)            :: boxdotgridcplx
   !
   INTEGER :: ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
   !
@@ -2748,7 +2748,7 @@ END FUNCTION boxdotgridcplx
 SUBROUTINE write_rho_g( rhog )
   !----------------------------------------------------------------------------
   !
-  USE kinds,              ONLY : dbl, dp
+  USE kinds,              ONLY : DP, dp
   USE io_global,          ONLY : stdout
   USE gvecp,              ONLY : ngm
   USE reciprocal_vectors, ONLY : gx, mill_l
@@ -2758,10 +2758,10 @@ SUBROUTINE write_rho_g( rhog )
   !
   IMPLICIT NONE
   !
-  COMPLEX(KIND=dbl) ,INTENT(IN) :: rhog(ngm,nspin) 
-  REAL(KIND=dbl),   ALLOCATABLE:: gnx(:,:), bigg(:,:)
-  COMPLEX(KIND=dbl),ALLOCATABLE :: bigrho(:)
-  COMPLEX(KIND=dbl) :: rhotmp_g(ngm)
+  COMPLEX(DP) ,INTENT(IN) :: rhog(ngm,nspin) 
+  REAL(DP),   ALLOCATABLE:: gnx(:,:), bigg(:,:)
+  COMPLEX(DP),ALLOCATABLE :: bigrho(:)
+  COMPLEX(DP) :: rhotmp_g(ngm)
   INTEGER           :: ntot, i, j
 #ifdef __PARA
   INTEGER proc, ierr, root, ngdens(nproc),recvcount(nproc), displs(nproc)
@@ -2895,7 +2895,7 @@ END SUBROUTINE write_rho_g
 SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   !----------------------------------------------------------------------------
   !
-  USE kinds,              ONLY : dbl, dp
+  USE kinds,              ONLY : DP, dp
   USE reciprocal_vectors, ONLY : gx
   USE gvecp,              ONLY : ngm
   USE electrons_base,     ONLY : nspin
@@ -2910,22 +2910,22 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   !
   IMPLICIT NONE
   !
-  REAL(KIND=dbl), ALLOCATABLE:: gnx(:,:), bigg(:,:)
-  COMPLEX(KIND=dbl) ,INTENT(in) :: rhog(ngm,nspin)
-  COMPLEX(KIND=dbl),ALLOCATABLE :: bigrho(:)
-  COMPLEX(KIND=dbl) :: rhotmp_g(ngm)
+  REAL(DP), ALLOCATABLE:: gnx(:,:), bigg(:,:)
+  COMPLEX(DP) ,INTENT(in) :: rhog(ngm,nspin)
+  COMPLEX(DP),ALLOCATABLE :: bigrho(:)
+  COMPLEX(DP) :: rhotmp_g(ngm)
   INTEGER ntot, i, j, ngz, l, isa
   INTEGER ,ALLOCATABLE :: g_red(:,:)
 #ifdef __PARA
   INTEGER proc, ierr, root, ngdens(nproc),recvcount(nproc), displs(nproc)
   INTEGER recvcount2(nproc), displs2(nproc)
 #endif
-  REAL(KIND=dbl) zlen,vtot, pos(3,nax,nsx), a_direct(3,3),a_trans(3,3), e_slp, e_int
-  REAL(KIND=dbl), INTENT(out) :: e_tuned(3)
-  REAL(KIND=dbl), INTENT(in) :: tau0(3,nax)
-  REAL(KIND=dbl),ALLOCATABLE :: v_mr(:), dz(:), gz(:), g_1(:,:), vbar(:), cd(:), v_final(:)
-  REAL(KIND=dbl), ALLOCATABLE:: cdion(:), cdel(:), v_line(:), dist(:)
-  COMPLEX(KIND=dbl),ALLOCATABLE :: rho_ion(:),v_1(:),vmac(:),rho_tot(:),rhogz(:), bigrhog(:)
+  REAL(DP) zlen,vtot, pos(3,nax,nsx), a_direct(3,3),a_trans(3,3), e_slp, e_int
+  REAL(DP), INTENT(out) :: e_tuned(3)
+  REAL(DP), INTENT(in) :: tau0(3,nax)
+  REAL(DP),ALLOCATABLE :: v_mr(:), dz(:), gz(:), g_1(:,:), vbar(:), cd(:), v_final(:)
+  REAL(DP), ALLOCATABLE:: cdion(:), cdel(:), v_line(:), dist(:)
+  COMPLEX(DP),ALLOCATABLE :: rho_ion(:),v_1(:),vmac(:),rho_tot(:),rhogz(:), bigrhog(:)
 
   ALLOCATE(gnx(3,ngm))
 
@@ -3157,17 +3157,17 @@ END SUBROUTINE macroscopic_average
 SUBROUTINE least_square( npts, x, y, slope, intercept )
   !----------------------------------------------------------------------------
   !
-  USE kinds, ONLY : dbl, dp
+  USE kinds, ONLY : DP, dp
   !
   IMPLICIT NONE
   !
   INTEGER,        INTENT(IN) :: npts
-  REAL(KIND=dbl), INTENT(IN) :: x(npts), y(npts)
-  REAL(KIND=dbl), INTENT(OUT):: slope, intercept
+  REAL(DP), INTENT(IN) :: x(npts), y(npts)
+  REAL(DP), INTENT(OUT):: slope, intercept
   !
   INTEGER        :: i
-  REAL(KIND=dbl) :: sumx,sumy,sumx2,sumxy,sumsqx
-  REAL(KIND=dbl) :: xav,yav
+  REAL(DP) :: sumx,sumy,sumx2,sumxy,sumsqx
+  REAL(DP) :: xav,yav
 
   sumxy=0.D0
   sumx =0.D0
@@ -3195,7 +3195,7 @@ END SUBROUTINE least_square
 SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   !----------------------------------------------------------------------------
   !
-  USE kinds,                  ONLY : dbl, dp
+  USE kinds,                  ONLY : DP, dp
   USE io_global,              ONLY : stdout
   USE wannier_base,           ONLY : nw, weight, nit, tolw, wfdt, maxwfdt, nsd
   USE control_flags,          ONLY : iprsta
@@ -3214,23 +3214,23 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   !
   !     conjugated gradient to search maximization
   !
-  REAL(KIND=dbl), PARAMETER :: autoaf=0.529177d0
+  REAL(DP), PARAMETER :: autoaf=0.529177d0
   INTEGER, INTENT(in) :: m
-  REAL(KIND=dbl), INTENT(in) :: b1(3),b2(3),b3(3)
-  COMPLEX(KIND=dbl), INTENT(inout) :: Omat(nw, m, m)
-  REAL(KIND=dbl), INTENT(inout) :: Umat(m,m)
+  REAL(DP), INTENT(in) :: b1(3),b2(3),b3(3)
+  COMPLEX(DP), INTENT(inout) :: Omat(nw, m, m)
+  REAL(DP), INTENT(inout) :: Umat(m,m)
   !
   INTEGER :: i, j, k, l, ig, ierr, ti, tj, tk, inw, ir, adjust
   INTEGER :: f3(nw), f4(nw), ierr1
-  REAL(KIND=dbl) :: slope, slope2, t1, t2, t3, mt(nw),t21,temp1,maxdt
-  REAL(KIND=dbl) :: U(m,m), wfc(3, m), Wm(m,m), schd(m,m), f2(4*m), gr(nw, 3)
-  REAL(KIND=dbl) :: Uspin2(m,m),temp2,wfdtold,oldt1,t01, d3(m,m), d4(m,m), U1(m,m)
-  REAL(KIND=dbl) :: spread, sp
-  REAL(KIND=dbl), ALLOCATABLE  :: wr(:)
-  REAL(KIND=dbl), ALLOCATABLE  :: W(:,:)
-  COMPLEX(KIND=dbl) :: ct1, ct2, ct3, z(m, m), X(m, m), d(m,m), d2(m,m)
-  COMPLEX(KIND=dbl) :: f1(2*m-1), wp(m*(m+1)/2), Oc(nw, m, m)
-  COMPLEX(KIND=dbl) ::  Oc2(nw, m, m),wp1(m*(m+1)/2), X1(m,m), U2(m,m), U3(m,m)
+  REAL(DP) :: slope, slope2, t1, t2, t3, mt(nw),t21,temp1,maxdt
+  REAL(DP) :: U(m,m), wfc(3, m), Wm(m,m), schd(m,m), f2(4*m), gr(nw, 3)
+  REAL(DP) :: Uspin2(m,m),temp2,wfdtold,oldt1,t01, d3(m,m), d4(m,m), U1(m,m)
+  REAL(DP) :: spread, sp
+  REAL(DP), ALLOCATABLE  :: wr(:)
+  REAL(DP), ALLOCATABLE  :: W(:,:)
+  COMPLEX(DP) :: ct1, ct2, ct3, z(m, m), X(m, m), d(m,m), d2(m,m)
+  COMPLEX(DP) :: f1(2*m-1), wp(m*(m+1)/2), Oc(nw, m, m)
+  COMPLEX(DP) ::  Oc2(nw, m, m),wp1(m*(m+1)/2), X1(m,m), U2(m,m), U3(m,m)
   !
   !
   ALLOCATE(W(m,m), wr(m))
@@ -3562,7 +3562,7 @@ SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
   ! ...                   sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
   ! ...                                e^-ig.r_i < beta_i,j | c_n > }
   !
-  USE kinds,                  ONLY : dbl, dp
+  USE kinds,                  ONLY : DP, dp
   USE control_flags,          ONLY : iprint, tbuff
   USE gvecs,                  ONLY : nms, nps
   USE gvecw,                  ONLY : ngw
@@ -3579,16 +3579,16 @@ SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
   !
   IMPLICIT NONE
   !
-  COMPLEX(KIND=dbl) :: betae(ngw,nkb), c(ngw), ca(ngw), df(ngw), da(ngw)
-  REAL(KIND=dbl)    :: bec(nkb,nbsp), deeq(nhm,nhm,nat,nspin), v(nnrsx,nspin), v1(nnrsx,nspin)
+  COMPLEX(DP) :: betae(ngw,nkb), c(ngw), ca(ngw), df(ngw), da(ngw)
+  REAL(DP)    :: bec(nkb,nbsp), deeq(nhm,nhm,nat,nspin), v(nnrsx,nspin), v1(nnrsx,nspin)
   INTEGER           :: i
   ! local variables
   INTEGER             :: iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
-  REAL(KIND=dbl)      :: fi, fip, dd
-  COMPLEX(KIND=dbl)   :: fp,fm
-  REAL(KIND=dbl)      :: af(nkb), aa(nkb)
-  COMPLEX(KIND=dbl)   :: dtemp(ngw)    !
-  COMPLEX(KIND=dbl), ALLOCATABLE :: psi(:)
+  REAL(DP)      :: fi, fip, dd
+  COMPLEX(DP)   :: fp,fm
+  REAL(DP)      :: af(nkb), aa(nkb)
+  COMPLEX(DP)   :: dtemp(ngw)    !
+  COMPLEX(DP), ALLOCATABLE :: psi(:)
   !
   !
   CALL start_clock( 'dforce_field' )
@@ -3715,7 +3715,7 @@ SUBROUTINE write_psi( c, jw )
   ! ... for calwf 5             - M.S
   ! ... collect wavefunctions on first node and write to file
   !
-  USE kinds,                  ONLY : dbl, dp
+  USE kinds,                  ONLY : DP, dp
   USE io_global,              ONLY : stdout
   USE gvecs,                  ONLY : nps
   USE electrons_base,         ONLY : nbspx
@@ -3729,13 +3729,13 @@ SUBROUTINE write_psi( c, jw )
   IMPLICIT NONE
   !
   INTEGER :: unit, jw
-  COMPLEX(KIND=dbl) :: c(ngw,nbspx)
-  COMPLEX(KIND=dbl), ALLOCATABLE :: psis(:)
+  COMPLEX(DP) :: c(ngw,nbspx)
+  COMPLEX(DP), ALLOCATABLE :: psis(:)
   !
   INTEGER ::i, ii, ig, proc, ierr, ntot, ncol, mc,ngpwpp(nproc)
   INTEGER ::nmin(3), nmax(3), n1,n2,nzx,nz,nz_
   INTEGER ::root, displs(nproc), recvcount(nproc)
-  COMPLEX(KIND=dbl), ALLOCATABLE:: psitot(:), psiwr(:,:,:)
+  COMPLEX(DP), ALLOCATABLE:: psitot(:), psiwr(:,:,:)
   !
   ! nmin, nmax are the bounds on (i,j,k) indexes of wavefunction G-vectors
   !
@@ -3858,7 +3858,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
   !
   USE constants,              ONLY : bohr_radius_angs
-  USE kinds,                  ONLY : dbl, dp
+  USE kinds,                  ONLY : DP, dp
   USE control_flags,          ONLY : iprint, tbuff, iprsta, thdyn, tpre, trhor
   USE ions_base,              ONLY : nax, nat, nsp, na
   USE cell_base,              ONLY : a1, a2, a3
@@ -3884,20 +3884,20 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   !
   IMPLICIT NONE
   !
-  REAL(KIND=dbl) bec(nkb,nbsp), rhovan(nhm*(nhm+1)/2,nat,nspin)
-  REAL(KIND=dbl) rhovanaux(nhm,nhm,nat,nspin)
-  REAL(KIND=dbl) rhor(nnrx,nspin), rhos(nnrsx,nspin)
-  REAL(KIND=dbl) enl, ekin
-  COMPLEX(KIND=dbl) eigrb(ngb,nat), c(ngw,nbspx), rhog(ngm,nspin)
+  REAL(DP) bec(nkb,nbsp), rhovan(nhm*(nhm+1)/2,nat,nspin)
+  REAL(DP) rhovanaux(nhm,nhm,nat,nspin)
+  REAL(DP) rhor(nnrx,nspin), rhos(nnrsx,nspin)
+  REAL(DP) enl, ekin
+  COMPLEX(DP) eigrb(ngb,nat), c(ngw,nbspx), rhog(ngm,nspin)
   INTEGER irb(3,nat), nfi, ndwwf
   ! local variables
   INTEGER iss, isup, isdw, iss1, iss2, ios, i, ir, ig
   INTEGER is,iv,jv,isa,isn, jnl, j, k, inl, ism, ia
-  REAL(KIND=dbl) rsumr(2), rsumg(2), sa1, sa2, sums(2)
-  REAL(KIND=dbl) rnegsum, rmin, rmax, rsum
-  REAL(KIND=dbl) enkin, ennl
-  COMPLEX(KIND=dbl) fp,fm
-  COMPLEX(KIND=dbl), ALLOCATABLE :: psi(:), psis(:)
+  REAL(DP) rsumr(2), rsumg(2), sa1, sa2, sums(2)
+  REAL(DP) rnegsum, rmin, rmax, rsum
+  REAL(DP) enkin, ennl
+  COMPLEX(DP) fp,fm
+  COMPLEX(DP), ALLOCATABLE :: psi(:), psis(:)
   EXTERNAL ennl, enkin
   !
   !

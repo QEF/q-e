@@ -18,7 +18,7 @@ subroutine set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)
   integer :: nspin, nrxx
   ! input: number of spin components: 1 if lda, 2 if lsd, 4 if noncolinear
   ! input: the fft grid dimension
-  real(kind=DP) :: vrs (nrxx, nspin), vltot (nrxx), vr (nrxx, nspin)
+  real(DP) :: vrs (nrxx, nspin), vltot (nrxx), vr (nrxx, nspin)
   ! output: total local potential on the smooth grid
   !         vrs=vltot+vr
   ! input: the total local pseudopotential

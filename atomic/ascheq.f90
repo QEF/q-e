@@ -20,13 +20,13 @@ subroutine ascheq(nn,lam,e,mesh,dx,r,r2,sqr,vpot,ze2, &
   integer :: mesh,lam, ierr
   integer:: nn,nstop,maxter,iter,l1,i,ik,ncross,n, &
        nstart,ns,n2,nst1,nst2,ndcr
-  real(kind=DP) :: ze2,ddx12,xl1,x4l6,x6l12,x8l20,eup,elw,b0e, &
+  real(DP) :: ze2,ddx12,xl1,x4l6,x6l12,x8l20,eup,elw,b0e, &
        c1,c2,c3,c4,rr1,rr2,ymx,rap,rstart,di,expn,  &
        fe,a0,a1,a2,sum0,f2,sum,sqlhf,f0,f1,dfe,de,eps,&
        yln,xp, sum1
-  real(kind=DP):: r(mesh),r2(mesh),sqr(mesh),vpot(mesh), y(mesh)
-  real(kind=DP),allocatable:: c(:), el(:), f(:)
-  real(kind=DP):: b(0:3),dx,e,thresh
+  real(DP):: r(mesh),r2(mesh),sqr(mesh),vpot(mesh), y(mesh)
+  real(DP),allocatable:: c(:), el(:), f(:)
+  real(DP):: b(0:3),dx,e,thresh
   data maxter/50/
   !
   !  set up constants and initialize
@@ -38,7 +38,7 @@ subroutine ascheq(nn,lam,e,mesh,dx,r,r2,sqr,vpot,ze2, &
   iter=0
   ddx12=dx*dx/12.0_dp
   l1=lam+1
-  sqlhf=(dble(lam)+0.5_dp)**2
+  sqlhf=(DBLE(lam)+0.5_dp)**2
   xl1=l1
   x4l6=4.0_dp*lam+6.0_dp
   x6l12=6.0_dp*lam+12.0_dp
@@ -119,7 +119,7 @@ subroutine ascheq(nn,lam,e,mesh,dx,r,r2,sqr,vpot,ze2, &
      !  value. increase abs(e)
      !
      eup=e
-     rap=(dble(ncross+l1)/dble(nn))**2
+     rap=(DBLE(ncross+l1)/DBLE(nn))**2
      e=(e-vpot(mesh))*rap+vpot(mesh)
      if(e.lt.elw) e=0.9_dp*elw+0.1_dp*eup
      go to 300
@@ -129,7 +129,7 @@ subroutine ascheq(nn,lam,e,mesh,dx,r,r2,sqr,vpot,ze2, &
      !  value. decrease abs(e)
      !
      elw=e
-     rap=(dble(ncross+l1)/dble(nn))**2
+     rap=(DBLE(ncross+l1)/DBLE(nn))**2
      e=(e-vpot(mesh))*rap+vpot(mesh)
      if(e.gt.eup) e=0.9_dp*eup+0.1_dp*elw
      go to 300
@@ -185,13 +185,13 @@ subroutine ascheq(nn,lam,e,mesh,dx,r,r2,sqr,vpot,ze2, &
         y(i)=y(i)/ymx
      enddo
   end if
-  a0=1.0_dp/dble(2*lam+3)
-  a1=c1/dble(lam+2)
-  a2=(c1*c1+c2+c2)/dble(2*lam+5)
+  a0=1.0_dp/DBLE(2*lam+3)
+  a1=c1/DBLE(lam+2)
+  a2=(c1*c1+c2+c2)/DBLE(2*lam+5)
   sum0=(a0+r(1)*(a1+r(1)*a2))*r(1)**(2*lam+3)
   nst2=nstart-2
   f2=r2(1  )*y(1  )*y(1  )
-  sum=r(1)*f2/dble(2*l1+1)
+  sum=r(1)*f2/DBLE(2*l1+1)
   do n=1,nst2,2
      f0=f2
      f1=r2(n+1)*y(n+1)*y(n+1)

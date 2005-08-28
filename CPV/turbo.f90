@@ -15,7 +15,7 @@
 
         LOGICAL :: TTURBO
         INTEGER :: NTURBO
-        COMPLEX(dbl), ALLOCATABLE :: turbo_states(:,:,:,:) 
+        COMPLEX(DP), ALLOCATABLE :: turbo_states(:,:,:,:) 
 
         PUBLIC :: tturbo, nturbo, turbo_states, turbo_init, allocate_turbo
         PUBLIC :: deallocate_turbo

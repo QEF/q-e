@@ -36,16 +36,16 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
         iorba, iorb1a, is, kp, nok, k1, nt, nb, kin, kfin
   INTEGER :: info
   INTEGER, ALLOCATABLE :: inslab(:)
-  real(kind=DP) :: z(nrz+1), r(1:ndmx,npsx), rab(1:ndmx,npsx),        &
+  real(DP) :: z(nrz+1), r(1:ndmx,npsx), rab(1:ndmx,npsx),        &
                    betar(1:ndmx,nbrx,npsx), taunew(4,norb) 
-  REAL(kind=DP), PARAMETER :: eps=1.d-8
-  REAL(kind=DP) :: DDOT, dz, tr, tr1, dz1 
-  COMPLEX(kind=DP), PARAMETER :: cim=(0.d0,1.d0), one=(1.d0, 0.d0), &
+  REAL(DP), PARAMETER :: eps=1.d-8
+  REAL(DP) :: DDOT, dz, tr, tr1, dz1 
+  COMPLEX(DP), PARAMETER :: cim=(0.d0,1.d0), one=(1.d0, 0.d0), &
                                  zero=(0.d0,0.d0) 
-  COMPLEX(kind=DP) :: int1d, int2d, c, d, e, f, s1, s2, s3, s4, arg,&
+  COMPLEX(DP) :: int1d, int2d, c, d, e, f, s1, s2, s3, s4, arg,&
                       f1p, ZDOTC, fact, factm, psiper(n2d,n2d,nrzp), &
                       zk(n2d,nrzp)
-  COMPLEX(kind=DP), ALLOCATABLE ::   &
+  COMPLEX(DP), ALLOCATABLE ::   &
      psigper(:,:), & ! psigper(g,lam)=newbg(g,lam1) psiper(lam1,lam)
      w0(:,:,:),  &   ! w0(z,g,m) are 2D Fourier components (see four.f)
      w(:,:,:),   &   ! w(z,lam,m)=psigper(g,lam)^* \exp{-igr^m_perp} 

@@ -18,12 +18,12 @@ subroutine stres_gradcorr (rho, rho_core, nspin, nr1, nr2, nr3, &
 
   integer :: nspin, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, &
        nl (ngm)
-  real(kind=DP) :: rho (nrxx, nspin), rho_core (nrxx), g (3, ngm), &
+  real(DP) :: rho (nrxx, nspin), rho_core (nrxx), g (3, ngm), &
        alat, omega, sigmaxc (3, 3)
   integer :: k, l, m, ipol, is
-  real(kind=DP) , allocatable :: grho (:,:,:)
-  real(kind=DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10, e2 = 2.d0
-  real(kind=DP) :: grh2, grho2 (2), sx, sc, v1x, v2x, v1c, v2c, fac, &
+  real(DP) , allocatable :: grho (:,:,:)
+  real(DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10, e2 = 2.d0
+  real(DP) :: grh2, grho2 (2), sx, sc, v1x, v2x, v1c, v2c, fac, &
        v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw, v2cup, v2cdw, v2cud, &
        zeta, rh, rup, rdw, grhoup, grhodw, grhoud, grup, grdw, &
        sigma_gradcorr (3, 3)
@@ -33,7 +33,7 @@ subroutine stres_gradcorr (rho, rho_core, nspin, nr1, nr2, nr3, &
   sigma_gradcorr(:,:) = 0.d0
 
   allocate (grho( 3, nrxx, nspin))    
-  fac = 1.d0 / dble (nspin)
+  fac = 1.d0 / DBLE (nspin)
   !
   !    calculate the gradient of rho+rhocore in real space
   !

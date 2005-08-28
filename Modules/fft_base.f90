@@ -23,7 +23,7 @@
       MODULE fft_base
 !=----------------------------------------------------------------------=!
 
-        USE kinds, ONLY: dbl
+        USE kinds, ONLY: DP
         USE mp, ONLY: mp_max, mp_sum, mp_barrier
         USE parallel_include
 
@@ -44,7 +44,7 @@
 
 
         INTEGER, ALLOCATABLE :: stmask(:)
-        REAL(dbl) :: fft_timing( 4, 2 ) = 0.0d0
+        REAL(DP) :: fft_timing( 4, 2 ) = 0.0d0
 
 
 !=----------------------------------------------------------------------=!
@@ -101,8 +101,8 @@
 
           IMPLICIT NONE
 
-          COMPLEX (dbl) :: zstick( * )
-          COMPLEX (dbl) :: r( * )
+          COMPLEX (DP) :: zstick( * )
+          COMPLEX (DP) :: r( * )
           TYPE (fft_dlay_descriptor), INTENT(IN) ::  dfft
           INTEGER, INTENT(IN) :: me    ! processor index starting from 1
           INTEGER, INTENT(IN) :: nproc
@@ -113,8 +113,8 @@
           INTEGER :: npz, nz_l, ns_l, ns_lp, nz_lx
           INTEGER :: nsx_l, msgsiz
           INTEGER :: mc1, mc2, mc3, mc4, is_offset, ns1
-          COMPLEX (dbl) :: zero
-          COMPLEX (dbl) :: bswp( ldz * 4 )
+          COMPLEX (DP) :: zero
+          COMPLEX (DP) :: bswp( ldz * 4 )
 
           INTEGER, SAVE :: dfft_id = -1
 
@@ -315,8 +315,8 @@
 
           IMPLICIT NONE
 
-          COMPLEX (dbl) :: zstick( * )
-          COMPLEX (dbl) :: r( * )
+          COMPLEX (DP) :: zstick( * )
+          COMPLEX (DP) :: r( * )
           TYPE (fft_dlay_descriptor), INTENT(IN) ::  dfft
           INTEGER, INTENT(IN) :: me    ! processor index starting from 1
           INTEGER, INTENT(IN) :: nproc
@@ -330,8 +330,8 @@
           INTEGER, ALLOCATABLE :: istatus( :, : )
           LOGICAL, ALLOCATABLE :: rtest( : )
           LOGICAL, ALLOCATABLE :: rdone( : )
-          COMPLEX(dbl), ALLOCATABLE :: sndbuf(:,:)
-          COMPLEX(dbl), ALLOCATABLE :: rcvbuf(:,:)
+          COMPLEX(DP), ALLOCATABLE :: sndbuf(:,:)
+          COMPLEX(DP), ALLOCATABLE :: rcvbuf(:,:)
           INTEGER :: i1, i2, j1, j2, mc1, mc2, is_offset
 
           INTEGER, SAVE :: dfft_id = -1
@@ -523,8 +523,8 @@
 
           IMPLICIT NONE
 
-          COMPLEX (dbl) :: zstick( * )
-          COMPLEX (dbl) :: r( * )
+          COMPLEX (DP) :: zstick( * )
+          COMPLEX (DP) :: r( * )
           TYPE (fft_dlay_descriptor), INTENT(IN) ::  dfft
           INTEGER, INTENT(IN) :: me    ! processor index starting from 1
           INTEGER, INTENT(IN) :: nproc
@@ -636,7 +636,7 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
   implicit none
 
   integer, intent(in) :: nrx3, nxx_, sign, ncp_ (:), npp_ (:)
-  complex (kind=DP) :: f_in (nxx_), f_aux (nxx_)
+  complex (DP) :: f_in (nxx_), f_aux (nxx_)
 
 #ifdef __PARA
 

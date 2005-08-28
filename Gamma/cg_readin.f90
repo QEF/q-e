@@ -127,7 +127,7 @@ SUBROUTINE cg_readmodes(iunit)
   INTEGER :: iunit
   !
   INTEGER :: na, nu, mu
-  REAL(kind=DP) utest, unorm, DDOT
+  REAL(DP) utest, unorm, DDOT
   !
   ! allocate space for modes, dynamical matrix, auxiliary stuff
   !

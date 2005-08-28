@@ -27,9 +27,9 @@ subroutine stres_loc (sigmaloc)
   !
   implicit none
   !
-  real(kind=DP) :: sigmaloc (3, 3)
-  real(kind=DP) , allocatable :: dvloc(:)
-  real(kind=DP) :: evloc, fact
+  real(DP) :: sigmaloc (3, 3)
+  real(DP) , allocatable :: dvloc(:)
+  real(DP) :: evloc, fact
   integer :: ng, nt, l, m, is
   ! counter on g vectors
   ! counter on atomic type

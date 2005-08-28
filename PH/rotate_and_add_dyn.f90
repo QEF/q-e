@@ -25,11 +25,11 @@ subroutine rotate_and_add_dyn (phi, phi2, nat, isym, s, invs, irt, &
   ! index of the inverse operations
   ! index of the rotated atom
 
-  complex(kind=DP) :: phi (3, 3, nat, nat), phi2 (3, 3, nat, nat)
+  complex(DP) :: phi (3, 3, nat, nat), phi2 (3, 3, nat, nat)
   ! the input dyn.mat. in crystal coordinates
   ! the rotated dyn.mat. in crystal coordinates
 
-  real(kind=DP) :: rtau (3, 48, nat), sxq (3)
+  real(DP) :: rtau (3, 48, nat), sxq (3)
   ! for eaxh atom and rotation gives the R vector
   !involved
   ! the rotated q involved in this sym.op.
@@ -39,12 +39,12 @@ subroutine rotate_and_add_dyn (phi, phi2, nat, isym, s, invs, irt, &
   ! indices of rotated atoms
   ! index of the inverse symm.op.
   ! generic counters
-  real(kind=DP) :: arg
+  real(DP) :: arg
   ! argument of the phase
-  complex(kind=DP) :: phase, work
+  complex(DP) :: phase, work
   ! auxiliary variable
   !
-  real(kind=DP) :: tpi
+  real(DP) :: tpi
 
 
   parameter (tpi = 2.d0 * 3.14159265358979d0)

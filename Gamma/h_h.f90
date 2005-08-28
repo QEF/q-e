@@ -22,8 +22,8 @@ subroutine H_h(e,h,Ah)
   !
   implicit none
   !
-  real(kind=DP):: e(nbnd)
-  complex(kind=DP):: h(npwx,nbnd), Ah(npwx,nbnd)
+  real(DP):: e(nbnd)
+  complex(DP):: h(npwx,nbnd), Ah(npwx,nbnd)
   !
   integer:: j,ibnd
   !

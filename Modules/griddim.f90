@@ -101,7 +101,7 @@
      ! This module contains subroutines that are related to grids 
      ! parameters
 
-     USE kinds, ONLY: dbl
+     USE kinds, ONLY: DP
 
      IMPLICIT NONE
      SAVE
@@ -120,12 +120,12 @@
        !
        IMPLICIT NONE
        !
-       REAL(dbl), INTENT(IN) :: alat
-       REAL(dbl), INTENT(IN) :: a1(3), a2(3), a3(3)
-       REAL(dbl), INTENT(IN) :: gcutd, gcuts
+       REAL(DP), INTENT(IN) :: alat
+       REAL(DP), INTENT(IN) :: a1(3), a2(3), a3(3)
+       REAL(DP), INTENT(IN) :: gcutd, gcuts
        INTEGER, INTENT(OUT) :: ng, ngs
        !
-       REAL(dbl) :: qk(3) = 0.0d0
+       REAL(DP) :: qk(3) = 0.0d0
 
        IF( nr1 == 0 .OR. nr2 == 0 .OR. nr3 == 0 ) THEN
          ! ... This subroutines calculates the size of the real and reciprocal dense grids

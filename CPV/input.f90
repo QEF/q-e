@@ -62,7 +62,7 @@
 MODULE input
    !---------------------------------------------------------------------------
    !
-   USE kinds,     ONLY: dbl
+   USE kinds,     ONLY: DP
    USE io_global, ONLY: ionode, stdout
    !
    IMPLICIT NONE
@@ -890,10 +890,10 @@ MODULE input
      !
      IMPLICIT NONE
      !
-     REAL(KIND=dbl) :: alat_ , massa_totale
-     REAL(KIND=dbl) :: delt_emp_inp, emass_emp_inp, ethr_emp_inp
+     REAL(DP) :: alat_ , massa_totale
+     REAL(DP) :: delt_emp_inp, emass_emp_inp, ethr_emp_inp
      ! ...   DIIS
-     REAL(KIND=dbl) :: tol_diis_inp, delt_diis_inp, tolene_inp
+     REAL(DP) :: tol_diis_inp, delt_diis_inp, tolene_inp
      LOGICAL :: o_diis_inp, oqnr_diis_inp
      INTEGER :: ia
      LOGICAL :: ltest
@@ -1079,7 +1079,7 @@ MODULE input
       !
       IMPLICIT NONE
       !
-      REAL(KIND=dbl) :: alat_
+      REAL(DP) :: alat_
       !
       IF( .NOT. tions_base_init ) &
         CALL errore( " smd_initvar ", " ions_base_init should be called first ", 1 )

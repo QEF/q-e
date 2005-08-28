@@ -12,7 +12,7 @@ MODULE el_phon
   !
   SAVE
   !
-  COMPLEX(KIND=DP), ALLOCATABLE :: &
+  COMPLEX(DP), ALLOCATABLE :: &
        el_ph_mat(:,:,:,:)    !  nbnd, nbnd, nks, 3*nat
   !     
 END MODULE el_phon

@@ -29,13 +29,13 @@ subroutine addcore (mode, drhoc)
   !
   integer, intent (IN) :: mode
   !  input: the mode
-  complex(kind=DP), intent(OUT) :: drhoc (nrxx)
+  complex(DP), intent(OUT) :: drhoc (nrxx)
   ! output: the change of the core charge
   !
   !   Local variables
   !
   integer :: nt, ig, mu, na
-  complex(kind=DP) :: fact, gu, gu0, u1, u2, u3, gtau
+  complex(DP) :: fact, gu, gu0, u1, u2, u3, gtau
   !
   !
   if (.not.nlcc_any) return

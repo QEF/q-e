@@ -32,19 +32,19 @@ SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e, ik )
     ! input number of states
     ! output number of states
     ! k-point considered
-  COMPLEX(KIND=DP) :: psi(ndmx,npol,nstart), evc(ndmx,npol,nbnd)
+  COMPLEX(DP) :: psi(ndmx,npol,nstart), evc(ndmx,npol,nbnd)
     ! input and output eigenvectors (may overlap) 
-  REAL(KIND=DP) :: e(nbnd)
+  REAL(DP) :: e(nbnd)
     ! eigenvalues
   !
   ! ... local variables
   !
   INTEGER                        :: m, i, j, ipol
   INTEGER                        :: kdim, kdmx, kdim2, kdmx2
-  REAL (KIND=DP)                 :: rtmp(2)
-  COMPLEX (KIND=DP)              :: ctmp(2)
-  COMPLEX (KIND=DP), ALLOCATABLE :: aux(:,:,:), hc(:,:,:), sc(:,:)
-  REAL (KIND=DP),    ALLOCATABLE :: en(:)
+  REAL (DP)                 :: rtmp(2)
+  COMPLEX (DP)              :: ctmp(2)
+  COMPLEX (DP), ALLOCATABLE :: aux(:,:,:), hc(:,:,:), sc(:,:)
+  REAL (DP),    ALLOCATABLE :: en(:)
   !
   !
   CALL start_clock( 'wfcrot1' )
