@@ -11,9 +11,8 @@ SUBROUTINE errore( calling_routine, message, ierr )
   !----------------------------------------------------------------------------
   !
   ! ... This is a simple routine which writes an error message to output: 
-  ! ... if ierr = 0 it does nothing, 
-  ! ... if ierr < 0 it writes the message but does not stop, 
-  ! ... if ierr > 0 it stops.
+  ! ... if ierr <= 0 it does nothing, 
+  ! ... if ierr  > 0 it stops.
   !
   ! ...          **** Important note for parallel execution ***
   !
@@ -42,7 +41,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
   LOGICAL                      :: exists
   !
   !
-  IF ( ierr == 0 ) RETURN
+  IF ( ierr <= 0 ) RETURN
   !
   ! ... the error message is written un the "*" unit
   !
@@ -65,51 +64,46 @@ SUBROUTINE errore( calling_routine, message, ierr )
   !
 #endif
   !
-  IF ( ierr > 0 ) THEN
-     !
-     WRITE( *, '("     stopping ...")' )
-     !
-     CALL flush_unit( stdout )
-     !
+  WRITE( *, '("     stopping ...")' )
+  !
+  CALL flush_unit( stdout )
+  !
 #if defined (__PARA) && defined (__MPI)
-     !
-     mpime = 0
-     !
-     CALL MPI_COMM_RANK( MPI_COMM_WORLD, mpime, ierr )
-     !
-     !  .. write the message to a file and close it before exiting
-     !  .. this will prevent loss of information on systems that
-     !  .. do not flush the open streams
-     !  .. added by C.C.
-     !
-     OPEN( UNIT = crashunit, FILE = crash_file, &
-           POSITION = 'APPEND', STATUS = 'UNKNOWN' )
-     !      
-     WRITE( UNIT = crashunit, FMT = '(/,1X,78("%"))' )
-     WRITE( UNIT = crashunit, FMT = '(5X,"task #",I10)' ) mpime
-     WRITE( UNIT = crashunit, &
-            FMT = '(5X,"from ",A," : error #",I10)' ) calling_routine, ierr
-     WRITE( UNIT = crashunit, FMT = '(5X,A)' ) message
-     WRITE( UNIT = crashunit, FMT = '(1X,78("%"),/)' )
-     !
-     CLOSE( UNIT = crashunit )
-     !
-     ! ... try to exit in a smooth way
-     !
-     CALL MPI_ABORT( MPI_COMM_WORLD, ierr )
-     !
-     CALL MPI_FINALIZE( ierr )
-     !
+  !
+  mpime = 0
+  !
+  CALL MPI_COMM_RANK( MPI_COMM_WORLD, mpime, ierr )
+  !
+  !  .. write the message to a file and close it before exiting
+  !  .. this will prevent loss of information on systems that
+  !  .. do not flush the open streams
+  !  .. added by C.C.
+  !
+  OPEN( UNIT = crashunit, FILE = crash_file, &
+        POSITION = 'APPEND', STATUS = 'UNKNOWN' )
+  !      
+  WRITE( UNIT = crashunit, FMT = '(/,1X,78("%"))' )
+  WRITE( UNIT = crashunit, FMT = '(5X,"task #",I10)' ) mpime
+  WRITE( UNIT = crashunit, &
+         FMT = '(5X,"from ",A," : error #",I10)' ) calling_routine, ierr
+  WRITE( UNIT = crashunit, FMT = '(5X,A)' ) message
+  WRITE( UNIT = crashunit, FMT = '(1X,78("%"),/)' )
+  !
+  CLOSE( UNIT = crashunit )
+  !
+  ! ... try to exit in a smooth way
+  !
+  CALL MPI_ABORT( MPI_COMM_WORLD, ierr )
+  !
+  CALL MPI_FINALIZE( ierr )
+  !
 #endif
-     !
-     STOP 2
-     !
-  END IF
+  !
+  STOP 2
   !
   RETURN
   !
 END SUBROUTINE errore
-!
 !
 !----------------------------------------------------------------------
 SUBROUTINE infomsg( routine, message, info )
@@ -117,6 +111,8 @@ SUBROUTINE infomsg( routine, message, info )
   !
   ! ... This is a simple routine which writes an info message 
   ! ... from a given routine to output. 
+  ! ... if info <  0 it prints the message,
+  ! ... if info >= 0 it does nothing.
   !
   USE io_global,  ONLY : stdout, ionode
   !
@@ -127,6 +123,9 @@ SUBROUTINE infomsg( routine, message, info )
     ! the output message
   INTEGER :: info
     ! the info code
+  !
+  !
+  IF ( info >= 0 ) RETURN
   !
   IF ( ionode ) THEN
      !

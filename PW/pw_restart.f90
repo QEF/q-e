@@ -75,19 +75,17 @@ MODULE pw_restart
       !
       CHARACTER(LEN=*), INTENT(IN) :: what
       !
-      CHARACTER(LEN=256)             :: dirname, filename, file_pseudo
-      CHARACTER(LEN=80)              :: bravais_lattice
-      CHARACTER(LEN=4)               :: cspin
-      CHARACTER(LEN=iotk_attlenx)    :: attr
-      !
-      INTEGER                        :: i, ig, ik, ngg,ig_, ierr, ipol, &
-                                        flen, ik_eff, num_k_points
-      INTEGER,           ALLOCATABLE :: kisort(:)
-      INTEGER                        :: npool, nkbl, nkl, nkr, npwx_g
-      INTEGER                        :: ike, iks, npw_g, ispin, local_pw
-      INTEGER,           ALLOCATABLE :: ngk_g(:)
-      INTEGER,           ALLOCATABLE :: itmp(:,:)
-      LOGICAL                        :: lgvec, lwfc
+      CHARACTER(LEN=256)          :: dirname, filename, file_pseudo
+      CHARACTER(LEN=80)           :: bravais_lattice
+      CHARACTER(LEN=4)            :: cspin
+      INTEGER                     :: i, ig, ik, ngg,ig_, ierr, ipol, &
+                                     flen, ik_eff, num_k_points
+      INTEGER, ALLOCATABLE        :: kisort(:)
+      INTEGER                     :: npool, nkbl, nkl, nkr, npwx_g
+      INTEGER                     :: ike, iks, npw_g, ispin, local_pw
+      INTEGER, ALLOCATABLE        :: ngk_g(:)
+      INTEGER, ALLOCATABLE        :: itmp(:,:)
+      LOGICAL                     :: lgvec, lwfc
       !
       !
       lgvec = .FALSE.
@@ -202,13 +200,13 @@ MODULE pw_restart
       !
       CALL mp_sum( ngk_g )
       !
-      ! ... compute the Maximum G vector index among all G+k an processors
+      ! ... compute the maximum G vector index among all G+k an processors
       !
       npw_g = MAXVAL( igk_l2g(:,:) )
       !
       CALL mp_max( npw_g )
       !
-      ! ... compute the Maximum number of G vector among all k points
+      ! ... compute the maximum number of G vector among all k points
       !
       npwx_g = MAXVAL( ngk_g( 1:nkstot ) )
       !
@@ -216,43 +214,67 @@ MODULE pw_restart
          !
          ! ... open XML descriptor
          !
-         CALL iotk_open_write( iunpun, FILE = TRIM( dirname ) // &
-                             & '/' // TRIM( xmlpun ), BINARY = .FALSE. )
+         CALL iotk_open_write( iunpun, FILE = TRIM( dirname ) // '/' // &
+                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+         !
+      END IF
+      !
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      CALL errore( 'cp_writefile ', &
+                   'cannot open restart file for writing', ierr )
+      !
+      IF ( ionode ) THEN  
          !
          ! ... here we start writing the punch-file
          !
-         ! ... CELL
+!-------------------------------------------------------------------------------
+! ... CELL
+!-------------------------------------------------------------------------------
          !
          CALL write_cell( ibrav, symm_type, celldm, alat, &
                           at(:,1), at(:,2), at(:,3), bg(:,1), bg(:,2), bg(:,3) )
          !
-         ! ... IONS
+!-------------------------------------------------------------------------------
+! ... IONS
+!-------------------------------------------------------------------------------
          !
-         CALL write_ions( nsp, nat, atm, ityp, &
-                          psfile, pseudo_dir, amass, tau, if_pos, dirname, "alat" )
+         CALL write_ions( nsp, nat, atm, ityp, psfile, &
+                          pseudo_dir, amass, tau, if_pos, dirname, "alat" )
          !
-         ! ... SYMMETRIES
+!-------------------------------------------------------------------------------
+! ... SYMMETRIES
+!-------------------------------------------------------------------------------
          !
          CALL write_symmetry( ibrav, symm_type, nsym, &
                               invsym, nr1, nr2, nr3, ftau, s, sname )
          !
-         ! ... PLANE_WAVES
+!-------------------------------------------------------------------------------
+! ... PLANE_WAVES
+!-------------------------------------------------------------------------------
          !
          CALL write_planewaves( ecutwfc, dual, npwx, gamma_only, nr1, nr2, &
                                 nr3, ngm_g, nr1s, nr2s, nr3s, ngms_g, nr1, &
                                 nr2, nr3, itmp, lgvec )
          !
-         ! ... SPIN
+!-------------------------------------------------------------------------------
+! ... SPIN
+!-------------------------------------------------------------------------------
          !
          CALL write_spin( lsda, noncolin, npol, lspinorb )
          !
-         ! ... EXCHANGE_CORRELATION
+!-------------------------------------------------------------------------------
+! ... EXCHANGE_CORRELATION
+!-------------------------------------------------------------------------------
          !
          CALL write_xc( DFT = dft, NSP = nsp, LDA_PLUS_U = lda_plus_u, &
                         HUBBARD_LMAX = Hubbard_lmax, HUBBARD_L = Hubbard_l, &
                         HUBBARD_U = Hubbard_U, HUBBARD_ALPHA = Hubbard_alpha )
          !
-         ! ... OCCUPATIONS
+!-------------------------------------------------------------------------------
+! ... OCCUPATIONS
+!-------------------------------------------------------------------------------
          !
          CALL write_occ( LGAUSS = lgauss, NGAUSS = ngauss, &
                          DEGAUSS = degauss, LTETRA = ltetra, NTETRA = ntetra, &
@@ -266,11 +288,15 @@ MODULE pw_restart
       !
       IF ( ionode ) THEN
          !
-         ! ... BRILLOUIN_ZONE
+!-------------------------------------------------------------------------------
+! ... BRILLOUIN_ZONE
+!-------------------------------------------------------------------------------
          !
          CALL write_bz( num_k_points, xk, wk )
          !
-         ! ... PARALLELISM
+!-------------------------------------------------------------------------------
+! ... PARALLELISM
+!-------------------------------------------------------------------------------
          !
          CALL iotk_write_begin( iunpun, "PARALLELISM" )
          !
@@ -279,7 +305,9 @@ MODULE pw_restart
          !
          CALL iotk_write_end( iunpun, "PARALLELISM" )
          !
-         ! ... CHARGE-DENSITY
+!-------------------------------------------------------------------------------
+! ... CHARGE-DENSITY
+!-------------------------------------------------------------------------------
          !
          CALL iotk_write_begin( iunpun, "CHARGE-DENSITY" )
          !
@@ -292,7 +320,9 @@ MODULE pw_restart
          !
          CALL iotk_write_end( iunpun, "CHARGE-DENSITY" )
          !
-         ! ... BAND_STRUCTURE
+!-------------------------------------------------------------------------------
+! ... BAND_STRUCTURE
+!-------------------------------------------------------------------------------
          !
          CALL iotk_write_begin( iunpun, "BAND_STRUCTURE" )
          !
@@ -422,7 +452,7 @@ MODULE pw_restart
                !
                CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
                                evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),   &
-                               ngk(ik-iks+1), filename, 1.0d0 )
+                               ngk(ik-iks+1), filename, 1.D0 )
                !
                ik_eff = ik + num_k_points
                !
@@ -447,7 +477,7 @@ MODULE pw_restart
                !
                CALL write_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
                                evc, npw_g, nbnd, igk_l2g(:,ik_eff-iks+1),   &
-                               ngk(ik_eff-iks+1), filename, 1.0d0 )
+                               ngk(ik_eff-iks+1), filename, 1.D0 )
                !
             ELSE
                !
@@ -483,7 +513,7 @@ MODULE pw_restart
                      CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
                                      evc_nc(:,ipol,:), npw_g, nbnd,           &
                                      igk_l2g(:,ik-iks+1), ngk(ik-iks+1),      &
-                                     filename, 1.0d0 )
+                                     filename, 1.D0 )
                      !
                   END DO
                   !
@@ -491,7 +521,7 @@ MODULE pw_restart
                   !
                   CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
                                   evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),   &
-                                  ngk(ik-iks+1), filename, 1.0d0 )
+                                  ngk(ik-iks+1), filename, 1.D0 )
                   !
                END IF
                !
@@ -516,6 +546,10 @@ MODULE pw_restart
          CALL iotk_close_write( iunpun )
          !
       END IF
+      !
+!-------------------------------------------------------------------------------
+! ... END RESTART SECTIONS
+!-------------------------------------------------------------------------------
       !
       DEALLOCATE( itmp )
       DEALLOCATE( ngk_g )
@@ -606,7 +640,8 @@ MODULE pw_restart
       !
       CHARACTER(LEN=256) :: dirname      
       LOGICAL            :: lexist, lcell, lpw, lions, lspin, &
-                            lxc, locc, lbz, lbs, lwfc, lgvec
+                            lxc, locc, lbz, lbs, lwfc, lgvec, &
+                            lsymm
       !
       !
       ierr = 0
@@ -633,8 +668,13 @@ MODULE pw_restart
       lbs   = .FALSE.
       lwfc  = .FALSE.
       lgvec = .FALSE.
+      lsymm = .FALSE.
       !
       SELECT CASE( what )
+      CASE( 'dim' )
+         !
+         CALL read_dim( dirname, ierr )
+         !
       CASE( 'config' )
          !
          lcell = .TRUE.
@@ -656,6 +696,7 @@ MODULE pw_restart
          locc  = .TRUE.
          lbz   = .TRUE.
          lbs   = .TRUE.
+         lsymm = .TRUE.
          !
       CASE( 'all' )
          !
@@ -669,40 +710,295 @@ MODULE pw_restart
          lbs   = .TRUE.
          lwfc  = .TRUE.
          lgvec = .TRUE.
+         lsymm = .TRUE.
          !
       END SELECT
       !
-      IF ( lcell ) CALL read_cell( dirname )
-      IF ( lpw   ) CALL read_planewaves( dirname )
-      IF ( lions ) CALL read_ions( dirname )
-      IF ( lspin ) CALL read_spin( dirname )
-      IF ( lxc   ) CALL read_xc( dirname )
-      IF ( locc  ) CALL read_occupations( dirname )
-      IF ( lbz   ) CALL read_brillouin_zone( dirname )
-      IF ( lbs   ) CALL read_band_structure( dirname )
-      IF ( lwfc  ) CALL read_wavefunctions( dirname )
+      IF ( lcell ) THEN
+         !
+         CALL read_cell( dirname, ierr )
+         IF ( ierr > 0 ) RETURN
+         !
+      END IF
+      IF ( lpw ) THEN
+         !
+         CALL read_planewaves( dirname, ierr )
+         IF ( ierr > 0 ) RETURN
+         !
+      END IF
+      IF ( lions ) THEN
+         !
+         CALL read_ions( dirname, ierr )
+         IF ( ierr > 0 ) RETURN
+         !
+      END IF
+      IF ( lspin ) THEN
+         !
+         CALL read_spin( dirname, ierr )
+         IF ( ierr > 0 ) RETURN
+         !
+      END IF
+      IF ( lxc ) THEN
+         !
+         CALL read_xc( dirname, ierr )
+         IF ( ierr > 0 ) RETURN
+         !
+      END IF
+      IF ( locc ) THEN
+         !
+         CALL read_occupations( dirname, ierr )
+         IF ( ierr > 0 ) RETURN
+         !
+      END IF
+      IF ( lbz ) THEN
+         !
+         CALL read_brillouin_zone( dirname, ierr )
+         IF ( ierr > 0 ) RETURN
+         !
+      END IF
+      IF ( lbs ) THEN
+         !
+         CALL read_band_structure( dirname, ierr )
+         IF ( ierr > 0 ) RETURN
+         !
+      END IF
+      IF ( lwfc ) THEN
+         !
+         CALL read_wavefunctions( dirname, ierr )
+         IF ( ierr > 0 ) RETURN
+         !
+      END IF
+      IF ( lsymm ) THEN
+         !
+         CALL read_symmetry( dirname, ierr )
+         IF ( ierr > 0 ) RETURN
+         !
+      END IF
       !
       RETURN
       !
     END SUBROUTINE pw_readfile
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_cell( dirname )
+    SUBROUTINE read_dim( dirname, ierr )
+      !------------------------------------------------------------------------
+      !
+      ! ... this routine collects array dimensions from various sections
+      ! ... plus with some other variables needed for array allocation 
+      !
+      USE cell_base,        ONLY : alat
+      USE ions_base,        ONLY : nat, nsp
+      USE symme,            ONLY : nsym
+      USE gvect,            ONLY : nr1, nr2, nr3, ngm_g, ecutwfc, dual
+      USE gsmooth,          ONLY : nr1s, nr2s, nr3s, ngms_g
+      USE lsda_mod,         ONLY : lsda, nspin
+      USE noncollin_module, ONLY : noncolin, npol
+      USE ktetra,           ONLY : ntetra
+      USE klist,            ONLY : nkstot, nelec
+      USE wvfct,            ONLY : nbnd, npwx, gamma_only
+      USE mp_global,        ONLY : kunit
+      
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
+      !
+      LOGICAL  :: ltetra
+      REAL(DP) :: ecutrho
+      !
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_scan_begin( iunpun, "CELL" )
+         !
+         CALL iotk_scan_dat( iunpun, "LATTICE_PARAMETER", alat )
+         !
+         CALL iotk_scan_end( iunpun, "CELL" )
+         !
+         CALL iotk_scan_begin( iunpun, "IONS" )
+         !
+         CALL iotk_scan_dat( iunpun, "NUMBER_OF_ATOMS", nat )
+         !
+         CALL iotk_scan_dat( iunpun, "NUMBER_OF_SPECIES", nsp )         
+         !
+         CALL iotk_scan_end( iunpun, "IONS" )
+         !
+         CALL iotk_scan_begin( iunpun, "SYMMETRIES" )
+         !
+         CALL iotk_scan_dat( iunpun, "NUMBER_OF_SYMMETRIES", nsym )
+         !
+         CALL iotk_scan_end( iunpun, "SYMMETRIES" )
+         !
+         CALL iotk_scan_begin( iunpun, "PLANE_WAVES" )
+         !
+         CALL iotk_scan_dat( iunpun, "WFC_CUTOFF", ecutwfc )
+         !
+         CALL iotk_scan_dat( iunpun, "RHO_CUTOFF", ecutrho )
+         !
+         ecutwfc = ecutwfc * e2
+         ecutrho = ecutrho * e2
+         !
+         dual = ecutrho / ecutwfc
+         !
+         CALL iotk_scan_dat( iunpun, "MAX_NPW", npwx )
+         !
+         CALL iotk_scan_dat( iunpun, "GAMMA_ONLY", gamma_only )
+         !
+         CALL iotk_scan_empty( iunpun, "FFT_GRID", attr )
+         CALL iotk_scan_attr( attr, "nr1", nr1 )
+         CALL iotk_scan_attr( attr, "nr2", nr2 )
+         CALL iotk_scan_attr( attr, "nr3", nr3 )         
+         !
+         CALL iotk_scan_dat( iunpun, "GVECT_NUMBER", ngm_g )
+         !
+         CALL iotk_scan_empty( iunpun, "SMOOTH_FFT_GRID", attr )
+         CALL iotk_scan_attr( attr, "nr1s", nr1s )
+         CALL iotk_scan_attr( attr, "nr2s", nr2s )
+         CALL iotk_scan_attr( attr, "nr3s", nr3s )
+         !
+         CALL iotk_scan_dat( iunpun, "SMOOTH_GVECT_NUMBER", ngms_g )
+         !
+         CALL iotk_scan_end( iunpun, "PLANE_WAVES" )
+         !
+         CALL iotk_scan_begin( iunpun, "SPIN" )
+         !
+         CALL iotk_scan_dat( iunpun, "LSDA", lsda )
+         !
+         IF ( lsda ) THEN
+            !
+            nspin = 2
+            !
+         ELSE
+            !
+            nspin = 1
+            !
+         END IF
+         !
+         CALL iotk_scan_dat( iunpun, "NON-COLINEAR_CALCULATION", noncolin )
+         !
+         IF ( noncolin ) THEN
+            !
+            CALL iotk_scan_dat( iunpun, "SPINOR_DIM", npol )
+            !
+         ELSE
+            !
+            npol = 1
+            !
+         END IF
+         !
+         CALL iotk_scan_end( iunpun, "SPIN" )
+         !
+         CALL iotk_scan_begin( iunpun, "OCCUPATIONS" )
+         !
+         CALL iotk_scan_dat( iunpun, "TETRAHEDRON_METHOD", ltetra )
+         !
+         IF ( ltetra ) THEN
+            !
+            CALL iotk_scan_dat( iunpun, "NUMBER_OF_TETRAHEDRA", ntetra )
+            !
+         ELSE
+            !
+            ntetra = 1
+            !
+         END IF
+         !
+         CALL iotk_scan_end( iunpun, "OCCUPATIONS" )        
+         !
+         CALL iotk_scan_begin( iunpun, "BRILLOUIN_ZONE" )
+         !
+         CALL iotk_scan_dat( iunpun, "NUMBER_OF_K-POINTS", nkstot )
+         !
+         IF ( nspin == 2 ) nkstot = nkstot * 2
+         !
+         CALL iotk_scan_end( iunpun, "BRILLOUIN_ZONE" )
+         !
+         CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE" )
+         !
+         CALL iotk_scan_dat( iunpun, "NUMBER_OF_ELECTRONS", nelec )
+         !
+         CALL iotk_scan_dat( iunpun, "NUMBER_OF_BANDS", nbnd )
+         !
+         CALL iotk_scan_end( iunpun, "BAND_STRUCTURE" )
+         !
+         CALL iotk_scan_begin( iunpun, "PARALLELISM" )
+         !
+         CALL iotk_scan_dat( iunpun, &
+                             "GRANULARITY_OF_K-POINTS_DISTRIBUTION", kunit )
+         !
+         CALL iotk_scan_end( iunpun, "PARALLELISM" )
+         !
+         CALL iotk_close_read( iunpun )
+         !
+      END IF
+      !
+      CALL mp_bcast( alat,       ionode_id )
+      CALL mp_bcast( nat,        ionode_id )
+      CALL mp_bcast( nsp,        ionode_id )
+      CALL mp_bcast( nsym,       ionode_id )
+      CALL mp_bcast( ecutwfc,    ionode_id )
+      CALL mp_bcast( dual,       ionode_id )
+      CALL mp_bcast( npwx,       ionode_id )
+      CALL mp_bcast( gamma_only, ionode_id )
+      CALL mp_bcast( nr1,        ionode_id )
+      CALL mp_bcast( nr2,        ionode_id )
+      CALL mp_bcast( nr3,        ionode_id )
+      CALL mp_bcast( ngm_g,      ionode_id )
+      CALL mp_bcast( nr1s,       ionode_id )
+      CALL mp_bcast( nr2s,       ionode_id )
+      CALL mp_bcast( nr3s,       ionode_id )
+      CALL mp_bcast( ngms_g,     ionode_id )
+      CALL mp_bcast( lsda,       ionode_id )
+      CALL mp_bcast( nspin,      ionode_id )
+      CALL mp_bcast( noncolin,   ionode_id )
+      CALL mp_bcast( npol,       ionode_id )
+      CALL mp_bcast( ntetra,     ionode_id )
+      CALL mp_bcast( nkstot,     ionode_id )
+      CALL mp_bcast( nelec,      ionode_id )
+      CALL mp_bcast( nbnd,       ionode_id )
+      CALL mp_bcast( kunit,      ionode_id )
+      !
+      RETURN
+      !
+    END SUBROUTINE read_dim
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE read_cell( dirname, ierr )
       !------------------------------------------------------------------------
       !
       USE cell_base, ONLY : ibrav, alat, symm_type, at, bg
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
       !
       CHARACTER(LEN=80) :: bravais_lattice
       !
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // &
-                            & '/' // TRIM( xmlpun ), BINARY = .FALSE. )         
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
          !
          CALL iotk_scan_begin( iunpun, "CELL" )
          !
@@ -780,7 +1076,7 @@ MODULE pw_restart
     END SUBROUTINE read_cell
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_ions( dirname )
+    SUBROUTINE read_ions( dirname, ierr )
       !------------------------------------------------------------------------
       !
       USE ions_base, ONLY : nat, nsp, ityp, amass, atm, tau, if_pos
@@ -788,16 +1084,24 @@ MODULE pw_restart
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
       !
-      INTEGER                     :: i
-      CHARACTER(LEN=iotk_attlenx) :: attr
+      INTEGER :: i
       !
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // &
-                            & '/' // TRIM( xmlpun ), BINARY = .FALSE. )
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
          !
          CALL iotk_scan_begin( iunpun, "IONS" )
          !
@@ -847,7 +1151,7 @@ MODULE pw_restart
     END SUBROUTINE read_ions
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_symmeries( dirname )
+    SUBROUTINE read_symmetry( dirname, ierr )
       !------------------------------------------------------------------------
       !
       USE symme, ONLY : nsym, invsym, s, ftau
@@ -856,19 +1160,27 @@ MODULE pw_restart
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
       !
-      INTEGER                     :: i
-      CHARACTER(LEN=iotk_attlenx) :: attr
-      REAL (DP)              :: tmp(3)
+      INTEGER  :: i
+      REAL(DP) :: tmp(3)
       !
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // &
-                            & '/' // TRIM( xmlpun ), BINARY = .FALSE. )
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
          !
-         CALL iotk_scan_begin( iunpun, "SYMMERIES" )
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_scan_begin( iunpun, "SYMMETRIES" )
          !
          CALL iotk_scan_dat( iunpun, "NUMBER_OF_SYMMETRIES", nsym )
          !
@@ -889,7 +1201,7 @@ MODULE pw_restart
             !
          END DO         
          !
-         CALL iotk_scan_end( iunpun, "SYMMERIES" )
+         CALL iotk_scan_end( iunpun, "SYMMETRIES" )
          !
          CALL iotk_close_read( iunpun )
          !
@@ -903,10 +1215,10 @@ MODULE pw_restart
       !
       RETURN
       !
-    END SUBROUTINE read_symmeries  
+    END SUBROUTINE read_symmetry
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_planewaves( dirname )
+    SUBROUTINE read_planewaves( dirname, ierr )
       !------------------------------------------------------------------------
       !
       USE gvect,   ONLY : nr1, nr2, nr3, ngm_g, ecutwfc, dual
@@ -915,16 +1227,24 @@ MODULE pw_restart
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
       !
-      CHARACTER(LEN=iotk_attlenx) :: attr
-      REAL(DP)               :: ecutrho
+      REAL(DP) :: ecutrho
       !
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // &
-                            & '/' // TRIM( xmlpun ), BINARY = .FALSE. )
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
          !
          CALL iotk_scan_begin( iunpun, "PLANE_WAVES" )
          !
@@ -949,7 +1269,7 @@ MODULE pw_restart
          CALL iotk_scan_dat( iunpun, "GVECT_NUMBER", ngm_g )
          !
          CALL iotk_scan_empty( iunpun, "SMOOTH_FFT_GRID", attr )
-         CALL iotk_scan_attr( attr, "nr1s", nr1s  )
+         CALL iotk_scan_attr( attr, "nr1s", nr1s )
          CALL iotk_scan_attr( attr, "nr2s", nr2s )
          CALL iotk_scan_attr( attr, "nr3s", nr3s )
          !
@@ -979,7 +1299,7 @@ MODULE pw_restart
     END SUBROUTINE read_planewaves  
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_spin( dirname )
+    SUBROUTINE read_spin( dirname, ierr )
       !------------------------------------------------------------------------
       !
       USE spin_orb,         ONLY : lspinorb
@@ -988,13 +1308,22 @@ MODULE pw_restart
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
       !
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // &
-                            & '/' // TRIM( xmlpun ), BINARY = .FALSE. )
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
          !
          CALL iotk_scan_begin( iunpun, "SPIN" )
          !
@@ -1041,7 +1370,7 @@ MODULE pw_restart
     END SUBROUTINE read_spin
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_xc( dirname )
+    SUBROUTINE read_xc( dirname, ierr )
       !------------------------------------------------------------------------
       !
       USE ions_base, ONLY : nsp
@@ -1051,13 +1380,22 @@ MODULE pw_restart
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
       !
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // &
-                            & '/' // TRIM( xmlpun ), BINARY = .FALSE. )
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
          !
          CALL iotk_scan_begin( iunpun, "EXCHANGE_CORRELATION" )
          !
@@ -1101,7 +1439,7 @@ MODULE pw_restart
     END SUBROUTINE read_xc
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_occupations( dirname )
+    SUBROUTINE read_occupations( dirname, ierr )
       !------------------------------------------------------------------------
       !
       USE lsda_mod,  ONLY : lsda
@@ -1111,13 +1449,22 @@ MODULE pw_restart
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
       !
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // &
-                            & '/' // TRIM( xmlpun ), BINARY = .FALSE. )
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
          !
          CALL iotk_scan_begin( iunpun, "OCCUPATIONS" )
          !
@@ -1177,7 +1524,7 @@ MODULE pw_restart
     END SUBROUTINE read_occupations
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_brillouin_zone( dirname )
+    SUBROUTINE read_brillouin_zone( dirname, ierr )
       !------------------------------------------------------------------------
       !
       USE lsda_mod, ONLY : nspin
@@ -1185,16 +1532,24 @@ MODULE pw_restart
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
       !
-      CHARACTER(LEN=iotk_attlenx) :: attr
-      INTEGER                     :: ik, num_k_points
+      INTEGER :: ik, num_k_points
       !
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // &
-                            & '/' // TRIM( xmlpun ), BINARY = .FALSE. )
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
          !
          CALL iotk_scan_begin( iunpun, "BRILLOUIN_ZONE" )
          !
@@ -1230,7 +1585,7 @@ MODULE pw_restart
     END SUBROUTINE read_brillouin_zone
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_band_structure( dirname )
+    SUBROUTINE read_band_structure( dirname, ierr )
       !------------------------------------------------------------------------
       !
       USE lsda_mod, ONLY : nspin, isk
@@ -1239,16 +1594,25 @@ MODULE pw_restart
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
       !
-      CHARACTER(LEN=iotk_attlenx) :: attr
-      CHARACTER(LEN=4)            :: cspin
-      INTEGER                     :: ik, ik_eff, num_k_points
+      CHARACTER(LEN=4) :: cspin
+      INTEGER          :: ik, ik_eff, num_k_points
+      !
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // &
-                            & '/' // TRIM( xmlpun ), BINARY = .FALSE. )
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
          !
          CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE" )
          !
@@ -1259,6 +1623,8 @@ MODULE pw_restart
          num_k_points = nkstot
          !
          IF ( nspin == 2 ) num_k_points = nkstot / 2
+         !
+         CALL iotk_scan_begin( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
          !
          k_points_loop: DO ik = 1, num_k_points
             !
@@ -1304,7 +1670,7 @@ MODULE pw_restart
                !
                et(:,ik) = et(:,ik) * e2
                !
-               CALL iotk_write_dat( iunpun, "OCC" // TRIM( cspin ), wg(:,ik) )
+               CALL iotk_scan_dat( iunpun, "OCC" // TRIM( cspin ), wg(:,ik) )
                !
                wg(:,ik) = wg(:,ik) * wk(ik)
                !
@@ -1313,6 +1679,8 @@ MODULE pw_restart
             CALL iotk_scan_end( iunpun, "K-POINT" // TRIM( iotk_index( ik ) ) )
             !
          END DO k_points_loop
+         !
+         CALL iotk_scan_end( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
          !
          CALL iotk_scan_end( iunpun, "BAND_STRUCTURE" )
          !
@@ -1331,7 +1699,7 @@ MODULE pw_restart
     END SUBROUTINE read_band_structure
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_wavefunctions( dirname )
+    SUBROUTINE read_wavefunctions( dirname, ierr )
       !------------------------------------------------------------------------
       !
       USE cell_base,            ONLY : tpiba2
@@ -1352,19 +1720,31 @@ MODULE pw_restart
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
       !
-      CHARACTER(LEN=iotk_attlenx)    :: attr
-      CHARACTER(LEN=4)               :: cspin
-      CHARACTER(LEN=256)             :: filename
-      INTEGER                        :: i, ig, ik, ngg,ig_, ierr, ipol, &
-                                        flen, ik_eff, num_k_points
-      INTEGER,           ALLOCATABLE :: kisort(:)
-      INTEGER                        :: npool, nkbl, nkl, nkr, npwx_g
-      INTEGER                        :: ike, iks, npw_g, ispin, local_pw
-      INTEGER,           ALLOCATABLE :: ngk_g(:)
-      INTEGER,           ALLOCATABLE :: itmp(:,:)
+      CHARACTER(LEN=4)     :: cspin
+      CHARACTER(LEN=256)   :: filename
+      INTEGER              :: i, ig, ik, ngg,ig_, ipol, &
+                              flen, ik_eff, num_k_points
+      INTEGER, ALLOCATABLE :: kisort(:)
+      INTEGER              :: npool, nkbl, nkl, nkr, npwx_g
+      INTEGER              :: ike, iks, npw_g, ispin, local_pw
+      INTEGER, ALLOCATABLE :: ngk_g(:)
+      INTEGER, ALLOCATABLE :: itmp(:,:)
+      REAL(DP)             :: scalef
       !
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      IF ( ierr > 0 ) RETURN
       !
       IF ( nkstot > 0 ) THEN
          !
@@ -1461,14 +1841,7 @@ MODULE pw_restart
       !
       npwx_g = MAXVAL( ngk_g( 1:nkstot ) )
       !      
-      IF ( ionode ) THEN
-         !
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // &
-                            & '/' // TRIM( xmlpun ), BINARY = .FALSE. )
-         !
-         CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE" )
-         !
-      END IF
+      IF ( ionode ) CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE" )
       !
       num_k_points = nkstot
       !
@@ -1497,7 +1870,7 @@ MODULE pw_restart
             !
             CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
                            evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),       &
-                           ngk(ik-iks+1), filename )
+                           ngk(ik-iks+1), filename, scalef )
             !
             IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                !
@@ -1519,7 +1892,7 @@ MODULE pw_restart
             !
             CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
                            evc, npw_g, nbnd, igk_l2g(:,ik_eff-iks+1),   &
-                           ngk(ik_eff-iks+1), filename )
+                           ngk(ik_eff-iks+1), filename, scalef )
             !
             IF ( ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
                !
@@ -1539,7 +1912,8 @@ MODULE pw_restart
                   !
                   CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, &
                                  nspin, evc_nc(:,ipol,:), npw_g, nbnd, &
-                                 igk_l2g(:,ik-iks+1), ngk(ik-iks+1), filename )
+                                 igk_l2g(:,ik-iks+1), ngk(ik-iks+1),   &
+                                 filename, scalef )
                   !
                END DO
                !
@@ -1547,7 +1921,7 @@ MODULE pw_restart
                !
                 CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
                                evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),       &
-                               ngk(ik-iks+1), filename )
+                               ngk(ik-iks+1), filename, scalef )
                !
             END IF
             !
@@ -1588,21 +1962,31 @@ MODULE pw_restart
     END SUBROUTINE read_wavefunctions
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_( dirname )
+    SUBROUTINE read_( dirname, ierr )
       !------------------------------------------------------------------------
       !
       ! ... template
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN) :: dirname
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
       !
       INTEGER :: idum
       !
+      !
       IF ( ionode ) THEN
          !
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // &
-                            & '/' // TRIM( xmlpun ), BINARY = .FALSE. )
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
          !
          CALL iotk_scan_begin( iunpun, "" )
          !
@@ -1617,384 +2001,5 @@ MODULE pw_restart
       RETURN
       !
     END SUBROUTINE read_
-    !
-    ! ... method to write and read wavefunctions
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE write_wfc( iuni, ik, nk, kunit, ispin, &
-                          nspin, wf0, ngw, nbnd, igl, ngwl, filename, scalef )
-      !------------------------------------------------------------------------
-      !
-      USE mp_wave
-      USE mp,         ONLY : mp_sum, mp_get, mp_bcast, mp_max
-      USE mp_global,  ONLY : mpime, nproc, root, me_pool, my_pool_id, &
-                             nproc_pool, intra_pool_comm, root_pool
-      !
-      IMPLICIT NONE
-      !
-      INTEGER,            INTENT(IN) :: iuni
-      INTEGER,            INTENT(IN) :: ik, nk, kunit, ispin, nspin
-      COMPLEX(DP),   INTENT(IN) :: wf0(:,:)
-      INTEGER,            INTENT(IN) :: ngw
-      INTEGER,            INTENT(IN) :: nbnd
-      INTEGER,            INTENT(IN) :: ngwl
-      INTEGER,            INTENT(IN) :: igl(:)
-      CHARACTER(LEN=256), INTENT(IN) :: filename
-      !
-      !  scale factor, usually  1.0 for pw and 1/SQRT( omega ) CP
-      !
-      REAL(DP),      INTENT(IN) :: scalef    
-      !
-      INTEGER                       :: i, j, ierr
-      INTEGER                       :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx
-      INTEGER                       :: npool, ipmask(nproc), ipsour
-      COMPLEX(DP), ALLOCATABLE :: wtmp(:)
-      INTEGER                       :: ierr_iotk
-      CHARACTER(LEN=iotk_attlenx)   :: attr
-      !
-      !
-      ! ... set working variables for k point index (ikt) 
-      ! ... and k points number (nkt)
-      !
-      ikt = ik
-      nkt = nk
-      !
-      ! ... find out the number of pools
-      !
-      npool = nproc / nproc_pool 
-      !
-      ! ... find out number of k points blocks
-      !
-      nkbl = nkt / kunit  
-      !
-      ! ... k points per pool
-      !
-      nkl = kunit * ( nkbl / npool )
-      !
-      ! ... find out the reminder
-      !
-      nkr = ( nkt - nkl * npool ) / kunit
-      !
-      ! ... Assign the reminder to the first nkr pools
-      !
-      IF( my_pool_id < nkr ) nkl = nkl + kunit
-      !
-      ! ... find out the index of the first k point in this pool
-      !
-      iks = nkl * my_pool_id + 1
-      !
-      IF( my_pool_id >= nkr ) iks = iks + nkr * kunit
-      !
-      ! ... find out the index of the last k point in this pool
-      !
-      ike = iks + nkl - 1
-      !
-      ipmask = 0
-      ipsour = ionode_id
-      !
-      ! ... find out the index of the processor which collect the data 
-      ! ... in the pool of ik
-      !
-      IF ( npool > 1 ) THEN
-         !
-         IF ( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-            !
-            IF ( me_pool == root_pool ) ipmask( mpime + 1 ) = 1
-            !
-         END IF
-         !
-         CALL mp_sum( ipmask )
-         !
-         DO i = 1, nproc
-            !
-            IF( ipmask(i) == 1 ) ipsour = ( i - 1 )
-            !
-         END DO
-         !
-      END IF
-      !
-      igwx = 0
-      ierr = 0
-      !
-      IF ( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-         !
-         IF ( ngwl > SIZE( igl ) ) THEN
-            !
-            ierr = 1
-            !
-         ELSE
-            !
-            igwx = MAXVAL( igl(1:ngwl) )
-            !
-         END IF
-         !
-      END IF
-      !
-      ! ... get the maximum index within the pool
-      !
-      CALL mp_max( igwx, intra_pool_comm ) 
-      !
-      ! ... now notify all procs if an error has been found 
-      !
-      CALL mp_max( ierr ) 
-      !
-      IF ( ierr > 0 ) &
-         CALL errore( 'write_wfc ', ' wrong size ngl ', ierr )
-      !
-      IF ( ipsour /= ionode_id ) &
-         CALL mp_get( igwx, igwx, mpime, ionode_id, ipsour, 1 )
-      !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_open_write( iuni, FILE = TRIM( filename ), BINARY = .TRUE. )
-         !
-         CALL iotk_write_begin( iuni, "K-POINT" // iotk_index( ik ) )
-         !
-         CALL iotk_write_attr( attr, "ngw",   ngw, FIRST = .TRUE. )
-         CALL iotk_write_attr( attr, "nbnd",  nbnd )
-         CALL iotk_write_attr( attr, "ik",    ik )
-         CALL iotk_write_attr( attr, "nk",    nk )
-         CALL iotk_write_attr( attr, "kunit", kunit )
-         CALL iotk_write_attr( attr, "ispin", ispin )
-         CALL iotk_write_attr( attr, "nspin", nspin )
-         CALL iotk_write_attr( attr, "igwx",  igwx )
-         CALL iotk_write_attr( attr, "scale_factor",  scalef )
-         !
-         CALL iotk_write_empty( iuni, "INFO", attr )
-         !
-      END IF
-      !
-      ALLOCATE( wtmp( MAX( igwx, 1 ) ) )
-      !
-      wtmp = 0.D0
-      !
-      DO j = 1, nbnd
-         !
-         IF ( npool > 1 ) THEN
-            !
-            IF ( ikt >= iks .AND. ikt <= ike ) &      
-               CALL mergewf( wf0(:,j), wtmp, ngwl, igl, me_pool, &
-                             nproc_pool, root_pool, intra_pool_comm )
-            !
-            IF ( ipsour /= ionode_id ) &
-               CALL mp_get( wtmp, wtmp, mpime, ionode_id, ipsour, j )
-            !
-         ELSE
-            !
-            CALL mergewf( wf0(:,j), wtmp, ngwl, igl, &
-                          mpime, nproc, ionode_id )
-            !
-         END IF
-         !
-         IF ( ionode ) &
-            CALL iotk_write_dat( iuni, "evc" // iotk_index( j ), wtmp(1:igwx) )
-         !
-      END DO
-      !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_write_end( iuni, "K-POINT" // iotk_index( ik ) )
-         !
-         CALL iotk_close_write( iuni )
-         !
-      END IF
-      !
-      DEALLOCATE( wtmp )
-      !
-      RETURN
-      !
-    END SUBROUTINE write_wfc
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE read_wfc( iuni, ik, nk, kunit, ispin, &
-                         nspin, wf, ngw, nbnd, igl, ngwl, filename )
-      !------------------------------------------------------------------------
-      !
-      !
-      USE mp_wave
-      USE mp,         ONLY : mp_sum, mp_get, mp_bcast, mp_max, mp_put
-      USE mp_global,  ONLY : mpime, nproc, root, me_pool, my_pool_id, &
-                             nproc_pool, intra_pool_comm, root_pool
-      !
-      IMPLICIT NONE
-      !
-      INTEGER,            INTENT(IN)    :: iuni
-      INTEGER,            INTENT(INOUT) :: ik, nk, kunit, ispin, nspin
-      COMPLEX(DP),   INTENT(OUT)   :: wf(:,:)
-      INTEGER,            INTENT(INOUT) :: ngw
-      INTEGER,            INTENT(INOUT) :: nbnd
-      INTEGER,            INTENT(IN)    :: ngwl
-      INTEGER,            INTENT(IN)    :: igl(:)
-      CHARACTER(LEN=256), INTENT(IN)    :: filename
-      !
-      INTEGER                       :: i, j, ierr, ipdest
-      INTEGER                       :: nkl, nkr, nkbl, iks, ike, nkt, ikt, igwx
-      INTEGER                       :: igwx_
-      INTEGER                       :: npool, ipmask(nproc), ipsour
-      COMPLEX(DP), ALLOCATABLE :: wtmp(:)
-      INTEGER                       :: ierr_iotk
-      CHARACTER(LEN=iotk_attlenx)   :: attr
-      !
-      !
-      ! ... set working variables for k point index (ikt) 
-      ! ... and k points number (nkt)
-      !
-      ikt = ik
-      nkt = nk
-      !
-      ! ... find out the number of pools
-      !
-      npool = nproc / nproc_pool 
-      !
-      ! ... find out number of k points blocks
-      !
-      nkbl = nkt / kunit  
-      !
-      ! ... k points per pool
-      !
-      nkl = kunit * ( nkbl / npool )
-      !
-      ! ... find out the reminder
-      !
-      nkr = ( nkt - nkl * npool ) / kunit
-      !
-      ! ... Assign the reminder to the first nkr pools
-      !
-      IF( my_pool_id < nkr ) nkl = nkl + kunit
-      !
-      ! ... find out the index of the first k point in this pool
-      !
-      iks = nkl * my_pool_id + 1
-      !
-      IF( my_pool_id >= nkr ) iks = iks + nkr * kunit
-      !
-      ! ... find out the index of the last k point in this pool
-      !
-      ike = iks + nkl - 1
-      !
-      ipmask = 0
-      ipsour = ionode_id
-      !
-      ! ... find out the index of the processor which collect the data 
-      ! ... in the pool of ik
-      !
-      IF ( npool > 1 ) THEN
-         !
-         IF ( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-            !
-            IF ( me_pool == root_pool ) ipmask( mpime + 1 ) = 1
-            !
-         END IF
-         !
-         CALL mp_sum( ipmask )
-         !
-         DO i = 1, nproc
-            !
-            IF( ipmask(i) == 1 ) ipsour = ( i - 1 )
-            !
-         END DO
-         !
-      END IF
-      !
-      igwx = 0
-      ierr = 0
-      !
-      IF ( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-         !
-         IF ( ngwl > SIZE( igl ) ) THEN
-            !
-            ierr = 1
-            !
-         ELSE
-            !
-            igwx = MAXVAL( igl(1:ngwl) )
-            !
-         END IF
-         !
-      END IF
-      !
-      ! ... get the maximum index within the pool
-      !
-      CALL mp_max( igwx, intra_pool_comm ) 
-      !
-      ! ... now notify all procs if an error has been found 
-      !
-      CALL mp_max( ierr ) 
-      !
-      IF ( ierr > 0 ) &
-         CALL errore( 'read_wfc ', ' wrong size ngl ', ierr )
-      !
-      IF ( ipsour /= ionode_id ) &
-         CALL mp_get( igwx, igwx, mpime, ionode_id, ipsour, 1 )
-      !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_open_read( iuni, FILE = TRIM( filename ), BINARY = .TRUE. )
-         !
-         CALL iotk_scan_begin( iuni, "K-POINT" // iotk_index( ik ) )
-         !
-         CALL iotk_scan_empty( iuni, "INFO", attr )
-         !
-         CALL iotk_scan_attr( attr, "ngw",   ngw )
-         CALL iotk_scan_attr( attr, "nbnd",  nbnd )
-         CALL iotk_scan_attr( attr, "ik",    ik )
-         CALL iotk_scan_attr( attr, "nk",    nk )
-         CALL iotk_scan_attr( attr, "kunit", kunit )
-         CALL iotk_scan_attr( attr, "ispin", ispin )
-         CALL iotk_scan_attr( attr, "nspin", nspin )
-         CALL iotk_scan_attr( attr, "igwx",  igwx_ )
-         !
-      END IF
-      !
-      ALLOCATE( wtmp( MAX( igwx_, igwx ) ) )
-      !
-      wtmp = 0.D0
-      !
-      DO j = 1, nbnd
-         !
-         IF ( j <= SIZE( wf, 2 ) ) THEN         
-            !
-            IF ( ionode ) &
-               CALL iotk_scan_dat( iuni, &
-                                   "evc" // iotk_index( j ), wtmp(1:igwx_) ) 
-            !
-            IF( igwx > igwx_ ) wtmp(igwx_+1:igwx) = 0.0d0
-            !
-            IF ( npool > 1 ) THEN
-               !
-               IF ( ipdest /= ionode_id ) &
-                  CALL mp_put( wtmp, wtmp, mpime, ionode_id, ipdest, j )
-               !
-               IF( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-                  !
-                  CALL splitwf( wf(:,j), wtmp, ngwl, igl, me_pool, &
-                                nproc_pool, root_pool, intra_pool_comm )
-                  !
-               ELSE
-                  !
-                  CALL splitwf( wf(:,j), wtmp, ngwl, &
-                                igl, mpime, nproc, ionode_id )
-                  !
-               END IF
-               !
-            END IF
-            !
-         END IF
-         !
-      END DO
-      !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_scan_end( iuni, "K-POINT" // iotk_index( ik ) )
-         !
-         CALL iotk_close_read( iuni )
-         !
-      END IF
-      !
-      DEALLOCATE( wtmp )
-      !
-      RETURN
-      !
-    END SUBROUTINE read_wfc
     !
 END MODULE pw_restart

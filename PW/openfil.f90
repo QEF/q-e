@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -29,8 +29,8 @@ SUBROUTINE openfil()
   !
   IMPLICIT NONE
   !
-  LOGICAL       :: exst
-  INTEGER       :: ierr
+  LOGICAL  :: exst
+  INTEGER  :: ierr
   REAL(DP) :: edum(1,1), wdum(1,1)
   !
   !
@@ -79,15 +79,10 @@ SUBROUTINE openfil()
   ! ... Note that unit 15 is reserved for error messages 
   !
   CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
-
-
   !
-  ! open units for electric field calculations
+  ! ... open units for electric field calculations
   !
-  if (lelfield) then
-     CALL diropn (iunefield, 'ewfc', nwordwfc, exst)
-  endif
-
+  IF ( lelfield ) CALL diropn( iunefield, 'ewfc', nwordwfc, exst )
   !
   RETURN
   !

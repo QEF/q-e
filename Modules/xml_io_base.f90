@@ -23,6 +23,14 @@ MODULE xml_io_base
   !
   IMPLICIT NONE
   !
+  PRIVATE
+  !
+  PUBLIC :: attr
+  PUBLIC :: create_directory, kpoint_dir, wfc_filename, copy_file, &
+            restart_dir, check_restartfile, set_kpoints_vars, write_cell, &
+            write_ions, write_symmetry, write_planewaves, write_spin, &
+            write_xc, write_occ, write_bz, write_rho_xml, write_wfc, read_wfc
+  !
   CHARACTER(iotk_attlenx) :: attr
   !
   CONTAINS
@@ -45,9 +53,8 @@ MODULE xml_io_base
       IF ( ionode ) &
          ierr = c_mkdir( TRIM( dirname ), LEN_TRIM( dirname ) )
       !
-      IF ( ierr > 0 ) &
-        CALL errore( 'create_directory', &
-                     'unable to create directory ' // TRIM( dirname ), ierr )
+      CALL errore( 'create_directory', &
+                   'unable to create directory ' // TRIM( dirname ), ierr )
       !
       ! ... all jobs are syncronized
       !
@@ -60,9 +67,8 @@ MODULE xml_io_base
             TRIM( int_to_char( mpime ) ), STATUS = 'UNKNOWN', IOSTAT = ierr )
       CLOSE( UNIT = 4, STATUS = 'DELETE' )
       !
-      IF ( ierr /= 0 ) &
-         CALL errore( ' create_directory: ', TRIM( dirname ) // &
-                    & ' non existent or non writable', 1 )
+      CALL errore( 'create_directory: ', &
+                   TRIM( dirname ) // 'non existent or non writable', ierr )
       !
     END SUBROUTINE create_directory
     !
@@ -179,7 +185,158 @@ MODULE xml_io_base
       !
     END FUNCTION restart_dir
     !
-    ! ... writing
+    !------------------------------------------------------------------------
+    FUNCTION check_restartfile( scradir, ndr )
+      !------------------------------------------------------------------------
+      !
+      USE io_global, ONLY : ionode, ionode_id
+      USE mp,        ONLY : mp_bcast
+      USE parser,    ONLY : int_to_char
+      !
+      IMPLICIT NONE
+      !
+      LOGICAL                      :: check_restartfile
+      INTEGER,          INTENT(IN) :: ndr
+      CHARACTER(LEN=*), INTENT(IN) :: scradir
+      CHARACTER(LEN=256)           :: filename
+      LOGICAL                      :: lval
+      INTEGER                      :: strlen
+      !
+      !
+      filename = restart_dir( scradir, ndr )
+      !
+      IF ( ionode ) THEN
+         !
+         filename = TRIM( filename ) // '/restart.xml'
+         !
+         INQUIRE( FILE = TRIM( filename ), EXIST = lval )
+         !
+      END IF
+      !
+      CALL mp_bcast( lval, ionode_id )
+      !
+      check_restartfile = lval
+      !
+      RETURN
+      !
+    END FUNCTION check_restartfile
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE set_kpoints_vars( ik, nk, kunit, ngwl, igl, &
+                                 npool, ikt, iks, ike, igwx, ipmask, ipsour )
+      !------------------------------------------------------------------------
+      !
+      ! ... set working variables for k-point index (ikt) and 
+      ! ... k-points number (nkt)
+      !
+      USE mp,         ONLY : mp_sum, mp_get, mp_max
+      USE mp_global,  ONLY : mpime, nproc, me_pool, my_pool_id, &
+                             nproc_pool, intra_pool_comm, root_pool
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN)  :: ik, nk, kunit
+      INTEGER, INTENT(IN)  :: ngwl, igl(:)
+      INTEGER, INTENT(OUT) :: npool
+      INTEGER, INTENT(OUT) :: ikt, iks, ike, igwx
+      INTEGER, INTENT(OUT) :: ipmask(:), ipsour
+      !
+      INTEGER :: ierr, i
+      INTEGER :: nkl, nkr, nkbl, nkt
+      !
+      !
+      ikt = ik
+      nkt = nk
+      !
+      ! ... find out the number of pools
+      !
+      npool = nproc / nproc_pool 
+      !
+      ! ... find out number of k points blocks
+      !
+      nkbl = nkt / kunit  
+      !
+      ! ... k points per pool
+      !
+      nkl = kunit * ( nkbl / npool )
+      !
+      ! ... find out the reminder
+      !
+      nkr = ( nkt - nkl * npool ) / kunit
+      !
+      ! ... Assign the reminder to the first nkr pools
+      !
+      IF ( my_pool_id < nkr ) nkl = nkl + kunit
+      !
+      ! ... find out the index of the first k point in this pool
+      !
+      iks = nkl * my_pool_id + 1
+      !
+      IF ( my_pool_id >= nkr ) iks = iks + nkr * kunit
+      !
+      ! ... find out the index of the last k point in this pool
+      !
+      ike = iks + nkl - 1
+      !
+      ipmask = 0
+      ipsour = ionode_id
+      !
+      ! ... find out the index of the processor which collect the data 
+      ! ... in the pool of ik
+      !
+      IF ( npool > 1 ) THEN
+         !
+         IF ( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
+            !
+            IF ( me_pool == root_pool ) ipmask( mpime + 1 ) = 1
+            !
+         END IF
+         !
+         CALL mp_sum( ipmask )
+         !
+         DO i = 1, nproc
+            !
+            IF( ipmask(i) == 1 ) ipsour = ( i - 1 )
+            !
+         END DO
+         !
+      END IF
+      !
+      igwx = 0
+      ierr = 0
+      !
+      IF ( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
+         !
+         IF ( ngwl > SIZE( igl ) ) THEN
+            !
+            ierr = 1
+            !
+         ELSE
+            !
+            igwx = MAXVAL( igl(1:ngwl) )
+            !
+         END IF
+         !
+      END IF
+      !
+      ! ... get the maximum index within the pool
+      !
+      CALL mp_max( igwx, intra_pool_comm ) 
+      !
+      ! ... now notify all procs if an error has been found 
+      !
+      CALL mp_max( ierr ) 
+      !
+      CALL errore( 'write_wfc ', 'wrong size ngl', ierr )
+      !
+      IF ( ipsour /= ionode_id ) &
+         CALL mp_get( igwx, igwx, mpime, ionode_id, ipsour, 1 )
+      !
+      RETURN
+      !
+    END SUBROUTINE set_kpoints_vars
+    !
+    ! ... writing subroutines
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_cell( ibrav, symm_type, &
@@ -188,9 +345,9 @@ MODULE xml_io_base
       !
       INTEGER,          INTENT(IN) :: ibrav
       CHARACTER(LEN=*), INTENT(IN) :: symm_type
-      REAL(DP),    INTENT(IN) :: celldm(6), alat
-      REAL(DP),    INTENT(IN) :: a1(3), a2(3), a3(3)
-      REAL(DP),    INTENT(IN) :: b1(3), b2(3), b3(3)
+      REAL(DP),         INTENT(IN) :: celldm(6), alat
+      REAL(DP),         INTENT(IN) :: a1(3), a2(3), a3(3)
+      REAL(DP),         INTENT(IN) :: b1(3), b2(3), b3(3)
       !
       CHARACTER(LEN=256) :: bravais_lattice
       !
@@ -269,8 +426,8 @@ MODULE xml_io_base
       CHARACTER(LEN=*), INTENT(IN) :: psfile(:)
       CHARACTER(LEN=*), INTENT(IN) :: pseudo_dir
       CHARACTER(LEN=*), INTENT(IN) :: dirname
-      REAL(DP),    INTENT(IN) :: amass(:)
-      REAL(DP),    INTENT(IN) :: tau(:,:)
+      REAL(DP),         INTENT(IN) :: amass(:)
+      REAL(DP),         INTENT(IN) :: tau(:,:)
       INTEGER,          INTENT(IN) :: if_pos(:,:)
       CHARACTER(LEN=*), INTENT(IN) :: pos_unit
       !
@@ -342,8 +499,8 @@ MODULE xml_io_base
       INTEGER,          INTENT(IN) :: s(:,:,:), ftau(:,:)
       CHARACTER(LEN=*), INTENT(IN) :: sname(:)
       !
-      INTEGER        :: i
-      REAL (DP) :: tmp(3)
+      INTEGER  :: i
+      REAL(DP) :: tmp(3)
       !
       !
       CALL iotk_write_begin( iunpun, "SYMMETRIES" )
@@ -384,11 +541,11 @@ MODULE xml_io_base
       !
       USE constants, ONLY : e2
       !
-      INTEGER,       INTENT(IN) :: npwx, nr1, nr2, nr3, ngm_g, &
-                                   nr1s, nr2s, nr3s, ngms_g, nr1b, nr2b, nr3b
-      INTEGER,       INTENT(IN) :: itmp(:,:)
+      INTEGER,  INTENT(IN) :: npwx, nr1, nr2, nr3, ngm_g, &
+                              nr1s, nr2s, nr3s, ngms_g, nr1b, nr2b, nr3b
+      INTEGER,  INTENT(IN) :: itmp(:,:)
       REAL(DP), INTENT(IN) :: ecutwfc, dual
-      LOGICAL,       INTENT(IN) :: gamma_only, lgvec
+      LOGICAL,  INTENT(IN) :: gamma_only, lgvec
       !
       !
       CALL iotk_write_begin( iunpun, "PLANE_WAVES" )
@@ -468,11 +625,11 @@ MODULE xml_io_base
                          Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha )
       !------------------------------------------------------------------------
       !
-      CHARACTER(LEN=*),        INTENT(IN) :: dft
-      LOGICAL,                 INTENT(IN) :: lda_plus_u
-      INTEGER,                 INTENT(IN) :: nsp
-      INTEGER,       OPTIONAL, INTENT(IN) :: Hubbard_lmax
-      INTEGER,       OPTIONAL, INTENT(IN) :: Hubbard_l(:)
+      CHARACTER(LEN=*),   INTENT(IN) :: dft
+      LOGICAL,            INTENT(IN) :: lda_plus_u
+      INTEGER,            INTENT(IN) :: nsp
+      INTEGER,  OPTIONAL, INTENT(IN) :: Hubbard_lmax
+      INTEGER,  OPTIONAL, INTENT(IN) :: Hubbard_l(:)
       REAL(DP), OPTIONAL, INTENT(IN) :: Hubbard_U(:), Hubbard_alpha(:)
       !
       !
@@ -513,8 +670,8 @@ MODULE xml_io_base
       !
       USE constants, ONLY : e2
       !
-      LOGICAL,                 INTENT(IN) :: lgauss, ltetra, tfixed_occ, lsda
-      INTEGER,       OPTIONAL, INTENT(IN) :: ngauss, ntetra, nelup, neldw
+      LOGICAL,            INTENT(IN) :: lgauss, ltetra, tfixed_occ, lsda
+      INTEGER,  OPTIONAL, INTENT(IN) :: ngauss, ntetra, nelup, neldw
       REAL(DP), OPTIONAL, INTENT(IN) :: degauss, f_inp(:,:)      
       !
       !
@@ -557,7 +714,7 @@ MODULE xml_io_base
     SUBROUTINE write_bz( num_k_points, xk, wk )
       !------------------------------------------------------------------------
       !
-      INTEGER,       INTENT(IN) :: num_k_points
+      INTEGER,  INTENT(IN) :: num_k_points
       REAL(DP), INTENT(IN) :: xk(:,:), wk(:)
       !
       INTEGER :: ik
@@ -585,47 +742,47 @@ MODULE xml_io_base
       !
     END SUBROUTINE write_bz
     !
-    !----------------------------------------------
-    SUBROUTINE write_rho_xml( rho_file, rho, nr1, nr2, nr3, nr1x, nr2x, ipp, npp )
+    !------------------------------------------------------------------------
+    SUBROUTINE write_rho_xml( rho_file, rho, &
+                              nr1, nr2, nr3, nr1x, nr2x, ipp, npp )
+      !------------------------------------------------------------------------
       !
-      !   Writes charge density rho, one plane at a time.
-      !   If ipp and npp are specified planes are collected one by one from
-      !   all processors, avoiding an overall collect of the charge density
-      !   on a single proc.
+      ! ... Writes charge density rho, one plane at a time.
+      ! ... If ipp and npp are specified, planes are collected one by one from
+      ! ... all processors, avoiding an overall collect of the charge density
+      ! ... on a single proc.
       !
-      USE kinds,     ONLY : DP
       USE io_files,  ONLY : rhounit
       USE io_global, ONLY : ionode, ionode_id
       USE mp,        ONLY : mp_sum, mp_get, mp_bcast, mp_max
       USE mp_global, ONLY : mpime, nproc, root, me_pool, my_pool_id, &
                             nproc_pool, intra_pool_comm, root_pool, my_image_id
-      USE iotk_module
       !
       IMPLICIT NONE
       !
       INTEGER,           INTENT(IN) :: nr1, nr2, nr3
       INTEGER,           INTENT(IN) :: nr1x, nr2x
       CHARACTER(LEN=*),  INTENT(IN) :: rho_file
-      REAL(DP),         INTENT(IN) :: rho( : )
-      INTEGER, OPTIONAL, INTENT(IN) :: ipp( : )
-      INTEGER, OPTIONAL, INTENT(IN) :: npp( : )
+
+      REAL(DP),          INTENT(IN) :: rho(:)
+      INTEGER, OPTIONAL, INTENT(IN) :: ipp(:)
+      INTEGER, OPTIONAL, INTENT(IN) :: npp(:)
       !
-      INTEGER :: ierr, i, j, k, kk, ldr, ip
-      INTEGER                       :: ierr_iotk
-      CHARACTER(LEN=iotk_attlenx)   :: attr
-      REAL(DP), ALLOCATABLE        :: rho_plane( : )
-      INTEGER,   ALLOCATABLE        :: kowner( : )
-   
-   
-      IF( ionode ) THEN
-         !
-         CALL iotk_open_write( rhounit, FILE = TRIM( rho_file ), BINARY = .FALSE., ierr = ierr )
-         !
-      END IF
+      INTEGER                     :: ierr, i, j, k, kk, ldr, ip
+      INTEGER                     :: ierr_iotk
+      CHARACTER(LEN=iotk_attlenx) :: attr
+      REAL(DP), ALLOCATABLE       :: rho_plane(:)
+      INTEGER,  ALLOCATABLE       :: kowner(:)
+      !
+      !
+      IF ( ionode ) &
+         CALL iotk_open_write( rhounit, FILE = TRIM( rho_file ), &
+                               BINARY = .FALSE., ierr = ierr )
       !
       CALL mp_bcast( ierr, ionode_id )
-      IF( ierr /= 0 ) &
-         call errore(" write_rho_xml ", " cannot open rho_file file for writing ", ierr )
+      !
+      CALL errore( 'write_rho_xml ', &
+                   'cannot open rho_file file for writing', ierr )
       !
       IF ( ionode ) THEN
          !
@@ -638,49 +795,59 @@ MODULE xml_io_base
          CALL iotk_write_empty( rhounit, "INFO", attr )
          !
       END IF
-   
+      !
       ALLOCATE( rho_plane( nr1 * nr2 ) )
       ALLOCATE( kowner( nr3 ) )
-   
-      ! find out the owner of each "z" plane
       !
-      IF( PRESENT( ipp ) .AND. PRESENT( npp ) ) THEN
+      ! ... find out the owner of each "z" plane
+      !
+      IF ( PRESENT( ipp ) .AND. PRESENT( npp ) ) THEN
+         !
          DO ip = 1, nproc
-            kowner( ipp( ip ) + 1 : ipp( ip ) + npp( ip ) ) = ip - 1
+            !
+            kowner((ipp(ip)+1):(ipp(ip)+npp(ip))) = ip - 1
+            !
          END DO
+         !
       ELSE
+         !
          kowner = ionode_id
+         !
       END IF
-   
+      !
       ldr = nr1x * nr2x
-   
+      !
       DO k = 1, nr3
          !
-         IF( kowner( k ) == mpime ) THEN
+         IF( kowner(k) == mpime ) THEN
             !
             kk = k
             !
-            IF( PRESENT( ipp ) ) kk = k - ipp( mpime + 1 )
+            IF ( PRESENT( ipp ) ) kk = k - ipp(mpime+1)
             ! 
             DO j = 1, nr2
+               !
                DO i = 1, nr1
-                  rho_plane( i + ( j - 1 ) * nr1 ) = rho( i + ( j - 1 ) * nr1x + ( kk - 1 ) * ldr )
+                  !
+                  rho_plane(i+(j-1)*nr1) = rho(i+(j-1)*nr1x+(kk-1)*ldr)
+                  !
                END DO
+               !
             END DO
+            !
          END IF
          !
-         IF( kowner( k ) /= ionode_id ) THEN
-            CALL mp_get( rho_plane, rho_plane, mpime, ionode_id, kowner( k ), k )
-         END IF
+         IF ( kowner( k ) /= ionode_id ) &
+            CALL mp_get( rho_plane, rho_plane, mpime, ionode_id, kowner(k), k )
          !
          IF ( ionode ) &
             CALL iotk_write_dat( rhounit, "z" // iotk_index( k ), rho_plane )
-   
+         !
       END DO
-   
+      !
       DEALLOCATE( rho_plane )
       DEALLOCATE( kowner )
-   
+      !
       IF ( ionode ) THEN
          !
          CALL iotk_write_end( rhounit, "CHARGE-DENSITY" )
@@ -688,10 +855,222 @@ MODULE xml_io_base
          CALL iotk_close_write( rhounit )
          !
       END IF
-   
+      !
       RETURN
-    
+      !
     END SUBROUTINE write_rho_xml
     !
+    ! ... methods to write and read wavefunctions
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE write_wfc( iuni, ik, nk, kunit, ispin, &
+                          nspin, wf0, ngw, nbnd, igl, ngwl, filename, scalef )
+      !------------------------------------------------------------------------
+      !
+      USE mp_wave,    ONLY : mergewf
+      USE mp,         ONLY : mp_get
+      USE mp_global,  ONLY : me_pool, nproc, nproc_pool, &
+                             root_pool, intra_pool_comm, mpime
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,            INTENT(IN) :: iuni
+      INTEGER,            INTENT(IN) :: ik, nk, kunit, ispin, nspin
+      COMPLEX(DP),        INTENT(IN) :: wf0(:,:)
+      INTEGER,            INTENT(IN) :: ngw
+      INTEGER,            INTENT(IN) :: nbnd
+      INTEGER,            INTENT(IN) :: ngwl
+      INTEGER,            INTENT(IN) :: igl(:)
+      CHARACTER(LEN=256), INTENT(IN) :: filename
+      REAL(DP),           INTENT(IN) :: scalef    
+        ! scale factor, usually 1.0 for pw and 1/SQRT( omega ) for CP
+      !
+      INTEGER                  :: i, j, ierr
+      INTEGER                  :: iks, ike, ikt, igwx
+      INTEGER                  :: npool, ipmask(nproc), ipsour
+      COMPLEX(DP), ALLOCATABLE :: wtmp(:)
+      !
+      !
+      CALL set_kpoints_vars( ik, nk, kunit, ngwl, igl, &
+                             npool, ikt, iks, ike, igwx, ipmask, ipsour )
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_open_write( iuni, FILE = TRIM( filename ), BINARY = .TRUE. )
+         !
+         CALL iotk_write_begin( iuni, "K-POINT" // iotk_index( ik ) )
+         !
+         CALL iotk_write_attr( attr, "ngw",          ngw, FIRST = .TRUE. )
+         CALL iotk_write_attr( attr, "nbnd",         nbnd )
+         CALL iotk_write_attr( attr, "ik",           ik )
+         CALL iotk_write_attr( attr, "nk",           nk )
+         CALL iotk_write_attr( attr, "kunit",        kunit )
+         CALL iotk_write_attr( attr, "ispin",        ispin )
+         CALL iotk_write_attr( attr, "nspin",        nspin )
+         CALL iotk_write_attr( attr, "igwx",         igwx )
+         CALL iotk_write_attr( attr, "scale_factor", scalef )
+         !
+         CALL iotk_write_empty( iuni, "INFO", attr )
+         !
+      END IF
+      !
+      ALLOCATE( wtmp( MAX( igwx, 1 ) ) )
+      !
+      wtmp = 0.D0
+      !
+      DO j = 1, nbnd
+         !
+         IF ( npool > 1 ) THEN
+            !
+            IF ( ikt >= iks .AND. ikt <= ike ) &      
+               CALL mergewf( wf0(:,j), wtmp, ngwl, igl, me_pool, &
+                             nproc_pool, root_pool, intra_pool_comm )
+            !
+            IF ( ipsour /= ionode_id ) &
+               CALL mp_get( wtmp, wtmp, mpime, ionode_id, ipsour, j )
+            !
+         ELSE
+            !
+            CALL mergewf( wf0(:,j), wtmp, ngwl, igl, &
+                          mpime, nproc, ionode_id )
+            !
+         END IF
+         !
+         IF ( ionode ) &
+            CALL iotk_write_dat( iuni, "evc" // iotk_index( j ), wtmp(1:igwx) )
+         !
+      END DO
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_write_end( iuni, "K-POINT" // iotk_index( ik ) )
+         !
+         CALL iotk_close_write( iuni )
+         !
+      END IF
+      !
+      DEALLOCATE( wtmp )
+      !
+      RETURN
+      !
+    END SUBROUTINE write_wfc
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE read_wfc( iuni, ik, nk, kunit, ispin, &
+                         nspin, wf, ngw, nbnd, igl, ngwl, filename, scalef )
+      !------------------------------------------------------------------------
+      !
+      USE mp_wave,   ONLY : splitwf
+      USE mp,        ONLY : mp_get, mp_put
+      USE mp_global, ONLY : mpime, nproc, root, me_pool, my_pool_id, &
+                            nproc_pool, intra_pool_comm, root_pool, my_image_id
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,            INTENT(IN)    :: iuni
+      COMPLEX(DP),        INTENT(OUT)   :: wf(:,:)
+      INTEGER,            INTENT(IN)    :: ik, nk
+      INTEGER,            INTENT(INOUT) :: kunit
+      INTEGER,            INTENT(INOUT) :: ngw, nbnd, ispin, nspin
+      INTEGER,            INTENT(IN)    :: ngwl
+      INTEGER,            INTENT(IN)    :: igl(:)
+      CHARACTER(LEN=256), INTENT(IN)    :: filename
+      REAL(DP),           INTENT(OUT)   :: scalef
+      !
+      INTEGER                  :: i, j
+      COMPLEX(DP), ALLOCATABLE :: wtmp(:)
+      INTEGER                  :: ierr
+      INTEGER                  :: iks, ike, nkt, ikt
+      INTEGER                  :: igwx, igwx_, ik_, nk_, kunit_
+      INTEGER                  :: npool, ipmask(nproc), ipdest
+      !
+      !
+      CALL set_kpoints_vars( ik, nk, kunit, ngwl, igl, &
+                             npool, ikt, iks, ike, igwx, ipmask, ipdest )
+      !
+      IF ( ionode ) &
+         CALL iotk_open_read( iuni, FILE = TRIM( filename ), &
+                              BINARY = .TRUE., IERR = ierr )
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      CALL errore( 'read_wfc ', &
+                   'cannot open restart file for reading', ierr )
+      !
+      IF ( ionode ) THEN
+          !
+          CALL iotk_scan_begin( iuni, "K-POINT" // iotk_index( ik ) )
+          !
+          CALL iotk_scan_empty( iuni, "INFO", attr )
+          !
+          CALL iotk_scan_attr( attr, "ngw",           ngw )
+          CALL iotk_scan_attr( attr, "nbnd",          nbnd )
+          CALL iotk_scan_attr( attr, "ik",            ik_ )
+          CALL iotk_scan_attr( attr, "nk",            nk_ )
+          CALL iotk_scan_attr( attr, "kunit",         kunit_ )
+          CALL iotk_scan_attr( attr, "ispin",         ispin )
+          CALL iotk_scan_attr( attr, "nspin",         nspin )
+          CALL iotk_scan_attr( attr, "igwx",          igwx_ )
+          CALL iotk_scan_attr( attr, "scale_factor",  scalef )
+          !
+      END IF
+      !
+      CALL mp_bcast( ngw,    ionode_id )
+      CALL mp_bcast( nbnd,   ionode_id )
+      CALL mp_bcast( ik_,    ionode_id )
+      CALL mp_bcast( nk_,    ionode_id )
+      CALL mp_bcast( kunit_, ionode_id )
+      CALL mp_bcast( ispin,  ionode_id )
+      CALL mp_bcast( nspin,  ionode_id )
+      CALL mp_bcast( igwx_,  ionode_id )
+      CALL mp_bcast( scalef, ionode_id )
+      !
+      ALLOCATE( wtmp( MAX( igwx_, igwx ) ) )
+      !
+      DO j = 1, nbnd
+         !
+         IF ( j <= SIZE( wf, 2 ) ) THEN
+            !
+            IF ( ionode ) THEN 
+               !
+               CALL iotk_scan_dat( iuni, &
+                                   "evc" // iotk_index( j ), wtmp(1:igwx_) )
+               !
+               IF ( igwx > igwx_ ) wtmp((igwx_+1):igwx) = 0.D0
+               !
+            END IF
+            !
+            IF ( npool > 1 ) THEN
+               
+               IF ( ipdest /= ionode_id ) &
+                  CALL mp_put( wtmp, wtmp, mpime, ionode_id, ipdest, j )
+               !
+               IF ( ( ikt >= iks ) .AND. ( ikt <= ike ) ) &
+                  CALL splitwf( wf(:,j), wtmp, ngwl, igl, me_pool, &
+                                nproc_pool, root_pool, intra_pool_comm )
+               !
+            ELSE
+               !
+               CALL splitwf( wf(:,j), wtmp, ngwl, igl, mpime, nproc, ionode_id )
+               !
+            END IF
+            !
+         END IF
+         !
+      END DO
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_scan_end( iuni, "K-POINT" // iotk_index( ik ) )
+         !
+         CALL iotk_close_read( iuni )
+         !
+      END IF
+      !
+      DEALLOCATE( wtmp )
+      !
+      RETURN
+      !
+    END SUBROUTINE read_wfc
     !
 END MODULE xml_io_base

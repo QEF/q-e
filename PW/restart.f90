@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,26 +7,28 @@
 !
 #include "f_defs.h"
 !
+!----------------------------------------------------------------------------
 MODULE restart_module
+  !----------------------------------------------------------------------------
   !
+  USE kinds,      ONLY : DP
   USE io_global,  ONLY : stdout
   !
   IMPLICIT NONE
+  !
   SAVE
   !
-CONTAINS
+  CONTAINS
   !
-  !----------------------------------------------------------------------
+  !--------------------------------------------------------------------------
   SUBROUTINE writefile_new( what, ndw, et_g, wg_g, kunit )
-    !-----------------------------------------------------------------------
+    !--------------------------------------------------------------------------
     !
-    !     This routine is called at the end of the run to save on a file
-    !     the information needed to restart and to other postprocessing
-    !     programs.
+    ! ... This routine is called at the end of the run to save on a file
+    ! ... the information needed to restart and to other postprocessing
+    ! ... programs.
     !
-    !
-    USE kinds,                ONLY : DP
-    USE ions_base,            ONLY : ntyp => nsp
+    USE ions_base,            ONLY : nsp
     USE basis,                ONLY : natomwfc
     USE ions_base,            ONLY : nat, ityp, tau, zv, atm
     USE cell_base,            ONLY : at, bg, ibrav, celldm, alat, symm_type
@@ -131,11 +133,6 @@ CONTAINS
 
     EXTERNAL DSCAL
 
-    ! ... end of declarations
-
-    !
-    !
-    ! WRITE( stdout, '(/,5x,"Writing file ",a)') trim(prefix)//'.save'
     !
     IF( ionode ) THEN
        CALL seqopn (ndw, 'save', 'unformatted', exst)
@@ -246,7 +243,7 @@ CONTAINS
     IF( twrhead ) THEN
        CALL write_restart_header(ndw, istep, trutime, nr1, nr2, nr3, &
             nr1s, nr2s, nr3s, ngm_g, nkstot, ngk_g, nspin, nbnd, nelec, nelu, neld, &
-            nat, ntyp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
+            nat, nsp, na, acc, nacx, ecutwfc, ecutrho, alat, ekincm, &
             kunit, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
             natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lforce, lstres, &
             title, crystal, tmp_dir, tupf, lgamma, noncolin, lspinorb, lda_plus_u, &
@@ -307,13 +304,13 @@ CONTAINS
     xnos0 = 0.0d0
     xnosm = 0.0d0
     xnosm2 = 0.0d0
-    atom_label(1:ntyp) = ' '
+    atom_label(1:nsp) = ' '
     cdmi = 0.0d0
     tscal = .FALSE.
 
     IF( twrpos ) THEN
        CALL write_restart_ions(ndw, atm, tscal, stau0, svel0, &
-            staum, svelm, tautmp, force, cdmi, nat, ntyp, ityp, na, amass, xnosp,  &
+            staum, svelm, tautmp, force, cdmi, nat, nsp, ityp, na, amass, xnosp,  &
             xnos0, xnosm, xnosm2)
     ELSE
        CALL write_restart_ions(ndw)
@@ -325,8 +322,8 @@ CONTAINS
     !  ==  LDA+U                                                       ==
     !  ==--------------------------------------------------------------==
     IF (lda_plus_u) THEN
-       CALL write_restart_ldaU(ndw, ntyp, Hubbard_lmax, &
-            Hubbard_l(1:ntyp), Hubbard_U(1:ntyp), Hubbard_alpha(1:ntyp))
+       CALL write_restart_ldaU(ndw, nsp, Hubbard_lmax, &
+            Hubbard_l(1:nsp), Hubbard_U(1:nsp), Hubbard_alpha(1:nsp))
     ELSE
        CALL write_restart_ldaU(ndw)
     ENDIF
@@ -346,7 +343,7 @@ CONTAINS
     !  ==  PSEUDOPOTENTIALS                                            ==
     !  ==--------------------------------------------------------------==
 
-    DO i = 1, ntyp
+    DO i = 1, nsp
        IF( twrpseudo ) THEN
           IF( tupf ) THEN
              iunps = 10
@@ -557,7 +554,7 @@ CONTAINS
     USE constants,            ONLY : pi
     USE io_files,             ONLY : iunwfc, nwordwfc, prefix, tmp_dir
     USE kinds,                ONLY : DP
-    USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
+    USE ions_base,            ONLY : nat, nsp => nsp, ityp, tau, zv, atm
     USE basis,                ONLY : natomwfc
     USE cell_base,            ONLY : at, bg, ibrav, celldm, alat, tpiba, tpiba2, &
          omega, symm_type
@@ -639,7 +636,7 @@ CONTAINS
     REAL(DP), ALLOCATABLE :: occtmp(:), lambda(:,:)
 
     INTEGER :: ntau
-    INTEGER :: i, ispin, ik, ispin_, nspin_, ik_, nkstot_, nat_, ntyp_
+    INTEGER :: i, ispin, ik, ispin_, nspin_, ik_, nkstot_, nat_, nsp_
     INTEGER :: nbnd_
 
     REAL(DP) :: nelec_
@@ -740,7 +737,7 @@ CONTAINS
 
        CALL read_restart_header(ndr, istep, trutime_, nr1, nr2, nr3, &
             nr1s, nr2s, nr3s, ngm_g, nkstot, ngk_g, nspin, nbnd, nelec, nelu_, &
-            neld_, nat, ntyp, na_, acc_, nacx_, ecutwfc, ecutrho_, alat, ekincm_, &
+            neld_, nat, nsp, na_, acc_, nacx_, ecutwfc, ecutrho_, alat, ekincm_, &
             kunit_, k1, k2, k3, nk1, nk2, nk3, degauss, ngauss, lgauss, ntetra, ltetra, &
             natomwfc, gcutm, gcutms, dual, doublegrid, modenum, lforce, lstres, &
             title_, crystal_, tmp_dir_, tupf, lgamma, noncolin, lspinorb, &
@@ -848,10 +845,10 @@ CONTAINS
        ALLOCATE( tautmp(3, nat) )
        ALLOCATE( force_(3, nat) )
        ALLOCATE( ityp_(nat) )
-       ALLOCATE( amass_(ntyp) )
+       ALLOCATE( amass_(nsp) )
 
-       CALL read_restart_ions(ndr, atom_label(1:ntyp), tscal, stau0, svel0, &
-            staum, svelm, tautmp, force_, cdmi, nat_, ntyp_, ityp_, na_, amass_, xnosp,  &
+       CALL read_restart_ions(ndr, atom_label(1:nsp), tscal, stau0, svel0, &
+            staum, svelm, tautmp, force_, cdmi, nat_, nsp_, ityp_, na_, amass_, xnosp,  &
             xnos0, xnosm, xnosm2)
        !
        ! get the right number of "tau" to avoid possible segmentation violations
@@ -859,7 +856,7 @@ CONTAINS
        ntau  = MIN( nat_, SIZE( tau, 2 ) )
        tau(:,1:ntau)  =  tautmp(:,1:ntau) / alat
        !
-       atm(1:ntyp) = atom_label(1:ntyp)
+       atm(1:nsp) = atom_label(1:nsp)
        ityp(1:ntau) = ityp_(1:ntau)
        force(1:3,1:ntau) = force_(1:3,1:ntau)
        DEALLOCATE( stau0, svel0, staum, svelm, tautmp, ityp_, force_, amass_ )
@@ -875,8 +872,8 @@ CONTAINS
     !  ==--------------------------------------------------------------==
     IF( lda_plus_u) THEN
 
-       CALL read_restart_ldaU(ndr, ntyp, Hubbard_lmax, &
-            Hubbard_l(1:ntyp), Hubbard_U(1:ntyp), Hubbard_alpha(1:ntyp))
+       CALL read_restart_ldaU(ndr, nsp, Hubbard_lmax, &
+            Hubbard_l(1:nsp), Hubbard_U(1:nsp), Hubbard_alpha(1:nsp))
 
     ELSE
 
@@ -899,7 +896,7 @@ CONTAINS
     !  ==  PSEUDOPOTENTIALS                                            ==
     !  ==--------------------------------------------------------------==
 
-    DO i = 1, ntyp
+    DO i = 1, nsp
 
        IF( trdpseudo ) THEN
 
@@ -1209,7 +1206,7 @@ CONTAINS
     INTEGER, ALLOCATABLE :: ityp_(:)
 
     INTEGER :: istep_, nr1_, nr2_, nr3_, nr1s_, nr2s_, nr3s_, ngm_, ngmg_, nkstot_
-    INTEGER :: nspin_, nbnd_, nelu_, neld_, nat_, ntyp_, nacx_, kunit_, nks_
+    INTEGER :: nspin_, nbnd_, nelu_, neld_, nat_, nsp_, nacx_, kunit_, nks_
     INTEGER :: k1_, k2_, k3_, nk1_, nk2_, nk3_, ngauss_
     INTEGER :: na_(nsx), ngk_l(npk), ngk_g(npk)
     INTEGER :: ntetra_, natomwfc_, modenum_
@@ -1264,7 +1261,7 @@ CONTAINS
 
     CALL read_restart_header(ndr, istep_, trutime_, nr1_, nr2_, nr3_, &
          nr1s_, nr2s_, nr3s_, ngmg_, nkstot_, ngk_g, nspin_, nbnd_, nelec_, nelu_, &
-         neld_, nat_, ntyp_, na_, acc_, nacx_, ecutwfc_, ecutrho_, alat_, ekincm_, &
+         neld_, nat_, nsp_, na_, acc_, nacx_, ecutwfc_, ecutrho_, alat_, ekincm_, &
          kunit_, k1_, k2_, k3_, nk1_, nk2_, nk3_, degauss_, ngauss_, lgauss_, &
          ntetra_, ltetra_, &
          natomwfc_, gcutm_, gcutms_, dual_, doublegrid_, modenum_, lstres_, &
@@ -1298,10 +1295,10 @@ CONTAINS
     ALLOCATE( tautmp(3, nat_) )
     ALLOCATE( force_(3, nat_) )
     ALLOCATE( ityp_(nat_) )
-    ALLOCATE( amass_(ntyp_) )
+    ALLOCATE( amass_(nsp_) )
 
-    CALL read_restart_ions(ndr, atom_label(1:ntyp_), tscal, stau0, svel0, &
-         staum, svelm, tautmp, force_, cdmi, nat_, ntyp_, ityp_, na_, amass_, xnosp,  &
+    CALL read_restart_ions(ndr, atom_label(1:nsp_), tscal, stau0, svel0, &
+         staum, svelm, tautmp, force_, cdmi, nat_, nsp_, ityp_, na_, amass_, xnosp,  &
          xnos0, xnosm, xnosm2)
 
     ibrav = ibrav_
@@ -1322,8 +1319,8 @@ CONTAINS
     !  ==  LDA+U                                                       ==
     !  ==--------------------------------------------------------------==
     IF( lda_plus_u) THEN
-       CALL read_restart_ldaU(ndr, ntyp_, Hubbard_lmax_, &
-            Hubbard_l(1:ntyp_), Hubbard_U(1:ntyp_), Hubbard_alpha(1:ntyp_))
+       CALL read_restart_ldaU(ndr, nsp_, Hubbard_lmax_, &
+            Hubbard_l(1:nsp_), Hubbard_U(1:nsp_), Hubbard_alpha(1:nsp_))
     ENDIF
 
     !
