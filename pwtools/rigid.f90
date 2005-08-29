@@ -190,7 +190,11 @@ subroutine nonanal(nat, nat_blk, itau_blk, epsil, q, zeu, omega, dyn )
         q(2)*(epsil(2,1)*q(1)+epsil(2,2)*q(2)+epsil(2,3)*q(3))+    &
         q(3)*(epsil(3,1)*q(1)+epsil(3,2)*q(2)+epsil(3,3)*q(3)))
  !
- if(qeq.eq.0.0) return
+ if (qeq < 1.d-8) then
+    write(6,'(5x,"A direction for q was not specified:", &
+      &          "TO-LO splitting will be absent")')
+    return
+ end if
  !
  do na = 1,nat
     na_blk = itau_blk(na)
