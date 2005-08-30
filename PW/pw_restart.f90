@@ -26,11 +26,25 @@ MODULE pw_restart
   !
   IMPLICIT NONE
   !
+  SAVE
+  !
   PRIVATE
   !
   PUBLIC :: pw_writefile, pw_readfile
   !
   INTEGER, PARAMETER, PRIVATE :: iunout = 99
+  !
+  LOGICAL :: lcell_read = .FALSE., &
+             lpw_read   = .FALSE., &
+             lions_read = .FALSE., &
+             lspin_read = .FALSE., &
+             lxc_read   = .FALSE., &
+             locc_read  = .FALSE., &
+             lbz_read   = .FALSE., &
+             lbs_read   = .FALSE., &
+             lwfc_read  = .FALSE., &
+             lgvec_read = .FALSE., &
+             lsymm_read = .FALSE.
   !
   CONTAINS
     !
@@ -675,6 +689,10 @@ MODULE pw_restart
          !
          CALL read_dim( dirname, ierr )
          !
+      CASE( 'pseudo' )
+         !
+         lions = .TRUE.
+         !
       CASE( 'config' )
          !
          lcell = .TRUE.
@@ -786,7 +804,6 @@ MODULE pw_restart
       ! ... this routine collects array dimensions from various sections
       ! ... plus with some other variables needed for array allocation 
       !
-      USE cell_base,        ONLY : alat
       USE ions_base,        ONLY : nat, nsp
       USE symme,            ONLY : nsym
       USE gvect,            ONLY : nr1, nr2, nr3, ngm_g, ecutwfc, dual
@@ -804,9 +821,14 @@ MODULE pw_restart
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
-      LOGICAL  :: ltetra
       REAL(DP) :: ecutrho
       !
+      !
+      ! ... first the entire CELL section is read
+      !
+      CALL read_cell( dirname, ierr )
+      !
+      IF ( ierr > 0 ) RETURN
       !
       IF ( ionode ) THEN
          !
@@ -819,13 +841,9 @@ MODULE pw_restart
       !
       IF ( ierr > 0 ) RETURN
       !
+      ! ... then selected tags are read from the other sections
+      !
       IF ( ionode ) THEN
-         !
-         CALL iotk_scan_begin( iunpun, "CELL" )
-         !
-         CALL iotk_scan_dat( iunpun, "LATTICE_PARAMETER", alat )
-         !
-         CALL iotk_scan_end( iunpun, "CELL" )
          !
          CALL iotk_scan_begin( iunpun, "IONS" )
          !
@@ -888,31 +906,14 @@ MODULE pw_restart
          !
          CALL iotk_scan_dat( iunpun, "NON-COLINEAR_CALCULATION", noncolin )
          !
-         IF ( noncolin ) THEN
-            !
-            CALL iotk_scan_dat( iunpun, "SPINOR_DIM", npol )
-            !
-         ELSE
-            !
-            npol = 1
-            !
-         END IF
+         CALL iotk_scan_dat( iunpun, "SPINOR_DIM", npol, DEFAULT = 1 )
          !
          CALL iotk_scan_end( iunpun, "SPIN" )
          !
          CALL iotk_scan_begin( iunpun, "OCCUPATIONS" )
          !
-         CALL iotk_scan_dat( iunpun, "TETRAHEDRON_METHOD", ltetra )
-         !
-         IF ( ltetra ) THEN
-            !
-            CALL iotk_scan_dat( iunpun, "NUMBER_OF_TETRAHEDRA", ntetra )
-            !
-         ELSE
-            !
-            ntetra = 1
-            !
-         END IF
+         CALL iotk_scan_dat( iunpun, &
+                             "NUMBER_OF_TETRAHEDRA", ntetra, DEFAULT = 1 )
          !
          CALL iotk_scan_end( iunpun, "OCCUPATIONS" )        
          !
@@ -920,7 +921,7 @@ MODULE pw_restart
          !
          CALL iotk_scan_dat( iunpun, "NUMBER_OF_K-POINTS", nkstot )
          !
-         IF ( nspin == 2 ) nkstot = nkstot * 2
+         IF ( lsda ) nkstot = nkstot * 2
          !
          CALL iotk_scan_end( iunpun, "BRILLOUIN_ZONE" )
          !
@@ -943,7 +944,6 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( alat,       ionode_id )
       CALL mp_bcast( nat,        ionode_id )
       CALL mp_bcast( nsp,        ionode_id )
       CALL mp_bcast( nsym,       ionode_id )
@@ -987,12 +987,11 @@ MODULE pw_restart
       CHARACTER(LEN=80) :: bravais_lattice
       !
       !
-      IF ( ionode ) THEN
-         !
+      IF ( lcell_read ) RETURN
+      !
+      IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
-         !
-      END IF
       !
       CALL mp_bcast( ierr, ionode_id )
       !
@@ -1071,6 +1070,8 @@ MODULE pw_restart
       CALL mp_bcast( at,        ionode_id )
       CALL mp_bcast( bg,        ionode_id )
       !
+      lcell_read = .TRUE.
+      !
       RETURN
       !
     END SUBROUTINE read_cell
@@ -1081,6 +1082,7 @@ MODULE pw_restart
       !
       USE ions_base, ONLY : nat, nsp, ityp, amass, atm, tau, if_pos
       USE cell_base, ONLY : alat
+      USE io_files,  ONLY : psfile, pseudo_dir
       !
       IMPLICIT NONE
       !
@@ -1090,16 +1092,17 @@ MODULE pw_restart
       INTEGER :: i
       !
       !
-      IF ( ionode ) THEN
-         !
+      IF ( lions_read ) RETURN
+      !
+      IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
-         !
-      END IF
       !
       CALL mp_bcast( ierr, ionode_id )
       !
       IF ( ierr > 0 ) RETURN
+      !
+      pseudo_dir = TRIM( dirname )
       !
       IF ( ionode ) THEN
          !
@@ -1116,6 +1119,9 @@ MODULE pw_restart
             !
             CALL iotk_scan_dat( iunpun, &
                                 TRIM( atm(i) ) // "_MASS", amass(i) )
+            !
+            CALL iotk_scan_dat( iunpun, &
+                                "PSEUDO_FOR_" // TRIM( atm(i) ), psfile(i) )
             !
          END DO
          !
@@ -1138,13 +1144,15 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( nat,        ionode_id )
-      CALL mp_bcast( nsp,        ionode_id )
-      CALL mp_bcast( amass,      ionode_id )
-      CALL mp_bcast( atm,        ionode_id )
-      CALL mp_bcast( ityp,       ionode_id )
-      CALL mp_bcast( tau,        ionode_id )
-      CALL mp_bcast( if_pos,     ionode_id )
+      CALL mp_bcast( nat,    ionode_id )
+      CALL mp_bcast( nsp,    ionode_id )
+      CALL mp_bcast( amass,  ionode_id )
+      CALL mp_bcast( atm,    ionode_id )
+      CALL mp_bcast( ityp,   ionode_id )
+      CALL mp_bcast( tau,    ionode_id )
+      CALL mp_bcast( if_pos, ionode_id )
+      !
+      lions_read = .TRUE.
       !
       RETURN
       !
@@ -1167,12 +1175,14 @@ MODULE pw_restart
       REAL(DP) :: tmp(3)
       !
       !
-      IF ( ionode ) THEN
-         !
+      IF ( lsymm_read ) RETURN
+      !
+      IF ( .NOT. lpw_read ) &
+         CALL errore( 'read_symmetry', 'read planewaves first', 1 )
+      !
+      IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
-         !
-      END IF
       !
       CALL mp_bcast( ierr, ionode_id )
       !
@@ -1213,6 +1223,8 @@ MODULE pw_restart
       CALL mp_bcast( ftau,   ionode_id )
       CALL mp_bcast( sname,  ionode_id )
       !
+      lsymm_read = .TRUE.
+      !
       RETURN
       !
     END SUBROUTINE read_symmetry
@@ -1233,12 +1245,11 @@ MODULE pw_restart
       REAL(DP) :: ecutrho
       !
       !
-      IF ( ionode ) THEN
-         !
+      IF ( lpw_read ) RETURN
+      !
+      IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
-         !
-      END IF
       !
       CALL mp_bcast( ierr, ionode_id )
       !
@@ -1294,6 +1305,8 @@ MODULE pw_restart
       CALL mp_bcast( nr3s,       ionode_id )
       CALL mp_bcast( ngms_g,     ionode_id )
       !
+      lpw_read = .TRUE.
+      !
       RETURN
       !
     END SUBROUTINE read_planewaves  
@@ -1312,12 +1325,11 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       !
-      IF ( ionode ) THEN
-         !
+      IF ( lspin_read ) RETURN
+      !
+      IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
-         !
-      END IF
       !
       CALL mp_bcast( ierr, ionode_id )
       !
@@ -1365,6 +1377,8 @@ MODULE pw_restart
       CALL mp_bcast( npol,     ionode_id )
       CALL mp_bcast( lspinorb, ionode_id )
       !
+      lspin_read = .TRUE.
+      !
       RETURN
       !
     END SUBROUTINE read_spin
@@ -1384,12 +1398,14 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       !
-      IF ( ionode ) THEN
-         !
+      IF ( lxc_read ) RETURN
+      !
+      IF ( .NOT. lions_read ) &
+         CALL errore( 'read_xc', 'read ions first', 1 )
+      !
+      IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
-         !
-      END IF
       !
       CALL mp_bcast( ierr, ionode_id )
       !
@@ -1434,9 +1450,73 @@ MODULE pw_restart
          !
       END IF
       !
+      lxc_read = .TRUE.
+      !
       RETURN
       !
     END SUBROUTINE read_xc
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE read_brillouin_zone( dirname, ierr )
+      !------------------------------------------------------------------------
+      !
+      USE lsda_mod, ONLY : nspin
+      USE klist,    ONLY : nkstot, xk, wk
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
+      !
+      INTEGER :: ik, num_k_points
+      !
+      !
+      IF ( lbz_read ) RETURN
+      !
+      IF ( ionode ) &
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_scan_begin( iunpun, "BRILLOUIN_ZONE" )
+         !
+         CALL iotk_scan_dat( iunpun, "NUMBER_OF_K-POINTS", num_k_points )
+         !
+         nkstot = num_k_points
+         !
+         IF ( nspin == 2 ) nkstot = num_k_points * 2
+         !
+         DO ik = 1, num_k_points
+            !
+            CALL iotk_scan_empty( iunpun, "K-POINT" // &
+                                & TRIM( iotk_index( ik ) ), attr )
+            !
+            CALL iotk_scan_attr( attr, "XYZ", xk(:,ik) )
+            !            
+            CALL iotk_scan_attr( attr, "WEIGHT", wk(ik) )
+            !
+         END DO
+         !
+         CALL iotk_scan_end( iunpun, "BRILLOUIN_ZONE" )
+         !
+         CALL iotk_close_read( iunpun )
+         !
+      END IF
+      !
+      CALL mp_bcast( nkstot, ionode_id )
+      CALL mp_bcast( xk,     ionode_id )
+      CALL mp_bcast( wk,     ionode_id )
+      !
+      lbz_read = .TRUE.
+      !
+      RETURN
+      !
+    END SUBROUTINE read_brillouin_zone
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_occupations( dirname, ierr )
@@ -1453,12 +1533,11 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       !
-      IF ( ionode ) THEN
-         !
+      IF ( locc_read ) RETURN
+      !
+      IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
-         !
-      END IF
       !
       CALL mp_bcast( ierr, ionode_id )
       !
@@ -1519,70 +1598,11 @@ MODULE pw_restart
       !
       IF ( tfixed_occ ) CALL mp_bcast( f_inp, ionode_id )
       !
+      locc_read = .TRUE.
+      !
       RETURN
       !
     END SUBROUTINE read_occupations
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE read_brillouin_zone( dirname, ierr )
-      !------------------------------------------------------------------------
-      !
-      USE lsda_mod, ONLY : nspin
-      USE klist,    ONLY : nkstot, xk, wk
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
-      INTEGER,          INTENT(OUT) :: ierr
-      !
-      INTEGER :: ik, num_k_points
-      !
-      !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
-         !
-      END IF
-      !
-      CALL mp_bcast( ierr, ionode_id )
-      !
-      IF ( ierr > 0 ) RETURN
-      !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_scan_begin( iunpun, "BRILLOUIN_ZONE" )
-         !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_K-POINTS", num_k_points )
-         !
-         nkstot = num_k_points
-         !
-         IF ( nspin == 2 ) nkstot = num_k_points * 2
-         !
-         DO ik = 1, num_k_points
-            !
-            CALL iotk_scan_empty( iunpun, "K-POINT" // &
-                                & TRIM( iotk_index( ik ) ), attr )
-            !
-            CALL iotk_scan_attr( attr, "XYZ", xk(:,ik) )
-            !            
-            CALL iotk_scan_attr( attr, "WEIGHT", wk(ik) )
-            !
-         END DO
-         !
-         CALL iotk_scan_end( iunpun, "BRILLOUIN_ZONE" )
-         !
-         CALL iotk_close_read( iunpun )
-         !
-      END IF
-      !
-      CALL mp_bcast( nkstot, ionode_id )
-      CALL mp_bcast( xk,     ionode_id )
-      CALL mp_bcast( wk,     ionode_id )
-      !
-      RETURN
-      !
-    END SUBROUTINE read_brillouin_zone
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_band_structure( dirname, ierr )
@@ -1601,12 +1621,16 @@ MODULE pw_restart
       INTEGER          :: ik, ik_eff, num_k_points
       !
       !
-      IF ( ionode ) THEN
-         !
+      IF ( lbs_read ) RETURN
+      !
+      IF ( .NOT. lspin_read ) &
+         CALL errore( 'read_band_structure', 'read spin first', 1 )
+      IF ( .NOT. lbz_read ) &
+         CALL errore( 'read_band_structure', 'read band_structure first', 1 )
+      !
+      IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
-         !
-      END IF
       !
       CALL mp_bcast( ierr, ionode_id )
       !
@@ -1693,6 +1717,8 @@ MODULE pw_restart
       CALL mp_bcast( isk,   ionode_id )
       CALL mp_bcast( et,    ionode_id )
       CALL mp_bcast( wg,    ionode_id )
+      !
+      lbs_read = .TRUE.
       !
       RETURN
       !

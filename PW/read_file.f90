@@ -38,6 +38,7 @@ SUBROUTINE read_file()
   USE noncollin_module, ONLY : noncolin, npol
   USE mp_global,        ONLY : kunit
   USE pw_restart,       ONLY : pw_readfile
+  
   !
   IMPLICIT NONE
   !
@@ -95,7 +96,11 @@ SUBROUTINE read_file()
 ! ... XML punch-file
 !-------------------------------------------------------------------------------
   !
-  CALL pw_readfile( 'config', ierr )
+  CALL pw_readfile( 'pseudo', ierr )
+  !
+  ! ... read pseudopotentials
+  !
+  CALL readpp()
   !
   CALL set_dimensions()
   !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2004 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,9 +13,9 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
   ! ... NB: this version will yield the same ordering for different ecut
   ! ...     and the same ordering in all machines
   !
-  USE kinds, ONLY : DP
-  USE constants,  ONLY : eps8
-  USE wvfct,      ONLY : npwx
+  USE kinds,     ONLY : DP
+  USE constants, ONLY : eps8
+  USE wvfct,     ONLY : npwx
   !
   IMPLICIT NONE
   !
@@ -86,13 +86,16 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
      !
   END DO
   !
-  IF( ng > ngm ) CALL infomsg ( 'gk_sort', 'unexpected exit from do-loop', -1 )
+  IF ( ng > ngm ) &
+     CALL infomsg( 'gk_sort', 'unexpected exit from do-loop', -1 )
   !
   ! ... order vector gk keeping initial position in index
   !
   CALL hpsort_eps( ngk, gk, igk, eps8 )
   !
   ! ... now order true |k+G|
+  !
+  PRINT *, "IGK", igk(:)
   !
   DO nk = 1, ngk
      !
@@ -106,7 +109,6 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
   !
 END SUBROUTINE gk_sort
 !
-!
 !----------------------------------------------------------------------------
 SUBROUTINE gk_l2gmap( ngm, ig_l2g, ngk, igk, igk_l2g )
   !----------------------------------------------------------------------------
@@ -115,8 +117,6 @@ SUBROUTINE gk_l2gmap( ngm, ig_l2g, ngk, igk, igk_l2g )
   ! ... the mapping is used to collect wavefunctions subsets distributed
   ! ... across processors.
   ! ... Written by Carlo Cavazzoni
-  !
-  USE kinds, ONLY : DP
   !
   IMPLICIT NONE
   !

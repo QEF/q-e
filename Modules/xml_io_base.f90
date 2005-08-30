@@ -457,15 +457,14 @@ MODULE xml_io_base
          END IF
          !
          CALL copy_file( TRIM( file_pseudo ), &
-                         TRIM( dirname ) // "/" // TRIM( psfile( i ) ) )
+                         TRIM( dirname ) // "/" // TRIM( psfile(i) ) )
          !
          CALL iotk_write_attr( attr, "UNIT", "a.m.u.", FIRST = .TRUE. )
-         CALL iotk_write_dat( iunpun, TRIM( atm( i ) )//"_MASS", &
+         CALL iotk_write_dat( iunpun, TRIM( atm(i) )//"_MASS", &
                               amass(i), ATTR = attr )
          !
-         CALL iotk_link( iunpun, "PSEUDO_FOR_" // TRIM( atm( i ) ), &
-                         TRIM( psfile(i) ), CREATE = .FALSE.,       &
-                         BINARY = .FALSE., RAW = .TRUE. )
+         CALL iotk_write_dat( iunpun, "PSEUDO_FOR_" // &
+                            & TRIM( atm(i) ), TRIM( psfile(i) ) )
          !
       END DO
       !
@@ -477,10 +476,10 @@ MODULE xml_io_base
          CALL iotk_write_attr( attr, "SPECIES", &
                              & atm( ityp(i) ), FIRST = .TRUE. )
          CALL iotk_write_attr( attr, "INDEX",  ityp(i) )                     
-         CALL iotk_write_attr( attr, "tau", tau(:,i) )
+         CALL iotk_write_attr( attr, "tau",    tau(:,i) )
          CALL iotk_write_attr( attr, "if_pos", if_pos(:,i) )
          CALL iotk_write_empty( iunpun, &
-                              & "ATOM" // TRIM( iotk_index(i) ), attr )
+                              & "ATOM" // TRIM( iotk_index( i ) ), attr )
          !
       END DO
       !
@@ -525,7 +524,7 @@ MODULE xml_io_base
          CALL iotk_write_attr( attr, "NAME",       sname(i) )
          !
          CALL iotk_write_empty( iunpun, &
-                                "SYMM" // TRIM( iotk_index(i) ), attr )
+                                "SYMM" // TRIM( iotk_index( i ) ), attr )
          !
       END DO
       !

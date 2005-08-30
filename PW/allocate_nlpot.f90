@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,21 +24,21 @@ subroutine allocate_nlpot
   !     nhm           !  maximum number of beta functions
   !
   !
-  USE parameters, ONLY : nbrx, nchix
-  USE ions_base,  ONLY : nat, ntyp => nsp, ityp
-  USE cell_base,  ONLY : tpiba2
-  USE cellmd,     ONLY : cell_factor
-  USE gvect,      ONLY : ngm, gcutm, ecutwfc, g
-  USE klist,      ONLY : xk, wk, ngk, nks, nkstot, xqq
-  USE lsda_mod,   ONLY : nspin
-  USE ldaU,       ONLY : Hubbard_lmax, ns, nsnew
-  USE noncollin_module,  ONLY : noncolin
-  USE wvfct,      ONLY : npwx, npw, igk, igk_l2g, g2kin
-  USE us,         ONLY : qrad, tab, tab_at, dq, nqx, nqxq
-  USE uspp,       ONLY : indv, nhtol, nhtolm, qq, dvan, deeq, vkb, nkb, &
-                         nkbus, nhtoj, becsum, qq_so, dvan_so, deeq_nc
-  USE uspp_param, ONLY : lmaxq, lmaxkb, lll, nbeta, nh, nhm, tvanp
-  USE spin_orb,   ONLY : lspinorb, fcoef
+  USE parameters,       ONLY : nbrx, nchix
+  USE ions_base,        ONLY : nat, nsp, ityp
+  USE cell_base,        ONLY : tpiba2
+  USE cellmd,           ONLY : cell_factor
+  USE gvect,            ONLY : ngm, gcutm, ecutwfc, g
+  USE klist,            ONLY : xk, wk, ngk, nks, nkstot, xqq
+  USE lsda_mod,         ONLY : nspin
+  USE ldaU,             ONLY : Hubbard_lmax, ns, nsnew
+  USE noncollin_module, ONLY : noncolin
+  USE wvfct,            ONLY : npwx, npw, igk, igk_l2g, g2kin
+  USE us,               ONLY : qrad, tab, tab_at, dq, nqx, nqxq
+  USE uspp,             ONLY : indv, nhtol, nhtolm, qq, dvan, deeq, vkb, nkb, &
+                               nkbus, nhtoj, becsum, qq_so, dvan_so, deeq_nc
+  USE uspp_param,       ONLY : lmaxq, lmaxkb, lll, nbeta, nh, nhm, tvanp
+  USE spin_orb,         ONLY : lspinorb, fcoef
   !
   implicit none
   !
@@ -53,7 +53,7 @@ subroutine allocate_nlpot
   !
   !   igk relates the index of PW k+G to index in the list of G vector
   !
-  allocate (igk( npwx))    
+  allocate (igk( npwx))
 
   allocate (igk_l2g( npwx, nks))    
   igk_l2g = 0
@@ -63,7 +63,7 @@ subroutine allocate_nlpot
   !     calculate the number of beta functions for each atomic type
   !
   lmaxkb = - 1
-  do nt = 1, ntyp
+  do nt = 1, nsp
      nh (nt) = 0
      do nb = 1, nbeta (nt)
         nh (nt) = nh (nt) + 2 * lll (nb, nt) + 1
@@ -73,7 +73,7 @@ subroutine allocate_nlpot
   !
   ! calculate the maximum number of beta functions
   !
-  nhm = MAXVAL (nh (1:ntyp))
+  nhm = MAXVAL (nh (1:nsp))
   !
   ! calculate the number of beta functions of the solid
   !
@@ -85,28 +85,28 @@ subroutine allocate_nlpot
      if (tvanp(nt)) nkbus = nkbus + nh (nt)
   enddo
   !
-  allocate (indv( nhm, ntyp))    
-  allocate (nhtol(nhm, ntyp))    
-  allocate (nhtolm(nhm, ntyp))    
-  allocate (nhtoj(nhm, ntyp))    
+  allocate (indv( nhm, nsp))    
+  allocate (nhtol(nhm, nsp))    
+  allocate (nhtolm(nhm, nsp))    
+  allocate (nhtoj(nhm, nsp))    
   allocate (deeq( nhm, nhm, nat, nspin))    
   if (noncolin) then
      allocate (deeq_nc( nhm, nhm, nat, nspin))    
   endif
   if (lspinorb) then
-    allocate (qq_so(nhm, nhm, 4, ntyp))    
-    allocate (dvan_so( nhm, nhm, nspin, ntyp))    
-    allocate (fcoef(nhm,nhm,2,2,ntyp))
+    allocate (qq_so(nhm, nhm, 4, nsp))    
+    allocate (dvan_so( nhm, nhm, nspin, nsp))    
+    allocate (fcoef(nhm,nhm,2,2,nsp))
   else
-    allocate (qq(   nhm, nhm, ntyp))    
-    allocate (dvan( nhm, nhm, ntyp))    
+    allocate (qq(   nhm, nhm, nsp))    
+    allocate (dvan( nhm, nhm, nsp))    
   endif
   !
   nqxq = ( (sqrt(gcutm) + sqrt(xqq(1)**2 + xqq(2)**2 + xqq(3)**2) ) &
           / dq + 4) * cell_factor
   lmaxq = 2*lmaxkb+1
   !
-  if (lmaxq > 0) allocate (qrad( nqxq, nbrx*(nbrx+1)/2, lmaxq, ntyp))    
+  if (lmaxq > 0) allocate (qrad( nqxq, nbrx*(nbrx+1)/2, lmaxq, nsp))    
   if (nkb > 0) allocate (vkb( npwx,  nkb))    
   allocate (becsum( nhm * (nhm + 1)/2, nat, nspin))    
   !
@@ -128,9 +128,9 @@ subroutine allocate_nlpot
   !
   nqx = (sqrt (ecutwfc) / dq + 4) * cell_factor
 
-  allocate (tab( nqx , nbrx , ntyp))    
+  allocate (tab( nqx , nbrx , nsp))    
 
-  allocate (tab_at( nqx , nchix , ntyp))
+  allocate (tab_at( nqx , nchix , nsp))
 
   return
 end subroutine allocate_nlpot

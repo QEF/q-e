@@ -141,9 +141,11 @@ PWOBJS = \
 ../PW/rdiaghg.o \
 ../PW/read_conf_from_file.o \
 ../PW/read_file.o \
-../PW/read_ncpp.o \
-../PW/readnewvan.o \
+../PW/readin.o \
+../PW/read_pseudo.o \
 ../PW/readvan.o \
+../PW/readnewvan.o \
+../PW/read_ncpp.o \
 ../PW/regterg.o \
 ../PW/remove_atomic_rho.o \
 ../PW/report_mag.o \
