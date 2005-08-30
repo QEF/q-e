@@ -202,7 +202,7 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
         
         deter=b**2-4.0_dp*a*c
         if (deter < 0.0_dp) then
-           call errore('compute phi','negative determinant',-1) 
+           call infomsg ('compute phi','negative determinant', -1) 
            write(6,100) ns,f1ae/fae, f2ae, faenor
 100        format(/5x,i5,' ld= ',f10.6,' f2ae',f10.6,' faenor',f10.6)
            iok=1
@@ -238,7 +238,7 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
         
         deter=b**2-4.0_dp*a*c
         if (deter < 0.0_dp) then
-           call errore('compute phi','negative determinant',-1) 
+           call infomsg ('compute phi','negative determinant', -1) 
            write(6,110) ns,f1ae/fae, f2ae, faenor
 110        format (/5x,i5,' ld= ',f10.6,' f2ae',f10.6, ' faenor',f10.6)
            iok=1

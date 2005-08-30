@@ -174,7 +174,7 @@ subroutine phq_setup
   else if (ltetra) then
      call errore('phq_setup','phonon + tetrahedra not implemented', 1)
   else
-     if (lsda) call errore('phq_setup','occupation numbers probably wrong', -1)
+     if (lsda) call infomsg('phq_setup','occupation numbers probably wrong', -1)
      do ik = 1, nks
         nbnd_occ (ik) = nint (nelec) / degspin
      enddo

@@ -34,7 +34,7 @@ subroutine stress
   integer :: l, m
   !
   if (nspin > 2) then
-     call errore ('stress','non-colinear case not implemented',-1)
+     call infomsg ('stress','non-colinear case not implemented', -1)
      return
   end if
   call start_clock ('stress')

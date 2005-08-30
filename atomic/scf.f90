@@ -101,11 +101,11 @@ subroutine scf
      !   write(6,*) iter, eps0
      !
      if (conv) then
-        if (nerr /= 0) call errore('scf','errors in KS equations',-1)
+        if (nerr /= 0) call infomsg ('scf','errors in KS equations', -1)
         goto 45
      endif
   enddo
-  call errore('scf','warning: convergence not achieved',-1)
+  call infomsg('scf','warning: convergence not achieved', -1)
 45 if (isic /= 0) then
      deallocate(egc, vhn1, vsicnew, vsic)
   endif

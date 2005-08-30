@@ -453,7 +453,7 @@ MODULE constraints_module
        !
        IF ( .NOT. global_test ) THEN
           !
-          CALL errore( 'check_constrain', 'g = 0 is not satisfied', - 1 )
+          CALL infomsg( 'check_constrain', 'g = 0 is not satisfied', -1 )
           !
           WRITE( stdout, '(5X,"Number of step(s): ",I3)') MIN( i, maxiter )
           !

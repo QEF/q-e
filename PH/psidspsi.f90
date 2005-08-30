@@ -74,7 +74,7 @@ subroutine psidspsi (ik, uact, pdsp)
      ikk = ik
      ikq = ik
   else
-     call errore ('psidspsi', 'called for lgamma .eq. false',-1)
+     call infomsg ('psidspsi', 'called for lgamma .eq. false', -1)
   endif
   if (lsda) current_spin = isk (ikk)
 

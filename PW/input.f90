@@ -794,7 +794,7 @@ SUBROUTINE iosys()
   !
   IF ( startingpot /= 'atomic' .AND. startingpot /= 'file' ) THEN
      !
-     CALL errore( 'iosys', 'wrong startingpot: use default', -1 )
+     CALL infomsg( 'iosys', 'wrong startingpot: use default', -1 )
      !
      IF (       lscf ) startingpot = 'atomic'
      IF ( .NOT. lscf ) startingpot = 'file'
@@ -803,7 +803,7 @@ SUBROUTINE iosys()
   !
   IF ( .NOT. lscf .AND. startingpot /= 'file' ) THEN
      !
-     CALL errore( 'iosys', 'wrong startingpot: use default', -1 )
+     CALL infomsg( 'iosys', 'wrong startingpot: use default', -1 )
      !
      startingpot = 'file'
      !
@@ -813,7 +813,7 @@ SUBROUTINE iosys()
        startingwfc /= 'random' .AND. &
        startingwfc /= 'file' ) THEN
      !
-     CALL errore( 'iosys', 'wrong startingwfc: use default', -1 )
+     CALL infomsg( 'iosys', 'wrong startingwfc: use default', -1 )
      !
      startingwfc = 'atomic'
      !

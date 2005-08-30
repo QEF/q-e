@@ -84,7 +84,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   ! in case of problems
   !
 
-10 call errore ('restart_i', 'problems in reading recover file', -1)
+10 call infomsg ('restart_i', 'problems in reading recover file', -1)
   return
 
 end subroutine restart_in_ions

@@ -345,7 +345,7 @@ SUBROUTINE dynamics()
   !
   IF ( ( mlt > eps8 ) .AND. &
        .NOT. ( ldamped .OR. lconstrain .OR. lfixatom ) ) &
-     CALL errore( 'dynamics', 'Total linear momentum <> 0', - 1 )
+     CALL infomsg ( 'dynamics', 'Total linear momentum <> 0', -1 )
   !
   WRITE( stdout, '(/,5X,"Linear momentum :",3(2X,F14.10))' ) ml
   !

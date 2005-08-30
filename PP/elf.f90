@@ -55,7 +55,7 @@ subroutine do_elf (elf)
   real(DP), allocatable :: kkin (:), tbos (:)
   complex(DP), allocatable :: aux (:), aux2 (:)
   !
-  call errore ('do_elf', 'elf + US not fully implemented', - 1)
+  call infomsg ('do_elf', 'elf + US not fully implemented', -1)
   !
   allocate (kkin( nrxx))    
   allocate (aux ( nrxxs))

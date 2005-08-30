@@ -167,7 +167,7 @@ subroutine gener_pseudo
      if (sum > 2.e-6_dp) then
         write(6, '(5x,''ns='',i4,'' l='',i4, '' sum='',f15.9, &
              & '' r(ikk) '',f15.9)') ns, lam, sum, r(ikk(ns))
-        call errore('gener_pseudo ','chi too large beyond r_c',-1)
+        call infomsg ('gener_pseudo ','chi too large beyond r_c', -1)
         do n=ikk(ns),mesh  
            write(6,*) r(n),gi(n,1)
         enddo

@@ -99,7 +99,7 @@ subroutine set_pseudo_upf (is, upf)
   rab(1:upf%mesh, is) = upf%rab(1:upf%mesh)
 
   if (lspinorb.and..not.upf%has_so) &
-     call errore('upf_to_internal','At least one non s.o. pseudo',-1)
+     call infomsg ('upf_to_internal','At least one non s.o. pseudo', -1)
    
   lspinorb=lspinorb.and.upf%has_so
   if (upf%has_so) then

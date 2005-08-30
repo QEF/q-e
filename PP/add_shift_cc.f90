@@ -50,7 +50,7 @@ subroutine add_shift_cc (shift_cc)
   return
   !
 15 continue
-   call errore ('add_shift_cc','BEWARE: shift with CC never tested !!!', -1 )
+   call infomsg ('add_shift_cc','BEWARE: shift with CC never tested !!!', -1 )
   if (gamma_only) then
      fact = 2.d0
   else

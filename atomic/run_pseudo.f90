@@ -162,7 +162,7 @@ subroutine run_pseudo
      !         write(6,*) 'iteration number',iter, eps0
      if (conv) goto 900
   enddo
-  call errore('run_pseudo','convergence not achieved',-1)
+  call infomsg('run_pseudo','convergence not achieved', -1)
 
   !
   !    final calculation with all states
