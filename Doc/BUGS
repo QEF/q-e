@@ -1,3 +1,21 @@
+Fixed in version 2.1.5:
+
+ *    bad forces and stresses with LDA+U in spin-unpolarised case
+
+  *   bad printout of Lowdin charges in projwfc
+
+  *   FPMD had a problem with some types of UPF PPs
+ 
+Fixed in version 2.1.4:
+
+  *   Incorrect initial guess for occupancies in LDA+U (init_ns)
+
+  *   bogus error in postprocessing with local pseudopotentials only
+
+  *   several errors in third-order energy derivatives (D3/)
+
+  *   checks on several unimplemented cases were missing
+
 Fixed in version 2.1.3:
  
   *  case ibrav=0 in CPV was not properly working

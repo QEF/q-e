@@ -1,6 +1,6 @@
 \documentclass[12pt,a4paper]{article}
  \def\version{CVS}
- \def\stableversion{2.1.3} % last stable release
+ \def\stableversion{2.1.5} % last stable release
 
  \usepackage{epsfig}
  \usepackage{html}
@@ -47,6 +47,7 @@ and the following auxiliary codes:
         interface for producing input data files for PWscf.
   \item atomic: a program for atomic calculations and generation of
         pseudopotentials.
+  \item iotk: Input-Output toolkit,
 \end{itemize}
 The Quantum-ESPRESSO codes work on many different types of Unix machines,
 including parallel machines using Message Passing Interface (MPI).
@@ -108,9 +109,11 @@ structure, for many exchange-correlation functionals (including spin
 polarization and LDA+U), for both norm-conserving (Hamann-Schl\"uter-Chiang)
 pseudopotentials in separable form, and --- with very few exceptions
 --- for Ultrasoft (Vanderbilt) pseudopotentials.  Non-colinear
-magnetism and spin-orbit interactions are also implemented, although
-at an experimental stage.  Various postprocessing programs are
-available.
+magnetism and spin-orbit interactions are also implemented.  Finite
+electric fields are implemented in both the supercell and the 
+``modern theory of polarization'' approaches (the latter is still 
+at an experimental stage).
+Various postprocessing and data analysis programs are available.
 
 FPMD and CP can currently perform the following kinds of calculations:
 
@@ -118,18 +121,24 @@ FPMD and CP can currently perform the following kinds of calculations:
   \item Car-Parrinello molecular dynamics simulation
   \item geometry optimization by damped dynamics
   \item constant-temperature simulation with Nos\`e thermostats
+        (including Nose-Hoover chains for each atom)
   \item variable-cell (Parrinello-Rahman) dynamics
   \item Nudged Elastic Band (NEB) for energy barriers and reaction
         paths
   \item String Method Dynamics (in real space) (CP only)
-  \item dynamics with Wannier functions (CP only)
+  \item dynamics with Wannier functions and under finite electric
+        fields (CP only)
 \end{itemize}
 Spin-polarized calculations and (for FPMD only) calculations with
 multiple k-points can be performed.
 CP works with both norm-conserving and Ultrasoft pseudopotentials,
 while FPMD is currently limited to norm-conserving.
-The restart files of the two programs are compatible: you can run FPMD
-with a restart file from CP, and vice versa. 
+
+The restart files of all the programs are compatible (if data are):
+you can run FPMD with a restart file from CP, and vice versa. 
+For CP, there are implementations of a dynamics for metals using 
+conjugate-gradient algorithms, and of the meta-GGA functionals.
+Both are at an experimental stage.
 
 \subsection{People}
 
@@ -176,6 +185,9 @@ The pseudopotential generation package ``atomic'' was written by
 Andrea Dal Corso and it is the result of many additions to the
 original code by Paolo Giannozzi.
 
+The input/output toolkit ``iotk'' was written by Giovanni Bussi
+(S3 Modena).
+
 \hyphenation{fran-ce-sco}
 \hyphenation{ce-re-so-li}
 A list of further contributors includes:
@@ -188,12 +200,15 @@ Paolo Cazzato,
 Davide Ceresoli,
 Gabriele Cipriani,
 Matteo Cococcioni,
+Cesar Da Silva, 
 Alberto Debernardi,
 Gernot Deinzer.
 Oswaldo Dieguez,
+Andrea Ferretti, 
 Guido Fratesi,
 Ralph Gebauer,
 Martin Hilgeman,
+Eyvaz Isaev, 
 Yosuke Kanai,
 Axel Kohlmeyer,
 Konstantin Kudin,
@@ -209,26 +224,33 @@ Alexander Smogunov,
 Kurt Stokbro,
 Pascal Thibaudeau,
 Antonio Tilocca,
+Paolo Umari,
 Renata Wentzcovitch,
 Yudong Wu,
 Xiaofei Wang,
 and let us apologize to everybody we have forgotten.
 
-This guide was written (mostly) by Paolo Giannozzi, Gerardo Ballabio,
+This guide was (mostly) written by Paolo Giannozzi, Gerardo Ballabio,
 Carlo Cavazzoni.
 
 \subsubsection{Contact us}
 
-The web site for PWscf is:
+The web site for Quantum-ESPRESSO is:
 \medskip
 
-\htmladdnormallink{\texttt{http://www.pwscf.org/}}%
-                  {http://www.pwscf.org/}
+\htmladdnormallink{\texttt{http://www.quantum-espresso.org/}}%
+                  {http://www.quantum-espresso.org/}
 
 \medskip
 \noindent
 Releases and patches of Quantum-ESPRESSO can be downloaded from this
-site.
+site or following the links contained in it.
+
+Announcements about new versions of Quantum-ESPRESSO are available
+via a low-traffic mailing list Pw$\_$users:
+(\htmladdnormallink{\texttt{pw\_users@pwscf.org}}%
+                   {mailto:pw\_users@pwscf.org}).
+You can subscribe (but not post) to this list from the PWscf web site.
 
 The recommended place where to ask questions about installation and
 usage of Quantum-ESPRESSO, and to report bugs, is the Pw$\_$forum
@@ -236,10 +258,10 @@ mailing list
 (\htmladdnormallink{\texttt{pw\_forum@pwscf.org}}%
                    {mailto:pw\_forum@pwscf.org}).
 Here you can obtain help from the developers and many knowledgeable
-users.  You can subscribe to this list and browse and search its
-archives from the PWscf web site.  Only subscribed users can post.
-Please search the archives before posting: your question may have
-already been answered.
+users. You can subscribe to this list and browse and search its
+archive from the PWscf web site.  Only subscribed users can post 
+Please search the archives before posting: your 
+question may have already been answered.
 
 If you specifically need to contact the developers of Quantum-ESPRESSO
 (and only them), write to
@@ -297,8 +319,7 @@ A.~Kokalj, % PWgui
 
 Presently, the Quantum-ESPRESSO package is only distributed in source
 form; some precompiled executables (binary files) are provided only
-for PWgui.
-Providing binaries for Quantum-ESPRESSO would require too much effort
+for PWgui. Providing binaries would require too much effort
 and would work only for a small number of machines anyway.
 
 Stable releases of the Quantum-ESPRESSO source package (current version
@@ -364,9 +385,9 @@ HP-Compaq Alpha machines, Cray X1, Mac OS X.  It may work with some
 assistance also on other architectures (see below).
 
 For cross-compilation, you have to specify the target machine with the
-\texttt{--host} option (see below).  This feature hasn't been tested
-extensively, but we've had at least one successful report (compile on
-PC for NEC SX6).
+\texttt{--host} option (see below).  This feature has not been 
+extensively tested, but we had at least one successful report 
+(compilation for NEC SX6 on a PC).
 
 Specifically, \texttt{configure} generates the following files:
 \begin{quote}
@@ -711,12 +732,12 @@ Here is a list:
     zone integration.
     It is faster and takes less memory than \texttt{ph.x}, but does
     not support Ultrasoft pseudopotentials.
-  \item
-    \texttt{make raman} produces \texttt{Raman/ram.x}.
-
-    \texttt{ram.x} calculates nonresonant Raman tensor coefficients
-    (derivatives of the polarizability wrt atomic displacements)
-    using the $(2n+1)$ theorem.
+%  \item
+%    \texttt{make raman} produces \texttt{Raman/ram.x}.
+%
+%    \texttt{ram.x} calculates nonresonant Raman tensor coefficients
+%    (derivatives of the polarizability wrt atomic displacements)
+%    using the $(2n+1)$ theorem.
   \item
     \texttt{make pp} produces several codes for data postprocessing, in
     \texttt{PP/} (see list below).
@@ -748,16 +769,17 @@ Here is a list:
 \end{itemize}
 For the setup of the GUI, refer to the
 \texttt{PWgui-}\emph{X.Y.Z}\texttt{/INSTALL} file, where \emph{X.Y.Z}
-stands for the version number of the GUI (presently 0.6.2).
-If you are using the CVS-sources, then see the \texttt{GUI/README}
+stands for the version number of the GUI (should be the same as the
+general version number, currently \version).
+If you are using the CVS-sources, see the \texttt{GUI/README}
 file instead.
 
 The codes for data postprocessing in \texttt{PP/} are:
 \begin{itemize}
   \item \texttt{pp.x} extracts the specified data from files
         produced by \texttt{pw.x} for further processing
-  \item \texttt{bands.x} extracts eigenvalues from files produced
-        by \texttt{pw.x} for band structure plotting
+  \item \texttt{bands.x} extracts and reorders eigenvalues
+        from files produced by \texttt{pw.x} for band structure plotting
   \item \texttt{projwfc.x} calculates projections of wavefunction
         over atomic orbitals, performs L\"owdin population
         analysis and calculates projected density of states
@@ -778,13 +800,15 @@ The codes for data postprocessing in \texttt{PP/} are:
   \item \texttt{voronoy.x} divides the charge density into Voronoy
         polyhedra (obsolete, use at your own risk)
   \item \texttt{dos.x} calculates electronic Density of States
-        (DOS).
-  \item \texttt{pw2wan.x}: interface with code WanT for calculation of
-        transport properties via Wannier (also known as Boyd)
+        (DOS)
+  \item \texttt{pw2wan.x}: interface with code WanT for calculation
+        of transport properties via Wannier (also known as Boyd)
         functions: see\hfill\break
         \htmladdnormallink%
         {\texttt{http://www.wannier-transport.org/}}%
         {http://www.wannier-transport.org/}
+  \item \texttt{pmw.x} generates Poor Man's Wannier functions,
+        to be used in LDA+U calculations
   \item \texttt{pw2casino.x}: interface with CASINO code for Quantum
         Monte Carlo calculation
         (\htmladdnormallink%
@@ -836,6 +860,12 @@ The utility programs in \texttt{pwtools/} are:
         \htmladdnormallink%
         {\texttt{http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml}}%
         {http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml}
+\item \texttt{path\_int.sh/path\_int.x}: utility to generate, starting
+        from a path (a set of images), a new one with a different number of
+        images. The initial and final points of the new path can differ
+        from those in the original one. Useful for NEB calculations.
+  \item \texttt{kvecs\_FS.x, bands\_FS.x}: utilities for Fermi Surface
+        plotting usingX CrySDen
 \end{itemize}
 
 \subsection{Run examples}
@@ -845,8 +875,9 @@ As a final check that compilation was successful, you may want to run
 some or all of the examples contained within the \texttt{examples}
 directory of the Quantum-ESPRESSO distribution.
 Those examples try to exercise all the programs and features of the
-Quantum-ESPRESSO package: for details, see the \texttt{README} file in each
-example's directory.
+Quantum-ESPRESSO package. A list of examples and of what each example
+does is contained in \texttt{examples/README}. For details, see the 
+\texttt{README} file in each example's directory. 
 If you find that any relevant feature isn't being tested, please
 contact us (or even better, write and send us a new example
 yourself!).
@@ -918,8 +949,9 @@ by the example runs, and possibly offering high I/O performance (i.e.,
 don't use an NFS-mounted directory).
 
   \item
-If you have compiled the parallel version of Quantum-ESPRESSO (that is the
-default), you'll usually have to specify a driver program (such as
+If you have compiled the parallel version of Quantum-ESPRESSO (this
+is the default if parallel libraries are detected), you will usually 
+have to specify a driver program (such as
 \texttt{poe} or \texttt{mpiexec}) and the number of processors: read
 section \ref{runparallel}, ``Running on parallel machines'' for
 details.
@@ -1905,7 +1937,9 @@ ATOMIC_POSITIONS (bohr)
 \end{verbatim}
 
     You can find the description of the input variables in files
-    \texttt{INPUT.FPMD}, \texttt{INPUT.HOWTO} and \texttt{INPUT}.
+    \texttt{INPUT\_FPMD} and \texttt{INPUT\_CP} in the \texttt{Doc/}
+    directory. A short description of the logic behind the choice 
+    of parameters in contained in \texttt{INPUT.HOWTO}
 
   \item
     Sometimes a single run is not enough to reach the GS.
