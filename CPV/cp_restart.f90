@@ -1061,7 +1061,15 @@ MODULE cp_restart
             IF ( ionode ) THEN
                !
                CALL iotk_scan_dat( iunpun, &
-                                   "OCC0" // TRIM( cspin ), occ0(:,ik,ispin) )
+                                   "OCC0" // TRIM( cspin ), occ0(:,ik,ispin),  &
+                                   FOUND = found, IERR = ierr )
+               !
+               IF ( .NOT. found ) THEN
+                  !
+                  CALL iotk_scan_dat( iunpun, &
+                                      "OCC" // TRIM( cspin ), occ0(:,ik,ispin) )
+                  !
+               END IF
                !
                CALL iotk_scan_dat( iunpun, &
                                    "OCCM" // TRIM( cspin ), occm(:,ik,ispin ), &
