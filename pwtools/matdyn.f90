@@ -325,7 +325,7 @@ PROGRAM matdyn
            END IF
            qh = SQRT(qhat(1)**2+qhat(2)**2+qhat(3)**2)
            IF (qh /= 0.d0) qhat(:) = qhat(:) / qh
-           IF (qh /= 0.d0 .AND. .NOT. has_zstar) CALL errore  &
+           IF (qh /= 0.d0 .AND. .NOT. has_zstar) CALL infomsg  &
                 ('matdyn','non-analytic term for q=0 missing !', -1)
            !
            CALL nonanal (nat, nat_blk, itau_blk, epsil, qhat, zeu, omega, dyn)
@@ -1519,7 +1519,7 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
      !
      CALL cubicsym (at, s, sname, nrot)  
   ELSEIF (ibrav == 0) THEN  
-     CALL errore ('gen_qpoints', 'assuming cubic symmetry',-1)  
+     CALL infomsg ('gen_qpoints', 'assuming cubic symmetry', -1)  
      CALL cubicsym (at, s, sname, nrot)  
   ELSE  
      CALL errore ('gen_qpoints', 'wrong ibrav', 1)  

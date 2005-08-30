@@ -46,7 +46,7 @@ MODULES = \
 TLDEPS= bindir mods libs pw
 
 all : tldeps band_plot.x dist.x dynmat.x ev.x fqha.x kpoints.x matdyn.x \
-      path_int.x pwi2xsf.x q2r.x
+      path_int.x pwi2xsf.x q2r.x bands_FS.x kvecs_FS.x 
 
 band_plot.x : band_plot.o $(LIBOBJS)
 	$(LD) -o $@ band_plot.o $(LIBOBJS) $(LDFLAGS)
@@ -91,6 +91,15 @@ pwi2xsf.x : pwi2xsf.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 q2r.x : q2r.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(LD) -o $@ q2r.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+# Isaev
+bands_FS.x : bands_FS.o
+	$(LD) -o $@ bands_FS.o  $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+
+kvecs_FS.x : kvecs_FS.o
+	$(LD) -o $@ kvecs_FS.o  $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
