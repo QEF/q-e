@@ -78,7 +78,7 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
            ux = 1.d0 - px
            vx = 2.d0 - px
            wx = 3.d0 - px
-           i0 = qg (ig) / dq + 1
+           i0 = INT( qg (ig) / dq ) + 1
            i1 = i0 + 1
            i2 = i0 + 2
            i3 = i0 + 3

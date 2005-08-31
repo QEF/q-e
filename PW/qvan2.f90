@@ -123,7 +123,7 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
            ux = 1.d0 - px
            vx = 2.d0 - px
            wx = 3.d0 - px
-           i0 = qm + 1
+           i0 = INT( qm ) + 1
            i1 = i0 + 1
            i2 = i0 + 2
            i3 = i0 + 3

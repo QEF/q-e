@@ -102,8 +102,8 @@ subroutine allocate_nlpot
     allocate (dvan( nhm, nhm, nsp))    
   endif
   !
-  nqxq = ( (sqrt(gcutm) + sqrt(xqq(1)**2 + xqq(2)**2 + xqq(3)**2) ) &
-          / dq + 4) * cell_factor
+  nqxq = INT( ( (sqrt(gcutm) + sqrt(xqq(1)**2 + xqq(2)**2 + xqq(3)**2) ) &
+          / dq + 4) * cell_factor )
   lmaxq = 2*lmaxkb+1
   !
   if (lmaxq > 0) allocate (qrad( nqxq, nbrx*(nbrx+1)/2, lmaxq, nsp))    
@@ -126,7 +126,7 @@ subroutine allocate_nlpot
   !     Calculate dimensions for array tab (including a possible factor
   !     coming from cell contraction during variable cell relaxation/MD)
   !
-  nqx = (sqrt (ecutwfc) / dq + 4) * cell_factor
+  nqx = INT( (sqrt (ecutwfc) / dq + 4) * cell_factor )
 
   allocate (tab( nqx , nbrx , nsp))    
 
