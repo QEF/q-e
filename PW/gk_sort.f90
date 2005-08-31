@@ -21,17 +21,19 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
   !
   ! ... Here the dummy variables
   !
-  INTEGER :: ngm, ngk, igk(npwx)
+  INTEGER, INTENT(IN) :: ngm
     ! input        : the number of g vectors
+  INTEGER, INTENT(INOUT) :: ngk
     ! input/output : the number of k+G vectors inside the "ecut sphere"
+  INTEGER, INTENT(OUT) :: igk(npwx)  
     ! output       : the correspondence k+G <-> G
-  REAL(DP) :: k(3), g(3,ngm), ecut, gk(npwx)
+
+  REAL(DP), INTENT(IN) :: k(3), g(3,ngm), ecut
     ! input  : the k point
     ! input  : the coordinates of G vectors
     ! input  : the cut-off energy
+  REAL(DP), INTENT(OUT) :: gk(npwx)
     ! output : the moduli of k+G
-  !
-  ! ... here the local variables
   !
   INTEGER :: ng, nk
     ! counter on   G vectors
@@ -94,8 +96,6 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
   CALL hpsort_eps( ngk, gk, igk, eps8 )
   !
   ! ... now order true |k+G|
-  !
-  PRINT *, "IGK", igk(:)
   !
   DO nk = 1, ngk
      !
