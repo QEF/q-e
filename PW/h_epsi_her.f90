@@ -11,12 +11,12 @@
 subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
   !-----------------------------------------------------------------------
   !
-  ! this subrutine applies w_k+w_k* on psi, see strategy in Souza, PRB
-  ! the output is pu in hpi
-  ! legge le funzioni d'onda vecchie e da queste calcola il gradiente
-  ! che trasforma in operatore e poi hermetizza
+  ! this subrutine applies w_k+w_k* on psi, 
+  ! (as in Souza,et al.  PRB B 69, 085106 (2004))
+  ! the output is put into hpsi
   !
-  ! In evcel must be the unmodified wavefunctions
+  ! evcel must contain the wavefunctions from previous iteration
+  ! spin polarized systems supported only with fixed occupations
 
   USE kinds,    ONLY : DP
   USE us
@@ -40,17 +40,18 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
   
   implicit none
   !
-  INTEGER :: lda, n! leading dimesion, e n numero onde piane
-  INTEGER :: nbande!numero bande da processare
-  INTEGER :: ik! kapa punto
+  INTEGER :: lda !leading dimension
+  INTEGER ::  n! total number of wavefunctions 
+  INTEGER :: nbande!number of wavefunctions to be calculated 
+  INTEGER :: ik! k-point index
   
   COMPLEX(DP) :: psi (lda, nbande ), hpsi (lda,nbande)
   !
 !  --- Internal definitions ---
 
-   COMPLEX(DP), ALLOCATABLE  :: evct(:,:)!per funzioni d'onda temporanee
-   COMPLEX(DP), ALLOCATABLE  :: evcp(:,:)!per gradiente ik+1
-   COMPLEX(DP), ALLOCATABLE  :: evcm(:,:)!per gradiente ik-1
+   COMPLEX(DP), ALLOCATABLE  :: evct(:,:)!for temporary wavefunctios
+   COMPLEX(DP), ALLOCATABLE  :: evcp(:,:)!for  gradient term ik+1
+   COMPLEX(DP), ALLOCATABLE  :: evcm(:,:)!for  gradient term ik-1
    INTEGER :: i
    INTEGER :: igk1(npwx)
    INTEGER :: igk0(npwx)
@@ -65,7 +66,6 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
    INTEGER :: jkb
    INTEGER :: jkb_bp
    INTEGER :: jkb1
-   INTEGER :: job
    INTEGER :: jv
    INTEGER :: kindex
    INTEGER :: kort
@@ -101,7 +101,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
    INTEGER :: npw0
    INTEGER :: nstring
    INTEGER :: nt
-   INTEGER :: ik_stringa!ik relativo alla stringa di appartenenza
+   INTEGER :: ik_stringa!k-point index inside string
    LOGICAL :: lodd
    REAL(dp) :: dk(3)
    REAL(dp) :: dkm(3)! -dk
@@ -114,7 +114,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
    REAL(dp) :: gtr(3)
    REAL(dp) :: gvec
    REAL(dp) :: ln(-nr1:nr1,-nr2:nr2,-nr3:nr3)
-   REAL(dp) :: ln0(-nr1:nr1,-nr2:nr2,-nr3:nr3)!corrispondenza tra coordinate g vettore generale e numero g vettore locale a kappa
+   REAL(dp) :: ln0(-nr1:nr1,-nr2:nr2,-nr3:nr3)!map g-space global to g-space k-point dependent
    REAL(dp) :: pdl_elec_dw
    REAL(dp) :: pdl_elec_tot
    REAL(dp) :: pdl_elec_up
@@ -136,7 +136,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
    COMPLEX(dp) :: aux1(ngm)
    COMPLEX(dp) :: becp0(nkb,nbnd)
    COMPLEX(dp) :: becp_bp(nkb,nbnd)
-   COMPLEX(dp) :: becp1(nkb,nbnd)!usato solo alla fine 
+   COMPLEX(dp) :: becp1(nkb,nbnd) 
    COMPLEX(dp) :: cdet(2)
    COMPLEX(dp) :: cdwork(nbnd)
    COMPLEX(dp) :: cave
@@ -147,21 +147,20 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
    COMPLEX(dp) :: mat(nbnd,nbnd)
    COMPLEX(dp) :: pref
    COMPLEX(dp) :: q_dk(nhm,nhm,ntyp)
-   COMPLEX(dp) :: q_dkp(nhm,nhm,ntyp)!corrisponde a T^dagger e^(iGx) T
+   COMPLEX(dp) :: q_dkp(nhm,nhm,ntyp)!to store the terms T^dagger e^(iGx) T
    COMPLEX(dp) :: struc(nat)
    COMPLEX(dp) :: theta0
    COMPLEX(dp) :: zdotc
    COMPLEX(dp) :: zeta
 
    
-   COMPLEX(dp) :: fact!fattore moltiplicativo con tutto dentro
-   COMPLEX(dp) :: sca,sca1!prodotti scalari
+   COMPLEX(dp) :: fact
+   COMPLEX(dp) :: sca,sca1
    COMPLEX(dp) :: ps(nkb,nbndx)
    INTEGER :: ijkb0,  ibnd,jh, ih, ikb
 
 
-   LOGICAL :: overlap!se true calcolo ultrasoft
-   LOGICAL l_cal!flag for doing mat calculation
+   LOGICAL l_cal!flag for doing mat calculation, used for spin polarized systems
 
   
    if(ik <= 0) return
@@ -176,9 +175,8 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
    ALLOCATE( evcp(npwx,nbndx))
    ALLOCATE( evcm(npwx,nbndx))
   
-   overlap=.true.
 
-!determine the spin polarization
+!determines the spin polarization
 
    if(nspin==2) then
       if(ik <= nks/2) then
@@ -237,14 +235,13 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
       gpar(1)=(xk(1,nppstr)-xk(1,1))*DBLE(nppstr)/DBLE(nppstr-1)
       gpar(2)=(xk(2,nppstr)-xk(2,1))*DBLE(nppstr)/DBLE(nppstr-1)
       gpar(3)=(xk(3,nppstr)-xk(3,1))*DBLE(nppstr)/DBLE(nppstr-1)
-      gpar(:)=gpar(:)!/at(gdir,gdir)!cella ortorombica!ATTENZIONE
+      gpar(:)=gpar(:)
       gvec=dsqrt(gpar(1)**2+gpar(2)**2+gpar(3)**2)*tpiba
    else
       gpar(1)=0.
       gpar(2)=0.
       gpar(3)=0.
-      gpar(gdir)=1./at(gdir,gdir)!cella ortorombica
-!      gvec=dsqrt(gpar(1)**2+gpar(2)**2+gpar(3)**2)*tpiba
+      gpar(gdir)=1./at(gdir,gdir)
       gvec=tpiba/sqrt(at(gdir,1)**2.+at(gdir,2)**2.+at(gdir,3)**2.)
    endif
       
@@ -254,33 +251,27 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
       dk(1)=xk(1,2)-xk(1,1)
       dk(2)=xk(2,2)-xk(2,1) 
       dk(3)=xk(3,2)-xk(3,1)
-      dkmod=SQRT(dk(1)**2+dk(2)**2+dk(3)**2)*tpiba!cella ortorombica
-!      dkmod=tpiba/at(gdir,gdir)/DBLE(nppstr)
-   else!caso punto gamma, per adesso solo cella cubica
+      dkmod=SQRT(dk(1)**2+dk(2)**2+dk(3)**2)*tpiba
+   else
       dk(1)=0.
       dk(2)=0.
       dk(3)=0.
       dk(gdir)=1./at(gdir,gdir)
-!      dkmod=tpiba
       dkmod=tpiba/sqrt(at(gdir,1)**2.+at(gdir,2)**2.+at(gdir,3)**2.)
    endif
 
    dkm(:)=-dk(:)
 
-!calcola fattore fact
-!la carica elettronica e' 2. (unita' Rydberg)
-!i fattori sono (-i)/2 AIMAG;  2 carica rydberg; campo ele; 2pi/L   
-!ho eliminato la multiplicita' di  spin
-!ATTENZIONE in fact va diviso per L:
+!calculates fact factor
+!electronic charge is 2. (Rydberg units)
+!the factor (-i)/2 comes form operator Im
+
    if(nspin == 1) then
       fact=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod
-!      fact=CMPLX(0.,-1.)*efield*(2.)/2./(tpiba/sqrt(at(gdir,1)**2.+at(gdir,2)**2.+at(gdir,3)**2.))
    else
      fact=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod/DBLE(nspin)
-!      fact=CMPLX(0.,-1.)*efield*nspin*(2.)/2./(tpiba/sqrt(at(gdir,1)**2.+at(gdir,2)**2.+at(gdir,3)**2.))
    endif
 
-!ATTENZIONE :: solo cella cubica e punti kappa CUBICI!!!!!!!!!!!!!!
 
 
   
@@ -289,7 +280,6 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
  
  
 
-!ATTENZIONE le inizializzazione US magari farle una sola volta
 
    if(okvan) then
 !  -------------------------------------------------------------------------   !
@@ -356,7 +346,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
        
 !    
 
-!PARTE S-1(k,k-1)       
+!calculate the term  S-1(k,k-1)       
 
 
 !       
@@ -379,7 +369,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
            &            npw1,igk1,g2kin_bp)        
          !  --- Recalculate FFT correspondence (see ggen.f90) ---
 
-      ln0=0!inizializza tutto a 0
+      ln0=0!set array to 0
       DO ig=1,npw1
          mk1=nint(g(1,igk1(ig))*at(1,1)+g(2,igk1(ig))*at(2,1)+g(3,igk1(ig))*at(3,1))
          mk2=nint(g(1,igk1(ig))*at(1,2)+g(2,igk1(ig))*at(2,2)+g(3,igk1(ig))*at(3,2))
@@ -468,8 +458,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
 !              --- Calculate matrix inverse ---
       CALL zgefa(mat,nbnd,nbnd,ivpt,info)
       CALL errore('h_epsi_her','error in zgefa',abs(info))
-      job=1!in sta maniera calcola la inversa
-      CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,job)
+      CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,1)
 !    mat=S^-1(k,k-1)
       do ig=1,npw0
          gtr(1)=g(1,igk0(ig))
@@ -495,8 +484,8 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
          ENDIF
       enddo
 
-! aggiunge parte US in evcm
-! calcola |beta_(ik,na,ih)>Q_dkp(na,ih,ij)<|beta_(ik-1,na,ih)| 
+! add US terms into evcm
+! calculate |beta_(ik,na,ih)>Q_dkp(na,ih,ij)<|beta_(ik-1,na,ih)| 
       if(okvan) then
          evct(:,:) =  (0.d0, 0.d0)
          ps (:,:) = (0.d0, 0.d0)
@@ -519,7 +508,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
             enddo
          enddo
 
-         call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb si riferisce a ik ultimo letto ACHTUNG
+         call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the last ik read
               npwx, ps, nkb, (1.d0, 0.d0) , evct, npwx)
          do m=1,nbnd
             do nb=1,nbnd
@@ -532,7 +521,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
     
  
 !           --- End of dot products between wavefunctions and betas ---
-   ELSE!qui mettere caso stringa estremale bassa
+   ELSE
        
 
       CALL gk_sort(xk(1,ik+nppstr-1),ngm,g,ecutwfc/tpiba2, &
@@ -554,7 +543,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
             &                   npw1,igk1,g2kin_bp)        
          !  --- Recalculate FFT correspondence (see ggen.f90) ---
 
-      ln0=0!inizializza tutto a 0
+      ln0=0!set to 0
       DO ig=1,npw1
          mk1=nint(g(1,igk1(ig))*at(1,1)+g(2,igk1(ig))*at(2,1)+g(3,igk1(ig))*at(3,1))
          mk2=nint(g(1,igk1(ig))*at(1,2)+g(2,igk1(ig))*at(2,2)+g(3,igk1(ig))*at(3,2))
@@ -676,8 +665,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
 !              --- Calculate matrix inverse ---
       CALL zgefa(mat,nbnd,nbnd,ivpt,info)
       CALL errore('h_epsi_her','error in zgefa',abs(info))
-      job=1!in sta maniera calcola la inversa
-      CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,job)
+      CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,1)
      
 !    mat=S^-1(k,k-1)
         
@@ -727,7 +715,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
             enddo
          enddo
 
-         call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb si riferisce a ik ultimo letto ACHTUNG
+         call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the last ik read
                  npwx, ps, nkb, (1.d0, 0.d0) , evct, npwx)
          do m=1,nbnd
             do nb=1,nbnd
@@ -739,7 +727,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
       endif
    ENDIF
 
-! SECONDA parte S-1(k,k+1)
+! calculate  S-1(k,k+1)
 
     
 !       
@@ -764,7 +752,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
            &                    npw1,igk1,g2kin_bp)        
          !  --- Recalculate FFT correspondence (see ggen.f90) ---
 
-      ln0=0!inizializza tutto a 0
+      ln0=0!set to  0
       DO ig=1,npw1
          mk1=nint(g(1,igk1(ig))*at(1,1)+g(2,igk1(ig))*at(2,1)+g(3,igk1(ig))*at(3,1))
          mk2=nint(g(1,igk1(ig))*at(1,2)+g(2,igk1(ig))*at(2,2)+g(3,igk1(ig))*at(3,2))
@@ -853,8 +841,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
 !              --- Calculate matrix inverse ---
       CALL zgefa(mat,nbnd,nbnd,ivpt,info)
       CALL errore('h_epsi_her','error in zgefa',abs(info))
-      job=1!in sta maniera calcola la inversa
-      CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,job)
+      CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,1)
 !    mat=S^-1(k,k-1)
       do ig=1,npw0
          gtr(1)=g(1,igk0(ig))
@@ -901,7 +888,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
             enddo
          enddo
 
-         call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb si riferisce a ik ultimo letto ACHTUNG
+         call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the last ik read
                  npwx, ps, nkb, (1.d0, 0.d0) , evct, npwx)
          do m=1,nbnd
             do nb=1,nbnd
@@ -913,7 +900,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
       endif
          
 !           --- End of dot products between wavefunctions and betas ---
-   else!qui mettere caso stringa estremale alta
+   else
        
       CALL gk_sort(xk(1,ik-nppstr+1),ngm,g,ecutwfc/tpiba2, &
            &    npw0,igk0,g2kin_bp) 
@@ -934,7 +921,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
                  &              npw1,igk1,g2kin_bp)        
          !  --- Recalculate FFT correspondence (see ggen.f90) ---
 
-      ln0=0!inizializza tutto a 0
+      ln0=0! set to 0
       DO ig=1,npw1
          mk1=nint(g(1,igk1(ig))*at(1,1)+g(2,igk1(ig))*at(2,1)+g(3,igk1(ig))*at(3,1))
          mk2=nint(g(1,igk1(ig))*at(1,2)+g(2,igk1(ig))*at(2,2)+g(3,igk1(ig))*at(3,2))
@@ -1054,8 +1041,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
 !              --- Calculate matrix inverse ---
       CALL zgefa(mat,nbnd,nbnd,ivpt,info)
       CALL errore('h_epsi_her','error in zgefa',abs(info))
-      job=1!in sta maniera calcola la inversa
-      CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,job)
+      CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,1)
        
 !    mat=S^-1(k,k-1)
       do ig=1,npw0
@@ -1103,7 +1089,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
             enddo
          enddo
 
-         call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb si riferisce a ik ultimo letto ACHTUNG
+         call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the ik read
                  npwx, ps, nkb, (1.d0, 0.d0) , evct, npwx)
          do m=1,nbnd
             do nb=1,nbnd
@@ -1123,7 +1109,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
    endif
 
    if(okvan) then
-! aggiunge S a evcp e evcm
+! in US case, add  S to evcp and evcm
 
       CALL ccalbec(nkb, npwx, npw1, nbnd, becp1, vkb, evcp)   
       ps (:,:) = (0.d0, 0.d0)
@@ -1145,7 +1131,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
             endif
          enddo
       enddo
-      call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb si riferisce a ik ultimo letto ACHTUNG
+      call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the last ik read
            npwx, ps, nkb, (1.d0, 0.d0) , evcp, npwx)
       
       CALL ccalbec(nkb, npwx, npw1, nbnd, becp1, vkb, evcm)   
@@ -1168,7 +1154,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
             endif
          enddo
       enddo
-      call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb si riferisce a ik ultimo letto ACHTUNG
+      call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb si relative to the last ik read
            npwx, ps, nkb, (1.d0, 0.d0) , evcm, npwx)
 
 
@@ -1176,11 +1162,10 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
 
  
 
-   do nb=1,nbande!indice su stati psi
+   do nb=1,nbande
       
-!applica w_k     
-      do mb=1,nbnd!indice su stati evcel        
-!questo deve essere calcolato a la US
+!apply w_k     
+      do mb=1,nbnd!index on states of evcel
          sca = zdotc(npw1,evcel(1,mb),1,psi(1,nb),1)
          call reduce(2,sca)
 
@@ -1194,7 +1179,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
                nhjkbm = nh(np)
                jkb1 = jkb - nhjkb
                DO j = 1,nhjkbm
-                  pref = pref+CONJG(becp_bp(jkb,mb))*becp0(jkb1+j,nb) &!ACHTUNG in becp_bp fattori relativi a ik
+                  pref = pref+CONJG(becp_bp(jkb,mb))*becp0(jkb1+j,nb) &!becp_bp is relative to ik
                        *qqq(nhjkb,j,np)
                ENDDO
             ENDDO
@@ -1202,13 +1187,13 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
          endif
          do ig=1,npw1
             hpsi(ig,nb) = hpsi(ig,nb) + &
-            &     fact*sca*(evcm(ig,mb)-evcp(ig,mb))!ATTENZIONE AL SEGNO
+            &     fact*sca*(evcm(ig,mb)-evcp(ig,mb))
          enddo
       enddo 
-!applica w_k*
+!apply w_k*
 
       if(.not.okvan) then
-         do mb=1,nbnd!indice su stati evcel        
+         do mb=1,nbnd!index on states of evcel        
             sca = zdotc(npw1,evcm(1,mb),1,psi(1,nb),1)
             sca1 = zdotc(npw1,evcp(1,mb),1,psi(1,nb),1)
             call reduce(2,sca)
@@ -1221,13 +1206,13 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
          enddo
       
    
-      else !caso US
+      else ! US case
 
-! copia evcel in evct per non sciuparlo
+! copy evcel into evct
          do ig=1,npwx*nbnd
             evct(ig,1)=evcel(ig,1)
          enddo
-!  calcola S|evct>
+!  calculate S|evct>
  
          ps (:,:) = (0.d0, 0.d0)
          ijkb0 = 0
@@ -1248,9 +1233,9 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
                endif
             enddo
          enddo
-         call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb si riferisce a ik ultimo letto ACHTUNG
+         call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the last ik read
               npwx, ps, nkb, (1.d0, 0.d0) , evct, npwx)
-         do mb=1,nbnd!indice su stati evcel        
+         do mb=1,nbnd!index on states of evcel       
             sca = zdotc(npw1,evcm(1,mb),1,psi(1,nb),1)
             sca1 = zdotc(npw1,evcp(1,mb),1,psi(1,nb),1)         
             call reduce(2,sca)
@@ -1267,7 +1252,6 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
    DEALLOCATE( evcp)
    DEALLOCATE( evcm)
 
-!   write(6,*) 'Esce'
   
 !  --
 !------------------------------------------------------------------------------!
