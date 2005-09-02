@@ -1731,7 +1731,6 @@ MODULE pw_restart
       USE cell_base,            ONLY : tpiba2
       USE lsda_mod,             ONLY : nspin, isk
       USE klist,                ONLY : nkstot, wk, nelec, nks, xk, ngk
-      USE wvfct,                ONLY : et, wg, nbnd
       USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, &
                                        igk_l2g, nbnd
       USE wavefunctions_module, ONLY : evc, evc_nc
