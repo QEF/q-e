@@ -41,6 +41,7 @@ SUBROUTINE potinit()
   USE noncollin_module, ONLY : noncolin, factlist, pointlist, pointnum, &
                                mcons, i_cons, lambda, vtcon, report
   USE io_files,         ONLY : prefix, iunocc, input_drho
+  USE spin_orb,         ONLY : domag
   USE mp,               ONLY : mp_bcast
   USE mp_global,        ONLY : intra_image_comm
   USE io_global,        ONLY : ionode, ionode_id
@@ -205,7 +206,7 @@ SUBROUTINE potinit()
      !
   END IF
   !
-  IF ( report /= 0 .AND. noncolin .AND. lscf ) CALL report_mag()
+  IF ( report /= 0 .AND. noncolin .AND. domag .AND. lscf ) CALL report_mag()
   !
   RETURN
   !
