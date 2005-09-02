@@ -264,9 +264,9 @@
 
   subroutine ions_nosevel( vnhp, xnhp0, xnhpm, delt, nhpcl, nhpdim )
     implicit none
+    integer, intent(in) :: nhpcl, nhpdim
     real(DP), intent(inout) :: vnhp(nhpcl,nhpdim)
     real(DP), intent(in) :: xnhp0(nhpcl,nhpdim), xnhpm(nhpcl,nhpdim), delt
-    integer, intent(in) :: nhpcl, nhpdim
     integer :: i,j
     do j=1,nhpdim
        do i=1,nhpcl
@@ -284,10 +284,10 @@
 
  subroutine ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim, nhpend )
     implicit none
+    integer, intent(in) :: nhpcl, nhpdim, nhpend
     real(DP), intent(out) :: xnhpp(nhpcl,nhpdim), vnhp(nhpcl,nhpdim)
     real(DP), intent(in) :: xnhp0(nhpcl,nhpdim), xnhpm(nhpcl,nhpdim), delt, qnp(nhpcl,nhpdim), gkbt2nhp(:), kbt
     real(DP), intent(inout) :: ekin2nhp(:)
-    integer, intent(in) :: nhpcl, nhpdim, nhpend
     integer :: i, j
     real(DP) :: dt2, zetfrc, vp1dlt, ekinend, vp1dend
 
