@@ -97,9 +97,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
      call r_to_s( rep(sm_k)%tau0, rep(sm_k)%taus, na, nsp, ainv )
   ENDDO
   !
-  !
-  refg=1.0*ecut/(mmx-1)
-  WRITE( stdout,*) '   NOTA BENE: refg, mmx = ',refg,mmx
+  WRITE( stdout,*) '   NOTA BENE: refg, mmx = ', refg, mmx
   !
   if( nbeg >= 0 ) then
      !

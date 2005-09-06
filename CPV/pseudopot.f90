@@ -21,7 +21,7 @@ MODULE pseudopotential
 
   USE kinds,   ONLY: DP
   USE splines, ONLY: spline_data
-  USE betax,   ONLY: pstab_size => mmx
+  USE betax,   ONLY: mmx
   USE read_pseudo_module_fpmd, ONLY: nspnl
 
   IMPLICIT NONE
@@ -41,11 +41,12 @@ MODULE pseudopotential
   TYPE (spline_data), ALLOCATABLE :: rhocp_sp(:)
   !
   REAL(DP), ALLOCATABLE :: xgtab(:)
-  LOGICAL                :: tpstab
+
+  LOGICAL               :: tpstab = .TRUE.
 
   PRIVATE
 
-  PUBLIC :: pseudopotential_setup, nlin, nlin_stress
+  PUBLIC :: nlin, nlin_stress
   PUBLIC :: deallocate_pseudopotential
   PUBLIC :: nspnl, nsanl
   PUBLIC :: pseudopotential_indexes
@@ -60,26 +61,6 @@ CONTAINS
 
   !  ----------------------------------------------
 
-
-  SUBROUTINE pseudopotential_setup( pstab_size_inp )
-     !
-     INTEGER, INTENT(IN) :: pstab_size_inp
-
-     !  set the sizes for the spline tables
-     !
-     pstab_size   = pstab_size_inp
-     !
-     IF( pstab_size_inp > 0 ) THEN
-        tpstab = .TRUE.
-     ELSE
-        tpstab = .FALSE.
-     END IF
-     !
-     RETURN
-  END SUBROUTINE pseudopotential_setup
-
-
-!  ----------------------------------------------
 
 
    SUBROUTINE compute_dvan()
@@ -332,8 +313,8 @@ CONTAINS
       INTEGER    :: ig, nval
       REAL(DP)  :: xg, dxg, res
       !
-      IF( .NOT. ALLOCATED( xgtab ) )     ALLOCATE( xgtab( pstab_size ) )
-      nval = pstab_size
+      IF( .NOT. ALLOCATED( xgtab ) )     ALLOCATE( xgtab( mmx ) )
+      nval = mmx
       !
       xgmin = 0.0d0
       xgmax = tpiba * SQRT( MAXVAL( g ) )
@@ -399,14 +380,14 @@ CONTAINS
          CALL nullify_spline( vps_sp( is ) )
          CALL nullify_spline( dvps_sp( is ) )
 
-         CALL allocate_spline( vps_sp(is), pstab_size, xgmin, xgmax )
-         CALL allocate_spline( dvps_sp(is), pstab_size, xgmin, xgmax )
+         CALL allocate_spline( vps_sp(is), mmx, xgmin, xgmax )
+         CALL allocate_spline( dvps_sp(is), mmx, xgmin, xgmax )
 
          if ( numeric(is) ) then
 
             call formfn( vps_sp(is)%y, dvps_sp(is)%y, r(:,is), rab(:,is), vloc_at(:,is), &
                          zv(is), rcmax(is), xgtab, 1.0d0, tpiba2, cmesh(is), mesh(is), &
-                         pstab_size, oldvan(is), tpre )
+                         mmx, oldvan(is), tpre )
 
          else
 
@@ -414,11 +395,11 @@ CONTAINS
             !
             call formfa( vps_sp(is)%y, dvps_sp(is)%y, rc1(is), rc2(is), wrc1(is), wrc2(is), &
                          rcl(:,is,lloc(is)), al(:,is,lloc(is)), bl(:,is,lloc(is)),    &
-                         zv(is), rcmax(is), xgtab, 1.0d0, tpiba2, pstab_size, 2 , tpre )
+                         zv(is), rcmax(is), xgtab, 1.0d0, tpiba2, mmx, 2 , tpre )
 
          end if
 
-         ! WRITE( 13, "(3D16.8)" ) ( xgtab(ig), vps_sp(is)%y(ig), dvps_sp(is)%y(ig), ig = 1, pstab_size )
+         ! WRITE( 13, "(3D16.8)" ) ( xgtab(ig), vps_sp(is)%y(ig), dvps_sp(is)%y(ig), ig = 1, mmx )
 
          CALL init_spline( vps_sp(is) )
          CALL init_spline( dvps_sp(is) )
@@ -474,11 +455,11 @@ CONTAINS
 
          IF( nlcc( is ) ) THEN
             !
-            CALL allocate_spline( rhoc1_sp(is), pstab_size, xgmin, xgmax )
-            CALL allocate_spline( rhocp_sp(is), pstab_size, xgmin, xgmax )
+            CALL allocate_spline( rhoc1_sp(is), mmx, xgmin, xgmax )
+            CALL allocate_spline( rhocp_sp(is), mmx, xgmin, xgmax )
             !
             CALL compute_rhocg( rhoc1_sp(is)%y, rhocp_sp(is)%y, r(:,is), &
-                 rab(:,is), rho_atc(:,is), xgtab, 1.0d0, tpiba2, kkbeta(is), pstab_size, 1 )
+                 rab(:,is), rho_atc(:,is), xgtab, 1.0d0, tpiba2, kkbeta(is), mmx, 1 )
             !
             CALL init_spline( rhoc1_sp(is) )
             CALL init_spline( rhocp_sp(is) )
@@ -549,8 +530,8 @@ CONTAINS
            END DO
 
            DO l = 1, nbeta( is )
-              CALL allocate_spline(  wnl_sp(l,is), pstab_size, xgmin, xgmax )
-              CALL allocate_spline( wnla_sp(l,is), pstab_size, xgmin, xgmax )
+              CALL allocate_spline(  wnl_sp(l,is), mmx, xgmin, xgmax )
+              CALL allocate_spline( wnla_sp(l,is), mmx, xgmin, xgmax )
            END DO
 
            ALLOCATE( fintl( SIZE( xgtab ), SIZE( wnl_sp, 1) ) )

@@ -192,10 +192,9 @@ MODULE input_parameters
         CHARACTER(LEN=256) :: pseudo_dir = './'
           ! specify the directory containing the pseudopotentials
 
-        INTEGER :: pseudo_table_size = 5000
-          ! size of the interpolation table to be used in CP/FPMD for 
-          ! pseudopotentials in reciprocal space. 
-          ! If it is set to 0 table are disabled.
+        REAL(DP) :: refg = 0.05
+          ! Accurancy of the interpolation table, interval between
+          ! table values in Rydberg
 
         CHARACTER(LEN=256) :: scradir = './'
           ! specify the scratch directory to store large, usually temporary, 
@@ -268,7 +267,7 @@ MODULE input_parameters
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, &
           max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
           pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, &
-          wf_collect, printwfc, scradir,lelfield, nberrycic, pseudo_table_size
+          wf_collect, printwfc, scradir,lelfield, nberrycic, refg
 
 
 !

@@ -1075,7 +1075,8 @@ END SUBROUTINE gshcount
 !
 !------------------------------------------------------------------------------!
 
-        SUBROUTINE ecutoffs_setup( ecutwfc, ecutrho, ecfixed, qcutz, q2sigma )
+        SUBROUTINE ecutoffs_setup( ecutwfc, ecutrho, ecfixed, qcutz, q2sigma,  &
+                                   refg_ )
  
           USE kinds, ONLY: DP
           USE constants, ONLY: eps8
@@ -1087,6 +1088,7 @@ END SUBROUTINE gshcount
 
           IMPLICIT NONE
           REAL(DP), INTENT(IN) ::  ecutwfc, ecutrho, ecfixed, qcutz, q2sigma
+          REAL(DP), INTENT(IN) ::  refg_
 
           ecutw = ecutwfc
 
@@ -1122,7 +1124,8 @@ END SUBROUTINE gshcount
           ecutz = qcutz
           ecsig = q2sigma
 
-          refg = 1.0d0 * ecutp / ( mmx - 1 )
+          refg = refg_
+          mmx  = INT( 1.2d0 * ecutp / refg )
 
           RETURN
         END SUBROUTINE ecutoffs_setup

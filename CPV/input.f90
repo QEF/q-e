@@ -831,8 +831,8 @@ MODULE input
            constr_inp, nconstr_inp, constr_tol_inp, constr_type_inp, iesr_inp, &
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nelup, neldw, nbnd,     &
            nelec, tprnks, ks_path, press, cell_damping, cell_dofree, tf_inp,   &
-           pseudo_table_size, greash, grease, greasp, epol, efield, tcg,       &
-           maxiter, etresh, passop
+           refg, greash, grease, greasp, epol, efield, tcg, maxiter, etresh,   &
+           passop
      !
      USE input_parameters, ONLY : nconstr_inp
      USE input_parameters, ONLY : wf_efield, wf_switch, sw_len, efx0, efy0,    &
@@ -873,7 +873,6 @@ MODULE input
            nr3s_ => nr3s
      USE brillouin,                ONLY : kpoint_setup
      USE optical_properties,       ONLY : optical_setup
-     USE pseudopotential,          ONLY : pseudopotential_setup
      USE guess,                    ONLY : guess_setup
      USE empty_states,             ONLY : empty_init
      USE diis,                     ONLY : diis_setup
@@ -929,7 +928,7 @@ MODULE input
 
      ! ...   Set Values for the cutoff
 
-     CALL ecutoffs_setup( ecutwfc, ecutrho, ecfixed, qcutz, q2sigma )
+     CALL ecutoffs_setup( ecutwfc, ecutrho, ecfixed, qcutz, q2sigma, refg )
 
      CALL gcutoffs_setup( alat_ , tk_inp, nkstot, xk )
 
@@ -1013,8 +1012,6 @@ MODULE input
      !
      IF ( lconstrain ) CALL init_constraint( nat, tau, 1.D0, ityp )
      !
-     CALL pseudopotential_setup( pseudo_table_size )
-
      IF( program_name == 'FPMD' ) THEN
         !
         o_diis_inp        = .TRUE.
