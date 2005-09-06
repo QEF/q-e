@@ -361,17 +361,6 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
          nnrx, nnrsx, nat, nax, nsp, nspin, nbsp, nbspx, 0, nupdwn, nkb, gzero, 1,   &
          'gamma', smd = .TRUE. )
   !
-  IF( nlcc_any ) THEN
-     ALLOCATE( rhoc( nnrx ) )
-  ELSE
-     !
-     ! ... dummy allocation required because this array appears in the
-     ! ... list of arguments of some routines
-     !
-     ALLOCATE( rhoc( 1 ) )
-  END IF
-  !
-  !
   !
   CALL allocate_local_pseudo( ngs, nsp )
   !
