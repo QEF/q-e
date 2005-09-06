@@ -468,7 +468,7 @@ MODULE xml_io_base
          !
       END DO
       !
-      CALL iotk_write_attr( attr, "UNIT", TRIM(pos_unit), FIRST = .TRUE. )
+      CALL iotk_write_attr( attr, "UNIT", TRIM( pos_unit ), FIRST = .TRUE. )
       CALL iotk_write_empty( iunpun, "UNITS_FOR_ATOMIC_POSITIONS", attr )
       !
       DO i = 1, nat

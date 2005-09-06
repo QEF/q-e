@@ -55,8 +55,10 @@ MODULE cp_restart
       USE cell_base,                ONLY : ibrav, alat, celldm, &
                                            symm_type, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
-                                           pmass, amass, iforce
+                                           pmass, amass, iforce, ind_bck
       USE funct,                    ONLY : dft
+      USE energies,                 ONLY : enthal, ekin, eht, esr, eself, &
+                                           epseu, enl, exc, vave
       USE mp,                       ONLY : mp_sum
       USE parameters,               ONLY : nhclm
       USE fft_base,                 ONLY : dfftp
@@ -231,12 +233,22 @@ MODULE cp_restart
          !
          CALL iotk_write_begin( iunpun, "STATUS" )
          !
-         CALL iotk_write_attr( attr, "nfi", nfi, FIRST = .TRUE. )
-         !
+         CALL iotk_write_attr( attr, "ITERATION", nfi, FIRST = .TRUE. )
          CALL iotk_write_empty(iunpun, "STEP", attr )
          ! 
          CALL iotk_write_dat( iunpun, "TIME", simtime )
          CALL iotk_write_dat( iunpun, "TITLE", TRIM( title ) )
+         !
+         CALL iotk_write_attr( attr, "UNIT", "Hartree", FIRST = .TRUE. )
+         CALL iotk_write_dat( iunpun, "ekin",   ekin,   ATTR = attr )
+         CALL iotk_write_dat( iunpun, "eht",    eht,    ATTR = attr )
+         CALL iotk_write_dat( iunpun, "esr",    esr,    ATTR = attr )
+         CALL iotk_write_dat( iunpun, "eself",  eself,  ATTR = attr )
+         CALL iotk_write_dat( iunpun, "epseu",  epseu,  ATTR = attr )
+         CALL iotk_write_dat( iunpun, "enl",    enl,    ATTR = attr )
+         CALL iotk_write_dat( iunpun, "exc",    exc,    ATTR = attr )
+         CALL iotk_write_dat( iunpun, "vave",   vave,   ATTR = attr )
+         CALL iotk_write_dat( iunpun, "enthal", enthal, ATTR = attr )
          !
          CALL iotk_write_end( iunpun, "STATUS" )      
          !
@@ -251,8 +263,9 @@ MODULE cp_restart
 ! ... IONS
 !-------------------------------------------------------------------------------
          !
-         CALL write_ions( nsp, nat, atm, ityp, psfile, &
-                          pseudo_dir, amass, tau, iforce, dirname, "Bohr" )
+         CALL write_ions( nsp, nat, atm, ityp(ind_bck(:)), &
+                          psfile, pseudo_dir, amass, tau(:,ind_bck(:)), &
+                          iforce(:,ind_bck(:)), dirname, "Bohr" )
          !
 !-------------------------------------------------------------------------------
 ! ... PLANE_WAVES
@@ -400,7 +413,7 @@ MODULE cp_restart
          CALL iotk_write_dat(   iunpun, "gvel",  gvel )
          CALL iotk_write_end(   iunpun, "CELL_PARAMETERS" )
          !
-         CALL iotk_write_begin( iunpun,"CELL_NOSE" )
+         CALL iotk_write_begin( iunpun, "CELL_NOSE" )
          CALL iotk_write_dat(   iunpun, "xnhh", xnhh0 )
          CALL iotk_write_dat(   iunpun, "vnhh", vnhh )
          CALL iotk_write_end(   iunpun, "CELL_NOSE" )
@@ -799,7 +812,7 @@ MODULE cp_restart
          IF ( found ) THEN
             !
             CALL iotk_scan_empty( iunpun, "STEP", attr )
-            CALL iotk_scan_attr( attr, "nfi", nfi )
+            CALL iotk_scan_attr( attr, "ITERATION", nfi )
             CALL iotk_scan_dat( iunpun, "TIME", simtime )
             CALL iotk_scan_dat( iunpun, "TITLE", title )
             CALL iotk_scan_end( iunpun, "STATUS" )
@@ -1561,6 +1574,7 @@ MODULE cp_restart
       RETURN
       !
     END SUBROUTINE
+    !
     !------------------------------------------------------------------------
     SUBROUTINE read_ions( nsp, nat, atm, ityp, psfile, &
                           amass, tau, if_pos, pos_unit, ierr )
@@ -1588,7 +1602,7 @@ MODULE cp_restart
          !
          ierr = 1
          !
-         GOTO 110
+         RETURN
          !
       END IF
       !
@@ -1599,7 +1613,9 @@ MODULE cp_restart
          !
          ierr = 10
          !
-         GOTO 100
+         CALL iotk_scan_end( iunpun, "IONS" )
+         !
+         RETURN
          !
       END IF
       !
@@ -1625,9 +1641,9 @@ MODULE cp_restart
          !
       END DO
       !
-100   CALL iotk_scan_end( iunpun, "IONS" )
+      CALL iotk_scan_end( iunpun, "IONS" )
       !
-110   RETURN
+      RETURN
       !
     END SUBROUTINE read_ions
     !
