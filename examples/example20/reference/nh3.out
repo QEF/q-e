@@ -3,13 +3,13 @@
      FPMD: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving pseudopotentials
 
-     Version: 2.1cvs - Sun Jul 31 02:34:00 CEST 2005                      
+     Version: 2.1cvs - Tue Sep 6 13:11:13 CEST 2005                       
      Authors: Carlo Cavazzoni, Guido Chiarotti, Sandro Scandolo,
      Paolo Focher, Gerardo Ballabio
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:41:28   2Aug2005               
+   This run was started on:  14:16:51   6Sep2005               
 
    Serial Build
 Warning: card  &CELL ignored
@@ -109,13 +109,12 @@ Warning: card  / ignored
    ---------------
    Ecutwfc =   80.0 Ryd.,    Ecutrho =  320.0 Ryd.,    Ecuts =  320.0 Ryd.
    Gcutwfc =   17.1     ,    Gcutrho =   34.2          Gcuts =   34.2
-   NOTA BENE: refg, mmx =   0.064000  5001
+   NOTA BENE: refg, mmx =   0.050000  7680
    Eigenvalues calculated without the kinetic term contribution
    Orthog. with lagrange multipliers : eps =   0.50E-07,  max =  15
    Electron dynamics with steepest descent
    Electron dynamics : the temperature is not controlled
    initial random displacement of el. coordinates with  amplitude=  0.020000
-   trane not to be used with mass preconditioning
 
    Electronic states
    -----------------
@@ -194,8 +193,8 @@ Warning: card  / ignored
           0    3673     917    3673  167037   20815  167037
  
  
-   Real Mesh Report 
-   ---------------- 
+   Real Mesh
+   ---------
    Global Dimensions   Local  Dimensions   Processor Grid
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     72    72    72      72    72    72       1     1     1
@@ -204,8 +203,8 @@ Warning: card  / ignored
    Number of x-y planes for each processors: 
    nr3l =    72
  
-   Smooth Real Mesh Report 
-   ----------------------- 
+   Smooth Real Mesh
+   ----------------
    Global Dimensions   Local  Dimensions   Processor Grid
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     72    72    72      72    72    72       1     1     1
@@ -214,59 +213,68 @@ Warning: card  / ignored
    Number of x-y planes for each processors: 
    nr3sl =    72
  
-   Small Box Real Mesh Report 
-   -------------------------- 
+   Small Box Real Mesh
+   -------------------
    Global Dimensions   Local  Dimensions   Processor Grid
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     10    10    10      10    10    10       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     10    10    10
    Local number of cell to store the grid ( nnrx ) =       1000
  
-   Reciprocal Space Mesh
-   ---------------------
-                Large Mesh Number of G               Small Mesh Number of G
-   PE       Global       Local   Max Local       Global       Local   Max Local
-    1        83519       83519       83519        10408       10408       10408
- 
    unit vectors of box grid cell
    in real space:                         in reciprocal space:
        1.6667    0.0000    0.0000              1.0000    0.0000    0.0000
        0.0000    1.6667    0.0000              0.0000    1.0000    0.0000
        0.0000    0.0000    1.6667              0.0000    0.0000    1.0000
+ 
+   Reciprocal Space Mesh
+   ---------------------
+                Large Mesh
+   PE   Global(ngmt)     Local(ngm) MaxLocal(ngmx)
+    1          83519          83519          83519
+                Smooth Mesh
+   PE   Global(ngst)     Local(ngs) MaxLocal(ngsx)
+    1          83519          83519          83519
+                Wave function Mesh
+   PE   Global(ngwt)     Local(ngw) MaxLocal(ngwx)
+    1          10408          10408          10408
 
-                Small box Mesh Number of G
-   PE       Global       Local   Max Local
-    1          231         231         231
-
-   Simulation dimensions initialization completed
-
-
+                Small box Mesh
+   ngb =          231 not distributed to processors
 
 
    Estimated Sizes of the problem
    ------------------------------
    dimension of the problem (byte/pe) :     53545960
 
+
+   System geometry initialization
+   ------------------------------
+
    Scaled atomic positions                                from standard input
    Species   1 atoms =    1
-   N        0.000825     0.000825     0.000000
+    N       0.000825     0.000825     0.000000
    Species   2 atoms =    3
-   H        0.159883    -0.020358    -0.018400
-   H       -0.019208     0.160117    -0.017867
-   H       -0.014958    -0.015058     0.160300
-   The following position components are kept fixed
-     ia  x  y  z 
-      1  1  1  1
-      2  1  1  1
-      3  1  1  1
-      4  1  1  1
-   formf  (sec) :   14.988
- 
+    H       0.159883    -0.020358    -0.018400
+    H      -0.019208     0.160117    -0.017867
+    H      -0.014958    -0.015058     0.160300
 
-   Wave Initialization: random initial wave-functions
-   Occupation number from init
-   nbnd =     4
-    2.00 2.00 2.00 2.00
+
+   Pseudopotentials initialization
+   -------------------------------
+
+
+   Common initialization
+
+   Specie:     1
+   1  indv=  1   ang. mom=  0
+ 
+                        dion 
+   4.6560
+
+   Specie:     2
+ 
+                        dion 
  
    Short Legend and Physical Units in the Output
    ---------------------------------------------
@@ -279,90 +287,64 @@ Warning: card  / ignored
    ECONS  [A.U.] - Enthalpy + kinetic energy of ions and cell
    ETTT   [A.U.] - Constant of motion for the CP lagrangian
  
+ 
+
+   Wave Initialization: random initial wave-functions
+   Occupation number from init
+   nbnd =     4
+    2.00 2.00 2.00 2.00
+
+   formf: eself=  13.96298
+   formf:     vps(g=0)=  -0.0055325     rhops(g=0)=  -0.0028935
+   formf: sum_g vps(g)=  -4.6148335 sum_g rhops(g)=  -0.8783370
+   formf:     vps(g=0)=  -0.0011896     rhops(g=0)=  -0.0005787
+   formf: sum_g vps(g)=  -2.5239213 sum_g rhops(g)=  -0.1756674
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
 
    ESR (real part of Ewald sum) =   0.11870195D+00
 
-
-
-       ETOT .... =      65.2624238181
-       EKIN .... =      76.2994920592
-       EHT ..... =      -4.8609852627
-       ESELF ... =      13.9629798141
-       ESR ..... =       0.1187019496
-       EH ...... =       8.9832926017
-       EPSEU ... =      -3.9682159173
-       ENL ..... =       0.0070641978
-       EXC ..... =    -478.4251519073
-       VXC ..... =      -2.8786374965
-       EVDW .... =       0.0000000000
-       EHTE .... =       1.2031210646
-       EHTI .... =      15.1835222698
-       ENT ..... =       0.0000000000
-       EBAND ... =       0.0000000000
-       EXC-VXC ............................. =    -475.5465144108
-       EHTI+ESR-ESELF ...................... =       1.3392444053
-       EBAND-EHTE+(EXC-VXC)+(EHTI+ESR-ESELF) =    -475.4103910700
-
-   Simulated Time (ps):     0.000000
  
  
-                      TOTAL ENERGY =      65.2624238181 A.U.
+                      TOTAL ENERGY =      65.2624238210 A.U.
                     KINETIC ENERGY =      76.2994920592 A.U.
               ELECTROSTATIC ENERGY =      -4.8609852627 A.U.
                              ESELF =      13.9629798141 A.U.
                                ESR =       0.1187019496 A.U.
             PSEUDOPOTENTIAL ENERGY =      -3.9682159173 A.U.
-        N-L PSEUDOPOTENTIAL ENERGY =       0.0070641978 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       0.0070642008 A.U.
        EXCHANGE-CORRELATION ENERGY =      -2.2149312588 A.U.
  
-                    HARTREE ENERGY =       8.9832926017 A.U.
-                      HARTREE EHTE =       1.2031210646 A.U.
-                      HARTREE EHTI =      15.1835222698 A.U.
-              VAN DER WAALS ENERGY =       0.0000000000 A.U.
-              EMASS KINETIC ENERGY =  276681.7569925831 A.U.
-
-   Atomic Positions (AU)
-
-   STEP:      0   0.000000
+   ATOMIC_POSITIONS
    N    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.191860E+01 -0.244300E+00 -0.220800E+00
    H   -0.230500E+00  0.192140E+01 -0.214400E+00
    H   -0.179500E+00 -0.180700E+00  0.192360E+01
-
-   Atomic Velocities (AU)
-
-   STEP:      0   0.000000
+ 
+   ATOMIC_VELOCITIES
    N    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
-
-   Atomic Forces (AU)
-
-   STEP:      0   0.000000
+ 
+   Forces acting on atoms (au):
    N   -0.187883E+01 -0.136389E+01 -0.947449E+00
    H    0.996546E+00 -0.788971E-01 -0.105174E+00
    H   -0.202250E+00  0.111233E+01 -0.176370E+00
    H   -0.178023E+00 -0.174342E+00  0.111202E+01
 
    Center of mass displacement (a.u.):   0.000000
-
-   Cell Variables (AU)
-
-   STEP:      0   0.000000
+ 
+   CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
     0.00000000    0.00000000   12.00000000
-
-   Total Stress (GPa)
-
-   STEP:      0   0.000000
-      740.88724320       -25.51813175       -11.86889814
-      -25.51813175       827.84535143       -14.35693615
-      -11.86889814       -14.35693615       845.66687594
+ 
+   Total stress (GPa)
+      740.88724322       -25.51813176       -11.86889812
+      -25.51813176       827.84535144       -14.35693615
+      -11.86889812       -14.35693615       845.66687595
 
    System Density [g/cm^3] :     0.1232
 
@@ -398,7 +380,9 @@ Warning: card  / ignored
    MAIN: doions = F
      9   1.66757    0.0    0.0      0.44061      0.44061      0.44061      2.10818
 
- * Step     10
+ * Physical Quantities at step:    10
+
+   Simulated time t = 0.12094500D-02 ps
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -407,64 +391,46 @@ Warning: card  / ignored
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.129262D+01  0.1D-03  0.276573D+01  0.1D-08  0.640158D+00  0.1D-02
    MAIN: convergence NOT achieved for system relaxation
-
-   Simulated Time (ps):     0.001209
  
  
-                      TOTAL ENERGY =      -2.3251201655 A.U.
-                    KINETIC ENERGY =      16.2257087454 A.U.
-              ELECTROSTATIC ENERGY =     -11.0223478309 A.U.
+                      TOTAL ENERGY =      -2.3251201396 A.U.
+                    KINETIC ENERGY =      16.2257087539 A.U.
+              ELECTROSTATIC ENERGY =     -11.0223478151 A.U.
                              ESELF =      13.9629798141 A.U.
                                ESR =       0.1187019496 A.U.
-            PSEUDOPOTENTIAL ENERGY =      -5.2782521483 A.U.
-        N-L PSEUDOPOTENTIAL ENERGY =       0.7159033665 A.U.
-       EXCHANGE-CORRELATION ENERGY =      -2.9661322981 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.2782520453 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       0.7159032604 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -2.9661322934 A.U.
  
-                    HARTREE ENERGY =       2.8219300335 A.U.
-                      HARTREE EHTE =       5.6600712727 A.U.
-                      HARTREE EHTI =      15.1835222698 A.U.
-              VAN DER WAALS ENERGY =       0.0000000000 A.U.
-              EMASS KINETIC ENERGY =   35601.6035953006 A.U.
-
-   Atomic Positions (AU)
-
-   STEP:     10   0.001209
+   ATOMIC_POSITIONS
    N    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.191860E+01 -0.244300E+00 -0.220800E+00
    H   -0.230500E+00  0.192140E+01 -0.214400E+00
    H   -0.179500E+00 -0.180700E+00  0.192360E+01
-
-   Atomic Velocities (AU)
-
-   STEP:     10   0.001209
+ 
+   ATOMIC_VELOCITIES
    N    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
-
-   Atomic Forces (AU)
-
-   STEP:     10   0.001209
-   N   -0.640158E+00 -0.544625E-01 -0.397406E-01
+ 
+   Forces acting on atoms (au):
+   N   -0.640158E+00 -0.544624E-01 -0.397407E-01
    H    0.391015E+00 -0.172299E-01  0.398194E-01
    H   -0.381706E-01  0.532891E+00 -0.151650E+00
    H   -0.335110E-01  0.109372E+00  0.432927E+00
 
    Center of mass displacement (a.u.):   0.000000
-
-   Cell Variables (AU)
-
-   STEP:     10   0.001209
+ 
+   CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
     0.00000000    0.00000000   12.00000000
-
-   Total Stress (GPa)
-
-   STEP:     10   0.001209
-       77.90387367        -5.13861154        -4.46367057
-       -5.13861154        97.62422463        -6.92095641
-       -4.46367057        -6.92095641        86.01172985
+ 
+   Total stress (GPa)
+       77.90387367        -5.13861150        -4.46367068
+       -5.13861150        97.62422449        -6.92095625
+       -4.46367068        -6.92095625        86.01173016
 
    System Density [g/cm^3] :     0.1232
 
@@ -500,7 +466,9 @@ Warning: card  / ignored
    MAIN: doions = F
     19   0.11720    0.0    0.0    -10.21848    -10.21848    -10.21848    -10.10128
 
- * Step     20
+ * Physical Quantities at step:    20
+
+   Simulated time t = 0.24189000D-02 ps
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -509,64 +477,46 @@ Warning: card  / ignored
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.946963D-01  0.1D-03  0.199226D+00  0.1D-08  0.225534D+00  0.1D-02
    MAIN: convergence NOT achieved for system relaxation
-
-   Simulated Time (ps):     0.002419
  
  
-                      TOTAL ENERGY =     -10.4177059146 A.U.
-                    KINETIC ENERGY =      10.0724765893 A.U.
-              ELECTROSTATIC ENERGY =     -12.6129646437 A.U.
+                      TOTAL ENERGY =     -10.4177059012 A.U.
+                    KINETIC ENERGY =      10.0724766875 A.U.
+              ELECTROSTATIC ENERGY =     -12.6129645913 A.U.
                              ESELF =      13.9629798141 A.U.
                                ESR =       0.1187019496 A.U.
-            PSEUDOPOTENTIAL ENERGY =      -5.5003153589 A.U.
-        N-L PSEUDOPOTENTIAL ENERGY =       1.0704639067 A.U.
-       EXCHANGE-CORRELATION ENERGY =      -3.4473664080 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.5003150868 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0704634936 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.4473664042 A.U.
  
-                    HARTREE ENERGY =       1.2313132207 A.U.
-                      HARTREE EHTE =       9.3196447805 A.U.
-                      HARTREE EHTI =      15.1835222698 A.U.
-              VAN DER WAALS ENERGY =       0.0000000000 A.U.
-              EMASS KINETIC ENERGY =   15416.3753639896 A.U.
-
-   Atomic Positions (AU)
-
-   STEP:     20   0.002419
+   ATOMIC_POSITIONS
    N    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.191860E+01 -0.244300E+00 -0.220800E+00
    H   -0.230500E+00  0.192140E+01 -0.214400E+00
    H   -0.179500E+00 -0.180700E+00  0.192360E+01
-
-   Atomic Velocities (AU)
-
-   STEP:     20   0.002419
+ 
+   ATOMIC_VELOCITIES
    N    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
-
-   Atomic Forces (AU)
-
-   STEP:     20   0.002419
-   N   -0.711740E-01  0.225534E+00 -0.567150E-01
+ 
+   Forces acting on atoms (au):
+   N   -0.711739E-01  0.225534E+00 -0.567149E-01
    H    0.113428E+00 -0.837855E-01  0.275483E-01
    H    0.635195E-01  0.126399E+00 -0.113459E+00
    H    0.214828E-01  0.621279E-01  0.438986E-01
 
    Center of mass displacement (a.u.):   0.000000
-
-   Cell Variables (AU)
-
-   STEP:     20   0.002419
+ 
+   CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
     0.00000000    0.00000000   12.00000000
-
-   Total Stress (GPa)
-
-   STEP:     20   0.002419
-       13.45547623        -0.81520724        -2.05460576
-       -0.81520724        14.21543034        -1.44695937
-       -2.05460576        -1.44695937         8.09745273
+ 
+   Total stress (GPa)
+       13.45547502        -0.81520724        -2.05460574
+       -0.81520724        14.21542951        -1.44695924
+       -2.05460574        -1.44695924         8.09745175
 
    System Density [g/cm^3] :     0.1232
 
@@ -602,7 +552,9 @@ Warning: card  / ignored
    MAIN: doions = F
     29   0.02291    0.0    0.0    -11.23576    -11.23576    -11.23576    -11.21284
 
- * Step     30
+ * Physical Quantities at step:    30
+
+   Simulated time t = 0.36283500D-02 ps
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -611,64 +563,46 @@ Warning: card  / ignored
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.203560D-01  0.1D-03  0.418934D-01  0.1D-08  0.872457D-01  0.1D-02
    MAIN: convergence NOT achieved for system relaxation
-
-   Simulated Time (ps):     0.003628
  
  
-                      TOTAL ENERGY =     -11.2776500471 A.U.
-                    KINETIC ENERGY =       9.4186389509 A.U.
-              ELECTROSTATIC ENERGY =     -12.7811416764 A.U.
+                      TOTAL ENERGY =     -11.2776500286 A.U.
+                    KINETIC ENERGY =       9.4186391026 A.U.
+              ELECTROSTATIC ENERGY =     -12.7811416269 A.U.
                              ESELF =      13.9629798141 A.U.
                                ESR =       0.1187019496 A.U.
-            PSEUDOPOTENTIAL ENERGY =      -5.4242025961 A.U.
-        N-L PSEUDOPOTENTIAL ENERGY =       1.0381464295 A.U.
-       EXCHANGE-CORRELATION ENERGY =      -3.5290911549 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.4242023276 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0381459787 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.5290911554 A.U.
  
-                    HARTREE ENERGY =       1.0631361880 A.U.
-                      HARTREE EHTE =      10.0587954864 A.U.
-                      HARTREE EHTI =      15.1835222698 A.U.
-              VAN DER WAALS ENERGY =       0.0000000000 A.U.
-              EMASS KINETIC ENERGY =   13149.8733245566 A.U.
-
-   Atomic Positions (AU)
-
-   STEP:     30   0.003628
+   ATOMIC_POSITIONS
    N    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.191860E+01 -0.244300E+00 -0.220800E+00
    H   -0.230500E+00  0.192140E+01 -0.214400E+00
    H   -0.179500E+00 -0.180700E+00  0.192360E+01
-
-   Atomic Velocities (AU)
-
-   STEP:     30   0.003628
+ 
+   ATOMIC_VELOCITIES
    N    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
-
-   Atomic Forces (AU)
-
-   STEP:     30   0.003628
-   N   -0.371735E-01  0.872457E-01 -0.509637E-01
+ 
+   Forces acting on atoms (au):
+   N   -0.371734E-01  0.872457E-01 -0.509637E-01
    H    0.272784E-01 -0.758627E-01 -0.141828E-01
    H    0.511313E-01  0.677133E-01 -0.506097E-01
    H    0.549675E-02  0.220365E-01  0.232825E-02
 
    Center of mass displacement (a.u.):   0.000000
-
-   Cell Variables (AU)
-
-   STEP:     30   0.003628
+ 
+   CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
     0.00000000    0.00000000   12.00000000
-
-   Total Stress (GPa)
-
-   STEP:     30   0.003628
-        5.97016115        -1.10153455        -1.10716218
-       -1.10153455         3.24555853        -0.77088073
-       -1.10716218        -0.77088073         0.77003464
+ 
+   Total stress (GPa)
+        5.97016018        -1.10153455        -1.10716217
+       -1.10153455         3.24555779        -0.77088063
+       -1.10716217        -0.77088063         0.77003385
 
    System Density [g/cm^3] :     0.1232
 
@@ -704,7 +638,9 @@ Warning: card  / ignored
    MAIN: doions = F
     39   0.00826    0.0    0.0    -11.50817    -11.50817    -11.50817    -11.49991
 
- * Step     40
+ * Physical Quantities at step:    40
+
+   Simulated time t = 0.48378000D-02 ps
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -713,64 +649,46 @@ Warning: card  / ignored
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.756017D-02  0.1D-03  0.154472D-01  0.1D-08  0.505607D-01  0.1D-02
    MAIN: convergence NOT achieved for system relaxation
-
-   Simulated Time (ps):     0.004838
  
  
-                      TOTAL ENERGY =     -11.5236130058 A.U.
-                    KINETIC ENERGY =       9.2556693062 A.U.
-              ELECTROSTATIC ENERGY =     -12.8310191273 A.U.
+                      TOTAL ENERGY =     -11.5236129801 A.U.
+                    KINETIC ENERGY =       9.2556694741 A.U.
+              ELECTROSTATIC ENERGY =     -12.8310190787 A.U.
                              ESELF =      13.9629798141 A.U.
                                ESR =       0.1187019496 A.U.
-            PSEUDOPOTENTIAL ENERGY =      -5.4173742324 A.U.
-        N-L PSEUDOPOTENTIAL ENERGY =       1.0313401278 A.U.
-       EXCHANGE-CORRELATION ENERGY =      -3.5622290801 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.4173739694 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0313396743 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.5622290804 A.U.
  
-                    HARTREE ENERGY =       1.0132587372 A.U.
-                      HARTREE EHTE =      10.3505767002 A.U.
-                      HARTREE EHTI =      15.1835222698 A.U.
-              VAN DER WAALS ENERGY =       0.0000000000 A.U.
-              EMASS KINETIC ENERGY =   12535.4027579065 A.U.
-
-   Atomic Positions (AU)
-
-   STEP:     40   0.004838
+   ATOMIC_POSITIONS
    N    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.191860E+01 -0.244300E+00 -0.220800E+00
    H   -0.230500E+00  0.192140E+01 -0.214400E+00
    H   -0.179500E+00 -0.180700E+00  0.192360E+01
-
-   Atomic Velocities (AU)
-
-   STEP:     40   0.004838
+ 
+   ATOMIC_VELOCITIES
    N    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
-
-   Atomic Forces (AU)
-
-   STEP:     40   0.004838
-   N   -0.347370E-01  0.355389E-01 -0.272225E-01
+ 
+   Forces acting on atoms (au):
+   N   -0.347370E-01  0.355390E-01 -0.272225E-01
    H   -0.130285E-01 -0.505607E-01 -0.246257E-01
    H    0.298286E-01  0.457155E-01 -0.222948E-01
-   H    0.523856E-04  0.776101E-02 -0.105138E-02
+   H    0.523842E-04  0.776101E-02 -0.105138E-02
 
    Center of mass displacement (a.u.):   0.000000
-
-   Cell Variables (AU)
-
-   STEP:     40   0.004838
+ 
+   CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
     0.00000000    0.00000000   12.00000000
-
-   Total Stress (GPa)
-
-   STEP:     40   0.004838
-        2.97122637        -0.89099551        -0.71054973
-       -0.89099551         0.41419042        -0.64220839
-       -0.71054973        -0.64220839        -0.46572399
+ 
+   Total stress (GPa)
+        2.97122563        -0.89099553        -0.71054973
+       -0.89099553         0.41418979        -0.64220834
+       -0.71054973        -0.64220834        -0.46572463
 
    System Density [g/cm^3] :     0.1232
 
@@ -806,7 +724,9 @@ Warning: card  / ignored
    MAIN: doions = F
     49   0.00362    0.0    0.0    -11.61716    -11.61716    -11.61716    -11.61354
 
- * Step     50
+ * Physical Quantities at step:    50
+
+   Simulated time t = 0.60472500D-02 ps
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -815,64 +735,46 @@ Warning: card  / ignored
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.335332D-02  0.1D-03  0.683043D-02  0.1D-08  0.327921D-01  0.1D-02
    MAIN: convergence NOT achieved for system relaxation
-
-   Simulated Time (ps):     0.006047
  
  
-                      TOTAL ENERGY =     -11.6239871662 A.U.
-                    KINETIC ENERGY =       9.1933980684 A.U.
-              ELECTROSTATIC ENERGY =     -12.8513190677 A.U.
+                      TOTAL ENERGY =     -11.6239871364 A.U.
+                    KINETIC ENERGY =       9.1933982423 A.U.
+              ELECTROSTATIC ENERGY =     -12.8513190190 A.U.
                              ESELF =      13.9629798141 A.U.
                                ESR =       0.1187019496 A.U.
-            PSEUDOPOTENTIAL ENERGY =      -5.4251492019 A.U.
-        N-L PSEUDOPOTENTIAL ENERGY =       1.0351002601 A.U.
-       EXCHANGE-CORRELATION ENERGY =      -3.5760172250 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.4251489387 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0350998034 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.5760172244 A.U.
  
-                    HARTREE ENERGY =       0.9929587967 A.U.
-                      HARTREE EHTE =      10.4747062524 A.U.
-                      HARTREE EHTI =      15.1835222698 A.U.
-              VAN DER WAALS ENERGY =       0.0000000000 A.U.
-              EMASS KINETIC ENERGY =   12319.3942054267 A.U.
-
-   Atomic Positions (AU)
-
-   STEP:     50   0.006047
+   ATOMIC_POSITIONS
    N    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.191860E+01 -0.244300E+00 -0.220800E+00
    H   -0.230500E+00  0.192140E+01 -0.214400E+00
    H   -0.179500E+00 -0.180700E+00  0.192360E+01
-
-   Atomic Velocities (AU)
-
-   STEP:     50   0.006047
+ 
+   ATOMIC_VELOCITIES
    N    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
-
-   Atomic Forces (AU)
-
-   STEP:     50   0.006047
-   N   -0.186866E-01  0.149848E-01 -0.111846E-01
+ 
+   Forces acting on atoms (au):
+   N   -0.186865E-01  0.149848E-01 -0.111845E-01
    H   -0.272585E-01 -0.323334E-01 -0.230040E-01
    H    0.168875E-01  0.327921E-01 -0.115923E-01
-   H   -0.779886E-03  0.153923E-02  0.534529E-03
+   H   -0.779887E-03  0.153923E-02  0.534526E-03
 
    Center of mass displacement (a.u.):   0.000000
-
-   Cell Variables (AU)
-
-   STEP:     50   0.006047
+ 
+   CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
     0.00000000    0.00000000   12.00000000
-
-   Total Stress (GPa)
-
-   STEP:     50   0.006047
-        1.33434284        -0.56371288        -0.46817425
-       -0.56371288        -0.37913007        -0.53639345
-       -0.46817425        -0.53639345        -0.66486183
+ 
+   Total stress (GPa)
+        1.33434220        -0.56371291        -0.46817428
+       -0.56371291        -0.37913066        -0.53639343
+       -0.46817428        -0.53639343        -0.66486243
 
    System Density [g/cm^3] :     0.1232
 
@@ -908,7 +810,9 @@ Warning: card  / ignored
    MAIN: doions = F
     59   0.00173    0.0    0.0    -11.66712    -11.66712    -11.66712    -11.66539
 
- * Step     60
+ * Physical Quantities at step:    60
+
+   Simulated time t = 0.72567000D-02 ps
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -917,64 +821,46 @@ Warning: card  / ignored
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.161310D-02  0.1D-03  0.328094D-02  0.1D-08  0.291561D-01  0.1D-02
    MAIN: convergence NOT achieved for system relaxation
-
-   Simulated Time (ps):     0.007257
  
  
-                      TOTAL ENERGY =     -11.6704009330 A.U.
-                    KINETIC ENERGY =       9.1648681957 A.U.
-              ELECTROSTATIC ENERGY =     -12.8616924707 A.U.
+                      TOTAL ENERGY =     -11.6704009011 A.U.
+                    KINETIC ENERGY =       9.1648683735 A.U.
+              ELECTROSTATIC ENERGY =     -12.8616924216 A.U.
                              ESELF =      13.9629798141 A.U.
                                ESR =       0.1187019496 A.U.
-            PSEUDOPOTENTIAL ENERGY =      -5.4330993209 A.U.
-        N-L PSEUDOPOTENTIAL ENERGY =       1.0414481090 A.U.
-       EXCHANGE-CORRELATION ENERGY =      -3.5819254462 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.4330990558 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0414476478 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.5819254450 A.U.
  
-                    HARTREE ENERGY =       0.9825853938 A.U.
-                      HARTREE EHTE =      10.5305726079 A.U.
-                      HARTREE EHTI =      15.1835222698 A.U.
-              VAN DER WAALS ENERGY =       0.0000000000 A.U.
-              EMASS KINETIC ENERGY =   12233.8839359064 A.U.
-
-   Atomic Positions (AU)
-
-   STEP:     60   0.007257
+   ATOMIC_POSITIONS
    N    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.191860E+01 -0.244300E+00 -0.220800E+00
    H   -0.230500E+00  0.192140E+01 -0.214400E+00
    H   -0.179500E+00 -0.180700E+00  0.192360E+01
-
-   Atomic Velocities (AU)
-
-   STEP:     60   0.007257
+ 
+   ATOMIC_VELOCITIES
    N    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
-
-   Atomic Forces (AU)
-
-   STEP:     60   0.007257
-   N   -0.317044E-02  0.640097E-02 -0.210632E-02
+ 
+   Forces acting on atoms (au):
+   N   -0.317040E-02  0.640098E-02 -0.210631E-02
    H   -0.291561E-01 -0.210560E-01 -0.189174E-01
-   H    0.988536E-02  0.235727E-01 -0.748774E-02
-   H   -0.101465E-02 -0.143903E-02  0.136215E-02
+   H    0.988535E-02  0.235727E-01 -0.748774E-02
+   H   -0.101465E-02 -0.143903E-02  0.136214E-02
 
    Center of mass displacement (a.u.):   0.000000
-
-   Cell Variables (AU)
-
-   STEP:     60   0.007257
+ 
+   CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
     0.00000000    0.00000000   12.00000000
-
-   Total Stress (GPa)
-
-   STEP:     60   0.007257
-        0.45523066        -0.30805979        -0.31133559
-       -0.30805979        -0.56173352        -0.44500884
-       -0.31133559        -0.44500884        -0.64410411
+ 
+   Total stress (GPa)
+        0.45523005        -0.30805983        -0.31133564
+       -0.30805983        -0.56173412        -0.44500884
+       -0.31133564        -0.44500884        -0.64410471
 
    System Density [g/cm^3] :     0.1232
 
@@ -1010,7 +896,9 @@ Warning: card  / ignored
    MAIN: doions = F
     69   0.00087    0.0    0.0    -11.69164    -11.69164    -11.69164    -11.69077
 
- * Step     70
+ * Physical Quantities at step:    70
+
+   Simulated time t = 0.84661500D-02 ps
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -1019,64 +907,46 @@ Warning: card  / ignored
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.815818D-03  0.1D-03  0.165757D-02  0.1D-08  0.261596D-01  0.1D-02
    MAIN: convergence NOT achieved for system relaxation
-
-   Simulated Time (ps):     0.008466
  
  
-                      TOTAL ENERGY =     -11.6932958078 A.U.
-                    KINETIC ENERGY =       9.1498075023 A.U.
-              ELECTROSTATIC ENERGY =     -12.8675113771 A.U.
+                      TOTAL ENERGY =     -11.6932957747 A.U.
+                    KINETIC ENERGY =       9.1498076832 A.U.
+              ELECTROSTATIC ENERGY =     -12.8675113277 A.U.
                              ESELF =      13.9629798141 A.U.
                                ESR =       0.1187019496 A.U.
-            PSEUDOPOTENTIAL ENERGY =      -5.4385698829 A.U.
-        N-L PSEUDOPOTENTIAL ENERGY =       1.0476466986 A.U.
-       EXCHANGE-CORRELATION ENERGY =      -3.5846687488 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.4385696159 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0476462330 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.5846687473 A.U.
  
-                    HARTREE ENERGY =       0.9767664874 A.U.
-                      HARTREE EHTE =      10.5574581016 A.U.
-                      HARTREE EHTI =      15.1835222698 A.U.
-              VAN DER WAALS ENERGY =       0.0000000000 A.U.
-              EMASS KINETIC ENERGY =   12193.8347601554 A.U.
-
-   Atomic Positions (AU)
-
-   STEP:     70   0.008466
+   ATOMIC_POSITIONS
    N    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.191860E+01 -0.244300E+00 -0.220800E+00
    H   -0.230500E+00  0.192140E+01 -0.214400E+00
    H   -0.179500E+00 -0.180700E+00  0.192360E+01
-
-   Atomic Velocities (AU)
-
-   STEP:     70   0.008466
+ 
+   ATOMIC_VELOCITIES
    N    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
-
-   Atomic Forces (AU)
-
-   STEP:     70   0.008466
-   N    0.674501E-02  0.321491E-02  0.306558E-02
+ 
+   Forces acting on atoms (au):
+   N    0.674504E-02  0.321493E-02  0.306560E-02
    H   -0.261596E-01 -0.141907E-01 -0.151908E-01
    H    0.596632E-02  0.167204E-01 -0.586276E-02
-   H   -0.142363E-02 -0.293481E-02  0.127220E-02
+   H   -0.142363E-02 -0.293481E-02  0.127219E-02
 
    Center of mass displacement (a.u.):   0.000000
-
-   Cell Variables (AU)
-
-   STEP:     70   0.008466
+ 
+   CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
     0.00000000    0.00000000   12.00000000
-
-   Total Stress (GPa)
-
-   STEP:     70   0.008466
-       -0.00142656        -0.14857241        -0.21742332
-       -0.14857241        -0.56830570        -0.37432233
-       -0.21742332        -0.37432233        -0.58667836
+ 
+   Total stress (GPa)
+       -0.00142716        -0.14857246        -0.21742338
+       -0.14857246        -0.56830631        -0.37432234
+       -0.21742338        -0.37432234        -0.58667897
 
    System Density [g/cm^3] :     0.1232
 
@@ -1112,7 +982,9 @@ Warning: card  / ignored
    MAIN: doions = F
     79   0.00045    0.0    0.0    -11.70420    -11.70420    -11.70420    -11.70375
 
- * Step     80
+ * Physical Quantities at step:    80
+
+   Simulated time t = 0.96756000D-02 ps
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -1121,64 +993,46 @@ Warning: card  / ignored
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.426666D-03  0.1D-03  0.866194D-03  0.1D-08  0.217721D-01  0.1D-02
    MAIN: convergence NOT achieved for system relaxation
-
-   Simulated Time (ps):     0.009676
  
  
-                      TOTAL ENERGY =     -11.7050702847 A.U.
-                    KINETIC ENERGY =       9.1405700844 A.U.
-              ELECTROSTATIC ENERGY =     -12.8707959587 A.U.
+                      TOTAL ENERGY =     -11.7050702511 A.U.
+                    KINETIC ENERGY =       9.1405702678 A.U.
+              ELECTROSTATIC ENERGY =     -12.8707959091 A.U.
                              ESELF =      13.9629798141 A.U.
                                ESR =       0.1187019496 A.U.
-            PSEUDOPOTENTIAL ENERGY =      -5.4417002871 A.U.
-        N-L PSEUDOPOTENTIAL ENERGY =       1.0528926571 A.U.
-       EXCHANGE-CORRELATION ENERGY =      -3.5860367804 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.4417000186 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0528921876 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.5860367788 A.U.
  
-                    HARTREE ENERGY =       0.9734819058 A.U.
-                      HARTREE EHTE =      10.5709825662 A.U.
-                      HARTREE EHTI =      15.1835222698 A.U.
-              VAN DER WAALS ENERGY =       0.0000000000 A.U.
-              EMASS KINETIC ENERGY =   12170.4727466337 A.U.
-
-   Atomic Positions (AU)
-
-   STEP:     80   0.009676
+   ATOMIC_POSITIONS
    N    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.191860E+01 -0.244300E+00 -0.220800E+00
    H   -0.230500E+00  0.192140E+01 -0.214400E+00
    H   -0.179500E+00 -0.180700E+00  0.192360E+01
-
-   Atomic Velocities (AU)
-
-   STEP:     80   0.009676
+ 
+   ATOMIC_VELOCITIES
    N    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
-
-   Atomic Forces (AU)
-
-   STEP:     80   0.009676
-   N    0.117155E-01  0.250885E-02  0.619568E-02
+ 
+   Forces acting on atoms (au):
+   N    0.117155E-01  0.250886E-02  0.619569E-02
    H   -0.217721E-01 -0.993728E-02 -0.123598E-01
    H    0.362399E-02  0.116735E-01 -0.523162E-02
-   H   -0.196309E-02 -0.371493E-02  0.780441E-03
+   H   -0.196309E-02 -0.371494E-02  0.780436E-03
 
    Center of mass displacement (a.u.):   0.000000
-
-   Cell Variables (AU)
-
-   STEP:     80   0.009676
+ 
+   CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
     0.00000000    0.00000000   12.00000000
-
-   Total Stress (GPa)
-
-   STEP:     80   0.009676
-       -0.23311025        -0.06151505        -0.16632969
-       -0.06151505        -0.53488513        -0.32183008
-       -0.16632969        -0.32183008        -0.53629218
+ 
+   Total stress (GPa)
+       -0.23311085        -0.06151510        -0.16632975
+       -0.06151510        -0.53488574        -0.32183011
+       -0.16632975        -0.32183011        -0.53629280
 
    System Density [g/cm^3] :     0.1232
 
@@ -1214,7 +1068,9 @@ Warning: card  / ignored
    MAIN: doions = F
     89   0.00024    0.0    0.0    -11.71084    -11.71084    -11.71084    -11.71059
 
- * Step     90
+ * Physical Quantities at step:    90
+
+   Simulated time t = 0.10885050D-01 ps
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -1223,64 +1079,46 @@ Warning: card  / ignored
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.228361D-03  0.1D-03  0.463331D-03  0.1D-08  0.174707D-01  0.1D-02
    MAIN: convergence NOT achieved for system relaxation
-
-   Simulated Time (ps):     0.010885
  
  
-                      TOTAL ENERGY =     -11.7112996910 A.U.
-                    KINETIC ENERGY =       9.1341410442 A.U.
-              ELECTROSTATIC ENERGY =     -12.8725966242 A.U.
+                      TOTAL ENERGY =     -11.7112996571 A.U.
+                    KINETIC ENERGY =       9.1341412298 A.U.
+              ELECTROSTATIC ENERGY =     -12.8725965745 A.U.
                              ESELF =      13.9629798141 A.U.
                                ESR =       0.1187019496 A.U.
-            PSEUDOPOTENTIAL ENERGY =      -5.4431953204 A.U.
-        N-L PSEUDOPOTENTIAL ENERGY =       1.0570849257 A.U.
-       EXCHANGE-CORRELATION ENERGY =      -3.5867337164 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.4431950507 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0570844531 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.5867337147 A.U.
  
-                    HARTREE ENERGY =       0.9716812402 A.U.
-                      HARTREE EHTE =      10.5778521673 A.U.
-                      HARTREE EHTI =      15.1835222698 A.U.
-              VAN DER WAALS ENERGY =       0.0000000000 A.U.
-              EMASS KINETIC ENERGY =   12154.0767215081 A.U.
-
-   Atomic Positions (AU)
-
-   STEP:     90   0.010885
+   ATOMIC_POSITIONS
    N    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.191860E+01 -0.244300E+00 -0.220800E+00
    H   -0.230500E+00  0.192140E+01 -0.214400E+00
    H   -0.179500E+00 -0.180700E+00  0.192360E+01
-
-   Atomic Velocities (AU)
-
-   STEP:     90   0.010885
+ 
+   ATOMIC_VELOCITIES
    N    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
-
-   Atomic Forces (AU)
-
-   STEP:     90   0.010885
-   N    0.135576E-01  0.286076E-02  0.821203E-02
+ 
+   Forces acting on atoms (au):
+   N    0.135576E-01  0.286077E-02  0.821204E-02
    H   -0.174707E-01 -0.722777E-02 -0.103334E-01
-   H    0.213651E-02  0.800846E-02 -0.502132E-02
-   H   -0.251256E-02 -0.413843E-02  0.211592E-03
+   H    0.213651E-02  0.800845E-02 -0.502132E-02
+   H   -0.251257E-02 -0.413843E-02  0.211588E-03
 
    Center of mass displacement (a.u.):   0.000000
-
-   Cell Variables (AU)
-
-   STEP:     90   0.010885
+ 
+   CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
     0.00000000    0.00000000   12.00000000
-
-   Total Stress (GPa)
-
-   STEP:     90   0.010885
-       -0.34800864        -0.01957000        -0.14151617
-       -0.01957000        -0.50099091        -0.28310162
-       -0.14151617        -0.28310162        -0.49998429
+ 
+   Total stress (GPa)
+       -0.34800924        -0.01957005        -0.14151622
+       -0.01957005        -0.50099153        -0.28310166
+       -0.14151622        -0.28310166        -0.49998491
 
    System Density [g/cm^3] :     0.1232
 
@@ -1316,7 +1154,9 @@ Warning: card  / ignored
    MAIN: doions = F
     99   0.00013    0.0    0.0    -11.71441    -11.71441    -11.71441    -11.71428
 
- * Step    100
+ * Physical Quantities at step:   100
+
+   Simulated time t = 0.12094500D-01 ps
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -1325,64 +1165,46 @@ Warning: card  / ignored
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.124267D-03  0.1D-03  0.251987D-03  0.1D-08  0.137769D-01  0.1D-02
    MAIN: convergence NOT achieved for system relaxation
-
-   Simulated Time (ps):     0.012095
  
  
-                      TOTAL ENERGY =     -11.7146608614 A.U.
-                    KINETIC ENERGY =       9.1293103530 A.U.
-              ELECTROSTATIC ENERGY =     -12.8735388866 A.U.
+                      TOTAL ENERGY =     -11.7146608273 A.U.
+                    KINETIC ENERGY =       9.1293105403 A.U.
+              ELECTROSTATIC ENERGY =     -12.8735388368 A.U.
                              ESELF =      13.9629798141 A.U.
                                ESR =       0.1187019496 A.U.
-            PSEUDOPOTENTIAL ENERGY =      -5.4437051092 A.U.
-        N-L PSEUDOPOTENTIAL ENERGY =       1.0603483762 A.U.
-       EXCHANGE-CORRELATION ENERGY =      -3.5870755948 A.U.
+            PSEUDOPOTENTIAL ENERGY =      -5.4437048387 A.U.
+        N-L PSEUDOPOTENTIAL ENERGY =       1.0603479011 A.U.
+       EXCHANGE-CORRELATION ENERGY =      -3.5870755931 A.U.
  
-                    HARTREE ENERGY =       0.9707389778 A.U.
-                      HARTREE EHTE =      10.5812535209 A.U.
-                      HARTREE EHTI =      15.1835222698 A.U.
-              VAN DER WAALS ENERGY =       0.0000000000 A.U.
-              EMASS KINETIC ENERGY =   12141.3827552352 A.U.
-
-   Atomic Positions (AU)
-
-   STEP:    100   0.012095
+   ATOMIC_POSITIONS
    N    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.191860E+01 -0.244300E+00 -0.220800E+00
    H   -0.230500E+00  0.192140E+01 -0.214400E+00
    H   -0.179500E+00 -0.180700E+00  0.192360E+01
-
-   Atomic Velocities (AU)
-
-   STEP:    100   0.012095
+ 
+   ATOMIC_VELOCITIES
    N    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
-
-   Atomic Forces (AU)
-
-   STEP:    100   0.012095
-   N    0.137299E-01  0.358448E-02  0.957469E-02
+ 
+   Forces acting on atoms (au):
+   N    0.137299E-01  0.358449E-02  0.957470E-02
    H   -0.137769E-01 -0.545016E-02 -0.890947E-02
-   H    0.114711E-02  0.537083E-02 -0.499128E-02
-   H   -0.300278E-02 -0.437960E-02 -0.299744E-03
+   H    0.114711E-02  0.537082E-02 -0.499129E-02
+   H   -0.300279E-02 -0.437960E-02 -0.299749E-03
 
    Center of mass displacement (a.u.):   0.000000
-
-   Cell Variables (AU)
-
-   STEP:    100   0.012095
+ 
+   CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
     0.00000000    0.00000000   12.00000000
-
-   Total Stress (GPa)
-
-   STEP:    100   0.012095
-       -0.40308996        -0.00294517        -0.13163655
-       -0.00294517        -0.47540809        -0.25436284
-       -0.13163655        -0.25436284        -0.47560036
+ 
+   Total stress (GPa)
+       -0.40309057        -0.00294522        -0.13163660
+       -0.00294522        -0.47540871        -0.25436288
+       -0.13163660        -0.25436288        -0.47560099
 
    System Density [g/cm^3] :     0.1232
 
@@ -1399,24 +1221,23 @@ Warning: card  / ignored
 
    nfi     ekinc  temph  tempp         etot       enthal        econs         ettt
    100   0.00012    0.0    0.0    -11.71466    -11.71466    -11.71466    -11.71454
- Opening file restart.xml
 
-   RESTART FILE WRITTEN COMPLETED IN    0.097 SEC.
+   RESTART FILE WRITTEN COMPLETED IN    5.025 SEC.
 
  
    Execution time statistics (SEC)
-   Mean time for MD step ..       1.798
+   Mean time for MD step ..       1.667
  
    Wave functions FFT execution time statistics
    total number of ffts ..       606
-   average time per fft ..   0.05443
-   total fft time    .....  32.98625
+   average time per fft ..   0.05357
+   total fft time    .....  32.46602
  
  
    Charge density and potential FFT execution statistics
    total number of ffts ..       909
-   average time per fft ..   0.10914
-   total fft time    .....  99.20685
+   average time per fft ..   0.09309
+   total fft time    .....  84.62053
  
 
    PC3FFT TIMINGS
@@ -1438,14 +1259,14 @@ Warning: card  / ignored
  
    mp_buffers: high_watermark (bytes):            0
  
-   mp: high_watermark (bytes):           24
+   mp: high_watermark (bytes):           12
  
-     FPMD         :  3m16.64s CPU time
+     FPMD         :  2m50.64s CPU time
 
  
-   This run was terminated on:   3:44:46   2Aug2005            
+   This run was terminated on:  14:19:43   6Sep2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:   198.0
+   ELAPSED SECONDS:   172.0
    JOB DONE.
 =------------------------------------------------------------------------------=
