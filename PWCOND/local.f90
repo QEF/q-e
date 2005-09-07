@@ -397,10 +397,11 @@ FUNCTION number(gp, at, fftxy, nrx, nry)
 ! This function receives as input the coordinates of 2D g vector 
 ! and write on output its fft position. 
 !
+  USE kinds, ONLY: DP
   IMPLICIT NONE
   INTEGER :: nrx, nry, fftxy(-nrx:nrx, -nrx:nry), &
              number, n1, n2
-  REAL(KIND(0.d0)) :: gp(2), at(3,3), x1, x2 
+  REAL(DP) :: gp(2), at(3,3), x1, x2 
 
   x1=gp(1)*at(1,1)+gp(2)*at(2,1)
   x2=gp(1)*at(1,2)+gp(2)*at(2,2) 
