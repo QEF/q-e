@@ -25,7 +25,8 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE uspp_param,               ONLY : nhm
   USE uspp,                     ONLY : nkb, vkb, rhovan => becsum, deeq
   USE cvan,                     ONLY : nvb
-  USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, ekin, esr
+  USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, ekin, &
+                                       esr, print_energies
   USE electrons_base,           ONLY : nbspx, nbsp, f, nspin
   USE electrons_base,           ONLY : nel, iupdwn, nupdwn
   USE gvecp,                    ONLY : ngm
@@ -561,6 +562,10 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         CALL vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
              &        ei1,ei2,ei3,irb,eigrb,sfac,rep(sm_k)%tau0,rep(sm_k)%fion)
 
+        IF( ionode .AND. &
+            ( ( nfi == 0 ) .or. ( MOD( nfi-1, iprint ) == 0 ) .or. tfirst .or. tlast ) ) &
+            CALL print_energies( .FALSE. )
+
         !
         etot_ar(sm_k) = etot
         eht_ar(sm_k) = eht
@@ -895,8 +900,11 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
 
         CALL vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,                 &
-             &            ei1,ei2,ei3,irb,eigrb,sfac,rep(sm_k)%tau0,rep(sm_k)%fion)
+                    ei1,ei2,ei3,irb,eigrb,sfac,rep(sm_k)%tau0,rep(sm_k)%fion)
 
+        IF( ionode .AND. &
+            ( ( nfi == 0 ) .or. ( MOD( nfi-1, iprint ) == 0 ) .or. tfirst .or. tlast ) ) &
+            CALL print_energies( .FALSE. )
         !
         etot_ar(sm_k)  = etot
         eht_ar(sm_k)   = eht

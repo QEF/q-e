@@ -1,886 +1,794 @@
-************************************************************************
-****                                                                ****
-****  CPV: variable-cell Car-Parrinello molecular dynamics          ****
-****  using ultrasoft Vanderbilt pseudopotentials - v.2.1           ****
-****                                                                ****
-************************************************************************
+=------------------------------------------------------------------------------=
 
-     Parallel version (MPI)
-     Number of processors in use:      1
-Warning: card K_POINTS ( GAMMA ) ignored
-reading ppot for species #  1 from file /home/ballabio/espresso/pseudo/Si.vbc.UPF
-reading ppot for species #  2 from file /home/ballabio/espresso/pseudo/H.vbc.UPF
+     CPV: variable-cell Car-Parrinello molecular dynamics
+     using ultrasoft Vanderbilt pseudopotentials
+
+     Version: 2.1cvs - Fri Jan 28 17:56:02 NFT 2005                       
+     Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
+       Paolo Giannozzi, Nicola Marzari, and others
+
+=------------------------------------------------------------------------------=
+
+   This run was started on:  17:23:48   7Sep2005               
+
+   MPI Parallel Build
+   Tasks =    1  This task id =    0
+
+   Job Title: MD Simulation
+
+
+   Atomic Pseudopotentials Parameters
+   ----------------------------------
+
+   Reading pseudopotential for specie #  1 from file :
+   /sp5/usercin/acv0/sfs/espresso/pseudo/H_US.van
+   file type is  1
+
+    ============================================================
+    |  pseudopotential report for atomic species:  1           |
+    |        pseudo potential version   7   3   2              |
+    ------------------------------------------------------------
+    |  hydrogen            PBE                  exchange-corr  |
+    |  z =   1.    zv( 1) =   1.    exfact =   5.00000         |
+    |  ifpcor =  0           atomic energy =  -0.91772 Ry      |
+    |  index    orbital      occupation    energy              |
+    |    1        100           1.00       -0.48               |
+    |  rinner =  0.5000                                        |
+    |    new generation scheme:                                |
+    |    nbeta =  1     kkbeta =  271     rcloc =    0.6000    |
+    |    ibeta    l     epsilon   rcut                         |
+    |      1       0      -0.48   0.80                         |
+    ============================================================
+
+   Warning XC functionals forced to be: PBE                 
+
+
+   Main Simulation Parameters (from input)
+   ---------------------------------------
+   Restart Mode       =       0   reset_counters 
+   Number of MD Steps =      50
+   Print out every          100 MD Steps
+   Reads from unit    =      60
+   Writes to unit     =      70
+   MD Simulation time step            =      10.00
+   Electronic fictitious mass (emass) =     500.00
+   emass cut-off                      =       2.50
+
+   Simulation Cell Parameters (from input)
+   external pressure       =            0.00 [GPa]
+   wmass (calculated)      =          415.57 [AU]
+   ibrav =    1
+   alat  =    10.00000000
+   a1    =    10.00000000    0.00000000    0.00000000
+   a2    =     0.00000000   10.00000000    0.00000000
+   a3    =     0.00000000    0.00000000   10.00000000
+ 
+   b1    =     0.10000000    0.00000000    0.00000000
+   b2    =     0.00000000    0.10000000    0.00000000
+   b3    =     0.00000000    0.00000000    0.10000000
+   omega =  1000.00000000
    
   INIT_PATH : linear interpolation used 
    
-   wmass (calculated) =        36015.99
+
+   Energy Cut-offs
+   ---------------
+   Ecutwfc =   15.0 Ryd.,    Ecutrho =  100.0 Ryd.,    Ecuts =   60.0 Ryd.
+   Gcutwfc =    6.2     ,    Gcutrho =   15.9          Gcuts =   12.3
+   NOTA BENE: refg, mmx =   0.050000  2400
+   Eigenvalues calculated without the kinetic term contribution
+   Orthog. with lagrange multipliers : eps =   0.10E-07,  max =  20
+   verlet algorithm for electron dynamics
+   with friction frice =  1.0000 , grease =  1.0000
+   Electron dynamics : the temperature is not controlled
+
+   Electronic states
+   -----------------
+   Local Spin Density calculation
+   Number of Electron =     3
+   Spins up   =     2, occupations: 
+   1.00 1.00
+   Spins down =     1, occupations: 
+   1.00
+
+
+   Exchange and correlations functionals
+   -------------------------------------
+   Using Local Density Approximation with
+     Exchange functional: SLATER                                                      
+     Correlation functional: PERDEW AND WANG                                             
+   Using Generalized Gradient Corrections with
+     Exchange functional: PERDEW BURKE ERNZERHOF                                      
+     Correlation functional: PERDEW BURKE ERNZERHOF                                      
+     Exchange-correlation      = PBE (1434)
+
+
+   Ions Simulation Parameters
+   --------------------------
+   Ions are allowed to move
+   Ions dynamics with newton equations
+   the temperature is computed for     9 degrees of freedom
+   ion dynamics with fricp =  0.8000 and greasp =  1.0000
+   Ionic position (from input)
+   sorted by specie, and converted to real a.u. coordinates
+   Species   1 atoms =    3 mass =      1822.89 (a.u.),         1.00 (uma) rcmax =   0.80 (a.u.)
+        0.000000     0.000000     0.000000
+        0.000000     0.000000     0.000000
+        0.000000     0.000000     0.000000
+   Ionic position will be re-read from restart file
+
+   All atoms are allowed to move
+   Ionic temperature is not controlled
+
+
+   Cell Dynamics Parameters (from STDIN)
+   -------------------------------------
+   Starting cell generated from CELLDM
+   Cell parameters will be re-read from restart file
+   Constant VOLUME Molecular dynamics
+   cell parameters are not allowed to move
+
+   Verbosity: iprsta =  1
 
 
 
- nbeg=  0 nomore=    100    iprint= 100
- reads from 60 writes on 70
- time step =   10.0000
+   Simulation dimensions initialization
+   ------------------------------------
 
- parameters for electron dynamics:
- emass=     500.00  emaec=       2.50ry
- orthog. with lagrange multipliers: eps=  0.10E-07 max= 20
- verlet algorithm for electron dynamics
- with friction frice =  0.8000 , grease =  1.0000
+   unit vectors of full simulation cell
+   in real space:                         in reciprocal space (units 2pi/alat):
+   1    10.0000    0.0000    0.0000              1.0000    0.0000    0.0000
+   2     0.0000   10.0000    0.0000              0.0000    1.0000    0.0000
+   3     0.0000    0.0000   10.0000              0.0000    0.0000    1.0000
+ 
+   Stick Mesh
+   ----------
+   nst =   397,  nstw =    61, nsts =   241
+        PEs    n.st   n.stw   n.sts    n.g    n.gw   n.gs
+          1     793     121     481   16879     949    7809
+          0     793     121     481   16879     949    7809
+ 
+ 
+   Real Mesh
+   ---------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    32    32    32      32    32    32       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     33    32    33
+   Local number of cell to store the grid ( nnrx ) =      34848
+   Number of x-y planes for each processors: 
+   nr3l =    32
+ 
+   Smooth Real Mesh
+   ----------------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    28    28    28      28    28    28       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     28    28    28
+   Local number of cell to store the grid ( nnrx ) =      21952
+   Number of x-y planes for each processors: 
+   nr3sl =    28
+ 
+   Small Box Real Mesh
+   -------------------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    16    16    16      16    16    16       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     17    16    16
+   Local number of cell to store the grid ( nnrx ) =       4352
+ 
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       5.0000    0.0000    0.0000              1.0000    0.0000    0.0000
+       0.0000    5.0000    0.0000              0.0000    1.0000    0.0000
+       0.0000    0.0000    5.0000              0.0000    0.0000    1.0000
+ 
+   Reciprocal Space Mesh
+   ---------------------
+                Large Mesh
+   PE   Global(ngmt)     Local(ngm) MaxLocal(ngmx)
+    1           8440           8440           8440
+                Smooth Mesh
+   PE   Global(ngst)     Local(ngs) MaxLocal(ngsx)
+    1           3905           3905           3905
+                Wave function Mesh
+   PE   Global(ngwt)     Local(ngw) MaxLocal(ngwx)
+    1            475            475            475
 
-
- ions are allowed to move
- ion dynamics with fricp =  0.5000 and greasp =  1.0000
- ion dynamics: the temperature is not controlled
-
-
- iprsta =  1
-
+                Small box Mesh
+   ngb =         1052 not distributed to processors
                                                   
   ================================================
                                                   
-  CPSMD : replica = 0 ..            9
+  CPSMD : replica = 0 ..  8
                                                   
                                                   
   String Method : 
                                                   
                                                   
-       SMLM    =  T
+       smd_lm    =  T
        CPMD    =  F
-       LINR    =  T
-       POLM    =  F Pt =            2
-       STCD    =  F
-       SMfile  =           20
+       smd_linr    =  T
+       smd_polm    =  F Pt =  2
+       smd_stcd    =  F
+       SMfile  =  20
        TFOR  =  T
                                                   
-       CONST. TOL  =   1.000000000000000E-005
-       Frequency   =            1
+       CONST. smd_tol  =  0.100000000000000008E-04
+       Frequency   =  1
                                                   
   ================================================
-  UNIT8 = 
- /home/ballabio/tmp//fort.8                                                     
-                                                                                
-                                                                                
-                    
- 
- unit vectors of full simulation cell
- in real space:                         in reciprocal space:
-   14.3967    0.0000    0.0000              1.0000    0.0000    0.0000
-    0.0000   14.3967    0.0000              0.0000    1.0000    0.0000
-    0.0000    0.0000   18.7157              0.0000    0.0000    0.7692
- 
-   Stick Mesh
-   ----------
-   nst =   397,  nstw =    97, nsts =   397
-        PEs    n.st   n.stw   n.sts    n.g    n.gw   n.gs
-          1     793     193     793   21737    2709   21737
-          0     793     193     793   21737    2709   21737
- 
- 
-   Real Mesh Report 
-   ---------------- 
-   Global Dimensions   Local  Dimensions   Processor Grid
-   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
-    32    32    45      32    32    45       1     1     1
-   nr3l =    45
- 
-   Smooth Real Mesh Report 
-   ----------------------- 
-   Global Dimensions   Local  Dimensions   Processor Grid
-   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
-    32    32    45      32    32    45       1     1     1
-   nr3sl =    45
- 
-   Small Box Real Mesh Report 
-   -------------------------- 
-   Global Dimensions   Local  Dimensions   Processor Grid
-   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
-    16    16    16      16    16    16       1     1     1
- 
- ggen:  # of g vectors < gcut   ng=  10869
- ggen:  # of g vectors < gcuts ngs=  10869
- ggen:  # of g vectors < gcutw ngw=   1355
- ggen:  # of g shells  < gcut  ngl=   1412
- 
- 
- unit vectors of box grid cell
- in real space:                         in reciprocal space:
-    7.1983    0.0000    0.0000              1.0000    0.0000    0.0000
-    0.0000    7.1983    0.0000              0.0000    1.0000    0.0000
-    0.0000    0.0000    6.6545              0.0000    0.0000    1.0817
- 
- ggenb: # of gb vectors < gcutb ngb =    972
- ggenb: # of gb shells  < gcutb ngbl=    169
- initialization 
+  UNIT8 = /scratch/acv0/tmp//fort.8                                                                                                                                                                                                                                       
+    NOTA BENE: refg, mmx =  0.500000000000000028E-01 2400
+ ibrav =    1       cell parameters 
 
- ibrav= 14 alat= 14.397 omega= 3879.1111
- gcut=  252.00    gcuts=  252.00 gcutw=   63.00
- k-points: nkpt= 1
-
-
- meshes:
-  dense grid: nr1 ,nr2, nr3  =   32  32  45  nr1x, nr2x, nr3x =   32  32  45
- smooth grid: nr1s,nr2s,nr3s =   32  32  45  nr1sx,nr2sx,nr3sx=   32  32  45
-    box grid: nr1b,nr2b,nr3b =   16  16  16  nr1bx,nr2bx,nr3bx=   16  16  16
-
- exchange-correlation potential:  SLA  PZ   NOGX NOGC
-
- ecutw=   12.0 ryd    ecuts=   48.0 ryd    ecut=   48.0 ryd
-
- # of electrons=   80 # of states=   40
-
-
- nspin= 1
- occupation numbers:
- 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0
- 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0 2.0
-
- # of atomic species    2
- is=  1
-  na=  18  atomic mass= 10.00 gaussian rcmax=  1.00
- atomic coordinates:
-      10.78   1.06   3.34
-      10.75   6.06   3.33
-       8.38   0.02  -0.34
-       8.25   7.04  -0.25
-      13.28   7.17  -0.22
-      13.20   0.15  -0.33
-       7.18   3.53  -2.61
-       7.31  -3.66  -2.45
-      14.39   3.68  -2.59
-      14.26  -3.54  -2.43
-      10.79   3.60  -5.16
-      10.79  -3.61  -5.16
-      17.98  -3.60  -4.90
-      17.98   3.60  -5.10
-      10.80   7.20  -7.60
-      18.00   7.20  -7.60
-      10.80   0.00  -7.60
-      18.00   0.00  -7.60
- is=  2
-  na=   8  atomic mass= 10.00 gaussian rcmax=  1.00
- atomic coordinates:
-      12.90   7.20  -9.40
-       8.70   7.20  -9.40
-      20.10   7.20  -9.40
-      15.90   7.20  -9.40
-      12.90   0.00  -9.40
-       8.70   0.00  -9.40
-      20.10   0.00  -9.40
-      15.90   0.00  -9.40
-    NOTA BENE: refg, mmx =   9.599999999999999E-003        5001
- ibrav =   14       cell parameters 
-
-      14.39670       0.00000       0.00000
-       0.00000      14.39670       0.00000
-       0.00000       0.00000      18.71571
+      10.00000       0.00000       0.00000
+       0.00000      10.00000       0.00000
+       0.00000       0.00000      10.00000
  
   out from init
-   betagx  
+
+
+   Pseudopotentials initialization
+   -------------------------------
+  nlinit  nh(is), ngb, is, kkbeta, lmaxq =  1 1052 1 271 1
+ 
+                        qqq 
+   9.4958
+ 
+
+
+   Common initialization
+
+   Specie:     1
    1  indv=  1   ang. mom=  0
-   2  indv=  2   ang. mom=  1
-   3  indv=  2   ang. mom=  1
-   4  indv=  2   ang. mom=  1
  
                         dion 
-   0.7619   0.0000
-   0.0000   1.8417
-   betagx  
- 
-                        dion 
+   3.3279
   out from nlinit
-  Allocation begun, smpm =            8
+  Allocation begun, smpm =  7
   Allocation for W.F. s : successful 
   Allocation for CP core : successful 
   Allocation for SM variables : successful 
   Allocation for pointers : successful 
   Allocation ended 
-  formf: eself= 118.08691
-  formf:     vps(g=0)=  -0.0038732     rhops(g=0)=  -0.0010312
-  formf: sum_g vps(g)=  -2.3721135 sum_g rhops(g)=  -0.3596807
-  formf:     vps(g=0)=  -0.0008213     rhops(g=0)=  -0.0002578
-  formf: sum_g vps(g)=  -1.5871998 sum_g rhops(g)=  -0.0899202
-  formf: eself= 118.08691
-  formf:     vps(g=0)=  -0.0038732     rhops(g=0)=  -0.0010312
-  formf: sum_g vps(g)=  -2.3721135 sum_g rhops(g)=  -0.3596807
-  formf:     vps(g=0)=  -0.0008213     rhops(g=0)=  -0.0002578
-  formf: sum_g vps(g)=  -1.5871998 sum_g rhops(g)=  -0.0899202
-  formf: eself= 118.08691
-  formf:     vps(g=0)=  -0.0038732     rhops(g=0)=  -0.0010312
-  formf: sum_g vps(g)=  -2.3721135 sum_g rhops(g)=  -0.3596807
-  formf:     vps(g=0)=  -0.0008213     rhops(g=0)=  -0.0002578
-  formf: sum_g vps(g)=  -1.5871998 sum_g rhops(g)=  -0.0899202
-  formf: eself= 118.08691
-  formf:     vps(g=0)=  -0.0038732     rhops(g=0)=  -0.0010312
-  formf: sum_g vps(g)=  -2.3721135 sum_g rhops(g)=  -0.3596807
-  formf:     vps(g=0)=  -0.0008213     rhops(g=0)=  -0.0002578
-  formf: sum_g vps(g)=  -1.5871998 sum_g rhops(g)=  -0.0899202
-  formf: eself= 118.08691
-  formf:     vps(g=0)=  -0.0038732     rhops(g=0)=  -0.0010312
-  formf: sum_g vps(g)=  -2.3721135 sum_g rhops(g)=  -0.3596807
-  formf:     vps(g=0)=  -0.0008213     rhops(g=0)=  -0.0002578
-  formf: sum_g vps(g)=  -1.5871998 sum_g rhops(g)=  -0.0899202
-  formf: eself= 118.08691
-  formf:     vps(g=0)=  -0.0038732     rhops(g=0)=  -0.0010312
-  formf: sum_g vps(g)=  -2.3721135 sum_g rhops(g)=  -0.3596807
-  formf:     vps(g=0)=  -0.0008213     rhops(g=0)=  -0.0002578
-  formf: sum_g vps(g)=  -1.5871998 sum_g rhops(g)=  -0.0899202
-  formf: eself= 118.08691
-  formf:     vps(g=0)=  -0.0038732     rhops(g=0)=  -0.0010312
-  formf: sum_g vps(g)=  -2.3721135 sum_g rhops(g)=  -0.3596807
-  formf:     vps(g=0)=  -0.0008213     rhops(g=0)=  -0.0002578
-  formf: sum_g vps(g)=  -1.5871998 sum_g rhops(g)=  -0.0899202
-  formf: eself= 118.08691
-  formf:     vps(g=0)=  -0.0038732     rhops(g=0)=  -0.0010312
-  formf: sum_g vps(g)=  -2.3721135 sum_g rhops(g)=  -0.3596807
-  formf:     vps(g=0)=  -0.0008213     rhops(g=0)=  -0.0002578
-  formf: sum_g vps(g)=  -1.5871998 sum_g rhops(g)=  -0.0899202
+
+   formf: eself=   1.49603
+   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
+   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+
+   formf: eself=   1.49603
+   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
+   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+
+   formf: eself=   1.49603
+   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
+   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+
+   formf: eself=   1.49603
+   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
+   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+
+   formf: eself=   1.49603
+   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
+   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+
+   formf: eself=   1.49603
+   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
+   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+
+   formf: eself=   1.49603
+   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
+   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
   
   Center of mass 
   
-   0 13.00312 2.48911-5.01791
-   1 13.00200 2.48942-5.03929
-   2 13.00088 2.48974-5.06066
-   3 12.99976 2.49005-5.08204
-   4 12.99864 2.49037-5.10341
-   5 12.99752 2.49068-5.12479
-   6 12.99640 2.49100-5.14616
-   7 12.99529 2.49131-5.16754
-   8 12.99417 2.49163-5.18892
-   9 12.99305 2.49195-5.21029
+   0  0.00000 0.00000 1.98543
+   1  0.00000 0.00000 2.05158
+   2  0.00000 0.00000 2.11772
+   3  0.00000 0.00000 2.18386
+   4  0.00000 0.00000 2.25000
+   5  0.00000 0.00000 2.31614
+   6  0.00000 0.00000 2.38228
+   7  0.00000 0.00000 2.44843
+   8  0.00000 0.00000 2.51457
   
   _____________________________________________
   
   *****    Entering SMD LOOP   ***** 
   _____________________________________________
   
-  -----------  REPLICA :            1
+  -----------  REPLICA :  1
   
 
 
- subroutine rhoofr: total integrated electronic density
- in g-space = 80.000000     in r-space = 80.000000
-
-
-                total energy =      -75.00873 a.u.
-              kinetic energy =       31.45849 a.u.
-        electrostatic energy =      -86.71952 a.u.
-                         esr =        0.07050 a.u.
-                       eself =      118.08691 a.u.
-      pseudopotential energy =      -13.15293 a.u.
-  n-l pseudopotential energy =       17.42768 a.u.
- exchange-correlation energy =      -24.02245 a.u.
-           average potential =       -0.34450 a.u.
+                total energy =       -1.63103 a.u.
+              kinetic energy =        1.30852 a.u.
+        electrostatic energy =        0.00000 a.u.
+                         esr =        0.02346 a.u.
+                       eself =        1.49603 a.u.
+      pseudopotential energy =       -0.64848 a.u.
+  n-l pseudopotential energy =        0.03295 a.u.
+ exchange-correlation energy =       -0.95762 a.u.
+           average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :            2
+  -----------  REPLICA :  2
   
 
 
- subroutine rhoofr: total integrated electronic density
- in g-space = 80.000000     in r-space = 80.000000
-
-
-                total energy =      -74.97841 a.u.
-              kinetic energy =       31.63554 a.u.
-        electrostatic energy =      -86.76387 a.u.
-                         esr =        0.07079 a.u.
-                       eself =      118.08691 a.u.
-      pseudopotential energy =      -13.17733 a.u.
-  n-l pseudopotential energy =       17.41111 a.u.
- exchange-correlation energy =      -24.08386 a.u.
-           average potential =       -0.34391 a.u.
+                total energy =       -1.62171 a.u.
+              kinetic energy =        1.26091 a.u.
+        electrostatic energy =        0.00000 a.u.
+                         esr =        0.01144 a.u.
+                       eself =        1.49603 a.u.
+      pseudopotential energy =       -0.60682 a.u.
+  n-l pseudopotential energy =        0.03084 a.u.
+ exchange-correlation energy =       -0.93473 a.u.
+           average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :            3
+  -----------  REPLICA :  3
   
 
 
- subroutine rhoofr: total integrated electronic density
- in g-space = 80.000000     in r-space = 80.000000
-
-
-                total energy =      -74.93911 a.u.
-              kinetic energy =       31.78537 a.u.
-        electrostatic energy =      -86.83783 a.u.
-                         esr =        0.07183 a.u.
-                       eself =      118.08691 a.u.
-      pseudopotential energy =      -13.24018 a.u.
-  n-l pseudopotential energy =       17.49324 a.u.
- exchange-correlation energy =      -24.13973 a.u.
-           average potential =       -0.34324 a.u.
+                total energy =       -1.61365 a.u.
+              kinetic energy =        1.22984 a.u.
+        electrostatic energy =        0.00000 a.u.
+                         esr =        0.00594 a.u.
+                       eself =        1.49603 a.u.
+      pseudopotential energy =       -0.58141 a.u.
+  n-l pseudopotential energy =        0.02947 a.u.
+ exchange-correlation energy =       -0.91900 a.u.
+           average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :            4
+  -----------  REPLICA :  4
   
 
 
- subroutine rhoofr: total integrated electronic density
- in g-space = 80.000000     in r-space = 80.000000
-
-
-                total energy =      -74.88923 a.u.
-              kinetic energy =       31.91738 a.u.
-        electrostatic energy =      -86.90254 a.u.
-                         esr =        0.07390 a.u.
-                       eself =      118.08691 a.u.
-      pseudopotential energy =      -13.31335 a.u.
-  n-l pseudopotential energy =       17.59684 a.u.
- exchange-correlation energy =      -24.18756 a.u.
-           average potential =       -0.34273 a.u.
+                total energy =       -1.61050 a.u.
+              kinetic energy =        1.21888 a.u.
+        electrostatic energy =        0.00000 a.u.
+                         esr =        0.00437 a.u.
+                       eself =        1.49603 a.u.
+      pseudopotential energy =       -0.57277 a.u.
+  n-l pseudopotential energy =        0.02899 a.u.
+ exchange-correlation energy =       -0.91330 a.u.
+           average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :            5
+  -----------  REPLICA :  5
   
 
 
- subroutine rhoofr: total integrated electronic density
- in g-space = 80.000000     in r-space = 80.000000
-
-
-                total energy =      -74.86648 a.u.
-              kinetic energy =       31.99063 a.u.
-        electrostatic energy =      -86.95005 a.u.
-                         esr =        0.07529 a.u.
-                       eself =      118.08691 a.u.
-      pseudopotential energy =      -13.36077 a.u.
-  n-l pseudopotential energy =       17.67173 a.u.
- exchange-correlation energy =      -24.21803 a.u.
-           average potential =       -0.34241 a.u.
+                total energy =       -1.61360 a.u.
+              kinetic energy =        1.22977 a.u.
+        electrostatic energy =        0.00000 a.u.
+                         esr =        0.00594 a.u.
+                       eself =        1.49603 a.u.
+      pseudopotential energy =       -0.58135 a.u.
+  n-l pseudopotential energy =        0.02947 a.u.
+ exchange-correlation energy =       -0.91896 a.u.
+           average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :            6
+  -----------  REPLICA :  6
   
 
 
- subroutine rhoofr: total integrated electronic density
- in g-space = 80.000000     in r-space = 80.000000
-
-
-                total energy =      -74.89829 a.u.
-              kinetic energy =       31.99138 a.u.
-        electrostatic energy =      -86.97454 a.u.
-                         esr =        0.07413 a.u.
-                       eself =      118.08691 a.u.
-      pseudopotential energy =      -13.35226 a.u.
-  n-l pseudopotential energy =       17.66636 a.u.
- exchange-correlation energy =      -24.22922 a.u.
-           average potential =       -0.34214 a.u.
+                total energy =       -1.62165 a.u.
+              kinetic energy =        1.26071 a.u.
+        electrostatic energy =        0.00000 a.u.
+                         esr =        0.01144 a.u.
+                       eself =        1.49603 a.u.
+      pseudopotential energy =       -0.60670 a.u.
+  n-l pseudopotential energy =        0.03083 a.u.
+ exchange-correlation energy =       -0.93464 a.u.
+           average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :            7
+  -----------  REPLICA :  7
   
 
 
- subroutine rhoofr: total integrated electronic density
- in g-space = 80.000000     in r-space = 80.000000
-
-
-                total energy =      -74.96301 a.u.
-              kinetic energy =       31.94144 a.u.
-        electrostatic energy =      -86.97354 a.u.
-                         esr =        0.07207 a.u.
-                       eself =      118.08691 a.u.
-      pseudopotential energy =      -13.30530 a.u.
-  n-l pseudopotential energy =       17.60206 a.u.
- exchange-correlation energy =      -24.22766 a.u.
-           average potential =       -0.34184 a.u.
-
-
-  
-  -----------  REPLICA :            8
-  
-
-
- subroutine rhoofr: total integrated electronic density
- in g-space = 80.000000     in r-space = 80.000000
-
-
-                total energy =      -75.01574 a.u.
-              kinetic energy =       31.88110 a.u.
-        electrostatic energy =      -86.95392 a.u.
-                         esr =        0.07103 a.u.
-                       eself =      118.08691 a.u.
-      pseudopotential energy =      -13.26079 a.u.
-  n-l pseudopotential energy =       17.53786 a.u.
- exchange-correlation energy =      -24.21999 a.u.
-           average potential =       -0.34163 a.u.
+                total energy =       -1.63106 a.u.
+              kinetic energy =        1.30853 a.u.
+        electrostatic energy =        0.00000 a.u.
+                         esr =        0.02346 a.u.
+                       eself =        1.49603 a.u.
+      pseudopotential energy =       -0.64849 a.u.
+  n-l pseudopotential energy =        0.03295 a.u.
+ exchange-correlation energy =       -0.95764 a.u.
+           average potential =        0.00000 a.u.
 
 
   
 
   nfi   SUM(E)   con_ite     con_usat     cons_pls     max_ekinc   deviation   maxforce
   
-    1     -749.61244     0  0.00000E+00   1  0.00000  0.00000  0.17340E+00  0.18904E+00
+    1      -14.61600     0  0.00000E+00   1  0.00000  0.00000  0.51508E-01  0.20354+237
   
-  ---------------------- Replica :            1
-  
-
-
- eigenvalues at k-point:  0.000 0.000 0.000
-  -11.19   -9.80   -9.34   -9.14   -8.99   -8.87   -8.39   -8.20   -7.24   -7.21
-   -7.20   -6.32   -6.20   -5.73   -5.53   -5.47   -5.33   -4.75   -4.26   -4.04
-   -3.44   -2.99   -2.90   -2.72   -2.44   -2.07   -2.00   -1.98   -1.65   -1.42
-   -1.36   -1.07   -0.98   -0.78   -0.67   -0.65   -0.63   -0.42   -0.38    0.29
- 
- 
-  
-  ---------------------- Replica :            2
+  ---------------------- Replica :  1
   
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -11.15   -9.83   -9.22   -9.05   -9.03   -8.75   -8.36   -8.30   -7.15   -7.10
-   -7.05   -6.38   -6.22   -5.65   -5.54   -5.45   -5.25   -4.68   -4.21   -4.15
-   -3.33   -2.88   -2.83   -2.66   -2.45   -2.00   -1.92   -1.90   -1.70   -1.55
-   -1.36   -0.94   -0.91   -0.66   -0.60   -0.56   -0.51   -0.38   -0.35    0.33
+  -10.54   -6.35
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+   -9.82
  
  
   
-  ---------------------- Replica :            3
+  ---------------------- Replica :  2
   
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -11.25  -10.01   -9.26   -9.14   -9.07   -8.71   -8.55   -8.29   -7.16   -7.14
-   -7.08   -6.55   -6.23   -5.66   -5.61   -5.49   -5.20   -4.68   -4.24   -4.20
-   -3.30   -2.93   -2.83   -2.72   -2.52   -2.03   -1.94   -1.93   -1.76   -1.67
-   -1.35   -0.90   -0.84   -0.68   -0.64   -0.57   -0.54   -0.36   -0.33    0.23
+  -10.46   -6.14
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+   -9.57
  
  
   
-  ---------------------- Replica :            4
+  ---------------------- Replica :  3
   
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -11.37  -10.17   -9.30   -9.22   -9.10   -8.69   -8.65   -8.28   -7.20   -7.14
-   -7.10   -6.64   -6.23   -5.69   -5.67   -5.52   -5.16   -4.68   -4.23   -4.20
-   -3.27   -2.97   -2.83   -2.78   -2.61   -2.06   -1.98   -1.98   -1.76   -1.75
-   -1.36   -0.89   -0.84   -0.71   -0.66   -0.58   -0.56   -0.36   -0.34    0.27
+  -10.43   -6.00
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+   -9.42
  
  
   
-  ---------------------- Replica :            5
+  ---------------------- Replica :  4
   
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -11.48  -10.27   -9.35   -9.27   -9.14   -8.69   -8.68   -8.26   -7.26   -7.15
-   -7.14   -6.66   -6.25   -5.75   -5.69   -5.54   -5.11   -4.67   -4.26   -4.12
-   -3.23   -3.02   -2.86   -2.81   -2.68   -2.11   -2.02   -2.02   -1.80   -1.71
-   -1.37   -0.91   -0.89   -0.73   -0.70   -0.59   -0.57   -0.39   -0.37    0.30
+  -10.42   -5.94
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+   -9.37
  
  
   
-  ---------------------- Replica :            6
+  ---------------------- Replica :  5
   
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -11.54  -10.28   -9.41   -9.29   -9.17   -8.71   -8.65   -8.26   -7.34   -7.19
-   -7.17   -6.62   -6.26   -5.81   -5.72   -5.56   -5.04   -4.69   -4.32   -3.99
-   -3.19   -3.06   -2.91   -2.83   -2.70   -2.16   -2.07   -2.03   -1.83   -1.63
-   -1.35   -0.99   -0.91   -0.77   -0.75   -0.61   -0.61   -0.41   -0.38    0.20
+  -10.43   -6.00
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+   -9.42
  
  
   
-  ---------------------- Replica :            7
+  ---------------------- Replica :  6
   
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -11.56  -10.20   -9.46   -9.30   -9.20   -8.75   -8.53   -8.25   -7.43   -7.23
-   -7.20   -6.54   -6.27   -5.88   -5.74   -5.54   -4.97   -4.70   -4.39   -3.89
-   -3.15   -3.07   -2.96   -2.83   -2.67   -2.19   -2.11   -2.02   -1.86   -1.52
-   -1.34   -1.08   -0.93   -0.82   -0.77   -0.65   -0.63   -0.44   -0.34    0.02
+  -10.46   -6.14
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+   -9.57
  
  
   
-  ---------------------- Replica :            8
+  ---------------------- Replica :  7
   
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -11.57  -10.09   -9.50   -9.34   -9.20   -8.80   -8.32   -8.25   -7.51   -7.27
-   -7.20   -6.45   -6.29   -5.97   -5.74   -5.45   -4.92   -4.71   -4.44   -3.84
-   -3.10   -3.07   -3.00   -2.82   -2.58   -2.24   -2.12   -1.99   -1.90   -1.50
-   -1.34   -1.19   -0.94   -0.85   -0.75   -0.68   -0.65   -0.45   -0.37   -0.01
+  -10.54   -6.34
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+   -9.82
  
  
-    2     -749.61372     0  0.28930E-07   4  0.00000  0.00000  0.17177E+00  0.18680E+00
-    3     -749.61540     0  0.16146E-06   7  0.00000  0.00000  0.16984E+00  0.18412E+00
-    4     -749.61719     0  0.45245E-06   7  0.00000  0.00000  0.16803E+00  0.18156E+00
-    5     -749.61899     0  0.90608E-06   7  0.00000  0.00000  0.16643E+00  0.17924E+00
-    6     -749.62078     0  0.15216E-05   7  0.00000  0.00000  0.16502E+00  0.17717E+00
-    7     -749.62255     0  0.22955E-05   7  0.00000  0.00000  0.16376E+00  0.17528E+00
-    8     -749.62430     0  0.32242E-05   7  0.00000  0.00000  0.16263E+00  0.17355E+00
-    9     -749.62602     0  0.43042E-05   7  0.00001  0.00000  0.16158E+00  0.17194E+00
-   10     -749.62773     0  0.55323E-05   7  0.00001  0.00000  0.16061E+00  0.17042E+00
-   11     -749.62941     0  0.69055E-05   7  0.00001  0.00000  0.15969E+00  0.16897E+00
-   12     -749.63108     0  0.84211E-05   7  0.00001  0.00000  0.15881E+00  0.16758E+00
-   13     -749.63270     1  0.38586E-08   9  0.00001  0.00000  0.15798E+00  0.16625E+00
-   14     -749.63432     0  0.15657E-05   7  0.00001  0.00000  0.15717E+00  0.16495E+00
-   15     -749.63592     0  0.75846E-06   7  0.00001  0.00000  0.15638E+00  0.16369E+00
-   16     -749.63752     0  0.13581E-05   6  0.00001  0.00000  0.15561E+00  0.16245E+00
-   17     -749.63909     0  0.35804E-05   6  0.00001  0.00000  0.15486E+00  0.16125E+00
-   18     -749.64065     0  0.60259E-05   6  0.00001  0.00000  0.15412E+00  0.16007E+00
-   19     -749.64219     0  0.86369E-05   6  0.00001  0.00000  0.15340E+00  0.15891E+00
-   20     -749.64369     1  0.50546E-08   9  0.00001  0.00000  0.15270E+00  0.15777E+00
-   21     -749.64520     0  0.90503E-06   6  0.00001  0.00000  0.15200E+00  0.15665E+00
-   22     -749.64669     0  0.92959E-06   7  0.00001  0.00000  0.15131E+00  0.15555E+00
-   23     -749.64817     0  0.35789E-05   6  0.00001  0.00000  0.15063E+00  0.15446E+00
-   24     -749.64963     0  0.67120E-05   6  0.00001  0.00000  0.14996E+00  0.15339E+00
-   25     -749.65106     1  0.49517E-08   9  0.00001  0.00000  0.14931E+00  0.15234E+00
-   26     -749.65249     0  0.14687E-06   6  0.00001  0.00000  0.14866E+00  0.15129E+00
-   27     -749.65391     0  0.26558E-05   6  0.00001  0.00000  0.14801E+00  0.15027E+00
-   28     -749.65532     0  0.60277E-05   6  0.00001  0.00000  0.14737E+00  0.14925E+00
-   29     -749.65671     0  0.97609E-05   6  0.00001  0.00000  0.14673E+00  0.14825E+00
-   30     -749.65806     1  0.89831E-08   9  0.00001  0.00000  0.14613E+00  0.14726E+00
-   31     -749.65942     0  0.49866E-06   6  0.00001  0.00000  0.14551E+00  0.14629E+00
-   32     -749.66077     0  0.21574E-05   6  0.00001  0.00000  0.14490E+00  0.14532E+00
-   33     -749.66211     0  0.59332E-05   6  0.00001  0.00000  0.14429E+00  0.14437E+00
-   34     -749.66341     1  0.62851E-08   9  0.00001  0.00000  0.14370E+00  0.14343E+00
-   35     -749.66472     0  0.10461E-05   6  0.00001  0.00000  0.14311E+00  0.14249E+00
-   36     -749.66602     0  0.44813E-05   6  0.00001  0.00000  0.14252E+00  0.14157E+00
-   37     -749.66731     0  0.87755E-05   6  0.00001  0.00000  0.14194E+00  0.14066E+00
-   38     -749.66856     1  0.10536E-07   9  0.00001  0.00000  0.14138E+00  0.13976E+00
-   39     -749.66982     0  0.34806E-06   6  0.00001  0.00000  0.14081E+00  0.13887E+00
-   40     -749.67107     0  0.37938E-05   6  0.00001  0.00000  0.14024E+00  0.13799E+00
-   41     -749.67232     0  0.83300E-05   6  0.00001  0.00000  0.13968E+00  0.13712E+00
-   42     -749.67352     1  0.11345E-07   9  0.00001  0.00000  0.13914E+00  0.13626E+00
-   43     -749.67473     0  0.72549E-06   6  0.00001  0.00000  0.13859E+00  0.13541E+00
-   44     -749.67594     0  0.45211E-05   6  0.00001  0.00000  0.13805E+00  0.13456E+00
-   45     -749.67714     0  0.93934E-05   6  0.00001  0.00000  0.13750E+00  0.13373E+00
-   46     -749.67829     1  0.14207E-07   9  0.00001  0.00000  0.13698E+00  0.13291E+00
-   47     -749.67946     0  0.58222E-06   6  0.00001  0.00000  0.13646E+00  0.13209E+00
-   48     -749.68063     0  0.45364E-05   6  0.00001  0.00000  0.13593E+00  0.13128E+00
-   49     -749.68178     0  0.96637E-05   6  0.00001  0.00000  0.13540E+00  0.13048E+00
-   50     -749.68290     1  0.15855E-07   9  0.00001  0.00000  0.13490E+00  0.12969E+00
-   51     -749.68402     0  0.68637E-06   6  0.00001  0.00000  0.13439E+00  0.12891E+00
-   52     -749.68515     0  0.48651E-05   6  0.00001  0.00000  0.13388E+00  0.12813E+00
-   53     -749.68624     1  0.97922E-08   9  0.00001  0.00000  0.13339E+00  0.12736E+00
-   54     -749.68734     0  0.24194E-05   6  0.00001  0.00000  0.13289E+00  0.12660E+00
-   55     -749.68844     0  0.73083E-05   6  0.00001  0.00000  0.13239E+00  0.12585E+00
-   56     -749.68950     1  0.14680E-07   9  0.00001  0.00000  0.13191E+00  0.12510E+00
-   57     -749.69057     0  0.17331E-05   6  0.00001  0.00000  0.13143E+00  0.12436E+00
-   58     -749.69164     0  0.65173E-05   6  0.00001  0.00000  0.13094E+00  0.12363E+00
-   59     -749.69267     1  0.14407E-07   9  0.00001  0.00000  0.13047E+00  0.12291E+00
-   60     -749.69372     0  0.21156E-05   6  0.00001  0.00000  0.13000E+00  0.12219E+00
-   61     -749.69476     0  0.71438E-05   6  0.00001  0.00000  0.12952E+00  0.12148E+00
-   62     -749.69577     1  0.16492E-07   9  0.00001  0.00000  0.12907E+00  0.12078E+00
-   63     -749.69678     0  0.20187E-05   6  0.00001  0.00000  0.12860E+00  0.12008E+00
-   64     -749.69780     0  0.71236E-05   6  0.00001  0.00000  0.12814E+00  0.11939E+00
-   65     -749.69878     1  0.17508E-07   9  0.00001  0.00000  0.12770E+00  0.11871E+00
-   66     -749.69977     0  0.21300E-05   6  0.00000  0.00000  0.12724E+00  0.11803E+00
-   67     -749.70076     0  0.73741E-05   6  0.00000  0.00000  0.12679E+00  0.11736E+00
-   68     -749.70172     1  0.19053E-07   9  0.00000  0.00000  0.12636E+00  0.11670E+00
-   69     -749.70269     0  0.21444E-05   6  0.00000  0.00000  0.12591E+00  0.11604E+00
-   70     -749.70365     0  0.74888E-05   6  0.00000  0.00000  0.12547E+00  0.11538E+00
-   71     -749.70459     1  0.20374E-07   9  0.00000  0.00000  0.12505E+00  0.11474E+00
-   72     -749.70553     0  0.21977E-05   6  0.00000  0.00000  0.12462E+00  0.11410E+00
-   73     -749.70648     0  0.76490E-05   6  0.00000  0.00000  0.12418E+00  0.11346E+00
-   74     -749.70739     1  0.21817E-07   9  0.00000  0.00000  0.12377E+00  0.11283E+00
-   75     -749.70831     0  0.22297E-05   6  0.00000  0.00000  0.12335E+00  0.11221E+00
-   76     -749.70923     0  0.77749E-05   6  0.00000  0.00000  0.12292E+00  0.11159E+00
-   77     -749.71012     1  0.23216E-07   9  0.00000  0.00000  0.12252E+00  0.11099E+00
-   78     -749.71102     0  0.22673E-05   6  0.00000  0.00000  0.12211E+00  0.11050E+00
-   79     -749.71192     0  0.79026E-05   6  0.00000  0.00000  0.12169E+00  0.11003E+00
-   80     -749.71279     1  0.24210E-07   9  0.00000  0.00000  0.12130E+00  0.10955E+00
-   81     -749.71367     0  0.22989E-05   6  0.00000  0.00000  0.12089E+00  0.10908E+00
-   82     -749.71455     0  0.80167E-05   6  0.00000  0.00000  0.12049E+00  0.10862E+00
-   83     -749.71539     1  0.25604E-07   9  0.00000  0.00000  0.12010E+00  0.10815E+00
-   84     -749.71625     0  0.23297E-05   6  0.00000  0.00000  0.11971E+00  0.10769E+00
-   85     -749.71711     0  0.81247E-05   6  0.00000  0.00000  0.11931E+00  0.10723E+00
-   86     -749.71794     1  0.27005E-07   9  0.00000  0.00000  0.11893E+00  0.10678E+00
-   87     -749.71878     0  0.23575E-05   6  0.00000  0.00000  0.11854E+00  0.10633E+00
-   88     -749.71962     0  0.82237E-05   6  0.00000  0.00000  0.11816E+00  0.10588E+00
-   89     -749.72043     1  0.28402E-07   9  0.00000  0.00000  0.11779E+00  0.10544E+00
-   90     -749.72125     0  0.23835E-05   6  0.00000  0.00000  0.11741E+00  0.10500E+00
-   91     -749.72207     0  0.83157E-05   6  0.00000  0.00000  0.11703E+00  0.10456E+00
-   92     -749.72286     1  0.29797E-07   9  0.00000  0.00000  0.11667E+00  0.10412E+00
-   93     -749.72366     0  0.24073E-05   6  0.00000  0.00000  0.11630E+00  0.10369E+00
-   94     -749.72446     0  0.84002E-05   6  0.00000  0.00000  0.11592E+00  0.10326E+00
-   95     -749.72524     1  0.31188E-07   9  0.00000  0.00000  0.11557E+00  0.10284E+00
-   96     -749.72602     0  0.24293E-05   6  0.00000  0.00000  0.11521E+00  0.10241E+00
-   97     -749.72681     0  0.84780E-05   6  0.00000  0.00000  0.11484E+00  0.10199E+00
-   98     -749.72756     1  0.32574E-07   9  0.00000  0.00000  0.11450E+00  0.10158E+00
-   99     -749.72833     0  0.24494E-05   6  0.00000  0.00000  0.11414E+00  0.10116E+00
+    2      -14.61657     0  0.17039E-05   8  0.00000  0.00000  0.50462E-01  0.20354+237
+    3      -14.61718     0  0.58788E-05   8  0.00000  0.00000  0.49399E-01  0.20354+237
+    4      -14.61777     1  0.57517E-09   8  0.00000  0.00000  0.48429E-01  0.20354+237
+    5      -14.61834     0  0.67905E-05   8  0.00000  0.00000  0.47560E-01  0.20354+237
+    6      -14.61891     1  0.33531E-08   8  0.00000  0.00000  0.46770E-01  0.20354+237
+    7      -14.61946     0  0.96388E-05   8  0.00000  0.00000  0.46062E-01  0.20354+237
+    8      -14.62001     1  0.10148E-07   8  0.00000  0.00000  0.45414E-01  0.20354+237
+    9      -14.62054     1  0.87429E-08   8  0.00000  0.00000  0.44823E-01  0.20354+237
+   10      -14.62107     1  0.13078E-07   8  0.00000  0.00000  0.44295E-01  0.20354+237
+   11      -14.62159     1  0.17511E-07   8  0.00000  0.00000  0.43806E-01  0.20354+237
+   12      -14.62211     1  0.22711E-07   8  0.00000  0.00000  0.43361E-01  0.20354+237
+   13      -14.62263     1  0.28720E-07   8  0.00000  0.00000  0.42954E-01  0.20354+237
+   14      -14.62313     1  0.35568E-07   8  0.00000  0.00000  0.42579E-01  0.20354+237
+   15      -14.62363     1  0.43260E-07   8  0.00000  0.00000  0.42230E-01  0.20354+237
+   16      -14.62414     1  0.51826E-07   8  0.00000  0.00000  0.41907E-01  0.20354+237
+   17      -14.62464     1  0.61291E-07   8  0.00000  0.00000  0.41610E-01  0.20354+237
+   18      -14.62513     1  0.71670E-07   8  0.00000  0.00000  0.41331E-01  0.20354+237
+   19      -14.62562     1  0.82957E-07   8  0.00000  0.00000  0.41068E-01  0.20354+237
+   20      -14.62611     1  0.95174E-07   8  0.00000  0.00000  0.40824E-01  0.20354+237
+   21      -14.62660     1  0.10834E-06   8  0.00000  0.00000  0.40593E-01  0.20354+237
+   22      -14.62709     1  0.12245E-06   8  0.00000  0.00000  0.40376E-01  0.20354+237
+   23      -14.62757     1  0.13751E-06   8  0.00000  0.00000  0.40165E-01  0.20354+237
+   24      -14.62806     1  0.15350E-06   8  0.00000  0.00000  0.39973E-01  0.20354+237
+   25      -14.62853     1  0.17047E-06   8  0.00000  0.00000  0.39783E-01  0.20354+237
+   26      -14.62901     1  0.18833E-06   8  0.00000  0.00000  0.39604E-01  0.20354+237
+   27      -14.62948     1  0.20717E-06   8  0.00000  0.00000  0.39430E-01  0.20354+237
+   28      -14.62995     1  0.22690E-06   8  0.00000  0.00000  0.39264E-01  0.20354+237
+   29      -14.63042     1  0.24756E-06   8  0.00000  0.00000  0.39102E-01  0.20354+237
+   30      -14.63089     1  0.26915E-06   8  0.00000  0.00000  0.38948E-01  0.20354+237
+   31      -14.63136     1  0.29161E-06   8  0.00000  0.00000  0.38796E-01  0.20354+237
+   32      -14.63182     1  0.31499E-06   8  0.00000  0.00000  0.38650E-01  0.20354+237
+   33      -14.63229     1  0.33912E-06   8  0.00000  0.00000  0.38505E-01  0.20354+237
+   34      -14.63275     1  0.36415E-06   8  0.00000  0.00000  0.38364E-01  0.20354+237
+   35      -14.63321     1  0.38999E-06   8  0.00000  0.00000  0.38227E-01  0.20354+237
+   36      -14.63366     1  0.41652E-06   8  0.00000  0.00000  0.38091E-01  0.20354+237
+   37      -14.63412     1  0.44389E-06   8  0.00000  0.00000  0.37960E-01  0.20354+237
+   38      -14.63457     1  0.47198E-06   8  0.00000  0.00000  0.37833E-01  0.20354+237
+   39      -14.63502     1  0.50078E-06   8  0.00000  0.00000  0.37705E-01  0.20354+237
+   40      -14.63546     1  0.53030E-06   8  0.00000  0.00000  0.37582E-01  0.20354+237
+   41      -14.63591     1  0.56057E-06   8  0.00000  0.00000  0.37458E-01  0.20354+237
+   42      -14.63636     1  0.59141E-06   8  0.00000  0.00000  0.37333E-01  0.20354+237
+   43      -14.63680     1  0.62273E-06   8  0.00000  0.00000  0.37214E-01  0.20354+237
+   44      -14.63725     1  0.65465E-06   8  0.00000  0.00000  0.37093E-01  0.20354+237
+   45      -14.63769     1  0.68707E-06   8  0.00000  0.00000  0.36973E-01  0.20354+237
+   46      -14.63812     1  0.71984E-06   8  0.00000  0.00000  0.36855E-01  0.20354+237
+   47      -14.63856     1  0.75323E-06   8  0.00000  0.00000  0.36739E-01  0.20354+237
+   48      -14.63899     1  0.78696E-06   8  0.00000  0.00000  0.36624E-01  0.20354+237
+   49      -14.63942     1  0.82091E-06   8  0.00000  0.00000  0.36507E-01  0.20354+237
   
-  -----------  REPLICA :            1
+  -----------  REPLICA :  1
   
 
 
-                total energy =      -75.00907 a.u.
-              kinetic energy =       31.45963 a.u.
-        electrostatic energy =      -86.72056 a.u.
-                         esr =        0.07050 a.u.
-                       eself =      118.08691 a.u.
-      pseudopotential energy =      -13.15334 a.u.
-  n-l pseudopotential energy =       17.42825 a.u.
- exchange-correlation energy =      -24.02304 a.u.
-           average potential =       -0.34450 a.u.
+                total energy =       -1.63320 a.u.
+              kinetic energy =        1.32219 a.u.
+        electrostatic energy =        0.00000 a.u.
+                         esr =        0.02898 a.u.
+                       eself =        1.49603 a.u.
+      pseudopotential energy =       -0.66262 a.u.
+  n-l pseudopotential energy =        0.03363 a.u.
+ exchange-correlation energy =       -0.96401 a.u.
+           average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :            2
+  -----------  REPLICA :  2
   
 
 
-                total energy =      -74.98005 a.u.
-              kinetic energy =       31.64183 a.u.
-        electrostatic energy =      -86.76854 a.u.
-                         esr =        0.07078 a.u.
-                       eself =      118.08691 a.u.
-      pseudopotential energy =      -13.17826 a.u.
-  n-l pseudopotential energy =       17.41197 a.u.
- exchange-correlation energy =      -24.08706 a.u.
-           average potential =       -0.34385 a.u.
+                total energy =       -1.62564 a.u.
+              kinetic energy =        1.27523 a.u.
+        electrostatic energy =        0.00000 a.u.
+                         esr =        0.01517 a.u.
+                       eself =        1.49603 a.u.
+      pseudopotential energy =       -0.62042 a.u.
+  n-l pseudopotential energy =        0.03155 a.u.
+ exchange-correlation energy =       -0.94184 a.u.
+           average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :            3
+  -----------  REPLICA :  3
   
 
 
-                total energy =      -74.94656 a.u.
-              kinetic energy =       31.77490 a.u.
-        electrostatic energy =      -86.83413 a.u.
-                         esr =        0.07153 a.u.
-                       eself =      118.08691 a.u.
-      pseudopotential energy =      -13.23169 a.u.
-  n-l pseudopotential energy =       17.48158 a.u.
- exchange-correlation energy =      -24.13722 a.u.
-           average potential =       -0.34324 a.u.
+                total energy =       -1.61760 a.u.
+              kinetic energy =        1.24116 a.u.
+        electrostatic energy =        0.00000 a.u.
+                         esr =        0.00771 a.u.
+                       eself =        1.49603 a.u.
+      pseudopotential energy =       -0.59121 a.u.
+  n-l pseudopotential energy =        0.03000 a.u.
+ exchange-correlation energy =       -0.92491 a.u.
+           average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :            4
+  -----------  REPLICA :  4
   
 
 
-                total energy =      -74.91381 a.u.
-              kinetic energy =       31.87082 a.u.
-        electrostatic energy =      -86.88264 a.u.
-                         esr =        0.07249 a.u.
-                       eself =      118.08691 a.u.
-      pseudopotential energy =      -13.28088 a.u.
-  n-l pseudopotential energy =       17.55206 a.u.
- exchange-correlation energy =      -24.17316 a.u.
-           average potential =       -0.34288 a.u.
+                total energy =       -1.61419 a.u.
+              kinetic energy =        1.22873 a.u.
+        electrostatic energy =        0.00000 a.u.
+                         esr =        0.00546 a.u.
+                       eself =        1.49603 a.u.
+      pseudopotential energy =       -0.58086 a.u.
+  n-l pseudopotential energy =        0.02943 a.u.
+ exchange-correlation energy =       -0.91854 a.u.
+           average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :            5
+  -----------  REPLICA :  5
   
 
 
-                total energy =      -74.90538 a.u.
-              kinetic energy =       31.91555 a.u.
-        electrostatic energy =      -86.91829 a.u.
-                         esr =        0.07288 a.u.
-                       eself =      118.08691 a.u.
-      pseudopotential energy =      -13.30997 a.u.
-  n-l pseudopotential energy =       17.60150 a.u.
- exchange-correlation energy =      -24.19418 a.u.
-           average potential =       -0.34269 a.u.
+                total energy =       -1.61758 a.u.
+              kinetic energy =        1.24119 a.u.
+        electrostatic energy =        0.00000 a.u.
+                         esr =        0.00772 a.u.
+                       eself =        1.49603 a.u.
+      pseudopotential energy =       -0.59121 a.u.
+  n-l pseudopotential energy =        0.03001 a.u.
+ exchange-correlation energy =       -0.92493 a.u.
+           average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :            6
+  -----------  REPLICA :  6
   
 
 
-                total energy =      -74.92905 a.u.
-              kinetic energy =       31.92203 a.u.
-        electrostatic energy =      -86.94319 a.u.
-                         esr =        0.07247 a.u.
-                       eself =      118.08691 a.u.
-      pseudopotential energy =      -13.31033 a.u.
-  n-l pseudopotential energy =       17.60900 a.u.
- exchange-correlation energy =      -24.20656 a.u.
-           average potential =       -0.34242 a.u.
+                total energy =       -1.62560 a.u.
+              kinetic energy =        1.27508 a.u.
+        electrostatic energy =        0.00000 a.u.
+                         esr =        0.01518 a.u.
+                       eself =        1.49603 a.u.
+      pseudopotential energy =       -0.62033 a.u.
+  n-l pseudopotential energy =        0.03155 a.u.
+ exchange-correlation energy =       -0.94179 a.u.
+           average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :            7
+  -----------  REPLICA :  7
   
 
 
-                total energy =      -74.97448 a.u.
-              kinetic energy =       31.90275 a.u.
-        electrostatic energy =      -86.95325 a.u.
-                         esr =        0.07161 a.u.
-                       eself =      118.08691 a.u.
-      pseudopotential energy =      -13.28638 a.u.
-  n-l pseudopotential energy =       17.57642 a.u.
- exchange-correlation energy =      -24.21402 a.u.
-           average potential =       -0.34203 a.u.
+                total energy =       -1.63324 a.u.
+              kinetic energy =        1.32227 a.u.
+        electrostatic energy =        0.00000 a.u.
+                         esr =        0.02901 a.u.
+                       eself =        1.49603 a.u.
+      pseudopotential energy =       -0.66269 a.u.
+  n-l pseudopotential energy =        0.03364 a.u.
+ exchange-correlation energy =       -0.96407 a.u.
+           average potential =        0.00000 a.u.
 
 
+   50      -14.63986     1  0.85533E-06   8  0.00000  0.00000  0.36390E-01  0.20354+237
   
-  -----------  REPLICA :            8
-  
-
-
-                total energy =      -75.01725 a.u.
-              kinetic energy =       31.86961 a.u.
-        electrostatic energy =      -86.94688 a.u.
-                         esr =        0.07099 a.u.
-                       eself =      118.08691 a.u.
-      pseudopotential energy =      -13.25637 a.u.
-  n-l pseudopotential energy =       17.53183 a.u.
- exchange-correlation energy =      -24.21543 a.u.
-           average potential =       -0.34170 a.u.
-
-
-  100     -749.72910     0  0.85492E-05   6  0.00000  0.00000  0.11378E+00  0.10075E+00
-  
-  ---------------------- Replica :            1
+  ---------------------- Replica :  1
   
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -11.19   -9.80   -9.34   -9.14   -8.99   -8.87   -8.39   -8.20   -7.24   -7.21
-   -7.20   -6.31   -6.20   -5.73   -5.53   -5.47   -5.33   -4.75   -4.26   -4.03
-   -3.44   -2.99   -2.90   -2.72   -2.44   -2.07   -2.00   -1.98   -1.64   -1.42
-   -1.36   -1.07   -0.98   -0.78   -0.67   -0.65   -0.63   -0.42   -0.38    0.28
+  -10.67   -6.38
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+   -9.98
  
  
   
-  ---------------------- Replica :            2
+  ---------------------- Replica :  2
   
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -11.16   -9.84   -9.22   -9.05   -9.04   -8.76   -8.36   -8.31   -7.16   -7.10
-   -7.05   -6.38   -6.21   -5.65   -5.54   -5.44   -5.26   -4.68   -4.21   -4.16
-   -3.33   -2.88   -2.84   -2.65   -2.45   -2.00   -1.92   -1.90   -1.70   -1.55
-   -1.36   -0.95   -0.91   -0.65   -0.60   -0.56   -0.52   -0.39   -0.35    0.32
+  -10.62   -6.16
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+   -9.76
  
  
   
-  ---------------------- Replica :            3
+  ---------------------- Replica :  3
   
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -11.26   -9.99   -9.26   -9.16   -9.07   -8.72   -8.51   -8.30   -7.16   -7.14
-   -7.08   -6.53   -6.22   -5.66   -5.62   -5.48   -5.22   -4.68   -4.23   -4.20
-   -3.30   -2.93   -2.83   -2.71   -2.53   -2.03   -1.94   -1.93   -1.76   -1.68
-   -1.35   -0.90   -0.83   -0.68   -0.64   -0.57   -0.54   -0.35   -0.30    0.24
+  -10.59   -5.99
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+   -9.61
  
  
   
-  ---------------------- Replica :            4
+  ---------------------- Replica :  4
   
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -11.36  -10.11   -9.30   -9.26   -9.09   -8.69   -8.58   -8.28   -7.20   -7.14
-   -7.10   -6.60   -6.24   -5.72   -5.66   -5.50   -5.18   -4.67   -4.21   -4.19
-   -3.27   -2.96   -2.83   -2.76   -2.64   -2.06   -1.98   -1.96   -1.77   -1.76
-   -1.36   -0.89   -0.79   -0.70   -0.66   -0.57   -0.55   -0.35   -0.28    0.29
+  -10.59   -5.92
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+   -9.55
  
  
   
-  ---------------------- Replica :            5
+  ---------------------- Replica :  5
   
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -11.44  -10.18   -9.34   -9.31   -9.12   -8.68   -8.60   -8.27   -7.26   -7.14
-   -7.13   -6.61   -6.25   -5.79   -5.68   -5.52   -5.13   -4.67   -4.23   -4.10
-   -3.23   -3.00   -2.85   -2.79   -2.72   -2.12   -2.03   -1.98   -1.81   -1.73
-   -1.36   -0.89   -0.85   -0.72   -0.69   -0.58   -0.57   -0.36   -0.30    0.32
+  -10.59   -5.99
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+   -9.61
  
  
   
-  ---------------------- Replica :            6
+  ---------------------- Replica :  6
   
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -11.50  -10.19   -9.40   -9.32   -9.15   -8.70   -8.57   -8.25   -7.34   -7.18
-   -7.17   -6.57   -6.26   -5.85   -5.71   -5.53   -5.06   -4.68   -4.29   -3.97
-   -3.19   -3.04   -2.90   -2.80   -2.73   -2.17   -2.07   -2.00   -1.84   -1.65
-   -1.35   -0.95   -0.91   -0.76   -0.74   -0.61   -0.60   -0.40   -0.30    0.22
+  -10.62   -6.16
+
+
+ eigenvalues at k-point:  0.000 0.000 0.000
+   -9.77
  
  
   
-  ---------------------- Replica :            7
+  ---------------------- Replica :  7
   
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -11.53  -10.15   -9.45   -9.31   -9.18   -8.74   -8.48   -8.25   -7.42   -7.23
-   -7.19   -6.51   -6.27   -5.89   -5.73   -5.52   -4.98   -4.70   -4.37   -3.87
-   -3.14   -3.06   -2.96   -2.81   -2.67   -2.20   -2.10   -2.00   -1.87   -1.54
-   -1.34   -1.07   -0.93   -0.81   -0.76   -0.65   -0.63   -0.43   -0.30    0.04
- 
- 
-  
-  ---------------------- Replica :            8
-  
+  -10.67   -6.37
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -11.56  -10.08   -9.50   -9.33   -9.19   -8.79   -8.31   -8.25   -7.50   -7.26
-   -7.20   -6.44   -6.28   -5.97   -5.73   -5.44   -4.92   -4.71   -4.44   -3.84
-   -3.10   -3.07   -2.99   -2.81   -2.58   -2.24   -2.12   -1.98   -1.90   -1.51
-   -1.34   -1.19   -0.94   -0.85   -0.74   -0.68   -0.65   -0.45   -0.36    0.01
+   -9.98
  
  
- Creating dir : RESTART71
- Creating dir : RESTART71/K00001
- Opening file restart.xml
- Creating dir : RESTART72
- Creating dir : RESTART72/K00001
- Opening file restart.xml
- Creating dir : RESTART73
- Creating dir : RESTART73/K00001
- Opening file restart.xml
- Creating dir : RESTART74
- Creating dir : RESTART74/K00001
- Opening file restart.xml
- Creating dir : RESTART75
- Creating dir : RESTART75/K00001
- Opening file restart.xml
- Creating dir : RESTART76
- Creating dir : RESTART76/K00001
- Opening file restart.xml
- Creating dir : RESTART77
- Creating dir : RESTART77/K00001
- Opening file restart.xml
-     initialize   :    23.54s CPU
-     formf        :    10.42s CPU (       8 calls,   1.303 s avg)
-     rhoofr       :   592.16s CPU (     800 calls,   0.740 s avg)
-     vofrho       :   361.39s CPU (     800 calls,   0.452 s avg)
-     dforce       :  1153.43s CPU (   16000 calls,   0.072 s avg)
-     calphi       :     9.00s CPU (     800 calls,   0.011 s avg)
-     ortho        :    38.65s CPU (     800 calls,   0.048 s avg)
-     updatc       :    25.69s CPU (     800 calls,   0.032 s avg)
-     newd         :     3.13s CPU (     800 calls,   0.004 s avg)
-     calbec       :    34.13s CPU (     816 calls,   0.042 s avg)
-     prefor       :    16.09s CPU (    1600 calls,   0.010 s avg)
-     strucf       :    17.22s CPU (     808 calls,   0.021 s avg)
-     nlfl         :     0.00s CPU (     800 calls,   0.000 s avg)
-     nlfq         :   102.16s CPU (     800 calls,   0.128 s avg)
-     nlsm1        :    34.13s CPU (    2416 calls,   0.014 s avg)
-     nlsm2        :   101.14s CPU (     800 calls,   0.126 s avg)
-     fft          :    66.38s CPU (    2400 calls,   0.028 s avg)
-     ffts         :    44.95s CPU (    1600 calls,   0.028 s avg)
-     fftw         :  1325.55s CPU (   48000 calls,   0.028 s avg)
-     rsg          :     2.07s CPU (     800 calls,   0.003 s avg)
- Creating dir : RESTART78
- Creating dir : RESTART78/K00001
- Opening file restart.xml
-     CP           : 40m22.33s CPU time
+     initialize   :     0.25s CPU
+     formf        :     0.04s CPU (       7 calls,   0.006 s avg)
+     rhoofr       :     2.21s CPU (     350 calls,   0.006 s avg)
+     vofrho       :    49.52s CPU (     350 calls,   0.141 s avg)
+     dforce       :     0.71s CPU (     700 calls,   0.001 s avg)
+     calphi       :     0.02s CPU (     350 calls,   0.000 s avg)
+     ortho        :     0.11s CPU (     350 calls,   0.000 s avg)
+     updatc       :     0.00s CPU (     350 calls,   0.000 s avg)
+     newd         :     1.33s CPU (     350 calls,   0.004 s avg)
+     calbec       :     0.01s CPU (     364 calls,   0.000 s avg)
+     prefor       :     0.00s CPU (     700 calls,   0.000 s avg)
+     strucf       :     0.04s CPU (     357 calls,   0.000 s avg)
+     nlfl         :     0.00s CPU (     350 calls,   0.000 s avg)
+     nlfq         :     0.02s CPU (     350 calls,   0.000 s avg)
+     rhov         :     0.82s CPU (     350 calls,   0.002 s avg)
+     nlsm1        :     0.03s CPU (    1064 calls,   0.000 s avg)
+     nlsm2        :     0.02s CPU (     350 calls,   0.000 s avg)
+     fft          :     5.47s CPU (    4900 calls,   0.001 s avg)
+     ffts         :     0.56s CPU (     700 calls,   0.001 s avg)
+     fftw         :     0.96s CPU (    2100 calls,   0.000 s avg)
+     rsg          :     0.00s CPU (     700 calls,   0.000 s avg)
+Estimated size (kB) of each process: 34684
 
+   PE(1) MEMORY STATISTICS 
+   total space in arena :146277696
+ 
+     CP90         :    56.00s CPU time
 
-   MEMORY STATISTICS FROM PE(1) : 
+ 
+   This run was terminated on:  17:24:56   7Sep2005            
+
+=------------------------------------------------------------------------------=
+   ELAPSED SECONDS:    68.0
+   JOB DONE.
+=------------------------------------------------------------------------------=
