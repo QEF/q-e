@@ -152,7 +152,6 @@
           LOGICAL, INTENT(IN) :: tsic
           TYPE (dft_energy_type), OPTIONAL, INTENT(IN) :: edft
           INTEGER, OPTIONAL, INTENT(IN) :: iprsta
-          REAL ( DP ) :: EHT
 
           IF( PRESENT ( edft ) ) THEN
               WRITE( stdout,  * )
