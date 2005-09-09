@@ -64,6 +64,8 @@ PROGRAM matdyn
   !     deltaE    energy step, in cm^(-1), for DOS calculation: from min
   !               to max phonon energy (default: 1 cm^(-1))
   !     fldos     output file for dos (default: 'matdyn.dos')
+  !               the dos is in states/cm(-1) plotted vs omega in cm(-1)
+  !               and is normalised to 3*nat, i.e. the number of phonons
   !     flfrq     output file for frequencies (default: 'matdyn.freq')
   !     flvec     output file for normal modes (default: 'matdyn.modes')
   !     at        supercell lattice vectors - must form a superlattice of the 
@@ -375,7 +377,11 @@ PROGRAM matdyn
         DO n= 1, ndos  
            E = Emin + (n - 1) * DeltaE  
            CALL dos_t(freq, 1, 3*nat, nq, ntetra, tetra, E, DOSofE)
-           WRITE (2, '(2e12.4)') E, DOSofE (1)
+           !
+           ! The factor 0.5 corrects for the factor 2 in dos_t,
+           ! that accounts for the spin in the electron DOS.
+           !
+           WRITE (2, '(2e12.4)') E, 0.5d0*DOSofE(1)
         END DO
         CLOSE(unit=2)
      END IF
