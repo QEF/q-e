@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !------------------------------------------------------------------------------!
   MODULE ions_base
 !------------------------------------------------------------------------------!
@@ -39,15 +38,15 @@
       !     atm( j )  = name of the type of the j-th atomic specie
       !     tau( 1:3, i ) = position of the i-th atom
 
-      INTEGER,   ALLOCATABLE :: ityp(:)
+      INTEGER,  ALLOCATABLE :: ityp(:)
       REAL(DP), ALLOCATABLE :: tau(:,:)     !  initial positions read from stdin (in bohr)
       REAL(DP), ALLOCATABLE :: vel(:,:)     !  initial velocities read from stdin (in bohr)
       REAL(DP), ALLOCATABLE :: tau_srt(:,:) !  tau sorted by specie in bohr
       REAL(DP), ALLOCATABLE :: vel_srt(:,:) !  vel sorted by specie in bohr
-      INTEGER,   ALLOCATABLE :: ind_srt(:)   !  index of tau sorted by specie
-      INTEGER,   ALLOCATABLE :: ind_bck(:)   !  reverse of ind_srt
-      CHARACTER(LEN=3)       :: atm( ntypx ) 
-      CHARACTER(LEN=80)      :: tau_units
+      INTEGER,  ALLOCATABLE :: ind_srt(:)   !  index of tau sorted by specie
+      INTEGER,  ALLOCATABLE :: ind_bck(:)   !  reverse of ind_srt
+      CHARACTER(LEN=3)      :: atm( ntypx ) 
+      CHARACTER(LEN=80)     :: tau_units
 
 
       INTEGER, ALLOCATABLE :: if_pos(:,:)  ! if if_pos( x, i ) = 0 then  x coordinate of 
@@ -66,7 +65,7 @@
       ! ... first index: x,y,z, second index: atom sortred by specie with respect input
       ! ... this array is saved in the restart file
 
-      REAL(DP), ALLOCATABLE ::  taui(:,:)
+      REAL(DP), ALLOCATABLE :: taui(:,:)
 
       ! ... cdmi = center of mass reference system (related to the taui)
       ! ... this vector is computed when NBEG = -1, NBEG = 0 and TAURDR = .TRUE.
@@ -180,50 +179,52 @@
       RETURN
     END SUBROUTINE unsort_tau
 
-
-!------------------------------------------------------------------------------!
-
-
-
-    SUBROUTINE ions_base_init( nsp_ , nat_ , na_ , ityp_ , tau_ , vel_, amass_ , &
-        atm_ , if_pos_ , tau_units_ , alat_ , a1_ , a2_ , a3_ , rcmax_ )
-
-      USE constants, ONLY: scmass
+    !-------------------------------------------------------------------------
+    SUBROUTINE ions_base_init( nsp_, nat_, na_, ityp_, tau_, vel_, amass_, &
+                               atm_, if_pos_, tau_units_, alat_, a1_, a2_, &
+                               a3_, rcmax_ )
+      !-------------------------------------------------------------------------
+      !
+      USE constants, ONLY: scmass, bohr_radius_angs
       USE io_global, ONLY: stdout
-
+      !
       IMPLICIT NONE
-      INTEGER, INTENT(IN) :: nsp_ , nat_ , na_ (:) , ityp_ (:)
-      REAL(DP), INTENT(IN) :: tau_(:,:)
-      REAL(DP), INTENT(IN) :: vel_(:,:)
-      REAL(DP), INTENT(IN) :: amass_(:)
-      CHARACTER(LEN=*), INTENT(IN) :: atm_ (:)
+      !
+      INTEGER,          INTENT(IN) :: nsp_, nat_, na_(:), ityp_(:)
+      REAL(DP),         INTENT(IN) :: tau_(:,:)
+      REAL(DP),         INTENT(IN) :: vel_(:,:)
+      REAL(DP),         INTENT(IN) :: amass_(:)
+      CHARACTER(LEN=*), INTENT(IN) :: atm_(:)
       CHARACTER(LEN=*), INTENT(IN) :: tau_units_
-      INTEGER, INTENT(IN) :: if_pos_ (:,:)
-      REAL(DP), INTENT(IN) :: alat_ , a1_(3) , a2_(3) , a3_(3)
-      REAL(DP), INTENT(IN) :: rcmax_ (:)
+      INTEGER,          INTENT(IN) :: if_pos_(:,:)
+      REAL(DP),         INTENT(IN) :: alat_, a1_(3), a2_(3), a3_(3)
+      REAL(DP),         INTENT(IN) :: rcmax_(:)
+      !
       INTEGER :: i, ia, is
-
+      !
+      !
       nsp = nsp_
       nat = nat_
-
-      if(nat < 1) &
-        call errore(' ions_base_init ', ' NAX OUT OF RANGE ',1)
-      if(nsp < 1) &
-        call errore(' ions_base_init ',' NSP OUT OF RANGE ',1)
-      if(nsp > SIZE( na ) ) &
-        call errore(' ions_base_init ',' NSP too large, increase NSX parameter ',1)
-
-      na( 1:nsp ) = na_ ( 1:nsp )
-      nax = MAXVAL( na( 1:nsp ) )
-
-      atm( 1:nsp ) = atm_ ( 1:nsp )
-      tau_units    = TRIM( tau_units_ )
-
-      if ( nat /= SUM( na( 1:nsp ) ) ) &
-        call errore(' ions_base_init ',' inconsistent NAT and NA ',1)
-
+      !
+      IF ( nat < 1 ) &
+         CALL errore( 'ions_base_init ', 'nax out of range', 1 )
+      IF ( nsp < 1 ) &
+         CALL errore( 'ions_base_init ', 'nsp out of range', 1 )
+      IF ( nsp > SIZE( na ) ) &
+         CALL errore( 'ions_base_init ', &
+                    & 'nsp too large, increase nsx parameter ', 1 )
+      !
+      na(1:nsp) = na_(1:nsp)
+      nax       = MAXVAL( na(1:nsp) )
+      !
+      atm(1:nsp) = atm_(1:nsp)
+      tau_units  = TRIM( tau_units_ )
+      !
+      IF ( nat /= SUM( na(1:nsp) ) ) &
+         CALL errore( 'ions_base_init ','inconsistent nat and na ', 1 )
+      !
       CALL deallocate_ions_base()
-
+      !
       ALLOCATE( ityp( nat ) )
       ALLOCATE( tau( 3, nat ) )
       ALLOCATE( vel( 3, nat ) )
@@ -234,90 +235,92 @@
       ALLOCATE( if_pos( 3, nat ) )
       ALLOCATE( iforce( 3, nat ) )
       ALLOCATE( taui( 3, nat ) )
-
-      ityp( 1:nat )      = ityp_ ( 1:nat )
-      vel( : , 1:nat )   = vel_ ( : , 1:nat )
-      if_pos( :, 1:nat ) = if_pos_ ( : , 1:nat )
-
-      ! ...  radii, masses 
-
+      !
+      ityp(1:nat)     = ityp_(1:nat)
+      vel(:,1:nat)    = vel_(:,1:nat)
+      if_pos(:,1:nat) = if_pos_(:,1:nat)
+      !
+      ! ... radii, masses 
+      !
       DO is = 1, nsp_
-         rcmax ( is ) = rcmax_ ( is )
-         IF( rcmax( is ) <= 0.d0 ) THEN
-            CALL errore(' ions_base_init ',' invalid rcmax ', is)
-         END IF
+         !
+         rcmax(is) = rcmax_(is)
+         !
+         IF( rcmax(is) <= 0.D0 ) &
+            CALL errore( 'ions_base_init ', 'invalid rcmax', is )
+         !
       END DO
-
-      SELECT CASE ( tau_units )
+      !
+      SELECT CASE ( TRIM( tau_units ) )
          !
-         !  convert input atomic positions to internally used format:
-         !  tau in atomic units
+         ! ... convert input atomic positions to internally used format:
+         ! ... tau in atomic units
          !
-         CASE ('alat')
+         CASE( 'alat' )
             !
-            !  input atomic positions are divided by a0
+            ! ... input atomic positions are divided by a0
             !
-            tau( :, 1:nat ) = tau_ ( :, 1:nat ) * alat_
-            vel( :, 1:nat ) = vel_ ( :, 1:nat ) * alat_
+            tau(:,1:nat) = tau_(:,1:nat) * alat_
+            vel(:,1:nat) = vel_(:,1:nat) * alat_
             !
-         CASE ('bohr')
+         CASE( 'bohr' )
             !
-            !  input atomic positions are in a.u.: do nothing
+            ! ... input atomic positions are in a.u.: do nothing
             !
-            tau( : , 1:nat )   = tau_ ( : , 1:nat )
-            vel( : , 1:nat )   = vel_ ( : , 1:nat )
+            tau(:,1:nat) = tau_(:,1:nat)
+            vel(:,1:nat) = vel_(:,1:nat)
             !
-         CASE ('crystal')
+         CASE( 'crystal' )
             !
-            !  input atomic positions are in crystal axis ("scaled"):
+            ! ... input atomic positions are in crystal axis ("scaled")
             !
-            do ia = 1, nat
-              do i = 1, 3
-                tau ( i, ia ) = a1_ (i) * tau_( 1, ia ) &
-                              + a2_ (i) * tau_( 2, ia ) &
-                              + a3_ (i) * tau_( 3, ia )
-               end do
-            end do
+            DO ia = 1, nat
+               !
+               DO i = 1, 3
+                  !
+                  tau(i,ia) = a1_(i) * tau_(1,ia) + &
+                              a2_(i) * tau_(2,ia) + &
+                              a3_(i) * tau_(3,ia)
+                  !
+                  vel(i,ia) = a1_(i) * vel_(1,ia) + &
+                              a2_(i) * vel_(2,ia) + &
+                              a3_(i) * vel_(3,ia)
+               
+               END DO
+               !
+            END DO
             !
-            do ia = 1, nat
-              do i = 1, 3
-                vel ( i, ia ) = a1_ (i) * vel_( 1, ia ) &
-                              + a2_ (i) * vel_( 2, ia ) &
-                              + a3_ (i) * vel_( 3, ia )
-               end do
-            end do
+         CASE( 'angstrom' )
             !
-         CASE ('angstrom')
+            ! ... atomic positions in A
             !
-            !  atomic positions in A
-            !
-            tau( :, 1:nat ) = tau_ ( :, 1:nat ) / 0.529177
-            vel( :, 1:nat ) = vel_ ( :, 1:nat ) / 0.529177
+            tau(:,1:nat) = tau_(:,1:nat) / bohr_radius_angs
+            vel(:,1:nat) = vel_(:,1:nat) / bohr_radius_angs
             !
          CASE DEFAULT
             !
-            CALL errore(' ions_base_init ',' tau_units='//TRIM(tau_units)// &
-              ' not implemented ', 1 )
+            CALL errore( 'ions_base_init',' tau_units = ' // &
+                       & TRIM( tau_units ) // ' not implemented ', 1 )
             !
       END SELECT
-
-
-! ...     tau_srt : atomic species are ordered according to
-! ...     the ATOMIC_SPECIES input card. Within each specie atoms are ordered
-! ...     according to the ATOMIC_POSITIONS input card.
-! ...     ind_srt : can be used to restore the original position
-
+      !
+      ! ... tau_srt : atomic species are ordered according to
+      ! ... the ATOMIC_SPECIES input card. Within each specie atoms are ordered
+      ! ... according to the ATOMIC_POSITIONS input card.
+      ! ... ind_srt : can be used to restore the original position
+      !
       CALL sort_tau( tau_srt, ind_srt, tau, ityp, nat, nsp )
-
+      !
+      vel_srt(:,:) = vel(:,ind_srt(:))
+      !
+      ! ... generate ind_bck from ind_srt (reverse sort list)
+      !
       DO ia = 1, nat
-        vel_srt( :, ia ) = vel( :, ind_srt( ia ) )
-      END DO
-
-! ... generate ind_bck from ind_srt (reverse sort list)
-      DO ia = 1, nat
+         !
          ind_bck(ind_srt(ia)) = ia
+         !
       END DO
-
+      !
       IF( tdebug ) THEN
         WRITE( stdout, * ) 'ions_base_init: unsorted position and velocities'
         DO ia = 1, nat
@@ -330,23 +333,19 @@
             atm( ityp( ind_srt( ia ) ) ), tau_srt(1:3, ia), vel_srt(1:3,ia)
         END DO
       END IF
-
       !
       ! ... The constrain on fixed coordinates is implemented using the array
       ! ... if_pos whose value is 0 when the coordinate is to be kept fixed, 1
       ! ... otherwise. fixatom is maintained for compatibility. ( C.S. 15/10/2003 )
       !
       if_pos = 1
-      if_pos(:,:) = if_pos_ (:,1:nat)
-
+      if_pos(:,:) = if_pos_(:,1:nat)
+      !
       iforce = 0
       !
-      DO ia = 1, nat
-        iforce ( :, ia ) = if_pos ( :, ind_srt( ia ) )
-      END DO
+      iforce(:,:) = if_pos(:,ind_srt(:))
       !
       ndofp = COUNT( iforce /= 0 )
-
       !
       ! ... TEMP: calculate fixatom (to be removed)
       !
@@ -361,26 +360,31 @@
         fixatom = fixatom + 1
         !
       END DO
-
-
-      amass( 1:nsp ) = amass_ ( 1:nsp )
-      IF( ANY( amass( 1:nsp ) <= 0.0d0 ) ) &
-        CALL errore( ' ions_base_init ', ' invalid  mass ', 1 ) 
-      pmass( 1:nsp ) = amass_ ( 1:nsp ) * scmass
-
+      !
+      amass(1:nsp) = amass_(1:nsp)
+      !
+      IF ( ANY( amass(1:nsp) <= 0.D0 ) ) &
+         CALL errore( 'ions_base_init ', 'invalid  mass', 1 ) 
+      !
+      pmass(1:nsp) = amass_(1:nsp) * scmass
+      !
       CALL ions_cofmass( tau_srt, pmass, na, nsp, cdmi )
+      !
       DO ia = 1, nat
-        taui( 1:3, ia ) = tau_srt( 1:3, ia ) - cdmi(1:3)
+         !
+         taui(1:3,ia) = tau_srt(1:3,ia) - cdmi(1:3)
+         !
       END DO
-
+      !
       tions_base_init = .TRUE.
-
+      !
       RETURN
+      !
     END SUBROUTINE ions_base_init
-    
-!------------------------------------------------------------------------------!
-
+    !
+    !-------------------------------------------------------------------------
     SUBROUTINE deallocate_ions_base()
+      !-------------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
@@ -400,10 +404,10 @@
       RETURN
       !
     END SUBROUTINE deallocate_ions_base
-
-!------------------------------------------------------------------------------!
-
+    !
+    !-------------------------------------------------------------------------
     SUBROUTINE ions_vel3( vel, taup, taum, na, nsp, dt )
+      !-------------------------------------------------------------------------
       IMPLICIT NONE
       REAL(DP) :: vel(:,:), taup(:,:), taum(:,:)
       INTEGER :: na(:), nsp
@@ -503,15 +507,8 @@
 
 !------------------------------------------------------------------------------!
 
-
-!  BEGIN manual -------------------------------------------------------------
-
       SUBROUTINE randpos(tau, na, nsp, tranp, amprp, hinv, ifor )
-
-!  Randomize ionic position
-!  --------------------------------------------------------------------------
-!  END manual ---------------------------------------------------------------
-
+        
          USE cell_base, ONLY: r_to_s
          USE io_global, ONLY: stdout
 
@@ -559,10 +556,10 @@
 
   SUBROUTINE ions_kinene( ekinp, vels, na, nsp, h, pmass )
     IMPLICIT NONE
-    real( 8 ), intent(out) :: ekinp     !  ionic kinetic energy
-    real( 8 ), intent(in) :: vels(:,:)  !  scaled ionic velocities
-    real( 8 ), intent(in) :: pmass(:)   !  ionic masses
-    real( 8 ), intent(in) :: h(:,:)     !  simulation cell
+    REAL(DP), intent(out) :: ekinp     !  ionic kinetic energy
+    REAL(DP), intent(in) :: vels(:,:)  !  scaled ionic velocities
+    REAL(DP), intent(in) :: pmass(:)   !  ionic masses
+    REAL(DP), intent(in) :: h(:,:)     !  simulation cell
     integer, intent(in) :: na(:), nsp
     integer :: i, j, is, ia, ii, isa
     ekinp = 0.0d0
@@ -591,16 +588,16 @@
     !
     implicit none
     !
-    real( 8 ), intent(out) :: ekinpr, tempp
-    real( 8 ), intent(out) :: temps(:)
-    real( 8 ), intent(out) :: ekin2nhp(:)
-    real( 8 ), intent(in)  :: vels(:,:)
-    real( 8 ), intent(in)  :: pmass(:)
-    real( 8 ), intent(in)  :: h(:,:)
+    REAL(DP), intent(out) :: ekinpr, tempp
+    REAL(DP), intent(out) :: temps(:)
+    REAL(DP), intent(out) :: ekin2nhp(:)
+    REAL(DP), intent(in)  :: vels(:,:)
+    REAL(DP), intent(in)  :: pmass(:)
+    REAL(DP), intent(in)  :: h(:,:)
     integer,        intent(in)  :: na(:), nsp, ndega, nhpdim, atm2nhp(:)
     !
     integer        :: nat, i, j, is, ia, ii, isa
-    real( 8 ) :: cdmvel(3), eks, eks1
+    REAL(DP) :: cdmvel(3), eks, eks1
     !
     call ions_cofmass( vels, pmass, na, nsp, cdmvel )
     !
@@ -652,8 +649,8 @@
 !------------------------------------------------------------------------------!
 
   subroutine ions_thermal_stress( stress, pmass, omega, h, vels, nsp, na )
-    real(8), intent(inout) :: stress(3,3)
-    real(8), intent(in)  :: pmass(:), omega, h(3,3), vels(:,:)
+    REAL(DP), intent(inout) :: stress(3,3)
+    REAL(DP), intent(in)  :: pmass(:), omega, h(3,3), vels(:,:)
     integer, intent(in) :: nsp, na(:)
     integer :: i, j, is, ia, isa
     isa    = 0
@@ -679,15 +676,15 @@
     use constants, only: pi, factem
     implicit none
     logical, intent(in) :: tcap
-    real(8), intent(inout) :: taup(:,:)
-    real(8), intent(in) :: tau0(:,:), taum(:,:), fion(:,:)
-    real(8), intent(in) :: delt, pmass(:), tempw, tempp
+    REAL(DP), intent(inout) :: taup(:,:)
+    REAL(DP), intent(in) :: tau0(:,:), taum(:,:), fion(:,:)
+    REAL(DP), intent(in) :: delt, pmass(:), tempw, tempp
     integer, intent(in) :: na(:), nsp
     integer, intent(in) :: iforce(:,:)
 
-    real(8) :: alfap, qr(3), alfar, gausp
-    real(8) :: dt2by2, ftmp
-    real(8) :: randy
+    REAL(DP) :: alfap, qr(3), alfar, gausp
+    REAL(DP) :: dt2by2, ftmp
+    REAL(DP) :: randy
     integer :: i, ia, is, nat, isa
 
     dt2by2 = .5d0 * delt * delt
@@ -740,8 +737,8 @@
 
   subroutine ions_shiftvar( varp, var0, varm )
     implicit none
-    real(8), intent(in) :: varp(:,:)
-    real(8), intent(out) :: varm(:,:), var0(:,:)
+    REAL(DP), intent(in) :: varp(:,:)
+    REAL(DP), intent(out) :: varm(:,:), var0(:,:)
       varm = var0
       var0 = varp
     return

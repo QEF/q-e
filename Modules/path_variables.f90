@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2005 PWSCF-FPMD-CPV group
+! Copyright (C) 2003-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,7 +24,7 @@ MODULE path_variables
   ! ... "general" variables :
   !
   LOGICAL :: &
-       conv_path                  ! .TRUE. if "path" convergence has been
+       conv_path                  ! .TRUE. when "path" convergence has been
                                   !        achieved
   LOGICAL :: &
        first_last_opt,           &! if .TRUE. the first and the last image
@@ -54,7 +54,7 @@ MODULE path_variables
                                   ! ( dim - #( of fixed coordinates ) )
        suspended_image            ! last image for which scf has not been
                                   ! achieved
-  REAL (DP) :: &
+  REAL(DP) :: &
        ds,                       &! the optimization step
        path_thr,                 &! convergence threshold
        damp,                     &! damp coefficient
@@ -77,14 +77,13 @@ MODULE path_variables
   !
   ! ... "general" real space arrays
   !
-  REAL (DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
        pes(:),                   &! the potential enrgy along the path
-       norm_tangent(:),          &!
        error(:)                   ! the error from the true MEP
-  REAL (DP), ALLOCATABLE :: &
-       pos(:,:),                 &! 
-       grad_pes(:,:),            &!
-       tangent(:,:)               !
+  REAL(DP), ALLOCATABLE :: &
+       pos(:,:),                 &! reaction path
+       grad_pes(:,:),            &! gradients acting on the path
+       tangent(:,:)               ! tangent to the path
   LOGICAL, ALLOCATABLE :: &
        frozen(:)                  ! .TRUE. if the image or mode has not 
                                   !        to be optimized
@@ -93,7 +92,7 @@ MODULE path_variables
   !
   LOGICAL, ALLOCATABLE :: &
        climbing(:)                ! .TRUE. if the image is required to climb
-  CHARACTER (LEN=20) :: &
+  CHARACTER(LEN=20) :: &
        CI_scheme                  ! Climbing Image scheme
   INTEGER :: &
        Emax_index                 ! index of the image with the highest energy
@@ -107,13 +106,13 @@ MODULE path_variables
   !
   ! ... real space arrays
   !
-  REAL (DP), ALLOCATABLE :: &
-       elastic_grad(:),          &!
+  REAL(DP), ALLOCATABLE :: &
+       elastic_grad(:),          &! elastic part of the gradients
        mass(:),                  &! atomic masses
-       k(:),                     &!  
+       k(:),                     &! elastic constants
        react_coord(:),           &! the reaction coordinate (in bohr)
-       norm_grad(:)               !
-  REAL (DP), ALLOCATABLE :: &
+       norm_grad(:)               ! norm of the gradients
+  REAL(DP), ALLOCATABLE :: &
        vel(:,:),                 &! 
        grad(:,:),                &!
        lang(:,:)                  ! langevin random force
@@ -126,45 +125,45 @@ MODULE path_variables
        Nft,                      &! number of discretization points in the
                                   ! discrete fourier transform
        Nft_smooth                 ! smooth real-space grid
-  REAL (DP) :: &
+  REAL(DP) :: &
        ft_coeff                   ! normalization in fourier transformation
   !
   !
   ! ... real space arrays
   !
-  REAL (DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
        pos_star(:,:)              !
   !
   ! ... reciprocal space arrays
   !
-  REAL (DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
        ft_pos(:,:)                ! fourier components of the path
   !
   ! ... Y. Kanai variabiles for combined smd/cp dynamics :
   !
-  INTEGER, PARAMETER :: smx = 20    ! max number of images
-  INTEGER, PARAMETER :: smmi = 4    ! a parameter for  polynomial interpolation
-                                    ! # of replicas used for interpolation
+  INTEGER, PARAMETER :: smx = 20  ! max number of images
+  INTEGER, PARAMETER :: smmi = 4  ! a parameter for  polynomial interpolation
+                                  ! # of replicas used for interpolation
   LOGICAL :: &
-       smd_cp,                     &! regular CP calculation
-       smd_lm,                     &! String method w/ Lagrange Mult.
-       smd_opt,                    &! CP for 2 replicas, initial & final
-       smd_linr,                   &! linear interpolation
-       smd_polm,                   &! polynomial interpolation
+       smd_cp,                   &! regular CP calculation
+       smd_lm,                   &! String method w/ Lagrange Mult.
+       smd_opt,                  &! CP for 2 replicas, initial & final
+       smd_linr,                 &! linear interpolation
+       smd_polm,                 &! polynomial interpolation
        smd_stcd
   INTEGER :: &
-       smd_p,                      &! sm_p = 0 .. SM_P replica
-       smd_kwnp,                   &! # of points used in polm
-       smd_codfreq,                &!
-       smd_forfreq,                &! frequency of calculating Lag. Mul
-       smd_wfreq,                  &!
-       smd_lmfreq,                 &
-       smd_maxlm                    ! max_ite = # of such iteration allowed
+       smd_p,                    &! sm_p = 0 .. SM_P replica
+       smd_kwnp,                 &! # of points used in polm
+       smd_codfreq,              &!
+       smd_forfreq,              &! frequency of calculating Lag. Mul
+       smd_wfreq,                &!
+       smd_lmfreq,               &!
+       smd_maxlm                  ! max_ite = # of such iteration allowed
   REAL(DP) :: &
-       smd_tol,                    &! tolrance on const in terms of
-                                    ! [alpha(k) - alpha(k-1)] - 1/sm_P
-       smd_ene_ini = 1.D0,         &
-       smd_ene_fin = 1.D0
+       smd_tol,                  &! tolrance on const in terms of
+                                  ! [alpha(k) - alpha(k-1)] - 1/sm_P
+       smd_ene_ini = 1.D0,       &!
+       smd_ene_fin = 1.D0         !
   !
   TYPE smd_ptr
     !

@@ -25,7 +25,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE mp_global,         ONLY : mpime, my_pool_id
   USE mp,                ONLY : mp_barrier
   USE check_stop,        ONLY : check_stop_now
-  USE cp_restart,        ONLY : check_restartfile
+  USE xml_io_base,       ONLY : check_restartfile
   USE main_module,       ONLY : cpmain
   USE input,             ONLY : modules_setup
   !
@@ -34,15 +34,15 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   INTEGER, INTENT(IN)   :: N_in, N_fin
   LOGICAL, INTENT(OUT)  :: stat
   ! 
-  INTEGER                     :: image
-  REAL (DP)              :: tcpu 
-  CHARACTER (LEN=256)         :: outdir_saved
-  LOGICAL                     :: file_exists, opnd, tstop 
-  REAL (DP), ALLOCATABLE :: tau(:,:)
-  REAL (DP), ALLOCATABLE :: fion(:,:)
-  REAL (DP)              :: etot
-  INTEGER                     :: ia, is, isa, ipos
-  REAL (DP), EXTERNAL    :: get_clock
+  INTEGER               :: image
+  REAL(DP)              :: tcpu 
+  CHARACTER(LEN=256)    :: outdir_saved
+  LOGICAL               :: file_exists, opnd, tstop 
+  REAL(DP), ALLOCATABLE :: tau(:,:)
+  REAL(DP), ALLOCATABLE :: fion(:,:)
+  REAL(DP)              :: etot
+  INTEGER               :: ia, is, isa, ipos
+  REAL(DP), EXTERNAL    :: get_clock
   !
   !
   stat = .TRUE.
@@ -61,10 +61,10 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      tstop = check_stop_now()
      stat  = .NOT. tstop
      !
-     IF( tstop ) RETURN
+     IF ( tstop ) RETURN
      !
      outdir = TRIM( outdir_saved ) // "/" // TRIM( prefix ) // "_" // &
-              TRIM( int_to_char( image ) ) // "/" 
+              TRIM( int_to_char( image ) ) // "/"
      !
      scradir = outdir
      !
@@ -91,13 +91,13 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
         WRITE( stdout, '(/,2X,"restarting calling readfile",/)' )
         !
-       ! nbeg   = 0
-       ! nomore = 100
+        nbeg   = 0
+        nomore = 100
         !
-        nbeg   = -1
-        nomore = 500
-        trane  = .TRUE.
-        ampre  = 0.02D0
+       ! nbeg   = -1
+       ! nomore = 500
+       ! trane  = .TRUE.
+       ! ampre  = 0.02D0
         !
      ELSE
         !
@@ -116,13 +116,9 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      CALL modules_setup()
      !
-     DO ia = 1, nat
-        !
-        tau(:,ia) = pos((3*ia-2):(3*ia),image) 
-        !
-     END DO
+     tau = RESHAPE( pos(:,image), SHAPE( tau ) )
      !
-     CALL sort_tau( tau_srt, ind_srt, tau, ityp, nat, nsp )       
+     CALL sort_tau( tau_srt, ind_srt, tau, ityp, nat, nsp )
      !
      CALL init_run()
      !
@@ -159,13 +155,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      ! ... gradients already in ( hartree / bohr )
      !
-     DO ia = 1, nat
-        !
-        grad_pes(1+(ia-1)*3,image) = - fion(1,ia)
-        grad_pes(2+(ia-1)*3,image) = - fion(2,ia)
-        grad_pes(3+(ia-1)*3,image) = - fion(3,ia)
-        !
-     END DO
+     grad_pes(:,image) = - RESHAPE( fion, (/ dim /) )
      !
      ! ... energy already in hartree
      !

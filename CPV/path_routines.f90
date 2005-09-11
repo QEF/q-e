@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !-----------------------------------------------------------------------
 MODULE path_routines
   !-----------------------------------------------------------------------
@@ -28,11 +27,12 @@ MODULE path_routines
     SUBROUTINE iosys_path()
       !------------------------------------------------------------------------
       !
-      USE input_parameters, ONLY : CI_scheme, opt_scheme, num_of_images,     &
-                                   first_last_opt, damp, temp_req, ds,       &
-                                   k_max, k_min, path_thr, restart_mode,     &
-                                   calculation, nstep, max_seconds,          &
-                                   phase_space, ion_dynamics, etot_conv_thr, &
+      USE input_parameters, ONLY : full_phs_path_flag, atomic_positions
+      USE input_parameters, ONLY : pos, CI_scheme, opt_scheme, num_of_images, &
+                                   first_last_opt, damp, temp_req, ds,        &
+                                   k_max, k_min, path_thr, restart_mode,      &
+                                   calculation, nstep, max_seconds,           &
+                                   phase_space, ion_dynamics, etot_conv_thr,  &
                                    forc_conv_thr
       !
       USE path_variables, ONLY : lsteep_des, lquick_min , ldamped_dyn, &
@@ -47,22 +47,25 @@ MODULE path_routines
                                  k_min_          => k_min, &
                                  path_thr_       => path_thr
       !
-      USE io_files,       ONLY : prefix, outdir, tmp_dir
-      USE io_global,      ONLY : ionode, ionode_id
-      USE mp_global,      ONLY : mpime
-      USE mp,             ONLY : mp_bcast, mp_barrier, mp_sum
-      USE control_flags,  ONLY : lpath, lneb, lcoarsegrained, lconstrain, &
-                                 lmd, ldamped, tprnfor
-      USE parser,         ONLY : int_to_char
-      USE check_stop,     ONLY : check_stop_init
+      USE io_files,      ONLY : prefix, outdir, tmp_dir
+      USE io_global,     ONLY : ionode, ionode_id
+      USE ions_base,     ONLY : nat
+      USE cell_base,     ONLY : alat, a1, a2, a3
+      USE mp_global,     ONLY : mpime
+      USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
+      USE control_flags, ONLY : lpath, lneb, lcoarsegrained, lconstrain, &
+                                lmd, ldamped, tprnfor
+      USE parser,        ONLY : int_to_char
+      USE check_stop,    ONLY : check_stop_init
 
       !
       IMPLICIT NONE
       !
-      INTEGER            :: image
-      INTEGER            :: ios
-      CHARACTER(LEN=256) :: outdir_saved
-      CHARACTER(LEN=256) :: filename
+      INTEGER               :: image, i, ia
+      INTEGER               :: ios
+      REAL(DP), ALLOCATABLE :: tau(:,:) 
+      CHARACTER(LEN=256)    :: outdir_saved
+      CHARACTER(LEN=256)    :: filename
       !
       INTEGER, EXTERNAL :: c_mkdir
       !
@@ -102,11 +105,10 @@ MODULE path_routines
         END SELECT
         !
       END IF
-
       !
       IF ( num_of_images < 2 ) &
-        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
-                   & ': num_of_images must be at least 2', 1 )
+         CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
+                    & ': num_of_images must be at least 2', 1 )
       !
       IF ( ( CI_scheme /= "no-CI"      ) .AND. &
            ( CI_scheme /= "highest-TS" ) .AND. &
@@ -117,7 +119,6 @@ MODULE path_routines
                     & ': unknown CI_scheme', 1 )
          !
       END IF
-
       !
       ! ... initialization of logical variables
       !
@@ -130,15 +131,15 @@ MODULE path_routines
       SELECT CASE ( opt_scheme )
       CASE ( "sd" )
          !
-         lsteep_des  = .TRUE.
+         lsteep_des = .TRUE.
          !
       CASE ( "quick-min" )
          !
-         lquick_min  = .TRUE.
+         lquick_min = .TRUE.
          !
       CASE( "broyden" )
          !
-         lbroyden     = .TRUE.
+         lbroyden = .TRUE.
          !
       CASE ( "damped-dyn" )
          !
@@ -146,7 +147,7 @@ MODULE path_routines
          !
       CASE ( "mol-dyn" )
          !
-         lmol_dyn    = .TRUE.
+         lmol_dyn = .TRUE.
          !
          IF ( temp_req == 0 ) &
             WRITE( stdout,'(/,T2,"WARNING: tepm_req has not been set" )')
@@ -160,22 +161,81 @@ MODULE path_routines
          !
       END SELECT
       !
-      num_of_images_   = num_of_images
-      CI_scheme_       = CI_scheme
-      first_last_opt_  = first_last_opt
-      damp_            = damp
-      temp_req_        = temp_req
-      ds_              = ds
-      k_max_           = k_max
-      k_min_           = k_min
-      path_thr_        = path_thr
+      num_of_images_  = num_of_images
+      CI_scheme_      = CI_scheme
+      first_last_opt_ = first_last_opt
+      damp_           = damp
+      temp_req_       = temp_req
+      ds_             = ds
+      k_max_          = k_max
+      k_min_          = k_min
+      path_thr_       = path_thr
       !
       lpath      = .TRUE.
       lneb       = .TRUE.
       nstep_path = nstep
-      nstep      = 1000
       !
       outdir_saved  = outdir
+      !
+      IF ( full_phs_path_flag ) THEN
+         !
+         ALLOCATE( tau( 3, nat ) )
+         !
+         DO image = 1, num_of_images
+            !
+            tau = RESHAPE( pos(1:3*nat,image), SHAPE( tau ) )
+            !
+            ! ... convert input atomic positions to internally used format:     
+            !
+            SELECT CASE ( TRIM( atomic_positions ) )
+            CASE( 'alat' )
+               !
+               ! ... input atomic positions are divided by a0
+               !
+               tau(:,1:nat) = tau(:,1:nat) * alat
+               !
+            CASE( 'bohr' )
+               !
+               ! ... input atomic positions are in a.u.: do nothing
+               !
+               tau(:,1:nat) = tau(:,1:nat)
+               !
+            CASE( 'crystal' )
+               !
+               ! ... input atomic positions are in crystal axis ("scaled")
+               !
+               DO ia = 1, nat
+                  !
+                  DO i = 1, 3
+                     !
+                     tau(i,ia) = a1(i) * tau(1,ia) + &
+                                 a2(i) * tau(2,ia) + &
+                                 a3(i) * tau(3,ia)
+                     !
+                  END DO
+                  !
+               END DO
+               !
+            CASE( 'angstrom' )
+               !
+               ! ... atomic positions in A
+               !
+               tau(:,1:nat) = tau(:,1:nat) / bohr_radius_angs
+               !
+            CASE DEFAULT
+               !
+               CALL errore( 'iosys_path',' tau_units = ' // &
+                          & TRIM( atomic_positions ) // ' not implemented ', 1 )
+               !
+            END SELECT
+            !
+            pos(1:3*nat,image) = RESHAPE( tau, (/ 3 * nat /) )
+            !
+         END DO
+         !
+         DEALLOCATE( tau )
+         !
+      END IF
       !
       DO image = 1, num_of_images
         !
@@ -231,7 +291,7 @@ MODULE path_routines
         !
       END DO
       !
-      outdir  = outdir_saved
+      outdir = outdir_saved
       !
       RETURN
       !

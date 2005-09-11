@@ -1,56 +1,3 @@
-! CPR.f90
-!********************************************************************************
-! CPR.f90        				Copyright (c) 2005 Targacept, Inc.
-!********************************************************************************
-! Original file changed by Targacept in June 2005 in order to accommodate 
-! Autopilot feature suite (see autopilot.f90).
-!
-! This program is free software; you can redistribute it and/or modify it under 
-! the terms of the GNU General Public License as published by the Free Software 
-! Foundation; either version 2 of the License, or (at your option) any later version.
-! This program is distributed in the hope that it will be useful, but WITHOUT ANY 
-! WARRANTY; without even the implied warranty of MERCHANTABILITY FOR A PARTICULAR 
-! PURPOSE.  See the GNU General Public License at www.gnu.or/copyleft/gpl.txt for 
-! more details.
-! 
-! THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  
-! EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES 
-! PROVIDE THE PROGRAM "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
-! INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND 
-! FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND THE 
-! PERFORMANCE OF THE PROGRAM IS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, 
-! YOU ASSUME THE COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
-!
-! IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING, 
-! WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR REDISTRIBUTE 
-! THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY 
-! GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR 
-! INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA 
-! BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A 
-! FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS), EVEN IF SUCH HOLDER 
-! OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
-!
-! You should have received a copy of the GNU General Public License along with 
-! this program; if not, write to the 
-! Free Software Foundation, Inc., 
-! 51 Franklin Street, 
-! Fifth Floor, 
-! Boston, MA  02110-1301, USA.
-! 
-! Targacept's address is 
-! 200 East First Street, Suite 300
-! Winston-Salem, North Carolina USA 27101-4165 
-! Attn: Molecular Design. 
-! Email: atp@targacept.com
-!
-! This work was supported by the Advanced Technology Program of the 
-! National Institute of Standards and Technology (NIST), Award No. 70NANB3H3065 
-!
-!********************************************************************************
-
-
-
-
 !
 ! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
@@ -133,13 +80,13 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE ions_base,                ONLY : zv, ions_vel
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff, emass_precond
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
-                                       vels, velsm, velsp, ions_hmove, ions_move
-  USE ions_nose,                ONLY : gkbt, kbt, ndega, nhpcl, nhpdim, nhpend, qnp, &
-                                       vnhp, xnhp0, xnhpm, xnhpp, atm2nhp, &
-                                       ions_nosevel, ions_noseupd, &
-                                       ions_nose_allocate, tempw,  &
-                                       ions_nose_nrg, ions_nose_shiftvar, &
-                                       gkbt2nhp, ekin2nhp, anum2nhp
+                                       vels, velsm, velsp, ions_hmove,       &
+                                       ions_move
+  USE ions_nose,                ONLY : gkbt, kbt, qnp, ndega, nhpcl, nhpdim, &
+                                       nhpend, vnhp, xnhp0, xnhpm, xnhpp,    &
+                                       atm2nhp, ions_nosevel, ions_noseupd,  &
+                                       tempw, ions_nose_nrg, gkbt2nhp,       &
+                                       ekin2nhp, anum2nhp
   USE electrons_nose,           ONLY : qne, ekincw, xnhe0, xnhep, xnhem,  &
                                        vnhe, fccc, electrons_nose_nrg,    &
                                        electrons_nose_shiftvar,           &
@@ -167,21 +114,22 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                                        ema0bg, sfac, eigr, ei1, ei2, ei3,  &
                                        irb, becdr, taub, eigrb, rhog, rhos, &
                                        rhor, bephi, becp, nfi
+  USE autopilot,                ONLY : event_step, event_index, &
+                                       max_event_step, restart_p
+  USE coarsegrained_vars,       ONLY : dfe_acc
   !
   USE cell_base,                ONLY : s_to_r, r_to_s
   USE phase_factors_module,     ONLY : strucf
+
   USE cpr_subroutines,          ONLY : print_lambda, print_atomic_var, &
                                        ions_cofmsub, elec_fakekine
   USE wannier_subroutines,      ONLY : wannier_startup, wf_closing_options, &
                                        ef_enthalpy
   USE restart_file,             ONLY : readfile, writefile
   USE constraints_module,       ONLY : check_constraint, lagrange
-  USE coarsegrained_vars,       ONLY : dfe_acc
-
-  ! support for AUTOPILOT   
-  USE autopilot,                ONLY : event_step, event_index, max_event_step, restart_p
+  USE coarsegrained_base,       ONLY : set_target
   USE autopilot,                ONLY : pilot
-
+  USE ions_nose,                ONLY : ions_nose_allocate, ions_nose_shiftvar
   !
   IMPLICIT NONE
   !
@@ -361,6 +309,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         IF ( lconstrain ) THEN
            !
            ! ... constraints are imposed here
+           !
+           IF ( lcoarsegrained ) CALL set_target()
            !
            CALL s_to_r( tausp, taup, na, nsp, hnew )
            !

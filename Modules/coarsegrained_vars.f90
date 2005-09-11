@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2005 PWSCF-FPMD-CPV group
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,6 +24,8 @@ MODULE coarsegrained_vars
   REAL (DP), ALLOCATABLE :: fe_grad(:)
   REAL (DP), ALLOCATABLE :: new_target(:)
   REAL (DP), ALLOCATABLE :: to_target(:)
+  !
+  LOGICAL  :: to_new_target
   !
   CONTAINS
     !
@@ -60,3 +62,33 @@ MODULE coarsegrained_vars
     END SUBROUTINE deallocate_coarsegrained_vars
     !
 END MODULE coarsegrained_vars
+!
+!----------------------------------------------------------------------------
+MODULE coarsegrained_base
+  !----------------------------------------------------------------------------
+  !
+  USE kinds, ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  CONTAINS
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE set_target()
+      !------------------------------------------------------------------------
+      !
+      USE coarsegrained_vars, ONLY : to_target, to_new_target, max_shake_iter
+      USE constraints_module, ONLY : target
+      !
+      !
+      IF ( to_new_target ) THEN
+         !
+         target(:) = target(:) + to_target(:) / DBLE( max_shake_iter )
+         !
+      END IF
+      !
+      RETURN
+      !
+    END SUBROUTINE set_target
+    !
+END MODULE coarsegrained_base

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2005 PWSCF-FPMD-CPV groups
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -45,13 +45,13 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN)  :: N_in, N_fin
-  LOGICAL, INTENT(OUT) :: stat
-  INTEGER              :: image, iter, counter
-  REAL (DP)       :: tcpu, error
-  CHARACTER (LEN=256)  :: tmp_dir_saved, filename
-  LOGICAL              :: opnd, file_exists, ldamped_saved
-  LOGICAL              :: tfirst
+  INTEGER, INTENT(IN)   :: N_in, N_fin
+  LOGICAL, INTENT(OUT)  :: stat
+  INTEGER               :: image, iter, counter
+  REAL(DP)              :: tcpu, error
+  CHARACTER(LEN=256)    :: tmp_dir_saved, filename
+  LOGICAL               :: opnd, file_exists, ldamped_saved
+  LOGICAL               :: lfirst
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
     ! previous positions of atoms (needed for extrapolation)
   !
@@ -268,10 +268,10 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         END IF
         !
         wg_set = .FALSE.
-        tfirst = .TRUE.
+        lfirst = .TRUE.
         !
-        ! ... tfirst the system is "adiabatically" moved to the new target
-        ! ... This is always done with standard MD
+        ! ... first the system is "adiabatically" moved to the new target
+        ! ... this is always done with standard MD (no damping)
         !
         ldamped = .FALSE.
         !
@@ -283,7 +283,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
            istep = iter
            !
-           CALL electronic_scf( tfirst, stat )
+           CALL electronic_scf( lfirst, stat )
            !
            IF ( .NOT. stat ) RETURN
            !
@@ -291,7 +291,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
            target(:) = target(:) + to_target(:) / DBLE( max_shake_iter )
            !
-           tfirst = .FALSE.
+           lfirst = .FALSE.
            !
         END DO
         !
@@ -305,7 +305,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
            istep = iter
            !
-           CALL electronic_scf( tfirst, stat )
+           CALL electronic_scf( lfirst, stat )
            !
            IF ( .NOT. stat )  RETURN
            !
@@ -325,7 +325,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
               !
            END IF
            !
-           tfirst = .FALSE.
+           lfirst = .FALSE.
            !
         END DO
         !
@@ -337,7 +337,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
            grad_pes(:,image) = - lagrange(:) / e2
            !
-           pes(image) = etot
+           pes(image) = etot / e2
            !
         ELSE
            !
@@ -425,7 +425,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
      !
   END IF
   !
-  ! ... after the tfirst call to compute_scf the input values of startingpot
+  ! ... after the lfirst call to compute_scf the input values of startingpot
   ! ... and startingwfc are both set to 'file'
   !
   startingpot = 'file'
@@ -599,7 +599,7 @@ SUBROUTINE write_config( image )
 END SUBROUTINE write_config
 !
 !----------------------------------------------------------------------------
-SUBROUTINE electronic_scf( tfirst, stat )
+SUBROUTINE electronic_scf( lfirst, stat )
   !----------------------------------------------------------------------------
   !
   USE control_flags, ONLY : conv_elec
@@ -607,11 +607,11 @@ SUBROUTINE electronic_scf( tfirst, stat )
   !
   IMPLICIT NONE
   !
-  LOGICAL, INTENT(IN)  :: tfirst
+  LOGICAL, INTENT(IN)  :: lfirst
   LOGICAL, INTENT(OUT) :: stat
   !
   !
-  IF ( .NOT. tfirst ) CALL hinit1()
+  IF ( .NOT. lfirst ) CALL hinit1()
   !
   CALL electrons()
   !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2005 PWSCF-FPMD-CPV group
+! Copyright (C) 2003-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -43,16 +43,16 @@ MODULE path_reparametrisation
       !
       ! ... local variables
       !
-      INTEGER        :: i, j
-      REAL(DP)  :: delta_R
-      REAL (DP) :: change_image_thr
-      REAL (DP) :: multistep_coeff = 2.D0
-      INTEGER        :: new_num_of_images
-      INTEGER        :: N_in, N_fin
-      INTEGER        :: init_num_of_images = 3
+      INTEGER  :: i, j
+      REAL(DP) :: delta_R
+      REAL(DP) :: change_image_thr
+      REAL(DP) :: multistep_coeff = 2.D0
+      INTEGER  :: new_num_of_images
+      INTEGER  :: N_in, N_fin
+      INTEGER  :: init_num_of_images = 3
       !
-      REAL (DP), ALLOCATABLE  :: new_pos(:,:)
-      REAL (DP), ALLOCATABLE  :: old_mesh(:), new_mesh(:)
+      REAL(DP), ALLOCATABLE  :: new_pos(:,:)
+      REAL(DP), ALLOCATABLE  :: old_mesh(:), new_mesh(:)
       !
       !
       new_num_of_images = num_of_images
@@ -153,10 +153,10 @@ MODULE path_reparametrisation
           pes(n)        = pes(num_of_images)
           grad_pes(:,n) = grad_pes(:,num_of_images)
           !
-          error(n)      = error(num_of_images)
-          vel(:,n)      = vel(:,num_of_images)
-          grad(:,n)     = grad(:,num_of_images)
-          norm_grad(n)  = norm_grad(num_of_images)
+          error(n)     = error(num_of_images)
+          vel(:,n)     = vel(:,num_of_images)
+          grad(:,n)    = grad(:,num_of_images)
+          norm_grad(n) = norm_grad(num_of_images)
           !
           RETURN
           !
@@ -179,12 +179,12 @@ MODULE path_reparametrisation
       !
       IMPLICIT NONE
       !
-      REAL (DP) :: change_image_thr
-      REAL (DP) :: multistep_coeff = 2.D0
-      INTEGER        :: new_num_of_images
-      LOGICAL        :: images_updated
-      INTEGER        :: N_in, N_fin
-      INTEGER        :: init_num_of_images = 3
+      REAL(DP) :: change_image_thr
+      REAL(DP) :: multistep_coeff = 2.D0
+      INTEGER  :: new_num_of_images
+      LOGICAL  :: images_updated
+      INTEGER  :: N_in, N_fin
+      INTEGER  :: init_num_of_images = 3
       !
       !
       IF ( .NOT. use_multistep ) RETURN
@@ -266,10 +266,10 @@ MODULE path_reparametrisation
           pes(n)        = pes(num_of_images)
           grad_pes(:,n) = grad_pes(:,num_of_images)
           !
-          error(n)      = error(num_of_images)
-          vel(:,n)      = vel(:,num_of_images)
-          grad(:,n)     = grad(:,num_of_images)
-          norm_grad(n)  = norm_grad(num_of_images)
+          error(n)     = error(num_of_images)
+          vel(:,n)     = vel(:,num_of_images)
+          grad(:,n)    = grad(:,num_of_images)
+          norm_grad(n) = norm_grad(num_of_images)
           !
           RETURN
           !
@@ -286,9 +286,9 @@ MODULE path_reparametrisation
       !
       IMPLICIT NONE
       !
-      REAL (DP), ALLOCATABLE :: r_h(:), r_n(:), delta_pos(:)
-      REAL (DP)              :: x, delta_x
-      INTEGER                     :: i, j, n
+      REAL(DP), ALLOCATABLE :: r_h(:), r_n(:), delta_pos(:)
+      REAL(DP)              :: x, delta_x
+      INTEGER               :: i, j, n
       !
       !
       ALLOCATE( r_h(       dim ) )
@@ -342,9 +342,9 @@ MODULE path_reparametrisation
       !
       IMPLICIT NONE
       !
-      REAL (DP), ALLOCATABLE :: r_h(:), r_n(:), delta_pos(:)
-      REAL (DP)              :: x, delta_x, s, s_image, pi_n
-      INTEGER                     :: i, j, n, image
+      REAL(DP), ALLOCATABLE :: r_h(:), r_n(:), delta_pos(:)
+      REAL(DP)              :: x, delta_x, s, s_image, pi_n
+      INTEGER               :: i, j, n, image
       !
       !
       ALLOCATE( r_h(       dim ) )
@@ -425,8 +425,8 @@ MODULE path_reparametrisation
       !
       IMPLICIT NONE
       !
-      INTEGER        :: j, n
-      REAL (DP) :: x, coeff, inv_Nft
+      INTEGER  :: j, n
+      REAL(DP) :: x, coeff, inv_Nft
       !
       !
       inv_Nft = 1.D0 / DBLE( Nft )
@@ -442,7 +442,7 @@ MODULE path_reparametrisation
       !
       ! ... fourier components of pos_star are computed
       !
-      ft_pos  = 0.D0
+      ft_pos = 0.D0
       !
       DO n = 1, num_of_modes
          !

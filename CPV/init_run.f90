@@ -314,7 +314,7 @@ SUBROUTINE init_run()
   !         
   fccc = 1.D0
   !
-  IF( tnewnfi   ) nfi = newnfi 
+  IF ( tnewnfi ) nfi = newnfi 
   !
   nomore = nomore + nfi
   !
