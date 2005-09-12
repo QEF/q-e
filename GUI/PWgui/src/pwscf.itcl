@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: pwscf.itcl,v 1.3 2004-09-20 07:06:05 kokalj Exp $ 
+# $Id: pwscf.itcl,v 1.4 2005-09-12 17:13:52 giannozz Exp $ 
 #
 
 tk_setPalette  #d9d9d9
@@ -82,6 +82,9 @@ $gui addModule module pr "ProjWFC.X" [file join $env(PWGUI) modules projwfc proj
 $gui addModule module d3 "D3.X" [file join $env(PWGUI) modules d3 d3.tcl] {
     {{D3.X Input File} {*.d3.inp}}
 }
+$gui addModule module ld "LD1.X" [file join $env(PWGUI) modules atomic atomic.tcl] {
+    {{LD1.X Input File} {*.ld1.inp}}
+}
 
 #$gui addModule cascade pwscf "PWscf files ..." {
 #   $gui addModule command ...
@@ -106,6 +109,7 @@ $gui addHelp help pp           "PP.X Input Syntax"  [file join $env(PWGUI) doc p
 $gui addHelp help chdens   "ChDENS.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_CHDENS.html]
 $gui addHelp help projwfc "ProjWFC.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PROJWFC.html]
 $gui addHelp help d3           "D3.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_D3.html]
+$gui addHelp help ld           "LD1.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT.html]
 
 
 
