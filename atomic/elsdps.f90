@@ -76,6 +76,7 @@ implicit none
          f1(i,1)= vpsloc(i)*rho_tot
          f4(i)= vxt(i)*rho_tot
          vh(i)= vh(i)*rho_tot
+         !
          do is=1,nspin
             rh(is) = rhos(i,is)/r2(i)/fourpi
          enddo
@@ -83,35 +84,35 @@ implicit none
             rhc= rhoc(i)/r2(i)/fourpi
             call vxc_t(rh,rhc,lsd,vxcp)
             if (gga) then
-               f2(i) =-(vgc(i,1)+vxcp(1))*rhos(i,1) &
-                      -f1(i,1)-vh(i)-f4(i)
                f3(i) = exc_t(rh,rhc,lsd)*(rho_tot+rhoc(i)) &
                      + egc(i)*r2(i)*fourpi  &
                      - exc_t(rh0,rhc,lsd)*rhoc(i) &
                      - egcc(i)*r2(i)*fourpi
                f8(i) = exc_t(rh0,rhc,lsd)*rhoc(i) + &
                        egcc(i)*r2(i)*fourpi
+               f2(i) =-(vgc(i,1)+vxcp(1))*rhos(i,1) &
+                      -f1(i,1)-vh(i)-f4(i)
                if (lsd.eq.1) f2(i)=f2(i)-  &
                               (vgc(i,2)+vxcp(2))*rhos(i,2)
             else
-               f2(i) =-vxcp(1)*rhos(i,1)-f1(i,1)-vh(i)-f4(i)
                f3(i) = exc_t(rh,rhc,lsd) * (rho_tot+rhoc(i)) &
                      - exc_t(rh0,rhc,lsd)*rhoc(i)
                f8(i) = exc_t(rh0,rhc,lsd)*rhoc(i)
+               f2(i) =-vxcp(1)*rhos(i,1)-f1(i,1)-vh(i)-f4(i)
                if (lsd.eq.1) f2(i)=f2(i)-vxcp(2)*rhos(i,2)
             endif
          else
             call vxc_t(rh,rhc,lsd,vxcp)
             if (gga) then
-               f2(i) =-(vgc(i,1)+vxcp(1))*rhos(i,1) &
-                                 -f1(i,1)-vh(i)-f4(i)
                f3(i) = exc_t(rh,rhc,lsd)*rho_tot + &
                        egc(i)*r2(i)*fourpi
+               f2(i) =-(vgc(i,1)+vxcp(1))*rhos(i,1) &
+                                 -f1(i,1)-vh(i)-f4(i)
                if (lsd.eq.1) f2(i)=f2(i)  &
                            -(vgc(i,2)+vxcp(2))*rhos(i,2)
             else
-               f2(i) =-vxcp(1)*rhos(i,1)-f1(i,1)-vh(i)-f4(i)
                f3(i) = exc_t(rh,rhc,lsd)* rho_tot
+               f2(i) =-vxcp(1)*rhos(i,1)-f1(i,1)-vh(i)-f4(i)
                if (lsd.eq.1) f2(i)=f2(i)-vxcp(2)*rhos(i,2)
             endif
          endif
