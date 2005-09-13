@@ -186,8 +186,8 @@ eigenvalues:  1.0000000 1.0000000 1.0000000 1.0000000 1.0000000
  0.000  0.000  0.000  0.000  1.000
 nsum =  12.0000000
  exit write_ns
-     Starting wfc are atomic
  Atomic wfc used for LDA+U Projector are NOT orthogonalized
+     Starting wfc are atomic
 
      total cpu time spent up to now is      7.09 secs
 
