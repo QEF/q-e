@@ -189,7 +189,7 @@
      Self-consistent Calculation
 
      iteration #  1     ecut=    25.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  5.0
 
  ==============================================================================
@@ -210,7 +210,7 @@
      absolute magnetization    =     1.35 Bohr mag/cell
 
      iteration #  2     ecut=    25.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  7.90E-03,  avg # of iterations =  1.2
 
  ==============================================================================
@@ -231,7 +231,7 @@
      absolute magnetization    =     0.22 Bohr mag/cell
 
      iteration #  3     ecut=    25.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  7.02E-03,  avg # of iterations =  1.0
 
  ==============================================================================
@@ -252,7 +252,7 @@
      absolute magnetization    =     0.30 Bohr mag/cell
 
      iteration #  4     ecut=    25.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  6.13E-04,  avg # of iterations =  1.4
 
  ==============================================================================
@@ -273,7 +273,7 @@
      absolute magnetization    =     0.03 Bohr mag/cell
 
      iteration #  5     ecut=    25.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.85E-04,  avg # of iterations =  1.0
 
  ==============================================================================
@@ -294,7 +294,7 @@
      absolute magnetization    =     0.03 Bohr mag/cell
 
      iteration #  6     ecut=    25.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.94E-06,  avg # of iterations =  2.1
 
  ==============================================================================
@@ -315,7 +315,7 @@
      absolute magnetization    =     0.01 Bohr mag/cell
 
      iteration #  7     ecut=    25.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  7.48E-08,  avg # of iterations =  1.1
 
  ==============================================================================
@@ -336,7 +336,7 @@
      absolute magnetization    =     0.00 Bohr mag/cell
 
      iteration #  8     ecut=    25.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.15E-08,  avg # of iterations =  1.0
 
  ==============================================================================

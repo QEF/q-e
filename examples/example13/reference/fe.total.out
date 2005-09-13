@@ -158,7 +158,7 @@
      Self-consistent Calculation
 
      iteration #  1     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      WARNING:     1 eigenvalues not converged
      ethr =  1.00E-02,  avg # of iterations = 13.6
       External magnetic field:       0.13053      0.17247      0.21702
@@ -183,7 +183,7 @@
      lambda                    =       0.50 ryd
 
      iteration #  2     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  6.3
       External magnetic field:      -0.20338     -0.26716     -0.33795
 
@@ -207,7 +207,7 @@
      lambda                    =       0.50 ryd
 
      iteration #  3     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  2.76E-03,  avg # of iterations =  3.6
       External magnetic field:       0.06685      0.08874      0.11121
 
@@ -231,7 +231,7 @@
      lambda                    =       0.50 ryd
 
      iteration #  4     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  2.76E-03,  avg # of iterations =  1.1
       External magnetic field:      -0.00572     -0.00870     -0.00957
 
@@ -255,7 +255,7 @@
      lambda                    =       0.50 ryd
 
      iteration #  5     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.93E-03,  avg # of iterations =  1.0
       External magnetic field:      -0.00512     -0.00451     -0.00838
 
@@ -279,7 +279,7 @@
      lambda                    =       0.50 ryd
 
      iteration #  6     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  3.01E-05,  avg # of iterations =  4.9
       External magnetic field:      -0.00381     -0.00613     -0.00640
 
@@ -303,7 +303,7 @@
      lambda                    =       0.50 ryd
 
      iteration #  7     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.41E-05,  avg # of iterations =  1.8
       External magnetic field:       0.00879      0.01221      0.01449
 
@@ -327,7 +327,7 @@
      lambda                    =       0.50 ryd
 
      iteration #  8     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.13E-05,  avg # of iterations =  1.5
       External magnetic field:       0.00536      0.00759      0.00848
 
@@ -351,7 +351,7 @@
      lambda                    =       0.50 ryd
 
      iteration #  9     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.13E-05,  avg # of iterations =  1.0
       External magnetic field:       0.00535      0.00550      0.00471
 
@@ -375,7 +375,7 @@
      lambda                    =       0.50 ryd
 
      iteration # 10     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.13E-05,  avg # of iterations =  1.0
       External magnetic field:      -0.01197     -0.01183     -0.01499
 
@@ -399,7 +399,7 @@
      lambda                    =       0.50 ryd
 
      iteration # 11     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.13E-05,  avg # of iterations =  1.1
       External magnetic field:      -0.00796     -0.00959     -0.01193
 
@@ -423,7 +423,7 @@
      lambda                    =       0.50 ryd
 
      iteration # 12     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.13E-05,  avg # of iterations =  1.0
       External magnetic field:      -0.01027     -0.01359     -0.01722
 
@@ -447,7 +447,7 @@
      lambda                    =       0.50 ryd
 
      iteration # 13     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.13E-05,  avg # of iterations =  1.0
       External magnetic field:      -0.01337     -0.01715     -0.02111
 
@@ -471,7 +471,7 @@
      lambda                    =       0.50 ryd
 
      iteration # 14     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.13E-05,  avg # of iterations =  1.0
       External magnetic field:      -0.00785     -0.01020     -0.01255
 
@@ -495,7 +495,7 @@
      lambda                    =       0.50 ryd
 
      iteration # 15     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.13E-05,  avg # of iterations =  1.0
       External magnetic field:      -0.00508     -0.00687     -0.00827
 
@@ -519,7 +519,7 @@
      lambda                    =       0.50 ryd
 
      iteration # 16     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.13E-05,  avg # of iterations =  1.0
       External magnetic field:      -0.00380     -0.00455     -0.00614
 
@@ -543,7 +543,7 @@
      lambda                    =       0.50 ryd
 
      iteration # 17     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  6.16E-06,  avg # of iterations =  1.0
       External magnetic field:      -0.00361     -0.00482     -0.00596
 
@@ -567,7 +567,7 @@
      lambda                    =       0.50 ryd
 
      iteration # 18     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  3.45E-07,  avg # of iterations =  1.2
       External magnetic field:      -0.00324     -0.00414     -0.00512
 
@@ -591,7 +591,7 @@
      lambda                    =       0.50 ryd
 
      iteration # 19     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  2.76E-07,  avg # of iterations =  1.0
       External magnetic field:      -0.00328     -0.00447     -0.00565
 
@@ -615,7 +615,7 @@
      lambda                    =       0.50 ryd
 
      iteration # 20     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  2.63E-08,  avg # of iterations =  1.1
       External magnetic field:      -0.00323     -0.00430     -0.00538
 
@@ -639,7 +639,7 @@
      lambda                    =       0.50 ryd
 
      iteration # 21     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  2.63E-08,  avg # of iterations =  1.0
       External magnetic field:      -0.00321     -0.00429     -0.00535
 
@@ -663,7 +663,7 @@
      lambda                    =       0.50 ryd
 
      iteration # 22     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  9.07E-10,  avg # of iterations =  1.0
       External magnetic field:      -0.00321     -0.00429     -0.00536
 
@@ -687,7 +687,7 @@
      lambda                    =       0.50 ryd
 
      iteration # 23     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  7.90E-11,  avg # of iterations =  1.0
       External magnetic field:      -0.00320     -0.00427     -0.00534
 
@@ -711,7 +711,7 @@
      lambda                    =       0.50 ryd
 
      iteration # 24     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  7.90E-11,  avg # of iterations =  1.0
       External magnetic field:      -0.00321     -0.00428     -0.00535
 
@@ -735,7 +735,7 @@
      lambda                    =       0.50 ryd
 
      iteration # 25     ecut=    25.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  7.90E-11,  avg # of iterations =  1.0
       External magnetic field:      -0.00323     -0.00431     -0.00538
 

@@ -194,7 +194,7 @@ nsum =  12.0000000
      Self-consistent Calculation
 
      iteration #  1     ecut=    30.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  3.2
  enter write_ns
 U( 1) =  0.0000      U( 2) =  4.3000      U( 3) =  4.3000
@@ -269,7 +269,7 @@ nsum =  12.2453603
      absolute magnetization    =     8.54 Bohr mag/cell
 
      iteration #  2     ecut=    30.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  8.58E-03,  avg # of iterations =  2.2
  enter write_ns
 U( 1) =  0.0000      U( 2) =  4.3000      U( 3) =  4.3000
@@ -344,7 +344,7 @@ nsum =  13.8277586
      absolute magnetization    =     7.22 Bohr mag/cell
 
      iteration #  3     ecut=    30.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  6.35E-04,  avg # of iterations =  1.8
  enter write_ns
 U( 1) =  0.0000      U( 2) =  4.3000      U( 3) =  4.3000
@@ -419,7 +419,7 @@ nsum =  13.5991548
      absolute magnetization    =     7.41 Bohr mag/cell
 
      iteration #  4     ecut=    30.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.63E-04,  avg # of iterations =  2.0
  enter write_ns
 U( 1) =  0.0000      U( 2) =  4.3000      U( 3) =  4.3000
@@ -494,7 +494,7 @@ nsum =  13.7305441
      absolute magnetization    =     7.30 Bohr mag/cell
 
      iteration #  5     ecut=    30.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  2.14E-05,  avg # of iterations =  2.2
  enter write_ns
 U( 1) =  0.0000      U( 2) =  4.3000      U( 3) =  4.3000
@@ -569,7 +569,7 @@ nsum =  13.7148178
      absolute magnetization    =     7.31 Bohr mag/cell
 
      iteration #  6     ecut=    30.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.69E-05,  avg # of iterations =  1.0
  enter write_ns
 U( 1) =  0.0000      U( 2) =  4.3000      U( 3) =  4.3000
@@ -644,7 +644,7 @@ nsum =  13.7183522
      absolute magnetization    =     7.31 Bohr mag/cell
 
      iteration #  7     ecut=    30.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.69E-05,  avg # of iterations =  1.5
  enter write_ns
 U( 1) =  0.0000      U( 2) =  4.3000      U( 3) =  4.3000
@@ -719,7 +719,7 @@ nsum =  13.6860564
      absolute magnetization    =     7.34 Bohr mag/cell
 
      iteration #  8     ecut=    30.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.69E-05,  avg # of iterations =  1.0
  enter write_ns
 U( 1) =  0.0000      U( 2) =  4.3000      U( 3) =  4.3000
@@ -794,7 +794,7 @@ nsum =  13.7240926
      absolute magnetization    =     7.30 Bohr mag/cell
 
      iteration #  9     ecut=    30.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.66E-05,  avg # of iterations =  1.0
  enter write_ns
 U( 1) =  0.0000      U( 2) =  4.3000      U( 3) =  4.3000
@@ -869,7 +869,7 @@ nsum =  13.7027586
      absolute magnetization    =     7.32 Bohr mag/cell
 
      iteration # 10     ecut=    30.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  3.30E-06,  avg # of iterations =  1.0
  enter write_ns
 U( 1) =  0.0000      U( 2) =  4.3000      U( 3) =  4.3000
@@ -944,7 +944,7 @@ nsum =  13.7221304
      absolute magnetization    =     7.31 Bohr mag/cell
 
      iteration # 11     ecut=    30.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.52E-06,  avg # of iterations =  1.1
  enter write_ns
 U( 1) =  0.0000      U( 2) =  4.3000      U( 3) =  4.3000
@@ -1019,7 +1019,7 @@ nsum =  13.7101802
      absolute magnetization    =     7.32 Bohr mag/cell
 
      iteration # 12     ecut=    30.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.52E-06,  avg # of iterations =  1.0
  enter write_ns
 U( 1) =  0.0000      U( 2) =  4.3000      U( 3) =  4.3000
@@ -1094,7 +1094,7 @@ nsum =  13.7116480
      absolute magnetization    =     7.32 Bohr mag/cell
 
      iteration # 13     ecut=    30.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.52E-06,  avg # of iterations =  1.0
  enter write_ns
 U( 1) =  0.0000      U( 2) =  4.3000      U( 3) =  4.3000
@@ -1169,7 +1169,7 @@ nsum =  13.7157321
      absolute magnetization    =     7.31 Bohr mag/cell
 
      iteration # 14     ecut=    30.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.82E-08,  avg # of iterations =  3.5
  enter write_ns
 U( 1) =  0.0000      U( 2) =  4.3000      U( 3) =  4.3000
@@ -1244,7 +1244,7 @@ nsum =  13.7153676
      absolute magnetization    =     7.31 Bohr mag/cell
 
      iteration # 15     ecut=    30.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.82E-08,  avg # of iterations =  1.0
  enter write_ns
 U( 1) =  0.0000      U( 2) =  4.3000      U( 3) =  4.3000
@@ -1319,7 +1319,7 @@ nsum =  13.7164163
      absolute magnetization    =     7.31 Bohr mag/cell
 
      iteration # 16     ecut=    30.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  8.63E-09,  avg # of iterations =  1.0
  enter write_ns
 U( 1) =  0.0000      U( 2) =  4.3000      U( 3) =  4.3000
@@ -1394,7 +1394,7 @@ nsum =  13.7164438
      absolute magnetization    =     7.31 Bohr mag/cell
 
      iteration # 17     ecut=    30.00 ryd     beta=0.30
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  8.63E-09,  avg # of iterations =  1.0
  enter write_ns
 U( 1) =  0.0000      U( 2) =  4.3000      U( 3) =  4.3000

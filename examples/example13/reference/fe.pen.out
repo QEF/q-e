@@ -236,7 +236,7 @@
      Self-consistent Calculation
 
      iteration #  1     ecut=    25.00 ryd     beta=0.20
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  4.3
      constraint energy (Ryd) =      6.79676676
 
@@ -260,7 +260,7 @@
      lambda                    =       1.00 ryd
 
      iteration #  2     ecut=    25.00 ryd     beta=0.20
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  3.01E-03,  avg # of iterations =  1.0
      constraint energy (Ryd) =      4.87120807
 
@@ -284,7 +284,7 @@
      lambda                    =       1.00 ryd
 
      iteration #  3     ecut=    25.00 ryd     beta=0.20
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.00E-03,  avg # of iterations =  1.1
      constraint energy (Ryd) =      3.24496240
 
@@ -308,7 +308,7 @@
      lambda                    =       1.00 ryd
 
      iteration #  4     ecut=    25.00 ryd     beta=0.20
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  5.37E-05,  avg # of iterations =  3.3
      constraint energy (Ryd) =      1.99910580
 
@@ -332,7 +332,7 @@
      lambda                    =       1.00 ryd
 
      iteration #  5     ecut=    25.00 ryd     beta=0.20
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  2.38E-05,  avg # of iterations =  2.3
      constraint energy (Ryd) =      1.35060491
 
@@ -356,7 +356,7 @@
      lambda                    =       1.00 ryd
 
      iteration #  6     ecut=    25.00 ryd     beta=0.20
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  2.38E-05,  avg # of iterations =  1.0
      constraint energy (Ryd) =      1.19234333
 
@@ -380,7 +380,7 @@
      lambda                    =       1.00 ryd
 
      iteration #  7     ecut=    25.00 ryd     beta=0.20
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  8.71E-06,  avg # of iterations =  1.0
      constraint energy (Ryd) =      0.82177735
 
@@ -404,7 +404,7 @@
      lambda                    =       1.00 ryd
 
      iteration #  8     ecut=    25.00 ryd     beta=0.20
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  5.40E-06,  avg # of iterations =  1.1
      constraint energy (Ryd) =      0.69207090
 
@@ -428,7 +428,7 @@
      lambda                    =       1.00 ryd
 
      iteration #  9     ecut=    25.00 ryd     beta=0.20
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  3.75E-07,  avg # of iterations =  1.6
      constraint energy (Ryd) =      0.75436838
 
@@ -452,7 +452,7 @@
      lambda                    =       1.00 ryd
 
      iteration # 10     ecut=    25.00 ryd     beta=0.20
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  3.75E-07,  avg # of iterations =  1.0
      constraint energy (Ryd) =      0.79579683
 
@@ -476,7 +476,7 @@
      lambda                    =       1.00 ryd
 
      iteration # 11     ecut=    25.00 ryd     beta=0.20
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  9.48E-08,  avg # of iterations =  1.0
      constraint energy (Ryd) =      0.83843420
 
@@ -500,7 +500,7 @@
      lambda                    =       1.00 ryd
 
      iteration # 12     ecut=    25.00 ryd     beta=0.20
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  5.52E-08,  avg # of iterations =  1.0
      constraint energy (Ryd) =      0.83665267
 
@@ -524,7 +524,7 @@
      lambda                    =       1.00 ryd
 
      iteration # 13     ecut=    25.00 ryd     beta=0.20
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.40E-09,  avg # of iterations =  1.0
      constraint energy (Ryd) =      0.83960358
 
@@ -548,7 +548,7 @@
      lambda                    =       1.00 ryd
 
      iteration # 14     ecut=    25.00 ryd     beta=0.20
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  3.86E-10,  avg # of iterations =  1.0
      constraint energy (Ryd) =      0.83897447
 
@@ -572,7 +572,7 @@
      lambda                    =       1.00 ryd
 
      iteration # 15     ecut=    25.00 ryd     beta=0.20
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  3.69E-10,  avg # of iterations =  1.0
      constraint energy (Ryd) =      0.83905833
 

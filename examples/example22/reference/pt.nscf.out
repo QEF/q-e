@@ -94,7 +94,7 @@
      total cpu time spent up to now is      3.44 secs
 
      Band Structure Calculation
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      WARNING:     2 eigenvalues not converged
      WARNING:     1 eigenvalues not converged
      ethr =  1.00E-10,  avg # of iterations = 16.2

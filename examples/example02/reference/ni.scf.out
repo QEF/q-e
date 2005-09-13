@@ -104,7 +104,7 @@
      Self-consistent Calculation
 
      iteration #  1     ecut=    27.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  4.5
 
      total cpu time spent up to now is      2.81 secs
@@ -116,7 +116,7 @@
      absolute magnetization    =     1.64 Bohr mag/cell
 
      iteration #  2     ecut=    27.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  6.00E-03,  avg # of iterations =  1.2
 
      total cpu time spent up to now is      3.47 secs
@@ -128,7 +128,7 @@
      absolute magnetization    =     0.75 Bohr mag/cell
 
      iteration #  3     ecut=    27.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  6.00E-03,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      4.12 secs
@@ -140,7 +140,7 @@
      absolute magnetization    =     1.00 Bohr mag/cell
 
      iteration #  4     ecut=    27.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  2.48E-04,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      4.78 secs
@@ -152,7 +152,7 @@
      absolute magnetization    =     0.82 Bohr mag/cell
 
      iteration #  5     ecut=    27.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  6.62E-06,  avg # of iterations =  1.6
 
      total cpu time spent up to now is      5.45 secs
@@ -164,7 +164,7 @@
      absolute magnetization    =     0.81 Bohr mag/cell
 
      iteration #  6     ecut=    27.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  2.57E-07,  avg # of iterations =  1.4
 
      total cpu time spent up to now is      6.12 secs
@@ -176,7 +176,7 @@
      absolute magnetization    =     0.79 Bohr mag/cell
 
      iteration #  7     ecut=    27.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  3.86E-08,  avg # of iterations =  1.1
 
      total cpu time spent up to now is      6.78 secs
@@ -188,7 +188,7 @@
      absolute magnetization    =     0.79 Bohr mag/cell
 
      iteration #  8     ecut=    27.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.99E-08,  avg # of iterations =  1.1
 
      total cpu time spent up to now is      7.45 secs
@@ -200,7 +200,7 @@
      absolute magnetization    =     0.79 Bohr mag/cell
 
      iteration #  9     ecut=    27.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  3.03E-10,  avg # of iterations =  1.1
 
      total cpu time spent up to now is      8.11 secs
@@ -212,7 +212,7 @@
      absolute magnetization    =     0.79 Bohr mag/cell
 
      iteration # 10     ecut=    27.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  3.03E-10,  avg # of iterations =  1.1
 
      total cpu time spent up to now is      8.76 secs

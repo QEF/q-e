@@ -92,7 +92,7 @@
      total cpu time spent up to now is      0.37 secs
 
      Band Structure Calculation
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.25E-08,  avg # of iterations = 10.5
 
      total cpu time spent up to now is      2.76 secs

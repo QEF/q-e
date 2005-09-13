@@ -113,13 +113,13 @@
      Self-consistent Calculation
 
      iteration #  1     ecut=    30.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  4.2
 
      Threshold (ethr) on eigenvalues was too large:
      Diagonalizing with lowered threshold
 
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  7.36E-04,  avg # of iterations =  1.0
 
      total cpu time spent up to now is     16.96 secs
@@ -128,7 +128,7 @@
      estimated scf accuracy    <     0.01520792 ryd
 
      iteration #  2     ecut=    30.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  7.60E-05,  avg # of iterations =  1.8
 
      total cpu time spent up to now is     23.26 secs
@@ -137,7 +137,7 @@
      estimated scf accuracy    <     0.00332740 ryd
 
      iteration #  3     ecut=    30.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.66E-05,  avg # of iterations =  1.7
 
      total cpu time spent up to now is     29.44 secs
@@ -146,7 +146,7 @@
      estimated scf accuracy    <     0.00004045 ryd
 
      iteration #  4     ecut=    30.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  2.02E-07,  avg # of iterations =  2.3
 
      total cpu time spent up to now is     35.62 secs
@@ -155,7 +155,7 @@
      estimated scf accuracy    <     0.00009276 ryd
 
      iteration #  5     ecut=    30.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  2.02E-07,  avg # of iterations =  1.5
 
      total cpu time spent up to now is     41.52 secs
@@ -164,7 +164,7 @@
      estimated scf accuracy    <     0.00000757 ryd
 
      iteration #  6     ecut=    30.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  3.78E-08,  avg # of iterations =  1.0
 
      total cpu time spent up to now is     47.32 secs
@@ -173,7 +173,7 @@
      estimated scf accuracy    <     0.00000001 ryd
 
      iteration #  7     ecut=    30.00 ryd     beta=0.70
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  5.09E-11,  avg # of iterations =  2.3
 
      total cpu time spent up to now is     54.15 secs

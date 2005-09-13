@@ -300,7 +300,7 @@
      total cpu time spent up to now is      6.51 secs
 
      Band Structure Calculation
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.25E-10,  avg # of iterations = 10.0
 
      total cpu time spent up to now is      7.50 secs
@@ -687,7 +687,7 @@
      total cpu time spent up to now is     24.92 secs
 
      Band Structure Calculation
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.25E-10,  avg # of iterations =  5.1
 
      total cpu time spent up to now is     25.18 secs
@@ -1024,7 +1024,7 @@
      total cpu time spent up to now is     33.75 secs
 
      Band Structure Calculation
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.25E-10,  avg # of iterations =  4.5
 
      total cpu time spent up to now is     34.36 secs
@@ -1510,7 +1510,7 @@
      total cpu time spent up to now is     54.78 secs
 
      Band Structure Calculation
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.25E-10,  avg # of iterations =  4.2
 
      total cpu time spent up to now is     55.83 secs
@@ -2107,7 +2107,7 @@
      total cpu time spent up to now is     96.18 secs
 
      Band Structure Calculation
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.25E-10,  avg # of iterations =  4.4
 
      total cpu time spent up to now is     97.19 secs
@@ -2660,7 +2660,7 @@
      total cpu time spent up to now is    135.71 secs
 
      Band Structure Calculation
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.25E-10,  avg # of iterations =  4.8
 
      total cpu time spent up to now is    135.87 secs
@@ -2962,7 +2962,7 @@
      total cpu time spent up to now is    141.35 secs
 
      Band Structure Calculation
-     Davidson diagonalization (with overlap)
+     Davidson diagonalization with overlap
      ethr =  1.25E-10,  avg # of iterations =  4.4
 
      total cpu time spent up to now is    141.76 secs
