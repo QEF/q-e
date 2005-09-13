@@ -81,6 +81,16 @@ tracevar rel w {
     }
 }
 
+tracevar nwfs w {
+    # wfc is table
+    widgetconfigure wfs -rows [varvalue nwfs]
+}
+
+
+tracevar nconf w {
+    # configts is dimension
+    widgetconfigure configts -end [varvalue nconf]
+}
 
 postprocess {
     varset iswitch -value 1
