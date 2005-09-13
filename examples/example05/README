@@ -10,22 +10,19 @@ variables see the appropriate INPUT_* file)
    output=si.scf.out)
 
 2) run the postprocessing program pp.x (input=si.pp_rho.in, 
-   output=si.pp_rho.out) in order to write out the charge density on
-   a 3D grid. See INPUT_PP for details of the input.
+   output=si.pp_rho.out) in order to extract a 2D cut of 
+   the charge density. See INPUT_PP for details of the input.
 
-3) run chdens.x program (input=si.chdens.in, output=si.chdens.out)
-   in order to extract a 2D cut of the 3D density.
-
-4) run plotrho.x program (input=si.plotrho.in, output=si.plotrho.out)
+3) run plotrho.x program (input=si.plotrho.in, output=si.plotrho.out)
    in order to produce a postscript file: si.rho.ps.
 
-5) make a non self-consistent calculation including more bands (nbnd=8). 
+4) make a non self-consistent calculation including more bands (nbnd=8). 
    (input=si.band.in, output=si.band.out) 
 
-6) run program bands.x that extracts the eigenvalues, tries to 
+5) run program bands.x that extracts the eigenvalues, tries to 
    determine the correct crossing (based on the character of the 
    bands), writes bands to a file (sibands.dat). 
    (input=si.bands.in, output=si.bands.out) 
 
-7) run program plotband.x that reads the file produced by bands.x
+6) run program plotband.x that reads the file produced by bands.x
    and produces a postscript plot file (sibands.ps)

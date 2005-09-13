@@ -7,12 +7,13 @@
 !
 !
 !-----------------------------------------------------------------------
-program chdens
+SUBROUTINE chdens
   !-----------------------------------------------------------------------
-  !      Charge density/polarization plotting program
+  !      Writes the charge density (or potential, or polarisation)
+  !      into a file format suitable for plotting
   !-----------------------------------------------------------------------
   !
-  !      DESCRIPTION of the INPUT: see file INPUT_CHDENS in pwdocs/
+  !      DESCRIPTION of the INPUT: see file INPUT_PP in Docs/
   !
 #include "f_defs.h"
   USE io_global,  ONLY : stdout
@@ -52,17 +53,15 @@ program chdens
   ! rho or polarization in G space
   logical :: fast3d
 
-  namelist /input/  &
+  namelist /plot/  &
        nfile, filepp, weight, iflag, e1, e2, e3, nx, ny, nz, x0, &
        output_format, fileout, epsilon, filepol
 
   !
-  call start_postproc (nd_nmbr)
-  !
   !   set the DEFAULT values
   !
   nfile         = 1
-  filepp(1)   = ' '
+  filepp(1)     = 'tmp.pp'
   weight(1)     = 1.0d0
   iflag         = 1
   radius        = 1.0d0
@@ -80,14 +79,17 @@ program chdens
   !
   !    read and check input data
   !
-  CALL input_from_file ( )
+  ! reading the namelist 'plot'
   !
-  ! reading the namelist input
+  read (5, plot, iostat = ios)
   !
-  read (5, input, err = 200, iostat = ios)
-200 call errore ('chdens', 'reading input namelist', abs (ios) )
-
+  if (ios /= 0) then
+     call infomsg ('chdens', 'namelist plot not found or not valid', -1 )
+     return
+  end if
+  !
   ! check for number of files
+  !
   if (nfile.le.0.or.nfile.gt.nfilemax) &
        call errore ('chdens ', 'nfile is wrong ', 1)
 
@@ -145,7 +147,6 @@ program chdens
   !
   ! ... see comment above
   !
-  
   allocate(tau (3, nat))
   allocate(ityp(nat))
   allocate(rhor(nrx1*nrx2*nrx3))
@@ -361,8 +362,8 @@ program chdens
   deallocate(rhog)
   deallocate(tau)
   deallocate(ityp)
-  call stop_pp
-end program chdens
+  
+end SUBROUTINE chdens
 !
 !-----------------------------------------------------------------------
 subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)

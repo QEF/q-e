@@ -31,8 +31,8 @@ xsf.o
 MODULES = \
 ../Modules/atom.o \
 ../Modules/cell_base.o \
-../Modules/clocks.o \
 ../Modules/check_stop.o \
+../Modules/clocks.o \
 ../Modules/constants.o \
 ../Modules/control_flags.o \
 ../Modules/fft_base.o \
@@ -104,6 +104,7 @@ PWOBJS = \
 ../PW/checkallsym.o \
 ../PW/checksym.o \
 ../PW/cinitcgg.o \
+../PW/clean_pw.o \
 ../PW/close_files.o \
 ../PW/compute_dip.o \
 ../PW/compute_rho.o \
@@ -271,7 +272,7 @@ PWOBJS = \
 
 TLDEPS= bindir mods libs pw
 
-all : tldeps average.x bands.x chdens.x dos.x efg.x plotband.x plotrho.x \
+all : tldeps average.x bands.x dos.x efg.x plotband.x plotrho.x \
       pmw.x pp.x projwfc.x pw2casino.x pw2wan.x pw_export.x \
       voronoy.x initial_state.x dipole.x
 
@@ -285,10 +286,6 @@ bands.x : bands.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 
 dipole.x : dipole.o $(PPOBJS) $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(LD) -o $@ dipole.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
-	- ( cd ../bin ; ln -fs ../PP/$@ . )
-
-chdens.x : chdens.o $(PPOBJS) $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(LD) -o $@ chdens.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 dos.x : dos.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
@@ -315,8 +312,8 @@ xctest.x : xctest.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(LD) -o $@ xctest.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
-pp.x : postproc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(LD) -o $@ postproc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
+pp.x : postproc.o chdens.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(LD) -o $@ postproc.o chdens.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 projwfc.x : projwfc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)

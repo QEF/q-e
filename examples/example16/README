@@ -7,27 +7,22 @@
    by using a slab supercell.
    (input=AlAs110re.scf.in, ouput=AlAs110re.scf.out)
 
-2) make a non-self-consistent calculation for the same cell with a higher
+2) make a non-self-consistent calculation for the same cell with a larger
    number of k points
    (input=AlAs110re.nonscf.in, output=AlAs110re.nonscf.out)
 
 3) call the postprocessing executable 'pp.x' with the instruction
-   'plot_num= 5' so that to generate the STM simulated image with the
-   bias potential specified by 'sample_bias=-0.0735'. The data are
-   collected in the ouput file 'AlAsresm-1.0'.
+   'plot_num= 5' to generate the STM simulated image with bias 
+   potential specified by 'sample_bias=-0.0735'. Intermediate data 
+   is collected in file 'AlAsresm-1.0'. A 2-dimensional slice of 
+   the image is then extracted and written to 'AlAs110-1.0'. 
    (input=AlAs110.pp_stm-.in, and output=AlAs110.pp_stm-.out)
 
 4) same as point 3) but with positive bias 'sample_bias=0.0735'.
+   Output files: 'AlAsresm+1.0' and 'AlAs110+1.0'. 
    (input=AlAs110.pp_stm+.in, and output=AlAs110.pp_stm+.out)
 
-5-6) produce a 2 dimensional plot of the STM images from the files
-   'AlAsresm-1.0' and 'AlAsresm-1.0'. This is done with the executable
-   'chdens.x'. The corresponding 2D plots are saved in 'AlAs110-1.0' and
-   'AlAs110+1.0'.
-   (input=AlAs110.chdens-.in, output=AlAs110.chdens-.out)
-   (input=AlAs110.chdens+.in, output=AlAs110.chdens+.out)
-
-7-8) produce a postscript file of the simulated STM images by running the
+5-6) produce a postscript file of the simulated STM images by running the
     executable 'plotrho.x'. This generate the PostScript files
     'AlAs110-1.0eV.ps' and 'AlAs110+1.0eV.ps'.
    (input=AlAs110.plotrho-.in, output=AlAs110.plotrho-.out)

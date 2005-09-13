@@ -29,7 +29,7 @@ SUBROUTINE clean_pw( lflag )
   USE extfield,             ONLY : forcefield
   USE sticks,               ONLY : dfftp, dffts  
   USE stick_base,           ONLY : sticks_deallocate
-  USE berry_phase,          ONLY : berry_closeup
+  ! USE berry_phase,          ONLY : berry_closeup
 #if defined (__SX6)
   USE afftnec,              ONLY : auxp, first
 #endif  
@@ -144,7 +144,7 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... deallocate indices used in calculation of polarizability at gamma
   !
-  CALL berry_closeup()
+  ! CALL berry_closeup()
   !
   RETURN
   !

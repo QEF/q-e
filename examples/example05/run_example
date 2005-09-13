@@ -18,7 +18,7 @@ $ECHO "plot the band structure of Si."
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x pp.x chdens.x plotrho.x bands.x plotband.x"
+BIN_LIST="pw.x pp.x plotrho.x bands.x plotband.x"
 PSEUDO_LIST="Si.vbc.UPF"
 
 $ECHO
@@ -67,14 +67,12 @@ $ECHO " done"
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 PP_COMMAND="$PARA_PREFIX $BIN_DIR/pp.x $PARA_POSTFIX"
-CHDENS_COMMAND="$BIN_DIR/chdens.x"
 PLOTRHO_COMMAND="$BIN_DIR/plotrho.x"
 BANDS_COMMAND="$PARA_PREFIX $BIN_DIR/bands.x $PARA_POSTFIX"
 PLOTBAND_COMMAND="$BIN_DIR/plotband.x"
 $ECHO
 $ECHO "  running pw.x as:       $PW_COMMAND"
 $ECHO "  running pp.x as:       $PP_COMMAND"
-$ECHO "  running chdens.x as:   $CHDENS_COMMAND"
 $ECHO "  running plotrho.x as:  $PLOTRHO_COMMAND"
 $ECHO "  running bands.x as:    $BANDS_COMMAND"
 $ECHO "  running plotband.x as: $PLOTBAND_COMMAND"
@@ -132,14 +130,7 @@ cat > si.pp_rho.in << EOF
     filplot = 'sicharge'
     plot_num= 0
  /
-EOF
-$ECHO "  running the post-processing for charge density...\c"
-$PP_COMMAND < si.pp_rho.in > si.pp_rho.out
-$ECHO " done"
-
-# chdens 
-cat > si.chdens.in << EOF
- &input
+ &plot
     nfile = 1
     filepp(1) = 'sicharge'
     weight(1) = 1.0
@@ -151,8 +142,8 @@ cat > si.chdens.in << EOF
     nx=56, ny=40
  /
 EOF
-$ECHO "  running chdens.x to make 2-d plot with plotrho.x...\c"
-$CHDENS_COMMAND < si.chdens.in > si.chdens.out
+$ECHO "  running pp.x to do a 2-d plot of the charge density...\c"
+$PP_COMMAND < si.pp_rho.in > si.pp_rho.out
 $ECHO " done"
 
 # plotrho

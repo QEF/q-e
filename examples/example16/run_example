@@ -16,7 +16,7 @@ $ECHO "This example shows a calculation of STM maps."
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x pp.x chdens.x plotrho.x"
+BIN_LIST="pw.x pp.x plotrho.x"
 PSEUDO_LIST="Al.vbc.UPF As.gon.UPF"
 
 $ECHO
@@ -65,12 +65,10 @@ $ECHO " done"
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 PP_COMMAND="$PARA_PREFIX $BIN_DIR/pp.x $PARA_POSTFIX"
-CHDENS_COMMAND="$BIN_DIR/chdens.x"
 PLOTRHO_COMMAND="$BIN_DIR/plotrho.x"
 $ECHO
 $ECHO "  running pw.x as:      $PW_COMMAND"
 $ECHO "  running pp.x as:      $PP_COMMAND"
-$ECHO "  running chdens.x as:  $CHDENS_COMMAND"
 $ECHO "  running plotrho.x as: $PLOTRHO_COMMAND"
 $ECHO
  
@@ -181,29 +179,7 @@ cat > AlAs110.pp_stm-.in << EOF
     stm_wfc_matching=.false.,
     plot_num= 5
  /
-EOF
-$ECHO "  running the post-processing phase, negative bias...\c"
-$PP_COMMAND < AlAs110.pp_stm-.in > AlAs110.pp_stm-.out
-$ECHO " done"
-
-# post-processing for stm images (as before, but positive bias)
-cat > AlAs110.pp_stm+.in << EOF
- &inputpp
-    prefix  = 'AlAs110'
-    outdir='$TMP_DIR/',
-    filplot = 'AlAsresm+1.0'
-    sample_bias=0.0735d0,
-    stm_wfc_matching=.false.,
-    plot_num= 5
- &/
-EOF
-$ECHO "  running the post-processing phase, positive bias...\c"
-$PP_COMMAND < AlAs110.pp_stm+.in > AlAs110.pp_stm+.out
-$ECHO " done"
-
-# run chdens for 2D plot of STM data
-cat > AlAs110.chdens-.in << EOF
- &input
+ &plot
    nfile=1
    filepp(1)='AlAsresm-1.0'
    weight(1)=1.0
@@ -216,28 +192,6 @@ cat > AlAs110.chdens-.in << EOF
    fileout='AlAs110-1.0'
  /
 EOF
-$ECHO "  running chdens on negative bias data...\c"
-$CHDENS_COMMAND < AlAs110.chdens-.in > AlAs110.chdens-.out
-$ECHO " done"
-
-# chdens
-cat > AlAs110.chdens+.in << EOF
- &input
-   nfile=1
-   filepp(1)='AlAsresm+1.0'
-   weight(1)=1.0
-   iflag=2
-   output_format=2
-   e1(1)=7.0, e1(2)=0.0,     e1(3)=0.0      
-   e2(1)=0.0, e2(2)=7.07107, e2(3)=0.0
-   x0(1)=0.0, x0(2)=-0.18,   x0(3)=3.25
-   nx=36 ,ny=56     
-   fileout='AlAs110+1.0'
- /
-EOF
-$ECHO "  running chdens on positive bias data...\c"
-$CHDENS_COMMAND < AlAs110.chdens+.in > AlAs110.chdens+.out
-$ECHO " done"
 
 # run plotrho to do the figure
 cat > AlAs110.plotrho-.in << EOF
@@ -262,4 +216,36 @@ $PLOTRHO_COMMAND < AlAs110.plotrho+.in > AlAs110.plotrho+.out
 $ECHO " done"
 
 $ECHO
-$ECHO "$EXAMPLE_DIR: done"
+$ECHO "  running the post-processing phase, negative bias...\c"
+$PP_COMMAND < AlAs110.pp_stm-.in > AlAs110.pp_stm-.out
+$ECHO " done"
+
+# post-processing for stm images (as before, but positive bias)
+cat > AlAs110.pp_stm+.in << EOF
+ &inputpp
+    prefix  = 'AlAs110'
+    outdir='$TMP_DIR/',
+    filplot = 'AlAsresm+1.0'
+    sample_bias=0.0735d0,
+    stm_wfc_matching=.false.,
+    plot_num= 5
+ /
+ &plot
+   nfile=1
+   filepp(1)='AlAsresm+1.0'
+   weight(1)=1.0
+   iflag=2
+   output_format=2
+   e1(1)=7.0, e1(2)=0.0,     e1(3)=0.0      
+   e2(1)=0.0, e2(2)=7.07107, e2(3)=0.0
+   x0(1)=0.0, x0(2)=-0.18,   x0(3)=3.25
+   nx=36 ,ny=56     
+   fileout='AlAs110+1.0'
+ /
+EOF
+$ECHO "  running the post-processing phase, positive bias...\c"
+$PP_COMMAND < AlAs110.pp_stm+.in > AlAs110.pp_stm+.out
+$ECHO " done"
+
+$ECHO 
+$ECHO " $EXAMPLE_DIR: done"

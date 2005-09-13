@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2005 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,19 +11,53 @@
 PROGRAM postproc
   !-----------------------------------------------------------------------
   !
-  !    This program reads the output file produced by pw.x
+  !    Program for data analysis and plotting. The two basic steps are:
+  !    1) read the output file produced by pw.x, extract and calculate
+  !       the desired quantity (rho, V, ...)
+  !    2) write the desired quantity to file in a suitable format for
+  !       various types of plotting and various plotting programs
+  !    The two steps can be performed independently. Intermediate data
+  !    can be saved to file in step 1 and read from file in step 2.
+  !
+  !    DESCRIPTION of the INPUT : see file Docs/INPUT_PP
+  !
+  USE io_files,  ONLY : nd_nmbr
+  USE io_global, ONLY : ionode
+  !
+  ! initialise parallel environment
+  !
+  CALL start_postproc (nd_nmbr)
+  IF ( ionode )  CALL input_from_file ( )
+  !
+  call extract () 
+  !
+  call clean_pw () 
+  !
+  ! chdens should be called on just one processor
+  !
+  IF ( ionode ) call chdens ()
+  !
+  call stop_pp ()
+  !
+END PROGRAM postproc
+!
+!-----------------------------------------------------------------------
+SUBROUTINE extract
+  !-----------------------------------------------------------------------
+  !
+  !    This subroutine reads the data for the output file produced by pw.x
   !    extracts and calculates the desired quantity (rho, V, ...)
   !    writes it to a file for further processing or plotting
   !
-  !    DESCRIPTION of the INPUT: see file pwdocs/INPUT_PP
+  !    DESCRIPTION of the INPUT: see file Docs/INPUT_PP
   !
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : bg
+  USE ener,      ONLY : ef
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau
   USE gvect
-  USE ener,      ONLY : ef
   USE vlocal,    ONLY : strf
-  USE io_files,  ONLY : tmp_dir, nd_nmbr, prefix
+  USE io_files,  ONLY : tmp_dir, prefix
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_bcast
 
@@ -42,27 +76,23 @@ PROGRAM postproc
        filplot, lsign, epsilon
 
   !
-  CALL start_postproc (nd_nmbr)
-  !
   !   set default values for variables in namelist
   !
   prefix = 'pwscf'
   outdir = './'
-  filplot = 'pp.out' 
-  plot_num = 0
+  filplot = 'tmp.pp' 
+  plot_num = -1
   spin_component = 0
   sample_bias = 0.01d0
   z = 1.d0
   dz = 0.05d0
   stm_wfc_matching = .TRUE.
   lsign=.FALSE.
-  emin = - 999.0d0
-  emax = ef*13.6058d0
+  emin = -999.0d0
+  emax = +999.0d0
   epsilon=1.d0
   !
   IF ( ionode )  THEN
-     !
-     CALL input_from_file ( )
      !
      !     reading the namelist inputpp
      !
@@ -90,7 +120,9 @@ PROGRAM postproc
   CALL mp_bcast( lsign, ionode_id )
   CALL mp_bcast( epsilon, ionode_id )
   !
-  !     Check of namelist variables
+  ! no task specified: do nothing and return
+  !
+  IF (plot_num == -1) return
   !
   IF (plot_num < 0 .OR. plot_num > 16) CALL errore ('postproc', &
           'Wrong plot_num', ABS (plot_num) )
@@ -102,12 +134,6 @@ PROGRAM postproc
      IF (spin_component < 0 .OR. spin_component > 2) CALL errore &
          ('postproc', 'wrong value of spin_component', 1)
   END IF
-
-  IF (plot_num == 10) THEN
-     emin = emin / 13.6058d0
-     emax = emax / 13.6058d0
-  END IF
-
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -117,12 +143,20 @@ PROGRAM postproc
        strf, eigts1, eigts2, eigts3)
   CALL init_us_1
   !
+  ! The following line sets emax to its default value if not set
+  ! It is done here because Ef must be read from file
+  !
+  IF (emax == +999.0d0) emax = ef
+  IF (plot_num == 10) THEN
+     emin = emin / 13.6058d0
+     emax = emax / 13.6058d0
+  END IF
+  !
+  !
   !   Now do whatever you want
   !
   CALL punch_plot (filplot, plot_num, sample_bias, z, dz, &
        stm_wfc_matching, emin, emax, kpoint, kband, spin_component, &
        lsign, epsilon)
   !
-  CALL stop_pp
-  STOP
-END PROGRAM postproc
+END SUBROUTINE extract
