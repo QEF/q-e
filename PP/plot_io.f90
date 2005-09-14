@@ -36,16 +36,16 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
   if (iflag == 0 ) call errore('plot_io',&
                         ' iflag==0 not allowed, use read_io_header ',1)
   if (iflag > 0) then
-     WRITE( stdout, '(5x,"Writing data on file  ",a)') filplot
+     WRITE( stdout, '(5x,"Writing data to file  ",a)') TRIM(filplot)
      open (unit = iunplot, file = filplot, form = 'formatted', &
           status = 'unknown', err = 100, iostat = ios)
   else
-     WRITE( stdout, '(5x,"Reading data from file  ",a)') filplot
+     WRITE( stdout, '(5x,"Reading data from file  ",a)') TRIM(filplot)
      open (unit = iunplot, file = filplot, form = 'formatted', &
           status = 'old', err = 100, iostat = ios)
   endif
 
-100 call errore ('plot_io', 'opening file '//filplot, abs (ios) )
+100 call errore ('plot_io', 'opening file '//TRIM(filplot), abs (ios) )
 
   rewind (iunplot)
   if (iflag > 0) then
@@ -106,10 +106,10 @@ subroutine read_io_header(filplot, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   if (filplot == ' ') call errore ('read_io_h', 'filename missing', 1)
   !
   iunplot = 4
-  WRITE( stdout, '(5x,"Reading header from file  ",a)') filplot
+  WRITE( stdout, '(5x,"Reading header from file  ",a)') TRIM(filplot)
   open (unit = iunplot, file = filplot, form = 'formatted', &
           status = 'old', err = 100, iostat = ios)
-100 call errore ('plot_io', 'opening file '//filplot, abs (ios) )
+100 call errore ('plot_io', 'opening file '//TRIM(filplot), abs (ios) )
 
   rewind (iunplot)
   read (iunplot, '(a)') title

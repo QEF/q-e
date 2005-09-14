@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE chdens
+SUBROUTINE chdens (filplot)
   !-----------------------------------------------------------------------
   !      Writes the charge density (or potential, or polarisation)
   !      into a file format suitable for plotting
@@ -30,6 +30,8 @@ SUBROUTINE chdens
   USE io_files, ONLY: nd_nmbr
 
   implicit none
+  character (len=256), INTENT(in) :: filplot
+  !
   integer, parameter :: nfilemax = 7
   ! maximum number of files with charge
 
@@ -39,7 +41,13 @@ SUBROUTINE chdens
   real(DP) :: e1(3), e2(3), e3(3), x0 (3), radius, m1, m2, m3, &
        weight (nfilemax), epsilon
 
-  character (len=256) :: fileout, filepol, filename (nfilemax)
+  character (len=256) :: fileout, filename (nfilemax)
+  character (len=15), dimension(0:6) :: formatname = &
+       (/ 'gnuplot', 'contour.x', 'plotrho.x', 'XCrySDen', 'gOpenMol', &
+       &  'XCrySDen', 'Gaussian cube' /)
+  character (len=20), dimension(0:4) :: plotname = &
+       (/ '1D spherical average', '1D along a line', '2D contour', &
+       &  '3D', '2D polar on a sphere'/)
 
   real(DP) :: celldms (6), gcutmsa, duals, ecuts, zvs(ntypx), ats(3,3)
   real(DP), allocatable :: taus (:,:), rhor(:)
@@ -55,20 +63,18 @@ SUBROUTINE chdens
 
   namelist /plot/  &
        nfile, filepp, weight, iflag, e1, e2, e3, nx, ny, nz, x0, &
-       output_format, fileout, epsilon, filepol
+       output_format, fileout
 
   !
   !   set the DEFAULT values
   !
   nfile         = 1
-  filepp(1)     = 'tmp.pp'
+  filepp(1)     = filplot
   weight(1)     = 1.0d0
   iflag         = 1
   radius        = 1.0d0
   output_format = 0
   fileout       = ' '
-  epsilon       = 1.0d0
-  filepol       = ' '
   e1(:)         = 0.d0
   e2(:)         = 0.d0
   e3(:)         = 0.d0
@@ -218,7 +224,8 @@ SUBROUTINE chdens
   if (fileout /= ' ') then
      ounit = 1
      open (unit=ounit, file=fileout, form='formatted', status='unknown')
-     WRITE( stdout, '(5x,"Writing data on file ",a)') fileout
+     WRITE( stdout, '(/5x,"Writing data to be plotted to file ",a)') &
+          TRIM(fileout)
   else
      ounit = 6
   endif
@@ -254,10 +261,10 @@ SUBROUTINE chdens
   !
   call ggen
   !
-  !    here we compute the fourier component of the quantity to plot
+  !    here we compute the fourier components of the quantity to plot
   !
   psic(:) = CMPLX (rhor(:), 0.d0)
-  call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+  call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
   !
   !    we store the fourier components in the array rhog
   !
@@ -293,12 +300,12 @@ SUBROUTINE chdens
         if (fileout /= ' ') then
            open (unit = ounit+1, file = trim(fileout)//'.xyz', &
                 form = 'formatted', status = 'unknown')
-           WRITE( stdout, '(5x,"Writing coordinates on file ",a)') &
+           WRITE( stdout, '(5x,"Writing coordinates to file ",a)') &
                 trim(fileout)//'.xyz'
         else
            open (unit = ounit+1, file = 'coord.xyz', &
                 form = 'formatted', status = 'unknown')
-           WRITE( stdout, '("Writing coordinates on file coord.xyz")')
+           WRITE( stdout, '("Writing coordinates to file coord.xyz")')
         end if
      endif
 
@@ -357,7 +364,10 @@ SUBROUTINE chdens
      call errore ('chdens', 'wrong iflag', 1)
 
   endif
- 
+  !
+  print '(5x,"Plot Type: ",a,"   Output format: ",a)', &
+       plotname(iflag), formatname(output_format)
+  !
   deallocate(rhor)
   deallocate(rhog)
   deallocate(tau)
@@ -566,7 +576,6 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
 
   rhoim = rhoim / nx / ny
   print '(5x,"Min, Max, imaginary charge: ",3f12.6)', rhomin, rhomax, rhoim
-  print '(5x,"Output format: ",i3)', output_format
 
   !
   !     and we print the charge on output

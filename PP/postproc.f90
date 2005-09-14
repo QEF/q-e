@@ -24,25 +24,28 @@ PROGRAM postproc
   USE io_files,  ONLY : nd_nmbr
   USE io_global, ONLY : ionode
   !
+  IMPLICIT NONE
+  CHARACTER(len=256) :: filplot
+  !
   ! initialise parallel environment
   !
   CALL start_postproc (nd_nmbr)
   IF ( ionode )  CALL input_from_file ( )
   !
-  call extract () 
+  call extract (filplot) 
   !
-  call clean_pw () 
+  call clean_pw ()
   !
   ! chdens should be called on just one processor
   !
-  IF ( ionode ) call chdens ()
+  IF ( ionode ) call chdens (filplot)
   !
   call stop_pp ()
   !
 END PROGRAM postproc
 !
 !-----------------------------------------------------------------------
-SUBROUTINE extract
+SUBROUTINE extract (filplot)
   !-----------------------------------------------------------------------
   !
   !    This subroutine reads the data for the output file produced by pw.x
@@ -62,7 +65,7 @@ SUBROUTINE extract
   USE mp,        ONLY : mp_bcast
 
   IMPLICIT NONE
-  CHARACTER(len=256) :: filplot
+  CHARACTER(len=256), INTENT(out) :: filplot
 
   INTEGER :: plot_num, kpoint, kband, spin_component, ios
   LOGICAL :: stm_wfc_matching, lsign
