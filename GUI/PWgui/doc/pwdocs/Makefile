@@ -1,10 +1,10 @@
 PW_DOC_DIR = ../../../../Doc
+LD1_DOC_DIR = ../../../../atomic_doc
 
 INPUT_FILES = \
 	INPUT_PW \
 	INPUT_PH \
 	INPUT_PP \
-	INPUT_CHDENS \
 	INPUT_PROJWFC \
 	INPUT_D3
 IMAGES = \
@@ -27,6 +27,7 @@ all: input_html compile_manual
 
 links:
 	for file in $(LINK_FILES); do ln -sf $(PW_DOC_DIR)/$$file . ; done
+	ln -sf $(LD1_DOC_FILE)/INPUT_LD1 .
 
 clean_links:
 	for file in $(LINK_FILES); do \
@@ -36,13 +37,13 @@ input_html: links
 	./htmlise.sh PW      pw.x      INPUT_PW      > INPUT_PW.html
 	./htmlise.sh PH      ph.x      INPUT_PH      > INPUT_PH.html
 	./htmlise.sh PP      pw.x      INPUT_PP      > INPUT_PP.html
-	./htmlise.sh ChDens  chdens.x  INPUT_CHDENS  > INPUT_CHDENS.html
 	./htmlise.sh ProjWFC projwfc.x INPUT_PROJWFC > INPUT_PROJWFC.html
 	./htmlise.sh D3      d3.x      INPUT_D3      > INPUT_D3.html
+	./htmlise.sh LD1     ld1.x     INPUT_LD1     > INPUT_LD1.html
 
 compile_manual: users-guide.pdf $(GIF_IMAGES) users-guide
 
-users-guide.pdf: users-guide.tex
+
 
 $(GIF_IMAGES): $(IMAGES)
 
