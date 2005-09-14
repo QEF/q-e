@@ -20,12 +20,12 @@ subroutine gweights (nks, wk, nbnd, nelec, degauss, ngauss, &
   integer, intent(in) :: is, isk(nks)
   !
   integer :: kpoint, ibnd
-  real(DP) , external :: wgauss, w1gauss
+  real(DP) , external :: wgauss, w1gauss, efermig
 
   ! Calculate the Fermi energy ef
 
 
-  call efermig (et, nbnd, nks, nelec, wk, degauss, ngauss, ef, is, isk)
+  ef = efermig (et, nbnd, nks, nelec, wk, degauss, ngauss, is, isk)
   demet = 0.d0
   do kpoint = 1, nks
      if (is /= 0) then

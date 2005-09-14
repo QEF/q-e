@@ -716,6 +716,9 @@ SUBROUTINE electrons()
        !
        IMPLICIT NONE
        !
+       REAL (DP), EXTERNAL :: efermit, efermig
+       !
+       !
        WRITE( stdout, 9002 )
        !
        CALL flush_unit( stdout )
@@ -766,13 +769,13 @@ SUBROUTINE electrons()
        !
        IF ( lgauss ) THEN
           !
-          CALL efermig( et, nbnd, nks, nelec, wk, degauss, ngauss, ef, 0, isk )
+          ef = efermig( et, nbnd, nks, nelec, wk, degauss, ngauss, 0, isk )
           !
           WRITE( stdout, 9040 ) ef * rytoev
           !
        ELSE IF ( ltetra ) THEN
           !
-          CALL efermit( et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, 0, isk )
+          ef = efermit( et, nbnd, nks, nelec, nspin, ntetra, tetra, 0, isk )
           !
           WRITE( stdout, 9040 ) ef * rytoev
           !

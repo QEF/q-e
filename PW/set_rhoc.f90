@@ -120,7 +120,7 @@ subroutine set_rhoc
   call reduce (1, rhoima)
 #endif
   IF (rhoneg < -1.0d-6 .OR. rhoima > 1.0d-6) &
-       WRITE( stdout, '(/5x,"warning: negative or imaginary core charge ",2f12.6)')&
+       WRITE( stdout, '(/5x,"Check: negative/imaginary core charge ",2f12.6)')&
        rhoneg, rhoima
   !
   ! calculate core_only exch-corr energy etxcc=E_xc[rho_core] if required

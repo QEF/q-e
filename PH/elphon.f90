@@ -310,9 +310,9 @@ SUBROUTINE elphsum
   !
   INTEGER :: ik, ikk, ikq, isig, ibnd, jbnd, ipert, jpert, nu, mu, &
        vu, ngauss1, nsig, iuelph, ios
-  REAL(DP) :: weight, w0g1, w0g2, w0gauss, degauss1, dosef, dos_ef, &
+  REAL(DP) :: weight, w0g1, w0g2, w0gauss, degauss1, dosef, &
        ef1, phase_space, lambda, gamma
-  EXTERNAL dos_ef
+  REAL(DP), EXTERNAL :: dos_ef, efermig
   !
   COMPLEX(DP) :: el_ph_sum (3*nat,3*nat)
 
@@ -353,7 +353,7 @@ SUBROUTINE elphsum
      ! Note that the weights of k+q points must be set to zero for the
      ! following call to yield correct results
      !
-     CALL efermig (et, nbnd, nks, nelec, wk, degauss1, ngauss1, ef1, 0, isk)
+     ef1 = efermig (et, nbnd, nks, nelec, wk, degauss1, ngauss1, 0, isk)
      dosef = dos_ef (ngauss1, degauss1, ef1, et, wk, nks, nbnd)
      ! N(Ef) is the DOS per spin, not summed over spin
      dosef = dosef / 2.d0

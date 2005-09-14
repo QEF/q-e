@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------
-subroutine efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, Ef, is, isk)
+FUNCTION efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
   !--------------------------------------------------------------------
   !
   !     Finds the Fermi energy - Gaussian Broadening (Methfessel-Paxton)
@@ -17,9 +17,12 @@ subroutine efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, Ef, is, isk)
   !  I/O variables
   integer, intent(in) :: nks, nbnd, Ngauss, is, isk(nks)
   real(DP), intent(in) :: wk (nks), et (nbnd, nks), Degauss, nelec
-  real(DP), intent(out) :: Ef
+  real(DP) :: efermig
+  !
+  real(DP), parameter :: rydtoev= 13.6058d0, eps= 1.0d-10
+  integer, parameter :: maxiter = 300
   ! internal variables
-  real(DP) :: Eup, Elw, sumkup, sumklw, sumkmid
+  real(DP) :: Ef, Eup, Elw, sumkup, sumklw, sumkmid
   real(DP), external::  sumkg
   integer :: i, kpoint
   !
@@ -45,15 +48,15 @@ subroutine efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, Ef, is, isk)
   !
   sumkup = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Eup, is, isk)
   sumklw = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Elw, is, isk)
-  if ( (sumkup - nelec) .lt. - 1.0e-10 .or. &
-       (sumklw - nelec) .gt.1.0e-10)  &
+  if ( (sumkup - nelec) < -eps .or. (sumklw - nelec) > eps )  &
        call errore ('Efermi', 'unexpected error', 1)
-  do i = 1, 50
-     Ef = (Eup + Elw) / 2.0
+  do i = 1, maxiter
+     Ef = (Eup + Elw) / 2.d0
      sumkmid = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Ef, is, isk)
-     if (abs (sumkmid-nelec) .lt.1.0e-10) then
+     if (abs (sumkmid-nelec) < eps) then
+        efermig = Ef
         return
-     elseif ( (sumkmid-nelec) .lt. - 1.0e-10) then
+     elseif ( (sumkmid-nelec) < -eps) then
         Elw = Ef
      else
         Eup = Ef
@@ -62,8 +65,9 @@ subroutine efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, Ef, is, isk)
   if (is /= 0) WRITE(stdout, '(5x,"Spin Component #",i3)') is
   WRITE( stdout, '(5x,"Warning: too many iterations in bisection"/ &
        &      5x,"Ef = ",f10.6," sumk = ",f10.6," electrons")' ) &
-       Ef * 13.6058, sumkmid
+       Ef * rydtoev, sumkmid
   !
+  efermig = Ef
   return
-end subroutine efermig
+end FUNCTION efermig
 

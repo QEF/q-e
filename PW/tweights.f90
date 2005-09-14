@@ -19,13 +19,18 @@ subroutine tweights (nks, nspin, nbnd, nelec, ntetra, tetra, et, &
   real(DP), intent(out) :: wg (nbnd, nks), ef
   integer, intent(in) :: is, isk(nks)
   ! local variables
+  real(DP), external :: efermit
   real(DP) :: e1, e2, e3, e4, c1, c2, c3, c4, etetra (4), dosef
   integer :: ik, ibnd, nt, nk, ns, i, kp1, kp2, kp3, kp4, itetra (4)
 
   ! Calculate the Fermi energy ef
 
-  call efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, &
-                is, isk)
+  ef = efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, is, isk)
+  !
+  ! if efermit cannot find a sensible value for Ef it returns Ef=1d10
+  !
+  if (abs(ef) > 1.0d8) call errore ('tweights', 'bad Fermi energy ',1)
+  !
   do ik = 1, nks
      if (is /= 0) then
         if (isk(ik) .ne. is) cycle

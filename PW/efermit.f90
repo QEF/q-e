@@ -7,7 +7,7 @@
 !
 !
 !--------------------------------------------------------------------
-subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, is, isk)
+FUNCTION efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, is, isk)
   !--------------------------------------------------------------------
   !
   !     Finds the Fermi energy - tetrahedron method (Bloechl)
@@ -16,27 +16,26 @@ subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, is, isk)
   USE kinds
   implicit none
   integer, intent(in)  :: nks, nbnd, nspin, ntetra, tetra (4, ntetra)
-  ! input: the number of k points
-  ! input: the number of bands
-  ! input: the number of spin components
-  ! input: the number of tetrahedra
-  ! input: the vertices of a tetrahedron
+  ! nks   : the number of k points
+  ! nbnd  : the number of bands
+  ! nspin : the number of spin components
+  ! ntetra: the number of tetrahedra
+  ! tetra : the vertices of a tetrahedron
   real(DP), intent(in) :: et (nbnd, nks), nelec
   ! input: the eigenvalues
   ! input: the number of electrons
-  real(DP), intent(out) :: ef
+  real(DP):: efermit
   ! output: the fermi energy
   integer, intent(in) :: is, isk(nks)
   !
   !     two parameters
   !
-  integer :: maxiter
-  ! the maximum number of iterations in
+  integer, parameter :: maxiter = 300
+  ! the maximum number of iterations in bisection
 
-  real(DP) :: rydtoev, eps
-  ! the transformation Ry to eV
+  real(DP), parameter :: rydtoev= 13.6058d0, eps= 1.0d-10
+  ! conversion factor from Ry to eV
   ! a small quantity
-  parameter (maxiter = 300, rydtoev = 13.6058d0, eps = 1.0d-10)
   !
   !     here the local variables
   !
@@ -45,16 +44,13 @@ subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, is, isk)
   ! counter on k points
   ! counter on iterations
 
-  real(DP) :: elw, eup, sumkup, sumklw, sumkt, sumkmid
-  ! the lower limit of the fermi ener
-  ! the upper limit of the fermi ener
-  ! the number of states with eup
-  ! the number of states with elw
-  ! the sum over the states below E_f
-  ! the number of states with ef
+  real(DP) :: ef, elw, eup, sumkup, sumklw, sumkmid
+  ! elw, eup: lower and upper bounds for fermi energy (ef)
+  ! sumklw, sumkup: number of states for ef=elw, ef=eup resp.
+  ! sumkmid:        number of states for ef=(elw+eup)/2
+  real(DP), external :: sumkt
 
   real(DP) :: efbetter, better
-  external sumkt
   !
   !      find bounds for the Fermi energy.
   !
@@ -70,20 +66,28 @@ subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, is, isk)
   !
   sumkup = sumkt (et, nbnd, nks, nspin, ntetra, tetra, eup, is, isk)
   sumklw = sumkt (et, nbnd, nks, nspin, ntetra, tetra, elw, is, isk)
-  if ( (sumkup - nelec) .lt. - eps.or. (sumklw - nelec) .gt.eps) &
-       call errore ('efermit', 'unexpected error', 1)
-  better = 1.0e+10
+  better = 1.0d+10
+  if ( (sumkup - nelec) < -eps .or. (sumklw - nelec) > eps)  then
+     !
+     ! this is a serious error and the code should stop here
+     ! we don't stop because this may occasionally happen in nonscf
+     ! calculations where it may be completely irrelevant
+     !
+     call infomsg ('efermit', 'internal error, cannot braket Ef',-1)
+     efermit = better
+     return
+  end if
   do iter = 1, maxiter
-     ef = (eup + elw) / 2.0
+     ef = (eup + elw) / 2.d0
      sumkmid = sumkt (et, nbnd, nks, nspin, ntetra, tetra, ef, is, isk)
-     if (abs (sumkmid-nelec) .lt.better) then
+     if (abs (sumkmid-nelec) < better) then
         better = abs (sumkmid-nelec)
         efbetter = ef
      endif
      ! converged
-     if (abs (sumkmid-nelec) .lt. eps) then
+     if (abs (sumkmid-nelec) < eps) then
         goto 100
-     elseif ( (sumkmid-nelec) .lt. -eps) then
+     elseif ( (sumkmid-nelec) < -eps) then
         elw = ef
      else
         eup = ef
@@ -102,12 +106,13 @@ subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, is, isk)
   !     Check if Fermi level is above any of the highest eigenvalues
   do ik = 1, nks
      if (is /= 0) then
-        if (isk(ik) .ne. is ) cycle
+        if (isk(ik) /= is ) cycle
      end if
-     if (ef.gt.et (nbnd, ik) + 1.d-4) WRITE( stdout, 9020) ef * rydtoev, ik, &
-          et (nbnd, ik) * rydtoev
+     if (ef > et (nbnd, ik) + 1.d-4) &
+          WRITE( stdout, 9020) ef * rydtoev, ik, et (nbnd, ik) * rydtoev
   enddo
 
+  efermit = ef
   return
 9010 format (/5x,'Warning: too many iterations in bisection'/ &
        &          5x,'ef = ',f10.6,' sumk = ',f10.6,' electrons')
@@ -115,4 +120,5 @@ subroutine efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, ef, is, isk)
 9020 format (/5x,'Warning: ef =',f10.6, &
        &     ' is above the highest band at k-point',i4,/5x,9x, &
        &     'e  = ',f10.6)
-end subroutine efermit
+end FUNCTION efermit
+
