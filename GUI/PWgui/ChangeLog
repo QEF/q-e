@@ -1,3 +1,41 @@
+
+2005-09-14 19:23  giannozz
+
+        * modules/chdens/chdens-event.tcl, modules/chdens/chdens-help.tcl,
+          modules/chdens/chdens.tcl, modules/chdens/commands.tcl,
+          doc/pwdocs/Makefile, modules/pp/pp-event.tcl,
+          modules/pp/pp-help.tcl, modules/pp/pp.tcl, src/pwscf.itcl:
+
+        GUI updated to reflect new input of pp.x - chdens.x input removed,
+        documentation (marginally) updated
+
+2005-09-13 15:54  kokalj
+
+	* modules/atomic/: atomic.tcl, atomic-event.tcl:
+
+	Elaborating a bit on Paolo's coding. In particular, making pages i
+	and event handlers ...
+
+2005-09-12 19:13  giannozz
+
+	* modules/atomic/atomic-event.tcl, modules/atomic/atomic-help.tcl,
+	  modules/atomic/atomic.tcl, modules/atomic/commands.tcl, VERSION,
+	  src/pwscf.itcl:
+
+	First attempt, not yet completely working, of a GUI for the atomic code
+
+2005-08-03 11:07  giannozz
+
+	* modules/chdens/: chdens-event.tcl, chdens-help.tcl, chdens.tcl:
+
+	GUI for chdens updated
+
+2005-08-02 18:13  giannozz
+
+	* doc/pwdocs/: Makefile, htmlise.sh:
+
+	manual => users-guide
+
 Fri Mar 25 2005  Anton Kokalj (tone.kokalj@ijs.si)
 	* pwgui_vfs/Makefile.*: the standalone binaries can be now created
 		much easier
@@ -6,7 +44,7 @@ Thu Mar 24 2005  Anton Kokalj (tone.kokalj@ijs.si)
 	* pw.tcl, pw-help.tcl: adding the pwscf's wf_collect variable
 
 Thu Mar 24 2005  Stefano de Gironcoli (degironc@sissa.it)
-	* pw.tcl, pw-help.tcl, pw-event.tcl: adding npsin=4 option and 
+	* pw.tcl, pw-help.tcl, pw-event.tcl: adding nspin=4 option and 
                 angle1, angle2 variables needed in the noncollinear case
 
 Wed Mar 23 2005  Anton Kokalj (tone.kokalj@ijs.si)
