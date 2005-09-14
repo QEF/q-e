@@ -1,8 +1,0 @@
-
-     Program POST-PROC v.2.1cvs starts ...
-     Today is 28Jul2005 at 16:47:35 
-     Reading header from file  sicharge                                                                                                                                                                                                                                                        
-     Reading data from file  sicharge                                                                                                                                                                                                                                                        
-     Writing data on file si.rho.dat                                                                                                                                                                                                                                                      
-     Min, Max, imaginary charge:     0.001409    0.087451    0.000000
-     Output format:   2

@@ -1,6 +1,6 @@
 
      Program POST-PROC v.2.1cvs starts ...
-     Today is 28Jul2005 at 16:47:35 
+     Today is 14Sep2005 at 15:45:58 
 
      Reading file si.save ...      only dimensions
      read complete
@@ -12,4 +12,10 @@
      nelec  =   8.00  nkb   =     8  ngl    =      65
 
      Calling punch_plot, plot_num =   0
-     Writing data on file  sicharge                                                                                                                                                                                                                                                        
+     Writing data to file  sicharge
+     Reading header from file  sicharge
+     Reading data from file  sicharge
+
+     Writing data to be plotted to file si.rho.dat
+     Min, Max, imaginary charge:     0.001409    0.087451    0.000000
+     Plot Type: 2D contour             Output format: plotrho.x      
