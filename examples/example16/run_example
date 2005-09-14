@@ -192,6 +192,10 @@ cat > AlAs110.pp_stm-.in << EOF
    fileout='AlAs110-1.0'
  /
 EOF
+$ECHO
+$ECHO "  running the post-processing phase, negative bias...\c"
+$PP_COMMAND < AlAs110.pp_stm-.in > AlAs110.pp_stm-.out
+$ECHO " done"
 
 # run plotrho to do the figure
 cat > AlAs110.plotrho-.in << EOF
@@ -202,22 +206,6 @@ n
 EOF
 $ECHO "  running plotrho on negative bias data...\c"
 $PLOTRHO_COMMAND < AlAs110.plotrho-.in > AlAs110.plotrho-.out
-$ECHO " done"
-
-# plotrho
-cat > AlAs110.plotrho+.in << EOF
-AlAs110+1.0
-AlAs110+1.0eV.ps
-n  
-0.00002 0.0021  8 
-EOF
-$ECHO "  running plotrho on positive bias data...\c"
-$PLOTRHO_COMMAND < AlAs110.plotrho+.in > AlAs110.plotrho+.out
-$ECHO " done"
-
-$ECHO
-$ECHO "  running the post-processing phase, negative bias...\c"
-$PP_COMMAND < AlAs110.pp_stm-.in > AlAs110.pp_stm-.out
 $ECHO " done"
 
 # post-processing for stm images (as before, but positive bias)
@@ -245,6 +233,17 @@ cat > AlAs110.pp_stm+.in << EOF
 EOF
 $ECHO "  running the post-processing phase, positive bias...\c"
 $PP_COMMAND < AlAs110.pp_stm+.in > AlAs110.pp_stm+.out
+$ECHO " done"
+
+# plotrho
+cat > AlAs110.plotrho+.in << EOF
+AlAs110+1.0
+AlAs110+1.0eV.ps
+n  
+0.00002 0.0021  8 
+EOF
+$ECHO "  running plotrho on positive bias data...\c"
+$PLOTRHO_COMMAND < AlAs110.plotrho+.in > AlAs110.plotrho+.out
 $ECHO " done"
 
 $ECHO 

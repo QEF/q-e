@@ -86,8 +86,7 @@
      nelec  =  56.00  nkb   =    56  ngl    =    2793
 
      Initial potential from superposition of free atoms
-
-     integrated negative starting charge:    -0.001946
+     Check: negative starting charge:    -0.001946
 
      starting charge   55.98419, renormalised to   56.00000
 

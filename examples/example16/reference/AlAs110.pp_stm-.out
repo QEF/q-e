@@ -1,6 +1,6 @@
 
      Program POST-PROC v.2.1cvs starts ...
-     Today is 28Jul2005 at 17:45:34 
+     Today is 14Sep2005 at 16:15:59 
 
      Reading file AlAs110.save ...      only dimensions
      read complete
@@ -21,5 +21,11 @@
      Use the true wfcs
      Sample bias          = -1.0000 eV
 
-     STM:      0.86s cpu time
-     Writing data on file  AlAsresm-1.0                                                                                                                                                                                                                                                    
+     STM:      2.49s cpu time
+     Writing data to file  AlAsresm-1.0
+     Reading header from file  AlAsresm-1.0
+     Reading data from file  AlAsresm-1.0
+
+     Writing data to be plotted to file AlAs110-1.0
+     Min, Max, imaginary charge:     0.000099    0.025640    0.000000
+     Plot Type: 2D contour             Output format: plotrho.x      
