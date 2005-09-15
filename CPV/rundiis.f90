@@ -236,7 +236,7 @@
 ! ...     self consistent energy
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fi, bec, becdr, eigr)
           CALL rhoofr( 1, c0, cdesc, fi, rhoe, desc, ht0)
-          CALL vofrhos(.FALSE., rhoe, desc, tforce, tstress, tforce, atoms, &
+          CALL vofrhos(.FALSE., tforce, tstress, rhoe, desc, atoms, &
             vpot, bec, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht0, edft)
 
 ! ...     density upgrade
@@ -249,7 +249,7 @@
 
 ! ...     recalculate potential
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fi, bec, becdr, eigr)
-          CALL vofrhos(.FALSE., rhoe, desc, tforce, tstress, tforce, atoms, &
+          CALL vofrhos(.FALSE., tforce, tstress, rhoe, desc, atoms, &
             vpot, bec, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht0, edft)
 
           IF( idiis /= 1 )THEN

@@ -1125,7 +1125,7 @@ END SUBROUTINE gshcount
           ecsig = q2sigma
 
           refg = refg_
-          mmx  = INT( 1.2d0 * ecutp / refg )
+          mmx  = NINT( 1.2d0 * ecutp / refg )
 
           RETURN
         END SUBROUTINE ecutoffs_setup

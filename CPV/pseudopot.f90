@@ -984,6 +984,11 @@ CONTAINS
       ALLOCATE( ylm( ngw, (lmaxkb+1)**2 ) )
       CALL ylmr2 ( (lmaxkb+1)**2, ngw, gx, g, ylm)
       !
+      gg = MAXVAL( g( 1:ngw ) )
+      gg = gg * tpiba * tpiba / refg
+      if( ( int( gg ) + 2 ) > mmx ) &
+           call errore( ' interpolate_beta ', ' g vec too large ', 1 )
+      !
       do is = 1, nsp
          !   
          !   calculation of array  beta(ig,iv,is)
@@ -1097,14 +1102,19 @@ CONTAINS
       qradb(:,:,:,:,:) = 0.d0
       call ylmr2 (lmaxq*lmaxq, ngb, gxb, gb, ylmb)
 
-      do is=1,nvb
+      gg = MAXVAL( gb( 1:ngb ) )
+      gg = gg * tpibab * tpibab / refg
+      if( ( int( gg ) + 2 ) > mmx ) &
+           call errore( ' interpolate_qradb ', ' g vec too large ', 1 )
 
-!     ---------------------------------------------------------------
-!     calculation of array qradb(igb,iv,jv,is)
-!     ---------------------------------------------------------------
-         if(iprsta.ge.4) WRITE( stdout,*)  '  qradb  '
-         c=fpi/omegab
-!
+      do is = 1, nvb
+         !
+         !     calculation of array qradb(igb,iv,jv,is)
+         !
+         if( iprsta .ge. 4 ) WRITE( stdout,*)  '  qradb  '
+         !
+         c = fpi / omegab
+         !
          do l=1,nqlc(is)
             do iv= 1,nbeta(is)
                do jv=iv,nbeta(is)

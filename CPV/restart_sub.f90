@@ -427,7 +427,8 @@ MODULE from_restart_module
     USE control_flags,         ONLY : tcarpar, nbeg, tranp, amprp, tfor, tsdp, &
                                       thdyn, tsdc, tbeg, tsde, tortho, tzeroe, &
                                       tzerop, tzeroc, taurdr, tv0rd, nv0rd,    &
-                                      trane, ampre, force_pairing, iprsta
+                                      trane, ampre, force_pairing, iprsta,     &
+                                      tprnfor, tpre
     USE parameters,            ONLY : nacx
     USE atoms_type_module,     ONLY : atoms_type
     USE charge_types,          ONLY : charge_descriptor
@@ -459,12 +460,13 @@ MODULE from_restart_module
     REAL(DP)                   :: vpot(:,:,:,:)
     TYPE(dft_energy_type)            :: edft
     !
-    INTEGER           :: ig, ib, i, j, k, ik, nb, is, ia, ierr, isa
-    LOGICAL           :: ttforce
+    INTEGER     :: ig, ib, i, j, k, ik, nb, is, ia, ierr, isa
     REAL(DP)    :: timepre, vdum = 0.D0
     REAL(DP)    :: stau(3), rtau(3), hinv(3,3)
     COMPLEX(DP) :: cgam(1,1,1)
     REAL(DP)    :: gam(1,1,1)
+    LOGICAL     :: ttforce
+    LOGICAL     :: tstress
     !
     !
     ! ... if tbeg .eq. true ht_0 is not read from the restart file, and
@@ -473,6 +475,9 @@ MODULE from_restart_module
     ! ... if tbeg is false, ht_0 is read from the restart file and now
     ! ... we have to compute the inverse and the volume of the cell,
     ! ... together with the new reciprocal vectors
+    !
+    ttforce = tfor  .OR. tprnfor
+    tstress = thdyn .OR. tpre
     !
     IF ( .NOT. tbeg ) THEN
        !
@@ -600,15 +605,13 @@ MODULE from_restart_module
        ! ... set right initial conditions when c0=cm or stau0=staum
        ! ... (the cell is kept fixed)
        !
-       ttforce = ( tfor .OR. ( iprsta > 1 ) )
-       !
        atoms_0%for = 0.D0
        ! 
        edft%enl = nlrh_m( c0, cdesc, ttforce, atoms_0, fi, bec, becdr, eigr )
        !
        CALL rhoofr( nfi, c0, cdesc, fi, rhoe, desc, ht_0 )
        !
-       CALL vofrhos( ( iprsta > 1 ), rhoe, desc, tfor, thdyn, ttforce, &
+       CALL vofrhos( .true. , ttforce, tstress, rhoe, desc, &
                      atoms_0, vpot, bec, c0, cdesc, fi, eigr,  &
                      ei1, ei2, ei3, sfac, timepre, ht_0, edft )
        !

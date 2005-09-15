@@ -15,7 +15,7 @@
   MODULE potentials
 !=----------------------------------------------------------------------------=!
 
-        USE kinds
+        USE kinds,         ONLY: DP
         USE control_flags, ONLY: timing
 
         IMPLICIT NONE 
@@ -24,14 +24,14 @@
 
         LOGICAL   :: tvhmean
         INTEGER   :: vhnr, vhiunit
-        REAL(DP) :: vhrmin, vhrmax
+        REAL(DP)  :: vhrmin, vhrmax
         CHARACTER :: vhasse
 
         INTEGER   :: iesr
 
         REAL(DP)  :: timtot, timfwft, timesr, timsumg, timforc, timinvft, timscat
         REAL(DP)  :: timxc, timhar, timstr
-        INTEGER    :: timcnt = 0
+        INTEGER   :: timcnt = 0
 
         PUBLIC :: vofrhos, potential_init, potential_print_info, &
                   kspotential, print_vofrho_time, localisation
@@ -42,14 +42,15 @@
   CONTAINS
 !=----------------------------------------------------------------------------=!
 
-      SUBROUTINE potential_init(tvhmean_inp,vhnr_inp, vhiunit_inp, &
-          vhrmin_inp, vhrmax_inp, vhasse_inp, iesr_inp)
+      SUBROUTINE potential_init &
+          ( tvhmean_inp, vhnr_inp, vhiunit_inp, vhrmin_inp, vhrmax_inp, &
+            vhasse_inp, iesr_inp )
 
-          LOGICAL, INTENT(IN) :: tvhmean_inp
-          INTEGER, INTENT(IN) :: vhnr_inp, vhiunit_inp
-          REAL(DP), INTENT(IN)  :: vhrmin_inp, vhrmax_inp
+          LOGICAL,   INTENT(IN) :: tvhmean_inp
+          INTEGER,   INTENT(IN) :: vhnr_inp, vhiunit_inp
+          REAL(DP),  INTENT(IN) :: vhrmin_inp, vhrmax_inp
           CHARACTER, INTENT(IN) :: vhasse_inp
-          INTEGER, INTENT(IN) :: iesr_inp
+          INTEGER,   INTENT(IN) :: iesr_inp
 
           tvhmean = tvhmean_inp
           vhnr    = vhnr_inp
@@ -74,36 +75,30 @@
         RETURN
       END SUBROUTINE potential_init
 
-!! ...................................................................... !!
-!! ...................................................................... !!
 
-      SUBROUTINE potential_print_info(iunit)
+      SUBROUTINE potential_print_info( iunit )
 
         INTEGER, INTENT(IN) :: iunit
 
         WRITE(iunit,50)
-
         WRITE(iunit,115) (2*iesr+1),(2*iesr+1),(2*iesr+1)
 
    50   FORMAT(//,3X,'Potentials Parameters',/,3X,'---------------------')
   115   FORMAT(   3X,'Ewald sum over ',I1,'*',I1,'*',I1,' cells')
 
         RETURN
-
       END SUBROUTINE potential_print_info
      
-!! ...................................................................... !!
-!! ...................................................................... !!
 
       SUBROUTINE vofmean( sfac, rhops, rhoeg )
 
         USE constants, ONLY: fpi
         USE cell_base, ONLY: tpiba2, tpiba
-        USE mp, ONLY: mp_sum
+        USE mp,        ONLY: mp_sum
         USE mp_global, ONLY: nproc, mpime, group, root
         USE io_global, ONLY: ionode
+        USE gvecp,     ONLY: ngm
         USE reciprocal_vectors, ONLY: gstart, gx, g
-        USE gvecp, ONLY: ngm
 
         REAL(DP),    INTENT(IN)   :: RHOPS(:,:)
         COMPLEX(DP), INTENT(IN)   :: RHOEG(:)
@@ -179,16 +174,18 @@
       END SUBROUTINE vofmean
 
 !  -------------------------------------------------------------------------
-      SUBROUTINE kspotential( nfi, tprint, tforce, tstress, rhoe, desc, &
-        atoms, bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht, fi, vpot, edft, timepre )
 
-        USE charge_density, ONLY: rhoofr
-        USE nl, ONLY: nlrh_m
-        USE energies, ONLY: dft_energy_type
-        USE cell_module, ONLY: boxdimensions
+      SUBROUTINE kspotential &
+        ( nfi, tprint, tforce, tstress, rhoe, desc, atoms, bec, becdr, eigr, &
+          ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht, fi, vpot, edft, timepre )
+
+        USE charge_density,    ONLY: rhoofr
+        USE nl,                ONLY: nlrh_m
+        USE energies,          ONLY: dft_energy_type
+        USE cell_module,       ONLY: boxdimensions
         USE atoms_type_module, ONLY: atoms_type
-        USE wave_types, ONLY: wave_descriptor
-        USE charge_types, ONLY: charge_descriptor
+        USE wave_types,        ONLY: wave_descriptor
+        USE charge_types,      ONLY: charge_descriptor
 
 ! ...   declare subroutine arguments
         LOGICAL   :: tcel
@@ -212,79 +209,76 @@
         REAL(DP), INTENT(OUT) :: timepre
         TYPE (charge_descriptor),  INTENT(IN) :: desc
 
-        edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fi, bec, becdr, eigr)
+        edft%enl = nlrh_m( c0, cdesc, tforce, atoms, fi, bec, becdr, eigr )
 
-        CALL rhoofr( nfi, c0, cdesc, fi, rhoe, desc, ht)
+        CALL rhoofr( nfi, c0, cdesc, fi, rhoe, desc, ht )
 
-        CALL vofrhos(tprint, rhoe, desc, tforce, tstress, tforce, atoms, &
-          vpot, bec, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht, edft)
+        CALL vofrhos( tprint, tforce, tstress, rhoe, desc, atoms, vpot, bec, &
+                      c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre,  &
+                      ht, edft )
 
         RETURN
       END SUBROUTINE kspotential
 
 !=----------------------------------------------------------------------------=!
 
-!  ----------------------------------------------
-!  BEGIN manual
+   SUBROUTINE vofrhos &
+      ( tprint, tforce, tstress, rhoe, desc, atoms, vpot, bec, c0, cdesc, fi, &
+        eigr, ei1, ei2, ei3, sfac, timepre, box, edft )
 
-      SUBROUTINE vofrhos(tprint, rhoe, desc, tfor, thdyn, tforce, atoms, &
-              vpot, bec, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, box, edft)
+      !  this routine computes:
+      !  ekin = dft_kinetic term of the DFT functional (see dft_kinetic_energy)
+      !  the one-particle potential v in real space,
+      !  the total energy etot,
+      !  the forces fion acting on the ions,
+      !  the matrix ngdrt used to compute the pair-correlation
+      !  function gdr for the ions
+      !
 
-!  this routine computes:
-!  ekin = dft_kinetic term of the DFT functional (see dft_kinetic_energy)
-!  the one-particle potential v in real space,
-!  the total energy etot,
-!  the forces fion acting on the ions,
-!  the matrix ngdrt used to compute the pair-correlation
-!  function gdr for the ions
-!  ----------------------------------------------
-!  END manual
+      ! ... include modules
 
-
-! ... include modules
-      USE cell_module, ONLY: boxdimensions
-      USE fft, ONLY : pfwfft, pinvfft
-      USE cell_base, ONLY: tpiba2
-      USE energies, ONLY: total_energy, dft_energy_type
-      USE stress, ONLY: pstress
-      USE exchange_correlation, ONLY: exch_corr_energy
-      USE funct, ONLY: igcx, igcc
+      USE control_flags,  ONLY: tscreen, tchi2, iprsta
+      USE mp_global,      ONLY: nproc, mpime, root, group
+      USE mp,             ONLY: mp_sum
+      USE cell_module,    ONLY: boxdimensions
+      USE cell_base,      ONLY: tpiba2
+      USE ions_base,      ONLY: rcmax, zv
+      USE fft,            ONLY : pfwfft, pinvfft
+      USE fft_base,       ONLY: dfftp
+      USE energies,       ONLY: total_energy, dft_energy_type
+      USE stress,         ONLY: pstress
+      USE funct,          ONLY: igcx, igcc
       USE charge_density, ONLY: gradrho
-      USE non_local_core_correction, ONLY: add_core_charge, core_charge_forces
-      USE chi2, ONLY: rhochi, allocate_chi2, deallocate_chi2
-      USE mp_global, ONLY: nproc, mpime, root, group
-      USE vanderwaals, ONLY: tvdw, vdw
+      USE chi2,           ONLY: rhochi, allocate_chi2, deallocate_chi2
+      USE vanderwaals,    ONLY: tvdw, vdw
       USE charge_density, ONLY: checkrho
+      USE charge_types,   ONLY: charge_descriptor
       USE wave_functions, ONLY: dft_kinetic_energy
-      USE mp, ONLY: mp_sum
-      USE wave_types, ONLY: wave_descriptor
-      USE atoms_type_module, ONLY: atoms_type
-      USE fft_base, ONLY: dfftp
-      USE charge_types, ONLY: charge_descriptor
-      USE control_flags, ONLY: tscreen, tchi2, iprsta, tpre
-      USE io_global, ONLY: ionode, stdout
-      USE sic_module, ONLY: self_interaction, si_epsilon
-      USE reciprocal_vectors, ONLY: gx
-      USE gvecp, ONLY: ngm
-      USE local_pseudo, ONLY: vps, rhops
-      USE ions_base, ONLY: rcmax, zv
-      USE atom, ONLY: nlcc
-      USE core, ONLY: nlcc_any, rhocg
+      USE wave_types,     ONLY: wave_descriptor
+      USE io_global,      ONLY: ionode, stdout
+      USE sic_module,     ONLY: self_interaction, si_epsilon
+      USE gvecp,          ONLY: ngm
+      USE local_pseudo,   ONLY: vps, rhops
+      USE atom,           ONLY: nlcc
+      USE core,           ONLY: nlcc_any, rhocg
+      USE reciprocal_vectors,        ONLY: gx
+      USE atoms_type_module,         ONLY: atoms_type
+      USE non_local_core_correction, ONLY: add_core_charge, core_charge_forces
+      USE exchange_correlation,      ONLY: exch_corr_energy
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      LOGICAL, INTENT(IN) :: tprint, tfor, thdyn, tforce
-      REAL(DP) :: vpot(:,:,:,:)
-
-      TYPE (atoms_type), INTENT(INOUT) :: atoms
+      LOGICAL, INTENT(IN) :: tprint, tforce, tstress
+      REAL(DP)            :: vpot(:,:,:,:)
       REAL(DP),    INTENT(IN) :: fi(:,:,:)
-      REAL(DP) :: bec(:,:)
+      REAL(DP)    :: bec(:,:)
       COMPLEX(DP) :: ei1(:,:)
       COMPLEX(DP) :: ei2(:,:)
       COMPLEX(DP) :: ei3(:,:)
       COMPLEX(DP) :: eigr(:,:)
-      COMPLEX(DP),    INTENT(IN) :: c0(:,:,:,:)
+      COMPLEX(DP),   INTENT(IN) :: c0(:,:,:,:)
+      TYPE (atoms_type), INTENT(INOUT) :: atoms
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE (charge_descriptor),    INTENT(IN) :: desc
       TYPE (boxdimensions),    INTENT(INOUT) :: box
@@ -328,7 +322,7 @@
       REAL(DP)  :: omega, desr(6), pesum(16)
       REAL(DP)  :: s0, s1, s2, s3, s4, s5, s6, s7, s8
 
-      LOGICAL :: ttstress, ttforce, ttscreen, ttsic, tgc
+      LOGICAL :: ttscreen, ttsic, tgc
 
       INTEGER ig1, ig2, ig3, is, ia, ig, isc, iflag, ispin
       INTEGER ik, i, j, k, isa, idum, nspin
@@ -361,10 +355,6 @@
       nr3x = dfftp%npl
 
       edft%evdw = 0.0d0
-      !
-      ttstress = ( thdyn .OR. (iprsta>2) .OR. tprint ) .AND. tpre
-      !
-      ttforce  = tfor  .OR. (iprsta>2) .OR. tprint .OR. tforce
       !
       ! ttscreen = .TRUE.
       ttscreen = .FALSE.
@@ -447,8 +437,8 @@
       edft%ekin  = edft%ekin  * tpiba2
       edft%emkin = edft%emkin * tpiba2
 
-      IF( ttstress .OR. ttforce .OR. iflag == 0 )  THEN
-        CALL vofesr( edft%esr, desr, fion, atoms, ttstress, box )
+      IF( tstress .OR. tforce .OR. iflag == 0 )  THEN
+        CALL vofesr( edft%esr, desr, fion, atoms, tstress, box )
         IF( iflag == 0 ) &
           WRITE( stdout, fmt="(/,3X,'ESR (real part of Ewald sum) = ',D16.8,/)" ) edft%esr
         iflag = 1
@@ -603,7 +593,7 @@
           write(stdout,*) '  -----------------------------------------------'
       END IF
                  
-      IF ( ttstress ) THEN
+      IF ( tstress ) THEN
         strvxc = ( edft%sxc - vxc ) * omega / DBLE( nr1_g * nr2_g * nr3_g )
       END IF
 
@@ -614,7 +604,7 @@
           CALL pfwfft( rhoetg(:,ispin), vpot(:,:,:,ispin) )
         END DO
 ! ...   now rhoetg contains the xc potential
-        IF (ttforce) THEN
+        IF (tforce) THEN
           CALL core_charge_forces(fion, rhoetg, rhocg, nlcc, atoms, box, ei1, ei2, ei3 )
         END IF
       END IF
@@ -633,7 +623,7 @@
 ! ... Self-interaction correction --- Hartree part
 
       ALLOCATE( vloc( ngm ) )
-      CALL vofloc(ttscreen, ttforce, edft%ehte, edft%ehti, ehp, & 
+      CALL vofloc(ttscreen, tforce, edft%ehte, edft%ehti, ehp, & 
            eps, vloc, rhoeg, fion, atoms, rhops, vps, eigr, &
            ei1, ei2, ei3, sfac, box, desc )
       !
@@ -713,7 +703,7 @@
       IF(timing) s6 = cclock()
 
 ! ... sum up forces
-      IF (ttforce) THEN
+      IF (tforce) THEN
         CALL mp_sum(fion, group)
       END IF
       ! WRITE(6,*) 'DEBUG end = ', SUM(fion)
@@ -740,7 +730,7 @@
 
       ! ... compute stress tensor
       !
-      IF( ttstress ) THEN
+      IF( tstress ) THEN
         s8 = cclock()
         CALL pstress( strvxc, rhoeg, rhoetg, pail, desr, bec, c0, cdesc, fi,  &
                       eigr, sfac, grho, v2xc, box, edft)
@@ -925,7 +915,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE vofloc(tscreen, ttforce, ehte, ehti, eh, eps, vloc, rhoeg, &
+      SUBROUTINE vofloc(tscreen, tforce, ehte, ehti, eh, eps, vloc, rhoeg, &
                  fion, atoms, rhops, vps, eigr, ei1, ei2, ei3, sfac, ht, desc )
 
 !  this routine computes:
@@ -981,7 +971,7 @@
       TYPE (atoms_type) :: atoms
       TYPE (boxdimensions), INTENT(in) :: ht
       TYPE (charge_descriptor), INTENT(IN) :: desc
-      LOGICAL      :: ttforce
+      LOGICAL      :: tforce
       LOGICAL      :: tscreen
       REAL(DP)    :: fion(:,:)
       REAL(DP)    :: rhops(:,:), vps(:,:)
@@ -1007,7 +997,7 @@
 ! ... Subroutine body ...
 
       nspin = SIZE(rhoeg,2)
-      IF(TTFORCE) THEN
+      IF(TFORCE) THEN
         ALLOCATE( ftmp(3, SIZE(fion, 2) ) )
         ftmp = CMPLX(0.0_DP,0.0_DP)
       END IF
@@ -1061,7 +1051,7 @@
         ehte     = ehte +  fpibg *   DBLE(rhet * CONJG(rhet))
         ehti     = ehti +  fpibg *   DBLE(  rp * CONJG(rp))
 
-        IF(TTFORCE) THEN
+        IF(TFORCE) THEN
           ig1  = mill_l(1,IG)
           ig2  = mill_l(2,IG)
           ig3  = mill_l(3,IG)
@@ -1087,7 +1077,7 @@
 
       END DO
 ! ... 
-      IF(TTFORCE) THEN
+      IF(TFORCE) THEN
 ! ...   each processor add its own contribution to the array FION
         IF( gamma_only ) THEN
           cost = 2.D0 * ht%deth * tpiba

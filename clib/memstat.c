@@ -35,7 +35,7 @@ void MEMSTAT(int *me)
 #if defined __AIX
   struct mallinfo info;  info = mallinfo();
   printf("\n   PE(%d) MEMORY STATISTICS ",*me);
-  printf("\n   total space in arena :%d\n",info.arena);
+  printf("\n   total space in arena :%ld\n",info.arena);
 #endif
 }
 

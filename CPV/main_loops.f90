@@ -8,8 +8,6 @@
 ! ... This file contains "sub-main" subroutines that drive the different
 ! ... kinds of "meta"/"non-meta" dynamics
 !
-! ... set tprnfor = .TRUE. to get atomic forces even if the atoms do not move
-!
 ! ... set ion_positions = 'from_input' and rd_pos = +your_positions+
 ! ... to force cprmain to compute forces for +your_position+ configuration
 !
@@ -19,7 +17,6 @@ SUBROUTINE smd_loop( nloop )
   !
   USE kinds,            ONLY : DP
   USE ions_base,        ONLY : nat
-  USE control_flags,    ONLY : tprnfor
   USE input_parameters, ONLY : ion_positions, rd_pos, num_of_images
   !
   IMPLICIT NONE
@@ -96,7 +93,6 @@ SUBROUTINE cpr_loop( nloop )
   !
   USE kinds,            ONLY : DP
   USE ions_base,        ONLY : nat
-  USE control_flags,    ONLY : tprnfor
   USE input_parameters, ONLY : ion_positions, rd_pos
   !
   IMPLICIT NONE

@@ -34,12 +34,13 @@ SUBROUTINE from_scratch_fpmd   &
 
       USE kinds,            ONLY : DP
       USE wave_types,       ONLY : wave_descriptor
-      USE wave_functions,   ONLY : gram, fixwave
+      USE wave_functions,   ONLY : gram, fixwave, wave_rand_init
       USE wave_base,        ONLY : wave_steepest
       USE charge_density,   ONLY : rhoofr
       USE cell_module,      only : boxdimensions
+      USE cell_base,        ONLY : s_to_r
       USE electrons_module, ONLY : nspin, pmss, occn_init, occn_info
-      USE ions_base,        ONLY : taui, cdmi
+      USE ions_base,        ONLY : taui, cdmi, randpos
       USE ions_module,      ONLY : set_reference_positions
       USE mp,               ONLY : mp_end
       USE nl,               ONLY : nlrh_m
@@ -48,13 +49,12 @@ SUBROUTINE from_scratch_fpmd   &
       USE forces,           ONLY : dforce_all
       USE orthogonalize,    ONLY : ortho
       USE control_flags,    ONLY : tcarpar, tfor, thdyn, tortho, force_pairing, &
-                                   iprsta
+                                   iprsta, tprnfor, tpre, tranp, amprp
       USE charge_types,     ONLY : charge_descriptor
       USE time_step,        ONLY : delt
       USE runcp_module,     ONLY : runcp_ncpp
       use grid_dimensions,  only : nr1, nr2, nr3
       USE gvecp,            ONLY : ngm
-      USE wave_init,        ONLY : pw_atomic_init
       USE io_global,        ONLY : ionode, stdout
       USE parameters,       ONLY : nacx
       !
@@ -86,26 +86,62 @@ SUBROUTINE from_scratch_fpmd   &
 
       ! ... declare other variables
 
-      LOGICAL, PARAMETER :: ttforce = .TRUE.
       LOGICAL, PARAMETER :: ttprint = .TRUE.
       INTEGER, PARAMETER :: nfi = 0
+      LOGICAL            :: ttforce
+      LOGICAL            :: tstress
 
       COMPLEX(DP) :: cgam(1,1,1)
-      REAL (DP)   :: gam(1,1,1)
-      INTEGER      :: ierr
+      REAL(DP)    :: gam(1,1,1)
+      INTEGER     :: ierr
       REAL(DP)    :: timepre, vdum
       REAL(DP)    :: s4, s5, cclock
       REAL(DP)    :: adum( nacx )
+      REAL(DP)    :: hinv( 3, 3 )
+      INTEGER     :: nspin_wfc
+      INTEGER     :: iss
+
+      !
+      !
+      ttforce = tfor  .or. tprnfor
+      tstress = thdyn .or. tpre
+
+      IF ( ANY( tranp ) ) THEN
+         !
+         hinv = TRANSPOSE( ht%m1 )
+         !
+         CALL randpos( atoms%taus, atoms%na, &
+                     atoms%nsp, tranp, amprp, hinv, atoms%mobile )
+         !
+         CALL s_to_r( atoms%taus, atoms%taur, atoms%na, atoms%nsp, ht%hmat )
+         !
+      END IF
+      !
+      CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms%taus, nr1, nr2, nr3, atoms%nat )
+      !
+      CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
       !
       !  initialize wave functions
       !
+      nspin_wfc = nspin
+      IF( force_pairing ) nspin_wfc = 1
+      !
       cm = 0.0d0
-      c0 = 0.0d0
-      cp = 0.0d0
       ce = 0.0d0
-
-      CALL pw_atomic_init( cm, c0, cdesc, ce, edesc )
-
+      cp = 0.0d0
+      !
+      DO iss = 1, nspin_wfc
+         !
+         CALL wave_rand_init( cm( :, :, 1, iss ) )
+         !
+      END DO
+      !
+      IF( ionode ) &
+         WRITE( stdout, fmt = '(//,3X, "Wave Initialization: random initial wave-functions" )' )
+      !
+      CALL gram( cm, cdesc ) 
+      !
+      c0 = cm
       !
       ! ... initialize bands
       !
@@ -114,23 +150,16 @@ SUBROUTINE from_scratch_fpmd   &
       !
       atoms%for = 0.0d0
       !
-      CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms%taus, nr1, nr2, nr3, atoms%nat )
-      !
-      CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
-
-      !
       ! ... compute local form factors
       !
       CALL formf( .true. , edft%eself )
-
       !
       edft%enl = nlrh_m( cm, cdesc, ttforce, atoms, fi, bec, becdr, eigr )
-
       !
       CALL rhoofr( 0, cm, cdesc, fi, rhoe, desc, ht)
       !
       !
-      CALL vofrhos( ttprint, rhoe, desc, tfor, thdyn, ttforce, atoms, &
+      CALL vofrhos( ttprint, ttforce, tstress, rhoe, desc, atoms, &
            vpot, bec, cm, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht, edft)
 
       !
@@ -181,9 +210,10 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst,    &
                             dbec, delt, bephi, becp, velh, dt2bye, iforce,    &
                             fionm, xnhe0, xnhem, vnhe, ekincm )
 
+    USE kinds, ONLY: DP
     USE control_flags, ONLY: tranp, trane, trhor, iprsta, tpre, tzeroc 
     USE control_flags, ONLY: tzerop, tzeroe, tfor, thdyn, lwf, tprnfor, tortho
-    USE control_flags, ONLY: amprp, taurdr, ampre, tsde, ortho_eps, ortho_max
+    USE control_flags, ONLY: amprp, ampre, tsde, ortho_eps, ortho_max
     USE ions_positions, ONLY: taus, tau0, tausm, vels, velsm
     USE ions_base, ONLY: na, nsp, randpos, zv, ions_vel, pmass
     USE cell_base, ONLY: ainv, h, s_to_r, ibrav, omega, press, hold, r_to_s, deth
@@ -210,75 +240,71 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst,    &
     USE electrons_base, ONLY: f, nspin
     USE phase_factors_module, ONLY: strucf
 
-    COMPLEX(8) :: eigr(:,:), ei1(:,:),  ei2(:,:),  ei3(:,:)
-    COMPLEX(8) :: eigrb(:,:)
-    REAL(8) :: bec(:,:), fion(:,:), becdr(:,:,:), fionm(:,:)
-    REAL(8) :: eself
-    REAL(8) :: taub(:,:)
-    REAL(8) :: b1(:), b2(:), b3(:)
+    COMPLEX(DP) :: eigr(:,:), ei1(:,:),  ei2(:,:),  ei3(:,:)
+    COMPLEX(DP) :: eigrb(:,:)
+    REAL(DP) :: bec(:,:), fion(:,:), becdr(:,:,:), fionm(:,:)
+    REAL(DP) :: eself
+    REAL(DP) :: taub(:,:)
+    REAL(DP) :: b1(:), b2(:), b3(:)
     INTEGER :: irb(:,:)
     INTEGER :: nfi, iforce(:,:)
     LOGICAL :: tfirst
-    COMPLEX(8) :: sfac(:,:)
-    COMPLEX(8) :: rhog(:,:)
-    REAL(8) :: rhor(:,:), rhos(:,:), rhoc(:), enl, ekin
-    REAL(8) :: stress(:,:), detot(:,:), enthal, etot
-    REAL(8) :: lambda(:,:), lambdam(:,:), lambdap(:,:)
-    REAL(8) :: ema0bg(:)
-    REAL(8) :: dbec(:,:,:,:)
-    REAL(8) :: delt
-    REAL(8) :: bephi(:,:), becp(:,:)
-    REAL(8) :: velh(:,:)
-    REAL(8) :: dt2bye, xnhe0, xnhem, vnhe, ekincm
+    COMPLEX(DP) :: sfac(:,:)
+    COMPLEX(DP) :: rhog(:,:)
+    REAL(DP) :: rhor(:,:), rhos(:,:), rhoc(:), enl, ekin
+    REAL(DP) :: stress(:,:), detot(:,:), enthal, etot
+    REAL(DP) :: lambda(:,:), lambdam(:,:), lambdap(:,:)
+    REAL(DP) :: ema0bg(:)
+    REAL(DP) :: dbec(:,:,:,:)
+    REAL(DP) :: delt
+    REAL(DP) :: bephi(:,:), becp(:,:)
+    REAL(DP) :: velh(:,:)
+    REAL(DP) :: dt2bye, xnhe0, xnhem, vnhe, ekincm
 
 
-    REAL(8), ALLOCATABLE :: emadt2(:), emaver(:)
-    COMPLEX(8), ALLOCATABLE :: c2(:), c3(:)
-    REAL(8) :: verl1, verl2
-    REAL(8) :: bigr
+    REAL(DP), ALLOCATABLE :: emadt2(:), emaver(:)
+    COMPLEX(DP), ALLOCATABLE :: c2(:), c3(:)
+    REAL(DP) :: verl1, verl2
+    REAL(DP) :: bigr
     INTEGER :: i, j, iter
     LOGICAL :: tlast = .FALSE.
-    REAL(8) :: fcell(3,3), ccc, dt2hbe, enb, enbi, fccc
-
+    REAL(DP) :: fcell(3,3), ccc, enb, enbi, fccc
     !
     !
-
-    dt2hbe = 0.5d0 * dt2bye
-
-    ! Input positions read from input file and stored in tau0
-
-    IF( taurdr ) THEN
-      call r_to_s( tau0, taus, na, nsp, h )
-    END IF
-
     IF( ANY( tranp( 1:nsp ) ) ) THEN
-      call invmat( 3, h, ainv, deth )
-      call randpos(taus, na, nsp, tranp, amprp, ainv, iforce )
-      call s_to_r( taus, tau0, na, nsp, h )
+       !
+       call invmat( 3, h, ainv, deth )
+       !
+       call randpos( taus, na, nsp, tranp, amprp, ainv, iforce )
+       !
+       call s_to_r( taus, tau0, na, nsp, h )
+       !
     END IF
-
-!
+    !
     call phfac( tau0, ei1, ei2, ei3, eigr )
-!     
+    !     
+    call strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
+    !     
     call initbox ( tau0, taub, irb )
-!     
+    !     
     call phbox( taub, eigrb )
-!     
+    !     
     if( trane ) then
-      !       
-      !     random initialization
-      !     
-      call randin( 1, n, gstart, ngw, ampre, cm )
+       !       
+       !     random initialization
+       !     
+       call randin( 1, n, gstart, ngw, ampre, cm )
       
     else 
-      !       
-      !     gaussian initialization
-      !     
-      ! call gausin( eigr, cm )  ! DEBUG to be check
+       !       
+       !     gaussian initialization
+       !     
+       ! call gausin( eigr, cm )  ! DEBUG to be check
       
     end if
 
     call prefor( eigr, betae )   !     prefor calculates betae (used by gram)
+    !
     call gram( betae, bec, cm )
 
     if( iprsta .ge. 3 ) call dotcsc( eigr, cm )
@@ -289,16 +315,12 @@ SUBROUTINE from_scratch_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst,    &
     tausm = taus
     vels  = 0.0d0
     lambdam = lambda
-!     
-    call phfac( tau0, ei1, ei2, ei3, eigr )
-    call strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
+    !
     call formf( tfirst, eself )
 
     IF( tefield ) THEN
       CALL efield_berry_setup( eigr, tau0 )
     END IF
-
-
 
     IF( .NOT. tcg ) THEN
 

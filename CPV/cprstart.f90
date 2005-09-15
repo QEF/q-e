@@ -8,16 +8,20 @@
 #include "f_defs.h"
 !
 !==============================================================================
-!***  Molecular Dynamics using Density-Functional Theory   ****
-!***  this is a Car-Parrinello program using Vanderbilt pseudopotentials
+!***  Molecular Dynamics using Density-Functional Theory                   ****
+!***  this is the main routine driver for Car-Parrinello simulations       ****
 !******************************************************************************
-!***  based on version 11 of cpv code including ggapw 07/04/99
+!***  based on
+!***  version 11 of cpv code including ggapw 07/04/99
 !***  copyright Alfredo Pasquarello 10/04/1996
 !***  parallelized and converted to f90 by Paolo Giannozzi (2000),
-!***  using parallel FFT written for PWSCF by Stefano de Gironcoli
 !***  PBE added by Michele Lazzeri (2000)
 !***  variable-cell dynamics by Andrea Trave (1998-2000)
 !***  Makov Payne Correction for charged systems by Filippo De Angelis
+!******************************************************************************
+!***  also based on
+!***  FPMD code written by Carlo Cavazzoni, Paolo Focher, Guido Chiarotti, 
+!***  Sandro Scandolo
 !******************************************************************************
 !***  appropriate citation for use of this code:
 !***  Car-Parrinello method    R. Car and M. Parrinello, PRL 55, 2471 (1985) 
@@ -33,28 +37,18 @@
 !***  implementation           M. Sharma and R.Car, ???
 !***  Electric Field
 !***  ensemble-DFT
-!***    cf. "Ensemble Density-Functional Theory for Ab Initio Molecular Dynamics
-!***        of Metals and Finite-Temperature Insulators"  PRL v.79,nbsp.7 (1997)
-!***        nbsp. Marzari, D. Vanderbilt and M.C. Payne
+!***  cf. "Ensemble Density-Functional Theory for Ab Initio Molecular Dynamics
+!***       of Metals and Finite-Temperature Insulators"  PRL v.79,nbsp.7 (1997)
+!***       nbsp. Marzari, D. Vanderbilt and M.C. Payne
 !***  string methods           Yosuke Kanai et al.  J. Chem. Phys., 
 !***                           2004, 121, 3359-3367
 !***
-!******************************************************************************
-!***  
-!***  f90 version, with dynamical allocation of memory
-!***  Variables that do not change during the dynamics are in modules
-!***  (with some exceptions) All other variables are passed as arguments
-!******************************************************************************
-!***
-!*** fft : uses machine's own complex fft routines, two real fft at the time
-!*** ggen: g's only for positive halfspace (g>)
-!*** all routines : keep equal c(g) and [c(-g)]*
-!***
-!******************************************************************************
-!    general variables:
-!     delt           = delta t
-!     emass          = electron mass (fictitious)
-!     dt2bye         = 2*delt/emass
+!***  parallelization          C. Cavazzoni and G. L. Chiarotti "A Parallel and
+!***                           Modular Car-Parrinello Code", Computer Physics 
+!***                           Communication 123, 56-76, (1999).
+!***                           P. Giannozzi, F. De Angelis and R. Car ...
+!***  variable cell            P. Focher et al., Europhys. Lett. 36, 345-351
+!***                           (1994)
 !******************************************************************************
 !
 !  ==========================================================================

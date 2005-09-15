@@ -86,10 +86,10 @@
       USE runcp_module, ONLY: runcp, runcp_force_pairing
       USE runcg_module, ONLY: runcg
       USE runcg_ion_module, ONLY: runcg_ion
-      USE control_flags, ONLY: tbeg, nomore, &
+      USE control_flags, ONLY: tbeg, nomore, tprnfor, tpre, &
                   nbeg, newnfi, tnewnfi, isave, iprint, tv0rd, nv0rd, tzeroc, tzerop, &
                   tfor, thdyn, tzeroe, tsde, tsdp, tsdc, taurdr, ndr, &
-                  ndw, tortho, tstress, timing, memchk, iprsta, &
+                  ndw, tortho, timing, memchk, iprsta, &
                   tconjgrad, tprnsfac, toptical, tcarpar, &
                   rhoout, tdipole, t_diis, t_diis_simple, t_diis_rot, &
                   tnosee, tnosep, force_pairing, tconvthrs, convergence_criteria, tionstep, nstepe, &
@@ -214,7 +214,7 @@
       REAL(DP) :: hgamma(3,3) = 0.0d0
       REAL(DP) :: temphh(3,3) = 0.0d0
 
-      LOGICAL :: ttforce, ttdiis
+      LOGICAL :: ttforce, tstress, ttdiis
       LOGICAL :: ttprint, ttsave, ttdipole, ttoptical, ttexit
       LOGICAL :: tstop, tconv, doions
       LOGICAL :: topen, ttcarpar, ttempst
@@ -273,7 +273,8 @@
         !
         ttdipole  =  ttprint .AND. tdipole
         ttoptical =  ttprint .AND. toptical
-        ttforce   =  ttprint .OR.  tfor .OR. ttconvchk
+        ttforce   =  tfor  .OR. ( ttprint .AND. tprnfor )
+        tstress   =  thdyn .OR. ( ttprint .AND. tpre )
         ttempst   =  ttprint .AND. ( MAXVAL( wempt%nbt ) > 0 )
         ttcarpar  =  tcarpar
         ttdiis    =  t_diis 
@@ -412,7 +413,7 @@
         ! ...   vofrhos compute the new DFT potential "vpot", and energies "edft",
         ! ...   ionc forces "fion" and stress "pail".
         !
-        CALL vofrhos(ttprint, rhoe, desc, tfor, thdyn, ttforce, atoms0, &
+        CALL vofrhos(ttprint, ttforce, tstress, rhoe, desc, atoms0, &
           vpot, bec, c0, wfill, occn, eigr, ei1, ei2, ei3, sfac, timepre, ht0, edft)
 
         ! CALL debug_energies( edft ) ! DEBUG
@@ -576,7 +577,11 @@
         !
         IF( ttconvchk ) THEN
            !
-           maxfion = max_ion_forces( atoms0 )
+           IF( ttforce ) THEN
+              maxfion = max_ion_forces( atoms0 )
+           ELSE
+              maxfion = 0.0d0
+           END IF
            !
            IF( tconjgrad ) THEN
               tconv = tconv_cg
