@@ -42,12 +42,20 @@ SUBROUTINE chdens (filplot)
        weight (nfilemax), epsilon
 
   character (len=256) :: fileout, filename (nfilemax)
-  character (len=15), dimension(0:6) :: formatname = &
-       (/ 'gnuplot', 'contour.x', 'plotrho.x', 'XCrySDen', 'gOpenMol', &
-       &  'XCrySDen', 'Gaussian cube' /)
+  character (len=13), dimension(0:6) :: formatname = &
+       (/ 'gnuplot      ', &
+          'contour.x    ', & 
+          'plotrho.x    ', &
+          'XCrySDen     ', &
+          'gOpenMol     ', &
+          'XCrySDen     ', &
+          'Gaussian cube' /)
   character (len=20), dimension(0:4) :: plotname = &
-       (/ '1D spherical average', '1D along a line', '2D contour', &
-       &  '3D', '2D polar on a sphere'/)
+       (/ '1D spherical average', &
+          '1D along a line     ', &
+          '2D contour          ', &
+          '3D                  ', &
+          '2D polar on a sphere'/)
 
   real(DP) :: celldms (6), gcutmsa, duals, ecuts, zvs(ntypx), ats(3,3)
   real(DP), allocatable :: taus (:,:), rhor(:)
@@ -334,7 +342,7 @@ SUBROUTINE chdens (filplot)
         !
         ! GAUSSIAN CUBE FORMAT
         call write_cubefile (alat, at, bg, nat, tau, atm, ityp, rhor, &
-             nrx1, nrx2, nrx3, ounit)
+             nr1, nr2, nr3, nrx1, nrx2, nrx3, ounit)
 
      else
         !

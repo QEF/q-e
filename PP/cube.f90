@@ -7,7 +7,10 @@
 
 ! This file holds gaussian cube generation subroutines.
 ! Adapted by Axel Kohlmeyer from xsf.f90.
-! last update by Axel Kohlmeyer on Sep 27, 2004.
+! updated by Axel Kohlmeyer on Sep 27, 2004.
+! updated by PG on Sep. 15, 2005 to account for the case in which
+! nrx1,nrx2,nrx3 (the physical dimensions of array rho) differ from
+!  nr1, nr2, nr3 (the true dimensions)
 !
 
 ! -------------------------------------------------------------------
@@ -17,12 +20,12 @@
 ! orthorhombic box (needed for most .cube aware programs :-/).
 ! -------------------------------------------------------------------
 subroutine write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
-     nrx1, nrx2, nrx3, ounit )
+     nr1, nr2, nr3, nrx1, nrx2, nrx3, ounit )
 
   USE kinds,  only : DP
 
   implicit none
-  integer          :: nat, ityp(nat), ounit, nrx1, nrx2, nrx3
+  integer          :: nat, ityp(nat), ounit,nr1, nr2, nr3, nrx1, nrx2, nrx3
   character(len=3) :: atm(*)
   real(DP)    :: alat, tau(3,nat), at(3,3), bg(3,3), rho(nrx1,nrx2,nrx3)
 
@@ -51,9 +54,9 @@ subroutine write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
   write(ounit,*) ' Total SCF Density'
 !                        origin is forced to (0.0,0.0,0.0)
   write(ounit,'(I5,3F12.6)') nat, 0.0, 0.0, 0.0
-  write(ounit,'(I5,3F12.6)') nrx1, (alat*at(i,1)/DBLE(nrx1),i=1,3)
-  write(ounit,'(I5,3F12.6)') nrx2, (alat*at(i,2)/DBLE(nrx2),i=1,3)
-  write(ounit,'(I5,3F12.6)') nrx3, (alat*at(i,3)/DBLE(nrx3),i=1,3)
+  write(ounit,'(I5,3F12.6)') nr1, (alat*at(i,1)/DBLE(nr1),i=1,3)
+  write(ounit,'(I5,3F12.6)') nr2, (alat*at(i,2)/DBLE(nr2),i=1,3)
+  write(ounit,'(I5,3F12.6)') nr3, (alat*at(i,3)/DBLE(nr3),i=1,3)
 
   do i=1,nat
      nt = ityp(i)
@@ -70,9 +73,9 @@ subroutine write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
      write(ounit,'(I5,5F12.6)') at_num, at_chrg, inpos
   enddo
   
-  do i1=1,nrx1
-     do i2=1,nrx2
-        write(ounit,'(6E13.5)') (rho(i1,i2,i3),i3=1,nrx3)
+  do i1=1,nr1
+     do i2=1,nr2
+        write(ounit,'(6E13.5)') (rho(i1,i2,i3),i3=1,nr3)
      enddo
   enddo
   return
