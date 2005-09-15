@@ -110,12 +110,16 @@ MODULE parser
   SUBROUTINE delete_if_present( filename, in_warning )
     !--------------------------------------------------------------------------
     !
+    USE io_global, ONLY : ionode
+    !
     IMPLICIT NONE
     !
     CHARACTER(LEN=*),  INTENT(IN) :: filename
     LOGICAL, OPTIONAL, INTENT(IN) :: in_warning
     LOGICAL                       :: exst, warning
     INTEGER                       :: iunit
+    !
+    IF ( .NOT. ionode ) RETURN
     !
     INQUIRE( FILE = filename, EXIST = exst )
     !
