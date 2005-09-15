@@ -777,7 +777,9 @@ file instead.
 The codes for data postprocessing in \texttt{PP/} are:
 \begin{itemize}
   \item \texttt{pp.x} extracts the specified data from files
-        produced by \texttt{pw.x} for further processing
+        produced by \texttt{pw.x}, prepare data fro plotting
+        by writing them into formats that can be read by
+        several plotting programs
   \item \texttt{bands.x} extracts and reorders eigenvalues
         from files produced by \texttt{pw.x} for band structure plotting
   \item \texttt{projwfc.x} calculates projections of wavefunction
@@ -788,11 +790,7 @@ The codes for data postprocessing in \texttt{PP/} are:
         for molecules in supercells (beware: meaningful results 
         only if the charge density is completely contained into 
         the Wigner-Seitz cell)
-  \item \texttt{chdens.x} plots data produced by \texttt{pp.x},
-        writing them into a format that is suitable for several
-        plotting programs
-  \item \texttt{plotrho.x} reads the output of \texttt{chdens.x},
-        produces PostScript 2-d contour plots
+  \item \texttt{plotrho.x} produces PostScript 2-d contour plots
   \item \texttt{plotband.x} reads the output of \texttt{bands.x},
         produces band structure PostScript plots
   \item \texttt{average.x} calculates planar averages of
@@ -1399,7 +1397,7 @@ If this happens, use the option \texttt{-in} (or \texttt{-inp} or
 Example: \texttt{pw.x -in input -npool 4 > output}.
 
 Please note that all postprocessing codes \emph{not} reading data
-files produced by \texttt{pw.x} --- that is, \texttt{chdens.x},
+files produced by \texttt{pw.x} --- that is,
 \texttt{average.x}, \texttt{voronoy.x}, \texttt{dos.x} --- the
 plotting codes \texttt{plotrho.x}, \texttt{plotband.x}, and all
 executables in \texttt{pwtools/}, should be executed on just one
@@ -1439,6 +1437,8 @@ PPs for selected elements can be downloaded from the Pseudopotentials
 Page of the Quantum-ESPRESSO web site
 (\htmladdnormallink{\texttt{http://www.pwscf.org/pseudo.htm}}%
                    {http://www.pwscf.org/pseudo.htm}).
+The naming convention for these PPs is explained in file
+\texttt{Doc/nomefile.upf}.
 If you do not find there the PP you need (because there is no PP for
 the atom you need or you need a different exchange-correlation
 functional or a different core-valence partition or for whatever
@@ -1769,13 +1769,13 @@ calculated by \texttt{pw.x}.
 Such quantities are saved by \texttt{pw.x} into the output data
 file(s).
 
-The main postprocessing code \texttt{pp.x} reads data file(s) and may
-produce on output either the projection of wavefunctions on atomic
-wavefunctions, or another file containing one of the following
-quantities:
+The main postprocessing code \texttt{pp.x} reads data file(s),
+extracts or calculated the selected quantity, writes it into
+a format that is suitable for plotting. Quantities that can
+be read or calculated are:
 
 \begin{quote}
-  charge\\
+  charge density\\
   spin polarization\\
   various potentials\\
   local density of states at $E_F$\\
@@ -1786,20 +1786,15 @@ quantities:
   planar averages\\
   integrated local density of states
 \end{quote}
+Various types of plotting (along a line, on a plane, three-dimensional,
+polar) and output formats (including the popular {\tt cube} format) can
+be specified. The output files can be directly read by the free plotting
+system Gnuplot (1D or 2D plots), 
+or by code \texttt{plotrho.x} that comes with PWscf (2D plots), or 
+by advanced plotting software XCrySDen and gOpenMol (3D plots)
 
 See file \texttt{INPUT\_PP} for a detailed description of the input
 for code \texttt{pp.x}.
-
-The file(s) produced by \texttt{pp.x} are processed by program
-\texttt{chdens.x} for plotting.
-The type of plotting (along a line, on a plane, three-dimensional,
-polar) and the output format must be specified here.
-The output file can be directly read by the free plotting system
-Gnuplot (1D or 2D plots), or by code \texttt{plotrho.x} that comes
-with PWscf (2D plots), or by advanced plotting software XCrySDen and
-gOpenMol (3D plots).
-More details on the input data are contained in file
-\texttt{INPUT\_CHDENS}.
 See Example 05 for a charge density plot.
 
 The postprocessing code \texttt{bands.x} reads data file(s), extracts
@@ -2435,7 +2430,7 @@ versions of MPICH, the current directory is set to the directory where
 the \emph{executable code} resides, instead of being set to the
 directory where the code is executed.
 This MPICH weirdness may cause unexpected failures in some
-postprocessing codes (i.e., \texttt{chdens.x}) that expect a data file
+postprocessing codes that expect a data file
 in the current directory.
 Workaround: use symbolic links, or copy the executable to the current
 directory.

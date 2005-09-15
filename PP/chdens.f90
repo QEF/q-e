@@ -79,9 +79,9 @@ SUBROUTINE chdens (filplot)
   nfile         = 1
   filepp(1)     = filplot
   weight(1)     = 1.0d0
-  iflag         = 1
+  iflag         = -0
   radius        = 1.0d0
-  output_format = 0
+  output_format = -1
   fileout       = ' '
   e1(:)         = 0.d0
   e2(:)         = 0.d0
@@ -98,13 +98,17 @@ SUBROUTINE chdens (filplot)
   read (5, plot, iostat = ios)
   !
   if (ios /= 0) then
-     call infomsg ('chdens', 'namelist plot not found or not valid', -1 )
+     call infomsg ('chdens', 'namelist plot not found or invalid, exiting', -1)
+     return
+  end if
+  if (output_format == -1 .or. iflag == -1) then
+     call infomsg ('chdens', 'output format not set, exiting', -1 )
      return
   end if
   !
   ! check for number of files
   !
-  if (nfile.le.0.or.nfile.gt.nfilemax) &
+  if (nfile < 1 .or. nfile > nfilemax) &
        call errore ('chdens ', 'nfile is wrong ', 1)
 
   ! check for iflag

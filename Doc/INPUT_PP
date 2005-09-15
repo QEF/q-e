@@ -18,6 +18,14 @@
   !      only step 2), leave namelist &inputtpp blank. In order to perform
   !      only step 1), do not specify namelist &plot
   !
+  !      Intermediate results from step 1 can be saved to disk (see
+  !      (variable "filplot" in &inputpp) and later read in step 2.
+  !      Since the file with intermediate results is formatted, it
+  !      can be safely transferred to a different machine. This 
+  !      also allows plotting of a linear combination (for instance,
+  !      charge differences) by saving two intermediate files and
+  !      combining them (see variables "weight" and "filepp" in &plot)
+  !
   !      DESCRIPTION of the INPUT:
   !
   !-&inputPP         Namelist &inputPP; contains
@@ -99,9 +107,11 @@
   !
   !----FOR i = 1, nfile:
   !
-  !      filepp(i)   file containing the quantity to be plotted
-  !                  (produced in step 1)
-  !      weight(i)   weight - The quantity to be plotted will be
+  !      filepp(i)   nfile=1: file containing the quantity to be plotted
+  !                  nfile>1: see "weight"
+  !                  (default: filepp(1)=filplot)
+  !      weight(i)   weighing factors: assuming that rho(i) is the quantity
+  !                  read from filepp(i), the quantity that will be plotted is:
   !                  weight(1)*rho(1) + weight(2)*rho(2) + weight(3)*rho(3)+...
   !                  (OPTIONAL: default weight(1)=1.0)
   !
@@ -112,13 +122,13 @@
   !----END_FOR
   !	
   !      iflag     0 1D plot of the spherical average
-  !                1 1D plot (DEFAULT)
+  !                1 1D plot
   !                2 2D plot
   !                3 3D plot
   !                4 2D polar plot on a sphere
   !
   !      output_format  (ignored on 1D plot)
-  !                0  format suitable for gnuplot   (1D) (DEFAULT)
+  !                0  format suitable for gnuplot   (1D)
   !                1  format suitable for contour.x (2D)
   !                2  format suitable for plotrho   (2D)
   !                3  format suitable for XCRYSDEN  (1D, 2D, 3D)
