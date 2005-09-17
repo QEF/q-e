@@ -10,7 +10,7 @@ MODULE path_opt_routines
   !---------------------------------------------------------------------------
   !
   ! ... This module contains all subroutines and functions needed for
-  ! ... the optimization of the reaction path (NEB and SMD calculations)
+  ! ... the optimisation of the reaction path (NEB and SMD calculations)
   !
   ! ... Written by Carlo Sbraccia ( 2003-2005 )
   !
@@ -103,8 +103,8 @@ MODULE path_opt_routines
        IMPLICIT NONE
        !
        INTEGER, INTENT(IN) :: index
-       REAL (DP)      :: force_versor(dim)
-       REAL (DP)      :: vel_component
+       REAL(DP)            :: force_versor(dim)
+       REAL(DP)            :: vel_component
        !
        !
        IF ( frozen(index) ) RETURN
@@ -153,13 +153,13 @@ MODULE path_opt_routines
        !
        IMPLICIT NONE
        !
-       REAL (DP), ALLOCATABLE :: t(:), g(:), s(:,:)
-       INTEGER                     :: k, i, j, I_in, I_fin
-       REAL (DP)              :: s_norm, coeff, norm_g
-       LOGICAL                     :: exists
+       REAL(DP), ALLOCATABLE :: t(:), g(:), s(:,:)
+       INTEGER               :: k, i, j, I_in, I_fin
+       REAL(DP)              :: s_norm, coeff, norm_g
+       LOGICAL               :: exists
        !
-       REAL (DP), PARAMETER   :: step_max = 0.6D0
-       INTEGER,        PARAMETER   :: broyden_ndim = 5
+       REAL(DP), PARAMETER   :: step_max = 0.6D0
+       INTEGER,  PARAMETER   :: broyden_ndim = 5
        !
        !
        ALLOCATE( g( dim * n_im ) )
@@ -228,7 +228,7 @@ MODULE path_opt_routines
              !
              ! ... the Broyden's subspace is swapped and s is projected
              ! ... orthogonally to the current tangent (this last thing 
-             ! ... in the smd case only, otherwise t = 0.0)
+             ! ... in the smd case only, otherwise t = 0.D0)
              !
              k = broyden_ndim
              !
@@ -242,19 +242,26 @@ MODULE path_opt_routines
           !
           s(:,k) = - ds * g(:)
           !
-          DO j = 1, k - 2
-             !
-             s(:,k) = s(:,k) + ( s(:,j) .dot. s(:,k) ) / &
-                               ( s(:,j) .dot. s(:,j) ) * s(:,j+1)
-             !
-          END DO
-          !
           IF ( k > 1 ) THEN
+             !
+             DO j = 1, k - 2
+                !
+                s(:,k) = s(:,k) + ( s(:,j) .dot. s(:,k) ) / &
+                                  ( s(:,j) .dot. s(:,j) ) * s(:,j+1)
+                !
+             END DO
              !
              coeff = ( s(:,k-1) .dot. ( s(:,k-1) - s(:,k) ) )
              !
-             IF ( coeff > eps8 ) & 
+             IF ( coeff > eps8 ) THEN
+                !
                 s(:,k) = ( s(:,k-1) .dot. s(:,k-1) ) / coeff * s(:,k)
+                !
+             ELSE
+                !
+                s(:,k) = - ds * g(:)
+                !
+             END IF
              !
           END IF
           !

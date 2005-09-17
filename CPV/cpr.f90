@@ -152,14 +152,14 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   ! ... work variables
   !
   REAL(DP) :: tempp, savee, saveh, savep, epot, epre, &
-                    enow, econs, econt, ettt, ccc, bigr, dt2bye
+              enow, econs, econt, ettt, ccc, bigr, dt2bye
   REAL(DP) :: ekinc0, ekinp, ekinpr, ekinc
   REAL(DP) :: temps(nsx)
   REAL(DP) :: ekinh, temphc, temp1, temp2, randy
   REAL(DP) :: delta_etot
   REAL(DP) :: ftmp, enb, enbi
-  INTEGER        :: is, nacc, ia, j, iter, i, isa, ipos
-  INTEGER        :: k, ii, l, m
+  INTEGER  :: is, nacc, ia, j, iter, i, isa, ipos
+  INTEGER   :: k, ii, l, m
   !
   REAL(DP) :: hgamma(3,3), temphh(3,3)
   REAL(DP) :: fcell(3,3)
@@ -178,14 +178,20 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   tlast    = .FALSE.
   nacc     = 5
   !
-  ! Check for restart_p from Autopilot Feeature Suite
-  IF (restart_p) THEN
-     ! do not add past nfi
+  ! ... Check for restart_p from Autopilot Feature Suite
+  !
+  IF ( restart_p ) THEN
+     !
+     ! ... do not add past nfi
+     !
      nomore = nomore
+     !
   ELSE
+     !
      nomore = nomore + nfi
+     !
   END IF
-
+  !
   !======================================================================
   !
   !           basic loop for molecular dynamics starts here
@@ -321,7 +327,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            !
            ! ... average value of the lagrange multipliers
            !
-           IF ( lcoarsegrained ) dfe_acc(:,1) = dfe_acc(:,1) - lagrange(:)
+           IF ( lcoarsegrained ) dfe_acc(:) = dfe_acc(:) - lagrange(:)
            !
         END IF
         !

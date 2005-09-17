@@ -16,9 +16,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE input_parameters,   ONLY : startingwfc, startingpot, diago_thr_init
   USE basis,              ONLY : startingwfc_ => startingwfc, &
                                  startingpot_ => startingpot
-  USE coarsegrained_vars, ONLY : new_target, to_target, dfe_acc, &
-                                 max_shake_iter, max_fe_iter, num_acc, &
-                                 fe_grad_thr
+  USE coarsegrained_vars, ONLY : new_target, to_target, to_new_target, &
+                                 dfe_acc, max_shake_iter, max_fe_iter
   USE path_variables,     ONLY : pos, pes, grad_pes, frozen, &
                                  num_of_images, istep_path, suspended_image
   USE constraints_module, ONLY : lagrange, target, init_constraint, &
@@ -42,55 +41,60 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
                                  my_image_id, nimage, root
   USE mp,                 ONLY : mp_bcast, mp_barrier, mp_sum, mp_min
   USE check_stop,         ONLY : check_stop_now
+  USE path_io_routines,   ONLY : new_image_init, get_new_image, &
+                                 stop_other_images  
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)   :: N_in, N_fin
   LOGICAL, INTENT(OUT)  :: stat
-  INTEGER               :: image, iter, counter
+  INTEGER               :: image, iter
   REAL(DP)              :: tcpu, error
   CHARACTER(LEN=256)    :: tmp_dir_saved, filename
-  LOGICAL               :: opnd, file_exists, ldamped_saved
+  LOGICAL               :: opnd, file_exists
   LOGICAL               :: lfirst
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
     ! previous positions of atoms (needed for extrapolation)
   !
-  REAL (DP), EXTERNAL :: get_clock
+  REAL(DP), EXTERNAL :: get_clock
   !
   !
   CALL flush_unit( iunpath )
   !
   ALLOCATE( tauold( 3, nat, 3 ) )
   !
-  OPEN( UNIT = iunaxsf, FILE = TRIM( prefix ) // "_" // &
-      & TRIM( int_to_char( istep_path + 1 ) ) // ".axsf", &
-        STATUS = "UNKNOWN", ACTION = "WRITE" )
-  !
-  WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I3)' ) num_of_images
-  WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
-  WRITE( UNIT = iunaxsf, FMT = '(" PRIMVEC ")' )
-  WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-       at(1,1) * alat * bohr_radius_angs, &
-       at(2,1) * alat * bohr_radius_angs, &
-       at(3,1) * alat * bohr_radius_angs
-  WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-       at(1,2) * alat * bohr_radius_angs, &
-       at(2,2) * alat * bohr_radius_angs, &
-       at(3,2) * alat * bohr_radius_angs
-  WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-       at(1,3) * alat * bohr_radius_angs, &
-       at(2,3) * alat * bohr_radius_angs, &
-       at(3,3) * alat * bohr_radius_angs
+  IF ( ionode ) THEN
+     !
+     OPEN( UNIT = iunaxsf, FILE = TRIM( prefix ) // "_" // &
+         & TRIM( int_to_char( istep_path + 1 ) ) // ".axsf", &
+           STATUS = "UNKNOWN", ACTION = "WRITE" )
+     !
+     WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I3)' ) num_of_images
+     WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
+     WRITE( UNIT = iunaxsf, FMT = '(" PRIMVEC ")' )
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+          at(1,1) * alat * bohr_radius_angs, &
+          at(2,1) * alat * bohr_radius_angs, &
+          at(3,1) * alat * bohr_radius_angs
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+          at(1,2) * alat * bohr_radius_angs, &
+          at(2,2) * alat * bohr_radius_angs, &
+          at(3,2) * alat * bohr_radius_angs
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+          at(1,3) * alat * bohr_radius_angs, &
+          at(2,3) * alat * bohr_radius_angs, &
+          at(3,3) * alat * bohr_radius_angs
+     !
+  END IF
   !
   tmp_dir_saved = tmp_dir
-  ldamped_saved = ldamped
   !
   ! ... vectors pes and grad_pes are initalized to zero for all images on
   ! ... all nodes: this is needed for the final mp_sum()
   !
   IF ( my_image_id == root ) THEN
      !
-     FORALL( image = N_in : N_fin, .NOT. frozen(image)   )
+     FORALL( image = N_in:N_fin, .NOT. frozen(image)   )
         !
         grad_pes(:,image) = 0.D0
         !
@@ -105,7 +109,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   ! ... only the first cpu initializes the file needed by parallelization 
   ! ... among images
   !
-  IF ( meta_ionode ) CALL new_image_init()
+  IF ( meta_ionode ) CALL new_image_init( N_in, tmp_dir_saved )
   !
   image = N_in + my_image_id
   !
@@ -176,23 +180,11 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         IF ( file_exists ) THEN
            !
-           dfe_acc(:,:) = 0.D0
-           !
            OPEN( UNIT = 1000, FILE = filename )
            !
            READ( 1000, * ) tau
-           READ( 1000, * ) dfe_acc(:,2:num_acc)
-           READ( 1000, * ) counter
            !
            CLOSE( UNIT = 1000 )
-           !
-           counter = MIN( counter + 1, num_acc )
-           !
-        ELSE
-           !
-           dfe_acc(:,:) = 0.D0
-           !
-           counter = 1
            !
         END IF
         !
@@ -271,13 +263,12 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         lfirst = .TRUE.
         !
         ! ... first the system is "adiabatically" moved to the new target
-        ! ... this is always done with standard MD (no damping)
-        !
-        ldamped = .FALSE.
         !
         to_target(:) = new_target(:) - target(:)
         !
         CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
+        !
+        to_new_target = .TRUE.
         !
         DO iter = 1, max_shake_iter
            !
@@ -289,17 +280,15 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
            CALL move_ions()
            !
-           target(:) = target(:) + to_target(:) / DBLE( max_shake_iter )
-           !
            lfirst = .FALSE.
            !
         END DO
         !
-        ldamped = ldamped_saved
-        !
         ! ... then the free energy gradients are computed
         !
         CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
+        !
+        to_new_target = .FALSE.
         !
         DO iter = 1, max_fe_iter
            !
@@ -311,25 +300,11 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
            CALL move_ions()
            !
-           IF ( ldamped ) THEN
-              !
-              ! ... zero temperature
-              !
-              IF ( conv_ions ) EXIT
-              !
-           ELSE
-              !
-              ! ... finite temperature
-              !
-              dfe_acc(:,1) = dfe_acc(:,1) - lagrange(:)
-              !
-           END IF
-           !
            lfirst = .FALSE.
            !
         END DO
         !
-        ! ... the averages are computed here
+        ! ... the averages are computed here (coverted ot Hartree a.u.)
         !
         IF ( ldamped ) THEN
            !
@@ -343,17 +318,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
            ! ... finite temperature
            !
-           dfe_acc(:,1) = dfe_acc(:,1) / DBLE( istep )
-           !
-           grad_pes(:,image) = 0.D0
-           !
-           DO iter = 1, counter
-              !
-              grad_pes(:,image) = grad_pes(:,image) + dfe_acc(:,iter)
-              !
-           END DO
-           !
-           grad_pes(:,image) = grad_pes(:,image) / DBLE( counter ) / e2
+           grad_pes(:,image) = dfe_acc(:) / DBLE( istep ) / e2
            !
         END IF
         !
@@ -377,15 +342,13 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
         END IF
         !
-        CALL write_config( image )
+        IF ( ionode ) CALL write_config( image )
         !
         ! ... the restart file is written here
         !
         OPEN( UNIT = 1000, FILE = filename )
         !
         WRITE( 1000, * ) tau
-        WRITE( 1000, * ) dfe_acc(:,1:num_acc-1)
-        WRITE( 1000, * ) counter
         !
         CLOSE( UNIT = 1000 )
         !
@@ -393,7 +356,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
      !
      ! ... the new image is obtained (by ionode only)
      !
-     CALL get_new_image( image )
+     CALL get_new_image( image, tmp_dir_saved )
      !
      CALL mp_bcast( image, ionode_id, intra_image_comm )
      !        
@@ -435,135 +398,196 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   RETURN  
   !
-  CONTAINS
-     !
-     ! ... internal procedures
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE new_image_init()
-       !-----------------------------------------------------------------------
-       !
-       ! ... this subroutine initializes the file needed for the 
-       ! ... parallelization among images
-       !
-       USE io_files,       ONLY : iunnewimage
-       USE path_variables, ONLY : tune_load_balance
-       !
-       IMPLICIT NONE       
-       !
-       IF ( nimage == 1 .OR. .NOT. tune_load_balance ) RETURN
-       !
-       OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
-           & TRIM( prefix ) // '.newimage' , STATUS = 'UNKNOWN' )
-       !
-       WRITE( iunnewimage, * ) N_in + nimage
-       ! 
-       CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )       
-       !
-       RETURN
-       !
-     END SUBROUTINE new_image_init
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE get_new_image( image )
-       !-----------------------------------------------------------------------
-       !
-       ! ... this subroutine is used to get the new image to work on
-       ! ... the "prefix.BLOCK" file is needed to avoid (when present) that 
-       ! ... other jobs try to read/write on file "prefix.newimage" 
-       !
-       USE io_files,       ONLY : iunnewimage, iunblock
-       USE io_global,      ONLY : ionode
-       USE path_variables, ONLY : tune_load_balance
-       !
-       IMPLICIT NONE
-       !
-       INTEGER, INTENT(INOUT) :: image
-       INTEGER                :: ioerr
-       CHARACTER (LEN=256)    :: filename
-       LOGICAL                :: opened, exists
-       !
-       !
-       IF ( .NOT. ionode ) RETURN
-       !
-       IF ( nimage > 1 ) THEN
-          !
-          IF ( tune_load_balance ) THEN
-             !
-             filename = TRIM( tmp_dir_saved ) // TRIM( prefix ) // '.BLOCK'
-             !
-             open_loop: DO
-                !          
-                OPEN( UNIT = iunblock, FILE = TRIM( filename ), &
-                    & IOSTAT = ioerr, STATUS = 'NEW' )
-                !
-                IF ( ioerr > 0 ) CYCLE open_loop
-                !
-                INQUIRE( UNIT = iunnewimage, OPENED = opened )
-                !
-                IF ( .NOT. opened ) THEN
-                   !
-                   OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
-                       & TRIM( prefix ) // '.newimage' , STATUS = 'OLD' )
-                   !
-                   READ( iunnewimage, * ) image
-                   !
-                   CLOSE( UNIT = iunnewimage, STATUS = 'DELETE' )
-                   !
-                   OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
-                       & TRIM( prefix ) // '.newimage' , STATUS = 'NEW' )
-                   !
-                   WRITE( iunnewimage, * ) image + 1
-                   ! 
-                   CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )
-                   !
-                   EXIT open_loop
-                   !
-                END IF
-                !
-             END DO open_loop
-             !
-             CLOSE( UNIT = iunblock, STATUS = 'DELETE' )
-             !
-          ELSE
-             !
-             image = image + nimage
-             !
-          END IF
-          !
-       ELSE
-          !
-          image = image + 1
-          !
-       END IF      
-       !
-       RETURN
-       !
-     END SUBROUTINE get_new_image
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE stop_other_images()
-       !-----------------------------------------------------------------------
-       !
-       ! ... this subroutine is used to send a stop signal to other images
-       ! ... this is done by creating the exit_file on the working directory
-       !
-       USE io_files,  ONLY : iunexit, exit_file
-       USE io_global, ONLY : ionode
-       !
-       IMPLICIT NONE
-       !
-       !
-       IF ( .NOT. ionode ) RETURN
-       !
-       OPEN( UNIT = iunexit, FILE = TRIM( exit_file ) )
-       CLOSE( UNIT = iunexit, STATUS = 'KEEP' )               
-       !
-       RETURN       
-       !
-     END SUBROUTINE stop_other_images
-     !
 END SUBROUTINE compute_fes_grads
+!
+!------------------------------------------------------------------------
+SUBROUTINE metadyn()
+  !------------------------------------------------------------------------
+  !
+  USE kinds,              ONLY : DP
+  USE constraints_module, ONLY : nconstr, target
+  USE control_flags,      ONLY : istep, ldamped
+  USE cell_base,          ONLY : at, alat
+  USE ener,               ONLY : etot
+  USE io_files,           ONLY : prefix, iunaxsf, tmp_dir
+  USE constants,          ONLY : bohr_radius_angs
+  USE coarsegrained_vars, ONLY : fe_grad, new_target, to_target, &
+                                 to_new_target, fe_step, metadyn_history, &
+                                 max_metadyn_iter, A, sigma
+  USE coarsegrained_vars, ONLY : allocate_coarsegrained_vars, &
+                                 deallocate_coarsegrained_vars
+  USE coarsegrained_base, ONLY : add_gaussians
+  USE parser,             ONLY : delete_if_present
+  USE io_global,          ONLY : ionode
+  USE basic_algebra_routines
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: iter
+  !
+  !
+  CALL allocate_coarsegrained_vars( nconstr, max_metadyn_iter )
+  !
+  IF ( ionode ) THEN
+     !
+     OPEN( UNIT = iunaxsf, FILE = TRIM( prefix ) // ".axsf", &
+           STATUS = "UNKNOWN", ACTION = "WRITE" )
+     !
+     WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I3)' ) max_metadyn_iter
+     WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
+     WRITE( UNIT = iunaxsf, FMT = '(" PRIMVEC ")' )
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+         at(1,1) * alat * bohr_radius_angs, &
+         at(2,1) * alat * bohr_radius_angs, &
+         at(3,1) * alat * bohr_radius_angs
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+         at(1,2) * alat * bohr_radius_angs, &
+         at(2,2) * alat * bohr_radius_angs, &
+         at(3,2) * alat * bohr_radius_angs
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+         at(1,3) * alat * bohr_radius_angs, &
+         at(2,3) * alat * bohr_radius_angs, &
+         at(3,3) * alat * bohr_radius_angs
+     !
+  END IF
+  !
+  CALL delete_if_present( TRIM( prefix ) // '.metadyn' )
+  !
+  IF ( ionode ) THEN
+     !
+     OPEN( UNIT = 999, FILE = TRIM( prefix ) // '.metadyn', STATUS = 'NEW' )
+     !
+     WRITE( 999, '(2(2X,I5))' ) nconstr, max_metadyn_iter
+     WRITE( 999, '(2(2X,F12.8))' ) A, sigma
+     !
+  END IF
+  !
+  DO iter = 1, max_metadyn_iter
+     !
+     metadyn_history(:,iter) = target(:)
+     !
+     IF ( ionode ) CALL write_config( iter )
+     !
+     CALL free_energy_grad( iter )
+     !
+     IF ( ionode ) &
+        WRITE( 999, '(I4,5(2X,F12.8))' ) iter, target(:), etot, fe_grad(:)
+     !
+     CALL add_gaussians( iter )
+     !
+     new_target(:) = target(:) - fe_step * fe_grad(:) / norm( fe_grad )
+     !
+     CALL move_to_target()
+     !
+  END DO
+  !
+  IF ( ionode ) THEN
+     !
+     CALL write_config( iter )
+     !
+     CLOSE( UNIT = iunaxsf )
+     CLOSE( UNIT = 999 )
+     !
+  END IF
+  !
+  CALL deallocate_coarsegrained_vars()
+  !
+  RETURN
+  !
+  CONTAINS
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE free_energy_grad( iter )
+      !------------------------------------------------------------------------
+      !
+      USE constants,          ONLY : e2
+      USE coarsegrained_vars, ONLY : max_fe_iter, dfe_acc
+      USE constraints_module, ONLY : lagrange
+      USE control_flags,      ONLY : istep, conv_ions
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: iter
+      !
+      INTEGER :: i
+      LOGICAL :: stat
+      LOGICAL :: lfirst = .TRUE.
+      !
+      !
+      istep   = 0
+      dfe_acc = 0.D0
+      !
+      CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
+      !
+      to_new_target = .FALSE.
+      !
+      DO i = 1, max_fe_iter
+         !
+         istep = istep + 1
+         !
+         CALL electronic_scf( lfirst, stat )
+         !
+         IF ( .NOT. stat ) RETURN
+         !
+         CALL move_ions()
+         !
+         lfirst = .FALSE.
+         !
+      END DO
+      !
+      ! ... the averages are computed here
+      !
+      IF ( ldamped ) THEN
+         !
+         ! ... zero temperature
+         !
+         fe_grad(:) = - lagrange(:) / e2
+         !
+      ELSE
+         !
+         ! ... finite temperature
+         !
+         fe_grad(:) = dfe_acc(:) / DBLE( istep ) / e2
+         !
+      END IF
+      !
+      RETURN
+      !
+    END SUBROUTINE free_energy_grad
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE move_to_target()
+      !------------------------------------------------------------------------
+      !
+      USE coarsegrained_vars, ONLY : max_shake_iter
+      !
+      INTEGER :: i
+      LOGICAL :: stat
+      !
+      !
+      to_target(:) = new_target(:) - target(:)
+      !
+      CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
+      !
+      to_new_target = .TRUE.
+      !
+      DO i = 1, max_shake_iter
+         !
+         istep = i
+         !
+         CALL electronic_scf( .FALSE., stat )
+         !
+         IF ( .NOT. stat ) RETURN
+         !
+         CALL move_ions()
+         !
+      END DO
+      !
+      RETURN
+      !
+    END SUBROUTINE move_to_target
+    !
+END SUBROUTINE metadyn
 !
 !----------------------------------------------------------------------------
 SUBROUTINE write_config( image )
@@ -588,9 +612,9 @@ SUBROUTINE write_config( image )
      !
      WRITE( UNIT = iunaxsf, FMT = '(A2,3(2X,F18.10))' ) &
             TRIM( atom_label(ityp(atom)) ), &
-             tau(1,atom) * alat * bohr_radius_angs, &
-             tau(2,atom) * alat * bohr_radius_angs, &
-             tau(3,atom) * alat * bohr_radius_angs
+         tau(1,atom) * alat * bohr_radius_angs, &
+         tau(2,atom) * alat * bohr_radius_angs, &
+         tau(3,atom) * alat * bohr_radius_angs
      !
   END DO
   !

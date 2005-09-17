@@ -59,10 +59,10 @@ SUBROUTINE dynamics()
   REAL(DP), ALLOCATABLE :: mass(:)
   REAL(DP)              :: ekin, etotold
   REAL(DP)              :: total_mass, temp_new, &
-                                elapsed_time, norm_of_dtau
+                           elapsed_time, norm_of_dtau
   REAL(DP)              :: ml(3), mlt
-  INTEGER                    :: i, na
-  LOGICAL                    :: exst
+  INTEGER               :: i, na
+  LOGICAL               :: exst
   !
   !
   ALLOCATE( mass( nat ) )
@@ -371,11 +371,11 @@ SUBROUTINE dynamics()
        !
        ! ... local variables
        !
-       REAL (DP) :: norm_acc, acc_versor(3,nat)
+       REAL(DP) :: norm_acc, acc_versor(3,nat)
        !
        ! ... external functions
        !
-       REAL (DP), EXTERNAL :: DNRM2, DDOT
+       REAL(DP), EXTERNAL :: DNRM2, DDOT
        !
        !
        norm_acc = DNRM2( 3*nat, acc, 1 )
@@ -405,11 +405,11 @@ SUBROUTINE dynamics()
        !
        IMPLICIT NONE
        !
-       INTEGER                :: na, nb
-       REAL(DP)          :: total_mass, aux, velox, ek, &
-                                 ml(3), dir_x, dir_y, dir_z, module
+       INTEGER  :: na, nb
+       REAL(DP) :: total_mass, aux, velox, ek, &
+                   ml(3), dir_x, dir_y, dir_z, module
        !  
-       REAL(DP),EXTERNAL :: rndm
+       REAL(DP), EXTERNAL :: rndm
        !
        !    
        aux = temperature / convert_E_to_temp

@@ -37,11 +37,12 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
                                dim, suspended_image, istep_path,  &
                                first_last_opt, frozen, write_save
   USE parser,           ONLY : int_to_char
-  USE path_variables,   ONLY : tune_load_balance
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_global,        ONLY : inter_image_comm, intra_image_comm, &
                                my_image_id, nimage, root
   USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum, mp_min
+  USE path_io_routines, ONLY : new_image_init, get_new_image, &
+                               stop_other_images
   !
   IMPLICIT NONE
   !
@@ -97,7 +98,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! ... only the first cpu initializes the file needed by parallelization 
   ! ... among images
   !
-  IF ( meta_ionode ) CALL new_image_init()
+  IF ( meta_ionode ) CALL new_image_init( N_in, tmp_dir_saved )
   !
   image = N_in + my_image_id
   !
@@ -292,7 +293,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      ! ... the new image is obtained (by ionode only)
      !
-     CALL get_new_image( image )
+     CALL get_new_image( image, tmp_dir_saved )
      !
      CALL mp_bcast( image, ionode_id, intra_image_comm )
      !        
@@ -357,132 +358,4 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   RETURN
   !
-  CONTAINS
-     !
-     ! ... internal procedures
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE new_image_init()
-       !-----------------------------------------------------------------------
-       !
-       ! ... this subroutine initializes the file needed for the 
-       ! ... parallelization among images
-       !
-       USE io_files,       ONLY : iunnewimage
-       USE path_variables, ONLY : tune_load_balance
-       !
-       IMPLICIT NONE       
-       !
-       IF ( nimage == 1 .OR. .NOT. tune_load_balance ) RETURN
-       !
-       OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
-           & TRIM( prefix ) // '.newimage' , STATUS = 'UNKNOWN' )
-       !
-       WRITE( iunnewimage, * ) N_in + nimage
-       ! 
-       CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )       
-       !
-       RETURN
-       !
-     END SUBROUTINE new_image_init
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE get_new_image( image )
-       !-----------------------------------------------------------------------
-       !
-       ! ... this subroutine is used to get the new image to work on
-       ! ... the "prefix.BLOCK" file is needed to avoid (when present) that 
-       ! ... other jobs try to read/write on file "prefix.newimage" 
-       !
-       USE io_files,       ONLY : iunnewimage, iunblock
-       USE io_global,      ONLY : ionode
-       USE path_variables, ONLY : tune_load_balance
-       !
-       IMPLICIT NONE
-       !
-       INTEGER, INTENT(INOUT) :: image
-       INTEGER                :: ioerr
-       CHARACTER (LEN=256)    :: filename
-       LOGICAL                :: opened, exists
-       !
-       !
-       IF ( .NOT. ionode ) RETURN
-       !
-       IF ( nimage > 1 ) THEN
-          !
-          IF ( tune_load_balance ) THEN
-             !
-             filename = TRIM( tmp_dir_saved ) // TRIM( prefix ) // '.BLOCK'
-             !
-             open_loop: DO
-                !          
-                OPEN( UNIT = iunblock, FILE = TRIM( filename ), &
-                    & IOSTAT = ioerr, STATUS = 'NEW' )
-                !
-                IF ( ioerr > 0 ) CYCLE open_loop
-                !
-                INQUIRE( UNIT = iunnewimage, OPENED = opened )
-                !
-                IF ( .NOT. opened ) THEN
-                   !
-                   OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
-                       & TRIM( prefix ) // '.newimage' , STATUS = 'OLD' )
-                   !
-                   READ( iunnewimage, * ) image
-                   !
-                   CLOSE( UNIT = iunnewimage, STATUS = 'DELETE' )
-                   !
-                   OPEN( UNIT = iunnewimage, FILE = TRIM( tmp_dir_saved ) // &
-                       & TRIM( prefix ) // '.newimage' , STATUS = 'NEW' )
-                   !
-                   WRITE( iunnewimage, * ) image + 1
-                   ! 
-                   CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )
-                   !
-                   EXIT open_loop
-                   !
-                END IF
-                !
-             END DO open_loop
-             !
-             CLOSE( UNIT = iunblock, STATUS = 'DELETE' )
-             !
-          ELSE
-             !
-             image = image + nimage
-             !
-          END IF
-          !
-       ELSE
-          !
-          image = image + 1
-          !
-       END IF      
-       !
-       RETURN
-       !
-     END SUBROUTINE get_new_image
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE stop_other_images()
-       !-----------------------------------------------------------------------
-       !
-       ! ... this subroutine is used to send a stop signal to other images
-       ! ... this is done by creating the exit_file on the working directory
-       !
-       USE io_files,  ONLY : iunexit, exit_file
-       USE io_global, ONLY : ionode
-       !
-       IMPLICIT NONE
-       !
-       !
-       IF ( .NOT. ionode ) RETURN
-       !
-       OPEN( UNIT = iunexit, FILE = TRIM( exit_file ) )
-       CLOSE( UNIT = iunexit, STATUS = 'KEEP' )               
-       !
-       RETURN       
-       !
-     END SUBROUTINE stop_other_images
-     !
 END SUBROUTINE compute_scf

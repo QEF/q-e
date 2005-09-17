@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,41 +18,40 @@ SUBROUTINE move_ions()
   ! ... coefficients for potential and wavefunctions extrapolation are
   ! ... also computed here
   !
-  USE constants,     ONLY : eps8
-  USE io_global,     ONLY : stdout
-  USE io_files,      ONLY : tmp_dir, prefix, iunupdate
-  USE kinds,         ONLY : DP
-  USE cell_base,     ONLY : alat, at, bg, omega
-  USE cellmd,        ONLY : omega_old, at_old, lmovecell, calc
-  USE ions_base,     ONLY : nat, ityp, tau, atm, if_pos
-  USE gvect,         ONLY : nr1, nr2, nr3
-  USE symme,         ONLY : s, ftau, nsym, irt
-  USE ener,          ONLY : etot
-  USE force_mod,     ONLY : force
-  USE control_flags, ONLY : upscale, lbfgs, loldbfgs, lmd, lconstrain, &
-                            conv_ions, history, alpha0, beta0, tr2, istep
-  USE relax,         ONLY : epse, epsf, starting_scf_threshold
-  USE lsda_mod,      ONLY : lsda, absmag
-  USE mp_global,     ONLY : intra_image_comm
-  USE io_global,     ONLY : ionode_id, ionode
-  USE mp,            ONLY : mp_bcast
-  !
-  ! ... external procedures
-  !
+  USE constants,              ONLY : eps8
+  USE io_global,              ONLY : stdout
+  USE io_files,               ONLY : tmp_dir, prefix, iunupdate
+  USE kinds,                  ONLY : DP
+  USE cell_base,              ONLY : alat, at, bg, omega
+  USE cellmd,                 ONLY : omega_old, at_old, lmovecell, calc
+  USE ions_base,              ONLY : nat, ityp, tau, atm, if_pos
+  USE gvect,                  ONLY : nr1, nr2, nr3
+  USE symme,                  ONLY : s, ftau, nsym, irt
+  USE ener,                   ONLY : etot
+  USE force_mod,              ONLY : force
+  USE control_flags,          ONLY : upscale, lbfgs, loldbfgs, lmd, &
+                                     lconstrain, lcoarsegrained, conv_ions, &
+                                     history, alpha0, beta0, tr2, istep
+  USE relax,                  ONLY : epse, epsf, starting_scf_threshold
+  USE lsda_mod,               ONLY : lsda, absmag
+  USE constraints_module,     ONLY : lagrange
+  USE coarsegrained_vars,     ONLY : dfe_acc
+  USE coarsegrained_base,     ONLY : set_target
+  USE mp_global,              ONLY : intra_image_comm
+  USE io_global,              ONLY : ionode_id, ionode
+  USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : new_bfgs => bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
   !
   IMPLICIT NONE
   !
-  ! ... local variables
-  !
-  LOGICAL, SAVE              :: lcheck_mag = .TRUE.
+  LOGICAL, SAVE         :: lcheck_mag = .TRUE.
     ! .TRUE. if the check of zero absolute magnetization is required
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
     ! previous positions of atoms
-  INTEGER                    :: na  
+  INTEGER               :: na  
   REAL(DP)              :: energy_error, gradient_error
-  LOGICAL                    :: step_accepted, exst
+  LOGICAL               :: step_accepted, exst
   REAL(DP), ALLOCATABLE :: pos(:), gradient(:)
   !
   !
@@ -189,6 +188,8 @@ SUBROUTINE move_ions()
      !
      IF ( lmd ) THEN
         !
+        IF ( lcoarsegrained ) CALL set_target()
+        !
         IF ( calc == ' ' ) THEN
            !
            ! ... Verlet dynamics
@@ -204,6 +205,8 @@ SUBROUTINE move_ions()
            CALL vcsmd()
            !
         END IF
+        !
+        IF ( lcoarsegrained ) dfe_acc(:) = dfe_acc(:) - lagrange(:)
         !
      END IF
      !
@@ -254,6 +257,13 @@ SUBROUTINE move_ions()
      CALL mp_bcast( bg,        ionode_id, intra_image_comm )
      !
   END IF
+  !
+  IF ( lcoarsegrained ) THEN
+     !
+     CALL mp_bcast( lagrange, ionode_id, intra_image_comm )
+     CALL mp_bcast( dfe_acc,  ionode_id, intra_image_comm )
+     !
+  END IF
   ! 
   RETURN
   !
@@ -288,7 +298,7 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   !
   IMPLICIT NONE
   !
-  INTEGER       :: nat, na, ipol
+  INTEGER  :: nat, na, ipol
   REAL(DP) :: chi, alpha0, beta0, tau(3,nat), tauold(3,nat,3)
   REAL(DP) :: a11, a12, a21, a22, b1, b2, c, det
   !

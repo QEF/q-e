@@ -1465,7 +1465,7 @@ MODULE read_cards_module
        LOGICAL, SAVE      :: tread = .FALSE.
        ! 
        ! 
-       IF ( tread ) CALL errore( ' card_constraints ', ' two occurrence ', 2 )
+       IF ( tread ) CALL errore( 'card_constraints ', 'two occurrence ', 2 )
        !
        CALL read_line( input_line )
        !
@@ -1485,7 +1485,7 @@ MODULE read_cards_module
           !
           CALL read_line( input_line )
           !
-          READ(input_line, * ) constr_type_inp(i)
+          READ( input_line, * ) constr_type_inp(i)
           !
           CALL field_count( nfield, input_line )
           !
@@ -1523,7 +1523,7 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( ' card_constraints ', ' too many fields ', 1 )
+                CALL errore( 'card_constraints ', 'too many fields ', nfield )
                 !
              END IF
              !
@@ -1554,7 +1554,7 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( ' card_constraints ', ' too many fields ', 1 )
+                CALL errore( 'card_constraints ', 'too many fields ', nfield )
                 !
              END IF
              !
@@ -1588,7 +1588,7 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( ' card_constraints ', ' too many fields ', 1 )
+                CALL errore( 'card_constraints ', 'too many fields', nfield )
                 !
              END IF
              !
@@ -1606,7 +1606,7 @@ MODULE read_cards_module
        ! 
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_constraints
      !
      !
      !------------------------------------------------------------------------

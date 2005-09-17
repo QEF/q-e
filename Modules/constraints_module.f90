@@ -52,12 +52,12 @@ MODULE constraints_module
   !
   ! ... global variables
   !
-  INTEGER                     :: nconstr 
-  REAL (DP)              :: constr_tol
-  INTEGER,        ALLOCATABLE :: constr_type(:)
-  REAL (DP), ALLOCATABLE :: constr(:,:)
-  REAL (DP), ALLOCATABLE :: target(:)
-  REAL (DP), ALLOCATABLE :: lagrange(:)
+  INTEGER               :: nconstr 
+  REAL(DP)              :: constr_tol
+  INTEGER,  ALLOCATABLE :: constr_type(:)
+  REAL(DP), ALLOCATABLE :: constr(:,:)
+  REAL(DP), ALLOCATABLE :: target(:)
+  REAL(DP), ALLOCATABLE :: lagrange(:)
   !
   !
   CONTAINS
@@ -74,15 +74,15 @@ MODULE constraints_module
        !
        IMPLICIT NONE
        !
-       INTEGER,        INTENT(IN) :: nat
-       REAL (DP), INTENT(IN) :: tau(3,nat)
-       REAL (DP), INTENT(IN) :: alat
-       INTEGER,        INTENT(IN) :: ityp(nat)
+       INTEGER,  INTENT(IN) :: nat
+       REAL(DP), INTENT(IN) :: tau(3,nat)
+       REAL(DP), INTENT(IN) :: alat
+       INTEGER,  INTENT(IN) :: ityp(nat)
        !
-       INTEGER       :: ia, ia1, ia2, ia3
+       INTEGER  :: ia, ia1, ia2, ia3
        REAL(DP) :: r21(3), r23(3)
        REAL(DP) :: k, r_c
-       INTEGER       :: type_coord
+       INTEGER  :: type_coord
        REAL(DP) :: dtau(3), norm_dtau
        !
        !
@@ -214,24 +214,24 @@ MODULE constraints_module
        !
        IMPLICIT NONE
        !
-       INTEGER,        INTENT(IN) :: index
-       INTEGER,        INTENT(IN) :: nat
-       REAL (DP), INTENT(IN) :: tau(:,:)
-       INTEGER,        INTENT(IN) :: if_pos(:,:)
-       INTEGER,        INTENT(IN) :: ityp(:)
-       REAL (DP), INTENT(IN) :: alat
-       REAL (DP), INTENT(OUT):: dg(:,:)
-       REAL (DP), INTENT(OUT):: g
+       INTEGER,  INTENT(IN)  :: index
+       INTEGER,  INTENT(IN)  :: nat
+       REAL(DP), INTENT(IN)  :: tau(:,:)
+       INTEGER,  INTENT(IN)  :: if_pos(:,:)
+       INTEGER,  INTENT(IN)  :: ityp(:)
+       REAL(DP), INTENT(IN)  :: alat
+       REAL(DP), INTENT(OUT) :: dg(:,:)
+       REAL(DP), INTENT(OUT) :: g
        !
        ! ... local variables
        !
        REAL(DP) :: x1, x2, y1, y2, z1, z2
        REAL(DP) :: dist0
-       INTEGER       :: ia, ia1, ia2, ia3
+       INTEGER  :: ia, ia1, ia2, ia3
        REAL(DP) :: r21(3), r23(3)
        REAL(DP) :: norm_r21, norm_r23, cos123, sin123
        REAL(DP) :: k, r_c
-       INTEGER       :: type_coord
+       INTEGER  :: type_coord
        REAL(DP) :: dtau(3), norm_dtau, expo
        !
        ! ... external function
@@ -366,22 +366,22 @@ MODULE constraints_module
        !
        IMPLICIT NONE
        !
-       INTEGER,        INTENT(IN)    :: nat
-       REAL (DP), INTENT(INOUT) :: taup(3,nat)
-       REAL (DP), INTENT(IN)    :: tau0(3,nat)
-       INTEGER,        INTENT(IN)    :: if_pos(3,nat)
-       REAL (DP), INTENT(INOUT) :: force(3,nat)
-       INTEGER,        INTENT(IN)    :: ityp(nat)
-       REAL (DP), INTENT(IN)    :: alat
-       REAL (DP), INTENT(IN)    :: dt
-       REAL (DP), INTENT(IN)    :: massconv
+       INTEGER,  INTENT(IN)    :: nat
+       REAL(DP), INTENT(INOUT) :: taup(3,nat)
+       REAL(DP), INTENT(IN)    :: tau0(3,nat)
+       INTEGER,  INTENT(IN)    :: if_pos(3,nat)
+       REAL(DP), INTENT(INOUT) :: force(3,nat)
+       INTEGER,  INTENT(IN)    :: ityp(nat)
+       REAL(DP), INTENT(IN)    :: alat
+       REAL(DP), INTENT(IN)    :: dt
+       REAL(DP), INTENT(IN)    :: massconv
        !
-       INTEGER                    :: na, i, index
+       INTEGER               :: na, i, index
        REAL(DP), ALLOCATABLE :: dgp(:,:), dg0(:,:)
        REAL(DP)              :: gp, g0
        REAL(DP)              :: lambda, fac, invdtsq
-       LOGICAL                    :: ltest(nconstr), global_test
-       INTEGER, PARAMETER         :: maxiter = 100
+       LOGICAL               :: ltest(nconstr), global_test
+       INTEGER, PARAMETER    :: maxiter = 100
        !
        REAL(DP), EXTERNAL :: DDOT
        !

@@ -16,8 +16,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
                                  trane, ampre, nbeg, tfor, taurdr, ndr
   USE cg_module,          ONLY : tcg
   USE coarsegrained_vars, ONLY : new_target, to_target, dfe_acc, &
-                                 max_shake_iter, max_fe_iter, num_acc, &
-                                 fe_grad_thr, to_new_target
+                                 max_shake_iter, max_fe_iter, to_new_target
   USE path_variables,     ONLY : pos, pes, grad_pes, frozen, &
                                  num_of_images, istep_path, suspended_image
   USE constraints_module, ONLY : lagrange, target, init_constraint, &
@@ -38,12 +37,14 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE check_stop,         ONLY : check_stop_now
   USE input,              ONLY : modules_setup
   USE xml_io_base,        ONLY : check_restartfile
+  USE path_io_routines,   ONLY : new_image_init, get_new_image, &
+                                 stop_other_images
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)         :: N_in, N_fin
   LOGICAL, INTENT(OUT)        :: stat
-  INTEGER                     :: image, iter, counter
+  INTEGER                     :: image, iter
   CHARACTER (LEN=256)         :: outdir_saved, filename
   LOGICAL                     :: file_exists, opnd, tstop
   REAL (KIND=DP)              :: tcpu
@@ -57,25 +58,29 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   CALL flush_unit( iunpath )
   !
-  OPEN( UNIT = iunaxsf, FILE = TRIM( prefix ) // "_" // &
-      & TRIM( int_to_char( istep_path + 1 ) ) // ".axsf", &
-        STATUS = "UNKNOWN", ACTION = "WRITE" )
-  !
-  WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I3)' ) num_of_images
-  WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
-  WRITE( UNIT = iunaxsf, FMT = '(" PRIMVEC ")' )
-  WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-       at(1,1) * alat * bohr_radius_angs, &
-       at(2,1) * alat * bohr_radius_angs, &
-       at(3,1) * alat * bohr_radius_angs
-  WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-       at(1,2) * alat * bohr_radius_angs, &
-       at(2,2) * alat * bohr_radius_angs, &
-       at(3,2) * alat * bohr_radius_angs
-  WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-       at(1,3) * alat * bohr_radius_angs, &
-       at(2,3) * alat * bohr_radius_angs, &
-       at(3,3) * alat * bohr_radius_angs
+  IF ( ionode ) THEN
+     !
+     OPEN( UNIT = iunaxsf, FILE = TRIM( prefix ) // "_" // &
+         & TRIM( int_to_char( istep_path + 1 ) ) // ".axsf", &
+           STATUS = "UNKNOWN", ACTION = "WRITE" )
+     !
+     WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I3)' ) num_of_images
+     WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
+     WRITE( UNIT = iunaxsf, FMT = '(" PRIMVEC ")' )
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+          at(1,1) * alat * bohr_radius_angs, &
+          at(2,1) * alat * bohr_radius_angs, &
+          at(3,1) * alat * bohr_radius_angs
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+          at(1,2) * alat * bohr_radius_angs, &
+          at(2,2) * alat * bohr_radius_angs, &
+          at(3,2) * alat * bohr_radius_angs
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+          at(1,3) * alat * bohr_radius_angs, &
+          at(2,3) * alat * bohr_radius_angs, &
+          at(3,3) * alat * bohr_radius_angs
+     !
+  END IF
   !
   outdir_saved = outdir
   !
@@ -84,7 +89,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   IF ( my_image_id == root ) THEN
      !
-     FORALL( image = N_in : N_fin, .NOT. frozen(image)   )
+     FORALL( image = N_in:N_fin, .NOT. frozen(image)   )
         !
         grad_pes(:,image) = 0.D0
         !
@@ -99,7 +104,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   ! ... only the first cpu initializes the file needed by parallelization 
   ! ... among images
   !
-  IF ( meta_ionode ) CALL new_image_init()
+  IF ( meta_ionode ) CALL new_image_init( N_in, outdir_saved )
   !
   image = N_in + my_image_id
   !
@@ -176,23 +181,11 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         IF ( file_exists ) THEN
            !
-           dfe_acc(:,:) = 0.D0
-           !
            OPEN( UNIT = 1000, FILE = filename )
            !
            READ( 1000, * ) tau
-           READ( 1000, * ) dfe_acc(:,2:num_acc)
-           READ( 1000, * ) counter
            !
            CLOSE( UNIT = 1000 )
-           !
-           counter = MIN( counter + 1, num_acc )
-           !
-        ELSE
-           !
-           dfe_acc(:,:) = 0.D0
-           !
-           counter = 1
            !
         END IF
         !
@@ -222,8 +215,6 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            ampre  = 0.02D0
            !
         END IF
-        !
-        CALL cprmain( tau, fion, etot )
         !
         ! ... the new value of the order-parameter is set here
         !
@@ -271,29 +262,17 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
            ! ... finite temperature
            !
-           dfe_acc(:,1) = dfe_acc(:,1) / DBLE( nomore )
-           !
-           grad_pes(:,image) = 0.D0
-           !
-           DO iter = 1, counter
-              !
-              grad_pes(:,image) = grad_pes(:,image) + dfe_acc(:,iter)
-              !
-           END DO
-           !
-           grad_pes(:,image) = grad_pes(:,image) / DBLE( counter )
+           grad_pes(:,image) = dfe_acc(:) / DBLE( nomore )
            !
         END IF
         !
-        CALL write_config( image )
+        IF ( ionode ) CALL write_config( image )
         !
         ! ... the restart file is written here
         !
         OPEN( UNIT = 1000, FILE = filename )
         !
         WRITE( 1000, * ) tau
-        WRITE( 1000, * ) dfe_acc(:,1:num_acc-1)
-        WRITE( 1000, * ) counter
         !
         CLOSE( UNIT = 1000 )
         !
@@ -301,7 +280,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
      !
      ! ... the new image is obtained (by ionode only)
      !
-     CALL get_new_image( image )
+     CALL get_new_image( image, outdir_saved )
      !
      CALL mp_bcast( image, ionode_id, intra_image_comm )
      !
@@ -323,134 +302,6 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   RETURN  
   !
-  CONTAINS
-     !
-     ! ... internal procedures
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE new_image_init()
-       !-----------------------------------------------------------------------
-       !
-       ! ... this subroutine initializes the file needed for the 
-       ! ... parallelization among images
-       !
-       USE io_files,       ONLY : iunnewimage
-       USE path_variables, ONLY : tune_load_balance
-       !
-       IMPLICIT NONE       
-       !
-       IF ( nimage == 1 .OR. .NOT. tune_load_balance ) RETURN
-       !
-       OPEN( UNIT = iunnewimage, FILE = TRIM( outdir_saved ) // &
-           & TRIM( prefix ) // '.newimage' , STATUS = 'UNKNOWN' )
-       !
-       WRITE( iunnewimage, * ) N_in + nimage
-       ! 
-       CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )       
-       !
-       RETURN
-       !
-     END SUBROUTINE new_image_init
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE get_new_image( image )
-       !-----------------------------------------------------------------------
-       !
-       ! ... this subroutine is used to get the new image to work on
-       ! ... the "prefix.BLOCK" file is needed to avoid (when present) that 
-       ! ... other jobs try to read/write on file "prefix.newimage" 
-       !
-       USE io_files,       ONLY : iunnewimage, iunblock
-       USE io_global,      ONLY : ionode
-       USE path_variables, ONLY : tune_load_balance
-       !
-       IMPLICIT NONE
-       !
-       INTEGER, INTENT(INOUT) :: image
-       INTEGER                :: ioerr
-       CHARACTER (LEN=256)    :: filename
-       LOGICAL                :: opened, exists
-       !
-       !
-       IF ( .NOT. ionode ) RETURN
-       !
-       IF ( nimage > 1 ) THEN
-          !
-          IF ( tune_load_balance ) THEN
-             !
-             filename = TRIM( outdir_saved ) // TRIM( prefix ) // '.BLOCK'
-             !
-             open_loop: DO
-                !          
-                OPEN( UNIT = iunblock, FILE = TRIM( filename ), &
-                    & IOSTAT = ioerr, STATUS = 'NEW' )
-                !
-                IF ( ioerr > 0 ) CYCLE open_loop
-                !
-                INQUIRE( UNIT = iunnewimage, OPENED = opened )
-                !
-                IF ( .NOT. opened ) THEN
-                   !
-                   OPEN( UNIT = iunnewimage, FILE = TRIM( outdir_saved ) // &
-                       & TRIM( prefix ) // '.newimage' , STATUS = 'OLD' )
-                   !
-                   READ( iunnewimage, * ) image
-                   !
-                   CLOSE( UNIT = iunnewimage, STATUS = 'DELETE' )
-                   !
-                   OPEN( UNIT = iunnewimage, FILE = TRIM( outdir_saved ) // &
-                       & TRIM( prefix ) // '.newimage' , STATUS = 'NEW' )
-                   !
-                   WRITE( iunnewimage, * ) image + 1
-                   ! 
-                   CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )
-                   !
-                   EXIT open_loop
-                   !
-                END IF
-                !
-             END DO open_loop
-             !
-             CLOSE( UNIT = iunblock, STATUS = 'DELETE' )
-             !
-          ELSE
-             !
-             image = image + nimage
-             !
-          END IF
-          !
-       ELSE
-          !
-          image = image + 1
-          !
-       END IF      
-       !
-       RETURN
-       !
-     END SUBROUTINE get_new_image
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE stop_other_images()
-       !-----------------------------------------------------------------------
-       !
-       ! ... this subroutine is used to send a stop signal to other images
-       ! ... this is done by creating the exit_file on the working directory
-       !
-       USE io_files,  ONLY : iunexit, exit_file
-       USE io_global, ONLY : ionode
-       !
-       IMPLICIT NONE
-       !
-       !
-       IF ( .NOT. ionode ) RETURN
-       !
-       OPEN( UNIT = iunexit, FILE = TRIM( exit_file ) )
-       CLOSE( UNIT = iunexit, STATUS = 'KEEP' )               
-       !
-       RETURN       
-       !
-     END SUBROUTINE stop_other_images
-     !
 END SUBROUTINE compute_fes_grads
 !
 !----------------------------------------------------------------------------
@@ -476,9 +327,9 @@ SUBROUTINE write_config( image )
      !
      WRITE( UNIT = iunaxsf, FMT = '(A2,3(2X,F18.10))' ) &
             TRIM( atom_label(ityp(atom)) ), &
-             tau(1,atom) * alat * bohr_radius_angs, &
-             tau(2,atom) * alat * bohr_radius_angs, &
-             tau(3,atom) * alat * bohr_radius_angs
+         tau(1,atom) * alat * bohr_radius_angs, &
+         tau(2,atom) * alat * bohr_radius_angs, &
+         tau(3,atom) * alat * bohr_radius_angs
      !
   END DO
   !
