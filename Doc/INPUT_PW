@@ -121,7 +121,7 @@ tprnfor        LOGICAL
 dt             REAL ( default = 20.D0 )
                time step for molecular dynamics, in Rydberg atomic units
                (1 a.u.=4.8378 * 10^-17 s : beware, CP and FPMD codes use
-                Hartree atomic units, half that much!!!)
+               Hartree atomic units, half that much!!!)
 
 outdir         CHARACTER ( default = current directory ('./') )
                input, temporary, output files are found in this directory
@@ -130,7 +130,7 @@ prefix         CHARACTER ( default = 'pwscf' )
                prepended to input/output filenames: 
                prefix.wfc, prefix.rho, etc. 
 
-max_seconds    REAL ( default : 1.0d+7, or 150 days, i.e. no time limit )
+max_seconds    REAL ( default : 1.D+7, or 150 days, i.e. no time limit )
                jobs stops after max_seconds CPU time
 
 etot_conv_thr  REAL ( default = 1.0D-4 )
@@ -499,16 +499,16 @@ ion_dynamics   CHARACTER
                                         for structural relaxation (experimental)
                  'old-bfgs' :           use the old BFGS quasi-newton method for
                                         structural relaxation
-		 'damp' :               use damped (quick-min velocity Verlet) 
+		 'damp' :               use damped (quick-min Verlet) 
                                         dynamics for structural relaxation
-                 'constrained-damp' :   use damped (quick-min velocity Verlet) 
+                 'constrained-damp' :   use damped (quick-min Verlet) 
                                         dynamics for structural relaxation with 
                                         the constraint specified in the 
                                         CONSTRAINTS CARD
                CASE ( calculation = 'md' )
-                 'verlet' : (default)   use velocity Verlet algorithm to 
-                                        integrate Newton's equation
-                 'constrained-verlet' : use velocity Verlet algorithm to do 
+                 'verlet' : (default)   use Verlet algorithm to integrate 
+		                        Newton's equation
+                 'constrained-verlet' : use Verlet algorithm to perform 
                                         molecular dynamics with the constraint
                                         specified in the CONSTRAINTS CARD 
                CASE ( calculation = 'vc-relax' )
@@ -587,29 +587,23 @@ bfgs_ndim      INTEGER ( default = 1 )
                (bfgs only)
 
 trust_radius_max
-               REAL ( default = 0.5D0 BOHR ) 
+               REAL ( default = 0.8D0 ) 
                maximum ionic displacement in the structural relaxation 
 	       (bfgs only)
 
 trust_radius_min
-               REAL ( default = 1.D-5 BOHR )
+               REAL ( default = 1.D-3 )
 	       minimum ionic displacement in the structural relaxation
                BFGS is reset when trust_radius < trust_radius_min
 	       (bfgs only)
 
 trust_radius_ini
-               REAL ( default = 0.5D0 BOHR )
+               REAL ( default = 0.5D0 )
                initial ionic displacement in the structural relaxation
                (bfgs only)
 
-trust_radius_end
-               REAL ( default = 1.D-7 BOHR )
-               BFGS is stopped when trust_radius < trust_radius_end
-	       trust_radius_end is not intended to be used as a criterium
-	       for convergence (bfgs only)
-
 w_1, w_2
-               REAL ( w_1 = 1.D-5, w_2 = 0.2D0 )
+               REAL ( w_1 = 0.01D0, w_2 = 0.5D0 )
 	       parameters used in line search based on the Wolfe conditions
 	       (bfgs only)
 
