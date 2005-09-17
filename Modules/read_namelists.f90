@@ -13,18 +13,18 @@ MODULE read_namelists_module
   !  ... written by: Carlo Cavazzoni
   !  --------------------------------------------------
   !
-  USE kinds
+  USE kinds,     ONLY : DP
+  USE constants, ONLY : factem, kb_au, au_kb, k_boltzman_au, angstrom_au, &
+                        uma_au, pi
   USE input_parameters
-  USE constants, ONLY: factem, kb_au, au_kb, k_boltzman_au, angstrom_au, &
-                       uma_au, pi
   !
   IMPLICIT NONE
   SAVE
   !
   PRIVATE
-  REAL (DP), PARAMETER :: SM_NOT_SET=-20.d0
+  REAL(DP), PARAMETER :: sm_not_set = -20.D0
   !
-  PUBLIC :: read_namelists, SM_NOT_SET
+  PUBLIC :: read_namelists, sm_not_set
   !
   !  ... end of module-scope declarations
   !
@@ -163,7 +163,7 @@ MODULE read_namelists_module
 ! ... in PW starting_magnetization MUST be set for at least one atomic type
 ! ... in CP starting_magnetization MUST REMAIN UNSET 
 !
-       starting_magnetization = SM_NOT_SET
+       starting_magnetization = sm_not_set
 
        IF ( prog == 'PW' ) THEN
           !
@@ -388,9 +388,8 @@ MODULE read_namelists_module
        !
        bfgs_ndim        = 1
        trust_radius_max = 0.8D0
-       trust_radius_min = 1.D-5
+       trust_radius_min = 1.D-3
        trust_radius_ini = 0.5D0
-       trust_radius_end = 1.D-7
        w_1              = 0.01D0
        w_2              = 0.50D0
        !
@@ -848,7 +847,6 @@ MODULE read_namelists_module
        CALL mp_bcast( trust_radius_max, ionode_id )
        CALL mp_bcast( trust_radius_min, ionode_id )
        CALL mp_bcast( trust_radius_ini, ionode_id )
-       CALL mp_bcast( trust_radius_end, ionode_id )
        CALL mp_bcast( w_1, ionode_id )
        CALL mp_bcast( w_2, ionode_id )
        !
@@ -1158,7 +1156,7 @@ MODULE read_namelists_module
        IF( q2sigma < 0.D0 ) &
           CALL errore( sub_name ,' q2sigma out of range ',1)
        IF( prog == 'FP' ) THEN
-          IF( ANY(starting_magnetization /= SM_NOT_SET ) ) &
+          IF( ANY(starting_magnetization /= sm_not_set ) ) &
              CALL infomsg( sub_name ,&
                           & ' starting_magnetization is not used in FPMD ', -1)
           IF( lda_plus_U ) &
@@ -1176,7 +1174,7 @@ MODULE read_namelists_module
           ! ... stop if starting_magnetization is not set for
           ! ... all atomic types
           !
-          IF ( (nspin==2) .AND. ALL(starting_magnetization == SM_NOT_SET) ) &
+          IF ( (nspin==2) .AND. ALL(starting_magnetization == sm_not_set) ) &
             CALL errore(sub_name,'some starting_magnetization MUST be set', 1 )
           !
        END IF
@@ -1526,7 +1524,7 @@ MODULE read_namelists_module
        !
        IF( prog == 'PW' ) startingpot = 'atomic'
        !       
-       SELECT CASE ( TRIM(calculation) )
+       SELECT CASE( TRIM( calculation ) )
           CASE ('scf')
              IF( prog == 'FP' ) THEN
                  electron_dynamics = 'sd'
@@ -1609,13 +1607,7 @@ MODULE read_namelists_module
           CASE ( 'neb' )
              !
              ! ... "path" optimizations
-             ! 
-             IF ( prog == 'PW' ) THEN
-                !
-                startingpot  = 'atomic'
-                startingwfc  = 'atomic'
-                !
-             END IF
+             !
              IF( prog == 'FP' ) THEN
                  !
                  electron_dynamics = 'sd'
@@ -1639,10 +1631,14 @@ MODULE read_namelists_module
                 ion_dynamics      = 'damp'
                 !
              END IF
-
+             !
+          CASE( 'metadyn' )
+             !
           CASE DEFAULT
+             !
              CALL errore( sub_name,' calculation '// & 
-                          & calculation//' not implemented ',1)
+                        & calculation//' not implemented ', 1 )
+             !
        END SELECT
        !              
        IF ( prog == 'PW' ) THEN
@@ -1784,18 +1780,20 @@ MODULE read_namelists_module
        ! ... IONS namelist   
        !
        ios = 0
-       IF( ionode ) THEN
-          IF( TRIM( calculation ) == 'relax'    .OR. &
-              TRIM( calculation ) == 'md'       .OR. &
-              TRIM( calculation ) == 'vc-relax' .OR. &
-              TRIM( calculation ) == 'vc-md'    .OR. &
-              TRIM( calculation ) == 'cp'       .OR. &
-              TRIM( calculation ) == 'vc-cp'    .OR. &
-              TRIM( calculation ) == 'smd'      .OR. &
-              TRIM( calculation ) == 'cp-wf'    .OR. &
-              TRIM( calculation ) == 'neb' ) THEN
-             READ( 5, ions, iostat = ios ) 
-          END IF
+       !
+       IF ( ionode ) THEN
+          !
+          IF ( TRIM( calculation ) == 'relax'    .OR. &
+               TRIM( calculation ) == 'md'       .OR. &
+               TRIM( calculation ) == 'vc-relax' .OR. &
+               TRIM( calculation ) == 'vc-md'    .OR. &
+               TRIM( calculation ) == 'cp'       .OR. &
+               TRIM( calculation ) == 'vc-cp'    .OR. &
+               TRIM( calculation ) == 'smd'      .OR. &
+               TRIM( calculation ) == 'cp-wf'    .OR. &
+               TRIM( calculation ) == 'neb'      .OR. &
+               TRIM( calculation ) == 'metadyn' ) READ( 5, ions, iostat = ios ) 
+          !
        END IF
        CALL mp_bcast( ios, ionode_id )
        IF( ios /= 0 ) THEN

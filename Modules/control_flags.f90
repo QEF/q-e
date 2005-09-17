@@ -195,6 +195,7 @@ MODULE control_flags
     lbfgs,            &! if .TRUE. the calc. is a relaxation based on new BFGS scheme
     loldbfgs,         &! if .TRUE. the calc. is a bfgs-type relaxation based on the old scheme
     lmd,              &! if .TRUE. the calc. is a dynamics
+    lmetadyn,         &! if .TRUE. the calc. is a meta-dynamics
     lpath,            &! if .TRUE. the calc. is a path optimizations
     lneb,             &! if .TRUE. the calc. is NEB dynamics
     lsmd,             &! if .TRUE. the calc. is string dynamics

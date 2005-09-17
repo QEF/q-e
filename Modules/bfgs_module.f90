@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2005 PWSCF group
+! Copyright (C) 2003-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -49,7 +49,6 @@ MODULE bfgs_module
             trust_radius_max, &
             trust_radius_min, &
             trust_radius_ini, &
-            trust_radius_end, &
             w_1,              &
             w_2
   !
@@ -66,7 +65,7 @@ MODULE bfgs_module
       step_old(:),            &! old bfgs steps
       pos_old(:,:),           &! list of m old positions
       grad_old(:,:),          &! list of m old gradients
-      pos_best(:)              !
+      pos_best(:)              ! best extrapolated positions
   REAL(DP) :: &   
       trust_radius,           &! displacement along the bfgs direction
       trust_radius_old,       &! old displacement along the bfgs direction
@@ -84,16 +83,14 @@ MODULE bfgs_module
   REAL(DP)  :: &
       trust_radius_max,       &! maximum allowed displacement
       trust_radius_min,       &! minimum allowed displacement
-      trust_radius_ini,       &! initial displacement
-      trust_radius_end         ! bfgs stops when trust_radius is less than
-                               ! this value
+      trust_radius_ini         ! initial displacement
   REAL(DP)  :: &
       w_1,                    &! parameters for Wolfe conditions
       w_2                      ! parameters for Wolfe conditions
   !
   ! ... Note that trust_radius_max, trust_radius_min, trust_radius_ini,
-  ! ... trust_radius_end, w_1, w_2, bfgs_ndim have a default value, 
-  ! ... but can also be assigned in input.
+  ! ... w_1, w_2, bfgs_ndim have a default value, but can also be assigned 
+  ! ... in the input.
   !
   CONTAINS
     !
@@ -124,25 +121,25 @@ MODULE bfgs_module
       !
       ! ... input/output arguments
       !
-      REAL(DP),     INTENT(INOUT) :: pos(:)
-      REAL(DP),     INTENT(INOUT) :: energy       
-      REAL(DP),     INTENT(INOUT) :: grad(:)
-      CHARACTER (LEN=*), INTENT(IN)    :: scratch
-      INTEGER,           INTENT(IN)    :: stdout
-      REAL(DP),     INTENT(IN)    :: energy_thr, grad_thr  
-      REAL(DP),     INTENT(OUT)   :: energy_error, grad_error       
-      LOGICAL,           INTENT(OUT)   :: step_accepted, conv_bfgs
+      REAL(DP),         INTENT(INOUT) :: pos(:)
+      REAL(DP),         INTENT(INOUT) :: energy       
+      REAL(DP),         INTENT(INOUT) :: grad(:)
+      CHARACTER(LEN=*), INTENT(IN)    :: scratch
+      INTEGER,          INTENT(IN)    :: stdout
+      REAL(DP),         INTENT(IN)    :: energy_thr, grad_thr  
+      REAL(DP),         INTENT(OUT)   :: energy_error, grad_error       
+      LOGICAL,          INTENT(OUT)   :: step_accepted, conv_bfgs
       !
       ! ... local variables
       !
-      INTEGER       :: dim, i, j
-      LOGICAL       :: lwolfe
+      INTEGER  :: dim, i, j
+      LOGICAL  :: lwolfe
       REAL(DP) :: dE0s, den
       !
-      REAL (DP), ALLOCATABLE :: res(:,:), overlap(:,:), work(:)
-      INTEGER,        ALLOCATABLE :: iwork(:)
-      INTEGER                     :: k, k_m, info
-      REAL(DP)               :: gamma0
+      REAL(DP), ALLOCATABLE :: res(:,:), overlap(:,:), work(:)
+      INTEGER,  ALLOCATABLE :: iwork(:)
+      INTEGER               :: k, k_m, info
+      REAL(DP)              :: gamma0
       !
       !
       dim = SIZE( pos )
@@ -226,7 +223,7 @@ MODULE bfgs_module
          END IF
          !
          WRITE( UNIT = stdout, &
-              & FMT = '(5X,"new trust radius",T30,"= ",F18.10," bohr",/)' ) &
+              & FMT = '(5X,"new trust radius",T30,"= ",F18.10," bohr")' ) &
               trust_radius          
          !
          IF ( trust_radius < trust_radius_min ) THEN
@@ -245,9 +242,9 @@ MODULE bfgs_module
             !
             WRITE( UNIT = stdout, FMT = '(/,5X,"resetting bfgs history",/)' )
             !
-            inv_hess = identity(dim)
+            inv_hess = identity( dim )
             !
-            step = - ( inv_hess .times. grad )
+            step = - grad
             !
             trust_radius = trust_radius_min
             !
@@ -294,76 +291,93 @@ MODULE bfgs_module
             !
             CALL update_inverse_hessian( pos, grad, dim, stdout )
             !
-            ! ... GDIIS step
-            !
-            k   = MIN( bfgs_iter, bfgs_ndim )
-            k_m = k + 1
-            !
-            ALLOCATE( res( dim, k ) )
-            !
-            ALLOCATE( overlap( k_m, k_m ) )
-            !
-            ALLOCATE( work(  k_m ) )
-            ALLOCATE( iwork( k_m ) )
-            !
-            ! ... the new direction is added to the workspace
-            !
-            DO i = bfgs_ndim, 2, -1
+            IF ( bfgs_ndim > 1 ) THEN
                !
-               pos_old(:,i)  = pos_old(:,i-1)
-               grad_old(:,i) = grad_old(:,i-1)
+               ! ... GDIIS extrapolation
                !
-            END DO
-            !
-            pos_old(:,1)  = pos(:)
-            grad_old(:,1) = grad(:)
-            !
-            ! ... |res_i> = H^-1 \times |g_i>
-            !
-            CALL DGEMM( 'N', 'N', dim, k, dim, 1.D0, inv_hess, &
-                        dim, grad_old, dim, 0.D0, res, dim )
-            !
-            ! ... overlap_ij = <res_i|res_j>
-            !
-            CALL DGEMM( 'T', 'N', k, k, dim, 1.D0, res, &
-                         dim, res, dim, 0.D0, overlap, k_m )
-            !
-            overlap( :,   k_m ) = 1.D0
-            overlap( k_m, k_m ) = 0.D0
-            !
-            ! ... overlap is inverted
-            !
-            CALL DSYTRF( 'U', k_m, overlap, k_m, iwork, work, k_m, info )
-            CALL DSYTRI( 'U', k_m, overlap, k_m, iwork, work, info )
-            !
-            FORALL( i = 1 : k_m, j = 1 : k_m, j > i )
+               k   = MIN( bfgs_iter, bfgs_ndim )
+               k_m = k + 1
                !
-               ! ... overlap is symmetrised
-               ! 
-               overlap(j,i) = overlap(i,j)
+               ALLOCATE( res( dim, k ) )
                !
-            END FORALL
-            !
-            work = (/ ( 0.D0, i = 1, k ), 1.D0 /)
-            !
-            pos_best = 0.D0
-            step     = 0.D0
-            !
-            DO i = 1, k
+               ALLOCATE( overlap( k_m, k_m ) )
                !
-               gamma0 = SUM( overlap(:,i) * work(:) )
+               ALLOCATE( work(  k_m ) )
+               ALLOCATE( iwork( k_m ) )
                !
-               pos_best = pos_best + gamma0 * pos_old(:,i)
+               ! ... the new direction is added to the workspace
                !
-               step = step - gamma0 * res(:,i)
+               DO i = bfgs_ndim, 2, -1
+                  !
+                  pos_old(:,i)  = pos_old(:,i-1)
+                  grad_old(:,i) = grad_old(:,i-1)
+                  !
+               END DO
                !
-            END DO
-            !
-            ! ... the step must be consistent with the old positions
-            !
-            step = pos_best - pos + step
-            !
-            DEALLOCATE( res, overlap, work, iwork )
+               pos_old(:,1)  = pos(:)
+               grad_old(:,1) = grad(:)
+               !
+               ! ... |res_i> = H^-1 \times |g_i>
+               !
+               CALL DGEMM( 'N', 'N', dim, k, dim, 1.D0, inv_hess, &
+                           dim, grad_old, dim, 0.D0, res, dim )
+               !
+               ! ... overlap_ij = <res_i|res_j>
+               !
+               CALL DGEMM( 'T', 'N', k, k, dim, 1.D0, res, &
+                           dim, res, dim, 0.D0, overlap, k_m )
+               !
+               overlap( :,   k_m ) = 1.D0
+               overlap( k_m, k_m ) = 0.D0
+               !
+               ! ... overlap is inverted
+               !
+               CALL DSYTRF( 'U', k_m, overlap, k_m, iwork, work, k_m, info )
+               CALL DSYTRI( 'U', k_m, overlap, k_m, iwork, work, info )
+               !
+               FORALL( i = 1 : k_m, j = 1 : k_m, j > i )
+                  !
+                  ! ... overlap is symmetrised
+                  ! 
+                  overlap(j,i) = overlap(i,j)
+                  !
+               END FORALL
+               !
+               work = (/ ( 0.D0, i = 1, k ), 1.D0 /)
+               !
+               pos_best = 0.D0
+               step     = 0.D0
+               !
+               DO i = 1, k
+                  !
+                  gamma0 = SUM( overlap(:,i) * work(:) )
+                  !
+                  pos_best = pos_best + gamma0 * pos_old(:,i)
+                  !
+                  step = step - gamma0 * res(:,i)
+                  !
+               END DO
+               !
+               ! ... the step must be consistent with the old positions
+               !
+               step = step + ( pos_best - pos )
+               !
+               IF ( ( grad .dot. step ) > 0.D0 ) THEN
+                  !
+                  ! ... if the extrapolated direction is uphill the last
+                  ! ... gradient only is uded
+                  !
+                  step = - ( inv_hess .times. grad )
+                  !
+               END IF
+               !
+               DEALLOCATE( res, overlap, work, iwork )
+               !
+            ELSE
+               !
+               step = - ( inv_hess .times. grad )
+               !
+            END IF
             !
          ELSE
             !
@@ -372,29 +386,18 @@ MODULE bfgs_module
             !
             step_accepted = .FALSE.
             !
-            pos_best = pos
-            !
             step = - grad
             !
          END IF
          !
          IF ( ( grad .dot. step ) > 0.D0 ) THEN
             !
-            step = - ( inv_hess .times. grad )
+            WRITE( UNIT = stdout, &
+                   FMT = '(5X,"uphill step: resetting bfgs history",/)' )
             !
-            IF ( ( grad .dot. step ) > 0.D0 ) THEN
-               !
-               WRITE( UNIT = stdout, &
-                      FMT = '(5X,"search direction reversed",/)' )
-               !
-               WRITE( UNIT = stdout, &
-                      FMT = '(5X,"resetting bfgs history",/)' )
-               !
-               step = - step
-               !
-               inv_hess = identity(dim)
-               !
-            END IF
+            step = - grad
+            !
+            inv_hess = identity( dim )
             !
          END IF
          !  
@@ -412,13 +415,10 @@ MODULE bfgs_module
             !   
          END IF
          !
-         ! ... if trust_radius < trust_radius_end convergence is achieved
-         ! ... this should be a "rare event"
-         !
          IF ( conv_bfgs ) RETURN
          !
          WRITE( UNIT = stdout, &
-              & FMT = '(5X,"new trust radius",T30,"= ",F18.10," bohr",/)' ) &
+              & FMT = '(5X,"new trust radius",T30,"= ",F18.10," bohr")' ) &
               trust_radius
          !
       END IF
@@ -456,12 +456,12 @@ MODULE bfgs_module
       !
       IMPLICIT NONE
       !
-      REAL(DP),     INTENT(IN)    :: pos(:)
-      REAL(DP),     INTENT(IN)    :: grad(:)
-      CHARACTER (LEN=*), INTENT(IN)    :: scratch
-      INTEGER,           INTENT(IN)    :: dim
-      INTEGER,           INTENT(IN)    :: stdout
-      REAL(DP),     INTENT(INOUT) :: energy
+      REAL(DP),         INTENT(IN)    :: pos(:)
+      REAL(DP),         INTENT(IN)    :: grad(:)
+      CHARACTER(LEN=*), INTENT(IN)    :: scratch
+      INTEGER,          INTENT(IN)    :: dim
+      INTEGER,          INTENT(IN)    :: stdout
+      REAL(DP),         INTENT(INOUT) :: energy
       !
       ! ... local variables
       !
@@ -551,10 +551,10 @@ MODULE bfgs_module
       !
       IMPLICIT NONE
       !
-      REAL(DP),     INTENT(IN) :: pos(:)       
-      REAL(DP),     INTENT(IN) :: energy       
-      REAL(DP),     INTENT(IN) :: grad(:)       
-      CHARACTER (LEN=*), INTENT(IN) :: scratch
+      REAL(DP),         INTENT(IN) :: pos(:)       
+      REAL(DP),         INTENT(IN) :: energy       
+      REAL(DP),         INTENT(IN) :: grad(:)       
+      CHARACTER(LEN=*), INTENT(IN) :: scratch
       !
       !
       OPEN( UNIT = iunbfgs, FILE = TRIM( scratch )//TRIM( prefix )//'.bfgs', &
@@ -581,15 +581,20 @@ MODULE bfgs_module
       !
       REAL(DP), INTENT(IN)  :: pos(:)
       REAL(DP), INTENT(IN)  :: grad(:)   
-      INTEGER,       INTENT(IN)  :: dim
-      INTEGER,       INTENT(IN)  :: stdout
+      INTEGER,  INTENT(IN)  :: dim
+      INTEGER,  INTENT(IN)  :: stdout
       !
       ! ... local variables
       !
-      REAL(DP) :: y(dim), s(dim), Hs(dim), Hy(dim), yH(dim), aux(dim)
-      REAL(DP) :: H_bfgs(dim,dim), H_ms(dim,dim)
-      REAL(DP) :: sdoty, coeff
+      REAL(DP), ALLOCATABLE :: y(:), s(:)
+      REAL(DP), ALLOCATABLE :: Hs(:), Hy(:), yH(:), aux(:)
+      REAL(DP), ALLOCATABLE :: H_bfgs(:,:), H_ms(:,:)
+      REAL(DP)              :: sdoty, coeff
       !
+      !
+      ALLOCATE( y( dim ), s( dim ) )
+      ALLOCATE( Hs( dim ), Hy( dim ), yH( dim ), aux( dim ) )
+      ALLOCATE( H_bfgs( dim, dim ), H_ms( dim, dim ) )
       !
       s(:) = pos(:)  - pos_p(:)
       y(:) = grad(:) - grad_p(:)
@@ -651,6 +656,10 @@ MODULE bfgs_module
       !
 #endif
       !
+      DEALLOCATE( y, s )
+      DEALLOCATE( Hs, Hy, yH, aux )
+      DEALLOCATE( H_bfgs, H_ms )
+      !
       RETURN
       !
     END SUBROUTINE update_inverse_hessian
@@ -663,7 +672,7 @@ MODULE bfgs_module
       !
       REAL(DP), INTENT(IN)  :: energy       
       REAL(DP), INTENT(IN)  :: grad(:)              
-      LOGICAL,       INTENT(OUT) :: lwolfe
+      LOGICAL,  INTENT(OUT) :: lwolfe
       !
       !
       lwolfe = ( energy - energy_p ) < w_1 * ( grad_p .dot. step_old )
@@ -679,16 +688,16 @@ MODULE bfgs_module
       !
       IMPLICIT NONE
       !
-      LOGICAL,       INTENT(IN)  :: lwolfe
+      LOGICAL,  INTENT(IN)  :: lwolfe
       REAL(DP), INTENT(IN)  :: energy    
       REAL(DP), INTENT(IN)  :: grad(:)                         
-      INTEGER,       INTENT(IN)  :: dim   
-      INTEGER,       INTENT(IN)  :: stdout
+      INTEGER,  INTENT(IN)  :: dim   
+      INTEGER,  INTENT(IN)  :: stdout
       !
       ! ... local variables
       !
       REAL(DP) :: a
-      LOGICAL       :: ltest
+      LOGICAL  :: ltest
       !
       !
       ltest = ( energy - energy_p ) < w_1 * ( grad_p .dot. step_old )
@@ -697,11 +706,11 @@ MODULE bfgs_module
       !
       IF ( ltest ) THEN
          !
-         a = 1.3D0
+         a = 1.5D0
          !
       ELSE
          !
-         a = 1.D0
+         a = 1.1D0
          !
       END IF
       !
@@ -722,7 +731,7 @@ MODULE bfgs_module
          !
          WRITE( UNIT = stdout, FMT = '(5X,"resetting bfgs history",/)' )
          !
-         inv_hess = identity(dim)
+         inv_hess = identity( dim )
          !
          step = - grad
          !
@@ -741,9 +750,9 @@ MODULE bfgs_module
       !
       IMPLICIT NONE
       !
-      REAL(DP),     INTENT(IN) :: energy  
-      INTEGER,           INTENT(IN) :: stdout         
-      CHARACTER (LEN=*), INTENT(IN) :: scratch       
+      REAL(DP),         INTENT(IN) :: energy  
+      INTEGER,          INTENT(IN) :: stdout         
+      CHARACTER(LEN=*), INTENT(IN) :: scratch       
       !       
       !
       WRITE( UNIT = stdout, &

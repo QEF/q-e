@@ -134,7 +134,8 @@ SUBROUTINE iosys()
                             modenum_     => modenum, &
                             reduce_io, ethr, lscf, lbfgs, lmd, lpath, lneb, &
                             lsmd, lphonon, ldamped, lraman, lrescale_t, &
-                            noinv, restart, loldbfgs, lconstrain, lcoarsegrained
+                            noinv, restart, loldbfgs, lmetadyn, lconstrain, &
+                            lcoarsegrained
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
   !
@@ -177,7 +178,6 @@ SUBROUTINE iosys()
                             trust_radius_max_ => trust_radius_max, &
                             trust_radius_min_ => trust_radius_min, &
                             trust_radius_ini_ => trust_radius_ini, &
-                            trust_radius_end_ => trust_radius_end, &
                             w_1_              => w_1, & 
                             w_2_              => w_2
   !
@@ -232,7 +232,7 @@ SUBROUTINE iosys()
                                k_min, ds, use_fourier, use_freezing,           &
                                fixed_tan, free_energy, write_save,             &
                                trust_radius_max, trust_radius_min, bfgs_ndim,  &
-                               trust_radius_ini, trust_radius_end, w_1, w_2
+                               trust_radius_ini, w_1, w_2
   !
   ! CELL namelist
   !
@@ -249,9 +249,9 @@ SUBROUTINE iosys()
   !
   ! ... "path" specific
   !
-  USE input_parameters, ONLY : pos, full_phs_path_flag, cg_phs_path_flag
+  USE input_parameters, ONLY : pos, full_phs_path_flag
   !
-  USE read_namelists_module, ONLY : read_namelists, SM_NOT_SET
+  USE read_namelists_module, ONLY : read_namelists, sm_not_set
   !
   USE kinds,                 ONLY : DP
   !
@@ -495,11 +495,11 @@ SUBROUTINE iosys()
      !
   END IF
   !
-  ! ... starting_magnetization(ia) = SM_NOT_SET means "not set" -- set it to 0
+  ! ... starting_magnetization(ia) = sm_not_set means "not set" -- set it to 0
   !
   DO ia = 1, ntyp
      !
-     IF ( starting_magnetization(ia) == SM_NOT_SET ) &
+     IF ( starting_magnetization(ia) == sm_not_set ) &
         starting_magnetization(ia) = 0.D0
      !
   END DO  
@@ -589,6 +589,7 @@ SUBROUTINE iosys()
   !
   lscf      = .FALSE.
   lmd       = .FALSE.
+  lmetadyn  = .FALSE.
   lpath     = .FALSE.
   lneb      = .FALSE.
   lsmd      = .FALSE.
@@ -608,19 +609,19 @@ SUBROUTINE iosys()
      lscf  = .TRUE.   
      nstep = 1
      !
-  CASE ( 'nscf' )
+  CASE( 'nscf' )
      !
      lforce = .FALSE.
      nstep  = 1
      !
-  CASE ( 'phonon' )
+  CASE( 'phonon' )
      !
      lforce  = .FALSE.
      lphonon = .TRUE.
      !
      nstep = 1
      !
-  CASE ( 'relax' )
+  CASE( 'relax' )
      !
      lscf   = .TRUE.
      lforce = .TRUE.
@@ -768,22 +769,28 @@ SUBROUTINE iosys()
                    & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
                    & ' not supported', 1 )
      !
-  CASE ( 'raman' )
+  CASE( 'raman' )
      !
      lraman    = .TRUE.
      nstep     = 1
      !
-  CASE ( 'neb' )
+  CASE( 'neb' )
      !
      lscf  = .TRUE.
      lpath = .TRUE.
      lneb  = .TRUE.
      !
-  CASE ( 'smd' )
+  CASE( 'smd' )
      !
      lscf  = .TRUE.
      lpath = .TRUE.
      lsmd  = .TRUE.
+     !
+  CASE( 'metadyn' )
+     !
+     lscf           = .TRUE.
+     lmetadyn       = .TRUE.
+     lcoarsegrained = .TRUE.
      !
   CASE DEFAULT
      !
@@ -920,38 +927,38 @@ SUBROUTINE iosys()
      !
   END IF
   !
+  IF ( lcoarsegrained ) THEN
+     !
+     lmd        = .TRUE.
+     lconstrain = .TRUE.
+     !
+     SELECT CASE( TRIM( ion_dynamics ) )
+     CASE( 'constrained-verlet' )
+        !
+        CONTINUE
+        !
+     CASE( 'constrained-damp' )
+        !
+        ldamped = .TRUE.
+        !
+        epse = etot_conv_thr
+        epsf = forc_conv_thr
+        !
+     CASE DEFAULT
+        !
+        CALL errore( 'iosys ', 'calculation=' // TRIM( calculation ) // &
+                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
+                   & ' not supported', 1 )
+        !
+     END SELECT
+     !
+  END IF
+  !
   ! ... "path" specific initialization of control variables
   !
-  IF ( full_phs_path_flag .OR. cg_phs_path_flag ) THEN
+  IF ( lpath ) THEN
      !
      nstep_path = nstep
-     !
-     IF ( lcoarsegrained ) THEN
-        !
-        lmd        = .TRUE.
-        lconstrain = .TRUE.
-        !
-        SELECT CASE( TRIM( ion_dynamics ) )
-        CASE( 'constrained-verlet' )
-           !
-           CONTINUE
-           !
-        CASE( 'constrained-damp' )
-           !
-           ldamped = .TRUE.
-           !
-           epse = etot_conv_thr
-           epsf = forc_conv_thr
-           !
-        CASE DEFAULT
-           !
-           CALL errore( 'iosys ', 'calculation=' // TRIM( calculation ) // &
-                      & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
-                      & ' not supported', 1 )
-           !
-        END SELECT
-        !
-     END IF
      !
      IF ( num_of_images < 2 ) &
         CALL errore( 'iosys ', 'calculation=' // TRIM( calculation ) // &
@@ -1211,7 +1218,6 @@ SUBROUTINE iosys()
   trust_radius_max_ = trust_radius_max
   trust_radius_min_ = trust_radius_min
   trust_radius_ini_ = trust_radius_ini
-  trust_radius_end_ = trust_radius_end
   w_1_              = w_1
   w_2_              = w_2  
   !
