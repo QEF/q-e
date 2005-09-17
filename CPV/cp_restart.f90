@@ -1626,6 +1626,9 @@ MODULE cp_restart
          CALL iotk_scan_dat( iunpun, &
                              TRIM( atm(i) )//"_MASS", amass(i), ATTR = attr )
          !
+         CALL iotk_scan_dat( iunpun, &
+                             "PSEUDO_FOR_" // TRIM( atm(i) ), psfile(i) )
+         !
       END DO
       !
       CALL iotk_scan_empty( iunpun, "UNITS_FOR_ATOMIC_POSITIONS", attr )
