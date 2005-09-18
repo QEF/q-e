@@ -74,7 +74,7 @@ PROGRAM main
   USE io_global,     ONLY : io_global_start, io_global_getionode
   USE mp_global,     ONLY : mp_global_start
   USE mp,            ONLY : mp_end, mp_start, mp_env
-  USE control_flags, ONLY : lneb, lsmd, program_name
+  USE control_flags, ONLY : lneb, lsmd, lmetadyn, program_name
   USE environment,   ONLY : environment_start
   !
   IMPLICIT NONE
@@ -126,6 +126,12 @@ PROGRAM main
   ELSE IF ( lsmd ) THEN
      !
      CALL smd_loop( 1 )
+     !
+  ELSE IF ( lmetadyn ) THEN
+     !
+     CALL metadyn()
+     !
+     CALL terminate_run()
      !
   ELSE
      !

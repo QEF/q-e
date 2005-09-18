@@ -826,6 +826,41 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   IF ( lneb ) fion_out(:,1:nat) = fion(:,1:nat) * DBLE( if_pos(:,1:nat) )
   !
+  conv_elec = .TRUE.
+  !
+  RETURN
+  !
+END SUBROUTINE cprmain
+!
+!----------------------------------------------------------------------------
+SUBROUTINE terminate_run()
+  !----------------------------------------------------------------------------
+  !
+  USE kinds,                 ONLY : DP
+  USE io_global,             ONLY : stdout, ionode
+  USE cp_main_variables,     ONLY : acc, nfi, lambda, lambdam, rhor
+  USE cpr_subroutines,       ONLY : print_lambda
+  USE cg_module,             ONLY : tcg, c0old
+  USE wavefunctions_module,  ONLY : c0, cm
+  USE control_flags,         ONLY : ndw, iprsta
+  USE cell_base,             ONLY : h, hold, velh, ibrav, celldm
+  USE ions_positions,        ONLY : taus, tausm, vels, velsm
+  USE electrons_nose,        ONLY : xnhe0, xnhem, vnhe
+  USE ions_nose,             ONLY : vnhp, xnhp0, xnhpm, nhpcl
+  USE cell_nose,             ONLY : xnhh0, xnhhm, vnhh
+  USE energies,              ONLY : ekincm
+  USE gvecw,                 ONLY : ecutw
+  USE gvecp,                 ONLY : ecutp
+  USE time_step,             ONLY : delt, tps
+  USE ions_base,             ONLY : pmass, fion
+  USE ensemble_dft,          ONLY : z0
+  USE electrons_base,        ONLY : f, nbsp
+  USE restart_file,          ONLY : writefile
+  !
+  IMPLICIT NONE
+  !
+  INTEGER  :: i, nacc = 5
+  !
   ! ...  Calculate statistics
   !
   acc = acc / DBLE( nfi )
@@ -837,7 +872,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
   END IF
   !
-1949 FORMAT( //'              averaged quantities :',/,9X,&
+1949 FORMAT( //'              averaged quantities :',/,9X, &
            & 'ekinc',10X,'ekin',10X,'epot',10X,'etot',5X,'tempp' )
 1950 FORMAT( 4F14.5,F10.1 )
   !
@@ -889,8 +924,6 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   IF( iprsta > 1 ) CALL print_lambda( lambda, nbsp, nbsp, 1.D0 )
   !
-  conv_elec = .TRUE.
-  !
 1974 FORMAT( 1X,2I5,3F10.4,2X,3F10.4 )
 1975 FORMAT( /1X,'Scaled coordinates '/1X,'species',' atom #' )
 1976 FORMAT( 1X,2I5,3F10.4 )
@@ -900,6 +933,4 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   CALL memory()
   !
-  RETURN
-  !
-END SUBROUTINE cprmain
+END SUBROUTINE terminate_run

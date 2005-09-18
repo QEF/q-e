@@ -21,7 +21,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
                                  num_of_images, istep_path, suspended_image
   USE constraints_module, ONLY : lagrange, target, init_constraint, &
                                  deallocate_constraint
-  USE cell_base,          ONLY : alat, at, bg
+  USE cell_base,          ONLY : alat, at
   USE cp_main_variables,  ONLY : nfi
   USE ions_base,          ONLY : nat, nsp, ityp, if_pos, &
                                  sort_tau, tau_srt, ind_srt
@@ -42,16 +42,16 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN)         :: N_in, N_fin
-  LOGICAL, INTENT(OUT)        :: stat
-  INTEGER                     :: image, iter
-  CHARACTER (LEN=256)         :: outdir_saved, filename
-  LOGICAL                     :: file_exists, opnd, tstop
-  REAL (KIND=DP)              :: tcpu
-  REAL (KIND=DP), ALLOCATABLE :: tau(:,:)
-  REAL (KIND=DP), ALLOCATABLE :: fion(:,:)
-  REAL (KIND=DP)              :: etot
-  REAL (KIND=DP), EXTERNAL    :: get_clock
+  INTEGER, INTENT(IN)   :: N_in, N_fin
+  LOGICAL, INTENT(OUT)  :: stat
+  INTEGER               :: image, iter
+  CHARACTER (LEN=256)   :: outdir_saved, filename
+  LOGICAL               :: file_exists, opnd, tstop
+  REAL(DP)              :: tcpu
+  REAL(DP), ALLOCATABLE :: tau(:,:)
+  REAL(DP), ALLOCATABLE :: fion(:,:)
+  REAL(DP)              :: etot
+  REAL(DP), EXTERNAL    :: get_clock
   !
   !
   ALLOCATE( tau( 3, nat ), fion( 3, nat ) )
@@ -216,17 +216,19 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
         END IF
         !
-        ! ... the new value of the order-parameter is set here
-        !
-        CALL init_constraint( nat, tau, alat, ityp )
-        !
-        new_target(:) = pos(:,image)
-        !
         ! ... initialization of the CP-dynamics
         !
         CALL init_run()
         !
-        ! ... first the system is "adiabatically" moved to the new target
+        ! ... the new value of the order-parameter is set here
+        !
+        CALL init_constraint( nat, tau, alat, ityp )
+        !
+        CALL cprmain( tau, fion, etot )
+        !
+        ! ... then the system is "adiabatically" moved to the new target
+        !
+        new_target(:) = pos(:,image)
         !
         to_target(:) = new_target(:) - target(:)
         !
@@ -239,7 +241,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         CALL cprmain( tau, fion, etot )
         !
-        ! ... then the free energy gradients are computed
+        ! ... and finally the free energy gradients are computed
         !
         nfi    = 1
         nomore = max_fe_iter
@@ -303,6 +305,182 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   RETURN  
   !
 END SUBROUTINE compute_fes_grads
+!
+!------------------------------------------------------------------------
+SUBROUTINE metadyn()
+  !------------------------------------------------------------------------
+  !
+  USE kinds,              ONLY : DP
+  USE constraints_module, ONLY : nconstr, target, lagrange
+  USE cell_base,          ONLY : at, alat
+  USE cp_main_variables,  ONLY : nfi
+  USE control_flags,      ONLY : program_name, nomore, ldamped, tconvthrs, &
+                                 trane, ampre, nbeg, tfor, taurdr, ndr
+  USE cg_module,          ONLY : tcg
+  USE ions_base,          ONLY : nat, nsp, ityp, if_pos, &
+                                 sort_tau, tau_srt, ind_srt
+  USE io_global,          ONLY : stdout
+  USE io_files,           ONLY : prefix, iunaxsf, scradir
+  USE constants,          ONLY : bohr_radius_angs
+  USE coarsegrained_vars, ONLY : max_fe_iter, max_shake_iter, fe_grad, &
+                                 new_target, to_target, to_new_target, &
+                                 fe_step, dfe_acc, metadyn_history,    &
+                                 max_metadyn_iter, A, sigma
+  USE coarsegrained_vars, ONLY : allocate_coarsegrained_vars, &
+                                 deallocate_coarsegrained_vars
+  USE coarsegrained_base, ONLY : add_gaussians
+  USE parser,             ONLY : delete_if_present
+  USE io_global,          ONLY : ionode
+  USE xml_io_base,        ONLY : check_restartfile
+  USE basic_algebra_routines
+  !
+  IMPLICIT NONE
+  !
+  INTEGER               :: iter
+  REAL(DP), ALLOCATABLE :: tau(:,:)
+  REAL(DP), ALLOCATABLE :: fion(:,:)
+  REAL(DP)              :: etot
+  !
+  !
+  ALLOCATE( tau( 3, nat ), fion( 3, nat ) )
+  !
+  CALL allocate_coarsegrained_vars( nconstr, max_metadyn_iter )
+  !
+  IF ( ionode ) THEN
+     !
+     OPEN( UNIT = iunaxsf, FILE = TRIM( prefix ) // ".axsf", &
+           STATUS = "UNKNOWN", ACTION = "WRITE" )
+     !
+     WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I3)' ) max_metadyn_iter
+     WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
+     WRITE( UNIT = iunaxsf, FMT = '(" PRIMVEC ")' )
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+         at(1,1) * alat * bohr_radius_angs, &
+         at(2,1) * alat * bohr_radius_angs, &
+         at(3,1) * alat * bohr_radius_angs
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+         at(1,2) * alat * bohr_radius_angs, &
+         at(2,2) * alat * bohr_radius_angs, &
+         at(3,2) * alat * bohr_radius_angs
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+         at(1,3) * alat * bohr_radius_angs, &
+         at(2,3) * alat * bohr_radius_angs, &
+         at(3,3) * alat * bohr_radius_angs
+     !
+  END IF
+  !
+  CALL delete_if_present( TRIM( prefix ) // '.metadyn' )
+  !
+  IF ( ionode ) THEN
+     !
+     OPEN( UNIT = 999, FILE = TRIM( prefix ) // '.metadyn', STATUS = 'NEW' )
+     !
+     WRITE( 999, '(2(2X,I5))' ) nconstr, max_metadyn_iter
+     WRITE( 999, '(2(2X,F12.8))' ) A, sigma
+     !
+  END IF
+  !
+  ! ... first the wfc are taken to the ground state
+  !
+  taurdr = .TRUE.
+  nfi    = 0
+  tfor   = .FALSE.
+  !
+  IF ( check_restartfile( scradir, ndr ) ) THEN
+     !
+     WRITE( stdout, '(/,2X,"restarting calling readfile",/)' )
+     !
+     nbeg   = 0
+     nomore = 100
+     !
+  ELSE
+     !
+     WRITE( stdout, '(/,2X,"restarting from scratch",/)' )
+     !
+     nbeg   = -1
+     nomore = 500
+     trane  = .TRUE.
+     ampre  = 0.02D0
+     !
+  END IF
+  !
+  CALL init_run()
+  !
+  CALL cprmain( tau, fion, etot )
+  !
+  tfor = .TRUE.
+  !
+  DO iter = 1, max_metadyn_iter
+     !
+     metadyn_history(:,iter) = target(:)
+     !
+     IF ( ionode ) CALL write_config( iter )
+     !
+     nfi    = 0
+     nomore = max_fe_iter
+     !
+     tconvthrs%active = .TRUE.
+     !
+     to_new_target = .FALSE.
+     !
+     CALL cprmain( tau, fion, etot )
+     !
+     ! ... the averages are computed here
+     !
+     IF ( ldamped ) THEN
+        !
+        ! ... zero temperature
+        !
+        fe_grad(:) = - lagrange(:)
+        !
+     ELSE
+        !
+        ! ... finite temperature
+        !
+        fe_grad(:) = dfe_acc(:) / DBLE( nomore )
+        !
+     END IF
+     !
+     IF ( ionode ) &
+        WRITE( 999, '(I4,5(2X,F12.8))' ) iter, target(:), etot, fe_grad(:)
+     !
+     CALL add_gaussians( iter )
+     !
+     new_target(:) = target(:) - fe_step * fe_grad(:) / norm( fe_grad )
+     !
+     ! ... the system is "adiabatically" moved to the new target
+     !
+     to_target(:) = new_target(:) - target(:)
+     !
+     nfi    = 0
+     nomore = max_shake_iter
+     !
+     tconvthrs%active = .FALSE.
+     !
+     to_new_target = .TRUE.
+     !
+     CALL cprmain( tau, fion, etot )
+     !
+     IF ( ionode ) CALL flush_unit( 999 )
+     !
+  END DO
+  !
+  IF ( ionode ) THEN
+     !
+     CALL write_config( iter )
+     !
+     CLOSE( UNIT = iunaxsf )
+     CLOSE( UNIT = 999 )
+     !
+  END IF
+  !
+  DEALLOCATE( tau, fion )
+  !
+  CALL deallocate_coarsegrained_vars()
+  !
+  RETURN
+  !
+END SUBROUTINE metadyn
 !
 !----------------------------------------------------------------------------
 SUBROUTINE write_config( image )

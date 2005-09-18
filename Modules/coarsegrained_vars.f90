@@ -13,8 +13,12 @@ MODULE coarsegrained_vars
   !
   IMPLICIT NONE
   !
-  INTEGER, PARAMETER :: max_fe_iter    = 50
-  INTEGER, PARAMETER :: max_shake_iter = 5
+  SAVE
+  !
+ ! INTEGER, PARAMETER :: max_fe_iter    = 50
+ ! INTEGER, PARAMETER :: max_shake_iter = 5
+  INTEGER, PARAMETER :: max_fe_iter    = 200
+  INTEGER, PARAMETER :: max_shake_iter = 20 
   !
   REAL(DP), PARAMETER :: fe_step = 0.4D0
   !
@@ -31,8 +35,10 @@ MODULE coarsegrained_vars
   !
   REAL(DP), ALLOCATABLE :: metadyn_history(:,:)
   !
-  REAL(DP), PARAMETER :: A            = 0.01D0
+ ! REAL(DP), PARAMETER :: A            = 0.01D0
+  REAL(DP), PARAMETER :: A            = 0.005D0
   REAL(DP), PARAMETER :: sigma        = 0.4D0
+  !
   REAL(DP), PARAMETER :: sigma_sq     = sigma**2
   REAL(DP), PARAMETER :: two_sigma_sq = 2.D0 * sigma_sq
   !

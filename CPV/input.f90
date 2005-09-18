@@ -34,7 +34,8 @@ MODULE input
      USE read_namelists_module, ONLY : read_namelists
      USE read_cards_module,     ONLY : read_cards
      USE input_parameters,      ONLY : calculation, title
-     USE control_flags,         ONLY : lneb, lsmd, lpath, lwf, program_name
+     USE control_flags,         ONLY : lneb, lsmd, lpath, lwf, lmetadyn, &
+                                       program_name
      USE printout_base,         ONLY : title_ => title
      !
      IMPLICIT NONE
@@ -60,6 +61,8 @@ MODULE input
      lsmd = ( TRIM( calculation ) == 'smd' )
      !
      lpath = ( lneb .OR. lsmd )
+     !
+     lmetadyn = ( TRIM( calculation ) == 'metadyn' )
      !
      IF ( lsmd .AND. ( program_name == 'FPMD' ) ) &
         CALL errore( 'read_input_file ', &
@@ -174,9 +177,9 @@ MODULE input
    SUBROUTINE set_control_flags()
      !-------------------------------------------------------------------------
      !
-     USE autopilot, ONLY:  auto_check
-     USE autopilot, ONLY:  restart_p
-
+     USE autopilot,     ONLY : auto_check
+     USE autopilot,     ONLY : restart_p
+     USE control_flags, ONLY : lcoarsegrained, ldamped, lmetadyn
      USE control_flags, ONLY : program_name
      USE control_flags, ONLY : ndw_        => ndw, &
                                ndr_        => ndr, &
@@ -265,7 +268,7 @@ MODULE input
         tcg, ndr, ndw, iprint, isave, tstress, k_points, tprnfor, verbosity,   &
         tprnrho, tdipole_card, toptical_card, tnewnfi_card, newnfi_card,       &
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
-        orthogonalization, electron_velocities, nat, if_pos
+        orthogonalization, electron_velocities, nat, if_pos, phase_space
      !
      IMPLICIT NONE
      !
@@ -512,6 +515,24 @@ MODULE input
         CASE DEFAULT
           CALL errore(' control_flags ',' unknown electron_temperature '//TRIM(electron_temperature), 1 )
       END SELECT
+
+      SELECT CASE( TRIM( phase_space ) )
+      CASE( 'full' )
+         !
+         lcoarsegrained  = .FALSE.
+         !
+      CASE ( 'coarse-grained' )
+         !
+         lcoarsegrained  = .TRUE.
+         !
+      END SELECT
+      !
+      IF ( lmetadyn ) THEN
+         !
+         ldamped         = .TRUE.
+         lcoarsegrained  = .TRUE.
+         !
+      END IF
 
       ! ... Ions dynamics
 

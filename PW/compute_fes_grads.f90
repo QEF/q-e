@@ -479,6 +479,8 @@ SUBROUTINE metadyn()
      !
      CALL move_to_target()
      !
+     IF ( ionode ) CALL flush_unit( 999 )
+     !
   END DO
   !
   IF ( ionode ) THEN

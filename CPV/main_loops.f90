@@ -23,7 +23,7 @@ SUBROUTINE smd_loop( nloop )
   !
   INTEGER, INTENT(IN) :: nloop
   !
-  INTEGER                     :: iloop, sm_p 
+  INTEGER               :: iloop, sm_p 
   REAL(DP), ALLOCATABLE :: tau(:,:,: )
   REAL(DP), ALLOCATABLE :: fion(:,:,:)
   REAL(DP), ALLOCATABLE :: etot(:) 
@@ -99,7 +99,7 @@ SUBROUTINE cpr_loop( nloop )
   !
   INTEGER, INTENT(IN) :: nloop
   !
-  INTEGER                     :: iloop
+  INTEGER               :: iloop
   REAL(DP), ALLOCATABLE :: tau(:,:)
   REAL(DP), ALLOCATABLE :: fion(:,:)
   REAL(DP)              :: etot
@@ -125,6 +125,8 @@ SUBROUTINE cpr_loop( nloop )
      CALL memstat( 1 )
      !
   END DO
+  !
+  CALL terminate_run()
   !
   DEALLOCATE( tau, fion )
   !
@@ -162,12 +164,12 @@ SUBROUTINE fpmd_loop( iloop )
      !
   END IF
   !
-  SELECT CASE ( iloop )
-  CASE ( 1 )
+  SELECT CASE( iloop )
+  CASE( 1 )
      !
      outdir = TRIM( outdir_orig ) // '/' // 'image01'
      !
-  CASE ( 2 )
+  CASE( 2 )
      !  
      outdir = TRIM( outdir_orig ) // '/' // 'image02'
      !
