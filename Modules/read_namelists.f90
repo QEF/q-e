@@ -57,21 +57,17 @@ MODULE read_namelists_module
        verbosity = 'default'
        IF( prog == 'PW' ) restart_mode = 'from_scratch' 
        IF( prog == 'CP' ) restart_mode = 'restart' 
-       IF( prog == 'FP' ) restart_mode = 'restart' 
        nstep  = 50
        IF( prog == 'PW' ) iprint = 100000
        IF( prog == 'CP' ) iprint = 10
-       IF( prog == 'FP' ) iprint = 10
        IF( prog == 'PW' ) isave = 0
        IF( prog == 'CP' ) isave = 100
-       IF( prog == 'FP' ) isave = 100
        !
        tstress = .FALSE.
        tprnfor = .FALSE.
        !
        IF( prog == 'PW' ) dt  = 20.D0
        IF( prog == 'CP' ) dt  =  1.D0
-       IF( prog == 'FP' ) dt  =  1.D0
        !
        ndr = 50
        ndw = 50
@@ -83,7 +79,6 @@ MODULE read_namelists_module
        scradir = './'   
        IF( prog == 'PW' ) prefix = 'pwscf'  
        IF( prog == 'CP' ) prefix = 'cp'  
-       IF( prog == 'FP' ) prefix = 'cp'  
        !
        ! ... directory containing the pseudopotentials
        !
@@ -642,18 +637,18 @@ MODULE read_namelists_module
        CALL mp_bcast( nelec, ionode_id  )
        CALL mp_bcast( ecutwfc, ionode_id  )
        CALL mp_bcast( ecutrho, ionode_id  )
-       CALL mp_bcast( nr1, ionode_id  )            ! not used in fpmd
-       CALL mp_bcast( nr2, ionode_id  )            ! not used in fpmd
-       CALL mp_bcast( nr3, ionode_id  )            ! not used in fpmd
-       CALL mp_bcast( nr1s, ionode_id  )           ! not used in fpmd
-       CALL mp_bcast( nr2s, ionode_id  )           ! not used in fpmd
-       CALL mp_bcast( nr3s, ionode_id  )           ! not used in fpmd
-       CALL mp_bcast( nr1b, ionode_id  )           ! not used in fpmd
-       CALL mp_bcast( nr2b, ionode_id  )           ! not used in fpmd
-       CALL mp_bcast( nr3b, ionode_id  )           ! not used in fpmd
-       CALL mp_bcast( occupations, ionode_id  )    ! not used in fpmd
-       CALL mp_bcast( smearing, ionode_id  )       ! not used in fpmd
-       CALL mp_bcast( degauss, ionode_id  )        ! not used in fpmd
+       CALL mp_bcast( nr1, ionode_id  )            
+       CALL mp_bcast( nr2, ionode_id  )           
+       CALL mp_bcast( nr3, ionode_id  )          
+       CALL mp_bcast( nr1s, ionode_id  )        
+       CALL mp_bcast( nr2s, ionode_id  )       
+       CALL mp_bcast( nr3s, ionode_id  )      
+       CALL mp_bcast( nr1b, ionode_id  )     
+       CALL mp_bcast( nr2b, ionode_id  )    
+       CALL mp_bcast( nr3b, ionode_id  )   
+       CALL mp_bcast( occupations, ionode_id  )   
+       CALL mp_bcast( smearing, ionode_id  )     
+       CALL mp_bcast( degauss, ionode_id  )     
        CALL mp_bcast( nelup, ionode_id )
        CALL mp_bcast( neldw, ionode_id )
        CALL mp_bcast( nspin, ionode_id )
@@ -1029,7 +1024,7 @@ MODULE read_namelists_module
                        & TRIM(calculation)//''' not allowed ',1)
        IF( calculation == ' ' ) &
           CALL errore( sub_name,' calculation not specifyed ',1)
-       IF( prog == 'FP' ) THEN
+       IF( prog == 'CP' ) THEN
           IF( calculation == 'nscf' .OR. calculation == 'phonon' ) &
              CALL errore( sub_name,' calculation '//calculation// &
                           & ' not implemented ',1)
@@ -1068,7 +1063,7 @@ MODULE read_namelists_module
           CALL errore( sub_name,' etot_conv_thr out of range ', 1 )
        IF( forc_conv_thr < 0.D0 ) &
           CALL errore( sub_name,' force_conv_thr out of range ', 1 )
-       IF( prog == 'FP' .OR. prog == 'CP' ) THEN
+       IF( prog == 'CP' ) THEN
           IF( tefield ) & 
              CALL infomsg( sub_name,' tefield not implemented yet ', -1)
           IF( dipfield ) & 
@@ -1140,9 +1135,9 @@ MODULE read_namelists_module
        IF( ecutrho < 0.D0 ) &
           CALL errore( sub_name ,' ecutrho out of range ',1)
        !
-       IF( prog == 'FP' ) THEN
+       IF( prog == 'CP' ) THEN
           IF( degauss /= 0.D0 ) &
-             CALL infomsg( sub_name ,' degauss is not used in FPMD ', -1)
+             CALL infomsg( sub_name ,' degauss is not used in CP ', -1)
        END IF
        !
        IF( nelup < 0.d0 .OR. nelup > nelec ) &
@@ -1155,18 +1150,18 @@ MODULE read_namelists_module
           CALL errore( sub_name ,' qcutz out of range ',1)
        IF( q2sigma < 0.D0 ) &
           CALL errore( sub_name ,' q2sigma out of range ',1)
-       IF( prog == 'FP' ) THEN
-          IF( ANY(starting_magnetization /= sm_not_set ) ) &
+       IF( prog == 'CP' ) THEN
+          IF( ANY(starting_magnetization /= SM_NOT_SET ) ) &
              CALL infomsg( sub_name ,&
-                          & ' starting_magnetization is not used in FPMD ', -1)
+                          & ' starting_magnetization is not used in CP ', -1)
           IF( lda_plus_U ) &
-             CALL infomsg( sub_name ,' lda_plus_U is not used in FPMD ', -1)
+             CALL infomsg( sub_name ,' lda_plus_U is not used in CP ', -1)
           IF( ANY(Hubbard_U /= 0.D0) ) &
-             CALL infomsg( sub_name ,' Hubbard_U is not used in FPMD ', -1)
+             CALL infomsg( sub_name ,' Hubbard_U is not used in CP ', -1)
           IF( ANY(Hubbard_alpha /= 0.D0) ) &
-             CALL infomsg( sub_name ,' Hubbard_alpha is not used in FPMD ', -1)
+             CALL infomsg( sub_name ,' Hubbard_alpha is not used in CP ', -1)
           IF( nosym ) &
-             CALL infomsg( sub_name ,' nosym not implemented in FPMD ', -1)
+             CALL infomsg( sub_name ,' nosym not implemented in CP ', -1)
        END IF
        !
        IF( prog == 'PW' ) THEN
@@ -1433,9 +1428,9 @@ MODULE read_namelists_module
                        TRIM(cell_dynamics)//''' not allowed ',1)
        IF( wmass < 0.D0 ) &
           CALL errore( sub_name,' wmass out of range ',1)
-       IF( prog == 'FP' ) THEN
+       IF( prog == 'CP' ) THEN
           IF( cell_factor /= 0.D0 ) &
-             CALL infomsg( sub_name,' cell_factor not used in FPMD ', -1)
+             CALL infomsg( sub_name,' cell_factor not used in CP ', -1)
        END IF
        IF( cell_nstepe <= 0 ) &
           CALL errore( sub_name,' cell_nstepe out of range ',1)
@@ -1526,35 +1521,24 @@ MODULE read_namelists_module
        !       
        SELECT CASE( TRIM( calculation ) )
           CASE ('scf')
-             IF( prog == 'FP' ) THEN
-                 electron_dynamics = 'sd'
-                 ion_dynamics = 'none'
-                 cell_dynamics = 'none'
-             END IF
              IF( prog == 'CP' ) THEN
                  electron_dynamics = 'damp'
                  ion_dynamics = 'none'
                  cell_dynamics = 'none'
              END IF
           CASE ('nscf')
-             IF( prog == 'FP' ) &
+             IF( prog == 'CP' ) &
                 CALL errore( sub_name,' calculation '//calculation// &
                              & ' not implemented ',1)
              IF( prog == 'CP' ) occupations = 'bogus'
              IF( prog == 'CP' ) electron_dynamics = 'damp'
              IF( prog == 'PW' ) startingpot = 'file'
           CASE ('phonon')
-             IF( prog == 'FP' ) &
-                CALL errore( sub_name,' calculation '//calculation// &
-                             & ' not implemented ',1)
              IF( prog == 'CP' ) &
                 CALL errore( sub_name,' calculation '//calculation// &
                              & ' not implemented ',1)
              IF( prog == 'PW' ) startingpot = 'file'
           CASE ('raman')
-             IF( prog == 'FP' ) &
-                  CALL errore( sub_name,' calculation '//calculation// &
-                  & ' not implemented ',1)
              IF( prog == 'CP' ) &
                   CALL errore( sub_name,' calculation '//calculation// &
                   & ' not implemented ',1)
@@ -1564,32 +1548,25 @@ MODULE read_namelists_module
                 electron_dynamics = 'damp'
                 ion_dynamics      = 'damp'
              END IF
-             IF ( prog == 'FP' .OR. prog == 'PW' ) &
+             IF ( prog == 'PW' ) &
                 CALL errore( sub_name, ' calculation ' // &
                            & TRIM( calculation ) // ' not implemented ', 1 )
           CASE ('relax')
-             IF( prog == 'FP' ) THEN
-                electron_dynamics = 'sd'
-                ion_dynamics = 'damp'
-             ELSE IF( prog == 'CP' ) THEN
+             IF( prog == 'CP' ) THEN
                 electron_dynamics = 'damp'
                 ion_dynamics = 'damp'
              ELSE IF( prog == 'PW' ) THEN
                 ion_dynamics = 'bfgs'
              END IF
           CASE ( 'md', 'cp' )
-             IF( prog == 'FP' .OR. prog == 'CP' ) THEN
+             IF( prog == 'CP' ) THEN
                 electron_dynamics = 'verlet'
                 ion_dynamics = 'verlet'
              ELSE IF( prog == 'PW' ) THEN
                 ion_dynamics = 'verlet'
              END IF
           CASE ('vc-relax')
-             IF( prog == 'FP' ) THEN
-                electron_dynamics = 'sd'
-                ion_dynamics = 'damp'
-                cell_dynamics = 'pr'
-             ELSE IF( prog == 'CP' ) THEN
+             IF( prog == 'CP' ) THEN
                 electron_dynamics = 'damp'
                 ion_dynamics = 'damp'
                 cell_dynamics = 'damp-pr'
@@ -1597,7 +1574,7 @@ MODULE read_namelists_module
                 ion_dynamics = 'damp'
              END IF
           CASE ( 'vc-md', 'vc-cp' )
-             IF( prog == 'FP' .OR. prog == 'CP' ) THEN
+             IF( prog == 'CP' ) THEN
                 electron_dynamics = 'verlet'
                 ion_dynamics = 'verlet'
                 cell_dynamics = 'pr'
@@ -1608,13 +1585,6 @@ MODULE read_namelists_module
              !
              ! ... "path" optimizations
              !
-             IF( prog == 'FP' ) THEN
-                 !
-                 electron_dynamics = 'sd'
-                 ion_dynamics      = 'none'
-                 cell_dynamics     = 'none'
-                 !
-             END IF
              IF( prog == 'CP' ) THEN
                 !
                 electron_dynamics = 'damp'
@@ -1631,6 +1601,14 @@ MODULE read_namelists_module
                 ion_dynamics      = 'damp'
                 !
              END IF
+             !
+          CASE ( 'fpmd' )
+             !
+             !  Compatibility with old FPMD
+             !
+             electron_dynamics = 'sd'
+             ion_dynamics      = 'none'
+             cell_dynamics     = 'none'
              !
           CASE( 'metadyn' )
              !
@@ -1702,7 +1680,6 @@ MODULE read_namelists_module
        !
        CHARACTER(LEN=2) :: prog   ! ... specify the calling program
                                   !     prog = 'PW'  pwscf
-                                  !     prog = 'FP'  fpmd
                                   !     prog = 'CP'  cpr
        !
        ! ... declare other variables
@@ -1714,7 +1691,7 @@ MODULE read_namelists_module
        !  ----------------------------------------------
        !
        !
-       IF( prog /= 'PW' .AND. prog /= 'CP' .AND. prog /= 'FP' ) &
+       IF( prog /= 'PW' .AND. prog /= 'CP' ) &
           CALL errore( ' read_namelists ', ' unknown calling program ', 1 )
        !
        ! ... default settings for all namelists
@@ -1792,6 +1769,7 @@ MODULE read_namelists_module
                TRIM( calculation ) == 'smd'      .OR. &
                TRIM( calculation ) == 'cp-wf'    .OR. &
                TRIM( calculation ) == 'neb'      .OR. &
+               TRIM( calculation ) == 'fpmd'     .OR. &
                TRIM( calculation ) == 'metadyn' ) READ( 5, ions, iostat = ios ) 
           !
        END IF

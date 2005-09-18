@@ -188,7 +188,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
   ELSE
      !
-     nomore = nomore + nfi
+     ! nomore = nomore + nfi  ! nfi already added in subroutine init_run
      !
   END IF
   !

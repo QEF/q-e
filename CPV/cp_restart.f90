@@ -110,7 +110,7 @@ MODULE cp_restart
       !
       CHARACTER(LEN=256)      :: dirname, filename, rho_file
       CHARACTER(LEN=4)        :: cspin
-      INTEGER                 :: kunit, ib
+      INTEGER                 :: kunit, ib, ik_eff
       INTEGER                 :: k1, k2, k3
       INTEGER                 :: nk1, nk2, nk3
       INTEGER                 :: j, i, ispin, ig, nspin_wfc
@@ -144,7 +144,11 @@ MODULE cp_restart
       !
       ! ... Some ( CP/FPMD ) default values
       !
-      kunit = 1
+      IF( nspin == 2 ) THEN
+        kunit = 2
+      ELSE
+        kunit = 1
+      END IF
       k1 = 0
       k2 = 0
       k3 = 0
@@ -529,6 +533,8 @@ MODULE cp_restart
          !
          DO ispin = 1, nspin
             ! 
+            ik_eff = ik + ( ispin - 1 ) * nk
+            ! 
             IF ( ionode ) THEN
                !
                IF ( nspin == 1 ) THEN
@@ -558,7 +564,7 @@ MODULE cp_restart
             !
             IF ( PRESENT( c04 ) ) THEN
                !
-               CALL write_wfc( iunout, ik, nk, kunit, ispin, nspin,   &
+               CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin,   &
                                c04(:,:,ik,ispin), ngwt, nbnd, ig_l2g, &
                                ngw, filename, scalef )
                !
@@ -566,7 +572,7 @@ MODULE cp_restart
                !
                ib = iupdwn(ispin)
                !
-               CALL write_wfc( iunout, ik, nk, kunit, ispin, nspin, &
+               CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin, &
                                c02(:,ib:), ngwt, nbnd, ig_l2g, ngw, &
                                filename, scalef )
                !
@@ -601,7 +607,7 @@ MODULE cp_restart
             !
             IF ( PRESENT( cm4 ) ) THEN
                !
-               CALL write_wfc( iunout, ik, nk, kunit, ispin, nspin,   &
+               CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin,   &
                               cm4(:,:,ik,ispin), ngwt, nbnd, ig_l2g,  &
                               ngw, filename, scalef )
                !
@@ -609,7 +615,7 @@ MODULE cp_restart
                !
                ib = iupdwn(ispin)
                !
-               CALL write_wfc( iunout, ik, nk, kunit, ispin, nspin, &
+               CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin, &
                                cm2(:,ib:), ngwt, nbnd, ig_l2g, ngw, &
                                filename, scalef )
                !
@@ -781,6 +787,7 @@ MODULE cp_restart
       REAL(DP)              :: wk_
       INTEGER               :: nhpcl_ 
       INTEGER               :: ib
+      INTEGER               :: ik_eff
       REAL(DP)              :: amass_(ntypx)
       INTEGER,  ALLOCATABLE :: ityp_(:) 
       INTEGER,  ALLOCATABLE :: isrt_(:) 
@@ -1055,6 +1062,7 @@ MODULE cp_restart
          !
       END IF
       !
+      !
       k_points_loop: DO ik = 1, nk
          !
          IF ( ionode ) THEN
@@ -1070,6 +1078,8 @@ MODULE cp_restart
             cspin = iotk_index( ispin )
             !
             tread_cm = .TRUE.
+            !
+            ik_eff = ik + ( ispin - 1 ) * nk
             !
             IF ( ionode ) THEN
                !
@@ -1118,7 +1128,7 @@ MODULE cp_restart
             !
             IF ( PRESENT( c04 ) ) THEN
                !
-               CALL read_wfc( iunout, ik, nk, kunit, ispin_, nspin_, &
+               CALL read_wfc( iunout, ik_eff , nk, kunit, ispin_, nspin_, &
                               c04(:,:,ik,ispin), ngwt_, nbnd_, ig_l2g, &
                               ngw, filename, scalef_ )
                !
@@ -1126,7 +1136,7 @@ MODULE cp_restart
                !
                ib = iupdwn(ispin)
                !
-               CALL read_wfc( iunout, ik, nk, kunit, ispin_, nspin_, &
+               CALL read_wfc( iunout, ik_eff , nk, kunit, ispin_, nspin_, &
                               c02(:,ib:), ngwt_, nbnd_, ig_l2g, ngw, &
                               filename, scalef_ )
                !
@@ -1151,7 +1161,7 @@ MODULE cp_restart
                !
                IF ( PRESENT( cm4 ) ) THEN
                   !
-                  CALL read_wfc( iunout, ik, nk, kunit, ispin_, nspin_,   &
+                  CALL read_wfc( iunout, ik_eff, nk, kunit, ispin_, nspin_,   &
                                  cm4(:,:,ik,ispin), ngwt_, nbnd_, ig_l2g, &
                                  ngw, filename, scalef_ )
                   !
@@ -1159,7 +1169,7 @@ MODULE cp_restart
                   !
                   ib = iupdwn(ispin)
                   !
-                  CALL read_wfc( iunout, ik, nk, kunit, ispin_, nspin_, &
+                  CALL read_wfc( iunout, ik_eff, nk, kunit, ispin_, nspin_, &
                                  cm2(:,ib:), ngwt_, nbnd_, ig_l2g, ngw, &
                                  filename, scalef_ )
                   !
@@ -1299,10 +1309,12 @@ MODULE cp_restart
       COMPLEX(DP), OPTIONAL, INTENT(OUT) :: c4(:,:,:,:)
       !
       CHARACTER(LEN=256) :: dirname, filename
-      INTEGER            :: ib, kunit, ispin_, nspin_, ngwt_, nbnd_
+      INTEGER            :: ik_eff, ib, kunit, ispin_, nspin_, ngwt_, nbnd_
       REAL(DP)           :: scalef
       !
       kunit = 1
+      !
+      ik_eff = ik + ( ispin - 1 ) * nk
       !
       dirname = restart_dir( scradir, ndr )
       !
@@ -1334,7 +1346,7 @@ MODULE cp_restart
       !
       IF ( PRESENT( c4 ) ) THEN
          !
-         CALL read_wfc( iunout, ik, nk, kunit, ispin_, nspin_,  &
+         CALL read_wfc( iunout, ik_eff, nk, kunit, ispin_, nspin_,  &
                         c4(:,:,ik,ispin), ngwt_, nbnd_, ig_l2g, &
                         ngw, filename, scalef )
          !
@@ -1342,7 +1354,7 @@ MODULE cp_restart
          !
          ib = iupdwn(ispin)
          !
-         CALL read_wfc( iunout, ik, nk, kunit, ispin_, nspin_, &
+         CALL read_wfc( iunout, ik_eff, nk, kunit, ispin_, nspin_, &
                         c2(:,ib:), ngwt_, nbnd_, ig_l2g, ngw,  &
                         filename, scalef )
          !

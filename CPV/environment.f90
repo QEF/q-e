@@ -35,7 +35,6 @@
 
           USE io_global, ONLY: stdout, ionode
           USE mp_global, ONLY: mpime, nproc
-          USE control_flags, ONLY: program_name
           USE parser, ONLY: int_to_char
           use para_mod, ONLY: me, node
           use mp, only: mp_env
@@ -50,7 +49,7 @@
 
 
           CALL init_clocks( .TRUE. )
-          CALL start_clock( program_name )
+          CALL start_clock( 'CP' )
 
           start_seconds    = elapsed_seconds()
           start_cclock_val = cclock( )
@@ -79,17 +78,10 @@
             uname = 'out.' // int_to_char( mpime )
             nchar = INDEX(uname,' ') - 1
 
-            IF( program_name == 'CP90' ) THEN
-              !
-              ! useful for debugging purposes 
-              !     open(6,file=file = uname(1:nchar),status='unknown')
-              open( unit = stdout, file='/dev/null', status='unknown' )
-
-            ELSE IF( program_name == 'FPMD' ) THEN
-
-              OPEN( unit = stdout, file = uname(1:nchar), status = 'unknown' )
-
-            END IF
+            !
+            ! useful for debugging purposes 
+            !     open( unit = stdout, file = uname(1:nchar),status='unknown')
+            open( unit = stdout, file='/dev/null', status='unknown' )
 
           END IF
 
@@ -127,7 +119,6 @@
         SUBROUTINE environment_end( )
 
           USE io_global, ONLY: stdout, ionode
-          USE control_flags, ONLY: program_name
 
           REAL(DP)  :: total_seconds
 
@@ -138,8 +129,8 @@
             WRITE( stdout,*)
           END IF
 
-          CALL print_clock( program_name )
-          CALL stop_clock( program_name )
+          CALL print_clock( 'CP' )
+          CALL stop_clock( 'CP' )
 
           CALL closing_date_and_time( )
 
@@ -160,7 +151,6 @@
         SUBROUTINE opening_date_and_time( version_str )
 
           USE io_global, ONLY: stdout, ionode
-          USE control_flags, ONLY: program_name
 
           CHARACTER(LEN=*), INTENT(IN) :: version_str
           CHARACTER(LEN=9)  :: cdate, ctime
@@ -174,27 +164,18 @@
 
           IF(ionode) THEN
             WRITE( stdout,3331) 
-            IF( program_name == 'FPMD' ) THEN
-              WRITE( stdout,3333) version_str
-            ELSE
-              WRITE( stdout,3332) version_str
-            END IF
+            WRITE( stdout,3332) version_str
             WRITE( stdout,3331) 
             WRITE( stdout,3334) time_str
           END IF
 
  3331     FORMAT('=',78('-'),'=')
- 3332     FORMAT( /, 5X,'CPV: variable-cell Car-Parrinello molecular dynamics',/&
-        & ,5X,'using ultrasoft Vanderbilt pseudopotentials',//&
+ 3332     FORMAT( /, 5X,'CP: variable-cell Car-Parrinello molecular dynamics',/&
+        & ,5X,'using norm-conserving and ultrasoft Vanderbilt pseudopotentials',//&
         & ,5X,'Version: ',A60,/&
         & ,5X,'Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,',/&
-        & ,5X,'  Paolo Giannozzi, Nicola Marzari, and others',/)
-
- 3333     FORMAT( /, 5X,'FPMD: variable-cell Car-Parrinello molecular dynamics',/&
-        & ,5X,'using norm-conserving pseudopotentials',//&
-        & ,5X,'Version: ',A60,/&
-        & ,5X,'Authors: Carlo Cavazzoni, Guido Chiarotti, Sandro Scandolo,',/&
-        & ,5X,'Paolo Focher, Gerardo Ballabio',/)
+        & ,5X,'  Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,',/&
+        & ,5X,'  Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others',/)
 
  3334     FORMAT(/,3X,A60,/)
           RETURN

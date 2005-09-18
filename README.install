@@ -236,7 +236,6 @@ Here is a list:
 
   make pw           compile PW/pw.x (electronic and ionic optimization), 
                       PW/memory.x (checks memory usage and tests input)
-  make fpmd         compile FPMD/fpmd.x (Car-Parrinello MD)
   make cp           compile CPV/cp.x (Car-Parrinello MD with ultrasoft
                       pseudopotentials)
   make ph           compile PH/ph.x (phonons)
@@ -253,7 +252,7 @@ Here is a list:
                       conversion)
 
   make pwall        same as "make pw ph pp d3 raman pwcond gamma tools"
-  make all          same as "make pwall ld1 cp fpmd upf"
+  make all          same as "make pwall ld1 cp upf"
 
   make clean        remove object files and executables
   make veryclean    remove configuration files too

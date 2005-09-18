@@ -3993,8 +3993,8 @@
       if((nfi.eq.0).or.tfirst.or.tlast) goto 999
       if(mod(nfi-1,iprint).ne.0 ) return
 !
- 999  if(tpre)then
-         if(iprsta.ge.2) then
+ 999  if ( tpre ) then
+         if( iprsta >= 2 ) then  
             WRITE( stdout,*)
             WRITE( stdout,*) "From vofrho:"
             WRITE( stdout,*) "cell parameters h"

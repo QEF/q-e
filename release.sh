@@ -41,11 +41,6 @@ tar -czf ../cp.tar.gz bin/ config* README* Make* make*           \
                       include/ Doc/ Modules/ clib/ flib/ \
                       CPV/
 
-tar -czf ../fpmd.tar.gz bin/ config* README* Make* make*        \
-                      install-sh install/ moduledep.sh License upftools/ \
-                      include/ Doc/ Modules/ clib/ flib/ \
-                      CPV/
-
 tar -czf ../$GUI.tar.gz $GUI
 
 tar -czf ../pw.tar.gz bin/ config* README* Make* make* \
@@ -63,6 +58,6 @@ tar -czf ../espresso.tar.gz  bin/ config* README* Make* make* \
 
 scp Doc/README Doc/ChangeLog Doc/BUGS Doc/manual.tex \
     Doc/*.png  Doc/manual.pdf ../pw.tar.gz ../espresso.tar.gz \
-    ../examples.tar.gz ../$GUI.tar.gz ../fpmd.tar.gz ../cp.tar.gz \
+    ../examples.tar.gz ../$GUI.tar.gz ../cp.tar.gz \
     cibs:public_html/pw
 

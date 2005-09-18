@@ -209,6 +209,7 @@
       subroutine init_geometry ( )
 !-----------------------------------------------------------------------
 !
+      USE kinds,            ONLY: DP
       USE input_parameters, ONLY: trd_ht
       use control_flags,    only: iprint, thdyn, ndr, nbeg, program_name
       use io_global,        only: stdout, ionode
@@ -228,8 +229,8 @@
       ! local
       !
       integer :: i, j
-      real(8) :: gvel(3,3)
-      real(8) :: xnhh0(3,3), xnhhm(3,3), vnhh(3,3), velh(3,3)
+      real(DP) :: gvel(3,3), ht(3,3)
+      real(DP) :: xnhh0(3,3), xnhhm(3,3), vnhh(3,3), velh(3,3)
 
       IF( .NOT. tcell_base_init ) &
          CALL errore( ' init_geometry ', ' cell_base_init has not been call yet! ', 1 )
@@ -265,16 +266,18 @@
         !
         ! read only h and hold from restart file "ndr"
         !
-        CALL cp_read_cell( ndr, scradir, .TRUE., h, hold, velh, gvel, xnhh0, xnhhm, vnhh )
+        CALL cp_read_cell( ndr, scradir, .TRUE., ht, hold, velh, gvel, xnhh0, xnhhm, vnhh )
 
-        CALL cell_init( ht0, h    )
+        CALL cell_init( ht0, ht   )
         CALL cell_init( htm, hold )
         ht0%hvel = velh  !  set cell velocity
         ht0%gvel = gvel 
 
-        h     = TRANSPOSE( h    )
-        hold  = TRANSPOSE( hold )
-        velh  = TRANSPOSE( velh )
+        h     = TRANSPOSE( ht   )
+        ht    = TRANSPOSE( hold )
+        hold  = ht
+        ht    = TRANSPOSE( velh )
+        velh  = ht
 
         WRITE( stdout,344) ibrav
         do i=1,3
@@ -306,7 +309,7 @@
       call newinit( h )
 !
       !
- 344  format(' ibrav = ',i4,'       cell parameters ',/)
+ 344  format(3X,'ibrav = ',i4,'       cell parameters ',/)
  345  format(3(4x,f10.5))
       return
       end subroutine init_geometry

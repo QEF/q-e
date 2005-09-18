@@ -24,7 +24,7 @@ To download the CVS tree from scratch, you will need "cvs" and "ssh"
       cvs checkout espresso
    (the code appears in directory espresso).
 
-   Alternatively, download PWscf only, or CP/FPMD only:
+   Alternatively, download PWscf only, or CP only:
       cvs checkout pwscf
       cvs checkout cp
    and optionally tests and examples (with the pseudopotentials needed

@@ -9,9 +9,9 @@
    MODULE print_out_module
 !=----------------------------------------------------------------------------=!
 
-        USE kinds
+        USE kinds,     ONLY: DP
         USE io_global, ONLY: ionode, ionode_id, stdout
-        USE io_files, ONLY: sfacunit, sfac_file, opt_unit
+        USE io_files,  ONLY: sfacunit, sfac_file, opt_unit
 
         IMPLICIT NONE
         SAVE
@@ -39,6 +39,79 @@
    CONTAINS
 !=----------------------------------------------------------------------------=!
 
+
+   SUBROUTINE printout_new( nfi, tfile, tprint, tps, h, stress, tau0 )
+      !
+      USE energies,         ONLY: print_energies, dft_energy_type
+      USE printout_base,    ONLY: printout_base_open, printout_base_close, &
+                                  printout_pos, printout_cell, printout_stress
+      USE constants,        ONLY: factem, au_gpa, au, uma_si, bohr_radius_cm, scmass
+      USE ions_base,        ONLY: nat, ind_bck, atm, ityp
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: nfi
+      LOGICAL, INTENT(IN) :: tfile, tprint
+      REAL(DP), INTENT(IN) :: tps
+      REAL(DP), INTENT(IN) :: h( 3, 3 )
+      REAL(DP), INTENT(IN) :: stress( 3, 3 )
+      REAL(DP), INTENT(IN) :: tau0( :, : )
+      !
+      REAL(DP) :: stress_gpa( 3, 3 )
+      CHARACTER(LEN=3), ALLOCATABLE :: labelw( : )
+      !
+      ALLOCATE( labelw( nat ) )
+      !
+      IF( ionode .AND. tfile .AND. tprint ) THEN
+         CALL printout_base_open()
+      END IF
+      !
+      IF( ionode ) THEN
+         !
+         IF( tprint ) THEN
+            !
+            CALL print_energies( .false. )
+            !
+            WRITE( stdout, * )
+            !
+            CALL printout_cell( stdout, h )
+            !
+            IF( tfile ) CALL printout_cell( 36, h, nfi, tps )
+            !
+            WRITE( stdout, * )
+            !
+            stress_gpa = stress * au_gpa
+            !
+            CALL printout_stress( stdout, stress_gpa )
+            !
+            IF( tfile ) CALL printout_stress( 38, stress_gpa, nfi, tps )
+            !
+            WRITE( stdout, * )
+            !
+            ! ... write out a standard XYZ file in angstroms
+            !
+            labelw( ind_bck(1:nat) ) = atm( ityp(1:nat) )
+            !
+            CALL printout_pos( stdout, tau0, nat, what = 'pos', &
+                               label = labelw, sort = ind_bck )
+            !
+            IF( tfile ) CALL printout_pos( 35, tau0, nat, nfi = nfi, tps = tps )
+            !
+         END IF
+         !
+      END IF
+      !
+      IF( ionode .AND. tfile .AND. tprint ) THEN
+         CALL printout_base_close()
+      END IF
+      !
+      DEALLOCATE( labelw )
+      !
+      RETURN
+   END SUBROUTINE
+
+   !  
+   !
 
    SUBROUTINE printout(nfi, atoms, ekinc, ekcell, tprint, ht, avgs, avgs_run, edft) 
 

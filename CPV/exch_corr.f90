@@ -333,27 +333,39 @@
       use derho,           only : drhor
       use mp,              only : mp_sum
       use metagga,         ONLY : ismeta, kedtaur
+      use kinds,           ONLY : DP
 !
       implicit none
-! input     
+
+      ! input     
+      !
       integer nspin
-! rhog contains the charge density in G space
-! rhor contains the charge density in R space
-      complex(8) rhog(ng,nspin)
-! output
-! rhor contains the exchange-correlation potential
-      real(8) rhor(nnr,nspin), dxc(3,3), exc
-! local
-      integer i,j,ir
-      real(8) dexc(3,3)
-      real(8), allocatable:: gradr(:,:,:)
+      !
+      ! rhog contains the charge density in G space
+      ! rhor contains the charge density in R space
+      !
+      complex(DP) :: rhog( ng, nspin )
+      !
+      ! output
+      ! rhor contains the exchange-correlation potential
+      !
+      real(DP) :: rhor( nnr, nspin ), dxc( 3, 3 ), exc
+      !
+      ! local
+      !
+      integer :: i, j, ir, iss
+      real(DP) :: dexc(3,3)
+      real(DP), allocatable :: gradr(:,:,:)
 !
 !     filling of gradr with the gradient of rho using fft's
 !
       if (igcx /= 0 .or. igcc /= 0) then
-         allocate(gradr(nnr,3,nspin))
-         call fillgrad(nspin,rhog,gradr)
+         !
+         allocate( gradr( nnr, 3, nspin ) )
+         call fillgrad( nspin, rhog, gradr )
+         ! 
       end if
+
 !
       if(ismeta) then
             call tpssmeta(nnr,nspin,gradr,rhor,kedtaur,exc)
@@ -367,36 +379,48 @@
 !
 ! exchange-correlation contribution to pressure
 !
-      dxc = 0.0
+      dxc = 0.0d0
+      !
       if (tpre) then
          !
-         if ( nspin /= 1 ) call errore('exc-cor','spin not implemented',1)
-         !
-         do j=1,3
-            do i=1,3
-               do ir=1,nnr
-                  dxc(i,j) = dxc(i,j) + rhor(ir,1)*drhor(ir,1,i,j)
+         do iss = 1, nspin
+            do j=1,3
+               do i=1,3
+                  do ir=1,nnr
+                     dxc(i,j) = dxc(i,j) + rhor( ir, iss ) * drhor( ir, iss, i, j )
+                  end do
                end do
-               dxc(i,j)=omega/(nr1*nr2*nr3)*dxc(i,j)
             end do
          end do
+         !
+         dxc = dxc * omega / ( nr1*nr2*nr3 )
+         !
          call mp_sum ( dxc )
+         !
          do j=1,3
             do i=1,3
                dxc(i,j) = dxc(i,j) + exc*ainv(j,i)
             end do
          end do
+         !
       end if
-!
-!     second part of the xc-potential
-!
+      !
+      !     second part of the xc-potential
+      !
       if (igcx /= 0 .or. igcc /= 0) then
+         !
          call gradh( nspin, gradr, rhog, rhor, dexc)
+         !
          if (tpre) then
+            !
             call mp_sum ( dexc )
+            !
             dxc = dxc + dexc
+            !
          end if
+         !
          deallocate(gradr)
+         !
       end if
 !
       return
@@ -405,7 +429,7 @@
 
 !=----------------------------------------------------------------------------=!
 
-      subroutine gradh(nspin,gradr,rhog,rhor,dexc)
+      subroutine gradh( nspin, gradr, rhog, rhor, dexc )
 !     _________________________________________________________________
 !     
 !     calculate the second part of gradient corrected xc potential
@@ -423,20 +447,22 @@
       implicit none  
 ! input                   
       integer nspin
-      real(8)  gradr(nnr,3,nspin), rhor(nnr,nspin), dexc(3,3)
-      complex(8) rhog(ng,nspin)
+      real(DP)    :: gradr( nnr, 3, nspin ), rhor( nnr, nspin ), dexc( 3, 3 )
+      complex(DP) :: rhog( ng, nspin )
 !
-      complex(8), allocatable:: v(:)
-      complex(8), allocatable:: x(:), vtemp(:)
-      complex(8)  ci, fp, fm
-      integer iss, ig, ir, i,j
+      complex(DP), allocatable:: v(:)
+      complex(DP), allocatable:: x(:), vtemp(:)
+      complex(DP) ::  ci, fp, fm
+      integer :: iss, ig, ir, i,j
 !
       allocate(v(nnr))
       allocate(x(ng))
       allocate(vtemp(ng))
+      !
       ci=(0.0,1.0)
-      if (tpre .and. nspin.ne.1) &
-           call errore('gradh','spin not implemented',1)
+      !
+      dexc = 0.0d0
+      !
       do iss=1, nspin
 !     _________________________________________________________________
 !     second part xc-potential: 3 forward ffts
@@ -457,7 +483,7 @@
      &                    tpiba*(-rhog(ig,iss)*gx(i,ig)*ainv(j,1)+      &
      &                    gx(1,ig)*drhog(ig,iss,i,j))
                   end do
-                  dexc(i,j) = DBLE(SUM(vtemp))*2.0
+                  dexc(i,j) = dexc(i,j) + DBLE(SUM(vtemp))*2.0
                end do
             end do
          endif

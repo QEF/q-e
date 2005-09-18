@@ -11,13 +11,11 @@ based on plane waves and pseudopotentials:
 
 - the CP code, developed by Alfredo Pasquarello (IRRMA, Lausanne),
   Kari Laasonen (Oulu), Andrea Trave (LLNL), Roberto Car
-  (Princeton), Paolo Giannozzi, Nicola Marzari (MIT) and others,
+  (Princeton), Paolo Giannozzi, Nicola Marzari (MIT),
+  Carlo Cavazzoni (CINECA, Bologna), Sandro Scandolo (ICTP, Trieste), 
+  Guido Chiarotti (SISSA, Trieste), Paolo Focher, 
+  Gerardo Ballabio (CINECA, Bologna) and others, 
   for Car-Parrinello variable-cell molecular dynamics 
-
-- the FPMD code, developed by Carlo Cavazzoni (CINECA, Bologna),
-  Sandro Scandolo (ICTP, Trieste), Guido Chiarotti (SISSA, Trieste), 
-  Paolo Focher, Gerardo Ballabio and others, for Car-Parrinello 
-  variable-cell molecular dynamics.
 
 Several utilities are also included, in particular:
 
@@ -58,7 +56,7 @@ PWCOND/    Source files for conductance calculations (pwcond.x)
 pwtools/   Source files for post-processing of ph.x results,
            miscellaneous analysis programs
 
-CPV/       Source files for CP/FPMD
+CPV/       Source files for CP
 
 GUI/ or PWgui-*/ Source files for the GUI (GUI/ for CVS sources, while
                  PWgui-*/ for the tarball *.tar.gz).

@@ -94,7 +94,7 @@ MODULE input_parameters
 
         CHARACTER(LEN=80) :: calculation = 'none'  
           ! calculation = 'scf', 'relax', 'md', 'cp'*, 'vc-relax', 'vc-md', 
-          !               'vc-cp', 'neb', 'smd', 'cp-wf', 'metadyn'
+          !               'vc-cp', 'neb', 'smd', 'cp-wf', 'fpmd', 'metadyn'
           ! Specify the type of the simulation
           ! 'scf'      = electron minimization
           ! 'relax'    = ionic minimization
@@ -106,13 +106,14 @@ MODULE input_parameters
           ! 'neb'      = NEB    Method search of the Minimum Energy Path (MEP)
           ! 'smd'      = String Method search of the Minimum Energy Path (MEP)
           ! 'cp-wf'    = Car-Parrinello with wannier functions
+          ! 'fpmd'     = Compatibility with the old FPMD code
           ! 'metadyn'  = meta-dynamics (Laio-Parrinello dynamics)
 
 
-        CHARACTER(LEN=80) :: calculation_allowed(14)
+        CHARACTER(LEN=80) :: calculation_allowed(15)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
           'vc-relax', 'vc-md', 'vc-cp', 'phonon', 'raman', 'neb', 'smd', &
-          'cp-wf', 'metadyn' /
+          'cp-wf', 'fpmd', 'metadyn' /
           ! Allowed value for calculation parameters
 
 

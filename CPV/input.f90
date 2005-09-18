@@ -43,8 +43,7 @@ MODULE input
      CHARACTER(LEN=2) :: prog
      !
      !
-     IF ( program_name == 'FPMD' ) prog = 'FP'
-     IF ( program_name == 'CP90' ) prog = 'CP'
+     prog = 'CP'
      !
      IF ( ionode ) CALL input_from_file()
      !
@@ -55,6 +54,8 @@ MODULE input
      ! ... Read CARDS 
      !
      CALL read_cards( prog )
+     !
+     IF( TRIM( calculation ) == 'fpmd' ) program_name = 'FPMD'
      !
      lneb = ( TRIM( calculation ) == 'neb' )
      !

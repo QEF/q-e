@@ -82,9 +82,10 @@ PROGRAM main
   INTEGER            :: mpime, nproc, gid, ionode_id
   LOGICAL            :: ionode
   INTEGER, PARAMETER :: root = 0
-  CHARACTER(LEN=4)   :: get_program
   !
   ! ... program starts here
+  !
+  program_name = 'CP90'
   !
   ! ... initialize MPI (parallel processing handling)
   !
@@ -101,8 +102,6 @@ PROGRAM main
   !
   CALL io_global_start( mpime, root )
   CALL io_global_getionode( ionode, ionode_id )
-  !
-  program_name = get_program()
   !
   CALL environment_start( )
   !

@@ -4,7 +4,6 @@ default :
 	@echo '  make target'
 	@echo 'where target is one of the following:'
 	@echo '  pw           basic code for scf, structure optimization, MD'
-	@echo '  fpmd         FPMD code for Car-Parrinello MD'
 	@echo '  cp           CP code: CP MD with ultrasoft pseudopotentials'
 	@echo '  ph           phonon code'
 	@echo '  pp           postprocessing programs'
@@ -15,7 +14,7 @@ default :
 	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  upf          utilities for pseudopotential conversion'
 	@echo '  pwall        same as "make pw ph pp gamma pwcond d3 tools"'
-	@echo '  all          same as "make pwall fpmd cp ld1 upf"'
+	@echo '  all          same as "make pwall cp ld1 upf"'
 	@echo '  clean        remove executables and objects'
 	@echo '  veryclean    revert distribution to the original status'
 	@echo '  tar          create a tarball of the source tree'
@@ -26,11 +25,6 @@ pw : bindir mods libs libiotk
 	if test -d PW ; then \
 	( cd PW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
-
-fpmd : bindir mods libs libiotk
-	if test -d CPV ; then \
-	( cd CPV ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= fpmd ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= fpmd ; fi ) ; fi
 
 cp : bindir mods libs libiotk
 	if test -d CPV ; then \
@@ -93,7 +87,7 @@ pw_export : libiotk bindir mods libs pw
 	else $(MAKE) $(MFLAGS) TLDEPS= pw_export.x ; fi ) ; fi
 
 pwall : pw ph pp gamma pwcond d3 tools
-all   : pwall fpmd cp ld1 upf 
+all   : pwall cp ld1 upf 
 
 mods : libiotk
 	( cd Modules ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
@@ -172,7 +166,7 @@ links : bindir
 	for exe in \
 	    ../CPV/cp.x \
 	    ../D3/d3.x \
-	    ../CPV/fpmd.x ../CPV/fpmdpp.x \
+	    ../CPV/fpmdpp.x \
 	    ../Gamma/phcg.x \
 	    ../PH/ph.x \
 	    ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x \

@@ -10,14 +10,14 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use fpmd.x to perform molecular dynamics"
+$ECHO "This example shows how to use cp.x to perform molecular dynamics"
 $ECHO "simulation of medium to large systems."
 
 # set the needed environment variables 
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="fpmd.x"
+BIN_LIST="cp.x"
 PSEUDO_LIST="O.BLYP.UPF H.fpmd.UPF"
 
 $ECHO
@@ -64,9 +64,9 @@ done
 $ECHO " done"
 
 # how to run executables
-FPMD_COMMAND="$PARA_PREFIX $BIN_DIR/fpmd.x $PARA_POSTFIX"
+FPMD_COMMAND="$PARA_PREFIX $BIN_DIR/cp.x $PARA_POSTFIX"
 $ECHO
-$ECHO "  running fpmd.x as: $FPMD_COMMAND"
+$ECHO "  running cp.x as: $FPMD_COMMAND"
 $ECHO
 
 # clean TMP_DIR
@@ -78,7 +78,7 @@ $ECHO " done"
 cat > h2o-32.in << EOF
  &control
     title = ' Water 32 molecules ',
-    calculation = 'cp',
+    calculation = 'fpmd',
     restart_mode = 'from_scratch', ! 'restart',
     ndr = 50,
     ndw = -1,
@@ -250,7 +250,7 @@ fi
 cat > h2o-64.in << EOF
  &control
     title = ' Water 64 molecules ',
-    calculation = 'cp',
+    calculation = 'fpmd',
     restart_mode = 'from_scratch', ! 'restart',
     ndr = 50,
     ndw = -1,
@@ -515,7 +515,7 @@ fi
 cat > h2o-128.in << EOF
  &control
     title = ' Water 128 molecules ',
-    calculation = 'cp',
+    calculation = 'fpmd',
     restart_mode = 'from_scratch', ! 'restart',
     ndr = 50,
     ndw = -1,
@@ -972,7 +972,7 @@ fi
 cat > h2o-256.in << EOF
  &control
     title = ' Water 256 molecules ',
-    calculation = 'cp',
+    calculation = 'fpmd',
     restart_mode = 'from_scratch', ! 'restart',
     ndr = 50,
     ndw = -1,
@@ -1813,7 +1813,7 @@ fi
 cat > h2o-384.in << EOF
  &control
     title = ' Water 384 molecules ',
-    calculation = 'cp',
+    calculation = 'fpmd',
     restart_mode = 'from_scratch', ! 'restart',
     ndr = 50,
     ndw = -1,
@@ -3038,7 +3038,7 @@ fi
 cat > h2o-512.in << EOF
  &control
     title = ' Water 512 molecules ',
-    calculation = 'cp',
+    calculation = 'fpmd',
     restart_mode = 'from_scratch', ! 'restart',
     ndr = 50,
     ndw = -1,

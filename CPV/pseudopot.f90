@@ -1104,6 +1104,7 @@ CONTAINS
 
       gg = MAXVAL( gb( 1:ngb ) )
       gg = gg * tpibab * tpibab / refg
+      
       if( ( int( gg ) + 2 ) > mmx ) &
            call errore( ' interpolate_qradb ', ' g vec too large ', 1 )
 

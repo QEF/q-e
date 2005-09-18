@@ -1,4 +1,4 @@
-This example shows how to use fpmd.x to perform molecular dynamics
+This example shows how to use cp.x to perform molecular dynamics
 simulation of medium to large systems.
 
 This example consists in calculations with 32, 64, 128, 256 water

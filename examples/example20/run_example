@@ -10,14 +10,14 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use fpmd.x to perform molecular dynamics"
+$ECHO "This example shows how to use cp.x to perform molecular dynamics"
 $ECHO "simulation of NH3."
 
 # set the needed environment variables 
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="fpmd.x"
+BIN_LIST="cp.x"
 PSEUDO_LIST="N.BLYP.UPF H.fpmd.UPF"
 
 $ECHO
@@ -64,9 +64,9 @@ done
 $ECHO " done"
 
 # how to run executables
-FPMD_COMMAND="$PARA_PREFIX $BIN_DIR/fpmd.x $PARA_POSTFIX"
+FPMD_COMMAND="$PARA_PREFIX $BIN_DIR/cp.x $PARA_POSTFIX"
 $ECHO
-$ECHO "  running fpmd.x as: $FPMD_COMMAND"
+$ECHO "  running cp.x as: $FPMD_COMMAND"
 $ECHO
 
 # clean TMP_DIR
@@ -78,7 +78,7 @@ $ECHO " done"
 cat > nh3.in << EOF
  &control
     title = ' Ammonia Molecule ',
-    calculation = 'cp',
+    calculation = 'fpmd',
     restart_mode = 'from_scratch', ! 'restart',
     ndr = 51,
     ndw = 51,
