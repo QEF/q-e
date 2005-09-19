@@ -33,7 +33,7 @@ SUBROUTINE dynamics()
   ! ... delta_t < 0 :                  every 'nraise' step the temperature
   ! ...                                reduced by -delta_t
   !
-  ! ... Dario Alfe' 1997  and  Carlo Sbraccia 2004
+  ! ... Dario Alfe' 1997  and  Carlo Sbraccia 2004-2005
   !
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
@@ -58,8 +58,7 @@ SUBROUTINE dynamics()
   REAL(DP), ALLOCATABLE :: tau_old(:,:), tau_new(:,:), vel(:,:), acc(:,:)
   REAL(DP), ALLOCATABLE :: mass(:)
   REAL(DP)              :: ekin, etotold
-  REAL(DP)              :: total_mass, temp_new, &
-                           elapsed_time, norm_of_dtau
+  REAL(DP)              :: total_mass, temp_new, elapsed_time, norm_of_dtau
   REAL(DP)              :: ml(3), mlt
   INTEGER               :: i, na
   LOGICAL               :: exst
@@ -213,15 +212,19 @@ SUBROUTINE dynamics()
   !
   FORALL( na = 1:nat ) acc(:,na) = force(:,na) / mass(na) / alat
   !
-  ! ... atoms are moved accordingly to the classical equation of motion.
-  ! ... Damped dynamics ( based on the quick-min algorithm ) is also
-  ! ... done here.
+  ! ... Damped dynamics ( based on the quick-min algorithm )
   !
   IF ( ldamped ) CALL project_velocity()
   !
-  ! ... positions are updated here. NB: vel is actually dt*( tau - tau_old )
+  ! ... the old positions are updated to reflect the new velocities
+  ! ... NB: vel is actually dt*( tau - tau_old )
   !
-  tau_new = tau + vel + dt**2 * acc
+  tau_old = tau - vel
+  !
+  ! ... atoms are moved accordingly to the classical equation of motion.
+  ! ... Verlet integration scheme.
+  !
+  tau_new = 2.D0 * tau - tau_old + dt**2 * acc
   !
   IF ( lconstrain ) THEN
      !
@@ -285,7 +288,15 @@ SUBROUTINE dynamics()
   !
   ! ... the linear momentum and the kinetic energy are computed here
   !
-  vel = ( tau_new - tau_old ) / ( 2.D0 * dt )
+  IF ( istep == 1 ) THEN
+     !
+     vel = ( tau_new - tau ) / dt
+     !
+  ELSE
+     !
+     vel = ( tau_new - tau_old ) / ( 2.D0 * dt )
+     !
+  END IF
   !
   ml   = 0.D0
   ekin = 0.D0  
