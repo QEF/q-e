@@ -109,7 +109,7 @@ subroutine read_config_from_file()
   !
   call readfile_config( iunres, ibrav_, nat_, alat_, at_, tau_, ierr )
   if ( ierr == 1 ) then
-     WRITE( stdout, '(/5x,"Failed to open file", a14 )') trim(prefix)//".save"
+     WRITE( stdout, '(/5x,"Failed to open file ", A16 )') trim(prefix)//".save"
      WRITE( stdout, '(/5x,"Use input configuration")')
      return
   else if( ierr > 1 ) then
@@ -173,7 +173,7 @@ subroutine read_config_from_file_old
   call seqopn (iunit, "config", 'unformatted', exst)
   if (.not.exst) then
      close (unit = iunit, status = 'delete')
-     WRITE( stdout, '(/5x,"Failed to open file", a14 )') trim(prefix)//".config"
+     WRITE( stdout, '(/5x,"Failed to open file ", A16 )') trim(prefix)//".config"
      WRITE( stdout, '(/5x,"Use input configuration")')
      return
   endif

@@ -233,10 +233,6 @@ SUBROUTINE dynamics()
      CALL check_constraint( nat, tau_new, tau, &
                             force, if_pos, ityp, alat, dt, amconv )
      !
-     WRITE( stdout, '(/5X,"Corrected atomic positions:")')
-     !
-     CALL output_tau( .FALSE. )
-     !
      WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
      !
      DO na = 1, nat
