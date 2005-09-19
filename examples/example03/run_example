@@ -139,6 +139,7 @@ cat > al001.rx.in << EOF
     mixing_beta = 0.3
  /
  &ions
+    bfgs_ndim = 3,
     upscale=10
  /
 ATOMIC_SPECIES
