@@ -34,13 +34,13 @@ PROGRAM postproc
   !
   call extract (filplot) 
   !
-  call clean_pw ()
+  call clean_pw( .TRUE. )
   !
   ! chdens should be called on just one processor
   !
   IF ( ionode ) call chdens (filplot)
   !
-  call stop_pp ()
+  call stop_pp()
   !
 END PROGRAM postproc
 !
