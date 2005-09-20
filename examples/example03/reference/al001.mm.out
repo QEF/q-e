@@ -1,6 +1,6 @@
 
      Program PWSCF     v.2.1cvs starts ...
-     Today is 19Sep2005 at 19:18:57 
+     Today is 19Sep2005 at 22:18:17 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -81,7 +81,7 @@
      negative rho (up, down):  0.276E-03 0.000E+00
      Starting wfc are atomic
 
-     total cpu time spent up to now is      0.62 secs
+     total cpu time spent up to now is      0.64 secs
 
      Self-consistent Calculation
 
@@ -91,7 +91,7 @@
 
      negative rho (up, down):  0.186E-03 0.000E+00
 
-     total cpu time spent up to now is      0.97 secs
+     total cpu time spent up to now is      1.00 secs
 
      total energy              =   -28.81800044 ryd
      estimated scf accuracy    <     0.99707290 ryd
@@ -100,7 +100,7 @@
      Davidson diagonalization with overlap
      ethr =  4.75E-03,  avg # of iterations =  4.3
 
-     total cpu time spent up to now is      1.54 secs
+     total cpu time spent up to now is      1.61 secs
 
      total energy              =   -27.55975725 ryd
      estimated scf accuracy    <    42.47180210 ryd
@@ -109,7 +109,7 @@
      Davidson diagonalization with overlap
      ethr =  4.75E-03,  avg # of iterations =  3.7
 
-     total cpu time spent up to now is      2.04 secs
+     total cpu time spent up to now is      2.19 secs
 
      total energy              =   -29.21236680 ryd
      estimated scf accuracy    <     0.25038981 ryd
@@ -118,7 +118,7 @@
      Davidson diagonalization with overlap
      ethr =  1.19E-03,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is      2.40 secs
+     total cpu time spent up to now is      2.57 secs
 
      total energy              =   -29.21649581 ryd
      estimated scf accuracy    <     0.04585932 ryd
@@ -127,7 +127,7 @@
      Davidson diagonalization with overlap
      ethr =  2.18E-04,  avg # of iterations =  2.7
 
-     total cpu time spent up to now is      2.73 secs
+     total cpu time spent up to now is      2.93 secs
 
      total energy              =   -29.21973500 ryd
      estimated scf accuracy    <     0.00336979 ryd
@@ -136,7 +136,7 @@
      Davidson diagonalization with overlap
      ethr =  1.60E-05,  avg # of iterations =  4.7
 
-     total cpu time spent up to now is      3.18 secs
+     total cpu time spent up to now is      3.42 secs
 
      total energy              =   -29.21993710 ryd
      estimated scf accuracy    <     0.00071042 ryd
@@ -145,7 +145,7 @@
      Davidson diagonalization with overlap
      ethr =  3.38E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      3.53 secs
+     total cpu time spent up to now is      3.80 secs
 
      total energy              =   -29.21995305 ryd
      estimated scf accuracy    <     0.00004258 ryd
@@ -154,7 +154,7 @@
      Davidson diagonalization with overlap
      ethr =  2.03E-07,  avg # of iterations =  2.7
 
-     total cpu time spent up to now is      3.92 secs
+     total cpu time spent up to now is      4.24 secs
 
      total energy              =   -29.21995565 ryd
      estimated scf accuracy    <     0.00004475 ryd
@@ -163,7 +163,7 @@
      Davidson diagonalization with overlap
      ethr =  2.03E-07,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is      4.26 secs
+     total cpu time spent up to now is      4.60 secs
 
      total energy              =   -29.21995946 ryd
      estimated scf accuracy    <     0.00000791 ryd
@@ -172,7 +172,7 @@
      Davidson diagonalization with overlap
      ethr =  3.77E-08,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is      4.58 secs
+     total cpu time spent up to now is      4.94 secs
 
      End of self-consistent calculation
 
@@ -212,9 +212,9 @@ Al       0.000000000   0.000000000   1.414337002
 Al       0.500000000   0.500000000   2.120204137
 
 
-     kinetic energy (Ekin) =     0.00000000 Ry
-     temperature           =     0.00000000 K
-     Ekin + Etot (const)   =   -29.21996018 Ry
+     kinetic energy (Ekin) =     0.00006441 Ry
+     temperature           =     0.96818486 K 
+     Ekin + Etot (const)   =   -29.21989576 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
      Check: negative starting charge:    -0.000275
@@ -224,7 +224,7 @@ Al       0.500000000   0.500000000   2.120204137
 
      negative rho (up, down):  0.965E-07 0.000E+00
 
-     total cpu time spent up to now is      4.68 secs
+     total cpu time spent up to now is      5.04 secs
 
      Self-consistent Calculation
 
@@ -238,7 +238,7 @@ Al       0.500000000   0.500000000   2.120204137
      Davidson diagonalization with overlap
      ethr =  1.75E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      5.29 secs
+     total cpu time spent up to now is      5.65 secs
 
      total energy              =   -29.22006881 ryd
      estimated scf accuracy    <     0.00004522 ryd
@@ -247,7 +247,7 @@ Al       0.500000000   0.500000000   2.120204137
      Davidson diagonalization with overlap
      ethr =  2.15E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      5.68 secs
+     total cpu time spent up to now is      6.03 secs
 
      total energy              =   -29.22002761 ryd
      estimated scf accuracy    <     0.00140709 ryd
@@ -256,7 +256,7 @@ Al       0.500000000   0.500000000   2.120204137
      Davidson diagonalization with overlap
      ethr =  2.15E-07,  avg # of iterations =  2.7
 
-     total cpu time spent up to now is      6.04 secs
+     total cpu time spent up to now is      6.40 secs
 
      total energy              =   -29.22008589 ryd
      estimated scf accuracy    <     0.00001355 ryd
@@ -265,7 +265,7 @@ Al       0.500000000   0.500000000   2.120204137
      Davidson diagonalization with overlap
      ethr =  6.45E-08,  avg # of iterations =  1.3
 
-     total cpu time spent up to now is      6.34 secs
+     total cpu time spent up to now is      6.71 secs
 
      End of self-consistent calculation
 
@@ -300,7 +300,7 @@ Al       0.500000000   0.500000000   2.118000887
 
 
      kinetic energy (Ekin) =     0.00014108 Ry
-     temperature           =     2.12050664 K
+     temperature           =     2.12050664 K 
      Ekin + Etot (const)   =   -29.21994542 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -311,7 +311,7 @@ Al       0.500000000   0.500000000   2.118000887
 
      negative rho (up, down):  0.426E-07 0.000E+00
 
-     total cpu time spent up to now is      6.44 secs
+     total cpu time spent up to now is      6.81 secs
 
      Self-consistent Calculation
 
@@ -319,7 +319,7 @@ Al       0.500000000   0.500000000   2.118000887
      Davidson diagonalization with overlap
      ethr =  1.00E-05,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is      6.75 secs
+     total cpu time spent up to now is      7.16 secs
 
      total energy              =   -29.22005979 ryd
      estimated scf accuracy    <     0.00057275 ryd
@@ -328,7 +328,7 @@ Al       0.500000000   0.500000000   2.118000887
      Davidson diagonalization with overlap
      ethr =  2.73E-06,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is      7.18 secs
+     total cpu time spent up to now is      7.62 secs
 
      total energy              =   -29.21946324 ryd
      estimated scf accuracy    <     0.02166990 ryd
@@ -337,7 +337,7 @@ Al       0.500000000   0.500000000   2.118000887
      Davidson diagonalization with overlap
      ethr =  2.73E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      7.60 secs
+     total cpu time spent up to now is      8.05 secs
 
      total energy              =   -29.22031315 ryd
      estimated scf accuracy    <     0.00007580 ryd
@@ -346,7 +346,7 @@ Al       0.500000000   0.500000000   2.118000887
      Davidson diagonalization with overlap
      ethr =  3.61E-07,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is      7.91 secs
+     total cpu time spent up to now is      8.38 secs
 
      total energy              =   -29.22031911 ryd
      estimated scf accuracy    <     0.00000194 ryd
@@ -355,7 +355,7 @@ Al       0.500000000   0.500000000   2.118000887
      Davidson diagonalization with overlap
      ethr =  9.25E-09,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is      8.28 secs
+     total cpu time spent up to now is      8.77 secs
 
      total energy              =   -29.22031942 ryd
      estimated scf accuracy    <     0.00000166 ryd
@@ -364,7 +364,7 @@ Al       0.500000000   0.500000000   2.118000887
      Davidson diagonalization with overlap
      ethr =  7.90E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      8.58 secs
+     total cpu time spent up to now is      9.08 secs
 
      total energy              =   -29.22031878 ryd
      estimated scf accuracy    <     0.00000208 ryd
@@ -373,7 +373,7 @@ Al       0.500000000   0.500000000   2.118000887
      Davidson diagonalization with overlap
      ethr =  7.90E-09,  avg # of iterations =  2.7
 
-     total cpu time spent up to now is      8.97 secs
+     total cpu time spent up to now is      9.49 secs
 
      total energy              =   -29.22031948 ryd
      estimated scf accuracy    <     0.00000326 ryd
@@ -382,7 +382,7 @@ Al       0.500000000   0.500000000   2.118000887
      Davidson diagonalization with overlap
      ethr =  7.90E-09,  avg # of iterations =  1.3
 
-     total cpu time spent up to now is      9.28 secs
+     total cpu time spent up to now is      9.81 secs
 
      total energy              =   -29.22031899 ryd
      estimated scf accuracy    <     0.00000353 ryd
@@ -391,7 +391,7 @@ Al       0.500000000   0.500000000   2.118000887
      Davidson diagonalization with overlap
      ethr =  7.90E-09,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is      9.60 secs
+     total cpu time spent up to now is     10.14 secs
 
      End of self-consistent calculation
 
@@ -426,7 +426,7 @@ Al       0.500000000   0.500000000   2.114798321
 
 
      kinetic energy (Ekin) =     0.00036922 Ry
-     temperature           =     5.54961754 K
+     temperature           =     5.54961754 K 
      Ekin + Etot (const)   =   -29.21994973 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -435,7 +435,7 @@ Al       0.500000000   0.500000000   2.114798321
      second order charge density extrapolation
      Check: negative starting charge:    -0.000287
 
-     total cpu time spent up to now is      9.69 secs
+     total cpu time spent up to now is     10.25 secs
 
      Self-consistent Calculation
 
@@ -443,7 +443,7 @@ Al       0.500000000   0.500000000   2.114798321
      Davidson diagonalization with overlap
      ethr =  1.00E-05,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     10.14 secs
+     total cpu time spent up to now is     10.71 secs
 
      total energy              =   -29.21753573 ryd
      estimated scf accuracy    <     0.00746149 ryd
@@ -452,7 +452,7 @@ Al       0.500000000   0.500000000   2.114798321
      Davidson diagonalization with overlap
      ethr =  3.55E-05,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is     10.58 secs
+     total cpu time spent up to now is     11.17 secs
 
      total energy              =   -29.21126463 ryd
      estimated scf accuracy    <     0.21273071 ryd
@@ -461,7 +461,7 @@ Al       0.500000000   0.500000000   2.114798321
      Davidson diagonalization with overlap
      ethr =  3.55E-05,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is     10.99 secs
+     total cpu time spent up to now is     11.61 secs
 
      total energy              =   -29.22030584 ryd
      estimated scf accuracy    <     0.00491214 ryd
@@ -470,7 +470,7 @@ Al       0.500000000   0.500000000   2.114798321
      Davidson diagonalization with overlap
      ethr =  2.34E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     11.29 secs
+     total cpu time spent up to now is     11.92 secs
 
      total energy              =   -29.22060851 ryd
      estimated scf accuracy    <     0.00002314 ryd
@@ -479,7 +479,7 @@ Al       0.500000000   0.500000000   2.114798321
      Davidson diagonalization with overlap
      ethr =  1.10E-07,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     11.72 secs
+     total cpu time spent up to now is     12.37 secs
 
      total energy              =   -29.22062230 ryd
      estimated scf accuracy    <     0.00000739 ryd
@@ -488,7 +488,7 @@ Al       0.500000000   0.500000000   2.114798321
      Davidson diagonalization with overlap
      ethr =  3.52E-08,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is     12.03 secs
+     total cpu time spent up to now is     12.69 secs
 
      End of self-consistent calculation
 
@@ -523,7 +523,7 @@ Al       0.500000000   0.500000000   2.110748755
 
 
      kinetic energy (Ekin) =     0.00066221 Ry
-     temperature           =     9.95344204 K
+     temperature           =     9.95344204 K 
      Ekin + Etot (const)   =   -29.21996064 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -532,7 +532,7 @@ Al       0.500000000   0.500000000   2.110748755
      second order charge density extrapolation
      Check: negative starting charge:    -0.000291
 
-     total cpu time spent up to now is     12.13 secs
+     total cpu time spent up to now is     12.79 secs
 
      Self-consistent Calculation
 
@@ -540,7 +540,7 @@ Al       0.500000000   0.500000000   2.110748755
      Davidson diagonalization with overlap
      ethr =  1.00E-05,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is     12.51 secs
+     total cpu time spent up to now is     13.20 secs
 
      total energy              =   -29.22036745 ryd
      estimated scf accuracy    <     0.00132708 ryd
@@ -549,7 +549,7 @@ Al       0.500000000   0.500000000   2.110748755
      Davidson diagonalization with overlap
      ethr =  6.32E-06,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is     12.94 secs
+     total cpu time spent up to now is     13.64 secs
 
      total energy              =   -29.21889537 ryd
      estimated scf accuracy    <     0.05338387 ryd
@@ -558,7 +558,7 @@ Al       0.500000000   0.500000000   2.110748755
      Davidson diagonalization with overlap
      ethr =  6.32E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     13.35 secs
+     total cpu time spent up to now is     14.09 secs
 
      total energy              =   -29.22095329 ryd
      estimated scf accuracy    <     0.00011497 ryd
@@ -567,7 +567,7 @@ Al       0.500000000   0.500000000   2.110748755
      Davidson diagonalization with overlap
      ethr =  5.47E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     13.68 secs
+     total cpu time spent up to now is     14.45 secs
 
      total energy              =   -29.22096398 ryd
      estimated scf accuracy    <     0.00000183 ryd
@@ -576,7 +576,7 @@ Al       0.500000000   0.500000000   2.110748755
      Davidson diagonalization with overlap
      ethr =  8.72E-09,  avg # of iterations =  2.7
 
-     total cpu time spent up to now is     14.04 secs
+     total cpu time spent up to now is     14.84 secs
 
      End of self-consistent calculation
 
@@ -611,7 +611,7 @@ Al       0.500000000   0.500000000   2.106128388
 
 
      kinetic energy (Ekin) =     0.00097949 Ry
-     temperature           =    14.72237272 K
+     temperature           =    14.72237272 K 
      Ekin + Etot (const)   =   -29.21998478 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -620,7 +620,7 @@ Al       0.500000000   0.500000000   2.106128388
      second order charge density extrapolation
      Check: negative starting charge:    -0.000292
 
-     total cpu time spent up to now is     14.14 secs
+     total cpu time spent up to now is     14.95 secs
 
      Self-consistent Calculation
 
@@ -628,7 +628,7 @@ Al       0.500000000   0.500000000   2.106128388
      Davidson diagonalization with overlap
      ethr =  1.00E-05,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     14.53 secs
+     total cpu time spent up to now is     15.37 secs
 
      total energy              =   -29.22115545 ryd
      estimated scf accuracy    <     0.00035609 ryd
@@ -637,7 +637,7 @@ Al       0.500000000   0.500000000   2.106128388
      Davidson diagonalization with overlap
      ethr =  1.70E-06,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is     14.96 secs
+     total cpu time spent up to now is     15.83 secs
 
      total energy              =   -29.22075879 ryd
      estimated scf accuracy    <     0.01487750 ryd
@@ -646,7 +646,7 @@ Al       0.500000000   0.500000000   2.106128388
      Davidson diagonalization with overlap
      ethr =  1.70E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     15.37 secs
+     total cpu time spent up to now is     16.26 secs
 
      total energy              =   -29.22132045 ryd
      estimated scf accuracy    <     0.00000269 ryd
@@ -655,7 +655,7 @@ Al       0.500000000   0.500000000   2.106128388
      Davidson diagonalization with overlap
      ethr =  1.28E-08,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is     15.73 secs
+     total cpu time spent up to now is     16.66 secs
 
      End of self-consistent calculation
 
@@ -690,7 +690,7 @@ Al       0.500000000   0.500000000   2.101205539
 
 
      kinetic energy (Ekin) =     0.00130708 Ry
-     temperature           =    19.64613450 K
+     temperature           =    19.64613450 K 
      Ekin + Etot (const)   =   -29.22001380 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -699,7 +699,7 @@ Al       0.500000000   0.500000000   2.101205539
      second order charge density extrapolation
      Check: negative starting charge:    -0.000291
 
-     total cpu time spent up to now is     15.83 secs
+     total cpu time spent up to now is     16.76 secs
 
      Self-consistent Calculation
 
@@ -713,7 +713,7 @@ Al       0.500000000   0.500000000   2.101205539
      Davidson diagonalization with overlap
      ethr =  9.76E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     16.52 secs
+     total cpu time spent up to now is     17.52 secs
 
      total energy              =   -29.22160027 ryd
      estimated scf accuracy    <     0.00021299 ryd
@@ -722,7 +722,7 @@ Al       0.500000000   0.500000000   2.101205539
      Davidson diagonalization with overlap
      ethr =  1.01E-06,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is     16.92 secs
+     total cpu time spent up to now is     17.98 secs
 
      total energy              =   -29.22150164 ryd
      estimated scf accuracy    <     0.00291255 ryd
@@ -731,7 +731,7 @@ Al       0.500000000   0.500000000   2.101205539
      Davidson diagonalization with overlap
      ethr =  1.01E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     17.32 secs
+     total cpu time spent up to now is     18.41 secs
 
      total energy              =   -29.22165808 ryd
      estimated scf accuracy    <     0.00054822 ryd
@@ -740,7 +740,7 @@ Al       0.500000000   0.500000000   2.101205539
      Davidson diagonalization with overlap
      ethr =  1.01E-06,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     17.64 secs
+     total cpu time spent up to now is     18.77 secs
 
      total energy              =   -29.22168183 ryd
      estimated scf accuracy    <     0.00000135 ryd
@@ -749,7 +749,7 @@ Al       0.500000000   0.500000000   2.101205539
      Davidson diagonalization with overlap
      ethr =  6.42E-09,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is     18.03 secs
+     total cpu time spent up to now is     19.18 secs
 
      End of self-consistent calculation
 
@@ -784,7 +784,7 @@ Al       0.500000000   0.500000000   2.096148699
 
 
      kinetic energy (Ekin) =     0.00164509 Ry
-     temperature           =    24.72665266 K
+     temperature           =    24.72665266 K 
      Ekin + Etot (const)   =   -29.22003658 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -793,7 +793,7 @@ Al       0.500000000   0.500000000   2.096148699
      second order charge density extrapolation
      Check: negative starting charge:    -0.000289
 
-     total cpu time spent up to now is     18.12 secs
+     total cpu time spent up to now is     19.28 secs
 
      Self-consistent Calculation
 
@@ -801,7 +801,7 @@ Al       0.500000000   0.500000000   2.096148699
      Davidson diagonalization with overlap
      ethr =  1.00E-05,  avg # of iterations =  2.7
 
-     total cpu time spent up to now is     18.57 secs
+     total cpu time spent up to now is     19.77 secs
 
      total energy              =   -29.22125033 ryd
      estimated scf accuracy    <     0.00174015 ryd
@@ -810,7 +810,7 @@ Al       0.500000000   0.500000000   2.096148699
      Davidson diagonalization with overlap
      ethr =  8.29E-06,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is     19.00 secs
+     total cpu time spent up to now is     20.24 secs
 
      total energy              =   -29.21932402 ryd
      estimated scf accuracy    <     0.07005216 ryd
@@ -819,7 +819,7 @@ Al       0.500000000   0.500000000   2.096148699
      Davidson diagonalization with overlap
      ethr =  8.29E-06,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is     19.42 secs
+     total cpu time spent up to now is     20.68 secs
 
      total energy              =   -29.22202826 ryd
      estimated scf accuracy    <     0.00010273 ryd
@@ -828,7 +828,7 @@ Al       0.500000000   0.500000000   2.096148699
      Davidson diagonalization with overlap
      ethr =  4.89E-07,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is     19.73 secs
+     total cpu time spent up to now is     21.01 secs
 
      total energy              =   -29.22203753 ryd
      estimated scf accuracy    <     0.00000169 ryd
@@ -837,7 +837,7 @@ Al       0.500000000   0.500000000   2.096148699
      Davidson diagonalization with overlap
      ethr =  8.07E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     20.12 secs
+     total cpu time spent up to now is     21.42 secs
 
      End of self-consistent calculation
 
@@ -872,7 +872,7 @@ Al       0.500000000   0.500000000   2.090959451
 
 
      kinetic energy (Ekin) =     0.00198852 Ry
-     temperature           =    29.88862671 K
+     temperature           =    29.88862671 K 
      Ekin + Etot (const)   =   -29.22004942 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -881,7 +881,7 @@ Al       0.500000000   0.500000000   2.090959451
      second order charge density extrapolation
      Check: negative starting charge:    -0.000289
 
-     total cpu time spent up to now is     20.21 secs
+     total cpu time spent up to now is     21.51 secs
 
      Self-consistent Calculation
 
@@ -889,7 +889,7 @@ Al       0.500000000   0.500000000   2.090959451
      Davidson diagonalization with overlap
      ethr =  1.00E-05,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     20.63 secs
+     total cpu time spent up to now is     21.95 secs
 
      total energy              =   -29.22125426 ryd
      estimated scf accuracy    <     0.00247291 ryd
@@ -898,7 +898,7 @@ Al       0.500000000   0.500000000   2.090959451
      Davidson diagonalization with overlap
      ethr =  1.18E-05,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is     21.08 secs
+     total cpu time spent up to now is     22.39 secs
 
      total energy              =   -29.21870248 ryd
      estimated scf accuracy    <     0.09350366 ryd
@@ -907,7 +907,7 @@ Al       0.500000000   0.500000000   2.090959451
      Davidson diagonalization with overlap
      ethr =  1.18E-05,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     21.49 secs
+     total cpu time spent up to now is     22.82 secs
 
      total energy              =   -29.22236111 ryd
      estimated scf accuracy    <     0.00013901 ryd
@@ -916,7 +916,7 @@ Al       0.500000000   0.500000000   2.090959451
      Davidson diagonalization with overlap
      ethr =  6.62E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     21.81 secs
+     total cpu time spent up to now is     23.16 secs
 
      End of self-consistent calculation
 
@@ -951,7 +951,7 @@ Al       0.500000000   0.500000000   2.085470303
 
 
      kinetic energy (Ekin) =     0.00232347 Ry
-     temperature           =    34.92309603 K
+     temperature           =    34.92309603 K 
      Ekin + Etot (const)   =   -29.22005126 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -962,7 +962,7 @@ Al       0.500000000   0.500000000   2.085470303
 
      negative rho (up, down):  0.861E-07 0.000E+00
 
-     total cpu time spent up to now is     21.91 secs
+     total cpu time spent up to now is     23.26 secs
 
      Self-consistent Calculation
 
@@ -972,7 +972,7 @@ Al       0.500000000   0.500000000   2.085470303
 
      negative rho (up, down):  0.236E-07 0.000E+00
 
-     total cpu time spent up to now is     22.36 secs
+     total cpu time spent up to now is     23.73 secs
 
      total energy              =   -29.22225267 ryd
      estimated scf accuracy    <     0.00094268 ryd
@@ -983,7 +983,7 @@ Al       0.500000000   0.500000000   2.085470303
 
      negative rho (up, down):  0.203E-07 0.000E+00
 
-     total cpu time spent up to now is     22.79 secs
+     total cpu time spent up to now is     24.18 secs
 
      total energy              =   -29.22123817 ryd
      estimated scf accuracy    <     0.03672632 ryd
@@ -992,7 +992,7 @@ Al       0.500000000   0.500000000   2.085470303
      Davidson diagonalization with overlap
      ethr =  4.49E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     23.20 secs
+     total cpu time spent up to now is     24.62 secs
 
      total energy              =   -29.22267547 ryd
      estimated scf accuracy    <     0.00004795 ryd
@@ -1001,7 +1001,7 @@ Al       0.500000000   0.500000000   2.085470303
      Davidson diagonalization with overlap
      ethr =  2.28E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     23.52 secs
+     total cpu time spent up to now is     24.95 secs
 
      End of self-consistent calculation
 
@@ -1036,7 +1036,7 @@ Al       0.500000000   0.500000000   2.079990419
 
 
      kinetic energy (Ekin) =     0.00261866 Ry
-     temperature           =    39.36004679 K
+     temperature           =    39.36004679 K 
      Ekin + Etot (const)   =   -29.22006116 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -1045,7 +1045,7 @@ Al       0.500000000   0.500000000   2.079990419
      second order charge density extrapolation
      Check: negative starting charge:    -0.000294
 
-     total cpu time spent up to now is     23.62 secs
+     total cpu time spent up to now is     25.06 secs
 
      Self-consistent Calculation
 
@@ -1053,7 +1053,7 @@ Al       0.500000000   0.500000000   2.079990419
      Davidson diagonalization with overlap
      ethr =  1.00E-05,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     24.07 secs
+     total cpu time spent up to now is     25.52 secs
 
      total energy              =   -29.21818141 ryd
      estimated scf accuracy    <     0.01036106 ryd
@@ -1062,7 +1062,7 @@ Al       0.500000000   0.500000000   2.079990419
      Davidson diagonalization with overlap
      ethr =  4.93E-05,  avg # of iterations =  4.7
 
-     total cpu time spent up to now is     24.54 secs
+     total cpu time spent up to now is     26.02 secs
 
      total energy              =   -29.20763169 ryd
      estimated scf accuracy    <     0.39246162 ryd
@@ -1071,7 +1071,7 @@ Al       0.500000000   0.500000000   2.079990419
      Davidson diagonalization with overlap
      ethr =  4.93E-05,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     24.98 secs
+     total cpu time spent up to now is     26.47 secs
 
      total energy              =   -29.22292071 ryd
      estimated scf accuracy    <     0.00011751 ryd
@@ -1080,7 +1080,7 @@ Al       0.500000000   0.500000000   2.079990419
      Davidson diagonalization with overlap
      ethr =  5.60E-07,  avg # of iterations =  2.7
 
-     total cpu time spent up to now is     25.35 secs
+     total cpu time spent up to now is     26.86 secs
 
      total energy              =   -29.22293635 ryd
      estimated scf accuracy    <     0.00000118 ryd
@@ -1089,7 +1089,7 @@ Al       0.500000000   0.500000000   2.079990419
      Davidson diagonalization with overlap
      ethr =  5.63E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     25.75 secs
+     total cpu time spent up to now is     27.28 secs
 
      End of self-consistent calculation
 
@@ -1124,7 +1124,7 @@ Al       0.500000000   0.500000000   2.074135627
 
 
      kinetic energy (Ekin) =     0.00287037 Ry
-     temperature           =    43.14330866 K
+     temperature           =    43.14330866 K 
      Ekin + Etot (const)   =   -29.22006614 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -1135,7 +1135,7 @@ Al       0.500000000   0.500000000   2.074135627
 
      negative rho (up, down):  0.105E-05 0.000E+00
 
-     total cpu time spent up to now is     25.85 secs
+     total cpu time spent up to now is     27.38 secs
 
      Self-consistent Calculation
 
@@ -1151,7 +1151,7 @@ Al       0.500000000   0.500000000   2.074135627
 
      negative rho (up, down):  0.273E-06 0.000E+00
 
-     total cpu time spent up to now is     26.64 secs
+     total cpu time spent up to now is     28.21 secs
 
      total energy              =   -29.22312599 ryd
      estimated scf accuracy    <     0.00000932 ryd
@@ -1162,7 +1162,7 @@ Al       0.500000000   0.500000000   2.074135627
 
      negative rho (up, down):  0.239E-06 0.000E+00
 
-     total cpu time spent up to now is     27.02 secs
+     total cpu time spent up to now is     28.60 secs
 
      total energy              =   -29.22311764 ryd
      estimated scf accuracy    <     0.00029927 ryd
@@ -1173,7 +1173,7 @@ Al       0.500000000   0.500000000   2.074135627
 
      negative rho (up, down):  0.144E-06 0.000E+00
 
-     total cpu time spent up to now is     27.37 secs
+     total cpu time spent up to now is     28.97 secs
 
      total energy              =   -29.22313001 ryd
      estimated scf accuracy    <     0.00000156 ryd
@@ -1182,7 +1182,7 @@ Al       0.500000000   0.500000000   2.074135627
      Davidson diagonalization with overlap
      ethr =  7.41E-09,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is     27.69 secs
+     total cpu time spent up to now is     29.30 secs
 
      End of self-consistent calculation
 
@@ -1217,7 +1217,7 @@ Al       0.500000000   0.500000000   2.068205860
 
 
      kinetic energy (Ekin) =     0.00304186 Ry
-     temperature           =    45.72098831 K
+     temperature           =    45.72098831 K 
      Ekin + Etot (const)   =   -29.22008836 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -1228,7 +1228,7 @@ Al       0.500000000   0.500000000   2.068205860
 
      negative rho (up, down):  0.493E-05 0.000E+00
 
-     total cpu time spent up to now is     27.78 secs
+     total cpu time spent up to now is     29.40 secs
 
      Self-consistent Calculation
 
@@ -1238,7 +1238,7 @@ Al       0.500000000   0.500000000   2.068205860
 
      negative rho (up, down):  0.177E-05 0.000E+00
 
-     total cpu time spent up to now is     28.26 secs
+     total cpu time spent up to now is     29.90 secs
 
      total energy              =   -29.22218387 ryd
      estimated scf accuracy    <     0.00232374 ryd
@@ -1249,7 +1249,7 @@ Al       0.500000000   0.500000000   2.068205860
 
      negative rho (up, down):  0.154E-05 0.000E+00
 
-     total cpu time spent up to now is     28.73 secs
+     total cpu time spent up to now is     30.40 secs
 
      total energy              =   -29.21966533 ryd
      estimated scf accuracy    <     0.09137493 ryd
@@ -1260,7 +1260,7 @@ Al       0.500000000   0.500000000   2.068205860
 
      negative rho (up, down):  0.805E-06 0.000E+00
 
-     total cpu time spent up to now is     29.14 secs
+     total cpu time spent up to now is     30.83 secs
 
      total energy              =   -29.22324417 ryd
      estimated scf accuracy    <     0.00002391 ryd
@@ -1269,7 +1269,7 @@ Al       0.500000000   0.500000000   2.068205860
      Davidson diagonalization with overlap
      ethr =  1.14E-07,  avg # of iterations =  2.7
 
-     total cpu time spent up to now is     29.51 secs
+     total cpu time spent up to now is     31.21 secs
 
      End of self-consistent calculation
 
@@ -1304,7 +1304,7 @@ Al       0.500000000   0.500000000   2.063302274
 
 
      kinetic energy (Ekin) =     0.00278173 Ry
-     temperature           =    41.81099421 K
+     temperature           =    41.81099421 K 
      Ekin + Etot (const)   =   -29.22046665 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -1315,7 +1315,7 @@ Al       0.500000000   0.500000000   2.063302274
 
      negative rho (up, down):  0.153E-04 0.000E+00
 
-     total cpu time spent up to now is     29.60 secs
+     total cpu time spent up to now is     31.31 secs
 
      Self-consistent Calculation
 
@@ -1331,7 +1331,7 @@ Al       0.500000000   0.500000000   2.063302274
 
      negative rho (up, down):  0.667E-05 0.000E+00
 
-     total cpu time spent up to now is     30.33 secs
+     total cpu time spent up to now is     32.06 secs
 
      total energy              =   -29.22325053 ryd
      estimated scf accuracy    <     0.00004394 ryd
@@ -1342,7 +1342,7 @@ Al       0.500000000   0.500000000   2.063302274
 
      negative rho (up, down):  0.594E-05 0.000E+00
 
-     total cpu time spent up to now is     30.73 secs
+     total cpu time spent up to now is     32.48 secs
 
      total energy              =   -29.22322589 ryd
      estimated scf accuracy    <     0.00091900 ryd
@@ -1353,7 +1353,7 @@ Al       0.500000000   0.500000000   2.063302274
 
      negative rho (up, down):  0.335E-05 0.000E+00
 
-     total cpu time spent up to now is     31.07 secs
+     total cpu time spent up to now is     32.85 secs
 
      total energy              =   -29.22326635 ryd
      estimated scf accuracy    <     0.00001401 ryd
@@ -1364,7 +1364,7 @@ Al       0.500000000   0.500000000   2.063302274
 
      negative rho (up, down):  0.106E-05 0.000E+00
 
-     total cpu time spent up to now is     31.39 secs
+     total cpu time spent up to now is     33.18 secs
 
      total energy              =   -29.22326801 ryd
      estimated scf accuracy    <     0.00000109 ryd
@@ -1373,7 +1373,7 @@ Al       0.500000000   0.500000000   2.063302274
      Davidson diagonalization with overlap
      ethr =  5.19E-09,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is     31.70 secs
+     total cpu time spent up to now is     33.50 secs
 
      End of self-consistent calculation
 
@@ -1408,7 +1408,7 @@ Al       0.500000000   0.500000000   2.063234427
 
 
      kinetic energy (Ekin) =     0.00000055 Ry
-     temperature           =     0.00828917 K
+     temperature           =     0.00828917 K 
      Ekin + Etot (const)   =   -29.22326781 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -1417,7 +1417,7 @@ Al       0.500000000   0.500000000   2.063234427
      second order charge density extrapolation
      Check: negative starting charge:    -0.000293
 
-     total cpu time spent up to now is     31.80 secs
+     total cpu time spent up to now is     33.61 secs
 
      Self-consistent Calculation
 
@@ -1431,7 +1431,7 @@ Al       0.500000000   0.500000000   2.063234427
      Davidson diagonalization with overlap
      ethr =  1.60E-08,  avg # of iterations =  1.3
 
-     total cpu time spent up to now is     32.38 secs
+     total cpu time spent up to now is     34.23 secs
 
      End of self-consistent calculation
 
@@ -1466,7 +1466,7 @@ Al       0.500000000   0.500000000   2.063106942
 
 
      kinetic energy (Ekin) =     0.00000448 Ry
-     temperature           =     0.06726214 K
+     temperature           =     0.06726214 K 
      Ekin + Etot (const)   =   -29.22326771 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -1475,7 +1475,7 @@ Al       0.500000000   0.500000000   2.063106942
      second order charge density extrapolation
      Check: negative starting charge:    -0.000293
 
-     total cpu time spent up to now is     32.48 secs
+     total cpu time spent up to now is     34.33 secs
 
      Self-consistent Calculation
 
@@ -1483,7 +1483,7 @@ Al       0.500000000   0.500000000   2.063106942
      Davidson diagonalization with overlap
      ethr =  1.00E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     32.77 secs
+     total cpu time spent up to now is     34.64 secs
 
      total energy              =   -29.22288652 ryd
      estimated scf accuracy    <     0.00086538 ryd
@@ -1492,7 +1492,7 @@ Al       0.500000000   0.500000000   2.063106942
      Davidson diagonalization with overlap
      ethr =  4.12E-06,  avg # of iterations =  3.7
 
-     total cpu time spent up to now is     33.20 secs
+     total cpu time spent up to now is     35.09 secs
 
      total energy              =   -29.22197462 ryd
      estimated scf accuracy    <     0.03224361 ryd
@@ -1501,7 +1501,7 @@ Al       0.500000000   0.500000000   2.063106942
      Davidson diagonalization with overlap
      ethr =  4.12E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     33.61 secs
+     total cpu time spent up to now is     35.52 secs
 
      total energy              =   -29.22327720 ryd
      estimated scf accuracy    <     0.00001755 ryd
@@ -1510,7 +1510,7 @@ Al       0.500000000   0.500000000   2.063106942
      Davidson diagonalization with overlap
      ethr =  8.35E-08,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is     33.95 secs
+     total cpu time spent up to now is     35.86 secs
 
      total energy              =   -29.22327886 ryd
      estimated scf accuracy    <     0.00000214 ryd
@@ -1519,7 +1519,7 @@ Al       0.500000000   0.500000000   2.063106942
      Davidson diagonalization with overlap
      ethr =  1.02E-08,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is     34.27 secs
+     total cpu time spent up to now is     36.19 secs
 
      End of self-consistent calculation
 
@@ -1554,7 +1554,7 @@ Al       0.500000000   0.500000000   2.062933837
 
 
      kinetic energy (Ekin) =     0.00001054 Ry
-     temperature           =     0.15849349 K
+     temperature           =     0.15849349 K 
      Ekin + Etot (const)   =   -29.22326811 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -1563,7 +1563,7 @@ Al       0.500000000   0.500000000   2.062933837
      second order charge density extrapolation
      Check: negative starting charge:    -0.000293
 
-     total cpu time spent up to now is     34.37 secs
+     total cpu time spent up to now is     36.29 secs
 
      Self-consistent Calculation
 
@@ -1571,7 +1571,7 @@ Al       0.500000000   0.500000000   2.062933837
      Davidson diagonalization with overlap
      ethr =  1.00E-05,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is     34.69 secs
+     total cpu time spent up to now is     36.61 secs
 
      total energy              =   -29.22232231 ryd
      estimated scf accuracy    <     0.00210147 ryd
@@ -1580,7 +1580,7 @@ Al       0.500000000   0.500000000   2.062933837
      Davidson diagonalization with overlap
      ethr =  1.00E-05,  avg # of iterations =  5.7
 
-     total cpu time spent up to now is     35.19 secs
+     total cpu time spent up to now is     37.12 secs
 
      total energy              =   -29.22018604 ryd
      estimated scf accuracy    <     0.07781232 ryd
@@ -1589,7 +1589,7 @@ Al       0.500000000   0.500000000   2.062933837
      Davidson diagonalization with overlap
      ethr =  1.00E-05,  avg # of iterations =  4.7
 
-     total cpu time spent up to now is     35.66 secs
+     total cpu time spent up to now is     37.59 secs
 
      total energy              =   -29.22328334 ryd
      estimated scf accuracy    <     0.00001077 ryd
@@ -1598,7 +1598,7 @@ Al       0.500000000   0.500000000   2.062933837
      Davidson diagonalization with overlap
      ethr =  5.13E-08,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is     36.01 secs
+     total cpu time spent up to now is     37.96 secs
 
      End of self-consistent calculation
 
@@ -1633,7 +1633,7 @@ Al       0.500000000   0.500000000   2.062747659
 
 
      kinetic energy (Ekin) =     0.00001649 Ry
-     temperature           =     0.24789221 K
+     temperature           =     0.24789221 K 
      Ekin + Etot (const)   =   -29.22326810 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -1642,7 +1642,7 @@ Al       0.500000000   0.500000000   2.062747659
      second order charge density extrapolation
      Check: negative starting charge:    -0.000293
 
-     total cpu time spent up to now is     36.11 secs
+     total cpu time spent up to now is     38.07 secs
 
      Self-consistent Calculation
 
@@ -1650,7 +1650,7 @@ Al       0.500000000   0.500000000   2.062747659
      Davidson diagonalization with overlap
      ethr =  1.00E-05,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     36.43 secs
+     total cpu time spent up to now is     38.41 secs
 
      total energy              =   -29.22061860 ryd
      estimated scf accuracy    <     0.00580842 ryd
@@ -1659,7 +1659,7 @@ Al       0.500000000   0.500000000   2.062747659
      Davidson diagonalization with overlap
      ethr =  2.77E-05,  avg # of iterations =  4.3
 
-     total cpu time spent up to now is     36.89 secs
+     total cpu time spent up to now is     38.89 secs
 
      total energy              =   -29.21419711 ryd
      estimated scf accuracy    <     0.23282817 ryd
@@ -1668,7 +1668,7 @@ Al       0.500000000   0.500000000   2.062747659
      Davidson diagonalization with overlap
      ethr =  2.77E-05,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     37.33 secs
+     total cpu time spent up to now is     39.32 secs
 
      total energy              =   -29.22328158 ryd
      estimated scf accuracy    <     0.00000559 ryd
@@ -1677,7 +1677,7 @@ Al       0.500000000   0.500000000   2.062747659
      Davidson diagonalization with overlap
      ethr =  2.66E-08,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     37.76 secs
+     total cpu time spent up to now is     39.76 secs
 
      total energy              =   -29.22328795 ryd
      estimated scf accuracy    <     0.00000156 ryd
@@ -1686,7 +1686,7 @@ Al       0.500000000   0.500000000   2.062747659
      Davidson diagonalization with overlap
      ethr =  7.42E-09,  avg # of iterations =  1.3
 
-     total cpu time spent up to now is     38.07 secs
+     total cpu time spent up to now is     40.06 secs
 
      End of self-consistent calculation
 
@@ -1721,7 +1721,7 @@ Al       0.500000000   0.500000000   2.062516379
 
 
      kinetic energy (Ekin) =     0.00001658 Ry
-     temperature           =     0.24918889 K
+     temperature           =     0.24918889 K 
      Ekin + Etot (const)   =   -29.22327146 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -1730,7 +1730,7 @@ Al       0.500000000   0.500000000   2.062516379
      second order charge density extrapolation
      Check: negative starting charge:    -0.000293
 
-     total cpu time spent up to now is     38.16 secs
+     total cpu time spent up to now is     40.16 secs
 
      Self-consistent Calculation
 
@@ -1738,7 +1738,7 @@ Al       0.500000000   0.500000000   2.062516379
      Davidson diagonalization with overlap
      ethr =  1.00E-05,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     38.56 secs
+     total cpu time spent up to now is     40.57 secs
 
      total energy              =   -29.20757038 ryd
      estimated scf accuracy    <     0.03423840 ryd
@@ -1747,7 +1747,7 @@ Al       0.500000000   0.500000000   2.062516379
      Davidson diagonalization with overlap
      ethr =  1.63E-04,  avg # of iterations =  4.7
 
-     total cpu time spent up to now is     39.04 secs
+     total cpu time spent up to now is     41.06 secs
 
      total energy              =   -29.17459961 ryd
      estimated scf accuracy    <     1.22420365 ryd
@@ -1756,7 +1756,7 @@ Al       0.500000000   0.500000000   2.062516379
      Davidson diagonalization with overlap
      ethr =  1.63E-04,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is     39.48 secs
+     total cpu time spent up to now is     41.51 secs
 
      total energy              =   -29.22326228 ryd
      estimated scf accuracy    <     0.00010182 ryd
@@ -1765,7 +1765,7 @@ Al       0.500000000   0.500000000   2.062516379
      Davidson diagonalization with overlap
      ethr =  4.85E-07,  avg # of iterations =  4.7
 
-     total cpu time spent up to now is     39.95 secs
+     total cpu time spent up to now is     42.00 secs
 
      total energy              =   -29.22328651 ryd
      estimated scf accuracy    <     0.00000930 ryd
@@ -1774,7 +1774,7 @@ Al       0.500000000   0.500000000   2.062516379
      Davidson diagonalization with overlap
      ethr =  4.43E-08,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is     40.26 secs
+     total cpu time spent up to now is     42.33 secs
 
      End of self-consistent calculation
 
@@ -1809,7 +1809,7 @@ Al       0.500000000   0.500000000   2.062527259
 
 
      kinetic energy (Ekin) =     0.00000002 Ry
-     temperature           =     0.00034035 K
+     temperature           =     0.00034035 K 
      Ekin + Etot (const)   =   -29.22328704 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -1818,7 +1818,7 @@ Al       0.500000000   0.500000000   2.062527259
      second order charge density extrapolation
      Check: negative starting charge:    -0.000293
 
-     total cpu time spent up to now is     40.36 secs
+     total cpu time spent up to now is     42.43 secs
 
      Self-consistent Calculation
 
@@ -1832,7 +1832,7 @@ Al       0.500000000   0.500000000   2.062527259
      Davidson diagonalization with overlap
      ethr =  9.48E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     40.92 secs
+     total cpu time spent up to now is     43.02 secs
 
      total energy              =   -29.22319637 ryd
      estimated scf accuracy    <     0.00020035 ryd
@@ -1841,7 +1841,7 @@ Al       0.500000000   0.500000000   2.062527259
      Davidson diagonalization with overlap
      ethr =  9.54E-07,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is     41.29 secs
+     total cpu time spent up to now is     43.44 secs
 
      total energy              =   -29.22298625 ryd
      estimated scf accuracy    <     0.00757486 ryd
@@ -1850,7 +1850,7 @@ Al       0.500000000   0.500000000   2.062527259
      Davidson diagonalization with overlap
      ethr =  9.54E-07,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is     41.69 secs
+     total cpu time spent up to now is     43.86 secs
 
      total energy              =   -29.22328733 ryd
      estimated scf accuracy    <     0.00000142 ryd
@@ -1859,7 +1859,7 @@ Al       0.500000000   0.500000000   2.062527259
      Davidson diagonalization with overlap
      ethr =  6.76E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     42.05 secs
+     total cpu time spent up to now is     44.23 secs
 
      End of self-consistent calculation
 
@@ -1894,7 +1894,7 @@ Al       0.500000000   0.500000000   2.062545684
 
 
      kinetic energy (Ekin) =     0.00000019 Ry
-     temperature           =     0.00286945 K
+     temperature           =     0.00286945 K 
      Ekin + Etot (const)   =   -29.22328737 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -1903,7 +1903,7 @@ Al       0.500000000   0.500000000   2.062545684
      second order charge density extrapolation
      Check: negative starting charge:    -0.000293
 
-     total cpu time spent up to now is     42.15 secs
+     total cpu time spent up to now is     44.33 secs
 
      Self-consistent Calculation
 
@@ -1911,7 +1911,7 @@ Al       0.500000000   0.500000000   2.062545684
      Davidson diagonalization with overlap
      ethr =  1.00E-05,  avg # of iterations =  1.3
 
-     total cpu time spent up to now is     42.46 secs
+     total cpu time spent up to now is     44.64 secs
 
      total energy              =   -29.22228565 ryd
      estimated scf accuracy    <     0.00218171 ryd
@@ -1920,7 +1920,7 @@ Al       0.500000000   0.500000000   2.062545684
      Davidson diagonalization with overlap
      ethr =  1.04E-05,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is     42.90 secs
+     total cpu time spent up to now is     45.13 secs
 
      total energy              =   -29.22005744 ryd
      estimated scf accuracy    <     0.08166424 ryd
@@ -1929,7 +1929,7 @@ Al       0.500000000   0.500000000   2.062545684
      Davidson diagonalization with overlap
      ethr =  1.04E-05,  avg # of iterations =  4.3
 
-     total cpu time spent up to now is     43.35 secs
+     total cpu time spent up to now is     45.60 secs
 
      total energy              =   -29.22328711 ryd
      estimated scf accuracy    <     0.00000125 ryd
@@ -1938,7 +1938,7 @@ Al       0.500000000   0.500000000   2.062545684
      Davidson diagonalization with overlap
      ethr =  5.93E-09,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is     43.73 secs
+     total cpu time spent up to now is     46.02 secs
 
      End of self-consistent calculation
 
@@ -1973,7 +1973,7 @@ Al       0.500000000   0.500000000   2.062564533
 
 
      kinetic energy (Ekin) =     0.00000044 Ry
-     temperature           =     0.00668099 K
+     temperature           =     0.00668099 K 
      Ekin + Etot (const)   =   -29.22328744 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -1982,7 +1982,7 @@ Al       0.500000000   0.500000000   2.062564533
      second order charge density extrapolation
      Check: negative starting charge:    -0.000293
 
-     total cpu time spent up to now is     43.82 secs
+     total cpu time spent up to now is     46.12 secs
 
      Self-consistent Calculation
 
@@ -1996,7 +1996,7 @@ Al       0.500000000   0.500000000   2.062564533
      Davidson diagonalization with overlap
      ethr =  7.61E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     44.37 secs
+     total cpu time spent up to now is     46.73 secs
 
      total energy              =   -29.22321398 ryd
      estimated scf accuracy    <     0.00016405 ryd
@@ -2005,7 +2005,7 @@ Al       0.500000000   0.500000000   2.062564533
      Davidson diagonalization with overlap
      ethr =  7.81E-07,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is     44.76 secs
+     total cpu time spent up to now is     47.15 secs
 
      total energy              =   -29.22304330 ryd
      estimated scf accuracy    <     0.00609554 ryd
@@ -2014,7 +2014,7 @@ Al       0.500000000   0.500000000   2.062564533
      Davidson diagonalization with overlap
      ethr =  7.81E-07,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is     45.16 secs
+     total cpu time spent up to now is     47.58 secs
 
      total energy              =   -29.22328783 ryd
      estimated scf accuracy    <     0.00000222 ryd
@@ -2023,7 +2023,7 @@ Al       0.500000000   0.500000000   2.062564533
      Davidson diagonalization with overlap
      ethr =  1.06E-08,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is     45.50 secs
+     total cpu time spent up to now is     47.93 secs
 
      End of self-consistent calculation
 
@@ -2058,7 +2058,7 @@ Al       0.500000000   0.500000000   2.062584000
 
 
      kinetic energy (Ekin) =     0.00000068 Ry
-     temperature           =     0.01028670 K
+     temperature           =     0.01028670 K 
      Ekin + Etot (const)   =   -29.22328733 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
@@ -2067,7 +2067,7 @@ Al       0.500000000   0.500000000   2.062584000
      second order charge density extrapolation
      Check: negative starting charge:    -0.000293
 
-     total cpu time spent up to now is     45.59 secs
+     total cpu time spent up to now is     48.03 secs
 
      Self-consistent Calculation
 
@@ -2075,7 +2075,7 @@ Al       0.500000000   0.500000000   2.062584000
      Davidson diagonalization with overlap
      ethr =  1.00E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     45.87 secs
+     total cpu time spent up to now is     48.35 secs
 
      total energy              =   -29.22310847 ryd
      estimated scf accuracy    <     0.00039393 ryd
@@ -2084,7 +2084,7 @@ Al       0.500000000   0.500000000   2.062584000
      Davidson diagonalization with overlap
      ethr =  1.88E-06,  avg # of iterations =  3.7
 
-     total cpu time spent up to now is     46.30 secs
+     total cpu time spent up to now is     48.81 secs
 
      total energy              =   -29.22270215 ryd
      estimated scf accuracy    <     0.01464911 ryd
@@ -2093,7 +2093,7 @@ Al       0.500000000   0.500000000   2.062584000
      Davidson diagonalization with overlap
      ethr =  1.88E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     46.71 secs
+     total cpu time spent up to now is     49.25 secs
 
      total energy              =   -29.22328782 ryd
      estimated scf accuracy    <     0.00000165 ryd
@@ -2102,7 +2102,7 @@ Al       0.500000000   0.500000000   2.062584000
      Davidson diagonalization with overlap
      ethr =  7.84E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     47.08 secs
+     total cpu time spent up to now is     49.65 secs
 
      End of self-consistent calculation
 
@@ -2151,42 +2151,42 @@ Al       0.500000000   0.500000000   2.062584000
 
      Writing file       pwscf.save for program phonon
  
-     PWSCF        :    47.15s CPU time
+     PWSCF        :    49.73s CPU time
 
-     init_run     :     0.61s CPU
-     electrons    :    44.32s CPU (      23 calls,   1.927 s avg)
-     forces       :     1.55s CPU (      23 calls,   0.068 s avg)
+     init_run     :     0.63s CPU
+     electrons    :    46.78s CPU (      23 calls,   2.034 s avg)
+     forces       :     1.62s CPU (      23 calls,   0.071 s avg)
  
-     electrons    :    44.32s CPU (      23 calls,   1.927 s avg)
-     c_bands      :    37.43s CPU (     117 calls,   0.320 s avg)
-     sum_band     :     5.28s CPU (     117 calls,   0.045 s avg)
-     v_of_rho     :     0.93s CPU (     133 calls,   0.007 s avg)
-     mix_rho      :     0.29s CPU (     117 calls,   0.002 s avg)
+     electrons    :    46.78s CPU (      23 calls,   2.034 s avg)
+     c_bands      :    39.53s CPU (     117 calls,   0.338 s avg)
+     sum_band     :     5.56s CPU (     117 calls,   0.047 s avg)
+     v_of_rho     :     0.98s CPU (     133 calls,   0.007 s avg)
+     mix_rho      :     0.30s CPU (     117 calls,   0.003 s avg)
  
-     c_bands      :    37.43s CPU (     117 calls,   0.320 s avg)
-     init_us_2    :     0.84s CPU (     774 calls,   0.001 s avg)
-     cegterg      :    36.53s CPU (     351 calls,   0.104 s avg)
+     c_bands      :    39.53s CPU (     117 calls,   0.338 s avg)
+     init_us_2    :     0.87s CPU (     774 calls,   0.001 s avg)
+     cegterg      :    38.61s CPU (     351 calls,   0.110 s avg)
  
-     sum_band     :     5.28s CPU (     117 calls,   0.045 s avg)
+     sum_band     :     5.56s CPU (     117 calls,   0.047 s avg)
  
-     wfcrot       :     0.52s CPU (       3 calls,   0.174 s avg)
-     cegterg      :    36.53s CPU (     351 calls,   0.104 s avg)
-     h_psi        :    24.10s CPU (    1292 calls,   0.019 s avg)
-     g_psi        :     0.60s CPU (     938 calls,   0.001 s avg)
-     overlap      :     3.51s CPU (     938 calls,   0.004 s avg)
-     cdiaghg      :     2.65s CPU (    1289 calls,   0.002 s avg)
-     update       :     2.41s CPU (     938 calls,   0.003 s avg)
-     last         :     1.27s CPU (     351 calls,   0.004 s avg)
+     wfcrot       :     0.54s CPU (       3 calls,   0.180 s avg)
+     cegterg      :    38.61s CPU (     351 calls,   0.110 s avg)
+     h_psi        :    25.47s CPU (    1292 calls,   0.020 s avg)
+     g_psi        :     0.62s CPU (     938 calls,   0.001 s avg)
+     overlap      :     3.70s CPU (     938 calls,   0.004 s avg)
+     cdiaghg      :     2.79s CPU (    1289 calls,   0.002 s avg)
+     update       :     2.55s CPU (     938 calls,   0.003 s avg)
+     last         :     1.36s CPU (     351 calls,   0.004 s avg)
  
-     h_psi        :    24.10s CPU (    1292 calls,   0.019 s avg)
-     init         :     0.18s CPU (    1292 calls,   0.000 s avg)
-     firstfft     :     8.81s CPU (   13132 calls,   0.001 s avg)
-     secondfft    :     8.72s CPU (   13132 calls,   0.001 s avg)
-     add_vuspsi   :     2.42s CPU (    1292 calls,   0.002 s avg)
+     h_psi        :    25.47s CPU (    1292 calls,   0.020 s avg)
+     init         :     0.19s CPU (    1292 calls,   0.000 s avg)
+     firstfft     :     9.33s CPU (   13132 calls,   0.001 s avg)
+     secondfft    :     9.16s CPU (   13132 calls,   0.001 s avg)
+     add_vuspsi   :     2.54s CPU (    1292 calls,   0.002 s avg)
  
      General routines
-     ccalbec      :     2.77s CPU (    1361 calls,   0.002 s avg)
-     cft3         :     0.74s CPU (     607 calls,   0.001 s avg)
-     cft3s        :    19.46s CPU (   31529 calls,   0.001 s avg)
-     davcio       :     0.39s CPU (    1739 calls,   0.000 s avg)
+     ccalbec      :     2.94s CPU (    1361 calls,   0.002 s avg)
+     cft3         :     0.76s CPU (     607 calls,   0.001 s avg)
+     cft3s        :    20.61s CPU (   31529 calls,   0.001 s avg)
+     davcio       :     0.43s CPU (    1739 calls,   0.000 s avg)
  

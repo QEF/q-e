@@ -328,23 +328,10 @@ SUBROUTINE dynamics()
   !
   CALL output_tau( .FALSE. )
   !
-  IF ( istep == 1 ) THEN
-     !
-     WRITE( stdout, '(5X,"kinetic energy (Ekin) = ",F14.8," Ry",/, &
-                    & 5X,"temperature           = ",F14.8," K", /, &
-                    & 5X,"Ekin + Etot (const)   = ",F14.8," Ry")' ) &
-         temperature * 3.D0 / 2.D0 * nat / convert_E_to_temp, &
-         temperature, &
-         temperature * 3.D0 / 2.D0 * nat / convert_E_to_temp + etot
-     !
-  ELSE
-     !        
-     WRITE( stdout, '(5X,"kinetic energy (Ekin) = ",F14.8," Ry",/, &
-                    & 5X,"temperature           = ",F14.8," K", /, &
-                    & 5X,"Ekin + Etot (const)   = ",F14.8," Ry")' ) &
-         ekin, temp_new, ( ekin  + etot )
-      !
-  END IF    
+  WRITE( stdout, '(5X,"kinetic energy (Ekin) = ",F14.8," Ry",/,  &
+                 & 5X,"temperature           = ",F14.8," K ",/,  &
+                 & 5X,"Ekin + Etot (const)   = ",F14.8," Ry")' ) &
+      ekin, temp_new, ( ekin  + etot )
   !
   ! ... total linear momentum must be zero if all atoms move
   !
