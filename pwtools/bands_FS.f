@@ -50,7 +50,7 @@
 !     
       open(9,file='Bands.out')               
 
-      do 
+      do while( .true. )
          read(9,'(a)') line
          if(line(1:24).eq.nkpt) then 
             print*, line(1:24)
@@ -62,7 +62,7 @@
       enddo
  100  continue
 
-      do 
+      do while( .true. )
          read(9,'(a)') line  
          if(line(22:25).eq.n_bands) then
             print*, line(22:25)
@@ -82,7 +82,7 @@
          stop 'Toooooooo many bands'
       endif
       
-      do 
+      do while( .true. )
          read(9,'(a)') line  
          if(line(1:31).eq.Band_structure) then
             print*, line(1:31)
@@ -91,7 +91,7 @@
       enddo
  102  continue
        
-      do 
+      do while( .true. )
          read(9,'(a)') line  
          if(line(1:13).eq.kpoint) then
             print*, line(1:13)
