@@ -412,7 +412,7 @@ SUBROUTINE metadyn()
                                  to_new_target, fe_step, metadyn_history, &
                                  max_metadyn_iter, starting_metadyn_iter
   USE coarsegrained_base, ONLY : add_gaussians
-  USE io_global,          ONLY : ionode
+  USE io_global,          ONLY : ionode, stdout
   USE basic_algebra_routines
   !
   IMPLICIT NONE
@@ -424,21 +424,26 @@ SUBROUTINE metadyn()
   !
   metadyn_loop: DO
      !
-     iter = iter + 1
-     !
-     IF ( iter > 1 ) THEN
+     IF ( iter > 0 ) THEN
         !
         CALL add_gaussians( iter )
         !
         new_target(:) = target(:) - fe_step * fe_grad(:) / norm( fe_grad )
         !
+        WRITE( stdout, '(/,5X,"adiabatic switch of the system ", &
+                            & "to the new coarse-grained positions",/)' )
+        !
         CALL move_to_target()
         !
      END IF
      !
+     iter = iter + 1
+     !
      metadyn_history(:,iter) = target(:)
      !
      IF ( ionode ) CALL write_config( iter )
+     !
+     WRITE( stdout, '(/,5X,"calculation of the potential of mean force",/)' )
      !
      CALL free_energy_grad( iter )
      !
@@ -446,6 +451,7 @@ SUBROUTINE metadyn()
         WRITE( iunmeta, '(I4,5(2X,F12.8))' ) iter, target(:), etot, fe_grad(:)
      !
      IF ( ionode ) CALL flush_unit( iunmeta )
+     IF ( ionode ) CALL flush_unit( iunaxsf )
      !
      IF ( iter >= max_metadyn_iter ) EXIT metadyn_loop
      !
@@ -619,6 +625,8 @@ SUBROUTINE electronic_scf( lfirst, stat )
      !
      WRITE( UNIT = iunpath, &
             FMT = '(/,5X,"WARNING :  scf convergence NOT achieved",/)' )
+     !
+     RETURN
      !
   END IF
   !

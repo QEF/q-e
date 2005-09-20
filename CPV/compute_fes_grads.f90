@@ -390,6 +390,9 @@ SUBROUTINE metadyn()
         !
         to_new_target = .TRUE.
         !
+        WRITE( stdout, '(/,5X,"adiabatic switch of the system ", &
+                            & "to the new coarse-grained positions",/)' )
+        !
         CALL cprmain( tau, fion, etot )
         !
      END IF
@@ -406,6 +409,8 @@ SUBROUTINE metadyn()
      tconvthrs%active = .TRUE.
      !
      to_new_target = .FALSE.
+     !
+     WRITE( stdout, '(/,5X,"calculation of the potential of mean force",/)' )
      !
      CALL cprmain( tau, fion, etot )
      !
@@ -427,6 +432,9 @@ SUBROUTINE metadyn()
      !
      IF ( ionode ) &
         WRITE( iunmeta, '(I4,5(2X,F12.8))' ) iter, target(:), etot, fe_grad(:)
+     !
+     IF ( ionode ) CALL flush_unit( iunmeta )
+     IF ( ionode ) CALL flush_unit( iunaxsf )
      !
      IF ( iter >= max_metadyn_iter ) EXIT metadyn_loop
      !
