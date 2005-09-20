@@ -1029,8 +1029,7 @@ MODULE input_parameters
           ! set the Climbing Image scheme
           ! 'no-CI'       Climbing Image is not used
           ! 'highest-TS'  Standard Climbing Image
-          ! 'all-SP'      not implemented
-          ! 'manual'      not implemented
+          ! 'manual'      the image is selected by hand
         
         CHARACTER(LEN=80) :: CI_scheme_allowed(4)
         DATA CI_scheme_allowed / 'no-CI', 'highest-TS', 'all-SP', 'manual' /

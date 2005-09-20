@@ -553,20 +553,18 @@ help ion_dynamics      -vartype character -helpfmt txt2html -helptext {
 	       CASE ( calculation = 'relax' )
                  'bfgs' :   (default)   a new BFGS quasi-newton algorithm, based
                                         on the trust radius procedure, is used 
-                                        for structural relaxation (experimental)
-                 'old-bfgs' :           use the old BFGS quasi-newton method for
-                                        structural relaxation
-		 'damp' :               use damped (quick-min velocity Verlet) 
-                                        dynamics for structural relaxation
-                 'constrained-damp' :   use damped (quick-min velocity Verlet) 
-                                        dynamics for structural relaxation with 
-                                        the constraint specified in the 
+                                        for structural relaxation.
+		 'damp' :               use damped dynamics (quick-min Verlet) 
+                                        for structural relaxation
+                 'constrained-damp' :   use damped dynamics (quick-min Verlet) 
+                                        for structural relaxation with the 
+                                        constraints specified in the 
                                         CONSTRAINTS CARD
                CASE ( calculation = 'md' )
-                 'verlet' : (default)   use velocity Verlet algorithm to 
-                                        integrate Newton's equation
-                 'constrained-verlet' : use velocity Verlet algorithm to do 
-                                        molecular dynamics with the constraint
+                 'verlet' : (default)   use Verlet algorithm to integrate 
+                                        Newton's equation of motion
+                 'constrained-verlet' : use Verlet algorithm to do molecular 
+                                        dynamics with the constraint
                                         specified in the CONSTRAINTS CARD 
                CASE ( calculation = 'vc-relax' )
                  'damp' :   (default)   use damped (Beeman) dynamics for 
@@ -575,7 +573,15 @@ help ion_dynamics      -vartype character -helpfmt txt2html -helptext {
                  'beeman' : (default)   use Beeman algorithm to integrate 
                                         Newton's equation
 }
-             
+
+help phase_space   -vartype character -helpfmt txt2html -helptext { 
+               'full' :           the full phase-space is used for the ionic 
+                                  dynamics.
+               'coarse-grained' : a coarse-grained phase-space, defined by a set
+                                  of constraints, is used for the ionic dynamics
+                                  (used for meta-dynamics).
+}
+
 help ion_temperature   -vartype character -helpfmt txt2html -helptext { 
              'nose'          : Nose' thermostat, not implemented
              'rescaling'     : velocity rescaling (sort of implemented)
@@ -602,21 +608,27 @@ help upscale      -vartype real -helpfmt txt2html -helptext {
 <p> ( default = 10.D0 )
 }
 
-help potential_extrapolation     -vartype character -helpfmt txt2html -helptext { 
-               used to extrapolate the potential and the wave-functions 
-               from preceding ionic step(s)
+help pot_extrapolation     -vartype character -helpfmt txt2html -helptext { 
+               used to extrapolate the potential from preceding ionic step(s)
                
-               'none':   no extrapolation
-               'atomic': extrapolate the potential as if it was a sum of
-                         atomic-like orbitals (default for calculation='relax')
-               'wfc':    extrapolate the potential as above
-                         extrapolate wave-functions with first-order formula
-                         (default for calcualtion = 'md', 'neb', 'smd')
-               'wfc2':   as above, with second order formula
+               'none':          no extrapolation
+               'atomic':        extrapolate the potential as if it was a sum of
+                                atomic-like orbitals (default for calculation='relax')
+               'first_order':   extrapolate the potential with first-order formula
+                                (default for calcualtion = 'md', 'neb', 'smd')
+               'second_order':  as above, with second order formula
 }
 
+help wfc_extrapolation     -vartype character -helpfmt txt2html -helptext { 
+               used to extrapolate the wave-functions from preceding ionic step(s)
+               
+               'none':   no extrapolation
+               'first_order':   extrapolate the wave-functions with first-order formula
+                                (default for calcualtion = 'md', 'neb', 'smd')
+               'second_order':  as above, with second order formula
+}
 
-help lbfgs_ndim    -vartype integer -helpfmt txt2html -helptext {
+help bfgs_ndim    -vartype integer -helpfmt txt2html -helptext {
                Number of old forces and displacements vectors used in the
 	       linear scaling BFGS algorithm. When lbfgs_ndim = 1 the complete
 	       inverse Hessian is stored (suggested for small/medium-size 
@@ -645,14 +657,6 @@ help trust_radius_ini -vartype real -helpfmt txt2html -helptext {
                (bfgs only)
 <p> ( default = 0.5D0 BOHR )
 }
-
-help trust_radius_end -vartype real -helpfmt txt2html -helptext {
-               BFGS is stopped when trust_radius < trust_radius_end
-	       trust_radius_end is not intended to be used as a criterium
-	       for convergence (bfgs only)
-<p> ( default = 1.D-7 BOHR )
-}
-
 
 set _w12 {
 	       parameters used in line search based on the Wolfe conditions
@@ -687,11 +691,12 @@ help first_last_opt  -vartype  logical -helpfmt txt2html -helptext {
 <p> ( default = .FALSE. )
 }
 
-help minimization_scheme  -vartype    character -helpfmt txt2html -helptext {
+help opt_scheme  -vartype    character -helpfmt txt2html -helptext {
                specify the type of optimization scheme      
                "sd"         : steepest descent
 	       "quick-min"  : a minimization algorithm based on
-	                      molecular dynamics (suggested)
+	                      molecular dynamics (suggested).
+               "broyden"    : quasi-Newton Broyden's second method.
                "damped-dyn" : damped molecular dynamics. See also the 
 	                      keyword damp
                "mol-dyn"    : constant temperature molecular dynamics. See 
@@ -739,11 +744,6 @@ help path_thr      -vartype   real -helpfmt txt2html -helptext {
 <p> ( default = 0.05D0 eV / Angstrom )
 }
 
-help reset_vel     -vartype logical -helpfmt txt2html -helptext {
-                used to reset quick-min velocities at restart time
-               (sort of clean-up of the history)
-<p> ( default = .FALSE. )
-}
 
 help write_save    -vartype logical -helpfmt txt2html -helptext {
                used to write the prefix.save file for each image needed for
@@ -751,6 +751,31 @@ help write_save    -vartype logical -helpfmt txt2html -helptext {
 <p> ( default = .FALSE. )
 }
 
+help use_freezing  -vartype logical -helpfmt txt2html -helptext {
+               if. TRUE. the images are optimised according to their error:
+               only those images with an error larger than half of the largest
+               are optimised. The other images are kept forzen.
+<p> ( default = .FALSE. )
+}
+
+help use_fourier   -vartype logical -helpfmt txt2html -helptext {
+               Used in the evaluation of the free-energy profile with
+               finite-temperature string dynamics.
+<p> ( default = .FALSE. )
+}
+
+help use_multistep -vartype logical -helpfmt txt2html -helptext {
+               In the string method images are sequentially added to the path: 
+               new images are added as soon as the pervious path is converged 
+               (this starting from 3 images up to num_of_images).
+<p> ( default = .FALSE. )
+}
+
+help use_masses -vartype logical -helpfmt txt2html -helptext {
+               If. TRUE. the optimisation of the path is performed using 
+               mass-weighted coordinates.
+<p> ( default = .FALSE. )
+}
 
 # =============================================================================
 # NAMELIST &CELL

@@ -497,8 +497,6 @@ ion_dynamics   CHARACTER
                  'bfgs' :   (default)   a new BFGS quasi-newton algorithm, based
                                         on the trust radius procedure, is used 
                                         for structural relaxation (experimental)
-                 'old-bfgs' :           use the old BFGS quasi-newton method for
-                                        structural relaxation
 		 'damp' :               use damped (quick-min Verlet) 
                                         dynamics for structural relaxation
                  'constrained-damp' :   use damped (quick-min Verlet) 
@@ -517,7 +515,14 @@ ion_dynamics   CHARACTER
                CASE ( calculation = 'vc-md' )
                  'beeman' : (default)   use Beeman algorithm to integrate 
                                         Newton's equation
-             
+
+phase_space    CHARACTER ( defauld = 'full' )
+               'full' :           the full phase-space is used for the ionic 
+                                  dynamics.
+               'coarse-grained' : a coarse-grained phase-space, defined by a set
+                                  of constraints, is used for the ionic dynamics
+                                  (used for meta-dynamics).
+
 ion_temperature   
                CHARACTER
                'rescaling'     : velocity rescaling
@@ -668,22 +673,27 @@ path_thr       REAL ( default = 0.05D0 eV / Angstrom )
                the simulation stops when the error ( the norm of the force 
 	       orthogonal to the path in eV/A ) is less than path_thr.
 
+use_masses     LOGICAL ( default = .FALSE. )
+               If. TRUE. the optimisation of the path is performed using 
+               mass-weighted coordinates.
+
 use_fourier    LOGICAL ( default = .FALSE. )
                In the string method the path is described by its 
                Fourier components.
 
+use_multistep  LOGICAL ( default = .FALSE. )
+               In the string method images are sequentially added to the path: 
+               new images are added as soon as the pervious path is converged 
+               (this starting from 3 images up to num_of_images).
+
 use_freezing   LOGICAL ( default = .FALSE. )
-               if. TRUE. the images are optimised according to their error:
+               If. TRUE. the images are optimised according to their error:
                only those images with an error larger than half of the largest
                are optimised. The other images are kept forzen.
                
 free_energy    LOGICAL ( default = .FALSE. )
                Used in the evaluation of the free-energy profile with
                finite-temperature string dynamics.
-
-reset_vel      LOGICAL ( default = .FALSE. )
-               used to reset quick-min velocities at restart time
-               (sort of clean-up of the history)
                
 write_save     LOGICAL ( default = .FALSE. )
                used to write the prefix.save file for each image ( needed for

@@ -685,18 +685,16 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 		    -label "Type of ionic dynamics (ion_dynamics):"
 		    -widget   optionmenu
 		    -textvalue {
-			"BFGS quasi-newton method for structural optimization (based on the trust radius procedure) <bfgs>"
-			"old BFGS quasi-newton method for structural optimization (based on line minimization) <old-bfgs>"
-			"damped dynamics (quick-min velocity Verlet) for structural optimization <damp>"
-                        "damped dynamics (quick-min velocity Verlet) for structural optimization with the CONSTRAINT <constrained-damp>"
-			"Velocity-Verlet algorithm for Molecular dynamics <verlet>"
-			"Velocity-Verlet-MD with the CONSTRAINT <constrained-verlet>"
+			"BFGS quasi-newton method for structural optimization  <bfgs>"
+			"damped dynamics (quick-min Verlet) for structural optimization <damp>"
+                        "damped dynamics (quick-min Verlet) for structural optimization with the CONSTRAINT <constrained-damp>"
+			"Verlet algorithm for molecular dynamics <verlet>"
+			"Verlet algorithm for constrained molecular dynamics <constrained-verlet>"
                         "Beeman algorithm for variable cell damped dynamics <damp>"
 			"Beeman algorithm for variable cell MD <beeman>"
 		    }
 		    -value {
 			'bfgs' 
-			'old-bfgs'
 			'damp' 
 			'constrained-damp'
 			'verlet' 
@@ -705,27 +703,47 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 			'beeman'
 		    }
 		}
+                
+                var phase_space {
+		    -label "Type of phase-space (phase_space):"
+                    -textvalue {
+			"The standard configuration space  <full>"
+			"Coarse-grained phase-space defined by few order parameters  <coarse-grained>"
+		    }
+		    -value {
+			'full' 'coarse-grained'
+		    }
+		    -widget optionmenu
+                }
 
-		var upscale {
-		    -text    "Max. reduction factor for conv_thr during structural optimization"
-		    -label   "Max. reduction factor (upscale):"
-		    -validate  fortranposreal
-		}
-
-		var potential_extrapolation {
-		    -text "Extrapolation for the potential and the wavefunctions"
-		    -label "Type of extrapolation (potential_extrapolation):"
+		var pot_extrapolation {
+		    -text "Extrapolation for the potential"
+		    -label "Type of extrapolation (pot_extrapolation):"
 		    -textvalue {
 			"no extrapolation  <none>"
 			"extrapolate the potential as a sum of atomic-like orbitals  <atomic>"
-			"extrapolate potential as above and wave-functions with first-order formula  <wfc>"
-			"extrapolate potential as above and wave-functions with second-order formula  <wfc2>"
+			"extrapolate potential with first-order  formula  <first_order>"
+			"extrapolate potential with second-order formula  <second_order>"
 		    }
 		    -value {
-			'none' 'atomic' 'wfc' 'wfc2'
+			'none' 'atomic' 'first_order' 'second_order'
 		    }
 		    -widget optionmenu
 		}
+                
+		var wfc_extrapolation {
+		    -text "Extrapolation for the wavefunctions"
+		    -label "Type of extrapolation (wfc_extrapolation):"
+		    -textvalue {
+			"no extrapolation  <none>"
+			"extrapolate wave-functions with first-order  formula  <first_order>"
+			"extrapolate wave-functions with second-order formula  <second_order>"
+		    }
+		    -value {
+			'none' 'first_order' 'second_order'
+		    }
+		    -widget optionmenu
+		}                
 
 		separator -label "--- Molecular Dynamics ---"
 
@@ -749,13 +767,29 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 			-label    "Tolerance for velocity rescaling (tolp):"
 			-validate fortranreal
 		    }
+                    
+                    var delta_t {
+			-label    "Temperature rescaling (delta_t):"
+			-validate fortranreal
+		    }
+                    
+                    var nraise {
+			-label    "Rescaling interval (nraise):"
+			-validate fortraninteger
+		    }
 		}
 
 		separator -label "--- BFGS Structural Optimization ---"
 
-		group new_bfgs {
-		    var lbfgs_ndim {
-			-label "Number of old forces and displacements vectors used in the L-BFGS (lbfgs_ndim):"
+		var upscale {
+		    -text    "Max. reduction factor for conv_thr during structural optimization"
+		    -label   "Max. reduction factor (upscale):"
+		    -validate  fortranposreal
+		}
+
+		group bfgs {
+		    var bfgs_ndim {
+			-label "Workspace dimension used in the PULAY mixing of the residual vectors:"
 			-widget   spinint
 			-validate posint
 		    }
@@ -772,12 +806,6 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 
 		    var trust_radius_ini {
 			-label "Initial ionic displacement in the structural relaxation (trust_radius_ini):"
-			-validate fortranposreal
-		    }
-
-		    var trust_radius_end {
-			-text "BFGS is stopped when trust_radius < trust_radius_end"
-			-label "trust_radius_end:"
 			-validate fortranposreal
 		    }
 		    
@@ -810,16 +838,18 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 			-widget    radiobox
 		    }
 		    		    
-		    var minimization_scheme {
-			-label "Type of optimization scheme (minimization_scheme):"
+		    var opt_scheme {
+			-label "Type of optimization scheme (opt_scheme):"
 			-value {
 			    'quick-min' 
+                            'broyden'
 			    'sd'
 			    'damped-dyn'
 			    'mol-dyn'  
 			}
 			-textvalue {
 			    "optimization algorithm based on molecular dynamics  <quick-min>"
+                            "second Broyden method <broyden>"
 			    "steepest descent  <sd>"
 			    "damped molecular dynamics  <damped-dyn>"
 			    "constant temperature molecular dynamics  <mol-dyn>"
@@ -847,8 +877,15 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 			-validate fortranposreal
 		    }
                     
-                    var reset_vel {
-			-label "Sort of clean-up of the quick-min history (reset_vel):"
+                    var use_freezing {
+			-label "Only the images with larger errors are optimised (use_freezing):"
+			-textvalue { Yes No }
+			-value     { .TRUE. .FALSE. }
+			-widget    radiobox
+		    }
+
+                    var use_masses {
+			-label "The optimisation is done with mass-weighted coordinates (use_masses):"
 			-textvalue { Yes No }
 			-value     { .TRUE. .FALSE. }
 			-widget    radiobox
@@ -860,22 +897,21 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 			-value     { .TRUE. .FALSE. }
 			-widget    radiobox
 		    }
+                                        
 		}
                 
-              group neb {
+                group neb {
               
 		    var CI_scheme {
 			-label "Type of Climbing Image (CI) scheme (CI_scheme):"
 			-textvalue {
 			    "do not use climbing image  <no-CI>"
 			    "image highest in energy is allowed to climb  <highest-TS>"
-			    "CI is used on all the saddle points  <all-SP>"
 			    "climbing images are manually selected  <manual>"
 			}
 			-value {
 			    'no-CI'
 			    'highest-TS'
-			    'all-SP'
 			    'manual'
 			}
 			-widget optionmenu
@@ -893,7 +929,25 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 			}
 		    }
               
-                }  
+                }
+                
+                group smd {
+                
+                    var use_fourier {
+			-label "The path is described by its Fourier components (use_fourier):"
+			-textvalue { Yes No }
+			-value     { .TRUE. .FALSE. }
+			-widget    radiobox
+		    }
+
+		    var use_multistep {
+			-label "Images are sequentially added to the path (use_multistep):"
+			-textvalue { Yes No }
+			-value     { .TRUE. .FALSE. }
+			-widget    radiobox
+		    }
+                
+                }
 	    }
 	}
     }
