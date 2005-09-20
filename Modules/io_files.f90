@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2004 FPMD & PWSCF groups
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -108,17 +108,21 @@ MODULE io_files
   INTEGER :: iunaxsf     = 25 ! unit for saving coordinates ( axsf format )
   INTEGER :: iunbroy     = 26 ! unit for saving broyden's history
   !
+  ! ... meta-dynamics
+  !
+  INTEGER :: iunmeta     = 99 ! unit for saving meta-dynamics history
+  !
   ! ... Y. Kanai combined smd/cp method
   !
   INTEGER :: smwout      = 20 ! base value to compute index for replica files
   !
   INTEGER :: vib_out     = 20 ! output of phrozen phonon vibrational calculation
   INTEGER :: vib_mass    = 21 ! isotope masses used for the dynamical matrix
-
   !
   !... finite electric field (Umari)
   !
   INTEGER :: iunefield   = 31 ! unit to store wavefunction for calculatin electric field operator
+  !
 !=----------------------------------------------------------------------------=!
 END MODULE io_files
 !=----------------------------------------------------------------------------=!

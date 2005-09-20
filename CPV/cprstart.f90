@@ -70,12 +70,13 @@
 PROGRAM main
   !----------------------------------------------------------------------------
   !
-  USE input,         ONLY : read_input_file, iosys_pseudo, iosys
-  USE io_global,     ONLY : io_global_start, io_global_getionode
-  USE mp_global,     ONLY : mp_global_start
-  USE mp,            ONLY : mp_end, mp_start, mp_env
-  USE control_flags, ONLY : lneb, lsmd, lmetadyn, program_name
-  USE environment,   ONLY : environment_start
+  USE input,              ONLY : read_input_file, iosys_pseudo, iosys
+  USE io_global,          ONLY : io_global_start, io_global_getionode
+  USE mp_global,          ONLY : mp_global_start
+  USE mp,                 ONLY : mp_end, mp_start, mp_env
+  USE control_flags,      ONLY : lneb, lsmd, lmetadyn, program_name
+  USE coarsegrained_base, ONLY : metadyn_init
+  USE environment,        ONLY : environment_start
   !
   IMPLICIT NONE
   !
@@ -127,6 +128,8 @@ PROGRAM main
      CALL smd_loop( 1 )
      !
   ELSE IF ( lmetadyn ) THEN
+     !
+     CALL metadyn_init()
      !
      CALL metadyn()
      !

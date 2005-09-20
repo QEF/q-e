@@ -21,7 +21,8 @@ SUBROUTINE iosys()
   ! ...  independent input parser
   !
   !
-  USE constants,     ONLY : AU, eV_to_kelvin
+  USE kinds,         ONLY : DP
+  USE constants,     ONLY : au, eV_to_kelvin
   USE mp_global,     ONLY : npool, nproc_pool
   !
   USE io_global,     ONLY : stdout, ionode
@@ -181,6 +182,12 @@ SUBROUTINE iosys()
                             w_1_              => w_1, & 
                             w_2_              => w_2
   !
+  USE coarsegrained_vars, ONLY : fe_nstep_    => fe_nstep, &
+                                 shake_nstep_ => shake_nstep, &
+                                 fe_step_     => fe_step, &
+                                 g_amplitude_ => g_amplitude, &
+                                 g_sigma_     => g_sigma
+  !
   USE check_stop,    ONLY : check_stop_init
   !
   ! CONTROL namelist
@@ -230,9 +237,10 @@ SUBROUTINE iosys()
                                use_masses, use_multistep, first_last_opt,      &
                                damp, init_num_of_images, temp_req, k_max,      &
                                k_min, ds, use_fourier, use_freezing,           &
-                               fixed_tan, free_energy, write_save,             &
+                               fixed_tan, free_energy, write_save, w_1, w_2,   &
                                trust_radius_max, trust_radius_min, bfgs_ndim,  &
-                               trust_radius_ini, w_1, w_2
+                               trust_radius_ini, g_amplitude, g_sigma, fe_step,&
+                               fe_nstep, shake_nstep
   !
   ! CELL namelist
   !
@@ -253,16 +261,13 @@ SUBROUTINE iosys()
   !
   USE read_namelists_module, ONLY : read_namelists, sm_not_set
   !
-  USE kinds,                 ONLY : DP
-  !
   IMPLICIT NONE
   !
   ! ... local variables
   !
-  INTEGER             :: unit = 5, &
-                         i, ia, ios, is, image, nt
-  LOGICAL             :: ltest
-  REAL(DP)       :: theta, phi
+  INTEGER  :: unit = 5, i, ia, ios, is, image, nt
+  LOGICAL  :: ltest
+  REAL(DP) :: theta, phi
   !
   !
   CALL getenv( 'HOME', pseudo_dir )
@@ -1153,15 +1158,16 @@ SUBROUTINE iosys()
   report_   = report
   lambda_   = lambda
   !
-  Hubbard_U_( 1 : ntyp )     = hubbard_u( 1 : ntyp )
-  Hubbard_alpha_( 1 : ntyp ) = hubbard_alpha( 1 : ntyp )
-  lda_plus_u_                = lda_plus_u
-  nspin_                     = nspin
-  starting_magnetization_    = starting_magnetization
-  starting_ns                = starting_ns_eigenvalue
-  U_projection               = U_projection_type
-  nosym_                     = nosym
-  nbnd_                      = nbnd
+  Hubbard_U_(1:ntyp)      = hubbard_u(1:ntyp)
+  Hubbard_alpha_(1:ntyp)  = hubbard_alpha(1:ntyp)
+  lda_plus_u_             = lda_plus_u
+  nspin_                  = nspin
+  starting_magnetization_ = starting_magnetization
+  starting_ns             = starting_ns_eigenvalue
+  U_projection            = U_projection_type
+  nosym_                  = nosym
+  nbnd_                    = nbnd
+  !
 #if defined (EXX)
   !
   lexx_  = lexx
@@ -1169,6 +1175,7 @@ SUBROUTINE iosys()
   nqx2_   = nqx2
   nqx3_   = nqx3
   yukawa_ = yukawa
+  !
 #endif
   !
   startingwfc_ = startingwfc
@@ -1220,6 +1227,14 @@ SUBROUTINE iosys()
   trust_radius_ini_ = trust_radius_ini
   w_1_              = w_1
   w_2_              = w_2  
+  !
+  ! ... meta-dynamics
+  !
+  fe_nstep_    = fe_nstep
+  shake_nstep_ = shake_nstep
+  fe_step_     = fe_step
+  g_amplitude_ = g_amplitude
+  g_sigma_     = g_sigma
   !
   ! ... read following cards
   !

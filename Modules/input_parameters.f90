@@ -1144,22 +1144,34 @@ MODULE input_parameters
         REAL (DP) :: smd_ene_fin = 1.D0
         !
         REAL (DP) :: smd_spal = 1.D0
+        
+        !
+        ! ... variable for meta-dynamics
+        !
+        
+        INTEGER  :: fe_nstep    = 50
+        INTEGER  :: shake_nstep = 5
+        REAL(DP) :: fe_step     = 0.4D0
+        REAL(DP) :: g_amplitude = 0.01D0
+        REAL(DP) :: g_sigma     = 0.4D0
  
         NAMELIST / ions / phase_space, ion_dynamics, ion_radius, ion_damping,  &
                           ion_positions, ion_velocities, ion_temperature,      &
-                          tempw, fnosep, nhpcl, nhptyp, ndega, tranp, amprp, greasp,   &
-                          tolp, ion_nstepe, ion_maxstep, upscale, delta_t,     &
-                          pot_extrapolation, wfc_extrapolation, nraise,        &
-                          num_of_images, CI_scheme, opt_scheme, use_masses,    &
-                          first_last_opt, use_multistep, write_save, damp,     &
-                          temp_req, ds, k_max, k_min, path_thr, fixed_tan,     &
-                          init_num_of_images, free_energy, use_freezing,       &
-                          use_fourier, trust_radius_max, trust_radius_min,     &
+                          tempw, fnosep, nhpcl, nhptyp, ndega, tranp, amprp,   &
+                          greasp, tolp, ion_nstepe, ion_maxstep, upscale,      &
+                          delta_t, pot_extrapolation, wfc_extrapolation,       &
+                          nraise, num_of_images, CI_scheme, opt_scheme,        &
+                          use_masses, first_last_opt, use_multistep,           &
+                          write_save, damp, temp_req, ds, k_max, k_min,        &
+                          path_thr, fixed_tan, init_num_of_images,             &
+                          free_energy, use_freezing, use_fourier,              &
+                          trust_radius_max, trust_radius_min,                  &
                           trust_radius_ini, w_1, w_2, bfgs_ndim, sic_rloc,     &
                           smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1,   &
                           smd_stcd2, smd_stcd3, smd_codf, smd_forf, smd_smwf,  &
                           smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, smd_smopt, &
-                          smd_smlm, smd_ene_ini, smd_ene_fin
+                          smd_smlm, smd_ene_ini, smd_ene_fin,                  &
+                          fe_step, fe_nstep, shake_nstep, g_amplitude, g_sigma
 
 !=----------------------------------------------------------------------------=!
 !  CELL Namelist Input Parameters

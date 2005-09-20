@@ -207,7 +207,8 @@ MODULE input
                                tchi2_      => tchi2, &
                                tatomicwfc_ => tatomicwfc, &
                                printwfc_   => printwfc, &
-                               tortho_     => tortho
+                               tortho_     => tortho,   &
+                               nstep_      => nstep
      USE control_flags, ONLY : t_diis_simple_ => t_diis_simple, &
                                t_diis_        => t_diis, &
                                tsde_          => tsde, &
@@ -258,6 +259,12 @@ MODULE input
      USE cp_electronic_mass, ONLY : emass_ => emass, &
                                     emaec_ => emass_cutoff
      !
+     USE coarsegrained_vars, ONLY : fe_nstep_    => fe_nstep, &
+                                    shake_nstep_ => shake_nstep, &
+                                    fe_step_     => fe_step, &
+                                    g_amplitude_ => g_amplitude, &
+                                    g_sigma_     => g_sigma
+     !
      USE input_parameters, ONLY: &
         electron_dynamics, electron_damping, diis_rot, electron_temperature,   &
         ion_dynamics, ekin_conv_thr, etot_conv_thr, forc_conv_thr, ion_maxstep,&
@@ -271,7 +278,11 @@ MODULE input
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
         orthogonalization, electron_velocities, nat, if_pos, phase_space
      !
+     USE input_parameters, ONLY : g_amplitude, g_sigma, fe_step, fe_nstep, &
+                                  shake_nstep
+     !
      IMPLICIT NONE
+     !
      !
      IF ( .NOT. has_been_read ) &
         CALL errore( 'iosys ', 'input file has not been read yet!', 1 )
@@ -368,46 +379,85 @@ MODULE input
      trane_  = .FALSE.
      ampre_  = ampre
      taurdr_ = .FALSE.
+     !
      SELECT CASE ( TRIM( restart_mode ) )
-       CASE ('from_scratch')
-         nbeg_   = -1
-         nomore_ = nstep
-         trane_  = ( startingwfc == 'random' )
-         IF ( ampre_ == 0.d0 ) ampre_ = 0.02
-       CASE ('reset_counters')
-         nbeg_   =  0
-         nomore_ = nstep
-       CASE ('restart')
-         nbeg_   =  1
-         nomore_ = nstep
-       CASE ('auto')
-          if( auto_check(ndr, ' ') ) then
-            write(*,*) 'AuTOPILOT: Auto Check detects restart.xml'
-            write(*,*) '      adjusting restart mode to RESTART' 
-            restart_mode = 'restart'
-            nbeg_ = 1
-            ! Also handle NSTEPS adjustment so that
-            ! nomore does not include past nfi in cpr.f90
-            restart_p = .TRUE.
-            nomore_ = nstep
-            if ( ion_positions == 'from_input' ) then
-               taurdr_ = .TRUE.
-               nbeg_ = -1
-            end if
-         else
-            write(*,*) 'AUTOPILOT: Auto Check did not detect restart.xml'
-            write(*,*) '     adjusting restart mode to FROM_SCRATCH' 
-            restart_mode = 'from_scratch'
-            nbeg_ = -2
-            if ( ion_positions == 'from_input' ) nbeg_ = -1
-            nomore_ = nstep
-            trane_  = ( startingwfc == 'random' )
-            if ( ampre_ == 0.d0 ) ampre_ = 0.02
-         end IF
+       !
+       CASE( 'from_scratch' )
+          !
+          nbeg_   = -1
+          nomore_ = nstep
+          nstep_  = nstep
+          trane_  = ( startingwfc == 'random' )
+          !
+          IF ( ampre_ == 0.D0 ) ampre_ = 0.02D0
+          !
+       CASE( 'reset_counters' )
+          !
+          nbeg_   =  0
+          nomore_ = nstep
+          nstep_  = nstep
+          !
+       CASE( 'restart' )
+          !
+          nbeg_   =  1
+          nomore_ = nstep
+          nstep_  = nstep
+          !
+       CASE( 'auto' )
+          !
+          IF ( auto_check( ndr, ' ' ) ) THEN
+             !
+             WRITE( stdout, '("autopilot: Auto Check detects restart.xml")' )
+             WRITE( stdout, '("           adjusting restart_mode to restart")' )
+             !
+             restart_mode = 'restart'
+             !
+             nbeg_ = 1
+             !
+             ! ... Also handle NSTEPS adjustment so that
+             ! ... nomore does not include past nfi in cpr.f90
+             !
+             restart_p = .TRUE.
+             nomore_   = nstep
+             nstep_    = nstep
+             !
+             IF ( ion_positions == 'from_input' ) THEN
+                !
+                taurdr_ = .TRUE.
+                nbeg_   = -1
+                !
+             END IF
+             !
+          ELSE
+             !
+             WRITE( stdout, &
+                    '("autopilot: Auto Check did not detect restart.xml")' )
+             !
+             WRITE( stdout, &
+                    '("           adjusting restart_mode to from_scratch")' ) 
+             !
+             restart_mode = 'from_scratch'
+             !
+             nbeg_ = -2
+             !
+             IF ( ion_positions == 'from_input' ) nbeg_ = -1
+             !
+             nomore_ = nstep
+             nstep_  = nstep
+             !
+             trane_ = ( startingwfc == 'random' )
+             !
+             IF ( ampre_ == 0.d0 ) ampre_ = 0.02D0
+             !
+          END IF
+          !
        CASE DEFAULT
-         CALL errore(' iosys ',' unknown restart_mode '//TRIM(restart_mode), 1 )
+          !
+          CALL errore( 'iosys ', &
+                       'unknown restart_mode ' // TRIM( restart_mode ), 1 )
+          !
      END SELECT
-
+     !
      ! ... Starting/Restarting Atomic positions
      !
      SELECT CASE ( TRIM(ion_positions) )
@@ -516,7 +566,17 @@ MODULE input
         CASE DEFAULT
           CALL errore(' control_flags ',' unknown electron_temperature '//TRIM(electron_temperature), 1 )
       END SELECT
-
+      
+      !
+      ! ... meta-dynamics
+      !
+      
+      fe_nstep_    = fe_nstep
+      shake_nstep_ = shake_nstep
+      fe_step_     = fe_step
+      g_amplitude_ = g_amplitude
+      g_sigma_     = g_sigma
+      
       SELECT CASE( TRIM( phase_space ) )
       CASE( 'full' )
          !

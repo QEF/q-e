@@ -16,7 +16,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
                                  trane, ampre, nbeg, tfor, taurdr, ndr
   USE cg_module,          ONLY : tcg
   USE coarsegrained_vars, ONLY : new_target, to_target, dfe_acc, &
-                                 max_shake_iter, max_fe_iter, to_new_target
+                                 shake_nstep, fe_nstep, to_new_target
   USE path_variables,     ONLY : pos, pes, grad_pes, frozen, &
                                  num_of_images, istep_path, suspended_image
   USE constraints_module, ONLY : lagrange, target, init_constraint, &
@@ -233,7 +233,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         to_target(:) = new_target(:) - target(:)
         !
         nfi    = 1
-        nomore = max_shake_iter
+        nomore = shake_nstep
         tcg    = .FALSE.
         tfor   = .TRUE.
         !
@@ -244,7 +244,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         ! ... and finally the free energy gradients are computed
         !
         nfi    = 1
-        nomore = max_fe_iter
+        nomore = fe_nstep
         !
         to_new_target = .FALSE.
         !
@@ -312,7 +312,6 @@ SUBROUTINE metadyn()
   !
   USE kinds,              ONLY : DP
   USE constraints_module, ONLY : nconstr, target, lagrange
-  USE cell_base,          ONLY : at, alat
   USE cp_main_variables,  ONLY : nfi
   USE control_flags,      ONLY : program_name, nomore, ldamped, tconvthrs, &
                                  trane, ampre, nbeg, tfor, taurdr, ndr
@@ -320,16 +319,12 @@ SUBROUTINE metadyn()
   USE ions_base,          ONLY : nat, nsp, ityp, if_pos, &
                                  sort_tau, tau_srt, ind_srt
   USE io_global,          ONLY : stdout
-  USE io_files,           ONLY : prefix, iunaxsf, scradir
-  USE constants,          ONLY : bohr_radius_angs
-  USE coarsegrained_vars, ONLY : max_fe_iter, max_shake_iter, fe_grad, &
+  USE io_files,           ONLY : iunmeta, iunaxsf, scradir
+  USE coarsegrained_vars, ONLY : fe_nstep, shake_nstep, fe_grad, &
                                  new_target, to_target, to_new_target, &
                                  fe_step, dfe_acc, metadyn_history,    &
-                                 max_metadyn_iter, A, sigma
-  USE coarsegrained_vars, ONLY : allocate_coarsegrained_vars, &
-                                 deallocate_coarsegrained_vars
+                                 max_metadyn_iter, starting_metadyn_iter
   USE coarsegrained_base, ONLY : add_gaussians
-  USE parser,             ONLY : delete_if_present
   USE io_global,          ONLY : ionode
   USE xml_io_base,        ONLY : check_restartfile
   USE basic_algebra_routines
@@ -343,42 +338,6 @@ SUBROUTINE metadyn()
   !
   !
   ALLOCATE( tau( 3, nat ), fion( 3, nat ) )
-  !
-  CALL allocate_coarsegrained_vars( nconstr, max_metadyn_iter )
-  !
-  IF ( ionode ) THEN
-     !
-     OPEN( UNIT = iunaxsf, FILE = TRIM( prefix ) // ".axsf", &
-           STATUS = "UNKNOWN", ACTION = "WRITE" )
-     !
-     WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I3)' ) max_metadyn_iter
-     WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
-     WRITE( UNIT = iunaxsf, FMT = '(" PRIMVEC ")' )
-     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-         at(1,1) * alat * bohr_radius_angs, &
-         at(2,1) * alat * bohr_radius_angs, &
-         at(3,1) * alat * bohr_radius_angs
-     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-         at(1,2) * alat * bohr_radius_angs, &
-         at(2,2) * alat * bohr_radius_angs, &
-         at(3,2) * alat * bohr_radius_angs
-     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-         at(1,3) * alat * bohr_radius_angs, &
-         at(2,3) * alat * bohr_radius_angs, &
-         at(3,3) * alat * bohr_radius_angs
-     !
-  END IF
-  !
-  CALL delete_if_present( TRIM( prefix ) // '.metadyn' )
-  !
-  IF ( ionode ) THEN
-     !
-     OPEN( UNIT = 999, FILE = TRIM( prefix ) // '.metadyn', STATUS = 'NEW' )
-     !
-     WRITE( 999, '(2(2X,I5))' ) nconstr, max_metadyn_iter
-     WRITE( 999, '(2(2X,F12.8))' ) A, sigma
-     !
-  END IF
   !
   ! ... first the wfc are taken to the ground state
   !
@@ -410,14 +369,39 @@ SUBROUTINE metadyn()
   !
   tfor = .TRUE.
   !
-  DO iter = 1, max_metadyn_iter
+  iter = starting_metadyn_iter
+  !
+  metadyn_loop: DO
+     !
+     IF ( iter > 0 ) THEN
+        !
+        CALL add_gaussians( iter )
+        !
+        ! ... the system is "adiabatically" moved to the new target
+        !
+        new_target(:) = target(:) - fe_step * fe_grad(:) / norm( fe_grad )
+        !
+        to_target(:) = new_target(:) - target(:)
+        !
+        nfi    = 0
+        nomore = shake_nstep
+        !
+        tconvthrs%active = .FALSE.
+        !
+        to_new_target = .TRUE.
+        !
+        CALL cprmain( tau, fion, etot )
+        !
+     END IF
+     !
+     iter = iter + 1
      !
      metadyn_history(:,iter) = target(:)
      !
      IF ( ionode ) CALL write_config( iter )
      !
      nfi    = 0
-     nomore = max_fe_iter
+     nomore = fe_nstep
      !
      tconvthrs%active = .TRUE.
      !
@@ -442,41 +426,22 @@ SUBROUTINE metadyn()
      END IF
      !
      IF ( ionode ) &
-        WRITE( 999, '(I4,5(2X,F12.8))' ) iter, target(:), etot, fe_grad(:)
+        WRITE( iunmeta, '(I4,5(2X,F12.8))' ) iter, target(:), etot, fe_grad(:)
      !
-     CALL add_gaussians( iter )
+     IF ( iter >= max_metadyn_iter ) EXIT metadyn_loop
      !
-     new_target(:) = target(:) - fe_step * fe_grad(:) / norm( fe_grad )
-     !
-     ! ... the system is "adiabatically" moved to the new target
-     !
-     to_target(:) = new_target(:) - target(:)
-     !
-     nfi    = 0
-     nomore = max_shake_iter
-     !
-     tconvthrs%active = .FALSE.
-     !
-     to_new_target = .TRUE.
-     !
-     CALL cprmain( tau, fion, etot )
-     !
-     IF ( ionode ) CALL flush_unit( 999 )
-     !
-  END DO
+  END DO metadyn_loop
   !
   IF ( ionode ) THEN
      !
      CALL write_config( iter )
      !
      CLOSE( UNIT = iunaxsf )
-     CLOSE( UNIT = 999 )
+     CLOSE( UNIT = iunmeta )
      !
   END IF
   !
   DEALLOCATE( tau, fion )
-  !
-  CALL deallocate_coarsegrained_vars()
   !
   RETURN
   !

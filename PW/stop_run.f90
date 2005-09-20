@@ -15,12 +15,14 @@ SUBROUTINE stop_run( flag )
   ! ... or during execution with flag = .FALSE. (does not remove 'restart')
   !
   USE io_global,          ONLY : stdout, ionode
-  USE control_flags,      ONLY : lpath, lneb, lsmd, twfcollect, lconstrain
+  USE control_flags,      ONLY : lpath, lneb, lsmd, twfcollect, lconstrain, &
+                                 lcoarsegrained
   USE io_files,           ONLY : prefix, iunwfc, iunigk, iunres, iunefield
   USE input_parameters,   ONLY : deallocate_input_parameters
   USE path_variables,     ONLY : path_deallocation
   USE path_io_routines,   ONLY : io_path_stop
   USE constraints_module, ONLY : deallocate_constraint
+  USE coarsegrained_vars, ONLY : deallocate_coarsegrained_vars
   USE mp,                 ONLY : mp_barrier, mp_end
   USE bp,                 ONLY : lelfield
   !
@@ -59,22 +61,22 @@ SUBROUTINE stop_run( flag )
      CALL seqopn( 4, 'md', 'FORMATTED', exst )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
-     !CALL seqopn( 4, 'para', 'FORMATTED', exst )
-     !CLOSE( UNIT = 4, STATUS = 'DELETE' )
+     CALL seqopn( 4, 'para', 'FORMATTED', exst )
+     CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
      CALL seqopn( 4, 'BLOCK', 'FORMATTED', exst )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
   END IF
- ! close unit for electric field if needed
-  IF( lelfield)  CLOSE( UNIT = iunefield, STATUS = 'KEEP' )
-
+  !
+  ! ... close unit for electric field if needed
+  !
+  IF ( lelfield ) CLOSE( UNIT = iunefield, STATUS = 'KEEP' )
   !
   ! ... iunigk is kept open during the execution - close and remove
   !
   CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
   !
-
   CALL print_clock_pw()
   !
   CALL mp_barrier()
@@ -93,6 +95,8 @@ SUBROUTINE stop_run( flag )
   CALL deallocate_input_parameters()
   !
   IF ( lconstrain ) CALL deallocate_constraint()
+  !
+  IF ( lcoarsegrained ) CALL deallocate_coarsegrained_vars()
   !
   IF ( lneb ) THEN
      !

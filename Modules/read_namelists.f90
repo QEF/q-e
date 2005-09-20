@@ -15,13 +15,15 @@ MODULE read_namelists_module
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : factem, kb_au, au_kb, k_boltzman_au, angstrom_au, &
-                        uma_au, pi
+                        uma_au, pi, e2
   USE input_parameters
   !
   IMPLICIT NONE
+  !
   SAVE
   !
   PRIVATE
+  !
   REAL(DP), PARAMETER :: sm_not_set = -20.D0
   !
   PUBLIC :: read_namelists, sm_not_set
@@ -413,6 +415,14 @@ MODULE read_namelists_module
        smd_ene_ini = 1.D0
        smd_ene_fin = 1.D0
        !
+       ! ... meta-dynamics defaults
+       !
+       fe_step     = 0.4D0
+       fe_nstep    = 50
+       shake_nstep = 5
+       g_amplitude   = 0.01D0
+       g_sigma       = 0.4D0
+       !
        RETURN
        !
      END SUBROUTINE
@@ -570,37 +580,37 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        ! 
-       CALL mp_bcast( title, ionode_id )
-       CALL mp_bcast( calculation, ionode_id )
-       CALL mp_bcast( verbosity, ionode_id )
-       CALL mp_bcast( restart_mode, ionode_id )
-       CALL mp_bcast( nstep, ionode_id )
-       CALL mp_bcast( iprint, ionode_id )
-       CALL mp_bcast( isave, ionode_id )
-       CALL mp_bcast( tstress, ionode_id )
-       CALL mp_bcast( tprnfor, ionode_id )
-       CALL mp_bcast( dt, ionode_id )
-       CALL mp_bcast( ndr, ionode_id )
-       CALL mp_bcast( ndw, ionode_id )
-       CALL mp_bcast( outdir, ionode_id )
-       CALL mp_bcast( scradir, ionode_id )
-       CALL mp_bcast( prefix, ionode_id )
-       CALL mp_bcast( max_seconds, ionode_id )
+       CALL mp_bcast( title,         ionode_id )
+       CALL mp_bcast( calculation,   ionode_id )
+       CALL mp_bcast( verbosity,     ionode_id )
+       CALL mp_bcast( restart_mode,  ionode_id )
+       CALL mp_bcast( nstep,         ionode_id )
+       CALL mp_bcast( iprint,        ionode_id )
+       CALL mp_bcast( isave,         ionode_id )
+       CALL mp_bcast( tstress,       ionode_id )
+       CALL mp_bcast( tprnfor,       ionode_id )
+       CALL mp_bcast( dt,            ionode_id )
+       CALL mp_bcast( ndr,           ionode_id )
+       CALL mp_bcast( ndw,           ionode_id )
+       CALL mp_bcast( outdir,        ionode_id )
+       CALL mp_bcast( scradir,       ionode_id )
+       CALL mp_bcast( prefix,        ionode_id )
+       CALL mp_bcast( max_seconds,   ionode_id )
        CALL mp_bcast( ekin_conv_thr, ionode_id )
        CALL mp_bcast( etot_conv_thr, ionode_id )
        CALL mp_bcast( forc_conv_thr, ionode_id )
-       CALL mp_bcast( pseudo_dir, ionode_id )
-       CALL mp_bcast( refg, ionode_id )
-       CALL mp_bcast( disk_io, ionode_id )
-       CALL mp_bcast( tefield, ionode_id )
-       CALL mp_bcast( dipfield, ionode_id )
-       CALL mp_bcast( lberry, ionode_id )
-       CALL mp_bcast( gdir, ionode_id )
-       CALL mp_bcast( nppstr, ionode_id )
-       CALL mp_bcast( wf_collect, ionode_id )
-       CALL mp_bcast( printwfc, ionode_id )
-       CALL mp_bcast( lelfield, ionode_id )
-       CALL mp_bcast( nberrycic, ionode_id )
+       CALL mp_bcast( pseudo_dir,    ionode_id )
+       CALL mp_bcast( refg,          ionode_id )
+       CALL mp_bcast( disk_io,       ionode_id )
+       CALL mp_bcast( tefield,       ionode_id )
+       CALL mp_bcast( dipfield,      ionode_id )
+       CALL mp_bcast( lberry,        ionode_id )
+       CALL mp_bcast( gdir,          ionode_id )
+       CALL mp_bcast( nppstr,        ionode_id )
+       CALL mp_bcast( wf_collect,    ionode_id )
+       CALL mp_bcast( printwfc,      ionode_id )
+       CALL mp_bcast( lelfield,      ionode_id )
+       CALL mp_bcast( nberrycic,     ionode_id )
 
        ! 
        RETURN
@@ -623,62 +633,62 @@ MODULE read_namelists_module
        IMPLICIT NONE
        ! 
        !
-       CALL mp_bcast( ibrav, ionode_id  )
-       CALL mp_bcast( celldm, ionode_id  )
-       CALL mp_bcast( a, ionode_id )
-       CALL mp_bcast( b, ionode_id )
-       CALL mp_bcast( c, ionode_id )
-       CALL mp_bcast( cosab, ionode_id )
-       CALL mp_bcast( cosac, ionode_id )
-       CALL mp_bcast( cosbc, ionode_id )
-       CALL mp_bcast( nat, ionode_id  )
-       CALL mp_bcast( ntyp, ionode_id  )
-       CALL mp_bcast( nbnd, ionode_id  )
-       CALL mp_bcast( nelec, ionode_id  )
-       CALL mp_bcast( ecutwfc, ionode_id  )
-       CALL mp_bcast( ecutrho, ionode_id  )
-       CALL mp_bcast( nr1, ionode_id  )            
-       CALL mp_bcast( nr2, ionode_id  )           
-       CALL mp_bcast( nr3, ionode_id  )          
-       CALL mp_bcast( nr1s, ionode_id  )        
-       CALL mp_bcast( nr2s, ionode_id  )       
-       CALL mp_bcast( nr3s, ionode_id  )      
-       CALL mp_bcast( nr1b, ionode_id  )     
-       CALL mp_bcast( nr2b, ionode_id  )    
-       CALL mp_bcast( nr3b, ionode_id  )   
-       CALL mp_bcast( occupations, ionode_id  )   
-       CALL mp_bcast( smearing, ionode_id  )     
-       CALL mp_bcast( degauss, ionode_id  )     
-       CALL mp_bcast( nelup, ionode_id )
-       CALL mp_bcast( neldw, ionode_id )
-       CALL mp_bcast( nspin, ionode_id )
-       CALL mp_bcast( nosym, ionode_id ) 
-       CALL mp_bcast( ecfixed, ionode_id )
-       CALL mp_bcast( qcutz, ionode_id )
-       CALL mp_bcast( q2sigma, ionode_id )
-       CALL mp_bcast( xc_type, ionode_id )
+       CALL mp_bcast( ibrav,                  ionode_id )
+       CALL mp_bcast( celldm,                 ionode_id )
+       CALL mp_bcast( a,                      ionode_id )
+       CALL mp_bcast( b,                      ionode_id )
+       CALL mp_bcast( c,                      ionode_id )
+       CALL mp_bcast( cosab,                  ionode_id )
+       CALL mp_bcast( cosac,                  ionode_id )
+       CALL mp_bcast( cosbc,                  ionode_id )
+       CALL mp_bcast( nat,                    ionode_id )
+       CALL mp_bcast( ntyp,                   ionode_id )
+       CALL mp_bcast( nbnd,                   ionode_id )
+       CALL mp_bcast( nelec,                  ionode_id )
+       CALL mp_bcast( ecutwfc,                ionode_id )
+       CALL mp_bcast( ecutrho,                ionode_id )
+       CALL mp_bcast( nr1,                    ionode_id )            
+       CALL mp_bcast( nr2,                    ionode_id )           
+       CALL mp_bcast( nr3,                    ionode_id )          
+       CALL mp_bcast( nr1s,                   ionode_id )        
+       CALL mp_bcast( nr2s,                   ionode_id )       
+       CALL mp_bcast( nr3s,                   ionode_id )      
+       CALL mp_bcast( nr1b,                   ionode_id )     
+       CALL mp_bcast( nr2b,                   ionode_id )    
+       CALL mp_bcast( nr3b,                   ionode_id )   
+       CALL mp_bcast( occupations,            ionode_id )   
+       CALL mp_bcast( smearing,               ionode_id )     
+       CALL mp_bcast( degauss,                ionode_id )     
+       CALL mp_bcast( nelup,                  ionode_id )
+       CALL mp_bcast( neldw,                  ionode_id )
+       CALL mp_bcast( nspin,                  ionode_id )
+       CALL mp_bcast( nosym,                  ionode_id ) 
+       CALL mp_bcast( ecfixed,                ionode_id )
+       CALL mp_bcast( qcutz,                  ionode_id )
+       CALL mp_bcast( q2sigma,                ionode_id )
+       CALL mp_bcast( xc_type,                ionode_id )
        CALL mp_bcast( starting_magnetization, ionode_id ) 
        CALL mp_bcast( starting_ns_eigenvalue, ionode_id ) 
-       CALL mp_bcast( U_projection_type, ionode_id ) 
-       CALL mp_bcast( lda_plus_U, ionode_id ) 
-       CALL mp_bcast( Hubbard_U, ionode_id ) 
-       CALL mp_bcast( Hubbard_alpha, ionode_id ) 
-       CALL mp_bcast( edir, ionode_id )
-       CALL mp_bcast( emaxpos, ionode_id )
-       CALL mp_bcast( eopreg, ionode_id )
-       CALL mp_bcast( eamp, ionode_id )
+       CALL mp_bcast( U_projection_type,      ionode_id ) 
+       CALL mp_bcast( lda_plus_U,             ionode_id ) 
+       CALL mp_bcast( Hubbard_U,              ionode_id ) 
+       CALL mp_bcast( Hubbard_alpha,          ionode_id ) 
+       CALL mp_bcast( edir,                   ionode_id )
+       CALL mp_bcast( emaxpos,                ionode_id )
+       CALL mp_bcast( eopreg,                 ionode_id )
+       CALL mp_bcast( eamp,                   ionode_id )
        !
        ! ... non collinear broadcast
        !
-       CALL mp_bcast( lspinorb, ionode_id )
-       CALL mp_bcast( noncolin, ionode_id )
-       CALL mp_bcast( angle1, ionode_id )
-       CALL mp_bcast( angle2, ionode_id )
-       CALL mp_bcast( report, ionode_id )
+       CALL mp_bcast( lspinorb,                  ionode_id )
+       CALL mp_bcast( noncolin,                  ionode_id )
+       CALL mp_bcast( angle1,                    ionode_id )
+       CALL mp_bcast( angle2,                    ionode_id )
+       CALL mp_bcast( report,                    ionode_id )
        CALL mp_bcast( constrained_magnetization, ionode_id )
-       CALL mp_bcast( B_field, ionode_id )
-       CALL mp_bcast( fixed_magnetization, ionode_id )
-       CALL mp_bcast( lambda, ionode_id )       
+       CALL mp_bcast( B_field,                   ionode_id )
+       CALL mp_bcast( fixed_magnetization,       ionode_id )
+       CALL mp_bcast( lambda,                    ionode_id )       
        ! 
        RETURN
        !
@@ -700,59 +710,60 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        !
-       CALL mp_bcast( emass, ionode_id )
-       CALL mp_bcast( emass_cutoff, ionode_id )
-       CALL mp_bcast( orthogonalization, ionode_id )
-       CALL mp_bcast( electron_maxstep, ionode_id )
-       CALL mp_bcast( ortho_eps, ionode_id )
-       CALL mp_bcast( ortho_max, ionode_id )
-       CALL mp_bcast( electron_dynamics, ionode_id )
-       CALL mp_bcast( electron_damping, ionode_id )
-       CALL mp_bcast( electron_velocities, ionode_id )
+       CALL mp_bcast( emass,                ionode_id )
+       CALL mp_bcast( emass_cutoff,         ionode_id )
+       CALL mp_bcast( orthogonalization,    ionode_id )
+       CALL mp_bcast( electron_maxstep,     ionode_id )
+       CALL mp_bcast( ortho_eps,            ionode_id )
+       CALL mp_bcast( ortho_max,            ionode_id )
+       CALL mp_bcast( electron_dynamics,    ionode_id )
+       CALL mp_bcast( electron_damping,     ionode_id )
+       CALL mp_bcast( electron_velocities,  ionode_id )
        CALL mp_bcast( electron_temperature, ionode_id )
-       CALL mp_bcast( conv_thr, ionode_id )
-       CALL mp_bcast( ekincw, ionode_id )
-       CALL mp_bcast( fnosee, ionode_id )
-       CALL mp_bcast( startingwfc, ionode_id )
-       CALL mp_bcast( ampre, ionode_id )
-       CALL mp_bcast( grease, ionode_id )
-       CALL mp_bcast( startingpot, ionode_id )
-       CALL mp_bcast( empty_states_nbnd, ionode_id )
+       CALL mp_bcast( conv_thr,             ionode_id )
+       CALL mp_bcast( ekincw,               ionode_id )
+       CALL mp_bcast( fnosee,               ionode_id )
+       CALL mp_bcast( startingwfc,          ionode_id )
+       CALL mp_bcast( ampre,                ionode_id )
+       CALL mp_bcast( grease,               ionode_id )
+       CALL mp_bcast( startingpot,          ionode_id )
+       CALL mp_bcast( empty_states_nbnd,    ionode_id )
        CALL mp_bcast( empty_states_maxstep, ionode_id )
-       CALL mp_bcast( empty_states_delt, ionode_id )
-       CALL mp_bcast( empty_states_emass, ionode_id )
-       CALL mp_bcast( empty_states_ethr, ionode_id )
-       CALL mp_bcast( diis_size, ionode_id )
-       CALL mp_bcast( diis_nreset, ionode_id )
-       CALL mp_bcast( diis_hcut, ionode_id )
-       CALL mp_bcast( diis_wthr, ionode_id )
-       CALL mp_bcast( diis_delt, ionode_id )
-       CALL mp_bcast( diis_maxstep, ionode_id )
-       CALL mp_bcast( diis_rot, ionode_id )
-       CALL mp_bcast( diis_fthr, ionode_id )
-       CALL mp_bcast( diis_temp, ionode_id )
-       CALL mp_bcast( diis_achmix, ionode_id )
-       CALL mp_bcast( diis_g0chmix, ionode_id )
-       CALL mp_bcast( diis_g1chmix, ionode_id )
-       CALL mp_bcast( diis_nchmix, ionode_id )
-       CALL mp_bcast( diis_nrot, ionode_id )
-       CALL mp_bcast( diis_rothr, ionode_id )
-       CALL mp_bcast( diis_ethr, ionode_id )
-       CALL mp_bcast( diis_chguess, ionode_id )
-       CALL mp_bcast( mixing_fixed_ns, ionode_id )
-       CALL mp_bcast( mixing_mode, ionode_id )
-       CALL mp_bcast( mixing_beta, ionode_id )
-       CALL mp_bcast( mixing_ndim, ionode_id )
-       CALL mp_bcast( diagonalization, ionode_id )
-       CALL mp_bcast( diago_thr_init, ionode_id )
-       CALL mp_bcast( diago_cg_maxiter, ionode_id )
-       CALL mp_bcast( diago_david_ndim, ionode_id )
-       CALL mp_bcast( diago_diis_ndim, ionode_id )
-       CALL mp_bcast( sic, ionode_id )
-       CALL mp_bcast( sic_epsilon , ionode_id )
-       CALL mp_bcast( force_pairing , ionode_id )
+       CALL mp_bcast( empty_states_delt,    ionode_id )
+       CALL mp_bcast( empty_states_emass,   ionode_id )
+       CALL mp_bcast( empty_states_ethr,    ionode_id )
+       CALL mp_bcast( diis_size,            ionode_id )
+       CALL mp_bcast( diis_nreset,          ionode_id )
+       CALL mp_bcast( diis_hcut,            ionode_id )
+       CALL mp_bcast( diis_wthr,            ionode_id )
+       CALL mp_bcast( diis_delt,            ionode_id )
+       CALL mp_bcast( diis_maxstep,         ionode_id )
+       CALL mp_bcast( diis_rot,             ionode_id )
+       CALL mp_bcast( diis_fthr,            ionode_id )
+       CALL mp_bcast( diis_temp,            ionode_id )
+       CALL mp_bcast( diis_achmix,          ionode_id )
+       CALL mp_bcast( diis_g0chmix,         ionode_id )
+       CALL mp_bcast( diis_g1chmix,         ionode_id )
+       CALL mp_bcast( diis_nchmix,          ionode_id )
+       CALL mp_bcast( diis_nrot,            ionode_id )
+       CALL mp_bcast( diis_rothr,           ionode_id )
+       CALL mp_bcast( diis_ethr,            ionode_id )
+       CALL mp_bcast( diis_chguess,         ionode_id )
+       CALL mp_bcast( mixing_fixed_ns,      ionode_id )
+       CALL mp_bcast( mixing_mode,          ionode_id )
+       CALL mp_bcast( mixing_beta,          ionode_id )
+       CALL mp_bcast( mixing_ndim,          ionode_id )
+       CALL mp_bcast( diagonalization,      ionode_id )
+       CALL mp_bcast( diago_thr_init,       ionode_id )
+       CALL mp_bcast( diago_cg_maxiter,     ionode_id )
+       CALL mp_bcast( diago_david_ndim,     ionode_id )
+       CALL mp_bcast( diago_diis_ndim,      ionode_id )
+       CALL mp_bcast( sic,                  ionode_id )
+       CALL mp_bcast( sic_epsilon ,         ionode_id )
+       CALL mp_bcast( force_pairing ,       ionode_id )
        ! 
-       !***ensemble-DFT       
+       ! ... ensemble-DFT
+       !
        CALL mp_bcast( fermi_energy,       ionode_id )
        CALL mp_bcast( n_inner,            ionode_id )
        CALL mp_bcast( rotation_dynamics,  ionode_id )
@@ -761,15 +772,18 @@ MODULE read_namelists_module
        CALL mp_bcast( occmass,            ionode_id )
        CALL mp_bcast( rotation_damping,   ionode_id )
        CALL mp_bcast( occupation_damping, ionode_id )
-       !*** GRADIENTE CONIUGATO
-       CALL mp_bcast( tcg,       ionode_id )
-       CALL mp_bcast( maxiter,       ionode_id )
-       CALL mp_bcast( etresh,       ionode_id )
-       CALL mp_bcast( passop,       ionode_id )
-
-       !***** CAMPO ELETTRICO
-       CALL mp_bcast( epol,       ionode_id )
-       CALL mp_bcast( efield,       ionode_id )
+       !
+       ! ... conjugate gradient
+       !
+       CALL mp_bcast( tcg,     ionode_id )
+       CALL mp_bcast( maxiter, ionode_id )
+       CALL mp_bcast( etresh,  ionode_id )
+       CALL mp_bcast( passop,  ionode_id )
+       !
+       ! ... electric field
+       !
+       CALL mp_bcast( epol,   ionode_id )
+       CALL mp_bcast( efield, ionode_id )
        ! 
        RETURN
        !
@@ -791,83 +805,89 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        !
-       CALL mp_bcast( phase_space, ionode_id )
-       CALL mp_bcast( ion_dynamics, ionode_id )
-       CALL mp_bcast( ion_radius, ionode_id )
-       CALL mp_bcast( ion_damping, ionode_id )
-       CALL mp_bcast( ion_positions, ionode_id )
-       CALL mp_bcast( ion_velocities, ionode_id )
-       CALL mp_bcast( ion_temperature, ionode_id )
-       CALL mp_bcast( tempw, ionode_id )
-       CALL mp_bcast( fnosep, ionode_id )
-       CALL mp_bcast( nhpcl, ionode_id )
-       CALL mp_bcast( nhptyp, ionode_id )
-       CALL mp_bcast( ndega, ionode_id )
-       CALL mp_bcast( tranp, ionode_id )
-       CALL mp_bcast( amprp, ionode_id )
-       CALL mp_bcast( greasp, ionode_id )
-       CALL mp_bcast( tolp, ionode_id )
-       CALL mp_bcast( ion_nstepe, ionode_id )
-       CALL mp_bcast( ion_maxstep, ionode_id )
-       CALL mp_bcast( delta_t, ionode_id )
-       CALL mp_bcast( nraise, ionode_id )
-       CALL mp_bcast( upscale, ionode_id )
+       CALL mp_bcast( phase_space,       ionode_id )
+       CALL mp_bcast( ion_dynamics,      ionode_id )
+       CALL mp_bcast( ion_radius,        ionode_id )
+       CALL mp_bcast( ion_damping,       ionode_id )
+       CALL mp_bcast( ion_positions,     ionode_id )
+       CALL mp_bcast( ion_velocities,    ionode_id )
+       CALL mp_bcast( ion_temperature,   ionode_id )
+       CALL mp_bcast( tempw,             ionode_id )
+       CALL mp_bcast( fnosep,            ionode_id )
+       CALL mp_bcast( nhpcl,             ionode_id )
+       CALL mp_bcast( nhptyp,            ionode_id )
+       CALL mp_bcast( ndega,             ionode_id )
+       CALL mp_bcast( tranp,             ionode_id )
+       CALL mp_bcast( amprp,             ionode_id )
+       CALL mp_bcast( greasp,            ionode_id )
+       CALL mp_bcast( tolp,              ionode_id )
+       CALL mp_bcast( ion_nstepe,        ionode_id )
+       CALL mp_bcast( ion_maxstep,       ionode_id )
+       CALL mp_bcast( delta_t,           ionode_id )
+       CALL mp_bcast( nraise,            ionode_id )
+       CALL mp_bcast( upscale,           ionode_id )
        CALL mp_bcast( pot_extrapolation, ionode_id )
        CALL mp_bcast( wfc_extrapolation, ionode_id )
        !
        ! ... "path" variables broadcast
        !
-       CALL mp_bcast( num_of_images, ionode_id )
-       CALL mp_bcast( first_last_opt, ionode_id )
-       CALL mp_bcast( use_masses, ionode_id )
+       CALL mp_bcast( num_of_images,      ionode_id )
+       CALL mp_bcast( first_last_opt,     ionode_id )
+       CALL mp_bcast( use_masses,         ionode_id )
        CALL mp_bcast( init_num_of_images, ionode_id )
-       CALL mp_bcast( use_multistep, ionode_id )
-       CALL mp_bcast( use_fourier, ionode_id )
-       CALL mp_bcast( use_freezing, ionode_id )
-       CALL mp_bcast( fixed_tan, ionode_id )
-       CALL mp_bcast( free_energy, ionode_id )
-       CALL mp_bcast( write_save, ionode_id )
-       CALL mp_bcast( CI_scheme, ionode_id )
-       CALL mp_bcast( opt_scheme, ionode_id )
-       CALL mp_bcast( damp, ionode_id )
-       CALL mp_bcast( temp_req, ionode_id )
-       CALL mp_bcast( ds, ionode_id )
-       CALL mp_bcast( k_max, ionode_id )
-       CALL mp_bcast( k_min, ionode_id )
-       CALL mp_bcast( path_thr, ionode_id )
+       CALL mp_bcast( use_multistep,      ionode_id )
+       CALL mp_bcast( use_fourier,        ionode_id )
+       CALL mp_bcast( use_freezing,       ionode_id )
+       CALL mp_bcast( fixed_tan,          ionode_id )
+       CALL mp_bcast( free_energy,        ionode_id )
+       CALL mp_bcast( write_save,         ionode_id )
+       CALL mp_bcast( CI_scheme,          ionode_id )
+       CALL mp_bcast( opt_scheme,         ionode_id )
+       CALL mp_bcast( damp,               ionode_id )
+       CALL mp_bcast( temp_req,           ionode_id )
+       CALL mp_bcast( ds,                 ionode_id )
+       CALL mp_bcast( k_max,              ionode_id )
+       CALL mp_bcast( k_min,              ionode_id )
+       CALL mp_bcast( path_thr,           ionode_id )
        !
        ! ... BFGS
        !
-       CALL mp_bcast( bfgs_ndim, ionode_id )
+       CALL mp_bcast( bfgs_ndim,        ionode_id )
        CALL mp_bcast( trust_radius_max, ionode_id )
        CALL mp_bcast( trust_radius_min, ionode_id )
        CALL mp_bcast( trust_radius_ini, ionode_id )
-       CALL mp_bcast( w_1, ionode_id )
-       CALL mp_bcast( w_2, ionode_id )
+       CALL mp_bcast( w_1,              ionode_id )
+       CALL mp_bcast( w_2,              ionode_id )
        !
        CALL mp_bcast( sic_rloc, ionode_id )
        ! 
        ! ... SMD broadcast (Y.K. 15/04/2004)
        !
-       CALL mp_bcast( smd_polm, ionode_id )
-       CALL mp_bcast( smd_kwnp, ionode_id )
-       CALL mp_bcast( smd_linr, ionode_id )
-       CALL mp_bcast( smd_stcd, ionode_id )
-       CALL mp_bcast( smd_stcd2, ionode_id )
-       CALL mp_bcast( smd_stcd2, ionode_id )
-       CALL mp_bcast( smd_stcd3, ionode_id )
-       CALL mp_bcast( smd_codf, ionode_id )
-       CALL mp_bcast( smd_forf, ionode_id )
-       CALL mp_bcast( smd_smwf, ionode_id )
-       CALL mp_bcast( smd_lmfreq, ionode_id )
-       CALL mp_bcast( smd_tol, ionode_id )
-       CALL mp_bcast( smd_maxlm, ionode_id)
-       CALL mp_bcast( smd_smcp, ionode_id )
-       CALL mp_bcast( smd_smopt, ionode_id )
-       CALL mp_bcast( smd_smlm, ionode_id)
+       CALL mp_bcast( smd_polm,    ionode_id )
+       CALL mp_bcast( smd_kwnp,    ionode_id )
+       CALL mp_bcast( smd_linr,    ionode_id )
+       CALL mp_bcast( smd_stcd,    ionode_id )
+       CALL mp_bcast( smd_stcd2,   ionode_id )
+       CALL mp_bcast( smd_stcd2,   ionode_id )
+       CALL mp_bcast( smd_stcd3,   ionode_id )
+       CALL mp_bcast( smd_codf,    ionode_id )
+       CALL mp_bcast( smd_forf,    ionode_id )
+       CALL mp_bcast( smd_smwf,    ionode_id )
+       CALL mp_bcast( smd_lmfreq,  ionode_id )
+       CALL mp_bcast( smd_tol,     ionode_id )
+       CALL mp_bcast( smd_maxlm,   ionode_id )
+       CALL mp_bcast( smd_smcp,    ionode_id )
+       CALL mp_bcast( smd_smopt,   ionode_id )
+       CALL mp_bcast( smd_smlm,    ionode_id )
        CALL mp_bcast( smd_ene_ini, ionode_id )
        CALL mp_bcast( smd_ene_fin, ionode_id )
-
+       !
+       CALL mp_bcast( fe_step,     ionode_id )
+       CALL mp_bcast( fe_nstep,    ionode_id )
+       CALL mp_bcast( shake_nstep, ionode_id )
+       CALL mp_bcast( g_amplitude, ionode_id )
+       CALL mp_bcast( g_sigma,     ionode_id )
+       !
        RETURN
        !
      END SUBROUTINE
@@ -888,19 +908,19 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        !
-       CALL mp_bcast( cell_parameters, ionode_id )
-       CALL mp_bcast( cell_dynamics, ionode_id )
-       CALL mp_bcast( cell_velocities, ionode_id )
-       CALL mp_bcast( cell_dofree, ionode_id )
-       CALL mp_bcast( press, ionode_id )
-       CALL mp_bcast( wmass, ionode_id )
+       CALL mp_bcast( cell_parameters,  ionode_id )
+       CALL mp_bcast( cell_dynamics,    ionode_id )
+       CALL mp_bcast( cell_velocities,  ionode_id )
+       CALL mp_bcast( cell_dofree,      ionode_id )
+       CALL mp_bcast( press,            ionode_id )
+       CALL mp_bcast( wmass,            ionode_id )
        CALL mp_bcast( cell_temperature, ionode_id )
-       CALL mp_bcast( temph, ionode_id )
-       CALL mp_bcast( fnoseh, ionode_id )
-       CALL mp_bcast( greash, ionode_id )
-       CALL mp_bcast( cell_factor, ionode_id )
-       CALL mp_bcast( cell_nstepe, ionode_id )
-       CALL mp_bcast( cell_damping, ionode_id )
+       CALL mp_bcast( temph,            ionode_id )
+       CALL mp_bcast( fnoseh,           ionode_id )
+       CALL mp_bcast( greash,           ionode_id )
+       CALL mp_bcast( cell_factor,      ionode_id )
+       CALL mp_bcast( cell_nstepe,      ionode_id )
+       CALL mp_bcast( cell_damping,     ionode_id )
        ! 
        RETURN
        !
@@ -923,7 +943,7 @@ MODULE read_namelists_module
        !
        !
        CALL mp_bcast( modenum, ionode_id )
-       CALL mp_bcast( xqq, ionode_id )
+       CALL mp_bcast( xqq,     ionode_id )
        !
        RETURN
        !
@@ -946,7 +966,7 @@ MODULE read_namelists_module
        !
        !
        CALL mp_bcast( b_length, ionode_id )
-       CALL mp_bcast( lcart, ionode_id )
+       CALL mp_bcast( lcart,    ionode_id )
        !
        RETURN
        !
@@ -969,29 +989,29 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        !
-       CALL mp_bcast( wf_efield, ionode_id )
-       CALL mp_bcast( wf_switch, ionode_id )
-       CALL mp_bcast( sw_len, ionode_id )
-       CALL mp_bcast( efx0, ionode_id )
-       CALL mp_bcast( efy0, ionode_id )
-       CALL mp_bcast( efz0, ionode_id )
-       CALL mp_bcast( efx1, ionode_id )
-       CALL mp_bcast( efy1, ionode_id )
-       CALL mp_bcast( efz1, ionode_id )
-       CALL mp_bcast( wfsd, ionode_id )
-       CALL mp_bcast( wfdt, ionode_id )
-       CALL mp_bcast( maxwfdt, ionode_id )
-       CALL mp_bcast( wf_q, ionode_id )
+       CALL mp_bcast( wf_efield,   ionode_id )
+       CALL mp_bcast( wf_switch,   ionode_id )
+       CALL mp_bcast( sw_len,      ionode_id )
+       CALL mp_bcast( efx0,        ionode_id )
+       CALL mp_bcast( efy0,        ionode_id )
+       CALL mp_bcast( efz0,        ionode_id )
+       CALL mp_bcast( efx1,        ionode_id )
+       CALL mp_bcast( efy1,        ionode_id )
+       CALL mp_bcast( efz1,        ionode_id )
+       CALL mp_bcast( wfsd,        ionode_id )
+       CALL mp_bcast( wfdt,        ionode_id )
+       CALL mp_bcast( maxwfdt,     ionode_id )
+       CALL mp_bcast( wf_q,        ionode_id )
        CALL mp_bcast( wf_friction, ionode_id )
-       CALL mp_bcast( nit, ionode_id )
-       CALL mp_bcast( nsd, ionode_id )
-       CALL mp_bcast( nsteps, ionode_id )
-       CALL mp_bcast( tolw, ionode_id )
-       CALL mp_bcast( adapt, ionode_id )
-       CALL mp_bcast( calwf, ionode_id )
-       CALL mp_bcast( nwf, ionode_id )
-       CALL mp_bcast( wffort, ionode_id )
-       CALL mp_bcast( writev, ionode_id )
+       CALL mp_bcast( nit,         ionode_id )
+       CALL mp_bcast( nsd,         ionode_id )
+       CALL mp_bcast( nsteps,      ionode_id )
+       CALL mp_bcast( tolw,        ionode_id )
+       CALL mp_bcast( adapt,       ionode_id )
+       CALL mp_bcast( calwf,       ionode_id )
+       CALL mp_bcast( nwf,         ionode_id )
+       CALL mp_bcast( wffort,      ionode_id )
+       CALL mp_bcast( writev,      ionode_id )
        !
        RETURN
        !
@@ -1376,25 +1396,25 @@ MODULE read_namelists_module
        ! ... SMD checking ( Y.K. 15/04/2004 )
        !
        IF ( smd_polm .AND. smd_linr ) &
-          CALL infomsg ( sub_name,' smd_polm & smd_linr  both true ', -1)
+          CALL infomsg( sub_name,' smd_polm & smd_linr  both true ', -1)
        !
        IF ( smd_polm .AND. smd_kwnp < 3 ) &
-          CALL infomsg ( sub_name,' smd_kwnp < 3 for smd_polm ', -1)
+          CALL infomsg( sub_name,' smd_kwnp < 3 for smd_polm ', -1)
        !
        IF ( smd_stcd .AND. (smd_stcd1==0 .OR. smd_stcd2==0 .OR. smd_stcd3==0) ) & 
-          CALL infomsg ( sub_name,' smd_stcd not specified ', -1)
+          CALL infomsg( sub_name,' smd_stcd not specified ', -1)
        !
        IF( smd_smcp .AND. (smd_smopt .OR. smd_smlm) ) &
-          CALL infomsg ( sub_name,' SMCP ? ', -1)
+          CALL infomsg( sub_name,' smcp ? ', -1)
        !
        IF( smd_smopt .AND. (smd_smcp .OR. smd_smlm) ) &
-          CALL infomsg ( sub_name,' SMOPT ? ', -1)
+          CALL infomsg( sub_name,' smopt ? ', -1)
        !
        IF( smd_smlm .AND. (smd_smcp .OR. smd_smopt) ) &
-          CALL infomsg ( sub_name,' SMLM ? ', -1)
+          CALL infomsg( sub_name,' smlm ? ', -1)
        !
        IF (sic /= 'none' .and. sic_rloc == 0.d0) &
-          CALL errore( sub_name, ' invalid sic_rloc with sic activated ', 1)
+          CALL errore( sub_name, ' invalid sic_rloc with sic activated ', 1 )
        !
        RETURN
        !
@@ -1648,6 +1668,9 @@ MODULE read_namelists_module
          IF ( nspin == 2 .AND. nelec > 1 .AND. &
               ( nelup == neldw .OR. nelup == neldw+1 ) ) force_pairing = .TRUE.
        END IF
+       !
+       IF ( calculation == 'metadyn' .AND. &
+            prog == 'CP' ) g_amplitude = g_amplitude / e2
        !
        RETURN
        !

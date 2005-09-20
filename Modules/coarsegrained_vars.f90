@@ -15,12 +15,8 @@ MODULE coarsegrained_vars
   !
   SAVE
   !
- ! INTEGER, PARAMETER :: max_fe_iter    = 50
- ! INTEGER, PARAMETER :: max_shake_iter = 5
-  INTEGER, PARAMETER :: max_fe_iter    = 200
-  INTEGER, PARAMETER :: max_shake_iter = 20 
-  !
-  REAL(DP), PARAMETER :: fe_step = 0.4D0
+  INTEGER  :: fe_nstep
+  INTEGER  :: shake_nstep
   !
   REAL(DP), ALLOCATABLE :: dfe_acc(:)
   REAL(DP), ALLOCATABLE :: fe_grad(:)
@@ -31,16 +27,19 @@ MODULE coarsegrained_vars
   !
   ! ... Laio-Parrinello meta-dynamics
   !
-  INTEGER, PARAMETER :: max_metadyn_iter = 500
+  REAL(DP) :: fe_step
+  !
+  INTEGER :: max_metadyn_iter
   !
   REAL(DP), ALLOCATABLE :: metadyn_history(:,:)
   !
- ! REAL(DP), PARAMETER :: A            = 0.01D0
-  REAL(DP), PARAMETER :: A            = 0.005D0
-  REAL(DP), PARAMETER :: sigma        = 0.4D0
+  REAL(DP) :: g_amplitude
+  REAL(DP) :: g_sigma
   !
-  REAL(DP), PARAMETER :: sigma_sq     = sigma**2
-  REAL(DP), PARAMETER :: two_sigma_sq = 2.D0 * sigma_sq
+  REAL(DP) :: g_sigma_sq
+  REAL(DP) :: two_g_sigma_sq
+  !
+  INTEGER :: starting_metadyn_iter
   !
   CONTAINS
     !
@@ -91,7 +90,7 @@ MODULE coarsegrained_base
   !
   PRIVATE
   !
-  PUBLIC :: set_target, add_gaussians
+  PUBLIC :: set_target, add_gaussians, metadyn_init
   !
   CONTAINS
     !
@@ -99,13 +98,13 @@ MODULE coarsegrained_base
     SUBROUTINE set_target()
       !------------------------------------------------------------------------
       !
-      USE coarsegrained_vars, ONLY : to_target, to_new_target, max_shake_iter
+      USE coarsegrained_vars, ONLY : to_target, to_new_target, shake_nstep
       USE constraints_module, ONLY : target
       !
       !
       IF ( to_new_target ) THEN
          !
-         target(:) = target(:) + to_target(:) / DBLE( max_shake_iter )
+         target(:) = target(:) + to_target(:) / DBLE( shake_nstep )
          !
       END IF
       !
@@ -114,12 +113,155 @@ MODULE coarsegrained_base
     END SUBROUTINE set_target
     !
     !------------------------------------------------------------------------
+    SUBROUTINE metadyn_init()
+      !------------------------------------------------------------------------
+      !
+      USE kinds,              ONLY : DP
+      USE input_parameters,   ONLY : restart_mode
+      USE constraints_module, ONLY : nconstr, target
+      USE control_flags,      ONLY : nstep
+      USE constants,          ONLY : bohr_radius_angs
+      USE cell_base,          ONLY : at, alat
+      USE coarsegrained_vars, ONLY : allocate_coarsegrained_vars, fe_grad,    &
+                                     g_amplitude, g_sigma, g_sigma_sq, two_g_sigma_sq, &
+                                     max_metadyn_iter, metadyn_history,       &
+                                     starting_metadyn_iter
+      USE parser,             ONLY : delete_if_present
+      USE io_files,           ONLY : prefix, iunaxsf, iunmeta
+      USE io_global,          ONLY : stdout, ionode, ionode_id
+      USE mp,                 ONLY : mp_bcast
+      !
+      IMPLICIT NONE
+      !
+      INTEGER  :: idum, i
+      REAL(DP) :: rdum
+      LOGICAL  :: lstop, file_exists
+      !
+      !
+      g_sigma_sq     = g_sigma**2
+      two_g_sigma_sq = 2.D0 * g_sigma_sq
+      !
+      IF ( nstep < 1 ) CALL errore( 'metadyn_init', 'nstep < 1', 1 )
+      !
+      max_metadyn_iter = nstep
+      !
+      CALL allocate_coarsegrained_vars( nconstr, max_metadyn_iter )
+      !
+      IF ( restart_mode == 'from_scratch' ) THEN
+         !
+         IF ( ionode ) THEN
+            !
+            OPEN( UNIT = iunaxsf, &
+                  FILE = TRIM( prefix ) // ".axsf", STATUS = 'UNKNOWN' )
+            !
+            WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I3)' ) max_metadyn_iter
+            WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
+            WRITE( UNIT = iunaxsf, FMT = '(" PRIMVEC ")' )
+            WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+                at(1,1) * alat * bohr_radius_angs, &
+                at(2,1) * alat * bohr_radius_angs, &
+                    at(3,1) * alat * bohr_radius_angs
+            WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+                at(1,2) * alat * bohr_radius_angs, &
+                at(2,2) * alat * bohr_radius_angs, &
+                at(3,2) * alat * bohr_radius_angs
+            WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+                at(1,3) * alat * bohr_radius_angs, &
+                at(2,3) * alat * bohr_radius_angs, &
+                at(3,3) * alat * bohr_radius_angs
+            !
+         END IF
+         !
+         CALL delete_if_present( TRIM( prefix ) // '.metadyn' )
+         !
+         IF ( ionode ) THEN
+            !
+            OPEN( UNIT = iunmeta, &
+                  FILE = TRIM( prefix ) // '.metadyn', STATUS = 'NEW' )
+            !
+            WRITE( iunmeta, '(2(2X,I5))' ) nconstr, max_metadyn_iter
+            WRITE( iunmeta, '(2(2X,F12.8))' ) g_amplitude, g_sigma
+            !
+         END IF
+         !
+         starting_metadyn_iter = 0
+         !
+      ELSE
+         !
+         IF ( ionode ) &
+            INQUIRE( FILE = TRIM( prefix ) // '.metadyn', EXIST = file_exists )
+         !
+         CALL mp_bcast( file_exists, ionode_id )
+         !
+         IF ( .NOT. file_exists ) &
+            CALL errore( 'metadyn_init', 'restart file  ' // &
+                       & TRIM( prefix ) // '.metadyn  does not exist', 1 )
+         !
+         IF ( ionode ) THEN
+            !
+            OPEN( UNIT = iunaxsf, FILE = TRIM( prefix ) // ".axsf", &
+                  STATUS = 'UNKNOWN', ACTION = 'WRITE', POSITION = 'APPEND' )
+            !
+            OPEN( UNIT = iunmeta, FILE = TRIM( prefix ) // '.metadyn', &
+                  ACTION = 'READ', STATUS = 'UNKNOWN' )
+            !
+            ! ... first we look for the number of performed iterations
+            !
+            READ( iunmeta, * ) nconstr, starting_metadyn_iter
+            READ( iunmeta, * )
+            !
+            IF ( starting_metadyn_iter >= max_metadyn_iter ) THEN
+               !
+               WRITE( stdout, '(/,5X,"Simulation already completed",/)' )
+               !
+               CLOSE( UNIT = iunmeta, STATUS = 'KEEP' )
+               !
+               lstop = .TRUE.
+               !
+            ELSE
+               !
+               lstop = .FALSE.
+               !
+               DO i = 1, starting_metadyn_iter
+                  !
+                  READ( iunmeta, * ) &
+                     idum, metadyn_history(:,i), rdum, fe_grad(:)
+                  !
+               END DO
+               !
+               target(:) = metadyn_history(:,starting_metadyn_iter)
+               !
+               CLOSE( UNIT = iunmeta, STATUS = 'KEEP' )
+               !
+               OPEN( UNIT = iunmeta, FILE = TRIM( prefix ) // '.metadyn', &
+                     STATUS = 'UNKNOWN', ACTION = 'WRITE', POSITION = 'APPEND' )
+               !
+            END IF
+            !
+         END IF
+         !
+         CALL mp_bcast( lstop, ionode_id )
+         !
+         IF ( lstop ) CALL stop_run( .FALSE. )
+         !
+         CALL mp_bcast( starting_metadyn_iter, ionode_id )
+         CALL mp_bcast( metadyn_history,       ionode_id )
+         CALL mp_bcast( target,                ionode_id )
+         CALL mp_bcast( fe_grad,               ionode_id )
+         !
+      END IF
+      !
+      RETURN
+      !
+    END SUBROUTINE metadyn_init
+    !
+    !------------------------------------------------------------------------
     SUBROUTINE add_gaussians( iter )
       !------------------------------------------------------------------------
       !
       USE constraints_module, ONLY : nconstr
       USE coarsegrained_vars, ONLY : metadyn_history, fe_grad, dfe_acc
-      USE coarsegrained_vars, ONLY : A, sigma_sq, two_sigma_sq
+      USE coarsegrained_vars, ONLY : g_amplitude, g_sigma_sq, two_g_sigma_sq
       USE basic_algebra_routines
       !
       IMPLICIT NONE
@@ -132,6 +274,8 @@ MODULE coarsegrained_base
       !
       ! ... history dependent term
       !
+      IF ( iter == 1 ) RETURN
+      !
       ALLOCATE( delta( nconstr ) )
       !
       dfe_acc = 0.D0
@@ -141,11 +285,11 @@ MODULE coarsegrained_base
          delta = metadyn_history(:,i) - metadyn_history(:,iter)
          !
          dfe_acc(:) = dfe_acc(:) + delta(:) * &
-                      EXP( - ( delta(:) .dot. delta(:) ) / two_sigma_sq )
+                      EXP( - ( delta(:) .dot. delta(:) ) / two_g_sigma_sq )
          !
       END DO
       !
-      fe_grad(:) = fe_grad(:) + A / sigma_sq * dfe_acc(:)
+      fe_grad(:) = fe_grad(:) + g_amplitude / g_sigma_sq * dfe_acc(:)
       !
       DEALLOCATE( delta )
       !
