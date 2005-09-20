@@ -211,7 +211,7 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 		    -value     {.false. .true.}
 		    -default  "No"
 		}
-		var file_recons {
+		var file_recon {
 		    -widget   entryfileselectquote
 		    -label    "Name of the file containing data needed for PAW reconstruction:"
 		    -fmt      %S
