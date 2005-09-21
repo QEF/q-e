@@ -408,7 +408,7 @@ SUBROUTINE metadyn()
   USE constraints_module, ONLY : nconstr, target
   USE ener,               ONLY : etot
   USE io_files,           ONLY : iunaxsf, iunmeta
-  USE coarsegrained_vars, ONLY : fe_grad, new_target, to_target, &
+  USE coarsegrained_vars, ONLY : fe_grad, new_target, to_target, metadyn_fmt, &
                                  to_new_target, fe_step, metadyn_history, &
                                  max_metadyn_iter, starting_metadyn_iter
   USE coarsegrained_base, ONLY : add_gaussians
@@ -448,7 +448,7 @@ SUBROUTINE metadyn()
      CALL free_energy_grad( iter )
      !
      IF ( ionode ) &
-        WRITE( iunmeta, '(I4,5(2X,F12.8))' ) iter, target(:), etot, fe_grad(:)
+        WRITE( iunmeta, metadyn_fmt ) iter, target(:), etot, fe_grad(:)
      !
      IF ( ionode ) CALL flush_unit( iunmeta )
      IF ( ionode ) CALL flush_unit( iunaxsf )

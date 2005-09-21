@@ -41,6 +41,8 @@ MODULE coarsegrained_vars
   !
   INTEGER :: starting_metadyn_iter
   !
+  CHARACTER(LEN=16) :: metadyn_fmt
+  !
   CONTAINS
     !
     !------------------------------------------------------------------------
@@ -125,8 +127,8 @@ MODULE coarsegrained_base
       USE coarsegrained_vars, ONLY : allocate_coarsegrained_vars, fe_grad,    &
                                      g_amplitude, g_sigma, g_sigma_sq, two_g_sigma_sq, &
                                      max_metadyn_iter, metadyn_history,       &
-                                     starting_metadyn_iter
-      USE parser,             ONLY : delete_if_present
+                                     starting_metadyn_iter, metadyn_fmt
+      USE parser,             ONLY : delete_if_present, int_to_char
       USE io_files,           ONLY : prefix, iunaxsf, iunmeta
       USE io_global,          ONLY : stdout, ionode, ionode_id
       USE mp,                 ONLY : mp_bcast
@@ -137,6 +139,9 @@ MODULE coarsegrained_base
       REAL(DP) :: rdum
       LOGICAL  :: lstop, file_exists
       !
+      !
+      metadyn_fmt = "(I4," // &
+                  & TRIM( int_to_char( 2*nconstr + 1 ) ) // "(2X,F12.8))"
       !
       g_sigma_sq     = g_sigma**2
       two_g_sigma_sq = 2.D0 * g_sigma_sq
@@ -154,13 +159,15 @@ MODULE coarsegrained_base
             OPEN( UNIT = iunaxsf, &
                   FILE = TRIM( prefix ) // ".axsf", STATUS = 'UNKNOWN' )
             !
-            WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I3)' ) max_metadyn_iter
+            WRITE( UNIT = iunaxsf, &
+                   FMT = '(" ANIMSTEPS ",I3)' ) max_metadyn_iter + 1
+            !
             WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
             WRITE( UNIT = iunaxsf, FMT = '(" PRIMVEC ")' )
             WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
                 at(1,1) * alat * bohr_radius_angs, &
                 at(2,1) * alat * bohr_radius_angs, &
-                    at(3,1) * alat * bohr_radius_angs
+                at(3,1) * alat * bohr_radius_angs
             WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
                 at(1,2) * alat * bohr_radius_angs, &
                 at(2,2) * alat * bohr_radius_angs, &
@@ -207,10 +214,17 @@ MODULE coarsegrained_base
             !
             ! ... first we look for the number of performed iterations
             !
-            READ( iunmeta, * ) nconstr, starting_metadyn_iter
+            READ( iunmeta, * ) nconstr
             READ( iunmeta, * )
             !
-            IF ( starting_metadyn_iter >= max_metadyn_iter ) THEN
+            DO i = 1, max_metadyn_iter
+               !
+               READ( iunmeta, *, END = 100 ) &
+                  starting_metadyn_iter, metadyn_history(:,i), rdum, fe_grad(:)
+               !
+            END DO
+            !
+100         IF ( starting_metadyn_iter == max_metadyn_iter ) THEN
                !
                WRITE( stdout, '(/,5X,"Simulation already completed",/)' )
                !
@@ -221,13 +235,6 @@ MODULE coarsegrained_base
             ELSE
                !
                lstop = .FALSE.
-               !
-               DO i = 1, starting_metadyn_iter
-                  !
-                  READ( iunmeta, * ) &
-                     idum, metadyn_history(:,i), rdum, fe_grad(:)
-                  !
-               END DO
                !
                target(:) = metadyn_history(:,starting_metadyn_iter)
                !

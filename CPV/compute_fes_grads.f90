@@ -320,7 +320,7 @@ SUBROUTINE metadyn()
                                  sort_tau, tau_srt, ind_srt
   USE io_global,          ONLY : stdout
   USE io_files,           ONLY : iunmeta, iunaxsf, scradir
-  USE coarsegrained_vars, ONLY : fe_nstep, shake_nstep, fe_grad, &
+  USE coarsegrained_vars, ONLY : fe_nstep, shake_nstep, fe_grad, metadyn_fmt, &
                                  new_target, to_target, to_new_target, &
                                  fe_step, dfe_acc, metadyn_history,    &
                                  max_metadyn_iter, starting_metadyn_iter
@@ -431,7 +431,7 @@ SUBROUTINE metadyn()
      END IF
      !
      IF ( ionode ) &
-        WRITE( iunmeta, '(I4,5(2X,F12.8))' ) iter, target(:), etot, fe_grad(:)
+        WRITE( iunmeta, metadyn_fmt ) iter, target(:), etot, fe_grad(:)
      !
      IF ( ionode ) CALL flush_unit( iunmeta )
      IF ( ionode ) CALL flush_unit( iunaxsf )
