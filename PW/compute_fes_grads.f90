@@ -475,7 +475,7 @@ SUBROUTINE metadyn()
       !------------------------------------------------------------------------
       !
       USE constants,          ONLY : e2
-      USE control_flags,      ONLY : istep, ldamped
+      USE control_flags,      ONLY : istep, ldamped, conv_ions
       USE coarsegrained_vars, ONLY : fe_nstep, dfe_acc
       USE constraints_module, ONLY : lagrange
       USE control_flags,      ONLY : istep, conv_ions
@@ -507,6 +507,8 @@ SUBROUTINE metadyn()
          IF ( .NOT. stat ) CALL stop_run( stat )
          !
          CALL move_ions()
+         !
+         IF ( ldamped .AND. conv_ions ) EXIT
          !
          lfirst = .FALSE.
          !
