@@ -79,10 +79,10 @@ MODULE constraints_module
        REAL(DP), INTENT(IN) :: alat
        INTEGER,  INTENT(IN) :: ityp(nat)
        !
-       INTEGER  :: ia, ia1, ia2, ia3
+       INTEGER  :: ia, ia1, ia2, ia3, n_type_coord1
        REAL(DP) :: r21(3), r23(3)
        REAL(DP) :: k, r_c
-       INTEGER  :: type_coord
+       INTEGER  :: type_coord1, type_coord2
        REAL(DP) :: dtau(3), norm_dtau
        !
        !
@@ -103,9 +103,56 @@ MODULE constraints_module
        DO ia = 1, nconstr
           !
           SELECT CASE ( constr_type(ia) )
-          CASE( 0 )
+          CASE( 1 )
              !
-             ! ... constraint on coordination number
+             ! ... constraint on global coordination number
+             !
+             IF ( constr_target_set(ia) ) THEN
+                !
+                target(ia) = constr_target(ia)
+                !
+                CYCLE
+                !
+             END IF
+             !
+             type_coord1 = ANINT( constr(1,ia) )
+             type_coord2 = ANINT( constr(2,ia) )
+             !
+             r_c = constr(3,ia)
+             k   = constr(4,ia)
+             !
+             target(ia) = 0.D0
+             !
+             n_type_coord1 = 0
+             !
+             DO ia1 = 1, nat
+                !
+                IF ( ityp(ia1) /= type_coord1 ) CYCLE
+                !
+                DO ia2 = 1, nat
+                   !
+                   IF ( ia2 == ia1 ) CYCLE
+                   !
+                   IF ( ityp(ia2) /= type_coord2 ) CYCLE
+                   !
+                   dtau = ( tau(:,ia1) - tau(:,ia2) ) * alat
+                   !
+                   norm_dtau = norm( dtau )
+                   !
+                   target(ia) = target(ia) + &
+                                2.D0 / ( EXP( k * ( norm_dtau - r_c ) ) + 1.D0 )
+                   !
+                END DO
+                !
+                n_type_coord1 = n_type_coord1 + 1
+                !
+             END DO
+             !
+             target(ia) = target(ia) / DBLE( n_type_coord1 )
+             !
+          CASE( 2 )
+             !
+             ! ... constraint on local coordination number
              !
              IF ( constr_target_set(ia) ) THEN
                 !
@@ -120,7 +167,7 @@ MODULE constraints_module
              r_c = constr(2,ia)
              k   = constr(3,ia)
              !
-             type_coord = INT( constr(4,ia) )
+             type_coord1 = ANINT( constr(4,ia) )
              !
              target(ia) = 0.D0
              !
@@ -128,7 +175,7 @@ MODULE constraints_module
                 !
                 IF ( ia2 == ia1 ) CYCLE
                 !
-                IF ( ityp(ia2) /= type_coord ) CYCLE
+                IF ( ityp(ia2) /= type_coord1 ) CYCLE
                 !
                 dtau = ( tau(:,ia1) - tau(:,ia2) ) * alat
                 !
@@ -139,7 +186,7 @@ MODULE constraints_module
                 !
              END DO
              !
-          CASE( 1 )
+          CASE( 3 )
              !
              ! ... constraint on distance
              !
@@ -156,7 +203,7 @@ MODULE constraints_module
              !
              target(ia) = norm( tau(:,ia1) - tau(:,ia2) ) * alat
              !
-          CASE( 2 )
+          CASE( 4 )
              !
              ! ... constraint on planar angle
              !
@@ -227,11 +274,11 @@ MODULE constraints_module
        !
        REAL(DP) :: x1, x2, y1, y2, z1, z2
        REAL(DP) :: dist0
-       INTEGER  :: ia, ia1, ia2, ia3
+       INTEGER  :: ia, ia1, ia2, ia3, n_type_coord1
        REAL(DP) :: r21(3), r23(3)
        REAL(DP) :: norm_r21, norm_r23, cos123, sin123
        REAL(DP) :: k, r_c
-       INTEGER  :: type_coord
+       INTEGER  :: type_coord1, type_coord2
        REAL(DP) :: dtau(3), norm_dtau, expo
        !
        ! ... external function
@@ -242,16 +289,66 @@ MODULE constraints_module
        dg(:,:) = 0.D0
        !
        SELECT CASE ( constr_type(index) )
-       CASE( 0 )
+       CASE( 1 )
           !
-          ! ... constraint on coordination
+          ! ... constraint on global coordination
+          !
+          type_coord1 = ANINT( constr(1,index) )
+          type_coord2 = ANINT( constr(2,index) )
+          !
+          r_c = constr(3,index)
+          k   = constr(4,index)
+          !
+          g = 0.D0
+          !
+          n_type_coord1 = 0
+          !
+          DO ia1 = 1, nat
+             !
+             IF ( ityp(ia1) /= type_coord1 ) CYCLE
+             !
+             DO ia2 = 1, nat
+                !
+                IF ( ia2 == ia1 ) CYCLE
+                !
+                IF ( ityp(ia2) /= type_coord2 ) CYCLE
+                !
+                dtau(:) = ( tau(:,ia1) - tau(:,ia2) ) * alat
+                !
+                norm_dtau = norm( dtau(:) )
+                !
+                dtau(:) = dtau(:) / norm_dtau
+                !
+                expo = EXP( k * ( norm_dtau - r_c ) )
+                !
+                g = g + 2.D0 / ( expo + 1.D0 )
+                !
+                dtau(:) = 2.D0 * dtau(:) * k * expo / ( expo + 1.D0 )**2
+                !
+                dg(:,ia2) = dg(:,ia2) + dtau(:)
+                dg(:,ia1) = dg(:,ia1) - dtau(:)
+                !
+             END DO
+             !
+             n_type_coord1 = n_type_coord1 + 1
+             !
+          END DO
+          !
+          g  = g  / DBLE( n_type_coord1 )
+          dg = dg / DBLE( n_type_coord1 )
+          !
+          g = ( g - target(index) )
+          !
+       CASE( 2 )
+          !
+          ! ... constraint on local coordination
           !
           ia = ANINT( constr(1,index) )
           !
           r_c = constr(2,index)
           k   = constr(3,index)          
           !
-          type_coord = INT( constr(4,index) )
+          type_coord1 = ANINT( constr(4,index) )
           !
           g = 0.D0
           !
@@ -259,7 +356,7 @@ MODULE constraints_module
              !
              IF ( ia1 == ia ) CYCLE
              !
-             IF ( ityp(ia1) /= type_coord ) CYCLE
+             IF ( ityp(ia1) /= type_coord1 ) CYCLE
              !
              dtau(:) = ( tau(:,ia) - tau(:,ia1) ) * alat
              !
@@ -280,7 +377,7 @@ MODULE constraints_module
           !
           g = ( g - target(index) )
           !
-       CASE( 1 )
+       CASE( 3 )
           !
           ! ... constraint on distances
           !
@@ -308,7 +405,7 @@ MODULE constraints_module
           dg(2,ia2) = - dg(2,ia1)
           dg(3,ia2) = - dg(3,ia1)
           !
-       CASE( 2 )
+       CASE( 4 )
           !
           ! ... constraint on planar angles
           !

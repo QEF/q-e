@@ -924,24 +924,31 @@ CONSTRAINTS
                                             constraints satisfied
 
       constr_type(.)               INTEGER, type of constrain :
-                                         0: for fixed coordination:
+                                       1,2: for fixed coordination numbers:
                                             four indexes must be specified
-                                         1: for fixed distances: 
+                                         3: for fixed distances: 
                                             two atom indexes must be specified 
-                                         2: for fixed planar angles: 
+                                         4: for fixed planar angles: 
                                             three atom indexes must be specified
 
       constr(1,.) constr(2,.) ...  REAL,    these variables have different 
                                             meanings for different constraint
                                             types:
-                                         0: constr(1) is the atom index of the
-                                            atom with constrained coordination
-                                            constr(2) is the cut-off radius for
+                                         1: constr(1) is the first index of the
+                                            atomic type involved
+                                            constr(2) is the second index of the
+                                            atomic type involved
+                                            constr(3) is the cut-off radius for
                                             estimating the coordination
-                                            constr(3) is a smoothing parameter
-                                            constr(4) is the index of the atomic
+                                            constr(4) is a smoothing parameter     
+                                         2: constr(1) is the atom index of the
+                                            atom with constrained coordination
+                                            constr(2) is the index of the atomic
                                             type involved in the coordination
-                                       1,2: atoms indices object of the 
+                                            constr(3) is the cut-off radius for
+                                            estimating the coordination
+                                            constr(4) is a smoothing parameter
+                                       3,4: atoms indices object of the 
                                             constraint, as they appear in 
                                             the 'POSITION' CARD
                                         

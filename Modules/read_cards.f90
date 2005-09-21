@@ -1489,8 +1489,8 @@ MODULE read_cards_module
           !
           CALL field_count( nfield, input_line )
           !
-          SELECT CASE( constr_type_inp(i) )
-          CASE( 0 )
+          SELECT CASE( constr_type_inp(i) )         
+          CASE( 1, 2 )
              !
              IF ( cg_phs_path_flag ) THEN
                 !
@@ -1527,7 +1527,7 @@ MODULE read_cards_module
                 !
              END IF
              !
-          CASE( 1 )
+          CASE( 3 )
              !
              IF ( cg_phs_path_flag ) THEN
                 !
@@ -1558,7 +1558,7 @@ MODULE read_cards_module
                 !
              END IF
              !
-          CASE( 2 )
+          CASE( 4 )
              !
              IF ( cg_phs_path_flag ) THEN
                 !
