@@ -73,7 +73,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
 
   enddo
   !
-  ! add the US term from augmentation charge derivatves
+  ! add the US term from augmentation charge derivatives
   !
 
   call addusstres (sigmanlc)

@@ -88,11 +88,14 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           END IF
        END DO
        !
-       IF ( me_pool /= root_pool ) GO TO 100
-       !
        ! ... diagonal contribution
        !
        evps = 0.D0
+       !
+       IF ( me_pool /= root_pool ) GO TO 100
+       !
+       ! ... the contribution is calculated only on one processor because
+       ! ... partial results are later summed over all processors
        !
        DO ibnd = 1, nbnd
           fac = wg(ibnd,ik)
@@ -290,11 +293,13 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           END IF
        END DO
        !
-       IF ( me_pool /= root_pool ) GO TO 100
-       !
+       evps = 0.D0
        ! ... diagonal contribution
        !
-       evps = 0.D0
+       IF ( me_pool /= root_pool ) GO TO 100
+       !
+       ! ... the contribution is calculated only on one processor because
+       ! ... partial results are later summed over all processors
        !
        DO ibnd = 1, nbnd
           fac = wg(ibnd,ik)
