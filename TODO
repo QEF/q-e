@@ -1,4 +1,4 @@
-TODO LIST - 24 aug 2005
+TODO LIST - 30 aug 2005
 
 BUGS TO EXAMINE
 
@@ -22,16 +22,14 @@ INSTALLATION/PORTING
 
 COMMON
 
-- data files: move to new format (XML + directories)
+- data files: move to new format (XML + directories),
+  ensure compatibility between PW and CP/FPMD
 
 - pseudopotentials: support new format (XML) if/when ready
 
 - adding/removing/modifying input variables is too complex
 
 - time steps in fs (both in input and in output)
-
-- data files: What is exactly the status of file compatibility
-  between PW and CP/FPMD?
 
 - better-structured (easily parsable) output format: XML?
 
@@ -44,8 +42,6 @@ COMMON
 
 - merge spherical harmonics between CP-PW and FPMD
   merge integration routines, random number generators
-
-- variable declarations : real(kind=DP) or real(dbl), everywhere
 
 - error is in flib/ but requires modules: not a good solution,
   things in flib/ should not use modules except maybe kinds 

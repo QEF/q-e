@@ -23,13 +23,14 @@ Several utilities are also included, in particular:
   written by Anton Kokalj (IJS Ljubljana) (for more info, see 
   http://www-k3.ijs.si/kokalj/pwgui , http://www-k3.ijs.si/kokalj/guib/)
 
-- a pseudopotential generation code, written by Andrea Dal Corso
+- the pseudopotential generation code "atomic", written by Andrea Dal Corso
+
+- the Input/Output Toolkit "iotk", written by Giovanni Bussi (S3 Modena)
 
 This distribution is a step in the ongoing work aiming at a full 
 integration and interoperability of these codes. This project is 
 part of a cooperative effort involving DEMOCRITOS, CINECA, Princeton 
-University, University of Pennsylvania, New York University, IBM 
-Corporation, University of Illinois at Urbana-Champaign.
+University, MIT Boston.
 
 Directory structure of the common part of the three packages:
 
@@ -63,6 +64,8 @@ GUI/ or PWgui-*/ Source files for the GUI (GUI/ for CVS sources, while
 
 atomic/    Source files for the pseudopotential generation package
 atomic_doc/ Documentation, tests and examples for the above
+
+iotk/      Input/Output Toolkit
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU

@@ -1323,14 +1323,14 @@ echo If any libraries are missing, you may specify a list of directories
 echo to search and retry, as follows:
 echo "  ./configure LIBDIRS=\"list of directories, separated by spaces\""
 echo
+if test "$use_parallel" -ne 0 && test "$parallel" -eq 0
+then
+	echo "A parallel environment was not detected"
+	echo "this program will run in single-processor mode"
+        echo
+fi
 echo For more information, read the ESPRESSO User\'s Guide \
 \(Doc/users-guide.tex\).
 echo --------------------------------------------------------------------
+echo "configure: success"
 
-if test "$use_parallel" -ne 0 && test "$parallel" -eq 0
-then
-	echo ----------------------------------------------
-	echo parallel environment not detected
-	echo this program will run in single-processor mode
-	echo ----------------------------------------------
-fi
