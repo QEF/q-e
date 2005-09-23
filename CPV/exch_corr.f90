@@ -173,6 +173,7 @@
       USE funct,              ONLY: igcx, igcc 
       USE reciprocal_vectors, ONLY: gstart, g
       USE gvecp,              ONLY: ngm
+      USE io_global,          ONLY: stdout
 
       IMPLICIT NONE
 
@@ -195,13 +196,16 @@
          (/ 1.0_DP, 0.0_DP, 0.0_DP, 1.0_DP, 0.0_DP, 1.0_DP /)
 
       COMPLEX(DP) :: tex1, tex2, tex3
-      REAL(DP) :: gcpail(6), omega
+      REAL(DP) :: gcpail(6), omega, detmp( 3, 3 )
+      REAL(DP) :: dcc( 6 )
       INTEGER :: ig, k, is, ispin, nspin
+      INTEGER :: i, j
 
       omega = box%deth
       nspin = SIZE(vxc, 2)
 
       DEXC = 0.0d0
+      dcc  = 0.0d0
 
       ! ... computes omega * \sum_{G}[ S(G)*rhopr(G)* G_{alpha} G_{beta}/|G|]
       ! ... (252) Phd thesis Dal Corso. Opposite sign.
@@ -220,23 +224,49 @@
             tex2 = tex2 + CONJG( vxc(ig, ispin) )
           END DO
           tex3 = DBLE(tex1 * tex2) / SQRT( g( ig ) ) / tpiba
-          dexc = dexc + tex3 * gagx_l(:,ig)
+          dcc = dcc + tex3 * gagx_l(:,ig)
         END DO
-        dexc = dexc * 2.0_DP * omega
+        dcc = dcc * 2.0_DP * omega
+
+        ! DEBUG
+        ! DO k=1,6
+        !   detmp(alpha(k),beta(k)) = dcc(k)
+        !   detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
+        ! END DO
+        ! detmp = MATMUL( detmp(:,:), box%m1(:,:) )
+        ! WRITE( stdout,*) "derivative of e(xc) - nlcc part"
+        ! WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+
 
       END IF
 
       ! ... (E_{xc} - \int dr v_{xc}(n) n(r))/omega part of the stress
       ! ... this part of the stress is diagonal.
 
-      dexc = dexc + strvxc * dalbe
+      dexc = strvxc * dalbe
 
       IF ( ( igcx > 0 ) .OR. ( igcc > 0 ) ) THEN
         CALL stress_gc(grho, v2xc, gcpail, omega)
         dexc = dexc + gcpail
       END IF
 
+      ! DEBUG
+      ! DO k=1,6
+      !   detmp(alpha(k),beta(k)) = dexc(k)
+      !   detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
+      ! END DO
+      ! detmp = MATMUL( detmp(:,:), box%m1(:,:) )
+      ! WRITE( stdout,*) "derivative of e(xc)"
+      ! WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+
+      dexc = dexc + dcc
+
       RETURN
+
+5555  format(1x,f12.5,1x,f12.5,1x,f12.5/                                &
+     &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
+     &       1x,f12.5,1x,f12.5,1x,f12.5//)
+
       END SUBROUTINE stress_xc
 
 
@@ -320,19 +350,23 @@
 !  CP subroutines
 !=----------------------------------------------------------------------------=!
 
-      subroutine exch_corr_h(nspin,rhog,rhor,exc,dxc)
+      subroutine exch_corr_h( nspin, rhog, rhor, rhoc, sfac, exc, dxc )
 !
 ! calculate exch-corr potential, energy, and derivatives dxc(i,j)
 ! of e(xc) with respect to to cell parameter h(i,j)
 !     
       use funct,           only : iexch, icorr, igcx, igcc
       use gvecp,           only : ng => ngm
+      use gvecs,           only : ngs
       use grid_dimensions, only : nr1, nr2, nr3, nnr => nnrx
       use cell_base,       only : ainv, omega
+      use ions_base,       only : nsp
       use control_flags,   only : tpre
       use derho,           only : drhor
+      use core,            only : drhocg, nlcc_any
       use mp,              only : mp_sum
       use metagga,         ONLY : ismeta, kedtaur
+      USE io_global,       ONLY : stdout
       use kinds,           ONLY : DP
 !
       implicit none
@@ -345,20 +379,23 @@
       ! rhor contains the charge density in R space
       !
       complex(DP) :: rhog( ng, nspin )
+      complex(DP) :: sfac( ngs, nsp )
       !
       ! output
       ! rhor contains the exchange-correlation potential
       !
-      real(DP) :: rhor( nnr, nspin ), dxc( 3, 3 ), exc
+      real(DP) :: rhor( nnr, nspin ), rhoc( nnr )
+      real(DP) :: dxc( 3, 3 ), exc
+      real(DP) :: dcc( 3, 3 ), drc( 3, 3 )
       !
       ! local
       !
       integer :: i, j, ir, iss
       real(DP) :: dexc(3,3)
       real(DP), allocatable :: gradr(:,:,:)
-!
-!     filling of gradr with the gradient of rho using fft's
-!
+      !
+      !     filling of gradr with the gradient of rho using fft's
+      !
       if (igcx /= 0 .or. igcc /= 0) then
          !
          allocate( gradr( nnr, 3, nspin ) )
@@ -367,21 +404,29 @@
       end if
 
 !
-      if(ismeta) then
-            call tpssmeta(nnr,nspin,gradr,rhor,kedtaur,exc)
+      if( ismeta ) then
+            call tpssmeta( nnr, nspin, gradr, rhor, kedtaur, exc )
       else
-            CALL exch_corr_cp(nnr,nspin,gradr,rhor,exc)
+            CALL exch_corr_cp(nnr, nspin, gradr, rhor, exc)
       end if
 
       call mp_sum( exc )
 
-      exc=exc*omega/DBLE(nr1*nr2*nr3)
-!
-! exchange-correlation contribution to pressure
-!
+      exc = exc * omega / DBLE( nr1 * nr2 * nr3 )
+
+      !
+      ! exchange-correlation contribution to pressure
+      !
       dxc = 0.0d0
       !
       if (tpre) then
+         !
+         IF( nlcc_any ) CALL  denlcc( nnr, nspin, rhor, sfac, drhocg, dcc )
+         !
+         ! DEBUG
+         !
+         ! write (stdout,*) "derivative of e(xc) - nlcc part"
+         ! write (stdout,5555) ((dcc(i,j),j=1,3),i=1,3)
          !
          do iss = 1, nspin
             do j=1,3
@@ -391,6 +436,17 @@
                   end do
                end do
             end do
+            drc = 0.0d0
+            IF( nlcc_any ) THEN
+               do j=1,3
+                  do i=1,3
+                     do ir=1,nnr
+                        drc(i,j) = drc(i,j) + rhor( ir, iss ) * rhoc( ir ) * ainv(j,i)
+                     end do
+                  end do
+               end do
+            END IF
+            dxc = dxc - drc * 1.0d0 / nspin
          end do
          !
          dxc = dxc * omega / ( nr1*nr2*nr3 )
@@ -399,9 +455,16 @@
          !
          do j=1,3
             do i=1,3
-               dxc(i,j) = dxc(i,j) + exc*ainv(j,i)
+               dxc(i,j) = dxc(i,j) + exc * ainv(j,i)
             end do
          end do
+         !
+         ! DEBUG
+         !
+         ! write (stdout,*) "derivative of e(xc)"
+         ! write (stdout,5555) ((dxc(i,j),j=1,3),i=1,3)
+         !
+         dxc = dxc + dcc
          !
       end if
       !
@@ -422,7 +485,11 @@
          deallocate(gradr)
          !
       end if
-!
+      !
+5555  format(1x,f12.5,1x,f12.5,1x,f12.5/                                &
+     &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
+     &       1x,f12.5,1x,f12.5,1x,f12.5//)
+      !
       return
       end subroutine exch_corr_h
 

@@ -15,47 +15,6 @@ module bhs
   integer :: lloc(nsx)
 end module bhs
 
-module core
-  implicit none
-  save
-  !     nlcc_any = 0 no core correction on any atom
-  !     rhocb  = core charge in G space (box grid)
-  !     rhoc   = core charge in real space  (dense grid)
-  !     rhocg  = core charge in G space  (dense grid)
-  !     drhocg = derivative of core charge in G space (used for stress) 
-  logical :: nlcc_any
-  real(8), allocatable:: rhocb(:,:)
-  real(8), allocatable:: rhoc(:)
-  real(8), allocatable:: rhocg(:,:)
-  real(8), allocatable:: drhocg(:,:)
-contains
-  subroutine allocate_core( nnrx, ngs, ngb, nsp )
-     integer, intent(in) :: nnrx, ngs, ngb, nsp
-     IF ( nlcc_any ) THEN
-        !
-        ALLOCATE( rhoc( nnrx ) )
-        ALLOCATE( rhocb( ngb, nsp ) )
-        ALLOCATE( rhocg( ngs, nsp ) )
-        ALLOCATE( drhocg( ngs, nsp ) )
-        !
-     ELSE
-        !
-        ! ... dummy allocation required because this array appears in the
-        ! ... list of arguments of some routines
-        !
-        ALLOCATE( rhoc( 1 ) )
-        !
-     END IF
-  end subroutine allocate_core
-
-  subroutine deallocate_core()
-      IF( ALLOCATED( rhocb  ) ) DEALLOCATE( rhocb )
-      IF( ALLOCATED( rhoc   ) ) DEALLOCATE( rhoc  )
-      IF( ALLOCATED( rhocg  ) ) DEALLOCATE( rhocg  )
-      IF( ALLOCATED( drhocg ) ) DEALLOCATE( drhocg )
-  end subroutine deallocate_core
-end module core
-
 !     f    = occupation numbers
 !     qbac = background neutralizing charge
 !     nspin = number of spins (1=no spin, 2=LSDA)

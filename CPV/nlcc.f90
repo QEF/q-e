@@ -8,23 +8,54 @@
 #include "f_defs.h"
 
 !=----------------------------------------------------------------------------=!
-  module non_local_core_correction
+  module core
 !=----------------------------------------------------------------------------=!
 
     USE kinds
     USE splines,    ONLY: spline_data
 
-    IMPLICIT NONE
-    SAVE
-
-    PRIVATE
-
-    PUBLIC :: add_core_charge,  core_charge_forces, core_charge_ftr
+  implicit none
+  save
+  !     nlcc_any = 0 no core correction on any atom
+  !     rhocb  = core charge in G space (box grid)
+  !     rhoc   = core charge in real space  (dense grid)
+  !     rhocg  = core charge in G space  (dense grid)
+  !     drhocg = derivative of core charge in G space (used for stress)
+  logical :: nlcc_any
+  real(8), allocatable:: rhocb(:,:)
+  real(8), allocatable:: rhoc(:)
+  real(8), allocatable:: rhocg(:,:)
+  real(8), allocatable:: drhocg(:,:)
 
 !=----------------------------------------------------------------------------=!
   contains
 !=----------------------------------------------------------------------------=!
 
+  subroutine allocate_core( nnrx, ngm, ngb, nsp )
+     integer, intent(in) :: nnrx, ngm, ngb, nsp
+     IF ( nlcc_any ) THEN
+        !
+        ALLOCATE( rhoc( nnrx ) )
+        ALLOCATE( rhocb( ngb, nsp ) )
+        ALLOCATE( rhocg( ngm, nsp ) )
+        ALLOCATE( drhocg( ngm, nsp ) )
+        !
+     ELSE
+        !
+        ! ... dummy allocation required because this array appears in the
+        ! ... list of arguments of some routines
+        !
+        ALLOCATE( rhoc( 1 ) )
+        !
+     END IF
+  end subroutine allocate_core
+
+  subroutine deallocate_core()
+      IF( ALLOCATED( rhocb  ) ) DEALLOCATE( rhocb )
+      IF( ALLOCATED( rhoc   ) ) DEALLOCATE( rhoc  )
+      IF( ALLOCATED( rhocg  ) ) DEALLOCATE( rhocg  )
+      IF( ALLOCATED( drhocg ) ) DEALLOCATE( drhocg )
+  end subroutine deallocate_core
 
 !=----------------------------------------------------------------------------=!
    subroutine core_charge_ftr( tpre )
@@ -34,7 +65,6 @@
      !  mesh to the reciprocal space
      !
      use control_flags,   ONLY : program_name
-     use core,            ONLY : rhocb, rhocg, drhocg
      use ions_base,       ONLY : nsp
      use uspp_param,      ONLY : kkbeta
      use atom,            ONLY : nlcc, r, rab, mesh, rho_atc
@@ -53,6 +83,9 @@
      INTEGER :: is, ig
      REAL(DP) :: xg, cost1
      !
+     !
+     IF( .NOT. nlcc_any ) RETURN
+     !
      IF( tpstab ) THEN
         !
         CALL build_cctab( )
@@ -68,7 +101,9 @@
               CALL compute_rhocg( rhocb(:,is), rhocb(:,is), r(:,is), rab(:,is), &
                   rho_atc(:,is), gb, omegab, tpibab**2, kkbeta(is), ngb, 0 )
               !
-           ELSE IF( program_name == 'FPMD' ) THEN
+           END IF
+           !
+           IF( ( program_name == 'FPMD' ) .OR. tpre ) THEN
               !
               IF( tpstab ) THEN
                  !
@@ -134,7 +169,6 @@
          end do
        endif
      end do
-
      
      rhoetg( 1:ngm ) = rhoetg( 1:ngm ) + vtemp( 1:ngm )
 
@@ -161,8 +195,7 @@
      USE brillouin, ONLY: kpoints, kp
      USE atoms_type_module, ONLY: atoms_type
      USE grid_dimensions, ONLY: nr1, nr2, nr3
-     USE reciprocal_vectors, ONLY: mill_l, gstart, gx
-     USE gvecp, ONLY: ngm
+     USE reciprocal_vectors, ONLY: mill_l, gstart, gx, ngm
      USE ions_base, ONLY: nat
 
      IMPLICIT NONE
@@ -242,7 +275,7 @@
 
 
 !=----------------------------------------------------------------------------=!
-   end module non_local_core_correction
+   end module core
 !=----------------------------------------------------------------------------=!
 
 
@@ -318,7 +351,6 @@
 !     the sum over node contributions is done in the calling routine
 !
       USE kinds,           ONLY: DP
-      use core,            only: rhocb
       use electrons_base,  only: nspin
       use gvecb,           only: gxb, ngb, npb, nmb
       use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx
@@ -327,6 +359,7 @@
       use parameters,      only: natx, nsx
       use small_box,       only: tpibab
       use atom,            only: nlcc
+      use core,            only: rhocb
       use reciprocal_vectors, only: gstart
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx

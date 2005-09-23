@@ -560,6 +560,84 @@
 
       return
       end subroutine denps
+
+
+!-----------------------------------------------------------------------
+      subroutine denlcc( nnr, nspin, vxcr, sfac, drhocg, dcc )
+!-----------------------------------------------------------------------
+!
+! derivative of non linear core correction exchange energy wrt cell 
+! parameters h 
+! Output in dcc
+!
+      use kinds, only: DP
+      use ions_base, only: nsp
+      use reciprocal_vectors, only: gstart, gx, ngs, g, ngm
+      use recvecs_indexes, only: np
+      use cell_base, only: omega, ainv, tpiba2
+      use mp, only: mp_sum
+      use atom, only: nlcc
+      use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nr3x
+
+      implicit none
+
+      ! input
+
+      integer, INTENT(IN)   :: nnr, nspin
+      real(DP)              :: vxcr( nnr, nspin )
+      complex(DP)           :: sfac( ngs, nsp )
+      real(DP)              :: drhocg( ngm, nsp )
+
+      ! output
+
+      real(DP), INTENT(OUT) ::  dcc(3,3)
+
+      ! local
+
+      integer     :: i, j, ig, is
+      complex(DP) :: srhoc
+      real(DP)    :: vxcc
+      !
+      complex(DP), ALLOCATABLE :: vxc( : )
+!
+      dcc = 0.0d0
+      !
+      ALLOCATE( vxc( nnr ) )
+      !
+      vxc(:) = vxcr(:,1)
+      !
+      IF( nspin > 1 ) vxc(:) = vxc(:) + vxcr(:,2)
+      !
+      call fwfft( vxc, nr1, nr2, nr3, nr1x, nr2x, nr3x )
+      !
+      do i=1,3
+         do j=1,3
+            do ig = gstart, ngs
+               srhoc = 0.0d0
+               do is = 1, nsp
+                 IF( nlcc( is ) ) srhoc = srhoc + sfac( ig, is ) * drhocg( ig, is )
+               enddo
+               vxcc = DBLE( CONJG( vxc( np( ig ) ) ) * srhoc ) / SQRT( g( ig ) * tpiba2 )
+               dcc(i,j) = dcc(i,j) + vxcc * &
+     &                      2.d0 * tpiba2 * gx(i,ig) *                  &
+     &                    (gx(1,ig)*ainv(j,1) +                         &
+     &                     gx(2,ig)*ainv(j,2) +                         &
+     &                     gx(3,ig)*ainv(j,3) )
+            enddo
+         enddo
+      enddo
+
+      DEALLOCATE( vxc )
+
+      dcc = dcc * omega
+
+      call mp_sum( dcc( 1:3, 1:3 ) )
+
+      return
+      end subroutine denlcc
+
+
+
 !
 !-------------------------------------------------------------------------
       subroutine dforce (bec,betae,i,c,ca,df,da,v)
@@ -3840,7 +3918,7 @@
 !     -------------------------------------------------------------------
       if (nlcc_any) call add_cc(rhoc,rhog,rhor)
 !
-      call exch_corr_h(nspin,rhog,rhor,exc,dxc)
+      call exch_corr_h(nspin,rhog,rhor,rhoc,sfac,exc,dxc)
 !
 !     rhor contains the xc potential in r-space
 !
@@ -4303,7 +4381,7 @@
 !
 !      write(6,*) 'add_cc'
 
-      call exch_corr_h(nspin,rhog,rhor,exc,dxc)
+      call exch_corr_h(nspin,rhog,rhor,rhoc,sfac,exc,dxc)
 !
 !     rhor contains the xc potential in r-space
 

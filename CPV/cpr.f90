@@ -95,6 +95,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE from_restart_module,      ONLY : from_restart
   USE wavefunctions_module,     ONLY : c0, cm, phi => cp
   USE wannier_module,           ONLY : allocate_wannier
+  USE print_out_module,         ONLY : printout_new
   USE printout_base,            ONLY : printout_base_open, &
                                        printout_base_close, &
                                        printout_pos, printout_cell, &
@@ -173,6 +174,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   dt2bye   = dt2 / emass
   etot_out = 0.D0
+  enow     = 1.d9
   !
   tfirst   = .TRUE.
   tlast    = .FALSE.
@@ -250,9 +252,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      IF ( tefield ) CALL calbec( 1, nsp, eigr, c0, bec ) ! ATTENZIONE  
      !
-
-
      ! Autopilot (Dynamic Rules) Implimentation    
+     !
      call pilot(nfi)
     
      !
@@ -354,6 +355,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            h    = hnew
            !
            CALL newinit( h )
+           !
            CALL newnlinit()
            !
         ELSE
@@ -556,94 +558,11 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      IF ( tnoseh ) &
         econt = econt + cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
      !
-     IF ( ionode .AND. ttprint ) THEN
-        !
-        ! ... Open units 30, 31, ... 40 for simulation output
-        !
-        CALL printout_base_open()
-        !
-        CALL print_energies( .false. )
-        !
-        WRITE( stdout, * )
-        !
-        CALL printout_cell( stdout, hold )
-        CALL printout_cell( 36, hold, nfi, tps )
-        !
-        WRITE( stdout, * )
-        !
-        stress_gpa = stress * au_gpa
-        !
-        CALL printout_stress( stdout, stress_gpa )
-        CALL printout_stress( 38, stress_gpa, nfi, tps )
-        !
-        WRITE( stdout, * )
-        !
-        ! ... write out a standard XYZ file in angstroms
-        !
-        labelw(ind_bck(1:nat)) = atm(ityp(1:nat))
-        !
-        CALL printout_pos( stdout, tau0, nat, &
-                           what = 'pos', label = labelw, sort = ind_bck )
-        CALL printout_pos( 35, tau0, nat, nfi = nfi, tps = tps )
-        !
-        ALLOCATE( tauw( 3, natx ) )
-        !
-        isa = 0 
-        !
-        DO is = 1, nsp
-           !
-           DO ia = 1, na(is)
-              !
-              isa = isa + 1
-              !
-              CALL s_to_r( vels(:,isa), tauw(:,isa), hold )
-              !
-           END DO
-           !
-        END DO
-        !
-        WRITE( stdout, * )
-        !
-        CALL printout_pos( stdout, tauw, nat, &
-                           what = 'vel', label = labelw, sort = ind_bck )
-        CALL printout_pos( 34, tauw, nat, nfi = nfi, tps = tps )
-        !
-        WRITE( stdout, * )
-        !
-        CALL printout_pos( stdout, fion, nat, &
-                           what = 'for', label = labelw, sort = ind_bck )
-        CALL printout_pos( 37, fion, nat, nfi = nfi, tps = tps )
-        !
-        DEALLOCATE( tauw )
-        !
-        WRITE( 33, 2948 ) tps, ekinc, temphc, tempp, etot, enthal, econs, econt
-        WRITE( 39, 2949 ) tps, vnhh(3,3), xnhh0(3,3), vnhp(1), xnhp0(1)
-        !
-        ! ... Close and flush unit 30, ... 40
-        !
-        CALL printout_base_close()
-        !
-     END IF
      !
-10   FORMAT( /,3X,'Cell Variables (AU)',/ )
-11   FORMAT( /,3X,'Atomic Positions (AU)',/ )
-12   FORMAT( /,3X,'Atomic Velocities (AU)',/ )
-13   FORMAT( /,3X,'Atomic Forces (AU)',/ )
-17   FORMAT( /,3X,'Total Stress (GPa)',/ )
-255  FORMAT( '     ',5(1X,A12) )
-256  FORMAT( 'Step ',I5,1X,I7,1X,F12.5,1X,F12.5,1X,F12.5,1X,I5 )
-2948 FORMAT( F8.5,1X,F8.5,1X,F6.1,1X,F6.1,3(1X,F11.5) )
-2949 FORMAT( F8.5,1X,4(1X,F7.4) )
-     !
-     IF( ( MOD( nfi, iprint ) == 0 ) .OR. tfirst )  THEN
-        !
-        WRITE( stdout, * )
-        WRITE( stdout, 1947 )
-        !
-     END IF
-     !
-     WRITE( stdout, 1948 ) nfi, ekinc, temphc, tempp, etot, enthal, econs, &
-                           econt, vnhh(3,3), xnhh0(3,3), vnhp(1),  xnhp0(1)
+     CALL printout_new                                                         &
+        ( nfi, tfirst, ttprint, ttprint, tps, hold, stress, tau0, vels, fion,  &
+          ekinc, temphc, tempp, etot, enthal, econs, econt, vnhh, xnhh0, vnhp, &
+          xnhp0 )
      !
      IF( tcg ) THEN
         !
@@ -658,9 +577,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
      END IF
      !
-1947 FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',8X,'etot',6X,'enthal', &
-           & 7X,'econs',7X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0' )
-1948 FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F11.5),4(1X,F7.4) )
+255  FORMAT( '     ',5(1X,A12) )
+256  FORMAT( 'Step ',I5,1X,I7,1X,F12.5,1X,F12.5,1X,F12.5,1X,I5 )
      !
      !
      tps = tps + delt * au_ps
@@ -696,13 +614,6 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      END IF
      !
      ! ... now:  cm=c(t) c0=c(t+dt)
-     !
-     IF ( tfirst ) THEN
-        !
-        epre = etot
-        enow = etot
-        !
-     END IF
      !
      tfirst = .FALSE.
      !

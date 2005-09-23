@@ -304,33 +304,12 @@
       SUBROUTINE gethinv(box)
         IMPLICIT NONE
         TYPE (boxdimensions), INTENT (INOUT) :: box
-        REAL (DP), DIMENSION (3,3) :: hmat, hmati
-        REAL (DP) :: odet
-
-        hmat = box%hmat
-        box%deth = hmat(1,1)*(hmat(2,2)*hmat(3,3)-hmat(2,3)*hmat(3,2)) + &
-          hmat(1,2)*(hmat(2,3)*hmat(3,1)-hmat(2,1)*hmat(3,3)) + &
-          hmat(1,3)*(hmat(2,1)*hmat(3,2)-hmat(2,2)*hmat(3,1))
-        IF (box%deth<1.E-10) & 
-          CALL errore('gethinv', 'box determinant too small', 1)
-        odet = 1._DP/box%deth
-        hmati(1,1) = (hmat(2,2)*hmat(3,3)-hmat(2,3)*hmat(3,2))*odet
-        hmati(2,2) = (hmat(1,1)*hmat(3,3)-hmat(1,3)*hmat(3,1))*odet
-        hmati(3,3) = (hmat(1,1)*hmat(2,2)-hmat(1,2)*hmat(2,1))*odet
-        hmati(1,2) = (hmat(1,3)*hmat(3,2)-hmat(1,2)*hmat(3,3))*odet
-        hmati(2,1) = (hmat(3,1)*hmat(2,3)-hmat(2,1)*hmat(3,3))*odet
-        hmati(1,3) = (hmat(1,2)*hmat(2,3)-hmat(1,3)*hmat(2,2))*odet
-        hmati(3,1) = (hmat(2,1)*hmat(3,2)-hmat(3,1)*hmat(2,2))*odet
-        hmati(2,3) = (hmat(1,3)*hmat(2,1)-hmat(2,3)*hmat(1,1))*odet
-        hmati(3,2) = (hmat(3,1)*hmat(1,2)-hmat(3,2)*hmat(1,1))*odet
-        box%hinv = hmati
-
+        !
         CALL invmat( 3, box%a, box%m1, box%omega )
-
-        IF(abs(box%omega-box%deth)/abs(box%omega+box%deth).gt.1.0d-12) THEN
-          CALL errore('gethinv', 'box determinants are different',2)
-        END IF
-
+        box%deth = box%omega
+        box%hinv = TRANSPOSE( box%m1 )
+        !
+        RETURN
       END SUBROUTINE gethinv
 !
 !------------------------------------------------------------------------------!

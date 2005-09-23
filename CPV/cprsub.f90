@@ -134,10 +134,10 @@ subroutine newnlinit
   !     and derivatives w.r.t. cell parameters dbeta, dqrad 
   !     See also comments in nlinit
   !
-  use control_flags,             ONLY : tpre
-  use pseudopotential,           ONLY : interpolate_beta, interpolate_qradb
-  use pseudopotential,           ONLY : exact_beta, tpstab
-  USE non_local_core_correction, ONLY : core_charge_ftr
+  use control_flags,    ONLY : tpre
+  use pseudopotential,  ONLY : interpolate_beta, interpolate_qradb
+  use pseudopotential,  ONLY : exact_beta, tpstab
+  USE core,             ONLY : core_charge_ftr
   !
   implicit none
   ! 
@@ -291,7 +291,7 @@ subroutine nlinit
       use qradb_mod,       ONLY : qradb
       use qgb_mod,         ONLY : qgb
       use gvecb,           ONLY : ngb
-      use gvecs,           ONLY : ngs
+      use gvecp,           ONLY : ngm
       use cdvan,           ONLY : dbeta
       use dqrad_mod,       ONLY : dqrad
       use dqgb_mod,        ONLY : dqgb
@@ -318,14 +318,14 @@ subroutine nlinit
       !
       !   initialize indexes
       !
-      CALL pseudopotential_indexes()
+      CALL pseudopotential_indexes( nlcc_any )
 
       !
       !   initialize array ap
       !
       call aainit( lmaxkb + 1 )
       !
-      CALL allocate_core( nnrx, ngs, ngb, nsp )
+      CALL allocate_core( nnrx, ngm, ngb, nsp )
       !
       allocate( beta( ngw, nhm, nsp ) )
       allocate( qradb( ngb, nbrx, nbrx, lmaxq, nsp ) )

@@ -107,7 +107,7 @@ CONTAINS
 
 
 
-   SUBROUTINE pseudopotential_indexes()
+   SUBROUTINE pseudopotential_indexes( nlcc_any )
 
       use parameters, only: lmaxx    !
       use ions_base,  only: nsp, &   !  number of specie
@@ -115,7 +115,6 @@ CONTAINS
       use cvan,       only: ish      !
       use uspp,       only: nkb, &   !
                             nkbus    !
-      use core,       only: nlcc_any !
       use uspp_param, only: nbeta,  &!
                             lmaxkb, &!
                             lll,    &!
@@ -132,6 +131,8 @@ CONTAINS
 
       IMPLICIT NONE
      
+      LOGICAL, INTENT(OUT) :: nlcc_any
+      !
       INTEGER :: is, iv, ind, il, lm
       !     ------------------------------------------------------------------
       !     find  number of beta functions per species, max dimensions,
@@ -209,13 +210,11 @@ CONTAINS
 
           USE splines,      ONLY: kill_spline
           USE local_pseudo, ONLY: deallocate_local_pseudo
-          USE core,         ONLY: deallocate_core
           USE uspp,         ONLY: dvan
 
           INTEGER :: i, j
 
           CALL deallocate_local_pseudo()
-          CALL deallocate_core()
           !
           IF( ALLOCATED( dvan ) ) DEALLOCATE( dvan )
           IF( ALLOCATED( xgtab ) )  DEALLOCATE( xgtab )

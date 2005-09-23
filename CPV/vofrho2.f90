@@ -206,7 +206,7 @@
 !     -------------------------------------------------------------------
       if ( nlcc_any ) call add_cc(rhoc,rhog,rhor)
 !
-      call exch_corr_h(nspin,rhog,rhor,exc,dxc)
+      call exch_corr_h(nspin,rhog,rhor,rhoc,sfac,exc,dxc)
 !
 !     rhor contains the xc potential in r-space
 !

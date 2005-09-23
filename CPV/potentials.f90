@@ -261,9 +261,9 @@
       USE local_pseudo,   ONLY: vps, rhops
       USE atom,           ONLY: nlcc
       USE core,           ONLY: nlcc_any, rhocg
+      USE core,           ONLY: add_core_charge, core_charge_forces
       USE reciprocal_vectors,        ONLY: gx
       USE atoms_type_module,         ONLY: atoms_type
-      USE non_local_core_correction, ONLY: add_core_charge, core_charge_forces
       USE exchange_correlation,      ONLY: exch_corr_energy
 
       IMPLICIT NONE
