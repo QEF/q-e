@@ -14,7 +14,58 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	}
     }
     namelist inputpp -name "INPUTPH" {
+
 	required {
+	    var outdir {
+	    	-label    "Temporary directory where punch file resides (outdir):"
+	    	-widget   entrydirselectquote
+	    	-fmt      %S
+	    }
+	    var prefix -label "Prefix of data file saved by PW.X (prefix):" \
+		-widget   [list entrybutton "Prefix ..." [list ::pwscf::phSelectPunchFile $this prefix]] \
+		-fmt      %S
+
+	    separator -label "--- What to Calculate ---"
+
+	    var ldisp {
+	    	-label     "Compute phonon dispersions (ldisp):"
+	    	-textvalue {Yes No}
+	    	-value     {.true. .false.}
+	    	-widget    radiobox
+	    	-fmt       %s
+	    }
+	    group nq -name q-grid {
+		var nq1 {
+		    -label     "NQ\#1:"
+		    -validate posint
+		}
+		var nq2 {
+		    -label     "NQ\#2:"
+		    -validate posint
+		}
+		var nq3 {
+		    -label     "NQ\#3:"
+		    -validate posint
+		}
+	    }
+
+	    var trans {
+	    	-label     "Compute phonons for a single q vector (trans):"
+	    	-textvalue {Yes No}
+	    	-value     {.true. .false.}
+	    	-widget    radiobox
+	    	-fmt       %s
+	    }
+ 	    var epsil {
+	    	-label     "Compute the macroscopic dielectric constant for q=0 (epsil):"
+	    	-textvalue {Yes No}
+	    	-value     {.true. .false.}
+	    	-widget    radiobox
+	    	-fmt       %s
+	    }
+
+	    separator -label "--- Atomic Masses ---"
+
 	    auxilvar ntyp {
 		-label   "Number of types of atoms in the unit cell (ntyp):"
 		-validate posint
@@ -24,28 +75,92 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    }		
 	    
 	    dimension amass {
-		-label     "Atomic mass of each atomic type"
+		-label     "Atomic mass [amu] of each atomic type"
 		-validate  fortranreal
 		-start     1
 		-end       1
 	    }
+
 	}
 	
 	optional {
-	    var outdir {
-	    	-label    "Temporary directory where punch file resides (outdir):"
-	    	-widget   entrydirselectquote
-	    	-fmt      %S
-	    }
-	    var prefix -label "Prefix of punch file saved by PW.X (prefix):" \
-		-widget   [list entrybutton "Prefix ..." [list ::pwscf::phSelectPunchFile $this prefix]] \
-		-fmt      %S
 
+
+	    separator -label "--- More options on what to compute ---"
+
+	    var elph {
+	    	-label     "Compute electron-phonon lambda coefficients (elph):"
+	    	-textvalue {Yes No}
+	    	-value     {.true. .false.}
+		-default   .false.
+	    	-widget    radiobox
+	    	-fmt       %s
+	    }
+
+	    var lraman {
+	    	-label     "Compute Raman coefficients (lraman):"
+	    	-textvalue {Yes No}
+	    	-value     {.true. .false.}
+	    	-widget    radiobox
+	    	-fmt       %s
+	    }
+	    var elop {
+	    	-label     "Compute electro-optic coefficients (elop):"
+	    	-textvalue {Yes No}
+	    	-value     {.true. .false.}
+	    	-widget    radiobox
+	    	-fmt       %s
+	    }
+
+	    group ramanthreshold -name "Thresholds for Raman" {
+		var eth_rps {
+		    -label    "Threshold for calculation of x|Psi> (eth_rps):"
+		    -validate fortranreal
+		}
+		var eth_ns {
+		    -label    "Threshold for non-scf wavefunction calculation (eth_ns):"
+		    -validate fortranreal
+		}
+		var dek {
+		    -label    "Delta k used for wavefunction derivation wtr k (dek)::"
+		    -validate fortranreal
+		}
+	    }
+	    var maxirr {
+	    	-label    "Maximum number of irreducible representation (maxirr):"
+	    	-widget   spinint
+	    	-fmt      %d
+	    }
+
+	    var zue {
+	    	-label     "Compute effective charges from the phonon density responses (zue):"
+	    	-textvalue {Yes No}
+	    	-value     {.true. .false.}
+	    	-widget    radiobox
+	    	-fmt       %s
+	    }
+
+	    separator -label "--- Misc control options ---"
+
+	    var lnscf {
+	    	-label    "Perform the non-scf calculation first (lnscf):"
+	    	-textvalue {Yes No}
+	    	-value     {.true. .false.}
+	    	-widget    radiobox
+	    	-fmt       %s
+	    }
 	    var iverbosity {
 	    	-label     "Verbosity of output (iverbosity):"
 	    	-textvalue {"short output" "verbose output"}
 	    	-value     {0 1}
 	    	-widget    optionmenu
+	    }
+	    var reduce_io {
+	    	-label    "Reduce I/O to the strict minimum (reduce_io):"
+	    	-textvalue {Yes No}
+	    	-value     {.true. .false.}
+	    	-widget    radiobox
+	    	-fmt       %s
 	    }
 	    var time_max {
 	    	-label    "Maximum allowed CPU run-time [in seconds] (time_max):"
@@ -53,7 +168,6 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    	-widget   spinint
 	    	-fmt      %d
 	    }
-
 	    separator -label "--- SCF settings ---"
 
 	    var niter_ph {
@@ -76,7 +190,7 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    	-fmt      %d
 	    }
 
-	    separator -label "--- Files ---"
+	    separator -label "--- Output Data Files ---"
 
 	    var fildyn {
 	    	-label    "File containing the dynamical matrix (fildyn):" 
@@ -99,42 +213,6 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    	-fmt      %S
 	    }
 
-	    separator -label "--- What to compute ---"
-
-	    var maxirr {
-	    	-label    "Maximum number of irreducible representation (maxirr):"
-	    	-widget   spinint
-	    	-fmt      %d
-	    }
-
-	    var epsil {
-	    	-label     "Compute the macroscopic dielectric constant (epsil):"
-	    	-textvalue {Yes No}
-	    	-value     {.true. .false.}
-	    	-widget    radiobox
-	    	-fmt       %s
-	    }
-	    var trans {
-	    	-label     "Compute phonons (trans):"
-	    	-textvalue {Yes No}
-	    	-value     {.true. .false.}
-	    	-widget    radiobox
-	    	-fmt       %s
-	    }
-	    var elph {
-	    	-label     "Compute electron-phonon lambda coefficients (elph):"
-	    	-textvalue {Yes No}
-	    	-value     {.true. .false.}
-	    	-widget    radiobox
-	    	-fmt       %s
-	    }
-	    var zue {
-	    	-label     "Computed effective charges from the phonon density responses (zue):"
-	    	-textvalue {Yes No}
-	    	-value     {.true. .false.}
-	    	-widget    radiobox
-	    	-fmt       %s
-	    }
 	}
     }
 

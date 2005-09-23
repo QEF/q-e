@@ -3,18 +3,18 @@ help title_ph -vartype character -helpfmt txt2html -helptext {
 }
 
 help amass -vartype real -helpfmt txt2html -helptext {
-            Atomic mass of each atomic type.
+    Atomic mass [amu] of each atomic type.
 }
 
 help outdir -vartype character -helpfmt txt2html -helptext {     
-            scratch directory                                    
+            scratch directory where data files written by pw.x reside
 <p> ( default = './' )
 }
 
 help prefix -vartype character -helpfmt txt2html -helptext {
             prepended to input/output filenames
             must be the same used in the calculation
-            of unperturbed system
+            of unperturbed system with pw.x
 <p> ( default = 'pwscf' )
 }
 
@@ -116,3 +116,25 @@ set _xq {
 foreach var {xq1 xq2 xq3} {
     help $var -vartype real -helpfmt txt2html -helptext $_xq
 }
+
+help elph    -vartype logical -helpfmt html -helptext {
+              calculate nonresonant Raman coefficients using 
+              second-order response as in:<p>
+              M. Lazzeri and F. Mauri, Phys. Rev. Lett. 90, 036401 (2003)<p>
+}
+
+help eth_rps -vartype real -helpfmt txt2html -helptext {
+    threshold for calculation of  Pc R |psi>, used in Raman calculation
+    Default value: 1.0d-9
+}
+help eth_ns -vartype real -helpfmt txt2html -helptext {
+    threshold for non-selfconsistent calculation of wavefunctions
+    at k+dk, used in Raman calculation
+    Default value: 1.0d-12
+}
+help eth_ns -vartype real -helpfmt txt2html -helptext {
+    dk used for finite-difference derivation of wavefunctions: dpsi_k/dk, 
+    for Raman calculation
+    Default value: 1.0e-3
+}
+
