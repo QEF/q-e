@@ -380,7 +380,9 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   integer :: npool, nkbl, nkl, nkr, npwx_g
   integer :: ike, iks, npw_g, ispin, local_pw
   integer, allocatable :: ngk_g( : )
-  integer, allocatable :: itmp( :, : )
+  integer, allocatable :: itmp_g( :, : )
+  real(DP),allocatable :: rtmp_g( :, : )
+  real(DP),allocatable :: rtmp_gg( : )
   integer, allocatable :: itmp1( : )
   integer, allocatable :: igwk( :, : )
   integer, allocatable :: l2g_new( : )
@@ -437,14 +439,33 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   end if
 
   ! collect all G vectors across processors within the pools
-  allocate( itmp( 3, ngm_g ) )
-  itmp = 0
+  ! and compute their modules
+  !
+  allocate( itmp_g( 3, ngm_g ) )
+  allocate( rtmp_g( 3, ngm_g ) )
+  allocate( rtmp_gg( ngm_g ) )
+
+  itmp_g = 0
   do  ig = 1, ngm
-    itmp( 1, ig_l2g( ig ) ) = ig1( ig )
-    itmp( 2, ig_l2g( ig ) ) = ig2( ig )
-    itmp( 3, ig_l2g( ig ) ) = ig3( ig )
+    itmp_g( 1, ig_l2g( ig ) ) = ig1( ig )
+    itmp_g( 2, ig_l2g( ig ) ) = ig2( ig )
+    itmp_g( 3, ig_l2g( ig ) ) = ig3( ig )
   end do
-  call mp_sum( itmp , intra_pool_comm )
+  call mp_sum( itmp_g , intra_pool_comm )
+  !
+  ! here we are in crystal units
+  rtmp_g(1:3,1:ngm_g) = REAL( itmp_g(1:3,1:ngm_g) )
+  !
+  ! go to cartesian units (tpiba)
+  call cryst_to_cart( ngm_g, rtmp_g, bg , 1 )
+  !
+  ! compute squared moduli
+  do  ig = 1, ngm_g 
+     rtmp_gg(ig) = rtmp_g(1,ig)**2 + rtmp_g(2,ig)**2 + rtmp_g(3,ig)**2 
+  enddo
+  deallocate( rtmp_g )
+
+
 
   ! build the G+k array indexes
   allocate ( kisort( npwx ) )
@@ -584,10 +605,13 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
     if(.not.single_file) &
       call iotk_link(50,"Main_grid","mgrid",create=.true.,binary=.not.ascii,raw=raw)
     call iotk_write_begin(50,"Main_grid",attr=attr)
-    call iotk_write_dat(50,"g",itmp(1:3,1:ngm_g),fmt="(3i5)")
-    call iotk_write_dat(50,"gg",gg(1:ngm_g))
+    call iotk_write_attr(attr,"units", "crystal",first=.true.)
+    call iotk_write_dat(50,"g",itmp_g(1:3,1:ngm_g),fmt="(3i5)", attr=attr)
+    call iotk_write_attr(attr,"units", "tpiba^2",first=.true.)
+    call iotk_write_dat(50,"gg",rtmp_gg(1:ngm_g),attr=attr)
     call iotk_write_end(50,"Main_grid")
   end if
+  deallocate( rtmp_gg )
 
   ! for each k point build and write the global G+k indexes array
   allocate( igwk( npwx_g,nkstot ) )
@@ -625,13 +649,13 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
         call iotk_link(50,"Kpoint"//iotk_index(ik),"grid"//iotk_index(ik),create=.true.,binary=.not.ascii,raw=raw)
       call iotk_write_begin(50,"Kpoint"//iotk_index(ik),attr)
       call iotk_write_dat  (50,"index",igwk(1:ngk_g(ik),ik))
-      call iotk_write_dat  (50,"grid",itmp(1:3,igwk(1:ngk_g(ik),ik)),fmt="(3i5)")
+      call iotk_write_dat  (50,"grid",itmp_g(1:3,igwk(1:ngk_g(ik),ik)),fmt="(3i5)")
       call iotk_write_end  (50,"Kpoint"//iotk_index(ik))
     end if
   end do
 
   if(ionode) call iotk_write_end(50,"Wfc_grids")
-  deallocate( itmp )
+  deallocate( itmp_g )
 
 
 #ifdef __PARA
