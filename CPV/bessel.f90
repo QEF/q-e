@@ -57,7 +57,7 @@
 ! ... Subroutine Body
 
       IF( ABS(XG) < small ) THEN 
-        CALL errore( ' bessel ',' xg too small ', 1)
+        CALL errore( ' bessel1',' xg too small ', 1)
       END IF
 
       DO ir = 1, mmax
