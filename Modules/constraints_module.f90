@@ -7,6 +7,8 @@
 !
 #include "f_defs.h"
 !
+!#define __DEBUG_CONSTRAINTS
+!
 !----------------------------------------------------------------------------
 MODULE constraints_module
   !----------------------------------------------------------------------------
@@ -140,7 +142,7 @@ MODULE constraints_module
                    norm_dtau = norm( dtau )
                    !
                    target(ia) = target(ia) + &
-                                2.D0 / ( EXP( k * ( norm_dtau - r_c ) ) + 1.D0 )
+                                1.D0 / ( EXP( k * ( norm_dtau - r_c ) ) + 1.D0 )
                    !
                 END DO
                 !
@@ -162,12 +164,11 @@ MODULE constraints_module
                 !
              END IF
              !
-             ia1 = ANINT( constr(1,ia) )
+             ia1         = ANINT( constr(1,ia) )
+             type_coord1 = ANINT( constr(2,ia) )
              !
-             r_c = constr(2,ia)
-             k   = constr(3,ia)
-             !
-             type_coord1 = ANINT( constr(4,ia) )
+             r_c = constr(3,ia)
+             k   = constr(4,ia)
              !
              target(ia) = 0.D0
              !
@@ -182,7 +183,7 @@ MODULE constraints_module
                 norm_dtau = norm( dtau )
                 !
                 target(ia) = target(ia) + &
-                             2.D0 / ( EXP( k * ( norm_dtau - r_c ) ) + 1.D0 )
+                             1.D0 / ( EXP( k * ( norm_dtau - r_c ) ) + 1.D0 )
                 !
              END DO
              !
@@ -321,9 +322,9 @@ MODULE constraints_module
                 !
                 expo = EXP( k * ( norm_dtau - r_c ) )
                 !
-                g = g + 2.D0 / ( expo + 1.D0 )
+                g = g + 1.D0 / ( expo + 1.D0 )
                 !
-                dtau(:) = 2.D0 * dtau(:) * k * expo / ( expo + 1.D0 )**2
+                dtau(:) = dtau(:) * k * expo / ( expo + 1.D0 )**2
                 !
                 dg(:,ia2) = dg(:,ia2) + dtau(:)
                 dg(:,ia1) = dg(:,ia1) - dtau(:)
@@ -343,12 +344,11 @@ MODULE constraints_module
           !
           ! ... constraint on local coordination
           !
-          ia = ANINT( constr(1,index) )
+          ia          = ANINT( constr(1,index) )
+          type_coord1 = ANINT( constr(2,index) )
           !
-          r_c = constr(2,index)
-          k   = constr(3,index)          
-          !
-          type_coord1 = ANINT( constr(4,index) )
+          r_c = constr(3,index)
+          k   = constr(4,index)
           !
           g = 0.D0
           !
@@ -366,9 +366,9 @@ MODULE constraints_module
              !
              expo = EXP( k * ( norm_dtau - r_c ) )
              !
-             g = g + 2.D0 / ( expo + 1.D0 )
+             g = g + 1.D0 / ( expo + 1.D0 )
              !
-             dtau(:) = 2.D0 * dtau(:) * k * expo / ( expo + 1.D0 )**2
+             dtau(:) = dtau(:) * k * expo / ( expo + 1.D0 )**2
              !
              dg(:,ia1) = dg(:,ia1) + dtau(:)
              dg(:,ia)  = dg(:,ia)  - dtau(:)

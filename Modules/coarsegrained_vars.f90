@@ -160,7 +160,7 @@ MODULE coarsegrained_base
                   FILE = TRIM( prefix ) // ".axsf", STATUS = 'UNKNOWN' )
             !
             WRITE( UNIT = iunaxsf, &
-                   FMT = '(" ANIMSTEPS ",I3)' ) max_metadyn_iter + 1
+                   FMT = '(" ANIMSTEPS ",I5)' ) max_metadyn_iter
             !
             WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
             WRITE( UNIT = iunaxsf, FMT = '(" PRIMVEC ")' )

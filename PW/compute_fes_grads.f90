@@ -69,7 +69,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
          & TRIM( int_to_char( istep_path + 1 ) ) // ".axsf", &
            STATUS = "UNKNOWN", ACTION = "WRITE" )
      !
-     WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I3)' ) num_of_images
+     WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I5)' ) num_of_images
      WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
      WRITE( UNIT = iunaxsf, FMT = '(" PRIMVEC ")' )
      WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
@@ -405,6 +405,7 @@ SUBROUTINE metadyn()
   !------------------------------------------------------------------------
   !
   USE kinds,              ONLY : DP
+  USE constants,          ONLY : eps8
   USE constraints_module, ONLY : nconstr, target
   USE ener,               ONLY : etot
   USE io_files,           ONLY : iunaxsf, iunmeta
@@ -417,7 +418,10 @@ SUBROUTINE metadyn()
   !
   IMPLICIT NONE
   !
-  INTEGER :: iter
+  INTEGER  :: iter, i
+  REAL(DP) :: norm_fe_grad
+  !
+  REAL(DP), EXTERNAL :: rndm
   !
   !
   iter = starting_metadyn_iter
@@ -428,10 +432,30 @@ SUBROUTINE metadyn()
         !
         CALL add_gaussians( iter )
         !
+        norm_fe_grad = norm( fe_grad )
+        !
+        IF ( norm_fe_grad < eps8 ) THEN
+           !
+           ! ... use a random perturbation
+           !
+           WRITE( iunmeta, '("random step")' )
+           !
+           DO i = 1, nconstr
+              !
+              fe_grad(:) = rndm()
+              !
+           END DO
+           !
+           norm_fe_grad = norm( fe_grad )
+           !
+        END IF
+        !
         new_target(:) = target(:) - fe_step * fe_grad(:) / norm( fe_grad )
         !
         WRITE( stdout, '(/,5X,"adiabatic switch of the system ", &
                             & "to the new coarse-grained positions",/)' )
+        !
+        ! ... the system is "adiabatically" moved to the new target
         !
         CALL move_to_target()
         !
@@ -587,7 +611,7 @@ SUBROUTINE write_config( image )
   INTEGER             :: atom
   !
   !
-  WRITE( UNIT = iunaxsf, FMT = '(" PRIMCOORD ",I3)' ) image
+  WRITE( UNIT = iunaxsf, FMT = '(" PRIMCOORD ",I5)' ) image
   WRITE( UNIT = iunaxsf, FMT = '(I5,"  1")' ) nat
   !
   DO atom = 1, nat
