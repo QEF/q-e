@@ -149,7 +149,8 @@ example07:
     coefficients at X for fcc Al.
 
 example08:
-    This example shows how to use pw.x to calculate the DOS of Ni.
+    This example shows how to use pw.x to calculate the DOS of Ni
+    and how to plot the Fermi Surface using XCrysDen
 
 example09:
     This example shows how to use pw.x and phcg.x to calculate the

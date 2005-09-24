@@ -17,10 +17,10 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       atom  = atomic symbol: atom='H', 'He', 'Be', etc
               specify either atom OR zed, not both
 
-      xmin  = mesh parameter                       (default: -7.0)
+      xmin  = radial grid parameter                (default: -7.0)
       dx    =   "    "   "                         (default: 0.0125)
-              the mesh is: r(i+1) = exp(xmin+i*dx)/zed
-      rmax  = outermost mesh point                 (default: 100.0)
+              the radial grid is: r(i+1) = exp(xmin+i*dx)/zed  a.u.
+      rmax  = outermost grid point                 (default: 100.0 a.u.)
 
       beta  = parameter for potential mixing       (default: 0.2)
       tr2   = convergence threshold for scf        (default: 1e-14)
@@ -60,7 +60,7 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
              See below for file names and the content of the file
 
       config = a string with the electronic configuration. Example:
-                  '[Ar] 3d10 4s2 3p2.5'              (default: ' ')
+                  '[Ar] 3d10 4s2 4p2.5'              (default: ' ')
                If lsd=1, spin-up and spin-down state may appear twice
                   with the respective occupancy: 3p4 3p2 = 4 up, 
                   2 down. Otherwise, the Hund's rule is assumed.
