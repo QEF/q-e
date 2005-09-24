@@ -18,13 +18,12 @@ subroutine dos_t (et, nspin, nbnd, nks, ntetra, tetra, e, dost)
   integer :: itetra (4), nk, ns, nt, ibnd, i
 
   real(DP) :: etetra (4), e1, e2, e3, e4
-  integer :: nspin0, nspin1
+  integer :: nspin0
 
-  nspin0=nspin
-  nspin1=nspin
   if (nspin==4) then
      nspin0=1
-     nspin1=2
+  else 
+     nspin0=nspin
   endif
   do ns = 1, nspin0
      dost (ns) = 0.d0
@@ -35,7 +34,6 @@ subroutine dos_t (et, nspin, nbnd, nks, ntetra, tetra, e, dost)
         nk = 0
      else
         nk = nks / 2
-
      endif
      do nt = 1, ntetra
         do ibnd = 1, nbnd
@@ -62,12 +60,12 @@ subroutine dos_t (et, nspin, nbnd, nks, ntetra, tetra, e, dost)
            endif
         enddo
 
-
      enddo
+
      ! add correct spin normalization : 2 for LDA, 1 for LSDA or
      ! noncollinear calculations 
 
-     dost (ns) = dost (ns) * 2.d0 / nspin1
+     if ( nspin == 1 ) dost (ns) = dost (ns) * 2.d0
 
   enddo
   return
