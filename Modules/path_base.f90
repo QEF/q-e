@@ -1062,7 +1062,7 @@ MODULE path_base
          !
          IF ( suspended_image == 0 ) THEN
             !
-            ! ... minimisation step is done only in case of no suspended images.
+            ! ... minimisation step is done only in case of no suspended images
             ! ... when the simulation is started from scratch all gradients are
             ! ... zero.
             !
@@ -1187,7 +1187,7 @@ MODULE path_base
          END IF
          !
          ! ... the error is computed here (it must be computed after the
-         ! ... second step of the velocity Verlet because, afetr the error
+         ! ... second step of the velocity Verlet because, when the error
          ! ... is computed, some images could be frozen)
          !
          CALL compute_error( err_max )

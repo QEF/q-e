@@ -72,8 +72,6 @@ MODULE path_variables
   INTEGER :: &                   
        istep_path,               &! iteration in the optimization procedure
        nstep_path                 ! maximum number of iterations
-  LOGICAL :: &
-       reset_broyden = .FALSE.    ! used to reset the broyden subspace
   !
   ! ... "general" real space arrays
   !

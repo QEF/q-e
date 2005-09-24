@@ -146,8 +146,8 @@ MODULE path_opt_routines
        USE constants,      ONLY : eps8
        USE control_flags,  ONLY : lsmd
        USE io_files,       ONLY : broy_file, iunbroy, iunpath
-       USE path_variables, ONLY : dim, reset_broyden, frozen, &
-                                  n_im => num_of_images, tangent
+       USE path_variables, ONLY : dim, frozen, tangent, &
+                                  n_im => num_of_images
        USE io_global,      ONLY : meta_ionode, meta_ionode_id
        USE mp,             ONLY : mp_bcast
        !
@@ -199,24 +199,25 @@ MODULE path_opt_routines
              !
              READ( UNIT = iunbroy , FMT = * ) i
              !
-             reset_broyden = ( i /= n_im )
+             ! ... if the number of images is changed the broyden history is
+             ! ... reset and the algorithm starts from scratch
+             !
+             exists = ( i == n_im )
              !
           END IF
           !
-          IF ( exists .AND. .NOT. reset_broyden ) THEN
+          IF ( exists ) THEN
              !
              READ( UNIT = iunbroy , FMT = * ) k
-             READ( UNIT = iunbroy , FMT = * ) s
+             READ( UNIT = iunbroy , FMT = * ) s(:,:)
              !
              k = k + 1
              !
           ELSE 
              !
-             s = 0.D0
+             s(:,:) = 0.D0
              !
              k = 1
-             !
-             reset_broyden = .FALSE.
              !
           END IF
           !
@@ -274,8 +275,7 @@ MODULE path_opt_routines
              !
              k = 1
              !
-             s = 0.D0
-             !
+             s(:,:) = 0.D0
              s(:,k) = - ds * g(:)
              !
           END IF

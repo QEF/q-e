@@ -61,8 +61,8 @@ MODULE basic_algebra_routines
        !
        internal_dot_product = DOT_PRODUCT( input_vector1, input_vector2 )
 #else
-       REAL (DP)             :: DDOT
-       EXTERNAL                      DDOT
+       REAL (DP) :: DDOT
+       EXTERNAL     DDOT
        !
        !
        internal_dot_product = DDOT( SIZE( input_vector1 ), &
@@ -85,8 +85,8 @@ MODULE basic_algebra_routines
        !
        norm = SQRT( input_vector .dot. input_vector )
 #else
-       REAL (DP)             :: DNRM2
-       EXTERNAL                      DNRM2   
+       REAL (DP) :: DNRM2
+       EXTERNAL     DNRM2   
        !
        !
        norm = DNRM2( SIZE( input_vector ), input_vector, 1 )
@@ -96,7 +96,7 @@ MODULE basic_algebra_routines
      !
      !
      !-----------------------------------------------------------------------
-     FUNCTION matrix_times_vector( input_matrix , input_vector )
+     FUNCTION matrix_times_vector( input_matrix, input_vector )
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
@@ -104,9 +104,9 @@ MODULE basic_algebra_routines
        REAL (DP), INTENT(IN) :: input_vector(:)
        REAL (DP), INTENT(IN) :: input_matrix(:,:)
        REAL (DP)             :: matrix_times_vector(SIZE( input_vector ))
-       INTEGER                    :: dim
+       INTEGER               :: dim
 #if defined (__NOBLAS)
-       INTEGER                    :: i
+       INTEGER :: i
 #endif       
        !
        !
@@ -127,7 +127,7 @@ MODULE basic_algebra_routines
      !
      !
      !-----------------------------------------------------------------------
-     FUNCTION vector_times_matrix( input_vector , input_matrix )
+     FUNCTION vector_times_matrix( input_vector, input_matrix )
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
@@ -135,9 +135,9 @@ MODULE basic_algebra_routines
        REAL (DP), INTENT(IN) :: input_vector(:)
        REAL (DP), INTENT(IN) :: input_matrix(:,:)
        REAL (DP)             :: vector_times_matrix(SIZE( input_vector ))
-       INTEGER                    :: dim
+       INTEGER               :: dim
 #if defined (__NOBLAS)
-       INTEGER                    :: i
+       INTEGER :: i
 #endif       
        !
        !
@@ -158,17 +158,17 @@ MODULE basic_algebra_routines
      !
      !
      !-----------------------------------------------------------------------
-     FUNCTION matrix( input_vector1 , input_vector2 )
+     FUNCTION matrix( input_vector1, input_vector2 )
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
        !
        REAL (DP), INTENT(IN) :: input_vector1(:), input_vector2(:)
-       REAL (DP)             :: matrix(SIZE( input_vector1 ),&
-                                            SIZE( input_vector2 ))
-       INTEGER                    :: dim1, dim2
+       REAL (DP)             :: matrix(SIZE( input_vector1 ), &
+                                       SIZE( input_vector2 ))
+       INTEGER               :: dim1, dim2
 #if defined (__NOBLAS)
-       INTEGER                    :: i, j
+       INTEGER :: i, j
 #endif
        !
        !
@@ -203,7 +203,7 @@ MODULE basic_algebra_routines
        IMPLICIT NONE
        !
        INTEGER, INTENT(IN) :: dim
-       REAL(DP)       :: identity(dim,dim)
+       REAL(DP)            :: identity(dim,dim)
        INTEGER             :: i
        !
        !
