@@ -332,8 +332,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            !
            ! dpsi is used as work space to store S|evc>
            !
-           CALL ccalbec (nkb, npwx, npwq, nbnd_occ(ikk), becp, vkb, evq)
-           CALL s_psi (npwx, npwq, nbnd_occ(ikk), evq, dpsi)
+           CALL ccalbec (nkb, npwx, npwq, nbnd, becp, vkb, evq)
+           CALL s_psi (npwx, npwq, nbnd, evq, dpsi)
            !
            ! |dvspi> = - (|dvpsi> - S|evq><evq|dvpsi>)
            !  note the change of sign!
