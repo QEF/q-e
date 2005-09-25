@@ -526,7 +526,7 @@
          isat = 0
          DO is = 1, nsp
            isa_s = isat + 1
-           isa_e = isat + na(is) - 1
+           isa_e = isat + na(is)
            IF( tranp(is) ) THEN
              WRITE( stdout,610) is, na(is)
              WRITE( stdout,615)

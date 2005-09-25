@@ -715,7 +715,7 @@ MODULE input
         tionstep_ = .TRUE.
         nstepe_   = MAX( ion_nstepe, cell_nstepe )
         IF( program_name == 'CP90' ) &
-            WRITE(stdout) " ion_nstepe or cell_nstepe have no effects "
+            WRITE(stdout, * ) "  ion_nstepe or cell_nstepe have no effects "
       END IF
 
       !   Cell dynamics

@@ -21,9 +21,13 @@
 ! from a FPMD output files
 ! --------------------------------------------------------------------
 PROGRAM fpmd_postproc
-  IMPLICIT NONE
 
-  INTEGER, PARAMETER :: DP = KIND(0.0d0)
+  USE kinds,      ONLY: DP
+  USE constants,  ONLY: bohr => BOHR_RADIUS_ANGS
+  USE iotk_module
+  USE xml_io_base
+
+  IMPLICIT NONE
 
   INTEGER, PARAMETER :: maxsp = 20
 
@@ -32,47 +36,58 @@ PROGRAM fpmd_postproc
   INTEGER                    :: nr1, nr2, nr3, ns1, ns2, ns3
   INTEGER                    :: np1, np2, np3, np, ispin
   INTEGER, ALLOCATABLE       :: ityp(:)
-  REAL(DP)              :: at(3, 3), atinv(3, 3)
+  REAL(DP)              :: at(3, 3), atinv(3, 3), ht0(3, 3), h0(3, 3)
   REAL(DP)              :: rhof, rhomax, rhomin, rhoc(6)
   REAL(DP), ALLOCATABLE :: rho_in(:,:,:), rho_out(:,:,:)
   REAL(DP), ALLOCATABLE :: tau_in(:,:), tau_out(:,:)
   REAL(DP), ALLOCATABLE :: sigma(:,:), force(:,:)
+  REAL(DP), ALLOCATABLE :: stau0(:,:), svel0(:,:), force0(:,:)
 
-  CHARACTER(len=256) :: prefix, filepp, fileout, output
+  CHARACTER(len=256) :: prefix, filepp, fileout, output, scradir
   CHARACTER(len=256) :: filecel, filepos, filefor, filepdb
+  CHARACTER(len=3)   :: atm( maxsp ), lab
   LOGICAL            :: lcharge, lforces, ldynamics, lpdb, lrotation
   INTEGER            :: nframes
-  INTEGER            :: ios
+  INTEGER            :: ios, nat, ndr
 
   REAL(DP) :: x, y, z, fx, fy, fz
-  INTEGER       :: i, j, k, n, ix, iy, iz
+  INTEGER  :: i, j, k, n, ix, iy, iz, ierr
 
   REAL(DP) :: euler(6)
 
-  NAMELIST /inputpp/ prefix, filepp, fileout, output, &
+  NAMELIST /inputpp/ prefix, filepp, fileout, output, scradir, &
                      lcharge, lforces, ldynamics, lpdb, lrotation, &
                      nr1, nr2, nr3, ns1, ns2, ns3, np1, np2, np3, &
-                     ispin, natoms, na, nsp, species, nframes
+                     species, nframes, ndr
 
   ! default values
-  prefix = 'fpmd'
-  filepp = 'CHARGE_DENSITY'
-  fileout = 'out'
-  output = 'xsf'
-  lcharge = .false.
-  lforces = .false.
+
+  dunit = 14
+
+  prefix    = 'fpmd'
+  filepp    = 'restart.xml'
+  fileout   = 'out'
+  output    = 'xsf'
+  scradir   = './'
+  lcharge   = .false.
+  lforces   = .false.
   ldynamics = .false.
-  lpdb = .false.
+  lpdb      = .false.
   lrotation = .false.
-  ns1 = 0
-  ns2 = 0
-  ns3 = 0
-  np1 = 1
-  np2 = 1
-  np3 = 1
-  nsp = 0
-  na(:) = 0
+  nr1   = 0
+  nr2   = 0
+  nr3   = 0
+  ns1   = 0
+  ns2   = 0
+  ns3   = 0
+  np1   = 1
+  np2   = 1
+  np3   = 1
   nframes = 1
+  ndr   = 51
+  species = 1
+
+  
 
   call input_from_file()
 
@@ -95,6 +110,18 @@ PROGRAM fpmd_postproc
      fileout = TRIM(fileout) // '.grd'
   END IF
 
+  np = np1 * np2 * np3
+  IF (np1 < 1 .OR. np2 < 1 .OR. np3 < 1) THEN
+     WRITE(*,*) 'Error: zero or negative replicas not allowed'
+     STOP
+  END IF
+
+  IF ( lcharge .AND. ( nr1 * nr2 * nr3 < 1 ) ) THEN
+     WRITE(*,*) 'Error: zero or negative grid dimensions'
+     STOP
+  END IF
+
+
   ! check for wrong input
   IF (ldynamics .AND. nframes < 2) THEN
      WRITE(*,*) 'Error: dynamics requested, but only one frame'
@@ -112,29 +139,98 @@ PROGRAM fpmd_postproc
      STOP
   END IF
 
-  IF (nsp > maxsp) THEN
+  filepp = restart_dir( scradir, ndr )
+  !
+  filepp = TRIM( filepp ) // '/' // 'restart.xml'
+  !
+  CALL iotk_open_read( dunit, file = TRIM( filepp ), BINARY = .FALSE., ROOT = attr )
+
+     CALL iotk_scan_begin( dunit, "IONS" )
+     CALL iotk_scan_dat( dunit, "NUMBER_OF_ATOMS", nat )
+     CALL iotk_scan_dat( dunit, "NUMBER_OF_SPECIES", nsp )
+
+     ALLOCATE( ityp( nat * np ) ) ! atomic species
+
+     DO i = 1, nsp
+        !
+        CALL iotk_scan_dat( dunit, "ATOM_TYPE", atm(i) )
+        !
+        ! CALL iotk_scan_dat( dunit, &
+        !                     TRIM( atm(i) )//"_MASS", amass(i), ATTR = attr )
+        !
+        ! CALL iotk_scan_dat( dunit, &
+        !                     "PSEUDO_FOR_" // TRIM( atm(i) ), psfile(i) )
+        !
+      END DO
+      !
+      ! CALL iotk_scan_empty( dunit, "UNITS_FOR_ATOMIC_POSITIONS", attr )
+      ! CALL iotk_scan_attr( attr, "UNIT", pos_unit  )
+      !
+      DO i = 1, nat
+         !
+         CALL iotk_scan_empty( dunit, "ATOM" // TRIM( iotk_index( i ) ), attr )
+         CALL iotk_scan_attr( attr, "SPECIES", lab )
+         CALL iotk_scan_attr( attr, "INDEX",   ityp(i) )
+         ! CALL iotk_scan_attr( attr, "tau",     tau(:,i) )
+         ! CALL iotk_scan_attr( attr, "if_pos",  if_pos(:,i) )
+         !
+      END DO
+
+     CALL iotk_scan_end( dunit, "IONS" )
+
+     ALLOCATE( stau0( 3, nat ) )
+     ALLOCATE( svel0( 3, nat ) )
+     ALLOCATE( force0( 3, nat ) ) ! forces, atomic units
+
+     CALL iotk_scan_begin( dunit, "TIMESTEPS", attr )
+        CALL iotk_scan_begin( dunit, "STEP0" )
+           CALL iotk_scan_begin( dunit, "IONS_POSITIONS" )
+              CALL iotk_scan_dat( dunit, "stau", stau0 )
+              CALL iotk_scan_dat( dunit, "svel", svel0 )
+              CALL iotk_scan_dat( dunit, "force", force0 )
+           CALL iotk_scan_end( dunit, "IONS_POSITIONS" )
+           CALL iotk_scan_begin( dunit, "CELL_PARAMETERS" )
+              CALL iotk_scan_dat( dunit, "ht", ht0 )
+           CALL iotk_scan_end( dunit, "CELL_PARAMETERS" )
+        CALL iotk_scan_end( dunit, "STEP0" )
+     CALL iotk_scan_end( dunit, "TIMESTEPS" )
+     !
+     ispin = 1
+     !
+     !
+  CALL iotk_close_read( dunit )
+
+  IF ( nsp > maxsp ) THEN
      WRITE(*,*) 'Error: too many atomic species'
      STOP
   END IF
 
-  np = np1 * np2 * np3
-  IF (np1 < 1 .OR. np2 < 1 .OR. np3 < 1) THEN
-     WRITE(*,*) 'Error: zero or negative replicas not allowed'
-     STOP
-  END IF
+  natoms = nat
+  !
+  ! Count atoms in each species
+  !
+  na = 0
+  DO i = 1, nat
+     na( ityp( i ) ) = na( ityp( i ) ) + 1                 ! total number of atoms
+  END DO
+
+  ! assign species (from input) to each atom
+  !
+  k = 0
+  DO i = 1, nsp
+     DO j = 1, na(i)
+        k = k + 1
+        ityp(k) = species(i)
+     END DO
+  END DO
+
 
   ! allocate arrays
-
-  ! atoms and forces
-  natoms = 0
-  DO i = 1, nsp
-     natoms = natoms + na(i)                  ! total number of atoms
-  END DO
-  ALLOCATE(tau_in(3, natoms))                  ! atomic positions, angstroms
-  ALLOCATE(tau_out(3, natoms * np))            ! replicated positions
-  ALLOCATE(sigma(3, natoms))                   ! scaled coordinates
-  ALLOCATE(ityp(natoms * np))                  ! atomic species
-  IF (lforces) ALLOCATE(force(3, natoms * np)) ! forces, atomic units
+  ALLOCATE(tau_in(3, nat))                  ! atomic positions, angstroms
+  ALLOCATE(tau_out(3, nat * np))            ! replicated positions
+  ALLOCATE(sigma(3, nat ) )                   ! scaled coordinates
+  !
+  IF (lforces) ALLOCATE( force( 3, nat * np ) )
 
   ! charge density
   IF (lcharge) THEN
@@ -145,27 +241,16 @@ PROGRAM fpmd_postproc
      ALLOCATE(rho_out(ns1, ns2, ns3))     ! rescaled charge density
   END IF
 
-  ! assign species to each atom
-  k = 0
-  DO i = 1, nsp
-     DO j = 1, na(i)
-        k = k + 1
-        ityp(k) = species(i)
-     END DO
-  END DO
-
   ! open files
   ounit = 10
   cunit = 11
   punit = 12
   funit = 13
-  dunit = 14
   bunit = 15
   OPEN(ounit, file=fileout, status='unknown')
   OPEN(punit, file=filepos, status='old')
   OPEN(cunit, file=filecel, status='old')
   if (lforces) OPEN(funit, file=filefor, status='old')
-  if (lcharge) OPEN(dunit, file=filepp, status='old')
   OPEN(bunit, file=filepdb, status='unknown')
 
   ! XSF file header
@@ -175,13 +260,41 @@ PROGRAM fpmd_postproc
   END IF
 
   DO n = 1, nframes
+     !
      IF (ldynamics) WRITE(*,'("frame",1X,I4)') n
 
      ! read data from files produced by fpmd
      CALL read_fpmd( lforces, lcharge, cunit, punit, funit, dunit, &
-                     natoms, nr1, nr2, nr3, ispin, at, tau_in, force, rho_in )
+                     natoms, nr1, nr2, nr3, ispin, at, tau_in, force, &
+                     rho_in, prefix, scradir, ndr )
+
+     IF( nframes == 1 ) THEN
+        !
+        !  use values from the XML file
+        !
+        IF( lforces ) force( 1:3, 1:nat ) = force0( 1:3, 1:nat ) 
+        !
+        h0 = TRANSPOSE( ht0 )
+        !
+        ! from scaled to real coordinates
+        !
+        tau_in( :, : ) = MATMUL( h0( :, : ), stau0( :, : ) )
+        !
+        ! convert atomic units to Angstroms
+        !
+        at     = h0     * bohr
+        tau_in = tau_in * bohr
+        !
+     END IF
+
+     WRITE(*,'(2x,"Cell parameters (Angstroms):")')
+     WRITE(*,'(3(2x,f10.6))') ((at(i, j), i=1,3), j=1,3)
+     !
+     WRITE(*,'(2x,"Atomic coordinates (Angstroms):")')
+     WRITE(*,'(3(2x,f10.6))') ((tau_in(i, j), i=1,3), j=1,natoms)
 
      ! compute scaled coordinates
+     !
      CALL inverse( at, atinv )
      sigma(:,:) = MATMUL(atinv(:,:), tau_in(:,:))
 
@@ -256,7 +369,6 @@ PROGRAM fpmd_postproc
   CLOSE(punit)
   CLOSE(cunit)
   IF (lforces) CLOSE(funit)
-  IF (lcharge) CLOSE(dunit)
 
   DEALLOCATE(tau_in)
   DEALLOCATE(tau_out)
@@ -266,37 +378,47 @@ PROGRAM fpmd_postproc
      DEALLOCATE(rho_in)
      DEALLOCATE(rho_out)
   END IF
+  DEALLOCATE( stau0 )
+  DEALLOCATE( svel0 )
+  DEALLOCATE( force0 )
 
   STOP
 END PROGRAM fpmd_postproc
 
 SUBROUTINE read_fpmd( lforces, lcharge, cunit, punit, funit, dunit, &
-                      natoms, nr1, nr2, nr3, ispin, at, tau, force, rho )
+                      natoms, nr1, nr2, nr3, ispin, at, tau, force, &
+                      rho, prefix, scradir, ndr )
+
+  USE kinds,      ONLY: DP
+  USE constants,  ONLY: bohr => BOHR_RADIUS_ANGS
+  USE xml_io_base
+  USE iotk_module
+
   IMPLICIT NONE
 
-  INTEGER, PARAMETER :: DP = KIND(0.0d0)
-
-  REAL(DP), PARAMETER :: bohr = 0.529177d0
-
-  LOGICAL, INTENT(in)        :: lforces, lcharge
-  INTEGER, INTENT(in)        :: cunit, punit, funit, dunit
-  INTEGER, INTENT(in)        :: natoms, nr1, nr2, nr3, ispin
+  LOGICAL, INTENT(in)   :: lforces, lcharge
+  INTEGER, INTENT(in)   :: cunit, punit, funit, dunit
+  INTEGER, INTENT(in)   :: natoms, nr1, nr2, nr3, ispin, ndr
   REAL(DP), INTENT(out) :: at(3, 3), tau(3, natoms), force(3, natoms)
   REAL(DP), INTENT(out) :: rho(nr1, nr2, nr3)
+  CHARACTER(LEN=*), INTENT(IN) :: prefix
+  CHARACTER(LEN=*), INTENT(IN) :: scradir
 
-  INTEGER       :: i, j, ix, iy, iz
+  INTEGER  :: i, j, ix, iy, iz, ierr
   REAL(DP) :: rhomin, rhomax, rhof
   REAL(DP) :: x, y, z, fx, fy, fz
+  CHARACTER(LEN=256) :: filename
+  INTEGER       :: n1, n2, n3
+  REAL(DP), ALLOCATABLE :: rho_plane(:)
 
   ! read cell vectors
+  ! NOTE: colums are lattice vectors
+  !
   READ(cunit,*)
   DO i = 1, 3
-     READ(cunit,*) (at(j, i), j=1,3)
+     READ(cunit,*) ( at(i, j), j=1,3 )
   END DO
-  ! convert atomic units to Angstroms
   at(:, :) = at(:, :) * bohr
-  WRITE(*,'(2x,"Cell parameters (Angstroms):")')
-  WRITE(*,'(3(2x,f10.6))') ((at(i, j), i=1,3), j=1,3)
 
   ! read atomic coordinates
   READ(punit,*)
@@ -316,20 +438,39 @@ SUBROUTINE read_fpmd( lforces, lcharge, cunit, punit, funit, dunit, &
         force(3, i) = fz
      END IF
   END DO
-  WRITE(*,'(2x,"Atomic coordinates (Angstroms):")')
-  WRITE(*,'(3(2x,f10.6))') ((tau(i, j), i=1,3), j=1,natoms)
 
   IF (lcharge) THEN
+
+     filename = restart_dir( scradir, ndr )
+     !
+     filename = TRIM( filename ) // '/' // TRIM( prefix ) // '.rho'
+     !
+     CALL iotk_open_read( dunit, file = TRIM( filename ), BINARY = .FALSE., ROOT = attr, IERR = ierr )
+
+     CALL iotk_scan_begin( dunit, "CHARGE-DENSITY" )
+     CALL iotk_scan_empty( dunit, "INFO", attr )
+     CALL iotk_scan_attr( attr, "nr1",   n1 )
+     CALL iotk_scan_attr( attr, "nr2",   n2 )
+     CALL iotk_scan_attr( attr, "nr3",   n3 )
+         !
+     ALLOCATE( rho_plane( n1 * n2 ) )
+
      ! read charge density from file
      ! note: must transpose
-     DO ix = 1, nr1
-        DO iy = 1, nr2
-           DO iz = 1, nr3
-              READ(dunit,*) rhof
-              rho(ix, iy, iz) = rhof
-           END DO
-        END DO
+     DO iz = 1, n3
+       CALL iotk_scan_dat( dunit, "z" // iotk_index( iz ), rho_plane )
+       IF( iz <= nr3 ) THEN
+          DO iy = 1, MIN( n2, nr2 )
+             DO ix = 1, MIN( n1, nr1 )
+                rho(ix, iy, iz) = rho_plane( ix + ( iy - 1 ) * n1 )
+             END DO
+          END DO
+       END IF
      END DO
+
+     CALL iotk_scan_end( dunit, "CHARGE-DENSITY" )
+     CALL iotk_close_read( dunit )
+
      rhomin = MINVAL(rho(:,:,:))
      rhomax = MAXVAL(rho(:,:,:))
 

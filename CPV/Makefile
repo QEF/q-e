@@ -131,7 +131,7 @@ TLDEPS= bindir mods libs libiotk
 
 all : tldeps cp.x fpmdpp.x
 fpmd : tldeps fpmdpp.x
-cp : tldeps cp.x
+cp : tldeps cp.x fpmdpp.x
 
 
 cp.x : cprstart.o $(FOBJS) $(LIBOBJ) $(LIBOBJS)
@@ -146,8 +146,15 @@ cpver.h :
 	echo "CHARACTER(LEN=70), PARAMETER :: version_date = '"`date`"'" \
 		> cpver.h
 
-fpmdpp.x : fpmdpp.o $(LIBOBJS)
-	$(LD) -o fpmdpp.x fpmdpp.o $(LIBOBJS) $(LDFLAGS)
+PPOBJS = \
+../Modules/xml_io_base.o \
+../Modules/mp.o \
+../Modules/mp_wave.o \
+../Modules/parser.o \
+../Modules/kind.o
+
+fpmdpp.x : fpmdpp.o $(PPOBJS) $(LIBOBJS)
+	$(LD) -o fpmdpp.x fpmdpp.o $(PPOBJS) $(LIBOBJS) $(LDFLAGS)
 	- (cd ../bin ; ln -fs ../CPV/fpmdpp.x . )
 
 tldeps:
