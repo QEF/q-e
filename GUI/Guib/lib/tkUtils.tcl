@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tkUtils.tcl,v 1.4 2004-09-04 08:01:00 kokalj Exp $ 
+# $Id: tkUtils.tcl,v 1.5 2005-09-26 11:32:04 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -49,6 +49,7 @@ package provide tku 0.1
 namespace eval ::tku:: {
     variable cursor 
     variable widgetCounter 0
+    variable toplevelCounter 0
 
     set cursor(default) [. cget -cursor]
     set cursor(watch)   watch
@@ -60,8 +61,8 @@ namespace eval ::tku:: {
     namespace export toplevelExists
     namespace export disableAll
     namespace export enableAll
-    namespace export errorDialog
-    namespace export warningDialog
+    #namespace export errorDialog
+    #namespace export warningDialog
     namespace export centerWindow
     namespace export createFont
     namespace export setCursor
@@ -69,6 +70,7 @@ namespace eval ::tku:: {
     namespace export watchExec
     namespace export getOpenFile
     namespace export getSaveFile
+    namespace export exitApp
 }
 
 #proc ::tku::_init {} {
@@ -134,13 +136,13 @@ proc ::tku::widgetName {{wid {}} {lastName {}}} {
 #------------------------------------------------------------------------
 
 proc ::tku::toplevelName {{prefix .tplw}} {
+    variable toplevelCounter
     set prefix .[string trim $prefix "."]
-    set widgetCounter 0
     while {1} { 
-	if { [winfo exists ${prefix}$widgetCounter] } {
-	    incr widgetCounter
+	if { [winfo exists ${prefix}$toplevelCounter] } {
+	    incr toplevelCounter
 	} else {
-	    return ${prefix}$widgetCounter
+	    return ${prefix}$toplevelCounter
 	}
     }
 }
@@ -154,17 +156,16 @@ proc ::tku::toplevelName {{prefix .tplw}} {
 #    ::tku::toplevelExists pathName
 #
 #  DESCRIPTION
-#    This proc is used for checking if widget pathName already exists.
-# If it does not existsit just returns the pathName, otherwise the
+# This proc is used for checking if widget pathName already exists.
+# If it does not exists it just returns the pathName, otherwise the
 # "return -code return" is issued, to return from the caller proc.
-
 #
 #  ARGUMENTS
 #    pathName -- widget path-name
 #
 #  RETURN VALUE
 #    If pathName widget does not exists it returns pathName, otherwise
-#    returns the -code return.
+#    returns the "-code return".
 #
 #  EXAMPLE
 #    ::tku::toplevelExists $widget
@@ -409,4 +410,21 @@ proc ::tku::getSaveFile {file args} {
     }
     
     return $file
+}
+
+
+
+proc ::tku::exitApp {{cmdAtExit {}}} {
+    set button [tk_messageBox -message "Really quit?" \
+                    -type yesno -icon question]
+    if { $button == "yes" } {
+        # do everything requested before exiting ... 
+	if { $cmdAtExit != "" } {
+	    eval $cmdAtExit
+	}
+
+        # delete all temporary files ...
+        ::tclu::tempFile delete all
+        exit
+    }
 }
