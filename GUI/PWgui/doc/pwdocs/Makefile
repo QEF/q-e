@@ -23,11 +23,11 @@ LINK_FILES = \
 %.gif : %.png
 	convert $< $@
 
-all: input_html compile_manual
+all: input_html compile_users-guide
 
 links:
 	for file in $(LINK_FILES); do ln -sf $(PW_DOC_DIR)/$$file . ; done
-	ln -sf $(LD1_DOC_FILE)/INPUT_LD1 .
+	ln -sf $(LD1_DOC_DIR)/INPUT_LD1 .
 
 clean_links:
 	for file in $(LINK_FILES); do \
@@ -41,21 +41,21 @@ input_html: links
 	./htmlise.sh D3      d3.x      INPUT_D3      > INPUT_D3.html
 	./htmlise.sh LD1     ld1.x     INPUT_LD1     > INPUT_LD1.html
 
-compile_manual: users-guide.pdf $(GIF_IMAGES) users-guide
+compile_users-guide: users-guide.pdf $(GIF_IMAGES) users-guide
 
 
 
 $(GIF_IMAGES): $(IMAGES)
 
 users-guide: users-guide.pdf users-guide.tex
-	rm -rf manual/	
+	rm -rf users-guide/	
 	latex2html \
-		-t "PWscf's Users Manual" \
+		-t "User's Guide for Quantum-ESPRESSO" \
 		-html_version 3.2,math \
 		-toc_depth 5 -split 5 -toc_stars -show_section_numbers \
 		-local_icons \
 		users-guide.tex
-	cd manual; \
+	cd users-guide; \
 	for file in *.png; do \
 		convert $$file $${file%.png}.gif; \
 		rm -f $$file; \
@@ -66,9 +66,9 @@ users-guide: users-guide.pdf users-guide.tex
 		rm -f /tmp/$$file; \
 	done
 
-clean_manual:
-	-rm -f manual.aux manual.log manual.out manual.toc *.gif
+clean_users-guide:
+	-rm -f users-guide.aux users-guide.log users-guide.out users-guide.toc *.gif
 
-clean: clean_links clean_manual
+clean: clean_links clean_users-guide
 	-rm -f INPUT_*.html *~
-	-rm -rf manual.pdf manual/	
+	-rm -rf users-guide.pdf users-guide/	
