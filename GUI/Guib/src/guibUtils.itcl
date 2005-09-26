@@ -1,0 +1,142 @@
+#
+# $RCSfile: guibUtils.itcl,v $ --
+#
+#      This file contains a few utility procs for Guib.
+#
+# Copyright (c) 2005  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: guibUtils.itcl,v 1.1 2005-09-26 11:44:41 kokalj Exp $ 
+#
+
+
+# ------------------------------------------------------------------------
+#****f* guib/properArrayName
+#  NAME
+#    ::guib::properArrayName -- get a proper name for array variable
+#  USAGE
+#    properArrayName $varName $elemName $index
+#  RETURN VALUE
+#    The proper name for array variable. For example:
+#
+#    properArrayName myVar blue 1,2
+#
+#    will return \"myVar(blue,1,2)\", while:
+#
+#    properArrayName myVar {} 1,2
+#
+#    will return \"myVar(1,2)\".
+#********
+# ------------------------------------------------------------------------
+
+proc ::guib::properArrayName {varName elemName index} {
+    if {$elemName != "" } {
+	set var ${varName}($elemName,$index)
+    } else {
+	set var ${varName}($index)
+    } 
+}
+
+
+# ------------------------------------------------------------------------
+#****f* guib/arrayInstance
+#  NAME
+#    ::guib::arrayInstance -- get a proper name of array instance
+#  USAGE
+#    arrayInstance $string
+#  RETURN VALUE
+#    If the string is for example blue(1)(2), then this will
+#    be transformed to blue(1,2).
+#  EXAMPLE
+#    set a [arrayInstance blue(1)(2)]
+#********
+# ------------------------------------------------------------------------
+
+proc ::guib::arrayInstance {string} {
+    regsub -all -- {\)\(} $string {,} arrayInstance
+    return $arrayInstance
+}
+
+
+# ------------------------------------------------------------------------
+#****f* guib/arrayName
+#  NAME
+#    ::guib::arrayName -- get the name of array from the full array instance string
+#  USAGE
+#    arrayName $arrayInstance
+#  RETURN VALUE
+#    The name of array, for example, from the \"myVar(elem)\" the
+#    \"myVar\" string will be returned
+#  EXAMPLE
+#    set name [arrayName myArray(elem)]
+#********
+# ------------------------------------------------------------------------
+
+proc ::guib::arrayName {arrayInstance} {
+    set ind [string first \( $arrayInstance]
+    if { $ind > -1 } {
+	# we have array
+	return [string range $arrayInstance 0 [expr $ind - 1]]
+    }
+    # its normal variable name
+    return $arrayInstance
+}
+
+
+# ------------------------------------------------------------------------
+#****f* guib/elemName
+#  NAME
+#    ::guib::elemName -- get the name of array element from the full array instance string
+#  USAGE
+#    elemName $arrayInstance
+#  RETURN VALUE
+#    The name of array element, if $arrayInstance is a normal
+#    variable-name an empty string is returned.
+#  EXAMPLE
+#    set a3 [comafy a(3)]
+#********
+# ------------------------------------------------------------------------
+
+proc ::guib::elemName {arrayInstance} {
+    set ind [string first \( $arrayInstance]
+    if { $ind > -1 } {
+	# we have array
+	set end [string length $arrayInstance]
+	return  [string range $arrayInstance [expr $ind + 1] [expr $end - 2]]
+    }
+    # its normal variable, return empty string
+    return ""
+}
+
+
+# ------------------------------------------------------------------------
+#****f* guib/comafy
+#  NAME
+#    ::guib::comafy -- tranforms the strings of type a(1) to a,1
+#  USAGE
+#    comafy $var
+#  RETURN VALUE
+#    The transformed string, i.e. a(1) is transformed to a,1
+#  EXAMPLE
+#    set a3 [comafy a(3)]
+#********
+# ------------------------------------------------------------------------
+
+proc ::guib::comafy {var} {
+    set var [string trimright $var ")"]    
+    regsub -all -- {\(} $var {,} newvar
+    return $newvar
+}
