@@ -1104,7 +1104,7 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 	table atomic_coordinates {
 	    -caption   "Enter atomic coordinates:"
 	    -head      {Atomic-label X-Coordinate Y-Coordinate Z-Coordinate X-iforce Y-iforce Z-iforce}
-	    -validate  {string real real real numeric numeric numeric}
+	    -validate  {string real real real binary binary binary}
 	    -cols      7
 	    -rows      1
 	    -outfmt    {"  %3s" "  %14.9f" %14.9f %14.9f "  %2d" %2d %2d}
