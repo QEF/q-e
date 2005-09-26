@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: pwscf.itcl,v 1.5 2005-09-14 17:24:01 giannozz Exp $ 
+# $Id: pwscf.itcl,v 1.6 2005-09-26 11:53:41 kokalj Exp $ 
 #
 
 tk_setPalette  #d9d9d9
@@ -96,7 +96,7 @@ $gui addModule module ld "LD1.X" [file join $env(PWGUI) modules atomic atomic.tc
 # ------------------------------------------------------------------------
 # help Files
 # ------------------------------------------------------------------------
-$gui addHelp help usersguide "PWSCF User's guide" [file join $env(PWGUI) doc pwdocs manual manual.html]
+$gui addHelp help usersguide "User's Guide for Quantum-ESPRESSO" [file join $env(PWGUI) doc pwdocs users-guide users-guide.html]
 
 $gui addHelp separator
 
