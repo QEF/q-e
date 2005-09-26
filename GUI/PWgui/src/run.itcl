@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: run.itcl,v 1.3 2005-03-23 11:22:31 kokalj Exp $ 
+# $Id: run.itcl,v 1.4 2005-09-26 11:52:58 kokalj Exp $ 
 #
 
 proc ::pwscf::run::run {guiObj {init 1} {use_defaults 1}} {
@@ -110,7 +110,7 @@ proc ::pwscf::run::run {guiObj {init 1} {use_defaults 1}} {
 	set execID [::tclu::nonblocking open]
 
 	# display stdout into pager while calculating
-	::tclu::nonblocking stdout $execID "::pwscf::run::defaultStdOutPager $moduleObj"
+	::tclu::nonblocking stdout $execID "::pwscf::run::defaultStdOutPager [list $moduleObj]"
 
 	# run the calculation
 	set status [eval ::tclu::nonblocking exec $execID $runCmd < $run(inpFile,$moduleObj) 2> $run(errFile,$moduleObj)]
@@ -312,13 +312,13 @@ proc ::pwscf::run::_configureModule {moduleObj prog} {
 	    var outFile -variable ::pwscf::run::run(outFile,$moduleObj) -label "Output file:" -widget entryfileselect
 	    var errFile -variable ::pwscf::run::run(errFile,$moduleObj) -label "Error file:" -widget entryfileselect
 	}
-	line run_mode -name "Mode of calculation: \\\"on the fly\\\" for short jobs  .OR. \\\"in background\\\" for long jobs" {
+	line run_mode -name "Mode of calculation:" {
 	    var mode {
 		-variable ::pwscf::run::run(mode,$moduleObj) 
-		-label "Mode of calaculation" 
+		-label "Mode of calaculation:" 
 		-textvalue {
-		    "on the fly" 
-		    "in background" 
+		    "on the fly (for short jobs)" 
+		    "in background (for longer jobs)" 
 		} 
 		-value { 
 		    nonblocking  
