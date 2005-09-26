@@ -1,11 +1,35 @@
+Mon Sep 26 13:25:34 CEST 2005
+	* moduleObj.itcl: adding optionSetDefault and _scopedName
+		methods. Making all necessary for the -validate module's
+		option.	
+	* table.itcl: table's -validate option is working now
+	* guib-keywords-def.tcl: adding -varscope option to "module" guib 
+		keyword.
+	* validate.itcl: adding a few new validators: string, int, real
+	* gui.itcl: adding "::guib::GUI::addHelp cascade" passibility. Few
+		other minor improvements.
+	* tclUtils.tcl: adding dummy and several functions for arguments
+		manipulation
+	* tkUtils.tcl: improving widgetName, toplevelName
+		functions. tku::errorDialog and tku::warningDialog
+		deprecated, use tclu::errorDialog and
+		tclu::warningDialog instead. Adding tku::exitApp function.
+	
+Mon Aug 25 2005  Anton Kokalj (tone.kokalj@ijs.si)
+	* validate.itcl: adding int and real validators
+
+Mon Aug 08 2005  Anton Kokalj (tone.kokalj@ijs.si)
+	* gui.itcl, spininthelp.itcl: adding the "addHelp help cascade"
+		possibility, i.e., the help menu can have cascades.
+
 Tue Feb 01 2005  Anton Kokalj (tone.kokalj@ijs.si)
 	* validate.itcl, spininthelp.itcl: adding the "binary" (i.e. 0/1)
 		validator
 	* lib/tclUtils.tcl: fixing a small bug in ::tclu::warningDialog.
 	
 Sat Jan 29 2005 Anton Kokalj (tone.kokalj@ijs.si)
- 	* lib/tclUtils.tcl: fixing typo in
-	::tclu::_error_or_warning_dialog routine
+	* lib/tclUtils.tcl: fixing typo in
+		::tclu::_error_or_warning_dialog routine
 	
 Mon Sep 20 2004 Anton Kokalj (tone.kokalj@ijs.si)
 	* gui.itcl: adding "getSelected saveFile" query. Making "save" and

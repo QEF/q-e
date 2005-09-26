@@ -23,7 +23,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: guibKeywords.itcl,v 1.4 2005-09-26 11:36:50 kokalj Exp $ 
+# $Id: guibKeywords.itcl,v 1.5 2005-09-26 11:46:26 kokalj Exp $ 
 #
 
 
@@ -1374,7 +1374,7 @@ body ::guib::moduleObj::postprocess {script} { set postprocessScript $script }
 # of $this).
 #  SOURCE
 
-body ::guib::moduleObj::this        {}       { return [code $this] }
+body ::guib::moduleObj::this        {}       { return $this }
 #********
 # ------------------------------------------------------------------------
 
