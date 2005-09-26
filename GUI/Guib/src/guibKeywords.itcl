@@ -23,7 +23,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: guibKeywords.itcl,v 1.3 2004-09-04 07:55:10 kokalj Exp $ 
+# $Id: guibKeywords.itcl,v 1.4 2005-09-26 11:36:50 kokalj Exp $ 
 #
 
 
@@ -1090,13 +1090,22 @@ body ::guib::moduleObj::widgetconfigure {varIdent args} {
     # first try to update the keywordObj database according to args
     #
     if { [set obj [_getObjFromVarident $varIdent]] != "" } {
-	set id  [getIdFromVarident $varIdent]
+	#puts stderr "::guib::moduleObj::widgetconfigure : obj = $obj ; varIdent = $varIdent"
+	set id  [$obj getIdFromVarident $varIdent]
 	set key [$obj getKey $id]
+	#puts stderr "::guib::moduleObj::widgetconfigure : key = $key ; id = $id"
 	if { [info exists options($key)] } {
+	    #puts stderr "::guib::moduleObj::widgetconfigure : set argvVar $args"
 	    set argvVar $args
-	    while { [::cmdline::getKnownOpt argvVar $options($key) opt value] > 0 } {
-		$obj setOptions $id [list $opt $value]
+	    foreach {opt value} $args {
+		$obj setOptions $id [list [string trimleft $opt -] $value]
+		#puts stderr "::guib::moduleObj::widgetconfigure : 	$obj setOptions $id [list $opt $value]"
 	    }
+	    #while { [::cmdline::getKnownOpt argvVar $options($key) opt value] > 0 } {
+	    #	$obj setOptions $id [list $opt $value]
+	    #	puts stderr "::guib::moduleObj::widgetconfigure : 	$obj setOptions $id [list $opt $value]"
+	    #
+	    #}
 	}
     }
     #/t.k.
@@ -1105,6 +1114,7 @@ body ::guib::moduleObj::widgetconfigure {varIdent args} {
     # now configure the widget
     # 
     set widget [getWidgetFromVarident $varIdent]
+    puts stderr "widget == $widget"
     if { $widget == "" } {
 	#error "widget \"$widget\" not found"
 	return
@@ -1364,7 +1374,7 @@ body ::guib::moduleObj::postprocess {script} { set postprocessScript $script }
 # of $this).
 #  SOURCE
 
-body ::guib::moduleObj::this        {}       { return $this }
+body ::guib::moduleObj::this        {}       { return [code $this] }
 #********
 # ------------------------------------------------------------------------
 

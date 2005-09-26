@@ -18,7 +18,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: table.itcl,v 1.3 2004-09-13 08:41:27 kokalj Exp $ 
+# $Id: table.itcl,v 1.4 2005-09-26 11:36:50 kokalj Exp $ 
 #
 
 #
@@ -90,7 +90,7 @@ class ::guib::keywidgets::Table {
     itk_option define -cols       cols      Cols     0
     itk_option define -varname    varname   Varname  _dummyName {}
     itk_option define -varident   varident  Varident _dummyVar {}
-    itk_option define -validate   validate  Command  {}
+    itk_option define -validate   validate  Command  whatever
     itk_option define -state      state     State    {}
     
     constructor {moduleObj args} {
@@ -125,7 +125,7 @@ class ::guib::keywidgets::Table {
 	#pack $itk_component(caption)  -in  $itk_component(topframe) -side left -fill x  -padx 15 -pady 15
 	#pack $itk_component(help)     -in  $itk_component(topframe) -side left -padx $itk_option(-helppadx) -pady $itk_option(-helppady)
 	#pack $itk_component(body)     -side top -fill x  -padx 3 -pady 2
-	grid $itk_component(caption) -row 0 -column 0 -columnspan 2 -sticky ew -padx 15 -pady 15
+	grid $itk_component(caption) -row 0 -column 0 -columnspan 2 -sticky ew -padx 5 -pady 5
 	grid $itk_component(help)    -row 1 -column 1 -sticky e -padx $itk_option(-helppadx) -pady $itk_option(-helppady)
 	grid $itk_component(body)    -row 2 -column 0 -columnspan 2 -sticky ew -padx 3  -pady 2
 	grid propagate $itk_interior 1
@@ -285,13 +285,15 @@ configbody  ::guib::keywidgets::Table::rows {
 # ------------------------------------------------------------------------
 
 configbody  ::guib::keywidgets::Table::validate {
-    if { $itk_option(-validate) != {} } {
-	set ind 1
-	foreach item $itk_option(-validate) {
-	    set validate($ind) $item
-	    #TODO: make something like:
-	    #set validate($ind) "::tclu::validate::numeric %c|%P"
-	}
+    if { $itk_option(-validate) == {} } {
+	set validate whatever
+	#set ind 1
+	#foreach item $itk_option(-validate) {
+	#    set validate($ind) $item
+	#    incr i
+	#    #TODO: make something like:
+	#    #set validate($ind) "::tclu::validate::numeric %c|%P"
+	#}
     }
 }
 
@@ -383,9 +385,20 @@ body ::guib::keywidgets::Table::_addCol {ic} {
     #
     # add column $ic to all rows !!!
     #
+
+    set validate [lindex $itk_option(-validate) [expr $ic - 1]]
+    if { $validate == "" } { 
+	set validate [lindex $itk_option(-validate) end] 
+    }
+    if { $validate == "string" } {
+	set validate whatever
+    }
+
     for {set ir 1} {$ic <= $nRows} {incr ir} {
 	set e [entry $itk_component(body).${ir}_${ic} \
-		   -textvariable $itk_option(-varident)($ir,$ic)]
+		   -textvariable $itk_option(-varident)($ir,$ic) \
+		   -validate key \
+		   -validatecommand "::guib::widgets::$validate %P"]
 	grid $e -row $ir -column $ic -sticky ewns \
 	    -padx 0 -pady 0 -ipadx 0 -ipady 0
     }
@@ -493,6 +506,20 @@ body ::guib::keywidgets::Table::_widget {ir ic} {
 	    set result [$wid $itk_component(body).${ir}_${ic} \
 			    -background seashell \
 			    -textvariable $textVar]
+
+	    # temp ...
+	    if {  $wid == "entry" } {
+		set validate [lindex $itk_option(-validate) [expr $ic - 1]]
+		if { $validate == "" } { 
+		    set validate [lindex $itk_option(-validate) end] 
+		}
+		if { $validate == "string" } {
+		    set validate whatever
+		}
+		$itk_component(body).${ir}_${ic} configure -validate key \
+		    -validatecommand "::guib::widgets::$validate %P"
+	    }
+	    # ... end
 	}
 
 	entrybutton {

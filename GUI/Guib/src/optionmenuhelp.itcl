@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: optionmenuhelp.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: optionmenuhelp.itcl,v 1.2 2005-09-26 11:36:50 kokalj Exp $ 
 #
 
 
@@ -100,8 +100,6 @@ class ::guib::widgets::Optionmenuhelp {
     itk_option define -width        width        Width        0
     itk_option define -borderwidth  borderWidth  BorderWidth  2
     itk_option define -highlightthickness highlightThickness HighlightThickness 1 
-    #itk_option define -font font Font -Adobe-Helvetica-Bold-R-Normal--*-120-*
-
     eval $::guib::widgets::def(helpCommand)
 }
 

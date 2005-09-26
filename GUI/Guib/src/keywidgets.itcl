@@ -30,7 +30,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: keywidgets.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: keywidgets.itcl,v 1.2 2005-09-26 11:36:50 kokalj Exp $ 
 #
 
 
@@ -464,7 +464,7 @@ class ::guib::keywidgets::Dimension {
 	    }   
 	    0 - no - false - {} { 
 		itk_component add dimFrame {
-		    iwidgets::labeledframe $itk_interior.dimFrame -labeltext "Dimension: $itk_option(-label)" -labelpos nw 
+		    iwidgets::labeledframe $itk_interior.dimFrame -labeltext $itk_option(-label) -labelpos nw 
 		} {
 		    #
 		}

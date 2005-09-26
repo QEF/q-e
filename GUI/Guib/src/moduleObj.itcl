@@ -35,7 +35,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: moduleObj.itcl,v 1.5 2004-09-04 07:56:29 kokalj Exp $ 
+# $Id: moduleObj.itcl,v 1.6 2005-09-26 11:36:50 kokalj Exp $ 
 #
 
 # ------------------------------------------------------------------------
@@ -142,6 +142,7 @@
 #        optionSetDefault      -- ...
 #        loadFromVar           -- inverse of saveToVar, i.e., it varsets GUIB-variables from the variables
 #        getAllVar           -- returns all defined GUIB_variables
+#        optionSetDefault    -- set dafule value for a given option
 # 
 #   3. PROTECTED/PRIVATE METHDOS
 #      3.1 methods connected to guib::keywordObj class
@@ -200,9 +201,9 @@
 #        _addIdent        -- adds (registers) identifier
 #        _checkIdentChars -- checks if identifier string contains only ^[[:alnum:]_.:]+$ type characters
 # 
-#      3.9 other options
-#        optionSetDefault   -- set dafule value for a given option
+#      3.9 other methdos
 #        _loadFromVar       -- ...
+#        _scopedName        --
 #
 # COMMANDS
 #   _validateFmtString  -- construct the formated string and check it against the format specifiers
@@ -230,6 +231,7 @@ class ::guib::moduleObj {
 
     public variable title   {}
     public variable script  {}
+    public variable varscope {}
     public variable toplevel {}
     public variable toplevelTitle {}
 
@@ -394,7 +396,7 @@ class ::guib::moduleObj {
     public method identinfo             {ident what}  
     public method optionSetDefault      {key option defaultValue}
     public method loadFromVar           {}
-    public method getAllVar             {types}
+    public method getAllVar             {{types a*}}
 
     # --------------------------------------------------
     # methods connected to guib::keywordObj class
@@ -470,14 +472,18 @@ class ::guib::moduleObj {
     private method _getOutput     {}
     private method _saveToVar     {obj namespace_scope}
 
+    #
+    # other methods
+    #
     private method _loadFromVar   {obj}
+    private method _scopedName    {varName}
     private method _getAllVar     {obj type}
 
     #
     # functions
     #
     private proc _validateFmtString  {fmt valuesList errorMessage}   
-    private proc _comafy             {var} 
+    private proc _comafy             {var} ; # TODO: should be a normal guib utility proc
     private proc _openGets           {fileChannel} 
     private proc _expandArgs         {code}
 
@@ -1554,6 +1560,17 @@ body ::guib::moduleObj::_groupwidget {obj action} {
 # ========================================================================
 
 
+body ::guib::moduleObj::_scopedName {varName} {
+    if { $varscope == "" } {
+	return $varName
+    } else {
+	#return [concat ${varscope}::${varName}]
+	return [concat ${varscope} ${varName}]
+    }
+}
+
+
+
 # ------------------------------------------------------------------------
 #****m* moduleObj/saveToVar
 #  NAME
@@ -1584,31 +1601,43 @@ body ::guib::moduleObj::_saveToVar {obj namespace_scope} {
 	    # we have new keyword
 	    switch -exact -- $key {
 		"var" { 
-		    set varName  [$obj getOptionValue $id variable]
+		    set varName  [_scopedName [$obj getOptionValue $id variable]]
 		    set varIdent [$obj getOptionValue $id ident]
 		    set varValue [varvalue $varIdent]
-		    ::tclu::DEBUG saveToVar: [namespace current]
-		    namespace eval $namespace_scope "set $varName [list $varValue]"
+		    namespace eval $namespace_scope [list set $varName $varValue]
 		}
+
 		"dimension" {		     
-		    set dimName  [$obj getOptionValue $id variable]
+		    set dimName  [_scopedName [$obj getOptionValue $id variable]]
 		    set dimIdent [$obj getOptionValue $id ident]
+		    #set dimWid   [getWidgetFromVarident $dimIdent]
+		    #set start    [$dimWid cget -start]
+		    #set end      [$dimWid cget -end]
 		    set start    [$obj getOptionValue $id start]
 		    set end      [$obj getOptionValue $id end]
-		    for {set i $start} {$i <= $end} {incr i} {
+
+		    for {set i $start} {$i <= $end} {incr i} {			
 			set varValue [dimvalue $dimIdent $i]
-			namespace eval $namespace_scope "set $varName [list $varValue]"
+			set varName  [::guib::arrayInstance ${dimName}($i)]
+			namespace eval $namespace_scope [list set $varName $varValue]
 		    }
 		}
+
 		"table" {
-		    set tableName  [$obj getOptionValue $id variable]
+		    set tableName  [_scopedName [$obj getOptionValue $id variable]]
 		    set tableIdent [$obj getOptionValue $id ident]
-		    set rows [$obj getOptionValue $id rows]
-		    set cols [$obj getoptionValue $id cols]
+		    #set tableWid   [getWidgetFromVarident $tableIdent]
+		    #set rows       [$tableWid cget -rows]
+		    #set cols       [$tableWid cget -cols]
+		    set rows       [$obj getOptionValue $id rows]
+		    set cols       [$obj getOptionValue $id cols]
+		    puts stderr "table info: size == ($rows,$cols)"
 		    for {set ir 1} {$ir <= $rows} {incr ir} {
 			for {set ic 1} {$ic <= $cols} {incr ic} {
 			    set varValue [tablevalue $tableIdent $ir $ic]
-			    namespace eval $namespace_scope "set ${varName}($ir,$ic) [list $varValue]"
+			    set varName  [::guib::arrayInstance ${tableName}($ir,$ic)]
+			    puts stderr "set $varName [list $varValue]"
+			    namespace eval $namespace_scope [list set $varName $varValue]
 			}
 		    }
 		}
@@ -1635,7 +1664,7 @@ body ::guib::moduleObj::_loadFromVar {obj} {
 	    # we have new keyword
 	    switch -exact -- $key {
 		"var" { 
-		    set varName  [$obj getOptionValue $id variable]
+		    set varName  [_scopedName [$obj getOptionValue $id variable]]
 		    set varIdent [$obj getOptionValue $id ident]
 		    upvar \#0 $varName varValue
 		    if { [info exists varValue] } {
@@ -1646,9 +1675,10 @@ body ::guib::moduleObj::_loadFromVar {obj} {
 		    set dimName  [$obj getOptionValue $id variable]
 		    set dimIdent [$obj getOptionValue $id ident]
 		    set start    [$obj getOptionValue $id start]
-		    set end t    [$obj getOptionValue $id end]
+		    set end      [$obj getOptionValue $id end]
 		    for {set i $start} {$i <= $end} {incr i} {
-			upvar \#0 ${dimName}($i) varValue
+			set dimn [_scopedName [::guib::arrayInstance ${dimName}($i)]]
+			upvar \#0 $dimn varValue
 			if { [info exists varValue] } {
 			    dimset $dimIdent $i -value $varValue
 			}
@@ -1657,22 +1687,28 @@ body ::guib::moduleObj::_loadFromVar {obj} {
 		"table" {
 		    set tableName  [$obj getOptionValue $id variable]
 		    set tableIdent [$obj getOptionValue $id ident]
-		    set rows [$obj getOptionValue $id rows]
-		    set cols [$obj getoptionValue $id cols]
+		    set rows       [$obj getOptionValue $id rows]
+		    set cols       [$obj getOptionValue $id cols]
 		    for {set ir 1} {$ir <= $rows} {incr ir} {
 			for {set ic 1} {$ic <= $cols} {incr ic} {
-			    upvar \#0 ${tableName}($ir,$ic) varValue
-			    tableset $tableIdent $ir $ic -value $varValue
+			    set tabn [_scopedName [::guib::arrayInstance ${tableName}($ir,$ic)]]
+			    upvar \#0 $tabn varValue
+			    if { [info exists varValue] } {
+				tableset $tableIdent $ir $ic -value $varValue
+			    }
 			}
 		    }
 		}
 	    }
-	}
-    }
+	}; # if
+    }; # for
 }
 
-
-body ::guib::moduleObj::getAllVar {types} {
+#
+# types == regular-expresion for mathing the type of var: var, dimenison, table
+# The types == a* will thus match all types.
+#
+body ::guib::moduleObj::getAllVar {{types a*}} {
     set _allVar ""
     _getAllVar $this $types
     ::tclu::DEBUG getAllVar: vars == $_allVar
@@ -1689,35 +1725,48 @@ body ::guib::moduleObj::_getAllVar {obj types} {
 	    # we have new keywordObj object, goes down the stack
 	    _getAllVar $childObj $types
 	} else {
-	    ::tclu::DEBUG _getAllVar: $types $key [regexp $types $key]
 	    # we have new keyword
-	    switch -exact -- $key {
-		"var" { 
-		    ::tclu::DEBUG _getAllVar.2: $types $key [regexp $types $key]
-		    if { [regexp $types $key] } {
-			::tclu::DEBUG _getAllVar: var == [$obj getOptionValue $id variable]
-			lappend _allVar [$obj getOptionValue $id variable]
-		    }
-		}
-		"dimension" {		     
-		    if { [regexp $types $key] } {
+	    if { [regexp -- $types $key] } {
+		#
+		switch -exact -- $key {
+		    "var" { 
+			set varName [_scopedName [$obj getOptionValue $id variable]]
+			lappend _allVar $varName
+		    }		
+		    
+		    "dimension" {		     
 			set dimName  [$obj getOptionValue $id variable]
+			#set dimIdent [$obj getOptionValue $id ident]
+			#set dimWid   [getWidgetFromVarident $dimIdent]
+			#set start    [$dimWid cget -start]
+			#set end      [$dimWid cget -end]
+			set start    [$obj getOptionValue $id start]
+			set end      [$obj getOptionValue $id end]
 			for {set i $start} {$i <= $end} {incr i} {
-			    lappend _allVar ${dimName}($i)
-			}
+			    set varName [_scopedName [::guib::arrayInstance ${dimName}($i)]]
+			    lappend _allVar $varName
+			}		
 		    }
-		}
-		"table" {
-		    if { [regexp $types $key] } {
+		    
+		    "table" {
 			set tableName  [$obj getOptionValue $id variable]
+			#set tableIdent [$obj getOptionValue $id ident]
+			#set tableWid   [getWidgetFromVarident $tableIdent]
+			#set rows       [$tableWid cget -rows]
+			#set cols       [$tableWid cget -cols]
+			set rows       [$obj getOptionValue $id rows]
+			set cols       [$obj getOptionValue $id cols]
+
 			for {set ir 1} {$ir <= $rows} {incr ir} {
 			    for {set ic 1} {$ic <= $cols} {incr ic} {
-				lappend _allVar ${tableName}($ir,$ic)
+				set varName [_scopedName [::guib::arrayInstance ${tableName}($ir,$ic)]]
+				lappend _allVar $varName
 			    }
-			}
+			}		
 		    }
 		}
 	    }
+	    # end of switch
 	}
     }
 }

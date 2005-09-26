@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: guib.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: guib.itcl,v 1.2 2005-09-26 11:36:50 kokalj Exp $ 
 #
 
 # ------------------------------------------------------------------------
@@ -65,7 +65,7 @@
 #            will be called (see below)
 # ------------------------------------------------------------------------
 
-proc ::guib::loadModule {moduleFile} {
+proc ::guib::loadModule {moduleFile {varscope {}}} {
     if { [file pathtype $moduleFile] != "absolute" } {
 	set moduleFile [file join [pwd] $moduleFile]
     }
@@ -79,6 +79,14 @@ proc ::guib::loadModule {moduleFile} {
     cd $pwd
     
     $obj setModuleFile $moduleFile
+
+    #
+    # set the varscope
+    #
+    if { $varscope != "" } {
+	$obj configure -varscope $varscope
+    }
+
     return $obj
 }
 
@@ -114,7 +122,9 @@ proc ::guib::module {moduleName args} {
 
     array set opt [cmdline::getoptions args $::guib::options(module)]    
     ::tclu::ifincr ::guib::module($opt(title))    
-    return [moduleObj $moduleName -title $opt(title) -script $opt(script)]
+    #return [code [moduleObj $moduleName -title $opt(title) -script $opt(script) -varscope $opt(varscope)]]
+    set moduleName ::guib::[string trimleft $moduleName]
+    return [moduleObj $moduleName -title $opt(title) -script $opt(script) -varscope $opt(varscope)]
 }
 
 

@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: radioboxhelp.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: radioboxhelp.itcl,v 1.2 2005-09-26 11:36:50 kokalj Exp $ 
 #
 
 
@@ -30,9 +30,6 @@ option add *Radioboxhelp.labelMargin	10	widgetDefault
 option add *Radioboxhelp.labelPos	wn	widgetDefault
 option add *Radioboxhelp.borderWidth	0	widgetDefault
 option add *Radioboxhelp.relief		flat	widgetDefault
-#option add *Radioboxhelp.labelFont     \
-#      "-Adobe-Helvetica-Bold-R-Normal--*-120-*-*-*-*-*-*"  widgetDefault
-
 
 # ------------------------------------------------------------------------
 #  USUAL options.
@@ -112,8 +109,6 @@ class ::guib::widgets::Radioboxhelp {
     itk_option define -width width Width 0
     itk_option define -borderwidth borderWidth BorderWidth 2
     itk_option define -highlightthickness highlightThickness HighlightThickness 1
-    #itk_option define -font font Font -Adobe-Helvetica-Bold-R-Normal--*-120-*
-
     eval $::guib::widgets::def(helpCommand)
 }
 

@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: guib-keywords-def.tcl,v 1.2 2004-09-04 07:54:20 kokalj Exp $ 
+# $Id: guib-keywords-def.tcl,v 1.3 2005-09-26 11:36:50 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -45,8 +45,9 @@
 # DEFINITION of standard "module" options.
 #------------------------------------------------------------------------
 set options(module) {
-    {title.arg  GUI {Human readable name for the module}}
-    {script.arg {}  {Scirpt of the module}}
+    {title.arg     GUI {Human readable name for the module}}
+    {script.arg   {}   {Scirpt of the module}}
+    {varscope.arg {}   {Scope for variables}}
 }    
 
 
