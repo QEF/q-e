@@ -121,7 +121,6 @@ Here is a list of available compilation targets:
   make pp           compile PP/pp.x and other postprocessing codes
   make d3           compile D3/d3.x (third-order energy derivatives)
   make gamma        compile Gamma/phcg.x (Gamma-only version of ph.x)
-  make fpmd         compile FPMD/par2.x (Car-Parrinello MD)
   make cp           compile CPV/cp.x (Car-Parrinello MD with ultrasoft
                       pseudopotentials)
   make tools        compile pwtools/* (miscellaneous tools for data
@@ -136,7 +135,7 @@ Here is a list of available compilation targets:
                       conversion)
   make links        create symbolic links to all executables in bin/
                       (required to run the examples)
-  make all          same as "make pwall ld1 cp fpmd upf"
+  make all          same as "make pwall ld1 cp upf"
   make clean        remove object files and executables
   make veryclean    remove configuration files too
   make tar          build a tarball of the current source tree

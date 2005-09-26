@@ -3,7 +3,6 @@ Electronic Structure, Simulation, and Optimization) is the result
 of the merge of several pre-existing packages for electronic-structure
 calculations:
 - the PWscf package
-- the FPMD code
 - the CP code
 and of several utilities, in particular:
 - the PWgui graphical user interface for generating input data files
@@ -27,16 +26,16 @@ The PWscf package was developed by Stefano Baroni, Stefano
 de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and others.
 The web site for PWSCF and related codes is: http://www.pwscf.org/
 
-The FPMD and CP codes are both based on the original code written by
+The CP code is based on the original code written by
 Roberto Car and Michele Parrinello.
 
-FPMD was developed by Carlo Cavazzoni, Gerardo Ballabio (CINECA),
-Sandro Scandolo (ICTP, Trieste), Guido Chiarotti (SISSA), Paolo
-Focher, and others.
 
 CP was developed by Alfredo Pasquarello (IRRMA, Lausanne), Kari
 Laasonen (Oulu), Andrea Trave (LLNL), Roberto Car (Princeton),
 Nicola Marzari (MIT), Paolo Giannozzi, and others.
+Also developed by former FPMD team: Carlo Cavazzoni, Gerardo Ballabio (CINECA),
+Sandro Scandolo (ICTP, Trieste), Guido Chiarotti (SISSA), Paolo
+Focher, and others.
 
 PWgui was written by Anton Kokalj (IJS) and is based on his GUIB
 concept (http://www-k3.ijs.si/kokalj/guib/).

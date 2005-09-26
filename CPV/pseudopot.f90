@@ -54,6 +54,7 @@ MODULE pseudopotential
   PUBLIC :: interpolate_beta, interpolate_qradb, exact_beta
   PUBLIC :: rhoc1_sp, rhocp_sp, build_cctab, tpstab, chkpstab
   PUBLIC :: build_pstab, vps_sp, dvps_sp
+  PUBLIC :: check_tables
 
   !  ----------------------------------------------
 
@@ -951,6 +952,43 @@ CONTAINS
       RETURN
     END SUBROUTINE compute_qradx
 
+! ----------------------------------------------
+
+! check table size against cell variations
+
+! ----------------------------------------------
+
+    LOGICAL FUNCTION check_tables( )
+      !
+      USE kinds, ONLY : DP
+      USE betax, ONLY : refg
+      USE mp,    ONLY : mp_sum
+      USE gvecw, ONLY: ngw
+      USE cell_base, ONLY: tpiba2
+      USE small_box, ONLY: tpibab
+      USE gvecb,     ONLY: gb, ngb
+      USE reciprocal_vectors, ONLY: g
+      !
+      IMPLICIT NONE
+      !
+      REAL(DP) :: gg, ggb, gmax
+      !
+      gg  = MAXVAL( g( 1:ngw ) )
+      gg  = gg * tpiba2 / refg
+      !
+      ggb = MAXVAL( gb( 1:ngb ) )
+      ggb = ggb * tpibab * tpibab / refg
+      !
+      gmax = MAX( gg, ggb )
+      !
+      CALL mp_sum( gmax )
+      !
+      check_tables = .FALSE.
+      IF( ( INT( gmax ) + 2 ) > mmx ) check_tables = .TRUE.
+      !
+      RETURN
+    END FUNCTION
+    
 
 ! ----------------------------------------------
 
@@ -983,10 +1021,6 @@ CONTAINS
       ALLOCATE( ylm( ngw, (lmaxkb+1)**2 ) )
       CALL ylmr2 ( (lmaxkb+1)**2, ngw, gx, g, ylm)
       !
-      gg = MAXVAL( g( 1:ngw ) )
-      gg = gg * tpiba * tpiba / refg
-      if( ( int( gg ) + 2 ) > mmx ) &
-           call errore( ' interpolate_beta ', ' g vec too large ', 1 )
       !
       do is = 1, nsp
          !   
@@ -1100,12 +1134,6 @@ CONTAINS
 !
       qradb(:,:,:,:,:) = 0.d0
       call ylmr2 (lmaxq*lmaxq, ngb, gxb, gb, ylmb)
-
-      gg = MAXVAL( gb( 1:ngb ) )
-      gg = gg * tpibab * tpibab / refg
-      
-      if( ( int( gg ) + 2 ) > mmx ) &
-           call errore( ' interpolate_qradb ', ' g vec too large ', 1 )
 
       do is = 1, nvb
          !

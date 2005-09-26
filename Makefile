@@ -166,7 +166,7 @@ links : bindir
 	for exe in \
 	    ../CPV/cp.x \
 	    ../D3/d3.x \
-	    ../CPV/fpmdpp.x \
+	    ../CPV/cppp.x \
 	    ../Gamma/phcg.x \
 	    ../PH/ph.x \
 	    ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x \

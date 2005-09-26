@@ -1812,6 +1812,7 @@ MODULE read_namelists_module
           IF( TRIM( calculation ) == 'vc-relax' .OR. &
               TRIM( calculation ) == 'vc-cp'    .OR. &
               TRIM( calculation ) == 'vc-md'    .OR. &
+              TRIM( calculation ) == 'fpmd'     .OR. &
               TRIM( calculation ) == 'vc-md' ) THEN
              READ( 5, cell, iostat = ios ) 
           END IF

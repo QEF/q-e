@@ -129,9 +129,8 @@ miller.o
 WRAPPERS = wrapper.o
 TLDEPS= bindir mods libs libiotk
 
-all : tldeps cp.x fpmdpp.x
-fpmd : tldeps fpmdpp.x
-cp : tldeps cp.x fpmdpp.x
+all : tldeps cp.x cppp.x
+cp : tldeps cp.x cppp.x
 
 
 cp.x : cprstart.o $(FOBJS) $(LIBOBJ) $(LIBOBJS)
@@ -153,15 +152,15 @@ PPOBJS = \
 ../Modules/parser.o \
 ../Modules/kind.o
 
-fpmdpp.x : fpmdpp.o $(PPOBJS) $(LIBOBJS)
-	$(LD) -o fpmdpp.x fpmdpp.o $(PPOBJS) $(LIBOBJS) $(LDFLAGS)
-	- (cd ../bin ; ln -fs ../CPV/fpmdpp.x . )
+cppp.x : fpmdpp.o $(PPOBJS) $(LIBOBJS)
+	$(LD) -o cppp.x fpmdpp.o $(PPOBJS) $(LIBOBJS) $(LDFLAGS)
+	- (cd ../bin ; ln -fs ../CPV/cppp.x . )
 
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
-	- /bin/rm -f fpmdpp.x *.o *.mod version.h *.i core* *.F90 fort* \
+	- /bin/rm -f cppp.x *.o *.mod version.h *.i core* *.F90 fort* \
 		*.cpp *.d work.pc  *.s cp.x
 
 include make.depend

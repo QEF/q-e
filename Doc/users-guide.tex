@@ -38,7 +38,6 @@ Density-Functional Theory, using a Plane-Wave basis set and
 pseudopotentials:
 \begin{itemize}
   \item PWscf (Plane-Wave Self-Consistent Field).
-  \item FPMD (First Principles Molecular Dynamics).
   \item CP (Car-Parrinello).
 \end{itemize}
 and the following auxiliary codes:
@@ -115,7 +114,7 @@ electric fields are implemented in both the supercell and the
 at an experimental stage).
 Various postprocessing and data analysis programs are available.
 
-FPMD and CP can currently perform the following kinds of calculations:
+CP can currently perform the following kinds of calculations:
 
 \begin{itemize}
   \item Car-Parrinello molecular dynamics simulation
@@ -125,18 +124,13 @@ FPMD and CP can currently perform the following kinds of calculations:
   \item variable-cell (Parrinello-Rahman) dynamics
   \item Nudged Elastic Band (NEB) for energy barriers and reaction
         paths
-  \item String Method Dynamics (in real space) (CP only)
+  \item String Method Dynamics (in real space)
   \item dynamics with Wannier functions and under finite electric
-        fields (CP only)
+        fields 
 \end{itemize}
-Spin-polarized calculations and (for FPMD only) calculations with
-multiple k-points can be performed.
-CP works with both norm-conserving and Ultrasoft pseudopotentials,
-while FPMD is currently limited to norm-conserving.
-
-The restart files of all the programs are compatible (if data are):
-you can run FPMD with a restart file from CP, and vice versa. 
-For CP, there are implementations of a dynamics for metals using 
+Spin-polarized calculations.
+CP works with both norm-conserving and Ultrasoft pseudopotentials.
+There are implementations of a dynamics for metals using 
 conjugate-gradient algorithms, and of the meta-GGA functionals.
 Both are at an experimental stage.
 
@@ -158,15 +152,8 @@ Anton Kokalj (Jo\v{z}ef Stefan Institute, Ljubljana).
 The PWscf package was originally developed by Stefano Baroni, Stefano
 de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and others.
 
-The FPMD and CP codes are both based on the original code written by
+The CP code is based on the original code written by
 Roberto Car and Michele Parrinello.
-
-FPMD was developed by
-Carlo Cavazzoni, Gerardo Ballabio (CINECA),
-Sandro Scandolo (ICTP, Trieste),
-Guido Chiarotti (SISSA),
-Paolo Focher,
-and others.
 
 CP was developed by
 Alfredo Pasquarello (IRRMA, Lausanne),
@@ -176,6 +163,13 @@ Roberto Car (Princeton),
 Nicola Marzari (MIT),
 Paolo Giannozzi,
 and others.
+also developed by former FPMD team:
+Carlo Cavazzoni, Gerardo Ballabio (CINECA),
+Sandro Scandolo (ICTP, Trieste),
+Guido Chiarotti (SISSA),
+Paolo Focher,
+and others.
+
 
 PWgui was written by Anton Kokalj and is based on his GUIB concept
 (\htmladdnormallink{\texttt{http://www-k3.ijs.si/kokalj/guib/}}%
@@ -759,11 +753,8 @@ Here is a list:
     \ref{pseudopotentials}, ``Pseudopotentials'').
   \item
     \texttt{make cp} produces the Car-Parrinello code CP in
-    \texttt{CPV/cp.x}.
-  \item
-    \texttt{make fpmd} produces the Car-Parrinello code FPMD
-    \texttt{CPV/fpmd.x} and the postprocessing code 
-    \texttt{CPV/fpmdpp.x}.
+    \texttt{CPV/cp.x}. and the postprocessing code 
+    \texttt{CPV/cppp.x}.
   \item
     \texttt{make all} produces all of the above.
 \end{itemize}
@@ -1414,7 +1405,7 @@ Currently PWscf and CP support both Ultrasoft (US) Vanderbilt
 pseudopotentials (PPs) and Norm-Conserving (NC)
 Hamann-Schl\"uter-Chiang PPs in separable Kleinman-Bylander form.
 Note however that calculation of third-order derivatives is not (yet)
-implemented with US PPs. Presently FPMD supports only NC PPs.
+implemented with US PPs. 
 
 The Quantum-ESPRESSO package uses a unified pseudopotential format (UPF)
 (\htmladdnormallink{\texttt{http://www.pwscf.org/format.htm}}%
@@ -1431,7 +1422,7 @@ for all types of PPs, but still accepts a number of other formats:
         US PPs.
 \end{enumerate}
 Note however that PWscf accept the first, fourth and fifth in the
-above list; CP the second, fourth and fifth; FPMD the third only.
+above list; CP the second, fourth and fifth.
 
 PPs for selected elements can be downloaded from the Pseudopotentials
 Page of the Quantum-ESPRESSO web site
@@ -1583,7 +1574,7 @@ with self-explanatory names:
 \end{quote}
 
 The keywords may be followed on the same line by an option.
-Unknown fields (including some that are specific to CP and FPMD codes)
+Unknown fields (including some that are specific to CP code)
 are ignored by PWscf.
 See file \texttt{Doc/INPUT\_PW} for a detailed explanation of the
 meaning and format of the various fields.
@@ -1835,10 +1826,10 @@ script.
 
 \clearpage
 
-\section{Using FPMD and CP}
+\section{Using CP}
 
 This section is intended to explain how to perform basic
-Car-Parrinello (CP) simulations using the FPMD and CP codes.
+Car-Parrinello (CP) simulations using the CP codes.
 
 It is important to understand that a CP simulation is a sequence of 
 different runs, some of them used to "prepare" the initial state
@@ -1931,8 +1922,8 @@ ATOMIC_POSITIONS (bohr)
    H     2.2  2.2 0.0
 \end{verbatim}
 
-    You can find the description of the input variables in files
-    \texttt{INPUT\_FPMD} and \texttt{INPUT\_CP} in the \texttt{Doc/}
+    You can find the description of the input variables in file
+    \texttt{INPUT\_CP} in the \texttt{Doc/}
     directory. A short description of the logic behind the choice 
     of parameters in contained in \texttt{INPUT.HOWTO}
 

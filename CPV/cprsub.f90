@@ -136,12 +136,20 @@ subroutine newnlinit
   !
   use control_flags,    ONLY : tpre
   use pseudopotential,  ONLY : interpolate_beta, interpolate_qradb
-  use pseudopotential,  ONLY : exact_beta, tpstab
+  use pseudopotential,  ONLY : exact_beta, tpstab, check_tables
   USE core,             ONLY : core_charge_ftr
   !
   implicit none
+  !
+  LOGICAL :: recompute_table
   ! 
   !     initialization for vanderbilt species
+  !
+  recompute_table = check_tables( )
+  !
+  IF( recompute_table ) THEN
+     CALL errore(' newnlinit ', ' interpolation tables recalculation, not implemented yet ', 1 )
+  END IF
   !
   CALL interpolate_qradb( tpre )
   !
