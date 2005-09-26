@@ -43,34 +43,14 @@ if { [info exists env(PWGUI)] } {
     exit
 }
 
-package require Guib 0.3.0
+#
+# all initialization stuff should go into init.tcl
+#
+source [file join $env(PWGUI) init.tcl]
+
+#
+# now go-ahead: launch the application
+#
 wm withdraw .
 bind . <Destroy> ::guib::exitApp
-
-namespace eval ::pwscf {
-    variable pwscf
-    variable settings
-
-    set pwscf(PWD) [pwd]
-}
-
-# define here all pwscf's namespaces ...
-namespace eval ::pwscf::edit      {
-    variable edit
-}
-namespace eval ::pwscf::menustate {}
-namespace eval ::pwscf::view      {}
-namespace eval ::pwscf::run       {
-    variable run
-    set run(mode) nonblocking ; # possibilities: nonblocking || background
-}
-
-# load settings file ...
-source $env(PWGUI)/pwgui.settings
-if { [file exists $env(HOME)/.pwgui/pwgui.settings] } {
-    # overwritte default settings by user-settings
-    source $env(HOME)/.pwgui/pwgui.settings
-}
-
-lappend auto_path [file join $env(PWGUI) src]
 source [file join $env(PWGUI) src pwscf.itcl]
