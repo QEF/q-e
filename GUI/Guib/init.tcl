@@ -1,8 +1,22 @@
 # ------------------------------------------------------------------------
 #  initialize the ::guib namespace and set the library & version variables
 # ------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------
+#  load Tcl/Tk + [Incr Tcl]/[Incr Tk]/[Incr Widgets]
+# ------------------------------------------------------------------------
+
+package require Tk       
+package require Itcl
+# We need to import all of the itcl functions into the global
+# namespace.
+namespace import -force itcl::*     
+package require Itk      
+package require Iwidgets 
+
+
 namespace eval ::guib {
-    #namespace export *
+    namespace export module
 
     variable library [file dirname [info script]]
     variable version [gets [open [file join $library VERSION] r]]
@@ -84,18 +98,6 @@ namespace eval ::guib {
     image create photo exitApp -format gif \
 	-file [file join $env(GUIB) images exit2.gif]     
 }
-
-# ------------------------------------------------------------------------
-#  load Tcl/Tk + [Incr Tcl]/[Incr Tk]/[Incr Widgets]
-# ------------------------------------------------------------------------
-
-package require Tk       
-package require Itcl
-# We need to import all of the itcl functions into the global
-# namespace.
-namespace import -force itcl::*     
-package require Itk      
-package require Iwidgets 
 
 
 # ------------------------------------------------------------------------
