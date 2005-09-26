@@ -3,7 +3,7 @@
 #
 #      This file contains the Tone Kokalj's Tcl utilities functions.
 #
-# Copyright (c) 2003  Anton Kokalj   Email: tone.kokalj@ijs.si
+# Copyright (c) 2003-2005  Anton Kokalj   Email: tone.kokalj@ijs.si
 #
 #
 # This file is distributed under the terms of the GNU General Public
@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tclUtils.tcl,v 1.8 2005-03-23 11:31:04 kokalj Exp $ 
+# $Id: tclUtils.tcl,v 1.9 2005-09-26 11:29:06 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -59,6 +59,7 @@ namespace eval ::tclu:: {
     set tempFile(dirs)    {}
     set nonblocking(counter) -1
 
+    namespace export dummy
     namespace export absolutePath
     namespace export usage
     namespace export writeFile
@@ -90,6 +91,15 @@ namespace eval ::tclu:: {
     namespace export tempDir
     namespace export stringMatch
     namespace export nonblocking
+    namespace export expandArgs
+    namespace export getArgs
+    namespace export extractArgs
+    namespace export mustBeEvenNumOfArgs
+    namespace export mustBeOddnNumOfArgs
+}
+
+proc ::tclu::dummy {} {
+    return ""
 }
 
 proc ::tclu::absolutePath {pathname} {
@@ -1404,6 +1414,131 @@ proc ::tclu::_nonblockingEvent {count} {
 
     }
 }
+
+
+
+# ------------------------------------------------------------------------
+#****f* ::tclu/::tclu::expandArgs
+#  NAME
+#    ::tclu::expandArgs -- expands the arguments
+#  USAGE
+#    tclu::expandArgs code
+#  DESCRIPTION
+#    This proc expands the argumants, for example:
+#
+#       tclu::expandArgs -variable varName -label "VarName:"
+#    or
+#       tclu::expandArgs { -variable varName -label "VarName:" }
+#
+#    will always return the expanded form: -variable varName -label "VarName:"
+#  CODE
+proc ::tclu::expandArgs {code} {
+    if { [llength $code] == 1 } {
+        # syntax: var { -option value -option value }
+        return [lindex $code 0]
+    } else {
+        # syntax: var -option value -option value 
+        return $code
+    }
+}
+#******
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+#****f* ::tclu/::tclu::getArgs
+#  NAME
+#    ::tclu::getArgs -- get requested option-value pairs from arguments
+#  USAGE
+#    tclu::getArgs optionList args
+#  RETURN VALUE
+#  The requested option-value pairs that were found in the arguments.
+#******
+# ------------------------------------------------------------------------
+
+proc ::tclu::getArgs {optList args} {
+    
+    set args   [expandArgs $args]    
+    set result ""
+    
+    foreach {opt value} $args {
+        
+        # is the option acceptable
+        if { [lsearch -exact $optList $opt] > -1} {
+            lappend result $opt $value
+        }
+    }
+    
+    return $result
+}
+
+
+# ------------------------------------------------------------------------
+#****f* ::tclu/::tclu::extractArgs
+# NAME
+#   ::tclu::extractArgs -- extract requested option-value pairs from arguments
+# USAGE
+#   tclu::extractArgs optionList argsVar
+# ARGUMENTS
+# * optionList -- list of options to extract
+# * argsVar    -- name of the variable holding the arguments
+# DESCRIPTION
+# Extracts and returns the requested options from arguments. The
+# extracted option-value pairs are removed from argsVar.
+#
+# RETURN VALUE
+# The requested option-value pairs that were found in the arguments.
+#******
+# ------------------------------------------------------------------------
+
+proc ::tclu::extractArgs {optList argsVar} {
+    upvar $argsVar args
+
+    set result  ""
+    set newArgs ""
+
+    foreach {opt value} $args {        
+        if { [lsearch -exact $optList $opt] > -1} {
+            lappend result $opt $value
+        } else {
+	    lappend newArgs $opt $value
+	}
+    }
+    set args $newArgs
+    return $result
+}
+
+
+#****f* ::tclu/::tclu::mustBeEvenNumOfArgs
+# NAME
+# mustBeEvenNumOfArgs -- trigger an error if number of arguments is not even
+# USAGE
+# tclu::mustBeEvenNumOfArgs arguments
+# RETURN VALUE
+# None.
+#******
+proc ::tclu::mustBeEvenNumOfArgs {arg} {
+    if { [expr [llength $arg] % 2] } {
+	uplevel [list error "odd number of arguments"]
+    }
+}
+
+
+#****f* ::tclu/::tclu::mustBeEvenNumOfArgs
+# NAME
+# mustBeEvenNumOfArgs -- trigger an error if number of arguments is not odd
+# USAGE
+# tclu::mustBeOddNumOfArgs arguments
+# RETURN VALUE
+# None.
+#******
+proc ::tclu::mustBeOddnNumOfArgs {arg} {
+    if { ! [expr [llength $arg] % 2] } {
+	uplevel [list error "odd number of arguments"]
+    }
+}
+
+
 
 
 # 
