@@ -31,7 +31,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: gui.itcl,v 1.5 2004-09-20 07:20:03 kokalj Exp $ 
+# $Id: gui.itcl,v 1.6 2005-09-26 11:35:49 kokalj Exp $ 
 #
 
 
@@ -57,6 +57,7 @@
 proc ::guib::simpleTplwGUI {moduleFile} {
     set obj [loadModule $moduleFile]
     $obj makeSimpleTplwGUI
+    #return [code $obj]
     return $obj
 }
 
@@ -81,14 +82,15 @@ proc ::guib::simpleTplwGUI {moduleFile} {
 #****
 # ------------------------------------------------------------------------
 
-proc ::guib::embedGUI {moduleFile containerWidget} {
+proc ::guib::embedGUI {moduleFile containerWidget {varscope {}}} {
     set t [winfo toplevel $containerWidget]
     ::tku::setCursor watch $t
     
-    set obj [loadModule $moduleFile]
+    set obj [loadModule $moduleFile $varscope]
     $obj makeEmbedGUI [expr {$containerWidget != "." ? $containerWidget : "" }]
     
     ::tku::resetCursor $t
+    #return [code $obj]
     return $obj
 }
 
@@ -447,11 +449,11 @@ body ::guib::GUI::constructor {args} {
 	-helpstr "Create new window"; # TODO: fix this ...
 
     # New -------------------------------------------------- New
-    $mb add cascade .file.newinp -label "New Input ..." 
+    $mb add cascade .file.newinp -label "New ..." 
 
     # Open -------------------------------------------------- Open
     $mb add separator .file.sep1
-    $mb add cascade   .file.openinp -label "Open Input ..."
+    $mb add cascade   .file.openinp -label "Open ..."
     
     # Save -------------------------------------------------- Save
     $mb add separator .file.sep2
@@ -522,7 +524,7 @@ body ::guib::GUI::constructor {args} {
     set widget(container)  [$widget(toplevel) childsite]
     grid configure $widget(container) -padx 0 -pady 0
 
-    set widget(logoframe)  [frame $widget(container).f -background White]
+    set widget(logoframe)  [frame $widget(container).logoframe -background White]
     pack $widget(logoframe) -expand 1 -fill both -ipadx 0 -ipady 0 -padx 0 -pady 0
 
     # --------------------------------------------------
@@ -581,7 +583,9 @@ body ::guib::GUI::addModule {mode args} {
     set path [lindex $args 0]
     regsub -all {\.} $path {new\.}  newPath
     regsub -all {\.} $path {open\.} openPath
-    
+    #set newPath  $path
+    #set openPath $path
+
     switch -- $mode {
 	separator {
 	    # Usage: addModule separator path	    
@@ -651,11 +655,12 @@ body ::guib::GUI::addModule {mode args} {
 # or
 #   addHelp separator
 # or 
-# INCOMING: 
 #   addHelp cascade ...
 # ------------------------------------------------------------------------
 
 body ::guib::GUI::addHelp {mode args} {
+
+    puts stderr "::guib::GUI::addHelp $mode $args"; flush stderr
 
     lappend addHelp $mode $args
 
@@ -663,10 +668,22 @@ body ::guib::GUI::addHelp {mode args} {
 
     switch -- $mode {
 	separator {
-	    # Usage: addHelp separator 
+	    # Usage: addHelp separator ?path?
 	    incr menuSeparatorCount
-	    $mb add separator .help.separator$menuSeparatorCount 
+	    if { $args != "" } {
+		set separatorPath $args
+	    } else {
+		set separatorPath separator$menuSeparatorCount 
+	    }
+	    $mb add separator .help.$separatorPath
 	    return .help.separator$menuSeparatorCount
+	}
+	cascade {
+	    # Usage: addModule cascade path cascadeText
+	    set cascadePath [lindex $args 0]
+	    set cascadeText [lindex $args 1]
+	    puts stderr "$mb add cascade .help.$cascadePath    -label \"$cascadeText\""
+	    $mb add cascade .help.$cascadePath    -label "$cascadeText"
 	}
 	help {
 	    # Usage: addHelp helpName helpEntrymenuText helpFile
@@ -833,6 +850,7 @@ body ::guib::GUI::getSelected {what} {
 	moduleObj {
 	    set index $currentTab(index)
 	    if { [info exists module(OBJ,$index)] } {
+		puts "moduleObj == $module(OBJ,$index)"
 		return $module(OBJ,$index)
 	    } else {
 		return ""
