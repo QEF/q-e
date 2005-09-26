@@ -108,7 +108,8 @@ For Tcl/Tk see:             http://www.scriptics.com/
 For ITcl/Itk/Iwidgets see:  http://incrtcl.sourceforge.net/
 
 Alternatively you may install ActiveTcl which includes all the
-Tcl/Tk/Itcl/Itk/Iwidgets. See:  http://aspn.activestate.com/ASPN/Tcl
+Tcl/Tk/Itcl/Itk/Iwidgets. See:  
+http://www.activestate.com/Products/Download/Download.plex?id=ActiveTcl
 
 
 Troubleshooting
@@ -125,4 +126,4 @@ experience goes--always works.
 
 
 --
-Anton Kokalj (tone.kokalj@ijs.si), Sat Sep  4 10:35:52 CEST 2004
+Anton Kokalj (tone.kokalj@ijs.si), Wed Aug  3 09:37:53 CEST 2005
