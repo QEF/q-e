@@ -671,9 +671,10 @@ then
 	# search
 	case "$arch:$f90_id" in
 
-	linux64:ifort | linux64:ifc )
+	linux64:ifort | linux64:ifc | linux64:g95 )
 		# check for mkl (in several directories)
-		try_libdirs="/opt/intel/mkl72/lib/64
+		try_libdirs="/opt/intel/mkl/8.0/lib/64
+			     /opt/intel/mkl72/lib/64
 			     /opt/intel/mkl701/lib/64
 			     /opt/intel/mkl70/lib/64
 			     /opt/intel/mkl/mkl61/lib/64
@@ -701,9 +702,10 @@ then
 		done
 		;;
 
-	linux32:ifort | linux32:ifc )
+	linux32:ifort | linux32:ifc | linux32:g95 )
 		# check for mkl (in several directories)
-		try_libdirs="/opt/intel/mkl72/lib/32
+		try_libdirs="/opt/intel/mkl/8.0/lib/32
+			     /opt/intel/mkl72/lib/32
 			     /opt/intel/mkl701/lib/32
 			     /opt/intel/mkl70/lib/32
 			     /opt/intel/mkl/mkl61/lib/32
