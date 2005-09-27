@@ -1,39 +1,45 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!-----------------------------------------------------------------------
-subroutine ions
-  !-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
+SUBROUTINE ions()
+  !----------------------------------------------------------------------------
   !
-  USE control_flags, ONLY: conv_ions, restart, lscf, lmd, lbfgs, loldbfgs
-  USE force_mod, ONLY: lforce, lstres
+  USE control_flags, ONLY : conv_ions, restart, lscf, lmd, lbfgs
+  USE force_mod,     ONLY : lforce, lstres
   !
-  implicit none
+  IMPLICIT NONE
   !
-  call start_clock ('ions')
-  conv_ions = .true.
+  CALL start_clock( 'ions' )
   !
-  ! recover from a previous run, if appropriate
+  conv_ions = .TRUE.
   !
-  if (restart.and.lscf) call restart_in_ions
+  ! ... recover from a previous run, if appropriate
   !
-  if (lforce) call forces
+  IF ( restart .and. lscf ) CALL restart_in_ions()
   !
-  if (lstres) call stress
+  IF ( lforce ) CALL forces()
   !
-  if (lmd .OR. lbfgs .OR. loldbfgs) then
-     call move_ions
-      !
-      ! save restart information
-      !
-      call write_config_to_file
-      call save_in_ions
-  end if
-  call stop_clock ('ions')
-  return
-end subroutine ions
-
+  IF ( lstres ) CALL stress()
+  !
+  IF ( lmd .OR. lbfgs ) THEN
+     !
+     CALL move_ions
+     !
+     ! ... save restart information
+     !
+     CALL write_config_to_file()
+     !
+     CALL save_in_ions()
+     !
+  END IF
+  !
+  CALL stop_clock( 'ions' )
+  !
+  RETURN
+  !
+END SUBROUTINE ions

@@ -29,7 +29,7 @@ SUBROUTINE move_ions()
   USE symme,                  ONLY : s, ftau, nsym, irt
   USE ener,                   ONLY : etot
   USE force_mod,              ONLY : force
-  USE control_flags,          ONLY : upscale, lbfgs, loldbfgs, lmd, &
+  USE control_flags,          ONLY : upscale, lbfgs, lmd, &
                                      lconstrain, lcoarsegrained, conv_ions, &
                                      history, alpha0, beta0, tr2, istep
   USE relax,                  ONLY : epse, epsf, starting_scf_threshold
@@ -40,7 +40,7 @@ SUBROUTINE move_ions()
   USE mp_global,              ONLY : intra_image_comm
   USE io_global,              ONLY : ionode_id, ionode
   USE mp,                     ONLY : mp_bcast
-  USE bfgs_module,            ONLY : new_bfgs => bfgs, terminate_bfgs
+  USE bfgs_module,            ONLY : bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
   !
   IMPLICIT NONE
@@ -101,7 +101,7 @@ SUBROUTINE move_ions()
      !
      IF ( lbfgs ) THEN
         !
-        ! ... the new bfgs procedure is used
+        ! ... the bfgs procedure is used
         !  
         ALLOCATE( pos(      3 * nat ) )
         ALLOCATE( gradient( 3 * nat ) )
@@ -109,8 +109,8 @@ SUBROUTINE move_ions()
         pos      =   RESHAPE( tau,   (/ 3 * nat /) ) * alat
         gradient = - RESHAPE( force, (/ 3 * nat /) )
         !
-        CALL new_bfgs( pos, etot, gradient, tmp_dir, stdout, epse, epsf, &
-                       energy_error, gradient_error, step_accepted, conv_ions )
+        CALL bfgs( pos, etot, gradient, tmp_dir, stdout, epse, epsf, &
+                   energy_error, gradient_error, step_accepted, conv_ions )
         !
         IF ( conv_ions ) THEN
            !
@@ -176,12 +176,6 @@ SUBROUTINE move_ions()
         DEALLOCATE( pos )
         DEALLOCATE( gradient ) 
         !
-     ELSE IF ( loldbfgs ) THEN
-        !
-        ! ... the old bfgs scheme is used
-        !
-        CALL bfgs()
-        !   
      END IF
      !
      ! ... molecular dynamics schemes are used

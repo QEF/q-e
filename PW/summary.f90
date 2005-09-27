@@ -36,8 +36,7 @@ SUBROUTINE summary()
                               a_nlcc, b_nlcc, alpha_nlcc
   USE symme,           ONLY : nsym, invsym, s, ftau
   USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, diis_ndim, &
-                              tr2, isolve, lmd, lbfgs, loldbfgs, lpath,  &
-                              iverbosity
+                              tr2, isolve, lmd, lbfgs, lpath, iverbosity
   USE uspp_param,      ONLY : nqf, rinner, nqlc, nbeta, iver, lll, psd, tvanp
   USE spin_orb,        ONLY : lspinorb
   USE funct,           ONLY : dft, iexch, icorr, igcx, igcc
@@ -97,7 +96,7 @@ SUBROUTINE summary()
   WRITE( stdout, '(5X,"Exchange-correlation      = ",A, &
        &              " (",4I1,")")') TRIM( dft ), iexch, icorr, igcx, igcc
   !
-  IF ( lmd .OR. lbfgs .OR. loldbfgs .OR. lpath ) &
+  IF ( lmd .OR. lbfgs .OR. lpath ) &
      WRITE( stdout, '(5X,"nstep                     = ",I12,/)' ) nstep
   !
   IF ( lspinorb ) &

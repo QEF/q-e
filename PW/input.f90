@@ -120,8 +120,7 @@ SUBROUTINE iosys()
                             pseudo_dir_ => pseudo_dir, &
                             psfile
   !
-  USE relax,         ONLY : epsf, starting_scf_threshold, &
-                            restart_bfgs, epse
+  USE relax,         ONLY : epsf, starting_scf_threshold, epse
   !
   USE control_flags, ONLY : diis_ndim, isolve, &
                             max_cg_iter, diis_buff, david, imix, nmix, &
@@ -135,7 +134,7 @@ SUBROUTINE iosys()
                             modenum_     => modenum, &
                             reduce_io, ethr, lscf, lbfgs, lmd, lpath, lneb, &
                             lsmd, lphonon, ldamped, lraman, lrescale_t, &
-                            noinv, restart, loldbfgs, lmetadyn, lconstrain, &
+                            noinv, restart, lmetadyn, lconstrain, &
                             lcoarsegrained
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
@@ -526,7 +525,6 @@ SUBROUTINE iosys()
   CASE( 'from_scratch' )
      !
      restart        = .FALSE.
-     restart_bfgs   = .FALSE.
      startingconfig = 'input'
      !
   CASE( 'restart' )
@@ -535,13 +533,11 @@ SUBROUTINE iosys()
         !
         ! ... "path" specific
         !
-        restart      = .FALSE.
-        restart_bfgs = .FALSE.
+        restart = .FALSE.
         !
      ELSE
         !
-        restart      = .TRUE.
-        restart_bfgs = .TRUE.
+        restart = .TRUE.
         !
         IF ( TRIM( ion_positions ) == 'from_input' ) THEN
            !
@@ -602,7 +598,6 @@ SUBROUTINE iosys()
   lphonon   = .FALSE.
   lraman    = .FALSE.
   lbfgs     = .FALSE.
-  loldbfgs  = .FALSE.
   ldamped   = .FALSE.
   lconstrain= .FALSE.  
   lforce    = tprnfor
@@ -638,14 +633,6 @@ SUBROUTINE iosys()
      CASE( 'bfgs' )
         !
         lbfgs = .TRUE.
-        !
-        IF ( epse <= 20.D0 * ( tr2 / upscale ) ) &
-           CALL errore( 'iosys ', 'required etot_conv_thr is too small:' // &
-                      & ' conv_thr must be reduced', 1 )   
-        !
-     CASE( 'old-bfgs' )
-        !
-        loldbfgs = .TRUE.
         !
         IF ( epse <= 20.D0 * ( tr2 / upscale ) ) &
            CALL errore( 'iosys ', 'required etot_conv_thr is too small:' // &

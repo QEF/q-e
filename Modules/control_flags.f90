@@ -24,8 +24,8 @@ MODULE control_flags
   !
   TYPE convergence_criteria
      !
-     LOGICAL   :: active
-     INTEGER   :: nstep
+     LOGICAL  :: active
+     INTEGER  :: nstep
      REAL(DP) :: ekin
      REAL(DP) :: derho
      REAL(DP) :: force
@@ -34,9 +34,9 @@ MODULE control_flags
   !
   TYPE ionic_conjugate_gradient
      !
-     LOGICAL   :: active
-     INTEGER   :: nstepix
-     INTEGER   :: nstepex
+     LOGICAL  :: active
+     INTEGER  :: nstepix
+     INTEGER  :: nstepex
      REAL(DP) :: ionthr
      REAL(DP) :: elethr
      !
@@ -139,17 +139,17 @@ MODULE control_flags
   !
   ! ... Wave function randomization
   !
-  LOGICAL   :: trane = .FALSE.
+  LOGICAL  :: trane = .FALSE.
   REAL(DP) :: ampre = 0.D0
   !
   ! ... Ionic position randomization
   !
-  LOGICAL   :: tranp(nsx) = .FALSE.
+  LOGICAL  :: tranp(nsx) = .FALSE.
   REAL(DP) :: amprp(nsx) = 0.D0
   !
   ! ... Read the cell from standard input
   !
-  LOGICAL   :: tbeg = .FALSE.
+  LOGICAL :: tbeg = .FALSE.
   !
   ! ... This flags control the calculation of the Dipole Moments
   !
@@ -171,16 +171,16 @@ MODULE control_flags
   !
   ! ... Flag controlling the Nose thermostat for ions
   !
-  LOGICAL   :: tnosep = .FALSE.
-  LOGICAL   :: tcap   = .FALSE.
-  LOGICAL   :: tcp    = .FALSE.
+  LOGICAL  :: tnosep = .FALSE.
+  LOGICAL  :: tcap   = .FALSE.
+  LOGICAL  :: tcp    = .FALSE.
   REAL(DP) :: tolp   = 0.D0   !  tolerance for temperature variation
   !
   REAL(DP), PUBLIC :: &
        ekin_conv_thr = 0.D0, &!  conv. threshold for fictitious e. kinetic energy
        etot_conv_thr = 0.D0, &!  conv. threshold for DFT energy
        forc_conv_thr = 0.D0   !  conv. threshold for atomic forces
-  INTEGER, PUBLIC   :: &
+  INTEGER, PUBLIC :: &
        ekin_maxiter = 100,   &!  max number of iter. for ekin convergence
        etot_maxiter = 100,   &!  max number of iter. for etot convergence
        forc_maxiter = 100     !  max number of iter. for atomic forces conv.
@@ -193,7 +193,6 @@ MODULE control_flags
     lfixatom,         &! if .TRUE. some atom is kept fixed
     lscf,             &! if .TRUE. the calc. is selfconsistent
     lbfgs,            &! if .TRUE. the calc. is a relaxation based on new BFGS scheme
-    loldbfgs,         &! if .TRUE. the calc. is a bfgs-type relaxation based on the old scheme
     lmd,              &! if .TRUE. the calc. is a dynamics
     lmetadyn,         &! if .TRUE. the calc. is a meta-dynamics
     lpath,            &! if .TRUE. the calc. is a path optimizations

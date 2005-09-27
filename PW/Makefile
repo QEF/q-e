@@ -18,7 +18,6 @@ atomic_rho.o \
 atomic_wfc.o \
 atomic_wfc_nc.o \
 becmod.o \
-bfgs.o \
 bp_c_phase.o \
 bp_calc_btq.o \
 bp_qvan3.o \
