@@ -1397,9 +1397,13 @@ SUBROUTINE iosys()
         !
      END IF
      !
+     cmass  = wmass
+     !
+  ELSE
+     !
+     cmass  = wmass * amconv
+     !
   END IF
-  !
-  cmass  = wmass
   !
   ! ... unit conversion for pressure
   !
