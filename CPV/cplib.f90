@@ -3822,7 +3822,7 @@
 !     ===================================================================
 !     forces on ions, ionic term in real space
 !     -------------------------------------------------------------------
-      if( tprnfor .or. tfor .or. tfirst .or. thdyn ) then
+      if( tprnfor .or. tfor .or. tfirst .or. tpre ) then
         call force_ion(tau0,esr,fion,dsr)
       end if
 !
@@ -3894,7 +3894,7 @@
 !     ===================================================================
 !     forces on ions, ionic term in reciprocal space
 !     -------------------------------------------------------------------
-      if( tprnfor .or. tfor .or. thdyn)                                                  &
+      if( tprnfor .or. tfor .or. tpre)                                                  &
      &    call force_ps(rhotmp,rhog,vtemp,ei1,ei2,ei3,fion1)
 !     ===================================================================
 !     calculation hartree + local pseudo potential

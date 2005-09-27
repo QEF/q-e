@@ -148,6 +148,9 @@ cpver.h :
 PPOBJS = \
 ../Modules/xml_io_base.o \
 ../Modules/mp.o \
+../Modules/mp_global.o \
+../Modules/io_global.o \
+../Modules/io_files.o \
 ../Modules/mp_wave.o \
 ../Modules/parser.o \
 ../Modules/kind.o
