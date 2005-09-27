@@ -1373,10 +1373,6 @@ SUBROUTINE iosys()
   !
   IF ( lconstrain ) CALL init_constraint( nat, tau, alat, ityp )
   !
-  ! ... Renata's dynamics uses masses in atomic units
-  !
-  IF ( calc /= ' ' ) amass = amass * amconv
-  !
   ! ... set default value of wmass
   !
   IF ( wmass == 0.D0 ) THEN
