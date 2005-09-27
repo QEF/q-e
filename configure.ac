@@ -695,7 +695,7 @@ then
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="-lguide"
-			AC_SEARCH_LIBS(dgemm, mkl_ipf, have_blas=1
+			AC_SEARCH_LIBS(dgemm, mkl_ipf, have_blas=1 have_mkl=1
 				       blas_libs="$try_loption $LIBS")
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
@@ -727,7 +727,7 @@ then
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="-lguide -lpthread"
-			AC_SEARCH_LIBS(dgemm, mkl_ia32, have_blas=1
+			AC_SEARCH_LIBS(dgemm, mkl_ia32, have_blas=1 have_mkl=1
 				       blas_libs="$try_loption $LIBS")
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
@@ -870,65 +870,30 @@ then
 	# search
 	case "$arch:$f90_id" in
 
-	linux64:ifort | linux64:ifc )
-		# check for mkl (in several directories)
-		try_libdirs="/opt/intel/mkl72/lib/64
-			     /opt/intel/mkl701/lib/64
-			     /opt/intel/mkl70/lib/64
-			     /opt/intel/mkl/mkl61/lib/64
-			     /opt/intel/mkl/lib/64
-			     /opt/intel/mkl61/lib/64"
-		try_libdirs="$libdirs $try_libdirs $ld_library_path"
-
-		for dir in none $try_libdirs
-		do
+	linux64:* )
+		# check for mkl_lapack
+		if test "$have_mkl" -ne 0
+		then
 			unset ac_cv_search_zggev # clear cached value
-			if test "$dir" = "none"
-			then
-				try_loption=
-			else
-				echo $ECHO_N "in $dir: " $ECHO_C
-				try_loption="-L$dir"
-			fi
 			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags $try_loption"
+			LDFLAGS="$test_ldflags"
 			LIBS="$blas_libs"
 			AC_SEARCH_LIBS(zggev, mkl_lapack, have_lapack=1
-				       lapack_libs="$try_loption -lmkl_lapack")
-			if test "$ac_cv_search_zggev" != "no"
-			then break ; fi
-		done
+				       lapack_libs="-lmkl_lapack")
+		fi
 		;;
 
-	linux32:ifort | linux32:ifc )
-		# check for mkl (in several directories)
-		try_libdirs="/opt/intel/mkl72/lib/32
-			     /opt/intel/mkl701/lib/32
-			     /opt/intel/mkl70/lib/32
-			     /opt/intel/mkl/mkl61/lib/32
-			     /opt/intel/mkl/lib/32
-			     /opt/intel/mkl61/lib/32
-			     /cineca/prod/intel/lib"
-		try_libdirs="$libdirs $try_libdirs $ld_library_path"
-
-		for dir in none $try_libdirs
-		do
+	linux32:* )
+		# check for mkl_lapack
+		if test "$have_mkl" -ne 0
+		then
 			unset ac_cv_search_zggev # clear cached value
-			if test "$dir" = "none"
-			then
-				try_loption=
-			else
-				echo $ECHO_N "in $dir: " $ECHO_C
-				try_loption="-L$dir"
-			fi
 			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags $try_loption"
+			LDFLAGS="$test_ldflags"
 			LIBS="$blas_libs"
 			AC_SEARCH_LIBS(zggev, mkl_lapack, have_lapack=1
-				       lapack_libs="$try_loption -lmkl_lapack")
-			if test "$ac_cv_search_zggev" != "no"
-			then break ; fi
-		done
+				       lapack_libs="-lmkl_lapack")
+		fi
 		;;
 
 	sparc:* )
@@ -1320,19 +1285,29 @@ fi
 if test "$mpi_libs" != "" ; then echo "  MPI_LIBS=$mpi_libs" ; fi
 if test "$arch" = "aix" ; then echo "  MASS_LIBS=$mass_libs" ; fi
 
+echo Please check if that is correct.
 echo
 echo If any libraries are missing, you may specify a list of directories
 echo to search and retry, as follows:
 echo "  ./configure LIBDIRS=\"list of directories, separated by spaces\""
 echo
-if test "$use_parallel" -ne 0 && test "$parallel" -eq 0
-then
-	echo "A parallel environment was not detected"
-	echo "this program will run in single-processor mode"
-        echo
-fi
-echo For more information, read the ESPRESSO User\'s Guide \
-\(Doc/users-guide.tex\).
-echo --------------------------------------------------------------------
-echo "configure: success"
 
+if test "$use_parallel" -ne 0
+then
+	if test "$parallel" -ne 0
+	then
+		echo Parallel environment detected successfully.
+		echo This program will run in multi-processor mode.
+	else
+		echo Parallel environment not detected \
+		     \(is this a parallel machine?\).
+		echo This program will run in single-processor mode.
+	fi
+else
+		echo This program will run in single-processor mode.
+fi
+
+echo
+echo For more info, read the ESPRESSO User\'s Guide \(Doc/users-guide.tex\).
+echo --------------------------------------------------------------------
+echo configure: success
