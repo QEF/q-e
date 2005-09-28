@@ -9,8 +9,10 @@ The following libraries have been found:
   @fft_line@
   @mpi_line@
   @mass_line@
-Please check if that is correct.  If any libraries are missing, you
-may specify a list of directories to search and retry, as follows:
+Please check if that is correct.
+
+If any libraries are missing, you may specify a list of directories
+to search and retry, as follows:
   ./configure LIBDIRS="list of directories, separated by spaces"
 
 @parallel_report@
