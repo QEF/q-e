@@ -308,7 +308,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os F77 FFLAGS LDFLAGS ac_ct_F77 EXEEXT OBJEXT CC CFLAGS CPPFLAGS ac_ct_CC CPP SET_MAKE EGREP cc cflags dflags fdflags cpp cppflags f77 f90 fflags f90flags fflags_noopt f90flags_noopt pre_fdflags imod ifftw ld ldflags blas_libs lapack_libs fft_libs mpi_libs mass_libs mylib ar arflags ranlib f90rule LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os F77 FFLAGS LDFLAGS ac_ct_F77 EXEEXT OBJEXT CC CFLAGS CPPFLAGS ac_ct_CC CPP SET_MAKE EGREP cc cflags dflags fdflags cpp cppflags f77 f90 fflags f90flags fflags_noopt f90flags_noopt pre_fdflags imod ifftw ld ldflags blas_libs lapack_libs fft_libs mpi_libs mass_libs mylib ar arflags ranlib f90rule blas_line lapack_line fft_line mpi_line mass_line parallel_report LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -6986,6 +6986,37 @@ then
 	( cd $topdir ; ./makedeps.sh )
 fi
 
+# configure output messages
+blas_line="BLAS_LIBS=$blas_libs"
+lapack_line="LAPACK_LIBS=$lapack_libs"
+fft_line="FFT_LIBS=$fft_libs"
+if test "$have_fft" -ne 0 && test "$have_fftw" -ne 0 &&
+	test "$have_fftw_h" -eq 0
+then
+	fft_line="$fft_line FFT_LIBS=$fft_libs\\
+  WARNING: fftw library detected, but fftw.h not found"
+fi
+if test "$mpi_libs" != "" ; then mpi_line="MPI_LIBS=$mpi_libs"
+else mpi_line="@delete@" ; fi
+if test "$arch" = "aix" ; then mass_line="MASS_LIBS=$mass_libs"
+else mass_line="@delete@" ; fi
+
+if test "$use_parallel" -ne 0
+then
+	if test "$parallel" -ne 0
+	then
+		parallel_report="Parallel environment detected successfully.\\
+This program will run in multi-processor mode."
+	else
+		parallel_report="Parallel environment not detected \
+\(is this a parallel machine?\).\\
+This program will run in single-processor mode."
+	fi
+else
+		parallel_report="This program will run in \
+single-processor mode."
+fi
+
 # export settings to generated files
 
 
@@ -7015,7 +7046,15 @@ fi
 
 
 
+
+
+
+
+
+
           ac_config_files="$ac_config_files make.sys"
+
+          ac_config_files="$ac_config_files configure.msg"
 
 
 cat >confcache <<\_ACEOF
@@ -7569,6 +7608,7 @@ do
   case "$ac_config_target" in
   # Handling of arguments.
   "make.sys" ) CONFIG_FILES="$CONFIG_FILES make.sys" ;;
+  "configure.msg" ) CONFIG_FILES="$CONFIG_FILES configure.msg" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
    { (exit 1); exit 1; }; };;
@@ -7696,6 +7736,12 @@ s,@ar@,$ar,;t t
 s,@arflags@,$arflags,;t t
 s,@ranlib@,$ranlib,;t t
 s,@f90rule@,$f90rule,;t t
+s,@blas_line@,$blas_line,;t t
+s,@lapack_line@,$lapack_line,;t t
+s,@fft_line@,$fft_line,;t t
+s,@mpi_line@,$mpi_line,;t t
+s,@mass_line@,$mass_line,;t t
+s,@parallel_report@,$parallel_report,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF
@@ -7963,48 +8009,6 @@ if test "$no_create" != yes; then
 fi
 
 
-# final warnings
-echo --------------------------------------------------------------------
-echo ESPRESSO can take advantage of several optimized numerical libraries
-echo \(essl, fftw, mkl...\).  This configure script attempts to find them,
-echo but may fail if they have been installed in non-standard locations.
-echo
-echo The following libraries have been found:
-
-echo "  BLAS_LIBS=$blas_libs"
-echo "  LAPACK_LIBS=$lapack_libs"
-echo "  FFT_LIBS=$fft_libs"
-if test "$have_fft" -ne 0 && test "$have_fftw" -ne 0 &&
-	test "$have_fftw_h" -eq 0
-then
-	echo "  WARNING: fftw library detected, but fftw.h not found"
-fi
-if test "$mpi_libs" != "" ; then echo "  MPI_LIBS=$mpi_libs" ; fi
-if test "$arch" = "aix" ; then echo "  MASS_LIBS=$mass_libs" ; fi
-
-echo Please check if that is correct.
-echo
-echo If any libraries are missing, you may specify a list of directories
-echo to search and retry, as follows:
-echo "  ./configure LIBDIRS=\"list of directories, separated by spaces\""
-echo
-
-if test "$use_parallel" -ne 0
-then
-	if test "$parallel" -ne 0
-	then
-		echo Parallel environment detected successfully.
-		echo This program will run in multi-processor mode.
-	else
-		echo Parallel environment not detected \
-		     \(is this a parallel machine?\).
-		echo This program will run in single-processor mode.
-	fi
-else
-		echo This program will run in single-processor mode.
-fi
-
-echo
-echo For more info, read the ESPRESSO User\'s Guide \(Doc/users-guide.tex\).
-echo --------------------------------------------------------------------
+# final messages
+sed '/@delete@/d' configure.msg
 echo configure: success

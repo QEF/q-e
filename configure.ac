@@ -1233,6 +1233,37 @@ then
 	( cd $topdir ; ./makedeps.sh )
 fi
 
+# configure output messages
+blas_line="BLAS_LIBS=$blas_libs"
+lapack_line="LAPACK_LIBS=$lapack_libs"
+fft_line="FFT_LIBS=$fft_libs"
+if test "$have_fft" -ne 0 && test "$have_fftw" -ne 0 &&
+	test "$have_fftw_h" -eq 0
+then
+	fft_line="$fft_line FFT_LIBS=$fft_libs\\
+  WARNING: fftw library detected, but fftw.h not found"
+fi
+if test "$mpi_libs" != "" ; then mpi_line="MPI_LIBS=$mpi_libs"
+else mpi_line="@delete@" ; fi
+if test "$arch" = "aix" ; then mass_line="MASS_LIBS=$mass_libs"
+else mass_line="@delete@" ; fi
+
+if test "$use_parallel" -ne 0
+then
+	if test "$parallel" -ne 0
+	then
+		parallel_report="Parallel environment detected successfully.\\
+This program will run in multi-processor mode."
+	else
+		parallel_report="Parallel environment not detected \
+\(is this a parallel machine?\).\\
+This program will run in single-processor mode."
+	fi
+else
+		parallel_report="This program will run in \
+single-processor mode."
+fi
+
 # export settings to generated files
 AC_SUBST(cc)
 AC_SUBST(cflags)
@@ -1261,53 +1292,18 @@ AC_SUBST(ar)
 AC_SUBST(arflags)
 AC_SUBST(ranlib)
 AC_SUBST(f90rule)
+AC_SUBST(blas_line)
+AC_SUBST(lapack_line)
+AC_SUBST(fft_line)
+AC_SUBST(mpi_line)
+AC_SUBST(mass_line)
+AC_SUBST(parallel_report)
 
 AC_CONFIG_FILES(make.sys)
+AC_CONFIG_FILES(configure.msg)
 
 AC_OUTPUT
 
-# final warnings
-echo --------------------------------------------------------------------
-echo ESPRESSO can take advantage of several optimized numerical libraries
-echo \(essl, fftw, mkl...\).  This configure script attempts to find them,
-echo but may fail if they have been installed in non-standard locations.
-echo
-echo The following libraries have been found:
-
-echo "  BLAS_LIBS=$blas_libs"
-echo "  LAPACK_LIBS=$lapack_libs"
-echo "  FFT_LIBS=$fft_libs"
-if test "$have_fft" -ne 0 && test "$have_fftw" -ne 0 &&
-	test "$have_fftw_h" -eq 0
-then
-	echo "  WARNING: fftw library detected, but fftw.h not found"
-fi
-if test "$mpi_libs" != "" ; then echo "  MPI_LIBS=$mpi_libs" ; fi
-if test "$arch" = "aix" ; then echo "  MASS_LIBS=$mass_libs" ; fi
-
-echo Please check if that is correct.
-echo
-echo If any libraries are missing, you may specify a list of directories
-echo to search and retry, as follows:
-echo "  ./configure LIBDIRS=\"list of directories, separated by spaces\""
-echo
-
-if test "$use_parallel" -ne 0
-then
-	if test "$parallel" -ne 0
-	then
-		echo Parallel environment detected successfully.
-		echo This program will run in multi-processor mode.
-	else
-		echo Parallel environment not detected \
-		     \(is this a parallel machine?\).
-		echo This program will run in single-processor mode.
-	fi
-else
-		echo This program will run in single-processor mode.
-fi
-
-echo
-echo For more info, read the ESPRESSO User\'s Guide \(Doc/users-guide.tex\).
-echo --------------------------------------------------------------------
+# final messages
+sed '/@delete@/d' configure.msg
 echo configure: success
