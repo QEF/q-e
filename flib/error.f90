@@ -36,8 +36,9 @@ SUBROUTINE errore( calling_routine, message, ierr )
     ! the output messagee
   INTEGER,          INTENT(IN) :: ierr
     ! the error flag
-  INTEGER                      :: mpime
+  INTEGER                      :: mpime, mpierr
     ! the task id  
+    !
   LOGICAL                      :: exists
   !
   !
@@ -72,7 +73,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
   !
   mpime = 0
   !
-  CALL MPI_COMM_RANK( MPI_COMM_WORLD, mpime, ierr )
+  CALL MPI_COMM_RANK( MPI_COMM_WORLD, mpime, mpierr )
   !
   !  .. write the message to a file and close it before exiting
   !  .. this will prevent loss of information on systems that
@@ -93,9 +94,9 @@ SUBROUTINE errore( calling_routine, message, ierr )
   !
   ! ... try to exit in a smooth way
   !
-  CALL MPI_ABORT( MPI_COMM_WORLD, ierr )
+  CALL MPI_ABORT( MPI_COMM_WORLD, mpierr )
   !
-  CALL MPI_FINALIZE( ierr )
+  CALL MPI_FINALIZE( mpierr )
   !
 #endif
   !
