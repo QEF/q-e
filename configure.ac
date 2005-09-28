@@ -1253,15 +1253,14 @@ then
 	if test "$parallel" -ne 0
 	then
 		parallel_report="Parallel environment detected successfully.\\
-This program will run in multi-processor mode."
+Configured for compilation of parallel executables."
 	else
 		parallel_report="Parallel environment not detected \
 \(is this a parallel machine?\).\\
-This program will run in single-processor mode."
+Configured for compilation of serial executables."
 	fi
 else
-		parallel_report="This program will run in \
-single-processor mode."
+	parallel_report="Configured for compilation of serial executables."
 fi
 
 # export settings to generated files
