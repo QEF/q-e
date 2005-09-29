@@ -316,7 +316,8 @@ TLDEPS= bindir mods libs pw
 all : tldeps phcg.x
 
 phcg.x : $(PWOBJS) $(CGOBJS) $(MODULES) $(LIBOBJS)
-	$(LD) -o phcg.x $(CGOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o phcg.x \
+		$(CGOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../Gamma/phcg.x . )
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :

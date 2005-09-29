@@ -291,8 +291,8 @@ TLDEPS= bindir mods libs pw pp
 all : tldeps pwcond.x
 
 pwcond.x : $(PWCONDOBJS) $(PWOBJS) $(PPOBJS) $(MODULES) $(LIBOBJS)
-	$(LD) -o pwcond.x $(PWCONDOBJS) $(PWOBJS) $(PPOBJS) \
-		$(MODULES) $(LIBOBJS) $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o pwcond.x \
+		$(PWCONDOBJS) $(PWOBJS) $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PWCOND/pwcond.x . )
 
 tldeps:

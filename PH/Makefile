@@ -434,7 +434,8 @@ TLDEPS= bindir mods libs pw
 all : tldeps ph.x
 
 ph.x : $(PHOBJS) $(RAMAN) $(LIBOBJS)
-	$(LD) -o ph.x $(PHOBJS) $(RAMAN) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o ph.x \
+		$(PHOBJS) $(RAMAN) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/ph.x . )
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :

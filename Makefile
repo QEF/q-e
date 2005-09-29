@@ -117,7 +117,7 @@ clean :
 	- /bin/rm -rf bin/*.x
 
 # remove configuration files too
-veryclean : clean
+distclean veryclean : clean
 	- /bin/rm -rf make.sys \
 		      config.log config.status autom4te.cache \
 		      espresso.tar.gz CPV/version.h \

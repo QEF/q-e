@@ -14,34 +14,37 @@ all : tldeps cpmd2upf.x fhi2upf.x fpmd2upf.x ncpp2upf.x oldcp2upf.x \
       rrkj2upf.x uspp2upf.x vdb2upf.x virtual.x
 
 cpmd2upf.x : cpmd2upf.o $(OBJS) $(LIBOBJS)
-	$(LD) -o $@ cpmd2upf.o $(OBJS) $(LIBOBJS) $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o $@ cpmd2upf.o $(OBJS) $(LIBOBJS) $(LIBS)
 
 fhi2upf.x : fhi2upf.o $(OBJS) $(FUNCT) $(LIBOBJS)
-	$(LD) -o $@ fhi2upf.o $(OBJS) $(FUNCT) $(LIBOBJS) $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o $@ fhi2upf.o $(OBJS) $(FUNCT) $(LIBOBJS) $(LIBS)
 
 fpmd2upf.x : fpmd2upf.o $(OBJS) $(LIBOBJS)
-	$(LD) -o $@ fpmd2upf.o $(OBJS) $(LIBOBJS) $(MODS) $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o $@ fpmd2upf.o $(OBJS) $(LIBOBJS) $(MODS) $(LIBS)
 
 ncpp2upf.x : ncpp2upf.o $(OBJS) $(FUNCT) $(LIBOBJS) 
-	$(LD) -o $@ ncpp2upf.o $(OBJS) $(FUNCT) $(LIBOBJS) $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o $@ ncpp2upf.o $(OBJS) $(FUNCT) $(LIBOBJS) $(LIBS)
 
 oldcp2upf.x : oldcp2upf.o $(OBJS) $(LIBOBJS)
-	$(LD) -o $@ oldcp2upf.o $(OBJS) $(LIBOBJS) $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o $@ oldcp2upf.o $(OBJS) $(LIBOBJS) $(LIBS)
 
 read_upf.x : read_upf.o
-	$(LD) -o $@ read_upf.o $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o $@ read_upf.o $(LIBS)
 
 rrkj2upf.x : rrkj2upf.o $(OBJS) $(LIBOBJS)
-	$(LD) -o $@ rrkj2upf.o $(OBJS) $(LIBOBJS) $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o $@ rrkj2upf.o $(OBJS) $(LIBOBJS) $(LIBS)
 
 uspp2upf.x : uspp2upf.o vanderbilt.o $(OBJS) $(LIBOBJS)
-	$(LD) -o $@ uspp2upf.o vanderbilt.o $(OBJS) $(LIBOBJS) $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o $@ \
+		uspp2upf.o vanderbilt.o $(OBJS) $(LIBOBJS) $(LIBS)
 
 vdb2upf.x : vdb2upf.o vanderbilt.o $(OBJS) $(LIBOBJS)
-	$(LD) -o $@ vdb2upf.o vanderbilt.o $(OBJS) $(LIBOBJS) $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o $@ \
+		vdb2upf.o vanderbilt.o $(OBJS) $(LIBOBJS) $(LIBS)
 
 virtual.x : virtual.o $(OBJS) $(SPLINE) $(FUNCT) $(LIBOBJS)
-	$(LD) -o $@ virtual.o $(OBJS) $(SPLINE) $(FUNCT) $(LIBOBJS) $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o $@ \
+		virtual.o $(OBJS) $(SPLINE) $(FUNCT) $(LIBOBJS) $(LIBS)
 
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :

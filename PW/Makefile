@@ -319,11 +319,13 @@ TLDEPS=bindir mods libs libiotk
 all : tldeps memory.x pw.x
 
 memory.x : memory.o $(PWOBJS) $(LIBOBJS)
-	$(LD) -o $@ memory.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o $@ \
+		memory.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../PW/$@ . )
 
 pw.x : pwscf.o $(PWOBJS) $(LIBOBJS)
-	$(LD) -o $@ pwscf.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o $@ \
+		pwscf.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../PW/$@ . )
 
 tldeps:

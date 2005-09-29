@@ -341,7 +341,8 @@ TLDEPS=bindir mods libs libiotk pw ph
 all : tldeps nmr.x
 
 nmr.x : $(NMROBJ) $(PHOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(LD) -o nmr.x $(NMROBJ) $(PHOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o nmr.x \
+		$(NMROBJ) $(PHOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 

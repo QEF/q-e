@@ -117,8 +117,7 @@ wave_types.o \
 wf.o \
 $(WRAPPERS)
 
-
-LIBOBJ = \
+LOBJS = \
 adjef.o \
 enthropy.o \
 forceconv.o \
@@ -132,12 +131,11 @@ TLDEPS= bindir mods libs libiotk
 all : tldeps cp.x cppp.x
 cp : tldeps cp.x cppp.x
 
-
-cp.x : cprstart.o $(FOBJS) $(LIBOBJ) $(LIBOBJS)
-	$(LD) -o cp.x cprstart.o $(FOBJS) $(LIBOBJ) ../Modules/*.o \
-		../flib/eispack.o $(LIBOBJS) $(LDFLAGS)
+cp.x : cprstart.o $(FOBJS) $(LOBJS) $(LIBOBJS)
+	$(F90) $(LDFLAGS) -o cp.x \
+		cprstart.o $(FOBJS) $(LOBJS) ../Modules/*.o \
+		../flib/eispack.o $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../CPV/cp.x . )
-
 
 cp_version.o : cpver.h
 
@@ -156,7 +154,7 @@ PPOBJS = \
 ../Modules/kind.o
 
 cppp.x : fpmdpp.o $(PPOBJS) $(LIBOBJS)
-	$(LD) -o cppp.x fpmdpp.o $(PPOBJS) $(LIBOBJS) $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o cppp.x fpmdpp.o $(PPOBJS) $(LIBOBJS) $(LIBS)
 	- (cd ../bin ; ln -fs ../CPV/cppp.x . )
 
 tldeps:

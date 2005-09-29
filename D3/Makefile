@@ -400,7 +400,7 @@ TLDEPS= bindir mods libs pw ph
 all : tldeps d3.x
 
 d3.x : $(D3OBJS) $(PHOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(LD) -o d3.x $(D3OBJS) $(PHOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LDFLAGS)
+	$(F90) $(LDFLAGS) -o d3.x $(D3OBJS) $(PHOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../D3/d3.x . )
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
