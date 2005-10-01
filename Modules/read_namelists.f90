@@ -1543,8 +1543,8 @@ MODULE read_namelists_module
           CASE ('scf')
              IF( prog == 'CP' ) THEN
                  electron_dynamics = 'damp'
-                 ion_dynamics = 'none'
-                 cell_dynamics = 'none'
+                 ion_dynamics      = 'none'
+                 cell_dynamics     = 'none'
              END IF
           CASE ('nscf')
              IF( prog == 'CP' ) &
@@ -1574,30 +1574,30 @@ MODULE read_namelists_module
           CASE ('relax')
              IF( prog == 'CP' ) THEN
                 electron_dynamics = 'damp'
-                ion_dynamics = 'damp'
+                ion_dynamics      = 'damp'
              ELSE IF( prog == 'PW' ) THEN
                 ion_dynamics = 'bfgs'
              END IF
           CASE ( 'md', 'cp' )
              IF( prog == 'CP' ) THEN
                 electron_dynamics = 'verlet'
-                ion_dynamics = 'verlet'
+                ion_dynamics      = 'verlet'
              ELSE IF( prog == 'PW' ) THEN
                 ion_dynamics = 'verlet'
              END IF
           CASE ('vc-relax')
              IF( prog == 'CP' ) THEN
                 electron_dynamics = 'damp'
-                ion_dynamics = 'damp'
-                cell_dynamics = 'damp-pr'
+                ion_dynamics      = 'damp'
+                cell_dynamics     = 'damp-pr'
              ELSE IF( prog == 'PW' ) THEN
                 ion_dynamics = 'damp'
              END IF
           CASE ( 'vc-md', 'vc-cp' )
              IF( prog == 'CP' ) THEN
                 electron_dynamics = 'verlet'
-                ion_dynamics = 'verlet'
-                cell_dynamics = 'pr'
+                ion_dynamics      = 'verlet'
+                cell_dynamics     = 'pr'
              ELSE IF( prog == 'PW' ) THEN
                 ion_dynamics = 'beeman'
              END IF
@@ -1625,6 +1625,10 @@ MODULE read_namelists_module
           CASE ( 'fpmd' )
              !
              !  Compatibility with old FPMD
+             !
+             IF ( prog == 'PW' ) &
+                CALL errore( sub_name, ' calculation ' // &
+                           & TRIM( calculation ) // ' not implemented ', 1 )
              !
              electron_dynamics = 'sd'
              ion_dynamics      = 'none'

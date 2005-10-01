@@ -114,7 +114,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                                        acc, bec, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, ei1, ei2, ei3,  &
                                        irb, becdr, taub, eigrb, rhog, rhos, &
-                                       rhor, bephi, becp, nfi
+                                       rhor, rhopr, bephi, becp, nfi
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
   USE coarsegrained_vars,       ONLY : dfe_acc
@@ -493,7 +493,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
      END IF
      !
-     IF( ( MOD(nfi,iprint) == 0 ) .OR. ( nfi == nomore ) ) THEN
+     IF( ( MOD( nfi, iprint ) == 0 ) .OR. ( nfi == nomore ) ) THEN
         !
         CALL cp_eigs( nfi, bec, c0, irb, eigrb, rhor, &
                       rhog, rhos, lambdap, lambda, tau0, h )
@@ -627,7 +627,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                            vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,    &
                            vnhe, xnhp0, xnhpm, vnhp, nhpcl, ekincm, xnhh0,     &
                            xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass, ibrav,&
-                           celldm, fion, tps, z0, f, rhor )
+                           celldm, fion, tps, z0, f, rhopr )
            !
         ELSE
            !
@@ -635,7 +635,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                            tausm, vels, velsm, acc,  lambda, lambdam, xnhe0,   &
                            xnhem, vnhe, xnhp0, xnhpm, vnhp, nhpcl, ekincm,     &
                            xnhh0, xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass,&
-                           ibrav, celldm, fion, tps, z0, f, rhor )
+                           ibrav, celldm, fion, tps, z0, f, rhopr )
            !
         END IF
         !
@@ -705,7 +705,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                                  velsm, acc, lambda, lambdam, xnhe0, xnhem,  &
                                  vnhe, xnhp0, xnhpm, vnhp, nhpcl, ekincm,    &
                                  xnhh0, xnhhm, vnhh, velh, ecutp, ecutw,     &
-                                 delt, celldm, fion, tps, z0, f, rhor )
+                                 delt, celldm, fion, tps, z0, f, rhopr )
      !
      IF ( ( nfi >= nomore ) .OR. tstop ) EXIT main_loop
      !
@@ -749,7 +749,7 @@ SUBROUTINE terminate_run()
   !
   USE kinds,                 ONLY : DP
   USE io_global,             ONLY : stdout, ionode
-  USE cp_main_variables,     ONLY : acc, nfi, lambda, lambdam, rhor
+  USE cp_main_variables,     ONLY : acc, nfi, lambda, lambdam, rhopr
   USE cpr_subroutines,       ONLY : print_lambda
   USE cg_module,             ONLY : tcg, c0old
   USE wavefunctions_module,  ONLY : c0, cm
@@ -821,7 +821,7 @@ SUBROUTINE terminate_run()
                      velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe, xnhp0,   &
                      xnhpm, vnhp, nhpcl, ekincm, xnhh0, xnhhm, vnhh, velh,     &
                      ecutp, ecutw, delt, pmass, ibrav, celldm, fion, tps,      &
-                     z0, f, rhor )
+                     z0, f, rhopr )
      !
   ELSE
      !
@@ -829,7 +829,7 @@ SUBROUTINE terminate_run()
                      vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe,    &
                      xnhp0, xnhpm, vnhp, nhpcl, ekincm, xnhh0, xnhhm, vnhh,    &
                      velh, ecutp, ecutw, delt, pmass, ibrav, celldm, fion, tps,&
-                     z0, f, rhor )
+                     z0, f, rhopr )
      !
   END IF
   !

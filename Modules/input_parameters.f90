@@ -1482,13 +1482,6 @@ MODULE input_parameters
       LOGICAL :: tchi2_inp = .FALSE.
 
 !
-!   RHOOUT 
-!
-
-      LOGICAL   :: tprnrho = .FALSE.
-
-
-!
 !   CLIMBING_IMAGES
 !
 

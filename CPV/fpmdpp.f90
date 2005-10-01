@@ -815,18 +815,3 @@ END SUBROUTINE write_pdb
 
 
 
-subroutine errore( a, b, ierr )
-  !
-  !  A substitution for subroutine Errore, used only by fpmdpp
-  !
-  implicit none
-  character(len=*) :: a, b
-  integer :: ierr
-  !
-  WRITE( *, * ) 'FATAL ERROR'
-  WRITE( *, * ) 'SUB:', a
-  WRITE( *, * ) 'MSG:', b
-  WRITE( *, * ) 'COD:', ierr
-  stop
-  return
-end subroutine

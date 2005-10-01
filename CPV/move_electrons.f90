@@ -18,8 +18,8 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE parameters,           ONLY : natx
   USE control_flags,        ONLY : lwf, trhow, tfor, tprnfor, thdyn
   USE cg_module,            ONLY : tcg
-  USE cp_main_variables,    ONLY : eigr, bec, irb, eigrb, rhog, rhos, rhor,  &
-                                   ei1, ei2, ei3, sfac, ema0bg, becdr, &
+  USE cp_main_variables,    ONLY : eigr, bec, irb, eigrb, rhog, rhos, rhor, &
+                                   rhopr, ei1, ei2, ei3, sfac, ema0bg, becdr, &
                                    taub, lambda, lambdam, lambdap
   USE wavefunctions_module, ONLY : c0, cm, phi => cp
   USE ensemble_dft,         ONLY : tens, z0, c0diag, becdiag, bec0, v0s, &
@@ -91,12 +91,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
         !
      END IF
      !
-#if defined (__PARA)
-     IF ( trhow .AND. tlast ) CALL write_rho( 47, nspin, rhor )
-#else
-     IF ( trhow .AND. tlast ) &
-          WRITE(47) ( ( rhor(i,is), i = 1, nnrx ), is = 1, nspin )
-#endif
+     IF ( tfirst .OR. tlast ) rhopr = rhor
      !
      ! ... put core charge (if present) in rhoc(r)
      !

@@ -69,7 +69,7 @@ NAMELIST &CONTROL
 calculation    CHARACTER ( default = 'cp' )
                a string describing the task to be performed:
                'cp', 'scf', 'nscf', 'relax', 'vc-relax', 'vc-cp', 'neb', 
-               'smd', 'cp-wf'
+               'smd', 'cp-wf', 'fpmd'
                where :               
                cp       = Car-Parrinello MD (includes cases 'scf' and 'relax')
                scf      = electron minimization
@@ -82,6 +82,9 @@ calculation    CHARACTER ( default = 'cp' )
                neb      = Nudged Elastc Band method
                smd      = String Method Dynamics
                cp-wf    = Car-Parrinello MD with Wannier functions
+               fpmd     = CP works in FPMD compatibility mode, with all FPMD
+                          features not yet ported in CP, but works only for
+                          norm-conserving pseudopotentials
 
 title          CHARACTER ( default = 'MD Simulation' )
                reprinted on output.
@@ -1975,12 +1978,6 @@ FORMER FPMD INPUT
       CHARACTER(LEN=256) :: tscradir_inp = ''
 
 
-   RHOOUT
-
-
-      LOGICAL   :: tprnrho = .FALSE.
-
-
  ----------------------------------------------------------------------
 
  Description of the allowed input CARDS for FPMD code
@@ -2475,20 +2472,5 @@ CONSTRAINTS
                     is saved to file KS_EMP.is(k)
 
  Note: the first empty state has index "1" !
-
- ----------------------------------------------------------------
-
- RHOOUT
-
-   Enable the printing of the real space charge density
-   to file CHARGE_DENSITY
-
- Syntax:
-
-   RHOOUT
-
- Where:
-
-   no parameters
 
  ----------------------------------------------------------------

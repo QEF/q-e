@@ -91,7 +91,7 @@
                   tfor, thdyn, tzeroe, tsde, tsdp, tsdc, taurdr, ndr, &
                   ndw, tortho, timing, memchk, iprsta, &
                   tconjgrad, tprnsfac, toptical, tcarpar, &
-                  rhoout, tdipole, t_diis, t_diis_simple, t_diis_rot, &
+                  tdipole, t_diis, t_diis_simple, t_diis_rot, &
                   tnosee, tnosep, force_pairing, tconvthrs, convergence_criteria, tionstep, nstepe, &
                   tsteepdesc, ekin_conv_thr, ekin_maxiter, ionic_conjugate_gradient, &
                   tconjgrad_ion, conv_elec, lneb, tnoseh, tuspp, etot_conv_thr
@@ -109,7 +109,7 @@
       USE fft, ONLY : fft_closeup
       USE electrons_module, ONLY: ei, nspin, n_emp
       USE diis, ONLY: allocate_diis
-      USE charge_density, ONLY: rhoofr, printrho
+      USE charge_density, ONLY: rhoofr
       USE fft_base, ONLY: dfftp, dffts
       USE check_stop, ONLY: check_stop_now
       USE nl, ONLY: nlrh_m
@@ -739,7 +739,7 @@
 
       ! ... report statistics
 
-      CALL printacc(nfi, rhoe, desc, rhoout, atomsm, htm, nstep_this_run, acc, acc_this_run)
+      CALL printacc(nfi, rhoe, desc, atomsm, htm, nstep_this_run, acc, acc_this_run)
       CALL mp_report_buffers()
       CALL mp_report()
 

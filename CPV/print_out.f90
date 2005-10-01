@@ -791,9 +791,8 @@
 !=----------------------------------------------------------------------------=!
 
 
-    SUBROUTINE printacc( nfi, rhoe, desc, rhoout, atoms, ht, nstep_run, avgs, avgs_run )
+    SUBROUTINE printacc( nfi, rhoe, desc, atoms, ht, nstep_run, avgs, avgs_run )
 
-      USE charge_density, ONLY: printrho
       USE cell_module, ONLY: boxdimensions
       USE atoms_type_module, ONLY: atoms_type
       USE charge_types, ONLY: charge_descriptor
@@ -801,7 +800,6 @@
       IMPLICIT NONE
 
       INTEGER, INTENT(IN) :: nfi, nstep_run
-      LOGICAL, INTENT(IN) :: rhoout
       REAL(DP), intent(in) :: rhoe(:,:,:,:)
       TYPE (charge_descriptor), intent(in) :: desc
       REAL (DP) :: avgs(:), avgs_run(:)
@@ -810,10 +808,6 @@
  
       IF ( nfi < 1 ) THEN
         RETURN
-      END IF
-
-      IF( rhoout ) THEN
-         CALL printrho(nfi, rhoe, desc, atoms, ht)
       END IF
 
       avgs     = avgs     / DBLE( nfi )

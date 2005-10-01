@@ -65,14 +65,7 @@ MODULE input
      !
      lmetadyn = ( TRIM( calculation ) == 'metadyn' )
      !
-     IF ( lsmd .AND. ( program_name == 'FPMD' ) ) &
-        CALL errore( 'read_input_file ', &
-                     'string dynamics not implemented in FPMD', 1 )
-     !
      lwf = ( TRIM( calculation ) == 'cp-wf' )
-     !
-     IF ( lwf .AND. ( program_name == 'FPMD' ) ) &
-        CALL errore( 'read_input_file ', 'cp-wf not implemented in FPMD', 1 )
      !
      ! ... Set job title and print it on standard output
      !
@@ -194,7 +187,6 @@ MODULE input
                                trane_      => trane, &
                                newnfi_     => newnfi, &
                                tnewnfi_    => tnewnfi, &
-                               rhoout_     => rhoout, &
                                tdipole_    => tdipole, &
                                nomore_     => nomore, &
                                memchk_     => memchk, &
@@ -274,7 +266,7 @@ MODULE input
         tapos, tavel, ecutwfc, emass, emass_cutoff, taspc, trd_ht, ibrav,      &
         ortho_eps, ortho_max, ntyp, tolp, tchi2_inp, calculation, disk_io, dt, &
         tcg, ndr, ndw, iprint, isave, tstress, k_points, tprnfor, verbosity,   &
-        tprnrho, tdipole_card, toptical_card, tnewnfi_card, newnfi_card,       &
+        tdipole_card, toptical_card, tnewnfi_card, newnfi_card,                &
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
         orthogonalization, electron_velocities, nat, if_pos, phase_space
      !
@@ -318,9 +310,6 @@ MODULE input
      timing_ = .FALSE.
           ! The code write to files fort.8 fort.41 fort.42 fort.43
           ! a detailed report of subroutines timing
-     rhoout_ = .FALSE.
-          ! save charge density to file  CHARGEDENSITY if nspin = 1, and
-          ! CHARGEDENSITY.UP CHARGEDENSITY.DOWN if nspin = 2
      memchk_ = .FALSE.
           ! The code performs a memory check, write on standard
           ! output the allocated memory at each step.
@@ -347,7 +336,6 @@ MODULE input
          !
          iprsta_   = 2
          timing_   = .TRUE.
-         rhoout_   = .TRUE.
          tprnsfac_ = .TRUE.
          !
        CASE( 'high' )
@@ -355,7 +343,6 @@ MODULE input
          iprsta_   = 3
          memchk_   = .TRUE.
          timing_   = .TRUE.
-         rhoout_   = .TRUE.
          tprnsfac_ = .TRUE.
          !
        CASE DEFAULT
@@ -364,10 +351,6 @@ MODULE input
                       'unknown verbosity ' // TRIM( verbosity ), 1 )
          !
      END SELECT
-     !
-     ! ... If explicitly requested force the charge density to be printed
-     !
-     IF ( tprnrho ) rhoout_ = .TRUE.
      !
      tdipole_  = tdipole_card
      toptical_ = toptical_card

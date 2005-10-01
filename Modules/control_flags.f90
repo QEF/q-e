@@ -45,7 +45,7 @@ MODULE control_flags
   PUBLIC :: tbeg, nomore, nbeg, isave, iprint, tv0rd, nv0rd, tzeroc, tzerop, &
             newnfi, tnewnfi, tfor, tpre, tzeroe, tsde, tsdp, tsdc, taurdr,   &
             ndr, ndw, tortho, ortho_eps, ortho_max, tstress, tprnfor,        &
-            timing, memchk, tconjgrad, tprnsfac, toptical, tcarpar, rhoout,  &
+            timing, memchk, tconjgrad, tprnsfac, toptical, tcarpar,          &
             trane, ampre, tranp, amprp, tdipole, t_diis, t_diis_simple,      &
             t_diis_rot, tnosee, tnosep, tnoseh, tcp, tcap, tdamp, tdampions, &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
@@ -91,7 +91,6 @@ MODULE control_flags
   LOGICAL :: tprnsfac      = .FALSE. ! print out structure factor 
   LOGICAL :: toptical      = .FALSE. ! print out optical properties
   LOGICAL :: tcarpar       = .FALSE. ! tcarpar is set TRUE for a "pure" Car Parrinello simulation
-  LOGICAL :: rhoout        = .FALSE. ! print out charge densities
   LOGICAL :: tdamp         = .FALSE. ! Use damped dinamics for electrons
   LOGICAL :: tdampions     = .FALSE. ! Use damped dinamics for electrons
   LOGICAL :: tatomicwfc    = .FALSE. ! Use atomic wavefunctions as starting guess for ch. density

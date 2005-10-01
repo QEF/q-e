@@ -235,12 +235,6 @@ MODULE read_cards_module
           IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
              WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
-       ELSE IF ( TRIM(card) == 'RHOOUT' ) THEN
-          !
-          CALL card_rhoout( input_line )
-          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
-          !
        ELSE IF ( TRIM(card) == 'CLIMBING_IMAGES' ) THEN
           !
           CALL card_climbing_images( input_line )
@@ -1785,46 +1779,6 @@ MODULE read_cards_module
        !
      END SUBROUTINE
      !
-     !
-     !------------------------------------------------------------------------
-     !    BEGIN manual
-     !----------------------------------------------------------------------
-     ! 
-     ! RHOOUT
-     !
-     !   Enable the printing of the real space charge density
-     !   to file CHARGE_DENSITY 
-     !
-     ! Syntax:
-     !
-     !   RHOOUT
-     !
-     ! Where:
-     !
-     !   no parameters 
-     !
-     !----------------------------------------------------------------------
-     !    END manual
-     !------------------------------------------------------------------------
-     !
-     SUBROUTINE card_rhoout( input_line )
-       ! 
-       IMPLICIT NONE
-       ! 
-       CHARACTER(LEN=256) :: input_line
-       LOGICAL, SAVE      :: tread = .FALSE.
-       ! 
-       !
-       IF ( tread ) THEN
-          CALL errore( ' card_rhoout ', ' two occurrence ', 2 )
-       END IF
-       ! 
-       tprnrho = .TRUE.
-       tread = .TRUE.
-       ! 
-       RETURN
-       !
-     END SUBROUTINE
      !
      !------------------------------------------------------------------------
      !    BEGIN manual
