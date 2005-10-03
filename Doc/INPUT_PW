@@ -711,13 +711,13 @@ cell_dynamics
                CASE ( calculation = 'vc-relax' )
                  'none':    default 
                  'sd':      steepest descent ( not implemented )
-                 'damp-pr': damped (Beeman) dynamics of the Parrinello-Raman 
+                 'damp-pr': damped (Beeman) dynamics of the Parrinello-Rahman 
                             extended lagrangian
                  'damp-w':  damped (Beeman) dynamics of the new Wentzcovitch
                             extended lagrangian
                CASE ( calculation = 'vc-md' )
                  'none': default 
-                 'pr':      (Beeman) molecular dynamics of the Parrinello-Raman 
+                 'pr':      (Beeman) molecular dynamics of the Parrinello-Rahman 
                             extended lagrangian
                  'w':       (Beeman) molecular dynamics of the new Wentzcovitch
                             extended lagrangian

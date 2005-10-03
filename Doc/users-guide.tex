@@ -1159,9 +1159,6 @@ Update to the last version (presently 7.1.41, 8.0.046 or
 {\texttt{http://developer.intel.com/software/products/support/\#premier}}%
 {http://developer.intel.com/software/products/support/\#premier}
 
-Note that \texttt{pwcond.x} does not work with some (but not all)
-releases of Intel compiler v.~7 and 8, for no apparent good reason.
-
 Warnings ``size of symbol ... changed ...'' are produced by ifc 7.1 at
 the loading stage.
 These seem to be harmless, but they may cause the loader to stop,
@@ -1182,6 +1179,8 @@ Note that some combinations of not-so-recent versions of MKL
 and ifc may yield a lot of "undefined references" when statically 
 loaded: use \texttt{configure --enable-shared}, 
 or remove the \texttt{-static} option in \texttt{make.sys}.
+Note that \texttt{pwcond.x} works only with recent versions
+of MKL.
 
 When using/testing/benchmarking MKL on SMP (multiprocessor)
 machines, one should set the environmental variable 
