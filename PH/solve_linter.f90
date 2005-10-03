@@ -71,8 +71,10 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   real(DP), external :: w0gauss, wgauss
   ! functions computing the delta and theta function
 
-  complex(DP), pointer :: dvscfin(:,:,:), dvscfins (:,:,:)
-  ! change of the scf potential (input): complete, smooth part only
+  complex(DP), allocatable, target :: dvscfin(:,:,:)
+  ! change of the scf potential 
+  complex(DP), pointer :: dvscfins (:,:,:)
+  ! change of the scf potential (smooth part only)
   complex(DP), allocatable :: drhoscfh (:,:,:), dvscfout (:,:,:)
   ! change of rho / scf potential (output)
   ! change of scf potential (output)

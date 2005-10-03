@@ -43,8 +43,9 @@ subroutine solve_e
   ! h_diag: diagonal part of the Hamiltonian
   ! eprec : array fo preconditioning
 
+  complex(DP) , allocatable, target ::      &
+                   dvscfin (:,:,:)     ! change of the scf potential (input)
   complex(DP) , pointer ::      &
-                   dvscfin (:,:,:),  & ! change of the scf potential (input)
                    dvscfins (:,:,:)    ! change of the scf potential (smooth)
   complex(DP) , allocatable ::   &
                    dvscfout (:,:,:), & ! change of the scf potential (output)
