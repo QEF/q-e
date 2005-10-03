@@ -17,6 +17,7 @@ SUBROUTINE chdens (filplot)
   !
 #include "f_defs.h"
   USE io_global,  ONLY : stdout
+  USE mp_global,  ONLY : nproc_pool
   USE parameters, ONLY : ntypx
   USE constants,  ONLY :  pi, fpi
   USE cell_base
@@ -25,7 +26,6 @@ SUBROUTINE chdens (filplot)
   USE lsda_mod,   ONLY: nspin
   USE gvect
   USE gsmooth
-  USE scf, ONLY: rho
   USE wavefunctions_module,  ONLY: psic
   USE io_files, ONLY: nd_nmbr
 
@@ -58,7 +58,7 @@ SUBROUTINE chdens (filplot)
           '2D polar on a sphere'/)
 
   real(DP) :: celldms (6), gcutmsa, duals, ecuts, zvs(ntypx), ats(3,3)
-  real(DP), allocatable :: taus (:,:), rhor(:)
+  real(DP), allocatable :: taus (:,:), rhor(:), rhos(:)
   integer :: ibravs, nrx1sa, nrx2sa, nrx3sa, nr1sa, nr2sa, nr3sa, &
        ntyps, nats
   integer, allocatable :: ityps (:)
@@ -189,30 +189,28 @@ SUBROUTINE chdens (filplot)
   call volume (alat, at(1,1), at(1,2), at(1,3), omega)
 
   call set_fft_dim
-
-  call allocate_fft
   !
   ! Read first file
   !
   call plot_io (filepp (1), title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
                 nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
-                plot_num, atm, ityp, zv, tau, rho(1,1), -1)
+                plot_num, atm, ityp, zv, tau, rhor, -1)
   !
-  rhor (:) = weight (1) * rho (:,1)
+  rhor (:) = weight (1) * rhor (:)
   !
   ! Read following files (if any), verify consistency
   ! Note that only rho is read; all other quantities are discarded
   !
-  do ifile = 2, nfile
+  if (nfile > 1) then
+     allocate  (rhos(nrx1*nrx2*nrx3))
      allocate  (taus( 3 , nat))    
      allocate  (ityps( nat))    
+  end if
+  do ifile = 2, nfile
      !
      call plot_io (filepp (ifile), title, nrx1sa, nrx2sa, nrx3sa, &
           nr1sa, nr2sa, nr3sa, nats, ntyps, ibravs, celldms, ats, gcutmsa, &
-          duals, ecuts, plot_num, atms, ityps, zvs, taus, rho(1,1), - 1)
-     !
-     deallocate (ityps)
-     deallocate (taus)
+          duals, ecuts, plot_num, atms, ityps, zvs, taus, rhos, - 1)
      !
      if (nats.gt.nat) call errore ('chdens', 'wrong file order? ', 1)
      if (nrx1.ne.nrx1sa.or.nrx2.ne.nrx2sa) call &
@@ -227,9 +225,13 @@ SUBROUTINE chdens (filplot)
              ('chdens', 'incompatible celldm', 1)
      enddo
      !
-     rhor (:) = rhor (:) + weight (ifile) * rho (:,1)
+     rhor (:) = rhor (:) + weight (ifile) * rhos (:)
   enddo
-
+  if (nfile > 1) then
+     deallocate (ityps)
+     deallocate (taus)
+     deallocate (rhos)
+  end if
   !
   ! open output file, i.e., "fileout"
   !
@@ -269,22 +271,44 @@ SUBROUTINE chdens (filplot)
   end if
   e3 (:) = e3 (:) / m3
   !
-  !    and rebuild G-vectors in reciprocal space
+  ! are vectors defining the plotting region aligned along xyz ?
   !
-  call ggen
+  fast3d = ( e1(2) == 0.d0  .and.  e1(3) == 0.d0) .and. &
+           ( e2(1) == 0.d0  .and.  e2(3) == 0.d0) .and. &
+           ( e3(1) == 0.d0  .and.  e3(2) == 0.d0) 
   !
-  !    here we compute the fourier components of the quantity to plot
+  ! are crystal axis aligned along xyz ?
   !
-  psic(:) = CMPLX (rhor(:), 0.d0)
-  call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+  fast3d = fast3d .and. &
+       ( at(2,1) == 0.d0  .and.  at(3,1) == 0.d0) .and. &
+       ( at(1,2) == 0.d0  .and.  at(3,2) == 0.d0) .and. &
+       ( at(1,3) == 0.d0  .and.  at(2,3) == 0.d0) 
   !
-  !    we store the fourier components in the array rhog
+  !    Initialise FFT for rho(r) => rho(G) conversion if needed
   !
-
-  allocate (rhog( ngm))    
-  do ig = 1, ngm
-     rhog (ig) = psic (nl (ig) )
-  enddo
+  if (.NOT. ( iflag == 3 .AND. ( output_format == 5 .OR. &
+                                 output_format == 6 .OR. &
+                                 fast3d ) ) ) THEN
+     !
+     nproc_pool=1
+     !
+     call allocate_fft()
+     !
+     !    and rebuild G-vectors in reciprocal space
+     !
+     call ggen()
+     !
+     !    here we compute the fourier components of the quantity to plot
+     !
+     psic(:) = CMPLX (rhor(:), 0.d0)
+     call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+     !
+     !    we store the fourier components in the array rhog
+     !
+     allocate (rhog( ngm))    
+     rhog (:) = psic (nl (:) )
+     !
+  END IF
   !
   !     And now the plot (rhog in G-space, rhor in real space)
   !
@@ -321,18 +345,6 @@ SUBROUTINE chdens (filplot)
         end if
      endif
 
-     ! are vectors defining the plotting region aligned along xyz ?
-
-     fast3d = ( e1(2) == 0.d0  .and.  e1(3) == 0.d0) .and. &
-              ( e2(1) == 0.d0  .and.  e2(3) == 0.d0) .and. &
-              ( e3(1) == 0.d0  .and.  e3(2) == 0.d0) 
-
-     ! are crystal axis aligned along xyz ?
-
-     fast3d = fast3d .and. &
-          ( at(2,1) == 0.d0  .and.  at(3,1) == 0.d0) .and. &
-          ( at(1,2) == 0.d0  .and.  at(3,2) == 0.d0) .and. &
-          ( at(1,3) == 0.d0  .and.  at(2,3) == 0.d0) 
 
      if (output_format == 5) then
         !
@@ -345,6 +357,7 @@ SUBROUTINE chdens (filplot)
      elseif (output_format == 6 ) then
         !
         ! GAUSSIAN CUBE FORMAT
+        !
         call write_cubefile (alat, at, bg, nat, tau, atm, ityp, rhor, &
              nr1, nr2, nr3, nrx1, nrx2, nrx3, ounit)
 
@@ -380,8 +393,8 @@ SUBROUTINE chdens (filplot)
   print '(5x,"Plot Type: ",a,"   Output format: ",a)', &
        plotname(iflag), formatname(output_format)
   !
+  if (allocated(rhog)) deallocate(rhog)
   deallocate(rhor)
-  deallocate(rhog)
   deallocate(tau)
   deallocate(ityp)
   
