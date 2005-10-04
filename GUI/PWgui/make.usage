@@ -17,10 +17,11 @@
 	pwgui-source-notcl   ... make PWgui-only source package
 	pwgui-source-all     ... make PWgui source package + Tcl libs
 	pwgui-linux-i386-bin ... make a binary PWgui package
-	
-	alldist                ... pwgui-source-all + 
-                                   pwgui-linux-i386-bin + 
-                                   pwgui-source-notcl	
+        pwgui-starkit-vfs    ... make a starkit's pwgui_vfs source package
+
+	alldist              ... pwgui-source-all + 
+                                 pwgui-linux-i386-bin + 
+                                 pwgui-source-notcl	
 
 * General target:
 
