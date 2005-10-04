@@ -12,7 +12,7 @@ PWGUI_DIRNAME    = PWgui-$(PWGUI_VERSION)
 PWGUI_VFS        = pwgui_vfs
 
 ROOT_FILES = \
-	pwgui pwgui.bat pwgui.tcl pwgui.settings \
+	pwgui pwgui.bat pwgui.tcl init.tcl pwgui.settings \
 	pwgui_reformat pwgui_reformat.tcl \
 	README README.developer INSTALL NEWS BUGS THANKS AUTHORS \
 	ChangeLog TODO COPYRIGHT COPYING VERSION
@@ -26,9 +26,9 @@ BIN_FILES = \
 #
 DOC_FILES = \
 	doc/pwdocs/INPUT*.html \
-	doc/pwdocs/manual.pdf \
-	doc/pwdocs/manual/
-#	doc/pwdocs/manual.tex 
+	doc/pwdocs/users-guide.pdf \
+	doc/pwdocs/users-guide/
+#	doc/pwdocs/users-guide.tex 
 #	doc/pwdocs/*.gif doc/pwdocs/*.png 
 
 EXAMPLES_FILES = \
