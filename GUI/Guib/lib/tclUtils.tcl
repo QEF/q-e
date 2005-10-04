@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tclUtils.tcl,v 1.9 2005-09-26 11:29:06 kokalj Exp $ 
+# $Id: tclUtils.tcl,v 1.10 2005-10-04 11:15:03 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -82,7 +82,7 @@ namespace eval ::tclu:: {
     namespace export newset
     namespace export conset
     namespace export ifincr
-    namespace export scan
+    #namespace export scan
     namespace export removeElementFromList
     namespace export addElementToList
     namespace export lindexEnd
