@@ -30,7 +30,7 @@ subroutine gep_x(n, amt, bmt, eigen, veigen)
 !
 !  for some reason the lapack routine does not work if the diagonal elements
 !  of the matrices are exactly zero. We tested these routines on 
-!  pc_ifc, ibmsp and origin. If you have problems, try llapack=.false.
+!  pc_ifc, ibmsp and origin.
 !
   do i=1,n
      amt(i,i)=amt(i,i)+delgep

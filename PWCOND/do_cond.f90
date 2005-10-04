@@ -30,7 +30,7 @@ SUBROUTINE do_cond(nodenumber)
   NAMELIST /inputcond/ outdir, prefixt, prefixl, prefixs, prefixr,     &
                        band_file, tran_file, save_file, fil_loc,       &
                        lwrite_loc, lread_loc, lwrite_cond, lread_cond, & 
-                       orbj_in,orbj_fin,ikind,iofspin,llocal,llapack,  & 
+                       orbj_in,orbj_fin,ikind,iofspin,llocal,          & 
                        bdl, bds, bdr, nz1, energy0, denergy, ecut2d,   &
                        ewind, epsproj, delgep, cutplot
                                                                                
@@ -67,7 +67,6 @@ SUBROUTINE do_cond(nodenumber)
   ecut2d = 0.d0
   ewind = 1.d0
   llocal = .FALSE.
-  llapack = .TRUE.
   epsproj = 1.d-3
   delgep = 5.d-10
   cutplot = 2.d0
@@ -150,7 +149,6 @@ SUBROUTINE do_cond(nodenumber)
   CALL mp_bcast( epsproj, ionode_id )
   CALL mp_bcast( delgep, ionode_id )
   CALL mp_bcast( cutplot, ionode_id )
-  CALL mp_bcast( llapack, ionode_id )
   CALL mp_bcast( nkpts, ionode_id )
   CALL mp_bcast( nenergy, ionode_id )
 

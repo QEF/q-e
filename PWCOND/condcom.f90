@@ -149,7 +149,6 @@ MODULE control_cond
   LOGICAL        :: &
      lwrite_loc,    &  ! if .t. save eigenproblem result on fil_loc
      lread_loc,     &  ! if .t. read eigenproblem result from fil_loc
-     llapack,       &  ! if .t. use LAPACK routine for GEP
      lwrite_cond,   &  ! if .t. save variables needed for pwcond
      lread_cond,    &  ! if .t. read variables needed for pwcond
      llocal            ! if .t. the local implementation

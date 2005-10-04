@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 subroutine compbs_2(nocros, norb, n2d, ntot, amat, bmat, &
-                    vec, kval, llapack)
+                    vec, kval)
 
 !
 ! This subroutine reduces amat, bmat into amt, bmt
@@ -25,7 +25,6 @@ subroutine compbs_2(nocros, norb, n2d, ntot, amat, bmat, &
              ntot       ! ntot = 2*(n2d+nocros) 
   integer :: info, ishift, i, j, k, l
   integer, allocatable :: ipiv(:)
-  logical :: llapack
   complex(DP) :: amat(2*n2d+norb, 2*n2d+norb),  &
                       bmat(2*n2d+norb, 2*n2d+norb),  &
                       vec(2*n2d+norb, ntot), kval(ntot) 
@@ -129,14 +128,9 @@ subroutine compbs_2(nocros, norb, n2d, ntot, amat, bmat, &
 !
 ! To solve GEP with matrices amt, bmt
 !
-  if (llapack) then
 !       LAPACK expert driver
+!
      call gep_x(ntot,amt,bmt,kval,vecaux)
-  else
-!       GEP algorithm
-     call gep_gep(ntot,amt,bmt,kval,vecaux)     
-  endif
-!ccccccc
 
 !
 ! Forming (2*n2d+norb, ntot) matrix of eigenvectors

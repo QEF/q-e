@@ -206,7 +206,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
 ! To reduce matrices and solve GEP A X = c B X; X = {a_n, a_\alpha}
 ! 
   call compbs_2(npol*nocros, npol*norb, n2d, 2*(n2d+npol*nocros),   &
-                amat, bmat, vec, kval, llapack) 
+                amat, bmat, vec, kval) 
 
 !
 ! To normalize (over XY plane) all the states

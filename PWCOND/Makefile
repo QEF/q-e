@@ -20,8 +20,6 @@ eigenchnl.o \
 form_zk.o \
 four.o \
 free_mem.o \
-gep.o \
-gep_gep.o \
 gep_x.o \
 gramsh.o \
 hev_ab.o \
