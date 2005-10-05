@@ -434,7 +434,7 @@ TLDEPS= bindir mods libs pw
 all : tldeps ph.x
 
 ph.x : $(PHOBJS) $(RAMAN) $(LIBOBJS)
-	$(F90) $(LDFLAGS) -o ph.x \
+	$(MPIF90) $(LDFLAGS) -o ph.x \
 		$(PHOBJS) $(RAMAN) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/ph.x . )
 tldeps:

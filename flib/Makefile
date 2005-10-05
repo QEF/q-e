@@ -57,6 +57,13 @@ reduce.o
 
 all: flib.a ptools.a eispack $(MYLIB)
 
+hangup.o : hangup.f90
+	$(MPIF90) $(F90FLAGS) -c $<
+matmul.o : matmul.f90
+	$(MPIF90) $(F90FLAGS) -c $<
+reduce.o : reduce.f90
+	$(MPIF90) $(F90FLAGS) -c $<
+
 flib.a : $(OBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@

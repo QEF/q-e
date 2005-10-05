@@ -132,10 +132,15 @@ all : tldeps cp.x cppp.x
 cp : tldeps cp.x cppp.x
 
 cp.x : cprstart.o $(FOBJS) $(LOBJS) $(LIBOBJS)
-	$(F90) $(LDFLAGS) -o cp.x \
+	$(MPIF90) $(LDFLAGS) -o cp.x \
 		cprstart.o $(FOBJS) $(LOBJS) ../Modules/*.o \
 		../flib/eispack.o $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../CPV/cp.x . )
+
+para.o : para.f90
+	$(MPIF90) $(F90FLAGS) -c $<
+dipol_matrix.o : dipol_matrix.f90
+	$(MPIF90) $(F90FLAGS) -c $<
 
 cp_version.o : cpver.h
 
@@ -154,7 +159,7 @@ PPOBJS = \
 ../Modules/kind.o
 
 cppp.x : fpmdpp.o $(PPOBJS) $(LIBOBJS)
-	$(F90) $(LDFLAGS) -o cppp.x fpmdpp.o $(PPOBJS) $(LIBOBJS) $(LIBS)
+	$(MPIF90) $(LDFLAGS) -o cppp.x fpmdpp.o $(PPOBJS) $(LIBOBJS) $(LIBS)
 	- (cd ../bin ; ln -fs ../CPV/cppp.x . )
 
 tldeps:

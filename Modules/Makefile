@@ -65,6 +65,9 @@ xml_io_base.o
 
 all : $(MODULES)
 
+parallel_include.o : parallel_include.f90
+	$(MPIF90) $(F90FLAGS) -c $<
+
 clean :
 	- /bin/rm -f *.o *.d *.i *~ *.F90 *.mod work.pc
 

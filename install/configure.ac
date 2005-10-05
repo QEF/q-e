@@ -13,13 +13,16 @@ use_shared=1
 # store variables from the environment (may be set or not)
 topdir=$TOPDIR
 arch=$ARCH
-cc=$CC
+env_cc=$CC
+mpicc=$MPICC
 cpp=$CPP
 cflags=$CFLAGS
 cppflags=$CPPFLAGS
 dflags=$DFLAGS
 f77=$F77
 f90=$F90
+mpif77=$MPIF77
+mpif90=$MPIF90
 fflags=$FFLAGS
 f90flags=$F90FLAGS
 ld=$LD
@@ -76,24 +79,24 @@ then
 fi
 echo checking architecture... $arch
 
-# check compiling environment
+# candidate compilers, archiver and flags based on architecture
 case $arch in
 linux64 )
-	try_f90_parallel="mpif90"
+	try_mpif90="mpif90"
 	try_f90="ifort ifc efc pgf90 g95 f90"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX64"
 	;;
 linux32 )
-	try_f90_parallel="mpif90"
+	try_mpif90="mpif90"
 	try_f90="ifort ifc pgf90 g95 f90"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX"
 	;;
 aix )
-	try_f90_parallel="mpxlf90_r mpxlf90"
+	try_mpif90="mpxlf90_r mpxlf90"
 	try_f90="xlf90_r xlf90 f90"
 	try_ar="ar"
 	try_arflags="-X64 ruv"
@@ -112,14 +115,14 @@ alpha )
 	try_dflags="-D__ALPHA"
 	;;
 alinux )
-	try_f90_parallel="mpif90"
+	try_mpif90="mpif90"
 	try_f90="fort g95 f90"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__ALPHA -D__LINUX64"
 	;;
 sparc )
-	try_f90_parallel="mpf90"
+	try_mpif90="mpf90"
 	try_f90="f90"
 	try_ar="ar"
 	try_arflags="ruv"
@@ -132,7 +135,7 @@ crayx1 )
 	try_dflags="-D__X1"
 	;;
 mac )
-	try_f90_parallel="mpxlf90 mpf90"
+	try_mpif90="mpxlf90 mpf90"
 	try_f90="xlf90 f90"
 	try_ar="ar"
 	try_arflags="ruv"
@@ -146,58 +149,108 @@ mac )
 	try_arflags="ruv"
 	;;
 esac
-if test "$use_parallel" -ne 0 ; then try_f90="$try_f90_parallel $try_f90" ; fi
 
-# check Fortran 90 compiler
+if test "$use_parallel" -ne 0
+then
+	# clear cached values
+	unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
+
+	# check parallel Fortran 90 compiler
+	if test "$mpif90" = "" ; then mpif90="$try_mpif90 $try_f90" ; fi
+	AC_PROG_F77($mpif90)
+	mpif90=$F77
+
+	case "$arch" in
+	linux* )
+		# check which compiler does mpif90 wrap
+		echo $ECHO_N "checking version of $mpif90... $ECHO_C"
+		ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
+		pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
+		g95_version=`$mpif90 -v 2>&1 | grep "g95"`
+		if test "$ifort_version" != ""
+		then
+			version=`$mpif90 -V 2>&1 | grep Version |
+				 sed 's/.*Version//' | awk '{print $1}'`
+			if test `echo $version | sed 's/\..*//'` -lt 8
+			then
+				try_f90="ifc efc"
+				echo "${ECHO_T}ifc $version"
+			else
+				try_f90="ifort efc"
+				echo "${ECHO_T}ifort $version"
+			fi
+		elif test "$pgf_version" != ""
+		then
+			version=`echo $pgf_version | awk '{print $2}'`
+			try_f90="pgf90"
+			echo "${ECHO_T}pgf90 $version"
+		elif test "$g95_version" != ""
+		then
+			version=`echo $g95_version | awk '{print $3}'`
+			try_f90="g95"
+			echo "${ECHO_T}g95 $version"
+		else
+			echo "${ECHO_T}unknown"
+		fi
+		;;
+	esac
+
+	case "$arch:$mpif90" in
+	*:mpif90 )
+		try_mpicc="mpicc"
+		try_mpif77="mpif77"
+		;;
+	*:mpf90 )
+		try_mpicc="mpcc"
+		try_mpif77="mpf77"
+		;;
+	aix:mpxlf*_r )
+		try_mpicc="mpcc_r"
+		try_mpif77="mpxlf_r"
+		;;
+	aix:mpxlf* )
+		try_mpicc="mpcc"
+		try_mpif77="mpxlf"
+		;;
+	mac:mpxlf* )
+		try_mpicc="mpcc"
+		try_mpif77="mpxlf mpf77"
+		;;
+	esac
+fi
+
+# clear cached values
+unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
+
+# check serial Fortran 90 compiler
 if test "$f90" = "" ; then f90="$try_f90" ; fi
-unset F77 # otherwise it may interfere with the check
 AC_PROG_F77($f90)
 f90=$F77
-f90_id=$f90 # this should be the compiler's brand name
+if test "$use_parallel" -eq 0 ; then mpif90=$f90 ; fi
+
+echo setting F90... $f90
+echo setting MPIF90... $mpif90
 
 case "$arch:$f90" in
-linux* )
-	# double-check compiler
-	# because on GNU/Linux systems they often have nonstandard names
-	echo $ECHO_N "checking version of $f90... $ECHO_C"
-	ifort_version=`$f90 -V 2>&1 | grep "Intel(R)"`
-	pgf_version=`$f90 -V 2>&1 | grep "^pgf"`
-	g95_version=`$f90 -v 2>&1 | grep "g95"`
-	if test "$ifort_version" != ""
-	then
-		version=`$f90 -V 2>&1 | grep Version |
-			 sed 's/.*Version//' | awk '{print $1}'`
-		if test `echo $version | sed 's/\..*//'` -lt 8
-		then
-			f90_id=ifc
-		else
-			f90_id=ifort
-		fi
-		echo "${ECHO_T}$f90_id $version"
-
-		try_cc="icc ecc gcc cc"
-		try_f77="ifort ifc efc $f90"
-	elif test "$pgf_version" != ""
-	then
-		f90_id=`echo $pgf_version | awk '{print $1}'`
-		version=`echo $pgf_version | awk '{print $2}'`
-		echo "${ECHO_T}$f90_id $version"
-
-		try_cc="pgcc gcc cc"
-		try_f77="pgf77 $f90"
-	elif test "$g95_version" != ""
-	then
-		f90_id=g95
-		version=`echo $g95_version | awk '{print $3}'`
-		echo "${ECHO_T}g95 $version"
-
-		try_cc="gcc cc"
-		try_f77="$f90"
-	else
-		echo "${ECHO_T}unknown"
-		try_cc="gcc cc"
-		try_f77="f77 $f90"
-	fi
+linux*:ifort )
+	try_cc="icc ecc gcc cc"
+	try_f77="ifort efc $f90"
+	;;
+linux*:ifc )
+	try_cc="icc ecc gcc cc"
+	try_f77="ifc efc $f90"
+	;;
+linux*:pgf90 )
+	try_cc="pgcc gcc cc"
+	try_f77="pgf77 $f90"
+	;;
+linux*:g95 )
+	try_cc="gcc cc"
+	try_f77="g95"
+	;;
+linux*:* )
+	try_cc="gcc cc"
+	try_f77="f77 $f90"
 	;;
 aix:*xlf*_r )
 	try_cc="xlc_r cc gcc"
@@ -242,80 +295,51 @@ mac:* )
 	;;
 esac
 
-case "$arch:$f90" in
-*:mpif90 )
-	try_cc_parallel="mpicc"
-	try_f77_parallel="mpif77"
-	;;
-*:mpf90 )
-	try_cc_parallel="mpcc"
-	try_f77_parallel="mpf77"
-	;;
-aix:mpxlf*_r )
-	try_cc_parallel="mpcc_r"
-	try_f77_parallel="mpxlf_r"
-	;;
-aix:mpxlf* )
-	try_cc_parallel="mpcc"
-	try_f77_parallel="mpxlf"
-	;;
-mac:mpxlf* )
-	try_cc_parallel="mpcc"
-	try_f77_parallel="mpxlf mpf77"
-	;;
-esac
 if test "$use_parallel" -ne 0
 then
-	try_f77="$try_f77_parallel $try_f77"
-	try_cc="$try_cc_parallel $try_cc"
+	# clear cached values
+	unset CC ac_cv_prog_ac_ct_CC ac_cv_c_compiler_gnu ac_cv_prog_cc_g
+
+	# check parallel C compiler
+	if test "$mpicc" = "" ; then mpicc="$try_mpicc $try_cc" ; fi
+	AC_PROG_CC($mpicc)
+	mpicc=$CC
+
+	# clear cached values
+	unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
+
+	# check parallel Fortran 77 compiler
+	if test "$mpif77" = "" ; then mpif77="$try_mpif77 $try_f77" ; fi
+	AC_PROG_F77($mpif77)
+	mpif77=$F77
 fi
+
+# clear cached values
+unset CC ac_cv_prog_ac_ct_CC ac_cv_c_compiler_gnu ac_cv_prog_cc_g
+
+# check serial C compiler
+if test "$env_cc" = "" ; then cc="$try_cc" ; else cc="$env_cc"; fi
+AC_PROG_CC($cc)
+cc=$CC
+if test "$use_parallel" -eq 0 ; then mpicc=$cc ; fi
+
+echo setting CC... $cc
+echo setting MPICC... $mpicc
 
 # clear cached values
 unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
 
-# Fortran 77 compiler
+# check serial Fortran 77 compiler
 if test "$f77" = "" ; then f77="$try_f77" ; fi
 AC_PROG_F77($f77)
 f77=$F77
+if test "$use_parallel" -eq 0 ; then mpif77=$f77 ; fi
 
-# C compiler
-if test "$cc" = "" ; then cc="$try_cc" ; fi
-AC_PROG_CC($cc)
-cc=$CC
-cc_id=$cc # this should be the compiler's brand name
-
-case "$arch:$cc" in
-linux* )
-	# double-check compiler
-	# because on GNU/Linux systems they often have nonstandard names
-	echo $ECHO_N "checking version of $cc... $ECHO_C"
-	icc_version=`$cc -V 2>&1 | grep "Intel(R)"`
-	pgcc_version=`$cc -V 2>&1 | grep "^pgcc"`
-	gcc_version=`$cc -v 2>&1 | grep "gcc version"`
-	if test "$icc_version" != ""
-	then
-		cc_id=icc
-		cversion=`$cc -V 2>&1 | grep Version |
-			  sed 's/.*Version//' | awk '{print $1}'`
-		echo "${ECHO_T}icc $cversion"
-	elif test "$pgcc_version" != ""
-	then
-		cc_id=`echo $pgcc_version | awk '{print $1}'`
-		cversion=`echo $pgcc_version | awk '{print $2}'`
-		echo "${ECHO_T}$cc_id $cversion"
-	elif test "$gcc_version" != ""
-	then
-		cc_id=gcc
-		cversion=`echo $gcc_version | awk '{print $3}'`
-		echo "${ECHO_T}gcc $cversion"
-	else
-		echo "${ECHO_T}unknown"
-	fi
-	;;
-esac
+echo setting F77... $f77
+echo setting MPIF77... $mpif77
 
 # check whether the C and Fortran compilers are compatible
-case "$arch:$cc_id:$f90_id" in
+case "$arch:$cc:$f90" in
 	# list supported combinations here
 linux*:icc:ifort | linux*:icc:ifc ) ;;
 linux*:gcc:ifort | linux*:gcc:ifc ) ;;
@@ -340,7 +364,7 @@ esac
 have_cpp=0
 xlf_flags=0
 
-case "$arch:$f90_id" in
+case "$arch:$f90" in
 linux64:ifort )
 	try_fflags="-O2 -assume byterecl"
 	try_f90flags="\$(FFLAGS) -nomodule"
@@ -532,7 +556,7 @@ echo setting FFLAGS_NOOPT... $fflags_noopt
 echo setting F90FLAGS_NOOPT... $f90flags_noopt
 if test "$imod" = "" ; then imod="-I" ; fi
 
-case "$arch:$cc_id" in
+case "$arch:$cc" in
 linux*:icc )
 	try_cflags="-O3"
 	c_ldflags=""
@@ -599,8 +623,8 @@ esac
 if test "$cppflags" = "" ; then cppflags=$try_cppflags ; fi
 echo "${ECHO_T}$cppflags"
 
-# linker and archiver (no tests)
-if test "$ld" = ""       ; then ld="$f90"              ; fi
+# linker and archiver
+if test "$ld" = ""       ; then ld="$mpif90"           ; fi
 if test "$ldflags" = ""  ; then ldflags="$try_ldflags" ; fi
 if test "$ar" = ""       ; then ar="$try_ar"           ; fi
 if test "$arflags" = ""  ; then arflags="$try_arflags" ; fi
@@ -669,7 +693,7 @@ then
 	esac
 
 	# search
-	case "$arch:$f90_id" in
+	case "$arch:$f90" in
 
 	linux64:ifort | linux64:ifc | linux64:g95 )
 		# check for mkl (in several directories)
@@ -787,7 +811,7 @@ then
 	if test "$have_blas" -eq 0
 	then
 		# check for atlas (in several directories)
-		case "$f90_id" in
+		case "$f90" in
 		ifort | ifc )
 			try_libdirs="/usr/local/lib /cineca/prod/intel/lib" ;;
 		pgf* )	try_libdirs="/usr/local/lib /cineca/prod/pgi/lib"   ;;
@@ -819,7 +843,7 @@ then
 	if test "$have_blas" -eq 0
 	then
 		# check for blas (in several directories)
-		case "$f90_id" in
+		case "$f90" in
 		ifort | ifc )
 			try_libdirs="/usr/local/lib /cineca/prod/intel/lib" ;;
 		pgf* )	try_libdirs="/usr/local/lib /cineca/prod/pgi/lib"   ;;
@@ -868,7 +892,7 @@ then
 	esac
 
 	# search
-	case "$arch:$f90_id" in
+	case "$arch:$f90" in
 
 	linux64:* )
 		# check for mkl_lapack
@@ -911,7 +935,7 @@ then
 	if test "$have_lapack" -eq 0
 	then
 		# check for lapack (in several directories)
-		case "$f90_id" in
+		case "$f90" in
 		ifort | ifc )
 			try_libdirs="/usr/local/lib /cineca/prod/intel/lib" ;;
 		pgf* )	try_libdirs="/usr/local/lib /cineca/prod/pgi/lib"   ;;
@@ -989,7 +1013,7 @@ then
 		AC_LANG_PUSH(C)
 
 		# check for fftw (in several directories)
-		case "$f90_id" in
+		case "$f90" in
 		ifort | ifc )
 			try_libdirs="/usr/local/lib /cineca/prod/intel/lib" ;;
 		pgf* )	try_libdirs="/usr/local/lib /cineca/prod/pgi/lib"   ;;
@@ -1021,54 +1045,6 @@ then
 	fi
 fi
 echo setting FFT_LIBS... $fft_libs
-
-# check for mpi
-# some architectures require to link mpi libraries explicitly
-if test "$mpi_libs" = ""
-then
-	# check directories in LD_LIBRARY_PATH too
-	# (maybe they are already searched by default, but I'm not sure)
-	ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
-
-	# build list of directories to search
-	case "$arch" in
-	mac )    try_libdirs="/usr/local/lib /sw/lib" ;;
-	*)       try_libdirs="/usr/local/lib"         ;;
-	esac
-
-	# search
-	if test "$use_parallel" -ne 0
-	then
-		case "$arch" in
-		alpha )
-			AC_LANG_PUSH(C)
-			CFLAGS="$test_cflags"
-			CPPFLAGS="$test_cppflags"
-			LDFLAGS="$c_ldflags"
-			LIBS=""
-			AC_SEARCH_LIBS(elan_baseInit, elan, mpi_libs="$LIBS")
-			LIBS="-lmpi $mpi_libs"
-			AC_SEARCH_LIBS(mpi_waitany_, fmpi, have_mpi=1
-				       mpi_libs="$LIBS")
-			AC_LANG_POP(C)
-
-			LIBS="$mpi_libs"
-			AC_SEARCH_LIBS(pmpi_init, pmpi, mpi_libs="$LIBS")
-			;;
-		esac
-
-		if test "$have_mpi" -eq 0
-		then
-			# check for mpi
-			unset ac_cv_search_mpi_init # clear cached value
-			LDFLAGS="$test_ldflags"
-			LIBS="$mpi_libs"
-			AC_SEARCH_LIBS(mpi_init, mpi,
-				       have_mpi=1 mpi_libs="$LIBS")
-		fi
-	fi
-fi
-echo setting MPI_LIBS... $mpi_libs
 
 # check for mass on aix
 if test "$mass_libs" = ""
@@ -1115,7 +1091,57 @@ then
 fi
 echo setting MASS_LIBS... $mass_libs
 
+# check for mpi
+# some architectures require to link mpi libraries explicitly
+F77=$mpif90 # use parallel compiler
+if test "$mpi_libs" = ""
+then
+	# check directories in LD_LIBRARY_PATH too
+	# (maybe they are already searched by default, but I'm not sure)
+	ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
+
+	# build list of directories to search
+	case "$arch" in
+	mac )    try_libdirs="/usr/local/lib /sw/lib" ;;
+	*)       try_libdirs="/usr/local/lib"         ;;
+	esac
+
+	# search
+	if test "$use_parallel" -ne 0
+	then
+		case "$arch" in
+		alpha )
+			AC_LANG_PUSH(C)
+			CFLAGS="$test_cflags"
+			CPPFLAGS="$test_cppflags"
+			LDFLAGS="$c_ldflags"
+			LIBS=""
+			AC_SEARCH_LIBS(elan_baseInit, elan, mpi_libs="$LIBS")
+			LIBS="-lmpi $mpi_libs"
+			AC_SEARCH_LIBS(mpi_waitany_, fmpi, have_mpi=1
+				       mpi_libs="$LIBS")
+			AC_LANG_POP(C)
+
+			LIBS="$mpi_libs"
+			AC_SEARCH_LIBS(pmpi_init, pmpi, mpi_libs="$LIBS")
+			;;
+		esac
+
+		if test "$have_mpi" -eq 0
+		then
+			# check for mpi
+			unset ac_cv_search_mpi_init # clear cached value
+			LDFLAGS="$test_ldflags"
+			LIBS="$mpi_libs"
+			AC_SEARCH_LIBS(mpi_init, mpi,
+				       have_mpi=1 mpi_libs="$LIBS")
+		fi
+	fi
+fi
+echo setting MPI_LIBS... $mpi_libs
+
 # final checks on available libraries
+F77=$f90
 FFLAGS="$test_fflags"
 LDFLAGS="$test_ldflags"
 parallel=0
@@ -1203,6 +1229,7 @@ fi
 
 if test "$use_parallel" -ne 0
 then
+	F77=$mpif90
 	LIBS="$mpi_libs"
 	AC_SEARCH_LIBS(mpi_init, "", parallel=1
 		       try_dflags="$try_dflags -D__MPI -D__PARA")
@@ -1265,17 +1292,20 @@ fi
 
 # export settings to generated files
 AC_SUBST(cc)
+AC_SUBST(mpicc)
 AC_SUBST(cflags)
 AC_SUBST(dflags)
 AC_SUBST(fdflags)
 AC_SUBST(cpp)
 AC_SUBST(cppflags)
-AC_SUBST(f77)
 AC_SUBST(f90)
-AC_SUBST(fflags)
+AC_SUBST(mpif90)
 AC_SUBST(f90flags)
-AC_SUBST(fflags_noopt)
 AC_SUBST(f90flags_noopt)
+AC_SUBST(f77)
+AC_SUBST(mpif77)
+AC_SUBST(fflags)
+AC_SUBST(fflags_noopt)
 AC_SUBST(pre_fdflags)
 AC_SUBST(imod)
 AC_SUBST(ifftw)

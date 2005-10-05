@@ -16,15 +16,18 @@
 
 @SET_MAKE@
 CC             = @cc@
+MPICC          = @mpicc@
 CFLAGS         = @cflags@ $(DFLAGS) $(IFLAGS)
 CPP            = @cpp@
 CPPFLAGS       = @cppflags@ $(DFLAGS) $(IFLAGS)
-F77            = @f77@
 F90            = @f90@
-FFLAGS         = @fflags@
+MPIF90         = @mpif90@
 F90FLAGS       = @f90flags@ @pre_fdflags@$(FDFLAGS) $(IFLAGS) $(MODFLAGS)
-FFLAGS_NOOPT   = @fflags_noopt@
 F90FLAGS_NOOPT = @f90flags_noopt@ @pre_fdflags@$(FDFLAGS) $(IFLAGS) $(MODFLAGS)
+F77            = @f77@
+MPIF77         = @mpif77@
+FFLAGS         = @fflags@
+FFLAGS_NOOPT   = @fflags_noopt@
 LD             = @ld@
 LDFLAGS        = @ldflags@
 AR             = @ar@

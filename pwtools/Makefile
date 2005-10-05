@@ -49,62 +49,64 @@ all : tldeps band_plot.x dist.x dynmat.x ev.x fqha.x kpoints.x matdyn.x \
       path_int.x pwi2xsf.x q2r.x bands_FS.x kvecs_FS.x 
 
 band_plot.x : band_plot.o $(LIBOBJS)
-	$(F90) $(LDFLAGS) -o $@ band_plot.o $(LIBOBJS) $(LIBS)
+	$(MPIF90) $(LDFLAGS) -o $@ band_plot.o $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 dist.x : dist.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(F90) $(LDFLAGS) -o $@ dist.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+	$(MPIF90) $(LDFLAGS) -o $@ \
+		dist.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 dynmat.x : dynmat.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(F90) $(LDFLAGS) -o $@ \
+	$(MPIF90) $(LDFLAGS) -o $@ \
 		dynmat.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 ev.x : ev.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(F90) $(LDFLAGS) -o $@ ev.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+	$(MPIF90) $(LDFLAGS) -o $@ \
+		ev.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 fqha.x : fqha.o $(LIBOBJS)
-	$(F90) $(LDFLAGS) -o $@ fqha.o $(LIBOBJS) $(LIBS)
+	$(MPIF90) $(LDFLAGS) -o $@ fqha.o $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 kpoints.x : kpoints.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(F90) $(LDFLAGS) -o $@ \
+	$(MPIF90) $(LDFLAGS) -o $@ \
 		kpoints.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 lambda.x : lambda.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(F90) $(LDFLAGS) -o $@ \
+	$(MPIF90) $(LDFLAGS) -o $@ \
 		lambda.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 matdyn.x : matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(F90) $(LDFLAGS) -o $@ \
+	$(MPIF90) $(LDFLAGS) -o $@ \
 		matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 path_int.x : path_int.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(F90) $(LDFLAGS) -o $@ \
+	$(MPIF90) $(LDFLAGS) -o $@ \
 		path_int.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 pwi2xsf.x : pwi2xsf.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(F90) $(LDFLAGS) -o $@ \
+	$(MPIF90) $(LDFLAGS) -o $@ \
 		pwi2xsf.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 q2r.x : q2r.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(F90) $(LDFLAGS) -o $@ \
+	$(MPIF90) $(LDFLAGS) -o $@ \
 		q2r.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 # Isaev
 bands_FS.x : bands_FS.o
-	$(F90) $(LDFLAGS) -o $@ bands_FS.o $(LIBS)
+	$(MPIF90) $(LDFLAGS) -o $@ bands_FS.o $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 kvecs_FS.x : kvecs_FS.o
-	$(F90) $(LDFLAGS) -o $@ kvecs_FS.o $(LIBS)
+	$(MPIF90) $(LDFLAGS) -o $@ kvecs_FS.o $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 tldeps:
