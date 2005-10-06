@@ -137,15 +137,6 @@ cp.x : cprstart.o $(FOBJS) $(LOBJS) $(LIBOBJS)
 		../flib/eispack.o $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../CPV/cp.x . )
 
-para.o : para.f90
-	$(CPP) $(CPPFLAGS) $< -o $*.F90
-	$(MPIF90) $(F90FLAGS) -c $*.F90
-	rm $*.F90
-dipol_matrix.o : dipol_matrix.f90
-	$(CPP) $(CPPFLAGS) $< -o $*.F90
-	$(MPIF90) $(F90FLAGS) -c $*.F90
-	rm $*.F90
-
 cp_version.o : cpver.h
 
 cpver.h :

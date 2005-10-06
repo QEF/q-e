@@ -57,19 +57,6 @@ reduce.o
 
 all: flib.a ptools.a eispack $(MYLIB)
 
-hangup.o : hangup.f90
-	$(CPP) $(CPPFLAGS) $< -o $*.F90
-	$(MPIF90) $(F90FLAGS) -c $*.F90
-	rm $*.F90
-matmul.o : matmul.f90
-	$(CPP) $(CPPFLAGS) $< -o $*.F90
-	$(MPIF90) $(F90FLAGS) -c $*.F90
-	rm $*.F90
-reduce.o : reduce.f90
-	$(CPP) $(CPPFLAGS) $< -o $*.F90
-	$(MPIF90) $(F90FLAGS) -c $*.F90
-	rm $*.F90
-
 flib.a : $(OBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@

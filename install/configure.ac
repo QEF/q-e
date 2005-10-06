@@ -638,11 +638,11 @@ AC_PROG_MAKE_SET
 echo $ECHO_N "checking whether Fortran files must be preprocessed... $ECHO_C"
 if test "$have_cpp" -ne 0
 then
-	f90rule="\$(F90) \$(F90FLAGS) -c \$<"
+	f90rule="\$(MPIF90) \$(F90FLAGS) -c \$<"
 	echo "${ECHO_T}no"
 else
 	f90rule="\$(CPP) \$(CPPFLAGS) \$< -o \$*.F90 \\
-	\$(F90) \$(F90FLAGS) -c \$*.F90 -o \$*.o"
+	\$(MPIF90) \$(F90FLAGS) -c \$*.F90 -o \$*.o"
 	echo "${ECHO_T}yes"
 fi
 
@@ -664,6 +664,7 @@ F77=$f90 # use Fortran 90 actually (autoconf only knows Fortran 77!)
 
 # search for libraries
 have_blas=0
+have_mkl=0
 have_lapack=0
 have_essl=0
 have_fft=0
@@ -695,7 +696,16 @@ then
 	# search
 	case "$arch:$f90" in
 
-	linux64:ifort | linux64:ifc | linux64:g95 )
+	linux*:pgf* )
+		# check for PGI blas
+		unset ac_cv_search_dgemm # clear cached value
+		FFLAGS="$test_fflags"
+		LDFLAGS="$test_ldflags"
+		LIBS=""
+		AC_SEARCH_LIBS(dgemm, blas, have_blas=1 blas_libs="$LIBS")
+		;;
+
+	linux64:* )
 		# check for mkl (in several directories)
 		try_libdirs="/opt/intel/mkl/8.0/lib/64
 			     /opt/intel/mkl72/lib/64
@@ -726,7 +736,7 @@ then
 		done
 		;;
 
-	linux32:ifort | linux32:ifc | linux32:g95 )
+	linux32:* )
 		# check for mkl (in several directories)
 		try_libdirs="/opt/intel/mkl/8.0/lib/32
 			     /opt/intel/mkl72/lib/32
@@ -756,15 +766,6 @@ then
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
 		done
-		;;
-
-	linux*:pgf* )
-		# check for PGI blas
-		unset ac_cv_search_dgemm # clear cached value
-		FFLAGS="$test_fflags"
-		LDFLAGS="$test_ldflags"
-		LIBS=""
-		AC_SEARCH_LIBS(dgemm, blas, have_blas=1 blas_libs="$LIBS")
 		;;
 
 	aix:* )
