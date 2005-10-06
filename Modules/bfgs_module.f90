@@ -230,17 +230,17 @@ MODULE bfgs_module
             !
             ! ... the history is reset
             !                  
+            WRITE( UNIT = stdout, FMT = '(/,5X,"resetting bfgs history",/)' )
+            !
             IF ( trust_radius_old == trust_radius_min ) THEN
                !
                ! ... the history has already been reset at the previous step :
                ! ... something is going wrong
                !
-               WRITE( UNIT = stdout, &
-                    & FMT = '(/,5X,"WARNING :  something is going wrong",/)' )
+               WRITE( UNIT = stdout, FMT = '(,5X,"Notice: bfgs history", &
+                      &," already reset at previous step",/)' )
                !
             END IF
-            !
-            WRITE( UNIT = stdout, FMT = '(/,5X,"resetting bfgs history",/)' )
             !
             inv_hess = identity( dim )
             !
