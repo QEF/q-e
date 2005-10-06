@@ -3948,13 +3948,14 @@ linux32:pgf* )
 	try_dflags="$try_dflags -D__PGI"
 	;;
 linux*:g95 )
-	try_fflags="-O3"
+	try_fflags="-O3 -cpp"
 	try_f90flags="\$(FFLAGS)"
-	try_fflags_noopt="-O0"
+	try_fflags_noopt="-O0 -cpp"
 	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
 	try_ldflags=""
 	#try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__G95"
+	have_cpp=1
 	;;
 aix:*xlf* )
 	try_fflags="-q64 -qalias=noaryovrlp -O3 -qstrict \
