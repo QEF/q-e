@@ -33,9 +33,12 @@ CPPFLAGS     = -D__LINUX -D__PGI -D__FFTW -D__USE_INTERNAL_FFTW \
                -I../include -I.
 
 # Please note: -r8 is necessary for numerical stability ..
-F90          = pgf90
-F77          = pgf77
 CC           = pgcc
+MPICC        = pgcc
+F90          = pgf90
+MPIF90       = pgf90
+F77          = pgf77
+MPIF77       = pgf77
 FFLAGS       = -fast -r8
 F90FLAGS     = -fast -r8 -I../Modules -I../PW -I../PH
 CFLAGS       = -fast $(CPPFLAGS)
@@ -47,9 +50,8 @@ LIBS         = -L/usr/local/pgi/linux86/lib/ -llapack -lblas $(FFTW_LIB)
 # LIBS         = -L/usr/local/pgi/linux86/lib/ -llapack -L/cineca/lib/ATLAS \
 #                -lf77blas -latlas $(FFTW_LIB)
 
-LD           = $(F90)
-LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS) \
-               -I../Modules -I../PW -I../PH
+LD           = $(MPIF90)
+LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a
 AR           = ar
 ARFLAGS      = ruv
 RANLIB       = echo

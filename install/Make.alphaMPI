@@ -28,9 +28,12 @@
 CPPFLAGS     = -D__ALPHA -D__PARA -D__MPI -D__FFTW -D__USE_INTERNAL_FFTW \
                -I../include -I.
 
-F90          = f90
-F77          = f90
 CC           = cc
+MPICC        = cc
+F90          = f90
+MPIF90       = f90
+F77          = f90
+MPIF77       = f90
 
 FFLAGS       = -O -fpe0 -real_size 64 -align dcommons -align records
 
@@ -44,8 +47,8 @@ CFLAGS       = -O $(CPPFLAGS)
 # Libraries (mpi + cxml + fftw) :
 LIBS         = -lfmpi -lpmpi -lmpi -lelan -lcxml $(FFTW_LIB)
 
-LD           = $(F90)
-LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS)
+LD           = $(MPIF90)
+LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a
 AR           = ar
 ARFLAGS      = rv
 RANLIB       = echo

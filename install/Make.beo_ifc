@@ -31,9 +31,12 @@
 CPPFLAGS     = -D__LINUX -D__INTEL -D__PARA -D__MPI -D__FFTW \
                -D__USE_INTERNAL_FFTW -I../include -I.
 
-F90          = mpif90
-F77          = mpif77
-CC           = mpicc
+CC           = icc
+MPICC        = mpicc
+F90          = ifc
+MPIF90       = mpif90
+F77          = ifc
+MPIF77       = mpif77
 
 # Fortran compiler flags
 # -Vaxlib         enables the use of portability libraries (getarg
@@ -78,8 +81,8 @@ MYLIB        = lapack_mkl
 ## The following is to use blas and lapack from the source code
 # MYLIB        = blas_and_lapack
 
-LD           = $(F90)
-LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a -Vaxlib $(LIBS)
+LD           = $(MPIF90)
+LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a -Vaxlib
 AR           = ar
 ARFLAGS      = ruv
 RANLIB       = echo

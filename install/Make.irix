@@ -28,9 +28,12 @@
 # Use the local copy of fftw
 CPPFLAGS     = -D__FFTW -D__SGI -D__USE_INTERNAL_FFTW -I../include -I.
 
-F90          = f90
-F77          = f90
 CC           = cc
+MPICC        = cc
+F90          = f90
+MPIF90       = f90
+F77          = f90
+MPIF77       = f90
 
 # use -O3 only if you are sure that it actually works 
 # use -64 if compiling with 64 bits
@@ -40,8 +43,8 @@ CFLAGS       =  -mips4 -O2 -r10000 $(CPPFLAGS)
 
 LIBS         = -lmpi -lcomplib.sgimath $(FFTW_LIB)
 
-LD           = $(F90)
-LDFLAGS      = $(FFLAGS) ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS)
+LD           = $(MPIF90)
+LDFLAGS      = $(FFLAGS) ../flib/ptools.a ../flib/flib.a ../clib/clib.a
 AR           = ar
 ARFLAGS      = ruv
 RANLIB       = echo

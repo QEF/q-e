@@ -23,9 +23,12 @@
 # Use the local copy of fftw
 CPPFLAGS     = -DHITACHI -D__PARA -D__MPI -D__FFTW -D__USE_INTERNAL_FFTW 
 
-F90          = f90
-F77          = f77
 CC           = cc
+MPICC        = cc
+F90          = f90
+MPIF90       = f90
+F77          = f77
+MPIF77       = f77
 FFLAGS       = -O4 -32 -noparallel -precexp=basic -conti199 -nosaveallocate \
                -I../include -I/usr/mpi/include
 F90FLAGS     = $(FFLAGS) $(CPPFLAGS) -I../Modules -I../PW -I../PH
@@ -36,8 +39,8 @@ MPIdir       = /usr/mpi/lib/lib32
 LIBS         = -L$(LAPACKdir) -llapack_sc -lblas_sc \
                -L$(MPIdir) -lfmpi -lmpi $(FFTW_LIB) -lm
 
-LD           = $(F90)
-LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS)
+LD           = $(MPIF90)
+LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a
 AR           = ar
 ARFLAGS      = rv
 RANLIB       = echo

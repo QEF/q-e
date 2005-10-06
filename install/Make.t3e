@@ -32,8 +32,12 @@ CPP          = /opt/ctl/bin/cpp
 CPPFLAGS     = -D__T3E -D__PARA  -D__MPI -D__FFTW -D__USE_INTERNAL_FFTW \
                -I../include -I.
 
+CC           = cc
+MPICC        = cc
 F90          = f90 
+MPIF90       = f90 
 F77          = f90 
+MPIF77       = f90 
 
 # you may need to add -Idir, where "dir"=directory where mpif.h resides
 # with -M1110 flag compiler does not issue warning messages for 
@@ -56,8 +60,8 @@ LIBS         = $(FFTW_LIB) -lmpi
 # this contains auxiliary routines missing in T3E lapack 
 MYLIB        = lapack_t3e
 
-LD           = $(F90)
-LDFLAGS      = ../flib/ptools.a ../flib/flib.a  ../clib/clib.a $(LIBS)
+LD           = $(MPIF90)
+LDFLAGS      = ../flib/ptools.a ../flib/flib.a  ../clib/clib.a
 AR           = ar
 ARFLAGS      = ruv
 RANLIB       = echo

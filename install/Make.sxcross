@@ -38,8 +38,13 @@ OPT0      = -C debug
 DEBUG     = -g 
 DEBUGOPT  = -Wf" -init stack=zero heap=zero"
 
+# CC        = sxc++
+CC        = sxcc
+CCLOCAL   = cc
 F90       = sxf90
+MPIF90    = sxf90
 F77       = sxf90
+MPIF77    = sxf90
 
 FFLAGS    = -f0 $(BASIC) $(MISC) $(OPT) $(DEBUGOPT)
 # $(FTRACE)
@@ -48,10 +53,7 @@ FFLAGS    = -f0 $(BASIC) $(MISC) $(OPT) $(DEBUGOPT)
 
 F90FLAGS  =  $(BASIC) $(MISC) $(OPT) $(DEBUGOPT) -I../Modules -I../PW -I../PH
 
-# CC        = sxc++
 # CFLAGS    = -DLANGUAGE_C -DNEC -DSX -I$(INC_DIR) -hfloat0,0,acct
-CC        = sxcc
-CCLOCAL   = cc
 CFLAGS    = -D__SX6 -I$(INC_DIR)  
 
 # With ASL fft libraries
@@ -66,11 +68,11 @@ LIBS      = -llapack -lblas -lasl
 ## by Jean-Marie Teuler on www.idris.fr (search for jmfft)
 # LIBS      = -llapack -lblas -L$(HOME)/mylocal/lib -ljmfft
 
-LD        = $(F90)
+LD        = $(MPIF90)
 
 # LDFLAGS  =  $(BASIC) $(PROF) $(FTRACE) 
 LDFLAGS   = $(BASIC) $(DEBUG) $(DEBUGOPT) ../flib/ptools.a \
-            ../flib/flib.a ../clib/clib.a -p -Wl" -f zero " $(LIBS)
+            ../flib/flib.a ../clib/clib.a -p -Wl" -f zero "
 
 AR        = sxar
 ARFLAGS   = rv

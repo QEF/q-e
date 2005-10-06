@@ -35,8 +35,12 @@ CPP          = /bin/cpp
 CPPFLAGS     = -D__LINUX -D__INTEL -D__FFTW -D__USE_INTERNAL_FFTW \
                -I../include -I.
 
+CC           = /cygdrive/c/Progra~1/Intel/Compiler70/IA32/Bin/ifc.exe
+MPICC        = /cygdrive/c/Progra~1/Intel/Compiler70/IA32/Bin/ifc.exe
 F90          = /cygdrive/c/Progra~1/Intel/Compiler70/IA32/Bin/ifl.exe
+MPIF90       = /cygdrive/c/Progra~1/Intel/Compiler70/IA32/Bin/ifl.exe
 F77          = $(F90)
+MPIF77       = $(MPIF90)
 
 # Fortran compiler flags
 # /4Yportlib    enables the use of portability libraries (getarg
@@ -50,7 +54,6 @@ F90FLAGS     = $(FFLAGS) /fpp $(CPPFLAGS) -nomodule \
                -I../Modules -I../PW -I../PH
 FFLAGS_NOOPT = /O0
 
-CC           = /cygdrive/c/Progra~1/Intel/Compiler70/IA32/Bin/ifc.exe
 CFLAGS       = $(CPPFLAGS) /O3
 
 # The following is for Intel MKL libraries v. 6.1 on Pentium-3 or above
@@ -59,7 +62,7 @@ LIBS         = $(FFTW_LIB) ../mkl_c.lib
 
 LD           = /cygdrive/c/Progra~1/Intel/Compiler70/IA32/Bin/icl.exe
 LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
-               /4Yportlib $(LIBS)
+               /4Yportlib
 AR           = ar
 ARFLAGS      = rv
 RANLIB       = echo

@@ -19,8 +19,12 @@ CPP      = /usr/lib/cpp
 # -DLANGUAGE_FORTRAN avoids that // is considered as a C++ comment
 CPPFLAGS =  -P -DFUJ64 -DLANGUAGE_FORTRAN -I../include
 
+CC       = cc
+MPICC    = cc
 F90      = frt
+MPIF90   = frt
 F77      = frt
+MPIF77   = frt
 
 FFLAGS   = -g -Ad -AR -Am
 
@@ -33,8 +37,8 @@ F90FLAGS = -O4 -KA64 -Kfast -Knof90move -Kalign7 -Knofreealloc -Ad -AR -Am \
 LIBS     = -L/usr/lang/lib64 -llapackvp -lblasvp -lssl2vp \
            -L/usr/local/lib/lib64/ -lfftvp_news  -lmp
 
-LD       = $(F90)
-LDFLAGS  = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS)
+LD       = $(MPIF90)
+LDFLAGS  = ../flib/ptools.a ../flib/flib.a ../clib/clib.a
 AR       = ar
 ARFLAGS  = rv
 RANLIB   = echo

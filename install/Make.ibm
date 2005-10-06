@@ -25,8 +25,12 @@ CPPFLAGS     = -D__AIX,-DHAS_ZHEGVX
 # Use -qarch=auto -qtune=auto for processor-specific optimization
 # Older compilers may not recognize "auto". Specify for instance
 #     -qarch=pwr2 -qtune=pwr2  (this would be for power2 cpus)
+CC           = cc
+MPICC        = cc
 F90          = xlf
+MPIF90       = xlf
 F77          = $(F90)
+MPIF77       = $(MPIF90)
 
 FFLAGS       = -qalias=noaryovrlp -I../include \
                -O3 -qstrict -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
@@ -49,10 +53,10 @@ LIBS         = -lessl  -L/usr/local/lib -llapack
 # use -bmaxdata:512000000 for jobs>256Mb (in this example up to 512Mb)
 # use -bnso -bI:/usr/lib/syscalls.exp for static linking
 # use -s for stripped executable (smaller file but no debugging)
-LD           = $(F90)
+LD           = $(MPIF90)
 
-LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS) -s
-# LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS) \
+LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a -s
+# LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
 #                -s -bmaxdata:512000000
 
 AR           = ar

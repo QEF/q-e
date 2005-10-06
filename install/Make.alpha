@@ -26,9 +26,12 @@
 # Use the local copy of fftw
 CPPFLAGS     = -D__ALPHA -D__FFTW -D__USE_INTERNAL_FFTW -I../include -I.
 
-F90          = f90
-F77          = f90
 CC           = cc
+MPICC        = cc
+F90          = f90
+MPIF90       = f90
+F77          = f90
+MPIF77       = f90
 
 FFLAGS       = -O -real_size 64 -align dcommons -align records
 
@@ -50,8 +53,8 @@ LIBS         = -ldxml $(FFTW_LIB)
 # BEWARE: if you have a dxml version with buggy blas/lapack, use
 # LIBS         = -llapack -lblas -ldxml $(FFTW_LIB)
 
-LD           = $(F90)
-LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS)
+LD           = $(MPIF90)
+LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a
 AR           = ar
 ARFLAGS      = rv
 RANLIB       = echo

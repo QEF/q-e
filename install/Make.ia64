@@ -30,9 +30,12 @@
 # Use the local copy of fftw
 CPPFLAGS     = -I../include -D__HP -D__FFTW -D__USE_INTERNAL_FFTW -D__HP64
 
-F90          = f90
-F77          = $(F90)
 CC           = cc
+MPICC        = cc
+F90          = f90
+MPIF90       = f90
+F77          = $(F90)
+MPIF77       = $(MPIF90)
 
 ## 32-bit
 # FFLAGS       = +O2 -w +cpp=yes +Odataprefetch +Onolimit +r8 +U77 +DA2.0 +DS2.0
@@ -53,14 +56,14 @@ CFLAGS       = $(CPPFLAGS) +O2  +DD64 +Odataprefetch +Onolimit
 # 64-bit
 LIBS         = -L/opt/mlib/lib/hpux64 -lveclib -llapack $(FFTW_LIB) 
 
-LD           = $(F90)
+LD           = $(MPIF90)
 
 ## 32-bit
 # LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
-#                +U77 +DA2.0 +DS2.0 +O2 $(LIBS)
+#                +U77 +DA2.0 +DS2.0 +O2
 # 64-bit
 LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
-               +U77 +O2 +DD64 $(LIBS)
+               +U77 +O2 +DD64
 
 AR           = ar
 ARFLAGS      = ruv

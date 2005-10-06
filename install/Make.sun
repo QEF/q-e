@@ -20,16 +20,20 @@
 CPP      = fpp
 CPPFLAGS = -P -D__SUN -DHAS_ZHEGVX -I../include
 
+CC       = cc
+MPICC    = cc
 F90      = f90
+MPIF90   = f90
 F77      = f77
+MPIF77   = f77
 FFLAGS   = -fast -dalign -xchip=ultra3 -xarch=v8plusb -xlic_lib=sunperf
 F90FLAGS = $(FFLAGS) -M../Modules -M../PW -M../PH
 
 LIBS     = -L/usr/opt/SUNWhpc/lib -R/opt/SUNWhpc/lib -lmvec 
 
-LD       = $(F90)
+LD       = $(MPIF90)
 LDFLAGS  = ../flib/ptools.a ../flib/flib.a ../clib/clib.a -fast -dalign \
-           -xchip=ultra3 -xarch=v8plusb -xlic_lib=sunperf $(LIBS)
+           -xchip=ultra3 -xarch=v8plusb -xlic_lib=sunperf
 AR       = ar
 ARFLAGS  = ruv
 RANLIB   = echo

@@ -36,9 +36,12 @@ CPP          = /lib/cpp -P -traditional
 CPPFLAGS     = -D__LINUX -D__PGI -D__PARA -D__MPI -D__FFTW \
                -D__USE_INTERNAL_FFTW -I../include -I.
 
-F90          = mpif90
-F77          = mpif77
-CC           = mpicc
+CC           = pgcc
+MPICC        = mpicc
+F90          = pgf90
+MPIF90       = mpif90
+F77          = pgf77
+MPIF77       = mpif77
 
 # Please note: -r8 is necessary for numerical stability ..
 FFLAGS       = -fast -r8
@@ -48,9 +51,8 @@ CFLAGS       = -fast $(CPPFLAGS)
 # use precompiled pgi libraries ( not very efficient but stable )
 LIBS         = -L/usr/local/pgi/linux86/lib/ -llapack -lblas $(FFTW_LIB)
 
-LD           = $(F90)
-LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS) \
-               -I../Modules -I../PW -I../PH
+LD           = $(MPIF90)
+LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a
 AR           = ar
 ARFLAGS      = ruv
 RANLIB       = echo

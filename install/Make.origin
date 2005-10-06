@@ -42,9 +42,12 @@ CPPFLAGS     = -D__SGI -D__SGI64 -D__ORIGIN -D__SCSL -D__MPI -D__PARA \
 # CPPFLAGS     = -D__COMPLIB -D__SGI -D__SGI64 -D__ORIGIN -D__MPI -D__PARA \
 #                -I../include -I.
 
-F90          = f90
-F77          = f90
 CC           = cc
+MPICC        = cc
+F90          = f90
+MPIF90       = f90
+F77          = f90
+MPIF77       = f90
 
 # use -O3 only if you are sure that it actually works 
 FFLAGS       = -mips4 -64 -r8 -TARG:platform=ip35 $(OFLAGS)
@@ -59,8 +62,8 @@ LIBS         = -lmpi -lscs
 ## use this for Complib
 # LIBS         = -lmpi -lcomplib.sgimath 
 
-LD           = $(F90)
-LDFLAGS      = $(FFLAGS) ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS)
+LD           = $(MPIF90)
+LDFLAGS      = $(FFLAGS) ../flib/ptools.a ../flib/flib.a ../clib/clib.a
 AR           = ar
 ARFLAGS      = ruv
 RANLIB       = echo

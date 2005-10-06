@@ -48,9 +48,12 @@ CPPFLAGS     = -D__SGI -D__SGI64 -D__ALTIX -D__LINUX64 -D__SCSL -D__PARA \
 # CPPFLAGS     = -D__SGI -D__SGI64 -D__ALTIX -D__LINUX64 -D__SCSL \
 #                -I../include -I.
 
-# Use the Intel 8.0 Fortran compiler
+CC           = icc
+MPICC        = icc
 F90          = ifort
+MPIF90       = ifort
 F77          = ifort
+MPIF77       = ifort
 
 # Fortran compiler flags
 # -W0               disable warnings                            
@@ -68,8 +71,6 @@ FFLAGS       = -cm -w -r8 -ftz -tpp2 -assume byterecl $(OFLAGS)
 OFLAGS       = -O3 -fno-alias -safe_cray_ptr -ip
 F90FLAGS     = $(FFLAGS) -fpp $(CPPFLAGS) -I../Modules -I../PW -I../PH
 
-# Use the Intel 8.0 C/C++ compiler
-CC           = icc
 CFLAGS       = -ip -tpp2 $(CPPFLAGS) -O3
 
 # Libraries:
@@ -80,8 +81,8 @@ LIBS         = -lmpi -lsma -lscs
 # LIBS         = -lmpi -lsma $(FFTW_LIB) -L/opt/intel/mkl60/lib/64 \
 #                -lmkl_lapack64 -lmkl_itp -lguide -lpthread
 
-LD           = $(F90)
-LDFLAGS      = $(FFLAGS) ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS)
+LD           = $(MPIF90)
+LDFLAGS      = $(FFLAGS) ../flib/ptools.a ../flib/flib.a ../clib/clib.a
 AR           = ar
 ARFLAGS      = ruv
 RANLIB       = echo

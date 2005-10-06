@@ -36,9 +36,12 @@ CPPFLAGS     = -I../include -D__HP -D__FFTW -D__PARA -D__MPI -I$(FFTW_INC_DIR)
 # CPPFLAGS     = -I../include -D__HP -D__FFTW -D__PARA -D__MPI \
 #                -D__USE_INTERNAL_FFTW
 
+CC           = cc
+MPICC        = mpicc
 F90          = f90
+MPIF90       = f90
 F77          = $(F90)
-CC           = mpicc
+MPIF77       = $(MPIF90)
 
 # 32-bit
 FFLAGS       = +O2 -w +cpp=yes +Odataprefetch +Onolimit +r8 +U77 \
@@ -57,18 +60,18 @@ CFLAGS       = $(CPPFLAGS) +O2 +DA2.0 +DS2.0 +DD32 +Odataprefetch +Onolimit
 # CFLAGS       = $(CPPFLAGS) +O2 +DA2.0W +DS2.0W +DD64 +Odataprefetch +Onolimit
 
 ## 32-bit
-# LIBS         = -L/opt/mlib/lib/pa2.0 -lveclib -llapack $(FFTW_LIB) -lm
+# LIBS         = -L/opt/mlib/lib/pa2.0 -lveclib -llapack $(FFTW_LIB) -lm -lpthread
 ## 64-bit
-# LIBS         = -L/opt/mlib/lib/pa20_64 -lveclib -llapack $(FFTW_LIB) -lm
+# LIBS         = -L/opt/mlib/lib/pa20_64 -lveclib -llapack $(FFTW_LIB) -lm -lpthread
 
-LD           = $(F90)
+LD           = $(MPIF90)
 
 # 32-bit
 LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
-               +U77 +DA2.0 +DS2.0 +O2  $(LIBS) -lpthread
+               +U77 +DA2.0 +DS2.0 +O2
 ## 64-bit
 # LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
-                 +U77 +DA2.0W +DS2.0W +O2  $(LIBS) -lpthread
+                 +U77 +DA2.0W +DS2.0W +O2
 
 AR           = ar
 ARFLAGS      = ruv

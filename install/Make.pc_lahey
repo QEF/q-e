@@ -33,16 +33,20 @@ CPP          = /usr/local/lf9560/lib/cpp -P -traditional
 CPPFLAGS     = -D__LINUX -D__LAHEY -D__FFTW -D__USE_INTERNAL_FFTW \
                -I../include -I.
 
+CC           = cc
+MPICC        = cc
 F90          = lf95
+MPIF90       = lf95
 F77          = lf95
+MPIF77       = lf95
 F90FLAGS     = --staticlink --dbl -O -I../include -I../Modules -I../PW -I../PH
 CFLAGS       = -O -$(CPPFLAGS)
 
 # this below uses precompiled lahey libraries.
 LIBS         = -llapackmt -lblasmt  $(FFTW_LIB)
 
-LD           = $(F90)
-LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a $(LIBS) \
+LD           = $(MPIF90)
+LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
                -I../Modules -I../PW -I../PH
 AR           = ar
 ARFLAGS      = ruv
