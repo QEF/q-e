@@ -156,6 +156,7 @@ then
 	unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
 
 	# check parallel Fortran 90 compiler
+	if test "$mpif90" = "" -a "$f90" != "" ; then mpif90=$f90; fi
 	if test "$mpif90" = "" ; then mpif90="$try_mpif90 $try_f90" ; fi
 	AC_PROG_F77($mpif90)
 	mpif90=$F77
@@ -232,13 +233,13 @@ echo setting F90... $f90
 echo setting MPIF90... $mpif90
 
 case "$arch:$f90" in
-linux*:ifort )
+linux*:ifort* )
 	try_cc="icc ecc gcc cc"
-	try_f77="ifort efc $f90"
+	try_f77="$f90"
 	;;
-linux*:ifc )
+linux*:ifc* )
 	try_cc="icc ecc gcc cc"
-	try_f77="ifc efc $f90"
+	try_f77="$f90"
 	;;
 linux*:pgf90 )
 	try_cc="pgcc gcc cc"
@@ -246,7 +247,7 @@ linux*:pgf90 )
 	;;
 linux*:g95 )
 	try_cc="gcc cc"
-	try_f77="g95"
+	try_f77="$f90"
 	;;
 linux*:* )
 	try_cc="gcc cc"
@@ -341,19 +342,19 @@ echo setting MPIF77... $mpif77
 # check whether the C and Fortran compilers are compatible
 case "$arch:$cc:$f90" in
 	# list supported combinations here
-linux*:icc:ifort | linux*:icc:ifc ) ;;
-linux*:gcc:ifort | linux*:gcc:ifc ) ;;
-linux*:pgcc:pgf90 )                 ;;
-linux*:gcc:g95 )                    ;;
-aix:mpcc*:mpxlf* )                  ;;
-aix:xlc*:*xlf* | aix:cc:*xlf* )     ;;
-mips:cc:f90 )                       ;;
-alinux:ccc:fort | alinux:gcc:fort ) ;;
-alpha:cc:f90 )                      ;;
-mac:mpcc:mpf90 )                    ;;
-mac:gcc:xlf90 )                     ;;
-crayx1:cc:ftn )                     ;;
-sparc:cc:f90 )                      ;;
+linux*:icc:ifort* | linux*:icc:ifc* ) ;;
+linux*:gcc:ifort* | linux*:gcc:ifc* ) ;;
+linux*:pgcc:pgf90 )                   ;;
+linux*:gcc:g95 )                      ;;
+aix:mpcc*:mpxlf* )                    ;;
+aix:xlc*:*xlf* | aix:cc:*xlf* )       ;;
+mips:cc:f90 )                         ;;
+alinux:ccc:fort | alinux:gcc:fort )   ;;
+alpha:cc:f90 )                        ;;
+mac:mpcc:mpf90 )                      ;;
+mac:gcc:xlf90 )                       ;;
+crayx1:cc:ftn )                       ;;
+sparc:cc:f90 )                        ;;
 
 * )
 	AC_MSG_WARN(unsupported C/Fortran compilers combination)
@@ -365,7 +366,7 @@ have_cpp=0
 xlf_flags=0
 
 case "$arch:$f90" in
-linux64:ifort )
+linux64:ifort* )
 	try_fflags="-O2 -assume byterecl"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0 -assume byterecl"
@@ -376,7 +377,7 @@ linux64:ifort )
 	pre_fdflags="-fpp "
 	have_cpp=1
 	;;
-linux64:ifc )
+linux64:ifc* )
 	try_fflags="-Vaxlib -O2"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
@@ -396,7 +397,7 @@ linux64:pgf* )
 	try_ldflags_static="-Bstatic"
 	try_dflags="$try_dflags -D__PGI"
 	;;
-linux32:ifort )
+linux32:ifort* )
         try_fflags="-O2 -tpp6 -assume byterecl"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0 -assume byterecl"
@@ -407,7 +408,7 @@ linux32:ifort )
 	pre_fdflags="-fpp "
 	have_cpp=1
 	;;
-linux32:ifc )
+linux32:ifc* )
         try_fflags="-Vaxlib -O2 -tpp6"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
@@ -813,7 +814,7 @@ then
 	then
 		# check for atlas (in several directories)
 		case "$f90" in
-		ifort | ifc )
+		ifort* | ifc* )
 			try_libdirs="/usr/local/lib /cineca/prod/intel/lib" ;;
 		pgf* )	try_libdirs="/usr/local/lib /cineca/prod/pgi/lib"   ;;
 		g95 )	try_libdirs="/usr/local/lib /cineca/prod/gnu/lib"   ;;
@@ -845,7 +846,7 @@ then
 	then
 		# check for blas (in several directories)
 		case "$f90" in
-		ifort | ifc )
+		ifort* | ifc* )
 			try_libdirs="/usr/local/lib /cineca/prod/intel/lib" ;;
 		pgf* )	try_libdirs="/usr/local/lib /cineca/prod/pgi/lib"   ;;
 		g95 )	try_libdirs="/usr/local/lib /cineca/prod/gnu/lib"   ;;
@@ -937,7 +938,7 @@ then
 	then
 		# check for lapack (in several directories)
 		case "$f90" in
-		ifort | ifc )
+		ifort* | ifc* )
 			try_libdirs="/usr/local/lib /cineca/prod/intel/lib" ;;
 		pgf* )	try_libdirs="/usr/local/lib /cineca/prod/pgi/lib"   ;;
 		g95 )	try_libdirs="/usr/local/lib /cineca/prod/gnu/lib"   ;;
@@ -1015,7 +1016,7 @@ then
 
 		# check for fftw (in several directories)
 		case "$f90" in
-		ifort | ifc )
+		ifort* | ifc* )
 			try_libdirs="/usr/local/lib /cineca/prod/intel/lib" ;;
 		pgf* )	try_libdirs="/usr/local/lib /cineca/prod/pgi/lib"   ;;
 		* )	try_libdirs="/usr/local/lib /cineca/prod/gnu/lib"   ;;
