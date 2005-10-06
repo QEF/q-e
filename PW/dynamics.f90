@@ -7,6 +7,9 @@
 !
 #include "f_defs.h"
 !
+#define __BFGS
+!#define __BROYDEN
+!
 !----------------------------------------------------------------------------
 SUBROUTINE dynamics()
   !----------------------------------------------------------------------------
@@ -20,7 +23,7 @@ SUBROUTINE dynamics()
   ! ... temperature  starting temperature
   ! ...              The starting velocities of atoms are set accordingly
   ! ...              to the starting temperature, in random directions.
-  ! ...              The initial velocity distribution is therefore a constant
+  ! ...              The initial velocity distribution is therefore a constant.
   !
   ! ... delta_t, nraise are used to change the temperature as follows:
   !
@@ -37,7 +40,7 @@ SUBROUTINE dynamics()
   !
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
-  USE constants,     ONLY : amconv, eps8, convert_E_to_temp
+  USE constants,     ONLY : amconv, eps8, eps16, convert_E_to_temp
   USE ions_base,     ONLY : nat, nsp, ityp, tau, if_pos, atm
   USE cell_base,     ONLY : alat
   USE dynam,         ONLY : amass, temperature, dt, delta_t, nraise
@@ -58,10 +61,10 @@ SUBROUTINE dynamics()
   REAL(DP), ALLOCATABLE :: tau_old(:,:), tau_new(:,:), vel(:,:), acc(:,:)
   REAL(DP), ALLOCATABLE :: mass(:)
   REAL(DP)              :: ekin, etotold
-  REAL(DP)              :: total_mass, temp_new, elapsed_time, norm_of_dtau
+  REAL(DP)              :: total_mass, temp_new, elapsed_time
   REAL(DP)              :: ml(3), mlt
   INTEGER               :: i, na
-  LOGICAL               :: exst
+  LOGICAL               :: file_exists
   !
   !
   ALLOCATE( mass( nat ) )
@@ -94,9 +97,9 @@ SUBROUTINE dynamics()
   !
   ! ... one Ryd a.u. of time is 4.84*10^-17 seconds, i.e. 0.0484  femtoseconds
   !
-  CALL seqopn( 4, 'md', 'FORMATTED', exst )
+  CALL seqopn( 4, 'md', 'FORMATTED', file_exists )
   !
-  IF ( .NOT. exst ) THEN
+  IF ( .NOT. file_exists ) THEN
      !
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
@@ -133,11 +136,6 @@ SUBROUTINE dynamics()
         !
         CALL start_therm()
         !
-        ! ... vel is used already multiplied by dt (it is used as an auxiliary 
-        ! ... variable in the Verlet scheme)
-        !
-        vel = dt * vel
-        !
      ELSE
         !
         tau_old = tau
@@ -160,10 +158,6 @@ SUBROUTINE dynamics()
      !
      CLOSE( UNIT = 4, STATUS = 'KEEP' )
      !
-     ! ... the velocity is computed here (used as an auxiliary variable)
-     !
-     vel = ( tau - tau_old ) * DBLE( if_pos )
-     ! 
   END IF
   !
   ! ... elapsed_time is in picoseconds
@@ -199,6 +193,10 @@ SUBROUTINE dynamics()
         !
      END IF
      !
+     ! ... the old positions are updated to reflect the new velocities
+     !
+     tau_old = tau - dt * vel
+     !
   END IF
   !
   WRITE( UNIT = stdout, &
@@ -206,25 +204,46 @@ SUBROUTINE dynamics()
                 & T28,"time",T37," =  ",F8.5," pico-seconds")' ) &
       istep, elapsed_time
   !
-  ! ... here starts the molecular dynamics :
+  IF ( lconstrain ) THEN
+     !
+     ! ... we first remove the component of the force along the constrain
+     ! ... gradient (this is constitutes the initial guess for the lagrange
+     ! ... multiplier)
+     !
+     CALL remove_constraint_force( nat, tau, if_pos, ityp, alat, force )
+     !
+  END IF
   !
-  ! ... calculate accelerations in a.u. units / alat
-  !
-  FORALL( na = 1:nat ) acc(:,na) = force(:,na) / mass(na) / alat
-  !
-  ! ... Damped dynamics ( based on the quick-min algorithm )
-  !
-  IF ( ldamped ) CALL project_velocity()
-  !
-  ! ... the old positions are updated to reflect the new velocities
-  ! ... NB: vel is actually dt*( tau - tau_old )
-  !
-  tau_old = tau - vel
+  IF ( ldamped ) THEN
+     !
+     ! ... Damped dynamics ( based on the quick-min algorithm )
+     !
+     vel(:,:) = tau(:,:) - tau_old(:,:)
+     !
+     acc(:,:) = force(:,:) / alat
+     !
+     CALL force_precond( acc )
+     !
+     acc(:,:) = acc(:,:) / amconv
+     !
+     CALL project_velocity()
+     !
+     ! ... the old positions are updated to reflect the new velocities
+     !
+     tau_old(:,:) = tau(:,:) - vel(:,:)
+     !
+  ELSE
+     !
+     ! ... calculate accelerations in a.u. units / alat
+     !
+     FORALL( na = 1:nat ) acc(:,na) = force(:,na) / mass(na) / alat
+     !
+  END IF
   !
   ! ... atoms are moved accordingly to the classical equation of motion.
   ! ... Verlet integration scheme.
   !
-  tau_new = 2.D0 * tau - tau_old + dt**2 * acc
+  tau_new(:,:) = 2.D0 * tau(:,:) - tau_old(:,:) + dt**2 * acc(:,:)
   !
   IF ( lconstrain ) THEN
      !
@@ -259,7 +278,7 @@ SUBROUTINE dynamics()
         WRITE( UNIT = stdout, &
                FMT = '(/,5X,"End of damped dynamics calculation")' )
         WRITE( UNIT = stdout, &
-               FMT = '(/,5X,"Final energy = ",F18.10," ryd"/)' ) etot                 
+               FMT = '(/,5X,"Final energy = ",F18.10," ryd"/)' ) etot
         !
         CALL output_tau( .TRUE. )
         !
@@ -284,15 +303,8 @@ SUBROUTINE dynamics()
   !
   ! ... the linear momentum and the kinetic energy are computed here
   !
-  IF ( istep == 1 ) THEN
-     !
-     vel = ( tau_new - tau ) / dt
-     !
-  ELSE
-     !
-     vel = ( tau_new - tau_old ) / ( 2.D0 * dt )
-     !
-  END IF
+  IF ( istep > 1 ) &
+     vel = ( tau_new - tau_old ) / ( 2.D0 * dt ) * DBLE( if_pos )
   !
   ml   = 0.D0
   ekin = 0.D0  
@@ -313,7 +325,7 @@ SUBROUTINE dynamics()
   !
   ! ... save on file all the needed quantities
   !
-  CALL seqopn( 4, 'md', 'FORMATTED',  exst )
+  CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
   !
   WRITE( UNIT = 4, FMT = * ) &
       etot, temp_new, mass, total_mass, elapsed_time, istep, tau
@@ -328,20 +340,23 @@ SUBROUTINE dynamics()
   !
   CALL output_tau( .FALSE. )
   !
-  WRITE( stdout, '(5X,"kinetic energy (Ekin) = ",F14.8," Ry",/,  &
-                 & 5X,"temperature           = ",F14.8," K ",/,  &
-                 & 5X,"Ekin + Etot (const)   = ",F14.8," Ry")' ) &
-      ekin, temp_new, ( ekin  + etot )
-  !
-  ! ... total linear momentum must be zero if all atoms move
-  !
-  mlt = norm( ml(:) )
-  !
-  IF ( ( mlt > eps8 ) .AND. &
-       .NOT. ( ldamped .OR. lconstrain .OR. lfixatom ) ) &
-     CALL infomsg ( 'dynamics', 'Total linear momentum <> 0', -1 )
-  !
-  WRITE( stdout, '(/,5X,"Linear momentum :",3(2X,F14.10))' ) ml
+  IF ( .NOT. ldamped ) THEN
+     !
+     WRITE( stdout, '(5X,"kinetic energy (Ekin) = ",F14.8," Ry",/,  &
+                    & 5X,"temperature           = ",F14.8," K ",/,  &
+                    & 5X,"Ekin + Etot (const)   = ",F14.8," Ry")' ) &
+         ekin, temp_new, ( ekin  + etot )
+     !
+     ! ... total linear momentum must be zero if all atoms move
+     !
+     mlt = norm( ml(:) )
+     !
+     IF ( mlt > eps8 .AND. .NOT.( lconstrain .OR. lfixatom ) ) &
+        CALL infomsg ( 'dynamics', 'Total linear momentum <> 0', -1 )
+     !
+     WRITE( stdout, '(/,5X,"Linear momentum :",3(2X,F14.10))' ) ml
+     !
+  END IF
   !
   DEALLOCATE( mass )
   DEALLOCATE( tau_old )
@@ -356,36 +371,267 @@ SUBROUTINE dynamics()
      ! ... internal procedure
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE project_velocity()
+     SUBROUTINE force_precond( force )
        !-----------------------------------------------------------------------
        !
-       USE constants, ONLY : eps32
+       ! ... this routine computes an estimate of H^1 by using the BFGS
+       ! ... algorithm and the preconditioned gradient  H^1 * g
+       ! ... ( it works in units of alat )
+       !
+       USE io_files, ONLY : iunbfgs, iunbroy, tmp_dir
+       USE basic_algebra_routines
        !
        IMPLICIT NONE
        !
-       ! ... local variables
+       REAL(DP), INTENT(INOUT) :: force(:,:)
        !
-       REAL(DP) :: norm_acc, acc_versor(3,nat)
+#if defined (__BFGS)
        !
-       ! ... external functions
+       REAL(DP), ALLOCATABLE :: pos(:), pos_p(:)
+       REAL(DP), ALLOCATABLE :: grad(:), grad_p(:), precond_grad(:)
+       REAL(DP), ALLOCATABLE :: inv_hess(:,:)
+       REAL(DP), ALLOCATABLE :: y(:), s(:)
+       REAL(DP), ALLOCATABLE :: Hs(:), Hy(:), yH(:)
+       REAL(DP)              :: sdoty, norm_grad
+       INTEGER               :: dim
+       CHARACTER(LEN=256)    :: bfgs_file
+       LOGICAL               :: file_exists
+       !
+       !
+       dim = 3 * nat
+       !
+       ALLOCATE( pos( dim ), pos_p( dim ) )
+       ALLOCATE( grad( dim ), grad_p( dim ), precond_grad( dim ) )
+       ALLOCATE( y( dim ), s( dim ) )
+       ALLOCATE( inv_hess( dim, dim ) )
+       ALLOCATE( Hs( dim ), Hy( dim ), yH( dim ) )       
+       !
+       pos(:)  =   RESHAPE( tau,   (/ dim /) )
+       grad(:) = - RESHAPE( force, (/ dim /) )
+       !
+       bfgs_file = TRIM( tmp_dir ) // TRIM( prefix ) // '.bfgs'
+       !
+       INQUIRE( FILE = TRIM( bfgs_file ) , EXIST = file_exists )
+       !
+       IF ( file_exists ) THEN
+          !
+          OPEN( UNIT = iunbfgs, &
+                FILE = TRIM( bfgs_file ), STATUS = 'OLD', ACTION = 'READ' )
+          !
+          READ( iunbfgs, * ) pos_p
+          READ( iunbfgs, * ) grad_p
+          READ( iunbfgs, * ) inv_hess
+          !
+          CLOSE( UNIT = iunbfgs )
+          !
+          ! ... BFGS update
+          !
+          s(:) = pos(:)  - pos_p(:)
+          y(:) = grad(:) - grad_p(:)
+          !
+          sdoty = ( s(:) .dot. y(:) )
+          !
+          IF ( sdoty > eps8 ) THEN
+             !
+             Hs(:) = ( inv_hess(:,:) .times. s(:) )
+             Hy(:) = ( inv_hess(:,:) .times. y(:) )
+             yH(:) = ( y(:) .times. inv_hess(:,:) )
+             !
+             inv_hess = inv_hess + 1.D0 / sdoty * &
+                        ( ( 1.D0 + ( y .dot. Hy ) / sdoty ) * matrix( s, s ) - &
+                          ( matrix( s, yH ) +  matrix( Hy, s ) ) )
+             !
+          END IF
+          !
+       ELSE
+          !
+          inv_hess(:,:) = identity( dim )
+          !
+       END IF
+       !
+       precond_grad(:) = ( inv_hess(:,:) .times. grad(:) )
+       !
+       IF ( ( precond_grad(:) .dot. grad(:) ) < 0.D0 ) THEN
+          !
+          WRITE( UNIT = stdout, &
+                 FMT = '(5X,/,"uphill step: resetting bfgs history",/)' )
+          !
+          precond_grad(:) = grad(:)
+          !
+          inv_hess(:,:) = identity( dim )
+          !
+       END IF
+       !
+       OPEN( UNIT = iunbfgs, &
+             FILE = TRIM( bfgs_file ), STATUS = 'UNKNOWN', ACTION = 'WRITE' )
+       !
+       WRITE( iunbfgs, * ) pos(:)
+       WRITE( iunbfgs, * ) grad(:)
+       WRITE( iunbfgs, * ) inv_hess(:,:)
+       !
+       CLOSE( UNIT = iunbfgs )
+       !
+       force(:,:) = - RESHAPE( precond_grad(:), (/ 3, nat /) )
+       !
+       DEALLOCATE( pos, pos_p )
+       DEALLOCATE( grad, grad_p, precond_grad )
+       DEALLOCATE( inv_hess )
+       DEALLOCATE( y, s )
+       DEALLOCATE( Hs, Hy, yH )
+       !
+#endif
+#if defined (__BROYDEN)
+       !
+       REAL(DP), ALLOCATABLE :: g(:), s(:,:)
+       INTEGER               :: k, i, j, dim
+       REAL(DP)              :: s_norm, coeff
+       LOGICAL               :: file_exists
+       CHARACTER(LEN=256)    :: broy_file
+       !
+       INTEGER,  PARAMETER   :: broyden_ndim = 6
+       !
+       !
+       dim = 3 * nat
+       !
+       ALLOCATE( g( dim ) )
+       ALLOCATE( s( dim, broyden_ndim ) )
+       !
+       g = - RESHAPE( force, (/ dim /) )
+       !
+       ! ... open the file containing the broyden's history
+       !
+       broy_file = TRIM( tmp_dir ) // TRIM( prefix ) // '.broyden'
+       !
+       INQUIRE( FILE = broy_file, EXIST = file_exists )
+       !
+       IF ( file_exists ) THEN
+          !
+          OPEN( UNIT = iunbroy, FILE = broy_file, STATUS = "OLD" )
+          !
+          READ( UNIT = iunbroy , FMT = * ) k
+          READ( UNIT = iunbroy , FMT = * ) s(:,:)
+          !
+          k = k + 1
+          !
+       ELSE 
+          !
+          s(:,:) = 0.D0
+          !
+          k = 1
+          !
+       END IF
+       !
+       CLOSE( UNIT = iunbroy )
+       !
+       ! ... Broyden's update
+       !
+       IF ( k > broyden_ndim ) THEN
+          !
+          ! ... the Broyden's subspace is swapped and s is projected
+          ! ... orthogonally to the current tangent (this last thing 
+          ! ... in the smd case only, otherwise t = 0.D0)
+          !
+          k = broyden_ndim
+          !
+          DO j = 1, k - 1
+             !
+             s(:,j) = s(:,j+1)
+             !
+          END DO
+          !
+       END IF
+       !
+       s(:,k) = - g(:)
+       !
+       IF ( k > 1 ) THEN
+          !
+          DO j = 1, k - 2
+             !
+             s(:,k) = s(:,k) + ( s(:,j) .dot. s(:,k) ) / &
+                               ( s(:,j) .dot. s(:,j) ) * s(:,j+1)
+             !
+          END DO
+          !
+          coeff = ( s(:,k-1) .dot. ( s(:,k-1) - s(:,k) ) )
+          !
+          IF ( coeff > eps8 ) THEN
+             !
+             s(:,k) = ( s(:,k-1) .dot. s(:,k-1) ) / coeff * s(:,k)
+             !
+          ELSE
+             !
+             s(:,k) = - g(:)
+             !
+          END IF
+          !
+       END IF
+       !
+       IF ( ( s(:,k) .dot. g(:) ) > 0.D0 ) THEN
+          !
+          ! ... uphill step :  history reset
+          !
+          WRITE( UNIT = stdout, &
+                 FMT = '(5X,"BROYDEN uphill step :  history reset",/)' )
+          !
+          k = 1
+          !
+          s(:,:) = 0.D0
+          s(:,k) = - g(:)
+          !
+       END IF
+       !
+       ! ... save the file containing the history
+       !
+       OPEN( UNIT = iunbroy, FILE = broy_file )
+       !
+       WRITE( UNIT = iunbroy, FMT = * ) k
+       WRITE( UNIT = iunbroy, FMT = * ) s
+       !
+       CLOSE( UNIT = iunbroy )
+       !
+       force(:,:) = RESHAPE( s(:,k), (/ 3, nat /) )
+       !
+       DEALLOCATE( g )
+       DEALLOCATE( s )       
+       !
+#endif
+       !
+       RETURN
+       !
+     END SUBROUTINE force_precond
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE project_velocity()
+       !-----------------------------------------------------------------------
+       !
+       ! ... quick-min algorithm
+       !
+       IMPLICIT NONE
+       !
+       REAL(DP)              :: norm_acc, projection
+       REAL(DP), ALLOCATABLE :: acc_versor(:,:)
        !
        REAL(DP), EXTERNAL :: DNRM2, DDOT
        !
        !
-       norm_acc = DNRM2( 3*nat, acc, 1 )
+       IF ( istep == 1 ) RETURN
        !
-       IF ( norm_acc > eps32 ) THEN
-          !
-          acc_versor = acc / norm_acc
-          !
-          vel = acc_versor * &
-                MAX( 0.D0, DDOT( 3*nat, vel, 1, acc_versor, 1 ) )
-          !
-       ELSE
-          !
-          vel = 0.D0
-          !
-       END IF       
+       ALLOCATE( acc_versor( 3, nat ) )
+       !
+       norm_acc = DNRM2( 3*nat, acc(:,:), 1 )
+       !
+       acc_versor(:,:) = acc(:,:) / norm_acc
+       !
+       projection = DDOT( 3*nat, vel(:,:), 1, acc_versor(:,:), 1 )
+       !
+       WRITE( UNIT = stdout, FMT = '(/,5X,"<vel(dt)|acc(dt)> = ",F12.8)' ) &
+           projection / DNRM2( 3*nat, vel, 1 )
+       !
+       vel(:,:) = acc_versor(:,:) * MAX( 0.D0, projection )
+       !
+       DEALLOCATE( acc_versor )
+       !
+       RETURN
        !
      END SUBROUTINE project_velocity 
      !

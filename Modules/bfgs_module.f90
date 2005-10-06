@@ -470,7 +470,7 @@ MODULE bfgs_module
       LOGICAL             :: file_exists
       !
       !
-      bfgs_file = TRIM( scratch ) // TRIM( prefix ) //'.bfgs'
+      bfgs_file = TRIM( scratch ) // TRIM( prefix ) // '.bfgs'
       !
       INQUIRE( FILE = TRIM( bfgs_file ) , EXIST = file_exists )
       !
@@ -479,7 +479,7 @@ MODULE bfgs_module
          ! ... bfgs is restarted from file
          !
          OPEN( UNIT = iunbfgs, FILE = TRIM( bfgs_file ), &
-               STATUS = 'UNKNOWN', ACTION = 'READ' )  
+               STATUS = 'UNKNOWN', ACTION = 'READ' )
          !
          READ( iunbfgs, * ) pos_p
          READ( iunbfgs, * ) grad_p
@@ -623,9 +623,8 @@ MODULE bfgs_module
       !
       ! ... DFP update
       !
-      inv_hess = inv_hess + &
-                        matrix( y(:), y(:) ) / sdoty - &
-                        matrix( Hs(:), Hs(:) ) / ( s(:) .dot. Hs(:) )
+      inv_hess = inv_hess + matrix( y(:), y(:) ) / sdoty - &
+                            matrix( Hs(:), Hs(:) ) / ( s(:) .dot. Hs(:) )
       !
 #endif
       !
@@ -640,7 +639,7 @@ MODULE bfgs_module
       !
 #if defined (__MIXEDBFGSMS)
       !
-      ! ... BFGS + Murtag-Sargent update
+      ! ... Bofill ( = BFGS + Murtag-Sargent ) update
       !
       aux(:) = y(:) - Hs(:)
       !
@@ -652,7 +651,7 @@ MODULE bfgs_module
       !
       H_ms = matrix( aux, aux ) / ( s .dot. aux )
       !
-      inv_hess = inv_hess + coeff * H_bfgs + ( 1.D0 - coeff) * H_ms
+      inv_hess = inv_hess + coeff * H_bfgs + ( 1.D0 - coeff ) * H_ms
       !
 #endif
       !

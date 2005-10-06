@@ -1730,7 +1730,7 @@ SUBROUTINE verify_tmpdir()
         !
         CALL delete_if_present( TRIM( file_path ) // '.md' )
         !
-        ! ... BFGS rstart file is removed       
+        ! ... BFGS and BROYDEN rstart files are removed       
         !     
         CALL delete_if_present( TRIM( file_path ) // '.bfgs' )
         !

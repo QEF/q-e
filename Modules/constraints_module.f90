@@ -8,6 +8,7 @@
 #include "f_defs.h"
 !
 !#define __DEBUG_CONSTRAINTS
+#define __REMOVE_CONSTRAINT_FORCE
 !
 !----------------------------------------------------------------------------
 MODULE constraints_module
@@ -39,8 +40,9 @@ MODULE constraints_module
   !
   ! ... public methods
   !
-  PUBLIC :: init_constraint,  &
-            check_constraint, &
+  PUBLIC :: init_constraint,         &
+            check_constraint,        &
+            remove_constraint_force, &
             deallocate_constraint
   !
   ! ... public variables (assigned in the CONSTRAINTS input card)
@@ -487,7 +489,6 @@ MODULE constraints_module
        ALLOCATE( dg0( 3, nat ) )
        !
        invdtsq  = 1.D0 / dt**2
-       lagrange = 0.D0
        !
        outer_loop: DO i = 1, maxiter
           !
@@ -562,6 +563,50 @@ MODULE constraints_module
        RETURN
        !
      END SUBROUTINE check_constraint
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE remove_constraint_force( nat, tau, if_pos, ityp, alat, force )
+       !-----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       INTEGER,  INTENT(IN)    :: nat
+       REAL(DP), INTENT(IN)    :: tau(:,:)
+       INTEGER,  INTENT(IN)    :: if_pos(:,:)
+       INTEGER,  INTENT(IN)    :: ityp(:)
+       REAL(DP), INTENT(IN)    :: alat
+       REAL(DP), INTENT(INOUT) :: force(:,:)
+       !
+       INTEGER               :: index
+       REAL(DP)              :: g
+       REAL(DP), ALLOCATABLE :: dg(:,:)
+       !
+       REAL(DP), EXTERNAL :: DDOT, DNRM2
+       !
+       !
+       lagrange(:) = 0.D0
+       !
+#if defined (__REMOVE_CONSTRAINT_FORCE)
+       !
+       ALLOCATE( dg( 3, nat ) )
+       !
+       DO index = 1, nconstr
+          !
+          CALL constraint_grad( index, nat, tau, if_pos, ityp, alat, g, dg )
+          !
+          dg = dg / DNRM2( 3 * nat, dg, 1 )
+          !
+          lagrange(index) = DDOT( 3 * nat, force, 1, dg, 1 )
+          !
+          force = force - lagrange(index) * dg
+          !
+       END DO
+       !
+       DEALLOCATE( dg )
+       !
+#endif
+       !
+     END SUBROUTINE remove_constraint_force     
      !
      !-----------------------------------------------------------------------
      SUBROUTINE deallocate_constraint()

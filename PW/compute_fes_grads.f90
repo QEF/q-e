@@ -519,6 +519,7 @@ SUBROUTINE metadyn()
       dfe_acc = 0.D0
       !
       CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
+      CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.bfgs' )
       !
       to_new_target = .FALSE.
       !
@@ -584,6 +585,8 @@ SUBROUTINE metadyn()
          CALL electronic_scf( .FALSE., stat )
          !
          IF ( .NOT. stat ) CALL stop_run( stat )
+         !
+         CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.bfgs' )
          !
          CALL move_ions()
          !

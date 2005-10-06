@@ -118,16 +118,15 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
   USE coarsegrained_vars,       ONLY : dfe_acc
-  !
   USE cell_base,                ONLY : s_to_r, r_to_s
   USE phase_factors_module,     ONLY : strucf
-
   USE cpr_subroutines,          ONLY : print_lambda, print_atomic_var, &
                                        ions_cofmsub, elec_fakekine
   USE wannier_subroutines,      ONLY : wannier_startup, wf_closing_options, &
                                        ef_enthalpy
   USE restart_file,             ONLY : readfile, writefile
-  USE constraints_module,       ONLY : check_constraint, lagrange
+  USE constraints_module,       ONLY : check_constraint, lagrange, &
+                                       remove_constraint_force
   USE coarsegrained_base,       ONLY : set_target
   USE autopilot,                ONLY : pilot
   USE ions_nose,                ONLY : ions_nose_allocate, ions_nose_shiftvar
@@ -308,16 +307,25 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         IF ( lwf ) CALL ef_force( fion, na, nsp, zv )
         !
-        CALL ions_move( tausp, taus, tausm, iforce, pmass, fion,  &
-                        ainv, delt, na, nsp, fricp, hgamma, vels, &
-                        tsdp, tnosep, fionm, vnhp, velsp, velsm,  &
-                        nhpcl, nhpdim, atm2nhp )
+        IF ( lconstrain ) THEN
+           !
+           IF ( lcoarsegrained ) CALL set_target()
+           !
+           ! ... we first remove the component of the force along the 
+           ! ... constrain gradient (this is constitutes the initial guess 
+           ! ... for the lagrange multiplier)
+           !
+           CALL remove_constraint_force( nat, tau0, iforce, ityp, 1.D0, fion )
+           !
+        END IF
+        !
+        CALL ions_move( tausp, taus, tausm, iforce, pmass, fion, ainv, &
+                        delt, na, nsp, fricp, hgamma, vels, tsdp, tnosep, &
+                        fionm, vnhp, velsp, velsm, nhpcl, nhpdim, atm2nhp )
         !
         IF ( lconstrain ) THEN
            !
            ! ... constraints are imposed here
-           !
-           IF ( lcoarsegrained ) CALL set_target()
            !
            CALL s_to_r( tausp, taup, na, nsp, hnew )
            !
