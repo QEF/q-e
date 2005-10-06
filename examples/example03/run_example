@@ -80,34 +80,34 @@ $ECHO " done"
 
 # self-consistent calculation
 cat > co.rx.in << EOF
- &control
-    calculation='relax'
-    restart_mode='from_scratch',
-    prefix='CO',
-    pseudo_dir = '$PSEUDO_DIR/',
-    outdir='$TMP_DIR/'
- /
- &system
-    ibrav=0, nat=2, ntyp=2,
-    ecutwfc = 24.0, ecutrho = 144.0
- /
- &electrons
-    conv_thr =  1.0d-8
-    mixing_beta = 0.7
- /
- &ions
-    upscale=10
- /
+&CONTROL
+  calculation  = "relax",
+  prefix       = "CO",
+  pseudo_dir   = "$PSEUDO_DIR",
+  outdir       = "$TMP_DIR",
+/
+&SYSTEM
+  ibrav     = 1,
+  celldm(1) = 12.D0, 
+  nat       = 2, 
+  ntyp      = 2,
+  ecutwfc   = 24.D0, 
+  ecutrho   = 144.D0,
+/
+&ELECTRONS
+  conv_thr    = 1.D-7,
+  mixing_beta = 0.7D0,
+/
+&IONS
+  pot_extrapolation = "second_order",
+  wfc_extrapolation = "second_order",
+/
 ATOMIC_SPECIES
- O 16.00  O.LDA.US.RRKJ3.UPF
- C 12.00  C.pz-rrkjus.UPF
+O  1.00  O.LDA.US.RRKJ3.UPF
+C  1.00  C.pz-rrkjus.UPF
 ATOMIC_POSITIONS {bohr}
- C 2.256 0.0 0.0
- O 0.0   0.0 0.0  0 0 0 
-CELL_PARAMETERS {cubic}
- 12.0  0.0  0.0
-  0.0 12.0  0.0
-  0.0  0.0 12.0
+C  2.256  0.0  0.0
+O  0.000  0.0  0.0  0 0 0 
 K_POINTS {Gamma}
 EOF
 $ECHO "  running the geometry relaxation for CO...\c"
@@ -121,37 +121,41 @@ $ECHO " done"
 
 # self-consistent calculation
 cat > al001.rx.in << EOF
- &control
-    calculation='relax'
-    title='Al 001 7 layers +  4 vacuum'
-    restart_mode='from_scratch',
-    pseudo_dir = '$PSEUDO_DIR/',
-    outdir='$TMP_DIR/'
- /
- &system
-    ibrav= 6, celldm(1) =5.3033, celldm(3) = 8.0, 
-    nat=7, ntyp=1,
-    ecutwfc = 12.0,
-    occupations='smearing', smearing='methfessel-paxton', degauss=0.05
- /
- &electrons
-    conv_thr =  1.0d-6
-    mixing_beta = 0.3
- /
- &ions
-    bfgs_ndim = 3,
-    upscale=10
- /
+&CONTROL
+  calculation = "relax",
+  pseudo_dir  = "$PSEUDO_DIR",
+  outdir      = "$TMP_DIR",
+/
+&SYSTEM
+  ibrav       = 6, 
+  celldm(1)   = 5.3033D0,
+  celldm(3)   = 8.D0, 
+  nat         = 7,
+  ntyp        = 1,
+  ecutwfc     = 12.D0,
+  occupations = "smearing",
+  smearing    = "methfessel-paxton",
+  degauss     = 0.05D0,
+/
+&ELECTRONS
+  conv_thr    = 1.D-6,
+  mixing_beta = 0.3D0,
+/
+&IONS
+  bfgs_ndim         = 3,
+  pot_extrapolation = "second_order",
+  wfc_extrapolation = "second_order",
+/
 ATOMIC_SPECIES
- Al 26.98 Al.vbc.UPF
+Al  1.0  Al.vbc.UPF
 ATOMIC_POSITIONS
- Al   0.5000000      0.5000000     -2.121320
- Al   0.0000000      0.0000000     -1.414213
- Al   0.5000000      0.5000000     -0.707107
- Al   0.0000000      0.0000000      0.000000
- Al   0.5000000      0.5000000      0.707107
- Al   0.0000000      0.0000000      1.414213
- Al   0.5000000      0.5000000      2.121320
+Al   0.5000000      0.5000000     -2.121320
+Al   0.0000000      0.0000000     -1.414213
+Al   0.5000000      0.5000000     -0.707107
+Al   0.0000000      0.0000000      0.000000
+Al   0.5000000      0.5000000      0.707107
+Al   0.0000000      0.0000000      1.414213
+Al   0.5000000      0.5000000      2.121320
 K_POINTS
  3
  0.125  0.125  0.0  1.0
@@ -170,42 +174,42 @@ $ECHO " done"
 # self-consistent calculation
 rm -f e eal ave p avec tv 
 cat > al001.mm.in << EOF
- &control
-    calculation='relax'
-    title='Al 001 7 layers +  4 vacuum'
-    restart_mode='from_scratch',
-    pseudo_dir = '$PSEUDO_DIR/',
-    outdir='$TMP_DIR/'
-    disk_io='high',
-    dt=120,
-    forc_conv_thr =5.d-5,
-    nstep = 100
- /
- &system
-    ibrav= 6, celldm(1) =5.3033, celldm(3) = 8.0, 
-    nat=7, ntyp=1,
-    ecutwfc = 12.0,
-    occupations='smearing', smearing='methfessel-paxton', degauss=0.05
- /
- &electrons
-    conv_thr =  1.0d-6
-    mixing_beta = 0.3
- /
- &ions
-    ion_dynamics='damp',
-    pot_extrapolation='second_order'
-    wfc_extrapolation='second-order'
- /
+&CONTROL
+  calculation = "relax",
+  dt          = 30.D0,
+  pseudo_dir  = "$PSEUDO_DIR",
+  outdir      = "$TMP_DIR",
+/
+&SYSTEM
+  ibrav       = 6, 
+  celldm(1)   = 5.3033D0,
+  celldm(3)   = 8.D0, 
+  nat         = 7,
+  ntyp        = 1,
+  ecutwfc     = 12.D0,
+  occupations = "smearing",
+  smearing    = "methfessel-paxton",
+  degauss     = 0.05D0,
+/
+&ELECTRONS
+  conv_thr    = 1.D-7,
+  mixing_beta = 0.3D0,
+/
+&IONS
+  ion_dynamics      = "damp",
+  pot_extrapolation = "second_order",
+  wfc_extrapolation = "second_order",
+/
 ATOMIC_SPECIES
- Al 26.98 Al.vbc.UPF
+Al  1.D0  Al.vbc.UPF
 ATOMIC_POSITIONS
- Al   0.5000000      0.5000000     -2.121320
- Al   0.0000000      0.0000000     -1.414213
- Al   0.5000000      0.5000000     -0.707107
- Al   0.0000000      0.0000000      0.000000
- Al   0.5000000      0.5000000      0.707107
- Al   0.0000000      0.0000000      1.414213
- Al   0.5000000      0.5000000      2.121320
+Al   0.5000000      0.5000000     -2.121320
+Al   0.0000000      0.0000000     -1.414213
+Al   0.5000000      0.5000000     -0.707107
+Al   0.0000000      0.0000000      0.000000
+Al   0.5000000      0.5000000      0.707107
+Al   0.0000000      0.0000000      1.414213
+Al   0.5000000      0.5000000      2.121320
 K_POINTS
  3
  0.125  0.125  0.0  1.0
