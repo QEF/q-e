@@ -9,8 +9,8 @@
 SUBROUTINE punch()
   !----------------------------------------------------------------------------
   !
-  ! ... This routine is called at the end of the run to save on a file
-  ! ... the information needed to the phonon program.
+  ! ... This routine is called at the end of the run to save to a file
+  ! ... the information needed for further processing (phonon etc.)
   !
   USE io_global,            ONLY : stdout
   USE klist,                ONLY : nks, nkstot
@@ -31,9 +31,8 @@ SUBROUTINE punch()
   LOGICAL :: exst
   !
   !
-  WRITE( UNIT = stdout, &
-         FMT = '(/,5X,"Writing file ",A16," for program phonon")' ) &
-      TRIM( prefix ) // '.save'
+  WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A16)' ) &
+       TRIM( prefix ) // '.save'
   !
   kunittmp = 1
   !
@@ -80,7 +79,7 @@ SUBROUTINE punch()
   !
   ! ... Write the charge density on a separate file
   !
-  CALL io_pot( + 1, TRIM(prefix)//'.rho', rho, nspin )
+  CALL io_pot( + 1, 'rho', rho, nspin )
   !
 #if defined (__NEWPUNCH)
   !

@@ -513,8 +513,11 @@ SUBROUTINE electrons()
         !
      END IF
      !
-     IF ( ( ABS( charge - nelec ) / charge ) > 1.D-7 ) &
-        WRITE( stdout, 9050 ) charge
+     IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
+        WRITE( stdout, 9050 ) charge, nelec
+        IF ( ABS( charge - nelec ) / charge > 1.D-3 ) &
+           CALL errore ('electrons','charge is wrong',1)
+     END IF
      !
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
 #if defined (EXX)
@@ -675,7 +678,7 @@ SUBROUTINE electrons()
 9042 FORMAT(/'     highest occupied, lowest unoccupied level (ev): ',2F10.4 )
 9041 FORMAT(/'     the spin up/dw Fermi energies are ',2F10.4,' ev' )
 9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev' )
-9050 FORMAT(/'     integrated charge         =',F15.8 )
+9050 FORMAT(/'     WARNING: integrated charge=',F15.8', expected=',F15.8 )
 9060 FORMAT(/'     band energy sum           =',  F15.8,' ryd' &
             /'     one-electron contribution =',  F15.8,' ryd' &
             /'     hartree contribution      =',  F15.8,' ryd' &

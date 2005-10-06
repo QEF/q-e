@@ -13,19 +13,23 @@ subroutine readpp
   !
   !    Read pseudopotentials
   !
-  USE atom,       ONLY : numeric, xmin, dx
+  USE kinds,      ONLY : DP
+  USE atom,       ONLY : chi, nchi, oc, msh, rab, numeric, xmin, dx
   USE uspp_param, ONLY : iver, tvanp, newpseudo
   USE ions_base,  ONLY : ntyp => nsp
   USE funct,      ONLY : iexch, icorr, igcx, igcc
   USE io_files,   ONLY : pseudo_dir, psfile
+  USE io_global,  ONLY : stdout
   !
   implicit none
   !
   character(len=256) :: file_pseudo
   ! file name complete with path
-  integer :: iunps, isupf, l, nt, ios, pseudo_type
+  real(DP), allocatable :: chi2r(:)
+  real(DP):: norm, eps = 1.0_DP
+  integer :: iunps, isupf, l, nt, nb, ios
   integer :: iexch_, icorr_, igcx_, igcc_
-  external pseudo_type
+  integer, external :: pseudo_type
   !
   iunps = 4
   l = len_trim (pseudo_dir)
@@ -110,7 +114,28 @@ subroutine readpp
            CALL errore( 'readpp','inconsistent DFT read',nt)
         end if
      end if
-
+     !
+     ! Check that there are no zero wavefunctions
+     !
+     allocate ( chi2r (msh(nt)) )
+     do nb = 1, nchi (nt)
+        chi2r(:) = chi ( :msh(nt), nb, nt ) **2 * rab( :msh(nt), nt )
+        call simpson (msh(nt), chi(1, nb, nt), rab(1,nt), norm)
+        !
+        ! if a zero wavefunction is found, set to zero 
+        !
+        if ( norm < eps ) then
+           WRITE( stdout,'(5X,"WARNING: atomic wfc # ",i2, &
+                & " for atom type",i2," has zero norm")') nb, nt
+           !
+           ! set occupancy to a negative number so that this wfc
+           ! is not going to be used for starting wavefunctions
+           !
+           oc (nb, nt) = -eps
+        end if
+     enddo
+     deallocate ( chi2r )
+     !
   enddo
   return
 end subroutine readpp
