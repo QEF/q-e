@@ -45,8 +45,6 @@
 ! ecut2d      2-D cutoff
 ! ewind       the energy window for reduction of 2D plane wave basis set (in XY)
 ! epsproj     accuracy of 2D basis set reduction
-! llapack     if .t. use the LAPACK routine for Generalized Eigenvalue 
-!             Problem (GEP)
 ! orbj_in     the initial orbital for projecting the transmission 
 ! orbj_fin    the final orbital for projecting the transmission 
 !
