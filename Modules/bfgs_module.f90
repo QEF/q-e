@@ -237,8 +237,8 @@ MODULE bfgs_module
                ! ... the history has already been reset at the previous step :
                ! ... something is going wrong
                !
-               WRITE( UNIT = stdout, FMT = '(,5X,"Notice: bfgs history", &
-                      &," already reset at previous step",/)' )
+               WRITE( UNIT = stdout, FMT = '(5X,"Notice: bfgs history", &
+                      & " already reset at previous step",/)' )
                !
             END IF
             !
