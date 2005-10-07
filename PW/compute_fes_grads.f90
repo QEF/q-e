@@ -267,6 +267,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         to_target(:) = new_target(:) - target(:)
         !
         CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
+        CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.update' )
         !
         to_new_target = .TRUE.
         !
@@ -278,6 +279,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
            IF ( .NOT. stat ) RETURN
            !
+           CALL delete_if_present( TRIM( tmp_dir )//TRIM( prefix )//'.bfgs' )
+           !
            CALL move_ions()
            !
            lfirst = .FALSE.
@@ -287,6 +290,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         ! ... then the free energy gradients are computed
         !
         CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
+        CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.bfgs' )
         !
         to_new_target = .FALSE.
         !
@@ -510,12 +514,10 @@ SUBROUTINE metadyn()
       !
       INTEGER, INTENT(IN) :: iter
       !
-      INTEGER :: i
       LOGICAL :: stat
       LOGICAL :: lfirst = .TRUE.
       !
       !
-      istep   = 0
       dfe_acc = 0.D0
       !
       CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
@@ -523,9 +525,7 @@ SUBROUTINE metadyn()
       !
       to_new_target = .FALSE.
       !
-      DO i = 1, fe_nstep
-         !
-         istep = istep + 1
+      DO istep = 1, fe_nstep
          !
          CALL electronic_scf( lfirst, stat )
          !
@@ -568,19 +568,17 @@ SUBROUTINE metadyn()
       USE io_files,           ONLY : tmp_dir, prefix
       USE parser,             ONLY : delete_if_present
       !
-      INTEGER :: i
       LOGICAL :: stat
       !
       !
       to_target(:) = new_target(:) - target(:)
       !
       CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
+      CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.update' )
       !
       to_new_target = .TRUE.
       !
-      DO i = 1, shake_nstep
-         !
-         istep = i
+      DO istep = 1, shake_nstep
          !
          CALL electronic_scf( .FALSE., stat )
          !
@@ -635,7 +633,7 @@ END SUBROUTINE write_config
 SUBROUTINE electronic_scf( lfirst, stat )
   !----------------------------------------------------------------------------
   !
-  USE control_flags, ONLY : conv_elec
+  USE control_flags, ONLY : conv_elec, ethr
   USE io_files,      ONLY : iunpath
   !
   IMPLICIT NONE
@@ -644,7 +642,13 @@ SUBROUTINE electronic_scf( lfirst, stat )
   LOGICAL, INTENT(OUT) :: stat
   !
   !
-  IF ( .NOT. lfirst ) CALL hinit1()
+  IF ( .NOT. lfirst ) THEN
+     !
+     ethr = 1.D-5
+     !
+     CALL hinit1()
+     !
+  END IF
   !
   CALL electrons()
   !

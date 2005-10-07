@@ -374,8 +374,8 @@ SUBROUTINE dynamics()
      SUBROUTINE force_precond( force )
        !-----------------------------------------------------------------------
        !
-       ! ... this routine computes an estimate of H^1 by using the BFGS
-       ! ... algorithm and the preconditioned gradient  H^1 * g
+       ! ... this routine computes an estimate of H^-1 by using the BFGS
+       ! ... algorithm and the preconditioned gradient  pg = H^-1 * g
        ! ... ( it works in units of alat )
        !
        USE io_files, ONLY : iunbfgs, iunbroy, tmp_dir
@@ -392,7 +392,7 @@ SUBROUTINE dynamics()
        REAL(DP), ALLOCATABLE :: inv_hess(:,:)
        REAL(DP), ALLOCATABLE :: y(:), s(:)
        REAL(DP), ALLOCATABLE :: Hs(:), Hy(:), yH(:)
-       REAL(DP)              :: sdoty, norm_grad
+       REAL(DP)              :: sdoty
        INTEGER               :: dim
        CHARACTER(LEN=256)    :: bfgs_file
        LOGICAL               :: file_exists

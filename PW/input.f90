@@ -1730,7 +1730,7 @@ SUBROUTINE verify_tmpdir()
         !
         CALL delete_if_present( TRIM( file_path ) // '.md' )
         !
-        ! ... BFGS and BROYDEN rstart files are removed       
+        ! ... BFGS restart file is removed       
         !     
         CALL delete_if_present( TRIM( file_path ) // '.bfgs' )
         !
@@ -1738,7 +1738,7 @@ SUBROUTINE verify_tmpdir()
      !
   END IF    
   !
-  ! ... "path" optimization specific:
+  ! ... "path" optimisation specific :
   ! ... in the scratch directory the tree of subdirectories needed by "path"
   ! ... calculations are created
   !
@@ -1801,6 +1801,11 @@ SUBROUTINE verify_tmpdir()
            DO proc = 0, nproc - 1
               !
               IF ( proc == mpime ) THEN
+                 !
+                 ! ... BFGS restart file is removed       
+                 !
+                 CALL delete_if_present( TRIM( tmp_dir ) // &
+                                       & TRIM( prefix ) // '.bfgs' )
                  !
                  ! ... wfc-extrapolation file is removed
                  !     
