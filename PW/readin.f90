@@ -26,7 +26,7 @@ subroutine readpp
   character(len=256) :: file_pseudo
   ! file name complete with path
   real(DP), allocatable :: chi2r(:)
-  real(DP):: norm, eps = 1.0_DP
+  real(DP):: norm, eps = 1.0D-08
   integer :: iunps, isupf, l, nt, nb, ios
   integer :: iexch_, icorr_, igcx_, igcc_
   integer, external :: pseudo_type
@@ -119,16 +119,14 @@ subroutine readpp
      !
      allocate ( chi2r (msh(nt)) )
      do nb = 1, nchi (nt)
-        chi2r(:) = chi ( :msh(nt), nb, nt ) **2 * rab( :msh(nt), nt )
-        call simpson (msh(nt), chi(1, nb, nt), rab(1,nt), norm)
-        !
-        ! if a zero wavefunction is found, set to zero 
+        chi2r(:) = chi ( :msh(nt), nb, nt ) **2
+        call simpson (msh(nt), chi2r(1), rab(1,nt), norm)
         !
         if ( norm < eps ) then
            WRITE( stdout,'(5X,"WARNING: atomic wfc # ",i2, &
                 & " for atom type",i2," has zero norm")') nb, nt
            !
-           ! set occupancy to a negative number so that this wfc
+           ! set occupancy to a small negative number so that this wfc
            ! is not going to be used for starting wavefunctions
            !
            oc (nb, nt) = -eps
