@@ -15,7 +15,7 @@
       implicit none
       integer::  ibound, ndm, mesh, i
       real(DP) :: zmesh, xmin, xmax, x, dx, rmax, &
-             r(ndm), r2(ndm), rab(mesh), sqr(ndm)
+             r(ndm), r2(ndm), rab(ndm), sqr(ndm)
 !      
       xmax=log(rmax*zmesh)
       mesh=(xmax-xmin)/dx+1
