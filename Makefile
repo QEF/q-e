@@ -131,7 +131,8 @@ distclean veryclean : clean
 tar :
 	tar cvf espresso.tar \
 	    License README* */README* Makefile */Makefile \
-	    configure configure.ac config.guess config.sub install-sh \
+	    configure configure.ac config.guess config.sub configure.msg.in \
+            install-sh \
 	    make.sys.in \
 	    makedeps.sh moduledep.sh includedep.sh \
 	    configure.old \
