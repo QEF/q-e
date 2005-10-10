@@ -113,7 +113,6 @@ subroutine set_rho_core
   write(6,110) r(ik), a, b
 110 format (5x, '  r < ',f4.2,' : rho core = a sin(br)/r', &
        '    a=',f7.2,'  b=',f7.2/)
-  file_core=' '
   if (file_core .ne. ' ') then
      write(6,*) '***Writing file ',trim(file_core),' ***'
      open(unit=26,file=file_core, status='unknown', iostat=ios, &
