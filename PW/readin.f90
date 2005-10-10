@@ -14,7 +14,7 @@ subroutine readpp
   !    Read pseudopotentials
   !
   USE kinds,      ONLY : DP
-  USE atom,       ONLY : chi, nchi, oc, msh, rab, numeric, xmin, dx
+  USE atom,       ONLY : chi, nchi, oc, mesh, rab, numeric, xmin, dx
   USE uspp_param, ONLY : iver, tvanp, newpseudo
   USE ions_base,  ONLY : ntyp => nsp
   USE funct,      ONLY : iexch, icorr, igcx, igcc
@@ -117,10 +117,10 @@ subroutine readpp
      !
      ! Check that there are no zero wavefunctions
      !
-     allocate ( chi2r (msh(nt)) )
+     allocate ( chi2r (mesh(nt)) )
      do nb = 1, nchi (nt)
-        chi2r(:) = chi ( :msh(nt), nb, nt ) **2
-        call simpson (msh(nt), chi2r(1), rab(1,nt), norm)
+        chi2r(:) = chi ( :mesh(nt), nb, nt ) **2
+        call simpson (mesh(nt), chi2r(1), rab(1,nt), norm)
         !
         if ( norm < eps ) then
            WRITE( stdout,'(5X,"WARNING: atomic wfc # ",i2, &
