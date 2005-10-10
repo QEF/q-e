@@ -1440,6 +1440,7 @@ then
 		sparc-sun-* )                           arch=sparc   ;;
 		*cray-unicosmp* )                       arch=crayx1  ;;
 		powerpc-apple-darwin* )                 arch=mac     ;;
+		*-pc-cygwin )                           arch=cygwin  ;;
 	esac
 fi
 echo checking architecture... $arch
@@ -1506,6 +1507,13 @@ mac )
 	try_arflags="ruv"
 	try_dflags="-D__MAC -D__XLF"
 	ranlib="ranlib"
+	;;
+cygwin )
+	try_mpif90="mpif90"
+	try_f90="g95 f90"
+	try_ar="ar"
+	try_arflags="ruv"
+	try_dflags="-D__LINUX"
 	;;
 * )
 	{ echo "$as_me:$LINENO: WARNING: unsupported architecture" >&5
@@ -2301,6 +2309,10 @@ mac:xlf90 )
 mac:* )
 	try_cc="gcc"
 	try_f77="f77 $f90"
+	;;
+cygwin*:g95 )
+	try_cc="gcc cc"
+	try_f77="$g95 f90"
 	;;
 * )
 	# unknown, try these
@@ -3844,6 +3856,7 @@ mac:mpcc:mpf90 )                      ;;
 mac:gcc:xlf90 )                       ;;
 crayx1:cc:ftn )                       ;;
 sparc:cc:f90 )                        ;;
+cygwin:gcc:g95 )                      ;;
 
 * )
 	{ echo "$as_me:$LINENO: WARNING: unsupported C/Fortran compilers combination" >&5
@@ -3957,6 +3970,16 @@ linux*:g95 )
 	try_dflags="$try_dflags -D__G95"
 	have_cpp=1
 	;;
+cygwin:g95 )
+        try_fflags="-O3 -cpp"
+        try_f90flags="\$(FFLAGS)"
+        try_fflags_noopt="-O0 -cpp"
+        try_f90flags_noopt="\$(FFLAGS_NOOPT)"
+        try_ldflags=""
+        #try_ldflags_static="-static"
+        try_dflags="$try_dflags -D__G95"
+        have_cpp=1
+        ;;
 aix:*xlf* )
 	try_fflags="-q64 -qalias=noaryovrlp -O3 -qstrict \
 -qarch=auto -qtune=auto -qdpc -Q -qalias=nointptr"
@@ -4063,6 +4086,11 @@ linux*:gcc )
 	c_ldflags=""
 	try_cpp="cpp"
 	;;
+cygwin:gcc )
+        try_cflags="-O3 -fomit-frame-pointer"
+        c_ldflags=""
+        try_cpp="cpp"
+        ;;
 aix:mpcc* | aix:xlc* | aix:cc )
 	try_cflags="-q64 -O2"
 	c_ldflags="-q64"
