@@ -36,7 +36,9 @@ Unified Pseudopotential File (UPF) Specifications - 2002-01-03
      PP_PSRHOATOM
    PP_INFO should be the first field, but only for human readers:
    it is meant to contain info that would allow to generate again
-   the pseudopotential, not data to be read
+   the pseudopotential, not data to be read. The field should NOT 
+   contain characters "<" and ">" in order to avoid potential 
+   problems when reading using XML-compliant libraries.
    PP_HEADER must precede PP_MESH that must precede all the others.
    (PP_INFO excepted). Fields PP_NLCC, PP_PSWFC, PP_PSRHOATOM are optional.
 
