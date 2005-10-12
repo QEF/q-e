@@ -28,15 +28,19 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
   !
   use kinds, only: DP
   implicit none
-  integer ibrav
-  real(DP) celldm(6), a1(3), a2(3), a3(3), omega
+  integer, intent(in) :: ibrav
+  real(DP), intent(in) :: celldm(6)
+  real(DP), intent(inout) :: a1(3), a2(3), a3(3)
+  real(DP), intent(out) :: omega
   !
   real(DP), parameter:: sr2 = 1.414213562373d0, &
-                             sr3 = 1.732050807569d0
-  integer i,j,k,l,iperm,ir
-  real(DP) term, cbya, s, term1, term2, singam, sen
+                        sr3 = 1.732050807569d0
+  integer :: i,j,k,l,iperm,ir
+  real(DP) :: term, cbya, s, term1, term2, singam, sen
   !
   if(ibrav == 0) go to 100
+  !
+  if (celldm (1) <= 0.d0) call errore ('latgen', 'wrong celldm(1)', ibrav)
   !
   !     user-supplied lattice
   !
@@ -50,8 +54,6 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     simple cubic lattice
      !
-     if (celldm (1) <= 0.d0) call errore ('latgen', 'wrong celldm', ibrav)
-     !
      a1(1)=celldm(1)
      a2(2)=celldm(1)
      a3(3)=celldm(1)
@@ -59,8 +61,6 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
   else if (ibrav == 2) then
      !
      !     fcc lattice
-     !
-     if (celldm (1) <= 0.d0) call errore ('latgen', 'wrong celldm', ibrav)
      !
      term=celldm(1)/2.d0
      a1(1)=-term
@@ -74,8 +74,6 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     bcc lattice
      !
-     if (celldm (1) <= 0.d0) call errore ('latgen', 'wrong celldm', ibrav)
-     !
      term=celldm(1)/2.d0
      do ir=1,3
         a1(ir)=term
@@ -86,12 +84,11 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      a3(1)=-term
      a3(2)=-term
      !
-  else if (ibrav.eq.4) then
+  else if (ibrav == 4) then
      !
      !     hexagonal lattice
      !
-     if (celldm (1) <= 0.d0 .or. celldm (3) <= 0.d0) &
-          call errore ('latgen', 'wrong celldm', ibrav)
+     if (celldm (3) <= 0.d0) call errore ('latgen', 'wrong celldm(3)', ibrav)
      !
      cbya=celldm(3)
      a1(1)=celldm(1)
@@ -103,8 +100,8 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     trigonal lattice
      !
-     if (celldm (1) <= 0.d0 .or. celldm (4) <= - 0.5d0) &
-          call errore ('latgen', 'wrong celldm', ibrav)
+     if (celldm (4) <= -0.5d0 .or. celldm (4) >= 1) &
+          call errore ('latgen', 'wrong celldm(4)', ibrav)
      !
      term1=sqrt(1.d0+2.d0*celldm(4))
      term2=sqrt(1.d0-celldm(4))
@@ -121,8 +118,7 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     tetragonal lattice
      !
-     if (celldm (1) <= 0.d0 .or. celldm (3) <= 0.d0) &
-          call errore ('latgen', 'wrong celldm', ibrav)
+     if (celldm (3) <= 0.d0) call errore ('latgen', 'wrong celldm(3)', ibrav)
      !
      cbya=celldm(3)
      a1(1)=celldm(1)
@@ -133,8 +129,7 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     body centered tetragonal lattice
      !
-     if (celldm (1) <= 0.d0 .or. celldm (3) <= 0.d0) &
-          call errore ('latgen', 'wrong celldm', ibrav)
+     if (celldm (3) <= 0.d0) call errore ('latgen', 'wrong celldm(3)', ibrav)
      !
      cbya=celldm(3)
      a2(1)=celldm(1)/2.d0
@@ -151,8 +146,8 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     Simple orthorhombic lattice
      !
-     if (celldm (1) <= 0.d0 .or. celldm (2) <= 0.d0 .or. &
-         celldm (3) <= 0.d0) call errore ('latgen', 'wrong celldm', ibrav)
+     if (celldm (2) <= 0.d0) call errore ('latgen', 'wrong celldm(2)', ibrav)
+     if (celldm (3) <= 0.d0) call errore ('latgen', 'wrong celldm(3)', ibrav)
      !
      a1(1)=celldm(1)
      a2(2)=celldm(1)*celldm(2)
@@ -163,8 +158,8 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     One face centered orthorhombic lattice
      !
-     if (celldm (1) <= 0.d0 .or. celldm (2) <= 0.d0 .or. &
-         celldm (3) <= 0.d0) call errore ('latgen', 'wrong celldm', ibrav)
+     if (celldm (2) <= 0.d0) call errore ('latgen', 'wrong celldm(2)', ibrav)
+     if (celldm (3) <= 0.d0) call errore ('latgen', 'wrong celldm(3)', ibrav)
      !
      a1(1) = 0.5 * celldm(1)
      a1(2) = a1(1) * celldm(2)
@@ -176,8 +171,8 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     All face centered orthorhombic lattice
      !
-     if (celldm (1) <= 0.d0 .or. celldm (2) <= 0.d0 .or.&
-         celldm (3) <= 0.d0) call errore ('latgen', 'wrong celldm', ibrav)
+     if (celldm (2) <= 0.d0) call errore ('latgen', 'wrong celldm(2)', ibrav)
+     if (celldm (3) <= 0.d0) call errore ('latgen', 'wrong celldm(3)', ibrav)
      !
      a2(1) = 0.5 * celldm(1)
      a2(2) = a2(1) * celldm(2)
@@ -190,8 +185,8 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     Body centered orthorhombic lattice
      !
-     if (celldm (1) <= 0.d0 .or. celldm (2) <= 0.d0 .or.&
-         celldm (3) <= 0.d0) call errore ('latgen', 'wrong celldm', ibrav)
+     if (celldm (2) <= 0.d0) call errore ('latgen', 'wrong celldm(2)', ibrav)
+     if (celldm (3) <= 0.d0) call errore ('latgen', 'wrong celldm(3)', ibrav)
      !
      a1(1) = 0.5 * celldm(1)
      a1(2) = a1(1) * celldm(2)
@@ -207,9 +202,9 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     Simple monoclinic lattice
      !
-     if (celldm (1) <= 0.d0 .or. celldm (2) <= 0.d0 .or.   &
-         celldm (3) <= 0.d0 .or. abs (celldm (4) ) > 1.d0) &
-         call errore ('latgen', 'wrong celldm', ibrav)
+     if (celldm (2) <= 0.d0) call errore ('latgen', 'wrong celldm(2)', ibrav)
+     if (celldm (3) <= 0.d0) call errore ('latgen', 'wrong celldm(3)', ibrav)
+     if (abs(celldm(4))>=1.d0) call errore ('latgen', 'wrong celldm(4)', ibrav)
      !
      sen=sqrt(1.d0-celldm(4)**2)
      a1(1)=celldm(1)
@@ -221,26 +216,26 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      !     One face centered monoclinic lattice
      !
-     if (celldm (1) <= 0.d0 .or. celldm (2) <= 0.d0 .or.   &
-         celldm (3) <= 0.d0 .or. abs (celldm (4) ) > 1.d0) &
-         call errore ('latgen', 'wrong celldm', ibrav)
+     if (celldm (2) <= 0.d0) call errore ('latgen', 'wrong celldm(2)', ibrav)
+     if (celldm (3) <= 0.d0) call errore ('latgen', 'wrong celldm(3)', ibrav)
+     if (abs(celldm(4))>=1.d0) call errore ('latgen', 'wrong celldm(4)', ibrav)
      !
      sen = sqrt( 1.d0 - celldm(4) ** 2 )
-     a1(1) = celldm(1) * celldm(4)
-     a1(3) = celldm(1) * sen
-     a2(1) = a1(1)
-     a2(3) = - a1(3)
-     a3(1) = celldm(1) * celldm(2)
-     a3(2) = celldm(1) * celldm(3)
+     a1(1) = 0.5 * celldm(1) * sen
+     a1(2) = 0.5 * celldm(1) * (celldm(4) - celldm(2))
+     a2(1) = 0.5 * celldm(1) * sen
+     a2(2) = 0.5 * celldm(1) * (celldm(4) + celldm(2))
+     a3(3) = celldm(1) * celldm(3)
      !
   else if (ibrav == 14) then
      !
      !     Triclinic lattice
      !
-     if (celldm (1) <= 0.d0 .or. celldm (2) <= 0.d0 .or.  &
-         celldm (3) <= 0.d0 .or. abs (celldm (4) ) > 1.d0 .or. &
-         abs (celldm (5) ) > 1.d0 .or. abs (celldm (6) ) > 1.d0) &
-         call errore ('latgen', 'wrong celldm', ibrav)
+     if (celldm (2) <= 0.d0) call errore ('latgen', 'wrong celldm(2)', ibrav)
+     if (celldm (3) <= 0.d0) call errore ('latgen', 'wrong celldm(3)', ibrav)
+     if (abs(celldm(4))>=1.d0) call errore ('latgen', 'wrong celldm(4)', ibrav)
+     if (abs(celldm(5))>=1.d0) call errore ('latgen', 'wrong celldm(5)', ibrav)
+     if (abs(celldm(6))>=1.d0) call errore ('latgen', 'wrong celldm(6)', ibrav)
      !
      singam=sqrt(1.d0-celldm(6)**2)
      term= sqrt((1.d0+2.d0*celldm(4)*celldm(5)*celldm(6)             &
