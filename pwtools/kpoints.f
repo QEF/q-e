@@ -57,7 +57,7 @@
       open(unit=1,file=filout,status='unknown')
       open(unit=2,file='info',status='unknown')
 !
-      if(ibrav.ge.4) then
+      if(ibrav.eq.4 .or. ibrav.gt.5) then
          write(*,'(5x,a,$)') 'enter celldm(3)  >> '
          read(*,*) celldm(3)
       end if
@@ -65,7 +65,7 @@
          write(*,'(5x,a,$)') 'enter celldm(2)  >> '
          read(*,*) celldm(2)
       end if
-      if(ibrav.ge.12) then
+      if(ibrav.eq.5 .or. ibrav.ge.12) then
          write(*,'(5x,a,$)') 'enter celldm(4)  >> '
          read(*,*) celldm(4)
       end if
