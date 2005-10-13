@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------
-      Please use the "cvs2cl.pl" script in the root directory 
-       of the distribution to produce a detailed ChangeLog
+      NO LONGER UPDATED - Please use the "cvs2cl.pl" script in the root
+      directory of the distribution to produce a detailed ChangeLog
 ---------------------------------------------------------------------------
 
 08 Feb 2005 Added to the atomic code the generation of Projector Augmented

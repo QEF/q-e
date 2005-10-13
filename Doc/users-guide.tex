@@ -1,6 +1,6 @@
 \documentclass[12pt,a4paper]{article}
- \def\version{CVS}
- \def\stableversion{2.1.5} % last stable release
+ \def\version{3.0}
+ \def\stableversion{3.0} % last stable release
 
  \usepackage{epsfig}
  \usepackage{html}
@@ -50,7 +50,7 @@ and the following auxiliary codes:
 \end{itemize}
 The Quantum-ESPRESSO codes work on many different types of Unix machines,
 including parallel machines using Message Passing Interface (MPI).
-Running Quantum-ESPRESSO on MS-Windows is possible, but not supported: 
+Running Quantum-ESPRESSO on Mac OS X and MS-Windows is also possible: 
 see section \ref{installation}, ``Installation''.
 
 Further documentation, beyond what is provided in this guide, can be
@@ -196,7 +196,7 @@ Gabriele Cipriani,
 Matteo Cococcioni,
 Cesar Da Silva, 
 Alberto Debernardi,
-Gernot Deinzer.
+Gernot Deinzer,
 Oswaldo Dieguez,
 Andrea Ferretti, 
 Guido Fratesi,
@@ -227,7 +227,7 @@ and let us apologize to everybody we have forgotten.
 This guide was (mostly) written by Paolo Giannozzi, Gerardo Ballabio,
 Carlo Cavazzoni.
 
-\subsubsection{Contact us}
+\subsection{Contacts}
 
 The web site for Quantum-ESPRESSO is:
 \medskip
@@ -294,7 +294,7 @@ Our preferred form for the acknowledgment is the following:
 
 \begin{quote}
 \emph{Acknowledgments:}\\
-Calculations in this work have been done using the $\nu$-ESPRESSO package
+Calculations in this work have been done using the Quantum-ESPRESSO package
 [\emph{ref}].
 \par\noindent
 \emph{Bibliography:}\\{}
@@ -355,7 +355,11 @@ the free \texttt{g95} compiler
 it is still unfinished but already usable.
 You also need a minimal Unix environment: basically, a command shell
 (e.g., \texttt{bash} or \texttt{tcsh}) and the \texttt{make} and
-\texttt{awk} utilities.
+\texttt{awk} utilities. MS-Windows users need to have Cygwin 
+(a UNIX environment which runs under Windows) installed. See
+\htmladdnormallink%
+{\texttt{http://www.cygwin.com/}}%
+        {http://www.cygwin.com/}.
 
 Instructions for the impatient:
 \begin{verbatim}
@@ -375,8 +379,9 @@ script.  It will (try to) detect compilers and libraries available on
 your machine, and set up things accordingly.
 Presently it is expected to work on most Linux 32- and 64-bit (Itanium
 and Opteron) PCs and clusters, IBM SP machines, SGI Origin, some
-HP-Compaq Alpha machines, Cray X1, Mac OS X.  It may work with some
-assistance also on other architectures (see below).
+HP-Compaq Alpha machines, Cray X1, Mac OS X, MS-Windows PCs. 
+It may work with 
+some assistance also on other architectures (see below).
 
 For cross-compilation, you have to specify the target machine with the
 \texttt{--host} option (see below).  This feature has not been 
@@ -450,7 +455,8 @@ Currently supported architectures are:
   \texttt{alpha}:   HP-Compaq alpha machines\\
   \texttt{sparc}:   Sun SPARC machines\\
   \texttt{crayx1}:  Cray X1 machines\\
-  \texttt{mac}:     Apple PowerPC running Mac OS X
+  \texttt{mac}:     Apple PowerPC machines running Mac OS X\\
+  \texttt{cygwin}:  MS-Windows PCs with Cygwin
 \end{quote}
 Finally, \texttt{configure} recognizes the following command-line
 options:
@@ -606,7 +612,7 @@ Currently available systems are:
   \texttt{altix}:     SGI Altix 350/3000 with Linux, Intel compiler\\
   \texttt{beo\_ifc}:  Linux clusters of PCs, Intel compiler\\
   \texttt{beowulf}:   Linux clusters of PCs, Portland compiler\\
-  \texttt{cygwin}:    Windows PC, Intel compiler (see below)\\
+  \texttt{cygwin}:    Windows PC, Intel compiler\\
   \texttt{fujitsu}:   Fujitsu vector machines\\
   \texttt{hitachi}:   Hitachi SR8000\\
   \texttt{hp}:        HP PA-RISC workstations\\
@@ -664,20 +670,17 @@ a machine running HP-UX.
 
 The Makefile for Windows PCs is based on a Makefile written for an
 earlier version of PWscf (1.2.0), contributed by Lu Fu-Fa, CCIT,
-Taiwan.
-Since there have been many changes to the installation procedure, the
-provided Makefile --- which has never been tested --- may not work.
-You will need the CygWin package (a UNIX environment for PC which runs
-in Windows).
-The provided Makefiles assumes that you have the Intel compiler with
-MKL libraries installed.
+Taiwan. You will need the Cygwin package. The provided Makefile
+assumes that you have the Intel compiler with MKL libraries installed.
+It is untested.
 
-Another possibility is to install Linux, either in dual-boot mode, or
-running from a CD-ROM.  You will need to create a partition for Linux
-and to install a boot loader (LILO, GRUB).  The latter step is not
-necessary if you boot from CD-ROM.  The former step could also be
-avoided in principle (distributions like Knoppix run directly from the
-CD-ROM) but for serious use you will need to have disk access.
+If you run into trouble, a possibility is to install Linux in 
+dual-boot mode. You need to create a partition for Linux, 
+install it, install a boot loader (LILO, GRUB). The latter step
+is not needed if you boot from floppy or CD-ROM. In principle 
+one could avoid installation altogether using a distribution 
+like Knoppix that runs directly from CD-ROM, but for serious use 
+disk access is needed.
 
 \subsection{Compile}
 
@@ -1122,11 +1125,11 @@ With some precompiled lapack libraries, you may need to add
 
 \paragraph{Linux PCs with Portland Group compiler (pgf90)}
 
-Quantum-ESPRESSO does not work reliably, or not at all, with some versions of
-the Portland Group compiler.  In particular, with some versions PWscf
-works only for small systems, but not for larger systems.  We think
-that this is a compiler bug.  Use the latest version of each release
-of the compiler, with patches if available: see the Portland Group web
+Quantum-ESPRESSO does not work reliably, or not at all, with some 
+versions (in particular, 5.2) of the Portland Group compiler.
+We think that this is due to compiler bugs, not to Quantum-ESPRESSO
+bugs. In any event, use the latest version of each release of the 
+compiler, with patches if available: see the Portland Group web
 site,\hfill\break
 \htmladdnormallink%
 {\texttt{http://www.pgroup.com/faq/install.htm\#release\_info}}%
@@ -1157,7 +1160,9 @@ Update to the last version (presently 7.1.41, 8.0.046 or
 (registration free of charge for Linux): 
 \htmladdnormallink%
 {\texttt{http://developer.intel.com/software/products/support/\#premier}}%
-{http://developer.intel.com/software/products/support/\#premier}
+{http://developer.intel.com/software/products/support/\#premier} .
+There are conflicting reports on the newest version 9. In any event,
+look for the last version with most patches.
 
 Warnings ``size of symbol ... changed ...'' are produced by ifc 7.1 at
 the loading stage.

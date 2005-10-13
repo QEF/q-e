@@ -1,3 +1,9 @@
+Fixed in version 3.0:
+
+  *  latgen.f90 : case ibrav=13 bad
+
+  *  kpoints.f : case ibrav=5 bad
+
 Fixed in version 2.1.5:
 
  *    bad forces and stresses with LDA+U in spin-unpolarised case

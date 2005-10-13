@@ -958,7 +958,7 @@ CONSTRAINTS
       2          cubic F (fcc)                     not used   
       3          cubic I (bcc)                     not used
       4          Hexagonal and Trigonal P        celldm(3)=c/a
-      5          Trigonal R                      celldm(4)=cos(aalpha)
+      5          Trigonal R                      celldm(4)=cos(alpha)
       6          Tetragonal P (st)               celldm(3)=c/a
       7          Tetragonal I (bct)              celldm(3)=c/a
       8          Orthorhombic P                  celldm(2)=b/a,celldm(3)=c/a
@@ -969,45 +969,88 @@ CONSTRAINTS
                                                  celldm(4)=cos(ab)
      13          Monoclinic base-centered        celldm(2)=b/a,celldm(3)=c/a,
                                                  celldm(4)=cos(ab)
-     14          Triclinic P                     celldm(2)= b/a,
+     14          Triclinic                       celldm(2)= b/a,
                                                  celldm(3)= c/a,
                                                  celldm(4)= cos(bc),
                                                  celldm(5)= cos(ac),
                                                  celldm(6)= cos(ab)
 
-  The special axis is the z-axis, one basal-plane vector is along x, 
-  and the other basal-plane vector is at angle beta for monoclinic 
-  (beta is not actually used), at 120 degrees for trigonal and hexagonal(p)
-  groups, and at 90 degrees for remaining groups, excepted fcc, bcc, 
-  tetragonal(i), for which the crystallographic vectors are as follows:
-
-  fcc bravais lattice.
+  For P lattices: the special axis (c) is the z-axis, one basal-plane 
+  vector (a) is along x, the other basal-plane vector (b) is at angle 
+  gamma for monoclinic, at 120 degrees for trigonal and hexagonal 
+  lattices, at 90 degrees for cubic, tetragonal, orthorhombic lattices
+ 
+  sc simple cubic
   ====================
+  a1 = a(1,0,0),  a2 = a(0,1,0),  a3 = a(0,0,1)
 
-  a1=(a/2)(-1,0,1), a2=(a/2)(0,1,1), a3=(a/2)(-1,1,0).
-
-  bcc bravais lattice.
+  fcc face centered cubic
   ====================
+  a1 = (a/2)(-1,0,1),  a2 = (a/2)(0,1,1), a3 = (a/2)(-1,1,0).
 
-  a1=(a/2)(1,1,1), a2=(a/2)(-1,1,1), a3=(a/2)(-1,-1,1).
+  bcc body entered cubic
+  ====================
+  a1 = (a/2)(1,1,1),  a2 = (a/2)(-1,1,1),  a3 = (a/2)(-1,-1,1).
 
-  tetragonal (i) bravais lattices.
-  ================================
-  a1=(a/2,a/2,c/2), a2=(a/2,-a/2,c/2), a3=(-a/2,-a/2,c/2).
+  simple hexagonal and trigonal(p)
+  ====================
+  a1 = a(1,0,0),  a2 = a(-1/2,sqrt(3),0),  a3 = a(0,0,c/a).
 
-  trigonal(r) groups.
+  trigonal(r) 
   ===================
-
   for these groups, the z-axis is chosen as the 3-fold axis, but the
   crystallographic vectors form a three-fold star around the z-axis,
-  and the primitive cell is a simple rhombohedron. if c is the cosine
-  of the angle between any pair of crystallographic vectors, and if
-  tx=sqrt((1-c)/2), ty=sqrt((1-c)/6), tz=sqrt((1+2c)/3), the crystal-
-  lographic vectors are:
+  and the primitive cell is a simple rhombohedron. The crystallographic
+  vectors are:
+        a1 = a(tx,-ty,tz),   a2 = a(0,2ty,tz),   a3 = a(-tx,-ty,tz).
+  where c=cos(alpha) is the cosine of the angle alpha between any pair
+  of crystallographic vectors, tc, ty, tz are defined as
+       tx=sqrt((1-c)/2), ty=sqrt((1-c)/6), tz=sqrt((1+2c)/3)
 
-        a1=a(0,2ty,tz),  a2=a(tx,-ty,tz),  a3=a(-tx,-ty,tz).
+  simple tetragonal (p)
+  ====================
+     a1 = a(1,0,0),  a2 = a(0,1,0),  a3 = a(0,0,c/a)
+
+  body centered tetragonal (i)
+  ================================
+     a1 = (a/2)(1,-1,c/a),  a2 = (a/2)(1,1,c/a),  a3 = (a/2)(-1,-1,c/a).
+
+  simple orthorhombic (p)
+  =============================
+     a1 = (a,0,0),  a2 = (0,b,0), a3 = (0,0,c)
 
   bco base centered orthorhombic
   =============================
-  a1=(a/2,b/2,0), a2=(-a/2,b/2,0), a3=(0,0,c)
+     a1 = (a/2,b/2,0),  a2 = (-a/2,b/2,0),  a3 = (0,0,c)
+
+  face centered orthorhombic
+  =============================
+     a1 = (a/2,0,c/2),  a2 = (a/2,b/2,0),  a3 = (0,b/2,c/2)
+
+  body centered orthorhombic
+  =============================
+     a1 = (a/2,b/2,c/2),  a2 = (-a/2,b/2,c/2),  a3 = (-a/2,-b/2,c/2)
+
+  monoclinic (p)
+  =============================
+     a1 = (a,0,0), a2= (b*sin(gamma), b*cos(gamma), 0),  a3 = (0, 0, c)
+  where gamma is the angle between axis a and b
+
+  base centered monoclinic
+  =============================
+     a1 = (a/2*sin(gamma), a/2*cos(gamma)-b/2, 0), 
+     a2 = (a/2*sin(gamma), a/2*cos(gamma)+b/2, 0),
+     a3 = (0, 0, c)
+  where gamma is the angle between axis a and b
+
+  triclinic 
+  =============================
+     a1 = (a, 0, 0),
+     a2 = (b*cos(gamma), b*sin(gamma), 0)
+     a3 = (c*cos(beta),  c*(cos(alpha)-cos(beta)cos(gamma))/sin(gamma),
+           c*sqrt( 1 + 2*cos(alpha)cos(beta)cos(gamma) 
+                     - cos(alpha)^2-cos(beta)^2-cos(gamma)^2 )/sin(gamma) )
+  where alpha is the angle between axis b and c
+         beta is the angle between axis a and c
+        gamm  is the angle between axis a and b
 ----------------------------------------------------------------------

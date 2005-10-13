@@ -9,6 +9,11 @@ users-guide.tex    User's Guide for Quantum-ESPRESSO
 refman.tex         Reference (technical) manual for PWscf: little more
                    than a template at present
 
+smd.tex            Notes on the usage of the "Strings Method", by Y. Kanai
+README.AUTOPILOT   Notes on the "autopilot" feature, by Targacept, Inc.
+nomefile.upf       Naming convention for UPF pseudopotentials
+                   The UPF format is described in ../upftools/UPF
+
 INPUT_CP         Input parameters for CP 
 INPUT.HOWTO      Hints on how to choose simulation parameters for
                  CP with Car-Parrinello dynamics
@@ -33,7 +38,10 @@ BUGS            List of bugs fixed - only bugs that have been present
 CREDITS         Who did what
 
 pwscf.png, pwscf.eps, democritos.png, democritos.eps
-                PWscf and DEMOCRITOS logos -- included from manual.tex
+                PWscf and DEMOCRITOS logos -- included from users-guide.tex
+
+Documentation for the "atomic" pseudopotential generation code 
+can be found in directory ../atomic_doc/
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU
