@@ -75,6 +75,7 @@ then
 		sparc-sun-* )                           arch=sparc   ;;
 		*cray-unicosmp* )                       arch=crayx1  ;;
 		powerpc-apple-darwin* )                 arch=mac     ;;
+		*-pc-cygwin )                           arch=cygwin  ;;
 	esac
 fi
 echo checking architecture... $arch
@@ -141,6 +142,13 @@ mac )
 	try_arflags="ruv"
 	try_dflags="-D__MAC -D__XLF"
 	ranlib="ranlib"
+	;;
+cygwin )
+	try_mpif90="mpif90"
+	try_f90="g95 f90"
+	try_ar="ar"
+	try_arflags="ruv"
+	try_dflags="-D__LINUX"
 	;;
 * )
 	AC_MSG_WARN(unsupported architecture)
@@ -289,6 +297,10 @@ mac:* )
 	try_cc="gcc"
 	try_f77="f77 $f90"
 	;;
+cygwin*:g95 )
+	try_cc="gcc cc"
+	try_f77="$g95 f90"
+	;;
 * )
 	# unknown, try these
 	try_cc="cc gcc"
@@ -355,6 +367,7 @@ mac:mpcc:mpf90 )                      ;;
 mac:gcc:xlf90 )                       ;;
 crayx1:cc:ftn )                       ;;
 sparc:cc:f90 )                        ;;
+cygwin:gcc:g95 )                      ;;
 
 * )
 	AC_MSG_WARN(unsupported C/Fortran compilers combination)
@@ -467,6 +480,16 @@ linux*:g95 )
 	try_dflags="$try_dflags -D__G95"
 	have_cpp=1
 	;;
+cygwin:g95 )
+        try_fflags="-O3 -cpp"
+        try_f90flags="\$(FFLAGS)"
+        try_fflags_noopt="-O0 -cpp"
+        try_f90flags_noopt="\$(FFLAGS_NOOPT)"
+        try_ldflags=""
+        #try_ldflags_static="-static"
+        try_dflags="$try_dflags -D__G95"
+        have_cpp=1
+        ;;
 aix:*xlf* )
 	try_fflags="-q64 -qalias=noaryovrlp -O3 -qstrict \
 -qarch=auto -qtune=auto -qdpc -Q -qalias=nointptr"
@@ -573,6 +596,11 @@ linux*:gcc )
 	c_ldflags=""
 	try_cpp="cpp"
 	;;
+cygwin:gcc )
+        try_cflags="-O3 -fomit-frame-pointer"
+        c_ldflags=""
+        try_cpp="cpp"
+        ;;
 aix:mpcc* | aix:xlc* | aix:cc )
 	try_cflags="-q64 -O2"
 	c_ldflags="-q64"
@@ -708,14 +736,27 @@ then
 		;;
 
 	linux64:* )
+                mklname=mkl
+                case $host in 
+                ia64-*-linux-gnu)
 		# check for mkl (in several directories)
 		try_libdirs="/opt/intel/mkl/8.0/lib/64
+			     /opt/intel/mkl721/lib/64
 			     /opt/intel/mkl72/lib/64
 			     /opt/intel/mkl701/lib/64
 			     /opt/intel/mkl70/lib/64
 			     /opt/intel/mkl/mkl61/lib/64
 			     /opt/intel/mkl/lib/64
 			     /opt/intel/mkl61/lib/64"
+                	mklname=mkl_ipf
+                	;;
+                x86_64-*-linux-gnu)
+			try_libdirs="/opt/intel/mkl/8.0/lib/em64t
+				     /opt/intel/mkl721/lib/em64t"
+                	mklname=mkl_em64t
+                	;;
+                esac
+
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
 		for dir in none $try_libdirs
@@ -730,8 +771,8 @@ then
 			fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
-			LIBS="-lguide"
-			AC_SEARCH_LIBS(dgemm, mkl_ipf, have_blas=1 have_mkl=1
+			LIBS="-lguide -lpthread"
+			AC_SEARCH_LIBS(dgemm, "$mklname", have_blas=1 have_mkl=1
 				       blas_libs="$try_loption $LIBS")
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
@@ -741,6 +782,7 @@ then
 	linux32:* )
 		# check for mkl (in several directories)
 		try_libdirs="/opt/intel/mkl/8.0/lib/32
+			     /opt/intel/mkl721/lib/32
 			     /opt/intel/mkl72/lib/32
 			     /opt/intel/mkl701/lib/32
 			     /opt/intel/mkl70/lib/32
