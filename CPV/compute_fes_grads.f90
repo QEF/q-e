@@ -321,10 +321,11 @@ SUBROUTINE metadyn()
                                  sort_tau, tau_srt, ind_srt
   USE io_global,          ONLY : stdout
   USE io_files,           ONLY : iunmeta, iunaxsf, scradir
-  USE coarsegrained_vars, ONLY : fe_nstep, shake_nstep, fe_grad, metadyn_fmt, &
-                                 new_target, to_target, to_new_target, &
-                                 fe_step, dfe_acc, metadyn_history,    &
-                                 max_metadyn_iter, starting_metadyn_iter
+  USE coarsegrained_vars, ONLY : fe_grad, new_target, to_target, metadyn_fmt, &
+                                 to_new_target, fe_step, metadyn_history, &
+                                 max_metadyn_iter, starting_metadyn_iter, &
+                                 fe_nstep, shake_nstep, dfe_acc, gaussian_add, &
+                                 gaussian_add_iter
   USE coarsegrained_base, ONLY : add_gaussians
   USE io_global,          ONLY : ionode
   USE xml_io_base,        ONLY : check_restartfile
@@ -384,7 +385,8 @@ SUBROUTINE metadyn()
         !
         IF ( norm_fe_grad < eps8 ) THEN
            !
-           ! ... use a random perturbation
+           ! ... use a random perturbation (just in case we start very close
+           ! ... to the minimum)
            !
            WRITE( iunmeta, '("random step")' )
            !
@@ -400,7 +402,7 @@ SUBROUTINE metadyn()
         !
         ! ... the system is "adiabatically" moved to the new target
         !
-        new_target(:) = target(:) - fe_step * fe_grad(:) / norm( fe_grad )
+        new_target(:) = target(:) - fe_step * fe_grad(:) / norm_fe_grad
         !
         to_target(:) = new_target(:) - target(:)
         !
@@ -421,6 +423,8 @@ SUBROUTINE metadyn()
      iter = iter + 1
      !
      metadyn_history(:,iter) = target(:)
+     !
+     gaussian_add(iter) = ( MOD( iter - 1, gaussian_add_iter ) == 0 )
      !
      IF ( ionode ) CALL write_config( iter )
      !
@@ -451,8 +455,12 @@ SUBROUTINE metadyn()
         !
      END IF
      !
-     IF ( ionode ) &
-        WRITE( iunmeta, metadyn_fmt ) iter, target(:), etot, fe_grad(:)
+     IF ( ionode ) THEN
+        !
+        WRITE( iunmeta, metadyn_fmt ) &
+            iter, target(:), etot, fe_grad(:), gaussian_add(iter)
+        !
+     END IF
      !
      IF ( ionode ) CALL flush_unit( iunmeta )
      IF ( ionode ) CALL flush_unit( iunaxsf )

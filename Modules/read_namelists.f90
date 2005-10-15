@@ -418,9 +418,9 @@ MODULE read_namelists_module
        ! ... meta-dynamics defaults
        !
        fe_step     = 0.4D0
-       fe_nstep    = 50
-       shake_nstep = 5
-       g_amplitude   = 0.01D0
+       fe_nstep    = 100
+       shake_nstep = 10
+       g_amplitude   = 0.005D0
        g_sigma       = 0.4D0
        !
        RETURN

@@ -76,7 +76,7 @@ NAMELIST &CONTROL
 calculation    CHARACTER
                a string describing the task to be performed:
                'scf', 'nscf', 'phonon', 'relax', 'md', 'vc-relax', 
-	       'vc-md', 'neb', 'smd'
+	       'vc-md', 'neb', 'smd', 'metadyn'
                (vc = variable-cell). Default: 'scf'
 
 title          CHARACTER
@@ -544,7 +544,7 @@ delta_t        REAL ( default = 1.D0 )
                delta_t /= 1 && delta_T > 0 : at each step the temperature is 
                                              multiplied by delta_t; this is 
                                              done rescaling all the velocities.
-               delta_t < 0                 : every 'nraise' steps the temperature
+               delta_t < 0                 : every 'nraise' steps temperature
                                              is reduced by -delta_T
                This keyword is NOT used in the case of variable cell
                calculations.
@@ -699,6 +699,29 @@ write_save     LOGICAL ( default = .FALSE. )
                used to write the prefix.save file for each image ( needed for
                post-processing )
 
+!
+! ... eywords used only in meta-dynamics calculations
+!
+
+fe_step        REAL ( default = 0.04 )
+               meta-dinamics step length, defined using the same units used 
+               to define the colletive variables (constraints).
+
+g_amplitude    REAL ( default = 0.005 Hartree )
+               Amplitude of the gaussians used in meta-dinamics.
+
+g_sigma        REAL ( default = 0.04 )
+               Spread  of the gaussians used in meta-dinamics, defined using the
+               same units used to define the colletive variables (constraints).
+
+fe_nstep       INTEGER ( default = 100 )
+               Maximum number of steps used to evaluate the potential of
+               mean force.
+
+shake_nstep    INTEGER ( default = 10 )
+               Number of steps used to switch to the new values of the
+               collective variables (constraints).
+
 ===============================================================================
 NAMELIST &CELL ( only if calculation = 'vc-relax', 'vc-md' )
 
@@ -717,7 +740,7 @@ cell_dynamics
                             extended lagrangian
                CASE ( calculation = 'vc-md' )
                  'none': default 
-                 'pr':      (Beeman) molecular dynamics of the Parrinello-Rahman 
+                 'pr':      (Beeman) molecular dynamics of the Parrinello-Rahman
                             extended lagrangian
                  'w':       (Beeman) molecular dynamics of the new Wentzcovitch
                             extended lagrangian

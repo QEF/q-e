@@ -1,4 +1,4 @@
-
+!
 ! Copyright (C) 2002-2005 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -35,7 +35,7 @@ SUBROUTINE iosys()
                             nberrycic_ => nberrycic
 
   !
-  USE cell_base,     ONLY : at, alat, omega, &
+  USE cell_base,     ONLY : at, bg, alat, omega, &
                             celldm_ => celldm, &
                             ibrav_  => ibrav
   !
@@ -135,13 +135,11 @@ SUBROUTINE iosys()
                             reduce_io, ethr, lscf, lbfgs, lmd, lpath, lneb, &
                             lsmd, lphonon, ldamped, lraman, lrescale_t, &
                             noinv, restart, lmetadyn, lconstrain, &
-                            lcoarsegrained
+                            lcoarsegrained, lconstrain, twfcollect
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
   !
   USE fixed_occ,     ONLY : tfixed_occ
-  !
-  USE control_flags, ONLY : twfcollect 
   !
   USE path_variables, ONLY : nstep_path, lsteep_des, lquick_min, lbroyden, &
                              ldamped_dyn, lmol_dyn, llangevin, &
@@ -172,8 +170,6 @@ SUBROUTINE iosys()
   !
   USE spin_orb, ONLY : lspinorb_ => lspinorb
   !
-  USE constraints_module, ONLY : init_constraint
-  !
   USE bfgs_module,   ONLY : bfgs_ndim_        => bfgs_ndim, &
                             trust_radius_max_ => trust_radius_max, &
                             trust_radius_min_ => trust_radius_min, &
@@ -189,7 +185,9 @@ SUBROUTINE iosys()
   !
   USE check_stop,    ONLY : check_stop_init
   !
-  ! CONTROL namelist
+  USE constraints_module, ONLY : init_constraint
+  !
+  ! ... CONTROL namelist
   !
   USE input_parameters, ONLY : title, calculation, verbosity, &
                                restart_mode, nstep, iprint, tstress, tprnfor, &
@@ -200,7 +198,7 @@ SUBROUTINE iosys()
                                nberrycic
 
   !
-  ! SYSTEM namelist
+  ! ... SYSTEM namelist
   !
   USE input_parameters, ONLY : ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
                                nat, ntyp, nbnd, nelec, nelup, neldw, &
@@ -219,7 +217,7 @@ SUBROUTINE iosys()
                                constrained_magnetization, B_field, &
                                fixed_magnetization, report, lspinorb
   !
-  ! ELECTRONS namelist
+  ! ... ELECTRONS namelist
   !
   USE input_parameters, ONLY : electron_maxstep, mixing_mode, mixing_beta, &
                                mixing_ndim, mixing_fixed_ns, conv_thr,     &
@@ -227,7 +225,7 @@ SUBROUTINE iosys()
                                diago_david_ndim, diago_diis_ndim,          &
                                diagonalization, startingwfc, startingpot
   !
-  ! IONS namelist
+  ! ... IONS namelist
   !
   USE input_parameters, ONLY : phase_space, ion_dynamics, ion_positions, tolp, &
                                tempw, delta_t, nraise, ion_temperature,        &
@@ -241,16 +239,16 @@ SUBROUTINE iosys()
                                trust_radius_ini, g_amplitude, g_sigma, fe_step,&
                                fe_nstep, shake_nstep
   !
-  ! CELL namelist
+  ! ... CELL namelist
   !
   USE input_parameters, ONLY : cell_parameters, cell_dynamics, press, &
                                wmass, cell_temperature, cell_factor
   !
-  ! PHONON namelist
+  ! ... PHONON namelist
   !
   USE input_parameters, ONLY : phonon, modenum, xqq
   !
-  ! RAMAN namelist
+  ! ... RAMAN namelist
   !
   USE input_parameters, ONLY : b_length, lcart
   !
@@ -301,7 +299,7 @@ SUBROUTINE iosys()
   !
   twfcollect = wf_collect
   !
-  ! ...   Set Values for electron and bands
+  ! ... Set Values for electron and bands
   !
   tfixed_occ = .FALSE.
   !
@@ -1287,6 +1285,10 @@ SUBROUTINE iosys()
   !
   CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
   !
+  ! ... Generate the reciprocal lattice vectors
+  !
+  CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
+  !
   IF ( full_phs_path_flag ) THEN
      !
      ! ... "path" optimizations specific
@@ -1369,10 +1371,6 @@ SUBROUTINE iosys()
      !
   END IF
   !
-  ! ... set constraints
-  !
-  IF ( lconstrain ) CALL init_constraint( nat, tau, alat, ityp )
-  !
   ! ... Renata's dynamics uses masses in atomic units
   !
   IF ( calc /= ' ' ) amass = amass * amconv
@@ -1434,6 +1432,10 @@ SUBROUTINE iosys()
      !
   END IF
   !
+  ! ... set constraints
+  !
+  IF ( lconstrain ) CALL init_constraint( nat, tau, alat, ityp )
+  !
   CALL verify_tmpdir()
   !
   CALL restart_from_file()
@@ -1450,10 +1452,15 @@ SUBROUTINE iosys()
   !
 END SUBROUTINE iosys
 !
-!-----------------------------------------------------------------------
+!----------------------------------------------------------------------------
 SUBROUTINE read_cards( psfile, atomic_positions_ )
-  !-----------------------------------------------------------------------
+  !----------------------------------------------------------------------------
   !
+  USE input_parameters,   ONLY : atom_label, atom_pfile, atom_mass, taspc, &
+                                 tapos, rd_pos, atomic_positions, if_pos,  &
+                                 sp_pos, k_points, xk, wk, nk1, nk2, nk3,  &
+                                 k1, k2, k3, nkstot, cell_symmetry, rd_ht, &
+                                 trd_ht, f_inp, calculation
   USE wvfct,              ONLY : gamma_only
   USE cell_base,          ONLY : at, ibrav, symm_type, celldm
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm
@@ -1473,16 +1480,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
                                  if_pos_ =>  if_pos
   USE dynam,              ONLY : amass
   USE control_flags,      ONLY : lfixatom
-  USE input_parameters,   ONLY : atom_label, atom_pfile, atom_mass, &
-                                 taspc, tapos, rd_pos, &
-                                 atomic_positions, if_pos, sp_pos, &
-                                 k_points, xk, wk, nk1, nk2, nk3, &
-                                 k1, k2, k3, nkstot, cell_symmetry, rd_ht, &
-                                 trd_ht, f_inp, calculation
   USE read_cards_module,  ONLY : read_cards_base => read_cards
-  !
-  USE parser
-  USE basic_algebra_routines, ONLY : norm
   !
   IMPLICIT NONE
   !
@@ -1655,7 +1653,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   IF ( ibrav /= 0 .AND. tcell ) &
      CALL errore( ' cards ', ' redundant data for cell parameters', 2 )
   !
-  RETURN 
+  RETURN
   !
 END SUBROUTINE read_cards
 !

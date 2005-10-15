@@ -69,7 +69,7 @@ NAMELIST &CONTROL
 calculation    CHARACTER ( default = 'cp' )
                a string describing the task to be performed:
                'cp', 'scf', 'nscf', 'relax', 'vc-relax', 'vc-cp', 'neb', 
-               'smd', 'cp-wf', 'fpmd'
+               'smd', 'cp-wf', 'fpmd', 'metadyn'
                where :               
                cp       = Car-Parrinello MD (includes cases 'scf' and 'relax')
                scf      = electron minimization
@@ -85,6 +85,7 @@ calculation    CHARACTER ( default = 'cp' )
                fpmd     = CP works in FPMD compatibility mode, with all FPMD
                           features not yet ported in CP, but works only for
                           norm-conserving pseudopotentials
+               metadyn  = Laio-Parrinello meta-dynamics
 
 title          CHARACTER ( default = 'MD Simulation' )
                reprinted on output.
@@ -534,6 +535,28 @@ free_energy    LOGICAL ( default = .FALSE. )
                Used in the evaluation of the free-energy profile with
                finite-temperature string dynamics.
 
+!
+! ... eywords used only in meta-dynamics calculations
+!
+
+fe_step        REAL ( default = 0.04 )
+               meta-dinamics step length, defined using the same units used 
+               to define the colletive variables (constraints).
+
+g_amplitude    REAL ( default = 0.005 Hartree )
+               Amplitude of the gaussians used in meta-dinamics.
+
+g_sigma        REAL ( default = 0.04 )
+               Spread  of the gaussians used in meta-dinamics, defined using the
+               same units used to define the colletive variables (constraints).
+
+fe_nstep       INTEGER ( default = 100 )
+               Maximum number of steps used to evaluate the potential of
+               mean force.
+
+shake_nstep    INTEGER ( default = 10 )
+               Number of steps used to switch to the new values of the
+               collective variables (constraints).
 
 ===============================================================================
 NAMELIST &CELL ( only if calculation = 'vc-relax', 'vc-cp' )

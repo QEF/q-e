@@ -52,7 +52,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   REAL(DP)              :: tcpu, error
   CHARACTER(LEN=256)    :: tmp_dir_saved, filename
   LOGICAL               :: opnd, file_exists
-  LOGICAL               :: lfirst
+  LOGICAL               :: lfirst, ldamped_saved
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
     ! previous positions of atoms (needed for extrapolation)
   !
@@ -88,6 +88,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   END IF
   !
   tmp_dir_saved = tmp_dir
+  ldamped_saved = ldamped
   !
   ! ... vectors pes and grad_pes are initalized to zero for all images on
   ! ... all nodes: this is needed for the final mp_sum()
@@ -144,8 +145,6 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         CALL clean_pw( .FALSE. )
         !
-        CALL deallocate_constraint()
-        !
         tcpu = get_clock( 'PWSCF' )
         !
         IF ( nimage > 1 ) THEN
@@ -188,15 +187,14 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
         END IF
         !
-        ! ... the new value of the order-parameter is set here
-        !
+        CALL deallocate_constraint()
         CALL init_constraint( nat, tau, alat, ityp )
         !
-        new_target(:) = pos(:,image)
-        !
-        ! ... initialization of the scf calculation
-        !
         CALL init_run()
+        !
+        ! ... the old and new values of the order-parameter are set here
+        !
+        new_target(:) = pos(:,image)
         !
         IF ( ionode ) THEN
            !     
@@ -263,8 +261,11 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         lfirst = .TRUE.
         !
         ! ... first the system is "adiabatically" moved to the new target
+        ! ... by using MD without damping
         !
         to_target(:) = new_target(:) - target(:)
+        !
+        ldamped = .FALSE.
         !
         CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
         CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.update' )
@@ -279,13 +280,13 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
            IF ( .NOT. stat ) RETURN
            !
-           CALL delete_if_present( TRIM( tmp_dir )//TRIM( prefix )//'.bfgs' )
-           !
            CALL move_ions()
            !
            lfirst = .FALSE.
            !
         END DO
+        !
+        ldamped = ldamped_saved
         !
         ! ... then the free energy gradients are computed
         !
@@ -303,6 +304,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            IF ( .NOT. stat )  RETURN
            !
            CALL move_ions()
+           !
+           IF ( ldamped .AND. conv_ions ) EXIT
            !
            lfirst = .FALSE.
            !
@@ -415,7 +418,8 @@ SUBROUTINE metadyn()
   USE io_files,           ONLY : iunaxsf, iunmeta
   USE coarsegrained_vars, ONLY : fe_grad, new_target, to_target, metadyn_fmt, &
                                  to_new_target, fe_step, metadyn_history, &
-                                 max_metadyn_iter, starting_metadyn_iter
+                                 max_metadyn_iter, starting_metadyn_iter, &
+                                 gaussian_add, gaussian_add_iter
   USE coarsegrained_base, ONLY : add_gaussians
   USE io_global,          ONLY : ionode, stdout
   USE basic_algebra_routines
@@ -454,7 +458,9 @@ SUBROUTINE metadyn()
            !
         END IF
         !
-        new_target(:) = target(:) - fe_step * fe_grad(:) / norm( fe_grad )
+        fe_grad(:) = fe_grad(:) / norm_fe_grad
+        !
+        new_target(:) = target(:) - fe_step * fe_grad(:)
         !
         WRITE( stdout, '(/,5X,"adiabatic switch of the system ", &
                             & "to the new coarse-grained positions",/)' )
@@ -469,14 +475,20 @@ SUBROUTINE metadyn()
      !
      metadyn_history(:,iter) = target(:)
      !
+     gaussian_add(iter) = ( MOD( iter - 1, gaussian_add_iter ) == 0 )
+     !
      IF ( ionode ) CALL write_config( iter )
      !
      WRITE( stdout, '(/,5X,"calculation of the potential of mean force",/)' )
      !
      CALL free_energy_grad( iter )
      !
-     IF ( ionode ) &
-        WRITE( iunmeta, metadyn_fmt ) iter, target(:), etot, fe_grad(:)
+     IF ( ionode ) THEN
+        !
+        WRITE( iunmeta, metadyn_fmt ) &
+            iter, target(:), etot, fe_grad(:), gaussian_add(iter)
+        !
+     END IF
      !
      IF ( ionode ) CALL flush_unit( iunmeta )
      IF ( ionode ) CALL flush_unit( iunaxsf )
@@ -564,18 +576,21 @@ SUBROUTINE metadyn()
       !------------------------------------------------------------------------
       !
       USE coarsegrained_vars, ONLY : shake_nstep
-      USE control_flags,      ONLY : istep
+      USE control_flags,      ONLY : istep, ldamped
       USE io_files,           ONLY : tmp_dir, prefix
       USE parser,             ONLY : delete_if_present
       !
-      LOGICAL :: stat
+      LOGICAL :: stat, ldamped_saved
       !
+      !
+      ldamped_saved = ldamped
       !
       to_target(:) = new_target(:) - target(:)
       !
       CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
       CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.update' )
       !
+      ldamped       = .FALSE.
       to_new_target = .TRUE.
       !
       DO istep = 1, shake_nstep
@@ -589,6 +604,8 @@ SUBROUTINE metadyn()
          CALL move_ions()
          !
       END DO
+      !
+      ldamped = ldamped_saved
       !
       RETURN
       !

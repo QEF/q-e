@@ -39,44 +39,45 @@ SUBROUTINE setup()
   ! ... + spin-orbit related quantities
   ! ... + LDA+U-related quantities
   !
-  USE kinds,            ONLY : DP
-  USE constants,        ONLY : eps8
-  USE parameters,       ONLY : npsx, nchix, npk
-  USE io_global,        ONLY : stdout
-  USE constants,        ONLY : pi, degspin
-  USE cell_base,        ONLY : at, bg, alat, tpiba, tpiba2, ibrav, symm_type
-  USE ions_base,        ONLY : nat, tau, ntyp => nsp, ityp, zv
-  USE basis,            ONLY : startingpot, natomwfc
-  USE gvect,            ONLY : gcutm, ecutwfc, dual, nr1, nr2, nr3
-  USE gsmooth,          ONLY : doublegrid, gcutms
-  USE klist,            ONLY : xk, wk, xqq, nks, nelec, degauss, lgauss, &
-                               lxkcry, nkstot, b_length, lcart, &
-                               nelup, neldw, two_fermi_energies
-  USE lsda_mod,         ONLY : lsda, nspin, current_spin, isk, &
-                               starting_magnetization
-  USE ktetra,           ONLY : nk1, nk2, nk3, k1, k2, k3, tetra, ntetra, ltetra
-  USE symme,            ONLY : s, irt, ftau, nsym, invsym
-  USE atom,             ONLY : r, oc, chi, nchi, lchi, jchi, mesh, msh
-  USE pseud,            ONLY : zp
-  USE wvfct,            ONLY : nbnd, nbndx, gamma_only
-  USE control_flags,    ONLY : tr2, ethr, alpha0, beta0, lscf, &
-                               lmd, lpath, lphonon, david, isolve, &
-                               niter, noinv,  nosym, modenum, lraman
-  USE relax,            ONLY : dtau_ref, starting_diag_threshold
-  USE cellmd,           ONLY : calc
-  USE uspp_param,       ONLY : psd, betar, nbeta, dion, jjj, lll, tvanp
-  USE uspp,             ONLY : okvan
-  USE ldaU,             ONLY : d1, d2, d3, lda_plus_u, Hubbard_U, Hubbard_l, &
-                               Hubbard_alpha, Hubbard_lmax
-  USE bp,               ONLY : gdir, lberry, nppstr
-  USE fixed_occ,        ONLY : f_inp, tfixed_occ   
-  USE char,             ONLY : sname
-  USE mp_global,        ONLY : nimage, kunit
-  USE spin_orb,         ONLY : lspinorb, domag
-  USE noncollin_module, ONLY : noncolin, npol, m_loc, i_cons, mcons, &
-                               angle1, angle2, bfield
+  USE kinds,              ONLY : DP
+  USE constants,          ONLY : eps8
+  USE parameters,         ONLY : npsx, nchix, npk
+  USE io_global,          ONLY : stdout
+  USE constants,          ONLY : pi, degspin
+  USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, symm_type
+  USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
+  USE basis,              ONLY : startingpot, natomwfc
+  USE gvect,              ONLY : gcutm, ecutwfc, dual, nr1, nr2, nr3
+  USE gsmooth,            ONLY : doublegrid, gcutms
+  USE klist,              ONLY : xk, wk, xqq, nks, nelec, degauss, lgauss, &
+                                 lxkcry, nkstot, b_length, lcart, &
+                                 nelup, neldw, two_fermi_energies
+  USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
+                                 starting_magnetization
+  USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
+                                 tetra, ntetra, ltetra
+  USE symme,              ONLY : s, irt, ftau, nsym, invsym
+  USE atom,               ONLY : r, oc, chi, nchi, lchi, jchi, mesh, msh
+  USE pseud,              ONLY : zp
+  USE wvfct,              ONLY : nbnd, nbndx, gamma_only
+  USE control_flags,      ONLY : tr2, ethr, alpha0, beta0, lscf, lmd, lpath, &
+                                 lphonon, david, isolve, niter, noinv, nosym, &
+                                 modenum, lraman
+  USE relax,              ONLY : dtau_ref, starting_diag_threshold
+  USE cellmd,             ONLY : calc
+  USE uspp_param,         ONLY : psd, betar, nbeta, dion, jjj, lll, tvanp
+  USE uspp,               ONLY : okvan
+  USE ldaU,               ONLY : d1, d2, d3, lda_plus_u, Hubbard_U, Hubbard_l, &
+                                 Hubbard_alpha, Hubbard_lmax
+  USE bp,                 ONLY : gdir, lberry, nppstr
+  USE fixed_occ,          ONLY : f_inp, tfixed_occ   
+  USE char,               ONLY : sname
+  USE mp_global,          ONLY : nimage, kunit
+  USE spin_orb,           ONLY : lspinorb, domag
+  USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, mcons, &
+                                 angle1, angle2, bfield
 #if defined (EXX)
-  USE exx             , ONLY : lexx, exxalfa, exx_grid_init
+  USE exx,                ONLY : lexx, exxalfa, exx_grid_init
 #endif
   !
   IMPLICIT NONE
@@ -155,21 +156,18 @@ SUBROUTINE setup()
   IF ( nelec == 0.D0 ) THEN
      !
 #if defined (__PGI)
-     !     
      DO na = 1, nat
         nelec = nelec + zv( ityp(na) )
      END DO
-     !
 #else
-     !
      nelec = SUM( zv(ityp(1:nat)) )
-     !
 #endif
      !
   END IF
   !
   ! ... If the occupations are from input, check the consistency with the
   ! ... number of electrons
+  !
   IF ( noncolin ) THEN
      !
      ! gamma_only and noncollinear not allowed
@@ -219,7 +217,8 @@ SUBROUTINE setup()
                       COS( angle1(ityp(na)) )
      END DO
      !
-     bfield=0.d0
+     bfield=0.D0
+     !
      IF ( i_cons == 2 ) THEN    
         !
         ! ... angle theta between the magnetic moments and the z-axis is
@@ -231,25 +230,29 @@ SUBROUTINE setup()
            !
         END DO
         !
-     ELSE IF (i_cons == 4) THEN
-         bfield(:)=mcons(:,1)
+     ELSE IF ( i_cons == 4 ) THEN
+        !
+        bfield(:) = mcons(:,1)
+        !
      END IF
      !
   ELSE
      !
-     ! wavefunctions are scalars
+     ! ... wavefunctions are scalars
      !
      npol = 1
      !
-     IF (i_cons==5) THEN
-        nelup= (nelec+mcons(3,1))*0.5d0
-        neldw= (nelec-mcons(3,1))*0.5d0
+     IF ( i_cons == 5 ) THEN
+        !
+        nelup = ( nelec + mcons(3,1) ) * 0.5D0
+        neldw = ( nelec - mcons(3,1) ) * 0.5D0
+        !
      ENDIF
-
-     IF (i_cons.NE.0.AND.i_cons.NE.5) &
-        call errore('setup','this i_cons requires a non colinear run',1)
-     IF (i_cons==5.AND.nspin.NE.2) &
-        call errore('setup','i_cons can be 5 only with nspin=2',1)
+     !
+     IF ( i_cons /= 0 .AND. i_cons /= 5 ) &
+        CALL errore( 'setup', 'this i_cons requires a non colinear run', 1 )
+     IF ( i_cons == 5 .AND. nspin /= 2 ) &
+        CALL errore( 'setup', 'i_cons can be 5 only with nspin=2', 1 )
   END IF
   !
   IF ( tfixed_occ ) THEN
@@ -259,15 +262,11 @@ SUBROUTINE setup()
      IF ( noncolin ) THEN
         !
 #if defined (__PGI)
-        !                 
         DO ibnd = 1, nbnd
            iocc = iocc + f_inp(ibnd,1)
         END DO
-        !
 #else
-        !
         iocc = iocc + SUM( f_inp(1:nbnd,1) )
-        !
 #endif        
         !
      ELSE
@@ -275,15 +274,11 @@ SUBROUTINE setup()
         DO is = 1, nspin
            !
 #if defined (__PGI)
-           !                 
            DO ibnd = 1, nbnd
               iocc = iocc + f_inp(ibnd,is)
            END DO
-           !
 #else
-           !
            iocc = iocc + SUM( f_inp(1:nbnd,is) )
-           !       
 #endif
            !
         END DO
@@ -580,10 +575,6 @@ SUBROUTINE setup()
      !
   END IF
   !
-  ! ... Generate the reciprocal lattice vectors
-  !
-  CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
-  !
   ! ... If  lxkcry = .TRUE. , the input k-point components in crystal
   ! ... axis are transformed in cartesian coordinates
   !
@@ -770,12 +761,15 @@ SUBROUTINE setup()
   IF ( lraman ) CALL set_kplusb(ibrav, xk, wk, b_length, nks, npk, lcart)
   !
 #if defined (EXX)
-  IF ( lexx ) then
-     call exx_grid_init
-     exxalfa = 0.d0
+  IF ( lexx ) THEN
+     !
+     call exx_grid_init()
+     !
+     exxalfa = 0.D0
+     !
   END IF
 #endif
-
+  !
   IF ( lsda ) THEN
      !
      ! ... LSDA case: two different spin polarizations, 

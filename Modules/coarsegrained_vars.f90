@@ -28,10 +28,12 @@ MODULE coarsegrained_vars
   ! ... Laio-Parrinello meta-dynamics
   !
   REAL(DP) :: fe_step
+  INTEGER  :: max_metadyn_iter
   !
-  INTEGER :: max_metadyn_iter
+  INTEGER, PARAMETER  :: gaussian_add_iter = 1
   !
   REAL(DP), ALLOCATABLE :: metadyn_history(:,:)
+  LOGICAL,  ALLOCATABLE :: gaussian_add(:)
   !
   REAL(DP) :: g_amplitude
   REAL(DP) :: g_sigma
@@ -41,7 +43,7 @@ MODULE coarsegrained_vars
   !
   INTEGER :: starting_metadyn_iter
   !
-  CHARACTER(LEN=16) :: metadyn_fmt
+  CHARACTER(LEN=32) :: metadyn_fmt
   !
   CONTAINS
     !
@@ -60,7 +62,12 @@ MODULE coarsegrained_vars
       ALLOCATE( new_target( nconstr ) )
       ALLOCATE( to_target(  nconstr ) )
       !
-      IF ( PRESENT( nstep ) ) ALLOCATE( metadyn_history( nconstr, nstep ) )
+      IF ( PRESENT( nstep ) ) THEN
+         !
+         ALLOCATE( metadyn_history( nconstr, nstep ) )
+         ALLOCATE( gaussian_add( nstep ) )
+         !
+      END IF
       !
       RETURN
       !
@@ -75,6 +82,7 @@ MODULE coarsegrained_vars
       IF ( ALLOCATED( new_target ) )       DEALLOCATE( new_target )
       IF ( ALLOCATED( to_target ) )        DEALLOCATE( to_target )
       IF ( ALLOCATED( metadyn_history ) )  DEALLOCATE( metadyn_history )
+      IF ( ALLOCATED( gaussian_add ) )     DEALLOCATE( gaussian_add )
       !
       RETURN
       !
@@ -141,7 +149,7 @@ MODULE coarsegrained_base
       !
       !
       metadyn_fmt = "(I4," // &
-                  & TRIM( int_to_char( 2*nconstr + 1 ) ) // "(2X,F12.8))"
+                  & TRIM( int_to_char( 2*nconstr + 1 ) ) // "(2X,F12.8),1X,L)"
       !
       g_sigma_sq     = g_sigma**2
       two_g_sigma_sq = 2.D0 * g_sigma_sq
@@ -267,7 +275,8 @@ MODULE coarsegrained_base
       !------------------------------------------------------------------------
       !
       USE constraints_module, ONLY : nconstr
-      USE coarsegrained_vars, ONLY : metadyn_history, fe_grad, dfe_acc
+      USE coarsegrained_vars, ONLY : metadyn_history, gaussian_add, &
+                                     fe_grad, dfe_acc
       USE coarsegrained_vars, ONLY : g_amplitude, g_sigma_sq, two_g_sigma_sq
       USE basic_algebra_routines
       !
@@ -288,6 +297,8 @@ MODULE coarsegrained_base
       dfe_acc = 0.D0
       !
       DO i = 1, iter - 1
+         !
+         IF ( .NOT. gaussian_add(i) ) CYCLE
          !
          delta = metadyn_history(:,i) - metadyn_history(:,iter)
          !

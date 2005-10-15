@@ -9,6 +9,7 @@
 !
 !#define __DEBUG_CONSTRAINTS
 #define __REMOVE_CONSTRAINT_FORCE
+!#define __USE_PBC
 !
 !----------------------------------------------------------------------------
 MODULE constraints_module
@@ -139,7 +140,7 @@ MODULE constraints_module
                    !
                    IF ( ityp(ia2) /= type_coord2 ) CYCLE
                    !
-                   dtau = ( tau(:,ia1) - tau(:,ia2) ) * alat
+                   dtau = pbc( tau(:,ia1) - tau(:,ia2) ) * alat
                    !
                    norm_dtau = norm( dtau )
                    !
@@ -180,7 +181,7 @@ MODULE constraints_module
                 !
                 IF ( ityp(ia2) /= type_coord1 ) CYCLE
                 !
-                dtau = ( tau(:,ia1) - tau(:,ia2) ) * alat
+                dtau = pbc( tau(:,ia1) - tau(:,ia2) ) * alat
                 !
                 norm_dtau = norm( dtau )
                 !
@@ -204,7 +205,7 @@ MODULE constraints_module
              ia1 = ANINT( constr(1,ia) )
              ia2 = ANINT( constr(2,ia) )
              !
-             target(ia) = norm( tau(:,ia1) - tau(:,ia2) ) * alat
+             target(ia) = norm( pbc( tau(:,ia1) - tau(:,ia2) ) ) * alat
              !
           CASE( 4 )
              !
@@ -225,8 +226,8 @@ MODULE constraints_module
              ia2 = ANINT( constr(2,ia) )
              ia3 = ANINT( constr(3,ia) )
              !
-             r21 = ( tau(:,ia2) - tau(:,ia1) ) * alat
-             r23 = ( tau(:,ia2) - tau(:,ia3) ) * alat
+             r21 = pbc( tau(:,ia2) - tau(:,ia1) ) * alat
+             r23 = pbc( tau(:,ia2) - tau(:,ia3) ) * alat
              !
              r21 = r21 / norm( r21 )
              r23 = r23 / norm( r23 )
@@ -275,8 +276,6 @@ MODULE constraints_module
        !
        ! ... local variables
        !
-       REAL(DP) :: x1, x2, y1, y2, z1, z2
-       REAL(DP) :: dist0
        INTEGER  :: ia, ia1, ia2, ia3, n_type_coord1
        REAL(DP) :: r21(3), r23(3)
        REAL(DP) :: norm_r21, norm_r23, cos123, sin123
@@ -316,7 +315,7 @@ MODULE constraints_module
                 !
                 IF ( ityp(ia2) /= type_coord2 ) CYCLE
                 !
-                dtau(:) = ( tau(:,ia1) - tau(:,ia2) ) * alat
+                dtau(:) = pbc( tau(:,ia1) - tau(:,ia2) ) * alat
                 !
                 norm_dtau = norm( dtau(:) )
                 !
@@ -360,7 +359,7 @@ MODULE constraints_module
              !
              IF ( ityp(ia1) /= type_coord1 ) CYCLE
              !
-             dtau(:) = ( tau(:,ia) - tau(:,ia1) ) * alat
+             dtau(:) = pbc( tau(:,ia) - tau(:,ia1) ) * alat
              !
              norm_dtau = norm( dtau(:) )
              !
@@ -386,26 +385,15 @@ MODULE constraints_module
           ia1 = ANINT( constr(1,index) )
           ia2 = ANINT( constr(2,index) )
           !
-          x1 = tau(1,ia1) * alat
-          y1 = tau(2,ia1) * alat
-          z1 = tau(3,ia1) * alat
-          x2 = tau(1,ia2) * alat
-          y2 = tau(2,ia2) * alat
-          z2 = tau(3,ia2) * alat
+          dtau(:) = pbc( tau(:,ia1) - tau(:,ia2) ) * alat
           !
-          ! ... the actual distance between the two atoms ( in bohr )
+          norm_dtau = norm( dtau(:) )
           !
-          dist0 = SQRT( ( x1 - x2 )**2 + ( y1 - y2 )**2 + ( z1 - z2 )**2 )
+          g = ( norm_dtau - target(index) )
           !
-          g = ( dist0 - target(index) )
+          dg(:,ia1) = dtau(:) / norm_dtau
           !
-          dg(1,ia1) = ( x1 - x2 ) / dist0
-          dg(2,ia1) = ( y1 - y2 ) / dist0
-          dg(3,ia1) = ( z1 - z2 ) / dist0
-          !
-          dg(1,ia2) = - dg(1,ia1)
-          dg(2,ia2) = - dg(2,ia1)
-          dg(3,ia2) = - dg(3,ia1)
+          dg(:,ia2) = - dg(:,ia1)
           !
        CASE( 4 )
           !
@@ -415,8 +403,8 @@ MODULE constraints_module
           ia2 = ANINT( constr(2,index) )
           ia3 = ANINT( constr(3,index) )
           !
-          r21 = ( tau(:,ia2) - tau(:,ia1) ) * alat
-          r23 = ( tau(:,ia2) - tau(:,ia3) ) * alat
+          r21 = pbc( tau(:,ia2) - tau(:,ia1) ) * alat
+          r23 = pbc( tau(:,ia2) - tau(:,ia3) ) * alat
           !
           norm_r21 = norm( r21 )
           norm_r23 = norm( r23 )
@@ -551,9 +539,10 @@ MODULE constraints_module
        !
        IF ( .NOT. global_test ) THEN
           !
-          CALL infomsg( 'check_constrain', 'g = 0 is not satisfied', -1 )
-          !
           WRITE( stdout, '(5X,"Number of step(s): ",I3)') MIN( i, maxiter )
+          !
+          CALL errore( 'check_constrain', &
+                       'on some constrain g = 0 is not satisfied', 1 )
           !
        END IF
        !
@@ -606,7 +595,7 @@ MODULE constraints_module
        !
 #endif
        !
-     END SUBROUTINE remove_constraint_force     
+     END SUBROUTINE remove_constraint_force
      !
      !-----------------------------------------------------------------------
      SUBROUTINE deallocate_constraint()
@@ -623,5 +612,35 @@ MODULE constraints_module
        RETURN
        !
      END SUBROUTINE deallocate_constraint
+     !
+     !-----------------------------------------------------------------------
+     FUNCTION pbc( vect )
+       !-----------------------------------------------------------------------
+       !
+       USE cell_base, ONLY : at, bg
+       !
+       IMPLICIT NONE
+       !
+       REAL(DP), INTENT(IN) :: vect(3)
+       REAL(DP)             :: pbc(3)
+       !
+       !
+#if defined (__USE_PBC)
+       !
+       pbc(:) = MATMUL( vect(:), bg(:,:) )
+       !
+       pbc(:) = pbc(:) - ANINT( pbc(:) )
+       !
+       pbc(:) = MATMUL( at(:,:), pbc(:) )
+       !
+       !
+#else
+       !
+       pbc(:) = vect(:)
+       !
+#endif
+       RETURN
+       !
+     END FUNCTION pbc
      !
 END MODULE constraints_module
