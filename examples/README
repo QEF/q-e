@@ -234,8 +234,8 @@ example26:
     This example shows how to use cp.x to do String method (SMD) to find
     the minimum energy path (MEP) (contributed by Yosuke Kanai).
     This example consists in 7 calculations and takes a long time.
-    In order to run calculations up to the N-th, use:
-       ./run_example N
+    In order to run calculations from the N-th to the M-th, use:
+       ./run_example N M
     Note that "./run_example" alone does nothing.
 
 example27:

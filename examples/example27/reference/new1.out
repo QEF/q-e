@@ -1,15 +1,16 @@
 =------------------------------------------------------------------------------=
 
-     CPV: variable-cell Car-Parrinello molecular dynamics
-     using ultrasoft Vanderbilt pseudopotentials
+     CP: variable-cell Car-Parrinello molecular dynamics
+     using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 2.1cvs - Tue Sep 6 13:11:13 CEST 2005                       
+     Version: 3.0 - Tue Sep 6 13:11:13 CEST 2005                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
-       Paolo Giannozzi, Nicola Marzari, and others
+       Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
+       Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  15:33:10   6Sep2005               
+   This run was started on:   4:53: 6  17Oct2005               
 
    Serial Build
 
@@ -20,11 +21,11 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /tmp/giannozz/espresso/pseudo/Hmeta.tm.UPF
+   /scr/giannozz/espresso/pseudo/Hmeta.tm.UPF
    file type is 20
 
    Reading pseudopotential for specie #  2 from file :
-   /tmp/giannozz/espresso/pseudo/C.meta.tm.UPF
+   /scr/giannozz/espresso/pseudo/C.meta.tm.UPF
    file type is 20
 
 
@@ -452,38 +453,38 @@
               averaged quantities :
          ekinc          ekin          epot          etot     tempp
        1.01944      21.54084     -46.83677     -22.66715       0.0
-     initialize   :     0.96s CPU
-     total_time   :    29.93s CPU (     133 calls,   0.225 s avg)
+     initialize   :     1.00s CPU
+     total_time   :    34.31s CPU (     133 calls,   0.258 s avg)
      formf        :     0.44s CPU
-     rhoofr       :     6.26s CPU (     134 calls,   0.047 s avg)
-     vofrho       :    13.92s CPU (     134 calls,   0.104 s avg)
-     dforce       :     8.90s CPU (     804 calls,   0.011 s avg)
+     rhoofr       :     7.94s CPU (     134 calls,   0.059 s avg)
+     vofrho       :    15.40s CPU (     134 calls,   0.115 s avg)
+     dforce       :    10.54s CPU (     804 calls,   0.013 s avg)
      calphi       :     0.03s CPU (     134 calls,   0.000 s avg)
-     ortho        :     0.45s CPU (     134 calls,   0.003 s avg)
-     updatc       :     0.04s CPU (     134 calls,   0.000 s avg)
+     ortho        :     0.17s CPU (     134 calls,   0.001 s avg)
+     updatc       :     0.07s CPU (     134 calls,   0.001 s avg)
      gram         :     0.00s CPU
-     newd         :     0.14s CPU (     134 calls,   0.001 s avg)
-     calbec       :     0.07s CPU (     135 calls,   0.001 s avg)
-     prefor       :     0.05s CPU (     135 calls,   0.000 s avg)
-     strucf       :     0.22s CPU (     134 calls,   0.002 s avg)
-     nlsm1        :     0.07s CPU (     403 calls,   0.000 s avg)
-     fft          :     2.63s CPU (    1340 calls,   0.002 s avg)
-     ffts         :     1.04s CPU (     536 calls,   0.002 s avg)
-     fftw         :    10.80s CPU (    9648 calls,   0.001 s avg)
-     rsg          :     0.32s CPU (     134 calls,   0.002 s avg)
+     newd         :     0.12s CPU (     134 calls,   0.001 s avg)
+     calbec       :     0.00s CPU (     135 calls,   0.000 s avg)
+     prefor       :     0.01s CPU (     135 calls,   0.000 s avg)
+     strucf       :     0.21s CPU (     134 calls,   0.002 s avg)
+     nlsm1        :     0.00s CPU (     403 calls,   0.000 s avg)
+     fft          :     3.96s CPU (    1340 calls,   0.003 s avg)
+     ffts         :     1.64s CPU (     536 calls,   0.003 s avg)
+     fftw         :    13.39s CPU (    9648 calls,   0.001 s avg)
+     rsg          :     0.05s CPU (     134 calls,   0.000 s avg)
 
 
 ======================== end cp ========================
 
 
  
-     CP90         :    31.33s CPU time
+     CP           :    35.76s CPU time
 
  
-   This run was terminated on:  15:33:41   6Sep2005            
+   This run was terminated on:   4:53:41  17Oct2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:    31.0
+   ELAPSED SECONDS:    36.0
    JOB DONE.
 =------------------------------------------------------------------------------=
 

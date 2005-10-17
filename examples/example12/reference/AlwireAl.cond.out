@@ -1,6 +1,6 @@
 
-     Program POST-PROC v.2.1cvs starts ...
-     Today is 26Jul2005 at 16:26:46 
+     Program POST-PROC v.3.0    starts ...
+     Today is 17Oct2005 at  2:50:41 
 
      Reading file alw.save ...      only dimensions
      read complete
@@ -10,7 +10,7 @@
 
      nbndx  =     6  nbnd   =     6  natomwfc =     9  npwx   =    1381
      nelec  =   3.00  nkb   =     4  ngl    =     905
-
+ 
 ===== INPUT FILE containing the left lead =====
 
      GEOMETRY:
@@ -61,7 +61,7 @@
 
      nbndx  =     6  nbnd   =     6  natomwfc =     9  npwx   =    1381
      nelec  =   3.00  nkb   =     4  ngl    =     905
-
+ 
 ===== INPUT FILE containing the scat. region =====
 
      GEOMETRY:
@@ -104,7 +104,7 @@
           Al      1         0                    0.2260
           Al      2         1                    0.2561
 ----- General information -----
-
+ 
 --- T calc. with identical leads (ikind=1) --- 
 
      nrx                       =           40
@@ -184,11 +184,11 @@
    13   0.3000 0.3250 0.0250   00001111
    14   0.3250 0.3500 0.0250   00001111
    15   0.3500 0.3750 0.0250   00001111
- ngper, shell number =  293 41
- ngper, n2d =  293 30
- Nchannels of the left tip =  4
+ ngper, shell number =          293          41
+ ngper, n2d =          293          30
+ Nchannels of the left tip =            4
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.1148856   0.0000000   2.9500000
    0.3599320   0.0000000   2.9500000
    0.3599320   0.0000000   2.9500000
@@ -217,29 +217,29 @@
                  1.00000
  Eigenchannel decomposition:
 @    1  2.95000  1.00000
-                      0.00252
-                      0.39842
-                      0.59443
-                      0.00463
+                      0.69583
+                      0.00381
+                      0.00287
+                      0.29749
 @    2  2.95000  1.00000
-                      0.35635
-                      0.15553
-                      0.08571
-                      0.40241
+                      0.30268
+                      0.00510
+                      0.01305
+                      0.67916
 @    3  2.95000  1.00000
-                      0.34958
-                      0.06520
-                      0.06235
-                      0.52286
+                      0.00049
+                      0.20652
+                      0.77048
+                      0.02252
 @    4  2.95000  1.00000
-                      0.29155
-                      0.38084
-                      0.25750
-                      0.07010
+                      0.00100
+                      0.78457
+                      0.21360
+                      0.00083
 E-Ef(ev), T(x2 spins) =    2.9500000   8.0000000
- Nchannels of the left tip =  4
+ Nchannels of the left tip =            4
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.0957689   0.0000000   2.8500000
    0.3541371   0.0000000   2.8500000
    0.3541371   0.0000000   2.8500000
@@ -268,29 +268,29 @@ E-Ef(ev), T(x2 spins) =    2.9500000   8.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  2.85000  1.00000
-                      0.00494
-                      0.60331
-                      0.39159
-                      0.00017
+                      0.57963
+                      0.00275
+                      0.00865
+                      0.40897
 @    2  2.85000  1.00000
-                      0.41748
-                      0.18930
-                      0.36219
-                      0.03103
+                      0.08299
+                      0.12276
+                      0.75251
+                      0.04173
 @    3  2.85000  1.00000
-                      0.53088
-                      0.17937
-                      0.20706
-                      0.08269
+                      0.33058
+                      0.00169
+                      0.12543
+                      0.54230
 @    4  2.85000  1.00000
-                      0.04670
-                      0.02803
-                      0.03917
-                      0.88611
+                      0.00679
+                      0.87280
+                      0.11341
+                      0.00700
 E-Ef(ev), T(x2 spins) =    2.8500000   8.0000000
- Nchannels of the left tip =  4
+ Nchannels of the left tip =            4
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.0718940   0.0000000   2.7500000
    0.3482474   0.0000000   2.7500000
    0.3482474   0.0000000   2.7500000
@@ -319,29 +319,29 @@ E-Ef(ev), T(x2 spins) =    2.8500000   8.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  2.75000  1.00000
-                      0.02244
-                      0.32392
-                      0.63218
-                      0.02146
+                      0.48260
+                      0.00463
+                      0.00629
+                      0.50647
 @    2  2.75000  1.00000
-                      0.39912
-                      0.04975
-                      0.03362
-                      0.51751
+                      0.09086
+                      0.12192
+                      0.75433
+                      0.03290
 @    3  2.75000  1.00000
-                      0.20791
-                      0.38578
-                      0.18359
-                      0.22272
+                      0.42552
+                      0.01522
+                      0.10089
+                      0.45836
 @    4  2.75000  1.00000
-                      0.37053
-                      0.24054
-                      0.15061
-                      0.23831
+                      0.00102
+                      0.85822
+                      0.13849
+                      0.00227
 E-Ef(ev), T(x2 spins) =    2.7500000   8.0000000
- Nchannels of the left tip =  4
+ Nchannels of the left tip =            4
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.0344521   0.0000000   2.6500000
    0.3422577   0.0000000   2.6500000
    0.3422577   0.0000000   2.6500000
@@ -370,32 +370,32 @@ E-Ef(ev), T(x2 spins) =    2.7500000   8.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  2.65000  1.00000
-                      0.88840
-                      0.03111
-                      0.03621
-                      0.04427
+                      0.93115
+                      0.00076
+                      0.00043
+                      0.06766
 @    2  2.65000  1.00000
-                      0.04697
-                      0.39385
-                      0.55583
-                      0.00336
+                      0.06797
+                      0.00385
+                      0.00611
+                      0.92207
 @    3  2.65000  1.00000
-                      0.02510
-                      0.25418
-                      0.15617
-                      0.56455
+                      0.00070
+                      0.13558
+                      0.85442
+                      0.00930
 @    4  2.65000  1.00000
-                      0.03953
-                      0.32086
-                      0.25179
-                      0.38781
+                      0.00018
+                      0.85981
+                      0.13904
+                      0.00097
 E-Ef(ev), T(x2 spins) =    2.6500000   8.0000000
- Nchannels of the left tip =  3
+ Nchannels of the left tip =            3
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3361625   0.0000000   2.5500000
    0.3361625   0.0000000   2.5500000
-  -0.4002871   0.0000000   2.5500000
+  -0.4002870   0.0000000   2.5500000
  to transmit
  T_ij for propagating states:
     1 -->     1   1.0000000
@@ -412,21 +412,21 @@ E-Ef(ev), T(x2 spins) =    2.6500000   8.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  2.55000  1.00000
-                      0.46159
-                      0.53747
-                      0.00093
+                      0.00449
+                      0.00967
+                      0.98584
 @    2  2.55000  1.00000
-                      0.37966
-                      0.31145
-                      0.30889
+                      0.10502
+                      0.88240
+                      0.01258
 @    3  2.55000  1.00000
-                      0.15875
-                      0.15108
-                      0.69018
+                      0.89049
+                      0.10793
+                      0.00158
 E-Ef(ev), T(x2 spins) =    2.5500000   6.0000000
- Nchannels of the left tip =  3
+ Nchannels of the left tip =            3
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3299558   0.0000000   2.4500000
    0.3299558   0.0000000   2.4500000
   -0.4046884   0.0000000   2.4500000
@@ -446,24 +446,24 @@ E-Ef(ev), T(x2 spins) =    2.5500000   6.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  2.45000  1.00000
-                      0.43301
-                      0.55887
-                      0.00811
+                      0.00802
+                      0.01017
+                      0.98181
 @    2  2.45000  1.00000
-                      0.39850
-                      0.29025
-                      0.31125
+                      0.19448
+                      0.78881
+                      0.01671
 @    3  2.45000  1.00000
-                      0.16849
-                      0.15088
-                      0.68063
+                      0.79750
+                      0.20102
+                      0.00148
 E-Ef(ev), T(x2 spins) =    2.4500000   6.0000000
- Nchannels of the left tip =  3
+ Nchannels of the left tip =            3
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3236310   0.0000000   2.3500000
    0.3236310   0.0000000   2.3500000
-  -0.4091214   0.0000000   2.3500000
+  -0.4091213   0.0000000   2.3500000
  to transmit
  T_ij for propagating states:
     1 -->     1   1.0000000
@@ -480,21 +480,21 @@ E-Ef(ev), T(x2 spins) =    2.4500000   6.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  2.35000  1.00000
-                      0.37061
-                      0.62175
-                      0.00763
+                      0.00987
+                      0.01601
+                      0.97413
 @    2  2.35000  1.00000
-                      0.39599
-                      0.21426
-                      0.38975
+                      0.14826
+                      0.82876
+                      0.02299
 @    3  2.35000  1.00000
-                      0.23340
-                      0.16398
-                      0.60262
+                      0.84188
+                      0.15524
+                      0.00288
 E-Ef(ev), T(x2 spins) =    2.3500000   6.0000000
- Nchannels of the left tip =  3
+ Nchannels of the left tip =            3
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3171809   0.0000000   2.2500000
    0.3171809   0.0000000   2.2500000
   -0.4135947   0.0000000   2.2500000
@@ -514,24 +514,24 @@ E-Ef(ev), T(x2 spins) =    2.3500000   6.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  2.25000  1.00000
-                      0.10979
-                      0.67797
-                      0.21223
+                      0.00210
+                      0.00273
+                      0.99517
 @    2  2.25000  1.00000
-                      0.59326
-                      0.11823
-                      0.28851
+                      0.01526
+                      0.98148
+                      0.00326
 @    3  2.25000  1.00000
-                      0.29694
-                      0.20380
-                      0.49925
+                      0.98264
+                      0.01580
+                      0.00157
 E-Ef(ev), T(x2 spins) =    2.2500000   6.0000000
- Nchannels of the left tip =  3
+ Nchannels of the left tip =            3
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3105976   0.0000000   2.1500000
    0.3105976   0.0000000   2.1500000
-  -0.4181187   0.0000000   2.1500000
+  -0.4181186   0.0000000   2.1500000
  to transmit
  T_ij for propagating states:
     1 -->     1   1.0000000
@@ -548,21 +548,21 @@ E-Ef(ev), T(x2 spins) =    2.2500000   6.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  2.15000  1.00000
-                      0.39317
-                      0.59250
-                      0.01433
+                      0.02213
+                      0.11130
+                      0.86657
 @    2  2.15000  1.00000
-                      0.36190
-                      0.22129
-                      0.41681
+                      0.09123
+                      0.77857
+                      0.13020
 @    3  2.15000  1.00000
-                      0.24493
-                      0.18621
-                      0.56886
+                      0.88664
+                      0.11013
+                      0.00323
 E-Ef(ev), T(x2 spins) =    2.1500000   6.0000000
- Nchannels of the left tip =  3
+ Nchannels of the left tip =            3
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3038723   0.0000000   2.0500000
    0.3038723   0.0000000   2.0500000
   -0.4227048   0.0000000   2.0500000
@@ -582,21 +582,21 @@ E-Ef(ev), T(x2 spins) =    2.1500000   6.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  2.05000  1.00000
-                      0.44606
-                      0.53280
-                      0.02114
+                      0.01177
+                      0.04030
+                      0.94794
 @    2  2.05000  1.00000
-                      0.50103
-                      0.40933
-                      0.08963
+                      0.07682
+                      0.87390
+                      0.04928
 @    3  2.05000  1.00000
-                      0.05290
-                      0.05787
-                      0.88923
+                      0.91141
+                      0.08580
+                      0.00278
 E-Ef(ev), T(x2 spins) =    2.0500000   6.0000000
- Nchannels of the left tip =  3
+ Nchannels of the left tip =            3
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2969953   0.0000000   1.9500000
    0.2969953   0.0000000   1.9500000
   -0.4273672   0.0000000   1.9500000
@@ -616,21 +616,21 @@ E-Ef(ev), T(x2 spins) =    2.0500000   6.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  1.95000  1.00000
-                      0.43817
-                      0.55832
-                      0.00350
+                      0.00494
+                      0.07956
+                      0.91550
 @    2  1.95000  1.00000
-                      0.43286
-                      0.32857
-                      0.23857
+                      0.05163
+                      0.87842
+                      0.06995
 @    3  1.95000  1.00000
-                      0.12897
-                      0.11310
-                      0.75793
+                      0.94343
+                      0.04202
+                      0.01455
 E-Ef(ev), T(x2 spins) =    1.9500000   6.0000000
- Nchannels of the left tip =  3
+ Nchannels of the left tip =            3
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2899556   0.0000000   1.8500000
    0.2899556   0.0000000   1.8500000
   -0.4321235   0.0000000   1.8500000
@@ -650,21 +650,21 @@ E-Ef(ev), T(x2 spins) =    1.9500000   6.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  1.85000  1.00000
-                      0.12502
-                      0.83004
-                      0.04495
+                      0.13287
+                      0.77092
+                      0.09621
 @    2  1.85000  1.00000
-                      0.84088
-                      0.14074
-                      0.01838
+                      0.02007
+                      0.09366
+                      0.88627
 @    3  1.85000  1.00000
-                      0.03411
-                      0.02922
-                      0.93667
+                      0.84706
+                      0.13542
+                      0.01752
 E-Ef(ev), T(x2 spins) =    1.8500000   6.0000000
- Nchannels of the left tip =  3
+ Nchannels of the left tip =            3
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2827410   0.0000000   1.7500000
    0.2827410   0.0000000   1.7500000
   -0.4369960   0.0000000   1.7500000
@@ -684,21 +684,21 @@ E-Ef(ev), T(x2 spins) =    1.8500000   6.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  1.75000  1.00000
-                      0.04234
-                      0.68297
-                      0.27470
+                      0.00454
+                      0.02342
+                      0.97204
 @    2  1.75000  1.00000
-                      0.16246
-                      0.17615
-                      0.66139
+                      0.12639
+                      0.85319
+                      0.02042
 @    3  1.75000  1.00000
-                      0.79521
-                      0.14088
-                      0.06391
+                      0.86907
+                      0.12339
+                      0.00754
 E-Ef(ev), T(x2 spins) =    1.7500000   6.0000000
- Nchannels of the left tip =  3
+ Nchannels of the left tip =            3
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2753378   0.0000000   1.6500000
    0.2753378   0.0000000   1.6500000
   -0.4420148   0.0000000   1.6500000
@@ -718,21 +718,21 @@ E-Ef(ev), T(x2 spins) =    1.7500000   6.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  1.65000  1.00000
-                      0.27881
-                      0.71815
-                      0.00303
+                      0.01888
+                      0.03420
+                      0.94692
 @    2  1.65000  1.00000
-                      0.67326
-                      0.25767
-                      0.06907
+                      0.27679
+                      0.67575
+                      0.04746
 @    3  1.65000  1.00000
-                      0.04793
-                      0.02417
-                      0.92790
+                      0.70432
+                      0.29005
+                      0.00563
 E-Ef(ev), T(x2 spins) =    1.6500000   6.0000000
- Nchannels of the left tip =  3
+ Nchannels of the left tip =            3
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2677301   0.0000000   1.5500000
    0.2677301   0.0000000   1.5500000
   -0.4472220   0.0000000   1.5500000
@@ -752,21 +752,21 @@ E-Ef(ev), T(x2 spins) =    1.6500000   6.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  1.55000  1.00000
-                      0.40707
-                      0.46336
-                      0.12957
+                      0.02362
+                      0.05824
+                      0.91814
 @    2  1.55000  1.00000
-                      0.33814
-                      0.29748
-                      0.36438
+                      0.27137
+                      0.65169
+                      0.07694
 @    3  1.55000  1.00000
-                      0.25479
-                      0.23916
-                      0.50605
+                      0.70502
+                      0.29007
+                      0.00491
 E-Ef(ev), T(x2 spins) =    1.5500000   6.0000000
- Nchannels of the left tip =  3
+ Nchannels of the left tip =            3
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2599000   0.0000000   1.4500000
    0.2599000   0.0000000   1.4500000
   -0.4526794   0.0000000   1.4500000
@@ -786,21 +786,21 @@ E-Ef(ev), T(x2 spins) =    1.5500000   6.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  1.45000  1.00000
-                      0.41645
-                      0.58253
-                      0.00101
+                      0.05404
+                      0.77009
+                      0.17587
 @    2  1.45000  1.00000
-                      0.54499
-                      0.38765
-                      0.06736
+                      0.02221
+                      0.15681
+                      0.82098
 @    3  1.45000  1.00000
-                      0.03855
-                      0.02982
-                      0.93162
+                      0.92375
+                      0.07310
+                      0.00315
 E-Ef(ev), T(x2 spins) =    1.4500000   6.0000000
- Nchannels of the left tip =  3
+ Nchannels of the left tip =            3
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2518266   0.0000000   1.3500000
    0.2518266   0.0000000   1.3500000
   -0.4584847   0.0000000   1.3500000
@@ -820,21 +820,21 @@ E-Ef(ev), T(x2 spins) =    1.4500000   6.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  1.35000  1.00000
-                      0.44560
-                      0.27864
-                      0.27576
+                      0.07933
+                      0.43257
+                      0.48811
 @    2  1.35000  1.00000
-                      0.22644
-                      0.13017
-                      0.64339
+                      0.23811
+                      0.29450
+                      0.46739
 @    3  1.35000  1.00000
-                      0.32796
-                      0.59119
-                      0.08085
+                      0.68256
+                      0.27294
+                      0.04450
 E-Ef(ev), T(x2 spins) =    1.3500000   6.0000000
- Nchannels of the left tip =  3
+ Nchannels of the left tip =            3
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2434857   0.0000000   1.2500000
    0.2434857   0.0000000   1.2500000
   -0.4648079   0.0000000   1.2500000
@@ -854,21 +854,21 @@ E-Ef(ev), T(x2 spins) =    1.3500000   6.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  1.25000  1.00000
-                      0.82245
-                      0.16292
-                      0.01462
+                      0.00184
+                      0.03507
+                      0.96308
 @    2  1.25000  1.00000
-                      0.08657
-                      0.55795
-                      0.35547
+                      0.09806
+                      0.87002
+                      0.03193
 @    3  1.25000  1.00000
-                      0.09097
-                      0.27912
-                      0.62990
+                      0.90010
+                      0.09491
+                      0.00499
 E-Ef(ev), T(x2 spins) =    1.2500000   6.0000000
- Nchannels of the left tip =  3
+ Nchannels of the left tip =            3
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2348488   0.0000000   1.1500000
    0.2348488   0.0000000   1.1500000
   -0.4719948   0.0000000   1.1500000
@@ -888,21 +888,21 @@ E-Ef(ev), T(x2 spins) =    1.2500000   6.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  1.15000  1.00000
-                      0.25893
-                      0.73650
-                      0.00457
+                      0.24311
+                      0.74491
+                      0.01198
 @    2  1.15000  1.00000
-                      0.31013
-                      0.09818
-                      0.59169
+                      0.70476
+                      0.21300
+                      0.08224
 @    3  1.15000  1.00000
-                      0.43093
-                      0.16533
-                      0.40374
+                      0.05213
+                      0.04210
+                      0.90577
 E-Ef(ev), T(x2 spins) =    1.1500000   6.0000000
- Nchannels of the left tip =  3
+ Nchannels of the left tip =            3
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2258817   0.0000000   1.0500000
    0.2258817   0.0000000   1.0500000
   -0.4809961   0.0000000   1.0500000
@@ -922,21 +922,21 @@ E-Ef(ev), T(x2 spins) =    1.1500000   6.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  1.05000  1.00000
-                      0.04651
-                      0.78074
-                      0.17275
+                      0.12906
+                      0.75431
+                      0.11663
 @    2  1.05000  1.00000
-                      0.06895
-                      0.17311
-                      0.75794
+                      0.14435
+                      0.05972
+                      0.79593
 @    3  1.05000  1.00000
-                      0.88455
-                      0.04615
-                      0.06931
+                      0.72659
+                      0.18597
+                      0.08743
 E-Ef(ev), T(x2 spins) =    1.0500000   6.0000000
- Nchannels of the left tip =  2
+ Nchannels of the left tip =            2
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2165435   0.0000000   0.9500000
    0.2165435   0.0000000   0.9500000
  to transmit
@@ -949,15 +949,15 @@ E-Ef(ev), T(x2 spins) =    1.0500000   6.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  0.95000  1.00000
-                      0.25495
-                      0.74505
+                      0.13495
+                      0.86505
 @    2  0.95000  1.00000
-                      0.74505
-                      0.25495
+                      0.86505
+                      0.13495
 E-Ef(ev), T(x2 spins) =    0.9500000   4.0000000
- Nchannels of the left tip =  2
+ Nchannels of the left tip =            2
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2067838   0.0000000   0.8500000
    0.2067838   0.0000000   0.8500000
  to transmit
@@ -970,15 +970,15 @@ E-Ef(ev), T(x2 spins) =    0.9500000   4.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  0.85000  1.00000
-                      0.09215
-                      0.90785
+                      0.23154
+                      0.76846
 @    2  0.85000  1.00000
-                      0.90785
-                      0.09215
+                      0.76846
+                      0.23154
 E-Ef(ev), T(x2 spins) =    0.8500000   4.0000000
- Nchannels of the left tip =  2
+ Nchannels of the left tip =            2
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.1965398   0.0000000   0.7500000
    0.1965398   0.0000000   0.7500000
  to transmit
@@ -991,15 +991,15 @@ E-Ef(ev), T(x2 spins) =    0.8500000   4.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  0.75000  1.00000
-                      0.17547
-                      0.82453
+                      0.18561
+                      0.81439
 @    2  0.75000  1.00000
-                      0.82453
-                      0.17547
+                      0.81439
+                      0.18561
 E-Ef(ev), T(x2 spins) =    0.7500000   4.0000000
- Nchannels of the left tip =  2
+ Nchannels of the left tip =            2
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.1857313   0.0000000   0.6500000
    0.1857313   0.0000000   0.6500000
  to transmit
@@ -1012,17 +1012,17 @@ E-Ef(ev), T(x2 spins) =    0.7500000   4.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  0.65000  1.00000
-                      0.12523
-                      0.87477
+                      0.24413
+                      0.75587
 @    2  0.65000  1.00000
-                      0.87477
-                      0.12523
+                      0.75587
+                      0.24413
 E-Ef(ev), T(x2 spins) =    0.6500000   4.0000000
- Nchannels of the left tip =  2
+ Nchannels of the left tip =            2
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
-   0.1742533   0.0000000   0.5500000
-   0.1742533   0.0000000   0.5500000
+ 
+   0.1742534   0.0000000   0.5500000
+   0.1742534   0.0000000   0.5500000
  to transmit
  T_ij for propagating states:
     1 -->     1   1.0000000
@@ -1033,15 +1033,15 @@ E-Ef(ev), T(x2 spins) =    0.6500000   4.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  0.55000  1.00000
-                      0.20303
-                      0.79697
+                      0.17324
+                      0.82676
 @    2  0.55000  1.00000
-                      0.79697
-                      0.20303
+                      0.82676
+                      0.17324
 E-Ef(ev), T(x2 spins) =    0.5500000   4.0000000
- Nchannels of the left tip =  2
+ Nchannels of the left tip =            2
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.1619636   0.0000000   0.4500000
    0.1619636   0.0000000   0.4500000
  to transmit
@@ -1054,15 +1054,15 @@ E-Ef(ev), T(x2 spins) =    0.5500000   4.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  0.45000  1.00000
-                      0.05342
-                      0.94658
+                      0.24616
+                      0.75384
 @    2  0.45000  1.00000
-                      0.94658
-                      0.05342
+                      0.75384
+                      0.24616
 E-Ef(ev), T(x2 spins) =    0.4500000   4.0000000
- Nchannels of the left tip =  2
+ Nchannels of the left tip =            2
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.1486607   0.0000000   0.3500000
    0.1486607   0.0000000   0.3500000
  to transmit
@@ -1075,15 +1075,15 @@ E-Ef(ev), T(x2 spins) =    0.4500000   4.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  0.35000  1.00000
-                      0.11705
-                      0.88295
+                      0.50000
+                      0.50000
 @    2  0.35000  1.00000
-                      0.88295
-                      0.11705
+                      0.50000
+                      0.50000
 E-Ef(ev), T(x2 spins) =    0.3500000   4.0000000
- Nchannels of the left tip =  2
+ Nchannels of the left tip =            2
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.1340434   0.0000000   0.2500000
    0.1340434   0.0000000   0.2500000
  to transmit
@@ -1096,15 +1096,15 @@ E-Ef(ev), T(x2 spins) =    0.3500000   4.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  0.25000  1.00000
-                      0.16008
-                      0.83992
+                      0.93469
+                      0.06531
 @    2  0.25000  1.00000
-                      0.83992
-                      0.16008
+                      0.06531
+                      0.93469
 E-Ef(ev), T(x2 spins) =    0.2500000   4.0000000
- Nchannels of the left tip =  2
+ Nchannels of the left tip =            2
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.1176227   0.0000000   0.1500000
    0.1176227   0.0000000   0.1500000
  to transmit
@@ -1117,15 +1117,15 @@ E-Ef(ev), T(x2 spins) =    0.2500000   4.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  0.15000  1.00000
-                      0.15874
-                      0.84126
+                      0.68771
+                      0.31229
 @    2  0.15000  1.00000
-                      0.84126
-                      0.15874
+                      0.31229
+                      0.68771
 E-Ef(ev), T(x2 spins) =    0.1500000   4.0000000
- Nchannels of the left tip =  2
+ Nchannels of the left tip =            2
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.0985006   0.0000000   0.0500000
    0.0985006   0.0000000   0.0500000
  to transmit
@@ -1138,15 +1138,15 @@ E-Ef(ev), T(x2 spins) =    0.1500000   4.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1  0.05000  1.00000
-                      0.02735
-                      0.97265
+                      0.41695
+                      0.58305
 @    2  0.05000  1.00000
-                      0.97265
-                      0.02735
+                      0.58305
+                      0.41695
 E-Ef(ev), T(x2 spins) =    0.0500000   4.0000000
- Nchannels of the left tip =  2
+ Nchannels of the left tip =            2
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.0746287   0.0000000  -0.0500000
    0.0746287   0.0000000  -0.0500000
  to transmit
@@ -1159,15 +1159,15 @@ E-Ef(ev), T(x2 spins) =    0.0500000   4.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1 -0.05000  1.00000
-                      0.19151
-                      0.80849
+                      0.12623
+                      0.87377
 @    2 -0.05000  1.00000
-                      0.80849
-                      0.19151
+                      0.87377
+                      0.12623
 E-Ef(ev), T(x2 spins) =   -0.0500000   4.0000000
- Nchannels of the left tip =  2
+ Nchannels of the left tip =            2
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.0378989   0.0000000  -0.1500000
    0.0378989   0.0000000  -0.1500000
  to transmit
@@ -1180,65 +1180,65 @@ E-Ef(ev), T(x2 spins) =   -0.0500000   4.0000000
                  1.00000
  Eigenchannel decomposition:
 @    1 -0.15000  1.00000
-                      0.37544
-                      0.62456
+                      0.09728
+                      0.90272
 @    2 -0.15000  1.00000
-                      0.62456
-                      0.37544
+                      0.90272
+                      0.09728
 E-Ef(ev), T(x2 spins) =   -0.1500000   4.0000000
- Nchannels of the left tip =  0
+ Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
  to transmit
           E-Ef(ev), T =   -0.2500000   0.0000000
- Nchannels of the left tip =  0
+ Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
  to transmit
           E-Ef(ev), T =   -0.3500000   0.0000000
- Nchannels of the left tip =  0
+ Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
  to transmit
           E-Ef(ev), T =   -0.4500000   0.0000000
- Nchannels of the left tip =  0
+ Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
  to transmit
           E-Ef(ev), T =   -0.5500000   0.0000000
- Nchannels of the left tip =  0
+ Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
  to transmit
           E-Ef(ev), T =   -0.6500000   0.0000000
- Nchannels of the left tip =  0
+ Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
  to transmit
           E-Ef(ev), T =   -0.7500000   0.0000000
- Nchannels of the left tip =  0
+ Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
  to transmit
           E-Ef(ev), T =   -0.8500000   0.0000000
- Nchannels of the left tip =  0
+ Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
  to transmit
           E-Ef(ev), T =   -0.9500000   0.0000000
- Nchannels of the left tip =  0
+ Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
  to transmit
           E-Ef(ev), T =   -1.0500000   0.0000000
- Nchannels of the left tip =  0
+ Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
  to transmit
           E-Ef(ev), T =   -1.1500000   0.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.4871559   0.0000000  -1.2500000
  to transmit
  T_ij for propagating states:
@@ -1248,9 +1248,9 @@ E-Ef(ev), T(x2 spins) =   -0.1500000   4.0000000
 @    1 -1.25000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -1.2500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.4747895   0.0000000  -1.3500000
  to transmit
  T_ij for propagating states:
@@ -1260,9 +1260,9 @@ E-Ef(ev), T(x2 spins) =   -1.2500000   2.0000000
 @    1 -1.35000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -1.3500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.4660343   0.0000000  -1.4500000
  to transmit
  T_ij for propagating states:
@@ -1272,9 +1272,9 @@ E-Ef(ev), T(x2 spins) =   -1.3500000   2.0000000
 @    1 -1.45000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -1.4500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.4585209   0.0000000  -1.5500000
  to transmit
  T_ij for propagating states:
@@ -1284,10 +1284,10 @@ E-Ef(ev), T(x2 spins) =   -1.4500000   2.0000000
 @    1 -1.55000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -1.5500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
-   0.4516532   0.0000000  -1.6500000
+ 
+   0.4516531   0.0000000  -1.6500000
  to transmit
  T_ij for propagating states:
     1 -->     1   1.0000000
@@ -1296,9 +1296,9 @@ E-Ef(ev), T(x2 spins) =   -1.5500000   2.0000000
 @    1 -1.65000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -1.6500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.4451751   0.0000000  -1.7500000
  to transmit
  T_ij for propagating states:
@@ -1308,9 +1308,9 @@ E-Ef(ev), T(x2 spins) =   -1.6500000   2.0000000
 @    1 -1.75000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -1.7500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.4389506   0.0000000  -1.8500000
  to transmit
  T_ij for propagating states:
@@ -1320,10 +1320,10 @@ E-Ef(ev), T(x2 spins) =   -1.7500000   2.0000000
 @    1 -1.85000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -1.8500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
-   0.4328973   0.0000000  -1.9500000
+ 
+   0.4328974   0.0000000  -1.9500000
  to transmit
  T_ij for propagating states:
     1 -->     1   1.0000000
@@ -1332,9 +1332,9 @@ E-Ef(ev), T(x2 spins) =   -1.8500000   2.0000000
 @    1 -1.95000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -1.9500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.4269616   0.0000000  -2.0500000
  to transmit
  T_ij for propagating states:
@@ -1344,9 +1344,9 @@ E-Ef(ev), T(x2 spins) =   -1.9500000   2.0000000
 @    1 -2.05000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -2.0500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.4211057   0.0000000  -2.1500000
  to transmit
  T_ij for propagating states:
@@ -1356,9 +1356,9 @@ E-Ef(ev), T(x2 spins) =   -2.0500000   2.0000000
 @    1 -2.15000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -2.1500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.4153022   0.0000000  -2.2500000
  to transmit
  T_ij for propagating states:
@@ -1368,9 +1368,9 @@ E-Ef(ev), T(x2 spins) =   -2.1500000   2.0000000
 @    1 -2.25000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -2.2500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.4095301   0.0000000  -2.3500000
  to transmit
  T_ij for propagating states:
@@ -1380,9 +1380,9 @@ E-Ef(ev), T(x2 spins) =   -2.2500000   2.0000000
 @    1 -2.35000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -2.3500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.4037730   0.0000000  -2.4500000
  to transmit
  T_ij for propagating states:
@@ -1392,9 +1392,9 @@ E-Ef(ev), T(x2 spins) =   -2.3500000   2.0000000
 @    1 -2.45000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -2.4500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3980172   0.0000000  -2.5500000
  to transmit
  T_ij for propagating states:
@@ -1404,9 +1404,9 @@ E-Ef(ev), T(x2 spins) =   -2.4500000   2.0000000
 @    1 -2.55000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -2.5500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3922517   0.0000000  -2.6500000
  to transmit
  T_ij for propagating states:
@@ -1416,9 +1416,9 @@ E-Ef(ev), T(x2 spins) =   -2.5500000   2.0000000
 @    1 -2.65000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -2.6500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3864666   0.0000000  -2.7500000
  to transmit
  T_ij for propagating states:
@@ -1428,9 +1428,9 @@ E-Ef(ev), T(x2 spins) =   -2.6500000   2.0000000
 @    1 -2.75000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -2.7500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3806534   0.0000000  -2.8500000
  to transmit
  T_ij for propagating states:
@@ -1440,9 +1440,9 @@ E-Ef(ev), T(x2 spins) =   -2.7500000   2.0000000
 @    1 -2.85000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -2.8500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3748044   0.0000000  -2.9500000
  to transmit
  T_ij for propagating states:
@@ -1452,9 +1452,9 @@ E-Ef(ev), T(x2 spins) =   -2.8500000   2.0000000
 @    1 -2.95000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -2.9500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3689124   0.0000000  -3.0500000
  to transmit
  T_ij for propagating states:
@@ -1464,9 +1464,9 @@ E-Ef(ev), T(x2 spins) =   -2.9500000   2.0000000
 @    1 -3.05000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -3.0500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3629707   0.0000000  -3.1500000
  to transmit
  T_ij for propagating states:
@@ -1476,9 +1476,9 @@ E-Ef(ev), T(x2 spins) =   -3.0500000   2.0000000
 @    1 -3.15000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -3.1500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3569727   0.0000000  -3.2500000
  to transmit
  T_ij for propagating states:
@@ -1488,9 +1488,9 @@ E-Ef(ev), T(x2 spins) =   -3.1500000   2.0000000
 @    1 -3.25000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -3.2500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3509120   0.0000000  -3.3500000
  to transmit
  T_ij for propagating states:
@@ -1500,9 +1500,9 @@ E-Ef(ev), T(x2 spins) =   -3.2500000   2.0000000
 @    1 -3.35000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -3.3500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3447823   0.0000000  -3.4500000
  to transmit
  T_ij for propagating states:
@@ -1512,9 +1512,9 @@ E-Ef(ev), T(x2 spins) =   -3.3500000   2.0000000
 @    1 -3.45000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -3.4500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3385771   0.0000000  -3.5500000
  to transmit
  T_ij for propagating states:
@@ -1524,9 +1524,9 @@ E-Ef(ev), T(x2 spins) =   -3.4500000   2.0000000
 @    1 -3.55000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -3.5500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3322897   0.0000000  -3.6500000
  to transmit
  T_ij for propagating states:
@@ -1536,10 +1536,10 @@ E-Ef(ev), T(x2 spins) =   -3.5500000   2.0000000
 @    1 -3.65000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -3.6500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
-   0.3259133   0.0000000  -3.7500000
+ 
+   0.3259132   0.0000000  -3.7500000
  to transmit
  T_ij for propagating states:
     1 -->     1   1.0000000
@@ -1548,9 +1548,9 @@ E-Ef(ev), T(x2 spins) =   -3.6500000   2.0000000
 @    1 -3.75000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -3.7500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3194404   0.0000000  -3.8500000
  to transmit
  T_ij for propagating states:
@@ -1560,9 +1560,9 @@ E-Ef(ev), T(x2 spins) =   -3.7500000   2.0000000
 @    1 -3.85000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -3.8500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3128635   0.0000000  -3.9500000
  to transmit
  T_ij for propagating states:
@@ -1572,9 +1572,9 @@ E-Ef(ev), T(x2 spins) =   -3.8500000   2.0000000
 @    1 -3.95000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -3.9500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.3061742   0.0000000  -4.0500000
  to transmit
  T_ij for propagating states:
@@ -1584,9 +1584,9 @@ E-Ef(ev), T(x2 spins) =   -3.9500000   2.0000000
 @    1 -4.05000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -4.0500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2993635   0.0000000  -4.1500000
  to transmit
  T_ij for propagating states:
@@ -1596,9 +1596,9 @@ E-Ef(ev), T(x2 spins) =   -4.0500000   2.0000000
 @    1 -4.15000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -4.1500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2924216   0.0000000  -4.2500000
  to transmit
  T_ij for propagating states:
@@ -1608,9 +1608,9 @@ E-Ef(ev), T(x2 spins) =   -4.1500000   2.0000000
 @    1 -4.25000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -4.2500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2853377   0.0000000  -4.3500000
  to transmit
  T_ij for propagating states:
@@ -1620,10 +1620,10 @@ E-Ef(ev), T(x2 spins) =   -4.2500000   2.0000000
 @    1 -4.35000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -4.3500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
-   0.2780999   0.0000000  -4.4500000
+ 
+   0.2780998   0.0000000  -4.4500000
  to transmit
  T_ij for propagating states:
     1 -->     1   1.0000000
@@ -1632,9 +1632,9 @@ E-Ef(ev), T(x2 spins) =   -4.3500000   2.0000000
 @    1 -4.45000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -4.4500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2706946   0.0000000  -4.5500000
  to transmit
  T_ij for propagating states:
@@ -1644,9 +1644,9 @@ E-Ef(ev), T(x2 spins) =   -4.4500000   2.0000000
 @    1 -4.55000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -4.5500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2631068   0.0000000  -4.6500000
  to transmit
  T_ij for propagating states:
@@ -1656,9 +1656,9 @@ E-Ef(ev), T(x2 spins) =   -4.5500000   2.0000000
 @    1 -4.65000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -4.6500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2553194   0.0000000  -4.7500000
  to transmit
  T_ij for propagating states:
@@ -1668,9 +1668,9 @@ E-Ef(ev), T(x2 spins) =   -4.6500000   2.0000000
 @    1 -4.75000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -4.7500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2473125   0.0000000  -4.8500000
  to transmit
  T_ij for propagating states:
@@ -1680,9 +1680,9 @@ E-Ef(ev), T(x2 spins) =   -4.7500000   2.0000000
 @    1 -4.85000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -4.8500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2390634   0.0000000  -4.9500000
  to transmit
  T_ij for propagating states:
@@ -1692,9 +1692,9 @@ E-Ef(ev), T(x2 spins) =   -4.8500000   2.0000000
 @    1 -4.95000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -4.9500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2305453   0.0000000  -5.0500000
  to transmit
  T_ij for propagating states:
@@ -1704,9 +1704,9 @@ E-Ef(ev), T(x2 spins) =   -4.9500000   2.0000000
 @    1 -5.05000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -5.0500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2217263   0.0000000  -5.1500000
  to transmit
  T_ij for propagating states:
@@ -1716,9 +1716,9 @@ E-Ef(ev), T(x2 spins) =   -5.0500000   2.0000000
 @    1 -5.15000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -5.1500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2125684   0.0000000  -5.2500000
  to transmit
  T_ij for propagating states:
@@ -1728,9 +1728,9 @@ E-Ef(ev), T(x2 spins) =   -5.1500000   2.0000000
 @    1 -5.25000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -5.2500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.2030251   0.0000000  -5.3500000
  to transmit
  T_ij for propagating states:
@@ -1740,9 +1740,9 @@ E-Ef(ev), T(x2 spins) =   -5.2500000   2.0000000
 @    1 -5.35000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -5.3500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.1930385   0.0000000  -5.4500000
  to transmit
  T_ij for propagating states:
@@ -1752,10 +1752,10 @@ E-Ef(ev), T(x2 spins) =   -5.3500000   2.0000000
 @    1 -5.45000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -5.4500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
-   0.1825354   0.0000000  -5.5500000
+ 
+   0.1825353   0.0000000  -5.5500000
  to transmit
  T_ij for propagating states:
     1 -->     1   1.0000000
@@ -1764,9 +1764,9 @@ E-Ef(ev), T(x2 spins) =   -5.4500000   2.0000000
 @    1 -5.55000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -5.5500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.1714199   0.0000000  -5.6500000
  to transmit
  T_ij for propagating states:
@@ -1776,9 +1776,9 @@ E-Ef(ev), T(x2 spins) =   -5.5500000   2.0000000
 @    1 -5.65000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -5.6500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.1595637   0.0000000  -5.7500000
  to transmit
  T_ij for propagating states:
@@ -1788,9 +1788,9 @@ E-Ef(ev), T(x2 spins) =   -5.6500000   2.0000000
 @    1 -5.75000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -5.7500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.1467869   0.0000000  -5.8500000
  to transmit
  T_ij for propagating states:
@@ -1800,10 +1800,10 @@ E-Ef(ev), T(x2 spins) =   -5.7500000   2.0000000
 @    1 -5.85000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -5.8500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
-   0.1328232   0.0000000  -5.9500000
+ 
+   0.1328233   0.0000000  -5.9500000
  to transmit
  T_ij for propagating states:
     1 -->     1   1.0000000
@@ -1812,10 +1812,10 @@ E-Ef(ev), T(x2 spins) =   -5.8500000   2.0000000
 @    1 -5.95000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -5.9500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
-   0.1172490   0.0000000  -6.0500000
+ 
+   0.1172489   0.0000000  -6.0500000
  to transmit
  T_ij for propagating states:
     1 -->     1   1.0000000
@@ -1824,9 +1824,9 @@ E-Ef(ev), T(x2 spins) =   -5.9500000   2.0000000
 @    1 -6.05000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -6.0500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
    0.0993082   0.0000000  -6.1500000
  to transmit
  T_ij for propagating states:
@@ -1836,10 +1836,10 @@ E-Ef(ev), T(x2 spins) =   -6.0500000   2.0000000
 @    1 -6.15000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -6.1500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
-   0.0773713   0.0000000  -6.2500000
+ 
+   0.0773712   0.0000000  -6.2500000
  to transmit
  T_ij for propagating states:
     1 -->     1   1.0000000
@@ -1848,10 +1848,10 @@ E-Ef(ev), T(x2 spins) =   -6.1500000   2.0000000
 @    1 -6.25000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -6.2500000   2.0000000
- Nchannels of the left tip =  1
+ Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
-   0.0460408   0.0000000  -6.3500000
+ 
+   0.0460409   0.0000000  -6.3500000
  to transmit
  T_ij for propagating states:
     1 -->     1   1.0000000
@@ -1860,49 +1860,49 @@ E-Ef(ev), T(x2 spins) =   -6.2500000   2.0000000
 @    1 -6.35000  1.00000
                       1.00000
 E-Ef(ev), T(x2 spins) =   -6.3500000   2.0000000
- Nchannels of the left tip =  0
+ Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
  to transmit
           E-Ef(ev), T =   -6.4500000   0.0000000
- Nchannels of the left tip =  0
+ Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
  to transmit
           E-Ef(ev), T =   -6.5500000   0.0000000
- Nchannels of the left tip =  0
+ Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
  to transmit
           E-Ef(ev), T =   -6.6500000   0.0000000
- Nchannels of the left tip =  0
+ Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
  to transmit
           E-Ef(ev), T =   -6.7500000   0.0000000
- Nchannels of the left tip =  0
+ Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
  to transmit
           E-Ef(ev), T =   -6.8500000   0.0000000
- Nchannels of the left tip =  0
+ Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
-
+ 
  to transmit
           E-Ef(ev), T =   -6.9500000   0.0000000
+ 
+     PWCOND       :    29.97s CPU time
 
-     PWCOND       :    34.47s CPU time
-
-     init         :     0.32s CPU
-     poten        :     0.03s CPU (       2 calls,   0.015 s avg)
-     local        :     6.81s CPU
-
-     scatter_forw :    22.51s CPU (     200 calls,   0.113 s avg)
-     integrals    :    12.85s CPU (     200 calls,   0.064 s avg)
-     rotatef      :     2.24s CPU (    2800 calls,   0.001 s avg)
-     rotateb      :     1.95s CPU (    2800 calls,   0.001 s avg)
-     scatter_back :     4.28s CPU (     200 calls,   0.021 s avg)
-
-     compbs       :     4.33s CPU (     100 calls,   0.043 s avg)
-     compbs_2     :     3.64s CPU (     100 calls,   0.036 s avg)
-
+     init         :     0.26s CPU
+     poten        :     0.04s CPU (       2 calls,   0.020 s avg)
+     local        :     4.19s CPU
+ 
+     scatter_forw :    20.34s CPU (     200 calls,   0.102 s avg)
+     integrals    :    12.62s CPU (     200 calls,   0.063 s avg)
+     rotatef      :     2.16s CPU (    2800 calls,   0.001 s avg)
+     rotateb      :     1.83s CPU (    2800 calls,   0.001 s avg)
+     scatter_back :     3.21s CPU (     200 calls,   0.016 s avg)
+ 
+     compbs       :     4.62s CPU (     100 calls,   0.046 s avg)
+     compbs_2     :     4.17s CPU (     100 calls,   0.042 s avg)
+ 

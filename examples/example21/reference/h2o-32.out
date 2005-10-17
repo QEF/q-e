@@ -1,23 +1,19 @@
 =------------------------------------------------------------------------------=
 
-     FPMD: variable-cell Car-Parrinello molecular dynamics
-     using norm-conserving pseudopotentials
+     CP: variable-cell Car-Parrinello molecular dynamics
+     using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 2.1cvs - Tue Sep 6 13:11:13 CEST 2005                       
-     Authors: Carlo Cavazzoni, Guido Chiarotti, Sandro Scandolo,
-     Paolo Focher, Gerardo Ballabio
+     Version: 3.0 - Tue Sep 6 13:11:13 CEST 2005                          
+     Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
+       Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
+       Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  18: 7:31   6Sep2005               
+   This run was started on:   3:38:53  17Oct2005               
 
    Serial Build
-Warning: card  &CELL ignored
-Warning: card     CELL_DYNAMICS = 'NONE', ignored
-Warning: card     CELL_VELOCITIES = 'ZERO', ignored
-Warning: card     PRESS = 0.0D0, ignored
-Warning: card     WMASS = 70000.0D0 ignored
-Warning: card  / ignored
+Warning: card  1 4 ignored
 
    Job Title:  Water 32 molecules
 
@@ -26,7 +22,7 @@ Warning: card  / ignored
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /tmp/giannozz/espresso/pseudo/O.BLYP.UPF
+   /scr/giannozz/espresso/pseudo/O.BLYP.UPF
    file type is 20
  
    Type is UPF        and NONLOCAL. 
@@ -54,7 +50,7 @@ Warning: card  / ignored
    Warning XC functionals forced to be: BLYP                
 
    Reading pseudopotential for specie #  2 from file :
-   /tmp/giannozz/espresso/pseudo/H.fpmd.UPF
+   /scr/giannozz/espresso/pseudo/H.fpmd.UPF
    file type is 20
  
    Type is UPF        and LOCAL. 
@@ -94,7 +90,7 @@ Warning: card  / ignored
 
    Simulation Cell Parameters (from input)
    external pressure       =            0.00 [GPa]
-   wmass (calculated)      =        79859.30 [AU]
+   wmass (read from input) =        70000.00 [AU]
    ibrav =   14
    alat  =    18.65000000
    a1    =    18.65000000    0.00000000    0.00000000
@@ -479,7 +475,7 @@ Warning: card  / ignored
    ECONS  [A.U.] - Enthalpy + kinetic energy of ions and cell
    ETTT   [A.U.] - Constant of motion for the CP lagrangian
  
- 
+
 
    Wave Initialization: random initial wave-functions
    Occupation number from init
@@ -1219,18 +1215,18 @@ Warning: card  / ignored
     10  34.84214    0.0    0.0   -260.36413   -260.36413   -260.36413   -225.52199
  
    Execution time statistics (SEC)
-   Mean time for MD step ..      47.247
+   Mean time for MD step ..      47.360
  
    Wave functions FFT execution time statistics
    total number of ffts ..      2112
-   average time per fft ..   0.15834
-   total fft time    ..... 334.41040
+   average time per fft ..   0.17307
+   total fft time    ..... 365.53117
  
  
    Charge density and potential FFT execution statistics
    total number of ffts ..        99
-   average time per fft ..   0.29652
-   total fft time    .....  29.35563
+   average time per fft ..   0.38020
+   total fft time    .....  37.63988
  
 
    PC3FFT TIMINGS
@@ -1241,8 +1237,8 @@ Warning: card  / ignored
    ---------------
              KS.1  integrated charge :        1.00000
              KS.4  integrated charge :        1.00000
-   time for KS ortho     =    46.88
-   time for KS print out =    26.93
+   time for KS ortho     =    48.00
+   time for KS print out =    27.16
 
 
    Averaged Physical Quantities
@@ -1261,12 +1257,12 @@ Warning: card  / ignored
  
    mp: high_watermark (bytes):           12
  
-     FPMD         : 10m 7.52s CPU time
+     CP           : 10m 6.44s CPU time
 
  
-   This run was terminated on:  18:17:39   6Sep2005            
+   This run was terminated on:   3:49: 3  17Oct2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:   608.0
+   ELAPSED SECONDS:   610.0
    JOB DONE.
 =------------------------------------------------------------------------------=

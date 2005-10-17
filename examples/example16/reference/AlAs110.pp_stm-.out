@@ -1,6 +1,6 @@
 
-     Program POST-PROC v.2.1cvs starts ...
-     Today is 14Sep2005 at 16:15:59 
+     Program POST-PROC v.3.0    starts ...
+     Today is 17Oct2005 at  3:22:40 
 
      Reading file AlAs110.save ...      only dimensions
      read complete
@@ -13,19 +13,19 @@
 
      Calling punch_plot, plot_num =   5
 
-     workfunction     =   -12.9707 +-    13.9601 eV
-     without exchcorr =    -4.4437 +-    12.7453 eV
+     workfunction     =   -12.9685 +-    13.9601 eV
+     without exchcorr =    -4.4424 +-    12.7448 eV
 
      Work function written on file workf
      Planar mean charge written on file charge
      Use the true wfcs
      Sample bias          = -1.0000 eV
 
-     STM:      2.49s cpu time
+     STM:      1.08s cpu time
      Writing data to file  AlAsresm-1.0
      Reading header from file  AlAsresm-1.0
      Reading data from file  AlAsresm-1.0
 
      Writing data to be plotted to file AlAs110-1.0
-     Min, Max, imaginary charge:     0.000099    0.025640    0.000000
-     Plot Type: 2D contour             Output format: plotrho.x      
+     Min, Max, imaginary charge:     0.000099    0.025796    0.000000
+     Plot Type: 2D contour             Output format: plotrho.x    

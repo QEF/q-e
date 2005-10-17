@@ -1,22 +1,18 @@
 =------------------------------------------------------------------------------=
 
-     FPMD: variable-cell Car-Parrinello molecular dynamics
-     using norm-conserving pseudopotentials
+     CP: variable-cell Car-Parrinello molecular dynamics
+     using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 2.1cvs - Tue Sep 6 13:11:13 CEST 2005                       
-     Authors: Carlo Cavazzoni, Guido Chiarotti, Sandro Scandolo,
-     Paolo Focher, Gerardo Ballabio
+     Version: 3.0 - Tue Sep 6 13:11:13 CEST 2005                          
+     Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
+       Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
+       Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  14:12:20   6Sep2005               
+   This run was started on:   3:30:48  17Oct2005               
 
    Serial Build
-Warning: card  &CELL ignored
-Warning: card     CELL_DYNAMICS = 'NONE', ignored
-Warning: card     CELL_VELOCITIES = 'ZERO', ignored
-Warning: card     PRESS = 0.0D0, ignored
-Warning: card  / ignored
 
    Job Title:  Water Molecule
 
@@ -25,7 +21,7 @@ Warning: card  / ignored
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /tmp/giannozz/espresso/pseudo/O.BLYP.UPF
+   /scr/giannozz/espresso/pseudo/O.BLYP.UPF
    file type is 20
  
    Type is UPF        and NONLOCAL. 
@@ -53,7 +49,7 @@ Warning: card  / ignored
    Warning XC functionals forced to be: BLYP                
 
    Reading pseudopotential for specie #  2 from file :
-   /tmp/giannozz/espresso/pseudo/H.fpmd.UPF
+   /scr/giannozz/espresso/pseudo/H.fpmd.UPF
    file type is 20
  
    Type is UPF        and LOCAL. 
@@ -284,7 +280,7 @@ Warning: card  / ignored
    ECONS  [A.U.] - Enthalpy + kinetic energy of ions and cell
    ETTT   [A.U.] - Constant of motion for the CP lagrangian
  
- 
+
 
    Wave Initialization: random initial wave-functions
    Occupation number from init
@@ -721,22 +717,22 @@ Warning: card  / ignored
    nfi     ekinc  temph  tempp         etot       enthal        econs         ettt
     50   0.00434    0.0    0.0    -17.05940    -17.05940    -17.05940    -17.05507
 
-   RESTART FILE WRITTEN COMPLETED IN    5.218 SEC.
+   RESTART FILE WRITTEN COMPLETED IN    5.197 SEC.
 
  
    Execution time statistics (SEC)
-   Mean time for MD step ..       1.725
+   Mean time for MD step ..       1.984
  
    Wave functions FFT execution time statistics
    total number of ffts ..       306
-   average time per fft ..   0.05291
-   total fft time    .....  16.19111
+   average time per fft ..   0.05799
+   total fft time    .....  17.74516
  
  
    Charge density and potential FFT execution statistics
    total number of ffts ..       459
-   average time per fft ..   0.09357
-   total fft time    .....  42.94983
+   average time per fft ..   0.12154
+   total fft time    .....  55.78480
  
 
    PC3FFT TIMINGS
@@ -760,12 +756,12 @@ Warning: card  / ignored
  
    mp: high_watermark (bytes):           12
  
-     FPMD         :  1m30.88s CPU time
+     CP           :  1m42.94s CPU time
 
  
-   This run was terminated on:  14:13:52   6Sep2005            
+   This run was terminated on:   3:32:32  17Oct2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:    92.0
+   ELAPSED SECONDS:   104.0
    JOB DONE.
 =------------------------------------------------------------------------------=

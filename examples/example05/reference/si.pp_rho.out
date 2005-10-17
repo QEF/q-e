@@ -1,6 +1,6 @@
 
-     Program POST-PROC v.2.1cvs starts ...
-     Today is 14Sep2005 at 15:45:58 
+     Program POST-PROC v.3.0    starts ...
+     Today is 17Oct2005 at  2:38:40 
 
      Reading file si.save ...      only dimensions
      read complete
@@ -17,5 +17,5 @@
      Reading data from file  sicharge
 
      Writing data to be plotted to file si.rho.dat
-     Min, Max, imaginary charge:     0.001409    0.087451    0.000000
-     Plot Type: 2D contour             Output format: plotrho.x      
+     Min, Max, imaginary charge:     0.001411    0.087448    0.000000
+     Plot Type: 2D contour             Output format: plotrho.x    

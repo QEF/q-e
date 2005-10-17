@@ -4,8 +4,8 @@ FeO Wustite whithin LDA+U with user defined ns + Wannier
     calculation = 'scf'
     restart_mode='from_scratch',
     prefix='feo_af',
-    pseudo_dir = '/tmp/giannozz/espresso/pseudo/',
-    outdir='/tmp/giannozz/tmp/'
+    pseudo_dir = '/scr/giannozz/espresso/pseudo/',
+    outdir='/scr/giannozz/tmp/'
  /
  &system
     ibrav=  0, celldm(1)=8.19, nat=  4, ntyp= 3,

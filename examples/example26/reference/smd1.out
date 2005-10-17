@@ -1,18 +1,18 @@
 =------------------------------------------------------------------------------=
 
-     CPV: variable-cell Car-Parrinello molecular dynamics
-     using ultrasoft Vanderbilt pseudopotentials
+     CP: variable-cell Car-Parrinello molecular dynamics
+     using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 2.1cvs - Fri Jan 28 17:56:02 NFT 2005                       
+     Version: 3.0 - Tue Sep 6 13:11:13 CEST 2005                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
-       Paolo Giannozzi, Nicola Marzari, and others
+       Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
+       Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  16:57: 2   7Sep2005               
+   This run was started on:  10:45:47  17Oct2005               
 
-   MPI Parallel Build
-   Tasks =    1  This task id =    0
+   Serial Build
 
    Job Title: MD Simulation
 
@@ -21,7 +21,7 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /sp5/usercin/acv0/sfs/espresso/pseudo/H_US.van
+   /scr/giannozz/espresso/pseudo/H_US.van
    file type is  1
 
     ============================================================
@@ -148,8 +148,8 @@
    Global Dimensions   Local  Dimensions   Processor Grid
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
     32    32    32      32    32    32       1     1     1
-   Array leading dimensions ( nr1x, nr2x, nr3x )   =     33    32    33
-   Local number of cell to store the grid ( nnrx ) =      34848
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     32    32    32
+   Local number of cell to store the grid ( nnrx ) =      32768
    Number of x-y planes for each processors: 
    nr3l =    32
  
@@ -157,25 +157,25 @@
    ----------------
    Global Dimensions   Local  Dimensions   Processor Grid
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
-    28    28    28      28    28    28       1     1     1
-   Array leading dimensions ( nr1x, nr2x, nr3x )   =     28    28    28
-   Local number of cell to store the grid ( nnrx ) =      21952
+    25    25    25      25    25    25       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     25    25    25
+   Local number of cell to store the grid ( nnrx ) =      15625
    Number of x-y planes for each processors: 
-   nr3sl =    28
+   nr3sl =    25
  
    Small Box Real Mesh
    -------------------
    Global Dimensions   Local  Dimensions   Processor Grid
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
-    16    16    16      16    16    16       1     1     1
-   Array leading dimensions ( nr1x, nr2x, nr3x )   =     17    16    16
-   Local number of cell to store the grid ( nnrx ) =       4352
+    15    15    15      15    15    15       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     15    15    15
+   Local number of cell to store the grid ( nnrx ) =       3375
  
    unit vectors of box grid cell
    in real space:                         in reciprocal space:
-       5.0000    0.0000    0.0000              1.0000    0.0000    0.0000
-       0.0000    5.0000    0.0000              0.0000    1.0000    0.0000
-       0.0000    0.0000    5.0000              0.0000    0.0000    1.0000
+       4.6875    0.0000    0.0000              1.0000    0.0000    0.0000
+       0.0000    4.6875    0.0000              0.0000    1.0000    0.0000
+       0.0000    0.0000    4.6875              0.0000    0.0000    1.0000
  
    Reciprocal Space Mesh
    ---------------------
@@ -190,11 +190,11 @@
     1            475            475            475
 
                 Small box Mesh
-   ngb =         1052 not distributed to processors
+   ngb =          872 not distributed to processors
                                                   
   ================================================
                                                   
-  CPSMD : replica = 0 ..  8
+  CPSMD : replica = 0 ..            8
                                                   
                                                   
   String Method : 
@@ -203,21 +203,26 @@
        smd_lm    =  F
        CPMD    =  T
        smd_linr    =  T
-       smd_polm    =  F Pt =  2
+       smd_polm    =  F Pt =            2
        smd_stcd    =  F
-       SMfile  =  20
+       SMfile  =           20
        TFOR  =  F
                                                   
                                                   
   ================================================
-  UNIT8 = /scratch/acv0/tmp//fort.8                                                                                                                                                                                                                                       
-    NOTA BENE: refg, mmx =  0.500000000000000028E-01 2400
+  UNIT8 = 
+ /scr/giannozz/tmp//fort.8                                                      
+                                                                                
+                                                                                
+                    
+    NOTA BENE: refg, mmx =   5.000000000000000E-002        2400
   out from init
 
 
    Pseudopotentials initialization
    -------------------------------
-  nlinit  nh(is), ngb, is, kkbeta, lmaxq =  1 1052 1 271 1
+  nlinit  nh(is), ngb, is, kkbeta, lmaxq =            1         872           1
+         271           1
  
                         qqq 
    9.4958
@@ -232,7 +237,7 @@
                         dion 
    3.3279
   out from nlinit
-  Allocation begun, smpm =  7
+  Allocation begun, smpm =            7
   Allocation for W.F. s : successful 
   Allocation for CP core : successful 
   Allocation for SM variables : successful 
@@ -243,7 +248,7 @@
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
   
-  --------------------- Replica :  1
+  --------------------- Replica :            1
   
 
    from rhoofr: total integrated electronic density
@@ -256,17 +261,17 @@
 
                 total energy =        4.12894 a.u.
               kinetic energy =        5.26357 a.u.
-        electrostatic energy =        0.00000 a.u.
+        electrostatic energy =       -0.38471 a.u.
                          esr =        0.02346 a.u.
                        eself =        1.49603 a.u.
       pseudopotential energy =       -0.05342 a.u.
   n-l pseudopotential energy =        0.00014 a.u.
- exchange-correlation energy =       -0.69664 a.u.
+ exchange-correlation energy =       -0.69663 a.u.
            average potential =        0.00000 a.u.
 
 
   
-  --------------------- Replica :  2
+  --------------------- Replica :            2
   
 
    from rhoofr: total integrated electronic density
@@ -277,9 +282,9 @@
   out from rhoofr
 
 
-                total energy =        4.12213 a.u.
+                total energy =        4.12214 a.u.
               kinetic energy =        5.26360 a.u.
-        electrostatic energy =        0.00000 a.u.
+        electrostatic energy =       -0.39343 a.u.
                          esr =        0.01144 a.u.
                        eself =        1.49603 a.u.
       pseudopotential energy =       -0.05153 a.u.
@@ -289,7 +294,7 @@
 
 
   
-  --------------------- Replica :  3
+  --------------------- Replica :            3
   
 
    from rhoofr: total integrated electronic density
@@ -302,7 +307,7 @@
 
                 total energy =        4.12901 a.u.
               kinetic energy =        5.26364 a.u.
-        electrostatic energy =        0.00000 a.u.
+        electrostatic energy =       -0.38761 a.u.
                          esr =        0.00594 a.u.
                        eself =        1.49603 a.u.
       pseudopotential energy =       -0.05051 a.u.
@@ -312,7 +317,7 @@
 
 
   
-  --------------------- Replica :  4
+  --------------------- Replica :            4
   
 
    from rhoofr: total integrated electronic density
@@ -325,7 +330,7 @@
 
                 total energy =        4.14755 a.u.
               kinetic energy =        5.26367 a.u.
-        electrostatic energy =        0.00000 a.u.
+        electrostatic energy =       -0.36958 a.u.
                          esr =        0.00437 a.u.
                        eself =        1.49603 a.u.
       pseudopotential energy =       -0.05001 a.u.
@@ -335,7 +340,7 @@
 
 
   
-  --------------------- Replica :  5
+  --------------------- Replica :            5
   
 
    from rhoofr: total integrated electronic density
@@ -348,7 +353,7 @@
 
                 total energy =        4.17741 a.u.
               kinetic energy =        5.26369 a.u.
-        electrostatic energy =        0.00000 a.u.
+        electrostatic energy =       -0.33997 a.u.
                          esr =        0.00594 a.u.
                        eself =        1.49603 a.u.
       pseudopotential energy =       -0.04978 a.u.
@@ -358,7 +363,7 @@
 
 
   
-  --------------------- Replica :  6
+  --------------------- Replica :            6
   
 
    from rhoofr: total integrated electronic density
@@ -371,17 +376,17 @@
 
                 total energy =        4.21959 a.u.
               kinetic energy =        5.26370 a.u.
-        electrostatic energy =        0.00000 a.u.
+        electrostatic energy =       -0.29793 a.u.
                          esr =        0.01144 a.u.
                        eself =        1.49603 a.u.
       pseudopotential energy =       -0.04964 a.u.
   n-l pseudopotential energy =        0.00011 a.u.
- exchange-correlation energy =       -0.69665 a.u.
+ exchange-correlation energy =       -0.69664 a.u.
            average potential =        0.00000 a.u.
 
 
   
-  --------------------- Replica :  7
+  --------------------- Replica :            7
   
 
    from rhoofr: total integrated electronic density
@@ -394,12 +399,12 @@
 
                 total energy =        4.27656 a.u.
               kinetic energy =        5.26370 a.u.
-        electrostatic energy =        0.00000 a.u.
+        electrostatic energy =       -0.24109 a.u.
                          esr =        0.02346 a.u.
                        eself =        1.49603 a.u.
       pseudopotential energy =       -0.04952 a.u.
   n-l pseudopotential energy =        0.00011 a.u.
- exchange-correlation energy =       -0.69665 a.u.
+ exchange-correlation energy =       -0.69664 a.u.
            average potential =        0.00000 a.u.
 
 
@@ -421,13 +426,13 @@
   *****    Entering SMD LOOP   ***** 
   _____________________________________________
   
-  -----------  REPLICA :  1
+  -----------  REPLICA :            1
   
 
 
                 total energy =        3.86445 a.u.
               kinetic energy =        5.02824 a.u.
-        electrostatic energy =        0.00000 a.u.
+        electrostatic energy =       -0.40130 a.u.
                          esr =        0.02346 a.u.
                        eself =        1.49603 a.u.
       pseudopotential energy =       -0.05639 a.u.
@@ -437,13 +442,13 @@
 
 
   
-  -----------  REPLICA :  2
+  -----------  REPLICA :            2
   
 
 
                 total energy =        3.86093 a.u.
               kinetic energy =        5.02857 a.u.
-        electrostatic energy =        0.00000 a.u.
+        electrostatic energy =       -0.40802 a.u.
                          esr =        0.01144 a.u.
                        eself =        1.49603 a.u.
       pseudopotential energy =       -0.05413 a.u.
@@ -453,13 +458,13 @@
 
 
   
-  -----------  REPLICA :  3
+  -----------  REPLICA :            3
   
 
 
                 total energy =        3.87056 a.u.
               kinetic energy =        5.02893 a.u.
-        electrostatic energy =        0.00000 a.u.
+        electrostatic energy =       -0.40058 a.u.
                          esr =        0.00594 a.u.
                        eself =        1.49603 a.u.
       pseudopotential energy =       -0.05283 a.u.
@@ -469,13 +474,13 @@
 
 
   
-  -----------  REPLICA :  4
+  -----------  REPLICA :            4
   
 
 
                 total energy =        3.89131 a.u.
               kinetic energy =        5.02924 a.u.
-        electrostatic energy =        0.00000 a.u.
+        electrostatic energy =       -0.38129 a.u.
                          esr =        0.00437 a.u.
                        eself =        1.49603 a.u.
       pseudopotential energy =       -0.05216 a.u.
@@ -485,13 +490,13 @@
 
 
   
-  -----------  REPLICA :  5
+  -----------  REPLICA :            5
   
 
 
                 total energy =        3.92287 a.u.
               kinetic energy =        5.02950 a.u.
-        electrostatic energy =        0.00000 a.u.
+        electrostatic energy =       -0.35073 a.u.
                          esr =        0.00594 a.u.
                        eself =        1.49603 a.u.
       pseudopotential energy =       -0.05182 a.u.
@@ -501,13 +506,13 @@
 
 
   
-  -----------  REPLICA :  6
+  -----------  REPLICA :            6
   
 
 
                 total energy =        3.96633 a.u.
               kinetic energy =        5.02968 a.u.
-        electrostatic energy =        0.00000 a.u.
+        electrostatic energy =       -0.30801 a.u.
                          esr =        0.01144 a.u.
                        eself =        1.49603 a.u.
       pseudopotential energy =       -0.05162 a.u.
@@ -517,13 +522,13 @@
 
 
   
-  -----------  REPLICA :  7
+  -----------  REPLICA :            7
   
 
 
                 total energy =        4.02424 a.u.
               kinetic energy =        5.02980 a.u.
-        electrostatic energy =        0.00000 a.u.
+        electrostatic energy =       -0.25069 a.u.
                          esr =        0.02346 a.u.
                        eself =        1.49603 a.u.
       pseudopotential energy =       -0.05147 a.u.
@@ -537,7 +542,7 @@
   nfi   SUM(E)   con_ite     con_usat     cons_pls     max_ekinc   deviation   maxforce
   
   
-  ---------------------- Replica :  1
+  ---------------------- Replica :            1
   
 
 
@@ -550,7 +555,7 @@
  
  
   
-  ---------------------- Replica :  2
+  ---------------------- Replica :            2
   
 
 
@@ -563,7 +568,7 @@
  
  
   
-  ---------------------- Replica :  3
+  ---------------------- Replica :            3
   
 
 
@@ -576,7 +581,7 @@
  
  
   
-  ---------------------- Replica :  4
+  ---------------------- Replica :            4
   
 
 
@@ -589,7 +594,7 @@
  
  
   
-  ---------------------- Replica :  5
+  ---------------------- Replica :            5
   
 
 
@@ -602,7 +607,7 @@
  
  
   
-  ---------------------- Replica :  6
+  ---------------------- Replica :            6
   
 
 
@@ -615,7 +620,7 @@
  
  
   
-  ---------------------- Replica :  7
+  ---------------------- Replica :            7
   
 
 
@@ -628,119 +633,119 @@
  
  
   
-  -----------  REPLICA :  1
+  -----------  REPLICA :            1
   
 
 
-                total energy =        0.93507 a.u.
+                total energy =        0.93506 a.u.
               kinetic energy =        2.36050 a.u.
-        electrostatic energy =        0.00000 a.u.
+        electrostatic energy =       -0.61473 a.u.
                          esr =        0.02346 a.u.
                        eself =        1.49603 a.u.
       pseudopotential energy =       -0.10719 a.u.
   n-l pseudopotential energy =        0.00299 a.u.
- exchange-correlation energy =       -0.70650 a.u.
+ exchange-correlation energy =       -0.70651 a.u.
            average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :  2
+  -----------  REPLICA :            2
   
 
 
-                total energy =        0.92553 a.u.
+                total energy =        0.92551 a.u.
               kinetic energy =        2.34387 a.u.
-        electrostatic energy =        0.00000 a.u.
+        electrostatic energy =       -0.62047 a.u.
                          esr =        0.01144 a.u.
                        eself =        1.49603 a.u.
-      pseudopotential energy =       -0.10118 a.u.
+      pseudopotential energy =       -0.10117 a.u.
   n-l pseudopotential energy =        0.00291 a.u.
- exchange-correlation energy =       -0.69960 a.u.
+ exchange-correlation energy =       -0.69963 a.u.
            average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :  3
+  -----------  REPLICA :            3
   
 
 
                 total energy =        0.92392 a.u.
               kinetic energy =        2.32969 a.u.
-        electrostatic energy =        0.00000 a.u.
+        electrostatic energy =       -0.61676 a.u.
                          esr =        0.00594 a.u.
                        eself =        1.49603 a.u.
-      pseudopotential energy =       -0.09797 a.u.
+      pseudopotential energy =       -0.09796 a.u.
   n-l pseudopotential energy =        0.00291 a.u.
- exchange-correlation energy =       -0.69393 a.u.
+ exchange-correlation energy =       -0.69395 a.u.
            average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :  4
+  -----------  REPLICA :            4
   
 
 
-                total energy =        0.92537 a.u.
-              kinetic energy =        2.31757 a.u.
-        electrostatic energy =        0.00000 a.u.
+                total energy =        0.92539 a.u.
+              kinetic energy =        2.31756 a.u.
+        electrostatic energy =       -0.60765 a.u.
                          esr =        0.00437 a.u.
                        eself =        1.49603 a.u.
-      pseudopotential energy =       -0.09778 a.u.
+      pseudopotential energy =       -0.09777 a.u.
   n-l pseudopotential energy =        0.00300 a.u.
- exchange-correlation energy =       -0.68975 a.u.
+ exchange-correlation energy =       -0.68976 a.u.
            average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :  5
+  -----------  REPLICA :            5
   
 
 
-                total energy =        0.92724 a.u.
-              kinetic energy =        2.30696 a.u.
-        electrostatic energy =        0.00000 a.u.
+                total energy =        0.92723 a.u.
+              kinetic energy =        2.30695 a.u.
+        electrostatic energy =       -0.59493 a.u.
                          esr =        0.00594 a.u.
                        eself =        1.49603 a.u.
-      pseudopotential energy =       -0.10078 a.u.
+      pseudopotential energy =       -0.10077 a.u.
   n-l pseudopotential energy =        0.00322 a.u.
- exchange-correlation energy =       -0.68723 a.u.
+ exchange-correlation energy =       -0.68724 a.u.
            average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :  6
+  -----------  REPLICA :            6
   
 
 
-                total energy =        0.92852 a.u.
-              kinetic energy =        2.29739 a.u.
-        electrostatic energy =        0.00000 a.u.
+                total energy =        0.92849 a.u.
+              kinetic energy =        2.29737 a.u.
+        electrostatic energy =       -0.57864 a.u.
                          esr =        0.01144 a.u.
                        eself =        1.49603 a.u.
-      pseudopotential energy =       -0.10731 a.u.
+      pseudopotential energy =       -0.10730 a.u.
   n-l pseudopotential energy =        0.00361 a.u.
- exchange-correlation energy =       -0.68651 a.u.
+ exchange-correlation energy =       -0.68654 a.u.
            average potential =        0.00000 a.u.
 
 
   
-  -----------  REPLICA :  7
+  -----------  REPLICA :            7
   
 
 
                 total energy =        0.92938 a.u.
-              kinetic energy =        2.28850 a.u.
-        electrostatic energy =        0.00000 a.u.
+              kinetic energy =        2.28849 a.u.
+        electrostatic energy =       -0.55737 a.u.
                          esr =        0.02346 a.u.
                        eself =        1.49603 a.u.
       pseudopotential energy =       -0.11815 a.u.
   n-l pseudopotential energy =        0.00420 a.u.
- exchange-correlation energy =       -0.68777 a.u.
+ exchange-correlation energy =       -0.68780 a.u.
            average potential =        0.00000 a.u.
 
 
   
-  ---------------------- Replica :  1
+  ---------------------- Replica :            1
   
 
 
@@ -753,7 +758,7 @@
  
  
   
-  ---------------------- Replica :  2
+  ---------------------- Replica :            2
   
 
 
@@ -766,7 +771,7 @@
  
  
   
-  ---------------------- Replica :  3
+  ---------------------- Replica :            3
   
 
 
@@ -779,7 +784,7 @@
  
  
   
-  ---------------------- Replica :  4
+  ---------------------- Replica :            4
   
 
 
@@ -792,7 +797,7 @@
  
  
   
-  ---------------------- Replica :  5
+  ---------------------- Replica :            5
   
 
 
@@ -805,7 +810,7 @@
  
  
   
-  ---------------------- Replica :  6
+  ---------------------- Replica :            6
   
 
 
@@ -818,7 +823,7 @@
  
  
   
-  ---------------------- Replica :  7
+  ---------------------- Replica :            7
   
 
 
@@ -830,36 +835,35 @@
     9.15
  
  
-     initialize   :     1.19s CPU
+     initialize   :     1.82s CPU
      formf        :     0.04s CPU
-     rhoofr       :     0.72s CPU (     112 calls,   0.006 s avg)
-     vofrho       :    15.54s CPU (     112 calls,   0.139 s avg)
-     dforce       :     0.24s CPU (     224 calls,   0.001 s avg)
-     calphi       :     0.01s CPU (     112 calls,   0.000 s avg)
-     ortho        :     0.02s CPU (     112 calls,   0.000 s avg)
+     rhoofr       :     2.96s CPU (     112 calls,   0.026 s avg)
+     vofrho       :    22.24s CPU (     112 calls,   0.199 s avg)
+     dforce       :     0.74s CPU (     224 calls,   0.003 s avg)
+     calphi       :     0.00s CPU (     112 calls,   0.000 s avg)
+     ortho        :     0.04s CPU (     112 calls,   0.000 s avg)
      updatc       :     0.00s CPU (     112 calls,   0.000 s avg)
      gram         :     0.00s CPU (       7 calls,   0.000 s avg)
-     newd         :     0.07s CPU (     112 calls,   0.001 s avg)
-     calbec       :     0.00s CPU (     119 calls,   0.000 s avg)
-     prefor       :     0.00s CPU (     224 calls,   0.000 s avg)
-     strucf       :     0.00s CPU (     112 calls,   0.000 s avg)
-     rhov         :     0.24s CPU (     112 calls,   0.002 s avg)
-     nlsm1        :     0.00s CPU (     343 calls,   0.000 s avg)
-     fft          :     1.64s CPU (    1568 calls,   0.001 s avg)
-     ffts         :     0.21s CPU (     224 calls,   0.001 s avg)
-     fftw         :     0.30s CPU (     672 calls,   0.000 s avg)
-     rsg          :     0.01s CPU (     224 calls,   0.000 s avg)
-Estimated size (kB) of each process: 41012
-
-   PE(1) MEMORY STATISTICS 
-   total space in arena :153683904
+     newd         :     0.30s CPU (     112 calls,   0.003 s avg)
+     calbec       :     0.01s CPU (     119 calls,   0.000 s avg)
+     prefor       :     0.02s CPU (     224 calls,   0.000 s avg)
+     strucf       :     0.04s CPU (     112 calls,   0.000 s avg)
+     rhov         :     1.16s CPU (     112 calls,   0.010 s avg)
+     nlsm1        :     0.03s CPU (     343 calls,   0.000 s avg)
+     fft          :     8.99s CPU (    1568 calls,   0.006 s avg)
+     ffts         :     0.65s CPU (     224 calls,   0.003 s avg)
+     fftw         :     0.98s CPU (     672 calls,   0.001 s avg)
+     fftb         :     0.25s CPU (     560 calls,   0.000 s avg)
+     rsg          :     0.00s CPU (     224 calls,   0.000 s avg)
  
-     CP90         :    17.97s CPU time
+     CP           :    36.03s CPU time
 
  
-   This run was terminated on:  16:57:22   7Sep2005            
+   This run was terminated on:  10:46:23  17Oct2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:    20.0
+   ELAPSED SECONDS:    36.0
    JOB DONE.
 =------------------------------------------------------------------------------=
+
+   MEMORY STATISTICS FROM PE(1) : 
