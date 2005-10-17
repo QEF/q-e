@@ -128,6 +128,8 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
               vtxcgc = vtxcgc+e2*( v1x + v1c ) * ( rhoout(k,1) - rho_core(k) )
               etxcgc = etxcgc+e2*( sx + sc ) * segno
               !
+           ELSE
+              h(:,k,1)=0.D0
            END IF
            !
         ELSE
