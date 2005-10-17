@@ -578,8 +578,8 @@ MODULE xml_io_base
          !
          ! ... write the G-vectors
          !
-         CALL iotk_link( iunpun, "G-VECTORS_FILE", "gvectors.dat", &
-                         CREATE = .TRUE., BINARY = .TRUE., RAW = .TRUE. )
+         CALL iotk_link( iunpun, "G-VECTORS_FILE", &
+                         "gvectors.dat", CREATE = .TRUE., BINARY = .TRUE. )
          !
          CALL iotk_write_begin( iunpun, "G-VECTORS", attr = attr )
          CALL iotk_write_dat( iunpun, "g", itmp(1:3,1:ngm_g), FMT = "(3I5)" )
@@ -775,21 +775,21 @@ MODULE xml_io_base
       !
       !
       IF ( ionode ) &
-         CALL iotk_open_write( rhounit, FILE = TRIM( rho_file ), &
-                               BINARY = .FALSE., ierr = ierr )
+         CALL iotk_open_write( rhounit, &
+                               FILE = rho_file, BINARY = .FALSE., ierr = ierr )
       !
       CALL mp_bcast( ierr, ionode_id )
       !
-      CALL errore( 'write_rho_xml ', &
-                   'cannot open rho_file file for writing', ierr )
+      CALL errore( 'write_rho_xml ', 'cannot open' // &
+                 & TRIM( rho_file ) // ' file for writing', ierr )
       !
       IF ( ionode ) THEN
          !
          CALL iotk_write_begin( rhounit, "CHARGE-DENSITY" )
          !
-         CALL iotk_write_attr( attr, "nr1",   nr1, FIRST = .TRUE. )
-         CALL iotk_write_attr( attr, "nr2",   nr2 )
-         CALL iotk_write_attr( attr, "nr3",   nr3 )
+         CALL iotk_write_attr( attr, "nr1", nr1, FIRST = .TRUE. )
+         CALL iotk_write_attr( attr, "nr2", nr2 )
+         CALL iotk_write_attr( attr, "nr3", nr3 )
          !
          CALL iotk_write_empty( rhounit, "INFO", attr )
          !

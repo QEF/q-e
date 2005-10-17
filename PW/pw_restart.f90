@@ -61,7 +61,7 @@ MODULE pw_restart
       USE wavefunctions_module, ONLY : evc, evc_nc
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
                                        lgauss, ngauss, degauss, nelec
-      USE gvect,                ONLY : nr1, nr2, nr3, ngm, ngm_g, &
+      USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, ngm, ngm_g, &
                                        g, ig1, ig2, ig3, ecutwfc, dual, gcutm
       USE gsmooth,              ONLY : nr1s, nr2s, nr3s, gcutms, ngms_g
       USE ktetra,               ONLY : nk1, nk2, nk3, k1, k2, k3, &
@@ -78,6 +78,7 @@ MODULE pw_restart
       USE dynam,                ONLY : amass
       USE funct,                ONLY : dft
       USE scf,                  ONLY : rho
+      USE sticks,               ONLY : dfftp
       !
       USE mp_global,            ONLY : kunit, nproc, nproc_pool, mpime
       USE mp_global,            ONLY : my_pool_id, &
@@ -89,17 +90,18 @@ MODULE pw_restart
       !
       CHARACTER(LEN=*), INTENT(IN) :: what
       !
-      CHARACTER(LEN=256)          :: dirname, filename, file_pseudo
-      CHARACTER(LEN=80)           :: bravais_lattice
-      CHARACTER(LEN=4)            :: cspin
-      INTEGER                     :: i, ig, ik, ngg,ig_, ierr, ipol, &
-                                     flen, ik_eff, num_k_points
-      INTEGER, ALLOCATABLE        :: kisort(:)
-      INTEGER                     :: npool, nkbl, nkl, nkr, npwx_g
-      INTEGER                     :: ike, iks, npw_g, ispin, local_pw
-      INTEGER, ALLOCATABLE        :: ngk_g(:)
-      INTEGER, ALLOCATABLE        :: itmp(:,:)
-      LOGICAL                     :: lgvec, lwfc
+      CHARACTER(LEN=256)    :: dirname, filename, file_pseudo, rho_file
+      CHARACTER(LEN=80)     :: bravais_lattice
+      CHARACTER(LEN=4)      :: cspin
+      INTEGER               :: i, ig, ik, ngg,ig_, ierr, ipol, &
+                               flen, ik_eff, num_k_points
+      INTEGER,  ALLOCATABLE :: kisort(:)
+      INTEGER               :: npool, nkbl, nkl, nkr, npwx_g
+      INTEGER               :: ike, iks, npw_g, ispin, local_pw
+      INTEGER,  ALLOCATABLE :: ngk_g(:)
+      INTEGER,  ALLOCATABLE :: itmp(:,:)
+      LOGICAL               :: lgvec, lwfc
+      REAL(DP), ALLOCATABLE :: rhosum(:)
       !
       !
       lgvec = .FALSE.
@@ -325,12 +327,56 @@ MODULE pw_restart
          !
          CALL iotk_write_begin( iunpun, "CHARGE-DENSITY" )
          !
-         CALL iotk_link( iunpun, "RHO_FILE", TRIM( prefix ) // ".rho", &
-                         CREATE = .TRUE., BINARY = .TRUE., RAW = .TRUE. )
+      END IF
+      !
+      rho_file = TRIM( prefix ) // ".rho"
+      !
+      CALL iotk_link( iunpun, "RHO_FILE", rho_file, &
+                      CREATE = .FALSE., BINARY = .FALSE. )
+      !
+      rho_file = TRIM( dirname ) // '/' // TRIM( rho_file )      
+      !
+      IF ( nspin == 1 ) THEN
          !
-         CALL iotk_write_begin( iunpun, "CHARGE-DENSITY", attr = attr )
-         CALL iotk_write_dat( iunpun, "RHO", rho )
-         CALL iotk_write_end( iunpun, "CHARGE-DENSITY" )
+         CALL write_rho_xml( rho_file, rho(:,1), nr1, &
+                             nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         !
+      ELSE IF ( nspin == 2 ) THEN
+         !
+         ALLOCATE( rhosum( SIZE( rho, 1 ) ) )
+         !
+         rhosum = rho(:,1) + rho(:,2) 
+         !
+         CALL write_rho_xml( rho_file, rhosum, nr1, &
+                             nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         !
+         DEALLOCATE( rhosum )
+         !
+         rho_file = TRIM( prefix ) // ".rhoup"
+         !
+         IF ( ionode ) &
+            CALL iotk_link( iunpun, "RHO_FILE", rho_file, &
+                            CREATE = .FALSE., BINARY = .FALSE. )
+         !
+         rho_file = TRIM( dirname ) // '/' // TRIM( rho_file )
+         !
+         CALL write_rho_xml( rho_file, rho(:,1), &
+                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         !
+         rho_file = TRIM( prefix ) // ".rhodw"
+         !
+         IF ( ionode ) &
+            CALL iotk_link( iunpun, "RHO_FILE", rho_file, &
+                            CREATE = .FALSE., BINARY = .FALSE. )
+         !
+         rho_file = TRIM( dirname ) // '/' // TRIM( rho_file )
+         !
+         CALL write_rho_xml( rho_file, rho(:,2), &
+                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         !
+      END IF
+      !
+      IF ( ionode ) THEN
          !
          CALL iotk_write_end( iunpun, "CHARGE-DENSITY" )
          !
@@ -428,8 +474,8 @@ MODULE pw_restart
                !
                filename = TRIM( wfc_filename( ".", 'gkvectors', ik ) )
                !
-               CALL iotk_link( iunpun, "gkvectors", filename, &
-                               CREATE = .FALSE., BINARY = .TRUE., RAW = .TRUE. )
+               CALL iotk_link( iunpun, "gkvectors", &
+                               filename, CREATE = .FALSE., BINARY = .TRUE. )
                !
                filename = TRIM( wfc_filename( dirname, 'gkvectors', ik ) )
                !
@@ -457,8 +503,8 @@ MODULE pw_restart
                   !
                   filename = TRIM( wfc_filename( ".", 'evc', ik, ispin ) )
                   !
-                  CALL iotk_link( iunpun, "wfc", filename, CREATE = .FALSE., &
-                                  BINARY = .TRUE., RAW = .TRUE. )
+                  CALL iotk_link( iunpun, "wfc", filename, &
+                                  CREATE = .FALSE., BINARY = .TRUE. )
                   !
                   filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
                   !
@@ -482,8 +528,8 @@ MODULE pw_restart
                   !
                   filename = TRIM( wfc_filename( ".", 'evc', ik, ispin ) )
                   !
-                  CALL iotk_link( iunpun, "wfc", filename, CREATE = .FALSE., &
-                                  BINARY = .TRUE., RAW = .TRUE. )
+                  CALL iotk_link( iunpun, "wfc", filename, &
+                                  CREATE = .FALSE., BINARY = .TRUE. )
                   !
                   filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
                   !
@@ -513,8 +559,8 @@ MODULE pw_restart
                   !
                   filename = TRIM( wfc_filename( ".", 'evc', ik ) )
                   !
-                  CALL iotk_link( iunpun, "wfc", filename, CREATE = .FALSE., &
-                                  BINARY = .TRUE., RAW = .TRUE. )
+                  CALL iotk_link( iunpun, "wfc", filename, &
+                                  CREATE = .FALSE., BINARY = .TRUE. )
                   !
                   filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
                   !
@@ -622,8 +668,8 @@ MODULE pw_restart
           !
           IF ( ionode ) THEN
              !
-             CALL iotk_open_write( iun, FILE = TRIM( filename ), &
-                                   BINARY = .TRUE. )
+             CALL iotk_open_write( iun, &
+                                   FILE = TRIM( filename ), BINARY = .TRUE. )
              !
              CALL iotk_write_begin( iun,"K-POINT" // iotk_index( ik ), attr )
              !

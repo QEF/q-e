@@ -39,7 +39,6 @@ MODULE cp_restart
                              c04, cm4, c02, cm2, mat_z )
       !------------------------------------------------------------------------
       !
-
       USE control_flags,            ONLY : gamma_only, force_pairing
       USE io_files,                 ONLY : psfile, pseudo_dir
       USE printout_base,            ONLY : title
@@ -108,24 +107,24 @@ MODULE cp_restart
       COMPLEX(DP), OPTIONAL, INTENT(IN) :: cm2(:,:)     ! 
       REAL(DP),    OPTIONAL, INTENT(IN) :: mat_z(:,:,:) ! 
       !
-      CHARACTER(LEN=256)      :: dirname, filename, rho_file
-      CHARACTER(LEN=4)        :: cspin
-      INTEGER                 :: kunit, ib, ik_eff
-      INTEGER                 :: k1, k2, k3
-      INTEGER                 :: nk1, nk2, nk3
-      INTEGER                 :: j, i, ispin, ig, nspin_wfc
-      INTEGER                 :: is, ia, isa, iss, ise, ik, ierr
-      INTEGER,  ALLOCATABLE   :: mill(:,:)
-      INTEGER,  ALLOCATABLE   :: ftmp(:,:)
-      INTEGER,  ALLOCATABLE   :: ityp(:)
-      REAL(DP), ALLOCATABLE   :: tau(:,:)
-      REAL(DP), ALLOCATABLE   :: rhosum(:)
-      REAL(DP)                :: omega, htm1(3,3), h(3,3)
-      REAL(DP)                :: a1(3), a2(3), a3(3)
-      REAL(DP)                :: b1(3), b2(3), b3(3)
-      REAL(DP)                :: nelec
-      REAL(DP)                :: scalef
-      LOGICAL                 :: lsda
+      CHARACTER(LEN=256)    :: dirname, filename, rho_file
+      CHARACTER(LEN=4)      :: cspin
+      INTEGER               :: kunit, ib, ik_eff
+      INTEGER               :: k1, k2, k3
+      INTEGER               :: nk1, nk2, nk3
+      INTEGER               :: j, i, ispin, ig, nspin_wfc
+      INTEGER               :: is, ia, isa, iss, ise, ik, ierr
+      INTEGER,  ALLOCATABLE :: mill(:,:)
+      INTEGER,  ALLOCATABLE :: ftmp(:,:)
+      INTEGER,  ALLOCATABLE :: ityp(:)
+      REAL(DP), ALLOCATABLE :: tau(:,:)
+      REAL(DP), ALLOCATABLE :: rhosum(:)
+      REAL(DP)              :: omega, htm1(3,3), h(3,3)
+      REAL(DP)              :: a1(3), a2(3), a3(3)
+      REAL(DP)              :: b1(3), b2(3), b3(3)
+      REAL(DP)              :: nelec
+      REAL(DP)              :: scalef
+      LOGICAL               :: lsda
       !
       ! ... Create main restart directory
       !
@@ -524,8 +523,8 @@ MODULE cp_restart
             !
             filename = TRIM( wfc_filename( ".", 'gkvectors', ik ) )
             !
-            CALL iotk_link( iunpun, "gkvectors", filename, &
-                            CREATE = .FALSE., BINARY = .TRUE., RAW = .TRUE. )
+            CALL iotk_link( iunpun, "gkvectors", &
+                            filename, CREATE = .FALSE., BINARY = .TRUE. )
             !
             filename = TRIM( wfc_filename( dirname, 'gkvectors', ik ) )
             !
@@ -547,8 +546,8 @@ MODULE cp_restart
                   !
                END IF
                !
-               CALL iotk_link( iunpun, "wfc", filename, &
-                               CREATE = .FALSE., BINARY = .TRUE., RAW = .TRUE. )
+               CALL iotk_link( iunpun, "wfc", &
+                               filename, CREATE = .FALSE., BINARY = .TRUE. )
                !
                IF ( nspin == 1 ) THEN
                   !
@@ -590,8 +589,8 @@ MODULE cp_restart
                   !
                END IF
                !
-               CALL iotk_link( iunpun, "wfcm", filename, &
-                               CREATE = .FALSE., BINARY = .TRUE., RAW = .TRUE. )
+               CALL iotk_link( iunpun, "wfcm", &
+                               filename, CREATE = .FALSE., BINARY = .TRUE. )
                !
                IF ( nspin == 1 ) THEN
                   !
@@ -636,8 +635,8 @@ MODULE cp_restart
             ! 
             filename = 'mat_z' // cspin
             !
-            CALL iotk_link( iunpun, "mat_z" // TRIM( cspin ), filename, &
-                            CREATE = .TRUE., BINARY = .TRUE., RAW = .TRUE. )
+            CALL iotk_link( iunpun, "mat_z" // TRIM( cspin ), &
+                            filename, CREATE = .TRUE., BINARY = .TRUE. )
             !
             CALL iotk_write_dat( iunpun, &
                                  "mat_z" // TRIM( cspin ), mat_z(:,:,ispin) )
