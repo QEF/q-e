@@ -50,7 +50,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE ions_base,                ONLY : ind_srt, ions_cofmass, ions_kinene, &
                                        ions_temp, ions_thermal_stress, if_pos
   USE ions_base,                ONLY : ions_vrescal, fricp, greasp, &
-                                       iforce, ions_shiftvar, ityp, &
+                                       iforce, ndfrz, ions_shiftvar, ityp, &
                                        atm, ind_bck, cdm, cdmi, fion, fionm
   USE cell_base,                ONLY : a1, a2, a3, b1, b2, b3, ainv, frich, &
                                        greash, tpiba2, omega, alat, ibrav,  &
@@ -342,7 +342,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         CALL ions_cofmass( tausp, pmass, na, nsp, cdm )
         !
-        CALL ions_cofmsub( tausp, iforce, na, nsp, cdm, cdmi )
+        IF ( ndfrz==0 ) CALL ions_cofmsub( tausp, iforce, na, nsp, cdm, cdmi )
         !
         CALL s_to_r( tausp, taup, na, nsp, hnew )
         !
