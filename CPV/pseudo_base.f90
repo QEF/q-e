@@ -229,9 +229,7 @@
           if( what == 1 ) then
             !IF( gb(ig) > gsmall ) THEN
               IF( abs(xg*r(1)) > gsmall ) THEN
-             write(*,*) 'Control a1'!ATTENZIONE
               call sph_bes ( mesh, r(1), xg, -1, djl )
-             write(*,*) 'Control a2'!ATTENZIONE
               do ir=1,mesh
                 djl(ir) = jl(ir) / ( r(ir) * xg ) - djl(ir) 
               end do
