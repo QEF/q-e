@@ -100,6 +100,9 @@ MODULE from_restart_module
     REAL(DP)                 :: fcell(3,3)
     REAL(DP)                 :: fccc = 0.D0
     REAL(DP)                 :: ccc
+    ! Kostya: the variable below will disable the ionic & cell motion
+    ! which nobody has any clue about ...
+    REAL(DP)                 :: delt0 = 0.0d0
     !
     !
     ! ... We are restarting from file recompute ainv
@@ -233,7 +236,7 @@ MODULE from_restart_module
        IF ( tortho ) THEN
           !
           CALL ortho( eigr, cm, phi, lambda, bigr, iter, &
-                      dt2bye, ortho_eps, ortho_max, delt, bephi, becp )
+                      dt2bye, ortho_eps, ortho_max, delt0, bephi, becp )
           !
           CALL updatc( dt2bye, lambda, phi, bephi, becp, bec, cm )
           !
@@ -251,7 +254,7 @@ MODULE from_restart_module
           !
           CALL cell_force( fcell, ainv, stress, omega, press, wmass )
           !
-          CALL cell_hmove( h, hold, delt, iforceh, fcell )
+          CALL cell_hmove( h, hold, delt0, iforceh, fcell )
           !
           CALL invmat( 3, h, ainv, deth )
           !
@@ -270,7 +273,7 @@ MODULE from_restart_module
           ELSE
              !
              CALL ions_hmove( taus, tausm, iforce, &
-                              pmass, fion, ainv, delt, na, nsp )
+                              pmass, fion, ainv, delt0, na, nsp )
              !
           END IF
           !
