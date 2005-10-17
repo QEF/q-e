@@ -54,6 +54,7 @@
       INTEGER, ALLOCATABLE :: iforce(:,:)  ! if_pos sorted by specie 
       INTEGER :: fixatom   = -1            ! to be removed
       INTEGER :: ndofp     = -1            ! ionic degree of freedom
+      INTEGER :: ndfrz     = 0             ! frozen degrees of freedom
 
       REAL(DP) :: fricp   ! friction parameter for damped dynamics
       REAL(DP) :: greasp  ! friction parameter for damped dynamics
@@ -346,6 +347,8 @@
       iforce(:,:) = if_pos(:,ind_srt(:))
       !
       ndofp = COUNT( iforce /= 0 )
+      !
+      ndfrz = COUNT( iforce == 0 )
       !
       ! ... TEMP: calculate fixatom (to be removed)
       !
