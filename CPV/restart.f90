@@ -90,7 +90,7 @@
 !-----------------------------------------------------------------------
       subroutine writefile_cp                                         &
      &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
-     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,ekincm,  &
+     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm, &
      &       fion, tps, mat_z, occ_f, rho )
 !-----------------------------------------------------------------------
@@ -114,7 +114,7 @@
       real(8), INTENT(IN) :: acc(:), lambda(:,:), lambdam(:,:)
       real(8), INTENT(IN) :: xnhe0, xnhem, vnhe, ekincm
       real(8), INTENT(IN) :: xnhp0(:), xnhpm(:), vnhp(:)
-      integer,      INTENT(in) :: nhpcl
+      integer,      INTENT(in) :: nhpcl, nhpdim
       real(8), INTENT(IN) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
       real(8), INTENT(in) :: ecut, ecutw, delt
       real(8), INTENT(in) :: pmass(:)
@@ -165,13 +165,13 @@
       IF( tens ) THEN
         CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
           ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
-          vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl, occ_ , &
+          vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_ , &
           occ_ , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei, &
           rho, c02 = c0, cm2 = cm, mat_z = mat_z  )
       ELSE
         CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
           ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
-          vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl, occ_ , &
+          vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_ , &
           occ_ , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei, &
           rho, c02 = c0, cm2 = cm  )
       END IF
@@ -185,7 +185,7 @@
 !-----------------------------------------------------------------------
       subroutine readfile_cp                                        &
      &     ( flag, ndr,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,    &
-     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,ekincm, &
+     &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,&
      &       fion, tps, mat_z, occ_f )
 !-----------------------------------------------------------------------
@@ -213,7 +213,7 @@
       real(8) :: acc(:),lambda(:,:), lambdam(:,:)
       real(8) :: xnhe0,xnhem,vnhe
       real(8) :: xnhp0(:), xnhpm(:), vnhp(:)
-      integer, INTENT(inout) :: nhpcl
+      integer, INTENT(inout) :: nhpcl,nhpdim
       real(8) :: ekincm
       real(8) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
       real(8), INTENT(in) :: ecut, ecutw, delt
@@ -251,13 +251,13 @@
       IF( tens ) THEN
          CALL cp_readfile( ndr, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
                 ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
-                vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl , occ_ , &
+                vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ_ , &
                 occ_ , lambda, lambdam, b1, b2, b3, &
                 xnhe0, xnhem, vnhe, ekincm, c02 = c0, cm2 = cm, mat_z = mat_z )
       ELSE
          CALL cp_readfile( ndr, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
                 ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
-                vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl , occ_ , &
+                vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ_ , &
                 occ_ , lambda, lambdam, b1, b2, b3, &
                 xnhe0, xnhem, vnhe, ekincm, c02 = c0, cm2 = cm )
       END IF
@@ -314,7 +314,7 @@
         USE electrons_nose, ONLY: xnhe0, xnhem, vnhe
         USE electrons_base, ONLY: nbsp, nspin
         USE cell_nose, ONLY: xnhh0, xnhhm, vnhh
-        USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, nhpcl
+        USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, nhpcl, nhpdim
         USE cp_restart, ONLY: cp_writefile
         USE electrons_module, ONLY: ei
         USE io_files, ONLY: scradir
@@ -377,7 +377,7 @@
         CALL cp_writefile( ndw, scradir, .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
           ht_0%a, ht_m%a, ht_0%hvel, ht_0%gvel, xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
-          xnhp0, xnhpm, nhpcl, occ, occ, lambda, lambda,  &
+          xnhp0, xnhpm, nhpcl, nhpdim, occ, occ, lambda, lambda,  &
           xnhe0, xnhem, vnhe, ekincm, ei, rhow, c04 = c0, cm4 = cm )
 
         DEALLOCATE( rhow )
@@ -426,7 +426,7 @@
         USE grid_dimensions, ONLY: nr1, nr2, nr3
         USE electrons_nose, ONLY: xnhe0, xnhem, vnhe
         USE cell_nose, ONLY: xnhh0, xnhhm, vnhh
-        USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, nhpcl
+        USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, nhpcl, nhpdim
         USE cp_restart, ONLY: cp_readfile
         USE io_files, ONLY: scradir
  
@@ -466,7 +466,7 @@
         CALL cp_readfile( ndr, scradir, .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
           hp0_ , hm1_ , hvel_ , gvel_ , xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
-          xnhp0, xnhpm, nhpcl, occ, occ, lambda_ , lambda_ , b1, b2,   &
+          xnhp0, xnhpm, nhpcl, nhpdim, occ, occ, lambda_ , lambda_ , b1, b2,   &
           b3, xnhe0, xnhem, vnhe, ekincm, c04 = c0, cm4 = cm )
 
         DEALLOCATE( lambda_ )

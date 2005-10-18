@@ -633,7 +633,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            !
            CALL writefile( ndw, h, hold ,nfi, c0(:,:,1,1), c0old, taus, tausm, &
                            vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,    &
-                           vnhe, xnhp0, xnhpm, vnhp, nhpcl, ekincm, xnhh0,     &
+                           vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
                            xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass, ibrav,&
                            celldm, fion, tps, z0, f, rhopr )
            !
@@ -641,7 +641,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            !
            CALL writefile( ndw, h, hold, nfi, c0(:,:,1,1), cm(:,:,1,1), taus,  &
                            tausm, vels, velsm, acc,  lambda, lambdam, xnhe0,   &
-                           xnhem, vnhe, xnhp0, xnhpm, vnhp, nhpcl, ekincm,     &
+                           xnhem, vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm,&
                            xnhh0, xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass,&
                            ibrav, celldm, fion, tps, z0, f, rhopr )
            !
@@ -711,7 +711,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         CALL wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, &
                                  irb, ibrav, b1, b2, b3, taus, tausm, vels,  &
                                  velsm, acc, lambda, lambdam, xnhe0, xnhem,  &
-                                 vnhe, xnhp0, xnhpm, vnhp, nhpcl, ekincm,    &
+                                 vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm,&
                                  xnhh0, xnhhm, vnhh, velh, ecutp, ecutw,     &
                                  delt, celldm, fion, tps, z0, f, rhopr )
      !
@@ -765,7 +765,7 @@ SUBROUTINE terminate_run()
   USE cell_base,             ONLY : h, hold, velh, ibrav, celldm
   USE ions_positions,        ONLY : taus, tausm, vels, velsm
   USE electrons_nose,        ONLY : xnhe0, xnhem, vnhe
-  USE ions_nose,             ONLY : vnhp, xnhp0, xnhpm, nhpcl
+  USE ions_nose,             ONLY : vnhp, xnhp0, xnhpm, nhpcl, nhpdim
   USE cell_nose,             ONLY : xnhh0, xnhhm, vnhh
   USE energies,              ONLY : ekincm
   USE gvecw,                 ONLY : ecutw
@@ -827,7 +827,7 @@ SUBROUTINE terminate_run()
      !
      CALL writefile( ndw, h, hold, nfi, c0(:,:,1,1), c0old, taus, tausm, vels, &
                      velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe, xnhp0,   &
-                     xnhpm, vnhp, nhpcl, ekincm, xnhh0, xnhhm, vnhh, velh,     &
+                     xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm, vnhh, velh,&
                      ecutp, ecutw, delt, pmass, ibrav, celldm, fion, tps,      &
                      z0, f, rhopr )
      !
@@ -835,7 +835,7 @@ SUBROUTINE terminate_run()
      !
      CALL writefile( ndw, h, hold, nfi, c0(:,:,1,1), cm(:,:,1,1), taus, tausm, &
                      vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe,    &
-                     xnhp0, xnhpm, vnhp, nhpcl, ekincm, xnhh0, xnhhm, vnhh,    &
+                     xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm, vnhh,&
                      velh, ecutp, ecutw, delt, pmass, ibrav, celldm, fion, tps,&
                      z0, f, rhopr )
      !

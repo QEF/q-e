@@ -34,7 +34,7 @@ MODULE cp_restart
     SUBROUTINE cp_writefile( ndw, scradir, ascii, nfi, simtime, acc, nk, xk, &
                              wk, ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh,   &
                              taui, cdmi, stau0, svel0, staum, svelm, force,  &
-                             vnhp, xnhp0, xnhpm, nhpcl, occ0, occm, lambda0, &
+                             vnhp, xnhp0, xnhpm,nhpcl,nhpdim, occ0, occm, lambda0,&
                              lambdam, xnhe0, xnhem, vnhe, ekincm, et, rho,   &
                              c04, cm4, c02, cm2, mat_z )
       !------------------------------------------------------------------------
@@ -91,6 +91,7 @@ MODULE cp_restart
       REAL(DP),              INTENT(IN) :: xnhpm(:)     ! 
       REAL(DP),              INTENT(IN) :: vnhp(:)      ! 
       INTEGER,               INTENT(IN) :: nhpcl        ! 
+      INTEGER,               INTENT(IN) :: nhpdim       ! 
       REAL(DP),              INTENT(IN) :: occ0(:,:,:)  ! 
       REAL(DP),              INTENT(IN) :: occm(:,:,:)  ! 
       REAL(DP),              INTENT(IN) :: lambda0(:,:) ! 
@@ -399,8 +400,9 @@ MODULE cp_restart
          !
          CALL iotk_write_begin( iunpun, "IONS_NOSE" )
          CALL iotk_write_dat(   iunpun, "nhpcl", nhpcl )
-         CALL iotk_write_dat(   iunpun, "xnhp",  xnhp0(1:nhpcl) )
-         CALL iotk_write_dat(   iunpun, "vnhp",  vnhp(1:nhpcl) )
+         CALL iotk_write_dat(   iunpun, "nhpdim", nhpdim )
+         CALL iotk_write_dat(   iunpun, "xnhp",  xnhp0(1:nhpcl*nhpdim) )
+         CALL iotk_write_dat(   iunpun, "vnhp",  vnhp(1:nhpcl*nhpdim) )
          CALL iotk_write_end(   iunpun, "IONS_NOSE" )
          !
          CALL iotk_write_dat( iunpun, "ekincm", ekincm )
@@ -434,7 +436,8 @@ MODULE cp_restart
          !
          CALL iotk_write_begin( iunpun, "IONS_NOSE" )
          CALL iotk_write_dat(   iunpun, "nhpcl", nhpcl )
-         CALL iotk_write_dat(   iunpun, "xnhp",  xnhpm(1:nhpcl) )
+         CALL iotk_write_dat(   iunpun, "nhpdim", nhpdim )
+         CALL iotk_write_dat(   iunpun, "xnhp",  xnhpm(1:nhpcl*nhpdim) )
         ! CALL iotk_write_dat(  iunpun, "vnhp",  vnhp )
          CALL iotk_write_end(   iunpun, "IONS_NOSE" )
          !
@@ -684,7 +687,7 @@ MODULE cp_restart
     SUBROUTINE cp_readfile( ndr, scradir, ascii, nfi, simtime, acc, nk, xk,  &
                             wk, ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh,    &
                             taui, cdmi, stau0, svel0, staum, svelm, force,   &
-                            vnhp, xnhp0, xnhpm, nhpcl, occ0, occm, lambda0,  &
+                            vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ0, occm, lambda0,&
                             lambdam, b1, b2, b3, xnhe0, xnhem, vnhe, ekincm, &
                             c04, cm4, c02, cm2, mat_z )
       !------------------------------------------------------------------------
@@ -739,6 +742,7 @@ MODULE cp_restart
       REAL(DP),              INTENT(INOUT) :: xnhpm(:)     ! 
       REAL(DP),              INTENT(INOUT) :: vnhp(:)      !  
       INTEGER,               INTENT(INOUT) :: nhpcl        !  
+      INTEGER,               INTENT(INOUT) :: nhpdim       !  
       REAL(DP),              INTENT(INOUT) :: occ0(:,:,:)  !
       REAL(DP),              INTENT(INOUT) :: occm(:,:,:)  !
       REAL(DP),              INTENT(INOUT) :: lambda0(:,:) !
@@ -784,7 +788,7 @@ MODULE cp_restart
       REAL(DP)              :: nelec_
       REAL(DP)              :: scalef_
       REAL(DP)              :: wk_
-      INTEGER               :: nhpcl_ 
+      INTEGER               :: nhpcl_, nhpdim_ 
       INTEGER               :: ib
       INTEGER               :: ik_eff
       REAL(DP)              :: amass_(ntypx)
@@ -886,8 +890,14 @@ MODULE cp_restart
             !
             CALL iotk_scan_begin( iunpun, "IONS_NOSE" )
             CALL iotk_scan_dat(   iunpun, "nhpcl", nhpcl_ )
-            CALL iotk_scan_dat(   iunpun, "xnhp", xnhp0(1:MIN(nhpcl_,nhpcl) ) )
-            CALL iotk_scan_dat(   iunpun, "vnhp", vnhp(1:MIN(nhpcl_,nhpcl) ) )
+            CALL iotk_scan_dat(   iunpun, "nhpdim", nhpdim_ )
+            if (nhpcl_.eq.nhpcl.and.nhpdim_.eq.nhpdim) then
+            CALL iotk_scan_dat(   iunpun, "xnhp", xnhp0(1:nhpcl*nhpdim))
+            CALL iotk_scan_dat(   iunpun, "vnhp", vnhp(1:nhpcl*nhpdim))
+            else
+               xnhp0(1:nhpcl*nhpdim) = 0.0d0
+               vnhp(1:nhpcl*nhpdim) = 0.0d0
+            endif
             CALL iotk_scan_end(   iunpun, "IONS_NOSE" )
             !
             CALL iotk_scan_dat( iunpun, "ekincm", ekincm )
@@ -929,7 +939,12 @@ MODULE cp_restart
             !
             CALL iotk_scan_begin( iunpun, "IONS_NOSE" )
             CALL iotk_scan_dat(   iunpun, "nhpcl", nhpcl_ )
-            CALL iotk_scan_dat(   iunpun, "xnhp",  xnhpm(1:MIN(nhpcl_,nhpcl) ) )
+            CALL iotk_scan_dat(   iunpun, "nhpdim", nhpdim_ )
+            if (nhpcl_.eq.nhpcl.and.nhpdim_.eq.nhpdim) then
+            CALL iotk_scan_dat(   iunpun, "xnhp",  xnhpm(1:nhpcl*nhpdim))
+            else
+               xnhpm(1:nhpcl*nhpdim) = 0.0d0
+            endif
             CALL iotk_scan_end(   iunpun,"IONS_NOSE" )
             !
             CALL iotk_scan_begin( iunpun, "ELECTRONS_NOSE" )

@@ -677,7 +677,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
              &       rep(sm_k)%tausm,rep(sm_k)%vels,rep(sm_k)%velsm,rep(sm_k)%acc,         &
              &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,                   &
              &       xnhe0(sm_k),xnhem(sm_k),vnhe(sm_k),xnhp0(:,sm_k),xnhpm(:,sm_k),vnhp(:,sm_k),&
-             &       nhpcl, ekincm(sm_k),                                                         &
+             &       nhpcl, nhpdim, ekincm(sm_k),                                                         &
              &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,rep(sm_k)%fion, &
              &       tps, mat_z, f )
 
@@ -1374,7 +1374,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
                 &     ( sm_ndw,h,hold,nfi,rep_el(sm_k)%c0,rep_el(sm_k)%cm,rep(sm_k)%taus, &
                 &       rep(sm_k)%tausm,rep(sm_k)%vels,rep(sm_k)%velsm,rep(sm_k)%acc,     &
                 &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,xnhe0(sm_k),xnhem(sm_k), &
-                &       vnhe(sm_k),xnhp0(:,sm_k),xnhpm(:,sm_k),vnhp(:,sm_k),nhpcl,ekincm(sm_k),       &
+                &       vnhe(sm_k),xnhp0(:,sm_k),xnhpm(:,sm_k),vnhp(:,sm_k),nhpcl,nhpdim, ekincm(sm_k),       &
                 &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,         &
                 &       rep(sm_k)%fion, tps, mat_z, f, rhor )
 
@@ -1541,7 +1541,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
           &     ( sm_ndw,h,hold,nfi,rep_el(sm_k)%c0,rep_el(sm_k)%cm,rep(sm_k)%taus, &
           &       rep(sm_k)%tausm,rep(sm_k)%vels,rep(sm_k)%velsm,rep(sm_k)%acc,     &
           &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,xnhe0(sm_k),xnhem(sm_k), &
-          &       vnhe(sm_k),xnhp0(:,sm_k),xnhpm(:,sm_k),vnhp(:,sm_k),nhpcl,ekincm(sm_k),       &
+          &       vnhe(sm_k),xnhp0(:,sm_k),xnhpm(:,sm_k),vnhp(:,sm_k),nhpcl,nhpdim,ekincm(sm_k),       &
           &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,         &
           &       rep(sm_k)%fion, tps, mat_z, f, rhor )
 

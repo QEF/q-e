@@ -44,7 +44,7 @@ SUBROUTINE init_run()
   USE parameters,               ONLY : natx, nspinx
   USE efield_module,            ONLY : tefield
   USE uspp_param,               ONLY : nhm
-  USE ions_nose,                ONLY : xnhp0, xnhpm, vnhp, nhpcl
+  USE ions_nose,                ONLY : xnhp0, xnhpm, vnhp, nhpcl, nhpdim
   USE cell_base,                ONLY : h, hold, hnew, velh, tpiba2, ibrav, &
                                        alat, celldm, a1, a2, a3, b1, b2, b3
   USE cp_main_variables,        ONLY : lambda, lambdam, lambdap, ema0bg, bec,  &
@@ -262,7 +262,7 @@ SUBROUTINE init_run()
         !
         CALL readfile( 1, ndr, h, hold, nfi, c0(:,:,1,1), cm(:,:,1,1), taus,   &
                        tausm, vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, &
-                       vnhe, xnhp0, xnhpm, vnhp, nhpcl, ekincm, xnhh0, xnhhm,  &
+                       vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
                        vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, celldm,   &
                        fion, tps, z0, f )
         !

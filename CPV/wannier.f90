@@ -643,7 +643,7 @@ MODULE wannier_subroutines
   SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub,  &
                                  irb, ibrav, b1, b2, b3, taus, tausm, vels,   &
                                  velsm, acc, lambda, lambdam, xnhe0, xnhem,   &
-                                 vnhe, xnhp0, xnhpm, vnhp, nhpcl, ekincm,     &
+                                 vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm,&
                                  xnhh0, xnhhm, vnhh, velh, ecut, ecutw, delt, &
                                  celldm, fion, tps, mat_z, occ_f, rho )
     !--------------------------------------------------------------------------
@@ -675,7 +675,7 @@ MODULE wannier_subroutines
     REAL(DP)    :: acc(:)
     REAL(DP)    :: lambda(:,:), lambdam(:,:)
     REAL(DP)    :: xnhe0, xnhem, vnhe, xnhp0(:), xnhpm(:), vnhp(:), ekincm
-    INTEGER           :: nhpcl
+    INTEGER           :: nhpcl, nhpdim
     REAL(DP)    :: velh(:,:)
     REAL(DP)    :: xnhh0(:,:), xnhhm(:,:), vnhh(:,:)
     REAL(DP)    :: ecut, ecutw, delt, celldm(:)
@@ -705,7 +705,7 @@ MODULE wannier_subroutines
        !
        CALL writefile( ndw, h, hold, nfi, c0(:,:,1,1), cm(:,:,1,1), taus, &
                        tausm, vels, velsm,acc, lambda, lambdam, xnhe0, xnhem, &
-                       vnhe, xnhp0, xnhpm, vnhp, nhpcl, ekincm, xnhh0, xnhhm, &
+                       vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
                        vnhh, velh, ecut, ecutw, delt, pmass, ibrav, celldm,   &
                        fion, tps, mat_z, occ_f, rho )
        !
