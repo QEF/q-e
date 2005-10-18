@@ -30,10 +30,10 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
                 3    PP generation
 
       nld    = the number of logarithmic derivatives to be calculated
-      rlderiv= the radius at which logarithmic derivatives are calculated
-      eminld, emaxld =
-               range (min, max energy) for logarithmic derivatives
-      deld   = delta e of energy for logarithmic derivatives
+      rlderiv= radius (a.u.) at which logarithmic derivatives are calculated
+      eminld, emaxld = energy range (min, max energy, in Ry) at which
+                       logarithmic derivatives are calculated
+      deld   = delta e (Ry) of energy for logarithmic derivatives
                If the above parameters are not specified, logarithmic
                derivaties are not calculated
 
@@ -121,12 +121,12 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
            lloc>-1 uses the corresponding channel as local PP
       NB: if lloc>-1, the corresponding channel must be the last in the
           list of wavefunctions appearing after the namelist &inputp
-      rcloc = matching radius for the local pseudo-potential      (no default)
+      rcloc = matching radius (a.u.) for local pseudo-potential (no default)
               Must be specified only if lloc=-1, otherwise the
               corresponding value of rcut is used. 
       nlcc =.true. : produce a PP with the nonlinear core    (default .false.) 
              correction of Froyen, Cohen, and Louie
-      rcore= matching radius for the smoothing of the core charge
+      rcore= matching radius (a.u.) for the smoothing of the core charge
              If not specified, the matching radius is determined 
              by the condition  rho_core(rcore) = 2*rho_valence(rcore)
       rho0 = charge at the origin: when the Rabe-Rappe-Kaxiras-Joannopoulos
@@ -152,11 +152,11 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
            nns=1 for lowest s, nns=2 for lowest p, and so on)
       lls= angular momentum quantum number
       ocs= occupation number  (same as in the all-electron configuration)
-      ener = energy used to pseudize the corresponding state
+      ener = energy (Ry) used to pseudize the corresponding state
              if 0.d0, use the one-electron energy of the all-electron state
-             do not use 0.d0 for unbound states!
-      rcut =  matching radius for norm conserving PP
-      rcutus= matching radius for ultrasoft PP - used only if pseudotype=3 
+             Do not use 0.d0 for unbound states!
+      rcut =  matching radius (a.u.) for norm conserving PP
+      rcutus= matching radius (a.u.) for ultrasoft PP - only for pseudotype=3 
       NB: il lloc>-1 the state with lls=lloc must be the last
 
   3) namelist &test (needed only if iswitch=2, optional if iswitch=3)
