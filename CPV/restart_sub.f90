@@ -67,7 +67,7 @@ MODULE from_restart_module
     USE runcp_module,         ONLY :  runcp_uspp
     USE wave_constrains,      ONLY : interpolate_lambda
     USE energies,             ONLY : eself, enl, etot, ekin
-    USE time_step,            ONLY : delt
+    USE time_step,            ONLY : delt, tps
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh, cell_nosezero
     USE phase_factors_module, ONLY : strucf
@@ -108,6 +108,10 @@ MODULE from_restart_module
     ! ... We are restarting from file recompute ainv
     !
     CALL invmat( 3, h, ainv, deth )
+    !
+    ! Reset total time counter if the run is not strictly 'restart'
+    !
+    if (nbeg.lt.1) tps = 0.0d0
     !
     IF ( taurdr ) THEN
        !
