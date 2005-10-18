@@ -13,8 +13,15 @@
 #     Make sure that it exists, is writable by you, and doesn't
 #     contain any valuable data (everything there will be destroyed!).
 
-BIN_DIR=$HOME/espresso/bin
-PSEUDO_DIR=$HOME/espresso/pseudo
+#Let's set some of the directories automatically assuming the usual
+#espresso tree, and that the examples are in examples/exampleN  
+
+CURDIR=`pwd`
+cd ../..
+PREFIX=`pwd`
+cd $CURDIR
+BIN_DIR=$PREFIX/bin
+PSEUDO_DIR=$PREFIX/pseudo
 TMP_DIR=$HOME/tmp
 
 # To run the ESPRESSO programs on a parallel machine, you may have to
