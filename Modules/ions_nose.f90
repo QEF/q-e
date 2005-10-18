@@ -90,7 +90,9 @@
     
     IF( nhpcl > nhclm ) &
       CALL errore(' ions_nose_init ', ' nhpcl out of range ', nhpcl )
-    call ions_nose_allocate()
+    !
+    CALL ions_nose_allocate()
+    !
     !  Setup Nose-Hoover chain masses
     !
     if ( ndega_ > 0 ) then
@@ -175,8 +177,17 @@
   end subroutine ions_nose_init
 
 
-  SUBROUTINE ions_nose_allocate()  
+  SUBROUTINE ions_nose_allocate()
+    !
     IMPLICIT NONE
+    !
+    LOGICAL, SAVE :: nose_allocated = .FALSE.
+    !
+    ! ... nose arrays are allocated only at the first call ( autopilot
+    ! ... calls this routine every time the temperature is changed )
+    !
+    IF ( nose_allocated ) RETURN
+    !
     allocate(vnhp(nhpcl*nhpdim))
     vnhp = 0.0d0
     allocate(xnhp0(nhpcl*nhpdim))
@@ -192,7 +203,11 @@
     qnp = 0.0d0
     allocate(qnp_(nhpcl))
     qnp_ = 0.0d0
+    !
+    nose_allocated = .TRUE.
+    !
     RETURN
+    !
   END SUBROUTINE ions_nose_allocate
 
   SUBROUTINE ions_nose_deallocate()  
