@@ -14,9 +14,9 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-       SUBROUTINE enthropy(f,temp,nx,ent)
+       SUBROUTINE entropy(f,temp,nx,ent)
 
-!  this routine computes the enthropic contribution due to the finite
+!  this routine computes the entropic contribution due to the finite
 !  temperature assigned to electrons when computing occupation numbers
 !  ----------------------------------------------
 !  END manual
@@ -44,9 +44,9 @@
        ent=-2.d0*temp*ent
 
        RETURN
-       END SUBROUTINE enthropy
+       END SUBROUTINE entropy
 
-       subroutine enthropy_s(f,temp,nx,ent)
+       subroutine entropy_s(f,temp,nx,ent)
        use kinds
        implicit none
        integer nx
@@ -62,5 +62,5 @@
        ent=-2.d0*temp*ent
 
        return
-       end subroutine enthropy_s
+       end subroutine entropy_s
 

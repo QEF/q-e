@@ -229,7 +229,7 @@
 
              call adjef_s(eig(1,1,1),fi(1,1,1),efermi,nel, &
                cdesc%nbl( 1 ),temp_elec,sume)
-             call enthropy_s(fi(1,1,1),temp_elec,cdesc%nbl( 1 ),edft%ent)
+             call entropy_s(fi(1,1,1),temp_elec,cdesc%nbl( 1 ),edft%ent)
 
           END IF
 
@@ -281,7 +281,7 @@
           END IF
 
           call adjef_s(eig(1,1,1),fi(1,1,1),efermi,nel, cdesc%nbl( 1 ),temp_elec,sume)
-          call enthropy_s(fi(1,1,1),temp_elec,cdesc%nbl(1),edft%ent)
+          call entropy_s(fi(1,1,1),temp_elec,cdesc%nbl(1),edft%ent)
 
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fs, bec, becdr, eigr)
           CALL dforce_all( 1, c0(:,:,1,1), cdesc, fi(:,1,1), cgrad(:,:,1,1), vpot(:,:,:,1), eigr, bec )

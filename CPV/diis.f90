@@ -401,11 +401,11 @@
         qtot = DBLE( nel ) 
         CALL fermi_energy( eig, occ, wke, efermi, qtot, temp, sume)
 
-! ...   compute the enthropic correction
+! ...   compute the entropic correction
         ent = 0.0d0
         DO ispin = 1, SIZE( occ, 3 )
           DO ik = 1, SIZE( occ, 2 )
-            CALL enthropy( occ(:,ik,ispin), temp, nb, entk )
+            CALL entropy( occ(:,ik,ispin), temp, nb, entk )
             ent = ent + kp%weight(ik) * entk
           END DO
         END DO

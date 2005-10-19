@@ -119,7 +119,7 @@ $(WRAPPERS)
 
 LOBJS = \
 adjef.o \
-enthropy.o \
+entropy.o \
 forceconv.o \
 geninv.o \
 indices.o \
