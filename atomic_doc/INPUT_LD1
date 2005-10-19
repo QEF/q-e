@@ -129,6 +129,10 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       rcore= matching radius (a.u.) for the smoothing of the core charge
              If not specified, the matching radius is determined 
              by the condition  rho_core(rcore) = 2*rho_valence(rcore)
+      tm   = .true.  for Troullier-Martins pseudization      (default .false.)
+              [PRB 43, 1993 (1991)]
+             .false. for Rabe-Rappe-Kaxiras-Joannopoulos pseudization 
+              [PRB 41, 1227 (1990), erratum PRB 44, 13175 (1991)]
       rho0 = charge at the origin: when the Rabe-Rappe-Kaxiras-Joannopoulos
              method with 3 Bessel functions fails, specifying rho0 > 0
              may allow to override the problem (using 4 Bessel functions)
@@ -146,6 +150,8 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       nwfs
    where nwfs=number of wavefunctions to be pseudized, followed by nwfs cards:
       nls, nns, lls, ocs(nl), ener, rcut, rcutus
+   for rel=0, or, for rel=2:
+      nls, nns, lls, ocs(nl), ener, rcut, rcutus, jjs
    where:
       nls= wavefunction label (same as in the all-electron configuration)
       nns= principal quantum number (referred to the PSEUDOPOTENTIAL case!
@@ -157,6 +163,7 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
              Do not use 0.d0 for unbound states!
       rcut =  matching radius (a.u.) for norm conserving PP
       rcutus= matching radius (a.u.) for ultrasoft PP - only for pseudotype=3 
+      jjs= the total angular momentum (0.0 is allowed for complete shells)
       NB: il lloc>-1 the state with lls=lloc must be the last
 
   3) namelist &test (needed only if iswitch=2, optional if iswitch=3)
