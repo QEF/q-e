@@ -49,14 +49,14 @@ LIBS         = -lessl  -L/usr/local/lib -llapack
 # LIBS         = -lessl -L/cineca/lib/ -llapack -L/cineca/lib/mass \
 #                -lmassvp4 -lmass
 
-# use -bmaxdata:512000000 for jobs>256Mb (in this example up to 512Mb)
+# use -bmaxdata:0x7FFFFFFF for jobs>256Mb (0x7FFFFFFF is 2Gb-1)
 # use -bnso -bI:/usr/lib/syscalls.exp for static linking
 # use -s for stripped executable (smaller file but no debugging)
 LD           = $(MPIF90)
 
 # LDFLAGS      = ../flib/ptools.a ../flib/flib.a -s
 LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
-               -s -bmaxdata:512000000
+               -s -bmaxdata:0x7FFFFFFF
 
 AR           = ar
 ARFLAGS      = ruv
