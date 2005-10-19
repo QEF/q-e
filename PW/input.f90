@@ -115,7 +115,7 @@ SUBROUTINE iosys()
                             starting_magnetization_ => starting_magnetization, &
                             lsda
   !
-  USE io_files,      ONLY : tmp_dir, &
+  USE io_files,      ONLY : tmp_dir, nod_dir, &
                             prefix_     => prefix, &
                             pseudo_dir_ => pseudo_dir, &
                             psfile
@@ -191,7 +191,7 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : title, calculation, verbosity, &
                                restart_mode, nstep, iprint, tstress, tprnfor, &
-                               dt, outdir, prefix, max_seconds, &
+                               dt, outdir, nodedir, prefix, max_seconds, &
                                etot_conv_thr, forc_conv_thr, pseudo_dir, &
                                disk_io, tefield, dipfield, lberry, gdir, &
                                nppstr, wf_collect,lelfield, efield,  &
@@ -1436,7 +1436,18 @@ SUBROUTINE iosys()
   !
   IF ( lconstrain ) CALL init_constraint( nat, tau, alat, ityp )
   !
-  CALL verify_tmpdir()
+  CALL verify_tmpdir(tmp_dir)
+  !
+  IF (nodedir=='undefined') THEN
+     !
+     nod_dir=tmp_dir
+     !
+  ELSE
+     !
+     nod_dir=TRIM( nodedir )
+     CALL verify_tmpdir(nod_dir)
+     !
+  ENDIF
   !
   CALL restart_from_file()
   !
@@ -1658,12 +1669,12 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
 END SUBROUTINE read_cards
 !
 !-----------------------------------------------------------------------
-SUBROUTINE verify_tmpdir()
+SUBROUTINE verify_tmpdir(tmp_dir)
   !-----------------------------------------------------------------------
   !
   USE input_parameters, ONLY : restart_mode
   USE control_flags,    ONLY : lpath
-  USE io_files,         ONLY : prefix, tmp_dir, nd_nmbr, exit_file
+  USE io_files,         ONLY : prefix, nd_nmbr, exit_file
   USE path_variables,   ONLY : num_of_images
   USE mp_global,        ONLY : mpime, nproc
   USE io_global,        ONLY : ionode
@@ -1673,6 +1684,7 @@ SUBROUTINE verify_tmpdir()
   !
   IMPLICIT NONE
   !
+  CHARACTER(LEN=*), INTENT(INOUT) :: tmp_dir
   INTEGER            :: l, ios, image, proc
   CHARACTER (LEN=256) :: file_path, tmp_dir_saved
   INTEGER, EXTERNAL  :: c_mkdir

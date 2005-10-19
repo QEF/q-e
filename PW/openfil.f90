@@ -20,7 +20,8 @@ SUBROUTINE openfil()
   USE wvfct,            ONLY : nbnd, npwx
   USE ldaU,             ONLY : lda_plus_U
   USE io_files,         ONLY : prefix, iunpun, iunat, iunwfc, iunigk, &
-                               nwordwfc, nwordatwfc, iunefield
+                               nwordwfc, nwordatwfc, iunefield, &
+                               tmp_dir, nod_dir
   USE pw_restart,       ONLY : pw_readfile
   USE restart_module,   ONLY : readfile_new
   USE noncollin_module, ONLY : npol
@@ -32,10 +33,16 @@ SUBROUTINE openfil()
   LOGICAL  :: exst
   INTEGER  :: ierr
   REAL(DP) :: edum(1,1), wdum(1,1)
+  CHARACTER(len=256) :: tmp_dir_sav
   !
   !
   ! ... nwordwfc is the record length for the direct-access file
   ! ... containing wavefunctions
+  !
+  ! we'll swap nod_dir for tmp_dir for large files
+  tmp_dir_sav = tmp_dir
+  !
+  tmp_dir = nod_dir
   !
   nwordwfc = 2 * nbnd * npwx * npol
   !
@@ -83,6 +90,8 @@ SUBROUTINE openfil()
   ! ... open units for electric field calculations
   !
   IF ( lelfield ) CALL diropn( iunefield, 'ewfc', nwordwfc, exst )
+  !
+  tmp_dir = tmp_dir_sav
   !
   RETURN
   !

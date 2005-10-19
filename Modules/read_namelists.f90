@@ -593,6 +593,7 @@ MODULE read_namelists_module
        CALL mp_bcast( ndr,           ionode_id )
        CALL mp_bcast( ndw,           ionode_id )
        CALL mp_bcast( outdir,        ionode_id )
+       CALL mp_bcast( nodedir,       ionode_id )
        CALL mp_bcast( scradir,       ionode_id )
        CALL mp_bcast( prefix,        ionode_id )
        CALL mp_bcast( max_seconds,   ionode_id )

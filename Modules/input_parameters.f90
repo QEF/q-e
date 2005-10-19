@@ -203,6 +203,12 @@ MODULE input_parameters
           ! files. When possible put this directory in the fastest available
           ! filesystem ( not NFS! )
 
+
+        CHARACTER(LEN=256) :: nodedir = 'undefined'
+          ! scratch directory that is hopefully local to the node
+          ! to store large, usually temporary files. Note that the 'scradir'
+          ! above is quite confusing and does not do what is claimed
+
         REAL(DP) :: max_seconds = 1.0d+7
           ! smoothly terminate program after the specified number of seconds
           ! this parameter is typically used to prevent an hard kill from
@@ -266,7 +272,7 @@ MODULE input_parameters
           ! if <0 do nothing, if==0 print rho and fort.47, if == nband print band
 
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
-          nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, &
+          nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, nodedir, &
           max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
           pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, &
           wf_collect, printwfc, scradir,lelfield, nberrycic, refg
