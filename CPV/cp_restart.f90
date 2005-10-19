@@ -239,8 +239,10 @@ MODULE cp_restart
          !
          CALL iotk_write_attr( attr, "ITERATION", nfi, FIRST = .TRUE. )
          CALL iotk_write_empty(iunpun, "STEP", attr )
-         ! 
-         CALL iotk_write_dat( iunpun, "TIME", simtime )
+         !
+         CALL iotk_write_attr( attr, "UNIT", "pico-seconds", FIRST = .TRUE. ) 
+         CALL iotk_write_dat( iunpun, "TIME", simtime, ATTR = attr )
+         !
          CALL iotk_write_dat( iunpun, "TITLE", TRIM( title ) )
          !
          CALL iotk_write_attr( attr, "UNIT", "Hartree", FIRST = .TRUE. )
