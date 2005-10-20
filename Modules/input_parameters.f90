@@ -205,7 +205,7 @@ MODULE input_parameters
           ! filesystem ( not NFS! )
 
 
-        CHARACTER(LEN=256) :: nodedir = 'undefined'
+        CHARACTER(LEN=256) :: wfcdir = 'undefined'
           ! scratch directory that is hopefully local to the node
           ! to store large, usually temporary files. Note that the 'scradir'
           ! above is quite confusing and does not do what is claimed
@@ -273,7 +273,7 @@ MODULE input_parameters
           ! if <0 do nothing, if==0 print rho and fort.47, if == nband print band
 
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
-          nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, nodedir, &
+          nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, wfcdir, &
           max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
           pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, &
           wf_collect, printwfc, scradir,lelfield, nberrycic, refg

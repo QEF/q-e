@@ -115,7 +115,7 @@ SUBROUTINE iosys()
                             starting_magnetization_ => starting_magnetization, &
                             lsda
   !
-  USE io_files,      ONLY : tmp_dir, nod_dir, &
+  USE io_files,      ONLY : tmp_dir, wfc_dir, &
                             prefix_     => prefix, &
                             pseudo_dir_ => pseudo_dir, &
                             psfile
@@ -183,7 +183,7 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : title, calculation, verbosity, &
                                restart_mode, nstep, iprint, tstress, tprnfor, &
-                               dt, outdir, nodedir, prefix, max_seconds, &
+                               dt, outdir, wfcdir, prefix, max_seconds, &
                                etot_conv_thr, forc_conv_thr, pseudo_dir, &
                                disk_io, tefield, dipfield, lberry, gdir, &
                                nppstr, wf_collect,lelfield, efield,  &
@@ -1421,14 +1421,10 @@ SUBROUTINE iosys()
   !
   CALL verify_tmpdir(tmp_dir)
   !
-  IF (nodedir=='undefined') THEN
+  IF (.not.(TRIM(wfcdir)=='undefined')) THEN
      !
-     nod_dir=tmp_dir
-     !
-  ELSE
-     !
-     nod_dir=TRIM( nodedir )
-     CALL verify_tmpdir(nod_dir)
+     wfc_dir=TRIM( wfcdir )
+     CALL verify_tmpdir(wfc_dir)
      !
   ENDIF
   !

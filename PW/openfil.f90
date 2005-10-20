@@ -21,7 +21,7 @@ SUBROUTINE openfil()
   USE ldaU,             ONLY : lda_plus_U
   USE io_files,         ONLY : prefix, iunpun, iunat, iunwfc, iunigk, &
                                nwordwfc, nwordatwfc, iunefield, &
-                               tmp_dir, nod_dir
+                               tmp_dir, wfc_dir
   USE pw_restart,       ONLY : pw_readfile
   USE restart_module,   ONLY : readfile_new
   USE noncollin_module, ONLY : npol
@@ -39,10 +39,14 @@ SUBROUTINE openfil()
   ! ... nwordwfc is the record length for the direct-access file
   ! ... containing wavefunctions
   !
-  ! we'll swap nod_dir for tmp_dir for large files
+  ! we'll swap wfc_dir for tmp_dir for large files
   tmp_dir_sav = tmp_dir
   !
-  tmp_dir = nod_dir
+  !  WRITE( stdout, '(5X,"openfil: wfc storage path = ",A)' ) TRIM(wfc_dir)
+  IF (.not.(wfc_dir=='undefined')) THEN
+     WRITE( stdout, '(5X,"writing wfc files to a dedicated directory")' )
+     tmp_dir = wfc_dir
+  ENDIF
   !
   nwordwfc = 2 * nbnd * npwx * npol
   !
