@@ -10,7 +10,7 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use c.x to perform molecular dynamics"
+$ECHO "This example shows how to use cp.x to perform molecular dynamics"
 $ECHO "simulation of H2O."
 
 # set the needed environment variables 
