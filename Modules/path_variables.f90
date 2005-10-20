@@ -13,7 +13,7 @@ MODULE path_variables
   !
   ! ... Written by Carlo Sbraccia ( 2003-2005 )
   !
-  USE kinds,  ONLY : DP
+  USE kinds, ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -45,6 +45,8 @@ MODULE path_variables
        tune_load_balance          ! if .TRUE. the load balance for image
                                   !           parallelisation is tuned at 
                                   !           runtime
+  LOGICAL, PARAMETER :: &
+       use_precond = .FALSE.      ! if .TRUE. a preconditioned gradient is ussed
   INTEGER :: &
        dim,                      &! dimension of the configuration space
        num_of_images,            &! number of images
@@ -108,11 +110,11 @@ MODULE path_variables
        elastic_grad(:),          &! elastic part of the gradients
        mass(:),                  &! atomic masses
        k(:),                     &! elastic constants
-       react_coord(:),           &! the reaction coordinate (in bohr)
-       norm_grad(:)               ! norm of the gradients
+       react_coord(:)             ! the reaction coordinate (in bohr)
   REAL(DP), ALLOCATABLE :: &
        vel(:,:),                 &! 
        grad(:,:),                &!
+       precond_grad(:,:),        &!
        lang(:,:)                  ! langevin random force
   !
   ! ... "smd specific" variables :
@@ -125,15 +127,6 @@ MODULE path_variables
        Nft_smooth                 ! smooth real-space grid
   REAL(DP) :: &
        ft_coeff                   ! normalization in fourier transformation
-  !
-  !
-  ! ... real space arrays
-  !
-  REAL(DP), ALLOCATABLE :: &
-       pos_star(:,:)              !
-  !
-  ! ... reciprocal space arrays
-  !
   REAL(DP), ALLOCATABLE :: &
        ft_pos(:,:)                ! fourier components of the path
   !
@@ -184,12 +177,12 @@ MODULE path_variables
        !
        ALLOCATE( vel( dim, num_of_images ) ) 
        !
-       ALLOCATE( grad(     dim, num_of_images ) )
-       ALLOCATE( grad_pes( dim, num_of_images ) )
-       ALLOCATE( tangent(  dim, num_of_images ) )
+       ALLOCATE( grad(         dim, num_of_images ) )
+       ALLOCATE( precond_grad( dim, num_of_images ) )
+       ALLOCATE( grad_pes(     dim, num_of_images ) )
+       ALLOCATE( tangent(      dim, num_of_images ) )
        !
        ALLOCATE( react_coord( num_of_images ) )
-       ALLOCATE( norm_grad(   num_of_images ) )
        ALLOCATE( pes(         num_of_images ) )
        ALLOCATE( k(           num_of_images ) )
        ALLOCATE( error(       num_of_images ) )
@@ -200,8 +193,6 @@ MODULE path_variables
        ALLOCATE( elastic_grad( dim ) )
        !
        IF ( method == "smd" ) THEN
-          !
-          ALLOCATE( pos_star( dim, 0:( Nft - 1 ) ) )
           !
           ALLOCATE( ft_pos( dim, ( Nft - 1 ) ) )
           !
@@ -228,8 +219,8 @@ MODULE path_variables
        IF ( ALLOCATED( pos ) )            DEALLOCATE( pos )
        IF ( ALLOCATED( vel ) )            DEALLOCATE( vel )
        IF ( ALLOCATED( grad ) )           DEALLOCATE( grad )
+       IF ( ALLOCATED( precond_grad ) )   DEALLOCATE( precond_grad )
        IF ( ALLOCATED( react_coord ) )    DEALLOCATE( react_coord )
-       IF ( ALLOCATED( norm_grad ) )      DEALLOCATE( norm_grad )
        IF ( ALLOCATED( pes ) )            DEALLOCATE( pes )
        IF ( ALLOCATED( grad_pes ) )       DEALLOCATE( grad_pes )
        IF ( ALLOCATED( k ) )              DEALLOCATE( k )
@@ -241,8 +232,6 @@ MODULE path_variables
        IF ( ALLOCATED( frozen ) )         DEALLOCATE( frozen )
        !
        IF ( method == "smd" ) THEN
-          !
-          IF ( ALLOCATED( pos_star ) )    DEALLOCATE( pos_star )
           !
           IF ( ALLOCATED( ft_pos ) )      DEALLOCATE( ft_pos )
           !

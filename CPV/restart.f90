@@ -1,56 +1,3 @@
-! RESTART.f90
-!********************************************************************************
-! RESTART.f90        				Copyright (c) 2005 Targacept, Inc.
-!********************************************************************************
-! Original file changed by Targacept in June 2005 in order to accommodate 
-! Autopilot feature suite (see autopilot.f90).
-!
-! This program is free software; you can redistribute it and/or modify it under 
-! the terms of the GNU General Public License as published by the Free Software 
-! Foundation; either version 2 of the License, or (at your option) any later version.
-! This program is distributed in the hope that it will be useful, but WITHOUT ANY 
-! WARRANTY; without even the implied warranty of MERCHANTABILITY FOR A PARTICULAR 
-! PURPOSE.  See the GNU General Public License at www.gnu.or/copyleft/gpl.txt for 
-! more details.
-! 
-! THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  
-! EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES 
-! PROVIDE THE PROGRAM "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, 
-! INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND 
-! FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND THE 
-! PERFORMANCE OF THE PROGRAM IS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, 
-! YOU ASSUME THE COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
-!
-! IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING, 
-! WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR REDISTRIBUTE 
-! THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY 
-! GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR 
-! INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA 
-! BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A 
-! FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS), EVEN IF SUCH HOLDER 
-! OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
-!
-! You should have received a copy of the GNU General Public License along with 
-! this program; if not, write to the 
-! Free Software Foundation, Inc., 
-! 51 Franklin Street, 
-! Fifth Floor, 
-! Boston, MA  02110-1301, USA.
-! 
-! Targacept's address is 
-! 200 East First Street, Suite 300
-! Winston-Salem, North Carolina USA 27101-4165 
-! Attn: Molecular Design. 
-! Email: atp@targacept.com
-!
-! This work was supported by the Advanced Technology Program of the 
-! National Institute of Standards and Technology (NIST), Award No. 70NANB3H3065 
-!
-!********************************************************************************
-
-
-
-
 !
 ! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
@@ -107,31 +54,31 @@
 !
       implicit none
       integer, INTENT(IN) :: ndw, nfi
-      real(8), INTENT(IN) :: h(3,3), hold(3,3)
+      REAL(DP), INTENT(IN) :: h(3,3), hold(3,3)
       complex(8), INTENT(IN) :: c0(:,:), cm(:,:)
-      real(8), INTENT(IN) :: tausm(:,:), taus(:,:), fion(:,:)
-      real(8), INTENT(IN) :: vels(:,:), velsm(:,:)
-      real(8), INTENT(IN) :: acc(:), lambda(:,:), lambdam(:,:)
-      real(8), INTENT(IN) :: xnhe0, xnhem, vnhe, ekincm
-      real(8), INTENT(IN) :: xnhp0(:), xnhpm(:), vnhp(:)
+      REAL(DP), INTENT(IN) :: tausm(:,:), taus(:,:), fion(:,:)
+      REAL(DP), INTENT(IN) :: vels(:,:), velsm(:,:)
+      REAL(DP), INTENT(IN) :: acc(:), lambda(:,:), lambdam(:,:)
+      REAL(DP), INTENT(IN) :: xnhe0, xnhem, vnhe, ekincm
+      REAL(DP), INTENT(IN) :: xnhp0(:), xnhpm(:), vnhp(:)
       integer,      INTENT(in) :: nhpcl, nhpdim
-      real(8), INTENT(IN) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-      real(8), INTENT(in) :: ecut, ecutw, delt
-      real(8), INTENT(in) :: pmass(:)
-      real(8), INTENT(in) :: celldm(:)
-      real(8), INTENT(in) :: tps
-      real(8), INTENT(in) :: rho(:,:)
+      REAL(DP), INTENT(IN) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
+      REAL(DP), INTENT(in) :: ecut, ecutw, delt
+      REAL(DP), INTENT(in) :: pmass(:)
+      REAL(DP), INTENT(in) :: celldm(:)
+      REAL(DP), INTENT(in) :: tps
+      REAL(DP), INTENT(in) :: rho(:,:)
       integer, INTENT(in) :: ibrav
-      real(8), INTENT(in) :: occ_f(:)
-      real(8), INTENT(in) :: mat_z(:,:,:)
+      REAL(DP), INTENT(in) :: occ_f(:)
+      REAL(DP), INTENT(in) :: mat_z(:,:,:)
 
-      real(8) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
+      REAL(DP) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       integer :: nk = 1, ispin, i, ib
-      real(8) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
-      real(8) :: cdmi_ (3) = 0.0d0
-      real(8), ALLOCATABLE :: taui_ (:,:) 
-      real(8), ALLOCATABLE :: occ_ ( :, :, : )
-      real(8) :: htm1(3,3), omega
+      REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
+      REAL(DP) :: cdmi_ (3) = 0.0d0
+      REAL(DP), ALLOCATABLE :: taui_ (:,:) 
+      REAL(DP), ALLOCATABLE :: occ_ ( :, :, : )
+      REAL(DP) :: htm1(3,3), omega
 
 !
 ! Do not write restart file if the unit number 
@@ -192,45 +139,44 @@
 !
 ! read from file and distribute data calculated in preceding iterations
 !
-      USE io_files,  ONLY : scradir
-
-      USE electrons_base, ONLY: nbnd, nbsp, nspin, nupdwn, iupdwn
-      USE gvecw,          ONLY: ngw, ngwt
-      USE ions_base,      ONLY: nsp, na
-      USE cp_restart,     ONLY: cp_readfile, cp_read_cell, cp_read_wfc
-      USE ensemble_dft,   ONLY: tens
-      USE io_files,       ONLY: scradir
-      USE autopilot,      ONLY: event_step, event_index, max_event_step
-      USE autopilot,      ONLY: employ_rules
-
+      USE io_files,       ONLY : scradir
+      USE electrons_base, ONLY : nbnd, nbsp, nspin, nupdwn, iupdwn
+      USE gvecw,          ONLY : ngw, ngwt
+      USE ions_base,      ONLY : nsp, na
+      USE cp_restart,     ONLY : cp_readfile, cp_read_cell, cp_read_wfc
+      USE ensemble_dft,   ONLY : tens
+      USE io_files,       ONLY : scradir
+      USE autopilot,      ONLY : event_step, event_index, max_event_step
+      USE autopilot,      ONLY : employ_rules
 !
       implicit none
       integer :: ndr, nfi, flag
-      real(8) :: h(3,3), hold(3,3)
+      REAL(DP) :: h(3,3), hold(3,3)
       complex(8) :: c0(:,:), cm(:,:)
-      real(8) :: tausm(:,:),taus(:,:), fion(:,:)
-      real(8) :: vels(:,:), velsm(:,:)
-      real(8) :: acc(:),lambda(:,:), lambdam(:,:)
-      real(8) :: xnhe0,xnhem,vnhe
-      real(8) :: xnhp0(:), xnhpm(:), vnhp(:)
+      REAL(DP) :: tausm(:,:),taus(:,:), fion(:,:)
+      REAL(DP) :: vels(:,:), velsm(:,:)
+      REAL(DP) :: acc(:),lambda(:,:), lambdam(:,:)
+      REAL(DP) :: xnhe0,xnhem,vnhe
+      REAL(DP) :: xnhp0(:), xnhpm(:), vnhp(:)
       integer, INTENT(inout) :: nhpcl,nhpdim
-      real(8) :: ekincm
-      real(8) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-      real(8), INTENT(in) :: ecut, ecutw, delt
-      real(8), INTENT(in) :: pmass(:)
-      real(8), INTENT(in) :: celldm(6)
+      REAL(DP) :: ekincm
+      REAL(DP) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
+      REAL(DP), INTENT(in) :: ecut, ecutw, delt
+      REAL(DP), INTENT(in) :: pmass(:)
+      REAL(DP), INTENT(in) :: celldm(6)
       integer, INTENT(in) :: ibrav
-      real(8), INTENT(OUT) :: tps
-      real(8), INTENT(INOUT) :: mat_z(:,:,:), occ_f(:)
+      REAL(DP), INTENT(OUT) :: tps
+      REAL(DP), INTENT(INOUT) :: mat_z(:,:,:), occ_f(:)
       !
-      real(8) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
+      REAL(DP) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       integer :: nk = 1, ispin, i, ib
-      real(8) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
-      real(8) :: cdmi_ (3) = 0.0d0
-      real(8), ALLOCATABLE :: taui_ (:,:)
-      real(8), ALLOCATABLE :: occ_ ( :, :, : )
-      real(8) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
-
+      REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
+      REAL(DP) :: cdmi_ (3) = 0.0d0
+      REAL(DP), ALLOCATABLE :: taui_ (:,:)
+      REAL(DP), ALLOCATABLE :: occ_ ( :, :, : )
+      REAL(DP) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
+        
+      LOGICAL::lopen
 
       IF( flag == -1 ) THEN
         CALL cp_read_cell( ndr, scradir, .TRUE., ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh )
@@ -262,7 +208,6 @@
                 xnhe0, xnhem, vnhe, ekincm, c02 = c0, cm2 = cm )
       END IF
 
-
       ! AutoPilot (Dynamic Rules) Implementation
       event_index = 1
 
@@ -277,7 +222,6 @@
          endif
       enddo
       
-
       DEALLOCATE( taui_ )
 
       do ispin = 1, nspin

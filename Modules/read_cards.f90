@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2003 Quantum-ESPRESSO group
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -53,62 +53,99 @@ MODULE read_cards_module
        !
        !
        ! ... f_inp is a temporary array to store the occupation numbers
-       f_inp = 0.d0   
-       ! ... mask that control the printing of selected Kohn-Sham occupied orbitals
-       tprnks = .FALSE.       
+       !
+       f_inp = 0.D0  
+       !
+       ! ... mask that control the printing of selected Kohn-Sham occupied 
+       ! ... orbitals
+       !
+       tprnks  = .FALSE.       
        ks_path = ' '
-       ! ... mask that control the printing of selected Kohn-Sham unoccupied orbitals
+       !
+       ! ... mask that control the printing of selected Kohn-Sham unoccupied 
+       ! ... orbitals
+       !
        tprnks_empty = .FALSE.
+       !
        ! ... Simulation cell from standard input
+       !
        trd_ht = .FALSE.
        rd_ht  = 0.0d0
-       ! ... DIPOLE
-       tdipole_card     = .FALSE.
-       ! ... OPTICAL PROPERTIES
-       toptical_card    = .FALSE.
-       noptical    = 0
-       woptical    = 0.1
-       boptical    = 0.0
+       !
+       ! ... dipole
+       !
+       tdipole_card = .FALSE.
+       !
+       ! ... optical properties
+       !
+       toptical_card = .FALSE.
+       noptical      = 0
+       woptical      = 0.1D0
+       boptical      = 0.0D0
+       !
        ! ... Constraints
-       nconstr_inp      = 0
-       constr_tol_inp   = 0.0d0
+       !
+       nconstr_inp    = 0
+       constr_tol_inp = 1.D-8
+       !
        ! ... ionic mass initialization
+       !
        atom_mass = 0.0d0
+       !
        ! ... dimension of the real space Ewald summation
+       !
        iesr_inp = 1
-       ! ... KPOINTS
+       !
+       ! ... k-points
+       !
        k_points = 'gamma'
-       tk_inp = .FALSE.
-       nkstot = 1
-       nk1 = 0
-       nk2 = 0
-       nk3 = 0
-       k1 = 0
-       k2 = 0
-       k3 = 0
-       ! ... NEIGHBOURS
+       tk_inp   = .FALSE.
+       nkstot   = 1
+       nk1      = 0
+       nk2      = 0
+       nk3      = 0
+       k1       = 0
+       k2       = 0
+       k3       = 0
+       !
+       ! ... neighbours
+       !
        tneighbo   =  .FALSE.
        neighbo_radius =  0.d0
+       !
        ! ... Turbo
+       !
        tturbo_inp = .FALSE.
        nturbo_inp = 0
+       !
        ! ... Grids
-       t2dpegrid_inp  = .FALSE.
+       !
+       t2dpegrid_inp = .FALSE.
+       !
        ! ... Electronic states
-       tf_inp = .false.
+       !
+       tf_inp = .FALSE.
+       !
        ! ... Hartree planar mean
+       !
        tvhmean_inp = .false.
        vhnr_inp    = 0
        vhiunit_inp = 0
        vhrmin_inp  = 0.0d0
        vhrmax_inp  = 0.0d0
        vhasse_inp  = 'K'
-       ! ... TCHI
-       tchi2_inp  = .FALSE.
-       ! ... ION_VELOCITIES
+       !
+       ! ... tchi
+       !
+       tchi2_inp = .FALSE.
+       !
+       ! ... ion_velocities
+       !
        tavel = .FALSE.
-       ! ... SETNFI
-       newnfi_card = -1
+       !
+       ! ... setnfi
+       !
+       newnfi_card  = -1
        tnewnfi_card = .FALSE.
        !
        CALL init_autopilot()
@@ -250,7 +287,7 @@ MODULE read_cards_module
           !
        END IF
        !
-       ! ...     END OF LOOP ... !
+       ! ... END OF LOOP ... !
        !   
        GOTO 100
        !
@@ -395,14 +432,6 @@ MODULE read_cards_module
        LOGICAL, EXTERNAL  :: matches
        LOGICAL, SAVE      :: tread = .FALSE.
        !
-       !
-       IF ( full_phs_path_flag ) THEN
-          !
-          ALLOCATE( pos( 3*natx, num_of_images ) )
-          !
-          pos = 0.D0
-          !
-       END IF
        !
        IF ( tread ) THEN
           CALL errore( ' card_atomic_positions  ', ' two occurrence ', 2 )
@@ -1459,15 +1488,31 @@ MODULE read_cards_module
        LOGICAL, SAVE      :: tread = .FALSE.
        ! 
        ! 
-       IF ( tread ) CALL errore( 'card_constraints ', 'two occurrence ', 2 )
+       IF ( tread ) CALL errore( 'card_constraints ', 'two occurrence', 2 )
        !
        CALL read_line( input_line )
        !
-       READ( input_line, * ) nconstr_inp, constr_tol_inp
+       CALL field_count( nfield, input_line )
+       !
+       IF ( nfield == 1 ) THEN
+          !
+          READ( input_line, * ) nconstr_inp
+          !
+       ELSE IF ( nfield == 2 ) THEN
+          !
+          READ( input_line, * ) nconstr_inp, constr_tol_inp
+          !
+       ELSE
+          !
+          CALL errore( 'card_constraints ', 'too many fields', nfield )
+          !
+       END IF
+       !
+       IF ( nconstr_inp > max_nconstr ) &
+          CALL errore( 'card_constraints ', &
+                     & 'too many constraints (increase max_nconstr)', 1 )
        !
        IF ( cg_phs_path_flag ) THEN
-          !
-          ALLOCATE( pos( nconstr_inp, 2 ) )
           !
           pos = 0.D0
           !
@@ -1815,15 +1860,10 @@ MODULE read_cards_module
        CHARACTER (LEN=5)  :: i_char 
        !
        !
-       IF ( tread ) THEN
+       IF ( tread ) &
           CALL errore( ' card_climbing_images ', ' two occurrence ', 2 )
-       END IF
        !
        IF ( calculation == 'neb' ) THEN
-          !
-          ALLOCATE( climbing( num_of_images ) )
-          !
-          climbing = .FALSE.
           !   
           IF ( CI_scheme == 'manual' ) THEN
              !

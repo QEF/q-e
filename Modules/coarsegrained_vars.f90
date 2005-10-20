@@ -27,10 +27,11 @@ MODULE coarsegrained_vars
   !
   ! ... Laio-Parrinello meta-dynamics
   !
-  REAL(DP) :: fe_step
   INTEGER  :: max_metadyn_iter
   !
   INTEGER, PARAMETER  :: gaussian_add_iter = 1
+  !
+  REAL(DP), ALLOCATABLE :: fe_step(:)
   !
   REAL(DP), ALLOCATABLE :: metadyn_history(:,:)
   LOGICAL,  ALLOCATABLE :: gaussian_add(:)
@@ -48,35 +49,48 @@ MODULE coarsegrained_vars
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE allocate_coarsegrained_vars( nconstr, nstep )
+    SUBROUTINE init_coarsegrained_vars()
       !------------------------------------------------------------------------
+      !
+      USE input_parameters,   ONLY : g_amplitude_ => g_amplitude, &
+                                     g_sigma_     => g_sigma, &
+                                     fe_step_     => fe_step, &
+                                     fe_nstep_    => fe_nstep, &
+                                     shake_nstep_ => shake_nstep
+      USE constraints_module, ONLY : nconstr
+      USE control_flags,      ONLY : lmetadyn, nstep
       !
       IMPLICIT NONE
       !
-      INTEGER,           INTENT(IN) :: nconstr
-      INTEGER, OPTIONAL, INTENT(IN) :: nstep
       !
-      !
+      ALLOCATE( fe_step(    nconstr ) )
       ALLOCATE( dfe_acc(    nconstr ) )
       ALLOCATE( fe_grad(    nconstr ) )
       ALLOCATE( new_target( nconstr ) )
       ALLOCATE( to_target(  nconstr ) )
       !
-      IF ( PRESENT( nstep ) ) THEN
+      IF ( lmetadyn ) THEN
          !
          ALLOCATE( metadyn_history( nconstr, nstep ) )
          ALLOCATE( gaussian_add( nstep ) )
          !
       END IF
       !
+      fe_nstep    = fe_nstep_
+      shake_nstep = shake_nstep_
+      g_amplitude = g_amplitude_
+      g_sigma     = g_sigma_
+      fe_step(:)  = fe_step_(1:nconstr)
+      !
       RETURN
       !
-    END SUBROUTINE allocate_coarsegrained_vars
+    END SUBROUTINE init_coarsegrained_vars
     !
     !------------------------------------------------------------------------
     SUBROUTINE deallocate_coarsegrained_vars()
       !------------------------------------------------------------------------
       !
+      IF ( ALLOCATED( fe_step ) )          DEALLOCATE( fe_step )
       IF ( ALLOCATED( dfe_acc ) )          DEALLOCATE( dfe_acc )
       IF ( ALLOCATED( fe_grad ) )          DEALLOCATE( fe_grad )
       IF ( ALLOCATED( new_target ) )       DEALLOCATE( new_target )
@@ -132,9 +146,9 @@ MODULE coarsegrained_base
       USE control_flags,      ONLY : nstep
       USE constants,          ONLY : bohr_radius_angs
       USE cell_base,          ONLY : at, alat
-      USE coarsegrained_vars, ONLY : allocate_coarsegrained_vars, fe_grad,    &
-                                     g_amplitude, g_sigma, g_sigma_sq, two_g_sigma_sq, &
-                                     max_metadyn_iter, metadyn_history,       &
+      USE coarsegrained_vars, ONLY : fe_grad, g_amplitude, g_sigma,     &
+                                     g_sigma_sq, two_g_sigma_sq,        &
+                                     max_metadyn_iter, metadyn_history, &
                                      starting_metadyn_iter, metadyn_fmt
       USE parser,             ONLY : delete_if_present, int_to_char
       USE io_files,           ONLY : prefix, iunaxsf, iunmeta
@@ -157,8 +171,6 @@ MODULE coarsegrained_base
       IF ( nstep < 1 ) CALL errore( 'metadyn_init', 'nstep < 1', 1 )
       !
       max_metadyn_iter = nstep
-      !
-      CALL allocate_coarsegrained_vars( nconstr, max_metadyn_iter )
       !
       IF ( restart_mode == 'from_scratch' ) THEN
          !
@@ -219,8 +231,6 @@ MODULE coarsegrained_base
             !
             OPEN( UNIT = iunmeta, FILE = TRIM( prefix ) // '.metadyn', &
                   ACTION = 'READ', STATUS = 'UNKNOWN' )
-            !
-            ! ... first we look for the number of performed iterations
             !
             READ( iunmeta, * ) nconstr
             READ( iunmeta, * )

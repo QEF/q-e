@@ -251,12 +251,6 @@ MODULE input
      USE cp_electronic_mass, ONLY : emass_ => emass, &
                                     emaec_ => emass_cutoff
      !
-     USE coarsegrained_vars, ONLY : fe_nstep_    => fe_nstep, &
-                                    shake_nstep_ => shake_nstep, &
-                                    fe_step_     => fe_step, &
-                                    g_amplitude_ => g_amplitude, &
-                                    g_sigma_     => g_sigma
-     !
      USE input_parameters, ONLY: &
         electron_dynamics, electron_damping, diis_rot, electron_temperature,   &
         ion_dynamics, ekin_conv_thr, etot_conv_thr, forc_conv_thr, ion_maxstep,&
@@ -269,9 +263,6 @@ MODULE input
         tdipole_card, toptical_card, tnewnfi_card, newnfi_card,                &
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
         orthogonalization, electron_velocities, nat, if_pos, phase_space
-     !
-     USE input_parameters, ONLY : g_amplitude, g_sigma, fe_step, fe_nstep, &
-                                  shake_nstep
      !
      IMPLICIT NONE
      !
@@ -550,16 +541,6 @@ MODULE input
           CALL errore(' control_flags ',' unknown electron_temperature '//TRIM(electron_temperature), 1 )
       END SELECT
       
-      !
-      ! ... meta-dynamics
-      !
-      
-      fe_nstep_    = fe_nstep
-      shake_nstep_ = shake_nstep
-      fe_step_     = fe_step
-      g_amplitude_ = g_amplitude
-      g_sigma_     = g_sigma
-      
       SELECT CASE( TRIM( phase_space ) )
       CASE( 'full' )
          !
@@ -817,8 +798,8 @@ MODULE input
    SUBROUTINE modules_setup()
      !-------------------------------------------------------------------------
      !
-     USE control_flags,    ONLY : program_name, lconstrain, lneb
-     USE constants,        ONLY : UMA_AU, pi
+     USE control_flags,    ONLY : program_name, lconstrain, lneb, lcoarsegrained
+     USE constants,        ONLY : uma_au, pi
      !
      USE input_parameters, ONLY: max_seconds, ibrav , celldm , trd_ht, dt,    &
            cell_symmetry, rd_ht, a, b, c, cosab, cosac, cosbc, ntyp , nat ,   &
@@ -897,7 +878,7 @@ MODULE input
      USE ensemble_dft,             ONLY : ensemble_initval
      USE wannier_base,             ONLY : wannier_init
      USE constraints_module,       ONLY : init_constraint
-     USE basic_algebra_routines,   ONLY : norm
+     USE coarsegrained_vars,       ONLY : init_coarsegrained_vars
      !
      !
      IMPLICIT NONE
@@ -1026,6 +1007,8 @@ MODULE input
      !
      IF ( lconstrain ) CALL init_constraint( nat, tau, 1.D0, ityp )
      !
+     IF ( lcoarsegrained ) CALL init_coarsegrained_vars()
+     !
      IF( program_name == 'FPMD' ) THEN
         !
         o_diis_inp        = .TRUE.
@@ -1033,15 +1016,21 @@ MODULE input
         tolene_inp        = etot_conv_thr
         tol_diis_inp      = ekin_conv_thr
         delt_diis_inp     = dt
-        IF( diis_ethr > 0.0d0 ) tolene_inp    = diis_ethr
-        IF( diis_wthr > 0.0d0 ) tol_diis_inp  = diis_wthr
-        IF( diis_delt > 0.0d0 ) delt_diis_inp = diis_delt
-        CALL diis_setup( diis_fthr, oqnr_diis_inp, o_diis_inp, &
-          diis_size, diis_hcut, tol_diis_inp, diis_maxstep, diis_nreset, delt_diis_inp, &
-          diis_temp, diis_nrot(1), diis_nrot(2), diis_nrot(3), &
-          diis_rothr(1), diis_rothr(2), diis_rothr(3), tolene_inp)
+        !
+        IF ( diis_ethr > 0.D0 ) tolene_inp    = diis_ethr
+        IF ( diis_wthr > 0.D0 ) tol_diis_inp  = diis_wthr
+        IF ( diis_delt > 0.D0 ) delt_diis_inp = diis_delt
+        !
+        CALL diis_setup( diis_fthr, oqnr_diis_inp, o_diis_inp, diis_size,      &
+                         diis_hcut, tol_diis_inp, diis_maxstep, diis_nreset,   &
+                         delt_diis_inp, diis_temp, diis_nrot(1), diis_nrot(2), &
+                         diis_nrot(3), diis_rothr(1), diis_rothr(2),           &
+                         diis_rothr(3), tolene_inp )
+        !
         CALL guess_setup( diis_chguess )
-        CALL charge_mix_setup(diis_achmix, diis_g0chmix, diis_nchmix, diis_g1chmix)
+        !
+        CALL charge_mix_setup( diis_achmix, diis_g0chmix, &
+                               diis_nchmix, diis_g1chmix )
         !
      END IF
      !
@@ -1302,60 +1291,58 @@ MODULE input
       !
       IF( thdyn .AND. tnoseh ) CALL cell_nose_info()
       !
-      IF( program_name == 'FPMD' ) THEN
-        CALL potential_print_info( stdout )
-        CALL sic_info( )
+      IF ( program_name == 'FPMD' ) THEN
+         !
+         CALL potential_print_info( stdout )
+         CALL sic_info()
+         !
       END IF
       !
-      WRITE( stdout,700) iprsta
-
+      WRITE( stdout, 700 ) iprsta
+      !
     END IF
-
-
-    RETURN
-
- 509  FORMAT(   3X,'verlet algorithm for electron dynamics')
- 510  FORMAT(   3X,'Electron dynamics with newton equations')
- 512  FORMAT(   3X,'Orthog. with Gram-Schmidt')
- 513  FORMAT(   3X,'Electron dynamics with steepest descent')
- 514  FORMAT(   3X,'with friction frice = ',f7.4,' , grease = ',f7.4)
- 515  FORMAT(   3X,'initial random displacement of el. coordinates with ',   &
-     &       ' amplitude=',f10.6)
- 535   FORMAT(   3X,'Electron dynamics : the temperature is not controlled')
- 540   FORMAT(   3X,'Electron dynamics with rescaling of velocities :',/ &
-               ,3X,'Average kinetic energy required = ',F11.6,'(A.U.)' &
-                  ,'Tolerance = ',F11.6)
- 545   FORMAT(   3X,'Electron dynamics with canonical temp. control : ',/ &
-               ,3X,'Average kinetic energy required = ',F11.6,'(A.U.)' &
-                  ,'Tolerance = ',F11.6)
- 550  FORMAT(' ion dynamics: the temperature is not controlled'//)
- 555  FORMAT(' ion dynamics with rescaling of velocities:'/             &
-     &       ' temperature required=',f10.5,'(kelvin)',' tolerance=',   &
-     &       f10.5//)
- 560  FORMAT(' ion dynamics with canonical temp. control:'/             &
-     &       ' temperature required=',f10.5,'(kelvin)',' tolerance=',   &
-     &       f10.5//)
- 562  FORMAT(' ion dynamics with nose` temp. control:'/                 &
-     &       ' temperature required=',f10.5,'(kelvin)',' nose` mass = ',&
-     &       f10.3//)
-563  FORMAT(' ion dynamics with nose` temp. control:'/                 &
-     &       ' temperature required=',f10.5,'(kelvin)'/                 &
-     &       ' NH chain length= ',i3,' active degrees of freedom=',i3,/ &
-     &       ' nose` mass(es) =',20(1X,f10.3)//)
- 566  FORMAT(' electronic dynamics with nose` temp. control:'/          &
-     &       ' elec. kin. en. required=',f10.5,'(hartree)',             &
-     &       ' nose` mass = ',f10.3//)
- 580   FORMAT(   3X,'Nstepe = ',I3  &
-                  ,' purely electronic steepest descent steps',/ &
-               ,3X,'are performed for every ionic step in the program')
- 590   FORMAT(   3X,'Electron temperature control via nose thermostat')
     !
-
- 700  FORMAT( /,3X, 'Verbosity: iprsta = ',i2,/)
- 720  FORMAT( 3X, 'charge density is read from unit 47')
- 721  FORMAT( 3X, 'charge density is written in unit 47')
- 722  FORMAT( 3X, 'local potential is written in unit 46')
-
+    RETURN
+    !
+509 FORMAT( 3X,'verlet algorithm for electron dynamics')
+510 FORMAT( 3X,'Electron dynamics with newton equations')
+512 FORMAT( 3X,'Orthog. with Gram-Schmidt')
+513 FORMAT( 3X,'Electron dynamics with steepest descent')
+514 FORMAT( 3X,'with friction frice = ',f7.4,' , grease = ',f7.4)
+515 FORMAT( 3X,'initial random displacement of el. coordinates with ',   &
+          &    ' amplitude=',f10.6)
+535 FORMAT( 3X,'Electron dynamics : the temperature is not controlled')
+540 FORMAT( 3X,'Electron dynamics with rescaling of velocities :',/, &
+          & 3X,'Average kinetic energy required = ',F11.6,'(A.U.)', &
+          &    'Tolerance = ',F11.6)
+545 FORMAT( 3X,'Electron dynamics with canonical temp. control : ',/, &
+          & 3X,'Average kinetic energy required = ',F11.6,'(A.U.)', &
+          &    'Tolerance = ',F11.6)
+550 FORMAT( 3X,'ion dynamics: the temperature is not controlled'//)
+555 FORMAT( 3X,'ion dynamics with rescaling of velocities:'/             &
+          &    ' temperature required=',f10.5,'(kelvin)',' tolerance=',F10.5//)
+560 FORMAT( 3X,'ion dynamics with canonical temp. control:'/             &
+          &    ' temperature required=',f10.5,'(kelvin)',' tolerance=',f10.5//)
+562 FORMAT( 3X,'ion dynamics with nose` temp. control:'/                 &
+          &    ' temperature required=',f10.5,'(kelvin)',' nose` mass = ',&
+          & F10.3//)
+563 FORMAT( 3X,'ion dynamics with nose` temp. control:'/                 &
+          &    ' temperature required=',f10.5,'(kelvin)'/                 &
+          &    ' NH chain length= ',i3,' active degrees of freedom=',i3,/ &
+          &    ' nose` mass(es) =',20(1X,f10.3)//)
+566 FORMAT( 3X,' electronic dynamics with nose` temp. control:'/          &
+          &    ' elec. kin. en. required=',f10.5,'(hartree)',             &
+          &    ' nose` mass = ',f10.3//)
+580 FORMAT( 3X,'Nstepe = ',I3  &
+          &   ,' purely electronic steepest descent steps',/, &
+          & 3X,'are performed for every ionic step in the program')
+590 FORMAT( 3X,'Electron temperature control via nose thermostat')
+    !
+700 FORMAT( /,3X, 'Verbosity: iprsta = ',i2,/)
+720 FORMAT(   3X, 'charge density is read from unit 47')
+721 FORMAT(   3X, 'charge density is written in unit 47')
+722 FORMAT(   3X, 'local potential is written in unit 46')
+    !
   END SUBROUTINE modules_info
   !
 END MODULE input

@@ -111,7 +111,7 @@ MODULE io_files
   !
   ! ... meta-dynamics
   !
-  INTEGER :: iunmeta     = 99 ! unit for saving meta-dynamics history
+  INTEGER :: iunmeta     = 77 ! unit for saving meta-dynamics history
   !
   ! ... Y. Kanai combined smd/cp method
   !

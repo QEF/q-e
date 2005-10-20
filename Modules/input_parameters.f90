@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2003 Quantum-ESPRESSO group
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,8 +18,9 @@ MODULE input_parameters
 !
 !=----------------------------------------------------------------------------=!
   !
-  USE kinds
-  USE parameters,  ONLY :  nsx, natx, npkx, nbndxx, nspinx, lqmax, nhclm
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : nsx, natx, npkx, nbndxx, nspinx, &
+                         lqmax, nhclm, max_num_of_images, max_nconstr
   !
   IMPLICIT NONE
   !
@@ -1154,12 +1155,13 @@ MODULE input_parameters
         ! ... variable for meta-dynamics
         !
         
-        INTEGER  :: fe_nstep    = 50
-        INTEGER  :: shake_nstep = 5
-        REAL(DP) :: fe_step     = 0.4D0
-        REAL(DP) :: g_amplitude = 0.01D0
-        REAL(DP) :: g_sigma     = 0.4D0
- 
+        INTEGER  :: fe_nstep     = 50
+        INTEGER  :: shake_nstep  = 5
+        REAL(DP) :: g_amplitude  = 0.01D0
+        REAL(DP) :: g_sigma      = 0.4D0
+        !
+        REAL(DP) :: fe_step( max_nconstr ) = 0.4D0
+        !
         NAMELIST / ions / phase_space, ion_dynamics, ion_radius, ion_damping,  &
                           ion_positions, ion_velocities, ion_temperature,      &
                           tempw, fnosep, nhpcl, nhptyp, ndega, tranp, amprp,   &
@@ -1357,12 +1359,12 @@ MODULE input_parameters
 !
 !    ATOMIC_POSITIONS
 !
-        REAL(DP) :: rd_pos(3,natx) = 0.0d0 ! unsorted position from input
-        INTEGER   :: sp_pos(natx)   = 0
-        INTEGER   :: if_pos(3,natx) = 1
-        INTEGER   :: id_loc(natx)   = 0
-        INTEGER   :: na_inp(nsx)    = 0     ! number of atom for each specie
-        LOGICAL   :: tapos = .FALSE.
+        REAL(DP) :: rd_pos(3,natx) = 0.D0 ! unsorted position from input
+        INTEGER  :: sp_pos(natx)   = 0
+        INTEGER  :: if_pos(3,natx) = 1
+        INTEGER  :: id_loc(natx)   = 0
+        INTEGER  :: na_inp(nsx)    = 0    ! number of atom for each specie
+        LOGICAL  :: tapos = .FALSE.
         CHARACTER(LEN=80) :: atomic_positions = 'crystal'
           ! atomic_positions = 'bohr' | 'angstrong' | 'crystal' | 'alat'
           ! select the units for the atomic positions being read from stdin
@@ -1370,17 +1372,14 @@ MODULE input_parameters
         !
         ! ... variable added for NEB  ( C.S. 17/10/2003 )
         !
- 
-        REAL (DP), ALLOCATABLE :: pos(:,:) 
-
-        
+        REAL(DP) :: pos( 3*natx, max_num_of_images ) = 0.D0
 
 !
 !    ION_VELOCITIES
 !
         REAL(DP) :: rd_vel(3,natx) = 0.0d0   ! unsorted velocities from input
-        INTEGER   :: sp_vel(natx)   = 0 
-        LOGICAL   :: tavel          = .FALSE.
+        INTEGER  :: sp_vel(natx)   = 0 
+        LOGICAL  :: tavel          = .FALSE.
 
 !
 !    KPOINTS
@@ -1465,12 +1464,12 @@ MODULE input_parameters
 !
 !    CONSTRAINTS
 !
-      INTEGER         :: nconstr_inp               = 0
+      INTEGER   :: nconstr_inp               = 0
       REAL (DP) :: constr_tol_inp            = 0.D0
-      INTEGER         :: constr_type_inp(natx)     = 0
+      INTEGER   :: constr_type_inp(natx)     = 0
       REAL (DP) :: constr_inp(4,natx)        = 0
       REAL (DP) :: constr_target(natx)       = 0.D0
-      LOGICAL         :: constr_target_set(natx)   = .FALSE.
+      LOGICAL   :: constr_target_set(natx)   = .FALSE.
 
 !
 !    KOHN_SHAM
@@ -1494,7 +1493,7 @@ MODULE input_parameters
       !
       ! ... variable added for NEB  ( C.S. 20/11/2003 )
       !
-      LOGICAL, ALLOCATABLE :: climbing(:) 
+      LOGICAL :: climbing( max_num_of_images ) = .FALSE.
 
 !
 !   PLOT_WANNIER
@@ -1507,18 +1506,6 @@ MODULE input_parameters
 !  END manual
 ! ----------------------------------------------------------------------
   !
-  CONTAINS
-     !
-     SUBROUTINE deallocate_input_parameters()
-       !
-       IMPLICIT NONE
-       !
-       !
-       IF ( ALLOCATED( pos ) )      DEALLOCATE( pos )
-       IF ( ALLOCATED( climbing ) ) DEALLOCATE( climbing )
-       !  
-     END SUBROUTINE deallocate_input_parameters
-     !
 !=----------------------------------------------------------------------------=!
 !
 END MODULE input_parameters

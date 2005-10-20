@@ -402,7 +402,7 @@ SUBROUTINE metadyn()
         !
         ! ... the system is "adiabatically" moved to the new target
         !
-        new_target(:) = target(:) - fe_step * fe_grad(:) / norm_fe_grad
+        new_target(:) = target(:) - fe_step(:) * fe_grad(:) / norm_fe_grad
         !
         to_target(:) = new_target(:) - target(:)
         !

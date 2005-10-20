@@ -583,11 +583,11 @@ MODULE constraints_module
           !
           CALL constraint_grad( index, nat, tau, if_pos, ityp, alat, g, dg )
           !
-          dg = dg / DNRM2( 3 * nat, dg, 1 )
+          dg(:,:) = dg(:,:) / DNRM2( 3 * nat, dg, 1 )
           !
           lagrange(index) = DDOT( 3 * nat, force, 1, dg, 1 )
           !
-          force = force - lagrange(index) * dg
+          force(:,:) = force(:,:) - lagrange(index) * dg(:,:)
           !
        END DO
        !

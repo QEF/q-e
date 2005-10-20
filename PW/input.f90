@@ -177,15 +177,7 @@ SUBROUTINE iosys()
                             w_1_              => w_1, & 
                             w_2_              => w_2
   !
-  USE coarsegrained_vars, ONLY : fe_nstep_    => fe_nstep, &
-                                 shake_nstep_ => shake_nstep, &
-                                 fe_step_     => fe_step, &
-                                 g_amplitude_ => g_amplitude, &
-                                 g_sigma_     => g_sigma
-  !
   USE check_stop,    ONLY : check_stop_init
-  !
-  USE constraints_module, ONLY : init_constraint
   !
   ! ... CONTROL namelist
   !
@@ -236,8 +228,7 @@ SUBROUTINE iosys()
                                k_min, ds, use_fourier, use_freezing,           &
                                fixed_tan, free_energy, write_save, w_1, w_2,   &
                                trust_radius_max, trust_radius_min, bfgs_ndim,  &
-                               trust_radius_ini, g_amplitude, g_sigma, fe_step,&
-                               fe_nstep, shake_nstep
+                               trust_radius_ini
   !
   ! ... CELL namelist
   !
@@ -256,6 +247,9 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : pos, full_phs_path_flag
   !
+  !
+  USE constraints_module,    ONLY : init_constraint
+  USE coarsegrained_vars,    ONLY : init_coarsegrained_vars
   USE read_namelists_module, ONLY : read_namelists, sm_not_set
   !
   IMPLICIT NONE
@@ -271,9 +265,7 @@ SUBROUTINE iosys()
   !
   pseudo_dir = TRIM( pseudo_dir ) // '/pw/pseudo/'
   !
-  IF (ionode) THEN
-     CALL input_from_file ( )
-  END IF
+  IF ( ionode ) CALL input_from_file()
   !
   ! ... all namelists are read
   !
@@ -635,11 +627,6 @@ SUBROUTINE iosys()
         IF ( epse <= 20.D0 * ( tr2 / upscale ) ) &
            CALL errore( 'iosys ', 'required etot_conv_thr is too small:' // &
                       & ' conv_thr must be reduced', 1 )   
-        !
-     CASE( 'constrained-bfgs' )
-        !
-        lbfgs      = .TRUE.
-        lconstrain = .TRUE.
         !
      CASE( 'constrained-damp' )
         !
@@ -1211,15 +1198,7 @@ SUBROUTINE iosys()
   trust_radius_min_ = trust_radius_min
   trust_radius_ini_ = trust_radius_ini
   w_1_              = w_1
-  w_2_              = w_2  
-  !
-  ! ... meta-dynamics
-  !
-  fe_nstep_    = fe_nstep
-  shake_nstep_ = shake_nstep
-  fe_step_     = fe_step
-  g_amplitude_ = g_amplitude
-  g_sigma_     = g_sigma
+  w_2_              = w_2
   !
   ! ... read following cards
   !
@@ -1435,6 +1414,10 @@ SUBROUTINE iosys()
   ! ... set constraints
   !
   IF ( lconstrain ) CALL init_constraint( nat, tau, alat, ityp )
+  !
+  ! ... set variables for metadynamics
+  !
+  IF ( lcoarsegrained ) CALL init_coarsegrained_vars()
   !
   CALL verify_tmpdir(tmp_dir)
   !

@@ -15,9 +15,9 @@ MODULE path_opt_routines
   ! ... Written by Carlo Sbraccia ( 2003-2005 )
   !
   USE kinds,          ONLY : DP
-  USE constants,      ONLY : eps32
+  USE constants,      ONLY : eps8, eps16
   USE path_variables, ONLY : ds
-  USE path_variables, ONLY : pos, grad, frozen
+  USE path_variables, ONLY : pos, grad, precond_grad
   !
   USE basic_algebra_routines
   !  
@@ -37,8 +37,6 @@ MODULE path_opt_routines
        !
        INTEGER, INTENT(IN) :: index
        !
-       !
-       IF ( frozen(index) ) RETURN
        !
        pos(:,index) = pos(:,index) - ds * grad(:,index)
        !
@@ -63,9 +61,7 @@ MODULE path_opt_routines
        INTEGER, INTENT(IN) :: index
        !
        !
-       IF ( frozen(index) ) RETURN
-       !
-       vel(:,index) = vel(:,index) - 0.5D0 * ds * grad(:,index)
+       vel(:,index) = vel(:,index) - 0.5D0 * ds * precond_grad(:,index)
        !
        pos(:,index) = pos(:,index) + ds * vel(:,index)
        !       
@@ -84,9 +80,7 @@ MODULE path_opt_routines
        INTEGER, INTENT(IN) :: index
        !
        !
-       IF ( frozen(index) ) RETURN
-       !
-       vel(:,index) = vel(:,index) - 0.5D0 * ds * grad(:,index)
+       vel(:,index) = vel(:,index) - 0.5D0 * ds * precond_grad(:,index)
        !
        IF ( ldamped_dyn ) vel(:,index) = damp * vel(:,index)
        !
@@ -98,34 +92,25 @@ MODULE path_opt_routines
      SUBROUTINE quick_min_second_step( index )
        !----------------------------------------------------------------------
        !
-       USE path_variables, ONLY : dim, vel, norm_grad
+       USE path_variables, ONLY : dim, vel
        !
        IMPLICIT NONE
        !
        INTEGER, INTENT(IN) :: index
        REAL(DP)            :: force_versor(dim)
-       REAL(DP)            :: vel_component
+       REAL(DP)            :: norm_pgrad
        !
        !
-       IF ( frozen(index) ) RETURN
+       vel(:,index) = vel(:,index) - 0.5D0 * ds * precond_grad(:,index)
        !
-       vel(:,index) = vel(:,index) - 0.5D0 * ds * grad(:,index)
+       norm_pgrad = norm( precond_grad(:,index) )
        !
-       IF ( norm_grad(index) > eps32 ) THEN
+       IF ( norm_pgrad > eps16 ) THEN
           !
-          force_versor = - grad(:,index) / norm_grad(index)
+          force_versor = - precond_grad(:,index) / norm_pgrad
           !
-          vel_component = ( vel(:,index) .dot. force_versor )
-          !
-          IF ( vel_component > 0.D0 ) THEN
-             ! 
-             vel(:,index) = vel_component * force_versor
-             !
-          ELSE
-             !
-             vel(:,index) = 0.D0
-             !
-          END IF
+          vel(:,index) = force_versor * &
+                         MAX( 0.D0, ( vel(:,index) .dot. force_versor ) )
           !
        ELSE
           !
@@ -136,6 +121,129 @@ MODULE path_opt_routines
        RETURN
        !
      END SUBROUTINE quick_min_second_step
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE grad_precond( index )
+       !-----------------------------------------------------------------------
+       !
+       ! ... this routine computes an estimate of H^-1 by using the BFGS
+       ! ... algorithm and the preconditioned gradient  pg = H^-1 * g
+       !
+       USE path_variables, ONLY : dim, use_precond, frozen
+       USE io_files,       ONLY : iunpath, iunbfgs, tmp_dir, prefix
+       USE parser,         ONLY : int_to_char
+       USE basic_algebra_routines
+       !
+       IMPLICIT NONE
+       !
+       INTEGER, INTENT(IN) :: index
+       !
+       REAL(DP), ALLOCATABLE :: pos_p(:)
+       REAL(DP), ALLOCATABLE :: grad_p(:)
+       REAL(DP), ALLOCATABLE :: inv_hess(:,:)
+       REAL(DP), ALLOCATABLE :: y(:), s(:)
+       REAL(DP), ALLOCATABLE :: Hs(:), Hy(:), yH(:)
+       REAL(DP)              :: sdoty, p_grad_norm
+       CHARACTER(LEN=256)    :: bfgs_file
+       LOGICAL               :: file_exists
+       !
+       REAL(DP), PARAMETER :: p_grad_norm_max = 0.6D0
+       !
+       !
+       IF ( .NOT. use_precond ) THEN
+          !
+          precond_grad(:,index) = grad(:,index)
+          !
+          RETURN
+          !
+       END IF
+       !
+       IF ( frozen(index) ) RETURN
+       !
+       ALLOCATE( pos_p( dim ) )
+       ALLOCATE( grad_p( dim ) )
+       ALLOCATE( y( dim ), s( dim ) )
+       ALLOCATE( inv_hess( dim, dim ) )
+       ALLOCATE( Hs( dim ), Hy( dim ), yH( dim ) )       
+       !
+       bfgs_file = TRIM( tmp_dir ) // TRIM( prefix ) // "_" // &
+                   TRIM( int_to_char( index ) )//"/"//TRIM( prefix )//'.bfgs'
+       !
+       INQUIRE( FILE = TRIM( bfgs_file ), EXIST = file_exists )
+       !
+       IF ( file_exists ) THEN
+          !
+          OPEN( UNIT = iunbfgs, &
+                FILE = TRIM( bfgs_file ), STATUS = 'OLD', ACTION = 'READ' )
+          !
+          READ( iunbfgs, * ) pos_p
+          READ( iunbfgs, * ) grad_p
+          READ( iunbfgs, * ) inv_hess
+          !
+          CLOSE( UNIT = iunbfgs )
+          !
+          ! ... BFGS update
+          !
+          s(:) = pos(:,index)  - pos_p(:)
+          y(:) = grad(:,index) - grad_p(:)
+          !
+          sdoty = ( s(:) .dot. y(:) )
+          !
+          IF ( sdoty > eps8 ) THEN
+             !
+             Hs(:) = ( inv_hess(:,:) .times. s(:) )
+             Hy(:) = ( inv_hess(:,:) .times. y(:) )
+             yH(:) = ( y(:) .times. inv_hess(:,:) )
+             !
+             inv_hess = inv_hess + 1.D0 / sdoty * &
+                        ( ( 1.D0 + ( y .dot. Hy ) / sdoty ) * matrix( s, s ) - &
+                          ( matrix( s, yH ) +  matrix( Hy, s ) ) )
+             !
+          END IF
+          !
+       ELSE
+          !
+          inv_hess(:,:) = identity( dim )
+          !
+       END IF
+       !
+       precond_grad(:,index) = ( inv_hess(:,:) .times. grad(:,index) )
+       !
+       IF ( ( precond_grad(:,index) .dot. grad(:,index) ) < 0.D0 ) THEN
+          !
+          WRITE( UNIT = iunpath, FMT = '(5X,/,"image ",I3)' ) index
+          WRITE( UNIT = iunpath, &
+                 FMT = '(5X,"uphill step: resetting bfgs history",/)' )
+          !
+          precond_grad(:,index) = grad(:,index)
+          !
+          inv_hess(:,:) = identity( dim )
+          !
+       END IF
+       !
+       p_grad_norm = norm( precond_grad(:,index) )
+       !
+       precond_grad(:,index) = precond_grad(:,index) / &
+                               p_grad_norm * MIN( p_grad_norm, p_grad_norm_max )
+       !
+       OPEN( UNIT = iunbfgs, &
+             FILE = TRIM( bfgs_file ), STATUS = 'UNKNOWN', ACTION = 'WRITE' )
+       !
+       WRITE( iunbfgs, * ) pos(:,index)
+       WRITE( iunbfgs, * ) grad(:,index)
+       WRITE( iunbfgs, * ) inv_hess(:,:)
+       !
+       CLOSE( UNIT = iunbfgs )
+       !
+       DEALLOCATE( pos_p )
+       DEALLOCATE( grad_p )
+       DEALLOCATE( inv_hess )
+       DEALLOCATE( y, s )
+       DEALLOCATE( Hs, Hy, yH )
+       !
+       RETURN
+       !
+     END SUBROUTINE grad_precond     
      !
      ! ... Broyden (rank one) optimisation
      !
@@ -165,7 +273,6 @@ MODULE path_opt_routines
        ALLOCATE( g( dim * n_im ) )
        ALLOCATE( s( dim * n_im, broyden_ndim ) )
        ALLOCATE( t( dim * n_im ) )
-       !
        !
        g = 0.D0
        t = 0.D0

@@ -32,7 +32,7 @@ MODULE pw_restart
   !
   PUBLIC :: pw_writefile, pw_readfile
   !
-  INTEGER, PARAMETER, PRIVATE :: iunout = 99
+  INTEGER, PRIVATE :: iunout
   !
   LOGICAL :: lcell_read = .FALSE., &
              lpw_read   = .FALSE., &
@@ -116,6 +116,13 @@ MODULE pw_restart
       CASE DEFAULT
          !
       END SELECT
+      !
+      ! ... look for an empty unit
+      !
+      CALL iotk_free_unit( iunout, ierr )
+      !
+      CALL errore( 'pw_writefile ', &
+                   'no free units to write wavefunctions', ierr )
       !
       ! ... create the main restart directory
       !
@@ -717,6 +724,13 @@ MODULE pw_restart
          RETURN
          !
       END IF
+      !
+      ! ... look for an empty unit
+      !
+      CALL iotk_free_unit( iunout, ierr )
+      !
+      CALL errore( 'pw_readfile ', &
+                   'no free units to read wavefunctions', ierr )      
       !
       lcell = .FALSE.
       lpw   = .FALSE.

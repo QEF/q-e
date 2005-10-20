@@ -315,7 +315,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            ! ... constrain gradient (this is constitutes the initial guess 
            ! ... for the lagrange multiplier)
            !
-           CALL remove_constraint_force( nat, tau0, iforce, ityp, 1.D0, fion )
+           CALL remove_constraint_force( nat, tau0, &
+                                         iforce, ityp, 1.D0, fion(:3,:nat) )
            !
         END IF
         !
@@ -329,8 +330,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            !
            CALL s_to_r( tausp, taup, na, nsp, hnew )
            !
-           CALL check_constraint( nat, taup, tau0, &
-                                  fion, iforce, ityp, 1.D0, delt, uma_au )
+           CALL check_constraint( nat, taup, tau0, fion(:3,:nat), &
+                                  iforce, ityp, 1.D0, delt, uma_au )
            !
            CALL r_to_s( taup, tausp, na, nsp, ainv )
            !

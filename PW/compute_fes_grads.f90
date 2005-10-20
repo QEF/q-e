@@ -444,7 +444,8 @@ SUBROUTINE metadyn()
         !
         IF ( norm_fe_grad < eps8 ) THEN
            !
-           ! ... use a random perturbation
+           ! ... use a random perturbation (just in case we start very close
+           ! ... to the minimum)
            !
            WRITE( iunmeta, '("random step")' )
            !
@@ -458,9 +459,7 @@ SUBROUTINE metadyn()
            !
         END IF
         !
-        fe_grad(:) = fe_grad(:) / norm_fe_grad
-        !
-        new_target(:) = target(:) - fe_step * fe_grad(:)
+        new_target(:) = target(:) - fe_step(:) * fe_grad(:) / norm_fe_grad
         !
         WRITE( stdout, '(/,5X,"adiabatic switch of the system ", &
                             & "to the new coarse-grained positions",/)' )

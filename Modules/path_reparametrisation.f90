@@ -143,7 +143,7 @@ MODULE path_reparametrisation
         SUBROUTINE redispose_last_image( n )
           !--------------------------------------------------------------------
           !
-          USE path_variables, ONLY : error, grad, norm_grad, pes, grad_pes
+          USE path_variables, ONLY : error, grad, pes, grad_pes
           !
           IMPLICIT NONE
           !
@@ -152,11 +152,9 @@ MODULE path_reparametrisation
           !
           pes(n)        = pes(num_of_images)
           grad_pes(:,n) = grad_pes(:,num_of_images)
-          !
-          error(n)     = error(num_of_images)
-          vel(:,n)     = vel(:,num_of_images)
-          grad(:,n)    = grad(:,num_of_images)
-          norm_grad(n) = norm_grad(num_of_images)
+          error(n)      = error(num_of_images)
+          vel(:,n)      = vel(:,num_of_images)
+          grad(:,n)     = grad(:,num_of_images)
           !
           RETURN
           !
@@ -255,7 +253,7 @@ MODULE path_reparametrisation
         SUBROUTINE redispose_last_image( n )
           !--------------------------------------------------------------------
           !
-          USE path_variables, ONLY : error, grad, norm_grad
+          USE path_variables, ONLY : error, grad
           !
           IMPLICIT NONE
           !
@@ -265,11 +263,9 @@ MODULE path_reparametrisation
           pos(:,n)      = pos(:,num_of_images)
           pes(n)        = pes(num_of_images)
           grad_pes(:,n) = grad_pes(:,num_of_images)
-          !
-          error(n)     = error(num_of_images)
-          vel(:,n)     = vel(:,num_of_images)
-          grad(:,n)    = grad(:,num_of_images)
-          norm_grad(n) = norm_grad(num_of_images)
+          error(n)      = error(num_of_images)
+          vel(:,n)      = vel(:,num_of_images)
+          grad(:,n)     = grad(:,num_of_images)
           !
           RETURN
           !
@@ -397,17 +393,17 @@ MODULE path_reparametrisation
       !
       DEALLOCATE( r_h )
       DEALLOCATE( r_n )
-      DEALLOCATE( delta_pos)
+      DEALLOCATE( delta_pos )
       !
       RETURN
       !
     END SUBROUTINE to_real_space
     !
     !------------------------------------------------------------------------
-    SUBROUTINE to_reciprocal_space()
+    SUBROUTINE to_reciprocal_space( f, ft_f )
       !------------------------------------------------------------------------
       !
-      ! ... functions that are fourier transformed are defined here :
+      ! ... the function that is fourier transformed is defined here :
       !
       ! ... f(j), j = 1,...,N   is the function in real space (it starts from 1)
       !
@@ -420,14 +416,20 @@ MODULE path_reparametrisation
       ! ... f_star(0) = f_star(N-1) = 0   so that f_star(j) is stroed between
       ! ...                               0  and  Nft - 1 ( = N - 2 )
       !
-      USE path_variables, ONLY : dim, num_of_images, num_of_modes, Nft, &
-                                 Nft_smooth, pos, ft_pos, ft_coeff, pos_star
+      USE path_variables, ONLY : nim => num_of_images
+      USE path_variables, ONLY : dim, num_of_modes, Nft, Nft_smooth, ft_coeff
       !
       IMPLICIT NONE
       !
-      INTEGER  :: j, n
-      REAL(DP) :: x, coeff, inv_Nft
+      REAL(DP), INTENT(IN)  :: f(:,:)
+      REAL(DP), INTENT(OUT) :: ft_f(:,:)
       !
+      INTEGER               :: j, n
+      REAL(DP), ALLOCATABLE :: f_star(:,:)
+      REAL(DP)              :: x, coeff, inv_Nft
+      !
+      !
+      ALLOCATE( f_star( dim, 0:( Nft - 1 ) ) )
       !
       inv_Nft = 1.D0 / DBLE( Nft )
       !
@@ -435,14 +437,13 @@ MODULE path_reparametrisation
          !
          x = DBLE( j ) * inv_Nft
          !
-         pos_star(:,j) = pos(:,j+1) - pos(:,1) - &
-                         x * ( pos(:,num_of_images) - pos(:,1) )
+         f_star(:,j) = f(:,j+1) - f(:,1) - x * ( f(:,nim) - f(:,1) )
          !
       END DO
       !
-      ! ... fourier components of pos_star are computed
+      ! ... fourier components of f_star are computed
       !
-      ft_pos = 0.D0
+      ft_f = 0.D0
       !
       DO n = 1, num_of_modes
          !
@@ -452,7 +453,7 @@ MODULE path_reparametrisation
             !
             x = DBLE( j )
             !
-            ft_pos(:,n) = ft_pos(:,n) + pos_star(:,j) * SIN( coeff * x )
+            ft_f(:,n) = ft_f(:,n) + f_star(:,j) * SIN( coeff * x )
             !
          END DO
          !
@@ -460,7 +461,9 @@ MODULE path_reparametrisation
       !
       ! ... normalisation
       !
-      ft_pos = ft_pos * ft_coeff
+      ft_f = ft_f * ft_coeff
+      !
+      DEALLOCATE( f_star )
       !
       RETURN
       !

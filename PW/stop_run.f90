@@ -18,7 +18,6 @@ SUBROUTINE stop_run( flag )
   USE control_flags,      ONLY : lpath, lneb, lsmd, twfcollect, lconstrain, &
                                  lcoarsegrained
   USE io_files,           ONLY : prefix, iunwfc, iunigk, iunres, iunefield
-  USE input_parameters,   ONLY : deallocate_input_parameters
   USE path_variables,     ONLY : path_deallocation
   USE path_io_routines,   ONLY : io_path_stop
   USE constraints_module, ONLY : deallocate_constraint
@@ -91,8 +90,6 @@ SUBROUTINE stop_run( flag )
 #endif
   !
   CALL clean_pw( .TRUE. )
-  !
-  CALL deallocate_input_parameters()
   !
   IF ( lconstrain ) CALL deallocate_constraint()
   !

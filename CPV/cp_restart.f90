@@ -26,7 +26,7 @@ MODULE cp_restart
   !
   PRIVATE :: read_cell
   !
-  INTEGER, PARAMETER, PRIVATE :: iunout = 99
+  INTEGER, PRIVATE :: iunout
   !
   CONTAINS
     !
@@ -127,6 +127,13 @@ MODULE cp_restart
       REAL(DP)              :: scalef
       LOGICAL               :: lsda
       !
+      ! ... look for an empty unit
+      !
+      CALL iotk_free_unit( iunout, ierr )
+      !
+      CALL errore( 'cp_writefile ', &
+                   'no free units to write wavefunctions', ierr )
+      !
       ! ... Create main restart directory
       !
       dirname = restart_dir( scradir, ndw )
@@ -144,14 +151,19 @@ MODULE cp_restart
       !
       ! ... Some ( CP/FPMD ) default values
       !
-      IF( nspin == 2 ) THEN
-        kunit = 2
+      IF ( nspin == 2 ) THEN
+         !
+         kunit = 2
+         !
       ELSE
-        kunit = 1
+         !
+         kunit = 1
+         !
       END IF
-      k1 = 0
-      k2 = 0
-      k3 = 0
+      !
+      k1  = 0
+      k2  = 0
+      k3  = 0
       nk1 = 1
       nk2 = 1
       nk3 = 1
@@ -686,12 +698,12 @@ MODULE cp_restart
     END SUBROUTINE cp_writefile
     !
     !------------------------------------------------------------------------
-    SUBROUTINE cp_readfile( ndr, scradir, ascii, nfi, simtime, acc, nk, xk,  &
-                            wk, ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh,    &
-                            taui, cdmi, stau0, svel0, staum, svelm, force,   &
-                            vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ0, occm, lambda0,&
-                            lambdam, b1, b2, b3, xnhe0, xnhem, vnhe, ekincm, &
-                            c04, cm4, c02, cm2, mat_z )
+    SUBROUTINE cp_readfile( ndr, scradir, ascii, nfi, simtime, acc, nk, xk,   &
+                            wk, ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh,     &
+                            taui, cdmi, stau0, svel0, staum, svelm, force,    &
+                            vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ0, occm,      &
+                            lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, vnhe, &
+                            ekincm, c04, cm4, c02, cm2, mat_z )
       !------------------------------------------------------------------------
       !
       USE parser,                   ONLY : int_to_char
@@ -801,6 +813,13 @@ MODULE cp_restart
       CHARACTER(LEN=256)    :: psfile_(ntypx)
       CHARACTER(LEN=80)     :: pos_unit
       !
+      ! ... look for an empty unit
+      !
+      CALL iotk_free_unit( iunout, ierr )
+      !
+      CALL errore( 'cp_readfile ', &
+                   'no free units to read wavefunctions', ierr )
+      !
       kunit = 1
       found = .FALSE.
       !
@@ -866,7 +885,7 @@ MODULE cp_restart
       !
       CALL errore( 'cp_readfile ', &
                    'cannot read positions from restart file', ierr )
-      ! 
+      !
       ! ... read MD timesteps variables
       !
       IF ( ionode ) &
@@ -893,13 +912,19 @@ MODULE cp_restart
             CALL iotk_scan_begin( iunpun, "IONS_NOSE" )
             CALL iotk_scan_dat(   iunpun, "nhpcl", nhpcl_ )
             CALL iotk_scan_dat(   iunpun, "nhpdim", nhpdim_ )
-            if (nhpcl_.eq.nhpcl.and.nhpdim_.eq.nhpdim) then
-            CALL iotk_scan_dat(   iunpun, "xnhp", xnhp0(1:nhpcl*nhpdim))
-            CALL iotk_scan_dat(   iunpun, "vnhp", vnhp(1:nhpcl*nhpdim))
-            else
-               xnhp0(1:nhpcl*nhpdim) = 0.0d0
-               vnhp(1:nhpcl*nhpdim) = 0.0d0
-            endif
+            !
+            IF ( nhpcl_ == nhpcl .AND. nhpdim_ == nhpdim ) THEN
+               !
+               CALL iotk_scan_dat( iunpun, "xnhp", xnhp0(1:nhpcl*nhpdim) )
+               CALL iotk_scan_dat( iunpun, "vnhp", vnhp(1:nhpcl*nhpdim) )
+               !
+            ELSE
+               !
+               xnhp0(1:nhpcl*nhpdim) = 0.D0
+               vnhp(1:nhpcl*nhpdim)  = 0.D0
+               !
+            END IF
+            !
             CALL iotk_scan_end(   iunpun, "IONS_NOSE" )
             !
             CALL iotk_scan_dat( iunpun, "ekincm", ekincm )
@@ -942,11 +967,17 @@ MODULE cp_restart
             CALL iotk_scan_begin( iunpun, "IONS_NOSE" )
             CALL iotk_scan_dat(   iunpun, "nhpcl", nhpcl_ )
             CALL iotk_scan_dat(   iunpun, "nhpdim", nhpdim_ )
-            if (nhpcl_.eq.nhpcl.and.nhpdim_.eq.nhpdim) then
-            CALL iotk_scan_dat(   iunpun, "xnhp",  xnhpm(1:nhpcl*nhpdim))
-            else
-               xnhpm(1:nhpcl*nhpdim) = 0.0d0
-            endif
+            !
+            IF ( nhpcl_ == nhpcl .AND. nhpdim_ == nhpdim ) THEN
+               !
+               CALL iotk_scan_dat( iunpun, "xnhp",  xnhpm(1:nhpcl*nhpdim) )
+               !
+            ELSE
+               !
+               xnhpm(1:nhpcl*nhpdim) = 0.D0
+               !
+            END IF
+            !
             CALL iotk_scan_end(   iunpun,"IONS_NOSE" )
             !
             CALL iotk_scan_begin( iunpun, "ELECTRONS_NOSE" )
@@ -1042,7 +1073,7 @@ MODULE cp_restart
       CALL mp_bcast( omega, ionode_id )
       !
       scalef = 1.D0 / SQRT( ABS( omega ) )
-      ! 
+      !
       ! ... band Structure
       !
       IF ( ionode ) THEN
@@ -1077,7 +1108,6 @@ MODULE cp_restart
          CALL iotk_scan_begin( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
          !
       END IF
-      !
       !
       k_points_loop: DO ik = 1, nk
          !

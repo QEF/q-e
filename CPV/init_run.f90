@@ -110,7 +110,8 @@ SUBROUTINE init_run()
   !
   ! ... more initialization requiring atomic positions
   !
-  IF ( iprsta > 1 ) CALL print_atomic_var( tau0, na, nsp, ' tau0 from init_run ' )
+  IF ( iprsta > 1 ) &
+     CALL print_atomic_var( tau0, na, nsp, ' tau0 from init_run ' )
   !
   !=======================================================================
   !     allocate and initialize nonlocal potentials
@@ -121,7 +122,6 @@ SUBROUTINE init_run()
   !=======================================================================
   !     allocation of all arrays not already allocated in init and nlinit
   !=======================================================================
-
   !
   CALL allocate_mainvar( ngw, ngwt, ngb, ngs, ngm, nr1, nr2, nr3, dfftp%nr1x, &
                          dfftp%nr2x, dfftp%npl, nnrx, nnrsx, nat, nax, nsp,   &
@@ -140,14 +140,17 @@ SUBROUTINE init_run()
      !
   ELSE IF( program_name == 'FPMD' ) THEN
      !
-     IF( iprsta > 2 ) THEN
-       CALL wave_descriptor_info( wfill, 'wfill', stdout )
-       CALL wave_descriptor_info( wempt, 'wempt', stdout )
+     IF ( iprsta > 2 ) THEN
+        !
+        CALL wave_descriptor_info( wfill, 'wfill', stdout )
+        CALL wave_descriptor_info( wempt, 'wempt', stdout )
+        !
      END IF
-
+     !
      lds_wfc = wfill%lds
-     IF( force_pairing ) lds_wfc = 1
-
+     !
+     IF ( force_pairing ) lds_wfc = 1
+     !
      ALLOCATE( cm( wfill%ldg, wfill%ldb, wfill%ldk, lds_wfc ) )
      ALLOCATE( c0( wfill%ldg, wfill%ldb, wfill%ldk, lds_wfc ) )
      ALLOCATE( cp( wfill%ldg, wfill%ldb, wfill%ldk, lds_wfc ) )
@@ -158,12 +161,12 @@ SUBROUTINE init_run()
   acc          = 0.D0
   acc_this_run = 0.D0
   !
-  edft%ent  = 0.0d0
-  edft%esr  = 0.0d0
-  edft%evdw = 0.0d0
-  edft%ekin = 0.0d0
-  edft%enl  = 0.0d0
-  edft%etot = 0.0d0
+  edft%ent  = 0.D0
+  edft%esr  = 0.D0
+  edft%evdw = 0.D0
+  edft%ekin = 0.D0
+  edft%enl  = 0.D0
+  edft%etot = 0.D0
   !
   ALLOCATE( becsum(  nhm*(nhm+1)/2, nat, nspin ) )
   ALLOCATE( deeq( nhm, nhm, nat, nspin ) )
@@ -192,15 +195,16 @@ SUBROUTINE init_run()
   IF ( lwf ) CALL allocate_wannier( nbsp, nnrsx, nspin, ngm )
   !
   IF ( tens .OR. tcg ) &
-     CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, nspin, nbspx, nnrsx, natx )
+     CALL allocate_ensemble_dft( nkb, nbsp, ngw, &
+                                 nudx, nspin, nbspx, nnrsx, natx )
   !
   IF ( tcg ) CALL allocate_cg( ngw, nbspx )
   !
   IF ( tefield ) CALL allocate_efield( ngw, nbspx, nhm, nax, nsp )
   !
-  IF( ALLOCATED( deeq ) )     deeq(:,:,:,:) = 0.D0
+  IF ( ALLOCATED( deeq ) ) deeq(:,:,:,:) = 0.D0
   !
-  IF( ALLOCATED( lambda ) )   lambda(:,:) = 0.D0
+  IF ( ALLOCATED( lambda ) ) lambda(:,:) = 0.D0
   !
   taum  = tau0
   taup  = 0.D0
@@ -219,7 +223,7 @@ SUBROUTINE init_run()
   !
   IF ( lwf ) CALL wannier_startup( ibrav, alat, a1, a2, a3, b1, b2, b3 )
   !
-  !  Calculate: PMSS = EMASS * (2PI/Alat)^2 * |G|^2 / ECUTMASS
+  ! ... Calculate: pmss = emass * (2pi/alat)^2 * |G|^2 / ecutmass
   !
   CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emass_cutoff )
   !

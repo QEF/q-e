@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2004 Quantum-ESPRESSO group
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -420,8 +420,8 @@ MODULE read_namelists_module
        fe_step     = 0.4D0
        fe_nstep    = 100
        shake_nstep = 10
-       g_amplitude   = 0.005D0
-       g_sigma       = 0.4D0
+       g_amplitude = 0.005D0
+       g_sigma     = 0.4D0
        !
        RETURN
        !
@@ -1380,12 +1380,15 @@ MODULE read_namelists_module
        !
        ! ... NEB specific checkin
        !
+       IF ( num_of_images > max_num_of_images ) &
+          CALL errore( sub_name, &
+                     & ' num_of_images too large (increase max_num_of_images)', 1)
        IF ( k_max < 0.D0 ) &
-          CALL errore( sub_name,' k_max out of range ',1)
+          CALL errore( sub_name, ' k_max out of range', 1 )
        IF ( k_min < 0.D0 ) &
-          CALL errore( sub_name,' k_min out of range ',1)
+          CALL errore( sub_name, ' k_min out of range', 1 )
        IF ( k_max < k_min ) &
-          CALL errore( sub_name,'  k_max < k_min ',1)  
+          CALL errore( sub_name, ' k_max < k_min', 1 )
        ! 
        DO i = 1, SIZE( CI_scheme_allowed )
           IF ( TRIM( CI_scheme ) == CI_scheme_allowed(i) ) allowed = .TRUE.

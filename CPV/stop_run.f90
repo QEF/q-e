@@ -17,7 +17,6 @@ SUBROUTINE stop_run( flag )
                                  lcoarsegrained
   USE io_files,           ONLY : prefix
   USE environment,        ONLY : environment_end
-  USE input_parameters,   ONLY : deallocate_input_parameters
   USE path_variables,     ONLY : path_deallocation
   USE path_io_routines,   ONLY : io_path_stop
   USE constraints_module, ONLY : deallocate_constraint
@@ -43,7 +42,6 @@ SUBROUTINE stop_run( flag )
 #endif
   !
   CALL deallocate_modules_var()
-  CALL deallocate_input_parameters()
   !
   IF ( lconstrain ) CALL deallocate_constraint()
   !
