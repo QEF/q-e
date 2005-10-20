@@ -14,12 +14,9 @@
 #     contain any valuable data (everything there will be destroyed!).
 
 #Let's set some of the directories automatically assuming the usual
-#espresso tree, and that the examples are in examples/exampleN  
+#espresso tree, and that the examples are in examples/exampleNN
 
-CURDIR=`pwd`
-cd ../..
-PREFIX=`pwd`
-cd $CURDIR
+PREFIX=`cd ../.. ; pwd`
 BIN_DIR=$PREFIX/bin
 PSEUDO_DIR=$PREFIX/pseudo
 TMP_DIR=$HOME/tmp
