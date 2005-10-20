@@ -60,7 +60,7 @@ else
 [ CLIMBING_IMAGES
    list of images, separated by a comma ]   
 [ CONSTRAINTS
-   nconstr   constr_tol
+   nconstr   { constr_tol }
    constr_type(.)   constr(1,.)   constr(2,.) { constr_target(.) } ]
 
 ===============================================================================
@@ -539,8 +539,9 @@ free_energy    LOGICAL ( default = .FALSE. )
 ! ... eywords used only in meta-dynamics calculations
 !
 
-fe_step        REAL ( default = 0.04 )
-               meta-dinamics step length, defined using the same units used 
+fe_step(i)     REAL ( default = 0.04 )
+               meta-dinamics step length (in principle different for each
+               collective variable), defined using the same units used 
                to define the colletive variables (constraints).
 
 g_amplitude    REAL ( default = 0.005 Hartree )
@@ -2380,7 +2381,7 @@ CONSTRAINTS
  Syntax:
 
     CONSTRAINTS
-      nconstr   constr_tol
+      nconstr   { constr_tol }
       constr_type(.)  constr(1,.)  constr(2,.) ... { constr_target(.) }
 
  Where:
