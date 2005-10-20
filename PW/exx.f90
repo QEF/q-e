@@ -894,7 +894,7 @@ contains
            end do
         end do
      end do
-     call reduce (div)
+     call reduce (1, div)
      if (gamma_only) then
         div = 2.d0 * div
         if (yukawa .le. 1.d-8) then
