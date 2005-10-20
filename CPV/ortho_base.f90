@@ -525,16 +525,16 @@
                   IOFF2 = i+(j-1)*CURNR +   CURNR*CURNC
                   IOFF3 = i+(j-1)*CURNR + 2*CURNR*CURNC
                   ! SIG
-                  call DGEMM('T','N',nib,njb,2*ngw,-2.0, &
-     &                 CP(1,ib),ldc,CP(1,jb),ldc,0.0, &
+                  call DGEMM('T','N',nib,njb,2*ngw,-2.0d0, &
+     &                 CP(1,ib),ldc,CP(1,jb),ldc,0.0d0, &
      &                 sigtmp(IOFF1),CURNR)
                   ! RHO
-                  call DGEMM('N','N',nib,njb,2*ngw,2.0, &
-     &                 CTMP(ib,1),n,CP(1,jb),ldc,0.0, &
+                  call DGEMM('N','N',nib,njb,2*ngw,2.0d0, &
+     &                 CTMP(ib,1),n,CP(1,jb),ldc,0.0d0, &
      &                 sigtmp(IOFF2),CURNR)
                   ! TMASS
-                  call DGEMM('N','N',nib,njb,2*ngw,2.0, &
-     &                 CTMP(ib,1),n,C0(1,jb),ldc,0.0, &
+                  call DGEMM('N','N',nib,njb,2*ngw,2.0d0, &
+     &                 CTMP(ib,1),n,C0(1,jb),ldc,0.0d0, &
      &                 sigtmp(IOFF3),CURNR)
 
                 endif
