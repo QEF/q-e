@@ -25,8 +25,11 @@ the GNU Autoconf Manual for more info.
 generates: you might want to edit that file as well.  The generation
 procedure is as follows: if "configure.ac" contains the macro
 "AC_SUBST(name)", then every occurrence of "@name@" in the source
-files will be substituted with the value of the shell variable "name"
-at the point where AC_SUBST was called.
+file will be substituted with the value of the shell variable "name"
+at the point where AC_SUBST was called.  Similarly, "configure.msg" is
+generated from "configure.msg.in": this file is only used by
+"configure" to print its final report, and isn't needed for the
+compilation.
 
 "configure" writes a detailed log of its operation to "config.log".
 When any configuration step fails, you may look there for the relevant
@@ -37,11 +40,11 @@ HOW TO ADD SUPPORT FOR A NEW ARCHITECTURE
 
 In order to support a previously unsupported architecture, first you
 have to figure out which compilers, compilation flags, libraries
-etc. should be used for compiling Quantum-ESPRESSO on that architecture.
-In other words, you have to write a "make.sys" that works: use the
-manual configuration procedure for that (see the Quantum-ESPRESSO User's
-Guide).  Then, you have to modify "configure" so that it can generate
-that "make.sys" automatically.
+etc. should be used on that architecture.
+In other words, you have to write a "make.sys" that works: you may use
+the manual configuration procedure for that (see the Quantum-ESPRESSO
+User's Guide).  Then, you have to modify "configure" so that it can
+generate that "make.sys" automatically.
 
 To do that, you have to add the case for your architecture in several
 places throughout "configure.ac":
@@ -52,8 +55,7 @@ Look for these lines:
 
   if test "$arch" = ""
   then
-          # identify architecture
-          case $build in
+          case $host in
                   ia64-*-linux-gnu | x86_64-*-linux-gnu ) arch=linux64 ;;
                   *-pc-linux-gnu )                        arch=linux32 ;;
                   *-ibm-aix* )                            arch=aix     ;;
@@ -72,7 +74,7 @@ the same family.  For instance, it could be "aix4.3" instead of
 
 Look for these lines:
 
-  # check compiling environment
+  # candidate compilers, archiver and flags based on architecture
   case $arch in
   linux64 )
         ...
@@ -88,7 +90,7 @@ values for several variables:
 - "try_f90" should contain the list of candidate Fortran 90 compilers,
   in order of decreasing preference (i.e. configure will use the first
   it finds).  If your system has parallel compilers, you should list
-  them in "try_f90_parallel".
+  them in "try_mpif90".
 
 - "try_ar", "try_arflags": for these, the values "ar" and "ruv" should
   be always fine, unless some special flag is required (e.g., -X64
@@ -104,66 +106,69 @@ values for several variables:
 For example, here's the entry for Mac OS X:
 
   mac )
-          try_f90_parallel="mpxlf90 mpf90"
+          try_mpif90="mpxlf90 mpf90"
           try_f90="xlf90 f90"
           try_ar="ar"
           try_arflags="ruv"
-          try_dflags="-D__MAC"
+          try_dflags="-D__MAC -D__XLF"
           ranlib="ranlib"
           ;;
 
 Then look for these lines:
 
-  # check Fortran 90 compiler
+  # check parallel Fortran 90 compiler
   ...
-  AC_PROG_F77($f90)
-  ...
+  AC_PROG_F77($mpif90)
+  mpif90=$F77
 
-  case "$arch:$f90" in
+  case "$arch" in
   linux* )
         ...
-  aix:*xlf*_r )
-        ...
-  etc.
 
 and just below:
 
-  case "$arch:$f90" in
+  case "$arch:$mpif90" in
   *:mpif90 )
         ....
   etc.
 
-In these two case blocks you have to add an entry for your
-architecture *and* Fortran 90 compiler.  There you have to set:
+If you don't have parallel Fortran and C compilers, you can skip this
+step.  Otherwise, in either of these two case blocks you have to add
+an entry for your architecture *and* parallel Fortran 90 compiler
+(Linux case is treated specially because there is a huge variety of
+compilers for that OS).  There you have to set:
 
-In the first case block:
-
-- "try_cc", "try_f77": list of C and Fortran 77 compilers, also in
-  decreasing order of preference.  This is done at this later stage
+- "try_mpicc", "try_mpif77": list of C and Fortran 77 compilers, also
+  in decreasing order of preference.  This is done at this later stage
   because the choice depends on the Fortran 90 compiler.  For
-  instance, if $f90=ifort you'll want to use icc, while if $f90=pgf90
-  you'll want pgcc.
-
-In the second case block:
-
-- "try_cc_parallel", "try_f77_parallel": list of parallel C and
-  Fortran 77 compilers (if any).
+  instance, if $mpif90=ifort you'll want to use icc, while if
+  $mpif90=pgf90 you'll want pgcc.
 
 A few compilers require some extra work here: for instance, if the
 Intel Fortran compiler was selected, you need to know the version
 because different versions need different flags.
 
-For example, here are the entries for XL compilers on AIX:
-
-  aix:*xlf*_r )
-          try_cc="xlc_r cc gcc"
-          try_f77="xlf_r f77 $f90"
-          ;;
+For example, here are the entries for parallel XL compilers on AIX:
 
   aix:mpxlf*_r )
-          try_cc_parallel="mpcc_r"
-          try_f77_parallel="mpxlf_r"
+          try_mpicc="mpcc_r"
+          try_mpif77="mpxlf_r"
           ;;
+
+Then look for these lines:
+
+  # check serial Fortran 90 compiler
+  ...
+  AC_PROG_F77($f90)
+  f90=$F77
+  ...
+  case "$arch:$f90" in
+  linux*:ifort* )
+        ...
+
+Here you have to add an entry for your architecture and serial C and
+Fortran 77 compilers (just like the previous case, but serial
+compilers here).
 
 Finally, at this point:
 
@@ -173,29 +178,20 @@ Finally, at this point:
   ...
 
 you may insert the case corresponding to your architecture, with the
-compilers that are known to work.  Otherwise "configure" will write a
-message like this:
-
-  ----------------------------------------------
-  WARNING: the following problems were detected:
-
-  unsupported C/Fortran compilers combination:
-  CC=gcc, F77=f77, F90=g77
-
-  you may not be able to compile this program
-  ----------------------------------------------
-
-which you may however ignore.
+compilers that are known to work.  Otherwise "configure" will issue a
+warning about "unsupported C/Fortran compilers combination", which you
+may however ignore.
 
 *** 3: Specify compilation flags. ***
 
 Look for these lines:
 
   # check Fortran compiler flags
-  case "$arch:$f90_id" in
-  linux64:ifort | linux64:efc )
+  ...
+  case "$arch:$f90" in
+  linux64:ifort* )
         ...
-  linux64:pgf* )
+  linux64:ifc* )
   	...
   etc.
 
@@ -212,9 +208,11 @@ Add an entry for your case and define:
   These flags must be used for compiling flib/dlamch.f (part of our
   version of Lapack): it won't compile properly with optimizations.
 
+- "try_f90flags_noopt" : as above, but for Fortran 90
+
 - "try_ldflags": flags for the linking phase (not including the list
-  of libraries, that is compiled later).  Note that $f90 will be used
-  as the linker, if not specified otherwise.
+  of libraries, that is compiled later).  Note that $mpif90 will be
+  used as the linker for Quantum-ESPRESSO programs.
 
 - "try_ldflags_static": additional flags to select static compilation
   (i.e., don't use shared libraries).
@@ -222,11 +220,11 @@ Add an entry for your case and define:
 - "try_dflags": must be defined if there is in the code any #ifdef
   specific to your compiler (for instance, -D__INTEL for Intel
   compilers).  Define it as "$try_dflags -D..." so that pre-existing
-  flags, if any, are conserved.
+  flags, if any, are preserved.
 
 - if the Fortran 90 compiler is able to invoke the C preprocessor
   automatically before compiling, define "have_cpp=1"; otherwise,
-  leave it undefined (I mean it -- *don't* define it as 0).
+  leave it undefined (or define it as 0).
   The appropriate compilation rules will be generated accordingly.
   If the compiler requires that any flags be specified in order to
   invoke the preprocessor (for example, "-fpp " -- note the space),
@@ -234,11 +232,11 @@ Add an entry for your case and define:
 
 For example, here's the entry for ifort on Linux PC:
 
-  linux32:ifort )
-          try_fflags="-Vaxlib -O2 -tpp6 -assume byterecl"
+  linux32:ifort* )
+          try_fflags="-O2 -tpp6 -assume byterecl"
           try_f90flags="\$(FFLAGS) -nomodule"
-          try_fflags_noopt="-O0"
-          try_ldflags="-Vaxlib"
+          try_fflags_noopt="-O0 -assume byterecl"
+          try_ldflags=""
           try_ldflags_static="-static"
           try_dflags="$try_dflags -D__INTEL"
           pre_fdflags="-fpp "
@@ -247,7 +245,7 @@ For example, here's the entry for ifort on Linux PC:
 
 Then, look for these lines:
 
-  case "$arch:$cc_id" in
+  case "$arch:$cc" in
   linux*:icc )
   	...
   linux*:pgcc )
@@ -276,9 +274,7 @@ lines:
 
   # preprocessor
   AC_PROG_CPP
-  if test "$cpp" = "" ; then cpp=$try_cpp; fi
-  if test "$cpp" = "" ; then cpp=$CPP;     fi
-
+  ...
   echo $ECHO_N "setting CPPFLAGS... $ECHO_C"
   case $cpp in
   	cpp) try_cppflags="-P -traditional" ;;
@@ -292,33 +288,37 @@ and set "try_cppflags" as appropriate.
 To instruct "configure" to search for libraries, you must tell it two
 things: the names of libraries it should search for, and where it
 should search.
-First, look for these lines:
 
-        # build list of directories to search
-        case "$arch" in
-        linux64 )
-                ...
-        linux32 )
-                ...
-        etc.
+The following libraries are searched for:
 
-insert an entry for your architecture (and your compiler, if the
-library to be searched for is compiler-specific), and define:
+- BLAS or equivalent
+  Some vendor replacements for BLAS that are supported by
+  Quantum-ESPRESSO are:
+    mkl on linux
+    essl on aix
+    complib.sgimath
+    cxml on alpha
+    SUNperf on sparc
+  Moreover, ATLAS is used over BLAS if available.
 
-- "try_libdirs": a list of directories to search, separated by spaces.
+- LAPACK or equivalent
+  Some vendor replacements for LAPACK that are supported by
+  Quantum-ESPRESSO are:
+    mkl on linux
+    SUNperf on sparc
 
-Then, look for these lines:
+- FFTW (version 2.x) or another supported FFT library
+  The latter include:
+    essl on aix
+    SUNperf on sparc
 
-        # use vendor libraries if available
-        case "$arch" in
-        linux64 )
-                ...
-        linux32 )
-                ...
-        etc.
+- the MASS vector math library on aix
 
-If you want to search for a vendor-specific library, you'll have to
-add an entry for that library here.
+- an MPI library
+  This is often automatically linked by the compiler
+
+If you have another replacement for the above libraries, you'll have
+to insert a new entry in the appropriate place.
 
 This is unfortunately a little bit too complex to explain.
 Basic info: "AC_SEARCH_LIBS(function, name, ...)" looks for symbol
