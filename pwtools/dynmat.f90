@@ -458,7 +458,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
   !
   if ( (asr.ne.'simple') .and. (asr.ne.'crystal') .and. (asr.ne.'one-dim') &
                          .and.(asr.ne.'zero-dim')) then
-     call errore('set_asr','reading asr',asr)
+     call errore('set_asr','invalid Acoustic Sum Rule:' // asr, 1)
   endif
   if(asr.eq.'crystal') n=3
   if(asr.eq.'one-dim') then

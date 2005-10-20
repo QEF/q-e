@@ -541,8 +541,8 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
   ! and (Oz) if axis='3') 
   !
   if((zasr.ne.'simple').and.(zasr.ne.'crystal').and.(zasr.ne.'one-dim') &
-       .and.(zasr.ne.'zero-dim')) then
-              call errore('q2r','reading zasr',zasr)
+                       .and.(zasr.ne.'zero-dim')) then
+      call errore('q2r','invalid Acoustic Sum Rulei for Z*:' // zasr, 1)
   endif
   if(zasr.eq.'crystal') n=3
   if(zasr.eq.'one-dim') then

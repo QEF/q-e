@@ -689,8 +689,8 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   ! (i.e. the rotation axis is (Ox) if axis='1', (Oy) if axis='2' and (Oz) if axis='3') 
   !
   if((asr.ne.'simple').and.(asr.ne.'crystal').and.(asr.ne.'one-dim') &
-       .and.(asr.ne.'zero-dim')) then
-              call errore('matdyn','reading asr',asr)
+                      .and.(asr.ne.'zero-dim')) then
+     call errore('matdyn','invalid Acoustic Sum Rule:' // asr, 1)
   endif
   if(asr.eq.'crystal') n=3
   if(asr.eq.'one-dim') then
