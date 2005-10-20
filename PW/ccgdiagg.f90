@@ -12,7 +12,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
-                     ethr, maxter, reorder, notconv, avg_iter, ik )
+                     ethr, maxter, reorder, notconv, avg_iter )
   !----------------------------------------------------------------------------
   !
   ! ... "poor man" iterative diagonalization of a complex hermitian matrix
@@ -32,7 +32,7 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
   !
   ! ... I/O variables
   !
-  INTEGER,           INTENT(IN)    :: ndmx, ndim, nbnd, maxter, ik
+  INTEGER,           INTENT(IN)    :: ndmx, ndim, nbnd, maxter
   INTEGER,           INTENT(IN)    :: btype(nbnd)
   REAL (DP),    INTENT(IN)    :: precondition(ndmx*npol), ethr
   COMPLEX (DP), INTENT(INOUT) :: psi(ndmx*npol,nbnd)
@@ -152,15 +152,12 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
      IF ( noncolin ) THEN
         !
         CALL h_1psi_nc( ndmx, ndim, npol, psi(1,m), hpsi, spsi )
-        IF( lelfield )  CALL h_epsi_her(ndmx,ndim,1,ik,psi(1,m),hpsi)
-
+        IF( lelfield )  CALL h_epsi_her(ndmx, ndim, 1, psi(1,m), hpsi )
         !
      ELSE
         !
         CALL h_1psi( ndmx, ndim, psi(1,m), hpsi, spsi )
-        IF( lelfield )  CALL h_epsi_her(ndmx,ndim,1,ik,psi(1,m),hpsi)
-
-
+        IF( lelfield )  CALL h_epsi_her( ndmx, ndim, 1, psi(1,m), hpsi)
         !
      END IF
      !
@@ -280,14 +277,12 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
         IF ( noncolin ) THEN
            !
            CALL h_1psi_nc( ndmx, ndim, npol, cg(1), ppsi(1), scg(1) )
-          IF( lelfield )  CALL h_epsi_her(ndmx,ndim,1,ik,cg(1),ppsi(1))
-
+           IF( lelfield ) CALL h_epsi_her( ndmx, ndim, 1, cg(1), ppsi(1))
            !
         ELSE
            !
            CALL h_1psi( ndmx, ndim, cg(1), ppsi(1), scg(1) )
-         IF( lelfield )  CALL h_epsi_her(ndmx,ndim,1,ik,cg(1),ppsi(1))
-
+           IF( lelfield ) CALL h_epsi_her(ndmx, ndim, 1, cg(1), ppsi(1))
            !
         END IF
         !

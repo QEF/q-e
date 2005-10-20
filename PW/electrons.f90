@@ -13,11 +13,9 @@ SUBROUTINE electrons()
   !
   ! ... This routine is a driver of the self-consistent cycle.
   ! ... It uses the routine c_bands for computing the bands at fixed
-  ! ... Hamiltonian, the routine sum_bands to compute the charge
+  ! ... Hamiltonian, the routine sum_band to compute the charge
   ! ... density, the routine v_of_rho to compute the new potential
-  ! ... and the routine mix_potential to mix input and output
-  ! ... potentials.
-  !
+  ! ... and the routine mix_rho to mix input and output charge densities
   ! ... It prints on output the total energy and its decomposition in
   ! ... the separate contributions.
   !
@@ -55,9 +53,7 @@ SUBROUTINE electrons()
   USE noncollin_module,     ONLY : factlist, pointlist, pointnum, mcons,&
                                    i_cons, bfield, lambda, vtcon, report
   USE spin_orb,             ONLY : domag
-  USE mp_global,            ONLY : me_pool
-  USE pfft,                 ONLY : npp, ncplane
-  USE bp
+  USE bp,                   ONLY : lelfield, lberry, nberrycic
 #if defined (EXX)
   USE exx,                  ONLY : lexx, exxinit, init_h_wfc, &
                                    exxalfa, exxstart, exxenergy, exxenergy2 
@@ -98,7 +94,7 @@ SUBROUTINE electrons()
        descf          ! correction for variational energy
 
   REAL (DP), ALLOCATABLE :: &
-      wg_g(:,:)        ! temporary array used to recover from pools array wg,
+      wg_g(:,:)        ! temporary array used to collect array wg from pools
                        ! and then print occupations on stdout
   LOGICAL :: &
       exst, first
@@ -106,22 +102,21 @@ SUBROUTINE electrons()
   ! ... external functions
   !
   REAL (DP), EXTERNAL :: ewald, get_clock
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !
+  ! ... auxiliary variables for calculating and storing rho in G-space
+  !
   COMPLEX (DP), ALLOCATABLE :: rhog(:,:)
   COMPLEX (DP), ALLOCATABLE :: rhognew(:,:)
   REAL (DP), ALLOCATABLE :: rhonew(:,:)
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- !
-  ! PU added for electric field
+  !
+  ! ... variables needed for electric field calculation
+  !
   COMPLEX(DP), ALLOCATABLE  :: psi(:,:)
   INTEGER inberry
-
+  !
   !
   CALL start_clock( 'electrons' )
   !
-
-  !
-
   iter = 0
   ik_  = 0
   !
@@ -190,14 +185,15 @@ SUBROUTINE electrons()
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
-  !TEMP
+  ! ... bring starting rho to G-space
+  !
   IF ( .not. ALLOCATED(rhog) ) ALLOCATE (rhog(ngm, nspin))
   do is = 1, nspin
      psic(:) = rho (:, is)
      call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
      rhog(:, is) = psic ( nl(:) )
   end do
-  !TEMP
+  !
   DO idum = 1, niter
      !
      IF ( check_stop_now() ) RETURN
@@ -279,20 +275,19 @@ SUBROUTINE electrons()
         !
         deband = delta_e()
         !
-        !TEMP
+        ! ... bring newly calculated (in sum_band) rho to G-space for mixing
+        !
         ALLOCATE (rhognew(ngm, nspin))
         do is = 1, nspin
            psic(:) = rho (:, is)
            call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
            rhognew (:, is) = psic ( nl(:) )
         end do
-        !TEMP
         !
         CALL mix_rho( rhognew, rhog, nsnew, ns, mixing_beta, &
              dr2, tr2_min, iter, nmix, flmix, conv_elec )
-        !TEMP
+        !
         DEALLOCATE (rhognew)
-        !TEMP
         !
         ! ... for the first scf iteration it is controlled that the 
         ! ... threshold is small enough for the diagonalization to 
@@ -319,7 +314,9 @@ SUBROUTINE electrons()
         END IF             
         !
         IF ( .NOT. conv_elec ) THEN
-        !TEMP
+           !
+           ! ... bring mixed rho from G- to R-space
+           !
            ALLOCATE (rhonew (nrxx, nspin) )
            do is = 1, nspin
               psic( :) = (0.d0, 0.d0)
@@ -328,7 +325,6 @@ SUBROUTINE electrons()
               call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
               rhonew (:, is) = psic (:)
            end do
-           !TEMP
            !
            ! ... no convergence yet: calculate new potential from 
            ! ... new estimate of the charge density 
@@ -343,10 +339,10 @@ SUBROUTINE electrons()
            !
            ! ... write the charge density to file
            !
-           !TEMP
            CALL io_pot( 1, 'rho', rhonew, nspin )
+           !
            DEALLOCATE (rhonew )
-           !TEMP
+           !
         ELSE
            !
            ! ... convergence reached: store V(out)-V(in) in vnew
@@ -361,6 +357,8 @@ SUBROUTINE electrons()
            ! ... correction for variational energy no longer needed
            !
            descf = 0.D0
+           !
+           DEALLOCATE (rhog)
            !
         END IF
 #if defined (EXX)
@@ -394,8 +392,8 @@ SUBROUTINE electrons()
         !
      END IF
      !
-     ! ... In the US case we need to recompute the self consistent term in
-     ! ... the nonlocal potential.
+     ! ... In the US case we need to recompute the self consistent term
+     ! ... in the nonlocal potential.
      !
      CALL newd()
      !
@@ -416,8 +414,10 @@ SUBROUTINE electrons()
            CALL davcio( evc, nwordwfc, iunwfc, nks, 1 )
         !
      END IF
-     IF(lelfield) CALL c_phase_field !in electric field case, calculate the polarization
-
+     !
+     ! ... calculate the polarization
+     !
+     IF ( lelfield ) CALL c_phase_field( )
      !
      ! ... write recover file
      !
@@ -629,14 +629,9 @@ SUBROUTINE electrons()
         !
         WRITE( stdout, 9110 )
         !
-        ! ... jump to the end
-        !
         IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
         !
         CALL stop_clock( 'electrons' )
-        !TEMP
-        DEALLOCATE (rhog)
-        !TEMP
         !
         RETURN
         !

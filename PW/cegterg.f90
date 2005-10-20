@@ -12,7 +12,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
-                    overlap, e, btype, notcnv, lrot, dav_iter,ik )
+                    overlap, e, btype, notcnv, lrot, dav_iter )
   !----------------------------------------------------------------------------
   !
   ! ... iterative solution of the eigenvalue problem:
@@ -31,7 +31,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   ! ... on INPUT
   ! 
-  INTEGER, INTENT(IN) :: ndim, ndmx, nvec, nvecx,ik
+  INTEGER, INTENT(IN) :: ndim, ndmx, nvec, nvecx
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix evc, as declared in the calling pgm unit
     ! integer number of searched low-lying roots
@@ -151,14 +151,14 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      CALL h_psi_nc( ndmx, ndim, nvec, psi, hpsi )
      !
-     IF ( lelfield )  CALL h_epsi_her(ndmx, ndim, nvec, ik,psi,hpsi)
+     IF ( lelfield )  CALL h_epsi_her(ndmx, ndim, nvec, psi, hpsi)
      IF ( overlap ) CALL s_psi_nc( ndmx, ndim, nvec, psi, spsi )
      !
   ELSE
      !
      CALL h_psi( ndmx, ndim, nvec, psi, hpsi )
      !
-     IF ( lelfield )  CALL h_epsi_her(ndmx, ndim, nvec, ik,psi,hpsi)
+     IF ( lelfield )  CALL h_epsi_her(ndmx, ndim, nvec, psi, hpsi)
      IF ( overlap ) CALL s_psi( ndmx, ndim, nvec, psi, spsi )
      !
   END IF
@@ -313,7 +313,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         !
         CALL h_psi_nc( ndmx, ndim, notcnv, psi(1,1,nbase+1), hpsi(1,1,nbase+1) )
         !
-        IF ( lelfield ) call h_epsi_her(ndmx, ndim,notcnv, ik, psi(1,1,nbase+1) , &
+        IF ( lelfield ) call h_epsi_her(ndmx, ndim,notcnv, psi(1,1,nbase+1), &
                  hpsi (1, 1, nbase+1) )
 
         IF ( overlap ) &
@@ -324,7 +324,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         !
         CALL h_psi( ndmx, ndim, notcnv, psi(1,1,nbase+1), hpsi(1,1,nbase+1) )
         !
-        IF ( lelfield ) call h_epsi_her(ndmx, ndim,notcnv, ik, psi(1,1,nbase+1) , &
+        IF ( lelfield ) call h_epsi_her(ndmx, ndim,notcnv, psi(1,1,nbase+1), &
                  hpsi (1, 1,nbase+1) )
 
         IF ( overlap ) &

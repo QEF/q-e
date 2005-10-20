@@ -11,7 +11,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e, ik )
+SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e )
   !----------------------------------------------------------------------------
   !
   ! ... Hamiltonian diagonalization in the subspace spanned
@@ -26,7 +26,7 @@ SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e, ik )
   !
   IMPLICIT NONE
   !
-  INTEGER :: ndim, ndmx, nstart, nbnd, ik
+  INTEGER :: ndim, ndmx, nstart, nbnd
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix psi, as declared in the calling pgm unit
     ! input number of states
@@ -81,13 +81,12 @@ SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e, ik )
      IF ( noncolin ) THEN
         !
         CALL h_1psi_nc( ndmx, ndim, npol, psi(1,1,m), aux(1,1,1), aux(1,1,2) )
-       IF(lelfield) call h_epsi_her(ndmx,ndim,1, ik, psi(1,1,m), aux(1,1,1))
-
+        IF(lelfield) call h_epsi_her(ndmx,ndim,1, psi(1,1,m), aux(1,1,1))
         !
      ELSE
         !
         CALL h_1psi( ndmx, ndim, psi(1,1,m), aux(1,1,1), aux(1,1,2) )
-        IF(lelfield) call h_epsi_her(ndmx,ndim,1, ik, psi(1,1,m), aux(1,1,1))
+        IF(lelfield) call h_epsi_her(ndmx,ndim,1, psi(1,1,m), aux(1,1,1))
         !
      END IF
      !

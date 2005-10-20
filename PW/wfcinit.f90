@@ -24,7 +24,8 @@ SUBROUTINE wfcinit()
   USE klist,                ONLY : xk, nks
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE control_flags,        ONLY : isolve, reduce_io
-  USE wvfct,                ONLY : nbnd, npw, npwx, igk, g2kin, et, wg
+  USE wvfct,                ONLY : nbnd, npw, npwx, igk, g2kin, et,&
+                                   wg, current_k
   USE uspp,                 ONLY : nkb, vkb, okvan
   USE ldaU,                 ONLY : swfcatom, swfcatom_nc, lda_plus_u
   USE noncollin_module,     ONLY : noncolin, npol
@@ -137,6 +138,7 @@ SUBROUTINE wfcinit()
        !
        DO ik = 1, nks
           !
+          current_k = ik 
           IF ( lsda ) current_spin = isk(ik)
           !
           IF ( nks > 1 ) READ( iunigk ) npw, igk

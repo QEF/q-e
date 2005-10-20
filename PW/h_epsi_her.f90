@@ -8,7 +8,7 @@
 
 #include "f_defs.h"
 !-----------------------------------------------------------------------
-subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
+subroutine h_epsi_her(lda, n,nbande, psi, hpsi)
   !-----------------------------------------------------------------------
   !
   ! this subrutine applies w_k+w_k* on psi, 
@@ -20,7 +20,7 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
 
   USE kinds,    ONLY : DP
   USE us
-  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ik => current_k
   USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE ldaU,     ONLY : lda_plus_u
   USE lsda_mod, ONLY : current_spin, nspin
@@ -36,18 +36,16 @@ subroutine h_epsi_her(lda, n,nbande, ik, psi, hpsi)
   USE io_files, ONLY: iunefield, nwordwfc
   USE constants, ONLY : e2, pi, tpi, fpi
   USE fixed_occ
-    
-  
+  !
   implicit none
   !
   INTEGER :: lda !leading dimension
   INTEGER ::  n! total number of wavefunctions 
   INTEGER :: nbande!number of wavefunctions to be calculated 
-  INTEGER :: ik! k-point index
   
   COMPLEX(DP) :: psi (lda, nbande ), hpsi (lda,nbande)
   !
-!  --- Internal definitions ---
+  !  --- Internal definitions ---
 
    COMPLEX(DP), ALLOCATABLE  :: evct(:,:)!for temporary wavefunctios
    COMPLEX(DP), ALLOCATABLE  :: evcp(:,:)!for  gradient term ik+1

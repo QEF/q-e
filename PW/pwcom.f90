@@ -283,7 +283,8 @@ MODULE wvfct
        npwx,             &! maximum number of PW for wavefunctions
        nbndx,            &! max number of bands use in iterative diag
        nbnd,             &! number of bands
-       npw                ! the number of plane waves
+       npw,              &! the number of plane waves
+       current_k          ! the index of k-point under consideration
   INTEGER, ALLOCATABLE, TARGET :: &
        igk(:),           &! correspondence k+G <-> G
        igk_l2g(:,:)       ! correspondence local index k+G <-> global G index

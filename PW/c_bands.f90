@@ -31,7 +31,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE gvect,                ONLY : g, gstart, ecfixed, qcutz, q2sigma, nrxx, &
                                    nr1, nr2, nr3  
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
-                                   npw
+                                   npw, current_k
   USE control_flags,        ONLY : diis_ndim, istep, ethr, lscf, max_cg_iter, &
                                    isolve, reduce_io, wg_set
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
@@ -41,9 +41,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE wavefunctions_module, ONLY : evc, evc_nc  
   USE g_psi_mod,            ONLY : h_diag, s_diag, h_diag_nc, s_diag_nc
   USE bp,                   ONLY : lelfield, evcel
-#if defined (EXX)
-  USE exx,                  ONLY : currentk
-#endif
   !
   IMPLICIT NONE
   !
@@ -151,12 +148,13 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !-----------------------------------------------------------------------
        !  
        ! ... This routine is a driver for the diagonalization routines of the
-       ! ... total Hamiltonian at Gammma point only
+       ! ... total Hamiltonian at Gamma point only
        ! ... It reads the Hamiltonian and an initial guess of the wavefunctions
        ! ... from a file and computes initialization quantities for the
        ! ... diagonalization routines.
        ! ... There are two types of iterative diagonalization:
        ! ... a) Davidson algorithm (all-band)
+       ! ... b) Conjugate Gradient (band-by-band)
        ! ... c) DIIS algorithm (all-band) 
        !
        USE becmod,           ONLY : rbecp
@@ -197,9 +195,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        k_loop: DO ik = 1, nks
           !
-#if defined (EXX)
-          currentk = ik
-#endif
+          current_k = ik
           !
           IF ( lsda ) current_spin = isk(ik)
           !
@@ -474,12 +470,11 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        k_loop: DO ik = 1, nks
           !
-         !read wave function for electric field
+          !read wave function for electric field
+          !
           IF (lelfield) CALL davcio(evcel,nwordwfc,iunefield,ik,-1)
-
-#if defined (EXX)
-          currentk = ik
-#endif
+          !
+          current_k = ik
           !
           IF ( lsda ) current_spin = isk(ik)
           !
@@ -583,11 +578,11 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                    IF ( noncolin ) THEN
                       !
                       CALL cinitcgg( npwx, npw, nbnd, &
-                                     nbnd, evc_nc, evc_nc, et(1,ik),ik )
+                                     nbnd, evc_nc, evc_nc, et(1,ik) )
                       !
                    ELSE
                       !
-                      CALL cinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik),ik )
+                      CALL cinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik) )
                       !
                    END IF
                    !
@@ -599,13 +594,13 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                    !
                    CALL ccgdiagg( npwx, npw, nbnd, evc_nc, et(1,ik), btype, &
                                   h_diag_nc, ethr, max_cg_iter, .NOT. lscf, &
-                                  notconv, cg_iter,ik )
+                                  notconv, cg_iter )
                    !
                 ELSE
                    !
                    CALL ccgdiagg( npwx, npw, nbnd, evc, et(1,ik), btype, &
                                   h_diag, ethr, max_cg_iter, .NOT. lscf, &
-                                  notconv, cg_iter,ik )
+                                  notconv, cg_iter )
                    !
                 END IF
                 !
@@ -733,12 +728,12 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 IF ( noncolin ) THEN
                    !
                    CALL cegterg( npw, npwx, nbnd, nbndx, evc_nc, ethr, okvan, &
-                                 et(1,ik), btype, notconv, lrot, dav_iter,ik )
+                                 et(1,ik), btype, notconv, lrot, dav_iter )
                    !
                 ELSE
                    !
                    CALL cegterg( npw, npwx, nbnd, nbndx, evc, ethr, okvan, &
-                                 et(1,ik), btype, notconv, lrot, dav_iter,ik )
+                                 et(1,ik), btype, notconv, lrot, dav_iter )
                    !
                 END IF
                 !

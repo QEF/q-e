@@ -18,7 +18,6 @@ module exx
 
   logical:: lexx=.true. ! if .true. exx is used
 
-  integer :: currentk
   real (DP):: exxalfa=0.d0 ! 1 if exx, 0 elsewhere
   real (DP):: yukawa = 0.d0
   logical:: exxstart=.false. !1 if initialited
@@ -502,7 +501,7 @@ contains
     USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
     USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                            nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
-    USE wvfct,     ONLY : nbnd, npwx, npw, igk, gamma_only
+    USE wvfct,     ONLY : nbnd, npwx, npw, igk, current_k, gamma_only
     USE klist,     ONLY : xk
     USE lsda_mod,  ONLY : lsda, current_spin, isk
     USE gvect,     ONLY : g, nl
@@ -540,7 +539,7 @@ contains
        result(:) = (0.d0,0.d0)
 
        do iq = 1, nqs
-          ikq  = index_xkq(currentk,iq)
+          ikq  = index_xkq(current_k,iq)
           ik   = index_xk(ikq)
           isym = abs(index_sym(ikq))
 
@@ -552,9 +551,9 @@ contains
           xkq(:) = bg(:,1)*sxk(1) + bg(:,2)*sxk(2) + bg(:,3)*sxk(3)
 
           do ig=1,ngm
-             qq = ( xk(1,currentk) - xkq(1) + g(1,ig) )**2 + &
-                  ( xk(2,currentk) - xkq(2) + g(2,ig) )**2 + &
-                  ( xk(3,currentk) - xkq(3) + g(3,ig) )**2
+             qq = ( xk(1,current_k) - xkq(1) + g(1,ig) )**2 + &
+                  ( xk(2,current_k) - xkq(2) + g(2,ig) )**2 + &
+                  ( xk(3,current_k) - xkq(3) + g(3,ig) )**2
              if (qq.gt.1.d-8) then
                 fac(ig)=e2*fpi/(tpiba2*qq + yukawa ) 
              else
@@ -644,7 +643,7 @@ contains
     ! This function is called to correct the deband value and have 
     ! the correct energy 
     USE io_files,   ONLY : iunigk,iunwfc, nwordwfc
-    USE wvfct,      ONLY : nbnd, npwx, npw, igk, wg, gamma_only
+    USE wvfct,      ONLY : nbnd, npwx, npw, igk, wg, current_k, gamma_only
     USE gvect,      ONLY : gstart
     USE wavefunctions_module, ONLY : evc
     USE lsda_mod,   ONLY : lsda, current_spin, isk
@@ -660,7 +659,7 @@ contains
     energy=0.d0
     IF ( nks > 1 ) REWIND( iunigk )
     do ik=1,nks
-       currentk = ik
+       current_k = ik
        IF ( lsda ) current_spin = isk(ik)
        IF ( nks > 1 ) THEN
           READ( iunigk ) npw, igk
@@ -703,7 +702,7 @@ contains
     USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
     USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                           nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
-    USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg, gamma_only
+    USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg, current_k, gamma_only
     USE wavefunctions_module, ONLY : evc
     USE klist,     ONLY : xk
     USE lsda_mod,  ONLY : lsda, current_spin, isk
@@ -734,7 +733,7 @@ contains
 
     IF ( nks > 1 ) REWIND( iunigk )
     do ikk=1,nks
-       currentk = ikk
+       current_k = ikk
        IF ( lsda ) current_spin = isk(ikk)
        IF ( nks > 1 ) THEN
           READ( iunigk ) npw, igk
@@ -749,7 +748,7 @@ contains
           CALL cft3s( temppsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
        
           do iq = 1, nqs
-             ikq  = index_xkq(currentk,iq)
+             ikq  = index_xkq(current_k,iq)
              ik   = index_xk(ikq)
              isym = abs(index_sym(ikq))
 
@@ -761,9 +760,9 @@ contains
              xkq(:) = bg(:,1)*sxk(1) + bg(:,2)*sxk(2) + bg(:,3)*sxk(3)
 
              do ig=1,ngm
-                qq = ( xk(1,currentk) - xkq(1) + g(1,ig) )**2 + &
-                     ( xk(2,currentk) - xkq(2) + g(2,ig) )**2 + &
-                     ( xk(3,currentk) - xkq(3) + g(3,ig) )**2
+                qq = ( xk(1,current_k) - xkq(1) + g(1,ig) )**2 + &
+                     ( xk(2,current_k) - xkq(2) + g(2,ig) )**2 + &
+                     ( xk(3,current_k) - xkq(3) + g(3,ig) )**2
                 if (qq.gt.1.d-8) then
                    fac(ig)=e2*fpi/(tpiba2*qq + yukawa )
                    if (gamma_only) fac(ig) = 2.d0 * fac(ig)
