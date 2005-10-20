@@ -4,7 +4,8 @@ INSTALLATION INSTRUCTIONS
 
 More detailed instructions can be found in the Quantum-ESPRESSO User's
 Guide: you can find it in the "Doc/" directory of the Quantum-ESPRESSO
-source distribution, or download it from http://www.pwscf.org/guide.htm
+source distribution, or download it from
+http://www.pwscf.org/guide.htm
 
 ----------------------------------------------------------------------
 
@@ -16,6 +17,8 @@ the free "g95" compiler (http://www.g95.org/): it is still unfinished
 but already usable.
 You also need a minimal Unix environment: basically, a command shell
 (e.g., "bash" or "tcsh") and the "make" and "awk" utilities.
+MS-Windows users need to have Cygwin (a UNIX environment which runs
+under Windows) installed.  See http://www.cygwin.com/.
 
 Instructions for the impatient:
 
@@ -37,13 +40,14 @@ script. It will (try to) detect compilers and libraries available on
 your machine, and set up things accordingly.
 Presently it is expected to work on most Linux 32- and 64-bit (Itanium
 and Opteron) PCs and clusters, IBM SP machines, SGI Origin, some
-HP-Compaq Alpha machines, Cray X1, Mac OS X.  It may work with some
-assistance also on other architectures (see below).
+HP-Compaq Alpha machines, Cray X1, Mac OS X, MS-Windows PCs.
+It may work with some assistance also on other architectures (see
+below).
 
 For cross-compilation, you have to specify the target machine with the
 "--host" option (see below).  This feature hasn't been tested
-extensively, but we've had at least one successful report (compile on
-PC for NEC SX6).
+extensively, but we had at least one successful report (compilation
+for NEC SX6 on a PC).
 
 Specifically, "configure" generates the following files:
 
@@ -86,8 +90,8 @@ Some environment variables that are relevant to "configure" are:
 
 For example, the following command line:
 
-  ./configure MPIF90=mpf90 FFLAGS="-O2 -assume byterecl" CC=gcc \
-              CFLAGS=-O3 LDFLAGS=-static
+  ./configure MPIF90=mpf90 FFLAGS="-O2 -assume byterecl" \
+              CC=gcc CFLAGS=-O3 LDFLAGS=-static
 
 instructs "configure" to use "mpf90" as parallel Fortran 90 compiler
 with flags "-O2 -assume byterecl", "gcc" as C compiler with flags
@@ -108,6 +112,7 @@ Currently supported architectures are:
   sparc      Sun SPARC machines
   crayx1     Cray X1 machines
   mac        Apple PowerPC running Mac OS X
+  cygwin     MS-Windows PCs with Cygwin
 
 Finally, "configure" recognizes the following command-line options:
 
@@ -176,9 +181,10 @@ IBM, if available (only on AIX).
 
 The "configure" script attempts to find optimized libraries, but may
 fail if they have been installed in non-standard places.
-You should examine the final value of LIBS (either in the output of
-"configure", or in the generated "make.sys") to check whether it found
-all the libraries that you intend to use.
+You should examine the final value of BLAS_LIBS, LAPACK_LIBS,
+FFT_LIBS, MPI_LIBS (if needed), MASS_LIBS (IBM only), either in the
+output of "configure" or in the generated "make.sys", to check whether
+it found all the libraries that you intend to use.
 
 If any libraries weren't found, you can specify a list of directories
 to search in the environment variable LIBDIRS, and rerun "configure";
@@ -186,22 +192,21 @@ directories in the list must be separated by spaces.  For example:
 
   ./configure LIBDIRS="/opt/intel/mkl70/lib/32 /usr/lib/math"
 
-If this still fails, you may set the environment variable LIBS
+If this still fails, you may set some or all of the *_LIBS variables
 manually and retry.  For example:
 
-  ./configure LIBS="-L/usr/lib/math -lfftw -lf77blas -latlas"
+  ./configure BLAS_LIBS="-L/usr/lib/math -lf77blas -latlas_sse"
 
-Beware that in this case, you must specify *all* the libraries that
-you want to link to.  "configure" will blindly accept the specified
-value, and won't search for any extra libraries.  (This is so that if
+Beware that in this case, "configure" will blindly accept the
+specified value, and won't do any extra search.  This is so that if
 "configure" finds any library that you don't want to use, you can
-override it.)
+override it.
 
 If you want to use a precompiled FFTW library, the corresponding
 "fftw.h" include file is also required.  That may or may not have been
 installed on your system together with the library: in particular,
-most Linux distributions split library packages into ``base'' and
-``development'' packages, and include files normally belong to the
+most Linux distributions split libraries into ``base'' and
+``development'' packages, include files normally belonging to the
 latter.  Thus if you can't find "fftw.h" on your machine, chances are
 you must install the FFTW development package (how exactly it's called
 depends on your distribution).

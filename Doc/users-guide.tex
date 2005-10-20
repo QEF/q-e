@@ -28,9 +28,9 @@
 
 \section{Introduction}
 
-This guide covers the installation and usage of Quantum
-ESPRESSO (opEn-Source Package for Research in Electronic Structure, 
-Simulation, and Optimization), version \version.
+This guide covers the installation and usage of Quantum-ESPRESSO
+(opEn-Source Package for Research in Electronic Structure, Simulation,
+and Optimization), version \version.
 
 The Quantum-ESPRESSO package contains the following codes for the
 calculation of electronic-structure properties within
@@ -46,8 +46,9 @@ and the following auxiliary codes:
         interface for producing input data files for PWscf.
   \item atomic: a program for atomic calculations and generation of
         pseudopotentials.
-  \item iotk: Input-Output toolkit,
+  \item iotk: an Input-Output ToolKit.
 \end{itemize}
+%
 The Quantum-ESPRESSO codes work on many different types of Unix machines,
 including parallel machines using Message Passing Interface (MPI).
 Running Quantum-ESPRESSO on Mac OS X and MS-Windows is also possible: 
@@ -78,9 +79,9 @@ found in:
          {\texttt{http://www.democritos.it/scientific.php}}%
          {http://www.democritos.it/scientific.php})
 \end{itemize}
-
-This guide is \emph{not} meant to provide comprehensive information
-about solid state physics and its computational methods.
+%
+This guide does \emph{not} explain solid state physics and its
+computational methods.
 If you want to learn that, read a good textbook.
 
 \subsection{Codes}
@@ -120,7 +121,7 @@ CP can currently perform the following kinds of calculations:
   \item Car-Parrinello molecular dynamics simulation
   \item geometry optimization by damped dynamics
   \item constant-temperature simulation with Nos\`e thermostats
-        (including Nose-Hoover chains for each atom)
+        (including\break Nos\`e-Hoover chains for each atom)
   \item variable-cell (Parrinello-Rahman) dynamics
   \item Nudged Elastic Band (NEB) for energy barriers and reaction
         paths
@@ -145,16 +146,17 @@ support of the CINECA National Supercomputing Center in Bologna under
 the responsibility of Carlo Cavazzoni.
 Currently active developers include
 Gerardo Ballabio (CINECA),
-Stefano Fabris, Adriano Mosca Conte, Carlo Sbraccia
-(SISSA, Trieste),
+Stefano Fabris,
+Adriano Mosca Conte,
+Carlo Sbraccia (SISSA, Trieste),
 Anton Kokalj (Jo\v{z}ef Stefan Institute, Ljubljana).
 
 The PWscf package was originally developed by Stefano Baroni, Stefano
 de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and others.
 
-The CP code is based on the original code written by
-Roberto Car and Michele Parrinello.
-
+The CP code is the result of the merging of two codes: CP and FPMD,
+both based on the original code written by Roberto Car and Michele
+Parrinello.
 CP was developed by
 Alfredo Pasquarello (IRRMA, Lausanne),
 Kari Laasonen (Oulu),
@@ -163,13 +165,13 @@ Roberto Car (Princeton),
 Nicola Marzari (MIT),
 Paolo Giannozzi,
 and others.
-also developed by former FPMD team:
-Carlo Cavazzoni, Gerardo Ballabio (CINECA),
+FPMD was developed by
+Carlo Cavazzoni,
+Gerardo Ballabio (CINECA),
 Sandro Scandolo (ICTP, Trieste),
 Guido Chiarotti (SISSA),
 Paolo Focher,
 and others.
-
 
 PWgui was written by Anton Kokalj and is based on his GUIB concept
 (\htmladdnormallink{\texttt{http://www-k3.ijs.si/kokalj/guib/}}%
@@ -179,12 +181,13 @@ The pseudopotential generation package ``atomic'' was written by
 Andrea Dal Corso and it is the result of many additions to the
 original code by Paolo Giannozzi.
 
-The input/output toolkit ``iotk'' was written by Giovanni Bussi
-(S3 Modena).
+\hyphenation{mo-de-na}
+The input/output toolkit ``iotk'' was written by Giovanni Bussi (S3,
+Modena).
 
 \hyphenation{fran-ce-sco}
 \hyphenation{ce-re-so-li}
-A list of further contributors includes:
+An alphabetical list of further contributors includes:
 Dario Alf\`e,
 Francesco Antoniella,
 Mauro Boero,
@@ -224,7 +227,7 @@ Yudong Wu,
 Xiaofei Wang,
 and let us apologize to everybody we have forgotten.
 
-This guide was (mostly) written by Paolo Giannozzi, Gerardo Ballabio,
+This guide was mostly written by Paolo Giannozzi, Gerardo Ballabio,
 Carlo Cavazzoni.
 
 \subsection{Contacts}
@@ -313,7 +316,7 @@ A.~Kokalj, % PWgui
 
 Presently, the Quantum-ESPRESSO package is only distributed in source
 form; some precompiled executables (binary files) are provided only
-for PWgui. Providing binaries would require too much effort
+for\break PWgui. Providing binaries would require too much effort
 and would work only for a small number of machines anyway.
 
 Stable releases of the Quantum-ESPRESSO source package (current version
@@ -391,12 +394,15 @@ extensively tested, but we had at least one successful report
 Specifically, \texttt{configure} generates the following files:
 \begin{quote}
   \texttt{make.sys}: compilation rules and flags\\
-  \texttt{*/make.depend}: dependencies, per source directory
+  \texttt{*/make.depend}: dependencies, per source directory\\
+  \texttt{configure.msg}: a report of the configuration run
 \end{quote}
 
-\texttt{make.depend} files are actually generated by the
-\texttt{makedeps.sh} shell script, that \texttt{configure} invokes.
-If you modify the program sources, you might have to rerun it.
+\texttt{configure.msg} is only used by \texttt{configure} to print its
+final report.  It isn't needed for compilation.
+\texttt{make.depend} files are actually generated by invoking the
+\texttt{makedeps.sh} shell script.  If you modify the program sources,
+you might have to rerun it.
 
 You should always be able to compile the Quantum-ESPRESSO suite of programs
 without having to edit any of the generated files.  However you may
@@ -422,9 +428,11 @@ Some environment variables that are relevant to \texttt{configure} are:
     label identifying the machine type (see below)\\
   \texttt{F90}, \texttt{F77}, \texttt{CC}:
     names of Fortran 95, Fortran 77, and C compilers\\
+  \texttt{MPIF90}, \texttt{MPIF77}, \texttt{MPICC}:
+    names of parallel compilers\\
   \texttt{CPP}:
     source file preprocessor (defaults to \texttt{\$CC -E})\\
-  \texttt{LD}: linker (defaults to \texttt{\$F90})\\
+  \texttt{LD}: linker (defaults to \texttt{\$MPIF90})\\
   \texttt{CFLAGS}, \texttt{FFLAGS}, \texttt{F90FLAGS},
     \texttt{CPPFLAGS}, \texttt{LDFLAGS}:
     compilation flags\\
@@ -433,13 +441,13 @@ Some environment variables that are relevant to \texttt{configure} are:
 \end{quote}
 For example, the following command line:
 \begin{verbatim}
-  ./configure F90=ifort FFLAGS="-O2 -assume byterecl" CC=gcc \
-              CFLAGS=-O3 LDFLAGS=-static
+  ./configure MPIF90=mpf90 FFLAGS="-O2 -assume byterecl" \
+              CC=gcc CFLAGS=-O3 LDFLAGS=-static
 \end{verbatim}
-instructs \texttt{configure} to use \texttt{ifort} as Fortran 95
-compiler with flags \texttt{"-O2 -assume byterecl"},
-\texttt{gcc} as C compiler with flags \texttt{"-O3"}, and to link with
-flags \texttt{"-static"}.  Note that the value of \texttt{FFLAGS} must
+instructs \texttt{configure} to use \texttt{mpf90} as Fortran 95
+compiler with flags \texttt{-O2 -assume byterecl},
+\texttt{gcc} as C compiler with flags \texttt{-O3}, and to link with
+flags \texttt{-static}.  Note that the value of \texttt{FFLAGS} must
 be quoted, because it contains spaces.
 
 If your machine type is unknown to \texttt{configure}, you may use the
@@ -474,14 +482,10 @@ options:
     \texttt{config.guess} on the target machine.
 \end{quote}
 If you want to modify the \texttt{configure} script (advanced users
-only!), you'll need GNU Autoconf
+only!), read the instructions in \texttt{README.configure} first.
+You'll need GNU Autoconf
 (\htmladdnormallink{\texttt{http://www.gnu.org/software/autoconf/}}%
                    {http://www.gnu.org/software/autoconf/}).
-Edit the source file \texttt{configure.ac}, then run Autoconf to
-regenerate \texttt{configure}.  If you edit \texttt{configure}
-directly, all changes will be lost when you regenerate it.
-You may also want to edit \texttt{make.sys.in}.
-For more information, see \texttt{README.configure}.
 
 \subsubsection{Libraries}
   \label{libraries}
@@ -509,6 +513,7 @@ BLAS and LAPACK:
 \begin{quote}
   \texttt{essl} for IBM machines\\
   \texttt{complib.sgimath} for SGI Origin\\
+  \texttt{SCSL} for SGI Altix\\
   \texttt{scilib} for Cray/T3e\\
   \texttt{sunperf} for Sun\\
   \texttt{MKL} for Intel Linux PCs\\
@@ -544,11 +549,16 @@ libraries, when available, or you can link to a precompiled FFTW
 library.  Please note that you must use FFTW version 2.  Support for
 version 3 is in progress: contact the developers if you want to try.
 
+Finally, Quantum-ESPRESSO can use the MASS vector math library from
+IBM, if available (only on AIX).
+
 The \texttt{configure} script attempts to find optimized libraries,
 but may fail if they have been installed in non-standard places.
-You should examine the final value of \texttt{LIBS} (either in the
-output of \texttt{configure}, or in the generated \texttt{make.sys})
-to check whether it found all the libraries that you intend to use.
+You should examine the final value of \texttt{BLAS\_LIBS},
+\texttt{LAPACK\_LIBS}, \texttt{FFT\_LIBS}, \texttt{MPI\_LIBS} (if
+needed), \texttt{MASS\_LIBS} (IBM only), either in the output of
+\texttt{configure} or in the generated \texttt{make.sys}, to check
+whether it found all the libraries that you intend to use.
 
 If any libraries weren't found, you can specify a list of directories
 to search in the environment variable \texttt{LIBDIRS}, and rerun
@@ -557,23 +567,22 @@ spaces.  For example:
 \begin{verbatim}
   ./configure LIBDIRS="/opt/intel/mkl70/lib/32 /usr/lib/math"
 \end{verbatim}
-If this still fails, you may set the environment variable
-\texttt{LIBS} manually and retry.  For example:
+If this still fails, you may set some or all of the \texttt{*\_LIBS}
+variables manually and retry.  For example:
 \begin{verbatim}
-  ./configure LIBS="-L/usr/lib/math -lfftw -lf77blas -latlas"
+  ./configure BLAS_LIBS="-L/usr/lib/math -lf77blas -latlas_sse"
 \end{verbatim}
-Beware that in this case, you must specify \emph{all} the libraries
-that you want to link to.  \texttt{configure} will blindly accept the
-specified value, and won't search for any extra libraries.  (This is
-so that if \texttt{configure} finds any library that you don't want to
-use, you can override it.)
+Beware that in this case, \texttt{configure} will blindly accept the
+specified value, and won't do any extra search.  This is so that if
+\texttt{configure} finds any library that you don't want to use, you
+can override it.
 
 If you want to use a precompiled FFTW library, the corresponding
 \texttt{fftw.h} include file is also required.
 That may or may not have been installed on your system together with
-the library: in particular, most Linux distributions split library
-packages into ``base'' and ``development'' packages, and include files
-normally belong to the latter.
+the library: in particular, most Linux distributions split libraries
+into ``base'' and ``development'' packages, include files normally
+belonging to the latter.
 Thus if you can't find \texttt{fftw.h} on your machine, chances are
 you must install the FFTW development package (how exactly it's called
 depends on your distribution).
@@ -599,7 +608,8 @@ settings and how to force their recompilation.
   \label{manualconf}
 
 To configure Quantum-ESPRESSO manually, you have to write a working
-\texttt{make.sys} and generate \texttt{*/make.depend} files yourself.
+\texttt{make.sys} yourself, and run \texttt{makedeps.sh} to generate
+\texttt{*/make.depend} files.
 
 For \texttt{make.sys}, several templates (each for a different machine
 type) to start with are provided in the \texttt{install/} directory:
@@ -642,10 +652,9 @@ where \emph{system} is the best match to your configuration;
 \texttt{configure.old} with no arguments prints the up-to-date list of
 available systems.
 
-That will copy \texttt{Make.}\emph{system} to \texttt{make.sys}, and
-run the \texttt{makedeps.sh} script to generate \texttt{*/make.depend}
-files.  If you don't use \texttt{configure.old}, you'll have to do
-that yourself.
+That will copy \texttt{Make.}\emph{system} to \texttt{make.sys}; for
+convenience, it'll also run \texttt{makedeps.sh} to generate
+\texttt{*/make.depend} files.
 
 Most probably (and even more so if there isn't an exact match to your
 machine type), you'll have to tweak \texttt{make.sys} by hand.
@@ -898,7 +907,8 @@ If you have downloaded the full Quantum-ESPRESSO distribution, you may set
 \texttt{PSEUDO\_DIR=\$TOPDIR/pseudo}, where \texttt{\$TOPDIR} is the
 root of the Quantum-ESPRESSO source tree.
 
-The \texttt{PSEUDO\_DIR} directory must contain the following files:    
+In order to be able to run all the examples, the \texttt{PSEUDO\_DIR}
+directory must contain the following files:    
 \begin{quote}
   \begin{flushleft}
 %
@@ -928,10 +938,9 @@ The \texttt{PSEUDO\_DIR} directory must contain the following files:
     \texttt{Ti.vdb.UPF}
   \end{flushleft}
 \end{quote}
-
-If any of these are missing, you may not be able to run some of the
-examples.  You can download them from the Pseudopotentials Page of the
-Quantum-ESPRESSO web site
+%
+If any of these are missing, you can download them (and many others) from the
+Pseudopotentials Page of the Quantum-ESPRESSO web site
 (\htmladdnormallink{\texttt{http://www.pwscf.org/pseudo.htm}}%
                    {http://www.pwscf.org/pseudo.htm}).
 
@@ -1125,6 +1134,7 @@ With some precompiled lapack libraries, you may need to add
 
 \paragraph{Linux PCs with Portland Group compiler (pgf90)}
 
+\hfill\break
 Quantum-ESPRESSO does not work reliably, or not at all, with some 
 versions (in particular, 5.2) of the Portland Group compiler.
 We think that this is due to compiler bugs, not to Quantum-ESPRESSO
@@ -1138,6 +1148,7 @@ site,\hfill\break
 \paragraph{Linux PCs (Pentium) with Intel compiler (ifort, formerly
 ifc)}
 
+\hfill\break
 If \texttt{configure} doesn't find the compiler, or if you get ``Error
 loading shared libraries...'' at run time, you have forgotten to
 execute the script that sets up the correct path and library path.
@@ -1160,9 +1171,10 @@ Update to the last version (presently 7.1.41, 8.0.046 or
 (registration free of charge for Linux): 
 \htmladdnormallink%
 {\texttt{http://developer.intel.com/software/products/support/\#premier}}%
-{http://developer.intel.com/software/products/support/\#premier} .
+{http://developer.intel.com/software/products/support/\#premier}.
+\hfill\break
 There are conflicting reports on the newest version 9. In any event,
-look for the last version with most patches.
+look for the last version with the most patches.
 
 Warnings ``size of symbol ... changed ...'' are produced by ifc 7.1 at
 the loading stage.
@@ -1313,7 +1325,7 @@ Typically one has to specify:
         to be executed;
   \item the program to be executed, with the proper path if needed:
         for instance, \texttt{pw.x}, or \texttt{./pw.x}, or
-        \texttt{\$(HOME)/bin/pw.x}, or whatever applies;
+        \texttt{\$HOME/bin/pw.x}, or whatever applies;
   \item the number of ``pools'' into which processors are to be
         grouped (see section \ref{parissues}, ``Parallelization
         Issues'', for an explanation of what a pool~is).
@@ -1415,25 +1427,26 @@ The Quantum-ESPRESSO package uses a unified pseudopotential format (UPF)
 (\htmladdnormallink{\texttt{http://www.pwscf.org/format.htm}}%
                    {http://www.pwscf.org/format.htm})
 for all types of PPs, but still accepts a number of other formats:
-(\htmladdnormallink{\texttt{http://www.pwscf.org/oldformat.htm}}%
-                   {http://www.pwscf.org/oldformat.htm}):
-\begin{enumerate}
-  \item the ``old PWscf'' format for NC PPs,
-  \item the ``old CP'' format for NC PPs,
-  \item the ``old FPMD'' format for NC PPs,
+\begin{itemize}
+  \item the ``old PWscf'' format for NC PPs (PWscf only!),
+  \item the ``old CP'' format for NC PPs (CP only!),
+  \item the ``old FPMD'' format for NC PPs (CP only!),
   \item the ``new PWscf'' format for NC and US PPs,
   \item the ``Vanderbilt'' format (formatted, not binary) for NC and
         US PPs.
-\end{enumerate}
-Note however that PWscf accept the first, fourth and fifth in the
-above list; CP the second, fourth and fifth.
+\end{itemize}
+See also
+\htmladdnormallink{\texttt{http://www.pwscf.org/oldformat.htm}}%
+                  {http://www.pwscf.org/oldformat.htm}.
 
-PPs for selected elements can be downloaded from the Pseudopotentials
-Page of the Quantum-ESPRESSO web site
+A large collection of PPs (currently about 60 elements covered) can
+be downloaded from the Pseudopotentials Page of the Quantum-ESPRESSO
+web site
 (\htmladdnormallink{\texttt{http://www.pwscf.org/pseudo.htm}}%
                    {http://www.pwscf.org/pseudo.htm}).
 The naming convention for these PPs is explained in file
 \texttt{Doc/nomefile.upf}.
+
 If you do not find there the PP you need (because there is no PP for
 the atom you need or you need a different exchange-correlation
 functional or a different core-valence partition or for whatever
