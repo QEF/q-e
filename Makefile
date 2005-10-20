@@ -56,11 +56,6 @@ d3 : bindir mods libs pw ph
 	( cd D3 ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
-raman : bindir mods libs pw ph
-	if test -d Raman ; then \
-	( cd Raman ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
-
 tools : bindir mods libs pw
 	if test -d pwtools ; then \
 	( cd pwtools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
@@ -176,7 +171,6 @@ links : bindir
 	      ../PP/voronoy.x ../PP/pw_export.x \
 	    ../PW/memory.x ../PW/pw.x \
 	    ../PWCOND/pwcond.x \
-	    ../Raman/ram.x \
 	    ../atomic/ld1.x \
 	    ../pwtools/band_plot.x ../pwtools/dist.x ../pwtools/dynmat.x \
 	      ../pwtools/ev.x ../pwtools/fqha.x ../pwtools/kpoints.x \

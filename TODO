@@ -11,14 +11,7 @@ NEW DEVELOPMENTS TO MERGE
 
 INSTALLATION/PORTING
 
-- make the installation system itself as portable as possible
-  so that it can be easily used for other codes
-
-- expand configure to cover as many configurations as possible
-
 - exotic architectures: __FUJITSU, FUJ64, HITACHI, NEC-SX5, ...
-
-- Axel's patches for multi-platform build?
 
 COMMON
 
@@ -97,7 +90,7 @@ POSTPROCESSING
   As a consequence most postprocessing codes will not work.
   The file format should be reconsidered: XML ?
 
-PH, D3, Gamma, Raman
+PH, D3, Gamma
 
 - use charge mixing instead of potential mixing
 
