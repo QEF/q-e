@@ -32,7 +32,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE electrons_base,           ONLY : nel, iupdwn, nupdwn, nudx, nelt
   USE efield_module,            ONLY : efield, epol, tefield, allocate_efield, &
                                        efield_update, ipolp, qmat, gqq,        &
-                                       evalue, berry_energy
+                                       evalue, berry_energy, pberryel, pberryion
   USE ensemble_dft,             ONLY : tens, tgrand, ninner, ismear, etemp,   &
                                        ef, tdynz, tdynf, zmass, fmass, fricz, &
                                        fricf, allocate_ensemble_dft,          &
@@ -205,7 +205,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      nfi     = nfi + 1
      tlast   = ( nfi == nomore )
-     ttprint = ( MOD( nfi, iprint ) == 0 )
+     ttprint = ( MOD( nfi, iprint ) == 0 ).or.tlast
      !
      IF ( ionode .AND. ttprint ) &
         WRITE( stdout, '(/," * Physical Quantities at step:",I6)' ) nfi
@@ -571,23 +571,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      CALL printout_new                                                         &
         ( nfi, tfirst, ttprint, ttprint, tps, hold, stress, tau0, vels, fion,  &
           ekinc, temphc, tempp, etot, enthal, econs, econt, vnhh, xnhh0, vnhp, &
-          xnhp0 )
+          xnhp0,atot)
      !
-     IF( tcg ) THEN
-        !
-        IF ( MOD( nfi, iprint ) == 0 .OR. tfirst ) THEN
-           !
-           WRITE( stdout, * )
-           WRITE( stdout, 255 ) 'nfi','tempp','E','-T.S-mu.nbsp','+K_p'
-           !
-        END IF
-        !
-        WRITE( stdout, 256 ) nfi, INT( tempp ), etot, atot, econs, itercg
-        !
-     END IF
-     !
-255  FORMAT( '     ',5(1X,A12) )
-256  FORMAT( 'Step ',I5,1X,I7,1X,F12.5,1X,F12.5,1X,F12.5,1X,I5 )
      !
      !
      tps = tps + delt * au_ps
