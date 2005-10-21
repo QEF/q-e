@@ -200,7 +200,7 @@ MODULE input
                                tatomicwfc_ => tatomicwfc, &
                                printwfc_   => printwfc, &
                                tortho_     => tortho,   &
-                               nstep_      => nstep
+                               nstep_      => nstep    
      USE control_flags, ONLY : t_diis_simple_ => t_diis_simple, &
                                t_diis_        => t_diis, &
                                tsde_          => tsde, &
@@ -251,6 +251,17 @@ MODULE input
      USE cp_electronic_mass, ONLY : emass_ => emass, &
                                     emaec_ => emass_cutoff
      !
+     USE coarsegrained_vars, ONLY : fe_nstep_    => fe_nstep, &
+                                    shake_nstep_ => shake_nstep, &
+                                    fe_step_     => fe_step, &
+                                    g_amplitude_ => g_amplitude, &
+                                    g_sigma_     => g_sigma
+     !
+
+     USE efield_module, ONLY:  tefield_    => tefield,  &
+                               epol_       => epol,     &
+                               efield_     => efield
+
      USE input_parameters, ONLY: &
         electron_dynamics, electron_damping, diis_rot, electron_temperature,   &
         ion_dynamics, ekin_conv_thr, etot_conv_thr, forc_conv_thr, ion_maxstep,&
@@ -262,7 +273,8 @@ MODULE input
         tcg, ndr, ndw, iprint, isave, tstress, k_points, tprnfor, verbosity,   &
         tdipole_card, toptical_card, tnewnfi_card, newnfi_card,                &
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
-        orthogonalization, electron_velocities, nat, if_pos, phase_space
+        orthogonalization, electron_velocities, nat, if_pos, phase_space,      &
+        tefield, epol, efield
      !
      IMPLICIT NONE
      !
@@ -284,6 +296,11 @@ MODULE input
      etot_conv_thr_ = etot_conv_thr
      forc_conv_thr_ = forc_conv_thr
      ekin_maxiter_  = electron_maxstep
+
+
+     tefield_       = tefield
+     epol_          = epol
+     efield_        = efield
      !
      ! ... Set internal time step variables ( delt, twodelt, dt2 ... )
      !
@@ -1214,6 +1231,7 @@ MODULE input
     USE ions_nose,            ONLY: ions_nose_info
     USE cell_nose,            ONLY: cell_nose_info
     USE cell_base,            ONLY: frich
+    USE efield_module,        ONLY: tefield, efield_info
       !
     IMPLICIT NONE
 
@@ -1298,8 +1316,9 @@ MODULE input
          !
       END IF
       !
-      WRITE( stdout, 700 ) iprsta
-      !
+      IF(tefield) call efield_info( ) 
+      WRITE( stdout,700) iprsta
+
     END IF
     !
     RETURN
