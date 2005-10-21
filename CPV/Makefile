@@ -108,7 +108,6 @@ turbo.o \
 util.o \
 vanderwaals.o \
 cp_version.o \
-vofrho2.o \
 wannier_base.o \
 wannier.o \
 waveinit.o \
