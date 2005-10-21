@@ -79,9 +79,10 @@
       use ions_positions, only: tau0
       use wavefunctions_module, only: c0, cm, phi => cp
       use wavefunctions_module, only: deallocate_wavefunctions
-      use efield_module, only: evalue, ctable, qmat, detq, ipolp, &
-            berry_energy, ctabin, gqq, gqqm, df
+      use efield_module, only: tefield, evalue, ctable, qmat, detq, ipolp, &
+            berry_energy, ctabin, gqq, gqqm, df, pberryel
       use mp, only: mp_sum
+      USE io_global, ONLY: ionode, stdout
 !
       implicit none
 !
@@ -116,17 +117,12 @@
 !
 
 
-
-     evalue=0.d0!ATTENZIONE
      fion2=0.d0
 
-      open(37,file='convergenza.dat',status='unknown')
-      if(tfirst) write(6,*) 'GRADIENTE CONIUGATO'
+      open(37,file='convergenza.dat',status='unknown')!for debug and tuning purposes
+      if(tfirst.and.ionode) write(stdout,*) 'PERFORMING CONJUGATE GRADIENT MINIMIZATION OF EL. STATES'
 
-      ! in caso ismear=0 o =-1 mette tutte le f a posto:
-
-
-      call prefor(eigr,betae) !basta na volta per tute in cg, verfica
+      call prefor(eigr,betae) 
 
       ltresh    = .false.
       itercg    = 1
@@ -137,7 +133,7 @@
       ene_ok = .false.
 
 
-      !ortonormalizza c0
+      !orthonormalize c0
 
       call calbec(1,nsp,eigr,c0,bec)
 
@@ -145,21 +141,16 @@
 
       call calbec(1,nsp,eigr,c0,bec)
 
-      !calcola phi per pcdaga
+      !calculates phi for pcdaga
 
       call calphiid(c0,bec,betae,phi)
          
-      !setta indice su numero passi convergiuti
+      !set index on number of converged iterations
 
       numok = 0
 
       do while ( itercg .lt. maxiter .and. (.not.ltresh) )
 
-        if( tfirst ) write(6,*)  'Iterazione numero:', itercg
-
-        !parte da c0, calcola bec, carica,potenziale
-        !la struttura dipendente da posizioni atomiche e' gia' stata calcolata
-        !ATTENZIONE estendere enever a caso metallico
 
         ENERGY_CHECK: if(.not. ene_ok ) then
           call calbec(1,nsp,eigr,c0,bec)
@@ -173,7 +164,7 @@
                      &                    ,rhovan,rhor,rhog,rhos,enl,ekin)
           endif
 
-          !calcula il potenzialo
+          !calculates the potential
           !
           !     put core charge (if present) in rhoc(r)
           !
@@ -198,12 +189,9 @@
 
           end if
 
-          if(evalue .ne. 0.d0 ) then
+          if(tefield  ) then!just in this case calculates elfield stuff at zeo field-->to be bettered
             
              call berry_energy( enb, enbi, bec, c0(:,:,1,1), fion )
-          
-             enb=enb*evalue
-             enbi=enbi*evalue
              etot=etot+enb+enbi
           endif
         else
@@ -217,21 +205,10 @@
           ene_ok=.false.
 
         end if ENERGY_CHECK
-        write(37,*)itercg, etotnew
-        !se prima iterazione diagonalizza stati
-
-        !           if(itercg.eq.2) then
-        !            do i=1,n
-        !              do ig=1,ngw
-        !                 c0(ig,i,1,1)=c0diag(ig,i)
-        !              enddo
-        !            enddo
-        !            z0=id
-        !            restartcg=.true.
-        !           endif 
+        write(37,*)itercg, etotnew,pberryel!for debug and tuning purposes
 
 
-        !calcola el preconditioning dipendente da banda come in articolo
+        
 
         if(abs(etotnew-etotold).lt.etresh) then
            numok=numok+1
@@ -243,34 +220,24 @@
            ltresh=.true.
         endif
 
-        !per calcolo stato eccitato rifa un giro
-        !            else
 
-        if(iprsta.gt.1) then
-          if(etotnew.lt.etotold) then
-            write(6,*) 'Energia     TOTALE  :',itercg, etotnew, etotnew-etotold
-          else
-            write(6,*) 'PORCO CAZZO TOTALE  :',itercg, etotnew
-          endif
-        endif
 
-        !  if(abs(etotnew-etotold).lt.0.0001) tcutoff=.false.
         etotold=etotnew
         ene0=etot
 
-        !  Non usa piu' emme, dovaria eser za bastanza preciso!!!             
+        ! cal_emme style of orhogonalization              
         !               call cal_emme(c0,bec,emme, 1)
-        !calcula nove d
+
+        !update d
 
         call newd(rhor,irb,eigrb,rhovan,fion)
 
-        !calcula el gradiente al paso sucesivo, e calcula la soma energie de ks:
 
         call prefor(eigr,betae)!ATTENZIONE
 
         do i=1,n,2
           call dforce(bec,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
-          if(evalue.ne.0.d0) then
+          if(tefield .and. (evalue.ne.0.d0)) then
             call dforceb(c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
             c2(1:ngw)=c2(1:ngw)+evalue*df(1:ngw)
             call dforceb(c0, i+1, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
@@ -286,7 +253,7 @@
 
         gi(1:ngw,1:n) = hpsi(1:ngw,1:n)
                
-        !la riga sotto equivale a mettere il termine in lambda, vedi note              
+        ! cal_emme strategy             
         !               call pc_emmedaga(c0,phi,gi,emme)
 
         call pcdaga2(c0,phi,gi)
@@ -294,95 +261,19 @@
         DO i = 1, n
           gi(1:ngw,i) = gi(1:ngw,i) * ema0bg(1:ngw)
         END DO
-
-        !se preconditioning su G calcola lambda per termine aggiunto in gradiente 
-        !vedi Teter,et al. PRB 40,12255              
-        !nel caso US ci sta S|psi_j>
-        !               if(.not.tcutoff) then
-        !                  do i=1,n
-        !                     do j=i,n
-        !                        lambda(i,j)=0.d0
-        !                        do ig=1,ngw
-        !                           lambda(i,j)=lambda(i,j)-2.d0*DBLE(CONJG(c0(ig,i,1,1))*hpsi(ig,j))
-        !                        enddo
-        !                        if(ng0.eq.2) then
-        !                           lambda(i,j)=lambda(i,j)+DBLE(CONJG(c0(1,i,1,1))*hpsi(1,j))
-        !                        endif
-        !                        lambda(j,i)=lambda(i,j)
-        !                     enddo
-        !                  enddo
-        !#ifdef __PARA
-        !                  call reduce(nx*n,lambda)
-        !#endif
-        !               endif
-
+        
         call calcmt(f,z0,fmat0)
-
-        if(iprsta.gt.10) then!ATTENZIONE
-
-          !stampa forza su ioni
-          ! calculation of  contribution of the non-local part of the pseudopotential
-          ! to the force on each ion
-          if (.not.tens) then
-            if (tfor .or. tprnfor) call nlfq(c0,eigr,bec,becdr,fion)
-          else
-            if (tfor .or. tprnfor) call nlfq(c0diag,eigr,becdiag,becdrdiag,fion)
-            !EL PARAMETRO becdrdiag el xe in output, tuto bon...
-          endif
-
-          !aggiunge parte dipendente da lambda in caso US
-          if(nvb.ge.1) then
-            do i=1,n
-              do j=1,n
-                 lambda(i,j)=0.d0
-                 do ig=1,ngw
-                    lambda(i,j)=lambda(i,j)-2.d0*DBLE(CONJG(c0(ig,i,1,1))*gi(ig,j))
-                 enddo
-                 if(ng0.eq.2) then
-                    lambda(i,j)=lambda(i,j)+DBLE(CONJG(c0(1,i,1,1))*gi(1,j))
-                 endif
-              enddo
-            enddo
-
-            call mp_sum(lambda)
-
-            if(tens) then!caso us meti anca le f
-               do i=1,n
-                 do j=1,n
-                   lambdap(i,j)=0.d0
-                   do k=1,n
-                     lambdap(i,j)=lambdap(i,j)+lambda(i,k)*fmat0(k,j,1)
-                   end do
-                 end do
-               enddo
-                   
-               call nlsm2(ngw,nhsa,n,eigr,c0(:,:,1,1),becdr,.true.)
-
-            endif
-            if(.not.tens) then
-              call nlfl(bec,becdr,lambda,fion)
-            else
-              call nlfl(bec,becdr,lambdap,fion)
-            endif
-
-          end if
-
-
-          do ia=1,nat
-            write(6,*) 'F :', itercg,(fion(i,ia),i=1,3)
-          enddo
-
-        endif !su iprsta !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 
         call calbec(1,nsp,eigr,gi,becm)
 
         call pcdaga2(c0,phi,gi)
         call pcdaga2(c0,phi,hpsi) 
 
-        !              call pc_emmedaga(c0,phi,gi,emme)!ATTENZIONE
+        !cal_emme strategy
+        !              call pc_emmedaga(c0,phi,gi,emme)
         !              call pc_emmedaga(c0,phi,hpsi,emme)
-        !caso prima iterazion
+
+        !case of first iteration
 
         if(itercg==1.or.(mod(itercg,20).eq.1).or.restartcg) then
 
@@ -390,7 +281,7 @@
           passof=passop
           hi(1:ngw,1:n)=gi(1:ngw,1:n)
 
-          !calcula esse per la seconda interazion
+          !calculates esse for the second iteration
 
           gamma=0.d0
           if(.not.tens) then
@@ -405,19 +296,19 @@
             enddo
             call mp_sum(gamma)
              
-            if (nvb.gt.0) then
-               do is=1,nvb
-                  do iv=1,nh(is)
-                     do jv=1,nh(is)
-                        do ia=1,na(is)
-                           inl=ish(is)+(iv-1)*na(is)+ia
-                           jnl=ish(is)+(jv-1)*na(is)+ia
-                           !      gamma=gamma+ qq(iv,jv,is)*becm(inl,i)*becm(jnl,i)  
-                        end do
-                     end do
-                  end do
-               end do
-            endif
+ !           if (nvb.gt.0) then
+ !              do is=1,nvb
+ !                 do iv=1,nh(is)
+ !                    do jv=1,nh(is)
+ !                       do ia=1,na(is)
+ !                          inl=ish(is)+(iv-1)*na(is)+ia
+ !                          jnl=ish(is)+(jv-1)*na(is)+ia
+ !                          !      gamma=gamma+ qq(iv,jv,is)*becm(inl,i)*becm(jnl,i)  
+ !                       end do
+ !                    end do
+ !                 end do
+ !              end do
+ !           endif
 
           else
 
@@ -440,8 +331,8 @@
 
         else
 
-          !trova hi in caso generale
-          !calcola gamma  caso generale no Polak Ribiere
+          !find direction hi for general case 
+          !calculates gamma for general case, not using Polak Ribiere
 
           gamma=0.d0
 
@@ -459,19 +350,19 @@
                 
             call mp_sum(gamma)
              
-            if (nvb.gt.0) then
-             do is=1,nvb
-                do iv=1,nh(is)
-                   do jv=1,nh(is)      
-                      do ia=1,na(is)
-                         inl=ish(is)+(iv-1)*na(is)+ia
-                         jnl=ish(is)+(jv-1)*na(is)+ia
-                         ! gamma=gamma+ qq(iv,jv,is)*becm(inl,i)*becm(jnl,i)  
-                      end do
-                   end do
-                end do
-             end do
-            endif
+!            if (nvb.gt.0) then
+!             do is=1,nvb
+!                do iv=1,nh(is)
+!                   do jv=1,nh(is)      
+!                      do ia=1,na(is)
+!                         inl=ish(is)+(iv-1)*na(is)+ia
+!                         jnl=ish(is)+(jv-1)*na(is)+ia
+!                         ! gamma=gamma+ qq(iv,jv,is)*becm(inl,i)*becm(jnl,i)  
+!                      end do
+!                   end do
+!                end do
+!             end do
+!            endif
 
           else
 
@@ -497,31 +388,32 @@
 
         endif
 
-        !minimizza lungo hi:
+        !find minimum along direction hi:
 
-        !proietta hi su spazio conduzione
+        !project hi on conduction sub-space
 
         call calbec(1,nsp,eigr,hi,bec0)
         call pc2(c0,bec,hi,bec0)
+        ! cal_emme strategy
         !     call pc_emme(c0,bec,hi,bec0,emme)
         call calbec(1,nsp,eigr,hi,bec0)
 
-        !ora minimizzazione parabolica
+        !do quadratic minimization
         !             
-        !calcola derivata rispetto a lambda su direzione hi
+        !calculate derivative with respect to  lambda along direction hi
 
         dene0=0.
         if(.not.tens) then
           do i=1,n               
             do ig=1,ngw
-              dene0=dene0-4.d0*DBLE(CONJG(hi(ig,i))*hpsi(ig,i))!ATTENZION iera gi
+              dene0=dene0-4.d0*DBLE(CONJG(hi(ig,i))*hpsi(ig,i))
             enddo
             if (ng0.eq.2) then
-              dene0=dene0+2.d0*DBLE(CONJG(hi(1,i))*hpsi(1,i))!ATTENZION iera gi
+              dene0=dene0+2.d0*DBLE(CONJG(hi(1,i))*hpsi(1,i))
             endif
           end do
         else
-          !nel caso metalico la derivata xe' Sum_ij (<hi|H|Psi_j>+ <Psi_i|H|hj>)*f_ji
+          !in the ensamble case the derivative is Sum_ij (<hi|H|Psi_j>+ <Psi_i|H|hj>)*f_ji
           !     calculation of the kinetic energy x=xmin      
           call calcmt(f,z0,fmat0)
           do i=1,n
@@ -542,7 +434,7 @@
         call mp_sum(dene0)
         !            if(tens.and.(nspin.eq.1)) dene0=dene0/2.d0 
 
-        !se la darivata la xe positiva, zerca in direzion oposta:
+        !if the derivative is positive, search along opposite direction
 
         if(dene0.gt.0.d0) then
           spasso=-1.D0
@@ -550,24 +442,18 @@
           spasso=1.d0
         endif
 
-        !calcula fni de onda in punto un poco spostado
+        !calculates wave-functions on a point on direction hi
 
         cm(1:ngw,1:n,1,1)=c0(1:ngw,1:n,1,1)+spasso*passof*hi(1:ngw,1:n)
 
-        ! ordina gli stati in base valore energia
-        !              do i=1,n
-        !                  e0(i)=lambda(i,i)
-        !              enddo
-        !              call  ordina(cm,e0)
 
-        !le ortonormalizza
+        !orthonormalize
 
         call calbec(1,nsp,eigr,cm,becm)
         call gram(betae,becm,cm)
-        !              call riordina(cm,e0) 
         call calbec(1,nsp,eigr,cm,becm)
                
-        !calcula energia del passetto
+        !calculate energy
         if(.not.tens) then
           call rhoofr(nfi,cm,irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
         else
@@ -577,7 +463,7 @@
           call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin)
         endif
 
-        !calcula il potenzialo
+        !calculate potential
         !
         !     put core charge (if present) in rhoc(r)
         !
@@ -591,44 +477,35 @@
                       &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
         end if
 
-        if( evalue .ne. 0.d0 ) then
+        if( tefield  ) then!to be bettered
           call berry_energy( enb, enbi, becm, cm(:,:,1,1), fion )
           etot=etot+enb+enbi
         endif
         ene1=etot
               
             
-        !trova il minimo di parabola
+        !find the minimum
 
         call minparabola(ene0,spasso*dene0,ene1,passof,passo,enesti)
 
         if(iprsta.gt.1) write(6,*) ene0,dene0,ene1,passo, gamma, esse
 
-        !imposta nuovo passetto come doppiodistanza da minimo
+        !set new step
 
         passov=passof
         passof=2.d0*passo
               
-        !calcola f.ni donda al minimo e ortonormalizza
-        !adesso xe c00
+        !calculates wave-functions at minimum
 
         cm(1:ngw,1:n,1,1)=c0(1:ngw,1:n,1,1)+spasso*passo*hi(1:ngw,1:n)
         if(ng0.eq.2) then
           cm(1,:,1,1)=0.5d0*(cm(1,:,1,1)+CONJG(cm(1,:,1,1)))
         endif
 
-        !               call ordina(cm,e0)               
         call calbec(1,nsp,eigr,cm,becm)
         call gram(betae,becm,cm)
-        !              call riordina(cm,e0) 
 
-
-        !calcola energia al minimo per vedere se e' veramente diminuita
-        !siccome in caso metallico nella prossima iterazione zo, cambia
-        !il test viene fatto adesso
-
-        !parte da c0, calcola bec, carica,potenziale
-        !la struttura dipendente da posizioni atomiche e' gia' stata calcolata
+        !test on energy: check the energy has really diminished
 
         call calbec(1,nsp,eigr,cm,becm)
         if(.not.tens) then
@@ -640,7 +517,7 @@
           call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin)
         endif
 
-        !calcula il potenzialo
+        !calculates the potential
         !
         !     put core charge (if present) in rhoc(r)
         !
@@ -653,46 +530,48 @@
           call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
                        &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
         end if
-        if( evalue .ne. 0.d0 ) then
+        if( tefield )  then!to be bettered
           call berry_energy( enb, enbi, becm, cm(:,:,1,1), fion )
           etot=etot+enb+enbi
         endif
         enever=etot
-        !confronto con quanto previsto
-        if(iprsta.gt.1) then
-          write(6,*) 'Confr :'  , (enesti-enever)/(ene0-enever)
-          write(6,*) 'Enever.'  , enever,passo,passov           
+        !check with  what supposed
+
+        if(ionode) then
+            if(iprsta.gt.1) then
+                 write(stdout,*) 'cg_sub: estimate :'  , (enesti-enever)/(ene0-enever)
+                 write(stdout,*) 'cg_sub: minmum   :'  , enever,passo,passov
+             endif
         endif
 
-        !se l'energia e' diminuita rispetto a ene0 ene1 , tutto ok
+        !if the energy has diminished with respect to  ene0 and ene1 , everything ok
         if( (enever.lt.ene0) .and. (enever.lt.ene1)) then
           c0(:,:,1,1)=cm(:,:,1,1)
           bec(:,:)=becm(:,:)
           ene_ok=.true.
-          !se l'energia si e' alzata ma ene1 << ene0 va in ene1
-          if( tfirst) write(6,*)  'Tutto ok:', itercg
+          !if  ene1 << energy <  ene0; go to  ene1
         else if( (enever.ge.ene0).and.(ene0.gt.ene1)) then
-          if(iprsta.gt.1) write(6,*) 'CASO: 2'
+          if(ionode) then
+             write(stdout,*) 'cg_sub: missed minimum, case 2, iteration',itercg
+          endif  
           c0(1:ngw,1:n,1,1)=c0(1:ngw,1:n,1,1)+spasso*passov*hi(1:ngw,1:n)
           restartcg=.true.!ATTENZIONE
-          !                  call ordina(c0,e0)
           call calbec(1,nsp,eigr,c0,bec)
           call gram(betae,bec,c0)
-          !                  call riordina(c0,e0)
-          !se anche ene1 e' piu grande di ene0 fa un passo di gradiente coniugato,
-          !riducendo il passetto in scala 2
+          !if ene > ene0,en1 do a steepest descent step
           ene_ok=.false.
         else if((enever.ge.ene0).and.(ene0.le.ene1)) then
-          if(iprsta.gt.1) write(6,*) 'CASO: 3'
+        if(ionode) then
+             write(stdout,*) 'cg_sub: missed minimum, case 3, iteration',itercg
+         endif
+
           iter3=0
           do while(enever.gt.ene0 .and. iter3.lt.4)
             iter3=iter3+1
             passov=passov*0.5d0
             cm(1:ngw,1:n,1,1)=c0(1:ngw,1:n,1,1)+spasso*passov*hi(1:ngw,1:n)
-            !cambia la direzione su cui cerca, se la derivata 
-            !e' molto piccola la direzione e' indeterminata
+            ! chenge the searching direction
             spasso=spasso*(-1.d0)
-            !                   call ordina(cm,e0)
             call calbec(1,nsp,eigr,cm,becm)
             call gram(betae,bec,cm)
             call calbec(1,nsp,eigr,cm,becm)
@@ -705,7 +584,7 @@
               call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin)
             endif
   
-            !calcula il potenzialo
+            !calculates the potential
             !
             !     put core charge (if present) in rhoc(r)
             !
@@ -719,7 +598,7 @@
               call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
                         &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
             end if
-            if( evalue .ne. 0.d0 ) then
+            if( tefield)  then !to be bettered
               call berry_energy( enb, enbi, becm, cm(:,:,1,1), fion )
               etot=etot+enb+enbi
             endif
@@ -733,18 +612,9 @@
         end if
   
         call calbec (1,nsp,eigr,c0,bec)
-        !calcula phi per l'operator Pc daga
+        !calculates phi for pc_daga
         call calphiid(c0,bec,betae,phi)
   
-        !calcolare energia , non calcolarla di nuovo in tens e all'inizio
-        ! se e' minore di stato 0 di stato 1 ok, se e' minore
-        ! di 0 maggiore di 1, a a 1 e ricomincia con sd,
-        ! se e' maggiore di 1 e 1 e' maggiore di 0, prendi
-        !passo piu' piccolo ancora stepest descend, fino a che trova minimo,
-        !poi ricomincia con steepest descend                  
-             
-  
-        !***ensemble-DFT
         !=======================================================================
         !
         !                 start of the inner loop
@@ -792,9 +662,7 @@
   
   
           do niter=1,ninner
-          !   call xebona(z0,n)!debug 
             h0c0 = 0.0d0
-!DEBUG  controlla c0
 
 
 
@@ -950,7 +818,6 @@
               !     using the previously calculated rotation matrix 
               !     (similar to what has been done at x=0)
               call calcmt(f,zxt,fmatx)
-              !call xebona(zxt,n)!DEBUG
              
               !     calculation of the rotated quantities for the calculation
               !     of the epsi0_ij matrix at x=1
@@ -1085,7 +952,6 @@
   
             end do
  
-            !le righe qua soto le xe per far el minimo con fit parabolico
   
             !                     eqc=atot0
             !                     eqa=dadx1-atot1+atot0
@@ -1148,28 +1014,13 @@
             end do
   
             !     calculation of the rotated quantities
-!DEBUG
-!            z0=z0_s
-!            f(1:n)=f_s(1:n)
 
 
-!DEBGUG
 
 
 
             call calcmt(f,z0,fmat0)
             call rotate(z0,c0(:,:,1,1),bec,c0diag,becdiag)
- !DEBUG
- !         do i=1,n
- !            do j=1,n
- !               add=0.d0
- !                 do ig=1,ngw
- !                add = add + 2*DBLE(CONJG(c0diag(ig,i))*c0diag(ig,j))
- !                 enddo
- !              add = add - DBLE(CONJG(c0diag(1,i))*c0diag(1,j))
- !               write(*,*) 'Conrollo c0diag', i,j, add
- !            enddo
- !         enddo
 
             call rhoofr (nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin) 
   
@@ -1198,6 +1049,8 @@
             atot0=atotmin
             etot0=etot
             enever=etot
+! set atot
+            atot=atot0
             !     end of the loop
   
           end do!su ninnner
@@ -1208,29 +1061,24 @@
   
         endif !su tens
   
-        !            endif!su raggiungimento treshold, eliminato per stato eccitato
         itercg=itercg+1
   
-      end do!su iterazioni cg
-  
-      !calcola forze se richiesto
-      !       if(tfor .or. tprnfor) then
-      !calcola sempre le forze in modo da calcolare lambda che serve per gli autostati
+      end do!on conjugate gradient iterations
+      write(6,*)'Control 1', fion(3,1), fion(3,64)!ATTENZIONE 
+      !calculates atomic forces and lambda
       call newd(rhor,irb,eigrb,rhovan,fion)
+ write(6,*)'Control 2', fion(3,1), fion(3,64)!ATTENZIONE
       if (.not.tens) then
         if (tfor .or. tprnfor) call nlfq(c0,eigr,bec,becdr,fion)
       else
         if (tfor .or. tprnfor) call nlfq(c0diag,eigr,becdiag,becdrdiag,fion)
-        !EL PARAMETRO becdrdiag el xe in output, tuto bon...
       endif
+  write(6,*)'Control 3', fion(3,1), fion(3,64)!ATTENZIONE 
   
-      !aggiunge parte dipendente da lambda in caso US
-  
-      if(nvb.ge.1) then
-        call prefor(eigr,betae)!ATTENZIONE
+        call prefor(eigr,betae)
         do i=1,n,2
           call dforce(bec,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),c2,c3,rhos)
-          if(evalue .ne. 0.d0) then
+          if(tefield.and.(evalue .ne. 0.d0)) then
             call dforceb &
                (c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
             do ig=1,ngw
@@ -1266,7 +1114,7 @@
   
         call mp_sum(lambda)
   
-        if(tens) then!caso us meti anca le f
+        if(tens) then!in the ensemble case matrix labda must be multiplied with f
           do i=1,n
             do j=1,n
               lambdap(i,j)=0.d0
@@ -1282,17 +1130,19 @@
               lambdap(i,j)=sta
             enddo
           enddo
-          call nlsm2(ngw,nhsa,n,eigr,c0(:,:,1,1),becdr,.true.)
+        call nlsm2(ngw,nhsa,n,eigr,c0(:,:,1,1),becdr,.true.)
         endif
         call nlfl(bec,becdr,lambda,fion)
           
         ! bforceion adds the force term due to electronic berry phase
         ! only in US-case
+ write(6,*)'Control 4', fion(3,1), fion(3,64)!ATTENZIONE
           
-        if( evalue .ne. 0.d0 ) then
-           call bforceion(fion,tfor,ipolp, qmat,bec,becdr,gqq,evalue)
-        endif
-      endif
-      !        end if
+        if( tefield.and.(evalue .ne. 0.d0) ) then
+           call bforceion(fion,tfor.or.tprnfor,ipolp, qmat,bec,becdr,gqq,evalue)
 
+        endif
+ write(6,*)'Control 3', fion(3,1), fion(3,64)!ATTENZIONE
+
+      close(37)!for debug and tuning purposes
 END SUBROUTINE
