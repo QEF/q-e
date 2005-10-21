@@ -167,7 +167,9 @@ subroutine newnlinit
   !
   !     non-linear core-correction   ( rhocb(ig,is) )
   !
+
   CALL core_charge_ftr( tpre )
+
   !
   return
   !

@@ -11,15 +11,15 @@ MODULE cg_module
   IMPLICIT NONE
   SAVE
 
-      logical      :: tcg        = .false.   ! se vero fa gradiente coniugato
-      integer      :: maxiter    = 20      !numero massimo interazioni c.g.
-      real(8) :: etresh    = 1.d-5    !soglia convergenza c.g.
-      real(8) :: passop    =0.3d0    !passetto per gradiente coniugato
+      logical      :: tcg        = .false.   ! if true do conjugate gradient minimization for electrons
+      integer      :: maxiter    = 100      ! maximum number of iterations
+      real(8) :: etresh    = 1.d-5   !energy treshold 
+      real(8) :: passop    =0.3d0    !small step for conjugate gradient
 
 !***
 !***  Conjugate Gradient
 !***
-      real(8)  esse,essenew !fattori cg
+      real(8)  esse,essenew !factors in c.g.
       COMPLEX(8), ALLOCATABLE :: gi(:,:)!coniugati
       COMPLEX(8), ALLOCATABLE :: hi(:,:)!gradienti di ricerca
       COMPLEX(8), ALLOCATABLE :: c0old(:,:)!vecchie funzioni d'onda, per estrapolazione
@@ -64,9 +64,9 @@ CONTAINS
        write (stdout,400) maxiter,etresh,passop                         
     endif
 400 format (/4x,'====================================='                          &
-   &        /4x,'|  GRADIENTE CONIUGATO              |'                          &
+   &        /4x,'|  CONJUGATE GRADIENT               |'                          &
    &        /4x,'====================================='                          &
-   &        /4x,'| iterazioni   =',i10,'          |'                             &
+   &        /4x,'| iterations   =',i10,'            |'                             &
    &        /4x,'| etresh       =',f10.5,' a.u.     |'                           &
    &        /4x,'| passop       =',f10.5,' a.u.     |'                           &
    &        /4x,'=====================================')
@@ -77,7 +77,7 @@ CONTAINS
   SUBROUTINE allocate_cg( ngw, nx )
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: ngw, nx
-    allocate(hi(ngw,nx))!poi bisogna fare che uno semplicemnte punti su cm
+    allocate(hi(ngw,nx))
     allocate(gi(ngw,nx))
     allocate(c0old(ngw,nx))
     allocate( emme(nx,nx))

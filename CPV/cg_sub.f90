@@ -119,7 +119,7 @@
 
      fion2=0.d0
 
-      open(37,file='convergenza.dat',status='unknown')!for debug and tuning purposes
+      !open(37,file='convergenza.dat',status='unknown')!for debug and tuning purposes
       if(tfirst.and.ionode) write(stdout,*) 'PERFORMING CONJUGATE GRADIENT MINIMIZATION OF EL. STATES'
 
       call prefor(eigr,betae) 
@@ -205,7 +205,7 @@
           ene_ok=.false.
 
         end if ENERGY_CHECK
-        write(37,*)itercg, etotnew,pberryel!for debug and tuning purposes
+        !write(37,*)itercg, etotnew,pberryel!for debug and tuning purposes
 
 
         
@@ -1064,16 +1064,13 @@
         itercg=itercg+1
   
       end do!on conjugate gradient iterations
-      write(6,*)'Control 1', fion(3,1), fion(3,64)!ATTENZIONE 
       !calculates atomic forces and lambda
       call newd(rhor,irb,eigrb,rhovan,fion)
- write(6,*)'Control 2', fion(3,1), fion(3,64)!ATTENZIONE
       if (.not.tens) then
         if (tfor .or. tprnfor) call nlfq(c0,eigr,bec,becdr,fion)
       else
         if (tfor .or. tprnfor) call nlfq(c0diag,eigr,becdiag,becdrdiag,fion)
       endif
-  write(6,*)'Control 3', fion(3,1), fion(3,64)!ATTENZIONE 
   
         call prefor(eigr,betae)
         do i=1,n,2
@@ -1136,13 +1133,11 @@
           
         ! bforceion adds the force term due to electronic berry phase
         ! only in US-case
- write(6,*)'Control 4', fion(3,1), fion(3,64)!ATTENZIONE
           
         if( tefield.and.(evalue .ne. 0.d0) ) then
            call bforceion(fion,tfor.or.tprnfor,ipolp, qmat,bec,becdr,gqq,evalue)
 
         endif
- write(6,*)'Control 3', fion(3,1), fion(3,64)!ATTENZIONE
 
-      close(37)!for debug and tuning purposes
+      !close(37)!for debug and tuning purposes
 END SUBROUTINE

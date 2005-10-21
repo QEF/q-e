@@ -2675,6 +2675,7 @@
       use dener
       use io_global, only: stdout
       use funct, only: ismeta
+      use cg_module, only : tcg
 !
       implicit none
       real(8) bec(nhsa,n), rhovan(nhm*(nhm+1)/2,nat,nspin)
@@ -2915,7 +2916,7 @@
      &     ' rhoofr: rmin rmax rnegsum rsum  ',rmin,rmax,rnegsum,rsum
       end if
 !
-      if( nfi == 0 .or. mod(nfi, iprint) == 0 ) then
+      if( nfi == 0 .or. mod(nfi, iprint) == 0 .and. .not. tcg) then
 
          do iss=1,nspin
             rsumg(iss)=omega*DBLE(rhog(1,iss))

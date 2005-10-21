@@ -32,7 +32,7 @@
       integer is, iv, jv, ia, inl, jnl, i, j
       real(8) qtemp(nhsavb,n) ! automatic array
 !
-      phi = 0.0d0
+      phi(1:ngw,1:n) = 0.0d0
 !
       if (nvb.gt.0) then
          qtemp = 0.0d0
@@ -148,7 +148,7 @@
       real(8) bec(nhsa,n), becdiag(nhsa,n)
       complex(8) c0(ngw,nx), c0diag(ngw,nx)
 
-      c0diag(:,ni+istart-1) = 0.0d0
+      c0diag(1:ngw,1:nx)=0.d0
         do iss=1,nspin
          nss=nupdwn(iss)
          istart=iupdwn(iss)
