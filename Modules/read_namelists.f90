@@ -91,7 +91,6 @@ MODULE read_namelists_module
        etot_conv_thr = 1.D-4
        forc_conv_thr = 1.D-3
        disk_io  = 'default'
-       tefield  = .FALSE.
        dipfield = .FALSE.
        lberry   = .FALSE.
        gdir     = 0
@@ -1085,8 +1084,6 @@ MODULE read_namelists_module
        IF( forc_conv_thr < 0.D0 ) &
           CALL errore( sub_name,' force_conv_thr out of range ', 1 )
        IF( prog == 'CP' ) THEN
-          IF( tefield ) & 
-             CALL infomsg( sub_name,' tefield not implemented yet ', -1)
           IF( dipfield ) & 
              CALL infomsg( sub_name,' dipfield not implemented yet ', -1)
           IF( lberry ) & 
