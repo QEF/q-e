@@ -22,8 +22,6 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
                                    rhopr, ei1, ei2, ei3, sfac, ema0bg, becdr, &
                                    taub, lambda, lambdam, lambdap
   USE wavefunctions_module, ONLY : c0, cm, phi => cp
-  USE ensemble_dft,         ONLY : tens, z0, c0diag, becdiag, bec0, v0s, &
-                                   vhxcs, becdrdiag
   USE cell_base,            ONLY : omega, ibrav, h, press
   USE uspp,                 ONLY : becsum, vkb, nkb
   USE energies,             ONLY : ekin, enl, entropy, etot
@@ -71,25 +69,9 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
           CALL get_wannier_center( tfirst, cm, bec, becdr, eigr, &
                                    eigrb, taub, irb, ibrav, b1, b2, b3 )
      !
-     IF ( .NOT. tens ) THEN
-        !
-        CALL rhoofr( nfi, c0, irb, eigrb, bec, &
+     CALL rhoofr( nfi, c0, irb, eigrb, bec, &
                      becsum, rhor, rhog, rhos, enl, ekin )
         !
-     ELSE
-        !
-        ! ... calculation of the rotated quantities
-        !
-        CALL rotate( z0, c0(:,:,1,1), bec, c0diag, becdiag )
-        !
-        ! ... calculation of rho corresponding to the rotated wavefunctions
-        !
-        CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, &
-                     becsum, rhor, rhog, rhos, enl, ekin )
-        !
-        bec0(:,:) = bec(:,:)
-        !
-     END IF
      !
      IF ( tfirst .OR. tlast ) rhopr = rhor
      !
@@ -104,18 +86,8 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
         !
      END IF
      !
-     IF ( .NOT. tens ) THEN
-        !
-        CALL vofrho( nfi, rhor, rhog, rhos, rhoc, tfirst, tlast, &
+     CALL vofrho( nfi, rhor, rhog, rhos, rhoc, tfirst, tlast, &
                      ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion )
-        !
-     ELSE
-        !
-        IF ( tfirst ) CALL compute_entropy2( entropy, f, nbsp, nspin )
-        !
-        CALL vofrho2( nfi, rhor, rhog, rhos, rhoc, tfirst, tlast, ei1, &
-                      ei2, ei3, irb, eigrb, sfac, tau0, fion, v0s, vhxcs )
-     END IF
      !
      IF ( lwf ) CALL wf_options( tfirst, nfi, cm, becsum, bec, becdr, &
                                  eigr, eigrb, taub, irb, ibrav, b1,   &
@@ -156,16 +128,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      !
      ! ... nlfq needs deeq bec
      !
-     IF ( .NOT. tens ) THEN
-        !
-        IF ( tfor .OR. tprnfor ) CALL nlfq( c0, eigr, bec, becdr, fion )
-        !
-     ELSE
-        !
-        IF ( tfor .OR. tprnfor ) &
-           CALL nlfq( c0diag, eigr, becdiag, becdrdiag, fion )
-        !
-     END IF
+     IF ( tfor .OR. tprnfor ) CALL nlfq( c0, eigr, bec, becdr, fion )
      !
      IF ( tfor .AND. tefield ) &
         CALL bforceion( fion, tfor, ipolp, qmat, bec, becdr, gqq, evalue )
@@ -182,21 +145,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      !
      ! ... nlfl and nlfh need: lambda (guessed) becdr
      !
-     IF ( .NOT. tens ) THEN
-        !
-        IF ( tfor .OR. tprnfor ) CALL nlfl( bec, becdr, lambda, fion )
-        !
-     ELSE
-        !
-        IF ( tfor .OR. tprnfor ) THEN
-           !
-           CALL nlsm2( ngw, nkb, nbsp, eigr, c0(:,:,1,1), becdr, .true. )
-           !
-           CALL nlfl( bec, becdr, lambda, fion )
-           !
-        END IF
-        !
-     END IF
+     IF ( tfor .OR. tprnfor ) CALL nlfl( bec, becdr, lambda, fion )
      !
   END IF electron_dynamic
   !
