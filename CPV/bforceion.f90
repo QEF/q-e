@@ -69,9 +69,10 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
 
   isa = 0
   do is=1,nvb
+   do ia=1,na(is)
+     isa = isa + 1
      do iv= 1,nh(is)
         do jv=1,nh(is)         
-           do ia=1,na(is)
               inl=ish(is)+(iv-1)*na(is)+ia
               jnl=ish(is)+(jv-1)*na(is)+ia
              
@@ -98,7 +99,6 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
                  enddo
               enddo
 
-              isa = isa + 1
               fion(ipol,isa) = fion(ipol,isa) -   2.*evalue*AIMAG(temp)/gmes
               fion(1,isa) = fion(1,isa) -   2.*evalue*AIMAG(temp1)/gmes
               fion(2,isa) = fion(2,isa) -   2.*evalue*AIMAG(temp2)/gmes
