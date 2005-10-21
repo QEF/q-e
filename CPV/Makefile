@@ -125,6 +125,66 @@ geninv.o \
 indices.o \
 miller.o
 
+MODULES = \
+../Modules/atom.o \
+../Modules/autopilot.o \
+../Modules/basic_algebra_routines.o \
+../Modules/berry_phase.o \
+../Modules/cell_base.o \
+../Modules/check_stop.o \
+../Modules/clocks.o \
+../Modules/coarsegrained_vars.o \
+../Modules/constants.o \
+../Modules/constraints_module.o \
+../Modules/control_flags.o \
+../Modules/descriptors.o \
+../Modules/electrons_base.o \
+../Modules/energies.o \
+../Modules/fft_base.o \
+../Modules/fft_scalar.o \
+../Modules/fft_types.o \
+../Modules/functionals.o \
+../Modules/griddim.o \
+../Modules/input_parameters.o \
+../Modules/io_base.o \
+../Modules/io_files.o \
+../Modules/io_global.o \
+../Modules/ions_base.o \
+../Modules/ions_nose.o \
+../Modules/kind.o \
+../Modules/mp_buffers.o \
+../Modules/mp_global.o \
+../Modules/mp_wave.o \
+../Modules/mp.o \
+../Modules/parallel_types.o \
+../Modules/path_base.o \
+../Modules/path_formats.o \
+../Modules/path_variables.o \
+../Modules/path_opt_routines.o \
+../Modules/path_io_routines.o \
+../Modules/path_reparametrisation.o \
+../Modules/parallel_include.o \
+../Modules/parameters.o \
+../Modules/parser.o \
+../Modules/printout_base.o \
+../Modules/pseudo_types.o \
+../Modules/ptoolkit.o \
+../Modules/read_cards.o \
+../Modules/read_namelists.o \
+../Modules/readpseudo.o \
+../Modules/recvec.o \
+../Modules/shmem_include.o \
+../Modules/sic.o \
+../Modules/smallbox.o \
+../Modules/splinelib.o \
+../Modules/stick_base.o \
+../Modules/uspp.o \
+../Modules/version.o \
+../Modules/wavefunctions.o \
+../Modules/wave_base.o \
+../Modules/timestep.o \
+../Modules/xml_io_base.o
+
 WRAPPERS = wrapper.o
 TLDEPS= bindir mods libs libiotk
 
@@ -133,7 +193,7 @@ cp : tldeps cp.x cppp.x
 
 cp.x : cprstart.o $(FOBJS) $(LOBJS) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o cp.x \
-		cprstart.o $(FOBJS) $(LOBJS) ../Modules/*.o \
+		cprstart.o $(FOBJS) $(LOBJS) $(MODULES) \
 		../flib/eispack.o $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../CPV/cp.x . )
 
