@@ -13,8 +13,8 @@ MODULE efield_module
   SAVE
 
   logical      :: tefield  = .FALSE.
-  integer      :: epol     = 3 !direzione campo elettrico
-  real(8) :: efield   = 0.d0 !intensita' campo elettrico
+  integer      :: epol     = 3 !direction electric field
+  real(8) :: efield   = 0.d0 !intensity electric field
   real(8)    evalue!strenght of electric field
   integer         ipolp  !direction of electric field
 
@@ -49,16 +49,14 @@ CONTAINS
   END SUBROUTINE efield_init
 
   SUBROUTINE efield_info( )
-    USE io_global, ONLY: stdout
-    write (stdout,401) epol, efield
-    ipolp  = epol
-    evalue = efield
+    USE io_global, ONLY: ionode,stdout
+    if(ionode) write (stdout,401) epol, efield
          
 401   format (/4x,'====================================='                       &
-     &        /4x,'|  CAMPO ELETTRICO                   '                       &
+     &        /4x,'|  BERRY PHASE ELECTRIC FIELD        '                       &
      &        /4x,'====================================='                       &
-     &        /4x,'| direzione    =',i10,'            '                         &
-     &        /4x,'| intensita    =',f10.5,' a.u.     '                         &
+     &        /4x,'| direction    =',i10,'            '                         &
+     &        /4x,'| intensity    =',f10.5,' a.u.     '                         &
      &        /4x,'=====================================')
 
     RETURN
@@ -66,19 +64,21 @@ CONTAINS
 
 
   SUBROUTINE efield_berry_setup( eigr, tau0 )
+    USE io_global, ONLY: ionode,stdout
     IMPLICIT NONE
     COMPLEX(8), INTENT(IN)  :: eigr(:,:)
     REAL(8), INTENT(IN)  :: tau0(:,:)
-    write(6,'(''before gtable'')')
+    if(ionode) write(stdout,'(''Initialize Berry phase electric field'')')
+    ipolp = epol
+    evalue = efield 
     call gtable(ipolp,ctable(1,1,ipolp))
-    write(6,'(''out of gtable'')')
     call gtablein(ipolp,ctabin(1,1,ipolp))
-    write(6,'(''out of gtablein'')')
     call qqberry2(gqq0,gqqm0,ipolp)!for Vanderbilt pps
-    write(6,'(''out of qqberry2'')')
     call qqupdate(eigr,gqqm0,gqq,gqqm,ipolp)
-    write(6,'(''out of qqupdate'')')
-    call cofcharge(tau0,cdz0)
+    !the following line was to keep the center of charge fixed
+    !when performing molecular dynamics in the presence of an electric
+    !field
+    !call cofcharge(tau0,cdz0)
     RETURN
   END SUBROUTINE efield_berry_setup
 
@@ -123,19 +123,17 @@ CONTAINS
   SUBROUTINE berry_energy( enb, enbi, bec, cm, fion )
     USE uspp, ONLY: betae => vkb
     USE ions_positions, ONLY: tau0
-    USE control_flags, ONLY: tfor
+    USE control_flags, ONLY: tfor, tprnfor
     IMPLICIT NONE
     real(8), intent(out) :: enb, enbi
     real(8) :: bec(:,:)
     real(8) :: fion(:,:)
     complex(8) :: cm(:,:)
     call qmatrixd(cm,bec,ctable(1,1,ipolp),gqq,qmat,detq)
-    write(6,'(''out of qmatrixd'')')
     call enberry( detq, ipolp,enb)
-    call berryion(tau0,fion,tfor,ipolp,evalue,enbi)
+    call berryion(tau0,fion,tfor.or.tprnfor,ipolp,evalue,enbi)
     pberryel=enb
     pberryion=enbi
-    write(6,*) 'Polarizzazione',pberryel,evalue
     enb=enb*evalue
     enbi=enbi*evalue
   END SUBROUTINE berry_energy

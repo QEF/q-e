@@ -18,7 +18,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
   use uspp_param, only: lqmax, nqlc, kkbeta, nbeta, nh, nhm
-  use uspp, only: indv, lpx, lpl, ap
+  use uspp, only: indv, lpx, lpl, ap,nhtolm
   use qrl_mod, only: qrl, cmesh
   use atom, only: r, rab
   use core
@@ -26,16 +26,14 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use reciprocal_vectors, only: mill_l
   use parameters
   use  constants
-  use cvan, only: oldvan, nvb, indlm
+  use cvan, only: oldvan, nvb
   use  ions_base
   use ions_base, only : nas => nax
   use cell_base, only: a1, a2, a3
   use reciprocal_vectors, only: ng0 => gstart, gx, g
+  use mp, only: mp_sum
 
 
-#ifdef __PARA
-  use para_mod
-#endif
   
   implicit none
 
@@ -83,7 +81,6 @@ subroutine qqberry2( gqq,gqqm, ipol)
      enddo
   enddo
   
-
   if(ipol.eq.1) then
      gmes=a1(1)**2+a1(2)**2+a1(3)**2
      gmes=2*pi/SQRT(gmes)
@@ -149,8 +146,8 @@ subroutine qqberry2( gqq,gqqm, ipol)
            do jv=iv,nh(is)
               ivs=indv(iv,is)
               jvs=indv(jv,is)
-              ivl=indlm(iv,is)
-              jvl=indlm(jv,is)
+              ivl=nhtolm(iv,is)
+              jvl=nhtolm(jv,is)
 !
 !     lpx = max number of allowed y_lm
 !     lp  = composite lm to indentify them
@@ -187,10 +184,6 @@ subroutine qqberry2( gqq,gqqm, ipol)
 
               
               do ia=1,na(is)
-!                  gqq(iv,jv,ia,is)=qgbs*eigr(igi,ia,is)!ATTENZIONE era cosi'
-!                  gqq(jv,iv,ia,is)=qgbs*eigr(igi,ia,is)
-!                  gqqm(iv,jv,ia,is)=CONJG(gqq(iv,jv,ia,is))
-!                  gqqm(jv,iv,ia,is)=CONJG(gqq(iv,jv,ia,is))
                      
                  gqqm(iv,jv,ia,is)=qgbs
                  gqqm(jv,iv,ia,is)=qgbs
@@ -202,11 +195,8 @@ subroutine qqberry2( gqq,gqqm, ipol)
      enddo
   endif
 
-#ifdef __PARA
-  call reduce(2*nhm*nhm*nas*nsp, gqq)
-  call reduce(2*nhm*nhm*nas*nsp, gqqm)
-#endif
-
+  call mp_sum(gqq(:,:,:,:))
+  call mp_sum(gqqm(:,:,:,:))
 
   deallocate( fint)
   deallocate( jl)
@@ -234,6 +224,7 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
   use ions_base, only : nas => nax, nat, na, nsp
   use reciprocal_vectors, only: mill_l
   use uspp_param, only: nh, nhm
+  use mp, only: mp_sum
 
   implicit none
 
@@ -289,10 +280,8 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
         enddo
      enddo
   endif
-#ifdef __PARA
-  call reduce(2*nhm*nhm*nas*nsp, gqq)
-  call reduce(2*nhm*nhm*nas*nsp, gqqm)
-#endif
+  call mp_sum(gqq(:,:,:,:))
+  call mp_sum(gqqm(:,:,:,:))
   return
 end subroutine qqupdate
       
