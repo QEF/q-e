@@ -44,7 +44,7 @@
    SUBROUTINE printout_new &
      ( nfi, tfirst, tfile, tprint, tps, h, stress, tau0, vels, &
        fion, ekinc, temphc, tempp, etot, enthal, econs, econt, &
-       vnhh, xnhh0, vnhp, xnhp0 )
+       vnhh, xnhh0, vnhp, xnhp0,atot )
 
       !
       USE control_flags,    ONLY: iprint
@@ -54,6 +54,10 @@
       USE constants,        ONLY: factem, au_gpa, au, uma_si, bohr_radius_cm, scmass
       USE ions_base,        ONLY: na, nsp, nat, ind_bck, atm, ityp
       USE cell_base,        ONLY: s_to_r
+      USE efield_module,    ONLY: tefield, pberryel, pberryion
+      USE cg_module,        ONLY : tcg, itercg
+
+
       !
       IMPLICIT NONE
       !
@@ -67,6 +71,7 @@
       REAL(DP), INTENT(IN) :: fion( :, : )  ! real forces
       REAL(DP), INTENT(IN) :: ekinc, temphc, tempp, etot, enthal, econs, econt
       REAL(DP), INTENT(IN) :: vnhh( 3, 3 ), xnhh0( 3, 3 ), vnhp( 1 ), xnhp0( 1 )
+      REAL(DP), INTENT(IN) :: atot! enthalpy of system for c.g. case
       !
       REAL(DP) :: stress_gpa( 3, 3 )
       REAL(DP) :: hinv( 3, 3 )
@@ -172,11 +177,30 @@
          !
       END IF
       !
-      WRITE( stdout, 1948 ) nfi, ekinc, temphc, tempp, etot, enthal, econs, &
+      IF(.not.tcg) THEN
+        WRITE( stdout, 1948 ) nfi, ekinc, temphc, tempp, etot, enthal, econs, &
                             econt, vnhh(3,3), xnhh0(3,3), vnhp(1),  xnhp0(1)
+      ELSE
+        IF ( MOD( nfi, iprint ) == 0 .OR. tfirst ) THEN
+           !
+           WRITE( stdout, * )
+           WRITE( stdout, 255 ) 'nfi','tempp','E','-T.S-mu.nbsp','+K_p','#Iter'
+           !
+        END IF
+        !
+        WRITE( stdout, 256 ) nfi, INT( tempp ), etot, atot, econs, itercg
+        !
+     END IF
+     IF( tefield) THEN
+       IF(ionode) write(stdout,'( A14,F12.6,A14,F12.6)') 'Elct. dipole',pberryel,'Ionic dipole',pberryion
+     ENDIF
+     !
+
       !
       DEALLOCATE( labelw )
       !
+255  FORMAT( '     ',A5,A8,3(1X,A12),A6 )
+256  FORMAT( 'Step ',I5,1X,I7,1X,F12.5,1X,F12.5,1X,F12.5,1X,I5 )
 1947  FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',8X,'etot',6X,'enthal', &
             & 7X,'econs',7X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0' )
 1948  FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F11.5),4(1X,F7.4) )
