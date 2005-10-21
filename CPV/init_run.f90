@@ -123,11 +123,13 @@ SUBROUTINE init_run()
   !     allocation of all arrays not already allocated in init and nlinit
   !=======================================================================
   !
+
   CALL allocate_mainvar( ngw, ngwt, ngb, ngs, ngm, nr1, nr2, nr3, dfftp%nr1x, &
                          dfftp%nr2x, dfftp%npl, nnrx, nnrsx, nat, nax, nsp,   &
                          nspin, nbsp, nbspx, n_emp, nupdwn, nkb, gzero,       &
                          kp%nkpt, kp%scheme )
   !
+
   CALL allocate_local_pseudo( ngs, nsp )
   !
   !  initialize wave functions descriptors and allocate wf

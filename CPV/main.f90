@@ -189,7 +189,7 @@
       USE cp_main_variables, ONLY : atoms0, atomsp, atomsm, ei1, ei2, ei3, eigr, sfac, &
                                     ht0, htm, htp, rhoe, vpot, desc, wfill, wempt,     &
                                     acc, acc_this_run, occn, edft, nfi, bec, becdr
-
+      USE cg_module,         ONLY : tcg
       IMPLICIT NONE
 
       REAL(DP) :: tau( :, : )
@@ -266,7 +266,11 @@
 
         ! ...   set the right flags for the current MD step
         !
-        ttprint   = ( MOD(nfi, iprint) == 0 )  .OR. ( iprsta > 2 )
+        if(.not.tcg) then
+           ttprint   = ( MOD(nfi, iprint) == 0 )  .OR. ( iprsta > 2 )
+        else
+           ttprint = .true.
+        endif
         ttsave    =   MOD(nfi, isave)  == 0
         !
         ttconvchk =  tconvthrs%active .AND. ( MOD( nfi, tconvthrs%nstep ) == 0 )

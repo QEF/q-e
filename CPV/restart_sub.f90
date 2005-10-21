@@ -71,6 +71,7 @@ MODULE from_restart_module
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh, cell_nosezero
     USE phase_factors_module, ONLY : strucf
+     USE cg_module,           ONLY : tcg
     !
     COMPLEX(DP) :: eigr(:,:), ei1(:,:), ei2(:,:), ei3(:,:)
     COMPLEX(DP) :: eigrb(:,:)
@@ -107,6 +108,7 @@ MODULE from_restart_module
     !
     ! ... We are restarting from file recompute ainv
     !
+    write(6,*) 'FROM_RESTART_CP :', tzeroe 
     CALL invmat( 3, h, ainv, deth )
     !
     ! Reset total time counter if the run is not strictly 'restart'
@@ -200,6 +202,7 @@ MODULE from_restart_module
           !
        END IF
        !
+       IF(.not. tcg) THEN
        CALL vofrho( nfi, rhor, rhog, rhos, rhoc, tfirst, tlast, &
                     ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion )
        !
@@ -213,16 +216,17 @@ MODULE from_restart_module
        CALL newd( rhor, irb, eigrb, becsum, fion )
        !
        CALL prefor( eigr, vkb )
-       !
-       IF ( tzeroe ) &
-          CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
-                           bec, c0(:,:,1,1), cm(:,:,1,1), restart = .TRUE. )
+       
+       IF ( tzeroe .and. (.not. tcg)) &
+       CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
+                          bec, c0(:,:,1,1), cm(:,:,1,1), restart = .TRUE. )
+
        !
        ! ... nlfq needs deeq bec
        !
-       IF ( tfor .OR. tprnfor ) CALL nlfq( c0, eigr, bec, becdr, fion )
+       IF ( (tfor .OR. tprnfor) .and. .not. tcg ) CALL nlfq( c0, eigr, bec, becdr, fion )
        !
-       IF ( tfor .OR. thdyn ) &
+       IF ( (tfor .OR. thdyn) .and. .not. tcg ) &
           CALL interpolate_lambda( lambdap, lambda, lambdam )
        !
        ! ... calphi calculates phi; the electron mass rises with g**2
@@ -233,7 +237,7 @@ MODULE from_restart_module
        !
        ! ...   nlfl and nlfh need: lambda (guessed) becdr
        !
-       IF ( tfor .OR. tprnfor ) CALL nlfl( bec, becdr, lambda, fion )
+       IF ( (tfor .OR. tprnfor) .and. .not. tcg ) CALL nlfl( bec, becdr, lambda, fion )
        !
        IF ( tpre ) CALL nlfh( bec, dbec, lambda )
        !
@@ -246,7 +250,7 @@ MODULE from_restart_module
           !
        ELSE
           !
-          CALL gram( vkb, bec, cm )
+          IF( .not. tcg) CALL gram( vkb, bec, cm )
           !
        END IF
        !
@@ -318,6 +322,7 @@ MODULE from_restart_module
        !
        CALL DSWAP( 2*ngw*nbsp, c0, 1, cm, 1 )
        !
+       END IF
     END IF
     !
     RETURN
