@@ -47,9 +47,7 @@ subroutine gtable( ipol, ctable)
      if(ipol.eq.3) k=k+1
 
      found = .false.
-!#ifdef NEC
-!     *vdir nodep(ctable)
-!#endif 
+
      do jg=1,ngw
         if(mill_l(1,jg).eq.i .and. mill_l(2,jg).eq.j .and. mill_l(3,jg).eq.k) then
            found=.true.
@@ -58,9 +56,7 @@ subroutine gtable( ipol, ctable)
         endif
      enddo
      if(.not. found) then
-!#ifdef NEC
-!        *vdir nodep
-!#endif 
+
         do jg=1,ngw
            if(-mill_l(1,jg).eq.i .and. -mill_l(2,jg).eq.j .and. -mill_l(3,jg).eq.k) then
               found=.true.
@@ -86,9 +82,6 @@ subroutine gtable( ipol, ctable)
 
      found = .false.
 
-!#ifdef NEC
-!     *vdir nodep
-!#endif 
      do jg=1,ngw
         if (-mill_l(1,jg).eq.i .and. -mill_l(2,jg).eq.j .and. -mill_l(3,jg).eq.k)then
            found=.true.
@@ -98,9 +91,6 @@ subroutine gtable( ipol, ctable)
      enddo
      if(.not.found) then
 
-!#ifdef NEC
-!        *vdir nodep
-!#endif 
         do jg=1,ngw
            if(mill_l(1,jg).eq.i .and. mill_l(2,jg).eq.j .and. mill_l(3,jg).eq.k)then
               found=.true.
