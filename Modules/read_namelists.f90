@@ -278,7 +278,7 @@ MODULE read_namelists_module
        force_pairing = .false.
        ! 
        fermi_energy = 0.D0
-       n_inner = 0
+       n_inner = 2
        rotation_dynamics = "line-minimization"
        occupation_dynamics = "line-minimization"
        rotmass = 0.D0

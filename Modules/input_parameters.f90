@@ -816,8 +816,8 @@ MODULE input_parameters
           ! specify the file containing the DFT potential of the system
           ! NOT used in FPMD
 
-        INTEGER :: n_inner = 0
-          ! number of inner loop per CP step.
+        INTEGER :: n_inner = 2
+          ! number of inner loop per CG iteration.
 
         LOGICAL :: tgrand = .FALSE.
           ! whether to do grand-canonical calculations.
