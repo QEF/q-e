@@ -551,25 +551,24 @@
       at(:,:) = at(:,:) / alat
 
     END IF
-
-
     !
-    a1  =  at( :, 1 ) * alat
-    a2  =  at( :, 2 ) * alat
-    a3  =  at( :, 3 ) * alat
-
+    a1 =  at( :, 1 ) * alat
+    a2 =  at( :, 2 ) * alat
+    a3 =  at( :, 3 ) * alat
+    !
     CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
-
+    !
     CALL recips( a1, a2, a3, b1, b2, b3 )
+    !
     ainv( 1, : ) = b1( : )
     ainv( 2, : ) = b2( : )
     ainv( 3, : ) = b3( : )
-
-    bg( :, 1 ) = b1( : )
-    bg( :, 2 ) = b2( : )
-    bg( :, 3 ) = b3( : )
-
-    ! ...     The matrix "htm1" in FPMD correspond to the matrix "bg" in PW
+    !
+    bg( :, 1 ) = b1( : ) * alat
+    bg( :, 2 ) = b2( : ) * alat
+    bg( :, 3 ) = b3( : ) * alat
+    !
+    ! ... The matrix "htm1" in FPMD correspond to the matrix "bg" in PW
     !           
 
     tcell_base_init = .TRUE.
@@ -688,9 +687,9 @@
     ainv( 2, : ) = b2( : )
     ainv( 3, : ) = b3( : )
 
-    bg( :, 1 ) = b1( : )
-    bg( :, 2 ) = b2( : )
-    bg( :, 3 ) = b3( : )
+    bg( :, 1 ) = b1( : ) * alat
+    bg( :, 2 ) = b2( : ) * alat
+    bg( :, 3 ) = b3( : ) * alat
 
     ! ...     The matrix "htm1" in FPMD correspond to the matrix "bg" in PW
 
@@ -725,12 +724,12 @@
 !------------------------------------------------------------------------------!
 
   SUBROUTINE cell_steepest( hnew, h, delt, iforceh, fcell )
-    REAL(8), INTENT(OUT) :: hnew(3,3)
-    REAL(8), INTENT(IN) :: h(3,3), fcell(3,3)
+    REAL(DP), INTENT(OUT) :: hnew(3,3)
+    REAL(DP), INTENT(IN) :: h(3,3), fcell(3,3)
     INTEGER,      INTENT(IN) :: iforceh(3,3)
-    REAL(8), INTENT(IN) :: delt
+    REAL(DP), INTENT(IN) :: delt
     INTEGER      :: i, j
-    REAL(8) :: dt2
+    REAL(DP) :: dt2
     dt2 = delt * delt
     DO j=1,3
       DO i=1,3
@@ -744,14 +743,14 @@
 !------------------------------------------------------------------------------!
 
   SUBROUTINE cell_verlet( hnew, h, hold, delt, iforceh, fcell, frich, tnoseh, hnos )
-    REAL(8), INTENT(OUT) :: hnew(3,3)
-    REAL(8), INTENT(IN) :: h(3,3), hold(3,3), hnos(3,3), fcell(3,3)
+    REAL(DP), INTENT(OUT) :: hnew(3,3)
+    REAL(DP), INTENT(IN) :: h(3,3), hold(3,3), hnos(3,3), fcell(3,3)
     INTEGER,      INTENT(IN) :: iforceh(3,3)
-    REAL(8), INTENT(IN) :: frich, delt
+    REAL(DP), INTENT(IN) :: frich, delt
     LOGICAL,      INTENT(IN) :: tnoseh
 
-    REAL(8) :: htmp(3,3)
-    REAL(8) :: verl1, verl2, verl3, dt2, ftmp
+    REAL(DP) :: htmp(3,3)
+    REAL(DP) :: verl1, verl2, verl3, dt2, ftmp
     INTEGER      :: i, j
   
     dt2 = delt * delt
@@ -781,11 +780,11 @@
 !------------------------------------------------------------------------------!
 
   subroutine cell_hmove( h, hold, delt, iforceh, fcell )
-    real(8), intent(out) :: h(3,3)
-    real(8), intent(in) :: hold(3,3), fcell(3,3)
-    real(8), intent(in) :: delt
+    REAL(DP), intent(out) :: h(3,3)
+    REAL(DP), intent(in) :: hold(3,3), fcell(3,3)
+    REAL(DP), intent(in) :: delt
     integer, intent(in) :: iforceh(3,3)
-    real(8) :: dt2by2, fac
+    REAL(DP) :: dt2by2, fac
     integer :: i, j
     dt2by2 = .5d0 * delt * delt
     fac = dt2by2
@@ -800,9 +799,9 @@
 !------------------------------------------------------------------------------!
 
   subroutine cell_force( fcell, ainv, stress, omega, press, wmass )
-    real(8), intent(out) :: fcell(3,3)
-    real(8), intent(in) :: stress(3,3), ainv(3,3)
-    real(8), intent(in) :: omega, press, wmass
+    REAL(DP), intent(out) :: fcell(3,3)
+    REAL(DP), intent(in) :: stress(3,3), ainv(3,3)
+    REAL(DP), intent(in) :: omega, press, wmass
     integer      :: i, j
     do j=1,3
       do i=1,3
@@ -821,14 +820,14 @@
 !------------------------------------------------------------------------------!
 
   subroutine cell_move( hnew, h, hold, delt, iforceh, fcell, frich, tnoseh, vnhh, velh, tsdc )
-    real(8), intent(out) :: hnew(3,3)
-    real(8), intent(in) :: h(3,3), hold(3,3), fcell(3,3)
-    real(8), intent(in) :: vnhh(3,3), velh(3,3)
+    REAL(DP), intent(out) :: hnew(3,3)
+    REAL(DP), intent(in) :: h(3,3), hold(3,3), fcell(3,3)
+    REAL(DP), intent(in) :: vnhh(3,3), velh(3,3)
     integer,      intent(in) :: iforceh(3,3)
-    real(8), intent(in) :: frich, delt
+    REAL(DP), intent(in) :: frich, delt
     logical,      intent(in) :: tnoseh, tsdc
 
-    real(8) :: hnos(3,3)
+    REAL(DP) :: hnos(3,3)
 
     if( tnoseh ) then
       hnos = vnhh * velh
@@ -849,8 +848,8 @@
 
   subroutine cell_gamma( hgamma, ainv, h, velh )
     implicit none
-    real(8) :: hgamma(3,3)
-    real(8), intent(in) :: ainv(3,3), h(3,3), velh(3,3)
+    REAL(DP) :: hgamma(3,3)
+    REAL(DP), intent(in) :: ainv(3,3), h(3,3), velh(3,3)
     integer :: i,j,k,l,m
          do i=1,3
             do j=1,3
@@ -872,8 +871,8 @@
   subroutine cell_kinene( ekinh, temphh, velh )
     use constants, only: factem
     implicit none
-    real(8), intent(out) :: ekinh, temphh(3,3)
-    real(8), intent(in)  :: velh(3,3)
+    REAL(DP), intent(out) :: ekinh, temphh(3,3)
+    REAL(DP), intent(in)  :: velh(3,3)
     integer :: i,j
     ekinh = 0.0d0
     do j=1,3
@@ -941,8 +940,8 @@ CONTAINS
 
   subroutine cell_nosevel( vnhh, xnhh0, xnhhm, delt )
     implicit none
-    real(8), intent(inout) :: vnhh(3,3)
-    real(8), intent(in) :: xnhh0(3,3), xnhhm(3,3), delt
+    REAL(DP), intent(inout) :: vnhh(3,3)
+    REAL(DP), intent(in) :: xnhh0(3,3), xnhhm(3,3), delt
     vnhh(:,:)=2.*(xnhh0(:,:)-xnhhm(:,:))/delt-vnhh(:,:)
     return
   end subroutine cell_nosevel
@@ -950,8 +949,8 @@ CONTAINS
   subroutine cell_noseupd( xnhhp, xnhh0, xnhhm, delt, qnh, temphh, temph, vnhh )
     use constants, only: factem
     implicit none
-    real(8), intent(out) :: xnhhp(3,3), vnhh(3,3)
-    real(8), intent(in) :: xnhh0(3,3), xnhhm(3,3), delt, qnh, temphh(3,3), temph
+    REAL(DP), intent(out) :: xnhhp(3,3), vnhh(3,3)
+    REAL(DP), intent(in) :: xnhh0(3,3), xnhhm(3,3), delt, qnh, temphh(3,3), temph
     integer :: i, j
     do j=1,3
       do i=1,3
@@ -963,13 +962,13 @@ CONTAINS
   end subroutine cell_noseupd
 
   
-  real(8) function cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
+  REAL(DP) function cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
     use constants, only: factem
     implicit none
-    real(8) :: qnh, vnhh( 3, 3 ), temph, xnhh0( 3, 3 )
+    REAL(DP) :: qnh, vnhh( 3, 3 ), temph, xnhh0( 3, 3 )
     integer :: iforceh( 3, 3 )
     integer :: i, j
-    real(8) :: enij
+    REAL(DP) :: enij
     cell_nose_nrg = 0.0d0
     do i=1,3
       do j=1,3
@@ -983,9 +982,9 @@ CONTAINS
   subroutine cell_nose_shiftvar( xnhhp, xnhh0, xnhhm )
     !  shift values of nose variables to start a new step
     implicit none
-    real(8), intent(out) :: xnhhm(3,3)
-    real(8), intent(inout) :: xnhh0(3,3)
-    real(8), intent(in) :: xnhhp(3,3)
+    REAL(DP), intent(out) :: xnhhm(3,3)
+    REAL(DP), intent(inout) :: xnhh0(3,3)
+    REAL(DP), intent(in) :: xnhhp(3,3)
       xnhhm = xnhh0
       xnhh0 = xnhhp
     return
