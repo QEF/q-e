@@ -114,7 +114,7 @@ clean :
 # remove configuration files too
 distclean veryclean : clean
 	- /bin/rm -rf make.sys \
-		      config.log config.status autom4te.cache \
+		      config.log configure.msg config.status autom4te.cache \
 		      espresso.tar.gz CPV/version.h \
 		      intel.pcl */intel.pcl
 	- cd examples ; ./make_clean
