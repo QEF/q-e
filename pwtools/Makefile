@@ -12,6 +12,7 @@ PWOBJS = \
 ../PW/error_handler.o \
 ../PW/hexsym.o \
 ../PW/irrek.o \
+../PW/inverse_s.o \
 ../PW/kpoint_grid.o \
 ../PW/mode_group.o \
 ../PW/multable.o \

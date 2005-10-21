@@ -8,7 +8,7 @@
 !
 !-----------------------------------------------------------------------
 subroutine sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
-     nr3, sym, irt, ftau, m_loc)
+     nr3, sym, irt, ftau, m_loc, sname)
   !-----------------------------------------------------------------------
   !
   !     given a point group, this routine finds the subgroup which is
@@ -56,6 +56,7 @@ subroutine sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   ! atomic coordinates in crystal axis
   logical :: fractional_translations
   real(DP) :: ft (3), ft1, ft2, ft3
+  character :: sname (48) * 45
   !
   external checksym
   !
@@ -94,7 +95,7 @@ subroutine sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
         ft (3) = xau(3,na) - xau(3,nb) - nint( xau(3,na) - xau(3,nb) )
 
 
-        call checksym_mag (irot, nat, ityp, xau, xau, ft, sym, irt,mxau,mrau)
+        call checksym_mag (irot, nat, ityp, xau, xau, ft, sym, irt, mxau, mxau)
 
         if (sym (irot) .and. (abs (ft (1) **2 + ft (2) **2 + ft (3) ** &
              2) ) .lt.1.d-8) call errore ('sgam_at', 'overlapping atoms', na)
@@ -134,6 +135,7 @@ subroutine sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
                                                        ! operation
         enddo
      enddo
+     if (sname(irot)(1:3)=='inv') mrau=-mrau
      !
      !      first attempt: no fractional translation
      !

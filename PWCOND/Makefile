@@ -173,6 +173,7 @@ PWOBJS = \
 ../PW/init_at_1.o \
 ../PW/init_vloc.o \
 ../PW/interpolate.o \
+../PW/inverse_s.o \
 ../PW/io_pot.o \
 ../PW/irrek.o \
 ../PW/iweights.o \

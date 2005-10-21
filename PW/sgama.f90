@@ -104,7 +104,7 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
      call sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, nr3, sym, &
        irt, ftau)
   IF (noncolin) CALL sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, &
-                                   nr1, nr2, nr3, sym, irt, ftau, m_loc)
+                          nr1, nr2, nr3, sym, irt, ftau, m_loc, sname)
   !
   !    If xq.ne.(0,0,0) this is a preparatory run for a linear response
   !    calculation at xq. The relevant point group is therefore only the
@@ -199,34 +199,4 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
 
 end subroutine sgama
 !-----------------------------------------------------------------------
-
-subroutine inverse_s (nrot, s, table, invs)
-  !-----------------------------------------------------------------------
-  implicit none
-  integer :: nrot, s (3, 3, 48), table (48, 48), invs (3, 3, 48)
-  ! input: number of symmetries of the original
-  ! input: matrices of the symmetry operations
-  ! input: multiplication table of the group
-  ! output: contains the inverse of each rotati
-
-
-  integer :: irot, jrot, ipol, jpol
-  ! counter over the rotations
-  ! counter over the rotations
-  ! counter over the polarizations
-  ! counter over the polarizations
-  do irot = 1, nrot
-     do jrot = 1, nrot
-        if (table (irot, jrot) .eq.1) then
-           do ipol = 1, 3
-              do jpol = 1, 3
-                 invs (ipol, jpol, irot) = s (ipol, jpol, jrot)
-              enddo
-           enddo
-        endif
-     enddo
-
-  enddo
-  return
-end subroutine inverse_s
 
