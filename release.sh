@@ -42,46 +42,46 @@ find . -name CVS -type d -exec /bin/rm -r {} \;
 cd ../
 
 tar -czf $TMPDIR/cp-$VERSION.tar.gz \
-                            $TMPDIR/bin/  $TMPDIR/config* $TMPDIR/README* \
-                            $TMPDIR/Make* $TMPDIR/make*   $TMPDIR/install-sh \
+                            $TMPDIR/bin/     $TMPDIR/config* $TMPDIR/README* \
+                            $TMPDIR/Make*    $TMPDIR/make*   $TMPDIR/install-sh \
                             $TMPDIR/install/ $TMPDIR/moduledep.sh \
                             $TMPDIR/License  $TMPDIR/upftools/     \
-                            $TMPDIR/include/ $TMPDIR/Doc/ $TMPDIR/Modules/ \
-                            $TMPDIR/clib/ $TMPDIR/flib/ \
+                            $TMPDIR/include/ $TMPDIR/Doc/    $TMPDIR/Modules/ \
+                            $TMPDIR/iotk/    $TMPDIR/clib/    $TMPDIR/flib/ \
                             $TMPDIR/CPV/ 
 
 tar -czf $TMPDIR/$GUI.tar.gz $TMPDIR/$GUI
 
 tar -czf $TMPDIR/pw_src-$VERSION.tar.gz \
-                            $TMPDIR/bin/  $TMPDIR/config* $TMPDIR/README* \
-                            $TMPDIR/Make* $TMPDIR/make*   $TMPDIR/install-sh \
+                            $TMPDIR/bin/     $TMPDIR/config* $TMPDIR/README* \
+                            $TMPDIR/Make*    $TMPDIR/make*   $TMPDIR/install-sh \
                             $TMPDIR/install/ $TMPDIR/moduledep.sh \
                             $TMPDIR/License  $TMPDIR/upftools/     \
                             $TMPDIR/include/ $TMPDIR/Doc/ $TMPDIR/Modules/ \
-                            $TMPDIR/clib/ $TMPDIR/flib/ \
-                            $TMPDIR/PW/   $TMPDIR/PP/ $TMPDIR/PH/ \
-                            $TMPDIR/Gamma/ $TMPDIR/PWCOND/ \
-                            $TMPDIR/D3/    $TMPDIR/pwtools/
+                            $TMPDIR/iotk/    $TMPDIR/clib/ $TMPDIR/flib/ \
+                            $TMPDIR/PW/      $TMPDIR/PP/ $TMPDIR/PH/ \
+                            $TMPDIR/Gamma/   $TMPDIR/PWCOND/ \
+                            $TMPDIR/D3/      $TMPDIR/pwtools/
 
 tar -czf $TMPDIR/examples-$VERSION.tar.gz $TMPDIR/examples/ $TMPDIR/pseudo/
 
 
 tar -czf $TMPDIR/espresso-$VERSION.tar.gz \
-                            $TMPDIR/bin/  $TMPDIR/config* $TMPDIR/README* \
-                            $TMPDIR/Make* $TMPDIR/make*   $TMPDIR/install-sh \
+                            $TMPDIR/bin/     $TMPDIR/config* $TMPDIR/README* \
+                            $TMPDIR/Make*    $TMPDIR/make*   $TMPDIR/install-sh \
                             $TMPDIR/install/ $TMPDIR/moduledep.sh \
                             $TMPDIR/License  $TMPDIR/upftools/     \
-                            $TMPDIR/include/ $TMPDIR/Doc/ $TMPDIR/Modules/ \
-                            $TMPDIR/clib/ $TMPDIR/flib/ \
-                            $TMPDIR/PW/   $TMPDIR/PP/ $TMPDIR/PH/ \
-                            $TMPDIR/Gamma/ $TMPDIR/PWCOND/ \
-                            $TMPDIR/D3/    $TMPDIR/pwtools/ \
+                            $TMPDIR/include/ $TMPDIR/Doc/    $TMPDIR/Modules/ \
+                            $TMPDIR/iotk/    $TMPDIR/clib/   $TMPDIR/flib/ \
+                            $TMPDIR/PW/      $TMPDIR/PP/ $TMPDIR/PH/ \
+                            $TMPDIR/Gamma/   $TMPDIR/PWCOND/ \
+                            $TMPDIR/D3/      $TMPDIR/pwtools/ \
                             $TMPDIR/CPV/  \
-		            $TMPDIR/atomic/ $TMPDIR/atomic_doc/ \
-                            $TMPDIR/examples/ $TMPDIR/pseudo/ $TMPDIR/$GUI
+		            $TMPDIR/atomic/  $TMPDIR/atomic_doc/ \
+                            $TMPDIR/pseudo/  $TMPDIR/examples/ $TMPDIR/$GUI
 cd $TMPDIR
 
-cp README     README-$VERSION
+cp README   i     README-$VERSION
 cp Doc/ChangeLog  ChangeLog-$VERSION
 cp Doc/BUGS       BUGS-$VERSION
 cp Doc/manual.tex manual-$VERSION.tex
