@@ -1,0 +1,105 @@
+This example shows how to perform Born-Oppeheimer molecular dynamics
+using the conjugate-gradient minimization of the electronic states.
+It uses also the ensemble DFT  for dealing with partial occupations
+of the electronic states.
+The example shows a simple Silicon dimer.
+The systems has 8 valence electrons, described by 8 states (nspin=1).
+For every ionic step, it fully minimized the electronic enthalpy
+(electronic energy if ensemble-DFT is not used)
+The conjugate-gradient algorith REQUIRES Gram-Schmidt orho-normalization.
+
+Ensemble-DFT is implemented only for conjugate gradient minimization
+of the electronic states and Born-Oppenheimer molecular dynamics
+(NOT FOR Car-Parrinello), it supports Ultrasoft pseudopotentials.
+For Ensemble DFT see:
+N. Marzari, D. Vanderbilt, and M. C. Payne
+"Ensemble Density-Functional Theory for Ab Initio 
+Molecular Dynamics of Metals and Finite-Temperature Insulators"
+Phys. Rev. Lett. 79, 1337-1340 (1997)
+
+
+Note that here we start a conjugate gradient minimizatio from
+scratch, directly with preconditioning on the electron masses
+(emass=1000.d0,emass_cutoff = 4.d0). This should not be done
+for larger systems (Just use maxiter=5 for doing some c.g. 
+iteration with no mass preconditioning and then do restart
+with mass preconditioning)
+
+The concerned parameters are:
+
+FOR CONJUGATE GRADIENT:
+
+tcg            LOGICAL ( default = .FALSE. )
+               if .TRUE. perform a conjugate gradient minimization of the
+               electronic states for every ionic step.
+               It requires Gram-Schmidt orthogonalization of the electronic
+               states.
+ 
+maxiter        INTEGER ( default = 100 )
+               maximum number of conjugate gradient iterations for
+               conjugate gradient minimizations of electronic states
+ 
+etresh         REAL ( default = 1.D-5 )
+               convergence criterion for energy in the case of
+               conjugate gradient minimization of the electronic states
+                
+passop         REAL ( default =  0.3D0 )
+               small step used in the  conjugate gradient minimization
+               of the electronic states.
+
+
+FOR ENSEMBLE-DFT
+
+
+occupations    CHARACTER
+               a string describing the occupation of the electronic states.
+               In the case of conjugate gradient style of minimization
+               of the electronic states, if occupations is set to 'ensemble',
+               this allows ensemble dft calculations for metallic systems
+                                                                                                                             
+smearing       CHARACTER
+               a string describing the kind of occupations for electronic states
+               in the case of ensemble dft (occupations == 'ensemble' );
+               now only Fermi-Dirac ('fd') case is implemented
+                                                                                                                             
+degauss        REAL ( default = 0.D0 )
+               parameter for the smearing function, only used for ensemble dft
+               calculations
+
+ 
+n_inner        INTEGER ( default = 2 )
+               number of internal cycles for every conjugate gradient
+               iteration only for ensemble dft
+
+
+The output file is slightly different from the Car-Parrinello case:
+
+It reports Kohn-Sham eigenstates energies and occupancies:
+
+    eigenvalues at k-point:  0.000 0.000 0.000
+         -10.79   -9.16   -4.57   -3.85   -3.85   -2.54   -2.54   -0.25
+  
+    Occupations  :
+       1.999925 1.999182 1.484846 1.000959 1.000959 0.252111 0.252111 0.009907
+
+At every steps, it reports:
+
+        nfi   tempp            E -T.S-mu.nbsp         +K_p #Iter
+   Step    10      13     -7.57738     -7.71516     -7.71504     9
+   Step    11      15     -7.57743     -7.71519     -7.71504    10
+   Step    12      19     -7.57748     -7.71522     -7.71504     6
+   Step    13      22     -7.57754     -7.71525     -7.71504     6
+
+
+where nfi is a counter of the ionic steps, tempp is the ionic temperature,
+E is the electronic energy at the minimum of the electronic enthalpy,
+-T.S-mu.nbsp is the electronic enthalpy (electronic energy -TS , S=entropy)
+, and +K_p  is the electronic enthalpy plus the ionic kinetic energy,
+#Iter is the number of iterations which were needed to minimized
+the electronic enthalpy with the conjugate gradient algorithm.
+
+NB: from one ionic step to the following, a linear extrapolation is 
+used to provide an estimate for the electronic wave-functions,
+every 10 steps, this procedure is restarted.
+A more powerful scheme will be implemented in the future.
+
