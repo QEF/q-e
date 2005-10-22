@@ -1,0 +1,65 @@
+&CONTROL
+  calculation = 'cp',
+  restart_mode = 'from_scratch',
+  nstep  = 20,
+  iprint = 10,
+  isave  = 10,
+  tstress = .FALSE.,
+  tprnfor = .TRUE.,
+  dt    = 10.0d0,
+  prefix = 'Si_dimer',
+  pseudo_dir = '/home/puma/espresso/pseudo/',
+  outdir='/home/puma/tmp/'
+
+/
+  
+&SYSTEM
+  ibrav = 1,
+  celldm(1) = 15.,
+  celldm(2) = 0.0,
+  celldm(3) = 0.0,
+  celldm(4) = 0.0,
+  celldm(5) = 0.0,
+  celldm(6) = 0.0,
+  nbnd=8,
+  nelec=8,
+  nat  =2,
+  ntyp =1,
+  ecutwfc = 15,
+  ecutrho = 60,
+  nr1b=20,nr2b=20,nr3b=20
+  occupations = 'ensemble',
+  smearing='fd',
+  degauss=0.025,
+  nspin=1,
+  nelup=4,
+  neldw=4,
+/
+  
+&ELECTRONS
+  emass = 1000.d0,
+  emass_cutoff = 4.d0,
+  orthogonalization = 'Gram-Schmidt',
+  startingwfc = 'random',
+  ampre = 0.02,
+  n_inner = 8,
+  tcg = .true.,
+  passop=0.3,
+  maxiter = 250,
+  etresh=1.d-6
+/
+  
+&IONS
+  ion_dynamics = 'damp',
+  ion_damping = 0.,
+  ion_positions = 'from_input',
+  greasp=1.0,
+  ion_radius(1) = 0.8d0,
+  ion_temperature = 'not_controlled',
+/
+ 
+ATOMIC_SPECIES
+ Si 28.086 Si.pbe-rrkj.UPF
+ATOMIC_POSITIONS (bohr)
+Si 0. 0. 0.  1 1 1
+Si 0. 0. 5.5 1 1 1
