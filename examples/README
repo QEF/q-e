@@ -32,6 +32,7 @@ To run the examples, you should follow this procedure:
      Ni.pbe-nd-rrkjus.UPF, NiUS.RRKJ3.UPF, O.BLYP.UPF,
      O.LDA.US.RRKJ3.UPF, O.pbe-rrkjus.UPF, O.vdb.UPF, OPBE_nc.UPF,
      Pb.vdb.UPF, Ptrel.RRKJ3.UPF, Si.vbc.UPF, SiPBE_nc.UPF, Ti.vdb.UPF
+     Si.pbe-rrkjus.UPF
 
    If any of these are missing, you may not be able to run some of the
    examples.  You can download them from the Pseudopotentials Page of
@@ -241,3 +242,9 @@ example26:
 example27:
     This example shows how to use cp.x to perform TPSS metaGGA calculations
     for C4H6
+
+example28:
+    This example shows how to perform Born-Oppenheimer molecular dynamics
+    with conjugate gradient algorithm for the electronic states and
+    ensemble-DFT for treating metallic systems.
+    It is a simple Si dimer.
