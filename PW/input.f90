@@ -22,16 +22,17 @@ SUBROUTINE iosys()
   !
   !
   USE kinds,         ONLY : DP
-  USE constants,     ONLY : au, eV_to_kelvin
+  USE constants,     ONLY : au, eV_to_kelvin, pi, rytoev, &
+                            uakbar, amconv, bohr_radius_angs
   USE mp_global,     ONLY : npool, nproc_pool
   !
   USE io_global,     ONLY : stdout, ionode
   !
-  USE bp,            ONLY : nppstr_ => nppstr, &
-                            gdir_   => gdir, &
-                            lberry_ => lberry,&
-                            lelfield_ => lelfield, &
-                            efield_ => efield, &
+  USE bp,            ONLY : nppstr_    => nppstr, &
+                            gdir_      => gdir, &
+                            lberry_    => lberry,&
+                            lelfield_  => lelfield, &
+                            efield_    => efield, &
                             nberrycic_ => nberrycic
 
   !
@@ -40,9 +41,9 @@ SUBROUTINE iosys()
                             ibrav_  => ibrav
   !
   USE ions_base,     ONLY : if_pos, &
-                            ntyp_ => nsp
-  !
-  USE ions_base,     ONLY : nat_  => nat, ityp, tau, atm  
+                            ntyp_ => nsp, &
+                            nat_  => nat, &
+                            ityp, tau, atm  
   !
   USE basis,         ONLY : atomic_positions, &
                             startingwfc_ => startingwfc, &
@@ -57,8 +58,6 @@ SUBROUTINE iosys()
                             press_       => press, &
                             calc, lmovecell
   !
-  USE constants,     ONLY : pi, rytoev, uakbar, amconv, bohr_radius_angs
-  !
   USE dynam,         ONLY : temperature, amass, &
                             dt_      => dt, &
                             delta_t_ => delta_t, &
@@ -72,7 +71,11 @@ SUBROUTINE iosys()
                             eamp_     => eamp, &
                             forcefield
   !
-  USE io_files,      ONLY : input_drho, output_drho
+  USE io_files,      ONLY : input_drho, output_drho, &
+                            psfile, tmp_dir, wfc_dir, &
+                            prefix_     => prefix, &
+                            pseudo_dir_ => pseudo_dir
+  
   !
   USE force_mod,     ONLY : lforce, lstres, force
   !
@@ -105,20 +108,15 @@ SUBROUTINE iosys()
                             niter_with_fixed_ns, starting_ns, U_projection, &
                             lda_plus_u_ => lda_plus_u
 
-  USE exx,           ONLY : lexx_ => lexx, &
-                            nqx1_  => nq1,  &
-                            nqx2_  => nq2,  &
-                            nqx3_  => nq3,  &
+  USE exx,           ONLY : lexx_   => lexx, &
+                            nqx1_   => nq1,  &
+                            nqx2_   => nq2,  &
+                            nqx3_   => nq3,  &
                             yukawa_ => yukawa
   !
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
                             starting_magnetization_ => starting_magnetization, &
                             lsda
-  !
-  USE io_files,      ONLY : tmp_dir, wfc_dir, &
-                            prefix_     => prefix, &
-                            pseudo_dir_ => pseudo_dir, &
-                            psfile
   !
   USE relax,         ONLY : epsf, starting_scf_threshold, epse
   !
@@ -161,9 +159,9 @@ SUBROUTINE iosys()
                              temp_req_           => temp_req, &
                              path_thr_           => path_thr
   !
-  USE noncollin_module, ONLY : noncolin_  => noncolin, &
+  USE noncollin_module, ONLY : i_cons, mcons, &
+                               noncolin_  => noncolin, &
                                lambda_    => lambda, &
-                               i_cons, mcons,        &
                                angle1_    => angle1, &
                                angle2_    => angle2, &
                                report_    => report
@@ -256,7 +254,7 @@ SUBROUTINE iosys()
   !
   ! ... local variables
   !
-  INTEGER  :: unit = 5, i, ia, ios, is, image, nt
+  INTEGER  :: i, ia, ios, is, image, nt
   LOGICAL  :: ltest
   REAL(DP) :: theta, phi
   !
