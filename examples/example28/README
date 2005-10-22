@@ -1,0 +1,12 @@
+
+This example shows how to run a meta-dynamics simulation (at T=0) using both 
+pw.x and cp.x to explore different conformations of the Si6H6 molecule.
+
+BEWARE: this example is intended as a test to validate the working condition of
+meta-dynamics and NOT to demonstrate the efficiency of of this algorithm for a
+conformational search.
+
+Given the low accuracy of these calculations (plane waves cut-off and 
+thresholds), the small box employed, and the risible number of steps performed  
+these results can not be compared with experiments or with other "ab initio" 
+calculations.
