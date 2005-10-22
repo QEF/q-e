@@ -43,6 +43,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE check_stop,         ONLY : check_stop_now
   USE path_io_routines,   ONLY : new_image_init, get_new_image, &
                                  stop_other_images  
+  USE coarsegrained_base, ONLY : write_axsf_file
   !
   IMPLICIT NONE
   !
@@ -349,7 +350,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
         END IF
         !
-        IF ( ionode ) CALL write_config( image )
+        IF ( ionode ) CALL write_axsf_file( image )
         !
         ! ... the restart file is written here
         !
@@ -420,7 +421,8 @@ SUBROUTINE metadyn()
                                  to_new_target, fe_step, metadyn_history, &
                                  max_metadyn_iter, starting_metadyn_iter, &
                                  gaussian_add, gaussian_add_iter
-  USE coarsegrained_base, ONLY : add_gaussians
+  USE coarsegrained_base, ONLY : add_gaussians, evolve_collective_vars, &
+                                 write_axsf_file
   USE io_global,          ONLY : ionode, stdout
   USE basic_algebra_routines
   !
@@ -459,7 +461,7 @@ SUBROUTINE metadyn()
            !
         END IF
         !
-        new_target(:) = target(:) - fe_step(:) * fe_grad(:) / norm_fe_grad
+        CALL evolve_collective_vars( norm_fe_grad )
         !
         WRITE( stdout, '(/,5X,"adiabatic switch of the system ", &
                             & "to the new coarse-grained positions",/)' )
@@ -476,7 +478,7 @@ SUBROUTINE metadyn()
      !
      gaussian_add(iter) = ( MOD( iter - 1, gaussian_add_iter ) == 0 )
      !
-     IF ( ionode ) CALL write_config( iter )
+     IF ( ionode ) CALL write_axsf_file( iter )
      !
      WRITE( stdout, '(/,5X,"calculation of the potential of mean force",/)' )
      !
@@ -498,7 +500,7 @@ SUBROUTINE metadyn()
   !
   IF ( ionode ) THEN
      !
-     CALL write_config( iter )
+     CALL write_axsf_file( iter )
      !
      CLOSE( UNIT = iunaxsf )
      CLOSE( UNIT = iunmeta )
@@ -514,7 +516,7 @@ SUBROUTINE metadyn()
       !------------------------------------------------------------------------
       !
       USE constants,          ONLY : e2
-      USE control_flags,      ONLY : istep, ldamped, conv_ions
+      USE control_flags,      ONLY : istep, ldamped, conv_ions, nstep
       USE coarsegrained_vars, ONLY : fe_nstep, dfe_acc
       USE constraints_module, ONLY : lagrange
       USE control_flags,      ONLY : istep, conv_ions
@@ -533,6 +535,9 @@ SUBROUTINE metadyn()
       !
       CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
       CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.bfgs' )
+      CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.update' )
+      !
+      nstep = fe_nstep
       !
       to_new_target = .FALSE.
       !
@@ -575,7 +580,7 @@ SUBROUTINE metadyn()
       !------------------------------------------------------------------------
       !
       USE coarsegrained_vars, ONLY : shake_nstep
-      USE control_flags,      ONLY : istep, ldamped
+      USE control_flags,      ONLY : istep, ldamped, nstep
       USE io_files,           ONLY : tmp_dir, prefix
       USE parser,             ONLY : delete_if_present
       !
@@ -584,13 +589,14 @@ SUBROUTINE metadyn()
       !
       ldamped_saved = ldamped
       !
-      to_target(:) = new_target(:) - target(:)
-      !
       CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
       CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.update' )
       !
-      ldamped       = .FALSE.
+      ldamped = .FALSE.
+      !
       to_new_target = .TRUE.
+      !
+      nstep = shake_nstep
       !
       DO istep = 1, shake_nstep
          !
@@ -611,39 +617,6 @@ SUBROUTINE metadyn()
     END SUBROUTINE move_to_target
     !
 END SUBROUTINE metadyn
-!
-!----------------------------------------------------------------------------
-SUBROUTINE write_config( image )
-  !----------------------------------------------------------------------------
-  !
-  USE input_parameters, ONLY : atom_label
-  USE io_files,         ONLY : iunaxsf
-  USE constants,        ONLY : bohr_radius_angs
-  USE ions_base,        ONLY : nat, tau, ityp
-  USE cell_base,        ONLY : alat
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN) :: image
-  INTEGER             :: atom
-  !
-  !
-  WRITE( UNIT = iunaxsf, FMT = '(" PRIMCOORD ",I5)' ) image
-  WRITE( UNIT = iunaxsf, FMT = '(I5,"  1")' ) nat
-  !
-  DO atom = 1, nat
-     !
-     WRITE( UNIT = iunaxsf, FMT = '(A2,3(2X,F18.10))' ) &
-            TRIM( atom_label(ityp(atom)) ), &
-         tau(1,atom) * alat * bohr_radius_angs, &
-         tau(2,atom) * alat * bohr_radius_angs, &
-         tau(3,atom) * alat * bohr_radius_angs
-     !
-  END DO
-  !
-  RETURN
-  !
-END SUBROUTINE write_config
 !
 !----------------------------------------------------------------------------
 SUBROUTINE electronic_scf( lfirst, stat )

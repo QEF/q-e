@@ -39,6 +39,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE xml_io_base,        ONLY : check_restartfile
   USE path_io_routines,   ONLY : new_image_init, get_new_image, &
                                  stop_other_images
+  USE coarsegrained_base, ONLY : write_axsf_file
   !
   IMPLICIT NONE
   !
@@ -268,7 +269,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
         END IF
         !
-        IF ( ionode ) CALL write_config( image )
+        IF ( ionode ) CALL write_axsf_file( image )
         !
         ! ... the restart file is written here
         !
@@ -321,12 +322,13 @@ SUBROUTINE metadyn()
                                  sort_tau, tau_srt, ind_srt
   USE io_global,          ONLY : stdout
   USE io_files,           ONLY : iunmeta, iunaxsf, scradir
-  USE coarsegrained_vars, ONLY : fe_grad, new_target, to_target, metadyn_fmt, &
-                                 to_new_target, fe_step, metadyn_history, &
-                                 max_metadyn_iter, starting_metadyn_iter, &
+  USE coarsegrained_vars, ONLY : fe_grad, new_target, to_target, metadyn_fmt,  &
+                                 to_new_target, fe_step, metadyn_history,      &
+                                 max_metadyn_iter, starting_metadyn_iter,      &
                                  fe_nstep, shake_nstep, dfe_acc, gaussian_add, &
                                  gaussian_add_iter
-  USE coarsegrained_base, ONLY : add_gaussians
+  USE coarsegrained_base, ONLY : add_gaussians, evolve_collective_vars, &
+                                 write_axsf_file
   USE io_global,          ONLY : ionode
   USE xml_io_base,        ONLY : check_restartfile
   USE basic_algebra_routines
@@ -400,11 +402,9 @@ SUBROUTINE metadyn()
            !
         END IF
         !
+        CALL evolve_collective_vars( norm_fe_grad )
+        !
         ! ... the system is "adiabatically" moved to the new target
-        !
-        new_target(:) = target(:) - fe_step(:) * fe_grad(:) / norm_fe_grad
-        !
-        to_target(:) = new_target(:) - target(:)
         !
         nfi    = 0
         nomore = shake_nstep
@@ -426,7 +426,7 @@ SUBROUTINE metadyn()
      !
      gaussian_add(iter) = ( MOD( iter - 1, gaussian_add_iter ) == 0 )
      !
-     IF ( ionode ) CALL write_config( iter )
+     IF ( ionode ) CALL write_axsf_file( iter )
      !
      nfi    = 0
      nomore = fe_nstep
@@ -436,6 +436,10 @@ SUBROUTINE metadyn()
      to_new_target = .FALSE.
      !
      WRITE( stdout, '(/,5X,"calculation of the potential of mean force",/)' )
+     !
+     CALL reset_vel()
+     !
+     dfe_acc(:) = 0.D0
      !
      CALL cprmain( tau, fion, etot )
      !
@@ -471,7 +475,7 @@ SUBROUTINE metadyn()
   !
   IF ( ionode ) THEN
      !
-     CALL write_config( iter )
+     CALL write_axsf_file( iter )
      !
      CLOSE( UNIT = iunaxsf )
      CLOSE( UNIT = iunmeta )
@@ -482,37 +486,22 @@ SUBROUTINE metadyn()
   !
   RETURN
   !
+  CONTAINS
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE reset_vel()
+      !------------------------------------------------------------------------
+      !
+      USE ions_positions, ONLY : tau0, taum, taus, tausm
+      !
+      IMPLICIT NONE
+      !
+      !
+      taum(:,:)  = tau0(:,:)
+      tausm(:,:) = taus(:,:)
+      !
+      RETURN
+      !
+    END SUBROUTINE reset_vel
+    !
 END SUBROUTINE metadyn
-!
-!----------------------------------------------------------------------------
-SUBROUTINE write_config( image )
-  !----------------------------------------------------------------------------
-  !
-  USE input_parameters, ONLY : atom_label
-  USE io_files,         ONLY : iunaxsf
-  USE constants,        ONLY : bohr_radius_angs
-  USE ions_base,        ONLY : nat, tau, ityp
-  USE cell_base,        ONLY : alat
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN) :: image
-  INTEGER             :: atom
-  !
-  !
-  WRITE( UNIT = iunaxsf, FMT = '(" PRIMCOORD ",I5)' ) image
-  WRITE( UNIT = iunaxsf, FMT = '(I5,"  1")' ) nat
-  !
-  DO atom = 1, nat
-     !
-     WRITE( UNIT = iunaxsf, FMT = '(A2,3(2X,F18.10))' ) &
-            TRIM( atom_label(ityp(atom)) ), &
-         tau(1,atom) * alat * bohr_radius_angs, &
-         tau(2,atom) * alat * bohr_radius_angs, &
-         tau(3,atom) * alat * bohr_radius_angs
-     !
-  END DO
-  !
-  RETURN
-  !
-END SUBROUTINE write_config

@@ -53,7 +53,8 @@ MODULE constraints_module
             constr_type, &
             constr,      &
             lagrange,    &
-            target
+            target,      &
+            dmax
   !
   ! ... global variables
   !
@@ -63,6 +64,7 @@ MODULE constraints_module
   REAL(DP), ALLOCATABLE :: constr(:,:)
   REAL(DP), ALLOCATABLE :: target(:)
   REAL(DP), ALLOCATABLE :: lagrange(:)
+  REAL(DP)              :: dmax
   !
   !
   CONTAINS
@@ -76,6 +78,7 @@ MODULE constraints_module
        USE input_parameters, ONLY : nconstr_inp, constr_tol_inp, &
                                     constr_type_inp, constr_inp, &
                                     constr_target, constr_target_set
+       USE parser,           ONLY : int_to_char
        !
        IMPLICIT NONE
        !
@@ -102,6 +105,11 @@ MODULE constraints_module
        !
        constr_type(:) = constr_type_inp(1:nconstr)
        constr(:,:)    = constr_inp(:,1:nconstr)
+       !
+       ! ... set the largest possible distance among two atoms within
+       ! ... the supercell
+       !
+       IF ( ANY( constr_type(:) == 3 ) ) CALL compute_dmax()
        !
        ! ... target value of the constrain ( in bohr )
        !
@@ -198,14 +206,19 @@ MODULE constraints_module
                 !
                 target(ia) = constr_target(ia)
                 !
-                CYCLE
+             ELSE
+                !
+                ia1 = ANINT( constr(1,ia) )
+                ia2 = ANINT( constr(2,ia) )
+                !
+                target(ia) = norm( pbc( tau(:,ia1) - tau(:,ia2) ) ) * alat
                 !
              END IF
              !
-             ia1 = ANINT( constr(1,ia) )
-             ia2 = ANINT( constr(2,ia) )
-             !
-             target(ia) = norm( pbc( tau(:,ia1) - tau(:,ia2) ) ) * alat
+             IF ( target(ia) > dmax ) &
+                CALL errore( 'init_constraint', 'the target for constraint ' //&
+                           & TRIM( int_to_char( ia ) ) // ' is larger than ' //&
+                           & 'the largest possible value', 1 )
              !
           CASE( 4 )
              !
@@ -540,6 +553,7 @@ MODULE constraints_module
        IF ( .NOT. global_test ) THEN
           !
           WRITE( stdout, '(5X,"Number of step(s): ",I3)') MIN( i, maxiter )
+          WRITE( stdout, '(5X,"targets: ")' ); WRITE( stdout, * ) target(:)
           !
           CALL errore( 'check_constrain', &
                        'on some constrain g = 0 is not satisfied', 1 )
@@ -617,7 +631,7 @@ MODULE constraints_module
      FUNCTION pbc( vect )
        !-----------------------------------------------------------------------
        !
-       USE cell_base, ONLY : at, bg
+       USE cell_base, ONLY : at, bg, alat
        !
        IMPLICIT NONE
        !
@@ -627,11 +641,11 @@ MODULE constraints_module
        !
 #if defined (__USE_PBC)
        !
-       pbc(:) = MATMUL( vect(:), bg(:,:) )
+       pbc(:) = MATMUL( vect(:) / alat, bg(:,:) )
        !
        pbc(:) = pbc(:) - ANINT( pbc(:) )
        !
-       pbc(:) = MATMUL( at(:,:), pbc(:) )
+       pbc(:) = MATMUL( at(:,:), pbc(:) ) * alat
        !
        !
 #else
@@ -642,5 +656,19 @@ MODULE constraints_module
        RETURN
        !
      END FUNCTION pbc
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE compute_dmax()
+       !-----------------------------------------------------------------------
+       !
+       USE cell_base, ONLY : at, alat
+       !
+       IMPLICIT NONE
+       !
+       dmax = norm( MATMUL( at(:,:), (/ 0.5D0, 0.5D0, 0.5D0 /) ) ) * alat
+       !
+       RETURN
+       !
+     END SUBROUTINE compute_dmax
      !
 END MODULE constraints_module

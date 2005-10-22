@@ -114,7 +114,11 @@ MODULE coarsegrained_base
   !
   PRIVATE
   !
-  PUBLIC :: set_target, add_gaussians, metadyn_init
+  PUBLIC :: set_target, &
+            add_gaussians, &
+            metadyn_init, &
+            evolve_collective_vars, &
+            write_axsf_file
   !
   CONTAINS
     !
@@ -324,5 +328,74 @@ MODULE coarsegrained_base
       RETURN
       !
     END SUBROUTINE add_gaussians
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE evolve_collective_vars( norm_fe_grad )
+      !------------------------------------------------------------------------
+      !
+      USE constraints_module, ONLY : nconstr, constr_type, target, dmax
+      USE coarsegrained_vars, ONLY : fe_grad, fe_step, new_target, to_target
+      !
+      IMPLICIT NONE
+      !
+      REAL(DP), INTENT(IN) :: norm_fe_grad
+      !
+      INTEGER :: i
+      !
+      !
+      fe_grad(:) = fe_grad(:) / norm_fe_grad
+      !
+      DO i = 1, nconstr
+         !
+         new_target(i) = target(i) - fe_step(i) * fe_grad(i)
+         !
+      !   IF ( constr_type(i) == 3 ) THEN
+      !      !
+      !      ! ... for constraints on distances we must use the minimum 
+      !      ! ... image convenction
+      !      !
+      !      PRINT *, "TG: ",new_target(i), dmax, MAX( 0.D0, new_target(i) - dmax )
+      !      new_target(i) = new_target(i) - MAX( 0.D0, new_target(i) - dmax )
+      !      !
+      !   END IF
+         !
+      END DO
+      !
+      to_target(:) = new_target(:) - target(:)
+      !
+    END SUBROUTINE evolve_collective_vars
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE write_axsf_file( image )
+      !------------------------------------------------------------------------
+      !
+      USE input_parameters, ONLY : atom_label
+      USE io_files,         ONLY : iunaxsf
+      USE constants,        ONLY : bohr_radius_angs
+      USE ions_base,        ONLY : nat, tau, ityp
+      USE cell_base,        ONLY : alat
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: image
+      INTEGER             :: atom
+      !
+      !
+      WRITE( UNIT = iunaxsf, FMT = '(" PRIMCOORD ",I5)' ) image
+      WRITE( UNIT = iunaxsf, FMT = '(I5,"  1")' ) nat
+      !
+      DO atom = 1, nat
+         !
+         WRITE( UNIT = iunaxsf, FMT = '(A2,3(2X,F18.10))' ) &
+                TRIM( atom_label(ityp(atom)) ), &
+             tau(1,atom) * alat * bohr_radius_angs, &
+             tau(2,atom) * alat * bohr_radius_angs, &
+             tau(3,atom) * alat * bohr_radius_angs
+         !
+      END DO
+      !
+      RETURN
+      !
+    END SUBROUTINE write_axsf_file
     !
 END MODULE coarsegrained_base
