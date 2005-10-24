@@ -192,7 +192,7 @@
         !
      END IF
      IF( tefield) THEN
-       IF(ionode) write(stdout,'( A14,F12.6,A14,F12.6)') 'Elct. dipole',pberryel,'Ionic dipole',pberryion
+       IF(ionode) write(stdout,'( A14,F12.6,A14,F12.6)') 'Elct. dipole',-pberryel,'Ionic dipole',-pberryion
      ENDIF
      !
 

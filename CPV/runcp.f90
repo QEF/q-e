@@ -792,7 +792,7 @@
         do i=1,n,2
            call dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos)
            if( tefield ) then
-             CALL dforce_efield ( bec, i, c0(:,i), c2, c3, rhos)
+             CALL dforce_efield ( bec, i, c0, c2, c3, rhos)
            end if
            IF( iflag == 2 ) THEN
              cm(:,i)   = c0(:,i)

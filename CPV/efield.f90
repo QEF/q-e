@@ -144,7 +144,7 @@ CONTAINS
     USE gvecw, ONLY: ngw
     IMPLICIT NONE
     complex(8), intent(out) :: c2(:), c3(:)
-    complex(8), intent(in) :: cm(:)
+    complex(8), intent(in) :: cm(:,:)
     REAL(8) :: rhos(:,:)
     real(8) :: bec(:,:)
     integer :: i

@@ -97,7 +97,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      !
      enthal = etot + press * omega
      !
-     IF( tefield .AND. ( ( MOD( nfi-1, 10 ) == 0 ) .OR. tfirst ) ) THEN
+     IF( tefield )  THEN
         !
         CALL berry_energy( enb, enbi, bec, c0(:,:,1,1), fion )
         !
@@ -130,8 +130,8 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      !
      IF ( tfor .OR. tprnfor ) CALL nlfq( c0, eigr, bec, becdr, fion )
      !
-     IF ( tfor .AND. tefield ) &
-        CALL bforceion( fion, tfor, ipolp, qmat, bec, becdr, gqq, evalue )
+     IF ( (tfor.or.tprnfor) .AND. tefield ) &
+        CALL bforceion( fion, .TRUE. , ipolp, qmat, bec, becdr, gqq, evalue )
      !
      IF ( tfor .OR. thdyn ) &
         CALL interpolate_lambda( lambdap, lambda, lambdam )
