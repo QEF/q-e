@@ -252,3 +252,13 @@ example29:
     with conjugate gradient algorithm for the electronic states and
     ensemble-DFT for treating metallic systems.
     It is a simple Si dimer.
+
+example30:
+    This example shows how to use cp.x to perform molecular dynamics
+    in the presence of an electric field described through the
+    modern theory of the polarization. The example shows how to
+    calculate high-frequency and static dielectric constants and 
+    Born effective charges.
+
+
+
