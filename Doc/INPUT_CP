@@ -174,6 +174,10 @@ forc_conv_thr  REAL ( default = 1.D-3 )
 ndr, ndw       INTEGER ( default = 50 )
                Units for input and output restart file.
 
+tefield        LOGICAL ( default = .FALSE.)
+               If .TRUE. perform calculations with a finite electric field 
+               which is described through the modern theory of the polarization
+
 
 ===============================================================================
 NAMELIST &SYSTEM
@@ -389,6 +393,16 @@ passop         REAL ( default =  0.3D0 )
 n_inner        INTEGER ( default = 2 )
                number of internal cycles for every conjugate gradient 
                iteration only for ensemble dft
+
+epol           INTEGER ( default = 3 )
+               direction of the finite electric field (only if tefield == .TRUE.)
+               In the case of a PARALLEL calculation only the case epol==3
+               is implemented
+
+efield         REAL ( default = 0.d0 )
+               intensity in a.u. of the finite electric field 
+               (only if tefield == .TRUE.)
+
 
 ===============================================================================
 NAMELIST &IONS  ( only if calculation = 'cp', 'relax',
