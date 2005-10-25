@@ -51,7 +51,7 @@
       USE energies,         ONLY: print_energies, dft_energy_type
       USE printout_base,    ONLY: printout_base_open, printout_base_close, &
                                   printout_pos, printout_cell, printout_stress
-      USE constants,        ONLY: factem, au_gpa, au, uma_si, bohr_radius_cm, scmass
+      USE constants,        ONLY: factem, au_gpa, au, amu_si, bohr_radius_cm, scmass
       USE ions_base,        ONLY: na, nsp, nat, ind_bck, atm, ityp
       USE cell_base,        ONLY: s_to_r
       USE efield_module,    ONLY: tefield, pberryel, pberryion
@@ -215,7 +215,7 @@
 
       USE control_flags,    ONLY: tdipole, tnosee, tnosep, tnoseh, iprsta, iprint, &
                                   toptical, tconjgrad
-      use constants,        only: factem, au_gpa, au, uma_si, bohr_radius_cm, scmass
+      use constants,        only: factem, au_gpa, au, amu_si, bohr_radius_cm, scmass
       use energies,         only: print_energies, dft_energy_type
       use mp_global,        only: mpime
       use electrons_module, only: ei, ei_emp, n_emp
@@ -454,7 +454,7 @@
             totalmass = totalmass + atoms%m(is) * atoms%na(is) / scmass
           END DO
           WRITE( stdout, fmt='(/,3X,"System Density [g/cm^3] : ",F10.4)' ) &
-            totalmass / ht%deth * 11.2061 ! UMA_SI * 1000.0 / BOHR_RADIUS_CM**3 
+            totalmass / ht%deth * 11.2061 ! AMU_SI * 1000.0 / BOHR_RADIUS_CM**3 
 
           ! ...       Write eigenvalues to stdout and unit fort.31
 

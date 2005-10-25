@@ -405,7 +405,7 @@
                a_ , b_ , c_ , cosab, cosac, cosbc, wc_ , total_ions_mass , press_ ,  &
                frich_ , greash_ , cell_dofree )
 
-    USE constants, ONLY: bohr_radius_angs, gpa_au, pi, uma_au
+    USE constants, ONLY: bohr_radius_angs, gpa_au, pi, amu_au
     USE io_global, ONLY: stdout
 
     IMPLICIT NONE
@@ -456,7 +456,7 @@
     wmass  = wc_
     IF( wmass == 0.d0 ) THEN
       wmass = 3.d0 / (4.d0 * pi**2 ) * total_ions_mass
-      wmass = wmass * UMA_AU
+      wmass = wmass * AMU_AU
       WRITE( stdout,130) wmass
     ELSE
       WRITE( stdout,120) wmass

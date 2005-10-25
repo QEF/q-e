@@ -18,6 +18,11 @@ COMMON
 - data files: move to new format (XML + directories),
   ensure compatibility between PW and CP/FPMD
 
+- cleanup of the scratch directory mess: outdir, tmp_dir, scradir...
+  There should be a distinction between 'output' and 'scratch' 
+  directories. Extend to CP/FPMD the possibility to save wavefunctions
+  either 'distributed' or 'collected' in parallel execution
+
 - pseudopotentials: support new format (XML) if/when ready
 
 - adding/removing/modifying input variables is too complex
@@ -119,12 +124,8 @@ DOCUMENTATION
 
 CP/FPMD:
 
-- extend to CP/FPMD possibility to save wavefunctions either 
-  'distributed' or 'collected' in parallel execution
 
 - CP: check on small box size
-
-- CP: the output is horrible
 
 - Documentation needs serious improvements
 

@@ -1525,7 +1525,7 @@ END SUBROUTINE gshcount
   850 FORMAT(   3X,'Initial ion velocities read from unit : ',I4)
 
  1000 FORMAT(3X,'Species ',I3,' atoms = ',I4,' mass = ',F12.2, ' (a.u.), ', &
-               & F12.2, ' (uma)', ' rcmax = ', F6.2, ' (a.u.)' )
+               & F12.2, ' (amu)', ' rcmax = ', F6.2, ' (a.u.)' )
  1010 FORMAT(3X,3(1X,F12.6))
  1020 FORMAT(/,3X,'NOT all atoms are allowed to move ')
  1021 FORMAT(/,3X,'All atoms are allowed to move')

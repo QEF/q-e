@@ -33,12 +33,12 @@ MODULE constants
   REAL(DP), PARAMETER :: BOHR_RADIUS_CM   = 0.529177D-8  ! cm
   REAL(DP), PARAMETER :: BOHR_RADIUS_ANGS = 0.529177D0   ! angstrom
   REAL(DP), PARAMETER :: ELECTRONMASS_SI  = 9.10953D-31  ! Kg
-  REAL(DP), PARAMETER :: ELECTRONMASS_UMA = 5.4858D-4    ! uma
+  REAL(DP), PARAMETER :: ELECTRONMASS_AMU = 5.4858D-4    ! amu
   !
   ! ... Units conversion factors
   !
   REAL(DP), PARAMETER :: ELECTRONVOLT_SI  = 1.6021892D-19  ! J  
-  REAL(DP), PARAMETER :: UMA_SI           = 1.66057D-27    ! Kg
+  REAL(DP), PARAMETER :: AMU_SI           = 1.66057D-27    ! Kg
   REAL(DP), PARAMETER :: ANGSTROM_AU      = 1.889727D0     ! au
   REAL(DP), PARAMETER :: AU_TO_OHMCMM1    = 46000.0D0      ! (ohm cm)^-1
   REAL(DP), PARAMETER :: AU_KB            = 294210.0D0     ! Kbar
@@ -47,8 +47,8 @@ MODULE constants
   REAL(DP), PARAMETER :: GPA_AU           = 1.0D0/29421.0D0  ! au
   REAL(DP), PARAMETER :: AU               = 27.211652D0    ! eV
   REAL(DP), PARAMETER :: RY               = 13.605826D0    ! eV
-  REAL(DP), PARAMETER :: SCMASS           = 1822.89D0   ! uma to au ( mass of a proton )
-  REAL(DP), PARAMETER :: UMA_AU           = 1822.89D0   ! au
+  REAL(DP), PARAMETER :: SCMASS           = 1822.89D0   ! amu to au ( mass of a proton )
+  REAL(DP), PARAMETER :: AMU_AU           = 1822.89D0   ! au
   REAL(DP), PARAMETER :: AU_TERAHERTZ     = 2.418D-5    ! THz
   REAL(DP), PARAMETER :: TERAHERTZ        = 2.418D-5    ! from au to THz
   REAL(DP), PARAMETER :: AU_SEC           = 2.4189D-17  ! sec

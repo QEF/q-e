@@ -12,7 +12,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !----------------------------------------------------------------------------
   !
   USE kinds,                    ONLY : DP
-  USE constants,                ONLY : bohr_radius_angs, uma_au
+  USE constants,                ONLY : bohr_radius_angs, amu_au
   USE control_flags,            ONLY : iprint, isave, thdyn, tpre, tbuff,      &
                                        iprsta, trhor, tfor, tvlocw, trhow,     &
                                        taurdr, tprnfor, tsdc, lconstrain, lwf, &
@@ -247,7 +247,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      IF ( thdyn ) CALL formf( tfirst, eself )
      !
-     ! ... why this call ??? from Paolo Umary
+     ! ... why this call ??? from Paolo Umari
      !
      IF ( tefield ) CALL calbec( 1, nsp, eigr, c0, bec ) ! ATTENZIONE  
      !
@@ -331,7 +331,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            CALL s_to_r( tausp, taup, na, nsp, hnew )
            !
            CALL check_constraint( nat, taup, tau0, fion(:3,:nat), &
-                                  iforce, ityp, 1.D0, delt, uma_au )
+                                  iforce, ityp, 1.D0, delt, amu_au )
            !
            CALL r_to_s( taup, tausp, na, nsp, ainv )
            !

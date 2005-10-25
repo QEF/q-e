@@ -15,7 +15,7 @@ MODULE read_namelists_module
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : factem, kb_au, au_kb, k_boltzman_au, angstrom_au, &
-                        uma_au, pi, e2
+                        amu_au, pi, e2
   USE input_parameters
   !
   IMPLICIT NONE

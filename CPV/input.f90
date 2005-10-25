@@ -816,7 +816,7 @@ MODULE input
      !-------------------------------------------------------------------------
      !
      USE control_flags,    ONLY : program_name, lconstrain, lneb, lcoarsegrained
-     USE constants,        ONLY : uma_au, pi
+     USE constants,        ONLY : amu_au, pi
      !
      USE input_parameters, ONLY: max_seconds, ibrav , celldm , trd_ht, dt,    &
            cell_symmetry, rd_ht, a, b, c, cosab, cosac, cosbc, ntyp , nat ,   &
