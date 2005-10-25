@@ -95,8 +95,9 @@ MODULES = \
 ../Modules/io_files.o \
 ../Modules/pseudo_types.o \
 ../Modules/readpseudo.o \
+../Modules/version.o
 
-TLDEPS= bindir mods libs pw
+TLDEPS= bindir mods libs 
 
 all: tldeps ld1.x
 

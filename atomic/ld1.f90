@@ -17,18 +17,18 @@ program ld1
   !                       The same applies to the core charge
   !---------------------------------------------------------------
   !
+  use global_version
   use ld1inc
 
   character :: &
        day*9, hour*9
 
-  character(len=9), parameter:: version='11-Feb-05'
   !
   !   write initialization information
   !
   call date_and_tim(day,hour)
   write(6,100)  version, day, hour
-100 format(/5x,'program ld1 starts. version ',a9 &
+100 format(/5x,'program ld1 starts. version ',a6 &
        /5x,'today is ',a9,' at ',a9/)
   !
   !    read input, possible pseudopotential and set the main variables
