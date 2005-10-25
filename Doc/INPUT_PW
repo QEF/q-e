@@ -166,6 +166,11 @@ tefield        LOGICAL ( default = .FALSE. )
                If .TRUE. a sawlike potential is added to the 
                bare ionic potential. 
 
+lelfield       LOGICAL ( default = .FALSE. )
+               If .TRUE. a homogeneous finite electric field
+               described through the modern theory of the polarization
+               is applied. 
+
 lberry         LOGICAL  (default =  .FALSE.)
                If .TRUE. perform a Berry phase calculation
                See the header of PW/bp_c_phase.f90 for documentation
@@ -174,10 +179,20 @@ gdir           INTEGER
                For Berry phase calculation: direction of the k-point
                strings in reciprocal space. Allowed values: 1, 2, 3 
                1=first, 2=second, 3=third reciprocal lattice vector
+               For calculations with finite electric fields
+               (lelfield==.true.), gdir is the direction of the field
 
 nppstr         INTEGER
                For Berry phase calculation: number of k-points to be 
                calculated along each symmetry-reduced string
+               The same for calculation with finite electric fields
+               (lelfield==.true.)
+
+nberrycyc      INTEGER ( default = 1 )
+               In the case of a finite electric field  (lelfield==.true.)
+               it defines the number of iterations for converging the
+               wavefunctions in the electric field Hamiltonian, for each
+               external iteration on the charge density  
 
 ===============================================================================
 NAMELIST &SYSTEM
@@ -478,6 +493,10 @@ diago_david_ndim
 diago_diis_ndim   
                INTEGER ( default = 3 )
                For DIIS: dimension of the reduced space.
+
+efield         REAL ( default = 0.D0 )
+               For finite electric field calculations (lelfield == .true.), 
+               it defines the intensity of the field in a.u.
 
 startingpot    CHARACTER
                'atomic': starting potential from atomic charge superposition
