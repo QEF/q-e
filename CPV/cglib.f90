@@ -14,7 +14,6 @@
 !       where  |phi> = s'|c0> = |c0> + sum q_ij |i><j|c0>
 !     where s'=s(r(t))  
 !
-!ATTENZION no  usa el preconditioning
       use ions_base, only: na, nsp
       use io_global, only: stdout
       use cvan
@@ -97,7 +96,6 @@
 
 
 
-!***ensemble-DFT
 !-----------------------------------------------------------------------
       subroutine calcmt(fdiag,zmat,fmat)
 !-----------------------------------------------------------------------
@@ -127,10 +125,8 @@
 
       return
       end subroutine calcmt
-!***ensemble-DFT
 
 
-!***ensemble-DFT
 !-----------------------------------------------------------------------
       subroutine rotate(z0,c0,bec,c0diag,becdiag)
 !-----------------------------------------------------------------------
@@ -152,15 +148,6 @@
         do iss=1,nspin
          nss=nupdwn(iss)
          istart=iupdwn(iss)
-!         do ni=1,nss
-!          call zero(2*ngw,c0diag(1,ni+istart-1))
-!          do nj=1,nss
-!           do j=1,ngw
-!            c0diag(j,ni+istart-1)=c0diag(j,ni+istart-1)+                &
-!     &           CMPLX(z0(ni,nj,iss),0.0)*c0(j,nj+istart-1)
-!           end do
-!          end do
-!         end do
           call MXMA(c0(1,istart),1,2*ngw,z0(1,1,iss),nudx,1,c0diag(1,istart),1,2*ngw,2*ngw,nss,nss)
         end do
 
@@ -185,7 +172,6 @@
       return
       end subroutine rotate
 
-!***ensemble-DFT
 !-----------------------------------------------------------------------
       subroutine ddiag(nx,n,amat,dval,dvec,iflag)
 !-----------------------------------------------------------------------
@@ -223,14 +209,13 @@
       end do
 
       call dspev('V','U',n,ap,dval,dvec,nx,aux,info)
-      if(info.ne.0) write(6,*) 'Cazzi con ddiag'
+      if(info.ne.0) write(6,*) 'Problems with ddiag'
 
       deallocate(ap)
       deallocate(aux)
 
       return
     end subroutine ddiag
-!***
 
 !-----------------------------------------------------------------------
       subroutine calcm(fdiag,zmat,fmat)
@@ -263,7 +248,7 @@
       end subroutine calcm
 
     subroutine minparabola(ene0,dene0,ene1,passop,passo,stima)
-!trova il minimo di parabola
+!this subroutines finds the minimum of a quadratic real function
       
       implicit none
       real(8) ene0,dene0,ene1,passop,passo,stima
@@ -274,8 +259,6 @@
       a=(ene1-b*passop-c)/(passop**2.d0)
       
       passo = -b/(2.d0*a)
-!provemo a coreger erori...
-!se la xe' convessa xe' cassi...la trova un massimo..
       if( a.lt.0.d0) then
          if(ene1.lt.ene0) then
             passo=passop
