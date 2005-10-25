@@ -1,0 +1,106 @@
+This example shows how to perform calculations with cp.x  for a system 
+under the presence of  an homogeneous static finite electric field.
+The coupling of the system with the electric field is described through
+the Modern Theory of the Polarization.
+We illustrate here the same example (bulk MgO) appearing in the paper:
+P.Umari and A.Pasquarello,
+Physical Review Letters, 89, p.157602 (2002).
+
+The concerned input parameters are:
+
+in namelist &CONTROL:
+
+tefield        LOGICAL ( default = .FALSE.)
+               If .TRUE. perform calculations with a finite electric field
+               which is described through the modern theory of the polarization
+
+
+in namelist &ELECTRONS:
+
+                                                                                   
+epol           INTEGER ( default = 3 )
+               direction of the finite electric field (only if tefield == .TRUE.)
+               In the case of a PARALLEL calculation ONLY the case epol==3
+               is implemented
+                                                                                                                             
+efield         REAL ( default = 0.d0 )
+               intensity in a.u. of the finite electric field
+               (only if tefield == .TRUE.)
+
+NOTE: the implementation has been tested ONLY for orthorhombic cells.
+
+****************
+
+The first two calculations use fast conjugate-gradient minimization for
+calculating the system's properties keeping the position of the atoms
+fixed in the experimental equilibrium positions, 
+in the presence of an electric field E  of 0. a.u. and 0.001 a.u. 
+along the 3rd direction.
+The third calculation uses damped Car-Parrinello molecular dynamic
+for relaxing the atomic structure under the presence of a 0.001 a.u.
+electric field. This allows the calculation of the static dielectric
+constant.
+
+
+Calculation of high-frequency dielectric constant:
+
+For the converged wavefunctions the output file reports the electric
+dipole D. We obtain:
+For E = 0.001 a.u. , we have D=15.4128 a.u.
+For E = 0.    a.u. , we have D=14.8516 a.u.
+The high-frequency dielectric constant eps_inf is given by
+eps_inf = 4*pi*(D[E=0.001 a.u.]-D[E=0. a.u.])/(0.001 a.u. * Omega) + 1
+        = 2.75
+where Omega is the volume of the cell in a.u.
+(cfr. PU&AP with other pseudos: 2.79, exp. 2.96)
+
+Calculation of Born-effective charges:
+
+The effective charges can be found as finite difference of atomic forces F,
+with respect to the electric field:
+For Mg: F[E=0.001 a.u.] = 0.197318*10**-2 a.u.
+        F[E=0. a.u. ]   = 0.93162*10**-5 a.u.
+For O:  F[E=0.001 a.u.] = -0.203209*10**-2 a.u.
+        F[E=0. a.u. ]   = -0.7028*10**-4 a.u.
+the effective charge Z* are found through:
+   Z*=  (F[E=0.001 a.u.]-F[E=0. a.u. ] )/(0.001 a.u.)
+we find:
+       Mg:  1.96
+       O:  -1.96
+(cfr. PU&AP with other pseudos: 1.96, exp.1.96)
+Note: the atomic forces are not strictly null at no electric field,
+      because of the  (very-)small error caused by the introduction of a
+      discretized mesh for describing wavefunctions in the cell.
+
+Calculation of the static dielectric constant:
+
+The third calculation relaxes the atomic coordinates under the presence
+of an electric field of 0.001 a.u. .The wavefunctions are taken from
+the previous calculation. It is a Car-Parrinello simulation, where
+only the electronic degrees of freedom are damped.
+At the beginning of the relaxation, the electronic  D1_el, and ionic D1_ion
+dipoles read:
+D1_el=15.4128 a.u. and D1_ion=1.0608 a.u.
+At the end of the relaxation, the electronic  D2_el, and ionic D2_ion,
+dipoles read:
+D2_el=-12.0495 a.u. and D2_ion=-1.141061 a.u.
+NOTE: the electronic dipole is defined modulo a factor (2*L=31.824i a.u.,
+during the MD simulation the term "ln det S" changes the Riemann
+plane, this must be taken into account when addressing the
+electronic dipole. Therefore, it reads:
+D2_el=19.7745 a.u. and D2_ion=-1.141061 a.u.
+
+The difference d_Eps  between static and high-frequency dielectric constant,
+is given by:
+
+d_Eps=4*pi*(D2_el+D2_ion-D1_el-d1_ion)/(0.001 a.u. * Omega)
+     = 6.74
+
+(cfr. PU&AP with other pseudos 5.15, exp. 6.67 )
+The difference with respect to PU&AP is due to the better
+estimation of the optical phonon frequency at Gamma.
+
+
+
+
+
