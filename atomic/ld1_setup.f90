@@ -136,8 +136,8 @@ subroutine ld1_setup
      !
      do n=1,nwfs
         if (.not.new(n)) then
-           if (oc(nstoae(n)).ne.ocs(n) ) &
-                call errore('ld1_setup','strange occupations',1)
+           if (abs(oc(nstoae(n))-ocs(n)) > 1.0d-8 ) call errore &
+	   ('ld1_setup','mismatched all-electron/pseudo occupations',n)
         endif
      enddo
   endif
