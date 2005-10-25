@@ -260,5 +260,9 @@ example30:
     calculate high-frequency and static dielectric constants and 
     Born effective charges.
 
-
+example31:
+    This example shows how to use pw.x to perform electronic structure
+    calculations in the presence of a finite electric field described 
+    through the modern theory of the polarization. The example shows how to
+    calculate the dielectric constant of silicon.
 
