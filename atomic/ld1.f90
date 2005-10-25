@@ -17,17 +17,17 @@ program ld1
   !                       The same applies to the core charge
   !---------------------------------------------------------------
   !
-  use global_version
-  use ld1inc
-
-  character :: &
-       day*9, hour*9
+  USE global_version,     ONLY : version_number
+  USE ld1inc
+  !
+  implicit none
+  character :: day*9, hour*9
 
   !
   !   write initialization information
   !
   call date_and_tim(day,hour)
-  write(6,100)  version, day, hour
+  write(6,100)  version_number, day, hour
 100 format(/5x,'program ld1 starts. version ',a6 &
        /5x,'today is ',a9,' at ',a9/)
   !
