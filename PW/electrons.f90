@@ -53,7 +53,7 @@ SUBROUTINE electrons()
   USE noncollin_module,     ONLY : factlist, pointlist, pointnum, mcons,&
                                    i_cons, bfield, lambda, vtcon, report
   USE spin_orb,             ONLY : domag
-  USE bp,                   ONLY : lelfield, lberry, nberrycic
+  USE bp,                   ONLY : lelfield, lberry, nberrycyc
 #if defined (EXX)
   USE exx,                  ONLY : lexx, exxinit, init_h_wfc, &
                                    exxalfa, exxstart, exxenergy, exxenergy2 
@@ -237,7 +237,7 @@ SUBROUTINE electrons()
         ! ... diagonalization of the KS hamiltonian
         !
         if(lelfield) then
-          do inberry=1,nberrycic
+          do inberry=1,nberrycyc
             ALLOCATE (psi(npwx,nbnd))
             do ik=1,nks
                call davcio(psi,nwordwfc,iunwfc,ik,-1)
@@ -540,7 +540,12 @@ SUBROUTINE electrons()
                      ehart, etxc, vtxc, etotefield, charge, vr )
            CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
            write (*,*) " NOW GO BACK TO REFINE HF CALCULATION"
-           write (*,*) fock0
+!<<<<<<< electrons.f90
+!           write(*,*) " SETS EFIELD"
+!           efield=0.003!ATTENZIONE
+!=======
+!           write (*,*) fock0
+!>>>>>>> 1.89
            iter = 0
            go to 10
         end if
@@ -726,7 +731,7 @@ SUBROUTINE electrons()
        ! ... diagonalization of the KS hamiltonian
        !
        if(lelfield) then
-          do inberry=1,nberrycic
+          do inberry=1,nberrycyc
             ALLOCATE (psi(npwx,nbnd))
             do ik=1,nks
                call davcio(psi,nwordwfc,iunwfc,ik,-1)

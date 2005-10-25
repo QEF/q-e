@@ -33,7 +33,7 @@ SUBROUTINE iosys()
                             lberry_    => lberry,&
                             lelfield_  => lelfield, &
                             efield_    => efield, &
-                            nberrycic_ => nberrycic
+                            nberrycyc_ => nberrycyc
 
   !
   USE cell_base,     ONLY : at, bg, alat, omega, &
@@ -185,7 +185,7 @@ SUBROUTINE iosys()
                                etot_conv_thr, forc_conv_thr, pseudo_dir, &
                                disk_io, tefield, dipfield, lberry, gdir, &
                                nppstr, wf_collect,lelfield, efield,  &
-                               nberrycic
+                               nberrycyc
 
   !
   ! ... SYSTEM namelist
@@ -1087,7 +1087,7 @@ SUBROUTINE iosys()
   lberry_     = lberry
   lelfield_   = lelfield
   efield_     = efield
-  nberrycic_  = nberrycic
+  nberrycyc_  = nberrycyc
 
   title_      = title
   dt_         = dt

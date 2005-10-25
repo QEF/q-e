@@ -40,6 +40,7 @@ SUBROUTINE summary()
   USE uspp_param,      ONLY : nqf, rinner, nqlc, nbeta, iver, lll, psd, tvanp
   USE spin_orb,        ONLY : lspinorb
   USE funct,           ONLY : dft, iexch, icorr, igcx, igcc
+  USE bp,              ONLY : lelfield, gdir, nppstr, efield, nberrycyc
   !
   IMPLICIT NONE
   !
@@ -112,6 +113,17 @@ SUBROUTINE summary()
           &  'width of the smooth step-function  =',F21.4,' Ry',/ )
      !
   END IF
+
+
+  IF ( lelfield ) THEN !here informations for berry's phase el. fields calculations
+     WRITE(stdout, *)
+     WRITE(stdout, '(''     Using Berry phase electric field'')')
+     WRITE(stdout, '(''     Direction :'', i4)') gdir
+     WRITE(stdout, '(''     Intensity (a.u.) :'', f13.10)') efield
+     WRITE(stdout, '(''     Strings composed by:'', i5,'' k-points'')') nppstr
+     WRITE(stdout, '(''     Number of iterative cycles:'', i4)') nberrycyc
+     WRITE(stdout, *)
+  ENDIF
   !
   ! ... and here more detailed information. Description of the unit cell
   !

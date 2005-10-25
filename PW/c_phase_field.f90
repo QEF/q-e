@@ -1,139 +1,16 @@
-!##############################################################################!
-!#                                                                            #!
-!#                                                                            #!
-!#   This is the main one of a set of Fortran 90 files designed to compute    #!
-!#   the electrical polarization in a crystaline solid.                       #!
-!#                                                                            #!
-!#                                                                            #!
-!#   AUTHORS                                                                  #!
-!#   ~~~~~~~                                                                  #!
-!#   This set of subprograms is based on code written in an early Fortran     #!
-!#   77 version of PWSCF by Alessio Filippetti. These were later ported       #!
-!#   into another version by Lixin He. Oswaldo Dieguez, in collaboration      #!
-!#   with Lixin He and Jeff Neaton, ported these routines into Fortran 90     #!
-!#   version 1.2.1 of PWSCF. He, Dieguez, and Neaton were working at the      #!
-!#   time in David Vanderbilt's group at Rutgers, The State University of     #!
-!#   New Jersey, USA.                                                         #!
-!#                                                                            #!
-!#                                                                            #!
-!#   LIST OF FILES                                                            #!
-!#   ~~~~~~~~~~~~~                                                            #!
-!#   The complete list of files added to the PWSCF distribution is:           #!
-!#   * ../PW/bp_bess.f                                                        #!
-!#   * ../PW/bp_calc_btq.f90                                                  #!
-!#   * ../PW/bp_c_phase.f90                                                   #!
-!#   * ../PW/bp_dbess.f                                                       #!
-!#   * ../PW/bp_qvan3.f90                                                     #!
-!#   * ../PW/bp_radin.f                                                       #!
-!#   * ../PW/bp_strings.f90                                                   #!
-!#   * ../PW/bp_ylm_q.f                                                       #!
-!#   * ../PW/bp_zgedi.f                                                       #!
-!#   * ../PW/bp_zgefa.f                                                       #!
-!#                                                                            #!
-!#   The PWSCF files that needed (minor) modifications were:                  #!
-!#   * ../PW/electrons.f90                                                    #!
-!#   * ../PW/input.f90                                                        #!
-!#   * ../PW/pwcom.f90                                                        #!
-!#   * ../PW/setup.f90                                                        #!
-!#                                                                            #!
-!#                                                                            #!
-!#   BRIEF SUMMARY OF THE METHODOLOGY                                         #!
-!#   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                         #!
-!#   The spontaneous polarization has two contibutions, electronic            #!
-!#   and ionic. With these additional routines, PWSCF will output both.       #!
-!#                                                                            #!
-!#   The ionic contribution is relatively trivial to compute, requiring       #!
-!#   knowledge only of the atomic positions and core charges. The new         #!
-!#   subroutines focus mainly on evaluating the electronic contribution,      #!
-!#   computed as a Berry phase, i.e., a global phase property that can        #!
-!#   be computed from inner products of Bloch states at neighboring           #!
-!#   points in k-space.                                                       #!
-!#                                                                            #!
-!#   The standard procedure would be for the user to first perform a          #!
-!#   self-consistent (sc) calculation to obtain a converged charge density.   #!
-!#   With well-converged sc charge density, the user would then run one       #!
-!#   or more non-self consistent (or "band structure") calculations,          #!
-!#   using the same main code, but with a flag to ask for the polarization.   #!
-!#   Each such run would calculate the projection of the polarization         #!
-!#   onto one of the three primitive reciprocal lattice vectors. In           #!
-!#   cases of high symmetry (e.g. a tetragonal ferroelectric phase), one      #!
-!#   such run would suffice. In the general case of low symmetry, the         #!
-!#   user would have to submit up to three jobs to compute the three          #!
-!#   components of polarization, and would have to obtain the total           #!
-!#   polarization "by hand" by summing these contributions.                   #!
-!#                                                                            #!
-!#   Accurate calculation of the electronic or "Berry-phase" polarization     #!
-!#   requires overlaps between wavefunctions along fairly dense lines (or     #!
-!#   "strings") in k-space in the direction of the primitive G-vector for     #!
-!#   which one is calculating the projection of the polarization. The         #!
-!#   code would use a higher-density k-mesh in this direction, and a          #!
-!#   standard-density mesh in the two other directions. See below for         #!
-!#   details.                                                                 #!
-!#                                                                            #!
-!#                                                                            #!
-!#   FUNCTIONALITY/COMPATIBILITY                                              #!
-!#   ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                              #!
-!#   * Berry phases for a given G-vector.                                     #!
-!#                                                                            #!
-!#   * Contribution to the polarization (in relevant units) for a given       #!
-!#     G-vector.                                                              #!
-!#                                                                            #!
-!#   * Spin-polarized systems supported.                                      #!
-!#                                                                            #!
-!#   * Ultrasoft and norm-conserving pseudopotentials supported.              #!
-!#                                                                            #!
-!#   * The value of the "polarization quantum" and the ionic contribution     #!
-!#     to the polarization are reported.                                      #!
-!#                                                                            #!
-!#                                                                            #!
-!#   NEW INPUT PARAMETERS                                                     #!
-!#   ~~~~~~~~~~~~~~~~~~~~                                                     #!
-!#   * lberry (.TRUE. or .FALSE.)                                             #!
-!#     Tells PWSCF that a Berry phase calcultion is desired.                  #!
-!#                                                                            #!
-!#   * gdir (1, 2, or 3)                                                      #!
-!#     Specifies the direction of the k-point strings in reciprocal space.    #!
-!#     '1' refers to the first reciprocal lattice vector, '2' to the          #!
-!#     second, and '3' to the third.                                          #!
-!#                                                                            #!
-!#   * nppstr (integer)                                                       #!
-!#     Specifies the number of k-points to be calculated along each           #!
-!#     symmetry-reduced string.                                               #!
-!#                                                                            #!
-!#                                                                            #!
-!#   EXPLANATION OF K-POINT MESH                                              #!
-!#   ~~~~~~~~~~~~~~~~~~~~~~~~~~~                                              #!
-!#   If gdir=1, the program takes the standard input specification of the     #!
-!#   k-point mesh (nk1 x nk2 x nk3) and stops if the k-points in dimension    #!
-!#   1 are not equally spaced or if its number is not equal to nppstr,        #!
-!#   working with a mesh of dimensions (nppstr x nk2 x nk3).  That is, for    #!
-!#   each point of the (nk2 x nk3) two-dimensional mesh, it works with a      #!
-!#   string of nppstr k-points extending in the third direction.  Symmetry    #!
-!#   will be used to reduce the number of strings (and assign them weights)   #!
-!#   if possible.  Of course, if gdir=2 or 3, the variables nk2 or nk3 will   #!
-!#   be overridden instead, and the strings constructed in those              #!
-!#   directions, respectively.                                                #!
-!#                                                                            #!
-!#                                                                            #!
-!#   BIBLIOGRAPHY                                                             #!
-!#   ~~~~~~~~~~~~                                                             #!
-!#   The theory behind this implementation is described in:                   #!
-!#   [1] R D King-Smith and D Vanderbilt, "Theory of polarization of          #!
-!#       crystaline solids", Phys Rev B 47, 1651 (1993).                      #!
-!#                                                                            #!
-!#   Other relevant sources of information are:                               #!
-!#   [2] D Vanderbilt and R D King-Smith, "Electronic polarization in the     #!
-!#       ultrasoft pseudopotential formalism", internal report (1998),        #!
-!#   [3] D Vanderbilt, "Berry phase theory of proper piezoelectric            #!
-!#       response", J Phys Chem Solids 61, 147 (2000).                        #!
-!#                                                                            #!
-!#                                                                            #!
-!#                                              dieguez@physics.rutgers.edu   #!
-!#                                                             09 June 2003   #!
-!#                                                                            #!
-!#                                                                            #!
-!##############################################################################!
+!
+! Copyright (C) 2001-2004 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 
+! this routine is used to calculate the electronic polarization
+! when a finite  electric field describe through the modern
+! theory of the polarization is applied.
+! is very close to the routine c_phase in bp_c_phase
+! however the numbering of the k-points in the strings is different
 
 #include "f_defs.h"
 !======================================================================!
@@ -163,7 +40,8 @@ SUBROUTINE c_phase_field
    USE wvfct,                ONLY : npwx, npw, nbnd
    USE wavefunctions_module, ONLY : evc
    USE bp
-  USE fixed_occ
+   USE fixed_occ
+
 
 !  --- Make use of the module with common information ---
 
@@ -254,6 +132,7 @@ SUBROUTINE c_phase_field
    REAL(dp) :: ylm_dk(lmaxq*lmaxq)
    REAL(dp) :: zeta_mod
    REAL(dp) :: chi
+   REAL(dp) :: pola, pola_ion
    COMPLEX(dp) :: aux(ngm)
    COMPLEX(dp) :: aux0(ngm)
    COMPLEX(dp) :: becp0(nkb,nbnd)
@@ -276,12 +155,11 @@ SUBROUTINE c_phase_field
 
    COMPLEX(dp) :: psi(npwx,nbnd)
    COMPLEX(dp) :: psi1(npwx,nbnd)
+   COMPLEX(dp) :: zeta_loc
 
 
    INTEGER ipivi(nbnd,nbnd),ii
 
-   LOGICAL overlap! se true caso ultrasoft
-   LOGICAL verboso!se true output verboso
    LOGICAL l_cal!flag for doing mat calculation
 
 
@@ -289,20 +167,14 @@ SUBROUTINE c_phase_field
 !                               INITIALIZATIONS
 !  -------------------------------------------------------------------------   !
 
-   overlap = .true.
-   verboso = .false.
-!  --- Write header ---
-   if( verboso) then
-      WRITE(6,"(/,/,/,15X,50('='))")
-      WRITE(6,"(28X,'POLARIZATION CALCULATION')")
-      WRITE(6,"(15X,50('-'),/)")
-   endif
+  pola=0.d0!set to 0 electronic polarization   
+
 !  --- Check that we are working with an insulator with no empty bands ---
 !   IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) CALL errore('c_phase', &
 !                'Polarization only for insulators and no empty bands',1)
 
 IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
-   &write(6,*) 'ATTENTION: EL FIELD AND OCCUPATIONS'
+   &write(stdout,*) 'PAY ATTENTION: EL FIELD AND OCCUPATIONS'
 
 !  --- Define a small number ---
    eps=1.0E-6_dp
@@ -354,14 +226,11 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
       gpar(1)=(xk(1,nppstr)-xk(1,1))*DBLE(nppstr)/DBLE(nppstr-1)
       gpar(2)=(xk(2,nppstr)-xk(2,1))*DBLE(nppstr)/DBLE(nppstr-1)
       gpar(3)=(xk(3,nppstr)-xk(3,1))*DBLE(nppstr)/DBLE(nppstr-1)
-      gpar(:)=gpar(:)!/at(gdir,gdir)!cella ortorombica ATTENZIONE
       gvec=dsqrt(gpar(1)**2+gpar(2)**2+gpar(3)**2)*tpiba
    else
       gpar(1)=0.
       gpar(2)=0.
       gpar(3)=0.
-!      gpar(gdir)=1.
-!      gvec=dsqrt(gpar(1)**2+gpar(2)**2+gpar(3)**2)*tpiba
       gpar(gdir)=1./at(gdir,gdir)!
       gvec=tpiba/sqrt(at(gdir,1)**2.+at(gdir,2)**2.+at(gdir,3)**2.)
    endif
@@ -372,18 +241,13 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
       dk(1)=xk(1,2)-xk(1,1)
       dk(2)=xk(2,2)-xk(2,1) 
       dk(3)=xk(3,2)-xk(3,1)
-      dkmod=SQRT(dk(1)**2+dk(2)**2+dk(3)**2)*tpiba!cella ortorombica
+      dkmod=SQRT(dk(1)**2+dk(2)**2+dk(3)**2)*tpiba!orthorombic cell
      
-!      IF (ABS(dkmod-gvec/DBLE(nppstr)) > eps) & 
-!           CALL errore('c_phase','Wrong k-strings?',1)
-   
-
    else!caso punto gamma, per adesso solo cella cubica
       dk(1)=0.
       dk(2)=0.
       dk(3)=0.
       dk(gdir)=1./at(gdir,gdir)
-!      dkmod=tpiba
       dkmod=tpiba/sqrt(at(gdir,1)**2.+at(gdir,2)**2.+at(gdir,3)**2.)
    endif
    
@@ -462,7 +326,7 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
        
 !     --- Start loop over orthogonal k-points ---
       DO kort=1,nkort
-
+         zeta_loc=(1.d0,0.d0)
 !        --- Index for this string ---
          istring=kort+(is-1)*nkort
 
@@ -636,12 +500,16 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
 !               write(6,*) "LogDet:", LOG(det)
 !              --- Multiply by the already calculated determinants ---
                zeta=zeta*det
+               zeta_loc=zeta_loc*det
+               
 
 !           --- End of dot products between wavefunctions and betas ---
             ENDIF
 
 !        --- End loop over parallel k-points ---
          END DO 
+         pola=pola+wstring(istring)*aimag(log(zeta_loc))
+
          kpoint=kpoint-1
 !        --- Calculate the phase for this string ---
          phik(istring)=AIMAG(LOG(zeta))
@@ -657,266 +525,30 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
 
 !  --- End loop over spin ---
    END DO
-   write(6,*) "Log_MDet:", LOG(zeta)
 !-----calculate polarization
 !-----the factor 2. is because of spin
-   berry_dip=2.d0*AIMAG(LOG(zeta))/dkmod
-!   write(6,*) berry_dip
+   if(nspin==1) pola=pola*2.d0
+   pola=pola/(gpar(gdir)*tpiba)
+
+!write output
+   write(stdout,*)
+   write(stdout,*) "    Expectation value of exp(iGx):",zeta
+   write(stdout,*) "    Electronic Dipole per cell (a.u.)",pola
  
 
 
- 
-!  -------------------------------------------------------------------------   !
-!                    electronic polarization: phase average                    !
-!  -------------------------------------------------------------------------   !
-
-!  --- Initializations ---
-   cave_up=(0.0_dp,0.0_dp)
-   cave_dw=(0.0_dp,0.0_dp)
-
-!  --- Start loop over spins ---
-   DO is=1,nspin
-
-!  --- Initialize average of phases as complex numbers ---
-      cave=(0.0_dp,0.0_dp)
-
-!     --- Start loop over strings with same spin ---
-      DO kort=1,nkort
-
-!        --- Calculate string index ---
-         istring=kort+(is-1)*nkort
-
-!        --- Average phases as complex numbers ---
-         cave=cave+wstring(istring)*cphik(istring)
-
-!     --- End loop over strings with same spin ---
-      END DO
-
-!     --- Get the angle corresponding to the complex numbers average ---
-      theta0=atan2(AIMAG(cave), DBLE(cave))
-
-!     --- Assign this angle to the corresponding spin phase average ---
-      IF (nspin == 1) THEN
-         phiup=theta0
-         phidw=theta0
-      ELSE IF (nspin == 2) THEN
-         IF (is == 1) THEN
-            phiup=theta0
-         ELSE IF (is == 2) THEN
-            phidw=theta0
-         END IF
-      END IF
-
-!     --- Put the phases in an around theta0 ---
-      cphik(istring)=cphik(istring)/cave
-      dtheta=atan2(AIMAG(cphik(istring)), DBLE(cphik(istring)))
-      phik(istring)=theta0+dtheta
-
-!  --- End loop over spins
-   END DO
-  
-   
-!  -------------------------------------------------------------------------   !
-!                     electronic polarization: remap phases                    !
-!  -------------------------------------------------------------------------   !
-
-!  --- Remap string phases to interval [-0.5,0.5) ---
-   pdl_elec=phik/(2.0_dp*pi)
-   mod_elec=1
-
-!  --- Remap spin average phases to interval [-0.5,0.5) ---
-   pdl_elec_up=phiup/(2.0_dp*pi)
-   mod_elec_up=1
-   pdl_elec_dw=phidw/(2.0_dp*pi)
-   mod_elec_dw=1
-
-!  --- Depending on nspin, remap total phase to [-1,1) or [-0.5,0.5) ---
-   pdl_elec_tot=pdl_elec_up+pdl_elec_dw
-   IF (nspin == 1) THEN
-      pdl_elec_tot=pdl_elec_tot-2.0_dp*NINT(pdl_elec_tot/2.0_dp)
-      mod_elec_tot=2
-   ELSE IF (nspin == 2) THEN
-      pdl_elec_tot=pdl_elec_tot-1.0_dp*NINT(pdl_elec_tot/1.0_dp)
-      mod_elec_tot=1
-   END IF
-  
-   
 !  -------------------------------------------------------------------------   !
 !                              ionic polarization                              !
 !  -------------------------------------------------------------------------   !
 
-!  --- Look for ions with odd number of charges ---
-   mod_ion=2
-   lodd=.FALSE.
-   DO na=1,nat
-      IF (MOD(NINT(zv(ityp(na))),2) == 1) THEN
-         mod_ion(na)=1
-         lodd=.TRUE.
-      END IF
-   END DO
+  pola_ion=0.d0
+  DO na=1,nat
+    pola_ion=pola_ion+zv(ityp(na))*tau(gdir,na)
+  END DO
 
-!  --- Calculate ionic polarization phase for every ion ---
-   pdl_ion=0.0_dp
-   DO na=1,nat
-      DO i=1,3
-         pdl_ion(na)=pdl_ion(na)+zv(ityp(na))*tau(i,na)*gpar(i)
-      ENDDO
-      IF (mod_ion(na) == 1) THEN
-         pdl_ion(na)=pdl_ion(na)-1.0_dp*nint(pdl_ion(na)/1.0_dp)
-      ELSE IF (mod_ion(na) == 2) THEN
-         pdl_ion(na)=pdl_ion(na)-2.0_dp*nint(pdl_ion(na)/2.0_dp)
-      END IF
-   ENDDO
+   write(stdout,*) "    Ionic Dipole per cell (a.u.)",pola_ion
+   write(stdout,*)
 
-!  --- Add up the phases modulo 2 iff the ionic charges are even numbers ---
-   pdl_ion_tot=SUM(pdl_ion(1:nat))
-   IF (lodd) THEN
-      pdl_ion_tot=pdl_ion_tot-1.d0*nint(pdl_ion_tot/1.d0)
-      mod_ion_tot=1
-   ELSE
-      pdl_ion_tot=pdl_ion_tot-2.d0*nint(pdl_ion_tot/2.d0)
-      mod_ion_tot=2
-   END IF
-
-
-!  -------------------------------------------------------------------------   !
-!                              total polarization                              !
-!  -------------------------------------------------------------------------   !
-
-!  --- Add electronic and ionic contributions to total phase ---
-   pdl_tot=pdl_elec_tot+pdl_ion_tot
-   IF ((.NOT.lodd).AND.(nspin == 1)) THEN
-      mod_tot=2
-   ELSE
-      mod_tot=1
-   END IF
-
-
-!  -------------------------------------------------------------------------   !
-!                           write output information                           !
-!  -------------------------------------------------------------------------   !
-!  --- Information about the k-points string used ---
-   if(verboso) then
-      WRITE(6,"(/,21X,'K-POINTS STRINGS USED IN CALCULATIONS')")
-      WRITE(6,"(21X,37('~'),/)")
-      WRITE(6,"(7X,'G-vector along string (2 pi/a):',3F9.5)") &
-           gpar(1),gpar(2),gpar(3)
-      WRITE(6,"(7X,'Modulus of the vector (1/bohr):',F9.5)") &
-           gvec
-      WRITE(6,"(7X,'Number of k-points per string:',I4)") nppstr
-      WRITE(6,"(7X,'Number of different strings  :',I4)") nkort
-      
-!  --- Information about ionic polarization phases ---
-      WRITE(6,"(2/,31X,'IONIC POLARIZATION')")
-      WRITE(6,"(31X,18('~'),/)")
-      WRITE(6,"(8X,'Note: (mod 1) means that the phases (angles ranging from' &
-           & /,8X,'-pi to pi) have been mapped to the interval [-1/2,+1/2) by',&
-           & /,8X,'dividing by 2*pi; (mod 2) refers to the interval [-1,+1)',&
-           & /)")
-      WRITE(6,"(2X,76('='))")
-      WRITE(6,"(4X,'Ion',4X,'Species',4X,'Charge',14X, &
-           & 'Position',16X,'Phase')")
-      WRITE(6,"(2X,76('-'))")
-      DO na=1,nat
-         WRITE(6,"(3X,I3,8X,A2,F12.3,5X,3F8.4,F12.5,' (mod ',I1,')')") &
-              & na,atm(ityp(na)),zv(ityp(na)), &
-              & tau(1,na),tau(2,na),tau(3,na),pdl_ion(na),mod_ion(na)
-      END DO
-      WRITE(6,"(2X,76('-'))")
-      WRITE(6,"(47X,'IONIC PHASE: ',F9.5,' (mod ',I1,')')") pdl_ion_tot,mod_ion_tot
-      WRITE(6,"(2X,76('='))")
-      
-!  --- Information about electronic polarization phases ---
-      WRITE(6,"(2/,28X,'ELECTRONIC POLARIZATION')")
-      WRITE(6,"(28X,23('~'),/)")
-      WRITE(6,"(8X,'Note: (mod 1) means that the phases (angles ranging from' &
-           & /,8X,'-pi to pi) have been mapped to the interval [-1/2,+1/2) by',&
-           & /,8X,'dividing by 2*pi; (mod 2) refers to the interval [-1,+1)',&
-           & /)")
-      WRITE(6,"(2X,76('='))")
-      WRITE(6,"(3X,'Spin',4X,'String',5X,'Weight',6X, &
-            &  'First k-point in string',9X,'Phase')")
-      WRITE(6,"(2X,76('-'))")
-      DO istring=1,nstring/nspin
-         ind1=1+(istring-1)*nppstr
-         WRITE(6,"(3X,' up ',3X,I5,F14.6,4X,3(F8.4),F12.5,' (mod ',I1,')')") &
-              &  istring,wstring(istring), &
-              &  xk(1,ind1),xk(2,ind1),xk(3,ind1),pdl_elec(istring),mod_elec(istring)
-      END DO
-      WRITE(6,"(2X,76('-'))")
-!  --- Treat unpolarized/polarized spin cases ---
-      IF (nspin == 1) THEN
-!     --- In unpolarized spin, just copy again the same data ---
-         DO istring=1,nstring
-            ind1=1+(istring-1)*nppstr
-            WRITE(6,"(3X,'down',3X,I5,F14.6,4X,3(F8.4),F12.5,' (mod ',I1,')')") &
-                 istring,wstring(istring), xk(1,ind1),xk(2,ind1),xk(3,ind1), &
-              pdl_elec(istring),mod_elec(istring)
-         END DO
-      ELSE IF (nspin == 2) THEN
-!     --- If there is spin polarization, write information for new strings ---
-         DO istring=nstring/2+1,nstring
-            ind1=1+(istring-1)*nppstr
-            WRITE(6,"(3X,'down',3X,I4,F15.6,4X,3(F8.4),F12.5,' (mod ',I1,')')") &
-           &    istring,wstring(istring), xk(1,ind1),xk(2,ind1),xk(3,ind1), &
-           &    pdl_elec(istring),mod_elec(istring)
-         END DO
-      END IF
-      WRITE(6,"(2X,76('-'))")
-      WRITE(6,"(40X,'Average phase (up): ',F9.5,' (mod ',I1,')')") & 
-           pdl_elec_up,mod_elec_up
-      WRITE(6,"(38X,'Average phase (down): ',F9.5,' (mod ',I1,')')")& 
-           pdl_elec_dw,mod_elec_dw
-      WRITE(6,"(42X,'ELECTRONIC PHASE: ',F9.5,' (mod ',I1,')')") & 
-           pdl_elec_tot,mod_elec_tot
-      WRITE(6,"(2X,76('='))")
-
-!  --- Information about total phase ---
-      WRITE(6,"(2/,31X,'SUMMARY OF PHASES')")
-      WRITE(6,"(31X,17('~'),/)")
-      WRITE(6,"(26X,'Ionic Phase:',F9.5,' (mod ',I1,')')") &
-           pdl_ion_tot,mod_ion_tot
-      WRITE(6,"(21X,'Electronic Phase:',F9.5,' (mod ',I1,')')") &
-           pdl_elec_tot,mod_elec_tot
-      WRITE(6,"(26X,'TOTAL PHASE:',F9.5,' (mod ',I1,')')") &
-           pdl_tot,mod_tot
-
-!  --- Information about the value of polarization ---
-      WRITE(6,"(2/,29X,'VALUES OF POLARIZATION')")
-      WRITE(6,"(29X,22('~'),/)")
-      WRITE(6,"( &
-           &   8X,'The calculation of phases done along the direction of vector ',I1, &
-           &   /,8X,'of the reciprocal lattice gives the following contribution to', &
-           &   /,8X,'the polarization vector (in different units, and being Omega', &
-           &   /,8X,'the volume of the unit cell):')") &
-           gdir
-!  --- Calculate direction of polarization and modulus of lattice vector ---
-      rmod=SQRT(at(1,gdir)*at(1,gdir)+at(2,gdir)*at(2,gdir) &
-           +at(3,gdir)*at(3,gdir))
-      upol(:)=at(:,gdir)/rmod
-      rmod=alat*rmod
-      !  --- Give polarization in units of (e/Omega).bohr ---
-      fac=rmod
-      WRITE(6,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  (e/Omega).bohr')") &
-           fac*pdl_tot,fac*DBLE(mod_tot)
-!  --- Give polarization in units of e.bohr ---
-      fac=rmod/omega
-      WRITE(6,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  e/bohr^2')") &
-           fac*pdl_tot,fac*DBLE(mod_tot)
-!  --- Give polarization in SI units (C/m^2) ---
-      fac=(rmod/omega)*(1.60097E-19_dp/5.29177E-11_dp**2)
-      WRITE(6,"(/,11X,'P = ',F11.7,'  (mod ',F11.7,')  C/m^2')") &
-           fac*pdl_tot,fac*DBLE(mod_tot)
-!  --- Write polarization direction ---
-      WRITE(6,"(/,8X,'The polarization direction is:  ( ', &
-           &  F7.5,' , ',F7.5,' , ',F7.5,' )'))") upol(1),upol(2),upol(3)
-
-!  --- End of information relative to polarization calculation ---
-      WRITE(6,"(/,/,15X,50('=')/,/)")
-   endif
-
-!  -------------------------------------------------------------------------   !
-!                                  finalization                                !
 !  -------------------------------------------------------------------------   !
 
 !  --- Free memory ---
