@@ -257,7 +257,7 @@ MODULE input_parameters
           !if true a static homogeneous electric field is present
 
 
-        INTEGER  :: nberrycic = 1 
+        INTEGER  :: nberrycyc = 1 
           !number of covergence cycles on electric field
 
 
@@ -276,7 +276,7 @@ MODULE input_parameters
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, wfcdir, &
           max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
           pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, &
-          wf_collect, printwfc, scradir,lelfield, nberrycic, refg
+          wf_collect, printwfc, scradir,lelfield, nberrycyc, refg
 
 
 !
