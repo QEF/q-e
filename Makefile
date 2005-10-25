@@ -61,7 +61,7 @@ tools : bindir mods libs pw
 	( cd pwtools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
-ld1 : bindir mods libs pw
+ld1 : bindir mods libs
 	if test -d atomic ; then \
 	( cd atomic ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
