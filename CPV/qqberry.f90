@@ -11,7 +11,6 @@ subroutine qqberry2( gqq,gqqm, ipol)
 !  this subroutine computes the array gqq and gqqm
 !  gqq=int_dr qq(r)exp(iGr)=<Beta_r|exp(iGr)|Beta_r'>
 !  gqqm=int_dr qq(r)exp(-iGr)=<Beta_r|exp(-iGr)|Beta_r'>
-! ATTENZIONE ora solo cella cubica
 
 !   gqq output: as defined above
 
@@ -66,7 +65,6 @@ subroutine qqberry2( gqq,gqqm, ipol)
 
      
 
-! qui deve trovare corrispondenza ipol, g adatto
 
   qradb2 = 0.0d0
      
@@ -98,8 +96,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
      c=fpi                 !/omegab
 ! now the radial part
      do l=1,nqlc(is)                        
-!        xg=tpiba!ATTENZIONE cella cubica 
-        xg= gmes !cella ortorombica
+        xg= gmes !only orthorombic cells
         call bess(xg,l,kkbeta(is),r(1,is),jl)
         do iv= 1,nbeta(is)
            do jv=iv,nbeta(is)

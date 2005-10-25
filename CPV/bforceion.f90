@@ -83,7 +83,7 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
               do i=1,n
                  do j=1,n
 
-                    temp = temp + ci*gmes*gqq(iv,jv,ia,is)* &!ATTENZIONE: segno + dovuto al exp(+iGr) in gqq
+                    temp = temp + ci*gmes*gqq(iv,jv,ia,is)* &!TAKECARE: sign + due to exp(+iGr) in gqq
                          &        bec0(inl,i)*bec0(jnl,j)*qmatinv(j,i)
 
                     temp1 = temp1 + gqq(iv,jv,ia,is)*&

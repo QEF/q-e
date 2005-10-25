@@ -9,9 +9,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
 
 ! this subroutine computes the force for electrons
 ! in case of Berry,s phase like perturbation
-! see internal notes
 ! it gives the force for the i-th state
-!respect to vectorial (serial) program I changed ngwx to ngw :-)
 
 ! c0 input: Psi^0_i
 ! c1 input: Psi^1_i
@@ -194,9 +192,8 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
    endif
 
    
-   enb = 2.*AIMAG(log(detq))/gmes!ATTENZIONE al segno
+   enb = 2.*AIMAG(log(detq))/gmes!take care of sign
    
-!   write(6,*) detq, enb
    return
  end subroutine enberry
 

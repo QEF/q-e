@@ -34,6 +34,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
   use uspp_param, only: nh, nhm
   use uspp, only : nhsa=> nkb
   use electrons_base, only: nx => nbspx, n => nbsp
+  use mp, only: mp_sum
   
 
   implicit none
@@ -123,12 +124,10 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
               endif
            endif
         enddo
-#ifdef __PARA
-        call reduce(2,sca)
-#endif
+        
+        call mp_sum(sca)
       
         qmat(ix,jx)=sca
-!        write(6,*) ix,jx,sca!ATTENZIONE
 
 !  now the non local vanderbilt part
             
@@ -161,17 +160,14 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
  
 
 #ifdef __DEC
-!ATTENZIONE
-!da aggiustare
+!take care
   call cgetrf(n,n,qmat,nx,ipiv,info)!ATTENZIONE
   call cgetri(n,qmat,nx,ipiv,work,nx,info)
 #endif 
 
 #ifdef __NEC
   call cbgnlu(qmat,nx,n,ipiv,info)
-!  write(6,*) 'info cbgnlu :', info!ATTENZIONE
   call cbgndi(qmat,nx,n,ipiv,cdet,det,0,work,info)
-!  write(6,*) 'info cbgndi :', info!ATTENZIONE
   detq =cdet*10.**det
 #endif 
 
@@ -181,17 +177,6 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
  !  write(6,*) 'info trf', info
   detq=(1.,0.)
 
-!  nexl=0.
-!  do ii=1,n
-!     if(ipiv(ii,1).ge.1 .and. ipiv(ii,1) .le.n) then
-!        if(ipiv(ii,1).ne.ii) nexl = nexl + 0.5
-!     endif
-!     detq = detq*qmat(ii,ii) 
-!  enddo
-! write(6,*) 'nexl :', nexl!ATTENZIONE
-!  detq=detq*(-1.,0.)**nexl
-
-! ho trovato le righe sottostanti su manuale, vanno bene????
  
   do ii=1,n
      if(ii.ne.ipiv(ii,1)) detq=-detq
@@ -203,7 +188,6 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
 
  
   call zgetri(n,qmat,nx,ipiv,work,nx,info)
- !  write(6,*) 'info tri', info
 #endif
 
   
@@ -218,15 +202,9 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
         qmat(jx,ix)=0.5*(qmat(ix,jx)+qmat(jx,ix))
         qmat(ix,jx)=qmat(jx,ix)
 
-!        sca = (0.,0.)
-!        do i=1,n
-!           sca=sca+qmat(jx,i)*qmat2(i,ix)
-!        enddo
-!            write(6,*) ix,jx, sca
      enddo
   enddo
 
-!  write(6,*) 'determinante', detq
       
   return
 end subroutine qmatrixd

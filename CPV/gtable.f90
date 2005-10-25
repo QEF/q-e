@@ -25,6 +25,8 @@ subroutine gtable( ipol, ctable)
 
   use gvecw, only: ngw  
   use reciprocal_vectors, only: mill_l
+  use mp, only: mp_sum
+  use io_global, only: ionode, stdout
 
 
   implicit none
@@ -106,10 +108,8 @@ subroutine gtable( ipol, ctable)
   enddo
 
 
-#ifdef __PARA
-  call reduce(1,test)
-#endif
-  write(6,*) '#not found, gtable: ', test
+  call mp_sum(test)
+  if(ionode) write(stdout,*) '#not found, gtable: ', test
 
   return
 end subroutine gtable
@@ -131,6 +131,9 @@ subroutine gtablein( ipol, ctabin)
   
   use gvecw, only: ngw  
   use reciprocal_vectors, only: mill_l
+  use mp, only: mp_sum
+  use io_global, only: ionode, stdout
+
 
   implicit none
 
@@ -204,10 +207,8 @@ subroutine gtablein( ipol, ctabin)
 
 
   enddo
-#ifdef __PARA
-  call reduce(1,test)
-#endif
-  write(6,*) '#not found, gtabin: ', test
+  call mp_sum(test)
+  if(ionode) write(stdout,*) '#not found, gtabin: ', test
 
   return
 

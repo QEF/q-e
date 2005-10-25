@@ -71,7 +71,6 @@ subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
   enddo
 
   enbi=AIMAG(log(exp(temp)))/gmes!this sounds stupid it's just a Riemann plane
-!  write(6,*) 'Pola  :', pola!ATTENZIONE
   return
 end subroutine berryion
 
@@ -106,7 +105,7 @@ end subroutine berryion
          end do
          cdz(i)=cdz(i)/zmas
       end do
-      write(6,*) 'Center of charge', cdz(3)!ATTENZIONE
+!      write(6,*) 'Center of charge', cdz(3)!ATTENZIONE
 !
       return
       end subroutine cofcharge
@@ -144,7 +143,6 @@ end subroutine berryion
                 tch=tch+zv(is)
              enddo             
           enddo
-          write(6,*) 'Forza su ioni in ipol:', fcm!ATTENZIONE 
           fcm=fcm/tch
           isa = 0
           do is=1,nsp

@@ -420,7 +420,7 @@
             do j=1,n
               do ig=1,ngw
                 dene0=dene0-2.d0*DBLE(CONJG(hi(ig,i))*hpsi(ig,j))*fmat0(j,i,1)
-                !ATTENZIONE solo caso nspin=1!!!!!
+                !ATTENZIONE only case nspin=1!!!!!
                 dene0=dene0-2.d0*DBLE(CONJG(hpsi(ig,i))*hi(ig,j))*fmat0(j,i,1)
               enddo
               if (ng0.eq.2) then
@@ -722,29 +722,11 @@
             enddo
   
 
-!            !    printing of the eigenvalues in fort.101
-!                         write(101,*)   '============='
-!                          write(101,'(2i10)') nfi,niter
-!                          write(101,*) 'Eigenvalues(x=0)'
-!                          do is=1,nspin
-!                             nss=nupdwn(is)
-!                             write(101,*) 'spin=',is
-!                             write(101,*) (e0(j),j=1,nss)
-!                          enddo
-  
             !     calculation of the occupations and the fermi energy
             !     corresponding to the chosen ismear,etemp and nspin
   
            call efermi(nelt,n,etemp,1,f1,ef1,e0,enocc,ismear,nspin)
   
-!            !    printing of the occupations in fort.101
-!                          write(101,*) 'Fermi energy(x=0):',ef1 
-!                          write(101,*) 'Occupations(x=0)'
-!                          do is=1,nspin
-!                             nss=nupdwn(is)
-!                             write(101,*) 'spin=',is
-!                             write(101,*) (f1(j),j=1,nss)
-!                          enddo
   
             !     calculation of the initial and final occupation matrices
             !     in the z0-rotated orbital basis
@@ -757,9 +739,6 @@
               dfmat(1:nss,1:nss,is)=-fmat0(1:nss,1:nss,is)+fmat1(1:nss,1:nss,is)
             end do
                    
-            !     printing of the loop index in fort.100
-            ! write(100,'(2i10)') nfi,niter
-            !     edition of f(i)
             f0(1:n)=f(1:n)
                    
             !     initialization when xmin is determined by sampling 
@@ -834,11 +813,9 @@
               !     free energy at x=1
               atot1=etot+entropy
               etot1=etot
-  !            write(*,*)'Energie:', x,atot1,entropy   
   
            end do
   
-            !write(100,*) "____________________"
   
             !     calculation of c0hc0_ij at x=1
             call prefor(eigr,betae)!ATTENZIONE
@@ -1037,15 +1014,7 @@
             !     free energy at x=xmin
             atotmin=etot+entropy      
   
-            !     output
-            !    write(100,'(a35,f12.7)') 'Fermi energy =',ef1
-            !    write(100,'(a35,6f12.7)') 'xmin,atot0,atotmin,atot1,datot=',      &
-            !         &          xmin,atot0,atotmin,atot1,atotmin-atot0
-            !    write(100,'(a35,3f12.7)') 'eqa,eqb,eqc=',eqa,eqb,eqc 
-            !    write(100,'(a35,3f12.7)') 'dadx1,dedx1,dentdx1=',dadx1,dedx1,     &
-            !         &                          dentdx1
   
-            if(iprsta.gt.1) write(6,*) 'Ciclo :', itercg,atot0,atot1
             atot0=atotmin
             etot0=etot
             enever=etot

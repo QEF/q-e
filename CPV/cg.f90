@@ -20,26 +20,26 @@ MODULE cg_module
 !***  Conjugate Gradient
 !***
       real(8)  esse,essenew !factors in c.g.
-      COMPLEX(8), ALLOCATABLE :: gi(:,:)!coniugati
-      COMPLEX(8), ALLOCATABLE :: hi(:,:)!gradienti di ricerca
-      COMPLEX(8), ALLOCATABLE :: c0old(:,:)!vecchie funzioni d'onda, per estrapolazione
-      COMPLEX(8), ALLOCATABLE :: hpsi(:,:) !termini H|Psi_i>
-      real(8)  ene0,ene1,dene0,enever,enesti !energie per minimizazzione lineare lungo hi
-      real(8)  passof,passov !passo effettivo stimato durante minimizzazione
-      integer itercg !numero iterazione
-      logical ltresh!flag per convergenza su energia
-      real(8) passo!passo per arrivare a  minimo
-      real(8) etotnew,etotold!per vedere convergenza
-      real(8) spasso!segno passetto
-      logical tcutoff!convergenza energia per togliere cutoff
-      real(8), ALLOCATABLE :: emme(:,:)!matrice per convergenza spinta
-      logical restartcg!se vero ricomincia gradiente coniugato da steepest descend
-      integer numok!numero volte differenza energia sotto treshhold
-      real(8) pcnum,pcden!per calcolare preconditioning
-      integer iter3!per tentativi ciclo3
-      real(8) ebanda!energia banda per preconditioning
-      logical ene_ok!se vero l'energia ha passato il test, non deve ricalcolare
-      integer ninner_ef!per conteggio ciclo interno, usato per stati eccitati
+      COMPLEX(8), ALLOCATABLE :: gi(:,:)!conjugates 
+      COMPLEX(8), ALLOCATABLE :: hi(:,:)!gradients 
+      COMPLEX(8), ALLOCATABLE :: c0old(:,:)!old wfcs for extrapolation
+      COMPLEX(8), ALLOCATABLE :: hpsi(:,:) !terms H|Psi_i>
+      real(8)  ene0,ene1,dene0,enever,enesti !energy terms for linear minimization along hi
+      real(8)  passof,passov !step to minimum: effective, estimated
+      integer itercg !iteration number
+      logical ltresh!flag for convergence on energy
+      real(8) passo!step to minimum
+      real(8) etotnew,etotold!energies
+      real(8) spasso!sign of small step
+      logical tcutoff!
+      real(8), ALLOCATABLE :: emme(:,:)!matrix used for cal_emme style of projection
+      logical restartcg!if .true. restart again the CG algorithm, performing a SD step
+      integer numok!counter on converged iterations
+      real(8) pcnum,pcden
+      integer iter3
+      real(8) ebanda
+      logical ene_ok!if .true. do not recalculate energy
+      integer ninner_ef
 
 
 CONTAINS
