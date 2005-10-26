@@ -1,6 +1,6 @@
 
      Program PWSCF     v.3.0    starts ...
-     Today is 17Oct2005 at  3: 3:47 
+     Today is 26Oct2005 at  3: 7:40 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -68,8 +68,7 @@
         O1             6.00    55.84700     O ( 1.00)
         O2             6.00    55.84700     O ( 1.00)
 
-      2 Sym.Ops. (no inversion)
-
+     No symmetry!
 
    Cartesian axes
 
@@ -110,7 +109,7 @@
  ==============================================================================
      Starting wfc are atomic +   4 random wfc
 
-     total cpu time spent up to now is      2.73 secs
+     total cpu time spent up to now is      2.74 secs
 
      Self-consistent Calculation
 
@@ -123,18 +122,18 @@
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
      charge :     3.465405
-     magnetization :          0.708400   -0.000104   -0.000104
-     magnetization/charge:    0.204420   -0.000030   -0.000030
-     polar coord.: r, theta, phi [deg] :     0.708400   90.008440   -0.008440
+     magnetization :          0.708400   -0.000059   -0.000149
+     magnetization/charge:    0.204420   -0.000017   -0.000043
+     polar coord.: r, theta, phi [deg] :     0.708400   90.012079   -0.004801
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.2000   0.2000   0.2000
      charge :     3.459734
-     magnetization :          0.707714    0.000009    0.000009
-     magnetization/charge:    0.204557    0.000003    0.000003
-     polar coord.: r, theta, phi [deg] :     0.707714   89.999256    0.000744
+     magnetization :          0.707714    0.000022   -0.000004
+     magnetization/charge:    0.204557    0.000006   -0.000001
+     polar coord.: r, theta, phi [deg] :     0.707714   90.000326    0.001814
 
  ==============================================================================
 
@@ -142,8 +141,8 @@
 
      WARNING: integrated charge=    11.99999785, expected=    12.00000000
 
-     total energy              =   -63.26179332 ryd
-     estimated scf accuracy    <     0.17748587 ryd
+     total energy              =   -63.26179334 ryd
+     estimated scf accuracy    <     0.17748591 ryd
 
      total magnetization       =     2.00     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.09 Bohr mag/cell
@@ -157,25 +156,25 @@
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
      charge :     3.463555
-     magnetization :          0.694946   -0.000011   -0.000011
-     magnetization/charge:    0.200645   -0.000003   -0.000003
-     polar coord.: r, theta, phi [deg] :     0.694946   90.000875   -0.000875
+     magnetization :          0.694946    0.000023   -0.000044
+     magnetization/charge:    0.200645    0.000007   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.694946   90.003605    0.001858
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.2000   0.2000   0.2000
      charge :     3.457687
-     magnetization :          0.694401   -0.000034   -0.000034
-     magnetization/charge:    0.200828   -0.000010   -0.000010
-     polar coord.: r, theta, phi [deg] :     0.694401   90.002798   -0.002798
+     magnetization :          0.694401   -0.000044   -0.000023
+     magnetization/charge:    0.200828   -0.000013   -0.000007
+     polar coord.: r, theta, phi [deg] :     0.694401   90.001937   -0.003659
 
  ==============================================================================
 
-     total cpu time spent up to now is      6.21 secs
+     total cpu time spent up to now is      6.16 secs
 
-     total energy              =   -63.41682410 ryd
-     estimated scf accuracy    <     0.11289321 ryd
+     total energy              =   -63.41682397 ryd
+     estimated scf accuracy    <     0.11289322 ryd
 
      total magnetization       =     2.00     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.07 Bohr mag/cell
@@ -189,25 +188,25 @@
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
      charge :     3.451663
-     magnetization :          0.645224   -0.000050   -0.000050
-     magnetization/charge:    0.186931   -0.000015   -0.000015
-     polar coord.: r, theta, phi [deg] :     0.645224   90.004468   -0.004468
+     magnetization :          0.645225   -0.000046   -0.000055
+     magnetization/charge:    0.186932   -0.000013   -0.000016
+     polar coord.: r, theta, phi [deg] :     0.645225   90.004887   -0.004080
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.2000   0.2000   0.2000
-     charge :     3.445947
-     magnetization :          0.644692    0.000002    0.000002
-     magnetization/charge:    0.187087    0.000001    0.000001
-     polar coord.: r, theta, phi [deg] :     0.644692   89.999837    0.000163
+     charge :     3.445948
+     magnetization :          0.644693    0.000086   -0.000082
+     magnetization/charge:    0.187087    0.000025   -0.000024
+     polar coord.: r, theta, phi [deg] :     0.644693   90.007315    0.007645
 
  ==============================================================================
 
-     total cpu time spent up to now is      7.81 secs
+     total cpu time spent up to now is      7.78 secs
 
-     total energy              =   -63.42576665 ryd
-     estimated scf accuracy    <     0.00334249 ryd
+     total energy              =   -63.42576733 ryd
+     estimated scf accuracy    <     0.00334251 ryd
 
      total magnetization       =     1.98     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.03 Bohr mag/cell
@@ -220,57 +219,57 @@
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     3.454844
-     magnetization :          0.635403   -0.000001   -0.000001
-     magnetization/charge:    0.183917    0.000000    0.000000
-     polar coord.: r, theta, phi [deg] :     0.635403   90.000121   -0.000121
+     charge :     3.454840
+     magnetization :          0.635413    0.000008   -0.000010
+     magnetization/charge:    0.183920    0.000002   -0.000003
+     polar coord.: r, theta, phi [deg] :     0.635413   90.000908    0.000698
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.2000   0.2000   0.2000
-     charge :     3.448463
-     magnetization :          0.635183    0.000018    0.000018
-     magnetization/charge:    0.184193    0.000005    0.000005
-     polar coord.: r, theta, phi [deg] :     0.635183   89.998357    0.001643
+     charge :     3.448459
+     magnetization :          0.635195    0.000075   -0.000040
+     magnetization/charge:    0.184197    0.000022   -0.000012
+     polar coord.: r, theta, phi [deg] :     0.635195   90.003599    0.006759
 
  ==============================================================================
 
-     total cpu time spent up to now is      9.57 secs
+     total cpu time spent up to now is      9.55 secs
 
-     total energy              =   -63.42635258 ryd
-     estimated scf accuracy    <     0.00017869 ryd
+     total energy              =   -63.42635245 ryd
+     estimated scf accuracy    <     0.00017988 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.01 Bohr mag/cell
 
      iteration #  5     ecut=    25.00 ryd     beta=0.20
      Davidson diagonalization with overlap
-     ethr =  1.49E-06,  avg # of iterations = 13.0
+     ethr =  1.50E-06,  avg # of iterations = 13.0
  it, count           1           0           0
    1.00000000000000        2.00000000000000        3.00000000000000     
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     3.454818
-     magnetization :          0.630907   -0.000019   -0.000019
-     magnetization/charge:    0.182617   -0.000005   -0.000005
-     polar coord.: r, theta, phi [deg] :     0.630907   90.001685   -0.001685
+     charge :     3.454815
+     magnetization :          0.630906    0.000006   -0.000044
+     magnetization/charge:    0.182616    0.000002   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.630906   90.003977    0.000586
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.2000   0.2000   0.2000
-     charge :     3.449119
-     magnetization :          0.630413   -0.000003   -0.000003
-     magnetization/charge:    0.182775   -0.000001   -0.000001
-     polar coord.: r, theta, phi [deg] :     0.630413   90.000308   -0.000308
+     charge :     3.449121
+     magnetization :          0.630409    0.000053   -0.000059
+     magnetization/charge:    0.182774    0.000015   -0.000017
+     polar coord.: r, theta, phi [deg] :     0.630409   90.005395    0.004856
 
  ==============================================================================
 
      total cpu time spent up to now is     11.48 secs
 
-     total energy              =   -63.42644135 ryd
+     total energy              =   -63.42644133 ryd
      estimated scf accuracy    <     0.00005061 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
@@ -284,75 +283,75 @@
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     3.455351
-     magnetization :          0.627919   -0.000011   -0.000011
-     magnetization/charge:    0.181724   -0.000003   -0.000003
-     polar coord.: r, theta, phi [deg] :     0.627919   90.001046   -0.001046
+     charge :     3.455359
+     magnetization :          0.627925    0.000029   -0.000053
+     magnetization/charge:    0.181725    0.000009   -0.000015
+     polar coord.: r, theta, phi [deg] :     0.627925   90.004791    0.002683
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.2000   0.2000   0.2000
-     charge :     3.448656
-     magnetization :          0.627952   -0.000011   -0.000011
-     magnetization/charge:    0.182086   -0.000003   -0.000003
-     polar coord.: r, theta, phi [deg] :     0.627952   90.000992   -0.000992
+     charge :     3.448648
+     magnetization :          0.627966    0.000032   -0.000053
+     magnetization/charge:    0.182091    0.000009   -0.000015
+     polar coord.: r, theta, phi [deg] :     0.627966   90.004809    0.002880
 
  ==============================================================================
 
      total cpu time spent up to now is     13.20 secs
 
      total energy              =   -63.42646734 ryd
-     estimated scf accuracy    <     0.00001140 ryd
+     estimated scf accuracy    <     0.00001144 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.00 Bohr mag/cell
 
      iteration #  7     ecut=    25.00 ryd     beta=0.20
      Davidson diagonalization with overlap
-     ethr =  9.50E-08,  avg # of iterations =  2.0
+     ethr =  9.53E-08,  avg # of iterations =  2.0
  it, count           1           0           0
    1.00000000000000        2.00000000000000        3.00000000000000     
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     3.455063
-     magnetization :          0.627774   -0.000011   -0.000011
-     magnetization/charge:    0.181697   -0.000003   -0.000003
-     polar coord.: r, theta, phi [deg] :     0.627774   90.001025   -0.001025
+     charge :     3.455060
+     magnetization :          0.627777    0.000082   -0.000098
+     magnetization/charge:    0.181698    0.000024   -0.000028
+     polar coord.: r, theta, phi [deg] :     0.627778   90.008904    0.007470
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.2000   0.2000   0.2000
-     charge :     3.449445
-     magnetization :          0.627227   -0.000012   -0.000012
-     magnetization/charge:    0.181834   -0.000003   -0.000003
-     polar coord.: r, theta, phi [deg] :     0.627227   90.001102   -0.001102
+     charge :     3.449447
+     magnetization :          0.627215    0.000007   -0.000032
+     magnetization/charge:    0.181831    0.000002   -0.000009
+     polar coord.: r, theta, phi [deg] :     0.627215   90.002910    0.000606
 
  ==============================================================================
 
-     total cpu time spent up to now is     14.78 secs
+     total cpu time spent up to now is     14.77 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   895 PWs)   bands (ev):
 
    -26.9495 -25.6468 -18.6034 -16.8087 -10.0734  -9.3255  -8.9642  -8.9642
-    -7.0562  -7.0561  -4.9054  -4.9054  -2.6812  -2.6812   2.0158   2.2007
-     2.2803   3.1195   9.7179   9.7182
+    -7.0562  -7.0562  -4.9054  -4.9054  -2.6812  -2.6812   2.0157   2.2007
+     2.2804   3.1194   9.7180   9.7181
 
      the Fermi energy is    -3.7933 ev
 
-!    total energy              =   -63.42647024 ryd
-     estimated scf accuracy    <     0.00000081 ryd
+!    total energy              =   -63.42647016 ryd
+     estimated scf accuracy    <     0.00000082 ryd
 
-     band energy sum           =   -10.96683379 ryd
-     one-electron contribution =   -57.22574982 ryd
-     hartree contribution      =    31.82265031 ryd
-     xc contribution           =   -13.40092365 ryd
+     band energy sum           =   -10.96683523 ryd
+     one-electron contribution =   -57.22576028 ryd
+     hartree contribution      =    31.82265935 ryd
+     xc contribution           =   -13.40092167 ryd
      ewald contribution        =   -24.61854905 ryd
-     correction for metals     =    -0.00389803 ryd
+     correction for metals     =    -0.00389851 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.00 Bohr mag/cell
@@ -361,25 +360,25 @@
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.17151469    0.17152211    0.17152211
-     atom   2 type  2   force =    -0.17151469   -0.17152211   -0.17152211
+     atom   1 type  1   force =     0.17151418    0.17152125    0.17151877
+     atom   2 type  2   force =    -0.17151418   -0.17152125   -0.17151877
 
-     Total force =     0.420136     Total SCF correction =     0.001107
+     Total force =     0.420132     Total SCF correction =     0.001183
 
      BFGS Geometry Optimization
 
      number of scf cycles    =   1
      number of bfgs steps    =   0
 
-     energy new              =     -63.4264702449 ryd
+     energy new              =     -63.4264701568 ryd
 
      new trust radius        =       0.5000000000 bohr
      new conv_thr            =       0.0000010000
 
 
 ATOMIC_POSITIONS (alat)
-O1       0.027215768   0.027216945   0.027216945
-O2       0.172784232   0.172783055   0.172783055
+O1       0.027215936   0.027217058   0.027216665
+O2       0.172784064   0.172782942   0.172783335
 
 
 
@@ -387,7 +386,7 @@ O2       0.172784232   0.172783055   0.172783055
  it, count           1           0           0
    1.00000000000000        2.00000000000000        3.00000000000000     
 
-     total cpu time spent up to now is     16.49 secs
+     total cpu time spent up to now is     16.48 secs
 
      Self-consistent Calculation
 
@@ -396,31 +395,31 @@ O2       0.172784232   0.172783055   0.172783055
      ethr =  1.00E-05,  avg # of iterations =  5.0
 
      negative rho (up, down):  0.000E+00 0.298E-01
- it, count           1           0           0
-   1.00000000000000        2.00000000000000        3.00000000000000     
+ it, count           4           1           1
+  0.138333675883605       0.535116225690198       0.833375317080850     
 
  ==============================================================================
      atom number    1 relative position :    0.0272   0.0272   0.0272
-     charge :     3.520511
-     magnetization :          0.621507   -0.000011   -0.000011
-     magnetization/charge:    0.176539   -0.000003   -0.000003
-     polar coord.: r, theta, phi [deg] :     0.621507   90.001060   -0.001060
+     charge :     3.520517
+     magnetization :          0.621514   -0.000008   -0.000019
+     magnetization/charge:    0.176540   -0.000002   -0.000005
+     polar coord.: r, theta, phi [deg] :     0.621514   90.001716   -0.000693
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1728   0.1728   0.1728
-     charge :     3.510983
-     magnetization :          0.620578   -0.000012   -0.000012
-     magnetization/charge:    0.176753   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.620578   90.001152   -0.001152
+     charge :     3.510975
+     magnetization :          0.620572    0.000018   -0.000042
+     magnetization/charge:    0.176752    0.000005   -0.000012
+     polar coord.: r, theta, phi [deg] :     0.620572   90.003894    0.001643
 
  ==============================================================================
 
-     total cpu time spent up to now is     18.65 secs
+     total cpu time spent up to now is     18.61 secs
 
-     total energy              =   -63.22113818 ryd
-     estimated scf accuracy    <     0.09320789 ryd
+     total energy              =   -63.22113795 ryd
+     estimated scf accuracy    <     0.09320617 ryd
 
      total magnetization       =     1.93     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     1.96 Bohr mag/cell
@@ -435,26 +434,26 @@ O2       0.172784232   0.172783055   0.172783055
 
  ==============================================================================
      atom number    1 relative position :    0.0272   0.0272   0.0272
-     charge :     3.486008
-     magnetization :          0.614640   -0.000011   -0.000011
-     magnetization/charge:    0.176316   -0.000003   -0.000003
-     polar coord.: r, theta, phi [deg] :     0.614640   90.001067   -0.001067
+     charge :     3.486009
+     magnetization :          0.614639    0.000010   -0.000036
+     magnetization/charge:    0.176316    0.000003   -0.000010
+     polar coord.: r, theta, phi [deg] :     0.614639   90.003345    0.000907
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1728   0.1728   0.1728
-     charge :     3.476776
-     magnetization :          0.613616   -0.000013   -0.000013
-     magnetization/charge:    0.176490   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.613616   90.001250   -0.001250
+     charge :     3.476774
+     magnetization :          0.613620    0.000027   -0.000052
+     magnetization/charge:    0.176491    0.000008   -0.000015
+     polar coord.: r, theta, phi [deg] :     0.613620   90.004854    0.002487
 
  ==============================================================================
 
-     total cpu time spent up to now is     20.24 secs
+     total cpu time spent up to now is     20.19 secs
 
-     total energy              =   -63.21130871 ryd
-     estimated scf accuracy    <     0.04196327 ryd
+     total energy              =   -63.21130865 ryd
+     estimated scf accuracy    <     0.04196283 ryd
 
      total magnetization       =     1.94     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     1.97 Bohr mag/cell
@@ -467,26 +466,26 @@ O2       0.172784232   0.172783055   0.172783055
 
  ==============================================================================
      atom number    1 relative position :    0.0272   0.0272   0.0272
-     charge :     3.419339
-     magnetization :          0.600218   -0.000011   -0.000011
-     magnetization/charge:    0.175536   -0.000003   -0.000003
-     polar coord.: r, theta, phi [deg] :     0.600218   90.001094   -0.001094
+     charge :     3.419337
+     magnetization :          0.600218    0.000022   -0.000045
+     magnetization/charge:    0.175536    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.600218   90.004339    0.002114
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1728   0.1728   0.1728
-     charge :     3.410479
-     magnetization :          0.599154   -0.000012   -0.000012
-     magnetization/charge:    0.175680   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.599154   90.001185   -0.001185
+     charge :     3.410480
+     magnetization :          0.599154    0.000018   -0.000044
+     magnetization/charge:    0.175680    0.000005   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.599154   90.004170    0.001753
 
  ==============================================================================
 
-     total cpu time spent up to now is     21.93 secs
+     total cpu time spent up to now is     21.85 secs
 
-     total energy              =   -63.21911989 ryd
-     estimated scf accuracy    <     0.00295339 ryd
+     total energy              =   -63.21911978 ryd
+     estimated scf accuracy    <     0.00295337 ryd
 
      total magnetization       =     1.95     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     1.98 Bohr mag/cell
@@ -499,26 +498,26 @@ O2       0.172784232   0.172783055   0.172783055
 
  ==============================================================================
      atom number    1 relative position :    0.0272   0.0272   0.0272
-     charge :     3.437979
-     magnetization :          0.605997   -0.000012   -0.000012
-     magnetization/charge:    0.176265   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.605997   90.001155   -0.001155
+     charge :     3.437978
+     magnetization :          0.605995    0.000019   -0.000044
+     magnetization/charge:    0.176265    0.000005   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.605995   90.004162    0.001778
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1728   0.1728   0.1728
-     charge :     3.428709
-     magnetization :          0.605044   -0.000012   -0.000012
-     magnetization/charge:    0.176464   -0.000003   -0.000003
-     polar coord.: r, theta, phi [deg] :     0.605044   90.001112   -0.001112
+     charge :     3.428704
+     magnetization :          0.605043    0.000023   -0.000046
+     magnetization/charge:    0.176464    0.000007   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.605043   90.004353    0.002132
 
  ==============================================================================
 
-     total cpu time spent up to now is     23.69 secs
+     total cpu time spent up to now is     23.60 secs
 
-     total energy              =   -63.21937661 ryd
-     estimated scf accuracy    <     0.00130401 ryd
+     total energy              =   -63.21937647 ryd
+     estimated scf accuracy    <     0.00130328 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     1.99 Bohr mag/cell
@@ -531,26 +530,26 @@ O2       0.172784232   0.172783055   0.172783055
 
  ==============================================================================
      atom number    1 relative position :    0.0272   0.0272   0.0272
-     charge :     3.425181
-     magnetization :          0.602799   -0.000012   -0.000012
-     magnetization/charge:    0.175990   -0.000003   -0.000003
-     polar coord.: r, theta, phi [deg] :     0.602799   90.001138   -0.001138
+     charge :     3.425174
+     magnetization :          0.602797    0.000020   -0.000045
+     magnetization/charge:    0.175990    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.602797   90.004265    0.001925
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1728   0.1728   0.1728
-     charge :     3.416155
-     magnetization :          0.601777   -0.000012   -0.000012
-     magnetization/charge:    0.176156   -0.000003   -0.000003
-     polar coord.: r, theta, phi [deg] :     0.601777   90.001138   -0.001138
+     charge :     3.416147
+     magnetization :          0.601775    0.000021   -0.000045
+     magnetization/charge:    0.176156    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.601775   90.004246    0.001955
 
  ==============================================================================
 
-     total cpu time spent up to now is     25.38 secs
+     total cpu time spent up to now is     25.28 secs
 
-     total energy              =   -63.21967014 ryd
-     estimated scf accuracy    <     0.00005006 ryd
+     total energy              =   -63.21967010 ryd
+     estimated scf accuracy    <     0.00005008 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     1.99 Bohr mag/cell
@@ -563,26 +562,26 @@ O2       0.172784232   0.172783055   0.172783055
 
  ==============================================================================
      atom number    1 relative position :    0.0272   0.0272   0.0272
-     charge :     3.427381
-     magnetization :          0.603321   -0.000012   -0.000012
-     magnetization/charge:    0.176030   -0.000003   -0.000003
-     polar coord.: r, theta, phi [deg] :     0.603321   90.001123   -0.001123
+     charge :     3.427380
+     magnetization :          0.603322    0.000020   -0.000045
+     magnetization/charge:    0.176030    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.603322   90.004262    0.001941
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1728   0.1728   0.1728
-     charge :     3.418448
-     magnetization :          0.602257   -0.000012   -0.000012
-     magnetization/charge:    0.176178   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.602257   90.001140   -0.001140
+     charge :     3.418451
+     magnetization :          0.602257    0.000020   -0.000045
+     magnetization/charge:    0.176178    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.602257   90.004264    0.001935
 
  ==============================================================================
 
-     total cpu time spent up to now is     27.08 secs
+     total cpu time spent up to now is     26.97 secs
 
-     total energy              =   -63.21967798 ryd
-     estimated scf accuracy    <     0.00002171 ryd
+     total energy              =   -63.21967800 ryd
+     estimated scf accuracy    <     0.00002174 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.00 Bohr mag/cell
@@ -595,55 +594,55 @@ O2       0.172784232   0.172783055   0.172783055
 
  ==============================================================================
      atom number    1 relative position :    0.0272   0.0272   0.0272
-     charge :     3.426412
-     magnetization :          0.603084   -0.000012   -0.000012
-     magnetization/charge:    0.176010   -0.000003   -0.000003
-     polar coord.: r, theta, phi [deg] :     0.603084   90.001138   -0.001138
+     charge :     3.426414
+     magnetization :          0.603085    0.000020   -0.000045
+     magnetization/charge:    0.176010    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.603085   90.004268    0.001936
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1728   0.1728   0.1728
-     charge :     3.417441
-     magnetization :          0.602035   -0.000012   -0.000012
-     magnetization/charge:    0.176166   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.602035   90.001140   -0.001140
+     charge :     3.417444
+     magnetization :          0.602036    0.000020   -0.000045
+     magnetization/charge:    0.176166    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.602036   90.004269    0.001943
 
  ==============================================================================
 
-     total cpu time spent up to now is     28.72 secs
+     total cpu time spent up to now is     28.61 secs
 
-     total energy              =   -63.21967897 ryd
-     estimated scf accuracy    <     0.00000384 ryd
+     total energy              =   -63.21967896 ryd
+     estimated scf accuracy    <     0.00000387 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.00 Bohr mag/cell
 
      iteration #  8     ecut=    25.00 ryd     beta=0.20
      Davidson diagonalization with overlap
-     ethr =  3.20E-08,  avg # of iterations =  2.0
+     ethr =  3.22E-08,  avg # of iterations =  2.0
  it, count           1           0           0
    1.00000000000000        2.00000000000000        3.00000000000000     
 
  ==============================================================================
      atom number    1 relative position :    0.0272   0.0272   0.0272
-     charge :     3.425967
-     magnetization :          0.603005   -0.000012   -0.000012
-     magnetization/charge:    0.176010   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.603005   90.001144   -0.001144
+     charge :     3.425968
+     magnetization :          0.603004    0.000020   -0.000045
+     magnetization/charge:    0.176010    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.603004   90.004259    0.001892
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1728   0.1728   0.1728
-     charge :     3.416928
-     magnetization :          0.601980   -0.000012   -0.000012
-     magnetization/charge:    0.176176   -0.000003   -0.000003
-     polar coord.: r, theta, phi [deg] :     0.601980   90.001132   -0.001132
+     charge :     3.416927
+     magnetization :          0.601980    0.000021   -0.000045
+     magnetization/charge:    0.176176    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.601980   90.004264    0.001957
 
  ==============================================================================
 
-     total cpu time spent up to now is     30.33 secs
+     total cpu time spent up to now is     30.17 secs
 
      End of self-consistent calculation
 
@@ -658,12 +657,12 @@ O2       0.172784232   0.172783055   0.172783055
 !    total energy              =   -63.21967950 ryd
      estimated scf accuracy    <     0.00000012 ryd
 
-     band energy sum           =   -12.97450675 ryd
-     one-electron contribution =   -73.18922203 ryd
-     hartree contribution      =    39.24076521 ryd
-     xc contribution           =   -14.06786614 ryd
+     band energy sum           =   -12.97450263 ryd
+     one-electron contribution =   -73.18921542 ryd
+     hartree contribution      =    39.24075725 ryd
+     xc contribution           =   -14.06786473 ryd
      ewald contribution        =   -15.20000740 ryd
-     correction for metals     =    -0.00334914 ryd
+     correction for metals     =    -0.00334920 ryd
 
      total magnetization       =     1.97     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.00 Bohr mag/cell
@@ -672,26 +671,26 @@ O2       0.172784232   0.172783055   0.172783055
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.96055657   -0.96053803   -0.96053803
-     atom   2 type  2   force =     0.96055657    0.96053803    0.96053803
+     atom   1 type  1   force =    -0.96055429   -0.96053570   -0.96054388
+     atom   2 type  2   force =     0.96055429    0.96053570    0.96054388
 
-     Total force =     2.352843     Total SCF correction =     0.000223
+     Total force =     2.352844     Total SCF correction =     0.000221
 
      number of scf cycles    =   2
      number of bfgs steps    =   1
 
-     energy old              =     -63.4264702449 ryd
+     energy old              =     -63.4264701568 ryd
      energy new              =     -63.2196794968 ryd
 
      CASE: energy_new > energy_old
 
-     new trust radius        =       0.1675378619 bohr
+     new trust radius        =       0.1675373782 bohr
      new conv_thr            =       0.0000010000
 
 
 ATOMIC_POSITIONS (alat)
-O1       0.009119343   0.009119738   0.009119738
-O2       0.190880657   0.190880262   0.190880262
+O1       0.009119373   0.009119749   0.009119617
+O2       0.190880627   0.190880251   0.190880383
 
 
 
@@ -699,7 +698,7 @@ O2       0.190880657   0.190880262   0.190880262
  it, count           1           0           0
    1.00000000000000        2.00000000000000        3.00000000000000     
 
-     total cpu time spent up to now is     32.03 secs
+     total cpu time spent up to now is     31.89 secs
 
      Self-consistent Calculation
 
@@ -713,26 +712,26 @@ O2       0.190880657   0.190880262   0.190880262
 
  ==============================================================================
      atom number    1 relative position :    0.0091   0.0091   0.0091
-     charge :     3.395666
-     magnetization :          0.599377   -0.000012   -0.000012
-     magnetization/charge:    0.176512   -0.000003   -0.000003
-     polar coord.: r, theta, phi [deg] :     0.599377   90.001128   -0.001128
+     charge :     3.395662
+     magnetization :          0.599379    0.000021   -0.000045
+     magnetization/charge:    0.176513    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.599379   90.004256    0.001963
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1909   0.1909   0.1909
-     charge :     3.389113
-     magnetization :          0.598770   -0.000012   -0.000012
-     magnetization/charge:    0.176674   -0.000003   -0.000003
-     polar coord.: r, theta, phi [deg] :     0.598770   90.001130   -0.001130
+     charge :     3.389117
+     magnetization :          0.598768    0.000020   -0.000045
+     magnetization/charge:    0.176674    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.598768   90.004263    0.001950
 
  ==============================================================================
 
-     total cpu time spent up to now is     34.11 secs
+     total cpu time spent up to now is     33.95 secs
 
-     total energy              =   -63.47794973 ryd
-     estimated scf accuracy    <     0.05628795 ryd
+     total energy              =   -63.47794964 ryd
+     estimated scf accuracy    <     0.05628753 ryd
 
      total magnetization       =     1.95     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     1.99 Bohr mag/cell
@@ -748,25 +747,25 @@ O2       0.190880657   0.190880262   0.190880262
  ==============================================================================
      atom number    1 relative position :    0.0091   0.0091   0.0091
      charge :     3.428008
-     magnetization :          0.609195   -0.000012   -0.000012
-     magnetization/charge:    0.177711   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.609195   90.001170   -0.001170
+     magnetization :          0.609195    0.000020   -0.000045
+     magnetization/charge:    0.177711    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.609195   90.004267    0.001877
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1909   0.1909   0.1909
      charge :     3.421464
-     magnetization :          0.608545   -0.000012   -0.000012
-     magnetization/charge:    0.177861   -0.000003   -0.000003
-     polar coord.: r, theta, phi [deg] :     0.608545   90.001086   -0.001086
+     magnetization :          0.608545    0.000022   -0.000045
+     magnetization/charge:    0.177861    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.608545   90.004247    0.002025
 
  ==============================================================================
 
-     total cpu time spent up to now is     35.71 secs
+     total cpu time spent up to now is     35.55 secs
 
-     total energy              =   -63.47176726 ryd
-     estimated scf accuracy    <     0.02382255 ryd
+     total energy              =   -63.47176723 ryd
+     estimated scf accuracy    <     0.02382242 ryd
 
      total magnetization       =     1.95     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.00 Bohr mag/cell
@@ -779,25 +778,25 @@ O2       0.190880657   0.190880262   0.190880262
 
  ==============================================================================
      atom number    1 relative position :    0.0091   0.0091   0.0091
-     charge :     3.478371
-     magnetization :          0.625645   -0.000012   -0.000012
-     magnetization/charge:    0.179867   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.625645   90.001144   -0.001144
+     charge :     3.478370
+     magnetization :          0.625645    0.000021   -0.000047
+     magnetization/charge:    0.179867    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.625645   90.004259    0.001927
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1909   0.1909   0.1909
      charge :     3.471736
-     magnetization :          0.624979   -0.000012   -0.000012
-     magnetization/charge:    0.180019   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.624979   90.001128   -0.001128
+     magnetization :          0.624978    0.000021   -0.000046
+     magnetization/charge:    0.180019    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.624978   90.004258    0.001950
 
  ==============================================================================
 
-     total cpu time spent up to now is     37.40 secs
+     total cpu time spent up to now is     37.23 secs
 
-     total energy              =   -63.47622938 ryd
+     total energy              =   -63.47622931 ryd
      estimated scf accuracy    <     0.00200606 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
@@ -811,26 +810,26 @@ O2       0.190880657   0.190880262   0.190880262
 
  ==============================================================================
      atom number    1 relative position :    0.0091   0.0091   0.0091
-     charge :     3.477508
-     magnetization :          0.630465   -0.000013   -0.000013
-     magnetization/charge:    0.181298   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.630465   90.001146   -0.001146
+     charge :     3.477509
+     magnetization :          0.630465    0.000021   -0.000047
+     magnetization/charge:    0.181298    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.630465   90.004260    0.001927
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1909   0.1909   0.1909
-     charge :     3.470946
-     magnetization :          0.629751   -0.000012   -0.000012
-     magnetization/charge:    0.181435   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.629751   90.001123   -0.001123
+     charge :     3.470945
+     magnetization :          0.629752    0.000022   -0.000047
+     magnetization/charge:    0.181435    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.629752   90.004258    0.001961
 
  ==============================================================================
 
-     total cpu time spent up to now is     39.06 secs
+     total cpu time spent up to now is     38.88 secs
 
-     total energy              =   -63.47641490 ryd
-     estimated scf accuracy    <     0.00004366 ryd
+     total energy              =   -63.47641484 ryd
+     estimated scf accuracy    <     0.00004365 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.01 Bohr mag/cell
@@ -843,25 +842,25 @@ O2       0.190880657   0.190880262   0.190880262
 
  ==============================================================================
      atom number    1 relative position :    0.0091   0.0091   0.0091
-     charge :     3.475822
-     magnetization :          0.631225   -0.000013   -0.000013
-     magnetization/charge:    0.181605   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.631225   90.001151   -0.001151
+     charge :     3.475820
+     magnetization :          0.631225    0.000021   -0.000047
+     magnetization/charge:    0.181605    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.631225   90.004255    0.001922
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1909   0.1909   0.1909
-     charge :     3.469185
-     magnetization :          0.630553   -0.000012   -0.000012
-     magnetization/charge:    0.181758   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.630553   90.001125   -0.001125
+     charge :     3.469184
+     magnetization :          0.630553    0.000022   -0.000047
+     magnetization/charge:    0.181758    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.630553   90.004255    0.001963
 
  ==============================================================================
 
-     total cpu time spent up to now is     40.75 secs
+     total cpu time spent up to now is     40.57 secs
 
-     total energy              =   -63.47643266 ryd
+     total energy              =   -63.47643259 ryd
      estimated scf accuracy    <     0.00001327 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
@@ -875,43 +874,43 @@ O2       0.190880657   0.190880262   0.190880262
 
  ==============================================================================
      atom number    1 relative position :    0.0091   0.0091   0.0091
-     charge :     3.476169
-     magnetization :          0.632708   -0.000013   -0.000013
-     magnetization/charge:    0.182013   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.632708   90.001144   -0.001144
+     charge :     3.476170
+     magnetization :          0.632708    0.000021   -0.000047
+     magnetization/charge:    0.182013    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.632708   90.004262    0.001926
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1909   0.1909   0.1909
-     charge :     3.469543
-     magnetization :          0.632031   -0.000012   -0.000012
-     magnetization/charge:    0.182165   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.632031   90.001129   -0.001129
+     charge :     3.469544
+     magnetization :          0.632032    0.000021   -0.000047
+     magnetization/charge:    0.182166    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.632032   90.004258    0.001946
 
  ==============================================================================
 
-     total cpu time spent up to now is     42.37 secs
+     total cpu time spent up to now is     42.17 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   895 PWs)   bands (ev):
 
-   -29.2399 -28.0052 -17.7604 -15.9578 -10.5395  -9.9929  -9.9929  -9.7105
-    -8.0869  -8.0869  -4.2517  -4.2517  -1.9777  -1.9777   2.0098   2.2880
+   -29.2399 -28.0052 -17.7604 -15.9578 -10.5396  -9.9929  -9.9929  -9.7105
+    -8.0869  -8.0869  -4.2517  -4.2517  -1.9778  -1.9778   2.0098   2.2880
      5.3206   6.2761   9.6421   9.6421
 
-     the Fermi energy is    -3.1147 ev
+     the Fermi energy is    -3.1148 ev
 
-!    total energy              =   -63.47643619 ryd
+!    total energy              =   -63.47643613 ryd
      estimated scf accuracy    <     0.00000044 ryd
 
-     band energy sum           =   -11.45359184 ryd
-     one-electron contribution =   -61.61359915 ryd
-     hartree contribution      =    33.87716628 ryd
-     xc contribution           =   -13.56177443 ryd
-     ewald contribution        =   -22.17477509 ryd
-     correction for metals     =    -0.00345381 ryd
+     band energy sum           =   -11.45360912 ryd
+     one-electron contribution =   -61.61359738 ryd
+     hartree contribution      =    33.87717493 ryd
+     xc contribution           =   -13.56177693 ryd
+     ewald contribution        =   -22.17478298 ryd
+     correction for metals     =    -0.00345378 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.01 Bohr mag/cell
@@ -920,28 +919,28 @@ O2       0.190880657   0.190880262   0.190880262
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.05356699    0.05356637    0.05356637
-     atom   2 type  2   force =    -0.05356699   -0.05356637   -0.05356637
+     atom   1 type  1   force =     0.05356766    0.05356691    0.05356740
+     atom   2 type  2   force =    -0.05356766   -0.05356691   -0.05356740
 
-     Total force =     0.131211     Total SCF correction =     0.002263
+     Total force =     0.131213     Total SCF correction =     0.002272
 
      number of scf cycles    =   3
      number of bfgs steps    =   1
 
-     energy old              =     -63.4264702449 ryd
-     energy new              =     -63.4764361917 ryd
+     energy old              =     -63.4264701568 ryd
+     energy new              =     -63.4764361284 ryd
 
      CASE: energy_new < energy_old
 
      Wolfe conditions not satisfied
 
-     new trust radius        =       0.0760847474 bohr
+     new trust radius        =       0.0760870849 bohr
      new conv_thr            =       0.0000010000
 
 
 ATOMIC_POSITIONS (alat)
-O1       0.013261133   0.013261136   0.013261136
-O2       0.186738867   0.186738864   0.186738864
+O1       0.013261236   0.013261209   0.013261263
+O2       0.186738764   0.186738791   0.186738737
 
 
 
@@ -949,7 +948,7 @@ O2       0.186738867   0.186738864   0.186738864
  it, count           1           0           0
    1.00000000000000        2.00000000000000        3.00000000000000     
 
-     total cpu time spent up to now is     44.08 secs
+     total cpu time spent up to now is     43.88 secs
 
      Self-consistent Calculation
 
@@ -963,26 +962,26 @@ O2       0.186738867   0.186738864   0.186738864
 
  ==============================================================================
      atom number    1 relative position :    0.0133   0.0133   0.0133
-     charge :     3.488935
-     magnetization :          0.635384   -0.000013   -0.000013
-     magnetization/charge:    0.182114   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.635384   90.001140   -0.001140
+     charge :     3.488934
+     magnetization :          0.635385    0.000021   -0.000047
+     magnetization/charge:    0.182114    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.635385   90.004260    0.001931
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1867   0.1867   0.1867
-     charge :     3.482004
-     magnetization :          0.634551   -0.000013   -0.000013
-     magnetization/charge:    0.182237   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.634551   90.001137   -0.001137
+     charge :     3.482003
+     magnetization :          0.634551    0.000021   -0.000047
+     magnetization/charge:    0.182237    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.634551   90.004258    0.001904
 
  ==============================================================================
 
-     total cpu time spent up to now is     46.02 secs
+     total cpu time spent up to now is     45.81 secs
 
-     total energy              =   -63.47733692 ryd
-     estimated scf accuracy    <     0.00192732 ryd
+     total energy              =   -63.47733667 ryd
+     estimated scf accuracy    <     0.00192726 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.01 Bohr mag/cell
@@ -995,26 +994,26 @@ O2       0.186738867   0.186738864   0.186738864
 
  ==============================================================================
      atom number    1 relative position :    0.0133   0.0133   0.0133
-     charge :     3.483897
-     magnetization :          0.634104   -0.000013   -0.000013
-     magnetization/charge:    0.182010   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.634104   90.001131   -0.001131
+     charge :     3.483896
+     magnetization :          0.634104    0.000021   -0.000047
+     magnetization/charge:    0.182010    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.634104   90.004262    0.001939
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1867   0.1867   0.1867
-     charge :     3.476864
-     magnetization :          0.633331   -0.000012   -0.000012
-     magnetization/charge:    0.182156   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.633331   90.001125   -0.001125
+     charge :     3.476863
+     magnetization :          0.633331    0.000022   -0.000047
+     magnetization/charge:    0.182156    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.633331   90.004256    0.002006
 
  ==============================================================================
 
-     total cpu time spent up to now is     47.62 secs
+     total cpu time spent up to now is     47.40 secs
 
-     total energy              =   -63.47723231 ryd
-     estimated scf accuracy    <     0.00089061 ryd
+     total energy              =   -63.47723210 ryd
+     estimated scf accuracy    <     0.00089060 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.01 Bohr mag/cell
@@ -1027,25 +1026,25 @@ O2       0.186738867   0.186738864   0.186738864
 
  ==============================================================================
      atom number    1 relative position :    0.0133   0.0133   0.0133
-     charge :     3.474074
-     magnetization :          0.631637   -0.000012   -0.000012
-     magnetization/charge:    0.181815   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.631637   90.001131   -0.001131
+     charge :     3.474075
+     magnetization :          0.631637    0.000021   -0.000047
+     magnetization/charge:    0.181814    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.631637   90.004260    0.001946
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1867   0.1867   0.1867
      charge :     3.467016
-     magnetization :          0.630899   -0.000013   -0.000013
-     magnetization/charge:    0.181972   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.630899   90.001137   -0.001137
+     magnetization :          0.630899    0.000021   -0.000047
+     magnetization/charge:    0.181972    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.630899   90.004263    0.001922
 
  ==============================================================================
 
-     total cpu time spent up to now is     49.31 secs
+     total cpu time spent up to now is     49.10 secs
 
-     total energy              =   -63.47743092 ryd
+     total energy              =   -63.47743069 ryd
      estimated scf accuracy    <     0.00006951 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
@@ -1059,25 +1058,25 @@ O2       0.186738867   0.186738864   0.186738864
 
  ==============================================================================
      atom number    1 relative position :    0.0133   0.0133   0.0133
-     charge :     3.476048
-     magnetization :          0.631851   -0.000013   -0.000013
-     magnetization/charge:    0.181773   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.631851   90.001139   -0.001139
+     charge :     3.476047
+     magnetization :          0.631851    0.000021   -0.000047
+     magnetization/charge:    0.181773    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.631851   90.004263    0.001924
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1867   0.1867   0.1867
-     charge :     3.469076
-     magnetization :          0.631079   -0.000012   -0.000012
-     magnetization/charge:    0.181916   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.631079   90.001127   -0.001127
+     charge :     3.469077
+     magnetization :          0.631079    0.000022   -0.000047
+     magnetization/charge:    0.181915    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.631079   90.004252    0.002004
 
  ==============================================================================
 
-     total cpu time spent up to now is     50.98 secs
+     total cpu time spent up to now is     50.77 secs
 
-     total energy              =   -63.47743976 ryd
+     total energy              =   -63.47743953 ryd
      estimated scf accuracy    <     0.00001047 ryd
 
      total magnetization       =     1.97     0.00     0.00 Bohr mag/cell
@@ -1085,80 +1084,80 @@ O2       0.186738867   0.186738864   0.186738864
 
      iteration #  5     ecut=    25.00 ryd     beta=0.20
      Davidson diagonalization with overlap
-     ethr =  8.72E-08,  avg # of iterations =  2.0
+     ethr =  8.73E-08,  avg # of iterations =  2.0
  it, count           1           0           0
    1.00000000000000        2.00000000000000        3.00000000000000     
 
  ==============================================================================
      atom number    1 relative position :    0.0133   0.0133   0.0133
-     charge :     3.474380
-     magnetization :          0.631403   -0.000012   -0.000012
-     magnetization/charge:    0.181731   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.631403   90.001132   -0.001132
+     charge :     3.474379
+     magnetization :          0.631402    0.000021   -0.000047
+     magnetization/charge:    0.181731    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.631402   90.004259    0.001950
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1867   0.1867   0.1867
-     charge :     3.467319
-     magnetization :          0.630675   -0.000013   -0.000013
-     magnetization/charge:    0.181891   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.630675   90.001142   -0.001142
+     charge :     3.467316
+     magnetization :          0.630674    0.000021   -0.000047
+     magnetization/charge:    0.181891    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.630674   90.004261    0.001927
 
  ==============================================================================
 
-     total cpu time spent up to now is     52.68 secs
+     total cpu time spent up to now is     52.48 secs
 
-     total energy              =   -63.47744245 ryd
-     estimated scf accuracy    <     0.00000371 ryd
+     total energy              =   -63.47744221 ryd
+     estimated scf accuracy    <     0.00000372 ryd
 
      total magnetization       =     1.97     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.01 Bohr mag/cell
 
      iteration #  6     ecut=    25.00 ryd     beta=0.20
      Davidson diagonalization with overlap
-     ethr =  3.09E-08,  avg # of iterations =  2.0
+     ethr =  3.10E-08,  avg # of iterations =  2.0
  it, count           1           0           0
    1.00000000000000        2.00000000000000        3.00000000000000     
 
  ==============================================================================
      atom number    1 relative position :    0.0133   0.0133   0.0133
-     charge :     3.475161
-     magnetization :          0.631485   -0.000013   -0.000013
-     magnetization/charge:    0.181714   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.631485   90.001136   -0.001136
+     charge :     3.475162
+     magnetization :          0.631485    0.000021   -0.000047
+     magnetization/charge:    0.181714    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.631485   90.004259    0.001943
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1867   0.1867   0.1867
      charge :     3.468110
-     magnetization :          0.630754   -0.000012   -0.000012
-     magnetization/charge:    0.181873   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.630754   90.001135   -0.001135
+     magnetization :          0.630754    0.000021   -0.000047
+     magnetization/charge:    0.181873    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.630754   90.004257    0.001951
 
  ==============================================================================
 
-     total cpu time spent up to now is     54.30 secs
+     total cpu time spent up to now is     54.06 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   895 PWs)   bands (ev):
 
-   -30.5246 -29.3246 -17.3455 -15.5429 -10.7499 -10.5800 -10.5800  -9.8778
+   -30.5247 -29.3246 -17.3455 -15.5429 -10.7500 -10.5800 -10.5800  -9.8778
     -8.6752  -8.6752  -3.8796  -3.8796  -1.5868  -1.5868   2.0049   2.2926
      6.9604   7.8771   9.6132   9.6132
 
      the Fermi energy is    -2.7332 ev
 
-!    total energy              =   -63.47744335 ryd
+!    total energy              =   -63.47744312 ryd
      estimated scf accuracy    <     0.00000023 ryd
 
-     band energy sum           =   -11.72995182 ryd
-     one-electron contribution =   -63.90053246 ryd
-     hartree contribution      =    34.94658962 ryd
-     xc contribution           =   -13.65463671 ryd
-     ewald contribution        =   -20.86556674 ryd
+     band energy sum           =   -11.72997024 ryd
+     one-electron contribution =   -63.90059981 ryd
+     hartree contribution      =    34.94662832 ryd
+     xc contribution           =   -13.65464147 ryd
+     ewald contribution        =   -20.86553310 ryd
      correction for metals     =    -0.00329706 ryd
 
      total magnetization       =     1.97     0.00     0.00 Bohr mag/cell
@@ -1168,28 +1167,28 @@ O2       0.186738867   0.186738864   0.186738864
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.05025415   -0.05025432   -0.05025432
-     atom   2 type  2   force =     0.05025415    0.05025432    0.05025432
+     atom   1 type  1   force =    -0.05025705   -0.05025731   -0.05025714
+     atom   2 type  2   force =     0.05025705    0.05025731    0.05025714
 
-     Total force =     0.123097     Total SCF correction =     0.000592
+     Total force =     0.123104     Total SCF correction =     0.000589
 
      number of scf cycles    =   4
      number of bfgs steps    =   2
 
-     energy old              =     -63.4764361917 ryd
-     energy new              =     -63.4774433529 ryd
+     energy old              =     -63.4764361284 ryd
+     energy new              =     -63.4774431237 ryd
 
      CASE: energy_new < energy_old
 
      Wolfe conditions not satisfied
 
-     new trust radius        =       0.0368286671 bohr
+     new trust radius        =       0.0368306313 bohr
      new conv_thr            =       0.0000010000
 
 
 ATOMIC_POSITIONS (alat)
-O1       0.011256342   0.011256484   0.011256484
-O2       0.188743658   0.188743516   0.188743516
+O1       0.011256360   0.011256462   0.011256470
+O2       0.188743640   0.188743538   0.188743530
 
 
 
@@ -1197,7 +1196,7 @@ O2       0.188743658   0.188743516   0.188743516
  it, count           1           0           0
    1.00000000000000        2.00000000000000        3.00000000000000     
 
-     total cpu time spent up to now is     56.00 secs
+     total cpu time spent up to now is     55.79 secs
 
      Self-consistent Calculation
 
@@ -1209,26 +1208,26 @@ O2       0.188743658   0.188743516   0.188743516
 
  ==============================================================================
      atom number    1 relative position :    0.0113   0.0113   0.0113
-     charge :     3.469251
-     magnetization :          0.630252   -0.000013   -0.000013
-     magnetization/charge:    0.181668   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.630252   90.001154   -0.001154
+     charge :     3.469249
+     magnetization :          0.630252    0.000021   -0.000047
+     magnetization/charge:    0.181668    0.000006   -0.000013
+     polar coord.: r, theta, phi [deg] :     0.630252   90.004255    0.001906
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1887   0.1887   0.1887
      charge :     3.462425
-     magnetization :          0.629547   -0.000012   -0.000012
-     magnetization/charge:    0.181823   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.629547   90.001121   -0.001121
+     magnetization :          0.629546    0.000021   -0.000047
+     magnetization/charge:    0.181822    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.629546   90.004256    0.001955
 
  ==============================================================================
 
-     total cpu time spent up to now is     57.88 secs
+     total cpu time spent up to now is     57.66 secs
 
-     total energy              =   -63.47934918 ryd
-     estimated scf accuracy    <     0.00048905 ryd
+     total energy              =   -63.47934919 ryd
+     estimated scf accuracy    <     0.00048918 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.01 Bohr mag/cell
@@ -1241,26 +1240,26 @@ O2       0.188743658   0.188743516   0.188743516
 
  ==============================================================================
      atom number    1 relative position :    0.0113   0.0113   0.0113
-     charge :     3.471834
-     magnetization :          0.630906   -0.000012   -0.000012
-     magnetization/charge:    0.181721   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.630906   90.001134   -0.001134
+     charge :     3.471833
+     magnetization :          0.630905    0.000021   -0.000047
+     magnetization/charge:    0.181721    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.630905   90.004257    0.001944
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1887   0.1887   0.1887
-     charge :     3.465012
-     magnetization :          0.630198   -0.000013   -0.000013
-     magnetization/charge:    0.181875   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.630198   90.001138   -0.001138
+     charge :     3.465011
+     magnetization :          0.630198    0.000021   -0.000047
+     magnetization/charge:    0.181875    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.630198   90.004257    0.001938
 
  ==============================================================================
 
-     total cpu time spent up to now is     59.47 secs
+     total cpu time spent up to now is     59.25 secs
 
-     total energy              =   -63.47931952 ryd
-     estimated scf accuracy    <     0.00022438 ryd
+     total energy              =   -63.47931951 ryd
+     estimated scf accuracy    <     0.00022443 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.01 Bohr mag/cell
@@ -1273,23 +1272,23 @@ O2       0.188743658   0.188743516   0.188743516
 
  ==============================================================================
      atom number    1 relative position :    0.0113   0.0113   0.0113
-     charge :     3.476925
-     magnetization :          0.632268   -0.000013   -0.000013
-     magnetization/charge:    0.181847   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.632268   90.001135   -0.001135
+     charge :     3.476926
+     magnetization :          0.632268    0.000021   -0.000047
+     magnetization/charge:    0.181847    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.632268   90.004257    0.001946
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1887   0.1887   0.1887
      charge :     3.470097
-     magnetization :          0.631558   -0.000013   -0.000013
-     magnetization/charge:    0.182000   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.631558   90.001138   -0.001138
+     magnetization :          0.631558    0.000021   -0.000047
+     magnetization/charge:    0.182000    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.631558   90.004258    0.001939
 
  ==============================================================================
 
-     total cpu time spent up to now is     61.16 secs
+     total cpu time spent up to now is     60.93 secs
 
      total energy              =   -63.47936919 ryd
      estimated scf accuracy    <     0.00001748 ryd
@@ -1305,23 +1304,23 @@ O2       0.188743658   0.188743516   0.188743516
 
  ==============================================================================
      atom number    1 relative position :    0.0113   0.0113   0.0113
-     charge :     3.475680
-     magnetization :          0.632208   -0.000013   -0.000013
-     magnetization/charge:    0.181895   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.632208   90.001137   -0.001137
+     charge :     3.475679
+     magnetization :          0.632208    0.000021   -0.000047
+     magnetization/charge:    0.181895    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.632208   90.004259    0.001942
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1887   0.1887   0.1887
-     charge :     3.468856
-     magnetization :          0.631495   -0.000013   -0.000013
-     magnetization/charge:    0.182047   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.631495   90.001136   -0.001136
+     charge :     3.468857
+     magnetization :          0.631495    0.000021   -0.000047
+     magnetization/charge:    0.182047    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.631495   90.004258    0.001944
 
  ==============================================================================
 
-     total cpu time spent up to now is     62.83 secs
+     total cpu time spent up to now is     62.58 secs
 
      total energy              =   -63.47937082 ryd
      estimated scf accuracy    <     0.00000454 ryd
@@ -1338,41 +1337,41 @@ O2       0.188743658   0.188743516   0.188743516
  ==============================================================================
      atom number    1 relative position :    0.0113   0.0113   0.0113
      charge :     3.476711
-     magnetization :          0.632469   -0.000013   -0.000013
-     magnetization/charge:    0.181916   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.632469   90.001135   -0.001135
+     magnetization :          0.632469    0.000021   -0.000047
+     magnetization/charge:    0.181916    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.632469   90.004258    0.001943
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1887   0.1887   0.1887
      charge :     3.469883
-     magnetization :          0.631758   -0.000013   -0.000013
-     magnetization/charge:    0.182069   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.631758   90.001137   -0.001137
+     magnetization :          0.631758    0.000021   -0.000047
+     magnetization/charge:    0.182069    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.631758   90.004259    0.001941
 
  ==============================================================================
 
-     total cpu time spent up to now is     64.46 secs
+     total cpu time spent up to now is     64.19 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   895 PWs)   bands (ev):
 
    -29.8852 -28.6655 -17.5518 -15.7498 -10.6514 -10.2879 -10.2879  -9.8023
-    -8.3812  -8.3812  -4.0698  -4.0698  -1.7843  -1.7843   2.0070   2.2901
+    -8.3812  -8.3812  -4.0699  -4.0698  -1.7843  -1.7843   2.0070   2.2901
      6.1551   7.1029   9.6262   9.6262
 
      the Fermi energy is    -2.9271 ev
 
-!    total energy              =   -63.47937198 ryd
+!    total energy              =   -63.47937197 ryd
      estimated scf accuracy    <     0.00000076 ryd
 
-     band energy sum           =   -11.59386627 ryd
-     one-electron contribution =   -62.77106362 ryd
-     hartree contribution      =    34.42060305 ryd
-     xc contribution           =   -13.60876894 ryd
-     ewald contribution        =   -21.51678548 ryd
+     band energy sum           =   -11.59386781 ryd
+     one-electron contribution =   -62.77106198 ryd
+     hartree contribution      =    34.42060361 ryd
+     xc contribution           =   -13.60876925 ryd
+     ewald contribution        =   -21.51678738 ryd
      correction for metals     =    -0.00335698 ryd
 
      total magnetization       =     1.96     0.00     0.00 Bohr mag/cell
@@ -1382,28 +1381,28 @@ O2       0.188743658   0.188743516   0.188743516
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.00583043    0.00583034    0.00583034
-     atom   2 type  2   force =    -0.00583043   -0.00583034   -0.00583034
+     atom   1 type  1   force =     0.00583061    0.00583048    0.00583056
+     atom   2 type  2   force =    -0.00583061   -0.00583048   -0.00583056
 
-     Total force =     0.014281     Total SCF correction =     0.000954
+     Total force =     0.014282     Total SCF correction =     0.000954
 
      number of scf cycles    =   5
      number of bfgs steps    =   3
 
-     energy old              =     -63.4774433529 ryd
-     energy new              =     -63.4793719767 ryd
+     energy old              =     -63.4774431237 ryd
+     energy new              =     -63.4793719750 ryd
 
      CASE: energy_new < energy_old
 
      Wolfe conditions not satisfied
 
-     new trust radius        =       0.0038285839 bohr
-     new conv_thr            =       0.0000005830
+     new trust radius        =       0.0038286961 bohr
+     new conv_thr            =       0.0000005831
 
 
 ATOMIC_POSITIONS (alat)
-O1       0.011464762   0.011464876   0.011464876
-O2       0.188535238   0.188535124   0.188535124
+O1       0.011464783   0.011464853   0.011464878
+O2       0.188535217   0.188535147   0.188535122
 
 
 
@@ -1411,7 +1410,7 @@ O2       0.188535238   0.188535124   0.188535124
  it, count           1           0           0
    1.00000000000000        2.00000000000000        3.00000000000000     
 
-     total cpu time spent up to now is     66.16 secs
+     total cpu time spent up to now is     65.91 secs
 
      Self-consistent Calculation
 
@@ -1430,22 +1429,22 @@ O2       0.188535238   0.188535124   0.188535124
  ==============================================================================
      atom number    1 relative position :    0.0115   0.0115   0.0115
      charge :     3.476811
-     magnetization :          0.632559   -0.000013   -0.000013
-     magnetization/charge:    0.181937   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.632559   90.001139   -0.001139
+     magnetization :          0.632560    0.000021   -0.000047
+     magnetization/charge:    0.181937    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.632560   90.004259    0.001937
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1885   0.1885   0.1885
-     charge :     3.469971
-     magnetization :          0.631840   -0.000012   -0.000012
-     magnetization/charge:    0.182088   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.631840   90.001133   -0.001133
+     charge :     3.469972
+     magnetization :          0.631839    0.000021   -0.000047
+     magnetization/charge:    0.182088    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.631839   90.004258    0.001947
 
  ==============================================================================
 
-     total cpu time spent up to now is     68.71 secs
+     total cpu time spent up to now is     68.42 secs
 
      total energy              =   -63.47939962 ryd
      estimated scf accuracy    <     0.00000275 ryd
@@ -1461,23 +1460,23 @@ O2       0.188535238   0.188535124   0.188535124
 
  ==============================================================================
      atom number    1 relative position :    0.0115   0.0115   0.0115
-     charge :     3.476642
-     magnetization :          0.632516   -0.000012   -0.000012
-     magnetization/charge:    0.181933   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.632516   90.001130   -0.001130
+     charge :     3.476641
+     magnetization :          0.632516    0.000022   -0.000047
+     magnetization/charge:    0.181933    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.632516   90.004256    0.001950
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1885   0.1885   0.1885
      charge :     3.469793
-     magnetization :          0.631800   -0.000013   -0.000013
-     magnetization/charge:    0.182086   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.631800   90.001140   -0.001140
+     magnetization :          0.631800    0.000021   -0.000047
+     magnetization/charge:    0.182086    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.631800   90.004260    0.001937
 
  ==============================================================================
 
-     total cpu time spent up to now is     70.31 secs
+     total cpu time spent up to now is     70.00 secs
 
      total energy              =   -63.47939989 ryd
      estimated scf accuracy    <     0.00000138 ryd
@@ -1494,22 +1493,22 @@ O2       0.188535238   0.188535124   0.188535124
  ==============================================================================
      atom number    1 relative position :    0.0115   0.0115   0.0115
      charge :     3.476305
-     magnetization :          0.632424   -0.000013   -0.000013
-     magnetization/charge:    0.181924   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.632424   90.001135   -0.001135
+     magnetization :          0.632423    0.000021   -0.000047
+     magnetization/charge:    0.181924    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.632423   90.004257    0.001943
 
  ==============================================================================
 
  ==============================================================================
      atom number    2 relative position :    0.1885   0.1885   0.1885
      charge :     3.469455
-     magnetization :          0.631708   -0.000013   -0.000013
-     magnetization/charge:    0.182077   -0.000004   -0.000004
-     polar coord.: r, theta, phi [deg] :     0.631708   90.001136   -0.001136
+     magnetization :          0.631708    0.000021   -0.000047
+     magnetization/charge:    0.182077    0.000006   -0.000014
+     polar coord.: r, theta, phi [deg] :     0.631708   90.004258    0.001944
 
  ==============================================================================
 
-     total cpu time spent up to now is     71.89 secs
+     total cpu time spent up to now is     71.56 secs
 
      End of self-consistent calculation
 
@@ -1524,11 +1523,11 @@ O2       0.188535238   0.188535124   0.188535124
 !    total energy              =   -63.47940017 ryd
      estimated scf accuracy    <     0.00000014 ryd
 
-     band energy sum           =   -11.60367840 ryd
-     one-electron contribution =   -62.88320522 ryd
-     hartree contribution      =    34.47033792 ryd
-     xc contribution           =   -13.61252389 ryd
-     ewald contribution        =   -21.45065615 ryd
+     band energy sum           =   -11.60367856 ryd
+     one-electron contribution =   -62.88320533 ryd
+     hartree contribution      =    34.47033802 ryd
+     xc contribution           =   -13.61252390 ryd
+     ewald contribution        =   -21.45065612 ryd
      correction for metals     =    -0.00335284 ryd
 
      total magnetization       =     1.97     0.00     0.00 Bohr mag/cell
@@ -1538,8 +1537,8 @@ O2       0.188535238   0.188535124   0.188535124
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.00020811    0.00020828    0.00020828
-     atom   2 type  2   force =    -0.00020811   -0.00020828   -0.00020828
+     atom   1 type  1   force =     0.00020812    0.00020832    0.00020818
+     atom   2 type  2   force =    -0.00020812   -0.00020832   -0.00020818
 
      Total force =     0.000510     Total SCF correction =     0.000205
 
@@ -1547,7 +1546,7 @@ O2       0.188535238   0.188535124   0.188535124
 
      End of BFGS Geometry Optimization
 
-     Final energy =     -63.4794001748 ryd
+     Final energy =     -63.4794001749 ryd
 
      Saving the approximate inverse hessian
 
@@ -1558,54 +1557,54 @@ CELL_PARAMETERS (alat)
    0.000000000   0.000000000   1.000000000
 
 ATOMIC_POSITIONS (alat)
-O1       0.011464762   0.011464876   0.011464876
-O2       0.188535238   0.188535124   0.188535124
+O1       0.011464783   0.011464853   0.011464878
+O2       0.188535217   0.188535147   0.188535122
 
 
 
      Writing output data file          o2.save
  
-     PWSCF        :  1m12.82s CPU time
+     PWSCF        :  1m12.48s CPU time
 
-     init_run     :     2.61s CPU
-     electrons    :    60.64s CPU (       6 calls,  10.107 s avg)
-     forces       :     5.43s CPU (       6 calls,   0.905 s avg)
+     init_run     :     2.63s CPU
+     electrons    :    60.24s CPU (       6 calls,  10.040 s avg)
+     forces       :     5.41s CPU (       6 calls,   0.902 s avg)
  
-     electrons    :    60.64s CPU (       6 calls,  10.107 s avg)
-     c_bands      :    14.63s CPU (      36 calls,   0.406 s avg)
-     sum_band     :    17.90s CPU (      36 calls,   0.497 s avg)
-     v_of_rho     :    15.28s CPU (      41 calls,   0.373 s avg)
-     newd         :    10.16s CPU (      41 calls,   0.248 s avg)
-     mix_rho      :     1.13s CPU (      36 calls,   0.031 s avg)
+     electrons    :    60.24s CPU (       6 calls,  10.040 s avg)
+     c_bands      :    14.85s CPU (      36 calls,   0.413 s avg)
+     sum_band     :    16.72s CPU (      36 calls,   0.464 s avg)
+     v_of_rho     :    15.88s CPU (      41 calls,   0.387 s avg)
+     newd         :    10.06s CPU (      41 calls,   0.245 s avg)
+     mix_rho      :     1.15s CPU (      36 calls,   0.032 s avg)
  
-     c_bands      :    14.63s CPU (      36 calls,   0.406 s avg)
-     init_us_2    :     0.10s CPU (      73 calls,   0.001 s avg)
-     cegterg      :    14.48s CPU (      36 calls,   0.402 s avg)
+     c_bands      :    14.85s CPU (      36 calls,   0.413 s avg)
+     init_us_2    :     0.09s CPU (      73 calls,   0.001 s avg)
+     cegterg      :    14.69s CPU (      36 calls,   0.408 s avg)
  
-     sum_band     :    17.90s CPU (      36 calls,   0.497 s avg)
+     sum_band     :    16.72s CPU (      36 calls,   0.464 s avg)
      becsum       :     0.00s CPU (      36 calls,   0.000 s avg)
-     addusdens    :    11.59s CPU (      36 calls,   0.322 s avg)
+     addusdens    :    11.56s CPU (      36 calls,   0.321 s avg)
  
-     wfcrot       :     0.17s CPU
-     cegterg      :    14.48s CPU (      36 calls,   0.402 s avg)
-     h_psi        :    11.45s CPU (     129 calls,   0.089 s avg)
-     g_psi        :     0.09s CPU (      92 calls,   0.001 s avg)
-     overlap      :     0.64s CPU (      92 calls,   0.007 s avg)
-     cdiaghg      :     0.39s CPU (     128 calls,   0.003 s avg)
-     update       :     0.58s CPU (      92 calls,   0.006 s avg)
-     last         :     0.29s CPU (      38 calls,   0.008 s avg)
+     wfcrot       :     0.16s CPU
+     cegterg      :    14.69s CPU (      36 calls,   0.408 s avg)
+     h_psi        :    11.68s CPU (     129 calls,   0.091 s avg)
+     g_psi        :     0.16s CPU (      92 calls,   0.002 s avg)
+     overlap      :     0.52s CPU (      92 calls,   0.006 s avg)
+     cdiaghg      :     0.47s CPU (     128 calls,   0.004 s avg)
+     update       :     0.50s CPU (      92 calls,   0.005 s avg)
+     last         :     0.20s CPU (      38 calls,   0.005 s avg)
  
-     h_psi        :    11.45s CPU (     129 calls,   0.089 s avg)
-     init         :     0.19s CPU (     129 calls,   0.001 s avg)
-     firstfft     :     6.37s CPU (    1879 calls,   0.003 s avg)
-     secondfft    :     3.32s CPU (    1879 calls,   0.002 s avg)
+     h_psi        :    11.68s CPU (     129 calls,   0.091 s avg)
+     init         :     0.22s CPU (     129 calls,   0.002 s avg)
+     firstfft     :     6.35s CPU (    1878 calls,   0.003 s avg)
+     secondfft    :     3.45s CPU (    1878 calls,   0.002 s avg)
      add_vuspsi   :     0.23s CPU (     129 calls,   0.002 s avg)
-     s_psi        :     0.28s CPU (     129 calls,   0.002 s avg)
+     s_psi        :     0.36s CPU (     129 calls,   0.003 s avg)
  
      General routines
-     ccalbec      :     0.19s CPU (     171 calls,   0.001 s avg)
-     cft3         :    13.27s CPU (    1694 calls,   0.008 s avg)
-     cft3s        :     8.40s CPU (    9264 calls,   0.001 s avg)
-     interpolate  :     3.90s CPU (     308 calls,   0.013 s avg)
-     davcio       :     0.08s CPU (      36 calls,   0.002 s avg)
+     ccalbec      :     0.30s CPU (     171 calls,   0.002 s avg)
+     cft3         :    13.72s CPU (    1694 calls,   0.008 s avg)
+     cft3s        :     8.51s CPU (    9260 calls,   0.001 s avg)
+     interpolate  :     4.12s CPU (     308 calls,   0.013 s avg)
+     davcio       :     0.04s CPU (      36 calls,   0.001 s avg)
  
