@@ -646,55 +646,6 @@
      LOGICAL, SAVE :: lprimo
      INTEGER :: i
 
-         if( tens .and. ( ismear == -1) ) then  ! in questo caso stampa elementi matrice dipolo
-
-            call rotate( z0, c0(:,:,1,1), bec, c0diag, becdiag )
-
-            lprimo = .false.
-            do i = 1, n
-               if(f(i) .ne. 1) then
-                  c0diag(:,i) = (0.d0,0.d0)
-                  becdiag(:,i) = 0.d0
-               else if(lprimo) then
-                  c0diag(:,i) = (0.d0,0.d0)
-                  becdiag(:,i) = 0.d0
-               else
-                  lprimo=.true.
-               end if
-            enddo
-
-            call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin)
-
-            allocate(rhodip(nnr,nspin))
-            call rotate(z0,c0(:,:,1,1),bec,c0diag,becdiag)
-
-            lprimo=.true.
-            do i=1,n
-               if(f(i) .ne. 1) then
-                  c0diag(:,i) = (0.d0,0.d0)
-                  becdiag(:,i) = 0.d0
-               else if(lprimo) then
-                  c0diag(:,i) = (0.d0,0.d0)
-                  becdiag(:,i) = 0.d0
-                  lprimo=.false.
-               endif
-            enddo
-
-            call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhodip,rhog,rhos,enl,ekin)
-
-            rhor(:,:)=sqrt(rhor(:,:))*sqrt(rhodip(:,:))
-            deallocate(rhodip)
-
-            call  dipol_matrix(tau0,h,rhor, dipol)
-
-            write(stdout,*) 'ELEMENTI DI DIPOLO :'
-            do i=1,3
-               write(stdout,*) dipol(i)
-            enddo
-            write(stdout,*) '--------------------------'
-
-
-         endif
 
          if(.not.tens) then
             call eigs0(nspin,nx,nupdwn,iupdwn,f,lambda)
