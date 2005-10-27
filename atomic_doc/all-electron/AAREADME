@@ -3,9 +3,8 @@
 he.in: convergence problems apparently related to SIC, worse with LSD
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
 This directory contains a few examples of all-electron inputs.
-The output are in the routine reference.
+The output are in the directory "reference/". Input data:
 
 h.in       Non-relativistic, sic correction,  sigma-GGA (PW91)
 he.in      Non-relativistic, sic correction,  sigma-GGA (PBE)
@@ -19,10 +18,12 @@ pt.in      Dirac relativistic, latter correction, as in the HS tables [1]
 u1.in      Dirac relativistic, latter correction, as in the HS tables [1]
 u.in       Dirac relativistic, sic correction, PBE
 w.in       Dirac relativistic, latter correction, as in the HS tables [1]
+ne_oep.in  Non-relativistic, Optimized Effective Potential, no spin
+c_oep.in   Non-relativistic, Optimized Effective Potential, spin-pol.
 
-The script test.job runs ld1.x on these examples and compares the
-outputs and the pseudo-potentials with those contained in reference.
-The differences between these files is written into the difference file.
+The script test.job runs ld1.x on these examples, writes the outputs
+into directory "results/", compares them with reference outputs and
+writes the differences between these files into file "difference".
 
 References:
 

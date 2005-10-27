@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 11-Feb-05
-     today is 12Aug2005 at 11: 6:10 
+     program ld1 starts. version 3.0   
+     today is 27Oct2005 at 11:19:48 
 
      -------------------- All-electron run ------------------------------
 
@@ -22,13 +22,13 @@
         spin 1   shift :        -0.0497        -0.0248        -0.6762
         spin 2   shift :        -0.0416        -0.0208        -0.5665
 
-     eps = 3.2E-15  iter = 34
+     eps = 3.0E-15  iter = 34
  
      Etot =     -75.377824 Ry,     -37.688912 Ha,   -1025.575595 eV
      Total magnetization:    2.00 Bohr mag. 
 
      Ekin =      75.378196 Ry,      37.689098 Ha,    1025.580654 eV
-     Encl =    -176.283970 Ry,     -88.141985 Ha,   -2398.484435 eV
+     Encl =    -176.283970 Ry,     -88.141985 Ha,   -2398.484436 eV
      Eh   =      35.620666 Ry,      17.810333 Ha,     484.647657 eV
      Exc  =     -10.092716 Ry,      -5.046358 Ha,    -137.319472 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV

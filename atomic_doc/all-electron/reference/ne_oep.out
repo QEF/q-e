@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 11-Feb-05
-     today is 12Aug2005 at 14:46:40 
+     program ld1 starts. version 3.0   
+     today is 27Oct2005 at 11:19:48 
 
      -------------------- All-electron run ------------------------------
 
@@ -18,7 +18,7 @@
      OEP WARNING: printed eigenvalues were shifted by
                  shift :        -0.0779        -0.0389        -1.0598
 
-     eps = 7.0E-15  iter = 21
+     eps = 7.1E-15  iter = 21
  
      Etot =    -257.090829 Ry,    -128.545414 Ha,   -3497.926401 eV
 
