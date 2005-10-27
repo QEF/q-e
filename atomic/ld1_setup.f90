@@ -74,7 +74,8 @@ subroutine ld1_setup
               endif
            enddo
            if (nstoaec(n,nc).eq.0) call errore('ld1_setup', &
-                'no all electron for this configuration',nc)
+                'all electron wfc corresponding to pseudo-state ' &
+          &     //eltsc(n,nc)//' not found',nc)
         enddo
      enddo
   endif
