@@ -1,0 +1,132 @@
+#!/bin/sh
+
+# In order to use this script, you must be logged to anonymous cvs:
+# $ cvs login
+# (password: cvsanon)
+
+# choose a directory ROOT  in which to perform the test
+# the code is in     PWROOT=$ROOT/espresso)
+# temporary files in TMPDIR=$ROOT/tmp)
+
+ROOT=/scr/giannozz
+
+# choose setting for the compiler you want to use
+. /opt/intel_fc_80/bin/ifortvars.sh
+# for g95 + MKL:
+# export CONFIG_OPTS="--disable-parallel F90=g95"
+# for ifort:
+. /opt/intel_fc_80/bin/ifortvars.sh
+export CONFIG_OPTS="--disable-parallel"
+#
+# choose if you want to update an existing cvs (update=1)
+#                 or to download a new one     (update=0)
+update=1
+######################################################################
+export CVSROOT=:pserver:cvsanon@democritos.sissa.it:/home/cvs
+PWROOT=$ROOT/espresso
+TMPDIR=$ROOT/tmp
+
+if ! test -d $PWROOT; then
+    mkdir -p $PWROOT
+    update=0
+elif ! test -d $PWROOT/CVS; then
+    update=0
+fi
+if ! test -d $TMPDIR; then
+    mkdir -p $TMPDIR
+fi
+
+if test  "$update" = "0" ; then
+   cd $ROOT
+   /bin/rm -r espresso
+   cvs co espresso >& cvs.log
+   cd $PWROOT
+   mv ../cvs.log .
+else
+   cd $PWROOT
+   cvs update -d >& cvs.log
+fi
+conflicts=`cat cvs.log | grep '^C '`
+if test "$conflicts" != "" ; then
+   echo "#" 
+   echo "# CONFLICTS IN CVS CHECKOUT "
+   echo "#" 
+   echo $conflicts
+   exit 0
+fi
+changes=` cat cvs.log | grep -e '^U ' -e'^P ' `
+if test  "$changes" = "0" ; then
+   # 
+   # no changes to cvs, do nothing
+   #
+   exit 0
+else
+   echo "#" 
+   echo "# CHECKOUT ESPRESSO "
+   echo "#" 
+   cat cvs.log | grep -e '^U ' -e'^P ' -e '^M '
+fi
+echo "#" 
+echo "# CONFIGURE "
+echo "#" 
+./configure $CONFIG_OPTS >& configure.log
+tail -1 config.log
+
+echo "#" 
+echo "# MAKE ALL "
+echo "#" 
+make all >& make.log
+errors=`grep -c -e Error make.log`
+if test  "$errors" = "0" ; then
+   echo "make all: success"
+else
+   echo "make all: failure"
+   exit $errors
+fi
+cd examples
+echo "#" 
+echo "# RUNNING ALL EXAMPLES "
+echo "#" 
+mv environment_variables environment_variables.orig
+cat > environment_variables << EOF
+BIN_DIR=$PWROOT/bin
+PSEUDO_DIR=$PWROOT/pseudo
+TMP_DIR=$TMPDIR
+PARA_PREFIX=
+PARA_POSTFIX=
+EOF
+#
+echo > run.log
+###./run_all_examples >& run.log
+#
+# TESTING ALL EXAMPLES
+#
+
+example_list=`/bin/ls -d example??`
+for example in $example_list
+do
+
+    cd $PWROOT/examples/$example
+    if test  "$example" = "example21" ; then
+    # the argument "64" to run_example is used in example 21
+       ./run_example 64 >& run.log
+    elif test  "$example" = "example26" ; then
+    # the arguments "1 7" to run_example are used in example 26
+       ./run_example 1 7 >& run.log
+    else
+    # all other cases
+       ./run_example >& run.log
+    fi
+    cat run.log >> ../run.log
+    /bin/rm run.log
+    N=`echo $example | sed 's/example//'`
+    echo "#" 
+    echo "# CHECKING EXAMPLE # " $N
+    echo "#" 
+
+    ../check_example ./
+
+done
+
+cd ../
+mv environment_variables.orig environment_variables
