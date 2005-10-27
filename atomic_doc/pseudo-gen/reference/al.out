@@ -1,6 +1,6 @@
 
-     program ld1 starts. version 11-Feb-05
-     today is 11Feb2005 at 12:25: 8 
+     program ld1 starts. version 3.0   
+     today is 27Oct2005 at 10:50:40 
 
      -------------------- All-electron run ------------------------------
 
@@ -119,7 +119,7 @@
      1 0     3S   1( 2.00)       -0.57419       -0.57419        0.00000
      2 1     3P   1( 1.00)       -0.20554       -0.20554        0.00000
 
-     eps = 2.9E-24  iter =  1
+     eps = 3.1E-23  iter =  1
  
      Etot =    -482.618012 Ry,    -241.309006 Ha,   -6566.404145 eV
      Etotps =    -3.885009 Ry,      -1.942504 Ha,     -52.858649 eV

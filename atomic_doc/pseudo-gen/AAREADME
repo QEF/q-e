@@ -1,5 +1,5 @@
-This directory contains few examples of pseudo-potential generation.
-The outputs are in the directory reference.
+This directory contains a few examples of pseudo-potential generation.
+The outputs are in the directory "reference/". INput data:
 
 al.in        Generates a NC pseudo-potential pseudotype=1 
 as.in        Generates a NC relativistic pseudo-potential pseudotype=2
@@ -8,7 +8,7 @@ pt.in        Generates a US relativistic pseudo-potential pseudotype=3
 si_nc.in     Generates a NC pseudo-potential tm  pseudotype=1
 si_nc_paw.in Generates the reconstruction file for PAW
 
-The script test.job runs ld1.x on these examples and compares the
-outputs and the pseudo-potentials with those contained in reference.
-The differences between these files is written into the file difference.
+The script test.job runs ld1.x on these examples, writes the outputs
+into directory "results/", compares them with reference outputs and
+writes the differences between these files into file "difference".
 
