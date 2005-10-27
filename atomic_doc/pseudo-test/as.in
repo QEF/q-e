@@ -7,7 +7,11 @@
    dft='LDA',
  /
  &test
-   nconf=1
+   nconf=5
    file_pseudo='Asrel.RRKJ3.UPF',
    configts(1)= '4s2 4p3'
+   configts(2)= '4s1 4p4'
+   configts(3)= '4s2 4p2'
+   configts(4)= '4s1 4p3'
+   configts(5)= '4s1 4p3'
  /
