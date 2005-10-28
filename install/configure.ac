@@ -299,7 +299,7 @@ mac:* )
 	;;
 cygwin*:g95 )
 	try_cc="gcc cc"
-	try_f77="$g95 f90"
+	try_f77="g95 $f90"
 	;;
 * )
 	# unknown, try these
