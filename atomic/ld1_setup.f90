@@ -123,10 +123,18 @@ subroutine ld1_setup
            nsloc=nwfs-1
            nbeta=nwfs-2
            if (lls(nsloc+1).ne.lloc) &
-                call errore('ld1_setup','spin-orbit local wavefunctions?',1)
+             call errore('ld1_setup','mismatch between lloc and l of ' // &
+           &           'spin-orbit split wfc chosen for local potential',nsloc)
         endif
-        if (lls(nsloc).ne.lloc) &
-             call errore('ld1_setup','no local wavefunctions?',1)
+        if (lls(nsloc).ne.lloc) then
+           if (rel==2) then
+              call errore('ld1_setup','mismatch between lloc and l of ' // &
+           &            'spin-orbit split wfc chosen for local potential',nsloc)
+           else
+              call errore('ld1_setup','mismatch between lloc and l of ' // &
+           &            'the wavefunction chosen for local potential',nsloc)
+           end if
+        end if
      else
         nsloc=-1   
         nbeta=nwfs

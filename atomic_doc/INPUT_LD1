@@ -121,6 +121,8 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
            lloc>-1 uses the corresponding channel as local PP
       NB: if lloc>-1, the corresponding channel must be the last in the
           list of wavefunctions appearing after the namelist &inputp
+          In the relativistic case, if lloc > 0 both the j=lloc-1/2 and
+          the j=lloc+1/2 wavefunctions must be atthe end of the list
       rcloc = matching radius (a.u.) for local pseudo-potential (no default)
               Must be specified only if lloc=-1, otherwise the
               corresponding value of rcut is used. 
@@ -164,7 +166,9 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       rcut =  matching radius (a.u.) for norm conserving PP
       rcutus= matching radius (a.u.) for ultrasoft PP - only for pseudotype=3 
       jjs= the total angular momentum (0.0 is allowed for complete shells)
-      NB: il lloc>-1 the state with lls=lloc must be the last
+      NB: if lloc>-1 the state with lls=lloc must be the last
+          if lloc>0 in the relativistic case, both states with jjs=lloc-1/2
+          and jjs=lloc+1/2 must be the last two
 
   3) namelist &test (needed only if iswitch=2, optional if iswitch=3)
 
