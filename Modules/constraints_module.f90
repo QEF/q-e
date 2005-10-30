@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004-2005 PWSCF-CP90 groups
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -72,7 +72,7 @@ MODULE constraints_module
      ! ... public methods
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE init_constraint( nat, tau, alat, ityp )
+     SUBROUTINE init_constraint( nat, tau, tau_units, ityp )
        !-----------------------------------------------------------------------
        !
        USE input_parameters, ONLY : nconstr_inp, constr_tol_inp, &
@@ -84,7 +84,7 @@ MODULE constraints_module
        !
        INTEGER,  INTENT(IN) :: nat
        REAL(DP), INTENT(IN) :: tau(3,nat)
-       REAL(DP), INTENT(IN) :: alat
+       REAL(DP), INTENT(IN) :: tau_units
        INTEGER,  INTENT(IN) :: ityp(nat)
        !
        INTEGER  :: ia, ia1, ia2, ia3, n_type_coord1
@@ -148,7 +148,7 @@ MODULE constraints_module
                    !
                    IF ( ityp(ia2) /= type_coord2 ) CYCLE
                    !
-                   dtau = pbc( tau(:,ia1) - tau(:,ia2) ) * alat
+                   dtau = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
                    !
                    norm_dtau = norm( dtau )
                    !
@@ -189,7 +189,7 @@ MODULE constraints_module
                 !
                 IF ( ityp(ia2) /= type_coord1 ) CYCLE
                 !
-                dtau = pbc( tau(:,ia1) - tau(:,ia2) ) * alat
+                dtau = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
                 !
                 norm_dtau = norm( dtau )
                 !
@@ -211,7 +211,9 @@ MODULE constraints_module
                 ia1 = ANINT( constr(1,ia) )
                 ia2 = ANINT( constr(2,ia) )
                 !
-                target(ia) = norm( pbc( tau(:,ia1) - tau(:,ia2) ) ) * alat
+                dtau = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
+                !
+                target(ia) = norm( dtau )
                 !
              END IF
              !
@@ -239,8 +241,8 @@ MODULE constraints_module
              ia2 = ANINT( constr(2,ia) )
              ia3 = ANINT( constr(3,ia) )
              !
-             r21 = pbc( tau(:,ia2) - tau(:,ia1) ) * alat
-             r23 = pbc( tau(:,ia2) - tau(:,ia3) ) * alat
+             r21 = pbc( ( tau(:,ia2) - tau(:,ia1) ) * tau_units )
+             r23 = pbc( ( tau(:,ia2) - tau(:,ia3) ) * tau_units )
              !
              r21 = r21 / norm( r21 )
              r23 = r23 / norm( r23 )
@@ -250,7 +252,7 @@ MODULE constraints_module
           CASE DEFAULT
              !
              CALL errore( 'init_constraint', &
-                          'constrain type not implemented ', 1 )
+                          'constrain type not implemented', 1 )
              !
           END SELECT
           !
@@ -261,20 +263,19 @@ MODULE constraints_module
      END SUBROUTINE init_constraint
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE constraint_grad( index, nat, tau, if_pos, ityp, alat, g, dg )
+     SUBROUTINE constraint_grad( index, nat, tau, &
+                                 if_pos, ityp, tau_units, g, dg )
        !-----------------------------------------------------------------------
        !
        ! ... this routine defines the constraint equation:
        !
        ! ...  g(tau,dist) = 0
        !
-       ! ... where tau are the atomic positions ( in alat units ) and dist is
+       ! ... where tau are the atomic positions ( in tau_units ) and dist is
        ! ... the distance of two atoms ( in this case atom 1 and atom 2 ) which 
        ! ... is, in this case, a one dimensional constrain. 
        ! ... dg is in output the value of the gradient of g and dg2 is its 
        ! ... square modulus.
-       !
-       ! ... Dario Alfe 1997  and  Carlo Sbraccia 2004
        !
        IMPLICIT NONE
        !
@@ -283,7 +284,7 @@ MODULE constraints_module
        REAL(DP), INTENT(IN)  :: tau(:,:)
        INTEGER,  INTENT(IN)  :: if_pos(:,:)
        INTEGER,  INTENT(IN)  :: ityp(:)
-       REAL(DP), INTENT(IN)  :: alat
+       REAL(DP), INTENT(IN)  :: tau_units
        REAL(DP), INTENT(OUT) :: dg(:,:)
        REAL(DP), INTENT(OUT) :: g
        !
@@ -328,7 +329,7 @@ MODULE constraints_module
                 !
                 IF ( ityp(ia2) /= type_coord2 ) CYCLE
                 !
-                dtau(:) = pbc( tau(:,ia1) - tau(:,ia2) ) * alat
+                dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
                 !
                 norm_dtau = norm( dtau(:) )
                 !
@@ -372,7 +373,7 @@ MODULE constraints_module
              !
              IF ( ityp(ia1) /= type_coord1 ) CYCLE
              !
-             dtau(:) = pbc( tau(:,ia) - tau(:,ia1) ) * alat
+             dtau(:) = pbc( ( tau(:,ia) - tau(:,ia1) ) * tau_units )
              !
              norm_dtau = norm( dtau(:) )
              !
@@ -398,7 +399,7 @@ MODULE constraints_module
           ia1 = ANINT( constr(1,index) )
           ia2 = ANINT( constr(2,index) )
           !
-          dtau(:) = pbc( tau(:,ia1) - tau(:,ia2) ) * alat
+          dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
           !
           norm_dtau = norm( dtau(:) )
           !
@@ -416,8 +417,8 @@ MODULE constraints_module
           ia2 = ANINT( constr(2,index) )
           ia3 = ANINT( constr(3,index) )
           !
-          r21 = pbc( tau(:,ia2) - tau(:,ia1) ) * alat
-          r23 = pbc( tau(:,ia2) - tau(:,ia3) ) * alat
+          r21 = pbc( ( tau(:,ia2) - tau(:,ia1) ) * tau_units )
+          r23 = pbc( ( tau(:,ia2) - tau(:,ia3) ) * tau_units )
           !
           norm_r21 = norm( r21 )
           norm_r23 = norm( r23 )
@@ -436,8 +437,8 @@ MODULE constraints_module
           !
        CASE DEFAULT
           !
-          CALL errore( 'dist_constrain', &
-                       'constrain type not implemented ', 1 )
+          CALL errore( 'constraint_grad', &
+                       'constrain type not implemented', 1 )
           !
        END SELECT
        !
@@ -449,7 +450,7 @@ MODULE constraints_module
      !
      !-----------------------------------------------------------------------
      SUBROUTINE check_constraint( nat, taup, tau0, &
-                                  force, if_pos, ityp, alat, dt, massconv )
+                                  force, if_pos, ityp, tau_units, dt, massconv )
        !-----------------------------------------------------------------------
        !
        ! ... update tau so that the constraint equation g=0 is satisfied,
@@ -472,12 +473,12 @@ MODULE constraints_module
        INTEGER,  INTENT(IN)    :: if_pos(3,nat)
        REAL(DP), INTENT(INOUT) :: force(3,nat)
        INTEGER,  INTENT(IN)    :: ityp(nat)
-       REAL(DP), INTENT(IN)    :: alat
+       REAL(DP), INTENT(IN)    :: tau_units
        REAL(DP), INTENT(IN)    :: dt
        REAL(DP), INTENT(IN)    :: massconv
        !
        INTEGER               :: na, i, index
-       REAL(DP), ALLOCATABLE :: dgp(:,:), dg0(:,:)
+       REAL(DP), ALLOCATABLE :: dgp(:,:), dg0(:,:,:)
        REAL(DP)              :: gp, g0
        REAL(DP)              :: lambda, fac, invdtsq
        LOGICAL               :: ltest(nconstr), global_test
@@ -487,9 +488,16 @@ MODULE constraints_module
        !
        !
        ALLOCATE( dgp( 3, nat ) )
-       ALLOCATE( dg0( 3, nat ) )
+       ALLOCATE( dg0( 3, nat, nconstr ) )
        !
        invdtsq  = 1.D0 / dt**2
+       !
+       DO index = 1, nconstr
+          !
+          CALL constraint_grad( index, nat, tau0, &
+                                if_pos, ityp, tau_units, g0, dg0(:,:,index) )
+          !
+       END DO
        !
        outer_loop: DO i = 1, maxiter
           !
@@ -498,7 +506,7 @@ MODULE constraints_module
              ltest(index) = .FALSE.
              !
              CALL constraint_grad( index, nat, taup, &
-                                   if_pos, ityp, alat, gp, dgp )
+                                   if_pos, ityp, tau_units, gp, dgp )
              !
              ! ... check if gp = 0
              !
@@ -514,8 +522,8 @@ MODULE constraints_module
                 !
              END IF
              !
-             ! ... if  gp <> 0  find new  taup check again 
-             ! ... ( gp is in bohr and taup in alat units )
+             ! ... if  gp <> 0  find new taup check again 
+             ! ... ( gp is in bohr and taup in tau_units )
              !
              DO na = 1, nat
                 !
@@ -523,20 +531,17 @@ MODULE constraints_module
                 !
              END DO
              !
-             CALL constraint_grad( index, nat, tau0, &
-                                   if_pos, ityp, alat, g0, dg0 )
-             !
-             lambda = gp / DDOT( 3 * nat, dgp, 1, dg0, 1 )
+             lambda = gp / DDOT( 3 * nat, dgp, 1, dg0(:,:,index), 1 )
              !
              DO na = 1, nat
                 !
-                fac = amass( ityp(na) ) * massconv * alat
+                fac = amass( ityp(na) ) * massconv * tau_units
                 !
-                taup(:,na) = taup(:,na) - lambda * dg0(:,na) / fac
-                !
-                force(:,na) = force(:,na) - lambda * dg0(:,na) * invdtsq
+                taup(:,na) = taup(:,na) - lambda * dg0(:,na,index) / fac
                 !
              END DO
+             !
+             force(:,:) = force(:,:) - lambda * dg0(:,:,index) * invdtsq
              !
              lagrange(index) = lagrange(index) + lambda * invdtsq
              !
@@ -556,7 +561,7 @@ MODULE constraints_module
           WRITE( stdout, '(5X,"targets: ")' ); WRITE( stdout, * ) target(:)
           !
           CALL errore( 'check_constrain', &
-                       'on some constrain g = 0 is not satisfied', 1 )
+                       'on some constraint g = 0 is not satisfied', 1 )
           !
        END IF
        !
@@ -568,8 +573,13 @@ MODULE constraints_module
      END SUBROUTINE check_constraint
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE remove_constraint_force( nat, tau, if_pos, ityp, alat, force )
+     SUBROUTINE remove_constraint_force( nat, tau, &
+                                         if_pos, ityp, tau_units, force )
        !-----------------------------------------------------------------------
+       !
+       ! ... the component of the force that is orthogonal to the
+       ! ... ipersurface defined by the constraint equations is removed
+       ! ... and the corresponding value of the lagrange multiplier computed
        !
        IMPLICIT NONE
        !
@@ -577,35 +587,63 @@ MODULE constraints_module
        REAL(DP), INTENT(IN)    :: tau(:,:)
        INTEGER,  INTENT(IN)    :: if_pos(:,:)
        INTEGER,  INTENT(IN)    :: ityp(:)
-       REAL(DP), INTENT(IN)    :: alat
+       REAL(DP), INTENT(IN)    :: tau_units
        REAL(DP), INTENT(INOUT) :: force(:,:)
        !
-       INTEGER               :: index
+       INTEGER               :: i, j
        REAL(DP)              :: g
-       REAL(DP), ALLOCATABLE :: dg(:,:)
+       REAL(DP), ALLOCATABLE :: dg(:,:,:)
+       REAL(DP), ALLOCATABLE :: dg_matrix(:,:)
+       INTEGER,  ALLOCATABLE :: iwork(:)
        !
-       REAL(DP), EXTERNAL :: DDOT, DNRM2
+       REAL(DP), EXTERNAL :: DDOT
        !
        !
        lagrange(:) = 0.D0
        !
 #if defined (__REMOVE_CONSTRAINT_FORCE)
        !
-       ALLOCATE( dg( 3, nat ) )
+       ALLOCATE( dg( 3, nat, nconstr ) )
+       ALLOCATE( dg_matrix( nconstr, nconstr ) )
+       ALLOCATE( iwork( nconstr ) )
        !
-       DO index = 1, nconstr
+       DO i = 1, nconstr
           !
-          CALL constraint_grad( index, nat, tau, if_pos, ityp, alat, g, dg )
+          CALL constraint_grad( i, nat, tau, if_pos, &
+                                ityp, tau_units, g, dg(:,:,i) )
           !
-          dg(:,:) = dg(:,:) / DNRM2( 3 * nat, dg, 1 )
+       END DO
+       !
+       DO i = 1, nconstr
           !
-          lagrange(index) = DDOT( 3 * nat, force, 1, dg, 1 )
+          dg_matrix(i,i) = DDOT( 3 * nat, dg(:,:,i), 1, dg(:,:,i), 1 )
           !
-          force(:,:) = force(:,:) - lagrange(index) * dg(:,:)
+          lagrange(i) = DDOT( 3 * nat, force, 1, dg(:,:,i), 1 )
+          !
+          DO j = i + 1, nconstr
+             !
+             dg_matrix(i,j) = DDOT( 3 * nat, dg(:,:,i), 1, dg(:,:,j), 1 )
+             dg_matrix(j,i) = dg_matrix(i,j)
+             !
+          END DO
+          !
+       END DO
+       !
+       CALL DGESV( nconstr, 1, dg_matrix, nconstr, iwork, lagrange, nconstr, i )
+       !
+       IF ( i /= 0 ) &
+          CALL errore( 'remove_constraint_force', &
+                       'error in the solution of the linear system', 1 )
+       !
+       DO i = 1, nconstr
+          !
+          force(:,:) = force(:,:) - lagrange(i) * dg(:,:,i)
           !
        END DO
        !
        DEALLOCATE( dg )
+       DEALLOCATE( dg_matrix )
+       DEALLOCATE( iwork )
        !
 #endif
        !
@@ -631,6 +669,9 @@ MODULE constraints_module
      FUNCTION pbc( vect )
        !-----------------------------------------------------------------------
        !
+       ! ... periodic boundary conditions ( vect is assumed to be given
+       ! ... in cartesian units )
+       !
        USE cell_base, ONLY : at, bg, alat
        !
        IMPLICIT NONE
@@ -641,7 +682,7 @@ MODULE constraints_module
        !
 #if defined (__USE_PBC)
        !
-       pbc(:) = MATMUL( vect(:) / alat, bg(:,:) )
+       pbc(:) = MATMUL( vect(:), bg(:,:) ) / alat
        !
        pbc(:) = pbc(:) - ANINT( pbc(:) )
        !

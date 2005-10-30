@@ -44,7 +44,7 @@ MODULE coarsegrained_vars
   !
   INTEGER :: starting_metadyn_iter
   !
-  CHARACTER(LEN=32) :: metadyn_fmt
+  CHARACTER(LEN=80) :: metadyn_fmt
   !
   CONTAINS
     !
@@ -161,13 +161,16 @@ MODULE coarsegrained_base
       !
       IMPLICIT NONE
       !
-      INTEGER  :: idum, i
-      REAL(DP) :: rdum
-      LOGICAL  :: lstop, file_exists
+      INTEGER          :: idum, i
+      REAL(DP)         :: rdum
+      LOGICAL          :: lstop, file_exists
+      CHARACTER(LEN=4) :: cncon
       !
       !
-      metadyn_fmt = "(I4," // &
-                  & TRIM( int_to_char( 2*nconstr + 1 ) ) // "(2X,F12.8),1X,L)"
+      cncon = int_to_char( nconstr )
+      !
+      metadyn_fmt = "(I4," // TRIM( cncon ) // "(2X,F10.5),2X,F14.8," // &
+                  & TRIM( cncon ) // "(2X,F10.7),1X,L)"
       !
       g_sigma_sq     = g_sigma**2
       two_g_sigma_sq = 2.D0 * g_sigma_sq
