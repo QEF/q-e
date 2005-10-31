@@ -377,7 +377,7 @@ MODULE path_base
           !
           DO i = 1, ( input_images - 1 )
              !
-             d_R(:,i) = ( pos(1:dim,i+1) - pos(1:dim,i) )
+             d_R(1:dim,i) = ( pos(1:dim,i+1) - pos(1:dim,i) )
              !
              image_spacing(i) = norm( d_R(:,i) )
              !
@@ -387,13 +387,13 @@ MODULE path_base
           !
           inter_image_dist = path_length / DBLE( num_of_images - 1  )
           !
-          DO i = 1, input_images - 1
+          DO i = 1, ( input_images - 1 )
              !
              d_R(:,i) = d_R(:,i) / image_spacing(i)
              !
           END DO
           !
-          pos_(:,1) = pos(1:dim,1)
+          pos_(1:dim,1) = pos(1:dim,1)
           !
           i = 1
           s = 0.D0
