@@ -133,7 +133,7 @@ SUBROUTINE iosys()
                             reduce_io, ethr, lscf, lbfgs, lmd, lpath, lneb, &
                             lsmd, lphonon, ldamped, lraman, lrescale_t, &
                             noinv, restart, lmetadyn, lconstrain, &
-                            lcoarsegrained, lconstrain, twfcollect
+                            lcoarsegrained, twfcollect
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
   !
