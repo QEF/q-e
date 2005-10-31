@@ -45,6 +45,7 @@ subroutine pseudovloc
   integer ::         &
        n,        &  ! counter on mesh points
        indi,rep, &  ! auxiliary
+       indns(0:1), & ! auxiliary
        nc           ! counter on bessel
 
   if (lloc.lt.0) then
@@ -117,8 +118,18 @@ subroutine pseudovloc
      !    here
      !
      nst=(lloc+1)*2
-     rep=0
-     if (rel==2.and.lloc.gt.0) rep=1
+     if (rel==2.and.lloc.gt.0) then
+        rep=1
+        indns(0)=nsloc
+        indns(1)=nsloc+1
+        if (jjs(nsloc) > jjs(nsloc+1) ) then
+           indns(0)=nsloc+1
+           indns(1)=nsloc
+        endif
+     else
+        rep=0
+        indns(0)=nsloc
+     endif
      vpsloc=0.0_dp
      vaux=0.0_dp
      do indi=0,rep
@@ -147,7 +158,7 @@ subroutine pseudovloc
         !
         !   compute the phi functions
         !
-        call compute_phipot(lloc,ik,nwf0,nsloc+indi,xc)
+        call compute_phipot(lloc,ik,nwf0,indns(indi),xc)
         !
         !     set the local potential equal to the all-electron one at large r
         !
@@ -155,7 +166,7 @@ subroutine pseudovloc
            if (r(n) > rcloc) then
               vaux(n,indi+1)=vpot(n,1)
            else
-              vaux(n,indi+1)=chis(n,nsloc+indi)/phis(n,nsloc+indi)
+              vaux(n,indi+1)=chis(n,indns(indi))/phis(n,indns(indi))
            endif
         enddo
      enddo
