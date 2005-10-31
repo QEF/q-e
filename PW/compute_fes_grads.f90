@@ -430,6 +430,7 @@ SUBROUTINE metadyn()
   !
   INTEGER  :: iter, i
   REAL(DP) :: norm_fe_grad
+  LOGICAL  :: lfirst_scf = .TRUE.
   !
   REAL(DP), EXTERNAL :: rndm
   !
@@ -468,7 +469,7 @@ SUBROUTINE metadyn()
         !
         ! ... the system is "adiabatically" moved to the new target
         !
-        CALL move_to_target()
+        CALL move_to_target( lfirst_scf )
         !
      END IF
      !
@@ -482,7 +483,7 @@ SUBROUTINE metadyn()
      !
      WRITE( stdout, '(/,5X,"calculation of the potential of mean force",/)' )
      !
-     CALL free_energy_grad( iter )
+     CALL free_energy_grad( iter, lfirst_scf )
      !
      IF ( ionode ) THEN
         !
@@ -512,23 +513,22 @@ SUBROUTINE metadyn()
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE free_energy_grad( iter )
+    SUBROUTINE free_energy_grad( iter, lfirst_scf )
       !------------------------------------------------------------------------
       !
       USE constants,          ONLY : e2
       USE control_flags,      ONLY : istep, ldamped, conv_ions, nstep
       USE coarsegrained_vars, ONLY : fe_nstep, dfe_acc
       USE constraints_module, ONLY : lagrange
-      USE control_flags,      ONLY : istep, conv_ions
       USE io_files,           ONLY : tmp_dir, prefix
       USE parser,             ONLY : delete_if_present
       !
       IMPLICIT NONE
       !
-      INTEGER, INTENT(IN) :: iter
+      INTEGER, INTENT(IN)    :: iter
+      LOGICAL, INTENT(INOUT) :: lfirst_scf
       !
       LOGICAL :: stat
-      LOGICAL :: lfirst = .TRUE.
       !
       !
       dfe_acc = 0.D0
@@ -543,15 +543,15 @@ SUBROUTINE metadyn()
       !
       DO istep = 1, fe_nstep
          !
-         CALL electronic_scf( lfirst, stat )
+         CALL electronic_scf( lfirst_scf, stat )
+         !
+         lfirst_scf = .FALSE.
          !
          IF ( .NOT. stat ) CALL stop_run( stat )
          !
          CALL move_ions()
          !
          IF ( ldamped .AND. conv_ions ) EXIT
-         !
-         lfirst = .FALSE.
          !
       END DO
       !
@@ -576,13 +576,15 @@ SUBROUTINE metadyn()
     END SUBROUTINE free_energy_grad
     !
     !------------------------------------------------------------------------
-    SUBROUTINE move_to_target()
+    SUBROUTINE move_to_target( lfirst_scf )
       !------------------------------------------------------------------------
       !
       USE coarsegrained_vars, ONLY : shake_nstep
       USE control_flags,      ONLY : istep, ldamped, nstep
       USE io_files,           ONLY : tmp_dir, prefix
       USE parser,             ONLY : delete_if_present
+      !
+      LOGICAL, INTENT(INOUT) :: lfirst_scf
       !
       LOGICAL :: stat, ldamped_saved
       !
@@ -600,11 +602,11 @@ SUBROUTINE metadyn()
       !
       DO istep = 1, shake_nstep
          !
-         CALL electronic_scf( .FALSE., stat )
+         CALL electronic_scf( lfirst_scf, stat )
+         !
+         lfirst_scf = .FALSE.
          !
          IF ( .NOT. stat ) CALL stop_run( stat )
-         !
-         CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.bfgs' )
          !
          CALL move_ions()
          !
@@ -619,7 +621,7 @@ SUBROUTINE metadyn()
 END SUBROUTINE metadyn
 !
 !----------------------------------------------------------------------------
-SUBROUTINE electronic_scf( lfirst, stat )
+SUBROUTINE electronic_scf( lfirst_scf, stat )
   !----------------------------------------------------------------------------
   !
   USE control_flags, ONLY : conv_elec, ethr
@@ -627,11 +629,11 @@ SUBROUTINE electronic_scf( lfirst, stat )
   !
   IMPLICIT NONE
   !
-  LOGICAL, INTENT(IN)  :: lfirst
+  LOGICAL, INTENT(IN)  :: lfirst_scf
   LOGICAL, INTENT(OUT) :: stat
   !
   !
-  IF ( .NOT. lfirst ) THEN
+  IF ( .NOT. lfirst_scf ) THEN
      !
      ethr = 1.D-5
      !
