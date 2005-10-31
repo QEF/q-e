@@ -616,8 +616,22 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      IF ( ( MOD( nfi, isave ) == 0 ) .AND. ( nfi < nomore ) ) THEN
         !
         IF ( tcg ) THEN
+!
+! Uncomment the following lines for smooth restart CG--->CP
+! 
+!          IF(tfor.and. .not.tens) then!in this case optimize c0 and lambda for smooth restart with CP
+!            CALL initbox( tau0, taub, irb )
+!            CALL phbox( taub, eigrb )
+!            CALL phfac( tau0, ei1, ei2, ei3, eigr )
+!            CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
+!            IF ( thdyn ) CALL formf( tfirst, eself )
+!            IF (tefield ) CALL efield_update( eigr )
+!            lambdam(:,:)=lambda
+!            CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
+!                          enthal, enb, enbi, fccc, ccc, dt2bye )
+!          END IF
            !
-           CALL writefile( ndw, h, hold ,nfi, c0(:,:,1,1), c0old, taus, tausm, &
+          CALL writefile( ndw, h, hold ,nfi, c0(:,:,1,1), c0old, taus, tausm, &
                            vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,    &
                            vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
                            xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass, ibrav,&
