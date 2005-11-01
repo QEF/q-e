@@ -1329,32 +1329,32 @@ MODULE input
 513 FORMAT( 3X,'Electron dynamics with steepest descent')
 514 FORMAT( 3X,'with friction frice = ',f7.4,' , grease = ',f7.4)
 515 FORMAT( 3X,'initial random displacement of el. coordinates with ',   &
-          &    ' amplitude=',f10.6)
+               ' amplitude=',f10.6)
 535 FORMAT( 3X,'Electron dynamics : the temperature is not controlled')
 540 FORMAT( 3X,'Electron dynamics with rescaling of velocities :',/, &
-          & 3X,'Average kinetic energy required = ',F11.6,'(A.U.)', &
-          &    'Tolerance = ',F11.6)
+            3X,'Average kinetic energy required = ',F11.6,'(A.U.)', &
+               'Tolerance = ',F11.6)
 545 FORMAT( 3X,'Electron dynamics with canonical temp. control : ',/, &
-          & 3X,'Average kinetic energy required = ',F11.6,'(A.U.)', &
-          &    'Tolerance = ',F11.6)
+            3X,'Average kinetic energy required = ',F11.6,'(A.U.)', &
+               'Tolerance = ',F11.6)
 550 FORMAT( 3X,'ion dynamics: the temperature is not controlled'//)
 555 FORMAT( 3X,'ion dynamics with rescaling of velocities:'/             &
-          &    ' temperature required=',f10.5,'(kelvin)',' tolerance=',F10.5//)
+               ' temperature required=',f10.5,'(kelvin)',' tolerance=',F10.5//)
 560 FORMAT( 3X,'ion dynamics with canonical temp. control:'/             &
-          &    ' temperature required=',f10.5,'(kelvin)',' tolerance=',f10.5//)
+               ' temperature required=',f10.5,'(kelvin)',' tolerance=',f10.5//)
 562 FORMAT( 3X,'ion dynamics with nose` temp. control:'/                 &
-          &    ' temperature required=',f10.5,'(kelvin)',' nose` mass = ',&
-          & F10.3//)
+               ' temperature required=',f10.5,'(kelvin)',' nose` mass = ',&
+            F10.3//)
 563 FORMAT( 3X,'ion dynamics with nose` temp. control:'/                 &
-          &    ' temperature required=',f10.5,'(kelvin)'/                 &
-          &    ' NH chain length= ',i3,' active degrees of freedom=',i3,/ &
-          &    ' nose` mass(es) =',20(1X,f10.3)//)
+               ' temperature required=',f10.5,'(kelvin)'/                 &
+               ' NH chain length= ',i3,' active degrees of freedom=',i3,/ &
+               ' nose` mass(es) =',20(1X,f10.3)//)
 566 FORMAT( 3X,' electronic dynamics with nose` temp. control:'/          &
-          &    ' elec. kin. en. required=',f10.5,'(hartree)',             &
-          &    ' nose` mass = ',f10.3//)
+               ' elec. kin. en. required=',f10.5,'(hartree)',             &
+               ' nose` mass = ',f10.3//)
 580 FORMAT( 3X,'Nstepe = ',I3  &
-          &   ,' purely electronic steepest descent steps',/, &
-          & 3X,'are performed for every ionic step in the program')
+              ,' purely electronic steepest descent steps',/, &
+            3X,'are performed for every ionic step in the program')
 590 FORMAT( 3X,'Electron temperature control via nose thermostat')
     !
 700 FORMAT( /,3X, 'Verbosity: iprsta = ',i2,/)
