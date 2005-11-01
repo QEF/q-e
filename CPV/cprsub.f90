@@ -124,32 +124,30 @@ subroutine formf( tfirst, eself )
   return
 end subroutine formf
 !
-
-
 !-----------------------------------------------------------------------
-subroutine newnlinit
+SUBROUTINE newnlinit()
   !-----------------------------------------------------------------------
   !
-  !     this routine calculates arrays beta, qradb, qq, qgb, rhocb
-  !     and derivatives w.r.t. cell parameters dbeta, dqrad 
-  !     See also comments in nlinit
+  ! ... this routine calculates arrays beta, qradb, qq, qgb, rhocb
+  ! ... and derivatives w.r.t. cell parameters dbeta, dqrad 
+  ! ... See also comments in nlinit
   !
   use control_flags,    ONLY : tpre
   use pseudopotential,  ONLY : interpolate_beta, interpolate_qradb
   use pseudopotential,  ONLY : exact_beta, tpstab, check_tables
   USE core,             ONLY : core_charge_ftr
   !
-  implicit none
+  IMPLICIT NONE
   !
   LOGICAL :: recompute_table
   ! 
-  !     initialization for vanderbilt species
+  ! ... initialization for vanderbilt species
   !
-  recompute_table = check_tables( )
+  recompute_table = tpre .AND. check_tables()
   !
-  IF( recompute_table ) THEN
-     CALL errore(' newnlinit ', ' interpolation tables recalculation, not implemented yet ', 1 )
-  END IF
+  IF ( recompute_table ) &
+     CALL errore( ' newnlinit', &
+                  'interpolation tables recalculation, not implemented yet', 1 )
   !
   CALL interpolate_qradb( tpre )
   !
@@ -161,22 +159,20 @@ subroutine newnlinit
      !
   ELSE
      !
-     CALL exact_beta( tpre )  !  this is mainly for testing
+     ! ... this is mainly for testing
+     !
+     CALL exact_beta( tpre )
      !
   END IF
   !
-  !     non-linear core-correction   ( rhocb(ig,is) )
+  ! ... non-linear core-correction   ( rhocb(ig,is) )
   !
-
   CALL core_charge_ftr( tpre )
-
   !
-  return
+  RETURN
   !
-end subroutine newnlinit
-
-
-
+END SUBROUTINE newnlinit
+!
 !-----------------------------------------------------------------------
 subroutine nlfh( bec, dbec, lambda )
   !-----------------------------------------------------------------------
