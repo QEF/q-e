@@ -962,7 +962,7 @@ CONTAINS
       !
       USE kinds, ONLY : DP
       USE betax, ONLY : refg
-      USE mp,    ONLY : mp_sum
+      USE mp,    ONLY : mp_max
       USE gvecw, ONLY: ngw
       USE cell_base, ONLY: tpiba2
       USE small_box, ONLY: tpibab
@@ -981,7 +981,7 @@ CONTAINS
       !
       gmax = MAX( gg, ggb )
       !
-      CALL mp_sum( gmax )
+      CALL mp_max( gmax )
       !
       check_tables = .FALSE.
       IF( ( INT( gmax ) + 2 ) > mmx ) check_tables = .TRUE.
