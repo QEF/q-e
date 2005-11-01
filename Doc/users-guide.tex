@@ -1277,20 +1277,21 @@ wrt the PGI compiler. You may also try with g95.
 PC clusters running some version of MPI are a very popular 
 computational platform nowadays. Two major MPI implementations 
 (MPICH, LAM-MPI) are available. The number of possible
-configurations, in terms of type and and version of the MPI 
+configurations, in terms of type and version of the MPI 
 libraries, kernels, system libraries, compilers, is very large. 
 Quantum-ESPRESSO compiles and works on all non-buggy, properly configured 
 configuration. You may have to recompile MPI libraries in order 
 to be able to use them with the Intel compiler. See Axel Kohlmeyer's 
-web site for precompiled versions of the MPI library.
+web site for precompiled versions of the MPI libraries.
 
 If Quantum-ESPRESSO does not work for some reason on a PC cluster, try first 
-if it works in serial execution. If the problem is clearly related to
-parallelism, it is likely that your MPI libraries are buggy or not
-properly configured: see Axel Kohlmeyer's web site for help.
-A frequent problem is that Quantum-ESPRESSO does not read from standard 
-output: see section ``Running on parallel machines''.
-If you are dissatisfied with the performances in parallel 
+if it works in serial execution. A frequent problem with parallel execution
+is that Quantum-ESPRESSO does not read from standard input, due to a bad 
+configuration of MPI libraries: see section ``Running on parallel machines''.
+If you get weird errors with LAM-MPI, add \texttt{-D\_\_LAM} to preprocessing
+options and recompile. See also Axel Kohlmeyer's web site for more info.      
+
+If you are dis satisfied with the performances in parallel 
 execution, read the ``Parallelization issues'' section.
 
 \paragraph{T3E}
@@ -2480,6 +2481,14 @@ in the codes -- on a parallel  machine, such as e.g. :
 you have forgotten the `''` in the definitions of 
 \texttt{PARA\_PREFIX} and \texttt{PARA\_POSTFIX}.
 
+\paragraph{\texttt{pw.x} prints the first few lines and then nothing
+happens (parallel execution).}
+
+If the code looks like it is not reading from input, maybe it isn't:
+the MPI libraries need to be properly configured to accept input 
+redirection. See section ``Running on parallel machines'', or inquire 
+with your local computer wizard (if any).
+
 \paragraph{\texttt{pw.x} stops with error in reading.}
 
 There is an error in the input data.
@@ -2491,10 +2500,9 @@ Also note that input data files containing \texttt{\^{}M} (Control-M)
 characters at the end of lines (typically, files coming from Windows
 PC) may yield error in reading.
 If none of the above applies and the code stops at the first namelist
-(``control'')
-and you are running on a PC cluster: your communication library
-(MPI) might not be properly configured to allow input
-redirection (so that you are effectively reading an empty file).
+(``control'') and you are running in parallel: your MPI libraries
+might not be properly configured to allow input redirection, so that 
+what you are effectively reading is an empty file.
 See section ``Running on parallel machines'', or inquire with your 
 local computer wizard (if any).
 
@@ -2608,6 +2616,8 @@ Possible solutions:
 \paragraph{\texttt{pw.x} crashes in parallel execution with an obscure
             message related to MPI errors.}
 
+With LAM-MPI, add \texttt{-D\_\_LAM} to preprocessing options in 
+\texttt{make.sys} and recompile. 
 See info from Axel Kohlmeyer:\hfill\break
 \htmladdnormallink%
 {{\small\texttt{http://www.democritos.it/pipermail/pw\_forum/2005-April/002338.html}}}%
