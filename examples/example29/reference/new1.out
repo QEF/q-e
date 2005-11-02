@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.0 - Tue May 24 14:33:50 EDT 2005                          
+     Version: 3.0 - Mon Oct 24 02:34:10 CEST 2005                         
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  19:22:55  22Oct2005               
+   This run was started on:   5: 6:24   2Nov2005               
 
    Serial Build
      from  system_checkin      : info #        -1
@@ -23,7 +23,7 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /home/puma/espresso/pseudo/Si.pbe-rrkj.UPF
+   /scr/giannozz/espresso/pseudo/Si.pbe-rrkj.UPF
    file type is 20
 
 
@@ -96,7 +96,7 @@
    ion dynamics with fricp =  0.0000 and greasp =  1.0000
    Ionic position (from input)
    sorted by specie, and converted to real a.u. coordinates
-   Species   1 atoms =    2 mass =     51197.69 (a.u.),        28.09 (uma) rcmax =   0.80 (a.u.)
+   Species   1 atoms =    2 mass =     51197.69 (a.u.),        28.09 (amu) rcmax =   0.80 (a.u.)
         0.000000     0.000000     0.000000
         0.000000     0.000000     5.500000
    Ionic position read from input file
@@ -274,16 +274,16 @@ Occupations  :
         0.00000000         0.00000000         0.00000000
  
    ATOMIC_POSITIONS
-   Si  -0.333051E-06  0.138173E-06  0.233340E-02
-   Si   0.333051E-06 -0.138173E-06  0.549767E+01
+   Si  -0.333240E-06  0.138010E-06  0.233340E-02
+   Si   0.333240E-06 -0.138010E-06  0.549767E+01
  
    ATOMIC_VELOCITIES
-   Si  -0.400883E-08  0.212528E-08  0.492513E-04
-   Si   0.400883E-08 -0.212528E-08 -0.492513E-04
+   Si  -0.401257E-08  0.212255E-08  0.492513E-04
+   Si   0.401257E-08 -0.212255E-08 -0.492513E-04
  
    Forces acting on atoms (au):
-   Si   0.275266E-05 -0.110627E-05  0.265324E-01
-   Si  -0.356257E-06  0.133833E-05 -0.265456E-01
+   Si   0.275042E-05 -0.110504E-05  0.265325E-01
+   Si  -0.351731E-06  0.133552E-05 -0.265455E-01
  
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
  
@@ -297,7 +297,8 @@ Step    15      30     -7.57767     -7.71533     -7.71504     6
 Step    16      34     -7.57774     -7.71537     -7.71504     6
 Step    17      39     -7.57782     -7.71541     -7.71504     6
 Step    18      44     -7.57790     -7.71546     -7.71504     6
- cg_sub: missed minimum, case 2, iteration           3
+ cg_sub: missed minimum, case 3, iteration           2
+ cg_sub: missed minimum, case 2, iteration           5
 Step    19      49     -7.57797     -7.71551     -7.71504     6
 
  * Physical Quantities at step:    20
@@ -334,16 +335,16 @@ Occupations  :
         0.00000000         0.00000000         0.00000000
  
    ATOMIC_POSITIONS
-   Si  -0.680533E-06  0.311005E-06  0.985619E-02
-   Si   0.680533E-06 -0.311005E-06  0.549014E+01
+   Si  -0.681222E-06  0.310632E-06  0.985615E-02
+   Si   0.681222E-06 -0.310632E-06  0.549014E+01
  
    ATOMIC_VELOCITIES
-   Si  -0.350190E-08  0.175760E-08  0.101263E-03
-   Si   0.350190E-08 -0.175760E-08 -0.101263E-03
+   Si  -0.349858E-08  0.175087E-08  0.101259E-03
+   Si   0.349858E-08 -0.175087E-08 -0.101259E-03
  
    Forces acting on atoms (au):
-   Si   0.133819E-06 -0.887605E-07  0.267221E-01
-   Si  -0.139418E-06  0.142406E-06 -0.267329E-01
+   Si   0.147243E-06 -0.895482E-07  0.267203E-01
+   Si  -0.152236E-06  0.164995E-06 -0.267311E-01
  
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
  
@@ -354,37 +355,37 @@ Step    20      55     -7.57808     -7.71556     -7.71504     6
               averaged quantities :
          ekinc          ekin          epot          etot     tempp
        0.00000       2.45299     -11.81879      -7.57749      19.3
-     initialize   :     0.53s CPU
-     total_time   :   930.81s CPU (      20 calls,  46.540 s avg)
-     formf        :     0.07s CPU
-     rhoofr       :   197.46s CPU (    2620 calls,   0.075 s avg)
-     vofrho       :   561.84s CPU (    2620 calls,   0.214 s avg)
-     dforce       :   158.26s CPU (    9872 calls,   0.016 s avg)
-     gram         :     0.19s CPU (     313 calls,   0.001 s avg)
-     newd         :     2.48s CPU (    2612 calls,   0.001 s avg)
-     calbec       :     0.67s CPU (    1224 calls,   0.001 s avg)
-     prefor       :     1.44s CPU (    3805 calls,   0.000 s avg)
-     strucf       :     0.02s CPU (      21 calls,   0.001 s avg)
+     initialize   :     0.52s CPU
+     total_time   :   882.95s CPU (      20 calls,  44.147 s avg)
+     formf        :     0.06s CPU
+     rhoofr       :   181.88s CPU (    2623 calls,   0.069 s avg)
+     vofrho       :   530.46s CPU (    2623 calls,   0.202 s avg)
+     dforce       :   155.94s CPU (    9872 calls,   0.016 s avg)
+     gram         :     0.25s CPU (     315 calls,   0.001 s avg)
+     newd         :     2.73s CPU (    2612 calls,   0.001 s avg)
+     calbec       :     0.80s CPU (    1229 calls,   0.001 s avg)
+     prefor       :     1.49s CPU (    3805 calls,   0.000 s avg)
+     strucf       :     0.00s CPU (      21 calls,   0.000 s avg)
      nlfl         :     0.00s CPU (      20 calls,   0.000 s avg)
-     nlfq         :     0.01s CPU (      20 calls,   0.000 s avg)
-     nlsm1        :     0.67s CPU (    1224 calls,   0.001 s avg)
-     nlsm2        :     0.04s CPU (      40 calls,   0.001 s avg)
-     fft          :   302.31s CPU (   20960 calls,   0.014 s avg)
-     ffts         :    92.14s CPU (    5240 calls,   0.018 s avg)
-     fftw         :   171.44s CPU (   30224 calls,   0.006 s avg)
+     nlfq         :     0.04s CPU (      20 calls,   0.002 s avg)
+     nlsm1        :     0.80s CPU (    1229 calls,   0.001 s avg)
+     nlsm2        :     0.08s CPU (      40 calls,   0.002 s avg)
+     fft          :   268.51s CPU (   20984 calls,   0.013 s avg)
+     ffts         :    77.90s CPU (    5246 calls,   0.015 s avg)
+     fftw         :   168.11s CPU (   30236 calls,   0.006 s avg)
 
 
 ======================== end cp ========================
 
 
  
-     CP           : 15m31.69s CPU time
+     CP           : 14m44.38s CPU time
 
  
-   This run was terminated on:  19:40: 7  22Oct2005            
+   This run was terminated on:   5:21: 8   2Nov2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:  1032.0
+   ELAPSED SECONDS:   884.0
    JOB DONE.
 =------------------------------------------------------------------------------=
 
