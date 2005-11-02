@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.0 - Tue Sep 6 13:11:13 CEST 2005                          
+     Version: 3.0 - Mon Oct 24 02:34:10 CEST 2005                         
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  10:45:47  17Oct2005               
+   This run was started on:   4:52: 8   2Nov2005               
 
    Serial Build
 
@@ -109,7 +109,7 @@
    Ions are not allowed to move
    Ionic position (from input)
    sorted by specie, and converted to real a.u. coordinates
-   Species   1 atoms =    3 mass =      1822.89 (a.u.),         1.00 (uma) rcmax =   0.80 (a.u.)
+   Species   1 atoms =    3 mass =      1822.89 (a.u.),         1.00 (amu) rcmax =   0.80 (a.u.)
         0.000000     0.000000     0.000000
         0.000000     0.000000     0.000000
         0.000000     0.000000     0.000000
@@ -835,34 +835,34 @@
     9.15
  
  
-     initialize   :     1.82s CPU
-     formf        :     0.04s CPU
-     rhoofr       :     2.96s CPU (     112 calls,   0.026 s avg)
-     vofrho       :    22.24s CPU (     112 calls,   0.199 s avg)
-     dforce       :     0.74s CPU (     224 calls,   0.003 s avg)
+     initialize   :     1.84s CPU
+     formf        :     0.05s CPU
+     rhoofr       :     3.00s CPU (     112 calls,   0.027 s avg)
+     vofrho       :    22.09s CPU (     112 calls,   0.197 s avg)
+     dforce       :     0.75s CPU (     224 calls,   0.003 s avg)
      calphi       :     0.00s CPU (     112 calls,   0.000 s avg)
-     ortho        :     0.04s CPU (     112 calls,   0.000 s avg)
-     updatc       :     0.00s CPU (     112 calls,   0.000 s avg)
+     ortho        :     0.02s CPU (     112 calls,   0.000 s avg)
+     updatc       :     0.01s CPU (     112 calls,   0.000 s avg)
      gram         :     0.00s CPU (       7 calls,   0.000 s avg)
      newd         :     0.30s CPU (     112 calls,   0.003 s avg)
-     calbec       :     0.01s CPU (     119 calls,   0.000 s avg)
-     prefor       :     0.02s CPU (     224 calls,   0.000 s avg)
-     strucf       :     0.04s CPU (     112 calls,   0.000 s avg)
-     rhov         :     1.16s CPU (     112 calls,   0.010 s avg)
-     nlsm1        :     0.03s CPU (     343 calls,   0.000 s avg)
-     fft          :     8.99s CPU (    1568 calls,   0.006 s avg)
-     ffts         :     0.65s CPU (     224 calls,   0.003 s avg)
-     fftw         :     0.98s CPU (     672 calls,   0.001 s avg)
-     fftb         :     0.25s CPU (     560 calls,   0.000 s avg)
+     calbec       :     0.00s CPU (     119 calls,   0.000 s avg)
+     prefor       :     0.00s CPU (     224 calls,   0.000 s avg)
+     strucf       :     0.05s CPU (     112 calls,   0.000 s avg)
+     rhov         :     1.21s CPU (     112 calls,   0.011 s avg)
+     nlsm1        :     0.01s CPU (     343 calls,   0.000 s avg)
+     fft          :     8.92s CPU (    1568 calls,   0.006 s avg)
+     ffts         :     0.57s CPU (     224 calls,   0.003 s avg)
+     fftw         :     0.88s CPU (     672 calls,   0.001 s avg)
+     fftb         :     0.10s CPU (     560 calls,   0.000 s avg)
      rsg          :     0.00s CPU (     224 calls,   0.000 s avg)
  
-     CP           :    36.03s CPU time
+     CP           :    35.85s CPU time
 
  
-   This run was terminated on:  10:46:23  17Oct2005            
+   This run was terminated on:   4:52:45   2Nov2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:    36.0
+   ELAPSED SECONDS:    37.0
    JOB DONE.
 =------------------------------------------------------------------------------=
 

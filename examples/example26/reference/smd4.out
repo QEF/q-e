@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.0 - Tue Sep 6 13:11:13 CEST 2005                          
+     Version: 3.0 - Mon Oct 24 02:34:10 CEST 2005                         
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  10:49:13  17Oct2005               
+   This run was started on:   4:55:34   2Nov2005               
 
    Serial Build
 
@@ -108,7 +108,7 @@
    Ions are not allowed to move
    Ionic position (from input)
    sorted by specie, and converted to real a.u. coordinates
-   Species   1 atoms =    3 mass =      1822.89 (a.u.),         1.00 (uma) rcmax =   0.80 (a.u.)
+   Species   1 atoms =    3 mass =      1822.89 (a.u.),         1.00 (amu) rcmax =   0.80 (a.u.)
         0.000000     0.000000     0.000000
         0.000000     0.000000     0.000000
         0.000000     0.000000     0.000000
@@ -837,30 +837,30 @@
    -9.82
  
  
-     initialize   :     0.36s CPU
-     formf        :     0.05s CPU (       7 calls,   0.007 s avg)
-     rhoofr       :    11.23s CPU (     420 calls,   0.027 s avg)
-     vofrho       :    82.65s CPU (     420 calls,   0.197 s avg)
-     dforce       :     2.75s CPU (     840 calls,   0.003 s avg)
-     calphi       :     0.00s CPU (     420 calls,   0.000 s avg)
-     ortho        :     0.01s CPU (     420 calls,   0.000 s avg)
-     updatc       :     0.02s CPU (     420 calls,   0.000 s avg)
-     newd         :     1.18s CPU (     420 calls,   0.003 s avg)
-     calbec       :     0.00s CPU (     427 calls,   0.000 s avg)
-     prefor       :     0.04s CPU (     840 calls,   0.000 s avg)
-     strucf       :     0.12s CPU (     427 calls,   0.000 s avg)
-     rhov         :     4.43s CPU (     420 calls,   0.011 s avg)
-     nlsm1        :     0.01s CPU (    1267 calls,   0.000 s avg)
-     fft          :    32.62s CPU (    5880 calls,   0.006 s avg)
-     ffts         :     2.84s CPU (     840 calls,   0.003 s avg)
-     fftw         :     3.44s CPU (    2520 calls,   0.001 s avg)
+     initialize   :     0.37s CPU
+     formf        :     0.06s CPU (       7 calls,   0.009 s avg)
+     rhoofr       :    11.11s CPU (     420 calls,   0.026 s avg)
+     vofrho       :    82.76s CPU (     420 calls,   0.197 s avg)
+     dforce       :     2.99s CPU (     840 calls,   0.004 s avg)
+     calphi       :     0.02s CPU (     420 calls,   0.000 s avg)
+     ortho        :     0.04s CPU (     420 calls,   0.000 s avg)
+     updatc       :     0.00s CPU (     420 calls,   0.000 s avg)
+     newd         :     1.04s CPU (     420 calls,   0.002 s avg)
+     calbec       :     0.01s CPU (     427 calls,   0.000 s avg)
+     prefor       :     0.02s CPU (     840 calls,   0.000 s avg)
+     strucf       :     0.13s CPU (     427 calls,   0.000 s avg)
+     rhov         :     4.41s CPU (     420 calls,   0.010 s avg)
+     nlsm1        :     0.04s CPU (    1267 calls,   0.000 s avg)
+     fft          :    32.53s CPU (    5880 calls,   0.006 s avg)
+     ffts         :     2.73s CPU (     840 calls,   0.003 s avg)
+     fftw         :     3.51s CPU (    2520 calls,   0.001 s avg)
      fftb         :     0.73s CPU (    2100 calls,   0.000 s avg)
      rsg          :     0.00s CPU (     840 calls,   0.000 s avg)
  
-     CP           :  1m57.56s CPU time
+     CP           :  1m57.70s CPU time
 
  
-   This run was terminated on:  10:51:12  17Oct2005            
+   This run was terminated on:   4:57:33   2Nov2005            
 
 =------------------------------------------------------------------------------=
    ELAPSED SECONDS:   119.0
