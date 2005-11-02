@@ -11,7 +11,7 @@
 SUBROUTINE addnlcc_zstar_eu_us( drhoscf ) 
 !----------===================-------------------
 
-  USE funct
+  USE funct, only : get_igcx, get_igcc
   USE pwcom
   USE kinds, ONLY : DP
   USE phcom
@@ -69,7 +69,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            ! its contribution. grho contains already the core charge
            !
 
-           IF (igcx.NE.0.OR.igcc.NE.0) &
+           IF (get_igcx().NE.0.OR.get_igcc().NE.0) &
                 CALL dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
                 drhoscf (1, 1, ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                 nspin, nl, ngm, g, alat, omega, dvaux)

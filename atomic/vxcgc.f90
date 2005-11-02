@@ -19,6 +19,7 @@ subroutine vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc)
   !     The units of the potential are Ryd.
   !
   use kinds, only : DP
+  use funct, only : gcxc, gcx_spin, gcc_spin
   implicit none
   integer :: ndm,mesh,nspin,ndm1
   real(DP) :: r(mesh), r2(mesh), rho(ndm,2), rhoc(ndm), &

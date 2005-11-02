@@ -19,6 +19,7 @@ subroutine d3dyn_cc
   !
   USE ions_base,  ONLY : nat, ityp, tau
   USE kinds, only : DP
+  USE funct, only : xc
   use pwcom
   use phcom
   use d3com

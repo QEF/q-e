@@ -17,7 +17,7 @@ subroutine readpp
   USE atom,       ONLY : chi, nchi, oc, mesh, rab, numeric, xmin, dx
   USE uspp_param, ONLY : iver, tvanp, newpseudo
   USE ions_base,  ONLY : ntyp => nsp
-  USE funct,      ONLY : iexch, icorr, igcx, igcc
+  USE funct,      ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE io_files,   ONLY : pseudo_dir, psfile
   USE io_global,  ONLY : stdout
   !
@@ -104,13 +104,13 @@ subroutine readpp
      endif
      !
      if (nt == 1) then
-        iexch_ = iexch
-        icorr_ = icorr
-        igcx_ = igcx
-        igcc_ = igcc
+        iexch_ = get_iexch()
+        icorr_ = get_icorr()
+        igcx_  = get_igcx()
+        igcc_  = get_igcc()
      else
-        if ( iexch_ /= iexch .or. icorr_ /= icorr .or. &
-             igcx_  /= igcx  .or.  igcc_ /= igcc ) then
+        if ( iexch_ /= get_iexch() .or. icorr_ /= get_icorr() .or. &
+             igcx_  /= get_igcx()  .or. igcc_ /= get_igcc() ) then
            CALL errore( 'readpp','inconsistent DFT read',nt)
         end if
      end if

@@ -57,7 +57,7 @@ SUBROUTINE electrons()
 #if defined (EXX)
   USE exx,                  ONLY : lexx, exxinit, init_h_wfc, &
                                    exxalfa, exxstart, exxenergy, exxenergy2 
-  USE funct,                ONLY : dft, which_dft, iexch, icorr, igcx, igcc
+  USE funct,                ONLY : dft, set_dft_from_name, iexch, icorr, igcx, igcc
 #endif
   !
   IMPLICIT NONE

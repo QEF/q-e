@@ -76,7 +76,7 @@ MODULE pw_restart
       USE char,                 ONLY : sname
       USE lsda_mod,             ONLY : nspin, isk, lsda
       USE dynam,                ONLY : amass
-      USE funct,                ONLY : dft
+      USE funct,                ONLY : get_dft_name
       USE scf,                  ONLY : rho
       USE sticks,               ONLY : dfftp
       !
@@ -90,6 +90,7 @@ MODULE pw_restart
       !
       CHARACTER(LEN=*), INTENT(IN) :: what
       !
+      CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname, filename, file_pseudo, rho_file
       CHARACTER(LEN=80)     :: bravais_lattice
       CHARACTER(LEN=4)      :: cspin
@@ -102,6 +103,7 @@ MODULE pw_restart
       INTEGER,  ALLOCATABLE :: itmp(:,:)
       LOGICAL               :: lgvec, lwfc
       REAL(DP), ALLOCATABLE :: rhosum(:)
+
       !
       !
       lgvec = .FALSE.
@@ -291,7 +293,8 @@ MODULE pw_restart
 ! ... EXCHANGE_CORRELATION
 !-------------------------------------------------------------------------------
          !
-         CALL write_xc( DFT = dft, NSP = nsp, LDA_PLUS_U = lda_plus_u, &
+         dft_name = get_dft_name()
+         CALL write_xc( DFT = dft_name, NSP = nsp, LDA_PLUS_U = lda_plus_u, &
                         HUBBARD_LMAX = Hubbard_lmax, HUBBARD_L = Hubbard_l, &
                         HUBBARD_U = Hubbard_U, HUBBARD_ALPHA = Hubbard_alpha )
          !
@@ -1448,7 +1451,7 @@ MODULE pw_restart
       !------------------------------------------------------------------------
       !
       USE ions_base, ONLY : nsp
-      USE funct,     ONLY : dft
+      USE funct,     ONLY : set_dft_from_name
       USE ldaU,      ONLY : lda_plus_u, Hubbard_lmax, &
                             Hubbard_l, Hubbard_U, Hubbard_alpha
       !
@@ -1456,6 +1459,7 @@ MODULE pw_restart
       !
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
+      CHARACTER(LEN=20)  :: dft_name
       !
       !
       IF ( lxc_read ) RETURN
@@ -1475,7 +1479,7 @@ MODULE pw_restart
          !
          CALL iotk_scan_begin( iunpun, "EXCHANGE_CORRELATION" )
          !
-         CALL iotk_scan_dat( iunpun, "DFT", dft )
+         CALL iotk_scan_dat( iunpun, "DFT", dft_name )
          !
          CALL iotk_scan_dat( iunpun, "LDA_PLUS_U_CALCULATION", lda_plus_u )
          !
@@ -1498,7 +1502,8 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( dft,        ionode_id )
+      CALL mp_bcast( dft_name,   ionode_id )
+      call set_dft_from_name( dft_name )
       CALL mp_bcast( lda_plus_u, ionode_id )
       !
       IF (lda_plus_u  ) THEN

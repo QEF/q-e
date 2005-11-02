@@ -9,6 +9,7 @@
 subroutine dgcxc (r, s2, vrrx, vsrx, vssx, vrrc, vsrc, vssc)
 !-----------------------------------------------------------------------
 USE kinds, only : DP
+use funct, only : gcxc
 implicit none
 real(DP) :: r, s2, vrrx, vsrx, vssx, vrrc, vsrc, vssc
 real(DP) :: dr, s, ds

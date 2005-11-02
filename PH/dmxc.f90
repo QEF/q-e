@@ -12,7 +12,7 @@ function dmxc (rho)
   !  derivative of the xc potential with respect to the local density
   !
   USE kinds, only : DP
-  use funct
+  use funct, only : get_iexch, get_icorr, xc
   implicit none
   ! I/O variables
 
@@ -46,7 +46,7 @@ function dmxc (rho)
   !
   !    first case: analytical derivatives available
   !
-  if (iexch.eq.1.and.icorr.eq.1) then
+  if (get_iexch().eq.1.and.get_icorr().eq.1) then
      rs = (pi34 / rho) **third
      !..exchange
      call slater (rs, ex, vx)

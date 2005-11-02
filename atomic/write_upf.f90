@@ -89,15 +89,17 @@ end subroutine write_upf
     !     This routine writes the header of the new UPF file
     !
     use ld1inc
-    use funct
+    use funct, only : get_iexch, get_icorr, get_igcx, get_igcc, dft_name
     use kinds, only : DP
     implicit none
     integer :: ounps  
     !
     character (len=4) :: shortname
     character (len=2), external :: atom_name
+    character (len=20) :: dft
     real(DP) ecutrho, ecutwfc
     integer :: nb, ios, nv  
+    integer :: iexch, icorr, igcx, igcc
     !
     !
     write (ounps, '(//a11)', err = 100, iostat = ios) "<PP_HEADER>"  
@@ -119,6 +121,10 @@ end subroutine write_upf
     endif
     write (ounps, '(l5,t24,a)', err = 100, iostat = ios) nlcc , &
          "Nonlinear Core Correction"
+    iexch = get_iexch()
+    icorr = get_icorr()
+    igcx  = get_igcx()
+    igcc  = get_igcc()
     call dft_name (iexch, icorr, igcx, igcc, dft, shortname)
     write (ounps, '(a,t24,a4,a)', err = 100, iostat = ios) &
          dft, shortname," Exchange-Correlation functional"
@@ -374,44 +380,3 @@ end subroutine write_upf
 100 call errore('write_pseudo_addinfo','Writing pseudo file',abs(ios))
 
 end subroutine write_pseudo_addinfo
-
-  !---------------------------------------------------------------------
-  subroutine dft_name(iexch, icorr, igcx, igcc, longname, shortname)
-  !---------------------------------------------------------------------
-  implicit none
-  integer iexch, icorr, igcx, igcc
-  character (len=4) :: shortname
-  character (len=20):: longname
-  !
-  ! The data used to convert iexch, icorr, igcx, igcc
-  ! into a user-readable string
-  !
-  integer, parameter :: nxc = 3, ncc = 9, ngcx = 4, ngcc = 4 
-  character (len=4) :: exc, corr, gradx, gradc  
-  dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0:ngcc)
-  data exc / 'NOX ', 'SLA ', 'SL1 ', 'RXC' /  
-  data corr / 'NOC ', 'PZ  ', 'VWN ', 'LYP ', 'PW  ', 'WIG ', 'HL  ',&
-              'OBZ ', 'OBW ', 'GL  ' /
-  data gradx / 'NOGX', 'B88 ', 'GGX ', 'PBX ', 'RPB' /  
-  data gradc / 'NOGC', 'P86 ', 'GGC ', 'BLYP', 'PBC ' /  
-
-  if (iexch==1.and.igcx==0.and.igcc==0) then
-     shortname = corr(icorr)
-  else if (iexch==1.and.icorr==3.and.igcx==1.and.igcc==3) then
-     shortname = 'BLYP'
-  else if (iexch==1.and.icorr==1.and.igcx==1.and.igcc==0) then
-     shortname = 'B88'
-  else if (iexch==1.and.icorr==1.and.igcx==1.and.igcc==1) then
-     shortname = 'BP'
-  else if (iexch==1.and.icorr==4.and.igcx==2.and.igcc==2) then
-     shortname = 'PW91'
-  else if (iexch==1.and.icorr==4.and.igcx==3.and.igcc==4) then
-     shortname = 'PBE'
-  else
-     shortname = ' '
-  end if
-  write(longname,'(4a5)') exc(iexch),corr(icorr),gradx(igcx),gradc(igcc)
-
-  return
-end subroutine dft_name
-

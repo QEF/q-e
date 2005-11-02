@@ -1282,7 +1282,7 @@ END SUBROUTINE gshcount
 
       SUBROUTINE exch_corr_print_info()
 
-        USE funct, ONLY: dft, iexch, icorr, igcx, igcc
+        USE funct, ONLY: get_iexch, get_icorr, get_igcx, get_igcc, write_dft_name
         USE io_global, ONLY: stdout
 
         IMPLICIT NONE
@@ -1299,7 +1299,7 @@ END SUBROUTINE gshcount
           ! ...     igcx  => Gradient Correction to the Exchange potential
           ! ...     igcc  => Gradient Correction to the Correlation potential
 
-          SELECT CASE ( iexch )
+          SELECT CASE ( get_iexch() )
             CASE (0)
               exch_info = 'NONE'
             CASE (1)
@@ -1309,7 +1309,7 @@ END SUBROUTINE gshcount
             CASE DEFAULT
               exch_info = 'UNKNOWN'
           END SELECT
-          SELECT CASE ( icorr )
+          SELECT CASE ( get_icorr() )
             CASE (0)
               corr_info = 'NONE'
             CASE (1)
@@ -1325,7 +1325,7 @@ END SUBROUTINE gshcount
             CASE DEFAULT
               corr_info = 'UNKNOWN'
           END SELECT
-          SELECT CASE ( igcx )
+          SELECT CASE ( get_igcx() )
             CASE (0)
               exgc_info = 'NONE'
             CASE (1)
@@ -1339,7 +1339,7 @@ END SUBROUTINE gshcount
             CASE DEFAULT
               exgc_info = 'UNKNOWN'
           END SELECT
-          SELECT CASE ( igcc )
+          SELECT CASE ( get_igcc() )
             CASE (0)
               cogc_info = 'NONE'
             CASE (1)
@@ -1359,14 +1359,13 @@ END SUBROUTINE gshcount
           WRITE(stdout,910)
           WRITE(stdout,fmt='(5X,"Exchange functional: ",A)') exch_info
           WRITE(stdout,fmt='(5X,"Correlation functional: ",A)') corr_info
-          IF( ( igcx > 0 ) .OR. ( igcc > 0 ) ) THEN
+          IF( ( get_igcx() > 0 ) .OR. ( get_igcc() > 0 ) ) THEN
             WRITE(stdout,810)
             WRITE(stdout,fmt='(5X,"Exchange functional: ",A)') exgc_info
             WRITE(stdout,fmt='(5X,"Correlation functional: ",A)') cogc_info
           END IF
 
-        WRITE( stdout, '(5x,"Exchange-correlation      = ",a, &
-       &       " (",4i1,")")') trim(dft) , iexch, icorr, igcx, igcc
+        call write_dft_name
 
 800 FORMAT(//,3X,'Exchange and correlations functionals',/ &
              ,3X,'-------------------------------------')

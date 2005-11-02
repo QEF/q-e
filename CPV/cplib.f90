@@ -4723,13 +4723,13 @@
         write (*,1004)(quad(ix),ix=4,6)
         write (*,1005) quadrupole,rzero*qbac
 !
-1001  format('DIPOLE XYZ-COMPONENTS (A.U.)',f10.4,2x,f10.4,2x,f10.4)
-1002  format('DIPOLE MOMENT         (A.U.)',f10.4)
-1003  format('QUADRUPOLE XX-YY-ZZ COMPONENTS (A.U.)',             &
+1001  format('DIPOLE XYZ-COMPONENTS (HARTREE A.U.)',f10.4,2x,f10.4,2x,f10.4)
+1002  format('DIPOLE MOMENT         (HARTREE A.U.)',f10.4)
+1003  format('QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.)',             &
      &f9.4,2x,f9.4,2x,f9.4)
-1004  format('QUADRUPOLE XY-XZ-YZ COMPONENTS (A.U.)',             &
+1004  format('QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.)',             &
      &f9.4,2x,f9.4,2x,f9.4)
-1005  format('QUADRUPOLE MOMENT              (A.U.)',2f9.4)
+1005  format('QUADRUPOLE MOMENT              (HARTREE A.U.)',2f9.4)
 !
       deallocate(dip)
 !

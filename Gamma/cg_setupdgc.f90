@@ -14,7 +14,7 @@ subroutine cg_setupdgc
   USE kinds, only: DP
   use pwcom
   use cgcom
-  use funct
+  use funct, only: gcxc, gcx_spin, gcc_spin, get_igcx, get_igcc
   !
   implicit none
   integer k, is
@@ -30,7 +30,7 @@ subroutine cg_setupdgc
   !
   parameter (epsr=1.0d-6, epsg=1.0d-10)
   !
-  if (igcx.eq.0 .and. igcc.eq.0) return
+  if (get_igcx().eq.0 .and. get_igcc().eq.0) return
   call start_clock('setup_dgc')
   !
   dvxc_rr(:,:,:) = 0.d0
@@ -58,7 +58,7 @@ subroutine cg_setupdgc
      do k = 1,nrxx
         grho2(1)=grho(1,k,1)**2+grho(2,k,1)**2+grho(3,k,1)**2
         if (abs(rho(k,1)).gt.epsr.and.grho2(1).gt.epsg) then
-           call gcxc(rho(k,nspin),grho2,sx,sc,v1x,v2x,v1c,v2c)
+           call gcxc(rho(k,nspin),grho2(1),sx,sc,v1x,v2x,v1c,v2c)
            call dgcxc(rho(k,nspin),grho2,vrrx,vsrx,vssx,vrrc,vsrc,vssc)
            dvxc_rr(k,1,1) = e2 * ( vrrx + vrrc )
            dvxc_sr(k,1,1) = e2 * ( vsrx + vsrc )

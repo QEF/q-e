@@ -18,7 +18,7 @@ subroutine read_pseudoupf
   ! PWSCF modules
   !
   use ld1inc
-  use funct
+  use funct, only: set_dft_from_name
   !
   use pseudo_types
   use read_pseudo_module
@@ -46,8 +46,7 @@ subroutine read_pseudoupf
   !
   zval  = upf%zp
   nlcc = upf%nlcc
-  dft = upf%dft
-  call which_dft (dft)
+  call set_dft_from_name (upf%dft)
 
   if (upf%typ.eq.'NC') then
      pseudotype=2

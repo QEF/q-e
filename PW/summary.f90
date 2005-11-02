@@ -39,7 +39,7 @@ SUBROUTINE summary()
                               tr2, isolve, lmd, lbfgs, lpath, iverbosity
   USE uspp_param,      ONLY : nqf, rinner, nqlc, nbeta, iver, lll, psd, tvanp
   USE spin_orb,        ONLY : lspinorb
-  USE funct,           ONLY : dft, iexch, icorr, igcx, igcc
+  USE funct,           ONLY : write_dft_name
   USE bp,              ONLY : lelfield, gdir, nppstr, efield, nberrycyc
   !
   IMPLICIT NONE
@@ -94,8 +94,7 @@ SUBROUTINE summary()
        &     'beta                      = ',0PF12.4,/,5X, &
        &     'number of iterations used = ',I12,2X,A,' mixing')
   !
-  WRITE( stdout, '(5X,"Exchange-correlation      = ",A, &
-       &              " (",4I1,")")') TRIM( dft ), iexch, icorr, igcx, igcc
+  call write_dft_name
   !
   IF ( lmd .OR. lbfgs .OR. lpath ) &
      WRITE( stdout, '(5X,"nstep                     = ",I12,/)' ) nstep

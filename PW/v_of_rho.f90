@@ -93,6 +93,7 @@ SUBROUTINE v_xc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   USE noncollin_module, ONLY : noncolin
   USE spin_orb,         ONLY : domag
   USE kinds,            ONLY : DP
+  USE funct,            ONLY : xc, xc_spin
 
 #ifdef EXX
   USE exx,              ONLY: exxalfa

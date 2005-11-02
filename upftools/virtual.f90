@@ -134,9 +134,9 @@ subroutine compute_virtual(x,filein)
            upf_chi => chi, &
            upf_rho_at  => rho_at
   use splinelib
-  use funct, ONLY : which_dft, iexch, icorr, igcx, igcc
+  use funct, ONLY : set_dft_from_name, get_iexch, get_icorr, get_igcx, get_igcc
   implicit none
-  integer :: i, j, ib, iexch_, icorr_, igcx_, igcc_
+  integer :: i, j, ib
   character (len=256) :: filein(2)
   character (len=5) :: xlabel
   real (8) :: x, capel
@@ -158,14 +158,15 @@ subroutine compute_virtual(x,filein)
   upf_psd = "Xx"
   upf_pseudotype = "NC"
   if (isus(1) .or. isus(2)) upf_pseudotype = "US"
-  call which_dft(dft(1))
-  upf_iexch = iexch
-  upf_icorr = icorr
-  upf_igcx  = igcx
-  upf_igcc  = igcc
-  call which_dft(dft(2))
-  if (iexch.ne.upf_iexch .or. icorr.ne.upf_icorr .or. igcx.ne.upf_igcx .or. &
-      igcc.ne.upf_igcc) call errore ('virtual','conflicting DFT functionals',1)
+  call set_dft_from_name(dft(1))
+  upf_iexch = get_iexch()
+  upf_icorr = get_icorr()
+  upf_igcx  = get_igcx()
+  upf_igcc  = get_igcc()
+  call set_dft_from_name(dft(2))
+  if (get_iexch().ne.upf_iexch .or. get_icorr().ne.upf_icorr .or. &
+      get_igcx().ne.upf_igcx .or. get_igcc().ne.upf_igcc) &
+      call errore ('virtual','conflicting DFT functionals',1)
   upf_lmax = max(lmax(1), lmax(2))
   if (mesh(1).ne.mesh(2) ) then
      write (*,*) " pseudopotentials have different mesh " 

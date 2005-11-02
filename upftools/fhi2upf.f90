@@ -152,11 +152,7 @@ subroutine convert_fhi
   !
   use fhi
   use upf
-  use funct, ONLY : which_dft, &
-                    funct_iexch => iexch, &
-                    funct_icorr => icorr, &
-                    funct_igcx => igcx, &
-                    funct_igcc => igcc
+  use funct, ONLY : set_dft_from_name, get_iexch, get_icorr, get_igcx, get_igcc
   implicit none
   real(8), parameter :: rmax = 10.0
   real(8), allocatable :: aux(:)
@@ -212,11 +208,11 @@ subroutine convert_fhi
      ocw(i)   = oc(i)
      elsw(i)  = els(i)
   end do
-  call which_dft(dft)
-  iexch = funct_iexch
-  icorr = funct_icorr
-  igcx  = funct_igcx
-  igcc  = funct_igcc
+  call set_dft_from_name(dft)
+  iexch = get_iexch()
+  icorr = get_icorr()
+  igcx  = get_igcx()
+  igcc  = get_igcc()
 
   allocate(rab(mesh))
   allocate(  r(mesh))

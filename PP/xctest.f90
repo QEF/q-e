@@ -8,13 +8,13 @@
 program xctest
   USE mp, ONLY: mp_start, mp_end
   use kinds, only: DP
-  use funct
+  use funct, only: set_dft_from_indices
   implicit none
   integer :: nnr = 1000
   integer :: nspin = 2
   real(DP), allocatable :: rhor( :, : )
   real(DP), allocatable :: grhor( :, :, : )
-
+  integer iexch,icorr,igcx,igcc
   
   CALL mp_start()
 
@@ -22,6 +22,7 @@ program xctest
   icorr=3
   igcx=1
   igcc=3
+  call set_dft_from_indices(iexch,icorr,igcx,igcc)
 
   open(unit=17,form='unformatted',status='old')
   read(17) nnr, nspin
@@ -39,7 +40,7 @@ end program xctest
 
 subroutine test_gcxc( nnr, nspin, rhor, grhor )
   use kinds, only: DP
-  use funct
+!  use funct, only: gcxc
   implicit none
   integer, intent(in) :: nnr, nspin
   real(DP) :: rhor( nnr, nspin )
@@ -120,7 +121,8 @@ end subroutine test_gcxc
 
 subroutine test_xc( nnr, nspin, rhor, grhor )
   use kinds, only: DP
-  use funct
+  use funct, only: get_iexch, get_icorr, get_igcx, get_igcc
+
   implicit none
   integer, intent(in) :: nnr, nspin
   real(DP) :: rhor( nnr, nspin )
@@ -130,8 +132,15 @@ subroutine test_xc( nnr, nspin, rhor, grhor )
   real(DP) :: grhon( nnr, 3, nspin )
   real(DP) :: exc, excn, rhod, grhod
   integer :: ir, is, ipol
+  integer iexch,icorr,igcx,igcc
 
-  rhon = rhor
+
+  iexch = get_iexch()
+  icorr = get_icorr()
+  igcx  = get_igcx()
+  igcc  = get_igcc()
+
+  rhon  = rhor
   grhon = grhor
   !
   ! original CP xc selection

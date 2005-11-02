@@ -14,7 +14,7 @@ subroutine dmxc_spin (rhoup, rhodw, dmuxc_uu, dmuxc_ud, dmuxc_du, &
   !
   !
   USE kinds, only : DP
-  use funct
+  use funct, only : get_iexch, get_icorr, xc_spin
   implicit none
   ! I/O variables
 
@@ -53,7 +53,7 @@ subroutine dmxc_spin (rhoup, rhodw, dmuxc_uu, dmuxc_ud, dmuxc_du, &
   zeta = (rhoup - rhodw) / rhotot
 
   if (abs (zeta) .gt.1.d0) return
-  if (iexch.eq.1.and.icorr.eq.1) then
+  if (get_iexch().eq.1.and.get_icorr().eq.1) then
      !
      !    first case: analytical derivative available
      !

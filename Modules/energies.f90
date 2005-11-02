@@ -188,33 +188,33 @@
  999         WRITE( stdout,100) etot,ekin,eht,esr,eself,epseu,enl,exc,vave
              !
           END IF
-1         FORMAT(    6X,'                TOTAL ENERGY = ',F18.10,' A.U.')
-2         FORMAT(    6X,'              KINETIC ENERGY = ',F18.10,' A.U.')
-3         FORMAT(    6X,'        ELECTROSTATIC ENERGY = ',F18.10,' A.U.')
-4         FORMAT(    6X,'                       ESELF = ',F18.10,' A.U.')
-5         FORMAT(    6X,'                         ESR = ',F18.10,' A.U.')
-6         FORMAT(    6X,'              HARTREE ENERGY = ',F18.10,' A.U.')
-7         FORMAT(    6X,'                HARTREE EHTE = ',F18.10,' A.U.')
-8         FORMAT(    6X,'                HARTREE EHTI = ',F18.10,' A.U.')
-9         FORMAT(    6X,'      PSEUDOPOTENTIAL ENERGY = ',F18.10,' A.U.')
-10        FORMAT(    6X,'  N-L PSEUDOPOTENTIAL ENERGY = ',F18.10,' A.U.')
-11        FORMAT(    6X,' EXCHANGE-CORRELATION ENERGY = ',F18.10,' A.U.')
-12        FORMAT(    6X,'        VAN DER WAALS ENERGY = ',F18.10,' A.U.')
-13        FORMAT(    6X,'        EMASS KINETIC ENERGY = ',F18.10,' A.U.')
-14        FORMAT(    6X,'            HARTREE SIC_EHTE = ',F18.10,' A.U.')
-15        FORMAT(    6X,' SIC EXCHANGE-CORRELA ENERGY = ',F18.10,' A.U.')
-16        FORMAT(    6X,'     EXCHANGE-CORRELA POTENT = ',F18.10,' A.U.')
-17        FORMAT(    6X,' SIC EXCHANGE-CORRELA POTENT = ',F18.10,' A.U.')
+1         FORMAT(6X,'                TOTAL ENERGY = ',F18.10,' HARTREE A.U.')
+2         FORMAT(6X,'              KINETIC ENERGY = ',F18.10,' HARTREE A.U.')
+3         FORMAT(6X,'        ELECTROSTATIC ENERGY = ',F18.10,' HARTREE A.U.')
+4         FORMAT(6X,'                       ESELF = ',F18.10,' HARTREE A.U.')
+5         FORMAT(6X,'                         ESR = ',F18.10,' HARTREE A.U.')
+6         FORMAT(6X,'              HARTREE ENERGY = ',F18.10,' HARTREE A.U.')
+7         FORMAT(6X,'                HARTREE EHTE = ',F18.10,' HARTREE A.U.')
+8         FORMAT(6X,'                HARTREE EHTI = ',F18.10,' HARTREE A.U.')
+9         FORMAT(6X,'      PSEUDOPOTENTIAL ENERGY = ',F18.10,' HARTREE A.U.')
+10        FORMAT(6X,'  N-L PSEUDOPOTENTIAL ENERGY = ',F18.10,' HARTREE A.U.')
+11        FORMAT(6X,' EXCHANGE-CORRELATION ENERGY = ',F18.10,' HARTREE A.U.')
+12        FORMAT(6X,'        VAN DER WAALS ENERGY = ',F18.10,' HARTREE A.U.')
+13        FORMAT(6X,'        EMASS KINETIC ENERGY = ',F18.10,' HARTREE A.U.')
+14        FORMAT(6X,'            HARTREE SIC_EHTE = ',F18.10,' HARTREE A.U.')
+15        FORMAT(6X,' SIC EXCHANGE-CORRELA ENERGY = ',F18.10,' HARTREE A.U.')
+16        FORMAT(6X,'     EXCHANGE-CORRELA POTENT = ',F18.10,' HARTREE A.U.')
+17        FORMAT(6X,' SIC EXCHANGE-CORRELA POTENT = ',F18.10,' HARTREE A.U.')
 
-  100 format(//'                total energy = ',f14.5,' a.u.'/         &
-     &         '              kinetic energy = ',f14.5,' a.u.'/         &
-     &         '        electrostatic energy = ',f14.5,' a.u.'/         &
-     &         '                         esr = ',f14.5,' a.u.'/         &
-     &         '                       eself = ',f14.5,' a.u.'/         &
-     &         '      pseudopotential energy = ',f14.5,' a.u.'/         &
-     &         '  n-l pseudopotential energy = ',f14.5,' a.u.'/         &
-     &         ' exchange-correlation energy = ',f14.5,' a.u.'/         &
-     &         '           average potential = ',f14.5,' a.u.'//)
+  100 format(//'                total energy = ',f14.5,' Hartree a.u.'/ &
+     &         '              kinetic energy = ',f14.5,' Hartree a.u.'/ &
+     &         '        electrostatic energy = ',f14.5,' Hartree a.u.'/ &
+     &         '                         esr = ',f14.5,' Hartree a.u.'/ &
+     &         '                       eself = ',f14.5,' Hartree a.u.'/ &
+     &         '      pseudopotential energy = ',f14.5,' Hartree a.u.'/ &
+     &         '  n-l pseudopotential energy = ',f14.5,' Hartree a.u.'/ &
+     &         ' exchange-correlation energy = ',f14.5,' Hartree a.u.'/ &
+     &         '           average potential = ',f14.5,' Hartree a.u.'//)
 
           RETURN
         END SUBROUTINE print_energies

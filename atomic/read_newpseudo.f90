@@ -15,7 +15,7 @@
 !     Vanderbilt form or in the norm-conserving form
 !
 use ld1inc
-use funct
+use funct, only: set_dft_from_indices
    implicit none
 
       integer :: &
@@ -24,6 +24,7 @@ use funct
              ir,    &  ! counters on mesh points
              ios,   &  ! I/O control: ios /= 0 means error
              iunps    ! the unit with the pseudopotential
+      integer :: iexch, icorr, igcx, igcc
 
       logical :: reldum
 
@@ -46,8 +47,8 @@ use funct
       if (.not.reldum.and.rel.gt.0) call errore('read_newpseudo', &
    &    'non relativistic pseudopotential and relativistic calculation',-1)
          
-      read( iunps, '(4i5)',err=100, iostat=ios ) iexch, icorr, &
-                                                  igcx, igcc
+      read( iunps, '(4i5)',err=100, iostat=ios ) iexch, icorr, igcx, igcc
+      call set_dft_from_indices(iexch, icorr, igcx, igcc)
       
       read( iunps, '(2e17.11,i5)') zval, etots, lmax
 

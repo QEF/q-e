@@ -18,7 +18,7 @@ subroutine setup_dgc
   use pwcom
   USE kinds, only : DP
   use phcom
-  use funct
+  use funct, only : get_igcx, get_igcc, gcxc, gcx_spin, gcc_spin
   implicit none
   integer :: k, is
   real(DP) :: grho2 (2), rh, zeta, grh2, fac, sx, sc, &
@@ -27,7 +27,7 @@ subroutine setup_dgc
        vssxup, vssxdw, vrrcup, vrrcdw, vrscup, vrscdw, vrzcup, vrzcdw
   real (DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
 
-  if (igcx == 0 .and. igcc == 0) return
+  if (get_igcx() == 0 .and. get_igcc() == 0) return
   allocate (dvxc_rr(  nrxx , nspin , nspin))    
   allocate (dvxc_sr(  nrxx , nspin , nspin))    
   allocate (dvxc_ss(  nrxx , nspin , nspin))    
@@ -58,7 +58,7 @@ subroutine setup_dgc
      grho2 (1) = grho (1, k, 1) **2 + grho (2, k, 1) **2 + grho (3, k, 1) **2
      if (nspin == 1) then
         if (abs (rho (k, 1) ) > epsr .and. grho2 (1) > epsg) then
-           call gcxc (rho (k, nspin), grho2, sx, sc, v1x, v2x, v1c, v2c)
+           call gcxc (rho (k, nspin), grho2(1), sx, sc, v1x, v2x, v1c, v2c)
            call dgcxc (rho (k, nspin), grho2, vrrx, vsrx, vssx, vrrc, &
                 vsrc, vssc)
            dvxc_rr (k, 1, 1) = e2 * (vrrx + vrrc)

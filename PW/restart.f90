@@ -64,7 +64,7 @@ MODULE restart_module
     USE control_flags,        ONLY : twfcollect, noinv, istep, modenum
     USE io_files,             ONLY : prefix, tmp_dir, pseudo_dir, psfile, &
          iunwfc, nwordwfc
-    USE funct,                ONLY : iexch, icorr, igcx, igcc
+    USE funct,                ONLY : get_iexch, get_icorr, get_igcx, get_igcc
     USE io_global,            ONLY : ionode
     USE mp,                   ONLY : mp_sum, mp_max, mp_end
     USE mp_global,            ONLY : mpime, nproc, root, me_pool, my_pool_id, &
@@ -130,6 +130,7 @@ MODULE restart_module
     LOGICAL :: lgamma
     COMPLEX(DP), ALLOCATABLE :: wfc_restart(:,:)
     TYPE (pseudo_upf) :: upf
+    integer :: iexch, icorr, igcx, igcc
 
     EXTERNAL DSCAL
 
@@ -378,6 +379,10 @@ MODULE restart_module
              CALL deallocate_pseudo_upf( upf )
              CLOSE( iunps )
           ELSE
+             iexch = get_iexch()
+             icorr = get_icorr()
+             igcx  = get_igcx()
+             igcc  = get_igcc()
              CALL write_restart_pseudo( ndw, &
                   zmesh(i), xmin(i), dx(i), r(:,i), rab(:,i), vloc_at(:,i), &
                   chi(:,:,i), oc(:,i), &
@@ -586,7 +591,7 @@ MODULE restart_module
     USE wavefunctions_module, ONLY : evc, evc_nc
     USE fixed_occ,            ONLY : tfixed_occ 
     USE control_flags,        ONLY : twfcollect, noinv, istep, modenum
-    USE funct,                ONLY : iexch, icorr, igcx, igcc
+    USE funct,                ONLY : set_dft_from_indices
     USE pseudo_types,         ONLY : pseudo_upf
     USE mp,                   ONLY : mp_sum, mp_bcast, mp_max, mp_end
     USE mp_global,            ONLY : mpime, nproc, root, me_pool, my_pool_id, &
@@ -654,6 +659,7 @@ MODULE restart_module
     COMPLEX(DP), ALLOCATABLE :: wfc_restart(:,:)
 
     TYPE( pseudo_upf ) :: upf
+    integer :: iexch, icorr, igcx, igcc
 
     INTEGER, ALLOCATABLE :: mill(:,:)
     !
@@ -956,6 +962,7 @@ MODULE restart_module
                   iexch, icorr, &
                   igcx, igcc, lsda, a_nlcc(i), b_nlcc(i), alpha_nlcc(i), &
                   nlcc(i), psd(i) )
+                  call set_dft_from_indices(iexch,icorr,igcx,igcc)
           ENDIF
 
        ELSE

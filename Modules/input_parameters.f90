@@ -402,6 +402,13 @@ MODULE input_parameters
           !   of the energy step for reciprocal vector whose square modulus 
           !   is greater than  "ecfixed"
 
+        CHARACTER(LEN=80) :: input_dft = 'none'
+          ! Variable used to overwrite dft definition contained in 
+          ! pseudopotential files .
+          ! Default value is 'none' meaning that DFT is take from pseudos.
+          ! Allowed values: any legal DFT value as defined in pseudopotentials.
+          !
+
         CHARACTER(LEN=80) :: xc_type = 'none'
           ! xc_type = 'BLYP' | 'BP' | 'PBE' | 'PZ' | 'PW' | 'LDA'
           ! select the exchange and correlation functionals
@@ -546,6 +553,7 @@ MODULE input_parameters
              qcutz, q2sigma, xc_type, lda_plus_U, Hubbard_U, Hubbard_alpha, &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue, &
              U_projection_type,  &
+             input_dft, &
 #if defined (EXX)
              lexx, nqx1, nqx2, nqx3, yukawa, &
 #endif

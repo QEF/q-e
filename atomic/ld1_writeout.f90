@@ -15,7 +15,7 @@ subroutine ld1_writeout
   !     Vanderbilt form or in the norm-conserving form
   !
   use ld1inc
-  use funct
+  use funct, only : get_dft_name
   use atomic_paw, only : paw_io
   implicit none
 
@@ -23,8 +23,10 @@ subroutine ld1_writeout
        ios,   &  ! I/O control
        iunps     ! the unit with the pseudopotential
 
+
   logical, external :: matches
   logical :: oldformat
+  character (len=20) :: dft_name
   
   if (file_pseudopw == ' ') return
 
@@ -62,19 +64,20 @@ subroutine ld1_writeout
   else if (oldformat) then
      !
      if (pseudotype == 1) then
+       dft_name = get_dft_name()
        !
        ! write in CPMD format 
        if ( matches('.psp',file_pseudopw) ) then
           call write_cpmd &
                (iunps,zed,xmin,dx,mesh,ndm,r,r2,  &
-               dft,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
+               dft_name,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
                rhoc,vnl,phis,vpsloc,elts,llts,octs,rcut,etots,nwfts)
        else
        ! write old "NC" format (semilocal)
        !
           call write_pseudo &
                (iunps,zed,xmin,dx,mesh,ndm,r,r2,  &
-               dft,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
+               dft_name,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
                rhoc,vnl,phis,vpsloc,elts,llts,octs,etots,nwfts)
        end if
      else
@@ -100,7 +103,7 @@ subroutine write_rrkj (iunps)
   !---------------------------------------------------------------------
   !
   use ld1inc
-  use funct
+  use funct, only: get_iexch, get_icorr, get_igcx, get_igcc
   implicit none
   !
   integer, intent(in):: iunps ! I/O unit
@@ -108,6 +111,7 @@ subroutine write_rrkj (iunps)
   integer :: nb, mb, & ! counters on beta functions
              ios,    & ! I/O control
              ir        ! counter on mesh points
+  integer :: iexch, icorr, igcx, igcc
   !
   !
   write( iunps, '(a75)', err=100, iostat=ios ) title
@@ -118,8 +122,11 @@ subroutine write_rrkj (iunps)
   else
      write( iunps, '(2l5)',err=100, iostat=ios ) .false., nlcc
   endif
-  write( iunps, '(4i5)',err=100, iostat=ios ) iexch, icorr, &
-       igcx, igcc
+  iexch = get_iexch()
+  icorr = get_icorr()
+  igcx  = get_igcx()
+  igcc  = get_igcc()
+  write( iunps, '(4i5)',err=100, iostat=ios ) iexch, icorr, igcx, igcc
 
   write( iunps, '(2e17.11,i5)') zval, etots, lmax
   write( iunps, '(4e17.11,i5)',err=100, iostat=ios ) &

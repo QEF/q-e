@@ -17,7 +17,7 @@ subroutine read_ncpp (np, iunps)
   use pseud, only: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, &
        a_nlcc, b_nlcc, alpha_nlcc
   use uspp_param, only: vloc_at, betar, kkbeta, nbeta, lll, dion, psd
-  use funct, only: dft, which_dft, ismeta, ishybrid
+  use funct, only: set_dft_from_name, ismeta, ishybrid
   implicit none
   !
   integer :: iunps, np
@@ -28,12 +28,13 @@ subroutine read_ncpp (np, iunps)
   real(DP), external :: erf
   integer :: nb, ios, i, l, ir
   logical :: bhstype
+  character (len=20) :: dft_name
   !
   !====================================================================
   ! read norm-conserving PPs
   !
-  read (iunps, '(a)', end=300, err=300, iostat=ios) dft
-  if (dft (1:2) .eq.'**') dft = 'PZ'
+  read (iunps, '(a)', end=300, err=300, iostat=ios) dft_name
+  if (dft_name (1:2) .eq.'**') dft_name = 'PZ'
   read (iunps, *, err=300, iostat=ios) psd(np), zp(np), lmax(np), nlc(np), &
                                        nnl(np), nlcc(np), lloc(np), bhstype
   if (nlc(np) > 2 .or. nnl(np) > 3) &
@@ -112,7 +113,7 @@ subroutine read_ncpp (np, iunps)
   !====================================================================
   ! PP read: now setup 
   !
-  call which_dft( dft )
+  call set_dft_from_name( dft_name )
   !
   IF ( ismeta ) &
     CALL errore( 'read_ncpp ', 'META-GGA not implemented in PWscf', 1 )

@@ -22,7 +22,7 @@ subroutine readnewvan (is, iunps)
   use pseud, only: zp, lmax, lloc
   use uspp_param, only: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqlc, &
        rinner, nbeta, kkbeta, lll, psd, tvanp
-  use funct
+  use funct, only : set_dft_from_indices
   !
   implicit none
   !    First the arguments passed to the subroutine
@@ -31,6 +31,7 @@ subroutine readnewvan (is, iunps)
   ! The number of the pseudopotential
   ! the unit with the pseudopotential
 
+  integer :: iexch, icorr, igcx, igcc
   integer :: nb, mb, n, ir, pseudotype, ios, nwfs, ndum, l, ikk
   ! counters on beta functions
   ! counter on mesh points
@@ -65,10 +66,9 @@ subroutine readnewvan (is, iunps)
      tvanp (is) = .false.
   endif
   read (iunps, '(2l5)', err = 100, iostat = ios) rel, nlcc (is)
-  read (iunps, '(4i5)', err = 100, iostat = ios) iexch, icorr, igcx, &
-       igcc
+  read (iunps, '(4i5)', err = 100, iostat = ios) iexch, icorr, igcx, igcc
 
-  dft = '?'
+  call set_dft_from_indices(iexch,icorr,igcx,igcc)
 
   read (iunps, '(2e17.11,i5)') zp (is) , etotps, lmax (is)
 

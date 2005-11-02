@@ -13,16 +13,16 @@ subroutine which_cpmd_dft &
      (dft,mfxcx, mfxcc, mgcx, mgcc)
   !-----------------------------------------------------------------------
   !
-  use funct, only : iexch, icorr, igcx, igcc, which_dft
+  use funct, only : get_iexch, get_icorr, get_igcx, get_igcc, set_dft_from_name
   implicit none
   character(len=*), intent(IN) :: dft
   integer , intent(OUT) :: mfxcx, mfxcc, mgcx, mgcc
 
-  call which_dft(dft)
-  mfxcx = iexch
-  mfxcc = icorr
-  mgcx = igcx
-  mgcc = igcc
+  call set_dft_from_name(dft)
+  mfxcx = get_iexch()
+  mfxcc = get_icorr()
+  mgcx = get_igcx()
+  mgcc = get_igcc()
 
 ! in CPMD PW91 and LYP are swapped.
   if (mgcc.eq.3) then

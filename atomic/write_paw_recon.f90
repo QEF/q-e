@@ -9,7 +9,6 @@
       subroutine write_paw_recon
 !--------------------------------------------------------------
 use ld1inc
-use funct
 implicit none
 
       integer :: i, j, n, m, l, ios, iae, isign

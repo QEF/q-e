@@ -11,6 +11,7 @@ function exc_t(rho,rhoc,lsd)
   !---------------------------------------------------------------
   !
   use kinds, only : DP
+  use funct, only : xc, xc_spin
   implicit none
   integer:: lsd
   real(DP) :: exc_t, rho(2),arho,rhot, zeta,rhoc
@@ -27,7 +28,7 @@ function exc_t(rho,rhoc,lsd)
      rhot = rho(1) + rhoc
      arho = abs(rhot)
      if (arho.gt.1.e-30_DP) then      
-        call xc(arho,ex,ec,vx,vc)
+        call xc(arho,ex,ec,vx(1),vc(1))
         exc_t=e2*(ex+ec)
      endif
   else

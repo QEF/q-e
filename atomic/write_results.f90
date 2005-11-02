@@ -9,14 +9,16 @@
 subroutine write_results 
   !--------------------------------------------------------------
   use ld1inc
-  use funct
+  use funct, only :  get_iexch, get_dft_name
   implicit none
 
   integer :: is, i, j, n, m, im(40), l, ios
   real(DP):: work(ndm), dum, int_0_inf_dr, ravg, r2avg, sij, ene, mm
   logical :: ok, oep
+  character (len=20) :: dft_name
   !
   !
+  dft_name = get_dft_name()
   write(6,'(5x,20(''-''),'' All-electron run '',30(''-''),/)')
   write(6,1150) title
   if(rel.eq.1) write(6,'(5x,''scalar relativistic calculation'')')
@@ -24,7 +26,7 @@ subroutine write_results
 1150 format(5x,a75)
   if (zed.ne.0.0) write(6,1250) zed
 1250 format(/5x,'atomic number is',f6.2)
-  write(6,2300) dft(1:len_trim(dft)),lsd,isic,latt,beta,tr2
+  write(6,2300) dft_name(1:len_trim(dft_name)),lsd,isic,latt,beta,tr2
 2300 format(5x,'dft =',a,'   lsd =',i1,' sic =',i1,' latt =',i1, &
        '  beta=',f4.2,' tr2=',1pe7.1)
   write(6,1270) mesh,r(mesh),xmin,dx
@@ -34,7 +36,7 @@ subroutine write_results
 1000 format(/5x, &
           'n l     nl                  e(Ryd)','         e(Ha)          e(eV)')
 
-     oep = iexch .eq. 4
+     oep = get_iexch() .eq. 4
      if (oep) enl(1:nwf) = enl(1:nwf) - enzero(isw(1:nwf))
      write(6,1100) &
           (nn(n),ll(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &

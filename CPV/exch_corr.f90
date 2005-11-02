@@ -170,7 +170,7 @@
       USE ions_base,          ONLY: nsp
       USE cell_module,        ONLY: boxdimensions
       USE cell_base,          ONLY: tpiba
-      USE funct,              ONLY: igcx, igcc 
+      USE funct,              ONLY: get_igcx, get_igcc 
       USE reciprocal_vectors, ONLY: gstart, g
       USE gvecp,              ONLY: ngm
       USE io_global,          ONLY: stdout
@@ -245,7 +245,7 @@
 
       dexc = strvxc * dalbe
 
-      IF ( ( igcx > 0 ) .OR. ( igcc > 0 ) ) THEN
+      IF ( ( get_igcx() > 0 ) .OR. ( get_igcc() > 0 ) ) THEN
         CALL stress_gc(grho, v2xc, gcpail, omega)
         dexc = dexc + gcpail
       END IF
@@ -277,7 +277,7 @@
 
         USE kinds, ONLY: DP
         USE grid_dimensions, ONLY: nr1l, nr2l, nr3l
-        USE funct, ONLY: igcx, igcc 
+        USE funct, ONLY: get_igcx, get_igcc
 
         REAL (DP) :: rhoetr(:,:,:,:)
         COMPLEX(DP) :: rhoetg(:,:)
@@ -289,6 +289,10 @@
         REAL (DP) :: ddot
 
         INTEGER :: nspin, nnr, ispin, j, k, i
+
+        logical :: is_gradient
+
+        is_gradient =  ( get_igcx() > 0 ) .OR. ( get_igcc() > 0 )
 
           !  vpot = vxc(rhoetr); vpot(r) <-- u(r)
 
@@ -303,7 +307,7 @@
                   DO i = 1, SIZE( rhoetr, 1 )
                     IF( i > nr1l .OR. j > nr2l .OR. k > nr3l ) THEN
                       rhoetr( i, j, k,    ispin ) = 0.0d0
-                      IF( ( igcx > 0 ) .OR. ( igcc > 0 ) ) THEN
+                      IF( is_gradient ) THEN
                         grho  ( i, j, k, :, ispin ) = 0.0d0
                       END IF
                     END IF
@@ -318,7 +322,7 @@
                                   sxc, vpot(1,1,1,1), v2xc(1,1,1,1,1) )
 
           !
-          IF( ( igcx > 0 ) .OR. ( igcc > 0 ) ) THEN
+          IF( ( get_igcx() > 0 ) .OR. ( get_igcc() > 0 ) ) THEN
             ! ... vpot additional term for gradient correction
             CALL v2gc( v2xc, grho, rhoetr, vpot )
           END If
@@ -355,7 +359,7 @@
 ! calculate exch-corr potential, energy, and derivatives dxc(i,j)
 ! of e(xc) with respect to to cell parameter h(i,j)
 !     
-      use funct,           only : iexch, icorr, igcx, igcc
+      use funct,           only : get_igcx, get_igcc
       use gvecp,           only : ng => ngm
       use gvecs,           only : ngs
       use grid_dimensions, only : nr1, nr2, nr3, nnr => nnrx
@@ -396,7 +400,7 @@
       !
       !     filling of gradr with the gradient of rho using fft's
       !
-      if (igcx /= 0 .or. igcc /= 0) then
+      if (get_igcx() /= 0 .or. get_igcc() /= 0) then
          !
          allocate( gradr( nnr, 3, nspin ) )
          call fillgrad( nspin, rhog, gradr )
@@ -470,7 +474,7 @@
       !
       !     second part of the xc-potential
       !
-      if (igcx /= 0 .or. igcc /= 0) then
+      if (get_igcx() /= 0 .or. get_igcc() /= 0) then
          !
          call gradh( nspin, gradr, rhog, rhor, dexc)
          !

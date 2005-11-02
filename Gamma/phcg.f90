@@ -448,7 +448,7 @@ SUBROUTINE newscf
   !
   USE pwcom
   USE noncollin_module, ONLY: report
-  USE funct
+!  USE funct, only :
   USE io_files,      ONLY : iunigk, iunwfc, input_drho, output_drho
   USE control_flags, ONLY : restart, reduce_io, lscf, istep, iprint, &
                             pot_order, wfc_order, david, max_cg_iter, &
@@ -461,7 +461,7 @@ SUBROUTINE newscf
   !
   !  set all kind of stuff needed by self-consistent (re-)calculation
   !
-  dft='Same as Before'
+!  dft='Same as Before'
   restart  =.FALSE.
   reduce_io=.TRUE.
   lscf=.TRUE.

@@ -7,49 +7,6 @@
 !
 
 
-!   ==================================================================
-    SUBROUTINE gcc_spin_more( RHOA, RHOB, GRHOAA, GRHOBB, GRHOAB, &
-                              SC, V1CA, V1CB, V2CA, V2CB, V2CAB )
-!   ==--------------------------------------------------------------==
-!   ==  GRADIENT CORRECTIONS FOR EXCHANGE AND CORRELATION           ==
-!   ==                                                              ==
-!   ==  EXCHANGE  :  BECKE88                                        ==
-!   ==               GGAX                                           ==
-!   ==  CORRELATION : PERDEW86                                      ==
-!   ==                LEE, YANG & PARR                              ==
-!   ==                GGAC                                          ==
-!   ==--------------------------------------------------------------==
-
-      USE funct, ONLY: igcc
-      USE kinds, ONLY: DP
-      IMPLICIT NONE
-      REAL(DP) :: RHOA,RHOB,GRHOAA,GRHOBB,GRHOAB
-      REAL(DP) :: SC,V1CA,V2CA,V1CB,V2CB,V2CAB
-
-      ! ... Gradient Correction for correlation
-
-      REAL(DP) :: SMALL, RHO
-      PARAMETER(SMALL=1.D-20)
-
-      SC=0.0D0
-      V1CA=0.0D0
-      V2CA=0.0D0
-      V1CB=0.0D0
-      V2CB=0.0D0
-      V2CAB=0.0D0
-      IF( igcc == 3 ) THEN
-        RHO=RHOA+RHOB
-        IF(RHO.GT.SMALL)  CALL LSD_GLYP(RHOA,RHOB,GRHOAA,GRHOAB,GRHOBB,SC,&
-                  V1CA,V2CA,V1CB,V2CB,V2CAB)
-      ELSE
-        CALL errore( " gcc_spin_more ", " gradiet correction not implemented ", 1 )
-      ENDIF
-!     ==--------------------------------------------------------------==
-      RETURN
-      END SUBROUTINE gcc_spin_more
-
-
-
 !     ==================================================================
       SUBROUTINE LSD_LYP(RHO,ETA,ELYP,VALYP,VBLYP)
 !     ==--------------------------------------------------------------==
@@ -1734,7 +1691,8 @@
 
 subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
   use kinds, only: DP
-  use funct
+  use funct, only: get_igcx, get_igcc, &
+                   xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
   implicit none
   integer, intent(in) :: nnr
   integer, intent(in) :: nspin
@@ -1756,7 +1714,9 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
   integer :: neg(3), ipol
   real(DP), parameter :: epsr = 1.0d-10, epsg = 1.0d-10
   logical :: debug_xc = .false.
+  logical :: igcc_is_lyp
 
+  igcc_is_lyp = (get_igcc() == 3)
   !
   sx_dbg = 0.0d0
   sc_dbg = 0.0d0
@@ -1823,7 +1783,7 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
   sx_dbg = 0.0d0
   sc_dbg = 0.0d0
 
-  if( igcx > 0 .or. igcc > 0 ) then
+  if( get_igcx() > 0 .or. get_igcc() > 0 ) then
 
     do k = 1, nnr
        !
@@ -1872,7 +1832,7 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
           rh = rhor (k, 1) + rhor (k, 2)
           !
           if (rh.gt.epsr) then
-             if( igcc == 3 ) then
+             if( igcc_is_lyp ) then
                 grhoup = grhor(k,1,1)**2 + grhor(k,2,1)**2 + grhor(k,3,1)**2
                 grhodw = grhor(k,1,2)**2 + grhor(k,2,2)**2 + grhor(k,3,2)**2
                 grhoud =          grhor(k,1,1)* grhor(k,1,2)
@@ -1941,7 +1901,7 @@ end subroutine exch_corr_wrapper
 
 subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   use kinds, only: DP
-  use funct
+  use funct, only: get_igcx, get_igcc
   implicit none
   integer, intent(in) :: nnr
   integer, intent(in) :: nspin
@@ -1954,7 +1914,7 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   real(DP), allocatable :: h(:,:,:)
   !
   allocate( v( nnr, nspin ) )
-  if( igcx > 0 .or. igcc > 0 ) then
+  if( get_igcx() > 0 .or. get_igcc() > 0 ) then
     allocate( h( nnr, nspin, nspin ) )
   else
     allocate( h( 1, 1, 1 ) )
@@ -1962,7 +1922,7 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   !
   call exch_corr_wrapper(nnr,nspin,grhor,rhor,etxc,v,h)
 
-  if( igcx > 0 .or. igcc > 0 ) then
+  if( get_igcx() > 0 .or. get_igcc() > 0 ) then
      !
      if( nspin == 1 ) then
         !

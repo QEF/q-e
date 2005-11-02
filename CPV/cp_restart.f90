@@ -55,7 +55,7 @@ MODULE cp_restart
                                            symm_type, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
                                            pmass, amass, iforce, ind_bck
-      USE funct,                    ONLY : dft
+      USE funct,                    ONLY : get_dft_name
       USE energies,                 ONLY : enthal, ekin, eht, esr, eself, &
                                            epseu, enl, exc, vave
       USE mp,                       ONLY : mp_sum
@@ -108,6 +108,7 @@ MODULE cp_restart
       COMPLEX(DP), OPTIONAL, INTENT(IN) :: cm2(:,:)     ! 
       REAL(DP),    OPTIONAL, INTENT(IN) :: mat_z(:,:,:) ! 
       !
+      CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname, filename, rho_file
       CHARACTER(LEN=4)      :: cspin
       INTEGER               :: kunit, ib, ik_eff
@@ -303,7 +304,8 @@ MODULE cp_restart
 ! ... EXCHANGE_CORRELATION
 !-------------------------------------------------------------------------------
          !
-         CALL write_xc( DFT = dft, NSP = nsp, LDA_PLUS_U = .FALSE. )
+         dft_name = get_dft_name()
+         CALL write_xc( DFT = dft_name, NSP = nsp, LDA_PLUS_U = .FALSE. )
          !
 !-------------------------------------------------------------------------------
 ! ... OCCUPATIONS

@@ -616,13 +616,13 @@
     WRITE( stdout, *) '  Short Legend and Physical Units in the Output'
     WRITE( stdout, *) '  ---------------------------------------------'
     WRITE( stdout, *) '  NFI    [int]  - step index'
-    WRITE( stdout, *) '  EKINC  [A.U.] - kinetic energy of the fictitious electronic dynamics'
+    WRITE( stdout, *) '  EKINC  [HARTREE A.U.] - kinetic energy of the fictitious electronic dynamics'
     WRITE( stdout, *) '  TEMPH  [K]    - Temperature of the fictitious cell dynamics'
     WRITE( stdout, *) '  TEMP   [K]    - Ionic temperature'
-    WRITE( stdout, *) '  ETOT   [A.U.] - Scf total energy (Kohn-Sham hamiltonian)'
-    WRITE( stdout, *) '  ENTHAL [A.U.] - Enthalpy ( ETOT + P * V )'
-    WRITE( stdout, *) '  ECONS  [A.U.] - Enthalpy + kinetic energy of ions and cell'
-    WRITE( stdout, *) '  ECONT  [A.U.] - Constant of motion for the CP lagrangian'
+    WRITE( stdout, *) '  ETOT   [HARTREE A.U.] - Scf total energy (Kohn-Sham hamiltonian)'
+    WRITE( stdout, *) '  ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )'
+    WRITE( stdout, *) '  ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell'
+    WRITE( stdout, *) '  ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian'
     WRITE( stdout, *) 
     !
     RETURN

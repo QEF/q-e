@@ -12,7 +12,7 @@ subroutine ld1_readin
   !     This routine reads the input parameters of the calculation
   !
   use ld1inc
-  use funct
+  use funct, only : set_dft_from_name
   use atomic_paw, only : paw_io, paw2us
   implicit none
 
@@ -27,7 +27,8 @@ subroutine ld1_readin
        edum(nwfsx), zdum        ! auxiliary
 
   character(len=80) :: config, configts(ncmax1)
-  character(len=2) :: atom
+  character(len=2)  :: atom
+  character(len=20) :: dft
   character, external :: atom_name*2
   integer, external :: atomic_number
   logical, external :: matches
@@ -117,7 +118,7 @@ subroutine ld1_readin
   read(5,input,err=100,iostat=ios) 
 100 call errore('ld1_readin','reading input namelist ',abs(ios))
 
-  call which_dft(dft)
+  call set_dft_from_name(dft)
 
   if (zed == 0.0_dp .and. atom /= ' ') then
      zed = DBLE(atomic_number(atom))
@@ -423,6 +424,7 @@ subroutine ld1_readin
         call read_pseudo  &
              (file_pseudo,zed,xmin,rmax,dx,mesh,ndm,r,r2,rab,sqr, &
              dft,lmax,lloc,zval,nlcc,rhoc,vnl,vpsloc,rel)
+        call set_dft_from_name(dft)
         !
         do ns=1,lmax+1
            ikk(ns)=mesh

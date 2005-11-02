@@ -13,7 +13,7 @@ subroutine stres_gradcorr (rho, rho_core, nspin, nr1, nr2, nr3, &
   !--------------------------------------------------------------------
 #include "f_defs.h"
   USE kinds
-  use funct
+  use funct, ONLY: gcxc, gcx_spin, gcc_spin, gcc_spin_more, get_igcx, get_igcc
   implicit none
 
   integer :: nspin, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, &
@@ -26,9 +26,12 @@ subroutine stres_gradcorr (rho, rho_core, nspin, nr1, nr2, nr3, &
   real(DP) :: grh2, grho2 (2), sx, sc, v1x, v2x, v1c, v2c, fac, &
        v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw, v2cup, v2cdw, v2cud, &
        zeta, rh, rup, rdw, grhoup, grhodw, grhoud, grup, grdw, &
-       sigma_gradcorr (3, 3)
+       sigma_gradcorr (3, 3), rhok
+  logical :: igcc_is_lyp
 
-  if (igcx.eq.0.and.igcc.eq.0) return
+  if ( (get_igcx()==0) .and. (get_igcc()==0)) return
+
+  igcc_is_lyp = (get_igcc() == 3)
 
   sigma_gradcorr(:,:) = 0.d0
 
@@ -53,7 +56,7 @@ subroutine stres_gradcorr (rho, rho_core, nspin, nr1, nr2, nr3, &
      do k = 1, nrxx
         grho2 (1) = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2
         if (abs (rho (k, 1) ) .gt.epsr.and.grho2 (1) .gt.epsg) then
-           call gcxc (rho (k, 1), grho2, sx, sc, v1x, v2x, v1c, v2c)
+           call gcxc (rho (k, 1), grho2(1), sx, sc, v1x, v2x, v1c, v2c)
            do l = 1, 3
               do m = 1, l
                  sigma_gradcorr (l, m) = sigma_gradcorr (l, m) + &
@@ -77,7 +80,7 @@ subroutine stres_gradcorr (rho, rho_core, nspin, nr1, nr2, nr3, &
                 sx, v1xup, v1xdw, v2xup, v2xdw)
            rh = rho (k, 1) + rho (k, 2)
            if (rh.gt.epsr) then
-              if ( igcc == 3 ) then
+              if ( igcc_is_lyp ) then
                  rup = rho (k, 1)
                  rdw = rho (k, 2)
                  grhoup = grho(1,k,1)**2 + grho(2,k,1)**2 + grho(3,k,1)**2

@@ -35,7 +35,7 @@ subroutine set_pseudo_upf (is, upf)
   USE pseud, ONLY: lloc, lmax, zp
   USE uspp_param, ONLY: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, &
        rinner, nbeta, kkbeta, lll, jjj, psd, tvanp
-  USE funct, ONLY: dft, which_dft, ismeta, ishybrid
+  USE funct, ONLY: set_dft_from_name, ismeta, ishybrid
   !
   USE ions_base, ONLY: zv
   USE spin_orb, ONLY: lspinorb
@@ -56,8 +56,7 @@ subroutine set_pseudo_upf (is, upf)
   psd (is)= upf%psd
   tvanp(is)=upf%tvanp
   nlcc(is) = upf%nlcc
-  dft = upf%dft
-  call which_dft( upf%dft )
+  call set_dft_from_name( upf%dft )
   !
   IF ( ismeta ) &
     CALL errore( 'upf_to_internals ', 'META-GGA not implemented in PWscf', 1 )

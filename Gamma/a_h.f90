@@ -22,7 +22,7 @@ subroutine A_h(e,h,ah)
   USE constants,  ONLY: degspin, e2, fpi
   use becmod, only: rbecp
   use cgcom
-  use funct
+  use funct, only: get_igcx, get_igcc
   !
   implicit none
   integer :: j, jkb, ibnd, na,nt,ih
@@ -115,7 +115,7 @@ subroutine A_h(e,h,ah)
   !  add gradient correction contribution (if any)
   !
   call start_clock('dgradcorr')
-  if (igcx.ne.0.or.igcc.ne.0) call dgradcor1  &
+  if (get_igcx().ne.0.or.get_igcc().ne.0) call dgradcor1  &
        (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s,            &
         drho, drhoc, nr1,nr2,nr3, nrx1, nrx2, nrx3, nrxx, nspin, &
         nl, nlm, ngm, g, alat, omega, dvxc)

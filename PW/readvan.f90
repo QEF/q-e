@@ -24,7 +24,7 @@ subroutine readvan (is, iunps)
   use pseud, only: zp, lmax, lloc
   use uspp_param, only: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, &
        rinner, nbeta, kkbeta, lll, iver, ifqopt, psd, tvanp
-  use funct, only: dft, which_dft, ismeta, ishybrid
+  use funct, only: set_dft_from_name, ismeta, ishybrid
   implicit none
 
   !
@@ -69,7 +69,7 @@ subroutine readvan (is, iunps)
   ! beta function counter
   ! beta function counter
   ! mesh points counter
-  character (len=20) :: line, xctit
+  character (len=20) :: line, xctit, dft_name
   ! The title of the pseudopotential
   ! Name of the xctype
   !
@@ -89,20 +89,20 @@ subroutine readvan (is, iunps)
   read (iunps, '(a20,3f15.9)', err = 100, iostat = ios) line, zmesh &
        (is) , zp (is) , exfact
   if (exfact.eq.0) then
-     dft = 'PZ'
+     dft_name = 'PZ'
   elseif (exfact.eq.1) then
-     dft = 'BLYP'
+     dft_name = 'BLYP'
   elseif (exfact.eq. - 5.or.exfact.eq.3) then
-     dft = 'BP'
+     dft_name = 'BP'
   elseif (exfact.eq. - 6.or.exfact.eq.4) then
-     dft = 'PW91'
+     dft_name = 'PW91'
   elseif (exfact.eq.5) then
-     dft = 'PBE'
+     dft_name = 'PBE'
   else
      call errore ('readvan', 'Wrong xc in pseudopotential', 1)
   endif
   !
-  call which_dft( dft )
+  call set_dft_from_name( dft_name )
   !
   IF ( ismeta ) &
     CALL errore( 'readvan ', 'META-GGA not implemented in PWscf', 1 )

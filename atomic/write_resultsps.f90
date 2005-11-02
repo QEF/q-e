@@ -9,13 +9,15 @@
 subroutine write_resultsps 
   !--------------------------------------------------------------
   use ld1inc
-  use funct
+  use funct, only: get_dft_name
   implicit none
 
   integer :: i, j, n, m, l, ios
   real(DP) :: work(ndm), int_0_inf_dr, ravg, sij
+  character (len=20) :: dft_name
   !
   !
+  dft_name = get_dft_name()
   write(6,110)
 110 format (/,5x,14('-'),' Testing the pseudopotential ',24('-'),/)
   write(6,1150) title
@@ -24,7 +26,7 @@ subroutine write_resultsps
 1150 format(5x,a75)
   write(6,1250) zed, zval
 1250 format(/5x,'atomic number is',f6.2,'   valence charge is',f6.2)
-  write(6,2300) dft(1:len_trim(dft)),lsd,isic,latt,beta,tr2
+  write(6,2300) dft_name(1:len_trim(dft_name)),lsd,isic,latt,beta,tr2
 2300 format(5x,'dft =',a,'   lsd =',i1,' sic =',i1,' latt =',i1, &
        '  beta=',f4.2,' tr2=',1pe7.1)
   write(6,1270) mesh,r(mesh),xmin,dx

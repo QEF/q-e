@@ -154,6 +154,7 @@ MODULE read_namelists_module
        qcutz   = 0.D0
        q2sigma = 0.01D0
        xc_type = 'none'
+       input_dft = 'none'
 !
 ! ... set starting_magnetization to an invalid value:
 ! ... in PW starting_magnetization MUST be set for at least one atomic type
@@ -667,6 +668,7 @@ MODULE read_namelists_module
        CALL mp_bcast( qcutz,                  ionode_id )
        CALL mp_bcast( q2sigma,                ionode_id )
        CALL mp_bcast( xc_type,                ionode_id )
+       CALL mp_bcast( input_dft,              ionode_id )
        CALL mp_bcast( starting_magnetization, ionode_id ) 
        CALL mp_bcast( starting_ns_eigenvalue, ionode_id ) 
        CALL mp_bcast( U_projection_type,      ionode_id ) 

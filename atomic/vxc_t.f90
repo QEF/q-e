@@ -13,6 +13,7 @@ subroutine vxc_t(rho,rhoc,lsd,vxc)
   !
 
   use kinds, only : DP
+  use funct, only : xc, xc_spin
   implicit none
   integer:: lsd
   real(DP):: vxc(2), rho(2),rhoc,arho,zeta
@@ -29,7 +30,7 @@ subroutine vxc_t(rho,rhoc,lsd,vxc)
      !
      arho=abs(rho(1)+rhoc)
      if (arho.gt.eps) then      
-        call xc(arho,ex,ec,vx,vc)
+        call xc(arho,ex,ec,vx(1),vc(1))
         vxc(1)=e2*(vx(1)+vc(1))
      endif
   else

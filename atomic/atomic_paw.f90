@@ -166,7 +166,7 @@ CONTAINS
        zval, mesh, r, r2, sqr, dx, irc, ikk,                      &
        nbeta, lls, ocs, enls, psipaw, phis, betas, qvan, kindiff, &
        nlcc, aerhoc, psrhoc, aevtot,psvtot, do_write_dataset)
-    USE funct
+    USE funct, only : get_iexch,get_icorr,get_igcx, get_igcc, dft_name
     IMPLICIT NONE
     TYPE(paw_t),   INTENT(OUT) :: pawset_
     REAL(dp), INTENT(IN)  :: zval
@@ -199,6 +199,7 @@ CONTAINS
     REAL(dp) :: etot
     INTEGER :: nspin=1, spin(nwfsx)=1
     CHARACTER(LEN=4) :: shortname
+    INTEGER :: iexch, icorr, igcx, igcc
     !
     pawset_%zval=zval
     !
@@ -311,6 +312,10 @@ CONTAINS
     !WRITE(4444,'(5e20.10)')(r(n),aevtot(n),psvtot(n),pawset_%aeloc(n),pawset_%psloc(n),n=1,mesh)
     !
     pawset_%dft="                                                                                "
+    iexch = get_iexch()
+    icorr = get_icorr()
+    igcx  = get_igcx()
+    igcc  = get_igcc()
     CALL dft_name (iexch, icorr, igcx, igcc, pawset_%dft, shortname)
     !
     IF (PRESENT(do_write_dataset)) THEN
@@ -334,7 +339,7 @@ CONTAINS
   !
   SUBROUTINE paw2us (pawset_,zval,mesh,r,r2,sqr,dx,nbeta,lls,ikk, &
        betas,qq,qvan,pseudotype)
-    USE funct, ONLY : which_dft
+    USE funct, ONLY : set_dft_from_name
     IMPLICIT NONE
     TYPE(paw_t),   INTENT(IN)  :: pawset_
     REAL(dp), INTENT(OUT) :: zval
@@ -377,7 +382,7 @@ CONTAINS
     betas(1:mesh,1:nbeta)=pawset_%proj(1:mesh,1:nbeta)
     pseudotype=3
     !
-    CALL which_dft (pawset_%dft)
+    CALL set_dft_from_name (pawset_%dft)
   END SUBROUTINE paw2us
   !
   !============================================================================
@@ -492,7 +497,7 @@ CONTAINS
   !
   SUBROUTINE compute_onecenter_energy ( totenergy_, veff_, &
        pawset_, vcharge_, nlcc_, ccharge_, nspin_, energies_ )
-    USE funct, ONLY: igcx, igcc
+    USE funct, ONLY: get_igcx, get_igcc
     IMPLICIT NONE
     REAL(dp), INTENT(OUT) :: totenergy_       ! H+XC+DC
     REAL(dp), INTENT(OUT) :: veff_(ndm,2)     ! effective potential
@@ -549,7 +554,7 @@ CONTAINS
           aux(i)=exc_t(rh,rhc,lsd) *  rhovtot(i)
        END IF
     END DO
-    IF ((igcx/=0).OR.(igcc/=0)) THEN
+    IF ((get_igcx()/=0).OR.(get_igcc()/=0)) THEN
        IF (nlcc_) THEN
           CALL vxcgc(ndm,pawset_%mesh,nspin_,pawset_%r,pawset_%r2,vcharge_,ccharge_,vgc,egc)
        ELSE

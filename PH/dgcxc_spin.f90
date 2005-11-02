@@ -16,6 +16,7 @@ subroutine dgcxc_spin (rup, rdw, gup, gdw, vrrxup, vrrxdw, vrsxup, &
 !    potentials with respect to the density, the gradient and zeta
 !
 USE kinds, only : DP
+use funct, only : gcx_spin, gcc_spin
 implicit none
 real(DP) :: rup, rdw, gup (3), gdw (3), vrrxup, vrrxdw, vrsxup, &
  vrsxdw, vssxup, vssxdw, vrrcup, vrrcdw, vrscup, vrscdw, vssc, &

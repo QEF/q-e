@@ -14,7 +14,7 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   USE constants, ONLY : e2
   USE kinds,     ONLY : DP
-  USE funct,     ONLY : igcx, igcc
+  USE funct,     ONLY : gcxc, gcx_spin, gcc_spin, gcc_spin_more, get_igcx, get_igcc
   USE spin_orb, ONLY : domag
 
 #ifdef EXX
@@ -42,11 +42,14 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   REAL (DP) :: v2cup, v2cdw,  v2cud, rup, rdw, &
                     grhoup, grhodw, grhoud, grup, grdw
 
-  REAL (DP), PARAMETER :: epsr = 1.D-6, &
-                               epsg = 1.D-10
+  REAL (DP), PARAMETER :: epsr = 1.D-6, epsg = 1.D-10
+ 
+  logical :: igcc_is_lyp
   !
   !
-  IF ( igcx == 0 .AND. igcc == 0 ) RETURN
+  IF ( get_igcx() == 0 .AND. get_igcc() == 0 ) RETURN
+
+  igcc_is_lyp = (get_igcc() == 3)
   !
   etxcgc = 0.D0
   vtxcgc = 0.D0
@@ -103,7 +106,7 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
               !
               segno = SIGN( 1.D0, rhoout(k,1) )
               !
-              CALL gcxc( arho, grho2, sx, sc, v1x, v2x, v1c, v2c )
+              CALL gcxc( arho, grho2(1), sx, sc, v1x, v2x, v1c, v2c )
 #if defined (EXX)
               if (lexx) then
                  sx  = (1.d0-exxalfa)*sx
@@ -164,7 +167,7 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
         !
         IF ( rh > epsr ) THEN
            !
-           IF ( igcc == 3 ) THEN
+           IF ( igcc_is_lyp ) THEN
               !
               rup = rhoout(k,1)
               rdw = rhoout(k,2)

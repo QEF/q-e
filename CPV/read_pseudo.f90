@@ -185,13 +185,14 @@ END FUNCTION calculate_dx
       use ions_base, only: nsp
       use read_pseudo_module, only: read_pseudo_upf
       use control_flags, only: program_name, tuspp
-      use funct, only: iexch, icorr, igcx, igcc, dft, which_dft, ishybrid
+      use funct, only: get_iexch, get_icorr, get_igcx, get_igcc, set_dft_from_name, ishybrid
 
       IMPLICIT NONE
 
       CHARACTER(LEN=*), INTENT(IN) :: xc_type
 
 ! ... declare other variables
+      CHARACTER(LEN=20)  :: dft_name
       CHARACTER(LEN=20)  :: pottyp
       CHARACTER(LEN=80)  :: error_msg
       CHARACTER(LEN=256) :: filename
@@ -358,25 +359,25 @@ END FUNCTION calculate_dx
           ! 
           !  DFT xc functional, given from input
           !
-          dft = TRIM( xc_type )
-          CALL which_dft( dft )
+          dft_name = TRIM( xc_type )
+          CALL set_dft_from_name( dft_name )
           IF ( ishybrid ) &
              CALL errore( 'readpp', 'HYBRID XC not implemented in CPV', 1 )
 
-          WRITE( stdout, fmt="(/,3X,'Warning XC functionals forced to be: ',A)" ) dft
+          WRITE( stdout, fmt="(/,3X,'Warning XC functionals forced to be: ',A)" ) dft_name
           !
         else
           !
           ! check for consistency of DFT
           !
           if (is == 1) then
-            iexch_ = iexch
-            icorr_ = icorr
-            igcx_ = igcx
-            igcc_ = igcc
+            iexch_ = get_iexch()
+            icorr_ = get_icorr()
+            igcx_ =  get_igcx()
+            igcc_ =  get_igcc()
           else
-            if ( iexch_ /= iexch .or. icorr_ /= icorr .or. &
-                 igcx_  /= igcx  .or.  igcc_ /= igcc ) then
+            if ( iexch_ /= get_iexch() .or. icorr_ /= get_icorr() .or. &
+                 igcx_  /= get_igcx()  .or. igcc_ /= get_igcc() ) then
                CALL errore( 'readpp','inconsistent DFT read',is)
             end if
           end if
@@ -761,7 +762,7 @@ subroutine upf2internal ( upf, is, ierr )
                    lll, nbeta, kkbeta,  nqlc, nqf, betar, dion, tvanp
   use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc, numeric
   use ions_base, only: zv
-  use funct, only: dft, which_dft, ishybrid
+  use funct, only: set_dft_from_name, ishybrid
   !
   use pseudo_types
   !
@@ -781,8 +782,7 @@ subroutine upf2internal ( upf, is, ierr )
   nlcc(is)  = .FALSE.
   nlcc(is)  = upf%nlcc
   !
-  dft = upf%dft
-  call which_dft( upf%dft )
+  call set_dft_from_name( upf%dft )
   IF ( ishybrid ) &
      CALL errore( 'read_pseudo', 'HYBRID XC not implemented in CPV', 1 )
 
@@ -854,7 +854,7 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
                    lll, nbeta, kkbeta,  nqlc, nqf, betar, dion, tvanp
   use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc, numeric
   use ions_base, only: zv
-  use funct, only: dft, which_dft, ishybrid
+  use funct, only: set_dft_from_name, ishybrid
   !
   use pseudo_types
   !
@@ -881,8 +881,7 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
   nqf (is)   = 0 ! upf%nqf
   if (mesh(is) > ndmx ) call errore('read_pseudo','increase mmaxx',mesh(is))
   !
-  dft = TRIM( xc_type )
-  call which_dft( TRIM( xc_type ) )
+  call set_dft_from_name( TRIM( xc_type ) )
   IF ( ishybrid ) &
      CALL errore( 'read_pseudo', 'HYBRID XC not implemented in CPV', 1 )
 
@@ -1216,7 +1215,7 @@ END SUBROUTINE read_atomic_cc
       use uspp_param, only: betar, dion, vloc_at, lll, nbeta, kkbeta
       use qrl_mod, only: cmesh
       use bhs, only: rcl, rc2, bl, al, wrc1, lloc, wrc2, rc1
-      use funct, only: dft, which_dft, ishybrid
+      use funct, only: set_dft_from_name, ishybrid
       use ions_base, only: zv
       use io_global, only: stdout
 
@@ -1228,6 +1227,7 @@ END SUBROUTINE read_atomic_cc
       integer meshp, ir, ib, il, i, j, jj
       real(8), allocatable:: fint(:), vnl(:)
       real(8) rdum, alpha, z, zval, cmeshp, exfact
+      character(len=20) :: dft_name
 !
 ! nlcc is unfortunately not read from file
 !
@@ -1238,11 +1238,10 @@ END SUBROUTINE read_atomic_cc
          call errore('readpp','wrong potential read',15)
       endif
 
-      call dftname_cp (nint(exfact), dft)
-      call which_dft( dft )
+      call dftname_cp (nint(exfact), dft_name)
+      call set_dft_from_name( dft_name )
       IF ( ishybrid ) &
          CALL errore( 'readpp', 'HYBRID XC not implemented in CPV', 1 )
-
 !
       if(lloc(is).eq.2)then 
          lll(1,is)=0
@@ -1353,7 +1352,7 @@ END SUBROUTINE read_atomic_cc
       WRITE( stdout,3000) z,zv(is)
 3000  format(2x,'bhs pp for z=',f3.0,2x,'zv=',f3.0)
 
-      WRITE( stdout,'(2x,a20)') dft
+      WRITE( stdout,'(2x,a20)') dft_name
       WRITE( stdout,3002) lloc(is)-1 
 3002  format(2x,'   local angular momentum: l=',i3)
       WRITE( stdout,3005) nbeta(is)
@@ -1403,9 +1402,9 @@ END SUBROUTINE read_atomic_cc
       use uspp_param, only: nqlc, qfunc, vloc_at, rinner,&
                        qqq, nbeta, nbrx, betar, dion, lll, kkbeta, tvanp
       use qrl_mod, only: qrl
-      use funct, only: dft, iexch, icorr, igcx, igcc
       use ions_base, only: zv
       use io_global, only: stdout
+      use funct, only:  set_dft_from_indices
 !
       ! the above module variables has no dependency from iosys
 
@@ -1419,6 +1418,8 @@ END SUBROUTINE read_atomic_cc
 !
 !    Local variables
 !
+      integer  iexch, icorr, igcx, igcc
+
       integer                                                           &
      &       nb,mb,     &! counters on beta functions
      &       n,         &! counter on mesh points
@@ -1460,11 +1461,10 @@ END SUBROUTINE read_atomic_cc
          WRITE( stdout,'('' RRKJ3 norm-conserving PP for '',a2)') titleps(7:8)
       endif
       read( iunps, '(2l5)',err=100, iostat=ios ) rel, nlcc(is)
-      read( iunps, '(4i5)',err=100, iostat=ios )  iexch, icorr, igcx,  &
-           igcc
-!
-      dft = '?'
-!
+      read( iunps, '(4i5)',err=100, iostat=ios )  iexch, icorr, igcx,  igcc
+
+      call set_dft_from_indices(iexch,icorr,igcx,igcc)
+
       read( iunps, '(2e17.11,i5)') zv(is), etotps, lmax
       if ( zv(is) < 1 .or. zv(is) > 100 )                               &
      &     call errore('readAdC','wrong potential read',is)
@@ -1656,7 +1656,7 @@ END SUBROUTINE read_atomic_cc
       use uspp_param, only: qfunc, qfcoef, qqq, betar, dion, vloc_at, &
            rinner, kkbeta, lll, nbeta, nqf, nqlc, tvanp
       use qrl_mod, only: cmesh, qrl
-      use funct, only: dft, which_dft, ishybrid
+      use funct, only: set_dft_from_name, ishybrid
       use atom, only: nchi, chi, lchi, r, rab, mesh, nlcc, rho_atc
       use cvan, only: oldvan
       use ions_base, only: zv
@@ -1709,10 +1709,9 @@ END SUBROUTINE read_atomic_cc
      &       iv,            &! beta function counter
      &       ir              ! mesh points counter
 !
-      character(len=20)                                                &
-     &        title
-      character(len=60)                                                &
-     &        fmt            ! format string
+      character(len=20) title
+      character(len=60) fmt ! format string
+      character(len=20) dft_name
 !
 !     We first check the input variables
 !
@@ -1738,8 +1737,8 @@ END SUBROUTINE read_atomic_cc
 ! convert from "our" conventions to Vanderbilt conventions
 !
 
-      call dftname_cp (nint(exfact), dft)
-      call which_dft( dft )
+      call dftname_cp (nint(exfact), dft_name)
+      call set_dft_from_name( dft_name )
       IF ( ishybrid ) &
          CALL errore( 'readvan', 'HYBRID XC not implemented in CPV', 1 )
 
@@ -1988,7 +1987,7 @@ END SUBROUTINE read_atomic_cc
       WRITE( stdout,300) 'pseudo potential version', iver(1),                 &
      &     iver(2), iver(3)
 300   format (4x,'|  ',1a30,3i4,13x,' |' /4x,60('-'))
-      WRITE( stdout,400) title, dft
+      WRITE( stdout,400) title, dft_name
 400   format (4x,'|  ',2a20,' exchange-corr  |')
       WRITE( stdout,500) z(is), is, zv(is), exfact
 500   format (4x,'|  z =',f5.0,4x,'zv(',i2,') =',f5.0,4x,'exfact =',    &

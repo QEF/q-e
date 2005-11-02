@@ -15,7 +15,7 @@ subroutine ld1_setup
   !
   !
   use ld1inc
-  use funct
+  use funct, only : get_iexch, ismeta !, set_dft_from_name
   implicit none
 
   integer n, n1, nc, nwf0, m, nwftot, ios
@@ -24,12 +24,12 @@ subroutine ld1_setup
   !     transform dft in a series of codes for the exchange and
   !     correlation routine
   !
-  if (iswitch /= 2 .or. pseudotype == 1) call which_dft(dft)
+!  if (iswitch /= 2 .or. pseudotype == 1) call set_dft_from_name(dft)
   !
   if (ismeta) call errore('setyp','meta-GGA not implemented yet', 1)
-  hf  = iexch.eq.5
+  hf  = get_iexch().eq.5
   if (hf)     call errore('setup','HF not implemented yet',1)
-  oep = iexch.eq.4
+  oep = get_iexch().eq.4
   if (oep.and.iswitch>1) &
      call errore('setup','OEP is implemented only for all-electron calc.',1)
   if (oep.and.rel>0) &

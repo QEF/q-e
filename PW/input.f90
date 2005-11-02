@@ -22,6 +22,7 @@ SUBROUTINE iosys()
   !
   !
   USE kinds,         ONLY : DP
+  USE funct,         ONLY : enforce_input_dft
   USE constants,     ONLY : au, eV_to_kelvin, pi, rytoev, &
                             uakbar, amconv, bohr_radius_angs
   USE mp_global,     ONLY : npool, nproc_pool
@@ -199,6 +200,7 @@ SUBROUTINE iosys()
                                nspin, ecfixed, qcutz, q2sigma, &
                                lda_plus_U, Hubbard_U, Hubbard_alpha, &
                                starting_ns_eigenvalue, U_projection_type, &
+                               input_dft, &
 #if defined (EXX)                               
                                lexx, nqx1, nqx2, nqx3, yukawa, &
 #endif
@@ -270,6 +272,8 @@ SUBROUTINE iosys()
   CALL read_namelists( 'PW' )
   !
   ! ... translate from input to internals of PWscf, various checks
+  !
+  if (input_dft /='none') call enforce_input_dft (input_dft)
   !
   CALL check_stop_init( max_seconds )
   !
