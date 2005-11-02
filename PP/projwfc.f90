@@ -183,7 +183,7 @@ SUBROUTINE projwave( )
   USE ions_base, ONLY : nat, ityp, atm, ntyp => nsp
   USE basis,     ONLY : natomwfc
   USE cell_base 
-  USE constants, ONLY: rytoev 
+  USE constants, ONLY: rytoev, eps4
   USE gvect 
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE ldaU 
@@ -454,15 +454,21 @@ SUBROUTINE projwave( )
      DO ik = 1, nkstot 
         WRITE( stdout, '(/" k = ",3f14.10)') (xk (i, ik) , i = 1, 3) 
         DO ibnd = 1, nbnd 
-           WRITE( stdout, '(5x,"e = ",f14.8," eV")') et (ibnd, ik) * rytoev 
+           WRITE( stdout, '(5x,"e = ",f11.5," eV")') et (ibnd, ik) * rytoev 
+!           previously eigenvalues were printed with 8 decimal digits ...
+!           WRITE( stdout, '(5x,"e = ",f14.8," eV")') et (ibnd, ik) * rytoev 
            ! 
            ! sort projections by magnitude, in decreasing order 
+           ! 
+           ! projections are printed to sdout with 3 decimal digids.
+           ! projections differing by less than 1.d-4 are considered equal 
+           ! so that output does not depend on phase of the moon
            ! 
            DO nwfc = 1, natomwfc 
               INDEX (nwfc) = 0 
               proj1 (nwfc) = - proj (nwfc, ibnd, ik) 
            END DO
-           CALL hpsort (natomwfc, proj1, index) 
+           CALL hpsort_eps (natomwfc, proj1, index, eps4 ) 
            ! 
            !  only projections that are larger than 0.001 are written 
            ! 
