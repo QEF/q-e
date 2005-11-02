@@ -120,6 +120,9 @@ subroutine hpsort_eps (n, ra, ind, eps)
           ! compare to better underling
           if ( hslt( ra (j),  ra (j + 1) ) ) then  
              j = j + 1  
+          else if ( .not. hslt( ra (j+1),  ra (j) ) ) then
+             ! this means ra(j) == ra(j+1) within tollerance
+             if (ind (j) .lt.ind (j + 1) ) j = j + 1
           endif
        endif
        ! demote rra
@@ -128,7 +131,20 @@ subroutine hpsort_eps (n, ra, ind, eps)
           ind (i) = ind (j)  
           i = j  
           j = j + j  
-       else  
+       else if ( .not. hslt ( ra(j) , rra ) ) then
+          !this means rra == ra(j) within tollerance
+          ! demote rra
+          if (iind.lt.ind (j) ) then
+             ra (i) = ra (j)
+             ind (i) = ind (j)
+             i = j
+             j = j + j
+          else
+             ! set j to terminate do-while loop
+             j = ir + 1
+          endif
+          ! this is the right place for rra
+       else
           ! set j to terminate do-while loop
           j = ir + 1  
        endif
