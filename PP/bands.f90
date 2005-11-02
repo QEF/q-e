@@ -239,6 +239,7 @@ SUBROUTINE punch_band (filband, spin_component)
                     END IF
                  END IF
               END DO
+              ok (il (ibnd) ) = 1
            ELSE
               old = (0.d0, 0.d0)
               DO ig = 1, npwold
