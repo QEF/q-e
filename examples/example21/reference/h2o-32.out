@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.0 - Tue Sep 6 13:11:13 CEST 2005                          
+     Version: 3.0 - Mon Oct 24 02:34:10 CEST 2005                         
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:38:53  17Oct2005               
+   This run was started on:   3:38:41   2Nov2005               
 
    Serial Build
 Warning: card  1 4 ignored
@@ -155,7 +155,7 @@ Warning: card  1 4 ignored
    Ions are not allowed to move
    Ionic position (from input)
    sorted by specie, and converted to real a.u. coordinates
-   Species   1 atoms =   32 mass =     29166.24 (a.u.),        16.00 (uma) rcmax =   0.80 (a.u.)
+   Species   1 atoms =   32 mass =     29166.24 (a.u.),        16.00 (amu) rcmax =   0.80 (a.u.)
         6.232830     7.195170     3.174230
        12.460065     1.439780     1.857540
         9.127310     5.132480    18.023360
@@ -188,7 +188,7 @@ Warning: card  1 4 ignored
         6.926610    16.342995     9.136635
        14.761475    15.460850    13.155710
         2.678140    18.461635    17.338905
-   Species   2 atoms =   64 mass =      1837.29 (a.u.),         1.01 (uma) rcmax =   0.50 (a.u.)
+   Species   2 atoms =   64 mass =      1837.29 (a.u.),         1.01 (amu) rcmax =   0.50 (a.u.)
         6.978830     6.266400     1.732585
         5.874750     6.016490     4.610280
        17.540325     3.364460     8.422340
@@ -473,7 +473,7 @@ Warning: card  1 4 ignored
    ETOT   [A.U.] - Scf total energy (Kohn-Sham hamiltonian)
    ENTHAL [A.U.] - Enthalpy ( ETOT + P * V )
    ECONS  [A.U.] - Enthalpy + kinetic energy of ions and cell
-   ETTT   [A.U.] - Constant of motion for the CP lagrangian
+   ECONT  [A.U.] - Constant of motion for the CP lagrangian
  
 
 
@@ -1215,18 +1215,18 @@ Warning: card  1 4 ignored
     10  34.84214    0.0    0.0   -260.36413   -260.36413   -260.36413   -225.52199
  
    Execution time statistics (SEC)
-   Mean time for MD step ..      47.360
+   Mean time for MD step ..      45.606
  
    Wave functions FFT execution time statistics
    total number of ffts ..      2112
-   average time per fft ..   0.17307
-   total fft time    ..... 365.53117
+   average time per fft ..   0.16615
+   total fft time    ..... 350.90748
  
  
    Charge density and potential FFT execution statistics
    total number of ffts ..        99
-   average time per fft ..   0.38020
-   total fft time    .....  37.63988
+   average time per fft ..   0.36120
+   total fft time    .....  35.75836
  
 
    PC3FFT TIMINGS
@@ -1237,8 +1237,8 @@ Warning: card  1 4 ignored
    ---------------
              KS.1  integrated charge :        1.00000
              KS.4  integrated charge :        1.00000
-   time for KS ortho     =    48.00
-   time for KS print out =    27.16
+   time for KS ortho     =    48.59
+   time for KS print out =    27.46
 
 
    Averaged Physical Quantities
@@ -1257,12 +1257,12 @@ Warning: card  1 4 ignored
  
    mp: high_watermark (bytes):           12
  
-     CP           : 10m 6.44s CPU time
+     CP           :  9m52.75s CPU time
 
  
-   This run was terminated on:   3:49: 3  17Oct2005            
+   This run was terminated on:   3:48:35   2Nov2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:   610.0
+   ELAPSED SECONDS:   594.0
    JOB DONE.
 =------------------------------------------------------------------------------=
