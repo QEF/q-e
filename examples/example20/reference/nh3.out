@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.0 - Tue Sep 6 13:11:13 CEST 2005                          
+     Version: 3.0 - Mon Oct 24 02:34:10 CEST 2005                         
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:35:45  17Oct2005               
+   This run was started on:   3:35:36   2Nov2005               
 
    Serial Build
 
@@ -144,9 +144,9 @@
    Zero initial momentum for ions
    Ionic position (from input)
    sorted by specie, and converted to real a.u. coordinates
-   Species   1 atoms =    1 mass =     29166.24 (a.u.),        16.00 (uma) rcmax =   0.80 (a.u.)
+   Species   1 atoms =    1 mass =     29166.24 (a.u.),        16.00 (amu) rcmax =   0.80 (a.u.)
         0.009900     0.009900     0.000000
-   Species   2 atoms =    3 mass =      1822.89 (a.u.),         1.00 (uma) rcmax =   0.80 (a.u.)
+   Species   2 atoms =    3 mass =      1822.89 (a.u.),         1.00 (amu) rcmax =   0.80 (a.u.)
         1.918600    -0.244300    -0.220800
        -0.230500     1.921400    -0.214400
        -0.179500    -0.180700     1.923600
@@ -281,7 +281,7 @@
    ETOT   [A.U.] - Scf total energy (Kohn-Sham hamiltonian)
    ENTHAL [A.U.] - Enthalpy ( ETOT + P * V )
    ECONS  [A.U.] - Enthalpy + kinetic energy of ions and cell
-   ETTT   [A.U.] - Constant of motion for the CP lagrangian
+   ECONT  [A.U.] - Constant of motion for the CP lagrangian
  
 
 
@@ -1218,22 +1218,22 @@
    nfi     ekinc  temph  tempp         etot       enthal        econs         ettt
    100   0.00012    0.0    0.0    -11.71466    -11.71466    -11.71466    -11.71454
 
-   RESTART FILE WRITTEN COMPLETED IN    5.131 SEC.
+   RESTART FILE WRITTEN COMPLETED IN    5.205 SEC.
 
  
    Execution time statistics (SEC)
-   Mean time for MD step ..       1.827
+   Mean time for MD step ..       1.794
  
    Wave functions FFT execution time statistics
    total number of ffts ..       606
-   average time per fft ..   0.05558
-   total fft time    .....  33.68031
+   average time per fft ..   0.05373
+   total fft time    .....  32.55894
  
  
    Charge density and potential FFT execution statistics
    total number of ffts ..       909
-   average time per fft ..   0.11113
-   total fft time    ..... 101.01625
+   average time per fft ..   0.10824
+   total fft time    .....  98.39409
  
 
    PC3FFT TIMINGS
@@ -1257,12 +1257,12 @@
  
    mp: high_watermark (bytes):           12
  
-     CP           :  3m 6.86s CPU time
+     CP           :  3m 3.96s CPU time
 
  
-   This run was terminated on:   3:38:53  17Oct2005            
+   This run was terminated on:   3:38:41   2Nov2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:   188.0
+   ELAPSED SECONDS:   185.0
    JOB DONE.
 =------------------------------------------------------------------------------=
