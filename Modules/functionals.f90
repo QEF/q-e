@@ -361,28 +361,28 @@ CONTAINS
      return
   end subroutine enforce_input_dft
 
-  function get_iexch
+  function get_iexch ()
      integer get_iexch
      get_iexch = iexch
      return
   end function get_iexch
-  function get_icorr
+  function get_icorr ()
      integer get_icorr
      get_icorr = icorr
      return
   end function get_icorr
-  function get_igcx
+  function get_igcx ()
      integer get_igcx
      get_igcx = igcx
      return
-  end function get_igcx
-  function get_igcc
+  end function get_igcx 
+  function get_igcc ()
      integer get_igcc
      get_igcc = igcc
      return
-  end function get_igcc
+  end function get_igcc 
 
-  function get_dft_name
+  function get_dft_name ()
      character (len=20) :: get_dft_name
      get_dft_name = dft
      return
