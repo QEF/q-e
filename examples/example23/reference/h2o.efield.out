@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.0 - Tue Sep 6 13:11:13 CEST 2005                          
+     Version: 3.0 - Mon Oct 24 02:34:10 CEST 2005                         
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   4:34:36  17Oct2005               
+   This run was started on:   4:33:34   2Nov2005               
 
    Serial Build
 
@@ -126,9 +126,9 @@
    ion dynamics with fricp =  0.0000 and greasp =  1.0000
    Ionic position (from input)
    sorted by specie, and converted to real a.u. coordinates
-   Species   1 atoms =    1 mass =     29166.24 (a.u.),        16.00 (uma) rcmax =   0.50 (a.u.)
+   Species   1 atoms =    1 mass =     29166.24 (a.u.),        16.00 (amu) rcmax =   0.50 (a.u.)
         0.009900     0.009900     0.000000
-   Species   2 atoms =    2 mass =      1822.89 (a.u.),         1.00 (uma) rcmax =   0.50 (a.u.)
+   Species   2 atoms =    2 mass =      1822.89 (a.u.),         1.00 (amu) rcmax =   0.50 (a.u.)
         1.832500    -0.224300    -0.000100
        -0.224300     1.832500     0.000200
    Ionic position will be re-read from restart file
@@ -328,8 +328,9 @@
    ETOT   [A.U.] - Scf total energy (Kohn-Sham hamiltonian)
    ENTHAL [A.U.] - Enthalpy ( ETOT + P * V )
    ECONS  [A.U.] - Enthalpy + kinetic energy of ions and cell
-   ETTT   [A.U.] - Constant of motion for the CP lagrangian
+   ECONT  [A.U.] - Constant of motion for the CP lagrangian
  
+ FROM_RESTART_CP : F
 
    formf: eself=  30.31961
    formf:     vps(g=0)=  -0.0002325     rhops(g=0)=  -0.0007500
@@ -645,41 +646,41 @@
               averaged quantities :
          ekinc          ekin          epot          etot     tempp
        0.00010       7.82354     -29.54065     -17.20637      26.0
-     initialize   :     2.61s CPU
-     total_time   :   367.13s CPU (     200 calls,   1.836 s avg)
+     initialize   :     2.64s CPU
+     total_time   :   368.69s CPU (     200 calls,   1.843 s avg)
      formf        :     0.18s CPU
-     rhoofr       :    70.70s CPU (     200 calls,   0.354 s avg)
-     vofrho       :   216.02s CPU (     200 calls,   1.080 s avg)
-     calphi       :     0.97s CPU (     200 calls,   0.005 s avg)
-     ortho        :     2.31s CPU (     200 calls,   0.012 s avg)
-     updatc       :     0.61s CPU (     200 calls,   0.003 s avg)
-     newd         :     1.28s CPU (     200 calls,   0.006 s avg)
-     calbec       :     0.02s CPU (     201 calls,   0.000 s avg)
-     prefor       :     0.96s CPU (     400 calls,   0.002 s avg)
-     strucf       :     1.29s CPU (     201 calls,   0.006 s avg)
+     rhoofr       :    70.96s CPU (     200 calls,   0.355 s avg)
+     vofrho       :   216.67s CPU (     200 calls,   1.083 s avg)
+     calphi       :     1.04s CPU (     200 calls,   0.005 s avg)
+     ortho        :     2.23s CPU (     200 calls,   0.011 s avg)
+     updatc       :     0.70s CPU (     200 calls,   0.003 s avg)
+     newd         :     1.32s CPU (     200 calls,   0.007 s avg)
+     calbec       :     0.01s CPU (     201 calls,   0.000 s avg)
+     prefor       :     0.87s CPU (     400 calls,   0.002 s avg)
+     strucf       :     1.32s CPU (     201 calls,   0.007 s avg)
      nlfl         :     0.00s CPU (     200 calls,   0.000 s avg)
-     nlfq         :     2.77s CPU (     200 calls,   0.014 s avg)
-     rhov         :    17.62s CPU (     200 calls,   0.088 s avg)
-     nlsm1        :     1.63s CPU (     601 calls,   0.003 s avg)
-     nlsm2        :     2.77s CPU (     200 calls,   0.014 s avg)
-     fft          :   119.14s CPU (    1800 calls,   0.066 s avg)
-     ffts         :    26.22s CPU (     400 calls,   0.066 s avg)
-     fftw         :    40.87s CPU (    1200 calls,   0.034 s avg)
-     fftb         :     1.30s CPU (   15030 calls,   0.000 s avg)
-     rsg          :     0.03s CPU (     200 calls,   0.000 s avg)
+     nlfq         :     2.73s CPU (     200 calls,   0.014 s avg)
+     rhov         :    17.74s CPU (     200 calls,   0.089 s avg)
+     nlsm1        :     1.72s CPU (     601 calls,   0.003 s avg)
+     nlsm2        :     2.72s CPU (     200 calls,   0.014 s avg)
+     fft          :   120.46s CPU (    1800 calls,   0.067 s avg)
+     ffts         :    26.68s CPU (     400 calls,   0.067 s avg)
+     fftw         :    40.49s CPU (    1200 calls,   0.034 s avg)
+     fftb         :     1.32s CPU (   15030 calls,   0.000 s avg)
+     rsg          :     0.02s CPU (     200 calls,   0.000 s avg)
 
 
 ======================== end cp ========================
 
 
  
-     CP           :  6m19.52s CPU time
+     CP           :  6m20.97s CPU time
 
  
-   This run was terminated on:   4:40:56  17Oct2005            
+   This run was terminated on:   4:39:55   2Nov2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:   380.0
+   ELAPSED SECONDS:   381.0
    JOB DONE.
 =------------------------------------------------------------------------------=
 
