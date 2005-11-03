@@ -7,7 +7,7 @@ MODS = ../Modules/kind.o ../Modules/parameters.o ../Modules/pseudo_types.o \
        ../Modules/parser.o ../Modules/io_global.o ../Modules/mp_global.o \
        ../Modules/mp.o ../Modules/parallel_include.o 
 SPLINE = ../Modules/splinelib.o
-FUNCT = ../Modules/functionals.o
+FUNCT = ../Modules/functionals.o ../Modules/io_global.o
 TLDEPS = mods libs libiotk
 
 all : tldeps cpmd2upf.x fhi2upf.x fpmd2upf.x ncpp2upf.x oldcp2upf.x \
@@ -19,8 +19,8 @@ cpmd2upf.x : cpmd2upf.o $(OBJS) $(LIBOBJS)
 fhi2upf.x : fhi2upf.o $(OBJS) $(FUNCT) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ fhi2upf.o $(OBJS) $(FUNCT) $(LIBOBJS) $(LIBS)
 
-fpmd2upf.x : fpmd2upf.o $(OBJS) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ fpmd2upf.o $(OBJS) $(LIBOBJS) $(MODS) $(LIBS)
+fpmd2upf.x : fpmd2upf.o $(OBJS) $(MODS) $(LIBOBJS)
+	$(MPIF90) $(LDFLAGS) -o $@ fpmd2upf.o $(OBJS) $(MODS) $(LIBOBJS) $(LIBS)
 
 ncpp2upf.x : ncpp2upf.o $(OBJS) $(FUNCT) $(LIBOBJS) 
 	$(MPIF90) $(LDFLAGS) -o $@ ncpp2upf.o $(OBJS) $(FUNCT) $(LIBOBJS) $(LIBS)
