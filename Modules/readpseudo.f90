@@ -140,7 +140,7 @@ subroutine scan_begin (iunps, string, rew)
 
   ios = 0
   if (rew) rewind (iunps)  
-  do while (ios.eq.0)  
+  do while (ios==0)  
      read (iunps, *, iostat = ios, err = 300) rstring  
      if (matches ("<PP_"//string//">", rstring) ) return  
   enddo
@@ -153,7 +153,7 @@ subroutine scan_end (iunps, string)
   !---------------------------------------------------------------------
   implicit none
   ! Unit of the input file
-  integer :: iunps, ios
+  integer :: iunps
   ! Label to be matched
   character (len=*) :: string  
   ! String read from file
@@ -161,11 +161,11 @@ subroutine scan_end (iunps, string)
   logical, external :: matches
   logical :: rew
 
-  read (iunps, '(a)', iostat = ios, err = 300) rstring  
+  read (iunps, '(a)', end = 300, err = 300) rstring  
   if (matches ("</PP_"//string//">", rstring) ) return  
   return
 300 call errore ('scan_end', &
-       'No '//string//' block end statement, possibly corrupted file',  - 1)
+       'No '//string//' block end statement, possibly corrupted file',  -1)
 end subroutine scan_end
 !
 !---------------------------------------------------------------------
@@ -182,16 +182,16 @@ subroutine read_pseudo_header (upf, iunps)
   integer :: iunps  
   !
   integer :: is, ierr  
-  integer :: nb, ios, nw  
+  integer :: nb, nw  
   character (len=80) :: dummy  
   logical, external :: matches
 
   ! Version number (presently ignored)
-  read (iunps, *, err = 100, iostat = ios) upf%nv , dummy  
+  read (iunps, *, err = 100, end = 100) upf%nv , dummy  
   ! Element label
-  read (iunps, *, err = 100, iostat = ios) upf%psd , dummy  
+  read (iunps, *, err = 100, end = 100) upf%psd , dummy  
   ! Type of pseudo
-  read (iunps, *, err = 100, iostat = ios) upf%typ  
+  read (iunps, *, err = 100, end = 100) upf%typ  
   if (matches (upf%typ, "US") ) then
      upf%tvanp = .true.  
   else if (matches (upf%typ, "NC") ) then
@@ -200,17 +200,17 @@ subroutine read_pseudo_header (upf, iunps)
      call errore ('read_pseudo_header', 'unknown pseudo type', 1)
   endif
 
-  read (iunps, *, err = 100, iostat = ios) upf%nlcc , dummy  
+  read (iunps, *, err = 100, end = 100) upf%nlcc , dummy  
 
-  read (iunps, '(a20,t24,a)', err = 100, iostat = ios) upf%dft, dummy  
+  read (iunps, '(a20,t24,a)', err = 100, end = 100) upf%dft, dummy  
 
   read (iunps, * ) upf%zp , dummy  
   read (iunps, * ) upf%etotps, dummy  
   read (iunps, * ) upf%ecutwfc, upf%ecutrho
   read (iunps, * ) upf%lmax , dummy  
-  read (iunps, *, err = 100, iostat = ios) upf%mesh , dummy  
-  read (iunps, *, err = 100, iostat = ios) upf%nwfc, upf%nbeta , dummy
-  read (iunps, '(a)', err = 100, iostat = ios) dummy
+  read (iunps, *, err = 100, end = 100) upf%mesh , dummy  
+  read (iunps, *, err = 100, end = 100) upf%nwfc, upf%nbeta , dummy
+  read (iunps, '(a)', err = 100, end = 100) dummy
   ALLOCATE( upf%els( upf%nwfc ), upf%lchi( upf%nwfc ), upf%oc( upf%nwfc ) )
   do nw = 1, upf%nwfc  
      read (iunps, * ) upf%els (nw), upf%lchi (nw), upf%oc (nw)  
@@ -218,7 +218,7 @@ subroutine read_pseudo_header (upf, iunps)
 
   return  
 
-100  call errore ('read_pseudo_header', 'Reading pseudo file', abs (ios))
+100  call errore ('read_pseudo_header', 'Reading pseudo file', 1 )
 end subroutine read_pseudo_header
 
 !---------------------------------------------------------------------
@@ -234,7 +234,7 @@ subroutine read_pseudo_mesh (upf, iunps)
   integer :: iunps  
   TYPE (pseudo_upf), INTENT(INOUT) :: upf
   !
-  integer :: ir, ios
+  integer :: ir
   character (len=75) :: dummy  
 
   ALLOCATE( upf%r( 0:upf%mesh ), upf%rab( 0:upf%mesh ) )
@@ -242,16 +242,16 @@ subroutine read_pseudo_mesh (upf, iunps)
   upf%rab = 0.0d0
 
   call scan_begin (iunps, "R", .false.)  
-  read (iunps, *, err = 100, iostat = ios) (upf%r(ir), ir=1,upf%mesh )
+  read (iunps, *, err = 100, end = 100) (upf%r(ir), ir=1,upf%mesh )
   call scan_end (iunps, "R")  
   call scan_begin (iunps, "RAB", .false.)  
-  read (iunps, *, err = 101, iostat = ios) (upf%rab(ir), ir=1,upf%mesh )
+  read (iunps, *, err = 101, end = 101) (upf%rab(ir), ir=1,upf%mesh )
   call scan_end (iunps, "RAB")  
 
   return  
 
-100 call errore ('read_pseudo_mesh', 'Reading pseudo file (R) for '//upf%psd, abs (ios) )  
-101 call errore ('read_pseudo_mesh', 'Reading pseudo file (RAB) for '//upf%psd, abs (ios) )  
+100 call errore ('read_pseudo_mesh', 'Reading pseudo file (R) for '//upf%psd,1)
+101 call errore ('read_pseudo_mesh', 'Reading pseudo file (RAB) for '//upf%psd,2)  
 end subroutine read_pseudo_mesh
 
 
@@ -267,16 +267,16 @@ subroutine read_pseudo_nlcc (upf, iunps)
   integer :: iunps  
   TYPE (pseudo_upf), INTENT(INOUT) :: upf
   !
-  integer :: ir, ios
+  integer :: ir
   !
   ALLOCATE( upf%rho_atc( 0:upf%mesh ) )
   upf%rho_atc = 0.0d0
 
-  read (iunps, *, err = 100, iostat = ios) (upf%rho_atc(ir), ir=1,upf%mesh )
+  read (iunps, *, err = 100, end = 100) (upf%rho_atc(ir), ir=1,upf%mesh )
   !
   return
 
-100 call errore ('read_pseudo_nlcc', 'Reading pseudo file', abs (ios) )
+100 call errore ('read_pseudo_nlcc', 'Reading pseudo file', 1)
   return
 end subroutine read_pseudo_nlcc
 
@@ -292,17 +292,17 @@ subroutine read_pseudo_local (upf, iunps)
   integer :: iunps  
   TYPE (pseudo_upf), INTENT(INOUT) :: upf
   !
-  integer :: ir, ios
+  integer :: ir
   character (len=75) :: dummy
   !
   ALLOCATE( upf%vloc( 0:upf%mesh ) )
   upf%vloc = 0.0d0
 
-  read (iunps, *, err=100, iostat=ios) (upf%vloc(ir) , ir=1,upf%mesh )
+  read (iunps, *, err=100, end=100) (upf%vloc(ir) , ir=1,upf%mesh )
 
   return
 
-100 call errore ('read_pseudo_local','Reading pseudo file', abs(ios) )
+100 call errore ('read_pseudo_local','Reading pseudo file', 1)
   return
 end subroutine read_pseudo_local
 
@@ -357,10 +357,10 @@ subroutine read_pseudo_nl (upf, iunps)
 
   do nb = 1, upf%nbeta 
      call scan_begin (iunps, "BETA", .false.)  
-     read (iunps, *, err = 100, iostat = ios) idum, upf%lll(nb), dummy
-     read (iunps, '(i6)', err = 100, iostat = ios) ikk  
+     read (iunps, *, err = 100, end = 100) idum, upf%lll(nb), dummy
+     read (iunps, '(i6)', err = 100, end = 100) ikk  
      upf%kkbeta(nb) = ikk
-     read (iunps, *, err = 100, iostat = ios) (upf%beta(ir,nb), ir=1,ikk)
+     read (iunps, *, err = 100, end = 100) (upf%beta(ir,nb), ir=1,ikk)
 
      read (iunps, '(2x,2f6.2)', err=200,iostat=ios) upf%rcut(nb), upf%rcutus(nb)
      read (iunps, '(2x,a2)', err=200,iostat=ios) upf%els_beta(nb)
@@ -370,9 +370,9 @@ subroutine read_pseudo_nl (upf, iunps)
 
 
   call scan_begin (iunps, "DIJ", .false.)  
-  read (iunps, *, err = 100, iostat = ios) upf%nd, dummy  
+  read (iunps, *, err = 101, end = 101) upf%nd, dummy  
   do icon = 1, upf%nd  
-     read (iunps, *, err = 100, iostat = ios) nb, mb, upf%dion(nb,mb)
+     read (iunps, *, err = 101, end = 101) nb, mb, upf%dion(nb,mb)
      upf%dion (mb,nb) = upf%dion (nb,mb)  
   enddo
   call scan_end (iunps, "DIJ")  
@@ -380,7 +380,7 @@ subroutine read_pseudo_nl (upf, iunps)
 
   if ( upf%tvanp ) then  
      call scan_begin (iunps, "QIJ", .false.)  
-     read (iunps, *, err = 100, iostat = ios) upf%nqf
+     read (iunps, *, err = 102, end = 102) upf%nqf
      upf%nqlc = 2 * upf%lmax  + 1
      ALLOCATE( upf%rinner( upf%nqlc ) )
      ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
@@ -392,30 +392,30 @@ subroutine read_pseudo_nl (upf, iunps)
      upf%qfcoef = 0.0d0
      if ( upf%nqf /= 0) then
         call scan_begin (iunps, "RINNER", .false.)  
-        read (iunps,*,err=100,iostat=ios) ( idum, upf%rinner(i), i=1,upf%nqlc )
+        read (iunps,*,err=103,end=103) ( idum, upf%rinner(i), i=1,upf%nqlc )
         call scan_end (iunps, "RINNER")  
      end if
      do nb = 1, upf%nbeta
         do mb = nb, upf%nbeta
 
-           read (iunps,*,err=100,iostat=ios) idum, idum, ldum, dummy
+           read (iunps,*,err=102,end=102) idum, idum, ldum, dummy
            !"  i    j   (l)"
            if (ldum /= upf%lll(mb) ) then
              call errore ('read_pseudo_nl','inconsistent angular momentum for Q_ij', 1)
            end if
 
-           read (iunps,*,err=100,iostat=ios) upf%qqq(nb,mb), dummy
+           read (iunps,*,err=104,end=104) upf%qqq(nb,mb), dummy
            ! "Q_int"
            upf%qqq(mb,nb) = upf%qqq(nb,mb)  
 
-           read (iunps, *, err=100, iostat=ios) (upf%qfunc(n,nb,mb), n=1,upf%mesh)
+           read (iunps, *, err=105, end=105) (upf%qfunc(n,nb,mb), n=1,upf%mesh)
            do n = 0, upf%mesh 
               upf%qfunc(n,mb,nb) = upf%qfunc(n,nb,mb)  
            enddo
 
            if ( upf%nqf > 0 ) then
               call scan_begin (iunps, "QFCOEF", .false.)  
-              read (iunps,*,err=100,iostat=ios) &
+              read (iunps,*,err=106,end=106) &
                         ( ( upf%qfcoef(i,lp,nb,mb), i=1,upf%nqf ), lp=1,upf%nqlc )
               call scan_end (iunps, "QFCOEF")  
            end if
@@ -439,7 +439,13 @@ subroutine read_pseudo_nl (upf, iunps)
 
   return  
 
-100 call errore ('read_pseudo_nl', 'Reading pseudo file', abs (ios) )  
+100 call errore ('read_pseudo_nl', 'Reading pseudo file (BETA)', 1 )  
+101 call errore ('read_pseudo_nl', 'Reading pseudo file (DIJ)',  2 )  
+102 call errore ('read_pseudo_nl', 'Reading pseudo file (QIJ)',  3 )
+103 call errore ('read_pseudo_nl', 'Reading pseudo file (RINNER)',4)
+104 call errore ('read_pseudo_nl', 'Reading pseudo file (qqq)',  5 )
+105 call errore ('read_pseudo_nl', 'Reading pseudo file (qfunc)',6 )
+106 call errore ('read_pseudo_nl', 'Reading pseudo file (qfcoef)',7)
 end subroutine read_pseudo_nl
 
 
@@ -456,18 +462,18 @@ subroutine read_pseudo_pswfc (upf, iunps)
   TYPE (pseudo_upf), INTENT(INOUT) :: upf
   !
   character (len=75) :: dummy  
-  integer :: nb, ir, ios 
+  integer :: nb, ir
 
   ALLOCATE( upf%chi( 0:upf%mesh, MAX( upf%nwfc, 1 ) ) )
   upf%chi = 0.0d0
   do nb = 1, upf%nwfc  
-     read (iunps, *, err=100, iostat=ios) dummy  !Wavefunction labels
-     read (iunps, *, err=100, iostat=ios) ( upf%chi(ir,nb), ir=1,upf%mesh )
+     read (iunps, *, err=100, end=100) dummy  !Wavefunction labels
+     read (iunps, *, err=100, end=100) ( upf%chi(ir,nb), ir=1,upf%mesh )
   enddo
 
   return  
 
-100 call errore ('read_pseudo_pswfc', 'Reading pseudo file', abs(ios))
+100 call errore ('read_pseudo_pswfc', 'Reading pseudo file', 1)
 end subroutine read_pseudo_pswfc
 
 !---------------------------------------------------------------------
@@ -482,15 +488,15 @@ subroutine read_pseudo_rhoatom (upf, iunps)
   integer :: iunps
   TYPE (pseudo_upf), INTENT(INOUT) :: upf
   !
-  integer :: ir, ios  
+  integer :: ir
   !
   ALLOCATE( upf%rho_at( 0:upf%mesh ) )
   upf%rho_at = 0.0d0
-  read (iunps,*,err=100,iostat=ios) ( upf%rho_at(ir), ir=1,upf%mesh )
+  read (iunps,*,err=100,end=100) ( upf%rho_at(ir), ir=1,upf%mesh )
   !
   return  
 
-100 call errore ('read_pseudo_rhoatom','Reading pseudo file',abs(ios))
+100 call errore ('read_pseudo_rhoatom','Reading pseudo file', 1)
 end subroutine read_pseudo_rhoatom
 !
 !---------------------------------------------------------------------
@@ -507,7 +513,7 @@ implicit none
 integer :: iunps
 
 TYPE (pseudo_upf), INTENT(INOUT) :: upf
-integer :: nb, ios
+integer :: nb
 
 ALLOCATE( upf%nn(upf%nwfc) )
 ALLOCATE( upf%epseu(upf%nwfc), upf%jchi(upf%nwfc) )
@@ -517,20 +523,20 @@ upf%nn=0
 upf%epseu=0.d0
 upf%jchi=0.d0
 do nb = 1, upf%nwfc
-  read (iunps, '(a2,2i3,2f6.2)',err=100,iostat=ios) upf%els(nb),  &
+  read (iunps, '(a2,2i3,2f6.2)',err=100,end=100) upf%els(nb),  &
        upf%nn(nb), upf%lchi(nb), upf%jchi(nb), upf%oc(nb)
 enddo
 
 upf%jjj=0.d0
 do nb = 1, upf%nbeta
-  read (iunps, '(i5,f6.2)', err=100,iostat=ios) upf%lll(nb), upf%jjj(nb)
+  read (iunps, '(i5,f6.2)', err=100,end=100) upf%lll(nb), upf%jjj(nb)
 enddo
 
 read(iunps, '(4f15.8)') upf%xmin, upf%rmax, upf%zmesh, upf%dx
 
 
 return
-100 call errore ('read_pseudo_addinfo','Reading pseudo file', abs(ios))
+100 call errore ('read_pseudo_addinfo','Reading pseudo file', 1)
 end subroutine read_pseudo_addinfo
 
 !=----------------------------------------------------------------------------=!

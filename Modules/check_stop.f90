@@ -7,7 +7,7 @@
 !
 !
 ! ... This module contains functions to check if the code should
-! ... be stopped smootly.
+! ... be smoothly stopped.
 ! ... In particular th function check_stop_now return .TRUE. if
 ! ... either the user has created a given file or if the 
 ! ... elapsed time is larger than max_seconds
