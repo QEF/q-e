@@ -1714,11 +1714,19 @@ phonon mode.
 This must be the same \textbf{q}-vector given in the input of
 \texttt{pw.x}.
 
-Notice that at $\mathbf{q}=0$ the non-analytic term of the
-dymamical matrix is absent, i.e. there is no LO-TO splitting
-in insulators. Use program \texttt{dynmat.x} to add the 
-LO-TO splitting, if you have calculated effective charges
-(option \texttt{epsil=.true.}).
+Notice that the dynamical matrix calculated by \texttt{ph.x}
+at $\mathbf{q}=0$ does not contain the non-analytic term
+occuring in polar materials, i.e. there is no LO-TO splitting
+in insulators. Moreover no Acoustic Sum Rule (ASR) is applied.
+In order to have the complete dynamical matrix at $\mathbf{q}=0$ 
+including the non-analytic terms, you need to calculate effective 
+charges by specifying option \texttt{epsil=.true.} to \texttt{ph.x}. 
+
+Use program \texttt{dynmat.x} to calculate the correct LO-TO 
+splitting, IR cross sections, and to impose various forms
+of ASR. If \texttt{ph.x} was instructed to calculate Raman 
+coefficients, \texttt{dynmat.x} will also calculate Raman cross 
+sections for a typical experimental setup.
 
 A sample phonon calculation is performed in Example 02.
 
@@ -1741,9 +1749,9 @@ to a distance that depends on the size of the grid of
 Program \texttt{matdyn.x} may be used to produce phonon modes and
 frequencies at any \textbf{q} using the Interatomic Force Constants
 file as input.
-Note that if you want to calculate LO-TO splitting and IR cross
-sections in insulators at $\mathbf{q}=0$ you should use program
-\texttt{dynmat.x} instead.
+Do not forget to specify \texttt{epsil=.true.} in the input data
+of \texttt{ph.x} if you want the correct TO-LO splitting in 
+polar materials. 
 
 See Example 06.
 
