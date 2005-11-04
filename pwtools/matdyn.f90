@@ -328,7 +328,8 @@ PROGRAM matdyn
            qh = SQRT(qhat(1)**2+qhat(2)**2+qhat(3)**2)
            IF (qh /= 0.d0) qhat(:) = qhat(:) / qh
            IF (qh /= 0.d0 .AND. .NOT. has_zstar) CALL infomsg  &
-                ('matdyn','non-analytic term for q=0 missing !', -1)
+                ('matdyn','Z* not found in file '//TRIM(flfrc)// &
+                          ', TO-LO splitting at q=0 will be absent!', -1)
            !
            CALL nonanal (nat, nat_blk, itau_blk, epsil, qhat, zeu, omega, dyn)
            !
