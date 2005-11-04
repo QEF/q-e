@@ -294,7 +294,7 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
   nnode=0  
   do n=1,ik+1
      if ( phis(n,ns) .ne. sign(phis(n,ns),phis(n+1,ns)) ) then
-        write(6,150) lam,ns,r(n)
+        if (iflag==1) write(6,150) lam,ns,r(n)
 150     format (5x,'l=',i4,' ns=',i4,' Node at ',f10.8)
         nnode=nnode+1
      endif
