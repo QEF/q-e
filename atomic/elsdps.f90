@@ -15,7 +15,7 @@
 !   gradient correction  allowed (A. Dal Corso fecit AD 1993)
 !
 use ld1inc
-use funct, only : get_igcx, get_igcc
+use funct, only : dft_is_gradient
 implicit none
       real(DP) :: &
              int_0_inf_dr,  &   ! the integral function
@@ -48,7 +48,7 @@ implicit none
 
       real(DP), parameter :: fourpi = 4.0_DP * 3.141592653589793_DP  
 
-      gga=get_igcx().ne.0.or.get_igcc().ne.0
+      gga=dft_is_gradient()
       allocate(vgc(ndm,2),stat=ierr)
       allocate(egc(ndm),stat=ierr)
       if (nlcc) allocate(egcc(ndm), stat=ierr)

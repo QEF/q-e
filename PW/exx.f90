@@ -16,11 +16,8 @@ module exx
   USE kinds,    ONLY : DP
   implicit none
 
-  logical:: lexx=.true. ! if .true. exx is used
-
   real (DP):: exxalfa=0.d0 ! 1 if exx, 0 elsewhere
   real (DP):: yukawa = 0.d0
-  logical:: exxstart=.false. !1 if initialited
   integer:: iunexx
   integer :: exx_nwordwfc
   !
@@ -352,6 +349,7 @@ contains
     USE symme,                ONLY : nsym, s, ftau
 
     use mp_global,            ONLY : nproc_pool
+    use funct,                ONLY : get_exx_fraction, start_exx, exx_is_active
 
     implicit none
     integer :: ios, ik,ibnd, i, j, k, ir, ri, rj, rk, isym, ikq
@@ -369,14 +367,13 @@ contains
     allocate(temppsic(nrxxs), psic(nrxxs), tempevc( npwx, nbnd ))
 
     exx_nwordwfc=2*nrxxs
-    if (.not.exxstart) then 
+    if (.not.exx_is_active()) then 
        iunexx = find_free_unit()
        call diropn(iunexx,'exx', exx_nwordwfc, exst) 
-
        exxdiv = exx_divergence() 
-       if (exxalfa == 0.d0) exxalfa = 0.25d0 !  1.d0
+       exxalfa = get_exx_fraction()
        write (*,*) " ! EXXALFA SET TO ", exxalfa
-       exxstart=.true.
+       call start_exx
     endif
 
     IF ( nks > 1 ) REWIND( iunigk )

@@ -166,7 +166,7 @@ CONTAINS
        zval, mesh, r, r2, sqr, dx, irc, ikk,                      &
        nbeta, lls, ocs, enls, psipaw, phis, betas, qvan, kindiff, &
        nlcc, aerhoc, psrhoc, aevtot,psvtot, do_write_dataset)
-    USE funct, only : get_iexch,get_icorr,get_igcx, get_igcc, dft_name
+    USE funct, only : get_iexch,get_icorr,get_igcx,get_igcc,dft_name
     IMPLICIT NONE
     TYPE(paw_t),   INTENT(OUT) :: pawset_
     REAL(dp), INTENT(IN)  :: zval
@@ -497,7 +497,7 @@ CONTAINS
   !
   SUBROUTINE compute_onecenter_energy ( totenergy_, veff_, &
        pawset_, vcharge_, nlcc_, ccharge_, nspin_, energies_ )
-    USE funct, ONLY: get_igcx, get_igcc
+    USE funct, ONLY: dft_is_gradient
     IMPLICIT NONE
     REAL(dp), INTENT(OUT) :: totenergy_       ! H+XC+DC
     REAL(dp), INTENT(OUT) :: veff_(ndm,2)     ! effective potential
@@ -554,7 +554,7 @@ CONTAINS
           aux(i)=exc_t(rh,rhc,lsd) *  rhovtot(i)
        END IF
     END DO
-    IF ((get_igcx()/=0).OR.(get_igcc()/=0)) THEN
+    IF ( dft_is_gradient() ) THEN
        IF (nlcc_) THEN
           CALL vxcgc(ndm,pawset_%mesh,nspin_,pawset_%r,pawset_%r2,vcharge_,ccharge_,vgc,egc)
        ELSE

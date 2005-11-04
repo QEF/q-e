@@ -20,7 +20,7 @@ SUBROUTINE cg_setup
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: prefix, iunpun, iunres
   USE cgcom
-  USE funct, only : get_igcx, get_igcc
+  USE funct, only : dft_is_gradient
   !
   IMPLICIT NONE
   !
@@ -53,7 +53,7 @@ SUBROUTINE cg_setup
   !
   !  allocate memory for gradient corrections (if needed)
   !
-  IF (get_igcx().NE.0 .OR. get_igcc().NE.0) THEN
+  IF ( dft_is_gradient() ) THEN
      ALLOCATE  ( dvxc_rr(nrxx,nspin,nspin))    
      ALLOCATE  ( dvxc_sr(nrxx,nspin,nspin))    
      ALLOCATE  ( dvxc_ss(nrxx,nspin,nspin))    

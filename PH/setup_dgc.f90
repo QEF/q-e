@@ -18,7 +18,7 @@ subroutine setup_dgc
   use pwcom
   USE kinds, only : DP
   use phcom
-  use funct, only : get_igcx, get_igcc, gcxc, gcx_spin, gcc_spin
+  use funct, only : dft_is_gradient, gcxc, gcx_spin, gcc_spin
   implicit none
   integer :: k, is
   real(DP) :: grho2 (2), rh, zeta, grh2, fac, sx, sc, &
@@ -27,7 +27,7 @@ subroutine setup_dgc
        vssxup, vssxdw, vrrcup, vrrcdw, vrscup, vrscdw, vrzcup, vrzcdw
   real (DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
 
-  if (get_igcx() == 0 .and. get_igcc() == 0) return
+  if ( .not. dft_is_gradient() ) return
   allocate (dvxc_rr(  nrxx , nspin , nspin))    
   allocate (dvxc_sr(  nrxx , nspin , nspin))    
   allocate (dvxc_ss(  nrxx , nspin , nspin))    

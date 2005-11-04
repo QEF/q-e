@@ -14,7 +14,7 @@ subroutine cg_setupdgc
   USE kinds, only: DP
   use pwcom
   use cgcom
-  use funct, only: gcxc, gcx_spin, gcc_spin, get_igcx, get_igcc
+  use funct, only: gcxc, gcx_spin, gcc_spin, dft_is_gradient
   !
   implicit none
   integer k, is
@@ -30,7 +30,7 @@ subroutine cg_setupdgc
   !
   parameter (epsr=1.0d-6, epsg=1.0d-10)
   !
-  if (get_igcx().eq.0 .and. get_igcc().eq.0) return
+  if (.not. dft_is_gradient() ) return
   call start_clock('setup_dgc')
   !
   dvxc_rr(:,:,:) = 0.d0

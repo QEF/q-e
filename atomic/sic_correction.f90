@@ -14,7 +14,7 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
   !
   use constants, only: e2, fpi
   use ld1inc
-  use funct, only: get_igcx, get_igcc
+  use funct, only: dft_is_gradient
   implicit none
   integer :: n
   real(DP):: vhn1(ndm),vhn2(ndm), egc(ndm)
@@ -26,7 +26,7 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
 
   vhn1=0.0_dp
   vhn2=0.0_dp
-  gga=get_igcx().ne.0.or.get_igcc().ne.0
+  gga=dft_is_gradient()
   nspin=1
   if (lsd.eq.1) nspin=2
   !

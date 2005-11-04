@@ -15,7 +15,7 @@ subroutine ld1_setup
   !
   !
   use ld1inc
-  use funct, only : get_iexch, ismeta !, set_dft_from_name
+  use funct, only : get_iexch, dft_is_meta !, set_dft_from_name
   implicit none
 
   integer n, n1, nc, nwf0, m, nwftot, ios
@@ -26,7 +26,7 @@ subroutine ld1_setup
   !
 !  if (iswitch /= 2 .or. pseudotype == 1) call set_dft_from_name(dft)
   !
-  if (ismeta) call errore('setyp','meta-GGA not implemented yet', 1)
+  if (dft_is_meta()) call errore('setyp','meta-GGA not implemented yet', 1)
   hf  = get_iexch().eq.5
   if (hf)     call errore('setup','HF not implemented yet',1)
   oep = get_iexch().eq.4

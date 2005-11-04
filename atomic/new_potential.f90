@@ -15,7 +15,7 @@ subroutine new_potential &
   !
   use constants, only: fpi, e2
   use kinds, only : DP
-  use funct, only : get_iexch, get_igcx, get_igcc
+  use funct, only : get_iexch, dft_is_gradient
   use ld1inc, only : nwf, vx
   implicit none
   logical :: nlcc, gga, oep
@@ -27,7 +27,7 @@ subroutine new_potential &
 !  real(DP),allocatable:: vx(:,:)
   real(DP),allocatable:: dchi0(:,:)
 
-  gga=get_igcx().ne.0.or.get_igcc().ne.0
+  gga=dft_is_gradient()
   oep=get_iexch().eq.4
   nspin=1
   if (lsd.eq.1) nspin=2

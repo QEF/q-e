@@ -13,7 +13,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
 #include "f_defs.h"
 
   USE ions_base, ONLY : nat
-  use funct, only : get_igcx, get_igcc
+  use funct, only : dft_is_gradient
   use pwcom
   USE kinds, only : DP
   use phcom
@@ -77,7 +77,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
      ! add gradient correction to xc, NB: if nlcc is true we need to add here
      ! its contribution. grho contains already the core charge
      !
-     if (get_igcx() /= 0 .or. get_igcc() /= 0) &
+     if ( dft_is_gradient() ) &
        call dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
           drhoscf (1, 1, ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
           nspin, nl, ngm, g, alat, omega, dvaux)

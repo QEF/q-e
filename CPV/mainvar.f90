@@ -14,7 +14,8 @@ MODULE cp_main_variables
   USE kinds,             ONLY : DP
   USE parameters,        ONLY : natx, nsx, nacx
   USE control_flags,     ONLY : program_name
-  USE metagga,           ONLY : ismeta, kedtaur, kedtaus, kedtaug
+  USE funct,             ONLY : dft_is_meta
+  USE metagga,           ONLY : kedtaur, kedtaus, kedtaug
   USE atoms_type_module, ONLY : atoms_type
   USE cell_base,         ONLY : boxdimensions
   USE charge_types,      ONLY : charge_descriptor, charge_descriptor_init
@@ -140,7 +141,7 @@ MODULE cp_main_variables
       ALLOCATE( eigrb( ngb, nat ) )
       ALLOCATE( irb( 3, nat ) )
       !
-      IF ( ismeta ) THEN
+      IF ( dft_is_meta() ) THEN
          !
          ! ... METAGGA
          !

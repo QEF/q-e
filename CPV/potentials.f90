@@ -247,7 +247,7 @@
       USE fft_base,       ONLY: dfftp
       USE energies,       ONLY: total_energy, dft_energy_type
       USE stress,         ONLY: pstress
-      USE funct,          ONLY: get_igcx, get_igcc
+      USE funct,          ONLY: dft_is_gradient
       USE charge_density, ONLY: gradrho
       USE chi2,           ONLY: rhochi, allocate_chi2, deallocate_chi2
       USE vanderwaals,    ONLY: tvdw, vdw
@@ -363,7 +363,7 @@
       !
       omega    = box%deth
       !
-      tgc      = ( get_igcx() > 0 ) .OR. ( get_igcc() > 0 )
+      tgc      = dft_is_gradient()
 
       IF(tchi2) THEN
         CALL allocate_chi2(ngm)

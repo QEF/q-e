@@ -13,7 +13,7 @@ subroutine stres_gradcorr (rho, rho_core, nspin, nr1, nr2, nr3, &
   !--------------------------------------------------------------------
 #include "f_defs.h"
   USE kinds
-  use funct, ONLY: gcxc, gcx_spin, gcc_spin, gcc_spin_more, get_igcx, get_igcc
+  use funct, ONLY: gcxc, gcx_spin, gcc_spin, gcc_spin_more, dft_is_gradient, get_igcc
   implicit none
 
   integer :: nspin, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, &
@@ -29,7 +29,7 @@ subroutine stres_gradcorr (rho, rho_core, nspin, nr1, nr2, nr3, &
        sigma_gradcorr (3, 3), rhok
   logical :: igcc_is_lyp
 
-  if ( (get_igcx()==0) .and. (get_igcc()==0)) return
+  if ( .not. dft_is_gradient() ) return
 
   igcc_is_lyp = (get_igcc() == 3)
 

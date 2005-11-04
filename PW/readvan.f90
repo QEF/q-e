@@ -24,7 +24,7 @@ subroutine readvan (is, iunps)
   use pseud, only: zp, lmax, lloc
   use uspp_param, only: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, &
        rinner, nbeta, kkbeta, lll, iver, ifqopt, psd, tvanp
-  use funct, only: set_dft_from_name, ismeta, ishybrid
+  use funct, only: set_dft_from_name, dft_is_meta, dft_is_hybrid
   implicit none
 
   !
@@ -104,11 +104,11 @@ subroutine readvan (is, iunps)
   !
   call set_dft_from_name( dft_name )
   !
-  IF ( ismeta ) &
+  IF ( dft_is_meta() ) &
     CALL errore( 'readvan ', 'META-GGA not implemented in PWscf', 1 )
 #if defined (EXX)
 #else
-  IF ( ishybrid ) &
+  IF ( dft_is_hybrid() ) &
     CALL errore( 'readvan ', 'HYBRID XC not implemented in PWscf', 1 )
 #endif
 

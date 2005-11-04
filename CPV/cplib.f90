@@ -664,7 +664,7 @@
       use gvecw, only: ggp
       use cell_base, only: tpiba2
       use ensemble_dft, only: tens
-      use funct, only: ismeta
+      use funct, only: dft_is_meta
 !
       implicit none
 !
@@ -755,7 +755,7 @@
          da(ig)=fip*(tpiba2*ggp(ig)*ca(ig)+CMPLX(AIMAG(fp),-DBLE(fm)))
       end do
 
-      if(ismeta) call  dforce_meta(c,ca,df,da,psi,iss1,iss2,fi,fip)  !METAGGA
+      if(dft_is_meta()) call dforce_meta(c,ca,df,da,psi,iss1,iss2,fi,fip) !METAGGA
 !
 !     aa_i,i,n = sum_j d_i,ij <beta_i,j|c_n>
 ! 
@@ -2674,7 +2674,7 @@
       use cdvan
       use dener
       use io_global, only: stdout
-      use funct, only: ismeta
+      use funct, only: dft_is_meta
       use cg_module, only : tcg
 !
       implicit none
@@ -2867,7 +2867,7 @@
                rhor(ir,isdw)=AIMAG(psi(ir))
             end do
          endif
-         if (ismeta) call kedtauofr_meta(c, psi, psis) ! METAGGA
+         if (dft_is_meta()) call kedtauofr_meta(c, psi, psis) ! METAGGA
 !
          if(iprsta.ge.3)then
             do iss=1,nspin
@@ -3785,7 +3785,7 @@
       use dener
       use derho
       use mp, only: mp_sum
-      use funct, only: ismeta
+      use funct, only: dft_is_meta
 !
       implicit none
 !
@@ -4043,7 +4043,7 @@
             rhos(ir,isdw)=AIMAG(vs(ir))
          end do
       endif
-      if(ismeta) call vofrho_meta(v,vs)  !METAGGA
+      if(dft_is_meta()) call vofrho_meta(v,vs)  !METAGGA
       ebac=0.0
 !
       eht=eh*omega+esr-eself

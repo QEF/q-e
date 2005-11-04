@@ -17,7 +17,7 @@ subroutine read_ncpp (np, iunps)
   use pseud, only: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, &
        a_nlcc, b_nlcc, alpha_nlcc
   use uspp_param, only: vloc_at, betar, kkbeta, nbeta, lll, dion, psd
-  use funct, only: set_dft_from_name, ismeta, ishybrid
+  use funct, only: set_dft_from_name, dft_is_meta, dft_is_hybrid
   implicit none
   !
   integer :: iunps, np
@@ -115,11 +115,11 @@ subroutine read_ncpp (np, iunps)
   !
   call set_dft_from_name( dft_name )
   !
-  IF ( ismeta ) &
+  IF ( dft_is_meta() ) &
     CALL errore( 'read_ncpp ', 'META-GGA not implemented in PWscf', 1 )
 #if defined (EXX)
 #else
-  IF ( ishybrid ) &
+  IF ( dft_is_hybrid() ) &
     CALL errore( 'read_ncpp ', 'HYBRID XC not implemented in PWscf', 1 )
 #endif
   !

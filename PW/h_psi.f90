@@ -32,7 +32,8 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   USE gvect,    ONLY : gstart
 
 #ifdef EXX
-  USE exx,      ONLY : vexx, exxstart !Suriano
+  USE exx,      ONLY : vexx !Suriano
+  USE funct,    ONLY : exx_is_active
 #endif
 
   !
@@ -109,7 +110,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        IF ( nkb > 0 ) CALL add_vuspsi( lda, n, m, psi, hpsi )
        !
 #ifdef EXX
-       if (exxstart) call vexx(lda, n, m, psi, hpsi)
+       if (exx_is_active()) call vexx(lda, n, m, psi, hpsi)
 #endif
        !
        RETURN
@@ -191,7 +192,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        END IF
        !
 #ifdef EXX
-       if (exxstart) call vexx(lda, n, m, psi, hpsi)
+       if (exx_is_active()) call vexx(lda, n, m, psi, hpsi)
 #endif
        !
        RETURN

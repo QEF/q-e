@@ -1691,7 +1691,7 @@
 
 subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
   use kinds, only: DP
-  use funct, only: get_igcx, get_igcc, &
+  use funct, only: dft_is_gradient, get_igcc, &
                    xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
   implicit none
   integer, intent(in) :: nnr
@@ -1783,7 +1783,7 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
   sx_dbg = 0.0d0
   sc_dbg = 0.0d0
 
-  if( get_igcx() > 0 .or. get_igcc() > 0 ) then
+  if( dft_is_gradient() ) then
 
     do k = 1, nnr
        !
@@ -1901,7 +1901,7 @@ end subroutine exch_corr_wrapper
 
 subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   use kinds, only: DP
-  use funct, only: get_igcx, get_igcc
+  use funct, only: dft_is_gradient
   implicit none
   integer, intent(in) :: nnr
   integer, intent(in) :: nspin
@@ -1914,7 +1914,7 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   real(DP), allocatable :: h(:,:,:)
   !
   allocate( v( nnr, nspin ) )
-  if( get_igcx() > 0 .or. get_igcc() > 0 ) then
+  if( dft_is_gradient() ) then
     allocate( h( nnr, nspin, nspin ) )
   else
     allocate( h( 1, 1, 1 ) )
@@ -1922,7 +1922,7 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
   !
   call exch_corr_wrapper(nnr,nspin,grhor,rhor,etxc,v,h)
 
-  if( get_igcx() > 0 .or. get_igcc() > 0 ) then
+  if( dft_is_gradient() ) then
      !
      if( nspin == 1 ) then
         !

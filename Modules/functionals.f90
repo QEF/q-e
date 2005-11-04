@@ -16,20 +16,25 @@ module funct
 !  setting routines:   set_dft_from_name (previously which_dft)
 !                      set_dft_from_indices
 !                      enforce_input_dft
+!                      start_exx
+!                      stop_exx
 !  retrive functions:  get_dft_name
 !                      get_iexch
 !                      get_icorr
 !                      get_igcx
 !                      get_igcc
+!                      get_exx_fraction
 !                      dft_name
 !                      write_dft_name
-!  retrivable logical: ishybrid
-!                      ismeta
-!                      isgradient
+!  logical functions:  dft_is_gradient
+!                      dft_is_meta
+!                      dft_is_hybrid
+!                      exx_is_active
 !
 !  XC computation drivers: xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
 !
   USE io_global, ONLY: stdout
+  USE kinds,     ONLY: DP
   IMPLICIT NONE
   PRIVATE
   SAVE
@@ -37,8 +42,9 @@ module funct
   PUBLIC  :: set_dft_from_indices, set_dft_from_name
   PUBLIC  :: enforce_input_dft, write_dft_name, dft_name
   PUBLIC  :: get_dft_name, get_iexch, get_icorr, get_igcx, get_igcc
-  ! two (still) public variables
-  PUBLIC  :: ismeta, ishybrid, isgradient
+  PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid
+  ! additional subroutines/functions for hybrid functionale
+  PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active
   ! driver subroutines computing XC
   PUBLIC  :: xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
   !
@@ -46,6 +52,8 @@ module funct
   !
   PRIVATE :: dft, dft_shortname, iexch, icorr, igcx, igcc
   PRIVATE :: discard_input_dft
+  PRIVATE :: isgradient, ismeta, ishybrid
+  PRIVATE :: exx_fraction, exx_started
   !
   character (len=20) :: dft = 'not set'
   character (len=4)  :: dft_shortname = ' '
@@ -60,6 +68,7 @@ module funct
   !              "rxc"    Relativistic Slater            iexch=3
   !              "oep"    Optimized Effective Potential  iexch=4
   !              "hf"     Hartree-Fock                   iexch=5
+  !              "pb0x"   PBE0                           iexch=6
   !
   ! Correlation: "noc"    none                           icorr=0
   !              "pz"     Perdew-Zunger                  icorr=1 (default)
@@ -80,14 +89,17 @@ module funct
   !              "rpb"    revised PBE by Zhang-Yang      igcx =4
   !              "hcth"   Cambridge exch, Handy et al    igcx =5
   !              "optx"   Handy's exchange functional    igcx =6
+  !              "meta"   meta-gga                       igcx =7
+  !              "pb0x"   PBE0                           igcx =8
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
   !              "p86"    Perdew86                       igcc =1
   !              "ggc"    Perdew-Wang 91 corr.           igcc =2
   !              "blyp"   Lee-Yang-Parr                  igcc =3
-  !              "pbx"    Perdew-Burke-Ernzenhof corr    igcc =4
+  !              "pbc"    Perdew-Burke-Ernzenhof corr    igcc =4
   !              "hcth"   Cambridge corr, Handy et al    igcc =5
+  !              "meta"   meta-gga                       igcc =6
   !
   ! Special cases (dft_shortnames):
   !              "bp"   = "b88+p86"         = Becke-Perdew grad.corr.
@@ -123,9 +135,11 @@ module funct
   integer :: icorr = notset
   integer :: igcx  = notset
   integer :: igcc  = notset
-  logical :: ismeta = .false.
-  logical :: ishybrid = .false.
-  logical :: isgradient = .false.
+  real(DP):: exx_fraction = 0.d0
+  logical :: isgradient  = .false.
+  logical :: ismeta      = .false.
+  logical :: ishybrid    = .false.
+  logical :: exx_started = .false.
 
   logical :: discard_input_dft = .false.
   !
@@ -133,26 +147,25 @@ module funct
   !    iexch: type of exchange
   !    icorr: type of correlation
   !    igcx:  type of gradient correction on exchange
-  !    igcc:  type of gradient correction on correlations
+  !    igcc:  type of gradient correction on correlation
   !
   !    ismeta: .TRUE. if gradient correction is of meta-gga type
   !    ishybrid: .TRUE. if the xc finctional is an HF+DFT hybrid like
-  !              PBE0 or B3LYP of HF itself
+  !              PBE0 or B3LYP or HF itself
   !
   ! see comments above and routine "set_dft_from_name" below 
   !
-  !
   ! data
   integer :: nxc, ncc, ngcx, ngcc
-  parameter (nxc = 5, ncc = 9, ngcx = 7, ngcc = 6)
+  parameter (nxc = 6, ncc = 9, ngcx = 8, ngcc = 6)
   character (len=4) :: exc, corr
   character (len=4) :: gradx, gradc
   dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
 
-  data exc / 'NOX', 'SLA', 'SL1', 'RXC', 'OEP', 'HF' /
+  data exc / 'NOX', 'SLA', 'SL1', 'RXC', 'OEP', 'HF', 'PB0X' /
   data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
               'OBW', 'GL' /
-  data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX', 'META' /
+  data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX', 'META', 'PB0X' /
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'META'/
 
 CONTAINS
@@ -183,7 +196,6 @@ CONTAINS
     do l = 1, len
        dftout (l:l) = capital (dft_(l:l) )
     enddo
-
 
     !  exchange
     iexch = notset
@@ -220,6 +232,12 @@ CONTAINS
     else if (matches('RPBE',dftout)) then
          call errore('set_dft_from_name', &
      &   'RPBE (Hammer-Hansen-Norskov) not implemented (revPBE is)',1)
+   else if (matches ('PBE0', dftout) ) then
+    ! special case : PBE0
+       call set_dft_value (iexch,6)
+       call set_dft_value (icorr,4)
+       call set_dft_value (igcx, 8)
+       call set_dft_value (igcc, 4)
    else if (matches ('PBE', dftout) ) then
     ! special case : PBE
        call set_dft_value (icorr,4)
@@ -277,15 +295,6 @@ CONTAINS
        CALL set_dft_value( igcc,  6 )
        !
     END IF
-
-    !
-    ! ... special case : OEP is exact exchange no GC part
-    !
-    IF ( matches( 'OEP', dftout ) ) THEN
-       !
-       CALL set_dft_value( igcx,  0 )
-       !
-    END IF
     !
     ! ... special cases : OEP and HF need not GC part (nor LDA...)
     !                     and include no correlation by default
@@ -296,6 +305,7 @@ CONTAINS
        if (icorr == notset) call set_dft_value (icorr, 0)
        !
     END IF
+
 
     if (igcx == 6) &
          call errore('set_dft_from_name','OPTX untested! please test',-igcx)
@@ -317,11 +327,28 @@ CONTAINS
 
     dft = dft_
 
-    isgradient =  (igcx > 0) .or. (igcc > 0)
-    ismeta     =  (igcx == 7) .or. (igcx == 6 )
+    call set_auxiliary_flags
 
     return
   end subroutine set_dft_from_name
+  !
+  !-----------------------------------------------------------------------
+  subroutine set_auxiliary_flags
+    !-----------------------------------------------------------------------
+    ! set logical flags describing the complexity of the xc functional
+    ! define the fraction of exact exchange used by hybrid fuctionals
+    !
+    isgradient =  (igcx > 0) .or. (igcc > 0)
+    ismeta     =  (igcx == 7) .or. (igcx == 6 )
+    ishybrid   =  (iexch == 4) .or. (iexch == 5) .or. (iexch == 6) .or. &
+                  (igcx == 8) 
+    ! PBE0
+    IF ( iexch==6 .or. igcx==8 ) exx_fraction = 0.25d0
+    ! HF or OEP
+    IF ( iexch==4 .or. iexch==5 ) exx_fraction = 1.d0
+
+    return
+  end subroutine set_auxiliary_flags
   !
   !-----------------------------------------------------------------------
   subroutine set_dft_value (m, i)
@@ -350,44 +377,92 @@ CONTAINS
     character(len=*) :: dft_
     ! data
 
-     write (stdout,'(a)') "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-     write (stdout,'(a)') " XC functional is enforced to be :"
-     write (stdout,'(a)') dft_
-     write (stdout,'(a)') "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-
      call set_dft_from_name (dft_)
      if (dft == 'not set') call errore('enforce_input_dft','cannot fix unset dft',1)
      discard_input_dft = .true.
+
+     write (stdout,'(/,5x,a)') "!!! XC functional enforced from input :"
+     call write_dft_name
+     write (stdout,'(5x,a)') "!!! Any further DFT definition will be discarded"
+     write (stdout,'(5x,a)') "!!! Please, verify this is what you really want !"
+
      return
   end subroutine enforce_input_dft
-
+  !-----------------------------------------------------------------------
+  subroutine start_exx 
+     if (.not. ishybrid) &
+        call errore('start_exx','dft is not hybrid, wrong call',1)
+     exx_started = .true.
+  end subroutine start_exx
+  !-----------------------------------------------------------------------
+  subroutine stop_exx 
+     if (.not. ishybrid) &
+        call errore('stop_exx','dft is not hybrid, wrong call',1)
+     exx_started = .false.
+  end subroutine stop_exx
+  !-----------------------------------------------------------------------
+  function exx_is_active ()
+     logical exx_is_active
+     exx_is_active = exx_started
+  end function exx_is_active
+  
+  !-----------------------------------------------------------------------
   function get_iexch ()
      integer get_iexch
      get_iexch = iexch
      return
   end function get_iexch
+  !-----------------------------------------------------------------------
   function get_icorr ()
      integer get_icorr
      get_icorr = icorr
      return
   end function get_icorr
+  !-----------------------------------------------------------------------
   function get_igcx ()
      integer get_igcx
      get_igcx = igcx
      return
-  end function get_igcx 
+  end function get_igcx
+  !-----------------------------------------------------------------------
   function get_igcc ()
      integer get_igcc
      get_igcc = igcc
      return
-  end function get_igcc 
-
+  end function get_igcc
+  !-----------------------------------------------------------------------
+  function get_exx_fraction ()
+     real(DP):: get_exx_fraction
+     get_exx_fraction = exx_fraction
+     return
+  end function get_exx_fraction
+  !-----------------------------------------------------------------------
   function get_dft_name ()
      character (len=20) :: get_dft_name
      get_dft_name = dft
      return
   end function get_dft_name
-
+  !-----------------------------------------------------------------------
+  function dft_is_gradient ()
+     logical :: dft_is_gradient
+     dft_is_gradient = isgradient
+     return
+  end function dft_is_gradient
+  !-----------------------------------------------------------------------
+  function dft_is_meta ()
+     logical :: dft_is_meta
+     dft_is_meta = ismeta
+     return
+  end function dft_is_meta
+  !-----------------------------------------------------------------------
+  function dft_is_hybrid ()
+     logical :: dft_is_hybrid
+     dft_is_hybrid = ishybrid
+     return
+  end function dft_is_hybrid
+  !-----------------------------------------------------------------------
+  
+  !-----------------------------------------------------------------------
   subroutine set_dft_from_indices(iexch_,icorr_,igcx_,igcc_)
      integer :: iexch_, icorr_, igcx_, igcc_
      if ( discard_input_dft ) return
@@ -414,11 +489,9 @@ CONTAINS
      dft = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
            &//gradc (igcc)
      ! WRITE( stdout,'(a)') dft
-     isgradient =  (igcx > 0) .or. (igcc > 0)
-     ismeta     =  (igcx == 7) .or. (igcx == 6 )
+     call set_auxiliary_flags
      return
   end subroutine set_dft_from_indices
-
   !---------------------------------------------------------------------
   subroutine dft_name(iexch_, icorr_, igcx_, igcc_, longname_, shortname_)
   !---------------------------------------------------------------------
@@ -442,6 +515,8 @@ CONTAINS
      shortname_ = 'PW91'
   else if (iexch_==1.and.icorr_==4.and.igcx_==3.and.igcc_==4) then
      shortname_ = 'PBE'
+  else if (iexch_==6.and.icorr_==4.and.igcx_==8.and.igcc_==4) then
+     shortname_ = 'PBE0'
   else
      shortname_ = ' '
   end if
@@ -457,6 +532,11 @@ subroutine write_dft_name
    return
 end subroutine write_dft_name
 
+!
+!-----------------------------------------------------------------------
+!-------  LDA DRIVERS --------------------------------------------------
+!-----------------------------------------------------------------------
+!
 !-----------------------------------------------------------------------
 subroutine xc (rho, ex, ec, vx, vc)
   !-----------------------------------------------------------------------
@@ -480,7 +560,6 @@ subroutine xc (rho, ex, ec, vx, vc)
   !             vx = dE_x(rho)/drho  ( NOT d\epsilon_x(rho)/drho )
   !             ec, vc as above for correlation
   !
-  USE kinds
   implicit none
 
   real(DP) :: rho, ec, vc, ex, vx
@@ -500,12 +579,20 @@ subroutine xc (rho, ex, ec, vx, vc)
      ! rs as in the theory of metals: rs=(3/(4pi rho))^(1/3)
   endif
   !..exchange
-  if (iexch == 1) then
+  if (iexch == 1) THEN             !  'sla'
      call slater (rs, ex, vx)
-  ELSEIF (iexch == 2) THEN
+  ELSEIF (iexch == 2) THEN         !  'sl1'
      call slater1(rs, ex, vx)
-  ELSEIF (iexch == 3) THEN
+  ELSEIF (iexch == 3) THEN         !  'rxc'
      CALL slater_rxc(rs, ex, vx)
+  ELSEIF ((iexch == 4).or.(iexch==5)) THEN  ! 'oep','hf'
+     IF (.not.exx_started) call slater (rs, ex, vx)
+  ELSEIF (iexch == 6) THEN         !  'pb0x'
+     CALL slater(rs, ex, vx)
+     if (exx_started) then
+        ex = 0.75d0 * ex 
+        vx = 0.75d0 * vx 
+     end if
   else
      ex = 0.0d0
      vx = 0.0d0
@@ -536,6 +623,80 @@ subroutine xc (rho, ex, ec, vx, vc)
   !
   return
 end subroutine xc
+!!!!!!!!!!!!!!SPIN
+!-----------------------------------------------------------------------
+subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
+  !-----------------------------------------------------------------------
+  !     lsd exchange and correlation functionals - Hartree a.u.
+  !
+  !     exchange  :  Slater (alpha=2/3)
+  !     correlation: Ceperley & Alder (Perdew-Zunger parameters)
+  !                  Perdew & Wang
+  !
+  !     input : rho = rhoup(r)+rhodw(r)
+  !             zeta=(rhoup(r)-rhodw(r))/rho
+  !
+  implicit none
+
+  real(DP) :: rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw
+  !
+  real(DP), parameter :: small= 1.d-10, third = 1.d0/3.d0, &
+       pi34= 0.6203504908994d0 ! pi34=(3/4pi)^(1/3)
+  real(DP) :: rs
+  !
+  if (rho <= small) then
+     ec = 0.0d0
+     vcup = 0.0d0
+     vcdw = 0.0d0
+     ex = 0.0d0
+     vxup = 0.0d0
+     vxdw = 0.0d0
+     return
+  else
+     rs = pi34 / rho**third
+  endif
+  !..exchange
+  IF (iexch == 1) THEN      ! 'sla'
+     call slater_spin (rho, zeta, ex, vxup, vxdw)
+  ELSEIF (iexch == 2) THEN  ! 'sl1'
+     call slater1_spin (rho, zeta, ex, vxup, vxdw)
+  ELSEIF (iexch == 3) THEN  ! 'rxc'
+     call slater_rxc_spin ( rho, zeta, ex, vxup, vxdw )
+  ELSEIF ((iexch == 4).or.(iexch==5)) THEN  ! 'oep','hf'
+     IF (.not.exx_started) call slater_spin (rho, zeta, ex, vxup, vxdw)
+  ELSEIF (iexch == 6) THEN  ! 'pb0x'
+     call slater_spin (rho, zeta, ex, vxup, vxdw)
+     if (exx_started) then
+        ex   = 0.75d0 * ex
+        vxup = 0.75d0 * vxup 
+        vxdw = 0.75d0 * vxdw 
+     end if
+  ELSE
+     ex = 0.0d0
+     vxup = 0.0d0
+     vxdw = 0.0d0
+  ENDIF
+  !..correlation
+  if (icorr == 0) then
+     ec = 0.0d0
+     vcup = 0.0d0
+     vcdw = 0.0d0
+  elseif (icorr == 1) then
+     call pz_spin (rs, zeta, ec, vcup, vcdw)
+  elseif (icorr == 3) then
+     call lsd_lyp (rho, zeta, ec, vcup, vcdw) ! from CP/FPMD (more_functionals)
+  elseif (icorr == 4) then
+     call pw_spin (rs, zeta, ec, vcup, vcdw)
+  else
+     call errore ('lsda_functional', 'not implemented', icorr)
+  endif
+  !
+  return
+end subroutine xc_spin
+!
+!-----------------------------------------------------------------------
+!------- GRADIENT CORRECTIONS DRIVERS ----------------------------------
+!-----------------------------------------------------------------------
 !
 !-----------------------------------------------------------------------
 subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
@@ -557,7 +718,6 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
   !             v2x= D(E_x)/D( D rho/D r_alpha ) / |\nabla rho|
   !             sc, v1c, v2c as above for correlation
   !
-  USE kinds
   implicit none
 
   real(DP) :: rho, grho, sx, sc, v1x, v2x, v1c, v2c
@@ -580,6 +740,13 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call hcth(rho, grho, sx, v1x, v2x)
   elseif (igcx == 6) then
      call optx (rho, grho, sx, v1x, v2x)
+  elseif (igcx == 8) then
+     call pbex (rho, grho, 1, sx, v1x, v2x)
+     if (exx_started) then
+        sx  = 0.75d0 * sx
+        v1x = 0.75d0 * v1x
+        v2x = 0.75d0 * v2x
+     end if
   else
      sx = 0.0d0
      v1x = 0.0d0
@@ -610,75 +777,12 @@ end subroutine gcxc
 !
 !!!!!!!!!!!!!!SPIN
 !-----------------------------------------------------------------------
-subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
-  !-----------------------------------------------------------------------
-  !     lsd exchange and correlation functionals - Hartree a.u.
-  !
-  !     exchange  :  Slater (alpha=2/3)
-  !     correlation: Ceperley & Alder (Perdew-Zunger parameters)
-  !                  Perdew & Wang
-  !
-  !     input : rho = rhoup(r)+rhodw(r)
-  !             zeta=(rhoup(r)-rhodw(r))/rho
-  !
-  USE kinds
-  implicit none
-
-  real(DP) :: rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw
-  !
-  real(DP), parameter :: small= 1.d-10, third = 1.d0/3.d0, &
-       pi34= 0.6203504908994d0 ! pi34=(3/4pi)^(1/3)
-  real(DP) :: rs
-  !
-  if (rho <= small) then
-     ec = 0.0d0
-     vcup = 0.0d0
-     vcdw = 0.0d0
-     ex = 0.0d0
-     vxup = 0.0d0
-     vxdw = 0.0d0
-     return
-  else
-     rs = pi34 / rho**third
-  endif
-  !..exchange
-  if (iexch == 1) then
-     call slater_spin (rho, zeta, ex, vxup, vxdw)
-  elseif (iexch == 2) then
-     call slater1_spin (rho, zeta, ex, vxup, vxdw)
-  ELSEIF (iexch == 3) THEN
-     call slater_rxc_spin ( rho, zeta, ex, vxup, vxdw )
-  else
-     ex = 0.0d0
-     vxup = 0.0d0
-     vxdw = 0.0d0
-  endif
-  !..correlation
-  if (icorr == 0) then
-     ec = 0.0d0
-     vcup = 0.0d0
-     vcdw = 0.0d0
-  elseif (icorr == 1) then
-     call pz_spin (rs, zeta, ec, vcup, vcdw)
-  elseif (icorr == 3) then
-     call lsd_lyp (rho, zeta, ec, vcup, vcdw)  !  from CP/FPMD (more_functionals)
-  elseif (icorr == 4) then
-     call pw_spin (rs, zeta, ec, vcup, vcdw)
-  else
-     call errore ('lsda_functional', 'not implemented', icorr)
-  endif
-  !
-  return
-end subroutine xc_spin
-!
-!-----------------------------------------------------------------------
-subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, sx, v1xup, &
-     v1xdw, v2xup, v2xdw)
+subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
+                     sx, v1xup, v1xdw, v2xup, v2xdw)
   !-----------------------------------------------------------------------
   !     gradient corrections for exchange - Hartree a.u.
-  !     Implemented:  Becke88, GGA (PW91), PBE, revPBE
+  !     Implemented:  Becke88, GGA (PW91), PBE, revPBE, PBE0
   !
-  USE kinds
   implicit none
   !
   !     dummy arguments
@@ -738,12 +842,12 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, sx, v1xup, &
      sx = 0.5d0 * (sxup + sxdw)
      v2xup = 2.d0 * v2xup
      v2xdw = 2.d0 * v2xdw
-  elseif (igcx == 3 .or. igcx == 4) then
-     ! igcx=3: PBE  igcx=4: revised PBE
-     if (igcx == 3) then
-        iflag = 1
-     else
+  elseif (igcx == 3 .or. igcx == 4 .or. igcx == 8) then
+     ! igcx=3: PBE, igcx=4: revised PBE, igcx=8 PBE0
+     if (igcx == 4) then
         iflag = 2
+     else
+        iflag = 1
      endif
      if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
         call pbex (2.d0 * rhoup, 4.d0 * grhoup2, iflag, sxup, v1xup, v2xup)
@@ -762,6 +866,13 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, sx, v1xup, &
      sx = 0.5d0 * (sxup + sxdw)
      v2xup = 2.d0 * v2xup
      v2xdw = 2.d0 * v2xdw
+     if (igcx == 8 .and. exx_started ) then
+       sx = 0.75d0 * sx
+       v1xup = 0.75d0 * v1xup
+       v1xdw = 0.75d0 * v1xdw
+       v2xup = 0.75d0 * v2xup
+       v2xdw = 0.75d0 * v2xdw
+     end if
   else
      call errore ('gcx_spin', 'not implemented', igcx)
   endif
@@ -775,7 +886,6 @@ subroutine gcc_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   !     gradient corrections for correlations - Hartree a.u.
   !     Implemented:  Perdew86, GGA (PW91), PBE
   !
-  USE kinds
   implicit none
   !
   !     dummy arguments
@@ -839,7 +949,6 @@ end subroutine gcc_spin
 !   ==                GGAC                                          ==
 !   ==--------------------------------------------------------------==
 
-      USE kinds, ONLY: DP
       IMPLICIT NONE
       REAL(DP) :: RHOA,RHOB,GRHOAA,GRHOBB,GRHOAB
       REAL(DP) :: SC,V1CA,V2CA,V1CB,V2CB,V2CAB

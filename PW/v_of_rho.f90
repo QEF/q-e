@@ -95,10 +95,6 @@ SUBROUTINE v_xc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   USE kinds,            ONLY : DP
   USE funct,            ONLY : xc, xc_spin
 
-#ifdef EXX
-  USE exx,              ONLY: exxalfa
-#endif
-
   !
   IMPLICIT NONE
   !
@@ -164,15 +160,9 @@ SUBROUTINE v_xc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
            !
            CALL xc( arhox, ex, ec, vx(1), vc(1) )
            !
-#if defined EXX
-           v(ir,1) = e2 * ( (1.d0-exxalfa)*vx(1) + vc(1) )
-           !
-           etxc = etxc + e2 * ( (1.d0-exxalfa)*ex + ec ) * rhox
-#else
            v(ir,1) = e2 * ( vx(1) + vc(1) )
            !
            etxc = etxc + e2 * ( ex + ec ) * rhox
-#endif
            !
            vtxc = vtxc + v(ir,1) * rho(ir,1)
            !
@@ -203,15 +193,6 @@ SUBROUTINE v_xc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
            !
            CALL xc_spin( arhox, zeta, ex, ec, vx(1), vx(2), vc(1), vc(2) )
            !
-#ifdef EXX
-           DO is = 1, nspin
-              !
-              v(ir,is) = e2 * ( (1.d0-exxalfa)*vx(is) + vc(is) )
-              !
-           END DO
-           !
-           etxc = etxc + e2 * ( (1.d0-exxalfa)*ex + ec ) * rhox
-#else
            DO is = 1, nspin
               !
               v(ir,is) = e2 * ( vx(is) + vc(is) )
@@ -219,7 +200,6 @@ SUBROUTINE v_xc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
            END DO
            !
            etxc = etxc + e2 * ( ex + ec ) * rhox
-#endif
            !
            vtxc = vtxc + v(ir,1) * rho(ir,1) + v(ir,2) * rho(ir,2)
            !

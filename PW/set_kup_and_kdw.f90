@@ -18,8 +18,8 @@ subroutine set_kup_and_kdw (xk, wk, isk, nks, npk)
   !
   USE kinds, ONLY : DP
 #if defined (EXX)
-  USE exx, ONLY : exx_grid_check, lexx, xkq, index_xkq, index_xk, index_sym, &
-                  nkqs, nqs
+  USE exx, ONLY : exx_grid_check, xkq, index_xkq, index_xk, index_sym, nkqs, nqs
+  USE funct, ONLY: dft_is_hybrid
   USE klist, ONLY: nks_ => nks
 #endif
   implicit none
@@ -45,7 +45,7 @@ subroutine set_kup_and_kdw (xk, wk, isk, nks, npk)
      isk(ik+nks) = 2
   enddo
 #if defined (EXX)
-  if (lexx) then
+  if (dft_is_hybrid()) then
      if (nks /= nks_) call errore ('set_kup_and_kdw', 'wrong nks', 1)
      do ik =1, nks
         do iq =1, nqs
@@ -64,7 +64,7 @@ subroutine set_kup_and_kdw (xk, wk, isk, nks, npk)
   nks = 2 * nks
 
 #if defined (EXX)
-  if (lexx) call exx_grid_check
+  if (dft_is_hybrid()) call exx_grid_check
 #endif
 
   return

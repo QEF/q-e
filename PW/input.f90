@@ -109,8 +109,7 @@ SUBROUTINE iosys()
                             niter_with_fixed_ns, starting_ns, U_projection, &
                             lda_plus_u_ => lda_plus_u
 
-  USE exx,           ONLY : lexx_   => lexx, &
-                            nqx1_   => nq1,  &
+  USE exx,           ONLY : nqx1_   => nq1,  &
                             nqx2_   => nq2,  &
                             nqx3_   => nq3,  &
                             yukawa_ => yukawa
@@ -1144,7 +1143,6 @@ SUBROUTINE iosys()
   !
 #if defined (EXX)
   !
-  lexx_  = lexx
   nqx1_   = nqx1
   nqx2_   = nqx2
   nqx3_   = nqx3

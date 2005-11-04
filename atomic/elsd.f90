@@ -17,7 +17,7 @@ subroutine elsd (mesh,zed,r,r2,dx,rho,zeta,vxt,vh,nlcc,   &
   !   gradient correction allowed (A. Dal Corso fecit AD 1993)
   !
   use kinds, only : DP
-  use funct, only: get_iexch, get_igcx, get_igcc
+  use funct, only: get_iexch, dft_is_gradient
   use ld1inc, only: vx
   implicit none
   integer:: ndm,mesh,nwf,i,n,ll(nwf),lam,lmax,lsd,nspin,is
@@ -32,7 +32,7 @@ subroutine elsd (mesh,zed,r,r2,dx,rho,zeta,vxt,vh,nlcc,   &
   integer:: mgcx,mgcc,ierr
   real(DP),parameter :: fourpi = 4.0_DP * 3.141592653589793_DP  
 
-  gga=get_igcx().ne.0.or.get_igcc().ne.0
+  gga=dft_is_gradient() 
   oep=get_iexch().eq.4
   allocate(vgc(ndm,2),stat=ierr)
   allocate(rhoc(ndm),stat=ierr)

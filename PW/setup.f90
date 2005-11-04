@@ -77,7 +77,8 @@ SUBROUTINE setup()
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, mcons, &
                                  angle1, angle2, bfield
 #if defined (EXX)
-  USE exx,                ONLY : lexx, exxalfa, exx_grid_init
+  USE exx,                ONLY : exx_grid_init
+  USE funct,              ONLY : dft_is_hybrid
 #endif
   !
   IMPLICIT NONE
@@ -761,13 +762,7 @@ SUBROUTINE setup()
   IF ( lraman ) CALL set_kplusb(ibrav, xk, wk, b_length, nks, npk, lcart)
   !
 #if defined (EXX)
-  IF ( lexx ) THEN
-     !
-     call exx_grid_init()
-     !
-     exxalfa = 0.D0
-     !
-  END IF
+  IF ( dft_is_hybrid() ) call exx_grid_init()
 #endif
   !
   IF ( lsda ) THEN

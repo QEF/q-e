@@ -185,7 +185,7 @@ END FUNCTION calculate_dx
       use ions_base, only: nsp
       use read_pseudo_module, only: read_pseudo_upf
       use control_flags, only: program_name, tuspp
-      use funct, only: get_iexch, get_icorr, get_igcx, get_igcc, set_dft_from_name, ishybrid
+      use funct, only: get_iexch, get_icorr, get_igcx, get_igcc, set_dft_from_name, dft_is_hybrid
 
       IMPLICIT NONE
 
@@ -361,7 +361,7 @@ END FUNCTION calculate_dx
           !
           dft_name = TRIM( xc_type )
           CALL set_dft_from_name( dft_name )
-          IF ( ishybrid ) &
+          IF ( dft_is_hybrid() ) &
              CALL errore( 'readpp', 'HYBRID XC not implemented in CPV', 1 )
 
           WRITE( stdout, fmt="(/,3X,'Warning XC functionals forced to be: ',A)" ) dft_name
@@ -762,7 +762,7 @@ subroutine upf2internal ( upf, is, ierr )
                    lll, nbeta, kkbeta,  nqlc, nqf, betar, dion, tvanp
   use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc, numeric
   use ions_base, only: zv
-  use funct, only: set_dft_from_name, ishybrid
+  use funct, only: set_dft_from_name, dft_is_hybrid
   !
   use pseudo_types
   !
@@ -783,7 +783,7 @@ subroutine upf2internal ( upf, is, ierr )
   nlcc(is)  = upf%nlcc
   !
   call set_dft_from_name( upf%dft )
-  IF ( ishybrid ) &
+  IF ( dft_is_hybrid() ) &
      CALL errore( 'read_pseudo', 'HYBRID XC not implemented in CPV', 1 )
 
   !
@@ -854,7 +854,7 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
                    lll, nbeta, kkbeta,  nqlc, nqf, betar, dion, tvanp
   use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc, numeric
   use ions_base, only: zv
-  use funct, only: set_dft_from_name, ishybrid
+  use funct, only: set_dft_from_name, dft_is_hybrid
   !
   use pseudo_types
   !
@@ -882,7 +882,7 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
   if (mesh(is) > ndmx ) call errore('read_pseudo','increase mmaxx',mesh(is))
   !
   call set_dft_from_name( TRIM( xc_type ) )
-  IF ( ishybrid ) &
+  IF ( dft_is_hybrid() ) &
      CALL errore( 'read_pseudo', 'HYBRID XC not implemented in CPV', 1 )
 
   !
@@ -1215,7 +1215,7 @@ END SUBROUTINE read_atomic_cc
       use uspp_param, only: betar, dion, vloc_at, lll, nbeta, kkbeta
       use qrl_mod, only: cmesh
       use bhs, only: rcl, rc2, bl, al, wrc1, lloc, wrc2, rc1
-      use funct, only: set_dft_from_name, ishybrid
+      use funct, only: set_dft_from_name, dft_is_hybrid
       use ions_base, only: zv
       use io_global, only: stdout
 
@@ -1240,7 +1240,7 @@ END SUBROUTINE read_atomic_cc
 
       call dftname_cp (nint(exfact), dft_name)
       call set_dft_from_name( dft_name )
-      IF ( ishybrid ) &
+      IF ( dft_is_hybrid() ) &
          CALL errore( 'readpp', 'HYBRID XC not implemented in CPV', 1 )
 !
       if(lloc(is).eq.2)then 
@@ -1656,7 +1656,7 @@ END SUBROUTINE read_atomic_cc
       use uspp_param, only: qfunc, qfcoef, qqq, betar, dion, vloc_at, &
            rinner, kkbeta, lll, nbeta, nqf, nqlc, tvanp
       use qrl_mod, only: cmesh, qrl
-      use funct, only: set_dft_from_name, ishybrid
+      use funct, only: set_dft_from_name, dft_is_hybrid
       use atom, only: nchi, chi, lchi, r, rab, mesh, nlcc, rho_atc
       use cvan, only: oldvan
       use ions_base, only: zv
@@ -1739,7 +1739,7 @@ END SUBROUTINE read_atomic_cc
 
       call dftname_cp (nint(exfact), dft_name)
       call set_dft_from_name( dft_name )
-      IF ( ishybrid ) &
+      IF ( dft_is_hybrid() ) &
          CALL errore( 'readvan', 'HYBRID XC not implemented in CPV', 1 )
 
 !

@@ -14,7 +14,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   !     due to the perturbation.
   !
 #include "f_defs.h"
-  use funct, only : get_igcx, get_igcc
+  use funct, only : dft_is_gradient
   use pwcom
   USE kinds, only : DP
   use phcom
@@ -70,7 +70,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   ! add gradient correction to xc, NB: if nlcc is true we need to add here
   ! its contribution. grho contains already the core charge
   !
-  if (get_igcx() /= 0 .or. get_igcc() /= 0) call dgradcorr &
+  if ( dft_is_gradient() ) call dgradcorr &
        (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
        dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, nl, ngm, g, &
        alat, omega, dvaux)

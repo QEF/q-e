@@ -55,9 +55,8 @@ SUBROUTINE electrons()
   USE spin_orb,             ONLY : domag
   USE bp,                   ONLY : lelfield, lberry, nberrycyc
 #if defined (EXX)
-  USE exx,                  ONLY : lexx, exxinit, init_h_wfc, &
-                                   exxalfa, exxstart, exxenergy, exxenergy2 
-  USE funct,                ONLY : dft, set_dft_from_name, iexch, icorr, igcx, igcc
+  USE exx,                  ONLY : exxinit, init_h_wfc, exxenergy, exxenergy2 
+  USE funct,                ONLY : dft_is_hybrid, exx_is_active
 #endif
   !
   IMPLICIT NONE
@@ -362,7 +361,7 @@ SUBROUTINE electrons()
            !
         END IF
 #if defined (EXX)
-        if (exxstart) then
+        if (exx_is_active()) then
            fock1 = exxenergy2()
            fock2 = fock0
         else
@@ -527,9 +526,9 @@ SUBROUTINE electrons()
 #endif
      !
 #if defined (EXX)
-     if (lexx .and. conv_elec ) then
+     if (dft_is_hybrid() .and. conv_elec ) then
 
-        first = .not. exxstart
+        first = .not. exx_is_active()
 
         CALL exxinit()
 
@@ -539,13 +538,8 @@ SUBROUTINE electrons()
                      nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
                      ehart, etxc, vtxc, etotefield, charge, vr )
            CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
-           write (*,*) " NOW GO BACK TO REFINE HF CALCULATION"
-!<<<<<<< electrons.f90
-!           write(*,*) " SETS EFIELD"
-!           efield=0.003!ATTENZIONE
-!=======
-!           write (*,*) fock0
-!>>>>>>> 1.89
+           write (*,*) " NOW GO BACK TO REFINE HYBRID CALCULATION"
+           write (*,*) fock0
            iter = 0
            go to 10
         end if
@@ -625,8 +619,8 @@ SUBROUTINE electrons()
      IF ( conv_elec ) THEN
 
 #if defined (EXX)
-        if (lexx .and. dexx > tr2 ) then
-           write (*,*) " NOW GO BACK TO REFINE HF CALCULATION"
+        if (dft_is_hybrid() .and. dexx > tr2 ) then
+           write (*,*) " NOW GO BACK TO REFINE HYBRID CALCULATION"
            iter = 0
            go to 10
         end if

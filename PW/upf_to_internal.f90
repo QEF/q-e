@@ -35,7 +35,7 @@ subroutine set_pseudo_upf (is, upf)
   USE pseud, ONLY: lloc, lmax, zp
   USE uspp_param, ONLY: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, &
        rinner, nbeta, kkbeta, lll, jjj, psd, tvanp
-  USE funct, ONLY: set_dft_from_name, ismeta, ishybrid
+  USE funct, ONLY: set_dft_from_name, dft_is_meta, dft_is_hybrid
   !
   USE ions_base, ONLY: zv
   USE spin_orb, ONLY: lspinorb
@@ -58,11 +58,11 @@ subroutine set_pseudo_upf (is, upf)
   nlcc(is) = upf%nlcc
   call set_dft_from_name( upf%dft )
   !
-  IF ( ismeta ) &
+  IF ( dft_is_meta() ) &
     CALL errore( 'upf_to_internals ', 'META-GGA not implemented in PWscf', 1 )
 #if defined (EXX)
 #else
-  IF ( ishybrid ) &
+  IF ( dft_is_hybrid() ) &
     CALL errore( 'upf_to_internals ', 'HYBRID XC not implemented in PWscf', 1 )
 #endif
   !

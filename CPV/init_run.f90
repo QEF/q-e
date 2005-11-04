@@ -61,7 +61,8 @@ SUBROUTINE init_run()
   USE electrons_nose,           ONLY : xnhe0, xnhem, vnhe, fccc
   USE cell_nose,                ONLY : xnhh0, xnhhm, vnhh
   USE gvecp,                    ONLY : ecutp
-  USE metagga,                  ONLY : ismeta, crosstaus, dkedtaus, gradwfc
+  USE funct,                    ONLY : dft_is_meta
+  USE metagga,                  ONLY : crosstaus, dkedtaus, gradwfc
   USE pseudo_projector,         ONLY : fnl, projector
   USE pseudopotential,          ONLY : pseudopotential_indexes, nsanl
   !
@@ -183,10 +184,10 @@ SUBROUTINE init_run()
      !
   END IF
   !
-  IF ( ismeta .AND. tens ) &
+  IF ( dft_is_meta() .AND. tens ) &
      CALL errore( 'cprmain ', 'ensemble_dft not implimented for metaGGA', 1 )
   !
-  IF ( ismeta .AND. tpre ) THEN
+  IF ( dft_is_meta() .AND. tpre ) THEN
      !
      ALLOCATE( crosstaus( nnrsx, 6, nspin ) )
      ALLOCATE( dkedtaus(  nnrsx, 3, 3, nspin ) )

@@ -170,7 +170,7 @@
       USE ions_base,          ONLY: nsp
       USE cell_module,        ONLY: boxdimensions
       USE cell_base,          ONLY: tpiba
-      USE funct,              ONLY: get_igcx, get_igcc 
+      USE funct,              ONLY: dft_is_gradient
       USE reciprocal_vectors, ONLY: gstart, g
       USE gvecp,              ONLY: ngm
       USE io_global,          ONLY: stdout
@@ -245,7 +245,7 @@
 
       dexc = strvxc * dalbe
 
-      IF ( ( get_igcx() > 0 ) .OR. ( get_igcc() > 0 ) ) THEN
+      IF ( dft_is_gradient() ) THEN
         CALL stress_gc(grho, v2xc, gcpail, omega)
         dexc = dexc + gcpail
       END IF
@@ -277,7 +277,7 @@
 
         USE kinds, ONLY: DP
         USE grid_dimensions, ONLY: nr1l, nr2l, nr3l
-        USE funct, ONLY: get_igcx, get_igcc
+        USE funct, ONLY: dft_is_gradient
 
         REAL (DP) :: rhoetr(:,:,:,:)
         COMPLEX(DP) :: rhoetg(:,:)
@@ -292,7 +292,7 @@
 
         logical :: is_gradient
 
-        is_gradient =  ( get_igcx() > 0 ) .OR. ( get_igcc() > 0 )
+        is_gradient =  dft_is_gradient()
 
           !  vpot = vxc(rhoetr); vpot(r) <-- u(r)
 
@@ -322,7 +322,7 @@
                                   sxc, vpot(1,1,1,1), v2xc(1,1,1,1,1) )
 
           !
-          IF( ( get_igcx() > 0 ) .OR. ( get_igcc() > 0 ) ) THEN
+          IF( dft_is_gradient() ) THEN
             ! ... vpot additional term for gradient correction
             CALL v2gc( v2xc, grho, rhoetr, vpot )
           END If
@@ -359,7 +359,7 @@
 ! calculate exch-corr potential, energy, and derivatives dxc(i,j)
 ! of e(xc) with respect to to cell parameter h(i,j)
 !     
-      use funct,           only : get_igcx, get_igcc
+      use funct,           only : dft_is_gradient, dft_is_meta
       use gvecp,           only : ng => ngm
       use gvecs,           only : ngs
       use grid_dimensions, only : nr1, nr2, nr3, nnr => nnrx
@@ -369,7 +369,7 @@
       use derho,           only : drhor
       use core,            only : drhocg, nlcc_any
       use mp,              only : mp_sum
-      use metagga,         ONLY : ismeta, kedtaur
+      use metagga,         ONLY : kedtaur
       USE io_global,       ONLY : stdout
       use kinds,           ONLY : DP
 !
@@ -400,7 +400,7 @@
       !
       !     filling of gradr with the gradient of rho using fft's
       !
-      if (get_igcx() /= 0 .or. get_igcc() /= 0) then
+      if ( dft_is_gradient() ) then
          !
          allocate( gradr( nnr, 3, nspin ) )
          call fillgrad( nspin, rhog, gradr )
@@ -408,7 +408,7 @@
       end if
 
 !
-      if( ismeta ) then
+      if( dft_is_meta() ) then
             call tpssmeta( nnr, nspin, gradr, rhor, kedtaur, exc )
       else
             CALL exch_corr_cp(nnr, nspin, gradr, rhor, exc)
@@ -474,7 +474,7 @@
       !
       !     second part of the xc-potential
       !
-      if (get_igcx() /= 0 .or. get_igcc() /= 0) then
+      if (dft_is_gradient()) then
          !
          call gradh( nspin, gradr, rhog, rhor, dexc)
          !
