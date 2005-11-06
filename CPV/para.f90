@@ -90,109 +90,64 @@ end module para_mod
 !----------------------------------------------------------------------
       subroutine read_rho(unit,nspin,rhor)
 !----------------------------------------------------------------------
-!
-! read from file rhor(nnr,nspin) on first node and distribute to other nodes
-!
-      use para_mod
-      use parallel_include
-      use grid_dimensions, only: nr1x, nr2x, nr3x, nnr => nnrx
+      !
+      ! read rhor(nnr,nspin) from file
+      !
+      use kinds,           only: DP
+      USE fft_base,        ONLY: dfftp
+      use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nnr => nnrx
+      use xml_io_base,     only: read_rho_xml
+      !
       implicit none
-      integer unit, nspin
-      real(8) rhor(nnr,nspin)
-!
-      integer ir, is
-      integer root, proc, ierr, n, displs(nproc), sendcount(nproc)
-      real(8), allocatable:: rhodist(:)
-!
-!
-      if (me.eq.1) allocate(rhodist(nr1x*nr2x*nr3x))
-      root = 0
-      do proc=1,nproc
-         sendcount(proc) =  dfftp%nnp * ( dfftp%npp(proc) )
-         if (proc.eq.1) then
-            displs(proc)=0
-         else
-            displs(proc)=displs(proc-1) + sendcount(proc-1)
-         end if
-      end do
+      !
+      integer  :: unit, nspin
+      real(DP) :: rhor( nnr, nspin )
+      !
+      integer            :: is
+      CHARACTER(LEN=256) :: filename
+      !
       do is=1,nspin
-!
-! read the charge density from unit "unit" on first node only
-!
-         if (me.eq.1) read(unit) (rhodist(ir),ir=1,nr1x*nr2x*nr3x)
-!
-! distribute the charge density to the other nodes
-!
-#if defined __PARA
-         call mpi_barrier ( MPI_COMM_WORLD, ierr)
-         call mpi_scatterv(rhodist, sendcount, displs, MPI_DOUBLE_PRECISION,       &
-     &                     rhor(1,is),sendcount(me),   MPI_DOUBLE_PRECISION,       &
-     &                     root, MPI_COMM_WORLD, ierr)
-         if (ierr.ne.0) call errore('mpi_scatterv','ierr<>0',ierr)
-#endif
-!
-! just in case: set to zero unread elements (if any)
-!
-         do ir=sendcount(me)+1,nnr
-            rhor(ir,is)=0.d0
-         end do
-      end do
-      if (me.eq.1) deallocate(rhodist)
-!
+        IF( nspin == 2 .AND. is == 1 ) THEN
+           filename = 'rho.1.xml'
+        ELSE IF( nspin == 2 .AND. is == 2 ) THEN
+           filename = 'rho.2.xml'
+        ELSE
+           filename = 'rho.xml'
+        END IF
+        CALL read_rho_xml( filename, rhor(:,is), nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+      END DO
       return
       end subroutine read_rho
 !
 !----------------------------------------------------------------------
-      subroutine write_rho(unit,nspin,rhor)
+      subroutine write_rho( unit, nspin, rhor )
 !----------------------------------------------------------------------
-!
-! collect rhor(nnr,nspin) on first node and write to file
-!
-      use para_mod
-      use parallel_include
-      use grid_dimensions, only: nr1x, nr2x, nr3x, nnr => nnrx
-      use gvecw , only : ngw
+      !
+      ! write rho to file
+      !
+      use kinds,           only: DP
+      USE fft_base,        ONLY: dfftp
+      use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nnr => nnrx
+      use xml_io_base,     only: write_rho_xml
+      !
       implicit none
-      integer unit, nspin
-      real(8) rhor(nnr,nspin)
-!
-      integer ir, is
-      integer root, proc, ierr, displs(nproc), recvcount(nproc)
-      real(8), allocatable:: rhodist(:)
-!
-!
-      if (me.eq.1) allocate(rhodist(nr1x*nr2x*nr3x))
-!
-      root = 0
-      do proc=1,nproc
-         recvcount(proc) =  dfftp%nnp  * ( dfftp%npp(proc) )
-         if (proc.eq.1) then
-            displs(proc)=0
-         else
-            displs(proc)=displs(proc-1) + recvcount(proc-1)
-         end if
-      end do
-!
+      !
+      integer  :: unit, nspin
+      real(DP) :: rhor( nnr, nspin )
+      !
+      integer            :: is
+      CHARACTER(LEN=256) :: filename
+      !
       do is=1,nspin
-!
-! gather the charge density on the first node
-!
-
-#if defined __PARA
-         call mpi_barrier ( MPI_COMM_WORLD, ierr)
-         call mpi_gatherv (rhor(1,is), recvcount(me), MPI_DOUBLE_PRECISION,        &
-     &                     rhodist,recvcount, displs, MPI_DOUBLE_PRECISION,        &
-     &                     root, MPI_COMM_WORLD, ierr)
-         if (ierr.ne.0) call errore('mpi_gatherv','ierr<>0',ierr)
-#endif
-!
-! write the charge density to unit "unit" from first node only
-!
-         if (me.eq.1) write(unit) (rhodist(ir),ir=1,nr1x*nr2x*nr3x)
-         ! if (me.eq.1) write(unit,'(f12.7)') (rhodist(ir),ir=1,nr1x*nr2x*nr3x)
-      end do
-      if (me.eq.1) deallocate(rhodist)
-!
+        IF( nspin == 2 .AND. is == 1 ) THEN
+           filename = 'rho.1.xml'
+        ELSE IF( nspin == 2 .AND. is == 2 ) THEN
+           filename = 'rho.2.xml'
+        ELSE
+           filename = 'rho.xml'
+        END IF
+        CALL write_rho_xml( filename, rhor(:,is), nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+      END DO
       return
       end subroutine write_rho
 !
@@ -326,68 +281,6 @@ end module para_mod
 
       return
       end subroutine nrbounds
-
-!----------------------------------------------------------------------
-      subroutine write_pot(unit,rhos2)
-!     - To write the hartree potential
-!        M.S
-!----------------------------------------------------------------------
-!
-! collect rhos2(nnrs) on first node and write to file
-!
-      use para_mod
-      use smooth_grid_dimensions , nnrs => nnrsx
-      use parallel_include
-
-      implicit none
-
-      integer unit, nspin
-      real(8) rhos2(nnrs)
-!
-      integer ir, is
-      integer root, proc, ierr, displs(nproc), recvcount(nproc)
-      real(8), allocatable:: rhodist(:)
-!
-!
-      if (me.eq.1) allocate(rhodist(nr1sx*nr2sx*nr3sx))
-!
-      root = 0
-      do proc=1,nproc
-         recvcount(proc) =   dffts%nnp * dffts%npp(proc)
-         if (proc.eq.1) then
-            displs(proc)=0
-         else
-            displs(proc)=displs(proc-1) + recvcount(proc-1)
-         end if
-      end do
-!
-!      do is=1,nspin
-!
-! gather the charge density on the first node
-#if defined __PARA
-         call mpi_barrier ( MPI_COMM_WORLD, ierr)
-         call mpi_gatherv (rhos2, recvcount(me), MPI_DOUBLE_PRECISION,        &
-     &                     rhodist,recvcount, displs, MPI_DOUBLE_PRECISION,        &
-     &                     root, MPI_COMM_WORLD, ierr)
-         if (ierr.ne.0) call errore('mpi_gatherv','ierr<>0',ierr)
-#endif
-!
-! write the charge density to unit "unit" from first node only
-!
-         if (me.eq.1) write(unit,'(f12.6)') (rhodist(ir),ir=1,nr1sx*nr2sx*nr3sx)
-!      end do
-      if (me.eq.1) deallocate(rhodist)
-!
-      return
-      end subroutine write_pot
-!
-! Copyright (C) 2002 CP90 group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-!
-
 
 !----------------------------------------------------------------------
       subroutine write_rho_xsf(tau0,h,rho)
