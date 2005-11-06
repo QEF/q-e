@@ -52,6 +52,7 @@ MODULE pw_restart
     SUBROUTINE pw_writefile( what )
       !------------------------------------------------------------------------
       !
+      USE control_flags,        ONLY : istep
       USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
                                        ibrav, symm_type, celldm
       USE reciprocal_vectors,   ONLY : ig_l2g
@@ -103,7 +104,6 @@ MODULE pw_restart
       INTEGER,  ALLOCATABLE :: itmp(:,:)
       LOGICAL               :: lgvec, lwfc
       REAL(DP), ALLOCATABLE :: rhosum(:)
-
       !
       !
       lgvec = .FALSE.
@@ -623,7 +623,22 @@ MODULE pw_restart
       !
       DEALLOCATE( itmp )
       DEALLOCATE( ngk_g )
-      !   
+      !
+      ! ... a copy of the xml descriptor (data-file.xml) is saved in the 
+      ! ... history subdir
+      !
+      CALL create_directory( TRIM( dirname ) // '/history' )
+      !
+      IF ( ionode ) THEN
+         !
+         filename = TRIM( dirname ) // '/history/' // &
+                  & TRIM( xmlpun ) // iotk_index( istep )
+         !
+         CALL copy_file( TRIM( dirname ) // "/" // TRIM( xmlpun ), &
+                         TRIM( filename ) )
+         !
+      END IF
+      !
       RETURN
       !
       CONTAINS
@@ -1459,7 +1474,8 @@ MODULE pw_restart
       !
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
-      CHARACTER(LEN=20)  :: dft_name
+      !
+      CHARACTER(LEN=20) :: dft_name
       !
       !
       IF ( lxc_read ) RETURN

@@ -53,18 +53,16 @@ MODULE io_files
   CHARACTER(LEN=6 ), PARAMETER :: ks_emp_file   = 'KS_EMP'
   CHARACTER(LEN=16), PARAMETER :: sfac_file     = 'STRUCTURE_FACTOR'
   CHARACTER (LEN=256) :: &
-    dat_file  = 'os.dat',    &! file containing the enegy profile
-    int_file  = 'os.int',    &! file containing the interpolated energy profile
-    path_file = 'os.path',   &! file containing informations needed to restart a path simulation
-    xyz_file  = 'os.xyz',    &! file containing coordinates of all images in xyz format
-    axsf_file = 'os.axsf',   &! file containing coordinates of all images in axsf format
-    broy_file = 'os.broyden'  ! file containing broyden's history
+    dat_file      = 'os.dat',    &! file containing the enegy profile
+    int_file      = 'os.int',    &! file containing the interpolated energy profile
+    path_file     = 'os.path',   &! file containing informations needed to restart a path simulation
+    xyz_file      = 'os.xyz',    &! file containing coordinates of all images in xyz format
+    axsf_file     = 'os.axsf',   &! file containing coordinates of all images in axsf format
+    broy_file     = 'os.broyden'  ! file containing broyden's history
   CHARACTER (LEN=261) :: &
     exit_file = "os.EXIT"    ! file required for a soft exit  
-  CHARACTER (LEN=11), PARAMETER :: xmlpun = 'restart.xml'
-  CHARACTER(LEN=256) :: vib_out_file  = 'vibrations.out', & ! output of phrozen phonon vibrational calculation
-                        vib_mass_file = 'mass.vib'         ! isotope masses used for diagonalizing the
-                                                      ! ...dynamical matrix
+  !
+  CHARACTER (LEN=13), PARAMETER :: xmlpun = 'data-file.xml'
   !
   ! ... The units where various variables are saved
   !

@@ -34,9 +34,9 @@ MODULE cp_restart
     SUBROUTINE cp_writefile( ndw, scradir, ascii, nfi, simtime, acc, nk, xk, &
                              wk, ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh,   &
                              taui, cdmi, stau0, svel0, staum, svelm, force,  &
-                             vnhp, xnhp0, xnhpm,nhpcl,nhpdim, occ0, occm, lambda0,&
-                             lambdam, xnhe0, xnhem, vnhe, ekincm, et, rho,   &
-                             c04, cm4, c02, cm2, mat_z )
+                             vnhp, xnhp0, xnhpm,nhpcl,nhpdim, occ0, occm,    &
+                             lambda0,lambdam, xnhe0, xnhem, vnhe, ekincm,    &
+                             et, rho, c04, cm4, c02, cm2, mat_z )
       !------------------------------------------------------------------------
       !
       USE control_flags,            ONLY : gamma_only, force_pairing
@@ -132,7 +132,7 @@ MODULE cp_restart
       !
       CALL iotk_free_unit( iunout, ierr )
       !
-      CALL errore( 'cp_writefile ', &
+      CALL errore( 'cp_writefile', &
                    'no free units to write wavefunctions', ierr )
       !
       ! ... Create main restart directory
@@ -227,13 +227,12 @@ MODULE cp_restart
          !
       END DO
       !
-      ! ... Open XML descriptor
-      !
       IF ( ionode ) THEN
          !
+         ! ... Open XML descriptor
+         !
          CALL iotk_open_write( iunpun, FILE = TRIM( dirname ) // '/' // &
-                             & TRIM( xmlpun ), BINARY = .NOT. ascii, &
-                               IERR = ierr )
+                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
          !
       END IF
       !
@@ -454,23 +453,18 @@ MODULE cp_restart
          CALL iotk_write_dat(   iunpun, "nhpcl", nhpcl )
          CALL iotk_write_dat(   iunpun, "nhpdim", nhpdim )
          CALL iotk_write_dat(   iunpun, "xnhp",  xnhpm(1:nhpcl*nhpdim) )
-        ! CALL iotk_write_dat(  iunpun, "vnhp",  vnhp )
          CALL iotk_write_end(   iunpun, "IONS_NOSE" )
          !
          CALL iotk_write_begin( iunpun, "ELECTRONS_NOSE" )
          CALL iotk_write_dat(   iunpun, "xnhe", xnhem )
-        ! CALL iotk_write_dat(  iunpun, "vnhe", vnhe )
          CALL iotk_write_end(   iunpun, "ELECTRONS_NOSE" )
          !
          CALL iotk_write_begin( iunpun, "CELL_PARAMETERS" )
          CALL iotk_write_dat(   iunpun, "ht",    htm )
-        ! CALL iotk_write_dat(  iunpun, "htvel", htvel )
-        ! CALL iotk_write_dat(  iunpun, "gvel",  gvel )
          CALL iotk_write_end(   iunpun, "CELL_PARAMETERS" )
          !
          CALL iotk_write_begin( iunpun, "CELL_NOSE" )
          CALL iotk_write_dat(   iunpun, "xnhh", xnhhm )
-        ! CALL iotk_write_dat(  iunpun, "vnhh", vnhh )
          CALL iotk_write_end(   iunpun, "CELL_NOSE" )
          !
          CALL iotk_write_end( iunpun, "STEPM" )
@@ -690,10 +684,29 @@ MODULE cp_restart
       !
       IF ( ionode ) CALL iotk_close_write( iunpun )
       !
+!-------------------------------------------------------------------------------
+! ... END RESTART SECTIONS
+!-------------------------------------------------------------------------------
+      !
       DEALLOCATE( ftmp )
       DEALLOCATE( tau  )
       DEALLOCATE( ityp )
       DEALLOCATE( mill )
+      !
+      ! ... a copy of the xml descriptor (data-file.xml) is saved in the 
+      ! ... history subdir
+      !
+      CALL create_directory( TRIM( dirname ) // '/history' )
+      !
+      IF ( ionode ) THEN
+         !
+         filename = TRIM( dirname ) // '/history/' // &
+                  & TRIM( xmlpun ) // iotk_index( nfi )
+         !
+         CALL copy_file( TRIM( dirname ) // "/" // TRIM( xmlpun ), &
+                         TRIM( filename ) )
+         !
+      END IF
       !
       RETURN
       !
@@ -776,18 +789,18 @@ MODULE cp_restart
       COMPLEX(DP), OPTIONAL, INTENT(INOUT) :: cm2(:,:)     ! 
       REAL(DP),    OPTIONAL, INTENT(INOUT) :: mat_z(:,:,:) ! 
       !
-      CHARACTER(LEN=256)      :: dirname, kdirname, filename
-      CHARACTER(LEN=5)        :: kindex
-      CHARACTER(LEN=4)        :: cspin
-      INTEGER                 :: strlen
-      INTEGER                 :: kunit
-      INTEGER                 :: k1, k2, k3
-      INTEGER                 :: nk1, nk2, nk3
-      INTEGER                 :: i, j, ispin, ig, nspin_wfc, ierr, ik
-      REAL(DP)                :: omega, htm1(3,3), hinv(3,3), scalef
-      LOGICAL                 :: found
-      LOGICAL                 :: tread_cm
-      INTEGER, ALLOCATABLE    :: mill(:,:)
+      CHARACTER(LEN=256)   :: dirname, kdirname, filename
+      CHARACTER(LEN=5)     :: kindex
+      CHARACTER(LEN=4)     :: cspin
+      INTEGER              :: strlen
+      INTEGER              :: kunit
+      INTEGER              :: k1, k2, k3
+      INTEGER              :: nk1, nk2, nk3
+      INTEGER              :: i, j, ispin, ig, nspin_wfc, ierr, ik
+      REAL(DP)             :: omega, htm1(3,3), hinv(3,3), scalef
+      LOGICAL              :: found
+      LOGICAL              :: tread_cm
+      INTEGER, ALLOCATABLE :: mill(:,:)
       !
       ! ... variables read for testing pourposes
       !
@@ -819,7 +832,7 @@ MODULE cp_restart
       !
       CALL iotk_free_unit( iunout, ierr )
       !
-      CALL errore( 'cp_readfile ', &
+      CALL errore( 'cp_readfile', &
                    'no free units to read wavefunctions', ierr )
       !
       kunit = 1
@@ -827,15 +840,20 @@ MODULE cp_restart
       !
       dirname = restart_dir( scradir, ndr )
       !
-      filename = TRIM( dirname ) // '/' // 'restart.xml'
+      ! ... Open XML descriptor
       !
-      IF ( ionode ) &
-         CALL iotk_open_read( iunpun, file = TRIM( filename ), &
+      IF ( ionode ) THEN
+         !
+         filename = TRIM( dirname ) // '/' // TRIM( xmlpun )
+         !
+         CALL iotk_open_read( iunpun, FILE = TRIM( filename ), &
                               BINARY = .FALSE., ROOT = attr, IERR = ierr )
+         !
+      END IF
       !
       CALL mp_bcast( ierr, ionode_id )
       !
-      CALL errore( 'cp_readfile ', &
+      CALL errore( 'cp_readfile', &
                    'cannot open restart file for reading', ierr )
       !
       IF ( ionode ) THEN
@@ -885,7 +903,7 @@ MODULE cp_restart
       !
       CALL mp_bcast( ierr, ionode_id )
       !
-      CALL errore( 'cp_readfile ', &
+      CALL errore( 'cp_readfile', &
                    'cannot read positions from restart file', ierr )
       !
       ! ... read MD timesteps variables
@@ -988,9 +1006,6 @@ MODULE cp_restart
             !
             CALL iotk_scan_begin( iunpun, "CELL_PARAMETERS" )
             CALL iotk_scan_dat(   iunpun, "ht", htm )
-           ! CALL iotk_scan_dat(  iunpun, "htvel", htvel )
-           ! CALL iotk_scan_dat(  iunpun, "gvel", gvel, FOUND = found, IERR = ierr )
-           ! IF ( .NOT. found ) gvel = 0.D0
             CALL iotk_scan_end(   iunpun, "CELL_PARAMETERS" )
             !
             CALL iotk_scan_begin( iunpun, "CELL_NOSE" )
@@ -1349,10 +1364,10 @@ MODULE cp_restart
       !
       IMPLICIT NONE
       !
-      INTEGER,               INTENT(IN) :: ndr
-      CHARACTER(LEN=*),      INTENT(IN) :: scradir
-      INTEGER,               INTENT(IN) :: ik, ispin, nk, nspin
-      CHARACTER,             INTENT(IN) :: tag
+      INTEGER,               INTENT(IN)  :: ndr
+      CHARACTER(LEN=*),      INTENT(IN)  :: scradir
+      INTEGER,               INTENT(IN)  :: ik, ispin, nk, nspin
+      CHARACTER,             INTENT(IN)  :: tag
       COMPLEX(DP), OPTIONAL, INTENT(OUT) :: c2(:,:)
       COMPLEX(DP), OPTIONAL, INTENT(OUT) :: c4(:,:,:,:)
       !
@@ -1434,10 +1449,10 @@ MODULE cp_restart
       REAL(DP),         INTENT(INOUT) :: xnhhm(3,3)
       REAL(DP),         INTENT(INOUT) :: vnhh(3,3)
       !
-      CHARACTER(LEN=256)      :: dirname, filename
-      INTEGER                 :: strlen
-      INTEGER                 :: i, ierr, nt_
-      LOGICAL                 :: found
+      CHARACTER(LEN=256) :: dirname, filename
+      INTEGER            :: strlen
+      INTEGER            :: i, ierr, nt_
+      LOGICAL            :: found
       !
       ! ... variables read for testing pourposes
       !
@@ -1451,7 +1466,7 @@ MODULE cp_restart
       !
       dirname = restart_dir( scradir, ndr ) 
       !
-      filename = TRIM( dirname ) // '/' // 'restart.xml'
+      filename = TRIM( dirname ) // '/' // TRIM( xmlpun )
       !
       IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( filename ), &
@@ -1459,7 +1474,7 @@ MODULE cp_restart
       !
       CALL mp_bcast( ierr, ionode_id )
       !
-      CALL errore( 'cp_read_cell ', &
+      CALL errore( 'cp_read_cell', &
                    'cannot open restart file for reading', ierr )
       !
       IF ( ionode ) THEN

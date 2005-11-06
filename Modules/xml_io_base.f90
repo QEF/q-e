@@ -43,10 +43,10 @@ MODULE xml_io_base
       USE mp_global, ONLY : mpime
       USE parser,    ONLY : int_to_char
       !
-      CHARACTER(LEN=256) :: dirname
-      INTEGER            :: ierr, ik
+      CHARACTER(LEN=*), INTENT(IN) :: dirname
       !
-      INTEGER,  EXTERNAL :: c_mkdir
+      INTEGER           :: ierr, ik
+      INTEGER, EXTERNAL :: c_mkdir
       !
       ierr = 0
       !
@@ -70,6 +70,8 @@ MODULE xml_io_base
       CALL errore( 'create_directory: ', &
                    TRIM( dirname ) // 'non existent or non writable', ierr )
       !
+      RETURN
+      !
     END SUBROUTINE create_directory
     !
     !------------------------------------------------------------------------
@@ -88,6 +90,8 @@ MODULE xml_io_base
       kdirname = TRIM( basedir ) // '/K' // kindex
       !
       kpoint_dir = TRIM( kdirname )
+      !
+      RETURN
       !
     END FUNCTION kpoint_dir
     !
@@ -127,6 +131,8 @@ MODULE xml_io_base
       !
       wfc_filename = TRIM( filename )
       !
+      RETURN
+      !
     END FUNCTION
     !
     !------------------------------------------------------------------------
@@ -134,25 +140,35 @@ MODULE xml_io_base
       !------------------------------------------------------------------------
       !
       CHARACTER(LEN=*), INTENT(IN) :: file_in, file_out
-      CHARACTER(LEN=256)           :: string
-      INTEGER                      :: ierr
+      !
+      CHARACTER(LEN=256) :: string
+      INTEGER            :: iun_in, iun_out, ierr
       !
       !
-      OPEN( UNIT = 776, FILE = file_in,  STATUS = "OLD" )
-      OPEN( UNIT = 777, FILE = file_out, STATUS = "UNKNOWN" )         
+      IF ( .NOT. ionode ) RETURN
+      !
+      CALL iotk_free_unit( iun_in,  ierr )
+      CALL iotk_free_unit( iun_out, ierr )
+      !
+      CALL errore( 'copy_file', 'no free units available', ierr )
+      !
+      OPEN( UNIT = iun_in,  FILE = file_in,  STATUS = "OLD" )
+      OPEN( UNIT = iun_out, FILE = file_out, STATUS = "UNKNOWN" )         
       !
       copy_loop: DO
          !
-         READ( UNIT = 776, FMT = '(A256)', IOSTAT = ierr ) string
+         READ( UNIT = iun_in, FMT = '(A256)', IOSTAT = ierr ) string
          !
          IF ( ierr < 0 ) EXIT copy_loop
          !
-         WRITE( UNIT = 777, FMT = * ) TRIM( string )
+         WRITE( UNIT = iun_out, FMT = * ) TRIM( string )
          !
       END DO copy_loop
       !
-      CLOSE( UNIT = 776 )
-      CLOSE( UNIT = 777 )
+      CLOSE( UNIT = iun_in )
+      CLOSE( UNIT = iun_out )
+      !
+      RETURN
       !
     END SUBROUTINE
     !
@@ -171,7 +187,8 @@ MODULE xml_io_base
       !
       ! ... main restart directory
       !
-      dirname = 'RESTART' // int_to_char( runit )
+      dirname = TRIM( prefix ) // '_' // &
+              & TRIM( int_to_char( runit ) )// '.save'
       !
       IF ( LEN( scradir ) > 1 ) THEN
          !
@@ -182,6 +199,8 @@ MODULE xml_io_base
       END IF
       !
       restart_dir = TRIM( dirname )
+      !
+      RETURN
       !
     END FUNCTION restart_dir
     !
@@ -207,7 +226,7 @@ MODULE xml_io_base
       !
       IF ( ionode ) THEN
          !
-         filename = TRIM( filename ) // '/restart.xml'
+         filename = TRIM( filename ) // '/' // TRIM( xmlpun )
          !
          INQUIRE( FILE = TRIM( filename ), EXIST = lval )
          !
@@ -433,6 +452,7 @@ MODULE xml_io_base
       !
       INTEGER            :: i, flen
       CHARACTER(LEN=256) :: file_pseudo
+      !
       !
       CALL iotk_write_begin( iunpun, "IONS" )
       !
