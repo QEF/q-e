@@ -83,9 +83,9 @@
 
           ! ...     --+ end of declarations +--
 
-          if(nr1.lt.3) call errore(' phfacs ',' nr1 too small ',nr1)
-          if(nr2.lt.3) call errore(' phfacs ',' nr2 too small ',nr2)
-          if(nr3.lt.3) call errore(' phfacs ',' nr3 too small ',nr3)
+          if(nr1 < 3) call errore(' phfacs ',' nr1 too small ',1)
+          if(nr2 < 3) call errore(' phfacs ',' nr2 too small ',1)
+          if(nr3 < 3) call errore(' phfacs ',' nr3 too small ',1)
 
           DO isa = 1, nat
 
@@ -122,15 +122,15 @@
               ! ...         Miller index < 0: exp(-i N G_i dot R(ia)) =
               ! ...           = exp(-i G_i dot R(ia)) exp(-i (N-1) G_i dot R(ia))
 
-              DO i = 1, nr1 - 1
+              DO i = 1, nr1
                 ei1(  i, isa ) = ei1(  i - 1, isa ) * ctep1
                 ei1( -i, isa ) = ei1( -i + 1, isa ) * ctem1
               END DO
-              DO j = 1, nr2 - 1
+              DO j = 1, nr2
                 ei2(  j, isa ) = ei2(  j - 1, isa ) * ctep2
                 ei2( -j, isa ) = ei2( -j + 1, isa ) * ctem2
               END DO
-              DO k = 1, nr3 - 1
+              DO k = 1, nr3
                 ei3(  k, isa ) = ei3(  k - 1, isa ) * ctep3
                 ei3( -k, isa ) = ei3( -k + 1, isa ) * ctem3
               END DO
@@ -291,10 +291,6 @@
       integer :: i,j,k, is, ia, ig, isa
       complex(8), allocatable:: ei1b(:,:), ei2b(:,:), ei3b(:,:)
       real(8), allocatable :: taus(:,:)
-!
-      if(nr1b.lt.3) call errore(' phbox ',' nr1b too small ',nr1b)
-      if(nr2b.lt.3) call errore(' phbox ',' nr2b too small ',nr2b)
-      if(nr3b.lt.3) call errore(' phbox ',' nr3b too small ',nr3b)
 !
       allocate(ei1b(-nr1b:nr1b,nat))
       allocate(ei2b(-nr2b:nr2b,nat))

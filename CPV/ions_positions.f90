@@ -87,6 +87,7 @@ MODULE ions_positions
     INTEGER                       :: is, ia, i, isa
     REAL(DP)                :: dt2by2, fac, dt2, twodel
     REAL(DP)                :: verl1, verl2, verl3
+    REAL(DP)                :: ftmp(3)
     !
     !
     dt2by2 = 0.5D0 * delt * delt
@@ -107,14 +108,17 @@ MODULE ions_positions
              !
              isa = isa + 1
              !
-             tausp(:,isa) = taus(:,isa) - pmass(is) * &
+             DO i = 1, 3
+
+                tausp(i,isa) = taus(i,isa) - pmass(is) * &
                                              ( hgamma(i,1) * vels(1,isa) + &
                                                hgamma(i,2) * vels(2,isa) + &
                                                hgamma(i,3) * vels(3,isa) ) + &
-                            iforce(:,isa) * dt2by2 / pmass(is) * &
+                            iforce(i,isa) * dt2 / pmass(is) * &
                                              ( fion(1,isa) * ainv(i,1) + &
                                                fion(2,isa) * ainv(i,2) + &
                                                fion(3,isa) * ainv(i,3) )
+             END DO
              !
           END DO
           !
