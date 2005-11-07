@@ -232,8 +232,7 @@ MODULE cp_restart
          !
          ! ... Open XML descriptor
          !
-         WRITE( stdout, fmt = "( /, 3X, 'Writing restart file: ', A)" ) TRIM( dirname ) // '/' // &
-                             & TRIM( xmlpun )
+         WRITE( stdout, '(/,3X,"writing restart file: ",A)' ) TRIM( dirname )
          !
          CALL iotk_open_write( iunpun, FILE = TRIM( dirname ) // '/' // &
                              & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
@@ -264,15 +263,15 @@ MODULE cp_restart
          CALL iotk_write_dat( iunpun, "TITLE", TRIM( title ) )
          !
          CALL iotk_write_attr( attr, "UNIT", "Hartree", FIRST = .TRUE. )
-         CALL iotk_write_dat( iunpun, "ekin",   ekin,   ATTR = attr )
-         CALL iotk_write_dat( iunpun, "eht",    eht,    ATTR = attr )
-         CALL iotk_write_dat( iunpun, "esr",    esr,    ATTR = attr )
-         CALL iotk_write_dat( iunpun, "eself",  eself,  ATTR = attr )
-         CALL iotk_write_dat( iunpun, "epseu",  epseu,  ATTR = attr )
-         CALL iotk_write_dat( iunpun, "enl",    enl,    ATTR = attr )
-         CALL iotk_write_dat( iunpun, "exc",    exc,    ATTR = attr )
-         CALL iotk_write_dat( iunpun, "vave",   vave,   ATTR = attr )
-         CALL iotk_write_dat( iunpun, "enthal", enthal, ATTR = attr )
+         CALL iotk_write_dat( iunpun, "KINETIC_ENERGY", ekin,   ATTR = attr )
+         CALL iotk_write_dat( iunpun, "HARTREE_ENERGY", eht,    ATTR = attr )
+         CALL iotk_write_dat( iunpun, "EWALD_TERM",     esr,    ATTR = attr )
+         CALL iotk_write_dat( iunpun, "GAUSS_SELFINT",  eself,  ATTR = attr )
+         CALL iotk_write_dat( iunpun, "LPSP_ENERGY",    epseu,  ATTR = attr )
+         CALL iotk_write_dat( iunpun, "NLPSP_ENERGY",   enl,    ATTR = attr )
+         CALL iotk_write_dat( iunpun, "EXC_ENERGY",     exc,    ATTR = attr )
+         CALL iotk_write_dat( iunpun, "AVERAGE_POT",    vave,   ATTR = attr )
+         CALL iotk_write_dat( iunpun, "ENTHALPY",       enthal, ATTR = attr )
          !
          CALL iotk_write_end( iunpun, "STATUS" )      
          !
@@ -716,9 +715,11 @@ MODULE cp_restart
       !
       s1 = cclock() 
       !
-      IF( ionode ) THEN
-         WRITE( stdout,10) (s1-s0)
-   10    FORMAT( 3X,'restart written completed in ',F8.3,' sec.',/)
+      IF ( ionode ) THEN
+         !
+         WRITE( stdout, &
+                '(3X,"restart file written in ",F8.3," sec.",/)' ) ( s1 - s0 )
+         !
       END IF
       !
       RETURN
@@ -860,7 +861,7 @@ MODULE cp_restart
          !
          filename = TRIM( dirname ) // '/' // TRIM( xmlpun )
          !
-         WRITE( stdout, fmt = "( /, 3X, 'Reading restart file: ', A)" ) TRIM( filename )
+         WRITE( stdout, '(/,3X,"reading restart file: ",A)' ) TRIM( dirname )
          !
          CALL iotk_open_read( iunpun, FILE = TRIM( filename ), &
                               BINARY = .FALSE., ROOT = attr, IERR = ierr )
@@ -1371,9 +1372,11 @@ MODULE cp_restart
       !
       s1 = cclock()
       !
-      IF( ionode ) THEN
-         WRITE( stdout,20)  (s1-s0)
-   20    FORMAT( 3X,'read restart file completed in ',F8.3,' sec.',/)
+      IF ( ionode ) THEN
+         !
+         WRITE( stdout, &
+                '(3X,"restart file read in ",F8.3," sec.",/)' )  ( s1 - s0 )
+         !
       END IF
       !
       RETURN

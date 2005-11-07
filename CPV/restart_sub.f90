@@ -71,16 +71,16 @@ MODULE from_restart_module
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh, cell_nosezero
     USE phase_factors_module, ONLY : strucf
-     USE cg_module,           ONLY : tcg
+    USE cg_module,            ONLY : tcg
     !
     COMPLEX(DP) :: eigr(:,:), ei1(:,:), ei2(:,:), ei3(:,:)
     COMPLEX(DP) :: eigrb(:,:)
-    INTEGER           :: irb(:,:)
+    INTEGER     :: irb(:,:)
     REAL(DP)    :: bec(:,:), fion(:,:), becdr(:,:,:), fionm(:,:)
     REAL(DP)    :: taub(:,:)
     REAL(DP)    :: b1(:), b2(:), b3(:)
-    INTEGER           :: nfi
-    LOGICAL           :: tfirst
+    INTEGER     :: nfi
+    LOGICAL     :: tfirst
     COMPLEX(DP) :: sfac(:,:)
     COMPLEX(DP) :: rhog(:,:)
     REAL(DP)    :: rhor(:,:), rhos(:,:), rhoc(:)
@@ -96,23 +96,23 @@ MODULE from_restart_module
     COMPLEX(DP), ALLOCATABLE :: c2(:), c3(:)
     REAL(DP)                 :: verl1, verl2
     REAL(DP)                 :: bigr
-    INTEGER                        :: i, j, iter
-    LOGICAL                        :: tlast = .FALSE.
+    INTEGER                  :: i, j, iter
+    LOGICAL                  :: tlast = .FALSE.
     REAL(DP)                 :: fcell(3,3)
     REAL(DP)                 :: fccc = 0.D0
     REAL(DP)                 :: ccc
     ! Kostya: the variable below will disable the ionic & cell motion
     ! which nobody has any clue about ...
-    REAL(DP)                 :: delt0 = 0.0d0
+    REAL(DP)                 :: delt0 = 0.D0
     !
     !
     ! ... We are restarting from file recompute ainv
     !
     CALL invmat( 3, h, ainv, deth )
     !
-    ! Reset total time counter if the run is not strictly 'restart'
+    ! ... Reset total time counter if the run is not strictly 'restart'
     !
-    if (nbeg.lt.1) tps = 0.0d0
+    IF ( nbeg < 1 ) tps = 0.D0
     !
     IF ( taurdr ) THEN
        !
@@ -201,9 +201,9 @@ MODULE from_restart_module
           !
        END IF
        !
-       IF(.not. tcg) THEN
-       CALL vofrho( nfi, rhor, rhog, rhos, rhoc, tfirst, tlast, &
-                    ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion )
+       IF ( .NOT. tcg ) THEN
+          CALL vofrho( nfi, rhor, rhog, rhos, rhoc, tfirst, tlast, &
+                       ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion )
        !
        CALL compute_stress( stress, detot, h, omega )
        !
@@ -216,17 +216,21 @@ MODULE from_restart_module
        !
        CALL prefor( eigr, vkb )
        
-       IF ( tzeroe .and. (.not. tcg)) &
-       CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
-                          bec, c0(:,:,1,1), cm(:,:,1,1), restart = .TRUE. )
+       IF ( tzeroe .AND. ( .NOT. tcg ) ) &
+          CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
+                           bec, c0(:,:,1,1), cm(:,:,1,1), restart = .TRUE. )
 
        !
        ! ... nlfq needs deeq bec
        !
-       IF ( (tfor .OR. tprnfor) .and. .not. tcg ) CALL nlfq( c0, eigr, bec, becdr, fion )
-       !
-       IF ( (tfor .OR. thdyn) .and. .not. tcg ) &
-          CALL interpolate_lambda( lambdap, lambda, lambdam )
+       IF ( .NOT. tcg ) THEN
+          !
+          IF ( tfor .OR. tprnfor ) CALL nlfq( c0, eigr, bec, becdr, fion )
+          !
+          IF ( tfor .OR. thdyn ) &
+             CALL interpolate_lambda( lambdap, lambda, lambdam )
+          !
+       END IF
        !
        ! ... calphi calculates phi; the electron mass rises with g**2
        !
@@ -234,9 +238,10 @@ MODULE from_restart_module
        !
        ! ... begin try and error loop ( only one step! )
        !
-       ! ...   nlfl and nlfh need: lambda (guessed) becdr
+       ! ... nlfl and nlfh need: lambda (guessed) becdr
        !
-       IF ( (tfor .OR. tprnfor) .and. .not. tcg ) CALL nlfl( bec, becdr, lambda, fion )
+       IF ( ( tfor .OR. tprnfor ) &
+           .AND. .NOT. tcg ) CALL nlfl( bec, becdr, lambda, fion )
        !
        IF ( tpre ) CALL nlfh( bec, dbec, lambda )
        !
@@ -255,7 +260,8 @@ MODULE from_restart_module
        !
        CALL calbec( nvb+1, nsp, eigr, cm, bec )
        !
-       IF ( tpre ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .true. )
+       IF ( tpre ) &
+          CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .TRUE. )
        !
        IF ( thdyn ) THEN
           !
@@ -290,7 +296,8 @@ MODULE from_restart_module
           !
           CALL calbec( 1, nsp, eigr, c0, bec )
           !
-          IF ( tpre ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, c0, dbec, .true. )
+          IF ( tpre ) &
+             CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, c0, dbec, .TRUE. )
           !
        END IF
        !
@@ -349,7 +356,7 @@ MODULE from_restart_module
     !
     IMPLICIT NONE
     !
-    LOGICAL           :: tfirst
+    LOGICAL     :: tfirst
     REAL(DP)    :: taus(:,:), tau0(:,:)
     REAL(DP)    :: h(3,3)
     COMPLEX(DP) :: eigr(:,:)
@@ -361,7 +368,7 @@ MODULE from_restart_module
     COMPLEX(DP) :: ei3(:,:)
     COMPLEX(DP) :: sfac(:,:)
     REAL(DP)    :: eself
-    INTEGER           :: j
+    INTEGER     :: j
     !
     !
     CALL s_to_r( taus,  tau0, na, nsp, h )
@@ -403,7 +410,7 @@ MODULE from_restart_module
   !
   !--------------------------------------------------------------------------
   SUBROUTINE from_restart_fpmd( nfi, acc, rhoe, desc, cm, c0, cdesc, &
-                                eigr, ei1, ei2, ei3, sfac, fi, ht_m, ht_0,   &
+                                eigr, ei1, ei2, ei3, sfac, fi, ht_m, ht_0, &
                                 atoms_m, atoms_0, bec, becdr, vpot, edft )
     !--------------------------------------------------------------------------
     !
@@ -452,24 +459,24 @@ MODULE from_restart_module
     !
     IMPLICIT NONE
     !
-    INTEGER                          :: nfi
+    INTEGER                    :: nfi
     REAL(DP)                   :: acc(nacx)
     COMPLEX(DP)                :: sfac(:,:)
-    TYPE(atoms_type)                 :: atoms_0, atoms_m
+    TYPE(atoms_type)           :: atoms_0, atoms_m
     COMPLEX(DP)                :: eigr(:,:)
     COMPLEX(DP)                :: ei1(:,:)
     COMPLEX(DP)                :: ei2(:,:)
     COMPLEX(DP)                :: ei3(:,:)
     COMPLEX(DP), INTENT(INOUT) :: cm(:,:,:,:), c0(:,:,:,:)
     REAL(DP)                   :: fi(:,:,:)
-    TYPE(boxdimensions)              :: ht_m, ht_0
+    TYPE(boxdimensions)        :: ht_m, ht_0
     REAL(DP)                   :: rhoe(:,:,:,:)
-    TYPE(charge_descriptor)          :: desc
-    TYPE(wave_descriptor)            :: cdesc
+    TYPE(charge_descriptor)    :: desc
+    TYPE(wave_descriptor)      :: cdesc
     REAL(DP)                   :: bec(:,:)
     REAL(DP)                   :: becdr(:,:,:)
     REAL(DP)                   :: vpot(:,:,:,:)
-    TYPE(dft_energy_type)            :: edft
+    TYPE(dft_energy_type)      :: edft
     !
     INTEGER     :: ig, ib, i, j, k, ik, nb, is, ia, ierr, isa
     REAL(DP)    :: timepre, vdum = 0.D0
@@ -500,14 +507,14 @@ MODULE from_restart_module
     !
     IF ( taurdr ) THEN
        !
-       ! ... positions are read from stdin (tau_srt) and not read from restart file
-       ! ... then reinitialize structure atoms_0
+       ! ... positions are read from stdin (tau_srt) and not read from restart
+       ! ... file then reinitialize structure atoms_0
        !
        hinv = TRANSPOSE( ht_0%m1 )
        !
        CALL r_to_s( tau_srt, atoms_0%taus, atoms_0%na, atoms_0%nsp, hinv )
        !
-       atoms_0%taur( 1:3, 1:nat ) = tau_srt( 1:3, 1:nat )
+       atoms_0%taur(1:3,1:nat) = tau_srt(1:3,1:nat)
        !
     END IF
     !
@@ -608,7 +615,7 @@ MODULE from_restart_module
     !
     CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
     !
-    CALL formf( .true. , edft%eself )
+    CALL formf( .TRUE. , edft%eself )
     !
     IF ( tzeroe .OR. tzerop ) THEN
        !
@@ -623,14 +630,15 @@ MODULE from_restart_module
        CALL rhoofr( nfi, c0, cdesc, fi, rhoe, desc, ht_0 )
        !
        CALL vofrhos( .true. , ttforce, tstress, rhoe, desc, &
-                     atoms_0, vpot, bec, c0, cdesc, fi, eigr,  &
+                     atoms_0, vpot, bec, c0, cdesc, fi, eigr, &
                      ei1, ei2, ei3, sfac, timepre, ht_0, edft )
        !
        IF ( tzeroe ) THEN
           !
           IF ( tcarpar .AND. ( .NOT. force_pairing ) ) THEN
              !
-             CALL runcp_ncpp( cm, cm, c0, cdesc, vpot, eigr, fi, bec, vdum, gam, cgam, restart = .TRUE. )
+             CALL runcp_ncpp( cm, cm, c0, cdesc, vpot, eigr, &
+                              fi, bec, vdum, gam, cgam, restart = .TRUE. )
              !
              IF ( tortho ) THEN
                 !

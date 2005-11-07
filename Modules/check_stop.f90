@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2004 FPMD-PWSCF group
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,7 +22,8 @@ MODULE check_stop
   !
   SAVE
   !
-  REAL(DP)        :: max_seconds = 1.D+7
+  REAL(DP) :: max_seconds = 1.D+7
+  !
   LOGICAL, PRIVATE :: tinit = .FALSE.
   !
   !
@@ -40,14 +41,14 @@ MODULE check_stop
        IMPLICIT NONE
        !
        REAL(DP), INTENT(IN) :: val
-       LOGICAL               :: tex
+       LOGICAL              :: tex
        REAL(DP)             :: seconds
        REAL(DP)             :: elapsed_seconds
-       EXTERNAL                 elapsed_seconds
+       EXTERNAL                elapsed_seconds
        !
-       IF( tinit ) &
-         WRITE( UNIT = stdout, &
-                FMT = '(/,5X,"WARNING: check_stop already initialized")' )
+       IF ( tinit ) &
+          WRITE( UNIT = stdout, &
+                 FMT = '(/,5X,"WARNING: check_stop already initialized")' )
        !
        IF ( val > 0.D0 ) max_seconds = val
        !
@@ -85,15 +86,15 @@ MODULE check_stop
        INTEGER, OPTIONAL, INTENT(IN) :: inunit
        INTEGER                       :: unit
        LOGICAL                       :: check_stop_now, tex
-       REAL(DP)                     :: seconds
-       REAL(DP)                     :: elapsed_seconds
+       REAL(DP)                      :: seconds
+       REAL(DP)                      :: elapsed_seconds
        EXTERNAL                         elapsed_seconds
        !
        !
        ! ... elapsed_seconds is a C function returning the elapsed solar 
        ! ... time in seconds since the first call to the function itself
        !
-       IF( .NOT. tinit ) &
+       IF ( .NOT. tinit ) &
           CALL errore( 'check_stop_now', 'check_stop not initialized', 1 )
        !
        unit = stdout
