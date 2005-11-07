@@ -967,12 +967,12 @@ MODULE xml_io_base
       !
       DO k = 1, nr3
          !
-         !   Only ionode reads the charge planes
+         ! ... only ionode reads the charge planes
          !
          IF ( ionode ) &
             CALL iotk_scan_dat( rhounit, "z" // iotk_index( k ), rho_plane )
          !
-         !   Planes are sent to the destination processor
+         ! ... planes are sent to the destination processor
          !
          IF( kowner(k) == mpime ) THEN
             !

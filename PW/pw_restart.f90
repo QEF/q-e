@@ -339,7 +339,7 @@ MODULE pw_restart
          !
       END IF
       !
-      rho_file = TRIM( prefix ) // ".rho"
+      rho_file = 'charge-density.dat'
       !
       CALL iotk_link( iunpun, "RHO_FILE", rho_file, &
                       CREATE = .FALSE., BINARY = .FALSE. )
@@ -362,7 +362,7 @@ MODULE pw_restart
          !
          DEALLOCATE( rhosum )
          !
-         rho_file = TRIM( prefix ) // ".rhoup"
+         rho_file = 'charge-density-up.dat'
          !
          IF ( ionode ) &
             CALL iotk_link( iunpun, "RHO_FILE", rho_file, &
@@ -373,7 +373,7 @@ MODULE pw_restart
          CALL write_rho_xml( rho_file, rho(:,1), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
-         rho_file = TRIM( prefix ) // ".rhodw"
+         rho_file = 'charge-density-dw.dat'
          !
          IF ( ionode ) &
             CALL iotk_link( iunpun, "RHO_FILE", rho_file, &
