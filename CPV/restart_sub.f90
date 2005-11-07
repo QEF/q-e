@@ -108,7 +108,6 @@ MODULE from_restart_module
     !
     ! ... We are restarting from file recompute ainv
     !
-    write(6,*) 'FROM_RESTART_CP :', tzeroe 
     CALL invmat( 3, h, ainv, deth )
     !
     ! Reset total time counter if the run is not strictly 'restart'

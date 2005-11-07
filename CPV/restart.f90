@@ -282,12 +282,9 @@
 
         REAL(DP), ALLOCATABLE :: lambda(:,:)
         REAL(DP), ALLOCATABLE :: rhow(:,:)
-        REAL(DP) S0, S1
         REAL(DP) :: ekincm
         INTEGER   :: i, j, k, iss, ir
              
-        s0 = cclock()
-
         IF( ndw < 1 ) RETURN
         !
         !   this is used for benchmarking and debug
@@ -326,15 +323,6 @@
 
         DEALLOCATE( rhow )
         DEALLOCATE( lambda )
-
-        s1 = cclock()
-
-!       ==--------------------------------------------------------------==
-        IF( ionode ) THEN 
-          WRITE( stdout,10) (s1-s0)
-   10     FORMAT(/,3X,'RESTART FILE WRITTEN COMPLETED IN ',F8.3,' SEC.',/) 
-        END IF 
-!       ==--------------------------------------------------------------==
 
      RETURN 
    END SUBROUTINE writefile_fpmd
@@ -390,8 +378,6 @@
         REAL(DP), INTENT(OUT) :: acc(:), cdmi(:) 
         REAL(DP), INTENT(OUT) :: trutime
 
-
-        REAL(DP) :: s0, s1
         REAL(DP), ALLOCATABLE :: lambda_ ( : , : )
         REAL(DP) :: ekincm
         REAL(DP) :: hp0_ (3,3)
@@ -400,9 +386,6 @@
         REAL(DP) :: hvel_ (3,3)
         REAL(DP) :: b1(3), b2(3), b3(3)
         LOGICAL :: tens = .FALSE.
-
-        CALL mp_barrier()
-        s0 = cclock()
 
         ALLOCATE( lambda_( nbsp , nbsp ) )
         lambda_  = 0.0d0
@@ -421,16 +404,6 @@
           ht_0%hvel = hvel_  !  set cell velocity
           ht_0%gvel = gvel_  !  set cell velocity
         END IF
-
-        CALL mp_barrier()
-        s1 = cclock()
-
-!       ==--------------------------------------------------------------==
-        IF( ionode ) THEN 
-          WRITE( stdout,20)  (s1-s0)
-   20     FORMAT(3X,'DISK READ COMPLETED IN ',F8.3,' SEC.',/) 
-        END IF 
-!       ==--------------------------------------------------------------==
 
         RETURN 
         END SUBROUTINE readfile_fpmd

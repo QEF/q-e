@@ -127,6 +127,7 @@ MODULE cp_restart
       REAL(DP)              :: nelec
       REAL(DP)              :: scalef
       LOGICAL               :: lsda
+      REAL(DP)              :: s0, s1, cclock
       !
       ! ... look for an empty unit
       !
@@ -231,6 +232,9 @@ MODULE cp_restart
          !
          ! ... Open XML descriptor
          !
+         WRITE( stdout, fmt = "( /, 3X, 'Writing restart file: ', A)" ) TRIM( dirname ) // '/' // &
+                             & TRIM( xmlpun )
+         !
          CALL iotk_open_write( iunpun, FILE = TRIM( dirname ) // '/' // &
                              & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
          !
@@ -240,6 +244,8 @@ MODULE cp_restart
       !
       CALL errore( 'cp_writefile ', &
                    'cannot open restart file for writing', ierr )
+      !
+      s0 = cclock() 
       !
       IF ( ionode ) THEN
          !
@@ -708,6 +714,13 @@ MODULE cp_restart
          !
       END IF
       !
+      s1 = cclock() 
+      !
+      IF( ionode ) THEN
+         WRITE( stdout,10) (s1-s0)
+   10    FORMAT( 3X,'restart written completed in ',F8.3,' sec.',/)
+      END IF
+      !
       RETURN
       !
     END SUBROUTINE cp_writefile
@@ -827,6 +840,7 @@ MODULE cp_restart
       INTEGER,  ALLOCATABLE :: if_pos_(:,:) 
       CHARACTER(LEN=256)    :: psfile_(ntypx)
       CHARACTER(LEN=80)     :: pos_unit
+      REAL(DP)              :: s1, s0, cclock
       !
       ! ... look for an empty unit
       !
@@ -846,6 +860,8 @@ MODULE cp_restart
          !
          filename = TRIM( dirname ) // '/' // TRIM( xmlpun )
          !
+         WRITE( stdout, fmt = "( /, 3X, 'Reading restart file: ', A)" ) TRIM( filename )
+         !
          CALL iotk_open_read( iunpun, FILE = TRIM( filename ), &
                               BINARY = .FALSE., ROOT = attr, IERR = ierr )
          !
@@ -855,6 +871,8 @@ MODULE cp_restart
       !
       CALL errore( 'cp_readfile', &
                    'cannot open restart file for reading', ierr )
+      !
+      s0 = cclock()
       !
       IF ( ionode ) THEN
          !
@@ -1350,6 +1368,13 @@ MODULE cp_restart
       !
       CALL mp_bcast( lambda0, ionode_id )
       CALL mp_bcast( lambdam, ionode_id )
+      !
+      s1 = cclock()
+      !
+      IF( ionode ) THEN
+         WRITE( stdout,20)  (s1-s0)
+   20    FORMAT( 3X,'read restart file completed in ',F8.3,' sec.',/)
+      END IF
       !
       RETURN
       !
