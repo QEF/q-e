@@ -20,10 +20,11 @@ PROGRAM bands
   !
   CHARACTER (len=256) :: filband
   CHARACTER (len=256) :: outdir
+  LOGICAL :: lsigma(4)
   INTEGER :: spin_component
   INTEGER :: ios
   !
-  NAMELIST / inputpp / outdir, prefix, filband, spin_component
+  NAMELIST / inputpp / outdir, prefix, filband, spin_component, lsigma
   !                                  
   !
   CALL start_postproc (nd_nmbr)
@@ -33,6 +34,7 @@ PROGRAM bands
   prefix = 'pwscf'
   outdir = './'
   filband = 'bands.out'
+  lsigma = .false.
   spin_component = 1
   !
   IF ( npool > 1 ) CALL errore('bands','pools not implemented',npool)
@@ -44,6 +46,7 @@ PROGRAM bands
      READ (5, inputpp, err = 200, iostat = ios)
 200  CALL errore ('do_bands', 'reading inputpp namelist', ABS (ios) )
      !
+     lsigma(4)=.false.
      tmp_dir = TRIM(outdir)
      !
   END IF
@@ -54,6 +57,7 @@ PROGRAM bands
   CALL mp_bcast( prefix, ionode_id )
   CALL mp_bcast( filband, ionode_id )
   CALL mp_bcast( spin_component, ionode_id )
+  CALL mp_bcast( lsigma(:), ionode_id )
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -61,14 +65,14 @@ PROGRAM bands
   CALL openfil_pp
   CALL init_us_1
   !
-  CALL punch_band (filband, spin_component)
+  CALL punch_band (filband, spin_component, lsigma)
   !
   CALL stop_pp
   STOP
 END PROGRAM bands
 !
 !-----------------------------------------------------------------------
-SUBROUTINE punch_band (filband, spin_component)
+SUBROUTINE punch_band (filband, spin_component, lsigma)
   !-----------------------------------------------------------------------
   !
   !    This routine writes the band energies on a file. The routine orders
@@ -99,6 +103,7 @@ SUBROUTINE punch_band (filband, spin_component)
   COMPLEX(DP) :: pro
   ! the product of wavefunctions
   INTEGER :: spin_component
+  LOGICAL :: lsigma(4)
 
   COMPLEX(DP), ALLOCATABLE :: psiold (:,:), old (:), new (:)
   ! psiold: eigenfunctions at previous k-point, ordered
@@ -109,7 +114,7 @@ SUBROUTINE punch_band (filband, spin_component)
   COMPLEX(DP), ALLOCATABLE :: psiold_nc (:,:,:), old_nc(:,:), new_nc(:,:)
   COMPLEX(DP), ALLOCATABLE :: becp_nc(:,:,:), becpold_nc(:,:,:)
   ! as above for the noncolinear case
-  INTEGER :: ibnd, jbnd, ik, ikb, ig, npwold, ios, nks1, nks2, ipol
+  INTEGER :: ibnd, jbnd, ik, ikb, ig, npwold, ios, nks1, nks2, ipol, ih, is1
   ! counters
   INTEGER, ALLOCATABLE :: ok (:), igkold (:), il (:)
   ! ok: keeps track of which bands have been already ordered
@@ -121,13 +126,25 @@ SUBROUTINE punch_band (filband, spin_component)
   ! ndeg : number of degenerate states
   INTEGER, ALLOCATABLE :: degeneracy(:), degbands(:,:), INDEX(:)
   ! degbands keeps track of which states are degenerate
+  INTEGER :: iunpun_sigma(4)
+  CHARACTER(LEN=256) :: nomefile
   REAL(DP), ALLOCATABLE:: edeg(:)
+  REAL(DP), ALLOCATABLE:: sigma_avg(:,:,:)
+  ! expectation value of sigma
   REAL(DP), PARAMETER :: eps = 0.001
   ! threshold (Ry) for degenerate states 
   COMPLEX(DP), EXTERNAL :: cgracsc, cgracsc_nc
  ! scalar product with the S matrix
 
   IF (filband == ' ') RETURN
+  DO ipol=1,4
+     IF (lsigma(ipol).and..not.noncolin) THEN
+        CALL errore ('punch_band', 'lsigma requires noncollinear run', &
+                    ABS (ios) )
+        lsigma=.false.
+     ENDIF
+  ENDDO
+  
   iunpun = 18
   maxdeg = 4 * npol 
   !
@@ -137,6 +154,17 @@ SUBROUTINE punch_band (filband, spin_component)
           'formatted', err = 100, iostat = ios)
 100  CALL errore ('punch_band', 'Opening filband file', ABS (ios) )
      REWIND (iunpun)
+     DO ipol=1,4
+        IF (lsigma(ipol)) THEN
+           iunpun_sigma(ipol)=iunpun+ipol
+           WRITE(nomefile,'(".",i1)') ipol
+           OPEN (unit = iunpun_sigma(ipol),  &
+                 file = TRIM(filband)//TRIM(nomefile), &
+                 status = 'unknown', form='formatted', err = 200, iostat = ios)
+200        CALL errore ('punch_band', 'Opening filband.1 file', ABS (ios) )
+           REWIND (iunpun_sigma(ipol))
+        ENDIF
+     ENDDO
      !
   END IF
   !
@@ -144,6 +172,7 @@ SUBROUTINE punch_band (filband, spin_component)
      ALLOCATE (psiold_nc( npwx, npol, nbnd))
      ALLOCATE (becp_nc(nkb, npol, nbnd), becpold_nc(nkb, npol, nbnd))
      ALLOCATE (old_nc(ngm,npol), new_nc(ngm,npol))
+     ALLOCATE (sigma_avg(4,nbnd,nks))
   ELSE
      ALLOCATE (psiold( npwx, nbnd))    
      ALLOCATE (old(ngm), new(ngm))    
@@ -193,6 +222,7 @@ SUBROUTINE punch_band (filband, spin_component)
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
      IF (noncolin) THEN
         CALL ccalbec_nc (nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc_nc)
+        CALL compute_sigma_avg(sigma_avg(1,1,ik),becp_nc,ik,lsigma)
      ELSE
         CALL ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
      END IF
@@ -343,10 +373,23 @@ SUBROUTINE punch_band (filband, spin_component)
         IF (ik == nks1) THEN
            WRITE (iunpun, '(" &plot nbnd=",i4,", nks=",i4," /")') &
                 nbnd, nks2-nks1+1
+           DO ipol=1,4
+              IF (lsigma(ipol)) WRITE(iunpun_sigma(ipol), &
+                            '(" &plot nbnd=",i4,", nks=",i4," /")') &
+                             nbnd, nks2-nks1+1
+           END DO
         END IF
         WRITE (iunpun, '(10x,3f10.6)') xk(1,ik),xk(2,ik),xk(3,ik)
-        WRITE (iunpun, '(10f8.3)') (et (il (ibnd) , ik) &
+        WRITE (iunpun, '(10f8.3)') (et (il (ibnd) , ik)             &
              * rytoev, ibnd = 1, nbnd)
+        DO ipol=1,4
+           IF (lsigma(ipol)) THEN
+              WRITE (iunpun_sigma(ipol), '(10x,3f10.6)')            &
+                                          xk(1,ik),xk(2,ik),xk(3,ik)
+              WRITE (iunpun_sigma(ipol), '(10f8.3)')                &
+                            (sigma_avg(ipol, il (ibnd) , ik), ibnd = 1, nbnd)
+           END IF
+        END DO
         !
      END IF
      !
@@ -357,6 +400,7 @@ SUBROUTINE punch_band (filband, spin_component)
   DEALLOCATE (il, ok)
   DEALLOCATE (igkold)
   IF (noncolin) THEN
+     DEALLOCATE (sigma_avg)
      DEALLOCATE (becpold_nc, becp_nc)
      DEALLOCATE (new_nc, old_nc)
      DEALLOCATE (psiold_nc)
@@ -366,7 +410,12 @@ SUBROUTINE punch_band (filband, spin_component)
      DEALLOCATE (psiold)
   END IF
   !
-  IF ( ionode ) CLOSE (iunpun)
+  IF ( ionode ) THEN
+     CLOSE (iunpun)
+     DO ipol=1,4
+        IF (lsigma(ipol)) CLOSE(iunpun_sigma(ipol))
+     ENDDO
+  ENDIF
   !
   RETURN
   !

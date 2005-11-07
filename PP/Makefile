@@ -9,6 +9,7 @@ add_shift_lc.o \
 add_shift_us.o \
 cft.o \
 cgracsc.o \
+compute_sigma_avg.o \
 cube.o \
 dosg.o \
 do_initial_state.o \
