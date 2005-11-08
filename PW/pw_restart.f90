@@ -624,20 +624,7 @@ MODULE pw_restart
       DEALLOCATE( itmp )
       DEALLOCATE( ngk_g )
       !
-      ! ... a copy of the xml descriptor (data-file.xml) is saved in the 
-      ! ... history subdir
-      !
-      CALL create_directory( TRIM( dirname ) // '/history' )
-      !
-      IF ( ionode ) THEN
-         !
-         filename = TRIM( dirname ) // '/history/' // &
-                  & TRIM( xmlpun ) // iotk_index( istep )
-         !
-         CALL copy_file( TRIM( dirname ) // "/" // TRIM( xmlpun ), &
-                         TRIM( filename ) )
-         !
-      END IF
+      CALL save_history( dirname, istep )
       !
       RETURN
       !

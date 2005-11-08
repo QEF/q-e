@@ -698,20 +698,7 @@ MODULE cp_restart
       DEALLOCATE( ityp )
       DEALLOCATE( mill )
       !
-      ! ... a copy of the xml descriptor (data-file.xml) is saved in the 
-      ! ... history subdir
-      !
-      CALL create_directory( TRIM( dirname ) // '/history' )
-      !
-      IF ( ionode ) THEN
-         !
-         filename = TRIM( dirname ) // '/history/' // &
-                  & TRIM( xmlpun ) // iotk_index( nfi )
-         !
-         CALL copy_file( TRIM( dirname ) // "/" // TRIM( xmlpun ), &
-                         TRIM( filename ) )
-         !
-      END IF
+      CALL save_history( dirname, nfi )
       !
       s1 = cclock() 
       !

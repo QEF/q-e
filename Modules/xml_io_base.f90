@@ -27,10 +27,10 @@ MODULE xml_io_base
   !
   PUBLIC :: attr
   PUBLIC :: create_directory, kpoint_dir, wfc_filename, copy_file, &
-            restart_dir, check_restartfile, set_kpoints_vars, write_cell, &
-            write_ions, write_symmetry, write_planewaves, write_spin, &
-            write_xc, write_occ, write_bz, write_rho_xml, write_wfc, read_wfc, &
-            read_rho_xml
+            restart_dir, check_restartfile, save_history, set_kpoints_vars, &
+            write_cell, write_ions, write_symmetry, write_planewaves,       &
+            write_spin, write_xc, write_occ, write_bz, write_rho_xml,       &
+            write_wfc, read_wfc, read_rho_xml
   !
   CHARACTER(iotk_attlenx) :: attr
   !
@@ -240,6 +240,39 @@ MODULE xml_io_base
       RETURN
       !
     END FUNCTION check_restartfile
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE save_history( dirname, iter )
+      !------------------------------------------------------------------------
+      !
+      ! ... a copy of the xml descriptor (data-file.xml) is saved in the 
+      ! ... history subdir
+      !
+      USE io_files, ONLY : xmlpun_base
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=*), INTENT(IN) :: dirname
+      INTEGER,          INTENT(IN) :: iter
+      !
+      CHARACTER(LEN=256) :: filename
+      !
+      !
+      CALL create_directory( TRIM( dirname ) // '/history' )
+      !
+      IF ( ionode ) THEN
+         !
+         filename = TRIM( dirname ) // '/history/' // &
+                  & TRIM( xmlpun_base ) // TRIM( iotk_index( iter ) ) // '.xml'
+         !
+         CALL copy_file( TRIM( dirname ) // "/" // TRIM( xmlpun ), &
+                         TRIM( filename ) )
+         !
+      END IF
+      !
+      RETURN
+      !
+    END SUBROUTINE save_history
     !
     !------------------------------------------------------------------------
     SUBROUTINE set_kpoints_vars( ik, nk, kunit, ngwl, igl, &

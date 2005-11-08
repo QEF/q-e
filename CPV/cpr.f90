@@ -312,7 +312,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            IF ( lcoarsegrained ) CALL set_target()
            !
            ! ... we first remove the component of the force along the 
-           ! ... constrain gradient (this is constitutes the initial guess 
+           ! ... constrain gradient (this constitutes the initial guess 
            ! ... for the lagrange multiplier)
            !
            CALL remove_constraint_force( nat, tau0, &
@@ -343,7 +343,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         CALL ions_cofmass( tausp, pmass, na, nsp, cdm )
         !
-        IF ( ndfrz==0 ) CALL ions_cofmsub( tausp, iforce, na, nsp, cdm, cdmi )
+        IF ( ndfrz == 0 ) &
+           CALL ions_cofmsub( tausp, iforce, na, nsp, cdm, cdmi )
         !
         CALL s_to_r( tausp, taup, na, nsp, hnew )
         !
@@ -503,7 +504,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
      END IF
      !
-     IF( ( MOD( nfi, iprint ) == 0 ) .OR. ( nfi == nomore ) ) THEN
+     IF ( MOD( nfi, iprint ) == 0 .OR. &
+          MOD( nfi, isave )  == 0 .OR. nfi == nomore ) THEN
         !
         CALL cp_eigs( nfi, bec, c0, irb, eigrb, rhor, &
                       rhog, rhos, lambdap, lambda, tau0, h )
@@ -568,13 +570,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      IF ( tnoseh ) &
         econt = econt + cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
      !
-     !
-     CALL printout_new                                                         &
-        ( nfi, tfirst, ttprint, ttprint, tps, hold, stress, tau0, vels, fion,  &
-          ekinc, temphc, tempp, temps, etot, enthal, econs, econt, vnhh, xnhh0,&
-          vnhp, xnhp0, atot )
-     !
-     !
+     CALL printout_new( nfi, tfirst, ttprint, ttprint, tps, hold, stress, &
+                        tau0, vels, fion, ekinc, temphc, tempp, temps, etot, &
+                        enthal, econs, econt, vnhh, xnhh0, vnhp, xnhp0, atot )
      !
      tps = tps + delt * au_ps
      !
@@ -617,26 +615,33 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      IF ( ( MOD( nfi, isave ) == 0 ) .AND. ( nfi < nomore ) ) THEN
         !
         IF ( tcg ) THEN
-!
-! Uncomment the following lines for smooth restart CG--->CP
-! 
-          IF(tfor.and. .not.tens) then!in this case optimize c0 and lambda for smooth restart with CP
-            CALL initbox( tau0, taub, irb )
-            CALL phbox( taub, eigrb )
-            CALL phfac( tau0, ei1, ei2, ei3, eigr )
-            CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
-            IF ( thdyn ) CALL formf( tfirst, eself )
-            IF (tefield ) CALL efield_update( eigr )
-            lambdam(:,:)=lambda
-            CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
-                          enthal, enb, enbi, fccc, ccc, dt2bye )
-          END IF
            !
+           ! ... uncomment the following lines for smooth restart CG--->CP
+           !
+           IF ( tfor .AND. .NOT. tens ) THEN
+              !
+              ! ... in this case optimize c0 and lambda for smooth restart 
+              ! ... with CP
+              !
+              CALL initbox( tau0, taub, irb )
+              CALL phbox( taub, eigrb )
+              CALL phfac( tau0, ei1, ei2, ei3, eigr )
+              CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
+              !
+              IF ( thdyn ) CALL formf( tfirst, eself )
+              IF ( tefield ) CALL efield_update( eigr )
+              !
+              lambdam(:,:)=lambda
+              !
+              CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
+                                   enthal, enb, enbi, fccc, ccc, dt2bye )
+          END IF
+          !
           CALL writefile( ndw, h, hold ,nfi, c0(:,:,1,1), c0old, taus, tausm, &
-                           vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,    &
-                           vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
-                           xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass, ibrav,&
-                           celldm, fion, tps, z0, f, rhopr )
+                          vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,    &
+                          vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
+                          xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass, ibrav,&
+                          celldm, fion, tps, z0, f, rhopr )
            !
         ELSE
            !
