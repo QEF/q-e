@@ -210,7 +210,8 @@ PPOBJS = \
 ../Modules/io_files.o \
 ../Modules/mp_wave.o \
 ../Modules/parser.o \
-../Modules/kind.o
+../Modules/kind.o \
+../Modules/parameters.o ../Modules/parallel_include.o ../Modules/constants.o
 
 cppp.x : fpmdpp.o $(PPOBJS) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o cppp.x fpmdpp.o $(PPOBJS) $(LIBOBJS) $(LIBS)
