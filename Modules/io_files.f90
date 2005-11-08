@@ -62,7 +62,8 @@ MODULE io_files
   CHARACTER (LEN=261) :: &
     exit_file = "os.EXIT"    ! file required for a soft exit  
   !
-  CHARACTER (LEN=13), PARAMETER :: xmlpun = 'data-file.xml'
+  CHARACTER (LEN=9),  PARAMETER :: xmlpun_base = 'data-file'
+  CHARACTER (LEN=13), PARAMETER :: xmlpun      = xmlpun_base // '.xml'
   !
   ! ... The units where various variables are saved
   !
