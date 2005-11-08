@@ -83,7 +83,7 @@ cat > new1.in << EOF
 &CONTROL
   calculation = 'cp',
   restart_mode = 'from_scratch',
-  nstep  = 20,
+  nstep  = 5,
   iprint = 10,
   isave  = 10,
   tstress = .FALSE.,
@@ -96,10 +96,10 @@ cat > new1.in << EOF
 /
   
 &SYSTEM
-  ibrav = 1,
-  celldm(1) = 15.,
-  celldm(2) = 0.0,
-  celldm(3) = 0.0,
+  ibrav = 8,
+  celldm(1) = 10.,
+  celldm(2) = 1.0,
+  celldm(3) = 1.5,
   celldm(4) = 0.0,
   celldm(5) = 0.0,
   celldm(6) = 0.0,
