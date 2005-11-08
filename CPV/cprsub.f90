@@ -292,7 +292,7 @@ subroutine nlinit
                                   nhsa => nkb, nhsavb=>nkbus
       use uspp_param,      ONLY : kkbeta, qqq, nqlc, betar, nbrx, lmaxq, dion, &
                                   nbeta, lmaxkb, lll, nhm, nh, tvanp
-      use qrl_mod,         ONLY : qrl, cmesh
+      use qrl_mod,         ONLY : cmesh
       use atom,            ONLY : mesh, r, rab, nlcc, numeric
       use qradb_mod,       ONLY : qradb
       use qgb_mod,         ONLY : qgb

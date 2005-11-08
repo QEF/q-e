@@ -22,23 +22,25 @@
       implicit none
       integer :: is
 !
-      integer :: iv, jv, lmin, lmax, l, ir, i
+      integer :: iv, jv, ijv, lmin, lmax, l, ir, i
 !
+      ijv = 0
       do iv=1,nbeta(is)
          do jv=iv,nbeta(is)
+            ijv = ijv + 1
             lmin=lll(jv,is)-lll(iv,is)+1
             lmax=lmin+2*lll(iv,is)
             do l=lmin,lmax
                do ir=1,kkbeta(is)
                   if (r(ir,is).ge.rinner(l,is)) then
-                     qrl(ir,iv,jv,l,is)=qfunc(ir,iv,jv,is)
+                     qrl(ir,ijv,l,is)=qfunc(ir,iv,jv,is)
                   else
-                     qrl(ir,iv,jv,l,is)=qfcoef(1,l,iv,jv,is)
+                     qrl(ir,ijv,l,is)=qfcoef(1,l,iv,jv,is)
                      do i = 2, nqf(is)
-                        qrl(ir,iv,jv,l,is)=qrl(ir,iv,jv,l,is) +      &
+                        qrl(ir,ijv,l,is)=qrl(ir,ijv,l,is) +      &
                              qfcoef(i,l,iv,jv,is)*r(ir,is)**(2*i-2)
                      end do
-                     qrl(ir,iv,jv,l,is) = qrl(ir,iv,jv,l,is) * r(ir,is)**(l+1)
+                     qrl(ir,ijv,l,is) = qrl(ir,ijv,l,is) * r(ir,is)**(l+1)
                   end if
                end do
             end do

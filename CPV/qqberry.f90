@@ -51,7 +51,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
   real(8), allocatable:: qradb2(:,:,:,:) 
   real(8) c, xg
   complex(8) qgbs,sig
-  integer ivs, jvs, ivl, jvl, lp
+  integer ivs, jvs, ivl, jvl, lp, ijv
   real(8), allocatable:: ylm(:,:)
 
   lx = lqmax
@@ -62,9 +62,6 @@ subroutine qqberry2( gqq,gqqm, ipol)
   allocate( ylm(ngw, lqmax*lqmax))
 
   CALL ylmr2( lqmax*lqmax, ngw, gx, g, ylm )
-
-     
-
 
   qradb2 = 0.0d0
      
@@ -98,13 +95,15 @@ subroutine qqberry2( gqq,gqqm, ipol)
      do l=1,nqlc(is)                        
         xg= gmes !only orthorombic cells
         call bess(xg,l,kkbeta(is),r(1,is),jl)
+        ijv = 0
         do iv= 1,nbeta(is)
            do jv=iv,nbeta(is)
+              ijv = ijv + 1
 !     
 !     note qrl(r)=r^2*q(r)
 !
               do ir=1,kkbeta(is)
-                 fint(ir)=qrl(ir,iv,jv,l,is)*jl(ir)
+                 fint(ir)=qrl(ir,ijv,l,is)*jl(ir)
               end do
               if (oldvan(is)) then
                  call herman_skillman_int     &

@@ -718,7 +718,7 @@ CONTAINS
       USE uspp,       ONLY: nhtol, indv
       USE betax,      only: refg, betagx, mmx, dbetagx
       USE cvan,       only: oldvan
-      USE qrl_mod,    only: qrl, cmesh
+      USE qrl_mod,    only: cmesh
       !
       IMPLICIT NONE
       !
@@ -842,7 +842,7 @@ CONTAINS
       !
       LOGICAL, INTENT(IN) :: tpre
       !
-      INTEGER :: is, iv, l, il, ltmp, i0, ir, jv
+      INTEGER :: is, iv, l, il, ltmp, i0, ir, jv, ijv
       REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:)
       REAL(DP) :: xg, xrg
 
@@ -900,13 +900,15 @@ CONTAINS
                   if (i0.eq.2) djl(1) = djl(2)
                endif
                !
+               ijv = 0
                do iv = 1, nbeta(is)
                   do jv = iv, nbeta(is)
+                     ijv = ijv + 1
                      !
                      !      note qrl(r)=r^2*q(r)
                      !
                      do ir=1,kkbeta(is)
-                        fint(ir)=qrl(ir,iv,jv,l,is)*jl(ir)
+                        fint(ir)=qrl(ir,ijv,l,is)*jl(ir)
                      end do
                      if (oldvan(is)) then
                         call herman_skillman_int(kkbeta(is),cmesh(is),fint,qradx(il,iv,jv,l,is))
@@ -918,7 +920,7 @@ CONTAINS
                      !
                      if( tpre ) then
                         do ir = 1, kkbeta(is)
-                           dfint(ir) = qrl(ir,iv,jv,l,is) * djl(ir)
+                           dfint(ir) = qrl(ir,ijv,l,is) * djl(ir)
                         end do
                         if ( oldvan(is) ) then
                            call herman_skillman_int(kkbeta(is),cmesh(is),dfint,dqradx(il,iv,jv,l,is))
@@ -1289,7 +1291,7 @@ CONTAINS
       USE cdvan,         ONLY : dbeta
       USE cvan,          only : oldvan
       USE atom,          ONLY : r, numeric, rab
-      USE qrl_mod,       only : qrl, cmesh
+      USE qrl_mod,       only : cmesh
       USE reciprocal_vectors, only : g, gx, gstart
 
       IMPLICIT NONE

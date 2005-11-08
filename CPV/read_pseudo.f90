@@ -1421,7 +1421,7 @@ END SUBROUTINE read_atomic_cc
       integer  iexch, icorr, igcx, igcc
 
       integer                                                           &
-     &       nb,mb,     &! counters on beta functions
+     &       nb,mb, nmb,&! counters on beta functions
      &       n,         &! counter on mesh points
      &       ir,        &! counters on mesh points
      &       pseudotype,&! the type of pseudopotential
@@ -1560,13 +1560,15 @@ END SUBROUTINE read_atomic_cc
 !
 !    fill the q(r)
 !
+      nmb = 0
       do nb=1,nbeta(is)
          do mb=nb,nbeta(is)
+            nmb = nmb + 1
             lmin=abs(lll(mb,is)-lll(nb,is))+1
             lmax=lmin+2*lll(nb,is)
             do l=lmin,lmax,2
                do ir=1,kkbeta(is)
-                  qrl(ir,nb,mb,l,is)=qfunc(ir,nb,mb,is)
+                  qrl(ir,nmb,l,is)=qfunc(ir,nb,mb,is)
                end do
             end do
          end do
@@ -1705,8 +1707,7 @@ END SUBROUTINE read_atomic_cc
      &       lmin, lmax,    &! min and max angular momentum in Q
      &       lp,            &! counter on Q angular momenta
      &       l,             &! counter on angular momenta
-     &       jv,            &! beta function counter
-     &       iv,            &! beta function counter
+     &       iv, jv, ijv,   &! beta function counter
      &       ir              ! mesh points counter
 !
       character(len=20) title
@@ -1954,13 +1955,15 @@ END SUBROUTINE read_atomic_cc
 !
 !   old version: read the q(r) here
 !
+         ijv = 0
          do iv=1,nbeta(is)
             do jv=iv,nbeta(is)
+               ijv = ijv + 1
                lmin=lll(jv,is)-lll(iv,is)+1
                lmax=lmin+2*lll(iv,is)
                do l=lmin,lmax
                   read(iunps,*, err=100, iostat=ios)                    &
-     &                 (qrl(ir,iv,jv,l,is),ir=1,kkbeta(is))
+     &                 (qrl(ir,ijv,l,is),ir=1,kkbeta(is))
                end do
             end do
          end do
