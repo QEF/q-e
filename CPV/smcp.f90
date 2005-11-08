@@ -1246,7 +1246,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         !
         IF(MOD(nfi-1,iprint).EQ.0 .OR. (nfi.EQ.(nomore))) THEN
-           CALL eigs0(nspin,nbspx,nupdwn,iupdwn,f,rep_el(sm_k)%lambda)
+           CALL eigs0(.true.,nspin,nbspx,nupdwn,iupdwn,f,rep_el(sm_k)%lambda)
            WRITE( stdout,*)
         ENDIF
         !

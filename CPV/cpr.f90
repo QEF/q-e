@@ -430,6 +430,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      ekinp  = 0.D0
      ekinpr = 0.D0
      tempp  = 0.D0
+     temps  = 0.D0
      ekinc0 = 0.0d0
      ekinc = 0.0d0
      !
@@ -570,8 +571,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      CALL printout_new                                                         &
         ( nfi, tfirst, ttprint, ttprint, tps, hold, stress, tau0, vels, fion,  &
-          ekinc, temphc, tempp, etot, enthal, econs, econt, vnhh, xnhh0, vnhp, &
-          xnhp0,atot)
+          ekinc, temphc, tempp, temps, etot, enthal, econs, econt, vnhh, xnhh0,&
+          vnhp, xnhp0, atot )
      !
      !
      !

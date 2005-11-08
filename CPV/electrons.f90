@@ -53,6 +53,7 @@
         PUBLIC :: pmss, n_emp, emass, ei_emp, n_emp_l, ib_owner, ib_local, nb_l
         PUBLIC :: ei, nspin, nelt, nupdwn
         PUBLIC :: nbnd
+        PUBLIC :: print_eigenvalues
 
 !
 !  end of module-scope declarations
@@ -195,8 +196,6 @@
    END SUBROUTINE bmeshset
 
 !  ----------------------------------------------
-!  ----------------------------------------------
-
 !
 !
 !
@@ -241,6 +240,69 @@
 
      RETURN
    END SUBROUTINE electrons_setup
+
+
+!  ----------------------------------------------
+
+
+   SUBROUTINE print_eigenvalues( ei_unit, tfile, nfi, tps )
+      !
+      use constants,  only : au 
+      USE io_global,  ONLY : stdout, ionode
+      !
+      INTEGER,  INTENT(IN) :: ei_unit
+      LOGICAL,  INTENT(IN) :: tfile
+      INTEGER,  INTENT(IN) :: nfi
+      REAL(DP), INTENT(IN) :: tps
+      !
+      INTEGER :: ik, i, j, nkpt
+      !
+      nkpt  = 1
+      !
+      IF ( tfile ) THEN
+          WRITE(ei_unit,30) nfi, tps
+      END IF
+      !
+      DO ik = 1, nkpt
+         !
+         DO j = 1, nspin
+            !
+            WRITE( stdout,1002) ik, j
+            WRITE( stdout,1004) ( ei( i, ik, j ) * au, i = 1, nupdwn(j) )
+            !
+            IF( n_emp .GT. 0 ) THEN
+               WRITE( stdout,1005) ik, j
+               WRITE( stdout,1004) ( ei_emp( i, ik, j ) * au , i = 1, n_emp )
+               WRITE( stdout,1006) ( ei_emp( 1, ik, j ) - ei( nupdwn(j), ik, j ) ) * au
+            END IF
+            !
+            IF( tfile ) THEN
+               WRITE(ei_unit,1010) ik, j
+               WRITE(ei_unit,1020) ( ei( i, ik, j ) * au, i = 1, nupdwn(j) )
+               IF( n_emp .GT. 0 ) THEN
+                  WRITE(ei_unit,1011) ik, j
+                  WRITE(ei_unit,1020) ( ei_emp( i, ik, j ) * au , i = 1, n_emp )
+                  WRITE(ei_unit,1021) ( ei_emp( 1, ik, j ) - ei( nupdwn(j), ik, j ) ) * au
+               END IF
+            END IF
+            !
+         END DO
+         !
+      END DO
+      !
+  30  FORMAT(2X,'STEP:',I7,1X,F10.2)
+ 1002 FORMAT(/,3X,'Eigenvalues (eV), kp = ',I3, ' , spin = ',I2,/)
+ 1005 FORMAT(/,3X,'Empty States Eigenvalues (eV), kp = ',I3, ' , spin = ',I2,/)
+ 1004 FORMAT(10F8.2)
+ 1006 FORMAT(/,3X,'Electronic Gap (eV) = ',F8.2,/)
+ 1010 FORMAT(3X,'Eigenvalues (eV), kp = ',I3, ' , spin = ',I2)
+ 1011 FORMAT(3X,'Empty States Eigenvalues (eV), kp = ',I3, ' , spin = ',I2)
+ 1020 FORMAT(10F8.2)
+ 1021 FORMAT(3X,'Electronic Gap (eV) = ',F8.2)
+ 1030 FORMAT(3X,'nfill = ', I4, ', nempt = ', I4, ', kp = ', I3, ', spin = ',I2)
+      !
+      RETURN
+   END SUBROUTINE print_eigenvalues
 
 
 !=======================================================================
@@ -648,9 +710,9 @@
 
 
          if(.not.tens) then
-            call eigs0(nspin,nx,nupdwn,iupdwn,f,lambda)
+            call eigs0(.false.,nspin,nx,nupdwn,iupdwn,f,lambda)
          else
-            call eigsp(nspin,nx,nupdwn,iupdwn,lambdap)
+            call eigsp(.false.,nspin,nx,nupdwn,iupdwn,lambdap)
          endif
 
          WRITE( stdout,*)

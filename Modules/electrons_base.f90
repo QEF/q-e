@@ -86,9 +86,9 @@
       !   Compute the number of bands
       !
       IF( nbnd_ /= 0 ) THEN
-        nbnd  = nbnd_
+        nbnd  = nbnd_                          ! nbnd is given from input
       ELSE
-        nbnd  = NINT( MAX( nelup, neldw ) )
+        nbnd  = NINT( MAX( nelup, neldw ) )    ! take the maximum between up and down states
       END IF
 
 

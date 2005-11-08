@@ -43,20 +43,21 @@
 
    SUBROUTINE printout_new &
      ( nfi, tfirst, tfile, tprint, tps, h, stress, tau0, vels, &
-       fion, ekinc, temphc, tempp, etot, enthal, econs, econt, &
-       vnhh, xnhh0, vnhp, xnhp0,atot )
+       fion, ekinc, temphc, tempp, temps, etot, enthal, econs, econt, &
+       vnhh, xnhh0, vnhp, xnhp0, atot )
 
       !
-      USE control_flags,    ONLY: iprint
-      USE energies,         ONLY: print_energies, dft_energy_type
-      USE printout_base,    ONLY: printout_base_open, printout_base_close, &
-                                  printout_pos, printout_cell, printout_stress
-      USE constants,        ONLY: factem, au_gpa, au, amu_si, bohr_radius_cm, scmass
-      USE ions_base,        ONLY: na, nsp, nat, ind_bck, atm, ityp
-      USE cell_base,        ONLY: s_to_r
-      USE efield_module,    ONLY: tefield, pberryel, pberryion
+      USE control_flags,    ONLY : iprint
+      USE energies,         ONLY : print_energies, dft_energy_type
+      USE printout_base,    ONLY : printout_base_open, printout_base_close, &
+                                   printout_pos, printout_cell, printout_stress
+      USE constants,        ONLY : factem, au_gpa, au, amu_si, bohr_radius_cm, scmass
+      USE ions_base,        ONLY : na, nsp, nat, ind_bck, atm, ityp, pmass
+      USE cell_base,        ONLY : s_to_r
+      USE efield_module,    ONLY : tefield, pberryel, pberryion
       USE cg_module,        ONLY : tcg, itercg
-
+      USE sic_module,       ONLY : self_interaction
+      USE electrons_module, ONLY : print_eigenvalues
 
       !
       IMPLICIT NONE
@@ -70,15 +71,18 @@
       REAL(DP), INTENT(IN) :: vels( :, : )  ! scaled velocities
       REAL(DP), INTENT(IN) :: fion( :, : )  ! real forces
       REAL(DP), INTENT(IN) :: ekinc, temphc, tempp, etot, enthal, econs, econt
+      REAL(DP), INTENT(IN) :: temps( : ) ! partial temperature for different ionic species
       REAL(DP), INTENT(IN) :: vnhh( 3, 3 ), xnhh0( 3, 3 ), vnhp( 1 ), xnhp0( 1 )
       REAL(DP), INTENT(IN) :: atot! enthalpy of system for c.g. case
       !
       REAL(DP) :: stress_gpa( 3, 3 )
       REAL(DP) :: hinv( 3, 3 )
       REAL(DP) :: out_press, volume
+      REAL(DP) :: totalmass
       INTEGER  :: isa, is, ia
       REAL(DP),         ALLOCATABLE :: tauw( :, : )
       CHARACTER(LEN=3), ALLOCATABLE :: labelw( : )
+      LOGICAL  :: tsic
       !
       ALLOCATE( labelw( nat ) )
       !
@@ -90,7 +94,11 @@
          !
          IF( tprint ) THEN
             !
-            CALL print_energies( .false. )
+            tsic = ( self_interaction /= 0 )
+            !
+            CALL print_energies( tsic )
+            !
+            CALL print_eigenvalues( 31, tfile, nfi, tps )
             !
             WRITE( stdout, * )
             !
@@ -100,6 +108,15 @@
             !
             IF( tfile ) CALL printout_cell( 36, h, nfi, tps )
             !
+            !  System density:
+            !
+            totalmass = 0.0d0
+            DO is = 1, nsp
+              totalmass = totalmass + pmass(is) * na(is) / scmass
+            END DO
+            totalmass = totalmass / volume * 11.2061 ! AMU_SI * 1000.0 / BOHR_RADIUS_CM**3 
+            WRITE( stdout, fmt='(/,3X,"System Density [g/cm^3] : ",F10.4)' ) totalmass
+
             WRITE( stdout, * )
             !
             stress_gpa = stress * au_gpa
@@ -177,25 +194,24 @@
          !
       END IF
       !
-      IF(.not.tcg) THEN
-        WRITE( stdout, 1948 ) nfi, ekinc, temphc, tempp, etot, enthal, econs, &
+      IF( .not. tcg ) THEN
+         WRITE( stdout, 1948 ) nfi, ekinc, temphc, tempp, etot, enthal, econs, &
                             econt, vnhh(3,3), xnhh0(3,3), vnhp(1),  xnhp0(1)
       ELSE
-        IF ( MOD( nfi, iprint ) == 0 .OR. tfirst ) THEN
-           !
-           WRITE( stdout, * )
-           WRITE( stdout, 255 ) 'nfi','tempp','E','-T.S-mu.nbsp','+K_p','#Iter'
-           !
-        END IF
-        !
-        WRITE( stdout, 256 ) nfi, INT( tempp ), etot, atot, econs, itercg
-        !
-     END IF
-     IF( tefield) THEN
-       IF(ionode) write(stdout,'( A14,F12.6,A14,F12.6)') 'Elct. dipole',-pberryel,'Ionic dipole',-pberryion
-     ENDIF
-     !
-
+         IF ( MOD( nfi, iprint ) == 0 .OR. tfirst ) THEN
+            !
+            WRITE( stdout, * )
+            WRITE( stdout, 255 ) 'nfi','tempp','E','-T.S-mu.nbsp','+K_p','#Iter'
+            !
+         END IF
+         !
+         WRITE( stdout, 256 ) nfi, INT( tempp ), etot, atot, econs, itercg
+         !
+      END IF
+      IF( tefield) THEN
+         IF(ionode) write(stdout,'( A14,F12.6,A14,F12.6)') 'Elct. dipole',-pberryel,'Ionic dipole',-pberryion
+      ENDIF
+      !
       !
       DEALLOCATE( labelw )
       !
@@ -218,7 +234,7 @@
       use constants,        only: factem, au_gpa, au, amu_si, bohr_radius_cm, scmass
       use energies,         only: print_energies, dft_energy_type
       use mp_global,        only: mpime
-      use electrons_module, only: ei, ei_emp, n_emp
+      use electrons_module, only: print_eigenvalues
       use brillouin,        only: kpoints, kp
       use time_step,        ONLY: tps
       USE electrons_nose,   ONLY: electrons_nose_nrg, xnhe0, vnhe, qne, ekincw
@@ -254,7 +270,7 @@
       REAL(DP) :: tempp, econs, ettt, out_press, ekinpr, enosee
       REAL(DP) :: enthal, totalmass, enoseh, temphc, enosep
       REAL(DP) :: dis(atoms%nsp), h(3,3)
-      LOGICAL   :: tfile, topen, ttsic
+      LOGICAL   :: tfile, topen, tsic, tfirst
       CHARACTER(LEN=3), ALLOCATABLE :: labelw( : )
       REAL(DP), ALLOCATABLE :: tauw( :, : )
       INTEGER   :: old_nfi = -1
@@ -262,7 +278,7 @@
       ! ...   Subroutine Body
 
       tfile = ( MOD( nfi, iprint ) == 0 )   !  print quantity to trajectory files
-      ttsic = ( self_interaction /= 0 )
+      tsic  = ( self_interaction /= 0 )
       
       ! ...   Calculate Ions temperature tempp (in Kelvin )
 
@@ -349,15 +365,36 @@
 
       ! ...   Print physical variables to fortran units
 
+#if ! defined __OLD_PRINTOUT
+
+      tfirst = tprint .OR. tconjgrad
+      stress_tensor = stress_tensor / au_gpa
+
+      ALLOCATE( tauw( 3, atoms%nat ) )
+      DO is = 1, atoms%nsp
+        DO ia = atoms%isa(is), atoms%isa(is) + atoms%na(is) - 1
+          CALL s_to_r( atoms%taus(:,ia), tauw(:,ia), ht )
+        END DO
+      END DO
+
+      CALL  printout_new &
+     ( nfi, tfirst, tfile, tprint, tps, ht%hmat, stress_tensor, tauw, atoms%vels, &
+       atoms%for, ekinc, temphc, tempp, temps, edft%etot, enthal, econs, ettt, &
+       vnhh, xnhh0, vnhp, xnhp0, 0.0d0 )
+
+      DEALLOCATE( tauw )
+
+#else
+
       IF ( ionode ) THEN
 
         IF ( tprint ) THEN
 
           ! ...  Write total energy components to standard output
 
-          CALL print_energies( ttsic, iprsta, edft )
+          CALL print_energies( tsic, iprsta, edft )
 
-          IF( ttsic ) THEN
+          IF( tsic ) THEN
             WRITE ( stdout, *) '  Sic_correction: type ', self_interaction
             WRITE ( stdout, *) '  Localisation: ', rad_localisation
             DO i = 1, nat_localisation
@@ -458,36 +495,7 @@
 
           ! ...       Write eigenvalues to stdout and unit fort.31
 
-          IF( tprint ) THEN
-            !
-            nfill = SIZE(ei,1)
-            nempt = n_emp
-            IF ( tfile ) THEN
-              WRITE(31,30) nfi, tps
-              WRITE(31,1030) nfill, nempt,  SIZE(ei,2),  SIZE(ei,3)
-            END IF
-            DO ik = 1, kp%nkpt
-              DO j = 1, SIZE( ei, 3 )
-                WRITE( stdout,1002) ik, j
-                WRITE( stdout,1004) ( ei( i, ik, j ) * au, i = 1, SIZE( ei, 1 ) )
-                IF( nempt .GT. 0 ) THEN
-                  WRITE( stdout,1005) ik, j
-                  WRITE( stdout,1004) ( ei_emp( i, ik, j ) * au , i = 1, SIZE( ei_emp, 1 ) )
-                  WRITE( stdout,1006) ( ei_emp( 1, ik, j ) - ei( SIZE(ei,1), ik, j ) ) * au
-                END IF
-                IF( tfile ) THEN
-                  WRITE(31,1010) IK, j
-                  WRITE(31,1020) ( ei( i, ik, j ) * au, i = 1, SIZE( ei, 1 ) )
-                  IF( nempt .GT. 0 ) THEN
-                    WRITE(31,1011) ik, j
-                    WRITE(31,1020) ( ei_emp( i, ik, j ) * au , i = 1, SIZE( ei_emp, 1 ) )
-                    WRITE(31,1021) ( ei_emp( 1, ik, j ) - ei( SIZE(ei,1), ik, j ) ) * au
-                  END IF
-                END IF
-              END DO
-            END DO
-            !
-          END IF
+          CALL print_eigenvalues( 31, tfile, nfi, tps )
 
 ! ...       Write partial temperature and MSD for each atomic specie tu stdout
 
@@ -517,6 +525,12 @@
 
         END IF
 
+      END IF
+
+#endif
+
+      old_nfi = nfi
+
  1947 FORMAT(//3X,'nfi', 5X,'ekinc', 2X,'temph', 2X,'tempp', 9X,'etot', 7X,'enthal', &
                8X,'econs', 9X,'ettt')
  1946 FORMAT(//6X,       5X,'(AU) ', 3X,'(K )', 9X,'(AU)', &
@@ -541,22 +555,10 @@
   255 FORMAT(3X,A3,3F10.4,3E12.4)
  100  FORMAT(3X,A3,3(1X,E14.6))
  101  FORMAT(3X,3(1X,E14.6))
- 1002 FORMAT(/,3X,'Eigenvalues (eV), kp = ',I3, ' , spin = ',I2,/)
- 1005 FORMAT(/,3X,'Empty States Eigenvalues (eV), kp = ',I3, ' , spin = ',I2,/)
- 1004 FORMAT(10F8.2)
- 1006 FORMAT(/,3X,'Electronic Gap (eV) = ',F8.2,/)
- 1010 FORMAT(3X,'Eigenvalues (eV), kp = ',I3, ' , spin = ',I2)
- 1011 FORMAT(3X,'Empty States Eigenvalues (eV), kp = ',I3, ' , spin = ',I2)
- 1020 FORMAT(10F8.2)
- 1021 FORMAT(3X,'Electronic Gap (eV) = ',F8.2)
- 1030 FORMAT(3X,'nfill = ', I4, ', nempt = ', I4, ', kp = ', I3, ', spin = ',I2)
  1944 FORMAT(//'   Partial temperatures (for each ionic specie) ', &
              /,'   Species  Temp (K)   MSD (AU)')
  1945 FORMAT(3X,I6,1X,F10.2,1X,F10.4)
 
-      END IF
-
-    old_nfi = nfi
 
     RETURN
   END SUBROUTINE printout

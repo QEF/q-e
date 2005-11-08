@@ -79,9 +79,6 @@
 
 ! ---------------------------------------------------------------------------- !
 
-!        SUBROUTINE total_energy( edft, omega, eexc, vvxc, eh, eps, &
-!          self_ehte_in, self_sxc_in, self_vxc_in, nnr)
-
         SUBROUTINE total_energy( edft, omega, vvxc, eps, self_vxc_in, nnr)
 
           TYPE (dft_energy_type) :: edft
@@ -91,34 +88,34 @@
           COMPLEX(DP), INTENT(IN) :: EPS
           INTEGER, INTENT(IN) :: nnr 
 
-          eself = edft%eself
-          ent   = edft%ent
-          enl   = edft%enl
-          evdw  = edft%evdw
-          esr   = edft%esr
-          ekin  = edft%ekin
-          sxc   = edft%sxc
-          ehti  = edft%ehte
-          ehte  = edft%ehte
-          self_ehte  = edft%ehte
+          eself      = edft%eself
+          ent        = edft%ent
+          enl        = edft%enl
+          evdw       = edft%evdw
+          esr        = edft%esr
+          ekin       = edft%ekin
+          sxc        = edft%sxc
+          ehti       = edft%ehti
+          ehte       = edft%ehte
+          self_ehte  = edft%self_ehte
           self_sxc   = edft%self_sxc
 
           self_vxc = self_vxc_in
 
-          EXC   = edft%sxc * omega / DBLE(NNR) !EEXC * omega / DBLE(NNR)
+          EXC   = edft%sxc * omega / DBLE(NNR) 
           VXC   = VVXC * omega / DBLE(NNR)
 
           edft%exc  = exc
           edft%vxc  = vxc
 
-          !EHT   = REAL( eh ) + esr - eself
-          edft%eht =  edft%eh + esr - eself ! = eht
-          EHT = edft%eht
+          edft%eht = edft%eh + esr - eself ! = eht
+          eht      = edft%eht
 
-          EPSEU = DBLE(eps)
+          epseu      = DBLE(eps)
           edft%epseu = epseu
 
-          ETOT  = EKIN + EHT + EPSEU + ENL + EXC + EVDW - ENT
+          etot  = ekin + eht + epseu + enl + exc + evdw - ent
+          !
           edft%etot = etot
 
           RETURN
@@ -174,37 +171,38 @@
                     WRITE( stdout, 13 ) edft%emkin
                  END IF
               END IF
-              IF( tsic ) THEN
-                WRITE( stdout, fmt = "('Sic contributes:')" )
-                WRITE( stdout, fmt = "('----------------')" )
-                WRITE( stdout, 14 ) edft%self_ehte
-                WRITE( stdout, 15 ) edft%self_sxc
-                WRITE( stdout, 16 ) vxc
-                WRITE( stdout, 17 ) self_vxc
-              END IF
-            ! ETOT  = EKIN + EHT + EPSEU + ENL + EXC + EVDW - ENT
           ELSE
              !
- 999         WRITE( stdout,100) etot,ekin,eht,esr,eself,epseu,enl,exc,vave
+ 999         WRITE( stdout,100) etot, ekin, eht, esr, eself, epseu, enl, exc, vave
              !
           END IF
-1         FORMAT(6X,'                TOTAL ENERGY = ',F18.10,' HARTREE A.U.')
-2         FORMAT(6X,'              KINETIC ENERGY = ',F18.10,' HARTREE A.U.')
-3         FORMAT(6X,'        ELECTROSTATIC ENERGY = ',F18.10,' HARTREE A.U.')
-4         FORMAT(6X,'                       ESELF = ',F18.10,' HARTREE A.U.')
-5         FORMAT(6X,'                         ESR = ',F18.10,' HARTREE A.U.')
-6         FORMAT(6X,'              HARTREE ENERGY = ',F18.10,' HARTREE A.U.')
-7         FORMAT(6X,'                HARTREE EHTE = ',F18.10,' HARTREE A.U.')
-8         FORMAT(6X,'                HARTREE EHTI = ',F18.10,' HARTREE A.U.')
-9         FORMAT(6X,'      PSEUDOPOTENTIAL ENERGY = ',F18.10,' HARTREE A.U.')
-10        FORMAT(6X,'  N-L PSEUDOPOTENTIAL ENERGY = ',F18.10,' HARTREE A.U.')
-11        FORMAT(6X,' EXCHANGE-CORRELATION ENERGY = ',F18.10,' HARTREE A.U.')
-12        FORMAT(6X,'        VAN DER WAALS ENERGY = ',F18.10,' HARTREE A.U.')
-13        FORMAT(6X,'        EMASS KINETIC ENERGY = ',F18.10,' HARTREE A.U.')
-14        FORMAT(6X,'            HARTREE SIC_EHTE = ',F18.10,' HARTREE A.U.')
-15        FORMAT(6X,' SIC EXCHANGE-CORRELA ENERGY = ',F18.10,' HARTREE A.U.')
-16        FORMAT(6X,'     EXCHANGE-CORRELA POTENT = ',F18.10,' HARTREE A.U.')
-17        FORMAT(6X,' SIC EXCHANGE-CORRELA POTENT = ',F18.10,' HARTREE A.U.')
+          !
+          IF( tsic ) THEN
+             WRITE( stdout, fmt = "('Sic contributes:')" )
+             WRITE( stdout, fmt = "('----------------')" )
+             WRITE( stdout, 14 ) self_ehte
+             WRITE( stdout, 15 ) self_sxc
+             WRITE( stdout, 16 ) vxc
+             WRITE( stdout, 17 ) self_vxc
+          END IF
+          !
+1         FORMAT(6X,'                total energy = ',F18.10,' Hartree a.u.')
+2         FORMAT(6X,'              kinetic energy = ',F18.10,' Hartree a.u.')
+3         FORMAT(6X,'        electrostatic energy = ',F18.10,' Hartree a.u.')
+4         FORMAT(6X,'                       eself = ',F18.10,' Hartree a.u.')
+5         FORMAT(6X,'                         esr = ',F18.10,' Hartree a.u.')
+6         FORMAT(6X,'              hartree energy = ',F18.10,' Hartree a.u.')
+7         FORMAT(6X,'                hartree ehte = ',F18.10,' Hartree a.u.')
+8         FORMAT(6X,'                hartree ehti = ',F18.10,' Hartree a.u.')
+9         FORMAT(6X,'      pseudopotential energy = ',F18.10,' Hartree a.u.')
+10        FORMAT(6X,'  n-l pseudopotential energy = ',F18.10,' Hartree a.u.')
+11        FORMAT(6X,' exchange-correlation energy = ',F18.10,' Hartree a.u.')
+12        FORMAT(6X,'        van der waals energy = ',F18.10,' Hartree a.u.')
+13        FORMAT(6X,'        emass kinetic energy = ',F18.10,' Hartree a.u.')
+14        FORMAT(6X,'            hartree sic_ehte = ',F18.10,' Hartree a.u.')
+15        FORMAT(6X,' sic exchange-correla energy = ',F18.10,' Hartree a.u.')
+16        FORMAT(6X,'     exchange-correla potent = ',F18.10,' Hartree a.u.')
+17        FORMAT(6X,' sic exchange-correla potent = ',F18.10,' Hartree a.u.')
 
   100 format(//'                total energy = ',f14.5,' Hartree a.u.'/ &
      &         '              kinetic energy = ',f14.5,' Hartree a.u.'/ &
