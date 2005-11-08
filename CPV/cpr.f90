@@ -505,7 +505,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      END IF
      !
      IF ( MOD( nfi, iprint ) == 0 .OR. &
-          MOD( nfi, isave )  == 0 .OR. nfi == nomore ) THEN
+          MOD( nfi, isave )  == 0 .OR. tlast ) THEN
         !
         CALL cp_eigs( nfi, bec, c0, irb, eigrb, rhor, &
                       rhog, rhos, lambdap, lambda, tau0, h )
@@ -520,7 +520,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      IF ( tens ) THEN
         !
-        IF ( MOD( nfi, iprint ) == 0 .OR. ( nfi == nomore ) ) THEN
+        IF ( MOD( nfi, iprint ) == 0 .OR. tlast ) THEN
            !
            WRITE( stdout, '("Occupations  :")' )
            WRITE( stdout, '(10F9.6)' ) ( f(i), i = 1, nbsp )
@@ -604,6 +604,22 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         CALL cg_update( tfirst, nfi, c0 )
         !
+!
+! Uncomment the following lines for smooth restart CG--->CP
+! 
+          IF(tfor.and..not.tens.and.(( MOD( nfi, isave ) == 0 ).or.tlast)) then
+!!in this case optimize c0 and lambda for smooth restart with CP
+            CALL initbox( tau0, taub, irb )
+            CALL phbox( taub, eigrb )
+            CALL phfac( tau0, ei1, ei2, ei3, eigr )
+            CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
+            IF ( thdyn ) CALL formf( tfirst, eself )
+            IF (tefield ) CALL efield_update( eigr )
+            lambdam(:,:)=lambda
+            CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
+                          enthal, enb, enbi, fccc, ccc, dt2bye )
+          END IF
+          !
      END IF
      !
      ! ... now:  cm=c(t) c0=c(t+dt)
@@ -615,27 +631,6 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      IF ( ( MOD( nfi, isave ) == 0 ) .AND. ( nfi < nomore ) ) THEN
         !
         IF ( tcg ) THEN
-           !
-           ! ... uncomment the following lines for smooth restart CG--->CP
-           !
-           IF ( tfor .AND. .NOT. tens ) THEN
-              !
-              ! ... in this case optimize c0 and lambda for smooth restart 
-              ! ... with CP
-              !
-              CALL initbox( tau0, taub, irb )
-              CALL phbox( taub, eigrb )
-              CALL phfac( tau0, ei1, ei2, ei3, eigr )
-              CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
-              !
-              IF ( thdyn ) CALL formf( tfirst, eself )
-              IF ( tefield ) CALL efield_update( eigr )
-              !
-              lambdam(:,:)=lambda
-              !
-              CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
-                                   enthal, enb, enbi, fccc, ccc, dt2bye )
-          END IF
           !
           CALL writefile( ndw, h, hold ,nfi, c0(:,:,1,1), c0old, taus, tausm, &
                           vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,    &
