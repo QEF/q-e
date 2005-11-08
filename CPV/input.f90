@@ -776,7 +776,7 @@ MODULE input
 
       force_pairing_ = force_pairing
       IF( program_name == 'CP90' .AND. force_pairing_) &
-            WRITE(stdout) " force_pairing have no effects "
+            WRITE(stdout, "(' force_pairing have no effects ')")
 
       ! . Set internal flags according to the input .......................!
 
