@@ -749,5 +749,71 @@
 
 
 !------------------------------------------------------------------------------!
+
+
+   FUNCTION cdm_displacement( tau )
+
+      !  Calculate the quadratic displacements of the cdm at the current time step
+      !    with respect to the initial position
+      !    cdmi: initial center of mass (real space)
+
+      IMPLICIT NONE
+
+      REAL(DP) :: cdm_displacement
+      REAL(DP) :: tau( :, : )      ! position in real space
+
+      REAL(DP)  ::  cdm(3)
+
+      CALL ions_cofmass(tau, pmass, na, nsp, cdm)
+
+      cdm_displacement = SUM( (cdm(:)-cdmi(:))**2 )
+
+   END FUNCTION cdm_displacement
+
+
+!------------------------------------------------------------------------------!
+
+
+   SUBROUTINE ions_displacement( dis, tau )
+
+      !  Calculate the sum of the quadratic displacements of the atoms in the ref.
+      !    of cdm respect to the initial positions.
+      !    taui: initial positions in real units in the ref. of cdm
+
+      !  ----------------------------------------------
+      !  att!     tau_ref: starting position in center-of-mass ref. in real units
+      !  ----------------------------------------------
+
+      IMPLICIT NONE
+
+      REAL (DP), INTENT(OUT) :: dis(:)
+      REAL (DP), INTENT(IN)  :: tau(:,:)
+
+      REAL(DP) :: rdist(3), r2, cdm(3)
+      INTEGER  :: i, j, k, isa
+
+      ! ...   Compute the current value of cdm "Centro Di Massa"
+      !
+      CALL ions_cofmass(tau, pmass, na, nsp, cdm )
+      !
+      IF( SIZE( dis ) < nsp ) &
+          CALL errore(' displacement ',' size of dis too small ', 1)
+      isa = 0
+      DO k = 1, nsp
+         dis(k) = 0.0_DP
+         r2     = 0.0_DP
+         DO j = 1, na(k)
+            isa = isa + 1
+            rdist = tau(:,isa) - cdm
+            r2 = r2 + SUM( ( rdist(:) - taui(:,isa) )**2 )
+         END DO
+         dis(k) = dis(k) + r2 / DBLE(na(k))
+      END DO
+
+      RETURN
+   END SUBROUTINE ions_displacement
+
+
+!------------------------------------------------------------------------------!
   END MODULE ions_base
 !------------------------------------------------------------------------------!

@@ -44,7 +44,7 @@
 !
 ! read from file and distribute data calculated in preceding iterations
 !
-      USE ions_base,        ONLY: nsp, na
+      USE ions_base,        ONLY: nsp, na, cdmi, taui
       USE cell_base,        ONLY: s_to_r
       USE cp_restart,       ONLY: cp_writefile
       USE electrons_base,   ONLY: nspin, nbnd, nbsp, iupdwn, nupdwn
@@ -75,8 +75,6 @@
       REAL(DP) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       integer :: nk = 1, ispin, i, ib
       REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
-      REAL(DP) :: cdmi_ (3) = 0.0d0
-      REAL(DP), ALLOCATABLE :: taui_ (:,:) 
       REAL(DP), ALLOCATABLE :: occ_ ( :, :, : )
       REAL(DP) :: htm1(3,3), omega
 
@@ -96,11 +94,6 @@
       gvel   = 0.0d0
       
 
-      ALLOCATE( taui_ ( 3, SIZE( taus, 2 ) ) )
-      CALL s_to_r( taus, taui_ , na, nsp, h )
-
-      cdmi_ = 0.0d0
-
       ALLOCATE( occ_ ( nbnd, 1, nspin ) )
       occ_ = 0.0d0
       do ispin = 1, nspin
@@ -111,19 +104,18 @@
 
       IF( tens ) THEN
         CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
-          ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
+          ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi , taus, &
           vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_ , &
           occ_ , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei, &
           rho, c02 = c0, cm2 = cm, mat_z = mat_z  )
       ELSE
         CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
-          ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
+          ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi , taus, &
           vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_ , &
           occ_ , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei, &
           rho, c02 = c0, cm2 = cm  )
       END IF
 
-      DEALLOCATE( taui_ )
       DEALLOCATE( occ_ )
 
       return
@@ -142,7 +134,7 @@
       USE io_files,       ONLY : scradir
       USE electrons_base, ONLY : nbnd, nbsp, nspin, nupdwn, iupdwn
       USE gvecw,          ONLY : ngw, ngwt
-      USE ions_base,      ONLY : nsp, na
+      USE ions_base,      ONLY : nsp, na, cdmi, taui
       USE cp_restart,     ONLY : cp_readfile, cp_read_cell, cp_read_wfc
       USE ensemble_dft,   ONLY : tens
       USE io_files,       ONLY : scradir
@@ -171,8 +163,6 @@
       REAL(DP) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       integer :: nk = 1, ispin, i, ib
       REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
-      REAL(DP) :: cdmi_ (3) = 0.0d0
-      REAL(DP), ALLOCATABLE :: taui_ (:,:)
       REAL(DP), ALLOCATABLE :: occ_ ( :, :, : )
       REAL(DP) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
         
@@ -191,18 +181,17 @@
         RETURN
       END IF
 
-      ALLOCATE( taui_ ( 3, SIZE( taus, 2 ) ) )
       ALLOCATE( occ_ ( nbnd, 1, nspin ) )
 
       IF( tens ) THEN
          CALL cp_readfile( ndr, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
-                ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
+                ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, taus, &
                 vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ_ , &
                 occ_ , lambda, lambdam, b1, b2, b3, &
                 xnhe0, xnhem, vnhe, ekincm, c02 = c0, cm2 = cm, mat_z = mat_z )
       ELSE
          CALL cp_readfile( ndr, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
-                ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui_ , cdmi_ , taus, &
+                ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, taus, &
                 vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ_ , &
                 occ_ , lambda, lambdam, b1, b2, b3, &
                 xnhe0, xnhem, vnhe, ekincm, c02 = c0, cm2 = cm )
@@ -222,8 +211,6 @@
          endif
       enddo
       
-      DEALLOCATE( taui_ )
-
       do ispin = 1, nspin
         do i = iupdwn ( ispin ), iupdwn ( ispin ) - 1 + nupdwn ( ispin )
           occ_f( i ) = occ_ ( i - iupdwn ( ispin ) + 1, 1, ispin )

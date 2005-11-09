@@ -52,7 +52,8 @@
       USE printout_base,    ONLY : printout_base_open, printout_base_close, &
                                    printout_pos, printout_cell, printout_stress
       USE constants,        ONLY : factem, au_gpa, au, amu_si, bohr_radius_cm, scmass
-      USE ions_base,        ONLY : na, nsp, nat, ind_bck, atm, ityp, pmass
+      USE ions_base,        ONLY : na, nsp, nat, ind_bck, atm, ityp, pmass, &
+                                   cdm_displacement, ions_displacement
       USE cell_base,        ONLY : s_to_r
       USE efield_module,    ONLY : tefield, pberryel, pberryion
       USE cg_module,        ONLY : tcg, itercg
@@ -77,6 +78,7 @@
       !
       REAL(DP) :: stress_gpa( 3, 3 )
       REAL(DP) :: hinv( 3, 3 )
+      REAL(DP) :: dis( nsp )
       REAL(DP) :: out_press, volume
       REAL(DP) :: totalmass
       INTEGER  :: isa, is, ia
@@ -115,9 +117,11 @@
               totalmass = totalmass + pmass(is) * na(is) / scmass
             END DO
             totalmass = totalmass / volume * 11.2061 ! AMU_SI * 1000.0 / BOHR_RADIUS_CM**3 
-            WRITE( stdout, fmt='(/,3X,"System Density [g/cm^3] : ",F10.4)' ) totalmass
+            WRITE( stdout, fmt='(/,3X,"System Density [g/cm^3] : ",F10.4,/)' ) totalmass
 
-            WRITE( stdout, * )
+            WRITE( stdout,1000) cdm_displacement( tau0 )
+            !
+            CALL ions_displacement( dis, tau0 )
             !
             stress_gpa = stress * au_gpa
             !
@@ -170,6 +174,13 @@
             !
             DEALLOCATE( tauw )
             !
+            ! ...       Write partial temperature and MSD for each atomic specie tu stdout
+            !
+            WRITE( stdout, 1944 )
+            DO is = 1, nsp
+               WRITE( stdout, 1945 ) is, temps(is), dis(is)
+            END DO
+            !
             IF( tfile ) WRITE( 33, 2948 ) nfi, ekinc, temphc, tempp, etot, enthal, &
                                           econs, econt, volume, out_press, tps
             IF( tfile ) WRITE( 39, 2949 ) nfi, vnhh(3,3), xnhh0(3,3), vnhp(1), &
@@ -217,6 +228,10 @@
       !
 255  FORMAT( '     ',A5,A8,3(1X,A12),A6 )
 256  FORMAT( 'Step ',I5,1X,I7,1X,F12.5,1X,F12.5,1X,F12.5,1X,I5 )
+1000  FORMAT(/,3X,'Center of mass square displacement (a.u.): ',F10.6,/)
+1944 FORMAT(//'   Partial temperatures (for each ionic specie) ', &
+             /,'   Species  Temp (K)   Mean Square Displacement (a.u.)')
+1945 FORMAT(3X,I6,1X,F10.2,1X,F10.4)
 1947  FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',8X,'etot',6X,'enthal', &
             & 7X,'econs',7X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0' )
 1948  FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F11.5),4(1X,F7.4) )
