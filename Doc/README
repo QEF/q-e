@@ -13,7 +13,8 @@ smd.tex            Notes on the usage of the "Strings Method", by Y. Kanai
 README.AUTOPILOT   Notes on the "autopilot" feature, by Targacept, Inc.
 nomefile.upf       Naming convention for UPF pseudopotentials
                    The UPF format is described in ../upftools/UPF
-
+restart            Describes the format of the new output data file
+ 
 INPUT_CP         Input parameters for CP 
 INPUT.HOWTO      Hints on how to choose simulation parameters for
                  CP with Car-Parrinello dynamics
@@ -26,7 +27,7 @@ INPUT_Gamma      Input parameters for normal-mode calculations (phcg.x)
 INPUT_D3         Input parameters for 3rd-order derivatives (d3.x)
 INPUT_EFG        Input parameters for electric-field gradient calc (efg.x)
 INPUT_PWCOND     Input parameters for ballistic conductance (pwcond.x)
- 
+
 ChangeLog       ChangeLog for the Quantum-ESPRESSO suite after aug. 2004
                 NO LONGER UPDATED: use script "cvs2cl.pl" in the main
                 directory to get an updated ChangeLog from CVS

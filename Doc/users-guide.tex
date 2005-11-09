@@ -787,7 +787,8 @@ The codes for data postprocessing in \texttt{PP/} are:
         from files produced by \texttt{pw.x} for band structure plotting
   \item \texttt{projwfc.x} calculates projections of wavefunction
         over atomic orbitals, performs L\"owdin population
-        analysis and calculates projected density of states
+        analysis and calculates projected density of states. 
+        These can be summed using auxiliary code \texttt{sumpdos.x}
   \item \texttt{dipole.x} calculates the dipole moment for
         isolated systems (molecules) and the Makov-Payne correction
         for molecules in supercells (beware: meaningful results 
@@ -1740,6 +1741,9 @@ this can be done one \textbf{q}-vector at the time, a simpler procedure
 is to specify variable \texttt{ldisp=.true} and to set variables
 \texttt{nq1,nq2,nq3} to some suitable Monkhorst-Pack grid, that
 will be automatically generated, centered at $\mathbf{q}=0$.
+Do not forget to specify \texttt{epsil=.true.} in the input data
+of \texttt{ph.x} if you want the correct TO-LO splitting in 
+polar materials. 
 
 Second, code \texttt{q2r.x} reads the $D(\mathbf{q})$ dynamical 
 matrices produced in the preceding step and Fourier-transform them,
@@ -1749,9 +1753,6 @@ to a distance that depends on the size of the grid of
 Program \texttt{matdyn.x} may be used to produce phonon modes and
 frequencies at any \textbf{q} using the Interatomic Force Constants
 file as input.
-Do not forget to specify \texttt{epsil=.true.} in the input data
-of \texttt{ph.x} if you want the correct TO-LO splitting in 
-polar materials. 
 
 See Example 06.
 
@@ -1830,10 +1831,14 @@ The atomic wavefunctions are those contained in the pseudopotential
 file(s).
 The L\"owdin population analysis (similar to Mulliken analysis) is
 presently implemented.
-The projected DOS (the DOS projected onto atomic orbitals) can also be
-calculated.
+The projected DOS (PDOS, the DOS projected onto atomic orbitals) can 
+also be calculated and written to file(s).
 More details on the input data are found in the header of file
-\texttt{PP/projwfc.f90}.
+\texttt{PP/projwfc.f90}. The auxiliary code \texttt{sumpdos.x}
+(courtesy of Andrea Ferretti) can be used to sum selected PDOS, 
+by specifiying the names of files containing the desired PDOS.
+Type \texttt{sumpdos.x -h} or look into the source code for
+more details.
 The total electronic DOS is instead calculated by code
 \texttt{PP/dos.x}.
 See Example 08 for total and projected electronic DOS calculations.
