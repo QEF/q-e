@@ -1,3 +1,10 @@
+WARNING: For speeding up the execution time for testing purposes,
+the plane waves cut-off has been reduced to 20 Ryd (from 23 Ryd),
+the charge cut-off has been reduced to 160 Ryd (from 200 Ryd)
+and the CP-MD damped dynamics uses a step of 10 a.u. (from 5 a.u.)
+and 20 steps (from 400 steps)
+USE the original parameters for obtaining converged results.
+
 This example shows how to perform calculations with cp.x  for a system 
 under the presence of  an homogeneous static finite electric field.
 The coupling of the system with the electric field is described through
