@@ -257,6 +257,7 @@ MODULE xml_io_base
       !
       CHARACTER(LEN=256) :: filename
       !
+#if defined (__VERBOSE_SAVE)
       !
       CALL create_directory( TRIM( dirname ) // '/history' )
       !
@@ -269,6 +270,8 @@ MODULE xml_io_base
                          TRIM( filename ) )
          !
       END IF
+      !
+#endif
       !
       RETURN
       !
