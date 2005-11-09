@@ -276,7 +276,7 @@ TLDEPS= bindir mods libs pw
 
 all : tldeps average.x bands.x dos.x efg.x plotband.x plotrho.x \
       pmw.x pp.x projwfc.x pw2casino.x pw2wan.x pw_export.x \
-      voronoy.x initial_state.x dipole.x
+      voronoy.x initial_state.x dipole.x sumpdos.x
 
 average.x : average.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
@@ -361,6 +361,10 @@ pw_export.x : pw_export.o $(PWOBJS) $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 		pw_export.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
+sumpdos.x : sumpdos.o 
+	$(MPIF90) $(LDFLAGS) -o $@ sumpdos.o
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+ 
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 

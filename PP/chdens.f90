@@ -1069,7 +1069,7 @@ subroutine write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
   !
   ! gopenmol needs atomic positions in a separate file
   !
-  write(ounit+1,'(i4)') natoms
+  write(ounit+1,'(i4,/)') natoms
   write(ounit+1,'(2x,a2,3f9.4)') (type(na),( atoms(i,na), i=1,3 ), na=1,natoms )
   !
   return
