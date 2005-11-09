@@ -24,7 +24,7 @@
       INTEGER :: iupdwn(2)  = 0    !  first state with spin (1) and down (2)
       INTEGER :: nudx       = 0    !  max (nupdw(1),nupdw(2))
       INTEGER :: nbsp       = 0    !  total number of electronic states 
-                                   !  (nbnd * nspin)
+                                   !  (nupdwn(1)+nupdwn(2))
       INTEGER :: nbspx      = 0    !  array dimension nbspx >= nbsp
 
       LOGICAL :: telectrons_base_initval = .FALSE.

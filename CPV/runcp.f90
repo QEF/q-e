@@ -480,22 +480,20 @@
         !  inizia a trattare lo stato unpaired
         !  per lo spin_up unpaired
 
-        if ( nupdwn(1) == (nupdwn(2) + 1) ) then
-           !
-           intermed = sum ( c0( :, nupdwn(1), ik, 1 ) * CONJG( c0( :, nupdwn(1), ik, 1 ) ) )
-           !  prodotto delle wf relative all'unpaired el
-           !  lavoro sugli n processori e' per quetso che sommo ... 
-           !  vengono messi nella variabile temporanea ei_t(:,:,2)
-           !  ei_t(:,:,1) viene utilizzato in seguito solo per il controllo/conto su <psi|H H|psi><psiunp|psiunp>
-           !  questo e' dovuto al fatto che non posso calcolare gli autovalori con eigs a causa della diversa
-           !  occupazione: lo stato unp dovrebbe gia' essere di suo uno stato di KS
-           !  cmq NON LO POSSO RUOTARE per come e' scritta la rho = sum_{i_1,N} |psi_i|**2 + |psi_unp|**2
-           !
-           CALL mp_sum( intermed, group)
-           ei_t(:,ik,2) = intermed  ! <Phiunpaired|Phiunpaired>
-           !  l'autoval dello spin up spaiato la mette in ei; memoria temporanea??? 
-           !
-        endif
+        !
+        intermed = sum ( c0( :, nupdwn(1), ik, 1 ) * CONJG( c0( :, nupdwn(1), ik, 1 ) ) )
+        !  prodotto delle wf relative all'unpaired el
+        !  lavoro sugli n processori e' per quetso che sommo ... 
+        !  vengono messi nella variabile temporanea ei_t(:,:,2)
+        !  ei_t(:,:,1) viene utilizzato in seguito solo per il controllo/conto su <psi|H H|psi><psiunp|psiunp>
+        !  questo e' dovuto al fatto che non posso calcolare gli autovalori con eigs a causa della diversa
+        !  occupazione: lo stato unp dovrebbe gia' essere di suo uno stato di KS
+        !  cmq NON LO POSSO RUOTARE per come e' scritta la rho = sum_{i_1,N} |psi_i|**2 + |psi_unp|**2
+        !
+        CALL mp_sum( intermed, group)
+        ei_t(:,ik,2) = intermed  ! <Phiunpaired|Phiunpaired>
+        !  l'autoval dello spin up spaiato la mette in ei; memoria temporanea??? 
+        !
 
         !  da qui e' per la trattazione degli el. paired, come in LSD dato che utilizzo
         !  vpot (:,:,:,1) e vpot(:,:,:,2) -nota e' def in spazio R(x,y,z)
@@ -508,15 +506,20 @@
         !  ripeto questo e' un accoppiamento di bande e non di elettroni
         !  non faccio alcuna distinzione finora fra gli el
 
-        nb = nx - MOD(nx, 2)
+        nb = nupdwn(1)
 
         DO i = 1, nb, 2
-
+          !
           !  dforce calcola la forza c2 e c3 sulle bande i e i+1 (sono reali => ne fa due alla volta)
           !  per il vpot (da potential ed e' il potetnziale di KS) in spin up e in down
           !
           CALL dforce( i, 1, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,:,:,1), eigr, bec )
-          CALL dforce( i, 2, c0(:,:,1,1), cdesc, fi(:,1,2), c4, c5, vpot(:,:,:,2), eigr, bec )
+          if( i <= nupdwn(2) ) then
+             CALL dforce( i, 2, c0(:,:,1,1), cdesc, fi(:,1,2), c4, c5, vpot(:,:,:,2), eigr, bec )
+          else
+             c4 = 0.0d0
+             c5 = 0.0d0
+          end if
           !
           !  accoppia c2 e c3 da vpot (spin 1) stato i e i+1
           !           c4   c5               2
@@ -544,21 +547,18 @@
             CALL update_lambda( i, gam( :, :), c0(:,:,ik,1), cdesc, c2 )
             CALL update_lambda( i+1, gam( :, :), c0(:,:,ik,1), cdesc, c3 )
 
-
-            if ( nupdwn(1) > nupdwn(2) ) then
-                intermed  = sum ( c2* CONJG(c2) )
-                intermed2 = sum ( c3* CONJG(c3) )
-                intermed3 = sum ( c2* CONJG( c0(:,nupdwn(1),ik,1) ) )
-                intermed4 = sum ( c3* CONJG( c0(:,nupdwn(1),ik,1) ) )
-                CALL mp_sum ( intermed,  group )
-                CALL mp_sum ( intermed2, group )
-                CALL mp_sum ( intermed3, group )
-                CALL mp_sum ( intermed4, group )
-                ei_t(i  ,ik,1) = intermed  * ei_t(i  ,ik,2) ! <Phi|H H|Phi>*<Phiunpaired|Phiunpaired>
-                ei_t(i+1,ik,1) = intermed2 * ei_t(i+1,ik,2)
-                ei_t(i  ,ik,2) = abs (intermed3)
-                ei_t(i+1,ik,2) = abs (intermed4)
-            endif
+             intermed  = sum ( c2* CONJG(c2) )
+             intermed2 = sum ( c3* CONJG(c3) )
+             intermed3 = sum ( c2* CONJG( c0(:,nupdwn(1),ik,1) ) )
+             intermed4 = sum ( c3* CONJG( c0(:,nupdwn(1),ik,1) ) )
+             CALL mp_sum ( intermed,  group )
+             CALL mp_sum ( intermed2, group )
+             CALL mp_sum ( intermed3, group )
+             CALL mp_sum ( intermed4, group )
+             ei_t(i  ,ik,1) = intermed  * ei_t(i  ,ik,2) ! <Phi|H H|Phi>*<Phiunpaired|Phiunpaired>
+             ei_t(i+1,ik,1) = intermed2 * ei_t(i+1,ik,2)
+             ei_t(i  ,ik,2) = abs (intermed3)
+             ei_t(i+1,ik,2) = abs (intermed4)
 
           END IF ! ttprint
 
@@ -579,18 +579,22 @@
         END DO ! bande
 
 
-        IF( MOD(nx,2) /= 0) THEN
+        IF( MOD(nb,2) /= 0) THEN
 
-          nb = nx
           !
           !  devo trattare solo l'tulima banda che conterra' di sicuro l'el unpaired
           !  in c2 ho quindi la forza relativa all'el unpaired
           !  per questo conservo in ei_t(:,:,2) il suo autovalore
           !
-          CALL dforce( nx, 1, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,:,:,1), eigr, bec )
-          CALL dforce( nx, 2, c0(:,:,1,1), cdesc, fi(:,1,2), c4, c5, vpot(:,:,:,2), eigr, bec )
+          CALL dforce( nb, 1, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,:,:,1), eigr, bec )
+          if( nb <= nupdwn(2) ) then
+             CALL dforce( nb, 2, c0(:,:,1,1), cdesc, fi(:,1,2), c4, c5, vpot(:,:,:,2), eigr, bec )
+          else
+             c4 = 0.0d0
+             c5 = 0.0d0
+          end if
 
-          IF( ttprint .and. ( nupdwn(1) > nupdwn(2) ) ) THEN
+          IF( ttprint ) THEN
             CALL update_lambda( nb, gam( :, :), c0(:,:,ik,1), cdesc, c2 )
             if ( nupdwn(1) > nupdwn(2) ) then
               intermed  = sum ( c2 * CONJG(c2) )
@@ -614,12 +618,6 @@
 
 
         IF( ttprint ) THEN
-
-            IF ( nupdwn(1) == nupdwn(2) ) THEN
-
-              CALL eigs( nupdwn(1), gam, cgam, tortho, fi(:,ik,1), ei(:,ik,1), cdesc%gamma )
-
-            ELSE IF( nupdwn(1) == ( nupdwn(2) + 1 ) ) THEN
 
               IF( ionode .AND. ( nupdwn(2) > 0 ) ) THEN
                 WRITE(6,1006) 
@@ -665,12 +663,6 @@
               ei(nupdwn(1), ik, 1)  = ei_t(nupdwn(1), ik, 2)
               ei(nupdwn(1), ik, 2)  = 0.D0
               ei_t(nupdwn(1), ik, 2)  = 0.D0
-
-            ELSE
-
-              CALL errore( ' runcp_force_pairing ', ' wrong nupdwn ', 1 )
-
-            END IF
 
         ENDIF
 

@@ -991,6 +991,9 @@ MODULE input
 
      CALL cg_init( tcg , maxiter , etresh , passop )
      !
+     IF( ( program_name == 'CP90' ) .AND. ( TRIM(sic) /= 'none' ) ) &
+        CALL errore(' modules_setup ', ' sic not implemented yet in cp ', 1 )
+     !
      CALL sic_initval( nat, id_loc, sic, sic_epsilon, sic_rloc  )
 
      !
