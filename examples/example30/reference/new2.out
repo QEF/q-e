@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.0 - Mon Oct 24 02:34:10 CEST 2005                         
+     Version: 3.0 - Tue May 24 14:33:50 EDT 2005                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5:39:19   2Nov2005               
+   This run was started on:  11:44:25   9Nov2005               
 
    Serial Build
 Warning: card &CELL ignored
@@ -24,11 +24,11 @@ Warning: card / ignored
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /scr/giannozz/espresso/pseudo/O.pz-rrkjus.UPF
+   /home/puma/espresso/pseudo/O.pz-rrkjus.UPF
    file type is 20
 
    Reading pseudopotential for specie #  2 from file :
-   /scr/giannozz/espresso/pseudo/Mg.pz-n-vbc.UPF
+   /home/puma/espresso/pseudo/Mg.pz-n-vbc.UPF
    file type is 20
 
 
@@ -67,9 +67,9 @@ Warning: card / ignored
 
    Energy Cut-offs
    ---------------
-   Ecutwfc =   23.0 Ryd.,    Ecutrho =  200.0 Ryd.,    Ecuts =   92.0 Ryd.
-   Gcutwfc =   12.1     ,    Gcutrho =   35.8          Gcuts =   24.3
-   NOTA BENE: refg, mmx =   0.050000  4800
+   Ecutwfc =   20.0 Ryd.,    Ecutrho =  160.0 Ryd.,    Ecuts =   80.0 Ryd.
+   Gcutwfc =   11.3     ,    Gcutrho =   32.0          Gcuts =   22.7
+   NOTA BENE: refg, mmx =   0.050000  3840
    Orthog. with Gram-Schmidt
    Electron dynamics with newton equations
    Electron dynamics : the temperature is not controlled
@@ -205,10 +205,10 @@ Warning: card / ignored
  
    Stick Mesh
    ----------
-   nst =  2013,  nstw =   233, nsts =   931
+   nst =  1617,  nstw =   203, nsts =   805
         PEs    n.st   n.stw   n.sts    n.g    n.gw   n.gs
-          1    4025     465    1861  192167    7497   60245
-          0    4025     465    1861  192167    7497   60245
+          1    3233     405    1609  137929    6043   48693
+          0    3233     405    1609  137929    6043   48693
  
  
    Real Mesh
@@ -225,11 +225,11 @@ Warning: card / ignored
    ----------------
    Global Dimensions   Local  Dimensions   Processor Grid
    .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
-    50    50    50      50    50    50       1     1     1
-   Array leading dimensions ( nr1x, nr2x, nr3x )   =     50    50    50
-   Local number of cell to store the grid ( nnrx ) =     125000
+    45    45    45      45    45    45       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     45    45    45
+   Local number of cell to store the grid ( nnrx ) =      91125
    Number of x-y planes for each processors: 
-   nr3sl =    50
+   nr3sl =    45
  
    Small Box Real Mesh
    -------------------
@@ -249,16 +249,16 @@ Warning: card / ignored
    ---------------------
                 Large Mesh
    PE   Global(ngmt)     Local(ngm) MaxLocal(ngmx)
-    1          96084          96084          96084
+    1          68965          68965          68965
                 Smooth Mesh
    PE   Global(ngst)     Local(ngs) MaxLocal(ngsx)
-    1          30123          30123          30123
+    1          24347          24347          24347
                 Wave function Mesh
    PE   Global(ngwt)     Local(ngw) MaxLocal(ngwx)
-    1           3749           3749           3749
+    1           3022           3022           3022
 
                 Small box Mesh
-   ngb =         6975 not distributed to processors
+   ngb =         4970 not distributed to processors
 
 
    System geometry initialization
@@ -341,7 +341,7 @@ Warning: card / ignored
 
    Pseudopotentials initialization
    -------------------------------
-  nlinit  nh(is), ngb, is, kkbeta, lmaxq =            8        6975           1
+  nlinit  nh(is), ngb, is, kkbeta, lmaxq =            8        4970           1
          865           3
  
                         qqq 
@@ -383,63 +383,67 @@ Warning: card / ignored
    Short Legend and Physical Units in the Output
    ---------------------------------------------
    NFI    [int]  - step index
-   EKINC  [A.U.] - kinetic energy of the fictitious electronic dynamics
+   EKINC  [HARTREE A.U.] - kinetic energy of the fictitious electronic dynamics
    TEMPH  [K]    - Temperature of the fictitious cell dynamics
    TEMP   [K]    - Ionic temperature
-   ETOT   [A.U.] - Scf total energy (Kohn-Sham hamiltonian)
-   ENTHAL [A.U.] - Enthalpy ( ETOT + P * V )
-   ECONS  [A.U.] - Enthalpy + kinetic energy of ions and cell
-   ECONT  [A.U.] - Constant of motion for the CP lagrangian
+   ETOT   [HARTREE A.U.] - Scf total energy (Kohn-Sham hamiltonian)
+   ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
+   ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
+   ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
- FROM_RESTART_CP : F
+
+   reading restart file: .//mgo_50.save
+   restart file read in    0.211 sec.
+
 
    formf: eself= 676.60611
    formf:     vps(g=0)=  -0.0020774     rhops(g=0)=  -0.0014893
-   formf: sum_g vps(g)=  -1.4508931 sum_g rhops(g)=  -1.0530111
+   formf: sum_g vps(g)=  -1.4455266 sum_g rhops(g)=  -1.0530008
    formf:     vps(g=0)=   0.0012432     rhops(g=0)=  -0.0004964
-   formf: sum_g vps(g)=   1.6335782 sum_g rhops(g)=  -1.4237345
+   formf: sum_g vps(g)=   1.6241241 sum_g rhops(g)=  -1.4102948
 Initialize Berry phase electric field
- #not found, gtable:    465.000000000000     
- #not found, gtabin:    465.000000000000     
+ #not found, gtable:    405.000000000000     
+ #not found, gtabin:    405.000000000000     
 
  * Physical Quantities at step:     2
  PERFORMING CONJUGATE GRADIENT MINIMIZATION OF EL. STATES
-
-
- eigenvalues at k-point:  0.000 0.000 0.000
-  -14.64  -13.84  -13.84  -13.84  -13.84  -13.84  -13.84  -13.36  -13.36  -13.36
-  -13.36  -13.36  -13.36  -13.36  -13.36  -13.36  -13.36  -13.36  -13.36  -13.29
-  -13.29  -13.29  -13.29  -12.96  -12.96  -12.96  -12.91  -12.91  -12.91  -12.91
-  -12.91  -12.91   -2.28   -2.28   -2.28   -2.28   -1.80   -1.80   -1.80   -1.13
-   -1.13   -1.13   -1.13   -1.13   -1.13   -1.13   -1.13   -1.13   -1.13   -1.13
-   -1.13   -0.61   -0.61   -0.61   -0.61   -0.61   -0.61   -0.61   -0.61   -0.61
-   -0.61   -0.61   -0.61   -0.22   -0.22   -0.22   -0.22   -0.21   -0.21    0.38
-    0.38    0.38    0.38    0.38    0.38    0.38    0.38    0.38    0.38    0.38
-    0.38    0.66    0.66    0.66    0.66    0.66    0.66    1.05    1.05    1.05
-    1.05    1.05    1.05    1.67    1.67    1.67    1.67    1.67    1.67    1.67
-    1.67    1.67    1.67    1.67    1.67    1.83    1.83    1.83    1.83    1.83
-    1.83    1.83    1.83    1.83    1.83    1.83    1.83    1.84    1.84    1.84
-    1.84    1.84    1.84    1.84    1.84    2.38    2.38    2.38
- 
  
 
 
-                total energy =     -548.29078 a.u.
-              kinetic energy =      233.53519 a.u.
-        electrostatic energy =     -589.82034 a.u.
-                         esr =        0.00000 a.u.
-                       eself =      676.60611 a.u.
-      pseudopotential energy =     -170.83985 a.u.
-  n-l pseudopotential energy =      114.01174 a.u.
- exchange-correlation energy =     -135.16104 a.u.
-           average potential =        0.00000 a.u.
+                total energy =     -547.28628 Hartree a.u.
+              kinetic energy =      235.43096 Hartree a.u.
+        electrostatic energy =     -588.81023 Hartree a.u.
+                         esr =        0.00000 Hartree a.u.
+                       eself =      676.60611 Hartree a.u.
+      pseudopotential energy =     -167.87987 Hartree a.u.
+  n-l pseudopotential energy =      108.84067 Hartree a.u.
+ exchange-correlation energy =     -134.85134 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -14.79  -14.01  -14.01  -14.01  -14.01  -14.01  -14.01  -13.53  -13.53  -13.53
+  -13.53  -13.53  -13.53  -13.53  -13.53  -13.53  -13.53  -13.53  -13.53  -13.47
+  -13.47  -13.47  -13.47  -13.14  -13.14  -13.14  -13.11  -13.11  -13.11  -13.11
+  -13.11  -13.11   -2.27   -2.27   -2.27   -2.27   -1.83   -1.83   -1.83   -1.15
+   -1.15   -1.15   -1.15   -1.15   -1.15   -1.15   -1.15   -1.15   -1.15   -1.15
+   -1.15   -0.69   -0.69   -0.69   -0.69   -0.69   -0.69   -0.69   -0.69   -0.69
+   -0.69   -0.69   -0.69   -0.21   -0.21   -0.21   -0.21   -0.21   -0.21    0.33
+    0.33    0.33    0.33    0.33    0.33    0.33    0.33    0.33    0.33    0.33
+    0.33    0.63    0.63    0.63    0.63    0.63    0.63    1.02    1.02    1.02
+    1.02    1.02    1.02    1.75    1.75    1.75    1.75    1.75    1.75    1.75
+    1.75    1.75    1.75    1.75    1.75    1.87    1.87    1.87    1.87    1.87
+    1.87    1.87    1.87    1.87    1.87    1.87    1.87    1.92    1.92    1.92
+    1.92    1.92    1.92    1.92    1.92    2.46    2.46    2.46
  
    CELL_PARAMETERS
    15.91200000    0.00000000    0.00000000
     0.00000000   15.91200000    0.00000000
     0.00000000    0.00000000   15.91200000
+
+   System Density [g/cm^3] :     3.2319
  
    Total stress (GPa)
         0.00000000         0.00000000         0.00000000
@@ -579,116 +583,120 @@ Initialize Berry phase electric field
    O    0.000000E+00  0.000000E+00  0.000000E+00
  
    Forces acting on atoms (au):
-   Mg   0.931335E-05  0.930825E-05  0.197132E-02
-   Mg   0.930685E-05  0.930795E-05  0.197132E-02
-   Mg   0.930080E-05  0.931442E-05  0.197132E-02
-   Mg   0.930008E-05  0.930407E-05  0.197133E-02
-   Mg   0.931362E-05  0.930795E-05  0.197133E-02
-   Mg   0.930417E-05  0.930619E-05  0.197133E-02
-   Mg   0.930167E-05  0.931314E-05  0.197133E-02
-   Mg   0.930254E-05  0.930427E-05  0.197132E-02
-   Mg   0.931146E-05  0.931003E-05  0.197132E-02
-   Mg   0.930439E-05  0.931049E-05  0.197132E-02
-   Mg   0.929689E-05  0.930388E-05  0.197132E-02
-   Mg   0.929962E-05  0.931420E-05  0.197133E-02
-   Mg   0.931106E-05  0.931028E-05  0.197133E-02
-   Mg   0.930182E-05  0.931196E-05  0.197133E-02
-   Mg   0.929822E-05  0.930514E-05  0.197133E-02
-   Mg   0.930093E-05  0.931404E-05  0.197132E-02
-   Mg   0.930501E-05  0.931079E-05  0.197132E-02
-   Mg   0.931142E-05  0.930962E-05  0.197132E-02
-   Mg   0.931749E-05  0.931408E-05  0.197132E-02
-   Mg   0.931824E-05  0.930014E-05  0.197132E-02
-   Mg   0.930471E-05  0.931026E-05  0.197133E-02
-   Mg   0.931411E-05  0.930866E-05  0.197133E-02
-   Mg   0.931667E-05  0.931139E-05  0.197133E-02
-   Mg   0.931560E-05  0.930090E-05  0.197133E-02
-   Mg   0.930676E-05  0.930763E-05  0.197132E-02
-   Mg   0.931384E-05  0.930859E-05  0.197132E-02
-   Mg   0.932140E-05  0.930426E-05  0.197132E-02
-   Mg   0.931862E-05  0.931811E-05  0.197132E-02
-   Mg   0.930723E-05  0.930798E-05  0.197133E-02
-   Mg   0.931640E-05  0.930940E-05  0.197133E-02
-   Mg   0.932010E-05  0.930692E-05  0.197133E-02
-   Mg   0.931750E-05  0.931742E-05  0.197133E-02
-   O   -0.703063E-04 -0.703010E-04 -0.203208E-02
-   O   -0.703106E-04 -0.703081E-04 -0.203208E-02
-   O   -0.703109E-04 -0.703006E-04 -0.203207E-02
-   O   -0.703061E-04 -0.703069E-04 -0.203207E-02
-   O   -0.703051E-04 -0.703022E-04 -0.203207E-02
-   O   -0.703103E-04 -0.703078E-04 -0.203207E-02
-   O   -0.703099E-04 -0.703000E-04 -0.203208E-02
-   O   -0.703058E-04 -0.703059E-04 -0.203208E-02
-   O   -0.703069E-04 -0.703055E-04 -0.203208E-02
-   O   -0.703122E-04 -0.702982E-04 -0.203208E-02
-   O   -0.703128E-04 -0.703063E-04 -0.203207E-02
-   O   -0.703062E-04 -0.703001E-04 -0.203207E-02
-   O   -0.703059E-04 -0.703039E-04 -0.203207E-02
-   O   -0.703112E-04 -0.702984E-04 -0.203207E-02
-   O   -0.703113E-04 -0.703059E-04 -0.203208E-02
-   O   -0.703061E-04 -0.703001E-04 -0.203208E-02
-   O   -0.703003E-04 -0.702997E-04 -0.203208E-02
-   O   -0.702956E-04 -0.703068E-04 -0.203208E-02
-   O   -0.702958E-04 -0.703016E-04 -0.203207E-02
-   O   -0.703005E-04 -0.703089E-04 -0.203207E-02
-   O   -0.703015E-04 -0.703007E-04 -0.203207E-02
-   O   -0.702961E-04 -0.703069E-04 -0.203207E-02
-   O   -0.702969E-04 -0.703014E-04 -0.203208E-02
-   O   -0.703008E-04 -0.703078E-04 -0.203208E-02
-   O   -0.702995E-04 -0.703064E-04 -0.203208E-02
-   O   -0.702944E-04 -0.703000E-04 -0.203208E-02
-   O   -0.702936E-04 -0.703058E-04 -0.203207E-02
-   O   -0.703005E-04 -0.702979E-04 -0.203207E-02
-   O   -0.703002E-04 -0.703054E-04 -0.203207E-02
-   O   -0.702948E-04 -0.702997E-04 -0.203207E-02
-   O   -0.702955E-04 -0.703050E-04 -0.203208E-02
-   O   -0.703006E-04 -0.702979E-04 -0.203208E-02
+   Mg   0.247034E-04  0.247028E-04  0.198669E-02
+   Mg   0.247063E-04  0.247084E-04  0.198668E-02
+   Mg   0.246987E-04  0.247035E-04  0.198669E-02
+   Mg   0.247016E-04  0.247000E-04  0.198668E-02
+   Mg   0.247048E-04  0.247020E-04  0.198668E-02
+   Mg   0.247102E-04  0.247094E-04  0.198669E-02
+   Mg   0.247006E-04  0.247047E-04  0.198669E-02
+   Mg   0.247029E-04  0.246993E-04  0.198669E-02
+   Mg   0.247040E-04  0.247054E-04  0.198669E-02
+   Mg   0.247065E-04  0.246997E-04  0.198668E-02
+   Mg   0.246985E-04  0.247047E-04  0.198669E-02
+   Mg   0.247060E-04  0.247082E-04  0.198668E-02
+   Mg   0.247058E-04  0.247061E-04  0.198668E-02
+   Mg   0.247103E-04  0.246989E-04  0.198669E-02
+   Mg   0.246996E-04  0.247036E-04  0.198669E-02
+   Mg   0.247039E-04  0.247089E-04  0.198669E-02
+   Mg   0.247048E-04  0.247026E-04  0.198669E-02
+   Mg   0.247018E-04  0.247078E-04  0.198668E-02
+   Mg   0.247095E-04  0.247081E-04  0.198668E-02
+   Mg   0.247067E-04  0.246998E-04  0.198669E-02
+   Mg   0.247033E-04  0.247020E-04  0.198668E-02
+   Mg   0.246980E-04  0.247085E-04  0.198669E-02
+   Mg   0.247075E-04  0.247055E-04  0.198669E-02
+   Mg   0.247052E-04  0.246982E-04  0.198668E-02
+   Mg   0.247041E-04  0.247056E-04  0.198669E-02
+   Mg   0.247016E-04  0.247004E-04  0.198668E-02
+   Mg   0.247097E-04  0.247002E-04  0.198668E-02
+   Mg   0.247022E-04  0.247085E-04  0.198669E-02
+   Mg   0.247023E-04  0.247062E-04  0.198668E-02
+   Mg   0.246978E-04  0.246998E-04  0.198669E-02
+   Mg   0.247085E-04  0.247027E-04  0.198669E-02
+   Mg   0.247043E-04  0.247099E-04  0.198668E-02
+   O   -0.470349E-04 -0.470347E-04 -0.200929E-02
+   O   -0.470355E-04 -0.470344E-04 -0.200929E-02
+   O   -0.470338E-04 -0.470363E-04 -0.200929E-02
+   O   -0.470350E-04 -0.470345E-04 -0.200929E-02
+   O   -0.470350E-04 -0.470352E-04 -0.200929E-02
+   O   -0.470345E-04 -0.470350E-04 -0.200929E-02
+   O   -0.470363E-04 -0.470356E-04 -0.200929E-02
+   O   -0.470359E-04 -0.470351E-04 -0.200929E-02
+   O   -0.470344E-04 -0.470348E-04 -0.200929E-02
+   O   -0.470356E-04 -0.470351E-04 -0.200929E-02
+   O   -0.470343E-04 -0.470330E-04 -0.200929E-02
+   O   -0.470332E-04 -0.470348E-04 -0.200929E-02
+   O   -0.470346E-04 -0.470343E-04 -0.200929E-02
+   O   -0.470343E-04 -0.470342E-04 -0.200929E-02
+   O   -0.470366E-04 -0.470338E-04 -0.200929E-02
+   O   -0.470344E-04 -0.470344E-04 -0.200929E-02
+   O   -0.470346E-04 -0.470347E-04 -0.200929E-02
+   O   -0.470337E-04 -0.470348E-04 -0.200929E-02
+   O   -0.470356E-04 -0.470342E-04 -0.200929E-02
+   O   -0.470343E-04 -0.470348E-04 -0.200929E-02
+   O   -0.470344E-04 -0.470353E-04 -0.200929E-02
+   O   -0.470349E-04 -0.470356E-04 -0.200929E-02
+   O   -0.470334E-04 -0.470342E-04 -0.200929E-02
+   O   -0.470334E-04 -0.470355E-04 -0.200929E-02
+   O   -0.470350E-04 -0.470346E-04 -0.200929E-02
+   O   -0.470337E-04 -0.470342E-04 -0.200929E-02
+   O   -0.470354E-04 -0.470351E-04 -0.200929E-02
+   O   -0.470361E-04 -0.470345E-04 -0.200929E-02
+   O   -0.470350E-04 -0.470343E-04 -0.200929E-02
+   O   -0.470350E-04 -0.470339E-04 -0.200929E-02
+   O   -0.470328E-04 -0.470352E-04 -0.200929E-02
+   O   -0.470350E-04 -0.470339E-04 -0.200929E-02
  
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
  
        nfi   tempp            E -T.S-mu.nbsp         +K_p #Iter
-Step     2       0   -548.29078   -548.29078   -548.29078    16
-  Elct. dipole   15.412773  Ionic dipole    1.060800
+Step     2       0   -547.28628   -547.28628   -547.28628    16
+  Elct. dipole   15.415240  Ionic dipole    1.060800
 
 
               averaged quantities :
          ekinc          ekin          epot          etot     tempp
-       0.00000     233.53523    -895.82147    -548.28268       0.0
-     initialize   :     8.36s CPU
-     total_time   :   549.84s CPU
-     formf        :     0.35s CPU
-     rhoofr       :    49.06s CPU (      32 calls,   1.533 s avg)
-     vofrho       :    42.49s CPU (      31 calls,   1.371 s avg)
-     dforce       :    57.99s CPU (    1024 calls,   0.057 s avg)
-     gram         :    59.99s CPU (      31 calls,   1.935 s avg)
-     newd         :    87.84s CPU (      16 calls,   5.490 s avg)
-     calbec       :    45.33s CPU (     140 calls,   0.324 s avg)
-     prefor       :     0.65s CPU (      17 calls,   0.038 s avg)
-     strucf       :     0.16s CPU (       2 calls,   0.080 s avg)
+       0.00000     235.43101    -891.54167    -547.27818       0.0
+     initialize   :     6.55s CPU
+     total_time   :   447.04s CPU
+     formf        :     0.29s CPU
+     rhoofr       :    35.70s CPU (      32 calls,   1.116 s avg)
+     vofrho       :    38.52s CPU (      31 calls,   1.243 s avg)
+     dforce       :    41.43s CPU (    1024 calls,   0.040 s avg)
+     gram         :    44.54s CPU (      31 calls,   1.437 s avg)
+     newd         :    75.47s CPU (      16 calls,   4.717 s avg)
+     calbec       :    36.42s CPU (     140 calls,   0.260 s avg)
+     prefor       :     0.51s CPU (      17 calls,   0.030 s avg)
+     strucf       :     0.13s CPU (       2 calls,   0.065 s avg)
      nlfl         :     0.04s CPU
-     nlfq         :     0.87s CPU
-     set_cc       :     4.85s CPU (      32 calls,   0.152 s avg)
-     rhov         :    10.45s CPU (      32 calls,   0.327 s avg)
-     nlsm1        :    45.33s CPU (     140 calls,   0.324 s avg)
-     nlsm2        :     0.85s CPU
-     forcecc      :     9.82s CPU (      31 calls,   0.317 s avg)
-     fft          :    13.19s CPU (     157 calls,   0.084 s avg)
-     ffts         :     1.88s CPU (      63 calls,   0.030 s avg)
-     fftw         :    50.21s CPU (    4096 calls,   0.012 s avg)
-     fftb         :    54.16s CPU (   12496 calls,   0.004 s avg)
+     nlfq         :     0.78s CPU
+     set_cc       :     5.07s CPU (      32 calls,   0.158 s avg)
+     rhov         :     9.46s CPU (      32 calls,   0.296 s avg)
+     nlsm1        :    36.42s CPU (     140 calls,   0.260 s avg)
+     nlsm2        :     0.76s CPU
+     forcecc      :    11.16s CPU (      31 calls,   0.360 s avg)
+     fft          :    13.26s CPU (     157 calls,   0.084 s avg)
+     ffts         :     1.25s CPU (      63 calls,   0.020 s avg)
+     fftw         :    32.17s CPU (    4096 calls,   0.008 s avg)
+     fftb         :    56.78s CPU (   12496 calls,   0.005 s avg)
+
+   writing restart file: .//mgo_50.save
+   restart file written in    1.921 sec.
+
 
 
 ======================== end cp ========================
 
 
  
-     CP           :  9m23.51s CPU time
+     CP           :  7m35.59s CPU time
 
  
-   This run was terminated on:   5:48:47   2Nov2005            
+   This run was terminated on:  11:52: 2   9Nov2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:   568.0
+   ELAPSED SECONDS:   457.0
    JOB DONE.
 =------------------------------------------------------------------------------=
 
