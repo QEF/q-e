@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.0 - Tue Sep 6 13:11:13 CEST 2005                          
+     Version: 3.0 - Mon Oct 24 02:34:10 CEST 2005                         
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:29:54  17Oct2005               
+   This run was started on:   3:32:27  10Nov2005               
 
    Serial Build
 
@@ -32,16 +32,16 @@
    Main Simulation Parameters (from input)
    ---------------------------------------
    Restart Mode       =       0   reset_counters 
-   Number of MD Steps =      10
-   Print out every           10 MD Steps
-   Reads from unit    =      92
-   Writes to unit     =      93
-   MD Simulation time step            =      12.00
+   Number of MD Steps =      50
+   Print out every           50 MD Steps
+   Reads from unit    =      91
+   Writes to unit     =      92
+   MD Simulation time step            =      15.00
    Electronic fictitious mass (emass) =     700.00
    emass cut-off                      =       3.00
 
    Simulation Cell Parameters (from input)
-   external pressure       =            1.00 [GPa]
+   external pressure       =            0.00 [GPa]
    wmass (calculated)      =        49868.29 [AU]
    ibrav =    8
    alat  =     9.28990000
@@ -62,8 +62,9 @@
    ecutz = 150.0000  ecsig =  2.0000  ecfix =  16.00
    NOTA BENE: refg, mmx =   0.050000  3600
    Eigenvalues calculated without the kinetic term contribution
-   Orthog. with lagrange multipliers : eps =   0.10E-07,  max =  30
-   Electron dynamics with newton equations
+   Orthog. with lagrange multipliers : eps =   0.10E-07,  max =  20
+   verlet algorithm for electron dynamics
+   with friction frice =  0.2000 , grease =  1.0000
    Electron dynamics : the temperature is not controlled
 
    Electronic states
@@ -87,13 +88,10 @@
 
    Ions Simulation Parameters
    --------------------------
-   Ions are allowed to move
-   Ions dynamics with newton equations
-   the temperature is computed for    54 degrees of freedom
-   ion dynamics with fricp =  0.0000 and greasp =  1.0000
+   Ions are not allowed to move
    Ionic position (from input)
    sorted by specie, and converted to real a.u. coordinates
-   Species   1 atoms =   12 mass =     29166.24 (a.u.),        16.00 (uma) rcmax =   1.00 (a.u.)
+   Species   1 atoms =   12 mass =     29166.24 (a.u.),        16.00 (amu) rcmax =   1.00 (a.u.)
         3.188294    14.832370     1.228830
         7.832315     6.787040     1.228830
         2.074435     5.995380     4.737583
@@ -106,7 +104,7 @@
         7.833244     9.302011     5.580296
         2.075364    10.092062     2.073586
         6.719385     2.046732     2.073586
-   Species   2 atoms =    6 mass =     51040.92 (a.u.),        28.00 (uma) rcmax =   1.00 (a.u.)
+   Species   2 atoms =    6 mass =     51040.92 (a.u.),        28.00 (amu) rcmax =   1.00 (a.u.)
         0.288916     8.045330     3.404563
         4.933866     0.000000     3.404563
         2.133890    12.277174    -0.041880
@@ -115,45 +113,13 @@
         6.778840    11.858816     6.852027
    Ionic position will be re-read from restart file
 
-   All atoms are allowed to move
-   Ionic temperature control via nose thermostat
-
-
-   ion dynamics with nose` temperature control:
-   temperature required      =  300.00000 (kelvin) 
-   NH chain length           =   1
-   active degrees of freedom =  54
-   time steps per nose osc.  =   516
-
-
-   nose` frequency(es)       =       6.667
-
-
-   the requested type of NH chains is     0
-   total number of thermostats used     1 0
-   ionic degrees of freedom for each chain   54
-
-
-   nose` mass(es) for chain    1 =  100013.420
-
 
    Cell Dynamics Parameters (from STDIN)
    -------------------------------------
-   internal stress tensor calculated
    Starting cell generated from CELLDM
    Cell parameters will be re-read from restart file
-   Volume dynamics with newton equations
-   cell parameters dynamics with nose` temp. control
-   Constant PRESSURE Molecular dynamics:
-   External pressure (GPa) =        1.00
-   Volume mass             =    49868.29
-
-
-   cell dynamics with nose` temperature control:
-   Kinetic energy required   =  300.00000 (Kelvin) 
-   time steps per nose osc.  =   400
-   nose` frequency           =      8.607 (THz) 
-   nose` mass(es)            =   10000.049
+   Constant VOLUME Molecular dynamics
+   cell parameters are not allowed to move
 
    Verbosity: iprsta =  1
 
@@ -302,20 +268,18 @@
    Short Legend and Physical Units in the Output
    ---------------------------------------------
    NFI    [int]  - step index
-   EKINC  [A.U.] - kinetic energy of the fictitious electronic dynamics
+   EKINC  [HARTREE A.U.] - kinetic energy of the fictitious electronic dynamics
    TEMPH  [K]    - Temperature of the fictitious cell dynamics
    TEMP   [K]    - Ionic temperature
-   ETOT   [A.U.] - Scf total energy (Kohn-Sham hamiltonian)
-   ENTHAL [A.U.] - Enthalpy ( ETOT + P * V )
-   ECONS  [A.U.] - Enthalpy + kinetic energy of ions and cell
-   ETTT   [A.U.] - Constant of motion for the CP lagrangian
+   ETOT   [HARTREE A.U.] - Scf total energy (Kohn-Sham hamiltonian)
+   ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
+   ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
+   ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
 
-   formf: eself= 210.64152
-   formf:     vps(g=0)=  -0.0099256     rhops(g=0)=  -0.0039295
-   formf: sum_g vps(g)=  -2.2959144 sum_g rhops(g)=  -0.5407261
-   formf:     vps(g=0)=  -0.0098400     rhops(g=0)=  -0.0026197
-   formf: sum_g vps(g)=  -2.3753533 sum_g rhops(g)=  -0.3604841
+   reading restart file: .//cp_91.save
+   restart file read in    0.066 sec.
+
 
    formf: eself= 210.64152
    formf:     vps(g=0)=  -0.0099256     rhops(g=0)=  -0.0039295
@@ -324,157 +288,93 @@
    formf: sum_g vps(g)=  -2.3753533 sum_g rhops(g)=  -0.3604841
  
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-    1  0.00001  240.2    7.9  -211.98210  -211.93020  -211.92611  -211.92609  0.0000  0.0000  0.0000  0.0000
-    2  0.00023  940.9   30.1  -211.98170  -211.92973  -211.91375  -211.91352  0.0000  0.0000  0.0000 -0.0001
-    3  0.00121  898.1   26.8  -211.98135  -211.92930  -211.91421  -211.91300  0.0000  0.0002  0.0000 -0.0002
-    4  0.00221  858.7   24.3  -211.98171  -211.92960  -211.91528  -211.91307  0.0000  0.0004  0.0000 -0.0004
-    5  0.00198  838.0   24.3  -211.98191  -211.92973  -211.91571  -211.91370  0.0000  0.0008  0.0000 -0.0007
-    6  0.00098  839.9   27.6  -211.98154  -211.92930  -211.91497  -211.91396  0.0000  0.0012  0.0000 -0.0010
-    7  0.00035  853.7   33.0  -211.98144  -211.92912  -211.91414  -211.91374  0.0000  0.0018  0.0000 -0.0014
-    8  0.00019  861.4   37.7  -211.98176  -211.92937  -211.91388  -211.91362  0.0001  0.0024  0.0000 -0.0019
-    9  0.00024  849.1   39.3  -211.98173  -211.92927  -211.91381  -211.91349  0.0001  0.0031  0.0000 -0.0025
+    1  1.14030    0.0    0.0  -205.37573  -205.37573  -205.37573  -204.23543  0.0000  0.0000  0.0000  0.0000
+    2  1.78251    0.0    0.0  -207.22882  -207.22882  -207.22882  -205.44631  0.0000  0.0000  0.0000  0.0000
+    3  1.59397    0.0    0.0  -208.78096  -208.78096  -208.78096  -207.18699  0.0000  0.0000  0.0000  0.0000
+    4  1.07113    0.0    0.0  -209.59343  -209.59343  -209.59343  -208.52231  0.0000  0.0000  0.0000  0.0000
+    5  0.69855    0.0    0.0  -209.97233  -209.97233  -209.97233  -209.27378  0.0000  0.0000  0.0000  0.0000
+    6  0.57534    0.0    0.0  -210.30224  -210.30224  -210.30224  -209.72690  0.0000  0.0000  0.0000  0.0000
+    7  0.57566    0.0    0.0  -210.72177  -210.72177  -210.72177  -210.14612  0.0000  0.0000  0.0000  0.0000
+    8  0.56061    0.0    0.0  -211.18164  -211.18164  -211.18164  -210.62104  0.0000  0.0000  0.0000  0.0000
+    9  0.46108    0.0    0.0  -211.56576  -211.56576  -211.56576  -211.10468  0.0000  0.0000  0.0000  0.0000
+   10  0.30310    0.0    0.0  -211.79271  -211.79271  -211.79271  -211.48962  0.0000  0.0000  0.0000  0.0000
+   11  0.16132    0.0    0.0  -211.87785  -211.87785  -211.87785  -211.71653  0.0000  0.0000  0.0000  0.0000
+   12  0.07727    0.0    0.0  -211.89603  -211.89603  -211.89603  -211.81875  0.0000  0.0000  0.0000  0.0000
+   13  0.04274    0.0    0.0  -211.90404  -211.90404  -211.90404  -211.86130  0.0000  0.0000  0.0000  0.0000
+   14  0.03284    0.0    0.0  -211.92028  -211.92028  -211.92028  -211.88744  0.0000  0.0000  0.0000  0.0000
+   15  0.02846    0.0    0.0  -211.94129  -211.94129  -211.94129  -211.91283  0.0000  0.0000  0.0000  0.0000
+   16  0.02219    0.0    0.0  -211.95887  -211.95887  -211.95887  -211.93668  0.0000  0.0000  0.0000  0.0000
+   17  0.01465    0.0    0.0  -211.96933  -211.96933  -211.96933  -211.95467  0.0000  0.0000  0.0000  0.0000
+   18  0.00848    0.0    0.0  -211.97398  -211.97398  -211.97398  -211.96551  0.0000  0.0000  0.0000  0.0000
+   19  0.00484    0.0    0.0  -211.97598  -211.97598  -211.97598  -211.97114  0.0000  0.0000  0.0000  0.0000
+   20  0.00314    0.0    0.0  -211.97742  -211.97742  -211.97742  -211.97429  0.0000  0.0000  0.0000  0.0000
+   21  0.00229    0.0    0.0  -211.97881  -211.97881  -211.97881  -211.97652  0.0000  0.0000  0.0000  0.0000
+   22  0.00170    0.0    0.0  -211.97998  -211.97998  -211.97998  -211.97828  0.0000  0.0000  0.0000  0.0000
+   23  0.00120    0.0    0.0  -211.98080  -211.98080  -211.98080  -211.97961  0.0000  0.0000  0.0000  0.0000
+   24  0.00078    0.0    0.0  -211.98130  -211.98130  -211.98130  -211.98052  0.0000  0.0000  0.0000  0.0000
+   25  0.00049    0.0    0.0  -211.98157  -211.98157  -211.98157  -211.98108  0.0000  0.0000  0.0000  0.0000
+   26  0.00031    0.0    0.0  -211.98174  -211.98174  -211.98174  -211.98143  0.0000  0.0000  0.0000  0.0000
+   27  0.00020    0.0    0.0  -211.98184  -211.98184  -211.98184  -211.98164  0.0000  0.0000  0.0000  0.0000
+   28  0.00014    0.0    0.0  -211.98193  -211.98193  -211.98193  -211.98179  0.0000  0.0000  0.0000  0.0000
+   29  0.00009    0.0    0.0  -211.98198  -211.98198  -211.98198  -211.98189  0.0000  0.0000  0.0000  0.0000
+   30  0.00006    0.0    0.0  -211.98202  -211.98202  -211.98202  -211.98196  0.0000  0.0000  0.0000  0.0000
+   31  0.00004    0.0    0.0  -211.98205  -211.98205  -211.98205  -211.98201  0.0000  0.0000  0.0000  0.0000
+   32  0.00003    0.0    0.0  -211.98207  -211.98207  -211.98207  -211.98204  0.0000  0.0000  0.0000  0.0000
+   33  0.00002    0.0    0.0  -211.98208  -211.98208  -211.98208  -211.98206  0.0000  0.0000  0.0000  0.0000
+   34  0.00001    0.0    0.0  -211.98209  -211.98209  -211.98209  -211.98208  0.0000  0.0000  0.0000  0.0000
+   35  0.00001    0.0    0.0  -211.98209  -211.98209  -211.98209  -211.98208  0.0000  0.0000  0.0000  0.0000
+   36  0.00001    0.0    0.0  -211.98210  -211.98210  -211.98210  -211.98209  0.0000  0.0000  0.0000  0.0000
+   37  0.00000    0.0    0.0  -211.98210  -211.98210  -211.98210  -211.98209  0.0000  0.0000  0.0000  0.0000
+   38  0.00000    0.0    0.0  -211.98210  -211.98210  -211.98210  -211.98210  0.0000  0.0000  0.0000  0.0000
+   39  0.00000    0.0    0.0  -211.98210  -211.98210  -211.98210  -211.98210  0.0000  0.0000  0.0000  0.0000
+   40  0.00000    0.0    0.0  -211.98210  -211.98210  -211.98210  -211.98210  0.0000  0.0000  0.0000  0.0000
+   41  0.00000    0.0    0.0  -211.98210  -211.98210  -211.98210  -211.98210  0.0000  0.0000  0.0000  0.0000
 
- * Physical Quantities at step:    10
-
-   from rhoofr: total integrated electronic density
-   in g-space =   96.000000   in r-space =  96.000000
-
-
- eigenvalues at k-point:  0.000 0.000 0.000
-  -23.63  -23.15  -22.80  -22.35  -22.29  -22.22  -21.82  -21.77  -21.76  -21.75
-  -21.75  -21.72  -11.63  -11.55  -11.38  -10.74   -9.17   -8.72   -8.68   -8.65
-   -8.63   -8.43   -8.38   -7.73   -6.26   -6.13   -6.09   -6.00   -5.98   -5.69
-   -5.66   -5.25   -5.23   -4.83   -4.81   -4.44   -4.40   -4.37   -4.24   -4.06
-   -4.05   -4.03   -3.71   -3.70   -3.31   -3.30   -3.23   -3.05
- 
- 
-
-
-                total energy =     -211.98139 a.u.
-              kinetic energy =       94.30857 a.u.
-        electrostatic energy =     -198.24973 a.u.
-                         esr =        0.40273 a.u.
-                       eself =      210.64152 a.u.
-      pseudopotential energy =      -95.93785 a.u.
-  n-l pseudopotential energy =       36.31656 a.u.
- exchange-correlation energy =      -48.41894 a.u.
-           average potential =        0.00000 a.u.
-
-
- 
-   CELL_PARAMETERS
-    9.34596670    0.00009983   -0.00012087
-    0.00017292   16.12073574   -0.00047879
-   -0.00013294   -0.00030417   10.25645968
- 
-   Total stress (GPa)
-       -3.41308897        -0.00533591        -0.14156295
-       -0.00533591        -6.65358216        -0.59630610
-       -0.14156299        -0.59630608       -14.12844837
- 
-   ATOMIC_POSITIONS
-   O    0.320761E+01  0.148720E+02  0.122705E+01
-   O    0.787674E+01  0.680734E+01  0.122656E+01
-   O    0.209539E+01  0.600726E+01  0.475020E+01
-   O    0.677263E+01  0.140673E+02  0.474994E+01
-   O    0.398321E+01  0.112794E+02  0.790498E+01
-   O    0.865683E+01  0.322125E+01  0.790253E+01
-   O    0.397868E+01  0.484251E+01  0.919078E+01
-   O    0.865233E+01  0.128986E+02  0.920052E+01
-   O    0.320539E+01  0.125475E+01  0.560342E+01
-   O    0.787850E+01  0.930935E+01  0.560633E+01
-   O    0.209668E+01  0.101046E+02  0.208493E+01
-   O    0.676863E+01  0.204437E+01  0.208617E+01
-   Si   0.289700E+00  0.806029E+01  0.341875E+01
-   Si   0.496266E+01  0.188288E-05  0.341891E+01
-   Si   0.214606E+01  0.123002E+02 -0.418148E-01
-   Si   0.681893E+01  0.423987E+01 -0.417711E-01
-   Si   0.214592E+01  0.382050E+01  0.688031E+01
-   Si   0.681899E+01  0.118810E+02  0.688011E+01
- 
-   ATOMIC_VELOCITIES
-   O   -0.196835E-05  0.120938E-03 -0.647993E-04
-   O   -0.282341E-04  0.803371E-04 -0.690726E-04
-   O    0.862506E-04  0.114870E-04 -0.664521E-04
-   O    0.116940E-03 -0.777383E-05 -0.653183E-04
-   O   -0.387553E-04 -0.117042E-03 -0.655613E-04
-   O   -0.329613E-04 -0.834604E-04 -0.883801E-04
-   O   -0.795809E-04  0.149760E-03  0.818050E-04
-   O   -0.749863E-04  0.109792E-03  0.173935E-03
-   O   -0.117947E-04 -0.484304E-04  0.793753E-05
-   O   -0.203738E-04 -0.101132E-03  0.374797E-04
-   O    0.900035E-04 -0.603237E-04  0.321329E-04
-   O    0.897411E-04 -0.600168E-04  0.418961E-04
-   Si  -0.108299E-04  0.313013E-07  0.394440E-05
-   Si  -0.105117E-04  0.160861E-06  0.514255E-05
-   Si  -0.795061E-05  0.176670E-06  0.530739E-05
-   Si  -0.907729E-05 -0.126911E-05  0.437569E-05
-   Si  -0.807932E-05  0.205080E-05  0.315721E-05
-   Si  -0.742581E-05  0.220074E-05  0.344284E-05
- 
-   Forces acting on atoms (au):
-   O   -0.253860E-03 -0.119443E-01  0.770629E-02
-   O    0.436683E-02 -0.406318E-02  0.926992E-02
-   O   -0.763052E-02  0.836029E-03  0.646785E-02
-   O   -0.125149E-01  0.305578E-02  0.809819E-02
-   O    0.303033E-02  0.102838E-01 -0.133064E-02
-   O    0.171446E-02  0.368384E-02  0.310091E-02
-   O    0.110696E-01 -0.155646E-01 -0.169927E-02
-   O    0.937981E-02 -0.909263E-02 -0.177456E-01
-   O    0.227655E-02 -0.176885E-02  0.200832E-02
-   O    0.289669E-02  0.880138E-02 -0.222685E-02
-   O   -0.700977E-02  0.901006E-02 -0.236880E-02
-   O   -0.685956E-02  0.899030E-02 -0.457810E-02
-   Si  -0.308775E-02 -0.980879E-03 -0.227365E-04
-   Si  -0.237794E-02 -0.182661E-02  0.174033E-02
-   Si  -0.443406E-03 -0.792195E-03 -0.289478E-03
-   Si  -0.218906E-02 -0.298120E-02 -0.108276E-02
-   Si  -0.400416E-03  0.760466E-03  0.882564E-03
-   Si   0.507770E-03  0.134491E-02  0.136003E-02
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-   10  0.00079  816.7   37.8  -211.98139  -211.92886  -211.91400  -211.91310  0.0001  0.0039 -0.0001 -0.0031
+   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
+   MAIN:   0.728079D-06  0.1D-05  0.269102D-06  0.1D-03  0.000000D+00  0.1D+11
+   MAIN: convergence achieved for system relaxation
 
 
               averaged quantities :
          ekinc          ekin          epot          etot     tempp
-       0.00082      94.47561    -342.86859    -211.98166      28.9
-     initialize   :     7.78s CPU
-     total_time   :    17.07s CPU (      10 calls,   1.707 s avg)
-     formf        :     0.69s CPU (      11 calls,   0.063 s avg)
-     rhoofr       :     5.95s CPU (      10 calls,   0.595 s avg)
-     vofrho       :     1.94s CPU (      10 calls,   0.194 s avg)
-     dforce       :     2.60s CPU (     240 calls,   0.011 s avg)
-     calphi       :     0.10s CPU (      10 calls,   0.010 s avg)
-     ortho        :     0.45s CPU (      10 calls,   0.045 s avg)
-     updatc       :     0.07s CPU (      10 calls,   0.007 s avg)
-     newd         :     1.69s CPU (      10 calls,   0.169 s avg)
-     calbec       :     0.10s CPU (      11 calls,   0.009 s avg)
-     prefor       :     0.08s CPU (      20 calls,   0.004 s avg)
-     strucf       :     0.07s CPU (      11 calls,   0.006 s avg)
-     nlfl         :     0.02s CPU (      10 calls,   0.002 s avg)
-     nlfq         :     0.63s CPU (      10 calls,   0.063 s avg)
-     rhov         :     0.41s CPU (      10 calls,   0.041 s avg)
-     nlsm1        :     0.36s CPU (      31 calls,   0.012 s avg)
-     nlsm2        :     0.62s CPU (      10 calls,   0.062 s avg)
-     fft          :     3.30s CPU (     130 calls,   0.025 s avg)
-     ffts         :     0.19s CPU (      20 calls,   0.010 s avg)
-     fftw         :     2.31s CPU (     720 calls,   0.003 s avg)
-     fftb         :     1.20s CPU (    2940 calls,   0.000 s avg)
-     rsg          :     0.00s CPU (      10 calls,   0.000 s avg)
+       0.22355      94.98968    -342.97528    -211.40306       0.0
+     initialize   :     4.26s CPU
+     total_time   :    30.73s CPU (      41 calls,   0.750 s avg)
+     formf        :     0.29s CPU
+     rhoofr       :     7.20s CPU (      41 calls,   0.176 s avg)
+     vofrho       :     3.87s CPU (      41 calls,   0.094 s avg)
+     dforce       :    10.70s CPU (     984 calls,   0.011 s avg)
+     calphi       :     0.41s CPU (      41 calls,   0.010 s avg)
+     ortho        :     1.95s CPU (      41 calls,   0.048 s avg)
+     updatc       :     0.29s CPU (      41 calls,   0.007 s avg)
+     newd         :     5.67s CPU (      41 calls,   0.138 s avg)
+     calbec       :     0.21s CPU (      42 calls,   0.005 s avg)
+     prefor       :     0.12s CPU (      41 calls,   0.003 s avg)
+     strucf       :     0.19s CPU (      42 calls,   0.005 s avg)
+     rhov         :     1.74s CPU (      41 calls,   0.042 s avg)
+     nlsm1        :     1.36s CPU (     124 calls,   0.011 s avg)
+     fft          :     3.84s CPU (     164 calls,   0.023 s avg)
+     ffts         :     0.55s CPU (      82 calls,   0.007 s avg)
+     fftw         :     8.88s CPU (    2952 calls,   0.003 s avg)
+     fftb         :     3.85s CPU (    9102 calls,   0.000 s avg)
+     rsg          :     0.05s CPU (      41 calls,   0.001 s avg)
+
+   writing restart file: .//cp_92.save
+   restart file written in    1.670 sec.
+
 
 
 ======================== end cp ========================
 
 
  
-     CP           :    26.45s CPU time
+     CP           :    36.62s CPU time
 
  
-   This run was terminated on:   3:30:21  17Oct2005            
+   This run was terminated on:   3:33: 5  10Nov2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:    27.0
+   ELAPSED SECONDS:    38.0
    JOB DONE.
 =------------------------------------------------------------------------------=
 

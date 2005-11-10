@@ -79,7 +79,7 @@ rm -rf $TMP_DIR/*
 $ECHO " done"
 
 # molecular dynamics calculation
-cat > new1.in << EOF
+cat > si.scf.in << EOF
  &control
     calculation='scf'
     restart_mode='from_scratch',
@@ -181,9 +181,9 @@ K_POINTS
   0.666666667  0.666666667  0.857142857 1
 EOF
 $ECHO "  running the PW calculation for bulk Si no electric field ...\c"
-$PW_COMMAND < new1.in > new1.out
+$PW_COMMAND < si.scf.in > si.scf.out
 $ECHO " done"
-cat > new2.in << EOF
+cat > si.scf.efield.in << EOF
  &control
     calculation='scf'
     restart_mode='restart',
@@ -284,9 +284,9 @@ K_POINTS
   0.666666667  0.666666667  0.857142857 1
 EOF
 $ECHO "  running the PW calculation for bulk Si E_field=0.0  a.u. ...\c"
-$PW_COMMAND < new2.in > new2.out
+$PW_COMMAND < si.scf.efield.in > si.scf.efield.out
 $ECHO " done"
-cat > new3.in << EOF 
+cat > si.scf.efield2.in << EOF 
  &control
     calculation='scf'
     restart_mode='restart',
@@ -388,7 +388,7 @@ K_POINTS
   0.666666667  0.666666667  0.857142857 1
 EOF
 $ECHO "  running the PW calculation for bulk Si E_field=0.001  a.u. ...\c"
-$PW_COMMAND < new3.in > new3.out
+$PW_COMMAND < si.scf.efield2.in > si.scf.efield2.out
 $ECHO " done"
 
 $ECHO

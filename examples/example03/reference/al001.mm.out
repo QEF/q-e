@@ -1,6 +1,6 @@
 
      Program PWSCF     v.3.0    starts ...
-     Today is 17Oct2005 at  2:37:11 
+     Today is 10Nov2005 at  2:42:33 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -88,7 +88,7 @@
 
      negative rho (up, down):  0.186E-03 0.000E+00
 
-     total cpu time spent up to now is      0.90 secs
+     total cpu time spent up to now is      0.91 secs
 
      total energy              =   -28.81800044 ryd
      estimated scf accuracy    <     0.99707290 ryd
@@ -97,7 +97,7 @@
      Davidson diagonalization with overlap
      ethr =  4.75E-03,  avg # of iterations =  4.3
 
-     total cpu time spent up to now is      1.44 secs
+     total cpu time spent up to now is      1.46 secs
 
      total energy              =   -27.55975725 ryd
      estimated scf accuracy    <    42.47180210 ryd
@@ -106,7 +106,7 @@
      Davidson diagonalization with overlap
      ethr =  4.75E-03,  avg # of iterations =  3.7
 
-     total cpu time spent up to now is      1.94 secs
+     total cpu time spent up to now is      1.96 secs
 
      total energy              =   -29.21236680 ryd
      estimated scf accuracy    <     0.25038981 ryd
@@ -115,7 +115,7 @@
      Davidson diagonalization with overlap
      ethr =  1.19E-03,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is      2.29 secs
+     total cpu time spent up to now is      2.32 secs
 
      total energy              =   -29.21649581 ryd
      estimated scf accuracy    <     0.04585932 ryd
@@ -124,7 +124,7 @@
      Davidson diagonalization with overlap
      ethr =  2.18E-04,  avg # of iterations =  2.7
 
-     total cpu time spent up to now is      2.63 secs
+     total cpu time spent up to now is      2.66 secs
 
      total energy              =   -29.21973500 ryd
      estimated scf accuracy    <     0.00336979 ryd
@@ -133,7 +133,7 @@
      Davidson diagonalization with overlap
      ethr =  1.60E-05,  avg # of iterations =  4.7
 
-     total cpu time spent up to now is      3.07 secs
+     total cpu time spent up to now is      3.10 secs
 
      total energy              =   -29.21993710 ryd
      estimated scf accuracy    <     0.00071042 ryd
@@ -142,7 +142,7 @@
      Davidson diagonalization with overlap
      ethr =  3.38E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      3.42 secs
+     total cpu time spent up to now is      3.45 secs
 
      total energy              =   -29.21995305 ryd
      estimated scf accuracy    <     0.00004258 ryd
@@ -151,7 +151,7 @@
      Davidson diagonalization with overlap
      ethr =  2.03E-07,  avg # of iterations =  2.7
 
-     total cpu time spent up to now is      3.80 secs
+     total cpu time spent up to now is      3.83 secs
 
      total energy              =   -29.21995565 ryd
      estimated scf accuracy    <     0.00004475 ryd
@@ -160,7 +160,7 @@
      Davidson diagonalization with overlap
      ethr =  2.03E-07,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is      4.13 secs
+     total cpu time spent up to now is      4.16 secs
 
      total energy              =   -29.21995946 ryd
      estimated scf accuracy    <     0.00000791 ryd
@@ -169,7 +169,7 @@
      Davidson diagonalization with overlap
      ethr =  3.77E-08,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is      4.46 secs
+     total cpu time spent up to now is      4.50 secs
 
      total energy              =   -29.21996037 ryd
      estimated scf accuracy    <     0.00000043 ryd
@@ -178,7 +178,7 @@
      Davidson diagonalization with overlap
      ethr =  2.06E-09,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is      4.84 secs
+     total cpu time spent up to now is      4.89 secs
 
      total energy              =   -29.21996046 ryd
      estimated scf accuracy    <     0.00000028 ryd
@@ -187,7 +187,7 @@
      Davidson diagonalization with overlap
      ethr =  1.36E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      5.19 secs
+     total cpu time spent up to now is      5.23 secs
 
      End of self-consistent calculation
 
@@ -234,7 +234,7 @@ Al       0.500000000   0.500000000   2.119434588
 
      negative rho (up, down):  0.170E-05 0.000E+00
 
-     total cpu time spent up to now is      5.28 secs
+     total cpu time spent up to now is      5.32 secs
 
      Self-consistent Calculation
 
@@ -250,7 +250,7 @@ Al       0.500000000   0.500000000   2.119434588
 
      negative rho (up, down):  0.274E-06 0.000E+00
 
-     total cpu time spent up to now is      5.90 secs
+     total cpu time spent up to now is      5.94 secs
 
      total energy              =   -29.22016100 ryd
      estimated scf accuracy    <     0.00002891 ryd
@@ -261,10 +261,10 @@ Al       0.500000000   0.500000000   2.119434588
 
      negative rho (up, down):  0.221E-06 0.000E+00
 
-     total cpu time spent up to now is      6.27 secs
+     total cpu time spent up to now is      6.32 secs
 
      total energy              =   -29.22014017 ryd
-     estimated scf accuracy    <     0.00070712 ryd
+     estimated scf accuracy    <     0.00070711 ryd
 
      iteration #  3     ecut=    12.00 ryd     beta=0.30
      Davidson diagonalization with overlap
@@ -272,7 +272,7 @@ Al       0.500000000   0.500000000   2.119434588
 
      negative rho (up, down):  0.309E-07 0.000E+00
 
-     total cpu time spent up to now is      6.62 secs
+     total cpu time spent up to now is      6.67 secs
 
      total energy              =   -29.22016979 ryd
      estimated scf accuracy    <     0.00000864 ryd
@@ -281,7 +281,7 @@ Al       0.500000000   0.500000000   2.119434588
      Davidson diagonalization with overlap
      ethr =  4.12E-08,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is      6.95 secs
+     total cpu time spent up to now is      7.00 secs
 
      total energy              =   -29.22017043 ryd
      estimated scf accuracy    <     0.00000133 ryd
@@ -290,7 +290,7 @@ Al       0.500000000   0.500000000   2.119434588
      Davidson diagonalization with overlap
      ethr =  6.35E-09,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is      7.27 secs
+     total cpu time spent up to now is      7.34 secs
 
      total energy              =   -29.22017059 ryd
      estimated scf accuracy    <     0.00000011 ryd
@@ -299,7 +299,7 @@ Al       0.500000000   0.500000000   2.119434588
      Davidson diagonalization with overlap
      ethr =  5.10E-10,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is      7.62 secs
+     total cpu time spent up to now is      7.69 secs
 
      End of self-consistent calculation
 
@@ -343,7 +343,7 @@ Al       0.500000000   0.500000000   2.092065520
      negative rho (up, down):  0.334E-03 0.000E+00
      first order wave-functions extrapolation
 
-     total cpu time spent up to now is      7.72 secs
+     total cpu time spent up to now is      7.80 secs
 
      Self-consistent Calculation
 
@@ -353,7 +353,7 @@ Al       0.500000000   0.500000000   2.092065520
 
      negative rho (up, down):  0.189E-03 0.000E+00
 
-     total cpu time spent up to now is      8.33 secs
+     total cpu time spent up to now is      8.42 secs
 
      total energy              =   -29.22106390 ryd
      estimated scf accuracy    <     0.00226184 ryd
@@ -364,7 +364,7 @@ Al       0.500000000   0.500000000   2.092065520
 
      negative rho (up, down):  0.158E-03 0.000E+00
 
-     total cpu time spent up to now is      8.72 secs
+     total cpu time spent up to now is      8.82 secs
 
      total energy              =   -29.22080606 ryd
      estimated scf accuracy    <     0.00478612 ryd
@@ -375,7 +375,7 @@ Al       0.500000000   0.500000000   2.092065520
 
      negative rho (up, down):  0.116E-03 0.000E+00
 
-     total cpu time spent up to now is      9.09 secs
+     total cpu time spent up to now is      9.20 secs
 
      total energy              =   -29.22097137 ryd
      estimated scf accuracy    <     0.01174472 ryd
@@ -386,7 +386,7 @@ Al       0.500000000   0.500000000   2.092065520
 
      negative rho (up, down):  0.668E-04 0.000E+00
 
-     total cpu time spent up to now is      9.44 secs
+     total cpu time spent up to now is      9.55 secs
 
      total energy              =   -29.22146204 ryd
      estimated scf accuracy    <     0.00023305 ryd
@@ -397,7 +397,7 @@ Al       0.500000000   0.500000000   2.092065520
 
      negative rho (up, down):  0.806E-05 0.000E+00
 
-     total cpu time spent up to now is      9.79 secs
+     total cpu time spent up to now is      9.90 secs
 
      total energy              =   -29.22148545 ryd
      estimated scf accuracy    <     0.00001997 ryd
@@ -408,7 +408,7 @@ Al       0.500000000   0.500000000   2.092065520
 
      negative rho (up, down):  0.281E-07 0.000E+00
 
-     total cpu time spent up to now is     10.13 secs
+     total cpu time spent up to now is     10.26 secs
 
      total energy              =   -29.22148858 ryd
      estimated scf accuracy    <     0.00000188 ryd
@@ -417,7 +417,7 @@ Al       0.500000000   0.500000000   2.092065520
      Davidson diagonalization with overlap
      ethr =  8.94E-09,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is     10.48 secs
+     total cpu time spent up to now is     10.61 secs
 
      total energy              =   -29.22148893 ryd
      estimated scf accuracy    <     0.00000052 ryd
@@ -426,7 +426,7 @@ Al       0.500000000   0.500000000   2.092065520
      Davidson diagonalization with overlap
      ethr =  2.50E-09,  avg # of iterations =  1.7
 
-     total cpu time spent up to now is     10.79 secs
+     total cpu time spent up to now is     10.93 secs
 
      End of self-consistent calculation
 
@@ -450,7 +450,7 @@ Al       0.500000000   0.500000000   2.092065520
      Entering Dynamics:    iteration =     3
                            time      =   0.00436 pico-seconds
 
-     <vel(dt)|acc(dt)> =  -0.76113988
+     <vel(dt)|acc(dt)> =  -0.76113989
 
 ATOMIC_POSITIONS (alat)
 Al       0.500000000   0.500000000  -2.093728853
@@ -470,7 +470,7 @@ Al       0.500000000   0.500000000   2.093728853
      negative rho (up, down):  0.936E-04 0.000E+00
      second order wave-functions extrapolation
 
-     total cpu time spent up to now is     10.89 secs
+     total cpu time spent up to now is     11.04 secs
 
      Self-consistent Calculation
 
@@ -480,10 +480,10 @@ Al       0.500000000   0.500000000   2.093728853
 
      negative rho (up, down):  0.545E-04 0.000E+00
 
-     total cpu time spent up to now is     11.30 secs
+     total cpu time spent up to now is     11.47 secs
 
      total energy              =   -29.21987183 ryd
-     estimated scf accuracy    <     0.00389380 ryd
+     estimated scf accuracy    <     0.00389379 ryd
 
      iteration #  2     ecut=    12.00 ryd     beta=0.30
      Davidson diagonalization with overlap
@@ -491,10 +491,10 @@ Al       0.500000000   0.500000000   2.093728853
 
      negative rho (up, down):  0.510E-04 0.000E+00
 
-     total cpu time spent up to now is     11.72 secs
+     total cpu time spent up to now is     11.89 secs
 
-     total energy              =   -29.21525116 ryd
-     estimated scf accuracy    <     0.17007480 ryd
+     total energy              =   -29.21525117 ryd
+     estimated scf accuracy    <     0.17007470 ryd
 
      iteration #  3     ecut=    12.00 ryd     beta=0.30
      Davidson diagonalization with overlap
@@ -502,7 +502,7 @@ Al       0.500000000   0.500000000   2.093728853
 
      negative rho (up, down):  0.336E-04 0.000E+00
 
-     total cpu time spent up to now is     12.13 secs
+     total cpu time spent up to now is     12.31 secs
 
      total energy              =   -29.22164895 ryd
      estimated scf accuracy    <     0.00001970 ryd
@@ -513,7 +513,7 @@ Al       0.500000000   0.500000000   2.093728853
 
      negative rho (up, down):  0.205E-04 0.000E+00
 
-     total cpu time spent up to now is     12.50 secs
+     total cpu time spent up to now is     12.69 secs
 
      total energy              =   -29.22165302 ryd
      estimated scf accuracy    <     0.00000452 ryd
@@ -524,7 +524,7 @@ Al       0.500000000   0.500000000   2.093728853
 
      negative rho (up, down):  0.178E-05 0.000E+00
 
-     total cpu time spent up to now is     12.83 secs
+     total cpu time spent up to now is     13.01 secs
 
      total energy              =   -29.22165412 ryd
      estimated scf accuracy    <     0.00000028 ryd
@@ -533,7 +533,7 @@ Al       0.500000000   0.500000000   2.093728853
      Davidson diagonalization with overlap
      ethr =  1.33E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     13.21 secs
+     total cpu time spent up to now is     13.40 secs
 
      total energy              =   -29.22165428 ryd
      estimated scf accuracy    <     0.00000017 ryd
@@ -542,7 +542,7 @@ Al       0.500000000   0.500000000   2.093728853
      Davidson diagonalization with overlap
      ethr =  7.86E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     13.56 secs
+     total cpu time spent up to now is     13.75 secs
 
      End of self-consistent calculation
 
@@ -569,13 +569,13 @@ Al       0.500000000   0.500000000   2.093728853
      <vel(dt)|acc(dt)> =   0.53127694
 
 ATOMIC_POSITIONS (alat)
-Al       0.500000000   0.500000000  -2.091490215
+Al       0.500000000   0.500000000  -2.091490216
 Al       0.000000000   0.000000000  -1.403988350
 Al       0.500000000   0.500000000  -0.701769369
 Al       0.000000000   0.000000000   0.000000000
 Al       0.500000000   0.500000000   0.701769369
 Al       0.000000000   0.000000000   1.403988350
-Al       0.500000000   0.500000000   2.091490215
+Al       0.500000000   0.500000000   2.091490216
 
 
      Check: negative starting charge=   -0.000284
@@ -586,7 +586,7 @@ Al       0.500000000   0.500000000   2.091490215
      negative rho (up, down):  0.252E-04 0.000E+00
      second order wave-functions extrapolation
 
-     total cpu time spent up to now is     13.66 secs
+     total cpu time spent up to now is     13.86 secs
 
      Self-consistent Calculation
 
@@ -602,7 +602,7 @@ Al       0.500000000   0.500000000   2.091490215
 
      negative rho (up, down):  0.135E-04 0.000E+00
 
-     total cpu time spent up to now is     14.25 secs
+     total cpu time spent up to now is     14.46 secs
 
      total energy              =   -29.22226735 ryd
      estimated scf accuracy    <     0.00008403 ryd
@@ -613,7 +613,7 @@ Al       0.500000000   0.500000000   2.091490215
 
      negative rho (up, down):  0.106E-04 0.000E+00
 
-     total cpu time spent up to now is     14.61 secs
+     total cpu time spent up to now is     14.83 secs
 
      total energy              =   -29.22226671 ryd
      estimated scf accuracy    <     0.00021847 ryd
@@ -624,7 +624,7 @@ Al       0.500000000   0.500000000   2.091490215
 
      negative rho (up, down):  0.874E-05 0.000E+00
 
-     total cpu time spent up to now is     14.95 secs
+     total cpu time spent up to now is     15.17 secs
 
      total energy              =   -29.22227841 ryd
      estimated scf accuracy    <     0.00041386 ryd
@@ -635,7 +635,7 @@ Al       0.500000000   0.500000000   2.091490215
 
      negative rho (up, down):  0.126E-05 0.000E+00
 
-     total cpu time spent up to now is     15.28 secs
+     total cpu time spent up to now is     15.50 secs
 
      total energy              =   -29.22229475 ryd
      estimated scf accuracy    <     0.00000045 ryd
@@ -644,7 +644,7 @@ Al       0.500000000   0.500000000   2.091490215
      Davidson diagonalization with overlap
      ethr =  2.12E-09,  avg # of iterations =  2.7
 
-     total cpu time spent up to now is     15.66 secs
+     total cpu time spent up to now is     15.89 secs
 
      total energy              =   -29.22229506 ryd
      estimated scf accuracy    <     0.00000018 ryd
@@ -653,7 +653,7 @@ Al       0.500000000   0.500000000   2.091490215
      Davidson diagonalization with overlap
      ethr =  8.56E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     15.96 secs
+     total cpu time spent up to now is     16.19 secs
 
      End of self-consistent calculation
 
@@ -680,13 +680,13 @@ Al       0.500000000   0.500000000   2.091490215
      <vel(dt)|acc(dt)> =   0.85465740
 
 ATOMIC_POSITIONS (alat)
-Al       0.500000000   0.500000000  -2.075565153
-Al       0.000000000   0.000000000  -1.386528247
+Al       0.500000000   0.500000000  -2.075565154
+Al       0.000000000   0.000000000  -1.386528248
 Al       0.500000000   0.500000000  -0.700064978
 Al       0.000000000   0.000000000   0.000000000
 Al       0.500000000   0.500000000   0.700064978
-Al       0.000000000   0.000000000   1.386528247
-Al       0.500000000   0.500000000   2.075565153
+Al       0.000000000   0.000000000   1.386528248
+Al       0.500000000   0.500000000   2.075565154
 
 
      Check: negative starting charge=   -0.000288
@@ -697,7 +697,7 @@ Al       0.500000000   0.500000000   2.075565153
      negative rho (up, down):  0.180E-04 0.000E+00
      second order wave-functions extrapolation
 
-     total cpu time spent up to now is     16.05 secs
+     total cpu time spent up to now is     16.30 secs
 
      Self-consistent Calculation
 
@@ -713,7 +713,7 @@ Al       0.500000000   0.500000000   2.075565153
 
      negative rho (up, down):  0.991E-05 0.000E+00
 
-     total cpu time spent up to now is     16.66 secs
+     total cpu time spent up to now is     16.90 secs
 
      total energy              =   -29.22281488 ryd
      estimated scf accuracy    <     0.00015867 ryd
@@ -724,10 +724,10 @@ Al       0.500000000   0.500000000   2.075565153
 
      negative rho (up, down):  0.873E-05 0.000E+00
 
-     total cpu time spent up to now is     17.04 secs
+     total cpu time spent up to now is     17.29 secs
 
      total energy              =   -29.22275918 ryd
-     estimated scf accuracy    <     0.00147877 ryd
+     estimated scf accuracy    <     0.00147881 ryd
 
      iteration #  3     ecut=    12.00 ryd     beta=0.30
      Davidson diagonalization with overlap
@@ -735,10 +735,10 @@ Al       0.500000000   0.500000000   2.075565153
 
      negative rho (up, down):  0.651E-05 0.000E+00
 
-     total cpu time spent up to now is     17.42 secs
+     total cpu time spent up to now is     17.68 secs
 
      total energy              =   -29.22284894 ryd
-     estimated scf accuracy    <     0.00048410 ryd
+     estimated scf accuracy    <     0.00048409 ryd
 
      iteration #  4     ecut=    12.00 ryd     beta=0.30
      Davidson diagonalization with overlap
@@ -746,7 +746,7 @@ Al       0.500000000   0.500000000   2.075565153
 
      negative rho (up, down):  0.135E-05 0.000E+00
 
-     total cpu time spent up to now is     17.75 secs
+     total cpu time spent up to now is     18.01 secs
 
      total energy              =   -29.22287026 ryd
      estimated scf accuracy    <     0.00000101 ryd
@@ -757,7 +757,7 @@ Al       0.500000000   0.500000000   2.075565153
 
      negative rho (up, down):  0.182E-06 0.000E+00
 
-     total cpu time spent up to now is     18.14 secs
+     total cpu time spent up to now is     18.40 secs
 
      total energy              =   -29.22287069 ryd
      estimated scf accuracy    <     0.00000036 ryd
@@ -766,7 +766,7 @@ Al       0.500000000   0.500000000   2.075565153
      Davidson diagonalization with overlap
      ethr =  1.72E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     18.46 secs
+     total cpu time spent up to now is     18.74 secs
 
      total energy              =   -29.22287078 ryd
      estimated scf accuracy    <     0.00000013 ryd
@@ -775,7 +775,7 @@ Al       0.500000000   0.500000000   2.075565153
      Davidson diagonalization with overlap
      ethr =  6.24E-10,  avg # of iterations =  1.3
 
-     total cpu time spent up to now is     18.77 secs
+     total cpu time spent up to now is     19.05 secs
 
      End of self-consistent calculation
 
@@ -799,16 +799,16 @@ Al       0.500000000   0.500000000   2.075565153
      Entering Dynamics:    iteration =     6
                            time      =   0.00871 pico-seconds
 
-     <vel(dt)|acc(dt)> =   0.80583069
+     <vel(dt)|acc(dt)> =   0.80583077
 
 ATOMIC_POSITIONS (alat)
-Al       0.500000000   0.500000000  -2.051094277
-Al       0.000000000   0.000000000  -1.380823504
+Al       0.500000000   0.500000000  -2.051094276
+Al       0.000000000   0.000000000  -1.380823501
 Al       0.500000000   0.500000000  -0.692196183
 Al       0.000000000   0.000000000   0.000000000
 Al       0.500000000   0.500000000   0.692196183
-Al       0.000000000   0.000000000   1.380823504
-Al       0.500000000   0.500000000   2.051094277
+Al       0.000000000   0.000000000   1.380823501
+Al       0.500000000   0.500000000   2.051094276
 
 
      Check: negative starting charge=   -0.000295
@@ -819,7 +819,7 @@ Al       0.500000000   0.500000000   2.051094277
      negative rho (up, down):  0.129E-03 0.000E+00
      second order wave-functions extrapolation
 
-     total cpu time spent up to now is     18.87 secs
+     total cpu time spent up to now is     19.15 secs
 
      Self-consistent Calculation
 
@@ -835,7 +835,7 @@ Al       0.500000000   0.500000000   2.051094277
 
      negative rho (up, down):  0.746E-04 0.000E+00
 
-     total cpu time spent up to now is     19.55 secs
+     total cpu time spent up to now is     19.86 secs
 
      total energy              =   -29.22291388 ryd
      estimated scf accuracy    <     0.00004503 ryd
@@ -846,7 +846,7 @@ Al       0.500000000   0.500000000   2.051094277
 
      negative rho (up, down):  0.611E-04 0.000E+00
 
-     total cpu time spent up to now is     19.90 secs
+     total cpu time spent up to now is     20.22 secs
 
      total energy              =   -29.22291200 ryd
      estimated scf accuracy    <     0.00008957 ryd
@@ -857,7 +857,7 @@ Al       0.500000000   0.500000000   2.051094277
 
      negative rho (up, down):  0.476E-04 0.000E+00
 
-     total cpu time spent up to now is     20.24 secs
+     total cpu time spent up to now is     20.56 secs
 
      total energy              =   -29.22291579 ryd
      estimated scf accuracy    <     0.00019290 ryd
@@ -868,7 +868,7 @@ Al       0.500000000   0.500000000   2.051094277
 
      negative rho (up, down):  0.120E-04 0.000E+00
 
-     total cpu time spent up to now is     20.56 secs
+     total cpu time spent up to now is     20.89 secs
 
      total energy              =   -29.22292563 ryd
      estimated scf accuracy    <     0.00000370 ryd
@@ -879,7 +879,7 @@ Al       0.500000000   0.500000000   2.051094277
 
      negative rho (up, down):  0.177E-05 0.000E+00
 
-     total cpu time spent up to now is     20.88 secs
+     total cpu time spent up to now is     21.22 secs
 
      total energy              =   -29.22292667 ryd
      estimated scf accuracy    <     0.00000044 ryd
@@ -888,7 +888,7 @@ Al       0.500000000   0.500000000   2.051094277
      Davidson diagonalization with overlap
      ethr =  2.08E-09,  avg # of iterations =  2.7
 
-     total cpu time spent up to now is     21.20 secs
+     total cpu time spent up to now is     21.55 secs
 
      End of self-consistent calculation
 
@@ -900,11 +900,11 @@ Al       0.500000000   0.500000000   2.051094277
      Forces acting on atoms (Ry/au):
 
      atom   1 type  1   force =     0.00000000    0.00000000   -0.00500914
-     atom   2 type  1   force =     0.00000000    0.00000000    0.00367319
+     atom   2 type  1   force =     0.00000000    0.00000000    0.00367318
      atom   3 type  1   force =     0.00000000    0.00000000    0.00215412
      atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
      atom   5 type  1   force =     0.00000000    0.00000000   -0.00215412
-     atom   6 type  1   force =     0.00000000    0.00000000   -0.00367319
+     atom   6 type  1   force =     0.00000000    0.00000000   -0.00367318
      atom   7 type  1   force =     0.00000000    0.00000000    0.00500914
 
      Total force =     0.009298     Total SCF correction =     0.000146
@@ -915,13 +915,13 @@ Al       0.500000000   0.500000000   2.051094277
      <vel(dt)|acc(dt)> =  -0.99763107
 
 ATOMIC_POSITIONS (alat)
-Al       0.500000000   0.500000000  -2.063133634
+Al       0.500000000   0.500000000  -2.063133635
 Al       0.000000000   0.000000000  -1.383660392
 Al       0.500000000   0.500000000  -0.695153435
 Al       0.000000000   0.000000000   0.000000000
 Al       0.500000000   0.500000000   0.695153435
 Al       0.000000000   0.000000000   1.383660392
-Al       0.500000000   0.500000000   2.063133634
+Al       0.500000000   0.500000000   2.063133635
 
 
      Check: negative starting charge=   -0.000295
@@ -932,7 +932,7 @@ Al       0.500000000   0.500000000   2.063133634
      negative rho (up, down):  0.360E-05 0.000E+00
      second order wave-functions extrapolation
 
-     total cpu time spent up to now is     21.31 secs
+     total cpu time spent up to now is     21.65 secs
 
      Self-consistent Calculation
 
@@ -948,7 +948,7 @@ Al       0.500000000   0.500000000   2.063133634
 
      negative rho (up, down):  0.108E-05 0.000E+00
 
-     total cpu time spent up to now is     21.91 secs
+     total cpu time spent up to now is     22.25 secs
 
      total energy              =   -29.22316252 ryd
      estimated scf accuracy    <     0.00001086 ryd
@@ -959,10 +959,10 @@ Al       0.500000000   0.500000000   2.063133634
 
      negative rho (up, down):  0.842E-06 0.000E+00
 
-     total cpu time spent up to now is     22.28 secs
+     total cpu time spent up to now is     22.66 secs
 
      total energy              =   -29.22315741 ryd
-     estimated scf accuracy    <     0.00014884 ryd
+     estimated scf accuracy    <     0.00014883 ryd
 
      iteration #  3     ecut=    12.00 ryd     beta=0.30
      Davidson diagonalization with overlap
@@ -970,7 +970,7 @@ Al       0.500000000   0.500000000   2.063133634
 
      negative rho (up, down):  0.301E-06 0.000E+00
 
-     total cpu time spent up to now is     22.62 secs
+     total cpu time spent up to now is     23.01 secs
 
      total energy              =   -29.22316565 ryd
      estimated scf accuracy    <     0.00001682 ryd
@@ -981,7 +981,7 @@ Al       0.500000000   0.500000000   2.063133634
 
      negative rho (up, down):  0.121E-07 0.000E+00
 
-     total cpu time spent up to now is     22.94 secs
+     total cpu time spent up to now is     23.33 secs
 
      total energy              =   -29.22316657 ryd
      estimated scf accuracy    <     0.00000013 ryd
@@ -990,7 +990,7 @@ Al       0.500000000   0.500000000   2.063133634
      Davidson diagonalization with overlap
      ethr =  6.19E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     23.31 secs
+     total cpu time spent up to now is     23.70 secs
 
      End of self-consistent calculation
 
@@ -1014,16 +1014,16 @@ Al       0.500000000   0.500000000   2.063133634
      Entering Dynamics:    iteration =     8
                            time      =   0.01162 pico-seconds
 
-     <vel(dt)|acc(dt)> =   0.19612264
+     <vel(dt)|acc(dt)> =   0.19612164
 
 ATOMIC_POSITIONS (alat)
-Al       0.500000000   0.500000000  -2.064793340
-Al       0.000000000   0.000000000  -1.382174104
-Al       0.500000000   0.500000000  -0.692649316
+Al       0.500000000   0.500000000  -2.064793331
+Al       0.000000000   0.000000000  -1.382174107
+Al       0.500000000   0.500000000  -0.692649325
 Al       0.000000000   0.000000000   0.000000000
-Al       0.500000000   0.500000000   0.692649316
-Al       0.000000000   0.000000000   1.382174104
-Al       0.500000000   0.500000000   2.064793340
+Al       0.500000000   0.500000000   0.692649325
+Al       0.000000000   0.000000000   1.382174107
+Al       0.500000000   0.500000000   2.064793331
 
 
      Check: negative starting charge=   -0.000299
@@ -1034,7 +1034,7 @@ Al       0.500000000   0.500000000   2.064793340
      negative rho (up, down):  0.309E-04 0.000E+00
      second order wave-functions extrapolation
 
-     total cpu time spent up to now is     23.42 secs
+     total cpu time spent up to now is     23.81 secs
 
      Self-consistent Calculation
 
@@ -1050,10 +1050,10 @@ Al       0.500000000   0.500000000   2.064793340
 
      negative rho (up, down):  0.151E-04 0.000E+00
 
-     total cpu time spent up to now is     24.07 secs
+     total cpu time spent up to now is     24.48 secs
 
      total energy              =   -29.22315250 ryd
-     estimated scf accuracy    <     0.00022519 ryd
+     estimated scf accuracy    <     0.00022520 ryd
 
      iteration #  2     ecut=    12.00 ryd     beta=0.30
      Davidson diagonalization with overlap
@@ -1061,10 +1061,10 @@ Al       0.500000000   0.500000000   2.064793340
 
      negative rho (up, down):  0.138E-04 0.000E+00
 
-     total cpu time spent up to now is     24.47 secs
+     total cpu time spent up to now is     24.89 secs
 
-     total energy              =   -29.22293083 ryd
-     estimated scf accuracy    <     0.00773469 ryd
+     total energy              =   -29.22293082 ryd
+     estimated scf accuracy    <     0.00773490 ryd
 
      iteration #  3     ecut=    12.00 ryd     beta=0.30
      Davidson diagonalization with overlap
@@ -1072,7 +1072,7 @@ Al       0.500000000   0.500000000   2.064793340
 
      negative rho (up, down):  0.508E-05 0.000E+00
 
-     total cpu time spent up to now is     24.85 secs
+     total cpu time spent up to now is     25.28 secs
 
      total energy              =   -29.22324765 ryd
      estimated scf accuracy    <     0.00000731 ryd
@@ -1083,7 +1083,7 @@ Al       0.500000000   0.500000000   2.064793340
 
      negative rho (up, down):  0.274E-05 0.000E+00
 
-     total cpu time spent up to now is     25.17 secs
+     total cpu time spent up to now is     25.62 secs
 
      total energy              =   -29.22324856 ryd
      estimated scf accuracy    <     0.00000081 ryd
@@ -1092,60 +1092,60 @@ Al       0.500000000   0.500000000   2.064793340
      Davidson diagonalization with overlap
      ethr =  3.84E-09,  avg # of iterations =  2.0
 
-     negative rho (up, down):  0.218E-07 0.000E+00
+     negative rho (up, down):  0.204E-07 0.000E+00
 
-     total cpu time spent up to now is     25.51 secs
+     total cpu time spent up to now is     25.96 secs
 
      total energy              =   -29.22324893 ryd
-     estimated scf accuracy    <     0.00000019 ryd
+     estimated scf accuracy    <     0.00000020 ryd
 
      iteration #  6     ecut=    12.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  9.28E-10,  avg # of iterations =  2.3
+     ethr =  9.34E-10,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is     25.86 secs
+     total cpu time spent up to now is     26.32 secs
 
-     total energy              =   -29.22324897 ryd
+     total energy              =   -29.22324896 ryd
      estimated scf accuracy    <     0.00000015 ryd
 
      iteration #  7     ecut=    12.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  7.10E-10,  avg # of iterations =  2.3
+     ethr =  7.31E-10,  avg # of iterations =  2.3
 
-     total cpu time spent up to now is     26.19 secs
+     total cpu time spent up to now is     26.66 secs
 
      End of self-consistent calculation
 
-!    total energy              =   -29.22324896 ryd
+!    total energy              =   -29.22324895 ryd
      estimated scf accuracy    <     0.00000005 ryd
 
      convergence has been achieved
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.00000000    0.00000000    0.00001647
-     atom   2 type  1   force =     0.00000000    0.00000000   -0.00011494
-     atom   3 type  1   force =     0.00000000    0.00000000    0.00191837
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00001667
+     atom   2 type  1   force =     0.00000000    0.00000000   -0.00011544
+     atom   3 type  1   force =     0.00000000    0.00000000    0.00191856
      atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom   5 type  1   force =     0.00000000    0.00000000   -0.00191837
-     atom   6 type  1   force =     0.00000000    0.00000000    0.00011494
-     atom   7 type  1   force =     0.00000000    0.00000000   -0.00001647
+     atom   5 type  1   force =     0.00000000    0.00000000   -0.00191856
+     atom   6 type  1   force =     0.00000000    0.00000000    0.00011544
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00001667
 
-     Total force =     0.002718     Total SCF correction =     0.000379
+     Total force =     0.002718     Total SCF correction =     0.000394
 
      Entering Dynamics:    iteration =     9
                            time      =   0.01307 pico-seconds
 
-     <vel(dt)|acc(dt)> =   0.64693038
+     <vel(dt)|acc(dt)> =   0.64699710
 
 ATOMIC_POSITIONS (alat)
-Al       0.500000000   0.500000000  -2.062533342
-Al       0.000000000   0.000000000  -1.378751507
-Al       0.500000000   0.500000000  -0.687445359
+Al       0.500000000   0.500000000  -2.062534140
+Al       0.000000000   0.000000000  -1.378753638
+Al       0.500000000   0.500000000  -0.687444979
 Al       0.000000000   0.000000000   0.000000000
-Al       0.500000000   0.500000000   0.687445359
-Al       0.000000000   0.000000000   1.378751507
-Al       0.500000000   0.500000000   2.062533342
+Al       0.500000000   0.500000000   0.687444979
+Al       0.000000000   0.000000000   1.378753638
+Al       0.500000000   0.500000000   2.062534140
 
 
      Check: negative starting charge=   -0.000296
@@ -1153,10 +1153,10 @@ Al       0.500000000   0.500000000   2.062533342
      second order charge density extrapolation
      Check: negative starting charge=   -0.000292
 
-     negative rho (up, down):  0.407E-07 0.000E+00
+     negative rho (up, down):  0.406E-07 0.000E+00
      second order wave-functions extrapolation
 
-     total cpu time spent up to now is     26.31 secs
+     total cpu time spent up to now is     26.76 secs
 
      Self-consistent Calculation
 
@@ -1168,66 +1168,66 @@ Al       0.500000000   0.500000000   2.062533342
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.59E-06,  avg # of iterations =  1.0
+     ethr =  1.80E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     26.91 secs
+     total cpu time spent up to now is     27.36 secs
 
-     total energy              =   -29.22326700 ryd
-     estimated scf accuracy    <     0.00003586 ryd
+     total energy              =   -29.22326478 ryd
+     estimated scf accuracy    <     0.00004073 ryd
 
      iteration #  2     ecut=    12.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  1.71E-07,  avg # of iterations =  3.0
+     ethr =  1.94E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     27.27 secs
+     total cpu time spent up to now is     27.73 secs
 
-     total energy              =   -29.22322950 ryd
-     estimated scf accuracy    <     0.00132718 ryd
+     total energy              =   -29.22322217 ryd
+     estimated scf accuracy    <     0.00150817 ryd
 
      iteration #  3     ecut=    12.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  1.71E-07,  avg # of iterations =  2.7
+     ethr =  1.94E-07,  avg # of iterations =  2.7
 
-     total cpu time spent up to now is     27.61 secs
+     total cpu time spent up to now is     28.08 secs
 
-     total energy              =   -29.22328322 ryd
-     estimated scf accuracy    <     0.00000028 ryd
+     total energy              =   -29.22328321 ryd
+     estimated scf accuracy    <     0.00000032 ryd
 
      iteration #  4     ecut=    12.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  1.35E-09,  avg # of iterations =  3.0
+     ethr =  1.52E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     27.97 secs
+     total cpu time spent up to now is     28.44 secs
 
      End of self-consistent calculation
 
 !    total energy              =   -29.22328331 ryd
-     estimated scf accuracy    <        4.4E-09 ryd
+     estimated scf accuracy    <        4.2E-09 ryd
 
      convergence has been achieved
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.00000000    0.00000000    0.00028026
-     atom   2 type  1   force =     0.00000000    0.00000000   -0.00018497
-     atom   3 type  1   force =     0.00000000    0.00000000   -0.00063527
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00027955
+     atom   2 type  1   force =     0.00000000    0.00000000   -0.00018370
+     atom   3 type  1   force =     0.00000000    0.00000000   -0.00063531
      atom   4 type  1   force =     0.00000000    0.00000000    0.00000000
-     atom   5 type  1   force =     0.00000000    0.00000000    0.00063527
-     atom   6 type  1   force =     0.00000000    0.00000000    0.00018497
-     atom   7 type  1   force =     0.00000000    0.00000000   -0.00028026
+     atom   5 type  1   force =     0.00000000    0.00000000    0.00063531
+     atom   6 type  1   force =     0.00000000    0.00000000    0.00018370
+     atom   7 type  1   force =     0.00000000    0.00000000   -0.00027955
 
-     Total force =     0.001016     Total SCF correction =     0.000052
+     Total force =     0.001015     Total SCF correction =     0.000039
 
      Entering Dynamics:    iteration =    10
                            time      =   0.01452 pico-seconds
 
-     <vel(dt)|acc(dt)> =  -0.95061726
+     <vel(dt)|acc(dt)> =  -0.95054458
 
      Damped Dynamics: convergence achieved in  10 steps
 
      End of damped dynamics calculation
 
-     Final energy =     -29.2232833081 ryd
+     Final energy =     -29.2232833076 ryd
 
 
 CELL_PARAMETERS (alat)
@@ -1236,54 +1236,54 @@ CELL_PARAMETERS (alat)
    0.000000000   0.000000000   8.000000000
 
 ATOMIC_POSITIONS (alat)
-Al       0.500000000   0.500000000  -2.062533342
-Al       0.000000000   0.000000000  -1.378751507
-Al       0.500000000   0.500000000  -0.687445359
+Al       0.500000000   0.500000000  -2.062534140
+Al       0.000000000   0.000000000  -1.378753638
+Al       0.500000000   0.500000000  -0.687444979
 Al       0.000000000   0.000000000   0.000000000
-Al       0.500000000   0.500000000   0.687445359
-Al       0.000000000   0.000000000   1.378751507
-Al       0.500000000   0.500000000   2.062533342
+Al       0.500000000   0.500000000   0.687444979
+Al       0.000000000   0.000000000   1.378753638
+Al       0.500000000   0.500000000   2.062534140
 
 
 
      Writing output data file       pwscf.save
  
-     PWSCF        :    28.04s CPU time
+     PWSCF        :    28.50s CPU time
 
      init_run     :     0.54s CPU
-     electrons    :    26.50s CPU (      10 calls,   2.650 s avg)
+     electrons    :    26.95s CPU (      10 calls,   2.695 s avg)
      forces       :     0.48s CPU (      10 calls,   0.048 s avg)
  
-     electrons    :    26.50s CPU (      10 calls,   2.650 s avg)
-     c_bands      :    21.45s CPU (      75 calls,   0.286 s avg)
-     sum_band     :     3.92s CPU (      75 calls,   0.052 s avg)
-     v_of_rho     :     0.57s CPU (      78 calls,   0.007 s avg)
-     mix_rho      :     0.16s CPU (      75 calls,   0.002 s avg)
+     electrons    :    26.95s CPU (      10 calls,   2.695 s avg)
+     c_bands      :    21.94s CPU (      75 calls,   0.293 s avg)
+     sum_band     :     3.84s CPU (      75 calls,   0.051 s avg)
+     v_of_rho     :     0.55s CPU (      78 calls,   0.007 s avg)
+     mix_rho      :     0.20s CPU (      75 calls,   0.003 s avg)
  
-     c_bands      :    21.45s CPU (      75 calls,   0.286 s avg)
+     c_bands      :    21.94s CPU (      75 calls,   0.293 s avg)
      init_us_2    :     0.45s CPU (     483 calls,   0.001 s avg)
-     cegterg      :    20.82s CPU (     225 calls,   0.093 s avg)
+     cegterg      :    21.34s CPU (     225 calls,   0.095 s avg)
  
-     sum_band     :     3.92s CPU (      75 calls,   0.052 s avg)
+     sum_band     :     3.84s CPU (      75 calls,   0.051 s avg)
  
      wfcrot       :     0.45s CPU (       3 calls,   0.150 s avg)
-     cegterg      :    20.82s CPU (     225 calls,   0.093 s avg)
-     h_psi        :    16.23s CPU (     756 calls,   0.021 s avg)
-     g_psi        :     0.31s CPU (     528 calls,   0.001 s avg)
-     overlap      :     1.01s CPU (     528 calls,   0.002 s avg)
-     cdiaghg      :     0.95s CPU (     753 calls,   0.001 s avg)
-     update       :     0.94s CPU (     528 calls,   0.002 s avg)
-     last         :     0.46s CPU (     228 calls,   0.002 s avg)
+     cegterg      :    21.34s CPU (     225 calls,   0.095 s avg)
+     h_psi        :    16.68s CPU (     756 calls,   0.022 s avg)
+     g_psi        :     0.29s CPU (     528 calls,   0.001 s avg)
+     overlap      :     0.88s CPU (     528 calls,   0.002 s avg)
+     cdiaghg      :     1.33s CPU (     753 calls,   0.002 s avg)
+     update       :     0.79s CPU (     528 calls,   0.001 s avg)
+     last         :     0.39s CPU (     228 calls,   0.002 s avg)
  
-     h_psi        :    16.23s CPU (     756 calls,   0.021 s avg)
+     h_psi        :    16.68s CPU (     756 calls,   0.022 s avg)
      init         :     0.10s CPU (     756 calls,   0.000 s avg)
-     firstfft     :     6.90s CPU (    8046 calls,   0.001 s avg)
-     secondfft    :     6.88s CPU (    8046 calls,   0.001 s avg)
-     add_vuspsi   :     0.79s CPU (     756 calls,   0.001 s avg)
+     firstfft     :     7.18s CPU (    8047 calls,   0.001 s avg)
+     secondfft    :     6.80s CPU (    8047 calls,   0.001 s avg)
+     add_vuspsi   :     1.08s CPU (     756 calls,   0.001 s avg)
  
      General routines
-     ccalbec      :     0.77s CPU (     786 calls,   0.001 s avg)
-     cft3         :     0.54s CPU (     348 calls,   0.002 s avg)
-     cft3s        :    15.56s CPU (   19467 calls,   0.001 s avg)
-     davcio       :     0.47s CPU (     951 calls,   0.000 s avg)
+     ccalbec      :     0.79s CPU (     786 calls,   0.001 s avg)
+     cft3         :     0.59s CPU (     348 calls,   0.002 s avg)
+     cft3s        :    15.93s CPU (   19469 calls,   0.001 s avg)
+     davcio       :     0.40s CPU (     951 calls,   0.000 s avg)
  

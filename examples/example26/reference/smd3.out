@@ -10,7 +10,7 @@
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   4:53:45   2Nov2005               
+   This run was started on:   4:56:51  10Nov2005               
 
    Serial Build
 
@@ -250,29 +250,57 @@
   Allocation for pointers : successful 
   Allocation ended 
 
-   formf: eself=   1.49603
-   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
-   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+   reading restart file: .//cp_61.save
+   restart file read in    0.025 sec.
+
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
-   formf: eself=   1.49603
-   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
-   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+   reading restart file: .//cp_62.save
+   restart file read in    0.024 sec.
+
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
-   formf: eself=   1.49603
-   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
-   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+   reading restart file: .//cp_63.save
+   restart file read in    0.025 sec.
+
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+
+   reading restart file: .//cp_64.save
+   restart file read in    0.024 sec.
+
+
+   formf: eself=   1.49603
+   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
+   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+
+   reading restart file: .//cp_65.save
+   restart file read in    0.024 sec.
+
+
+   formf: eself=   1.49603
+   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
+   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+
+   reading restart file: .//cp_66.save
+   restart file read in    0.024 sec.
+
+
+   formf: eself=   1.49603
+   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
+   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+
+   reading restart file: .//cp_67.save
+   restart file read in    0.025 sec.
+
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
@@ -296,93 +324,93 @@
   _____________________________________________
 
 
-                total energy =       -1.57970 a.u.
-              kinetic energy =        1.33932 a.u.
-        electrostatic energy =       -1.36082 a.u.
-                         esr =        0.02346 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.64383 a.u.
-  n-l pseudopotential energy =        0.03261 a.u.
- exchange-correlation energy =       -0.94698 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.32015 Hartree a.u.
+              kinetic energy =        1.18072 Hartree a.u.
+        electrostatic energy =       -1.20907 Hartree a.u.
+                         esr =        0.02346 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.49409 Hartree a.u.
+  n-l pseudopotential energy =        0.02484 Hartree a.u.
+ exchange-correlation energy =       -0.82256 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
 
 
-                total energy =       -1.55916 a.u.
-              kinetic energy =        1.29465 a.u.
-        electrostatic energy =       -1.36169 a.u.
-                         esr =        0.01144 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.59982 a.u.
-  n-l pseudopotential energy =        0.03040 a.u.
- exchange-correlation energy =       -0.92270 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.32082 Hartree a.u.
+              kinetic energy =        1.14599 Hartree a.u.
+        electrostatic energy =       -1.21949 Hartree a.u.
+                         esr =        0.01144 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.46205 Hartree a.u.
+  n-l pseudopotential energy =        0.02325 Hartree a.u.
+ exchange-correlation energy =       -0.80853 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
 
 
-                total energy =       -1.51603 a.u.
-              kinetic energy =        1.25991 a.u.
-        electrostatic energy =       -1.34723 a.u.
-                         esr =        0.00594 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.56141 a.u.
-  n-l pseudopotential energy =        0.02838 a.u.
- exchange-correlation energy =       -0.89567 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.32453 Hartree a.u.
+              kinetic energy =        1.12754 Hartree a.u.
+        electrostatic energy =       -1.22638 Hartree a.u.
+                         esr =        0.00594 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.44658 Hartree a.u.
+  n-l pseudopotential energy =        0.02244 Hartree a.u.
+ exchange-correlation energy =       -0.80155 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
 
 
-                total energy =       -1.44390 a.u.
-              kinetic energy =        1.22597 a.u.
-        electrostatic energy =       -1.31312 a.u.
-                         esr =        0.00437 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.52101 a.u.
-  n-l pseudopotential energy =        0.02628 a.u.
- exchange-correlation energy =       -0.86201 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.32799 Hartree a.u.
+              kinetic energy =        1.12100 Hartree a.u.
+        electrostatic energy =       -1.22902 Hartree a.u.
+                         esr =        0.00437 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.44292 Hartree a.u.
+  n-l pseudopotential energy =        0.02226 Hartree a.u.
+ exchange-correlation energy =       -0.79931 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
 
 
-                total energy =       -1.35638 a.u.
-              kinetic energy =        1.18715 a.u.
-        electrostatic energy =       -1.25963 a.u.
-                         esr =        0.00594 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.48087 a.u.
-  n-l pseudopotential energy =        0.02425 a.u.
- exchange-correlation energy =       -0.82729 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.32865 Hartree a.u.
+              kinetic energy =        1.12446 Hartree a.u.
+        electrostatic energy =       -1.22602 Hartree a.u.
+                         esr =        0.00594 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.44877 Hartree a.u.
+  n-l pseudopotential energy =        0.02261 Hartree a.u.
+ exchange-correlation energy =       -0.80094 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
 
 
-                total energy =       -1.29243 a.u.
-              kinetic energy =        1.15989 a.u.
-        electrostatic energy =       -1.20530 a.u.
-                         esr =        0.01144 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.46176 a.u.
-  n-l pseudopotential energy =        0.02335 a.u.
- exchange-correlation energy =       -0.80861 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.32530 Hartree a.u.
+              kinetic energy =        1.13896 Hartree a.u.
+        electrostatic energy =       -1.21588 Hartree a.u.
+                         esr =        0.01144 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.46478 Hartree a.u.
+  n-l pseudopotential energy =        0.02350 Hartree a.u.
+ exchange-correlation energy =       -0.80710 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
 
 
-                total energy =       -1.27058 a.u.
-              kinetic energy =        1.16728 a.u.
-        electrostatic energy =       -1.16781 a.u.
-                         esr =        0.02346 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.48011 a.u.
-  n-l pseudopotential energy =        0.02431 a.u.
- exchange-correlation energy =       -0.81425 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.31778 Hartree a.u.
+              kinetic energy =        1.16809 Hartree a.u.
+        electrostatic energy =       -1.19690 Hartree a.u.
+                         esr =        0.02346 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.49445 Hartree a.u.
+  n-l pseudopotential energy =        0.02502 Hartree a.u.
+ exchange-correlation energy =       -0.81954 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
   
@@ -394,15 +422,15 @@
   
 
 
-                total energy =       -1.63108 a.u.
-              kinetic energy =        1.30844 a.u.
-        electrostatic energy =       -1.36639 a.u.
-                         esr =        0.02346 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.64847 a.u.
-  n-l pseudopotential energy =        0.03295 a.u.
- exchange-correlation energy =       -0.95761 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.63108 Hartree a.u.
+              kinetic energy =        1.30846 Hartree a.u.
+        electrostatic energy =       -1.36640 Hartree a.u.
+                         esr =        0.02346 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.64846 Hartree a.u.
+  n-l pseudopotential energy =        0.03295 Hartree a.u.
+ exchange-correlation energy =       -0.95762 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
   
@@ -410,15 +438,15 @@
   
 
 
-                total energy =       -1.62169 a.u.
-              kinetic energy =        1.26077 a.u.
-        electrostatic energy =       -1.37187 a.u.
-                         esr =        0.01144 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.60675 a.u.
-  n-l pseudopotential energy =        0.03084 a.u.
- exchange-correlation energy =       -0.93467 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.62169 Hartree a.u.
+              kinetic energy =        1.26090 Hartree a.u.
+        electrostatic energy =       -1.37190 Hartree a.u.
+                         esr =        0.01144 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.60679 Hartree a.u.
+  n-l pseudopotential energy =        0.03084 Hartree a.u.
+ exchange-correlation energy =       -0.93474 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
   
@@ -426,15 +454,15 @@
   
 
 
-                total energy =       -1.61364 a.u.
-              kinetic energy =        1.22975 a.u.
-        electrostatic energy =       -1.37252 a.u.
-                         esr =        0.00594 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.58136 a.u.
-  n-l pseudopotential energy =        0.02947 a.u.
- exchange-correlation energy =       -0.91897 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.61364 Hartree a.u.
+              kinetic energy =        1.22997 Hartree a.u.
+        electrostatic energy =       -1.37257 Hartree a.u.
+                         esr =        0.00594 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.58144 Hartree a.u.
+  n-l pseudopotential energy =        0.02947 Hartree a.u.
+ exchange-correlation energy =       -0.91908 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
   
@@ -442,15 +470,15 @@
   
 
 
-                total energy =       -1.61050 a.u.
-              kinetic energy =        1.21884 a.u.
-        electrostatic energy =       -1.37229 a.u.
-                         esr =        0.00437 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.57274 a.u.
-  n-l pseudopotential energy =        0.02899 a.u.
- exchange-correlation energy =       -0.91330 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.61050 Hartree a.u.
+              kinetic energy =        1.21909 Hartree a.u.
+        electrostatic energy =       -1.37233 Hartree a.u.
+                         esr =        0.00437 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.57282 Hartree a.u.
+  n-l pseudopotential energy =        0.02899 Hartree a.u.
+ exchange-correlation energy =       -0.91343 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
   
@@ -458,15 +486,15 @@
   
 
 
-                total energy =       -1.61366 a.u.
-              kinetic energy =        1.22983 a.u.
-        electrostatic energy =       -1.37255 a.u.
-                         esr =        0.00594 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.58140 a.u.
-  n-l pseudopotential energy =        0.02947 a.u.
- exchange-correlation energy =       -0.91901 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.61366 Hartree a.u.
+              kinetic energy =        1.23008 Hartree a.u.
+        electrostatic energy =       -1.37259 Hartree a.u.
+                         esr =        0.00594 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.58147 Hartree a.u.
+  n-l pseudopotential energy =        0.02947 Hartree a.u.
+ exchange-correlation energy =       -0.91915 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
   
@@ -474,15 +502,15 @@
   
 
 
-                total energy =       -1.62169 a.u.
-              kinetic energy =        1.26080 a.u.
-        electrostatic energy =       -1.37189 a.u.
-                         esr =        0.01144 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.60675 a.u.
-  n-l pseudopotential energy =        0.03084 a.u.
- exchange-correlation energy =       -0.93468 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.62169 Hartree a.u.
+              kinetic energy =        1.26098 Hartree a.u.
+        electrostatic energy =       -1.37191 Hartree a.u.
+                         esr =        0.01144 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.60680 Hartree a.u.
+  n-l pseudopotential energy =        0.03084 Hartree a.u.
+ exchange-correlation energy =       -0.93479 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
   
@@ -490,15 +518,15 @@
   
 
 
-                total energy =       -1.63108 a.u.
-              kinetic energy =        1.30863 a.u.
-        electrostatic energy =       -1.36642 a.u.
-                         esr =        0.02346 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.64854 a.u.
-  n-l pseudopotential energy =        0.03295 a.u.
- exchange-correlation energy =       -0.95769 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.63108 Hartree a.u.
+              kinetic energy =        1.30878 Hartree a.u.
+        electrostatic energy =       -1.36644 Hartree a.u.
+                         esr =        0.02346 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.64860 Hartree a.u.
+  n-l pseudopotential energy =        0.03295 Hartree a.u.
+ exchange-correlation energy =       -0.95777 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
   
@@ -520,7 +548,7 @@
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -10.46   -6.14
+  -10.45   -6.14
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
@@ -572,7 +600,7 @@
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -10.46   -6.14
+  -10.45   -6.14
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
@@ -585,40 +613,68 @@
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -10.54   -6.34
+  -10.54   -6.35
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
    -9.82
  
  
-     initialize   :     0.38s CPU
-     formf        :     0.05s CPU (       7 calls,   0.007 s avg)
-     rhoofr       :    11.11s CPU (     420 calls,   0.026 s avg)
-     vofrho       :    83.64s CPU (     420 calls,   0.199 s avg)
-     dforce       :     2.71s CPU (     840 calls,   0.003 s avg)
-     calphi       :     0.04s CPU (     420 calls,   0.000 s avg)
-     ortho        :     0.05s CPU (     420 calls,   0.000 s avg)
-     updatc       :     0.02s CPU (     420 calls,   0.000 s avg)
-     newd         :     1.12s CPU (     420 calls,   0.003 s avg)
-     calbec       :     0.00s CPU (     427 calls,   0.000 s avg)
+
+   writing restart file: .//cp_61.save
+   restart file written in    1.343 sec.
+
+
+   writing restart file: .//cp_62.save
+   restart file written in    1.339 sec.
+
+
+   writing restart file: .//cp_63.save
+   restart file written in    1.398 sec.
+
+
+   writing restart file: .//cp_64.save
+   restart file written in    1.338 sec.
+
+
+   writing restart file: .//cp_65.save
+   restart file written in    1.473 sec.
+
+
+   writing restart file: .//cp_66.save
+   restart file written in    1.339 sec.
+
+     initialize   :     0.37s CPU
+     formf        :     0.07s CPU (       7 calls,   0.010 s avg)
+     rhoofr       :    11.68s CPU (     420 calls,   0.028 s avg)
+     vofrho       :    82.71s CPU (     420 calls,   0.197 s avg)
+     dforce       :     2.83s CPU (     840 calls,   0.003 s avg)
+     calphi       :     0.00s CPU (     420 calls,   0.000 s avg)
+     ortho        :     0.07s CPU (     420 calls,   0.000 s avg)
+     updatc       :     0.01s CPU (     420 calls,   0.000 s avg)
+     newd         :     1.14s CPU (     420 calls,   0.003 s avg)
+     calbec       :     0.01s CPU (     427 calls,   0.000 s avg)
      prefor       :     0.01s CPU (     840 calls,   0.000 s avg)
-     strucf       :     0.21s CPU (     427 calls,   0.000 s avg)
-     rhov         :     4.39s CPU (     420 calls,   0.010 s avg)
-     nlsm1        :     0.03s CPU (    1267 calls,   0.000 s avg)
-     fft          :    33.74s CPU (    5880 calls,   0.006 s avg)
-     ffts         :     2.55s CPU (     840 calls,   0.003 s avg)
-     fftw         :     3.29s CPU (    2520 calls,   0.001 s avg)
-     fftb         :     0.74s CPU (    2100 calls,   0.000 s avg)
-     rsg          :     0.00s CPU (     840 calls,   0.000 s avg)
- 
-     CP           :  1m49.03s CPU time
+     strucf       :     0.14s CPU (     427 calls,   0.000 s avg)
+     rhov         :     4.44s CPU (     420 calls,   0.011 s avg)
+     nlsm1        :     0.02s CPU (    1267 calls,   0.000 s avg)
+     fft          :    33.15s CPU (    5880 calls,   0.006 s avg)
+     ffts         :     3.12s CPU (     840 calls,   0.004 s avg)
+     fftw         :     3.39s CPU (    2520 calls,   0.001 s avg)
+     fftb         :     0.76s CPU (    2100 calls,   0.000 s avg)
+     rsg          :     0.02s CPU (     840 calls,   0.000 s avg)
+
+   writing restart file: .//cp_67.save
+   restart file written in    1.338 sec.
 
  
-   This run was terminated on:   4:55:34   2Nov2005            
+     CP           :  1m48.55s CPU time
+
+ 
+   This run was terminated on:   4:58:41  10Nov2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:   109.0
+   ELAPSED SECONDS:   110.0
    JOB DONE.
 =------------------------------------------------------------------------------=
 

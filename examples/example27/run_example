@@ -75,7 +75,7 @@ rm -rf $TMP_DIR/*
 $ECHO " done"
 
 # molecular dynamics calculation
-cat > new1.in << EOF
+cat > c4h6.cp.metaGGA.in << EOF
  &control
     calculation='scf',
     restart_mode='from_scratch',
@@ -110,7 +110,7 @@ ATOMIC_POSITIONS  bohr
  C  0.109484E+01   0.137081E+01  -0.496954E+00
 EOF
 $ECHO "  running the SCF calculation...\c"
-$CP_COMMAND < new1.in > new1.out
+$CP_COMMAND < c4h6.cp.metaGGA.in > c4h6.cp.metaGGA.out
 $ECHO " done"
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"

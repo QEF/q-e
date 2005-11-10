@@ -75,7 +75,7 @@ rm -rf $TMP_DIR/*
 $ECHO " done"
 
 # molecular dynamics calculation
-cat > new1.in << EOF
+cat >  sio2.cp.start.in << EOF
  &control
     calculation='cp',
     restart_mode='from_scratch',
@@ -125,11 +125,11 @@ Si  2.13389003   3.81348642   6.85202747
 Si  6.77884003  11.85881642   6.85202747
 EOF
 $ECHO "  running the calculation with fixed ions...\c"
-$CP_COMMAND < new1.in > new1.out
+$CP_COMMAND < sio2.cp.start.in > sio2.cp.start.out
 $ECHO " done"
 
 # molecular dynamics calculation
-cat > new2.in << EOF
+cat > sio2.cp.restart.in << EOF
  &control
     calculation='cp',
     restart_mode='reset_counters',
@@ -178,11 +178,11 @@ Si  2.13389003   3.81348642   6.85202747
 Si  6.77884003  11.85881642   6.85202747
 EOF
 $ECHO "  running the calculation with fixed ions, restart...\c"
-$CP_COMMAND < new2.in > new2.out
+$CP_COMMAND < sio2.cp.restart.in > sio2.cp.restart.out
 $ECHO " done"
 
 # molecular dynamics calculation
-cat > new3.in << EOF
+cat > sio2.vc-cp.in << EOF
  &control
     calculation='vc-cp',
     restart_mode='reset_counters',
@@ -236,11 +236,11 @@ Si  2.13389003   3.81348642   6.85202747
 Si  6.77884003  11.85881642   6.85202747
 EOF
 $ECHO "  running the variable-cell calculation...\c"
-$CP_COMMAND < new3.in > new3.out
+$CP_COMMAND < sio2.vc-cp.in > sio2.vc-cp.out
 $ECHO " done"
 
 # molecular dynamics calculation
-cat > new4.in << EOF
+cat > sio2.vc-cp.restart.in << EOF
  &control
     calculation='vc-cp',
     restart_mode='reset_counters',
@@ -295,7 +295,7 @@ Si  6.77884003  11.85881642   6.85202747
 EOF
 
 $ECHO "  running the variable-cell calculation, restart...\c"
-$CP_COMMAND < new4.in > new4.out
+$CP_COMMAND < sio2.vc-cp.restart.in >  sio2.vc-cp.restart.out
 $ECHO " done"
 
 $ECHO

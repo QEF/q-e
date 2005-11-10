@@ -10,7 +10,7 @@
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5: 0:46   2Nov2005               
+   This run was started on:   5: 3:53  10Nov2005               
 
    Serial Build
 
@@ -258,29 +258,57 @@
   Allocation for pointers : successful 
   Allocation ended 
 
-   formf: eself=   1.49603
-   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
-   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+   reading restart file: .//cp_71.save
+   restart file read in    0.024 sec.
+
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
-   formf: eself=   1.49603
-   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
-   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+   reading restart file: .//cp_72.save
+   restart file read in    0.024 sec.
+
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
-   formf: eself=   1.49603
-   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
-   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+   reading restart file: .//cp_73.save
+   restart file read in    0.024 sec.
+
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+
+   reading restart file: .//cp_74.save
+   restart file read in    0.024 sec.
+
+
+   formf: eself=   1.49603
+   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
+   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+
+   reading restart file: .//cp_75.save
+   restart file read in    0.024 sec.
+
+
+   formf: eself=   1.49603
+   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
+   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+
+   reading restart file: .//cp_76.save
+   restart file read in    0.024 sec.
+
+
+   formf: eself=   1.49603
+   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
+   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+
+   reading restart file: .//cp_77.save
+   restart file read in    0.024 sec.
+
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
@@ -290,12 +318,12 @@
   
    0  0.00000 0.00000 1.98543
    1  0.00001 0.00001 2.08986
-   2  0.00001 0.00001 2.16877
-   3  0.00001 0.00001 2.21849
-   4  0.00001 0.00000 2.25003
-   5  0.00001 0.00000 2.28131
-   6  0.00000 0.00000 2.33143
-   7  0.00001 0.00000 2.41030
+   2  0.00003 0.00002 2.16883
+   3  0.00003 0.00002 2.21856
+   4  0.00003 0.00002 2.25007
+   5  0.00002 0.00001 2.28137
+   6  0.00001 0.00001 2.33151
+   7  0.00001 0.00001 2.41031
    8  0.00000 0.00000 2.51457
   
   _____________________________________________
@@ -307,15 +335,15 @@
   
 
 
-                total energy =       -1.63558 a.u.
-              kinetic energy =        1.36094 a.u.
-        electrostatic energy =       -1.35371 a.u.
-                         esr =        0.04235 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.69685 a.u.
-  n-l pseudopotential energy =        0.03521 a.u.
- exchange-correlation energy =       -0.98116 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.63558 Hartree a.u.
+              kinetic energy =        1.36094 Hartree a.u.
+        electrostatic energy =       -1.35371 Hartree a.u.
+                         esr =        0.04235 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.69685 Hartree a.u.
+  n-l pseudopotential energy =        0.03521 Hartree a.u.
+ exchange-correlation energy =       -0.98116 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
   
@@ -323,15 +351,15 @@
   
 
 
-                total energy =       -1.63278 a.u.
-              kinetic energy =        1.32948 a.u.
-        electrostatic energy =       -1.36313 a.u.
-                         esr =        0.02943 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.66602 a.u.
-  n-l pseudopotential energy =        0.03379 a.u.
- exchange-correlation energy =       -0.96690 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.63278 Hartree a.u.
+              kinetic energy =        1.32949 Hartree a.u.
+        electrostatic energy =       -1.36313 Hartree a.u.
+                         esr =        0.02943 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.66603 Hartree a.u.
+  n-l pseudopotential energy =        0.03379 Hartree a.u.
+ exchange-correlation energy =       -0.96690 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
   
@@ -339,15 +367,15 @@
   
 
 
-                total energy =       -1.62661 a.u.
-              kinetic energy =        1.28755 a.u.
-        electrostatic energy =       -1.37224 a.u.
-                         esr =        0.01518 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.62642 a.u.
-  n-l pseudopotential energy =        0.03185 a.u.
- exchange-correlation energy =       -0.94735 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.62661 Hartree a.u.
+              kinetic energy =        1.28756 Hartree a.u.
+        electrostatic energy =       -1.37224 Hartree a.u.
+                         esr =        0.01519 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.62643 Hartree a.u.
+  n-l pseudopotential energy =        0.03185 Hartree a.u.
+ exchange-correlation energy =       -0.94735 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
   
@@ -355,15 +383,15 @@
   
 
 
-                total energy =       -1.62299 a.u.
-              kinetic energy =        1.26899 a.u.
-        electrostatic energy =       -1.37498 a.u.
-                         esr =        0.00999 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.60954 a.u.
-  n-l pseudopotential energy =        0.03097 a.u.
- exchange-correlation energy =       -0.93844 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.62299 Hartree a.u.
+              kinetic energy =        1.26899 Hartree a.u.
+        electrostatic energy =       -1.37498 Hartree a.u.
+                         esr =        0.00999 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.60953 Hartree a.u.
+  n-l pseudopotential energy =        0.03097 Hartree a.u.
+ exchange-correlation energy =       -0.93844 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
   
@@ -371,15 +399,15 @@
   
 
 
-                total energy =       -1.62666 a.u.
-              kinetic energy =        1.28753 a.u.
-        electrostatic energy =       -1.37226 a.u.
-                         esr =        0.01518 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.62643 a.u.
-  n-l pseudopotential energy =        0.03185 a.u.
- exchange-correlation energy =       -0.94734 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.62666 Hartree a.u.
+              kinetic energy =        1.28751 Hartree a.u.
+        electrostatic energy =       -1.37226 Hartree a.u.
+                         esr =        0.01517 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.62642 Hartree a.u.
+  n-l pseudopotential energy =        0.03185 Hartree a.u.
+ exchange-correlation energy =       -0.94734 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
   
@@ -387,15 +415,15 @@
   
 
 
-                total energy =       -1.63283 a.u.
-              kinetic energy =        1.32950 a.u.
-        electrostatic energy =       -1.36314 a.u.
-                         esr =        0.02945 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.66606 a.u.
-  n-l pseudopotential energy =        0.03379 a.u.
- exchange-correlation energy =       -0.96692 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.63283 Hartree a.u.
+              kinetic energy =        1.32948 Hartree a.u.
+        electrostatic energy =       -1.36314 Hartree a.u.
+                         esr =        0.02944 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.66604 Hartree a.u.
+  n-l pseudopotential energy =        0.03379 Hartree a.u.
+ exchange-correlation energy =       -0.96691 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
   
@@ -403,22 +431,22 @@
   
 
 
-                total energy =       -1.63554 a.u.
-              kinetic energy =        1.36087 a.u.
-        electrostatic energy =       -1.35371 a.u.
-                         esr =        0.04234 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.69680 a.u.
-  n-l pseudopotential energy =        0.03521 a.u.
- exchange-correlation energy =       -0.98110 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.63554 Hartree a.u.
+              kinetic energy =        1.36087 Hartree a.u.
+        electrostatic energy =       -1.35371 Hartree a.u.
+                         esr =        0.04234 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.69680 Hartree a.u.
+  n-l pseudopotential energy =        0.03521 Hartree a.u.
+ exchange-correlation energy =       -0.98110 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
   
 
   nfi   SUM(E)   con_ite     con_usat     cons_pls     max_ekinc   deviation   maxforce
   
-  101      -14.68579     0  0.00000E+00   1  0.00000  0.00000  0.16394E-01  0.19519E-01
+  101      -14.68579     0  0.00000E+00   1  0.00000  0.00000  0.16395E-01  0.19518E-01
   
   ---------------------- Replica :            1
   
@@ -510,104 +538,104 @@
   -10.19
  
  
-  102      -14.68656     1  0.13331E-05   8  0.00004  0.00004  0.16859E-01  0.20064E-01
-  103      -14.68749     1  0.15217E-05   8  0.00009  0.00005  0.17668E-01  0.20988E-01
-  104      -14.68852     1  0.17145E-05   8  0.00013  0.00004  0.18454E-01  0.21916E-01
-  105      -14.68962     1  0.19903E-05   8  0.00015  0.00002  0.18913E-01  0.22534E-01
-  106      -14.69076     1  0.23766E-05   8  0.00016  0.00001  0.18852E-01  0.22644E-01
-  107      -14.69195     1  0.28796E-05   8  0.00016  0.00000  0.18213E-01  0.22169E-01
-  108      -14.69311     1  0.34871E-05   8  0.00016  0.00000  0.17064E-01  0.21175E-01
-  109      -14.69426     1  0.41621E-05   8  0.00015  0.00000  0.15588E-01  0.19808E-01
-  110      -14.69539     1  0.48856E-05   8  0.00015  0.00000  0.13987E-01  0.18247E-01
-  111      -14.69647     1  0.56260E-05   8  0.00015  0.00001  0.12471E-01  0.16697E-01
-  112      -14.69754     1  0.63257E-05   8  0.00016  0.00001  0.11187E-01  0.15298E-01
-  113      -14.69856     1  0.69518E-05   8  0.00018  0.00002  0.10183E-01  0.14211E-01
-  114      -14.69953     1  0.75078E-05   8  0.00019  0.00002  0.94488E-02  0.13557E-01
-  115      -14.70041     1  0.80019E-05   8  0.00021  0.00002  0.89154E-02  0.13092E-01
-  116      -14.70125     1  0.84411E-05   8  0.00022  0.00001  0.85117E-02  0.12784E-01
-  117      -14.70202     1  0.88442E-05   8  0.00023  0.00001  0.81515E-02  0.12517E-01
-  118      -14.70274     1  0.91940E-05   8  0.00023  0.00000  0.77755E-02  0.12221E-01
-  119      -14.70338     1  0.94715E-05   8  0.00022  0.00000  0.73427E-02  0.11843E-01
-  120      -14.70395     1  0.96258E-05   8  0.00021  0.00000  0.68713E-02  0.11360E-01
-  121      -14.70445     1  0.96356E-05   8  0.00020  0.00000  0.64175E-02  0.10775E-01
-  122      -14.70490     1  0.94864E-05   8  0.00018  0.00000  0.60264E-02  0.10111E-01
-  123      -14.70530     1  0.91719E-05   8  0.00017  0.00000  0.56744E-02  0.94092E-02
-  124      -14.70565     1  0.87143E-05   8  0.00016  0.00000  0.53211E-02  0.87130E-02
-  125      -14.70595     1  0.81483E-05   8  0.00016  0.00000  0.49539E-02  0.80547E-02
-  126      -14.70622     1  0.75224E-05   8  0.00015  0.00000  0.45782E-02  0.74533E-02
-  127      -14.70645     1  0.68861E-05   8  0.00014  0.00000  0.42056E-02  0.69168E-02
-  128      -14.70664     1  0.62781E-05   8  0.00014  0.00000  0.38476E-02  0.64395E-02
-  129      -14.70680     1  0.57212E-05   8  0.00013  0.00000  0.35103E-02  0.60062E-02
-  130      -14.70694     1  0.52160E-05   8  0.00012  0.00000  0.31946E-02  0.55978E-02
-  131      -14.70706     1  0.47507E-05   1  0.00011  0.00000  0.28991E-02  0.52025E-02
-  132      -14.70715     1  0.43135E-05   1  0.00010  0.00000  0.26209E-02  0.48035E-02
-  133      -14.70722     1  0.38806E-05   1  0.00009  0.00000  0.23592E-02  0.43958E-02
-  134      -14.70728     1  0.34332E-05   1  0.00008  0.00000  0.21275E-02  0.39777E-02
-  135      -14.70733     1  0.29589E-05   1  0.00007  0.00000  0.19961E-02  0.35601E-02
-  136      -14.70736     1  0.24590E-05   1  0.00007  0.00000  0.19636E-02  0.31518E-02
-  137      -14.70739     1  0.19412E-05   1  0.00006  0.00000  0.19449E-02  0.27660E-02
-  138      -14.70741     1  0.14183E-05   1  0.00005  0.00000  0.19168E-02  0.24045E-02
-  139      -14.70742     1  0.90034E-06   1  0.00005  0.00000  0.18772E-02  0.20750E-02
-  140      -14.70743     1  0.39560E-06   1  0.00004  0.00000  0.18314E-02  0.18775E-02
-  141      -14.70744     1  0.73156E-07   8  0.00004  0.00000  0.17807E-02  0.18542E-02
-  142      -14.70739     1  0.50603E-06   1  0.00003  0.00000  0.17307E-02  0.18325E-02
-  143      -14.70739     1  0.92326E-06   1  0.00003  0.00000  0.16750E-02  0.18126E-02
-  144      -14.70739     1  0.13183E-05   1  0.00002  0.00000  0.16179E-02  0.17949E-02
-  145      -14.70740     1  0.16979E-05   1  0.00002  0.00000  0.15600E-02  0.17781E-02
-  146      -14.70740     1  0.20650E-05   1  0.00002  0.00000  0.15019E-02  0.17638E-02
-  147      -14.70741     1  0.24242E-05   1  0.00002  0.00000  0.14445E-02  0.17508E-02
-  148      -14.70741     1  0.27718E-05   1  0.00001  0.00000  0.13893E-02  0.17391E-02
-  149      -14.70742     1  0.31045E-05   1  0.00001  0.00000  0.13481E-02  0.17283E-02
-  150      -14.70743     1  0.34163E-05   1  0.00001  0.00000  0.13362E-02  0.17183E-02
-  151      -14.70743     1  0.37040E-05   1  0.00001  0.00000  0.13263E-02  0.17090E-02
-  152      -14.70747     1  0.39647E-05   1  0.00001  0.00000  0.13066E-02  0.17002E-02
-  153      -14.70748     1  0.41674E-05   1  0.00000  0.00000  0.12879E-02  0.16919E-02
-  154      -14.70749     1  0.43561E-05   1  0.00000  0.00000  0.12659E-02  0.16841E-02
-  155      -14.70750     1  0.45278E-05   1  0.00000  0.00000  0.12418E-02  0.16767E-02
-  156      -14.70752     1  0.46773E-05   1  0.00000  0.00000  0.12171E-02  0.16697E-02
-  157      -14.70751     1  0.48082E-05   1  0.00000  0.00000  0.11947E-02  0.16633E-02
-  158      -14.70753     1  0.49393E-05   1  0.00000  0.00000  0.11713E-02  0.16572E-02
-  159      -14.70754     1  0.50463E-05   1  0.00000  0.00000  0.11499E-02  0.16511E-02
-  160      -14.70756     1  0.51431E-05   1  0.00000  0.00000  0.11301E-02  0.16453E-02
-  161      -14.70758     1  0.52331E-05   1  0.00000  0.00000  0.11116E-02  0.16399E-02
-  162      -14.70760     1  0.53170E-05   1  0.00000  0.00000  0.10940E-02  0.16349E-02
-  163      -14.70762     1  0.53944E-05   1  0.00000  0.00000  0.10766E-02  0.16294E-02
-  164      -14.70764     1  0.54639E-05   1  0.00000  0.00000  0.10591E-02  0.16229E-02
-  165      -14.70766     1  0.55245E-05   1  0.00000  0.00000  0.10414E-02  0.16154E-02
-  166      -14.70768     1  0.55761E-05   1  0.00000  0.00000  0.10238E-02  0.16073E-02
-  167      -14.70770     1  0.56202E-05   1  0.00000  0.00000  0.10064E-02  0.15988E-02
-  168      -14.70772     1  0.56583E-05   1  0.00000  0.00000  0.98975E-03  0.15903E-02
-  169      -14.70775     1  0.56924E-05   1  0.00000  0.00000  0.97400E-03  0.15818E-02
-  170      -14.70777     1  0.57244E-05   1  0.00000  0.00000  0.95931E-03  0.15743E-02
-  171      -14.70779     1  0.57555E-05   1  0.00000  0.00000  0.94572E-03  0.15706E-02
-  172      -14.70782     1  0.57866E-05   1  0.00000  0.00000  0.93313E-03  0.15664E-02
-  173      -14.70784     1  0.58182E-05   1  0.00000  0.00000  0.92140E-03  0.15618E-02
-  174      -14.70786     1  0.58505E-05   1  0.00000  0.00000  0.91033E-03  0.15569E-02
-  175      -14.70789     1  0.58835E-05   1  0.00000  0.00000  0.89976E-03  0.15518E-02
-  176      -14.70791     1  0.59171E-05   1  0.00000  0.00000  0.88958E-03  0.15467E-02
-  177      -14.70793     1  0.59511E-05   1  0.00000  0.00000  0.87973E-03  0.15418E-02
-  178      -14.70796     1  0.59855E-05   1  0.00000  0.00000  0.87017E-03  0.15370E-02
-  179      -14.70798     1  0.60205E-05   1  0.00000  0.00000  0.86087E-03  0.15324E-02
-  180      -14.70800     1  0.60562E-05   1  0.00000  0.00000  0.85183E-03  0.15280E-02
-  181      -14.70805     1  0.60931E-05   1  0.00000  0.00000  0.84523E-03  0.15239E-02
-  182      -14.70807     1  0.61132E-05   1  0.00000  0.00000  0.83671E-03  0.15199E-02
-  183      -14.70809     1  0.61506E-05   1  0.00000  0.00000  0.82819E-03  0.15159E-02
-  184      -14.70812     1  0.61919E-05   1  0.00000  0.00000  0.82012E-03  0.15119E-02
-  185      -14.70814     1  0.62360E-05   1  0.00000  0.00000  0.81257E-03  0.15077E-02
-  186      -14.70816     1  0.62826E-05   1  0.00000  0.00000  0.80565E-03  0.15034E-02
-  187      -14.70819     1  0.63322E-05   1  0.00000  0.00000  0.79937E-03  0.14989E-02
-  188      -14.70821     1  0.63850E-05   1  0.00000  0.00000  0.79367E-03  0.14942E-02
-  189      -14.70823     1  0.64406E-05   1  0.00000  0.00000  0.78843E-03  0.14894E-02
-  190      -14.70825     1  0.64983E-05   1  0.00000  0.00000  0.78350E-03  0.14846E-02
-  191      -14.70828     1  0.65578E-05   1  0.00000  0.00000  0.77877E-03  0.14797E-02
-  192      -14.70830     1  0.66187E-05   1  0.00000  0.00000  0.77412E-03  0.14749E-02
-  193      -14.70832     1  0.66806E-05   1  0.00000  0.00000  0.76943E-03  0.14698E-02
-  194      -14.70834     1  0.67431E-05   1  0.00000  0.00000  0.76497E-03  0.14660E-02
-  195      -14.70836     1  0.68084E-05   1  0.00000  0.00000  0.76034E-03  0.14609E-02
-  196      -14.70839     1  0.68736E-05   1  0.00000  0.00000  0.75590E-03  0.14563E-02
-  197      -14.70841     1  0.69400E-05   1  0.00000  0.00000  0.75165E-03  0.14517E-02
-  198      -14.70843     1  0.70081E-05   1  0.00000  0.00000  0.74763E-03  0.14471E-02
-  199      -14.70845     1  0.70782E-05   1  0.00000  0.00000  0.74384E-03  0.14426E-02
+  102      -14.68656     1  0.13321E-05   8  0.00004  0.00004  0.16860E-01  0.20063E-01
+  103      -14.68749     1  0.15206E-05   8  0.00009  0.00005  0.17668E-01  0.20987E-01
+  104      -14.68852     1  0.17133E-05   8  0.00013  0.00004  0.18455E-01  0.21915E-01
+  105      -14.68961     1  0.19890E-05   8  0.00015  0.00002  0.18914E-01  0.22533E-01
+  106      -14.69076     1  0.23751E-05   8  0.00016  0.00001  0.18853E-01  0.22643E-01
+  107      -14.69194     1  0.28780E-05   8  0.00016  0.00000  0.18214E-01  0.22168E-01
+  108      -14.69310     1  0.34853E-05   8  0.00016  0.00000  0.17065E-01  0.21173E-01
+  109      -14.69426     1  0.41602E-05   8  0.00015  0.00000  0.15589E-01  0.19806E-01
+  110      -14.69538     1  0.48837E-05   8  0.00015  0.00000  0.13988E-01  0.18245E-01
+  111      -14.69647     1  0.56240E-05   8  0.00015  0.00001  0.12472E-01  0.16695E-01
+  112      -14.69754     1  0.63237E-05   8  0.00016  0.00001  0.11187E-01  0.15296E-01
+  113      -14.69856     1  0.69500E-05   8  0.00018  0.00002  0.10184E-01  0.14211E-01
+  114      -14.69953     1  0.75061E-05   8  0.00019  0.00002  0.94495E-02  0.13557E-01
+  115      -14.70041     1  0.80005E-05   8  0.00021  0.00002  0.89160E-02  0.13091E-01
+  116      -14.70125     1  0.84398E-05   8  0.00022  0.00001  0.85123E-02  0.12784E-01
+  117      -14.70202     1  0.88430E-05   8  0.00023  0.00001  0.81520E-02  0.12516E-01
+  118      -14.70274     1  0.91929E-05   8  0.00023  0.00000  0.77760E-02  0.12221E-01
+  119      -14.70338     1  0.94706E-05   8  0.00022  0.00000  0.73433E-02  0.11842E-01
+  120      -14.70395     1  0.96252E-05   8  0.00021  0.00000  0.68718E-02  0.11360E-01
+  121      -14.70445     1  0.96350E-05   8  0.00020  0.00000  0.64179E-02  0.10775E-01
+  122      -14.70490     1  0.94861E-05   8  0.00018  0.00000  0.60268E-02  0.10111E-01
+  123      -14.70530     1  0.91718E-05   8  0.00017  0.00000  0.56749E-02  0.94090E-02
+  124      -14.70565     1  0.87143E-05   8  0.00016  0.00000  0.53216E-02  0.87130E-02
+  125      -14.70595     1  0.81486E-05   8  0.00016  0.00000  0.49544E-02  0.80547E-02
+  126      -14.70622     1  0.75228E-05   8  0.00015  0.00000  0.45787E-02  0.74534E-02
+  127      -14.70644     1  0.68866E-05   8  0.00014  0.00000  0.42061E-02  0.69170E-02
+  128      -14.70664     1  0.62786E-05   8  0.00014  0.00000  0.38480E-02  0.64396E-02
+  129      -14.70680     1  0.57216E-05   8  0.00013  0.00000  0.35107E-02  0.60064E-02
+  130      -14.70694     1  0.52164E-05   8  0.00012  0.00000  0.31951E-02  0.55979E-02
+  131      -14.70706     1  0.47510E-05   1  0.00011  0.00000  0.28996E-02  0.52026E-02
+  132      -14.70715     1  0.43139E-05   1  0.00010  0.00000  0.26213E-02  0.48036E-02
+  133      -14.70722     1  0.38810E-05   1  0.00009  0.00000  0.23596E-02  0.43963E-02
+  134      -14.70728     1  0.34339E-05   1  0.00008  0.00000  0.21278E-02  0.39779E-02
+  135      -14.70733     1  0.29595E-05   1  0.00007  0.00000  0.19964E-02  0.35603E-02
+  136      -14.70736     1  0.24595E-05   1  0.00007  0.00000  0.19638E-02  0.31521E-02
+  137      -14.70739     1  0.19418E-05   1  0.00006  0.00000  0.19451E-02  0.27663E-02
+  138      -14.70741     1  0.14188E-05   1  0.00005  0.00000  0.19170E-02  0.24047E-02
+  139      -14.70742     1  0.90080E-06   1  0.00005  0.00000  0.18774E-02  0.20752E-02
+  140      -14.70743     1  0.39603E-06   1  0.00004  0.00000  0.18315E-02  0.18765E-02
+  141      -14.70744     1  0.72708E-07   8  0.00004  0.00000  0.17808E-02  0.18531E-02
+  142      -14.70739     1  0.50566E-06   1  0.00003  0.00000  0.17308E-02  0.18315E-02
+  143      -14.70739     1  0.92292E-06   1  0.00003  0.00000  0.16751E-02  0.18116E-02
+  144      -14.70739     1  0.13179E-05   1  0.00002  0.00000  0.16181E-02  0.17938E-02
+  145      -14.70740     1  0.16974E-05   1  0.00002  0.00000  0.15602E-02  0.17772E-02
+  146      -14.70740     1  0.20648E-05   1  0.00002  0.00000  0.15020E-02  0.17629E-02
+  147      -14.70741     1  0.24240E-05   1  0.00002  0.00000  0.14446E-02  0.17499E-02
+  148      -14.70741     1  0.27716E-05   1  0.00001  0.00000  0.13894E-02  0.17381E-02
+  149      -14.70742     1  0.31043E-05   1  0.00001  0.00000  0.13482E-02  0.17273E-02
+  150      -14.70743     1  0.34161E-05   1  0.00001  0.00000  0.13363E-02  0.17173E-02
+  151      -14.70743     1  0.37040E-05   1  0.00001  0.00000  0.13264E-02  0.17080E-02
+  152      -14.70747     1  0.39649E-05   1  0.00001  0.00000  0.13067E-02  0.16992E-02
+  153      -14.70748     1  0.41672E-05   1  0.00000  0.00000  0.12879E-02  0.16910E-02
+  154      -14.70749     1  0.43559E-05   1  0.00000  0.00000  0.12660E-02  0.16831E-02
+  155      -14.70750     1  0.45276E-05   1  0.00000  0.00000  0.12419E-02  0.16758E-02
+  156      -14.70752     1  0.46772E-05   1  0.00000  0.00000  0.12172E-02  0.16688E-02
+  157      -14.70751     1  0.48081E-05   1  0.00000  0.00000  0.11947E-02  0.16624E-02
+  158      -14.70753     1  0.49391E-05   1  0.00000  0.00000  0.11713E-02  0.16563E-02
+  159      -14.70754     1  0.50460E-05   1  0.00000  0.00000  0.11499E-02  0.16502E-02
+  160      -14.70756     1  0.51428E-05   1  0.00000  0.00000  0.11301E-02  0.16444E-02
+  161      -14.70758     1  0.52327E-05   1  0.00000  0.00000  0.11116E-02  0.16390E-02
+  162      -14.70760     1  0.53166E-05   1  0.00000  0.00000  0.10940E-02  0.16339E-02
+  163      -14.70762     1  0.53939E-05   1  0.00000  0.00000  0.10766E-02  0.16285E-02
+  164      -14.70764     1  0.54635E-05   1  0.00000  0.00000  0.10591E-02  0.16221E-02
+  165      -14.70766     1  0.55240E-05   1  0.00000  0.00000  0.10415E-02  0.16146E-02
+  166      -14.70768     1  0.55757E-05   1  0.00000  0.00000  0.10238E-02  0.16065E-02
+  167      -14.70770     1  0.56197E-05   1  0.00000  0.00000  0.10065E-02  0.15980E-02
+  168      -14.70772     1  0.56579E-05   1  0.00000  0.00000  0.98980E-03  0.15895E-02
+  169      -14.70775     1  0.56920E-05   1  0.00000  0.00000  0.97404E-03  0.15810E-02
+  170      -14.70777     1  0.57239E-05   1  0.00000  0.00000  0.95935E-03  0.15753E-02
+  171      -14.70779     1  0.57550E-05   1  0.00000  0.00000  0.94576E-03  0.15716E-02
+  172      -14.70782     1  0.57861E-05   1  0.00000  0.00000  0.93317E-03  0.15674E-02
+  173      -14.70784     1  0.58177E-05   1  0.00000  0.00000  0.92143E-03  0.15628E-02
+  174      -14.70786     1  0.58500E-05   1  0.00000  0.00000  0.91036E-03  0.15579E-02
+  175      -14.70789     1  0.58830E-05   1  0.00000  0.00000  0.89979E-03  0.15528E-02
+  176      -14.70791     1  0.59165E-05   1  0.00000  0.00000  0.88962E-03  0.15477E-02
+  177      -14.70793     1  0.59505E-05   1  0.00000  0.00000  0.87978E-03  0.15428E-02
+  178      -14.70796     1  0.59849E-05   1  0.00000  0.00000  0.87023E-03  0.15379E-02
+  179      -14.70798     1  0.60199E-05   1  0.00000  0.00000  0.86091E-03  0.15334E-02
+  180      -14.70800     1  0.60556E-05   1  0.00000  0.00000  0.85186E-03  0.15290E-02
+  181      -14.70805     1  0.60924E-05   1  0.00000  0.00000  0.84527E-03  0.15249E-02
+  182      -14.70807     1  0.61126E-05   1  0.00000  0.00000  0.83675E-03  0.15209E-02
+  183      -14.70809     1  0.61500E-05   1  0.00000  0.00000  0.82823E-03  0.15169E-02
+  184      -14.70812     1  0.61914E-05   1  0.00000  0.00000  0.82016E-03  0.15129E-02
+  185      -14.70814     1  0.62354E-05   1  0.00000  0.00000  0.81261E-03  0.15087E-02
+  186      -14.70816     1  0.62820E-05   1  0.00000  0.00000  0.80568E-03  0.15043E-02
+  187      -14.70819     1  0.63315E-05   1  0.00000  0.00000  0.79940E-03  0.14998E-02
+  188      -14.70821     1  0.63842E-05   1  0.00000  0.00000  0.79370E-03  0.14951E-02
+  189      -14.70823     1  0.64397E-05   1  0.00000  0.00000  0.78845E-03  0.14903E-02
+  190      -14.70825     1  0.64974E-05   1  0.00000  0.00000  0.78353E-03  0.14855E-02
+  191      -14.70828     1  0.65568E-05   1  0.00000  0.00000  0.77880E-03  0.14806E-02
+  192      -14.70830     1  0.66176E-05   1  0.00000  0.00000  0.77415E-03  0.14758E-02
+  193      -14.70832     1  0.66796E-05   1  0.00000  0.00000  0.76946E-03  0.14706E-02
+  194      -14.70834     1  0.67420E-05   1  0.00000  0.00000  0.76499E-03  0.14669E-02
+  195      -14.70836     1  0.68073E-05   1  0.00000  0.00000  0.76037E-03  0.14618E-02
+  196      -14.70839     1  0.68727E-05   1  0.00000  0.00000  0.75593E-03  0.14571E-02
+  197      -14.70841     1  0.69391E-05   1  0.00000  0.00000  0.75168E-03  0.14526E-02
+  198      -14.70843     1  0.70073E-05   1  0.00000  0.00000  0.74767E-03  0.14480E-02
+  199      -14.70845     1  0.70773E-05   1  0.00000  0.00000  0.74388E-03  0.14435E-02
 
    from rhoofr: total integrated electronic density
    spin up
@@ -619,15 +647,15 @@
   
 
 
-                total energy =       -1.63592 a.u.
-              kinetic energy =        1.37372 a.u.
-        electrostatic energy =       -1.35042 a.u.
-                         esr =        0.04708 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.70823 a.u.
-  n-l pseudopotential energy =        0.03571 a.u.
- exchange-correlation energy =       -0.98670 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.63592 Hartree a.u.
+              kinetic energy =        1.37372 Hartree a.u.
+        electrostatic energy =       -1.35042 Hartree a.u.
+                         esr =        0.04708 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.70823 Hartree a.u.
+  n-l pseudopotential energy =        0.03571 Hartree a.u.
+ exchange-correlation energy =       -0.98670 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
 
@@ -641,15 +669,15 @@
   
 
 
-                total energy =       -1.63434 a.u.
-              kinetic energy =        1.37636 a.u.
-        electrostatic energy =       -1.35472 a.u.
-                         esr =        0.04355 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.70436 a.u.
-  n-l pseudopotential energy =        0.03554 a.u.
- exchange-correlation energy =       -0.98716 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.63434 Hartree a.u.
+              kinetic energy =        1.37636 Hartree a.u.
+        electrostatic energy =       -1.35472 Hartree a.u.
+                         esr =        0.04356 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.70436 Hartree a.u.
+  n-l pseudopotential energy =        0.03554 Hartree a.u.
+ exchange-correlation energy =       -0.98716 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
 
@@ -663,15 +691,15 @@
   
 
 
-                total energy =       -1.63228 a.u.
-              kinetic energy =        1.37624 a.u.
-        electrostatic energy =       -1.36286 a.u.
-                         esr =        0.03565 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.69455 a.u.
-  n-l pseudopotential energy =        0.03514 a.u.
- exchange-correlation energy =       -0.98626 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.63228 Hartree a.u.
+              kinetic energy =        1.37625 Hartree a.u.
+        electrostatic energy =       -1.36285 Hartree a.u.
+                         esr =        0.03566 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.69455 Hartree a.u.
+  n-l pseudopotential energy =        0.03514 Hartree a.u.
+ exchange-correlation energy =       -0.98626 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
 
@@ -685,15 +713,15 @@
   
 
 
-                total energy =       -1.63059 a.u.
-              kinetic energy =        1.37211 a.u.
-        electrostatic energy =       -1.37058 a.u.
-                         esr =        0.02745 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.68277 a.u.
-  n-l pseudopotential energy =        0.03470 a.u.
- exchange-correlation energy =       -0.98404 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.63059 Hartree a.u.
+              kinetic energy =        1.37211 Hartree a.u.
+        electrostatic energy =       -1.37058 Hartree a.u.
+                         esr =        0.02745 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.68277 Hartree a.u.
+  n-l pseudopotential energy =        0.03470 Hartree a.u.
+ exchange-correlation energy =       -0.98404 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
 
@@ -707,15 +735,15 @@
   
 
 
-                total energy =       -1.63227 a.u.
-              kinetic energy =        1.37636 a.u.
-        electrostatic energy =       -1.36277 a.u.
-                         esr =        0.03575 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.69470 a.u.
-  n-l pseudopotential energy =        0.03515 a.u.
- exchange-correlation energy =       -0.98631 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.63227 Hartree a.u.
+              kinetic energy =        1.37636 Hartree a.u.
+        electrostatic energy =       -1.36278 Hartree a.u.
+                         esr =        0.03574 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.69469 Hartree a.u.
+  n-l pseudopotential energy =        0.03515 Hartree a.u.
+ exchange-correlation energy =       -0.98631 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
 
@@ -729,15 +757,15 @@
   
 
 
-                total energy =       -1.63431 a.u.
-              kinetic energy =        1.37640 a.u.
-        electrostatic energy =       -1.35476 a.u.
-                         esr =        0.04353 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.70432 a.u.
-  n-l pseudopotential energy =        0.03554 a.u.
- exchange-correlation energy =       -0.98717 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.63431 Hartree a.u.
+              kinetic energy =        1.37640 Hartree a.u.
+        electrostatic energy =       -1.35477 Hartree a.u.
+                         esr =        0.04352 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.70432 Hartree a.u.
+  n-l pseudopotential energy =        0.03554 Hartree a.u.
+ exchange-correlation energy =       -0.98717 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
 
@@ -751,18 +779,18 @@
   
 
 
-                total energy =       -1.63597 a.u.
-              kinetic energy =        1.37378 a.u.
-        electrostatic energy =       -1.35026 a.u.
-                         esr =        0.04723 a.u.
-                       eself =        1.49603 a.u.
-      pseudopotential energy =       -0.70846 a.u.
-  n-l pseudopotential energy =        0.03573 a.u.
- exchange-correlation energy =       -0.98676 a.u.
-           average potential =        0.00000 a.u.
+                total energy =       -1.63597 Hartree a.u.
+              kinetic energy =        1.37378 Hartree a.u.
+        electrostatic energy =       -1.35026 Hartree a.u.
+                         esr =        0.04723 Hartree a.u.
+                       eself =        1.49603 Hartree a.u.
+      pseudopotential energy =       -0.70846 Hartree a.u.
+  n-l pseudopotential energy =        0.03573 Hartree a.u.
+ exchange-correlation energy =       -0.98676 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
 
 
-  200      -14.70847     1  0.71501E-05   1  0.00000  0.00000  0.74027E-03  0.14381E-02
+  200      -14.70847     1  0.71492E-05   1  0.00000  0.00000  0.74030E-03  0.14389E-02
   
   ---------------------- Replica :            1
   
@@ -854,36 +882,64 @@
   -10.21
  
  
-     initialize   :     0.37s CPU
-     formf        :     0.05s CPU (       7 calls,   0.007 s avg)
-     rhoofr       :    18.74s CPU (     700 calls,   0.027 s avg)
-     vofrho       :   139.93s CPU (     700 calls,   0.200 s avg)
-     dforce       :     4.59s CPU (    1400 calls,   0.003 s avg)
-     calphi       :     0.01s CPU (     700 calls,   0.000 s avg)
-     ortho        :     0.10s CPU (     700 calls,   0.000 s avg)
-     updatc       :     0.01s CPU (     700 calls,   0.000 s avg)
-     newd         :     5.34s CPU (     700 calls,   0.008 s avg)
+
+   writing restart file: .//cp_71.save
+   restart file written in    1.349 sec.
+
+
+   writing restart file: .//cp_72.save
+   restart file written in    1.345 sec.
+
+
+   writing restart file: .//cp_73.save
+   restart file written in    1.354 sec.
+
+
+   writing restart file: .//cp_74.save
+   restart file written in    1.341 sec.
+
+
+   writing restart file: .//cp_75.save
+   restart file written in    1.606 sec.
+
+
+   writing restart file: .//cp_76.save
+   restart file written in    1.342 sec.
+
+     initialize   :     0.35s CPU
+     formf        :     0.06s CPU (       7 calls,   0.009 s avg)
+     rhoofr       :    18.73s CPU (     700 calls,   0.027 s avg)
+     vofrho       :   141.11s CPU (     700 calls,   0.202 s avg)
+     dforce       :     4.65s CPU (    1400 calls,   0.003 s avg)
+     calphi       :     0.03s CPU (     700 calls,   0.000 s avg)
+     ortho        :     0.09s CPU (     700 calls,   0.000 s avg)
+     updatc       :     0.02s CPU (     700 calls,   0.000 s avg)
+     newd         :     5.19s CPU (     700 calls,   0.007 s avg)
      calbec       :     0.00s CPU (     714 calls,   0.000 s avg)
-     prefor       :     0.01s CPU (    1400 calls,   0.000 s avg)
-     strucf       :     0.25s CPU (     707 calls,   0.000 s avg)
+     prefor       :     0.05s CPU (    1400 calls,   0.000 s avg)
+     strucf       :     0.22s CPU (     707 calls,   0.000 s avg)
      nlfl         :     0.00s CPU (     700 calls,   0.000 s avg)
-     nlfq         :     0.08s CPU (     700 calls,   0.000 s avg)
-     rhov         :     7.53s CPU (     700 calls,   0.011 s avg)
-     nlsm1        :     0.03s CPU (    2114 calls,   0.000 s avg)
-     nlsm2        :     0.08s CPU (     700 calls,   0.000 s avg)
-     fft          :    54.32s CPU (    9800 calls,   0.006 s avg)
-     ffts         :     4.28s CPU (    1400 calls,   0.003 s avg)
-     fftw         :     5.53s CPU (    4200 calls,   0.001 s avg)
-     fftb         :     3.35s CPU (    9800 calls,   0.000 s avg)
-     rsg          :     0.02s CPU (    1400 calls,   0.000 s avg)
- 
-     CP           :  3m 0.91s CPU time
+     nlfq         :     0.11s CPU (     700 calls,   0.000 s avg)
+     rhov         :     7.37s CPU (     700 calls,   0.011 s avg)
+     nlsm1        :     0.01s CPU (    2114 calls,   0.000 s avg)
+     nlsm2        :     0.10s CPU (     700 calls,   0.000 s avg)
+     fft          :    55.39s CPU (    9800 calls,   0.006 s avg)
+     ffts         :     4.45s CPU (    1400 calls,   0.003 s avg)
+     fftw         :     5.77s CPU (    4200 calls,   0.001 s avg)
+     fftb         :     3.69s CPU (    9800 calls,   0.000 s avg)
+     rsg          :     0.04s CPU (    1400 calls,   0.000 s avg)
+
+   writing restart file: .//cp_77.save
+   restart file written in    1.388 sec.
 
  
-   This run was terminated on:   5: 3:47   2Nov2005            
+     CP           :  3m 2.27s CPU time
+
+ 
+   This run was terminated on:   5: 6:56  10Nov2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:   181.0
+   ELAPSED SECONDS:   183.0
    JOB DONE.
 =------------------------------------------------------------------------------=
 

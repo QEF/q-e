@@ -1,6 +1,6 @@
 
      Program POST-PROC v.3.0    starts ...
-     Today is 17Oct2005 at  2:49:13 
+     Today is 10Nov2005 at  2:54:35 
 
      Reading file alw.save ...      only dimensions
      read complete
@@ -473,18 +473,18 @@
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
  
-     PWCOND       :    13.79s CPU time
+     PWCOND       :    13.85s CPU time
 
      init         :     0.05s CPU
-     poten        :     0.01s CPU
+     poten        :     0.00s CPU
      local        :     0.58s CPU
  
-     scatter_forw :     8.16s CPU (      71 calls,   0.115 s avg)
-     integrals    :     3.86s CPU (      71 calls,   0.054 s avg)
-     rotatef      :     1.09s CPU (     852 calls,   0.001 s avg)
-     rotateb      :     0.95s CPU (     852 calls,   0.001 s avg)
-     scatter_back :     1.81s CPU (      71 calls,   0.025 s avg)
+     scatter_forw :     8.30s CPU (      71 calls,   0.117 s avg)
+     integrals    :     3.92s CPU (      71 calls,   0.055 s avg)
+     rotatef      :     1.19s CPU (     852 calls,   0.001 s avg)
+     rotateb      :     1.07s CPU (     852 calls,   0.001 s avg)
+     scatter_back :     1.87s CPU (      71 calls,   0.026 s avg)
  
-     compbs       :     4.92s CPU (      71 calls,   0.069 s avg)
-     compbs_2     :     4.65s CPU (      71 calls,   0.065 s avg)
+     compbs       :     4.90s CPU (      71 calls,   0.069 s avg)
+     compbs_2     :     4.61s CPU (      71 calls,   0.065 s avg)
  

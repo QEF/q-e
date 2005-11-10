@@ -1,6 +1,6 @@
 
      Program PWSCF     v.3.0    starts ...
-     Today is 17Oct2005 at  2:35:45 
+     Today is 10Nov2005 at  2:41:10 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -93,7 +93,7 @@
      negative rho (up, down):  0.399E-02 0.000E+00
      Starting wfc are atomic
 
-     total cpu time spent up to now is      2.57 secs
+     total cpu time spent up to now is      2.56 secs
 
      Self-consistent Calculation
 
@@ -103,7 +103,7 @@
 
      negative rho (up, down):  0.600E-02 0.000E+00
 
-     total cpu time spent up to now is      3.50 secs
+     total cpu time spent up to now is      3.49 secs
 
      total energy              =   -43.00811269 ryd
      estimated scf accuracy    <     0.20026243 ryd
@@ -114,7 +114,7 @@
 
      negative rho (up, down):  0.523E-02 0.000E+00
 
-     total cpu time spent up to now is      4.45 secs
+     total cpu time spent up to now is      4.42 secs
 
      total energy              =   -42.97511590 ryd
      estimated scf accuracy    <     0.66789848 ryd
@@ -125,7 +125,7 @@
 
      negative rho (up, down):  0.503E-02 0.000E+00
 
-     total cpu time spent up to now is      5.38 secs
+     total cpu time spent up to now is      5.33 secs
 
      total energy              =   -43.09487034 ryd
      estimated scf accuracy    <     0.00903049 ryd
@@ -136,7 +136,7 @@
 
      negative rho (up, down):  0.498E-02 0.000E+00
 
-     total cpu time spent up to now is      6.27 secs
+     total cpu time spent up to now is      6.22 secs
 
      total energy              =   -43.09564279 ryd
      estimated scf accuracy    <     0.00127450 ryd
@@ -147,7 +147,7 @@
 
      negative rho (up, down):  0.501E-02 0.000E+00
 
-     total cpu time spent up to now is      7.20 secs
+     total cpu time spent up to now is      7.17 secs
 
      total energy              =   -43.09623470 ryd
      estimated scf accuracy    <     0.00077530 ryd
@@ -158,7 +158,7 @@
 
      negative rho (up, down):  0.502E-02 0.000E+00
 
-     total cpu time spent up to now is      8.06 secs
+     total cpu time spent up to now is      8.03 secs
 
      total energy              =   -43.09621708 ryd
      estimated scf accuracy    <     0.00018449 ryd
@@ -169,7 +169,7 @@
 
      negative rho (up, down):  0.503E-02 0.000E+00
 
-     total cpu time spent up to now is      9.01 secs
+     total cpu time spent up to now is      8.94 secs
 
      total energy              =   -43.09627391 ryd
      estimated scf accuracy    <     0.00000672 ryd
@@ -180,7 +180,7 @@
 
      negative rho (up, down):  0.502E-02 0.000E+00
 
-     total cpu time spent up to now is      9.95 secs
+     total cpu time spent up to now is      9.88 secs
 
      total energy              =   -43.09627626 ryd
      estimated scf accuracy    <     0.00000492 ryd
@@ -191,7 +191,7 @@
 
      negative rho (up, down):  0.502E-02 0.000E+00
 
-     total cpu time spent up to now is     10.82 secs
+     total cpu time spent up to now is     10.75 secs
 
      total energy              =   -43.09627584 ryd
      estimated scf accuracy    <     0.00000153 ryd
@@ -202,7 +202,7 @@
 
      negative rho (up, down):  0.502E-02 0.000E+00
 
-     total cpu time spent up to now is     11.75 secs
+     total cpu time spent up to now is     11.68 secs
 
      total energy              =   -43.09627642 ryd
      estimated scf accuracy    <     0.00000055 ryd
@@ -213,7 +213,7 @@
 
      negative rho (up, down):  0.502E-02 0.000E+00
 
-     total cpu time spent up to now is     12.58 secs
+     total cpu time spent up to now is     12.51 secs
 
      End of self-consistent calculation
 
@@ -262,7 +262,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.524E-02 0.000E+00
 
-     total cpu time spent up to now is     13.75 secs
+     total cpu time spent up to now is     13.64 secs
 
      Self-consistent Calculation
 
@@ -272,7 +272,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.716E-02 0.000E+00
 
-     total cpu time spent up to now is     14.83 secs
+     total cpu time spent up to now is     14.72 secs
 
      total energy              =   -42.78485278 ryd
      estimated scf accuracy    <     0.17117520 ryd
@@ -283,7 +283,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.636E-02 0.000E+00
 
-     total cpu time spent up to now is     15.73 secs
+     total cpu time spent up to now is     15.62 secs
 
      total energy              =   -42.81868589 ryd
      estimated scf accuracy    <     0.01230691 ryd
@@ -294,7 +294,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.620E-02 0.000E+00
 
-     total cpu time spent up to now is     16.62 secs
+     total cpu time spent up to now is     16.52 secs
 
      total energy              =   -42.82123441 ryd
      estimated scf accuracy    <     0.00185249 ryd
@@ -305,7 +305,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.607E-02 0.000E+00
 
-     total cpu time spent up to now is     17.52 secs
+     total cpu time spent up to now is     17.41 secs
 
      total energy              =   -42.82168944 ryd
      estimated scf accuracy    <     0.00023780 ryd
@@ -316,7 +316,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.608E-02 0.000E+00
 
-     total cpu time spent up to now is     18.41 secs
+     total cpu time spent up to now is     18.31 secs
 
      total energy              =   -42.82172988 ryd
      estimated scf accuracy    <     0.00001195 ryd
@@ -327,7 +327,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.607E-02 0.000E+00
 
-     total cpu time spent up to now is     19.32 secs
+     total cpu time spent up to now is     19.22 secs
 
      total energy              =   -42.82173565 ryd
      estimated scf accuracy    <     0.00000599 ryd
@@ -338,7 +338,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.607E-02 0.000E+00
 
-     total cpu time spent up to now is     20.17 secs
+     total cpu time spent up to now is     20.07 secs
 
      End of self-consistent calculation
 
@@ -392,7 +392,7 @@ O        0.000000000   0.000000000   0.000000000
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
 
-     total cpu time spent up to now is     21.33 secs
+     total cpu time spent up to now is     21.20 secs
 
      Self-consistent Calculation
 
@@ -402,7 +402,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.260E-02 0.000E+00
 
-     total cpu time spent up to now is     22.46 secs
+     total cpu time spent up to now is     22.34 secs
 
      total energy              =   -42.93706052 ryd
      estimated scf accuracy    <     0.64196258 ryd
@@ -413,7 +413,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.408E-02 0.000E+00
 
-     total cpu time spent up to now is     23.36 secs
+     total cpu time spent up to now is     23.24 secs
 
      total energy              =   -43.08399897 ryd
      estimated scf accuracy    <     0.10510116 ryd
@@ -424,7 +424,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.461E-02 0.000E+00
 
-     total cpu time spent up to now is     24.26 secs
+     total cpu time spent up to now is     24.15 secs
 
      total energy              =   -43.10666729 ryd
      estimated scf accuracy    <     0.01215251 ryd
@@ -435,7 +435,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.505E-02 0.000E+00
 
-     total cpu time spent up to now is     25.14 secs
+     total cpu time spent up to now is     25.06 secs
 
      total energy              =   -43.10950797 ryd
      estimated scf accuracy    <     0.00028604 ryd
@@ -446,7 +446,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.510E-02 0.000E+00
 
-     total cpu time spent up to now is     26.07 secs
+     total cpu time spent up to now is     25.99 secs
 
      total energy              =   -43.10951713 ryd
      estimated scf accuracy    <     0.00041644 ryd
@@ -457,7 +457,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.510E-02 0.000E+00
 
-     total cpu time spent up to now is     26.97 secs
+     total cpu time spent up to now is     26.90 secs
 
      total energy              =   -43.10960409 ryd
      estimated scf accuracy    <     0.00001037 ryd
@@ -468,7 +468,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     27.91 secs
+     total cpu time spent up to now is     27.83 secs
 
      total energy              =   -43.10960615 ryd
      estimated scf accuracy    <     0.00000244 ryd
@@ -479,7 +479,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     28.77 secs
+     total cpu time spent up to now is     28.70 secs
 
      End of self-consistent calculation
 
@@ -535,7 +535,7 @@ O        0.000000000   0.000000000   0.000000000
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
 
-     total cpu time spent up to now is     29.93 secs
+     total cpu time spent up to now is     29.83 secs
 
      Self-consistent Calculation
 
@@ -551,7 +551,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     31.36 secs
+     total cpu time spent up to now is     31.31 secs
 
      total energy              =   -43.10962706 ryd
      estimated scf accuracy    <     0.00002611 ryd
@@ -562,7 +562,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.512E-02 0.000E+00
 
-     total cpu time spent up to now is     32.32 secs
+     total cpu time spent up to now is     32.24 secs
 
      total energy              =   -43.10963127 ryd
      estimated scf accuracy    <     0.00011129 ryd
@@ -573,7 +573,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     33.25 secs
+     total cpu time spent up to now is     33.16 secs
 
      total energy              =   -43.10964516 ryd
      estimated scf accuracy    <     0.00000150 ryd
@@ -584,7 +584,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     34.17 secs
+     total cpu time spent up to now is     34.08 secs
 
      total energy              =   -43.10964566 ryd
      estimated scf accuracy    <     0.00000022 ryd
@@ -595,7 +595,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     35.05 secs
+     total cpu time spent up to now is     34.96 secs
 
      total energy              =   -43.10964563 ryd
      estimated scf accuracy    <     0.00000010 ryd
@@ -606,7 +606,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.512E-02 0.000E+00
 
-     total cpu time spent up to now is     35.90 secs
+     total cpu time spent up to now is     35.80 secs
 
      End of self-consistent calculation
 
@@ -662,7 +662,7 @@ O        0.000000000   0.000000000   0.000000000
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
 
-     total cpu time spent up to now is     37.07 secs
+     total cpu time spent up to now is     36.94 secs
 
      Self-consistent Calculation
 
@@ -678,7 +678,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     38.49 secs
+     total cpu time spent up to now is     38.38 secs
 
      total energy              =   -43.10964008 ryd
      estimated scf accuracy    <     0.00000642 ryd
@@ -689,7 +689,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     39.44 secs
+     total cpu time spent up to now is     39.34 secs
 
      total energy              =   -43.10964371 ryd
      estimated scf accuracy    <     0.00004417 ryd
@@ -700,7 +700,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     40.36 secs
+     total cpu time spent up to now is     40.26 secs
 
      total energy              =   -43.10964761 ryd
      estimated scf accuracy    <     0.00000238 ryd
@@ -711,7 +711,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     41.22 secs
+     total cpu time spent up to now is     41.12 secs
 
      total energy              =   -43.10964751 ryd
      estimated scf accuracy    <     0.00000141 ryd
@@ -722,7 +722,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     42.09 secs
+     total cpu time spent up to now is     41.98 secs
 
      total energy              =   -43.10964752 ryd
      estimated scf accuracy    <     0.00000075 ryd
@@ -733,7 +733,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     42.96 secs
+     total cpu time spent up to now is     42.84 secs
 
      total energy              =   -43.10964749 ryd
      estimated scf accuracy    <     0.00000051 ryd
@@ -744,7 +744,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     43.83 secs
+     total cpu time spent up to now is     43.71 secs
 
      total energy              =   -43.10964750 ryd
      estimated scf accuracy    <     0.00000028 ryd
@@ -755,7 +755,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     44.70 secs
+     total cpu time spent up to now is     44.58 secs
 
      total energy              =   -43.10964751 ryd
      estimated scf accuracy    <     0.00000021 ryd
@@ -766,7 +766,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     45.58 secs
+     total cpu time spent up to now is     45.46 secs
 
      total energy              =   -43.10964752 ryd
      estimated scf accuracy    <     0.00000017 ryd
@@ -777,7 +777,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     46.46 secs
+     total cpu time spent up to now is     46.35 secs
 
      total energy              =   -43.10964743 ryd
      estimated scf accuracy    <     0.00000015 ryd
@@ -788,7 +788,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     47.40 secs
+     total cpu time spent up to now is     47.30 secs
 
      total energy              =   -43.10964752 ryd
      estimated scf accuracy    <     0.00000016 ryd
@@ -799,7 +799,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     48.29 secs
+     total cpu time spent up to now is     48.18 secs
 
      total energy              =   -43.10964754 ryd
      estimated scf accuracy    <     0.00000012 ryd
@@ -810,7 +810,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     49.17 secs
+     total cpu time spent up to now is     49.07 secs
 
      total energy              =   -43.10964758 ryd
      estimated scf accuracy    <     0.00000015 ryd
@@ -821,7 +821,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     50.07 secs
+     total cpu time spent up to now is     49.96 secs
 
      total energy              =   -43.10964756 ryd
      estimated scf accuracy    <     0.00000041 ryd
@@ -832,7 +832,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     50.95 secs
+     total cpu time spent up to now is     50.84 secs
 
      total energy              =   -43.10964743 ryd
      estimated scf accuracy    <     0.00000034 ryd
@@ -843,7 +843,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     51.83 secs
+     total cpu time spent up to now is     51.73 secs
 
      End of self-consistent calculation
 
@@ -891,44 +891,44 @@ O        0.000000000   0.000000000   0.000000000
 
      Writing output data file          CO.save
  
-     PWSCF        :    52.37s CPU time
+     PWSCF        :    52.26s CPU time
 
-     init_run     :     2.45s CPU
-     electrons    :    44.60s CPU (       5 calls,   8.920 s avg)
-     forces       :     2.61s CPU (       5 calls,   0.522 s avg)
+     init_run     :     2.44s CPU
+     electrons    :    44.65s CPU (       5 calls,   8.930 s avg)
+     forces       :     2.58s CPU (       5 calls,   0.516 s avg)
  
-     electrons    :    44.60s CPU (       5 calls,   8.920 s avg)
-     c_bands      :     7.52s CPU (      50 calls,   0.150 s avg)
-     sum_band     :    15.87s CPU (      50 calls,   0.317 s avg)
-     v_of_rho     :     4.45s CPU (      53 calls,   0.084 s avg)
-     newd         :    12.17s CPU (      53 calls,   0.230 s avg)
-     mix_rho      :     0.86s CPU (      50 calls,   0.017 s avg)
+     electrons    :    44.65s CPU (       5 calls,   8.930 s avg)
+     c_bands      :     7.59s CPU (      50 calls,   0.152 s avg)
+     sum_band     :    15.76s CPU (      50 calls,   0.315 s avg)
+     v_of_rho     :     4.50s CPU (      53 calls,   0.085 s avg)
+     newd         :    11.99s CPU (      53 calls,   0.226 s avg)
+     mix_rho      :     0.89s CPU (      50 calls,   0.018 s avg)
  
-     c_bands      :     7.52s CPU (      50 calls,   0.150 s avg)
-     init_us_2    :     0.31s CPU (     101 calls,   0.003 s avg)
-     cegterg      :     7.32s CPU (      50 calls,   0.146 s avg)
+     c_bands      :     7.59s CPU (      50 calls,   0.152 s avg)
+     init_us_2    :     0.40s CPU (     101 calls,   0.004 s avg)
+     cegterg      :     7.38s CPU (      50 calls,   0.148 s avg)
  
-     sum_band     :    15.87s CPU (      50 calls,   0.317 s avg)
+     sum_band     :    15.76s CPU (      50 calls,   0.315 s avg)
      becsum       :     0.00s CPU (      50 calls,   0.000 s avg)
-     addusdens    :    10.12s CPU (      50 calls,   0.202 s avg)
+     addusdens    :    10.06s CPU (      50 calls,   0.201 s avg)
  
-     cegterg      :     7.32s CPU (      50 calls,   0.146 s avg)
-     h_psi        :     6.81s CPU (     174 calls,   0.039 s avg)
-     g_psi        :     0.02s CPU (     123 calls,   0.000 s avg)
-     overlap      :     0.14s CPU (     123 calls,   0.001 s avg)
-     cdiaghg      :     0.07s CPU (     173 calls,   0.000 s avg)
-     update       :     0.02s CPU (     123 calls,   0.000 s avg)
+     cegterg      :     7.38s CPU (      50 calls,   0.148 s avg)
+     h_psi        :     6.92s CPU (     174 calls,   0.040 s avg)
+     g_psi        :     0.03s CPU (     123 calls,   0.000 s avg)
+     overlap      :     0.08s CPU (     123 calls,   0.001 s avg)
+     cdiaghg      :     0.02s CPU (     173 calls,   0.000 s avg)
+     update       :     0.03s CPU (     123 calls,   0.000 s avg)
      last         :     0.01s CPU (      52 calls,   0.000 s avg)
  
-     h_psi        :     6.81s CPU (     174 calls,   0.039 s avg)
-     init         :     0.02s CPU (     174 calls,   0.000 s avg)
-     add_vuspsi   :     0.15s CPU (     174 calls,   0.001 s avg)
-     s_psi        :     0.07s CPU (     174 calls,   0.000 s avg)
+     h_psi        :     6.92s CPU (     174 calls,   0.040 s avg)
+     init         :     0.03s CPU (     174 calls,   0.000 s avg)
+     add_vuspsi   :     0.12s CPU (     174 calls,   0.001 s avg)
+     s_psi        :     0.12s CPU (     174 calls,   0.001 s avg)
  
      General routines
-     ccalbec      :     0.04s CPU (      50 calls,   0.001 s avg)
-     cft3         :    10.67s CPU (     439 calls,   0.024 s avg)
-     cft3s        :     7.02s CPU (    1137 calls,   0.006 s avg)
+     ccalbec      :     0.01s CPU (      50 calls,   0.000 s avg)
+     cft3         :    10.52s CPU (     439 calls,   0.024 s avg)
+     cft3s        :     7.21s CPU (    1137 calls,   0.006 s avg)
      interpolate  :     4.93s CPU (     103 calls,   0.048 s avg)
-     davcio       :     0.00s CPU (      80 calls,   0.000 s avg)
+     davcio       :     0.05s CPU (      80 calls,   0.001 s avg)
  

@@ -78,7 +78,7 @@ rm -rf $TMP_DIR/*
 $ECHO " done"
 
 # molecular dynamics calculation
-cat > new1.in << EOF
+cat > mgo.cp.cg.in << EOF
 &CONTROL
   calculation = 'cp',
   restart_mode = 'from_scratch',
@@ -208,9 +208,9 @@ O  12.000300000   8.022300000  15.978300000
 O   8.022300000  12.000300000  15.978300000 
 EOF
 $ECHO "  running the CG calculation for bulk MgO E_field=0. a.u. ...\c"
-$CP_COMMAND < new1.in > new1.out
+$CP_COMMAND < mgo.cp.cg.in > mgo.cp.cg.out
 $ECHO " done"
-cat > new2.in << EOF
+cat > mgo.cp.cg.efield.in << EOF
 &CONTROL
   calculation = 'cp',
   restart_mode = 'restart',
@@ -340,9 +340,9 @@ O  12.000300000   8.022300000  15.978300000
 O   8.022300000  12.000300000  15.978300000
 EOF
 $ECHO "  running the CG calculation for bulk MgO E_field=0.001 a.u. ...\c"
-$CP_COMMAND < new2.in > new2.out
+$CP_COMMAND < mgo.cp.cg.efield.in > mgo.cp.cg.efield.out
 $ECHO " done"
-cat > new3.in << EOF 
+cat > mgo.cp.damp.efield.in << EOF 
 &CONTROL
   calculation = 'cp',
   restart_mode = 'restart',
@@ -466,7 +466,7 @@ O  12.000300000   8.022300000  15.978300000
 O   8.022300000  12.000300000  15.978300000
 EOF
 $ECHO "  running the CP- damped MD calculation for bulk MgO E_field=0.001 a.u. ...\c"
-$CP_COMMAND < new3.in > new3.out
+$CP_COMMAND < mgo.cp.damp.efield.in > mgo.cp.damp.efield.out
 $ECHO " done"
 
 $ECHO

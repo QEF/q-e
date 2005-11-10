@@ -1,6 +1,6 @@
 
      Program PWSCF     v.3.0    starts ...
-     Today is 17Oct2005 at  2:37:42 
+     Today is 10Nov2005 at  2:43: 4 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -156,7 +156,7 @@ Si       0.123035765   0.123035765   0.123035765
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.14 secs
+     total cpu time spent up to now is      0.15 secs
 
      Self-consistent Calculation
 
@@ -170,7 +170,7 @@ Si       0.123035765   0.123035765   0.123035765
      Davidson diagonalization with overlap
      ethr =  5.69E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.15 secs
+     total cpu time spent up to now is      0.16 secs
 
      total energy              =   -14.44798776 ryd
      estimated scf accuracy    <     0.00000004 ryd
@@ -179,7 +179,7 @@ Si       0.123035765   0.123035765   0.123035765
      Davidson diagonalization with overlap
      ethr =  4.68E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.16 secs
+     total cpu time spent up to now is      0.17 secs
 
      End of self-consistent calculation
 
@@ -211,7 +211,7 @@ Si       0.123106631   0.123106631   0.123106631
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.17 secs
+     total cpu time spent up to now is      0.18 secs
 
      Self-consistent Calculation
 
@@ -225,7 +225,7 @@ Si       0.123106631   0.123106631   0.123106631
      Davidson diagonalization with overlap
      ethr =  2.30E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.18 secs
+     total cpu time spent up to now is      0.20 secs
 
      total energy              =   -14.44808489 ryd
      estimated scf accuracy    <     0.00000015 ryd
@@ -234,7 +234,7 @@ Si       0.123106631   0.123106631   0.123106631
      Davidson diagonalization with overlap
      ethr =  1.89E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.19 secs
+     total cpu time spent up to now is      0.21 secs
 
      total energy              =   -14.44808492 ryd
      estimated scf accuracy    <     0.00000001 ryd
@@ -243,7 +243,7 @@ Si       0.123106631   0.123106631   0.123106631
      Davidson diagonalization with overlap
      ethr =  1.57E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.20 secs
+     total cpu time spent up to now is      0.22 secs
 
      End of self-consistent calculation
 
@@ -275,7 +275,7 @@ Si       0.123211300   0.123211300   0.123211300
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.21 secs
+     total cpu time spent up to now is      0.23 secs
 
      Self-consistent Calculation
 
@@ -289,7 +289,7 @@ Si       0.123211300   0.123211300   0.123211300
      Davidson diagonalization with overlap
      ethr =  4.96E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.22 secs
+     total cpu time spent up to now is      0.25 secs
 
      total energy              =   -14.44822166 ryd
      estimated scf accuracy    <     0.00000033 ryd
@@ -298,7 +298,7 @@ Si       0.123211300   0.123211300   0.123211300
      Davidson diagonalization with overlap
      ethr =  4.08E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.23 secs
+     total cpu time spent up to now is      0.26 secs
 
      total energy              =   -14.44822171 ryd
      estimated scf accuracy    <     0.00000003 ryd
@@ -307,7 +307,7 @@ Si       0.123211300   0.123211300   0.123211300
      Davidson diagonalization with overlap
      ethr =  3.42E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.24 secs
+     total cpu time spent up to now is      0.27 secs
 
      End of self-consistent calculation
 
@@ -339,7 +339,7 @@ Si       0.123347856   0.123347856   0.123347856
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.25 secs
+     total cpu time spent up to now is      0.28 secs
 
      Self-consistent Calculation
 
@@ -353,7 +353,7 @@ Si       0.123347856   0.123347856   0.123347856
      Davidson diagonalization with overlap
      ethr =  8.45E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.27 secs
+     total cpu time spent up to now is      0.29 secs
 
      total energy              =   -14.44838810 ryd
      estimated scf accuracy    <     0.00000056 ryd
@@ -362,7 +362,7 @@ Si       0.123347856   0.123347856   0.123347856
      Davidson diagonalization with overlap
      ethr =  6.96E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.28 secs
+     total cpu time spent up to now is      0.30 secs
 
      total energy              =   -14.44838820 ryd
      estimated scf accuracy    <     0.00000005 ryd
@@ -371,7 +371,7 @@ Si       0.123347856   0.123347856   0.123347856
      Davidson diagonalization with overlap
      ethr =  5.79E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.28 secs
+     total cpu time spent up to now is      0.31 secs
 
      End of self-consistent calculation
 
@@ -403,7 +403,7 @@ Si       0.123513804   0.123513804   0.123513804
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.29 secs
+     total cpu time spent up to now is      0.32 secs
 
      Self-consistent Calculation
 
@@ -417,7 +417,7 @@ Si       0.123513804   0.123513804   0.123513804
      Davidson diagonalization with overlap
      ethr =  1.25E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.31 secs
+     total cpu time spent up to now is      0.33 secs
 
      total energy              =   -14.44857219 ryd
      estimated scf accuracy    <     0.00000082 ryd
@@ -426,7 +426,7 @@ Si       0.123513804   0.123513804   0.123513804
      Davidson diagonalization with overlap
      ethr =  1.03E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.32 secs
+     total cpu time spent up to now is      0.34 secs
 
      total energy              =   -14.44857234 ryd
      estimated scf accuracy    <     0.00000007 ryd
@@ -435,7 +435,7 @@ Si       0.123513804   0.123513804   0.123513804
      Davidson diagonalization with overlap
      ethr =  8.52E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.33 secs
+     total cpu time spent up to now is      0.34 secs
 
      End of self-consistent calculation
 
@@ -467,7 +467,7 @@ Si       0.123706130   0.123706130   0.123706130
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.34 secs
+     total cpu time spent up to now is      0.35 secs
 
      Self-consistent Calculation
 
@@ -490,7 +490,7 @@ Si       0.123706130   0.123706130   0.123706130
      Davidson diagonalization with overlap
      ethr =  1.38E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.36 secs
+     total cpu time spent up to now is      0.37 secs
 
      total energy              =   -14.44876090 ryd
      estimated scf accuracy    <     0.00000009 ryd
@@ -499,7 +499,7 @@ Si       0.123706130   0.123706130   0.123706130
      Davidson diagonalization with overlap
      ethr =  1.14E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.36 secs
+     total cpu time spent up to now is      0.38 secs
 
      End of self-consistent calculation
 
@@ -531,7 +531,7 @@ Si       0.123921354   0.123921354   0.123921354
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.37 secs
+     total cpu time spent up to now is      0.39 secs
 
      Self-consistent Calculation
 
@@ -545,7 +545,7 @@ Si       0.123921354   0.123921354   0.123921354
      Davidson diagonalization with overlap
      ethr =  2.10E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.39 secs
+     total cpu time spent up to now is      0.40 secs
 
      total energy              =   -14.44894022 ryd
      estimated scf accuracy    <     0.00000139 ryd
@@ -554,7 +554,7 @@ Si       0.123921354   0.123921354   0.123921354
      Davidson diagonalization with overlap
      ethr =  1.73E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.40 secs
+     total cpu time spent up to now is      0.41 secs
 
      total energy              =   -14.44894046 ryd
      estimated scf accuracy    <     0.00000011 ryd
@@ -563,7 +563,7 @@ Si       0.123921354   0.123921354   0.123921354
      Davidson diagonalization with overlap
      ethr =  1.41E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.40 secs
+     total cpu time spent up to now is      0.41 secs
 
      End of self-consistent calculation
 
@@ -595,7 +595,7 @@ Si       0.124155610   0.124155610   0.124155610
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.41 secs
+     total cpu time spent up to now is      0.42 secs
 
      Self-consistent Calculation
 
@@ -609,7 +609,7 @@ Si       0.124155610   0.124155610   0.124155610
      Davidson diagonalization with overlap
      ethr =  2.49E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.42 secs
+     total cpu time spent up to now is      0.43 secs
 
      total energy              =   -14.44909808 ryd
      estimated scf accuracy    <     0.00000165 ryd
@@ -618,7 +618,7 @@ Si       0.124155610   0.124155610   0.124155610
      Davidson diagonalization with overlap
      ethr =  2.06E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.43 secs
+     total cpu time spent up to now is      0.44 secs
 
      total energy              =   -14.44909837 ryd
      estimated scf accuracy    <     0.00000013 ryd
@@ -627,7 +627,7 @@ Si       0.124155610   0.124155610   0.124155610
      Davidson diagonalization with overlap
      ethr =  1.66E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.43 secs
+     total cpu time spent up to now is      0.44 secs
 
      End of self-consistent calculation
 
@@ -659,7 +659,7 @@ Si       0.124404712   0.124404712   0.124404712
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.44 secs
+     total cpu time spent up to now is      0.45 secs
 
      Self-consistent Calculation
 
@@ -673,7 +673,7 @@ Si       0.124404712   0.124404712   0.124404712
      Davidson diagonalization with overlap
      ethr =  2.81E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.45 secs
+     total cpu time spent up to now is      0.46 secs
 
      total energy              =   -14.44922333 ryd
      estimated scf accuracy    <     0.00000186 ryd
@@ -682,7 +682,7 @@ Si       0.124404712   0.124404712   0.124404712
      Davidson diagonalization with overlap
      ethr =  2.33E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.46 secs
+     total cpu time spent up to now is      0.47 secs
 
      total energy              =   -14.44922366 ryd
      estimated scf accuracy    <     0.00000015 ryd
@@ -691,7 +691,7 @@ Si       0.124404712   0.124404712   0.124404712
      Davidson diagonalization with overlap
      ethr =  1.87E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.47 secs
+     total cpu time spent up to now is      0.48 secs
 
      End of self-consistent calculation
 
@@ -723,7 +723,7 @@ Si       0.124664242   0.124664242   0.124664242
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.48 secs
+     total cpu time spent up to now is      0.49 secs
 
      Self-consistent Calculation
 
@@ -737,7 +737,7 @@ Si       0.124664242   0.124664242   0.124664242
      Davidson diagonalization with overlap
      ethr =  3.05E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.49 secs
+     total cpu time spent up to now is      0.51 secs
 
      total energy              =   -14.44930742 ryd
      estimated scf accuracy    <     0.00000203 ryd
@@ -746,7 +746,7 @@ Si       0.124664242   0.124664242   0.124664242
      Davidson diagonalization with overlap
      ethr =  2.53E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.50 secs
+     total cpu time spent up to now is      0.51 secs
 
      total energy              =   -14.44930777 ryd
      estimated scf accuracy    <     0.00000016 ryd
@@ -755,7 +755,7 @@ Si       0.124664242   0.124664242   0.124664242
      Davidson diagonalization with overlap
      ethr =  2.01E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.51 secs
+     total cpu time spent up to now is      0.52 secs
 
      End of self-consistent calculation
 
@@ -787,7 +787,7 @@ Si       0.124929629   0.124929629   0.124929629
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.52 secs
+     total cpu time spent up to now is      0.53 secs
 
      Self-consistent Calculation
 
@@ -801,7 +801,7 @@ Si       0.124929629   0.124929629   0.124929629
      Davidson diagonalization with overlap
      ethr =  3.19E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.53 secs
+     total cpu time spent up to now is      0.54 secs
 
      total energy              =   -14.44934479 ryd
      estimated scf accuracy    <     0.00000212 ryd
@@ -865,7 +865,7 @@ Si       0.125196233   0.125196233   0.125196233
      Davidson diagonalization with overlap
      ethr =  3.22E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.58 secs
+     total cpu time spent up to now is      0.57 secs
 
      total energy              =   -14.44933319 ryd
      estimated scf accuracy    <     0.00000215 ryd
@@ -929,7 +929,7 @@ Si       0.125459428   0.125459428   0.125459428
      Davidson diagonalization with overlap
      ethr =  3.14E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.61 secs
+     total cpu time spent up to now is      0.62 secs
 
      total energy              =   -14.44927379 ryd
      estimated scf accuracy    <     0.00000209 ryd
@@ -947,7 +947,7 @@ Si       0.125459428   0.125459428   0.125459428
      Davidson diagonalization with overlap
      ethr =  2.02E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.62 secs
+     total cpu time spent up to now is      0.63 secs
 
      End of self-consistent calculation
 
@@ -979,7 +979,7 @@ Si       0.125714678   0.125714678   0.125714678
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.63 secs
+     total cpu time spent up to now is      0.64 secs
 
      Self-consistent Calculation
 
@@ -1057,7 +1057,7 @@ Si       0.125957617   0.125957617   0.125957617
      Davidson diagonalization with overlap
      ethr =  2.68E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.69 secs
+     total cpu time spent up to now is      0.70 secs
 
      total energy              =   -14.44903210 ryd
      estimated scf accuracy    <     0.00000179 ryd
@@ -1066,7 +1066,7 @@ Si       0.125957617   0.125957617   0.125957617
      Davidson diagonalization with overlap
      ethr =  2.24E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.70 secs
+     total cpu time spent up to now is      0.71 secs
 
      total energy              =   -14.44903241 ryd
      estimated scf accuracy    <     0.00000014 ryd
@@ -1075,7 +1075,7 @@ Si       0.125957617   0.125957617   0.125957617
      Davidson diagonalization with overlap
      ethr =  1.69E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.70 secs
+     total cpu time spent up to now is      0.71 secs
 
      End of self-consistent calculation
 
@@ -1107,7 +1107,7 @@ Si       0.126184116   0.126184116   0.126184116
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.71 secs
+     total cpu time spent up to now is      0.72 secs
 
      Self-consistent Calculation
 
@@ -1121,7 +1121,7 @@ Si       0.126184116   0.126184116   0.126184116
      Davidson diagonalization with overlap
      ethr =  2.33E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.72 secs
+     total cpu time spent up to now is      0.74 secs
 
      total energy              =   -14.44886679 ryd
      estimated scf accuracy    <     0.00000156 ryd
@@ -1130,7 +1130,7 @@ Si       0.126184116   0.126184116   0.126184116
      Davidson diagonalization with overlap
      ethr =  1.95E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.73 secs
+     total cpu time spent up to now is      0.75 secs
 
      total energy              =   -14.44886705 ryd
      estimated scf accuracy    <     0.00000012 ryd
@@ -1139,7 +1139,7 @@ Si       0.126184116   0.126184116   0.126184116
      Davidson diagonalization with overlap
      ethr =  1.46E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.73 secs
+     total cpu time spent up to now is      0.76 secs
 
      End of self-consistent calculation
 
@@ -1171,7 +1171,7 @@ Si       0.126390351   0.126390351   0.126390351
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.74 secs
+     total cpu time spent up to now is      0.77 secs
 
      Self-consistent Calculation
 
@@ -1185,7 +1185,7 @@ Si       0.126390351   0.126390351   0.126390351
      Davidson diagonalization with overlap
      ethr =  1.93E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.75 secs
+     total cpu time spent up to now is      0.78 secs
 
      total energy              =   -14.44868637 ryd
      estimated scf accuracy    <     0.00000129 ryd
@@ -1194,7 +1194,7 @@ Si       0.126390351   0.126390351   0.126390351
      Davidson diagonalization with overlap
      ethr =  1.62E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.76 secs
+     total cpu time spent up to now is      0.79 secs
 
      total energy              =   -14.44868659 ryd
      estimated scf accuracy    <     0.00000010 ryd
@@ -1203,7 +1203,7 @@ Si       0.126390351   0.126390351   0.126390351
      Davidson diagonalization with overlap
      ethr =  1.20E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.77 secs
+     total cpu time spent up to now is      0.80 secs
 
      End of self-consistent calculation
 
@@ -1235,7 +1235,7 @@ Si       0.126572859   0.126572859   0.126572859
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.78 secs
+     total cpu time spent up to now is      0.80 secs
 
      Self-consistent Calculation
 
@@ -1249,7 +1249,7 @@ Si       0.126572859   0.126572859   0.126572859
      Davidson diagonalization with overlap
      ethr =  1.51E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.79 secs
+     total cpu time spent up to now is      0.82 secs
 
      total energy              =   -14.44850308 ryd
      estimated scf accuracy    <     0.00000101 ryd
@@ -1258,7 +1258,7 @@ Si       0.126572859   0.126572859   0.126572859
      Davidson diagonalization with overlap
      ethr =  1.27E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.79 secs
+     total cpu time spent up to now is      0.83 secs
 
      total energy              =   -14.44850325 ryd
      estimated scf accuracy    <     0.00000007 ryd
@@ -1267,7 +1267,7 @@ Si       0.126572859   0.126572859   0.126572859
      Davidson diagonalization with overlap
      ethr =  9.36E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.80 secs
+     total cpu time spent up to now is      0.83 secs
 
      End of self-consistent calculation
 
@@ -1299,7 +1299,7 @@ Si       0.126728593   0.126728593   0.126728593
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.81 secs
+     total cpu time spent up to now is      0.84 secs
 
      Self-consistent Calculation
 
@@ -1313,7 +1313,7 @@ Si       0.126728593   0.126728593   0.126728593
      Davidson diagonalization with overlap
      ethr =  1.10E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.83 secs
+     total cpu time spent up to now is      0.85 secs
 
      total energy              =   -14.44832922 ryd
      estimated scf accuracy    <     0.00000074 ryd
@@ -1322,7 +1322,7 @@ Si       0.126728593   0.126728593   0.126728593
      Davidson diagonalization with overlap
      ethr =  9.24E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.84 secs
+     total cpu time spent up to now is      0.86 secs
 
      total energy              =   -14.44832934 ryd
      estimated scf accuracy    <     0.00000005 ryd
@@ -1331,7 +1331,7 @@ Si       0.126728593   0.126728593   0.126728593
      Davidson diagonalization with overlap
      ethr =  6.78E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.85 secs
+     total cpu time spent up to now is      0.87 secs
 
      End of self-consistent calculation
 
@@ -1363,7 +1363,7 @@ Si       0.126854963   0.126854963   0.126854963
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.86 secs
+     total cpu time spent up to now is      0.88 secs
 
      Self-consistent Calculation
 
@@ -1377,7 +1377,7 @@ Si       0.126854963   0.126854963   0.126854963
      Davidson diagonalization with overlap
      ethr =  7.24E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.87 secs
+     total cpu time spent up to now is      0.89 secs
 
      total energy              =   -14.44817637 ryd
      estimated scf accuracy    <     0.00000049 ryd
@@ -1386,7 +1386,7 @@ Si       0.126854963   0.126854963   0.126854963
      Davidson diagonalization with overlap
      ethr =  6.09E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.88 secs
+     total cpu time spent up to now is      0.90 secs
 
      total energy              =   -14.44817645 ryd
      estimated scf accuracy    <     0.00000004 ryd
@@ -1395,7 +1395,7 @@ Si       0.126854963   0.126854963   0.126854963
      Davidson diagonalization with overlap
      ethr =  4.45E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.89 secs
+     total cpu time spent up to now is      0.91 secs
 
      End of self-consistent calculation
 
@@ -1427,7 +1427,7 @@ Si       0.126949877   0.126949877   0.126949877
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.90 secs
+     total cpu time spent up to now is      0.92 secs
 
      Self-consistent Calculation
 
@@ -1441,7 +1441,7 @@ Si       0.126949877   0.126949877   0.126949877
      Davidson diagonalization with overlap
      ethr =  4.09E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.91 secs
+     total cpu time spent up to now is      0.93 secs
 
      total energy              =   -14.44805466 ryd
      estimated scf accuracy    <     0.00000028 ryd
@@ -1450,7 +1450,7 @@ Si       0.126949877   0.126949877   0.126949877
      Davidson diagonalization with overlap
      ethr =  3.44E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.92 secs
+     total cpu time spent up to now is      0.94 secs
 
      total energy              =   -14.44805470 ryd
      estimated scf accuracy    <     0.00000002 ryd
@@ -1459,7 +1459,7 @@ Si       0.126949877   0.126949877   0.126949877
      Davidson diagonalization with overlap
      ethr =  2.50E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.93 secs
+     total cpu time spent up to now is      0.95 secs
 
      End of self-consistent calculation
 
@@ -1491,7 +1491,7 @@ Si       0.127011766   0.127011766   0.127011766
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.94 secs
+     total cpu time spent up to now is      0.96 secs
 
      Self-consistent Calculation
 
@@ -1505,7 +1505,7 @@ Si       0.127011766   0.127011766   0.127011766
      Davidson diagonalization with overlap
      ethr =  1.74E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.96 secs
+     total cpu time spent up to now is      0.97 secs
 
      total energy              =   -14.44797211 ryd
      estimated scf accuracy    <     0.00000012 ryd
@@ -1514,7 +1514,7 @@ Si       0.127011766   0.127011766   0.127011766
      Davidson diagonalization with overlap
      ethr =  1.46E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.97 secs
+     total cpu time spent up to now is      0.98 secs
 
      End of self-consistent calculation
 
@@ -1546,7 +1546,7 @@ Si       0.127039604   0.127039604   0.127039604
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.98 secs
+     total cpu time spent up to now is      0.99 secs
 
      Self-consistent Calculation
 
@@ -1560,7 +1560,7 @@ Si       0.127039604   0.127039604   0.127039604
      Davidson diagonalization with overlap
      ethr =  3.64E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.99 secs
+     total cpu time spent up to now is      1.00 secs
 
      total energy              =   -14.44793417 ryd
      estimated scf accuracy    <     0.00000002 ryd
@@ -1569,7 +1569,7 @@ Si       0.127039604   0.127039604   0.127039604
      Davidson diagonalization with overlap
      ethr =  3.05E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.00 secs
+     total cpu time spent up to now is      1.01 secs
 
      End of self-consistent calculation
 
@@ -1601,7 +1601,7 @@ Si       0.127032937   0.127032937   0.127032937
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.01 secs
+     total cpu time spent up to now is      1.02 secs
 
      Self-consistent Calculation
 
@@ -1615,7 +1615,7 @@ Si       0.127032937   0.127032937   0.127032937
      Davidson diagonalization with overlap
      ethr =  1.89E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.02 secs
+     total cpu time spent up to now is      1.03 secs
 
      End of self-consistent calculation
 
@@ -1647,7 +1647,7 @@ Si       0.126991884   0.126991884   0.126991884
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.03 secs
+     total cpu time spent up to now is      1.04 secs
 
      Self-consistent Calculation
 
@@ -1661,7 +1661,7 @@ Si       0.126991884   0.126991884   0.126991884
      Davidson diagonalization with overlap
      ethr =  7.29E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.04 secs
+     total cpu time spent up to now is      1.06 secs
 
      total energy              =   -14.44799892 ryd
      estimated scf accuracy    <     0.00000005 ryd
@@ -1670,7 +1670,7 @@ Si       0.126991884   0.126991884   0.126991884
      Davidson diagonalization with overlap
      ethr =  6.12E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.05 secs
+     total cpu time spent up to now is      1.07 secs
 
      End of self-consistent calculation
 
@@ -1702,7 +1702,7 @@ Si       0.126917123   0.126917123   0.126917123
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.06 secs
+     total cpu time spent up to now is      1.08 secs
 
      Self-consistent Calculation
 
@@ -1716,7 +1716,7 @@ Si       0.126917123   0.126917123   0.126917123
      Davidson diagonalization with overlap
      ethr =  2.56E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.07 secs
+     total cpu time spent up to now is      1.09 secs
 
      total energy              =   -14.44809736 ryd
      estimated scf accuracy    <     0.00000017 ryd
@@ -1725,7 +1725,7 @@ Si       0.126917123   0.126917123   0.126917123
      Davidson diagonalization with overlap
      ethr =  2.15E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.08 secs
+     total cpu time spent up to now is      1.10 secs
 
      total energy              =   -14.44809739 ryd
      estimated scf accuracy    <     0.00000001 ryd
@@ -1734,7 +1734,7 @@ Si       0.126917123   0.126917123   0.126917123
      Davidson diagonalization with overlap
      ethr =  1.54E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.09 secs
+     total cpu time spent up to now is      1.11 secs
 
      End of self-consistent calculation
 
@@ -1766,7 +1766,7 @@ Si       0.126809885   0.126809885   0.126809885
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.10 secs
+     total cpu time spent up to now is      1.12 secs
 
      Self-consistent Calculation
 
@@ -1780,7 +1780,7 @@ Si       0.126809885   0.126809885   0.126809885
      Davidson diagonalization with overlap
      ethr =  5.22E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.11 secs
+     total cpu time spent up to now is      1.14 secs
 
      total energy              =   -14.44823214 ryd
      estimated scf accuracy    <     0.00000035 ryd
@@ -1789,7 +1789,7 @@ Si       0.126809885   0.126809885   0.126809885
      Davidson diagonalization with overlap
      ethr =  4.39E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.12 secs
+     total cpu time spent up to now is      1.15 secs
 
      total energy              =   -14.44823220 ryd
      estimated scf accuracy    <     0.00000003 ryd
@@ -1798,7 +1798,7 @@ Si       0.126809885   0.126809885   0.126809885
      Davidson diagonalization with overlap
      ethr =  3.19E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.13 secs
+     total cpu time spent up to now is      1.16 secs
 
      End of self-consistent calculation
 
@@ -1830,7 +1830,7 @@ Si       0.126671942   0.126671942   0.126671942
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.14 secs
+     total cpu time spent up to now is      1.17 secs
 
      Self-consistent Calculation
 
@@ -1844,7 +1844,7 @@ Si       0.126671942   0.126671942   0.126671942
      Davidson diagonalization with overlap
      ethr =  8.64E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.15 secs
+     total cpu time spent up to now is      1.18 secs
 
      total energy              =   -14.44839437 ryd
      estimated scf accuracy    <     0.00000058 ryd
@@ -1853,7 +1853,7 @@ Si       0.126671942   0.126671942   0.126671942
      Davidson diagonalization with overlap
      ethr =  7.26E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.16 secs
+     total cpu time spent up to now is      1.19 secs
 
      total energy              =   -14.44839446 ryd
      estimated scf accuracy    <     0.00000004 ryd
@@ -1862,7 +1862,7 @@ Si       0.126671942   0.126671942   0.126671942
      Davidson diagonalization with overlap
      ethr =  5.30E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.17 secs
+     total cpu time spent up to now is      1.20 secs
 
      End of self-consistent calculation
 
@@ -1894,7 +1894,7 @@ Si       0.126505583   0.126505583   0.126505583
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.18 secs
+     total cpu time spent up to now is      1.21 secs
 
      Self-consistent Calculation
 
@@ -1908,7 +1908,7 @@ Si       0.126505583   0.126505583   0.126505583
      Davidson diagonalization with overlap
      ethr =  1.26E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.19 secs
+     total cpu time spent up to now is      1.22 secs
 
      total energy              =   -14.44857327 ryd
      estimated scf accuracy    <     0.00000084 ryd
@@ -1917,7 +1917,7 @@ Si       0.126505583   0.126505583   0.126505583
      Davidson diagonalization with overlap
      ethr =  1.05E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.20 secs
+     total cpu time spent up to now is      1.23 secs
 
      total energy              =   -14.44857341 ryd
      estimated scf accuracy    <     0.00000006 ryd
@@ -1926,7 +1926,7 @@ Si       0.126505583   0.126505583   0.126505583
      Davidson diagonalization with overlap
      ethr =  7.75E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.21 secs
+     total cpu time spent up to now is      1.24 secs
 
      End of self-consistent calculation
 
@@ -1958,7 +1958,7 @@ Si       0.126313582   0.126313582   0.126313582
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.22 secs
+     total cpu time spent up to now is      1.25 secs
 
      Self-consistent Calculation
 
@@ -1972,7 +1972,7 @@ Si       0.126313582   0.126313582   0.126313582
      Davidson diagonalization with overlap
      ethr =  1.67E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.23 secs
+     total cpu time spent up to now is      1.26 secs
 
      total energy              =   -14.44875689 ryd
      estimated scf accuracy    <     0.00000112 ryd
@@ -1981,7 +1981,7 @@ Si       0.126313582   0.126313582   0.126313582
      Davidson diagonalization with overlap
      ethr =  1.40E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.24 secs
+     total cpu time spent up to now is      1.27 secs
 
      total energy              =   -14.44875709 ryd
      estimated scf accuracy    <     0.00000008 ryd
@@ -1990,7 +1990,7 @@ Si       0.126313582   0.126313582   0.126313582
      Davidson diagonalization with overlap
      ethr =  1.04E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.25 secs
+     total cpu time spent up to now is      1.28 secs
 
      End of self-consistent calculation
 
@@ -2022,7 +2022,7 @@ Si       0.126099151   0.126099151   0.126099151
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.26 secs
+     total cpu time spent up to now is      1.29 secs
 
      Self-consistent Calculation
 
@@ -2036,7 +2036,7 @@ Si       0.126099151   0.126099151   0.126099151
      Davidson diagonalization with overlap
      ethr =  2.09E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.27 secs
+     total cpu time spent up to now is      1.31 secs
 
      total energy              =   -14.44893288 ryd
      estimated scf accuracy    <     0.00000140 ryd
@@ -2045,7 +2045,7 @@ Si       0.126099151   0.126099151   0.126099151
      Davidson diagonalization with overlap
      ethr =  1.75E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.28 secs
+     total cpu time spent up to now is      1.32 secs
 
      total energy              =   -14.44893312 ryd
      estimated scf accuracy    <     0.00000010 ryd
@@ -2054,7 +2054,7 @@ Si       0.126099151   0.126099151   0.126099151
      Davidson diagonalization with overlap
      ethr =  1.30E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.29 secs
+     total cpu time spent up to now is      1.33 secs
 
      End of self-consistent calculation
 
@@ -2086,7 +2086,7 @@ Si       0.125865899   0.125865899   0.125865899
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.30 secs
+     total cpu time spent up to now is      1.34 secs
 
      Self-consistent Calculation
 
@@ -2100,7 +2100,7 @@ Si       0.125865899   0.125865899   0.125865899
      Davidson diagonalization with overlap
      ethr =  2.47E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.31 secs
+     total cpu time spent up to now is      1.35 secs
 
      total energy              =   -14.44908926 ryd
      estimated scf accuracy    <     0.00000165 ryd
@@ -2109,7 +2109,7 @@ Si       0.125865899   0.125865899   0.125865899
      Davidson diagonalization with overlap
      ethr =  2.07E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.32 secs
+     total cpu time spent up to now is      1.36 secs
 
      total energy              =   -14.44908954 ryd
      estimated scf accuracy    <     0.00000012 ryd
@@ -2118,7 +2118,7 @@ Si       0.125865899   0.125865899   0.125865899
      Davidson diagonalization with overlap
      ethr =  1.55E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.33 secs
+     total cpu time spent up to now is      1.36 secs
 
      End of self-consistent calculation
 
@@ -2150,7 +2150,7 @@ Si       0.125617775   0.125617775   0.125617775
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.34 secs
+     total cpu time spent up to now is      1.37 secs
 
      Self-consistent Calculation
 
@@ -2164,7 +2164,7 @@ Si       0.125617775   0.125617775   0.125617775
      Davidson diagonalization with overlap
      ethr =  2.80E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.35 secs
+     total cpu time spent up to now is      1.38 secs
 
      total energy              =   -14.44921527 ryd
      estimated scf accuracy    <     0.00000187 ryd
@@ -2173,7 +2173,7 @@ Si       0.125617775   0.125617775   0.125617775
      Davidson diagonalization with overlap
      ethr =  2.33E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.36 secs
+     total cpu time spent up to now is      1.39 secs
 
      total energy              =   -14.44921559 ryd
      estimated scf accuracy    <     0.00000014 ryd
@@ -2182,7 +2182,7 @@ Si       0.125617775   0.125617775   0.125617775
      Davidson diagonalization with overlap
      ethr =  1.77E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.36 secs
+     total cpu time spent up to now is      1.40 secs
 
      End of self-consistent calculation
 
@@ -2214,7 +2214,7 @@ Si       0.125359006   0.125359006   0.125359006
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.37 secs
+     total cpu time spent up to now is      1.41 secs
 
      Self-consistent Calculation
 
@@ -2228,7 +2228,7 @@ Si       0.125359006   0.125359006   0.125359006
      Davidson diagonalization with overlap
      ethr =  3.04E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.38 secs
+     total cpu time spent up to now is      1.42 secs
 
      total energy              =   -14.44930207 ryd
      estimated scf accuracy    <     0.00000203 ryd
@@ -2237,7 +2237,7 @@ Si       0.125359006   0.125359006   0.125359006
      Davidson diagonalization with overlap
      ethr =  2.53E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.39 secs
+     total cpu time spent up to now is      1.43 secs
 
      total energy              =   -14.44930242 ryd
      estimated scf accuracy    <     0.00000016 ryd
@@ -2246,7 +2246,7 @@ Si       0.125359006   0.125359006   0.125359006
      Davidson diagonalization with overlap
      ethr =  1.94E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.40 secs
+     total cpu time spent up to now is      1.43 secs
 
      End of self-consistent calculation
 
@@ -2278,7 +2278,7 @@ Si       0.125094032   0.125094032   0.125094032
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.41 secs
+     total cpu time spent up to now is      1.44 secs
 
      Self-consistent Calculation
 
@@ -2292,7 +2292,7 @@ Si       0.125094032   0.125094032   0.125094032
      Davidson diagonalization with overlap
      ethr =  3.19E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.42 secs
+     total cpu time spent up to now is      1.45 secs
 
      total energy              =   -14.44934344 ryd
      estimated scf accuracy    <     0.00000212 ryd
@@ -2301,7 +2301,7 @@ Si       0.125094032   0.125094032   0.125094032
      Davidson diagonalization with overlap
      ethr =  2.65E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.43 secs
+     total cpu time spent up to now is      1.46 secs
 
      total energy              =   -14.44934381 ryd
      estimated scf accuracy    <     0.00000016 ryd
@@ -2310,7 +2310,7 @@ Si       0.125094032   0.125094032   0.125094032
      Davidson diagonalization with overlap
      ethr =  2.06E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.44 secs
+     total cpu time spent up to now is      1.47 secs
 
      End of self-consistent calculation
 
@@ -2342,7 +2342,7 @@ Si       0.124827431   0.124827431   0.124827431
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.45 secs
+     total cpu time spent up to now is      1.48 secs
 
      Self-consistent Calculation
 
@@ -2356,7 +2356,7 @@ Si       0.124827431   0.124827431   0.124827431
      Davidson diagonalization with overlap
      ethr =  3.23E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.46 secs
+     total cpu time spent up to now is      1.49 secs
 
      total energy              =   -14.44933619 ryd
      estimated scf accuracy    <     0.00000215 ryd
@@ -2365,7 +2365,7 @@ Si       0.124827431   0.124827431   0.124827431
      Davidson diagonalization with overlap
      ethr =  2.68E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.46 secs
+     total cpu time spent up to now is      1.49 secs
 
      total energy              =   -14.44933656 ryd
      estimated scf accuracy    <     0.00000017 ryd
@@ -2374,7 +2374,7 @@ Si       0.124827431   0.124827431   0.124827431
      Davidson diagonalization with overlap
      ethr =  2.10E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.47 secs
+     total cpu time spent up to now is      1.50 secs
 
      End of self-consistent calculation
 
@@ -2406,7 +2406,7 @@ Si       0.124563842   0.124563842   0.124563842
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.48 secs
+     total cpu time spent up to now is      1.51 secs
 
      Self-consistent Calculation
 
@@ -2420,7 +2420,7 @@ Si       0.124563842   0.124563842   0.124563842
      Davidson diagonalization with overlap
      ethr =  3.16E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.49 secs
+     total cpu time spent up to now is      1.52 secs
 
      total energy              =   -14.44928046 ryd
      estimated scf accuracy    <     0.00000209 ryd
@@ -2429,7 +2429,7 @@ Si       0.124563842   0.124563842   0.124563842
      Davidson diagonalization with overlap
      ethr =  2.62E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.50 secs
+     total cpu time spent up to now is      1.53 secs
 
      total energy              =   -14.44928083 ryd
      estimated scf accuracy    <     0.00000017 ryd
@@ -2438,7 +2438,7 @@ Si       0.124563842   0.124563842   0.124563842
      Davidson diagonalization with overlap
      ethr =  2.07E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.51 secs
+     total cpu time spent up to now is      1.53 secs
 
      End of self-consistent calculation
 
@@ -2463,14 +2463,14 @@ Si       0.124307886   0.124307886   0.124307886
 
 
      kinetic energy (Ekin) =     0.00134253 Ry
-     temperature           =    70.62678452 K 
+     temperature           =    70.62678453 K 
      Ekin + Etot (const)   =   -14.44793830 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.52 secs
+     total cpu time spent up to now is      1.54 secs
 
      Self-consistent Calculation
 
@@ -2484,7 +2484,7 @@ Si       0.124307886   0.124307886   0.124307886
      Davidson diagonalization with overlap
      ethr =  2.98E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.53 secs
+     total cpu time spent up to now is      1.56 secs
 
      total energy              =   -14.44917981 ryd
      estimated scf accuracy    <     0.00000197 ryd
@@ -2493,7 +2493,7 @@ Si       0.124307886   0.124307886   0.124307886
      Davidson diagonalization with overlap
      ethr =  2.46E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.54 secs
+     total cpu time spent up to now is      1.57 secs
 
      total energy              =   -14.44918016 ryd
      estimated scf accuracy    <     0.00000016 ryd
@@ -2502,7 +2502,7 @@ Si       0.124307886   0.124307886   0.124307886
      Davidson diagonalization with overlap
      ethr =  1.97E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.54 secs
+     total cpu time spent up to now is      1.58 secs
 
      End of self-consistent calculation
 
@@ -2534,7 +2534,7 @@ Si       0.124064084   0.124064084   0.124064084
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.55 secs
+     total cpu time spent up to now is      1.59 secs
 
      Self-consistent Calculation
 
@@ -2548,7 +2548,7 @@ Si       0.124064084   0.124064084   0.124064084
      Davidson diagonalization with overlap
      ethr =  2.70E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.57 secs
+     total cpu time spent up to now is      1.60 secs
 
      total energy              =   -14.44904100 ryd
      estimated scf accuracy    <     0.00000179 ryd
@@ -2557,7 +2557,7 @@ Si       0.124064084   0.124064084   0.124064084
      Davidson diagonalization with overlap
      ethr =  2.23E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.58 secs
+     total cpu time spent up to now is      1.61 secs
 
      total energy              =   -14.44904131 ryd
      estimated scf accuracy    <     0.00000014 ryd
@@ -2566,7 +2566,7 @@ Si       0.124064084   0.124064084   0.124064084
      Davidson diagonalization with overlap
      ethr =  1.80E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.59 secs
+     total cpu time spent up to now is      1.62 secs
 
      End of self-consistent calculation
 
@@ -2598,7 +2598,7 @@ Si       0.123836771   0.123836771   0.123836771
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.60 secs
+     total cpu time spent up to now is      1.63 secs
 
      Self-consistent Calculation
 
@@ -2612,7 +2612,7 @@ Si       0.123836771   0.123836771   0.123836771
      Davidson diagonalization with overlap
      ethr =  2.35E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.61 secs
+     total cpu time spent up to now is      1.64 secs
 
      total energy              =   -14.44887357 ryd
      estimated scf accuracy    <     0.00000155 ryd
@@ -2621,7 +2621,7 @@ Si       0.123836771   0.123836771   0.123836771
      Davidson diagonalization with overlap
      ethr =  1.94E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.62 secs
+     total cpu time spent up to now is      1.65 secs
 
      total energy              =   -14.44887384 ryd
      estimated scf accuracy    <     0.00000013 ryd
@@ -2630,7 +2630,7 @@ Si       0.123836771   0.123836771   0.123836771
      Davidson diagonalization with overlap
      ethr =  1.58E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.63 secs
+     total cpu time spent up to now is      1.65 secs
 
      End of self-consistent calculation
 
@@ -2662,7 +2662,7 @@ Si       0.123630016   0.123630016   0.123630016
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.64 secs
+     total cpu time spent up to now is      1.66 secs
 
      Self-consistent Calculation
 
@@ -2676,7 +2676,7 @@ Si       0.123630016   0.123630016   0.123630016
      Davidson diagonalization with overlap
      ethr =  1.94E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.65 secs
+     total cpu time spent up to now is      1.68 secs
 
      total energy              =   -14.44868923 ryd
      estimated scf accuracy    <     0.00000128 ryd
@@ -2685,7 +2685,7 @@ Si       0.123630016   0.123630016   0.123630016
      Davidson diagonalization with overlap
      ethr =  1.60E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.66 secs
+     total cpu time spent up to now is      1.69 secs
 
      total energy              =   -14.44868946 ryd
      estimated scf accuracy    <     0.00000011 ryd
@@ -2694,7 +2694,7 @@ Si       0.123630016   0.123630016   0.123630016
      Davidson diagonalization with overlap
      ethr =  1.31E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.67 secs
+     total cpu time spent up to now is      1.70 secs
 
      End of self-consistent calculation
 
@@ -2726,7 +2726,7 @@ Si       0.123447543   0.123447543   0.123447543
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.68 secs
+     total cpu time spent up to now is      1.71 secs
 
      Self-consistent Calculation
 
@@ -2740,7 +2740,7 @@ Si       0.123447543   0.123447543   0.123447543
      Davidson diagonalization with overlap
      ethr =  1.51E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.69 secs
+     total cpu time spent up to now is      1.72 secs
 
      total energy              =   -14.44850103 ryd
      estimated scf accuracy    <     0.00000100 ryd
@@ -2749,7 +2749,7 @@ Si       0.123447543   0.123447543   0.123447543
      Davidson diagonalization with overlap
      ethr =  1.25E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.70 secs
+     total cpu time spent up to now is      1.72 secs
 
      total energy              =   -14.44850120 ryd
      estimated scf accuracy    <     0.00000008 ryd
@@ -2758,7 +2758,7 @@ Si       0.123447543   0.123447543   0.123447543
      Davidson diagonalization with overlap
      ethr =  1.03E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.71 secs
+     total cpu time spent up to now is      1.73 secs
 
      End of self-consistent calculation
 
@@ -2790,7 +2790,7 @@ Si       0.123292656   0.123292656   0.123292656
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.72 secs
+     total cpu time spent up to now is      1.74 secs
 
      Self-consistent Calculation
 
@@ -2804,7 +2804,7 @@ Si       0.123292656   0.123292656   0.123292656
      Davidson diagonalization with overlap
      ethr =  1.09E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.74 secs
+     total cpu time spent up to now is      1.75 secs
 
      total energy              =   -14.44832241 ryd
      estimated scf accuracy    <     0.00000072 ryd
@@ -2813,7 +2813,7 @@ Si       0.123292656   0.123292656   0.123292656
      Davidson diagonalization with overlap
      ethr =  8.96E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.74 secs
+     total cpu time spent up to now is      1.76 secs
 
      total energy              =   -14.44832253 ryd
      estimated scf accuracy    <     0.00000006 ryd
@@ -2822,7 +2822,7 @@ Si       0.123292656   0.123292656   0.123292656
      Davidson diagonalization with overlap
      ethr =  7.45E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.75 secs
+     total cpu time spent up to now is      1.76 secs
 
      End of self-consistent calculation
 
@@ -2854,7 +2854,7 @@ Si       0.123168176   0.123168176   0.123168176
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.76 secs
+     total cpu time spent up to now is      1.77 secs
 
      Self-consistent Calculation
 
@@ -2868,7 +2868,7 @@ Si       0.123168176   0.123168176   0.123168176
      Davidson diagonalization with overlap
      ethr =  7.03E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.78 secs
+     total cpu time spent up to now is      1.79 secs
 
      total energy              =   -14.44816624 ryd
      estimated scf accuracy    <     0.00000046 ryd
@@ -2877,7 +2877,7 @@ Si       0.123168176   0.123168176   0.123168176
      Davidson diagonalization with overlap
      ethr =  5.78E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.78 secs
+     total cpu time spent up to now is      1.80 secs
 
      total energy              =   -14.44816632 ryd
      estimated scf accuracy    <     0.00000004 ryd
@@ -2886,7 +2886,7 @@ Si       0.123168176   0.123168176   0.123168176
      Davidson diagonalization with overlap
      ethr =  4.83E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.79 secs
+     total cpu time spent up to now is      1.81 secs
 
      End of self-consistent calculation
 
@@ -2918,7 +2918,7 @@ Si       0.123076375   0.123076375   0.123076375
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.80 secs
+     total cpu time spent up to now is      1.82 secs
 
      Self-consistent Calculation
 
@@ -2932,7 +2932,7 @@ Si       0.123076375   0.123076375   0.123076375
      Davidson diagonalization with overlap
      ethr =  3.82E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.81 secs
+     total cpu time spent up to now is      1.83 secs
 
      total energy              =   -14.44804384 ryd
      estimated scf accuracy    <     0.00000025 ryd
@@ -2941,7 +2941,7 @@ Si       0.123076375   0.123076375   0.123076375
      Davidson diagonalization with overlap
      ethr =  3.14E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.82 secs
+     total cpu time spent up to now is      1.84 secs
 
      total energy              =   -14.44804389 ryd
      estimated scf accuracy    <     0.00000002 ryd
@@ -2950,7 +2950,7 @@ Si       0.123076375   0.123076375   0.123076375
      Davidson diagonalization with overlap
      ethr =  2.64E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.83 secs
+     total cpu time spent up to now is      1.84 secs
 
      End of self-consistent calculation
 
@@ -2982,7 +2982,7 @@ Si       0.123018937   0.123018937   0.123018937
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.84 secs
+     total cpu time spent up to now is      1.85 secs
 
      Self-consistent Calculation
 
@@ -2996,7 +2996,7 @@ Si       0.123018937   0.123018937   0.123018937
      Davidson diagonalization with overlap
      ethr =  1.50E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.85 secs
+     total cpu time spent up to now is      1.86 secs
 
      total energy              =   -14.44796413 ryd
      estimated scf accuracy    <     0.00000010 ryd
@@ -3005,7 +3005,7 @@ Si       0.123018937   0.123018937   0.123018937
      Davidson diagonalization with overlap
      ethr =  1.23E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.86 secs
+     total cpu time spent up to now is      1.87 secs
 
      End of self-consistent calculation
 
@@ -3037,7 +3037,7 @@ Si       0.122996924   0.122996924   0.122996924
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.87 secs
+     total cpu time spent up to now is      1.88 secs
 
      Self-consistent Calculation
 
@@ -3051,7 +3051,7 @@ Si       0.122996924   0.122996924   0.122996924
      Davidson diagonalization with overlap
      ethr =  2.34E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.88 secs
+     total cpu time spent up to now is      1.90 secs
 
      total energy              =   -14.44793295 ryd
      estimated scf accuracy    <     0.00000002 ryd
@@ -3060,7 +3060,7 @@ Si       0.122996924   0.122996924   0.122996924
      Davidson diagonalization with overlap
      ethr =  1.91E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.89 secs
+     total cpu time spent up to now is      1.91 secs
 
      End of self-consistent calculation
 
@@ -3092,7 +3092,7 @@ Si       0.123010737   0.123010737   0.123010737
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.90 secs
+     total cpu time spent up to now is      1.92 secs
 
      Self-consistent Calculation
 
@@ -3106,7 +3106,7 @@ Si       0.123010737   0.123010737   0.123010737
      Davidson diagonalization with overlap
      ethr =  8.32E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.91 secs
+     total cpu time spent up to now is      1.93 secs
 
      End of self-consistent calculation
 
@@ -3138,7 +3138,7 @@ Si       0.123060104   0.123060104   0.123060104
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.92 secs
+     total cpu time spent up to now is      1.94 secs
 
      Self-consistent Calculation
 
@@ -3152,7 +3152,7 @@ Si       0.123060104   0.123060104   0.123060104
      Davidson diagonalization with overlap
      ethr =  1.01E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.94 secs
+     total cpu time spent up to now is      1.96 secs
 
      total energy              =   -14.44802153 ryd
      estimated scf accuracy    <     0.00000007 ryd
@@ -3161,7 +3161,7 @@ Si       0.123060104   0.123060104   0.123060104
      Davidson diagonalization with overlap
      ethr =  8.35E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.95 secs
+     total cpu time spent up to now is      1.97 secs
 
      End of self-consistent calculation
 
@@ -3193,7 +3193,7 @@ Si       0.123144123   0.123144123   0.123144123
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      1.96 secs
+     total cpu time spent up to now is      1.98 secs
 
      Self-consistent Calculation
 
@@ -3207,7 +3207,7 @@ Si       0.123144123   0.123144123   0.123144123
      Davidson diagonalization with overlap
      ethr =  3.25E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.97 secs
+     total cpu time spent up to now is      1.99 secs
 
      total energy              =   -14.44813480 ryd
      estimated scf accuracy    <     0.00000021 ryd
@@ -3216,7 +3216,7 @@ Si       0.123144123   0.123144123   0.123144123
      Davidson diagonalization with overlap
      ethr =  2.67E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.98 secs
+     total cpu time spent up to now is      2.00 secs
 
      total energy              =   -14.44813483 ryd
      estimated scf accuracy    <     0.00000002 ryd
@@ -3225,7 +3225,7 @@ Si       0.123144123   0.123144123   0.123144123
      Davidson diagonalization with overlap
      ethr =  2.20E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      1.99 secs
+     total cpu time spent up to now is      2.01 secs
 
      End of self-consistent calculation
 
@@ -3257,7 +3257,7 @@ Si       0.123261257   0.123261257   0.123261257
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.00 secs
+     total cpu time spent up to now is      2.02 secs
 
      Self-consistent Calculation
 
@@ -3271,7 +3271,7 @@ Si       0.123261257   0.123261257   0.123261257
      Davidson diagonalization with overlap
      ethr =  6.21E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.01 secs
+     total cpu time spent up to now is      2.03 secs
 
      total energy              =   -14.44828412 ryd
      estimated scf accuracy    <     0.00000041 ryd
@@ -3280,7 +3280,7 @@ Si       0.123261257   0.123261257   0.123261257
      Davidson diagonalization with overlap
      ethr =  5.12E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.02 secs
+     total cpu time spent up to now is      2.04 secs
 
      total energy              =   -14.44828419 ryd
      estimated scf accuracy    <     0.00000003 ryd
@@ -3289,7 +3289,7 @@ Si       0.123261257   0.123261257   0.123261257
      Davidson diagonalization with overlap
      ethr =  4.27E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.02 secs
+     total cpu time spent up to now is      2.04 secs
 
      End of self-consistent calculation
 
@@ -3321,7 +3321,7 @@ Si       0.123409365   0.123409365   0.123409365
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.03 secs
+     total cpu time spent up to now is      2.05 secs
 
      Self-consistent Calculation
 
@@ -3335,7 +3335,7 @@ Si       0.123409365   0.123409365   0.123409365
      Davidson diagonalization with overlap
      ethr =  9.94E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.04 secs
+     total cpu time spent up to now is      2.06 secs
 
      total energy              =   -14.44845866 ryd
      estimated scf accuracy    <     0.00000066 ryd
@@ -3344,7 +3344,7 @@ Si       0.123409365   0.123409365   0.123409365
      Davidson diagonalization with overlap
      ethr =  8.19E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.05 secs
+     total cpu time spent up to now is      2.07 secs
 
      total energy              =   -14.44845878 ryd
      estimated scf accuracy    <     0.00000005 ryd
@@ -3353,7 +3353,7 @@ Si       0.123409365   0.123409365   0.123409365
      Davidson diagonalization with overlap
      ethr =  6.80E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.06 secs
+     total cpu time spent up to now is      2.08 secs
 
      End of self-consistent calculation
 
@@ -3385,7 +3385,7 @@ Si       0.123585745   0.123585745   0.123585745
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.07 secs
+     total cpu time spent up to now is      2.09 secs
 
      Self-consistent Calculation
 
@@ -3399,7 +3399,7 @@ Si       0.123585745   0.123585745   0.123585745
      Davidson diagonalization with overlap
      ethr =  1.41E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.08 secs
+     total cpu time spent up to now is      2.10 secs
 
      total energy              =   -14.44864582 ryd
      estimated scf accuracy    <     0.00000093 ryd
@@ -3408,7 +3408,7 @@ Si       0.123585745   0.123585745   0.123585745
      Davidson diagonalization with overlap
      ethr =  1.16E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.09 secs
+     total cpu time spent up to now is      2.11 secs
 
      total energy              =   -14.44864599 ryd
      estimated scf accuracy    <     0.00000008 ryd
@@ -3417,7 +3417,7 @@ Si       0.123585745   0.123585745   0.123585745
      Davidson diagonalization with overlap
      ethr =  9.60E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.10 secs
+     total cpu time spent up to now is      2.11 secs
 
      End of self-consistent calculation
 
@@ -3449,7 +3449,7 @@ Si       0.123787200   0.123787200   0.123787200
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.11 secs
+     total cpu time spent up to now is      2.12 secs
 
      Self-consistent Calculation
 
@@ -3463,7 +3463,7 @@ Si       0.123787200   0.123787200   0.123787200
      Davidson diagonalization with overlap
      ethr =  1.84E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.12 secs
+     total cpu time spent up to now is      2.14 secs
 
      total energy              =   -14.44883221 ryd
      estimated scf accuracy    <     0.00000121 ryd
@@ -3472,7 +3472,7 @@ Si       0.123787200   0.123787200   0.123787200
      Davidson diagonalization with overlap
      ethr =  1.52E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.12 secs
+     total cpu time spent up to now is      2.14 secs
 
      total energy              =   -14.44883243 ryd
      estimated scf accuracy    <     0.00000010 ryd
@@ -3481,7 +3481,7 @@ Si       0.123787200   0.123787200   0.123787200
      Davidson diagonalization with overlap
      ethr =  1.24E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.12 secs
+     total cpu time spent up to now is      2.15 secs
 
      End of self-consistent calculation
 
@@ -3513,7 +3513,7 @@ Si       0.124010094   0.124010094   0.124010094
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.13 secs
+     total cpu time spent up to now is      2.16 secs
 
      Self-consistent Calculation
 
@@ -3527,7 +3527,7 @@ Si       0.124010094   0.124010094   0.124010094
      Davidson diagonalization with overlap
      ethr =  2.25E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.14 secs
+     total cpu time spent up to now is      2.17 secs
 
      total energy              =   -14.44900461 ryd
      estimated scf accuracy    <     0.00000149 ryd
@@ -3536,7 +3536,7 @@ Si       0.124010094   0.124010094   0.124010094
      Davidson diagonalization with overlap
      ethr =  1.86E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.15 secs
+     total cpu time spent up to now is      2.18 secs
 
      total energy              =   -14.44900487 ryd
      estimated scf accuracy    <     0.00000012 ryd
@@ -3545,7 +3545,7 @@ Si       0.124010094   0.124010094   0.124010094
      Davidson diagonalization with overlap
      ethr =  1.51E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.15 secs
+     total cpu time spent up to now is      2.18 secs
 
      End of self-consistent calculation
 
@@ -3577,7 +3577,7 @@ Si       0.124250430   0.124250430   0.124250430
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.16 secs
+     total cpu time spent up to now is      2.19 secs
 
      Self-consistent Calculation
 
@@ -3591,7 +3591,7 @@ Si       0.124250430   0.124250430   0.124250430
      Davidson diagonalization with overlap
      ethr =  2.62E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.17 secs
+     total cpu time spent up to now is      2.20 secs
 
      total energy              =   -14.44915092 ryd
      estimated scf accuracy    <     0.00000173 ryd
@@ -3600,7 +3600,7 @@ Si       0.124250430   0.124250430   0.124250430
      Davidson diagonalization with overlap
      ethr =  2.17E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.18 secs
+     total cpu time spent up to now is      2.20 secs
 
      total energy              =   -14.44915122 ryd
      estimated scf accuracy    <     0.00000014 ryd
@@ -3609,7 +3609,7 @@ Si       0.124250430   0.124250430   0.124250430
      Davidson diagonalization with overlap
      ethr =  1.75E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.19 secs
+     total cpu time spent up to now is      2.21 secs
 
      End of self-consistent calculation
 
@@ -3641,7 +3641,7 @@ Si       0.124503927   0.124503927   0.124503927
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.20 secs
+     total cpu time spent up to now is      2.21 secs
 
      Self-consistent Calculation
 
@@ -3655,7 +3655,7 @@ Si       0.124503927   0.124503927   0.124503927
      Davidson diagonalization with overlap
      ethr =  2.91E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.21 secs
+     total cpu time spent up to now is      2.22 secs
 
      total energy              =   -14.44926105 ryd
      estimated scf accuracy    <     0.00000193 ryd
@@ -3664,7 +3664,7 @@ Si       0.124503927   0.124503927   0.124503927
      Davidson diagonalization with overlap
      ethr =  2.41E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.22 secs
+     total cpu time spent up to now is      2.23 secs
 
      total energy              =   -14.44926139 ryd
      estimated scf accuracy    <     0.00000015 ryd
@@ -3673,7 +3673,7 @@ Si       0.124503927   0.124503927   0.124503927
      Davidson diagonalization with overlap
      ethr =  1.93E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.23 secs
+     total cpu time spent up to now is      2.24 secs
 
      End of self-consistent calculation
 
@@ -3705,7 +3705,7 @@ Si       0.124766102   0.124766102   0.124766102
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.24 secs
+     total cpu time spent up to now is      2.25 secs
 
      Self-consistent Calculation
 
@@ -3792,7 +3792,7 @@ Si       0.125032348   0.125032348   0.125032348
      Davidson diagonalization with overlap
      ethr =  2.67E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.30 secs
+     total cpu time spent up to now is      2.31 secs
 
      total energy              =   -14.44934651 ryd
      estimated scf accuracy    <     0.00000017 ryd
@@ -3801,7 +3801,7 @@ Si       0.125032348   0.125032348   0.125032348
      Davidson diagonalization with overlap
      ethr =  2.09E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.30 secs
+     total cpu time spent up to now is      2.32 secs
 
      End of self-consistent calculation
 
@@ -3833,7 +3833,7 @@ Si       0.125298025   0.125298025   0.125298025
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.31 secs
+     total cpu time spent up to now is      2.33 secs
 
      Self-consistent Calculation
 
@@ -3847,7 +3847,7 @@ Si       0.125298025   0.125298025   0.125298025
      Davidson diagonalization with overlap
      ethr =  3.20E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.32 secs
+     total cpu time spent up to now is      2.34 secs
 
      total energy              =   -14.44931585 ryd
      estimated scf accuracy    <     0.00000213 ryd
@@ -3856,7 +3856,7 @@ Si       0.125298025   0.125298025   0.125298025
      Davidson diagonalization with overlap
      ethr =  2.67E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.33 secs
+     total cpu time spent up to now is      2.35 secs
 
      total energy              =   -14.44931622 ryd
      estimated scf accuracy    <     0.00000017 ryd
@@ -3865,7 +3865,7 @@ Si       0.125298025   0.125298025   0.125298025
      Davidson diagonalization with overlap
      ethr =  2.07E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.33 secs
+     total cpu time spent up to now is      2.35 secs
 
      End of self-consistent calculation
 
@@ -3897,7 +3897,7 @@ Si       0.125558534   0.125558534   0.125558534
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.34 secs
+     total cpu time spent up to now is      2.36 secs
 
      Self-consistent Calculation
 
@@ -3911,7 +3911,7 @@ Si       0.125558534   0.125558534   0.125558534
      Davidson diagonalization with overlap
      ethr =  3.08E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.35 secs
+     total cpu time spent up to now is      2.38 secs
 
      total energy              =   -14.44923914 ryd
      estimated scf accuracy    <     0.00000205 ryd
@@ -3920,7 +3920,7 @@ Si       0.125558534   0.125558534   0.125558534
      Davidson diagonalization with overlap
      ethr =  2.57E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.36 secs
+     total cpu time spent up to now is      2.39 secs
 
      total energy              =   -14.44923950 ryd
      estimated scf accuracy    <     0.00000016 ryd
@@ -3929,7 +3929,7 @@ Si       0.125558534   0.125558534   0.125558534
      Davidson diagonalization with overlap
      ethr =  1.97E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.37 secs
+     total cpu time spent up to now is      2.39 secs
 
      End of self-consistent calculation
 
@@ -3961,7 +3961,7 @@ Si       0.125809399   0.125809399   0.125809399
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.38 secs
+     total cpu time spent up to now is      2.40 secs
 
      Self-consistent Calculation
 
@@ -3975,7 +3975,7 @@ Si       0.125809399   0.125809399   0.125809399
      Davidson diagonalization with overlap
      ethr =  2.85E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.39 secs
+     total cpu time spent up to now is      2.41 secs
 
      total energy              =   -14.44912158 ryd
      estimated scf accuracy    <     0.00000191 ryd
@@ -3984,7 +3984,7 @@ Si       0.125809399   0.125809399   0.125809399
      Davidson diagonalization with overlap
      ethr =  2.38E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.39 secs
+     total cpu time spent up to now is      2.42 secs
 
      total energy              =   -14.44912191 ryd
      estimated scf accuracy    <     0.00000014 ryd
@@ -3993,7 +3993,7 @@ Si       0.125809399   0.125809399   0.125809399
      Davidson diagonalization with overlap
      ethr =  1.81E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.39 secs
+     total cpu time spent up to now is      2.43 secs
 
      End of self-consistent calculation
 
@@ -4025,7 +4025,7 @@ Si       0.126046341   0.126046341   0.126046341
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.40 secs
+     total cpu time spent up to now is      2.44 secs
 
      Self-consistent Calculation
 
@@ -4039,7 +4039,7 @@ Si       0.126046341   0.126046341   0.126046341
      Davidson diagonalization with overlap
      ethr =  2.55E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.42 secs
+     total cpu time spent up to now is      2.45 secs
 
      total energy              =   -14.44897145 ryd
      estimated scf accuracy    <     0.00000170 ryd
@@ -4048,7 +4048,7 @@ Si       0.126046341   0.126046341   0.126046341
      Davidson diagonalization with overlap
      ethr =  2.13E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.43 secs
+     total cpu time spent up to now is      2.46 secs
 
      total energy              =   -14.44897174 ryd
      estimated scf accuracy    <     0.00000013 ryd
@@ -4057,7 +4057,7 @@ Si       0.126046341   0.126046341   0.126046341
      Davidson diagonalization with overlap
      ethr =  1.60E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.44 secs
+     total cpu time spent up to now is      2.46 secs
 
      End of self-consistent calculation
 
@@ -4089,7 +4089,7 @@ Si       0.126265342   0.126265342   0.126265342
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.45 secs
+     total cpu time spent up to now is      2.47 secs
 
      Self-consistent Calculation
 
@@ -4103,7 +4103,7 @@ Si       0.126265342   0.126265342   0.126265342
      Davidson diagonalization with overlap
      ethr =  2.17E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.46 secs
+     total cpu time spent up to now is      2.48 secs
 
      total energy              =   -14.44879912 ryd
      estimated scf accuracy    <     0.00000146 ryd
@@ -4112,7 +4112,7 @@ Si       0.126265342   0.126265342   0.126265342
      Davidson diagonalization with overlap
      ethr =  1.82E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.47 secs
+     total cpu time spent up to now is      2.49 secs
 
      total energy              =   -14.44879937 ryd
      estimated scf accuracy    <     0.00000011 ryd
@@ -4121,7 +4121,7 @@ Si       0.126265342   0.126265342   0.126265342
      Davidson diagonalization with overlap
      ethr =  1.36E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.47 secs
+     total cpu time spent up to now is      2.50 secs
 
      End of self-consistent calculation
 
@@ -4153,7 +4153,7 @@ Si       0.126462713   0.126462713   0.126462713
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.48 secs
+     total cpu time spent up to now is      2.51 secs
 
      Self-consistent Calculation
 
@@ -4167,7 +4167,7 @@ Si       0.126462713   0.126462713   0.126462713
      Davidson diagonalization with overlap
      ethr =  1.77E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.49 secs
+     total cpu time spent up to now is      2.52 secs
 
      total energy              =   -14.44861635 ryd
      estimated scf accuracy    <     0.00000119 ryd
@@ -4176,7 +4176,7 @@ Si       0.126462713   0.126462713   0.126462713
      Davidson diagonalization with overlap
      ethr =  1.48E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.50 secs
+     total cpu time spent up to now is      2.53 secs
 
      total energy              =   -14.44861655 ryd
      estimated scf accuracy    <     0.00000009 ryd
@@ -4185,7 +4185,7 @@ Si       0.126462713   0.126462713   0.126462713
      Davidson diagonalization with overlap
      ethr =  1.10E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.51 secs
+     total cpu time spent up to now is      2.53 secs
 
      End of self-consistent calculation
 
@@ -4210,14 +4210,14 @@ Si       0.126635147   0.126635147   0.126635147
 
 
      kinetic energy (Ekin) =     0.00068018 Ry
-     temperature           =    35.78237547 K 
+     temperature           =    35.78237546 K 
      Ekin + Etot (const)   =   -14.44793637 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.52 secs
+     total cpu time spent up to now is      2.54 secs
 
      Self-consistent Calculation
 
@@ -4231,7 +4231,7 @@ Si       0.126635147   0.126635147   0.126635147
      Davidson diagonalization with overlap
      ethr =  1.35E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.54 secs
+     total cpu time spent up to now is      2.55 secs
 
      total energy              =   -14.44843547 ryd
      estimated scf accuracy    <     0.00000091 ryd
@@ -4240,7 +4240,7 @@ Si       0.126635147   0.126635147   0.126635147
      Davidson diagonalization with overlap
      ethr =  1.13E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.54 secs
+     total cpu time spent up to now is      2.56 secs
 
      total energy              =   -14.44843562 ryd
      estimated scf accuracy    <     0.00000007 ryd
@@ -4249,7 +4249,7 @@ Si       0.126635147   0.126635147   0.126635147
      Davidson diagonalization with overlap
      ethr =  8.34E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.55 secs
+     total cpu time spent up to now is      2.56 secs
 
      End of self-consistent calculation
 
@@ -4274,14 +4274,14 @@ Si       0.126779769   0.126779769   0.126779769
 
 
      kinetic energy (Ekin) =     0.00049998 Ry
-     temperature           =    26.30255498 K 
+     temperature           =    26.30255497 K 
      Ekin + Etot (const)   =   -14.44793564 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.56 secs
+     total cpu time spent up to now is      2.57 secs
 
      Self-consistent Calculation
 
@@ -4295,7 +4295,7 @@ Si       0.126779769   0.126779769   0.126779769
      Davidson diagonalization with overlap
      ethr =  9.49E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.58 secs
+     total cpu time spent up to now is      2.59 secs
 
      total energy              =   -14.44826859 ryd
      estimated scf accuracy    <     0.00000064 ryd
@@ -4304,7 +4304,7 @@ Si       0.126779769   0.126779769   0.126779769
      Davidson diagonalization with overlap
      ethr =  7.98E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.59 secs
+     total cpu time spent up to now is      2.60 secs
 
      total energy              =   -14.44826870 ryd
      estimated scf accuracy    <     0.00000005 ryd
@@ -4441,7 +4441,7 @@ Si       0.126976486   0.126976486   0.126976486
      Davidson diagonalization with overlap
      ethr =  1.88E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.69 secs
+     total cpu time spent up to now is      2.68 secs
 
      End of self-consistent calculation
 
@@ -4466,14 +4466,14 @@ Si       0.127025329   0.127025329   0.127025329
 
 
      kinetic energy (Ekin) =     0.00008555 Ry
-     temperature           =     4.50045649 K 
+     temperature           =     4.50045648 K 
      Ekin + Etot (const)   =   -14.44793396 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.71 secs
+     total cpu time spent up to now is      2.69 secs
 
      Self-consistent Calculation
 
@@ -4487,7 +4487,7 @@ Si       0.127025329   0.127025329   0.127025329
      Davidson diagonalization with overlap
      ethr =  1.08E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.72 secs
+     total cpu time spent up to now is      2.71 secs
 
      total energy              =   -14.44795369 ryd
      estimated scf accuracy    <     0.00000007 ryd
@@ -4496,7 +4496,7 @@ Si       0.127025329   0.127025329   0.127025329
      Davidson diagonalization with overlap
      ethr =  9.11E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.73 secs
+     total cpu time spent up to now is      2.71 secs
 
      End of self-consistent calculation
 
@@ -4528,7 +4528,7 @@ Si       0.127039899   0.127039899   0.127039899
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.74 secs
+     total cpu time spent up to now is      2.72 secs
 
      Self-consistent Calculation
 
@@ -4542,7 +4542,7 @@ Si       0.127039899   0.127039899   0.127039899
      Davidson diagonalization with overlap
      ethr =  1.01E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.75 secs
+     total cpu time spent up to now is      2.73 secs
 
      End of self-consistent calculation
 
@@ -4574,7 +4574,7 @@ Si       0.127019955   0.127019955   0.127019955
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.76 secs
+     total cpu time spent up to now is      2.74 secs
 
      Self-consistent Calculation
 
@@ -4588,7 +4588,7 @@ Si       0.127019955   0.127019955   0.127019955
      Davidson diagonalization with overlap
      ethr =  2.29E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.77 secs
+     total cpu time spent up to now is      2.75 secs
 
      total energy              =   -14.44796102 ryd
      estimated scf accuracy    <     0.00000002 ryd
@@ -4597,7 +4597,7 @@ Si       0.127019955   0.127019955   0.127019955
      Davidson diagonalization with overlap
      ethr =  2.01E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.77 secs
+     total cpu time spent up to now is      2.75 secs
 
      End of self-consistent calculation
 
@@ -4629,7 +4629,7 @@ Si       0.126965838   0.126965838   0.126965838
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.78 secs
+     total cpu time spent up to now is      2.76 secs
 
      Self-consistent Calculation
 
@@ -4643,7 +4643,7 @@ Si       0.126965838   0.126965838   0.126965838
      Davidson diagonalization with overlap
      ethr =  1.33E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.79 secs
+     total cpu time spent up to now is      2.77 secs
 
      total energy              =   -14.44803363 ryd
      estimated scf accuracy    <     0.00000009 ryd
@@ -4652,7 +4652,7 @@ Si       0.126965838   0.126965838   0.126965838
      Davidson diagonalization with overlap
      ethr =  1.12E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.79 secs
+     total cpu time spent up to now is      2.78 secs
 
      End of self-consistent calculation
 
@@ -4684,7 +4684,7 @@ Si       0.126878445   0.126878445   0.126878445
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.81 secs
+     total cpu time spent up to now is      2.79 secs
 
      Self-consistent Calculation
 
@@ -4698,7 +4698,7 @@ Si       0.126878445   0.126878445   0.126878445
      Davidson diagonalization with overlap
      ethr =  3.50E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.82 secs
+     total cpu time spent up to now is      2.80 secs
 
      total energy              =   -14.44814684 ryd
      estimated scf accuracy    <     0.00000024 ryd
@@ -4707,7 +4707,7 @@ Si       0.126878445   0.126878445   0.126878445
      Davidson diagonalization with overlap
      ethr =  2.94E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.83 secs
+     total cpu time spent up to now is      2.81 secs
 
      total energy              =   -14.44814688 ryd
      estimated scf accuracy    <     0.00000002 ryd
@@ -4716,7 +4716,7 @@ Si       0.126878445   0.126878445   0.126878445
      Davidson diagonalization with overlap
      ethr =  2.12E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.83 secs
+     total cpu time spent up to now is      2.82 secs
 
      End of self-consistent calculation
 
@@ -4748,7 +4748,7 @@ Si       0.126759213   0.126759213   0.126759213
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.84 secs
+     total cpu time spent up to now is      2.83 secs
 
      Self-consistent Calculation
 
@@ -4762,7 +4762,7 @@ Si       0.126759213   0.126759213   0.126759213
      Davidson diagonalization with overlap
      ethr =  6.45E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.85 secs
+     total cpu time spent up to now is      2.84 secs
 
      total energy              =   -14.44829319 ryd
      estimated scf accuracy    <     0.00000043 ryd
@@ -4780,7 +4780,7 @@ Si       0.126759213   0.126759213   0.126759213
      Davidson diagonalization with overlap
      ethr =  3.95E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.87 secs
+     total cpu time spent up to now is      2.86 secs
 
      End of self-consistent calculation
 
@@ -4812,7 +4812,7 @@ Si       0.126610117   0.126610117   0.126610117
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.88 secs
+     total cpu time spent up to now is      2.87 secs
 
      Self-consistent Calculation
 
@@ -4826,7 +4826,7 @@ Si       0.126610117   0.126610117   0.126610117
      Davidson diagonalization with overlap
      ethr =  1.01E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.89 secs
+     total cpu time spent up to now is      2.88 secs
 
      total energy              =   -14.44846299 ryd
      estimated scf accuracy    <     0.00000068 ryd
@@ -4835,7 +4835,7 @@ Si       0.126610117   0.126610117   0.126610117
      Davidson diagonalization with overlap
      ethr =  8.48E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.90 secs
+     total cpu time spent up to now is      2.89 secs
 
      total energy              =   -14.44846311 ryd
      estimated scf accuracy    <     0.00000005 ryd
@@ -4844,7 +4844,7 @@ Si       0.126610117   0.126610117   0.126610117
      Davidson diagonalization with overlap
      ethr =  6.20E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.90 secs
+     total cpu time spent up to now is      2.89 secs
 
      End of self-consistent calculation
 
@@ -4876,7 +4876,7 @@ Si       0.126433634   0.126433634   0.126433634
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.92 secs
+     total cpu time spent up to now is      2.90 secs
 
      Self-consistent Calculation
 
@@ -4890,7 +4890,7 @@ Si       0.126433634   0.126433634   0.126433634
      Davidson diagonalization with overlap
      ethr =  1.41E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.93 secs
+     total cpu time spent up to now is      2.91 secs
 
      total energy              =   -14.44864495 ryd
      estimated scf accuracy    <     0.00000095 ryd
@@ -4899,7 +4899,7 @@ Si       0.126433634   0.126433634   0.126433634
      Davidson diagonalization with overlap
      ethr =  1.19E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.94 secs
+     total cpu time spent up to now is      2.91 secs
 
      total energy              =   -14.44864512 ryd
      estimated scf accuracy    <     0.00000007 ryd
@@ -4908,7 +4908,7 @@ Si       0.126433634   0.126433634   0.126433634
      Davidson diagonalization with overlap
      ethr =  8.74E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.94 secs
+     total cpu time spent up to now is      2.92 secs
 
      End of self-consistent calculation
 
@@ -4940,7 +4940,7 @@ Si       0.126232710   0.126232710   0.126232710
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.95 secs
+     total cpu time spent up to now is      2.93 secs
 
      Self-consistent Calculation
 
@@ -4954,7 +4954,7 @@ Si       0.126232710   0.126232710   0.126232710
      Davidson diagonalization with overlap
      ethr =  1.83E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.97 secs
+     total cpu time spent up to now is      2.94 secs
 
      total energy              =   -14.44882688 ryd
      estimated scf accuracy    <     0.00000123 ryd
@@ -4963,7 +4963,7 @@ Si       0.126232710   0.126232710   0.126232710
      Davidson diagonalization with overlap
      ethr =  1.54E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.98 secs
+     total cpu time spent up to now is      2.95 secs
 
      total energy              =   -14.44882709 ryd
      estimated scf accuracy    <     0.00000009 ryd
@@ -4972,7 +4972,7 @@ Si       0.126232710   0.126232710   0.126232710
      Davidson diagonalization with overlap
      ethr =  1.14E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      2.98 secs
+     total cpu time spent up to now is      2.96 secs
 
      End of self-consistent calculation
 
@@ -5004,7 +5004,7 @@ Si       0.126010716   0.126010716   0.126010716
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      2.99 secs
+     total cpu time spent up to now is      2.97 secs
 
      Self-consistent Calculation
 
@@ -5018,7 +5018,7 @@ Si       0.126010716   0.126010716   0.126010716
      Davidson diagonalization with overlap
      ethr =  2.24E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.00 secs
+     total cpu time spent up to now is      2.98 secs
 
      total energy              =   -14.44899648 ryd
      estimated scf accuracy    <     0.00000150 ryd
@@ -5027,7 +5027,7 @@ Si       0.126010716   0.126010716   0.126010716
      Davidson diagonalization with overlap
      ethr =  1.87E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.01 secs
+     total cpu time spent up to now is      2.99 secs
 
      total energy              =   -14.44899674 ryd
      estimated scf accuracy    <     0.00000011 ryd
@@ -5036,7 +5036,7 @@ Si       0.126010716   0.126010716   0.126010716
      Davidson diagonalization with overlap
      ethr =  1.40E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.01 secs
+     total cpu time spent up to now is      2.99 secs
 
      End of self-consistent calculation
 
@@ -5068,7 +5068,7 @@ Si       0.125771394   0.125771394   0.125771394
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.02 secs
+     total cpu time spent up to now is      3.00 secs
 
      Self-consistent Calculation
 
@@ -5082,7 +5082,7 @@ Si       0.125771394   0.125771394   0.125771394
      Davidson diagonalization with overlap
      ethr =  2.60E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.03 secs
+     total cpu time spent up to now is      3.02 secs
 
      total energy              =   -14.44914217 ryd
      estimated scf accuracy    <     0.00000174 ryd
@@ -5091,7 +5091,7 @@ Si       0.125771394   0.125771394   0.125771394
      Davidson diagonalization with overlap
      ethr =  2.17E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.04 secs
+     total cpu time spent up to now is      3.03 secs
 
      total energy              =   -14.44914247 ryd
      estimated scf accuracy    <     0.00000013 ryd
@@ -5100,7 +5100,7 @@ Si       0.125771394   0.125771394   0.125771394
      Davidson diagonalization with overlap
      ethr =  1.64E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.04 secs
+     total cpu time spent up to now is      3.03 secs
 
      End of self-consistent calculation
 
@@ -5132,7 +5132,7 @@ Si       0.125518808   0.125518808   0.125518808
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.05 secs
+     total cpu time spent up to now is      3.04 secs
 
      Self-consistent Calculation
 
@@ -5146,7 +5146,7 @@ Si       0.125518808   0.125518808   0.125518808
      Davidson diagonalization with overlap
      ethr =  2.90E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.06 secs
+     total cpu time spent up to now is      3.05 secs
 
      total energy              =   -14.44925386 ryd
      estimated scf accuracy    <     0.00000193 ryd
@@ -5155,7 +5155,7 @@ Si       0.125518808   0.125518808   0.125518808
      Davidson diagonalization with overlap
      ethr =  2.42E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.07 secs
+     total cpu time spent up to now is      3.06 secs
 
      total energy              =   -14.44925419 ryd
      estimated scf accuracy    <     0.00000015 ryd
@@ -5164,7 +5164,7 @@ Si       0.125518808   0.125518808   0.125518808
      Davidson diagonalization with overlap
      ethr =  1.84E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.08 secs
+     total cpu time spent up to now is      3.06 secs
 
      End of self-consistent calculation
 
@@ -5196,7 +5196,7 @@ Si       0.125257271   0.125257271   0.125257271
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.09 secs
+     total cpu time spent up to now is      3.07 secs
 
      Self-consistent Calculation
 
@@ -5210,7 +5210,7 @@ Si       0.125257271   0.125257271   0.125257271
      Davidson diagonalization with overlap
      ethr =  3.11E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.10 secs
+     total cpu time spent up to now is      3.08 secs
 
      total energy              =   -14.44932366 ryd
      estimated scf accuracy    <     0.00000207 ryd
@@ -5219,7 +5219,7 @@ Si       0.125257271   0.125257271   0.125257271
      Davidson diagonalization with overlap
      ethr =  2.59E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.11 secs
+     total cpu time spent up to now is      3.09 secs
 
      total energy              =   -14.44932402 ryd
      estimated scf accuracy    <     0.00000016 ryd
@@ -5228,7 +5228,7 @@ Si       0.125257271   0.125257271   0.125257271
      Davidson diagonalization with overlap
      ethr =  1.99E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.11 secs
+     total cpu time spent up to now is      3.09 secs
 
      End of self-consistent calculation
 
@@ -5260,7 +5260,7 @@ Si       0.124991282   0.124991282   0.124991282
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.12 secs
+     total cpu time spent up to now is      3.10 secs
 
      Self-consistent Calculation
 
@@ -5274,7 +5274,7 @@ Si       0.124991282   0.124991282   0.124991282
      Davidson diagonalization with overlap
      ethr =  3.21E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.14 secs
+     total cpu time spent up to now is      3.12 secs
 
      total energy              =   -14.44934647 ryd
      estimated scf accuracy    <     0.00000214 ryd
@@ -5283,7 +5283,7 @@ Si       0.124991282   0.124991282   0.124991282
      Davidson diagonalization with overlap
      ethr =  2.67E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.14 secs
+     total cpu time spent up to now is      3.13 secs
 
      total energy              =   -14.44934684 ryd
      estimated scf accuracy    <     0.00000017 ryd
@@ -5292,7 +5292,7 @@ Si       0.124991282   0.124991282   0.124991282
      Davidson diagonalization with overlap
      ethr =  2.08E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.15 secs
+     total cpu time spent up to now is      3.14 secs
 
      End of self-consistent calculation
 
@@ -5324,7 +5324,7 @@ Si       0.124725450   0.124725450   0.124725450
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.16 secs
+     total cpu time spent up to now is      3.15 secs
 
      Self-consistent Calculation
 
@@ -5338,7 +5338,7 @@ Si       0.124725450   0.124725450   0.124725450
      Davidson diagonalization with overlap
      ethr =  3.21E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.17 secs
+     total cpu time spent up to now is      3.16 secs
 
      total energy              =   -14.44932037 ryd
      estimated scf accuracy    <     0.00000213 ryd
@@ -5347,7 +5347,7 @@ Si       0.124725450   0.124725450   0.124725450
      Davidson diagonalization with overlap
      ethr =  2.66E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.18 secs
+     total cpu time spent up to now is      3.17 secs
 
      total energy              =   -14.44932075 ryd
      estimated scf accuracy    <     0.00000017 ryd
@@ -5356,7 +5356,7 @@ Si       0.124725450   0.124725450   0.124725450
      Davidson diagonalization with overlap
      ethr =  2.09E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.19 secs
+     total cpu time spent up to now is      3.18 secs
 
      End of self-consistent calculation
 
@@ -5388,7 +5388,7 @@ Si       0.124464415   0.124464415   0.124464415
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.20 secs
+     total cpu time spent up to now is      3.19 secs
 
      Self-consistent Calculation
 
@@ -5402,7 +5402,7 @@ Si       0.124464415   0.124464415   0.124464415
      Davidson diagonalization with overlap
      ethr =  3.10E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.21 secs
+     total cpu time spent up to now is      3.20 secs
 
      total energy              =   -14.44924683 ryd
      estimated scf accuracy    <     0.00000205 ryd
@@ -5411,7 +5411,7 @@ Si       0.124464415   0.124464415   0.124464415
      Davidson diagonalization with overlap
      ethr =  2.56E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.22 secs
+     total cpu time spent up to now is      3.21 secs
 
      total energy              =   -14.44924719 ryd
      estimated scf accuracy    <     0.00000016 ryd
@@ -5420,7 +5420,7 @@ Si       0.124464415   0.124464415   0.124464415
      Davidson diagonalization with overlap
      ethr =  2.04E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.23 secs
+     total cpu time spent up to now is      3.21 secs
 
      End of self-consistent calculation
 
@@ -5452,7 +5452,7 @@ Si       0.124212765   0.124212765   0.124212765
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.23 secs
+     total cpu time spent up to now is      3.22 secs
 
      Self-consistent Calculation
 
@@ -5466,7 +5466,7 @@ Si       0.124212765   0.124212765   0.124212765
      Davidson diagonalization with overlap
      ethr =  2.88E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.25 secs
+     total cpu time spent up to now is      3.23 secs
 
      total energy              =   -14.44913066 ryd
      estimated scf accuracy    <     0.00000190 ryd
@@ -5475,7 +5475,7 @@ Si       0.124212765   0.124212765   0.124212765
      Davidson diagonalization with overlap
      ethr =  2.38E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.26 secs
+     total cpu time spent up to now is      3.24 secs
 
      total energy              =   -14.44913099 ryd
      estimated scf accuracy    <     0.00000015 ryd
@@ -5484,7 +5484,7 @@ Si       0.124212765   0.124212765   0.124212765
      Davidson diagonalization with overlap
      ethr =  1.91E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.26 secs
+     total cpu time spent up to now is      3.24 secs
 
      End of self-consistent calculation
 
@@ -5516,7 +5516,7 @@ Si       0.123974956   0.123974956   0.123974956
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.27 secs
+     total cpu time spent up to now is      3.25 secs
 
      Self-consistent Calculation
 
@@ -5530,7 +5530,7 @@ Si       0.123974956   0.123974956   0.123974956
      Davidson diagonalization with overlap
      ethr =  2.57E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.28 secs
+     total cpu time spent up to now is      3.26 secs
 
      total energy              =   -14.44897974 ryd
      estimated scf accuracy    <     0.00000170 ryd
@@ -5539,7 +5539,7 @@ Si       0.123974956   0.123974956   0.123974956
      Davidson diagonalization with overlap
      ethr =  2.12E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.29 secs
+     total cpu time spent up to now is      3.27 secs
 
      total energy              =   -14.44898003 ryd
      estimated scf accuracy    <     0.00000014 ryd
@@ -5548,7 +5548,7 @@ Si       0.123974956   0.123974956   0.123974956
      Davidson diagonalization with overlap
      ethr =  1.72E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.29 secs
+     total cpu time spent up to now is      3.27 secs
 
      End of self-consistent calculation
 
@@ -5580,7 +5580,7 @@ Si       0.123755228   0.123755228   0.123755228
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.30 secs
+     total cpu time spent up to now is      3.28 secs
 
      Self-consistent Calculation
 
@@ -5594,7 +5594,7 @@ Si       0.123755228   0.123755228   0.123755228
      Davidson diagonalization with overlap
      ethr =  2.19E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.31 secs
+     total cpu time spent up to now is      3.30 secs
 
      total energy              =   -14.44880453 ryd
      estimated scf accuracy    <     0.00000145 ryd
@@ -5603,7 +5603,7 @@ Si       0.123755228   0.123755228   0.123755228
      Davidson diagonalization with overlap
      ethr =  1.81E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.32 secs
+     total cpu time spent up to now is      3.31 secs
 
      total energy              =   -14.44880478 ryd
      estimated scf accuracy    <     0.00000012 ryd
@@ -5612,7 +5612,7 @@ Si       0.123755228   0.123755228   0.123755228
      Davidson diagonalization with overlap
      ethr =  1.48E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.32 secs
+     total cpu time spent up to now is      3.31 secs
 
      End of self-consistent calculation
 
@@ -5644,7 +5644,7 @@ Si       0.123557525   0.123557525   0.123557525
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.33 secs
+     total cpu time spent up to now is      3.32 secs
 
      Self-consistent Calculation
 
@@ -5658,7 +5658,7 @@ Si       0.123557525   0.123557525   0.123557525
      Davidson diagonalization with overlap
      ethr =  1.77E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.35 secs
+     total cpu time spent up to now is      3.33 secs
 
      total energy              =   -14.44861734 ryd
      estimated scf accuracy    <     0.00000117 ryd
@@ -5667,7 +5667,7 @@ Si       0.123557525   0.123557525   0.123557525
      Davidson diagonalization with overlap
      ethr =  1.46E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.36 secs
+     total cpu time spent up to now is      3.34 secs
 
      total energy              =   -14.44861754 ryd
      estimated scf accuracy    <     0.00000010 ryd
@@ -5676,7 +5676,7 @@ Si       0.123557525   0.123557525   0.123557525
      Davidson diagonalization with overlap
      ethr =  1.20E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.36 secs
+     total cpu time spent up to now is      3.34 secs
 
      End of self-consistent calculation
 
@@ -5708,7 +5708,7 @@ Si       0.123385414   0.123385414   0.123385414
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.37 secs
+     total cpu time spent up to now is      3.35 secs
 
      Self-consistent Calculation
 
@@ -5722,7 +5722,7 @@ Si       0.123385414   0.123385414   0.123385414
      Davidson diagonalization with overlap
      ethr =  1.34E-07,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.38 secs
+     total cpu time spent up to now is      3.36 secs
 
      total energy              =   -14.44843146 ryd
      estimated scf accuracy    <     0.00000089 ryd
@@ -5731,7 +5731,7 @@ Si       0.123385414   0.123385414   0.123385414
      Davidson diagonalization with overlap
      ethr =  1.11E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.39 secs
+     total cpu time spent up to now is      3.38 secs
 
      total energy              =   -14.44843162 ryd
      estimated scf accuracy    <     0.00000007 ryd
@@ -5740,7 +5740,7 @@ Si       0.123385414   0.123385414   0.123385414
      Davidson diagonalization with overlap
      ethr =  9.17E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.40 secs
+     total cpu time spent up to now is      3.38 secs
 
      End of self-consistent calculation
 
@@ -5772,7 +5772,7 @@ Si       0.123242020   0.123242020   0.123242020
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.40 secs
+     total cpu time spent up to now is      3.39 secs
 
      Self-consistent Calculation
 
@@ -5786,7 +5786,7 @@ Si       0.123242020   0.123242020   0.123242020
      Davidson diagonalization with overlap
      ethr =  9.33E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.42 secs
+     total cpu time spent up to now is      3.40 secs
 
      total energy              =   -14.44826024 ryd
      estimated scf accuracy    <     0.00000061 ryd
@@ -5795,7 +5795,7 @@ Si       0.123242020   0.123242020   0.123242020
      Davidson diagonalization with overlap
      ethr =  7.68E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.43 secs
+     total cpu time spent up to now is      3.41 secs
 
      total energy              =   -14.44826035 ryd
      estimated scf accuracy    <     0.00000005 ryd
@@ -5804,7 +5804,7 @@ Si       0.123242020   0.123242020   0.123242020
      Davidson diagonalization with overlap
      ethr =  6.40E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.43 secs
+     total cpu time spent up to now is      3.42 secs
 
      End of self-consistent calculation
 
@@ -5836,7 +5836,7 @@ Si       0.123129955   0.123129955   0.123129955
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.44 secs
+     total cpu time spent up to now is      3.43 secs
 
      Self-consistent Calculation
 
@@ -5850,7 +5850,7 @@ Si       0.123129955   0.123129955   0.123129955
      Davidson diagonalization with overlap
      ethr =  5.70E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.45 secs
+     total cpu time spent up to now is      3.44 secs
 
      total energy              =   -14.44811603 ryd
      estimated scf accuracy    <     0.00000037 ryd
@@ -5859,7 +5859,7 @@ Si       0.123129955   0.123129955   0.123129955
      Davidson diagonalization with overlap
      ethr =  4.69E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.46 secs
+     total cpu time spent up to now is      3.44 secs
 
      total energy              =   -14.44811609 ryd
      estimated scf accuracy    <     0.00000003 ryd
@@ -5868,7 +5868,7 @@ Si       0.123129955   0.123129955   0.123129955
      Davidson diagonalization with overlap
      ethr =  3.92E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.47 secs
+     total cpu time spent up to now is      3.45 secs
 
      End of self-consistent calculation
 
@@ -5900,7 +5900,7 @@ Si       0.123051271   0.123051271   0.123051271
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.48 secs
+     total cpu time spent up to now is      3.46 secs
 
      Self-consistent Calculation
 
@@ -5914,7 +5914,7 @@ Si       0.123051271   0.123051271   0.123051271
      Davidson diagonalization with overlap
      ethr =  2.81E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.50 secs
+     total cpu time spent up to now is      3.47 secs
 
      total energy              =   -14.44800930 ryd
      estimated scf accuracy    <     0.00000018 ryd
@@ -5923,7 +5923,7 @@ Si       0.123051271   0.123051271   0.123051271
      Davidson diagonalization with overlap
      ethr =  2.31E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.51 secs
+     total cpu time spent up to now is      3.48 secs
 
      total energy              =   -14.44800933 ryd
      estimated scf accuracy    <     0.00000002 ryd
@@ -5932,7 +5932,7 @@ Si       0.123051271   0.123051271   0.123051271
      Davidson diagonalization with overlap
      ethr =  1.94E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.52 secs
+     total cpu time spent up to now is      3.49 secs
 
      End of self-consistent calculation
 
@@ -5964,7 +5964,7 @@ Si       0.123007410   0.123007410   0.123007410
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.53 secs
+     total cpu time spent up to now is      3.50 secs
 
      Self-consistent Calculation
 
@@ -5978,7 +5978,7 @@ Si       0.123007410   0.123007410   0.123007410
      Davidson diagonalization with overlap
      ethr =  8.73E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.54 secs
+     total cpu time spent up to now is      3.51 secs
 
      total energy              =   -14.44794785 ryd
      estimated scf accuracy    <     0.00000006 ryd
@@ -5987,7 +5987,7 @@ Si       0.123007410   0.123007410   0.123007410
      Davidson diagonalization with overlap
      ethr =  7.18E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.54 secs
+     total cpu time spent up to now is      3.52 secs
 
      End of self-consistent calculation
 
@@ -6019,7 +6019,7 @@ Si       0.122999184   0.122999184   0.122999184
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.55 secs
+     total cpu time spent up to now is      3.53 secs
 
      Self-consistent Calculation
 
@@ -6033,7 +6033,7 @@ Si       0.122999184   0.122999184   0.122999184
      Davidson diagonalization with overlap
      ethr =  3.50E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.56 secs
+     total cpu time spent up to now is      3.54 secs
 
      End of self-consistent calculation
 
@@ -6065,7 +6065,7 @@ Si       0.123026743   0.123026743   0.123026743
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.57 secs
+     total cpu time spent up to now is      3.55 secs
 
      Self-consistent Calculation
 
@@ -6079,7 +6079,7 @@ Si       0.123026743   0.123026743   0.123026743
      Davidson diagonalization with overlap
      ethr =  3.82E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.58 secs
+     total cpu time spent up to now is      3.57 secs
 
      total energy              =   -14.44797513 ryd
      estimated scf accuracy    <     0.00000003 ryd
@@ -6088,7 +6088,7 @@ Si       0.123026743   0.123026743   0.123026743
      Davidson diagonalization with overlap
      ethr =  3.17E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.59 secs
+     total cpu time spent up to now is      3.58 secs
 
      End of self-consistent calculation
 
@@ -6120,7 +6120,7 @@ Si       0.123089569   0.123089569   0.123089569
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.60 secs
+     total cpu time spent up to now is      3.58 secs
 
      Self-consistent Calculation
 
@@ -6134,7 +6134,7 @@ Si       0.123089569   0.123089569   0.123089569
      Davidson diagonalization with overlap
      ethr =  1.80E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.61 secs
+     total cpu time spent up to now is      3.59 secs
 
      total energy              =   -14.44806184 ryd
      estimated scf accuracy    <     0.00000012 ryd
@@ -6143,7 +6143,7 @@ Si       0.123089569   0.123089569   0.123089569
      Davidson diagonalization with overlap
      ethr =  1.48E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.61 secs
+     total cpu time spent up to now is      3.60 secs
 
      End of self-consistent calculation
 
@@ -6189,7 +6189,7 @@ Si       0.123186504   0.123186504   0.123186504
      Davidson diagonalization with overlap
      ethr =  4.32E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.63 secs
+     total cpu time spent up to now is      3.62 secs
 
      total energy              =   -14.44818998 ryd
      estimated scf accuracy    <     0.00000028 ryd
@@ -6198,7 +6198,7 @@ Si       0.123186504   0.123186504   0.123186504
      Davidson diagonalization with overlap
      ethr =  3.55E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.64 secs
+     total cpu time spent up to now is      3.63 secs
 
      total energy              =   -14.44819003 ryd
      estimated scf accuracy    <     0.00000002 ryd
@@ -6207,7 +6207,7 @@ Si       0.123186504   0.123186504   0.123186504
      Davidson diagonalization with overlap
      ethr =  2.93E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.65 secs
+     total cpu time spent up to now is      3.64 secs
 
      End of self-consistent calculation
 
@@ -6239,7 +6239,7 @@ Si       0.123315778   0.123315778   0.123315778
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      3.66 secs
+     total cpu time spent up to now is      3.64 secs
 
      Self-consistent Calculation
 
@@ -6253,7 +6253,7 @@ Si       0.123315778   0.123315778   0.123315778
      Davidson diagonalization with overlap
      ethr =  7.57E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.67 secs
+     total cpu time spent up to now is      3.65 secs
 
      total energy              =   -14.44835022 ryd
      estimated scf accuracy    <     0.00000050 ryd
@@ -6262,7 +6262,7 @@ Si       0.123315778   0.123315778   0.123315778
      Davidson diagonalization with overlap
      ethr =  6.23E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.67 secs
+     total cpu time spent up to now is      3.66 secs
 
      total energy              =   -14.44835031 ryd
      estimated scf accuracy    <     0.00000004 ryd
@@ -6271,7 +6271,7 @@ Si       0.123315778   0.123315778   0.123315778
      Davidson diagonalization with overlap
      ethr =  5.20E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.68 secs
+     total cpu time spent up to now is      3.67 secs
 
      End of self-consistent calculation
 
@@ -6294,42 +6294,42 @@ Si       0.123315778   0.123315778   0.123315778
 
      Writing output data file       pwscf.save
  
-     PWSCF        :     3.69s CPU time
+     PWSCF        :     3.68s CPU time
 
      init_run     :     0.06s CPU
-     electrons    :     2.66s CPU (     100 calls,   0.027 s avg)
-     forces       :     0.21s CPU (     100 calls,   0.002 s avg)
+     electrons    :     2.64s CPU (     100 calls,   0.026 s avg)
+     forces       :     0.28s CPU (     100 calls,   0.003 s avg)
  
-     electrons    :     2.66s CPU (     100 calls,   0.027 s avg)
-     c_bands      :     1.33s CPU (     381 calls,   0.003 s avg)
-     sum_band     :     0.25s CPU (     381 calls,   0.001 s avg)
-     v_of_rho     :     0.49s CPU (     382 calls,   0.001 s avg)
-     mix_rho      :     0.13s CPU (     381 calls,   0.000 s avg)
+     electrons    :     2.64s CPU (     100 calls,   0.026 s avg)
+     c_bands      :     1.24s CPU (     381 calls,   0.003 s avg)
+     sum_band     :     0.29s CPU (     381 calls,   0.001 s avg)
+     v_of_rho     :     0.69s CPU (     382 calls,   0.002 s avg)
+     mix_rho      :     0.04s CPU (     381 calls,   0.000 s avg)
  
-     c_bands      :     1.33s CPU (     381 calls,   0.003 s avg)
-     init_us_2    :     0.03s CPU (     763 calls,   0.000 s avg)
-     cegterg      :     1.19s CPU (     381 calls,   0.003 s avg)
+     c_bands      :     1.24s CPU (     381 calls,   0.003 s avg)
+     init_us_2    :     0.09s CPU (     763 calls,   0.000 s avg)
+     cegterg      :     1.08s CPU (     381 calls,   0.003 s avg)
  
-     sum_band     :     0.25s CPU (     381 calls,   0.001 s avg)
+     sum_band     :     0.29s CPU (     381 calls,   0.001 s avg)
  
-     wfcrot       :     0.01s CPU
-     cegterg      :     1.19s CPU (     381 calls,   0.003 s avg)
-     h_psi        :     0.93s CPU (     861 calls,   0.001 s avg)
-     g_psi        :     0.04s CPU (     479 calls,   0.000 s avg)
-     overlap      :     0.02s CPU (     479 calls,   0.000 s avg)
-     cdiaghg      :     0.07s CPU (     860 calls,   0.000 s avg)
-     update       :     0.09s CPU (     479 calls,   0.000 s avg)
-     last         :     0.01s CPU (     381 calls,   0.000 s avg)
+     wfcrot       :     0.00s CPU
+     cegterg      :     1.08s CPU (     381 calls,   0.003 s avg)
+     h_psi        :     0.92s CPU (     861 calls,   0.001 s avg)
+     g_psi        :     0.00s CPU (     479 calls,   0.000 s avg)
+     overlap      :     0.05s CPU (     479 calls,   0.000 s avg)
+     cdiaghg      :     0.08s CPU (     860 calls,   0.000 s avg)
+     update       :     0.01s CPU (     479 calls,   0.000 s avg)
+     last         :     0.00s CPU (     381 calls,   0.000 s avg)
  
-     h_psi        :     0.93s CPU (     861 calls,   0.001 s avg)
+     h_psi        :     0.92s CPU (     861 calls,   0.001 s avg)
      init         :     0.00s CPU (     861 calls,   0.000 s avg)
-     firstfft     :     0.34s CPU (    3351 calls,   0.000 s avg)
-     secondfft    :     0.41s CPU (    3351 calls,   0.000 s avg)
+     firstfft     :     0.37s CPU (    3351 calls,   0.000 s avg)
+     secondfft    :     0.35s CPU (    3351 calls,   0.000 s avg)
      add_vuspsi   :     0.06s CPU (     861 calls,   0.000 s avg)
  
      General routines
-     ccalbec      :     0.04s CPU (     961 calls,   0.000 s avg)
-     cft3         :     0.68s CPU (    1926 calls,   0.000 s avg)
-     cft3s        :     0.89s CPU (    8226 calls,   0.000 s avg)
-     davcio       :     0.05s CPU (    1483 calls,   0.000 s avg)
+     ccalbec      :     0.08s CPU (     961 calls,   0.000 s avg)
+     cft3         :     0.76s CPU (    1926 calls,   0.000 s avg)
+     cft3s        :     0.80s CPU (    8226 calls,   0.000 s avg)
+     davcio       :     0.04s CPU (    1483 calls,   0.000 s avg)
  

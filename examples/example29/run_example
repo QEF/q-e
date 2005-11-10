@@ -79,7 +79,7 @@ rm -rf $TMP_DIR/*
 $ECHO " done"
 
 # molecular dynamics calculation
-cat > new1.in << EOF
+cat > si2.ensemble-dyn.in << EOF
 &CONTROL
   calculation = 'cp',
   restart_mode = 'from_scratch',
@@ -147,7 +147,7 @@ Si 0. 0. 0.  1 1 1
 Si 0. 0. 5.5 1 1 1
 EOF
 $ECHO "  running the calculation BO-MD for Si-dimer...\c"
-$CP_COMMAND < new1.in > new1.out
+$CP_COMMAND < si2.ensemble-dyn.in > si2.ensemble-dyn.out
 $ECHO " done"
 
 $ECHO

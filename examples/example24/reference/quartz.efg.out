@@ -1,6 +1,6 @@
 
      Program POST-PROC v.3.0    starts ...
-     Today is 17Oct2005 at  4:44:41 
+     Today is 10Nov2005 at  4:46:40 
 
      Reading file quartz.save ...      only dimensions
      read complete
@@ -9,7 +9,7 @@
      read complete
 
      nbndx  =    24  nbnd   =    24  natomwfc =    36  npwx   =    9229
-     nelec  =  48.00  nkb   =     9  ngl    =    5892
+     nelec  =  48.00  nkb   =     9  ngl    =    5893
  N_AEwfc atom           1 :           4
  N_AEwfc atom           2 :           4
  

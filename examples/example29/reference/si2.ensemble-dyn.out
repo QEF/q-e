@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.0 - Tue May 24 14:33:50 EDT 2005                          
+     Version: 3.0 - Mon Oct 24 02:34:10 CEST 2005                         
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  19:59:44   7Nov2005               
+   This run was started on:   5: 9:34  10Nov2005               
 
    Serial Build
      from  system_checkin      : info #        -1
@@ -23,7 +23,7 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /home/puma/espresso/pseudo/Si.pbe-rrkj.UPF
+   /scr/giannozz/espresso/pseudo/Si.pbe-rrkj.UPF
    file type is 20
 
 
@@ -238,7 +238,7 @@ Step     4       1     -7.56894     -7.70164     -7.70162     7
  * Physical Quantities at step:     5
  
 Occupations  :
- 1.999949 1.999450 1.627478 0.933442 0.933442 0.245828 0.245827 0.014584
+ 1.999949 1.999450 1.627478 0.933442 0.933442 0.245828 0.245827 0.014583
 
 
                 total energy =       -7.56895 Hartree a.u.
@@ -263,50 +263,58 @@ Occupations  :
     0.00000000    0.00000000   15.00000000
 
    System Density [g/cm^3] :     0.4196
- 
+
+
+   Center of mass square displacement (a.u.):   6.587778
+
    Total stress (GPa)
         0.00000000         0.00000000         0.00000000
         0.00000000         0.00000000         0.00000000
         0.00000000         0.00000000         0.00000000
  
    ATOMIC_POSITIONS
-   Si   0.438351E-07 -0.751683E-07  0.508179E-03
-   Si  -0.438351E-07  0.751683E-07  0.549949E+01
+   Si   0.434582E-07 -0.749941E-07  0.508179E-03
+   Si  -0.434582E-07  0.749941E-07  0.549949E+01
  
    ATOMIC_VELOCITIES
-   Si   0.118700E-08 -0.994452E-09  0.228523E-04
-   Si  -0.118700E-08  0.994452E-09 -0.228523E-04
+   Si   0.117638E-08 -0.100027E-08  0.228523E-04
+   Si  -0.117638E-08  0.100027E-08 -0.228523E-04
  
    Forces acting on atoms (au):
-   Si   0.229704E-05 -0.230253E-04  0.259522E-01
-   Si  -0.247805E-05 -0.227327E-04 -0.259814E-01
+   Si   0.235260E-05 -0.233712E-04  0.259522E-01
+   Si  -0.254040E-05 -0.227311E-04 -0.259814E-01
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   Mean Square Displacement (a.u.)
+        1       2.81     0.0000
 Step     5       2     -7.56895     -7.70165     -7.70162    10
 
 
               averaged quantities :
          ekinc          ekin          epot          etot     tempp
        0.00000       2.49388     -11.84272      -7.56895       1.1
-     initialize   :     0.50s CPU
-     total_time   :   200.29s CPU (       5 calls,  40.058 s avg)
-     formf        :     0.06s CPU
-     rhoofr       :    36.36s CPU (    1359 calls,   0.027 s avg)
-     vofrho       :   130.90s CPU (    1359 calls,   0.096 s avg)
-     dforce       :    27.65s CPU (    5120 calls,   0.005 s avg)
-     gram         :     0.04s CPU (     159 calls,   0.000 s avg)
-     newd         :     1.95s CPU (    1355 calls,   0.001 s avg)
-     calbec       :     0.16s CPU (     622 calls,   0.000 s avg)
-     prefor       :     0.39s CPU (    1966 calls,   0.000 s avg)
+     initialize   :     0.51s CPU
+     total_time   :   172.78s CPU (       5 calls,  34.556 s avg)
+     formf        :     0.07s CPU
+     rhoofr       :    29.27s CPU (    1359 calls,   0.022 s avg)
+     vofrho       :   109.51s CPU (    1359 calls,   0.081 s avg)
+     dforce       :    28.96s CPU (    5120 calls,   0.006 s avg)
+     gram         :     0.03s CPU (     159 calls,   0.000 s avg)
+     newd         :     1.69s CPU (    1355 calls,   0.001 s avg)
+     calbec       :     0.10s CPU (     622 calls,   0.000 s avg)
+     prefor       :     0.24s CPU (    1966 calls,   0.000 s avg)
      strucf       :     0.00s CPU (       6 calls,   0.000 s avg)
      nlfl         :     0.00s CPU (       5 calls,   0.000 s avg)
      nlfq         :     0.00s CPU (       5 calls,   0.000 s avg)
-     nlsm1        :     0.16s CPU (     622 calls,   0.000 s avg)
-     nlsm2        :     0.00s CPU (      10 calls,   0.000 s avg)
-     fft          :    72.81s CPU (   10872 calls,   0.007 s avg)
-     ffts         :    17.39s CPU (    2718 calls,   0.006 s avg)
-     fftw         :    29.96s CPU (   15676 calls,   0.002 s avg)
+     nlsm1        :     0.10s CPU (     622 calls,   0.000 s avg)
+     nlsm2        :     0.01s CPU (      10 calls,   0.001 s avg)
+     fft          :    53.51s CPU (   10872 calls,   0.005 s avg)
+     ffts         :    12.27s CPU (    2718 calls,   0.005 s avg)
+     fftw         :    31.58s CPU (   15676 calls,   0.002 s avg)
 
    writing restart file: .//Si_dimer_50.save
-   restart file written in    0.211 sec.
+   restart file written in    0.461 sec.
 
 
 
@@ -314,13 +322,13 @@ Step     5       2     -7.56895     -7.70165     -7.70162    10
 
 
  
-     CP           :  3m21.00s CPU time
+     CP           :  2m53.69s CPU time
 
  
-   This run was terminated on:  20: 3: 7   7Nov2005            
+   This run was terminated on:   5:12:28  10Nov2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:   203.0
+   ELAPSED SECONDS:   174.0
    JOB DONE.
 =------------------------------------------------------------------------------=
 

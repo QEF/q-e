@@ -1,6 +1,6 @@
 
      Program PWSCF     v.3.0    starts ...
-     Today is  2Nov2005 at  5: 4:24 
+     Today is 10Nov2005 at  5: 7:34 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -96,7 +96,7 @@
 
      negative rho (up, down):  0.329E-02 0.000E+00
 
-     total cpu time spent up to now is      0.41 secs
+     total cpu time spent up to now is      0.39 secs
 
      total energy              =   -37.93426931 ryd
      estimated scf accuracy    <     0.42397121 ryd
@@ -107,7 +107,7 @@
 
      negative rho (up, down):  0.890E-03 0.000E+00
 
-     total cpu time spent up to now is      0.55 secs
+     total cpu time spent up to now is      0.53 secs
 
      total energy              =   -37.94024206 ryd
      estimated scf accuracy    <     0.07831496 ryd
@@ -118,7 +118,7 @@
 
      negative rho (up, down):  0.294E-04 0.000E+00
 
-     total cpu time spent up to now is      0.69 secs
+     total cpu time spent up to now is      0.66 secs
 
      total energy              =   -37.94252907 ryd
      estimated scf accuracy    <     0.00834927 ryd
@@ -129,7 +129,7 @@
 
      negative rho (up, down):  0.217E-04 0.000E+00
 
-     total cpu time spent up to now is      0.85 secs
+     total cpu time spent up to now is      0.82 secs
 
      total energy              =   -37.94394290 ryd
      estimated scf accuracy    <     0.00080013 ryd
@@ -140,7 +140,7 @@
 
      negative rho (up, down):  0.848E-07 0.000E+00
 
-     total cpu time spent up to now is      1.00 secs
+     total cpu time spent up to now is      0.97 secs
 
      total energy              =   -37.94398150 ryd
      estimated scf accuracy    <     0.00017881 ryd
@@ -149,7 +149,7 @@
      Davidson diagonalization with overlap
      ethr =  8.13E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.16 secs
+     total cpu time spent up to now is      1.13 secs
 
      total energy              =   -37.94401031 ryd
      estimated scf accuracy    <     0.00002503 ryd
@@ -158,7 +158,7 @@
      Davidson diagonalization with overlap
      ethr =  1.14E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.33 secs
+     total cpu time spent up to now is      1.30 secs
 
      total energy              =   -37.94401659 ryd
      estimated scf accuracy    <     0.00000513 ryd
@@ -167,7 +167,7 @@
      Davidson diagonalization with overlap
      ethr =  2.33E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.49 secs
+     total cpu time spent up to now is      1.45 secs
 
      total energy              =   -37.94401730 ryd
      estimated scf accuracy    <     0.00000047 ryd
@@ -176,7 +176,7 @@
      Davidson diagonalization with overlap
      ethr =  2.16E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      1.67 secs
+     total cpu time spent up to now is      1.63 secs
 
      total energy              =   -37.94401735 ryd
      estimated scf accuracy    <     0.00000024 ryd
@@ -185,7 +185,7 @@
      Davidson diagonalization with overlap
      ethr =  1.10E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.82 secs
+     total cpu time spent up to now is      1.78 secs
 
      End of self-consistent calculation
 
@@ -250,7 +250,7 @@ Si       1.192211446  -1.124687649  -0.000001108
      NEW-OLD atomic charge density approx. for the potential
      Check: negative starting charge=   -0.006125
 
-     total cpu time spent up to now is      1.96 secs
+     total cpu time spent up to now is      1.91 secs
 
      Self-consistent Calculation
 
@@ -264,7 +264,7 @@ Si       1.192211446  -1.124687649  -0.000001108
      Davidson diagonalization with overlap
      ethr =  2.53E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.21 secs
+     total cpu time spent up to now is      2.16 secs
 
      End of self-consistent calculation
 
@@ -328,7 +328,7 @@ Si       1.192211673  -1.124551525  -0.000001119
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is      2.35 secs
+     total cpu time spent up to now is      2.30 secs
 
      Self-consistent Calculation
 
@@ -342,7 +342,7 @@ Si       1.192211673  -1.124551525  -0.000001119
      Davidson diagonalization with overlap
      ethr =  3.53E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      2.62 secs
+     total cpu time spent up to now is      2.55 secs
 
      total energy              =   -37.94402923 ryd
      estimated scf accuracy    <     0.00000011 ryd
@@ -351,7 +351,7 @@ Si       1.192211673  -1.124551525  -0.000001119
      Davidson diagonalization with overlap
      ethr =  5.20E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      2.76 secs
+     total cpu time spent up to now is      2.70 secs
 
      End of self-consistent calculation
 
@@ -430,7 +430,7 @@ Si       1.192211673  -1.124551525  -0.000001119
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is      2.91 secs
+     total cpu time spent up to now is      2.83 secs
 
      Self-consistent Calculation
 
@@ -444,7 +444,7 @@ Si       1.192211673  -1.124551525  -0.000001119
      Davidson diagonalization with overlap
      ethr =  9.34E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      3.20 secs
+     total cpu time spent up to now is      3.09 secs
 
      End of self-consistent calculation
 
@@ -516,7 +516,7 @@ Si       1.197912208  -1.130664523  -0.000001311
 
      negative rho (up, down):  0.261E-07 0.000E+00
 
-     total cpu time spent up to now is      3.33 secs
+     total cpu time spent up to now is      3.22 secs
 
      Self-consistent Calculation
 
@@ -530,7 +530,7 @@ Si       1.197912208  -1.130664523  -0.000001311
      Davidson diagonalization with overlap
      ethr =  2.13E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      3.61 secs
+     total cpu time spent up to now is      3.50 secs
 
      total energy              =   -37.94405923 ryd
      estimated scf accuracy    <     0.00005116 ryd
@@ -539,7 +539,7 @@ Si       1.197912208  -1.130664523  -0.000001311
      Davidson diagonalization with overlap
      ethr =  2.33E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.77 secs
+     total cpu time spent up to now is      3.65 secs
 
      total energy              =   -37.94406485 ryd
      estimated scf accuracy    <     0.00000626 ryd
@@ -548,7 +548,7 @@ Si       1.197912208  -1.130664523  -0.000001311
      Davidson diagonalization with overlap
      ethr =  2.85E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      3.92 secs
+     total cpu time spent up to now is      3.79 secs
 
      total energy              =   -37.94406526 ryd
      estimated scf accuracy    <     0.00000147 ryd
@@ -557,7 +557,7 @@ Si       1.197912208  -1.130664523  -0.000001311
      Davidson diagonalization with overlap
      ethr =  6.68E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      4.05 secs
+     total cpu time spent up to now is      3.92 secs
 
      End of self-consistent calculation
 
@@ -624,7 +624,7 @@ Si       1.203612800  -1.136684997  -0.000001476
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is      4.19 secs
+     total cpu time spent up to now is      4.05 secs
 
      Self-consistent Calculation
 
@@ -638,7 +638,7 @@ Si       1.203612800  -1.136684997  -0.000001476
      Davidson diagonalization with overlap
      ethr =  2.26E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      4.48 secs
+     total cpu time spent up to now is      4.34 secs
 
      total energy              =   -37.94368132 ryd
      estimated scf accuracy    <     0.00000020 ryd
@@ -647,7 +647,7 @@ Si       1.203612800  -1.136684997  -0.000001476
      Davidson diagonalization with overlap
      ethr =  9.09E-10,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is      4.69 secs
+     total cpu time spent up to now is      4.55 secs
 
      total energy              =   -37.94368165 ryd
      estimated scf accuracy    <     0.00000023 ryd
@@ -656,7 +656,7 @@ Si       1.203612800  -1.136684997  -0.000001476
      Davidson diagonalization with overlap
      ethr =  9.09E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      4.83 secs
+     total cpu time spent up to now is      4.68 secs
 
      End of self-consistent calculation
 
@@ -723,7 +723,7 @@ Si       1.209313437  -1.142585670  -0.000001559
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is      4.96 secs
+     total cpu time spent up to now is      4.81 secs
 
      Self-consistent Calculation
 
@@ -737,7 +737,7 @@ Si       1.209313437  -1.142585670  -0.000001559
      Davidson diagonalization with overlap
      ethr =  5.63E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      5.24 secs
+     total cpu time spent up to now is      5.07 secs
 
      total energy              =   -37.94293473 ryd
      estimated scf accuracy    <     0.00000608 ryd
@@ -746,7 +746,7 @@ Si       1.209313437  -1.142585670  -0.000001559
      Davidson diagonalization with overlap
      ethr =  2.76E-08,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is      5.44 secs
+     total cpu time spent up to now is      5.27 secs
 
      total energy              =   -37.94293811 ryd
      estimated scf accuracy    <     0.00000337 ryd
@@ -755,7 +755,7 @@ Si       1.209313437  -1.142585670  -0.000001559
      Davidson diagonalization with overlap
      ethr =  1.53E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      5.59 secs
+     total cpu time spent up to now is      5.42 secs
 
      End of self-consistent calculation
 
@@ -822,7 +822,7 @@ Si       1.215013886  -1.148341112  -0.000001868
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is      5.72 secs
+     total cpu time spent up to now is      5.56 secs
 
      Self-consistent Calculation
 
@@ -836,7 +836,7 @@ Si       1.215013886  -1.148341112  -0.000001868
      Davidson diagonalization with overlap
      ethr =  5.55E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      6.02 secs
+     total cpu time spent up to now is      5.85 secs
 
      total energy              =   -37.94191391 ryd
      estimated scf accuracy    <     0.00000160 ryd
@@ -845,7 +845,7 @@ Si       1.215013886  -1.148341112  -0.000001868
      Davidson diagonalization with overlap
      ethr =  7.26E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is      6.22 secs
+     total cpu time spent up to now is      6.05 secs
 
      total energy              =   -37.94191524 ryd
      estimated scf accuracy    <     0.00000069 ryd
@@ -854,7 +854,7 @@ Si       1.215013886  -1.148341112  -0.000001868
      Davidson diagonalization with overlap
      ethr =  3.14E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      6.37 secs
+     total cpu time spent up to now is      6.19 secs
 
      End of self-consistent calculation
 
@@ -921,7 +921,7 @@ Si       1.220714187  -1.153929513  -0.000001970
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is      6.50 secs
+     total cpu time spent up to now is      6.33 secs
 
      Self-consistent Calculation
 
@@ -935,7 +935,7 @@ Si       1.220714187  -1.153929513  -0.000001970
      Davidson diagonalization with overlap
      ethr =  1.48E-07,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is      6.84 secs
+     total cpu time spent up to now is      6.68 secs
 
      total energy              =   -37.94068778 ryd
      estimated scf accuracy    <     0.00000073 ryd
@@ -944,7 +944,7 @@ Si       1.220714187  -1.153929513  -0.000001970
      Davidson diagonalization with overlap
      ethr =  3.34E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      7.02 secs
+     total cpu time spent up to now is      6.84 secs
 
      total energy              =   -37.94068800 ryd
      estimated scf accuracy    <     0.00000013 ryd
@@ -953,7 +953,7 @@ Si       1.220714187  -1.153929513  -0.000001970
      Davidson diagonalization with overlap
      ethr =  5.85E-10,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is      7.18 secs
+     total cpu time spent up to now is      7.00 secs
 
      End of self-consistent calculation
 
@@ -1020,7 +1020,7 @@ Si       1.226414204  -1.159336572  -0.000002214
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is      7.31 secs
+     total cpu time spent up to now is      7.13 secs
 
      Self-consistent Calculation
 
@@ -1034,7 +1034,7 @@ Si       1.226414204  -1.159336572  -0.000002214
      Davidson diagonalization with overlap
      ethr =  4.50E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      7.62 secs
+     total cpu time spent up to now is      7.44 secs
 
      total energy              =   -37.93930880 ryd
      estimated scf accuracy    <     0.00000129 ryd
@@ -1043,7 +1043,7 @@ Si       1.226414204  -1.159336572  -0.000002214
      Davidson diagonalization with overlap
      ethr =  5.87E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is      7.83 secs
+     total cpu time spent up to now is      7.65 secs
 
      total energy              =   -37.93930994 ryd
      estimated scf accuracy    <     0.00000116 ryd
@@ -1052,7 +1052,7 @@ Si       1.226414204  -1.159336572  -0.000002214
      Davidson diagonalization with overlap
      ethr =  5.26E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      7.97 secs
+     total cpu time spent up to now is      7.79 secs
 
      End of self-consistent calculation
 
@@ -1119,7 +1119,7 @@ Si       1.232113989  -1.164559386  -0.000001984
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is      8.10 secs
+     total cpu time spent up to now is      7.92 secs
 
      Self-consistent Calculation
 
@@ -1133,7 +1133,7 @@ Si       1.232113989  -1.164559386  -0.000001984
      Davidson diagonalization with overlap
      ethr =  9.84E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      8.41 secs
+     total cpu time spent up to now is      8.22 secs
 
      total energy              =   -37.93779853 ryd
      estimated scf accuracy    <     0.00000926 ryd
@@ -1142,7 +1142,7 @@ Si       1.232113989  -1.164559386  -0.000001984
      Davidson diagonalization with overlap
      ethr =  4.21E-08,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is      8.60 secs
+     total cpu time spent up to now is      8.40 secs
 
      total energy              =   -37.93780352 ryd
      estimated scf accuracy    <     0.00000759 ryd
@@ -1151,7 +1151,7 @@ Si       1.232113989  -1.164559386  -0.000001984
      Davidson diagonalization with overlap
      ethr =  3.45E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      8.76 secs
+     total cpu time spent up to now is      8.55 secs
 
      total energy              =   -37.93780425 ryd
      estimated scf accuracy    <     0.00000031 ryd
@@ -1160,7 +1160,7 @@ Si       1.232113989  -1.164559386  -0.000001984
      Davidson diagonalization with overlap
      ethr =  1.42E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      8.92 secs
+     total cpu time spent up to now is      8.71 secs
 
      End of self-consistent calculation
 
@@ -1227,7 +1227,7 @@ Si       1.237813695  -1.169610604  -0.000001695
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is      9.05 secs
+     total cpu time spent up to now is      8.84 secs
 
      Self-consistent Calculation
 
@@ -1241,7 +1241,7 @@ Si       1.237813695  -1.169610604  -0.000001695
      Davidson diagonalization with overlap
      ethr =  6.59E-08,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is      9.41 secs
+     total cpu time spent up to now is      9.21 secs
 
      total energy              =   -37.93616663 ryd
      estimated scf accuracy    <     0.00000122 ryd
@@ -1250,7 +1250,7 @@ Si       1.237813695  -1.169610604  -0.000001695
      Davidson diagonalization with overlap
      ethr =  5.53E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      9.58 secs
+     total cpu time spent up to now is      9.38 secs
 
      total energy              =   -37.93616693 ryd
      estimated scf accuracy    <     0.00000015 ryd
@@ -1259,7 +1259,7 @@ Si       1.237813695  -1.169610604  -0.000001695
      Davidson diagonalization with overlap
      ethr =  6.81E-10,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is      9.74 secs
+     total cpu time spent up to now is      9.54 secs
 
      End of self-consistent calculation
 
@@ -1326,7 +1326,7 @@ Si       1.243513040  -1.174520522  -0.000001176
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is      9.88 secs
+     total cpu time spent up to now is      9.67 secs
 
      Self-consistent Calculation
 
@@ -1340,7 +1340,7 @@ Si       1.243513040  -1.174520522  -0.000001176
      Davidson diagonalization with overlap
      ethr =  2.93E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     10.23 secs
+     total cpu time spent up to now is     10.05 secs
 
      total energy              =   -37.93437657 ryd
      estimated scf accuracy    <     0.00000064 ryd
@@ -1349,7 +1349,7 @@ Si       1.243513040  -1.174520522  -0.000001176
      Davidson diagonalization with overlap
      ethr =  2.93E-09,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is     10.43 secs
+     total cpu time spent up to now is     10.26 secs
 
      total energy              =   -37.93437708 ryd
      estimated scf accuracy    <     0.00000058 ryd
@@ -1358,7 +1358,7 @@ Si       1.243513040  -1.174520522  -0.000001176
      Davidson diagonalization with overlap
      ethr =  2.64E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     10.57 secs
+     total cpu time spent up to now is     10.40 secs
 
      End of self-consistent calculation
 
@@ -1411,7 +1411,7 @@ Si       1.243513040  -1.174520522  -0.000001176
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     10.71 secs
+     total cpu time spent up to now is     10.53 secs
 
      Self-consistent Calculation
 
@@ -1425,7 +1425,7 @@ Si       1.243513040  -1.174520522  -0.000001176
      Davidson diagonalization with overlap
      ethr =  3.03E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     11.05 secs
+     total cpu time spent up to now is     10.86 secs
 
      total energy              =   -37.93437649 ryd
      estimated scf accuracy    <     0.00000076 ryd
@@ -1434,7 +1434,7 @@ Si       1.243513040  -1.174520522  -0.000001176
      Davidson diagonalization with overlap
      ethr =  3.44E-09,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is     11.26 secs
+     total cpu time spent up to now is     11.07 secs
 
      total energy              =   -37.93437707 ryd
      estimated scf accuracy    <     0.00000057 ryd
@@ -1443,7 +1443,7 @@ Si       1.243513040  -1.174520522  -0.000001176
      Davidson diagonalization with overlap
      ethr =  2.60E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     11.40 secs
+     total cpu time spent up to now is     11.20 secs
 
      End of self-consistent calculation
 
@@ -1510,7 +1510,7 @@ Si       1.249213564  -1.180540820  -0.000000942
 
      negative rho (up, down):  0.291E-06 0.000E+00
 
-     total cpu time spent up to now is     11.54 secs
+     total cpu time spent up to now is     11.34 secs
 
      Self-consistent Calculation
 
@@ -1526,7 +1526,7 @@ Si       1.249213564  -1.180540820  -0.000000942
 
      negative rho (up, down):  0.437E-07 0.000E+00
 
-     total cpu time spent up to now is     11.82 secs
+     total cpu time spent up to now is     11.62 secs
 
      total energy              =   -37.93181920 ryd
      estimated scf accuracy    <     0.00003949 ryd
@@ -1535,7 +1535,7 @@ Si       1.249213564  -1.180540820  -0.000000942
      Davidson diagonalization with overlap
      ethr =  1.80E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     11.97 secs
+     total cpu time spent up to now is     11.77 secs
 
      total energy              =   -37.93182325 ryd
      estimated scf accuracy    <     0.00000578 ryd
@@ -1544,7 +1544,7 @@ Si       1.249213564  -1.180540820  -0.000000942
      Davidson diagonalization with overlap
      ethr =  2.63E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     12.11 secs
+     total cpu time spent up to now is     11.91 secs
 
      total energy              =   -37.93182369 ryd
      estimated scf accuracy    <     0.00000123 ryd
@@ -1553,7 +1553,7 @@ Si       1.249213564  -1.180540820  -0.000000942
      Davidson diagonalization with overlap
      ethr =  5.60E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     12.23 secs
+     total cpu time spent up to now is     12.03 secs
 
      End of self-consistent calculation
 
@@ -1619,7 +1619,7 @@ Si       1.249213314  -1.180339023  -0.000001253
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     12.37 secs
+     total cpu time spent up to now is     12.17 secs
 
      Self-consistent Calculation
 
@@ -1633,7 +1633,7 @@ Si       1.249213314  -1.180339023  -0.000001253
      Davidson diagonalization with overlap
      ethr =  1.44E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     12.66 secs
+     total cpu time spent up to now is     12.44 secs
 
      total energy              =   -37.93202826 ryd
      estimated scf accuracy    <     0.00003359 ryd
@@ -1642,7 +1642,7 @@ Si       1.249213314  -1.180339023  -0.000001253
      Davidson diagonalization with overlap
      ethr =  1.53E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     12.81 secs
+     total cpu time spent up to now is     12.59 secs
 
      total energy              =   -37.93203071 ryd
      estimated scf accuracy    <     0.00000865 ryd
@@ -1651,7 +1651,7 @@ Si       1.249213314  -1.180339023  -0.000001253
      Davidson diagonalization with overlap
      ethr =  3.93E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     12.98 secs
+     total cpu time spent up to now is     12.75 secs
 
      total energy              =   -37.93203195 ryd
      estimated scf accuracy    <     0.00000283 ryd
@@ -1660,7 +1660,7 @@ Si       1.249213314  -1.180339023  -0.000001253
      Davidson diagonalization with overlap
      ethr =  1.29E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     13.13 secs
+     total cpu time spent up to now is     12.90 secs
 
      total energy              =   -37.93203219 ryd
      estimated scf accuracy    <     0.00000047 ryd
@@ -1669,7 +1669,7 @@ Si       1.249213314  -1.180339023  -0.000001253
      Davidson diagonalization with overlap
      ethr =  2.12E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     13.31 secs
+     total cpu time spent up to now is     13.07 secs
 
      total energy              =   -37.93203223 ryd
      estimated scf accuracy    <     0.00000014 ryd
@@ -1678,7 +1678,7 @@ Si       1.249213314  -1.180339023  -0.000001253
      Davidson diagonalization with overlap
      ethr =  6.14E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     13.46 secs
+     total cpu time spent up to now is     13.23 secs
 
      End of self-consistent calculation
 
@@ -1742,7 +1742,7 @@ Si       1.249213859  -1.179880100  -0.000001429
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     13.60 secs
+     total cpu time spent up to now is     13.37 secs
 
      Self-consistent Calculation
 
@@ -1756,7 +1756,7 @@ Si       1.249213859  -1.179880100  -0.000001429
      Davidson diagonalization with overlap
      ethr =  2.66E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     13.88 secs
+     total cpu time spent up to now is     13.65 secs
 
      total energy              =   -37.93257985 ryd
      estimated scf accuracy    <     0.00000184 ryd
@@ -1765,7 +1765,7 @@ Si       1.249213859  -1.179880100  -0.000001429
      Davidson diagonalization with overlap
      ethr =  8.35E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     14.07 secs
+     total cpu time spent up to now is     13.84 secs
 
      total energy              =   -37.93258074 ryd
      estimated scf accuracy    <     0.00000074 ryd
@@ -1774,7 +1774,7 @@ Si       1.249213859  -1.179880100  -0.000001429
      Davidson diagonalization with overlap
      ethr =  3.38E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     14.22 secs
+     total cpu time spent up to now is     13.98 secs
 
      End of self-consistent calculation
 
@@ -1838,7 +1838,7 @@ Si       1.249214251  -1.179378969  -0.000002034
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     14.36 secs
+     total cpu time spent up to now is     14.13 secs
 
      Self-consistent Calculation
 
@@ -1852,7 +1852,7 @@ Si       1.249214251  -1.179378969  -0.000002034
      Davidson diagonalization with overlap
      ethr =  1.78E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     14.64 secs
+     total cpu time spent up to now is     14.42 secs
 
      total energy              =   -37.93304148 ryd
      estimated scf accuracy    <     0.00000167 ryd
@@ -1861,7 +1861,7 @@ Si       1.249214251  -1.179378969  -0.000002034
      Davidson diagonalization with overlap
      ethr =  7.61E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     14.83 secs
+     total cpu time spent up to now is     14.60 secs
 
      total energy              =   -37.93304207 ryd
      estimated scf accuracy    <     0.00000081 ryd
@@ -1870,7 +1870,7 @@ Si       1.249214251  -1.179378969  -0.000002034
      Davidson diagonalization with overlap
      ethr =  3.68E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     14.97 secs
+     total cpu time spent up to now is     14.74 secs
 
      End of self-consistent calculation
 
@@ -1936,7 +1936,7 @@ Si       1.249219286  -1.179059198  -0.000003713
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     15.11 secs
+     total cpu time spent up to now is     14.88 secs
 
      Self-consistent Calculation
 
@@ -1950,7 +1950,7 @@ Si       1.249219286  -1.179059198  -0.000003713
      Davidson diagonalization with overlap
      ethr =  9.70E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     15.43 secs
+     total cpu time spent up to now is     15.20 secs
 
      total energy              =   -37.93318556 ryd
      estimated scf accuracy    <     0.00000212 ryd
@@ -1959,7 +1959,7 @@ Si       1.249219286  -1.179059198  -0.000003713
      Davidson diagonalization with overlap
      ethr =  9.63E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     15.60 secs
+     total cpu time spent up to now is     15.37 secs
 
      total energy              =   -37.93318591 ryd
      estimated scf accuracy    <     0.00000024 ryd
@@ -1968,7 +1968,7 @@ Si       1.249219286  -1.179059198  -0.000003713
      Davidson diagonalization with overlap
      ethr =  1.08E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     15.76 secs
+     total cpu time spent up to now is     15.52 secs
 
      End of self-consistent calculation
 
@@ -2032,7 +2032,7 @@ Si       1.249219355  -1.179080329  -0.000003439
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     15.91 secs
+     total cpu time spent up to now is     15.66 secs
 
      Self-consistent Calculation
 
@@ -2046,7 +2046,7 @@ Si       1.249219355  -1.179080329  -0.000003439
      Davidson diagonalization with overlap
      ethr =  4.47E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     16.25 secs
+     total cpu time spent up to now is     15.99 secs
 
      total energy              =   -37.93320658 ryd
      estimated scf accuracy    <     0.00000027 ryd
@@ -2055,7 +2055,7 @@ Si       1.249219355  -1.179080329  -0.000003439
      Davidson diagonalization with overlap
      ethr =  1.23E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     16.42 secs
+     total cpu time spent up to now is     16.17 secs
 
      End of self-consistent calculation
 
@@ -2119,7 +2119,7 @@ Si       1.249219199  -1.179109995  -0.000003483
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     16.56 secs
+     total cpu time spent up to now is     16.31 secs
 
      Self-consistent Calculation
 
@@ -2133,7 +2133,7 @@ Si       1.249219199  -1.179109995  -0.000003483
      Davidson diagonalization with overlap
      ethr =  4.51E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     16.89 secs
+     total cpu time spent up to now is     16.65 secs
 
      total energy              =   -37.93324384 ryd
      estimated scf accuracy    <     0.00000176 ryd
@@ -2142,7 +2142,7 @@ Si       1.249219199  -1.179109995  -0.000003483
      Davidson diagonalization with overlap
      ethr =  8.01E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     17.06 secs
+     total cpu time spent up to now is     16.81 secs
 
      total energy              =   -37.93324431 ryd
      estimated scf accuracy    <     0.00000058 ryd
@@ -2151,7 +2151,7 @@ Si       1.249219199  -1.179109995  -0.000003483
      Davidson diagonalization with overlap
      ethr =  2.65E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     17.20 secs
+     total cpu time spent up to now is     16.95 secs
 
      End of self-consistent calculation
 
@@ -2217,7 +2217,7 @@ Si       1.249215052  -1.179090980  -0.000003511
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     17.35 secs
+     total cpu time spent up to now is     17.10 secs
 
      Self-consistent Calculation
 
@@ -2233,7 +2233,7 @@ Si       1.249215052  -1.179090980  -0.000003511
 
      negative rho (up, down):  0.888E-07 0.000E+00
 
-     total cpu time spent up to now is     17.64 secs
+     total cpu time spent up to now is     17.39 secs
 
      total energy              =   -37.93339208 ryd
      estimated scf accuracy    <     0.00001296 ryd
@@ -2244,7 +2244,7 @@ Si       1.249215052  -1.179090980  -0.000003511
 
      negative rho (up, down):  0.146E-07 0.000E+00
 
-     total cpu time spent up to now is     17.81 secs
+     total cpu time spent up to now is     17.55 secs
 
      total energy              =   -37.93339544 ryd
      estimated scf accuracy    <     0.00000232 ryd
@@ -2253,7 +2253,7 @@ Si       1.249215052  -1.179090980  -0.000003511
      Davidson diagonalization with overlap
      ethr =  1.06E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     17.96 secs
+     total cpu time spent up to now is     17.71 secs
 
      total energy              =   -37.93339603 ryd
      estimated scf accuracy    <     0.00000037 ryd
@@ -2262,7 +2262,7 @@ Si       1.249215052  -1.179090980  -0.000003511
      Davidson diagonalization with overlap
      ethr =  1.67E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     18.11 secs
+     total cpu time spent up to now is     17.85 secs
 
      End of self-consistent calculation
 
@@ -2326,7 +2326,7 @@ Si       1.249214315  -1.178865704  -0.000004395
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     18.25 secs
+     total cpu time spent up to now is     17.99 secs
 
      Self-consistent Calculation
 
@@ -2340,7 +2340,7 @@ Si       1.249214315  -1.178865704  -0.000004395
      Davidson diagonalization with overlap
      ethr =  2.33E-08,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     18.61 secs
+     total cpu time spent up to now is     18.35 secs
 
      total energy              =   -37.93355825 ryd
      estimated scf accuracy    <     0.00000168 ryd
@@ -2349,7 +2349,7 @@ Si       1.249214315  -1.178865704  -0.000004395
      Davidson diagonalization with overlap
      ethr =  7.64E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     18.77 secs
+     total cpu time spent up to now is     18.52 secs
 
      total energy              =   -37.93355867 ryd
      estimated scf accuracy    <     0.00000053 ryd
@@ -2358,7 +2358,7 @@ Si       1.249214315  -1.178865704  -0.000004395
      Davidson diagonalization with overlap
      ethr =  2.39E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     18.93 secs
+     total cpu time spent up to now is     18.66 secs
 
      End of self-consistent calculation
 
@@ -2422,7 +2422,7 @@ Si       1.249214358  -1.178364156  -0.000008610
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     19.07 secs
+     total cpu time spent up to now is     18.80 secs
 
      Self-consistent Calculation
 
@@ -2436,7 +2436,7 @@ Si       1.249214358  -1.178364156  -0.000008610
      Davidson diagonalization with overlap
      ethr =  7.15E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     19.42 secs
+     total cpu time spent up to now is     19.14 secs
 
      total energy              =   -37.93362677 ryd
      estimated scf accuracy    <     0.00000143 ryd
@@ -2445,7 +2445,7 @@ Si       1.249214358  -1.178364156  -0.000008610
      Davidson diagonalization with overlap
      ethr =  6.51E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     19.59 secs
+     total cpu time spent up to now is     19.32 secs
 
      total energy              =   -37.93362716 ryd
      estimated scf accuracy    <     0.00000018 ryd
@@ -2454,7 +2454,7 @@ Si       1.249214358  -1.178364156  -0.000008610
      Davidson diagonalization with overlap
      ethr =  8.09E-10,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     19.75 secs
+     total cpu time spent up to now is     19.48 secs
 
      End of self-consistent calculation
 
@@ -2533,7 +2533,7 @@ Si       1.249214358  -1.178364156  -0.000008610
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     19.89 secs
+     total cpu time spent up to now is     19.62 secs
 
      Self-consistent Calculation
 
@@ -2547,7 +2547,7 @@ Si       1.249214358  -1.178364156  -0.000008610
      Davidson diagonalization with overlap
      ethr =  4.86E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     20.22 secs
+     total cpu time spent up to now is     19.94 secs
 
      End of self-consistent calculation
 
@@ -2619,7 +2619,7 @@ Si       1.243879204  -1.172051846  -0.000009383
 
      negative rho (up, down):  0.500E-07 0.000E+00
 
-     total cpu time spent up to now is     20.35 secs
+     total cpu time spent up to now is     20.07 secs
 
      Self-consistent Calculation
 
@@ -2633,7 +2633,7 @@ Si       1.243879204  -1.172051846  -0.000009383
      Davidson diagonalization with overlap
      ethr =  1.58E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     20.66 secs
+     total cpu time spent up to now is     20.35 secs
 
      total energy              =   -37.93565617 ryd
      estimated scf accuracy    <     0.00003797 ryd
@@ -2642,7 +2642,7 @@ Si       1.243879204  -1.172051846  -0.000009383
      Davidson diagonalization with overlap
      ethr =  1.73E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     20.81 secs
+     total cpu time spent up to now is     20.50 secs
 
      total energy              =   -37.93565960 ryd
      estimated scf accuracy    <     0.00000600 ryd
@@ -2651,7 +2651,7 @@ Si       1.243879204  -1.172051846  -0.000009383
      Davidson diagonalization with overlap
      ethr =  2.73E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     20.96 secs
+     total cpu time spent up to now is     20.65 secs
 
      total energy              =   -37.93566012 ryd
      estimated scf accuracy    <     0.00000119 ryd
@@ -2660,7 +2660,7 @@ Si       1.243879204  -1.172051846  -0.000009383
      Davidson diagonalization with overlap
      ethr =  5.41E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     21.12 secs
+     total cpu time spent up to now is     20.81 secs
 
      total energy              =   -37.93566021 ryd
      estimated scf accuracy    <     0.00000014 ryd
@@ -2669,7 +2669,7 @@ Si       1.243879204  -1.172051846  -0.000009383
      Davidson diagonalization with overlap
      ethr =  6.36E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     21.27 secs
+     total cpu time spent up to now is     20.95 secs
 
      End of self-consistent calculation
 
@@ -2736,7 +2736,7 @@ Si       1.238544349  -1.165752172  -0.000009950
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     21.40 secs
+     total cpu time spent up to now is     21.08 secs
 
      Self-consistent Calculation
 
@@ -2750,7 +2750,7 @@ Si       1.238544349  -1.165752172  -0.000009950
      Davidson diagonalization with overlap
      ethr =  1.52E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     21.70 secs
+     total cpu time spent up to now is     21.38 secs
 
      total energy              =   -37.93736160 ryd
      estimated scf accuracy    <     0.00000073 ryd
@@ -2759,7 +2759,7 @@ Si       1.238544349  -1.165752172  -0.000009950
      Davidson diagonalization with overlap
      ethr =  3.31E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     21.87 secs
+     total cpu time spent up to now is     21.56 secs
 
      total energy              =   -37.93736187 ryd
      estimated scf accuracy    <     0.00000013 ryd
@@ -2768,7 +2768,7 @@ Si       1.238544349  -1.165752172  -0.000009950
      Davidson diagonalization with overlap
      ethr =  5.96E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     22.02 secs
+     total cpu time spent up to now is     21.71 secs
 
      End of self-consistent calculation
 
@@ -2835,7 +2835,7 @@ Si       1.233209932  -1.159510790  -0.000010249
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     22.15 secs
+     total cpu time spent up to now is     21.84 secs
 
      Self-consistent Calculation
 
@@ -2849,7 +2849,7 @@ Si       1.233209932  -1.159510790  -0.000010249
      Davidson diagonalization with overlap
      ethr =  6.21E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     22.43 secs
+     total cpu time spent up to now is     22.12 secs
 
      total energy              =   -37.93875731 ryd
      estimated scf accuracy    <     0.00000818 ryd
@@ -2858,7 +2858,7 @@ Si       1.233209932  -1.159510790  -0.000010249
      Davidson diagonalization with overlap
      ethr =  3.72E-08,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     22.61 secs
+     total cpu time spent up to now is     22.31 secs
 
      total energy              =   -37.93876146 ryd
      estimated scf accuracy    <     0.00000498 ryd
@@ -2867,7 +2867,7 @@ Si       1.233209932  -1.159510790  -0.000010249
      Davidson diagonalization with overlap
      ethr =  2.27E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     22.77 secs
+     total cpu time spent up to now is     22.46 secs
 
      total energy              =   -37.93876204 ryd
      estimated scf accuracy    <     0.00000014 ryd
@@ -2876,7 +2876,7 @@ Si       1.233209932  -1.159510790  -0.000010249
      Davidson diagonalization with overlap
      ethr =  6.55E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     22.94 secs
+     total cpu time spent up to now is     22.62 secs
 
      End of self-consistent calculation
 
@@ -2943,7 +2943,7 @@ Si       1.227875468  -1.153372767  -0.000010306
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     23.08 secs
+     total cpu time spent up to now is     22.76 secs
 
      Self-consistent Calculation
 
@@ -2957,7 +2957,7 @@ Si       1.227875468  -1.153372767  -0.000010306
      Davidson diagonalization with overlap
      ethr =  5.28E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     23.39 secs
+     total cpu time spent up to now is     23.06 secs
 
      total energy              =   -37.93990571 ryd
      estimated scf accuracy    <     0.00000087 ryd
@@ -2966,7 +2966,7 @@ Si       1.227875468  -1.153372767  -0.000010306
      Davidson diagonalization with overlap
      ethr =  3.94E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     23.59 secs
+     total cpu time spent up to now is     23.26 secs
 
      total energy              =   -37.93990683 ryd
      estimated scf accuracy    <     0.00000086 ryd
@@ -2975,7 +2975,7 @@ Si       1.227875468  -1.153372767  -0.000010306
      Davidson diagonalization with overlap
      ethr =  3.89E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     23.73 secs
+     total cpu time spent up to now is     23.40 secs
 
      End of self-consistent calculation
 
@@ -3042,7 +3042,7 @@ Si       1.222541066  -1.147379249  -0.000010274
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     23.87 secs
+     total cpu time spent up to now is     23.53 secs
 
      Self-consistent Calculation
 
@@ -3056,7 +3056,7 @@ Si       1.222541066  -1.147379249  -0.000010274
      Davidson diagonalization with overlap
      ethr =  5.56E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     24.18 secs
+     total cpu time spent up to now is     23.84 secs
 
      total energy              =   -37.94083971 ryd
      estimated scf accuracy    <     0.00000523 ryd
@@ -3065,7 +3065,7 @@ Si       1.222541066  -1.147379249  -0.000010274
      Davidson diagonalization with overlap
      ethr =  2.38E-08,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     24.36 secs
+     total cpu time spent up to now is     24.02 secs
 
      total energy              =   -37.94084244 ryd
      estimated scf accuracy    <     0.00000419 ryd
@@ -3074,7 +3074,7 @@ Si       1.222541066  -1.147379249  -0.000010274
      Davidson diagonalization with overlap
      ethr =  1.90E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     24.51 secs
+     total cpu time spent up to now is     24.17 secs
 
      total energy              =   -37.94084286 ryd
      estimated scf accuracy    <     0.00000019 ryd
@@ -3083,7 +3083,7 @@ Si       1.222541066  -1.147379249  -0.000010274
      Davidson diagonalization with overlap
      ethr =  8.51E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     24.68 secs
+     total cpu time spent up to now is     24.33 secs
 
      End of self-consistent calculation
 
@@ -3150,7 +3150,7 @@ Si       1.217206442  -1.141561976  -0.000010065
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     24.82 secs
+     total cpu time spent up to now is     24.47 secs
 
      Self-consistent Calculation
 
@@ -3164,7 +3164,7 @@ Si       1.217206442  -1.141561976  -0.000010065
      Davidson diagonalization with overlap
      ethr =  1.95E-07,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     25.15 secs
+     total cpu time spent up to now is     24.80 secs
 
      total energy              =   -37.94160376 ryd
      estimated scf accuracy    <     0.00000183 ryd
@@ -3173,7 +3173,7 @@ Si       1.217206442  -1.141561976  -0.000010065
      Davidson diagonalization with overlap
      ethr =  8.34E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     25.32 secs
+     total cpu time spent up to now is     24.98 secs
 
      total energy              =   -37.94160427 ryd
      estimated scf accuracy    <     0.00000032 ryd
@@ -3182,7 +3182,7 @@ Si       1.217206442  -1.141561976  -0.000010065
      Davidson diagonalization with overlap
      ethr =  1.44E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     25.47 secs
+     total cpu time spent up to now is     25.14 secs
 
      End of self-consistent calculation
 
@@ -3249,7 +3249,7 @@ Si       1.211871817  -1.135940872  -0.000010083
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     25.61 secs
+     total cpu time spent up to now is     25.28 secs
 
      Self-consistent Calculation
 
@@ -3263,7 +3263,7 @@ Si       1.211871817  -1.135940872  -0.000010083
      Davidson diagonalization with overlap
      ethr =  7.40E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     25.93 secs
+     total cpu time spent up to now is     25.60 secs
 
      total energy              =   -37.94220383 ryd
      estimated scf accuracy    <     0.00000206 ryd
@@ -3272,7 +3272,7 @@ Si       1.211871817  -1.135940872  -0.000010083
      Davidson diagonalization with overlap
      ethr =  9.36E-09,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is     26.14 secs
+     total cpu time spent up to now is     25.81 secs
 
      total energy              =   -37.94220563 ryd
      estimated scf accuracy    <     0.00000175 ryd
@@ -3281,7 +3281,7 @@ Si       1.211871817  -1.135940872  -0.000010083
      Davidson diagonalization with overlap
      ethr =  7.98E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     26.29 secs
+     total cpu time spent up to now is     25.96 secs
 
      total energy              =   -37.94220578 ryd
      estimated scf accuracy    <     0.00000012 ryd
@@ -3290,7 +3290,7 @@ Si       1.211871817  -1.135940872  -0.000010083
      Davidson diagonalization with overlap
      ethr =  5.38E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     26.43 secs
+     total cpu time spent up to now is     26.10 secs
 
      End of self-consistent calculation
 
@@ -3357,7 +3357,7 @@ Si       1.206536762  -1.130520437  -0.000010241
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     26.56 secs
+     total cpu time spent up to now is     26.24 secs
 
      Self-consistent Calculation
 
@@ -3371,7 +3371,7 @@ Si       1.206536762  -1.130520437  -0.000010241
      Davidson diagonalization with overlap
      ethr =  4.21E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     26.89 secs
+     total cpu time spent up to now is     26.57 secs
 
      total energy              =   -37.94263737 ryd
      estimated scf accuracy    <     0.00000315 ryd
@@ -3380,7 +3380,7 @@ Si       1.206536762  -1.130520437  -0.000010241
      Davidson diagonalization with overlap
      ethr =  1.43E-08,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     27.08 secs
+     total cpu time spent up to now is     26.76 secs
 
      total energy              =   -37.94263926 ryd
      estimated scf accuracy    <     0.00000285 ryd
@@ -3389,7 +3389,7 @@ Si       1.206536762  -1.130520437  -0.000010241
      Davidson diagonalization with overlap
      ethr =  1.30E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     27.23 secs
+     total cpu time spent up to now is     26.91 secs
 
      total energy              =   -37.94263952 ryd
      estimated scf accuracy    <     0.00000015 ryd
@@ -3398,7 +3398,7 @@ Si       1.206536762  -1.130520437  -0.000010241
      Davidson diagonalization with overlap
      ethr =  6.69E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     27.38 secs
+     total cpu time spent up to now is     27.06 secs
 
      End of self-consistent calculation
 
@@ -3465,7 +3465,7 @@ Si       1.201201088  -1.125286458  -0.000010475
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     27.51 secs
+     total cpu time spent up to now is     27.19 secs
 
      Self-consistent Calculation
 
@@ -3479,7 +3479,7 @@ Si       1.201201088  -1.125286458  -0.000010475
      Davidson diagonalization with overlap
      ethr =  1.86E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     27.85 secs
+     total cpu time spent up to now is     27.54 secs
 
      total energy              =   -37.94287580 ryd
      estimated scf accuracy    <     0.00000012 ryd
@@ -3488,7 +3488,7 @@ Si       1.201201088  -1.125286458  -0.000010475
      Davidson diagonalization with overlap
      ethr =  5.42E-10,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is     28.07 secs
+     total cpu time spent up to now is     27.75 secs
 
      total energy              =   -37.94287602 ryd
      estimated scf accuracy    <     0.00000016 ryd
@@ -3497,7 +3497,7 @@ Si       1.201201088  -1.125286458  -0.000010475
      Davidson diagonalization with overlap
      ethr =  5.42E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     28.20 secs
+     total cpu time spent up to now is     27.88 secs
 
      End of self-consistent calculation
 
@@ -3550,7 +3550,7 @@ Si       1.201201088  -1.125286458  -0.000010475
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     28.33 secs
+     total cpu time spent up to now is     28.01 secs
 
      Self-consistent Calculation
 
@@ -3564,7 +3564,7 @@ Si       1.201201088  -1.125286458  -0.000010475
      Davidson diagonalization with overlap
      ethr =  3.49E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     28.66 secs
+     total cpu time spent up to now is     28.34 secs
 
      total energy              =   -37.94287517 ryd
      estimated scf accuracy    <     0.00000085 ryd
@@ -3573,7 +3573,7 @@ Si       1.201201088  -1.125286458  -0.000010475
      Davidson diagonalization with overlap
      ethr =  3.87E-09,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is     28.88 secs
+     total cpu time spent up to now is     28.56 secs
 
      total energy              =   -37.94287596 ryd
      estimated scf accuracy    <     0.00000075 ryd
@@ -3582,7 +3582,7 @@ Si       1.201201088  -1.125286458  -0.000010475
      Davidson diagonalization with overlap
      ethr =  3.39E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     29.01 secs
+     total cpu time spent up to now is     28.70 secs
 
      End of self-consistent calculation
 
@@ -3649,7 +3649,7 @@ Si       1.195864524  -1.119102158  -0.000010596
 
      negative rho (up, down):  0.991E-06 0.000E+00
 
-     total cpu time spent up to now is     29.14 secs
+     total cpu time spent up to now is     28.83 secs
 
      Self-consistent Calculation
 
@@ -3665,7 +3665,7 @@ Si       1.195864524  -1.119102158  -0.000010596
 
      negative rho (up, down):  0.990E-07 0.000E+00
 
-     total cpu time spent up to now is     29.42 secs
+     total cpu time spent up to now is     29.11 secs
 
      total energy              =   -37.94223844 ryd
      estimated scf accuracy    <     0.00005475 ryd
@@ -3674,7 +3674,7 @@ Si       1.195864524  -1.119102158  -0.000010596
      Davidson diagonalization with overlap
      ethr =  2.49E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     29.58 secs
+     total cpu time spent up to now is     29.27 secs
 
      total energy              =   -37.94224530 ryd
      estimated scf accuracy    <     0.00000611 ryd
@@ -3683,7 +3683,7 @@ Si       1.195864524  -1.119102158  -0.000010596
      Davidson diagonalization with overlap
      ethr =  2.78E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     29.71 secs
+     total cpu time spent up to now is     29.41 secs
 
      total energy              =   -37.94224562 ryd
      estimated scf accuracy    <     0.00000167 ryd
@@ -3692,7 +3692,7 @@ Si       1.195864524  -1.119102158  -0.000010596
      Davidson diagonalization with overlap
      ethr =  7.61E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     29.83 secs
+     total cpu time spent up to now is     29.53 secs
 
      End of self-consistent calculation
 
@@ -3758,7 +3758,7 @@ Si       1.195863975  -1.119408533  -0.000010673
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     29.97 secs
+     total cpu time spent up to now is     29.66 secs
 
      Self-consistent Calculation
 
@@ -3772,7 +3772,7 @@ Si       1.195863975  -1.119408533  -0.000010673
      Davidson diagonalization with overlap
      ethr =  1.92E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     30.24 secs
+     total cpu time spent up to now is     29.93 secs
 
      total energy              =   -37.94247839 ryd
      estimated scf accuracy    <     0.00004614 ryd
@@ -3781,7 +3781,7 @@ Si       1.195863975  -1.119408533  -0.000010673
      Davidson diagonalization with overlap
      ethr =  2.10E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     30.39 secs
+     total cpu time spent up to now is     30.09 secs
 
      total energy              =   -37.94248257 ryd
      estimated scf accuracy    <     0.00000883 ryd
@@ -3790,7 +3790,7 @@ Si       1.195863975  -1.119408533  -0.000010673
      Davidson diagonalization with overlap
      ethr =  4.01E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     30.55 secs
+     total cpu time spent up to now is     30.25 secs
 
      total energy              =   -37.94248353 ryd
      estimated scf accuracy    <     0.00000239 ryd
@@ -3799,7 +3799,7 @@ Si       1.195863975  -1.119408533  -0.000010673
      Davidson diagonalization with overlap
      ethr =  1.08E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     30.71 secs
+     total cpu time spent up to now is     30.40 secs
 
      total energy              =   -37.94248380 ryd
      estimated scf accuracy    <     0.00000045 ryd
@@ -3808,7 +3808,7 @@ Si       1.195863975  -1.119408533  -0.000010673
      Davidson diagonalization with overlap
      ethr =  2.06E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     30.85 secs
+     total cpu time spent up to now is     30.55 secs
 
      End of self-consistent calculation
 
@@ -3872,7 +3872,7 @@ Si       1.195864192  -1.120231917  -0.000011686
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     30.99 secs
+     total cpu time spent up to now is     30.69 secs
 
      Self-consistent Calculation
 
@@ -3886,7 +3886,7 @@ Si       1.195864192  -1.120231917  -0.000011686
      Davidson diagonalization with overlap
      ethr =  1.72E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     31.27 secs
+     total cpu time spent up to now is     30.97 secs
 
      total energy              =   -37.94311244 ryd
      estimated scf accuracy    <     0.00000446 ryd
@@ -3895,7 +3895,7 @@ Si       1.195864192  -1.120231917  -0.000011686
      Davidson diagonalization with overlap
      ethr =  2.03E-08,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     31.44 secs
+     total cpu time spent up to now is     31.15 secs
 
      total energy              =   -37.94311368 ryd
      estimated scf accuracy    <     0.00000155 ryd
@@ -3904,7 +3904,7 @@ Si       1.195864192  -1.120231917  -0.000011686
      Davidson diagonalization with overlap
      ethr =  7.05E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     31.58 secs
+     total cpu time spent up to now is     31.29 secs
 
      End of self-consistent calculation
 
@@ -3968,7 +3968,7 @@ Si       1.195863436  -1.121219949  -0.000010728
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     31.73 secs
+     total cpu time spent up to now is     31.43 secs
 
      Self-consistent Calculation
 
@@ -3982,7 +3982,7 @@ Si       1.195863436  -1.121219949  -0.000010728
      Davidson diagonalization with overlap
      ethr =  6.74E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     32.02 secs
+     total cpu time spent up to now is     31.71 secs
 
      total energy              =   -37.94359003 ryd
      estimated scf accuracy    <     0.00002185 ryd
@@ -3991,7 +3991,7 @@ Si       1.195863436  -1.121219949  -0.000010728
      Davidson diagonalization with overlap
      ethr =  9.93E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     32.20 secs
+     total cpu time spent up to now is     31.88 secs
 
      total energy              =   -37.94359674 ryd
      estimated scf accuracy    <     0.00000427 ryd
@@ -4000,7 +4000,7 @@ Si       1.195863436  -1.121219949  -0.000010728
      Davidson diagonalization with overlap
      ethr =  1.94E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     32.36 secs
+     total cpu time spent up to now is     32.04 secs
 
      total energy              =   -37.94359751 ryd
      estimated scf accuracy    <     0.00000014 ryd
@@ -4009,7 +4009,7 @@ Si       1.195863436  -1.121219949  -0.000010728
      Davidson diagonalization with overlap
      ethr =  6.41E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     32.52 secs
+     total cpu time spent up to now is     32.19 secs
 
      End of self-consistent calculation
 
@@ -4075,7 +4075,7 @@ Si       1.195866645  -1.121814686  -0.000012744
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     32.67 secs
+     total cpu time spent up to now is     32.33 secs
 
      Self-consistent Calculation
 
@@ -4091,7 +4091,7 @@ Si       1.195866645  -1.121814686  -0.000012744
 
      negative rho (up, down):  0.171E-06 0.000E+00
 
-     total cpu time spent up to now is     32.97 secs
+     total cpu time spent up to now is     32.66 secs
 
      total energy              =   -37.94366514 ryd
      estimated scf accuracy    <     0.00001136 ryd
@@ -4100,7 +4100,7 @@ Si       1.195866645  -1.121814686  -0.000012744
      Davidson diagonalization with overlap
      ethr =  5.16E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     33.14 secs
+     total cpu time spent up to now is     32.82 secs
 
      total energy              =   -37.94366815 ryd
      estimated scf accuracy    <     0.00000256 ryd
@@ -4109,7 +4109,7 @@ Si       1.195866645  -1.121814686  -0.000012744
      Davidson diagonalization with overlap
      ethr =  1.16E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     33.30 secs
+     total cpu time spent up to now is     32.98 secs
 
      total energy              =   -37.94366880 ryd
      estimated scf accuracy    <     0.00000010 ryd
@@ -4118,7 +4118,7 @@ Si       1.195866645  -1.121814686  -0.000012744
      Davidson diagonalization with overlap
      ethr =  4.65E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     33.47 secs
+     total cpu time spent up to now is     33.15 secs
 
      End of self-consistent calculation
 
@@ -4182,7 +4182,7 @@ Si       1.195866323  -1.121749188  -0.000012581
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     33.61 secs
+     total cpu time spent up to now is     33.29 secs
 
      Self-consistent Calculation
 
@@ -4196,7 +4196,7 @@ Si       1.195866323  -1.121749188  -0.000012581
      Davidson diagonalization with overlap
      ethr =  9.09E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     33.94 secs
+     total cpu time spent up to now is     33.61 secs
 
      End of self-consistent calculation
 
@@ -4260,7 +4260,7 @@ Si       1.195879294  -1.121632999  -0.000016524
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     34.08 secs
+     total cpu time spent up to now is     33.75 secs
 
      Self-consistent Calculation
 
@@ -4274,7 +4274,7 @@ Si       1.195879294  -1.121632999  -0.000016524
      Davidson diagonalization with overlap
      ethr =  1.90E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     34.40 secs
+     total cpu time spent up to now is     34.06 secs
 
      total energy              =   -37.94377290 ryd
      estimated scf accuracy    <     0.00000327 ryd
@@ -4283,7 +4283,7 @@ Si       1.195879294  -1.121632999  -0.000016524
      Davidson diagonalization with overlap
      ethr =  1.48E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     34.58 secs
+     total cpu time spent up to now is     34.24 secs
 
      total energy              =   -37.94377389 ryd
      estimated scf accuracy    <     0.00000045 ryd
@@ -4292,7 +4292,7 @@ Si       1.195879294  -1.121632999  -0.000016524
      Davidson diagonalization with overlap
      ethr =  2.04E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     34.73 secs
+     total cpu time spent up to now is     34.39 secs
 
      End of self-consistent calculation
 
@@ -4356,7 +4356,7 @@ Si       1.195882838  -1.121610537  -0.000008777
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     34.87 secs
+     total cpu time spent up to now is     34.53 secs
 
      Self-consistent Calculation
 
@@ -4370,7 +4370,7 @@ Si       1.195882838  -1.121610537  -0.000008777
      Davidson diagonalization with overlap
      ethr =  2.60E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     35.16 secs
+     total cpu time spent up to now is     34.83 secs
 
      total energy              =   -37.94386673 ryd
      estimated scf accuracy    <     0.00000528 ryd
@@ -4379,7 +4379,7 @@ Si       1.195882838  -1.121610537  -0.000008777
      Davidson diagonalization with overlap
      ethr =  2.40E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     35.33 secs
+     total cpu time spent up to now is     35.00 secs
 
      total energy              =   -37.94386795 ryd
      estimated scf accuracy    <     0.00000075 ryd
@@ -4388,7 +4388,7 @@ Si       1.195882838  -1.121610537  -0.000008777
      Davidson diagonalization with overlap
      ethr =  3.40E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     35.47 secs
+     total cpu time spent up to now is     35.14 secs
 
      End of self-consistent calculation
 
@@ -4467,7 +4467,7 @@ Si       1.195882838  -1.121610537  -0.000008777
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     35.62 secs
+     total cpu time spent up to now is     35.28 secs
 
      Self-consistent Calculation
 
@@ -4481,7 +4481,7 @@ Si       1.195882838  -1.121610537  -0.000008777
      Davidson diagonalization with overlap
      ethr =  8.77E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     35.96 secs
+     total cpu time spent up to now is     35.61 secs
 
      total energy              =   -37.94386796 ryd
      estimated scf accuracy    <     0.00000029 ryd
@@ -4490,7 +4490,7 @@ Si       1.195882838  -1.121610537  -0.000008777
      Davidson diagonalization with overlap
      ethr =  1.32E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     36.14 secs
+     total cpu time spent up to now is     35.79 secs
 
      End of self-consistent calculation
 
@@ -4562,7 +4562,7 @@ Si       1.190896580  -1.115152109  -0.000007936
 
      negative rho (up, down):  0.773E-07 0.000E+00
 
-     total cpu time spent up to now is     36.27 secs
+     total cpu time spent up to now is     35.92 secs
 
      Self-consistent Calculation
 
@@ -4578,7 +4578,7 @@ Si       1.190896580  -1.115152109  -0.000007936
 
      negative rho (up, down):  0.165E-07 0.000E+00
 
-     total cpu time spent up to now is     36.55 secs
+     total cpu time spent up to now is     36.19 secs
 
      total energy              =   -37.94330776 ryd
      estimated scf accuracy    <     0.00005440 ryd
@@ -4587,7 +4587,7 @@ Si       1.190896580  -1.115152109  -0.000007936
      Davidson diagonalization with overlap
      ethr =  2.47E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     36.71 secs
+     total cpu time spent up to now is     36.34 secs
 
      total energy              =   -37.94331386 ryd
      estimated scf accuracy    <     0.00000639 ryd
@@ -4596,7 +4596,7 @@ Si       1.190896580  -1.115152109  -0.000007936
      Davidson diagonalization with overlap
      ethr =  2.90E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     36.85 secs
+     total cpu time spent up to now is     36.48 secs
 
      total energy              =   -37.94331429 ryd
      estimated scf accuracy    <     0.00000152 ryd
@@ -4605,7 +4605,7 @@ Si       1.190896580  -1.115152109  -0.000007936
      Davidson diagonalization with overlap
      ethr =  6.89E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     36.98 secs
+     total cpu time spent up to now is     36.61 secs
 
      End of self-consistent calculation
 
@@ -4672,7 +4672,7 @@ Si       1.185909273  -1.108739587  -0.000006485
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     37.11 secs
+     total cpu time spent up to now is     36.75 secs
 
      Self-consistent Calculation
 
@@ -4686,7 +4686,7 @@ Si       1.185909273  -1.108739587  -0.000006485
      Davidson diagonalization with overlap
      ethr =  2.27E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     37.40 secs
+     total cpu time spent up to now is     37.04 secs
 
      total energy              =   -37.94231020 ryd
      estimated scf accuracy    <     0.00000100 ryd
@@ -4695,7 +4695,7 @@ Si       1.185909273  -1.108739587  -0.000006485
      Davidson diagonalization with overlap
      ethr =  4.54E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     37.58 secs
+     total cpu time spent up to now is     37.22 secs
 
      total energy              =   -37.94231074 ryd
      estimated scf accuracy    <     0.00000062 ryd
@@ -4704,7 +4704,7 @@ Si       1.185909273  -1.108739587  -0.000006485
      Davidson diagonalization with overlap
      ethr =  2.83E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     37.72 secs
+     total cpu time spent up to now is     37.36 secs
 
      End of self-consistent calculation
 
@@ -4771,7 +4771,7 @@ Si       1.180920677  -1.102391832  -0.000004674
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     37.86 secs
+     total cpu time spent up to now is     37.50 secs
 
      Self-consistent Calculation
 
@@ -4785,7 +4785,7 @@ Si       1.180920677  -1.102391832  -0.000004674
      Davidson diagonalization with overlap
      ethr =  4.71E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     38.15 secs
+     total cpu time spent up to now is     37.78 secs
 
      total energy              =   -37.94088351 ryd
      estimated scf accuracy    <     0.00000312 ryd
@@ -4794,7 +4794,7 @@ Si       1.180920677  -1.102391832  -0.000004674
      Davidson diagonalization with overlap
      ethr =  1.42E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     38.34 secs
+     total cpu time spent up to now is     37.98 secs
 
      total energy              =   -37.94088565 ryd
      estimated scf accuracy    <     0.00000070 ryd
@@ -4803,7 +4803,7 @@ Si       1.180920677  -1.102391832  -0.000004674
      Davidson diagonalization with overlap
      ethr =  3.16E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     38.49 secs
+     total cpu time spent up to now is     38.13 secs
 
      End of self-consistent calculation
 
@@ -4870,7 +4870,7 @@ Si       1.175931738  -1.096124951  -0.000002851
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     38.62 secs
+     total cpu time spent up to now is     38.27 secs
 
      Self-consistent Calculation
 
@@ -4884,7 +4884,7 @@ Si       1.175931738  -1.096124951  -0.000002851
      Davidson diagonalization with overlap
      ethr =  1.53E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     38.94 secs
+     total cpu time spent up to now is     38.59 secs
 
      total energy              =   -37.93908221 ryd
      estimated scf accuracy    <     0.00000036 ryd
@@ -4893,7 +4893,7 @@ Si       1.175931738  -1.096124951  -0.000002851
      Davidson diagonalization with overlap
      ethr =  1.61E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     39.15 secs
+     total cpu time spent up to now is     38.80 secs
 
      total energy              =   -37.93908252 ryd
      estimated scf accuracy    <     0.00000018 ryd
@@ -4902,7 +4902,7 @@ Si       1.175931738  -1.096124951  -0.000002851
      Davidson diagonalization with overlap
      ethr =  8.34E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     39.30 secs
+     total cpu time spent up to now is     38.94 secs
 
      End of self-consistent calculation
 
@@ -4969,7 +4969,7 @@ Si       1.170942681  -1.089949961  -0.000001344
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     39.44 secs
+     total cpu time spent up to now is     39.08 secs
 
      Self-consistent Calculation
 
@@ -4983,7 +4983,7 @@ Si       1.170942681  -1.089949961  -0.000001344
      Davidson diagonalization with overlap
      ethr =  2.18E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     39.77 secs
+     total cpu time spent up to now is     39.41 secs
 
      total energy              =   -37.93694280 ryd
      estimated scf accuracy    <     0.00000039 ryd
@@ -4992,7 +4992,7 @@ Si       1.170942681  -1.089949961  -0.000001344
      Davidson diagonalization with overlap
      ethr =  1.75E-09,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is     39.99 secs
+     total cpu time spent up to now is     39.62 secs
 
      total energy              =   -37.93694323 ryd
      estimated scf accuracy    <     0.00000024 ryd
@@ -5001,7 +5001,7 @@ Si       1.170942681  -1.089949961  -0.000001344
      Davidson diagonalization with overlap
      ethr =  1.08E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     40.14 secs
+     total cpu time spent up to now is     39.77 secs
 
      End of self-consistent calculation
 
@@ -5068,7 +5068,7 @@ Si       1.165953883  -1.083871164  -0.000000470
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     40.27 secs
+     total cpu time spent up to now is     39.90 secs
 
      Self-consistent Calculation
 
@@ -5082,7 +5082,7 @@ Si       1.165953883  -1.083871164  -0.000000470
      Davidson diagonalization with overlap
      ethr =  3.62E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     40.59 secs
+     total cpu time spent up to now is     40.22 secs
 
      total energy              =   -37.93449629 ryd
      estimated scf accuracy    <     0.00000057 ryd
@@ -5091,7 +5091,7 @@ Si       1.165953883  -1.083871164  -0.000000470
      Davidson diagonalization with overlap
      ethr =  2.58E-09,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is     40.80 secs
+     total cpu time spent up to now is     40.43 secs
 
      total energy              =   -37.93449715 ryd
      estimated scf accuracy    <     0.00000042 ryd
@@ -5100,7 +5100,7 @@ Si       1.165953883  -1.083871164  -0.000000470
      Davidson diagonalization with overlap
      ethr =  1.89E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     40.94 secs
+     total cpu time spent up to now is     40.57 secs
 
      End of self-consistent calculation
 
@@ -5167,7 +5167,7 @@ Si       1.160965488  -1.077884515  -0.000000395
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     41.07 secs
+     total cpu time spent up to now is     40.71 secs
 
      Self-consistent Calculation
 
@@ -5181,7 +5181,7 @@ Si       1.160965488  -1.077884515  -0.000000395
      Davidson diagonalization with overlap
      ethr =  6.41E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     41.39 secs
+     total cpu time spent up to now is     41.03 secs
 
      total energy              =   -37.93175360 ryd
      estimated scf accuracy    <     0.00000189 ryd
@@ -5190,7 +5190,7 @@ Si       1.160965488  -1.077884515  -0.000000395
      Davidson diagonalization with overlap
      ethr =  8.59E-09,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is     41.60 secs
+     total cpu time spent up to now is     41.24 secs
 
      total energy              =   -37.93175534 ryd
      estimated scf accuracy    <     0.00000113 ryd
@@ -5199,7 +5199,7 @@ Si       1.160965488  -1.077884515  -0.000000395
      Davidson diagonalization with overlap
      ethr =  5.14E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     41.74 secs
+     total cpu time spent up to now is     41.38 secs
 
      End of self-consistent calculation
 
@@ -5266,7 +5266,7 @@ Si       1.155977970  -1.071975448  -0.000001429
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     41.88 secs
+     total cpu time spent up to now is     41.51 secs
 
      Self-consistent Calculation
 
@@ -5280,7 +5280,7 @@ Si       1.155977970  -1.071975448  -0.000001429
      Davidson diagonalization with overlap
      ethr =  1.90E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     42.27 secs
+     total cpu time spent up to now is     41.86 secs
 
      total energy              =   -37.92870940 ryd
      estimated scf accuracy    <     0.00000045 ryd
@@ -5289,7 +5289,7 @@ Si       1.155977970  -1.071975448  -0.000001429
      Davidson diagonalization with overlap
      ethr =  2.04E-09,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is     42.48 secs
+     total cpu time spent up to now is     42.07 secs
 
      total energy              =   -37.92870972 ryd
      estimated scf accuracy    <     0.00000026 ryd
@@ -5298,7 +5298,7 @@ Si       1.155977970  -1.071975448  -0.000001429
      Davidson diagonalization with overlap
      ethr =  1.20E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     42.62 secs
+     total cpu time spent up to now is     42.21 secs
 
      End of self-consistent calculation
 
@@ -5365,7 +5365,7 @@ Si       1.150991175  -1.066117466  -0.000003197
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     42.76 secs
+     total cpu time spent up to now is     42.34 secs
 
      Self-consistent Calculation
 
@@ -5379,7 +5379,7 @@ Si       1.150991175  -1.066117466  -0.000003197
      Davidson diagonalization with overlap
      ethr =  1.84E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     43.12 secs
+     total cpu time spent up to now is     42.69 secs
 
      total energy              =   -37.92533191 ryd
      estimated scf accuracy    <     0.00000031 ryd
@@ -5388,7 +5388,7 @@ Si       1.150991175  -1.066117466  -0.000003197
      Davidson diagonalization with overlap
      ethr =  1.41E-09,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is     43.32 secs
+     total cpu time spent up to now is     42.88 secs
 
      total energy              =   -37.92533214 ryd
      estimated scf accuracy    <     0.00000020 ryd
@@ -5397,7 +5397,7 @@ Si       1.150991175  -1.066117466  -0.000003197
      Davidson diagonalization with overlap
      ethr =  9.12E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     43.46 secs
+     total cpu time spent up to now is     43.03 secs
 
      End of self-consistent calculation
 
@@ -5450,7 +5450,7 @@ Si       1.150991175  -1.066117466  -0.000003197
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     43.59 secs
+     total cpu time spent up to now is     43.16 secs
 
      Self-consistent Calculation
 
@@ -5464,7 +5464,7 @@ Si       1.150991175  -1.066117466  -0.000003197
      Davidson diagonalization with overlap
      ethr =  2.11E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     43.92 secs
+     total cpu time spent up to now is     43.50 secs
 
      total energy              =   -37.92533180 ryd
      estimated scf accuracy    <     0.00000025 ryd
@@ -5473,7 +5473,7 @@ Si       1.150991175  -1.066117466  -0.000003197
      Davidson diagonalization with overlap
      ethr =  1.13E-09,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is     44.13 secs
+     total cpu time spent up to now is     43.71 secs
 
      total energy              =   -37.92533214 ryd
      estimated scf accuracy    <     0.00000032 ryd
@@ -5482,7 +5482,7 @@ Si       1.150991175  -1.066117466  -0.000003197
      Davidson diagonalization with overlap
      ethr =  1.13E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     44.27 secs
+     total cpu time spent up to now is     43.85 secs
 
      End of self-consistent calculation
 
@@ -5549,7 +5549,7 @@ Si       1.146007257  -1.059594272  -0.000003846
 
      negative rho (up, down):  0.978E-06 0.000E+00
 
-     total cpu time spent up to now is     44.40 secs
+     total cpu time spent up to now is     43.98 secs
 
      Self-consistent Calculation
 
@@ -5565,7 +5565,7 @@ Si       1.146007257  -1.059594272  -0.000003846
 
      negative rho (up, down):  0.138E-06 0.000E+00
 
-     total cpu time spent up to now is     44.69 secs
+     total cpu time spent up to now is     44.27 secs
 
      total energy              =   -37.92089036 ryd
      estimated scf accuracy    <     0.00008352 ryd
@@ -5574,7 +5574,7 @@ Si       1.146007257  -1.059594272  -0.000003846
      Davidson diagonalization with overlap
      ethr =  3.80E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     44.85 secs
+     total cpu time spent up to now is     44.43 secs
 
      total energy              =   -37.92090271 ryd
      estimated scf accuracy    <     0.00000720 ryd
@@ -5583,7 +5583,7 @@ Si       1.146007257  -1.059594272  -0.000003846
      Davidson diagonalization with overlap
      ethr =  3.27E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     44.98 secs
+     total cpu time spent up to now is     44.56 secs
 
      total energy              =   -37.92090307 ryd
      estimated scf accuracy    <     0.00000213 ryd
@@ -5592,7 +5592,7 @@ Si       1.146007257  -1.059594272  -0.000003846
      Davidson diagonalization with overlap
      ethr =  9.67E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     45.11 secs
+     total cpu time spent up to now is     44.69 secs
 
      End of self-consistent calculation
 
@@ -5658,7 +5658,7 @@ Si       1.146009193  -1.059643994  -0.000004656
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     45.25 secs
+     total cpu time spent up to now is     44.83 secs
 
      Self-consistent Calculation
 
@@ -5672,7 +5672,7 @@ Si       1.146009193  -1.059643994  -0.000004656
      Davidson diagonalization with overlap
      ethr =  3.11E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     45.53 secs
+     total cpu time spent up to now is     45.11 secs
 
      total energy              =   -37.92115457 ryd
      estimated scf accuracy    <     0.00007599 ryd
@@ -5681,7 +5681,7 @@ Si       1.146009193  -1.059643994  -0.000004656
      Davidson diagonalization with overlap
      ethr =  3.45E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     45.68 secs
+     total cpu time spent up to now is     45.27 secs
 
      total energy              =   -37.92116383 ryd
      estimated scf accuracy    <     0.00000840 ryd
@@ -5690,7 +5690,7 @@ Si       1.146009193  -1.059643994  -0.000004656
      Davidson diagonalization with overlap
      ethr =  3.82E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     45.83 secs
+     total cpu time spent up to now is     45.42 secs
 
      total energy              =   -37.92116454 ryd
      estimated scf accuracy    <     0.00000190 ryd
@@ -5699,7 +5699,7 @@ Si       1.146009193  -1.059643994  -0.000004656
      Davidson diagonalization with overlap
      ethr =  8.63E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     45.98 secs
+     total cpu time spent up to now is     45.57 secs
 
      total energy              =   -37.92116468 ryd
      estimated scf accuracy    <     0.00000014 ryd
@@ -5708,7 +5708,7 @@ Si       1.146009193  -1.059643994  -0.000004656
      Davidson diagonalization with overlap
      ethr =  6.56E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     46.14 secs
+     total cpu time spent up to now is     45.72 secs
 
      End of self-consistent calculation
 
@@ -5772,7 +5772,7 @@ Si       1.146018686  -1.059619137  -0.000006920
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     46.28 secs
+     total cpu time spent up to now is     45.86 secs
 
      Self-consistent Calculation
 
@@ -5786,7 +5786,7 @@ Si       1.146018686  -1.059619137  -0.000006920
      Davidson diagonalization with overlap
      ethr =  1.34E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     46.57 secs
+     total cpu time spent up to now is     46.15 secs
 
      total energy              =   -37.92190325 ryd
      estimated scf accuracy    <     0.00000342 ryd
@@ -5795,7 +5795,7 @@ Si       1.146018686  -1.059619137  -0.000006920
      Davidson diagonalization with overlap
      ethr =  1.56E-08,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     46.74 secs
+     total cpu time spent up to now is     46.33 secs
 
      total energy              =   -37.92190410 ryd
      estimated scf accuracy    <     0.00000097 ryd
@@ -5804,7 +5804,7 @@ Si       1.146018686  -1.059619137  -0.000006920
      Davidson diagonalization with overlap
      ethr =  4.40E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     46.89 secs
+     total cpu time spent up to now is     46.47 secs
 
      End of self-consistent calculation
 
@@ -5868,7 +5868,7 @@ Si       1.146023475  -1.059353649  -0.000007858
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     47.03 secs
+     total cpu time spent up to now is     46.61 secs
 
      Self-consistent Calculation
 
@@ -5882,7 +5882,7 @@ Si       1.146023475  -1.059353649  -0.000007858
      Davidson diagonalization with overlap
      ethr =  6.53E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     47.31 secs
+     total cpu time spent up to now is     46.89 secs
 
      total energy              =   -37.92248884 ryd
      estimated scf accuracy    <     0.00001319 ryd
@@ -5891,7 +5891,7 @@ Si       1.146023475  -1.059353649  -0.000007858
      Davidson diagonalization with overlap
      ethr =  6.00E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     47.48 secs
+     total cpu time spent up to now is     47.06 secs
 
      total energy              =   -37.92249323 ryd
      estimated scf accuracy    <     0.00000086 ryd
@@ -5900,7 +5900,7 @@ Si       1.146023475  -1.059353649  -0.000007858
      Davidson diagonalization with overlap
      ethr =  3.91E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     47.64 secs
+     total cpu time spent up to now is     47.22 secs
 
      End of self-consistent calculation
 
@@ -5966,7 +5966,7 @@ Si       1.146019357  -1.058686599  -0.000007567
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     47.78 secs
+     total cpu time spent up to now is     47.36 secs
 
      Self-consistent Calculation
 
@@ -5982,7 +5982,7 @@ Si       1.146019357  -1.058686599  -0.000007567
 
      negative rho (up, down):  0.151E-06 0.000E+00
 
-     total cpu time spent up to now is     48.09 secs
+     total cpu time spent up to now is     47.66 secs
 
      total energy              =   -37.92261759 ryd
      estimated scf accuracy    <     0.00001490 ryd
@@ -5993,7 +5993,7 @@ Si       1.146019357  -1.058686599  -0.000007567
 
      negative rho (up, down):  0.412E-07 0.000E+00
 
-     total cpu time spent up to now is     48.25 secs
+     total cpu time spent up to now is     47.82 secs
 
      total energy              =   -37.92262201 ryd
      estimated scf accuracy    <     0.00000536 ryd
@@ -6002,7 +6002,7 @@ Si       1.146019357  -1.058686599  -0.000007567
      Davidson diagonalization with overlap
      ethr =  2.43E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     48.39 secs
+     total cpu time spent up to now is     47.97 secs
 
      End of self-consistent calculation
 
@@ -6066,7 +6066,7 @@ Si       1.146017598  -1.058682768  -0.000007125
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     48.53 secs
+     total cpu time spent up to now is     48.11 secs
 
      Self-consistent Calculation
 
@@ -6080,7 +6080,7 @@ Si       1.146017598  -1.058682768  -0.000007125
      Davidson diagonalization with overlap
      ethr =  7.88E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     48.86 secs
+     total cpu time spent up to now is     48.42 secs
 
      total energy              =   -37.92265517 ryd
      estimated scf accuracy    <     0.00000015 ryd
@@ -6089,7 +6089,7 @@ Si       1.146017598  -1.058682768  -0.000007125
      Davidson diagonalization with overlap
      ethr =  6.97E-10,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     49.05 secs
+     total cpu time spent up to now is     48.61 secs
 
      End of self-consistent calculation
 
@@ -6153,7 +6153,7 @@ Si       1.146028040  -1.058590799  -0.000009842
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     49.19 secs
+     total cpu time spent up to now is     48.75 secs
 
      Self-consistent Calculation
 
@@ -6167,7 +6167,7 @@ Si       1.146028040  -1.058590799  -0.000009842
      Davidson diagonalization with overlap
      ethr =  3.36E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     49.50 secs
+     total cpu time spent up to now is     49.04 secs
 
      total energy              =   -37.92279281 ryd
      estimated scf accuracy    <     0.00001014 ryd
@@ -6176,7 +6176,7 @@ Si       1.146028040  -1.058590799  -0.000009842
      Davidson diagonalization with overlap
      ethr =  4.61E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     49.67 secs
+     total cpu time spent up to now is     49.20 secs
 
      total energy              =   -37.92279554 ryd
      estimated scf accuracy    <     0.00000278 ryd
@@ -6185,7 +6185,7 @@ Si       1.146028040  -1.058590799  -0.000009842
      Davidson diagonalization with overlap
      ethr =  1.26E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     49.82 secs
+     total cpu time spent up to now is     49.35 secs
 
      End of self-consistent calculation
 
@@ -6249,7 +6249,7 @@ Si       1.146020738  -1.058343492  -0.000010144
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     49.96 secs
+     total cpu time spent up to now is     49.49 secs
 
      Self-consistent Calculation
 
@@ -6263,7 +6263,7 @@ Si       1.146020738  -1.058343492  -0.000010144
      Davidson diagonalization with overlap
      ethr =  3.88E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     50.27 secs
+     total cpu time spent up to now is     49.79 secs
 
      total energy              =   -37.92299152 ryd
      estimated scf accuracy    <     0.00002031 ryd
@@ -6272,7 +6272,7 @@ Si       1.146020738  -1.058343492  -0.000010144
      Davidson diagonalization with overlap
      ethr =  9.23E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     50.43 secs
+     total cpu time spent up to now is     49.95 secs
 
      total energy              =   -37.92299578 ryd
      estimated scf accuracy    <     0.00000426 ryd
@@ -6281,7 +6281,7 @@ Si       1.146020738  -1.058343492  -0.000010144
      Davidson diagonalization with overlap
      ethr =  1.93E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     50.58 secs
+     total cpu time spent up to now is     50.11 secs
 
      total energy              =   -37.92299654 ryd
      estimated scf accuracy    <     0.00000019 ryd
@@ -6290,7 +6290,7 @@ Si       1.146020738  -1.058343492  -0.000010144
      Davidson diagonalization with overlap
      ethr =  8.64E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     50.75 secs
+     total cpu time spent up to now is     50.28 secs
 
      End of self-consistent calculation
 
@@ -6354,7 +6354,7 @@ Si       1.146008427  -1.058000982  -0.000008316
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     50.89 secs
+     total cpu time spent up to now is     50.42 secs
 
      Self-consistent Calculation
 
@@ -6368,7 +6368,7 @@ Si       1.146008427  -1.058000982  -0.000008316
      Davidson diagonalization with overlap
      ethr =  1.13E-07,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     51.22 secs
+     total cpu time spent up to now is     50.75 secs
 
      total energy              =   -37.92315746 ryd
      estimated scf accuracy    <     0.00000560 ryd
@@ -6377,7 +6377,7 @@ Si       1.146008427  -1.058000982  -0.000008316
      Davidson diagonalization with overlap
      ethr =  2.54E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     51.39 secs
+     total cpu time spent up to now is     50.91 secs
 
      total energy              =   -37.92315884 ryd
      estimated scf accuracy    <     0.00000194 ryd
@@ -6386,7 +6386,7 @@ Si       1.146008427  -1.058000982  -0.000008316
      Davidson diagonalization with overlap
      ethr =  8.82E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     51.54 secs
+     total cpu time spent up to now is     51.06 secs
 
      End of self-consistent calculation
 
@@ -6465,7 +6465,7 @@ Si       1.146008427  -1.058000982  -0.000008316
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     51.68 secs
+     total cpu time spent up to now is     51.19 secs
 
      Self-consistent Calculation
 
@@ -6479,7 +6479,7 @@ Si       1.146008427  -1.058000982  -0.000008316
      Davidson diagonalization with overlap
      ethr =  2.76E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     52.04 secs
+     total cpu time spent up to now is     51.53 secs
 
      End of self-consistent calculation
 
@@ -6551,7 +6551,7 @@ Si       1.148641021  -1.065238689  -0.000008730
 
      negative rho (up, down):  0.494E-07 0.000E+00
 
-     total cpu time spent up to now is     52.17 secs
+     total cpu time spent up to now is     51.66 secs
 
      Self-consistent Calculation
 
@@ -6565,7 +6565,7 @@ Si       1.148641021  -1.065238689  -0.000008730
      Davidson diagonalization with overlap
      ethr =  3.02E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     52.44 secs
+     total cpu time spent up to now is     51.94 secs
 
      total energy              =   -37.92701825 ryd
      estimated scf accuracy    <     0.00007193 ryd
@@ -6574,7 +6574,7 @@ Si       1.148641021  -1.065238689  -0.000008730
      Davidson diagonalization with overlap
      ethr =  3.27E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     52.59 secs
+     total cpu time spent up to now is     52.09 secs
 
      total energy              =   -37.92702663 ryd
      estimated scf accuracy    <     0.00000734 ryd
@@ -6583,7 +6583,7 @@ Si       1.148641021  -1.065238689  -0.000008730
      Davidson diagonalization with overlap
      ethr =  3.33E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     52.73 secs
+     total cpu time spent up to now is     52.23 secs
 
      total energy              =   -37.92702702 ryd
      estimated scf accuracy    <     0.00000174 ryd
@@ -6592,7 +6592,7 @@ Si       1.148641021  -1.065238689  -0.000008730
      Davidson diagonalization with overlap
      ethr =  7.89E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     52.87 secs
+     total cpu time spent up to now is     52.37 secs
 
      End of self-consistent calculation
 
@@ -6659,7 +6659,7 @@ Si       1.151273914  -1.072492950  -0.000009175
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     53.01 secs
+     total cpu time spent up to now is     52.50 secs
 
      Self-consistent Calculation
 
@@ -6673,7 +6673,7 @@ Si       1.151273914  -1.072492950  -0.000009175
      Davidson diagonalization with overlap
      ethr =  1.58E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     53.31 secs
+     total cpu time spent up to now is     52.80 secs
 
      total energy              =   -37.93031823 ryd
      estimated scf accuracy    <     0.00000035 ryd
@@ -6682,7 +6682,7 @@ Si       1.151273914  -1.072492950  -0.000009175
      Davidson diagonalization with overlap
      ethr =  1.60E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     53.49 secs
+     total cpu time spent up to now is     52.99 secs
 
      total energy              =   -37.93031846 ryd
      estimated scf accuracy    <     0.00000018 ryd
@@ -6691,7 +6691,7 @@ Si       1.151273914  -1.072492950  -0.000009175
      Davidson diagonalization with overlap
      ethr =  8.30E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     53.64 secs
+     total cpu time spent up to now is     53.14 secs
 
      End of self-consistent calculation
 
@@ -6758,7 +6758,7 @@ Si       1.153907251  -1.079754108  -0.000009576
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     53.78 secs
+     total cpu time spent up to now is     53.27 secs
 
      Self-consistent Calculation
 
@@ -6772,7 +6772,7 @@ Si       1.153907251  -1.079754108  -0.000009576
      Davidson diagonalization with overlap
      ethr =  3.80E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     54.06 secs
+     total cpu time spent up to now is     53.56 secs
 
      total energy              =   -37.93309362 ryd
      estimated scf accuracy    <     0.00000188 ryd
@@ -6781,7 +6781,7 @@ Si       1.153907251  -1.079754108  -0.000009576
      Davidson diagonalization with overlap
      ethr =  8.55E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     54.25 secs
+     total cpu time spent up to now is     53.74 secs
 
      total energy              =   -37.93309447 ryd
      estimated scf accuracy    <     0.00000016 ryd
@@ -6790,7 +6790,7 @@ Si       1.153907251  -1.079754108  -0.000009576
      Davidson diagonalization with overlap
      ethr =  7.29E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     54.40 secs
+     total cpu time spent up to now is     53.89 secs
 
      End of self-consistent calculation
 
@@ -6857,7 +6857,7 @@ Si       1.156540294  -1.087000650  -0.000009815
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     54.54 secs
+     total cpu time spent up to now is     54.02 secs
 
      Self-consistent Calculation
 
@@ -6871,7 +6871,7 @@ Si       1.156540294  -1.087000650  -0.000009815
      Davidson diagonalization with overlap
      ethr =  5.06E-08,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     54.88 secs
+     total cpu time spent up to now is     54.39 secs
 
      total energy              =   -37.93542957 ryd
      estimated scf accuracy    <     0.00000080 ryd
@@ -6880,7 +6880,7 @@ Si       1.156540294  -1.087000650  -0.000009815
      Davidson diagonalization with overlap
      ethr =  3.62E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     55.06 secs
+     total cpu time spent up to now is     54.56 secs
 
      total energy              =   -37.93542975 ryd
      estimated scf accuracy    <     0.00000015 ryd
@@ -6889,7 +6889,7 @@ Si       1.156540294  -1.087000650  -0.000009815
      Davidson diagonalization with overlap
      ethr =  6.98E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     55.21 secs
+     total cpu time spent up to now is     54.70 secs
 
      End of self-consistent calculation
 
@@ -6956,7 +6956,7 @@ Si       1.159172674  -1.094199868  -0.000009755
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     55.35 secs
+     total cpu time spent up to now is     54.83 secs
 
      Self-consistent Calculation
 
@@ -6970,7 +6970,7 @@ Si       1.159172674  -1.094199868  -0.000009755
      Davidson diagonalization with overlap
      ethr =  3.65E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     55.65 secs
+     total cpu time spent up to now is     55.13 secs
 
      total energy              =   -37.93738985 ryd
      estimated scf accuracy    <     0.00000370 ryd
@@ -6979,7 +6979,7 @@ Si       1.159172674  -1.094199868  -0.000009755
      Davidson diagonalization with overlap
      ethr =  1.68E-08,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     55.85 secs
+     total cpu time spent up to now is     55.32 secs
 
      total energy              =   -37.93739190 ryd
      estimated scf accuracy    <     0.00000366 ryd
@@ -6988,7 +6988,7 @@ Si       1.159172674  -1.094199868  -0.000009755
      Davidson diagonalization with overlap
      ethr =  1.66E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     56.00 secs
+     total cpu time spent up to now is     55.47 secs
 
      total energy              =   -37.93739220 ryd
      estimated scf accuracy    <     0.00000019 ryd
@@ -6997,7 +6997,7 @@ Si       1.159172674  -1.094199868  -0.000009755
      Davidson diagonalization with overlap
      ethr =  8.69E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     56.15 secs
+     total cpu time spent up to now is     55.62 secs
 
      End of self-consistent calculation
 
@@ -7064,7 +7064,7 @@ Si       1.161804353  -1.101312475  -0.000009422
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     56.28 secs
+     total cpu time spent up to now is     55.75 secs
 
      Self-consistent Calculation
 
@@ -7078,7 +7078,7 @@ Si       1.161804353  -1.101312475  -0.000009422
      Davidson diagonalization with overlap
      ethr =  2.60E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     56.60 secs
+     total cpu time spent up to now is     56.07 secs
 
      total energy              =   -37.93903037 ryd
      estimated scf accuracy    <     0.00000015 ryd
@@ -7087,7 +7087,7 @@ Si       1.161804353  -1.101312475  -0.000009422
      Davidson diagonalization with overlap
      ethr =  6.76E-10,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is     56.83 secs
+     total cpu time spent up to now is     56.29 secs
 
      total energy              =   -37.93903076 ryd
      estimated scf accuracy    <     0.00000022 ryd
@@ -7096,7 +7096,7 @@ Si       1.161804353  -1.101312475  -0.000009422
      Davidson diagonalization with overlap
      ethr =  6.76E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     56.97 secs
+     total cpu time spent up to now is     56.43 secs
 
      End of self-consistent calculation
 
@@ -7163,7 +7163,7 @@ Si       1.164434964  -1.108299400  -0.000008519
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     57.11 secs
+     total cpu time spent up to now is     56.56 secs
 
      Self-consistent Calculation
 
@@ -7177,7 +7177,7 @@ Si       1.164434964  -1.108299400  -0.000008519
      Davidson diagonalization with overlap
      ethr =  6.47E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     57.42 secs
+     total cpu time spent up to now is     56.85 secs
 
      total energy              =   -37.94037196 ryd
      estimated scf accuracy    <     0.00000239 ryd
@@ -7186,7 +7186,7 @@ Si       1.164434964  -1.108299400  -0.000008519
      Davidson diagonalization with overlap
      ethr =  1.08E-08,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is     57.63 secs
+     total cpu time spent up to now is     57.05 secs
 
      total energy              =   -37.94037384 ryd
      estimated scf accuracy    <     0.00000157 ryd
@@ -7195,7 +7195,7 @@ Si       1.164434964  -1.108299400  -0.000008519
      Davidson diagonalization with overlap
      ethr =  7.13E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     57.77 secs
+     total cpu time spent up to now is     57.19 secs
 
      End of self-consistent calculation
 
@@ -7262,7 +7262,7 @@ Si       1.167064840  -1.115130225  -0.000007286
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     57.91 secs
+     total cpu time spent up to now is     57.33 secs
 
      Self-consistent Calculation
 
@@ -7276,7 +7276,7 @@ Si       1.167064840  -1.115130225  -0.000007286
      Davidson diagonalization with overlap
      ethr =  2.58E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     58.24 secs
+     total cpu time spent up to now is     57.66 secs
 
      total energy              =   -37.94143480 ryd
      estimated scf accuracy    <     0.00000114 ryd
@@ -7285,7 +7285,7 @@ Si       1.167064840  -1.115130225  -0.000007286
      Davidson diagonalization with overlap
      ethr =  5.20E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     58.43 secs
+     total cpu time spent up to now is     57.85 secs
 
      total energy              =   -37.94143546 ryd
      estimated scf accuracy    <     0.00000058 ryd
@@ -7294,7 +7294,7 @@ Si       1.167064840  -1.115130225  -0.000007286
      Davidson diagonalization with overlap
      ethr =  2.63E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     58.58 secs
+     total cpu time spent up to now is     58.00 secs
 
      End of self-consistent calculation
 
@@ -7361,7 +7361,7 @@ Si       1.169693766  -1.121790171  -0.000005803
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     58.71 secs
+     total cpu time spent up to now is     58.14 secs
 
      Self-consistent Calculation
 
@@ -7375,7 +7375,7 @@ Si       1.169693766  -1.121790171  -0.000005803
      Davidson diagonalization with overlap
      ethr =  1.20E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     59.06 secs
+     total cpu time spent up to now is     58.49 secs
 
      total energy              =   -37.94221691 ryd
      estimated scf accuracy    <     0.00000031 ryd
@@ -7384,7 +7384,7 @@ Si       1.169693766  -1.121790171  -0.000005803
      Davidson diagonalization with overlap
      ethr =  1.39E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     59.26 secs
+     total cpu time spent up to now is     58.69 secs
 
      total energy              =   -37.94221712 ryd
      estimated scf accuracy    <     0.00000011 ryd
@@ -7393,7 +7393,7 @@ Si       1.169693766  -1.121790171  -0.000005803
      Davidson diagonalization with overlap
      ethr =  5.15E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     59.41 secs
+     total cpu time spent up to now is     58.83 secs
 
      End of self-consistent calculation
 
@@ -7446,7 +7446,7 @@ Si       1.169693766  -1.121790171  -0.000005803
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     59.54 secs
+     total cpu time spent up to now is     58.97 secs
 
      Self-consistent Calculation
 
@@ -7460,7 +7460,7 @@ Si       1.169693766  -1.121790171  -0.000005803
      Davidson diagonalization with overlap
      ethr =  1.26E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     59.87 secs
+     total cpu time spent up to now is     59.31 secs
 
      End of self-consistent calculation
 
@@ -7527,7 +7527,7 @@ Si       1.172323142  -1.128832252  -0.000004154
 
      negative rho (up, down):  0.301E-06 0.000E+00
 
-     total cpu time spent up to now is     60.00 secs
+     total cpu time spent up to now is     59.44 secs
 
      Self-consistent Calculation
 
@@ -7541,7 +7541,7 @@ Si       1.172323142  -1.128832252  -0.000004154
      Davidson diagonalization with overlap
      ethr =  2.81E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     60.27 secs
+     total cpu time spent up to now is     59.72 secs
 
      total energy              =   -37.94224094 ryd
      estimated scf accuracy    <     0.00006691 ryd
@@ -7550,7 +7550,7 @@ Si       1.172323142  -1.128832252  -0.000004154
      Davidson diagonalization with overlap
      ethr =  3.04E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     60.42 secs
+     total cpu time spent up to now is     59.88 secs
 
      total energy              =   -37.94224980 ryd
      estimated scf accuracy    <     0.00000629 ryd
@@ -7559,7 +7559,7 @@ Si       1.172323142  -1.128832252  -0.000004154
      Davidson diagonalization with overlap
      ethr =  2.86E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     60.56 secs
+     total cpu time spent up to now is     60.01 secs
 
      total energy              =   -37.94225013 ryd
      estimated scf accuracy    <     0.00000175 ryd
@@ -7568,7 +7568,7 @@ Si       1.172323142  -1.128832252  -0.000004154
      Davidson diagonalization with overlap
      ethr =  7.96E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     60.69 secs
+     total cpu time spent up to now is     60.14 secs
 
      End of self-consistent calculation
 
@@ -7634,7 +7634,7 @@ Si       1.172321183  -1.128572078  -0.000004525
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     60.83 secs
+     total cpu time spent up to now is     60.28 secs
 
      Self-consistent Calculation
 
@@ -7648,7 +7648,7 @@ Si       1.172321183  -1.128572078  -0.000004525
      Davidson diagonalization with overlap
      ethr =  2.49E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     61.12 secs
+     total cpu time spent up to now is     60.56 secs
 
      total energy              =   -37.94242326 ryd
      estimated scf accuracy    <     0.00005849 ryd
@@ -7657,7 +7657,7 @@ Si       1.172321183  -1.128572078  -0.000004525
      Davidson diagonalization with overlap
      ethr =  2.66E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     61.28 secs
+     total cpu time spent up to now is     60.72 secs
 
      total energy              =   -37.94243049 ryd
      estimated scf accuracy    <     0.00000951 ryd
@@ -7666,7 +7666,7 @@ Si       1.172321183  -1.128572078  -0.000004525
      Davidson diagonalization with overlap
      ethr =  4.32E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     61.43 secs
+     total cpu time spent up to now is     60.87 secs
 
      total energy              =   -37.94243156 ryd
      estimated scf accuracy    <     0.00000241 ryd
@@ -7675,7 +7675,7 @@ Si       1.172321183  -1.128572078  -0.000004525
      Davidson diagonalization with overlap
      ethr =  1.09E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     61.58 secs
+     total cpu time spent up to now is     61.02 secs
 
      total energy              =   -37.94243179 ryd
      estimated scf accuracy    <     0.00000038 ryd
@@ -7684,7 +7684,7 @@ Si       1.172321183  -1.128572078  -0.000004525
      Davidson diagonalization with overlap
      ethr =  1.75E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     61.72 secs
+     total cpu time spent up to now is     61.16 secs
 
      End of self-consistent calculation
 
@@ -7748,7 +7748,7 @@ Si       1.172317168  -1.127906941  -0.000003265
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     61.86 secs
+     total cpu time spent up to now is     61.30 secs
 
      Self-consistent Calculation
 
@@ -7762,7 +7762,7 @@ Si       1.172317168  -1.127906941  -0.000003265
      Davidson diagonalization with overlap
      ethr =  3.51E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     62.13 secs
+     total cpu time spent up to now is     61.55 secs
 
      total energy              =   -37.94285780 ryd
      estimated scf accuracy    <     0.00000335 ryd
@@ -7771,7 +7771,7 @@ Si       1.172317168  -1.127906941  -0.000003265
      Davidson diagonalization with overlap
      ethr =  1.52E-08,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     62.33 secs
+     total cpu time spent up to now is     61.74 secs
 
      total energy              =   -37.94285975 ryd
      estimated scf accuracy    <     0.00000176 ryd
@@ -7780,7 +7780,7 @@ Si       1.172317168  -1.127906941  -0.000003265
      Davidson diagonalization with overlap
      ethr =  8.00E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     62.49 secs
+     total cpu time spent up to now is     61.90 secs
 
      total energy              =   -37.94285995 ryd
      estimated scf accuracy    <     0.00000012 ryd
@@ -7789,7 +7789,7 @@ Si       1.172317168  -1.127906941  -0.000003265
      Davidson diagonalization with overlap
      ethr =  5.37E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     62.64 secs
+     total cpu time spent up to now is     62.05 secs
 
      End of self-consistent calculation
 
@@ -7853,7 +7853,7 @@ Si       1.172314032  -1.126931203  -0.000002173
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     62.79 secs
+     total cpu time spent up to now is     62.19 secs
 
      Self-consistent Calculation
 
@@ -7867,7 +7867,7 @@ Si       1.172314032  -1.126931203  -0.000002173
      Davidson diagonalization with overlap
      ethr =  1.75E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     63.09 secs
+     total cpu time spent up to now is     62.47 secs
 
      total energy              =   -37.94318203 ryd
      estimated scf accuracy    <     0.00000172 ryd
@@ -7876,7 +7876,7 @@ Si       1.172314032  -1.126931203  -0.000002173
      Davidson diagonalization with overlap
      ethr =  7.83E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     63.26 secs
+     total cpu time spent up to now is     62.64 secs
 
      total energy              =   -37.94318248 ryd
      estimated scf accuracy    <     0.00000013 ryd
@@ -7885,7 +7885,7 @@ Si       1.172314032  -1.126931203  -0.000002173
      Davidson diagonalization with overlap
      ethr =  5.70E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     63.42 secs
+     total cpu time spent up to now is     62.80 secs
 
      End of self-consistent calculation
 
@@ -7949,7 +7949,7 @@ Si       1.172316961  -1.125689293  -0.000002465
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     63.56 secs
+     total cpu time spent up to now is     62.94 secs
 
      Self-consistent Calculation
 
@@ -7963,7 +7963,7 @@ Si       1.172316961  -1.125689293  -0.000002465
      Davidson diagonalization with overlap
      ethr =  1.22E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     63.87 secs
+     total cpu time spent up to now is     63.25 secs
 
      total energy              =   -37.94321791 ryd
      estimated scf accuracy    <     0.00000102 ryd
@@ -7972,7 +7972,7 @@ Si       1.172316961  -1.125689293  -0.000002465
      Davidson diagonalization with overlap
      ethr =  4.62E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     64.04 secs
+     total cpu time spent up to now is     63.42 secs
 
      total energy              =   -37.94321829 ryd
      estimated scf accuracy    <     0.00000012 ryd
@@ -7981,7 +7981,7 @@ Si       1.172316961  -1.125689293  -0.000002465
      Davidson diagonalization with overlap
      ethr =  5.66E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     64.19 secs
+     total cpu time spent up to now is     63.56 secs
 
      End of self-consistent calculation
 
@@ -8045,7 +8045,7 @@ Si       1.172317023  -1.125749094  -0.000002782
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     64.33 secs
+     total cpu time spent up to now is     63.70 secs
 
      Self-consistent Calculation
 
@@ -8059,7 +8059,7 @@ Si       1.172317023  -1.125749094  -0.000002782
      Davidson diagonalization with overlap
      ethr =  2.24E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     64.63 secs
+     total cpu time spent up to now is     64.00 secs
 
      total energy              =   -37.94323513 ryd
      estimated scf accuracy    <     0.00000032 ryd
@@ -8068,7 +8068,7 @@ Si       1.172317023  -1.125749094  -0.000002782
      Davidson diagonalization with overlap
      ethr =  1.43E-09,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     64.86 secs
+     total cpu time spent up to now is     64.21 secs
 
      total energy              =   -37.94323554 ryd
      estimated scf accuracy    <     0.00000041 ryd
@@ -8077,7 +8077,7 @@ Si       1.172317023  -1.125749094  -0.000002782
      Davidson diagonalization with overlap
      ethr =  1.43E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     65.00 secs
+     total cpu time spent up to now is     64.34 secs
 
      End of self-consistent calculation
 
@@ -8141,7 +8141,7 @@ Si       1.172320494  -1.125699944   0.000000011
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     65.14 secs
+     total cpu time spent up to now is     64.49 secs
 
      Self-consistent Calculation
 
@@ -8155,7 +8155,7 @@ Si       1.172320494  -1.125699944   0.000000011
      Davidson diagonalization with overlap
      ethr =  5.93E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     65.40 secs
+     total cpu time spent up to now is     64.77 secs
 
      total energy              =   -37.94327160 ryd
      estimated scf accuracy    <     0.00000881 ryd
@@ -8164,7 +8164,7 @@ Si       1.172320494  -1.125699944   0.000000011
      Davidson diagonalization with overlap
      ethr =  4.00E-08,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     65.59 secs
+     total cpu time spent up to now is     64.96 secs
 
      total energy              =   -37.94327585 ryd
      estimated scf accuracy    <     0.00000297 ryd
@@ -8173,7 +8173,7 @@ Si       1.172320494  -1.125699944   0.000000011
      Davidson diagonalization with overlap
      ethr =  1.35E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     65.75 secs
+     total cpu time spent up to now is     65.12 secs
 
      total energy              =   -37.94327625 ryd
      estimated scf accuracy    <     0.00000010 ryd
@@ -8182,7 +8182,7 @@ Si       1.172320494  -1.125699944   0.000000011
      Davidson diagonalization with overlap
      ethr =  4.56E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     65.91 secs
+     total cpu time spent up to now is     65.28 secs
 
      End of self-consistent calculation
 
@@ -8246,7 +8246,7 @@ Si       1.172325706  -1.125321538  -0.000000359
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  2 zero eigenvalues
 
-     total cpu time spent up to now is     66.06 secs
+     total cpu time spent up to now is     65.42 secs
 
      Self-consistent Calculation
 
@@ -8260,7 +8260,7 @@ Si       1.172325706  -1.125321538  -0.000000359
      Davidson diagonalization with overlap
      ethr =  6.54E-08,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is     66.39 secs
+     total cpu time spent up to now is     65.75 secs
 
      total energy              =   -37.94331886 ryd
      estimated scf accuracy    <     0.00000635 ryd
@@ -8269,7 +8269,7 @@ Si       1.172325706  -1.125321538  -0.000000359
      Davidson diagonalization with overlap
      ethr =  2.89E-08,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     66.55 secs
+     total cpu time spent up to now is     65.92 secs
 
      total energy              =   -37.94332049 ryd
      estimated scf accuracy    <     0.00000207 ryd
@@ -8278,7 +8278,7 @@ Si       1.172325706  -1.125321538  -0.000000359
      Davidson diagonalization with overlap
      ethr =  9.43E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     66.69 secs
+     total cpu time spent up to now is     66.06 secs
 
      End of self-consistent calculation
 
@@ -8348,38 +8348,38 @@ Si       1.172325706  -1.125321538  -0.000000359
 
      Writing output data file  metadyn-pw.save
  
-     PWSCF        :  1m 6.77s CPU time
+     PWSCF        :  1m 6.12s CPU time
 
      init_run     :     0.21s CPU
-     electrons    :    55.30s CPU (      82 calls,   0.674 s avg)
-     forces       :     4.52s CPU (      82 calls,   0.055 s avg)
+     electrons    :    54.79s CPU (      82 calls,   0.668 s avg)
+     forces       :     4.51s CPU (      82 calls,   0.055 s avg)
  
-     electrons    :    55.30s CPU (      82 calls,   0.674 s avg)
-     c_bands      :    37.17s CPU (     348 calls,   0.107 s avg)
-     sum_band     :     6.62s CPU (     348 calls,   0.019 s avg)
-     v_of_rho     :     7.61s CPU (     349 calls,   0.022 s avg)
-     mix_rho      :     0.55s CPU (     348 calls,   0.002 s avg)
+     electrons    :    54.79s CPU (      82 calls,   0.668 s avg)
+     c_bands      :    36.98s CPU (     348 calls,   0.106 s avg)
+     sum_band     :     6.53s CPU (     348 calls,   0.019 s avg)
+     v_of_rho     :     7.36s CPU (     349 calls,   0.021 s avg)
+     mix_rho      :     0.57s CPU (     348 calls,   0.002 s avg)
  
-     c_bands      :    37.17s CPU (     348 calls,   0.107 s avg)
-     init_us_2    :     0.65s CPU (     697 calls,   0.001 s avg)
-     cegterg      :    36.67s CPU (     348 calls,   0.105 s avg)
+     c_bands      :    36.98s CPU (     348 calls,   0.106 s avg)
+     init_us_2    :     0.60s CPU (     697 calls,   0.001 s avg)
+     cegterg      :    36.51s CPU (     348 calls,   0.105 s avg)
  
-     sum_band     :     6.62s CPU (     348 calls,   0.019 s avg)
+     sum_band     :     6.53s CPU (     348 calls,   0.019 s avg)
  
-     cegterg      :    36.67s CPU (     348 calls,   0.105 s avg)
-     h_psi        :    31.94s CPU (    1341 calls,   0.024 s avg)
-     g_psi        :     0.39s CPU (     992 calls,   0.000 s avg)
-     overlap      :     0.90s CPU (     992 calls,   0.001 s avg)
-     cdiaghg      :     0.85s CPU (    1340 calls,   0.001 s avg)
-     update       :     0.79s CPU (     992 calls,   0.001 s avg)
-     last         :     0.27s CPU (     348 calls,   0.001 s avg)
+     cegterg      :    36.51s CPU (     348 calls,   0.105 s avg)
+     h_psi        :    31.50s CPU (    1341 calls,   0.023 s avg)
+     g_psi        :     0.48s CPU (     992 calls,   0.000 s avg)
+     overlap      :     1.05s CPU (     992 calls,   0.001 s avg)
+     cdiaghg      :     0.99s CPU (    1340 calls,   0.001 s avg)
+     update       :     0.73s CPU (     992 calls,   0.001 s avg)
+     last         :     0.29s CPU (     348 calls,   0.001 s avg)
  
-     h_psi        :    31.94s CPU (    1341 calls,   0.024 s avg)
-     init         :     0.15s CPU (    1341 calls,   0.000 s avg)
-     add_vuspsi   :     0.43s CPU (    1341 calls,   0.000 s avg)
+     h_psi        :    31.50s CPU (    1341 calls,   0.023 s avg)
+     init         :     0.14s CPU (    1341 calls,   0.000 s avg)
+     add_vuspsi   :     0.35s CPU (    1341 calls,   0.000 s avg)
  
      General routines
-     cft3         :     9.96s CPU (    1722 calls,   0.006 s avg)
-     cft3s        :    28.11s CPU (   13764 calls,   0.002 s avg)
-     davcio       :     0.36s CPU (     997 calls,   0.000 s avg)
+     cft3         :     9.62s CPU (    1722 calls,   0.006 s avg)
+     cft3s        :    27.53s CPU (   13764 calls,   0.002 s avg)
+     davcio       :     0.33s CPU (     997 calls,   0.000 s avg)
  
