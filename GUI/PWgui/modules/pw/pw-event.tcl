@@ -16,7 +16,8 @@ tracevar calculation w {
     groupwidget path   disable
     groupwidget neb    disable
     groupwidget smd    disable
-    
+    groupwidget metadyn disable
+
     switch -exact -- $calc {
 	'scf' - 
 	'nscf' {
@@ -27,6 +28,7 @@ tracevar calculation w {
 	    groupwidget path   disable
 	    groupwidget neb    disable
             groupwidget smd    disable
+	    groupwidget metadyn disable
 	}
 	'phonon' {
 	    groupwidget ions   disable
@@ -36,6 +38,7 @@ tracevar calculation w {
 	    groupwidget path   disable
 	    groupwidget neb    disable
             groupwidget smd    disable
+	    groupwidget metadyn disable
 	}
 	'relax' {
 	    groupwidget ions   enable
@@ -45,7 +48,7 @@ tracevar calculation w {
 	    groupwidget path   disable
 	    groupwidget neb    disable
             groupwidget smd    disable
-	    groupwidget ions   enable
+	    groupwidget metadyn disable	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
 		"BFGS quasi-newton method for structural optimization <bfgs>"
@@ -61,6 +64,7 @@ tracevar calculation w {
 	    groupwidget path   disable
 	    groupwidget neb    disable
             groupwidget smd    disable
+	    groupwidget metadyn disable	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
 		"Beeman algorithm for variable cell damped dynamics <damp>"
@@ -74,6 +78,7 @@ tracevar calculation w {
 	    groupwidget path   disable
 	    groupwidget neb    disable
             groupwidget smd    disable
+	    groupwidget metadyn disable	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
 		"Verlet algorithm for molecular dynamics <verlet>"
@@ -88,6 +93,7 @@ tracevar calculation w {
 	    groupwidget path   disable
 	    groupwidget neb    disable
             groupwidget smd    disable
+	    groupwidget metadyn disable	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
 		"Beeman algorithm for variable cell MD <beeman>"
@@ -101,6 +107,7 @@ tracevar calculation w {
 	    groupwidget path   enable
 	    groupwidget neb    enable
             groupwidget smd    disable
+	    groupwidget metadyn disable	    
 	}
 	'smd' {
 	    groupwidget ions   enable
@@ -110,6 +117,17 @@ tracevar calculation w {
 	    groupwidget path   enable
 	    groupwidget neb    disable
             groupwidget smd    enable
+	    groupwidget metadyn disable	    
+	}
+	'metadyn' {
+	    groupwidget ions   enable
+	    groupwidget cell   disable
+	    groupwidget phonon disable
+	    groupwidget vc_md  disable
+	    groupwidget path   disable
+	    groupwidget neb    disable
+            groupwidget smd    disable
+	    groupwidget metadyn enable
 	}
     }
 
@@ -236,23 +254,84 @@ tracevar ntyp w {
     widgetconfigure Hubbard_alpha -end $ntyp
 }
 
+#tracevar nspin w {
+#    if { [vartextvalue nspin] == "Yes" || [vartextvalue nspin] == "Yes noncollinear"} {
+#	widget starting_magnetization enable
+#	widgetconfigure starting_magnetization -end [varvalue ntyp]
+#        if { [vartextvalue nspin] == "Yes" } {
+#	    groupwidget noncolin_group disable
+#	    #widget angle1 disable
+#	    #widget angle2 disable
+#        } else {
+#	    groupwidget noncolin_group enable
+#	    #widget angle1 enable
+#	    #widget angle2 enable
+#	    widgetconfigure angle1 -end [varvalue ntyp]
+#	    widgetconfigure angle2 -end [varvalue ntyp]
+#        }
+#    } else {
+#	widget starting_magnetization disable
+#	groupwidget noncolin_group disable
+#	#widget angle1 disable
+#	#widget angle2 disable
+#    }
+#}
+
+
 tracevar nspin w {
-    if { [vartextvalue nspin] == "Yes" || [vartextvalue nspin] == "Yes noncollinear"} {
+    if { [vartextvalue nspin] == "Yes" } {
 	widget starting_magnetization enable
 	widgetconfigure starting_magnetization -end [varvalue ntyp]
-        if { [vartextvalue nspin] == "Yes" } {
-	   widget angle1 disable
-	   widget angle2 disable
-        } else {
-	   widget angle1 enable
-	   widgetconfigure angle1 -end [varvalue ntyp]
-	   widget angle2 enable
-	   widgetconfigure angle2 -end [varvalue ntyp]
-        }
+
+	varset noncolin -value ""
+	groupwidget noncolin_group disable
+
+	foreach var {fixed_magnetization B_field} {
+	    widgetconfigure $var -start 3 -end 3
+	}    
     } else {
-	widget starting_magnetization disable
-	widget angle1 disable
-	widget angle2 disable
+	if { [vartextvalue noncolin] != "Yes" } {
+	    widget starting_magnetization disable
+	}
+	groupwidget noncolin_group disable
+	#widget angle1 disable
+	#widget angle2 disable
+    }
+
+    # constrained/fixed magnetization
+    if { [vartextvalue nspin] == "Yes" || [vartextvalue noncolin] == "Yes" } {
+	groupwidget constrained_magnetization_group enable
+    } else {
+	groupwidget constrained_magnetization_group disable
+    }
+}
+
+
+tracevar noncolin w {
+    if { [vartextvalue noncolin] == "Yes" } {
+	widget starting_magnetization enable
+	widgetconfigure starting_magnetization -end [varvalue ntyp]
+
+	varset nspin -value ""
+	groupwidget noncolin_group enable
+	
+	foreach var {fixed_magnetization B_field} {
+	    widgetconfigure $var -start 1 -end 3
+	}
+    } else {
+	if { [vartextvalue nspin] != "Yes" } {
+	    widget starting_magnetization disable
+	}
+	groupwidget noncolin_group disable
+	#widget angle1 disable
+	#widget angle2 disable
+    }
+
+    # constrained/fixed magnetization
+    if { [vartextvalue nspin] == "Yes" || [vartextvalue noncolin] == "Yes" } {
+	groupwidget constrained_magnetization_group enable
+    } else {
+	groupwidget constrained_magnetization_group disable
     }
 }
 
