@@ -34,11 +34,12 @@ SUBROUTINE summary()
   USE ktetra,          ONLY : ltetra
   USE pseud,           ONLY : zp, alps, alpc, cc, aps, nlc, nnl, lmax, lloc, &
                               a_nlcc, b_nlcc, alpha_nlcc
-  USE symme,           ONLY : nsym, invsym, s, ftau
+  USE symme,           ONLY : nsym, invsym, s, t_rev, ftau
   USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, diis_ndim, &
                               tr2, isolve, lmd, lbfgs, lpath, iverbosity
   USE uspp_param,      ONLY : nqf, rinner, nqlc, nbeta, iver, lll, psd, tvanp
-  USE spin_orb,        ONLY : lspinorb
+  USE noncollin_module,ONLY : noncolin
+  USE spin_orb,        ONLY : domag, lspinorb
   USE funct,           ONLY : write_dft_name
   USE bp,              ONLY : lelfield, gdir, nppstr, efield, nberrycyc
   !
@@ -250,6 +251,7 @@ SUBROUTINE summary()
      WRITE( stdout, '(36x,"s",24x,"frac. trans.")')
      DO isym = 1, nsym
         WRITE( stdout, '(/6x,"isym = ",i2,5x,a45/)') isym, sname(isym)
+        IF(noncolin.and.domag) WRITE(stdout,*) 'Time Reversal ', t_rev(isym)
         CALL s_axis_to_cart (s(1,1,isym), sr, at, bg)
         IF (ftau(1,isym).NE.0.OR.ftau(2,isym).NE.0.OR.ftau(3,isym).NE.0) THEN
            ft1 = at(1,1)*ftau(1,isym)/nr1 + at(1,2)*ftau(2,isym)/nr2 + &

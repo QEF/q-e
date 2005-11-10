@@ -8,7 +8,7 @@
 !
 !-----------------------------------------------------------------------
 subroutine sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
-     nr3, sym, irt, ftau, m_loc, sname)
+     nr3, sym, irt, ftau, m_loc, sname, t_rev)
   !-----------------------------------------------------------------------
   !
   !     given a point group, this routine finds the subgroup which is
@@ -56,6 +56,7 @@ subroutine sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   ! atomic coordinates in crystal axis
   logical :: fractional_translations
   real(DP) :: ft (3), ft1, ft2, ft3
+  integer :: t_rev(48)
   character :: sname (48) * 45
   !
   external checksym
@@ -95,7 +96,8 @@ subroutine sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
         ft (3) = xau(3,na) - xau(3,nb) - nint( xau(3,na) - xau(3,nb) )
 
 
-        call checksym_mag (irot, nat, ityp, xau, xau, ft, sym, irt, mxau, mxau)
+        call checksym_mag (irot, nat, ityp, xau, xau, ft, sym, irt, mxau,&
+                           mxau, t_rev(irot))
 
         if (sym (irot) .and. (abs (ft (1) **2 + ft (2) **2 + ft (3) ** &
              2) ) .lt.1.d-8) call errore ('sgam_at', 'overlapping atoms', na)
@@ -145,7 +147,8 @@ subroutine sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
         ft (kpol) = 0.d0
      enddo
 
-     call checksym_mag (irot, nat, ityp, xau, rau, ft, sym, irt, mxau, mrau)
+     call checksym_mag (irot, nat, ityp, xau, rau, ft, sym, irt, mxau, &
+                        mrau, t_rev(irot))
      if (.not.sym (irot) .and.fractional_translations) then
         nb = 1
         do na = 1, nat
@@ -157,7 +160,8 @@ subroutine sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
               ft (2) = rau(2,na) - xau(2,nb) - nint( rau(2,na) - xau(2,nb) )
               ft (3) = rau(3,na) - xau(3,nb) - nint( rau(3,na) - xau(3,nb) )
 
-              call checksym_mag (irot,nat,ityp,xau,rau,ft,sym,irt,mxau,mrau)
+              call checksym_mag (irot,nat,ityp,xau,rau,ft,sym,irt,mxau, &
+                                 mrau,t_rev(irot))
               if (sym (irot) ) then
                  ! convert ft to FFT coordinates
                  ! for later use in symmetrization
@@ -203,8 +207,8 @@ END SUBROUTINE sgam_at_mag
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-!-----------------------------------------------------------------------
-subroutine checksym_mag (ir, nat, ityp, xau, rau, ft, sym, irt, mxau, mrau)
+!----------------------------------------------------------------------
+subroutine checksym_mag (ir,nat,ityp,xau,rau,ft,sym,irt,mxau,mrau,t_rev)
   !-----------------------------------------------------------------------
   !
   !   This routine receives as input all the atomic positions xau,
@@ -220,11 +224,12 @@ subroutine checksym_mag (ir, nat, ityp, xau, rau, ft, sym, irt, mxau, mrau)
   !
   !     first the dummy variables
   !
-  integer :: nat, ityp (nat), irt (48, nat), ir
+  integer :: nat, ityp (nat), irt (48, nat), ir, t_rev
   ! input: the total number of atoms
   ! input: the type of each atom
   ! output: the rotated of each atom
   ! input: the rotation to be tested
+  ! output: time reversal operation is present
   real(DP) :: xau (3, nat), rau (3, nat), ft (3)
   ! input: the initial vectors
   ! input: the rotated vectors
@@ -233,43 +238,54 @@ subroutine checksym_mag (ir, nat, ityp, xau, rau, ft, sym, irt, mxau, mrau)
   ! input: the rotated vectors
   ! input: the possible fractionary translation
   REAL(DP), PARAMETER :: mt(3) = (/0,0,0/)
-  logical :: sym (48)
+  logical :: sym (48), sym_xyz
   ! output: if true this is a symmetry opera
   !
   !  few local variables
   !
-  integer :: na, nb
+  integer :: na, nb, na1, t1, t2
   ! counter on atoms
   ! counter on atoms
   logical :: eqvect
   ! the testing function
 
   external eqvect
+
+  t1 = 1
+  t2 = 1
+
   do na = 1, nat
+     na1 = 0
      do nb = 1, nat
-        sym (ir) = ityp (na) .eq.ityp (nb) .and. &
-                   eqvect (rau (1, na), xau (1, nb), ft) .and. &
-                   abs( mrau(1,na) - mxau(1,nb) ) .lt. 1.0D-5 .and. &
-                   abs( mrau(2,na) - mxau(2,nb) ) .lt. 1.0D-5 .and. &
-                   abs( mrau(3,na) - mxau(3,nb) ) .lt. 1.0D-5
-        if (sym (ir) ) then
-           !
-           ! the rotated atom does coincide with one of the like atoms
-           ! keep track of which atom the rotated atom coincides with
-           !
-           irt (ir, na) = nb
-           goto 10
-        endif
+        if(ityp(na).eq.ityp(nb).and. &
+           eqvect(rau (1, na),xau(1,nb),ft)) na1 = nb
      enddo
-     !
-     ! the rotated atom does not coincide with any of the like atoms
-     ! s(ir) + ft is not a symmetry operation
-     !
-     return
-10   continue
+     if(na1.ne.0.and.abs(mrau(1,na) - mxau(1,na1))+       &
+                     abs(mrau(2,na) - mxau(2,na1))+       &
+                     abs(mrau(3,na) - mxau(3,na1)).gt.1.0D-5) t1 = 0
+     if(na1.ne.0.and.abs(mrau(1,na) + mxau(1,na1))+       &
+                     abs(mrau(2,na) + mxau(2,na1))+       &
+                     abs(mrau(3,na) + mxau(3,na1)).gt.1.0D-5) t2 = 0
+     if(na1.eq.0.or.(t1+t2).eq.0) then
+       sym(ir) = .false.
+       t_rev = 0
+       return
+     else
+       irt(ir,na) = na1
+     endif
   enddo
-  !
-  ! s(ir) + ft is a symmetry operation
-  !
+
+  if(t1+t2.eq.2) then
+    sym(ir) = .true.
+    t_rev = 0
+  elseif(t1.eq.1) then
+    sym(ir) = .true.
+    t_rev = 0
+  else
+    sym(ir) = .true.
+    t_rev = 1
+  endif
+
   return
 END SUBROUTINE checksym_mag
+

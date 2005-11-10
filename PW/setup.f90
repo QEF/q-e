@@ -56,7 +56,7 @@ SUBROUTINE setup()
                                  starting_magnetization
   USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                  tetra, ntetra, ltetra
-  USE symme,              ONLY : s, irt, ftau, nsym, invsym
+  USE symme,              ONLY : s, t_rev, irt, ftau, nsym, invsym
   USE atom,               ONLY : r, oc, chi, nchi, lchi, jchi, mesh, msh
   USE pseud,              ONLY : zp
   USE wvfct,              ONLY : nbnd, nbndx, gamma_only
@@ -169,6 +169,8 @@ SUBROUTINE setup()
   ! ... If the occupations are from input, check the consistency with the
   ! ... number of electrons
   !
+  ! time reversal operation is set up to 0 by default
+  t_rev = 0
   IF ( noncolin ) THEN
      !
      ! gamma_only and noncollinear not allowed
@@ -705,8 +707,8 @@ SUBROUTINE setup()
   !
   input_nks = nks
   !
-  CALL sgama( nrot, nat, s, sname, at, bg, tau, ityp, nsym, nr1, &
-              nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q, &
+  CALL sgama( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, nr1,&
+              nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q,  &
               xqq, modenum, noncolin, m_loc )
   !
   CALL checkallsym( nsym, s, nat, tau, ityp, at, &

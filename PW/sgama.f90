@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
+subroutine sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym,&
      nr1, nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q, xq, &
      modenum, noncolin, m_loc)
   !-----------------------------------------------------------------------
@@ -92,9 +92,10 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
   ! auxilary variable
   ! counter on atoms
 
+  integer :: t_rev(48)
   logical :: sym (48)
   ! if true the corresponding operation is a symmetry operation
-
+  ! if 1 there is time reversal operation
 
   allocate(rtau (3, 48, nat))
   !
@@ -104,7 +105,7 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
      call sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, nr3, sym, &
        irt, ftau)
   IF (noncolin) CALL sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, &
-                          nr1, nr2, nr3, sym, irt, ftau, m_loc, sname)
+                  nr1, nr2, nr3, sym, irt, ftau, m_loc, sname, t_rev)
   !
   !    If xq.ne.(0,0,0) this is a preparatory run for a linear response
   !    calculation at xq. The relevant point group is therefore only the
@@ -167,6 +168,7 @@ subroutine sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, &
            irt (jrot, na) = irt (irot, na)
         enddo
         sname (jrot) = sname (irot)
+        t_rev(jrot) = t_rev(irot)
      endif
   enddo
   if (jrot.ne.nsym) call errore ('sgama', 'unexpected', 1)

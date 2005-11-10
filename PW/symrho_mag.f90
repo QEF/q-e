@@ -16,6 +16,7 @@ subroutine symrho_mag (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
 #include "f_defs.h"
   USE kinds
   USE CHAR, ONLY : sname
+  USE symme,ONLY : t_rev
   implicit none
   !
   !    first the dummy variables
@@ -81,6 +82,7 @@ subroutine symrho_mag (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
                     invs(3,kpol,isym)*mag(3)
                 enddo
                 if (sname(isym)(1:3)=='inv') magrot=-magrot
+                if(t_rev(isym).eq.1) magrot=-magrot
                 sumx = sumx + magrot(1)
                 sumy = sumy + magrot(2)
                 sumz = sumz + magrot(3)
@@ -103,6 +105,7 @@ subroutine symrho_mag (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
                         s(3,kpol,isym)*mag(3)
                      enddo
                      if (sname(isym)(1:3)=='inv') magrot=-magrot
+                     if(t_rev(isym).eq.1) magrot=-magrot
 ! go back to carthesian coordinates
                      do kpol = 1, 3
                         mag(kpol)=at(kpol,1)*magrot(1) + &
