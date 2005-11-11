@@ -21,17 +21,15 @@
 
       use atom, only: nlcc
       use core, only: nlcc_any
-      use core, only: deallocate_core
 !---ensemble-DFT
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin,          &
      &                    atot, entropy, egrand
       use electrons_base, only: f, nspin, nel, iupdwn, nupdwn, nudx, nelt, &
-                                nx => nbspx, n => nbsp, ispin => fspin, &
-                                deallocate_elct
+                                nx => nbspx, n => nbsp, ispin => fspin
 
-      use ensemble_dft, only: tens, tgrand, ninner, ismear, etemp, ef,              &
-     &                tdynz, tdynf, zmass, fmass, fricz, fricf, z0, c0diag, &
-                      becdiag, fmat0, becdrdiag, becm, bec0, fion2, atot0, &
+      use ensemble_dft, only: tens, tgrand, ninner, ismear, etemp, ef,       &
+     &                tdynz, tdynf, zmass, fmass, fricz, fricf, z0, c0diag,  &
+                      becdiag, fmat0, becdrdiag, becm, bec0, fion2, atot0,   &
                       etot0, h0c0, c0hc0, epsi0, e0, dval, z1, f1, dfmat, fmat1, &
                       ef1, enocc, f0, fmatx, fx, zaux, zx, ex, zxt, atot1, etot1, &
                       dedx1, dentdx1, dx, dadx1, faux, eqc, eqa, atotmin, xmin, &
@@ -63,11 +61,6 @@
       use parameters, only: nacx, natx, nsx, nbndxx
       use constants, only: pi, factem
       use io_files, only: psfile, pseudo_dir
-      use qgb_mod, only: deallocate_qgb_mod
-      use dqgb_mod, only: deallocate_dqgb_mod
-      use qradb_mod, only: deallocate_qradb_mod
-      use dqrad_mod, only: deallocate_dqrad_mod
-      use betax, only: deallocate_betax
       use io_files, only: outdir
 
       use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
@@ -78,7 +71,6 @@
           ene1, passo, iter3, enesti, ninner_ef, emme
       use ions_positions, only: tau0
       use wavefunctions_module, only: c0, cm, phi => cp
-      use wavefunctions_module, only: deallocate_wavefunctions
       use efield_module, only: tefield, evalue, ctable, qmat, detq, ipolp, &
             berry_energy, ctabin, gqq, gqqm, df, pberryel
       use mp, only: mp_sum

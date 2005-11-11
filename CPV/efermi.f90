@@ -10,7 +10,7 @@
      &                  entropy,ismear,nspin)
 !-----------------------------------------------------------------------
 !
-!     FERMI ENERGY & SMEARING PACKAGE WRITTEN FOR CASTEP USE BY A. DE VITA 
+!     FERMI ENERGY & SMEARING PACKAGE WRITTEN BY A. DE VITA 
 !     IN JULY 1992 FROM R.J. NEEDS ORIGINAL VERSION.
 !
 !     THIS VERSION IS BY N. MARZARI. COLD SMEARING ADDED IN OCT 1995.
@@ -94,7 +94,7 @@
 !     the one to use. (5) and (6) are practically identical; this is more elegant. 
 !     For a discussion, see Marzari et al., Phys. Rev. Lett. 82, 3296 (1999), 
 !     or Marzari's PhD thesis (Univ. of Cambridge, 1996), at 
-!     http://alfaromeo.princeton.edu/~marzari/preprints/index.html#phd.
+!     http://quasiamore.mit.edu/phd
 !
 !-----------------------------------------------------------------------
 !     PLEASE INQUIRE WITH ADV/NMAR FOR REFERENCE & SUGGESTIONS IF
