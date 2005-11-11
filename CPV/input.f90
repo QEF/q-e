@@ -892,10 +892,11 @@ MODULE input
      USE kohn_sham_states,         ONLY : ks_states_init
      USE electrons_module,         ONLY : electrons_setup
      USE electrons_base,           ONLY : electrons_base_initval
-     USE ensemble_dft,             ONLY : ensemble_initval
+     USE ensemble_dft,             ONLY : ensemble_initval,tens
      USE wannier_base,             ONLY : wannier_init
      USE constraints_module,       ONLY : init_constraint
      USE coarsegrained_vars,       ONLY : init_coarsegrained_vars
+     USE efield_module,            ONLY: tefield
      !
      !
      IMPLICIT NONE
@@ -987,9 +988,12 @@ MODULE input
 
      CALL kpoint_setup( k_points, nkstot, nk1, nk2, nk3, k1, k2, k3, xk, wk )
 
+     IF( ( program_name == 'CP90' ) .AND.  tefield .AND. nspin == 2) CALL errore(' modules_setup ', ' tefield not implemented yet with nspin==2 ', 1 )
      CALL efield_init( epol, efield )
 
+     IF( ( program_name == 'CP90' ) .AND.  tcg .AND. nspin == 2) CALL errore(' modules_setup ', ' CG not implemented yet with nspin==2 ', 1 )
      CALL cg_init( tcg , maxiter , etresh , passop )
+
      !
      IF( ( program_name == 'CP90' ) .AND. ( TRIM(sic) /= 'none' ) ) &
         CALL errore(' modules_setup ', ' sic not implemented yet in cp ', 1 )
@@ -1020,6 +1024,7 @@ MODULE input
                             occmass, rotation_damping, occupation_damping, &
                             occupation_dynamics, rotation_dynamics, degauss, &
                             smearing )
+     IF( ( program_name == 'CP90' ) .AND. .NOT.tcg .AND. tens ) CALL errore(' modules_setup ', 'Ensemble DFT implemented only with CG   ', 1 )
      !
      ! ... variables for constrained dynamics are set here
      !
