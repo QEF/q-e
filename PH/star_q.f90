@@ -58,7 +58,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! Local variables
   !
   integer :: nsq (48), ftau(3,48), nrot, isym, jsym, ism1, table (48, 48), &
-       iq, i, j, nks, npk
+       iq, i, j, nks, npk, t_rev(48)
   ! number of symmetry ops. of bravais lattice.
   ! counters on symmetry ops.
   ! index of inverse of isym
@@ -129,7 +129,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! extract from it the crystal symmetry group by calling sgama
   !
   nosym = .false.
-  call sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, nr1, &
+  call sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, nr1, &
        nr2, nr3, irt, ftau, npk, nks, xk0, wk, invsym, minus_q, zero, &
        modenum, .false., mdum)
   do isym = 1, nsym
