@@ -256,15 +256,18 @@ MODULE xml_io_base
       INTEGER,          INTENT(IN) :: iter
       !
       CHARACTER(LEN=256) :: filename
+      CHARACTER(LEN=6)   :: hindex
       !
 #if defined (__VERBOSE_SAVE)
       !
       CALL create_directory( TRIM( dirname ) // '/history' )
       !
+      WRITE( hindex, FMT = '(I6.6)' ) iter
+      !
       IF ( ionode ) THEN
          !
          filename = TRIM( dirname ) // '/history/' // &
-                  & TRIM( xmlpun_base ) // TRIM( iotk_index( iter ) ) // '.xml'
+                  & TRIM( xmlpun_base ) // hindex // '.xml'
          !
          CALL copy_file( TRIM( dirname ) // "/" // TRIM( xmlpun ), &
                          TRIM( filename ) )
