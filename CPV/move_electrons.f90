@@ -133,8 +133,12 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      IF ( (tfor.or.tprnfor) .AND. tefield ) &
         CALL bforceion( fion, .TRUE. , ipolp, qmat, bec, becdr, gqq, evalue )
      !
-     IF ( tfor .OR. thdyn ) &
+     IF ( tfor .OR. thdyn ) then
         CALL interpolate_lambda( lambdap, lambda, lambdam )
+     ELSE
+        ! take care of the otherwise uninitialized lambdam
+        lambdam(:,:)=lambda(:,:)
+     END IF
      !
      ! ... calphi calculates phi
      ! ... the electron mass rises with g**2

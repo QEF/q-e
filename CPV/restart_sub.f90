@@ -227,8 +227,12 @@ MODULE from_restart_module
           !
           IF ( tfor .OR. tprnfor ) CALL nlfq( c0, eigr, bec, becdr, fion )
           !
-          IF ( tfor .OR. thdyn ) &
+          IF ( tfor .OR. thdyn ) then
              CALL interpolate_lambda( lambdap, lambda, lambdam )
+          ELSE
+             ! take care of the otherwise uninitialized lambdam
+             lambdam(:,:)=lambda(:,:)
+          END IF
           !
        END IF
        !
