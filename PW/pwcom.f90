@@ -217,8 +217,9 @@ MODULE symme
   INTEGER :: &
        s(3,3,48),              &! simmetry matrices
        ftau(3,48),             &! fractional translations
-       t_rev(48),              &! time reversal
        nsym                     ! number of symmetries
+  INTEGER :: &
+       t_rev(48) = 0           &! time reversal flag, for noncolinear magnetisation
   INTEGER, ALLOCATABLE :: &
        irt(:,:)                 ! symmetric atom for each atom and sym.op.
   LOGICAL :: &
