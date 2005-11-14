@@ -58,7 +58,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! Local variables
   !
   integer :: nsq (48), ftau(3,48), nrot, isym, jsym, ism1, table (48, 48), &
-       iq, i, j, nks, npk, t_rev(48)
+       iq, i, j, nks, npk
   ! number of symmetry ops. of bravais lattice.
   ! counters on symmetry ops.
   ! index of inverse of isym
@@ -67,6 +67,8 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! generic counter
   ! number of dummy k-points
   ! maximum allowed number of dummy k-points
+  integer :: t_rev(48) = 0
+  ! for magnetic symetries - not actually used
   real(DP) :: saq (3, 48), aq (3), raq (3), xk0 (3), wk(1), zero (3), &
        mdum(3,nat)
   ! auxiliary list of q (crystal coordinates)
