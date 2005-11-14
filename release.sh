@@ -52,7 +52,7 @@ tar -czf $TMPDIR/cp-$VERSION.tar.gz \
 
 tar -czf $TMPDIR/$GUI.tar.gz $TMPDIR/$GUI
 
-tar -czf $TMPDIR/pw_src-$VERSION.tar.gz \
+tar -czf $TMPDIR/pw-$VERSION.tar.gz \
                             $TMPDIR/bin/     $TMPDIR/config* $TMPDIR/README* \
                             $TMPDIR/Make*    $TMPDIR/make*   $TMPDIR/install-sh \
                             $TMPDIR/install/ $TMPDIR/moduledep.sh  $TMPDIR/includedep.sh \
@@ -63,7 +63,7 @@ tar -czf $TMPDIR/pw_src-$VERSION.tar.gz \
                             $TMPDIR/Gamma/   $TMPDIR/PWCOND/ \
                             $TMPDIR/D3/      $TMPDIR/pwtools/
 
-tar -czf $TMPDIR/examples-$VERSION.tar.gz $TMPDIR/examples/ $TMPDIR/pseudo/
+# tar -czf $TMPDIR/examples-$VERSION.tar.gz $TMPDIR/examples/ $TMPDIR/pseudo/
 
 
 tar -czf $TMPDIR/espresso-$VERSION.tar.gz \
@@ -81,16 +81,16 @@ tar -czf $TMPDIR/espresso-$VERSION.tar.gz \
                             $TMPDIR/pseudo/  $TMPDIR/examples/ $TMPDIR/$GUI
 cd $TMPDIR
 
-cp README         README-$VERSION
-cp Doc/ChangeLog  ChangeLog-$VERSION
-cp Doc/BUGS       BUGS-$VERSION
-cp Doc/manual.tex manual-$VERSION.tex
-cp Doc/manual.pdf manual-$VERSION.pdf
+# cp README         README-$VERSION
+# cp Doc/ChangeLog  ChangeLog-$VERSION
+# cp Doc/BUGS       BUGS-$VERSION
+cp Doc/users-guide.tex users-guide-$VERSION.tex
+cp Doc/users-guide.pdf users-guide-$VERSION.pdf
 
-scp README-$VERSION ChangeLog-$VERSION BUGS-$VERSION \
-    manual-$VERSION.tex manual-$VERSION.pdf \
-    espresso-$VERSION.tar.gz examples-$VERSION.tar.gz $GUI.tar.gz  \
-    pw_src-$VERSION.tar.gz cp-$VERSION.tar.gz \
+# scp README-$VERSION ChangeLog-$VERSION BUGS-$VERSION examples-$VERSION.tar.gz \
+scp users-guide-$VERSION.tex users-guide-$VERSION.pdf \
+    espresso-$VERSION.tar.gz  $GUI.tar.gz  \
+    pw-$VERSION.tar.gz cp-$VERSION.tar.gz \
     $TARGET_MACHINE
 
 #cd ../
