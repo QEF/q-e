@@ -1510,6 +1510,7 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
   REAL(DP) :: q(3,nqx)
   ! local
   INTEGER :: nrot, nsym, s(3,3,48), ftau(3,48), irt(48,nat)
+  INTEGER :: t_rev = 0
   LOGICAL :: minus_q, invsym
   REAL(DP) :: xqq(3), wk(nqx), mdum(3,nat)
   CHARACTER(LEN=45)   ::  sname(48)
@@ -1534,7 +1535,7 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
   !
   CALL kpoint_grid ( nrot, s, bg, nqx, 0,0,0, nk1,nk2,nk3, nq, q, wk)
   !
-  CALL sgama (nrot, nat, s, sname, at, bg, tau, ityp, nsym, 6, &
+  CALL sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, 6, &
        6, 6, irt, ftau, nqx, nq, q, wk, invsym, minus_q, xqq, &
        0, 0, .FALSE., mdum)
   
