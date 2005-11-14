@@ -170,7 +170,7 @@ MODULE coarsegrained_base
       cncon = int_to_char( nconstr )
       !
       metadyn_fmt = "(I4," // TRIM( cncon ) // "(2X,F10.5),2X,F14.8," // &
-                  & TRIM( cncon ) // "(2X,F10.7),1X,L)"
+                  & TRIM( cncon ) // "(2X,F10.7),1X,L1)"
       !
       g_sigma_sq     = g_sigma**2
       two_g_sigma_sq = 2.D0 * g_sigma_sq
