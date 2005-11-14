@@ -28,7 +28,7 @@ if test -f espresso.tar.gz ; then /bin/rm espresso.tar.gz ; fi
 make tar tar-gui
 ##### Alternatively:
 #tar -czf espresso.tar.gz config* README* Make* make* \
-#                         install-sh install/ moduledep.sh License upftools/ \
+#                         install-sh install/ moduledep.sh includedeps.sh License upftools/ \
 #                         include/ Doc/ Modules/ clib/ flib/ \
 #                         PW/ PP/ PH/ Gamma/ PWCOND/ D3/ pwtools/ \
 #                         CPV/ atomic/ atomic_doc/ examples/ pseudo/
@@ -44,7 +44,7 @@ cd ../
 tar -czf $TMPDIR/cp-$VERSION.tar.gz \
                             $TMPDIR/bin/     $TMPDIR/config* $TMPDIR/README* \
                             $TMPDIR/Make*    $TMPDIR/make*   $TMPDIR/install-sh \
-                            $TMPDIR/install/ $TMPDIR/moduledep.sh \
+                            $TMPDIR/install/ $TMPDIR/moduledep.sh $TMPDIR/includedep.sh \
                             $TMPDIR/License  $TMPDIR/upftools/     \
                             $TMPDIR/include/ $TMPDIR/Doc/    $TMPDIR/Modules/ \
                             $TMPDIR/iotk/    $TMPDIR/clib/    $TMPDIR/flib/ \
@@ -55,7 +55,7 @@ tar -czf $TMPDIR/$GUI.tar.gz $TMPDIR/$GUI
 tar -czf $TMPDIR/pw_src-$VERSION.tar.gz \
                             $TMPDIR/bin/     $TMPDIR/config* $TMPDIR/README* \
                             $TMPDIR/Make*    $TMPDIR/make*   $TMPDIR/install-sh \
-                            $TMPDIR/install/ $TMPDIR/moduledep.sh \
+                            $TMPDIR/install/ $TMPDIR/moduledep.sh  $TMPDIR/includedep.sh \
                             $TMPDIR/License  $TMPDIR/upftools/     \
                             $TMPDIR/include/ $TMPDIR/Doc/ $TMPDIR/Modules/ \
                             $TMPDIR/iotk/    $TMPDIR/clib/ $TMPDIR/flib/ \
@@ -69,7 +69,7 @@ tar -czf $TMPDIR/examples-$VERSION.tar.gz $TMPDIR/examples/ $TMPDIR/pseudo/
 tar -czf $TMPDIR/espresso-$VERSION.tar.gz \
                             $TMPDIR/bin/     $TMPDIR/config* $TMPDIR/README* \
                             $TMPDIR/Make*    $TMPDIR/make*   $TMPDIR/install-sh \
-                            $TMPDIR/install/ $TMPDIR/moduledep.sh \
+                            $TMPDIR/install/ $TMPDIR/moduledep.sh $TMPDIR/includedep.sh \
                             $TMPDIR/License  $TMPDIR/upftools/     \
                             $TMPDIR/include/ $TMPDIR/Doc/    $TMPDIR/Modules/ \
                             $TMPDIR/iotk/    $TMPDIR/clib/   $TMPDIR/flib/ \
