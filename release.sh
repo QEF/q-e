@@ -81,7 +81,7 @@ tar -czf $TMPDIR/espresso-$VERSION.tar.gz \
                             $TMPDIR/pseudo/  $TMPDIR/examples/ $TMPDIR/$GUI
 cd $TMPDIR
 
-cp README   i     README-$VERSION
+cp README         README-$VERSION
 cp Doc/ChangeLog  ChangeLog-$VERSION
 cp Doc/BUGS       BUGS-$VERSION
 cp Doc/manual.tex manual-$VERSION.tex

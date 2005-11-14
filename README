@@ -30,7 +30,7 @@ Several utilities are also included, in particular:
 This distribution is a step in the ongoing work aiming at a full 
 integration and interoperability of these codes. This project is 
 part of a cooperative effort involving DEMOCRITOS, CINECA, Princeton 
-University, MIT Boston.
+University, MIT.
 
 Directory structure of the common part of the three packages:
 

@@ -1,4 +1,4 @@
-TODO LIST - 30 aug 2005
+TODO LIST - 11 Nov 2005
 
 BUGS TO EXAMINE
 
@@ -12,15 +12,14 @@ NEW DEVELOPMENTS TO MERGE
 INSTALLATION/PORTING
 
 - exotic architectures: __FUJITSU, FUJ64, HITACHI, NEC-SX5, ...
+- replacement for FFTW on Intel/AMD?
 
 COMMON
 
-- data files: move to new format (XML + directories),
-  ensure compatibility between PW and CP/FPMD
+- cleanup of the scratch directory mess: 
+  outdir, tmp_dir, wfc_dir, scradir...
 
-- cleanup of the scratch directory mess: outdir, tmp_dir, scradir...
-  There should be a distinction between 'output' and 'scratch' 
-  directories. Extend to CP/FPMD the possibility to save wavefunctions
+- Extend to CP/FPMD the possibility to save wavefunctions
   either 'distributed' or 'collected' in parallel execution
 
 - pseudopotentials: support new format (XML) if/when ready
@@ -49,11 +48,10 @@ COMMON
 
 - cleanup and merge of routines reading and processing PPs;
   merge uspp-related stuff ("small box") of CP into PW
+  Fix the 'qrl' stuff in CP: too much memory, too intrusive
+  to maintain compatibility with obsolete format
 
 PW
-
-- save rho and/or V in G-space instead of R-space
-  check that what is read makes sense
 
 - add possibility to read atomic positions from file
 
@@ -79,11 +77,15 @@ PW
 - write explicitly and unambiguosly the units of output quantities
   and also what are exactly the output quantites!
 
+- some symmetry-related routines such as sgama are too complex
+
 Low priority:
 
 - add traceback in error (error_handler module)
 
 POSTPROCESSING
+
+- verify that postprocessing works with new file format
 
 - complete postprocessing in Gamma case (only average missing),
   and with CP/FPMD data
@@ -97,6 +99,8 @@ POSTPROCESSING
 
 PH, D3, Gamma
 
+- verify that everything works with new file format
+
 - use charge mixing instead of potential mixing
 
 - move all phonon-specific stuff (symmetry etc) from pw into phonon
@@ -109,13 +113,17 @@ PH, D3, Gamma
 
 DOCUMENTATION
 
+- better documentation for file format
+
 - single source (xml?) for text file, GUI help file, user guide
   (Tone?)
 
-- examples for some features (e.g. variable cell, many postprocessings) 
-  still missing
+- tests/examples for some features (e.g. variable cell, many kinds
+  of postprocessings) are still missing
 
-- automated testing procedure
+- automated testing procedure, quick and distinct from examples!
+
+- add some benchmarks
 
 - expand and update the manual; add a list of FAQ, or of already
   answered questions
@@ -123,7 +131,6 @@ DOCUMENTATION
 - complete the developer's (technical) guide
 
 CP/FPMD:
-
 
 - CP: check on small box size
 
@@ -172,5 +179,5 @@ CP/FPMD:
     e.g. Amass_default=10 AMU. If the minimum physical AMASS is 20 then
     dt=sqrt(2) dt_default and emass should be increased so to keep
     emass^2/dt constant
-  * defaults for the Nose thermostat, introduction of Nose' chains
+  * defaults for the Nose thermostat
 
