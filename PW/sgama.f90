@@ -93,9 +93,9 @@ subroutine sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym,&
   ! counter on atoms
 
   integer :: t_rev(48)
+  ! for magnetic symmetries: if 1 there is time reversal operation
   logical :: sym (48)
   ! if true the corresponding operation is a symmetry operation
-  ! if 1 there is time reversal operation
 
   allocate(rtau (3, 48, nat))
   !
