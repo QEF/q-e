@@ -1,0 +1,36 @@
+Name of UPF PP files: "atomic symbol"."description".UPF
+
+Table of description fields and their meaning
+(fields are separated by a dash):
+
+  field 1 (optional)
+     rel    = full-relativistic
+     starNl =  one core-hole in Nl state
+     starhNl= half core-hole in Nl state
+        (Nl = 1s 2s 2p 3s 3p 3d 4s 4p 4d 4f 5s 5p 5d 6s 6p)
+
+  field 2
+     One among the following
+     pz     = Perdew-Zunger (LDA) exch-corr
+     vwn    = Vosko-Wilk-Nusair (LDA) exch-corr
+     pbe    = Perdew-Burke-Erzerhof (PBE) exch-corr
+     blyp   = Becke-Lee-Yang-Parr (BLYP) exch-corr
+     pw91   = Perdew-Wang 91 gradient-corrected functional
+     tpss   = Tao-Perdew-Staroverov-Scuseria (TPSS) meta-GGA
+
+  field 3 (optional)
+     Any meaningful combination (i.e. sp) of:
+     s    = semicore state s in valence
+     p    = semicore state p in valence
+     d    = semicore state d in valence
+     f    = valence f state in core
+     n    = nonlinear core-correction
+
+  field 4
+     One among the following
+     mt    = Martins-Troullier
+     bhs   = Bachelet-Hamann-Schlueter and derived
+     vbc   = Von Barth-Car (direct fit)
+     van   = Vanderbilt ultrasoft
+     rrkj  = Rabe Rappe Kaxiras Joannopoulos (norm-conserving)
+     rrkjus= Rabe Rappe Kaxiras Joannopoulos (ultrasoft)
