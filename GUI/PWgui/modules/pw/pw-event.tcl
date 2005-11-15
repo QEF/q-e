@@ -52,8 +52,8 @@ tracevar calculation w {
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
 		"BFGS quasi-newton method for structural optimization <bfgs>"
-		"damped dynamics (quick-min Verlet) for structural-optimization <damp>"
-		"damped dynamics (quick-min Verlet) for constrained structural-optimization <constrained-damp>"
+		"damped dynamics (quick-min Verlet) for structural optimization <damp>"
+		"damped dynamics (quick-min Verlet) for structural optimization with the CONSTRAINT <constrained-damp>"
 	    }
 	}
 	'vc-relax' {
@@ -551,7 +551,7 @@ postprocess {
     varset occupations     -value {}
     varset diagonalization -value {}
     varset CI_scheme       -value {}
-    varset kpoint_type     -value tpiba
+    varset kpoint_type     -value automatic
     varset lattice_type    -value cubic
     varset ion_dynamics    -value {}
 

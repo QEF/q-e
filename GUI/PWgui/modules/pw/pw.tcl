@@ -773,7 +773,7 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 		    -label "Type of ionic dynamics (ion_dynamics):"
 		    -widget   optionmenu
 		    -textvalue {
-			"BFGS quasi-newton method for structural optimization  <bfgs>"
+			"BFGS quasi-newton method for structural optimization <bfgs>"
 			"damped dynamics (quick-min Verlet) for structural optimization <damp>"
                         "damped dynamics (quick-min Verlet) for structural optimization with the CONSTRAINT <constrained-damp>"
 			"Verlet algorithm for molecular dynamics <verlet>"
@@ -1385,17 +1385,18 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 		    -label    "Tolerance for keeping the constraints satisfied:"
 		    -validate fortranposreal
 		}
-		table constraints_table {
-		    -caption  "Enter constraints data:"
-		    -head     {constraint-type 1st-atom-index 2nd-atom-index}
-		    -validate {posint posint posint}
-		    -cols     3
-		    -rows     1
-		    -outfmt   {"  %d    " "%d " "%d "}
-		}
-	    }		    
-	}
-
+	    }
+	    table constraints_table {
+		-caption  "Enter constraints data:\n(see Help for the format of \"constraint-specification\")"
+		-head     {constraint-type constraint-specification}
+		-validate {posint whatever}
+		-cols     2
+		-rows     1
+		-outfmt   {"  %d    " %s}
+		-infmt    {%d %S}
+	    }
+	}		    
+	
 	# CARD: OCCUPATIONS
 	
 	group occupations_card -name "Card: OCCUPATIONS" -decor normal {	    
