@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: validate.itcl,v 1.3 2005-09-26 11:36:50 kokalj Exp $ 
+# $Id: validate.itcl,v 1.4 2005-11-15 08:55:30 kokalj Exp $ 
 #
 
 # ------------------------------------------------------------------
@@ -162,6 +162,7 @@ proc ::guib::widgets::int {string} {
 # Entryfield to be positive-integer and returns the result.
 # ------------------------------------------------------------------
 proc ::guib::widgets::posint {string} {
+    if { $string == "" } { return 1 }
     set result [regexp {^[+]?[0-9]*$} $string]
     if { $result == 1 } {
 	if { $string == "+" } {
@@ -198,12 +199,13 @@ proc ::guib::widgets::nonposint {string} {
 # Entryfield to be negative-integer and returns the result.
 # ------------------------------------------------------------------
 proc ::guib::widgets::negint {string} {
+    if { $string == "" } { return 1 }
     set result [regexp {^-[0-9]*$} $string]     
     if { $result == 1 } {
 	if { $string == "-" } {
 	    return 1
 	} else {
-	    return [expr ${string} < 0]
+	    return [expr ${string}0 < 0]
 	}
     } else {
 	return $result
@@ -257,6 +259,7 @@ proc ::guib::widgets::posreal {string} {
 # to be non-positive-real and returns the result.
 # ------------------------------------------------------------------
 proc ::guib::widgets::nonposreal {string} {
+    if { $string == "" } { return 1 }
     set result [regexp {^[-]?[0-9]*\.?[0-9]*([0-9]\.?[eE][-+]?[0-9]*)?$} $string]
     if { $result == 1 } {
 	if { $string == "-" } {
