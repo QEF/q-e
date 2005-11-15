@@ -30,7 +30,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: keywidgets.itcl,v 1.2 2005-09-26 11:36:50 kokalj Exp $ 
+# $Id: keywidgets.itcl,v 1.3 2005-11-15 08:55:55 kokalj Exp $ 
 #
 
 
@@ -201,6 +201,10 @@ class ::guib::keywidgets::Options {
 		    }
 		}
 		
+		scale {
+		    # do nothing ...
+		}
+
 		default {
 		    # check for entrybutton
 		    set wid [lindex $type 0]

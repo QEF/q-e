@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: widgets.itcl,v 1.2 2004-09-20 07:24:32 kokalj Exp $ 
+# $Id: widgets.itcl,v 1.3 2005-11-15 08:55:55 kokalj Exp $ 
 #
 
 
@@ -896,3 +896,104 @@ body ::guib::widgets::Texthelp::insert {index text} {
 #body ::guib::widgets::Texthelp::_keyPress {} {
 #    set $itk_option(-textvariable) [$itk_component(text) get 1.0 end]
 #}
+
+
+option add *Scalehelp*Scale.orient        horizontal  widgetDefault
+option add *Scalehelp*Scale.length        20m         widgetDefault
+option add *Scalehelp*Scale.sliderLength  4m          widgetDefault
+option add *Scalehelp*Scale.from          0           widgetDefault
+option add *Scalehelp*Scale.to            10          widgetDefault
+option add *Scalehelp*Scale.resolution    1           widgetDefault
+#option add *Scalehelp*Scale.width         5           widgetDefault
+option add *Scalehelp*Scale.tickInterval  5           widgetDefault
+
+itk::usual ::guib::widgets::Scalehelp {
+    keep -orient -length -sliderlength -from -to -resolution -width -tickinterval -borderwidth
+}
+
+# ------------------------------------------------------------------------
+#  SCALEHELP
+# ------------------------------------------------------------------------
+#****f* widgets/scalehelp
+#  NAME
+#    ::guib::widgets::scalehelp -- scalehelp megawidget
+#  USAGE
+#    scalehelp pathName ?option value?  ?...?
+#  DESCRIPTION
+#    scalehelp = scale + help-button
+#  OPTIONS
+#    Special OPTIONS:
+#      -scalebd -- border-width for the scale
+#    The following scale's options are supported:
+#      -orient -- orientation of scale
+#      -length  -- length of scale widget
+#      -sliderlength 
+#      -from
+#      -to
+#      -resolution
+#      -tickinterval
+#  METHODS
+#    Widget METHODS
+#      (see [Incr Tcl]'s Scale documentation)
+#  RETURN VALUE
+#    Returns the path of the scalehelp, i.e., pathName.
+#********
+# ------------------------------------------------------------------------
+proc ::guib::widgets::scalehelp {pathName args} { 
+    uplevel ::guib::widgets::Scalehelp $pathName $args 
+}
+# ------------------------------------------------------------------------
+#****c* widgets/Scalehelp
+# NAME
+#    ::guib::widgets::Scalehelp -- a class for scalehelp megawidget
+#****
+# ------------------------------------------------------------------------
+class ::guib::widgets::Scalehelp {
+    inherit ::iwidgets::Labeledwidget
+    
+    itk_option define -textvariable textVariable Variable      ""
+    itk_option define -orient       orient       Orient        horizontal scaleConfig_
+    itk_option define -sliderlength sliderLength SliderLength  4m         scaleConfig_
+    itk_option define -from         from         From          0          scaleConfig_
+    itk_option define -to           to           To            10         scaleConfig_
+    itk_option define -resolution   resolution   Resolution    1          scaleConfig_
+    itk_option define -tickinterval tickInterval TickInterval  5          scaleConfig_
+
+    protected method scaleConfig_ {}
+
+    constructor {args} {	
+	itk_component add -- scale {
+	    scale $itk_interior.scale
+	} {
+	    usual
+	    rename -width        -scalewidth  scaleWidth        Width
+	    rename -borderwidth  -scalebd     scaleBorderWidth  BorderWidth
+	}
+	itk_component add -- help {
+	    button $itk_interior.help
+	} {
+	    eval $::guib::widgets::def(helpOptions)
+	}
+	eval itk_initialize $args
+	pack $itk_component(scale) -side left -fill x
+	pack  $itk_component(help) -side left -padx $itk_option(-helppadx) -pady $itk_option(-helppady)
+    }
+        
+    eval $::guib::widgets::def(helpCommand)
+}
+
+configbody ::guib::widgets::Scalehelp::textvariable {
+    if { $itk_option(-textvariable) != "" } {
+	$itk_interior.scale configure -variable $itk_option(-textvariable)
+    }
+}
+
+body ::guib::widgets::Scalehelp::scaleConfig_ {} {
+    $itk_interior.scale configure \
+	-orient $itk_option(-orient) \
+	-sliderlength $itk_option(-sliderlength) \
+	-from $itk_option(-from) \
+	-to $itk_option(-to) \
+	-resolution $itk_option(-resolution) \
+	-tickinterval $itk_option(-tickinterval)
+}
