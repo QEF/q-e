@@ -96,7 +96,7 @@ subroutine cubicsym (at, is, isname, nrot)
        &        '180 deg rotation - cart. axis [0,1,-1]      ',&
        &        ' 90 deg rotation - cart. axis [-1,0,0]      ',&
        &        ' 90 deg rotation - cart. axis [1,0,0]       ',&
-       &        '120 deg rotation - cart. axis [-1,-1,1]     ',&
+       &        '120 deg rotation - cart. axis [-1,-1,-1]    ',&
        &        '120 deg rotation - cart. axis [-1,1,1]      ',&
        &        '120 deg rotation - cart. axis [-1,-1,1]     ',&
        &        '120 deg rotation - cart. axis [-1,1,-1]     ',&
@@ -120,7 +120,7 @@ subroutine cubicsym (at, is, isname, nrot)
        &        'inv. 180 deg rotation - cart. axis [0,1,-1] ',&
        &        'inv.  90 deg rotation - cart. axis [-1,0,0] ',&
   &        'inv.  90 deg rotation - cart. axis [1,0,0]  ',&
-  &        'inv. 120 deg rotation - cart. axis [-1,-1,1]',&
+  &        'inv. 120 deg rotation - cart. axis [-1,-1,-1]',&
   &        'inv. 120 deg rotation - cart. axis [-1,1,1] ',&
   &        'inv. 120 deg rotation - cart. axis [-1,-1,1]',&
   &        'inv. 120 deg rotation - cart. axis [-1,1,-1]',&
