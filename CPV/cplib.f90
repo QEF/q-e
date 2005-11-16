@@ -4199,7 +4199,7 @@
 
 ! Makov Payne Variables
 !
-      real(8) dipole,quadrupole
+      real(8) dipole,quadrupole, dip_vec(3)
       real(8) E_dip,E_quad,en1,en2
       real(8), allocatable:: rhortot(:)
       real(8) alpha
@@ -4349,7 +4349,7 @@
           rhortot(ir)=DBLE(v(ir))
          end do
 !
-       call poles(rhortot,dipole,quadrupole)
+       call poles(rhortot,dipole,dip_vec, quadrupole)
 !
 !      Madelung constant for cubic lattice (NaCl)
 
@@ -4595,7 +4595,7 @@
       end subroutine vofrho_wf
 
 !------------------------------------------------------------------------
-      subroutine poles(rhortot,dipole,quadrupole)
+      subroutine poles(rhortot,dipole,mu,quadrupole)
 !------------------------------------------------------------------------
 !
       use para_mod
