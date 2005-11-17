@@ -81,7 +81,6 @@ tar -czf $TMPDIR/espresso-$VERSION.tar.gz \
                             $TMPDIR/pseudo/  $TMPDIR/examples/ $TMPDIR/$GUI
 cd $TMPDIR
 
-cp Doc/users-guide.tex users-guide-$VERSION.tex
 cp Doc/users-guide.pdf users-guide-$VERSION.pdf
 cd Doc
 latex2html -t "User's Guide for Quantum-ESPRESSO" \
@@ -89,13 +88,13 @@ latex2html -t "User's Guide for Quantum-ESPRESSO" \
            -toc_depth 5 -split 5 -toc_stars -show_section_numbers \
            -local_icons \
             users-guide.tex
-tar -czf ../users-guide.tar.gz users-guide
+tar -czf ../users-guide-$VERSION.tar.gz users-guide
 cd ../
 
-scp users-guide-$VERSION.tex users-guide-$VERSION.pdf \
-    espresso-$VERSION.tar.gz  $GUI.tar.gz  \
-    pw-$VERSION.tar.gz cp-$VERSION.tar.gz \
-    examples-$VERSION.tar.gz users-guide.tar.gz \
+scp users-guide-$VERSION.pdf users-guide-$VERSION.tar.gz \
+    espresso-$VERSION.tar.gz \
+    $GUI.tar.gz pw-$VERSION.tar.gz cp-$VERSION.tar.gz \
+    examples-$VERSION.tar.gz \
     $TARGET_MACHINE
 
 #cd ../
