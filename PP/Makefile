@@ -356,6 +356,11 @@ initial_state.x : initial_state.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
+pw2gw.x : pw2gw.o $(PPOBJS) $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(MPIF90) $(LDFLAGS) -o $@ \
+		pw2gw.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
 pw_export.x : pw_export.o $(PWOBJS) $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
 		pw_export.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)

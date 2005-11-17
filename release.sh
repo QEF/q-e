@@ -63,7 +63,7 @@ tar -czf $TMPDIR/pw-$VERSION.tar.gz \
                             $TMPDIR/Gamma/   $TMPDIR/PWCOND/ \
                             $TMPDIR/D3/      $TMPDIR/pwtools/
 
-# tar -czf $TMPDIR/examples-$VERSION.tar.gz $TMPDIR/examples/ $TMPDIR/pseudo/
+tar -czf $TMPDIR/examples-$VERSION.tar.gz $TMPDIR/examples/ $TMPDIR/pseudo/
 
 
 tar -czf $TMPDIR/espresso-$VERSION.tar.gz \
@@ -81,16 +81,21 @@ tar -czf $TMPDIR/espresso-$VERSION.tar.gz \
                             $TMPDIR/pseudo/  $TMPDIR/examples/ $TMPDIR/$GUI
 cd $TMPDIR
 
-# cp README         README-$VERSION
-# cp Doc/ChangeLog  ChangeLog-$VERSION
-# cp Doc/BUGS       BUGS-$VERSION
 cp Doc/users-guide.tex users-guide-$VERSION.tex
 cp Doc/users-guide.pdf users-guide-$VERSION.pdf
+cd Doc
+latex2html -t "User's Guide for Quantum-ESPRESSO" \
+           -html_version 4.0 \
+           -toc_depth 5 -split 5 -toc_stars -show_section_numbers \
+           -local_icons \
+            users-guide.tex
+tar -czf ../users-guide.tar.gz users-guide
+cd ../
 
-# scp README-$VERSION ChangeLog-$VERSION BUGS-$VERSION examples-$VERSION.tar.gz \
 scp users-guide-$VERSION.tex users-guide-$VERSION.pdf \
     espresso-$VERSION.tar.gz  $GUI.tar.gz  \
     pw-$VERSION.tar.gz cp-$VERSION.tar.gz \
+    examples-$VERSION.tar.gz users-guide.tar.gz \
     $TARGET_MACHINE
 
 #cd ../
