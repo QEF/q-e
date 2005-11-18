@@ -1,10 +1,9 @@
 #!/bin/sh -x
-
+#
 VERSION=3.0
-TMPDIR=espresso-$VERSION
-
 TARGET_MACHINE=cibs.sns.it:public_html/public/
-
+#
+TMPDIR=espresso-$VERSION
 GUI_VERSION=`cat GUI/PWgui/VERSION`
 GUI=PWgui-$GUI_VERSION
 
@@ -20,12 +19,18 @@ if test -d $TMPDIR; then mv $TMPDIR $TMPDIR.save; fi
 mkdir $TMPDIR
 mkdir $TMPDIR/bin
 
+# cleanup of the CVS repository
+
 make veryclean
+
 find . -type f -name *~ -exec /bin/rm {} \;
 find . -type f -name .#* -exec /bin/rm {} \;
 if test -f espresso.tar.gz ; then /bin/rm espresso.tar.gz ; fi
-##### Using Makefile:
+
+# package the entire distribution and the GUI using Makefile:
+
 make tar tar-gui
+
 ##### Alternatively:
 #tar -czf espresso.tar.gz config* README* Make* make* \
 #                         install-sh install/ moduledep.sh includedeps.sh License upftools/ \
@@ -34,10 +39,26 @@ make tar tar-gui
 #                         CPV/ atomic/ atomic_doc/ examples/ pseudo/
 #tar -cf $GUI.tgz $GUI
 ##### End
+
+# unpackage in a temporary directory 
+
 cd  $TMPDIR
 tar -xzf ../espresso.tar.gz
 tar -xzf ../$GUI.tgz
+
+# remove CVS directories
+
 find . -name CVS -type d -exec /bin/rm -r {} \;
+
+# generate pdf for users' guide
+
+cd Doc
+pdflatex users-guide
+# twice to get references right
+pdflatex users-guide
+cd ../
+
+# re-package
 
 cd ../
 
@@ -81,17 +102,12 @@ tar -czf $TMPDIR/espresso-$VERSION.tar.gz \
                             $TMPDIR/pseudo/  $TMPDIR/examples/ $TMPDIR/$GUI
 cd $TMPDIR
 
-cp Doc/users-guide.pdf users-guide-$VERSION.pdf
-cd Doc
-latex2html -t "User's Guide for Quantum-ESPRESSO" \
-           -html_version 4.0 \
-           -toc_depth 5 -split 5 -toc_stars -show_section_numbers \
-           -local_icons \
-            users-guide.tex
-tar -czf ../users-guide-$VERSION.tar.gz users-guide
-cd ../
+cp Doc/users-guide.tex  users-guide-$VERSION.tex
+cp Doc/users-guide.pdf  users-guide-$VERSION.pdf
 
-scp users-guide-$VERSION.pdf users-guide-$VERSION.tar.gz \
+# copy to target machine
+
+scp users-guide-$VERSION.pdf users-guide-$VERSION.tex \
     espresso-$VERSION.tar.gz \
     $GUI.tar.gz pw-$VERSION.tar.gz cp-$VERSION.tar.gz \
     examples-$VERSION.tar.gz \
