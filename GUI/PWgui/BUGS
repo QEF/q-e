@@ -1,5 +1,8 @@
 BUGS -- known bugs. 
 
+* if tab-page is changed during the module's gui constraction, then the page is 
+treated as non-editable in menus
+
 * strange behaviour of checkbox widgets for atomic-coordinates (iforce
 components)
 

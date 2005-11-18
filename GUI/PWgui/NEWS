@@ -1,3 +1,8 @@
+Version: 3.0
+	* LD1.X module added, i.e., GUI for pseudo-potential generation
+	* CHDENS.X module was removed: the chdens.x is now merged in pp.x
+	* the PW.X module was updated to reflect new pw.x input
+
 Version: 2.1
 	* A "Run" menubutton was added. PWgui is now a complete PWscf
 		GUI, and not only input manager. Features:

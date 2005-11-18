@@ -14,8 +14,14 @@ software. Therefore you have two possibility:
 
    (ii) to use source package if required Tcl software is installed
         (see SOFTWARE REQUIREMENTS section below)
-
-
+	
+    QUICK-INFO for source package of PWgui: 
+    ---------------------------------------
+	If you have Tcl/Tk + Itcl/Itk/Iwidgets installed on your computer
+	you can use the source version of PWgui straightaway. In the other
+	case, one of convenient option is to install a complete Tcl
+	distribution named ActiveTcl:
+	http://www.activestate.com/Products/Download/Download.plex?id=ActiveTcl
 
 --
 (I) INSTALLATION INSTRUCTIONS FOR STANDALONE EXECUTABLE
