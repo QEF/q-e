@@ -47,7 +47,7 @@ MASS_LIBS      = @mass_libs@
 DFLAGS         = @dflags@
 FDFLAGS        = @fdflags@
 IFLAGS         = -I../include @ifftw@
-MODFLAGS       = @imod@. @imod@../Modules @imod@../PW @imod@../PH @imod@../iotk/src
+MODFLAGS       = @imod@. @imod@../Modules @imod@../PW @imod@../PH @imod@../iotk/src @imod@../CPV
 
 LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a
 # LIBS must contain the location of all needed external libraries
