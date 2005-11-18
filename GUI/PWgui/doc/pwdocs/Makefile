@@ -6,14 +6,17 @@ INPUT_FILES = \
 	INPUT_PH \
 	INPUT_PP \
 	INPUT_PROJWFC \
-	INPUT_D3
+	INPUT_D3 \
+	INPUT_LD1
+
 IMAGES = \
 	democritos.png \
 	pwscf.png
+
 GIF_IMAGES = $(IMAGES:.png=.gif)
 LINK_FILES = \
 	$(INPUT_FILES) \
-	users-guide.tex \
+	users-guide.tex democritos.eps pwscf.eps \
 	$(IMAGES)
 
 %.pdf : %.tex
@@ -62,7 +65,7 @@ users-guide: users-guide.pdf users-guide.tex
 	done; \
 	for file in *.html; do \
 		cp $$file /tmp/$$file; \
-		cat /tmp/$$file | sed 's/\.png/\.gif/g' - | sed 's/HREF="http/NAME="http/g' - > $$file; \
+		cat /tmp/$$file | sed 's/\.png/\.gif/g' - | sed 's/HREF="http/NAME="http/g' | sed 's/mathend000#//g' - > $$file; \
 		rm -f /tmp/$$file; \
 	done
 
