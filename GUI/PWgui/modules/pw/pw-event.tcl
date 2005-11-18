@@ -437,6 +437,10 @@ tracevar CI_scheme w {
     }
 }
 
+tracevar n_fe_step w {
+    widgetconfigure fe_step -end [varvalue n_fe_step]
+}
+
 # ------------------------------------------------------------------------
 # Page: CELL_PARAMETERS, ATOMIC_SPECIES, ATOMIC_POSITIONS
 # ------------------------------------------------------------------------
@@ -525,11 +529,9 @@ tracevar nconstr w {
 
     widgetconfigure constraints_table -rows $nc
 
-    # so far the only constraint-type is "1". Fill in the "1"
-    # values
-    for {set i 1} {$i <= $nc} {incr i} {
-	tableset constraints_table $i 1 -value 1
-    }
+    #for {set i 1} {$i <= $nc} {incr i} {
+    #	tableset constraints_table $i 1 -value 1
+    #}
 }
 
 
