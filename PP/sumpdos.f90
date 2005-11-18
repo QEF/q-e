@@ -17,7 +17,7 @@ PROGRAM sumpdos
   ! files (which are related to different atoms)
   !
   ! file names are read from stdin
-  ! USAGE: see below for the manual (or run with -h)
+  ! USAGE: sumpdos <file1> ... <fileN>
   !
   INTEGER             :: iargc              ! function giving no of arguments
 
@@ -147,7 +147,7 @@ efermi = 0.0
       !
       IF ( TRIM(str1) == 'ldos(E)' ) THEN
           nspin = 1
-      ELSEIF ( TRIM(str1) == 'ldosup(E)' .AND.  TRIM(str1) == 'ldosdw(E)' ) THEN
+      ELSEIF ( TRIM(str1) == 'ldosup(E)' .AND.  TRIM(str2) == 'ldosdw(E)' ) THEN
           nspin = 2
       ELSE
           CALL errore("sumpdos", "wrong fmf in the first line of "//TRIM(file(1)), 1)
