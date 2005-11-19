@@ -10,10 +10,9 @@
 !----------------------------------------------------------------------
       subroutine dipol_matrix(tau0,h,rho, dipol)
 !----------------------------------------------------------------------
-      
-!questa subroutine calcola l'elemento di dipolo tra due stati, gli
-!stati sono dati da rho(r)=Psi_1(r)*Psi_2(r)
-!NB tutti gli stati sono reali
+! This subroutine calculates the dipole element between two states, 
+! the states are given from rho(r)=Psi_1(r)*Psi_2(r) 
+! The density is assumed to be a real function
 
       use parameters, only: nsx, natx
       use ions_base, only: nsp, na, pmass
@@ -29,14 +28,14 @@
       include 'mpif.h'
 #endif
 
-      integer specie(100)!specie atomica da modificare 
+      integer specie(100) !atomic species to modify
       integer i, j, k, ir, ia, is, ityp(natx), nat00, tp(3), isa
       integer ir1, ir2, ir3, ip1, ip2, ip3, ipn
       real(8) tau0(3,natx), tau00(3,natx), rho(nnr)
       real(8) h(3,3), l1, l2, l3, shift(3), maxr, minr, cm(3)
       real(8) ll1, ll2, ll3, tot_m
       real(8) rho_aux
-      real(8) dipol(3)!vettore di dipolo Int_R rho(r)r
+      real(8) dipol(3) ! dipole vector: Int_R rho(r)r
 
 #ifdef __PARA
       integer ip, ierr, incr(nproc), displs(nproc)
