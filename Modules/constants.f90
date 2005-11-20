@@ -53,6 +53,7 @@ MODULE constants
   REAL(DP), PARAMETER :: TERAHERTZ        = 2.418D-5    ! from au to THz
   REAL(DP), PARAMETER :: AU_SEC           = 2.4189D-17  ! sec
   REAL(DP), PARAMETER :: AU_PS            = 2.4189D-5   ! sec
+  REAL(DP), PARAMETER :: DIP_DEBYE        = 2.54168     ! hartree atomic units dipole to Debye
   !     
   !
   PARAMETER( pi        = 3.14159265358979323846_DP )
