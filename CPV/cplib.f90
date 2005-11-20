@@ -10,85 +10,85 @@
 
 !
 !-----------------------------------------------------------------------
-      subroutine atomic_wfc(eigr,n_atomic_wfc,wfc)
+      SUBROUTINE atomic_wfc(eigr,n_atomic_wfc,wfc)
 !-----------------------------------------------------------------------
 !
 ! Compute atomic wavefunctions in G-space
 !
-      use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart, g, gx
-      use ions_base, only: nsp, na, nat
-      use cell_base, only: tpiba
-      use atom, only: nchi, lchi, mesh, r, chi, rab
+      USE gvecw, ONLY: ngw
+      USE reciprocal_vectors, ONLY: gstart, g, gx
+      USE ions_base, ONLY: nsp, na, nat
+      USE cell_base, ONLY: tpiba
+      USE atom, ONLY: nchi, lchi, mesh, r, chi, rab
 !
-      implicit none
-      integer, intent(in) :: n_atomic_wfc
-      complex(8), intent(in) ::  eigr(ngw,nat)
-      complex(8), intent(out):: wfc(ngw,n_atomic_wfc)
+      IMPLICIT NONE
+      INTEGER, INTENT(in) :: n_atomic_wfc
+      COMPLEX(8), INTENT(in) ::  eigr(ngw,nat)
+      COMPLEX(8), INTENT(out):: wfc(ngw,n_atomic_wfc)
 !
-      integer :: natwfc, ndm, is, ia, ir, nb, l, m, lm, i, lmax_wfc, isa
-      real(8), allocatable::  ylm(:,:), q(:), jl(:), vchi(:),      &
+      INTEGER :: natwfc, ndm, is, ia, ir, nb, l, m, lm, i, lmax_wfc, isa
+      REAL(8), ALLOCATABLE::  ylm(:,:), q(:), jl(:), vchi(:),      &
      &     chiq(:)
 !
 ! calculate max angular momentum required in wavefunctions
 !
       lmax_wfc=-1
-      do is = 1,nsp
-         do nb = 1, nchi(is)
-            lmax_wfc = max (lmax_wfc, lchi (nb, is) )
-         enddo
-      enddo
-      allocate(ylm(ngw,(lmax_wfc+1)**2))
-      call ylmr2 ((lmax_wfc+1)**2, ngw, gx, g, ylm)
+      DO is = 1,nsp
+         DO nb = 1, nchi(is)
+            lmax_wfc = MAX (lmax_wfc, lchi (nb, is) )
+         ENDDO
+      ENDDO
+      ALLOCATE(ylm(ngw,(lmax_wfc+1)**2))
+      CALL ylmr2 ((lmax_wfc+1)**2, ngw, gx, g, ylm)
       ndm = MAXVAL(mesh(1:nsp))
-      allocate(jl(ndm), vchi(ndm))
-      allocate(q(ngw), chiq(ngw))
+      ALLOCATE(jl(ndm), vchi(ndm))
+      ALLOCATE(q(ngw), chiq(ngw))
 !
-      do i=1,ngw
-         q(i) = sqrt(g(i))*tpiba
-      end do
+      DO i=1,ngw
+         q(i) = SQRT(g(i))*tpiba
+      END DO
 !
       natwfc=0
       isa   = 0
-      do is=1,nsp
+      DO is=1,nsp
 !
 !   radial fourier transform of the chi functions
 !   NOTA BENE: chi is r times the radial part of the atomic wavefunction
 !
-         do nb = 1,nchi(is)
+         DO nb = 1,nchi(is)
             l = lchi(nb,is)
-            do i=1,ngw
-               call sph_bes (mesh(is), r(1,is), q(i), l, jl)
-               do ir=1,mesh(is)
+            DO i=1,ngw
+               CALL sph_bes (mesh(is), r(1,is), q(i), l, jl)
+               DO ir=1,mesh(is)
                   vchi(ir) = chi(ir,nb,is)*r(ir,is)*jl(ir)
-               enddo
-               call simpson_cp90(mesh(is),vchi,rab(1,is),chiq(i))
-            enddo
+               ENDDO
+               CALL simpson_cp90(mesh(is),vchi,rab(1,is),chiq(i))
+            ENDDO
 !
 !   multiply by angular part and structure factor
 !   NOTA BENE: the factor i^l MUST be present!!!
 !
-            do m = 1,2*l+1
+            DO m = 1,2*l+1
                lm = l**2 + m
-               do ia = 1 + isa, na(is) + isa
+               DO ia = 1 + isa, na(is) + isa
                   natwfc = natwfc + 1
                   wfc(:,natwfc) = (0.d0,1.d0)**l * eigr(:,ia)* ylm(:,lm)*chiq(:)
-               enddo
-            enddo
-         enddo
+               ENDDO
+            ENDDO
+         ENDDO
          isa = isa + na(is)
-      enddo
+      ENDDO
 !
-      if (natwfc.ne.n_atomic_wfc)                                       &
-     &     call errore('atomic_wfc','unexpected error',natwfc)
+      IF (natwfc.NE.n_atomic_wfc)                                       &
+     &     CALL errore('atomic_wfc','unexpected error',natwfc)
 !
-      deallocate(q, chiq, vchi, jl, ylm)
+      DEALLOCATE(q, chiq, vchi, jl, ylm)
 !
-      return
-      end subroutine atomic_wfc
+      RETURN
+      END SUBROUTINE atomic_wfc
 !
 !-----------------------------------------------------------------------
-      subroutine box2grid(irb,nfft,qv,vr)
+      SUBROUTINE box2grid(irb,nfft,qv,vr)
 !-----------------------------------------------------------------------
 !
 ! add array qv(r) on box grid to array vr(r) on dense grid
@@ -96,99 +96,99 @@
 ! nfft=1  add      real part of qv(r) to real part of array vr(r) 
 ! nfft=2  add imaginary part of qv(r) to real part of array vr(r) 
 !
-      use parameters, only: natx, nsx
-      use grid_dimensions, only: nr1, nr2, nr3, &
+      USE parameters, ONLY: natx, nsx
+      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
             nr1x, nr2x, nnr => nnrx
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
+      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nnrb => nnrbx
-      use para_mod
-      implicit none
-      integer, intent(in):: nfft, irb(3)
-      real(8), intent(in):: qv(2,nnrb)
-      complex(8), intent(inout):: vr(nnr)
+      USE para_mod
+      IMPLICIT NONE
+      INTEGER, INTENT(in):: nfft, irb(3)
+      REAL(8), INTENT(in):: qv(2,nnrb)
+      COMPLEX(8), INTENT(inout):: vr(nnr)
 !
-      integer ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
+      INTEGER ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
 
-      if(nfft.le.0.or.nfft.gt.2) call errore('box2grid','wrong data',nfft)
+      IF(nfft.LE.0.OR.nfft.GT.2) CALL errore('box2grid','wrong data',nfft)
 
-      do ir3=1,nr3b
+      DO ir3=1,nr3b
          ibig3=irb(3)+ir3-1
-         ibig3=1+mod(ibig3-1,nr3)
-         if(ibig3.lt.1.or.ibig3.gt.nr3)                                 &
-     &        call errore('box2grid','ibig3 wrong',ibig3)
+         ibig3=1+MOD(ibig3-1,nr3)
+         IF(ibig3.LT.1.OR.ibig3.GT.nr3)                                 &
+     &        CALL errore('box2grid','ibig3 wrong',ibig3)
          ibig3=ibig3-dfftp%ipp(me)
-         if ( ibig3 .gt. 0 .and. ibig3 .le. ( dfftp%npp(me) ) ) then
-            do ir2=1,nr2b
+         IF ( ibig3 .GT. 0 .AND. ibig3 .LE. ( dfftp%npp(me) ) ) THEN
+            DO ir2=1,nr2b
                ibig2=irb(2)+ir2-1
-               ibig2=1+mod(ibig2-1,nr2)
-               if(ibig2.lt.1.or.ibig2.gt.nr2)                           &
-     &              call errore('box2grid','ibig2 wrong',ibig2)
-               do ir1=1,nr1b
+               ibig2=1+MOD(ibig2-1,nr2)
+               IF(ibig2.LT.1.OR.ibig2.GT.nr2)                           &
+     &              CALL errore('box2grid','ibig2 wrong',ibig2)
+               DO ir1=1,nr1b
                   ibig1=irb(1)+ir1-1
-                  ibig1=1+mod(ibig1-1,nr1)
-                  if(ibig1.lt.1.or.ibig1.gt.nr1)                        &
-     &                 call errore('box2grid','ibig1 wrong',ibig1)
+                  ibig1=1+MOD(ibig1-1,nr1)
+                  IF(ibig1.LT.1.OR.ibig1.GT.nr1)                        &
+     &                 CALL errore('box2grid','ibig1 wrong',ibig1)
                   ibig=ibig1+(ibig2-1)*nr1x+(ibig3-1)*nr1x*nr2x
                   ir=ir1+(ir2-1)*nr1bx+(ir3-1)*nr1bx*nr2bx
                   vr(ibig) = vr(ibig)+qv(nfft,ir)
-               end do
-            end do
-         end if
-      end do
+               END DO
+            END DO
+         END IF
+      END DO
 !
-      return
-      end subroutine box2grid
+      RETURN
+      END SUBROUTINE box2grid
 !
 !-----------------------------------------------------------------------
-      subroutine box2grid2(irb,qv,v)
+      SUBROUTINE box2grid2(irb,qv,v)
 !-----------------------------------------------------------------------
 !
 ! add array qv(r) on box grid to array v(r) on dense grid
 ! irb   : position of the box in the dense grid
 !
-      use parameters, only: nsx, natx
-      use grid_dimensions, only: nr1, nr2, nr3, &
+      USE parameters, ONLY: nsx, natx
+      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
             nr1x, nr2x, nnr => nnrx
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
+      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nnrb => nnrbx
-      use para_mod
-      implicit none
-      integer, intent(in):: irb(3)
-      complex(8), intent(in):: qv(nnrb)
-      complex(8), intent(inout):: v(nnr)
+      USE para_mod
+      IMPLICIT NONE
+      INTEGER, INTENT(in):: irb(3)
+      COMPLEX(8), INTENT(in):: qv(nnrb)
+      COMPLEX(8), INTENT(inout):: v(nnr)
 !
-      integer ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
+      INTEGER ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
 
-      do ir3=1,nr3b
+      DO ir3=1,nr3b
          ibig3=irb(3)+ir3-1
-         ibig3=1+mod(ibig3-1,nr3)
-         if(ibig3.lt.1.or.ibig3.gt.nr3)                                 &
-     &        call errore('box2grid2','ibig3 wrong',ibig3)
+         ibig3=1+MOD(ibig3-1,nr3)
+         IF(ibig3.LT.1.OR.ibig3.GT.nr3)                                 &
+     &        CALL errore('box2grid2','ibig3 wrong',ibig3)
          ibig3=ibig3-dfftp%ipp(me)
-         if (ibig3.gt.0.and.ibig3.le. dfftp%npp(me) ) then
-            do ir2=1,nr2b
+         IF (ibig3.GT.0.AND.ibig3.LE. dfftp%npp(me) ) THEN
+            DO ir2=1,nr2b
                ibig2=irb(2)+ir2-1
-               ibig2=1+mod(ibig2-1,nr2)
-               if(ibig2.lt.1.or.ibig2.gt.nr2)                           &
-     &              call errore('box2grid2','ibig2 wrong',ibig2)
-               do ir1=1,nr1b
+               ibig2=1+MOD(ibig2-1,nr2)
+               IF(ibig2.LT.1.OR.ibig2.GT.nr2)                           &
+     &              CALL errore('box2grid2','ibig2 wrong',ibig2)
+               DO ir1=1,nr1b
                   ibig1=irb(1)+ir1-1
-                  ibig1=1+mod(ibig1-1,nr1)
-                  if(ibig1.lt.1.or.ibig1.gt.nr1)                        &
-     &                 call errore('box2grid2','ibig1 wrong',ibig1)
+                  ibig1=1+MOD(ibig1-1,nr1)
+                  IF(ibig1.LT.1.OR.ibig1.GT.nr1)                        &
+     &                 CALL errore('box2grid2','ibig1 wrong',ibig1)
                   ibig=ibig1+(ibig2-1)*nr1x+(ibig3-1)*nr1x*nr2x
                   ir=ir1+(ir2-1)*nr1bx+(ir3-1)*nr1bx*nr2bx
                   v(ibig) = v(ibig)+qv(ir)
-               end do
-            end do
-         end if
-      end do
+               END DO
+            END DO
+         END IF
+      END DO
 
-      return
-      end subroutine box2grid2
+      RETURN
+      END SUBROUTINE box2grid2
 !
 !-----------------------------------------------------------------------
-      real(8) function boxdotgrid(irb,nfft,qv,vr)
+      REAL(8) FUNCTION boxdotgrid(irb,nfft,qv,vr)
 !-----------------------------------------------------------------------
 !
 ! Calculate \sum_i qv(r_i)*vr(r_i)  with r_i on box grid
@@ -197,245 +197,245 @@
 ! nfft=1 (2): use real (imaginary) part of qv(r)
 ! Parallel execution: remember to sum the contributions from other nodes
 !
-      use parameters, only: nsx, natx
-      use grid_dimensions, only: nr1, nr2, nr3, &
+      USE parameters, ONLY: nsx, natx
+      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
             nr1x, nr2x, nnr => nnrx
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
+      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nnrb => nnrbx
-      use para_mod
-      implicit none
-      integer, intent(in):: nfft, irb(3)
-      real(8), intent(in):: qv(2,nnrb), vr(nnr)
+      USE para_mod
+      IMPLICIT NONE
+      INTEGER, INTENT(in):: nfft, irb(3)
+      REAL(8), INTENT(in):: qv(2,nnrb), vr(nnr)
 !
-      integer ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
+      INTEGER ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
 !
 !
-      if(nfft.le.0.or.nfft.gt.2) call errore('box2grid','wrong data',nfft)
+      IF(nfft.LE.0.OR.nfft.GT.2) CALL errore('box2grid','wrong data',nfft)
 
       boxdotgrid=0.d0
 
-      do ir3=1,nr3b
+      DO ir3=1,nr3b
          ibig3=irb(3)+ir3-1
-         ibig3=1+mod(ibig3-1,nr3)
+         ibig3=1+MOD(ibig3-1,nr3)
          ibig3=ibig3-dfftp%ipp(me)
-         if (ibig3.gt.0.and.ibig3.le. dfftp%npp(me) ) then
-            do ir2=1,nr2b
+         IF (ibig3.GT.0.AND.ibig3.LE. dfftp%npp(me) ) THEN
+            DO ir2=1,nr2b
                ibig2=irb(2)+ir2-1
-               ibig2=1+mod(ibig2-1,nr2)
-               do ir1=1,nr1b
+               ibig2=1+MOD(ibig2-1,nr2)
+               DO ir1=1,nr1b
                   ibig1=irb(1)+ir1-1
-                  ibig1=1+mod(ibig1-1,nr1)
+                  ibig1=1+MOD(ibig1-1,nr1)
                   ibig=ibig1 + (ibig2-1)*nr1x + (ibig3-1)*nr1x*nr2x
                   ir  =ir1 + (ir2-1)*nr1bx + (ir3-1)*nr1bx*nr2bx
                   boxdotgrid = boxdotgrid + qv(nfft,ir)*vr(ibig)
-               end do
-            end do
-         endif
-      end do
+               END DO
+            END DO
+         ENDIF
+      END DO
 
-      return
-      end function boxdotgrid
+      RETURN
+      END FUNCTION boxdotgrid
 !
 
 
 !-------------------------------------------------------------------------
-      subroutine calphi(c0,ema0bg,bec,betae,phi)
+      SUBROUTINE calphi(c0,ema0bg,bec,betae,phi)
 !-----------------------------------------------------------------------
 !     input: c0 (orthonormal with s(r(t)), bec=<c0|beta>, betae=|beta>
 !     computes the matrix phi (with the old positions)
 !       where  |phi> = s'|c0> = |c0> + sum q_ij |i><j|c0>
 !     where s'=s(r(t))  
 !
-      use ions_base, only: na, nsp
-      use io_global, only: stdout
-      use cvan, only: ish, nvb
-      use uspp_param, only: nh
-      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
-      use gvecw, only: ngw
-      use electrons_base, only: n => nbsp
-      use constants, only: pi, fpi
-      use control_flags, only: iprint, iprsta
-      use mp, only: mp_sum
+      USE ions_base, ONLY: na, nsp
+      USE io_global, ONLY: stdout
+      USE cvan, ONLY: ish, nvb
+      USE uspp_param, ONLY: nh
+      USE uspp, ONLY :nhsa=>nkb, nhsavb=>nkbus, qq
+      USE gvecw, ONLY: ngw
+      USE electrons_base, ONLY: n => nbsp
+      USE constants, ONLY: pi, fpi
+      USE control_flags, ONLY: iprint, iprsta
+      USE mp, ONLY: mp_sum
 !
-      implicit none
-      complex(8) c0(ngw,n), phi(ngw,n), betae(ngw,nhsa)
-      real(8)    ema0bg(ngw), bec(nhsa,n), emtot
+      IMPLICIT NONE
+      COMPLEX(8) c0(ngw,n), phi(ngw,n), betae(ngw,nhsa)
+      REAL(8)    ema0bg(ngw), bec(nhsa,n), emtot
 ! local variables
-      integer is, iv, jv, ia, inl, jnl, i, j
-      real(8) qtemp(nhsavb,n) ! automatic array
+      INTEGER is, iv, jv, ia, inl, jnl, i, j
+      REAL(8) qtemp(nhsavb,n) ! automatic array
 !
-      call start_clock( 'calphi' )
+      CALL start_clock( 'calphi' )
       phi(:,:) = (0.d0, 0.d0)
 !
-      if (nvb.gt.0) then
+      IF (nvb.GT.0) THEN
          qtemp (:,:) = 0.d0
-         do is=1,nvb
-            do iv=1,nh(is)
-               do jv=1,nh(is)
-                  if(abs(qq(iv,jv,is)) > 1.e-5) then
-                     do ia=1,na(is)
+         DO is=1,nvb
+            DO iv=1,nh(is)
+               DO jv=1,nh(is)
+                  IF(ABS(qq(iv,jv,is)) > 1.e-5) THEN
+                     DO ia=1,na(is)
                         inl=ish(is)+(iv-1)*na(is)+ia
                         jnl=ish(is)+(jv-1)*na(is)+ia
-                        do i=1,n
+                        DO i=1,n
                            qtemp(inl,i) = qtemp(inl,i) +                &
      &                                    qq(iv,jv,is)*bec(jnl,i)
-                        end do
-                     end do
-                  endif
-               end do
-            end do
-         end do
+                        END DO
+                     END DO
+                  ENDIF
+               END DO
+            END DO
+         END DO
 !
-         call MXMA                                                     &
+         CALL MXMA                                                     &
      &       (betae,1,2*ngw,qtemp,1,nhsavb,phi,1,2*ngw,2*ngw,nhsavb,n)
-      end if
+      END IF
 !
-      do j=1,n
-         do i=1,ngw
+      DO j=1,n
+         DO i=1,ngw
             phi(i,j)=(phi(i,j)+c0(i,j))*ema0bg(i)
-         end do
-      end do
+         END DO
+      END DO
 !     =================================================================
-      if(iprsta > 2) then
+      IF(iprsta > 2) THEN
          emtot=0.
-         do j=1,n
-            do i=1,ngw
+         DO j=1,n
+            DO i=1,ngw
                emtot=emtot                                              &
      &        +2.*DBLE(phi(i,j)*CONJG(c0(i,j)))*ema0bg(i)**(-2.)
-            end do
-         end do
+            END DO
+         END DO
          emtot=emtot/n
 
-         call mp_sum( emtot )
+         CALL mp_sum( emtot )
 
-         WRITE( stdout,*) 'in calphi sqrt(emtot)=',sqrt(emtot)
+         WRITE( stdout,*) 'in calphi sqrt(emtot)=',SQRT(emtot)
          WRITE( stdout,*)
-         do is=1,nsp
-            if(nsp > 1) then
+         DO is=1,nsp
+            IF(nsp > 1) THEN
                WRITE( stdout,'(33x,a,i4)') ' calphi: bec (is)',is
                WRITE( stdout,'(8f9.4)')                                       &
      &            ((bec(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,n)
-            else
-               do ia=1,na(is)
+            ELSE
+               DO ia=1,na(is)
                   WRITE( stdout,'(33x,a,i4)') ' calphi: bec (ia)',ia
                   WRITE( stdout,'(8f9.4)')                                    &
      &               ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,n)
-               end do
-            end if
-         end do
-      endif
-      call stop_clock( 'calphi' )
+               END DO
+            END IF
+         END DO
+      ENDIF
+      CALL stop_clock( 'calphi' )
 !
-      return
-      end subroutine calphi
+      RETURN
+      END SUBROUTINE calphi
 !-----------------------------------------------------------------------
-      real(8) function cscnorm(bec,cp,i)
+      REAL(8) FUNCTION cscnorm(bec,cp,i)
 !-----------------------------------------------------------------------
 !     requires in input the updated bec(i)
 !
-      use ions_base, only: na
-      use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart
-      use electrons_base, only: n => nbsp
-      use cvan, only: ish, nvb
-      use uspp_param, only: nh
-      use uspp, only: nhsa=>nkb, nhsavb=>nkbus, qq
-      use mp, only: mp_sum
+      USE ions_base, ONLY: na
+      USE gvecw, ONLY: ngw
+      USE reciprocal_vectors, ONLY: gstart
+      USE electrons_base, ONLY: n => nbsp
+      USE cvan, ONLY: ish, nvb
+      USE uspp_param, ONLY: nh
+      USE uspp, ONLY: nhsa=>nkb, nhsavb=>nkbus, qq
+      USE mp, ONLY: mp_sum
 !
-      implicit none
-      integer i
-      real(8) bec(nhsa,n)
-      complex(8) cp(ngw,n)
+      IMPLICIT NONE
+      INTEGER i
+      REAL(8) bec(nhsa,n)
+      COMPLEX(8) cp(ngw,n)
 !
-      integer ig, is, iv, jv, ia, inl, jnl
-      real(8) rsum
-      real(8), allocatable:: temp(:)
+      INTEGER ig, is, iv, jv, ia, inl, jnl
+      REAL(8) rsum
+      REAL(8), ALLOCATABLE:: temp(:)
 !
 !
-      allocate(temp(ngw))
-      do ig=1,ngw
+      ALLOCATE(temp(ngw))
+      DO ig=1,ngw
          temp(ig)=DBLE(CONJG(cp(ig,i))*cp(ig,i))
-      end do
+      END DO
       rsum=2.*SUM(temp)
-      if (gstart == 2) rsum=rsum-temp(1)
+      IF (gstart == 2) rsum=rsum-temp(1)
 
-      call mp_sum( rsum )
+      CALL mp_sum( rsum )
 
-      deallocate(temp)
+      DEALLOCATE(temp)
 !
-      do is=1,nvb
-         do iv=1,nh(is)
-            do jv=1,nh(is)
-               if(abs(qq(iv,jv,is)).gt.1.e-5) then 
-                  do ia=1,na(is)
+      DO is=1,nvb
+         DO iv=1,nh(is)
+            DO jv=1,nh(is)
+               IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN 
+                  DO ia=1,na(is)
                      inl=ish(is)+(iv-1)*na(is)+ia
                      jnl=ish(is)+(jv-1)*na(is)+ia
                      rsum = rsum +                                        &
      &                    qq(iv,jv,is)*bec(inl,i)*bec(jnl,i)
-                  end do
-               endif
-            end do
-         end do
-      end do
+                  END DO
+               ENDIF
+            END DO
+         END DO
+      END DO
 !
-      cscnorm=sqrt(rsum)
+      cscnorm=SQRT(rsum)
 !
-      return
-      end function cscnorm
+      RETURN
+      END FUNCTION cscnorm
 !
 !-----------------------------------------------------------------------
-      subroutine denkin(c,dekin)
+      SUBROUTINE denkin(c,dekin)
 !-----------------------------------------------------------------------
 !
-      use constants, only: pi, fpi
-      use electrons_base, only: n => nbsp, nx => nbspx, f
-      use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart, g, gx
-      use cell_base, only: ainv, tpiba2
-      use gvecw, only: ggp, ecutz, ecsig, ecfix
-      use mp, only: mp_sum
+      USE constants, ONLY: pi, fpi
+      USE electrons_base, ONLY: n => nbsp, nx => nbspx, f
+      USE gvecw, ONLY: ngw
+      USE reciprocal_vectors, ONLY: gstart, g, gx
+      USE cell_base, ONLY: ainv, tpiba2
+      USE gvecw, ONLY: ggp, ecutz, ecsig, ecfix
+      USE mp, ONLY: mp_sum
 !
-      implicit none
+      IMPLICIT NONE
 ! input
-      complex(8) c(ngw,nx)
+      COMPLEX(8) c(ngw,nx)
 ! output
-      real(8) dekin(3,3)
+      REAL(8) dekin(3,3)
 ! local
-      integer j, k, ig, i
-      real(8), allocatable:: gtmp(:)
-      real(8) sk(n)  ! automatic array
-      real(8) :: ga, dggp, efac
+      INTEGER j, k, ig, i
+      REAL(8), ALLOCATABLE:: gtmp(:)
+      REAL(8) sk(n)  ! automatic array
+      REAL(8) :: ga, dggp, efac
 !
-      allocate (gtmp(ngw))
+      ALLOCATE (gtmp(ngw))
       dekin=0.d0
-      do j=1,3
-         do k=1,3
-            do ig=1,ngw
-               efac     = 2.d0 * ecutz / ecsig / sqrt(pi)
-               dggp     = 1.d0 + efac * exp( - ( tpiba2 * g(ig) - ecfix ) * ( tpiba2 * g(ig) - ecfix ) / ecsig / ecsig )
+      DO j=1,3
+         DO k=1,3
+            DO ig=1,ngw
+               efac     = 2.d0 * ecutz / ecsig / SQRT(pi)
+               dggp     = 1.d0 + efac * EXP( - ( tpiba2 * g(ig) - ecfix ) * ( tpiba2 * g(ig) - ecfix ) / ecsig / ecsig )
                ga       = gx(1,ig) * ainv(k,1) + gx(2,ig) * ainv(k,2) + gx(3,ig) * ainv(k,3)
                gtmp(ig) = gx(j,ig) * ga * dggp
-            end do
-            do i=1,n
+            END DO
+            DO i=1,n
                sk(i)=0.d0
-               do ig=gstart,ngw
+               DO ig=gstart,ngw
                   sk(i)=sk(i)+DBLE(CONJG(c(ig,i))*c(ig,i))*gtmp(ig)
-               end do
-            end do
-            do i=1,n
+               END DO
+            END DO
+            DO i=1,n
                dekin(j,k)=dekin(j,k)-2.d0*tpiba2*(f(i)*sk(i))
-            end do
-         end do
-      end do
-      deallocate (gtmp)
+            END DO
+         END DO
+      END DO
+      DEALLOCATE (gtmp)
 
-      call mp_sum( dekin( 1:3, 1:3 ) )
+      CALL mp_sum( dekin( 1:3, 1:3 ) )
 !
-      return
-      end subroutine denkin
+      RETURN
+      END SUBROUTINE denkin
 !
 !-----------------------------------------------------------------------
-      subroutine denh(rhotmp,drhotmp,sfac,vtemp,eh,dh)
+      SUBROUTINE denh(rhotmp,drhotmp,sfac,vtemp,eh,dh)
 !-----------------------------------------------------------------------
 !
 ! derivative of hartree energy wrt cell parameters h
@@ -447,64 +447,64 @@
 ! wtemp work space
 ! eh input: hartree energy
 !
-      use constants, only: pi, fpi
-      use ions_base, only: nsp
-      use gvecs
-      use gvecp, only: ng => ngm
-      use reciprocal_vectors, only: gstart, gx, g
-      use cell_base, only: omega
-      use cell_base, only: ainv, tpiba2
-      use local_pseudo, only: rhops, drhops
-      use mp, only: mp_sum
+      USE constants, ONLY: pi, fpi
+      USE ions_base, ONLY: nsp
+      USE gvecs
+      USE gvecp, ONLY: ng => ngm
+      USE reciprocal_vectors, ONLY: gstart, gx, g
+      USE cell_base, ONLY: omega
+      USE cell_base, ONLY: ainv, tpiba2
+      USE local_pseudo, ONLY: rhops, drhops
+      USE mp, ONLY: mp_sum
 
-      implicit none
+      IMPLICIT NONE
 ! input
-      complex(8) rhotmp(ng), drhotmp(ng,3,3), vtemp(ng), sfac(ngs,nsp)
-      real(8) eh
+      COMPLEX(8) rhotmp(ng), drhotmp(ng,3,3), vtemp(ng), sfac(ngs,nsp)
+      REAL(8) eh
 ! output
-      real(8) dh(3,3)
+      REAL(8) dh(3,3)
 ! local
-      integer i, j, ig, is
-      real(8) wz
+      INTEGER i, j, ig, is
+      REAL(8) wz
 !
 !     wz = factor for g.neq.0 because of c*(g)=c(-g)
 !
       wz=2.d0
-      do j=1,3
-         do i=1,3
-            do is=1,nsp
-               do ig=1,ngs
+      DO j=1,3
+         DO i=1,3
+            DO is=1,nsp
+               DO ig=1,ngs
                   drhotmp(ig,i,j) = drhotmp(ig,i,j) -                   &
      &                    sfac(ig,is)*drhops(ig,is)*                    &
      &                    2.d0*tpiba2*gx(i,ig)*(gx(1,ig)*ainv(j,1)+     &
      &                     gx(2,ig)*ainv(j,2)+gx(3,ig)*ainv(j,3))-      &
      &                    sfac(ig,is)*rhops(ig,is)*ainv(j,i)
-               enddo
-            enddo
-            if (gstart == 2) vtemp(1)=(0.d0,0.d0)
-            do ig=gstart,ng
+               ENDDO
+            ENDDO
+            IF (gstart == 2) vtemp(1)=(0.d0,0.d0)
+            DO ig=gstart,ng
                vtemp(ig)=CONJG(rhotmp(ig))*rhotmp(ig)/(tpiba2*g(ig))**2 &
      &                 * tpiba2*gx(i,ig)*(gx(1,ig)*ainv(j,1)+           &
      &                   gx(2,ig)*ainv(j,2)+gx(3,ig)*ainv(j,3)) +       &
      &                 CONJG(rhotmp(ig))/(tpiba2*g(ig))*drhotmp(ig,i,j)
-            enddo
+            ENDDO
             dh(i,j)=fpi*omega*DBLE(SUM(vtemp))*wz
-         enddo
-      enddo
+         ENDDO
+      ENDDO
 
-      call mp_sum( dh( 1:3, 1:3 ) )
+      CALL mp_sum( dh( 1:3, 1:3 ) )
 
-      do i=1,3
-         do j=1,3
+      DO i=1,3
+         DO j=1,3
             dh(i,j)=dh(i,j)+omega*eh*ainv(j,i)
-         end do
-      end do
+         END DO
+      END DO
 
-      return
-      end subroutine denh
+      RETURN
+      END SUBROUTINE denh
 !
 !-----------------------------------------------------------------------
-      subroutine denps(rhotmp,drhotmp,sfac,vtemp,dps)
+      SUBROUTINE denps(rhotmp,drhotmp,sfac,vtemp,dps)
 !-----------------------------------------------------------------------
 !
 ! derivative of local potential energy wrt cell parameters h
@@ -515,90 +515,90 @@
 ! sfac   input : structure factors
 ! wtemp work space
 !
-      use ions_base, only: nsp
-      use gvecs, only: ngs
-      use gvecp, only: ng => ngm
-      use reciprocal_vectors, only: gstart, gx
-      use cell_base, only: omega
-      use cell_base, only: ainv, tpiba2
-      use local_pseudo, only: vps, dvps
-      use mp, only: mp_sum
+      USE ions_base, ONLY: nsp
+      USE gvecs, ONLY: ngs
+      USE gvecp, ONLY: ng => ngm
+      USE reciprocal_vectors, ONLY: gstart, gx
+      USE cell_base, ONLY: omega
+      USE cell_base, ONLY: ainv, tpiba2
+      USE local_pseudo, ONLY: vps, dvps
+      USE mp, ONLY: mp_sum
 
-      implicit none
+      IMPLICIT NONE
 ! input
-      complex(8) rhotmp(ng), drhotmp(ng,3,3), vtemp(ng), sfac(ngs,nsp)
+      COMPLEX(8) rhotmp(ng), drhotmp(ng,3,3), vtemp(ng), sfac(ngs,nsp)
 ! output
-      real(8) dps(3,3)
+      REAL(8) dps(3,3)
 ! local
-      integer i, j, ig, is
-      real(8) wz
+      INTEGER i, j, ig, is
+      REAL(8) wz
 !
 !     wz = factor for g.neq.0 because of c*(g)=c(-g)
 !
       wz=2.d0
-      do i=1,3
-         do j=1,3
-            do ig=1,ngs
+      DO i=1,3
+         DO j=1,3
+            DO ig=1,ngs
                vtemp(ig)=(0.,0.)
-            enddo
-            do is=1,nsp
-               do ig=1,ngs
+            ENDDO
+            DO is=1,nsp
+               DO ig=1,ngs
                   vtemp(ig)=vtemp(ig)-CONJG(rhotmp(ig))*sfac(ig,is)*    &
      &                    dvps(ig,is)*2.d0*tpiba2*gx(i,ig)*             &
      &                    (gx(1,ig)*ainv(j,1) +                         &
      &                     gx(2,ig)*ainv(j,2) +                         &
      &                     gx(3,ig)*ainv(j,3) ) +                       &
      &                    CONJG(drhotmp(ig,i,j))*sfac(ig,is)*vps(ig,is)
-               enddo
-            enddo
+               ENDDO
+            ENDDO
             dps(i,j)=omega*DBLE(wz*SUM(vtemp))
-            if (gstart == 2) dps(i,j)=dps(i,j)-omega*DBLE(vtemp(1))
-         enddo
-      enddo
+            IF (gstart == 2) dps(i,j)=dps(i,j)-omega*DBLE(vtemp(1))
+         ENDDO
+      ENDDO
 
-      call mp_sum( dps( 1:3, 1:3 ) )
+      CALL mp_sum( dps( 1:3, 1:3 ) )
 
-      return
-      end subroutine denps
+      RETURN
+      END SUBROUTINE denps
 
 
 !-----------------------------------------------------------------------
-      subroutine denlcc( nnr, nspin, vxcr, sfac, drhocg, dcc )
+      SUBROUTINE denlcc( nnr, nspin, vxcr, sfac, drhocg, dcc )
 !-----------------------------------------------------------------------
 !
 ! derivative of non linear core correction exchange energy wrt cell 
 ! parameters h 
 ! Output in dcc
 !
-      use kinds, only: DP
-      use ions_base, only: nsp
-      use reciprocal_vectors, only: gstart, gx, ngs, g, ngm
-      use recvecs_indexes, only: np
-      use cell_base, only: omega, ainv, tpiba2
-      use mp, only: mp_sum
-      use atom, only: nlcc
-      use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nr3x
+      USE kinds, ONLY: DP
+      USE ions_base, ONLY: nsp
+      USE reciprocal_vectors, ONLY: gstart, gx, ngs, g, ngm
+      USE recvecs_indexes, ONLY: np
+      USE cell_base, ONLY: omega, ainv, tpiba2
+      USE mp, ONLY: mp_sum
+      USE atom, ONLY: nlcc
+      USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
 
-      implicit none
+      IMPLICIT NONE
 
       ! input
 
-      integer, INTENT(IN)   :: nnr, nspin
-      real(DP)              :: vxcr( nnr, nspin )
-      complex(DP)           :: sfac( ngs, nsp )
-      real(DP)              :: drhocg( ngm, nsp )
+      INTEGER, INTENT(IN)   :: nnr, nspin
+      REAL(DP)              :: vxcr( nnr, nspin )
+      COMPLEX(DP)           :: sfac( ngs, nsp )
+      REAL(DP)              :: drhocg( ngm, nsp )
 
       ! output
 
-      real(DP), INTENT(OUT) ::  dcc(3,3)
+      REAL(DP), INTENT(OUT) ::  dcc(3,3)
 
       ! local
 
-      integer     :: i, j, ig, is
-      complex(DP) :: srhoc
-      real(DP)    :: vxcc
+      INTEGER     :: i, j, ig, is
+      COMPLEX(DP) :: srhoc
+      REAL(DP)    :: vxcc
       !
-      complex(DP), ALLOCATABLE :: vxc( : )
+      COMPLEX(DP), ALLOCATABLE :: vxc( : )
 !
       dcc = 0.0d0
       !
@@ -608,39 +608,39 @@
       !
       IF( nspin > 1 ) vxc(:) = vxc(:) + vxcr(:,2)
       !
-      call fwfft( vxc, nr1, nr2, nr3, nr1x, nr2x, nr3x )
+      CALL fwfft( vxc, nr1, nr2, nr3, nr1x, nr2x, nr3x )
       !
-      do i=1,3
-         do j=1,3
-            do ig = gstart, ngs
+      DO i=1,3
+         DO j=1,3
+            DO ig = gstart, ngs
                srhoc = 0.0d0
-               do is = 1, nsp
+               DO is = 1, nsp
                  IF( nlcc( is ) ) srhoc = srhoc + sfac( ig, is ) * drhocg( ig, is )
-               enddo
+               ENDDO
                vxcc = DBLE( CONJG( vxc( np( ig ) ) ) * srhoc ) / SQRT( g( ig ) * tpiba2 )
                dcc(i,j) = dcc(i,j) + vxcc * &
      &                      2.d0 * tpiba2 * gx(i,ig) *                  &
      &                    (gx(1,ig)*ainv(j,1) +                         &
      &                     gx(2,ig)*ainv(j,2) +                         &
      &                     gx(3,ig)*ainv(j,3) )
-            enddo
-         enddo
-      enddo
+            ENDDO
+         ENDDO
+      ENDDO
 
       DEALLOCATE( vxc )
 
       dcc = dcc * omega
 
-      call mp_sum( dcc( 1:3, 1:3 ) )
+      CALL mp_sum( dcc( 1:3, 1:3 ) )
 
-      return
-      end subroutine denlcc
+      RETURN
+      END SUBROUTINE denlcc
 
 
 
 !
 !-------------------------------------------------------------------------
-      subroutine dforce (bec,betae,i,c,ca,df,da,v)
+      SUBROUTINE dforce (bec,betae,i,c,ca,df,da,v)
 !-----------------------------------------------------------------------
 !computes: the generalized force df=CMPLX(dfr,dfi) acting on the i-th
 !          electron state at the gamma point of the brillouin zone
@@ -649,62 +649,62 @@
 !     d_n(g) = f_n { 0.5 g^2 c_n(g) + [vc_n](g) +
 !              sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
 !                                 e^-ig.r_i < beta_i,j | c_n >}
-      use kinds, only: dp
-      use control_flags, only: iprint, tbuff
-      use gvecs
-      use gvecw, only: ngw
-      use cvan, only: ish
-      use uspp, only: nhsa=>nkb, dvan, deeq
-      use uspp_param, only: nhm, nh
-      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
+      USE kinds, ONLY: dp
+      USE control_flags, ONLY: iprint, tbuff
+      USE gvecs
+      USE gvecw, ONLY: ngw
+      USE cvan, ONLY: ish
+      USE uspp, ONLY: nhsa=>nkb, dvan, deeq
+      USE uspp_param, ONLY: nhm, nh
+      USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, &
             nr1sx, nr2sx, nr3sx, nnrsx
-      use electrons_base, only: n => nbsp, ispin => fspin, f, nspin
-      use constants, only: pi, fpi
-      use ions_base, only: nsp, na, nat
-      use gvecw, only: ggp
-      use cell_base, only: tpiba2
-      use ensemble_dft, only: tens
-      use funct, only: dft_is_meta
+      USE electrons_base, ONLY: n => nbsp, ispin => fspin, f, nspin
+      USE constants, ONLY: pi, fpi
+      USE ions_base, ONLY: nsp, na, nat
+      USE gvecw, ONLY: ggp
+      USE cell_base, ONLY: tpiba2
+      USE ensemble_dft, ONLY: tens
+      USE funct, ONLY: dft_is_meta
 !
-      implicit none
+      IMPLICIT NONE
 !
-      complex(8) betae(ngw,nhsa), c(ngw), ca(ngw), df(ngw), da(ngw)
-      real(8) bec(nhsa,n), v(nnrsx,nspin)
-      integer i
+      COMPLEX(8) betae(ngw,nhsa), c(ngw), ca(ngw), df(ngw), da(ngw)
+      REAL(8) bec(nhsa,n), v(nnrsx,nspin)
+      INTEGER i
 ! local variables
-      integer iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
-      real(8) fi, fip, dd
-      complex(8) fp,fm,ci
-      real(8) af(nhsa), aa(nhsa) ! automatic arrays
-      complex(8)  dtemp(ngw)    !
-      complex(8), allocatable :: psi(:)
+      INTEGER iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
+      REAL(8) fi, fip, dd
+      COMPLEX(8) fp,fm,ci
+      REAL(8) af(nhsa), aa(nhsa) ! automatic arrays
+      COMPLEX(8)  dtemp(ngw)    !
+      COMPLEX(8), ALLOCATABLE :: psi(:)
 !
 !
-      call start_clock( 'dforce' ) 
+      CALL start_clock( 'dforce' ) 
       !
-      allocate( psi( nnrsx ) )
+      ALLOCATE( psi( nnrsx ) )
 !
 !     important: if n is odd => c(*,n+1)=0.
 ! 
-      if (mod(n,2).ne.0.and.i.eq.n) then
-         do ig=1,ngw
+      IF (MOD(n,2).NE.0.AND.i.EQ.n) THEN
+         DO ig=1,ngw
             ca(ig)=(0.,0.)
-         end do
-      endif
+         END DO
+      ENDIF
 !
       ci=(0.0,1.0)
 !
-      if (.not.tbuff) then
+      IF (.NOT.tbuff) THEN
 !
          psi (:) = (0.d0, 0.d0)
-         do ig=1,ngw
+         DO ig=1,ngw
             psi(nms(ig))=CONJG(c(ig)-ci*ca(ig))
             psi(nps(ig))=c(ig)+ci*ca(ig)
-         end do
+         END DO
 !
-         call ivfftw(psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+         CALL ivfftw(psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
 !     
-      else
+      ELSE
 !
 !     read psi from buffer 21
 !
@@ -712,184 +712,184 @@
          buffer in(21,0) (psi(1),psi(nnrsx))
          ios = unit(21)
 #else
-         read(21,iostat=ios) psi
+         READ(21,iostat=ios) psi
 #endif
-         if(ios.ne.0) call errore                                        &
+         IF(ios.NE.0) CALL errore                                        &
      &       (' dforce',' error in reading unit 21',ios)
 !
-      endif
+      ENDIF
 ! 
       iss1=ispin(i)
 !
 ! the following avoids a potential out-of-bounds error
 !
-      if (i.ne.n) then
+      IF (i.NE.n) THEN
          iss2=ispin(i+1)
-      else
+      ELSE
          iss2=iss1
-      end if
+      END IF
 !
-      do ir=1,nnrsx
+      DO ir=1,nnrsx
          psi(ir)=CMPLX(v(ir,iss1)* DBLE(psi(ir)), v(ir,iss2)*AIMAG(psi(ir)) )
-      end do
+      END DO
 !
-      call fwfftw(psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+      CALL fwfftw(psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
 !
 !     note : the factor 0.5 appears 
 !       in the kinetic energy because it is defined as 0.5*g**2
 !       in the potential part because of the logics
 !
    
-     if (tens) then
+     IF (tens) THEN
         fi =-0.5
         fip=-0.5
-      else
+      ELSE
         fi =-  f(i)*0.5
         fip=-f(i+1)*0.5
-      end if
+      END IF
 
-      do ig=1,ngw
+      DO ig=1,ngw
          fp= psi(nps(ig)) + psi(nms(ig))
          fm= psi(nps(ig)) - psi(nms(ig))
          df(ig)= fi*(tpiba2*ggp(ig)* c(ig)+CMPLX(DBLE(fp), AIMAG(fm)))
          da(ig)=fip*(tpiba2*ggp(ig)*ca(ig)+CMPLX(AIMAG(fp),-DBLE(fm)))
-      end do
+      END DO
 
-      if(dft_is_meta()) call dforce_meta(c,ca,df,da,psi,iss1,iss2,fi,fip) !METAGGA
+      IF(dft_is_meta()) CALL dforce_meta(c,ca,df,da,psi,iss1,iss2,fi,fip) !METAGGA
 !
 !     aa_i,i,n = sum_j d_i,ij <beta_i,j|c_n>
 ! 
-      if(nhsa.gt.0)then
-         do inl=1,nhsa
+      IF(nhsa.GT.0)THEN
+         DO inl=1,nhsa
             af(inl)=0.
             aa(inl)=0.
-         end do
+         END DO
 !
-         do is=1,nsp
-            do iv=1,nh(is)
-               do jv=1,nh(is)
+         DO is=1,nsp
+            DO iv=1,nh(is)
+               DO jv=1,nh(is)
                   isa=0
-                  do ism=1,is-1
+                  DO ism=1,is-1
                      isa=isa+na(ism)
-                  end do
-                  do ia=1,na(is)
+                  END DO
+                  DO ia=1,na(is)
                      inl=ish(is)+(iv-1)*na(is)+ia
                      jnl=ish(is)+(jv-1)*na(is)+ia
                      isa=isa+1
                      dd = deeq(iv,jv,isa,iss1)+dvan(iv,jv,is)
-                     if(tens) then
+                     IF(tens) THEN
                       af(inl)=af(inl)-dd*bec(jnl,  i)
-                     else
+                     ELSE
                       af(inl)=af(inl)- f(i)*dd*bec(jnl,  i)
-                     end if
+                     END IF
                      dd = deeq(iv,jv,isa,iss2)+dvan(iv,jv,is)
-                     if(tens) then
-                      if (i.ne.n) aa(inl)=aa(inl)-dd*bec(jnl,i+1)
-                     else
-                      if (i.ne.n) aa(inl)=aa(inl)-f(i+1)*dd*bec(jnl,i+1)
-                     end if
-                  end do
-               end do
-            end do
-         end do
+                     IF(tens) THEN
+                      IF (i.NE.n) aa(inl)=aa(inl)-dd*bec(jnl,i+1)
+                     ELSE
+                      IF (i.NE.n) aa(inl)=aa(inl)-f(i+1)*dd*bec(jnl,i+1)
+                     END IF
+                  END DO
+               END DO
+            END DO
+         END DO
 !
-         do ig=1,ngw
+         DO ig=1,ngw
             dtemp(ig)=(0.,0.)
-         end do
-         call MXMA                                                      &
+         END DO
+         CALL MXMA                                                      &
      &        (betae,1,2*ngw,af,1,nhsa,dtemp,1,2*ngw,2*ngw,nhsa,1)
-         do ig=1,ngw
+         DO ig=1,ngw
             df(ig)=df(ig)+dtemp(ig)
-         end do
+         END DO
 !
-         do ig=1,ngw
+         DO ig=1,ngw
             dtemp(ig)=(0.,0.)
-         end do
-         call MXMA                                                      &
+         END DO
+         CALL MXMA                                                      &
      &        (betae,1,2*ngw,aa,1,nhsa,dtemp,1,2*ngw,2*ngw,nhsa,1)
-         do ig=1,ngw
+         DO ig=1,ngw
             da(ig)=da(ig)+dtemp(ig)
-         end do
-      endif
+         END DO
+      ENDIF
 
-      deallocate( psi )
+      DEALLOCATE( psi )
 !
-      call stop_clock( 'dforce' ) 
+      CALL stop_clock( 'dforce' ) 
 !
-      return
-      end subroutine dforce
+      RETURN
+      END SUBROUTINE dforce
 !
 !-----------------------------------------------------------------------
-      subroutine dotcsc(eigr,cp)
+      SUBROUTINE dotcsc(eigr,cp)
 !-----------------------------------------------------------------------
 !
-      use ions_base, only: nas => nax, na, nsp, nat
-      use io_global, only: stdout
-      use gvecw, only: ngw
-      use electrons_base, only: n => nbsp
-      use reciprocal_vectors, only: gstart
-      use cvan, only: ish, nvb
-      use uspp, only: nhsa=>nkb, qq
-      use uspp_param, only: nh
-      use mp, only: mp_sum
+      USE ions_base, ONLY: nas => nax, na, nsp, nat
+      USE io_global, ONLY: stdout
+      USE gvecw, ONLY: ngw
+      USE electrons_base, ONLY: n => nbsp
+      USE reciprocal_vectors, ONLY: gstart
+      USE cvan, ONLY: ish, nvb
+      USE uspp, ONLY: nhsa=>nkb, qq
+      USE uspp_param, ONLY: nh
+      USE mp, ONLY: mp_sum
 !
-      implicit none
+      IMPLICIT NONE
 !
-      complex(8)  eigr(ngw,nat), cp(ngw,n)
+      COMPLEX(8)  eigr(ngw,nat), cp(ngw,n)
 ! local variables
-      real(8) rsum, csc(n) ! automatic array
-      complex(8) temp(ngw) ! automatic array
+      REAL(8) rsum, csc(n) ! automatic array
+      COMPLEX(8) temp(ngw) ! automatic array
  
-      real(8), allocatable::  becp(:,:)
-      integer i,kmax,nnn,k,ig,is,ia,iv,jv,inl,jnl
+      REAL(8), ALLOCATABLE::  becp(:,:)
+      INTEGER i,kmax,nnn,k,ig,is,ia,iv,jv,inl,jnl
 !
-      allocate(becp(nhsa,n))
+      ALLOCATE(becp(nhsa,n))
 !
 !     < beta | phi > is real. only the i lowest:
 !
-      nnn=min(12,n)
-      do i=nnn,1,-1
+      nnn=MIN(12,n)
+      DO i=nnn,1,-1
          kmax=i
-         call nlsm1(i,1,nvb,eigr,cp,becp)
+         CALL nlsm1(i,1,nvb,eigr,cp,becp)
 !
-         do k=1,kmax
-            do ig=1,ngw
+         DO k=1,kmax
+            DO ig=1,ngw
                temp(ig)=CONJG(cp(ig,k))*cp(ig,i)
-            end do
+            END DO
             csc(k)=2.*DBLE(SUM(temp))
-            if (gstart == 2) csc(k)=csc(k)-DBLE(temp(1))
-         end do
+            IF (gstart == 2) csc(k)=csc(k)-DBLE(temp(1))
+         END DO
 
-         call mp_sum( csc( 1:kmax ) )
+         CALL mp_sum( csc( 1:kmax ) )
 
-         do k=1,kmax
+         DO k=1,kmax
             rsum=0.
-            do is=1,nvb
-               do iv=1,nh(is)
-                  do jv=1,nh(is)
-                     do ia=1,na(is)
+            DO is=1,nvb
+               DO iv=1,nh(is)
+                  DO jv=1,nh(is)
+                     DO ia=1,na(is)
                         inl=ish(is)+(iv-1)*na(is)+ia
                         jnl=ish(is)+(jv-1)*na(is)+ia
                         rsum = rsum +                                    &
      &                   qq(iv,jv,is)*becp(inl,i)*becp(jnl,k)
-                     end do
-                  end do
-               end do
-            end do
+                     END DO
+                  END DO
+               END DO
+            END DO
             csc(k)=csc(k)+rsum
-         end do
+         END DO
 !
          WRITE( stdout,'(a,12f18.15)')' dotcsc = ',(csc(k),k=1,i)
 !
-      end do
+      END DO
       WRITE( stdout,*)
 !
-      deallocate(becp)
+      DEALLOCATE(becp)
 !
-      return
-      end subroutine dotcsc
+      RETURN
+      END SUBROUTINE dotcsc
 !-----------------------------------------------------------------------
-      subroutine drhov(irb,eigrb,rhovan,rhog,rhor)
+      SUBROUTINE drhov(irb,eigrb,rhovan,rhog,rhor)
 !-----------------------------------------------------------------------
 !     this routine calculates arrays drhog drhor, derivatives wrt h of:
 !
@@ -899,408 +899,408 @@
 !     On input rhor and rhog must contain the smooth part only !!!
 !     Output in module derho (drhor, drhog)
 !
-      use kinds, only: dp
-      use control_flags, only: iprint
-      use parameters, only: natx, nsx
-      use ions_base, only: na, nsp, nat, nas => nax
-      use cvan
-      use uspp_param, only: nhm, nh
-      use grid_dimensions, only: nr1, nr2, nr3, &
+      USE kinds, ONLY: dp
+      USE control_flags, ONLY: iprint
+      USE parameters, ONLY: natx, nsx
+      USE ions_base, ONLY: na, nsp, nat, nas => nax
+      USE cvan
+      USE uspp_param, ONLY: nhm, nh
+      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
-      use electrons_base, only: nspin
-      use gvecb
-      use gvecp, only: ng => ngm
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
+      USE electrons_base, ONLY: nspin
+      USE gvecb
+      USE gvecp, ONLY: ng => ngm
+      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
-      use cell_base, only: ainv
-      use qgb_mod
-      use para_mod
-      use cdvan
-      use derho
-      use dqgb_mod
-      use recvecs_indexes, only: nm, np
+      USE cell_base, ONLY: ainv
+      USE qgb_mod
+      USE para_mod
+      USE cdvan
+      USE derho
+      USE dqgb_mod
+      USE recvecs_indexes, ONLY: nm, np
 
-      implicit none
+      IMPLICIT NONE
 ! input
-      integer, intent(in) ::  irb(3,nat)
-      real(8), intent(in)::  rhor(nnr,nspin)
-      real(8) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
-      complex(8), intent(in)::  eigrb(ngb,nat), rhog(ng,nspin)
+      INTEGER, INTENT(in) ::  irb(3,nat)
+      REAL(8), INTENT(in)::  rhor(nnr,nspin)
+      REAL(8) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
+      COMPLEX(8), INTENT(in)::  eigrb(ngb,nat), rhog(ng,nspin)
 ! local
-      integer i, j, isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,   &
+      INTEGER i, j, isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,   &
      &     isa, ia, ir, irb3, imin3, imax3
-      real(8) sum, dsum
-      complex(8) fp, fm, ci
-      complex(8), allocatable :: v(:)
-      complex(8), allocatable:: dqgbt(:,:)
-      complex(8), allocatable :: qv(:)
+      REAL(8) sum, dsum
+      COMPLEX(8) fp, fm, ci
+      COMPLEX(8), ALLOCATABLE :: v(:)
+      COMPLEX(8), ALLOCATABLE:: dqgbt(:,:)
+      COMPLEX(8), ALLOCATABLE :: qv(:)
 !
 !
-      do j=1,3
-         do i=1,3
-            do iss=1,nspin
-               do ir=1,nnr
+      DO j=1,3
+         DO i=1,3
+            DO iss=1,nspin
+               DO ir=1,nnr
                   drhor(ir,iss,i,j)=-rhor(ir,iss)*ainv(j,i)
-               end do
-               do ig=1,ng
+               END DO
+               DO ig=1,ng
                   drhog(ig,iss,i,j)=-rhog(ig,iss)*ainv(j,i)
-               end do
-            end do
-         end do
-      end do
+               END DO
+            END DO
+         END DO
+      END DO
 !
-      if (nvb.eq.0) return
+      IF (nvb.EQ.0) RETURN
 !
-      allocate( v( nnr ) )
-      allocate( qv( nnrb ) )
-      allocate( dqgbt( ngb, 2 ) )
+      ALLOCATE( v( nnr ) )
+      ALLOCATE( qv( nnrb ) )
+      ALLOCATE( dqgbt( ngb, 2 ) )
 
       ci=(0.,1.)
 !
-      if(nspin.eq.1) then
+      IF(nspin.EQ.1) THEN
 !     ------------------------------------------------------------------
 !     nspin=1 : two fft at a time, one per atom, if possible
 !     ------------------------------------------------------------------
-         do i=1,3
-            do j=1,3
+         DO i=1,3
+            DO j=1,3
 !
                v(:) = (0.d0, 0.d0)
 !
                iss=1
                isa=1
-               do is=1,nvb
+               DO is=1,nvb
 #ifdef __PARA
-                  do ia=1,na(is)
+                  DO ia=1,na(is)
                      nfft=1
                      irb3=irb(3,isa)
-                     call parabox(nr3b,irb3,nr3,imin3,imax3)
-                     if (imax3-imin3+1.le.0) go to 15
+                     CALL parabox(nr3b,irb3,nr3,imin3,imax3)
+                     IF (imax3-imin3+1.LE.0) go to 15
 #else
-                  do ia=1,na(is),2
+                  DO ia=1,na(is),2
                      nfft=2
 #endif
                      dqgbt(:,:) = (0.d0, 0.d0) 
-                     if (ia.eq.na(is)) nfft=1
+                     IF (ia.EQ.na(is)) nfft=1
 !
 !  nfft=2 if two ffts at the same time are performed
 !
-                     do ifft=1,nfft
+                     DO ifft=1,nfft
                         ijv=0
-                        do iv=1,nh(is)
-                           do jv=iv,nh(is)
+                        DO iv=1,nh(is)
+                           DO jv=iv,nh(is)
                               ijv=ijv+1
                               sum = rhovan(ijv,isa+ifft-1,iss)
                               dsum=drhovan(ijv,isa+ifft-1,iss,i,j)
-                              if(iv.ne.jv) then
+                              IF(iv.NE.jv) THEN
                                  sum =2.*sum
                                  dsum=2.*dsum
-                              endif
-                              do ig=1,ngb
+                              ENDIF
+                              DO ig=1,ngb
                                  dqgbt(ig,ifft)=dqgbt(ig,ifft) +        &
      &                                (sum*dqgb(ig,ijv,is,i,j) +        &
      &                                dsum*qgb(ig,ijv,is) )
-                              end do
-                           end do
-                        end do
-                     end do
+                              END DO
+                           END DO
+                        END DO
+                     END DO
 !     
 ! add structure factor
 !
                      qv(:) = (0.d0, 0.d0)
-                     if(nfft.eq.2) then
-                        do ig=1,ngb
+                     IF(nfft.EQ.2) THEN
+                        DO ig=1,ngb
                            qv(npb(ig)) = eigrb(ig,isa   )*dqgbt(ig,1)  &
      &                        + ci*      eigrb(ig,isa+1 )*dqgbt(ig,2)
                            qv(nmb(ig))=                                 &
      &                             CONJG(eigrb(ig,isa  )*dqgbt(ig,1)) &
      &                        + ci*CONJG(eigrb(ig,isa+1)*dqgbt(ig,2))
-                        end do
-                     else
-                        do ig=1,ngb
+                        END DO
+                     ELSE
+                        DO ig=1,ngb
                            qv(npb(ig)) = eigrb(ig,isa)*dqgbt(ig,1)
                            qv(nmb(ig)) =                                &
      &                             CONJG(eigrb(ig,isa)*dqgbt(ig,1))
-                        end do
-                     endif
+                        END DO
+                     ENDIF
 !
-                     call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+                     CALL ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
 !
 !  qv = US contribution in real space on box grid
 !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
 !
 !  add qv(r) to v(r), in real space on the dense grid
 !
-                     call box2grid(irb(1,isa),1,qv,v)
-                     if (nfft.eq.2) call box2grid(irb(1,isa+1),2,qv,v)
+                     CALL box2grid(irb(1,isa),1,qv,v)
+                     IF (nfft.EQ.2) CALL box2grid(irb(1,isa+1),2,qv,v)
   15                 isa=isa+nfft
 !
-                  end do
-               end do
+                  END DO
+               END DO
 !
-               do ir=1,nnr
+               DO ir=1,nnr
                   drhor(ir,iss,i,j)=drhor(ir,iss,i,j)+DBLE(v(ir))
-               end do
+               END DO
 !
-               call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+               CALL fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
-               do ig=1,ng
+               DO ig=1,ng
                   drhog(ig,iss,i,j)=drhog(ig,iss,i,j)+v(np(ig))
-               end do
+               END DO
 !
-            enddo
-         enddo
+            ENDDO
+         ENDDO
 !
-      else
+      ELSE
 !     ------------------------------------------------------------------
 !     nspin=2: two fft at a time, one for spin up and one for spin down
 !     ------------------------------------------------------------------
          isup=1
          isdw=2
-         do i=1,3
-            do j=1,3
+         DO i=1,3
+            DO j=1,3
                v(:) = (0.d0, 0.d0)
                isa=1
-               do is=1,nvb
-                  do ia=1,na(is)
+               DO is=1,nvb
+                  DO ia=1,na(is)
 #ifdef __PARA
                      irb3=irb(3,isa)
-                     call parabox(nr3b,irb3,nr3,imin3,imax3)
-                     if (imax3-imin3+1.le.0) go to 25
+                     CALL parabox(nr3b,irb3,nr3,imin3,imax3)
+                     IF (imax3-imin3+1.LE.0) go to 25
 #endif
-                     do iss=1,2
+                     DO iss=1,2
                         dqgbt(:,iss) = (0.d0, 0.d0)
                         ijv=0
-                        do iv= 1,nh(is)
-                           do jv=iv,nh(is)
+                        DO iv= 1,nh(is)
+                           DO jv=iv,nh(is)
                               ijv=ijv+1
                               sum=rhovan(ijv,isa,iss)
                               dsum =drhovan(ijv,isa,iss,i,j)
-                              if(iv.ne.jv) then
+                              IF(iv.NE.jv) THEN
                                  sum =2.*sum
                                  dsum=2.*dsum
-                              endif
-                              do ig=1,ngb
+                              ENDIF
+                              DO ig=1,ngb
                                  dqgbt(ig,iss)=dqgbt(ig,iss)  +         &
      &                               (sum*dqgb(ig,ijv,is,i,j) +         &
      &                               dsum*qgb(ig,ijv,is))
-                              end do
-                           end do
-                        end do
-                     end do
+                              END DO
+                           END DO
+                        END DO
+                     END DO
 !     
 ! add structure factor
 !
                      qv(:) = (0.d0, 0.d0)
-                     do ig=1,ngb
+                     DO ig=1,ngb
                         qv(npb(ig))= eigrb(ig,isa)*dqgbt(ig,1)        &
      &                    + ci*      eigrb(ig,isa)*dqgbt(ig,2)
                         qv(nmb(ig))= CONJG(eigrb(ig,isa)*dqgbt(ig,1)) &
      &                    +       ci*CONJG(eigrb(ig,isa)*dqgbt(ig,2))
-                     end do
+                     END DO
 !
-                     call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+                     CALL ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
 !
 !  qv is the now the US augmentation charge for atomic species is
 !  and atom ia: real(qv)=spin up, imag(qv)=spin down
 !
 !  add qv(r) to v(r), in real space on the dense grid
 !
-                     call box2grid2(irb(1,isa),qv,v)
+                     CALL box2grid2(irb(1,isa),qv,v)
   25                 isa=isa+1
-                  end do
-               end do
+                  END DO
+               END DO
 !
-               do ir=1,nnr
+               DO ir=1,nnr
                   drhor(ir,isup,i,j) = drhor(ir,isup,i,j) + DBLE(v(ir))
                   drhor(ir,isdw,i,j) = drhor(ir,isdw,i,j) +AIMAG(v(ir))
-               enddo
+               ENDDO
 !
-               call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-               do ig=1,ng
+               CALL fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+               DO ig=1,ng
                   fp=v(np(ig))+v(nm(ig))
                   fm=v(np(ig))-v(nm(ig))
                   drhog(ig,isup,i,j) = drhog(ig,isup,i,j) +             &
      &                 0.5*CMPLX( DBLE(fp),AIMAG(fm))
                   drhog(ig,isdw,i,j) = drhog(ig,isdw,i,j) +             &
      &                 0.5*CMPLX(AIMAG(fp),-DBLE(fm))
-               end do
+               END DO
 !
-            end do
-         end do
-      endif
-      deallocate(dqgbt)
-      deallocate( v )
-      deallocate( qv )
+            END DO
+         END DO
+      ENDIF
+      DEALLOCATE(dqgbt)
+      DEALLOCATE( v )
+      DEALLOCATE( qv )
 !
-      return
-      end subroutine drhov
+      RETURN
+      END SUBROUTINE drhov
 
 !
 !-----------------------------------------------------------------------
-      real(8) function enkin(c)
+      REAL(8) FUNCTION enkin(c)
 !-----------------------------------------------------------------------
 !
 ! calculation of kinetic energy term
 !
-      use constants, only: pi, fpi
-      use electrons_base, only: nx => nbspx, n => nbsp, f
-      use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart
-      use gvecw, only: ggp
-      use mp, only: mp_sum
-      use cell_base, only: tpiba2
+      USE constants, ONLY: pi, fpi
+      USE electrons_base, ONLY: nx => nbspx, n => nbsp, f
+      USE gvecw, ONLY: ngw
+      USE reciprocal_vectors, ONLY: gstart
+      USE gvecw, ONLY: ggp
+      USE mp, ONLY: mp_sum
+      USE cell_base, ONLY: tpiba2
 
-      implicit none
+      IMPLICIT NONE
 ! input
-      complex(8) c(ngw,nx)
+      COMPLEX(8) c(ngw,nx)
 ! local
-      integer ig, i
-      real(8) sk(n)  ! automatic array
+      INTEGER ig, i
+      REAL(8) sk(n)  ! automatic array
 !
 !
-      do i=1,n
+      DO i=1,n
          sk(i)=0.0
-         do ig=gstart,ngw
+         DO ig=gstart,ngw
             sk(i)=sk(i)+DBLE(CONJG(c(ig,i))*c(ig,i))*ggp(ig)
-         end do
-      end do
+         END DO
+      END DO
 
-      call mp_sum( sk(1:n) )
+      CALL mp_sum( sk(1:n) )
 
       enkin=0.0
-      do i=1,n
+      DO i=1,n
          enkin=enkin+f(i)*sk(i)
-      end do
+      END DO
       enkin=enkin*tpiba2
 !
-      return
-      end function enkin
+      RETURN
+      END FUNCTION enkin
 !
 !
 !-----------------------------------------------------------------------
-      subroutine force_ion(tau0,esr,fion,dsr)
+      SUBROUTINE force_ion(tau0,esr,fion,dsr)
 !-----------------------------------------------------------------------
 !
 !     forces on ions, ionic term in real space (also stress if requested)
 !
-      use parameters, only: nsx, natx
-      use control_flags, only: iprint, tpre
-      use constants, only: pi, fpi
-      use cell_base, only: ainv, a1, a2, a3
-      use ions_base, only: nsp, na, rcmax, zv
-      implicit none
+      USE parameters, ONLY: nsx, natx
+      USE control_flags, ONLY: iprint, tpre
+      USE constants, ONLY: pi, fpi
+      USE cell_base, ONLY: ainv, a1, a2, a3
+      USE ions_base, ONLY: nsp, na, rcmax, zv
+      IMPLICIT NONE
 ! input
-      real(8) tau0(3,natx)
+      REAL(8) tau0(3,natx)
 ! output
-      real(8) fion(3,natx), dsr(3,3), esr
+      REAL(8) fion(3,natx), dsr(3,3), esr
 ! local variables
-      integer i,j,k,l,m, ii, lax, inf, isak, isaj
-      real(8) rlm(3), rckj, rlmn, arg, addesr, addpre, repand, fxx
-      real(8), external :: erfc
+      INTEGER i,j,k,l,m, ii, lax, inf, isak, isaj
+      REAL(8) rlm(3), rckj, rlmn, arg, addesr, addpre, repand, fxx
+      REAL(8), EXTERNAL :: erfc
 !
 !
       esr=0.d0
-      if(tpre) dsr=0.d0
+      IF(tpre) dsr=0.d0
 !
       isak = 0
-      do k=1,nsp
+      DO k=1,nsp
          isaj = 0
-         do j = 1, k-1
+         DO j = 1, k-1
            isaj = isaj + na(j)
-         end do
-         do j=k,nsp
-            rckj=sqrt(rcmax(k)**2+rcmax(j)**2)
+         END DO
+         DO j=k,nsp
+            rckj=SQRT(rcmax(k)**2+rcmax(j)**2)
             lax=na(k)
-            if(k.eq.j) lax=lax-1
+            IF(k.EQ.j) lax=lax-1
 !
-            do l=1,lax
+            DO l=1,lax
                inf=1
-               if(k.eq.j) inf=l+1
+               IF(k.EQ.j) inf=l+1
 !
-               do m=inf,na(j)
+               DO m=inf,na(j)
                   rlm(1) = tau0(1,l + isak) - tau0(1,m + isaj)
                   rlm(2) = tau0(2,l + isak) - tau0(2,m + isaj)
                   rlm(3) = tau0(3,l + isak) - tau0(3,m + isaj)
-                  call pbc(rlm,a1,a2,a3,ainv,rlm)
+                  CALL pbc(rlm,a1,a2,a3,ainv,rlm)
 !
-                  rlmn=sqrt(rlm(1)**2+rlm(2)**2+rlm(3)**2)
+                  rlmn=SQRT(rlm(1)**2+rlm(2)**2+rlm(3)**2)
 !
                   arg=rlmn/rckj
                   addesr=zv(k)*zv(j)*erfc(arg)/rlmn
                   esr=esr+addesr
-                  addpre=2.d0*zv(k)*zv(j)*exp(-arg*arg)/rckj/sqrt(pi)
+                  addpre=2.d0*zv(k)*zv(j)*EXP(-arg*arg)/rckj/SQRT(pi)
                   repand=(addesr+addpre)/rlmn/rlmn
 !
-                  do i=1,3
+                  DO i=1,3
                      fxx=repand*rlm(i)
                      fion(i,l+isak)=fion(i,l+isak)+fxx
                      fion(i,m+isaj)=fion(i,m+isaj)-fxx
-                     if(tpre)then
-                        do ii=1,3
+                     IF(tpre)THEN
+                        DO ii=1,3
                            dsr(i,ii)=dsr(i,ii)-                         &
      &                             repand*rlm(i)*rlm(1)*ainv(ii,1)-     &
      &                             repand*rlm(i)*rlm(2)*ainv(ii,2)-     &
      &                             repand*rlm(i)*rlm(3)*ainv(ii,3)
-                        end do
-                     endif
-                  end do
-               end do
-            end do
+                        END DO
+                     ENDIF
+                  END DO
+               END DO
+            END DO
             isaj = isaj + na(j)
-         end do
+         END DO
          isak = isak + na(k)
-      end do
+      END DO
 
-      return
-      end subroutine force_ion
+      RETURN
+      END SUBROUTINE force_ion
 !
 !-----------------------------------------------------------------------
-      subroutine force_ps(rhotemp,rhog,vtemp,ei1,ei2,ei3,fion1)
+      SUBROUTINE force_ps(rhotemp,rhog,vtemp,ei1,ei2,ei3,fion1)
 !-----------------------------------------------------------------------
 !
 ! Contribution to ionic forces from local pseudopotential
 !
-      use kinds, only: dp
-      use constants, only: pi, fpi
-      use electrons_base, only: nspin
-      use gvecs
-      use gvecp, only: ng => ngm
-      use reciprocal_vectors, only: gstart, gx, mill_l, g
-      use cell_base, only: omega, tpiba, tpiba2
-      use ions_base, only: nsp, na, nas => nax, nat
-      use grid_dimensions, only: nr1, nr2, nr3
-      use parameters, only: nsx, natx
-      use local_pseudo, only: vps, rhops
+      USE kinds, ONLY: dp
+      USE constants, ONLY: pi, fpi
+      USE electrons_base, ONLY: nspin
+      USE gvecs
+      USE gvecp, ONLY: ng => ngm
+      USE reciprocal_vectors, ONLY: gstart, gx, mill_l, g
+      USE cell_base, ONLY: omega, tpiba, tpiba2
+      USE ions_base, ONLY: nsp, na, nas => nax, nat
+      USE grid_dimensions, ONLY: nr1, nr2, nr3
+      USE parameters, ONLY: nsx, natx
+      USE local_pseudo, ONLY: vps, rhops
 !
-      implicit none
+      IMPLICIT NONE
 ! input
-      complex(8) rhotemp(ng), rhog(ng,nspin), vtemp(ng),           &
+      COMPLEX(8) rhotemp(ng), rhog(ng,nspin), vtemp(ng),           &
      &           ei1(-nr1:nr1,nat),                                 &
      &           ei2(-nr2:nr2,nat),                                 &
      &           ei3(-nr3:nr3,nat)
 ! output
-      real(8) fion1(3,natx)
+      REAL(8) fion1(3,natx)
 ! local
-      integer ig, is, isa, ism, ia, ix, iss, isup, isdw
-      integer i, j, k
-      real(8)  wz
-      complex(8) eigrx, vcgs, cnvg, cvn
+      INTEGER ig, is, isa, ism, ia, ix, iss, isup, isdw
+      INTEGER i, j, k
+      REAL(8)  wz
+      COMPLEX(8) eigrx, vcgs, cnvg, cvn
 !
 !     wz = factor for g.neq.0 because of c*(g)=c(-g)
 !
       wz=2.0
-      do is=1,nsp
+      DO is=1,nsp
          isa=0
-         do ism=1,is-1
+         DO ism=1,is-1
             isa=isa+na(ism)
-         end do
-         do ia=1,na(is)
+         END DO
+         DO ia=1,na(is)
             isa=isa+1
-            do ix=1,3
-               if(nspin.eq.1)then
+            DO ix=1,3
+               IF(nspin.EQ.1)THEN
                   iss=1
-                  if (gstart == 2) vtemp(1)=0.0
-                  do ig=gstart,ngs
+                  IF (gstart == 2) vtemp(1)=0.0
+                  DO ig=gstart,ngs
                      vcgs=CONJG(rhotemp(ig))*fpi/(tpiba2*g(ig))
                      cnvg=rhops(ig,is)*vcgs
                      cvn=vps(ig,is)*CONJG(rhog(ig,iss))
@@ -1309,12 +1309,12 @@
                      k = mill_l(3,ig)
                      eigrx=ei1(i,isa)*ei2(j,isa)*ei3(k,isa)
                      vtemp(ig)=eigrx*(cnvg+cvn)*CMPLX(0.d0,gx(ix,ig)) 
-                  end do
-               else
+                  END DO
+               ELSE
                   isup=1
                   isdw=2
-                  if (gstart == 2) vtemp(1)=0.0
-                  do ig=gstart,ngs
+                  IF (gstart == 2) vtemp(1)=0.0
+                  DO ig=gstart,ngs
                      vcgs=CONJG(rhotemp(ig))*fpi/(tpiba2*g(ig))
                      cnvg=rhops(ig,is)*vcgs
                      cvn=vps(ig,is)*CONJG(rhog(ig,isup)                 &
@@ -1324,67 +1324,67 @@
                      k = mill_l(3,ig)
                      eigrx=ei1(i,isa)*ei2(j,isa)*ei3(k,isa)
                      vtemp(ig)=eigrx*(cnvg+cvn)*CMPLX(0.d0,gx(ix,ig)) 
-                  end do
-               endif
+                  END DO
+               ENDIF
                fion1(ix,isa) = fion1(ix,isa) + tpiba*omega* wz*DBLE(SUM(vtemp))
-            end do
-         end do
-      end do
+            END DO
+         END DO
+      END DO
 !
-      return
-      end subroutine force_ps
+      RETURN
+      END SUBROUTINE force_ps
 !
 !-----------------------------------------------------------------------
-      subroutine gausin(eigr,cm)
+      SUBROUTINE gausin(eigr,cm)
 !-----------------------------------------------------------------------
 !
 ! initialize wavefunctions with gaussians - edit to fit your system
 !
-      use ions_base, only: nas => nax, na, nsp, nat
-      use electrons_base, only: n => nbsp
-      use gvecw, only: ngw
-      use reciprocal_vectors, only: gx, g
+      USE ions_base, ONLY: nas => nax, na, nsp, nat
+      USE electrons_base, ONLY: n => nbsp
+      USE gvecw, ONLY: ngw
+      USE reciprocal_vectors, ONLY: gx, g
 !
-      implicit none
+      IMPLICIT NONE
 !
-      complex(8) eigr(ngw,nat), cm(ngw,n)
-      real(8)    sigma, auxf
-      integer nband, is, ia, ig, isa
+      COMPLEX(8) eigr(ngw,nat), cm(ngw,n)
+      REAL(8)    sigma, auxf
+      INTEGER nband, is, ia, ig, isa
 !
       sigma=12.0
       nband=0
 !!!      do is=1,nsp
       isa = 0
       is=1
-         do ia=1,na(is)
+         DO ia=1,na(is)
 ! s-like gaussians
             nband=nband+1
-            do ig=1,ngw
-               auxf=exp(-g(ig)/sigma**2)
+            DO ig=1,ngw
+               auxf=EXP(-g(ig)/sigma**2)
                cm(ig,nband)=auxf*eigr(ig,ia+isa)
-            end do
+            END DO
 ! px-like gaussians
             nband=nband+1
-            do ig=1,ngw
-               auxf=exp(-g(ig)/sigma**2)
+            DO ig=1,ngw
+               auxf=EXP(-g(ig)/sigma**2)
                cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(1,ig)
-            end do
+            END DO
 ! py-like gaussians
             nband=nband+1
-            do ig=1,ngw
-               auxf=exp(-g(ig)/sigma**2)
+            DO ig=1,ngw
+               auxf=EXP(-g(ig)/sigma**2)
                cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(2,ig)
-            end do
+            END DO
 ! pz-like gaussians
             nband=nband+1
-            do ig=1,ngw
-               auxf=exp(-g(ig)/sigma**2)
+            DO ig=1,ngw
+               auxf=EXP(-g(ig)/sigma**2)
                cm(ig,nband)=auxf*eigr(ig,ia+isa)*gx(3,ig)
-            end do
-         end do
+            END DO
+         END DO
       isa = isa + na(is)
       is=2
-         do ia=1,na(is)
+         DO ia=1,na(is)
 ! s-like gaussians
 !            nband=nband+1
 !            do ig=1,ngw
@@ -1434,187 +1434,187 @@
 !               cm(ig,nband)=auxf*eigr(ig,ia+isa)*                        &
 !     &              (gx(1,ig)**2-gx(2,ig)**2)
 !            end do
-         end do
+         END DO
 !!!      end do
-      return
-      end subroutine gausin
+      RETURN
+      END SUBROUTINE gausin
 !            
 
 !-------------------------------------------------------------------------
-      subroutine gracsc(bec,betae,cp,i,csc)
+      SUBROUTINE gracsc(bec,betae,cp,i,csc)
 !-----------------------------------------------------------------------
 !     requires in input the updated bec(k) for k<i
 !     on output: bec(i) is recalculated
 !
-      use ions_base, only: na
-      use cvan, only :nvb, ish
-      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
-      use uspp_param, only:  nh
-      use electrons_base, only: n => nbsp, ispin => fspin, nx => nbspx
-      use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart
-      use mp, only: mp_sum
+      USE ions_base, ONLY: na
+      USE cvan, ONLY :nvb, ish
+      USE uspp, ONLY :nhsa=>nkb, nhsavb=>nkbus, qq
+      USE uspp_param, ONLY:  nh
+      USE electrons_base, ONLY: n => nbsp, ispin => fspin, nx => nbspx
+      USE gvecw, ONLY: ngw
+      USE reciprocal_vectors, ONLY: gstart
+      USE mp, ONLY: mp_sum
 !
-      implicit none
+      IMPLICIT NONE
 !
-      integer i
-      complex(8) betae(ngw,nhsa)
-      real(8)  bec(nhsa,n), cp(2,ngw,n)
-      real(8)  csc(nx)
-      integer k, kmax,ig, is, iv, jv, ia, inl, jnl
-      real(8) rsum, temp(ngw) ! automatic array
+      INTEGER i
+      COMPLEX(8) betae(ngw,nhsa)
+      REAL(8)  bec(nhsa,n), cp(2,ngw,n)
+      REAL(8)  csc(nx)
+      INTEGER k, kmax,ig, is, iv, jv, ia, inl, jnl
+      REAL(8) rsum, temp(ngw) ! automatic array
 !
 !     calculate csc(k)=<cp(i)|cp(k)>,  k<i
 !
       kmax=i-1
-      do k=1,kmax
+      DO k=1,kmax
          csc(k)=0.
-         if (ispin(i).eq.ispin(k)) then
-            do ig=1,ngw
+         IF (ispin(i).EQ.ispin(k)) THEN
+            DO ig=1,ngw
                temp(ig)=cp(1,ig,k)*cp(1,ig,i)+cp(2,ig,k)*cp(2,ig,i)
-            end do
+            END DO
             csc(k)=2.*SUM(temp)
-            if (gstart == 2) csc(k)=csc(k)-temp(1)
-         endif
-      end do
+            IF (gstart == 2) csc(k)=csc(k)-temp(1)
+         ENDIF
+      END DO
 
-      call mp_sum( csc( 1:kmax ) )
+      CALL mp_sum( csc( 1:kmax ) )
 
 !
 !     calculate bec(i)=<cp(i)|beta>
 !
-      do inl=1,nhsavb
-         do ig=1,ngw
+      DO inl=1,nhsavb
+         DO ig=1,ngw
             temp(ig)=cp(1,ig,i)* DBLE(betae(ig,inl))+             &
      &               cp(2,ig,i)*AIMAG(betae(ig,inl))
-         end do
+         END DO
          bec(inl,i)=2.*SUM(temp)
-         if (gstart == 2) bec(inl,i)= bec(inl,i)-temp(1)
-      end do
+         IF (gstart == 2) bec(inl,i)= bec(inl,i)-temp(1)
+      END DO
 
-      call mp_sum( bec( 1:nhsavb, i ) )
+      CALL mp_sum( bec( 1:nhsavb, i ) )
 !
 !     calculate csc(k)=<cp(i)|S|cp(k)>,  k<i
 !
-      do k=1,kmax
-         if (ispin(i).eq.ispin(k)) then
+      DO k=1,kmax
+         IF (ispin(i).EQ.ispin(k)) THEN
             rsum=0.
-            do is=1,nvb
-               do iv=1,nh(is)
-                  do jv=1,nh(is)
-                     if(abs(qq(iv,jv,is)).gt.1.e-5) then 
-                        do ia=1,na(is)
+            DO is=1,nvb
+               DO iv=1,nh(is)
+                  DO jv=1,nh(is)
+                     IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN 
+                        DO ia=1,na(is)
                            inl=ish(is)+(iv-1)*na(is)+ia
                            jnl=ish(is)+(jv-1)*na(is)+ia
                            rsum = rsum + qq(iv,jv,is)*bec(inl,i)*bec(jnl,k)
-                        end do
-                     endif
-                  end do
-               end do
-            end do
+                        END DO
+                     ENDIF
+                  END DO
+               END DO
+            END DO
             csc(k)=csc(k)+rsum
-         endif
-      end do
+         ENDIF
+      END DO
 !
 !     orthogonalized cp(i) : |cp(i)>=|cp(i)>-\sum_k<i csc(k)|cp(k)>
 !
 !     corresponing bec:  bec(i)=<cp(i)|beta>-csc(k)<cp(k)|beta>
 !
-      do k=1,kmax
-         do inl=1,nhsavb
+      DO k=1,kmax
+         DO inl=1,nhsavb
             bec(inl,i)=bec(inl,i)-csc(k)*bec(inl,k)
-         end do
-      end do
+         END DO
+      END DO
 !
-      return
-      end subroutine gracsc
+      RETURN
+      END SUBROUTINE gracsc
 !-------------------------------------------------------------------------
-      subroutine gram(betae,bec,cp)
+      SUBROUTINE gram(betae,bec,cp)
 !-----------------------------------------------------------------------
 !     gram-schmidt orthogonalization of the set of wavefunctions cp
 !
-      use uspp, only :nhsa=>nkb, nhsavb=> nkbus
-      use electrons_base, only: nx => nbspx, n => nbsp
-      use gvecw, only: ngw
+      USE uspp, ONLY :nhsa=>nkb, nhsavb=> nkbus
+      USE electrons_base, ONLY: nx => nbspx, n => nbsp
+      USE gvecw, ONLY: ngw
 !
-      implicit none
+      IMPLICIT NONE
 !
-      real(8)  bec(nhsa,n)
-      complex(8)   cp(ngw,n), betae(ngw,nhsa)
+      REAL(8)  bec(nhsa,n)
+      COMPLEX(8)   cp(ngw,n), betae(ngw,nhsa)
 !
-      real(8) :: anorm, cscnorm
-      real(8), allocatable :: csc( : )
-      integer :: i,k
-      external cscnorm
+      REAL(8) :: anorm, cscnorm
+      REAL(8), ALLOCATABLE :: csc( : )
+      INTEGER :: i,k
+      EXTERNAL cscnorm
 !
-      call start_clock( 'gram' )
+      CALL start_clock( 'gram' )
 
-      allocate( csc( nx ) )
+      ALLOCATE( csc( nx ) )
 !
-      do i=1,n
-         call gracsc(bec,betae,cp,i,csc)
+      DO i=1,n
+         CALL gracsc(bec,betae,cp,i,csc)
 !
 ! calculate orthogonalized cp(i) : |cp(i)>=|cp(i)>-\sum_k<i csc(k)|cp(k)>
 !
-         do k=1,i-1
-            call DAXPY(2*ngw,-csc(k),cp(1,k),1,cp(1,i),1)
-         end do
+         DO k=1,i-1
+            CALL DAXPY(2*ngw,-csc(k),cp(1,k),1,cp(1,i),1)
+         END DO
          anorm =cscnorm(bec,cp,i)
-         call DSCAL(2*ngw,1.0/anorm,cp(1,i),1)
+         CALL DSCAL(2*ngw,1.0/anorm,cp(1,i),1)
 !
 !         these are the final bec's
 !
-         call DSCAL(nhsavb,1.0/anorm,bec(1,i),1)
-      end do
+         CALL DSCAL(nhsavb,1.0/anorm,bec(1,i),1)
+      END DO
 !
-      deallocate( csc )
+      DEALLOCATE( csc )
 
-      call stop_clock( 'gram' )
+      CALL stop_clock( 'gram' )
 !
-      return
-      end subroutine gram
+      RETURN
+      END SUBROUTINE gram
 !
 !-----------------------------------------------------------------------
-      subroutine herman_skillman_grid(mesh,z,cmesh,r)
+      SUBROUTINE herman_skillman_grid(mesh,z,cmesh,r)
 !-----------------------------------------------------------------------
 !
-      implicit none
+      IMPLICIT NONE
 !
-      integer mesh
-      real(8) z, cmesh, r(mesh)
+      INTEGER mesh
+      REAL(8) z, cmesh, r(mesh)
 !
-      real(8) deltax
-      integer nblock,i,j,k
+      REAL(8) deltax
+      INTEGER nblock,i,j,k
 !
       nblock = mesh/40
       i=1
       r(i)=0.0
       cmesh=0.88534138/z**(1.0/3.0)
       deltax=0.0025*cmesh
-      do j=1,nblock
-         do k=1,40
+      DO j=1,nblock
+         DO k=1,40
             i=i+1
             r(i)=r(i-1)+deltax
-         end do
+         END DO
          deltax=deltax+deltax
-      end do
+      END DO
 !
-      return
-      end subroutine herman_skillman_grid
+      RETURN
+      END SUBROUTINE herman_skillman_grid
 !
 !-----------------------------------------------------------------------
-      subroutine herman_skillman_int(mesh,cmesh,func,asum)
+      SUBROUTINE herman_skillman_int(mesh,cmesh,func,asum)
 !-----------------------------------------------------------------------
 !     simpsons rule integration for herman skillman mesh
 !     mesh - # of mesh points
 !     c    - 0.8853418/z**(1/3.)
 !
-      implicit none
-      integer mesh
-      real(8) cmesh, func(mesh), asum
+      IMPLICIT NONE
+      INTEGER mesh
+      REAL(8) cmesh, func(mesh), asum
 !
-      integer i, j, k, i1, nblock
-      real(8) a1, a2e, a2o, a2es, h
+      INTEGER i, j, k, i1, nblock
+      REAL(8) a1, a2e, a2o, a2es, h
 !
       a1=0.0
       a2e=0.0
@@ -1623,8 +1623,8 @@
       nblock=mesh/40
       i=1
       func(1)=0.0
-      do j=1,nblock
-         do k=1,20
+      DO j=1,nblock
+         DO k=1,20
             i=i+2
             i1=i-1
             a2es=a2e
@@ -1634,40 +1634,40 @@
             func(i1)=asum+a1*h
             a1=a1-a2es+8.0*a2o+5.0*a2e
             func(i)=asum+a1*h
-         end do
+         END DO
          asum=func(i)
          a1=0.0
          h=h+h
-      end do
+      END DO
 !
-      return
-      end subroutine herman_skillman_int
+      RETURN
+      END SUBROUTINE herman_skillman_int
 !
 !-----------------------------------------------------------------------
-      subroutine initbox ( tau0, taub, irb )
+      SUBROUTINE initbox ( tau0, taub, irb )
 !-----------------------------------------------------------------------
 !
 !     sets the indexes irb and positions taub for the small boxes 
 !     around atoms
 !
-      use parameters, only: natx, nsx
-      use ions_base, only: nsp, na, nat
-      use grid_dimensions, only: nr1, nr2, nr3
-      use cell_base, only: ainv, a1, a2, a3
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
-      use control_flags, only: iprsta
-      use cvan, only: nvb
-      use io_global, only: stdout
+      USE parameters, ONLY: natx, nsx
+      USE ions_base, ONLY: nsp, na, nat
+      USE grid_dimensions, ONLY: nr1, nr2, nr3
+      USE cell_base, ONLY: ainv, a1, a2, a3
+      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b
+      USE control_flags, ONLY: iprsta
+      USE cvan, ONLY: nvb
+      USE io_global, ONLY: stdout
 
-      implicit none
+      IMPLICIT NONE
 ! input
-      real(8), intent(in):: tau0(3,natx)
+      REAL(8), INTENT(in):: tau0(3,natx)
 ! output
-      integer, intent(out):: irb(3,nat)
-      real(8), intent(out):: taub(3,natx)
+      INTEGER, INTENT(out):: irb(3,nat)
+      REAL(8), INTENT(out):: taub(3,natx)
 ! local
-      real(8) x(3), xmod
-      integer nr(3), nrb(3), xint, is, ia, i, isa
+      REAL(8) x(3), xmod
+      INTEGER nr(3), nrb(3), xint, is, ia, i, isa
 !
       nr (1)=nr1
       nr (2)=nr2
@@ -1677,11 +1677,11 @@
       nrb(3)=nr3b
 !
       isa = 0
-      do is=1,nsp
-         do ia=1,na(is)
+      DO is=1,nsp
+         DO ia=1,na(is)
            isa = isa + 1
 !
-            do i=1,3
+            DO i=1,3
 !
 ! bring atomic positions to crystal axis
 !
@@ -1691,19 +1691,19 @@
 !
 ! bring x in the range between 0 and 1
 !
-               x(i) = mod(x(i),1.d0)
-               if (x(i).lt.0.d0) x(i)=x(i)+1.d0
+               x(i) = MOD(x(i),1.d0)
+               IF (x(i).LT.0.d0) x(i)=x(i)+1.d0
 !
 ! case of nrb(i) even
 !
-               if (mod(nrb(i),2).eq.0) then
+               IF (MOD(nrb(i),2).EQ.0) THEN
 !
 ! find irb = index of the grid point at the corner of the small box
 !           (the indices of the small box run from irb to irb+nrb-1)
 !
-                  xint=int(x(i)*nr(i))
+                  xint=INT(x(i)*nr(i))
                   irb (i,isa)=xint+1-nrb(i)/2+1
-                  if(irb(i,isa).lt.1) irb(i,isa)=irb(i,isa)+nr(i)
+                  IF(irb(i,isa).LT.1) irb(i,isa)=irb(i,isa)+nr(i)
 !
 ! x(i) are the atomic positions in crystal coordinates, where the
 ! "crystal lattice" is the small box lattice and the origin is at
@@ -1711,44 +1711,44 @@
 !
                   xmod=x(i)*nr(i)-xint
                   x(i)=(xmod+nrb(i)/2-1)/nr(i)
-               else
+               ELSE
 !
 ! case of nrb(i) odd - see above for comments
 !
-                  xint=nint(x(i)*nr(i))
+                  xint=NINT(x(i)*nr(i))
                   irb (i,isa)=xint+1-(nrb(i)-1)/2
-                  if(irb(i,isa).lt.1) irb(i,isa)=irb(i,isa)+nr(i)
+                  IF(irb(i,isa).LT.1) irb(i,isa)=irb(i,isa)+nr(i)
                   xmod=x(i)*nr(i)-xint
                   x(i)=(xmod+(nrb(i)-1)/2)/nr(i)
-               end if
-            end do
+               END IF
+            END DO
 !
 ! bring back taub in cartesian coordinates
 !
-            do i=1,3
+            DO i=1,3
                taub(i,isa)= x(1)*a1(i) + x(2)*a2(i) + x(3)*a3(i)
-            end do
-         end do
-      end do
+            END DO
+         END DO
+      END DO
 
-      if( iprsta > 2 ) then
+      IF( iprsta > 2 ) THEN
            isa = 1
-           do is=1,nvb
+           DO is=1,nvb
               WRITE( stdout,'(/,2x,''species= '',i2)') is
-              do ia=1,na(is)
+              DO ia=1,na(is)
                  WRITE( stdout,2000) ia, (irb(i,isa),i=1,3)
-2000             format(2x,'atom= ',i3,' irb1= ',i3,' irb2= ',i3,' irb3= ',i3)
+2000             FORMAT(2x,'atom= ',i3,' irb1= ',i3,' irb2= ',i3,' irb3= ',i3)
                  isa = isa + 1
-               end do
-            end do
-      endif
+               END DO
+            END DO
+      ENDIF
 
 !
-      return
-      end subroutine initbox
+      RETURN
+      END SUBROUTINE initbox
 !
 !-------------------------------------------------------------------------
-      subroutine newd(vr,irb,eigrb,rhovan,fion)
+      SUBROUTINE newd(vr,irb,eigrb,rhovan,fion)
 !-----------------------------------------------------------------------
 !     this routine calculates array deeq:
 !         deeq_i,lm = \int V_eff(r) q_i,lm(r) dr
@@ -1757,151 +1757,151 @@
 !     where
 !         rho_lm = \sum_j f_j <psi_j|beta_l><beta_m|psi_j>
 !
-      use kinds, only: dp
-      use uspp_param, only: nh, nhm
-      use uspp, only: deeq
-      use cvan, only: nvb
-      use ions_base, only: nas => nax, nat, nsp, na
-      use parameters, only: natx, nsx
-      use constants, only: pi, fpi
-      use grid_dimensions, only: nr3, nnr => nnrx
-      use gvecb
-      use small_box, only: omegab, tpibab
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
+      USE kinds, ONLY: dp
+      USE uspp_param, ONLY: nh, nhm
+      USE uspp, ONLY: deeq
+      USE cvan, ONLY: nvb
+      USE ions_base, ONLY: nas => nax, nat, nsp, na
+      USE parameters, ONLY: natx, nsx
+      USE constants, ONLY: pi, fpi
+      USE grid_dimensions, ONLY: nr3, nnr => nnrx
+      USE gvecb
+      USE small_box, ONLY: omegab, tpibab
+      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
-      use qgb_mod
-      use electrons_base, only: nspin
-      use control_flags, only: iprint, thdyn, tfor, tprnfor
-      use para_mod
-      use mp, only: mp_sum
+      USE qgb_mod
+      USE electrons_base, ONLY: nspin
+      USE control_flags, ONLY: iprint, thdyn, tfor, tprnfor
+      USE para_mod
+      USE mp, ONLY: mp_sum
 !
-      implicit none
+      IMPLICIT NONE
 ! input
-      integer irb(3,nat)
-      real(8) rhovan(nhm*(nhm+1)/2,nat,nspin)
-      complex(8) eigrb(ngb,nat)
-      real(8)  vr(nnr,nspin)
+      INTEGER irb(3,nat)
+      REAL(8) rhovan(nhm*(nhm+1)/2,nat,nspin)
+      COMPLEX(8) eigrb(ngb,nat)
+      REAL(8)  vr(nnr,nspin)
 ! output
-      real(8)  fion(3,natx)
+      REAL(8)  fion(3,natx)
 ! local
-      integer isup,isdw,iss, iv,ijv,jv, ik, nfft, isa, ia, is, ig
-      integer irb3, imin3, imax3
-      real(8)  fvan(3,natx,nsx), fac, fac1, fac2, boxdotgrid
-      complex(8) ci, facg1, facg2
-      complex(8), allocatable :: qv(:)
-      external boxdotgrid
+      INTEGER isup,isdw,iss, iv,ijv,jv, ik, nfft, isa, ia, is, ig
+      INTEGER irb3, imin3, imax3
+      REAL(8)  fvan(3,natx,nsx), fac, fac1, fac2, boxdotgrid
+      COMPLEX(8) ci, facg1, facg2
+      COMPLEX(8), ALLOCATABLE :: qv(:)
+      EXTERNAL boxdotgrid
 !
-      call start_clock( 'newd' )
+      CALL start_clock( 'newd' )
       ci=(0.d0,1.d0)
       fac=omegab/DBLE(nr1b*nr2b*nr3b)
       deeq (:,:,:,:) = 0.d0
       fvan (:,:,:) = 0.d0
 
-      allocate( qv( nnrb ) )
+      ALLOCATE( qv( nnrb ) )
 !
 ! calculation of deeq_i,lm = \int V_eff(r) q_i,lm(r) dr
 !
       isa=1
-      do is=1,nvb
+      DO is=1,nvb
 #ifdef __PARA
-         do ia=1,na(is)
+         DO ia=1,na(is)
             nfft=1
             irb3=irb(3,isa)
-            call parabox(nr3b,irb3,nr3,imin3,imax3)
-            if (imax3-imin3+1.le.0) go to 15
+            CALL parabox(nr3b,irb3,nr3,imin3,imax3)
+            IF (imax3-imin3+1.LE.0) go to 15
 #else
-         do ia=1,na(is),2
+         DO ia=1,na(is),2
             nfft=2
 #endif
-            if(ia.eq.na(is)) nfft=1
+            IF(ia.EQ.na(is)) nfft=1
 !
 ! two ffts at the same time, on two atoms (if possible: nfft=2)
 !
             ijv=0
-            do iv=1,nh(is)
-               do jv=iv,nh(is)
+            DO iv=1,nh(is)
+               DO jv=iv,nh(is)
                   ijv=ijv+1
                   qv(:) = (0.d0, 0.d0)
-                  if (nfft.eq.2) then
-                     do ig=1,ngb
+                  IF (nfft.EQ.2) THEN
+                     DO ig=1,ngb
                         qv(npb(ig))= eigrb(ig,isa  )*qgb(ig,ijv,is)   &
      &                          + ci*eigrb(ig,isa+1)*qgb(ig,ijv,is)
                         qv(nmb(ig))= CONJG(                             &
      &                               eigrb(ig,isa  )*qgb(ig,ijv,is))  &
      &                          + ci*CONJG(                             &
      &                               eigrb(ig,isa+1)*qgb(ig,ijv,is))
-                     end do
-                  else
-                     do ig=1,ngb
+                     END DO
+                  ELSE
+                     DO ig=1,ngb
                         qv(npb(ig)) = eigrb(ig,isa)*qgb(ig,ijv,is)
                         qv(nmb(ig)) = CONJG(                            &
      &                                eigrb(ig,isa)*qgb(ig,ijv,is))
-                     end do
-                  end if
+                     END DO
+                  END IF
 !
-                  call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+                  CALL ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
 !
-                  do iss=1,nspin
+                  DO iss=1,nspin
                      deeq(iv,jv,isa,iss) = fac *                        &
      &                    boxdotgrid(irb(1,isa),1,qv,vr(1,iss))
-                     if (iv.ne.jv)                                      &
+                     IF (iv.NE.jv)                                      &
      &                    deeq(jv,iv,isa,iss)=deeq(iv,jv,isa,iss)
 !
-                     if (nfft.eq.2) then
+                     IF (nfft.EQ.2) THEN
                         deeq(iv,jv,isa+1,iss) = fac*                    &
      &                       boxdotgrid(irb(1,isa+1),2,qv,vr(1,iss))
-                        if (iv.ne.jv)                                   &
+                        IF (iv.NE.jv)                                   &
      &                       deeq(jv,iv,isa+1,iss)=deeq(iv,jv,isa+1,iss)
-                     end if
-                  end do
-               end do
-            end do
+                     END IF
+                  END DO
+               END DO
+            END DO
   15        isa=isa+nfft
-         end do
-      end do
+         END DO
+      END DO
 
-      call reduce(nat*nhm*nhm*nspin,deeq)
+      CALL reduce(nat*nhm*nhm*nspin,deeq)
 
-      if (.not.( tfor .or. thdyn .or. tprnfor ) ) go to 10
+      IF (.NOT.( tfor .OR. thdyn .OR. tprnfor ) ) go to 10
 !
 ! calculation of fion_i = \int V_eff(r) \sum_lm rho_lm (dq_i,lm(r)/dR_i) dr
 !
       isa=1
-      if(nspin.eq.1) then
+      IF(nspin.EQ.1) THEN
 !     =================================================================
 !     case nspin=1: two ffts at the same time, on two atoms (if possible)
 !     -----------------------------------------------------------------
          iss=1
          isa=1
-         do is=1,nvb
+         DO is=1,nvb
 #ifdef __PARA
-            do ia=1,na(is)
+            DO ia=1,na(is)
                nfft=1
                irb3=irb(3,isa)
-               call parabox(nr3b,irb3,nr3,imin3,imax3)
-               if (imax3-imin3+1.le.0) go to 20
+               CALL parabox(nr3b,irb3,nr3,imin3,imax3)
+               IF (imax3-imin3+1.LE.0) go to 20
 #else
-            do ia=1,na(is),2
+            DO ia=1,na(is),2
                nfft=2
 #endif
-               if( ia.eq.na(is)) nfft=1
-               do ik=1,3
+               IF( ia.EQ.na(is)) nfft=1
+               DO ik=1,3
                   qv(:) = (0.d0, 0.d0)
                   ijv=0
-                  do iv=1,nh(is)
-                     do jv=iv,nh(is)
+                  DO iv=1,nh(is)
+                     DO jv=iv,nh(is)
                         ijv=ijv+1
-                        if(iv.ne.jv) then
+                        IF(iv.NE.jv) THEN
                            fac1=2.d0*fac*tpibab*rhovan(ijv,isa,iss)
-                           if (nfft.eq.2) fac2=2.d0*fac*tpibab*         &
+                           IF (nfft.EQ.2) fac2=2.d0*fac*tpibab*         &
      &                                           rhovan(ijv,isa+1,iss)
-                        else
+                        ELSE
                            fac1=     fac*tpibab*rhovan(ijv,isa,iss)
-                           if (nfft.eq.2) fac2=     fac*tpibab*        &
+                           IF (nfft.EQ.2) fac2=     fac*tpibab*        &
      &                                           rhovan(ijv,isa+1,iss)
-                        endif
-                        if (nfft.eq.2) then
-                           do ig=1,ngb
+                        ENDIF
+                        IF (nfft.EQ.2) THEN
+                           DO ig=1,ngb
                               facg1 = CMPLX(0.d0,-gxb(ik,ig)) *         &
      &                                   qgb(ig,ijv,is) * fac1
                               facg2 = CMPLX(0.d0,-gxb(ik,ig)) *         &
@@ -1912,60 +1912,60 @@
                               qv(nmb(ig)) = qv(nmb(ig))                 &
      &                                +   CONJG(eigrb(ig,isa  )*facg1)&
      &                                +ci*CONJG(eigrb(ig,isa+1)*facg2)
-                           end do
-                        else
-                           do ig=1,ngb
+                           END DO
+                        ELSE
+                           DO ig=1,ngb
                               facg1 = CMPLX(0.d0,-gxb(ik,ig)) *         &
      &                                   qgb(ig,ijv,is)*fac1
                               qv(npb(ig)) = qv(npb(ig))                 &
      &                                    +    eigrb(ig,isa)*facg1
                               qv(nmb(ig)) = qv(nmb(ig))                 &
      &                               +  CONJG( eigrb(ig,isa)*facg1)
-                           end do
-                        end if
-                     end do
-                  end do
+                           END DO
+                        END IF
+                     END DO
+                  END DO
 !
-                  call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+                  CALL ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
 !
                   fvan(ik,ia,is) =                                      &
      &                    boxdotgrid(irb(1,isa),1,qv,vr(1,iss))
 !
-                  if (nfft.eq.2) fvan(ik,ia+1,is) =                     &
+                  IF (nfft.EQ.2) fvan(ik,ia+1,is) =                     &
      &                    boxdotgrid(irb(1,isa+1),2,qv,vr(1,iss))
-               end do
+               END DO
  20            isa = isa+nfft
-            end do
-         end do
-      else
+            END DO
+         END DO
+      ELSE
 !     =================================================================
 !     case nspin=2: up and down spin fft's combined into a single fft
 !     -----------------------------------------------------------------
          isup=1
          isdw=2
          isa=1
-         do is=1,nvb
-            do ia=1,na(is)
+         DO is=1,nvb
+            DO ia=1,na(is)
 #ifdef __PARA
                irb3=irb(3,isa)
-               call parabox(nr3b,irb3,nr3,imin3,imax3)
-               if (imax3-imin3+1.le.0) go to 25
+               CALL parabox(nr3b,irb3,nr3,imin3,imax3)
+               IF (imax3-imin3+1.LE.0) go to 25
 #endif
-               do ik=1,3
+               DO ik=1,3
                   qv(:) = (0.d0, 0.d0)
                   ijv=0
 !
-                  do iv=1,nh(is)
-                     do jv=iv,nh(is)
+                  DO iv=1,nh(is)
+                     DO jv=iv,nh(is)
                         ijv=ijv+1
-                        if(iv.ne.jv) then
+                        IF(iv.NE.jv) THEN
                            fac1=2.d0*fac*tpibab*rhovan(ijv,isa,isup)
                            fac2=2.d0*fac*tpibab*rhovan(ijv,isa,isdw)
-                        else
+                        ELSE
                            fac1=     fac*tpibab*rhovan(ijv,isa,isup)
                            fac2=     fac*tpibab*rhovan(ijv,isa,isdw)
-                        end if
-                        do ig=1,ngb
+                        END IF
+                        DO ig=1,ngb
                            facg1 = fac1 * CMPLX(0.d0,-gxb(ik,ig)) *     &
      &                                qgb(ig,ijv,is) * eigrb(ig,isa)
                            facg2 = fac2 * CMPLX(0.d0,-gxb(ik,ig)) *     &
@@ -1973,23 +1973,23 @@
                            qv(npb(ig)) = qv(npb(ig))                    &
      &                                    + facg1 + ci*facg2
                            qv(nmb(ig)) = qv(nmb(ig))                    &
-     &                                    +CONJG(facg1)+ci*conjg(facg2)
-                        end do
-                     end do
-                  end do
+     &                                    +CONJG(facg1)+ci*CONJG(facg2)
+                        END DO
+                     END DO
+                  END DO
 !
-                  call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+                  CALL ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
 !
                   fvan(ik,ia,is) =                                      &
      &                    boxdotgrid(irb(1,isa),isup,qv,vr(1,isup)) + &
      &                    boxdotgrid(irb(1,isa),isdw,qv,vr(1,isdw))
-               end do
+               END DO
 25             isa = isa+1
-            end do
-         end do
-      end if
+            END DO
+         END DO
+      END IF
 
-      call reduce(3*natx*nvb,fvan)
+      CALL reduce(3*natx*nvb,fvan)
 
       isa = 0
       DO is = 1, nvb
@@ -1999,91 +1999,91 @@
         END DO
       END DO
 
-      deallocate( qv )
+      DEALLOCATE( qv )
 !
-  10  call stop_clock( 'newd' )
+  10  CALL stop_clock( 'newd' )
 !
-      return
-      end subroutine newd
+      RETURN
+      END SUBROUTINE newd
 !-------------------------------------------------------------------------
-      subroutine nlfl(bec,becdr,lambda,fion)
+      SUBROUTINE nlfl(bec,becdr,lambda,fion)
 !-----------------------------------------------------------------------
 !     contribution to fion due to the orthonormality constraint
 ! 
 !
-      use io_global, only: stdout
-      use ions_base, only: na, nsp
-      use parameters, only: natx
-      use uspp, only :nhsa=>nkb, qq
-      use uspp_param, only: nhm, nh
-      use cvan, only: ish, nvb
-      use electrons_base, only: nx => nbspx, n => nbsp
-      use constants, only: pi, fpi
+      USE io_global, ONLY: stdout
+      USE ions_base, ONLY: na, nsp
+      USE parameters, ONLY: natx
+      USE uspp, ONLY :nhsa=>nkb, qq
+      USE uspp_param, ONLY: nhm, nh
+      USE cvan, ONLY: ish, nvb
+      USE electrons_base, ONLY: nx => nbspx, n => nbsp
+      USE constants, ONLY: pi, fpi
 !
-      implicit none
-      real(8) bec(nhsa,n), becdr(nhsa,n,3), lambda(nx,nx)
-      real(8) fion(3,natx)
+      IMPLICIT NONE
+      REAL(8) bec(nhsa,n), becdr(nhsa,n,3), lambda(nx,nx)
+      REAL(8) fion(3,natx)
 !
-      integer k, is, ia, iv, jv, i, j, inl, isa
-      real(8) temp(nx,nx), tmpbec(nhm,nx),tmpdr(nx,nhm) ! automatic arrays
+      INTEGER k, is, ia, iv, jv, i, j, inl, isa
+      REAL(8) temp(nx,nx), tmpbec(nhm,nx),tmpdr(nx,nhm) ! automatic arrays
 !
-      call start_clock( 'nlfl' )
-      do k=1,3
+      CALL start_clock( 'nlfl' )
+      DO k=1,3
          isa = 0
-         do is=1,nvb
-            do ia=1,na(is)
+         DO is=1,nvb
+            DO ia=1,na(is)
                isa = isa + 1
 !
                tmpbec = 0.d0
                tmpdr  = 0.d0
 !
-               do iv=1,nh(is)
-                  do jv=1,nh(is)
+               DO iv=1,nh(is)
+                  DO jv=1,nh(is)
                      inl=ish(is)+(jv-1)*na(is)+ia
-                     if(abs(qq(iv,jv,is)).gt.1.e-5) then
-                        do i=1,n
+                     IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN
+                        DO i=1,n
                            tmpbec(iv,i)=tmpbec(iv,i)                    &
      &                          + qq(iv,jv,is)*bec(inl,i)
-                        end do
-                     endif
-                  end do
-               end do
+                        END DO
+                     ENDIF
+                  END DO
+               END DO
 !
-               do iv=1,nh(is)
+               DO iv=1,nh(is)
                   inl=ish(is)+(iv-1)*na(is)+ia
-                  do i=1,n
+                  DO i=1,n
                      tmpdr(i,iv)=becdr(inl,i,k)
-                  end do
-               end do
+                  END DO
+               END DO
 !
-               if(nh(is).gt.0)then
+               IF(nh(is).GT.0)THEN
                   temp = 0.d0
 !
-                  call MXMA                                             &
+                  CALL MXMA                                             &
      &                 (tmpdr,1,nx,tmpbec,1,nhm,temp,1,nx,n,nh(is),n)
 !
-                  do j=1,n
-                     do i=1,n
+                  DO j=1,n
+                     DO i=1,n
                         temp(i,j)=temp(i,j)*lambda(i,j)
-                     end do
-                  end do
+                     END DO
+                  END DO
 !
                   fion(k,isa)=fion(k,isa)+2.*SUM(temp)
-               endif
+               ENDIF
 !
-            end do
-         end do
-      end do
+            END DO
+         END DO
+      END DO
 !
 !     end of x/y/z loop
 !
-      call stop_clock( 'nlfl' )
-      return
-      end subroutine nlfl
+      CALL stop_clock( 'nlfl' )
+      RETURN
+      END SUBROUTINE nlfl
 
 
 !-----------------------------------------------------------------------
-      subroutine ortho                                                  &
+      SUBROUTINE ortho                                                  &
      &      (eigr,cp,phi,x0,diff,iter,ccc,eps,max,delt,bephi,becp)
 !-----------------------------------------------------------------------
 !     input = cp (non-orthonormal), beta
@@ -2097,69 +2097,69 @@
 !     where s=s(r(t+dt)) and s'=s(r(t))  
 !     for vanderbilt pseudo pot - kl & ap
 !
-      use ions_base, only: na, nsp, nas => nax, nat
-      use cvan, only: ish, nvb
-      use uspp, only :nhsa=>nkb, qq
-      use uspp_param, only: nh
-      use electrons_base, only: n => nbsp, nx => nbspx, nspin, nupdwn, iupdwn, f
-      use gvecw, only: ngw
-      use control_flags, only: iprint, iprsta
-      use io_global, only: stdout
+      USE ions_base, ONLY: na, nsp, nas => nax, nat
+      USE cvan, ONLY: ish, nvb
+      USE uspp, ONLY :nhsa=>nkb, qq
+      USE uspp_param, ONLY: nh
+      USE electrons_base, ONLY: n => nbsp, nx => nbspx, nspin, nupdwn, iupdwn, f
+      USE gvecw, ONLY: ngw
+      USE control_flags, ONLY: iprint, iprsta
+      USE io_global, ONLY: stdout
 !
-      implicit none
+      IMPLICIT NONE
 !
-      complex(8)   cp(ngw,n), phi(ngw,n), eigr(ngw,nat)
-      real(8) x0(nx,nx), diff, ccc, eps, delt
-      integer iter, max
-      real(8) bephi(nhsa,n), becp(nhsa,n)
+      COMPLEX(8)   cp(ngw,n), phi(ngw,n), eigr(ngw,nat)
+      REAL(8) x0(nx,nx), diff, ccc, eps, delt
+      INTEGER iter, max
+      REAL(8) bephi(nhsa,n), becp(nhsa,n)
 !
-      real(8), allocatable :: diag(:), work1(:), work2(:), xloc(:,:), &
+      REAL(8), ALLOCATABLE :: diag(:), work1(:), work2(:), xloc(:,:), &
                                    tmp1(:,:), tmp2(:,:), dd(:,:), x1(:,:), &
                                    rhos(:,:), rhor(:,:), con(:,:), u(:,:), &
                                    sig(:,:), rho(:,:), tau(:,:)
 
 ! the above are all automatic arrays
-      integer istart, nss, ifail, i, j, iss, iv, jv, ia, is, inl, jnl
-      real(8), allocatable:: qbephi(:,:), qbecp(:,:)
+      INTEGER istart, nss, ifail, i, j, iss, iv, jv, ia, is, inl, jnl
+      REAL(8), ALLOCATABLE:: qbephi(:,:), qbecp(:,:)
 
-      allocate( diag(nx), work1(nx), work2(nx), xloc(nx,nx), tmp1(nx,nx),    &
+      ALLOCATE( diag(nx), work1(nx), work2(nx), xloc(nx,nx), tmp1(nx,nx),    &
                 tmp2(nx,nx), dd(nx,nx), x1(nx,nx), rhos(nx,nx), rhor(nx,nx), &
                 con(nx,nx),  u(nx,nx), sig(nx,nx), rho(nx,nx), tau(nx,nx) )
 
 !
 !     calculation of becp and bephi
 !
-      call start_clock( 'ortho' )
-      call nlsm1(n,1,nvb,eigr, cp, becp)
-      call nlsm1(n,1,nvb,eigr,phi,bephi)
+      CALL start_clock( 'ortho' )
+      CALL nlsm1(n,1,nvb,eigr, cp, becp)
+      CALL nlsm1(n,1,nvb,eigr,phi,bephi)
 !
 !     calculation of qbephi and qbecp
 !
-      allocate(qbephi(nhsa,n))
-      allocate(qbecp (nhsa,n))
+      ALLOCATE(qbephi(nhsa,n))
+      ALLOCATE(qbecp (nhsa,n))
       qbephi = 0.d0
       qbecp  = 0.d0
 !
-      do is=1,nvb
-         do iv=1,nh(is)
-            do jv=1,nh(is)
-               if(abs(qq(iv,jv,is)).gt.1.e-5) then
-                  do ia=1,na(is)
+      DO is=1,nvb
+         DO iv=1,nh(is)
+            DO jv=1,nh(is)
+               IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN
+                  DO ia=1,na(is)
                      inl=ish(is)+(iv-1)*na(is)+ia
                      jnl=ish(is)+(jv-1)*na(is)+ia
-                     do i=1,n
+                     DO i=1,n
                         qbephi(inl,i)= qbephi(inl,i)                    &
      &                       +qq(iv,jv,is)*bephi(jnl,i)
                         qbecp (inl,i)=qbecp (inl,i)                     &
      &                       +qq(iv,jv,is)*becp (jnl,i)
-                     end do
-                  end do
-               endif
-            end do
-         end do
-      end do
+                     END DO
+                  END DO
+               ENDIF
+            END DO
+         END DO
+      END DO
 !
-      do iss=1,nspin
+      DO iss=1,nspin
          nss=nupdwn(iss)
          istart=iupdwn(iss)
 !
@@ -2167,33 +2167,33 @@
 !     sig = 1-<cp|s|cp>
 !     tau = <s'c0|s|s'c0>
 !
-         call rhoset(cp,phi,bephi,qbecp,nss,istart,rho)
-         call sigset(cp,becp,qbecp,nss,istart,sig)
-         call tauset(phi,bephi,qbephi,nss,istart,tau)
+         CALL rhoset(cp,phi,bephi,qbecp,nss,istart,rho)
+         CALL sigset(cp,becp,qbecp,nss,istart,sig)
+         CALL tauset(phi,bephi,qbephi,nss,istart,tau)
 !
-         if(iprsta.gt.4) then
+         IF(iprsta.GT.4) THEN
             WRITE( stdout,*)
             WRITE( stdout,'(26x,a)') '    rho '
-            do i=1,nss
+            DO i=1,nss
                WRITE( stdout,'(7f11.6)') (rho(i,j),j=1,nss)
-            end do
+            END DO
             WRITE( stdout,*)
             WRITE( stdout,'(26x,a)') '    sig '
-            do i=1,nss
+            DO i=1,nss
                WRITE( stdout,'(7f11.6)') (sig(i,j),j=1,nss)
-            end do
+            END DO
             WRITE( stdout,*)
             WRITE( stdout,'(26x,a)') '    tau '
-            do i=1,nss
+            DO i=1,nss
                WRITE( stdout,'(7f11.6)') (tau(i,j),j=1,nss)
-            end do
-         endif
+            END DO
+         ENDIF
 !
 !
 !----------------------------------------------------------------by ap--
 ! 
-         do j=1,nss
-            do i=1,nss
+         DO j=1,nss
+            DO i=1,nss
                xloc(i,j) = x0(istart-1+i,istart-1+j)*ccc
                dd(i,j) = 0.d0
                x1(i,j) = 0.d0
@@ -2205,23 +2205,23 @@
 ! If a matrix of Not-Numbers is passed to rs, the most likely outcome is
 ! that the program goes on forever doing nothing and writing nothing.
 !
-               if (rhos(i,j).ne.rhos(i,j))                                &
-     &             call errore('ortho','ortho went bananas',1)
+               IF (rhos(i,j).NE.rhos(i,j))                                &
+     &             CALL errore('ortho','ortho went bananas',1)
                rhor(i,j)=rho(i,j)-rhos(i,j)
-            end do
-         end do
+            END DO
+         END DO
 !     
-         do i=1,nss
+         DO i=1,nss
             tmp1(i,i)=1.d0
-         end do
+         END DO
          ifail=0
-         call start_clock( 'rsg' )
-         call rs(nx,nss,rhos,diag,1,u,work1,work2,ifail) 
-         call stop_clock( 'rsg' )
+         CALL start_clock( 'rsg' )
+         CALL rs(nx,nss,rhos,diag,1,u,work1,work2,ifail) 
+         CALL stop_clock( 'rsg' )
 !
 !                calculation of lagranges multipliers
 !
-         do iter=1,max
+         DO iter=1,max
 !
 !       the following 4 MXMA-calls do the following matrix 
 !       multiplications:
@@ -2229,103 +2229,103 @@
 !                       dd   = x0*tau*x0  (2nd and 3rd call)
 !                       tmp2 = x0*rhos    (4th call)
 !
-            call MXMA( xloc,1,nx,rhor,1,nx,tmp1,1,nx,nss,nss,nss)
-            call MXMA( tau ,1,nx,xloc,1,nx,tmp2,1,nx,nss,nss,nss)
-            call MXMA( xloc,1,nx,tmp2,1,nx,  dd,1,nx,nss,nss,nss)
-            call MXMA( xloc,1,nx,rhos,1,nx,tmp2,1,nx,nss,nss,nss)
-            do i=1,nss
-               do j=1,nss
+            CALL MXMA( xloc,1,nx,rhor,1,nx,tmp1,1,nx,nss,nss,nss)
+            CALL MXMA( tau ,1,nx,xloc,1,nx,tmp2,1,nx,nss,nss,nss)
+            CALL MXMA( xloc,1,nx,tmp2,1,nx,  dd,1,nx,nss,nss,nss)
+            CALL MXMA( xloc,1,nx,rhos,1,nx,tmp2,1,nx,nss,nss,nss)
+            DO i=1,nss
+               DO j=1,nss
                   x1(i,j) = sig(i,j)-tmp1(i,j)-tmp1(j,i)-dd(i,j)       
                   con(i,j)= x1(i,j)-tmp2(i,j)-tmp2(j,i)
-               end do
-            end do
+               END DO
+            END DO
 !
 !         x1      = sig      -x0*rho    -x0*rho^t  -x0*tau*x0
 !
             diff=0.d0
-            do i=1,nss
-               do j=1,nss
-                  if(abs(con(i,j)).gt.diff) diff=abs(con(i,j))
-               end do
-            end do
+            DO i=1,nss
+               DO j=1,nss
+                  IF(ABS(con(i,j)).GT.diff) diff=ABS(con(i,j))
+               END DO
+            END DO
 !
-            if( diff.le.eps ) go to 20
+            IF( diff.LE.eps ) go to 20
 !     
 !     the following two MXMA-calls do:   
 !                       tmp1 = x1*u
 !                       tmp2 = ut*x1*u
 !
-            call MXMA(x1,1,nx,   u,1,nx,tmp1,1,nx,nss,nss,nss)
-            call MXMA(u ,nx,1,tmp1,1,nx,tmp2,1,nx,nss,nss,nss)   
+            CALL MXMA(x1,1,nx,   u,1,nx,tmp1,1,nx,nss,nss,nss)
+            CALL MXMA(u ,nx,1,tmp1,1,nx,tmp2,1,nx,nss,nss,nss)   
 !
 !       g=ut*x1*u/d  (g is stored in tmp1)
 ! 
-            do i=1,nss
-               do j=1,nss
+            DO i=1,nss
+               DO j=1,nss
                   tmp1(i,j)=tmp2(i,j)/(diag(i)+diag(j))
-               end do
-            end do
+               END DO
+            END DO
 !     
 !       the following two MXMA-calls do:   
 !                       tmp2 = g*ut
 !                       x0 = u*g*ut
 !
-            call MXMA(tmp1,1,nx,  u,nx,1,tmp2,1,nx,nss,nss,nss)
-            call MXMA(   u,1,nx,tmp2,1,nx,xloc,1,nx,nss,nss,nss)
-         end do
+            CALL MXMA(tmp1,1,nx,  u,nx,1,tmp2,1,nx,nss,nss,nss)
+            CALL MXMA(   u,1,nx,tmp2,1,nx,xloc,1,nx,nss,nss,nss)
+         END DO
          WRITE( stdout,*) ' diff= ',diff,' iter= ',iter
-         call errore('ortho','max number of iterations exceeded',iter)
+         CALL errore('ortho','max number of iterations exceeded',iter)
 !
- 20      continue
+ 20      CONTINUE
 !
 !-----------------------------------------------------------------------
 !
-         if(iprsta.gt.4) then
+         IF(iprsta.GT.4) THEN
             WRITE( stdout,*)
             WRITE( stdout,'(26x,a)') '    lambda '
-            do i=1,nss
+            DO i=1,nss
                WRITE( stdout,'(7f11.6)') (xloc(i,j)/f(i+istart-1),j=1,nss)
-            end do
-         endif
+            END DO
+         ENDIF
 !     
-         if(iprsta.gt.2) then
+         IF(iprsta.GT.2) THEN
             WRITE( stdout,*) ' diff= ',diff,' iter= ',iter
-         endif
+         ENDIF
 !     
 !     lagrange multipliers
 !
-         do i=1,nss
-            do j=1,nss
+         DO i=1,nss
+            DO j=1,nss
                x0(istart-1+i,istart-1+j)=xloc(i,j)/ccc
-               if (xloc(i,j).ne.xloc(i,j))                                &
-     &             call errore('ortho','ortho went bananas',2)
-            end do
-         end do
+               IF (xloc(i,j).NE.xloc(i,j))                                &
+     &             CALL errore('ortho','ortho went bananas',2)
+            END DO
+         END DO
 !
-      end do
+      END DO
 !
-      deallocate(qbecp )
-      deallocate(qbephi)
-      deallocate( diag, work1, work2, xloc, tmp1, tmp2, dd, x1, rhos, rhor, &
+      DEALLOCATE(qbecp )
+      DEALLOCATE(qbephi)
+      DEALLOCATE( diag, work1, work2, xloc, tmp1, tmp2, dd, x1, rhos, rhor, &
                   con, u, sig, rho, tau )
 !
-      call stop_clock( 'ortho' )
-      return
-      end subroutine ortho
+      CALL stop_clock( 'ortho' )
+      RETURN
+      END SUBROUTINE ortho
 !
 !-----------------------------------------------------------------------
-      subroutine pbc(rin,a1,a2,a3,ainv,rout)
+      SUBROUTINE pbc(rin,a1,a2,a3,ainv,rout)
 !-----------------------------------------------------------------------
 !
 !     brings atoms inside the unit cell
 !
-      implicit none
+      IMPLICIT NONE
 ! input
-      real(8) rin(3), a1(3),a2(3),a3(3), ainv(3,3)
+      REAL(8) rin(3), a1(3),a2(3),a3(3), ainv(3,3)
 ! output
-      real(8) rout(3)
+      REAL(8) rout(3)
 ! local
-      real(8) x,y,z
+      REAL(8) x,y,z
 !
 ! bring atomic positions to crystal axis
 !
@@ -2335,9 +2335,9 @@
 !
 ! bring x,y,z in the range between -0.5 and 0.5
 !
-      x = x - nint(x)
-      y = y - nint(y)
-      z = z - nint(z)
+      x = x - NINT(x)
+      y = y - NINT(y)
+      z = z - NINT(z)
 !
 ! bring atomic positions back in cartesian axis
 !
@@ -2345,233 +2345,233 @@
       rout(2) = x*a1(2)+y*a2(2)+z*a3(2)
       rout(3) = x*a1(3)+y*a2(3)+z*a3(3)
 !
-      return
-      end subroutine pbc
+      RETURN
+      END SUBROUTINE pbc
 
 !
 !-------------------------------------------------------------------------
-      subroutine prefor(eigr,betae)
+      SUBROUTINE prefor(eigr,betae)
 !-----------------------------------------------------------------------
 !
 !     input :        eigr =  e^-ig.r_i
 !     output:        betae_i,i(g) = (-i)**l beta_i,i(g) e^-ig.r_i 
 !
-      use ions_base, only: nas => nax, nsp, na, nat
-      use gvecw, only: ngw
-      use cvan, only: ish
-      use uspp, only :nhsa=>nkb, beta, nhtol
-      use uspp_param, only: nh
+      USE ions_base, ONLY: nas => nax, nsp, na, nat
+      USE gvecw, ONLY: ngw
+      USE cvan, ONLY: ish
+      USE uspp, ONLY :nhsa=>nkb, beta, nhtol
+      USE uspp_param, ONLY: nh
 !
-      implicit none
-      complex(8) eigr(ngw,nat)
-      complex(8) betae(ngw,nhsa)
+      IMPLICIT NONE
+      COMPLEX(8) eigr(ngw,nat)
+      COMPLEX(8) betae(ngw,nhsa)
 !
-      integer is, iv, ia, inl, ig, isa
-      complex(8) ci
+      INTEGER is, iv, ia, inl, ig, isa
+      COMPLEX(8) ci
 !
-      call start_clock( 'prefor' )
+      CALL start_clock( 'prefor' )
       isa = 0
-      do is=1,nsp
-         do iv=1,nh(is)
+      DO is=1,nsp
+         DO iv=1,nh(is)
             ci=(0.,-1.)**nhtol(iv,is)
-            do ia=1,na(is)
+            DO ia=1,na(is)
                inl=ish(is)+(iv-1)*na(is)+ia
-               do ig=1,ngw
+               DO ig=1,ngw
                   betae(ig,inl)=ci*beta(ig,iv,is)*eigr(ig,ia+isa)
-               end do
-            end do
-         end do
+               END DO
+            END DO
+         END DO
          isa = isa + na(is)
-      end do
-      call stop_clock( 'prefor' )
+      END DO
+      CALL stop_clock( 'prefor' )
 !
-      return
-      end subroutine prefor
+      RETURN
+      END SUBROUTINE prefor
 !
 !-----------------------------------------------------------------------
-      subroutine projwfc(c,eigr,betae)
+      SUBROUTINE projwfc(c,eigr,betae)
 !-----------------------------------------------------------------------
 !
 ! Projection on atomic wavefunctions
 !
-      use io_global, only: stdout
-      use electrons_base, only: nx => nbspx, n => nbsp
-      use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart
-      use ions_base, only: nsp, na, nas => nax, nat
-      use uspp, only: nhsa => nkb
-      use atom
+      USE io_global, ONLY: stdout
+      USE electrons_base, ONLY: nx => nbspx, n => nbsp
+      USE gvecw, ONLY: ngw
+      USE reciprocal_vectors, ONLY: gstart
+      USE ions_base, ONLY: nsp, na, nas => nax, nat
+      USE uspp, ONLY: nhsa => nkb
+      USE atom
 !
-      implicit none
-      complex(8), intent(in) :: c(ngw,nx), eigr(ngw,nat),      &
+      IMPLICIT NONE
+      COMPLEX(8), INTENT(in) :: c(ngw,nx), eigr(ngw,nat),      &
      &                               betae(ngw,nhsa)
 !
-      complex(8), allocatable:: wfc(:,:), swfc(:,:), becwfc(:,:)
-      real(8), allocatable   :: overlap(:,:), e(:), z(:,:),        &
+      COMPLEX(8), ALLOCATABLE:: wfc(:,:), swfc(:,:), becwfc(:,:)
+      REAL(8), ALLOCATABLE   :: overlap(:,:), e(:), z(:,:),        &
      &                               proj(:,:), temp(:)
-      real(8)                :: somma
-      integer n_atomic_wfc
-      integer is, ia, nb, l, m, k, i
+      REAL(8)                :: somma
+      INTEGER n_atomic_wfc
+      INTEGER is, ia, nb, l, m, k, i
 !
 ! calculate number of atomic states
 !
       n_atomic_wfc=0
-      do is=1,nsp
-         do nb = 1,nchi(is)
+      DO is=1,nsp
+         DO nb = 1,nchi(is)
             l = lchi(nb,is)
             n_atomic_wfc = n_atomic_wfc + (2*l+1)*na(is)
-         end do
-      end do
-      if (n_atomic_wfc.eq.0) return
+         END DO
+      END DO
+      IF (n_atomic_wfc.EQ.0) RETURN
 !
-      allocate(wfc(ngw,n_atomic_wfc))
+      ALLOCATE(wfc(ngw,n_atomic_wfc))
 !
 ! calculate wfc = atomic states
 !
-      call atomic_wfc(eigr,n_atomic_wfc,wfc)
+      CALL atomic_wfc(eigr,n_atomic_wfc,wfc)
 !
 ! calculate bec = <beta|wfc>
 !
-      allocate(becwfc(nhsa,n_atomic_wfc))
-      call nlsm1 (n_atomic_wfc,1,nsp,eigr,wfc,becwfc)
+      ALLOCATE(becwfc(nhsa,n_atomic_wfc))
+      CALL nlsm1 (n_atomic_wfc,1,nsp,eigr,wfc,becwfc)
 
 ! calculate swfc = S|wfc>
 !
-      allocate(swfc(ngw,n_atomic_wfc))
-      call s_wfc(n_atomic_wfc,becwfc,betae,wfc,swfc)
+      ALLOCATE(swfc(ngw,n_atomic_wfc))
+      CALL s_wfc(n_atomic_wfc,becwfc,betae,wfc,swfc)
 !
 ! calculate overlap(i,j) = <wfc_i|S|wfc_j> 
 !
-      allocate(overlap(n_atomic_wfc,n_atomic_wfc))
+      ALLOCATE(overlap(n_atomic_wfc,n_atomic_wfc))
 !
-      call MXMA(wfc,2*ngw,1,swfc,1,2*ngw,overlap,1,                     &
+      CALL MXMA(wfc,2*ngw,1,swfc,1,2*ngw,overlap,1,                     &
      &          n_atomic_wfc,n_atomic_wfc,2*ngw,n_atomic_wfc)
 
-      call reduce(n_atomic_wfc**2,overlap)
+      CALL reduce(n_atomic_wfc**2,overlap)
 
       overlap=overlap*2.d0
-      if (gstart == 2) then
-         do l=1,n_atomic_wfc
-            do m=1,n_atomic_wfc
+      IF (gstart == 2) THEN
+         DO l=1,n_atomic_wfc
+            DO m=1,n_atomic_wfc
                overlap(m,l)=overlap(m,l)-DBLE(wfc(1,m))*DBLE(swfc(1,l))
-            end do
-         end do
-      end if
+            END DO
+         END DO
+      END IF
 !
 ! calculate (overlap)^(-1/2)(i,j). An orthonormal set of vectors |wfc_i>
 ! is obtained by introducing |wfc_j>=(overlap)^(-1/2)(i,j)*S|wfc_i>
 !
-      allocate(z(n_atomic_wfc,n_atomic_wfc))
-      allocate(e(n_atomic_wfc))
-      call rdiag(n_atomic_wfc,overlap,n_atomic_wfc,e,z)
+      ALLOCATE(z(n_atomic_wfc,n_atomic_wfc))
+      ALLOCATE(e(n_atomic_wfc))
+      CALL rdiag(n_atomic_wfc,overlap,n_atomic_wfc,e,z)
       overlap=0.d0
-      do l=1,n_atomic_wfc
-         do m=1,n_atomic_wfc
-            do k=1,n_atomic_wfc
-               overlap(l,m)=overlap(l,m)+z(m,k)*z(l,k)/sqrt(e(k))
-            end do
-         end do
-      end do
-      deallocate(e)
-      deallocate(z)
+      DO l=1,n_atomic_wfc
+         DO m=1,n_atomic_wfc
+            DO k=1,n_atomic_wfc
+               overlap(l,m)=overlap(l,m)+z(m,k)*z(l,k)/SQRT(e(k))
+            END DO
+         END DO
+      END DO
+      DEALLOCATE(e)
+      DEALLOCATE(z)
 !
 ! calculate |wfc_j>=(overlap)^(-1/2)(i,j)*S|wfc_i>   (note the S matrix!)
 !
       wfc=0.d0
-      do m=1,n_atomic_wfc
-         do l=1,n_atomic_wfc
+      DO m=1,n_atomic_wfc
+         DO l=1,n_atomic_wfc
             wfc(:,m)=wfc(:,m)+overlap(l,m)*swfc(:,l)
-         end do
-      end do
-      deallocate(overlap)
-      deallocate(swfc)
-      deallocate(becwfc)
+         END DO
+      END DO
+      DEALLOCATE(overlap)
+      DEALLOCATE(swfc)
+      DEALLOCATE(becwfc)
 !
 ! calculate proj = <c|S|wfc> 
 !
-      allocate(proj(n,n_atomic_wfc))
-      allocate(temp(ngw))
-      do m=1,n
-         do l=1,n_atomic_wfc
+      ALLOCATE(proj(n,n_atomic_wfc))
+      ALLOCATE(temp(ngw))
+      DO m=1,n
+         DO l=1,n_atomic_wfc
             temp(:)=DBLE(CONJG(c(:,m))*wfc(:,l))
             proj(m,l)=2.d0*SUM(temp)
-            if (gstart == 2) proj(m,l)=proj(m,l)-temp(1)
-         end do
-      end do
-      deallocate(temp)
+            IF (gstart == 2) proj(m,l)=proj(m,l)-temp(1)
+         END DO
+      END DO
+      DEALLOCATE(temp)
 
-      call reduce(n*n_atomic_wfc,proj)
+      CALL reduce(n*n_atomic_wfc,proj)
 
       i=0
       WRITE( stdout,'(/''Projection on atomic states:'')')
-      do is=1,nsp
-         do nb = 1,nchi(is)
+      DO is=1,nsp
+         DO nb = 1,nchi(is)
             l=lchi(nb,is)
-            do m = -l,l
-               do ia=1,na(is)
+            DO m = -l,l
+               DO ia=1,na(is)
                   i=i+1
                   WRITE( stdout,'(''atomic state # '',i3,'': atom # '',i3,    &
      &                      ''  species # '',i2,''  wfc # '',i2,        &
      &                      '' (l='',i1,'' m='',i2,'')'')')             &
      &                 i, ia, is, nb, l, m
-               end do
-            end do
-         end do
-      end do
+               END DO
+            END DO
+         END DO
+      END DO
 
       WRITE( stdout,*)
-      do m=1,n
+      DO m=1,n
          somma=0.d0
-         do l=1,n_atomic_wfc
+         DO l=1,n_atomic_wfc
             somma=somma+proj(m,l)**2
-         end do
+         END DO
          WRITE( stdout,'(''state # '',i4,''    sum c^2 ='',f7.4)') m,somma
-         WRITE( stdout,'(10f7.4)') (abs(proj(m,l)),l=1,n_atomic_wfc)
-      end do
+         WRITE( stdout,'(10f7.4)') (ABS(proj(m,l)),l=1,n_atomic_wfc)
+      END DO
 !
-      deallocate(proj)
-      deallocate(wfc)
-      return
-      end subroutine projwfc
+      DEALLOCATE(proj)
+      DEALLOCATE(wfc)
+      RETURN
+      END SUBROUTINE projwfc
 !-----------------------------------------------------------------------
-      subroutine raddrizza(nspin,nx,nupdwn,iupdwn,f,lambda,ngw,c)
+      SUBROUTINE raddrizza(nspin,nx,nupdwn,iupdwn,f,lambda,ngw,c)
 !-----------------------------------------------------------------------
 !
 !     transform wavefunctions into eigenvectors of the hamiltonian
 !     via diagonalization of the constraint matrix lambda
 !
-      implicit none
-      integer, intent(in)           :: nspin, nx, ngw, nupdwn(nspin),   &
+      IMPLICIT NONE
+      INTEGER, INTENT(in)           :: nspin, nx, ngw, nupdwn(nspin),   &
      &                                 iupdwn(nspin)
-      real   (8), intent(in)   :: lambda(nx,nx), f(nx)
-      complex(8), intent(inout):: c(ngw,nx)
+      REAL   (8), INTENT(in)   :: lambda(nx,nx), f(nx)
+      COMPLEX(8), INTENT(inout):: c(ngw,nx)
 
-      real(8)                :: lambdar(nx,nx), wr(nx), zr(nx,nx)
-      complex(8), allocatable:: csave(:,:)
-      integer                     :: iss, n, j, i, i0
+      REAL(8)                :: lambdar(nx,nx), wr(nx), zr(nx,nx)
+      COMPLEX(8), ALLOCATABLE:: csave(:,:)
+      INTEGER                     :: iss, n, j, i, i0
 !
-      do iss=1,nspin
+      DO iss=1,nspin
          n=nupdwn(iss)
          i0=iupdwn(iss)-1
-         allocate(csave(ngw,n))
-         do i=1,n
-            do j=1,n
+         ALLOCATE(csave(ngw,n))
+         DO i=1,n
+            DO j=1,n
                lambdar(j,i)=lambda(i0+j,i0+i)
-            end do
-         end do
+            END DO
+         END DO
 
-         call rdiag(n,lambdar,nx,wr,zr)
+         CALL rdiag(n,lambdar,nx,wr,zr)
 
          csave=0.d0
-         do i=1,n
-            do j=1,n
+         DO i=1,n
+            DO j=1,n
                csave(:,i) = csave(:,i) + zr(j,i)*c(:,i0+j)
-            end do
-         end do
-         do i=1,n
+            END DO
+         END DO
+         DO i=1,n
             c(:,i0+i)=csave(:,i)
-         end do
-         deallocate(csave)
+         END DO
+         DEALLOCATE(csave)
 
 !     uncomment to print out eigenvalues
 !         do i=1,n
@@ -2582,25 +2582,25 @@
 !            end if
 !         end do
 !         WRITE( stdout,'(/10f8.2/)') (wr(i),i=1,nupdwn(iss))
-      end do
-      return
-      end subroutine raddrizza
+      END DO
+      RETURN
+      END SUBROUTINE raddrizza
 !
 !---------------------------------------------------------------------
-      subroutine randin(nmin,nmax,gstart,ngw,ampre,c)
+      SUBROUTINE randin(nmin,nmax,gstart,ngw,ampre,c)
 !---------------------------------------------------------------------
 !
-      use wave_functions, only: wave_rand_init
-      implicit none
+      USE wave_functions, ONLY: wave_rand_init
+      IMPLICIT NONE
 
 ! input
-      integer nmin, nmax, gstart, ngw
-      real(8) ampre
+      INTEGER nmin, nmax, gstart, ngw
+      REAL(8) ampre
 ! output
-      complex(8) c(ngw,nmax)
+      COMPLEX(8) c(ngw,nmax)
 ! local
-      integer i,j
-      real(8) ranf1, randy, ranf2, ampexp
+      INTEGER i,j
+      REAL(8) ranf1, randy, ranf2, ampexp
 !
       CALL wave_rand_init( c )
 !      do i=nmin,nmax
@@ -2612,31 +2612,31 @@
 !         end do
 !      end do
 !
-      return
-      end subroutine randin
+      RETURN
+      END SUBROUTINE randin
 !
 !-----------------------------------------------------------------------
-      subroutine rdiag (n,h,ldh,e,v)
+      SUBROUTINE rdiag (n,h,ldh,e,v)
 !-----------------------------------------------------------------------
 !
 !   calculates all the eigenvalues and eigenvectors of a complex
 !   hermitean matrix H . On output, the matrix H is destroyed
 !
-      implicit none
-      integer, intent(in)           :: n, ldh
-      complex(8), intent(inout):: h(ldh,n)
-      real   (8), intent(out)  :: e(n)
-      complex(8), intent(out)  :: v(ldh,n)
+      IMPLICIT NONE
+      INTEGER, INTENT(in)           :: n, ldh
+      COMPLEX(8), INTENT(inout):: h(ldh,n)
+      REAL   (8), INTENT(out)  :: e(n)
+      COMPLEX(8), INTENT(out)  :: v(ldh,n)
 !
-      real(8) fv1(n), fv2(n)
-      integer ierr
+      REAL(8) fv1(n), fv2(n)
+      INTEGER ierr
 !
-      call rs(ldh,n,h,e,1,v,fv1,fv2,ierr)
+      CALL rs(ldh,n,h,e,1,v,fv1,fv2,ierr)
 !
-      return
-      end subroutine rdiag
+      RETURN
+      END SUBROUTINE rdiag
 !-----------------------------------------------------------------------
-   subroutine rhoofr (nfi,c,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
+   SUBROUTINE rhoofr (nfi,c,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
 !-----------------------------------------------------------------------
 !     the normalized electron density rhor in real space
 !     the kinetic energy ekin
@@ -2649,109 +2649,109 @@
 !
 !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
 !
-      use kinds, only: dp
-      use control_flags, only: iprint, tbuff, iprsta, thdyn, tpre, trhor
-      use ions_base, only: nat, nas => nax, nsp
-      use parameters, only: natx, nsx
-      use gvecp, only: ng => ngm
-      use gvecs
-      use gvecb, only: ngb
-      use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart
-      use recvecs_indexes, only: np, nm
-      use uspp, only: nhsa => nkb
-      use uspp_param, only: nh, nhm
-      use grid_dimensions, only: nr1, nr2, nr3, &
+      USE kinds, ONLY: dp
+      USE control_flags, ONLY: iprint, tbuff, iprsta, thdyn, tpre, trhor
+      USE ions_base, ONLY: nat, nas => nax, nsp
+      USE parameters, ONLY: natx, nsx
+      USE gvecp, ONLY: ng => ngm
+      USE gvecs
+      USE gvecb, ONLY: ngb
+      USE gvecw, ONLY: ngw
+      USE reciprocal_vectors, ONLY: gstart
+      USE recvecs_indexes, ONLY: np, nm
+      USE uspp, ONLY: nhsa => nkb
+      USE uspp_param, ONLY: nh, nhm
+      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
-      use cell_base, only: omega
-      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
+      USE cell_base, ONLY: omega
+      USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, &
             nr1sx, nr2sx, nr3sx, nnrsx
-      use electrons_base, only: nx => nbspx, n => nbsp, f, ispin => fspin, nspin
-      use constants, only: pi, fpi
-      use mp, ONLY: mp_sum
+      USE electrons_base, ONLY: nx => nbspx, n => nbsp, f, ispin => fspin, nspin
+      USE constants, ONLY: pi, fpi
+      USE mp, ONLY: mp_sum
       ! use local_pseudo
 !
-      use cdvan
-      use dener
-      use io_global, only: stdout
-      use funct, only: dft_is_meta
-      use cg_module, only : tcg
+      USE cdvan
+      USE dener
+      USE io_global, ONLY: stdout
+      USE funct, ONLY: dft_is_meta
+      USE cg_module, ONLY : tcg
 !
-      implicit none
-      real(8) bec(nhsa,n), rhovan(nhm*(nhm+1)/2,nat,nspin)
-      real(8) rhor(nnr,nspin), rhos(nnrsx,nspin)
-      real(8) enl, ekin
-      complex(8) eigrb(ngb,nat), c(ngw,nx), rhog(ng,nspin)
-      integer irb(3,nat), nfi
+      IMPLICIT NONE
+      REAL(8) bec(nhsa,n), rhovan(nhm*(nhm+1)/2,nat,nspin)
+      REAL(8) rhor(nnr,nspin), rhos(nnrsx,nspin)
+      REAL(8) enl, ekin
+      COMPLEX(8) eigrb(ngb,nat), c(ngw,nx), rhog(ng,nspin)
+      INTEGER irb(3,nat), nfi
 ! local variables
-      integer iss, isup, isdw, iss1, iss2, ios, i, ir, ig
-      real(8) rsumr(2), rsumg(2), sa1, sa2
-      real(8) rnegsum, rmin, rmax, rsum
-      real(8), external :: enkin, ennl
-      complex(8) ci,fp,fm
-      complex(8), allocatable :: psi(:), psis(:)
+      INTEGER iss, isup, isdw, iss1, iss2, ios, i, ir, ig
+      REAL(8) rsumr(2), rsumg(2), sa1, sa2
+      REAL(8) rnegsum, rmin, rmax, rsum
+      REAL(8), EXTERNAL :: enkin, ennl
+      COMPLEX(8) ci,fp,fm
+      COMPLEX(8), ALLOCATABLE :: psi(:), psis(:)
 !
 !
-      call start_clock( 'rhoofr' )
-      allocate( psi( nnr ) ) 
-      allocate( psis( nnrsx ) ) 
+      CALL start_clock( 'rhoofr' )
+      ALLOCATE( psi( nnr ) ) 
+      ALLOCATE( psis( nnrsx ) ) 
       ci=(0.0,1.0)
-      do iss=1,nspin
+      DO iss=1,nspin
          rhor(:,iss) = 0.d0
          rhos(:,iss) = 0.d0
          rhog(:,iss) = (0.d0, 0.d0)
-      end do
+      END DO
 !
 !     ==================================================================
 !     calculation of kinetic energy ekin
 !     ==================================================================
       ekin=enkin(c)
-      if(tpre) call denkin(c,dekin)
+      IF(tpre) CALL denkin(c,dekin)
 !
 !     ==================================================================
 !     calculation of non-local energy
 !     ==================================================================
       enl=ennl(rhovan, bec)
-      if(tpre) call dennl(bec,denl)
+      IF(tpre) CALL dennl(bec,denl)
 !    
 !    warning! trhor and thdyn are not compatible yet!   
 !
-      if(trhor.and.(.not.thdyn))then
+      IF(trhor.AND.(.NOT.thdyn))THEN
 !     ==================================================================
 !     charge density is read from unit 47
 !     ==================================================================
 #ifdef __PARA
-         call read_rho(47,nspin,rhor)
+         CALL read_rho(47,nspin,rhor)
 #else
-         read(47) ((rhor(ir,iss),ir=1,nnr),iss=1,nspin)
+         READ(47) ((rhor(ir,iss),ir=1,nnr),iss=1,nspin)
 #endif
-         rewind 47
+         REWIND 47
 !
-         if(nspin.eq.1)then
+         IF(nspin.EQ.1)THEN
             iss=1
-            do ir=1,nnr
+            DO ir=1,nnr
                psi(ir)=CMPLX(rhor(ir,iss),0.d0)
-            end do
-            call fwfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-            do ig=1,ng
+            END DO
+            CALL fwfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+            DO ig=1,ng
                rhog(ig,iss)=psi(np(ig))
-            end do
-         else
+            END DO
+         ELSE
             isup=1
             isdw=2
-            do ir=1,nnr
+            DO ir=1,nnr
                psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
-            end do
-            call fwfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-            do ig=1,ng
+            END DO
+            CALL fwfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+            DO ig=1,ng
                fp=psi(np(ig))+psi(nm(ig))
                fm=psi(np(ig))-psi(nm(ig))
                rhog(ig,isup)=0.5*CMPLX( DBLE(fp),AIMAG(fm))
                rhog(ig,isdw)=0.5*CMPLX(AIMAG(fp),-DBLE(fm))
-            end do
-         endif
+            END DO
+         ENDIF
 !
-      else
+      ELSE
 
          !     ==================================================================
          !     self-consistent charge
@@ -2759,190 +2759,190 @@
          !
          !     important: if n is odd then nx must be .ge.n+1 and c(*,n+1)=0.
          ! 
-         if (mod(n,2).ne.0) then
-            do ig=1,ngw
+         IF (MOD(n,2).NE.0) THEN
+            DO ig=1,ngw
                c(ig,n+1)=(0.,0.)
-            end do
-         endif
+            END DO
+         ENDIF
          !
-         do i=1,n,2
+         DO i=1,n,2
             psis (:) = (0.d0, 0.d0)
-            do ig=1,ngw
-               psis(nms(ig))=CONJG(c(ig,i))+ci*conjg(c(ig,i+1))
+            DO ig=1,ngw
+               psis(nms(ig))=CONJG(c(ig,i))+ci*CONJG(c(ig,i+1))
                psis(nps(ig))=c(ig,i)+ci*c(ig,i+1)
                ! write(6,'(I6,4F15.10)') ig, psis(nms(ig)), psis(nps(ig))
-            end do
+            END DO
 
-            call ivfftw(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+            CALL ivfftw(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
 
             !     wavefunctions in unit 21
             !
 #if defined(__CRAYY)
-            if(tbuff) buffer out(21,0) (psis(1),psis(nnrsx))
+            IF(tbuff) buffer out(21,0) (psis(1),psis(nnrsx))
 #else
-            if(tbuff) write(21,iostat=ios) psis
+            IF(tbuff) WRITE(21,iostat=ios) psis
 #endif
             iss1=ispin(i)
             sa1=f(i)/omega
-            if (i.ne.n) then
+            IF (i.NE.n) THEN
                iss2=ispin(i+1)
                sa2=f(i+1)/omega
-            else
+            ELSE
                iss2=iss1
                sa2=0.0
-            end if
-            do ir=1,nnrsx
+            END IF
+            DO ir=1,nnrsx
                rhos(ir,iss1)=rhos(ir,iss1) + sa1*( DBLE(psis(ir)))**2
                rhos(ir,iss2)=rhos(ir,iss2) + sa2*(AIMAG(psis(ir)))**2
-            end do
+            END DO
 
             !
             !       buffer 21
             !     
-            if(tbuff) then
+            IF(tbuff) THEN
 #if defined(__CRAYY)
                ios=unit(21)
 #endif
-               if(ios.ne.0) call errore(' rhoofr',' error in writing unit 21',ios)
-            endif
+               IF(ios.NE.0) CALL errore(' rhoofr',' error in writing unit 21',ios)
+            ENDIF
             !
-         end do
+         END DO
          !
-         if(tbuff) rewind 21
+         IF(tbuff) REWIND 21
          !
          !     smooth charge in g-space is put into rhog(ig)
          !
-         if(nspin.eq.1)then
+         IF(nspin.EQ.1)THEN
             iss=1
-            do ir=1,nnrsx
+            DO ir=1,nnrsx
                psis(ir)=CMPLX(rhos(ir,iss),0.d0)
-            end do
-            call fwffts(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
-            do ig=1,ngs
+            END DO
+            CALL fwffts(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+            DO ig=1,ngs
                rhog(ig,iss)=psis(nps(ig))
-            end do
-         else
+            END DO
+         ELSE
             isup=1
             isdw=2
-             do ir=1,nnrsx
+             DO ir=1,nnrsx
                psis(ir)=CMPLX(rhos(ir,isup),rhos(ir,isdw))
-            end do
-            call fwffts(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
-            do ig=1,ngs
+            END DO
+            CALL fwffts(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+            DO ig=1,ngs
                fp= psis(nps(ig)) + psis(nms(ig))
                fm= psis(nps(ig)) - psis(nms(ig))
                rhog(ig,isup)=0.5*CMPLX( DBLE(fp),AIMAG(fm))
                rhog(ig,isdw)=0.5*CMPLX(AIMAG(fp),-DBLE(fm))
-            end do
-         endif
+            END DO
+         ENDIF
 !
-         if(nspin.eq.1) then
+         IF(nspin.EQ.1) THEN
             ! 
             !     case nspin=1
             ! 
             iss=1
             psi (:) = (0.d0, 0.d0)
-            do ig=1,ngs
+            DO ig=1,ngs
                psi(nm(ig))=CONJG(rhog(ig,iss))
                psi(np(ig))=      rhog(ig,iss)
-            end do
-            call invfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-            do ir=1,nnr
+            END DO
+            CALL invfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+            DO ir=1,nnr
                rhor(ir,iss)=DBLE(psi(ir))
-            end do
-         else 
+            END DO
+         ELSE 
             !
             !     case nspin=2
             !
             isup=1
             isdw=2
             psi (:) = (0.d0, 0.d0)
-            do ig=1,ngs
-               psi(nm(ig))=CONJG(rhog(ig,isup))+ci*conjg(rhog(ig,isdw))
+            DO ig=1,ngs
+               psi(nm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
                psi(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
-            end do
-            call invfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-            do ir=1,nnr
+            END DO
+            CALL invfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+            DO ir=1,nnr
                rhor(ir,isup)= DBLE(psi(ir))
                rhor(ir,isdw)=AIMAG(psi(ir))
-            end do
-         endif
-         if (dft_is_meta()) call kedtauofr_meta(c, psi, psis) ! METAGGA
+            END DO
+         ENDIF
+         IF (dft_is_meta()) CALL kedtauofr_meta(c, psi, psis) ! METAGGA
 !
-         if(iprsta.ge.3)then
-            do iss=1,nspin
+         IF(iprsta.GE.3)THEN
+            DO iss=1,nspin
                rsumg(iss)=omega*DBLE(rhog(1,iss))
                rsumr(iss)=SUM(rhor(:,iss))*omega/DBLE(nr1*nr2*nr3)
-            end do
+            END DO
 
-            if ( gstart /= 2 ) then
+            IF ( gstart /= 2 ) THEN
                !
                !    in the parallel case, only one processor has G=0 ! 
                !
-               do iss=1,nspin
+               DO iss=1,nspin
                   rsumg(iss)=0.0
-               end do
-            end if
-            call mp_sum( rsumg( 1:nspin ) )
-            call mp_sum( rsumr( 1:nspin ) )
+               END DO
+            END IF
+            CALL mp_sum( rsumg( 1:nspin ) )
+            CALL mp_sum( rsumr( 1:nspin ) )
 
-            if ( nspin == 1 ) then
+            IF ( nspin == 1 ) THEN
               WRITE( stdout, 10) rsumg(1), rsumr(1)
-            else
+            ELSE
               WRITE( stdout, 20) rsumg(1), rsumr(1), rsumg(2), rsumr(2)
-            endif
+            ENDIF
 
-         endif
+         ENDIF
          !
          !     add vanderbilt contribution to the charge density
          !     drhov called before rhov because input rho must be the smooth part
          !
-         if (tpre) call drhov(irb,eigrb,rhovan,rhog,rhor)
+         IF (tpre) CALL drhov(irb,eigrb,rhovan,rhog,rhor)
          !
-         call rhov(irb,eigrb,rhovan,rhog,rhor)
+         CALL rhov(irb,eigrb,rhovan,rhog,rhor)
 
-      endif
+      ENDIF
 
 !     ======================================endif for trhor=============
 !
 !     here to check the integral of the charge density
 !
 !
-      if(iprsta.ge.2) then
-         call checkrho(nnr,nspin,rhor,rmin,rmax,rsum,rnegsum)
+      IF(iprsta.GE.2) THEN
+         CALL checkrho(nnr,nspin,rhor,rmin,rmax,rsum,rnegsum)
          rnegsum=rnegsum*omega/DBLE(nr1*nr2*nr3)
          rsum=rsum*omega/DBLE(nr1*nr2*nr3)
          WRITE( stdout,'(a,4(1x,f12.6))')                                     &
      &     ' rhoofr: rmin rmax rnegsum rsum  ',rmin,rmax,rnegsum,rsum
-      end if
+      END IF
 !
-      if( nfi == 0 .or. mod(nfi, iprint) == 0 .and. .not. tcg) then
+      IF( nfi == 0 .OR. MOD(nfi, iprint) == 0 .AND. .NOT. tcg) THEN
 
-         do iss=1,nspin
+         DO iss=1,nspin
             rsumg(iss)=omega*DBLE(rhog(1,iss))
             rsumr(iss)=SUM(rhor(:,iss),1)*omega/DBLE(nr1*nr2*nr3)
-         end do
+         END DO
 
-         if (gstart.ne.2) then
+         IF (gstart.NE.2) THEN
             ! in the parallel case, only one processor has G=0 ! 
-            do iss=1,nspin
+            DO iss=1,nspin
                rsumg(iss)=0.0
-            end do
-         end if
+            END DO
+         END IF
 
-         call mp_sum( rsumg( 1:nspin ) )
-         call mp_sum( rsumr( 1:nspin ) )
+         CALL mp_sum( rsumg( 1:nspin ) )
+         CALL mp_sum( rsumr( 1:nspin ) )
 
-         if ( nspin == 1 ) then
+         IF ( nspin == 1 ) THEN
            WRITE( stdout, 10) rsumg(1), rsumr(1)
-         else
+         ELSE
            WRITE( stdout, 20) rsumg(1), rsumr(1), rsumg(2), rsumr(2)
-         endif
+         ENDIF
 
-      endif
+      ENDIF
 
-      deallocate( psi ) 
-      deallocate( psis ) 
+      DEALLOCATE( psi ) 
+      DEALLOCATE( psis ) 
 
 10    FORMAT( /, 3X, 'from rhoofr: total integrated electronic density', &
             & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 )
@@ -2952,14 +2952,14 @@
             & /, 3X, 'spin down', &
             & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 )
 !
-      call stop_clock( 'rhoofr' )
+      CALL stop_clock( 'rhoofr' )
 
 !
-      return
-      end subroutine rhoofr
+      RETURN
+      END SUBROUTINE rhoofr
 !
 !-----------------------------------------------------------------------
-      subroutine rhoset(cp,phi,bephi,qbecp,nss,ist,rho)
+      SUBROUTINE rhoset(cp,phi,bephi,qbecp,nss,ist,rho)
 !-----------------------------------------------------------------------
 !     input: cp (non-orthonormal), phi, bephi, qbecp
 !     computes the matrix
@@ -2968,68 +2968,68 @@
 !     where s=s(r(t+dt)) and s'=s(r(t))  
 !     routine makes use of  c(-q)=c*(q)
 !
-      use parameters, only: nsx, natx
-      use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart
-      use uspp, only: nhsa => nkb, nhsavb=>nkbus
-      use cvan, only: nvb
-      use electrons_base, only: nx => nbspx, n => nbsp ! , f, ispin => fspin, nspin
+      USE parameters, ONLY: nsx, natx
+      USE gvecw, ONLY: ngw
+      USE reciprocal_vectors, ONLY: gstart
+      USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus
+      USE cvan, ONLY: nvb
+      USE electrons_base, ONLY: nx => nbspx, n => nbsp ! , f, ispin => fspin, nspin
 !
-      implicit none
+      IMPLICIT NONE
 !
-      integer nss, ist
-      complex(8)   cp(ngw,n), phi(ngw,n)
-      real(8)       bephi(nhsa,n), qbecp(nhsa,n), rho(nx,nx)
-      integer i, j
-      real(8)    tmp1(nx,nx) ! automatic array
+      INTEGER nss, ist
+      COMPLEX(8)   cp(ngw,n), phi(ngw,n)
+      REAL(8)       bephi(nhsa,n), qbecp(nhsa,n), rho(nx,nx)
+      INTEGER i, j
+      REAL(8)    tmp1(nx,nx) ! automatic array
 !
       rho (:,:) = 0.d0
 !
 !     <phi|cp>
 !
-      call MXMA(phi(1,ist),2*ngw,1,cp(1,ist),1,2*ngw,                   &
+      CALL MXMA(phi(1,ist),2*ngw,1,cp(1,ist),1,2*ngw,                   &
      &                              rho,1,nx,nss,2*ngw,nss)
 !
 !     q >= 0  components with weight 2.0
 !
-      do j=1,nss
-         do i=1,nss
+      DO j=1,nss
+         DO i=1,nss
             rho(i,j)=2.*rho(i,j)
-         end do
-      end do
+         END DO
+      END DO
 !
-      if (gstart == 2) then
+      IF (gstart == 2) THEN
 !
 !     q = 0  components has weight 1.0
 !
-         do j=1,nss
-            do i=1,nss
+         DO j=1,nss
+            DO i=1,nss
                rho(i,j) = rho(i,j) -                                    &
      &              DBLE(phi(1,i+ist-1))*DBLE(cp(1,j+ist-1))
-            end do
-         end do
-      end if
+            END DO
+         END DO
+      END IF
 
-      call reduce(nx*nss,rho)
+      CALL reduce(nx*nss,rho)
 !
-      if(nvb.gt.0)then
+      IF(nvb.GT.0)THEN
          tmp1 (:,:) = 0.d0
 !
-         call MXMA(bephi(1,ist),nhsa,1,qbecp(1,ist),1,nhsa,               &
+         CALL MXMA(bephi(1,ist),nhsa,1,qbecp(1,ist),1,nhsa,               &
      &                                tmp1,1,nx,nss,nhsavb,nss)
 !
-         do j=1,nss
-            do i=1,nss
+         DO j=1,nss
+            DO i=1,nss
                rho(i,j)=rho(i,j)+tmp1(i,j)
-            end do
-         end do
-      endif
+            END DO
+         END DO
+      ENDIF
 !
-      return
-      end subroutine rhoset
+      RETURN
+      END SUBROUTINE rhoset
 !
 !-----------------------------------------------------------------------
-      subroutine rhov(irb,eigrb,rhovan,rhog,rhor)
+      SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 !-----------------------------------------------------------------------
 !     Add Vanderbilt contribution to rho(r) and rho(g)
 !
@@ -3037,122 +3037,122 @@
 !
 !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
 !
-      use kinds, only: dp
-      use ions_base, only: nas => nax, nat, na, nsp
-      use io_global, only: stdout
-      use parameters, only: natx, nsx
-      use cvan, only: nvb
-      use uspp_param, only: nh, nhm
-      use uspp, only: deeq
-      use grid_dimensions, only: nr1, nr2, nr3, &
+      USE kinds, ONLY: dp
+      USE ions_base, ONLY: nas => nax, nat, na, nsp
+      USE io_global, ONLY: stdout
+      USE parameters, ONLY: natx, nsx
+      USE cvan, ONLY: nvb
+      USE uspp_param, ONLY: nh, nhm
+      USE uspp, ONLY: deeq
+      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
-      use electrons_base, only: nspin
-      use gvecb
-      use gvecp, only: ng => ngm
-      use cell_base, only: omega
-      use small_box, only: omegab
-      use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
+      USE electrons_base, ONLY: nspin
+      USE gvecb
+      USE gvecp, ONLY: ng => ngm
+      USE cell_base, ONLY: omega
+      USE small_box, ONLY: omegab
+      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
-      use control_flags, only: iprint, iprsta
-      use qgb_mod
-      use para_mod
-      use recvecs_indexes, only: np, nm
+      USE control_flags, ONLY: iprint, iprsta
+      USE qgb_mod
+      USE para_mod
+      USE recvecs_indexes, ONLY: np, nm
 !
-      implicit none
+      IMPLICIT NONE
 !
-      real(8) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
-      integer, intent(in) :: irb(3,nat)
-      complex(8), intent(in):: eigrb(ngb,nat)
-      real(8), intent(inout):: rhor(nnr,nspin)
-      complex(8),  intent(inout):: rhog(ng,nspin)
+      REAL(8) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
+      INTEGER, INTENT(in) :: irb(3,nat)
+      COMPLEX(8), INTENT(in):: eigrb(ngb,nat)
+      REAL(8), INTENT(inout):: rhor(nnr,nspin)
+      COMPLEX(8),  INTENT(inout):: rhog(ng,nspin)
 !
-      integer isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,           &
+      INTEGER isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,           &
      &     isa, ia, ir, irb3, imin3, imax3
-      real(8) sumrho
-      complex(8) ci, fp, fm, ca
-      complex(8), allocatable::  qgbt(:,:)
-      complex(8), allocatable:: v(:)
-      complex(8), allocatable:: qv(:)
+      REAL(8) sumrho
+      COMPLEX(8) ci, fp, fm, ca
+      COMPLEX(8), ALLOCATABLE::  qgbt(:,:)
+      COMPLEX(8), ALLOCATABLE:: v(:)
+      COMPLEX(8), ALLOCATABLE:: qv(:)
 !
-      if (nvb.eq.0) return
-      call start_clock( 'rhov' )
+      IF (nvb.EQ.0) RETURN
+      CALL start_clock( 'rhov' )
       ci=(0.,1.)
 !
 !
-      allocate( v( nnr ) )
-      allocate( qv( nnrb ) )
+      ALLOCATE( v( nnr ) )
+      ALLOCATE( qv( nnrb ) )
       v (:) = (0.d0, 0.d0)
-      allocate( qgbt( ngb, 2 ) )
+      ALLOCATE( qgbt( ngb, 2 ) )
 
 !
-      if(nspin.eq.1) then
+      IF(nspin.EQ.1) THEN
          ! 
          !     nspin=1 : two fft at a time, one per atom, if possible
          !
          iss=1
          isa=1
 
-         do is = 1, nvb
+         DO is = 1, nvb
 
 #ifdef __PARA
 
-            do ia=1,na(is)
+            DO ia=1,na(is)
                nfft=1
                irb3=irb(3,isa)
-               call parabox(nr3b,irb3,nr3,imin3,imax3)
-               if (imax3-imin3+1.le.0) go to 15
+               CALL parabox(nr3b,irb3,nr3,imin3,imax3)
+               IF (imax3-imin3+1.LE.0) go to 15
 #else
 
-            do ia = 1, na(is), 2
+            DO ia = 1, na(is), 2
                nfft = 2
-               if( ia .eq. na(is) ) nfft = 1
+               IF( ia .EQ. na(is) ) nfft = 1
 
 #endif
 
                !
                !  nfft=2 if two ffts at the same time are performed
                !
-               do ifft=1,nfft
+               DO ifft=1,nfft
                   qgbt(:,ifft) = (0.d0, 0.d0)
                   ijv=0
-                  do iv= 1,nh(is)
-                     do jv=iv,nh(is)
+                  DO iv= 1,nh(is)
+                     DO jv=iv,nh(is)
                         ijv=ijv+1
                         sumrho=rhovan(ijv,isa+ifft-1,iss)
-                        if(iv.ne.jv) sumrho=2.*sumrho
-                        do ig=1,ngb
+                        IF(iv.NE.jv) sumrho=2.*sumrho
+                        DO ig=1,ngb
                            qgbt(ig,ifft)=qgbt(ig,ifft) + sumrho*qgb(ig,ijv,is)
-                        end do
-                     end do
-                  end do
-               end do
+                        END DO
+                     END DO
+                  END DO
+               END DO
                !
                ! add structure factor
                !
                qv(:) = (0.d0, 0.d0)
-               if(nfft.eq.2)then
-                  do ig=1,ngb
+               IF(nfft.EQ.2)THEN
+                  DO ig=1,ngb
                      qv(npb(ig))=  &
                                    eigrb(ig,isa  )*qgbt(ig,1)  &
                         + ci*      eigrb(ig,isa+1)*qgbt(ig,2)
                      qv(nmb(ig))=                                       &
                              CONJG(eigrb(ig,isa  )*qgbt(ig,1))        &
                         + ci*CONJG(eigrb(ig,isa+1)*qgbt(ig,2))
-                  end do
-               else
-                  do ig=1,ngb
+                  END DO
+               ELSE
+                  DO ig=1,ngb
                      qv(npb(ig)) = eigrb(ig,isa)*qgbt(ig,1)
                      qv(nmb(ig)) = CONJG(eigrb(ig,isa)*qgbt(ig,1))
-                  end do
-               endif
+                  END DO
+               ENDIF
 
-               call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+               CALL ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
 
                !
                !  qv = US augmentation charge in real space on box grid
                !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
  
-               if(iprsta.gt.2) then
+               IF(iprsta.GT.2) THEN
                   ca = SUM(qv)
                   WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
      &                 omegab*DBLE(qgbt(1,1))
@@ -3162,94 +3162,94 @@
      &                 omegab*DBLE(qgbt(1,2))
                   WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
      &                 omegab*AIMAG(ca)/(nr1b*nr2b*nr3b)
-               endif
+               ENDIF
                !
                !  add qv(r) to v(r), in real space on the dense grid
                !
-               call  box2grid(irb(1,isa),1,qv,v)
-               if (nfft.eq.2) call  box2grid(irb(1,isa+1),2,qv,v)
+               CALL  box2grid(irb(1,isa),1,qv,v)
+               IF (nfft.EQ.2) CALL  box2grid(irb(1,isa+1),2,qv,v)
   15           isa=isa+nfft
 !
-            end do
-         end do
+            END DO
+         END DO
          !
          !  rhor(r) = total (smooth + US) charge density in real space
          !
-         do ir=1,nnr
+         DO ir=1,nnr
             rhor(ir,iss)=rhor(ir,iss)+DBLE(v(ir))        
-         end do
+         END DO
 !
-         if(iprsta.gt.2) then
+         IF(iprsta.GT.2) THEN
             ca = SUM(v)
 
-            call reduce(2,ca)
+            CALL reduce(2,ca)
 
             WRITE( stdout,'(a,2f12.8)')                                  &
      &           ' rhov: int  n_v(r)  dr = ',omega*ca/(nr1*nr2*nr3)
-         endif
+         ENDIF
 !
-         call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         CALL fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
-         if(iprsta.gt.2) then
+         IF(iprsta.GT.2) THEN
             WRITE( stdout,*) ' rhov: smooth ',omega*rhog(1,iss)
             WRITE( stdout,*) ' rhov: vander ',omega*v(1)
             WRITE( stdout,*) ' rhov: all    ',omega*(rhog(1,iss)+v(1))
-         endif
+         ENDIF
          !
          !  rhog(g) = total (smooth + US) charge density in G-space
          !
-         do ig=1,ng
+         DO ig=1,ng
             rhog(ig,iss)=rhog(ig,iss)+v(np(ig))
-         end do
+         END DO
 !
-         if(iprsta.gt.1) WRITE( stdout,'(a,2f12.8)')                          &
+         IF(iprsta.GT.1) WRITE( stdout,'(a,2f12.8)')                          &
      &        ' rhov: n_v(g=0) = ',omega*DBLE(rhog(1,iss))
 !
-      else
+      ELSE
          !
          !     nspin=2: two fft at a time, one for spin up and one for spin down
          !
          isup=1
          isdw=2
          isa=1
-         do is=1,nvb
-            do ia=1,na(is)
+         DO is=1,nvb
+            DO ia=1,na(is)
 #ifdef __PARA
                irb3=irb(3,isa)
-               call parabox(nr3b,irb3,nr3,imin3,imax3)
-               if (imax3-imin3+1.le.0) go to 25
+               CALL parabox(nr3b,irb3,nr3,imin3,imax3)
+               IF (imax3-imin3+1.LE.0) go to 25
 #endif
-               do iss=1,2
+               DO iss=1,2
                   qgbt(:,iss) = (0.d0, 0.d0)
                   ijv=0
-                  do iv=1,nh(is)
-                     do jv=iv,nh(is)
+                  DO iv=1,nh(is)
+                     DO jv=iv,nh(is)
                         ijv=ijv+1
                         sumrho=rhovan(ijv,isa,iss)
-                        if(iv.ne.jv) sumrho=2.*sumrho
-                        do ig=1,ngb
+                        IF(iv.NE.jv) sumrho=2.*sumrho
+                        DO ig=1,ngb
                            qgbt(ig,iss)=qgbt(ig,iss)+sumrho*qgb(ig,ijv,is)
-                        end do
-                     end do
-                  end do
-               end do
+                        END DO
+                     END DO
+                  END DO
+               END DO
 !     
 ! add structure factor
 !
                qv(:) = (0.d0, 0.d0)
-               do ig=1,ngb
+               DO ig=1,ngb
                   qv(npb(ig)) =    eigrb(ig,isa)*qgbt(ig,1)           &
      &                  + ci*      eigrb(ig,isa)*qgbt(ig,2)
                   qv(nmb(ig)) = CONJG(eigrb(ig,isa)*qgbt(ig,1))       &
      &                  + ci*   CONJG(eigrb(ig,isa)*qgbt(ig,2))
-               end do
+               END DO
 !
-               call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+               CALL ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
 !
 !  qv is the now the US augmentation charge for atomic species is
 !  and atom ia: real(qv)=spin up, imag(qv)=spin down
 !
-               if(iprsta.gt.2) then
+               IF(iprsta.GT.2) THEN
                   ca = SUM(qv)
                   WRITE( stdout,'(a,f12.8)') ' rhov: up   g-space = ',        &
      &                 omegab*DBLE(qgbt(1,1))
@@ -3259,30 +3259,30 @@
      &                 omegab*DBLE(qgbt(1,2))
                   WRITE( stdout,'(a,f12.8)') ' rhov: dw r-sp = ',             &
      &                 omegab*AIMAG(ca)/(nr1b*nr2b*nr3b)
-               endif
+               ENDIF
 !
 !  add qv(r) to v(r), in real space on the dense grid
 !
-               call box2grid2(irb(1,isa),qv,v)
+               CALL box2grid2(irb(1,isa),qv,v)
   25           isa=isa+1
 !
-            end do
-         end do
+            END DO
+         END DO
 !
-         do ir=1,nnr
+         DO ir=1,nnr
             rhor(ir,isup)=rhor(ir,isup)+DBLE(v(ir)) 
             rhor(ir,isdw)=rhor(ir,isdw)+AIMAG(v(ir)) 
-         end do
+         END DO
 !
-         if(iprsta.gt.2) then
+         IF(iprsta.GT.2) THEN
             ca = SUM(v)
-            call reduce(2,ca)
+            CALL reduce(2,ca)
             WRITE( stdout,'(a,2f12.8)') 'rhov:in n_v  ',omega*ca/(nr1*nr2*nr3)
-         endif
+         ENDIF
 !
-         call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         CALL fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
-         if(iprsta.gt.2) then
+         IF(iprsta.GT.2) THEN
             WRITE( stdout,*) 'rhov: smooth up',omega*rhog(1,isup)
             WRITE( stdout,*) 'rhov: smooth dw',omega*rhog(1,isdw)
             WRITE( stdout,*) 'rhov: vander up',omega*DBLE(v(1))
@@ -3291,91 +3291,91 @@
      &           omega*(rhog(1,isup)+DBLE(v(1)))
             WRITE( stdout,*) 'rhov: all dw',                                  &
      &           omega*(rhog(1,isdw)+AIMAG(v(1)))
-         endif
+         ENDIF
 !
-         do ig=1,ng
+         DO ig=1,ng
             fp=  v(np(ig)) + v(nm(ig))
             fm=  v(np(ig)) - v(nm(ig))
             rhog(ig,isup)=rhog(ig,isup) + 0.5*CMPLX(DBLE(fp),AIMAG(fm))
             rhog(ig,isdw)=rhog(ig,isdw) + 0.5*CMPLX(AIMAG(fp),-DBLE(fm))
-         end do
+         END DO
 !
-         if(iprsta.gt.2) WRITE( stdout,'(a,2f12.8)')                          &
+         IF(iprsta.GT.2) WRITE( stdout,'(a,2f12.8)')                          &
      &        ' rhov: n_v(g=0) up   = ',omega*DBLE (rhog(1,isup))
-         if(iprsta.gt.2) WRITE( stdout,'(a,2f12.8)')                          &
+         IF(iprsta.GT.2) WRITE( stdout,'(a,2f12.8)')                          &
      &        ' rhov: n_v(g=0) down = ',omega*DBLE(rhog(1,isdw))
 !
-      endif
+      ENDIF
 
-      deallocate(qgbt)
-      deallocate( v )
-      deallocate( qv )
+      DEALLOCATE(qgbt)
+      DEALLOCATE( v )
+      DEALLOCATE( qv )
 
-      call stop_clock( 'rhov' )
+      CALL stop_clock( 'rhov' )
 !
-      return
-      end subroutine rhov
+      RETURN
+      END SUBROUTINE rhov
 !
 !
 !-------------------------------------------------------------------------
-      subroutine s_wfc(n_atomic_wfc,becwfc,betae,wfc,swfc)
+      SUBROUTINE s_wfc(n_atomic_wfc,becwfc,betae,wfc,swfc)
 !-----------------------------------------------------------------------
 !
 !     input: wfc, becwfc=<wfc|beta>, betae=|beta>
 !     output: swfc=S|wfc>
 !
-      use ions_base, only: na
-      use cvan, only: nvb, ish
-      use uspp, only: nhsa => nkb, nhsavb=>nkbus, qq
-      use uspp_param, only: nh
-      use gvecw, only: ngw
+      USE ions_base, ONLY: na
+      USE cvan, ONLY: nvb, ish
+      USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus, qq
+      USE uspp_param, ONLY: nh
+      USE gvecw, ONLY: ngw
       !use parm
-      use constants, only: pi, fpi
-      implicit none
+      USE constants, ONLY: pi, fpi
+      IMPLICIT NONE
 ! input
-      integer, intent(in)         :: n_atomic_wfc
-      complex(8), intent(in) :: betae(ngw,nhsa),                   &
+      INTEGER, INTENT(in)         :: n_atomic_wfc
+      COMPLEX(8), INTENT(in) :: betae(ngw,nhsa),                   &
      &                               wfc(ngw,n_atomic_wfc)
-      real(8), intent(in)    :: becwfc(nhsa,n_atomic_wfc)
+      REAL(8), INTENT(in)    :: becwfc(nhsa,n_atomic_wfc)
 ! output
-      complex(8), intent(out):: swfc(ngw,n_atomic_wfc)
+      COMPLEX(8), INTENT(out):: swfc(ngw,n_atomic_wfc)
 ! local
-      integer is, iv, jv, ia, inl, jnl, i
-      real(8) qtemp(nhsavb,n_atomic_wfc)
+      INTEGER is, iv, jv, ia, inl, jnl, i
+      REAL(8) qtemp(nhsavb,n_atomic_wfc)
 !
       swfc=0.d0
 !
-      if (nvb.gt.0) then
+      IF (nvb.GT.0) THEN
          qtemp=0.d0
-         do is=1,nvb
-            do iv=1,nh(is)
-               do jv=1,nh(is)
-                  if(abs(qq(iv,jv,is)).gt.1.e-5) then
-                     do ia=1,na(is)
+         DO is=1,nvb
+            DO iv=1,nh(is)
+               DO jv=1,nh(is)
+                  IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN
+                     DO ia=1,na(is)
                         inl=ish(is)+(iv-1)*na(is)+ia
                         jnl=ish(is)+(jv-1)*na(is)+ia
-                        do i=1,n_atomic_wfc
+                        DO i=1,n_atomic_wfc
                            qtemp(inl,i) = qtemp(inl,i) +                &
      &                                    qq(iv,jv,is)*becwfc(jnl,i)
-                        end do
-                     end do
-                  endif
-               end do
-            end do
-         end do
+                        END DO
+                     END DO
+                  ENDIF
+               END DO
+            END DO
+         END DO
 !
-         call MXMA (betae,1,2*ngw,qtemp,1,nhsavb,swfc,1,                &
+         CALL MXMA (betae,1,2*ngw,qtemp,1,nhsavb,swfc,1,                &
      &              2*ngw,2*ngw,nhsavb,n_atomic_wfc)
-      end if
+      END IF
 !
       swfc=swfc+wfc
 !
-      return
-      end subroutine s_wfc
+      RETURN
+      END SUBROUTINE s_wfc
 
 !
 !-------------------------------------------------------------------------
-      subroutine sigset(cp,becp,qbecp,nss,ist,sig)
+      SUBROUTINE sigset(cp,becp,qbecp,nss,ist,sig)
 !-----------------------------------------------------------------------
 !     input: cp (non-orthonormal), becp, qbecp
 !     computes the matrix
@@ -3383,67 +3383,67 @@
 !     where s=s(r(t+dt)) 
 !     routine makes use of c(-q)=c*(q)
 !
-      use parameters, only: natx, nsx
-      use uspp, only: nhsa => nkb, nhsavb=>nkbus
-      use cvan, only : nvb
-      use electrons_base, only: nx => nbspx, n => nbsp
-      use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart
+      USE parameters, ONLY: natx, nsx
+      USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus
+      USE cvan, ONLY : nvb
+      USE electrons_base, ONLY: nx => nbspx, n => nbsp
+      USE gvecw, ONLY: ngw
+      USE reciprocal_vectors, ONLY: gstart
 !
-      implicit none
+      IMPLICIT NONE
 !
-      integer nss, ist
-      complex(8)  cp(ngw,n)
-      real(8) becp(nhsa,n), qbecp(nhsa,n), sig(nx,nx)
+      INTEGER nss, ist
+      COMPLEX(8)  cp(ngw,n)
+      REAL(8) becp(nhsa,n), qbecp(nhsa,n), sig(nx,nx)
 !
-      integer i, j
-      real(8)    tmp1(nx,nx) ! automatic array
+      INTEGER i, j
+      REAL(8)    tmp1(nx,nx) ! automatic array
 !
       sig = 0.d0
-      call MXMA(cp(1,ist),2*ngw,1,cp(1,ist),1,2*ngw,                    &
+      CALL MXMA(cp(1,ist),2*ngw,1,cp(1,ist),1,2*ngw,                    &
      &                                  sig,1,nx,nss,2*ngw,nss)
 !
 !     q >= 0  components with weight 2.0
 !
-      do j=1,nss
-         do i=1,nss
+      DO j=1,nss
+         DO i=1,nss
             sig(i,j)=-2.*sig(i,j)
-         end do
-      end do
-      if (gstart == 2) then
+         END DO
+      END DO
+      IF (gstart == 2) THEN
 !
 !     q = 0  components has weight 1.0
 !
-         do j=1,nss
-            do i=1,nss
+         DO j=1,nss
+            DO i=1,nss
                sig(i,j) = sig(i,j) +                                    &
      &              DBLE(cp(1,i+ist-1))*DBLE(cp(1,j+ist-1))
-            end do
-         end do
-      end if
-      call reduce(nx*nss,sig)
-      do i=1,nss
+            END DO
+         END DO
+      END IF
+      CALL reduce(nx*nss,sig)
+      DO i=1,nss
          sig(i,i) = sig(i,i)+1.
-      end do
+      END DO
 !
-      if(nvb.gt.0)then
+      IF(nvb.GT.0)THEN
          tmp1 = 0.d0
 !
-         call MXMA(becp(1,ist),nhsa,1,qbecp(1,ist),1,nhsa,                &
+         CALL MXMA(becp(1,ist),nhsa,1,qbecp(1,ist),1,nhsa,                &
      &                              tmp1,1,nx,nss,nhsavb,nss)
 !
-         do j=1,nss
-            do i=1,nss
+         DO j=1,nss
+            DO i=1,nss
                sig(i,j)=sig(i,j)-tmp1(i,j)
-            end do
-         end do
-      endif
+            END DO
+         END DO
+      ENDIF
 !
-      return
-      end subroutine sigset
+      RETURN
+      END SUBROUTINE sigset
 !
 !-----------------------------------------------------------------------
-      subroutine spinsq (c,bec,rhor)
+      SUBROUTINE spinsq (c,bec,rhor)
 !-----------------------------------------------------------------------
 !
 !     estimate of <S^2>=s(s+1) in two different ways.
@@ -3469,128 +3469,128 @@
 !     Requires on input: c=psi, bec=<c|beta>, rhoup(r), rhodw(r)
 !     Assumes real psi, with only half G vectors.
 !
-      use electrons_base, only: nx => nbspx, n => nbsp, iupdwn, nupdwn, f, nel, nspin
-      use io_global, only: stdout
-      use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart
-      use grid_dimensions, only: nr1, nr2, nr3, &
+      USE electrons_base, ONLY: nx => nbspx, n => nbsp, iupdwn, nupdwn, f, nel, nspin
+      USE io_global, ONLY: stdout
+      USE gvecw, ONLY: ngw
+      USE reciprocal_vectors, ONLY: gstart
+      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
             nnr => nnrx
-      use cell_base, only: omega
-      use cvan, only: nvb, ish
-      use uspp, only: nhsa => nkb, nhsavb=>nkbus, qq
-      use uspp_param, only: nh
-      use ions_base, only: na
+      USE cell_base, ONLY: omega
+      USE cvan, ONLY: nvb, ish
+      USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus, qq
+      USE uspp_param, ONLY: nh
+      USE ions_base, ONLY: na
 !
-      implicit none
+      IMPLICIT NONE
 ! input
-      real(8) bec(nhsa,n), rhor(nnr,nspin)
-      complex(8) c(ngw,nx)
+      REAL(8) bec(nhsa,n), rhor(nnr,nspin)
+      COMPLEX(8) c(ngw,nx)
 ! local variables
-      integer nup, ndw, ir, i, j, jj, ig, ia, is, iv, jv, inl, jnl
-      real(8) spin0, spin1, spin2, fup, fdw
-      real(8), allocatable:: overlap(:,:), temp(:)
-      logical frac
+      INTEGER nup, ndw, ir, i, j, jj, ig, ia, is, iv, jv, inl, jnl
+      REAL(8) spin0, spin1, spin2, fup, fdw
+      REAL(8), ALLOCATABLE:: overlap(:,:), temp(:)
+      LOGICAL frac
 !
 !
-      if (nspin.eq.1) return
+      IF (nspin.EQ.1) RETURN
 !
 ! find spin-up and spin-down states
 !
       fup = 0.0
-      do i=iupdwn(1),nupdwn(1)
+      DO i=iupdwn(1),nupdwn(1)
          fup = fup + f(i)
-      end do
-      nup = nint(fup)
+      END DO
+      nup = NINT(fup)
       ndw = nel(1)+nel(2) - nup
 !
 ! paranoid checks
 !
-      frac= abs(fup-nup).gt.1.0e-6
+      frac= ABS(fup-nup).GT.1.0e-6
       fup = 0.0
-      do i=1,nup
+      DO i=1,nup
          fup = fup + f(i)
-      end do
-      frac=frac.or.abs(fup-nup).gt.1.0e-6
+      END DO
+      frac=frac.OR.ABS(fup-nup).GT.1.0e-6
       fdw = 0.0
-      do j=iupdwn(2),iupdwn(2)-1+ndw
+      DO j=iupdwn(2),iupdwn(2)-1+ndw
          fdw = fdw + f(j)
-      end do
-      frac=frac.or.abs(fdw-ndw).gt.1.0e-6
+      END DO
+      frac=frac.OR.ABS(fdw-ndw).GT.1.0e-6
 !
-      spin0 = abs(fup-fdw)/2.d0 * ( abs(fup-fdw)/2.d0 + 1.d0 ) + fdw
+      spin0 = ABS(fup-fdw)/2.d0 * ( ABS(fup-fdw)/2.d0 + 1.d0 ) + fdw
 !
 !     Becke's formula for spin polarization
 !
       spin1 = 0.0
-      do ir=1,nnr
-         spin1 = spin1 - min(rhor(ir,1),rhor(ir,2))
-      end do
-      call reduce(1,spin1)
+      DO ir=1,nnr
+         spin1 = spin1 - MIN(rhor(ir,1),rhor(ir,2))
+      END DO
+      CALL reduce(1,spin1)
       spin1 = spin0 + omega/(nr1*nr2*nr3)*spin1
-      if (frac) then
+      IF (frac) THEN
          WRITE( stdout,'(/'' Spin contamination: s(s+1)='',f5.2,'' (Becke) '',&
      &                             f5.2,'' (expected)'')')              &
-     &          spin1, abs(fup-fdw)/2.d0*(abs(fup-fdw)/2.d0+1.d0)
-         return
-      end if
+     &          spin1, ABS(fup-fdw)/2.d0*(ABS(fup-fdw)/2.d0+1.d0)
+         RETURN
+      END IF
 !
 !     Slater formula, smooth contribution to  < psi_up | psi_dw >
 !
-      allocate (overlap(nup,ndw))
-      allocate (temp(ngw))
-      do j=1,ndw
+      ALLOCATE (overlap(nup,ndw))
+      ALLOCATE (temp(ngw))
+      DO j=1,ndw
          jj=j+iupdwn(2)-1
-         do i=1,nup
+         DO i=1,nup
             overlap(i,j)=0.d0
-            do ig=1,ngw
+            DO ig=1,ngw
                temp(ig)=DBLE(CONJG(c(ig,i))*c(ig,jj))
-            end do
+            END DO
             overlap(i,j) = 2.d0*SUM(temp)
-            if (gstart == 2) overlap(i,j) = overlap(i,j) - temp(1)
-         end do
-      end do
-      deallocate (temp)
-      call reduce(nup*ndw,overlap)
-      do j=1,ndw
+            IF (gstart == 2) overlap(i,j) = overlap(i,j) - temp(1)
+         END DO
+      END DO
+      DEALLOCATE (temp)
+      CALL reduce(nup*ndw,overlap)
+      DO j=1,ndw
          jj=j+iupdwn(2)-1
-         do i=1,nup
+         DO i=1,nup
 !
 !     vanderbilt contribution to  < psi_up | psi_dw >
 !
-            do is=1,nvb
-               do iv=1,nh(is)
-                  do jv=1,nh(is)
-                     if(abs(qq(iv,jv,is)).gt.1.e-5) then 
-                        do ia=1,na(is)
+            DO is=1,nvb
+               DO iv=1,nh(is)
+                  DO jv=1,nh(is)
+                     IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN 
+                        DO ia=1,na(is)
                            inl=ish(is)+(iv-1)*na(is)+ia
                            jnl=ish(is)+(jv-1)*na(is)+ia
                            overlap(i,j) = overlap(i,j) +                &
      &                          qq(iv,jv,is)*bec(inl,i)*bec(jnl,jj)
-                        end do
-                     endif
-                  end do
-               end do
-            end do
-         end do
-      end do
+                        END DO
+                     ENDIF
+                  END DO
+               END DO
+            END DO
+         END DO
+      END DO
 !
       spin2 = spin0
-      do j=1,ndw
-         do i=1,nup
+      DO j=1,ndw
+         DO i=1,nup
             spin2 = spin2 - overlap(i,j)**2
-         end do
-      end do
+         END DO
+      END DO
 !
-      deallocate (overlap)
+      DEALLOCATE (overlap)
 !
       WRITE( stdout,'(/" Spin contamination: s(s+1)=",f5.2," (Slater) ",  &
      &          f5.2," (Becke) ",f5.2," (expected)")')              &
-     &     spin2,spin1, abs(fup-fdw)/2.d0*(abs(fup-fdw)/2.d0+1.d0)
+     &     spin2,spin1, ABS(fup-fdw)/2.d0*(ABS(fup-fdw)/2.d0+1.d0)
 !
-      return
-      end subroutine spinsq
+      RETURN
+      END SUBROUTINE spinsq
 !-------------------------------------------------------------------------
-      subroutine tauset(phi,bephi,qbephi,nss,ist,tau)
+      SUBROUTINE tauset(phi,bephi,qbephi,nss,ist,tau)
 !-----------------------------------------------------------------------
 !     input: phi
 !     computes the matrix
@@ -3598,62 +3598,62 @@
 !     where s=s(r(t+dt)) and s'=s(r(t))  
 !     routine makes use of c(-q)=c*(q)
 !
-      use parameters, only: nsx, natx
-      use cvan, only: nvb
-      use uspp, only: nhsa => nkb, nhsavb=>nkbus
-      use electrons_base, only: nx => nbspx, n => nbsp
-      use gvecw, only: ngw
-      use reciprocal_vectors, only: gstart
+      USE parameters, ONLY: nsx, natx
+      USE cvan, ONLY: nvb
+      USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus
+      USE electrons_base, ONLY: nx => nbspx, n => nbsp
+      USE gvecw, ONLY: ngw
+      USE reciprocal_vectors, ONLY: gstart
 !
-      implicit none
-      integer nss, ist
-      complex(8) phi(ngw,n)
-      real(8)  bephi(nhsa,n), qbephi(nhsa,n), tau(nx,nx)
-      integer i, j
-      real(8)    tmp1(nx,nx) ! automatic array
+      IMPLICIT NONE
+      INTEGER nss, ist
+      COMPLEX(8) phi(ngw,n)
+      REAL(8)  bephi(nhsa,n), qbephi(nhsa,n), tau(nx,nx)
+      INTEGER i, j
+      REAL(8)    tmp1(nx,nx) ! automatic array
 !
       tau = 0.d0
-      call MXMA(phi(1,ist),2*ngw,1,phi(1,ist),1,2*ngw,                  &
+      CALL MXMA(phi(1,ist),2*ngw,1,phi(1,ist),1,2*ngw,                  &
      &                                   tau,1,nx,nss,2*ngw,nss)
 !
 !     q >= 0  components with weight 2.0
 !
-      do j=1,nss
-         do i=1,nss
+      DO j=1,nss
+         DO i=1,nss
             tau(i,j)=2.*tau(i,j)
-         end do
-      end do
-      if (gstart == 2) then
+         END DO
+      END DO
+      IF (gstart == 2) THEN
 !
 !     q = 0  components has weight 1.0
 !
-         do j=1,nss
-            do i=1,nss
+         DO j=1,nss
+            DO i=1,nss
                tau(i,j) = tau(i,j) -                                    &
      &              DBLE(phi(1,i+ist-1))*DBLE(phi(1,j+ist-1))
-            end do
-         end do
-      end if
-      call reduce(nx*nss,tau)
+            END DO
+         END DO
+      END IF
+      CALL reduce(nx*nss,tau)
 !
-      if(nvb.gt.0)then
+      IF(nvb.GT.0)THEN
          tmp1 = 0.d0
 !
-         call MXMA(bephi(1,ist),nhsa,1,qbephi(1,ist),1,nhsa,              &
+         CALL MXMA(bephi(1,ist),nhsa,1,qbephi(1,ist),1,nhsa,              &
      &                                     tmp1,1,nx,nss,nhsavb,nss)
 !
-         do j=1,nss
-            do i=1,nss
+         DO j=1,nss
+            DO i=1,nss
                tau(i,j)=tau(i,j)+tmp1(i,j)
-            end do
-         end do
-      endif
+            END DO
+         END DO
+      ENDIF
 !
-      return
-      end subroutine tauset
+      RETURN
+      END SUBROUTINE tauset
 !
 !-------------------------------------------------------------------------
-      subroutine updatc(ccc,x0,phi,bephi,becp,bec,cp)
+      SUBROUTINE updatc(ccc,x0,phi,bephi,becp,bec,cp)
 !-----------------------------------------------------------------------
 !     input ccc : dt**2/emass (unchanged in output)
 !     input x0  : converged lambdas from ortho-loop (unchanged in output)
@@ -3663,91 +3663,91 @@
 !     output cp : orthonormal cp=cp+lambda*phi
 !     output bec: bec=becp+lambda*bephi
 !
-      use ions_base, only: nsp, na
-      use io_global, only: stdout
-      use cvan, only: nvb, ish
-      use uspp, only: nhsa => nkb, nhsavb=>nkbus
-      use uspp_param, only: nh
-      use gvecw, only: ngw
-      use electrons_base, only: nx => nbspx, n => nbsp
-      use control_flags, only: iprint, iprsta
+      USE ions_base, ONLY: nsp, na
+      USE io_global, ONLY: stdout
+      USE cvan, ONLY: nvb, ish
+      USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus
+      USE uspp_param, ONLY: nh
+      USE gvecw, ONLY: ngw
+      USE electrons_base, ONLY: nx => nbspx, n => nbsp
+      USE control_flags, ONLY: iprint, iprsta
 !
-      implicit none
+      IMPLICIT NONE
 !
-      complex(8) cp(ngw,n), phi(ngw,n)
-      real(8)   bec(nhsa,n), x0(nx,nx), ccc
-      real(8)   bephi(nhsa,n), becp(nhsa,n)
+      COMPLEX(8) cp(ngw,n), phi(ngw,n)
+      REAL(8)   bec(nhsa,n), x0(nx,nx), ccc
+      REAL(8)   bephi(nhsa,n), becp(nhsa,n)
 ! local variables
-      integer i, j, ig, is, iv, ia, inl
-      real(8) wtemp(n,nhsa) ! automatic array
-      complex(8), allocatable :: wrk2(:,:)
+      INTEGER i, j, ig, is, iv, ia, inl
+      REAL(8) wtemp(n,nhsa) ! automatic array
+      COMPLEX(8), ALLOCATABLE :: wrk2(:,:)
 !
 !     lagrange multipliers
 !
-      call start_clock( 'updatc' )
+      CALL start_clock( 'updatc' )
       
-      allocate( wrk2( ngw, n ) )
+      ALLOCATE( wrk2( ngw, n ) )
 
       wrk2 = (0.d0, 0.d0)
-      do j=1,n
-         call DSCAL(n,ccc,x0(1,j),1)
-      end do
+      DO j=1,n
+         CALL DSCAL(n,ccc,x0(1,j),1)
+      END DO
 !
 !     wrk2 = sum_m lambda_nm s(r(t+dt))|m>
 !
-      call MXMA(phi,1,2*ngw,x0,nx,1,wrk2,1,2*ngw,2*ngw,n,n)
+      CALL MXMA(phi,1,2*ngw,x0,nx,1,wrk2,1,2*ngw,2*ngw,n,n)
 !
-      do i=1,n
-         do ig=1,ngw
+      DO i=1,n
+         DO ig=1,ngw
             cp(ig,i)=cp(ig,i)+wrk2(ig,i)
-         end do
-      end do
+         END DO
+      END DO
 !    
 !     updating of the <beta|c(n,g)>
 !
 !     bec of vanderbilt species are updated 
 !
-      if(nvb.gt.0)then
-         call MXMA(x0,1,nx,bephi,nhsa,1,wtemp,1,n,n,n,nhsavb)
+      IF(nvb.GT.0)THEN
+         CALL MXMA(x0,1,nx,bephi,nhsa,1,wtemp,1,n,n,n,nhsavb)
 !
-         do i=1,n
-            do inl=1,nhsavb
+         DO i=1,n
+            DO inl=1,nhsavb
                bec(inl,i)=wtemp(i,inl)+becp(inl,i)
-            end do
-         end do
-      endif
+            END DO
+         END DO
+      ENDIF
 !
-      if (iprsta.gt.2) then
+      IF (iprsta.GT.2) THEN
          WRITE( stdout,*)
-         do is=1,nsp
-            if(nsp.gt.1) then
+         DO is=1,nsp
+            IF(nsp.GT.1) THEN
                WRITE( stdout,'(33x,a,i4)') ' updatc: bec (is)',is
                WRITE( stdout,'(8f9.4)')                                       &
      &            ((bec(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,n)
-            else
-               do ia=1,na(is)
+            ELSE
+               DO ia=1,na(is)
                   WRITE( stdout,'(33x,a,i4)') ' updatc: bec (ia)',ia
                   WRITE( stdout,'(8f9.4)')                                    &
      &            ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,n)
-               end do
-            end if
+               END DO
+            END IF
             WRITE( stdout,*)
-         end do
-      endif
+         END DO
+      ENDIF
 !
-      do j=1,n
-         call DSCAL(n,1.0/ccc,x0(1,j),1)
-      end do
+      DO j=1,n
+         CALL DSCAL(n,1.0/ccc,x0(1,j),1)
+      END DO
 
-      deallocate( wrk2 )
+      DEALLOCATE( wrk2 )
 !
-      call stop_clock( 'updatc' )
+      CALL stop_clock( 'updatc' )
 !
-      return
-      end subroutine updatc
+      RETURN
+      END SUBROUTINE updatc
 !
 !-----------------------------------------------------------------------
-      subroutine vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,           &
+      SUBROUTINE vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,           &
      &     ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
 !-----------------------------------------------------------------------
 !     computes: the one-particle potential v in real space,
@@ -3761,59 +3761,59 @@
 !     rhor output: total potential on dense real space grid
 !     rhos output: total potential on smooth real space grid
 !
-      use kinds, only: dp
-      use control_flags, only: iprint, tvlocw, iprsta, thdyn, tpre, tfor, tprnfor
-      use io_global, only: stdout
-      use parameters, only: natx, nsx
-      use ions_base, only: nas => nax, nsp, na, nat
-      use gvecs
-      use gvecp, only: ng => ngm
-      use cell_base, only: omega
-      use cell_base, only: a1, a2, a3, tpiba2
-      use reciprocal_vectors, only: gstart, g
-      use recvecs_indexes, only: np, nm
-      use grid_dimensions, only: nr1, nr2, nr3, &
+      USE kinds, ONLY: dp
+      USE control_flags, ONLY: iprint, tvlocw, iprsta, thdyn, tpre, tfor, tprnfor
+      USE io_global, ONLY: stdout
+      USE parameters, ONLY: natx, nsx
+      USE ions_base, ONLY: nas => nax, nsp, na, nat
+      USE gvecs
+      USE gvecp, ONLY: ng => ngm
+      USE cell_base, ONLY: omega
+      USE cell_base, ONLY: a1, a2, a3, tpiba2
+      USE reciprocal_vectors, ONLY: gstart, g
+      USE recvecs_indexes, ONLY: np, nm
+      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
-      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
+      USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, &
             nr1sx, nr2sx, nr3sx, nnrsx
-      use electrons_base, only: nspin
-      use constants, only: pi, fpi
-      use energies, only: etot, eself, enl, ekin, epseu, esr, eht, exc 
-      use local_pseudo, only: vps, rhops
-      use core, only: nlcc_any
-      use gvecb
-      use dener
-      use derho
-      use mp, only: mp_sum
-      use funct, only: dft_is_meta
+      USE electrons_base, ONLY: nspin
+      USE constants, ONLY: pi, fpi
+      USE energies, ONLY: etot, eself, enl, ekin, epseu, esr, eht, exc 
+      USE local_pseudo, ONLY: vps, rhops
+      USE core, ONLY: nlcc_any
+      USE gvecb
+      USE dener
+      USE derho
+      USE mp, ONLY: mp_sum
+      USE funct, ONLY: dft_is_meta
 !
-      implicit none
+      IMPLICIT NONE
 !
-      logical tlast,tfirst
-      integer nfi
-      real(8)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx)
-      real(8)  rhoc(nnr), tau0(3,natx)
-      complex(8) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
+      LOGICAL tlast,tfirst
+      INTEGER nfi
+      REAL(8)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx)
+      REAL(8)  rhoc(nnr), tau0(3,natx)
+      COMPLEX(8) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
      &                ei3(-nr3:nr3,nat), eigrb(ngb,nat),        &
      &                rhog(ng,nspin), sfac(ngs,nsp)
 !
-      integer irb(3,nat), iss, isup, isdw, ig, ir,i,j,k,is, ia
-      real(8) fion1(3,natx), vave, ebac, wz, eh
-      complex(8)  fp, fm, ci
-      complex(8), allocatable :: v(:), vs(:)
-      complex(8), allocatable :: rhotmp(:), vtemp(:), drhotmp(:,:,:)
+      INTEGER irb(3,nat), iss, isup, isdw, ig, ir,i,j,k,is, ia
+      REAL(8) fion1(3,natx), vave, ebac, wz, eh
+      COMPLEX(8)  fp, fm, ci
+      COMPLEX(8), ALLOCATABLE :: v(:), vs(:)
+      COMPLEX(8), ALLOCATABLE :: rhotmp(:), vtemp(:), drhotmp(:,:,:)
 !
-      call start_clock( 'vofrho' )
+      CALL start_clock( 'vofrho' )
       ci=(0.,1.)
 !
 !     wz = factor for g.neq.0 because of c*(g)=c(-g)
 !
       wz = 2.0
-      allocate( v( nnr ) )
-      allocate( vs( nnrsx ) )
-      allocate(vtemp(ng))
-      allocate(rhotmp(ng))
-      if (tpre) allocate(drhotmp(ng,3,3))
+      ALLOCATE( v( nnr ) )
+      ALLOCATE( vs( nnrsx ) )
+      ALLOCATE(vtemp(ng))
+      ALLOCATE(rhotmp(ng))
+      IF (tpre) ALLOCATE(drhotmp(ng,3,3))
 !
 !     first routine in which fion is calculated: annihilation
 !
@@ -3823,103 +3823,103 @@
 !     ===================================================================
 !     forces on ions, ionic term in real space
 !     -------------------------------------------------------------------
-      if( tprnfor .or. tfor .or. tfirst .or. tpre ) then
-        call force_ion(tau0,esr,fion,dsr)
-      end if
+      IF( tprnfor .OR. tfor .OR. tfirst .OR. tpre ) THEN
+        CALL force_ion(tau0,esr,fion,dsr)
+      END IF
 !
-      if(nspin.eq.1) then
+      IF(nspin.EQ.1) THEN
          iss=1
-         do ig=1,ng
+         DO ig=1,ng
             rhotmp(ig)=rhog(ig,iss)
-         end do
-         if(tpre)then
-            do j=1,3
-               do i=1,3
-                  do ig=1,ng
+         END DO
+         IF(tpre)THEN
+            DO j=1,3
+               DO i=1,3
+                  DO ig=1,ng
                      drhotmp(ig,i,j)=drhog(ig,iss,i,j)
-                  enddo
-               enddo
-            enddo
-         endif
-      else
+                  ENDDO
+               ENDDO
+            ENDDO
+         ENDIF
+      ELSE
          isup=1
          isdw=2
-         do ig=1,ng
+         DO ig=1,ng
             rhotmp(ig)=rhog(ig,isup)+rhog(ig,isdw)
-         end do
-         if(tpre)then
-            do i=1,3
-               do j=1,3
-                  do ig=1,ng
+         END DO
+         IF(tpre)THEN
+            DO i=1,3
+               DO j=1,3
+                  DO ig=1,ng
                      drhotmp(ig,i,j) = drhog(ig,isup,i,j) +           &
      &                                 drhog(ig,isdw,i,j)
-                  enddo
-               enddo
-            enddo
-         endif
-      end if
+                  ENDDO
+               ENDDO
+            ENDDO
+         ENDIF
+      END IF
 !     ===================================================================
 !     calculation local potential energy
 !     -------------------------------------------------------------------
       vtemp=(0.,0.)
-      do is=1,nsp
-         do ig=1,ngs
+      DO is=1,nsp
+         DO ig=1,ngs
             vtemp(ig)=vtemp(ig)+CONJG(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
-         end do
-      end do
+         END DO
+      END DO
 !
       epseu=wz*DBLE(SUM(vtemp))
-      if (gstart == 2) epseu=epseu-vtemp(1)
-      call reduce(1,epseu)
+      IF (gstart == 2) epseu=epseu-vtemp(1)
+      CALL reduce(1,epseu)
       epseu=epseu*omega
 !
-      if(tpre) call denps(rhotmp,drhotmp,sfac,vtemp,dps)
+      IF(tpre) CALL denps(rhotmp,drhotmp,sfac,vtemp,dps)
 !
 !     ===================================================================
 !     calculation hartree energy
 !     -------------------------------------------------------------------
-      do is=1,nsp
-         do ig=1,ngs
+      DO is=1,nsp
+         DO ig=1,ngs
             rhotmp(ig)=rhotmp(ig)+sfac(ig,is)*rhops(ig,is)
-         end do
-      end do
-      if (gstart == 2) vtemp(1)=0.0
-      do ig=gstart,ng
+         END DO
+      END DO
+      IF (gstart == 2) vtemp(1)=0.0
+      DO ig=gstart,ng
          vtemp(ig)=CONJG(rhotmp(ig))*rhotmp(ig)/g(ig)
-      end do
+      END DO
 !
       eh=DBLE(SUM(vtemp))*wz*0.5*fpi/tpiba2
-      call reduce(1,eh)
-      if(tpre) call denh(rhotmp,drhotmp,sfac,vtemp,eh,dh)
-      if(tpre) deallocate(drhotmp)
+      CALL reduce(1,eh)
+      IF(tpre) CALL denh(rhotmp,drhotmp,sfac,vtemp,eh,dh)
+      IF(tpre) DEALLOCATE(drhotmp)
 !     ===================================================================
 !     forces on ions, ionic term in reciprocal space
 !     -------------------------------------------------------------------
-      if( tprnfor .or. tfor .or. tpre)                                                  &
-     &    call force_ps(rhotmp,rhog,vtemp,ei1,ei2,ei3,fion1)
+      IF( tprnfor .OR. tfor .OR. tpre)                                                  &
+     &    CALL force_ps(rhotmp,rhog,vtemp,ei1,ei2,ei3,fion1)
 !     ===================================================================
 !     calculation hartree + local pseudo potential
 !     -------------------------------------------------------------------
 !
-      if (gstart == 2) vtemp(1)=(0.,0.)
-      do ig=gstart,ng
+      IF (gstart == 2) vtemp(1)=(0.,0.)
+      DO ig=gstart,ng
          vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*g(ig))
-      end do
+      END DO
 !
-      do is=1,nsp
-         do ig=1,ngs
+      DO is=1,nsp
+         DO ig=1,ngs
             vtemp(ig)=vtemp(ig)+sfac(ig,is)*vps(ig,is)
-         end do
-      end do
+         END DO
+      END DO
 !
 !     vtemp = v_loc(g) + v_h(g)
 !
 !     ===================================================================
 !      calculation exchange and correlation energy and potential
 !     -------------------------------------------------------------------
-      if (nlcc_any) call add_cc(rhoc,rhog,rhor)
+      IF (nlcc_any) CALL add_cc(rhoc,rhog,rhor)
 !
-      call exch_corr_h(nspin,rhog,rhor,rhoc,sfac,exc,dxc)
+      CALL exch_corr_h(nspin,rhog,rhor,rhoc,sfac,exc,dxc)
 !
 !     rhor contains the xc potential in r-space
 !
@@ -3927,123 +3927,123 @@
 !     fourier transform of xc potential to g-space (dense grid)
 !     -------------------------------------------------------------------
 !
-      if(nspin.eq.1) then
+      IF(nspin.EQ.1) THEN
          iss=1
-         do ir=1,nnr
+         DO ir=1,nnr
             v(ir)=CMPLX(rhor(ir,iss),0.d0)
-         end do
+         END DO
 !
 !     v_xc(r) --> v_xc(g)
 !
-         call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         CALL fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
-         do ig=1,ng
+         DO ig=1,ng
             rhog(ig,iss)=vtemp(ig)+v(np(ig))
-         end do
+         END DO
 !
 !     v_tot(g) = (v_tot(g) - v_xc(g)) +v_xc(g)
 !     rhog contains the total potential in g-space
 !
-      else
+      ELSE
          isup=1
          isdw=2
-         do ir=1,nnr
+         DO ir=1,nnr
             v(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
-         end do
-         call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-         do ig=1,ng
+         END DO
+         CALL fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         DO ig=1,ng
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
             rhog(ig,isup)=vtemp(ig)+0.5*CMPLX( DBLE(fp),AIMAG(fm))
             rhog(ig,isdw)=vtemp(ig)+0.5*CMPLX(AIMAG(fp),-DBLE(fm))
-         end do
-      endif
+         END DO
+      ENDIF
 !
 !     rhog contains now the total (local+Hartree+xc) potential in g-space
 !
-      if( tprnfor .or. tfor ) then
+      IF( tprnfor .OR. tfor ) THEN
 
-         if (nlcc_any) call force_cc(irb,eigrb,rhor,fion1)
+         IF (nlcc_any) CALL force_cc(irb,eigrb,rhor,fion1)
 
-         call mp_sum( fion1 )
+         CALL mp_sum( fion1 )
 !
 !    add g-space ionic and core correction contributions to fion
 !
          fion = fion + fion1
 
-      end if
+      END IF
 !     ===================================================================
 !     fourier transform of total potential to r-space (dense grid)
 !     -------------------------------------------------------------------
       v(:) = (0.d0, 0.d0)
-      if(nspin.eq.1) then
+      IF(nspin.EQ.1) THEN
          iss=1
-         do ig=1,ng
+         DO ig=1,ng
             v(np(ig))=rhog(ig,iss)
             v(nm(ig))=CONJG(rhog(ig,iss))
-         end do
+         END DO
 !
 !     v(g) --> v(r)
 !
-         call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         CALL invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
-         do ir=1,nnr
+         DO ir=1,nnr
             rhor(ir,iss)=DBLE(v(ir))
-         end do
+         END DO
 !
 !     calculation of average potential
 !
          vave=SUM(rhor(:,iss))/DBLE(nr1*nr2*nr3)
-      else
+      ELSE
          isup=1
          isdw=2
-         do ig=1,ng
+         DO ig=1,ng
             v(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
-            v(nm(ig))=CONJG(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
-         end do
+            v(nm(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
+         END DO
 !
-         call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-         do ir=1,nnr
+         CALL invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         DO ir=1,nnr
             rhor(ir,isup)= DBLE(v(ir))
             rhor(ir,isdw)=AIMAG(v(ir))
-         end do
+         END DO
 !
 !     calculation of average potential
 !
          vave=(SUM(rhor(:,isup))+SUM(rhor(:,isdw)))       &
      &        /2.0/DBLE(nr1*nr2*nr3)
-      endif
-      call reduce(1,vave)
+      ENDIF
+      CALL reduce(1,vave)
 !     ===================================================================
 !     fourier transform of total potential to r-space (smooth grid)
 !     -------------------------------------------------------------------
       vs (:) = (0.d0, 0.d0)
-      if(nspin.eq.1)then
+      IF(nspin.EQ.1)THEN
          iss=1
-         do ig=1,ngs
+         DO ig=1,ngs
             vs(nms(ig))=CONJG(rhog(ig,iss))
             vs(nps(ig))=rhog(ig,iss)
-         end do
+         END DO
 !
-         call ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+         CALL ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
 !
-         do ir=1,nnrsx
+         DO ir=1,nnrsx
             rhos(ir,iss)=DBLE(vs(ir))
-         end do
-      else
+         END DO
+      ELSE
          isup=1
          isdw=2
-         do ig=1,ngs
+         DO ig=1,ngs
             vs(nps(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
-            vs(nms(ig))=CONJG(rhog(ig,isup)) +ci*conjg(rhog(ig,isdw))
-         end do 
-         call ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
-         do ir=1,nnrsx
+            vs(nms(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
+         END DO 
+         CALL ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+         DO ir=1,nnrsx
             rhos(ir,isup)= DBLE(vs(ir))
             rhos(ir,isdw)=AIMAG(vs(ir))
-         end do
-      endif
-      if(dft_is_meta()) call vofrho_meta(v,vs)  !METAGGA
+         END DO
+      ENDIF
+      IF(dft_is_meta()) CALL vofrho_meta(v,vs)  !METAGGA
       ebac=0.0
 !
       eht=eh*omega+esr-eself
@@ -4051,29 +4051,29 @@
 !     etot is the total energy ; ekin, enl were calculated in rhoofr
 !
       etot=ekin+eht+epseu+enl+exc+ebac
-      if(tpre) detot=dekin+dh+dps+denl+dxc+dsr
+      IF(tpre) detot=dekin+dh+dps+denl+dxc+dsr
 !
-      if(tvlocw.and.tlast)then
+      IF(tvlocw.AND.tlast)THEN
 #ifdef __PARA
-         call write_rho(46,nspin,rhor)
+         CALL write_rho(46,nspin,rhor)
 #else
-         write(46) ((rhor(ir,iss),ir=1,nnr),iss=1,nspin)
+         WRITE(46) ((rhor(ir,iss),ir=1,nnr),iss=1,nspin)
 #endif
-      endif
+      ENDIF
 !
-      deallocate(rhotmp)
-      deallocate(vtemp)
-      deallocate( v )
-      deallocate( vs )
+      DEALLOCATE(rhotmp)
+      DEALLOCATE(vtemp)
+      DEALLOCATE( v )
+      DEALLOCATE( vs )
 !
 !
-      call stop_clock( 'vofrho' )
+      CALL stop_clock( 'vofrho' )
 
-      if((nfi.eq.0).or.tfirst.or.tlast) goto 999
-      if(mod(nfi-1,iprint).ne.0 ) return
+      IF((nfi.EQ.0).OR.tfirst.OR.tlast) GOTO 999
+      IF(MOD(nfi-1,iprint).NE.0 ) RETURN
 !
- 999  if ( tpre ) then
-         if( iprsta >= 2 ) then  
+ 999  IF ( tpre ) THEN
+         IF( iprsta >= 2 ) THEN  
             WRITE( stdout,*)
             WRITE( stdout,*) "From vofrho:"
             WRITE( stdout,*) "cell parameters h"
@@ -4096,187 +4096,238 @@
             WRITE( stdout,5555) ((denl(i,j),j=1,3),i=1,3)
             WRITE( stdout,*) "derivative of e(xc)"
             WRITE( stdout,5555) ((dxc(i,j),j=1,3),i=1,3)
-         endif
-      endif
-5555  format(1x,f12.5,1x,f12.5,1x,f12.5/                                &
+         ENDIF
+      ENDIF
+5555  FORMAT(1x,f12.5,1x,f12.5,1x,f12.5/                                &
      &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
      &       1x,f12.5,1x,f12.5,1x,f12.5//)
 !
-      return
-      end subroutine vofrho
+      RETURN
+      END SUBROUTINE vofrho
 
 !
 !----------------------------------------------------------------------
-      subroutine checkrho(nnr,nspin,rhor,rmin,rmax,rsum,rnegsum)
+      SUBROUTINE checkrho(nnr,nspin,rhor,rmin,rmax,rsum,rnegsum)
 !----------------------------------------------------------------------
 !
 !     check \int rho(r)dr and the negative part of rho
 !
-      implicit none
-      integer nnr, nspin
-      real(8) rhor(nnr,nspin), rmin, rmax, rsum, rnegsum
+      IMPLICIT NONE
+      INTEGER nnr, nspin
+      REAL(8) rhor(nnr,nspin), rmin, rmax, rsum, rnegsum
 !
-      real(8) roe
-      integer ir, iss
+      REAL(8) roe
+      INTEGER ir, iss
 !
       rsum   =0.0
       rnegsum=0.0
       rmin   =100.
       rmax   =0.0
-      do iss=1,nspin
-         do ir=1,nnr
+      DO iss=1,nspin
+         DO ir=1,nnr
             roe=rhor(ir,iss)
             rsum=rsum+roe
-            if (roe.lt.0.0) rnegsum=rnegsum+roe
-            rmax=max(rmax,roe)
-            rmin=min(rmin,roe)
-         end do
-      end do
-      call reduce(1,rsum)
-      call reduce(1,rnegsum)
-      return
-      end subroutine checkrho
+            IF (roe.LT.0.0) rnegsum=rnegsum+roe
+            rmax=MAX(rmax,roe)
+            rmin=MIN(rmin,roe)
+         END DO
+      END DO
+      CALL reduce(1,rsum)
+      CALL reduce(1,rnegsum)
+      RETURN
+    END SUBROUTINE checkrho
 !______________________________________________________________________
 
 !------------------------------------------------------------------------
-      subroutine poles(rhortot,dipole,mu,quadrupole)
-!------------------------------------------------------------------------
-!
-      use para_mod
-!      use parm
-      use grid_dimensions, only : nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr=> nnrx
-      use cell_base, only : a1, a2, a3, omega
-      use electrons_base, only: qbac
-!
-      implicit none
-      real(8), parameter :: debye=1./0.39344, angs=1./0.52917726
-!
-      real(8)  dipole,quadrupole,mu(3),quad(6)
-      real(8)  ax,ay,az,XG0,YG0,ZG0,X,Y,Z,D,s,rzero,x0,y0,z0
-      real(8)  en1,en2, pass1, pass2, pass3
-      real(8)  rhortot(nnr)
-!     real(8), allocatable:: x(:),y(:),z(:)
-      real(8), allocatable:: dip(:)
-      integer (4) ix,ir, i, j, k
-!
-      allocate(dip(nnr))
-
-!     compute the dipole moment
-!
-        ax=a1(1)
-        ay=a2(2)
-        az=a3(3)
-!
-        XG0 = -ax/2.
-        YG0 = -ay/2.
-        ZG0 = -az/2.
-        pass1=ax/nr1
-        pass2=ax/nr2
-        pass3=ax/nr3
-!        pass1 = ax / (nr1-1)
-!        pass2 = ay / (nr2-1)
-!        pass3 = az / (nr3-1)
-!
-        do ix=1,3
-        ir=1
-!
-        do k = dfftp%ipp(me)+1, dfftp%ipp(me)+ dfftp%npp(me)
-         do j=1,nr2x
-          do i=1,nr1x
-            X=XG0+(i-1)*pass1
-            Y=YG0+(j-1)*pass2
-            Z=ZG0+(k-1)*pass3
-            if (ix.eq.1) D=X
-            if (ix.eq.2) D=Y
-            if (ix.eq.3) D=Z
-            dip(ir)=D*rhortot(ir)
-            ir=ir+1
-           end do
-          end do
+    SUBROUTINE poles ( dipole_moment, dipole_vec, quadrupole, rhortot, &
+         ion_flag, tau, coc_flag)
+      !------------------------------------------------------------------------
+      !
+      ! The subroutine computes dipole and quadrupole moments of a charge
+      ! distribution 'rhortot'. It was designed originally to be used in 
+      ! the context of the Makov-Payne correction. 
+      !
+      ! If 'ion_flag' is .true., the 
+      ! contribution to the dipole due to the nuclei core charge is added.
+      !
+      ! If coc_flag==.true. the dipole is calculated around the Center Of
+      !                     Charge (hence COC)
+      !
+      ! Note: rhortot id the TOTAL charge density, i.e. spin up + down
+      !
+      USE cell_base,        ONLY : a1, a2, a3, omega
+      USE electrons_base,   ONLY : qbac
+      USE grid_dimensions,  ONLY : nr1, nr2, nr3, nr1x, nr2x, nnr=> nnrx
+      USE ions_base,        ONLY : nat, zv, ityp
+      USE kinds,            ONLY : DP
+      USE para_mod
+      !
+      IMPLICIT NONE
+      !REAL(KIND=DP), PARAMETER  :: debye=1./0.39344, angs=1./0.52917726
+      !
+      ! ... input variales
+      !
+      REAL(KIND=DP), intent(IN)  :: rhortot(nnr), tau(3,nat)
+      logical,       intent(IN)  :: ion_flag, coc_flag
+      !
+      ! ... output variales
+      !
+      REAL(KIND=DP), intent(OUT) :: dipole_moment,quadrupole,dipole_vec(3)
+      !
+      ! ... local variales
+      !
+      REAL(KIND=DP)              :: quad(6), coc(3), tot_charge, ionic_dipole(3)
+      REAL(KIND=DP)              :: ax,ay,az,XG0,YG0,ZG0,X,Y,Z,D,rzero,x0,y0,z0
+      REAL(KIND=DP)              :: pass1, pass2, pass3
+      REAL(KIND=DP), ALLOCATABLE :: dip(:)
+      INTEGER                    :: ix,ir, i, j, k
+      !
+      ALLOCATE(dip(nnr))
+      tot_charge = 0.d0
+      coc = 0.d0
+      !
+      ! ... compute the cores center of charge
+      !
+      if (coc_flag) then
+         do i=1,nat
+            coc(:)     = coc(:)+zv(ityp(i))*tau(:,i)
+            tot_charge = tot_charge + zv(ityp(i))
          end do
-!
-         mu(ix)=sum(dip(1:nnr))
-!
-         end do !!!!!!! ix
-!
-         call reduce(3,mu)
-!
-        do ix=1,3
-         mu(ix)=mu(ix)*omega/DBLE(nr1*nr2*nr3)
-        end do
-!
-        dipole=sqrt(mu(1)**2+mu(2)**2+mu(3)**2)
-!
-!
-!       compute the coordinates which put the dipole moment to zero
-!
-        if (abs(qbac).gt.1.d-05) then
-         x0=mu(1)/abs(qbac)
-         y0=mu(2)/abs(qbac)
-         z0=mu(3)/abs(qbac)
-         rzero=x0**2+y0**2+z0**2
-        else
-         rzero=0.
-        end if
-!
-!       compute the quadrupole moment
-!
-        do ix=1,6
-!
+      end if
+      coc = coc / tot_charge
+      !
+      ! ... (1) compute the dipole moment
+      !
+      ax=a1(1)
+      ay=a2(2)
+      az=a3(3)
+      !
+      if (.not.coc_flag) then
+         XG0 = -ax/2.
+         YG0 = -ay/2.
+         ZG0 = -az/2.
+      end if
+      pass1=ax/nr1
+      pass2=ax/nr2
+      pass3=ax/nr3
+      !
+      DO ix=1,3
          ir=1
-         do k=dfftp%ipp(me)+1, dfftp%ipp(me) + dfftp%npp(me)
-          do j=1,nr2x
-           do i=1,nr1x
-!
-            X=XG0+(i-1)*pass1
-            Y=YG0+(j-1)*pass2
-            Z=ZG0+(k-1)*pass3
-!
-            if (ix.eq.1) D=X*X
-            if (ix.eq.2) D=Y*Y
-            if (ix.eq.3) D=Z*Z
-            if (ix.eq.4) D=X*Y
-            if (ix.eq.5) D=X*Z
-            if (ix.eq.6) D=Y*Z
-!
-            dip(ir)=D*rhortot(ir)
-!
-            ir=ir+1
-           end do
-          end do
-         end do
-!
-        quad(ix)=SUM(dip(1:nnr))
-        end do
-!
-         call reduce(6,quad)
+         !
+         DO k = dfftp%ipp(me)+1, dfftp%ipp(me)+ dfftp%npp(me)
+            DO j=1,nr2x
+               DO i=1,nr1x
+                  X=XG0+(i-1)*pass1
+                  Y=YG0+(j-1)*pass2
+                  Z=ZG0+(k-1)*pass3
+                  IF (ix.EQ.1) D=X
+                  IF (ix.EQ.2) D=Y
+                  IF (ix.EQ.3) D=Z
+                  dip(ir)=(D-coc(ix))*rhortot(ir)
+                  ir=ir+1
+               END DO
+            END DO
+         END DO
+         !
+         dipole_vec(ix)=SUM(dip(1:nnr))
+         !
+      END DO !!!!!!! ix
+      !
+      CALL reduce(3,dipole_vec)
+      !
+      DO ix=1,3
+         dipole_vec(ix)=dipole_vec(ix)*omega/DBLE(nr1*nr2*nr3)
+      END DO
+      !
+      IF (ion_flag .and. (.not.coc_flag)) THEN
+         !
+         ! ... when coc_flag=.true. the ionic contribution
+         !     vanishes by definition
+         !
+         ionic_dipole = 0.d0
+         DO ix = 1,nat
+            ionic_dipole(:) = ionic_dipole(:) - & 
+                 zv(ityp(ix)) * (tau(:,ix)-coc(:))
+         END DO
+         dipole_vec = - dipole_vec + ionic_dipole
+         ! note: electron charge is taken as positive in the code, and thus 
+         !       the core is negative. When ion_flag is .true. we reverse the 
+         !       sign in the output such that the dipole will have the correct
+         !       physical sign.
+      END IF
+      !
+      dipole_moment=SQRT(dipole_vec(1)**2+dipole_vec(2)**2+dipole_vec(3)**2)
+      !
+      !
+      !       compute the coordinates which put the dipole moment to zero
+      !
+      IF (ABS(qbac).GT.1.d-05) THEN
+         x0=dipole_vec(1)/ABS(qbac)
+         y0=dipole_vec(2)/ABS(qbac)
+         z0=dipole_vec(3)/ABS(qbac)
+         rzero=x0**2+y0**2+z0**2
+      ELSE
+         rzero=0.
+      END IF
+      !
+      ! ... (2) compute the quadrupole moment
+      !
+      DO ix=1,6
+         !
+         ir=1
+         DO k=dfftp%ipp(me)+1, dfftp%ipp(me) + dfftp%npp(me)
+            DO j=1,nr2x
+               DO i=1,nr1x
+                  !
+                  X=XG0+(i-1)*pass1
+                  Y=YG0+(j-1)*pass2
+                  Z=ZG0+(k-1)*pass3
+                  !
+                  IF (ix.EQ.1) D=X*X
+                  IF (ix.EQ.2) D=Y*Y
+                  IF (ix.EQ.3) D=Z*Z
+                  IF (ix.EQ.4) D=X*Y
+                  IF (ix.EQ.5) D=X*Z
+                  IF (ix.EQ.6) D=Y*Z
+                  !
+                  dip(ir)=D*rhortot(ir)
+                  !
+                  ir=ir+1
+               END DO
+            END DO
+         END DO
+         !
+         quad(ix)=SUM(dip(1:nnr))
+      END DO
+      !
+      CALL reduce(6,quad)
 
-        do ix=1,6
+      DO ix=1,6
          quad(ix)=quad(ix)*omega/DBLE(nr1*nr2*nr3)
-        end do
-!
-        quadrupole=quad(1)+quad(2)+quad(3)-rzero*qbac
-!
-!  only the diagonal elements contribute to the inetaction energy
-!  the term rzero*qbac is subtracted to zero the dipole moment
-!
-        write (*,1001)(mu(ix),ix=1,3)
-        write (*,1002) dipole
-        write (*,*) ' '
-        write (*,1003)(quad(ix),ix=1,3)
-        write (*,1004)(quad(ix),ix=4,6)
-        write (*,1005) quadrupole,rzero*qbac
-!
-1001  format('DIPOLE XYZ-COMPONENTS (HARTREE A.U.)',f10.4,2x,f10.4,2x,f10.4)
-1002  format('DIPOLE MOMENT         (HARTREE A.U.)',f10.4)
-1003  format('QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.)',             &
-     &f9.4,2x,f9.4,2x,f9.4)
-1004  format('QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.)',             &
-     &f9.4,2x,f9.4,2x,f9.4)
-1005  format('QUADRUPOLE MOMENT              (HARTREE A.U.)',2f9.4)
-!
-      deallocate(dip)
-!
-      return
-      end subroutine poles
+      END DO
+      !
+      quadrupole=quad(1)+quad(2)+quad(3)-rzero*qbac
+      !
+      !  only the diagonal elements contribute to the inetaction energy
+      !  the term rzero*qbac is subtracted to zero the dipole moment
+      !
+      WRITE (*,1001)(dipole_vec(ix),ix=1,3)
+      WRITE (*,1002) dipole_moment
+      WRITE (*,*) ' '
+      WRITE (*,1003)(quad(ix),ix=1,3)
+      WRITE (*,1004)(quad(ix),ix=4,6)
+      WRITE (*,1005) quadrupole,rzero*qbac
+      !
+1001  FORMAT('DIPOLE XYZ-COMPONENTS (HARTREE A.U.)',f10.4,2x,f10.4,2x,f10.4)
+1002  FORMAT('DIPOLE MOMENT         (HARTREE A.U.)',f10.4)
+1003  FORMAT('QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.)',             &
+           &f9.4,2x,f9.4,2x,f9.4)
+1004  FORMAT('QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.)',             &
+           &f9.4,2x,f9.4,2x,f9.4)
+1005  FORMAT('QUADRUPOLE MOMENT              (HARTREE A.U.)',2f9.4)
+      !
+      DEALLOCATE(dip)
+      !
+      RETURN
+    END SUBROUTINE poles
 
