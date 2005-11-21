@@ -185,7 +185,7 @@ END MODULE electric_field_module
 MODULE wannier_subroutines
   !--------------------------------------------------------------------------
   !
-  USE kinds,     ONLY : DP, dp
+  USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   !
   IMPLICIT NONE

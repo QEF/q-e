@@ -74,7 +74,6 @@
       use efield_module, only: tefield, evalue, ctable, qmat, detq, ipolp, &
             berry_energy, ctabin, gqq, gqqm, df, pberryel
       use mp, only: mp_sum
-      USE io_global, ONLY: ionode, stdout
 !
       implicit none
 !

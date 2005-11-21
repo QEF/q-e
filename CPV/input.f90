@@ -845,7 +845,6 @@ MODULE input
            refg, greash, grease, greasp, epol, efield, tcg, maxiter, etresh,   &
            passop
      !
-     USE input_parameters, ONLY : nconstr_inp
      USE input_parameters, ONLY : wf_efield, wf_switch, sw_len, efx0, efy0,    &
                                   efz0, efx1, efy1, efz1, wfsd, wfdt, maxwfdt, &
                                   wf_q, wf_friction, nit, nsd, nsteps, tolw,   &

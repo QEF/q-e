@@ -1258,7 +1258,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   ! ... obtain the wannier function at time(t+delta). It also updates the
   ! ... quantities bec and becdr
   !
-  USE kinds,            ONLY : DP, dp
+  USE kinds,            ONLY : DP
   USE io_global,        ONLY : stdout
   USE wannier_base,     ONLY : wf_friction, nsteps, tolw, adapt, wf_q, &
                                weight, nw, wfdt
@@ -1522,7 +1522,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   !----------------------------------------------------------------------------
   !
   USE io_global,          ONLY : stdout
-  USE kinds,              ONLY : DP, dp
+  USE kinds,              ONLY : DP
   USE reciprocal_vectors, ONLY : gx, mill_l, gstart
   USE gvecw,              ONLY : ngw
   USE electrons_base,     ONLY : nbsp
@@ -2514,7 +2514,7 @@ END SUBROUTINE wfunc_init
 SUBROUTINE grid_map()
   !----------------------------------------------------------------------------
   !
-  USE kinds,                  ONLY : DP, dp
+  USE kinds,                  ONLY : DP
   USE efcalc,                 ONLY : xdist, ydist, zdist
   USE smooth_grid_dimensions, ONLY : nnrsx, nr1s, nr2s, nr3s, &
                                      nr1sx, nr2sx, nr3sx
@@ -2562,7 +2562,7 @@ SUBROUTINE tric_wts( rp1, rp2, rp3, alat, wts )
   ! ... R.P. translations in the WF calculation in the case
   ! ... of ibrav=0 or ibrav=14
   !
-  USE kinds,     ONLY : DP, dp
+  USE kinds,     ONLY : DP
   USE constants, ONLY : pi
   USE cell_base, ONLY : tpiba, tpiba2
   !
@@ -2647,7 +2647,7 @@ END SUBROUTINE tric_wts
 SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
   !----------------------------------------------------------------------------
   !
-  USE kinds,                  ONLY : DP, dp
+  USE kinds,                  ONLY : DP
   USE io_global,              ONLY : stdout
   USE constants,              ONLY : fpi
   USE wannier_base,           ONLY : expo
@@ -2700,7 +2700,7 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   !
   !      use ion_parameters
   !
-  USE kinds,                    ONLY : DP, dp
+  USE kinds,                    ONLY : DP
   USE grid_dimensions,          ONLY : nnrx, nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE smallbox_grid_dimensions, ONLY : nnrbx, nr1b, nr2b, nr3b, &
                                        nr1bx, nr2bx, nr3bx
@@ -2748,7 +2748,7 @@ END FUNCTION boxdotgridcplx
 SUBROUTINE write_rho_g( rhog )
   !----------------------------------------------------------------------------
   !
-  USE kinds,              ONLY : DP, dp
+  USE kinds,              ONLY : DP
   USE io_global,          ONLY : stdout
   USE gvecp,              ONLY : ngm
   USE reciprocal_vectors, ONLY : gx, mill_l
@@ -2895,7 +2895,7 @@ END SUBROUTINE write_rho_g
 SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   !----------------------------------------------------------------------------
   !
-  USE kinds,              ONLY : DP, dp
+  USE kinds,              ONLY : DP
   USE reciprocal_vectors, ONLY : gx
   USE gvecp,              ONLY : ngm
   USE electrons_base,     ONLY : nspin
@@ -3157,7 +3157,7 @@ END SUBROUTINE macroscopic_average
 SUBROUTINE least_square( npts, x, y, slope, intercept )
   !----------------------------------------------------------------------------
   !
-  USE kinds, ONLY : DP, dp
+  USE kinds, ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -3195,7 +3195,7 @@ END SUBROUTINE least_square
 SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   !----------------------------------------------------------------------------
   !
-  USE kinds,                  ONLY : DP, dp
+  USE kinds,                  ONLY : DP
   USE io_global,              ONLY : stdout
   USE wannier_base,           ONLY : nw, weight, nit, tolw, wfdt, maxwfdt, nsd
   USE control_flags,          ONLY : iprsta
@@ -3562,7 +3562,7 @@ SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
   ! ...                   sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
   ! ...                                e^-ig.r_i < beta_i,j | c_n > }
   !
-  USE kinds,                  ONLY : DP, dp
+  USE kinds,                  ONLY : DP
   USE control_flags,          ONLY : iprint, tbuff
   USE gvecs,                  ONLY : nms, nps
   USE gvecw,                  ONLY : ngw
@@ -3715,7 +3715,7 @@ SUBROUTINE write_psi( c, jw )
   ! ... for calwf 5             - M.S
   ! ... collect wavefunctions on first node and write to file
   !
-  USE kinds,                  ONLY : DP, dp
+  USE kinds,                  ONLY : DP
   USE io_global,              ONLY : stdout
   USE gvecs,                  ONLY : nps
   USE electrons_base,         ONLY : nbspx
@@ -3858,7 +3858,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
   !
   USE constants,              ONLY : bohr_radius_angs
-  USE kinds,                  ONLY : DP, dp
+  USE kinds,                  ONLY : DP
   USE control_flags,          ONLY : iprint, tbuff, iprsta, thdyn, tpre, trhor
   USE ions_base,              ONLY : nax, nat, nsp, na
   USE cell_base,              ONLY : a1, a2, a3

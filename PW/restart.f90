@@ -559,7 +559,7 @@ MODULE restart_module
     USE constants,            ONLY : pi
     USE io_files,             ONLY : iunwfc, nwordwfc, prefix, tmp_dir
     USE kinds,                ONLY : DP
-    USE ions_base,            ONLY : nat, nsp => nsp, ityp, tau, zv, atm
+    USE ions_base,            ONLY : nat, nsp, ityp, tau, zv, atm
     USE basis,                ONLY : natomwfc
     USE cell_base,            ONLY : at, bg, ibrav, celldm, alat, tpiba, tpiba2, &
          omega, symm_type

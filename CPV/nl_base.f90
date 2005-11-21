@@ -109,7 +109,7 @@
       !     input : beta(ig,l,is), eigr, c
       !     output: becp as parameter
       !
-      USE kinds,      ONLY : DP, dp
+      USE kinds,      ONLY : DP
       USE mp,         ONLY : mp_sum
       USE mp_global,  ONLY : nproc
       USE ions_base,  only : na, nax, nat
@@ -227,7 +227,7 @@
       !     output: becdr
       !
  
-      USE kinds,      ONLY : DP, dp
+      USE kinds,      ONLY : DP
       use ions_base,  only : nax, nsp, na, nat
       use uspp,       only : nhtol, beta  !, nkb
       use cvan,       only : ish
@@ -533,7 +533,7 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
   !
   !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
   !
-  USE kinds,      ONLY : DP, dp
+  USE kinds,      ONLY : DP
   use mp,         only : mp_sum
   use mp_global,  only : nproc
   use ions_base,  only : na, nax, nat

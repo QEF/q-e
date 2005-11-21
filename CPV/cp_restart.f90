@@ -737,8 +737,8 @@ MODULE cp_restart
       USE cell_base,                ONLY : ibrav, alat, celldm, symm_type, &
                                            s_to_r, r_to_s
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, pmass, &
-                                           sort_tau, atm, ityp, ions_cofmass
-      USE reciprocal_vectors,       ONLY : ngwt, ngw, ig_l2g, mill_l
+                                           sort_tau, ityp, ions_cofmass
+      USE reciprocal_vectors,       ONLY : ig_l2g, mill_l
       USE mp,                       ONLY : mp_sum
       USE parameters,               ONLY : nhclm, ntypx
       USE constants,                ONLY : eps8, angstrom_au

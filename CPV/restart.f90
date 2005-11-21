@@ -137,7 +137,6 @@
       USE ions_base,      ONLY : nsp, na, cdmi, taui
       USE cp_restart,     ONLY : cp_readfile, cp_read_cell, cp_read_wfc
       USE ensemble_dft,   ONLY : tens
-      USE io_files,       ONLY : scradir
       USE autopilot,      ONLY : event_step, event_index, max_event_step
       USE autopilot,      ONLY : employ_rules
 !
