@@ -4155,7 +4155,7 @@
       !
       ! Note: rhortot id the TOTAL charge density, i.e. spin up + down
       !
-      USE cell_base,        ONLY : a1, a2, a3, omega
+      USE cell_base,        ONLY : a1, a2, a3, ainv, omega
       USE electrons_base,   ONLY : qbac
       USE grid_dimensions,  ONLY : nr1, nr2, nr3, nr1x, nr2x, nnr=> nnrx
       USE ions_base,        ONLY : nat, zv, ityp
@@ -4178,7 +4178,7 @@
       !
       REAL(KIND=DP)              :: quad(6), coc(3), tot_charge, ionic_dipole(3)
       REAL(KIND=DP)              :: ax,ay,az,XG0,YG0,ZG0,X,Y,Z,D,rzero,x0,y0,z0
-      REAL(KIND=DP)              :: pass1, pass2, pass3
+      REAL(KIND=DP)              :: pass1, pass2, pass3, rin(3),rout(3)
       REAL(KIND=DP), ALLOCATABLE :: dip(:)
       INTEGER                    :: ix,ir, i, j, k
       !
@@ -4223,7 +4223,9 @@
                   IF (ix.EQ.1) D=X
                   IF (ix.EQ.2) D=Y
                   IF (ix.EQ.3) D=Z
-                  dip(ir)=(D-coc(ix))*rhortot(ir)
+                  rin(ix) = D-coc(ix) 
+                  call pbc(rin,a1,a2,a3,ainv,rout)
+                  dip(ir)=rout(ix)*rhortot(ir)
                   ir=ir+1
                END DO
             END DO
