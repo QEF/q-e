@@ -414,7 +414,6 @@ CONTAINS
     CHARACTER(LEN=256) :: input_line
     CHARACTER(LEN=32)  :: var_label
     CHARACTER(LEN=32)  :: value_str
-    INTEGER            :: nrules
     INTEGER            :: on_step, now_step, plus_step
     integer            :: ios
     integer            :: event
@@ -638,7 +637,7 @@ CONTAINS
     ! there can exists more than one rule per event
 
     IF ( (n_rules+1) .gt. max_rules) THEN
-       write(*,*) ' AutoPilot: current nrules', nrules
+       write(*,*) ' AutoPilot: current n_rules', n_rules
        CALL auto_error( ' AutoPilot ', ' invalid number of rules ')
        go to 20
     END IF
