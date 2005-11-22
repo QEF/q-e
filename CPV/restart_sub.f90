@@ -459,7 +459,7 @@ MODULE from_restart_module
     USE grid_dimensions,       ONLY : nr1, nr2, nr3
     USE reciprocal_vectors,    ONLY : mill_l
     USE gvecp,                 ONLY : ngm
-    USE ions_base,             ONLY : na, nat, tau_srt
+    USE ions_base,             ONLY : nat, tau_srt
     !
     IMPLICIT NONE
     !
