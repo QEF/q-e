@@ -160,8 +160,9 @@ MODULE from_restart_module
     IF ( tzeroe ) THEN
        !
        lambdam(:,:) = lambda(:,:)
+       cm(:,1:nbsp,1,1) = c0(:,1:nbsp,1,1)
        !
-       WRITE( stdout, '("Electronic velocities set to zero")' )
+       WRITE( stdout, '(" Electronic velocities set to zero")' )
        !
     END IF
     !
