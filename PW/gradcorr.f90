@@ -23,8 +23,8 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   INTEGER,        INTENT(IN)    :: nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                                    nrxx, ngm, nl(ngm), nspin
   REAL (DP), INTENT(IN)    :: rho_core(nrxx), g(3,ngm), alat, omega
-  REAL (DP), INTENT(OUT)   :: v(nrxx,nspin), vtxc, etxc
-  REAL (DP), INTENT(INOUT) :: rho(nrxx,nspin)
+  REAL (DP), INTENT(OUT)   :: v(nrxx,nspin)
+  REAL (DP), INTENT(INOUT) :: rho(nrxx,nspin), vtxc, etxc
   !
   INTEGER :: k, ipol, is, nspin0
   !
