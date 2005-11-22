@@ -31,7 +31,6 @@ subroutine which_cpmd_dft &
      mgcc=3
   end if
 
-
   return
 end subroutine which_cpmd_dft
 !
@@ -44,20 +43,19 @@ subroutine write_cpmd &
   !
   use kinds, only : DP
   implicit none
-  integer :: ndm, mesh, nwfps, lmin,lmax,lloc,nlc,nnl,nwfs,lls(nwfs)
+  integer :: iunps, ndm, mesh, nwfps, lmin,lmax,lloc,nlc,nnl,nwfs,lls(nwfs)
   real(DP) :: zed, zval, xmin,dx, cc(2),alpc(2),alc(6,0:3), &
        alps(3,0:3), phis(ndm,nwfs), ocs(nwfs), rcuts(nwfs), &
        r(ndm), r2(ndm), vnl(ndm,0:3), rhoc(ndm), erf, etots
-  integer ios, mdum, i, l, k, n, ir, iunps, nb, ldum
-  real(DP) :: zdum, fourpi, vnloc,a_core, b_core,  &
-       alfa_core, dum, xdum, dxdum, rdum, vpsloc(ndm), e2
+  character(len=*) :: dft
+  !
+  real(DP), parameter :: fourpi=4.0_dp*3.141592653589793_dp, e2=2.0_dp
+  real(DP) :: alfa_core=0.0_dp, vpsloc(ndm)
   logical nlcc, bhstype, numeric
-  parameter(fourpi=4.0_dp*3.141592653589793_dp, e2=2.0_dp)
   character(len=70) title_pseudo
   character(len=2), external :: atom_name
   character(len=2) :: els(nwfs)
-  character(len=*) dft
-  integer mfxcx, mfxcc, mgcx, mgcc, lls_table(nwfs)
+  integer :: ios, i, l, k, n, ir, nb, mfxcx, mfxcc, mgcx, mgcc, lls_table(nwfs)
   !
   !
   nlc=0
