@@ -155,7 +155,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
               enow, econs, econt, ettt, ccc, bigr, dt2bye
   REAL(DP) :: ekinc0, ekinp, ekinpr, ekinc
   REAL(DP) :: temps(nsx)
-  REAL(DP) :: ekinh, temphc, temp1, temp2, randy
+  REAL(DP) :: ekinh, temphc, randy
   REAL(DP) :: delta_etot
   REAL(DP) :: ftmp, enb, enbi
   INTEGER  :: is, nacc, ia, j, iter, i, isa, ipos
@@ -495,7 +495,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      IF ( tcp .OR. tcap .AND. tfor .AND. .NOT.thdyn ) THEN
         !
-        IF ( tempp > temp1 .OR. tempp < temp2 .AND. tempp /= 0.D0 ) THEN
+        IF ( tempp > (tempw+tolp) .OR. tempp < (tempw-tolp) .AND. tempp /= 0.D0 ) THEN
            !
            CALL  ions_vrescal( tcap, tempw, tempp, taup, &
                                tau0, taum, na, nsp, fion, iforce, pmass, delt )
