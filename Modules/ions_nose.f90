@@ -34,7 +34,7 @@
 ! variables
 ! nhclm is now mostly not used, needs to be cleaned up at some point
 !
-      INTEGER   :: nhpcl, ndega, nhpdim, nhptyp, nhpend
+      INTEGER   :: nhpcl=1, ndega, nhpdim=1, nhptyp=0, nhpend=0
       INTEGER   :: atm2nhp(natx)
       INTEGER, ALLOCATABLE   :: anum2nhp(:)
       REAL(DP), ALLOCATABLE :: vnhp(:), xnhp0(:), xnhpm(:), xnhpp(:), &
@@ -60,36 +60,34 @@
     IF( .NOT. tions_base_init ) &
       CALL errore(' ions_nose_init ', ' you should call ions_base_init first ', 1 )
     tempw     = tempw_
-    fnosep    = 0.0d0
-    nhpcl = MAX( nhpcl_ , 1 )
-    nhpdim = 1
-    nhpend = 0
     atm2nhp(1:nat) = 1
-    nhptyp = 0
-    if (abs(nhptyp_).eq.1) then
-       nhptyp = 1
-       if (nhptyp_.gt.0) nhpend = 1
-       nhpdim = nsp
-       iat = 0
-       do is=1,nsp
-          do ia=1,na(is)
-             iat = iat+1
-             atm2nhp(iat) = is
+    if (tnosep) then
+       nhpcl = MAX( nhpcl_ , 1 )
+       if (abs(nhptyp_).eq.1) then
+          nhptyp = 1
+          if (nhptyp_.gt.0) nhpend = 1
+          nhpdim = nsp
+          iat = 0
+          do is=1,nsp
+             do ia=1,na(is)
+                iat = iat+1
+                atm2nhp(iat) = is
+             enddo
           enddo
-       enddo
-    elseif (abs(nhptyp_).eq.2) then
-       nhptyp = 2
-       if (nhptyp_.gt.0) nhpend = 1
-       nhpdim = nat
-       do i=1,nat
-          atm2nhp(i) = i
-       enddo
+       elseif (abs(nhptyp_).eq.2) then
+          nhptyp = 2
+          if (nhptyp_.gt.0) nhpend = 1
+          nhpdim = nat
+          do i=1,nat
+             atm2nhp(i) = i
+          enddo
+       endif
+       ! Add one more chain on top if needed
+       nhpdim = nhpdim + nhpend
+
+       IF( nhpcl > nhclm ) &
+            CALL errore(' ions_nose_init ', ' nhpcl out of range ', nhpcl )
     endif
-    ! Add one more chain on top if needed
-    nhpdim = nhpdim + nhpend
-    
-    IF( nhpcl > nhclm ) &
-      CALL errore(' ions_nose_init ', ' nhpcl out of range ', nhpcl )
     !
     CALL ions_nose_allocate()
     !
