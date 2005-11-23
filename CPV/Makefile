@@ -29,7 +29,6 @@ cprsub.o \
 crayfft.o \
 dealloc.o \
 diis.o \
-dipol_matrix.o \
 dforceb.o \
 efermi.o \
 efield.o \
