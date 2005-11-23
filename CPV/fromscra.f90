@@ -76,7 +76,7 @@ MODULE from_scratch_module
     REAL(DP),                INTENT(OUT) :: vpot(:,:,:,:)
     TYPE(atoms_type)    ,    INTENT(OUT) :: atoms
     TYPE(dft_energy_type) ,  INTENT(OUT) :: edft
-    TYPE(boxdimensions)  ,   INTENT(OUT) :: ht 
+    TYPE(boxdimensions)  ,   INTENT(INOUT) :: ht 
     TYPE(charge_descriptor), INTENT(IN)    :: desc
     TYPE(wave_descriptor),   INTENT(IN)    :: cdesc, edesc
     COMPLEX(DP),             INTENT(INOUT) :: cm(:,:,:,:), c0(:,:,:,:)
