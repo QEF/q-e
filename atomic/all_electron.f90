@@ -46,5 +46,11 @@ subroutine all_electron(ild)
   !  compute logarithmic derivative
   !
   if (deld > 0.0_DP .and. ild) call lderiv
+  !
+  ! compute C6 coefficient if required
+  !
+  if (vdw) call c6_tfvw ( mesh, zed, dx, r(1), r2(1), rho(1,1) )
+  !
   return
+  !
 end subroutine all_electron

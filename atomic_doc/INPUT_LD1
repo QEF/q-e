@@ -72,6 +72,13 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       If config is empty the electronic configuration is read from
       the following cards:
 
+      vdw = .true. or .false.                         (default: .false.) 
+             If .true., the frequency dependent polarizability and van der
+             Waals coefficient C6 will be computed in Thomas-Fermi and 
+             von Weizsaecker approximation(only for closed-shell ions).
+             Up to now DFT with gradient correction for correlation energy 
+             has not been implemented yet in this calculation. 
+          
   1.1) optional cards for all-electron calculation
 
       nwf
@@ -87,7 +94,6 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       isw= the spin index (1-2) used only in the lsda case
       jj = the total angular momentum (0.0 is allowed for complete shells:
            the codes fills 2l states with jj=l-1/2, 2l+2 with jj=l+1/2)
-
 
   2) namelist &inputp  (needed only if iswitch=3)
 

@@ -1,0 +1,20 @@
+This directory contains few examples of calculating van der Waals coefficients for 
+closed-shell ions in Thomas-Fermi and von Weizsaecker approximation (experimental).
+The outputs are in the directory reference.
+
+ne.sla-noc.in       |
+ar.sla-noc.in       |  only Slater exchange 
+kr.sla-noc.in       |
+
+ne.sla-pz.in        |
+ar.sla-pz.in        |  Slater exchange and Perdew-Zunger correlation
+kr.sla-pz.in        |
+
+ne.sla-gl.in        |  Slater exchange and Gunnarsson-Lundqvist correlation
+ar.sla-gl.in        |  ( used in G.D. Mahan, J. Chem. Phys., 76, 493, 1982
+kr.sla-gl.in        |    taken as reference )
+
+The script test.job runs ld1.x on these examples (output in results dir.)
+and compares the calculated C6 coefficients with those contained in reference 
+(see file compare.dat).
+

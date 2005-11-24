@@ -1,0 +1,15 @@
+ &input
+     title='Ne',
+     zed=10.0,
+     rel=0,
+     beta=0.5,
+     rlderiv=2.4,
+     eminld=-4.0,
+     emaxld=4.0,
+     deld=0.02d0,
+     nld=3,
+     config='[Ne] ',
+     iswitch=1,
+     dft='sla gl',
+     vdw = .true.
+ /

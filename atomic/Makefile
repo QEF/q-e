@@ -10,6 +10,7 @@ all_electron.o \
 ascheq.o \
 ascheqlocps.o \
 ascheqps.o \
+c6_tfvw.o \
 cfdsol.o \
 chargeps.o \
 compute_chi.o \
@@ -98,13 +99,16 @@ MODULES = \
 ../Modules/version.o \
 ../Modules/parameters.o ../Modules/parallel_include.o
 
+PHOBJS = \
+../PH/dmxc.o 
+
 TLDEPS= bindir mods libs 
 
 all: tldeps ld1.x
 
-ld1.x: $(LD1OBJS) ld1.o $(LD1MODS) $(MODULES) $(LIBOBJS)
+ld1.x: $(LD1OBJS) ld1.o $(LD1MODS) $(MODULES) $(PHOBJS) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o ld1.x \
-		ld1.o $(LD1OBJS) $(LD1MODS) $(MODULES) $(LIBOBJS) $(LIBS)
+		ld1.o $(LD1OBJS) $(LD1MODS) $(MODULES) $(PHOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../atomic/ld1.x . )
 
 tldeps:

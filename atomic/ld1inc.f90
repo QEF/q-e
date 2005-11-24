@@ -248,5 +248,12 @@ module ld1inc
        file_logder,          & ! all-electron logarithmic derivatives
        file_logderps,        & ! pseudopotential logarithmic derivatives
        file_tests              ! results of pseudopotential tests
-
+  !
+  ! vdw calculation
+  !
+  logical :: vdw        ! optional variable
+  real(DP) :: um,     & ! maximum frequency
+              du,     & ! step of frequency
+              tr_s    ! threshold for scf solution of modified Sternheimer equation
+  !
 end module ld1inc

@@ -1,0 +1,37 @@
+#!/bin/bash
+
+LD1=../../bin/ld1.x
+workd=./results/
+
+mkdir -p $workd
+
+for atom in ne ar kr; do
+for xc in sla-noc sla-pz sla-gl; do
+
+$LD1 < $atom.$xc.in > $atom.$xc.out
+mv $atom.$xc.out $workd
+mv freq-pol.dat $workd/$atom.$xc.freq-pol.dat
+rm -f ld1.*
+done 
+done
+
+
+cd  $workd
+
+neref=6.98
+arref=66.1
+krref=130.7
+
+(
+echo "        reference       sla-noc        sla-pz         slc-gl"
+
+echo -n "ne        $neref       "
+grep -e 'coeff' ne.* | awk '{gl=$7; getline; noc=$7;getline; pz=$7; print "    ", gl,"     ", noc, "     ",pz}'
+
+echo -n "ar       $arref        "
+grep -e 'coeff' ar.* | awk '{gl=$7; getline; noc=$7;getline; pz=$7; print "   ", gl,"    ", noc, "    ",pz}'
+
+echo -n "kr      $krref        "
+grep -e 'coeff' kr.* | awk '{gl=$7; getline; noc=$7;getline; pz=$7; print "  ", gl,"   ", noc, "   ",pz}'
+) > compare.dat
+

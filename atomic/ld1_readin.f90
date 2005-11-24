@@ -51,7 +51,8 @@ subroutine ld1_readin
        isic,    &  ! if 1 self-interaction correction
        latt,    &  ! if <> 0 Latter correction is applied
        title,   &  ! the title of the run
-       prefix      ! the prefix for file names
+       prefix,  &  ! the prefix for file names
+       vdw         ! if .true. vdW coefficient in TF+vW will be calculated
 
   namelist /test/                 &
        nconf,         & ! the number of configurations
@@ -75,6 +76,7 @@ subroutine ld1_readin
        file_chi,      & ! outpu  file for the chi functions
        file_qvan,     & ! output file for the qvan functions
        file_recon       ! output file needed for the paw reconstruction
+       
    !
   prefix       = 'ld1'
   file_pseudo  = ' '
@@ -112,6 +114,8 @@ subroutine ld1_readin
   config=' '
 
   lpaw = .false.
+
+  vdw  = .false.
 
   ! read the namelist input
 
@@ -211,7 +215,9 @@ subroutine ld1_readin
   !  In the spin polarized case adjust the occupations
   !
   if (lsd == 1)  call occ_spin(nwf,nwfx,el,nn,ll,oc,isw)
-
+  !
+  !  If vdW calculation, read the input parameters
+  !
   if (iswitch == 1) then
      !
      !    no more data needed for AE calculations
@@ -644,4 +650,4 @@ subroutine read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
   !
   return
 end subroutine read_psconfig
-
+!------------------------------------------------------------------------

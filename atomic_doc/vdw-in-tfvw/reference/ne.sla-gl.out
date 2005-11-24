@@ -1,0 +1,52 @@
+
+     program ld1 starts. version 3.0   
+     today is 24Nov2005 at 16:51:51 
+
+     -------------------- All-electron run ------------------------------
+
+     Ne                                                                         
+
+     atomic number is 10.00
+     dft =sla gl   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
+     mesh =1113 r(mesh) =  99.22747 xmin = -7.00 dx = 0.01250
+
+     n l     nl                  e(Ryd)         e(Ha)          e(eV)
+     1 0     1S 1( 2.00)       -60.6406       -30.3203      -825.0643
+     2 0     2S 1( 2.00)        -2.6714        -1.3357       -36.3471
+     2 1     2P 1( 6.00)        -1.0210        -0.5105       -13.8914
+
+     eps = 5.8E-15  iter = 13
+ 
+     Etot =    -256.806898 Ry,    -128.403449 Ha,   -3494.063290 eV
+
+     Ekin =     255.587403 Ry,     127.793702 Ha,    3477.471088 eV
+     Encl =    -620.193911 Ry,    -310.096955 Ha,   -8438.234309 eV
+     Eh   =     131.575679 Ry,      65.787839 Ha,    1790.192373 eV
+     Exc  =     -23.776069 Ry,     -11.888035 Ha,    -323.492442 eV
+     Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Epseu=       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.1589  <r2> =    0.0341  r(max) =   0.1038
+     s(1S/2S) =  0.000000
+     s(2S/2S) =  1.000000  <r> =   0.9037  <r2> =    0.9984  r(max) =   0.6855
+     s(2P/2P) =  1.000000  <r> =   0.9793  <r2> =    1.2896  r(max) =   0.6203
+
+     -------------------- End of All-electron run ----------------------
+
+     Computing logarithmic derivative in   2.40773
+
+
+
+     -------------------- Compute C6 from polarizability with TFvW approx.----------
+
+     Frequency dependent polarizability is written into freq-pol.dat
+
+     Static polarizability:    0.41005 (in angstrom^3)   --->   2.76714  (in e^2a0^3)
+
+     C6 coefficient in units [e2*a0**5]    7.055224
+
+     -------------------- End of C6 calculation --------------------
+
