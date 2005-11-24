@@ -181,6 +181,7 @@ CONTAINS
     IF (ionode) THEN
        dirlen    = INDEX(outdir,' ') - 1
        mass_file = TRIM(prefix)//'.vib.isotope'
+       mass_file = outdir(1:dirlen) // '/' // mass_file
        !
        ! ... check existance
        !
@@ -599,6 +600,7 @@ CONTAINS
        !
        dirlen    = INDEX(outdir,' ') - 1
        results_file = TRIM(prefix)//'.vib.analysis'
+       results_file = outdir(1:dirlen) // '/' // results_file
        WRITE (stdout,*) 'Results are written to file: ', results_file
        !
        OPEN(filep,file=results_file,status='unknown',IOSTAT=ierr)
