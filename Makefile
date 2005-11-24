@@ -10,6 +10,7 @@ default :
 	@echo '  gamma        Gamma-only version of phonon code'
 	@echo '  pwcond       ballistic conductance'
 	@echo '  d3           third-order derivatives'
+	@echo '  cpvib        vibrational analysis of isolated systems'
 	@echo '  tools        misc tools for data analysis'
 	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  upf          utilities for pseudopotential conversion'
@@ -54,6 +55,11 @@ pwcond : bindir mods libs pw pp
 d3 : bindir mods libs pw ph
 	if test -d D3 ; then \
 	( cd D3 ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+
+cpvib : bindir mods libs cp
+	if test -d CPVIB ; then \
+	( cd CPVIB ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 tools : bindir mods libs pw
