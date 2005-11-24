@@ -41,7 +41,8 @@ SUBROUTINE read_input_vib()
      ! Set input file name
      !
      dirlen         = INDEX(outdir,' ') - 1
-     input_filename = TRIM(prefix)//'.vib.inp'
+     input_filename = './' // TRIM(prefix) // '.vib.inp'
+     input_filename = outdir(1:dirlen) // '/' // input_filename
      WRITE (stdout,*) 'Input information is read from:', input_filename
      !
      ! ... Open input file
