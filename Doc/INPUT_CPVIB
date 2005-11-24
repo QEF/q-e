@@ -1,4 +1,6 @@
-Program CPVIB
+=============================================================================
+                            Program CPVIB
+=============================================================================
 
 Calculates the vibrational modes, Born effective charges and infrared 
 cross-section for isolated molecules/clusters in vacuum. 
@@ -7,6 +9,9 @@ for wave function relaxation (SCF) and the frozen phonon method for
 construction of the energy hessian (dynamical matrix), 
 i.e. displace each atom in all three cartesian directions to construct 
 the numerical first derivative of the forces.
+
+INPUT:
+=====
 
 The program uses two mandatory input files (optional files are discussed
 further below):
@@ -61,7 +66,10 @@ animate		logical ( default = .false. )
 		generate xyz animation files for all normal modes
 
 
+
+
 Additional information about the input/output files:
+===================================================
 
 1. The program will look for the presence of 'prefix.vib.isotope' file.
    It is a text file containing NAT lines, where NAT is the number of atoms.
@@ -94,7 +102,9 @@ Additional information about the input/output files:
    out. 
 
 
+
 A brief description of the methods:
+==================================
 
 1. The energy hessian is constructed by a simple difference formula for
    the numerical first derivative of the forces.
@@ -113,4 +123,51 @@ A brief description of the methods:
 3. The algorithm for removal of rotational rigid modes follows closely the 
    one implemented in Gaussian03 electronic structure package, as described 
    in their white papers (www.gaussian.com).
+
+
+
+Warning messeges:
+================
+
+1.
+     from calc_hessian : info #        -1
+     Warning: Reference structure is not converged!!!
+
+   Issued when the total energy of a perturbed configuration is lower than the
+   reference energy of the ground-state configuration. In some cases it is an
+   indication of insufficient structural relaxation, and further relaxation
+   is required. However, for very soft (low frequency) modes it is very difficult
+   to converge the structure properly. The soft modes include also the 'zero'
+   frequency modes associated with rigid translation and rotation. In practice
+   these are never zero, for numerical reasons, but could be projected out
+   of the final results.
+
+2.
+     from calc_hessian : info #        -1
+     Warning: consistency check
+    Numerical second derivative of the total energy, compared to
+    first derivative of the forces, for diagonal hessian element,
+    deviate by more then 10%:
+        Energy second derivative :    -0.0003
+        Force  first  derivative :     0.0004
+
+   The matrix elements of the energy hessian are evaluated by a simple two-point
+   formula for the first derivative of the forces. For diagonal matrix elements
+   we can compare with the (less accurate) second numerical derivative of the
+   total energy, as a consistency check. If the difference between the two estimates
+   is larger than 10% (arbitrarily chosen) the code will issue the above warning,
+   but only if the matrix element is estimated to be larger than 1.0E-4.
+   Very small matrix elements are again associated with soft modes and are hard to
+   compute accurately.
+
+In some cases the 'problems' causing the warnings are harmless. However one should always
+verify it for each case.
+
+
+How to improve the results:
+==========================
+
+1. better reference structure
+2. tighter SCF convergence
+
 
