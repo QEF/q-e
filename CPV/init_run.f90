@@ -20,7 +20,7 @@ SUBROUTINE init_run()
                                        force_pairing, newnfi, tnewnfi
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, pmass, &
-                                       fion, fionm, cdmi, ityp, taui
+                                       fion, fionm, cdmi, ityp, taui, cdms
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
                                        vels, velsm, velsp
   USE gvecw,                    ONLY : ngw, ecutw, ngwt, ggp
@@ -325,11 +325,9 @@ SUBROUTINE init_run()
   !
   nomore = nomore + nfi
   !
-  IF( program_name == 'CP90' ) THEN
-     !
-     CALL ions_cofmass( taus, pmass, na, nsp, cdmi )
-     !
-  END IF
+  !  Set center of mass for scaled coordinates
+  !
+  CALL ions_cofmass( taus, pmass, na, nsp, cdms )
   !
   CALL stop_clock( 'initialize' )
   !

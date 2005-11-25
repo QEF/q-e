@@ -119,7 +119,9 @@
             totalmass = totalmass / volume * 11.2061 ! AMU_SI * 1000.0 / BOHR_RADIUS_CM**3 
             WRITE( stdout, fmt='(/,3X,"System Density [g/cm^3] : ",F10.4,/)' ) totalmass
 
-            WRITE( stdout,1000) cdm_displacement( tau0 )
+            CALL cdm_displacement( dis(1), tau0 )
+            !
+            WRITE( stdout,1000) dis(1)
             !
             CALL ions_displacement( dis, tau0 )
             !
@@ -256,8 +258,7 @@
       USE polarization,     ONLY: pdipole, pdipolt, p
       USE sic_module,       ONLY: ind_localisation, pos_localisation, nat_localisation, &
                                   self_interaction, rad_localisation
-      USE ions_module,      ONLY: displacement, cdm_displacement
-      USE ions_base,        ONLY: ions_temp, cdmi, taui
+      USE ions_base,        ONLY: ions_temp, taui
       USE ions_nose,        ONLY: ndega, ions_nose_nrg, xnhp0, vnhp, qnp, gkbt, &
                                   kbt, nhpcl, nhpdim, atm2nhp, ekin2nhp, gkbt2nhp
       USE cell_module,      only: s_to_r, boxdimensions, press
@@ -284,7 +285,7 @@
       REAL(DP) :: tau(3), vel(3), stress_tensor(3,3), temps( atoms%nsp )
       REAL(DP) :: tempp, econs, ettt, out_press, ekinpr, enosee
       REAL(DP) :: enthal, totalmass, enoseh, temphc, enosep
-      REAL(DP) :: dis(atoms%nsp), h(3,3)
+      REAL(DP) :: h(3,3)
       LOGICAL   :: tfile, topen, tsic, tfirst
       CHARACTER(LEN=3), ALLOCATABLE :: labelw( : )
       REAL(DP), ALLOCATABLE :: tauw( :, : )
@@ -298,10 +299,6 @@
       ! ...   Calculate Ions temperature tempp (in Kelvin )
 
       CALL ions_temp( tempp, temps, ekinpr, atoms%vels, atoms%na, atoms%nsp, ht%hmat, atoms%m, ndega, nhpdim, atm2nhp, ekin2nhp )
-
-      ! ...   Calculate MSD for each specie, starting from taui positions
-
-      CALL displacement(dis, atoms, taui, ht)
 
       ! ...   Stress tensor (in GPa) and pressure (in GPa)
 
@@ -380,8 +377,6 @@
 
       ! ...   Print physical variables to fortran units
 
-#if ! defined __OLD_PRINTOUT
-
       tfirst = tprint .OR. tconjgrad
       stress_tensor = stress_tensor / au_gpa
 
@@ -399,151 +394,29 @@
 
       DEALLOCATE( tauw )
 
-#else
-
-      IF ( ionode ) THEN
-
-        IF ( tprint ) THEN
-
-          ! ...  Write total energy components to standard output
-
-          CALL print_energies( tsic, iprsta, edft )
-
-          IF( tsic ) THEN
-            WRITE ( stdout, *) '  Sic_correction: type ', self_interaction
-            WRITE ( stdout, *) '  Localisation: ', rad_localisation
-            DO i = 1, nat_localisation
-              write( stdout, *) '    Atom ', ind_localisation(i), ' : ', pos_localisation(4,i)
-            END DO
-          END IF
-
-          IF( tfile ) THEN
-            ! ...  Open units 30, 31, ... 40 for simulation output 
-            CALL printout_base_open()
-            !
-          END IF
-
-          ! ...  Write Dielectric tensor and electronic conductivity on unit fort.30
-
-          IF ( toptical .AND. tfile ) THEN
-            CALL write_dielec( nfi, tps )
-          END IF
+          ! IF( tsic ) THEN
+          !   WRITE ( stdout, *) '  Sic_correction: type ', self_interaction
+          !   WRITE ( stdout, *) '  Localisation: ', rad_localisation
+          !   DO i = 1, nat_localisation
+          !     write( stdout, *) '    Atom ', ind_localisation(i), ' : ', pos_localisation(4,i)
+          !   END DO
+          ! END IF
 
           ! ...  Write Polarizability tensor to stdout and fortran unit 32
 
-          IF ( tdipole ) THEN
-            WRITE( stdout,19) 
-            WRITE( stdout,20) (pdipole(i),i=1,3)
-            WRITE( stdout,20) (p(i),i=1,3)
-            WRITE( stdout,20) (pdipolt(i),i=1,3)
-            IF ( tfile ) THEN 
-               WRITE(32,30) nfi, tps
-               WRITE(32,20) (pdipole(i),i=1,3)
-               WRITE(32,20) (p(i),i=1,3)
-               WRITE(32,20) (pdipolt(i),i=1,3)
-            END IF
-          END IF
+          ! IF ( tdipole ) THEN
+          !   WRITE( stdout,19) 
+          !   WRITE( stdout,20) (pdipole(i),i=1,3)
+          !   WRITE( stdout,20) (p(i),i=1,3)
+          !   WRITE( stdout,20) (pdipolt(i),i=1,3)
+          !   IF ( tfile ) THEN 
+          !      WRITE(32,30) nfi, tps
+          !      WRITE(32,20) (pdipole(i),i=1,3)
+          !      WRITE(32,20) (p(i),i=1,3)
+          !      WRITE(32,20) (pdipolt(i),i=1,3)
+          !   END IF
+          ! END IF
           
-          ! ...  Write energies, pressure, volume and MSD to unit fort.33
-
-          IF( tfile ) THEN
-            WRITE(33,2000) nfi, ekinc, temphc, tempp, edft%etot, enthal, econs, ettt, &
-              tps, ht%deth, out_press, (dis(i),i=1,atoms%nsp)
-          END IF
- 2000 FORMAT(I7, 1X,  F8.5, 1X, F6.1,  1X, F6.1, 1X, F12.5, 1X, F12.5, &
-                 1X, F12.5, 1X, F12.5, 1X, F9.2, 1X, F9.2,  1X, F9.2,  &
-                 1X, 100F9.4)
-
-          ! ...  Write Positions and velocities to stdout and unit fort.35
-
-          ALLOCATE( labelw( atoms%nat ) )
-          ALLOCATE( tauw( 3, atoms%nat ) )
-          DO is = 1, atoms%nsp
-            DO ia = atoms%isa(is), atoms%isa(is) + atoms%na(is) - 1
-              labelw( ia ) = atoms%label(is)
-              CALL s_to_r( atoms%taus(:,ia), tauw(:,ia), ht )
-            END DO
-          END DO
-          
-          WRITE( stdout,*) 
-          CALL printout_pos( stdout, tauw, atoms%nat, what = 'pos', label = labelw )
-          IF( tfile ) CALL printout_pos( 35, tauw, atoms%nat, nfi = nfi, tps = tps )
-
-          DO ia = 1, atoms%nat
-            CALL s_to_r( atoms%vels(:,ia), tauw(:,ia), ht )
-          END DO
-          WRITE( stdout,*) 
-          CALL printout_pos( stdout, tauw, atoms%nat, what = 'vel', label = labelw )
-          IF( tfile ) CALL printout_pos( 34, tauw, atoms%nat, nfi = nfi, tps = tps )
-
-          WRITE( stdout,*) 
-          CALL printout_pos( stdout, atoms%for, atoms%nat, what = 'for', label = labelw )
-          IF( tfile ) CALL printout_pos( 37, atoms%for, atoms%nat, nfi = nfi, tps = tps )
-
-          DEALLOCATE( labelw )
-          DEALLOCATE( tauw )
-
-          ! ...  Write to the standard output the center of mass displacement
-
-          CALL cdm_displacement(cdmi, atoms, ht)
-
-          ! ...  Write Cell parameter to unit fort.36 and stdout
-          ! ...  Write Stress tensor to unit fort.38 and stdout
-
-          WRITE( stdout, * )
-          CALL printout_cell( stdout, ht%a )
-          IF( tfile ) CALL printout_cell( 36, ht%a, nfi, tps )
-          !
-          WRITE( stdout, * )
-          CALL printout_stress( stdout, stress_tensor )
-          IF( tfile ) CALL printout_stress( 38, stress_tensor, nfi, tps )
-
-
-          ! ...  System density:
-
-          totalmass = 0.0
-          DO is = 1, atoms%nsp
-            totalmass = totalmass + atoms%m(is) * atoms%na(is) / scmass
-          END DO
-          WRITE( stdout, fmt='(/,3X,"System Density [g/cm^3] : ",F10.4)' ) &
-            totalmass / ht%deth * 11.2061 ! AMU_SI * 1000.0 / BOHR_RADIUS_CM**3 
-
-          ! ...       Write eigenvalues to stdout and unit fort.31
-
-          CALL print_eigenvalues( 31, tfile, nfi, tps )
-
-! ...       Write partial temperature and MSD for each atomic specie tu stdout
-
-          WRITE( stdout, 1944 )
-          DO is = 1, atoms%nsp
-             WRITE( stdout, 1945 ) is, temps(is), dis(is)
-          END DO
-
-          IF( tfile .AND. ( tnosee .OR. tnosep ) ) THEN
-            IF(tfile) WRITE(39,*) nfi, enosep, enosee
-          END IF
-
-          IF( tfile ) THEN
-            ! ...   Close and flush unit 30, ... 40
-            CALL printout_base_close()
-            !
-          END IF
-
-        END IF
-
-        IF( nfi >= 0 ) THEN
-
-          ! ...  Print energies on standard output EVERY MD STEP!  
-
-          IF( tprint .OR. tconjgrad ) WRITE( stdout, 1947 )
-          WRITE( stdout, 1948) nfi, ekinc, temphc, tempp, edft%etot, enthal, econs, ettt
-
-        END IF
-
-      END IF
-
-#endif
-
       old_nfi = nfi
 
  1947 FORMAT(//3X,'nfi', 5X,'ekinc', 2X,'temph', 2X,'tempp', 9X,'etot', 7X,'enthal', &

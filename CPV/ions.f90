@@ -25,7 +25,6 @@
 !  routines in this module:
 !  SUBROUTINE print_scaled_positions(unit)
 !  SUBROUTINE displacement(ht)
-!  SUBROUTINE cdm_displacement(cdm_ref, atoms, ht)
 !  SUBROUTINE set_reference_positions(cdm_ref, tau_ref, atoms, ht)
 !  SUBROUTINE ions_print_info(tfor,tsdp,tzerop,tv0rd,nv0rd,nbeg, &
 !                             taurdr,iunit)
@@ -58,7 +57,7 @@
 
 
         PUBLIC :: neighbo, print_scaled_positions, displacement
-        PUBLIC :: cdm_displacement, set_velocities
+        PUBLIC :: set_velocities
         PUBLIC :: set_reference_positions, atoms_init
         PUBLIC :: update_ions
         PUBLIC :: velocity_scaling
@@ -290,42 +289,6 @@
         RETURN
       END SUBROUTINE displacement
 
-!  BEGIN manual -------------------------------------------------------------   
-
-      SUBROUTINE cdm_displacement(cdm_ref, atoms, ht)
-
-!  Calculate the quadratic displacements of the cdm at the current time step
-!    with respect to the initial position                                            
-!    cdm_ref: initial position of cdm in scaled units                           
-!  --------------------------------------------------------------------------   
-!  END manual ---------------------------------------------------------------   
-
-! ...   declare modules
-        USE cell_module, ONLY: S_TO_R
-        USE cell_module, ONLY: boxdimensions
-
-        IMPLICIT NONE
-
-! ...   declare subroutine arguments
-        TYPE (boxdimensions), INTENT(IN) :: ht
-        TYPE (atoms_type), INTENT(IN) :: atoms
-        REAL(DP) :: cdm_ref(3)
-
-! ...   declare other variables
-        REAL(DP)  :: r2, cdm0(3),rcdm0(3), rcdmi(3)
-
-! ...   end of declarations
-!  ----------------------------------------------
-        CALL ions_cofmass(atoms%taus, atoms%m, atoms%na, atoms%nsp, cdm0)
-        CALL s_to_r(cdm0, rcdm0, ht)
-        CALL s_to_r(cdm_ref, rcdmi, ht)
-        r2 = SUM( (rcdm0(:)-rcdmi(:))**2 )
-
-        WRITE( stdout,1000) R2
-1000    FORMAT(/,3X,'Center of mass displacement (a.u.): ',F10.6)
-
-        RETURN
-      END SUBROUTINE cdm_displacement
 
 
 !  BEGIN manual -------------------------------------------------------------   

@@ -73,6 +73,10 @@
       ! ... this array is saved in the restart file
 
       REAL(DP) :: cdmi(3), cdm(3)
+
+      ! ... cdms = center of mass computed for scaled positions (taus)
+
+      REAL(DP) :: cdms(3)
       !
       REAL(DP) :: fion(3,natx), fionm(3,natx)
 
@@ -751,7 +755,7 @@
 !------------------------------------------------------------------------------!
 
 
-   FUNCTION cdm_displacement( tau )
+   SUBROUTINE cdm_displacement( dis, tau )
 
       !  Calculate the quadratic displacements of the cdm at the current time step
       !    with respect to the initial position
@@ -759,16 +763,17 @@
 
       IMPLICIT NONE
 
-      REAL(DP) :: cdm_displacement
+      REAL(DP) :: dis
       REAL(DP) :: tau( :, : )      ! position in real space
 
+      INTEGER   ::  i, ia
       REAL(DP)  ::  cdm(3)
 
       CALL ions_cofmass(tau, pmass, na, nsp, cdm)
 
-      cdm_displacement = SUM( (cdm(:)-cdmi(:))**2 )
+      dis = SUM( (cdm(:)-cdmi(:))**2 )
 
-   END FUNCTION cdm_displacement
+   END SUBROUTINE cdm_displacement
 
 
 !------------------------------------------------------------------------------!

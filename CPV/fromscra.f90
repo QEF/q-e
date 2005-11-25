@@ -39,7 +39,6 @@ MODULE from_scratch_module
     USE cell_base,        ONLY : s_to_r
     USE electrons_module, ONLY : nspin, pmss, occn_init, occn_info
     USE ions_base,        ONLY : taui, cdmi, randpos
-    USE ions_module,      ONLY : set_reference_positions
     USE mp,               ONLY : mp_end
     USE nl,               ONLY : nlrh_m
     USE energies,         ONLY : dft_energy_type, debug_energies
@@ -190,8 +189,6 @@ MODULE from_scratch_module
        c0 = cm
        !
     END IF
-    !
-    CALL set_reference_positions( cdmi, taui, atoms, ht )
     !
     adum = 0.D0
     !
