@@ -15,10 +15,10 @@ MODULE vibrations
   ! Programmed by: Silviu Zilberman
   !
   USE kinds,                  ONLY: DP
-
+  !
   IMPLICIT NONE
   SAVE
-
+  !
   PRIVATE
   !
   ! ... private variables
@@ -683,6 +683,12 @@ CONTAINS
           !
        END IF
        !
+       ! ... creating xyz animation files
+       !
+       IF (animate) &
+            CALL animation (ref_tau,eigenvecs,eigenvals)
+       !
+       !
        !------------------------------------------------------------------------------------------
        ! *** REPEATING CALCULATION WITH IMPOSED ACOUSTIC SUM RULE 
        !     translational and rotations are projected out
@@ -751,12 +757,6 @@ CONTAINS
           !
        END IF
        CLOSE(filep)
-       !
-       ! ... creating xyz animation files
-       !
-       IF (animate) &
-            CALL animation (ref_tau,eigenvecs,eigenvals)
-       !
     END IF
     !
     RETURN
@@ -920,6 +920,7 @@ CONTAINS
     !------------------------------------------------------------------------------------
     !
     USE ions_base,            ONLY : nat
+    USE io_files,             ONLY : outdir
     !
     ! ... input variables
     !
@@ -929,15 +930,24 @@ CONTAINS
     !
     ! ... local variables
     !
-    INTEGER                    :: i,it,ia, coord
+    INTEGER                    :: i,it,ia, coord, dirlen
     CHARACTER (len=3)          :: mode_label
-    CHARACTER (len=20)         :: free_text
-    REAL      (KIND=DP)        :: tau(3,nat)
+    CHARACTER (len=20)         :: free_text, mode_freq_ascii
+    CHARACTER (len=256)        :: file_name
+    REAL      (KIND=DP)        :: tau(3,nat), freq
+    !
+    !
+    dirlen    = INDEX(outdir,' ') - 1
     !
     DO i=1,3*nat !loop over modes
        !
+       ! ... converting to cm-1
+       freq = sign(1.0D0,eigval_loc(i)) * &
+            SQRT(abs(eigval_loc(i)))*2.194746313709741e+05
        WRITE (mode_label,'(i3.3)') i
-       WRITE (free_text,'(2x,E7.2,2x,A6)') eigval_loc(i),' cm-1'
+       WRITE (free_text,'(2x,f10.2,2x,A6)')  freq,' cm-1'
+       WRITE (mode_freq_ascii,'(I4.4)') nint(freq)
+       print *, eigval_loc(i), mode_freq_ascii
        !
        ! ... generate 20 snapshots of along one vibrational period
        !
@@ -950,8 +960,9 @@ CONTAINS
                        SIN(4.0d0*ASIN(1.0)*it/20)*SQRT(1822.9))
              END DO
           END DO
-          CALL write_xyz &
-               (tau,free_text,'APPEND','vib_anim_'//mode_label//'.xyz')
+          file_name='vib_anim_'//mode_label//'_'//TRIM(mode_freq_ascii)//'.xyz'
+          file_name = outdir(1:dirlen) // '/' // file_name
+          CALL write_xyz(tau,free_text,'APPEND',file_name)
        END DO
     END DO
     !

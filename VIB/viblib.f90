@@ -82,8 +82,8 @@ SUBROUTINE write_xyz(tau,free_text,position_in_file,file_name)
        STATUS = "UNKNOWN", ACTION = "WRITE", &
        POSITION = TRIM(position_in_file))
   !
-  WRITE( UNIT = iunxyz, FMT = '(I5,/)' ) nat
-  WRITE( UNIT = iunxyz, FMT = '(A ,/)' ) free_text
+  WRITE( UNIT = iunxyz, FMT = '(I5)' ) nat
+  WRITE( UNIT = iunxyz, FMT = '(A)'  ) free_text
   !
   DO atom = 1, nat
      !
