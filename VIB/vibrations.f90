@@ -565,7 +565,7 @@ CONTAINS
     !
 111 FORMAT(3x,'Ground-state dipole vector [debye]:',3x,f10.3,3x,f10.3,3x,f10.3)
 112 FORMAT(3x,'Dipole moment [debye]             :',3x,f10.3)
-113 FORMAT(3x,'displacement total energy         :',3x,f10.6)
+113 FORMAT(3x,'displacement total energy         :',3x,f15.6)
     RETURN
   END SUBROUTINE calc_hessian
   !
