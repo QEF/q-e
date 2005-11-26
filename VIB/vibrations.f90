@@ -326,7 +326,7 @@ CONTAINS
        WRITE (stdout,112) dipole_moment * DIP_DEBYE
        WRITE (stdout,*)
        !
-110    FORMAT(3x,'Ground-state (reference) energy   :',3x,f10.6)
+110    FORMAT(3x,'Ground-state (reference) energy   :',3x,f15.6)
 111    FORMAT(3x,'Ground-state dipole vector [debye]:',3x,f10.3,3x,f10.3,3x,f10.3)
 112    FORMAT(3x,'Dipole moment [debye]             :',3x,f10.3)
        !
