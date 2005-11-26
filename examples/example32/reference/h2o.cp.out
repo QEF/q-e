@@ -1,0 +1,1731 @@
+=------------------------------------------------------------------------------=
+
+     Ab-initio DFT calculation of normal modes for
+     molecules and clusters in vacuum. The CP code is used as
+     the undelying DFT egine.
+
+     Version: 3.0 - Fri Jul 15 23:24:44 EDT 2005                          
+     Authors of the normal-modes code: Silviu Zilberman
+
+     Authors of the CP code: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
+       Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
+       Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
+
+=------------------------------------------------------------------------------=
+
+   This run was started on:  18:43:21  25Nov2005               
+
+   MPI Parallel Build
+   Tasks =    1  This task id =    0
+Warning: card  &IONS ignored
+Warning: card     ION_DYNAMICS = 'NONE', ignored
+Warning: card     ION_RADIUS(1) = 0.8D0, ignored
+Warning: card     ION_RADIUS(2) = 0.8D0, ignored
+Warning: card  / ignored
+
+   Job Title:  Water Molecule
+
+
+   Atomic Pseudopotentials Parameters
+   ----------------------------------
+
+   Reading pseudopotential for specie #  1 from file :
+   /home/silviu/Work/O-sesame/pseudo/O.BLYP.UPF
+   file type is 20
+
+   Reading pseudopotential for specie #  2 from file :
+   /home/silviu/Work/O-sesame/pseudo/H.fpmd.UPF
+   file type is 20
+
+
+   Main Simulation Parameters (from input)
+   ---------------------------------------
+Warning: electron_velocities keyword has no effect
+   Restart Mode       =      -1   from_scratch   
+   Number of MD Steps =     100
+   Print out every           10 MD Steps
+   Reads from unit    =      51
+   Writes to unit     =      51
+   MD Simulation time step            =       1.00
+   Electronic fictitious mass (emass) =     400.00
+   emass cut-off                      =       2.50
+
+   Simulation Cell Parameters (from input)
+   external pressure       =            0.00 [GPa]
+   wmass (calculated)      =         2493.41 [AU]
+   ibrav =    1
+   alat  =    12.00000000
+   a1    =    12.00000000    0.00000000    0.00000000
+   a2    =     0.00000000   12.00000000    0.00000000
+   a3    =     0.00000000    0.00000000   12.00000000
+ 
+   b1    =     0.08333333    0.00000000    0.00000000
+   b2    =     0.00000000    0.08333333    0.00000000
+   b3    =     0.00000000    0.00000000    0.08333333
+   omega =  1728.00000000
+
+    =====================================
+    |  CONJUGATE GRADIENT               |
+    =====================================
+    | iterations   =        40            |
+    | etresh       =   0.00000 a.u.     |
+    | passop       =   0.30000 a.u.     |
+    =====================================
+
+   Energy Cut-offs
+   ---------------
+   Ecutwfc =   80.0 Ryd.,    Ecutrho =  320.0 Ryd.,    Ecuts =  320.0 Ryd.
+   Gcutwfc =   17.1     ,    Gcutrho =   34.2          Gcuts =   34.2
+   NOTA BENE: refg, mmx =   0.050000  7680
+   Eigenvalues calculated without the kinetic term contribution
+   Orthog. with lagrange multipliers : eps =   0.10E-07,  max =  20
+   Electron dynamics : the temperature is not controlled
+   initial random displacement of el. coordinates with  amplitude=  0.020000
+
+   Electronic states
+   -----------------
+   Number of Electron =     8, of States =     4
+   Occupation numbers :
+   2.00 2.00 2.00 2.00
+
+
+   Exchange and correlations functionals
+   -------------------------------------
+   Using Local Density Approximation with
+     Exchange functional: SLATER                                                      
+     Correlation functional: LEE, YANG, AND PARR                                         
+   Using Generalized Gradient Corrections with
+     Exchange functional: BECKE                                                       
+     Correlation functional: PERDEW AND WANG                                             
+     Exchange-correlation      =     BLYP (1313)
+
+
+   Ions Simulation Parameters
+   --------------------------
+   Ions are not allowed to move
+   Ionic position (from input)
+   sorted by specie, and converted to real a.u. coordinates
+   Species   1 atoms =    1 mass =     29166.24 (a.u.),        16.00 (amu) rcmax =   0.50 (a.u.)
+        0.009570     0.009570     0.000000
+   Species   2 atoms =    2 mass =      1822.89 (a.u.),         1.00 (amu) rcmax =   0.50 (a.u.)
+        1.833180    -0.217650    -0.000150
+       -0.217650     1.833180     0.000280
+   Ionic position read from input file
+
+
+   Cell Dynamics Parameters (from STDIN)
+   -------------------------------------
+   Starting cell generated from CELLDM
+   Constant VOLUME Molecular dynamics
+   cell parameters are not allowed to move
+
+   Verbosity: iprsta =  1
+
+
+
+   Simulation dimensions initialization
+   ------------------------------------
+
+   unit vectors of full simulation cell
+   in real space:                         in reciprocal space (units 2pi/alat):
+   1    12.0000    0.0000    0.0000              1.0000    0.0000    0.0000
+   2     0.0000   12.0000    0.0000              0.0000    1.0000    0.0000
+   3     0.0000    0.0000   12.0000              0.0000    0.0000    1.0000
+ 
+   Stick Mesh
+   ----------
+   nst =  1837,  nstw =   459, nsts =  1837
+        PEs    n.st   n.stw   n.sts    n.g    n.gw   n.gs
+          1    3673     917    3673  167037   20815  167037
+          0    3673     917    3673  167037   20815  167037
+ 
+ 
+   Real Mesh
+   ---------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    72    72    72      72    72    72       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     72    72    72
+   Local number of cell to store the grid ( nnrx ) =     373248
+   Number of x-y planes for each processors: 
+   nr3l =    72
+ 
+   Smooth Real Mesh
+   ----------------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    72    72    72      72    72    72       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     72    72    72
+   Local number of cell to store the grid ( nnrx ) =     373248
+   Number of x-y planes for each processors: 
+   nr3sl =    72
+ 
+   Small Box Real Mesh
+   -------------------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    10    10    10      10    10    10       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     10    10    10
+   Local number of cell to store the grid ( nnrx ) =       1000
+ 
+   unit vectors of box grid cell
+   in real space:                         in reciprocal space:
+       1.6667    0.0000    0.0000              1.0000    0.0000    0.0000
+       0.0000    1.6667    0.0000              0.0000    1.0000    0.0000
+       0.0000    0.0000    1.6667              0.0000    0.0000    1.0000
+ 
+   Reciprocal Space Mesh
+   ---------------------
+                Large Mesh
+   PE   Global(ngmt)     Local(ngm) MaxLocal(ngmx)
+    1          83519          83519          83519
+                Smooth Mesh
+   PE   Global(ngst)     Local(ngs) MaxLocal(ngsx)
+    1          83519          83519          83519
+                Wave function Mesh
+   PE   Global(ngwt)     Local(ngw) MaxLocal(ngwx)
+    1          10408          10408          10408
+
+                Small box Mesh
+   ngb =          231 not distributed to processors
+
+
+   System geometry initialization
+   ------------------------------
+
+   Scaled atomic positions                                from standard input
+   Species   1 atoms =    1
+    O       0.000798     0.000798     0.000000
+   Species   2 atoms =    2
+    H       0.152765    -0.018138    -0.000012
+    H      -0.018138     0.152765     0.000023
+
+
+   Pseudopotentials initialization
+   -------------------------------
+
+
+   Common initialization
+
+   Specie:     1
+   1  indv=  1   ang. mom=  0
+ 
+                        dion 
+   3.2390
+
+   Specie:     2
+ 
+                        dion 
+ 
+   Short Legend and Physical Units in the Output
+   ---------------------------------------------
+   NFI    [int]  - step index
+   EKINC  [HARTREE A.U.] - kinetic energy of the fictitious electronic dynamics
+   TEMPH  [K]    - Temperature of the fictitious cell dynamics
+   TEMP   [K]    - Ionic temperature
+   ETOT   [HARTREE A.U.] - Scf total energy (Kohn-Sham hamiltonian)
+   ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
+   ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
+   ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
+ 
+
+   formf: eself=  30.31961
+   formf:     vps(g=0)=  -0.0023656     rhops(g=0)=  -0.0034722
+   formf: sum_g vps(g)=  -3.7395698 sum_g rhops(g)=  -4.3118270
+   formf:     vps(g=0)=  -0.0004805     rhops(g=0)=  -0.0005787
+   formf: sum_g vps(g)=  -2.1004248 sum_g rhops(g)=  -0.7186378
+ Input information is read from:
+ /home/silviu/tmp//./h2o.vib.inp                                                
+                                                                                
+                                                                                
+                    
+ ------------------------------------------------------
+  SUMMERY OF VIBRATIONAL INPUT VARIABLES: 
+ 
+   delta                  =        0.0200
+   save_freq              =             1
+   trans_inv_flag         =             T
+   trans_inv_max_iter     =            50
+   trans_inv_conv_thr     =    0.1000D-14
+   trans_rot_inv_flag     =             T
+   restart_label          =    auto      
+   animate                =             T
+ ------------------------------------------------------
+ Creating new isotopes file: 
+ /home/silviu/tmp//h2o.vib.isotope                                              
+                                                                                
+                                                                                
+                    
+ ---------------------------------------
+ STARTING A NEW NORMAL MODES CALCULATION 
+ ---------------------------------------
+ 
+ Restart information is saved to 
+ /home/silviu/tmp//h2o.vib.restart                                              
+                                                                                
+                                                                                
+                    
+ 
+ ... Initial relaxation of wavefunction...
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+ Done
+ 
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171     -0.0002
+DIPOLE MOMENT         (HARTREE A.U.)    0.7313
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0405   443.0390   469.9360
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5469   229.9164   229.9214
+QUADRUPOLE MOMENT              (HARTREE A.U.)1356.0155   0.0000
+ 
+   ATOMIC_POSITIONS
+  0.957000E-02  0.957000E-02  0.000000E+00
+  0.183318E+01 -0.217650E+00 -0.150000E-03
+ -0.217650E+00  0.183318E+01  0.280000E-03
+ 
+   Ground-state (reference) energy   :   -17.181116
+   Ground-state dipole vector [debye]:       -1.314       -1.314        0.000
+   Dipole moment [debye]             :        1.859
+ 
+ 
+ Moving now atom #           1   Symbol:  O
+ Displacement in direction: -X
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5250     -0.5157      0.0000
+DIPOLE MOMENT         (HARTREE A.U.)    0.7359
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 451.7876   442.9690   469.9590
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 221.4819   234.0005   229.9354
+QUADRUPOLE MOMENT              (HARTREE A.U.)1364.7156   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.180998
+   Ground-state dipole vector [debye]:       -1.334       -1.311        0.000
+   Dipole moment [debye]             :        1.870
+ 
+ 
+ Saving restart information...
+ Done.
+ 
+ 
+ Moving now atom #           1   Symbol:  O
+ Displacement in direction: +X
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5092     -0.5186      0.0000
+DIPOLE MOMENT         (HARTREE A.U.)    0.7268
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 434.2593   443.1134   469.9099
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 213.6055   225.8326   229.9059
+QUADRUPOLE MOMENT              (HARTREE A.U.)1347.2826   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.181027
+   Ground-state dipole vector [debye]:       -1.294       -1.318        0.000
+   Dipole moment [debye]             :        1.847
+ 
+ 
+ Saving restart information...
+ Done.
+ 
+ 
+ Moving now atom #           1   Symbol:  O
+ Displacement in direction: -Y
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+ cg_sub: missed minimum, case 3, iteration          10
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5157     -0.5250      0.0000
+DIPOLE MOMENT         (HARTREE A.U.)    0.7359
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 442.9689   451.7887   469.9591
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 221.4825   229.9297   234.0068
+QUADRUPOLE MOMENT              (HARTREE A.U.)1364.7167   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.180998
+   Ground-state dipole vector [debye]:       -1.311       -1.334        0.000
+   Dipole moment [debye]             :        1.871
+ 
+ 
+ Saving restart information...
+ Done.
+ 
+ 
+ Moving now atom #           1   Symbol:  O
+ Displacement in direction: +Y
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5186     -0.5092      0.0000
+DIPOLE MOMENT         (HARTREE A.U.)    0.7268
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.1135   434.2592   469.9097
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 213.6055   229.9000   225.8382
+QUADRUPOLE MOMENT              (HARTREE A.U.)1347.2824   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.181027
+   Ground-state dipole vector [debye]:       -1.318       -1.294        0.000
+   Dipole moment [debye]             :        1.847
+ 
+ 
+ Saving restart information...
+ Done.
+ 
+ 
+ Moving now atom #           1   Symbol:  O
+ Displacement in direction: -Z
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+ cg_sub: missed minimum, case 3, iteration           9
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171     -0.0127
+DIPOLE MOMENT         (HARTREE A.U.)    0.7314
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0370   443.0370   477.9835
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5460   233.5448   233.5506
+QUADRUPOLE MOMENT              (HARTREE A.U.)1364.0575   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.181129
+   Ground-state dipole vector [debye]:       -1.314       -1.314       -0.032
+   Dipole moment [debye]             :        1.859
+ 
+     from calc_hessian : info #        -1
+     Warning: Reference structure is not converged!!!
+ 
+ Saving restart information...
+ Done.
+ 
+ 
+ Moving now atom #           1   Symbol:  O
+ Displacement in direction: +Z
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171      0.0130
+DIPOLE MOMENT         (HARTREE A.U.)    0.7314
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0376   443.0379   461.8405
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5459   226.2760   226.2820
+QUADRUPOLE MOMENT              (HARTREE A.U.)1347.9160   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.181129
+   Ground-state dipole vector [debye]:       -1.314       -1.314        0.033
+   Dipole moment [debye]             :        1.859
+ 
+     from calc_hessian : info #        -1
+     Warning: Reference structure is not converged!!!
+ 
+ Saving restart information...
+ Done.
+ 
+ 
+ Moving now atom #           2   Symbol:  H
+ Displacement in direction: -X
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5147     -0.5180      0.0000
+DIPOLE MOMENT         (HARTREE A.U.)    0.7302
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.1014   443.0909   469.9108
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5122   229.8697   229.8906
+QUADRUPOLE MOMENT              (HARTREE A.U.)1356.1032   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.181017
+   Ground-state dipole vector [debye]:       -1.308       -1.317        0.000
+   Dipole moment [debye]             :        1.856
+ 
+ 
+ Saving restart information...
+ Done.
+ 
+ 
+ Moving now atom #           2   Symbol:  H
+ Displacement in direction: +X
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5195     -0.5163     -0.0001
+DIPOLE MOMENT         (HARTREE A.U.)    0.7324
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 442.9757   442.9911   469.9583
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5806   229.9580   229.9503
+QUADRUPOLE MOMENT              (HARTREE A.U.)1355.9251   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.181022
+   Ground-state dipole vector [debye]:       -1.320       -1.312        0.000
+   Dipole moment [debye]             :        1.862
+ 
+ 
+ Saving restart information...
+ Done.
+ 
+ 
+ Moving now atom #           2   Symbol:  H
+ Displacement in direction: -Y
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+ cg_sub: missed minimum, case 3, iteration           8
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5176     -0.5115      0.0000
+DIPOLE MOMENT         (HARTREE A.U.)    0.7277
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0623   444.0851   469.9334
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.7989   229.9292   230.3932
+QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0809   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.181104
+   Ground-state dipole vector [debye]:       -1.316       -1.300        0.000
+   Dipole moment [debye]             :        1.850
+ 
+ 
+ Saving restart information...
+ Done.
+ 
+ 
+ Moving now atom #           2   Symbol:  H
+ Displacement in direction: +Y
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5166     -0.5226     -0.0001
+DIPOLE MOMENT         (HARTREE A.U.)    0.7348
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0153   441.9745   469.9367
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.2906   229.9001   229.4413
+QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9265   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.181104
+   Ground-state dipole vector [debye]:       -1.313       -1.328        0.000
+   Dipole moment [debye]             :        1.868
+ 
+ 
+ Saving restart information...
+ Done.
+ 
+ 
+ Moving now atom #           2   Symbol:  H
+ Displacement in direction: -Z
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171      0.0065
+DIPOLE MOMENT         (HARTREE A.U.)    0.7313
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0386   443.0394   470.9811
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5465   230.2115   230.4895
+QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0591   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.181116
+   Ground-state dipole vector [debye]:       -1.314       -1.314        0.017
+   Dipole moment [debye]             :        1.859
+ 
+     from calc_hessian : info #        -1
+     Warning: Reference structure is not converged!!!
+ 
+ Saving restart information...
+ Done.
+ 
+ 
+ Moving now atom #           2   Symbol:  H
+ Displacement in direction: +Z
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+ cg_sub: missed minimum, case 2, iteration           5
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171     -0.0065
+DIPOLE MOMENT         (HARTREE A.U.)    0.7313
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0378   443.0385   468.8906
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5459   229.6162   229.3545
+QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9669   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.181116
+   Ground-state dipole vector [debye]:       -1.314       -1.314       -0.017
+   Dipole moment [debye]             :        1.859
+ 
+     from calc_hessian : info #        -1
+     Warning: Reference structure is not converged!!!
+     from calc_hessian : info #        -1
+     Warning: consistency check
+    Numerical second derivative of the total energy, compared to
+    first derivative of the forces, for diagonal hessian element,
+    deviate by more then 10%:
+        Energy second derivative :    -0.0003
+        Force  first  derivative :     0.0004
+ 
+ Saving restart information...
+ Done.
+ 
+ 
+ Moving now atom #           3   Symbol:  H
+ Displacement in direction: -X
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+ cg_sub: missed minimum, case 2, iteration           7
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5116     -0.5176      0.0000
+DIPOLE MOMENT         (HARTREE A.U.)    0.7278
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 444.0875   443.0630   469.9334
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.7995   230.3882   229.9352
+QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0839   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.181104
+   Ground-state dipole vector [debye]:       -1.300       -1.316        0.000
+   Dipole moment [debye]             :        1.850
+ 
+ 
+ Saving restart information...
+ Done.
+ 
+ 
+ Moving now atom #           3   Symbol:  H
+ Displacement in direction: +X
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5226     -0.5166     -0.0001
+DIPOLE MOMENT         (HARTREE A.U.)    0.7348
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 441.9755   443.0150   469.9375
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.2909   229.4368   229.9063
+QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9280   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.181104
+   Ground-state dipole vector [debye]:       -1.328       -1.313        0.000
+   Dipole moment [debye]             :        1.868
+ 
+ 
+ Saving restart information...
+ Done.
+ 
+ 
+ Moving now atom #           3   Symbol:  H
+ Displacement in direction: -Y
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5180     -0.5147      0.0000
+DIPOLE MOMENT         (HARTREE A.U.)    0.7302
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0908   443.1017   469.9107
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5124   229.8848   229.8757
+QUADRUPOLE MOMENT              (HARTREE A.U.)1356.1032   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.181017
+   Ground-state dipole vector [debye]:       -1.317       -1.308        0.000
+   Dipole moment [debye]             :        1.856
+ 
+ 
+ Saving restart information...
+ Done.
+ 
+ 
+ Moving now atom #           3   Symbol:  H
+ Displacement in direction: +Y
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5163     -0.5195     -0.0001
+DIPOLE MOMENT         (HARTREE A.U.)    0.7324
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 442.9912   442.9755   469.9585
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5806   229.9447   229.9639
+QUADRUPOLE MOMENT              (HARTREE A.U.)1355.9252   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.181022
+   Ground-state dipole vector [debye]:       -1.312       -1.320        0.000
+   Dipole moment [debye]             :        1.862
+ 
+ 
+ Saving restart information...
+ Done.
+ 
+ 
+ Moving now atom #           3   Symbol:  H
+ Displacement in direction: -Z
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171      0.0064
+DIPOLE MOMENT         (HARTREE A.U.)    0.7313
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0394   443.0387   470.9819
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5465   230.4838   230.2179
+QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0599   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.181116
+   Ground-state dipole vector [debye]:       -1.314       -1.314        0.016
+   Dipole moment [debye]             :        1.859
+ 
+     from calc_hessian : info #        -1
+     Warning: Reference structure is not converged!!!
+ 
+ Saving restart information...
+ Done.
+ 
+ 
+ Moving now atom #           3   Symbol:  H
+ Displacement in direction: +Z
+ 
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171     -0.0065
+DIPOLE MOMENT         (HARTREE A.U.)    0.7313
+  
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0386   443.0380   468.8909
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5461   229.3490   229.6223
+QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9675   0.0000
+ 
+ Done scf relaxation for displacement.
+   displacement total energy         :   -17.181116
+   Ground-state dipole vector [debye]:       -1.314       -1.314       -0.017
+   Dipole moment [debye]             :        1.859
+ 
+     from calc_hessian : info #        -1
+     Warning: Reference structure is not converged!!!
+ 
+ Saving restart information...
+ Done.
+ 
+ Results are written to file: 
+ /home/silviu/tmp//h2o.vib.analysis                                             
+                                                                                
+                                                                                
+                    
+ -8.321737278161237E-006 ******              
+ -1.648245791363489E-006 ******              
+ -6.132741558816840E-021 000000              
+  2.405542635167033E-020 000000              
+  3.667252810535317E-020 000000              
+  2.553542374138422E-007 000111              
+  5.583691342540311E-005 001640              
+  2.794791104780519E-004 003669              
+  2.897528620523391E-004 003736              
+
+
+              averaged quantities :
+         ekinc          ekin          epot          etot     tempp
+ NaN           NaN           NaN           NaN           NaN      
+     initialize   :     0.92s CPU
+     formf        :     0.56s CPU
+     rhoofr       :    72.80s CPU (     354 calls,   0.206 s avg)
+     vofrho       :   280.30s CPU (     335 calls,   0.837 s avg)
+     dforce       :    23.53s CPU (     340 calls,   0.069 s avg)
+     gram         :     0.43s CPU (     329 calls,   0.001 s avg)
+     newd         :     0.08s CPU (     170 calls,   0.000 s avg)
+     calbec       :     1.21s CPU (    1437 calls,   0.001 s avg)
+     prefor       :     0.06s CPU (     190 calls,   0.000 s avg)
+     strucf       :     0.09s CPU (      20 calls,   0.004 s avg)
+     nlfl         :     0.00s CPU (      19 calls,   0.000 s avg)
+     nlfq         :     0.06s CPU (      19 calls,   0.003 s avg)
+     nlsm1        :     1.20s CPU (    1437 calls,   0.001 s avg)
+     nlsm2        :     0.05s CPU (      19 calls,   0.003 s avg)
+     fft          :   136.15s CPU (    2699 calls,   0.050 s avg)
+     ffts         :    35.07s CPU (     689 calls,   0.051 s avg)
+     fftw         :    36.79s CPU (    1388 calls,   0.027 s avg)
+
+   writing restart file: .//h2o_51.save
+   restart file written in    4.830 sec.
+
+
+
+======================== end cp ========================
+
+
+ 
+     CP           :  6m28.37s CPU time
+
+ 
+   This run was terminated on:  18:50: 7  25Nov2005            
+
+=------------------------------------------------------------------------------=
+   ELAPSED SECONDS:   406.0
+   JOB DONE.
+=------------------------------------------------------------------------------=
