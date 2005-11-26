@@ -37,7 +37,6 @@ CP_OBJS = \
 ../CPV/crayfft.o \
 ../CPV/dealloc.o \
 ../CPV/diis.o \
-../CPV/dipol_matrix.o \
 ../CPV/dforceb.o \
 ../CPV/efermi.o \
 ../CPV/efield.o \
