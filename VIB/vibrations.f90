@@ -529,11 +529,11 @@ CONTAINS
                          tmp2 = U(index,index)/(2*delta)
                          IF( (ABS(tmp1-tmp2)/(tmp2) > 0.1) .AND. (tmp2 > eps4 ) ) THEN
                             CALL infomsg('calc_hessian','Warning: consistency check',-1)
-                            WRITE(stdout,*) '   Numerical second derivative of the total energy, compared to'
-                            WRITE(stdout,*) '   first derivative of the forces, for diagonal hessian element,'
-                            WRITE(stdout,*) '   deviate by more then 10%:'
-                            WRITE(stdout,'(3x,A,f10.4)') '     Energy second derivative : ', tmp1
-                            WRITE(stdout,'(3x,A,f10.4)') '     Force  first  derivative : ', tmp2
+                            WRITE(stdout,*)              '    Numerical second derivative of the total energy, compared to'
+                            WRITE(stdout,*)              '    first derivative of the forces, for diagonal hessian element,'
+                            WRITE(stdout,*)              '    deviate by more then 10% :'
+                            WRITE(stdout,'(3x,A,f10.4)') '       Energy second derivative : ', tmp1
+                            WRITE(stdout,'(3x,A,f10.4)') '       Force  first  derivative : ', tmp2
                          END IF
                       END IF
                    END IF
