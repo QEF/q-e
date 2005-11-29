@@ -66,30 +66,31 @@ cross_compiling=yes
 if test "$arch" = ""
 then
 	case $host in
-		ia64-*-linux-gnu | x86_64-*-linux-gnu ) arch=linux64 ;;
-		*-pc-linux-gnu )                        arch=linux32 ;;
-		*-ibm-aix* )                            arch=aix     ;;
-		mips-sgi-* )                            arch=mips    ;;
-		alphaev*-dec-osf* )                     arch=alpha   ;;
-		alphaev*-*-linux* )                     arch=alinux  ;;
-		sparc-sun-* )                           arch=sparc   ;;
-		*cray-unicosmp* )                       arch=crayx1  ;;
-		powerpc-apple-darwin* )                 arch=mac     ;;
-		*-pc-cygwin )                           arch=cygwin  ;;
+		ia64-*-linux-gnu )      arch=ia64   ;;
+		x86_64-*-linux-gnu )    arch=amd64  ;;
+		*-pc-linux-gnu )        arch=ia32   ;;
+		*-ibm-aix* )            arch=aix    ;;
+		mips-sgi-* )            arch=mips   ;;
+		alphaev*-dec-osf* )     arch=alpha  ;;
+		alphaev*-*-linux* )     arch=alinux ;;
+		sparc-sun-* )           arch=sparc  ;;
+		*cray-unicosmp* )       arch=crayx1 ;;
+		powerpc-apple-darwin* ) arch=mac    ;;
+		*-pc-cygwin )           arch=cygwin ;;
 	esac
 fi
 echo checking architecture... $arch
 
 # candidate compilers, archiver and flags based on architecture
 case $arch in
-linux64 )
+ia64 | amd64 )
 	try_mpif90="mpif90"
 	try_f90="ifort ifc efc pgf90 g95 f90"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX64"
 	;;
-linux32 )
+ia32 )
 	try_mpif90="mpif90"
 	try_f90="ifort ifc pgf90 g95 f90"
 	try_ar="ar"
@@ -170,7 +171,7 @@ then
 	mpif90=$F77
 
 	case "$arch" in
-	linux* )
+	ia32 | ia64 | amd64 )
 		# check which compiler does mpif90 wrap
 		echo $ECHO_N "checking version of $mpif90... $ECHO_C"
 		ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
@@ -241,23 +242,23 @@ echo setting F90... $f90
 echo setting MPIF90... $mpif90
 
 case "$arch:$f90" in
-linux*:ifort* )
+*:ifort* )
 	try_cc="icc ecc gcc cc"
 	try_f77="$f90"
 	;;
-linux*:ifc* )
+*:ifc* )
 	try_cc="icc ecc gcc cc"
 	try_f77="$f90"
 	;;
-linux*:pgf90 )
+*:pgf90 )
 	try_cc="pgcc gcc cc"
 	try_f77="pgf77 $f90"
 	;;
-linux*:g95 )
+*:g95 )
 	try_cc="gcc cc"
 	try_f77="$f90"
 	;;
-linux*:* )
+ia32:* | ia64:* | amd64:* )
 	try_cc="gcc cc"
 	try_f77="f77 $f90"
 	;;
@@ -354,20 +355,28 @@ echo setting MPIF77... $mpif77
 # check whether the C and Fortran compilers are compatible
 case "$arch:$cc:$f90" in
 	# list supported combinations here
-linux*:icc:ifort* | linux*:icc:ifc* ) ;;
-linux*:gcc:ifort* | linux*:gcc:ifc* ) ;;
-linux*:pgcc:pgf90 )                   ;;
-linux*:gcc:g95 )                      ;;
-aix:mpcc*:mpxlf* )                    ;;
-aix:xlc*:*xlf* | aix:cc:*xlf* )       ;;
-mips:cc:f90 )                         ;;
-alinux:ccc:fort | alinux:gcc:fort )   ;;
-alpha:cc:f90 )                        ;;
-mac:mpcc:mpf90 )                      ;;
-mac:gcc:xlf90 )                       ;;
-crayx1:cc:ftn )                       ;;
-sparc:cc:f90 )                        ;;
-cygwin:gcc:g95 )                      ;;
+ia32:icc:ifort* | ia32:icc:ifc* )   ;;
+ia32:gcc:ifort* | ia32:gcc:ifc* )   ;;
+ia32:pgcc:pgf90 )                   ;;
+ia32:gcc:g95 )                      ;;
+ia64:icc:ifort* | ia64:icc:ifc* )   ;;
+ia64:gcc:ifort* | ia64:gcc:ifc* )   ;;
+ia64:pgcc:pgf90 )                   ;;
+ia64:gcc:g95 )                      ;;
+amd64:icc:ifort* | amd64:icc:ifc* ) ;;
+amd64:gcc:ifort* | amd64:gcc:ifc* ) ;;
+amd64:pgcc:pgf90 )                  ;;
+amd64:gcc:g95 )                     ;;
+aix:mpcc*:mpxlf* )                  ;;
+aix:xlc*:*xlf* | aix:cc:*xlf* )     ;;
+mips:cc:f90 )                       ;;
+alinux:ccc:fort | alinux:gcc:fort ) ;;
+alpha:cc:f90 )                      ;;
+mac:mpcc:mpf90 )                    ;;
+mac:gcc:xlf90 )                     ;;
+crayx1:cc:ftn )                     ;;
+sparc:cc:f90 )                      ;;
+cygwin:gcc:g95 )                    ;;
 
 * )
 	AC_MSG_WARN(unsupported C/Fortran compilers combination)
@@ -379,7 +388,7 @@ have_cpp=0
 xlf_flags=0
 
 case "$arch:$f90" in
-linux64:ifort* )
+ia64:ifort* | amd64:ifort* )
 	try_fflags="-O2 -assume byterecl"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0 -assume byterecl"
@@ -390,7 +399,7 @@ linux64:ifort* )
 	pre_fdflags="-fpp "
 	have_cpp=1
 	;;
-linux64:ifc* )
+ia64:ifc* | amd64:ifort* )
 	try_fflags="-Vaxlib -O2"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
@@ -401,7 +410,7 @@ linux64:ifc* )
 	pre_fdflags="-fpp "
 	have_cpp=1
 	;;
-linux64:pgf* )
+ia64:pgf* | amd64:pgf* )
 	try_fflags="-fast -r8"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
@@ -410,7 +419,7 @@ linux64:pgf* )
 	try_ldflags_static="-Bstatic"
 	try_dflags="$try_dflags -D__PGI"
 	;;
-linux32:ifort* )
+ia32:ifort* )
         try_fflags="-O2 -tpp6 -assume byterecl"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0 -assume byterecl"
@@ -421,7 +430,7 @@ linux32:ifort* )
 	pre_fdflags="-fpp "
 	have_cpp=1
 	;;
-linux32:ifc* )
+ia32:ifc* )
         try_fflags="-Vaxlib -O2 -tpp6"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
@@ -461,7 +470,7 @@ linux32:ifc* )
 		echo "${ECHO_T}done"
 	fi
 	;;
-linux32:pgf* )
+ia32:pgf* )
 	try_fflags="-fast -r8"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
@@ -470,7 +479,7 @@ linux32:pgf* )
 	try_ldflags_static="-Bstatic"
 	try_dflags="$try_dflags -D__PGI"
 	;;
-linux*:g95 )
+*:g95 )
 	try_fflags="-O3 -cpp"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0 -cpp"
@@ -582,17 +591,12 @@ echo setting F90FLAGS_NOOPT... $f90flags_noopt
 if test "$imod" = "" ; then imod="-I" ; fi
 
 case "$arch:$cc" in
-linux*:icc )
+*:icc )
 	try_cflags="-O3"
 	c_ldflags=""
 	;;
-linux*:pgcc )
+*:pgcc )
 	try_cflags="-fast"
-	c_ldflags=""
-	try_cpp="cpp"
-	;;
-linux*:gcc )
-	try_cflags="-O3 -fomit-frame-pointer"
 	c_ldflags=""
 	try_cpp="cpp"
 	;;
@@ -629,6 +633,7 @@ mac:* )
 	;;
 *:gcc )
 	try_cflags="-O3 -fomit-frame-pointer"
+	c_ldflags=""
 	try_cpp="cpp"
 	;;
 * )
@@ -726,7 +731,16 @@ then
 	# search
 	case "$arch:$f90" in
 
-	linux*:pgf* )
+	amd64:pgf* )
+		# check for acml
+		unset ac_cv_search_dgemm # clear cached value
+		FFLAGS="$test_fflags"
+		LDFLAGS="$test_ldflags"
+		LIBS=""
+		AC_SEARCH_LIBS(dgemm, acml, have_blas=1 blas_libs="$LIBS")
+		;;
+
+	*:pgf* )
 		# check for PGI blas
 		unset ac_cv_search_dgemm # clear cached value
 		FFLAGS="$test_fflags"
@@ -735,10 +749,7 @@ then
 		AC_SEARCH_LIBS(dgemm, blas, have_blas=1 blas_libs="$LIBS")
 		;;
 
-	linux64:* )
-                mklname=mkl
-                case $host in 
-                ia64-*-linux-gnu)
+	ia64:* )
 		# check for mkl (in several directories)
 		try_libdirs="/opt/intel/mkl/8.0/lib/64
 			     /opt/intel/mkl721/lib/64
@@ -748,15 +759,6 @@ then
 			     /opt/intel/mkl/mkl61/lib/64
 			     /opt/intel/mkl/lib/64
 			     /opt/intel/mkl61/lib/64"
-                	mklname=mkl_ipf
-                	;;
-                x86_64-*-linux-gnu)
-			try_libdirs="/opt/intel/mkl/8.0/lib/em64t
-				     /opt/intel/mkl721/lib/em64t"
-                	mklname=mkl_em64t
-                	;;
-                esac
-
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
 		for dir in none $try_libdirs
@@ -772,14 +774,39 @@ then
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="-lguide -lpthread"
-			AC_SEARCH_LIBS(dgemm, "$mklname", have_blas=1 have_mkl=1
+			AC_SEARCH_LIBS(dgemm, mkl_ipf, have_blas=1 have_mkl=1
 				       blas_libs="$try_loption $LIBS")
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
 		done
 		;;
 
-	linux32:* )
+	amd64:* )
+		try_libdirs="/opt/intel/mkl/8.0/lib/em64t
+			     /opt/intel/mkl721/lib/em64t"
+		try_libdirs="$libdirs $try_libdirs $ld_library_path"
+
+		for dir in none $try_libdirs
+		do
+			unset ac_cv_search_dgemm # clear cached value
+			if test "$dir" = "none"
+			then
+				try_loption=
+			else
+				echo $ECHO_N "in $dir: " $ECHO_C
+				try_loption="-L$dir"
+			fi
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags $try_loption"
+			LIBS="-lguide -lpthread"
+			AC_SEARCH_LIBS(dgemm, mkl_em64t, have_blas=1 have_mkl=1
+				       blas_libs="$try_loption $LIBS")
+			if test "$ac_cv_search_dgemm" != "no"
+			then break ; fi
+		done
+		;;
+
+	ia32:* )
 		# check for mkl (in several directories)
 		try_libdirs="/opt/intel/mkl/8.0/lib/32
 			     /opt/intel/mkl721/lib/32
@@ -939,20 +966,7 @@ then
 	# search
 	case "$arch:$f90" in
 
-	linux64:* )
-		# check for mkl_lapack
-		if test "$have_mkl" -ne 0
-		then
-			unset ac_cv_search_zggev # clear cached value
-			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags"
-			LIBS="$blas_libs"
-			AC_SEARCH_LIBS(zggev, mkl_lapack, have_lapack=1
-				       lapack_libs="-lmkl_lapack")
-		fi
-		;;
-
-	linux32:* )
+	ia32:* | ia64:* | amd64:* )
 		# check for mkl_lapack
 		if test "$have_mkl" -ne 0
 		then
