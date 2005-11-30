@@ -23,7 +23,7 @@ arref=66.1
 krref=130.7
 
 (
-echo "        reference       sla-noc        sla-pz         slc-gl"
+echo "        reference       sla-gl         sla-noc         slc-pz"
 
 echo -n "ne        $neref       "
 grep -e 'coeff' ne.* | awk '{gl=$7; getline; noc=$7;getline; pz=$7; print "    ", gl,"     ", noc, "     ",pz}'
