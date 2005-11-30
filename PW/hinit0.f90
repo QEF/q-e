@@ -21,6 +21,7 @@ subroutine hinit0
   USE vlocal,    ONLY : strf
   USE wvfct,     ONLY : npw, g2kin, igk, igk_l2g
   USE io_files,  ONLY : iunigk
+  USE realus,    ONLY : tqr, qpointlist
   !
   implicit none
   !
@@ -79,6 +80,9 @@ subroutine hinit0
   !
   call set_rhoc
   !
+
+  if (tqr) call qpointlist
+
   return
 end subroutine hinit0
 

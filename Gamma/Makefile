@@ -147,6 +147,7 @@ PWOBJS = \
 ../PW/readvan.o \
 ../PW/readnewvan.o \
 ../PW/read_ncpp.o \
+../PW/realus.o \
 ../PW/regterg.o \
 ../PW/remove_atomic_rho.o \
 ../PW/report_mag.o \

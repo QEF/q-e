@@ -113,6 +113,8 @@ SUBROUTINE iosys()
                             nqx2_   => nq2,  &
                             nqx3_   => nq3,  &
                             yukawa_ => yukawa
+
+  USE realus,        ONLY : tqr_    => tqr
   !
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
                             starting_magnetization_ => starting_magnetization, &
@@ -185,7 +187,7 @@ SUBROUTINE iosys()
                                etot_conv_thr, forc_conv_thr, pseudo_dir, &
                                disk_io, tefield, dipfield, lberry, gdir, &
                                nppstr, wf_collect,lelfield, efield,  &
-                               nberrycyc
+                               nberrycyc, tqr
 
   !
   ! ... SYSTEM namelist
@@ -1091,6 +1093,7 @@ SUBROUTINE iosys()
   lelfield_   = lelfield
   efield_     = efield
   nberrycyc_  = nberrycyc
+  tqr_        = tqr
 
   title_      = title
   dt_         = dt

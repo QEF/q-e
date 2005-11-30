@@ -10,6 +10,18 @@
 !----------------------------------------------------------------------
 subroutine addusdens
   !----------------------------------------------------------------------
+  USE realus, ONLY: tqr,  addusdensreal
+  if (tqr) then
+     call addusdensreal
+  else
+     call addusdens_g
+  endif
+  return
+end subroutine addusdens
+
+!----------------------------------------------------------------------
+subroutine addusdens_g
+  !----------------------------------------------------------------------
   !
   !  This routine adds to the charge density the part which is due to
   !  the US augmentation.
@@ -113,5 +125,5 @@ subroutine addusdens
 
   call stop_clock ('addusdens')
   return
-end subroutine addusdens
+end subroutine addusdens_g
 

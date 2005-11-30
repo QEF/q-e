@@ -62,6 +62,7 @@ davcio.o \
 deriv_drhoc.o \
 diis_base.o \
 real_diis_module.o \
+realus.o \
 complex_diis_module.o \
 diropn.o \
 divide.o \
@@ -337,3 +338,4 @@ clean :
 
 include make.depend
 
+# DO NOT DELETE

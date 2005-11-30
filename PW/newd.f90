@@ -7,8 +7,17 @@
 !
 #include "f_defs.h"
 !
-!----------------------------------------------------------------------------
 SUBROUTINE newd()
+  use realus, ONLY: tqr,  newdrealsub
+  if (tqr) then
+     call newdrealsub()
+  else
+     call newd_g()
+  end if
+  return
+END SUBROUTINE newd
+!----------------------------------------------------------------------------
+SUBROUTINE newd_g()
   !----------------------------------------------------------------------------
   !
   ! ... This routine computes the integral of the effective potential with
@@ -318,4 +327,4 @@ SUBROUTINE newd()
       !
     END SUBROUTINE newd_nc
     !
-END SUBROUTINE newd
+END SUBROUTINE newd_g

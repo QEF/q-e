@@ -269,6 +269,9 @@ MODULE input_parameters
           !  .FALSE. do not collect wave function they are left in temporary
           !          local file
 
+        LOGICAL :: tqr = .FALSE.
+
+
         INTEGER :: printwfc=1
           ! if <0 do nothing, if==0 print rho and fort.47, if == nband print band
 
@@ -276,7 +279,7 @@ MODULE input_parameters
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, wfcdir, &
           max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
           pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, &
-          wf_collect, printwfc, scradir,lelfield, nberrycyc, refg
+          wf_collect, printwfc, scradir,lelfield, nberrycyc, refg, tqr
 
 
 !
