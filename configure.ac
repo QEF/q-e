@@ -399,7 +399,7 @@ ia64:ifort* | amd64:ifort* )
 	pre_fdflags="-fpp "
 	have_cpp=1
 	;;
-ia64:ifc* | amd64:ifort* )
+ia64:ifc* )
 	try_fflags="-Vaxlib -O2"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
