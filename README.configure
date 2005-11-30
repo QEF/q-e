@@ -17,19 +17,26 @@ to install a more recent version.  Version 2.53 at least is known to
 work.
 
 "configure.ac" is a regular Bourne shell script (i.e., "sh" -- not
-csh!), except that capitalized names starting with "AC_" are Autoconf
-macros.  Normally you shouldn't have to touch them.  You may refer to
-the GNU Autoconf Manual for more info.
+csh!), except that:
+- capitalized names starting with "AC_" are Autoconf macros.  Normally
+  you shouldn't have to touch them.
+- square brackets are normally removed by the macro processor.  If you
+  need a square bracket (that should be very rare), you'll have to
+  write two.
+You may refer to the GNU Autoconf Manual for more info.
 
 "make.sys.in" is the source file for "make.sys", that "configure"
 generates: you might want to edit that file as well.  The generation
 procedure is as follows: if "configure.ac" contains the macro
 "AC_SUBST(name)", then every occurrence of "@name@" in the source
 file will be substituted with the value of the shell variable "name"
-at the point where AC_SUBST was called.  Similarly, "configure.msg" is
-generated from "configure.msg.in": this file is only used by
-"configure" to print its final report, and isn't needed for the
-compilation.
+at the point where AC_SUBST was called.
+
+Similarly, "configure.msg" is generated from "configure.msg.in": this
+file is only used by "configure" to print its final report, and isn't
+needed for the compilation.  We did it this way so that our
+"configure" may also be used by other projects, just by replacing the
+Quantum-ESPRESSO-specific "configure.msg.in" by your own.
 
 "configure" writes a detailed log of its operation to "config.log".
 When any configuration step fails, you may look there for the relevant
@@ -56,9 +63,9 @@ Look for these lines:
   if test "$arch" = ""
   then
           case $host in
-                  ia64-*-linux-gnu | x86_64-*-linux-gnu ) arch=linux64 ;;
-                  *-pc-linux-gnu )                        arch=linux32 ;;
-                  *-ibm-aix* )                            arch=aix     ;;
+                  ia64-*-linux-gnu )      arch=ia64   ;;
+                  x86_64-*-linux-gnu )    arch=and64  ;;
+                  *-pc-linux-gnu )        arch=ia32   ;;
                   etc.
 
 Here you must add an entry corresponding to your architecture and
@@ -76,9 +83,9 @@ Look for these lines:
 
   # candidate compilers, archiver and flags based on architecture
   case $arch in
-  linux64 )
+  ia64 | amd64 )
         ...
-  linux32 )
+  ia32 )
         ...
   aix )
         ...
@@ -122,7 +129,7 @@ Then look for these lines:
   mpif90=$F77
 
   case "$arch" in
-  linux* )
+  ia32 | ia64 | amd64 )
         ...
 
 and just below:
@@ -163,7 +170,7 @@ Then look for these lines:
   f90=$F77
   ...
   case "$arch:$f90" in
-  linux*:ifort* )
+  *:ifort* )
         ...
 
 Here you have to add an entry for your architecture and serial C and
@@ -189,9 +196,9 @@ Look for these lines:
   # check Fortran compiler flags
   ...
   case "$arch:$f90" in
-  linux64:ifort* )
+  ia64:ifort* | amd64:ifort* )
         ...
-  linux64:ifc* )
+  ia64:ifc* )
   	...
   etc.
 
@@ -232,10 +239,11 @@ Add an entry for your case and define:
 
 For example, here's the entry for ifort on Linux PC:
 
-  linux32:ifort* )
+  ia32:ifort* )
           try_fflags="-O2 -tpp6 -assume byterecl"
           try_f90flags="\$(FFLAGS) -nomodule"
           try_fflags_noopt="-O0 -assume byterecl"
+          try_f90flags_noopt="\$(FFLAGS_NOOPT) -nomodule"
           try_ldflags=""
           try_ldflags_static="-static"
           try_dflags="$try_dflags -D__INTEL"
@@ -246,9 +254,9 @@ For example, here's the entry for ifort on Linux PC:
 Then, look for these lines:
 
   case "$arch:$cc" in
-  linux*:icc )
+  *:icc )
   	...
-  linux*:pgcc )
+  *:pgcc )
   	...
   etc.
 
@@ -294,11 +302,14 @@ The following libraries are searched for:
 - BLAS or equivalent
   Some vendor replacements for BLAS that are supported by
   Quantum-ESPRESSO are:
-    mkl on linux
-    essl on aix
-    complib.sgimath
-    cxml on alpha
+    MKL on Linux
+    ACML on Linux amd64
+    essl on AIX
+    complib.sgimath on sgi origin
+    SCSL on sgi altix
+    scilib on Cray T3E
     SUNperf on sparc
+    cxml on alpha
   Moreover, ATLAS is used over BLAS if available.
 
 - LAPACK or equivalent

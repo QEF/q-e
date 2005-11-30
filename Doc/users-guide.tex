@@ -355,15 +355,15 @@ compilers are actually Fortran-95-compliant).
 If you don't have a commercial Fortran-95 compiler, you may install
 the free \texttt{g95} compiler
 (\htmladdnormallink{\texttt{http://www.g95.org/}}%
-                   {http://www.g95.org/}):
-it is still unfinished but already usable.
+                   {http://www.g95.org/}).
 You also need a minimal Unix environment: basically, a command shell
-(e.g., \texttt{bash} or \texttt{tcsh}) and the \texttt{make} and
-\texttt{awk} utilities. MS-Windows users need to have Cygwin 
-(a UNIX environment which runs under Windows) installed. See
+(e.g., \texttt{bash} or \texttt{tcsh}) and the utilities
+\texttt{make}, \texttt{awk} and \texttt{sed}.
+MS-Windows users need to have Cygwin (a UNIX environment which runs
+under Windows) installed: see
 \htmladdnormallink%
 {\texttt{http://www.cygwin.com/}}%
-        {http://www.cygwin.com/}.
+        {http://www.cygwin.com/}
 
 Instructions for the impatient:
 \begin{verbatim}
@@ -457,11 +457,13 @@ ones.  Try the one that looks more similar to your machine type;
 you'll probably have to do some additional tweaking.
 Currently supported architectures are:
 \begin{quote}
-  \texttt{linux64}: Linux 64-bit machines (Itanium, Opteron)\\
-  \texttt{linux32}: Linux PCs\\
+  \texttt{ia32}:    Intel 32-bit machines (x86) running Linux\\
+  \texttt{ia64}:    Intel 64-bit (Itanium) running Linux\\
+  \texttt{amd64}:   AMD 64-bit (Opteron) running Linux\\
   \texttt{aix}:     IBM AIX machines\\
   \texttt{mips}:    SGI MIPS machines\\
   \texttt{alpha}:   HP-Compaq alpha machines\\
+  \texttt{alinux}:  HP-Compaq alpha running Linux\\
   \texttt{sparc}:   Sun SPARC machines\\
   \texttt{crayx1}:  Cray X1 machines\\
   \texttt{mac}:     Apple PowerPC machines running Mac OS X\\
@@ -512,13 +514,13 @@ used instead: this often yields huge performance gains.
 Quantum-ESPRESSO can use the following architecture-specific replacements for
 BLAS and LAPACK:
 \begin{quote}
+  \texttt{MKL} for Intel Linux PCs\\
+  \texttt{ACML} for AMD Linux PCs\\
   \texttt{essl} for IBM machines\\
   \texttt{complib.sgimath} for SGI Origin\\
   \texttt{SCSL} for SGI Altix\\
-  \texttt{scilib} for Cray/T3e\\
-  \texttt{sunperf} for Sun\\
-  \texttt{MKL} for Intel Linux PCs\\
-  \texttt{ACML} for AMD Linux PCs\\
+  \texttt{scilib} for Cray T3e\\
+  \texttt{SUNperf} for Sun\\
   \texttt{cxml} for HP-Compaq Alphas.
 \end{quote}
 If none of these is available, we suggest that you use the optimized
@@ -598,7 +600,7 @@ For example:
 If everything else fails, you'll have to write the \texttt{make.sys}
 file manually: see section \ref{manualconf}, ``Manual configuration''.
 
-{\bf Please Note:}
+\textbf{Please note:}
 If you change any settings after a previous (successful or failed)
 compilation, you must run \texttt{make clean} before recompiling,
 unless you know exactly which routines are affected by the changed
@@ -641,6 +643,10 @@ Currently available systems are:
   \texttt{sxcross}:   NEC SX-6 (cross-compilation)\\
   \texttt{t3e}:       Cray T3E
 \end{quote}
+\textbf{Please note:}
+Most of these files are old and haven't been tested for a long time.
+They may or may not work.
+
 To select the appropriate templates, you can run:
 \medskip
 
@@ -1337,7 +1343,7 @@ The last item is optional and is read by the code.
 The first and second items are machine- and installation-dependent,
 and may be different for interactive and batch execution.
 
-{\bf Please note:}
+\textbf{Please note:}
 Your machine might be configured so as to disallow interactive
 execution: if in doubt, ask your system administrator.
 \bigskip

@@ -13,12 +13,11 @@ To install Quantum-ESPRESSO from source, you need C and Fortran-95
 compilers (Fortran-90 is not sufficient, but most "Fortran-90"
 compilers are actually Fortran-95-compliant).
 If you don't have a commercial Fortran-95 compiler, you may install
-the free "g95" compiler (http://www.g95.org/): it is still unfinished
-but already usable.
+the free "g95" compiler (http://www.g95.org/).
 You also need a minimal Unix environment: basically, a command shell
-(e.g., "bash" or "tcsh") and the "make" and "awk" utilities.
+(e.g., "bash" or "tcsh") and the utilities "make", "awk" and "sed".
 MS-Windows users need to have Cygwin (a UNIX environment which runs
-under Windows) installed.  See http://www.cygwin.com/.
+under Windows) installed: see http://www.cygwin.com/
 
 Instructions for the impatient:
 
@@ -104,11 +103,13 @@ Try the one that looks more similar to your machine type; you'll
 probably have to do some additional tweaking.
 Currently supported architectures are:
 
-  linux64    Linux 64-bit machines (Itanium, Opteron)
-  linux32    Linux PCs
+  ia32       Intel 32-bit machines (x86) running Linux
+  ia64       Intel 64-bit (Itanium) running Linux
+  amd64      AMD 64-bit (Opteron) running Linux
   aix        IBM AIX machines
   mips       SGI MIPS machines
   alpha      HP-Compaq alpha machines
+  alinux     HP-Compaq alpha running Linux
   sparc      Sun SPARC machines
   crayx1     Cray X1 machines
   mac        Apple PowerPC running Mac OS X
