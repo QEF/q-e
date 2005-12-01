@@ -8,7 +8,6 @@
 #include "f_defs.h"
 !
 #define __BFGS
-!#define __BROYDEN
 !
 !----------------------------------------------------------------------------
 SUBROUTINE dynamics()
@@ -40,7 +39,7 @@ SUBROUTINE dynamics()
   !
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
-  USE constants,     ONLY : amconv, eps8, eps16, convert_E_to_temp
+  USE constants,     ONLY : amconv, convert_E_to_temp, au_ps, eps8, eps16
   USE ions_base,     ONLY : nat, nsp, ityp, tau, if_pos, atm
   USE cell_base,     ONLY : alat
   USE dynam,         ONLY : amass, temperature, dt, delta_t, nraise
@@ -95,11 +94,18 @@ SUBROUTINE dynamics()
      !
   END IF
   !
-  ! ... one Ryd a.u. of time is 4.84*10^-17 seconds, i.e. 0.0484  femtoseconds
-  !
   CALL seqopn( 4, 'md', 'FORMATTED', file_exists )
   !
-  IF ( .NOT. file_exists ) THEN
+  IF ( file_exists ) THEN
+     !
+     ! ... the file is read
+     !
+     READ( UNIT = 4, FMT = * ) &
+        etotold, temp_new, mass, total_mass, elapsed_time, istep, tau_old
+     !
+     CLOSE( UNIT = 4, STATUS = 'KEEP' )
+     !
+  ELSE
      !
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
@@ -116,7 +122,7 @@ SUBROUTINE dynamics()
      !
      WRITE( UNIT = stdout, &
             FMT = '(5X,"Time step",T27," = ",F8.2," a.u.,",F8.4, &
-                     & " femto-seconds")' ) dt, ( dt * 0.0484D0 )
+                     & " femto-seconds")' ) dt, ( dt * 2.D0 * au_ps )
      !
      ! ...  masses in rydberg atomic units
      !
@@ -130,39 +136,27 @@ SUBROUTINE dynamics()
         !
      END DO
      !
+     tau_old(:,:) = tau(:,:)
+     !
      IF ( lrescale_t ) THEN
         !
         ! ... initial thermalization. N.B. tau is in units of alat
         !
         CALL start_therm()
         !
-     ELSE
-        !
-        tau_old = tau
-        vel     = 0.D0
+        temp_new = temperature
         !
      END IF
      !
      elapsed_time = 0.D0
      !
-     temp_new = temperature
-     !
      istep = 0
-     !
-  ELSE
-     !
-     ! ... the file is read
-     !
-     READ( UNIT = 4, FMT = * ) &
-        etotold, temp_new, mass, total_mass, elapsed_time, istep, tau_old
-     !
-     CLOSE( UNIT = 4, STATUS = 'KEEP' )
      !
   END IF
   !
   ! ... elapsed_time is in picoseconds
   !
-  elapsed_time = elapsed_time + dt * 0.0000484D0
+  elapsed_time = elapsed_time + dt * 2.D0 * au_ps
   !
   istep = istep + 1
   !
@@ -195,7 +189,7 @@ SUBROUTINE dynamics()
      !
      ! ... the old positions are updated to reflect the new velocities
      !
-     tau_old = tau - dt * vel
+     tau_old(:,:) = tau(:,:) - dt * vel(:,:)
      !
   END IF
   !
@@ -206,11 +200,11 @@ SUBROUTINE dynamics()
   !
   IF ( lconstrain ) THEN
      !
-     ! ... we first remove the component of the force along the constrain
-     ! ... gradient (this is constitutes the initial guess for the lagrange
-     ! ... multiplier)
+     ! ... we first remove the component of the force along the constraint
+     ! ... gradient (this constitutes the initial guess for the lagrange
+     ! ... multipliers)
      !
-     CALL remove_constraint_force( nat, tau, if_pos, ityp, alat, force )
+     CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
      !
   END IF
   !
@@ -294,6 +288,8 @@ SUBROUTINE dynamics()
         !
         WRITE( UNIT = stdout, &
                FMT = '(/,5X,"End of molecular dynamics calculation")' )
+        !
+        CALL output_tau( .TRUE. )
         !
         RETURN
         !
@@ -392,10 +388,12 @@ SUBROUTINE dynamics()
        REAL(DP), ALLOCATABLE :: inv_hess(:,:)
        REAL(DP), ALLOCATABLE :: y(:), s(:)
        REAL(DP), ALLOCATABLE :: Hs(:), Hy(:), yH(:)
-       REAL(DP)              :: sdoty
+       REAL(DP)              :: sdoty, pg_norm
        INTEGER               :: dim
        CHARACTER(LEN=256)    :: bfgs_file
        LOGICAL               :: file_exists
+       !
+       REAL(DP), PARAMETER :: max_step = 0.8D0  ! ... in bohr
        !
        !
        dim = 3 * nat
@@ -424,22 +422,26 @@ SUBROUTINE dynamics()
           !
           CLOSE( UNIT = iunbfgs )
           !
-          ! ... BFGS update
-          !
-          s(:) = pos(:)  - pos_p(:)
-          y(:) = grad(:) - grad_p(:)
-          !
-          sdoty = ( s(:) .dot. y(:) )
-          !
-          IF ( sdoty > eps8 ) THEN
+          IF ( etot < etotold ) THEN
              !
-             Hs(:) = ( inv_hess(:,:) .times. s(:) )
-             Hy(:) = ( inv_hess(:,:) .times. y(:) )
-             yH(:) = ( y(:) .times. inv_hess(:,:) )
+             ! ... BFGS update
              !
-             inv_hess = inv_hess + 1.D0 / sdoty * &
+             s(:) = pos(:)  - pos_p(:)
+             y(:) = grad(:) - grad_p(:)
+             !
+             sdoty = ( s(:) .dot. y(:) )
+             !
+             IF ( sdoty > eps8 ) THEN
+                !
+                Hs(:) = ( inv_hess(:,:) .times. s(:) )
+                Hy(:) = ( inv_hess(:,:) .times. y(:) )
+                yH(:) = ( y(:) .times. inv_hess(:,:) )
+                !
+                inv_hess = inv_hess + 1.D0 / sdoty * &
                         ( ( 1.D0 + ( y .dot. Hy ) / sdoty ) * matrix( s, s ) - &
                           ( matrix( s, yH ) +  matrix( Hy, s ) ) )
+                !
+             END IF
              !
           END IF
           !
@@ -471,6 +473,13 @@ SUBROUTINE dynamics()
        !
        CLOSE( UNIT = iunbfgs )
        !
+       ! ... the length of the step is always shorter than pg_norm
+       !
+       pg_norm = norm( precond_grad(:) )
+       !
+       precond_grad(:) = precond_grad(:) / pg_norm * &
+                         MIN( max_step / alat, pg_norm )
+       !
        force(:,:) = - RESHAPE( precond_grad(:), (/ 3, nat /) )
        !
        DEALLOCATE( pos, pos_p )
@@ -478,121 +487,6 @@ SUBROUTINE dynamics()
        DEALLOCATE( inv_hess )
        DEALLOCATE( y, s )
        DEALLOCATE( Hs, Hy, yH )
-       !
-#endif
-#if defined (__BROYDEN)
-       !
-       REAL(DP), ALLOCATABLE :: g(:), s(:,:)
-       INTEGER               :: k, i, j, dim
-       REAL(DP)              :: s_norm, coeff
-       LOGICAL               :: file_exists
-       CHARACTER(LEN=256)    :: broy_file
-       !
-       INTEGER,  PARAMETER   :: broyden_ndim = 6
-       !
-       !
-       dim = 3 * nat
-       !
-       ALLOCATE( g( dim ) )
-       ALLOCATE( s( dim, broyden_ndim ) )
-       !
-       g = - RESHAPE( force, (/ dim /) )
-       !
-       ! ... open the file containing the broyden's history
-       !
-       broy_file = TRIM( tmp_dir ) // TRIM( prefix ) // '.broyden'
-       !
-       INQUIRE( FILE = broy_file, EXIST = file_exists )
-       !
-       IF ( file_exists ) THEN
-          !
-          OPEN( UNIT = iunbroy, FILE = broy_file, STATUS = "OLD" )
-          !
-          READ( UNIT = iunbroy , FMT = * ) k
-          READ( UNIT = iunbroy , FMT = * ) s(:,:)
-          !
-          k = k + 1
-          !
-       ELSE 
-          !
-          s(:,:) = 0.D0
-          !
-          k = 1
-          !
-       END IF
-       !
-       CLOSE( UNIT = iunbroy )
-       !
-       ! ... Broyden's update
-       !
-       IF ( k > broyden_ndim ) THEN
-          !
-          ! ... the Broyden's subspace is swapped and s is projected
-          ! ... orthogonally to the current tangent (this last thing 
-          ! ... in the smd case only, otherwise t = 0.D0)
-          !
-          k = broyden_ndim
-          !
-          DO j = 1, k - 1
-             !
-             s(:,j) = s(:,j+1)
-             !
-          END DO
-          !
-       END IF
-       !
-       s(:,k) = - g(:)
-       !
-       IF ( k > 1 ) THEN
-          !
-          DO j = 1, k - 2
-             !
-             s(:,k) = s(:,k) + ( s(:,j) .dot. s(:,k) ) / &
-                               ( s(:,j) .dot. s(:,j) ) * s(:,j+1)
-             !
-          END DO
-          !
-          coeff = ( s(:,k-1) .dot. ( s(:,k-1) - s(:,k) ) )
-          !
-          IF ( coeff > eps8 ) THEN
-             !
-             s(:,k) = ( s(:,k-1) .dot. s(:,k-1) ) / coeff * s(:,k)
-             !
-          ELSE
-             !
-             s(:,k) = - g(:)
-             !
-          END IF
-          !
-       END IF
-       !
-       IF ( ( s(:,k) .dot. g(:) ) > 0.D0 ) THEN
-          !
-          ! ... uphill step :  history reset
-          !
-          WRITE( UNIT = stdout, &
-                 FMT = '(5X,"BROYDEN uphill step :  history reset",/)' )
-          !
-          k = 1
-          !
-          s(:,:) = 0.D0
-          s(:,k) = - g(:)
-          !
-       END IF
-       !
-       ! ... save the file containing the history
-       !
-       OPEN( UNIT = iunbroy, FILE = broy_file )
-       !
-       WRITE( UNIT = iunbroy, FMT = * ) k
-       WRITE( UNIT = iunbroy, FMT = * ) s
-       !
-       CLOSE( UNIT = iunbroy )
-       !
-       force(:,:) = RESHAPE( s(:,k), (/ 3, nat /) )
-       !
-       DEALLOCATE( g )
-       DEALLOCATE( s )       
        !
 #endif
        !
