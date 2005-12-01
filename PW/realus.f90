@@ -57,6 +57,8 @@ contains
     USE cell_base,  ONLY : at, bg
     USE parameters, ONLY : nbrx
     USE pfft,       ONLY : npp
+    USE mp_global,  ONLY : me_pool
+
     implicit none
 
     integer :: inat, indm, inbrx1, inbrx2, inrxx, idimension, ilm,ih,jh,is,m, iih,ijh, ilemme
@@ -128,7 +130,7 @@ contains
 
     index0 = 0
 #ifdef __PARA
-    do indproc=1,me-1
+    do indproc=1,me_pool
        index0 = index0 + nrx1*nrx2*npp(indproc)
     enddo
 
@@ -403,7 +405,7 @@ contains
     call stop_clock('qpointlist')
   end subroutine qpointlist
 
-  subroutine newdrealsub
+  subroutine newd_r
 
 !This subroutine is the real version of newd
 !This is faster
@@ -503,7 +505,8 @@ contains
 
     enddo
     call stop_clock('newd')
-  end subroutine newdrealsub
+  end subroutine newd_r
+
   subroutine setqfcorr (qfcoef, rho, r, nqf, ltot, mesh)
     !-----------------------------------------------------------------------
     !
@@ -669,7 +672,7 @@ subroutine setqfcorrpointfirst (qfcoef, rho, r, nqf, ltot)
     return
   end subroutine setqfcorrpointsecond
 
-subroutine addusdensreal
+subroutine addusdens_r
   !----------------------------------------------------------------------
   !
   !  This routine adds to the charge density the part which is due to
@@ -723,10 +726,7 @@ subroutine addusdensreal
   !
   call stop_clock ('addusdens')
   return
-end subroutine addusdensreal
-
-
-
+end subroutine addusdens_r
 
 
     !

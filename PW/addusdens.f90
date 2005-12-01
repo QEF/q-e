@@ -10,9 +10,9 @@
 !----------------------------------------------------------------------
 subroutine addusdens
   !----------------------------------------------------------------------
-  USE realus, ONLY: tqr,  addusdensreal
+  USE realus, ONLY: tqr,  addusdens_r
   if (tqr) then
-     call addusdensreal
+     call addusdens_r
   else
      call addusdens_g
   endif

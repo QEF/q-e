@@ -8,9 +8,9 @@
 #include "f_defs.h"
 !
 SUBROUTINE newd()
-  use realus, ONLY: tqr,  newdrealsub
+  use realus, ONLY: tqr,  newd_r
   if (tqr) then
-     call newdrealsub()
+     call newd_r()
   else
      call newd_g()
   end if
