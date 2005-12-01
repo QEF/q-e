@@ -1,5 +1,6 @@
 \documentclass[12pt,a4paper]{article}
- \def\version{2.1}
+ \def\version{3.0}
+ \def\developersmail{\texttt{pwscf@pwscf.org}}
 
  \usepackage{epsfig}
  \usepackage{html}
@@ -16,8 +17,8 @@
   \vspace{1.5cm}
   \\
   % title
-  \huge Developer's Guide and Reference Manual for PWscf v.\version
-        -- (template)
+  \huge Developer's Guide and Reference Manual for Quantum-ESPRESSO
+       v.\version
 }
 \maketitle
 
@@ -31,22 +32,21 @@
 
 The intended audience of this guide is everybody who wants to:
 \begin{itemize}
-  \item know how PWscf works, including its internals (infernals?)
-  \item modify/customize/add/extend/improve/clean up PWscf
-  \item know how to read data produced by PWscf
+  \item know how Quantum-ESPRESSO works, including its internals
+  \item modify/customize/add/extend/improve/clean up Quantum-ESPRESSO
+  \item know how to read data produced by Quantum-ESPRESSO
 \end{itemize}
 The same category of people should also {\em write} this guide, of course.
-Who else?
 
 \subsection{Who may read this guide but will not necessarily
 profit from it}
 
-People who want to know about the capabilities of PWscf,
-or who want just to use PWscf, should read the User's Guide, 
-coming with the PWscf distribution.
+People who want to know about the capabilities of Quantum-ESPRESSO,
+or who want just to use Quantum-ESPRESSO, should read the User's Guide, 
+coming with the Quantum-ESPRESSO distribution.
 
 People who want to know about the methods or the physics
-behind PWscf should read the relevant literature. The
+behind Quantum-ESPRESSO should read the relevant literature. The
 following references are chosen for their completeness.
 \medskip
 
@@ -100,6 +100,77 @@ Car-Parrinello (CP), first-principles Molecular Dynamics (MD) method:
      {http://www.nest.sns.it/~giannozz/Papers/JCP_57.pdf}).
 \end{enumerate}
 
+\subsection{How to Contribute to Quantum-ESPRESSO}
+
+You can contribute to a better quantum-ESPRESSO by
+\begin{itemize}
+\item answering other people's questions on the mailing list
+  (correct answers are strongly preferred to wrong ones).
+\item 
+  suggesting changes: note however that suggestions requiring a
+  significant amount of work are welcome only if accompanied by
+  implementation or by a promise of future implementation
+  (fulfilled promises are strongly preferred to forgotten ones)
+\item 
+  porting to new/unsupported architectures or configurations:
+  see the users' guide and the files \texttt{README.install}, 
+  \texttt{README.configure}.
+  You shouldn't need new preprocessing flags (see Sect.\ref{preproc}):
+  those already existing should be sufficient, but if in case, 
+  look into the header of file \texttt{include/f\_defs.h}
+\item
+  pointing out bugs in the software and in the documentation
+  (reports of real bugs are strongly preferred to reports of
+  nonexistent bugs). A bug report should include enough information
+  to reproduce it: typically, version number, hardware/software
+  combination(s) for which the problem arises, whether it is 
+  reproducible or erratic, whether it happens in serial or parallel 
+  execution or both, and, most important, an input and output 
+  exhibiting such behavior (fast to execute if possible). The error
+  message alone is usually not a sufficient piece of information
+\item
+  adding new features to the code. If you like to have something added
+  to ESPRESSO, contact the developers at \developersmail. Unless there
+  are technical reasons not to include your changes, we will try to
+  make you happy (no warranty that we will actually succeed)
+\end{itemize}
+  If your changes are straightforward, it will be sufficient to send 
+  the modified file(s), or patches, to \developersmail.
+
+  For extensive changes, the ideal procedure is as follows:
+\begin{itemize}
+   \item download the current CVS version (see Sec.\ref{cvs})
+    and work on that version
+   \item when you are happy with your modified version, make a copy of it,
+    then update your copy with \texttt{cvs update}
+  \item if you get no conflicts and everything is still working, you have
+    won. Send the modified files to \developersmail.
+  \item if you get conflicts, or if the updated code doesn't work any
+    longer, you haven't yet won. Look into the conflicting section:
+    in most cases conflicts are trivial (format changes, white spaces) 
+    or easily solved (the part of the code you were modifying has
+    been moved to another place, for instance). Sometimes, somebody
+    else has done changes that are incompatible with yours during the
+    same period. Look into the ChangeLog (use the script \texttt{cvs2cl.pl}
+    to get an updated ChangeLog) to understand what may have happened.
+    Use \texttt{cvs update -D}{\em date} to update to the CVS version 
+    at date {\em date}:
+    this may be useful if you suspect that the incompatibile change 
+    happened after date {\em date}.
+    CVS versions can be "tagged"; tags are visible with 
+    \texttt{cvs status -v}. Use \texttt{cvs update -r}{\em tag} 
+    to update to the CVS version with tag {\em tag}.
+    In all cases, use \texttt{cvs update -A} to revert to the last version.
+\end{itemize}
+% Presently the following parts of the distribution have a nonofficial
+% maintainer (i.e. somebody who knows better than the others what is 
+% going on there):
+% Configure, installation: Gerardo Ballabio
+% LDA+U, phonon: Stefano de Gironcoli
+% tetrahedra, gamma phonon: Paolo Giannozzi
+% spin-orbit: Andrea Dal Corso
+% FPMD: Carlo Cavazzoni
+
 \section{Structure of the distribution}
 
 \subsection{Contents of the various directories}
@@ -149,6 +220,7 @@ specify the C precompiler and options (if needed) in "make.sys".
 
 \subsection{Preprocessing}
 
+\label{preproc}
 The code contains C-style preprocessing directives. Most
 fortran compilers directly support them; some don't, and
 preprocessing is "hand-made" by the makefile using the C
@@ -208,7 +280,7 @@ grid) are distributed.
 \subsection{Data file(s)}
 \subsection{Restart files}
 
-\section{Modifying/adding/extending PWscf}
+\section{Modifying/adding/extending Quantum-ESPRESSO}
 \subsection{Hints, Caveats, Do's and Dont's}
 \begin{itemize}
 \item
@@ -247,7 +319,7 @@ subroutine. The namelists and cards parsers are in :
 Files \texttt{input\_parameters.f90}, \texttt{read\_namelists.f90},
 \texttt{read\_cards.f90} are shared by all codes, while each code 
 has its own version of \texttt{input.f90}  used to copy input values 
-into internals variables ).
+into internal variables ).
 
 EXAMPLE:
 suppose you need to add a new input variable called "pippo"
@@ -285,6 +357,7 @@ read_namelists.f90 )
 
 \section{Using CVS}
 
+\label{cvs}
 The package is available read-only using anonymous CVS. Developers 
 may have read-write access if needed. Note that the latest
 (development) version may not work properly, and sometimes not 

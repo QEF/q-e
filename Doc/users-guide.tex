@@ -1180,8 +1180,9 @@ Update to the last version (presently 7.1.41, 8.0.046 or
 {\texttt{http://developer.intel.com/software/products/support/\#premier}}%
 {http://developer.intel.com/software/products/support/\#premier}.
 \hfill\break
-There are conflicting reports on the newest version 9. In any event,
-look for the last version with the most patches.
+Intel v.~9 should work, but earlier releases had a bug in preprocessing
+that prevents compilation of {\tt iotk}. Use the last available version
+with the most patches.
 
 Warnings ``size of symbol ... changed ...'' are produced by ifc 7.1 at
 the loading stage.
@@ -2254,8 +2255,27 @@ H 1.00d0 h.ps
     It is possible to specify also the thermostat for the electrons,
     this is usually activated in metal or in system where we have a
     transfer of energy between ionic and electronic degrees of
-    freedom.
+    freedom. Beware: the usage of electronic thermostats is quite
+    delicate. The following information comes from K. Kudin:
+    {\em The main issue is that there is usually some "natural" fictitious
+    kinetic energy that electrons gain from the ionic motion ("drag"). One
+    could easily quantify how much of the fictitious energy comes from this
+    drag by doing a CP run, then a couple of CG (same as BO) steps, and
+    then going back to CP. The fictitious electronic energy at the last CP
+    restart will be purely due to the drag effect.
+
+    The thermostat on electrons will either try to overexcite the
+    otherwise "cold" electrons, or, will try to take them down to an
+    unnaturally cold state where their fictitious kinetic energy is even
+    below what would be just due pure drag. Neither of this is good.
+
+    I think the only workable regime with an electronic thermostat is a
+    mild overexcitation of the electrons, however, to do this one will need
+    to know rather precisely what is the fictititious kinetic energy due to
+    the drag.}
+
 \end{enumerate}
+
 
 \clearpage
 
