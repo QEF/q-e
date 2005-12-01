@@ -328,7 +328,7 @@
 
 !-----------------------------------------------------------------------
       subroutine formfn( vps, dvps, r, rab, vloc_at, zv, rcmax, g, omega, &
-                         tpiba2, cmesh, mesh, ngs, oldvan, tpre )
+                         tpiba2, mesh, ngs, oldvan, tpre )
 !-----------------------------------------------------------------------
 !
         !computes the form factors of pseudopotential (vps),
@@ -349,7 +349,7 @@
         real(DP), intent(in)  ::  vloc_at( mesh )
         real(DP), intent(out) ::  vps( ngs )
         real(DP), intent(out) :: dvps( ngs )
-        real(DP), intent(in)  :: zv, rcmax, omega, tpiba2, cmesh
+        real(DP), intent(in)  :: zv, rcmax, omega, tpiba2
         !
         real(DP) :: xg
         integer   :: ig, ir, irmax
@@ -396,8 +396,8 @@
             end do
             !
             if ( oldvan ) then
-              call herman_skillman_int( mesh, cmesh, f,  figl(ig) )
-              if(tpre) call herman_skillman_int( mesh, cmesh, df, dfigl(ig) )
+              call herman_skillman_int( mesh, f, rab, figl(ig) )
+              if(tpre) call herman_skillman_int( mesh, df, rab, dfigl(ig) )
             else
               call simpson_cp90( mesh, f, rab,  figl(ig) )
               if(tpre) call simpson_cp90( mesh, df, rab, dfigl(ig) )
@@ -415,8 +415,8 @@
             end do
             !
             if ( oldvan ) then
-              call herman_skillman_int( mesh, cmesh, f, figl(ig) )
-              if(tpre) call herman_skillman_int( mesh, cmesh, df, dfigl(ig) )
+              call herman_skillman_int( mesh, f, rab(1), figl(ig) )
+              if(tpre) call herman_skillman_int( mesh, df, rab(1), dfigl(ig) )
             else
               call simpson_cp90(mesh,f,rab(1),figl(ig))
               if(tpre) call simpson_cp90(mesh,df,rab(1),dfigl(ig))

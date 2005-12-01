@@ -18,7 +18,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
   use uspp_param, only: lqmax, nqlc, kkbeta, nbeta, nh, nhm
   use uspp, only: indv, lpx, lpl, ap,nhtolm
-  use qrl_mod, only: qrl, cmesh
+  use qrl_mod, only: qrl
   use atom, only: r, rab
   use core
   use gvecw, only: ngw
@@ -107,10 +107,9 @@ subroutine qqberry2( gqq,gqqm, ipol)
               end do
               if (oldvan(is)) then
                  call herman_skillman_int     &
-                      &  (kkbeta(is),cmesh(is),fint,qradb2(iv,jv,l,is))
+                      &  (kkbeta(is),fint,rab(1,is),qradb2(iv,jv,l,is))
               else
-                 call simpson     &
-                      &           (kkbeta(is),fint,rab(1,is),qradb2(iv,jv,l,is))                         
+                 call simpson (kkbeta(is),fint,rab(1,is),qradb2(iv,jv,l,is))
               endif
               qradb2(iv,jv,l,is)=  c*qradb2(iv,jv,l,is)
               qradb2(jv,iv,l,is)=  qradb2(iv,jv,l,is)

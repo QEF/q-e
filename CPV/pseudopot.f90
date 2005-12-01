@@ -340,7 +340,6 @@ CONTAINS
       USE ions_base,     ONLY : nsp, rcmax, zv
       USE cell_base,     ONLY : tpiba, tpiba2
       use bhs,           ONLY : rc1, rc2, wrc2, wrc1, rcl, al, bl, lloc
-      use qrl_mod,       ONLY : cmesh
       USE splines,       ONLY : init_spline, allocate_spline, kill_spline, nullify_spline
       USE pseudo_base,   ONLY : formfn, formfa
       USE uspp_param,    only : vloc_at
@@ -386,7 +385,7 @@ CONTAINS
          if ( numeric(is) ) then
 
             call formfn( vps_sp(is)%y, dvps_sp(is)%y, r(:,is), rab(:,is), vloc_at(:,is), &
-                         zv(is), rcmax(is), xgtab, 1.0d0, tpiba2, cmesh(is), mesh(is), &
+                         zv(is), rcmax(is), xgtab, 1.0d0, tpiba2, mesh(is), &
                          mmx, oldvan(is), tpre )
 
          else
@@ -718,7 +717,6 @@ CONTAINS
       USE uspp,       ONLY: nhtol, indv
       USE betax,      only: refg, betagx, mmx, dbetagx
       USE cvan,       only: oldvan
-      USE qrl_mod,    only: cmesh
       !
       IMPLICIT NONE
       !
@@ -786,7 +784,7 @@ CONTAINS
                   fint(ir) = r(ir,is) * betar( ir, indv(iv,is), is ) * jl(ir)
                end do
                if (oldvan(is)) then
-                  call herman_skillman_int(kkbeta(is),cmesh(is),fint,betagx(il,iv,is))
+                  call herman_skillman_int(kkbeta(is),fint,rab(1,is),betagx(il,iv,is))
                else
                   call simpson_cp90(kkbeta(is),fint,rab(1,is),betagx(il,iv,is))
                endif
@@ -796,7 +794,7 @@ CONTAINS
                      dfint(ir) = r(ir,is) * betar( ir, indv(iv,is), is ) * djl(ir)
                   end do
                   if (oldvan(is)) then
-                     call herman_skillman_int(kkbeta(is),cmesh(is),dfint,dbetagx(il,iv,is))
+                     call herman_skillman_int(kkbeta(is),dfint,rab(1,is),dbetagx(il,iv,is))
                   else
                      call simpson_cp90(kkbeta(is),dfint,rab(1,is),dbetagx(il,iv,is))
                   end if
@@ -835,7 +833,7 @@ CONTAINS
       USE uspp,       ONLY: nhtol, indv
       USE betax,      only: refg, qradx, mmx, dqradx
       USE cvan,       only: oldvan, ish, nvb
-      USE qrl_mod,    only: qrl, cmesh
+      USE qrl_mod,    only: qrl
       use gvecb,      only: ngb
       !
       IMPLICIT NONE
@@ -911,7 +909,7 @@ CONTAINS
                         fint(ir)=qrl(ir,ijv,l,is)*jl(ir)
                      end do
                      if (oldvan(is)) then
-                        call herman_skillman_int(kkbeta(is),cmesh(is),fint,qradx(il,iv,jv,l,is))
+                        call herman_skillman_int (kkbeta(is),fint,rab(1,is),qradx(il,iv,jv,l,is))
                      else
                         call simpson_cp90(kkbeta(is),fint,rab(1,is),qradx(il,iv,jv,l,is))
                      end if
@@ -923,7 +921,7 @@ CONTAINS
                            dfint(ir) = qrl(ir,ijv,l,is) * djl(ir)
                         end do
                         if ( oldvan(is) ) then
-                           call herman_skillman_int(kkbeta(is),cmesh(is),dfint,dqradx(il,iv,jv,l,is))
+                           call herman_skillman_int(kkbeta(is),dfint,rab(1,is),dqradx(il,iv,jv,l,is))
                         else
                            call simpson_cp90(kkbeta(is),dfint,rab(1,is),dqradx(il,iv,jv,l,is))
                         end if
@@ -1291,7 +1289,6 @@ CONTAINS
       USE cdvan,         ONLY : dbeta
       USE cvan,          only : oldvan
       USE atom,          ONLY : r, numeric, rab
-      USE qrl_mod,       only : cmesh
       USE reciprocal_vectors, only : g, gx, gstart
 
       IMPLICIT NONE
@@ -1365,7 +1362,7 @@ CONTAINS
                   fint(ir) = r(ir,is) * betar( ir, indv(iv,is), is ) * jl(ir)
                end do
                if (oldvan(is)) then
-                  call herman_skillman_int(kkbeta(is),cmesh(is),fint,betagx(il,iv,is))
+                  call herman_skillman_int(kkbeta(is),fint,rab(1,is),betagx(il,iv,is))
                else
                   call simpson_cp90(kkbeta(is),fint,rab(1,is),betagx(il,iv,is))
                endif
@@ -1375,7 +1372,7 @@ CONTAINS
                      dfint(ir) = r(ir,is) * betar( ir, indv(iv,is), is ) * djl(ir)
                   end do
                   if (oldvan(is)) then
-                     call herman_skillman_int(kkbeta(is),cmesh(is),dfint,dbetagx(il,iv,is))
+                     call herman_skillman_int(kkbeta(is),dfint,rab(1,is),dbetagx(il,iv,is))
                   else
                      call simpson_cp90(kkbeta(is),dfint,rab(1,is),dbetagx(il,iv,is))
                   end if

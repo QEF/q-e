@@ -274,10 +274,8 @@ module qrl_mod
   save
 !
 ! qrl       q(r) functions (old format)
-! cmesh     used only for Herman-Skillman mesh (old format)
-!
+
   real(8) :: qrl(ndmx,nbrx*(nbrx+1)/2,lqmax,nsx)
-  real(8) :: cmesh(nsx)
 
 end module qrl_mod
 

@@ -1213,7 +1213,6 @@ END SUBROUTINE read_atomic_cc
 !
       use atom, only: rab, r, mesh, nlcc, rho_atc, numeric
       use uspp_param, only: betar, dion, vloc_at, lll, nbeta, kkbeta
-      use qrl_mod, only: cmesh
       use bhs, only: rcl, rc2, bl, al, wrc1, lloc, wrc2, rc1
       use funct, only: set_dft_from_name, dft_is_hybrid
       use ions_base, only: zv
@@ -1226,7 +1225,7 @@ END SUBROUTINE read_atomic_cc
 !
       integer meshp, ir, ib, il, i, j, jj
       real(8), allocatable:: fint(:), vnl(:)
-      real(8) rdum, alpha, z, zval, cmeshp, exfact
+      real(8) rdum, alpha, z, zval, cmesh, cmeshp, exfact
       character(len=20) :: dft_name
 !
 ! nlcc is unfortunately not read from file
@@ -1278,7 +1277,7 @@ END SUBROUTINE read_atomic_cc
 !     wavefunctions are read from file iunps
 !     ------------------------------------------------------------------
       do il=1,nbeta(is)
-         read(iunps,*) mesh(is),cmesh(is)
+         read(iunps,*) mesh(is),cmesh
 !
 ! kkbeta is for compatibility with Vanderbilt PP
 !
@@ -1294,7 +1293,7 @@ END SUBROUTINE read_atomic_cc
 !
       if(nlcc(is)) then
          read(15,*) meshp,cmeshp
-         if(meshp.ne.mesh(is).or.cmeshp.ne.cmesh(is))then
+         if ( meshp.ne.mesh(is) .or. cmeshp.ne.cmesh ) then
             call errore('readpp','core charge mesh mismatch',is)
          endif
          do ir=1,mesh(is)
@@ -1304,9 +1303,8 @@ END SUBROUTINE read_atomic_cc
 !
 !  rab(i) is the derivative of the radial mesh
 !
-      cmesh(is)=log(cmesh(is))
       do ir=1,mesh(is)
-         rab(ir,is)=r(ir,is)*cmesh(is)
+         rab(ir,is)=r(ir,is) * log(cmesh)
       end do
 !
 !     ------------------------------------------------------------------
@@ -1657,7 +1655,7 @@ END SUBROUTINE read_atomic_cc
       use parameters, only: nchix, lmaxx, nbrx, ndmx, nsx, lqmax, nqfx
       use uspp_param, only: qfunc, qfcoef, qqq, betar, dion, vloc_at, &
            rinner, kkbeta, lll, nbeta, nqf, nqlc, tvanp
-      use qrl_mod, only: cmesh, qrl
+      use qrl_mod, only: qrl
       use funct, only: set_dft_from_name, dft_is_hybrid
       use atom, only: nchi, chi, lchi, r, rab, mesh, nlcc, rho_atc
       use cvan, only: oldvan
@@ -1925,7 +1923,7 @@ END SUBROUTINE read_atomic_cc
 !
 !     generate herman-skillman mesh (if version = 1)
 !
-         call herman_skillman_grid(mesh(is),z(is),cmesh(is),r(1,is))
+         call herman_skillman_grid(mesh(is),z(is),r(1,is),rab(1,is))
       end if
 !
 !     set rho_atc(r)=rho_core(r)  (without 4*pi*r^2 factor)

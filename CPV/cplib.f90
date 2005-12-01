@@ -1575,13 +1575,16 @@
       END SUBROUTINE gram
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE herman_skillman_grid(mesh,z,cmesh,r)
+      SUBROUTINE herman_skillman_grid(mesh,z,r,rab)
 !-----------------------------------------------------------------------
+!
+!     generate Herman-Skillman radial grid
+!     c    - 0.8853418/z**(1/3)
 !
       IMPLICIT NONE
 !
       INTEGER mesh
-      REAL(8) z, cmesh, r(mesh)
+      REAL(8) z, r(mesh), rab(mesh)
 !
       REAL(8) deltax
       INTEGER nblock,i,j,k
@@ -1589,12 +1592,12 @@
       nblock = mesh/40
       i=1
       r(i)=0.0
-      cmesh=0.88534138/z**(1.0/3.0)
-      deltax=0.0025*cmesh
+      deltax=0.0025*0.88534138/z**(1.0/3.0)
       DO j=1,nblock
          DO k=1,40
             i=i+1
             r(i)=r(i-1)+deltax
+            rab(i)=deltax
          END DO
          deltax=deltax+deltax
       END DO
@@ -1603,23 +1606,21 @@
       END SUBROUTINE herman_skillman_grid
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE herman_skillman_int(mesh,cmesh,func,asum)
+      SUBROUTINE herman_skillman_int(mesh,func,rab,asum)
 !-----------------------------------------------------------------------
 !     simpsons rule integration for herman skillman mesh
 !     mesh - # of mesh points
-!     c    - 0.8853418/z**(1/3.)
 !
       IMPLICIT NONE
       INTEGER mesh
-      REAL(8) cmesh, func(mesh), asum
+      REAL(8) rab(mesh), func(mesh), asum
 !
       INTEGER i, j, k, i1, nblock
-      REAL(8) a1, a2e, a2o, a2es, h
+      REAL(8) a1, a2e, a2o, a2es
 !
       a1=0.0
       a2e=0.0
       asum=0.0
-      h=0.0025*cmesh
       nblock=mesh/40
       i=1
       func(1)=0.0
@@ -1631,13 +1632,12 @@
             a2o=func(i1)/12.0
             a2e=func(i)/12.0
             a1=a1+5.0*a2es+8.0*a2o-a2e
-            func(i1)=asum+a1*h
+            func(i1)=asum+a1*rab(i1)
             a1=a1-a2es+8.0*a2o+5.0*a2e
-            func(i)=asum+a1*h
+            func(i)=asum+a1*rab(i)
          END DO
          asum=func(i)
          a1=0.0
-         h=h+h
       END DO
 !
       RETURN

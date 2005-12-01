@@ -29,7 +29,6 @@ subroutine formf( tfirst, eself )
   use local_pseudo,    ONLY : vps, rhops, dvps, drhops
   use atom,            ONLY : r, rab, mesh, numeric
   use uspp_param,      ONLY : vloc_at
-  use qrl_mod,         ONLY : cmesh
   use pseudo_base,     ONLY : compute_rhops, formfn, formfa, compute_eself
   use pseudopotential, ONLY : tpstab, build_pstab, vps_sp, dvps_sp
   use splines,         ONLY : spline
@@ -85,7 +84,7 @@ subroutine formf( tfirst, eself )
         if ( numeric(is) ) then
 
            call formfn( vps(:,is), dvps(:,is), r(:,is), rab(:,is), vloc_at(:,is), &
-                        zv(is), rcmax(is), g, omega, tpiba2, cmesh(is), mesh(is), &
+                        zv(is), rcmax(is), g, omega, tpiba2, mesh(is), &
                         ngs, oldvan(is), tpre )
 
         else
