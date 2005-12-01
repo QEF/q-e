@@ -103,27 +103,34 @@ CONTAINS
     !-------------------------------------------------------------
     !
     USE constants,            ONLY : DIP_DEBYE
-    USE cell_base,            ONLY : tpiba2, h
-    USE cg_module,            ONLY : tcg
+    USE cell_base,            ONLY : tpiba2, h, hold, velh, ibrav, celldm
+    USE cell_nose,            ONLY : xnhh0, xnhhm,vnhh
+    USE cg_module,            ONLY : tcg, c0old
     USE constants,            ONLY : AMU_AU
+    USE control_flags,        ONLY : ndr, ndw
     USE cp_electronic_mass,   ONLY : emass_precond, emass_cutoff
     USE cp_main_variables,    ONLY : lambda, lambdam, ema0bg, nfi, bec
-    USE cp_main_variables,    ONLY : irb, eigrb, rhor, rhog, rhos
-    USE cp_main_variables,    ONLY : lambdap, eigr
-    USE electrons_base,       ONLY : nbsp, nbspx, nel
+    USE cp_main_variables,    ONLY : irb, eigrb, rhor, rhog, rhos, acc
+    USE cp_main_variables,    ONLY : lambdap, eigr, rhopr
+    USE electrons_base,       ONLY : nbsp, nbspx, nel, f
     USE electrons_module,     ONLY : cp_eigs
-    USE energies,             ONLY : etot, ekin
-    USE gvecw,                ONLY : ngw, ggp
+    USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
+    USE energies,             ONLY : etot, ekin, ekincm
+    USE ensemble_dft,         ONLY : z0
+    USE gvecp,                ONLY : ecutp
+    USE gvecw,                ONLY : ngw, ggp, ecutw
     USE io_files,             ONLY : outdir, prefix
     USE io_global,            ONLY : ionode, ionode_id, stdout
     USE ions_base,            ONLY : nsp, nat, iforce, na, pmass
-    USE ions_positions,       ONLY : tau0
+    USE ions_nose,            ONLY : xnhp0,xnhpm, vnhp, nhpcl, nhpdim
+    USE ions_positions,       ONLY : tau0, taus, tausm, vels, velsm
     USE kinds,                ONLY : DP
     USE mp,                   ONLY : mp_bcast
     USE parameters,           ONLY : natx
     USE printout_base,        ONLY : printout_pos
     USE print_out_module,     ONLY : cp_print_rho
     USE restart_file,         ONLY : writefile
+    USE time_step,            ONLY : delt, tps
     USE wavefunctions_module, ONLY : c0, cm
     !
     ! ... output variables
@@ -292,14 +299,26 @@ CONTAINS
        WRITE ( stdout , * ) '... Initial relaxation of wavefunction...'
        !
        CALL relax_wavefunction (fion)
-       !CALL cp_eigs( nfi, bec, c0, irb, eigrb, rhor, &
-       !    rhog, rhos, lambdap, lambda, tau0, h )
        !
-       !printwfc = 1
-       !IF ( printwfc >= 0 ) &
-       !     CALL cp_print_rho( nfi, bec, c0, eigr, irb, eigrb, rhor, &
-       !     rhog, rhos, lambdap, lambda, tau0, h )
+       ! ... saving restart wavefunction
        !
+       IF ( tcg ) THEN
+          !
+          CALL writefile( ndw, h, hold ,nfi, c0(:,:,1,1), c0old, taus, tausm, &
+               vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,    &
+               vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
+               xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass, ibrav,&
+               celldm, fion, tps, z0, f, rhopr )
+          !
+       ELSE
+          !
+          CALL writefile( ndw, h, hold, nfi, c0(:,:,1,1), cm(:,:,1,1), taus,  &
+               tausm, vels, velsm, acc,  lambda, lambdam, xnhe0,   &
+               xnhem, vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm,&
+               xnhh0, xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass,&
+               ibrav, celldm, fion, tps, z0, f, rhopr )
+          !
+       END IF
        !
        WRITE ( stdout , * ) 'Done' 
        WRITE ( stdout , * )                                       
@@ -722,6 +741,10 @@ CONTAINS
           U_internal(1:nmodes,1:nmodes)=U_tmp(3*nat-nmodes+1:3*nat,3*nat-nmodes+1:3*nat)
           T_internal(1:nmodes,1:nmodes)=T_tmp(3*nat-nmodes+1:3*nat,3*nat-nmodes+1:3*nat)
           !
+          ! ... imposing symmetry on the hessian
+          !
+          CALL symmetrize_matrix(U,3*nat)
+          !
           do_IR_intensity = .FALSE.
           CALL analyze_vibrations(U_internal,T_internal,nmodes,filep,tot_born_charge, &
                eigenvals_internal,eigenvecs_internal,do_IR_intensity,intensity)
@@ -947,7 +970,6 @@ CONTAINS
        WRITE (mode_label,'(i3.3)') i
        WRITE (free_text,'(2x,f10.2,2x,A6)')  freq,' cm-1'
        WRITE (mode_freq_ascii,'(I4.4)') nint(freq)
-       print *, eigval_loc(i), mode_freq_ascii
        !
        ! ... generate 20 snapshots of along one vibrational period
        !

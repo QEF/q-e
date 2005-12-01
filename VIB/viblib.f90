@@ -36,7 +36,7 @@ SUBROUTINE print_matrix (matrix, dim1, dim2, title, filep)
   WRITE (filep,*)
   DO i=1,dim1
      DO j=1,dim2
-        WRITE (filep,FMT='(F12.5,3X)',ADVANCE='NO') matrix(i,j)
+        WRITE (filep,FMT='(F12.6,3X)',ADVANCE='NO') matrix(i,j)
      END DO
      WRITE (filep,*)
   END DO
