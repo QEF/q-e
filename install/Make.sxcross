@@ -14,22 +14,25 @@
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 
-MAKE      = sxmake
-CPP       = /SX/usr/lib/sxcpp
-INC_DIR   = ../include
+MAKE       = sxmake
+CPP        = /SX/usr/lib/sxcpp
+DFLAGS     = -P -E -DASL -DHAS_ZHEGVX -DLANGUAGE_FORTRAN -D__SX6 -USX
+## For libfft library, part of Mathkeisan Libraries 
+#DFLAGS    = -P -E -DHAS_ZHEGVX -DLANGUAGE_FORTRAN -D__SX6 
+## For libjmfft library (www.idris.fr) by Jean-Marie Teuler
+#DFLAGS    = -P -E -DZZFFT3D=ccfft3d -DHAS_ZHEGVX -DLANGUAGE_FORTRAN -D__SX6 
+FDFLAGS    = $(DFLAGS)
+IFLAGS     = -I../include
+MODFLAGS   = -I. -I../Modules -I../PW -I../PH -I../iotk/src 
+LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a
 
 # For fft routines of ASL library
-CPPFLAGS  = -P -E -DASL -DHAS_ZHEGVX -DLANGUAGE_FORTRAN -D__SX6 -I$(INC_DIR)
-## For libfft library, part of Mathkeisan Libraries 
-# CPPFLAGS  = -P -E -DLANGUAGE_FORTRAN -DHAS_ZHEGVX -D__SX6 -I$(INC_DIR) 
-## For libjmfft library (www.idris.fr) by Jean-Marie Teuler
-# CPPFLAGS  = -P -E -DZZFFT3D=ccfft3d -DHAS_ZHEGVX -DLANGUAGE_FORTRAN \
-#             -D__SX6 -I$(INC_DIR)
+CPPFLAGS  = $(DFLAGS) $(IFLAGS)
 
 HOST      = -sx6
-BASIC     = -float0 -P stack $(HOST)
-MISC      = -I$(INC_DIR) -eab -R5 -Wf" -P nh -ptr byte" -Wf,"-Ncont -A dbl4"
-MISC1     = -I$(INC_DIR) -eab -R5 -Wf" -P nh -ptr byte" -Wf,"-cont -A dbl4"
+BASIC     = -float0 -P stack $(HOST) -USX
+MISC      = -eab -R5 -Wf" -P nh -ptr byte" -Wf,"-Ncont -A dbl4"
+MISC1     = -eab -R5 -Wf" -P nh -ptr byte" -Wf,"-cont -A dbl4"
 PROF      = -p
 FTRACE    = -ftrace
 OPT       = -C hopt -Wf" -pvctl noifopt loopcnt=9999999 expand=12 fullmsg vwork=stack -fusion -O noif"
@@ -51,13 +54,13 @@ FFLAGS    = -f0 $(BASIC) $(MISC) $(OPT) $(DEBUGOPT)
 # FFLAGS    = -f0 $(BASIC) $(MISC) $(DEBUG) $(DEBUGOPT) $(OPT0) 
 # FCAUTIOUS = -f0 $(BASIC) $(MISC1) $(DEBUG) $(DEBUGOPT)
 
-F90FLAGS  =  $(BASIC) $(MISC) $(OPT) $(DEBUGOPT) -I../Modules -I../PW -I../PH
+F90FLAGS  =  $(BASIC) $(MISC) $(OPT) $(DEBUGOPT) $(IFLAGS) $(MODFLAGS)
 
 # CFLAGS    = -DLANGUAGE_C -DNEC -DSX -I$(INC_DIR) -hfloat0,0,acct
-CFLAGS    = -D__SX6 -I$(INC_DIR)  
+CFLAGS    = -D__SX6 $(IFLAGS) $(MODFLAGS)
 
-# With ASL fft libraries
-LIBS      = -llapack -lblas -lasl
+# With ASL fft libraries (and libfft for CP crayfft.f90)
+LIBS      = -llapack -lblas -lasl -lfft
 
 ## With libfft (Mathkeisan) libraries
 ## be careful, versions <= 1.4 are buggy (zzfft3d), 
@@ -71,8 +74,8 @@ LIBS      = -llapack -lblas -lasl
 LD        = $(MPIF90)
 
 # LDFLAGS  =  $(BASIC) $(PROF) $(FTRACE) 
-LDFLAGS   = $(BASIC) $(DEBUG) $(DEBUGOPT) ../flib/ptools.a \
-            ../flib/flib.a ../clib/clib.a -p -Wl" -f zero "
+LDFLAGS   = $(BASIC) $(DEBUG) $(DEBUGOPT) \
+            -p -Wl" -f zero " 
 
 AR        = sxar
 ARFLAGS   = rv
