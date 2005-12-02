@@ -38,7 +38,6 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
   integer :: i,j,k,l,iperm,ir
   real(DP) :: term, cbya, s, term1, term2, singam, sen
   !
-  !
   !  user-supplied lattice vectors
   !
   if (ibrav == 0) then
@@ -71,7 +70,7 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
   !
   if (celldm (1) <= 0.d0) call errore ('latgen', 'wrong celldm(1)', ibrav)
   !
-  !  barvais-lattice supplied lattice
+  !  index of bravais lattice supplied
   !
   if (ibrav == 1) then
      !
