@@ -15,6 +15,7 @@ MODULE vibrations
   ! Programmed by: Silviu Zilberman
   !
   USE kinds,                  ONLY: DP
+  USE parameters,             ONLY : natx
   !
   IMPLICIT NONE
   SAVE
@@ -42,16 +43,19 @@ MODULE vibrations
   !
   ! ... public variables
   !
-  PUBLIC :: delta, eigenvals, eigenvecs, born_charge, U, T,              &
+  PUBLIC :: displacement, eigenvals, eigenvecs, born_charge, U, T,       &
        trans_inv_conv_thr, save_freq, nactive_atoms, trans_inv_max_iter, &
-       vib_restart_mode, trans_inv_flag, trans_rot_inv_flag, animate
+       vib_restart_mode, trans_inv_flag, trans_rot_inv_flag, animate,    &
+       isotope
   !
-  ! delta              - displacement step
+  ! displacement       - displacement step
   ! U                  - energy hessian
   ! T                  - diagonal mass matrix
   ! eigenvals          - eigen values
   ! eigenvecs          - eigen vectros
   ! born_charge        - born charge tensor for each atom
+  ! isotope            - mass assigned for each atom 
+  !                      (the default is the species mass)
   ! trans_inv_thr      - criteria for convergence of the
   !                      repeated application of the symmentrization
   !                      and translational invariance procedure
@@ -67,12 +71,13 @@ MODULE vibrations
   ! trans_rot_inv_flag - turn on/off removal of rigid modes
   ! animate            - creates an xyz animation file for each mode
   !
-  REAL(KIND=DP)                  :: delta 
+  REAL(KIND=DP)                  :: displacement 
   REAL(KIND=DP), ALLOCATABLE     :: U(:,:)
   REAL(KIND=DP), ALLOCATABLE     :: T(:,:)
   REAL(KIND=DP), ALLOCATABLE     :: eigenvals(:)
   REAL(KIND=DP), ALLOCATABLE     :: eigenvecs(:,:)
   REAL(KIND=DP), ALLOCATABLE     :: born_charge(:,:)
+  REAL(KIND=DP)                  :: isotope(natx)
   REAL(KIND=DP)                  :: trans_inv_conv_thr
 
   INTEGER                        :: save_freq
@@ -181,74 +186,13 @@ CONTAINS
     restart_vib = .FALSE.
     restart_cyc_counter = -1
     !
-    ! (4) Setting the T matrix (diagonal masses matrix)
+    ! (4) Setting the T matrix (diagonal mass matrix)
     !
-    ! ... set file name
-    !
-    IF (ionode) THEN
-       dirlen    = INDEX(outdir,' ') - 1
-       mass_file = TRIM(prefix)//'.vib.isotope'
-       mass_file = outdir(1:dirlen) // '/' // mass_file
-       !
-       ! ... check existance
-       !
-       INQUIRE (FILE = mass_file, EXIST = mass_file_exists)
-       !
-       ! ... use it if it's there or creat a new one using masses
-       ! ... that were specified in the CP input file
-       !
-       IF (mass_file_exists) THEN
-          !
-          ! ... read isotope masses from input.
-          ! ... The input file should contain nat lines with the mass 
-          ! ... of each individual atom in each line, in AMU units
-          !
-          WRITE (stdout,*) 'Using existing isotopes file...', mass_file
-          OPEN(filep , FILE = mass_file , STATUS = 'old',IOSTAT=ierr)
-          IF( ierr /= 0 ) &
-               CALL errore(' start_vibrations ', ' opening file '//mass_file, 1 )
-          !
-          T=0.0
-          counter=1
-          DO is=1,nat
-             READ (filep,*)           tmp_mass
-             T(counter,counter)     = tmp_mass * AMU_AU
-             T(counter+1,counter+1) = tmp_mass * AMU_AU
-             T(counter+2,counter+2) = tmp_mass * AMU_AU
-             counter=counter+3
-          END DO
-          CLOSE (filep)
-       ELSE
-          !
-          ! ... no isotopes file found
-          !
-          WRITE (stdout,*) 'Creating new isotopes file: ', mass_file
-          T=0.
-          counter=0
-          DO is=1,nsp              
-             DO ia=1,na(is)      
-                DO coord=1,3      
-                   counter=counter+1
-                   T(counter,counter)=pmass(is)
-                END DO
-             END DO
-          END DO
-          !
-          ! write a prefix.vib.isotope file
-          !
-          !
-          OPEN(filep,file=mass_file,status='new',IOSTAT=ierr)
-          IF( ierr /= 0 ) &
-               CALL errore(' start_vibrations ', ' creating file '//mass_file, 1 )
-          !
-          DO is=1,nsp            
-             DO ia=1,na(is)    
-                WRITE (filep,*) pmass(is) / AMU_AU
-             END DO
-          END DO
-          CLOSE(filep)
-       END IF
-    END IF
+    do ia=1,nat
+       T(3*(ia-1)+1,3*(ia-1)+1) = isotope(ia)
+       T(3*(ia-1)+2,3*(ia-1)+2) = isotope(ia)
+       T(3*(ia-1)+3,3*(ia-1)+3) = isotope(ia)
+    end do
     !
     ! (5) restarting from file ? ...
     !
@@ -443,7 +387,7 @@ CONTAINS
                    !
                    nfi             = 0
                    tau0            = ref_tau
-                   tau0(coord,iax) = tau0(coord,iax) + disp_sign*delta
+                   tau0(coord,iax) = tau0(coord,iax) + disp_sign*displacement
                    !
                    !
                    IF(disp_sign.EQ.-1) THEN
@@ -538,14 +482,14 @@ CONTAINS
                          END DO
                          ! adding negative sign, since electronic charge is positive
                          ! in this CP code.
-                         born_charge(:,index)=-(dipole-dip_minus)/(2*delta)
+                         born_charge(:,index)=-(dipole-dip_minus)/(2*displacement)
                          !
                          ! A verification on the diagonal element of dynamical matrix:
                          ! ... comparing numerical second derivative of the total energy
                          ! ... to first derivative of the forces
                          !
-                         tmp1 = (E_plus+E_minus-2*ref_etot)/(delta*delta)
-                         tmp2 = U(index,index)/(2*delta)
+                         tmp1 = (E_plus+E_minus-2*ref_etot)/(displacement*displacement)
+                         tmp2 = U(index,index)/(2*displacement)
                          IF( (ABS(tmp1-tmp2)/(tmp2) > 0.1) .AND. (tmp2 > eps4 ) ) THEN
                             CALL infomsg('calc_hessian','Warning: consistency check',-1)
                             WRITE(stdout,*)              '    Numerical second derivative of the total energy, compared to'
@@ -580,7 +524,7 @@ CONTAINS
        END IF
     END DO
     !
-    U=U/(2*delta)
+    U=U/(2*displacement)
     !
 111 FORMAT(3x,'Ground-state dipole vector [debye]:',3x,f10.3,3x,f10.3,3x,f10.3)
 112 FORMAT(3x,'Dipole moment [debye]             :',3x,f10.3)

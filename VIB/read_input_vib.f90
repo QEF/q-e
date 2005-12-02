@@ -16,25 +16,28 @@ SUBROUTINE read_input_vib()
   !
   ! ... modules
   !
+  USE constants,  ONLY : AMU_AU
   USE io_files,   ONLY : outdir, prefix
   USE io_global,  ONLY : ionode, ionode_id, stdout
+  USE ions_base,  ONLY : nat, ityp, pmass
   USE kinds,      ONLY : DP
   USE mp,         ONLY : mp_bcast
-  USE vibrations, ONLY : delta, save_freq,                                   &
+  USE vibrations, ONLY : displacement, save_freq,                            &
        trans_inv_max_iter, trans_inv_conv_thr, vib_restart_mode,             &
-       trans_inv_flag, trans_rot_inv_flag, animate
+       trans_inv_flag, trans_rot_inv_flag, animate, isotope
   !
   IMPLICIT NONE
   !
   ! ... local variables
   !
-  INTEGER             :: ios, dirlen
+  INTEGER             :: ios, dirlen, i
   CHARACTER (LEN=256) :: restart_label, input_filename
   LOGICAL             :: inp_file_exists
   !
-  NAMELIST / INPUT_VIB / delta, save_freq, trans_inv_max_iter,               &
+  NAMELIST / INPUT_VIB / displacement, save_freq, trans_inv_max_iter,        &
        trans_inv_conv_thr, restart_label, trans_inv_flag,trans_rot_inv_flag, &
        animate
+  NAMELIST / ISOTOPES / isotope
   !
   IF ( ionode ) THEN
      !
@@ -52,9 +55,9 @@ SUBROUTINE read_input_vib()
           CALL errore( 'read_input_vib', 'input file absent ', 1 )
      OPEN( 99 , FILE = input_filename , STATUS = 'old' )
      !
-     ! ... set default values for variables in namelist
+     ! ... set default values for variables in namelist INPUT_VIB
      !
-     delta              = 0.05
+     displacement       = 0.05
      save_freq          = 1
      trans_inv_flag     = .TRUE.
      trans_rot_inv_flag = .TRUE.
@@ -64,16 +67,28 @@ SUBROUTINE read_input_vib()
      restart_label      = 'auto'
      animate            = .FALSE.
      !
+     ! ... set default values for variables in namelist ISOTOPES
+     !
+     do i=1,nat
+        isotope(i) = pmass(ityp(i)) / AMU_AU
+     end do
+     !
      ! ...  reading the namelist input_vib
      !
      READ( 99, input_vib, ERR = 200, IOSTAT = ios )
      !
 200  CALL errore( 'readin_input_vib', 'reading input_vib namelist',  ABS(ios) )
      !
+     ! ...  reading the namelist isotopes
+     !
+     READ( 99, isotopes, ERR = 201, IOSTAT = ios )
+     !
+201  CALL errore( 'readin_input_vib', 'reading isotopes namelist',  ABS(ios) )
+     !
      ! ... Check all namelist variables
      !
-     IF (delta <= 0.D0) &
-          CALL errore (' readin_input_vib', ' Wrong delta        ', 1)
+     IF (displacement <= 0.D0) &
+          CALL errore (' readin_input_vib', ' Wrong displacement        ', 1)
      !
      IF (trans_inv_max_iter <= 0.D0) &
           CALL errore (' readin_input_vib', ' Wrong trans_inv_max_iter ', 1)
@@ -94,9 +109,13 @@ SUBROUTINE read_input_vib()
      END SELECT
   END IF
   !
+  do i=1,nat
+     isotope(i) = isotope(i) * AMU_AU
+  end do
+  !
   ! ... Broadcasting input variables
   !
-  CALL mp_bcast( delta,              ionode_id )
+  CALL mp_bcast( displacement,       ionode_id )
   CALL mp_bcast( save_freq,          ionode_id )
   CALL mp_bcast( trans_inv_max_iter, ionode_id )
   CALL mp_bcast( trans_inv_conv_thr, ionode_id )
@@ -111,7 +130,7 @@ SUBROUTINE read_input_vib()
      WRITE (stdout,*) '------------------------------------------------------'
      WRITE (stdout,*) ' SUMMERY OF VIBRATIONAL INPUT VARIABLES: '
      WRITE (stdout,*) ''
-     WRITE (stdout,101) delta
+     WRITE (stdout,101) displacement
      WRITE (stdout,102) save_freq
      WRITE (stdout,103) trans_inv_flag
      WRITE (stdout,104) trans_inv_max_iter
@@ -121,7 +140,7 @@ SUBROUTINE read_input_vib()
      WRITE (stdout,108) animate
      WRITE (stdout,*) '------------------------------------------------------'
      !
-101  FORMAT(3x,'delta                  = ',3x,f10.4)
+101  FORMAT(3x,'displacement           = ',3x,f10.4)
 102  FORMAT(3x,'save_freq              = ',3x,I10)
 103  FORMAT(3x,'trans_inv_flag         = ',3x,L10)
 104  FORMAT(3x,'trans_inv_max_iter     = ',3x,I10)
