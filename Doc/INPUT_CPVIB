@@ -20,15 +20,20 @@ further below):
 2. A file "prefix.vib.inp", where prefix is defined in the CP input
    file.
 
- prefix.vib.inp  contains one name list:
+ prefix.vib.inp  contains two name lists:
 
  &INPUT_VIB
  ...
  /
 
-Parameters:
+ &ISOTOPES
+ ...
+ /
 
-delta		real ( default = 0.05 )
+------------------------------------------------------------------------------
+INPUT_VIB namelist:
+
+displacement 	real ( default = 0.05 )
 		displacement step, a uniform value for all atoms
 
 save_freq	integer ( default = 1 )
@@ -66,22 +71,25 @@ animate		logical ( default = .false. )
 		generate xyz animation files for all normal modes
 
 
+------------------------------------------------------------------------------
+ISOTOPES namelist:
+
+isotope(i)      real ( default = mass specified in ATOMIC_SPECIES name 
+		                 list of the CP input                  )
+                Used to change the mass (in AMU) of atom i. The same could 
+                be achieved (in principle) if the particular atom i was
+		defined as a different species in the CP input, having the
+		same pseudo potential but a different mass. However, this
+		is useful if you haven't done it apriory, but you want to 
+		get the isotope shift without repeating the whole calculation.
+
+------------------------------------------------------------------------------
 
 
 Additional information about the input/output files:
 ===================================================
 
-1. The program will look for the presence of 'prefix.vib.isotope' file.
-   It is a text file containing NAT lines, where NAT is the number of atoms.
-   Each line contains a single number, the mass of this particular atom
-   in the same order as in the CP input file. The masses are in AMU, i.e. 
-   the hydrogen is ~1, carbon is 12 etc. If this file is present, these masses
-   are used in the calculation. If not, the default masses are used, 
-   as specified in the CP input, and an isotopes file is created. 
-   This is useful for testing the isotope shifts, without having to 
-   redo the full calculation.
-
-2. After the energy hessian is calculated, the program will write
+1. After the energy hessian is calculated, the program will write
    the analysis results to 'prefix.vib.analysis'.
    The minimal output is: 
 	* raw (but symmetrized) hessian 
@@ -118,7 +126,7 @@ A brief description of the methods:
    than trans_inv_conv_thr parameter.
    A more sophisticated and general algorithm was suggested by
    Nicolas Mounet and Nicola Marzari (Ref. ???) and is already implemented 
-   in QE.
+   in QE-3.0.
 
 3. The algorithm for removal of rotational rigid modes follows closely the 
    one implemented in Gaussian03 electronic structure package, as described 
