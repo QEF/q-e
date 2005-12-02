@@ -204,7 +204,7 @@ SUBROUTINE dynamics()
      ! ... gradient (this constitutes the initial guess for the lagrange
      ! ... multipliers)
      !
-     CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
+     CALL remove_constraint_force( nat, tau, if_pos, ityp, alat, force )
      !
   END IF
   !
