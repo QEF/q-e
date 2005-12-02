@@ -34,6 +34,8 @@ MODULES = \
 ../Modules/control_flags.o \
 ../Modules/io_global.o \
 ../Modules/io_files.o \
+../Modules/ions_base.o \
+../Modules/fft_types.o \
 ../Modules/fft_scalar.o \
 ../Modules/kind.o \
 ../Modules/mp.o \
@@ -42,6 +44,7 @@ MODULES = \
 ../Modules/parameters.o \
 ../Modules/parser.o \
 ../Modules/path_formats.o \
+../Modules/recvec.o \
 ../Modules/splinelib.o \
 ../Modules/timestep.o
 
