@@ -169,7 +169,10 @@ SUBROUTINE chdens (filplot)
   allocate(ityp(nat))
   allocate(rhor(nrx1*nrx2*nrx3))
   !
-  alat = celldm (1)
+  call latgen (ibrav, celldm, at(1,1), at(1,2), at(1,3), omega )
+  alat = celldm (1) ! define alat
+  at = at / alat    ! bring at in units of alat
+
   tpiba = 2.d0 * pi / alat
   tpiba2 = tpiba**2
   doublegrid = dual.gt.4.0d0
@@ -180,10 +183,6 @@ SUBROUTINE chdens (filplot)
   endif
 
   nspin = 1
-  if (ibrav.gt.0) then
-    call latgen (ibrav, celldm, at(1,1), at(1,2), at(1,3), omega )
-    at = at / alat !  bring at in units of alat
-  end if
 
   call recips (at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
   call volume (alat, at(1,1), at(1,2), at(1,3), omega)

@@ -84,6 +84,7 @@ PROGRAM q2r
   CHARACTER(len=80)  :: title
   CHARACTER(len=256) :: fildyn, filin, filj, filf, flfrc
   CHARACTER(len=3)   :: atm(ntypx)
+  CHARACTER(len=9)   :: symm_type
   !
   LOGICAL :: lq, lrigid, lrigid_save, lnogridinfo
   CHARACTER (LEN=10) :: zasr
@@ -168,14 +169,16 @@ PROGRAM q2r
         OPEN (unit=1, file=filin, status='old', form='formatted', iostat=ierr)
         IF (ierr /= 0) CALL errore('q2r','file '//TRIM(filin)//' missing!',1)
         CALL read_file (nqs, q, epsil, lrigid,  &
-             ntyp, nat, ibrav, celldm, atm, amass)
+             ntyp, nat, ibrav, symm_type, celldm, at, atm, amass)
         IF (ifile == 1) THEN
            ! it must be allocated here because nat is read from file
            ALLOCATE (phid(nr1,nr2,nr3,3,3,nat,nat) )
            !
            lrigid_save=lrigid
+
            CALL latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
            at = at / celldm(1)  !  bring at in units of alat 
+
            CALL volume(celldm(1),at(1,1),at(1,2),at(1,3),omega)
            CALL recips(at(1,1),at(1,2),at(1,3),bg(1,1),bg(1,2),bg(1,3))
            IF (lrigid .AND. (zasr.NE.'no')) THEN
@@ -245,6 +248,10 @@ PROGRAM q2r
      !
      OPEN(unit=2,file=flfrc,status='unknown',form='formatted')
      WRITE(2,'(i3,i5,i3,6f11.7)') ntyp,nat,ibrav,celldm
+     if (ibrav==0) then
+        write (2,'(a)') symm_type
+        write (2,'(2x,3f15.9)') ((at(i,j),i=1,3),j=1,3)
+     end if
      DO nt = 1,ntyp
         WRITE(2,*) nt," '",atm(nt),"' ",amass(nt)
      END DO
@@ -292,7 +299,7 @@ END PROGRAM q2r
 !
 !----------------------------------------------------------------------------
 SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
-                      ntyp, nat, ibrav, celldm, atm, amass )
+                      ntyp, nat, ibrav, symm_type, celldm, at, atm, amass )
   !----------------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
@@ -304,15 +311,17 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
   LOGICAL :: lrigid
   INTEGER :: nqs, ntyp, nat, ibrav
   REAL(DP) :: epsil(3,3)
-  REAL(DP) :: xq(3,48), celldm(6), amass(ntyp)
+  REAL(DP) :: xq(3,48), celldm(6), at(3,3), amass(ntyp)
   CHARACTER(LEN=3) atm(ntyp)
+  CHARACTER(LEN=9) symm_type
   ! local variables
   INTEGER :: ntyp1,nat1,ibrav1,ityp1
   INTEGER :: i, j, na, nb, nt
-  REAL(DP) :: tau1(3), amass1, celldm1(6), q2
+  REAL(DP) :: tau1(3), amass1, at1(3,3), celldm1(6), q2
   REAL(DP) :: phir(3),phii(3)
   CHARACTER(LEN=75) :: line
   CHARACTER(LEN=3)  :: atm1
+  CHARACTER(LEN=9) symm_type1
   LOGICAL, SAVE :: first =.TRUE.
   !
   READ(1,*) 
@@ -322,6 +331,11 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
      ! read cell information from file
      !
      READ(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
+     if (ibrav==0) then
+        read (1,'(a)') symm_type
+        read (1,*) ((at(i,j),i=1,3),j=1,3)
+     end if
+
      IF (ntyp.GT.nat) CALL errore('read_f','ntyp.gt.nat!!',ntyp)
      DO nt = 1,ntyp
         READ(1,*) i,atm(nt),amass(nt)
@@ -349,6 +363,18 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
      DO i=1,6
         IF(celldm1(i).NE.celldm(i)) CALL errore('read_f','wrong celldm',i)
      END DO
+     if (ibrav==0) then
+         read (1,*) symm_type1
+         if (symm_type1 /= symm_type) &
+            CALL errore('read_f','wrong symm_type for ibrav=0',1)
+         read (1,*) ((at1(i,j),i=1,3),j=1,3)
+         do i=1,3
+            do j=1,3
+               if(at1(i,j).NE.at(i,j)) &
+                 CALL errore('read_f','wrong at(i,j)',i+3*(j-1))
+            end do
+         end do
+     end if
      DO nt = 1,ntyp
         READ(1,*) i,atm1,amass1
         IF (i.NE.nt) CALL errore('read_f','wrong data read',nt)

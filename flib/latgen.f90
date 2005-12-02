@@ -29,7 +29,7 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
   use kinds, only: DP
   implicit none
   integer, intent(in) :: ibrav
-  real(DP), intent(in) :: celldm(6)
+  real(DP), intent(inout) :: celldm(6)
   real(DP), intent(inout) :: a1(3), a2(3), a3(3)
   real(DP), intent(out) :: omega
   !
@@ -38,17 +38,40 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
   integer :: i,j,k,l,iperm,ir
   real(DP) :: term, cbya, s, term1, term2, singam, sen
   !
-  if(ibrav == 0) go to 100
+  !
+  !  user-supplied lattice vectors
+  !
+  if (ibrav == 0) then
+     if (SQRT( a1(1)**2 + a1(2)**2 + a1(3)**2 ) == 0 )  &
+         call errore ('latgen', 'wrong at for ibrav=0', 1)
+     if (SQRT( a2(1)**2 + a2(2)**2 + a2(3)**2 ) == 0 )  &
+         call errore ('latgen', 'wrong at for ibrav=0', 2)
+     if (SQRT( a3(1)**2 + a3(2)**2 + a3(3)**2 ) == 0 )  &
+         call errore ('latgen', 'wrong at for ibrav=0', 3)
+
+     if ( celldm(1) /= 0.D0 ) then
+     !
+     ! ... input at are in units of alat => convert them to a.u.
+     !
+         a1(:) = a1(:) * celldm(1)
+         a2(:) = a2(:) * celldm(1)
+         a3(:) = a3(:) * celldm(1)
+     else
+     !
+     ! ... input at are in atomic units: define celldm(1) from a1
+     !
+         celldm(1) = SQRT( a1(1)**2 + a1(2)**2 + a1(3)**2 )
+     end if
+     !
+  else
+     a1(:) = 0.d0
+     a2(:) = 0.d0
+     a3(:) = 0.d0
+  end if
   !
   if (celldm (1) <= 0.d0) call errore ('latgen', 'wrong celldm(1)', ibrav)
   !
-  !     user-supplied lattice
-  !
-  do ir=1,3
-     a1(ir)=0.d0
-     a2(ir)=0.d0
-     a3(ir)=0.d0
-  end do
+  !  barvais-lattice supplied lattice
   !
   if (ibrav == 1) then
      !

@@ -60,13 +60,13 @@ PROGRAM voronoy
      !
      ALLOCATE(tau(3, nat))
      ALLOCATE(ityp(nat))
-     alat = celldm (1)
+
+     CALL latgen (ibrav, celldm, at (1, 1), at (1, 2), at (1, 3), omega )
+     alat = celldm (1) ! define alat
+     at = at / alat    ! bring at in units of alat
+
      tpiba = 2.d0 * pi / alat
      tpiba2 = tpiba**2
-     IF (ibrav.GT.0) THEN
-        CALL latgen (ibrav, celldm, at (1, 1), at (1, 2), at (1, 3), omega )
-        at = at / alat !  bring at in units of alat
-     END IF
      CALL recips (at (1, 1), at (1, 2), at (1, 3), bg (1, 1), bg (1, 2) &
           , bg (1, 3) )
      CALL volume (alat, at (1, 1), at (1, 2), at (1, 3), omega)

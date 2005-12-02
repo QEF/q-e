@@ -190,9 +190,10 @@ end Module dynamical
       allocate ( tau (3,nat) )
       allocate (ityp (nat) )
       !
-      a0=celldm(1)
       call latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
+      a0=celldm(1) ! define alat
       at = at / a0 !  bring at in units of alat
+
       do nt=1,ntyp
          read(1,*) i,atm(nt),amass(nt)
       end do

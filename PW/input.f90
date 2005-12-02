@@ -113,7 +113,6 @@ SUBROUTINE iosys()
                             nqx2_   => nq2,  &
                             nqx3_   => nq3,  &
                             yukawa_ => yukawa
-
   USE realus,        ONLY : tqr_    => tqr
   !
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
@@ -188,7 +187,6 @@ SUBROUTINE iosys()
                                disk_io, tefield, dipfield, lberry, gdir, &
                                nppstr, wf_collect,lelfield, efield,  &
                                nberrycyc, tqr
-
   !
   ! ... SYSTEM namelist
   !
@@ -1233,37 +1231,11 @@ SUBROUTINE iosys()
      !
   END IF
   !
-  IF ( ibrav_ == 0 .AND. celldm_(1) /= 0.D0 ) THEN
-     !
-     ! ... input at are in units of alat
-     !
-     alat = celldm_(1)
-     !
-  ELSE IF ( ibrav_ == 0 .AND. celldm_(1) == 0.D0 ) THEN
-     !
-     ! ... input at are in atomic units: define alat
-     !
-     celldm_(1) = SQRT( at(1,1)**2 + at(1,2)**2 + at(1,3)**2 )
-     !
-     alat = celldm_(1)
-     !
-     ! ... bring at to alat units
-     !
-     at(:,:) = at(:,:) / alat
-     !
-  ELSE
-     !
-     ! ... generate at (atomic units)
-     !
-     CALL latgen( ibrav, celldm_, at(1,1), at(1,2), at(1,3), omega )
-     !
-     alat = celldm_(1) 
-     !
-     ! ... bring at to alat units
-     !
-     at(:,:) = at(:,:) / alat
-     !
-  END IF
+  ! ... generate at (in atomic units) from ibrav and celldm
+  !
+  CALL latgen( ibrav_, celldm_, at(1,1), at(1,2), at(1,3), omega )
+  alat = celldm_(1) ! define alat
+  at = at / alat    ! bring at in unit of alat
   !
   CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
   !

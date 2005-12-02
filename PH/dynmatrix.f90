@@ -27,7 +27,7 @@ subroutine dynmatrix
   ! local variables
 
   integer :: nq, isq (48), imq, na, nt, imode0, jmode0, irr, jrr, &
-       ipert, jpert, mu, nu, j
+       ipert, jpert, mu, nu, i, j
   ! nq :  degeneracy of the star of q
   ! isq: index of q in the star of a given sym.op.
   ! imq: index of -q in the star of q (0 if not present)
@@ -92,6 +92,10 @@ subroutine dynmatrix
   write (iudyn, '(a)') title
   write (iudyn, '(a)') title_ph
   write (iudyn, '(i3,i5,i3,6f11.7)') ntyp, nat, ibrav, celldm
+  if (ibrav==0) then
+     write (iudyn,'(a)') symm_type
+     write (iudyn,'(2x,3f15.9)') ((at(i,j),i=1,3),j=1,3)
+  end if
   do nt = 1, ntyp
      write (iudyn, * ) nt, ' ''', atm (nt) , ' '' ', amass (nt)
   enddo

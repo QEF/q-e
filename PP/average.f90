@@ -126,13 +126,11 @@ PROGRAM average
      CALL read_io_header(filename (1), title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
           nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num)
      nspin = 1
-     IF (ibrav.GT.0) CALL latgen (ibrav, celldm, at (1, 1), &
-          at (1, 2), at (1, 3), omega )
-     alat = celldm(1)
-     at=at/alat
-     CALL recips (at (1, 1), at (1, 2), at (1, 3), bg (1, 1), bg (1, 2) &
-          , bg (1, 3) )
+     CALL latgen (ibrav, celldm, at(1,1), at(1,2), at(1,3), omega )
+     alat = celldm(1)  ! define alat
+     at = at / alat    ! bring at in units of alat
 
+     CALL recips (at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
      tpiba = 2.d0 * pi / alat
      tpiba2 = tpiba**2
 

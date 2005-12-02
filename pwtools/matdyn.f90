@@ -110,6 +110,7 @@ PROGRAM matdyn
   INTEGER :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ntetra, ibrav
   CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos
   CHARACTER(LEN=10)  :: asr
+  CHARACTER(LEN=9)   :: symm_type
   LOGICAL :: dos, has_zstar
   COMPLEX(DP), ALLOCATABLE :: dyn(:,:,:,:), dyn_blk(:,:,:,:)
   COMPLEX(DP), ALLOCATABLE :: z(:,:)
@@ -178,7 +179,7 @@ PROGRAM matdyn
      !
      ntyp_blk = ntypx ! avoids fake out-of-bound error
      CALL readfc ( flfrc, nr1, nr2, nr3, epsil, nat_blk, &
-          ibrav, alat, at_blk, ntyp_blk, &
+          ibrav, symm_type, alat, at_blk, ntyp_blk, &
           amass_blk, omega_blk, has_zstar)
      !
      CALL recips ( at_blk(1,1),at_blk(1,2),at_blk(1,3),  &
@@ -266,7 +267,7 @@ PROGRAM matdyn
         nqx = nk1*nk2*nk3
         ALLOCATE ( tetra(4,ntetra), q(3,nqx) )
         CALL gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
-             ntetra, nqx, nq, q, tetra)
+             symm_type, ntetra, nqx, nq, q, tetra)
      ELSE
         !
         ! read q-point list
@@ -399,7 +400,7 @@ END PROGRAM matdyn
 !
 !-----------------------------------------------------------------------
 SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
-                    ibrav, alat, at, ntyp, amass, omega, has_zstar )
+                    ibrav, symm_type, alat, at, ntyp, amass, omega, has_zstar )
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -417,6 +418,7 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   REAL(DP) amass(ntyp), amass_from_file, celldm(6), omega
   INTEGER nt
   CHARACTER(LEN=3) atm
+  CHARACTER(LEN=9) symm_type
   !
   !
   OPEN (unit=1,file=flfrc,status='old',form='formatted')
@@ -424,6 +426,10 @@ SUBROUTINE readfc ( flfrc, nr1, nr2, nr3, epsil, nat,    &
   !  read cell data
   !
   READ(1,*) ntyp,nat,ibrav,(celldm(i),i=1,6)
+  if (ibrav==0) then
+     read(1,'(a)') symm_type
+     read(1,*) ((at(i,j),i=1,3),j=1,3)
+  end if
   !
   CALL latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
   alat = celldm(1)
@@ -1496,7 +1502,7 @@ END SUBROUTINE write_tau
 !
 !-----------------------------------------------------------------------
 SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
-     ntetra, nqx, nq, q, tetra)
+     symm_type, ntetra, nqx, nq, q, tetra)
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
@@ -1505,6 +1511,7 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
   ! input 
   INTEGER :: ibrav, nat, nk1, nk2, nk3, ntetra, ityp(*)
   REAL(DP) :: at(3,3), bg(3,3), tau(3,nat)
+  character(LEN=9)    :: symm_type
   ! output 
   INTEGER :: nqx, nq, tetra(4,ntetra)
   REAL(DP) :: q(3,nqx)
@@ -1527,8 +1534,16 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
      !
      CALL cubicsym (at, s, sname, nrot)  
   ELSEIF (ibrav == 0) THEN  
-     CALL infomsg ('gen_qpoints', 'assuming cubic symmetry', -1)  
-     CALL cubicsym (at, s, sname, nrot)  
+
+     if (symm_type=='cubic') then
+        CALL cubicsym (at, s, sname, nrot)  
+     elseif (symm_type=='hexagonal') then
+        CALL hexsym (at, s, sname, nrot)  
+     else
+        CALL infomsg ('gen_qpoints', 'symm_type missing: assuming cubic symmetry', -1)  
+        CALL cubicsym (at, s, sname, nrot)  
+     end if
+
   ELSE  
      CALL errore ('gen_qpoints', 'wrong ibrav', 1)  
   ENDIF
