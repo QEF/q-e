@@ -1,3 +1,4 @@
+
 \documentclass[12pt,a4paper]{article}
  \def\version{3.0}
  \def\stableversion{3.0} % last stable release
@@ -2926,6 +2927,20 @@ detectable loss of translational invariance (the energy changes if all
 atoms are displaced by the same quantity, not commensurate with the
 FFT grid).  This sets a limit to the accuracy of forces.  The
 situation improves somewhat by increasing the \texttt{ecutrho} cutoff.
+
+\paragraph{\texttt{pw.x} stops during variable-cell optimization
+in \texttt{checkallsym} with ``non orthogonal operation'' error.}
+
+Variable-cell optimization may occasionally break the starting
+symmetry of the cell. When this happen, the run is stopped
+because the number of k-points calculated for the starting
+configuration may no longer be suitable. Possible solutions:
+\begin{itemize}
+\item start with a nonsymmetric cell
+\item use a symmetry-conserving algorithm: the Wentzcovitch
+algorithm \\
+(\texttt{cell\_dynamics='damp-w'}) shouldn't break the symmetry.
+\end{itemize}
 
 \paragraph{\texttt{ph.x} stops with ``error reading file''.}
 
