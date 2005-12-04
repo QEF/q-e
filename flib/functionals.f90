@@ -1,3 +1,10 @@
+!
+! Copyright (C) 2001-2005 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 !-----------------------------------------------------------------------
 subroutine slater (rs, ex, vx)
   !-----------------------------------------------------------------------
@@ -757,3 +764,42 @@ subroutine optx(rho,grho,sx,v1x,v2x)
   endif
   return
 end subroutine optx
+!-----------------------------------------------------------------------
+function dpz (rs, iflg)
+  !-----------------------------------------------------------------------
+  !  derivative of the correlation potential with respect to local density
+  !  Perdew and Zunger parameterization of the Ceperley-Alder functional
+  !
+  use kinds, only: DP
+  !
+  implicit none
+  !
+  real(DP), intent (in) :: rs
+  integer, intent(in) :: iflg
+  real(DP) :: dpz
+  !
+  !  local variables
+  !  a,b,c,d,gc,b1,b2 are the parameters defining the functional
+  !
+  real(DP), parameter :: a = 0.0311d0, b = -0.048d0, c = 0.0020d0, &
+       d = -0.0116d0, gc = -0.1423d0, b1 = 1.0529d0, b2 = 0.3334d0,&
+       a1 = 7.0d0 * b1 / 6.d0, a2 = 4.d0 * b2 / 3.d0
+  real(DP), parameter :: pi = 3.14159265358979d0, fpi = 4.d0*pi
+  real(DP) :: x, den, dmx, dmrs
+  !
+  !
+  if (iflg == 1) then
+     dmrs = a / rs + 2.d0 / 3.d0 * c * (log (rs) + 1.d0) + &
+          (2.d0 * d-c) / 3.d0
+  else
+     x = sqrt (rs)
+     den = 1.d0 + x * (b1 + x * b2)
+     dmx = gc * ( (a1 + 2.d0 * a2 * x) * den - 2.d0 * (b1 + 2.d0 * &
+          b2 * x) * (1.d0 + x * (a1 + x * a2) ) ) / den**3
+     dmrs = 0.5d0 * dmx / x
+  endif
+  !
+  dpz = - fpi * rs**4.d0 / 9.d0 * dmrs
+  return
+  !
+end function dpz

@@ -52,11 +52,10 @@ subroutine phq_setup
   USE kinds,         ONLY : DP
   use phcom
   USE control_flags, ONLY : iverbosity, modenum
-  
+  USE funct,         ONLY : dmxc, dmxc_spin  
   implicit none
 
-  real(DP) :: rhotot, rhoup, rhodw, target, small, fac, xmax, emin, &
-       emax, dmxc
+  real(DP) :: rhotot, rhoup, rhodw, target, small, fac, xmax, emin, emax
   ! total charge
   ! total up charge
   ! total down charge
@@ -64,7 +63,6 @@ subroutine phq_setup
   ! to set nbnd_occ in the metallic case
   ! minimum band energy
   ! maximum band energy
-  ! computes derivative of xc potential
 
   integer :: ir, table (48, 48), isym, jsym, irot, ik, ibnd, ipol, &
        mu, nu, imode0, irr, ipert, na, it, nt

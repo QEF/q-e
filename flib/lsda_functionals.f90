@@ -492,3 +492,44 @@ subroutine slater1_spin (rho, zeta, ex, vxup, vxdw)
   !
   return
 end subroutine slater1_spin
+!
+!-----------------------------------------------------------------------
+function dpz_polarized (rs, iflg)
+  !-----------------------------------------------------------------------
+  !  derivative of the correlation potential with respect to local density
+  !  Perdew and Zunger parameterization of the Ceperley-Alder functional
+  !  spin-polarized case
+  !
+  USE kinds, only : DP
+  !
+  implicit none
+  !
+  real(DP), intent (in) :: rs
+  integer, intent(in) :: iflg
+  real(DP) :: dpz_polarized
+  !
+  !  local variables
+  !  a,b,c,d,gc,b1,b2 are the parameters defining the functional
+  !
+  real(DP), parameter :: a = 0.01555d0, b = -0.0269d0, c = 0.0007d0, &
+       d = -0.0048d0, gc = -0.0843d0, b1 = 1.3981d0, b2 = 0.2611d0,&
+       a1 = 7.0d0 * b1 / 6.d0, a2 = 4.d0 * b2 / 3.d0
+  real(DP), parameter :: pi = 3.14159265358979d0, fpi = 4.d0*pi
+  real(DP) :: x, den, dmx, dmrs
+  !
+  !
+  if (iflg == 1) then
+     dmrs = a / rs + 2.d0 / 3.d0 * c * (log (rs) + 1.d0) + &
+          (2.d0 * d-c) / 3.d0
+  else
+     x = sqrt (rs)
+     den = 1.d0 + x * (b1 + x * b2)
+     dmx = gc * ( (a1 + 2.d0 * a2 * x) * den - 2.d0 * (b1 + 2.d0 * &
+          b2 * x) * (1.d0 + x * (a1 + x * a2) ) ) / den**3
+     dmrs = 0.5d0 * dmx / x
+  endif
+  !
+  dpz_polarized = - fpi * rs**4.d0 / 9.d0 * dmrs
+  return
+  !
+end function dpz_polarized

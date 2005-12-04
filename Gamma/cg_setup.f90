@@ -20,15 +20,14 @@ SUBROUTINE cg_setup
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: prefix, iunpun, iunres
   USE cgcom
-  USE funct, only : dft_is_gradient
+  USE funct, only : dft_is_gradient, dmxc
   !
   IMPLICIT NONE
   !
   INTEGER :: i, l, nt, kpoint
   LOGICAL :: exst
   CHARACTER (len=256) :: filint
-  REAL(DP) :: rhotot, dmxc
-  EXTERNAL dmxc
+  REAL(DP) :: rhotot
   INTEGER       :: ndr, kunittmp, ierr
   REAL(DP) :: edum(1,1), wdum(1,1)
   !

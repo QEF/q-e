@@ -41,8 +41,6 @@ dgcxc.o \
 dgcxc_spin.o \
 dgradcorr.o \
 dielec.o \
-dmxc.o \
-dmxc_spin.o \
 drho.o \
 drhodv.o \
 drhodvloc.o \

@@ -292,7 +292,6 @@ dgcxc.o \
 dgcxc_spin.o \
 dgradcorr.o \
 dielec.o \
-dmxc.o \
 drhodv.o \
 dvb_cc.o \
 dvpsi_e.o \

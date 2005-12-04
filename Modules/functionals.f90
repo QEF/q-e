@@ -32,6 +32,7 @@ module funct
 !                      exx_is_active
 !
 !  XC computation drivers: xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
+!  derivatives of XC computation drivers: dmxc, dmxc_spin
 !
   USE io_global, ONLY: stdout
   USE kinds,     ONLY: DP
@@ -47,6 +48,7 @@ module funct
   PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active
   ! driver subroutines computing XC
   PUBLIC  :: xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
+  PUBLIC  :: dmxc, dmxc_spin
   !
   ! PRIVATE variables defining the DFT functional
   !
@@ -974,6 +976,169 @@ end subroutine gcc_spin
 !     ==--------------------------------------------------------------==
       RETURN
       END SUBROUTINE gcc_spin_more
-
+!
+!-----------------------------------------------------------------------
+!------- DRIVERS FOR DERIVATIVES OF XC POTENTIAL -----------------------
+!-----------------------------------------------------------------------
+!
+      !-----------------------------------------------------------------------
+      function dmxc (rho)
+      !-----------------------------------------------------------------------
+        !
+        !  derivative of the xc potential with respect to the local density
+        !
+        !
+        implicit none
+        !
+        real(DP), intent(in) :: rho
+        ! input: the charge density ( positive )
+        real(DP) :: dmxc
+        ! output: the derivative of the xc potential
+        !
+        ! local variables
+        !
+        real(DP) :: dr, vxp, vcp, vxm, vcm, vx, ex, ec, rs
+        real(DP), external :: dpz
+        integer :: iflg
+        !
+        real(DP), parameter :: small = 1.d-30, e2 = 2.d0, &
+             pi34 = 0.75d0 / 3.141592653589793d+00, third = 1.d0 /3.d0
+        !
+        dmxc = 0.d0
+        if (rho < small) then
+           return
+        endif
+        !
+        !    first case: analytical derivatives available
+        !
+        if (get_iexch() == 1 .and. get_icorr() == 1) then
+           rs = (pi34 / rho) **third
+           !..exchange
+           call slater (rs, ex, vx)
+           dmxc = vx / (3.d0 * rho)
+           !..correlation
+           iflg = 2
+           if (rs < 1.0d0) iflg = 1
+           dmxc = dmxc + dpz (rs, iflg)
+        else
+           !
+           !     second case: numerical derivatives
+           !
+           dr = min (1.d-6, 1.d-4 * rho)
+           call xc (rho + dr, ex, ec, vxp, vcp)
+           call xc (rho - dr, ex, ec, vxm, vcm)
+           dmxc = (vxp + vcp - vxm - vcm) / (2.d0 * dr)
+        endif
+        !
+        ! bring to rydberg units
+        !
+        dmxc = e2 * dmxc
+        return
+        !
+      end function dmxc
+      !
+      !-----------------------------------------------------------------------
+      subroutine dmxc_spin (rhoup, rhodw, dmuxc_uu, dmuxc_ud, dmuxc_du, &
+           dmuxc_dd)
+      !-----------------------------------------------------------------------
+        !  derivative of the xc potential with respect to the local density
+        !  spin-polarized case
+        !
+        implicit none
+        !
+        real(DP), intent(in) :: rhoup, rhodw
+        ! input: spin-up and spin-down charge density
+        real(DP), intent(out) :: dmuxc_uu, dmuxc_ud, dmuxc_du, dmuxc_dd
+        ! output: up-up, up-down, down-up, down-down derivatives of the
+        ! XC functional
+        !
+        ! local variables
+        !
+        real(DP) :: rhotot, rs, zeta, fz, fz1, fz2, ex, vx, ecu, ecp, vcu, &
+             vcp, dmcu, dmcp, aa, bb, cc, dr, dz, ec, vxupm, vxdwm, vcupm, &
+             vcdwm, rho, vxupp, vxdwp, vcupp, vcdwp
+        real(DP), external :: dpz, dpz_polarized
+        integer :: iflg
+        !
+        real(DP), parameter :: small = 1.d-30, e2 = 2.d0, &
+             pi34 = 0.75d0 / 3.141592653589793d+00, third = 1.d0/3.d0, &
+             p43 = 4.d0 / 3.d0, p49 = 4.d0 / 9.d0, m23 = -2.d0 / 3.d0
+        !
+        dmuxc_uu = 0.d0
+        dmuxc_du = 0.d0
+        dmuxc_ud = 0.d0
+        dmuxc_dd = 0.d0
+        !
+        rhotot = rhoup + rhodw
+        if (rhotot <= small) return
+        zeta = (rhoup - rhodw) / rhotot
+        
+        if (abs (zeta) > 1.d0) return
+        if (get_iexch() == 1 .and. get_icorr() == 1) then
+           !
+           !    first case: analytical derivative available
+           !
+           !..exchange
+           rs = (pi34 / (2.d0 * rhoup) ) **third
+           call slater (rs, ex, vx)
+           dmuxc_uu = vx / (3.d0 * rhoup)
+           rs = (pi34 / (2.d0 * rhodw) ) **third
+           call slater (rs, ex, vx)
+           dmuxc_dd = vx / (3.d0 * rhodw)
+           !..correlation
+           rs = (pi34 / rhotot) **third
+           iflg = 2
+           if (rs < 1.0d0) iflg = 1
+           dmcu = dpz (rs, iflg)
+           dmcp = dpz_polarized (rs, iflg)
+           call pz (rs, 1, ecu, vcu)
+           call pz_polarized (rs, ecp, vcp)
+           fz = ( (1.d0 + zeta) **p43 + (1.d0 - zeta) **p43 - 2.d0) &
+                / (2.d0**p43 - 2.d0)
+           fz1 = p43 * ( (1.d0 + zeta) **third- (1.d0 - zeta) **third) &
+                / (2.d0**p43 - 2.d0)
+           fz2 = p49 * ( (1.d0 + zeta) **m23 + (1.d0 - zeta) **m23) &
+                / (2.d0**p43 - 2.d0)
+           aa = dmcu + fz * (dmcp - dmcu)
+           bb = 2.d0 * fz1 * (vcp - vcu - (ecp - ecu) ) / rhotot
+           cc = fz2 * (ecp - ecu) / rhotot
+           dmuxc_uu = dmuxc_uu + aa + (1.d0 - zeta) * bb + (1.d0 - zeta)**2 * cc
+           dmuxc_du = dmuxc_du + aa + ( - zeta) * bb + (zeta**2 - 1.d0) * cc
+           dmuxc_ud = dmuxc_du
+           dmuxc_dd = dmuxc_dd+aa - (1.d0 + zeta) * bb + (1.d0 + zeta)**2 * cc
+           
+        else
+           
+           rho = rhoup + rhodw
+           dr = min (1.d-6, 1.d-4 * rho)
+           call xc_spin (rho - dr, zeta, ex, ec, vxupm, vxdwm, vcupm, vcdwm)
+           call xc_spin (rho + dr, zeta, ex, ec, vxupp, vxdwp, vcupp, vcdwp)
+           dmuxc_uu = (vxupp + vcupp - vxupm - vcupm) / (2.d0 * dr)
+           dmuxc_ud = dmuxc_uu
+           dmuxc_dd = (vxdwp + vcdwp - vxdwm - vcdwm) / (2.d0 * dr)
+           dmuxc_du = dmuxc_dd
+           dz = min (1.d-6, 1.d-4 * abs (zeta) )
+           call xc_spin (rho, zeta - dz, ex, ec, vxupm, vxdwm, vcupm, vcdwm)
+           call xc_spin (rho, zeta + dz, ex, ec, vxupp, vxdwp, vcupp, vcdwp)
+           dmuxc_uu = dmuxc_uu + (vxupp + vcupp - vxupm - vcupm) * &
+                (1.d0 - zeta) / rho / (2.d0 * dz)
+           dmuxc_ud = dmuxc_ud- (vxupp + vcupp - vxupm - vcupm) * &
+                (1.d0 + zeta) / rho / (2.d0 * dz)
+           dmuxc_du = dmuxc_du + (vxdwp + vcdwp - vxdwm - vcdwm) * &
+                (1.d0 - zeta) / rho / (2.d0 * dz)
+           dmuxc_dd = dmuxc_dd- (vxdwp + vcdwp - vxdwm - vcdwm) * &
+                (1.d0 + zeta) / rho / (2.d0 * dz)
+        endif
+        !
+        ! bring to rydberg units
+        !
+        dmuxc_uu = e2 * dmuxc_uu
+        dmuxc_du = e2 * dmuxc_du
+        dmuxc_ud = e2 * dmuxc_ud
+        dmuxc_dd = e2 * dmuxc_dd
+        !
+        return
+        
+      end subroutine dmxc_spin
 
 end module funct

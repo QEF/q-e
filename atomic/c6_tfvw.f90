@@ -280,7 +280,7 @@ subroutine dv_of_drho(mesh,dx,r,r2,rho,drho,dvhx,dvxc,pp)
    !
    ! local variables
    !
-   real (kind=8) :: dr3, dmxc, kf2, charge
+   real (kind=8) :: dr3, kf2, charge
    real (kind=8), allocatable :: qq(:)
    integer i
 
@@ -322,7 +322,7 @@ subroutine dvxc_dn(mesh, rho, dvxc)
    ! compute the derivative of xc-potential w.r.t local density.
    ! some routine in PH and flibs will be called
    !
-   use funct,  only : dft_is_gradient
+   use funct,  only : dft_is_gradient, dmxc
    !
    implicit none
    !
@@ -330,7 +330,6 @@ subroutine dvxc_dn(mesh, rho, dvxc)
    !
    integer :: mesh
    real(kind=8) :: rho(0:mesh), dvxc(0:mesh)
-   real(kind=8) :: dmxc
    !
    ! local variables
    !
@@ -339,7 +338,7 @@ subroutine dvxc_dn(mesh, rho, dvxc)
    !
    !
    if ( dft_is_gradient() ) &
-      call errore ('dvxc_dn', 'gradient correction to dvxc has not been implemented yet', 1)
+      call errore ('dvxc_dn', 'gradient correction to dvxc not yet implemented', 1)
    do i = 0, mesh
       ! LDA only
       dvxc(i) = dmxc (rho(i))

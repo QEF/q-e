@@ -392,11 +392,12 @@ SUBROUTINE cg_neweps
   USE ions_base, ONLY : nat, tau
   USE pwcom
   USE cgcom
+  USE funct, only: dmxc
   !
   IMPLICIT NONE
 
   INTEGER :: i, j
-  REAL(DP) :: rhotot, dmxc, chi(3,3)
+  REAL(DP) :: rhotot, chi(3,3)
   !
   !  recalculate self-consistent potential etc
   !

@@ -99,9 +99,6 @@ MODULES = \
 ../Modules/version.o \
 ../Modules/parameters.o ../Modules/parallel_include.o
 
-PHOBJS = \
-../PH/dmxc.o 
-
 TLDEPS= bindir mods libs 
 
 all: tldeps ld1.x

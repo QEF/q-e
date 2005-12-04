@@ -93,8 +93,6 @@ PHOBJS = \
 ../PH/dgcxc_spin.o \
 ../PH/dgradcorr.o \
 ../PH/dielec.o \
-../PH/dmxc.o \
-../PH/dmxc_spin.o \
 ../PH/drho.o \
 ../PH/drhodv.o \
 ../PH/drhodvloc.o \

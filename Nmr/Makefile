@@ -47,8 +47,6 @@ PHOBJS = \
 ../PH/dgcxc_spin.o \
 ../PH/dgradcorr.o \
 ../PH/dielec.o \
-../PH/dmxc.o \
-../PH/dmxc_spin.o \
 ../PH/drho.o \
 ../PH/drhodv.o \
 ../PH/drhodvloc.o \
@@ -262,6 +260,7 @@ PWOBJS = \
 ../PW/read_file.o \
 ../PW/read_ncpp.o \
 ../PW/read_pseudo.o \
+../PW/realus.o \
 ../PW/readin.o \
 ../PW/readnewvan.o \
 ../PW/readvan.o \
