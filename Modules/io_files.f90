@@ -31,10 +31,10 @@ MODULE io_files
   !
   CHARACTER(LEN=19) :: band_file = ' '
   CHARACTER(LEN=19) :: tran_file = ' '
-  CHARACTER(LEN=14) :: prefixt   = ' '
-  CHARACTER(LEN=14) :: prefixl   = ' '
-  CHARACTER(LEN=14) :: prefixs   = ' '
-  CHARACTER(LEN=14) :: prefixr   = ' '
+  CHARACTER(LEN=256) :: prefixt   = ' '
+  CHARACTER(LEN=256) :: prefixl   = ' '
+  CHARACTER(LEN=256) :: prefixs   = ' '
+  CHARACTER(LEN=256) :: prefixr   = ' '
   CHARACTER(LEN=256) :: save_file = ' '
   CHARACTER(LEN=256) :: fil_loc = ' '      !  file with 2D eigenvectors and eigenvalues
   !
