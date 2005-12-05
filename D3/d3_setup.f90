@@ -53,11 +53,12 @@ SUBROUTINE d3_setup()
   USE phcom
   USE d3com
   USE mp_global,     ONLY : npool, me_pool
+  USE funct,         ONLY : dmxc, dmxc_spin
   !
   IMPLICIT NONE
   !
   REAL (DP) :: rhotot, rhoup, rhodw, TARGET, small, fac, xmax, emin, &
-       emax, dmxc, wrk
+       emax, wrk
   ! total charge
   ! total up charge
   ! total down charge
