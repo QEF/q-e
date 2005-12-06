@@ -543,7 +543,7 @@ Warning: card  1 4 ignored
    System Density [g/cm^3] :     0.9959
 
 
-   Center of mass square displacement (a.u.): 232.338570
+   Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
      6009.09041520       -17.55572787       -32.37528209
@@ -910,7 +910,7 @@ Warning: card  1 4 ignored
    System Density [g/cm^3] :     0.9959
 
 
-   Center of mass square displacement (a.u.): 232.338570
+   Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
       501.74972893        -0.59898792        -9.87582428

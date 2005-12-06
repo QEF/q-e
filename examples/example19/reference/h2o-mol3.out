@@ -364,7 +364,7 @@
    System Density [g/cm^3] :     0.1167
 
 
-   Center of mass square displacement (a.u.):   0.016149
+   Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
        -1.86423858        -0.03496540        -0.00815811
@@ -436,7 +436,7 @@
    System Density [g/cm^3] :     0.1167
 
 
-   Center of mass square displacement (a.u.):   0.016163
+   Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
        -1.93520153        -0.14067132         0.04209015
@@ -508,7 +508,7 @@
    System Density [g/cm^3] :     0.1167
 
 
-   Center of mass square displacement (a.u.):   0.016304
+   Center of mass square displacement (a.u.):   0.000001
 
    Total stress (GPa)
        -2.02313009         0.02945999        -0.00386523
@@ -580,7 +580,7 @@
    System Density [g/cm^3] :     0.1167
 
 
-   Center of mass square displacement (a.u.):   0.016384
+   Center of mass square displacement (a.u.):   0.000001
 
    Total stress (GPa)
        -2.08245766         0.02120216        -0.04354135
@@ -652,7 +652,7 @@
    System Density [g/cm^3] :     0.1167
 
 
-   Center of mass square displacement (a.u.):   0.016351
+   Center of mass square displacement (a.u.):   0.000001
 
    Total stress (GPa)
        -2.02774273        -0.08068188         0.02320413
