@@ -124,7 +124,7 @@ EOF
 
 cat > $TMP_DIR/h2o.vib.inp << EOF
  &INPUT_VIB
-     delta              = 0.02
+     displacement       = 0.02
      save_freq          = 1
      trans_inv_flag     = .TRUE.
      trans_rot_inv_flag = .TRUE.
