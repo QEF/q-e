@@ -118,7 +118,7 @@
       integer, save :: nr3b_old = -1
       save    first, ifax1, ifax2,ifax3, trig1, trig2, trig3, work
 !
-      if( ( nr1b_old /= nr1 ) .OR. ( nr2b_old /= nr2 ) .OR. ( nr3b_old /= nr3 ) ) then
+      if( ( nr1b_old /= nr1b ) .OR. ( nr2b_old /= nr2b ) .OR. ( nr3b_old /= nr3b ) ) then
         first = .true.
       end if
 !
@@ -194,7 +194,7 @@
 !
       save    first, ifax1, ifax2, ifax3, trig1, trig2, trig3, work
 !
-      if( ( nr1s_old /= nr1 ) .OR. ( nr2s_old /= nr2 ) .OR. ( nr3s_old /= nr3 ) ) then
+      if( ( nr1s_old /= nr1s ) .OR. ( nr2s_old /= nr2s ) .OR. ( nr3s_old /= nr3s ) ) then
         first = .true.
       end if
 !
