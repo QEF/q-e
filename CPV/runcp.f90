@@ -391,9 +391,9 @@
       REAL(DP) :: s3, s4
       REAL(DP) ::  svar1, svar2, tmpfac, annee
       INTEGER :: i, ik,ig, nx, ngw, nb, j, nb_g, nb_lx, ierr, nkl, ibl
-      INTEGER :: ispin_wfc
+      INTEGER :: ispin_wfc, n_unp 
       REAL(DP), ALLOCATABLE :: occup(:,:), occdown(:,:), occsum(:)
-      REAL(DP) :: intermed, intermed2
+      REAL(DP) :: intermed, intermed2, ei_unp_mem, ei_unp_wfc
       COMPLEX(DP) ::  intermed3, intermed4
 
 
@@ -442,12 +442,15 @@
       timerd   = 0.0d0
       timeorto = 0.0d0
 
-      nx   = cdesc%nbt( 1 )
+      nx    = cdesc%nbt( 1 )
+      n_unp = nupdwn(1)
+
       IF( nx /= SIZE( fi, 1 ) ) &
         CALL errore(' runcp_forced_pairing ',' inconsistent occupation numbers ', 1)
 
       IF( nupdwn(1) /= (nupdwn(2) + 1) ) &
         CALL errore(' runcp_forced_pairing ',' inconsistent spin numbers ', 1)
+
 
       nb_g = cdesc%nbt( 1 )
       nb_lx = MAX( nb_l(1), nb_l(2) )
@@ -477,192 +480,109 @@
 
         s4 = cclock()
 
-        !  inizia a trattare lo stato unpaired
-        !  per lo spin_up unpaired
-
-        !
-        intermed = sum ( c0( :, nupdwn(1), ik, 1 ) * CONJG( c0( :, nupdwn(1), ik, 1 ) ) )
-        !  prodotto delle wf relative all'unpaired el
-        !  lavoro sugli n processori e' per quetso che sommo ... 
-        !  vengono messi nella variabile temporanea ei_t(:,:,2)
-        !  ei_t(:,:,1) viene utilizzato in seguito solo per il controllo/conto su <psi|H H|psi><psiunp|psiunp>
-        !  questo e' dovuto al fatto che non posso calcolare gli autovalori con eigs a causa della diversa
-        !  occupazione: lo stato unp dovrebbe gia' essere di suo uno stato di KS
-        !  cmq NON LO POSSO RUOTARE per come e' scritta la rho = sum_{i_1,N} |psi_i|**2 + |psi_unp|**2
-        !
-        CALL mp_sum( intermed, group)
-        ei_t(:,ik,2) = intermed  ! <Phiunpaired|Phiunpaired>
-        !  l'autoval dello spin up spaiato la mette in ei; memoria temporanea??? 
-        !
-
-        !  da qui e' per la trattazione degli el. paired, come in LSD dato che utilizzo
-        !  vpot (:,:,:,1) e vpot(:,:,:,2) -nota e' def in spazio R(x,y,z)
-        !  mentre dire c0(:,:,:1) o c0(:,:,:,2) e' la stessa cosa
-        !  accoppiamento che segue e' solo per motivi tecnici
-        !  se il numero di bande e' pari o dispari
-        !  indip dal conto sic o dal particolare problema fisico
-        !  per semplicita' ... di conto considero bande pari
-        !  e poi l'ultima come "dissaccoppiata"
-        !  ripeto questo e' un accoppiamento di bande e non di elettroni
-        !  non faccio alcuna distinzione finora fra gli el
-
-        nb = nupdwn(1)
+        IF( MOD( n_unp, 2 ) == 0 ) nb =  n_unp - 1
+        IF( MOD( n_unp, 2 ) /= 0 ) nb =  n_unp - 2
 
         DO i = 1, nb, 2
           !
-          !  dforce calcola la forza c2 e c3 sulle bande i e i+1 (sono reali => ne fa due alla volta)
-          !  per il vpot (da potential ed e' il potetnziale di KS) in spin up e in down
+          CALL dforce( i, 2, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,:,:,1), eigr, bec )
+          CALL dforce( i, 2, c0(:,:,1,1), cdesc, fi(:,1,1), c4, c5, vpot(:,:,:,2), eigr, bec )
           !
-          CALL dforce( i, 1, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,:,:,1), eigr, bec )
-          if( i <= nupdwn(2) ) then
-             CALL dforce( i, 2, c0(:,:,1,1), cdesc, fi(:,1,2), c4, c5, vpot(:,:,:,2), eigr, bec )
-          else
-             c4 = 0.0d0
-             c5 = 0.0d0
-          end if
-          !
-          !  accoppia c2 e c3 da vpot (spin 1) stato i e i+1
-          !           c4   c5               2
-          !  per lo stesso stato con spin diverso
-          !  qui calcolo la forza H|psi> ma e' gia' dato il contributo sia up che dwn
-          !  e quindi qui ho occupazione "fi==2" per gli stati paired; mentre rimane "fi==1" per l'unpaired
-
-          c2 = occup(i  , ik)*c2 + occdown(i  , ik)*c4
-          c3 = occup(i+1, ik)*c3 + occdown(i+1, ik)*c5
-          !
-          !  se l'unpaired e' nell'ultima banda "pari"
-          !  allora e' lo stato i+1 e andra' in c3 che per def si trovera' ad avere occdwn=0.d0
-          !  combina in c2 la forza degli spin up/down relativa alla banda i
-          !  conbina in c3 la forza "  "    "   "   "   "   "    "     "   i+1
-          !
+          c2 = occup(i  , ik)* (c2 + c4)
+          c3 = occup(i+1, ik)* (c3 + c5)
 
           IF( ttprint ) then
-
             !
-            !  c2 e' l'array di comb. lin. dH/dpsi stato i   con spin_up e dwn
-            !  c3                                        i+1
-            !  anche solita divisione sul gamma == matrice lambda dei moltiplicatori di Lagrange
-            !  e faccio il prodotto <psi|dH/dpsi> == <psi|H|psi>
-            !
-            CALL update_lambda( i, gam( :, :), c0(:,:,ik,1), cdesc, c2 )
+            CALL update_lambda( i  , gam( :, :), c0(:,:,ik,1), cdesc, c2 )
             CALL update_lambda( i+1, gam( :, :), c0(:,:,ik,1), cdesc, c3 )
-
-             intermed  = sum ( c2* CONJG(c2) )
-             intermed2 = sum ( c3* CONJG(c3) )
-             intermed3 = sum ( c2* CONJG( c0(:,nupdwn(1),ik,1) ) )
-             intermed4 = sum ( c3* CONJG( c0(:,nupdwn(1),ik,1) ) )
-             CALL mp_sum ( intermed,  group )
-             CALL mp_sum ( intermed2, group )
-             CALL mp_sum ( intermed3, group )
-             CALL mp_sum ( intermed4, group )
-             ei_t(i  ,ik,1) = intermed  * ei_t(i  ,ik,2) ! <Phi|H H|Phi>*<Phiunpaired|Phiunpaired>
-             ei_t(i+1,ik,1) = intermed2 * ei_t(i+1,ik,2)
-             ei_t(i  ,ik,2) = abs (intermed3)
-             ei_t(i+1,ik,2) = abs (intermed4)
 
           END IF ! ttprint
 
           IF ( tsde ) THEN
-             CALL wave_steepest( cp(:,i,ik,1), c0(:,i,ik,1), svar3, c2 )
+             CALL wave_steepest( cp(:,i,ik,1)  , c0(:,i,ik,1)  , svar3, c2 )
              CALL wave_steepest( cp(:,i+1,ik,1), c0(:,i+1,ik,1), svar3, c3 )
           ELSE
-            cp(:,i,ik,1) = cm(:,i,ik,1)
+            cp(:,i  ,ik,1) = cm(:,i  ,ik,1)
             cp(:,i+1,ik,1) = cm(:,i+1,ik,1)
-            CALL wave_verlet( cp(:,i,ik,1), c0(:,i,ik,1), svar1, svar2, svar3, c2 )
+            CALL wave_verlet( cp(:,i  ,ik,1), c0(:,i  ,ik,1), svar1, svar2, svar3, c2 )
             CALL wave_verlet( cp(:,i+1,ik,1), c0(:,i+1,ik,1), svar1, svar2, svar3, c3 )
           END IF
 
-          IF( cdesc%gzero ) cp(1,i,ik,1)  = DBLE( cp(1,i,ik,1) )
-          IF( cdesc%gzero ) cp(1,i+1,ik,1)= DBLE( cp(1,i+1,ik,1) )
-
+          IF( cdesc%gzero ) cp(1,i  ,ik,1)  = DBLE( cp(1,i  ,ik,1) )
+          IF( cdesc%gzero ) cp(1,i+1,ik,1)  = DBLE( cp(1,i+1,ik,1) )
 
         END DO ! bande
 
 
-        IF( MOD(nb,2) /= 0) THEN
+        IF( MOD( n_unp, 2 ) /= 0 .and. n_unp > 1 ) THEN
+          !
+          nb = n_unp - 1
+          !
+          CALL dforce( nb, 2, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,:,:,1), eigr, bec )
+          CALL dforce( nb, 2, c0(:,:,1,1), cdesc, fi(:,1,2), c4, c5, vpot(:,:,:,2), eigr, bec )
 
-          !
-          !  devo trattare solo l'tulima banda che conterra' di sicuro l'el unpaired
-          !  in c2 ho quindi la forza relativa all'el unpaired
-          !  per questo conservo in ei_t(:,:,2) il suo autovalore
-          !
-          CALL dforce( nb, 1, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,:,:,1), eigr, bec )
-          if( nb <= nupdwn(2) ) then
-             CALL dforce( nb, 2, c0(:,:,1,1), cdesc, fi(:,1,2), c4, c5, vpot(:,:,:,2), eigr, bec )
-          else
-             c4 = 0.0d0
-             c5 = 0.0d0
-          end if
+          c2 = occup(nb , ik)* (c2 + c4)
 
           IF( ttprint ) THEN
             CALL update_lambda( nb, gam( :, :), c0(:,:,ik,1), cdesc, c2 )
-            if ( nupdwn(1) > nupdwn(2) ) then
-              intermed  = sum ( c2 * CONJG(c2) )
-              intermed3 = sum ( c2 * CONJG( c0(:, nupdwn(1), ik, 1) ) )
-              CALL mp_sum ( intermed, group )
-              CALL mp_sum ( intermed3, group )
-              ei_t(nb,ik,1) = intermed * ei_t(nb,ik,2) ! <Phi|H H|Phi>*<Phiunpaired|Phiunpaired>
-              ei_t(nb,ik,2) = abs (intermed3)
-            endif
           END IF
 
           IF ( tsde ) THEN
              CALL wave_steepest( cp(:,nb,ik,1), c0(:,nb,ik,1), svar3, c2 )
           ELSE
-           cp(:,nb,ik,1) = cm(:,nb,ik,1)
-            CALL wave_verlet( cp(:,nb,ik,1), c0(:,nb,ik,1), svar1, svar2, svar3, c2 )
+             cp(:,nb,ik,1) = cm(:,nb,ik,1)
+             CALL wave_verlet( cp(:,nb,ik,1), c0(:,nb,ik,1), svar1, svar2, svar3, c2 )
           END IF
           IF( cdesc%gzero ) cp(1,nb,ik,1) = DBLE( cp(1,nb,ik,1) )
-
         END IF
+
+        !
+        CALL dforce( n_unp, 1, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,:,:,1), eigr, bec )
+
+        intermed  = -2.d0 * sum( c2 * conjg( c0(:, n_unp, ik, 1 ) ) )
+        intermed3 = sum(c0(:,n_unp, ik, 1) * conjg( c0(:, n_unp, ik, 1)))
+
+        CALL mp_sum ( intermed, group )
+        CALL mp_sum ( intermed3, group )
+        !  Eigenvalue of unpaired
+        ei_unp_mem = intermed
+        !  <Phiunpaired|Phiunpaired>
+        ei_unp_wfc = intermed3
+        !write(6,*) '  <psi|psi> = ', intermed3, '  ei_unp(au) = ', intermed
+
+        IF ( tsde ) THEN
+           CALL wave_steepest( cp( :, n_unp, ik, 1 ), c0( :, n_unp, ik, 1 ), svar3, c2 )
+        ELSE
+          cp( :, n_unp, ik, 1 ) = cm( :, n_unp, ik, 1 )
+          CALL wave_verlet( cp( :, n_unp, ik, 1 ), c0( :, n_unp, ik, 1 ), svar1, svar2, svar3, c2 )
+        END IF
+        IF( cdesc%gzero ) cp( 1, n_unp, ik, 1 ) = DBLE( cp( 1, n_unp, ik, 1 ) )
 
 
         IF( ttprint ) THEN
 
-              IF( ionode .AND. ( nupdwn(2) > 0 ) ) THEN
-                WRITE(6,1006) 
-                WRITE(6,1003) ik, 1
-                WRITE(6,1004) 
-                WRITE(6,1007) ( ei_t( i, ik, 2 ) * au, i = 1, nupdwn(2) )
-              END IF
+            ALLOCATE( occsum( SIZE( fi, 1 ) ) )
+            occsum(:) = occup(:,ik) + occdown(:,ik)
 
-              DO i = 1, nupdwn(2)
-                ei_t(i, ik, 1) = ei_t(i, ik, 2) * ei_t(i,ik,2) / ei_t(i, ik, 1)
-              END DO
+            if( cdesc%gamma ) then
+               CALL eigs( nupdwn(2), gam, cgam, tortho, occsum, ei(:,ik,1), cdesc%gamma )
+            else
+               CALL eigs( nupdwn(2), gam, cgam, tortho, occsum, ei(:,ik,1), cdesc%gamma )
+            endif
+            DEALLOCATE( occsum )
+            DO i = 1, nupdwn(2)
+               ei( i, ik, 2 ) = ei( i , ik, 1)
+            END DO
 
-              IF( ionode ) THEN
-                WRITE(6,1002) ik, 1
-                WRITE(6,1004) 
-                WRITE(6,1007) ( ei_t( i, ik, 1), i = 1, nupdwn(1) )
-                WRITE(6,1005)  ei_t( nb, ik, 2)
-              END IF
+            ei( nupdwn(1), ik, 1) = ei_unp_mem
+            ei( nupdwn(1), ik, 2) = 0.d0
 
-1002          FORMAT(/,3X,'presence in unpaired space (%), kp = ',I3, ' , spin = ',I2,/)
-1003          FORMAT(/,3X,'energie cross-terms <Phunpaired| H|Phipaired>, kp = ',I3, ' , spin = ',I2,/)
-1004          FORMAT(/,3X,'componente ei_t(i,,1)==<Phi|H H|Phi>*<Phiunpaired|Phiunpaired> su spin up')
-1005          FORMAT(/,3X,'eigenvalue  (ei_t) unpaired electron: ei_unp = ',F8.4,/)
-1006          FORMAT(/,3X,'eigenvalues (ei_t) for states UP == DWN')
-1007          FORMAT(/,3X,10F8.4)
+            WRITE(6,*) 'SIC EIGENVALUES(eV), dwn and up electrons Kpoint',ik
+            WRITE(6,1004) ( ei( i, ik, 2 ) * au, i = 1, nupdwn(2) )
+            WRITE(6,1005) ( ei( i, ik, 1 ) * au, i = 1, nupdwn(1) )
 
-              ALLOCATE( occsum( SIZE( fi, 1 ) ) )
-              occsum(:) = occup(:,ik) + occdown(:,ik)
-
-              !  CALCOLO GLI AUTOVAL di KS per le wf paired
-              !  impongo il vincolo del force_pairing che spin up e dwn siano uguali
-              !  infine metto gli autovalori in ei
-
-              if( cdesc%gamma ) then
-                CALL eigs(nupdwn(2), gam, cgam, tortho, occsum, ei(:,ik,1), cdesc%gamma)
-              else
-                CALL eigs(nupdwn(2), gam, cgam, tortho, occsum, ei(:,ik,1), cdesc%gamma)
-              endif
-              DEALLOCATE( occsum )
-              DO i = 1, nupdwn(2)
-                ei( i, ik, 2 ) = ei( i , ik, 1)
-              END DO
-              ei(nupdwn(1), ik, 1)  = ei_t(nupdwn(1), ik, 2)
-              ei(nupdwn(1), ik, 2)  = 0.D0
-              ei_t(nupdwn(1), ik, 2)  = 0.D0
+1004        FORMAT(/,3X,'SIC EIGENVALUES DW=',3X,10F8.2)
+1005        FORMAT(/,3X,'SIC EIGENVALUES UP=',3X,10F8.2)
 
         ENDIF
 
@@ -672,7 +592,7 @@
       timerd = timerd + s3 - s4
 
       IF( tortho ) THEN
-        CALL ortho( 1, c0(:,:,:,1), cp(:,:,:,1), cdesc, pmss, emass)
+        CALL ortho( 1, c0(:,:,:,1), cp(:,:,:,1), cdesc, pmss, emass )
       ELSE
         CALL gram(1, cp(:,:,:,1), cdesc)
       END IF

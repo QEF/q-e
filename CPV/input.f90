@@ -830,7 +830,7 @@ MODULE input
            xk, wk, occupations, n_inner, fermi_energy, rotmass, occmass,      &
            rotation_damping, occupation_damping, occupation_dynamics,         &
            rotation_dynamics, degauss, smearing, nhpcl, nhptyp, ndega,        &
-           cell_units, restart_mode
+           cell_units, restart_mode, sic_alpha
 
      USE input_parameters, ONLY: diis_achmix, diis_ethr, diis_wthr, diis_delt, &
            diis_nreset, diis_temp, diis_nrot, diis_maxstep, diis_fthr,         &
@@ -999,7 +999,7 @@ MODULE input
      IF( ( program_name == 'CP90' ) .AND. ( TRIM(sic) /= 'none' ) ) &
         CALL errore(' modules_setup ', ' sic not implemented yet in cp ', 1 )
      !
-     CALL sic_initval( nat, id_loc, sic, sic_epsilon, sic_rloc  )
+     CALL sic_initval( nat, id_loc, sic, sic_epsilon, sic_alpha, sic_rloc  )
 
      !
      !  empty states

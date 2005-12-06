@@ -234,6 +234,29 @@
       !  the matrix ngdrt used to compute the pair-correlation
       !  function gdr for the ions
       !
+      !  Moreover, this routin is re-written also to calculate the self-interaction-correction
+      !  has proposed by Mauri et al. (PRB 2005), taking also into account the 'comment' 
+      !  proposed by Sprik et al. (ICR 2005). 
+      !  Thus, we introduce the parameters sic_alpha and sic_epsilon to correct the 
+      !  the exchange-correlation and the electronic hartree potentials, respectively.
+      !  They are two empirical parameters, thus to remain in a ab-initio
+      !  set them equal to 1.0d0.
+      !  Sprik et al. showed that, in same cases, i.e. OH radical, it should be better
+      !  to under estimate the correction to ex-ch, since in same way the exch already
+      !  corrects the electronic hartree part.
+
+!fran:  My personal considerations: 
+  !     the SIC is a way to correct the self-interaction
+  !     of ONE and only ONE e- that lives in an unpaired electronic level
+  !     we have choosen for it the spin up
+  !     the other e- are fictitious calculate in a LSD approach
+  !     even if they feel a different potential
+  !     we constrain them to have the same force, and the same eigenvalues, the same eigenstate
+  !     When you applied this SIC scheme to a molecule or to an atom, which are neutral,
+  !     remeber hat you have to consider another correction to the energy level as proposed
+  !     by Landau: infact if you start from a neutral system and subtract the self-intereaction
+  !     the unpaired e- feels a charge system. Thus remeber a correction term ~2.317(Madelung)/2L_box
+ 
 
       ! ... include modules
 
@@ -256,7 +279,7 @@
       USE wave_functions, ONLY: dft_kinetic_energy
       USE wave_types,     ONLY: wave_descriptor
       USE io_global,      ONLY: ionode, stdout
-      USE sic_module,     ONLY: self_interaction, si_epsilon
+      USE sic_module,     ONLY: self_interaction, sic_epsilon, sic_alpha !!TO ADD!!!
       USE gvecp,          ONLY: ngm
       USE local_pseudo,   ONLY: vps, rhops
       USE atom,           ONLY: nlcc
@@ -359,8 +382,8 @@
       ! ttscreen = .TRUE.
       ttscreen = .FALSE.
       !
-      ttsic    = ( ABS(self_interaction) /= 0 )
-      !
+      ttsic    = ( ABS(self_interaction) /= 0  ) 
+
       omega    = box%deth
       !
       tgc      = dft_is_gradient()
@@ -387,10 +410,10 @@
       ALLOCATE( rhoeg(ngm, nspin) )
       ALLOCATE( rhoetg(ngm, nspin) )
 
-      edft%self_sxc  = 0.d0
-      edft%sxc       = 0.d0
-      edft%self_ehte = 0.d0
-      edft%eht       = 0.d0
+      !edft%self_sxc  = 0.d0
+      !edft%sxc       = 0.d0
+      !edft%self_ehte = 0.d0
+      !edft%eht       = 0.d0
 
     
       IF( ttsic ) THEN
@@ -416,7 +439,6 @@
         IF( ierr /= 0 ) CALL errore(' vofrhos ', ' allocating self_rho ', ierr)
 
       END IF !on self_interaction
-
 
       IF(timing) s1 = cclock()
 
@@ -488,111 +510,47 @@
       IF(timing) s3 = cclock()
 
 
-
-! ... Self-interaction correction --- Excor Part
-!In any case calculate the Excor part with rhoetr
-      
       CALL exch_corr_energy(rhoetr, rhoetg, grho, vpot, sxcp, vxc, v2xc)
 
+      edft%sxc       = sxcp
+      edft%self_sxc  = 0.d0
+      self_vxc       = 0.d0
+      !
+      IF ( ttsic ) THEN                
 
-      IF( ttsic ) THEN
-        IF( ionode ) THEN
-          write(stdout,*) 
-          write(stdout,*) '  KIND of SELF_INTERACTION CHOOSEN  == ', self_interaction
-          write(stdout,*) '  EXC before SIC corr               == ', sxcp * omega / DBLE( nr1_g * nr2_g * nr3_g )
-          write(stdout,*) 
-        END IF
-      END IF
+         self_rho(:,:,:,1) = rhoetr(:,:,:,2)
+         self_rho(:,:,:,2) = rhoetr(:,:,:,2)
 
-      SELECT CASE( ABS(self_interaction) )
-
-        CASE default 
-
-          !  no sic correction
-          !
-          edft%sxc       = sxcp
-          edft%self_sxc  = 0.d0
-          self_vxc       = 0.d0
-                
-        CASE(1) 
-
-          !   Delta_Esic to xc = Exc[rhoup-rhodown, 0]
-          !
-          self_rho(:,:,:,1) = rhoetr(:,:,:,1) - rhoetr(:,:,:,2)
-          self_rho(:,:,:,2) = 0.D0
-          !
-          IF (tgc) THEN
-                 self_grho(:,:,:,:,1) = grho(:,:,:,:,1) - grho(:,:,:,:,2)
-                 self_grho(:,:,:,:,2) = 0.D0
-          ENDIF
-          !
-          CALL exch_corr_energy(self_rho, rhoetg, self_grho, self_vpot, &
-                                self_sxcp, self_vxc, self_v2xc)
-          !
-          vpot(:,:,:,1) =  vpot(:,:,:,1) - self_vpot(:,:,:,1)
-          vpot(:,:,:,2) =  vpot(:,:,:,2) + self_vpot(:,:,:,1)
-          !
-          IF (tgc) THEN
-            v2xc(:,:,:,1,1) =  v2xc(:,:,:,1,1) - self_v2xc(:,:,:,1,1)
-            v2xc(:,:,:,2,2) =  v2xc(:,:,:,2,2) + self_v2xc(:,:,:,1,1)
-          ENDIF
-
-          ! write(stdout,*)  'da exc la parte da rhodwn rhodwn',self_sxcp
-
-          edft%sxc = sxcp + self_sxcp !- self_sxcp
-          vxc = vxc - self_vxc
-          edft%self_sxc = self_sxcp * omega / DBLE(nr1_g*nr2_g*nr3_g)
-          self_vxc = self_vxc * omega / DBLE(nr1_g*nr2_g*nr3_g)
-
-
-        CASE(2) 
-
-          !   Delta_Esic to xc = Exc[rhoup,rhodown] - Exc[rhopaired, rhopaired] 
-          !   where Exc[rhoup,rhodown==sxc prevoiusly calculated
-
-          self_rho(:,:,:,1) = rhoetr(:,:,:,2)
-          self_rho(:,:,:,2) = rhoetr(:,:,:,2)
-
-          IF (tgc) THEN
+         IF (tgc) THEN
             self_grho(:,:,:,:,1) = grho(:,:,:,:,2)
             self_grho(:,:,:,:,2) = grho(:,:,:,:,2)
-          ENDIF
+         ENDIF
 
-          !          write(stdout,*)'DA XC SELF_RHO1',self_rho(:,:,:,1)
-          !          write(stdout,*)'DA XC SELF_RHO2',self_rho(:,:,:,2)
+         CALL exch_corr_energy( self_rho, rhoetg, self_grho, self_vpot, &
+                 self_sxcp, self_vxc, self_v2xc )
 
-          CALL exch_corr_energy(self_rho, rhoetg, self_grho, self_vpot, &
-                 self_sxcp, self_vxc, self_v2xc)
+         vpot (:,:,:,1) = ( 1.0d0 - sic_alpha ) * vpot(:,:,:,1)
+         ! 
+         vpot (:,:,:,2) = ( 1.0d0 - sic_alpha ) * vpot(:,:,:,2) + sic_alpha * ( self_vpot(:,:,:,2) + self_vpot(:,:,:,1) )
 
-          vpot (:,:,:,2) = self_vpot(:,:,:,2) + self_vpot(:,:,:,1)
-          vpot (:,:,:,1) = 0.d0
-          write(stdout,*)  'da XC with tgc: E_XC==',self_sxcp
-
-          IF (tgc) THEN
-             v2xc(:,:,:,1,1) = 0.d0
-             v2xc(:,:,:,2,2) = self_v2xc(:,:,:,2,2) + self_v2xc(:,:,:,1,1)
-          ENDIF
-          write(stdout,*)  'da exc la parte da rhodwn rhodwn',self_sxcp
-          edft%self_sxc= sxcp - self_sxcp
-          edft%sxc = self_sxcp !!sxcp - edft%self_sxc
-          vxc = self_vxc
-          edft%self_sxc = edft%self_sxc * omega / DBLE(nr1_g*nr2_g*nr3_g)
-          self_vxc = self_vxc * omega / DBLE(nr1_g*nr2_g*nr3_g)
-
-      END SELECT 
-
-      !  on value of self_interaction for Exchange-Correlation Part 
-      !  sxcp is the exchange-correlation part to the energy from LSD with rhoup e rhodown
-
-      IF( ttsic ) THEN
-          write(stdout,*) '  Exchange-correlation Energy introducing the SIC'
-          write(stdout,*) '  -----------------------------------------------'
-          write(stdout,*) '  SXCP from first call     :: ', sxcp * omega / DBLE( nr1_g * nr2_g * nr3_g )
-          write(stdout,*) '  SXC after SIC-correction :: ', edft%sxc * omega / DBLE( nr1_g * nr2_g * nr3_g )
-          write(stdout,*) '  D_SIC SIC correction     :: ', edft%self_sxc
-          write(stdout,*) '  -----------------------------------------------'
+      IF (tgc) THEN
+        !
+        v2xc(:,:,:,1,1) = ( 1.0d0 - sic_alpha ) * v2xc(:,:,:,1,1)
+        !
+        v2xc(:,:,:,2,2) = ( 1.0d0 - sic_alpha ) * v2xc(:,:,:,2,2) +sic_alpha * ( self_v2xc(:,:,:,2,2) + self_v2xc(:,:,:,1,1) )
+        !
       END IF
-                 
+
+         edft%self_sxc = sic_alpha * ( sxcp - self_sxcp )
+         !
+         edft%sxc      = sxcp - edft%self_sxc
+         !
+         self_vxc      = sic_alpha * ( vxc - self_vxc )
+         !
+         vxc           = vxc - self_vxc
+         !
+      END IF  
+
       IF ( tstress ) THEN
         strvxc = ( edft%sxc - vxc ) * omega / DBLE( nr1_g * nr2_g * nr3_g )
       END IF
@@ -605,7 +563,7 @@
         END DO
 ! ...   now rhoetg contains the xc potential
         IF (tforce) THEN
-          CALL core_charge_forces(fion, rhoetg, rhocg, nlcc, atoms, box, ei1, ei2, ei3 )
+          CALL core_charge_forces( fion, rhoetg, rhocg, nlcc, atoms, box, ei1, ei2, ei3 )
         END IF
       END IF
 
@@ -623,57 +581,42 @@
 ! ... Self-interaction correction --- Hartree part
 
       ALLOCATE( vloc( ngm ) )
+      !
       CALL vofloc(ttscreen, tforce, edft%ehte, edft%ehti, ehp, & 
            eps, vloc, rhoeg, fion, atoms, rhops, vps, eigr, &
            ei1, ei2, ei3, sfac, box, desc )
       !
-      ! WRITE(6,*) 'DEBUG vofloc = ', SUM(fion)
-
-      !       edft%ehte = DBLE ( ehtep )
-
-
       edft%self_ehte = 0.d0
 
-      IF ( self_interaction > 0 .AND. nspin == 2 ) THEN
+      IF ( ttsic ) THEN
 
-        !  Delta_Esic to Hartree is ALWAYS = -EH(rhoup-rhodw)
-
-        ALLOCATE(self_vloc(ngm), self_rhoeg(ngm), STAT = ierr)
+        ALLOCATE( self_vloc(ngm), self_rhoeg(ngm), STAT = ierr)
         IF( ierr /= 0 )&
           CALL errore(' vofrhos ', ' allocating self_vloc, self_rhoeg ', ierr)
 
         self_rhoeg = rhoeg(:,1) - rhoeg(:,2)
-        self_vpot = 0.d0
+        !
+        self_vpot  = 0.d0
 
         !  working on the total charge density
 
-        CALL self_vofloc(ttscreen, self_ehtep, self_vloc, self_rhoeg, &
-              box, desc)
-        CALL pinvfft(self_vpot(:,:,:,1), self_vloc(:))
+        CALL self_vofloc( ttscreen, self_ehtep, self_vloc, self_rhoeg, box, desc)
+        !
+        CALL pinvfft( self_vpot(:,:,:,1), self_vloc(:))
 
-        self_vpot(:,:,:,1) = si_epsilon * self_vpot(:,:,:,1)
-        edft%self_ehte = si_epsilon * DBLE(self_ehtep)
+        self_vpot(:,:,:,1) = sic_epsilon * self_vpot(:,:,:,1)
+        !
+        edft%self_ehte     = sic_epsilon * DBLE( self_ehtep )
  
         vpot(:,:,:,1) =  vpot(:,:,:,1) - self_vpot(:,:,:,1)
         vpot(:,:,:,2) =  vpot(:,:,:,2) + self_vpot(:,:,:,1)
 
-        DEALLOCATE(self_vloc, self_rhoeg)
+        DEALLOCATE( self_vloc, self_rhoeg )
 
       END IF
 
       edft%eh = DBLE( ehp ) - edft%self_ehte
      
-      IF ( ttsic ) THEN
-        IF ( ionode ) THEN
-          write(stdout,*) '  Hartree Energy Contribution when SIC is introduced'
-          write(stdout,*) '  --------------------------------------------------'
-          write(stdout,*) '  HARTREE Potential == ' , DBLE( edft%eh )
-          write(stdout,*) '  EH(rhoup+rhodwn)  == ' , DBLE( ehp )
-          write(stdout,*) '  EH(rhoup-rhodwn)  == ' , DBLE( edft%self_ehte )
-          write(stdout,*) '  --------------------------------------------------'
-        END IF
-      END IF
-
       IF( ALLOCATED( self_grho  ) ) DEALLOCATE( self_grho  )
       IF( ALLOCATED( self_v2xc  ) ) DEALLOCATE( self_v2xc  )
       IF( ALLOCATED( self_vpot  ) ) DEALLOCATE( self_vpot )
@@ -720,13 +663,10 @@
       CALL mp_sum(edft%ekin, group)
       CALL mp_sum(edft%emkin, group)
 
-
-      IF( ttsic .and. ionode ) THEN
-        write(stdout,*) 'ESELF_EL::', edft%eself
-      END IF
-
       CALL total_energy(edft,omega,vxc,eps,self_vxc,nr1_g*nr2_g*nr3_g)
 
+!fran: the output is introduced only in the print_energies.f90
+!fran: in this way you print only each print_step
 
       ! ... compute stress tensor
       !
@@ -1449,7 +1389,7 @@
       USE atoms_type_module, ONLY: atoms_type
       USE fft, ONLY : pw_invfft, pfwfft, pinvfft
       USE sic_module, ONLY: ind_localisation, nat_localisation, print_localisation
-      USE sic_module, ONLY: rad_localisation, pos_localisation
+      USE sic_module, ONLY: sic_rloc, pos_localisation
       USE ions_base, ONLY: ind_srt
       USE fft_base, ONLY: dfftp
       USE cell_base, ONLY: tpiba2
@@ -1530,11 +1470,11 @@
             R( : ) = atoms_m%taus( :, isa_sorted )
             CALL s_to_r ( R, pos_localisation( 1:3 , isa_loc ), ht )
 
-            WRITE(6,*) 'ATOM ', ind_localisation( isa_input )
-            WRITE(6,*) 'POS  ', atoms_m%taus( :, isa_sorted )
+            !WRITE(6,*) 'ATOM ', ind_localisation( isa_input )
+            !WRITE(6,*) 'POS  ', atoms_m%taus( :, isa_sorted )
 
             work  = nr1_l
-            work2 = rad_localisation * work
+            work2 = sic_rloc * work
             work  = work * R(1) - work2
             Xmin  = FLOOR(work)
             work  = work + 2*work2
@@ -1542,7 +1482,7 @@
             IF ( Xmax > nr1_l ) Xmax = nr1_l
             IF ( Xmin < 1 ) Xmin = 1
             work  = nr2_l
-            work2 = rad_localisation * work
+            work2 = sic_rloc * work
             work  = work * R(2) - work2
             Ymin  = FLOOR(work)
             work  = work + 2*work2
@@ -1550,7 +1490,7 @@
             IF ( Ymax > nr2_l ) Ymax = nr2_l
             IF ( Ymin < 1 ) Ymin = 1
             work  = nr3_l
-            work2 = rad_localisation * work
+            work2 = sic_rloc * work
             work  = work * R(3) - work2
             Zmin  = FLOOR(work)
             work  = work + 2*work2

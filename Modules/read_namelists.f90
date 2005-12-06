@@ -80,7 +80,7 @@ MODULE read_namelists_module
        outdir  = './'   
        scradir = './'   
        IF( prog == 'PW' ) prefix = 'pwscf'  
-       IF( prog == 'CP' ) prefix = 'cp'  
+       IF( prog == 'CP' ) prefix = 'cp' 
        !
        ! ... directory containing the pseudopotentials
        !
@@ -275,7 +275,8 @@ MODULE read_namelists_module
        diago_diis_ndim = 3
        !
        sic = 'none' 
-       sic_epsilon = 1.D0
+       sic_epsilon = 0.D0
+       sic_alpha = 0.D0
        force_pairing = .false.
        ! 
        fermi_energy = 0.D0
@@ -762,6 +763,7 @@ MODULE read_namelists_module
        CALL mp_bcast( diago_diis_ndim,      ionode_id )
        CALL mp_bcast( sic,                  ionode_id )
        CALL mp_bcast( sic_epsilon ,         ionode_id )
+       CALL mp_bcast( sic_alpha   ,         ionode_id )
        CALL mp_bcast( force_pairing ,       ionode_id )
        ! 
        ! ... ensemble-DFT
@@ -1216,6 +1218,12 @@ MODULE read_namelists_module
           IF (sic_epsilon < 0.d0 )  &
              CALL errore( sub_name, &
                         & ' invalid sic_epsilon, less than 0 ',1 )
+          IF (sic_alpha > 1.D0 )  &
+             CALL errore( sub_name, &
+                        & ' invalid sic_alpha, greater than 1.',1 )
+          IF (sic_alpha < 0.d0 )  &
+             CALL errore( sub_name, &
+                        & ' invalid sic_alpha, less than 0 ',1 )
           !
           IF ( .NOT. force_pairing ) &
              CALL errore( sub_name, &

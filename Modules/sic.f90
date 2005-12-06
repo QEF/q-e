@@ -9,6 +9,31 @@
 !------------------------------------------------------------------------------!
   MODULE sic_module
 !------------------------------------------------------------------------------!
+!
+!  The versions after 3.0 contain also the self-interaction-correction method
+!  has proposed by Mauri et al. (PRB 2005), taking also into account the 'comment'
+!  proposed by Sprik et al. (ICR 2005).
+!  Thus, we introduce the parameters sic_alpha and sic_epsilon to correct the
+!  exchange-correlation and the electronic hartree potentials, respectively.
+!  They are two empirical parameters, thus to remain in a ab-initio
+!  set them equal to 1.0d0.
+!  Sprik et al. showed that, in same cases, i.e. OH radical, it should be better
+!  to under estimate the correction to ex-ch, since in same way the exch already
+!  corrects the electronic hartree part.
+! HOW AND WHEN USE THE SIC::
+! Fran's personal considerations:
+!     the SIC is a way to correct the self-interaction WHEN
+!     ONE and only ONE e- lives in an unpaired electronic level
+!     we have choosen for it the spin up
+!     Remember to select nspin == 2 and nelup = neldw + 1
+!     the other e- are fictitious calculate in a LSD approach:
+!     infact, even if the paired e- feel a different potential (for spin up and spin dw)
+!     we constrain them to have the same force, and the same eigenvalues, the same eigenstates
+!     When you applied this SIC scheme to a molecule or to an atom, which are neutral,
+!     remember that you have to consider another correction to the energy level as proposed
+!     by Landau: infact if you start from a neutral system and subtract the self-intereaction
+!     the unpaired e- feels a charge system. Thus remeber a correction term ~2.317(Madelung)/2L_box
+
 
       USE kinds, ONLY: DP
       USE parameters, ONLY: natx
@@ -20,39 +45,34 @@
       INTEGER :: nat_localisation = 0 
       LOGICAL :: print_localisation = .FALSE. ! Calculates hartree energy around specified atoms
       INTEGER :: self_interaction = 0 
-      REAL(DP) :: si_epsilon = 0.0d0
-      REAL(DP) :: rad_localisation = 0.0d0
+      REAL(DP) :: sic_epsilon = 0.0d0
+      REAL(DP) :: sic_alpha = 0.0d0
+      REAL(DP) :: sic_rloc = 0.0d0
       REAL(DP), ALLOCATABLE :: pos_localisation(:,:)
 
 !------------------------------------------------------------------------------!
   CONTAINS
 !------------------------------------------------------------------------------!
 
-    SUBROUTINE sic_initval( nat_ , id_loc_ , sic_ ,  sic_epsilon_ , sic_rloc_ )
+    SUBROUTINE sic_initval( nat_ , id_loc_ , sic_ ,  sic_epsilon_ , sic_alpha_, sic_rloc_ )
 
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: nat_
       INTEGER, INTENT(IN) :: id_loc_ (:)
       CHARACTER(LEN=*), INTENT(IN) :: sic_
       REAL(DP), INTENT(IN) :: sic_epsilon_
+      REAL(DP), INTENT(IN) :: sic_alpha_
       REAL(DP), INTENT(IN) :: sic_rloc_
 
       select case ( TRIM( sic_ ) )
-        case ( 'sic_pz' ) 
-          self_interaction = 1
         case ( 'sic_mac' )
           self_interaction = 2
-        case ( 'only_sich' )
-          self_interaction = 3
-        case ( 'only_sicxc_pz' )
-          self_interaction = -1
-        case ( 'only_sicxc_mac' )
-          self_interaction = -2
         case default
           self_interaction = 0
       end select
-      si_epsilon       = sic_epsilon_
-      rad_localisation = sic_rloc_
+      sic_epsilon     = sic_epsilon_
+      sic_alpha       = sic_alpha_
+      sic_rloc        = sic_rloc_
       ! counting the atoms around which i want to calculate the charge localization
       ind_localisation( 1 : nat_ ) = id_loc_ ( 1 : nat_ )
       nat_localisation = COUNT( ind_localisation > 0 ) 
@@ -90,40 +110,21 @@
         WRITE(stdout, 591)
         WRITE(stdout, 592) self_interaction
         WRITE(stdout, 593)
-        select case (self_interaction)
-        case (1)
+        !!select case (self_interaction)
+
+       IF ( self_interaction /= 0 ) THEN
+
           write(stdout,*) &
-            '  Unpaired-electron self-interaction correction of type ', self_interaction
+            '  Unpaired-electron self-interaction correction by Mauri', self_interaction
           write(stdout,*) &
-            '  E_USIC_PZ = - U_hartree[rho_up-rhp_down] - E_excor[rho_up-rho_down,0] '
-        case (2)
+            '  E_USIC_EHTE = U_hartree[rho_up + rho_dw]- sic_espilon * U_hartree[rho_up-rhp_down]'
           write(stdout,*) &
-            '  Unpaired-electron self-interaction correction of type ', self_interaction
-          write(stdout,*) &
-            '  E_USIC_MAC = - U_hartree[rho_up-rhp_down] - E_excor[rho_up,rho_down] + E[rho_down, rho_down] '
-        case (3)
-          write(stdout,*) &
-            '  Unpaired-electron self-interaction correction of type ', self_interaction
-          write(stdout,*) &
-            '  E_USIC_basis = - U_hartree[rho_up-rhp_down] '
-        case (-1)
-          write(stdout,*) &
-            '  Unpaired-electron self-interaction correction of type ', self_interaction
-          write(stdout,*) &
-            '  E_USIC_nohartree_PZ =  - E_excor[rho_up-rho_down,0] '
-        case (-2)
-          write(stdout,*) &
-            '  Unpaired-electron self-interaction correction of type ', self_interaction
-          write(stdout,*) &
-            '  E_USIC_nohartree_MAC =  - E_excor[rho_up,rho_down] + E[rho_down, rho_down] '
-        case default
-          write(stdout,*) &
-            '  Unpaired-electron self-interaction correction of type ', self_interaction
-          write(stdout,*) &
-            '  No unpaired-electron self-interaction correction '
-        end select
+            '  E_USIC_XC   = E_xc[rho_up,rho_dw] - sic_alpha( E_xc[rho_up,rho_dw] + E_xc[rho_dw, rho_dw]) '
+
+       END IF !!select
+
   591 FORMAT(   3X,'')
-  592 FORMAT(   3X,'Introducing a Self_Interaction Correction case: ', I3)
+  592 FORMAT(   3X,'Introducing a Mauri Avezac Calandra Self_Interaction Correction: ', I3)
   593 FORMAT(   3X,'----------------------------------------')
 
     RETURN

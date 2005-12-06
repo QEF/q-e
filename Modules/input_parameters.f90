@@ -276,8 +276,8 @@ MODULE input_parameters
           ! if <0 do nothing, if==0 print rho and fort.47, if == nband print band
 
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
-          nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, wfcdir, &
-          max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
+          nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, &
+          wfcdir, max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
           pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, &
           wf_collect, printwfc, scradir,lelfield, nberrycyc, refg, tqr
 
@@ -520,24 +520,14 @@ MODULE input_parameters
 !
 
         CHARACTER(LEN=80) :: sic = 'none'
-          ! sic = 'none' | 'sic_pz' | 'sic_mac' | 'only_sich' | 'only_sicxc_pz' | 'only_sicxc_mac' |
-               
-         ! Where:   
-         ! 'none'          => self_interaction == 0   -> no USIC 
-         ! 'sic_pz'        => self_interaction == 1   -> USIC = Exc[rhoup-rhodown,0] + Uhartree[rhoup-rhodown] 
-                                               !! proposed by Perdew, Zunger, PRB 23 (1981) 5048
-         ! 'sic_mac'       => self_interaction == 2   -> USIC = Exc[rhoup,rhodown] - Exc[rhopaired, rhopaired] + Uhartree[rhoup-rhodown]
-                                               !! proposed by Lundin-Eriksson, IJQC 81 (2003) 247 
-                                               !! implemented by Mauri-Calandra-d'Avezac (2003/04) for one electron/hole 
-         ! 'only_sich'     => self_interaction == 3   -> USIC = Uhartree[rhoup-rhodown]
-                                               !!SIcorrection only on hartree part )
-         ! 'only_sich_pz'  => self_interaction == -1  -> USIC = Exc[rhoup-rhodown,0]
-                                               !!SIcorrection only on xc by PZ 
-         ! 'only_sich_mac' => self_interaction == -2  -> USIC = Exc[rhoup,rhodown] - Exc[rhopaired, rhopaired]
-                                               !!sIcorrection only on xc by MAC: 
-                                               !!rhopaired==rhodown since that the charge more is defined in the highest level and up
-                                               !!rhounpaired==rhoup-rhodown 
-        REAL(DP) :: sic_epsilon   = 1.0d0
+          ! sic = 'none' | 'sic_mac' 
+          ! 'none'          no SIC 
+          ! 'sic_mac'       SIC correction: Exc[rhoup,rhodown] 
+          !                         - sic_alpha * ( Exc[rhoup, rhodwn] - Exc[ rhodwn, rhodwn ] ) 
+          !                         + Uhartree[rhoup+rhodown] - sic_epsilon * Uhartree[rhoup-rhodown]
+
+        REAL(DP) :: sic_epsilon = 0.0d0
+        REAL(DP) :: sic_alpha   = 0.0d0
 
         LOGICAL   :: force_pairing = .FALSE.
           !  FORCEPAIRING 
@@ -562,7 +552,7 @@ MODULE input_parameters
 #endif
              noncolin, lspinorb, lambda, angle1, angle2, report, &
              constrained_magnetization, B_field, fixed_magnetization, &
-             sic, sic_epsilon, force_pairing
+             sic, sic_epsilon, force_pairing, sic_alpha
 
 
 !=----------------------------------------------------------------------------=!

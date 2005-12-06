@@ -57,7 +57,7 @@
       USE cell_base,        ONLY : s_to_r
       USE efield_module,    ONLY : tefield, pberryel, pberryion
       USE cg_module,        ONLY : tcg, itercg
-      USE sic_module,       ONLY : self_interaction
+      USE sic_module,       ONLY : self_interaction, sic_alpha, sic_epsilon
       USE electrons_module, ONLY : print_eigenvalues
 
       !
@@ -92,13 +92,14 @@
          CALL printout_base_open()
       END IF
       !
+
       IF( ionode ) THEN
          !
          IF( tprint ) THEN
             !
             tsic = ( self_interaction /= 0 )
             !
-            CALL print_energies( tsic )
+            CALL print_energies( tsic, sic_alpha = sic_alpha, sic_epsilon = sic_epsilon )
             !
             CALL print_eigenvalues( 31, tfile, nfi, tps )
             !
@@ -132,8 +133,6 @@
             out_press = ( stress_gpa(1,1) + stress_gpa(2,2) + stress_gpa(3,3) ) / 3.0d0
             !
             IF( tfile ) CALL printout_stress( 38, stress_gpa, nfi, tps )
-            !
-            WRITE( stdout, * )
             !
             ! ... write out a standard XYZ file in angstroms
             !
@@ -178,7 +177,9 @@
             !
             ! ...       Write partial temperature and MSD for each atomic specie tu stdout
             !
+            WRITE( stdout, * ) 
             WRITE( stdout, 1944 )
+            !
             DO is = 1, nsp
                WRITE( stdout, 1945 ) is, temps(is), dis(is)
             END DO
@@ -190,9 +191,10 @@
             !
          END IF
          !
-      END IF
+       END IF
       !
-      IF( ionode .AND. tfile .AND. tprint ) THEN
+
+       IF( ionode .AND. tfile .AND. tprint ) THEN
          !
          ! ... Close and flush unit 30, ... 40
          !
@@ -200,14 +202,15 @@
          !
       END IF
       !
-      IF( ( MOD( nfi, iprint ) == 0 ) .OR. tfirst )  THEN
-         !
-         WRITE( stdout, * )
-         WRITE( stdout, 1947 )
-         !
-      END IF
-      !
+        IF( ( MOD( nfi, iprint ) == 0 ) .OR. tfirst )  THEN
+           !
+           WRITE( stdout, * )
+           WRITE( stdout, 1947 )
+           !
+        END IF
+      ! 
       IF( .not. tcg ) THEN
+         !
          WRITE( stdout, 1948 ) nfi, ekinc, temphc, tempp, etot, enthal, econs, &
                             econt, vnhh(3,3), xnhh0(3,3), vnhp(1),  xnhp0(1)
       ELSE
@@ -221,6 +224,7 @@
          WRITE( stdout, 256 ) nfi, INT( tempp ), etot, atot, econs, itercg
          !
       END IF
+
       IF( tefield) THEN
          IF(ionode) write(stdout,'( A14,F12.6,A14,F12.6)') 'Elct. dipole',-pberryel,'Ionic dipole',-pberryion
       ENDIF
@@ -228,14 +232,14 @@
       !
       DEALLOCATE( labelw )
       !
-255  FORMAT( '     ',A5,A8,3(1X,A12),A6 )
-256  FORMAT( 'Step ',I5,1X,I7,1X,F12.5,1X,F12.5,1X,F12.5,1X,I5 )
+255   FORMAT( '     ',A5,A8,3(1X,A12),A6 )
+256   FORMAT( 'Step ',I5,1X,I7,1X,F12.5,1X,F12.5,1X,F12.5,1X,I5 )
 1000  FORMAT(/,3X,'Center of mass square displacement (a.u.): ',F10.6,/)
-1944 FORMAT(//'   Partial temperatures (for each ionic specie) ', &
+1944  FORMAT(//'   Partial temperatures (for each ionic specie) ', &
              /,'   Species  Temp (K)   Mean Square Displacement (a.u.)')
-1945 FORMAT(3X,I6,1X,F10.2,1X,F10.4)
+1945  FORMAT(3X,I6,1X,F10.2,1X,F10.4)
 1947  FORMAT( 2X,'nfi',4X,'ekinc',2X,'temph',2X,'tempp',8X,'etot',6X,'enthal', &
-            & 7X,'econs',7X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0' )
+           & 7X,'econs',7X,'econt',4X,'vnhh',3X,'xnhh0',4X,'vnhp',3X,'xnhp0' )
 1948  FORMAT( I5,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F11.5),4(1X,F7.4) )
 2948  FORMAT( I6,1X,F8.5,1X,F6.1,1X,F6.1,4(1X,F11.5),F10.2, F8.2, F8.5 )
 2949  FORMAT( I6,1X,4(1X,F7.4), F8.5 )
@@ -257,8 +261,9 @@
       USE electrons_nose,   ONLY: electrons_nose_nrg, xnhe0, vnhe, qne, ekincw
       USE polarization,     ONLY: pdipole, pdipolt, p
       USE sic_module,       ONLY: ind_localisation, pos_localisation, nat_localisation, &
-                                  self_interaction, rad_localisation
-      USE ions_base,        ONLY: ions_temp, taui
+                                  self_interaction, sic_rloc
+      !!USE ions_base,        ONLY: ions_displacement, cdm_displacement
+      USE ions_base,        ONLY: ions_temp, cdmi, taui, nsp
       USE ions_nose,        ONLY: ndega, ions_nose_nrg, xnhp0, vnhp, qnp, gkbt, &
                                   kbt, nhpcl, nhpdim, atm2nhp, ekin2nhp, gkbt2nhp
       USE cell_module,      only: s_to_r, boxdimensions, press
@@ -274,7 +279,6 @@
 
       INTEGER, INTENT(IN) :: nfi
       TYPE (atoms_type)   :: atoms
-      REAL(DP)           :: ekinc, ekcell
       LOGICAL             :: tprint
       type (boxdimensions), intent(in) :: ht
       REAL(DP) :: avgs(:), avgs_run(:)
@@ -284,8 +288,10 @@
       INTEGER   :: is, ia, k, i, j, ik, isa, iunit, nfill, nempt
       REAL(DP) :: tau(3), vel(3), stress_tensor(3,3), temps( atoms%nsp )
       REAL(DP) :: tempp, econs, ettt, out_press, ekinpr, enosee
+      REAL(DP) :: ekinc, ekcell
       REAL(DP) :: enthal, totalmass, enoseh, temphc, enosep
       REAL(DP) :: h(3,3)
+      !!REAL(DP) :: dis( nsp )
       LOGICAL   :: tfile, topen, tsic, tfirst
       CHARACTER(LEN=3), ALLOCATABLE :: labelw( : )
       REAL(DP), ALLOCATABLE :: tauw( :, : )
@@ -336,7 +342,7 @@
 
       ! ...   Energy expectation value for physical ions hamiltonian
       ! ...   in Born-Oppenheimer approximation
-
+ 
       econs  = atoms%ekint + ekcell + enthal
 
       ! ...   Car-Parrinello constant of motion
@@ -394,37 +400,7 @@
 
       DEALLOCATE( tauw )
 
-          ! IF( tsic ) THEN
-          !   WRITE ( stdout, *) '  Sic_correction: type ', self_interaction
-          !   WRITE ( stdout, *) '  Localisation: ', rad_localisation
-          !   DO i = 1, nat_localisation
-          !     write( stdout, *) '    Atom ', ind_localisation(i), ' : ', pos_localisation(4,i)
-          !   END DO
-          ! END IF
-
-          ! ...  Write Polarizability tensor to stdout and fortran unit 32
-
-          ! IF ( tdipole ) THEN
-          !   WRITE( stdout,19) 
-          !   WRITE( stdout,20) (pdipole(i),i=1,3)
-          !   WRITE( stdout,20) (p(i),i=1,3)
-          !   WRITE( stdout,20) (pdipolt(i),i=1,3)
-          !   IF ( tfile ) THEN 
-          !      WRITE(32,30) nfi, tps
-          !      WRITE(32,20) (pdipole(i),i=1,3)
-          !      WRITE(32,20) (p(i),i=1,3)
-          !      WRITE(32,20) (pdipolt(i),i=1,3)
-          !   END IF
-          ! END IF
-          
       old_nfi = nfi
-
- 1947 FORMAT(//3X,'nfi', 5X,'ekinc', 2X,'temph', 2X,'tempp', 9X,'etot', 7X,'enthal', &
-               8X,'econs', 9X,'ettt')
- 1946 FORMAT(//6X,       5X,'(AU) ', 3X,'(K )', 9X,'(AU)', &
-               2X,' (K) ', 8X,' (AU)', 9X,'(AU)')
- 1948 FORMAT(        I6, 1X, F9.5,  1X, F6.1,  1X, F6.1, 1X, F12.5, 1X, F12.5, &
-                         1X, F12.5, 1X, F12.5 )
 
    5  FORMAT(/,3X,'Simulated Time (ps): ',F12.6)
   10  FORMAT(/,3X,'Cell Variables (AU)',/)

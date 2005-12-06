@@ -72,6 +72,7 @@
                   print_energies, debug_energies
 
         PUBLIC :: etot, eself, enl, ekin, epseu, esr, eht, exc, ekincm
+        PUBLIC :: self_sxc, self_ehte
 
         PUBLIC :: atot, entropy, egrand, enthal, vave
 
@@ -97,8 +98,8 @@
           sxc        = edft%sxc
           ehti       = edft%ehti
           ehte       = edft%ehte
-          self_ehte  = edft%self_ehte
-          self_sxc   = edft%self_sxc
+          self_ehte  = edft%self_ehte * omega / DBLE(NNR)
+          self_sxc   = edft%self_sxc * omega / DBLE(NNR)
 
           self_vxc = self_vxc_in
 
@@ -145,10 +146,11 @@
 
 ! ---------------------------------------------------------------------------- !
 
-        SUBROUTINE print_energies( tsic, iprsta, edft )
+        SUBROUTINE print_energies( tsic, iprsta, edft, sic_alpha, sic_epsilon )
           LOGICAL, INTENT(IN) :: tsic
           TYPE (dft_energy_type), OPTIONAL, INTENT(IN) :: edft
           INTEGER, OPTIONAL, INTENT(IN) :: iprsta
+          REAL(DP), OPTIONAL, INTENT(IN) :: sic_alpha, sic_epsilon
 
           IF( PRESENT ( edft ) ) THEN
               WRITE( stdout,  * )
@@ -178,12 +180,18 @@
           END IF
           !
           IF( tsic ) THEN
-             WRITE( stdout, fmt = "('Sic contributes:')" )
-             WRITE( stdout, fmt = "('----------------')" )
-             WRITE( stdout, 14 ) self_ehte
-             WRITE( stdout, 15 ) self_sxc
-             WRITE( stdout, 16 ) vxc
-             WRITE( stdout, 17 ) self_vxc
+             !
+             IF( .NOT. PRESENT( sic_alpha ) .OR. .NOT. PRESENT( sic_epsilon ) ) &
+                CALL errore( ' print_energies ', ' sic without parameters? ', 1 )
+
+             WRITE( stdout, fmt = "('Sic contributes in Mauri&al. approach:')" )
+             WRITE( stdout, fmt = "('--------------------------------------')" )
+             !
+             !  qui e' da aggiungere i due parametetri alpha_si e si_epsilon che determinano "quanto"
+             !  correggo lo exc e hartree
+             !           
+             WRITE( stdout, 14 ) self_ehte, sic_epsilon
+             WRITE( stdout, 15 ) self_sxc, sic_alpha
           END IF
           !
 1         FORMAT(6X,'                total energy = ',F18.10,' Hartree a.u.')
@@ -199,10 +207,8 @@
 11        FORMAT(6X,' exchange-correlation energy = ',F18.10,' Hartree a.u.')
 12        FORMAT(6X,'        van der waals energy = ',F18.10,' Hartree a.u.')
 13        FORMAT(6X,'        emass kinetic energy = ',F18.10,' Hartree a.u.')
-14        FORMAT(6X,'            hartree sic_ehte = ',F18.10,' Hartree a.u.')
-15        FORMAT(6X,' sic exchange-correla energy = ',F18.10,' Hartree a.u.')
-16        FORMAT(6X,'     exchange-correla potent = ',F18.10,' Hartree a.u.')
-17        FORMAT(6X,' sic exchange-correla potent = ',F18.10,' Hartree a.u.')
+14        FORMAT(6X,'            hartree sic_ehte = ',F18.10,' Hartree a.u.', 1X, 'corr. factor = ',F6.3)
+15        FORMAT(6X,' sic exchange-correla energy = ',F18.10,' Hartree a.u.', 1X, 'corr. factor = ',F6.3)
 
   100 format(//'                total energy = ',f14.5,' Hartree a.u.'/ &
      &         '              kinetic energy = ',f14.5,' Hartree a.u.'/ &

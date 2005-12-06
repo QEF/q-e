@@ -136,8 +136,7 @@
       USE mp_global, ONLY: nproc, mpime, group
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b
       USE ions_base, ONLY: taui, cdmi, nat, nsp
-      USE sic_module, ONLY: nat_localisation, self_interaction, si_epsilon, rad_localisation, &
-                            ind_localisation, pos_localisation
+      USE sic_module, ONLY: self_interaction, nat_localisation
       USE ions_base, ONLY: if_pos, ind_srt, ions_thermal_stress
       USE constants, ONLY: au, au_ps
       USE electrons_base, ONLY: nupdwn, nbnd
