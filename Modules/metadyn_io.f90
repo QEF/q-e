@@ -16,9 +16,12 @@ MODULE metadyn_io
   USE kinds, ONLY : DP
   !
   USE iotk_module
-  USE xml_io_base
+  !
+  USE xml_io_base, ONLY : create_directory
   !
   IMPLICIT NONE
+  !
+  CHARACTER(iotk_attlenx) :: attr
   !
   PRIVATE
   !
@@ -29,32 +32,38 @@ MODULE metadyn_io
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_metadyn_restart( iter, tmp_dir, tau, energy, pos_unit )
+    SUBROUTINE write_metadyn_restart( dirname, iter, tau, energy, pos_unit )
       !------------------------------------------------------------------------
       !
       USE metadyn_vars,       ONLY : max_metadyn_iter, g_amplitude, &
                                      gaussian_pos, fe_grad, fe_step
       USE constraints_module, ONLY : nconstr, target
-      USE io_files,           ONLY : prefix
-      USE io_global,          ONLY : ionode
+      USE io_global,          ONLY : ionode, ionode_id
+      USE mp_global,          ONLY : MPIME
+      USE mp,                 ONLY : mp_bcast
       !
       IMPLICIT NONE
       !
+      CHARACTER(LEN=*), INTENT(IN) :: dirname
       INTEGER,          INTENT(IN) :: iter
-      CHARACTER(LEN=*), INTENT(IN) :: tmp_dir
       REAL(DP),         INTENT(IN) :: tau(:,:)
       REAL(DP),         INTENT(IN) :: energy
       REAL(DP),         INTENT(IN) :: pos_unit
       !
       INTEGER            :: i, ia
-      CHARACTER(LEN=256) :: filename, dirname
+      CHARACTER(LEN=256) :: filename, metadyn_dir
       INTEGER            :: iunit, ierr
       !
-      IF ( .NOT. ionode ) RETURN
       !
-      ! ... look for an empty unit
+      IF ( ionode ) THEN
+         !
+         ! ... look for an empty unit (only ionode needs it)
+         !
+         CALL iotk_free_unit( iunit, ierr )
+         !
+      END IF
       !
-      CALL iotk_free_unit( iunit, ierr )
+      CALL mp_bcast( ierr, ionode_id )
       !
       CALL errore( 'write_metadyn_restart', &
                    'no free units to write the restart file', ierr )
@@ -62,15 +71,17 @@ MODULE metadyn_io
       ! ... the restart information is written in a sub-directory of
       ! .. the 'save' directory
       !
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.new-save'
-      !
       CALL create_directory( dirname )
       !
-      dirname = TRIM( dirname ) // '/meta-dynamics'
+      metadyn_dir = TRIM( dirname ) // '/meta-dynamics'
       !
-      CALL create_directory( dirname )
+      CALL create_directory( metadyn_dir )
       !
-      filename = TRIM( dirname ) // '/' // "metadyn-descriptor.xml"
+      filename = TRIM( metadyn_dir ) // '/' // "metadyn-descriptor.xml"
+      !
+      ! ... only ionode writes the file
+      !
+      IF ( .NOT. ionode ) RETURN
       !
       ! ... descriptor file
       !
@@ -93,11 +104,9 @@ MODULE metadyn_io
       !
       CALL iotk_write_dat( iunit, "STEP", iter )
       !
-      
-      !
       DO i = 1, iter
          !
-         filename = TRIM( dirname ) // '/' // &
+         filename = TRIM( metadyn_dir ) // '/' // &
                   & 'iteration' // TRIM( iotk_index( i ) ) // '.xml'
          !
          CALL iotk_link( iunit, "ITERATION" // TRIM( iotk_index( i ) ), &
@@ -145,19 +154,18 @@ MODULE metadyn_io
     END SUBROUTINE write_metadyn_restart
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_metadyn_restart( tmp_dir, tau, pos_unit )
+    SUBROUTINE read_metadyn_restart( dirname, tau, pos_unit )
       !------------------------------------------------------------------------
       !
       USE metadyn_vars,       ONLY : g_amplitude, gaussian_pos, fe_grad, &
                                      metadyn_history, starting_metadyn_iter
       USE constraints_module, ONLY : nconstr, target
-      USE io_files,           ONLY : prefix
       USE io_global,          ONLY : ionode, ionode_id
       USE mp,                 ONLY : mp_bcast
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=*), INTENT(IN)  :: tmp_dir
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
       REAL(DP),         INTENT(OUT) :: tau(:,:)
       REAL(DP),         INTENT(IN)  :: pos_unit
       !
@@ -176,7 +184,7 @@ MODULE metadyn_io
          CALL errore( 'read_metadyn_restart', &
                       'no free units to read the restart file', ierr )
          !
-         filename = TRIM( tmp_dir ) // TRIM( prefix ) // '.new-save' // &
+         filename = TRIM( dirname ) // &
                   & '/meta-dynamics' // '/' // "metadyn-descriptor.xml"
          !
          ! ... descriptor file

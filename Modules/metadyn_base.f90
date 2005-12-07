@@ -124,10 +124,14 @@ MODULE metadyn_base
          !
          CALL read_metadyn_restart( tmp_dir, tau, alat )
          !
-         OPEN( UNIT = iunaxsf, FILE = TRIM( prefix ) // ".axsf", &
-               STATUS = 'UNKNOWN', ACTION = 'WRITE', POSITION = 'APPEND' )
-         OPEN( UNIT = iunmeta, FILE = TRIM( prefix ) // '.metadyn', &
-               STATUS = 'UNKNOWN', ACTION = 'WRITE', POSITION = 'APPEND' )
+         IF ( ionode ) THEN
+            !
+            OPEN( UNIT = iunaxsf, FILE = TRIM( prefix ) // ".axsf", &
+                  STATUS = 'UNKNOWN', ACTION = 'WRITE', POSITION = 'APPEND' )
+            OPEN( UNIT = iunmeta, FILE = TRIM( prefix ) // '.metadyn', &
+                  STATUS = 'UNKNOWN', ACTION = 'WRITE', POSITION = 'APPEND' )
+            !
+         END IF
          !
       END IF
       !

@@ -418,7 +418,7 @@ SUBROUTINE metadyn()
   USE ener,               ONLY : etot
   USE ions_base,          ONLY : tau
   USE cell_base,          ONLY : alat
-  USE io_files,           ONLY : tmp_dir, iunaxsf, iunmeta
+  USE io_files,           ONLY : iunaxsf, iunmeta, prefix, tmp_dir
   USE metadyn_vars,       ONLY : fe_grad, new_target, to_target, metadyn_fmt, &
                                  to_new_target, fe_step, metadyn_history, &
                                  max_metadyn_iter, starting_metadyn_iter, &
@@ -430,10 +430,13 @@ SUBROUTINE metadyn()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: iter, i
-  REAL(DP) :: norm_fe_grad
-  LOGICAL  :: lfirst_scf = .TRUE.
+  CHARACTER(LEN=256) :: dirname
+  INTEGER            :: iter, i
+  REAL(DP)           :: norm_fe_grad
+  LOGICAL            :: lfirst_scf = .TRUE.
   !
+  !
+  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.new-save'
   !
   iter = starting_metadyn_iter
   !
@@ -474,9 +477,9 @@ SUBROUTINE metadyn()
         CALL flush_unit( iunmeta )
         CALL flush_unit( iunaxsf )
         !
-        CALL write_metadyn_restart( iter, tmp_dir, tau, etot, alat )
-        !
      END IF
+     !
+     CALL write_metadyn_restart( dirname,iter, tau, etot, alat )
      !
      IF ( iter >= max_metadyn_iter ) EXIT metadyn_loop
      !

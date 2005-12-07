@@ -316,7 +316,7 @@ SUBROUTINE metadyn()
   USE constraints_module, ONLY : nconstr, target, lagrange
   USE cp_main_variables,  ONLY : nfi
   USE control_flags,      ONLY : program_name, nomore, ldamped, tconvthrs, &
-                                 trane, ampre, nbeg, tfor, taurdr, ndr
+                                 trane, ampre, nbeg, tfor, taurdr, ndr, ndw
   USE cg_module,          ONLY : tcg
   USE ions_base,          ONLY : nat, nsp, ityp, if_pos, &
                                  sort_tau, tau_srt, ind_srt
@@ -329,17 +329,20 @@ SUBROUTINE metadyn()
   USE metadyn_base,       ONLY : add_gaussians, evolve_collective_vars
   USE metadyn_io,         ONLY : write_axsf_file, write_metadyn_restart
   USE io_global,          ONLY : ionode
-  USE xml_io_base,        ONLY : check_restartfile
+  USE xml_io_base,        ONLY : restart_dir, check_restartfile
   USE basic_algebra_routines
   !
   IMPLICIT NONE
   !
+  CHARACTER(LEN=256)    :: dirname
   INTEGER               :: iter, i
   REAL(DP), ALLOCATABLE :: tau(:,:)
   REAL(DP), ALLOCATABLE :: fion(:,:)
   REAL(DP)              :: etot, norm_fe_grad
   LOGICAL               :: do_first_scf
   !
+  !
+  dirname = restart_dir( scradir, ndw )
   !
   ALLOCATE( tau( 3, nat ), fion( 3, nat ) )
   !
@@ -453,9 +456,9 @@ SUBROUTINE metadyn()
         CALL flush_unit( iunmeta )
         CALL flush_unit( iunaxsf )
         !
-        CALL write_metadyn_restart( iter, scradir, tau, etot, 1.D0 )
-        !
      END IF
+     !
+     CALL write_metadyn_restart( dirname, iter, tau, etot, 1.D0 )
      !
      IF ( iter >= max_metadyn_iter ) EXIT metadyn_loop
      !
