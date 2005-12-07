@@ -31,7 +31,7 @@ SUBROUTINE punch()
   LOGICAL :: exst
   !
   !
-  WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A16)' ) &
+  WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
        TRIM( prefix ) // '.save'
   !
   kunittmp = 1

@@ -272,7 +272,6 @@ MODULES = \
 ../Modules/cell_base.o \
 ../Modules/check_stop.o \
 ../Modules/clocks.o \
-../Modules/coarsegrained_vars.o \
 ../Modules/constants.o \
 ../Modules/constraints_module.o \
 ../Modules/control_flags.o \
@@ -291,6 +290,9 @@ MODULES = \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
+../Modules/metadyn_base.o \
+../Modules/metadyn_io.o \
+../Modules/metadyn_vars.o \
 ../Modules/path_base.o \
 ../Modules/path_formats.o \
 ../Modules/path_variables.o \

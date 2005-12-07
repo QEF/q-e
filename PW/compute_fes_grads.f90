@@ -16,7 +16,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE input_parameters,   ONLY : startingwfc, startingpot, diago_thr_init
   USE basis,              ONLY : startingwfc_ => startingwfc, &
                                  startingpot_ => startingpot
-  USE coarsegrained_vars, ONLY : new_target, to_target, to_new_target, &
+  USE metadyn_vars,       ONLY : new_target, to_target, to_new_target, &
                                  dfe_acc, shake_nstep, fe_nstep
   USE path_variables,     ONLY : pos, pes, grad_pes, frozen, &
                                  num_of_images, istep_path, suspended_image
@@ -43,7 +43,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE check_stop,         ONLY : check_stop_now
   USE path_io_routines,   ONLY : new_image_init, get_new_image, &
                                  stop_other_images  
-  USE coarsegrained_base, ONLY : write_axsf_file
+  USE metadyn_io,         ONLY : write_axsf_file
   !
   IMPLICIT NONE
   !
@@ -350,7 +350,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
         END IF
         !
-        IF ( ionode ) CALL write_axsf_file( image )
+        IF ( ionode ) CALL write_axsf_file( image, tau, alat )
         !
         ! ... the restart file is written here
         !
@@ -416,13 +416,15 @@ SUBROUTINE metadyn()
   USE constants,          ONLY : eps8
   USE constraints_module, ONLY : nconstr, target
   USE ener,               ONLY : etot
-  USE io_files,           ONLY : iunaxsf, iunmeta
-  USE coarsegrained_vars, ONLY : fe_grad, new_target, to_target, metadyn_fmt, &
+  USE ions_base,          ONLY : tau
+  USE cell_base,          ONLY : alat
+  USE io_files,           ONLY : tmp_dir, iunaxsf, iunmeta
+  USE metadyn_vars,       ONLY : fe_grad, new_target, to_target, metadyn_fmt, &
                                  to_new_target, fe_step, metadyn_history, &
                                  max_metadyn_iter, starting_metadyn_iter, &
-                                 gaussian_add, gaussian_add_iter
-  USE coarsegrained_base, ONLY : add_gaussians, evolve_collective_vars, &
-                                 write_axsf_file
+                                 gaussian_pos
+  USE metadyn_base,       ONLY : add_gaussians, evolve_collective_vars
+  USE metadyn_io,         ONLY : write_axsf_file, write_metadyn_restart
   USE io_global,          ONLY : ionode, stdout
   USE basic_algebra_routines
   !
@@ -431,8 +433,6 @@ SUBROUTINE metadyn()
   INTEGER  :: iter, i
   REAL(DP) :: norm_fe_grad
   LOGICAL  :: lfirst_scf = .TRUE.
-  !
-  REAL(DP), EXTERNAL :: rndm
   !
   !
   iter = starting_metadyn_iter
@@ -444,23 +444,6 @@ SUBROUTINE metadyn()
         CALL add_gaussians( iter )
         !
         norm_fe_grad = norm( fe_grad )
-        !
-        IF ( norm_fe_grad < eps8 ) THEN
-           !
-           ! ... use a random perturbation (just in case we start very close
-           ! ... to the minimum)
-           !
-           WRITE( iunmeta, '("random step")' )
-           !
-           DO i = 1, nconstr
-              !
-              fe_grad(:) = rndm()
-              !
-           END DO
-           !
-           norm_fe_grad = norm( fe_grad )
-           !
-        END IF
         !
         CALL evolve_collective_vars( norm_fe_grad )
         !
@@ -475,11 +458,9 @@ SUBROUTINE metadyn()
      !
      iter = iter + 1
      !
-     metadyn_history(:,iter) = target(:)
+     metadyn_history(:,iter) = gaussian_pos(:)
      !
-     gaussian_add(iter) = ( MOD( iter - 1, gaussian_add_iter ) == 0 )
-     !
-     IF ( ionode ) CALL write_axsf_file( iter )
+     IF ( ionode ) CALL write_axsf_file( iter, tau, alat )
      !
      WRITE( stdout, '(/,5X,"calculation of the potential of mean force",/)' )
      !
@@ -487,13 +468,15 @@ SUBROUTINE metadyn()
      !
      IF ( ionode ) THEN
         !
-        WRITE( iunmeta, metadyn_fmt ) &
-            iter, target(:), etot, fe_grad(:), gaussian_add(iter)
+        WRITE( UNIT = iunmeta, FMT = metadyn_fmt ) &
+            iter, target(:), etot, gaussian_pos(:), fe_grad(:)
+        !
+        CALL flush_unit( iunmeta )
+        CALL flush_unit( iunaxsf )
+        !
+        CALL write_metadyn_restart( iter, tmp_dir, tau, etot, alat )
         !
      END IF
-     !
-     IF ( ionode ) CALL flush_unit( iunmeta )
-     IF ( ionode ) CALL flush_unit( iunaxsf )
      !
      IF ( iter >= max_metadyn_iter ) EXIT metadyn_loop
      !
@@ -501,7 +484,7 @@ SUBROUTINE metadyn()
   !
   IF ( ionode ) THEN
      !
-     CALL write_axsf_file( iter )
+     CALL write_axsf_file( iter, tau, alat )
      !
      CLOSE( UNIT = iunaxsf )
      CLOSE( UNIT = iunmeta )
@@ -518,7 +501,7 @@ SUBROUTINE metadyn()
       !
       USE constants,          ONLY : e2
       USE control_flags,      ONLY : istep, ldamped, conv_ions, nstep
-      USE coarsegrained_vars, ONLY : fe_nstep, dfe_acc
+      USE metadyn_vars,       ONLY : fe_nstep, dfe_acc
       USE constraints_module, ONLY : lagrange
       USE io_files,           ONLY : tmp_dir, prefix
       USE parser,             ONLY : delete_if_present
@@ -579,10 +562,10 @@ SUBROUTINE metadyn()
     SUBROUTINE move_to_target( lfirst_scf )
       !------------------------------------------------------------------------
       !
-      USE coarsegrained_vars, ONLY : shake_nstep
-      USE control_flags,      ONLY : istep, ldamped, nstep
-      USE io_files,           ONLY : tmp_dir, prefix
-      USE parser,             ONLY : delete_if_present
+      USE metadyn_vars,  ONLY : shake_nstep
+      USE control_flags, ONLY : istep, ldamped, nstep
+      USE io_files,      ONLY : tmp_dir, prefix
+      USE parser,        ONLY : delete_if_present
       !
       LOGICAL, INTENT(INOUT) :: lfirst_scf
       !

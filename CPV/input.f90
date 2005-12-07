@@ -251,13 +251,6 @@ MODULE input
      USE cp_electronic_mass, ONLY : emass_ => emass, &
                                     emaec_ => emass_cutoff
      !
-     USE coarsegrained_vars, ONLY : fe_nstep_    => fe_nstep, &
-                                    shake_nstep_ => shake_nstep, &
-                                    fe_step_     => fe_step, &
-                                    g_amplitude_ => g_amplitude, &
-                                    g_sigma_     => g_sigma
-     !
-
      USE efield_module, ONLY:  tefield_    => tefield,  &
                                epol_       => epol,     &
                                efield_     => efield
@@ -881,21 +874,21 @@ MODULE input
            nr1s_ => nr1s, &
            nr2s_ => nr2s, &
            nr3s_ => nr3s
-     USE brillouin,                ONLY : kpoint_setup
-     USE optical_properties,       ONLY : optical_setup
-     USE guess,                    ONLY : guess_setup
-     USE empty_states,             ONLY : empty_init
-     USE diis,                     ONLY : diis_setup
-     USE charge_mix,               ONLY : charge_mix_setup
-     USE potentials,               ONLY : potential_init
-     USE kohn_sham_states,         ONLY : ks_states_init
-     USE electrons_module,         ONLY : electrons_setup
-     USE electrons_base,           ONLY : electrons_base_initval
-     USE ensemble_dft,             ONLY : ensemble_initval,tens
-     USE wannier_base,             ONLY : wannier_init
-     USE constraints_module,       ONLY : init_constraint
-     USE coarsegrained_vars,       ONLY : init_coarsegrained_vars
-     USE efield_module,            ONLY: tefield
+     USE brillouin,          ONLY : kpoint_setup
+     USE optical_properties, ONLY : optical_setup
+     USE guess,              ONLY : guess_setup
+     USE empty_states,       ONLY : empty_init
+     USE diis,               ONLY : diis_setup
+     USE charge_mix,         ONLY : charge_mix_setup
+     USE potentials,         ONLY : potential_init
+     USE kohn_sham_states,   ONLY : ks_states_init
+     USE electrons_module,   ONLY : electrons_setup
+     USE electrons_base,     ONLY : electrons_base_initval
+     USE ensemble_dft,       ONLY : ensemble_initval,tens
+     USE wannier_base,       ONLY : wannier_init
+     USE constraints_module, ONLY : init_constraint
+     USE metadyn_vars,       ONLY : init_metadyn_vars
+     USE efield_module,      ONLY: tefield
      !
      !
      IMPLICIT NONE
@@ -1034,7 +1027,7 @@ MODULE input
      !
      IF ( lconstrain ) CALL init_constraint( nat, tau, 1.D0, ityp )
      !
-     IF ( lcoarsegrained ) CALL init_coarsegrained_vars()
+     IF ( lcoarsegrained ) CALL init_metadyn_vars()
      !
      IF( program_name == 'FPMD' ) THEN
         !

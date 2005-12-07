@@ -601,20 +601,18 @@ free_energy    LOGICAL ( default = .FALSE. )
                finite-temperature string dynamics.
 
 !
-! ... eywords used only in meta-dynamics calculations
+! ... keywords used only in meta-dynamics calculations
 !
 
 fe_step(i)     REAL ( default = 0.04 )
-               meta-dinamics step length (in principle different for each
+               meta-dynamics step length (in principle different for each
                collective variable), defined using the same units used 
-               to define the colletive variables (constraints).
+               to define the colletive variables themselves (constraints).
+               The step also defines the spread of the Gaussian-like bias
+               potential.
 
 g_amplitude    REAL ( default = 0.005 Hartree )
-               Amplitude of the gaussians used in meta-dinamics.
-
-g_sigma        REAL ( default = 0.04 )
-               Spread  of the gaussians used in meta-dinamics, defined using the
-               same units used to define the colletive variables (constraints).
+               Amplitude of the gaussians used in meta-dynamics.
 
 fe_nstep       INTEGER ( default = 100 )
                Maximum number of steps used to evaluate the potential of

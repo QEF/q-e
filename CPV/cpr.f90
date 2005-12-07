@@ -117,7 +117,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                                        rhor, rhopr, bephi, becp, nfi
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
-  USE coarsegrained_vars,       ONLY : dfe_acc
+  USE metadyn_vars,             ONLY : dfe_acc
   USE cell_base,                ONLY : s_to_r, r_to_s
   USE phase_factors_module,     ONLY : strucf
   USE cpr_subroutines,          ONLY : print_lambda, print_atomic_var, &
@@ -126,8 +126,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                                        ef_enthalpy
   USE restart_file,             ONLY : readfile, writefile
   USE constraints_module,       ONLY : check_constraint, lagrange, &
-                                       remove_constraint_force
-  USE coarsegrained_base,       ONLY : set_target
+                                       remove_constr_force
+  USE metadyn_base,             ONLY : set_target
   USE autopilot,                ONLY : pilot
   USE ions_nose,                ONLY : ions_nose_allocate, ions_nose_shiftvar
   !
@@ -315,8 +315,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            ! ... constrain gradient (this constitutes the initial guess 
            ! ... for the lagrange multiplier)
            !
-           CALL remove_constraint_force( nat, tau0, &
-                                         iforce, ityp, 1.D0, fion(:3,:nat) )
+           CALL remove_constr_force( nat, tau0, &
+                                     iforce, ityp, 1.D0, fion(:3,:nat) )
            !
         END IF
         !

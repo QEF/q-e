@@ -11,19 +11,19 @@ PROGRAM pwscf
   !
   ! ... Plane Wave Self-Consistent Field code 
   !
-  USE io_global,          ONLY : stdout
-  USE parameters,         ONLY : ntypx, npk, lmaxx, nchix, ndmx, nqfx, nbrx
-  USE global_version,     ONLY : version_number
-  USE wvfct,              ONLY : gamma_only
-  USE noncollin_module,   ONLY : noncolin
-  USE control_flags,      ONLY : nstep, istep, conv_elec, conv_ions, &
-                                 lpath, lmetadyn
-  USE io_files,           ONLY : nd_nmbr, iunpath, tmp_dir
-  USE path_variables,     ONLY : conv_path
-  USE path_base,          ONLY : initialize_path, search_mep
-  USE coarsegrained_base, ONLY : metadyn_init
-  USE path_io_routines,   ONLY : io_path_start, io_path_stop
-  USE io_global,          ONLY : ionode
+  USE io_global,        ONLY : stdout, ionode
+  USE parameters,       ONLY : ntypx, npk, lmaxx, nchix, ndmx, nqfx, nbrx
+  USE global_version,   ONLY : version_number
+  USE wvfct,            ONLY : gamma_only
+  USE noncollin_module, ONLY : noncolin
+  USE control_flags,    ONLY : nstep, istep, conv_elec, conv_ions, &
+                               lpath, lmetadyn
+  USE io_files,         ONLY : nd_nmbr, iunpath, tmp_dir
+  USE ions_base,        ONLY : tau
+  USE path_variables,   ONLY : conv_path
+  USE path_base,        ONLY : initialize_path, search_mep
+  USE metadyn_base,     ONLY : metadyn_init
+  USE path_io_routines, ONLY : io_path_start, io_path_stop
   !
   IMPLICIT NONE
   !
@@ -90,7 +90,7 @@ PROGRAM pwscf
         !
         ! ... meta-dynamics
         !
-        CALL metadyn_init()
+        CALL metadyn_init( tau )
         !
         CALL metadyn()
         !

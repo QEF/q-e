@@ -35,8 +35,8 @@ SUBROUTINE move_ions()
   USE relax,                  ONLY : epse, epsf, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
   USE constraints_module,     ONLY : lagrange
-  USE coarsegrained_vars,     ONLY : dfe_acc
-  USE coarsegrained_base,     ONLY : set_target
+  USE metadyn_vars,           ONLY : dfe_acc
+  USE metadyn_base,           ONLY : set_target
   USE mp_global,              ONLY : intra_image_comm
   USE io_global,              ONLY : ionode_id, ionode
   USE mp,                     ONLY : mp_bcast

@@ -1156,10 +1156,9 @@ MODULE input_parameters
         ! ... variable for meta-dynamics
         !
         
-        INTEGER  :: fe_nstep     = 50
-        INTEGER  :: shake_nstep  = 5
-        REAL(DP) :: g_amplitude  = 0.01D0
-        REAL(DP) :: g_sigma      = 0.4D0
+        INTEGER  :: fe_nstep    = 50
+        INTEGER  :: shake_nstep = 5
+        REAL(DP) :: g_amplitude = 0.01D0
         !
         REAL(DP) :: fe_step( max_nconstr ) = 0.4D0
         !
@@ -1179,7 +1178,7 @@ MODULE input_parameters
                           smd_stcd2, smd_stcd3, smd_codf, smd_forf, smd_smwf,  &
                           smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, smd_smopt, &
                           smd_smlm, smd_ene_ini, smd_ene_fin,                  &
-                          fe_step, fe_nstep, shake_nstep, g_amplitude, g_sigma
+                          fe_step, fe_nstep, shake_nstep, g_amplitude
 
 !=----------------------------------------------------------------------------=!
 !  CELL Namelist Input Parameters

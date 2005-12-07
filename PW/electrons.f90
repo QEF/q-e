@@ -64,8 +64,8 @@ SUBROUTINE electrons()
   ! ... a few local variables
   !  
 #if defined (EXX)
-  REAL (DP) :: dexx
-  REAL (DP) :: fock0,  fock1,  fock2
+  REAL(DP) :: dexx
+  REAL(DP) :: fock0,  fock1,  fock2
 #endif
   INTEGER :: &
       ngkp(npk)        !  number of plane waves summed on all nodes
@@ -88,11 +88,11 @@ SUBROUTINE electrons()
       ik_              !  used to read ik from restart file
   INTEGER :: &
       ldim2           !
-  REAL (DP) :: &
+  REAL(DP) :: &
        tr2_min,      &! estimated error on energy coming from diagonalization
        descf          ! correction for variational energy
 
-  REAL (DP), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
       wg_g(:,:)        ! temporary array used to collect array wg from pools
                        ! and then print occupations on stdout
   LOGICAL :: &
@@ -100,18 +100,18 @@ SUBROUTINE electrons()
   !
   ! ... external functions
   !
-  REAL (DP), EXTERNAL :: ewald, get_clock
+  REAL(DP), EXTERNAL :: ewald, get_clock
   !
   ! ... auxiliary variables for calculating and storing rho in G-space
   !
-  COMPLEX (DP), ALLOCATABLE :: rhog(:,:)
-  COMPLEX (DP), ALLOCATABLE :: rhognew(:,:)
-  REAL (DP), ALLOCATABLE :: rhonew(:,:)
+  COMPLEX(DP), ALLOCATABLE :: rhog(:,:)
+  COMPLEX(DP), ALLOCATABLE :: rhognew(:,:)
+  REAL(DP),    ALLOCATABLE :: rhonew(:,:)
   !
   ! ... variables needed for electric field calculation
   !
   COMPLEX(DP), ALLOCATABLE  :: psi(:,:)
-  INTEGER inberry
+  INTEGER                   :: inberry
   !
   !
   CALL start_clock( 'electrons' )
@@ -436,8 +436,7 @@ SUBROUTINE electrons()
      !
      CALL flush_unit( stdout )
      !
-     IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. &
-          ( .NOT. lmd ) ) THEN
+     IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
         !
 #if defined (__PARA)
         !
@@ -486,75 +485,82 @@ SUBROUTINE electrons()
            !
         END DO
         !
-        IF ( lgauss .OR. ltetra ) then
-           IF (two_fermi_energies) then
+        IF ( lgauss .OR. ltetra ) THEN
+           IF ( two_fermi_energies ) THEN
               WRITE( stdout, 9041 ) ef_up * rytoev, ef_dw * rytoev
            ELSE
               WRITE( stdout, 9040 ) ef * rytoev
            END IF
-       ELSE
-          !
-          IF ( nspin == 1 ) THEN
-             ibnd =  nint (nelec) / 2.d0
-          ELSE
-             ibnd =  nint (nelec)
-          END IF
-          !
-          IF ( ionode .AND. nbnd > ibnd ) THEN
-             !
-             ehomo = MAXVAL ( et( ibnd  , 1:nkstot) )
-             elumo = MINVAL ( et( ibnd+1, 1:nkstot) )
-             !
-             WRITE( stdout, 9042 ) ehomo * rytoev, elumo * rytoev
-             !
-          END IF
-       END IF
+        ELSE
+           !
+           IF ( nspin == 1 ) THEN
+              ibnd =  NINT( nelec ) / 2.D0
+           ELSE
+              ibnd =  NINT( nelec )
+           END IF
+           !
+           IF ( ionode .AND. nbnd > ibnd ) THEN
+              !
+              ehomo = MAXVAL ( et( ibnd  , 1:nkstot) )
+              elumo = MINVAL ( et( ibnd+1, 1:nkstot) )
+              !
+              WRITE( stdout, 9042 ) ehomo * rytoev, elumo * rytoev
+              !
+           END IF
+        END IF
         !
      END IF
      !
      IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
         WRITE( stdout, 9050 ) charge, nelec
         IF ( ABS( charge - nelec ) / charge > 1.D-3 ) &
-           CALL errore ('electrons','charge is wrong',1)
+           CALL errore( 'electrons', 'charge is wrong', 1 )
      END IF
      !
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
-#if defined (EXX)
-
-     etot = etot - 0.5d0 * fock0
-
-#endif
      !
 #if defined (EXX)
-     if (dft_is_hybrid() .and. conv_elec ) then
-
-        first = .not. exx_is_active()
-
+     !
+     etot = etot - 0.5d0 * fock0
+     !
+     IF ( dft_is_hybrid() .AND. conv_elec ) THEN
+        !
+        first = .NOT. exx_is_active()
+        !
         CALL exxinit()
-
-        if (first) then
+        !
+        IF ( first ) THEN
+           !
            fock0 = exxenergy2()
+           !
            CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                     nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                     ehart, etxc, vtxc, etotefield, charge, vr )
+                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                          ehart, etxc, vtxc, etotefield, charge, vr )
+           !
            CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
-           write (*,*) " NOW GO BACK TO REFINE HYBRID CALCULATION"
-           write (*,*) fock0
+           !
+           WRITE (*,*) " NOW GO BACK TO REFINE HYBRID CALCULATION"
+           WRITE (*,*) fock0
+           !
            iter = 0
-           go to 10
-        end if
+           !
+           GO TO 10
+           !
+        END IF
+        !
         fock2 = exxenergy2()
         !
-        dexx = fock1 - 0.5d0 * ( fock0 + fock2 )
-
+        dexx = fock1 - 0.5D0 * ( fock0 + fock2 )
+        !
         etot = etot  - dexx
-
-        write (*,*) fock0,fock1,fock2
+        !
+        WRITE(*,*) fock0, fock1, fock2
         WRITE( stdout, 9066 ) dexx
-
+        !
         fock0 = fock2
         !
-     end if
+     END IF
+     !
 #endif
      !
      IF ( lda_plus_u ) etot = etot + eth
@@ -617,13 +623,18 @@ SUBROUTINE electrons()
      CALL flush_unit( stdout )
      !
      IF ( conv_elec ) THEN
-
+        !
 #if defined (EXX)
-        if (dft_is_hybrid() .and. dexx > tr2 ) then
-           write (*,*) " NOW GO BACK TO REFINE HYBRID CALCULATION"
+        !
+        IF ( dft_is_hybrid() .AND. dexx > tr2 ) THEN
+           !
+           WRITE (*,*) " NOW GO BACK TO REFINE HYBRID CALCULATION"
+           !
            iter = 0
-           go to 10
-        end if
+           !
+           GO TO 10
+           !
+        END IF
 #endif
         !
         WRITE( stdout, 9110 )
@@ -713,7 +724,7 @@ SUBROUTINE electrons()
        !
        IMPLICIT NONE
        !
-       REAL (DP), EXTERNAL :: efermit, efermig
+       REAL(DP), EXTERNAL :: efermit, efermig
        !
        !
        WRITE( stdout, 9002 )
@@ -724,20 +735,30 @@ SUBROUTINE electrons()
        !
        ! ... diagonalization of the KS hamiltonian
        !
-       if(lelfield) then
-          do inberry=1,nberrycyc
-            ALLOCATE (psi(npwx,nbnd))
-            do ik=1,nks
-               call davcio(psi,nwordwfc,iunwfc,ik,-1)
-               call davcio(psi,nwordwfc,iunefield,ik,1)
-             enddo
-             DEALLOCATE(psi)
-            CALL c_bands( iter, ik_, dr2 )
-          enddo
-        else
+       IF ( lelfield ) THEN
+          !
+          DO inberry = 1, nberrycyc
+             !
+             ALLOCATE( psi( npwx, nbnd ) )
+             !
+             DO ik=1,nks
+                !
+                CALL davcio( psi, nwordwfc, iunwfc,    ik, -1 )
+                CALL davcio( psi, nwordwfc, iunefield, ik,  1 )
+                !
+             END DO
+             !
+             DEALLOCATE( psi )
+             !
+             CALL c_bands( iter, ik_, dr2 )
+             !
+          END DO
+          !
+       ELSE
+          !
           CALL c_bands( iter, ik_, dr2 )
-        endif
-
+          !
+       END IF
        !
        conv_elec = .TRUE.
        !

@@ -15,7 +15,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE control_flags,      ONLY : program_name, nomore, ldamped, &
                                  trane, ampre, nbeg, tfor, taurdr, ndr
   USE cg_module,          ONLY : tcg
-  USE coarsegrained_vars, ONLY : new_target, to_target, dfe_acc, &
+  USE metadyn_vars,       ONLY : new_target, to_target, dfe_acc, &
                                  shake_nstep, fe_nstep, to_new_target
   USE path_variables,     ONLY : pos, pes, grad_pes, frozen, &
                                  num_of_images, istep_path, suspended_image
@@ -39,7 +39,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE xml_io_base,        ONLY : check_restartfile
   USE path_io_routines,   ONLY : new_image_init, get_new_image, &
                                  stop_other_images
-  USE coarsegrained_base, ONLY : write_axsf_file
+  USE metadyn_io,         ONLY : write_axsf_file
   !
   IMPLICIT NONE
   !
@@ -269,7 +269,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
         END IF
         !
-        IF ( ionode ) CALL write_axsf_file( image )
+        IF ( ionode ) CALL write_axsf_file( image, tau, 1.D0 )
         !
         ! ... the restart file is written here
         !
@@ -322,13 +322,12 @@ SUBROUTINE metadyn()
                                  sort_tau, tau_srt, ind_srt
   USE io_global,          ONLY : stdout
   USE io_files,           ONLY : iunmeta, iunaxsf, scradir
-  USE coarsegrained_vars, ONLY : fe_grad, new_target, to_target, metadyn_fmt,  &
+  USE metadyn_vars,       ONLY : fe_grad, new_target, to_target, metadyn_fmt,  &
                                  to_new_target, fe_step, metadyn_history,      &
                                  max_metadyn_iter, starting_metadyn_iter,      &
-                                 fe_nstep, shake_nstep, dfe_acc, gaussian_add, &
-                                 gaussian_add_iter
-  USE coarsegrained_base, ONLY : add_gaussians, evolve_collective_vars, &
-                                 write_axsf_file
+                                 fe_nstep, shake_nstep, dfe_acc, gaussian_pos
+  USE metadyn_base,       ONLY : add_gaussians, evolve_collective_vars
+  USE metadyn_io,         ONLY : write_axsf_file, write_metadyn_restart
   USE io_global,          ONLY : ionode
   USE xml_io_base,        ONLY : check_restartfile
   USE basic_algebra_routines
@@ -339,42 +338,46 @@ SUBROUTINE metadyn()
   REAL(DP), ALLOCATABLE :: tau(:,:)
   REAL(DP), ALLOCATABLE :: fion(:,:)
   REAL(DP)              :: etot, norm_fe_grad
-  !
-  REAL(DP), EXTERNAL :: rndm
+  LOGICAL               :: do_first_scf
   !
   !
   ALLOCATE( tau( 3, nat ), fion( 3, nat ) )
-  !
-  ! ... first the wfc are taken to the ground state
   !
   taurdr = .TRUE.
   nfi    = 0
   tfor   = .FALSE.
   !
-  IF ( check_restartfile( scradir, ndr ) ) THEN
+  IF ( nbeg == - 1 ) THEN
      !
-     WRITE( stdout, '(/,2X,"restarting calling readfile",/)' )
+     WRITE( stdout, '(/,3X,"restarting from scratch",/)' )
      !
-     nbeg   = 0
-     nomore = 100
+     do_first_scf = .TRUE.
      !
-  ELSE
-     !
-     WRITE( stdout, '(/,2X,"restarting from scratch",/)' )
-     !
-     nbeg   = -1
      nomore = 500
      trane  = .TRUE.
      ampre  = 0.02D0
      !
+  ELSE IF ( check_restartfile( scradir, ndr ) ) THEN
+     !
+     WRITE( stdout, '(/,3X,"restarting calling readfile",/)' )
+     !
+     do_first_scf = .FALSE.
+     !
+     nbeg = 0
+     !
   END IF
   !
   CALL init_run()
-  !
-  CALL cprmain( tau, fion, etot )
+  !  
+  IF ( do_first_scf ) THEN
+     !
+     ! ... the wfc's are taken to the ground state
+     !
+     CALL cprmain( tau, fion, etot )
+     !
+  END IF
   !
   tfor = .TRUE.
-  !
   iter = starting_metadyn_iter
   !
   metadyn_loop: DO
@@ -384,23 +387,6 @@ SUBROUTINE metadyn()
         CALL add_gaussians( iter )
         !
         norm_fe_grad = norm( fe_grad )
-        !
-        IF ( norm_fe_grad < eps8 ) THEN
-           !
-           ! ... use a random perturbation (just in case we start very close
-           ! ... to the minimum)
-           !
-           WRITE( iunmeta, '("random step")' )
-           !
-           DO i = 1, nconstr
-              !
-              fe_grad(:) = rndm()
-              !
-           END DO
-           !
-           norm_fe_grad = norm( fe_grad )
-           !
-        END IF
         !
         CALL evolve_collective_vars( norm_fe_grad )
         !
@@ -413,6 +399,8 @@ SUBROUTINE metadyn()
         !
         to_new_target = .TRUE.
         !
+        CALL reset_vel()
+        !
         WRITE( stdout, '(/,5X,"adiabatic switch of the system ", &
                             & "to the new coarse-grained positions",/)' )
         !
@@ -422,11 +410,9 @@ SUBROUTINE metadyn()
      !
      iter = iter + 1
      !
-     metadyn_history(:,iter) = target(:)
+     metadyn_history(:,iter) = gaussian_pos(:)
      !
-     gaussian_add(iter) = ( MOD( iter - 1, gaussian_add_iter ) == 0 )
-     !
-     IF ( ionode ) CALL write_axsf_file( iter )
+     IF ( ionode ) CALL write_axsf_file( iter, tau, 1.D0 )
      !
      nfi    = 0
      nomore = fe_nstep
@@ -461,13 +447,15 @@ SUBROUTINE metadyn()
      !
      IF ( ionode ) THEN
         !
-        WRITE( iunmeta, metadyn_fmt ) &
-            iter, target(:), etot, fe_grad(:), gaussian_add(iter)
+        WRITE( UNIT = iunmeta, FMT = metadyn_fmt ) &
+            iter, target(:), etot, gaussian_pos(:), fe_grad(:)
+        !
+        CALL flush_unit( iunmeta )
+        CALL flush_unit( iunaxsf )
+        !
+        CALL write_metadyn_restart( iter, scradir, tau, etot, 1.D0 )
         !
      END IF
-     !
-     IF ( ionode ) CALL flush_unit( iunmeta )
-     IF ( ionode ) CALL flush_unit( iunaxsf )
      !
      IF ( iter >= max_metadyn_iter ) EXIT metadyn_loop
      !
@@ -475,7 +463,7 @@ SUBROUTINE metadyn()
   !
   IF ( ionode ) THEN
      !
-     CALL write_axsf_file( iter )
+     CALL write_axsf_file( iter, tau, 1.D0 )
      !
      CLOSE( UNIT = iunaxsf )
      CLOSE( UNIT = iunmeta )

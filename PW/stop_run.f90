@@ -21,7 +21,7 @@ SUBROUTINE stop_run( flag )
   USE path_variables,     ONLY : path_deallocation
   USE path_io_routines,   ONLY : io_path_stop
   USE constraints_module, ONLY : deallocate_constraint
-  USE coarsegrained_vars, ONLY : deallocate_coarsegrained_vars
+  USE metadyn_vars,       ONLY : deallocate_metadyn_vars
   USE mp,                 ONLY : mp_barrier, mp_end
   USE bp,                 ONLY : lelfield
   !
@@ -93,7 +93,7 @@ SUBROUTINE stop_run( flag )
   !
   IF ( lconstrain ) CALL deallocate_constraint()
   !
-  IF ( lcoarsegrained ) CALL deallocate_coarsegrained_vars()
+  IF ( lcoarsegrained ) CALL deallocate_metadyn_vars()
   !
   IF ( lneb ) THEN
      !
@@ -116,7 +116,6 @@ SUBROUTINE stop_run( flag )
   END IF
   !
 END SUBROUTINE stop_run
-!
 !
 !----------------------------------------------------------------------------
 SUBROUTINE closefile()

@@ -248,7 +248,7 @@ SUBROUTINE iosys()
   !
   !
   USE constraints_module,    ONLY : init_constraint
-  USE coarsegrained_vars,    ONLY : init_coarsegrained_vars
+  USE metadyn_vars,          ONLY : init_metadyn_vars
   USE read_namelists_module, ONLY : read_namelists, sm_not_set
   !
   IMPLICIT NONE
@@ -1392,7 +1392,7 @@ SUBROUTINE iosys()
   !
   ! ... set variables for metadynamics
   !
-  IF ( lcoarsegrained ) CALL init_coarsegrained_vars()
+  IF ( lcoarsegrained ) CALL init_metadyn_vars()
   !
   CALL verify_tmpdir(tmp_dir)
   !

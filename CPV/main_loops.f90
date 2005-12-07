@@ -17,7 +17,7 @@ SUBROUTINE smd_loop( nloop )
   !
   USE kinds,            ONLY : DP
   USE ions_base,        ONLY : nat
-  USE input_parameters, ONLY : ion_positions, rd_pos, num_of_images
+  USE input_parameters, ONLY : num_of_images
   !
   IMPLICIT NONE
   !
@@ -91,9 +91,10 @@ END SUBROUTINE neb_loop
 SUBROUTINE cpr_loop( nloop )
   !----------------------------------------------------------------------------
   !
-  USE kinds,            ONLY : DP
-  USE ions_base,        ONLY : nat
-  USE input_parameters, ONLY : ion_positions, rd_pos
+  USE kinds,         ONLY : DP
+  USE ions_base,     ONLY : nat
+  USE control_flags, ONLY : lmetadyn
+  USE metadyn_base,  ONLY : metadyn_init
   !
   IMPLICIT NONE
   !
@@ -116,15 +117,25 @@ SUBROUTINE cpr_loop( nloop )
      !
   END IF
   !
-  CALL init_run()
-  !
-  DO iloop = 1, nloop
+  IF ( lmetadyn ) THEN
      !
-     CALL cprmain( tau(1,1), fion(1,1), etot )
+     CALL metadyn_init( tau )
      !
-     CALL memstat( 1 )
+     CALL metadyn()
      !
-  END DO
+  ELSE
+     !
+     CALL init_run()
+     !
+     DO iloop = 1, nloop
+        !
+        CALL cprmain( tau(1,1), fion(1,1), etot )
+        !
+        CALL memstat( 1 )
+        !
+     END DO
+     !
+  END IF
   !
   CALL terminate_run()
   !

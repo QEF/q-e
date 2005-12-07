@@ -422,7 +422,6 @@ MODULE read_namelists_module
        fe_nstep    = 100
        shake_nstep = 10
        g_amplitude = 0.005D0
-       g_sigma     = 0.4D0
        !
        RETURN
        !
@@ -890,7 +889,6 @@ MODULE read_namelists_module
        CALL mp_bcast( fe_nstep,    ionode_id )
        CALL mp_bcast( shake_nstep, ionode_id )
        CALL mp_bcast( g_amplitude, ionode_id )
-       CALL mp_bcast( g_sigma,     ionode_id )
        !
        RETURN
        !

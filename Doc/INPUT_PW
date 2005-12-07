@@ -189,7 +189,7 @@ nppstr         INTEGER
                (lelfield==.true.)
 
 nberrycyc      INTEGER ( default = 1 )
-               In the case of a finite electric field  (lelfield==.true.)
+               In the case of a finite electric field  ( lelfield == .TRUE. )
                it defines the number of iterations for converging the
                wavefunctions in the electric field Hamiltonian, for each
                external iteration on the charge density  
@@ -433,7 +433,7 @@ report         INTEGER
                write all the atomic magnetic moments.
 
 lspinorb       LOGICAL
-               if .true. the noncollinear code can use a pseudopotential with
+               if .TRUE. the noncollinear code can use a pseudopotential with
                spin-orbit.
 
 ===============================================================================
@@ -549,7 +549,7 @@ phase_space    CHARACTER ( defauld = 'full' )
                                   dynamics.
                'coarse-grained' : a coarse-grained phase-space, defined by a set
                                   of constraints, is used for the ionic dynamics
-                                  (used for meta-dynamics).
+                                  (used for calculation of free-energy barriers)
 
 ion_temperature   
                CHARACTER
@@ -728,20 +728,18 @@ write_save     LOGICAL ( default = .FALSE. )
                post-processing )
 
 !
-! ... eywords used only in meta-dynamics calculations
+! ... keywords used only in meta-dynamics calculations
 !
 
 fe_step(i)     REAL ( default = 0.04 )
-               meta-dinamics step length (in principle different for each
+               meta-dynamics step length (in principle different for each
                collective variable), defined using the same units used 
-               to define the colletive variables (constraints).
+               to define the colletive variables themselves (constraints).
+               The step also defines the spread of the Gaussian-like bias
+               potential.
 
 g_amplitude    REAL ( default = 0.005 Hartree )
-               Amplitude of the gaussians used in meta-dinamics.
-
-g_sigma        REAL ( default = 0.04 )
-               Spread  of the gaussians used in meta-dinamics, defined using the
-               same units used to define the colletive variables (constraints).
+               Amplitude of the gaussians used in meta-dynamics.
 
 fe_nstep       INTEGER ( default = 100 )
                Maximum number of steps used to evaluate the potential of

@@ -7,8 +7,8 @@
 !
 #include "f_defs.h"
 !
-!#define __DEBUG_CONSTRAINTS
 #define __REMOVE_CONSTRAINT_FORCE
+!#define __DEBUG_CONSTRAINTS
 !#define __USE_PBC
 !
 !----------------------------------------------------------------------------
@@ -16,10 +16,10 @@ MODULE constraints_module
   !----------------------------------------------------------------------------
   ! 
   ! ... variables and methods for constraint Molecular Dynamics and
-  ! ... constraint ionic relaxations (the SHAKE algorithm based on 
+  ! ... constrained ionic relaxations (the SHAKE algorithm based on 
   ! ... lagrange multipliers) are defined here.
   !
-  ! ... Written by Carlo Sbraccia ( 24/02/2004 )
+  ! ... written by Carlo Sbraccia ( 24/02/2004 )
   !
   ! ... references :
   !
@@ -41,9 +41,9 @@ MODULE constraints_module
   !
   ! ... public methods
   !
-  PUBLIC :: init_constraint,         &
-            check_constraint,        &
-            remove_constraint_force, &
+  PUBLIC :: init_constraint,     &
+            check_constraint,    &
+            remove_constr_force, &
             deallocate_constraint
   !
   ! ... public variables (assigned in the CONSTRAINTS input card)
@@ -118,7 +118,8 @@ MODULE constraints_module
           SELECT CASE ( constr_type(ia) )
           CASE( 1 )
              !
-             ! ... constraint on global coordination number
+             ! ... constraint on global coordination-number, i.e. the average 
+             ! ... number of atoms of type B surrounding the atoms of type A
              !
              IF ( constr_target_set(ia) ) THEN
                 !
@@ -165,7 +166,8 @@ MODULE constraints_module
              !
           CASE( 2 )
              !
-             ! ... constraint on local coordination number
+             ! ... constraint on local coordination-number, i.e. the average 
+             ! ... number of atoms of type A surrounding a specific atom
              !
              IF ( constr_target_set(ia) ) THEN
                 !
@@ -478,8 +480,8 @@ MODULE constraints_module
        REAL(DP), INTENT(IN)    :: massconv
        !
        INTEGER               :: na, i, index
-       REAL(DP), ALLOCATABLE :: dgp(:,:), dg0(:,:,:)
-       REAL(DP)              :: gp, g0
+       REAL(DP), ALLOCATABLE :: gp(:), dgp(:,:), dg0(:,:,:)
+       REAL(DP)              :: g0
        REAL(DP)              :: lambda, fac, invdtsq
        LOGICAL               :: ltest(nconstr), global_test
        INTEGER, PARAMETER    :: maxiter = 100
@@ -489,6 +491,7 @@ MODULE constraints_module
        !
        ALLOCATE( dgp( 3, nat ) )
        ALLOCATE( dg0( 3, nat, nconstr ) )
+       ALLOCATE( gp( nconstr ) )
        !
        invdtsq  = 1.D0 / dt**2
        !
@@ -506,15 +509,15 @@ MODULE constraints_module
              ltest(index) = .FALSE.
              !
              CALL constraint_grad( index, nat, taup, &
-                                   if_pos, ityp, tau_units, gp, dgp )
+                                   if_pos, ityp, tau_units, gp(index), dgp )
              !
              ! ... check if gp = 0
              !
 #if defined (__DEBUG_CONSTRAINTS)
-             WRITE( stdout, * ) i, index, ABS( gp )
+             WRITE( stdout, * ) i, index, ABS( gp(index) )
 #endif
              !             
-             IF ( ABS( gp ) < constr_tol ) THEN
+             IF ( ABS( gp(index) ) < constr_tol ) THEN
                 !
                 ltest(index) = .TRUE.
                 !
@@ -531,7 +534,7 @@ MODULE constraints_module
                 !
              END DO
              !
-             lambda = gp / DDOT( 3 * nat, dgp, 1, dg0(:,:,index), 1 )
+             lambda = gp(index) / DDOT( 3 * nat, dgp, 1, dg0(:,:,index), 1 )
              !
              DO na = 1, nat
                 !
@@ -557,8 +560,17 @@ MODULE constraints_module
        !
        IF ( .NOT. global_test ) THEN
           !
-          WRITE( stdout, '(5X,"Number of step(s): ",I3)') MIN( i, maxiter )
-          WRITE( stdout, '(5X,"targets: ")' ); WRITE( stdout, * ) target(:)
+          ! ... error messages
+          !
+          WRITE( stdout, '(/,5X,"Number of step(s): ",I3)') MIN( i, maxiter )
+          WRITE( stdout, '(/,5X,"target convergence: ")' )
+          !
+          DO i = 1, nconstr
+             !
+             WRITE( stdout, '(5X,"target = ",I3,2X,L1,2(2X,F16.10))' ) &
+                 i, ltest(i), ABS( gp(i) ), target(i)
+             !
+          END DO
           !
           CALL errore( 'check_constrain', &
                        'on some constraint g = 0 is not satisfied', 1 )
@@ -567,14 +579,15 @@ MODULE constraints_module
        !
        DEALLOCATE( dgp )
        DEALLOCATE( dg0 )
+       DEALLOCATE( gp )
        !
        RETURN
        !
      END SUBROUTINE check_constraint
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE remove_constraint_force( nat, tau, &
-                                         if_pos, ityp, tau_units, force )
+     SUBROUTINE remove_constr_force( nat, tau, &
+                                     if_pos, ityp, tau_units, force )
        !-----------------------------------------------------------------------
        !
        ! ... the component of the force that is orthogonal to the
@@ -591,17 +604,19 @@ MODULE constraints_module
        REAL(DP), INTENT(INOUT) :: force(:,:)
        !
        INTEGER               :: i, j
-       REAL(DP)              :: g
+       REAL(DP)              :: g, norm_before, norm_after
        REAL(DP), ALLOCATABLE :: dg(:,:,:)
        REAL(DP), ALLOCATABLE :: dg_matrix(:,:)
        INTEGER,  ALLOCATABLE :: iwork(:)
        !
-       REAL(DP), EXTERNAL :: DDOT
+       REAL(DP), EXTERNAL :: DDOT, DNRM2
        !
        !
        lagrange(:) = 0.D0
        !
 #if defined (__REMOVE_CONSTRAINT_FORCE)
+       !
+       norm_before = DNRM2( 3 * nat, force, 1 )
        !
        ALLOCATE( dg( 3, nat, nconstr ) )
        ALLOCATE( dg_matrix( nconstr, nconstr ) )
@@ -632,7 +647,7 @@ MODULE constraints_module
        CALL DGESV( nconstr, 1, dg_matrix, nconstr, iwork, lagrange, nconstr, i )
        !
        IF ( i /= 0 ) &
-          CALL errore( 'remove_constraint_force', &
+          CALL errore( 'remove_constr_force', &
                        'error in the solution of the linear system', 1 )
        !
        DO i = 1, nconstr
@@ -641,13 +656,38 @@ MODULE constraints_module
           !
        END DO
        !
+#if defined (__DEBUG_CONSTRAINTS)
+       !
+       WRITE( stdout, '(/,5X,"Intermediate forces (Ry/au):",/)')
+       !
+       DO i = 1, nat
+          !
+          WRITE( stdout, '(5X,"atom ",I3," type ",I2,3X,"force = ",3F14.8)' ) &
+              i, ityp(i), force(:,i)
+          !
+       END DO
+       !
+#endif
+       !
+       norm_after = DNRM2( 3 * nat, force, 1 )
+       !
+       IF ( norm_before < norm_after ) THEN
+          !
+          WRITE( stdout, '(/,5X,"norm before = ",F16.10)' ) norm_before
+          WRITE( stdout, '(  5X,"norm after  = ",F16.10)' ) norm_after
+          !
+          CALL errore( 'remove_constr_force', &
+                       'norm(F) before < norm(F) after', 1 )
+          !
+       END IF
+       !
        DEALLOCATE( dg )
        DEALLOCATE( dg_matrix )
        DEALLOCATE( iwork )
        !
 #endif
        !
-     END SUBROUTINE remove_constraint_force
+     END SUBROUTINE remove_constr_force
      !
      !-----------------------------------------------------------------------
      SUBROUTINE deallocate_constraint()

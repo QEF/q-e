@@ -28,11 +28,13 @@ io_global.o  \
 ions_base.o \
 ions_nose.o \
 kind.o \
-coarsegrained_vars.o \
 mp.o \
 mp_global.o \
 mp_wave.o \
 mp_buffers.o \
+metadyn_base.o \
+metadyn_io.o \
+metadyn_vars.o \
 path_base.o \
 path_formats.o \
 path_io_routines.o  \
