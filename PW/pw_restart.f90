@@ -119,16 +119,22 @@ MODULE pw_restart
          !
       END SELECT
       !
-      ! ... look for an empty unit
+      IF ( ionode ) THEN
+         !
+         ! ... look for an empty unit (only ionode needs it)
+         !
+         CALL iotk_free_unit( iunout, ierr )
+         !
+      END IF
       !
-      CALL iotk_free_unit( iunout, ierr )
+      CALL mp_bcast( ierr, ionode_id )
       !
       CALL errore( 'pw_writefile ', &
                    'no free units to write wavefunctions', ierr )
       !
-      ! ... create the main restart directory
-      !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.new-save'
+      !
+      ! ... create the main restart directory
       !
       CALL create_directory( dirname )
       !
@@ -180,7 +186,7 @@ MODULE pw_restart
       !
       CALL mp_sum( ngm_g, intra_pool_comm )
       !
-      ! ... collect all G vectors across processors within the pools
+      ! ... collect all G-vectors across processors within the pools
       !
       ALLOCATE( itmp( 3, ngm_g ) )
       !
@@ -247,7 +253,7 @@ MODULE pw_restart
       !
       CALL mp_bcast( ierr, ionode_id )
       !
-      CALL errore( 'cp_writefile ', &
+      CALL errore( 'pw_writefile ', &
                    'cannot open restart file for writing', ierr )
       !
       IF ( ionode ) THEN  
@@ -341,8 +347,9 @@ MODULE pw_restart
       !
       rho_file = 'charge-density.dat'
       !
-      CALL iotk_link( iunpun, "RHO_FILE", rho_file, &
-                      CREATE = .FALSE., BINARY = .FALSE. )
+      IF ( ionode ) &
+         CALL iotk_link( iunpun, "RHO_FILE", rho_file, &
+                         CREATE = .FALSE., BINARY = .FALSE. )
       !
       rho_file = TRIM( dirname ) // '/' // TRIM( rho_file )      
       !

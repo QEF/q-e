@@ -129,16 +129,23 @@ MODULE cp_restart
       LOGICAL               :: lsda
       REAL(DP)              :: s0, s1, cclock
       !
-      ! ... look for an empty unit
       !
-      CALL iotk_free_unit( iunout, ierr )
+      IF ( ionode ) THEN
+         !
+         ! ... look for an empty unit (only ionode needs it)
+         !
+         CALL iotk_free_unit( iunout, ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
       !
       CALL errore( 'cp_writefile', &
                    'no free units to write wavefunctions', ierr )
       !
-      ! ... Create main restart directory
-      !
       dirname = restart_dir( scradir, ndw )
+      !
+      ! ... Create main restart directory
       !
       CALL create_directory( dirname )
       !
