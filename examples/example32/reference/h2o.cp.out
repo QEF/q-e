@@ -13,7 +13,7 @@
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  18:43:21  25Nov2005               
+   This run was started on:   2:39:43   7Dec2005               
 
    MPI Parallel Build
    Tasks =    1  This task id =    0
@@ -219,10 +219,10 @@ Warning: electron_velocities keyword has no effect
  
    Short Legend and Physical Units in the Output
    ---------------------------------------------
-   NFI    [int]  - step index
+   NFI    [int]          - step index
    EKINC  [HARTREE A.U.] - kinetic energy of the fictitious electronic dynamics
-   TEMPH  [K]    - Temperature of the fictitious cell dynamics
-   TEMP   [K]    - Ionic temperature
+   TEMPH  [K]            - Temperature of the fictitious cell dynamics
+   TEMP   [K]            - Ionic temperature
    ETOT   [HARTREE A.U.] - Scf total energy (Kohn-Sham hamiltonian)
    ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
@@ -242,7 +242,7 @@ Warning: electron_velocities keyword has no effect
  ------------------------------------------------------
   SUMMERY OF VIBRATIONAL INPUT VARIABLES: 
  
-   delta                  =        0.0200
+   displacement           =        0.0200
    save_freq              =             1
    trans_inv_flag         =             T
    trans_inv_max_iter     =            50
@@ -251,11 +251,6 @@ Warning: electron_velocities keyword has no effect
    restart_label          =    auto      
    animate                =             T
  ------------------------------------------------------
- Creating new isotopes file: 
- /home/silviu/tmp//h2o.vib.isotope                                              
-                                                                                
-                                                                                
-                    
  ---------------------------------------
  STARTING A NEW NORMAL MODES CALCULATION 
  ---------------------------------------
@@ -390,6 +385,10 @@ Warning: electron_velocities keyword has no effect
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+
+   writing restart file: .//h2o_51.save
+   restart file written in    2.749 sec.
+
  Done
  
 DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171     -0.0002
@@ -404,7 +403,7 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1356.0155   0.0000
   0.183318E+01 -0.217650E+00 -0.150000E-03
  -0.217650E+00  0.183318E+01  0.280000E-03
  
-   Ground-state (reference) energy   :   -17.181116
+   Ground-state (reference) energy   :        -17.181116
    Ground-state dipole vector [debye]:       -1.314       -1.314        0.000
    Dipole moment [debye]             :        1.859
  
@@ -483,7 +482,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 221.4819   234.0005   229.9354
 QUADRUPOLE MOMENT              (HARTREE A.U.)1364.7156   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.180998
+   displacement total energy         :        -17.180998
    Ground-state dipole vector [debye]:       -1.334       -1.311        0.000
    Dipole moment [debye]             :        1.870
  
@@ -548,7 +547,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 213.6055   225.8326   229.9059
 QUADRUPOLE MOMENT              (HARTREE A.U.)1347.2826   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.181027
+   displacement total energy         :        -17.181027
    Ground-state dipole vector [debye]:       -1.294       -1.318        0.000
    Dipole moment [debye]             :        1.847
  
@@ -638,7 +637,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 221.4825   229.9297   234.0068
 QUADRUPOLE MOMENT              (HARTREE A.U.)1364.7167   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.180998
+   displacement total energy         :        -17.180998
    Ground-state dipole vector [debye]:       -1.311       -1.334        0.000
    Dipole moment [debye]             :        1.871
  
@@ -703,7 +702,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 213.6055   229.9000   225.8382
 QUADRUPOLE MOMENT              (HARTREE A.U.)1347.2824   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.181027
+   displacement total energy         :        -17.181027
    Ground-state dipole vector [debye]:       -1.318       -1.294        0.000
    Dipole moment [debye]             :        1.847
  
@@ -796,7 +795,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5460   233.5448   233.5506
 QUADRUPOLE MOMENT              (HARTREE A.U.)1364.0575   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.181129
+   displacement total energy         :        -17.181129
    Ground-state dipole vector [debye]:       -1.314       -1.314       -0.032
    Dipole moment [debye]             :        1.859
  
@@ -863,7 +862,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5459   226.2760   226.2820
 QUADRUPOLE MOMENT              (HARTREE A.U.)1347.9160   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.181129
+   displacement total energy         :        -17.181129
    Ground-state dipole vector [debye]:       -1.314       -1.314        0.033
    Dipole moment [debye]             :        1.859
  
@@ -942,7 +941,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5122   229.8697   229.8906
 QUADRUPOLE MOMENT              (HARTREE A.U.)1356.1032   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.181017
+   displacement total energy         :        -17.181017
    Ground-state dipole vector [debye]:       -1.308       -1.317        0.000
    Dipole moment [debye]             :        1.856
  
@@ -998,7 +997,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5806   229.9580   229.9503
 QUADRUPOLE MOMENT              (HARTREE A.U.)1355.9251   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.181022
+   displacement total energy         :        -17.181022
    Ground-state dipole vector [debye]:       -1.320       -1.312        0.000
    Dipole moment [debye]             :        1.862
  
@@ -1076,7 +1075,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.7989   229.9292   230.3932
 QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0809   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.181104
+   displacement total energy         :        -17.181104
    Ground-state dipole vector [debye]:       -1.316       -1.300        0.000
    Dipole moment [debye]             :        1.850
  
@@ -1132,7 +1131,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.2906   229.9001   229.4413
 QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9265   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.181104
+   displacement total energy         :        -17.181104
    Ground-state dipole vector [debye]:       -1.313       -1.328        0.000
    Dipole moment [debye]             :        1.868
  
@@ -1203,7 +1202,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5465   230.2115   230.4895
 QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0591   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.181116
+   displacement total energy         :        -17.181116
    Ground-state dipole vector [debye]:       -1.314       -1.314        0.017
    Dipole moment [debye]             :        1.859
  
@@ -1262,7 +1261,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5459   229.6162   229.3545
 QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9669   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.181116
+   displacement total energy         :        -17.181116
    Ground-state dipole vector [debye]:       -1.314       -1.314       -0.017
    Dipole moment [debye]             :        1.859
  
@@ -1270,11 +1269,11 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9669   0.0000
      Warning: Reference structure is not converged!!!
      from calc_hessian : info #        -1
      Warning: consistency check
-    Numerical second derivative of the total energy, compared to
-    first derivative of the forces, for diagonal hessian element,
-    deviate by more then 10%:
-        Energy second derivative :    -0.0003
-        Force  first  derivative :     0.0004
+     Numerical second derivative of the total energy, compared to
+     first derivative of the forces, for diagonal hessian element,
+     deviate by more then 10% :
+          Energy second derivative :    -0.0003
+          Force  first  derivative :     0.0004
  
  Saving restart information...
  Done.
@@ -1346,7 +1345,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.7995   230.3882   229.9352
 QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0839   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.181104
+   displacement total energy         :        -17.181104
    Ground-state dipole vector [debye]:       -1.300       -1.316        0.000
    Dipole moment [debye]             :        1.850
  
@@ -1402,7 +1401,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.2909   229.4368   229.9063
 QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9280   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.181104
+   displacement total energy         :        -17.181104
    Ground-state dipole vector [debye]:       -1.328       -1.313        0.000
    Dipole moment [debye]             :        1.868
  
@@ -1479,7 +1478,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5124   229.8848   229.8757
 QUADRUPOLE MOMENT              (HARTREE A.U.)1356.1032   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.181017
+   displacement total energy         :        -17.181017
    Ground-state dipole vector [debye]:       -1.317       -1.308        0.000
    Dipole moment [debye]             :        1.856
  
@@ -1535,7 +1534,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5806   229.9447   229.9639
 QUADRUPOLE MOMENT              (HARTREE A.U.)1355.9252   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.181022
+   displacement total energy         :        -17.181022
    Ground-state dipole vector [debye]:       -1.312       -1.320        0.000
    Dipole moment [debye]             :        1.862
  
@@ -1606,7 +1605,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5465   230.4838   230.2179
 QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0599   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.181116
+   displacement total energy         :        -17.181116
    Ground-state dipole vector [debye]:       -1.314       -1.314        0.016
    Dipole moment [debye]             :        1.859
  
@@ -1664,7 +1663,7 @@ QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5461   229.3490   229.6223
 QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9675   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :   -17.181116
+   displacement total energy         :        -17.181116
    Ground-state dipole vector [debye]:       -1.314       -1.314       -0.017
    Dipole moment [debye]             :        1.859
  
@@ -1679,40 +1678,31 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9675   0.0000
                                                                                 
                                                                                 
                     
- -8.321737278161237E-006 ******              
- -1.648245791363489E-006 ******              
- -6.132741558816840E-021 000000              
-  2.405542635167033E-020 000000              
-  3.667252810535317E-020 000000              
-  2.553542374138422E-007 000111              
-  5.583691342540311E-005 001640              
-  2.794791104780519E-004 003669              
-  2.897528620523391E-004 003736              
 
 
               averaged quantities :
          ekinc          ekin          epot          etot     tempp
  NaN           NaN           NaN           NaN           NaN      
-     initialize   :     0.92s CPU
-     formf        :     0.56s CPU
-     rhoofr       :    72.80s CPU (     354 calls,   0.206 s avg)
-     vofrho       :   280.30s CPU (     335 calls,   0.837 s avg)
-     dforce       :    23.53s CPU (     340 calls,   0.069 s avg)
-     gram         :     0.43s CPU (     329 calls,   0.001 s avg)
-     newd         :     0.08s CPU (     170 calls,   0.000 s avg)
-     calbec       :     1.21s CPU (    1437 calls,   0.001 s avg)
+     initialize   :     0.89s CPU
+     formf        :     0.55s CPU
+     rhoofr       :    72.26s CPU (     354 calls,   0.204 s avg)
+     vofrho       :   277.66s CPU (     335 calls,   0.829 s avg)
+     dforce       :    23.42s CPU (     340 calls,   0.069 s avg)
+     gram         :     0.36s CPU (     329 calls,   0.001 s avg)
+     newd         :     0.12s CPU (     170 calls,   0.001 s avg)
+     calbec       :     1.30s CPU (    1437 calls,   0.001 s avg)
      prefor       :     0.06s CPU (     190 calls,   0.000 s avg)
-     strucf       :     0.09s CPU (      20 calls,   0.004 s avg)
+     strucf       :     0.11s CPU (      20 calls,   0.005 s avg)
      nlfl         :     0.00s CPU (      19 calls,   0.000 s avg)
-     nlfq         :     0.06s CPU (      19 calls,   0.003 s avg)
-     nlsm1        :     1.20s CPU (    1437 calls,   0.001 s avg)
-     nlsm2        :     0.05s CPU (      19 calls,   0.003 s avg)
-     fft          :   136.15s CPU (    2699 calls,   0.050 s avg)
-     ffts         :    35.07s CPU (     689 calls,   0.051 s avg)
-     fftw         :    36.79s CPU (    1388 calls,   0.027 s avg)
+     nlfq         :     0.03s CPU (      19 calls,   0.002 s avg)
+     nlsm1        :     1.30s CPU (    1437 calls,   0.001 s avg)
+     nlsm2        :     0.03s CPU (      19 calls,   0.002 s avg)
+     fft          :   134.94s CPU (    2699 calls,   0.050 s avg)
+     ffts         :    34.71s CPU (     689 calls,   0.050 s avg)
+     fftw         :    36.73s CPU (    1388 calls,   0.026 s avg)
 
    writing restart file: .//h2o_51.save
-   restart file written in    4.830 sec.
+   restart file written in    2.629 sec.
 
 
 
@@ -1720,12 +1710,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9675   0.0000
 
 
  
-     CP           :  6m28.37s CPU time
+     CP           :  6m27.06s CPU time
 
  
-   This run was terminated on:  18:50: 7  25Nov2005            
+   This run was terminated on:   2:46:24   7Dec2005            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:   406.0
+   ELAPSED SECONDS:   401.0
    JOB DONE.
 =------------------------------------------------------------------------------=
