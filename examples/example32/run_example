@@ -133,6 +133,9 @@ cat > $TMP_DIR/h2o.vib.inp << EOF
      restart_label      = 'auto'
      animate            = .TRUE.
  /
+ &ISOTOPES
+ isotope(1) = 16.0,
+ /
 EOF
 
 $ECHO "  running the CPVIB calculation for water molecule in vacuum ...\c"
