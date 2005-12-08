@@ -13,7 +13,7 @@
 !     computes the matrix phi (with the old positions)
 !       where  |phi> = s'|c0> = |c0> + sum q_ij |i><j|c0>
 !     where s'=s(r(t))  
-!
+!     
       use ions_base, only: na, nsp
       use io_global, only: stdout
       use cvan
@@ -23,6 +23,7 @@
       use gvecw, only: ngw
       use constants, only: pi, fpi
       use control_flags, only: iprint, iprsta
+      use mp, only: mp_sum
 !
       implicit none
       complex(8) c0(ngw,n), phi(ngw,n), betae(ngw,nhsa)
@@ -71,9 +72,7 @@
             end do
          end do
          emtot=emtot/n
-#ifdef __PARA
-         call reduce(1,emtot)
-#endif      
+         call mp_sum(emtot)
          WRITE( stdout,*) 'in calphi sqrt(emtot)=',sqrt(emtot)
          WRITE( stdout,*)
          do is=1,nsp
@@ -188,7 +187,8 @@
       naux=3*n
       allocate(ap(ndim))
       allocate(aux(naux))
-
+      ap(:)=0.d0
+      aux(:)=0.d0
 
       if (iflag.eq.1) then
        iopt=1
@@ -292,7 +292,7 @@ subroutine pc2(a,beca,b,becb)
       use control_flags, only: iprint, iprsta
       use reciprocal_vectors, only: ng0 => gstart
       use mp, only: mp_sum
-      use electrons_base, only: n => nbsp
+      use electrons_base, only: n => nbsp, fspin
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb
       use uspp, only :qq
@@ -311,45 +311,47 @@ subroutine pc2(a,beca,b,becb)
             if (ng0.eq.2) then
                b(1,i)=0.5d0*(b(1,i)+CONJG(b(1,i)))
             endif
-            do  ig=1,ngw           !loop on g vectors
-               sca=sca+2.d0*DBLE(CONJG(a(ig,j))*b(ig,i)) !2. for real wavefunctions
-            enddo
-            if (ng0.eq.2) then
-               sca=sca-DBLE(CONJG(a(1,j))*b(1,i))
-            endif
+            if(fspin(j) == fspin(i)) then
+               do  ig=1,ngw           !loop on g vectors
+                  sca=sca+2.d0*DBLE(CONJG(a(ig,j))*b(ig,i)) !2. for real wavefunctions
+               enddo
+               if (ng0.eq.2) then
+                  sca=sca-DBLE(CONJG(a(1,j))*b(1,i))
+               endif
 
-            call mp_sum( sca )
+               call mp_sum( sca )
 
-            if (nvb.gt.0) then
+               if (nvb.gt.0) then
 
-               do is=1,nvb
-                  do iv=1,nh(is)
-                     do jv=1,nh(is)
-                        do ia=1,na(is)
-                           inl=ish(is)+(iv-1)*na(is)+ia
-                           jnl=ish(is)+(jv-1)*na(is)+ia
-                           sca=sca+ qq(iv,jv,is)*beca(inl,j)*becb(jnl,i)  
+                  do is=1,nvb
+                     do iv=1,nh(is)
+                        do jv=1,nh(is)
+                           do ia=1,na(is)
+                              inl=ish(is)+(iv-1)*na(is)+ia
+                              jnl=ish(is)+(jv-1)*na(is)+ia
+                              sca=sca+ qq(iv,jv,is)*beca(inl,j)*becb(jnl,i)  
+                           end do
                         end do
                      end do
                   end do
-               end do
-            end if
+               end if
 
-            do ig=1,ngw
-               b(ig,i)=b(ig,i)-sca*a(ig,j)
-            enddo
-            ! this to prevent numerical errors
-            if (ng0.eq.2) then
-               b(1,i)=0.5d0*(b(1,i)+CONJG(b(1,i)))
+               do ig=1,ngw
+                  b(ig,i)=b(ig,i)-sca*a(ig,j)
+               enddo
+               ! this to prevent numerical errors
+               if (ng0.eq.2) then
+                  b(1,i)=0.5d0*(b(1,i)+CONJG(b(1,i)))
+               endif
             endif
          enddo
 
       enddo
       return
-    end subroutine pc2
+      end subroutine pc2
 
 
-subroutine pcdaga2(a,as ,b )
+      subroutine pcdaga2(a,as ,b )
 
 ! this function applies the operator Pc
 
@@ -366,7 +368,7 @@ subroutine pcdaga2(a,as ,b )
       use control_flags, only: iprint, iprsta
       use reciprocal_vectors, only: ng0 => gstart
       use mp, only: mp_sum
-      use electrons_base, only: n => nbsp
+      use electrons_base, only: n => nbsp, fspin
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb
 
@@ -384,19 +386,21 @@ subroutine pcdaga2(a,as ,b )
             if (ng0.eq.2) then
                b(1,i)=0.5d0*(b(1,i)+CONJG(b(1,i)))
             endif
-            do  ig=1,ngw           !loop on g vectors
-               sca=sca+2.*DBLE(CONJG(a(ig,j))*b(ig,i)) !2. for real weavefunctions
-            enddo
-            if (ng0.eq.2) then
-               sca=sca-DBLE(CONJG(a(1,j))*b(1,i))
-            endif
-            call mp_sum(sca)
-            do ig=1,ngw
-               b(ig,i)=b(ig,i)-sca*as(ig,j)
-            enddo
-            ! this to prevent numerical errors
-            if (ng0.eq.2) then
-               b(1,i)=0.5d0*(b(1,i)+CONJG(b(1,i)))
+            if(fspin(i) == fspin(j)) then
+               do  ig=1,ngw           !loop on g vectors
+                  sca=sca+2.*DBLE(CONJG(a(ig,j))*b(ig,i)) !2. for real weavefunctions
+               enddo
+               if (ng0.eq.2) then
+                  sca=sca-DBLE(CONJG(a(1,j))*b(1,i))
+               endif
+               call mp_sum(sca)
+               do ig=1,ngw
+                  b(ig,i)=b(ig,i)-sca*as(ig,j)
+               enddo
+               ! this to prevent numerical errors
+               if (ng0.eq.2) then
+                  b(1,i)=0.5d0*(b(1,i)+CONJG(b(1,i)))
+               endif
             endif
          enddo
       enddo

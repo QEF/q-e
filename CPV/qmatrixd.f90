@@ -33,7 +33,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
   use reciprocal_vectors, only: ng0 => gstart
   use uspp_param, only: nh, nhm
   use uspp, only : nhsa=> nkb
-  use electrons_base, only: nx => nbspx, n => nbsp
+  use electrons_base, only: nx => nbspx, n => nbsp, fspin
   use mp, only: mp_sum
   
 
@@ -80,70 +80,73 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
 ! first the local part
 
         sca=(0.,0.)
+        if(fspin(ix) == fspin(jx) ) then
        
 !#ifdef NEC
 !        *vdir nodep
 !#endif 
-        do ig=1,ngw
-           if(ctable(ig,1).ne.(ngw+1))then
-              if(ctable(ig,1).ge.0) then
-                 sca=sca+CONJG(c0(ctable(ig,1),ix))*c0(ig,jx)
-              endif
-           endif
-        enddo
+          do ig=1,ngw
+             if(ctable(ig,1).ne.(ngw+1))then
+                if(ctable(ig,1).ge.0) then
+                   sca=sca+CONJG(c0(ctable(ig,1),ix))*c0(ig,jx)
+                endif
+             endif
+          enddo
 
 !#ifdef NEC
 !        *vdir nodep
 !#endif
-        do ig=1,ngw
-           if(ctable(ig,1).ne.(ngw+1))then
-              if(ctable(ig,1).lt. 0) then
-                 sca=sca+c0(-ctable(ig,1),ix)*c0(ig,jx)
-              endif
-           endif
-        enddo
+          do ig=1,ngw
+             if(ctable(ig,1).ne.(ngw+1))then
+                if(ctable(ig,1).lt. 0) then
+                   sca=sca+c0(-ctable(ig,1),ix)*c0(ig,jx)
+                endif
+             endif
+          enddo
 
 
 !#ifdef NEC
 !        *vdir nodep
 !#endif
-        do ig=ng0,ngw
-           if(ctable(ig,2).ne.(ngw+1)) then
-              if(ctable(ig,2).lt.0) then
-                 sca=sca+c0(-ctable(ig,2),ix)*CONJG(c0(ig,jx))
-              endif
-           endif
-        enddo
+          do ig=ng0,ngw
+             if(ctable(ig,2).ne.(ngw+1)) then
+                if(ctable(ig,2).lt.0) then
+                   sca=sca+c0(-ctable(ig,2),ix)*CONJG(c0(ig,jx))
+                endif
+             endif
+          enddo
 !#ifdef NEC
 !        *vdir nodep
 !#endif
-        do ig=ng0,ngw
-           if(ctable(ig,2).ne.(ngw+1)) then
-              if(ctable(ig,2).ge.0) then
-                 sca=sca+CONJG(c0(ctable(ig,2),ix))*conjg(c0(ig,jx))
-              endif
-           endif
-        enddo
+          do ig=ng0,ngw
+             if(ctable(ig,2).ne.(ngw+1)) then
+                if(ctable(ig,2).ge.0) then
+                   sca=sca+CONJG(c0(ctable(ig,2),ix))*conjg(c0(ig,jx))
+                endif
+             endif
+          enddo
         
-        call mp_sum(sca)
-      
+          call mp_sum(sca)
+        endif
         qmat(ix,jx)=sca
 
 !  now the non local vanderbilt part
             
         sca =(0.,0.)
-        do is=1,nvb!loop on vanderbilt species
-           do ia=1,na(is)!loop on atoms
-              do iv=1,nh(is)!loop on projectors
-                 do jv=1,nh(is)
-                    inl=ish(is)+(iv-1)*na(is)+ia
-                    jnl=ish(is)+(jv-1)*na(is)+ia                
-                    sca=sca+gqq(iv,jv,ia,is)*bec0(inl,ix)*bec0(jnl,jx)
-                 enddo
-              enddo
-           enddo
-        enddo
-        qmat(ix,jx)=qmat(ix,jx)+sca
+        if(fspin(ix)==fspin(jx)) then
+          do is=1,nvb!loop on vanderbilt species
+             do ia=1,na(is)!loop on atoms
+                do iv=1,nh(is)!loop on projectors
+                   do jv=1,nh(is)
+                      inl=ish(is)+(iv-1)*na(is)+ia
+                      jnl=ish(is)+(jv-1)*na(is)+ia                
+                      sca=sca+gqq(iv,jv,ia,is)*bec0(inl,ix)*bec0(jnl,jx)
+                   enddo
+                enddo
+             enddo
+          enddo
+          qmat(ix,jx)=qmat(ix,jx)+sca
+        endif
         qmat(jx,ix)=qmat(ix,jx)
        
        

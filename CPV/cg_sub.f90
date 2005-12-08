@@ -50,9 +50,8 @@
       use smooth_grid_dimensions, only: nnrsx, nr1s, nr2s, nr3s
       use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
       use local_pseudo, only: vps, rhops
-      use io_global, ONLY: io_global_start, stdout, ionode
+      use io_global, ONLY: io_global_start, stdout, ionode, ionode_id
       use mp_global, ONLY: mp_global_start
-      use mp, ONLY: mp_end
       use para_mod
       use dener
       use derho
@@ -73,7 +72,7 @@
       use wavefunctions_module, only: c0, cm, phi => cp
       use efield_module, only: tefield, evalue, ctable, qmat, detq, ipolp, &
             berry_energy, ctabin, gqq, gqqm, df, pberryel
-      use mp, only: mp_sum
+      use mp, only: mp_sum,mp_bcast
 !
       implicit none
 !
@@ -110,7 +109,7 @@
 
      fion2=0.d0
 
-      !open(37,file='convergenza.dat',status='unknown')!for debug and tuning purposes
+      if(ionode) open(37,file='convergence.dat',status='unknown')!for debug and tuning purposes
       if(tfirst.and.ionode) write(stdout,*) 'PERFORMING CONJUGATE GRADIENT MINIMIZATION OF EL. STATES'
 
       call prefor(eigr,betae) 
@@ -196,7 +195,7 @@
           ene_ok=.false.
 
         end if ENERGY_CHECK
-        !write(37,*)itercg, etotnew,pberryel!for debug and tuning purposes
+        if(ionode) write(37,*)itercg, etotnew,pberryel!for debug and tuning purposes
 
 
         
@@ -303,17 +302,20 @@
 
           else
 
-            do i=1,n        
-               do j=1,n
-                  do ig=1,ngw
-                     gamma=gamma+2*DBLE(CONJG(gi(ig,i))*gi(ig,j))*fmat0(j,i,1)
+            do is=1,nspin
+               nss=nupdwn(is)
+               istart=iupdwn(is)
+               do i=1,nss
+                  do j=1,nss
+                     do ig=1,ngw
+                       gamma=gamma+2*DBLE(CONJG(gi(ig,i+istart-1))*gi(ig,j+istart-1))*fmat0(j,i,is)
+                     enddo
+                     if (ng0.eq.2) then
+                       gamma=gamma-DBLE(CONJG(gi(1,i+istart-1))*gi(1,j+istart-1))*fmat0(j,i,is)
+                     endif
                   enddo
-                  if (ng0.eq.2) then
-                     gamma=gamma-DBLE(CONJG(gi(1,i))*gi(1,j))*fmat0(j,i,1)
-                  endif
-               enddo
+                enddo
             enddo
-
             call mp_sum(gamma)
 
           endif
@@ -356,17 +358,21 @@
 !            endif
 
           else
-
-            do i=1,n        
-              do j=1,n
-                do ig=1,ngw
-                  gamma=gamma+2*DBLE(CONJG(gi(ig,i))*gi(ig,j))*fmat0(j,i,1)
+           do is=1,nspin
+               nss=nupdwn(is)
+               istart=iupdwn(is)
+               do i=1,nss
+                  do j=1,nss
+                     do ig=1,ngw
+                       gamma=gamma+2*DBLE(CONJG(gi(ig,i+istart-1))*gi(ig,j+istart-1))*fmat0(j,i,is)
+                     enddo
+                     if (ng0.eq.2) then
+                       gamma=gamma-DBLE(CONJG(gi(1,i+istart-1))*gi(1,j+istart-1))*fmat0(j,i,is)
+                     endif
+                  enddo
                 enddo
-                if (ng0.eq.2) then
-                  gamma=gamma-DBLE(CONJG(gi(1,i))*gi(1,j))*fmat0(j,i,1)
-                endif
-              enddo
             enddo
+
             call mp_sum(gamma)
 
           endif
@@ -407,23 +413,25 @@
           !in the ensamble case the derivative is Sum_ij (<hi|H|Psi_j>+ <Psi_i|H|hj>)*f_ji
           !     calculation of the kinetic energy x=xmin      
           call calcmt(f,z0,fmat0)
-          do i=1,n
-            do j=1,n
-              do ig=1,ngw
-                dene0=dene0-2.d0*DBLE(CONJG(hi(ig,i))*hpsi(ig,j))*fmat0(j,i,1)
-                !ATTENZIONE only case nspin=1!!!!!
-                dene0=dene0-2.d0*DBLE(CONJG(hpsi(ig,i))*hi(ig,j))*fmat0(j,i,1)
-              enddo
-              if (ng0.eq.2) then
-                dene0=dene0+DBLE(CONJG(hi(1,i))*hpsi(1,j))*fmat0(j,i,1)
-                dene0=dene0+DBLE(CONJG(hpsi(1,i))*hi(1,j))*fmat0(j,i,1)
-              end if
+         do is=1,nspin
+             nss=nupdwn(is)
+             istart=iupdwn(is)
+             do i=1,nss
+                do j=1,nss
+                   do ig=1,ngw
+                    dene0=dene0-2.d0*DBLE(CONJG(hi(ig,i+istart-1))*hpsi(ig,j+istart-1))*fmat0(j,i,is)
+                    dene0=dene0-2.d0*DBLE(CONJG(hpsi(ig,i+istart-1))*hi(ig,j+istart-1))*fmat0(j,i,is)
+                   enddo
+                   if (ng0.eq.2) then
+                    dene0=dene0+DBLE(CONJG(hi(1,i+istart-1))*hpsi(1,j+istart-1))*fmat0(j,i,is)
+                    dene0=dene0+DBLE(CONJG(hpsi(1,i+istart-1))*hi(1,j+istart-1))*fmat0(j,i,is)
+                   end if
+                  enddo
             enddo
           enddo
         endif
 
         call mp_sum(dene0)
-        !            if(tens.and.(nspin.eq.1)) dene0=dene0/2.d0 
 
         !if the derivative is positive, search along opposite direction
 
@@ -526,6 +534,9 @@
           etot=etot+enb+enbi
         endif
         enever=etot
+        if(ionode) write(37,'(a3,4f20.10)') 'CG1',ene0+entropy,ene1+entropy,enesti+entropy,enever+entropy
+        if(ionode) write(37,'(a3,4f10.7)')  'CG2',spasso,passov,passo,(enever-ene0)/passo/dene0
+
         !check with  what supposed
 
         if(ionode) then
@@ -678,6 +689,7 @@
                   endif
                 end do
               end do
+              call mp_sum(c0hc0(1:nss,1:nss,is))
             end do
  
 !           do is=1,nspin
@@ -692,7 +704,6 @@
 !           enddo 
 
  
-            call mp_sum(c0hc0)
   
             do is=1,nspin
               nss=nupdwn(is)
@@ -706,8 +717,12 @@
             do  is=1,nspin
               istart=iupdwn(is)
               nss=nupdwn(is) 
-              call ddiag(nss,nss,epsi0(1,1,is),dval(1),z1(1,1,is),1)
-              do i=1,nss
+              if(ionode) then
+                 call ddiag(nss,nss,epsi0(1,1,is),dval(1),z1(1,1,is),1)
+              endif
+              call mp_bcast(dval,ionode_id)
+              call mp_bcast(z1(:,:,is),ionode_id)
+             do i=1,nss
                 e0(i+istart-1)=dval(i)
               enddo
             enddo
@@ -735,7 +750,6 @@
             !     initialization when xmin is determined by sampling 
             do il=1,1
               !     this loop is useful to check that the sampling is correct
-              !x=0.1*DBLE(il)
               x=1.*DBLE(il)
               do is=1,nspin
                 nss=nupdwn(is)
@@ -747,7 +761,11 @@
               do  is=1,nspin
                 nss=nupdwn(is)
                 istart=iupdwn(is)
-                call ddiag(nss,nss,fmatx(1,1,is),dval(1),zaux(1,1,is),1)
+                if(ionode) then
+                   call ddiag(nss,nss,fmatx(1,1,is),dval(1),zaux(1,1,is),1)
+                endif
+                call mp_bcast(dval,ionode_id)
+                call mp_bcast(zaux(:,:,is),ionode_id)
                 do i=1,nss
                   faux(i+istart-1)=dval(i)
                 enddo
@@ -804,7 +822,7 @@
               !     free energy at x=1
               atot1=etot+entropy
               etot1=etot
-  
+              !if(ionode) write(37,'(a5,f4.2,3f15.10)') 'x :',x,etot,entropy,atot1
            end do
   
   
@@ -832,8 +850,8 @@
                   endif
                 end do
               end do
+              call mp_sum(c0hc0(1:nss,1:nss,is))
             end do
-            call mp_sum(c0hc0)
   
             do is=1,nspin
               nss=nupdwn(is)
@@ -929,8 +947,8 @@
   
   
             !     if xmin=1, no need do recalculate the quantities
-             
-            if (xmin.eq.1) goto 300
+            if(ionode) write(37,'(a5,2f15.10)') 'XMIN', xmin,atotmin 
+            if (xmin.eq.1.) goto 300
   
             !     calculation of the fmat at x=xmin
             !     this part can be optimized in the case where xmin=0
@@ -948,7 +966,9 @@
             do is=1,nspin
                nss=nupdwn(is)
                istart=iupdwn(is)
-               call ddiag(nss,nss,fmatx(1,1,is),dval(1),zaux(1,1,is),1)  
+               if(ionode) call ddiag(nss,nss,fmatx(1,1,is),dval(1),zaux(1,1,is),1)  
+               call mp_bcast(dval,ionode_id)
+               call mp_bcast(zaux(:,:,is),ionode_id)
                do i=1,n
                   faux(i+istart-1)=dval(i)
                enddo
@@ -1004,6 +1024,7 @@
     
             !     free energy at x=xmin
             atotmin=etot+entropy      
+            if(ionode) write(37,'(a3,i2,2f15.10)') 'CI',niter,atot0,atotmin
   
   
             atot0=atotmin
@@ -1099,5 +1120,5 @@
 
         endif
 
-      !close(37)!for debug and tuning purposes
+      if(ionode) close(37)!for debug and tuning purposes
 END SUBROUTINE

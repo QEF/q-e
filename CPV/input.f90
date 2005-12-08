@@ -980,12 +980,8 @@ MODULE input
 
      CALL kpoint_setup( k_points, nkstot, nk1, nk2, nk3, k1, k2, k3, xk, wk )
 
-     IF( ( program_name == 'CP90' ) .AND.  tefield .AND. nspin == 2) &
-          CALL errore(' modules_setup ', ' tefield not implemented yet with nspin==2 ', 1 )
      CALL efield_init( epol, efield )
 
-     IF( ( program_name == 'CP90' ) .AND.  tcg .AND. nspin == 2) &
-          CALL errore(' modules_setup ', ' CG not implemented yet with nspin==2 ', 1 )
      CALL cg_init( tcg , maxiter , etresh , passop )
 
      !
