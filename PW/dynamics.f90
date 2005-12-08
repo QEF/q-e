@@ -162,6 +162,8 @@ SUBROUTINE dynamics()
   !
   IF ( lrescale_t ) THEN
      !
+     vel(:,:) = tau(:,:) - tau_old(:,:)
+     !
      IF ( MOD( istep, nraise ) == 0 ) THEN
         !
         IF ( delta_t == 1.D0 ) THEN
@@ -188,8 +190,10 @@ SUBROUTINE dynamics()
      END IF
      !
      ! ... the old positions are updated to reflect the new velocities
+     ! ... ( notice that vel is not the real velocity, but just a 
+     ! ... displacement vector )
      !
-     tau_old(:,:) = tau(:,:) - dt * vel(:,:)
+     tau_old(:,:) = tau(:,:) - vel(:,:)
      !
   END IF
   !
@@ -299,7 +303,7 @@ SUBROUTINE dynamics()
   !
   ! ... the linear momentum and the kinetic energy are computed here
   !
-  IF ( istep > 1 ) &
+  IF ( istep > 1 .OR. lrescale_t ) &
      vel = ( tau_new - tau_old ) / ( 2.D0 * dt ) * DBLE( if_pos )
   !
   ml   = 0.D0
@@ -626,6 +630,10 @@ SUBROUTINE dynamics()
           !
        END DO   
        !
+       ! ... vel is used already multiplied by the time step
+       !
+       vel(:,:) = vel(:,:) * dt
+       !
        ! ... after the velocity of the center of mass has been subtracted the
        ! ... temperature is usually changed. Set again the temperature to the
        ! ... right value.
@@ -661,7 +669,7 @@ SUBROUTINE dynamics()
           !
        END IF
        !
-       vel = vel * aux
+       vel(:,:) = vel(:,:) * aux
        !
        RETURN
        !
