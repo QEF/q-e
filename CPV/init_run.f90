@@ -173,14 +173,18 @@ SUBROUTINE init_run()
   !
   ALLOCATE( becsum(  nhm*(nhm+1)/2, nat, nspin ) )
   ALLOCATE( deeq( nhm, nhm, nat, nspin ) )
-  ALLOCATE( dbec( nkb, nbsp, 3, 3 ) )
-  ALLOCATE( drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 ) )
+  IF ( tpre ) THEN
+     ALLOCATE( dbec( nkb, nbsp, 3, 3 ) )
+     ALLOCATE( drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 ) )
+  END IF
   !
   IF( program_name == 'CP90' ) THEN
      !
      ALLOCATE( vkb( ngw, nkb ) )
-     ALLOCATE( drhog( ngm,  nspin, 3, 3 ) )
-     ALLOCATE( drhor( nnrx, nspin, 3, 3 ) )
+     IF ( tpre ) THEN
+        ALLOCATE( drhog( ngm,  nspin, 3, 3 ) )
+        ALLOCATE( drhor( nnrx, nspin, 3, 3 ) )
+     END IF
      !
   END IF
   !
