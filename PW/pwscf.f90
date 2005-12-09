@@ -82,19 +82,21 @@ PROGRAM pwscf
      !
   ELSE
      !
-     CALL init_run()
-     !
      istep = 0
      !
      IF ( lmetadyn ) THEN
         !
         ! ... meta-dynamics
         !
-        CALL metadyn_init( tau )
+        CALL metadyn_init( 'PW', tau )
+        !
+        CALL init_run()
         !
         CALL metadyn()
         !
      ELSE
+        !
+        CALL init_run()
         !
         main_loop: DO
            !

@@ -119,7 +119,7 @@ SUBROUTINE cpr_loop( nloop )
   !
   IF ( lmetadyn ) THEN
      !
-     CALL metadyn_init( tau )
+     CALL metadyn_init( 'CP', tau )
      !
      CALL metadyn()
      !

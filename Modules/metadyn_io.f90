@@ -158,7 +158,7 @@ MODULE metadyn_io
       !------------------------------------------------------------------------
       !
       USE metadyn_vars,       ONLY : g_amplitude, gaussian_pos, fe_grad, &
-                                     metadyn_history, starting_metadyn_iter
+                                     metadyn_history, first_metadyn_iter
       USE constraints_module, ONLY : nconstr, target
       USE io_global,          ONLY : ionode, ionode_id
       USE mp,                 ONLY : mp_bcast
@@ -185,7 +185,7 @@ MODULE metadyn_io
                       'no free units to read the restart file', ierr )
          !
          filename = TRIM( dirname ) // &
-                  & '/meta-dynamics' // '/' // "metadyn-descriptor.xml"
+                  & '/meta-dynamics/' // "metadyn-descriptor.xml"
          !
          ! ... descriptor file
          ! 
@@ -195,7 +195,8 @@ MODULE metadyn_io
       !
       CALL mp_bcast( ierr, ionode_id )
       !
-      CALL errore( 'read_metadyn_restart', 'restart file not found', ierr )
+      CALL errore( 'read_metadyn_restart', &
+                   'restart file ' // TRIM( filename ) // ' not found', ierr )
       !
       IF ( ionode ) THEN
          !
@@ -213,9 +214,9 @@ MODULE metadyn_io
             !
          END IF
          !
-         CALL iotk_scan_dat( iunit, "STEP", starting_metadyn_iter )
+         CALL iotk_scan_dat( iunit, "STEP", first_metadyn_iter )
          !
-         DO i = 1, starting_metadyn_iter
+         DO i = 1, first_metadyn_iter
             !
             tag = "ITERATION" // TRIM( iotk_index( i ) )
             !
@@ -234,7 +235,7 @@ MODULE metadyn_io
          !
          CALL iotk_open_read( iunit, FILE = filename )
          !
-         tag = "ITERATION" // TRIM( iotk_index( starting_metadyn_iter ) )
+         tag = "ITERATION" // TRIM( iotk_index( first_metadyn_iter ) )
          !
          CALL iotk_scan_begin( iunit, TRIM( tag ) )
          !
@@ -264,13 +265,13 @@ MODULE metadyn_io
          !
       END IF
       !
-      CALL mp_bcast( nconstr,               ionode_id )
-      CALL mp_bcast( starting_metadyn_iter, ionode_id )
-      CALL mp_bcast( metadyn_history,       ionode_id )
-      CALL mp_bcast( tau,                   ionode_id )
-      CALL mp_bcast( target,                ionode_id )
-      CALL mp_bcast( gaussian_pos,          ionode_id )
-      CALL mp_bcast( fe_grad,               ionode_id )
+      CALL mp_bcast( nconstr,            ionode_id )
+      CALL mp_bcast( first_metadyn_iter, ionode_id )
+      CALL mp_bcast( metadyn_history,    ionode_id )
+      CALL mp_bcast( tau,                ionode_id )
+      CALL mp_bcast( target,             ionode_id )
+      CALL mp_bcast( gaussian_pos,       ionode_id )
+      CALL mp_bcast( fe_grad,            ionode_id )
       !
       RETURN
       !

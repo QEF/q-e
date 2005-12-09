@@ -40,7 +40,9 @@ MODULE metadyn_vars
   !
   REAL(DP) :: g_amplitude
   !
-  INTEGER :: starting_metadyn_iter
+  INTEGER :: first_metadyn_iter
+  INTEGER :: first_fe_iter
+  INTEGER :: first_shake_iter
   !
   CHARACTER(LEN=80) :: metadyn_fmt
   !

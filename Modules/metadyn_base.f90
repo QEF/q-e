@@ -34,33 +34,36 @@ MODULE metadyn_base
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE metadyn_init( tau )
+    SUBROUTINE metadyn_init( progname, tau )
       !------------------------------------------------------------------------
       !
       USE kinds,              ONLY : DP
       USE input_parameters,   ONLY : restart_mode
       USE constraints_module, ONLY : nconstr, target
-      USE control_flags,      ONLY : nstep
+      USE control_flags,      ONLY : nstep, ndr
       USE constants,          ONLY : bohr_radius_angs
       USE cell_base,          ONLY : at, alat
       USE metadyn_vars,       ONLY : fe_grad, g_amplitude, max_metadyn_iter, &
                                      metadyn_history, metadyn_fmt, fe_step,  &
-                                     starting_metadyn_iter, gaussian_pos
+                                     first_metadyn_iter, gaussian_pos
       USE metadyn_io,         ONLY : read_metadyn_restart
       USE parser,             ONLY : delete_if_present, int_to_char
-      USE io_files,           ONLY : tmp_dir, prefix, iunaxsf, iunmeta
+      USE io_files,           ONLY : tmp_dir, scradir, prefix, iunaxsf, iunmeta
       USE io_global,          ONLY : stdout, ionode, ionode_id
       USE mp,                 ONLY : mp_bcast
+      USE xml_io_base,        ONLY : restart_dir
       !
       IMPLICIT NONE
       !
-      REAL(DP), INTENT(INOUT) :: tau(:,:)
+      CHARACTER(LEN=*), INTENT(IN)    :: progname
+      REAL(DP),         INTENT(INOUT) :: tau(:,:)
       !
-      INTEGER           :: idum, i
-      REAL(DP)          :: rdum
-      LOGICAL           :: file_exists
-      CHARACTER(LEN=4)  :: c_nconstr
-      CHARACTER(LEN=16) :: fe_step_fmt
+      INTEGER            :: idum, i
+      REAL(DP)           :: rdum
+      LOGICAL            :: file_exists
+      CHARACTER(LEN=256) :: dirname
+      CHARACTER(LEN=4)   :: c_nconstr
+      CHARACTER(LEN=16)  :: fe_step_fmt
       !
       !
       c_nconstr  = int_to_char( nconstr )
@@ -116,13 +119,28 @@ MODULE metadyn_base
             !
          END IF
          !
-         starting_metadyn_iter = 0
+         first_metadyn_iter = 0
          !
       ELSE
          !
          ! ... restarting from file
          !
-         CALL read_metadyn_restart( tmp_dir, tau, alat )
+         IF ( progname == 'PW' ) THEN
+            !
+            dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.new-save'
+            !
+         ELSE IF ( progname == 'CP' ) THEN
+            !
+            dirname = restart_dir( scradir, ndr )
+            !
+         ELSE
+            !
+            CALL errore( 'metadyn_init', &
+                         'wrong calling program: ' // TRIM( progname ), 1 )
+            !
+         END IF
+         !
+         CALL read_metadyn_restart( dirname, tau, alat )
          !
          IF ( ionode ) THEN
             !
@@ -135,7 +153,7 @@ MODULE metadyn_base
          !
       END IF
       !
-      IF ( starting_metadyn_iter == max_metadyn_iter ) THEN
+      IF ( first_metadyn_iter == max_metadyn_iter ) THEN
          !
          WRITE( stdout, '(/,5X,"Simulation already completed",/)' )
          !

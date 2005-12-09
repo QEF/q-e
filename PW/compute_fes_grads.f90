@@ -421,7 +421,7 @@ SUBROUTINE metadyn()
   USE io_files,           ONLY : iunaxsf, iunmeta, prefix, tmp_dir
   USE metadyn_vars,       ONLY : fe_grad, new_target, to_target, metadyn_fmt, &
                                  to_new_target, fe_step, metadyn_history, &
-                                 max_metadyn_iter, starting_metadyn_iter, &
+                                 max_metadyn_iter, first_metadyn_iter, &
                                  gaussian_pos
   USE metadyn_base,       ONLY : add_gaussians, evolve_collective_vars
   USE metadyn_io,         ONLY : write_axsf_file, write_metadyn_restart
@@ -438,7 +438,7 @@ SUBROUTINE metadyn()
   !
   dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.new-save'
   !
-  iter = starting_metadyn_iter
+  iter = first_metadyn_iter
   !
   metadyn_loop: DO
      !
