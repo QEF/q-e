@@ -7,8 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine symrho (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
-     ftau)
+subroutine symrho (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
   !-----------------------------------------------------------------------
   !
   !     symmetrize the charge density.
@@ -19,8 +18,7 @@ subroutine symrho (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
   !
   !    first the dummy variables
   !
-  integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s (3, 3, 48), &
-       ftau (3, 48)
+  integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s (3, 3, 48), ftau (3, 48)
   !
   ! input:  dimensions of the FFT mesh
   ! input: the number of symmetries

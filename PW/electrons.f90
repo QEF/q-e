@@ -539,8 +539,8 @@ SUBROUTINE electrons()
            !
            CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
            !
-           WRITE (*,*) " NOW GO BACK TO REFINE HYBRID CALCULATION"
-           WRITE (*,*) fock0
+           WRITE (stdout,*) " NOW GO BACK TO REFINE HYBRID CALCULATION"
+           WRITE (stdout,*) fock0
            !
            iter = 0
            !
@@ -554,7 +554,7 @@ SUBROUTINE electrons()
         !
         etot = etot  - dexx
         !
-        WRITE(*,*) fock0, fock1, fock2
+        WRITE( stdout,*) fock0, fock1, fock2
         WRITE( stdout, 9066 ) dexx
         !
         fock0 = fock2
@@ -628,7 +628,7 @@ SUBROUTINE electrons()
         !
         IF ( dft_is_hybrid() .AND. dexx > tr2 ) THEN
            !
-           WRITE (*,*) " NOW GO BACK TO REFINE HYBRID CALCULATION"
+           WRITE (stdout,*) " NOW GO BACK TO REFINE HYBRID CALCULATION"
            !
            iter = 0
            !

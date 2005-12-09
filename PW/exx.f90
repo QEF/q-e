@@ -101,6 +101,7 @@ contains
   USE lsda_mod,  ONLY : nspin
   USE klist,     ONLY : xk
   USE wvfct,     ONLY : nbnd
+  USE io_global, ONLY : stdout
 !
 ! parallel stuff
 !
@@ -123,8 +124,12 @@ contains
   ! all processors need to have access to all k+q points
   !
   no_pool_para =  (nq1*nq2*nq3 /= 1) .and. (npool>nspin) .and. ( nsym > 1 )
-  if (no_pool_para ) call errore('exx_grid',&
+  if (no_pool_para ) then
+     write(stdout,'(5x,a)') &
+         '(nq1*nq2*nq3 /= 1) .and. (npool>nspin) .and. ( nsym > 1 )'
+     call errore('exx_grid',&
               'pool parallelization not possible in this case', npool)
+  end if
   !
   eps = 1.d-6
   !
@@ -275,6 +280,7 @@ contains
   USE symme,     ONLY : nsym, s
   USE cell_base, ONLY : bg, at
   USE lsda_mod,  ONLY : nspin
+  USE io_global, ONLY : stdout
   USE klist
   implicit none
   real (DP) :: sxk(3), dxk(3), xk_cryst(3), xkk_cryst(3)
@@ -323,7 +329,7 @@ contains
      end do
   end do
 
-  write (*,*) ' EXX GRID CHECK SUCCESSFUL '
+  write (stdout,*) ' EXX GRID CHECK SUCCESSFUL '
 
   return
 
@@ -340,6 +346,7 @@ contains
     USE io_files,             ONLY : nwordwfc
     USE io_files,             ONLY : prefix
     USE io_files,             ONLY : tmp_dir, iunwfc, iunigk
+    USE io_global,            ONLY : stdout
     USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
     USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                      nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
@@ -348,22 +355,28 @@ contains
     USE parser,               ONLY : find_free_unit
     USE symme,                ONLY : nsym, s, ftau
 
-    use mp_global,            ONLY : nproc_pool
+    use mp_global,            ONLY : nproc_pool, me_pool
     use funct,                ONLY : get_exx_fraction, start_exx, exx_is_active
 
     implicit none
     integer :: ios, ik,ibnd, i, j, k, ir, ri, rj, rk, isym, ikq
     integer :: h_ibnd, half_nbnd
     COMPLEX(DP),allocatable :: temppsic(:), psic(:), tempevc(:,:)
+#ifdef __PARA
+    integer nxxs
+    COMPLEX(DP),allocatable :: temppsic_all(:), psic_all(:)
+#endif
     logical, allocatable :: present(:)
     logical :: exst
     integer, allocatable :: rir(:,:)
 
     call start_clock ('exxinit')
 
-    if (nproc_pool > 1 ) call errore ('exxinit',' nproc_pool > 1 ',nproc_pool)
-
-    allocate(present(nsym),rir(nrxxs,nsym))
+#ifdef __PARA
+    nxxs = nrx1s * nrx2s * nrx3s
+    allocate(psic_all(nxxs), temppsic_all(nxxs) )
+#endif
+    allocate(present(nsym),rir(nrx1s*nrx2s*nrx3s,nsym))
     allocate(temppsic(nrxxs), psic(nrxxs), tempevc( npwx, nbnd ))
 
     exx_nwordwfc=2*nrxxs
@@ -372,7 +385,7 @@ contains
        call diropn(iunexx,'exx', exx_nwordwfc, exst) 
        exxdiv = exx_divergence() 
        exxalfa = get_exx_fraction()
-       write (*,*) " ! EXXALFA SET TO ", exxalfa
+       write (stdout,*) " ! EXXALFA SET TO ", exxalfa
        call start_exx
     endif
 
@@ -391,7 +404,7 @@ contains
                mod (s (2, 3, isym) * nr3s, nr2s) .ne.0 ) then
              call errore ('exxinit',' EXX + smooth grid is not working',isym)
           end if
-          do ir=1,nrxxs
+          do ir=1, nrx1s * nrx2s * nrx3s
              rir(ir,isym) = ir
           end do
           do k = 1, nr3s
@@ -439,7 +452,14 @@ contains
                 if (index_xk(ikq) .ne. ik) cycle
 
                 isym = abs(index_sym(ikq) )
+#ifdef __PARA
+                call cgather_smooth(temppsic,temppsic_all)
+                IF ( me_pool == 0 ) &
+                     psic_all(1:nxxs) = temppsic_all(rir(1:nxxs,isym))
+                call cscatter_smooth(psic_all,psic)
+#else
                 psic(1:nrxxs) = temppsic(rir(1:nrxxs,isym))
+#endif
                 if (index_sym(ikq) < 0 ) &
                    call errore('exxinit','index_sym < 0 with gamma_only (!?)',1)
 
@@ -456,7 +476,14 @@ contains
                 if (index_xk(ikq) .ne. ik) cycle
 
                 isym = abs(index_sym(ikq) )
+#ifdef __PARA
+                call cgather_smooth(temppsic,temppsic_all)
+                IF ( me_pool == 0 ) &
+                    psic_all(1:nxxs) = temppsic_all(rir(1:nxxs,isym))
+                call cscatter_smooth(psic_all,psic)
+#else
                 psic(1:nrxxs) = temppsic(rir(1:nrxxs,isym))
+#endif
                 if (index_sym(ikq) < 0 ) psic(1:nrxxs) = CONJG(psic(1:nrxxs))
 
                 CALL davcio(psic,exx_nwordwfc,iunexx,(ikq-1)*nbnd+ibnd,1)
@@ -466,6 +493,9 @@ contains
     end do
     deallocate(temppsic, psic, tempevc)
     deallocate(present,rir)
+#ifdef __PARA
+    deallocate(temppsic_all, psic_all)
+#endif 
 
     ! set appropriately the x_occupation
     do ik =1,nks
@@ -849,6 +879,7 @@ contains
      USE cell_base, ONLY : bg, alat, omega
      USE gvect,     ONLY : ngm, g, ecutwfc
      USE wvfct,     ONLY : gamma_only
+     USE io_global, ONLY : stdout
 
      implicit none
      real(DP) :: exx_divergence
@@ -917,7 +948,7 @@ contains
      end do
      aa = aa * 8.d0 /fpi
      aa = aa + 1.d0/sqrt(alpha*0.25d0*fpi) 
-     write (*,*) aa, 1.d0/sqrt(alpha*0.25d0*fpi)
+     write (stdout,*) aa, 1.d0/sqrt(alpha*0.25d0*fpi)
     
      div = div - e2*omega * aa
 
@@ -925,7 +956,7 @@ contains
 
      exx_divergence = div * nqs
 
-     write (*,'(a,i4,a,3f12.4)') 'EXX divergence (',nq1,')= ', &
+     write (stdout,'(a,i4,a,3f12.4)') 'EXX divergence (',nq1,')= ', &
                                   div, alpha
 
      call stop_clock ('exx_div')
