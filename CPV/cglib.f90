@@ -175,6 +175,7 @@
       subroutine ddiag(nx,n,amat,dval,dvec,iflag)
 !-----------------------------------------------------------------------
 !
+      use parallel_toolkit, only: dspev_drv
       implicit none
       integer nx,n,naux,ndim,iopt,iflag,k,i,j,info
       real(8)   dval(n)
@@ -208,7 +209,8 @@
        end do
       end do
 
-      call dspev('V','U',n,ap,dval,dvec,nx,aux,info)
+      CALL dspev_drv( 'V', 'U', n, ap, dval, dvec, nx )
+
       if(info.ne.0) write(6,*) 'Problems with ddiag'
 
       deallocate(ap)

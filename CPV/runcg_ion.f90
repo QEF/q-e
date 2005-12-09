@@ -296,7 +296,7 @@
 
         USE wave_types, ONLY: wave_descriptor
         USE energies, ONLY: dft_energy_type
-        USE wave_functions, ONLY: gram, update_wave_functions
+        USE wave_functions, ONLY: update_wave_functions
         USE io_global, ONLY: ionode
         USE io_global, ONLY: stdout
         USE cell_module, ONLY: boxdimensions, r_to_s

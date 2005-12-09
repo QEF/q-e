@@ -32,7 +32,7 @@ MODULE from_scratch_module
     !
     USE kinds,            ONLY : DP
     USE wave_types,       ONLY : wave_descriptor
-    USE wave_functions,   ONLY : gram, fixwave, wave_rand_init
+    USE wave_functions,   ONLY : fixwave, wave_rand_init
     USE wave_base,        ONLY : wave_steepest
     USE charge_density,   ONLY : rhoofr
     USE cell_module,      only : boxdimensions
@@ -54,6 +54,7 @@ MODULE from_scratch_module
     USE gvecp,            ONLY : ngm
     USE io_global,        ONLY : ionode, stdout
     USE parameters,       ONLY : nacx
+    USE uspp,             ONLY : vkb, nkb
     !
     USE atoms_type_module,    ONLY : atoms_type
     USE phase_factors_module, ONLY : strucf, phfacs
@@ -136,7 +137,11 @@ MODULE from_scratch_module
     IF ( ionode ) &
        WRITE( stdout, fmt = '(//,3X, "Wave Initialization: random initial wave-functions" )' )
     !
-    CALL gram( cm, cdesc ) 
+    DO iss = 1, nspin_wfc
+       !
+       CALL gram( vkb, bec, nkb, cm(1,1,1,iss), SIZE(cm,1), cdesc%nbt( iss ) )
+       !
+    END DO
     !
     c0 = cm
     !
@@ -180,7 +185,11 @@ MODULE from_scratch_module
           !
        ELSE
           !
-          CALL gram( c0, cdesc )
+          DO iss = 1, nspin_wfc
+            !
+            CALL gram( vkb, bec, nkb, c0(1,1,1,iss), SIZE(c0,1), cdesc%nbt( iss ) )
+            !
+          END DO
           !
        END IF
        !
@@ -309,7 +318,7 @@ MODULE from_scratch_module
     !
     CALL prefor( eigr, vkb )
     !
-    CALL gram( vkb, bec, cm )
+    CALL gram( vkb, bec, nkb, cm, ngw, nbsp )
 
     if( iprsta .ge. 3 ) CALL dotcsc( eigr, cm )
 
@@ -380,7 +389,7 @@ MODULE from_scratch_module
       if( tortho ) then
          CALL ortho( eigr, c0, phi, lambda, bigr, iter, ccc, ortho_eps, ortho_max, delt, bephi, becp )
       else
-         CALL gram( vkb, bec, c0 )
+         CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
       endif
 !
 !

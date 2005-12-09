@@ -87,9 +87,8 @@
             DO l = 1,nbeta
 ! ...         G=0 (Only if l=1, since otherwise the radial Bessel function jl=0)
               IF( ap%lll(l) == 0 ) THEN
-                fint(1:mmax,l) = ap%rw(1:mmax)**2 * ap%vrps(1:mmax,l)
-                call simpson_fpmd(mmax, fint(:,l), dx, wnl(ig,l))
-                ! call simpson(mmax, fint(:,l), ap%rab, wnl(ig,l))
+                fint(1:mmax,l) = ap%rw(1:mmax) * ap%vrps(1:mmax,l)
+                call simpson_cp90( mmax, fint(1,l), ap%rab(1), wnl(ig,l) )
               ELSE
                 wnl(ig,l) = 0.d0
               END IF
@@ -99,9 +98,8 @@
             xg = SQRT( hg(ig) ) * tpiba
             CALL bessel2(xg, ap%rw, fint, nbeta, ap%lll, mmax)
             DO l = 1, nbeta
-              fint(1:mmax,l) = fint(1:mmax,l) * ap%rw(1:mmax)**2 * ap%vrps(1:mmax,l)
-              call simpson_fpmd(mmax, fint(:,l), dx, wnl(ig,l))
-              ! call simpson(mmax, fint(:,l), ap%rab, wnl(ig,l))
+              fint(1:mmax,l) = fint(1:mmax,l) * ap%rw(1:mmax) * ap%vrps(1:mmax,l)
+              call simpson_cp90( mmax, fint(1,l), ap%rab(1), wnl(ig,l) )
             END DO
 
 ! ...       Bessel Test
@@ -151,8 +149,8 @@
 ! ...       G=0 (Only if L = 0, since otherwise the radial Bessel function JL=0)
             DO l = 1, nbeta
               IF( ap%lll(l) == 0 ) THEN
-                fint(1:mmax,l) = ap%rw(1:mmax)**2 * ap%vrps(1:mmax,l) 
-                call simpson_fpmd(mmax, fint(:,l), dx, wnla(ig, l))
+                fint(1:mmax,l) = ap%rw(1:mmax) * ap%vrps(1:mmax,l) 
+                call simpson_cp90( mmax, fint(1,l), ap%rab(1), wnla(ig,l) )
               ELSE
                 wnla(ig, l) = 0.d0
               END IF
@@ -161,8 +159,8 @@
             xg = SQRT(hg(ig)) * tpiba
             CALL bessel3(xg, ap%rw, fint, nbeta, ap%lll, mmax)
             DO l = 1, nbeta
-              fint(1:mmax,l) = fint(1:mmax,l) * ap%rw(1:mmax)**2 * ap%vrps(1:mmax,l)
-              call simpson_fpmd(mmax, fint(:,l), dx, wnla(ig,l))
+              fint(1:mmax,l) = fint(1:mmax,l) * ap%rw(1:mmax) * ap%vrps(1:mmax,l)
+              call simpson_cp90( mmax, fint(1,l), ap%rab(1), wnla(ig,l) )
             END DO
           END IF
         END DO

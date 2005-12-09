@@ -329,23 +329,24 @@
       RETURN
       END SUBROUTINE calphi
 !-----------------------------------------------------------------------
-      REAL(8) FUNCTION cscnorm(bec,cp,i)
+      REAL(8) FUNCTION cscnorm( bec, nkbx, cp, ngwx, i, n )
 !-----------------------------------------------------------------------
 !     requires in input the updated bec(i)
 !
-      USE ions_base, ONLY: na
-      USE gvecw, ONLY: ngw
+      USE ions_base,  ONLY: na
+      USE gvecw,      ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
-      USE electrons_base, ONLY: n => nbsp
-      USE cvan, ONLY: ish, nvb
+      USE cvan,       ONLY: ish, nvb
       USE uspp_param, ONLY: nh
-      USE uspp, ONLY: nhsa=>nkb, nhsavb=>nkbus, qq
-      USE mp, ONLY: mp_sum
+      USE uspp,       ONLY: qq
+      USE mp,         ONLY: mp_sum
+      USE kinds,      ONLY: DP
 !
       IMPLICIT NONE
-      INTEGER i
-      REAL(8) bec(nhsa,n)
-      COMPLEX(8) cp(ngw,n)
+      INTEGER, INTENT(IN) :: i, n
+      INTEGER, INTENT(IN) :: ngwx, nkbx
+      REAL(DP)    :: bec( nkbx, n )
+      COMPLEX(DP) :: cp( ngwx, n )
 !
       INTEGER ig, is, iv, jv, ia, inl, jnl
       REAL(8) rsum
@@ -1441,48 +1442,54 @@
 !            
 
 !-------------------------------------------------------------------------
-      SUBROUTINE gracsc(bec,betae,cp,i,csc)
+      SUBROUTINE gracsc( bec, nkbx, betae, cp, ngwx, i, csc, n )
 !-----------------------------------------------------------------------
 !     requires in input the updated bec(k) for k<i
 !     on output: bec(i) is recalculated
 !
-      USE ions_base, ONLY: na
-      USE cvan, ONLY :nvb, ish
-      USE uspp, ONLY :nhsa=>nkb, nhsavb=>nkbus, qq
-      USE uspp_param, ONLY:  nh
-      USE electrons_base, ONLY: n => nbsp, ispin => fspin, nx => nbspx
-      USE gvecw, ONLY: ngw
+      USE ions_base,      ONLY: na
+      USE cvan,           ONLY :nvb, ish
+      USE uspp,           ONLY : nkb, nhsavb=>nkbus, qq
+      USE uspp_param,     ONLY:  nh
+      USE electrons_base, ONLY: ispin => fspin
+      USE gvecw,          ONLY: ngw
+      USE mp,             ONLY: mp_sum
+      USE kinds,          ONLY: DP
       USE reciprocal_vectors, ONLY: gstart
-      USE mp, ONLY: mp_sum
 !
       IMPLICIT NONE
 !
-      INTEGER i
-      COMPLEX(8) betae(ngw,nhsa)
-      REAL(8)  bec(nhsa,n), cp(2,ngw,n)
-      REAL(8)  csc(nx)
-      INTEGER k, kmax,ig, is, iv, jv, ia, inl, jnl
-      REAL(8) rsum, temp(ngw) ! automatic array
-!
-!     calculate csc(k)=<cp(i)|cp(k)>,  k<i
-!
-      kmax=i-1
-      DO k=1,kmax
-         csc(k)=0.
-         IF (ispin(i).EQ.ispin(k)) THEN
-            DO ig=1,ngw
-               temp(ig)=cp(1,ig,k)*cp(1,ig,i)+cp(2,ig,k)*cp(2,ig,i)
+      INTEGER, INTENT(IN) :: i, nkbx, ngwx, n
+      COMPLEX(DP) :: betae( ngwx, nkb )
+      REAL(DP)    :: bec( nkbx, n ), cp( 2, ngwx, n )
+      REAL(DP)    :: csc( n )
+      INTEGER     :: k, kmax,ig, is, iv, jv, ia, inl, jnl
+      REAL(DP)    :: rsum
+      REAL(DP), ALLOCATABLE :: temp(:) 
+
+      !
+      !     calculate csc(k)=<cp(i)|cp(k)>,  k<i
+      !
+      ALLOCATE( temp( ngw ) )
+
+      kmax = i - 1
+
+      DO k = 1, kmax
+         csc(k) = 0.0d0
+         IF ( ispin(i) .EQ. ispin(k) ) THEN
+            DO ig = 1, ngw
+               temp(ig) = cp(1,ig,k) * cp(1,ig,i) + cp(2,ig,k) * cp(2,ig,i)
             END DO
-            csc(k)=2.*SUM(temp)
-            IF (gstart == 2) csc(k)=csc(k)-temp(1)
+            csc(k) = 2.0d0 * SUM(temp)
+            IF (gstart == 2) csc(k) = csc(k) - temp(1)
          ENDIF
       END DO
 
       CALL mp_sum( csc( 1:kmax ) )
 
-!
-!     calculate bec(i)=<cp(i)|beta>
-!
+      !
+      !     calculate bec(i)=<cp(i)|beta>
+      !
       DO inl=1,nhsavb
          DO ig=1,ngw
             temp(ig)=cp(1,ig,i)* DBLE(betae(ig,inl))+             &
@@ -1525,46 +1532,51 @@
             bec(inl,i)=bec(inl,i)-csc(k)*bec(inl,k)
          END DO
       END DO
+
+      DEALLOCATE( temp )
 !
       RETURN
       END SUBROUTINE gracsc
+
 !-------------------------------------------------------------------------
-      SUBROUTINE gram(betae,bec,cp)
+      SUBROUTINE gram( betae, bec, nkbx, cp, ngwx, n )
 !-----------------------------------------------------------------------
 !     gram-schmidt orthogonalization of the set of wavefunctions cp
 !
-      USE uspp, ONLY :nhsa=>nkb, nhsavb=> nkbus
-      USE electrons_base, ONLY: nx => nbspx, n => nbsp
-      USE gvecw, ONLY: ngw
+      USE uspp,           ONLY : nkb, nhsavb=> nkbus
+      USE gvecw,          ONLY : ngw
+      USE kinds,          ONLY : DP
 !
       IMPLICIT NONE
 !
-      REAL(8)  bec(nhsa,n)
-      COMPLEX(8)   cp(ngw,n), betae(ngw,nhsa)
+      INTEGER, INTENT(IN) :: nkbx, ngwx, n
+      REAL(DP)      :: bec( nkbx, n )
+      COMPLEX(DP)   :: cp( ngwx, n ), betae( ngwx, nkb )
 !
-      REAL(8) :: anorm, cscnorm
-      REAL(8), ALLOCATABLE :: csc( : )
+      REAL(DP) :: anorm, cscnorm
+      REAL(DP), ALLOCATABLE :: csc( : )
       INTEGER :: i,k
       EXTERNAL cscnorm
 !
       CALL start_clock( 'gram' )
 
-      ALLOCATE( csc( nx ) )
+      ALLOCATE( csc( n ) )
 !
-      DO i=1,n
-         CALL gracsc(bec,betae,cp,i,csc)
-!
-! calculate orthogonalized cp(i) : |cp(i)>=|cp(i)>-\sum_k<i csc(k)|cp(k)>
-!
-         DO k=1,i-1
-            CALL DAXPY(2*ngw,-csc(k),cp(1,k),1,cp(1,i),1)
+      DO i = 1, n
+         !
+         CALL gracsc( bec, nkbx, betae, cp, ngwx, i, csc, n )
+         !
+         ! calculate orthogonalized cp(i) : |cp(i)>=|cp(i)>-\sum_k<i csc(k)|cp(k)>
+         !
+         DO k = 1, i - 1
+            CALL DAXPY( 2*ngw, -csc(k), cp(1,k), 1, cp(1,i), 1 )
          END DO
-         anorm =cscnorm(bec,cp,i)
-         CALL DSCAL(2*ngw,1.0/anorm,cp(1,i),1)
-!
-!         these are the final bec's
-!
-         CALL DSCAL(nhsavb,1.0/anorm,bec(1,i),1)
+         anorm = cscnorm( bec, nkbx, cp, ngwx, i, n )
+         CALL DSCAL( 2*ngw, 1.0/anorm, cp(1,i), 1 )
+         !
+         !         these are the final bec's
+         !
+         CALL DSCAL( nhsavb, 1.0/anorm, bec(1,i), 1 )
       END DO
 !
       DEALLOCATE( csc )

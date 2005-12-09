@@ -45,7 +45,7 @@
       USE electrons_module, ONLY:  pmss, eigs, nb_l
       USE cp_electronic_mass, ONLY: emass
       USE descriptors_module, ONLY: get_local_dims, owner_of, local_index
-      USE wave_functions, ONLY : rande, cp_kinetic_energy, gram
+      USE wave_functions, ONLY : cp_kinetic_energy
       USE wave_base, ONLY : frice
       USE wave_base, ONLY: hpsi
       USE cell_module, ONLY: boxdimensions
@@ -58,6 +58,7 @@
       USE control_flags, ONLY: tdamp
       USE wave_constrains, ONLY: update_lambda
       USE reciprocal_space_mesh, ONLY: gkmask_l
+      USE uspp,             ONLY : vkb, nkb
 
       IMPLICIT NONE
 
@@ -126,9 +127,11 @@
       !  Orthogonalize the new wave functions "cp"
 
       IF( tortho ) THEN
-        CALL ortho(c0, cp, cdesc, pmss, emass)
+         CALL ortho(c0, cp, cdesc, pmss, emass)
       ELSE
-        CALL gram(cp, cdesc)
+         DO is = 1, cdesc%nspin
+            CALL gram( vkb, bec, nkb, cp(1,1,1,is), SIZE(cp,1), cdesc%nbt( is ) )
+         END DO
       END IF
 
       s3 = cclock()
@@ -355,7 +358,7 @@
       USE electrons_module, ONLY: pmss, eigs, nb_l, nupdwn, nspin
       USE cp_electronic_mass, ONLY: emass
       USE descriptors_module, ONLY: get_local_dims, owner_of, local_index
-      USE wave_functions, ONLY : rande, cp_kinetic_energy, gram
+      USE wave_functions, ONLY : cp_kinetic_energy
       USE wave_base, ONLY: frice, wave_steepest, wave_verlet
       USE wave_base, ONLY: hpsi
       USE cell_module, ONLY: boxdimensions
@@ -369,6 +372,7 @@
       USE io_global, ONLY: ionode
       USE wave_constrains, ONLY: update_lambda
       USE reciprocal_space_mesh, ONLY: gkmask_l
+      USE uspp,             ONLY : vkb, nkb
 
         IMPLICIT NONE
 
@@ -592,9 +596,9 @@
       timerd = timerd + s3 - s4
 
       IF( tortho ) THEN
-        CALL ortho( 1, c0(:,:,:,1), cp(:,:,:,1), cdesc, pmss, emass )
+         CALL ortho( 1, c0(:,:,:,1), cp(:,:,:,1), cdesc, pmss, emass )
       ELSE
-        CALL gram(1, cp(:,:,:,1), cdesc)
+         CALL gram( vkb, bec, nkb, cp(1,1,1,1), SIZE(cp,1), cdesc%nbt( 1 ) )
       END IF
 
 

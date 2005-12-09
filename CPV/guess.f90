@@ -69,23 +69,24 @@
 
 !  ----------------------------------------------
 !  ----------------------------------------------
-        SUBROUTINE guessc0( tk, c0, cm, cdesc )
+        SUBROUTINE guessc0( tk, bec, c0, cm, cdesc )
 
 !  this subroutine updates the wavefunctions, leaving the new wave
 !  functions in the KS base
 !  ----------------------------------------------
 
 ! ...     declare modules
-          USE mp
-          USE wave_functions, ONLY: gram
-          USE wave_types
-          USE control_flags, ONLY: force_pairing
+          USE mp_global,        ONLY : nproc, mpime, group
+          USE wave_types,       ONLY : wave_descriptor
+          USE control_flags,    ONLY : force_pairing
+          USE uspp,             ONLY : vkb, nkb
 
           IMPLICIT NONE
 
 ! ...     declare subroutine arguments
           COMPLEX(DP), INTENT(INOUT) ::  c0(:,:,:,:)
           COMPLEX(DP), INTENT(INOUT) ::  cm(:,:,:,:)
+          REAL(DP), INTENT(INOUT) ::  bec(:,:)
           TYPE (wave_descriptor), INTENT(IN) ::  cdesc
           LOGICAL, INTENT(IN) :: tk
 
@@ -111,12 +112,10 @@
           REAL(DP)   costemp( cdesc%ngwl )
 
           INTEGER jl, i,j,k,ig,h,n,ngw,nrl,ik,nk
-          INTEGER   nproc,mpime,gid
 
 ! ...     end of declarations
 !  ----------------------------------------------
 
-          CALL mp_env(nproc,mpime,gid)
 
           IF( force_pairing ) &
             CALL errore( ' guess ', ' force_pairing not yet implemented ', 1 )
@@ -239,7 +238,7 @@
 
           END IF
 
-          CALL gram( c0, cdesc )
+          CALL gram( vkb, bec, nkb, c0(1,1,1,1), SIZE(c0,1), cdesc%nbt( 1 ) )
 
           RETURN
           END SUBROUTINE guessc0

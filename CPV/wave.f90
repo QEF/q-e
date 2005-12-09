@@ -19,8 +19,6 @@
 !  routines in this module:
 !  REAL(DP) FUNCTION dft_kinetic_energy(c,hg,f,nb)
 !  REAL(DP) FUNCTION cp_kinetic_energy(cp,cm,pmss,emass,delt)
-!  SUBROUTINE rande(cm,ampre)
-!  SUBROUTINE gram(cp)
 !  SUBROUTINE update_wave_functions(cm,c0,cp)
 !  SUBROUTINE crot_gamma (c0,lambda,eig)
 !  SUBROUTINE crot_kp (ik,c0,lambda,eig)
@@ -38,18 +36,12 @@
 
         PRIVATE
 
-          PUBLIC :: crot, proj, gram, rande, fixwave
+          PUBLIC :: crot, proj, fixwave
           INTERFACE crot
             MODULE PROCEDURE crot_kp, crot_gamma
           END INTERFACE
           INTERFACE proj
             MODULE PROCEDURE proj_kp, proj_gamma, proj2
-          END INTERFACE
-          INTERFACE rande
-            MODULE PROCEDURE rande_s, rande_v, rande_m
-          END INTERFACE
-          INTERFACE gram
-            MODULE PROCEDURE gram_s, gram_v, gram_m
           END INTERFACE
           INTERFACE fixwave
             MODULE PROCEDURE fixwave_s, fixwave_v, fixwave_m
@@ -252,96 +244,6 @@
 
 !=----------------------------------------------------------------------------=!
 
-   SUBROUTINE rande_v( ispin, cm, cdesc, ampre )
-
-!  randomize wave functions coefficients
-!  then orthonormalize them
-
-      USE wave_types, ONLY: wave_descriptor
-      USE wave_base, ONLY: rande_base
-
-      IMPLICIT NONE
-
-! ... declare subroutine arguments
-      COMPLEX(DP), INTENT(INOUT) :: cm(:,:,:)
-      TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      INTEGER, INTENT(IN) :: ispin
-      REAL(DP) ampre
-
-! ... declare other variables
-      INTEGER ik
-
-      DO ik = 1, cdesc%nkl
-        call rande_base( cm(:,:,ik), ampre )
-      END DO
-
-      CALL gram( ispin, cm, cdesc )
-
-      RETURN
-   END SUBROUTINE rande_v
-
-!=----------------------------------------------------------------------------=!
-
-   SUBROUTINE rande_m( cm, cdesc, ampre )
-
-!  randomize wave functions coefficients
-!  then orthonormalize them
-! 
-      USE wave_base, ONLY: rande_base
-      USE wave_types, ONLY: wave_descriptor
-      USE control_flags, ONLY: force_pairing
-
-      IMPLICIT NONE
-
-! ... declare subroutine arguments
-      COMPLEX(DP), INTENT(INOUT) :: cm(:,:,:,:)
-      TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      REAL(DP) ampre
-
-! ... declare other variables
-      INTEGER :: ik, ispin, nspin
-
-      nspin = cdesc%nspin
-      IF( force_pairing ) nspin = 1
-
-      DO ispin = 1, nspin
-        DO ik = 1, cdesc%nkl
-          call rande_base( cm( :, :, ik, ispin), ampre )
-        END DO
-      END DO
-
-      CALL gram( cm, cdesc )
-
-      RETURN
-   END SUBROUTINE rande_m
-
-!=----------------------------------------------------------------------------=!
-
-   SUBROUTINE rande_s( ispin, cm, cdesc, ampre )
-
-!  randomize wave functions coefficients
-!  then orthonormalize them
-!
-      USE wave_types, ONLY: wave_descriptor
-      USE wave_base, ONLY: rande_base
-
-      IMPLICIT NONE
-
-! ... declare subroutine arguments
-      COMPLEX(DP), INTENT(INOUT) :: cm(:,:)
-      TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      INTEGER, INTENT(IN) :: ispin
-      REAL(DP) ampre
-
-      CALL rande_base( cm(:,:), ampre )
-
-      CALL gram( ispin, cm, cdesc )
-
-      RETURN
-   END SUBROUTINE rande_s
-
-!=----------------------------------------------------------------------------=!
-
    SUBROUTINE fixwave_s ( ispin, c, cdesc, kmask )
 
       USE wave_types, ONLY: wave_descriptor
@@ -472,105 +374,6 @@
 
       RETURN
    END FUNCTION cp_kinetic_energy
-
-!=----------------------------------------------------------------------------=!
-
-   SUBROUTINE gram_m( cp, cdesc )
-
-! ... declare modules
-      USE mp_global, ONLY: group
-      USE wave_types, ONLY: wave_descriptor
-      USE wave_base, ONLY: gram_gamma_base, gram_kp_base
-      USE control_flags, ONLY: force_pairing
-
-      IMPLICIT NONE
-
-! ... declare other variables
-      COMPLEX(DP), INTENT(INOUT) :: cp(:,:,:,:)
-      TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      INTEGER :: ik, ispin, n, nspin
-
-! ... end of declarations
-
-      nspin = cdesc%nspin
-      IF( force_pairing ) nspin = 1
-
-      DO ispin = 1, nspin
-        DO ik = 1, cdesc%nkl
-          n = cdesc%nbl( ispin )
-          IF( cdesc%gamma ) THEN
-            CALL gram_gamma_base( cp( :, 1:n, ik, ispin), cdesc%gzero, group )
-          ELSE
-            CALL gram_kp_base( cp( :, 1:n, ik,ispin), group )
-          END IF
-        END DO
-      END DO
-
-      RETURN
-   END SUBROUTINE gram_m
-
-!=----------------------------------------------------------------------------=!
-
-   SUBROUTINE gram_v( ispin, cp, cdesc )
-
-! ... declare modules
-      USE mp_global, ONLY: group
-      USE wave_types, ONLY: wave_descriptor
-      USE wave_base, ONLY: gram_gamma_base, gram_kp_base
-
-      IMPLICIT NONE
-
-! ... declare other variables
-      COMPLEX(DP), INTENT(INOUT) :: cp(:,:,:)
-      TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      INTEGER, INTENT(IN) :: ispin
-      INTEGER :: ik
-      INTEGER :: n
-
-! ... end of declarations
-
-      n = cdesc%nbl( ispin )
-
-      DO ik = 1, cdesc%nkl
-        IF( cdesc%gamma ) THEN
-          CALL gram_gamma_base( cp( :, 1:n, ik), cdesc%gzero, group )
-        ELSE
-          CALL gram_kp_base( cp( :, 1:n, ik), group )
-        END IF
-      END DO
-
-      RETURN
-   END SUBROUTINE gram_v
-
-!=----------------------------------------------------------------------------=!
-
-   SUBROUTINE gram_s( ispin, cp, cdesc )
-
-! ... declare modules
-      USE mp_global, ONLY: group
-      USE wave_types, ONLY: wave_descriptor
-      USE wave_base, ONLY: gram_gamma_base, gram_kp_base
-
-      IMPLICIT NONE
-
-! ... declare other variables
-      COMPLEX(DP), INTENT(INOUT) :: cp(:,:)
-      INTEGER, INTENT(IN) :: ispin
-      TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      INTEGER :: n
-
-! ... end of declarations
-
-      n = cdesc%nbl( ispin )
-
-      IF( cdesc%gamma ) THEN
-        CALL gram_gamma_base( cp( :, 1:n ), cdesc%gzero, group )
-      ELSE
-        CALL gram_kp_base( cp( :, 1:n ), group )
-      END IF
-
-      RETURN
-   END SUBROUTINE gram_s
 
 !=----------------------------------------------------------------------------=!
 

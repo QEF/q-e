@@ -67,7 +67,7 @@
       USE electrons_module, ONLY: pmss, eigs, nb_l
       USE cp_electronic_mass, ONLY: emass
       USE descriptors_module, ONLY: get_local_dims, owner_of, local_index
-      USE wave_functions, ONLY: gram, rande, cp_kinetic_energy, proj, fixwave
+      USE wave_functions, ONLY: cp_kinetic_energy, proj, fixwave
       USE wave_base, ONLY: dotp, hpsi
       USE wave_constrains, ONLY: update_lambda
       USE check_stop, ONLY: check_stop_now
@@ -84,6 +84,7 @@
       USE control_flags, ONLY: force_pairing
       USE environment, ONLY: start_cclock_val
       USE reciprocal_space_mesh, ONLY: gkmask_l
+      USE uspp,             ONLY : vkb, nkb
 
       IMPLICIT NONE
 
@@ -258,7 +259,9 @@
           IF( tortho ) THEN
              CALL ortho( c0, cp, cdesc, pmss, emass )
           ELSE
-             CALL gram( cp, cdesc )
+             DO ispin = 1, nspin
+                CALL gram( vkb, bec, nkb, cp(1,1,1,ispin), SIZE(cp,1), cdesc%nbt( ispin ) )
+             END DO
           END IF
 
         END IF
@@ -367,7 +370,7 @@
 
         USE wave_types
         USE energies, ONLY: dft_energy_type
-        USE wave_functions, ONLY: gram, fixwave
+        USE wave_functions, ONLY: fixwave
         USE io_global, ONLY: ionode
         USE io_global, ONLY: stdout
         USE cell_module, ONLY: boxdimensions
@@ -375,6 +378,7 @@
         USE atoms_type_module, ONLY: atoms_type
         USE charge_types, ONLY: charge_descriptor
         USE reciprocal_space_mesh, ONLY: gkmask_l
+        USE uspp,             ONLY : vkb, nkb
 
         IMPLICIT NONE
 
@@ -413,7 +417,7 @@
         REAL(DP) :: x, p, v, w, e, fw, fv, xm, tol1, tol2, a, b, etemp, d
         REAL(DP) :: fx, xmin, brent, eold, tol
         LOGICAL   :: tbrent
-        INTEGER   :: iter
+        INTEGER   :: iter, ispin
 
 !
 ! ... SUBROUTINE BODY
@@ -595,7 +599,11 @@
         cp = c + hstep * hacca
 
         CALL fixwave( cp, cdesc, gkmask_l )
-        CALL gram( cp, cdesc )
+
+        DO ispin = 1, cdesc%nspin
+           CALL gram( vkb, bec, nkb, cp(1,1,1,ispin), SIZE(cp,1), cdesc%nbt( ispin ) )
+        END DO
+
 
         CALL kspotential( 1, ttprint, ttforce, ttstress, rhoe, desc, &
             atoms, bec, becdr, eigr, ei1, ei2, ei3, sfac, cp, cdesc, tcel, ht, occ, vpot, edft, timepre )

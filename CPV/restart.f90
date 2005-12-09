@@ -340,7 +340,6 @@
         USE ions_base, ONLY: nat, nsp, na
         USE electrons_module, ONLY: nspin
         USE control_flags, ONLY: twfcollect, force_pairing
-        USE wave_functions, ONLY: gram
         USE grid_dimensions, ONLY: nr1, nr2, nr3
         USE electrons_nose, ONLY: xnhe0, xnhem, vnhe
         USE cell_nose, ONLY: xnhh0, xnhhm, vnhh

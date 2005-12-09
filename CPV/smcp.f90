@@ -524,7 +524,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         CALL prefor(eigr,vkb)
         !
-        CALL gram(vkb,rep_el(sm_k)%bec,rep_el(sm_k)%cm)
+        CALL gram( vkb, rep_el(sm_k)%bec, nkb, rep_el(sm_k)%cm, ngw, nbsp )
         !
         IF(iprsta.GE.3) CALL dotcsc(eigr,rep_el(sm_k)%cm)
         !     
@@ -615,7 +615,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
            CALL ortho  (eigr,rep_el(sm_k)%c0,rep_el(sm_k)%phi,rep_el(sm_k)%lambda, &
                 &                   bigr,iter,ccc(sm_k),ortho_eps,ortho_max,delt,bephi,becp)
         ELSE
-           CALL gram(vkb,rep_el(sm_k)%bec,rep_el(sm_k)%c0)
+           CALL gram( vkb, rep_el(sm_k)%bec, nkb, rep_el(sm_k)%c0, ngw, nbsp )
            !
            IF(ionode) WRITE( sm_file,*) ' gram  c0 '
         ENDIF
@@ -1165,7 +1165,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
                 &         (eigr,rep_el(sm_k)%cm,rep_el(sm_k)%phi,rep_el(sm_k)%lambda, &
                 & bigr,iter,ccc(sm_k),ortho_eps,ortho_max,delt,bephi,becp)
         ELSE
-           CALL gram(vkb,rep_el(sm_k)%bec,rep_el(sm_k)%cm)
+           CALL gram( vkb, rep_el(sm_k)%bec, nkb, rep_el(sm_k)%cm, ngw, nbsp )
            IF(iprsta.GT.4) CALL dotcsc(eigr,rep_el(sm_k)%cm)
         ENDIF
         !

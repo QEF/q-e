@@ -80,7 +80,7 @@
       USE energies, ONLY: dft_energy_type
       USE electrons_module, ONLY: pmss
       USE time_step, ONLY: delt
-      USE wave_functions, ONLY: gram, proj, crot
+      USE wave_functions, ONLY: proj, crot
       USE phase_factors_module, ONLY: strucf, phfacs
       USE charge_mix
       USE charge_density, ONLY: rhoofr
@@ -100,6 +100,7 @@
       USE reciprocal_vectors, ONLY: mill_l
       USE gvecp, ONLY: ngm
       USE local_pseudo, ONLY: vps
+      USE uspp,             ONLY : vkb, nkb
 
       IMPLICIT NONE
 
@@ -200,7 +201,7 @@
       CALL newrho(rhoe(:,:,:,1), drho, 0)  ! memorize density
       CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms%taus, nr1, nr2, nr3, atoms%nat )
       CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
-      CALL guessc0( .NOT. kp%gamma_only, c0, cm, cdesc)
+      CALL guessc0( .NOT. kp%gamma_only, bec, c0, cm, cdesc)
 
 ! ... Initialize the rotation index srot
       srot = srot0
@@ -334,7 +335,7 @@
                   svar3_0,edft%etot,fs(:,1,1),eigr,sfac,vps, &
                   treset_diis,istate,cnorm,eold,ndiis,nowv)
 
-        CALL gram(c0, cdesc)
+        CALL gram( vkb, bec, nkb, c0(1,1,1,1), SIZE(c0,1), cdesc%nbt( 1 ) )
 
       END DO DIIS_LOOP
 
@@ -438,7 +439,7 @@
       USE energies, ONLY: dft_energy_type
       USE electrons_module, ONLY: ei, pmss
       USE time_step, ONLY: delt
-      USE wave_functions, ONLY: gram, proj, update_wave_functions
+      USE wave_functions, ONLY: proj, update_wave_functions
       USE diis
       USE cell_module, ONLY: boxdimensions
       USE check_stop, ONLY: check_stop_now
@@ -452,6 +453,7 @@
       USE atoms_type_module, ONLY: atoms_type
       USE charge_types, ONLY: charge_descriptor
       USE local_pseudo, ONLY: vps
+      USE uspp,             ONLY : vkb, nkb
 
       IMPLICIT NONE
 
@@ -600,7 +602,7 @@
                 vps, ttreset_diis(ispin), istate, cnorm, &
                 eold, ndiis, nowv)
             END IF
-            CALL gram( ispin, c0(:,:,:,ispin), cdesc)
+            CALL gram( vkb, bec, nkb, c0(1,1,1,ispin), SIZE(c0,1), cdesc%nbt( ispin ) )
             IF (.NOT.kp%gamma_only) THEN
               DEALLOCATE(clambda)
             ELSE

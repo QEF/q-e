@@ -127,7 +127,7 @@
 
       call calbec(1,nsp,eigr,c0,bec)
 
-      call gram(betae,bec,c0)
+      call gram(betae,bec,nhsa,c0,ngw,n)
 
       call calbec(1,nsp,eigr,c0,bec)
 
@@ -449,7 +449,7 @@
         !orthonormalize
 
         call calbec(1,nsp,eigr,cm,becm)
-        call gram(betae,becm,cm)
+        call gram(betae,becm,nhsa,cm,ngw,n)
         call calbec(1,nsp,eigr,cm,becm)
                
         !calculate energy
@@ -502,7 +502,7 @@
         endif
 
         call calbec(1,nsp,eigr,cm,becm)
-        call gram(betae,becm,cm)
+        call gram(betae,becm,nhsa,cm,ngw,n)
 
         !test on energy: check the energy has really diminished
 
@@ -559,7 +559,7 @@
           c0(1:ngw,1:n,1,1)=c0(1:ngw,1:n,1,1)+spasso*passov*hi(1:ngw,1:n)
           restartcg=.true.!ATTENZIONE
           call calbec(1,nsp,eigr,c0,bec)
-          call gram(betae,bec,c0)
+          call gram(betae,bec,nhsa,c0,ngw,n)
           !if ene > ene0,en1 do a steepest descent step
           ene_ok=.false.
         else if((enever.ge.ene0).and.(ene0.le.ene1)) then
@@ -575,7 +575,7 @@
             ! chenge the searching direction
             spasso=spasso*(-1.d0)
             call calbec(1,nsp,eigr,cm,becm)
-            call gram(betae,bec,cm)
+            call gram(betae,bec,nhsa,cm,ngw,n)
             call calbec(1,nsp,eigr,cm,becm)
             if(.not.tens) then
               call rhoofr(nfi,cm,irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)

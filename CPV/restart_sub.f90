@@ -142,7 +142,7 @@ MODULE from_restart_module
     IF ( trane .AND. trhor ) THEN
        !
        CALL prefor( eigr, vkb )
-       CALL gram( vkb, bec, c0 )
+       CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
        !
        cm(:,1:nbsp,1,1) = c0(:,1:nbsp,1,1)
        !
@@ -259,7 +259,7 @@ MODULE from_restart_module
           !
        ELSE
           !
-          IF( .not. tcg) CALL gram( vkb, bec, cm )
+          IF( .not. tcg) CALL gram( vkb, bec, nkb, cm, ngw, nbsp )
           !
        END IF
        !
@@ -382,7 +382,7 @@ MODULE from_restart_module
        !
        CALL prefor( eigr, vkb )
        !
-       CALL gram( vkb, bec, c0 )
+       CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
        !
        cm(:,1:nbsp) = c0(:,1:nbsp)
        !
@@ -426,8 +426,8 @@ MODULE from_restart_module
     USE phase_factors_module,  ONLY : strucf, phfacs
     USE time_step,             ONLY : delt
     USE charge_density,        ONLY : rhoofr
-    USE wave_functions,        ONLY : gram, rande, fixwave
-    USE wave_base,             ONLY : wave_verlet
+    USE wave_functions,        ONLY : fixwave
+    USE wave_base,             ONLY : wave_verlet, rande_base
     USE electrons_module,      ONLY : pmss,emass, nspin, occn_info
     USE ions_base,             ONLY : na, nsp, nax, randpos, taui, cdmi
     USE ions_module,           ONLY : set_reference_positions, &
@@ -461,6 +461,7 @@ MODULE from_restart_module
     USE reciprocal_vectors,    ONLY : mill_l
     USE gvecp,                 ONLY : ngm
     USE ions_base,             ONLY : nat, tau_srt
+    USE uspp,                  ONLY : vkb, nkb
     !
     IMPLICIT NONE
     !
@@ -483,7 +484,7 @@ MODULE from_restart_module
     REAL(DP)                   :: vpot(:,:,:,:)
     TYPE(dft_energy_type)      :: edft
     !
-    INTEGER     :: ig, ib, i, j, k, ik, nb, is, ia, ierr, isa
+    INTEGER     :: ig, ib, i, j, k, ik, nb, is, ia, ierr, isa, iss
     REAL(DP)    :: timepre, vdum = 0.D0
     REAL(DP)    :: stau(3), rtau(3), hinv(3,3)
     COMPLEX(DP) :: cgam(1,1,1)
@@ -580,8 +581,12 @@ MODULE from_restart_module
        !
        WRITE( stdout, 515 ) ampre
        !
-       CALL rande( c0, cdesc, ampre )
-       CALL rande( cm, cdesc, ampre )
+       DO iss = 1, cdesc%nspin
+          call rande_base( c0( :, :, 1, iss), ampre )
+          CALL gram( vkb, bec, nkb, c0(1,1,1,iss), SIZE(c0,1), cdesc%nbt( iss ) )
+          call rande_base( cm( :, :, 1, iss), ampre )
+          CALL gram( vkb, bec, nkb, cm(1,1,1,iss), SIZE(cm,1), cdesc%nbt( iss ) )
+       END DO
        !
     END IF
     !
@@ -651,7 +656,11 @@ MODULE from_restart_module
                 !
              ELSE
                 !
-                CALL gram( c0, cdesc )
+                DO iss = 1, nspin
+                   ! 
+                   CALL gram( vkb, bec, nkb, c0(1,1,1,iss), SIZE(c0,1), cdesc%nbt( iss ) )
+                   ! 
+                END DO
                 !
              END IF
              !

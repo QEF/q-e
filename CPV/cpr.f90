@@ -397,7 +397,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            !
         ELSE
            !
-           CALL gram( vkb, bec,cm )
+           CALL gram( vkb, bec, nkb, cm, ngw, nbsp )
            !
            IF ( iprsta > 4 ) CALL dotcsc( eigr, cm )
            !
