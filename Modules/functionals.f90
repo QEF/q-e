@@ -588,7 +588,12 @@ subroutine xc (rho, ex, ec, vx, vc)
   ELSEIF (iexch == 3) THEN         !  'rxc'
      CALL slater_rxc(rs, ex, vx)
   ELSEIF ((iexch == 4).or.(iexch==5)) THEN  ! 'oep','hf'
-     IF (.not.exx_started) call slater (rs, ex, vx)
+     IF (exx_started) then
+        ex = 0.0d0
+        vx = 0.0d0
+     else
+        call slater (rs, ex, vx)
+     endif
   ELSEIF (iexch == 6) THEN         !  'pb0x'
      CALL slater(rs, ex, vx)
      if (exx_started) then
@@ -665,7 +670,13 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
   ELSEIF (iexch == 3) THEN  ! 'rxc'
      call slater_rxc_spin ( rho, zeta, ex, vxup, vxdw )
   ELSEIF ((iexch == 4).or.(iexch==5)) THEN  ! 'oep','hf'
-     IF (.not.exx_started) call slater_spin (rho, zeta, ex, vxup, vxdw)
+     IF (exx_started) then
+        ex   = 0.d0
+        vxup = 0.d0 
+        vxdw = 0.d0 
+     else
+        call slater_spin (rho, zeta, ex, vxup, vxdw)
+     endif
   ELSEIF (iexch == 6) THEN  ! 'pb0x'
      call slater_spin (rho, zeta, ex, vxup, vxdw)
      if (exx_started) then
