@@ -122,7 +122,7 @@ SUBROUTINE dynamics()
      !
      WRITE( UNIT = stdout, &
             FMT = '(5X,"Time step",T27," = ",F8.2," a.u.,",F8.4, &
-                     & " femto-seconds")' ) dt, ( dt * 2.D0 * au_ps )
+                     & " femto-seconds")' ) dt, ( dt * 2.D+3 * au_ps )
      !
      ! ...  masses in rydberg atomic units
      !
