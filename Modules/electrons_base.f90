@@ -207,6 +207,10 @@
             iupdwn(2) = nupdwn(1) + 1
          end if
 
+         if( (nspin == 1) .and. MOD( nint(nelec), 2 ) /= 0 ) &
+              CALL errore(' electrons_base_initval ', &
+              ' must use nspin=2 for odd number of electrons', 1 )
+         
          ! ocp = 2 for spinless systems, ocp = 1 for spin-polarized systems
          ocp = 2.d0 / nspin
          !
