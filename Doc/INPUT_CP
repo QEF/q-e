@@ -211,8 +211,13 @@ nelec          INTEGER
                read from the pseudopotential
 
 tot_charge     INTEGER ( default = 0 )
-               total system charge. Used if nelec is not specified,
+               total system charge. Used only if nelec is unspecified,
                otherwise it is ignored.
+
+multiplicity   INTEGER
+               spin multiplicity (2s+1). 1 is singlet, 2 for doublet etc.
+               if unspecified or a non-zero value is specified in nelup/neldw
+               then multiplicity variable is ignored.
 
 nbnd           INTEGER ( default = nelec / 2 )
                number of electronic states (bands) to be calculated.
