@@ -210,6 +210,10 @@ nelec          INTEGER
                number of electron in the unit cell. If not specified it is
                read from the pseudopotential
 
+tot_charge     INTEGER ( default = 0 )
+               total system charge. Used if nelec is not specified,
+               otherwise it is ignored.
+
 nbnd           INTEGER ( default = nelec / 2 )
                number of electronic states (bands) to be calculated.
 

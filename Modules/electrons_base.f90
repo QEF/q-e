@@ -39,7 +39,7 @@
 
 
     SUBROUTINE electrons_base_initval( zv_ , na_ , nsp_ , nelec_ , nelup_ , neldw_ , nbnd_ , &
-               nspin_ , occupations_ , f_inp )
+               nspin_ , occupations_ , f_inp, tot_charge_ )
 
       USE constants, ONLY: eps8
       USE io_global, ONLY: stdout
@@ -51,7 +51,7 @@
       INTEGER, INTENT(IN) :: nbnd_ , nspin_
       CHARACTER(LEN=*), INTENT(IN) :: occupations_
       REAL(DP), INTENT(IN) :: f_inp(:,:)
-      REAL(DP) :: nelec, nelup, neldw, ocp, fsum
+      REAL(DP) :: nelec, nelup, neldw, ocp, fsum, tot_charge_
       INTEGER   :: iss, i, in
 
       nspin = nspin_
@@ -63,6 +63,7 @@
         DO i = 1, nsp_
           nelec = nelec + na_ ( i ) * zv_ ( i )
         END DO 
+        nelec = nelec - tot_charge_
       END IF
 
       IF( nelup_ > 0.0d0 .AND. neldw_ > 0.0d0 ) THEN

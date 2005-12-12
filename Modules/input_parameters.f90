@@ -337,6 +337,9 @@ MODULE input_parameters
           ! number of electrons, this parameter is MANDATORY in FPMD
           ! may be fractionary in PW, but not in CP and FPMD !
 
+        REAL(DP):: tot_charge = 0.0d0
+	  ! total system charge 
+
         REAL(DP) :: ecutwfc = 0.0d0
           ! energy cutoff for wave functions in k-space ( in Rydbergs )
           ! this parameter is MANDATORY in FPMD
@@ -552,7 +555,8 @@ MODULE input_parameters
 #endif
              noncolin, lspinorb, lambda, angle1, angle2, report, &
              constrained_magnetization, B_field, fixed_magnetization, &
-             sic, sic_epsilon, force_pairing, sic_alpha
+             sic, sic_epsilon, force_pairing, sic_alpha, &
+	     tot_charge
 
 
 !=----------------------------------------------------------------------------=!
