@@ -340,6 +340,10 @@ MODULE input_parameters
         REAL(DP):: tot_charge = 0.0d0
 	  ! total system charge 
 
+        INTEGER :: multiplicity = 0
+          ! spin multiplicity (2s+1), 1 for singlet, 2 for doublet etc.
+          ! when multiplicity = 0, it is unspecified
+
         REAL(DP) :: ecutwfc = 0.0d0
           ! energy cutoff for wave functions in k-space ( in Rydbergs )
           ! this parameter is MANDATORY in FPMD
@@ -556,7 +560,7 @@ MODULE input_parameters
              noncolin, lspinorb, lambda, angle1, angle2, report, &
              constrained_magnetization, B_field, fixed_magnetization, &
              sic, sic_epsilon, force_pairing, sic_alpha, &
-	     tot_charge
+	     tot_charge, multiplicity
 
 
 !=----------------------------------------------------------------------------=!

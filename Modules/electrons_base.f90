@@ -39,19 +39,19 @@
 
 
     SUBROUTINE electrons_base_initval( zv_ , na_ , nsp_ , nelec_ , nelup_ , neldw_ , nbnd_ , &
-               nspin_ , occupations_ , f_inp, tot_charge_ )
+               nspin_ , occupations_ , f_inp, tot_charge_, multiplicity_ )
 
       USE constants, ONLY: eps8
       USE io_global, ONLY: stdout
       USE control_flags, ONLY: iprsta
 
-      REAL(DP), INTENT(IN) :: zv_ (:)
-      INTEGER, INTENT(IN) :: na_ (:) , nsp_
+      REAL(DP), INTENT(IN) :: zv_ (:), tot_charge_
+      INTEGER, INTENT(IN) :: na_ (:) , nsp_, multiplicity_
       REAL(DP), INTENT(IN) :: nelec_ , nelup_ , neldw_
       INTEGER, INTENT(IN) :: nbnd_ , nspin_
       CHARACTER(LEN=*), INTENT(IN) :: occupations_
       REAL(DP), INTENT(IN) :: f_inp(:,:)
-      REAL(DP) :: nelec, nelup, neldw, ocp, fsum, tot_charge_
+      REAL(DP) :: nelec, nelup, neldw, ocp, fsum
       INTEGER   :: iss, i, in
 
       nspin = nspin_
@@ -76,8 +76,25 @@
         neldw = neldw_
         nelup = nelec - neldw_
       ELSE
-        nelup = INT( nelec + 1 ) / 2
-        neldw = nelec - nelup
+         IF ( multiplicity_ == 0 ) THEN
+            ! default when multiplicity is unspecified
+            nelup = INT( nelec + 1 ) / 2
+            neldw = nelec - nelup
+         else
+            ! non singlet multiplicity requires nspin=2
+            if ( (multiplicity_ > 1) .and. (nspin==1) ) &
+                 CALL errore(' electrons_base_initval ', &
+                 ' spin multiplicity incosistent with nspin=1 ', 2 )
+            ! odd multiplicity requires an even number of electrons
+            ! even multiplicity requires an odd number of electrons
+            if ( ((MOD(multiplicity_,2) == 0) .and. (MOD(NINT(nelec),2)==0)) .or.   &
+                 ((MOD(multiplicity_,2) == 1) .and. (MOD(NINT(nelec),2)==1))      ) &
+                 CALL errore(' electrons_base_initval ',                           &
+                 ' spin multiplicity incosistent with total number of electrons ', 2 )
+
+            nelup = ( INT(nelec) + ( multiplicity_-1 ) ) / 2
+            neldw = ( INT(nelec) - ( multiplicity_-1 ) ) / 2
+         end IF
       END IF
 
       IF( ABS( nelec - ( nelup + neldw ) ) > eps8 ) THEN

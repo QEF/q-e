@@ -836,7 +836,7 @@ MODULE input
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nelup, neldw, nbnd,     &
            nelec, tprnks, ks_path, press, cell_damping, cell_dofree, tf_inp,   &
            refg, greash, grease, greasp, epol, efield, tcg, maxiter, etresh,   &
-           passop, tot_charge
+           passop, tot_charge, multiplicity
      !
      USE input_parameters, ONLY : wf_efield, wf_switch, sw_len, efx0, efy0,    &
                                   efz0, efx1, efy1, efz1, wfsd, wfdt, maxwfdt, &
@@ -1005,9 +1005,9 @@ MODULE input
 
      CALL ks_states_init( nspin, tprnks, tprnks_empty )
 
-     CALL electrons_base_initval( zv, na_inp, ntyp, nelec, nelup, &
+     CALL electrons_base_initval( zv, na_inp, ntyp, nelec, nelup,         &
                                   neldw, nbnd, nspin, occupations, f_inp, &
-                                  tot_charge )
+                                  tot_charge, multiplicity )
 
      CALL electrons_setup( empty_states_nbnd, emass, emass_cutoff, nkstot )
 
