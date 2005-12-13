@@ -26,7 +26,6 @@ module ld1inc
   real(DP) ::   &
        jj(nwfx),     & ! the total angular momentum
        oc(nwfx),     & ! the occupations of the all-electron atom
-       oc_old(nwfx), & ! saves the occupations of the all-electron 
        zed,          & ! the ionic charge 
        enne,         & ! the number of electrons
        sl3(0:lmx2,0:lmx2,0:lmx2)

@@ -146,8 +146,10 @@ do n=nwfc+1,nwf
       if (oc(n) > 2*(2*ll(n)+1)) &
    &     call errore('el_config','wrong occupancy:'//occup,n)
 enddo
+!
 ! pseudopotentials: N quantum number .ne. wavefunction label
 ! we find the lowest N for each L and reassign N as it
+!
 if (.not.all_elec) then
    do l=0,3
       n0=1000

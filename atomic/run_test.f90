@@ -16,6 +16,8 @@ subroutine run_test
   use ld1inc
   implicit none
 
+  real(DP) :: oc_old(nwfx)
+
   integer  &
        n, &  ! counter on wavefunctions
        n1,&  ! counter on mesh points
@@ -25,6 +27,10 @@ subroutine run_test
   integer :: ios
   character(len=1) :: nch
   real(DP) :: dum
+
+  do n=1,nwf
+     oc_old(n)=oc(n)
+  enddo
 
   file_tests = trim(prefix)//'.test'
   open(unit=13, file=file_tests, iostat=ios, err=1111, status='unknown')

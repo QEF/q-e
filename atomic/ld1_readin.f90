@@ -169,11 +169,11 @@ subroutine ld1_readin
      nspin = 1
   else if(lsd == 1) then
      nspin = 2
+     if (rel == 2) call errore('ld1_readin', &
+       &    'local spin density and spin-orbit not allowed',1)
   else
      call errore('ld1_readin','lsd not correct',1)
   endif
-  if (rel == 2 .and. lsd == 1) call errore('ld1_readin', &
-       &    'local spin density and spin-orbit not allowed',1)
 
   if (config == ' ') then
      call read_config (rel, lsd, nwf, el, nn, ll, oc, isw, jj)
@@ -182,12 +182,11 @@ subroutine ld1_readin
      !
      ! check same labels corresponding to different spin or j value
      !
-     do n=1,nwf  
+     jj(1:nwf)=0.d0
+     do n=1,nwf 
         do i=n+1,nwf  
            if (el(i) == el(n)) then
-              if ( lsd==0 ) then
-                 call errore('ld1_readin',el(i)//' appears twice',i)
-              else if (rel == 2) then
+              if (rel == 2) then
                  if (ll(n) > 0) then
                     jj(n) = ll(n) + (isw(n)-1.5)
                     jj(i) = ll(i) + (isw(i)-1.5)
@@ -198,11 +197,22 @@ subroutine ld1_readin
                  else
                     call errore('ld1_readin',el(i)//' appears twice',i)
                  end if
+              else if ( lsd==0 ) then
+                 call errore('ld1_readin',el(i)//' appears twice',i)
               end if
            end if
         end do
      end do
+     if (rel == 2) isw(1:nwf)=1 
   end if
+  !
+  !  In the spin polarized or relativistic case adjust the occupations
+  !
+  if (lsd == 1) then
+     call occ_spin(nwf,nwfx,el,nn,ll,oc,isw)
+  else if (rel == 2) then
+     call occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw)
+  endif
   !
   ! generate the radial grid - note that if iswitch = 2 the radial grid
   ! is not generated but read from the pseudopotential file
@@ -212,19 +222,12 @@ subroutine ld1_readin
      rhoc=0.0_dp
   endif
   !
-  !  In the spin polarized case adjust the occupations
-  !
-  if (lsd == 1)  call occ_spin(nwf,nwfx,el,nn,ll,oc,isw)
-  !
-  !  If vdW calculation, read the input parameters
-  !
   if (iswitch == 1) then
      !
      !    no more data needed for AE calculations
      !
      return
-     !
-     
+     !     
   else if (iswitch == 3) then
      !
      !    reading input for PP generation
@@ -243,12 +246,15 @@ subroutine ld1_readin
 500  call errore('ld1_readin','reading inputp',abs(ios))
 
      if (lloc < 0 .and. rcloc <=0.0_dp) &
-          call errore('ld1_readin','rcloc is negative',1)
+          call errore('ld1_readin','rcloc must be positive',1)
      if (pseudotype < 1.or.pseudotype > 3) &
           call errore('ld1_readin','specify correct pseudotype',1)
      !
      call read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
           isws, jjs, enls, rcut, rcutus )
+     !
+     if (rel==2) call occ_spinorbps &
+          (nwfs,nwfsx,els,nns,lls,jjs,ocs,rcut,rcutus,enls,isws)
      !
      lmax = maxval(lls(1:nwfs))
      !
@@ -303,10 +309,6 @@ subroutine ld1_readin
   jjts=0.0_dp
   jjtsc=0.0_dp
   
-  do n=1,nwf
-     oc_old(n)=oc(n)
-  enddo
-
   nconf=1
   configts=' '
 
@@ -369,6 +371,11 @@ subroutine ld1_readin
      if (lsd == 1) then
         call occ_spin(nwftsc(nc),nwfsx,eltsc(1,nc),nntsc(1,nc),lltsc(1,nc),&
              octsc(1,nc), iswtsc(1,nc)) 
+     else if (rel == 2) then
+        call occ_spinorb(nwftsc(nc),nwfsx,eltsc(1,nc), &
+             &  nntsc(1,nc),lltsc(1,nc),jjtsc(1,nc),octsc(1,nc),iswtsc(1,nc))
+     else
+        jjtsc=0.0_dp
      endif
   end do
   !
@@ -542,6 +549,7 @@ subroutine read_config(rel, lsd, nwf, el, nn, ll, oc, isw, jj)
   !
   do n=1,nwf  
      if (rel < 2) then
+        jj(n) = 0.0_dp
         if (lsd == 0) then
            read(5,*,err=20,end=20,iostat=ios) &
                 el(n), nn(n), ll(n), oc(n)
@@ -559,12 +567,25 @@ subroutine read_config(rel, lsd, nwf, el, nn, ll, oc, isw, jj)
              el(n), nn(n), ll(n), oc(n), jj(n)
         isw(n)=1
         if ((abs(ll(n)+0.5_dp-jj(n)) > 1.e-3_dp) .and. &
-            (abs(ll(n)-0.5_dp-jj(n)) > 1.e-3_dp) .and. abs(jj(n)) > 1.e-3_dp)  &
+            (abs(ll(n)-0.5_dp-jj(n)) > 1.e-3_dp) .and. abs(jj(n)) > 1.e-3_dp) &
             call errore('read_config','jj wrong',n)
         if (oc(n) > (2.0_dp*jj(n)+1.0_dp) .and. abs(jj(n)) > 1e-3_dp) &
              call errore('read_config','occupations wrong',n)
 22      call errore('read_config','reading orbital (rel)',abs(ios))
      endif
+     !
+     ! Check: no two same wavefunctions
+     !
+     do ncheck=1,n-1
+        if ( el(ncheck) == el(n) .and. isw(ncheck) == isw(n) .and. &
+             jj(ncheck) == jj(n) ) then
+           call errore('read_config', &
+                'same wavefunction '//el(n)//' appears twice',n)
+        endif
+     enddo
+     !
+     ! More sanity checks
+     !
      write(label,'(a2)') el(n)
      read (label,'(i1)') ncheck
      if (ncheck /= nn(n)  .or. &

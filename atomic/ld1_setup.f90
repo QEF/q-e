@@ -18,7 +18,7 @@ subroutine ld1_setup
   use funct, only : get_iexch, dft_is_meta !, set_dft_from_name
   implicit none
 
-  integer n, n1, nc, nwf0, m, nwftot, ios
+  integer n, n1, nc, m, nwftot, ios
   logical ok, hf, oep
   !
   !     transform dft in a series of codes for the exchange and
@@ -37,25 +37,10 @@ subroutine ld1_setup
   !
   call set_sl3(sl3,lmx)
   !
-  !  split the spin-orbit states
-  !
-  if (rel == 2) then
-     call occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw)
-     do n=1,nwf
-        oc_old(n)=oc(n)
-     enddo
-  else
-     jj=0.d0
-  endif
-  !
   !  make the correspondence all-electron pseudopotential
-  !  and split the spin-orbit states
   !
   if (iswitch >= 2) then
      do nc=1, nconf
-        if (rel.eq.2) &
-             call occ_spinorb(nwftsc(nc),nwfsx,eltsc(1,nc), &
-             &  nntsc(1,nc),lltsc(1,nc),jjtsc(1,nc),octsc(1,nc),iswtsc(1,nc))
         do n=1,nwftsc(nc)
            nstoaec(n,nc)=0
            do n1=1,nwf
@@ -86,13 +71,9 @@ subroutine ld1_setup
   !
   if (iswitch == 3) then 
      isws=1
-     nwf0=nwfs
-     if (rel==2) &
-          call occ_spinorbps(nwfs,nwfsx,els,nns,lls,jjs,ocs,rcut,rcutus,enls,isws)
      do n=1,nwf
         core_state(n)=.true.
      enddo
-
      do n=1,nwfs
         nstoae(n)=0
         do n1=1,nwf
