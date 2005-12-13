@@ -90,9 +90,6 @@ calculation    CHARACTER ( default = 'cp' )
 title          CHARACTER ( default = 'MD Simulation' )
                reprinted on output.
 
-prefix         CHARACTER ( default = 'cp' )
-               basename prepended to input/output filenames. 
-               
 restart_mode   CHARACTER ( default = 'restart' )
                from_scratch    = from scratch
 	                         NEB only: the starting path is obtained
@@ -108,23 +105,11 @@ restart_mode   CHARACTER ( default = 'restart' )
                upto            = continue a previous simulation and stops 
                                  swhen the counter value is equal "nstep"
 
-verbosity      CHARACTER
-               'high' | 'default' | 'low' | 'minimal'
-
 nstep          INTEGER                         
                number of ionic + electronic steps
                default =    1 if calculation = 'scf', 'nscf'
 	               =    0 if calculation = 'neb', 'smd'
                        =   50 for the other cases
-
-iprint         INTEGER ( default = 10 )
-               Number of steps between successive writings of relevant 
-               physical quantities to standard output and to files "fort.3?" 
-               or "prefix.???" depending on "prefix" parameter
-
-isave          INTEGER ( default = 100 )
-               Number of steps between successive savings of
-               information needed to restart the run ( see also ndr, ndw ).
 
 tstress        LOGICAL ( default = .FALSE. )
                This flag controls the printing of the stress, always .TRUE.
@@ -144,15 +129,6 @@ dt             REAL ( default = 1.D0 )
                time step for molecular dynamics, in Hartree atomic units.
                ( 1 a.u. of time = 2.4189 * 10^-17 s )
 
-outdir         CHARACTER ( default = current directory ('./') )
-               input, temporary, output files are found in this directory.
-
-disk_io        CHARACTER
-               'high', 'default', 'low', 'minimal'
-
-pseudo_dir     CHARACTER ( default = current directory ('./') )
-               directory containing pseudopotential files.
-
 ekin_conv_thr  REAL ( default = 1.D-6 )
                convergence criterion for electron minimization:
                convergence is achieved when "ekin < ekin_conv_thr".
@@ -171,9 +147,6 @@ forc_conv_thr  REAL ( default = 1.D-3 )
                forces.
                See also etot_conv_thr - both criteria must be satisfied.
 
-ndr, ndw       INTEGER ( default = 50 )
-               Units for input and output restart file.
-
 max_seconds    REAL ( default = 1.D+7 )
                smootly terminate program after the specified number of seconds
                this parameter is typically used to prevent an hard kill from
@@ -182,6 +155,33 @@ max_seconds    REAL ( default = 1.D+7 )
 tefield        LOGICAL ( default = .FALSE.)
                If .TRUE. perform calculations with a finite electric field 
                which is described through the modern theory of the polarization
+
+iprint         INTEGER ( default = 10 )
+               Number of steps between successive writings of relevant 
+               physical quantities to standard output and to files "fort.3?" 
+               or "prefix.???" depending on "prefix" parameter
+
+isave          INTEGER ( default = 100 )
+               Number of steps between successive savings of
+               information needed to restart the run ( see also ndr, ndw ).
+
+prefix         CHARACTER ( default = 'cp' )
+               basename prepended to input/output filenames. 
+               
+verbosity      CHARACTER
+               'high' | 'default' | 'low' | 'minimal'
+
+outdir         CHARACTER ( default = current directory ('./') )
+               input, temporary, output files are found in this directory.
+
+disk_io        CHARACTER
+               'high', 'default', 'low', 'minimal'
+
+pseudo_dir     CHARACTER ( default = current directory ('./') )
+               directory containing pseudopotential files.
+
+ndr, ndw       INTEGER ( default = 50 )
+               Units for input and output restart file.
 
 ===============================================================================
 NAMELIST &SYSTEM
@@ -206,22 +206,6 @@ nat            INTEGER
 ntyp           INTEGER
                number of types of atoms in the unit cell - must be specified
 
-nelec          INTEGER
-               number of electron in the unit cell. If not specified it is
-               read from the pseudopotential
-
-tot_charge     INTEGER ( default = 0 )
-               total system charge. Used only if nelec is unspecified,
-               otherwise it is ignored.
-
-multiplicity   INTEGER
-               spin multiplicity (2s+1). 1 is singlet, 2 for doublet etc.
-               if unspecified or a non-zero value is specified in nelup/neldw
-               then multiplicity variable is ignored.
-
-nbnd           INTEGER ( default = nelec / 2 )
-               number of electronic states (bands) to be calculated.
-
 ecutwfc        REAL
                kinetic energy cutoff (Ry) for wavefunctions
                (must be specified)
@@ -231,41 +215,16 @@ ecutrho        REAL ( default = 4 * ecutwfc )
                May be larger ( for ultrasoft PP ) or somewhat smaller 
                ( but not much smaller ) than the default value
 
-nr1,nr2,nr3    INTEGER
-               three-dimensional FFT mesh (hard grid) for charge
-               density (and scf potential). If not specified
-               the grid is calculated based on the cutoff for
-               charge density (see also "ecutrho")
+nelec          INTEGER
+               number of electron in the unit cell. If not specified it is
+               read from the pseudopotential
 
-nr1s,nr2s,nr3s INTEGER
-               three-dimensional mesh for wavefunction FFT and for the smooth 
-               part of charge density ( smooth grid ). 
-               Coincides with nr1, nr2, nr3 if ecutrho = 4 * ecutwfc ( default )
+tot_charge     INTEGER ( default = 0 )
+               total system charge. Used only if nelec is unspecified,
+               otherwise it is ignored.
 
-
-nr1b, nr2b, nr3b 
-               INTEGER
-               dimensions of the "box" grid for Ultrasoft pseudopotentials
-               must be specified if Ultrasoft PP are present
-
-nspin          INTEGER ( default = 1 )
-               nspin = 1 :   non-polarized calculation
-               nspin = 2 :  spin-polarized calculation
-
-nelup, neldw   REAL
-               number of spin-up and spin-down electrons, respectively.
-               The sum must yield nelec that must also be specified
-               explicitely in this case.
-
-ecfixed        REAL ( default = 0.0 )
-qcutz          REAL ( default = 0.0 )
-q2sigma        REAL ( default = 0.1 )
-               parameters for modified functional to be used in
-               variable-cell molecular dynamics (or in stress calculation)
-               "ecfixed" is the value (in Rydberg) of the constant-cutoff 
-               "qcutz" and "q2sigma" are the height and the width (in Rydberg) 
-               of the energy step for reciprocal vector whose square modulus 
-               is grather than "ecfixed"
+nbnd           INTEGER ( default = nelec / 2 )
+               number of electronic states (bands) to be calculated.
 
 xc_type        CHARACTER ( default = read from pseudopot )
                can be used to force a given functional 
@@ -291,6 +250,48 @@ smearing       CHARACTER
 degauss        REAL ( default = 0.D0 )
                parameter for the smearing function, only used for ensemble dft
                calculations
+
+nspin          INTEGER ( default = 1 )
+               nspin = 1 :   non-polarized calculation
+               nspin = 2 :  spin-polarized calculation
+
+nelup, neldw   REAL
+               number of spin-up and spin-down electrons, respectively.
+               The sum must yield nelec that must also be specified
+               explicitely in this case.
+
+multiplicity   INTEGER
+               spin multiplicity (2s+1). 1 is singlet, 2 for doublet etc.
+               if unspecified or a non-zero value is specified in nelup/neldw
+               then multiplicity variable is ignored.
+
+ecfixed        REAL ( default = 0.0 )
+qcutz          REAL ( default = 0.0 )
+q2sigma        REAL ( default = 0.1 )
+               parameters for modified functional to be used in
+               variable-cell molecular dynamics (or in stress calculation)
+               "ecfixed" is the value (in Rydberg) of the constant-cutoff 
+               "qcutz" and "q2sigma" are the height and the width (in Rydberg) 
+               of the energy step for reciprocal vector whose square modulus 
+               is grather than "ecfixed"
+
+nr1,nr2,nr3    INTEGER
+               three-dimensional FFT mesh (hard grid) for charge
+               density (and scf potential). If not specified
+               the grid is calculated based on the cutoff for
+               charge density (see also "ecutrho")
+
+nr1s,nr2s,nr3s INTEGER
+               three-dimensional mesh for wavefunction FFT and for the smooth 
+               part of charge density ( smooth grid ). 
+               Coincides with nr1, nr2, nr3 if ecutrho = 4 * ecutwfc ( default )
+
+
+nr1b, nr2b, nr3b 
+               INTEGER
+               dimensions of the "box" grid for Ultrasoft pseudopotentials
+               must be specified if Ultrasoft PP are present
+
 
 
 ===============================================================================
@@ -441,7 +442,7 @@ ion_dynamics   CHARACTER ( default = 'none' )
                verlet  = standard Verlet algorithm is used to propagate ions
 
 ion_nstepe     INTEGER ( default = 1 )
-               number of electronic steps between for each ionic step.
+               number of electronic steps per ionic step.
 
 ion_radius(i)  REAL ( default = 0.5D0 )
                pseudo-atomic radius of the i-th atomic species for Ewald 
