@@ -88,7 +88,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                                        tempw, ions_nose_nrg, gkbt2nhp,       &
                                        ekin2nhp, anum2nhp
   USE electrons_nose,           ONLY : qne, ekincw, xnhe0, xnhep, xnhem,  &
-                                       vnhe, fccc, electrons_nose_nrg,    &
+                                       vnhe, electrons_nose_nrg,    &
                                        electrons_nose_shiftvar,           &
                                        electrons_nosevel, electrons_noseupd
   USE from_scratch_module,      ONLY : from_scratch
@@ -152,7 +152,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   ! ... work variables
   !
   REAL(DP) :: tempp, savee, saveh, savep, epot, epre, &
-              enow, econs, econt, ettt, ccc, bigr, dt2bye
+              enow, econs, econt, fccc, ccc, bigr, dt2bye
   REAL(DP) :: ekinc0, ekinp, ekinpr, ekinc
   REAL(DP) :: temps(nsx)
   REAL(DP) :: ekinh, temphc, randy
@@ -210,9 +210,13 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      IF ( ionode .AND. ttprint ) &
         WRITE( stdout, '(/," * Physical Quantities at step:",I6)' ) nfi
      !
-     ! ... calculation of velocity of nose-hoover variables
+     IF ( tsde ) THEN
+        fccc = 1.D0 
+     ELSE
+        fccc = 1.D0 / ( 1.D0 + frice )
+     END IF
      !
-     IF ( .NOT. tsde ) fccc = 1.D0 / ( 1.D0 + frice )
+     ! ... calculation of velocity of nose-hoover variables
      !
      IF ( tnosep ) CALL ions_nosevel( vnhp, xnhp0, xnhpm, delt, nhpcl, nhpdim )
      !

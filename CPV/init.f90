@@ -210,8 +210,7 @@
 !-----------------------------------------------------------------------
 !
       USE kinds,            ONLY: DP
-      USE input_parameters, ONLY: trd_ht
-      use control_flags,    only: iprint, thdyn, ndr, nbeg, program_name
+      use control_flags,    only: iprint, thdyn, ndr, nbeg, program_name, tbeg
       use io_global,        only: stdout, ionode
       USE io_files,         ONLY: scradir     
       use ions_base,        only: na, nsp, nat, natx, tau_srt, ind_srt, if_pos, atm
@@ -259,10 +258,10 @@
       CALL atoms_init( atomsm, atoms0, atomsp, taus, ind_srt, if_pos, atm, ht0%hmat )
 
       !
-      !  if trd_ht = .true.  the geometry is given in the standard input even if
+      !  if tbeg = .true.  the geometry is given in the standard input even if
       !  we are restarting a previous run
       !
-      if( ( nbeg > -1 ) .and. ( .not. trd_ht ) ) then
+      if( ( nbeg > -1 ) .and. ( .not. tbeg ) ) then
         !
         ! read only h and hold from restart file "ndr"
         !

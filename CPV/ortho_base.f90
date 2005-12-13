@@ -7,27 +7,25 @@
 !
 #include "f_defs.h"
 
-     MODULE orthogonalize_base
+   MODULE orthogonalize_base
 
-       USE kinds
-       USE parallel_toolkit, ONLY: matmulp, cmatmulp, &
-         pdspev_drv, dspev_drv, pzhpev_drv, zhpev_drv
+      USE kinds
+      USE parallel_toolkit, ONLY: matmulp, cmatmulp, pdspev_drv, dspev_drv, &
+                                  pzhpev_drv, zhpev_drv
 
-       IMPLICIT NONE
+      IMPLICIT NONE
 
-       SAVE
+      SAVE
 
-       PRIVATE
+      PRIVATE
 
-       LOGICAL :: timing = .false.
-
-       REAL(DP) :: one, zero, two, minus_one, minus_two
-       PARAMETER ( one = 1.0d0, zero = 0.0d0, two = 2.0d0, minus_one = -1.0d0 )
-       PARAMETER ( minus_two = -2.0d0 )
-       COMPLEX(DP) :: cone, czero, mcone
-       PARAMETER ( cone = (1.0d0, 0.0d0), czero = (0.0d0, 0.0d0) )
-       PARAMETER ( mcone = (-1.0d0, 0.0d0) )
-       REAL(DP) :: small = 1.0d-14
+      REAL(DP) :: one, zero, two, minus_one, minus_two
+      PARAMETER ( one = 1.0d0, zero = 0.0d0, two = 2.0d0, minus_one = -1.0d0 )
+      PARAMETER ( minus_two = -2.0d0 )
+      COMPLEX(DP) :: cone, czero, mcone
+      PARAMETER ( cone = (1.0d0, 0.0d0), czero = (0.0d0, 0.0d0) )
+      PARAMETER ( mcone = (-1.0d0, 0.0d0) )
+      REAL(DP) :: small = 1.0d-14
 
 #if defined __AIX
        INTEGER, PARAMETER :: nrlx_tune = 128
@@ -52,6 +50,7 @@
 
        PUBLIC :: sqr_matmul, sigset, rhoset, diagonalize_rho
        PUBLIC :: backrhoset2, sigrhoset2, backrhoset, sigrhoset
+       PUBLIC :: ortho_iterate
 
      CONTAINS
 
@@ -1089,5 +1088,100 @@
         RETURN
       END SUBROUTINE zpack
 
+!=----------------------------------------------------------------------------=!
 
-     END MODULE orthogonalize_base
+
+   SUBROUTINE ortho_iterate( u, diag, xloc, sig, rhor, rhos, tau, nx, nss, max, eps )
+
+      USE kinds,     ONLY: DP
+      USE io_global, ONLY: stdout
+
+      IMPLICIT NONE
+
+      INTEGER, INTENT(IN) :: max
+      INTEGER, INTENT(IN) :: nx, nss
+      REAL(DP), INTENT(IN) :: eps
+      REAL(DP) :: u( nx, nx )
+      REAL(DP) :: diag( nx )
+      REAL(DP) :: xloc( nx, nx )
+      REAL(DP) :: rhor( nx, nx )
+      REAL(DP) :: rhos( nx, nx )
+      REAL(DP) :: tau( nx, nx )
+      REAL(DP) :: sig( nx, nx )
+
+      INTEGER :: iter, i, j
+      REAL(DP), ALLOCATABLE :: tmp1(:,:), tmp2(:,:), dd(:,:)
+      REAL(DP), ALLOCATABLE :: con(:,:), x1(:,:)
+      REAL(DP) :: diff
+
+      ALLOCATE( tmp1(nx,nx), tmp2(nx,nx), dd(nx,nx), x1(nx,nx), con(nx,nx) )
+
+
+      DO iter = 1, max
+         !
+         !       the following 4 MXMA-calls do the following matrix
+         !       multiplications:
+         !                       tmp1 = x0*rhor    (1st call)
+         !                       dd   = x0*tau*x0  (2nd and 3rd call)
+         !                       tmp2 = x0*rhos    (4th call)
+         !
+         CALL MXMA( xloc,1,nx,rhor,1,nx,tmp1,1,nx,nss,nss,nss)
+         CALL MXMA( tau ,1,nx,xloc,1,nx,tmp2,1,nx,nss,nss,nss)
+         CALL MXMA( xloc,1,nx,tmp2,1,nx,  dd,1,nx,nss,nss,nss)
+         CALL MXMA( xloc,1,nx,rhos,1,nx,tmp2,1,nx,nss,nss,nss)
+         !
+         DO i=1,nss
+            DO j=1,nss
+               x1(i,j) = sig(i,j)-tmp1(i,j)-tmp1(j,i)-dd(i,j)
+               con(i,j)= x1(i,j)-tmp2(i,j)-tmp2(j,i)
+            END DO
+         END DO
+         !
+         !         x1      = sig      -x0*rho    -x0*rho^t  -x0*tau*x0
+         !
+         diff = 0.d0
+         DO i=1,nss
+            DO j=1,nss
+               IF(ABS(con(i,j)).GT.diff) diff=ABS(con(i,j))
+            END DO
+         END DO
+
+         IF( diff <= eps ) go to 20
+
+         !
+         !     the following two MXMA-calls do:
+         !                       tmp1 = x1*u
+         !                       tmp2 = ut*x1*u
+         !
+         CALL MXMA(x1,1,nx,   u,1,nx,tmp1,1,nx,nss,nss,nss)
+         CALL MXMA(u ,nx,1,tmp1,1,nx,tmp2,1,nx,nss,nss,nss)
+         !
+         !       g=ut*x1*u/d  (g is stored in tmp1)
+         !
+         DO i=1,nss
+            DO j=1,nss
+               tmp1(i,j)=tmp2(i,j)/(diag(i)+diag(j))
+            END DO
+         END DO
+         !
+         !       the following two MXMA-calls do:
+         !                       tmp2 = g*ut
+         !                       x0 = u*g*ut
+         !
+         CALL MXMA(tmp1,1,nx,  u,nx,1,tmp2,1,nx,nss,nss,nss)
+         CALL MXMA(   u,1,nx,tmp2,1,nx,xloc,1,nx,nss,nss,nss)
+         !
+      END DO
+
+      WRITE( stdout,*) ' diff= ',diff,' iter= ',iter
+      CALL errore('ortho','max number of iterations exceeded',iter)
+
+20    CONTINUE
+
+      DEALLOCATE( tmp1, tmp2, dd, x1, con )
+
+      RETURN
+   END SUBROUTINE ortho_iterate
+
+
+   END MODULE orthogonalize_base

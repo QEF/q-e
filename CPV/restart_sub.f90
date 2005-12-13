@@ -99,8 +99,8 @@ MODULE from_restart_module
     INTEGER                  :: i, j, iter
     LOGICAL                  :: tlast = .FALSE.
     REAL(DP)                 :: fcell(3,3)
-    REAL(DP)                 :: fccc = 0.D0
-    REAL(DP)                 :: ccc
+    REAL(DP)                 :: fccc = 0.5D0
+    REAL(DP)                 :: ccc  = 0.D0
     ! Kostya: the variable below will disable the ionic & cell motion
     ! which nobody has any clue about ...
     REAL(DP)                 :: delt0 = 0.D0
@@ -239,7 +239,7 @@ MODULE from_restart_module
        !
        ! ... calphi calculates phi; the electron mass rises with g**2
        !
-       CALL calphi( c0, ema0bg, bec, vkb, phi )
+       CALL calphi( c0, ngw, ema0bg, bec, nkb, vkb, phi, nbsp )
        !
        ! ... begin try and error loop ( only one step! )
        !
@@ -485,7 +485,7 @@ MODULE from_restart_module
     TYPE(dft_energy_type)      :: edft
     !
     INTEGER     :: ig, ib, i, j, k, ik, nb, is, ia, ierr, isa, iss
-    REAL(DP)    :: timepre, vdum = 0.D0
+    REAL(DP)    :: timepre, fccc
     REAL(DP)    :: stau(3), rtau(3), hinv(3,3)
     COMPLEX(DP) :: cgam(1,1,1)
     REAL(DP)    :: gam(1,1,1)
@@ -502,6 +502,7 @@ MODULE from_restart_module
     !
     ttforce = tfor  .OR. tprnfor
     tstress = thdyn .OR. tpre
+    fccc    = 0.5d0
     !
     IF ( .NOT. tbeg ) THEN
        !
@@ -648,7 +649,7 @@ MODULE from_restart_module
           IF ( tcarpar .AND. ( .NOT. force_pairing ) ) THEN
              !
              CALL runcp_ncpp( cm, cm, c0, cdesc, vpot, eigr, &
-                              fi, bec, vdum, gam, cgam, restart = .TRUE. )
+                              fi, bec, fccc, gam, cgam, restart = .TRUE. )
              !
              IF ( tortho ) THEN
                 !

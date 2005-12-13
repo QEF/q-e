@@ -604,8 +604,8 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !     imposing the orthogonality
         !     ==========================================================
         !
-        CALL calphi(rep_el(sm_k)%cm,ema0bg,rep_el(sm_k)%bec, &
-             & vkb,rep_el(sm_k)%phi)
+        CALL calphi( rep_el(sm_k)%cm, ngw, ema0bg,rep_el(sm_k)%bec, nkb, &
+             & vkb,rep_el(sm_k)%phi, nbsp )
         !
         !
         IF(ionode) WRITE( sm_file,*) ' out from calphi'
@@ -951,7 +951,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !     calphi calculates phi
         !     the electron mass rises with g**2
         !
-        CALL calphi(rep_el(sm_k)%c0,ema0bg,rep_el(sm_k)%bec,vkb,rep_el(sm_k)%phi)
+        CALL calphi( rep_el(sm_k)%c0, ngw, ema0bg, rep_el(sm_k)%bec, nkb, vkb, rep_el(sm_k)%phi, nbsp )
         !
         !     begin try and error loop (only one step!)
         !

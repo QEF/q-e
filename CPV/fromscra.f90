@@ -46,7 +46,7 @@ MODULE from_scratch_module
     USE forces,           ONLY : dforce_all
     USE orthogonalize,    ONLY : ortho
     USE control_flags,    ONLY : tcarpar, tfor, thdyn, tortho, tpre, tranp, &
-                                 force_pairing, iprsta, tprnfor, amprp
+                                 force_pairing, iprsta, tprnfor, amprp, tsde
     USE charge_types,     ONLY : charge_descriptor
     USE time_step,        ONLY : delt
     USE runcp_module,     ONLY : runcp_ncpp
@@ -91,7 +91,7 @@ MODULE from_scratch_module
     COMPLEX(DP)        :: cgam(1,1,1)
     REAL(DP)           :: gam(1,1,1)
     INTEGER            :: ierr
-    REAL(DP)           :: timepre, vdum
+    REAL(DP)           :: timepre, fccc
     REAL(DP)           :: s4, s5, cclock
     REAL(DP)           :: adum( nacx )
     REAL(DP)           :: hinv( 3, 3 )
@@ -101,6 +101,12 @@ MODULE from_scratch_module
     !
     ttforce = tfor  .or. tprnfor
     tstress = thdyn .or. tpre
+
+    IF( tsde ) THEN
+       fccc = 1.0d0
+    ELSE
+       fccc = 0.5d0
+    END IF
     !
     IF ( ANY( tranp ) ) THEN
        !
@@ -171,7 +177,7 @@ MODULE from_scratch_module
        IF ( .NOT. force_pairing ) THEN
           !
           CALL runcp_ncpp( cm, cm, c0, cdesc, vpot, eigr, fi, &
-                           bec, vdum, gam, cgam, fromscra = .TRUE. )
+                           bec, fccc, gam, cgam, fromscra = .TRUE. )
           !
        ELSE
           !
@@ -328,6 +334,12 @@ MODULE from_scratch_module
     tausm = taus
     vels  = 0.0d0
     lambdam = lambda
+    
+    IF( tsde ) THEN
+       fccc = 1.0d0
+    ELSE
+       fccc = 0.5d0
+    END IF
     !
     CALL formf( tfirst, eself )
 
@@ -371,7 +383,6 @@ MODULE from_scratch_module
       CALL prefor( eigr, vkb )
 
 !
-      fccc = 0.0d0
       !
       CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:,1,1), c0(:,:,1,1), fromscra = .TRUE. )
 
@@ -383,7 +394,7 @@ MODULE from_scratch_module
 !     calphi calculates phi
 !     the electron mass rises with g**2
 !
-      CALL calphi( cm, ema0bg, bec, vkb, phi )
+      CALL calphi( cm, ngw, ema0bg, bec, nkb, vkb, phi, nbsp )
 
 
       if( tortho ) then

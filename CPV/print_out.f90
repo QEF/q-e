@@ -501,7 +501,6 @@
       timevof_ , timerd_ , timeorto_ , timeloop_ , timing )
 
       USE fft, ONLY: fft_time_stat 
-      USE orthogonalize, ONLY: print_ortho_time
       USE potentials, ONLY: print_vofrho_time
       USE stress, ONLY: print_stress_time
       USE printout_base, ONLY: pprefix
@@ -530,13 +529,6 @@
       IF( timing ) THEN
 
         IF( ionode ) THEN
-
-          file_name = trim(pprefix)//'.tmo'
-          CALL open_and_append( opt_unit, file_name )
-          IF( index == 0 ) WRITE( opt_unit, 930 ) 
-          CALL print_ortho_time( opt_unit )
-          CLOSE( opt_unit )
- 930      FORMAT('     RHOSET    SIGSET      DIAG     TRASF      ITER  BACKTRAS       TOT')
 
           file_name = trim(pprefix)//'.tmv'
           CALL open_and_append( opt_unit, file_name )

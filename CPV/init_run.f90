@@ -58,7 +58,7 @@ SUBROUTINE init_run()
   USE stre,                     ONLY : stress
   USE dener,                    ONLY : detot
   USE time_step,                ONLY : dt2, delt, tps
-  USE electrons_nose,           ONLY : xnhe0, xnhem, vnhe, fccc
+  USE electrons_nose,           ONLY : xnhe0, xnhem, vnhe
   USE cell_nose,                ONLY : xnhh0, xnhhm, vnhh
   USE gvecp,                    ONLY : ecutp
   USE funct,                    ONLY : dft_is_meta
@@ -323,8 +323,6 @@ SUBROUTINE init_run()
   !
   IF ( .NOT. tpre ) stress = 0.D0
   !         
-  fccc = 1.D0
-  !
   IF ( tnewnfi ) nfi = newnfi 
   !
   nomore = nomore + nfi

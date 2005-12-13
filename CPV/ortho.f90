@@ -16,8 +16,7 @@
        USE parallel_toolkit, ONLY: matmulp, cmatmulp, &
          pdspev_drv, dspev_drv, pzhpev_drv, zhpev_drv
        USE orthogonalize_base, ONLY: sqr_matmul, sigset, rhoset, diagonalize_rho, &
-         BACKRHOSET, SIGRHOSET, BACKRHOSET2, SIGRHOSET2
-       USE control_flags, ONLY: timing
+         BACKRHOSET, SIGRHOSET, BACKRHOSET2, SIGRHOSET2, ortho_iterate
 
        IMPLICIT NONE
 
@@ -35,23 +34,11 @@
        PARAMETER ( mcone = (-1.0d0, 0.0d0) )
        REAL(DP) :: small = 1.0d-14
 
-       REAL(DP) :: timrhos = 0.0d0
-       REAL(DP) :: timsigs = 0.0d0
-       REAL(DP) :: timdiag = 0.0d0
-       REAL(DP) :: timtras1 = 0.0d0
-       REAL(DP) :: timiter = 0.0d0
-       REAL(DP) :: timbtra = 0.0d0
-       REAL(DP) :: timtot = 0.0d0
-       INTEGER   :: timcnt = 0
-
-       REAL(DP), EXTERNAL :: cclock
-
        INTERFACE ortho
          MODULE PROCEDURE ortho_s, ortho_v, ortho_m
        END INTERFACE
 
        PUBLIC :: ortho
-       PUBLIC :: print_ortho_time
 
 !=----------------------------------------------------------------------------=!
      CONTAINS
@@ -159,6 +146,7 @@
       USE mp_global, ONLY: nproc, mpime
       USE wave_types, ONLY: wave_descriptor
       USE control_flags, ONLY: ortho_eps, ortho_max
+      USE time_step, ONLY: delt
 
       IMPLICIT  NONE
 
@@ -191,7 +179,6 @@
       REAL(DP),   ALLOCATABLE :: sigd(:), rhod(:), aux(:)
       REAL(DP)                :: pwrk(1) 
       REAL(DP) :: difgam, rhosigd
-      REAL(DP) :: s0, s1, s2, s3, s4, s5, s6, s7, s8, s9
       REAL(DP) :: fact, one_by_emass, den
       INTEGER   :: nrl,is,jl, n, ngw, nx, naux, i, j, iopt, k, info, iter
       LOGICAL   :: gzero
@@ -199,7 +186,7 @@
 
 ! ...   Subroutine body
 
-      IF(timing) s1 = cclock()
+      CALL start_clock( 'ortho_gamma' )
 
       n   = cdesc%nbl( ispin )
       nx  = cdesc%nbl( ispin )
@@ -258,9 +245,7 @@
       !WRITE(6,*) 'ORTHO DEBUG cp= ', SUM( cp )  ! DEBUG
 
       CALL rhoset( ngw, n, c0( :, : ) , cp( :, : ), rho, tmass, pwrk)
-      IF(timing) s2 = cclock()
       CALL sigset( ngw, n, cp( :, : ), SIG, PWRK)
-      IF(timing) S3 = cclock()
 
 
       call mytranspose(rho, nx, temp1, NX, N, N)
@@ -268,6 +253,7 @@
         DO i = 1, n
           rhoa(i,j) = 0.5d0*(rho(i,j)-temp1(i,j))
           temp(i,j) = 0.5d0*(rho(i,j)+temp1(i,j))
+!          temp1(i,j) = temp(i,j)
         ENDDO
       ENDDO
 
@@ -280,12 +266,14 @@
 
 ! ...   "s" is the matrix of eigenvectors, "rhod" is the array of eigenvalues
 
-      IF(timing) S4 = cclock()
-
       ! WRITE(6,*) ' ORTHO RHOD ',  RHOD(1),RHOD(2) ! DEBUG
       ! WRITE(6,*) ' ORTHO S ',  SUM(S), SUM(RHOD) ! DEBUG
       ! WRITE(6,*) ' ORTHO SIG ',  SUM(SIG) ! DEBUG
 
+!      temp = 0.0d0
+!      CALL ortho_iterate( s, rhod, temp, sig, rhoa, temp1, tmass, n, n, ortho_max, ortho_eps )
+!
+! #ifdef __PIPPO
 !
 ! ...   Transform "sig", "rhoa" and "tmass" in the new basis through matrix "s"
 !
@@ -296,7 +284,6 @@
       CALL sqr_matmul( 'N', 'N', TMASS, S, TEMP )
       CALL sqr_matmul( 'T', 'N', S, TEMP, TMASS )
 
-      IF(timing) S5 = cclock()
 !
 ! ...   Initialize x0
 !
@@ -347,22 +334,23 @@
           END DO
         END DO      
 
-        IF( difgam < ortho_eps ) EXIT ITERATIVE_LOOP
         x0 = x1
+
+        IF( difgam < ortho_eps ) EXIT ITERATIVE_LOOP
 
       END DO ITERATIVE_LOOP
 
-
-      IF(timing) S6 = cclock()
 !
-! ...   Transform x1 back to the original basis
+! ...   Transform x0 back to the original basis
 
-      CALL sqr_matmul( 'N', 'N', S, X1, TEMP )
-      CALL sqr_matmul( 'N', 'T', S, TEMP, X1 )
+      CALL sqr_matmul( 'N', 'N', S, X0, TEMP )
+      CALL sqr_matmul( 'N', 'T', S, TEMP, X0 )
+
+! #endif
 
       !WRITE(6,*) ' ORTHO CP a  ',  SUM(CP) ! DEBUG
 !
-      CALL DGEMM( 'N', 'N', 2*ngw, n, n, one, c0(1,1), 2*SIZE(c0,1), x1(1,1), n, &
+      CALL DGEMM( 'N', 'N', 2*ngw, n, n, one, c0(1,1), 2*SIZE(c0,1), x0(1,1), n, &
         one, cp(1,1), 2*SIZE(cp,1) )
 
       !WRITE(6,*) ' ORTHO CP b  ',  SUM(CP) ! DEBUG
@@ -407,22 +395,12 @@
       DEALLOCATE(s, sig, rho, tmass, temp )
 #endif
 
-      IF(timing) THEN
-        S7 = cclock()
-        timrhos  = (s2 - s1) + timrhos
-        timsigs  = (s3 - s2) + timsigs
-        timdiag  = (s4 - s3) + timdiag
-        timtras1 = (s5 - s4) + timtras1
-        timiter  = (s6 - s5) + timiter
-        timbtra  = (s7 - s6) + timbtra
-        timtot   = (s7 - s1) + timtot
-        timcnt = timcnt + 1
-      END IF
-
-
       ortho_gamma = iter
+
+      CALL stop_clock( 'ortho_gamma' )
+
       RETURN
-      END FUNCTION ortho_gamma
+   END FUNCTION ortho_gamma
 
 !=----------------------------------------------------------------------------=!
 !  BEGIN manual
@@ -469,7 +447,6 @@
       REAL(DP), ALLOCATABLE :: x1(:,:), rhoa(:,:)
       REAL(DP), ALLOCATABLE :: sigd(:), rhod(:), aux(:)
       REAL(DP) :: DIFGAM, RHOSIGD
-      REAL(DP) :: s0, s1, s2, s3, s4, s5, s6, s7, s8, s9
       REAL(DP) :: fact, den
       integer   :: nrl, n, ngw, I, ii, J, K, ITER
 
@@ -479,7 +456,7 @@
 
 ! ... Subroutine body
 
-      IF(timing) s1 = cclock()
+      CALL start_clock( 'ortho_gamma_p' )
 
       n   = cdesc%nbl( ispin )
 
@@ -509,9 +486,7 @@
 !.....INITIALIZE RHO AND SIG
 
       CALL SIGRHOSET2( ngw, n, CP(:,:), C0(:,:), SIGT, RHOT, TMASST, PMSS, EMASS, cdesc%gzero)
-      IF(timing) s2 = cclock()
       CALL mytrasp_dati(rhot%m, SIZE(rhot%m,1), 'R', temp1, nrl, 'R', n, mpime, nproc)
-      IF(timing) s3 = cclock()
 
       DO j = 1, N
         DO i = 1, nrl
@@ -522,7 +497,6 @@
 
       CALL pdspev_drv( 'V', temp, nrl, rhod, s, nrl, nrl, n, nproc, mpime)
 
-      IF(timing) S4 = cclock()
 !
 ! ... TRANSFORM SIG, RHOA AND TMASS IN THE NEW BASIS THROUGH MATRIX S
 !
@@ -535,7 +509,6 @@
       CALL mymatmul(tmasst%m, nrl, 'N', 'R', s, nrl, 'N', 'R', temp, nrl, 'R', n, mpime, nproc)
       CALL mymatmul(s, nrl, 'T', 'R', temp, nrl, 'N', 'R', tmasst%m, nrl, 'R', n, mpime, nproc)
 
-      IF(timing) S5 = cclock()
 !
 ! ... INITIALIZE X0
 !
@@ -600,7 +573,6 @@
       END DO ITERATIVE_LOOP
 
 
-      IF(timing) S6 = cclock()
 !
 ! ... TRANSFORM X1 BACK TO THE ORIGINAL BASIS
 
@@ -621,21 +593,13 @@
       CALL parallel_deallocate(rhot)
       DEALLOCATE( desc )
 
-      IF(timing) THEN
-        S7 = cclock()
-        timrhos  = (s2 - s1) + timrhos
-        timsigs  = (s3 - s2) + timsigs
-        timdiag  = (s4 - s3) + timdiag
-        timtras1 = (s5 - s4) + timtras1
-        timiter  = (s6 - s5) + timiter
-        timbtra  = (s7 - s6) + timbtra
-        timtot   = (s7 - s1) + timtot
-        timcnt = timcnt + 1
-      END IF
+      CALL stop_clock( 'ortho_gamma_p' )
 
       ortho_gamma_p = iter
+
       RETURN
-      END FUNCTION ortho_gamma_p
+
+    END FUNCTION ortho_gamma_p
 
 
 !=----------------------------------------------------------------------------=!
@@ -717,11 +681,10 @@
       INTEGER ::  IDAMAX 
       INTEGER ::  N, NGW, NX, I, J, K, ITER
       REAL(DP)  DIFGAM,RHOSIGD
-      REAL(DP)  S1,S2,S3,S4,s5,s6,s7,s8
 
 ! ... Subroutine body
 
-      IF(timing) S1 = cclock()
+      CALL start_clock( 'ortho_kp' )
 
       N   = SIZE( c0, 2 )
       NX  = SIZE( c0, 2 )
@@ -766,9 +729,7 @@
       DEALLOCATE(AUX)
 
       CALL rhoset( ngw, nx, C0, CP, RHO, TMASS, PWRK )
-      IF(timing) S2 = cclock()
       CALL sigset( ngw, nx, CP, SIG, PWRK )
-      IF(timing) S3 = cclock()
 
       DO J=1,N
         DO I=1,N
@@ -783,7 +744,6 @@
 
       CALL diagonalize_rho(temp,rhod,s)
 
-      IF(timing) S4 = cclock()
 !
 ! ... TRANSFORM SIG, RHOA AND TMASS IN THE NEW BASIS THROUGH MATRIX S
 !
@@ -794,7 +754,6 @@
       CALL sqr_matmul('N','N',TMASS,S,TEMP)
       CALL sqr_matmul('C','N',S,TEMP,TMASS)
 
-      IF(timing) S5 = cclock()
 !
 ! ... INITIALIZE X0
 !
@@ -844,7 +803,6 @@
 
       END DO ITERATIVE_LOOP
 
-      IF(timing) S6 = cclock()
 !
 ! ... TRANSFORM X1 BACK TO THE ORIGINAL BASIS
 !
@@ -890,17 +848,7 @@
       END IF
 #endif
 
-      IF(timing) THEN
-        S7 = cclock()
-        timrhos  = (s2 - s1) + timrhos
-        timsigs  = (s3 - s2) + timsigs
-        timdiag  = (s4 - s3) + timdiag
-        timtras1 = (s5 - s4) + timtras1
-        timiter  = (s6 - s5) + timiter
-        timbtra  = (s7 - s6) + timbtra
-        timtot   = (s7 - s1) + timtot
-        timcnt = timcnt + 1
-      END IF
+      CALL stop_clock( 'ortho_kp' )
 
       ortho_kp = iter
       RETURN
@@ -954,7 +902,6 @@
       INTEGER IDAMAX 
       INTEGER I,J,K,II,JJ,IP,JP
       INTEGER ITER
-      REAL (DP)  ::  S1,S2,S3,S4,S5,S6,S7,S8
       REAL (DP)  ::  fact,ONE_BY_EMASS
 
 !     .. Local Scalars ..
@@ -976,7 +923,7 @@
 
 ! ... Subroutine body
 
-      IF (timing) S1 = cclock()
+      CALL start_clock( 'ortho_scalapack' )
 
       n   = cdesc%nbl( ispin )
       ngw = cdesc%ngwl
@@ -1015,11 +962,7 @@
 
       CALL SIGRHOSET( ngw, n, CP(:,:), C0(:,:), SIGT, RHOAT, TMASST, PMSS, EMASS, cdesc%gzero)
 
-      IF (timing) S2 = cclock()
-
 !.....DIAGONALIZATION OF RHOS
-
-      IF (timing) S3 = cclock()
 
       NRL = local_dimension( desc, 'R' )
       NCL = local_dimension( desc, 'C' )
@@ -1037,8 +980,6 @@
 
 
       CALL pdiagonalize('U',tempt,rhod,st)
-
-      IF (timing) S4 = cclock()
 
       ! ... TRANSFORM SIG, RHOA AND TMASS IN THE NEW BASIS THROUGH MATRIX S
 
@@ -1060,8 +1001,6 @@
       ENDDO
 
       !
-
-      IF (timing) S5 = cclock()
 
       ITERATIVE_LOOP: DO iter = 0, ortho_max
 
@@ -1115,8 +1054,6 @@
       END DO ITERATIVE_LOOP
 
 
-      IF (timing) S6 = cclock()
-
       ! ... TRANSFORM X1 BACK TO THE ORIGINAL BASIS
 
       CALL pmatmul(st,x1t,tempt,'n','n')
@@ -1137,53 +1074,12 @@
 
       CALL free_blacs_grid(grid)
 
-
-      IF(timing) THEN
-        S7 = cclock()
-        timrhos  = (s2 - s1) + timrhos
-        timsigs  = (s3 - s2) + timsigs
-        timdiag  = (s4 - s3) + timdiag
-        timtras1 = (s5 - s4) + timtras1
-        timiter  = (s6 - s5) + timiter
-        timbtra  = (s7 - s6) + timbtra
-        timtot   = (s7 - s1) + timtot
-        timcnt = timcnt + 1
-      END IF
+      CALL stop_clock( 'ortho_scalapack' )
 
       ortho_scalapack = iter
       RETURN
       END FUNCTION ortho_scalapack
 !
-
-!=----------------------------------------------------------------------------=!
-
-      SUBROUTINE print_ortho_time( iunit )
-        USE io_global, ONLY: ionode
-        INTEGER, INTENT(IN) :: iunit
-        IF( timing .AND. timcnt > 0 ) THEN
-          timrhos  = timrhos/timcnt
-          timsigs  = timsigs/timcnt
-          timdiag  = timdiag/timcnt
-          timtras1 = timtras1/timcnt
-          timiter  = timiter/timcnt
-          timbtra  = timbtra/timcnt
-          timtot   = timtot/timcnt
-          IF(ionode) THEN
-            WRITE( iunit, 999 ) TIMRHOS, TIMSIGS, TIMDIAG, TIMTRAS1, TIMITER, TIMBTRA, TIMTOT
-          END IF
-        END IF
-        timrhos = 0.0d0
-        timsigs = 0.0d0
-        timdiag = 0.0d0
-        timtras1 = 0.0d0
-        timiter = 0.0d0
-        timbtra = 0.0d0
-        timtot = 0.0d0
-        timcnt = 0
-999     FORMAT(1X,7(1X,F9.3))
-        RETURN
-      END SUBROUTINE print_ortho_time
-
 
 !=----------------------------------------------------------------------------=!
      END MODULE orthogonalize

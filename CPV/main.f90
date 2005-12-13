@@ -94,7 +94,7 @@
                   tdipole, t_diis, t_diis_simple, t_diis_rot, &
                   tnosee, tnosep, force_pairing, tconvthrs, convergence_criteria, tionstep, nstepe, &
                   tsteepdesc, ekin_conv_thr, ekin_maxiter, ionic_conjugate_gradient, &
-                  tconjgrad_ion, conv_elec, lneb, tnoseh, tuspp, etot_conv_thr
+                  tconjgrad_ion, conv_elec, lneb, tnoseh, tuspp, etot_conv_thr, tdamp
       USE atoms_type_module, ONLY: atoms_type
       USE print_out_module, ONLY: printout, print_time, print_sfac, &
           printacc
@@ -117,6 +117,7 @@
       USE brillouin, ONLY: kp
       USE rundiis_module, ONLY: rundiis, runsdiis
       USE wave_types
+      use wave_base, only: frice
       USE charge_types
       USE kohn_sham_states, ONLY: ks_states, tksout, n_ksout, indx_ksout, ks_states_closeup
       USE kohn_sham_states, ONLY: ks_states_force_pairing
@@ -221,7 +222,7 @@
       LOGICAL :: ttionstep
       LOGICAL :: tconv_cg
 
-      REAL(DP) :: vnosee, vnosep
+      REAL(DP) :: fccc, vnosep
 
       REAL(DP), EXTERNAL  :: cclock
 
@@ -245,6 +246,7 @@
       timeorto  = 0.0_DP
       timeform  = 0.0_DP
       timeloop  = 0.0_DP
+      fccc      = 1.0d0
       nstep_this_run  = 0
 
       MAIN_LOOP: DO 
@@ -434,7 +436,14 @@
            !
            IF(tnosee) THEN
               call electrons_nosevel( vnhe, xnhe0, xnhem, delt )
-              vnosee = vnhe
+           END IF
+
+           IF( tnosee ) THEN
+              fccc = 1.0d0 / ( 1.0d0 + vnhe * delt * 0.5d0 )
+           ELSE IF ( tdamp ) THEN
+              fccc = 1.0d0 / ( 1.0d0 + frice )
+           ELSE
+              fccc = 1.0d0
            END IF
 
            !    move electronic degrees of freedom by Verlet's algorithm
@@ -447,12 +456,12 @@
               ! index band; and put equal for paired wf spin up and down
               !
               CALL runcp_force_pairing(ttprint, tortho, tsde, cm, c0, cp, wfill, &
-                vpot, eigr, occn, ekincs, timerd, timeorto, ht0, ei, bec, vnosee )
+                vpot, eigr, occn, ekincs, timerd, timeorto, ht0, ei, bec, fccc )
               !
            ELSE
               !
               CALL runcp( ttprint, tortho, tsde, cm, c0, cp, wfill, vpot, eigr, &
-                         occn, ekincs, timerd, timeorto, ht0, ei, bec, vnosee )
+                         occn, ekincs, timerd, timeorto, ht0, ei, bec, fccc )
               !
            END IF
 

@@ -85,7 +85,7 @@
       LOGICAL :: gammasym
 
       REAL(DP) :: timepre, s0, s1, s2, s3, s4, s5, s6, seconds_per_iter
-      REAL(DP) :: eold, timerd, timeorto, ekinc, vnosee
+      REAL(DP) :: eold, timerd, timeorto, ekinc, fccc
       REAL(DP) :: ekincs( cdesc%nspin )
       REAL(DP) :: ekinc_old, emin, demin
 
@@ -106,7 +106,7 @@
       ttforce     = .FALSE.
       ttstress    = .FALSE.
       ttortho     = .TRUE.
-      vnosee      = 0.0d0
+      fccc        = 1.0d0
       gzero       = cdesc%gzero
       gammasym    = cdesc%gamma
 
@@ -134,7 +134,7 @@
         s2 = cclock()
 
         CALL runcp( ttprint, ttortho, ttsde, cm, c0, cp, cdesc, vpot, eigr, occ, ekincs, timerd, &
-                    timeorto, ht0, ei, bec, vnosee)
+                    timeorto, ht0, ei, bec, fccc)
 
         ekinc = SUM( ekincs )
         emin  = edft%etot

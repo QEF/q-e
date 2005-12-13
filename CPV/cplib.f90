@@ -239,35 +239,42 @@
 
 
 !-------------------------------------------------------------------------
-      SUBROUTINE calphi(c0,ema0bg,bec,betae,phi)
+      SUBROUTINE calphi( c0, ngwx, ema0bg, bec, nkbx, betae, phi, n )
 !-----------------------------------------------------------------------
 !     input: c0 (orthonormal with s(r(t)), bec=<c0|beta>, betae=|beta>
 !     computes the matrix phi (with the old positions)
 !       where  |phi> = s'|c0> = |c0> + sum q_ij |i><j|c0>
 !     where s'=s(r(t))  
 !
-      USE ions_base, ONLY: na, nsp
-      USE io_global, ONLY: stdout
-      USE cvan, ONLY: ish, nvb
-      USE uspp_param, ONLY: nh
-      USE uspp, ONLY :nhsa=>nkb, nhsavb=>nkbus, qq
-      USE gvecw, ONLY: ngw
-      USE electrons_base, ONLY: n => nbsp
-      USE constants, ONLY: pi, fpi
-      USE control_flags, ONLY: iprint, iprsta
-      USE mp, ONLY: mp_sum
+      USE kinds,          ONLY: DP
+      USE ions_base,      ONLY: na, nsp
+      USE io_global,      ONLY: stdout
+      USE cvan,           ONLY: ish, nvb
+      USE uspp_param,     ONLY: nh
+      USE uspp,           ONLY: nhsavb=>nkbus, qq
+      USE gvecw,          ONLY: ngw
+      USE constants,      ONLY: pi, fpi
+      USE control_flags,  ONLY: iprint, iprsta
+      USE mp,             ONLY: mp_sum
 !
       IMPLICIT NONE
-      COMPLEX(8) c0(ngw,n), phi(ngw,n), betae(ngw,nhsa)
-      REAL(8)    ema0bg(ngw), bec(nhsa,n), emtot
-! local variables
-      INTEGER is, iv, jv, ia, inl, jnl, i, j
-      REAL(8) qtemp(nhsavb,n) ! automatic array
+      
+      INTEGER, INTENT(IN) :: ngwx, nkbx, n
+      COMPLEX(DP)         :: c0( ngwx, n ), phi( ngwx, n ), betae( ngwx, nkbx )
+      REAL(DP)            :: ema0bg( ngwx ), bec( nkbx, n ), emtot
+
+      ! local variables
+      !
+      INTEGER  :: is, iv, jv, ia, inl, jnl, i, j
+      REAL(DP), ALLOCATABLE :: qtemp( : , : )
 !
       CALL start_clock( 'calphi' )
+
+      ALLOCATE( qtemp( nhsavb, n ) )
+
       phi(:,:) = (0.d0, 0.d0)
 !
-      IF (nvb.GT.0) THEN
+      IF ( nvb > 0 ) THEN
          qtemp (:,:) = 0.d0
          DO is=1,nvb
             DO iv=1,nh(is)
@@ -287,7 +294,7 @@
          END DO
 !
          CALL MXMA                                                     &
-     &       (betae,1,2*ngw,qtemp,1,nhsavb,phi,1,2*ngw,2*ngw,nhsavb,n)
+     &       ( betae, 1, 2*ngwx, qtemp, 1, nhsavb, phi, 1, 2*ngwx, 2*ngw, nhsavb, n )
       END IF
 !
       DO j=1,n
@@ -297,11 +304,11 @@
       END DO
 !     =================================================================
       IF(iprsta > 2) THEN
-         emtot=0.
+         emtot=0.0d0
          DO j=1,n
             DO i=1,ngw
                emtot=emtot                                              &
-     &        +2.*DBLE(phi(i,j)*CONJG(c0(i,j)))*ema0bg(i)**(-2.)
+     &        +2.0d0*DBLE(phi(i,j)*CONJG(c0(i,j)))*ema0bg(i)**(-2.0d0)
             END DO
          END DO
          emtot=emtot/n
@@ -324,10 +331,16 @@
             END IF
          END DO
       ENDIF
+
+      DEALLOCATE( qtemp )
+
       CALL stop_clock( 'calphi' )
 !
       RETURN
       END SUBROUTINE calphi
+
+
+
 !-----------------------------------------------------------------------
       REAL(8) FUNCTION cscnorm( bec, nkbx, cp, ngwx, i, n )
 !-----------------------------------------------------------------------
@@ -2109,46 +2122,51 @@
 !     where s=s(r(t+dt)) and s'=s(r(t))  
 !     for vanderbilt pseudo pot - kl & ap
 !
-      USE ions_base, ONLY: na, nsp, nas => nax, nat
+      USE ions_base, ONLY: na, nat
       USE cvan, ONLY: ish, nvb
-      USE uspp, ONLY :nhsa=>nkb, qq
+      USE uspp, ONLY : nkb, qq
       USE uspp_param, ONLY: nh
-      USE electrons_base, ONLY: n => nbsp, nx => nbspx, nspin, nupdwn, iupdwn, f
+      USE electrons_base, ONLY: n => nbsp, nbspx, nudx, nspin, nupdwn, iupdwn, f
       USE gvecw, ONLY: ngw
       USE control_flags, ONLY: iprint, iprsta
       USE io_global, ONLY: stdout
+      USE orthogonalize_base, ONLY: ortho_iterate
 !
       IMPLICIT NONE
 !
       COMPLEX(8)   cp(ngw,n), phi(ngw,n), eigr(ngw,nat)
-      REAL(8) x0(nx,nx), diff, ccc, eps, delt
+      REAL(8) x0( nbspx, nbspx ), diff, ccc, eps, delt
       INTEGER iter, max
-      REAL(8) bephi(nhsa,n), becp(nhsa,n)
+      REAL(8) bephi(nkb,n), becp(nkb,n)
 !
       REAL(8), ALLOCATABLE :: diag(:), work1(:), work2(:), xloc(:,:), &
-                                   tmp1(:,:), tmp2(:,:), dd(:,:), x1(:,:), &
-                                   rhos(:,:), rhor(:,:), con(:,:), u(:,:), &
+                                   rhos(:,:), rhor(:,:), u(:,:), &
                                    sig(:,:), rho(:,:), tau(:,:)
 
-! the above are all automatic arrays
+      INTEGER :: ngwx, nkbx
+
       INTEGER istart, nss, ifail, i, j, iss, iv, jv, ia, is, inl, jnl
       REAL(8), ALLOCATABLE:: qbephi(:,:), qbecp(:,:)
 
-      ALLOCATE( diag(nx), work1(nx), work2(nx), xloc(nx,nx), tmp1(nx,nx),    &
-                tmp2(nx,nx), dd(nx,nx), x1(nx,nx), rhos(nx,nx), rhor(nx,nx), &
-                con(nx,nx),  u(nx,nx), sig(nx,nx), rho(nx,nx), tau(nx,nx) )
+      ALLOCATE( diag( nudx ), work1( nudx ), work2( nudx ), xloc( nudx, nudx ),  &
+                rhos( nudx, nudx ), rhor( nudx, nudx ), u( nudx, nudx ),         &
+                sig( nudx, nudx ), rho( nudx, nudx ), tau( nudx, nudx ) )
 
-!
-!     calculation of becp and bephi
-!
+      ngwx = ngw
+      nkbx = nkb
+      !
+      !     calculation of becp and bephi
+      !
       CALL start_clock( 'ortho' )
-      CALL nlsm1(n,1,nvb,eigr, cp, becp)
-      CALL nlsm1(n,1,nvb,eigr,phi,bephi)
-!
-!     calculation of qbephi and qbecp
-!
-      ALLOCATE(qbephi(nhsa,n))
-      ALLOCATE(qbecp (nhsa,n))
+
+      CALL nlsm1( n, 1, nvb, eigr,  cp,  becp )
+      CALL nlsm1( n, 1, nvb, eigr, phi, bephi )
+      !
+      !     calculation of qbephi and qbecp
+      !
+      ALLOCATE( qbephi( nkbx, n ) )
+      ALLOCATE( qbecp ( nkbx, n ) )
+      !
       qbephi = 0.d0
       qbecp  = 0.d0
 !
@@ -2171,17 +2189,22 @@
          END DO
       END DO
 !
-      DO iss=1,nspin
-         nss=nupdwn(iss)
-         istart=iupdwn(iss)
-!
-!     rho = <s'c0|s|cp>
-!     sig = 1-<cp|s|cp>
-!     tau = <s'c0|s|s'c0>
-!
-         CALL rhoset(cp,phi,bephi,qbecp,nss,istart,rho)
-         CALL sigset(cp,becp,qbecp,nss,istart,sig)
-         CALL tauset(phi,bephi,qbephi,nss,istart,tau)
+      DO iss = 1, nspin
+
+         nss    = nupdwn(iss)
+         istart = iupdwn(iss)
+
+         !
+         !     rho = <s'c0|s|cp>
+         !     sig = 1-<cp|s|cp>
+         !     tau = <s'c0|s|s'c0>
+         !
+         CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, rho, nudx )
+         !
+         CALL sigset( cp, ngwx, becp, nkbx, qbecp, n, nss, istart, sig, nudx )
+         !
+         CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, tau, nudx )
+         !
 !
          IF(iprsta.GT.4) THEN
             WRITE( stdout,*)
@@ -2207,9 +2230,6 @@
          DO j=1,nss
             DO i=1,nss
                xloc(i,j) = x0(istart-1+i,istart-1+j)*ccc
-               dd(i,j) = 0.d0
-               x1(i,j) = 0.d0
-               tmp1(i,j)=0.d0
                rhos(i,j)=0.5d0*( rho(i,j)+rho(j,i) )
 !
 ! on some machines (IBM RS/6000 for instance) the following test allows
@@ -2223,75 +2243,15 @@
             END DO
          END DO
 !     
-         DO i=1,nss
-            tmp1(i,i)=1.d0
-         END DO
          ifail=0
          CALL start_clock( 'rsg' )
-         CALL rs(nx,nss,rhos,diag,1,u,work1,work2,ifail) 
+         CALL rs(nudx,nss,rhos,diag,1,u,work1,work2,ifail) 
          CALL stop_clock( 'rsg' )
 !
 !                calculation of lagranges multipliers
 !
-         DO iter=1,max
-!
-!       the following 4 MXMA-calls do the following matrix 
-!       multiplications:
-!                       tmp1 = x0*rhor    (1st call)
-!                       dd   = x0*tau*x0  (2nd and 3rd call)
-!                       tmp2 = x0*rhos    (4th call)
-!
-            CALL MXMA( xloc,1,nx,rhor,1,nx,tmp1,1,nx,nss,nss,nss)
-            CALL MXMA( tau ,1,nx,xloc,1,nx,tmp2,1,nx,nss,nss,nss)
-            CALL MXMA( xloc,1,nx,tmp2,1,nx,  dd,1,nx,nss,nss,nss)
-            CALL MXMA( xloc,1,nx,rhos,1,nx,tmp2,1,nx,nss,nss,nss)
-            DO i=1,nss
-               DO j=1,nss
-                  x1(i,j) = sig(i,j)-tmp1(i,j)-tmp1(j,i)-dd(i,j)       
-                  con(i,j)= x1(i,j)-tmp2(i,j)-tmp2(j,i)
-               END DO
-            END DO
-!
-!         x1      = sig      -x0*rho    -x0*rho^t  -x0*tau*x0
-!
-            diff=0.d0
-            DO i=1,nss
-               DO j=1,nss
-                  IF(ABS(con(i,j)).GT.diff) diff=ABS(con(i,j))
-               END DO
-            END DO
-!
-            IF( diff.LE.eps ) go to 20
-!     
-!     the following two MXMA-calls do:   
-!                       tmp1 = x1*u
-!                       tmp2 = ut*x1*u
-!
-            CALL MXMA(x1,1,nx,   u,1,nx,tmp1,1,nx,nss,nss,nss)
-            CALL MXMA(u ,nx,1,tmp1,1,nx,tmp2,1,nx,nss,nss,nss)   
-!
-!       g=ut*x1*u/d  (g is stored in tmp1)
-! 
-            DO i=1,nss
-               DO j=1,nss
-                  tmp1(i,j)=tmp2(i,j)/(diag(i)+diag(j))
-               END DO
-            END DO
-!     
-!       the following two MXMA-calls do:   
-!                       tmp2 = g*ut
-!                       x0 = u*g*ut
-!
-            CALL MXMA(tmp1,1,nx,  u,nx,1,tmp2,1,nx,nss,nss,nss)
-            CALL MXMA(   u,1,nx,tmp2,1,nx,xloc,1,nx,nss,nss,nss)
-         END DO
-         WRITE( stdout,*) ' diff= ',diff,' iter= ',iter
-         CALL errore('ortho','max number of iterations exceeded',iter)
-!
- 20      CONTINUE
-!
-!-----------------------------------------------------------------------
-!
+         CALL ortho_iterate( u, diag, xloc, sig, rhor, rhos, tau, nudx, nss, max, eps )
+
          IF(iprsta.GT.4) THEN
             WRITE( stdout,*)
             WRITE( stdout,'(26x,a)') '    lambda '
@@ -2318,8 +2278,7 @@
 !
       DEALLOCATE(qbecp )
       DEALLOCATE(qbephi)
-      DEALLOCATE( diag, work1, work2, xloc, tmp1, tmp2, dd, x1, rhos, rhor, &
-                  con, u, sig, rho, tau )
+      DEALLOCATE( diag, work1, work2, xloc, rhos, rhor, u, sig, rho, tau )
 !
       CALL stop_clock( 'ortho' )
       RETURN
@@ -2971,7 +2930,7 @@
       END SUBROUTINE rhoofr
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE rhoset(cp,phi,bephi,qbecp,nss,ist,rho)
+      SUBROUTINE rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, ist, rho, nx )
 !-----------------------------------------------------------------------
 !     input: cp (non-orthonormal), phi, bephi, qbecp
 !     computes the matrix
@@ -2980,40 +2939,40 @@
 !     where s=s(r(t+dt)) and s'=s(r(t))  
 !     routine makes use of  c(-q)=c*(q)
 !
-      USE parameters, ONLY: nsx, natx
-      USE gvecw, ONLY: ngw
+      USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
-      USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus
-      USE cvan, ONLY: nvb
-      USE electrons_base, ONLY: nx => nbspx, n => nbsp ! , f, ispin => fspin, nspin
+      USE uspp,               ONLY: nkbus
+      USE cvan,               ONLY: nvb
+      USE kinds,              ONLY: DP
+      USE mp,                 ONLY: mp_sum
 !
       IMPLICIT NONE
 !
-      INTEGER nss, ist
-      COMPLEX(8)   cp(ngw,n), phi(ngw,n)
-      REAL(8)       bephi(nhsa,n), qbecp(nhsa,n), rho(nx,nx)
-      INTEGER i, j
-      REAL(8)    tmp1(nx,nx) ! automatic array
-!
+      INTEGER     :: nss, ist, ngwx, nkbx, nx, n
+      COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
+      REAL(DP)    :: bephi( nkbx, n ), qbecp( nkbx, n ), rho( nx, nx )
+      !
+      INTEGER     :: i, j
+      REAL(DP), ALLOCATABLE :: tmp1(:,:)
+      !
       rho (:,:) = 0.d0
-!
-!     <phi|cp>
-!
-      CALL MXMA(phi(1,ist),2*ngw,1,cp(1,ist),1,2*ngw,                   &
-     &                              rho,1,nx,nss,2*ngw,nss)
-!
-!     q >= 0  components with weight 2.0
-!
+      !
+      !     <phi|cp>
+      !
+      CALL MXMA( phi( 1, ist ), 2*ngwx, 1, cp( 1, ist ), 1, 2*ngwx,                   &
+     &           rho, 1, nx, nss, 2*ngw, nss )
+      !
+      !     q >= 0  components with weight 2.0
+      !
       DO j=1,nss
          DO i=1,nss
             rho(i,j)=2.*rho(i,j)
          END DO
       END DO
-!
+      !
+      !     q = 0  components has weight 1.0
+      !
       IF (gstart == 2) THEN
-!
-!     q = 0  components has weight 1.0
-!
          DO j=1,nss
             DO i=1,nss
                rho(i,j) = rho(i,j) -                                    &
@@ -3022,19 +2981,23 @@
          END DO
       END IF
 
-      CALL reduce(nx*nss,rho)
+      CALL mp_sum( rho )
 !
-      IF(nvb.GT.0)THEN
-         tmp1 (:,:) = 0.d0
+      IF( nvb > 0 ) THEN
+
+         ALLOCATE( tmp1( nx, nx ) )
 !
-         CALL MXMA(bephi(1,ist),nhsa,1,qbecp(1,ist),1,nhsa,               &
-     &                                tmp1,1,nx,nss,nhsavb,nss)
+         CALL MXMA( bephi( 1, ist ), nkbx, 1, qbecp( 1, ist ), 1, nkbx,               &
+     &                                tmp1, 1, nx, nss, nkbus, nss )
 !
          DO j=1,nss
             DO i=1,nss
                rho(i,j)=rho(i,j)+tmp1(i,j)
             END DO
          END DO
+
+         DEALLOCATE( tmp1 )
+
       ENDIF
 !
       RETURN
@@ -3387,7 +3350,7 @@
 
 !
 !-------------------------------------------------------------------------
-      SUBROUTINE sigset(cp,becp,qbecp,nss,ist,sig)
+      SUBROUTINE sigset( cp, ngwx, becp, nkbx, qbecp, n, nss, ist, sig, nx )
 !-----------------------------------------------------------------------
 !     input: cp (non-orthonormal), becp, qbecp
 !     computes the matrix
@@ -3395,37 +3358,38 @@
 !     where s=s(r(t+dt)) 
 !     routine makes use of c(-q)=c*(q)
 !
-      USE parameters, ONLY: natx, nsx
-      USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus
-      USE cvan, ONLY : nvb
-      USE electrons_base, ONLY: nx => nbspx, n => nbsp
-      USE gvecw, ONLY: ngw
+      USE kinds,              ONLY: DP
+      USE uspp,               ONLY: nkbus
+      USE cvan,               ONLY: nvb
+      USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
+      USE mp,                 ONLY: mp_sum
 !
       IMPLICIT NONE
 !
-      INTEGER nss, ist
-      COMPLEX(8)  cp(ngw,n)
-      REAL(8) becp(nhsa,n), qbecp(nhsa,n), sig(nx,nx)
+      INTEGER nss, ist, ngwx, nkbx, n, nx
+      COMPLEX(DP) :: cp( ngwx, n )
+      REAL(DP)    :: becp( nkbx, n ), qbecp( nkbx, n ), sig( nx, nx )
 !
-      INTEGER i, j
-      REAL(8)    tmp1(nx,nx) ! automatic array
+      INTEGER :: i, j
+      REAL(DP), ALLOCATABLE :: tmp1(:,:)
 !
       sig = 0.d0
-      CALL MXMA(cp(1,ist),2*ngw,1,cp(1,ist),1,2*ngw,                    &
-     &                                  sig,1,nx,nss,2*ngw,nss)
-!
-!     q >= 0  components with weight 2.0
-!
+      !
+      CALL MXMA( cp( 1, ist ), 2*ngwx, 1, cp( 1, ist ), 1, 2*ngwx,                    &
+     &           sig, 1, nx, nss, 2*ngw, nss )
+      !
+      !     q >= 0  components with weight 2.0
+      !
       DO j=1,nss
          DO i=1,nss
-            sig(i,j)=-2.*sig(i,j)
+            sig(i,j) = -2.0d0 * sig(i,j)
          END DO
       END DO
-      IF (gstart == 2) THEN
-!
-!     q = 0  components has weight 1.0
-!
+      !
+      !     q = 0  components has weight 1.0
+      !
+      IF ( gstart == 2 ) THEN
          DO j=1,nss
             DO i=1,nss
                sig(i,j) = sig(i,j) +                                    &
@@ -3433,22 +3397,28 @@
             END DO
          END DO
       END IF
-      CALL reduce(nx*nss,sig)
-      DO i=1,nss
-         sig(i,i) = sig(i,i)+1.
+      !
+      CALL mp_sum( sig )
+      !
+      DO i = 1, nss
+         sig(i,i) = sig(i,i) + 1.0d0
       END DO
 !
-      IF(nvb.GT.0)THEN
-         tmp1 = 0.d0
+      IF( nvb > 0 ) THEN
+       
+         ALLOCATE( tmp1( nx, nx ) )
 !
-         CALL MXMA(becp(1,ist),nhsa,1,qbecp(1,ist),1,nhsa,                &
-     &                              tmp1,1,nx,nss,nhsavb,nss)
+         CALL MXMA( becp( 1, ist ), nkbx, 1, qbecp( 1, ist ), 1, nkbx,                &
+     &              tmp1, 1, nx, nss, nkbus, nss )
 !
          DO j=1,nss
             DO i=1,nss
                sig(i,j)=sig(i,j)-tmp1(i,j)
             END DO
          END DO
+
+         DEALLOCATE( tmp1 )
+
       ENDIF
 !
       RETURN
@@ -3601,8 +3571,9 @@
 !
       RETURN
       END SUBROUTINE spinsq
+
 !-------------------------------------------------------------------------
-      SUBROUTINE tauset(phi,bephi,qbephi,nss,ist,tau)
+      SUBROUTINE tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, ist, tau, nx )
 !-----------------------------------------------------------------------
 !     input: phi
 !     computes the matrix
@@ -3610,35 +3581,37 @@
 !     where s=s(r(t+dt)) and s'=s(r(t))  
 !     routine makes use of c(-q)=c*(q)
 !
-      USE parameters, ONLY: nsx, natx
-      USE cvan, ONLY: nvb
-      USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus
-      USE electrons_base, ONLY: nx => nbspx, n => nbsp
-      USE gvecw, ONLY: ngw
+      USE kinds,              ONLY: DP
+      USE cvan,               ONLY: nvb
+      USE uspp,               ONLY: nkbus
+      USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
+      USE mp,                 ONLY: mp_sum
 !
       IMPLICIT NONE
-      INTEGER nss, ist
-      COMPLEX(8) phi(ngw,n)
-      REAL(8)  bephi(nhsa,n), qbephi(nhsa,n), tau(nx,nx)
-      INTEGER i, j
-      REAL(8)    tmp1(nx,nx) ! automatic array
+      INTEGER :: nss, ist, ngwx, nkbx, n, nx
+      COMPLEX(DP) :: phi( ngwx, n )
+      REAL(DP)    :: bephi( nkbx, n ), qbephi( nkbx, n ), tau( nx, nx )
+      !
+      INTEGER     :: i, j
+      REAL(DP), ALLOCATABLE :: tmp1( :, : )
 !
-      tau = 0.d0
-      CALL MXMA(phi(1,ist),2*ngw,1,phi(1,ist),1,2*ngw,                  &
-     &                                   tau,1,nx,nss,2*ngw,nss)
-!
-!     q >= 0  components with weight 2.0
-!
+      tau = 0.0d0
+      !
+      CALL MXMA( phi( 1, ist ), 2*ngwx, 1, phi( 1, ist ), 1, 2*ngwx,                  &
+     &           tau, 1, nx, nss, 2*ngw, nss )
+      !
+      !     q >= 0  components with weight 2.0
+      !
       DO j=1,nss
          DO i=1,nss
-            tau(i,j)=2.*tau(i,j)
+            tau(i,j) = 2.0d0 * tau(i,j)
          END DO
       END DO
+      !
+      !     q = 0  components has weight 1.0
+      !
       IF (gstart == 2) THEN
-!
-!     q = 0  components has weight 1.0
-!
          DO j=1,nss
             DO i=1,nss
                tau(i,j) = tau(i,j) -                                    &
@@ -3646,19 +3619,24 @@
             END DO
          END DO
       END IF
-      CALL reduce(nx*nss,tau)
+
+      CALL mp_sum( tau )
 !
-      IF(nvb.GT.0)THEN
-         tmp1 = 0.d0
+      IF( nvb > 0 ) THEN
+         !
+         ALLOCATE( tmp1( nx, nx ) )
 !
-         CALL MXMA(bephi(1,ist),nhsa,1,qbephi(1,ist),1,nhsa,              &
-     &                                     tmp1,1,nx,nss,nhsavb,nss)
+         CALL MXMA( bephi( 1, ist ), nkbx, 1, qbephi( 1, ist ), 1, nkbx,              &
+     &              tmp1, 1, nx, nss, nkbus, nss )
 !
          DO j=1,nss
             DO i=1,nss
                tau(i,j)=tau(i,j)+tmp1(i,j)
             END DO
          END DO
+
+         DEALLOCATE( tmp1 )
+
       ENDIF
 !
       RETURN

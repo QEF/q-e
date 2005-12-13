@@ -492,6 +492,7 @@
       REAL(DP)  dene, etot_m, cnorm,  drho
       REAL(DP)  efermi, sume, entk,rhos
       REAL(DP)  eold, timerd, timeorto
+      REAL(DP)  fccc
       REAL(DP), ALLOCATABLE :: lambda(:,:)
       COMPLEX(DP), ALLOCATABLE :: clambda(:,:,:)
       COMPLEX(DP), ALLOCATABLE :: c0rot(:,:)
@@ -511,6 +512,7 @@
       svar1       = 2.d0
       svar2       = -1.d0
       svar3_0     = delt * delt / pmss(1)
+      fccc        = 1.0d0
       isteep      = nreset
 
       ttreset_diis = .TRUE.
@@ -552,7 +554,7 @@
           isteep = isteep + 1
           cm = c0
           CALL runcp(.FALSE., tortho, tsde, cm, c0, cgrad, cdesc, vpot, eigr, fi, &
-            ekinc, timerd, timeorto, ht0, ei, bec, 0.0d0 )
+            ekinc, timerd, timeorto, ht0, ei, bec, fccc )
           CALL update_wave_functions(cm, c0, cgrad, cdesc)
 
         ELSE

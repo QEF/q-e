@@ -27,7 +27,7 @@
 !  BEGIN manual
 
     SUBROUTINE runcp( ttprint, tortho, tsde, cm, c0, cp, cdesc, &
-      vpot, eigr, fi, ekinc, timerd, timeorto, ht, ei, bec, vnosee )
+      vpot, eigr, fi, ekinc, timerd, timeorto, ht, ei, bec, fccc )
 
 !     This subroutine performs a Car-Parrinello or Steepest-Descent step
 !     on the electronic variables, computing forces on electrons and,
@@ -46,7 +46,6 @@
       USE cp_electronic_mass, ONLY: emass
       USE descriptors_module, ONLY: get_local_dims, owner_of, local_index
       USE wave_functions, ONLY : cp_kinetic_energy
-      USE wave_base, ONLY : frice
       USE wave_base, ONLY: hpsi
       USE cell_module, ONLY: boxdimensions
       USE time_step, ONLY: delt
@@ -54,8 +53,6 @@
       USE orthogonalize, ONLY: ortho
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
-      USE control_flags, ONLY: tnosee
-      USE control_flags, ONLY: tdamp
       USE wave_constrains, ONLY: update_lambda
       USE reciprocal_space_mesh, ONLY: gkmask_l
       USE uspp,             ONLY : vkb, nkb
@@ -75,7 +72,7 @@
       REAL(DP) :: ei(:,:,:)
       REAL(DP) :: timerd, timeorto
       REAL(DP) :: ekinc(:)
-      REAL(DP), INTENT(IN) :: vnosee
+      REAL(DP), INTENT(IN) :: fccc
 
 ! ...   declare other variables
       REAL(DP) :: s1, s2, s3, s4
@@ -106,7 +103,7 @@
 
       !  Compute electronic forces and move electrons
 
-      CALL runcp_ncpp( cm, c0, cp, cdesc, vpot, eigr, fi, bec, vnosee, &
+      CALL runcp_ncpp( cm, c0, cp, cdesc, vpot, eigr, fi, bec, fccc, &
            gam, cgam, lambda = ttprint )
 
       !  Compute eigenstate
@@ -158,7 +155,7 @@
 !  BEGIN manual
 
     SUBROUTINE runcp_ncpp( cm, c0, cp, cdesc, &
-      vpot, eigr, fi, bec, vnosee, gam, cgam, lambda, fromscra, diis, restart )
+      vpot, eigr, fi, bec, fccc, gam, cgam, lambda, fromscra, diis, restart )
 
 !     This subroutine performs a Car-Parrinello or Steepest-Descent step
 !     on the electronic variables, computing forces on electrons and,
@@ -175,12 +172,12 @@
       USE mp, ONLY: mp_sum
       USE electrons_module, ONLY:  pmss
       USE cp_electronic_mass, ONLY: emass
-      USE wave_base, ONLY: frice, wave_steepest, wave_verlet
+      USE wave_base, ONLY: wave_steepest, wave_verlet
       USE time_step, ONLY: delt
       USE forces, ONLY: dforce
       USE wave_types, ONLY: wave_descriptor
       USE wave_constrains, ONLY: update_lambda
-      USE control_flags, ONLY: tnosee, tdamp, tsde
+      USE control_flags, ONLY: tsde
       USE pseudo_projector, ONLY: projector
       USE reciprocal_space_mesh, ONLY: gkmask_l
 
@@ -196,11 +193,11 @@
       REAL(DP), INTENT(IN)  ::  fi(:,:,:)
       REAL (DP) ::  vpot(:,:,:,:)
       REAL (DP), INTENT(IN) ::  bec(:,:)
-      REAL(DP), INTENT(IN) :: vnosee
+      REAL(DP), INTENT(IN) :: fccc
       LOGICAL, OPTIONAL, INTENT(IN) :: lambda, fromscra, diis, restart
 
 ! ...   declare other variables
-      REAL(DP) ::  svar1, svar2, tmpfac, annee
+      REAL(DP) ::  svar1, svar2
       INTEGER :: i, ig, nx, ngw, nb, ierr, is
       INTEGER :: iflag
 
@@ -235,35 +232,18 @@
       ! ...   determines friction dynamically according to the Nose' dynamics
       !
 
-      IF( tnosee ) THEN
-        annee   = vnosee * delt * 0.5d0
-      ELSE IF ( tdamp ) THEN
-        annee   = frice
-      ELSE
-        annee   = 0.0d0
-      END IF
-      tmpfac  = 1.d0 / (1.d0 + annee)
-
       IF( iflag == 0 ) THEN
         ttsde   = tsde
-        svar1   = 2.d0 * tmpfac
-        svar2   = 1.d0 - svar1
-        svar3( 1:ngw ) = delt * delt / pmss( 1:ngw ) * tmpfac
       ELSE IF ( iflag == 1 ) THEN
         ttsde   = .TRUE.
-        svar1   = 1.d0
-        svar2   = 2.d0
-        svar3( 1:ngw ) = delt * delt / pmss( 1:ngw )
       ELSE IF ( iflag == 2 ) THEN
-        ttsde = .FALSE.
-        svar1 = 1.d0
-        svar2 = 0.d0
-        svar3 = delt * delt / pmss( 1:ngw ) * 0.5d0
+        ttsde   = .FALSE.
       END IF
 
-      !    OPEN(unit=17,form='unformatted',status='old')
-      !    READ(17) vpot  ! debug
-      !    CLOSE(17)
+      svar1   = 2.d0 * fccc
+      svar2   = 1.d0 - svar1
+      svar3( 1:ngw ) = delt * delt / pmss( 1:ngw ) * fccc
+
 
       DO is = 1, cdesc%nspin
 
@@ -343,7 +323,7 @@
 !fnl if the factor non local
 
     SUBROUTINE runcp_force_pairing(ttprint, tortho, tsde, cm, c0, cp, cdesc, &
-        vpot, eigr, fi, ekinc, timerd, timeorto, ht, ei, bec, vnosee)
+        vpot, eigr, fi, ekinc, timerd, timeorto, ht, ei, bec, fccc)
 
 !  same as runcp, except that electrons are paired forcedly
 !  i.e. this handles a state dependant Hamiltonian for the paired and unpaired electrons
@@ -359,15 +339,13 @@
       USE cp_electronic_mass, ONLY: emass
       USE descriptors_module, ONLY: get_local_dims, owner_of, local_index
       USE wave_functions, ONLY : cp_kinetic_energy
-      USE wave_base, ONLY: frice, wave_steepest, wave_verlet
+      USE wave_base, ONLY: wave_steepest, wave_verlet
       USE wave_base, ONLY: hpsi
       USE cell_module, ONLY: boxdimensions
       USE time_step, ONLY: delt
       USE forces, ONLY: dforce
       USE orthogonalize, ONLY: ortho
       USE wave_types, ONLY: wave_descriptor
-      USE control_flags, ONLY: tnosee
-      USE control_flags, ONLY: tdamp
       USE constants, ONLY: au
       USE io_global, ONLY: ionode
       USE wave_constrains, ONLY: update_lambda
@@ -389,11 +367,11 @@
       REAL(DP), INTENT(IN) :: bec(:,:)
       REAL(DP) :: timerd, timeorto
       REAL(DP) :: ekinc(:)
-      REAL(DP), INTENT(IN) :: vnosee
+      REAL(DP), INTENT(IN) :: fccc
 
 ! ...   declare other variables
       REAL(DP) :: s3, s4
-      REAL(DP) ::  svar1, svar2, tmpfac, annee
+      REAL(DP) ::  svar1, svar2
       INTEGER :: i, ik,ig, nx, ngw, nb, j, nb_g, nb_lx, ierr, nkl, ibl
       INTEGER :: ispin_wfc, n_unp 
       REAL(DP), ALLOCATABLE :: occup(:,:), occdown(:,:), occsum(:)
@@ -428,19 +406,9 @@
       IF( ierr /= 0 ) CALL errore(' runcp_forced_pairing ', ' allocating c2, c3, svar3 ', ierr)
 
 
-! ...   determines friction dynamically according to the Nose' dynamics
-      IF( tnosee ) THEN
-        annee   = vnosee * delt * 0.5d0
-      ELSE IF ( tdamp ) THEN
-        annee   = frice
-      ELSE
-        annee   = 0.0d0
-      END IF
-
-      tmpfac  = 1.d0 / (1.d0 + annee)
-      svar1   = 2.d0 * tmpfac
+      svar1   = 2.d0 * fccc
       svar2   = 1.d0 - svar1
-      svar3(1:ngw) = delt * delt / pmss(1:ngw) * tmpfac
+      svar3(1:ngw) = delt * delt / pmss(1:ngw) * fccc
 
       ekinc    = 0.0d0
       timerd   = 0.0d0
@@ -625,8 +593,7 @@
               fromscra, restart )
      !
      use wave_base, only: wave_steepest, wave_verlet
-     use wave_base, only: frice
-     use control_flags, only: tnosee, tbuff, lwf, tsde
+     use control_flags, only: tbuff, lwf, tsde
      !use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
      use uspp, only : deeq, betae => vkb
      use reciprocal_vectors, only : gstart
@@ -663,42 +630,26 @@
      END IF
 
      !
-     !==== set friction ====
+     ! ...  set verlet variables 
      !
-     IF( iflag == 0 ) THEN
-       if( tnosee ) then
-         verl1 = 2.0d0 * fccc
-         verl2 = 1.0d0 - verl1
-         verl3 = 1.0d0 * fccc
-       else
-         verl1=2./(1.+frice)
-         verl2=1.-verl1
-         verl3=1./(1.+frice)
-       end if
-     ELSE IF( iflag == 1 .OR. iflag == 2 ) THEN
-       verl1 = 1.0d0
-       verl2 = 0.0d0
-     END IF
+     verl1 = 2.0d0 * fccc
+     verl2 = 1.0d0 - verl1
+     verl3 = 1.0d0 * fccc
 
      allocate(c2(ngw))
      allocate(c3(ngw))
      ALLOCATE( emadt2( ngw ) )
      ALLOCATE( emaver( ngw ) )
 
+     ccc    = fccc * dt2bye
+     emadt2 = dt2bye * ema0bg
+     emaver = emadt2 * verl3
 
      IF( iflag == 0 ) THEN
-       emadt2 = dt2bye * ema0bg
-       emaver = emadt2 * verl3
-       ttsde = tsde
+       ttsde  = tsde
      ELSE IF( iflag == 1 ) THEN
-       ccc = 0.5d0 * dt2bye
-       if(tsde) ccc = dt2bye
-       emadt2 = ccc * ema0bg
-       emaver = emadt2
        ttsde = .TRUE.
      ELSE IF( iflag == 2 ) THEN
-       emadt2 = dt2bye * ema0bg
-       emaver = emadt2 * 0.5d0
        ttsde = .FALSE.
      END IF
 
@@ -715,8 +666,8 @@
              cm(:,i+1) = c0(:,i+1)
            END IF
            if( ttsde ) then
-              CALL wave_steepest( cm(:, i  ), c0(:, i  ), emadt2, c2 )
-              CALL wave_steepest( cm(:, i+1), c0(:, i+1), emadt2, c3 )
+              CALL wave_steepest( cm(:, i  ), c0(:, i  ), emaver, c2 )
+              CALL wave_steepest( cm(:, i+1), c0(:, i+1), emaver, c3 )
            else
               CALL wave_verlet( cm(:, i  ), c0(:, i  ), verl1, verl2, emaver, c2 )
               CALL wave_verlet( cm(:, i+1), c0(:, i+1), verl1, verl2, emaver, c3 )
@@ -727,10 +678,6 @@
            end if
         end do
       end if
-
-     IF( iflag == 0 ) THEN
-       ccc = fccc * dt2bye
-     END IF
 
      DEALLOCATE( emadt2 )
      DEALLOCATE( emaver )
