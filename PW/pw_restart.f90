@@ -910,8 +910,8 @@ MODULE pw_restart
       USE symme,            ONLY : nsym
       USE gvect,            ONLY : nr1, nr2, nr3, ngm_g, ecutwfc, dual
       USE gsmooth,          ONLY : nr1s, nr2s, nr3s, ngms_g
-      USE lsda_mod,         ONLY : lsda, nspin
-      USE noncollin_module, ONLY : noncolin, npol
+      USE lsda_mod,         ONLY : lsda
+      USE noncollin_module, ONLY : noncolin
       USE ktetra,           ONLY : ntetra
       USE klist,            ONLY : nkstot, nelec
       USE wvfct,            ONLY : nbnd, npwx, gamma_only
@@ -996,19 +996,7 @@ MODULE pw_restart
          !
          CALL iotk_scan_dat( iunpun, "LSDA", lsda )
          !
-         IF ( lsda ) THEN
-            !
-            nspin = 2
-            !
-         ELSE
-            !
-            nspin = 1
-            !
-         END IF
-         !
          CALL iotk_scan_dat( iunpun, "NON-COLINEAR_CALCULATION", noncolin )
-         !
-         CALL iotk_scan_dat( iunpun, "SPINOR_DIM", npol, DEFAULT = 1 )
          !
          CALL iotk_scan_end( iunpun, "SPIN" )
          !
@@ -1062,9 +1050,7 @@ MODULE pw_restart
       CALL mp_bcast( nr3s,       ionode_id )
       CALL mp_bcast( ngms_g,     ionode_id )
       CALL mp_bcast( lsda,       ionode_id )
-      CALL mp_bcast( nspin,      ionode_id )
       CALL mp_bcast( noncolin,   ionode_id )
-      CALL mp_bcast( npol,       ionode_id )
       CALL mp_bcast( ntetra,     ionode_id )
       CALL mp_bcast( nkstot,     ionode_id )
       CALL mp_bcast( nelec,      ionode_id )
@@ -1145,7 +1131,7 @@ MODULE pw_restart
          IF ( ibrav == 0 ) &
             CALL iotk_scan_dat( iunpun, "CELL_SYMMETRY", symm_type )
          !
-         CALL iotk_scan_dat( iunpun, "CELLDM", celldm(1:6) )
+         CALL iotk_scan_dat( iunpun, "CELL_DIMENSION", celldm(1:6) )
          !
          CALL iotk_scan_dat( iunpun, "LATTICE_PARAMETER", alat )
          !
@@ -1628,6 +1614,14 @@ MODULE pw_restart
             !            
             CALL iotk_scan_attr( attr, "WEIGHT", wk(ik) )
             !
+            IF ( nspin == 2 ) THEN
+               !
+               xk(:,ik+num_k_points) = xk(:,ik)
+               !
+               wk(ik+num_k_points) = wk(ik)
+               !
+            END IF
+            !
          END DO
          !
          CALL iotk_scan_end( iunpun, "BRILLOUIN_ZONE" )
@@ -1659,6 +1653,8 @@ MODULE pw_restart
       !
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
+      !
+      INTEGER :: i
       !
       !
       IF ( locc_read ) RETURN
@@ -1693,7 +1689,12 @@ MODULE pw_restart
             !
             CALL iotk_scan_dat( iunpun, "NUMBER_OF_TETRAHEDRA", ntetra )
             !
-            CALL iotk_scan_dat( iunpun, "TETRAHEDRA", tetra(1:4,1:ntetra) )
+            DO i = 1, ntetra
+               !
+               CALL iotk_scan_dat( iunpun, "TETRAHEDRON" // &
+                                 & iotk_index( i ), tetra(1:4,i) )
+               !
+            END DO
             !
          END IF
          !

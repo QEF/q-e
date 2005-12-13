@@ -1652,7 +1652,7 @@ MODULE cp_restart
          CALL iotk_scan_dat( iunpun, "CELL_SYMMETRY", symm_type )
       !
       CALL iotk_scan_dat( iunpun, "LATTICE_PARAMETER", alat )
-      CALL iotk_scan_dat( iunpun, "CELLDM", celldm(1:6) )
+      CALL iotk_scan_dat( iunpun, "CELL_DIMENSION", celldm(1:6) )
       !
       CALL iotk_scan_begin( iunpun, "DIRECT_LATTICE_VECTORS" )
       CALL iotk_scan_dat(   iunpun, "a1", a1 )

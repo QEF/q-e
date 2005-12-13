@@ -455,7 +455,7 @@ MODULE xml_io_base
       CALL iotk_write_attr( attr, "UNIT", "Bohr", FIRST = .TRUE. )
       CALL iotk_write_dat( iunpun, "LATTICE_PARAMETER", alat, ATTR = attr )
       !
-      CALL iotk_write_dat( iunpun, "CELLDM", celldm(1:6) )
+      CALL iotk_write_dat( iunpun, "CELL_DIMENSION", celldm(1:6) )
       !
       CALL iotk_write_begin( iunpun, "DIRECT_LATTICE_VECTORS" )
       CALL iotk_write_dat(   iunpun, "a1", a1(:) * alat, ATTR = attr )
@@ -734,6 +734,8 @@ MODULE xml_io_base
       INTEGER,  OPTIONAL, INTENT(IN) :: tetra(:,:)
       REAL(DP), OPTIONAL, INTENT(IN) :: degauss, f_inp(:,:)      
       !
+      INTEGER :: i
+      !
       !
       CALL iotk_write_begin( iunpun, "OCCUPATIONS" )
       !
@@ -756,7 +758,12 @@ MODULE xml_io_base
          !
          CALL iotk_write_dat( iunpun, "NUMBER_OF_TETRAHEDRA", ntetra )
          !
-         CALL iotk_write_dat( iunpun, "TETRAHEDRA", tetra(:,:) )
+         DO i = 1, ntetra
+            !
+            CALL iotk_write_dat( iunpun, "TETRAHEDRON" // &
+                               & iotk_index( i ), tetra(1:4,i) )
+            !
+         END DO
          !
       END IF
       !

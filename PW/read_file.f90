@@ -14,7 +14,6 @@ SUBROUTINE read_file()
   ! ... This routine allocates space for all quantities already computed
   ! ... in the pwscf program and reads them from the data file.
   !
-  !
   USE kinds,            ONLY : DP
   USE parameters,       ONLY : natx
   USE ions_base,        ONLY : nat, nsp, ityp, tau, if_pos
@@ -111,7 +110,26 @@ SUBROUTINE read_file()
   !
   CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
-  current_spin = 1
+  ! ... check whether LSDA
+  !
+  IF ( lsda ) THEN
+     !
+     nspin = 2
+     npol  = 1
+     !
+  ELSE IF ( noncolin ) THEN
+     !
+     nspin        = 4
+     npol         = 2
+     current_spin = 1
+     !
+  ELSE
+     !
+     nspin        = 1
+     npol         = 1
+     current_spin = 1
+     !
+  END IF
   !
   cell_factor = 1.D0
   lmovecell = .FALSE.
