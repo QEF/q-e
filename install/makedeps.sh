@@ -17,7 +17,7 @@ do
 	PP | PWCOND | Gamma | PH )
 		  DEPENDS="../include ../Modules ../PW ../iotk/src"       ;;
 	D3 | Nmr) DEPENDS="../include ../Modules ../PW ../PH ../iotk/src" ;;
-        CPVIB ) DEPENDS="../include ../Modules ../iotk/src ../CPV"
+        CPVIB )   DEPENDS="../include ../Modules ../iotk/src ../CPV"
     esac
 
     # generate dependencies file
