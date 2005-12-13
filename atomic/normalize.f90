@@ -58,8 +58,12 @@ subroutine normalize
               work1=work1+qq(n1,n2)*work(n1)*work(n2)  
            enddo
         enddo
-        if (work1.lt.1e-10_dp)  &
-             call errore('normalize','negative or zero norm?',1)   
+        if (abs(work1) < 1e-10_dp) then
+             call infomsg('normalize','zero norm: not a true US PP ?',-1)   
+             work1=1.0_dp
+        else if (work1 < -1e-10_dp) then
+             call errore('normalize','negative norm?',1)   
+        end if
         work1=sqrt(work1)
         do n=1,mesh
            phis(n,ns)=phis(n,ns)/work1

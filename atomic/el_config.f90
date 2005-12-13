@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2005 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,20 +7,31 @@
 !
 !
 !---------------------------------------------------------------
-subroutine el_config(config,all_elec,nwf,el,nn,ll,oc,isw)
+subroutine el_config &
+     ( config, rel, lsd, all_elec, nwf, el, nn, ll, oc, isw, jj)
   !---------------------------------------------------------------
+  !
+  ! read electronic configuration from string "config"
+  ! example: config = '[Ar] 3d10 4s2 4p2.5'
+  ! Replicated wavefunctions are allowed and correspond to:
+  !   spin-up, spin-down for lsd;
+  !   j=l-1/2, j=j+1/2 for relativistic calculation and l > 0 ;
+  !   error in all other cases
+  ! See file INPUT_LD1 for full syntax
   !
   use kinds, only: dp
   use ld1_parameters
   implicit none
-  ! input
-  character(len=*):: config
-  logical :: all_elec
+  ! input: electronic configuration
+  character(len=*), intent(in):: config
+  logical, intent(in) :: all_elec
+  integer, intent(in) :: lsd, rel
   ! output: atomic states
-  character(len=2) :: el(nwfx)
-  integer :: nwf, nn(nwfx), ll(nwfx), isw(nwfx)
-  real(DP) :: oc(nwfx)
+  character(len=2), intent(out) :: el(nwfx)
+  integer, intent(out) :: nwf, nn(nwfx), ll(nwfx), isw(nwfx)
+  real(DP), intent(out) :: oc(nwfx), jj(nwfx)
   ! local variables
+  logical :: toomany
   integer ::  i, n, l, len, n0, first, start(nwfx), finish(nwfx)
   character ::  occup*10, core*2, prev*1, curr*1
   character(len=1), external :: capital
@@ -127,25 +138,57 @@ do n=nwfc+1,nwf
        &              'main/angular quantum number mismatch',n)
 
    el(n)=prev//curr
-   isw(n)=1
-   do i=1,n-1
-      if (el(i) == el(n)) then
-         if (isw(i) == 2) then
-            call errore('el_config',  &
-        &         'wavefunction '//el(n)//' found too many times',n)
-         else
-            isw(n)=2
-         endif   
-      endif
-   enddo
 
    if (start(n)+2 > finish(n))  &
    &   call errore('el_config','no occupancy field?',n)
-      occup = config(start(n)+2:finish(n))
-      read(occup,*) oc(n)
-      if (oc(n) > 2*(2*ll(n)+1)) &
-   &     call errore('el_config','wrong occupancy:'//occup,n)
+   occup = config(start(n)+2:finish(n))
+   read(occup,*) oc(n)
+   if (oc(n) > 2*(2*ll(n)+1)) &
+        call errore('el_config','wrong occupancy:'//occup,n)
+
 enddo
+!
+! check same labels corresponding to different spin or j value
+!
+do n=nwfc+1,nwf
+   isw(n)=1
+   jj(n) =0.0_dp
+   toomany = .false.
+   do i=1,n-1
+      if (el(i) == el(n)) then
+         !
+         if (rel == 2) then
+            !
+            ! relativistic case: j=l-1/2, j=l+1/2
+            !
+            toomany = (jj(i) > 0.0_dp) .or. ll(n) == 0
+            !
+            jj(i)=ll(i)-0.5_dp
+            jj(n)=ll(n)+0.5_dp
+            if ( oc(n) > (2.0_dp*jj(n)+1.0_dp) ) &
+                 call errore('el_config','occupation wrong',n)
+            if ( oc(i) > (2.0_dp*jj(i)+1.0_dp) ) &
+                 call errore('el_config','occupation wrong',i)
+         else  if (lsd == 1) then
+            !
+            ! lsda case: spin up, spin down
+            !
+            toomany = (isw(i) > 1)
+            !
+            isw(n)=2
+         else
+            !
+            ! lda case: this shouldn't happen
+            !
+            toomany = .true.
+         end if
+      endif
+   enddo
+   !
+   if (toomany) call errore('el_config',  &
+        'wavefunction '//el(n)//' found too many times',n)
+   !
+end do
 !
 ! pseudopotentials: N quantum number .ne. wavefunction label
 ! we find the lowest N for each L and reassign N as it
@@ -164,3 +207,167 @@ endif
 
 return
 end subroutine el_config
+!
+!---------------------------------------------------------------
+subroutine read_config(rel, lsd, nwf, el, nn, ll, oc, isw, jj)
+  !---------------------------------------------------------------
+  !
+  ! read electronic configuration from input. Syntax:
+  !    nwf
+  ! followed by nwf cards
+  !    label N L occ  (example: 4S 4 0 2.0) for lda
+  ! or
+  !    label N L occ spin (example: 4S 4 0 1.0 1) for lsda
+  ! or
+  !    label N L occ j (example: 4P 4 1 1.0 1.5) for full relativistic
+  ! See file INPUT_LD1 for full syntax
+  !
+  use kinds, only: dp
+  use ld1_parameters, only: nwfx
+  implicit none
+  ! input
+  integer :: rel, lsd 
+  ! output: atomic states
+  character(len=2) :: el(nwfx)
+  integer :: nwf, nn(nwfx), ll(nwfx), isw(nwfx)
+  real(DP) :: oc(nwfx), jj(nwfx)
+  ! local variables
+  integer :: ios, n, ncheck
+  character (len=2) :: label
+  character (len=1), external :: capital
+  !
+  !
+  read(5,*,err=200,iostat=ios) nwf
+200 call errore('read_config','reading nwf ',abs(ios))
+  if (nwf <= 0) call errore('read_config','nwf is wrong',1)
+  if (nwf > nwfx) call errore('read_config','too many wfcs',1)
+  !
+  !     read the occupation of the states
+  !
+  do n=1,nwf  
+     if (rel < 2) then
+        jj(n) = 0.0_dp
+        if (lsd == 0) then
+           read(5,*,err=20,end=20,iostat=ios) &
+                el(n), nn(n), ll(n), oc(n)
+           isw(n)=1
+20         call errore('read_config','reading orbital (lda)',abs(ios))
+        else  
+           read(5,*,err=21,end=21,iostat=ios) &
+                el(n), nn(n), ll(n), oc(n), isw(n)
+21         call errore('read_config','reading orbital (lsd)',abs(ios))
+           if(isw(n) > 2 .or. isw(n) < 1) &
+                call errore('read_config','spin variable wrong ',n)
+        endif
+     else
+        read(5,*,err=22,end=22,iostat=ios) &
+             el(n), nn(n), ll(n), oc(n), jj(n)
+        isw(n)=1
+        if ((abs(ll(n)+0.5_dp-jj(n)) > 1.e-3_dp) .and. &
+            (abs(ll(n)-0.5_dp-jj(n)) > 1.e-3_dp) .and. abs(jj(n)) > 1.e-3_dp) &
+            call errore('read_config','jj wrong',n)
+        if (oc(n) > (2.0_dp*jj(n)+1.0_dp) .and. abs(jj(n)) > 1e-3_dp) &
+             call errore('read_config','occupations wrong',n)
+22      call errore('read_config','reading orbital (rel)',abs(ios))
+     endif
+     !
+     ! Check: no two same wavefunctions
+     !
+     do ncheck=1,n-1
+        if ( el(ncheck) == el(n) .and. isw(ncheck) == isw(n) .and. &
+             jj(ncheck) == jj(n) ) then
+           call errore('read_config', &
+                'same wavefunction '//el(n)//' appears twice',n)
+        endif
+     enddo
+     !
+     ! More sanity checks
+     !
+     write(label,'(a2)') el(n)
+     read (label,'(i1)') ncheck
+     if (ncheck /= nn(n)  .or. &
+         capital(label(2:2)) == 'S' .and. ll(n) /= 0 .or. &
+         capital(label(2:2)) == 'P' .and. ll(n) /= 1 .or. &
+         capital(label(2:2)) == 'D' .and. ll(n) /= 2 .or. &
+         capital(label(2:2)) == 'F' .and. ll(n) /= 3 .or. &
+         oc(n) > 2.0_dp*(2*ll(n)+1) .or. nn(n) < ll(n)+1  ) &
+         call errore('read_config',label//' wrong?',n)
+  enddo
+  !
+  return
+end subroutine read_config
+!
+!---------------------------------------------------------------
+subroutine read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
+     isws, jjs, enls, rcut, rcutus )
+  !---------------------------------------------------------------
+  ! read pseudostates and pseudization information from input
+  ! See file INPUT_LD1 for full syntax
+  !
+  use kinds, only: dp
+  use ld1_parameters, only: nwfsx
+  implicit none
+  ! input
+  integer :: rel, lsd 
+  ! output: atomic states
+  character(len=2) :: els(nwfsx)
+  integer :: nwfs, nns(nwfsx), lls(nwfsx), isws(nwfsx)
+  real(DP) :: ocs(nwfsx), jjs(nwfsx), enls(nwfsx), &
+       rcut(nwfsx), rcutus(nwfsx)
+  ! local variables
+  integer :: ios, n
+  character (len=2) :: label
+  character (len=1), external :: capital
+
+  read(5,*,err=600,iostat=ios) nwfs
+600 call errore('read_psconfig','reading nwfs',abs(ios))
+
+  if (nwfs <= 0 .or. nwfs > nwfsx) &
+       call errore('read_psconfig','nwfs is wrong',1)
+
+  do n=1,nwfs
+     if (rel < 2) then
+        if (lsd == 1) then
+           read(5,*,err=30,end=30,iostat=ios) &
+                els(n), nns(n), lls(n), ocs(n), enls(n), &
+                rcut(n), rcutus(n), isws(n)
+           if (isws(n) > 2 .or. isws(n) < 1) &
+                call errore('read_psconfig', 'spin variable wrong ',n)
+           if (ocs(n) > (2.0_dp*lls(n)+1.0_dp))                 &
+             call errore('read_psconfig','occupations (ls) wrong',n)
+        else
+           read(5,*,err=30,end=30,iostat=ios) &
+                els(n), nns(n), lls(n), ocs(n), enls(n), &
+                rcut(n), rcutus(n)
+           isws(n)=1
+           if (ocs(n) > 2.0_dp*(2.0_dp*lls(n)+1.0_dp))                 &
+             call errore('read_psconfig','occupations (l) wrong',n)
+        end if
+        jjs(n)=0.0_dp
+     else
+        read(5,*,err=30,end=30,iostat=ios) &
+             els(n), nns(n), lls(n), ocs(n), enls(n),     &
+             rcut(n), rcutus(n), jjs(n)
+        isws(n)=1
+        if ((abs(lls(n)+0.5_dp-jjs(n)) > 1.e-3_dp).and.      &
+            (abs(lls(n)-0.5_dp-jjs(n)) > 1.e-3_dp).and. abs(jjs(n)) > 1.e-3_dp) &
+             call errore('read_psconfig', 'jjs wrong',n)
+        if (ocs(n) > (2.0_dp*jjs(n)+1.0_dp).and. abs(jjs(n)) > 1.e-3_dp) &
+             call errore('read_psconfig','occupations (j) wrong',n)
+     endif
+     write(label,'(a2)') els(n)
+     if ( capital(label(2:2)) == 'S'.and.lls(n) /= 0.or.   &
+          capital(label(2:2)) == 'P'.and.lls(n) /= 1.or.   &
+          capital(label(2:2)) == 'D'.and.lls(n) /= 2.or.   &
+          capital(label(2:2)) == 'F'.and.lls(n) /= 3.or.   &
+          ocs(n) > 2*(2*lls(n)+1).or.                 &
+          nns(n) < lls(n)+1 )                         &
+          call errore('read_psconfig','ps-label'//' wrong?',n)
+     if (rcut(n) > rcutus(n)) &
+          call errore('read_psconfig','rcut or rcutus is wrong',1)
+  enddo
+30 call errore('read_psconfig','reading pseudo wavefunctions',abs(ios))
+  !
+  return
+end subroutine read_psconfig
+!------------------------------------------------------------------------

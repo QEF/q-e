@@ -53,6 +53,7 @@ newd_at.o \
 new_potential.o \
 nodenum.o \
 normalize.o \
+occ_spin.o \
 pseudovloc.o \
 read_newpseudo.o \
 read_pseudo.o \
@@ -79,9 +80,6 @@ write_pseudo.o \
 write_results.o \
 write_resultsps.o \
 write_upf.o
-
-# sph_bes.o erf.o random.o bachel.o
-# funct.o which_dft.o capital.o matches.o functionals.o lsda_functionals.o 
 
 LD1MODS = \
 atomic_paw.o \

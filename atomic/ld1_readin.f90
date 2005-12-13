@@ -178,32 +178,7 @@ subroutine ld1_readin
   if (config == ' ') then
      call read_config (rel, lsd, nwf, el, nn, ll, oc, isw, jj)
   else
-     call el_config(config,.true.,nwf,el,nn,ll,oc,isw)
-     !
-     ! check same labels corresponding to different spin or j value
-     !
-     jj(1:nwf)=0.d0
-     do n=1,nwf 
-        do i=n+1,nwf  
-           if (el(i) == el(n)) then
-              if (rel == 2) then
-                 if (ll(n) > 0) then
-                    jj(n) = ll(n) + (isw(n)-1.5)
-                    jj(i) = ll(i) + (isw(i)-1.5)
-                    if ( oc(n) > (2.0_dp*jj(n)+1.0_dp) ) &
-                         call errore('ld1_readin','occupation wrong',n)
-                    if ( oc(i) > (2.0_dp*jj(i)+1.0_dp) ) &
-                         call errore('ld1_readin','occupation wrong',i)
-                 else
-                    call errore('ld1_readin',el(i)//' appears twice',i)
-                 end if
-              else if ( lsd==0 ) then
-                 call errore('ld1_readin',el(i)//' appears twice',i)
-              end if
-           end if
-        end do
-     end do
-     if (rel == 2) isw(1:nwf)=1 
+     call el_config (config, rel, lsd, .true., nwf, el, nn, ll, oc, isw, jj)
   end if
   !
   !  In the spin polarized or relativistic case adjust the occupations
@@ -362,8 +337,9 @@ subroutine ld1_readin
              nntsc(1,nc), lltsc(1,nc), octsc(1,nc), iswtsc(1,nc), &
              jjtsc(1,nc), edum(1), rcuttsc(1,nc), rcutustsc(1,nc) )
      else
-        call el_config(configts(nc),.false.,nwftsc(nc),eltsc(1,nc),  &
-             &     nntsc(1,nc),lltsc(1,nc),octsc(1,nc),iswtsc(1,nc))
+        call el_config( configts(nc), rel, lsd, .false., nwftsc(nc), &
+             eltsc(1,nc), nntsc(1,nc), lltsc(1,nc), octsc(1,nc), &
+             iswtsc(1,nc), jjtsc(1,nc))
      endif
      !
      !  adjust the occupations of the test cases if this is a lsd run
@@ -373,9 +349,7 @@ subroutine ld1_readin
              octsc(1,nc), iswtsc(1,nc)) 
      else if (rel == 2) then
         call occ_spinorb(nwftsc(nc),nwfsx,eltsc(1,nc), &
-             &  nntsc(1,nc),lltsc(1,nc),jjtsc(1,nc),octsc(1,nc),iswtsc(1,nc))
-     else
-        jjtsc=0.0_dp
+             nntsc(1,nc),lltsc(1,nc),jjtsc(1,nc),octsc(1,nc),iswtsc(1,nc))
      endif
   end do
   !
@@ -460,215 +434,3 @@ subroutine ld1_readin
   return
 
 end subroutine ld1_readin
-!
-!---------------------------------------------------------------
-subroutine occ_spin(nwf,nwfx,el,nn,ll,oc,isw)
-  !---------------------------------------------------------------
-  !
-  !  This routine splits the occupations of the states between spin-up
-  !  and spin down. If the occupations are lower than 2*l+1 it does
-  !  nothing, otherwise 2*l+1 states are assumed with spin up and
-  !  the difference with spin down. 
-  !
-  use kinds, only : DP
-  implicit none
-  integer :: nwf, nwfx, nn(nwfx), ll(nwfx), isw(nwfx)
-  real(DP) :: oc(nwfx)
-  character(len=2) :: el(nwfx)
-
-  integer :: nwf0, n, n1
-  logical :: ok
-
-  nwf0=nwf
-  do n=1,nwf0
-     if (oc(n) > (2*ll(n)+1)) then
-        !
-        !    check that the new state is not already available
-        !
-        do n1=n+1,nwf0
-           if (el(n1)==el(n)) call errore('ld1_readin','wrong occupations',1)
-        enddo
-        !
-        !    and add it
-        !
-        nwf=nwf+1
-        if (nwf > nwfx) call errore('ld1_readin','too many wavefunctions',1)
-        el(nwf)=el(n)
-        nn(nwf)=nn(n)
-        ll(nwf)=ll(n)
-        oc(nwf)=oc(n)-2*ll(n)-1
-        oc(n)=2*ll(n)+1
-        if (isw(n) == 1) isw(nwf)=2 
-        if (isw(n) == 2) isw(nwf)=1 
-     else
-        ok=.true.
-        do n1=1,nwf0
-           if (n1 /= n) ok=ok.and.(el(n1) /= el(n))  
-        enddo
-        if (ok) then
-           nwf=nwf+1
-           if (nwf > nwfx) &
-                & call errore('occ_spin','too many wavefunctions',1)
-           el(nwf)=el(n)
-           nn(nwf)=nn(n)
-           ll(nwf)=ll(n)
-           oc(nwf)=0.0_dp
-           if (isw(n) == 1) isw(nwf)=2 
-           if (isw(n) == 2) isw(nwf)=1 
-        endif
-     endif
-  enddo
-  return
-end subroutine occ_spin
-!
-!---------------------------------------------------------------
-subroutine read_config(rel, lsd, nwf, el, nn, ll, oc, isw, jj)
-  !---------------------------------------------------------------
-  !
-  use kinds, only: dp
-  use ld1_parameters, only: nwfx
-  implicit none
-  ! input
-  integer :: rel, lsd 
-  ! output: atomic states
-  character(len=2) :: el(nwfx)
-  integer :: nwf, nn(nwfx), ll(nwfx), isw(nwfx)
-  real(DP) :: oc(nwfx), jj(nwfx)
-  ! local variables
-  integer :: ios, n, ncheck
-  character (len=2) :: label
-  character (len=1), external :: capital
-  !
-  !
-  read(5,*,err=200,iostat=ios) nwf
-200 call errore('read_config','reading nwf ',abs(ios))
-  if (nwf <= 0) call errore('read_config','nwf is wrong',1)
-  if (nwf > nwfx) call errore('read_config','too many wfcs',1)
-  !
-  !     read the occupation of the states
-  !
-  do n=1,nwf  
-     if (rel < 2) then
-        jj(n) = 0.0_dp
-        if (lsd == 0) then
-           read(5,*,err=20,end=20,iostat=ios) &
-                el(n), nn(n), ll(n), oc(n)
-           isw(n)=1
-20         call errore('read_config','reading orbital (lda)',abs(ios))
-        else  
-           read(5,*,err=21,end=21,iostat=ios) &
-                el(n), nn(n), ll(n), oc(n), isw(n)
-21         call errore('read_config','reading orbital (lsd)',abs(ios))
-           if(isw(n) > 2 .or. isw(n) < 1) &
-                call errore('read_config','spin variable wrong ',n)
-        endif
-     else
-        read(5,*,err=22,end=22,iostat=ios) &
-             el(n), nn(n), ll(n), oc(n), jj(n)
-        isw(n)=1
-        if ((abs(ll(n)+0.5_dp-jj(n)) > 1.e-3_dp) .and. &
-            (abs(ll(n)-0.5_dp-jj(n)) > 1.e-3_dp) .and. abs(jj(n)) > 1.e-3_dp) &
-            call errore('read_config','jj wrong',n)
-        if (oc(n) > (2.0_dp*jj(n)+1.0_dp) .and. abs(jj(n)) > 1e-3_dp) &
-             call errore('read_config','occupations wrong',n)
-22      call errore('read_config','reading orbital (rel)',abs(ios))
-     endif
-     !
-     ! Check: no two same wavefunctions
-     !
-     do ncheck=1,n-1
-        if ( el(ncheck) == el(n) .and. isw(ncheck) == isw(n) .and. &
-             jj(ncheck) == jj(n) ) then
-           call errore('read_config', &
-                'same wavefunction '//el(n)//' appears twice',n)
-        endif
-     enddo
-     !
-     ! More sanity checks
-     !
-     write(label,'(a2)') el(n)
-     read (label,'(i1)') ncheck
-     if (ncheck /= nn(n)  .or. &
-         capital(label(2:2)) == 'S' .and. ll(n) /= 0 .or. &
-         capital(label(2:2)) == 'P' .and. ll(n) /= 1 .or. &
-         capital(label(2:2)) == 'D' .and. ll(n) /= 2 .or. &
-         capital(label(2:2)) == 'F' .and. ll(n) /= 3 .or. &
-         oc(n) > 2.0_dp*(2*ll(n)+1) .or. nn(n) < ll(n)+1  ) &
-         call errore('read_config',label//' wrong?',n)
-  enddo
-  !
-  return
-end subroutine read_config
-!
-!---------------------------------------------------------------
-subroutine read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
-     isws, jjs, enls, rcut, rcutus )
-  !---------------------------------------------------------------
-  !
-  use kinds, only: dp
-  use ld1_parameters, only: nwfsx
-  implicit none
-  ! input
-  integer :: rel, lsd 
-  ! output: atomic states
-  character(len=2) :: els(nwfsx)
-  integer :: nwfs, nns(nwfsx), lls(nwfsx), isws(nwfsx)
-  real(DP) :: ocs(nwfsx), jjs(nwfsx), enls(nwfsx), &
-       rcut(nwfsx), rcutus(nwfsx)
-  ! local variables
-  integer :: ios, n
-  character (len=2) :: label
-  character (len=1), external :: capital
-
-  read(5,*,err=600,iostat=ios) nwfs
-600 call errore('read_psconfig','reading nwfs',abs(ios))
-
-  if (nwfs <= 0 .or. nwfs > nwfsx) &
-       call errore('read_psconfig','nwfs is wrong',1)
-
-  do n=1,nwfs
-     if (rel < 2) then
-        if (lsd == 1) then
-           read(5,*,err=30,end=30,iostat=ios) &
-                els(n), nns(n), lls(n), ocs(n), enls(n), &
-                rcut(n), rcutus(n), isws(n)
-           if (isws(n) > 2 .or. isws(n) < 1) &
-                call errore('read_psconfig', 'spin variable wrong ',n)
-           if (ocs(n) > (2.0_dp*lls(n)+1.0_dp))                 &
-             call errore('read_psconfig','occupations (ls) wrong',n)
-        else
-           read(5,*,err=30,end=30,iostat=ios) &
-                els(n), nns(n), lls(n), ocs(n), enls(n), &
-                rcut(n), rcutus(n)
-           isws(n)=1
-           if (ocs(n) > 2.0_dp*(2.0_dp*lls(n)+1.0_dp))                 &
-             call errore('read_psconfig','occupations (l) wrong',n)
-        end if
-        jjs(n)=0.0_dp
-     else
-        read(5,*,err=30,end=30,iostat=ios) &
-             els(n), nns(n), lls(n), ocs(n), enls(n),     &
-             rcut(n), rcutus(n), jjs(n)
-        isws(n)=1
-        if ((abs(lls(n)+0.5_dp-jjs(n)) > 1.e-3_dp).and.      &
-            (abs(lls(n)-0.5_dp-jjs(n)) > 1.e-3_dp).and. abs(jjs(n)) > 1.e-3_dp) &
-             call errore('read_psconfig', 'jjs wrong',n)
-        if (ocs(n) > (2.0_dp*jjs(n)+1.0_dp).and. abs(jjs(n)) > 1.e-3_dp) &
-             call errore('read_psconfig','occupations (j) wrong',n)
-     endif
-     write(label,'(a2)') els(n)
-     if ( capital(label(2:2)) == 'S'.and.lls(n) /= 0.or.   &
-          capital(label(2:2)) == 'P'.and.lls(n) /= 1.or.   &
-          capital(label(2:2)) == 'D'.and.lls(n) /= 2.or.   &
-          capital(label(2:2)) == 'F'.and.lls(n) /= 3.or.   &
-          ocs(n) > 2*(2*lls(n)+1).or.                 &
-          nns(n) < lls(n)+1 )                         &
-          call errore('read_psconfig','ps-label'//' wrong?',n)
-     if (rcut(n) > rcutus(n)) &
-          call errore('read_psconfig','rcut or rcutus is wrong',1)
-  enddo
-30 call errore('read_psconfig','reading pseudo wavefunctions',abs(ios))
-  !
-  return
-end subroutine read_psconfig
-!------------------------------------------------------------------------
