@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -29,7 +29,7 @@ PROGRAM phonon
   USE gvect,           ONLY : nrx1, nrx2, nrx3
   USE parser,          ONLY : int_to_char
   USE control_flags,   ONLY : restart, lphonon, tr2, &
-                              mixing_beta, lscf, david, isolve, modenum
+                              mixing_beta, lscf, david, isolve
   USE qpoint,          ONLY : xq, nksq
   USE disp,            ONLY : nqs, x_q
   USE control_ph,      ONLY : ldisp, lnscf, lgamma, convt, epsil, trans, &

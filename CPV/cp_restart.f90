@@ -295,7 +295,7 @@ MODULE cp_restart
          !
          CALL write_ions( nsp, nat, atm, ityp(ind_bck(:)), &
                           psfile, pseudo_dir, amass, tau(:,ind_bck(:)), &
-                          iforce(:,ind_bck(:)), dirname, "Bohr" )
+                          iforce(:,ind_bck(:)), dirname, 1.D0 )
          !
 !-------------------------------------------------------------------------------
 ! ... PLANE_WAVES

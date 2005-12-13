@@ -9,8 +9,8 @@
 MODULE xml_io_base
   !----------------------------------------------------------------------------
   !
-  ! ... this module contains subroutines to read and write in XML format 
-  ! ... the data produced by Quantum-ESPRESSO package
+  ! ... this module contains some common subroutines used to read and write
+  ! ... in XML format the data produced by Quantum-ESPRESSO package
   !
   ! ... written by Carlo Sbraccia (2005)
   !
@@ -26,11 +26,11 @@ MODULE xml_io_base
   PRIVATE
   !
   PUBLIC :: attr
-  PUBLIC :: create_directory, kpoint_dir, wfc_filename, copy_file, &
+  PUBLIC :: create_directory, kpoint_dir, wfc_filename, copy_file,          &
             restart_dir, check_restartfile, save_history, set_kpoints_vars, &
             write_cell, write_ions, write_symmetry, write_planewaves,       &
-            write_spin, write_xc, write_occ, write_bz, write_rho_xml,       &
-            write_wfc, read_wfc, read_rho_xml
+            write_spin, write_xc, write_occ, write_bz, write_phonon,        &
+            write_rho_xml, write_wfc, read_wfc, read_rho_xml
   !
   CHARACTER(iotk_attlenx) :: attr
   !
@@ -419,7 +419,7 @@ MODULE xml_io_base
         CASE(  1 )
            bravais_lattice = "cubic P (sc)"
         CASE(  2 )
-            bravais_lattice = "cubic F (fcc)"
+           bravais_lattice = "cubic F (fcc)"
         CASE(  3 )
            bravais_lattice = "cubic I (bcc)"
         CASE(  4 )
@@ -427,13 +427,13 @@ MODULE xml_io_base
         CASE(  5 )
            bravais_lattice = "Trigonal R"
         CASE(  6 )
-            bravais_lattice = "Tetragonal P (st)"
+           bravais_lattice = "Tetragonal P (st)"
         CASE(  7 )
-            bravais_lattice = "Tetragonal I (bct)"
+           bravais_lattice = "Tetragonal I (bct)"
         CASE(  8 )
-            bravais_lattice = "Orthorhombic P"
+           bravais_lattice = "Orthorhombic P"
         CASE(  9 )
-            bravais_lattice = "Orthorhombic base-centered(bco)"
+           bravais_lattice = "Orthorhombic base-centered(bco)"
         CASE( 10 )
            bravais_lattice = "Orthorhombic face-centered"
         CASE( 11 )
@@ -488,7 +488,7 @@ MODULE xml_io_base
       REAL(DP),         INTENT(IN) :: amass(:)
       REAL(DP),         INTENT(IN) :: tau(:,:)
       INTEGER,          INTENT(IN) :: if_pos(:,:)
-      CHARACTER(LEN=*), INTENT(IN) :: pos_unit
+      REAL(DP),         INTENT(IN) :: pos_unit
       !
       INTEGER            :: i, flen
       CHARACTER(LEN=256) :: file_pseudo
@@ -528,7 +528,7 @@ MODULE xml_io_base
          !
       END DO
       !
-      CALL iotk_write_attr( attr, "UNIT", TRIM( pos_unit ), FIRST = .TRUE. )
+      CALL iotk_write_attr( attr, "UNIT", "Bohr", FIRST = .TRUE. )
       CALL iotk_write_empty( iunpun, "UNITS_FOR_ATOMIC_POSITIONS", attr )
       !
       DO i = 1, nat
@@ -536,7 +536,7 @@ MODULE xml_io_base
          CALL iotk_write_attr( attr, "SPECIES", &
                              & atm( ityp(i) ), FIRST = .TRUE. )
          CALL iotk_write_attr( attr, "INDEX",  ityp(i) )                     
-         CALL iotk_write_attr( attr, "tau",    tau(:,i) )
+         CALL iotk_write_attr( attr, "tau",    tau(:,i)*pos_unit )
          CALL iotk_write_attr( attr, "if_pos", if_pos(:,i) )
          CALL iotk_write_empty( iunpun, &
                               & "ATOM" // TRIM( iotk_index( i ) ), attr )
@@ -579,9 +579,9 @@ MODULE xml_io_base
          tmp(2) = ftau(2,i) / DBLE( nr2 )
          tmp(3) = ftau(3,i) / DBLE( nr3 )
          !
-         CALL iotk_write_attr( attr, "ROT",        s(:,:,i) )
+         CALL iotk_write_attr( attr, "ROT", s(:,:,i) )
          CALL iotk_write_attr( attr, "FRAC_TRANS", tmp(:) )
-         CALL iotk_write_attr( attr, "NAME",       sname(i) )
+         CALL iotk_write_attr( attr, "NAME", TRIM( sname(i) ) )
          !
          CALL iotk_write_empty( iunpun, &
                                 "SYMM" // TRIM( iotk_index( i ) ), attr )
@@ -723,14 +723,15 @@ MODULE xml_io_base
     END SUBROUTINE write_xc
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_occ( lgauss, ngauss, degauss, ltetra, &
-                          ntetra, tfixed_occ, lsda, nelup, neldw, f_inp )
+    SUBROUTINE write_occ( lgauss, ngauss, degauss, ltetra, ntetra, &
+                          tetra, tfixed_occ, lsda, nelup, neldw, f_inp )
       !------------------------------------------------------------------------
       !
       USE constants, ONLY : e2
       !
       LOGICAL,            INTENT(IN) :: lgauss, ltetra, tfixed_occ, lsda
       INTEGER,  OPTIONAL, INTENT(IN) :: ngauss, ntetra, nelup, neldw
+      INTEGER,  OPTIONAL, INTENT(IN) :: tetra(:,:)
       REAL(DP), OPTIONAL, INTENT(IN) :: degauss, f_inp(:,:)      
       !
       !
@@ -751,8 +752,13 @@ MODULE xml_io_base
       !
       CALL iotk_write_dat( iunpun, "TETRAHEDRON_METHOD", ltetra )
       !
-      IF ( ltetra ) &
+      IF ( ltetra ) THEN
+         !
          CALL iotk_write_dat( iunpun, "NUMBER_OF_TETRAHEDRA", ntetra )
+         !
+         CALL iotk_write_dat( iunpun, "TETRAHEDRA", tetra(:,:) )
+         !
+      END IF
       !
       CALL iotk_write_dat( iunpun, "FIXED_OCCUPATIONS", tfixed_occ )
       !
@@ -801,6 +807,26 @@ MODULE xml_io_base
       !
     END SUBROUTINE write_bz
     !
+    !------------------------------------------------------------------------
+    SUBROUTINE write_phonon( modenum, xqq )
+      !------------------------------------------------------------------------
+      !
+      INTEGER,  INTENT(IN) :: modenum
+      REAL(DP), INTENT(IN) :: xqq(:)
+      !
+      !
+      CALL iotk_write_begin( iunpun, "PHONON" )
+      !
+      CALL iotk_write_dat( iunpun, "NUMBER_OF_MODES", modenum )
+      !
+      CALL iotk_write_attr( attr, "UNIT", "2 pi / a", FIRST = .TRUE. )
+      CALL iotk_write_empty( iunpun, "UNITS_FOR_Q-POINT", attr )
+      !
+      CALL iotk_write_dat( iunpun, "Q-POINT", xqq(:) )
+      !
+      CALL iotk_write_end( iunpun, "PHONON" )
+      !
+    END SUBROUTINE write_phonon
     !
     ! ... methods to write and read charge_density
     !

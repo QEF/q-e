@@ -81,17 +81,17 @@ SUBROUTINE punch()
   !
   CALL io_pot( + 1, 'rho', rho, nspin )
   !
-#if defined (__NEWPUNCH)
+  iunpun = 4
   !
-  iunpun = 999
+#if defined (__NEWPUNCH)
   !
   CALL pw_writefile( 'all' )
   !
-#endif
-  !
-  iunpun = 4
+#else
   !
   CALL writefile_new( 'all', iunpun, et, wg, kunittmp )
+  !
+#endif
   !
   RETURN
   !

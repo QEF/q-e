@@ -52,7 +52,7 @@ MODULE pw_restart
     SUBROUTINE pw_writefile( what )
       !------------------------------------------------------------------------
       !
-      USE control_flags,        ONLY : istep
+      USE control_flags,        ONLY : istep, modenum
       USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
                                        ibrav, symm_type, celldm
       USE reciprocal_vectors,   ONLY : ig_l2g
@@ -61,14 +61,16 @@ MODULE pw_restart
       USE io_files,             ONLY : nwordwfc, iunwfc, psfile, pseudo_dir
       USE wavefunctions_module, ONLY : evc, evc_nc
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
-                                       lgauss, ngauss, degauss, nelec
+                                       lgauss, ngauss, degauss, nelec, xqq
       USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, ngm, ngm_g, &
                                        g, ig1, ig2, ig3, ecutwfc, dual, gcutm
+      USE basis,                ONLY : natomwfc
       USE gsmooth,              ONLY : nr1s, nr2s, nr3s, gcutms, ngms_g
       USE ktetra,               ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                        ntetra, tetra, ltetra
       USE wvfct,                ONLY : gamma_only, npw, npwx, g2kin, et, wg, &
                                        igk_l2g, nbnd
+      USE ener,                 ONLY : ef
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
       USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
                                        Hubbard_U, Hubbard_alpha
@@ -94,7 +96,6 @@ MODULE pw_restart
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname, filename, file_pseudo, rho_file
       CHARACTER(LEN=80)     :: bravais_lattice
-      CHARACTER(LEN=4)      :: cspin
       INTEGER               :: i, ig, ik, ngg,ig_, ierr, ipol, &
                                flen, ik_eff, num_k_points
       INTEGER,  ALLOCATABLE :: kisort(:)
@@ -272,7 +273,7 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          CALL write_ions( nsp, nat, atm, ityp, psfile, &
-                          pseudo_dir, amass, tau, if_pos, dirname, "alat" )
+                          pseudo_dir, amass, tau, if_pos, dirname, alat )
          !
 !-------------------------------------------------------------------------------
 ! ... SYMMETRIES
@@ -300,6 +301,7 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          dft_name = get_dft_name()
+         !
          CALL write_xc( DFT = dft_name, NSP = nsp, LDA_PLUS_U = lda_plus_u, &
                         HUBBARD_LMAX = Hubbard_lmax, HUBBARD_L = Hubbard_l, &
                         HUBBARD_U = Hubbard_U, HUBBARD_ALPHA = Hubbard_alpha )
@@ -310,8 +312,8 @@ MODULE pw_restart
          !
          CALL write_occ( LGAUSS = lgauss, NGAUSS = ngauss, &
                          DEGAUSS = degauss, LTETRA = ltetra, NTETRA = ntetra, &
-                         TFIXED_OCC = tfixed_occ, LSDA = lsda, NELUP = nbnd,  &
-                         NELDW = nbnd, F_INP = f_inp )
+                         TETRA = tetra, TFIXED_OCC = tfixed_occ, LSDA = lsda, &
+                         NELUP = nbnd, NELDW = nbnd, F_INP = f_inp )
       END IF
       !
       num_k_points = nkstot
@@ -325,6 +327,12 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          CALL write_bz( num_k_points, xk, wk )
+         !
+!-------------------------------------------------------------------------------
+! ... PHONON
+!-------------------------------------------------------------------------------         
+         !
+         CALL write_phonon( modenum, xqq )
          !
 !-------------------------------------------------------------------------------
 ! ... PARALLELISM
@@ -405,7 +413,12 @@ MODULE pw_restart
          !
          CALL iotk_write_dat( iunpun, "NUMBER_OF_ELECTRONS", nelec )
          !
+         CALL iotk_write_dat( iunpun, "NUMBER_OF_ATOMIC_WFC", natomwfc )
+         !
          CALL iotk_write_dat( iunpun, "NUMBER_OF_BANDS", nbnd )
+         !
+         CALL iotk_write_attr( attr, "UNIT", "Hartree", FIRST = .TRUE. )
+         CALL iotk_write_dat( iunpun, "FERMI_ENERGY", ef / e2, ATTR = attr )
          !
          CALL iotk_write_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin )
          !
@@ -428,58 +441,50 @@ MODULE pw_restart
             !
             IF ( nspin == 2 ) THEN
                !
-               cspin = iotk_index( isk(ik) )
-               !
                CALL iotk_write_attr( attr, "UNIT", "Hartree", FIRST = .TRUE. )
-               CALL iotk_write_dat( iunpun, "ET" // TRIM( cspin ), &
+               CALL iotk_write_dat( iunpun, "ET.1", &
                                     et(:,ik) / e2, ATTR = attr  )
                !
                IF ( wk(ik) == 0.D0 ) THEN
                   !
-                  CALL iotk_write_dat( iunpun, "OCC" // TRIM( cspin ), 0.D0 )
+                  CALL iotk_write_dat( iunpun, "OCC.1", wg(:,ik) )
                   !
                ELSE
                   !
-                  CALL iotk_write_dat( iunpun, "OCC" // &
-                                     & TRIM( cspin ), wg(:,ik) / wk(ik) )
+                  CALL iotk_write_dat( iunpun, "OCC.1", wg(:,ik) / wk(ik) )
                   !
                END IF
                !
                ik_eff = ik + num_k_points
                !
-               cspin = iotk_index( isk(ik_eff) )
-               !
                CALL iotk_write_attr( attr, "UNIT", "Hartree", FIRST = .TRUE. )
-               CALL iotk_write_dat( iunpun, "ET" // TRIM( cspin ), &
+               CALL iotk_write_dat( iunpun, "ET.2", &
                                     et(:,ik_eff) / e2, ATTR = attr  )
                !
-               IF ( wk(ik) == 0.D0 ) THEN
+               IF ( wk(ik_eff) == 0.D0 ) THEN
                   !
-                  CALL iotk_write_dat( iunpun, "OCC" // TRIM( cspin ), 0.D0 )
+                  CALL iotk_write_dat( iunpun, "OCC.2", wg(:,ik_eff) )
                   !
                ELSE
                   !
-                  CALL iotk_write_dat( iunpun, "OCC" // TRIM( cspin ), &
+                  CALL iotk_write_dat( iunpun, "OCC.2", &
                                        wg(:,ik_eff) / wk(ik_eff) )
                   !
                END IF
                !
             ELSE
                !
-               cspin = iotk_index( 1 )
-               !
                CALL iotk_write_attr( attr, "UNIT", "Hartree", FIRST = .TRUE. )
-               CALL iotk_write_dat( iunpun, "ET" // TRIM( cspin ), &
+               CALL iotk_write_dat( iunpun, "ET.1", &
                                     et(:,ik) / e2, ATTR = attr  )
                !
                IF ( wk(ik) == 0.D0 ) THEN
                   !
-                  CALL iotk_write_dat( iunpun, "OCC" // TRIM( cspin ), 0.D0 )
+                  CALL iotk_write_dat( iunpun, "OCC.1", wg(:,ik) )
                   !
                ELSE
                   !
-                  CALL iotk_write_dat( iunpun, "OCC" // &
-                                     & TRIM( cspin ), wg(:,ik) / wk(ik) )
+                  CALL iotk_write_dat( iunpun, "OCC.1", wg(:,ik) / wk(ik) )
                   !
                END IF
                !
@@ -720,7 +725,7 @@ MODULE pw_restart
       CHARACTER(LEN=256) :: dirname      
       LOGICAL            :: lexist, lcell, lpw, lions, lspin, &
                             lxc, locc, lbz, lbs, lwfc, lgvec, &
-                            lsymm
+                            lsymm, lph
       !
       !
       ierr = 0
@@ -755,11 +760,14 @@ MODULE pw_restart
       lwfc  = .FALSE.
       lgvec = .FALSE.
       lsymm = .FALSE.
+      lph   = .FALSE.
       !
       SELECT CASE( what )
       CASE( 'dim' )
          !
          CALL read_dim( dirname, ierr )
+         !
+         lbz = .TRUE.
          !
       CASE( 'pseudo' )
          !
@@ -787,6 +795,7 @@ MODULE pw_restart
          lbz   = .TRUE.
          lbs   = .TRUE.
          lsymm = .TRUE.
+         lph   = .TRUE.
          !
       CASE( 'all' )
          !
@@ -801,6 +810,21 @@ MODULE pw_restart
          lwfc  = .TRUE.
          lgvec = .TRUE.
          lsymm = .TRUE.
+         lph   = .TRUE.
+         !
+      CASE( 'reset' )
+         !
+         lcell_read = .FALSE.
+         lpw_read   = .FALSE.
+         lions_read = .FALSE.
+         lspin_read = .FALSE.
+         lxc_read   = .FALSE.
+         locc_read  = .FALSE.
+         lbz_read   = .FALSE.
+         lbs_read   = .FALSE.
+         lwfc_read  = .FALSE.
+         lgvec_read = .FALSE.
+         lsymm_read = .FALSE.
          !
       END SELECT
       !
@@ -861,6 +885,12 @@ MODULE pw_restart
       IF ( lsymm ) THEN
          !
          CALL read_symmetry( dirname, ierr )
+         IF ( ierr > 0 ) RETURN
+         !
+      END IF
+      IF ( lph ) THEN
+         !
+         CALL read_phonon( dirname, ierr )
          IF ( ierr > 0 ) RETURN
          !
       END IF
@@ -1049,7 +1079,10 @@ MODULE pw_restart
     SUBROUTINE read_cell( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE cell_base, ONLY : ibrav, alat, symm_type, at, bg
+      USE constants, ONLY : pi
+      USE char,      ONLY : crystal
+      USE cell_base, ONLY : ibrav, alat, symm_type, at, bg, celldm
+      USE cell_base, ONLY : tpiba, tpiba2, omega
       !
       IMPLICIT NONE
       !
@@ -1112,7 +1145,14 @@ MODULE pw_restart
          IF ( ibrav == 0 ) &
             CALL iotk_scan_dat( iunpun, "CELL_SYMMETRY", symm_type )
          !
+         CALL iotk_scan_dat( iunpun, "CELLDM", celldm(1:6) )
+         !
          CALL iotk_scan_dat( iunpun, "LATTICE_PARAMETER", alat )
+         !
+         ! ... some internal variables
+         !
+         tpiba  = 2.D0 * pi / alat
+         tpiba2 = tpiba**2 
          !
          CALL iotk_scan_begin( iunpun, "DIRECT_LATTICE_VECTORS" )
          CALL iotk_scan_dat(   iunpun, "a1", at(:,1) )
@@ -1123,6 +1163,8 @@ MODULE pw_restart
          ! ... to alat units
          !
          at = at / alat
+         !
+         CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
          !
          CALL iotk_scan_begin( iunpun, "RECIPROCAL_LATTICE_VECTORS" )
          CALL iotk_scan_dat(   iunpun, "b1", bg(:,1) )
@@ -1139,8 +1181,15 @@ MODULE pw_restart
       CALL mp_bcast( ibrav,     ionode_id )
       CALL mp_bcast( symm_type, ionode_id )
       CALL mp_bcast( alat,      ionode_id )
+      CALL mp_bcast( tpiba,     ionode_id )
+      CALL mp_bcast( tpiba2,    ionode_id )
+      CALL mp_bcast( omega,     ionode_id )
       CALL mp_bcast( at,        ionode_id )
       CALL mp_bcast( bg,        ionode_id )
+      !
+      ! ... crystal is always set to empty string (see PW/input.f90)
+      !
+      crystal = ' '
       !
       lcell_read = .TRUE.
       !
@@ -1165,6 +1214,9 @@ MODULE pw_restart
       !
       !
       IF ( lions_read ) RETURN
+      !
+      IF ( .NOT. lcell_read ) &
+         CALL errore( 'read_ions', 'read cell first', 1 )
       !
       IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
@@ -1513,7 +1565,6 @@ MODULE pw_restart
       END IF
       !
       CALL mp_bcast( dft_name,   ionode_id )
-      call set_dft_from_name( dft_name )
       CALL mp_bcast( lda_plus_u, ionode_id )
       !
       IF (lda_plus_u  ) THEN
@@ -1524,6 +1575,8 @@ MODULE pw_restart
          CALL mp_bcast( Hubbard_alpha, ionode_id )
          !
       END IF
+      !
+      CALL set_dft_from_name( dft_name )
       !
       lxc_read = .TRUE.
       !
@@ -1636,8 +1689,13 @@ MODULE pw_restart
          !
          CALL iotk_scan_dat( iunpun, "TETRAHEDRON_METHOD", ltetra )
          !
-         IF ( ltetra ) &
+         IF ( ltetra ) THEN
+            !
             CALL iotk_scan_dat( iunpun, "NUMBER_OF_TETRAHEDRA", ntetra )
+            !
+            CALL iotk_scan_dat( iunpun, "TETRAHEDRA", tetra(1:4,1:ntetra) )
+            !
+         END IF
          !
          CALL iotk_scan_dat( iunpun, "FIXED_OCCUPATIONS", tfixed_occ )
          !
@@ -1667,7 +1725,12 @@ MODULE pw_restart
       !
       CALL mp_bcast( ltetra, ionode_id )
       !
-      IF ( ltetra ) CALL mp_bcast( ntetra, ionode_id )
+      IF ( ltetra ) THEN
+         !
+         CALL mp_bcast( ntetra, ionode_id )
+         CALL mp_bcast( tetra,  ionode_id )
+         !
+      END IF
       !
       CALL mp_bcast( tfixed_occ, ionode_id )
       !
@@ -1683,17 +1746,18 @@ MODULE pw_restart
     SUBROUTINE read_band_structure( dirname, ierr )
       !------------------------------------------------------------------------
       !
+      USE basis,    ONLY : natomwfc
       USE lsda_mod, ONLY : nspin, isk
       USE klist,    ONLY : nkstot, wk, nelec
       USE wvfct,    ONLY : et, wg, nbnd
+      USE ener,     ONLY : ef
       !
       IMPLICIT NONE
       !
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
-      CHARACTER(LEN=4) :: cspin
-      INTEGER          :: ik, ik_eff, num_k_points
+      INTEGER :: ik, ik_eff, num_k_points
       !
       !
       IF ( lbs_read ) RETURN
@@ -1717,7 +1781,13 @@ MODULE pw_restart
          !
          CALL iotk_scan_dat( iunpun, "NUMBER_OF_ELECTRONS", nelec )
          !
+         CALL iotk_scan_dat( iunpun, "NUMBER_OF_ATOMIC_WFC", natomwfc )
+         !
          CALL iotk_scan_dat( iunpun, "NUMBER_OF_BANDS", nbnd )
+         !
+         CALL iotk_scan_dat( iunpun, "FERMI_ENERGY", ef )
+         !
+         ef = ef * e2
          !
          num_k_points = nkstot
          !
@@ -1734,50 +1804,35 @@ MODULE pw_restart
                !
                isk(ik) = 1
                !
-               cspin = iotk_index( 1 )
+               CALL iotk_scan_dat( iunpun, "ET.1", et(:,ik)  )
                !
-               CALL iotk_scan_dat( iunpun, "ET" // TRIM( cspin ), et(:,ik)  )
-               !
-               et(:,ik) = et(:,ik) * e2
-               !
-               CALL iotk_scan_dat( iunpun, "OCC" // TRIM( cspin ), wg(:,ik) )
-               !
-               wg(:,ik) = wg(:,ik) * wk(ik)
+               CALL iotk_scan_dat( iunpun, "OCC.1", wg(:,ik) )
                !
                ik_eff = ik + num_k_points
                !
                isk(ik_eff) = 2
                !
-               cspin = iotk_index( 2 )
+               CALL iotk_scan_dat( iunpun, "ET.2", et(:,ik_eff) )
                !
-               CALL iotk_scan_dat( iunpun, "ET" // TRIM( cspin ), et(:,ik_eff) )
-               !
-               et(:,ik_eff) = et(:,ik_eff) * e2
-               !
-               CALL iotk_scan_dat( iunpun, &
-                                   "OCC" // TRIM( cspin ), wg(:,ik_eff) )
-               !
-               wg(:,ik_eff) = wg(:,ik_eff) * wk(ik_eff)
+               CALL iotk_scan_dat( iunpun, "OCC.2", wg(:,ik_eff) )
                !
             ELSE
                !
                isk(ik) = 1
                !
-               cspin = iotk_index( 1 )
+               CALL iotk_scan_dat( iunpun, "ET.1", et(:,ik) )
                !
-               CALL iotk_scan_dat( iunpun, "ET" // TRIM( cspin ), et(:,ik) )
-               !
-               et(:,ik) = et(:,ik) * e2
-               !
-               CALL iotk_scan_dat( iunpun, "OCC" // TRIM( cspin ), wg(:,ik) )
-               !
-               wg(:,ik) = wg(:,ik) * wk(ik)
+               CALL iotk_scan_dat( iunpun, "OCC.1", wg(:,ik) )
                !
             END IF
             !
             CALL iotk_scan_end( iunpun, "K-POINT" // TRIM( iotk_index( ik ) ) )
             !
          END DO k_points_loop
+         !
+         et(:,:) = et(:,:) * e2
+         !
+         FORALL( ik = 1:nkstot ) wg(:,ik) = wg(:,ik) * wk(ik)
          !
          CALL iotk_scan_end( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
          !
@@ -1792,6 +1847,7 @@ MODULE pw_restart
       CALL mp_bcast( isk,   ionode_id )
       CALL mp_bcast( et,    ionode_id )
       CALL mp_bcast( wg,    ionode_id )
+      CALL mp_bcast( ef,    ionode_id )
       !
       lbs_read = .TRUE.
       !
@@ -2062,10 +2118,55 @@ MODULE pw_restart
     END SUBROUTINE read_wavefunctions
     !
     !------------------------------------------------------------------------
+    SUBROUTINE read_phonon( dirname, ierr )
+      !------------------------------------------------------------------------
+      !
+      USE control_flags, ONLY : modenum
+      USE klist,         ONLY : xqq
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
+      !
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_scan_begin( iunpun, "PHONON" )
+         !
+         CALL iotk_scan_dat( iunpun, "NUMBER_OF_MODES", modenum )
+         !
+         CALL iotk_scan_dat( iunpun, "Q-POINT", xqq(:) )
+         !
+         CALL iotk_scan_end( iunpun, "PHONON" )
+         !
+         CALL iotk_close_read( iunpun )
+         !
+      END IF
+      !
+      CALL mp_bcast( modenum, ionode_id )
+      CALL mp_bcast( xqq,     ionode_id )      
+      !
+      RETURN
+      !
+    END SUBROUTINE read_phonon
+    !
+    !------------------------------------------------------------------------
     SUBROUTINE read_( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      ! ... template
+      ! ... this is a template for a "read section" subroutine
       !
       IMPLICIT NONE
       !

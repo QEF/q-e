@@ -19,12 +19,12 @@ SUBROUTINE read_file()
   USE parameters,       ONLY : natx
   USE ions_base,        ONLY : nat, nsp, ityp, tau, if_pos
   USE basis,            ONLY : natomwfc
-  USE cell_base,        ONLY : tpiba2, bg
+  USE cell_base,        ONLY : tpiba2, at, bg
   USE force_mod,        ONLY : force
   USE klist,            ONLY : nkstot, nks, xk, wk
   USE lsda_mod,         ONLY : lsda, nspin, current_spin, isk
   USE wvfct,            ONLY : nbnd, nbndx, et, wg
-  USE symme,            ONLY : irt 
+  USE symme,            ONLY : irt, nsym, ftau, s
   USE ktetra,           ONLY : tetra, ntetra 
   USE extfield,         ONLY : forcefield, tefield
   USE cellmd,           ONLY : cell_factor, lmovecell
@@ -57,7 +57,14 @@ SUBROUTINE read_file()
   !
 #if defined(__NEWPUNCH)
   !
-  CALL pw_readfile( 'dim', ierr )
+  ! ... a reset of the internal flgas is necessary because some codes call
+  ! ... read_file() more than once
+  !
+  CALL pw_readfile( 'reset', ierr )
+  CALL pw_readfile( 'dim',   ierr )
+  !
+  CALL errore( 'read_file ', 'problem reading file ' // &
+             & TRIM( tmp_dir ) // TRIM( prefix ) // '.new-save', ierr )
   !
 #else
   !
@@ -88,7 +95,7 @@ SUBROUTINE read_file()
   !
   ! ... here we read all the variables defining the system
   ! ... in parallel execution, only root proc read the file
-  ! ... and then broadcast the values to all ather procs
+  ! ... and then broadcast the values to all other procs
   !
 #if defined(__NEWPUNCH)
   !
@@ -96,23 +103,13 @@ SUBROUTINE read_file()
 ! ... XML punch-file
 !-------------------------------------------------------------------------------
   !
-  CALL pw_readfile( 'pseudo', ierr )
-  !
-  ! ... read pseudopotentials
-  !
-  CALL readpp()
-  !
   CALL set_dimensions()
-  !
-#if defined (__PARA)
   !
   ! ... parallel execution: distribute across pools k-points and
   ! ... related variables (not a smart implementation):
   ! ... nks and nkstot are redefined by the following routine
   !
   CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
-  !
-#endif
   !
   current_spin = 1
   !
@@ -124,11 +121,6 @@ SUBROUTINE read_file()
   CALL allocate_fft()
   CALL ggen()
   !
-  ! ... allocate the potential
-  !
-  CALL allocate_locpot()
-  CALL allocate_nlpot()
-  !
   ! ... allocate wavefunctions and related quantities (including et and wg)
   !
   nbndx = nbnd
@@ -137,15 +129,22 @@ SUBROUTINE read_file()
   !
   CALL pw_readfile( 'nowave', ierr )
   !
-  CALL errore( 'read_file ', 'problem reading file ' // &
-             & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
-  !
-#if defined (__PARA)
-  !
   CALL poolscatter( nbnd , nkstot, et, nks, et )
   CALL poolscatter( nbnd , nkstot, wg, nks, wg )
   !
-#endif
+  CALL checkallsym( nsym, s, nat, tau, &
+                    ityp, at, bg, nr1, nr2, nr3, irt, ftau )
+  !
+  ! ... read pseudopotentials
+  !
+  CALL pw_readfile( 'pseudo', ierr )
+  !
+  CALL readpp()
+  !
+  ! ... allocate the potential
+  !
+  CALL allocate_locpot()
+  CALL allocate_nlpot()
   !
 #else
   !
@@ -160,8 +159,6 @@ SUBROUTINE read_file()
   CALL errore( 'read_file ', 'problem reading file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
   !
-#if defined (__PARA)
-  !
   ! ... parallel execution: distribute across pools k-points and
   ! ... related variables (not a smart implementation)
   !
@@ -170,8 +167,6 @@ SUBROUTINE read_file()
   ! ... nks and nkstot are redefined by the following routine
   !
   CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
-  !
-#endif
   !
   ! ... check whether LSDA
   !
@@ -218,12 +213,8 @@ SUBROUTINE read_file()
   !
   DEALLOCATE( et_g, wg_g )
   !
-#if defined (__PARA)
-  !
   CALL poolscatter( nbnd , nkstot, et, nks, et )
   CALL poolscatter( nbnd , nkstot, wg, nks, wg )
-  !
-#endif
   !
 #endif
   !
