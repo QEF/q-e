@@ -364,16 +364,6 @@ subroutine gener_pseudo
   !
   !     print the main functions on files
   !
-if (file_wavefunctionsps .ne. ' ') then
-     open(unit=19,file=file_wavefunctionsps, status='unknown', iostat=ios, &
-          err=300)
-300  call errore('gener_pseudo','opening file '//file_wavefunctionsps,&
-          abs(ios))
-     do n=1,mesh
-        write(19,'(i5,7e13.5)') n,r(n), (phis(n,ns), ns=1,nwfs)
-     enddo
-     close(19)
-  endif
   if (file_beta .ne. ' ') then
      open(unit=19,file=file_beta, status='unknown', iostat=ios, err=400)
 400  call errore('gener_pseudo','opening file '//file_beta,abs(ios))
