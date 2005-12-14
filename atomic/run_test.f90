@@ -77,7 +77,7 @@ subroutine run_test
      !   find the maximum of the all electron wavefunction
      !
      do n=1,nwfts
-        do n1=1,nbeta
+        do n1=1,nwfs
            if (els(n1).eq.elts(n).and.rcut(n1).gt.1.e-3_dp) then
               rcutts(n)=rcut(n1)
               rcutusts(n)=rcutus(n1)
