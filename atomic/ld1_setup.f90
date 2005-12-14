@@ -15,7 +15,7 @@ subroutine ld1_setup
   !
   !
   use ld1inc
-  use funct, only : get_iexch, dft_is_meta !, set_dft_from_name
+  use funct, only : get_iexch, dft_is_meta, start_exx !, set_dft_from_name
   implicit none
 
   integer n, n1, nc, m, nwftot, ios
@@ -30,6 +30,7 @@ subroutine ld1_setup
   hf  = get_iexch().eq.5
   if (hf)     call errore('setup','HF not implemented yet',1)
   oep = get_iexch().eq.4
+  if (oep) call start_exx
   if (oep.and.iswitch>1) &
      call errore('setup','OEP is implemented only for all-electron calc.',1)
   if (oep.and.rel>0) &
