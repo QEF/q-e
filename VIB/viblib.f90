@@ -270,7 +270,7 @@ SUBROUTINE relax_wavefunction (fion)
   USE cp_main_variables,    ONLY : eigr, ei1, ei2, ei3, &
        sfac, irb, eigrb, taub, nfi
   USE efield_module,        ONLY : tefield, efield_update
-  USE electrons_nose,       ONLY : fccc
+  USE wave_base,            ONLY : frice
   USE energies,             ONLY : eself, etot
   USE from_scratch_module,  ONLY : from_scratch
   USE gvecs,                ONLY : ngs
@@ -290,12 +290,13 @@ SUBROUTINE relax_wavefunction (fion)
   ! ... local variables
   !
   LOGICAL                       :: tfirst, tlast
-  REAL (KIND=DP)                :: enthal
+  REAL (KIND=DP)                :: enthal, fccc
   REAL (KIND=DP)                :: dt2bye, enb, enbi, ccc
   !
   ! ... for smooth restart in the new coordinates
   ! 
   dt2bye = dt2 / emass
+  fccc = 1.D0 / ( 1.D0 + frice )
   CALL initbox( tau0, taub, irb )
   CALL phbox( taub, eigrb )
   CALL phfac( tau0, ei1, ei2, ei3, eigr )
@@ -303,7 +304,7 @@ SUBROUTINE relax_wavefunction (fion)
   IF ( thdyn ) CALL formf( tfirst, eself )
   IF (tefield ) CALL efield_update( eigr )
   !
-  !... relax wavefunction in new position
+  ! ... relax wavefunction in new position
   !
   IF (tcg) THEN
      tprnfor = .TRUE. ! ... atomic forces are calculated only at the
