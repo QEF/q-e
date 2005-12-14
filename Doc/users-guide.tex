@@ -1289,7 +1289,8 @@ computational platform nowadays. Two major MPI implementations
 configurations, in terms of type and version of the MPI 
 libraries, kernels, system libraries, compilers, is very large. 
 Quantum-ESPRESSO compiles and works on all non-buggy, properly configured 
-configuration. You may have to recompile MPI libraries in order 
+hardware and software combinations. You may have to recompile MPI 
+libraries in order 
 to be able to use them with the Intel compiler. See Axel Kohlmeyer's 
 web site for precompiled versions of the MPI libraries.
 
@@ -2871,11 +2872,12 @@ solved by increasing the cutoff for the charge density.
 \paragraph{self-consistency is slow or does not converge.}
 
 Reduce \texttt{mixing\_beta} from the default value (0.7) to $\sim
-0.3-0.1$ or smaller, or try a different \texttt{mixing\_mode}.
-You may also try to increase \texttt{mixing\_ndim} to more than 8
-(default value).
-Beware: the larger \texttt{mixing\_ndim}, the larger the amount of
-memory you need.
+0.3-0.1$ or smaller. Try the \texttt{mixing\_mode} value that is
+more appropriate for your problem. For slab geometries used in surface 
+problems or for elongated cells, \texttt{mixing\_mode='local-TF'} should
+be the better choice, dampening "charge sloshing".  You may also try to 
+increase \texttt{mixing\_ndim} to more than 8 (default value). Beware: 
+the larger \texttt{mixing\_ndim}, the larger the amount of memory you need.
 
 If the above doesn't help: verify if your system is metallic or is
 close to a metallic state, especially if you have few k-points.

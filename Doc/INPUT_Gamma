@@ -1,22 +1,22 @@
-First, an explanation and a warning: the code phcg.x contained in 
-the Gamma/ subdirectory is a specialized phonon code, calculating
-phonon modes only at Gamma (q=0), and using only Gamma (k=0) for 
-the sum over the Brillouin Zone. It performs direct minimization 
-of the energy functional expanded at second order in the atomic 
-displacements. The code was written having molecular applications 
-in mind : Raman and IR spectra calculations in C60 (see JCP 100, 
-p.8537, 1994) and later in models of the GFP chromophore (Chem.Phys.
-287/1-2, p.33, 2003). The (non resonant) Raman cross sections are 
-calculated by finite differences of the dielectric tensor with 
-respect to small atomic displacements. This method is simple but 
-slow. The Raman calculation using such as second-order response,
-as implemented in code ph.x, should be much faster. You might still
-find this code useful for testing purposes, or in some special
-case (high-symmetry molecules for instance).
+The code phcg.x contained in the Gamma/ subdirectory is a specialized 
+phonon code, calculating phonon modes only at Gamma (q=0), and using 
+only Gamma (k=0) for the sum over the Brillouin Zone. It performs direct
+minimization of the energy functional expanded at second order in the
+atomic displacements. The code was written having molecular applications 
+in mind : Raman and IR spectra calculations in C60 (JCP100, p.8537, 1994) 
+and later in models of the GFP chromophore (Chem.Phys. 287/1-2, p.33, 2003).
+
+The (non resonant) Raman cross sections are calculated by finite differences 
+of the dielectric tensor with respect to small atomic displacements. This 
+method is simple but slow. The Raman calculation using such as second-order
+response, as implemented in code ph.x, should be much faster. The calculation
+of Raman cross sections in phcg.x was retained for testing purposes, or for
+some special cases (high-symmetry molecules for instance).
 
 Note that:
 - the code reads a file produced by pw.x with Gamma point only and
   Gamma-point special tricks (half of the plane waves and so on)
+- Ultrasoft PP's are not implemented
 - the symmetry is used in a different way wrt all other PWscf codes:
   only inequivalent atoms are displaced. This has an historical reason: 
   C60 has just 3 inequivalent atoms when put into in a cubic cell with 
