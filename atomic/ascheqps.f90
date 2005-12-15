@@ -33,7 +33,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
        lls(nbeta),&! for each beta the angular momentum
        ikk(nbeta) ! for each beta the point where it become zero
 
-  real(DP) :: &
+  real(kind=dp) :: &
        e,de,    &     ! output eigenvalue
        dx,      &  ! linear delta x for radial mesh
        jam, &      ! j angular momentum
@@ -51,7 +51,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   !
   integer, parameter :: maxter=100
 
-  real(DP) :: &
+  real(kind=dp) :: &
        sqlhf,      &  ! the term for angular momentum in equation
        det,detup,detlw,detold, &! the determinant
        eup0,elw0,  &  ! limits imposed by node counter
@@ -70,7 +70,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   !
   !  set up constants and allocate variables the 
   !
-  sqlhf=(DBLE(lam)+0.5_DP)**2
+  sqlhf=(dble(lam)+0.5_DP)**2
   !
   !     first try to find the zero with newton method
   !
@@ -79,28 +79,39 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   elw0=0.0_DP
   nosol=.false.
   count0=0
+  elw = e
+  call compute_det(nn,lam,jam,elw,mesh,ndm,dx,r,r2,sqr,vpot, &
+       beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk, &
+       detlw)
+  eup=e*0.99_DP
+  call compute_det(nn,lam,jam,eup,mesh,ndm,dx,r,r2,sqr,vpot, &
+       beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk, &
+       detup)
+     detold=detlw
   do iter=1,maxter
-
-     elw=e
-     call compute_det(nn,lam,jam,elw,mesh,ndm,dx,r,r2,sqr,vpot, &
-          beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk, &
-          detlw)
-     if (iter.eq.1) detold=detlw
-     eup=e*0.99_DP  
-     call compute_det(nn,lam,jam,eup,mesh,ndm,dx,r,r2,sqr,vpot, &
-          beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk, &
-          detup)
-     de=-detlw*(eup-elw)/(detup-detlw)
+     if (detup /= detlw) de=-detlw*(eup-elw)/(detup-detlw)
      !
      !    if an asintote has been found use bisection
      !
-     if (abs(de).gt.1.e3_dp*abs(eold)) goto 800
+     if (abs(de).gt.1.e3_dp*abs(eold)) then
+        write(*,*) 'BISECTION'
+        goto 800
+     endif
      !
      !    check for convergence
      !
-     if (abs(de/e).lt.thresh) goto 900
-     e=e+de
-     !         write(6,*) 'newton', e, de
+     if (abs(de/elw).lt.thresh) then
+        e=elw
+        goto 900
+     endif
+        eup = elw
+        elw = elw + de
+     call compute_det(nn,lam,jam,elw,mesh,ndm,dx,r,r2,sqr,vpot, &
+       beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk, &
+       detlw)
+     call compute_det(nn,lam,jam,eup,mesh,ndm,dx,r,r2,sqr,vpot, &
+       beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk, &
+       detup)
   enddo
   !
   !    if the program arrives here newton method does not work
@@ -120,7 +131,6 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   else
      elw=elw0
   endif
-  ! write(6,*) 'Try bisec', elw,eup       
   if(e.gt.eup) e=0.9_DP*eup+0.1_DP*elw
   if(e.lt.elw) e=0.9_DP*elw+0.1_DP*eup
 
@@ -133,8 +143,8 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
      call compute_det(nn,lam,jam,eup,mesh,ndm,dx,r,r2,sqr,vpot, &
           beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk, &
           detup)
+if (detup*detlw.lt.0.0_DP) write(*,*) 'count0 = ', count0
      if (detup*detlw.lt.0.0_DP) goto 100
-     !         write(6,*) 'bracketing;',elw,eup,detup
      elw=eup
      detlw=detup  
   enddo
@@ -223,7 +233,6 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
         if (abs(y(n+1)).gt.1.e-10_dp) ncross=ncross+1
      endif
   enddo
-  !      write(6,*) ncross, nn-lam-1
   if (ncross.gt.nn-lam-1) then
      eup0=e-1.e-6_dp
   elseif (ncross.lt.nn-lam-1) then
