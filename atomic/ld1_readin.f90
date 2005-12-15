@@ -24,7 +24,8 @@ subroutine ld1_readin
        ios               ! I/O control
 
   real(DP) :: &
-       edum(nwfsx), zdum        ! auxiliary
+       edum(nwfsx), zdum ! auxiliary variables
+  character(len=6)  :: zdum_
 
   character(len=80) :: config, configts(ncmax1)
   character(len=2)  :: atom
@@ -127,8 +128,10 @@ subroutine ld1_readin
   if (zed == 0.0_dp .and. atom /= ' ') then
      zed = DBLE(atomic_number(atom))
   else if (zed /= 0.0_dp .and. atom == ' ') then
-     if(DBLE(int(zed)) /= zed .or. zed < 1.0_dp .or. zed > 100) &
-          call errore('ld1_readin','wrong zed',1)
+     if (DBLE(int(zed)) /= zed .or. zed < 1.0_dp .or. zed > 100) then
+        write(zdum_,'(f6.2)') zed
+        call errore('ld1_readin','wrong nuclear charge zed: '//zdum_,1)
+     end if
      atom = atom_name(nint(zed))
   else
      zdum = DBLE(atomic_number(atom))
@@ -240,10 +243,13 @@ subroutine ld1_readin
      do ns=1,nwfs
         if ( ocs(ns) > 0.0_dp) zdum = zdum + ocs(ns)
      end do
-     if ( abs(nint(zdum)-zdum) > 1.d-8 ) call errore &
-          ('ld1_readin',' calculated valence charge not integer?',1)
      if (zval == 0) then
         zval = zdum
+        if ( abs(nint(zdum)-zdum) > 1.d-8 ) then
+           write(zdum_,'(f6.2)') zdum
+           call errore ('ld1_readin', 'found noninteger valence ' &
+                &//zdum_//', if you want this specify zval in inputp',1)
+        end if
      else if ( abs(zval-zdum) > 1.d-8 ) then
         call errore ('ld1_readin',&
              ' supplied and calculated valence charge do not match',1)
