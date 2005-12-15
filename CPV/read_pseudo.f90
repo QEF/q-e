@@ -65,9 +65,10 @@ END FUNCTION pseudo_filename
 
 INTEGER FUNCTION check_file_type( is )
   !
-  ! ...   This sub. try to guess the pseudo type
+  ! ...   This subroutine guesses the pseudopotential type
   ! on return:
-  !  0   file is unknow (guess: old CPV norm-conserving format) 
+  ! -1   file is nonexistent
+  !  0   file is unknown (guess: old CPV norm-conserving format) 
   !  1   file is *.vdb or *.van  Vanderbilt US pseudopotential
   !  2   file is *.RRKJ3         Andrea's   US new code 
   ! 11   file is NUMERIC (FPMD only)
@@ -79,11 +80,17 @@ INTEGER FUNCTION check_file_type( is )
   CHARACTER(LEN=80) :: dummy
   LOGICAL, EXTERNAL :: matches
   INTEGER :: ios, info, l
+  LOGICAL :: exst
   !
   info = 0  
   ios  = 0
   filename = pseudo_filename( is )
   !
+  INQUIRE ( FILE = TRIM(filename), EXIST=exst )
+  IF ( .NOT. exst) THEN
+     check_file_type = -1
+     return
+  END IF
   OPEN( UNIT = pseudounit, FILE = TRIM(filename), STATUS = 'OLD' )
   header_loop: do while (ios == 0)
     read ( pseudounit, *, iostat = ios, err = 200) dummy  
@@ -249,10 +256,24 @@ END FUNCTION calculate_dx
 
         IF( ionode ) THEN
           info = check_file_type( is )
-          WRITE( stdout, 7) info
-    7     FORMAT(   3X,'file type is ',I2)
+          SELECT CASE (info)
+          CASE (0)
+             WRITE( stdout,"(3X,'file type is ',I2,': Old CPV NC PP')") info
+          CASE (1)
+             WRITE( stdout,"(3X,'file type is ',I2,': Vanderbilt US PP')") info
+          CASE (2)
+             WRITE( stdout,"(3X,'file type is ',I2,': RRKJ3')") info
+          CASE (11)
+             WRITE( stdout,"(3X,'file type is ',I2,': Old FPMD Numeric')") info
+          CASE (12)
+             WRITE( stdout,"(3X,'file type is ',I2,': Old FPMD Analytic')") info
+          CASE (20)
+             WRITE( stdout, "(3X,'file type is ',I2,': UPF')") info
+          END SELECT
         END IF
         CALL mp_bcast( info, ionode_id )
+        IF (info == -1) CALL errore ('readpp', &
+                            'file '//TRIM(filename)//' not found',is)
 
         !  Now each processor read the pseudopotential file
   
