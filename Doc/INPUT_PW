@@ -27,7 +27,11 @@ ATOMIC_SPECIES
  Y  Mass_Y  PseudoPot_Y
  Z  Mass_Z  PseudoPot_Z
 ATOMIC_POSITIONS { alat | bohr | crystal | angstrom }
-if ( calculation = 'neb' )
+in all cases except calculation = 'neb' or 'smd' :
+  X 0.0  0.0  0.0  {if_pos(1) if_pos(2) if_pos(3)}
+  Y 0.5  0.0  0.0
+  Z O.0  0.2  0.2
+if calculation = 'neb' .OR. 'smd' :
   first_image
   X 0.0  0.0  0.0  {if_pos(1) if_pos(2) if_pos(3)}
   Y 0.5  0.0  0.0
@@ -40,14 +44,10 @@ if ( calculation = 'neb' )
    X 0.0  0.0  0.0
    Y 0.9  0.0  0.0
    Z O.0  0.2  0.2 }
-  last_image
-  X 0.0  0.0  0.0
-  Y 0.7  0.0  0.0
-  Z O.0  0.5  0.2 
-else
-  X 0.0  0.0  0.0  {if_pos(1) if_pos(2) if_pos(3)}
-  Y 0.5  0.0  0.0
-  Z O.0  0.2  0.2
+   last_image
+   X 0.0  0.0  0.0
+   Y 0.7  0.0  0.0
+   Z O.0  0.5  0.2 
 K_POINTS { tpiba | automatic | crystal | gamma }
 if (gamma)
    nothing to read
@@ -831,18 +831,30 @@ ATOMIC_POSITIONS { alat | bohr | crystal | angstrom }
    crystal : atomic positions are in crystal coordinates (see below)
    angstrom: atomic positions are in A
 
-if calculation = 'neb' .OR. 'smd' there are many cards like the following
-  
-  identifier
-  X  x y z   {if_pos(1) if_pos(2) if_pos(3)}
-  
-  One for the first image ( identifier="first_image" must be followed by "nat" 
-  position cards ) and one for the last image ( identifier="last_image" must 
-  be followed by "nat" position cards )
+- in all cases EXCEPT calculation = 'neb' or 'smd' :
+
+  There are "nat" cards like the following
+     X  x y z   {if_pos(1) if_pos(2) if_pos(3)}
+  where :
+    X         Character: label of the atom as specified in ATOMIC_SPECIES
+    x, y, z   Real: atomic positions 
+    if_pos:   Integer, optional: component i of the force for this atom is
+              multiplied by if_pos(i), which must be 0 or 1. Used to keep
+              selected atoms and/or selected components fixed in neb, smd,
+              MD dynamics or structural optimization run
+
+- if calculation = 'neb' .OR. 'smd'
+
+  There are at least two groups of cards, each group composed by an identifier
+  followed by "nat" cards as specified above:
+     identifier
+     X  x y z   {if_pos(1) if_pos(2) if_pos(3)}
+  The first group ( identifier="first_image" ) contains the first image,
+  the last group  ( identifier="last_image" )  contains the last image.
   There is also the possibility of specifying intermediate images; in this case
   their coordinates must be set between the first_image and the last_image.
-  ( identifier="intermediate_image" must be followed by "nat" position cards ). 
-  
+  ( identifier="intermediate_image", followed by "nat" position cards ). 
+
   Image configurations must be specified in the following order:
   
   first_image                                           <= mandatory
@@ -864,25 +876,9 @@ if calculation = 'neb' .OR. 'smd' there are many cards like the following
    
   IMPORTANT: the total number of configurations specified in the input file 
              must be less than num_of_images (as specified in &IONS).
-             The initial path is obtained interpolatig between the specified
+             The initial path is obtained interpolating between the specified
              configurations so that all images are equispaced (only the
              coordinates of the first and last images are not changed). 
-
-otherwise
-
-  There are "nat" cards like the following
-  
-  X  x y z   {if_pos(1) if_pos(2) if_pos(3)}
-
-where :
-
-  identifier  String: a string that identifies image coordinates.
-  X           Character: label of the atom as specified in ATOMIC_SPECIES
-  x, y, z     Real: atomic positions 
-  if_pos:     Integer: component i of the force for this atom is multiplied
-              by if_pos(i), which must be 0 or 1. Used to keep selected atoms
-              and/or selected components fixed in neb, smd, MD dynamics or 
-              structural optimization run
 
 -------------------------------------------------------------------------------
 
