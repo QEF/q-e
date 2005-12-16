@@ -1470,10 +1470,10 @@ END SUBROUTINE read_atomic_cc
       if (is.lt.0 .or. is.gt.nsx)                                       &
      &   call errore('readAdC','Wrong is number', 1)
 !
-      tvanp(is) = (pseudotype == 3)
       read( iunps, '(a75)', err=100, iostat=ios ) titleps
 !
       read( iunps, '(i5)',err=100, iostat=ios ) pseudotype
+      tvanp(is) = (pseudotype == 3)
       if (pseudotype.eq.3) then
          WRITE( stdout,'('' RRKJ3 Ultrasoft PP for '',a2)') titleps(7:8)
       else
