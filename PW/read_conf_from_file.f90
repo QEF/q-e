@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 PWSCF group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,7 @@ SUBROUTINE read_config_from_file()
   USE io_global,      ONLY : stdout
   USE ions_base,      ONLY : nat, ityp, tau
   USE basis,          ONLY : startingconfig
-  USE cell_base,      ONLY : at, bg, ibrav, alat, omega
+  USE cell_base,      ONLY : at, bg, omega
   USE cellmd,         ONLY : at_old, omega_old, lmovecell
   USE io_files,       ONLY : prefix
   USE pw_restart,     ONLY : pw_readfile
@@ -29,7 +29,7 @@ SUBROUTINE read_config_from_file()
   !
   IF ( TRIM( startingconfig ) /= 'file' ) RETURN
   !
-  PRINT '(/5X,"*****  NEW PUNCH  *****",/)'
+  WRITE( *, '(/5X,"*****  NEW PUNCH  *****")' )
   !
   WRITE( stdout, '(/5X,"Starting configuration read from file ",A16)') &
       TRIM( prefix ) // ".new-save"
@@ -43,7 +43,7 @@ SUBROUTINE read_config_from_file()
      WRITE( stdout, '(/5X,"Failed to open file ",A16)' ) &
          TRIM( prefix ) // ".new-save"
      !
-     WRITE( stdout, '(/5X,"Use input configuration")' )
+     WRITE( stdout, '(/5X,"Using input configuration")' )
      !
      RETURN
      !
@@ -52,10 +52,6 @@ SUBROUTINE read_config_from_file()
      CALL errore( 'read_config_from_file', 'problems in reading file', 1 )
      !
   END IF
-  !
-  CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
-  !
-  CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
   !
   IF ( lmovecell ) THEN
      !
@@ -70,6 +66,8 @@ SUBROUTINE read_config_from_file()
      CALL swap( 1, omega, omega_old )
      !
      CALL cryst_to_cart( nat, tau, at, + 1 )
+     !
+     CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
      !
   END IF
   !
@@ -139,6 +137,7 @@ subroutine read_config_from_file()
      call swap (9, at, at_old)
      call swap (1, omega, omega_old)
      call cryst_to_cart (nat, tau, at, + 1)
+     CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
   endif
   !
   return
@@ -201,6 +200,7 @@ subroutine read_config_from_file_old
      call swap (9, at, at_old)
      call swap (1, omega, omega_old)
      call cryst_to_cart (nat, tau, at, + 1)
+     CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
   endif
   !
   !  close the file for later use
