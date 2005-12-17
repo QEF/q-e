@@ -36,18 +36,18 @@ if calculation = 'neb' .OR. 'smd' :
   X 0.0  0.0  0.0  {if_pos(1) if_pos(2) if_pos(3)}
   Y 0.5  0.0  0.0
   Z O.0  0.2  0.2
- { intermediate_image 1
-   X 0.0  0.0  0.0
-   Y 0.9  0.0  0.0
-   Z O.0  0.2  0.2
-   intermediate_image ...
-   X 0.0  0.0  0.0
-   Y 0.9  0.0  0.0
-   Z O.0  0.2  0.2 }
-   last_image
-   X 0.0  0.0  0.0
-   Y 0.7  0.0  0.0
-   Z O.0  0.5  0.2 
+  { intermediate_image 1
+    X 0.0  0.0  0.0
+    Y 0.9  0.0  0.0
+    Z O.0  0.2  0.2
+    intermediate_image ...
+    X 0.0  0.0  0.0
+    Y 0.9  0.0  0.0
+    Z O.0  0.2  0.2 }
+  last_image
+  X 0.0  0.0  0.0
+  Y 0.7  0.0  0.0
+  Z O.0  0.5  0.2 
 K_POINTS { tpiba | automatic | crystal | gamma }
 if (gamma)
    nothing to read
@@ -838,10 +838,11 @@ ATOMIC_POSITIONS { alat | bohr | crystal | angstrom }
   where :
     X         Character: label of the atom as specified in ATOMIC_SPECIES
     x, y, z   Real: atomic positions 
-    if_pos:   Integer, optional: component i of the force for this atom is
-              multiplied by if_pos(i), which must be 0 or 1. Used to keep
-              selected atoms and/or selected components fixed in neb, smd,
-              MD dynamics or structural optimization run
+    if_pos:   Integer, optional ( default = 1 ): component i of the force for 
+              this atom is multiplied by if_pos(i), which must be either 0 or 1.
+              Used to keep selected atoms and/or selected components fixed in 
+              meta-dynamics, neb, smd, MD dynamics or structural optimization
+              run.
 
 - if calculation = 'neb' .OR. 'smd'
 
