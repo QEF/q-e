@@ -89,8 +89,8 @@ SUBROUTINE read_file()
   !
   IF ( tefield ) ALLOCATE( forcefield( 3, nat ) )
   !
-  ALLOCATE( irt( 48, nat ) )    
-  ALLOCATE( tetra( 4, MAX( ntetra, 1 ) ) )    
+  ALLOCATE( irt( 48, nat ) )
+  ALLOCATE( tetra( 4, MAX( ntetra, 1 ) ) )
   !
   ! ... here we read all the variables defining the system
   ! ... in parallel execution, only root proc read the file
@@ -147,8 +147,8 @@ SUBROUTINE read_file()
   !
   CALL pw_readfile( 'nowave', ierr )
   !
-  CALL poolscatter( nbnd , nkstot, et, nks, et )
-  CALL poolscatter( nbnd , nkstot, wg, nks, wg )
+  CALL poolscatter( nbnd, nkstot, et, nks, et )
+  CALL poolscatter( nbnd, nkstot, wg, nks, wg )
   !
   CALL checkallsym( nsym, s, nat, tau, &
                     ityp, at, bg, nr1, nr2, nr3, irt, ftau )

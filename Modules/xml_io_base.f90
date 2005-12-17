@@ -410,7 +410,6 @@ MODULE xml_io_base
       !
       CHARACTER(LEN=256) :: bravais_lattice
       !
-      !
       CALL iotk_write_begin( iunpun, "CELL" )
       !
       SELECT CASE ( ibrav )
@@ -449,13 +448,12 @@ MODULE xml_io_base
       CALL iotk_write_dat( iunpun, &
                            "BRAVAIS_LATTICE", TRIM( bravais_lattice ) )
       !
-      IF ( ibrav == 0 ) &
-         CALL iotk_write_dat( iunpun, "CELL_SYMMETRY", symm_type )
+      CALL iotk_write_dat( iunpun, "CELL_SYMMETRY", symm_type )
       !
       CALL iotk_write_attr( attr, "UNIT", "Bohr", FIRST = .TRUE. )
       CALL iotk_write_dat( iunpun, "LATTICE_PARAMETER", alat, ATTR = attr )
       !
-      CALL iotk_write_dat( iunpun, "CELL_DIMENSION", celldm(1:6) )
+      CALL iotk_write_dat( iunpun, "CELL_DIMENSIONS", celldm(1:6) )
       !
       CALL iotk_write_begin( iunpun, "DIRECT_LATTICE_VECTORS" )
       CALL iotk_write_dat(   iunpun, "a1", a1(:) * alat, ATTR = attr )
@@ -492,6 +490,7 @@ MODULE xml_io_base
       !
       INTEGER            :: i, flen
       CHARACTER(LEN=256) :: file_pseudo
+      LOGICAL            :: pseudo_exists
       !
       !
       CALL iotk_write_begin( iunpun, "IONS" )
@@ -516,11 +515,15 @@ MODULE xml_io_base
             !
          END IF
          !
-         CALL copy_file( TRIM( file_pseudo ), &
-                         TRIM( dirname ) // "/" // TRIM( psfile(i) ) )
+         INQUIRE( FILE = TRIM( dirname ) // "/" &
+                       & // TRIM( psfile(i) ), EXIST = pseudo_exists )
+         !
+         IF ( .NOT. pseudo_exists ) &
+            CALL copy_file( TRIM( file_pseudo ), &
+                            TRIM( dirname ) // "/" // TRIM( psfile(i) ) )
          !
          CALL iotk_write_attr( attr, "UNIT", "a.m.u.", FIRST = .TRUE. )
-         CALL iotk_write_dat( iunpun, TRIM( atm(i) )//"_MASS", &
+         CALL iotk_write_dat( iunpun, TRIM( atm(i) ) // "_MASS", &
                               amass(i), ATTR = attr )
          !
          CALL iotk_write_dat( iunpun, "PSEUDO_FOR_" // &
@@ -549,7 +552,7 @@ MODULE xml_io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_symmetry( ibrav, symm_type, nsym, &
-                               invsym, nr1, nr2, nr3, ftau, s, sname )
+                               invsym, nr1, nr2, nr3, ftau, s, sname, irt )
       !------------------------------------------------------------------------
       !
       INTEGER,          INTENT(IN) :: ibrav, nsym,  nr1, nr2, nr3
@@ -557,6 +560,7 @@ MODULE xml_io_base
       LOGICAL,          INTENT(IN) :: invsym
       INTEGER,          INTENT(IN) :: s(:,:,:), ftau(:,:)
       CHARACTER(LEN=*), INTENT(IN) :: sname(:)
+      INTEGER,          INTENT(IN) :: irt(:,:)
       !
       INTEGER  :: i
       REAL(DP) :: tmp(3)
@@ -582,6 +586,7 @@ MODULE xml_io_base
          CALL iotk_write_attr( attr, "ROT", s(:,:,i) )
          CALL iotk_write_attr( attr, "FRAC_TRANS", tmp(:) )
          CALL iotk_write_attr( attr, "NAME", TRIM( sname(i) ) )
+         CALL iotk_write_attr( attr, "EQ_IONS", irt(i,:) )
          !
          CALL iotk_write_empty( iunpun, &
                                 "SYMM" // TRIM( iotk_index( i ) ), attr )

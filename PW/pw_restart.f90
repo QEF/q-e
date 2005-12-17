@@ -75,7 +75,7 @@ MODULE pw_restart
       USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
                                        Hubbard_U, Hubbard_alpha
       USE spin_orb,             ONLY : lspinorb
-      USE symme,                ONLY : nsym, invsym, s, ftau
+      USE symme,                ONLY : nsym, invsym, s, ftau, irt
       USE char,                 ONLY : sname
       USE lsda_mod,             ONLY : nspin, isk, lsda
       USE dynam,                ONLY : amass
@@ -280,7 +280,7 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          CALL write_symmetry( ibrav, symm_type, nsym, &
-                              invsym, nr1, nr2, nr3, ftau, s, sname )
+                              invsym, nr1, nr2, nr3, ftau, s, sname, irt )
          !
 !-------------------------------------------------------------------------------
 ! ... PLANE_WAVES
@@ -1095,47 +1095,25 @@ MODULE pw_restart
          CALL iotk_scan_dat( iunpun, &
                              "BRAVAIS_LATTICE", bravais_lattice )
          !
-         SELECT CASE ( TRIM( bravais_lattice ) )
-           CASE( "free" )
-              ibrav = 0
-           CASE( "cubic P (sc)" )
-              ibrav = 1
-           CASE( "cubic F (fcc)" )
-              ibrav = 2
-           CASE( "cubic I (bcc)" )
-              ibrav = 3
-           CASE( "Hexagonal and Trigonal P" )
-              ibrav = 4
-           CASE( "Trigonal R" )
-              ibrav = 5
-           CASE( "Tetragonal P (st)" )
-              ibrav = 6
-           CASE( "Tetragonal I (bct)" )
-              ibrav = 7
-           CASE( "Orthorhombic P" )
-              ibrav = 8
-           CASE( "Orthorhombic base-centered(bco)" )
-              ibrav = 9
-           CASE( "Orthorhombic face-centered" )
-              ibrav = 10
-           CASE( "Orthorhombic body-centered" )
-              ibrav = 11
-           CASE( "Monoclinic P" )
-              ibrav = 12
-           CASE( "Monoclinic base-centered" )
-              ibrav = 13
-           CASE( "Triclinic P" )
-              ibrav = 14
-         END SELECT
+         IF ( TRIM( bravais_lattice ) == "Trigonal R" .OR. &
+              TRIM( bravais_lattice ) == "Hexagonal and Trigonal P" ) THEN
+            !
+            symm_type = 'hexagonal'
+            !
+         ELSE
+            !
+            symm_type = 'cubic'
+            !
+         END IF
          !
-         IF ( ibrav == 0 ) &
-            CALL iotk_scan_dat( iunpun, "CELL_SYMMETRY", symm_type )
-         !
-         CALL iotk_scan_dat( iunpun, "CELL_DIMENSION", celldm(1:6) )
+         ibrav = 0
          !
          CALL iotk_scan_dat( iunpun, "LATTICE_PARAMETER", alat )
          !
          ! ... some internal variables
+         !
+         celldm(:) = 0.D0
+         celldm(1) = alat
          !
          tpiba  = 2.D0 * pi / alat
          tpiba2 = tpiba**2 
@@ -1148,15 +1126,13 @@ MODULE pw_restart
          !
          ! ... to alat units
          !
-         at = at / alat
+         at(:,:) = at(:,:) / alat
          !
          CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
          !
-         CALL iotk_scan_begin( iunpun, "RECIPROCAL_LATTICE_VECTORS" )
-         CALL iotk_scan_dat(   iunpun, "b1", bg(:,1) )
-         CALL iotk_scan_dat(   iunpun, "b2", bg(:,2) )
-         CALL iotk_scan_dat(   iunpun, "b3", bg(:,3) )
-         CALL iotk_scan_end(   iunpun, "RECIPROCAL_LATTICE_VECTORS" )
+         ! ... Generate the reciprocal lattice vectors
+         !
+         CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
          !
          CALL iotk_scan_end( iunpun, "CELL" )
          !
@@ -1224,12 +1200,8 @@ MODULE pw_restart
          !
          DO i = 1, nsp
             !
-            CALL iotk_scan_dat( iunpun, &
-                                "ATOM_TYPE", atm(i) )
-            !
-            CALL iotk_scan_dat( iunpun, &
-                                TRIM( atm(i) ) // "_MASS", amass(i) )
-            !
+            CALL iotk_scan_dat( iunpun, "ATOM_TYPE", atm(i) )
+            CALL iotk_scan_dat( iunpun, TRIM( atm(i) ) // "_MASS", amass(i) )
             CALL iotk_scan_dat( iunpun, &
                                 "PSEUDO_FOR_" // TRIM( atm(i) ), psfile(i) )
             !
@@ -1246,7 +1218,7 @@ MODULE pw_restart
             !
          END DO
          !
-         tau = tau / alat
+         tau(:,:) = tau(:,:) / alat
          !
          CALL iotk_scan_end( iunpun, "IONS" )
          !
@@ -1272,7 +1244,7 @@ MODULE pw_restart
     SUBROUTINE read_symmetry( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE symme, ONLY : nsym, invsym, s, ftau
+      USE symme, ONLY : nsym, invsym, s, ftau, irt
       USE char,  ONLY : sname
       USE gvect, ONLY : nr1, nr2, nr3
       !
@@ -1314,6 +1286,7 @@ MODULE pw_restart
             CALL iotk_scan_attr( attr, "ROT",        s(:,:,i) )
             CALL iotk_scan_attr( attr, "FRAC_TRANS", tmp(:) )
             CALL iotk_scan_attr( attr, "NAME",       sname(i) )
+            CALL iotk_scan_attr( attr, "EQ_IONS",    irt(i,:) )
             !
             ftau(1,i) = tmp(1) * DBLE( nr1 )
             ftau(2,i) = tmp(2) * DBLE( nr2 )
@@ -1332,6 +1305,7 @@ MODULE pw_restart
       CALL mp_bcast( s,      ionode_id )
       CALL mp_bcast( ftau,   ionode_id )
       CALL mp_bcast( sname,  ionode_id )
+      CALL mp_bcast( irt,    ionode_id )
       !
       lsymm_read = .TRUE.
       !
@@ -1553,7 +1527,7 @@ MODULE pw_restart
       CALL mp_bcast( dft_name,   ionode_id )
       CALL mp_bcast( lda_plus_u, ionode_id )
       !
-      IF (lda_plus_u  ) THEN
+      IF ( lda_plus_u ) THEN
          !
          CALL mp_bcast( Hubbard_lmax,  ionode_id )
          CALL mp_bcast( Hubbard_l ,    ionode_id )
