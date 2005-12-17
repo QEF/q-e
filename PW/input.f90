@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 PWSCF group
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -1623,7 +1623,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
 END SUBROUTINE read_cards
 !
 !-----------------------------------------------------------------------
-SUBROUTINE verify_tmpdir(tmp_dir)
+SUBROUTINE verify_tmpdir( tmp_dir )
   !-----------------------------------------------------------------------
   !
   USE input_parameters, ONLY : restart_mode
@@ -1633,15 +1633,15 @@ SUBROUTINE verify_tmpdir(tmp_dir)
   USE mp_global,        ONLY : mpime, nproc
   USE io_global,        ONLY : ionode
   USE mp,               ONLY : mp_barrier
-  !
   USE parser,           ONLY : int_to_char, delete_if_present
   !
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(INOUT) :: tmp_dir
-  INTEGER            :: l, ios, image, proc
+  !
+  INTEGER             :: l, ios, image, proc
   CHARACTER (LEN=256) :: file_path, tmp_dir_saved
-  INTEGER, EXTERNAL  :: c_mkdir
+  INTEGER, EXTERNAL   :: c_mkdir
   !
   !
   ! ... verify if tmp_dir ends with /, add one if needed
@@ -1682,7 +1682,7 @@ SUBROUTINE verify_tmpdir(tmp_dir)
      !
      IF ( ionode ) THEN
         !
-        ! ... wfc-extrapolation file is removed
+        ! ... extrapolation file is removed
         !     
         CALL delete_if_present( TRIM( file_path ) // '.update' )
         !
@@ -1767,7 +1767,7 @@ SUBROUTINE verify_tmpdir(tmp_dir)
                  CALL delete_if_present( TRIM( tmp_dir ) // &
                                        & TRIM( prefix ) // '.bfgs' )
                  !
-                 ! ... wfc-extrapolation file is removed
+                 ! ... extrapolation file is removed
                  !     
                  CALL delete_if_present( TRIM( tmp_dir ) // &
                                        & TRIM( prefix ) // '.update' )
