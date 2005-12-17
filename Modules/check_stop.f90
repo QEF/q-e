@@ -32,25 +32,29 @@ MODULE check_stop
      ! ... internal procedures
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE check_stop_init( val )
+     SUBROUTINE check_stop_init()
        !-----------------------------------------------------------------------
        !
-       USE io_global, ONLY : meta_ionode, stdout
-       USE io_files,  ONLY : exit_file, stopunit
+       USE input_parameters, ONLY : max_seconds_ => max_seconds
+       USE io_global,        ONLY : meta_ionode, stdout
+       USE io_files,         ONLY : prefix, exit_file, stopunit
        !
        IMPLICIT NONE
        !
-       REAL(DP), INTENT(IN) :: val
-       LOGICAL              :: tex
-       REAL(DP)             :: seconds
-       REAL(DP)             :: elapsed_seconds
-       EXTERNAL                elapsed_seconds
+       LOGICAL  :: tex
+       REAL(DP) :: seconds
+       REAL(DP) :: elapsed_seconds
+       EXTERNAL    elapsed_seconds
        !
        IF ( tinit ) &
           WRITE( UNIT = stdout, &
                  FMT = '(/,5X,"WARNING: check_stop already initialized")' )
        !
-       IF ( val > 0.D0 ) max_seconds = val
+       ! ... the exit_file name is set here
+       !
+       exit_file = TRIM( prefix ) // '.EXIT'
+       !
+       IF ( max_seconds_ > 0.D0 ) max_seconds = max_seconds_
        !
        IF ( meta_ionode ) THEN
           !

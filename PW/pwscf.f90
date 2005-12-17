@@ -21,6 +21,7 @@ PROGRAM pwscf
   USE io_files,         ONLY : nd_nmbr, iunpath, tmp_dir
   USE ions_base,        ONLY : tau
   USE path_variables,   ONLY : conv_path
+  USE check_stop,       ONLY : check_stop_init
   USE path_base,        ONLY : initialize_path, search_mep
   USE metadyn_base,     ONLY : metadyn_init
   USE path_io_routines, ONLY : io_path_start, io_path_stop
@@ -58,6 +59,8 @@ PROGRAM pwscf
   END IF   
   !
   CALL iosys()
+  !
+  CALL check_stop_init()
   !
   IF ( ionode .AND. noncolin ) &
     WRITE( UNIT = stdout, &

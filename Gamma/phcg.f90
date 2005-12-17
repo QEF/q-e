@@ -30,7 +30,7 @@ PROGRAM phcg
   INTEGER :: i
   !
   !
-  CALL check_stop_init ( max_seconds ) 
+  CALL check_stop_init () 
   !
   CALL init_clocks(.TRUE.)
   CALL start_clock('phcg')

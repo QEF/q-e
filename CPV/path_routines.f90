@@ -56,8 +56,6 @@ MODULE path_routines
       USE control_flags, ONLY : lpath, lneb, lcoarsegrained, lconstrain, &
                                 lmd, ldamped, tprnfor
       USE parser,        ONLY : int_to_char
-      USE check_stop,    ONLY : check_stop_init
-
       !
       IMPLICIT NONE
       !

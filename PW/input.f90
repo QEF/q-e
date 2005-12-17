@@ -31,7 +31,7 @@ SUBROUTINE iosys()
   !
   USE bp,            ONLY : nppstr_    => nppstr, &
                             gdir_      => gdir, &
-                            lberry_    => lberry,&
+                            lberry_    => lberry, &
                             lelfield_  => lelfield, &
                             efield_    => efield, &
                             nberrycyc_ => nberrycyc
@@ -133,8 +133,8 @@ SUBROUTINE iosys()
                             modenum_     => modenum, &
                             reduce_io, ethr, lscf, lbfgs, lmd, lpath, lneb, &
                             lsmd, lphonon, ldamped, lraman, lrescale_t, &
-                            noinv, restart, lmetadyn, lconstrain, &
-                            lcoarsegrained, twfcollect
+                            lmetadyn, lconstrain, lcoarsegrained, restart, &
+                            twfcollect
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
   !
@@ -176,17 +176,14 @@ SUBROUTINE iosys()
                             w_1_              => w_1, & 
                             w_2_              => w_2
   !
-  USE check_stop,    ONLY : check_stop_init
-  !
   ! ... CONTROL namelist
   !
-  USE input_parameters, ONLY : title, calculation, verbosity, &
-                               restart_mode, nstep, iprint, tstress, tprnfor, &
-                               dt, outdir, wfcdir, prefix, max_seconds, &
-                               etot_conv_thr, forc_conv_thr, pseudo_dir, &
-                               disk_io, tefield, dipfield, lberry, gdir, &
-                               nppstr, wf_collect,lelfield, efield,  &
-                               nberrycyc, tqr
+  USE input_parameters, ONLY : title, calculation, verbosity, restart_mode, &
+                               nstep, iprint, tstress, tprnfor, dt, outdir, &
+                               wfcdir, prefix, etot_conv_thr, forc_conv_thr, &
+                               pseudo_dir, disk_io, tefield, dipfield, lberry, &
+                               gdir, nppstr, wf_collect,lelfield, efield, tqr, &
+                               nberrycyc
   !
   ! ... SYSTEM namelist
   !
@@ -273,8 +270,6 @@ SUBROUTINE iosys()
   ! ... translate from input to internals of PWscf, various checks
   !
   if (input_dft /='none') call enforce_input_dft (input_dft)
-  !
-  CALL check_stop_init( max_seconds )
   !
   IF ( tefield .AND. ( .NOT. nosym ) ) THEN
      nosym = .TRUE.
@@ -1234,10 +1229,14 @@ SUBROUTINE iosys()
   ! ... generate at (in atomic units) from ibrav and celldm
   !
   CALL latgen( ibrav_, celldm_, at(1,1), at(1,2), at(1,3), omega )
-  alat = celldm_(1) ! define alat
-  at = at / alat    ! bring at in unit of alat
   !
-  CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
+  ! ... define alat
+  !
+  alat = celldm_(1)
+  !
+  ! ... convert at to unit of alat
+  !
+  at = at / alat
   !
   ! ... Generate the reciprocal lattice vectors
   !
@@ -1394,12 +1393,13 @@ SUBROUTINE iosys()
   !
   IF ( lcoarsegrained ) CALL init_metadyn_vars()
   !
-  CALL verify_tmpdir(tmp_dir)
+  CALL verify_tmpdir( tmp_dir )
   !
-  IF (.not.(TRIM(wfcdir)=='undefined')) THEN
+  IF ( .NOT. TRIM( wfcdir ) == 'undefined' ) THEN
      !
-     wfc_dir=TRIM( wfcdir )
-     CALL verify_tmpdir(wfc_dir)
+     wfc_dir = TRIM( wfcdir )
+     !
+     CALL verify_tmpdir( wfc_dir )
      !
   ENDIF
   !
@@ -1628,7 +1628,7 @@ SUBROUTINE verify_tmpdir(tmp_dir)
   !
   USE input_parameters, ONLY : restart_mode
   USE control_flags,    ONLY : lpath
-  USE io_files,         ONLY : prefix, nd_nmbr, exit_file
+  USE io_files,         ONLY : prefix, nd_nmbr
   USE path_variables,   ONLY : num_of_images
   USE mp_global,        ONLY : mpime, nproc
   USE io_global,        ONLY : ionode
@@ -1661,10 +1661,6 @@ SUBROUTINE verify_tmpdir(tmp_dir)
      END IF
      !
   END IF
-  !
-  ! ... the exit_file name is set here
-  !
-  exit_file = TRIM( prefix ) // '.EXIT'
   !
   ios = 0
   !

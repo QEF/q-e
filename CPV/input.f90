@@ -811,7 +811,7 @@ MODULE input
      USE control_flags,    ONLY : program_name, lconstrain, lneb, lcoarsegrained
      USE constants,        ONLY : amu_au, pi
      !
-     USE input_parameters, ONLY: max_seconds, ibrav , celldm , trd_ht, dt,    &
+     USE input_parameters, ONLY: ibrav , celldm , trd_ht, dt,    &
            cell_symmetry, rd_ht, a, b, c, cosab, cosac, cosbc, ntyp , nat ,   &
            na_inp , sp_pos , rd_pos , rd_vel, atom_mass, atom_label, if_pos,  &
            atomic_positions, id_loc, sic, sic_epsilon, sic_rloc, ecutwfc,     &
@@ -844,7 +844,6 @@ MODULE input
                                   adapt, calwf, nwf, wffort, writev,           &
                                   wannier_index
      !
-     USE check_stop,       ONLY : check_stop_init
      USE ions_base,        ONLY : tau, ityp, zv
      USE cell_base,        ONLY : cell_base_init, a1, a2, a3, cell_alat
      USE cell_nose,        ONLY : cell_nose_init
@@ -888,7 +887,7 @@ MODULE input
      USE wannier_base,       ONLY : wannier_init
      USE constraints_module, ONLY : init_constraint
      USE metadyn_vars,       ONLY : init_metadyn_vars
-     USE efield_module,      ONLY: tefield
+     USE efield_module,      ONLY : tefield
      !
      !
      IMPLICIT NONE
@@ -906,11 +905,8 @@ MODULE input
      IF( .NOT. has_been_read ) &
        CALL errore( ' modules_setup ', ' input file has not been read yet! ', 1 )
      !
-     !
-     CALL check_stop_init( max_seconds )
-
      ! ...  Set cell base module
-
+     !
      massa_totale = SUM( atom_mass(1:ntyp)*na_inp(1:ntyp) )
      !
      CALL cell_base_init( ibrav , celldm , trd_ht, cell_symmetry, rd_ht, &

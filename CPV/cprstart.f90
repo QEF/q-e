@@ -76,6 +76,7 @@ PROGRAM main
   USE mp,            ONLY : mp_end, mp_start, mp_env
   USE control_flags, ONLY : lneb, lsmd, lmetadyn, program_name
   USE environment,   ONLY : environment_start
+  USE check_stop,    ONLY : check_stop_init
   !
   IMPLICIT NONE
   !
@@ -117,6 +118,8 @@ PROGRAM main
   ! ... copy-in input parameters from input_parameter module
   !
   CALL iosys()
+  !
+  CALL check_stop_init()
   !
   IF ( lneb ) THEN
      !
