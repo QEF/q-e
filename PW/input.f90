@@ -111,8 +111,8 @@ SUBROUTINE iosys()
 
   USE exx,           ONLY : nqx1_   => nq1,  &
                             nqx2_   => nq2,  &
-                            nqx3_   => nq3,  &
-                            yukawa_ => yukawa
+                            nqx3_   => nq3
+
   USE realus,        ONLY : tqr_    => tqr
   !
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
@@ -198,7 +198,7 @@ SUBROUTINE iosys()
                                starting_ns_eigenvalue, U_projection_type, &
                                input_dft, &
 #if defined (EXX)                               
-                               lexx, nqx1, nqx2, nqx3, yukawa, &
+                               nqx1, nqx2, nqx3, &
 #endif
                                edir, emaxpos, eopreg, eamp, &
                                noncolin, lambda, angle1, angle2, &
@@ -1135,14 +1135,13 @@ SUBROUTINE iosys()
   starting_ns             = starting_ns_eigenvalue
   U_projection            = U_projection_type
   nosym_                  = nosym
-  nbnd_                    = nbnd
+  nbnd_                   = nbnd
   !
 #if defined (EXX)
   !
   nqx1_   = nqx1
   nqx2_   = nqx2
   nqx3_   = nqx3
-  yukawa_ = yukawa
   !
 #endif
   !

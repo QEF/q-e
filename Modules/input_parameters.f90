@@ -448,13 +448,9 @@ MODULE input_parameters
         CHARACTER(LEN=80) :: U_projection_type = 'atomic'
           ! ONLY PWSCF
 #if defined (EXX)
-
-        LOGICAL :: lexx = .FALSE.
-          ! ONLY PWSCF
-
         INTEGER :: nqx1 = 1, nqx2 = 1, nqx3=1
           ! ONLY PWSCF
-        REAL(DP) :: yukawa = 0.d0
+!        REAL(DP) :: yukawa = 0.d0
           ! ONLY PWSCF
 #endif
 
@@ -555,7 +551,7 @@ MODULE input_parameters
              U_projection_type,  &
              input_dft, &
 #if defined (EXX)
-             lexx, nqx1, nqx2, nqx3, yukawa, &
+             nqx1, nqx2, nqx3, &
 #endif
              noncolin, lspinorb, lambda, angle1, angle2, report, &
              constrained_magnetization, B_field, fixed_magnetization, &

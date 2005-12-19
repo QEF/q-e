@@ -669,6 +669,11 @@ MODULE read_namelists_module
        CALL mp_bcast( q2sigma,                ionode_id )
        CALL mp_bcast( xc_type,                ionode_id )
        CALL mp_bcast( input_dft,              ionode_id )
+#ifdef EXX
+       CALL mp_bcast( nqx1,                   ionode_id )
+       CALL mp_bcast( nqx2,                   ionode_id )
+       CALL mp_bcast( nqx3,                   ionode_id )
+#endif
        CALL mp_bcast( starting_magnetization, ionode_id ) 
        CALL mp_bcast( starting_ns_eigenvalue, ionode_id ) 
        CALL mp_bcast( U_projection_type,      ionode_id ) 
