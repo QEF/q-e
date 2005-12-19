@@ -90,7 +90,7 @@ subroutine gener_pseudo
   !
   !   compute the local potential from the all-electron potential
   !
-  call pseudovloc
+  call pseudovloc ( )
   !
   !   if nlcc is true compute here the core charge
   !   the core charge is needed also for the PAW dataset
@@ -248,7 +248,7 @@ subroutine gener_pseudo
   !
   !   compute the inverse of the matrix B_{ij}^-1
   !
-  call invmat(nbeta, b, binv, db)
+  if (nbeta > 0) call invmat(nbeta, b, binv, db)
   !
   !   compute the beta functions
   !

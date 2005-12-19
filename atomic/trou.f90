@@ -12,14 +12,18 @@ subroutine find_coefficients &
   !     -----------------------------------
   !
   !     recherche des coefficients du polynome
+  !
   use kinds, only : DP
   implicit none
-  integer ndm, lam, ipvt(6), ik
-  real(DP):: vpot(ndm), psi(ndm), r(ndm), dx, energy, &
-       c(6), c2, amat(6,6), y(6), rc, aenorm
-  integer i, info, n, nmax, ndiv
-  real(DP):: c2o, dc2, newvalue, oldvalue, precision, &
-       funz, rndm
+  integer, intent(in) :: ndm, lam,  ik
+  real(DP), intent(in):: vpot(ndm), psi(ndm), r(ndm), dx, energy
+  real(DP), intent(out):: c2, c(6)
+  !
+  real(DP ):: amat(6,6), y(6), rc, aenorm
+  integer ipvt(6), i, info, n, ndiv
+  real(DP):: c2o, dc2, dcmin, newvalue, oldvalue, precision
+  real(DP), external:: funz, rndm
+  character(len=10) :: prec
   !
   do i = 1,6
      c(i) = 0.0_dp
@@ -27,52 +31,58 @@ subroutine find_coefficients &
   rc  = r(ik)
 
   call fill_matrix(amat,rc,lam)
-  ! calcul de mat = lu
-  !      call dgef(amat,6,6,ipvt,info)
+  !
+  ! LU factorization of matrix A = amat
+  !
   call DGETRF(6,6,amat,6,ipvt,info)
-  ! calcul de y pour ax = y
+  !
+  ! calculate coefficients y in linear system Ax = y
+  !
   call eval_coeff(r,psi,ik,lam,energy,dx,vpot,y)
-  ! cherche la valeur de  c2 qui verifie l'equ 29a
+  !
+  ! find value of c2 solving norm-conservation requirement
   ! This is done by miniming with a random search funz**2
   ! We are looking for the smallest solution
+  !
   c2o =  0.0_dp        ! starting point
   dc2 =  0.1_dp        ! starting range
-  n   = 0             ! number of failed attempts
-  nmax=2000
-  ndiv= 200
+  dcmin= 1.0e-10_dp    ! minimum range
+  n   = 0              ! counter of failed attempts
+  ndiv= 200            ! afte ndiv failed attempts reduce range
   !
-  !     original
-  !      precision = 1e-15
-  precision = 7.e-10_dp
+  precision = 7.e-10_dp! a small number
+  !
   oldvalue = funz(amat,ipvt,y,rc,ik,aenorm,c2o,c,c2, &
        lam,r,dx,ndm)**2
 10 continue
   c2 = c2o + (0.5_dp - rndm())*dc2
   newvalue = funz(amat,ipvt,y,rc,ik,aenorm,c2,c,c2,lam, &
        r,dx,ndm)**2
-  if (newvalue.lt.precision) goto 900
-  if (newvalue.lt.oldvalue) then
+  if (newvalue < precision) return
+  if (newvalue < oldvalue) then
      n=0
      c2o = c2
      oldvalue=newvalue
   else
      n=n+1
      ! after ndiv failed attempts reduce the size of the interval
-     if (n.gt.ndiv) dc2=dc2/10.0_dp
-     ! after nmax failed attempts exit
-     if (n.gt.nmax) then
-        write(6,110) nmax, precision
-110     format ('Warning: after ',i5,' attempts ',  &
-             'the error is still',e10.4)
+     if (n > ndiv) then
+        n=0
+        dc2=dc2/10.0_dp
+     end if
+     ! if the size of the interval is too small quit
+     if (dc2 < 1.0d-12) then
         c2=c2o
         newvalue = funz(amat,ipvt,y,rc,ik, &
              aenorm,c2,c,c2,lam,r,dx,ndm)**2
-        goto 900
+        write(prec,'(e10.4)') newvalue
+        call infomsg('find_coeff','giving up minimization, ', &
+             'the error is still '//prec,-1)
+        return
      end if
   end if
   go to 10
 
-900 continue
   return
 end subroutine find_coefficients
 

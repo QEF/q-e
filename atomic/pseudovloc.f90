@@ -48,7 +48,7 @@ subroutine pseudovloc
        indns(0:1), & ! auxiliary
        nc           ! counter on bessel
 
-  if (lloc.lt.0) then
+  if (lloc < 0) then
      !
      !   Compute the potential by smoothing the AE potential
      !
@@ -58,9 +58,9 @@ subroutine pseudovloc
           & 'potential, matching radius rcloc = ',f8.4)") rcloc
      ik=0
      do n=1,mesh
-        if (r(n).lt.rcloc) ik=n
+        if (r(n) < rcloc) ik=n
      enddo
-     if (mod(ik,2).eq.0) ik=ik+1
+     if (mod(ik,2) == 0) ik=ik+1
      if (ik <= 1 .or. ik > mesh) &
           call errore('pseudovloc','wrong matching point',1)
      !
@@ -73,7 +73,7 @@ subroutine pseudovloc
      !    find the q_i of the bessel functions
      !      
      call find_qi(f1ae/fae,xc(3),ik,0,2,0,iok)
-     if (iok.ne.0) &
+     if (iok /= 0) &
           call errore('pseudovloc','problems with find_qi',1)
      !
      !    compute the functions
@@ -118,7 +118,7 @@ subroutine pseudovloc
      !    here
      !
      nst=(lloc+1)*2
-     if (rel==2.and.lloc.gt.0) then
+     if (rel==2 .and. lloc > 0) then
         rep=1
         indns(0)=nsloc
         indns(1)=nsloc+1
@@ -134,14 +134,14 @@ subroutine pseudovloc
      vaux=0.0_dp
      do indi=0,rep
         nwf0=nstoae(nsloc+indi)
-        if (enls(nsloc+indi).eq.0.0_dp) &
+        if (enls(nsloc+indi) == 0.0_dp) &
              enls(nsloc+indi)=enl(nstoae(nsloc+indi))
         !
         !    compute the ik closer to r_cut
         !
         ik=0
         do n=1,mesh
-           if (r(n).lt.rcut(nsloc+indi)) ik=n
+           if (r(n) < rcut(nsloc+indi)) ik=n
         enddo
         if (mod(ik,2).eq.0) ik=ik+1
         if (ik <= 1 .or. ik > mesh) &
