@@ -340,6 +340,7 @@ CONTAINS
     ! set logical flags describing the complexity of the xc functional
     ! define the fraction of exact exchange used by hybrid fuctionals
     !
+    logical, external :: matches
     isgradient =  (igcx > 0) .or. (igcc > 0) 
     ismeta     =  (igcx == 7) .or. (igcx == 6 )
     ishybrid   =  (iexch == 4) .or. (iexch == 5) .or. (iexch == 6) .or. &
