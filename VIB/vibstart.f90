@@ -8,18 +8,17 @@
 #include "f_defs.h"
 !
 !==============================================================================
-!  Program CPVIB (programmed by Silviu Zilberman)
+!  Program VIB (programmed by Silviu Zilberman)
 !  
 !  Calculates the vibrational modes, Born effective charges and infrared
 !  cross-section for isolated molecules/clusters in vacuum.
-!  The programs uses the CP code as the underlying DFT engine
+!  The programs uses rither the CP or PW codes as the underlying DFT engine
 !  for wave function relaxation (SCF) and the frozen phonon method for
 !  construction of the energy hessian (dynamical matrix),
 !  i.e. displace each atom in all three cartesian directions to construct
 !  the numerical first derivative of the forces.
 !  
-!  The program uses two mandatory input files (optional files are discussed
-!  further below):
+!  The program uses two mandatory input files
 !  1. The regular CP input file, which presumably was used to generate a
 !     ground state nuclear configuration (local minimum).
 !  2. A file "prefix.vib.inp", where prefix is defined in the CP input
@@ -33,7 +32,7 @@
 !  
 !  Parameters:
 !  
-!  delta           real ( default = 0.05 )
+!  displacement    real ( default = 0.05 )
 !                  displacement step, a uniform value for all atoms
 !  
 !  save_freq       integer ( default = 1 )
@@ -69,19 +68,9 @@
 !  animate         logical ( default = .false. )
 !                  generate xyz animation files for all normal modes
 !
-!  Additional information about the input/output files:
+!  Additional information about the output files:
 !  
-!  1. The program will look for the presence of 'prefix.vib.isotope' file.
-!     It is a text file containing NAT lines, where NAT is the number of atoms.
-!     Each line contains a single number, the mass of this particular atom
-!     in the same order as in the CP input file. The masses are in AMU, i.e.
-!     the hydrogen is ~1, carbon is 12 etc. If this file is present, these masses
-!     are used in the calculation. If not, the default masses are used,
-!     as specified in the CP input, and an isotopes file is created.
-!     This is useful for testing the isotope shifts, without having to
-!     redo the full calculation.
-!  
-!  2. After the energy hessian is calculated, the program will write
+!  1. After the energy hessian is calculated, the program will write
 !     the analysis results to 'prefix.vib.analysis'.
 !     The minimal output is:
 !          * raw (but symmetrized) hessian
@@ -138,30 +127,70 @@
 !  ==========================================================================
 !
 !----------------------------------------------------------------------------
-PROGRAM cpvib
+PROGRAM vib
   !----------------------------------------------------------------------------
   !
   USE control_flags,         ONLY : program_name
-  USE environment,           ONLY : environment_start
-  USE input,                 ONLY : read_input_file, iosys_pseudo, iosys
-  USE io_global,             ONLY : io_global_start, io_global_getionode
+  USE io_global,             ONLY : stdout
   USE kinds,                 ONLY : DP
-  USE mp_global,             ONLY : mp_global_start
-  USE mp,                    ONLY : mp_end, mp_start, mp_env
   USE vibrations,            ONLY : start_vibrations, calc_hessian, &
        analysis, end_vibrations
   !
   IMPLICIT NONE
   !
-  INTEGER                        :: mpime, nproc, gid, ionode_id, &
-       restart_cyc_counter
-  INTEGER,           PARAMETER   :: root = 0
-  LOGICAL                        :: ionode
+  INTEGER                        :: restart_cyc_counter
   REAL    (KIND=DP)              :: E_minus, dip_minus(3)
   !
   ! ... program starts here
   !
+#ifdef DFT_CP
   program_name = 'CP90'
+  call start_cp
+#endif
+#ifdef DFT_PW
+  program_name = 'PW'
+  call start_pw
+#endif
+  write (stdout,*) 'Using program ',program_name,' as a DFT engine.'
+  !
+  !
+  print *,'reading vib input...'
+  CALL read_input_vib()
+  print *,'Done...'
+  print *,'starting start_vibrations...'
+  CALL start_vibrations(restart_cyc_counter, E_minus, dip_minus)
+  print *,'Done...'
+  CALL calc_hessian    (restart_cyc_counter, E_minus, dip_minus)
+  CALL analysis ()
+  CALL end_vibrations()
+  !
+#ifdef DFT_CP
+     call end_cp
+#endif
+#ifdef DFT_PW
+     call end_pw
+#endif
+  !
+  STOP
+  !
+END PROGRAM vib
+
+!----------------------------------------------------------------------------
+
+subroutine start_cp
+  !
+#ifdef DFT_CP
+  !
+  USE environment,           ONLY : environment_start
+  USE input,                 ONLY : read_input_file, iosys_pseudo, iosys
+  USE io_global,             ONLY : io_global_start, io_global_getionode
+  USE mp_global,             ONLY : mp_global_start
+  USE mp,                    ONLY : mp_end, mp_start, mp_env
+  !
+  INTEGER                        :: mpime, nproc, gid, ionode_id, &
+       restart_cyc_counter
+  INTEGER,           PARAMETER   :: root = 0
+  LOGICAL                        :: ionode
   !
   ! ... initialize MPI (parallel processing handling)
   !
@@ -197,17 +226,105 @@ PROGRAM cpvib
   CALL init_run()
   !     
   !  CALL memstat( 1 )
+#endif
+  return
+end subroutine start_cp
+!
+!----------------------------------------------------------------------------
+!
+subroutine end_cp
   !
-  CALL read_input_vib()
-  CALL start_vibrations(restart_cyc_counter, E_minus, dip_minus)
-  CALL calc_hessian    (restart_cyc_counter, E_minus, dip_minus)
-  CALL analysis ()
-  CALL end_vibrations()
+#ifdef DFT_CP
   !
   CALL terminate_run()
   !
   CALL stop_run( .TRUE. )
   !
-  STOP
+#endif
+  return
+end subroutine end_cp
+!
+!----------------------------------------------------------------------------
+!
+subroutine start_pw
   !
-END PROGRAM cpvib
+#ifdef DFT_PW
+  !
+  ! ... Plane Wave Self-Consistent Field code
+  !
+  USE io_global,          ONLY : stdout
+  USE parameters,         ONLY : ntypx, npk, lmaxx, nchix, ndmx, nqfx, nbrx
+  USE global_version,     ONLY : version_number
+  USE wvfct,              ONLY : gamma_only
+  USE noncollin_module,   ONLY : noncolin
+  USE control_flags,      ONLY : nstep, istep, conv_elec, conv_ions, &
+       lpath, lmetadyn
+  USE io_files,           ONLY : nd_nmbr, iunpath, tmp_dir
+  USE path_variables,     ONLY : conv_path
+  USE path_base,          ONLY : initialize_path, search_mep
+  USE metadyn_base,       ONLY : metadyn_init
+  USE path_io_routines,   ONLY : io_path_start, io_path_stop
+  USE io_global,          ONLY : ionode
+  !
+  IMPLICIT NONE
+  !
+  ! ... local variables
+  !
+  CHARACTER (LEN=9) :: code = 'PWSCF'
+  !
+  !
+  ! ... use ".FALSE." to disable all clocks except the total cpu time clock
+  ! ... use ".TRUE."  to enable clocks
+  !
+  CALL init_clocks( .TRUE. )
+  CALL start_clock( code )
+  !
+  CALL startup( nd_nmbr, code, version_number )
+  !
+  IF ( ionode ) THEN
+     !
+     WRITE( UNIT = stdout, &
+          FMT = '(/5X,"Ultrasoft (Vanderbilt) Pseudopotentials")')
+     !
+     WRITE( unit = stdout, FMT = 9010 ) &
+          ntypx, npk, lmaxx, nchix, ndmx, nbrx, nqfx
+     !
+  END IF
+  !
+  CALL iosys()
+  !
+  IF ( ionode .AND. noncolin ) &
+       WRITE( UNIT = stdout, &
+       & FMT = '(/,5X,"non-colinear magnetization allowed",/)' )
+  IF ( ionode .AND. gamma_only ) &
+       WRITE( UNIT = stdout, &
+       & FMT = '(/,5X,"gamma-point specific algorithms are used",/)' )
+  !
+  !
+  CALL init_run()
+  !
+  istep = 0
+  !
+  !
+  !
+9010 FORMAT( /,5X,'Current dimensions of program pwscf are:', /, &
+       & /,5X,'ntypx = ',I2,'   npk = ',I5,'  lmax = ',I2   &
+       & /,5X,'nchix = ',I2,'  ndmx = ',I5,'  nbrx = ',I2,'  nqfx = ',I2 )
+  !
+#endif
+  return
+end subroutine start_pw
+!
+!----------------------------------------------------------------------------
+!
+subroutine end_pw
+  !
+#ifdef DFT_PW
+  !
+  CALL punch()
+  !
+  CALL stop_run( conv_ions )
+  !
+#endif
+  return
+end subroutine end_pw

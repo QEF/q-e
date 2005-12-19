@@ -14,7 +14,7 @@ MODULE vibrations
   !
   ! Programmed by: Silviu Zilberman
   !
-  USE kinds,                  ONLY: DP
+  USE kinds,                  ONLY : DP
   USE parameters,             ONLY : natx
   !
   IMPLICIT NONE
@@ -32,13 +32,14 @@ MODULE vibrations
   ! active_atom - frozen/non frozen atom
   !               frozen atoms are not displaced
   !
+#ifdef DFT_CP
   COMPLEX (KIND=DP), ALLOCATABLE :: ref_c0(:,:,:,:)
+  REAL    (KIND=DP), ALLOCATABLE :: ref_lambda(:,:)
+#endif
 
   REAL    (KIND=DP), ALLOCATABLE :: ref_tau(:,:)
-  REAL    (KIND=DP), ALLOCATABLE :: ref_lambda(:,:)
   REAL    (KIND=DP)              :: ref_etot
   REAL    (KIND=DP), ALLOCATABLE :: fion(:,:)   
-
   LOGICAL,           ALLOCATABLE :: active_atom(:)
   !
   ! ... public variables
@@ -47,6 +48,10 @@ MODULE vibrations
        trans_inv_conv_thr, save_freq, nactive_atoms, trans_inv_max_iter, &
        vib_restart_mode, trans_inv_flag, trans_rot_inv_flag, animate,    &
        isotope
+
+#ifdef DFT_CP
+  PUBLIC :: ref_c0, ref_lambda
+#endif
   !
   ! displacement       - displacement step
   ! U                  - energy hessian
@@ -101,17 +106,24 @@ MODULE vibrations
 CONTAINS
   ! ----------------------------------------------------------------
 
-
   SUBROUTINE start_vibrations (restart_cyc_counter, E_minus,  &
        dip_minus)
     !
     !-------------------------------------------------------------
     !
-    USE constants,            ONLY : DIP_DEBYE
+    USE constants,            ONLY : DIP_DEBYE, AMU_AU
+    USE kinds,                ONLY : DP
+    USE io_files,             ONLY : outdir, prefix
+    USE io_global,            ONLY : ionode, ionode_id, stdout
+    USE ions_base,            ONLY : nsp, nat, iforce, na, pmass, if_pos
+    USE mp,                   ONLY : mp_bcast
+    USE parameters,           ONLY : natx
+    USE printout_base,        ONLY : printout_pos
+
+#ifdef DFT_CP
     USE cell_base,            ONLY : tpiba2, h, hold, velh, ibrav, celldm
     USE cell_nose,            ONLY : xnhh0, xnhhm,vnhh
     USE cg_module,            ONLY : tcg, c0old
-    USE constants,            ONLY : AMU_AU
     USE control_flags,        ONLY : ndr, ndw
     USE cp_electronic_mass,   ONLY : emass_precond, emass_cutoff
     USE cp_main_variables,    ONLY : lambda, lambdam, ema0bg, nfi, bec
@@ -119,24 +131,23 @@ CONTAINS
     USE cp_main_variables,    ONLY : lambdap, eigr, rhopr
     USE electrons_base,       ONLY : nbsp, nbspx, nel, f
     USE electrons_module,     ONLY : cp_eigs
+    USE ions_positions,       ONLY : tau0, taus, tausm, vels, velsm
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
     USE energies,             ONLY : etot, ekin, ekincm
     USE ensemble_dft,         ONLY : z0
     USE gvecp,                ONLY : ecutp
     USE gvecw,                ONLY : ngw, ggp, ecutw
-    USE io_files,             ONLY : outdir, prefix
-    USE io_global,            ONLY : ionode, ionode_id, stdout
-    USE ions_base,            ONLY : nsp, nat, iforce, na, pmass
     USE ions_nose,            ONLY : xnhp0,xnhpm, vnhp, nhpcl, nhpdim
-    USE ions_positions,       ONLY : tau0, taus, tausm, vels, velsm
-    USE kinds,                ONLY : DP
-    USE mp,                   ONLY : mp_bcast
-    USE parameters,           ONLY : natx
-    USE printout_base,        ONLY : printout_pos
     USE print_out_module,     ONLY : cp_print_rho
     USE restart_file,         ONLY : writefile
     USE time_step,            ONLY : delt, tps
     USE wavefunctions_module, ONLY : c0, cm
+#endif
+#ifdef DFT_PW
+    USE ener,                 ONLY : etot
+    USE ions_base,            ONLY : tau0 => tau
+#endif
+
     !
     ! ... output variables
     !
@@ -155,9 +166,11 @@ CONTAINS
     !
     ! (1) Allocate arrays
     !
+#ifdef DFT_CP
     ALLOCATE( ref_c0     ( ngw,   nbspx, 1, 1 ) )
-    ALLOCATE( ref_tau    ( 3,     natx        ) )
     ALLOCATE( ref_lambda ( nbsp,  nbsp        ) )
+#endif
+    ALLOCATE( ref_tau    ( 3,     natx        ) )
     ALLOCATE( active_atom( nat                ) )
     ALLOCATE( eigenvals  ( 3*nat              ) )
     ALLOCATE( eigenvecs  ( 3*nat, 3*nat       ) )
@@ -170,6 +183,7 @@ CONTAINS
     !     Any atom with ANY frozen coordinate is assume to be totally
     !     frozen.
     !
+#ifdef DFT_CP
     nactive_atoms = 0
     DO ia = 1,nat
        IF (iforce(1,ia)+iforce(2,ia)+iforce(3,ia).EQ.3) THEN
@@ -179,12 +193,27 @@ CONTAINS
           active_atom(ia)=.FALSE.
        END IF
     END DO
+#endif
+#ifdef DFT_PW
+    nactive_atoms = 0
+    DO ia = 1,nat
+       IF (if_pos(1,ia)+if_pos(2,ia)+if_pos(3,ia).EQ.3) THEN
+          nactive_atoms=nactive_atoms+1
+          active_atom(ia)=.TRUE.
+       ELSE
+          active_atom(ia)=.FALSE.
+       END IF
+    END DO
+    !
+#endif
+    call flush(stdout)
     !
     ! (3) initiating variables ...
     !
     U = 0.0
     restart_vib = .FALSE.
     restart_cyc_counter = -1
+    call flush(stdout)
     !
     ! (4) Setting the T matrix (diagonal mass matrix)
     !
@@ -193,6 +222,7 @@ CONTAINS
        T(3*(ia-1)+2,3*(ia-1)+2) = isotope(ia)
        T(3*(ia-1)+3,3*(ia-1)+3) = isotope(ia)
     end do
+    call flush(stdout)
     !
     ! (5) restarting from file ? ...
     !
@@ -246,6 +276,7 @@ CONTAINS
        !
        ! ... saving restart wavefunction
        !
+#ifdef DFT_CP
        IF ( tcg ) THEN
           !
           CALL writefile( ndw, h, hold ,nfi, c0(:,:,1,1), c0old, taus, tausm, &
@@ -263,18 +294,22 @@ CONTAINS
                ibrav, celldm, fion, tps, z0, f, rhopr )
           !
        END IF
+#endif
        !
+       !call save_restart_cp()
        WRITE ( stdout , * ) 'Done' 
        WRITE ( stdout , * )                                       
        !
        ! (6) Saving refernce ground-state parameters
        !     (coordinates, wavefunctions, energy and polarization)
        !
+#ifdef DFT_CP
        ref_c0     = c0
-       ref_lambda = lambda
-       ref_etot   = etot
        cm         = c0           ! setting zero wavefunction velocity
+       ref_lambda = lambda
        lambdam    = lambda
+#endif
+       ref_etot   = etot
        ref_tau    = tau0
        !
        !     ... printing refernce structure and energy
@@ -289,9 +324,10 @@ CONTAINS
        WRITE (stdout,112) dipole_moment * DIP_DEBYE
        WRITE (stdout,*)
        !
-110    FORMAT(3x,'Ground-state (reference) energy   :',3x,f15.6)
+110    FORMAT(3x,'Ground-state (reference) energy   :',3x,f15.6, ' hartree')
 111    FORMAT(3x,'Ground-state dipole vector [debye]:',3x,f10.3,3x,f10.3,3x,f10.3)
 112    FORMAT(3x,'Dipole moment [debye]             :',3x,f10.3)
+#ifdef DFT_CP
        !
        ! (7) Electronic mass preconditioning, in case damped scf minimization
        !     is used. It assumes a converged ground-state configuration, and 
@@ -302,6 +338,7 @@ CONTAINS
           emass_cutoff = ekin/(nel(1)+nel(2))
           CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emass_cutoff )
        END IF
+#endif
        !
     ELSE
        ref_tau = tau0
@@ -319,17 +356,25 @@ CONTAINS
     !-------------------------------------------------------------
     !
     USE constants,            ONLY : DIP_DEBYE, eps4
+    USE input_parameters,     ONLY : atom_label
+    USE parameters,           ONLY : natx
+    USE ions_base,            ONLY : nat, ityp
+    USE io_global,            ONLY : stdout, ionode
+    USE printout_base,        ONLY : printout_pos
+#ifdef DFT_CP
+    USE ions_positions,       ONLY : tau0
     USE cp_main_variables,    ONLY : lambda, lambdam, nfi
     USE efield_module,        ONLY : efield_update
     USE energies,             ONLY : etot
     USE from_scratch_module,  ONLY : from_scratch
-    USE input_parameters,     ONLY : atom_label
-    USE io_global,            ONLY : stdout, ionode
-    USE ions_base,            ONLY : nat, ityp
-    USE ions_positions,       ONLY : tau0
-    USE parameters,           ONLY : natx
     USE phase_factors_module, ONLY : strucf     
     USE wavefunctions_module, ONLY : c0, cm
+#endif
+#ifdef DFT_PW
+    USE ener,                 ONLY : etot
+    USE ions_base,            ONLY : tau0 => tau
+    USE cell_base,            ONLY : alat
+#endif
     !
     ! ... input variables
     !
@@ -383,33 +428,6 @@ CONTAINS
                    END IF
                 ELSE
                    !
-                   ! ... setting coordinates of displaced atom and resetting all relevant variables
-                   !
-                   nfi             = 0
-                   tau0            = ref_tau
-                   tau0(coord,iax) = tau0(coord,iax) + disp_sign*displacement
-                   !
-                   !
-                   IF(disp_sign.EQ.-1) THEN
-                      !
-                      ! ... use reference wavefunction as initial guess
-                      !
-                      c0(:,:,1,1) = ref_c0(:,:,1,1)
-                      !
-                   ELSE
-                      !
-                      ! ... linearly extrapolate wave function coefficients from their value
-                      ! ... at dispalcement at the negative direction
-                      !
-                      c0(:,:,1,1) = 2*ref_c0(:,:,1,1)-c0(:,:,1,1) 
-                      !
-                   END IF
-                   !
-                   ! ... set wavefunction velocity to zero
-                   !
-                   cm      = c0
-                   lambdam = lambda
-                   !
                    ! ... printing information
                    !
                    IF (ionode) THEN
@@ -426,7 +444,23 @@ CONTAINS
                       WRITE (stdout,*)
                    END IF
                    !
-                   !... relax wavefunction in new position
+                   ! ... setting coordinates of displaced atom and resetting all relevant variables
+                   !
+                   tau0            = ref_tau
+#ifdef DFT_CP
+                   tau0(coord,iax) = tau0(coord,iax) + disp_sign*displacement
+#endif
+#ifdef DFT_PW
+                   tau0(coord,iax) = tau0(coord,iax) + disp_sign*displacement/alat
+#endif
+                   WRITE (stdout,*) '  Perturbed geometry:'
+                   CALL printout_pos( stdout, tau0, nat, 'pos' )
+                   WRITE (stdout,*)
+                   !
+                   !
+                   call set_guess_wfc(disp_sign)
+                   !
+                   ! ... relax wavefunction in new position
                    !
                    CALL relax_wavefunction (fion)
                    !
@@ -452,6 +486,8 @@ CONTAINS
                       IF(etot.LT.ref_etot) THEN
                          CALL infomsg('calc_hessian', &
                               'Warning: Reference structure is not converged!!!',-1)
+                         write (stdout,*) '      reference energy:', ref_etot, ' hartree'
+                         write (stdout,*) '      current   energy:', etot,     ' hartree'
                       END IF
                       !
                       ! ... record observables:
@@ -528,7 +564,7 @@ CONTAINS
     !
 111 FORMAT(3x,'Ground-state dipole vector [debye]:',3x,f10.3,3x,f10.3,3x,f10.3)
 112 FORMAT(3x,'Dipole moment [debye]             :',3x,f10.3)
-113 FORMAT(3x,'displacement total energy         :',3x,f15.6)
+113 FORMAT(3x,'displacement total energy         :',3x,f15.6,' hartree')
     RETURN
   END SUBROUTINE calc_hessian
   !
@@ -538,6 +574,7 @@ CONTAINS
   !
   SUBROUTINE analysis
     !
+    USE constants,          ONLY : e2
     USE io_files,           ONLY : outdir, prefix
     USE io_global,          ONLY : ionode, stdout
     USE ions_base,          ONLY : nat
@@ -760,7 +797,7 @@ CONTAINS
     !
     ! ... diagonalizing the hessian to obtain eigen frequencies and modes
     !
-    CALL rdiaghg(dim,dim,U_loc,T_loc,dim,eigval_loc,eigvec_loc)
+    CALL vib_rdiaghg(dim,dim,U_loc,T_loc,dim,eigval_loc,eigvec_loc)
     !
     ! ... calculating IR intensities for each mode
     !
@@ -1039,8 +1076,8 @@ CONTAINS
     dummy(1,1)=1.0
     dummy(2,2)=1.0
     dummy(3,3)=1.0
-    !CALL rdiaghg(3,3,inertia_tensor,dummy,3,inertia_moments,inertia_eigenvecs)
-    CALL rdiagh(3,inertia_tensor,3,inertia_moments,inertia_eigenvecs)
+    !CALL vib_rdiaghg(3,3,inertia_tensor,dummy,3,inertia_moments,inertia_eigenvecs)
+    CALL vib_rdiagh(3,inertia_tensor,3,inertia_moments,inertia_eigenvecs)
     !
     IF(iprsta.GT.4) THEN
        WRITE (filep,*)
@@ -1245,9 +1282,11 @@ CONTAINS
   !
   SUBROUTINE end_vibrations
     !
+#ifdef DFT_CP
     DEALLOCATE( ref_c0      )
-    DEALLOCATE( ref_tau     )
     DEALLOCATE( ref_lambda  )
+#endif
+    DEALLOCATE( ref_tau     )
     DEALLOCATE( active_atom )
     DEALLOCATE( eigenvals   )
     DEALLOCATE( eigenvecs   )

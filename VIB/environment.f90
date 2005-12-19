@@ -8,7 +8,7 @@
 !==-----------------------------------------------------------------------==!
    MODULE environment
 !==-----------------------------------------------------------------------==!
-
+#ifdef DFT_CP
         USE kinds
         USE io_files, ONLY: crash_file, crashunit, &
                             stop_file, stopunit
@@ -206,6 +206,8 @@
 
           RETURN
         END SUBROUTINE closing_date_and_time
+
+#endif
 
 !==-----------------------------------------------------------------------==!
    END MODULE environment

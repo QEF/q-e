@@ -16,15 +16,19 @@ SUBROUTINE read_input_vib()
   !
   ! ... modules
   !
-  USE constants,  ONLY : AMU_AU
-  USE io_files,   ONLY : outdir, prefix
-  USE io_global,  ONLY : ionode, ionode_id, stdout
-  USE ions_base,  ONLY : nat, ityp, pmass
-  USE kinds,      ONLY : DP
-  USE mp,         ONLY : mp_bcast
-  USE vibrations, ONLY : displacement, save_freq,                            &
+  USE constants,        ONLY : AMU_AU
+  USE io_files,         ONLY : outdir, prefix
+  USE io_global,        ONLY : ionode, ionode_id, stdout
+  USE ions_base,        ONLY : nat, ityp, pmass
+  USE input_parameters, ONLY : atom_label
+  USE kinds,            ONLY : DP
+  USE mp,               ONLY : mp_bcast
+  USE vibrations,       ONLY : displacement, save_freq,                            &
        trans_inv_max_iter, trans_inv_conv_thr, vib_restart_mode,             &
        trans_inv_flag, trans_rot_inv_flag, animate, isotope
+#ifdef DFT_PW
+  USE dynam,            ONLY : amass
+#endif
   !
   IMPLICIT NONE
   !
@@ -32,6 +36,7 @@ SUBROUTINE read_input_vib()
   !
   INTEGER             :: ios, dirlen, i
   CHARACTER (LEN=256) :: restart_label, input_filename
+  CHARACTER (LEN=3)   :: tmp_str
   LOGICAL             :: inp_file_exists
   !
   NAMELIST / INPUT_VIB / displacement, save_freq, trans_inv_max_iter,        &
@@ -69,6 +74,9 @@ SUBROUTINE read_input_vib()
      !
      ! ... set default values for variables in namelist ISOTOPES
      !
+#ifdef DFT_PW
+     pmass = amass * AMU_AU
+#endif
      do i=1,nat
         isotope(i) = pmass(ityp(i)) / AMU_AU
      end do
@@ -107,6 +115,15 @@ SUBROUTINE read_input_vib()
         CALL errore( 'read_input_vib ', &
              'unknown vib_restart_mode ' // TRIM( restart_label ), 1 )
      END SELECT
+     !
+     do i=1,nat
+        if (isotope(i).le.0.0) then
+           write (tmp_str,'(I3.3)') i
+           CALL errore (' readin_input_vib', &
+                ' negative or zero mass for atom '//tmp_str, 1)
+        end if
+     end do
+
   END IF
   !
   do i=1,nat
@@ -138,6 +155,12 @@ SUBROUTINE read_input_vib()
      WRITE (stdout,106) trans_rot_inv_flag
      WRITE (stdout,107) restart_label
      WRITE (stdout,108) animate
+     WRITE (stdout,*) ''
+     do i=1,nat
+        WRITE (stdout,109) i,TRIM(atom_label(ityp(i))),isotope(i) / AMU_AU
+     end do
+
+
      WRITE (stdout,*) '------------------------------------------------------'
      !
 101  FORMAT(3x,'displacement           = ',3x,f10.4)
@@ -148,6 +171,7 @@ SUBROUTINE read_input_vib()
 106  FORMAT(3x,'trans_rot_inv_flag     = ',3x,L10)
 107  FORMAT(3x,'restart_label          = ',3x,A10)
 108  FORMAT(3x,'animate                = ',3x,L10)
+109  FORMAT(3x,I3.3,3x,A5,F10.4)
      !
      CLOSE(99)
   END IF

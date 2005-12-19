@@ -112,6 +112,7 @@ SUBROUTINE calculate_dipole (dipole, dipole_moment,tau)
   !
   ! ... modules
   !
+#ifdef DFT_CP
   USE cp_main_variables,    ONLY : irb, eigrb, bec, rhor, rhog, rhos
   USE electrons_base,       ONLY : nspin
   USE energies,             ONLY : ekin, enl
@@ -154,6 +155,7 @@ SUBROUTINE calculate_dipole (dipole, dipole_moment,tau)
   ! STILL HAVE TO ADD IN THE WANNIER BASED DIPOLE
   ! AS AN ALTERNATIVE WAY OF DOING THE CALCULATION
   !
+#endif
   RETURN
 END SUBROUTINE calculate_dipole
 !
@@ -261,8 +263,13 @@ SUBROUTINE relax_wavefunction (fion)
   !
   ! A DRIVER ROUTINE FOR WAVE FUNCTION RELAXATION
   !
+  !
   ! ... modules
   !
+  USE parameters,           ONLY : natx
+  USE kinds,                ONLY : DP
+  !
+#ifdef DFT_CP
   USE cell_base,            ONLY : b1, b2, b3
   USE cg_module,            ONLY : tcg
   USE control_flags,        ONLY : tprnfor, thdyn
@@ -275,26 +282,37 @@ SUBROUTINE relax_wavefunction (fion)
   USE from_scratch_module,  ONLY : from_scratch
   USE gvecs,                ONLY : ngs
   USE ions_positions,       ONLY : tau0
-  USE kinds,                ONLY : DP
-  USE parameters,           ONLY : natx
+  USE ions_base,            ONLY : ityp, nat
   USE phase_factors_module, ONLY : strucf     
   USE reciprocal_vectors,   ONLY : mill_l
   USE time_step,            ONLY : dt2
+  USE io_global,            ONLY : stdout
+#endif
   !
+#ifdef DFT_PW
+  USE force_mod,            ONLY : force
+  USE ener,                 ONLY : etot
+  USE cell_base,            ONLY : alat
+  USE constants,            ONLY : e2
+#endif
   IMPLICIT NONE
   !
   ! ... input variables
   !
   REAL (KIND=DP)                ::  fion(3,natx)
   !
+#ifdef DFT_CP
+  !
   ! ... local variables
   !
   LOGICAL                       :: tfirst, tlast
   REAL (KIND=DP)                :: enthal, fccc
   REAL (KIND=DP)                :: dt2bye, enb, enbi, ccc
+  integer                       :: ipol, na
   !
   ! ... for smooth restart in the new coordinates
   ! 
+  fion = 0.0
   dt2bye = dt2 / emass
   fccc = 1.D0 / ( 1.D0 + frice )
   CALL initbox( tau0, taub, irb )
@@ -325,5 +343,136 @@ SUBROUTINE relax_wavefunction (fion)
      tprnfor = .FALSE.
   END IF
   !
+  ! ... write on output the forces
+  !
+  DO na = 1, nat
+     WRITE( stdout, 9035) na, ityp(na), ( fion(ipol,na), ipol = 1, 3 )
+  END DO
+9035 FORMAT(5X,'atom ',I3,' type ',I2,'   force = ',3F14.8)
+
+  !
+#endif
+  !
+#ifdef DFT_PW
+  fion = 0.0
+  force = 0.0
+  call hinit0 ()
+  CALL hinit1 ()
+  call electrons()
+  call forces()
+  ! convert to hartree/bohr
+  fion = force /e2
+  etot = etot / e2
+#endif
+  !
   RETURN
 END SUBROUTINE relax_wavefunction
+  !
+  !  ----------------------------------------------
+  !
+subroutine set_guess_wfc ( disp_sign )
+  !
+  USE kinds,                ONLY : DP
+#ifdef DFT_CP
+  USE ions_positions,       ONLY : tau0
+  USE cp_main_variables,    ONLY : lambda, lambdam, nfi
+  USE wavefunctions_module, ONLY : c0, cm
+  USE vibrations,           ONLY : ref_c0
+#endif
+#ifdef DFT_PW
+  USE scf,                  ONLY : rho
+  USE wavefunctions_module, ONLY : evc
+  USE io_files,             ONLY : nwordwfc, iunwfc, iunoldwfc2, prefix
+  USE klist,                ONLY : nks
+  USE scf,              ONLY : rho, rho_core, vr
+  USE gvect,            ONLY : nrxx, ngm, g, gg, gstart,  nr1, nr2, nr3, nl, &
+                               eigts1, eigts2, eigts3, nrx1, nrx2, nrx3
+  USE cell_base,        ONLY : omega, bg, alat
+  USE ener,             ONLY : ehart, etxc, vtxc
+  USE extfield,         ONLY : etotefield
+
+#endif
+  !
+  ! ... input variables
+  !
+  INTEGER, INTENT(IN)           :: disp_sign
+  !
+  ! ... local variables
+  !
+  logical                       :: exst
+  REAL(kind=DP) :: charge
+  !
+  !
+#ifdef DFT_CP
+  nfi = 0
+#endif
+  !
+  !
+
+  IF(disp_sign.EQ.-1) THEN
+     !
+     ! ... use reference wavefunction as initial guess
+     !
+#ifdef DFT_CP
+     c0(:,:,1,1) = ref_c0(:,:,1,1)
+#endif
+     !
+#ifdef DFT_PW
+     INQUIRE (file=TRIM(prefix)//'.old2rho', EXIST=exst)
+     if ( exst ) then
+        !
+        ! ... charge-density from file to memory
+        !  
+        CALL io_pot( - 1, 'old2rho', rho, 1 )
+        !
+        CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
+                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                       ehart, etxc, vtxc, etotefield, charge, vr )
+        !
+        ! .. swapping the wavefunctions
+        !
+        CALL diropn( iunoldwfc2, 'old2wfc', nwordwfc, exst )
+        !
+        DO ik = 1, nks
+           !
+           ! ... "2old"  -> "now"
+           !
+           CALL davcio( evc, nwordwfc, iunoldwfc2, ik, - 1 )
+           CALL davcio( evc, nwordwfc, iunwfc,     ik, + 1 )
+           !
+        END DO
+        !
+        CLOSE( UNIT = iunoldwfc2 )
+        !
+     end if
+     history = 1
+     !history = 0
+     call update_pot()
+     !
+#endif
+     !
+  ELSE
+     !
+     ! ... extrapolate wave function coefficients from their value
+     ! ... at dispalcement at the negative direction
+     !
+#ifdef DFT_CP
+     c0(:,:,1,1) = 2*ref_c0(:,:,1,1)-c0(:,:,1,1) 
+#endif
+#ifdef DFT_PW
+     history = 2
+     !history = 0
+     call update_pot()
+#endif
+     !
+  END IF
+  !
+  ! ... set wavefunction velocity to zero
+  !
+#ifdef DFT_CP
+  cm      = c0
+  lambdam = lambda
+#endif
+
+  return
+end subroutine set_guess_wfc
