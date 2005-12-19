@@ -159,16 +159,16 @@ module funct
   !
   ! data
   integer :: nxc, ncc, ngcx, ngcc
-  parameter (nxc = 6, ncc = 9, ngcx = 8, ngcc = 6)
+  parameter (nxc = 7, ncc =10, ngcx = 9, ngcc = 7)
   character (len=4) :: exc, corr
   character (len=4) :: gradx, gradc
   dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
 
-  data exc / 'NOX', 'SLA', 'SL1', 'RXC', 'OEP', 'HF', 'PB0X' /
+  data exc / 'NOX', 'SLA', 'SL1', 'RXC', 'OEP', 'HF', 'PB0X', 'B3LYP' /
   data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
-              'OBW', 'GL' /
-  data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX', 'META', 'PB0X' /
-  data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'META'/
+              'OBW', 'GL' , 'B3LYP' /
+  data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX', 'META', 'PB0X', 'B3LYP'  /
+  data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'META', 'B3LYP' /
 
 CONTAINS
   !-----------------------------------------------------------------------
@@ -245,7 +245,7 @@ CONTAINS
        call set_dft_value (icorr,4)
        call set_dft_value (igcx, 3)
        call set_dft_value (igcc, 4)
-    endif
+   endif
 
     if (matches ('PBC', dftout) ) then
     ! special case : PBC  = PW + PBC 
@@ -340,14 +340,16 @@ CONTAINS
     ! set logical flags describing the complexity of the xc functional
     ! define the fraction of exact exchange used by hybrid fuctionals
     !
-    isgradient =  (igcx > 0) .or. (igcc > 0)
+    isgradient =  (igcx > 0) .or. (igcc > 0) 
     ismeta     =  (igcx == 7) .or. (igcx == 6 )
     ishybrid   =  (iexch == 4) .or. (iexch == 5) .or. (iexch == 6) .or. &
-                  (igcx == 8) 
+                  (igcx == 8)  .or. matches( 'B3LYP',dft )
     ! PBE0
     IF ( iexch==6 .or. igcx==8 ) exx_fraction = 0.25d0
     ! HF or OEP
     IF ( iexch==4 .or. iexch==5 ) exx_fraction = 1.d0
+    !B3LYP
+    IF ( matches( 'B3LYP',dft ) ) exx_fraction = 0.2d0
 
     return
   end subroutine set_auxiliary_flags
@@ -600,6 +602,12 @@ subroutine xc (rho, ex, ec, vx, vc)
         ex = 0.75d0 * ex 
         vx = 0.75d0 * vx 
      end if
+  ELSEIF (iexch == 7) THEN         !  'b3lyp'
+     CALL slater(rs, ex, vx)
+     if (exx_started) then
+        ex = 0.8d0 * ex 
+        vx = 0.8d0 * vx 
+     end if
   else
      ex = 0.0d0
      vx = 0.0d0
@@ -623,6 +631,8 @@ subroutine xc (rho, ex, ec, vx, vc)
      call pw (rs, 2, ec, vc)
   elseif (icorr == 9) then
      call gl (rs, ec, vc)
+  elseif (icorr ==10) then ! b3lyp
+     call vwn (rs, ec, vc)
   else
      ec = 0.0d0
      vc = 0.0d0
@@ -683,6 +693,13 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
         ex   = 0.75d0 * ex
         vxup = 0.75d0 * vxup 
         vxdw = 0.75d0 * vxdw 
+     end if
+  ELSEIF (iexch == 7) THEN  ! 'b3lyp'
+     call slater_spin (rho, zeta, ex, vxup, vxdw)
+     if (exx_started) then
+        ex   = 0.8d0 * ex
+        vxup = 0.8d0 * vxup 
+        vxdw = 0.8d0 * vxdw 
      end if
   ELSE
      ex = 0.0d0
@@ -753,12 +770,19 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call hcth(rho, grho, sx, v1x, v2x)
   elseif (igcx == 6) then
      call optx (rho, grho, sx, v1x, v2x)
-  elseif (igcx == 8) then
+  elseif (igcx == 8) then ! 'pbe0'
      call pbex (rho, grho, 1, sx, v1x, v2x)
      if (exx_started) then
         sx  = 0.75d0 * sx
         v1x = 0.75d0 * v1x
         v2x = 0.75d0 * v2x
+     end if
+  elseif (igcx == 9) then ! 'brlyp'
+     call becke88 (rho, grho, sx, v1x, v2x)
+     if (exx_started) then
+        sx  = 0.72d0 * sx
+        v1x = 0.72d0 * v1x
+        v2x = 0.72d0 * v2x
      end if
   else
      sx = 0.0d0
@@ -778,6 +802,13 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call glyp (rho, grho, sc, v1c, v2c)
   elseif (igcc == 4) then
      call pbec (rho, grho, sc, v1c, v2c)
+  elseif (igcc == 7) then !'B3LYP'
+     call glyp (rho, grho, sc, v1c, v2c)
+     if (exx_started) then
+        sc  = 0.81d0 * sc
+        v1c = 0.81d0 * v1c
+        v2c = 0.81d0 * v2c
+     end if
   else
      ! note that if igcc == 5 the hcth functional is called above
      sc = 0.0d0
@@ -886,6 +917,31 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
        v2xup = 0.75d0 * v2xup
        v2xdw = 0.75d0 * v2xdw
      end if
+  elseif (igcx == 9) then
+     if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
+        call becke88_spin (rhoup, grhoup2, sxup, v1xup, v2xup)
+     else
+        sxup = 0.d0
+        v1xup = 0.d0
+        v2xup = 0.d0
+     endif
+     if (rhodw > small .and. sqrt (abs (grhodw2) ) > small) then
+        call becke88_spin (rhodw, grhodw2, sxdw, v1xdw, v2xdw)
+     else
+        sxdw = 0.d0
+        v1xdw = 0.d0
+        v2xdw = 0.d0
+     endif
+     sx = sxup + sxdw
+
+     if (exx_started ) then
+       sx = 0.72d0 * sx
+       v1xup = 0.72d0 * v1xup
+       v1xdw = 0.72d0 * v1xdw
+       v2xup = 0.72d0 * v2xup
+       v2xdw = 0.72d0 * v2xdw
+     end if
+
   else
      call errore ('gcx_spin', 'not implemented', igcx)
   endif
