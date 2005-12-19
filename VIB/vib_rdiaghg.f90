@@ -8,7 +8,7 @@
 !#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
+SUBROUTINE vib_rdiaghg( n, m, h, s, ldh, e, v )
   !----------------------------------------------------------------------------
   !
   ! ... calculates eigenvalues and eigenvectors of the generalized problem
@@ -150,4 +150,4 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !
   RETURN
   !
-END SUBROUTINE rdiaghg
+END SUBROUTINE vib_rdiaghg

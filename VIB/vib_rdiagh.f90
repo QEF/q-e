@@ -8,7 +8,7 @@
 !#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rdiagh( n, h, ldh, e, v )
+SUBROUTINE vib_rdiagh( n, h, ldh, e, v )
   !----------------------------------------------------------------------------
   !
   ! ... calculates all the eigenvalues and eigenvectors of a complex
@@ -97,5 +97,5 @@ SUBROUTINE rdiagh( n, h, ldh, e, v )
       !
     END SUBROUTINE rdiagh_lapack
     !
-END SUBROUTINE rdiagh
+END SUBROUTINE vib_rdiagh
 
