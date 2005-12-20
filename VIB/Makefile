@@ -1,5 +1,7 @@
 # Makefile for CPVIB/PWVIB
 
+include ../make.sys
+
 VIB_OBJ    =    \
 vibrations.o     \
 environment.o    \
@@ -456,14 +458,14 @@ PW_OBJS = \
 WRAPPERS = wrapper.o
 
 
-all : cpvib.x pwvib.x
+all : cpvib pwvib
 
 cpvib   : cpvib.x
-cpvib.x : $(CP_OBJS) $(VIB_OBJ) $(LOBJS) $(LIBOBJS) ../CPV/cp.x vibstart.o
+cpvib.x : 
 	$(MAKE) -f makefile.cpvib
 
 pwvib   : pwvib.x
-pwvib.x : $(PW_OBJS) $(VIB_OBJ) $(LOBJS) $(LIBOBJS) ../PW/pw.x vibstart.o
+pwvib.x : 
 	$(MAKE) -f makefile.pwvib
 
 clean :
