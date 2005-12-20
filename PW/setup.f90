@@ -63,7 +63,7 @@ SUBROUTINE setup()
   USE control_flags,      ONLY : tr2, ethr, alpha0, beta0, lscf, lmd, lpath, &
                                  lphonon, david, isolve, niter, noinv, nosym, &
                                  modenum, lraman
-  USE relax,              ONLY : dtau_ref, starting_diag_threshold
+  USE relax,              ONLY : starting_diag_threshold
   USE cellmd,             ONLY : calc
   USE uspp_param,         ONLY : psd, betar, nbeta, dion, jjj, lll, tvanp
   USE uspp,               ONLY : okvan
@@ -587,11 +587,6 @@ SUBROUTINE setup()
   !
   IF ( .NOT. ( lchk_tauxk( nat, tau, bg ) ) ) &
      CALL errore( 'setup', 'Wrong atomic coordinates ', 1 )
-  !
-  ! ... set dtau_ref for relaxation and dynamics
-  ! ... this is done here because dtau_ref is updated in cg
-  !
-  dtau_ref = 0.2D0
   !
   ! ... calculate dimensions of the FFT grid
   !

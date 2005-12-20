@@ -374,7 +374,6 @@ MODULE relax
   REAL(DP) :: &
        epse,                    &! threshold on total energy
        epsf,                    &! threshold on forces
-       dtau_ref,                &! estimation of dtau
        starting_diag_threshold, &! self-explanatory
        starting_scf_threshold    ! as above
   !
