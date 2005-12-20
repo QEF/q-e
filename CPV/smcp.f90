@@ -175,6 +175,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
 
   tps     = 0.0d0
 
+  fccc    = 1.0d0
   !
   !     ==================================================================
   !
@@ -493,6 +494,13 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !         &       tps, mat_z, f )
         ! ENDIF
         !     
+
+        IF( tsde ) THEN
+           fccc = 1.0d0
+        ELSE
+           fccc = 0.5d0
+        END IF
+
 
         CALL phfac( rep(sm_k)%tau0, ei1, ei2, ei3, eigr )
         !
@@ -1246,7 +1254,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         !
         IF(MOD(nfi-1,iprint).EQ.0 .OR. (nfi.EQ.(nomore))) THEN
-           CALL eigs0(.true.,nspin,nbspx,nupdwn,iupdwn,f,rep_el(sm_k)%lambda)
+           CALL eigs0(.true.,nspin,nbspx,nupdwn,iupdwn,.true.,f,rep_el(sm_k)%lambda)
            WRITE( stdout,*)
         ENDIF
         !

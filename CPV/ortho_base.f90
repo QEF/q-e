@@ -38,25 +38,25 @@
        END INTERFACE
 
        INTERFACE sigset
-         MODULE PROCEDURE rsigset, csigset
+         MODULE PROCEDURE rsigset, csigset, sigset_cp
        END INTERFACE
        INTERFACE rhoset
-         MODULE PROCEDURE rrhoset, crhoset
+         MODULE PROCEDURE rrhoset, crhoset, rhoset_cp
        END INTERFACE
 
        INTERFACE diagonalize_rho
          MODULE PROCEDURE diagonalize_rrho, diagonalize_crho
        END INTERFACE
 
-       PUBLIC :: sqr_matmul, sigset, rhoset, diagonalize_rho
+       PUBLIC :: sqr_matmul, sigset, rhoset, tauset, diagonalize_rho
        PUBLIC :: backrhoset2, sigrhoset2, backrhoset, sigrhoset
        PUBLIC :: ortho_iterate
 
-     CONTAINS
+  CONTAINS
 
 
        SUBROUTINE sqr_dmatmul(transa,transb,a,b,c)
-! ...    Multiply square matrices A, B and return the result in C
+         ! ...    Multiply square matrices A, B and return the result in C
          USE mp_global, ONLY: nproc
          REAL(DP) :: c(:,:), a(:,:), b(:,:)
          CHARACTER*1 :: transa, transb
@@ -70,8 +70,12 @@
          RETURN
        END SUBROUTINE sqr_dmatmul
 
+
+!  ----------------------------------------------
+
+
        SUBROUTINE sqr_cmatmul(transa,transb,a,b,c)
-! ...    Multiply square matrices A, B and return the result in C
+         ! ...    Multiply square matrices A, B and return the result in C
          USE mp_global, ONLY: nproc
          COMPLEX(DP) :: c(:,:), a(:,:), b(:,:)
          CHARACTER*1 transa, transb
@@ -86,68 +90,80 @@
        END SUBROUTINE sqr_cmatmul
 
 
-!.....DIAGONALIZATION OF RHOS
+!  ----------------------------------------------
 
-       SUBROUTINE diagonalize_rrho( temp, rhod, s, pwrk)
 
-#if defined __SHMEM
-         USE shmem_include
-#endif
+   SUBROUTINE diagonalize_rrho( n, rhos, rhod, s, use_pdrv )
+
+         !   Diagonalization of rhos
 
          USE mp_global, ONLY: nproc, mpime
-         USE mp, ONLY: mp_sum
-         REAL(DP) :: rhod(:)
-         REAL(DP) :: temp(:,:), s(:,:), pwrk(:)
+         USE mp,        ONLY: mp_sum
+         !
+         REAL(DP), INTENT(IN) :: rhos(:,:) !  input symmetric matrix
+         REAL(DP)             :: rhod(:)   !  output eigenvalues
+         REAL(DP)             :: s(:,:)    !  output eigenvectors
+         INTEGER, INTENT(IN)  :: n         !  matrix dimension
+         LOGICAL, OPTIONAL, &
+                  INTENT(IN)  :: use_pdrv  ! if true use parallel driver
 
          REAL(DP),   ALLOCATABLE :: aux(:)
          REAL(DP),   ALLOCATABLE :: diag(:,:)
          REAL(DP),   ALLOCATABLE :: vv(:,:)
-         INTEGER :: n, nrl
+         !
+         INTEGER :: nrl
+         LOGICAL :: lpdrv
 
-         n = SIZE(temp,1)
+         lpdrv = .FALSE.
+         
+         IF( PRESENT( use_pdrv ) ) lpdrv = use_pdrv
+         
 
-         IF ( ( nproc > 1 ) .AND. ( n / nproc ) >= nrlx_tune ) THEN
+         IF( SIZE( rhos, 1 ) /= SIZE( s, 1 ) .OR. SIZE( rhos, 2 ) /= SIZE( s, 2 ) ) &
+            CALL errore(" diagonalize_rho ", " input matrixes size do not match ", 1 )
 
-           nrl = n/nproc
-           IF(mpime < MOD(n,nproc)) THEN
+         IF ( ( nproc > 1 ) .AND. use_pdrv ) THEN
+
+           !  distribute matrix rows to processors
+           !
+           nrl = n / nproc
+           IF( mpime < MOD( n, nproc ) ) THEN
              nrl = nrl + 1
            end if
-           ALLOCATE( diag(nrl,n), vv(nrl,n) )
 
-           CALL prpack(diag, temp)
+           ALLOCATE( diag( nrl, n ), vv( nrl, n ) )
+
+           CALL prpack( n, diag, rhos)
            CALL pdspev_drv( 'V', diag, nrl, rhod, vv, nrl, nrl, n, nproc, mpime)
-           CALL prunpack(temp, vv)
+           CALL prunpack( n, s, vv)
 
            DEALLOCATE( diag, vv )
 
-#if defined __SHMEM
-           call shmem_barrier_all
-           CALL SHMEM_REAL8_SUM_TO_ALL(S,TEMP,N*N,0,0,nproc, pWrk, pSync_sta)
-           call shmem_barrier_all
-#else
-           CALL mp_sum(temp, s)
-#endif
+           CALL mp_sum( s )
 
          ELSE
 
            ALLOCATE( aux( n * ( n + 1 ) / 2 ) )
-           CALL rpack( aux, temp )
-           CALL dspev_drv('V', 'L', n, aux, rhod, s, n)
+
+           CALL rpack( n, aux, rhos )   !  pack lower triangle of rho into aux
+
+           CALL dspev_drv( 'V', 'L', n, aux, rhod, s, SIZE(s,1) )
+
            DEALLOCATE( aux )
 
          END IF
 
-         RETURN
-       END SUBROUTINE diagonalize_rrho
+      RETURN
+   END SUBROUTINE diagonalize_rrho
 
-!  BEGIN manual
 
-      SUBROUTINE diagonalize_crho(a,d,ev)
-
-!  this routine calls the appropriate Lapack routine for diagonalizing a
-!  complex Hermitian matrix
 !  ----------------------------------------------
-!  END manual
+
+
+   SUBROUTINE diagonalize_crho(a,d,ev)
+
+      !  this routine calls the appropriate Lapack routine for diagonalizing a
+      !  complex Hermitian matrix
 
          USE mp_global, ONLY: nproc, mpime
          USE mp, ONLY: mp_sum
@@ -204,7 +220,7 @@
 !  ----------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE rsigset ( ngw, nb, cp, sig, pwrk)
+      SUBROUTINE rsigset ( gstart, ngw, nb, cp, sig )
 
 !     SIG = REAL PART OF ONE-2.0*ADJ(CP)*CP+CP(*,1)*ADJ(CP(*,1))
 !     WHERE CP(*,1) IS REAL, AND THEREFORE TRANS() IS USED IN PLACE OF ADJ()
@@ -213,30 +229,18 @@
 
       USE mp_global, ONLY: nproc, group
       USE mp, ONLY: mp_sum
-#if defined __SHMEM
-      USE shmem_include
-#endif
 
       IMPLICIT NONE
 
       COMPLEX(DP)        :: CP(:,:)
-      REAL(DP)           :: SIG(:,:), PWRK(1)
-      INTEGER, INTENT(IN) :: nb, ngw
+      REAL(DP)           :: SIG(:,:)
+      INTEGER, INTENT(IN) :: nb, ngw, gstart
       INTEGER :: i, ldc, twongw, j, k, lds, n
 
       ldc = 2 * SIZE( cp, 1 )
       lds =     SIZE( sig, 1 )
       twongw = 2*ngw
       n      = nb
-
-!      WRITE( stdout,*) ' SIGSET 1 ', SUM(sig), SUM(cp)  ! DEBUG
-!      DO i = 1, nb
-!        DO j = 1, nb
-!          DO k = 1, ngw
-!            sig(i,j) = - 2.0d0 * ( DBLE(cp(k,i))*DBLE(cp(k,j))+AIMAG(cp(k,i))*AIMAG(cp(k,j)) )
-!          END DO
-!        END DO
-!      END DO
 
       CALL DGEMM('T','N', n, n, twongw, -2.0d0, cp(1,1), ldc, cp(1,1), ldc, zero, sig(1,1), lds)
       DO i = 1, n
@@ -245,40 +249,34 @@
 
 !      WRITE( stdout,*) ' SIGSET 2 ', SUM(sig)  ! DEBUG
 
+      IF ( gstart == 2 ) THEN
+         DO j=1,n
+            DO i=1,n
+               sig(i,j) = sig(i,j) +  DBLE(cp(1,i))*DBLE(cp(1,j))
+            END DO
+         END DO
+      END IF
 
-#if defined __SHMEM
-      call shmem_barrier_all
-      CALL SHMEM_REAL8_SUM_TO_ALL(SIG, SIG, SIZE(sig),0,0, nproc, pWrk, pSync_sta)
-      call shmem_barrier_all
-#else
       CALL mp_sum( sig, group )
-#endif
-
 
       RETURN
       END SUBROUTINE rsigset
 
 !  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE csigset( ngw, nx, cp, sig, pwrk )
+      SUBROUTINE csigset( ngw, nx, cp, sig )
 
-! SIG = REAL PART OF ONE-2.0*ADJ(CP)*CP+CP(*,1)*ADJ(CP(*,1))
-!     (WHERE CP(*,1) IS REAL, AND THEREFORE TRANS() IS USED IN
-!      PLACE OF ADJ()
-!  ----------------------------------------------
-!  END manual
+      ! SIG = REAL PART OF ONE-2.0*ADJ(CP)*CP+CP(*,1)*ADJ(CP(*,1))
+      !     (WHERE CP(*,1) IS REAL, AND THEREFORE TRANS() IS USED IN
+      !      PLACE OF ADJ()
 
       USE mp_global, ONLY: nproc, mpime
       USE mp, ONLY: mp_sum
-#if defined __SHMEM
-      USE shmem_include
-#endif
 
       IMPLICIT NONE
 
       INTEGER, INTENT( IN ) :: nx, ngw
-      COMPLEX(DP) :: cp(:,:), sig(:,:), pwrk(1)
+      COMPLEX(DP) :: cp(:,:), sig(:,:)
       INTEGER :: i, j, ldc, lds
 
       ldc = SIZE( cp, 1 )
@@ -289,13 +287,7 @@
         sig(i,i) = sig(i,i) + cone / DBLE(nproc)
       END DO
       
-#if defined __SHMEM
-      call shmem_barrier_all
-      CALL SHMEM_REAL8_SUM_TO_ALL(SIG,SIG,2*NX*NX,0,0,nproc,pWrk,pSync_sta)
-      call shmem_barrier_all
-#else
       CALL mp_sum( sig )
-#endif
 
       DO i=1,nx
         DO j=i,nx
@@ -312,32 +304,25 @@
       END SUBROUTINE csigset
 
 !  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE rrhoset ( ngw, nb, c0, cp, rho, tmass, pwrk)
+      SUBROUTINE rrhoset ( gstart, ngw, nb, c0, cp, rho, tmass )
 
-!     RHO   = REAL PART OF 2*ADJ(C0/PMSS)*CP + 
-!             C0(*,1)/PMSS*TRANS(CP(*,1)) 
-!             (CP(*,1) AND C0(*,1) REAL!)
-!
-!     TMASS = REAL PART OF 2*ADJ(C0/PMSS)*C0/PMSS + ...
-!
-!     RHO AND TMASS ARE PLACED IN COMMON /HOPE/
-!  ----------------------------------------------
-!  END manual
+      !     RHO   = REAL PART OF 2*ADJ(C0/PMSS)*CP + 
+      !             C0(*,1)/PMSS*TRANS(CP(*,1)) 
+      !             (CP(*,1) AND C0(*,1) REAL!)
+      !
+      !     TMASS = REAL PART OF 2*ADJ(C0/PMSS)*C0/PMSS + ...
+      !
+      !     RHO AND TMASS ARE PLACED IN COMMON /HOPE/
  
       USE mp_global, ONLY: nproc
       USE mp, ONLY: mp_sum
-#if defined __SHMEM
-      USE shmem_include
-#endif
 
       IMPLICIT  NONE
 
       COMPLEX(DP) :: CP(:,:), C0(:,:)
       REAL(DP)    :: RHO(:,:), TMASS(:,:)
-      REAL(DP)    :: pWrk(1)
-      INTEGER, INTENT(IN) :: ngw, nb
+      INTEGER, INTENT(IN) :: ngw, nb, gstart
 
       INTEGER ::  i, j, ldc, ldr, tngw, n
 
@@ -349,47 +334,47 @@
       CALL DGEMM('T','N',n,n,tngw,two,c0(1,1),ldc,cp(1,1),ldc,zero,rho(1,1),ldr)
       CALL DGEMM('T','N',n,n,tngw,two,c0(1,1),ldc,c0(1,1),ldc,zero,tmass(1,1),ldr)
 
-#if defined __SHMEM
-      call shmem_barrier_all
-      CALL SHMEM_REAL8_SUM_TO_ALL(RHO, RHO, size(rho),0,0, nproc, &
-        pWrk, pSync_sta)
-      CALL SHMEM_REAL8_SUM_TO_ALL(TMASS,TMASS,size(tmass),0,0,nproc, &
-        pWrk,pSync_sta)
-      call shmem_barrier_all
-#else
+      IF (gstart == 2) THEN
+         DO j=1,n
+            DO i=1,n
+               rho(i,j) = rho(i,j) - DBLE(c0(1,i))*DBLE(cp(1,j))
+            END DO
+         END DO
+      END IF
+
+      IF (gstart == 2) THEN
+         DO j=1,n
+            DO i=1,n
+               tmass(i,j) = tmass(i,j) - DBLE(c0(1,i))*DBLE(c0(1,j))
+            END DO
+         END DO
+      END IF
+
       CALL mp_sum( rho )
       CALL mp_sum( tmass )
-#endif
 
       RETURN
       END SUBROUTINE rrhoset
 
 !  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE crhoset( ngw, nx, c0, cp, rho, tmass, pwrk )
-!
-!     RHO   = REAL PART OF 2*ADJ(C0/PMSS)*CP + 
-!             C0(*,1)/PMSS*TRANS(CP(*,1)) 
-!             (CP(*,1) AND C0(*,1) REAL!)
-!
-!     TMASS = REAL PART OF 2*ADJ(C0/PMSS)*C0/PMSS + ...
-!
-!  ----------------------------------------------
-!  END manual
+      SUBROUTINE crhoset( ngw, nx, c0, cp, rho, tmass )
+      !
+      !     RHO   = REAL PART OF 2*ADJ(C0/PMSS)*CP + 
+      !             C0(*,1)/PMSS*TRANS(CP(*,1)) 
+      !             (CP(*,1) AND C0(*,1) REAL!)
+      !
+      !     TMASS = REAL PART OF 2*ADJ(C0/PMSS)*C0/PMSS + ...
+      !
 
       USE mp_global, ONLY: nproc
       USE mp, ONLY: mp_sum
-#if defined __SHMEM
-      USE shmem_include
-#endif
 
       IMPLICIT  NONE
 
       INTEGER :: nx, ngw
       COMPLEX(DP) :: cp(:,:), c0(:,:)
       COMPLEX(DP) :: rho(:,:), tmass(:,:)
-      COMPLEX(DP) :: pwrk(1)
       INTEGER  :: i, j, ldc, ldr
 
       ldc = SIZE( c0, 1 )
@@ -397,15 +382,8 @@
       CALL ZGEMM('C','N',nx,nx,ngw,cone,c0(1,1),ldc,cp(1,1),ldc,czero,rho(1,1),ldr)
       CALL ZGEMM('C','N',nx,nx,ngw,cone,c0(1,1),ldc,c0(1,1),ldc,czero,tmass(1,1),ldr)
 
-#if defined __SHMEM
-      call shmem_barrier_all
-      CALL SHMEM_REAL8_SUM_TO_ALL(TMASS,TMASS,2*NX*NX,0,0,nproc,pWrk,pSync_sta)
-      CALL SHMEM_REAL8_SUM_TO_ALL(RHO,RHO,2*NX*NX,0,0,nproc,pWrk,pSync_sta)
-      call shmem_barrier_all
-#else
       CALL mp_sum( RHO )
       CALL mp_sum( TMASS )
-#endif
 
       DO I=1,NX
         DO J=I,NX
@@ -994,10 +972,11 @@
 !=----------------------------------------------------------------------------=!
 
 
-      SUBROUTINE prpack( ap, a)
+      SUBROUTINE prpack( n, ap, a)
         USE mp_global, ONLY: mpime, nproc
         REAL(DP), INTENT(IN) :: a(:,:)
         REAL(DP), INTENT(OUT) :: ap(:,:)
+        INTEGER, INTENT(IN) :: n
         INTEGER :: i, j, jl
         DO i = 1, SIZE( ap, 2)
            j = mpime + 1
@@ -1024,13 +1003,14 @@
         RETURN
       END SUBROUTINE pzpack
 
-      SUBROUTINE prunpack( a, ap)
+      SUBROUTINE prunpack( n, a, ap )
         USE mp_global, ONLY: mpime, nproc
         REAL(DP), INTENT(IN) :: ap(:,:)
         REAL(DP), INTENT(OUT) :: a(:,:)
+        INTEGER, INTENT(IN) :: n
         INTEGER :: i, j, jl
-        DO i = 1, SIZE(a, 2)
-          DO j = 1, SIZE(a, 1)
+        DO i = 1, n
+          DO j = 1, n
             a(j,i) = zero
           END DO
           j = mpime + 1
@@ -1060,13 +1040,14 @@
         RETURN
       END SUBROUTINE pzunpack
 
-      SUBROUTINE rpack( ap, a)
+      SUBROUTINE rpack( n, ap, a)
+        INTEGER, INTENT(IN) :: n
         REAL(DP), INTENT(IN) :: a(:,:)
         REAL(DP), INTENT(OUT) :: ap(:)
         INTEGER :: i, j, k
         K = 0
-        DO J = 1, SIZE(a, 2)
-          DO I = J, SIZE(a, 1)
+        DO J = 1, n
+          DO I = J, n
             K = K + 1
             ap( k ) = a( i, j )
           END DO
@@ -1087,6 +1068,7 @@
         END DO
         RETURN
       END SUBROUTINE zpack
+
 
 !=----------------------------------------------------------------------------=!
 
@@ -1182,6 +1164,228 @@
 
       RETURN
    END SUBROUTINE ortho_iterate
+
+
+
+!-------------------------------------------------------------------------
+      SUBROUTINE sigset_cp( cp, ngwx, becp, nkbx, qbecp, n, nss, ist, sig, nx )
+!-----------------------------------------------------------------------
+!     input: cp (non-orthonormal), becp, qbecp
+!     computes the matrix
+!       sig = 1 - a ,  a = <cp|s|cp> = <cp|cp> + sum q_ij <cp|i><j|cp>
+!     where s=s(r(t+dt))
+!     routine makes use of c(-q)=c*(q)
+!
+      USE kinds,              ONLY: DP
+      USE uspp,               ONLY: nkbus
+      USE cvan,               ONLY: nvb
+      USE gvecw,              ONLY: ngw
+      USE reciprocal_vectors, ONLY: gstart
+      USE mp,                 ONLY: mp_sum
+!
+      IMPLICIT NONE
+!
+      INTEGER nss, ist, ngwx, nkbx, n, nx
+      COMPLEX(DP) :: cp( ngwx, n )
+      REAL(DP)    :: becp( nkbx, n ), qbecp( nkbx, n ), sig( nx, nx )
+!
+      INTEGER :: i, j
+      REAL(DP), ALLOCATABLE :: tmp1(:,:)
+!
+      sig = 0.d0
+      !
+      CALL MXMA( cp( 1, ist ), 2*ngwx, 1, cp( 1, ist ), 1, 2*ngwx,                    &
+     &           sig, 1, nx, nss, 2*ngw, nss )
+      !
+      !     q >= 0  components with weight 2.0
+      !
+      DO j=1,nss
+         DO i=1,nss
+            sig(i,j) = -2.0d0 * sig(i,j)
+         END DO
+      END DO
+      !
+      !     q = 0  components has weight 1.0
+      !
+      IF ( gstart == 2 ) THEN
+         DO j=1,nss
+            DO i=1,nss
+               sig(i,j) = sig(i,j) +                                    &
+     &              DBLE(cp(1,i+ist-1))*DBLE(cp(1,j+ist-1))
+            END DO
+         END DO
+      END IF
+      !
+      CALL mp_sum( sig )
+      !
+      DO i = 1, nss
+         sig(i,i) = sig(i,i) + 1.0d0
+      END DO
+!
+      IF( nvb > 0 ) THEN
+
+         ALLOCATE( tmp1( nx, nx ) )
+!
+         CALL MXMA( becp( 1, ist ), nkbx, 1, qbecp( 1, ist ), 1, nkbx,                &
+     &              tmp1, 1, nx, nss, nkbus, nss )
+!
+         DO j=1,nss
+            DO i=1,nss
+               sig(i,j)=sig(i,j)-tmp1(i,j)
+            END DO
+         END DO
+
+         DEALLOCATE( tmp1 )
+
+      ENDIF
+!
+      RETURN
+      END SUBROUTINE sigset_cp
+
+!
+!-----------------------------------------------------------------------
+      SUBROUTINE rhoset_cp( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, ist, rho, nx )
+!-----------------------------------------------------------------------
+!     input: cp (non-orthonormal), phi, bephi, qbecp
+!     computes the matrix
+!       rho = <s'c0|s cp> = <phi|s cp>
+!     where  |phi> = s'|c0> = |c0> + sum q_ij |i><j|c0>
+!     where s=s(r(t+dt)) and s'=s(r(t))
+!     routine makes use of  c(-q)=c*(q)
+!
+      USE gvecw,              ONLY: ngw
+      USE reciprocal_vectors, ONLY: gstart
+      USE uspp,               ONLY: nkbus
+      USE cvan,               ONLY: nvb
+      USE kinds,              ONLY: DP
+      USE mp,                 ONLY: mp_sum
+!
+      IMPLICIT NONE
+!
+      INTEGER     :: nss, ist, ngwx, nkbx, nx, n
+      COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
+      REAL(DP)    :: bephi( nkbx, n ), qbecp( nkbx, n ), rho( nx, nx )
+      !
+      INTEGER     :: i, j
+      REAL(DP), ALLOCATABLE :: tmp1(:,:)
+      !
+      rho (:,:) = 0.d0
+      !
+      !     <phi|cp>
+      !
+      CALL MXMA( phi( 1, ist ), 2*ngwx, 1, cp( 1, ist ), 1, 2*ngwx,                   &
+     &           rho, 1, nx, nss, 2*ngw, nss )
+      !
+      !     q >= 0  components with weight 2.0
+      !
+      DO j=1,nss
+         DO i=1,nss
+            rho(i,j)=2.*rho(i,j)
+         END DO
+      END DO
+      !
+      !     q = 0  components has weight 1.0
+      !
+      IF (gstart == 2) THEN
+         DO j=1,nss
+            DO i=1,nss
+               rho(i,j) = rho(i,j) -                                    &
+     &              DBLE(phi(1,i+ist-1))*DBLE(cp(1,j+ist-1))
+            END DO
+         END DO
+      END IF
+
+      CALL mp_sum( rho )
+!
+      IF( nvb > 0 ) THEN
+
+         ALLOCATE( tmp1( nx, nx ) )
+!
+         CALL MXMA( bephi( 1, ist ), nkbx, 1, qbecp( 1, ist ), 1, nkbx,               &
+     &                                tmp1, 1, nx, nss, nkbus, nss )
+!
+         DO j=1,nss
+            DO i=1,nss
+               rho(i,j)=rho(i,j)+tmp1(i,j)
+            END DO
+         END DO
+
+         DEALLOCATE( tmp1 )
+
+      ENDIF
+!
+      RETURN
+      END SUBROUTINE rhoset_cp
+
+!-------------------------------------------------------------------------
+      SUBROUTINE tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, ist, tau, nx )
+!-----------------------------------------------------------------------
+!     input: phi
+!     computes the matrix
+!        tau = <s'c0|s|s'c0> = <phi|s|phi>,  where  |phi> = s'|c0>
+!     where s=s(r(t+dt)) and s'=s(r(t))
+!     routine makes use of c(-q)=c*(q)
+!
+      USE kinds,              ONLY: DP
+      USE cvan,               ONLY: nvb
+      USE uspp,               ONLY: nkbus
+      USE gvecw,              ONLY: ngw
+      USE reciprocal_vectors, ONLY: gstart
+      USE mp,                 ONLY: mp_sum
+!
+      IMPLICIT NONE
+      INTEGER :: nss, ist, ngwx, nkbx, n, nx
+      COMPLEX(DP) :: phi( ngwx, n )
+      REAL(DP)    :: bephi( nkbx, n ), qbephi( nkbx, n ), tau( nx, nx )
+      !
+      INTEGER     :: i, j
+      REAL(DP), ALLOCATABLE :: tmp1( :, : )
+!
+      tau = 0.0d0
+      !
+      CALL MXMA( phi( 1, ist ), 2*ngwx, 1, phi( 1, ist ), 1, 2*ngwx,                  &
+     &           tau, 1, nx, nss, 2*ngw, nss )
+      !
+      !     q >= 0  components with weight 2.0
+      !
+      DO j=1,nss
+         DO i=1,nss
+            tau(i,j) = 2.0d0 * tau(i,j)
+         END DO
+      END DO
+      !
+      !     q = 0  components has weight 1.0
+      !
+      IF (gstart == 2) THEN
+         DO j=1,nss
+            DO i=1,nss
+               tau(i,j) = tau(i,j) -                                    &
+     &              DBLE(phi(1,i+ist-1))*DBLE(phi(1,j+ist-1))
+            END DO
+         END DO
+      END IF
+
+      CALL mp_sum( tau )
+!
+      IF( nvb > 0 ) THEN
+         !
+         ALLOCATE( tmp1( nx, nx ) )
+!
+         CALL MXMA( bephi( 1, ist ), nkbx, 1, qbephi( 1, ist ), 1, nkbx,              &
+     &              tmp1, 1, nx, nss, nkbus, nss )
+!
+         DO j=1,nss
+            DO i=1,nss
+               tau(i,j)=tau(i,j)+tmp1(i,j)
+            END DO
+         END DO
+
+         DEALLOCATE( tmp1 )
+
+      ENDIF
+!
+      RETURN
+      END SUBROUTINE tauset
 
 
    END MODULE orthogonalize_base

@@ -55,7 +55,7 @@ ownerof.o \
 error.o \
 reduce.o
 
-all: flib.a ptools.a eispack $(MYLIB)
+all: flib.a ptools.a $(MYLIB)
 
 flib.a : $(OBJS)
 	$(AR) $(ARFLAGS) $@ $?
@@ -91,9 +91,6 @@ lapack_atlas : lapack_atlas.o dlamch.o
 	$(AR) $(ARFLAGS) flib.a $?
 	touch $@
 
-eispack : eispack.o 
-	touch $@
-
 dlamch.o : dlamch.f
 	$(F77) $(FFLAGS_NOOPT) -c $<
 
@@ -104,6 +101,6 @@ ptools.a : $(POBJS)
 clean :
 	- /bin/rm -f ptools.a *.o *.mod *.i *.F90 core* work.pc flib.a \
 		blas_and_lapack blas lapack lapack_ibm lapack_t3e \
-		lapack_mkl eispack lapack_atlas
+		lapack_mkl lapack_atlas
 
 include make.depend

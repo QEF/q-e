@@ -32,7 +32,6 @@ diis.o \
 dforceb.o \
 efermi.o \
 efield.o \
-eigsp.o \
 eigs0.o \
 electrons.o \
 emptystates.o \
@@ -194,7 +193,7 @@ cp : tldeps cp.x cppp.x
 cp.x : cprstart.o $(FOBJS) $(LOBJS) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o cp.x \
 		cprstart.o $(FOBJS) $(LOBJS) $(MODULES) \
-		../flib/eispack.o $(LIBOBJS) $(LIBS)
+		$(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../CPV/cp.x . )
 
 cp_version.o : cpver.h

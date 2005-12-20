@@ -710,9 +710,9 @@
 
 
          if(.not.tens) then
-            call eigs0(.false.,nspin,nx,nupdwn,iupdwn,f,lambda)
+            call eigs0(.false.,nspin,nx,nupdwn,iupdwn,.true.,f,lambda)
          else
-            call eigsp(.false.,nspin,nx,nupdwn,iupdwn,lambdap)
+            call eigs0(.false.,nspin,nx,nupdwn,iupdwn,.false.,f,lambdap)
          endif
 
          WRITE( stdout,*)

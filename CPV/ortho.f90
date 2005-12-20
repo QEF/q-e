@@ -15,7 +15,7 @@
        USE io_global, ONLY: ionode
        USE parallel_toolkit, ONLY: matmulp, cmatmulp, &
          pdspev_drv, dspev_drv, pzhpev_drv, zhpev_drv
-       USE orthogonalize_base, ONLY: sqr_matmul, sigset, rhoset, diagonalize_rho, &
+       USE orthogonalize_base, ONLY: sqr_matmul, diagonalize_rho, &
          BACKRHOSET, SIGRHOSET, BACKRHOSET2, SIGRHOSET2, ortho_iterate
 
        IMPLICIT NONE
@@ -137,16 +137,11 @@
 !  ----------------------------------------------
 !  END manual
 
-#if defined __SHMEM
-
-      USE shmem_include
-
-#endif
-
       USE mp_global, ONLY: nproc, mpime
       USE wave_types, ONLY: wave_descriptor
       USE control_flags, ONLY: ortho_eps, ortho_max
       USE time_step, ONLY: delt
+      USE orthogonalize_base, ONLY: rhoset, sigset, tauset
 
       IMPLICIT  NONE
 
@@ -155,38 +150,29 @@
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       REAL(DP), INTENT(IN) ::  pmss(:), emass
       INTEGER, INTENT(IN) :: ispin
+
       
 ! ... Functions
       INTEGER :: IDAMAX 
   
 ! ... Locals
 
-#if defined __SHMEM
-      INTEGER         :: err
-      REAL(DP)       :: s(SIZE(c0,2), SIZE(c0,2)),                     &
-     &                   sig(SIZE(c0,2), SIZE(c0,2)),                   &
-     &                   rho(SIZE(c0,2), SIZE(c0,2)),                   &
-     &                   tmass(SIZE(c0,2), SIZE(c0,2)),                 &
-     &                   temp(SIZE(c0,2), SIZE(c0,2))
-      POINTER            (p_source,s), (p_sig,sig), (p_rho,rho),        &
-     &                   (p_tmass,tmass), (p_target,TEMP)
-      COMMON /sym_heap3/ p_source, p_sig, p_rho, p_tmass, p_target
-#else
       REAL(DP),   ALLOCATABLE :: s(:,:), sig(:,:), rho(:,:), tmass(:,:), temp(:,:)
-#endif
       REAL(DP),   ALLOCATABLE :: x0(:,:), temp1(:,:)
       REAL(DP),   ALLOCATABLE :: x1(:,:), rhoa(:,:)
       REAL(DP),   ALLOCATABLE :: sigd(:), rhod(:), aux(:)
       REAL(DP)                :: pwrk(1) 
       REAL(DP) :: difgam, rhosigd
       REAL(DP) :: fact, one_by_emass, den
-      INTEGER   :: nrl,is,jl, n, ngw, nx, naux, i, j, iopt, k, info, iter
+      INTEGER   :: nrl,is,jl, n, ngw, nx, naux, i, j, iopt, k, info, iter, gstart
       LOGICAL   :: gzero
-      REAL(DP) :: sqrtfact
+      REAL(DP) :: sqrtfact, dum(2,2)
+
+      COMPLEX(DP), ALLOCATABLE :: phi(:,:)
 
 ! ...   Subroutine body
 
-      CALL start_clock( 'ortho_gamma' )
+      CALL start_clock( 'ortho_r' )   !  _r stay for replicated data
 
       n   = cdesc%nbl( ispin )
       nx  = cdesc%nbl( ispin )
@@ -197,56 +183,29 @@
         RETURN
       END IF
 
-#if defined __SHMEM
-      CALL shpalloc(p_source, 2*n*n, err, -1)
-      IF (err .NE. 0) THEN
-         CALL errore( ' ortho ', ' allocation of source failed ', 0)
-      END IF
-      CALL shpalloc(p_sig, 2*n*n, err, -1)
-      IF (err .NE. 0) THEN
-         CALL errore( ' ortho ', ' allocation of sig failed ', 0)
-      END IF
-      CALL shpalloc(p_rho, 2*n*n, err, -1)
-      IF (err .NE. 0) THEN
-         CALL errore( ' ortho ', ' allocation of rho failed ', 0)
-      END IF
-      CALL shpalloc(p_tmass, 2*n*n, err, -1)
-      IF (err .NE. 0) THEN
-         CALL errore( ' ortho ', ' allocation of tmass failed ', 0)
-      END IF
-      CALL shpalloc(p_target, 2*n*n, err, -1)
-      IF (err .NE. 0) THEN
-         CALL errore( ' ortho ', ' allocation of target failed ', 0)
-      END IF
-#else
       ALLOCATE( s(n,n), sig(n,n), rho(n,n), tmass(n,n), temp(n,n), STAT = info )
-#endif
       IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 1 )
+
       ALLOCATE( x0(n,n), x1(n,n), rhoa(n,n), temp1(n,n), sigd(n), rhod(n), STAT = info )
       IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 2 )
+
+      ALLOCATE( phi( SIZE( c0, 1 ), SIZE( c0, 2 ) ), STAT = info )
+      IF( info /= 0 ) CALL errore( ' ortho ', ' allocating phi ', 3 )
 
 ! ...   Scale wave functions
 
       ALLOCATE( aux( ngw ) )
-      aux(:) = emass / pmss(:) 
-      sqrtfact = 1.0d0 / SQRT( 2.0d0 )
-      IF( cdesc%gzero ) THEN
-        aux(1)    = aux(1)    * sqrtfact
-        cp(1, 1:n ) = cp(1, 1:n ) * sqrtfact
-      END IF
-      DO i = 1, n
-        c0(:,i) = c0(:,i) * aux(:)
-      END DO
+      aux(:) = emass / pmss(:)  ! ema0bg
+
+      CALL calphi( c0, SIZE(c0,1), aux, dum, 1, dum, phi, n )
+
       DEALLOCATE( aux )
 
 ! ...   Initialize rho and sig
 
-      !WRITE(6,*) 'ORTHO DEBUG c0= ', SUM( c0 )  ! DEBUG
-      !WRITE(6,*) 'ORTHO DEBUG cp= ', SUM( cp )  ! DEBUG
-
-      CALL rhoset( ngw, n, c0( :, : ) , cp( :, : ), rho, tmass, pwrk)
-      CALL sigset( ngw, n, cp( :, : ), SIG, PWRK)
-
+      CALL rhoset( cp, SIZE(cp,1), phi, dum, 1, dum, n, n, 1, rho, n )
+      CALL tauset( phi, SIZE(phi,1), dum, 1, dum, n, n, 1, tmass, n )
+      CALL sigset( cp, SIZE(cp,1), dum, 1, dum, n, n, 1, sig, n )
 
       call mytranspose(rho, nx, temp1, NX, N, N)
       DO j = 1, n
@@ -260,15 +219,9 @@
 ! ...   Diagonalize Matrix  symmetric part of rho
 ! ...   temp = ( rho(i,j) + rho(j,i) ) / 2
 
-      !WRITE(6,*) 'ORTHO DEBUG temp= ', SUM( temp )  ! DEBUG
-
-      CALL diagonalize_rho( temp, rhod, s, pwrk )
+      CALL diagonalize_rho( n, temp, rhod, s )
 
 ! ...   "s" is the matrix of eigenvectors, "rhod" is the array of eigenvalues
-
-      ! WRITE(6,*) ' ORTHO RHOD ',  RHOD(1),RHOD(2) ! DEBUG
-      ! WRITE(6,*) ' ORTHO S ',  SUM(S), SUM(RHOD) ! DEBUG
-      ! WRITE(6,*) ' ORTHO SIG ',  SUM(SIG) ! DEBUG
 
 !      temp = 0.0d0
 !      CALL ortho_iterate( s, rhod, temp, sig, rhoa, temp1, tmass, n, n, ortho_max, ortho_eps )
@@ -295,7 +248,6 @@
         ENDDO
       ENDDO
 
-      !WRITE(6,*) ' ORTHO X0 ',  SUM(X0) ! DEBUG
 !
 ! ...   Starting iteration
 !
@@ -348,56 +300,20 @@
 
 ! #endif
 
-      !WRITE(6,*) ' ORTHO CP a  ',  SUM(CP) ! DEBUG
-!
-      CALL DGEMM( 'N', 'N', 2*ngw, n, n, one, c0(1,1), 2*SIZE(c0,1), x0(1,1), n, &
+
+      CALL DGEMM( 'N', 'N', 2*ngw, n, n, one, phi(1,1), 2*SIZE(phi,1), x0(1,1), n, &
         one, cp(1,1), 2*SIZE(cp,1) )
 
-      !WRITE(6,*) ' ORTHO CP b  ',  SUM(CP) ! DEBUG
-!
-! ...   Restore wave functions
-!
-      ALLOCATE( aux( ngw ) )
-      aux(:)   = pmss(:) / emass
-      sqrtfact = SQRT( 2.0d0 )
-      IF( cdesc%gzero ) THEN
-        aux(1)    = aux(1)    * sqrtfact
-        cp(1, 1:n ) = cp(1, 1:n ) * sqrtfact
-      END IF
-      DO i = 1, n
-        c0(:,i) = c0(:,i) * aux(:)
-      END DO
-      DEALLOCATE( aux )
 
       DEALLOCATE(x0, x1, rhoa, temp1, sigd, rhod)
-#if defined __SHMEM
-      CALL shpdeallc(p_source, 2*n*n, err, -1)
-      IF (err .NE. 0) THEN
-         CALL errore( ' ortho ', ' deallocation of source failed ', 0)
-      END IF
-      CALL shpdeallc(p_sig, 2*n*n, err, -1)
-      IF (err .NE. 0) THEN
-         CALL errore( ' ortho ', ' deallocation of sig failed ', 0)
-      END IF
-      CALL shpdeallc(p_rho, 2*n*n, err, -1)
-      IF (err .NE. 0) THEN
-         CALL errore( ' ortho ', ' deallocation of rho failed ', 0)
-      END IF
-      CALL shpdeallc(p_tmass, 2*n*n, err, -1)
-      IF (err .NE. 0) THEN
-         CALL errore( ' ortho ', ' deallocation of tmass failed ', 0)
-      END IF
-      CALL shpdeallc(p_target, 2*n*n, err, -1)
-      IF (err .NE. 0) THEN 
-         CALL errore( ' ortho ', ' deallocation of target failed ', 0)
-      END IF
-#else
+
       DEALLOCATE(s, sig, rho, tmass, temp )
-#endif
+
+      DEALLOCATE( phi )
 
       ortho_gamma = iter
 
-      CALL stop_clock( 'ortho_gamma' )
+      CALL stop_clock( 'ortho_r' )
 
       RETURN
    END FUNCTION ortho_gamma
@@ -456,7 +372,7 @@
 
 ! ... Subroutine body
 
-      CALL start_clock( 'ortho_gamma_p' )
+      CALL start_clock( 'ortho_d' )  ! _d stay for distributed data
 
       n   = cdesc%nbl( ispin )
 
@@ -593,7 +509,7 @@
       CALL parallel_deallocate(rhot)
       DEALLOCATE( desc )
 
-      CALL stop_clock( 'ortho_gamma_p' )
+      CALL stop_clock( 'ortho_d' )
 
       ortho_gamma_p = iter
 
@@ -627,6 +543,7 @@
 #endif
 
       USE control_flags, ONLY: ortho_eps, ortho_max
+      USE orthogonalize_base, ONLY: rhoset, sigset
  
       IMPLICIT  NONE
 
@@ -728,8 +645,8 @@
       END DO
       DEALLOCATE(AUX)
 
-      CALL rhoset( ngw, nx, C0, CP, RHO, TMASS, PWRK )
-      CALL sigset( ngw, nx, CP, SIG, PWRK )
+      CALL rhoset( ngw, nx, C0, CP, RHO, TMASS )
+      CALL sigset( ngw, nx, CP, SIG )
 
       DO J=1,N
         DO I=1,N
@@ -923,7 +840,7 @@
 
 ! ... Subroutine body
 
-      CALL start_clock( 'ortho_scalapack' )
+      CALL start_clock( 'ortho_scal' )
 
       n   = cdesc%nbl( ispin )
       ngw = cdesc%ngwl
@@ -1074,7 +991,7 @@
 
       CALL free_blacs_grid(grid)
 
-      CALL stop_clock( 'ortho_scalapack' )
+      CALL stop_clock( 'ortho_scal' )
 
       ortho_scalapack = iter
       RETURN

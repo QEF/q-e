@@ -2130,7 +2130,8 @@
       USE gvecw, ONLY: ngw
       USE control_flags, ONLY: iprint, iprsta
       USE io_global, ONLY: stdout
-      USE orthogonalize_base, ONLY: ortho_iterate
+      USE orthogonalize_base, ONLY: ortho_iterate, diagonalize_rho, sigset, rhoset, &
+                                    tauset
 !
       IMPLICIT NONE
 !
@@ -2245,7 +2246,8 @@
 !     
          ifail=0
          CALL start_clock( 'rsg' )
-         CALL rs(nudx,nss,rhos,diag,1,u,work1,work2,ifail) 
+         CALL diagonalize_rho( nss, rhos, diag, u )
+         ! CALL rs(nudx,nss,rhos,diag,1,u,work1,work2,ifail) 
          CALL stop_clock( 'rsg' )
 !
 !                calculation of lagranges multipliers
@@ -2593,16 +2595,32 @@
 !   calculates all the eigenvalues and eigenvectors of a complex
 !   hermitean matrix H . On output, the matrix H is destroyed
 !
+      USE kinds,            ONLY: DP
+      USE parallel_toolkit, ONLY: zhpev_drv
+      !
       IMPLICIT NONE
+      !
       INTEGER, INTENT(in)           :: n, ldh
-      COMPLEX(8), INTENT(inout):: h(ldh,n)
-      REAL   (8), INTENT(out)  :: e(n)
-      COMPLEX(8), INTENT(out)  :: v(ldh,n)
+      COMPLEX(DP), INTENT(inout):: h(ldh,n)
+      REAL   (DP), INTENT(out)  :: e(n)
+      COMPLEX(DP), INTENT(out)  :: v(ldh,n)
 !
-      REAL(8) fv1(n), fv2(n)
-      INTEGER ierr
+      INTEGER :: i, j, k
+      COMPLEX(DP), ALLOCATABLE :: ap( : )
 !
-      CALL rs(ldh,n,h,e,1,v,fv1,fv2,ierr)
+      ALLOCATE( ap( n * ( n + 1 ) / 2 ) )
+
+      K = 0
+      DO J = 1, n
+         DO I = J, n
+            K = K + 1
+            ap( k ) = h( i, j )
+         END DO
+      END DO
+
+      CALL zhpev_drv( 'V', 'L', n, ap, e, v, ldh )
+
+      DEALLOCATE( ap )
 !
       RETURN
       END SUBROUTINE rdiag
@@ -2928,80 +2946,6 @@
 !
       RETURN
       END SUBROUTINE rhoofr
-!
-!-----------------------------------------------------------------------
-      SUBROUTINE rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, ist, rho, nx )
-!-----------------------------------------------------------------------
-!     input: cp (non-orthonormal), phi, bephi, qbecp
-!     computes the matrix
-!       rho = <s'c0|s cp> = <phi|s cp>
-!     where  |phi> = s'|c0> = |c0> + sum q_ij |i><j|c0>
-!     where s=s(r(t+dt)) and s'=s(r(t))  
-!     routine makes use of  c(-q)=c*(q)
-!
-      USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gstart
-      USE uspp,               ONLY: nkbus
-      USE cvan,               ONLY: nvb
-      USE kinds,              ONLY: DP
-      USE mp,                 ONLY: mp_sum
-!
-      IMPLICIT NONE
-!
-      INTEGER     :: nss, ist, ngwx, nkbx, nx, n
-      COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
-      REAL(DP)    :: bephi( nkbx, n ), qbecp( nkbx, n ), rho( nx, nx )
-      !
-      INTEGER     :: i, j
-      REAL(DP), ALLOCATABLE :: tmp1(:,:)
-      !
-      rho (:,:) = 0.d0
-      !
-      !     <phi|cp>
-      !
-      CALL MXMA( phi( 1, ist ), 2*ngwx, 1, cp( 1, ist ), 1, 2*ngwx,                   &
-     &           rho, 1, nx, nss, 2*ngw, nss )
-      !
-      !     q >= 0  components with weight 2.0
-      !
-      DO j=1,nss
-         DO i=1,nss
-            rho(i,j)=2.*rho(i,j)
-         END DO
-      END DO
-      !
-      !     q = 0  components has weight 1.0
-      !
-      IF (gstart == 2) THEN
-         DO j=1,nss
-            DO i=1,nss
-               rho(i,j) = rho(i,j) -                                    &
-     &              DBLE(phi(1,i+ist-1))*DBLE(cp(1,j+ist-1))
-            END DO
-         END DO
-      END IF
-
-      CALL mp_sum( rho )
-!
-      IF( nvb > 0 ) THEN
-
-         ALLOCATE( tmp1( nx, nx ) )
-!
-         CALL MXMA( bephi( 1, ist ), nkbx, 1, qbecp( 1, ist ), 1, nkbx,               &
-     &                                tmp1, 1, nx, nss, nkbus, nss )
-!
-         DO j=1,nss
-            DO i=1,nss
-               rho(i,j)=rho(i,j)+tmp1(i,j)
-            END DO
-         END DO
-
-         DEALLOCATE( tmp1 )
-
-      ENDIF
-!
-      RETURN
-      END SUBROUTINE rhoset
 !
 !-----------------------------------------------------------------------
       SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
@@ -3348,82 +3292,6 @@
       RETURN
       END SUBROUTINE s_wfc
 
-!
-!-------------------------------------------------------------------------
-      SUBROUTINE sigset( cp, ngwx, becp, nkbx, qbecp, n, nss, ist, sig, nx )
-!-----------------------------------------------------------------------
-!     input: cp (non-orthonormal), becp, qbecp
-!     computes the matrix
-!       sig = 1 - a ,  a = <cp|s|cp> = <cp|cp> + sum q_ij <cp|i><j|cp>
-!     where s=s(r(t+dt)) 
-!     routine makes use of c(-q)=c*(q)
-!
-      USE kinds,              ONLY: DP
-      USE uspp,               ONLY: nkbus
-      USE cvan,               ONLY: nvb
-      USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gstart
-      USE mp,                 ONLY: mp_sum
-!
-      IMPLICIT NONE
-!
-      INTEGER nss, ist, ngwx, nkbx, n, nx
-      COMPLEX(DP) :: cp( ngwx, n )
-      REAL(DP)    :: becp( nkbx, n ), qbecp( nkbx, n ), sig( nx, nx )
-!
-      INTEGER :: i, j
-      REAL(DP), ALLOCATABLE :: tmp1(:,:)
-!
-      sig = 0.d0
-      !
-      CALL MXMA( cp( 1, ist ), 2*ngwx, 1, cp( 1, ist ), 1, 2*ngwx,                    &
-     &           sig, 1, nx, nss, 2*ngw, nss )
-      !
-      !     q >= 0  components with weight 2.0
-      !
-      DO j=1,nss
-         DO i=1,nss
-            sig(i,j) = -2.0d0 * sig(i,j)
-         END DO
-      END DO
-      !
-      !     q = 0  components has weight 1.0
-      !
-      IF ( gstart == 2 ) THEN
-         DO j=1,nss
-            DO i=1,nss
-               sig(i,j) = sig(i,j) +                                    &
-     &              DBLE(cp(1,i+ist-1))*DBLE(cp(1,j+ist-1))
-            END DO
-         END DO
-      END IF
-      !
-      CALL mp_sum( sig )
-      !
-      DO i = 1, nss
-         sig(i,i) = sig(i,i) + 1.0d0
-      END DO
-!
-      IF( nvb > 0 ) THEN
-       
-         ALLOCATE( tmp1( nx, nx ) )
-!
-         CALL MXMA( becp( 1, ist ), nkbx, 1, qbecp( 1, ist ), 1, nkbx,                &
-     &              tmp1, 1, nx, nss, nkbus, nss )
-!
-         DO j=1,nss
-            DO i=1,nss
-               sig(i,j)=sig(i,j)-tmp1(i,j)
-            END DO
-         END DO
-
-         DEALLOCATE( tmp1 )
-
-      ENDIF
-!
-      RETURN
-      END SUBROUTINE sigset
-!
 !-----------------------------------------------------------------------
       SUBROUTINE spinsq (c,bec,rhor)
 !-----------------------------------------------------------------------
@@ -3572,75 +3440,6 @@
       RETURN
       END SUBROUTINE spinsq
 
-!-------------------------------------------------------------------------
-      SUBROUTINE tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, ist, tau, nx )
-!-----------------------------------------------------------------------
-!     input: phi
-!     computes the matrix
-!        tau = <s'c0|s|s'c0> = <phi|s|phi>,  where  |phi> = s'|c0>
-!     where s=s(r(t+dt)) and s'=s(r(t))  
-!     routine makes use of c(-q)=c*(q)
-!
-      USE kinds,              ONLY: DP
-      USE cvan,               ONLY: nvb
-      USE uspp,               ONLY: nkbus
-      USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gstart
-      USE mp,                 ONLY: mp_sum
-!
-      IMPLICIT NONE
-      INTEGER :: nss, ist, ngwx, nkbx, n, nx
-      COMPLEX(DP) :: phi( ngwx, n )
-      REAL(DP)    :: bephi( nkbx, n ), qbephi( nkbx, n ), tau( nx, nx )
-      !
-      INTEGER     :: i, j
-      REAL(DP), ALLOCATABLE :: tmp1( :, : )
-!
-      tau = 0.0d0
-      !
-      CALL MXMA( phi( 1, ist ), 2*ngwx, 1, phi( 1, ist ), 1, 2*ngwx,                  &
-     &           tau, 1, nx, nss, 2*ngw, nss )
-      !
-      !     q >= 0  components with weight 2.0
-      !
-      DO j=1,nss
-         DO i=1,nss
-            tau(i,j) = 2.0d0 * tau(i,j)
-         END DO
-      END DO
-      !
-      !     q = 0  components has weight 1.0
-      !
-      IF (gstart == 2) THEN
-         DO j=1,nss
-            DO i=1,nss
-               tau(i,j) = tau(i,j) -                                    &
-     &              DBLE(phi(1,i+ist-1))*DBLE(phi(1,j+ist-1))
-            END DO
-         END DO
-      END IF
-
-      CALL mp_sum( tau )
-!
-      IF( nvb > 0 ) THEN
-         !
-         ALLOCATE( tmp1( nx, nx ) )
-!
-         CALL MXMA( bephi( 1, ist ), nkbx, 1, qbephi( 1, ist ), 1, nkbx,              &
-     &              tmp1, 1, nx, nss, nkbus, nss )
-!
-         DO j=1,nss
-            DO i=1,nss
-               tau(i,j)=tau(i,j)+tmp1(i,j)
-            END DO
-         END DO
-
-         DEALLOCATE( tmp1 )
-
-      ENDIF
-!
-      RETURN
-      END SUBROUTINE tauset
 !
 !-------------------------------------------------------------------------
       SUBROUTINE updatc(ccc,x0,phi,bephi,becp,bec,cp)

@@ -6,40 +6,53 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-      subroutine eigs0( tprint, nspin, nx, nupdwn, iupdwn, f, lambda )
+      subroutine eigs0( tprint, nspin, nx, nupdwn, iupdwn, lf, f, lambda )
 !-----------------------------------------------------------------------
 !     computes eigenvalues (wr) of the real symmetric matrix lambda
 !     Note that lambda as calculated is multiplied by occupation numbers
 !     so empty states yield zero. Eigenvalues are printed out in eV
 !
+      use kinds, only            : DP
       use io_global, only        : stdout
       use constants, only        : au
       use electrons_module, only : ei
+      use parallel_toolkit, only : dspev_drv
       implicit none
 ! input
-      logical, intent(in) :: tprint
+      logical, intent(in) :: tprint, lf
       integer, intent(in) :: nspin, nx, nupdwn(nspin), iupdwn(nspin)
-      real(8), intent(in) :: lambda(nx,nx), f(nx)
+      real(DP), intent(in) :: lambda(nx,nx), f(nx)
 ! local variables
-      real(8), allocatable :: lambdar(:,:)
-      real(8) wr(nx), fv1(nx),fm1(2,nx), zr
-      integer iss, j, i, ierr
+      real(DP), allocatable :: lambdar(:)
+      real(DP) wr(nx), fv1(nx),fm1(2,nx), zr(1)
+      integer iss, j, i, ierr, k, n
 !
-      do iss=1,nspin
-         allocate( lambdar( nupdwn(iss), nupdwn(iss) ) )
-         do i=1,nupdwn(iss)
-            do j=1,nupdwn(iss)
-               lambdar(j,i)=lambda(iupdwn(iss)-1+j,iupdwn(iss)-1+i)
+      do iss = 1, nspin
+
+         n = nupdwn(iss)
+
+         allocate( lambdar( n * ( n + 1 ) / 2 ) )
+
+         k = 0
+
+         do i = 1, n
+            do j = i, n
+               k = k + 1
+               lambdar( k ) = lambda( iupdwn(iss) - 1 + j, iupdwn(iss) - 1 + i )
             end do
          end do
-         call rs( nupdwn(iss), nupdwn(iss), lambdar, wr, 0, zr, fv1, fm1, ierr)
-         do i=1,nupdwn(iss)
-            if (f(iupdwn(iss)-1+i).gt.1.e-6) then
-               wr(i)=wr(i)/f(iupdwn(iss)-1+i)
-            else
-               wr(i)=0.0
-            end if
-         end do
+
+         CALL dspev_drv( 'N', 'L', n, lambdar, wr, zr, 1 )
+
+         if( lf ) then
+            do i=1,nupdwn(iss)
+               if (f(iupdwn(iss)-1+i).gt.1.e-6) then
+                  wr(i)=wr(i)/f(iupdwn(iss)-1+i)
+               else
+                  wr(i)=0.0
+               end if
+            end do
+         end if
          !
          IF( tprint ) THEN
             !
