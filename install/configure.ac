@@ -865,9 +865,9 @@ then
 		FFLAGS="$test_fflags"
 		LDFLAGS="$test_ldflags"
 		LIBS=""
-		AC_SEARCH_LIBS(dgemm, cxml, have_blas=1 have_lapack=1 
-			       libs="$LIBS")
-               ;;
+		AC_SEARCH_LIBS(dgemm, cxml, have_blas=1 have_lapack=1
+                                blas_libs="$LIBS")
+		;;
 
 	sparc:* )
 		# check for SUNperf library

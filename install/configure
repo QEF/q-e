@@ -5368,10 +5368,10 @@ echo "${ECHO_T}$ac_cv_search_dgemm" >&6
 if test "$ac_cv_search_dgemm" != no; then
   test "$ac_cv_search_dgemm" = "none required" || LIBS="$ac_cv_search_dgemm $LIBS"
   have_blas=1 have_lapack=1
-			       libs="$LIBS"
+                                blas_libs="$LIBS"
 fi
 
-               ;;
+		;;
 
 	sparc:* )
 		# check for SUNperf library
