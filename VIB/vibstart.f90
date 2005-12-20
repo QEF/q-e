@@ -186,6 +186,7 @@ subroutine start_cp
   USE io_global,             ONLY : io_global_start, io_global_getionode
   USE mp_global,             ONLY : mp_global_start
   USE mp,                    ONLY : mp_end, mp_start, mp_env
+  USE check_stop,            ONLY : check_stop_init
   !
   INTEGER                        :: mpime, nproc, gid, ionode_id, &
        restart_cyc_counter
@@ -222,6 +223,8 @@ subroutine start_cp
   ! ... copy-in input parameters from input_parameter module
   !
   CALL iosys()
+  !
+  CALL check_stop_init()
   !
   CALL init_run()
   !     
@@ -265,6 +268,7 @@ subroutine start_pw
   USE metadyn_base,       ONLY : metadyn_init
   USE path_io_routines,   ONLY : io_path_start, io_path_stop
   USE io_global,          ONLY : ionode
+  USE check_stop,         ONLY : check_stop_init
   !
   IMPLICIT NONE
   !
@@ -292,6 +296,8 @@ subroutine start_pw
   END IF
   !
   CALL iosys()
+  !
+  CALL check_stop_init()
   !
   IF ( ionode .AND. noncolin ) &
        WRITE( UNIT = stdout, &

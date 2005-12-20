@@ -575,9 +575,15 @@ CONTAINS
   SUBROUTINE analysis
     !
     USE constants,          ONLY : e2
-    USE io_files,           ONLY : outdir, prefix
     USE io_global,          ONLY : ionode, stdout
     USE ions_base,          ONLY : nat
+#ifdef DFT_CP
+    USE io_files,         ONLY : outdir, prefix
+#endif
+#ifdef DFT_PW
+    USE io_files,         ONLY : outdir=>tmp_dir,prefix
+#endif
+
     !
     ! ... local variables
     !
