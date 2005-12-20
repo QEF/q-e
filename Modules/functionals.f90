@@ -164,11 +164,11 @@ module funct
   character (len=4) :: gradx, gradc
   dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
 
-  data exc / 'NOX', 'SLA', 'SL1', 'RXC', 'OEP', 'HF', 'PB0X', 'B3LYP' /
+  data exc / 'NOX', 'SLA', 'SL1', 'RXC', 'OEP', 'HF', 'PB0X', 'B3LP' /
   data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
-              'OBW', 'GL' , 'B3LYP' /
-  data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX', 'META', 'PB0X', 'B3LYP'  /
-  data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'META', 'B3LYP' /
+              'OBW', 'GL' , 'B3LP' /
+  data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX', 'META', 'PB0X', 'B3LP'  /
+  data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'META', 'B3LP' /
 
 CONTAINS
   !-----------------------------------------------------------------------
@@ -323,11 +323,11 @@ CONTAINS
     ! Default value: no gradient correction on correlation
     if (igcc == notset) call set_dft_value (igcc, 0)
 
+    dft = dftout
+
     dftout = exc (iexch) //'-'//corr (icorr) //'-'//gradx (igcx) //'-' &
          &//gradc (igcc)
     ! WRITE( stdout,'(a)') dftout
-
-    dft = dft_
 
     call set_auxiliary_flags
 
@@ -341,16 +341,17 @@ CONTAINS
     ! define the fraction of exact exchange used by hybrid fuctionals
     !
     logical, external :: matches
+
     isgradient =  (igcx > 0) .or. (igcc > 0) 
     ismeta     =  (igcx == 7) .or. (igcx == 6 )
-    ishybrid   =  (iexch == 4) .or. (iexch == 5) .or. (iexch == 6) .or. &
-                  (igcx == 8)  .or. matches( 'B3LYP',dft )
+
     ! PBE0
     IF ( iexch==6 .or. igcx==8 ) exx_fraction = 0.25d0
     ! HF or OEP
     IF ( iexch==4 .or. iexch==5 ) exx_fraction = 1.d0
     !B3LYP
-    IF ( matches( 'B3LYP',dft ) ) exx_fraction = 0.2d0
+    IF ( matches( 'B3LP',dft ) ) exx_fraction = 0.2d0
+    ishybrid = ( exx_fraction /= 0.d0 )
 
     return
   end subroutine set_auxiliary_flags
