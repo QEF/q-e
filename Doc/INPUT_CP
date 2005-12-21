@@ -1865,9 +1865,12 @@ CONSTRAINTS
                                             constr(3) is the cut-off radius for
                                             estimating the coordination
                                             constr(4) is a smoothing parameter
-                                       3,4: atoms indices object of the 
+                                         3: atoms indices object of the 
                                             constraint, as they appear in 
                                             the 'POSITION' CARD
+                                       4,5: atoms indices object of the 
+                                            constraint, as they appear in the 
+                                            'POSITION' CARD (beware the order)
                                         
       constr_target                 REAL,   target for the constrain ( planar 
                                             angles are specified in degrees ).

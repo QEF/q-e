@@ -1,0 +1,87 @@
+\documentclass[a4paper,12pt,notitlepage]{report}
+
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage[dvips]{graphicx}
+
+\newcommand{\Rb}{\mathbf R}
+\newcommand{\nb}{\boldsymbol \nabla}
+
+\author{Carlo Sbraccia}
+
+\begin{document}
+
+\title{How to implement new constraints into the Quantum-ESPRESSO package.}
+%
+\maketitle
+
+The two basic ingredients that are required to implement a new type of
+constraint into the Quantum-ESPRESSO package are:
+%
+\begin{itemize}
+\item the analytical expression for the constraint $\sigma(\{\Rb^{3N}\})$ (it
+must be a function of the ionic coordinates $\{\Rb^{3N}\}$ only);
+\item the analytical expression for the gradients of the constraint
+$\nb_{\Rb_i}\sigma(\{\Rb^{3N}\})$ with respect to the ionic coordinates.
+\end{itemize}
+%
+Given these expressions one has simply to follow what has already been done for
+the standard constraint types.%
+%
+\footnote{At present the constraint types implemented in Quantum-ESPRESSO are:
+\begin{itemize}
+\item coordination numbers;
+\item distances;
+\item planar angles (linear angles included);
+\item torsional angles.
+\end{itemize}}
+%
+No detailed knowledge of the algorithm used to impose the constraints (SHAKE) is
+necessary since the implementation is designed to work for any possible kind of
+constraint, provided it is defined by an analytical expression. In the
+following I describe the three basic steps that are strictly necessary to
+implement a new constraint type.
+
+One first has to modify the routine that reads the \texttt{CONSTRAINTS}
+input card (this input card contains the parameters specified at run-time by the
+user to define the constraint). The name of this routine is
+\texttt{card\_constraints()} and it is located in the module
+\texttt{Modules/read\_cards.f90}. Note the maximum allowed number of input
+parameters used to define a single constraint is 6; if the new constraint type
+requires additional input parameters one has to modify the dimension of the
+array \texttt{constr\_inp(:,:)} defined in the module
+\texttt{Modules/input\_parameters.f90}. All the other arrays are dynamically
+allocated.
+
+Then one has to copy the input arrays into the internal ones (this is
+automatically done and should not not require any additional tuning) and to
+initialise the target value of each constraint (the target corresponds to the
+initial value of $\sigma_i(\{\Rb^{3N}_0\}$; this is the quantity that is kept
+constant during the simulation).
+All this is done in the routine \texttt{init\_constraint()} which is
+located in the module \texttt{Modules/constraints\_module.f90}. One has to
+define the new variables that are needed to calculate the value of the
+constraint (possibly recicling those that are already there) and then implement
+the equation defining the constraint (following what is done for the other
+constraint types).
+
+The last step consists in the implementation of the constraint's gradient
+$\nb\sigma(\{\Rb^{3N}\})$. This is done in the routine
+\texttt{constraint\_grad()} located in the module
+\texttt{Modules/constraints\_module.f90}. Again one has to define the new
+variables and implement the equations that define both the constraint violation
+and the constraint gradients (respectively stored in \texttt{g} and
+\texttt{dg(:,:)}). This is done for a single constraint $\sigma_i$ (identified
+by the input variable \texttt{index}) since the routine is externally called by
+other drivers as many times as the number of constraints. Note that for each
+constraint the sum of the gradients must be zero: $\sum_{i}
+\nb_{\Rb_i}\sigma(\{\Rb^{3N}\}) = 0$. This is usually imposed by defining one of
+the gradients to be equal to minus the sum of all the others.
+
+Finally, one should not forget to test the new constraint on both PWscf and CP
+by monitoring the energy conservation and, of course, the consrevation of the
+constraint itself.
+
+\end{document}
