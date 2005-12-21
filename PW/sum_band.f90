@@ -37,7 +37,7 @@ SUBROUTINE sum_band()
   USE uspp_param,           ONLY : nh, tvanp, nhm
   USE wavefunctions_module, ONLY : evc, psic, evc_nc, psic_nc
   USE noncollin_module,     ONLY : noncolin, bfield, npol
-  USE spin_orb,             ONLY : lspinorb, domag, fcoef
+  USE spin_orb,             ONLY : lspinorb, domag, so, fcoef
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
   USE control_flags,        ONLY : wg_set
   USE mp_global,            ONLY : intra_image_comm, me_image, &
@@ -566,7 +566,7 @@ SUBROUTINE sum_band()
                       !
                       IF (ityp(na)==np) THEN
                          !
-                         IF (lspinorb) THEN
+                         IF (so(np)) THEN
                             be1=(0.d0,0.d0)
                             be2=(0.d0,0.d0)
                             DO ih = 1, nh(np)
@@ -598,7 +598,7 @@ SUBROUTINE sum_band()
                             !
                             IF (noncolin) THEN
                                !
-                               IF (lspinorb) THEN
+                               IF (so(np)) THEN
                                   becsum(ijh,na,1)=becsum(ijh,na,1)+ w1*&
                                      (be1(ih,1)*be2(ih,1)+ be1(ih,2)*be2(ih,2))
                                   IF (domag) THEN
@@ -647,7 +647,7 @@ SUBROUTINE sum_band()
                                jkb = ijkb0 + jh
                                !
                                IF (noncolin) THEN
-                                  IF (lspinorb) THEN
+                                  IF (so(np)) THEN
                                      becsum(ijh,na,1)=becsum(ijh,na,1)+ w1*(  &
                                    (be1(jh,1)*be2(ih,1)+be1(jh,2)*be2(ih,2))+ &
                                    (be1(ih,1)*be2(jh,1)+be1(ih,2)*be2(jh,2)))

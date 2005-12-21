@@ -26,7 +26,7 @@ subroutine atomic_wfc_nc (ik, wfcatom)
   USE wvfct,      ONLY : npwx, npw, nbndx, nbnd, igk
   USE us,         ONLY : tab_at, dq
   USE noncollin_module, ONLY : noncolin, npol, angle1, angle2
-  USE spin_orb,   ONLY : lspinorb, rot_ylm, fcoef, lmaxx
+  USE spin_orb,   ONLY : lspinorb, so, rot_ylm, fcoef, lmaxx
   !
   implicit none
   !
@@ -125,7 +125,7 @@ subroutine atomic_wfc_nc (ik, wfcatom)
            lphase = (0.d0,1.d0)**l
            !  the factor i^l MUST BE PRESENT in order to produce
            !  wavefunctions for k=0 that are real in real space
-           if (lspinorb) then
+           if (so(nt)) then
              j = jchi (nb, nt)
              do m = -l-1, l
                fact(1) = spinor(l,j,m,1)

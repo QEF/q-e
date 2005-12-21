@@ -73,7 +73,7 @@ SUBROUTINE setup()
   USE fixed_occ,          ONLY : f_inp, tfixed_occ   
   USE char,               ONLY : sname
   USE mp_global,          ONLY : nimage, kunit
-  USE spin_orb,           ONLY : lspinorb, domag
+  USE spin_orb,           ONLY : lspinorb, domag, so
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, mcons, &
                                  angle1, angle2, bfield
 #if defined (EXX)
@@ -108,7 +108,6 @@ SUBROUTINE setup()
       l,              &!
       ibnd             !
   LOGICAL :: &
-      so(npsx),       &!
       minus_q,        &!
       ltest            !
   REAL(DP) :: &
@@ -543,6 +542,8 @@ SUBROUTINE setup()
            !
         END IF
         !
+        so(nt) = .FALSE.
+        !
      END DO
      !
   END IF
@@ -893,7 +894,7 @@ FUNCTION n_atom_wfc( nat, npsx, ityp, nchix, nchi, oc, lchi, jchi )
   !
   USE kinds,            ONLY : DP
   use noncollin_module, ONLY : noncolin
-  use spin_orb,         ONLY : lspinorb
+  use spin_orb,         ONLY : lspinorb, so
   !
   IMPLICIT NONE
   !
@@ -915,7 +916,7 @@ FUNCTION n_atom_wfc( nat, npsx, ityp, nchix, nchi, oc, lchi, jchi )
            !
            IF ( noncolin ) THEN
               !
-              IF ( lspinorb ) THEN
+              IF ( so(nt) ) THEN
                  !
                  n_atom_wfc = n_atom_wfc + 2 * lchi(n,nt)
                  !

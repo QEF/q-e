@@ -100,7 +100,6 @@ subroutine set_pseudo_upf (is, upf)
   if (lspinorb.and..not.upf%has_so) &
      call infomsg ('upf_to_internal','At least one non s.o. pseudo', -1)
    
-  lspinorb=lspinorb.and.upf%has_so
   if (upf%has_so) then
      jchi(1:upf%nwfc, is) = upf%jchi(1:upf%nwfc)
      jjj(1:upf%nbeta, is) = upf%jjj(1:upf%nbeta)

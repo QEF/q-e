@@ -40,7 +40,7 @@ subroutine init_us_1
                          qq_so, dvan_so, okvan
   USE uspp_param, ONLY : lmaxq, dion, betar, qfunc, qfcoef, rinner, nbeta, &
                          kkbeta, nqf, nqlc, lll, jjj, lmaxkb, nh, tvanp, nhm
-  USE spin_orb,   ONLY : lspinorb, rot_ylm, fcoef
+  USE spin_orb,   ONLY : lspinorb, so, rot_ylm, fcoef
   !
   implicit none
   !
@@ -111,8 +111,9 @@ subroutine init_us_1
      fcoef=(0.d0,0.d0)
      dvan_so = (0.d0,0.d0)
      qq_so=(0.d0,0.d0)
+     qq  = 0.d0
   else
-     qq (:,:,:)   = 0.d0
+     qq  = 0.d0
      dvan = 0.d0
   endif
   !
@@ -139,7 +140,7 @@ subroutine init_us_1
      !
      !    Here we initialize the D of the solid
      !
-     if (lspinorb) then
+     if (so(nt)) then
      !
      !  first calculate the fcoef coefficients
      !
@@ -194,7 +195,12 @@ subroutine init_us_1
               nhtolm(ih, nt) == nhtolm(jh, nt) ) then
               ir = indv (ih, nt)
               is = indv (jh, nt)
-              dvan (ih, jh, nt) = dion (ir, is, nt)
+              if (lspinorb) then
+                 dvan_so (ih, jh, 1, nt) = dion (ir, is, nt)
+                 dvan_so (ih, jh, 4, nt) = dion (ir, is, nt)
+              else
+                 dvan (ih, jh, nt) = dion (ir, is, nt)
+              endif
             endif
           enddo
         enddo
@@ -283,7 +289,7 @@ subroutine init_us_1
   call ylmr2 (lmaxq * lmaxq, 1, g, gg, ylmk0)
   do nt = 1, ntyp
     if (tvanp (nt) ) then
-      if (lspinorb) then
+      if (so(nt)) then
         do ih=1,nh(nt)
           do jh=1,nh(nt)
             call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)
@@ -309,6 +315,12 @@ subroutine init_us_1
         do ih = 1, nh (nt)
           do jh = ih, nh (nt)
              call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)
+             if (lspinorb) then
+                 qq_so (ih, jh, 1, nt) = omega *  DBLE (qgm (1) )
+                 qq_so (jh, ih, 1, nt) = qq_so (ih, jh, 1, nt)
+                 qq_so (ih, jh, 4, nt) = qq_so (ih, jh, 1, nt)
+                 qq_so (jh, ih, 4, nt) = qq_so (ih, jh, 4, nt)
+             endif
              qq (ih, jh, nt) = omega *  DBLE (qgm (1) )
              qq (jh, ih, nt) = qq (ih, jh, nt)
           enddo

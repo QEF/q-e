@@ -540,12 +540,15 @@ END MODULE fixed_occ
 MODULE spin_orb
   
   USE kinds, ONLY: DP
-  USE parameters, ONLY : lmaxx
+  USE parameters, ONLY : lmaxx, npsx
   
   SAVE
 
   LOGICAL :: &
-      lspinorb, domag    ! if .TRUE. this is a spin-robit calculation
+      lspinorb,  &       ! if .TRUE. this is a spin-orbit calculation
+      domag,     &       ! if .TRUE. magnetization is computed
+      so(npsx)           ! for each pseudo tells if it is spin-orbit
+
 
   COMPLEX (DP) :: rot_ylm(2*lmaxx+1,2*lmaxx+1)  ! transform real
                          ! spherical harmonics into complex ones

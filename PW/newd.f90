@@ -36,7 +36,7 @@ SUBROUTINE newd_g()
   USE uspp_param,           ONLY : lmaxq, nh, nhm, tvanp
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
-  USE spin_orb,             ONLY : lspinorb
+  USE spin_orb,             ONLY : lspinorb, so
   USE noncollin_module,     ONLY : noncolin
   !
   IMPLICIT NONE
@@ -183,19 +183,22 @@ SUBROUTINE newd_g()
   !
   CALL reduce( nhm * nhm * nat * nspin, deeq )
   !
-  IF ( lspinorb ) THEN
+  DO na = 1, nat
      !
-     CALL newd_so()
-     !
-  ELSE IF ( noncolin ) THEN 
-     !
-     CALL newd_nc()
-     !
-  ELSE
-     !
-     DO na = 1, nat
+     nt  = ityp(na)
+     IF ( noncolin ) THEN
         !
-        nt = ityp(na)
+        IF (so(nt)) THEN
+           !
+           CALL newd_so(na)
+           !
+        ELSE
+           !
+           CALL newd_nc(na)
+           !
+        END IF
+        !
+     ELSE
         !
         DO is = 1, nspin
            !
@@ -212,9 +215,9 @@ SUBROUTINE newd_g()
            !
         END DO
         !
-     END DO
+     END IF
      !
-  END IF
+  END DO
   !
   DEALLOCATE( aux, qgm_na, qgm, qmod, ylmk0 )
   !
@@ -225,52 +228,50 @@ SUBROUTINE newd_g()
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE newd_so()
+    SUBROUTINE newd_so(na)
       !------------------------------------------------------------------------
       !
       USE spin_orb, ONLY : fcoef
       !
       IMPLICIT NONE
       !
+      INTEGER :: na
+
       INTEGER :: ijs, is1, is2, kh, lh
       !
       !
-      DO na = 1, nat
+      nt=ityp(na)
+      ijs = 0
+      !
+      DO is1 = 1, 2
          !
-         nt  = ityp(na)
-         ijs = 0
-         !
-         DO is1 = 1, 2
+         DO is2 =1, 2
             !
-            DO is2 =1, 2
+            ijs = ijs + 1
+            !
+            DO ih = 1, nh(nt)
                !
-               ijs = ijs + 1
-               !
-               DO ih = 1, nh(nt)
+               DO jh = 1, nh(nt)
                   !
-                  DO jh = 1, nh(nt)
+                  deeq_nc(ih,jh,na,ijs) = dvan_so(ih,jh,ijs,nt)
+                  !
+                  DO kh = 1, nh(nt)
                      !
-                     deeq_nc(ih,jh,na,ijs) = dvan_so(ih,jh,ijs,nt)
-                     !
-                     DO kh = 1, nh(nt)
+                     DO lh = 1, nh(nt)
                         !
-                        DO lh = 1, nh(nt)
-                           !
-                           deeq_nc(ih,jh,na,ijs) = deeq_nc(ih,jh,na,ijs) +   &
-                                deeq (kh,lh,na,1)*            &
-                                (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt)  + &
-                                fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt)) + &
-                                deeq (kh,lh,na,2)*            &
-                                (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,2,is2,nt)  + &
-                                fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,1,is2,nt)) + &
-                                (0.D0,-1.D0)*deeq (kh,lh,na,3)*            &
-                                (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,2,is2,nt)  - &
-                                fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,1,is2,nt)) + &
-                                deeq (kh,lh,na,4)*            &
-                                (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt)  - &
-                                fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt))   
-                           !
-                        END DO
+                        deeq_nc(ih,jh,na,ijs) = deeq_nc(ih,jh,na,ijs) +   &
+                             deeq (kh,lh,na,1)*            &
+                             (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt)  + &
+                             fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt)) + &
+                             deeq (kh,lh,na,2)*            &
+                             (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,2,is2,nt)  + &
+                             fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,1,is2,nt)) + &
+                             (0.D0,-1.D0)*deeq (kh,lh,na,3)*            &
+                             (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,2,is2,nt)  - &
+                             fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,1,is2,nt)) + &
+                             deeq (kh,lh,na,4)*            &
+                             (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt)  - &
+                             fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt))   
                         !
                      END DO
                      !
@@ -284,47 +285,54 @@ SUBROUTINE newd_g()
          !
       END DO
       !
-      RETURN
+    RETURN
       !
     END SUBROUTINE newd_so
     !
     !------------------------------------------------------------------------
-    SUBROUTINE newd_nc()
+    SUBROUTINE newd_nc(na)
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
+      INTEGER :: na
       !
-      DO na = 1, nat
+      nt = ityp(na)
+      !
+      DO is = 1, nspin
          !
-         nt = ityp(na)
-         !
-         DO is = 1, nspin
+         DO ih = 1, nh(nt)
             !
-            DO ih = 1, nh(nt)
+            DO jh = 1, nh(nt)
                !
-               DO jh = 1, nh(nt)
-                  !
-                  deeq_nc(ih,jh,na,1) = dvan(ih,jh,nt) + &
+               IF (lspinorb) THEN
+                  deeq_nc(ih,jh,na,1) = dvan_so(ih,jh,1,nt) + &
                                         deeq(ih,jh,na,1) + deeq(ih,jh,na,4)
                   !                      
-                  deeq_nc(ih,jh,na,2) = deeq(ih,jh,na,2) - &
-                                        ( 0.D0, 1.D0 ) * deeq(ih,jh,na,3)
-                  !                      
-                  deeq_nc(ih,jh,na,3) = deeq(ih,jh,na,2) + &
-                                        ( 0.D0, 1.D0 ) * deeq(ih,jh,na,3)
+                  deeq_nc(ih,jh,na,4) = dvan_so(ih,jh,4,nt) + &
+                                        deeq(ih,jh,na,1) - deeq(ih,jh,na,4)
+                  !
+               ELSE
+                  deeq_nc(ih,jh,na,1) = dvan(ih,jh,nt) + &
+                                        deeq(ih,jh,na,1) + deeq(ih,jh,na,4)
                   !                      
                   deeq_nc(ih,jh,na,4) = dvan(ih,jh,nt) + &
                                         deeq(ih,jh,na,1) - deeq(ih,jh,na,4)
                   !
-               END DO
-               !
+               END IF
+               deeq_nc(ih,jh,na,2) = deeq(ih,jh,na,2) - &
+                                     ( 0.D0, 1.D0 ) * deeq(ih,jh,na,3)
+               !                      
+               deeq_nc(ih,jh,na,3) = deeq(ih,jh,na,2) + &
+                                     ( 0.D0, 1.D0 ) * deeq(ih,jh,na,3)
+               !                      
             END DO
             !
          END DO
          !
       END DO
       !
+    RETURN
     END SUBROUTINE newd_nc
     !
 END SUBROUTINE newd_g
