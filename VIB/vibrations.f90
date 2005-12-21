@@ -206,7 +206,6 @@ CONTAINS
     END DO
     !
 #endif
-    call flush(stdout)
     !
     ! (3) initiating variables ...
     !
@@ -217,12 +216,12 @@ CONTAINS
     !
     ! (4) Setting the T matrix (diagonal mass matrix)
     !
+    T = 0.0
     do ia=1,nat
        T(3*(ia-1)+1,3*(ia-1)+1) = isotope(ia)
        T(3*(ia-1)+2,3*(ia-1)+2) = isotope(ia)
        T(3*(ia-1)+3,3*(ia-1)+3) = isotope(ia)
     end do
-    call flush(stdout)
     !
     ! (5) restarting from file ? ...
     !
@@ -516,6 +515,7 @@ CONTAINS
                                     - fion(1:3,iax2)
                             END IF
                          END DO
+    CALL print_matrix(U,3*nat,3*nat," Hessian:  ",stdout)
                          ! adding negative sign, since electronic charge is positive
                          ! in this CP code.
                          born_charge(:,index)=-(dipole-dip_minus)/(2*displacement)
@@ -560,7 +560,8 @@ CONTAINS
        END IF
     END DO
     !
-    U=U/(2*displacement)
+    !
+    U = U / (2*displacement)
     !
 111 FORMAT(3x,'Ground-state dipole vector [debye]:',3x,f10.3,3x,f10.3,3x,f10.3)
 112 FORMAT(3x,'Dipole moment [debye]             :',3x,f10.3)
@@ -578,10 +579,11 @@ CONTAINS
     USE io_global,          ONLY : ionode, stdout
     USE ions_base,          ONLY : nat
 #ifdef DFT_CP
-    USE io_files,         ONLY : outdir, prefix
+    USE io_files,           ONLY : outdir, prefix
 #endif
 #ifdef DFT_PW
-    USE io_files,         ONLY : outdir=>tmp_dir,prefix
+    USE io_files,           ONLY : outdir=>tmp_dir,prefix
+    USE cell_base,          ONLY : alat
 #endif
 
     !
@@ -718,7 +720,13 @@ CONTAINS
           !
           ! Internal coordinates representation, rigid translations and rotations are projected out
           !
+#ifdef DFT_CP
           CALL internal_hessian(U_tmp,T_tmp,nmodes,ref_tau,D,filep)
+#endif
+#ifdef DFT_PW
+          CALL internal_hessian(U_tmp,T_tmp,nmodes,ref_tau*alat,D,filep)
+#endif
+
           !
           ALLOCATE(U_internal(nmodes,nmodes))
           ALLOCATE(T_internal(nmodes,nmodes))
