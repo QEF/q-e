@@ -86,7 +86,7 @@ MODULE read_cards_module
        ! ... Constraints
        !
        nconstr_inp    = 0
-       constr_tol_inp = 1.D-8
+       constr_tol_inp = 1.D-6
        !
        ! ... ionic mass initialization
        !
@@ -1434,7 +1434,6 @@ MODULE read_cards_module
        !
      END SUBROUTINE
      !
-     !
      !------------------------------------------------------------------------
      !    BEGIN manual
      !----------------------------------------------------------------------
@@ -1488,7 +1487,7 @@ MODULE read_cards_module
        LOGICAL, SAVE      :: tread = .FALSE.
        ! 
        ! 
-       IF ( tread ) CALL errore( 'card_constraints ', 'two occurrence', 2 )
+       IF ( tread ) CALL errore( 'card_constraints', 'two occurrence', 2 )
        !
        CALL read_line( input_line )
        !
@@ -1504,12 +1503,12 @@ MODULE read_cards_module
           !
        ELSE
           !
-          CALL errore( 'card_constraints ', 'too many fields', nfield )
+          CALL errore( 'card_constraints', 'too many fields', nfield )
           !
        END IF
        !
        IF ( nconstr_inp > max_nconstr ) &
-          CALL errore( 'card_constraints ', &
+          CALL errore( 'card_constraints', &
                      & 'too many constraints (increase max_nconstr)', 1 )
        !
        IF ( cg_phs_path_flag ) THEN
@@ -1527,6 +1526,10 @@ MODULE read_cards_module
           READ( input_line, * ) constr_type_inp(i)
           !
           CALL field_count( nfield, input_line )
+          !
+          IF ( nfield > SIZE( constr_inp(:,:), DIM = 1 ) ) &
+             CALL errore( 'card_constraints', &
+                        & 'too many fields for this constraint', i )
           !
           SELECT CASE( constr_type_inp(i) )         
           CASE( 1, 2 )
@@ -1562,7 +1565,7 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( 'card_constraints ', 'too many fields ', nfield )
+                CALL errore( 'card_constraints', 'too many fields', nfield )
                 !
              END IF
              !
@@ -1593,7 +1596,7 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( 'card_constraints ', 'too many fields ', nfield )
+                CALL errore( 'card_constraints', 'too many fields', nfield )
                 !
              END IF
              !
@@ -1627,15 +1630,51 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( 'card_constraints ', 'too many fields', nfield )
+                CALL errore( 'card_constraints', 'too many fields', nfield )
+                !
+             END IF
+             !
+          CASE( 5 )
+             !
+             IF ( cg_phs_path_flag ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i),    &
+                                      constr_inp(2,i),    &
+                                      constr_inp(3,i),    &
+                                      constr_inp(4,i),    &
+                                      pos(i,1),           &
+                                      pos(i,2)
+                !
+             ELSE IF ( nfield == 5 ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i), &
+                                      constr_inp(2,i), &
+                                      constr_inp(3,i), &
+                                      constr_inp(4,i)
+                !
+             ELSE IF ( nfield == 6 ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i), &
+                                      constr_inp(2,i), &
+                                      constr_inp(3,i), &
+                                      constr_inp(4,i), &
+                                      constr_target(i)
+                !
+                constr_target_set(i) = .TRUE.
+                !
+             ELSE
+                !
+                CALL errore( 'card_constraints', 'too many fields', nfield )
                 !
              END IF
              !
           CASE DEFAULT
              !
-             READ( input_line, * ) constr_type_inp(i), &
-                                   constr_inp(1,i), &
-                                   constr_inp(2,i)
+             CALL errore( 'card_constraints', &
+                          'unknown contraint type', constr_type_inp(i) )
              !
           END SELECT
           !
@@ -1646,7 +1685,6 @@ MODULE read_cards_module
        RETURN
        !
      END SUBROUTINE card_constraints
-     !
      !
      !------------------------------------------------------------------------
      !    BEGIN manual

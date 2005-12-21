@@ -1471,7 +1471,7 @@ MODULE input_parameters
       INTEGER   :: nconstr_inp               = 0
       REAL (DP) :: constr_tol_inp            = 0.D0
       INTEGER   :: constr_type_inp(natx)     = 0
-      REAL (DP) :: constr_inp(4,natx)        = 0
+      REAL (DP) :: constr_inp(6,natx)        = 0
       REAL (DP) :: constr_target(natx)       = 0.D0
       LOGICAL   :: constr_target_set(natx)   = .FALSE.
 
