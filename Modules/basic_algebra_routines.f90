@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2003-2005 PWSCF group
+! Copyright (C) 2003-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#undef __NOBLAS
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
@@ -17,17 +16,16 @@ MODULE basic_algebra_routines
   ! ... This module contains a limited number of functions and operators
   ! ... for vectorial algebra. Wherever possible the appropriate BLAS routine
   ! ... ( always the double precision version ) is used.
-  ! ... If BLAS are not available compile this module with the -D__NOBLAS
-  ! ... precompiler option.
   !
   ! ... List of public methods :
   !
-  !  x .dot. y          implements the dot product between vectors ( <x|y> )
-  !  norm( x )          computes the norm of a vector ( SQRT(<x|x>) )
-  !  A .times. x        implements the matrix-vector multiplication ( A|x> )
-  !  x .times. A        implements the vector-matrix multiplication ( <x|A )
-  !  matrix( x, y )     implements the vector-vector multiplication ( |x><y| )
-  !  identity( N )      the identity matrix in dimension N
+  !  x .dot. y          dot product between vectors ( <x|y> )
+  !  x .ext. y          external (vector) product between vectors ( <x|y> )
+  !  norm( x )          norm of a vector ( SQRT(<x|x>) )
+  !  A .times. x        matrix-vector multiplication ( A|x> )
+  !  x .times. A        vector-matrix multiplication ( <x|A )
+  !  matrix( x, y )     vector-vector multiplication ( |x><y| )
+  !  identity( N )      identity matrix of rank N
   !
   !
   USE kinds,  ONLY : DP
@@ -36,7 +34,13 @@ MODULE basic_algebra_routines
   !
   INTERFACE OPERATOR( .dot. )
      !
-     MODULE PROCEDURE internal_dot_product
+     MODULE PROCEDURE dot_product_
+     !
+  END INTERFACE
+  !
+  INTERFACE OPERATOR( .ext. )
+     !
+     MODULE PROCEDURE external_product_
      !
   END INTERFACE
   !  
@@ -49,149 +53,107 @@ MODULE basic_algebra_routines
   CONTAINS
      !
      !-----------------------------------------------------------------------
-     FUNCTION internal_dot_product( input_vector1, input_vector2 )
+     FUNCTION dot_product_( vec1, vec2 )
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
        !
-       REAL (DP), INTENT(IN) :: input_vector1(:), input_vector2(:)
-       REAL (DP)             :: internal_dot_product
-#if defined (__NOBLAS)              
+       REAL(DP), INTENT(IN) :: vec1(:), vec2(:)
+       REAL(DP)             :: dot_product_
        !
+       REAL(DP) :: DDOT
+       EXTERNAL    DDOT
        !
-       internal_dot_product = DOT_PRODUCT( input_vector1, input_vector2 )
-#else
-       REAL (DP) :: DDOT
-       EXTERNAL     DDOT
+       dot_product_ = DDOT( SIZE( vec1 ), vec1, 1, vec2, 1 )
        !
-       !
-       internal_dot_product = DDOT( SIZE( input_vector1 ), &
-                                    input_vector1, 1, input_vector2, 1 )
-#endif
-       !
-     END FUNCTION internal_dot_product
+     END FUNCTION dot_product_
      !
+     !-----------------------------------------------------------------------
+     FUNCTION external_product_( vec1, vec2 )
+       !-----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       REAL(DP), INTENT(IN) :: vec1(:), vec2(:)
+       REAL(DP)             :: external_product_(SIZE( vec1 ))
+       !
+       !
+       external_product_(1) = + vec1(2)*vec2(3) - vec1(3)*vec2(2)
+       external_product_(2) = - vec1(1)*vec2(3) - vec1(3)*vec2(1)
+       external_product_(3) = + vec1(1)*vec2(2) - vec1(2)*vec2(1)
+       !
+     END FUNCTION external_product_
      !     
      !----------------------------------------------------------------------- 
-     FUNCTION norm( input_vector )
+     FUNCTION norm( vec )
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
        !
-       REAL (DP), INTENT(IN) :: input_vector(:)
-       REAL (DP)             :: norm
-#if  defined (__NOBLAS)       
+       REAL(DP), INTENT(IN) :: vec(:)
+       REAL(DP)             :: norm
        !
+       REAL(DP) :: DNRM2
+       EXTERNAL    DNRM2   
        !
-       norm = SQRT( input_vector .dot. input_vector )
-#else
-       REAL (DP) :: DNRM2
-       EXTERNAL     DNRM2   
-       !
-       !
-       norm = DNRM2( SIZE( input_vector ), input_vector, 1 )
-#endif
+       norm = DNRM2( SIZE( vec ), vec, 1 )
        !
      END FUNCTION norm
      !
-     !
      !-----------------------------------------------------------------------
-     FUNCTION matrix_times_vector( input_matrix, input_vector )
+     FUNCTION matrix_times_vector( mat, vec )
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
        !
-       REAL (DP), INTENT(IN) :: input_vector(:)
-       REAL (DP), INTENT(IN) :: input_matrix(:,:)
-       REAL (DP)             :: matrix_times_vector(SIZE( input_vector ))
-       INTEGER               :: dim
-#if defined (__NOBLAS)
-       INTEGER :: i
-#endif       
+       REAL(DP), INTENT(IN) :: vec(:)
+       REAL(DP), INTENT(IN) :: mat(:,:)
+       REAL(DP)             :: matrix_times_vector(SIZE( vec ))
+       INTEGER              :: dim
        !
+       dim = SIZE( vec )
        !
-       dim = SIZE( input_vector )
-       !
-#if defined (__NOBLAS)              
-       DO i = 1, dim
-          !
-          matrix_times_vector(i) = input_matrix(i,:) .dot. input_vector(:)
-          !
-       END DO
-#else
-       CALL DGEMV( 'N', dim, dim, 1.D0, input_matrix, dim, &
-                   input_vector, 1, 0.D0, matrix_times_vector, 1 )       
-#endif
+       CALL DGEMV( 'N', dim, dim, 1.D0, mat, dim, &
+                   vec, 1, 0.D0, matrix_times_vector, 1 )
        !
      END FUNCTION  matrix_times_vector
      !
      !
      !-----------------------------------------------------------------------
-     FUNCTION vector_times_matrix( input_vector, input_matrix )
+     FUNCTION vector_times_matrix( vec, mat )
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
        !
-       REAL (DP), INTENT(IN) :: input_vector(:)
-       REAL (DP), INTENT(IN) :: input_matrix(:,:)
-       REAL (DP)             :: vector_times_matrix(SIZE( input_vector ))
-       INTEGER               :: dim
-#if defined (__NOBLAS)
-       INTEGER :: i
-#endif       
+       REAL(DP), INTENT(IN) :: vec(:)
+       REAL(DP), INTENT(IN) :: mat(:,:)
+       REAL(DP)             :: vector_times_matrix(SIZE( vec ))
+       INTEGER              :: dim
        !
+       dim = SIZE( vec )
        !
-       dim = SIZE( input_vector )
-       !
-#if defined (__NOBLAS)              
-       DO i = 1, dim
-          !
-          vector_times_matrix(i) = input_vector(:) .dot. input_matrix(:,i)
-          !
-       END DO
-#else
-       CALL DGEMV( 'T', dim, dim, 1.D0, input_matrix, dim, &
-                   input_vector, 1, 0.D0, vector_times_matrix, 1 )       
-#endif
+       CALL DGEMV( 'T', dim, dim, 1.D0, mat, dim, &
+                   vec, 1, 0.D0, vector_times_matrix, 1 )
        !
      END FUNCTION vector_times_matrix
      !
      !
      !-----------------------------------------------------------------------
-     FUNCTION matrix( input_vector1, input_vector2 )
+     FUNCTION matrix( vec1, vec2 )
        !-----------------------------------------------------------------------
        !
        IMPLICIT NONE
        !
-       REAL (DP), INTENT(IN) :: input_vector1(:), input_vector2(:)
-       REAL (DP)             :: matrix(SIZE( input_vector1 ), &
-                                       SIZE( input_vector2 ))
-       INTEGER               :: dim1, dim2
-#if defined (__NOBLAS)
-       INTEGER :: i, j
-#endif
+       REAL(DP), INTENT(IN) :: vec1(:), vec2(:)
+       REAL(DP)             :: matrix(SIZE( vec1 ),SIZE( vec2 ))
+       INTEGER              :: dim1, dim2
        !
-       !
-       dim1 = SIZE( input_vector1 )
-       dim2 = SIZE( input_vector2 )
-       !
-#if defined (__NOBLAS)              
-       DO i = 1, dim1
-          !
-          DO j = 1, dim2
-             !
-             matrix(i,j) = input_vector1(i) * input_vector2(j)
-             !
-          END DO
-          !
-       END DO      
-#else
+       dim1 = SIZE( vec1 )
+       dim2 = SIZE( vec2 )
        !
        matrix = 0.D0
        !
-       CALL DGER( dim1, dim2, 1.D0, input_vector1, &
-                  1, input_vector2, 1, matrix, dim1 )
-#endif
+       CALL DGER( dim1, dim2, 1.D0, vec1, 1, vec2, 1, matrix, dim1 )
        !
      END FUNCTION matrix
      !
@@ -206,14 +168,9 @@ MODULE basic_algebra_routines
        REAL(DP)            :: identity(dim,dim)
        INTEGER             :: i
        !
-       !
        identity = 0.D0
        !
-       DO i = 1, dim
-          !
-          identity(i,i) = 1.D0
-          !
-       END DO
+       FORALL( i = 1:dim ) identity(i,i) = 1.D0
        !
      END FUNCTION identity
      !    
