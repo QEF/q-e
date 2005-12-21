@@ -17,10 +17,13 @@ subroutine dynmatrix
 #include "f_defs.h"
   !
   USE kinds,         ONLY : DP
-  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, atm
+  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, atm, amass
   USE io_global,     ONLY : stdout
   USE control_flags, ONLY : modenum, noinv
-  use pwcom
+  USE cell_base,     ONLY : at, bg, celldm, ibrav, symm_type
+  USE gvect,         ONLY : nr1, nr2, nr3
+  USE printout_base, ONLY : title
+  USE symme,         ONLY : s, irt, nsym
   use phcom
   USE ramanm,        ONLY: lraman, ramtns
   implicit none

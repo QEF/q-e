@@ -15,8 +15,7 @@ subroutine sym_def (def, irr)
   !
   ! Used in the q=0 metallic case only.
   !
-  use pwcom
-  USE kinds, only : DP
+    USE kinds, only : DP
   use phcom
   implicit none
 

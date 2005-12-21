@@ -18,12 +18,20 @@ subroutine phq_summary
   !    if iverbosity = 0 only a partial summary is done.
   !
   !
-  USE ions_base,     ONLY : nat, ityp, atm, tau, ntyp => nsp
+  USE ions_base,     ONLY : nat, ityp, atm, tau, ntyp => nsp, amass
   USE io_global,     ONLY : stdout
-  use pwcom
+  USE char,          ONLY : crystal, sname
+  USE cell_base,     ONLY : at, bg, ibrav, alat, omega, celldm
+  USE klist,         ONLY : degauss, ngauss, nkstot, xk, wk
+  USE gvect,         ONLY : ecutwfc, dual, nr1, nr2, nr3, gcutm, ngm
+  USE gsmooth,       ONLY : doublegrid, nr1s, nr2s, nr3s, gcutms, ngms
+  USE symme,         ONLY : s, ftau
+  USE pseud,         ONLY : zp, lmax, lloc, cc, aps, nlc, nnl, alpc, alps, &
+       a_nlcc, b_nlcc, alpha_nlcc
   USE atom,          ONLY : numeric, mesh, msh, dx, r , rab, xmin, nlcc
   USE uspp_param,    ONLY : psd, lll, iver, nbeta, nqf, rinner, nqlc, &
        tvanp
+  USE constants,     ONLY : amconv
   use phcom
   USE control_flags, ONLY : iverbosity
   

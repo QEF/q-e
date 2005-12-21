@@ -20,7 +20,9 @@ subroutine dynmat0
 #include "f_defs.h"
   !
   USE ions_base, ONLY : nat,ntyp => nsp, ityp, zv, tau
-  use pwcom
+  USE cell_base, ONLY: alat, omega, at, bg
+  USE gvect, ONLY: g, gg, ngm, gcutm
+  USE symme, ONLY: irt, s
   USE control_flags, ONLY : modenum
   USE kinds,         ONLY : DP
   use phcom

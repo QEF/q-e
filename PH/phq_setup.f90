@@ -44,12 +44,21 @@ subroutine phq_setup
   !
 #include "f_defs.h"
   !
-  USE ions_base,     ONLY : tau, nat, ntyp => nsp
-  USE io_global,     ONLY : stdout
-  use pwcom
-  USE atom,          ONLY : nlcc
-  USE constants,     ONLY : degspin
   USE kinds,         ONLY : DP
+  USE ions_base,     ONLY : tau, nat, ntyp => nsp
+  USE cell_base,     ONLY : at, bg  
+  USE io_global,     ONLY : stdout
+  USE ener,          ONLY : Ef
+  USE klist,         ONLY : xk, degauss, ngauss, nks, nelec
+  USE ktetra,        ONLY : ltetra, tetra
+  USE lsda_mod,      ONLY : nspin, lsda
+  USE scf,           ONLY : vr, vrs, vltot, rho, rho_core
+  USE gvect,         ONLY : nrxx, ngm
+  USE gsmooth,       ONLY : doublegrid
+  USE symme,         ONLY : nsym, s, irt
+  USE atom,          ONLY : nlcc
+  USE constants,     ONLY : degspin, pi
+  USE wvfct,         ONLY : nbnd, et
   use phcom
   USE control_flags, ONLY : iverbosity, modenum
   USE funct,         ONLY : dmxc, dmxc_spin  
