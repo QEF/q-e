@@ -277,7 +277,7 @@ PWOBJS = \
 TLDEPS= bindir mods libs pw
 
 all : tldeps average.x bands.x dos.x efg.x plotband.x plotrho.x \
-      pmw.x pp.x projwfc.x pw2casino.x pw2wan.x pw_export.x \
+      pmw.x pp.x projwfc.x pw2casino.x pw2wan.x pw2wannier90.x pw_export.x \
       voronoy.x initial_state.x dipole.x sumpdos.x
 
 average.x : average.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
@@ -345,6 +345,11 @@ pw2casino.x : pw2casino.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 pw2wan.x : pw2wan.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
 		pw2wan.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+pw2wannier90.x : pw2wannier90.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(MPIF90) $(LDFLAGS) -o $@ \
+		pw2wannier90.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 voronoy.x : voronoy.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
