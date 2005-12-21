@@ -12,25 +12,29 @@ MODULE splinelib
   !
   IMPLICIT NONE
   !
+  PRIVATE
+  PUBLIC :: dosplineint, spline, splint
+  !
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE spline( xdata, ydata, d2y )
+    SUBROUTINE spline( xdata, ydata, startu, startd, d2y )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
-      REAL (DP), INTENT(IN)  :: xdata(:), ydata(:)
+      REAL (DP), INTENT(IN)  :: xdata(:), ydata(:), startu, startd 
       REAL (DP), INTENT(OUT) :: d2y(:)
       INTEGER                     :: i, k, old_num_of_images
       REAL (DP)              :: p, qn, sig, un
-      REAL (DP)              :: u(1000)
+      REAL (DP), ALLOCATABLE :: u(:)
       !
       !
       old_num_of_images = SIZE( ydata )
       !
-      d2y(1) = 0
-      u(1)   = 0
+      allocate(u(old_num_of_images))
+      u(1)   = startu
+      d2y(1) = startd
       !
       DO  i = 2, ( old_num_of_images - 1 ) 
          !
@@ -51,6 +55,8 @@ MODULE splinelib
          d2y(k) = d2y(k) * d2y(k + 1) + u(k) 
          !
       END DO
+      !
+      DEALLOCATE (u)
       !
     END SUBROUTINE spline
     !
@@ -199,7 +205,7 @@ MODULE splinelib
          ! 
          d2y = 0
          !
-         CALL spline( old_mesh , old_vect(i,:) , d2y ) 
+         CALL spline( old_mesh , old_vect(i,:), 0.d0, 0.d0, d2y  ) 
          !
          DO j = 1, new_num_of_images
             !

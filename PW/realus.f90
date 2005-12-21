@@ -58,7 +58,7 @@ contains
     USE parameters, ONLY : nbrx
     USE pfft,       ONLY : npp
     USE mp_global,  ONLY : me_pool
-
+    USE splinelib,  ONLY : spline, splint
     implicit none
 
     integer :: inat, indm, inbrx1, inbrx2, inrxx, idimension, ilm,ih,jh,is,m, iih,ijh, ilemme
@@ -363,7 +363,7 @@ contains
                       call setqfcorrpointsecond(qfcoef (1, l+1, nb, mb, nt), &
                            second, r(1,nt), nqf(nt),l)
 !call spline 
-                      call spline(xsp,ysp,wsp,second,first)
+                      call spline(xsp,ysp,first,second,wsp)
 
 
                       do ir=1,maxbox(inat)
@@ -728,138 +728,6 @@ subroutine addusdens_r
   return
 end subroutine addusdens_r
 
-
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE spline( xdata, ydata, d2y,startd,startu )
-      !------------------------------------------------------------------------
-      !
-      IMPLICIT NONE
-      !
-      REAL (KIND=DP), INTENT(IN)  :: xdata(:), ydata(:)
-      REAL (KIND=DP), INTENT(OUT) :: d2y(:)
-      INTEGER                     :: i, k, old_num_of_images
-      REAL (KIND=DP)              :: p, qn, sig, un,startd,startu
-      REAL (KIND=DP),allocatable  :: u(:)
-      !
-      !
-      old_num_of_images = SIZE( ydata )
-      !
-      allocate(u(old_num_of_images))
-      d2y(1) = startd
-      u(1)   = startu
-      !
-      DO  i = 2, ( old_num_of_images - 1 ) 
-         !
-         sig    = ( xdata(i) - xdata(i - 1) ) / ( xdata(i + 1) - xdata(i - 1) ) 
-         p      = sig * d2y(i - 1) + 2.D0 
-         d2y(i) = ( sig - 1.D0 ) / p 
-         u(i)   = ( 6.D0 * ( (ydata(i + 1) - ydata(i) ) / &
-                  ( xdata(i + 1) - xdata(i) ) - ( ydata(i) - ydata(i - 1) ) / &
-                  ( xdata(i) - xdata(i - 1) ) ) / &
-                  ( xdata(i + 1) - xdata(i - 1) ) - sig * u(i - 1) ) / p 
-         !       
-      END DO
-      !
-      d2y(old_num_of_images) = 0  
-      !
-      DO  k = ( old_num_of_images - 1 ), 1, -1 
-         !
-         d2y(k) = d2y(k) * d2y(k + 1) + u(k) 
-         !
-      END DO
-      !
-    END SUBROUTINE spline
-    !
-    !
-    !------------------------------------------------------------------------
-    FUNCTION splint( xdata, ydata, d2y, x )
-      !------------------------------------------------------------------------
-      !
-      IMPLICIT NONE
-      !
-      REAL (KIND=DP), INTENT(IN)  :: xdata(:), ydata(:), d2y(:)
-      REAL (KIND=DP), INTENT(IN)  :: x
-      REAL (KIND=DP)              :: splint
-      INTEGER                     :: k, khi, klo, dim
-      REAL (KIND=DP)              :: a, b, h
-      !
-      !
-      dim = SIZE( xdata )
-      klo = 1
-      khi = dim
-      !
-      klo = MAX( MIN( locate( xdata , x ) , ( dim - 1 ) ) , 1 )
-      !
-      khi = klo + 1
-      !
-      h = xdata(khi) - xdata(klo)
-      !
-      a = ( xdata(khi) - x ) / h
-      b = ( x - xdata(klo) ) / h
-      !
-      splint = a * ydata(klo) + b * ydata(khi) + &
-               ( ( a**3 - a ) * d2y(klo) + ( b**3 - b ) * d2y(khi) ) * &
-               ( h**2 ) / 6.D0
-      !
-      CONTAINS
-         !
-         !-------------------------------------------------------------------
-         FUNCTION locate( xx , x )
-           !-------------------------------------------------------------------
-           !
-           IMPLICIT NONE
-           !
-           REAL (KIND=DP), INTENT(IN)  :: xx(:)
-           REAL (KIND=DP), INTENT(IN)  :: x
-           INTEGER                     :: locate
-           INTEGER                     :: n, jl, jm, ju
-           LOGICAL                     :: ascnd
-           !
-           !
-           n     = SIZE( xx )
-           ascnd = ( xx(n) >= xx(1) )
-           jl    = 0
-           ju    = n + 1
-           !
-           main_loop: DO
-              !
-              IF ( ( ju - jl ) <= 1 ) EXIT main_loop
-              ! 
-              jm = ( ju + jl ) / 2
-              !
-              IF ( ascnd .EQV. ( x >= xx(jm) ) ) THEN
-                 !
-                 jl = jm
-                 !
-              ELSE
-                 !
-                 ju = jm
-                 !
-              END IF
-              !
-           END DO main_loop
-           !
-           IF ( x == xx(1) ) THEN
-              !
-              locate = 1
-              !
-           ELSE IF ( x == xx(n) ) THEN
-              !
-              locate = n - 1
-              !
-           ELSE 
-              !
-              locate = jl
-              !
-           END IF
-           !
-         END FUNCTION locate      
-         !
-    END FUNCTION splint
-    !
-    !
-    !------------------------------------------------------------------------
    
     !
 END MODULE realus
