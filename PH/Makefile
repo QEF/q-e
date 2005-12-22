@@ -144,6 +144,7 @@ MODULES = \
 ../Modules/read_namelists.o \
 ../Modules/readpseudo.o \
 ../Modules/recvec.o \
+../Modules/splinelib.o \
 ../Modules/stick_base.o \
 ../Modules/shmem_include.o \
 ../Modules/timestep.o \

@@ -185,6 +185,7 @@ MODULES = \
 ../Modules/readpseudo.o \
 ../Modules/recvec.o \
 ../Modules/shmem_include.o \
+../Modules/splinelib.o \
 ../Modules/stick_base.o \
 ../Modules/uspp.o \
 ../Modules/timestep.o \
