@@ -22,15 +22,16 @@ SUBROUTINE read_input_vib()
   USE input_parameters, ONLY : atom_label
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_bcast
-  USE vibrations,       ONLY : displacement, save_freq,                      &
+  USE vibrations,       ONLY : displacement, save_freq,                            &
        trans_inv_max_iter, trans_inv_conv_thr, vib_restart_mode,             &
        trans_inv_flag, trans_rot_inv_flag, animate, isotope
 #ifdef DFT_CP
-  USE io_files,         ONLY : outdir, prefix 
+  USE io_files,         ONLY : outdir, prefix
 #endif
+
 #ifdef DFT_PW
   USE dynam,            ONLY : amass
-  USE io_files,         ONLY : outdir=>tmp_dir,prefix
+  USE io_files,         ONLY : prefix, outdir=>tmp_dir
 #endif
   !
   IMPLICIT NONE
