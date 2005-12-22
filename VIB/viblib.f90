@@ -254,11 +254,11 @@ SUBROUTINE symmetrize_matrix(M, dim)
   !
   RETURN
 END SUBROUTINE symmetrize_matrix
-  !
-  !
-  !  ----------------------------------------------
-  !
-  !
+!
+!
+!  ----------------------------------------------
+!
+!
 SUBROUTINE relax_wavefunction (fion)
   !
   ! A DRIVER ROUTINE FOR WAVE FUNCTION RELAXATION
@@ -367,9 +367,9 @@ SUBROUTINE relax_wavefunction (fion)
   !
   RETURN
 END SUBROUTINE relax_wavefunction
-  !
-  !  ----------------------------------------------
-  !
+!
+!  ----------------------------------------------
+!
 subroutine set_guess_wfc ( disp_sign )
   !
   USE kinds,                ONLY : DP
@@ -386,7 +386,7 @@ subroutine set_guess_wfc ( disp_sign )
   USE klist,                ONLY : nks
   USE scf,              ONLY : rho, rho_core, vr
   USE gvect,            ONLY : nrxx, ngm, g, gg, gstart,  nr1, nr2, nr3, nl, &
-                               eigts1, eigts2, eigts3, nrx1, nrx2, nrx3
+       eigts1, eigts2, eigts3, nrx1, nrx2, nrx3
   USE cell_base,        ONLY : omega, bg, alat
   USE ener,             ONLY : ehart, etxc, vtxc
   USE extfield,         ONLY : etotefield
@@ -426,8 +426,8 @@ subroutine set_guess_wfc ( disp_sign )
         CALL io_pot( - 1, 'old2rho', rho, 1 )
         !
         CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-                       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-                       ehart, etxc, vtxc, etotefield, charge, vr )
+             nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+             ehart, etxc, vtxc, etotefield, charge, vr )
         !
         ! .. swapping the wavefunctions
         !
@@ -476,3 +476,30 @@ subroutine set_guess_wfc ( disp_sign )
 
   return
 end subroutine set_guess_wfc
+!
+!
+!  ----------------------------------------------
+!
+!
+SUBROUTINE cofmass( tau, mass, nat, com )
+  !
+  ! ... calculation of the center of mass
+  !
+  USE kinds,        only : DP
+  IMPLICIT NONE
+  REAL(DP), INTENT(IN)  :: tau(3,nat), mass(nat)
+  REAL(DP), INTENT(OUT) :: com(3)
+  INTEGER,  INTENT(IN)  :: nat
+
+  REAL(DP) :: tmas
+  INTEGER :: is, i, ia
+  !
+  tmas=SUM(mass(1:nat))
+  !
+  do i=1,3
+     com(i)=DOT_PRODUCT(tau(i,1:nat),mass(1:nat))
+     com(i)=com(i)/tmas
+  end do
+  !
+  RETURN
+END SUBROUTINE cofmass

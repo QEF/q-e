@@ -515,7 +515,6 @@ CONTAINS
                                     - fion(1:3,iax2)
                             END IF
                          END DO
-    CALL print_matrix(U,3*nat,3*nat," Hessian:  ",stdout)
                          ! adding negative sign, since electronic charge is positive
                          ! in this CP code.
                          born_charge(:,index)=-(dipole-dip_minus)/(2*displacement)
@@ -694,7 +693,12 @@ CONTAINS
        ! ... creating xyz animation files
        !
        IF (animate) &
+#ifdef DFT_CP
             CALL animation (ref_tau,eigenvecs,eigenvals)
+#endif
+#ifdef DFT_PW
+            CALL animation (ref_tau*alat,eigenvecs,eigenvals)
+#endif
        !
        !
        !------------------------------------------------------------------------------------------
@@ -726,7 +730,6 @@ CONTAINS
 #ifdef DFT_PW
           CALL internal_hessian(U_tmp,T_tmp,nmodes,ref_tau*alat,D,filep)
 #endif
-
           !
           ALLOCATE(U_internal(nmodes,nmodes))
           ALLOCATE(T_internal(nmodes,nmodes))
@@ -996,9 +999,13 @@ CONTAINS
     ! to the Hessian. The resulting hessian is of dimension 3*nat-6 (or 5), and
     ! reflects only internal modes of motion.
     !
+    USE constants,            ONLY : AMU_AU
     USE control_flags,        ONLY : iprsta
     USE kinds,                ONLY : DP
-    USE ions_base,            ONLY : nat, pmass, ityp, nsp, na, ions_cofmass
+    USE ions_base,            ONLY : nat, pmass, ityp, nsp, na
+#ifdef DFT_PW
+    USE dynam,                ONLY : amass
+#endif
     !
     ! ... input variables
     !
@@ -1022,6 +1029,10 @@ CONTAINS
     REAL (KIND=DP)                :: xx, yy, zz 
     REAL (KIND=DP)                :: P(nat,3)
     INTEGER                       :: index, zero_moment_index
+    !
+#ifdef DFT_PW
+    pmass = amass * AMU_AU
+#endif    
     !
     ! Transforming U_loc to mass weighted coordintaes and T_loc to unity matrix
     !
@@ -1049,8 +1060,9 @@ CONTAINS
     !
     IF(iprsta.GT.4) &
          PRINT *,'tau=',tau
-
-    CALL ions_cofmass(tau,pmass,na,nsp,Rcom)
+    !
+    CALL cofmass(tau,isotope,nat,Rcom)
+    !
     IF(iprsta.GT.4) &
          PRINT *,'Rcom=',Rcom
     !
