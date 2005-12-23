@@ -293,7 +293,7 @@ subroutine generate_guiding_functions(ik)
       do ig=1,npw
          arg = tpi * (g(1,ig)*rw(1,iw)+g(2,ig)*rw(2,iw)+g(3,ig)*rw(3,iw))
          gf(ig,iw) = fac * exp(-0.5d0*alpha_w2*g2kin(ig)*tpiba2) * &
-                           CMPLX(cos(arg),sin(arg))
+                           CMPLX(cos(arg),-sin(arg))
       end do
       anorm = ZDOTC(npw,gf(1,iw),1,gf(1,iw),1)
       write (*,*) iw, ik, anorm
