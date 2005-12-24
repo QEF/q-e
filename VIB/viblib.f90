@@ -356,7 +356,7 @@ SUBROUTINE relax_wavefunction (fion)
 #ifdef DFT_PW
   fion = 0.0
   force = 0.0
-  call hinit0 ()
+  !call hinit0 ()
   CALL hinit1 ()
   call electrons()
   call forces()
@@ -383,13 +383,17 @@ subroutine set_guess_wfc ( disp_sign )
   USE scf,                  ONLY : rho
   USE wavefunctions_module, ONLY : evc
   USE io_files,             ONLY : nwordwfc, iunwfc, iunoldwfc2, prefix
+  USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
   USE klist,                ONLY : nks
-  USE scf,              ONLY : rho, rho_core, vr
-  USE gvect,            ONLY : nrxx, ngm, g, gg, gstart,  nr1, nr2, nr3, nl, &
-       eigts1, eigts2, eigts3, nrx1, nrx2, nrx3
-  USE cell_base,        ONLY : omega, bg, alat
-  USE ener,             ONLY : ehart, etxc, vtxc
-  USE extfield,         ONLY : etotefield
+  USE scf,                  ONLY : rho, rho_core, vr
+  USE gvect,                ONLY : nrxx, ngm, g, gg, gstart,  & 
+                                   nr1, nr2, nr3, nl, &
+                                   eigts1, eigts2, eigts3, & 
+                                   nrx1, nrx2, nrx3
+  USE cell_base,            ONLY : omega, bg, alat
+  USE ener,                 ONLY : ehart, etxc, vtxc
+  USE extfield,             ONLY : etotefield
+  USE vlocal,               ONLY : strf
 
 #endif
   !
@@ -400,7 +404,7 @@ subroutine set_guess_wfc ( disp_sign )
   ! ... local variables
   !
   logical                       :: exst
-  REAL(kind=DP) :: charge
+  REAL(kind=DP)                 :: charge
   !
   !
 #ifdef DFT_CP
@@ -446,7 +450,6 @@ subroutine set_guess_wfc ( disp_sign )
         !
      end if
      history = 1
-     !history = 0
      call update_pot()
      !
 #endif
@@ -461,7 +464,6 @@ subroutine set_guess_wfc ( disp_sign )
 #endif
 #ifdef DFT_PW
      history = 2
-     !history = 0
      call update_pot()
 #endif
      !
@@ -472,6 +474,11 @@ subroutine set_guess_wfc ( disp_sign )
 #ifdef DFT_CP
   cm      = c0
   lambdam = lambda
+#endif
+
+#ifdef DFT_PW
+  CALL struc_fact( nat, tau, ntyp, ityp, ngm, g, bg, &
+       nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
 #endif
 
   return
