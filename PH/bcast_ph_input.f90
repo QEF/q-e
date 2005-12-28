@@ -6,10 +6,10 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine bcast_ph_input
+subroutine bcast_ph_input ( )
   !-----------------------------------------------------------------------
   !
-  !     In this routine the first processor send the input to all
+  !     In this routine the first processor sends the input to all
   !     the other processors
   !
   !
@@ -41,6 +41,7 @@ subroutine bcast_ph_input
   call mp_bcast (lraman, root)
   call mp_bcast (elop, root)
   call mp_bcast (recover, root)
+  call mp_bcast (la2F, root)
   !
   ! integers
   !

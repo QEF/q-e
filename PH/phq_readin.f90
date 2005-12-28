@@ -31,7 +31,7 @@ SUBROUTINE phq_readin()
   USE char_ph,       ONLY : title_ph
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma, epsil, zue, trans, &
                             elph, tr2_ph, niter_ph, nmix_ph, maxirr, lnscf, &
-                            ldisp, recover
+                            ldisp, la2f, recover
   USE qpoint,        ONLY : nksq, xq
   USE partial,       ONLY : atomo, list, nat_todo, nrapp
   USE output,        ONLY : fildyn, filelph, fildvscf, fildrho
@@ -59,7 +59,8 @@ SUBROUTINE phq_readin()
                        trans, elph, zue, nrapp, max_seconds, reduce_io, &
                        prefix, fildyn, filelph, fildvscf, fildrho,   &
                        lnscf, ldisp, nq1, nq2, nq3, modenum,         &
-                       eth_rps, eth_ns, lraman, elop, dek, recover
+                       eth_rps, eth_ns, lraman, elop, dek, recover, &
+                       la2F
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
   ! alpha_mix    : the mixing parameter

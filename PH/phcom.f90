@@ -250,17 +250,18 @@ MODULE control_ph
   ! the mixing parameter
   ! CPU time up to now
   ! the alpha value for shifting the bands
-  LOGICAL :: lgamma, convt, epsil, trans, elph, zue, recover
-  ! if .TRUE. this is a q=0 computation
-  ! if .TRUE. the phonon has converged
-  ! if .TRUE. computes dielec. const and eff. c
-  ! if .TRUE. computes phonons
-  ! if .TRUE. computes electron-phonon interact
-  ! if .TRUE. computes eff.cha. with ph
-  ! if .TRUE. the run restart
+  LOGICAL :: lgamma, convt, epsil, trans, elph, la2f, zue, recover
+  ! lgamma: if .TRUE. this is a q=0 computation
+  ! convt : if .TRUE. the phonon has converged
+  ! epsil : if .TRUE. computes dielec. const and eff. charges
+  ! trans : if .TRUE. computes phonons
+  ! elph  : if .TRUE. computes electron-phonon interaction coefficients
+  ! la2f  : if .TRUE. use a more sophisticated algorithm for el-phon 
+  ! zue   : if .TRUE. computes eff. charges. as induced polarization
+  ! recover:if .TRUE. the run restarts
   logical :: lnscf, ldisp
-  ! if .TRUE. the run makes first a nscf calculation
-  ! if .TRUE. the run calculates the points for a dispersion
+  ! lnscf : if .TRUE. the run makes first a nscf calculation
+  ! ldisp : if .TRUE. the run calculates the q-points for a full dispersion
   !
 END MODULE control_ph
 !

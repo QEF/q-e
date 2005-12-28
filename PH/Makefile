@@ -24,6 +24,7 @@ bcast_ph_input1.o \
 cg_psi.o \
 cgsolve_all.o \
 ch_psi_all.o \
+clinear.o \
 close_phq.o \
 compute_alphasum.o \
 compute_becalp.o \
@@ -103,6 +104,7 @@ symdvscf.o \
 symdyn_munu.o \
 symdynph_gq.o \
 syme.o \
+symm.o \
 tra_write_matrix.o \
 trntnsc.o \
 write_dyn_on_file.o \
@@ -155,6 +157,7 @@ MODULES = \
 ../Modules/xml_io_base.o
 
 PWOBJS = \
+../PW/a2fmod.o \
 ../PW/add_bfield.o \
 ../PW/add_efield.o \
 ../PW/add_vuspsi.o \
@@ -227,6 +230,7 @@ PWOBJS = \
 ../PW/efermig.o \
 ../PW/efermit.o \
 ../PW/electrons.o \
+../PW/enfdos.o \
 ../PW/eqvect.o \
 ../PW/error_handler.o \
 ../PW/estimate.o \

@@ -13,9 +13,12 @@ SUBROUTINE elphon()
   !
   ! Electron-phonon calculation from data saved in fildvscf
   !
-  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau
-  USE pwcom
   USE kinds, ONLY : DP
+  USE cell_base, ONLY : celldm, omega, ibrav
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
+  USE gvect, ONLY: nrxx
+  USE gsmooth, ONLY: nrxxs, doublegrid
+  USE lsda_mod, ONLY: nspin
   USE phcom
   USE el_phon
   !
@@ -26,6 +29,7 @@ SUBROUTINE elphon()
   ! counter on the modes
   ! the change of Vscf due to perturbations
   COMPLEX(DP), POINTER :: dvscfin(:,:,:), dvscfins (:,:,:)
+
 
   CALL start_clock ('elphon')
 
@@ -167,10 +171,14 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
   !         <\psi(k+q)|dV_{SCF}/du^q_{i a}|\psi(k)>
   !      Original routine written by Francesco Mauri
   !
-  USE pwcom
-  USE wavefunctions_module,  ONLY: evc
   USE kinds, ONLY : DP
+  USE gsmooth, ONLY: nrxxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nls
+  USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: iunigk
+  USE klist, ONLY: xk
+  USE lsda_mod, ONLY: nspin, lsda, current_spin, isk
+  USE wvfct, ONLY: nbnd, npw, igk
+  USE uspp, ONLY : vkb
   USE phcom
   USE el_phon
   IMPLICIT NONE
@@ -178,7 +186,7 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
   INTEGER :: npe, imode0
   COMPLEX(DP) :: dvscfins (nrxxs, nspin, npe)
   ! LOCAL variables
-  INTEGER :: ik, ikk, ikq, ipert, mode, nrec, ibnd, jbnd, ir, ig, &
+  INTEGER :: nrec, ik, ikk, ikq, ipert, mode, ibnd, jbnd, ir, ig, &
        ios
   COMPLEX(DP) , ALLOCATABLE :: aux1 (:), elphmat (:,:,:)
   COMPLEX(DP) :: ZDOTC
@@ -290,35 +298,83 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
 END SUBROUTINE elphel
 !
 !-----------------------------------------------------------------------
-SUBROUTINE elphsum
+SUBROUTINE elphsum ( )
   !-----------------------------------------------------------------------
   !
   !      Sum over BZ of the electron-phonon matrix elements el_ph_mat
-  !      Original routine written by Francesco Mauri
+  !      Original routine written by Francesco Mauri, modified by PG
+  !      New version by  Malgorzata Wierzbowska 
   !
-  USE ions_base, ONLY : nat
-  USE pwcom
-  USE kinds, ONLY : DP
+  USE kinds,     ONLY : DP
+  USE ions_base,     ONLY : nat, ityp, tau
+  USE cell_base,     ONLY : at, bg, ibrav, symm_type
+  USE gvect, ONLY: nr1, nr2, nr3
+  USE lsda_mod, ONLY: isk
+  USE klist, ONLY: nks, xk, wk, nelec
+  USE ktetra, ONLY: nk1, nk2, nk3
+  USE symme, ONLY: s, irt, nsym
+  USE wvfct, ONLY: nbnd, et
   USE phcom
   USE el_phon
   USE mp_global, ONLY : me_pool, root_pool
+  USE control_flags, ONLY : modenum, noinv
+  USE control_ph, ONLY : lgamma
+  USE io_files,  ONLY : prefix
   !
   IMPLICIT NONE
-  ! eps = 20 cm^-1, in Ry
-  REAL(DP) :: eps
-  PARAMETER (eps = 20.d0 / 13.6058d0 / 8065.5d0)
+  ! epsw = 20 cm^-1, in Ry
+  REAL(DP), PARAMETER :: epsw = 20.d0 / 13.6058d0 / 8065.5d0, &
+       eps = 1.0d-6
+  !
+  INTEGER :: iuna2Fsave  = 40
+  !
+  REAL(DP), allocatable :: gam(:,:), lamb(:,:)
+  !
+  ! Quantities ending with "fit" are relative to the "dense" grid
+  !
+  REAL(DP), allocatable :: etfit(:,:), xkfit(:,:), wkfit(:)
+  INTEGER :: nksfit, nk1fit, nk2fit, nk3fit, nkfit
+  INTEGER, allocatable :: eqkfit(:), eqqfit(:), sfit(:)
+  !
+  ! Quantities ending with "gam" are symmetries for Gamma (q=0) 
+  !
+  INTEGER :: nsymgam, sgam(3,3,48), invsgam(48), tablegam(48,48), &
+       irtgam(48,nat)
+  REAL(DP) :: rtaugam(3,48,nat)
+  LOGICAL  :: symgam(48)
+  !
+  ! workspace used for symmetrisation
+  !
+  COMPLEX(DP), allocatable :: g0(:,:,:), g3(:,:,:), g1(:,:), g2(:,:), gf(:,:,:)
+  COMPLEX(DP), allocatable :: point(:), noint(:)
+  COMPLEX(DP) :: ctemp, dyn22(3*nat,3*nat)
+  !
+  ! Quantities ending with "loc" are ... what???
+  !
+  integer :: nsymloc, sloc(3,3,48), invsloc(48), irtloc(48,nat), &
+             nqloc, isqloc(48), imqloc
+  real(DP) :: rtauloc(3,48,nat), sxqloc(3,48)
+  !
+  ! Misc auxiliary variables
   !
   INTEGER :: ik, ikk, ikq, isig, ibnd, jbnd, ipert, jpert, nu, mu, &
-       vu, ngauss1, nsig, iuelph, ios
-  REAL(DP) :: weight, w0g1, w0g2, w0gauss, degauss1, dosef, &
+       vu, ngauss1, ngauss2, nsig, iuelph, ios, i,k,j, ii, jj
+  INTEGER :: nkBZ, nti, ntj, ntk, nkr, itemp1, itemp2, nn, ifile, &
+       qx,qy,qz,iq,jq,kq
+  INTEGER, ALLOCATABLE :: eqBZ(:), sBZ(:)
+  REAL(DP) :: weight, wqa, w0g1, w0g2, degauss1, degauss2, dosef, &
        ef1, phase_space, lambda, gamma
-  REAL(DP), EXTERNAL :: dos_ef, efermig
+  REAL(DP) :: deg(10), effit(10), dosfit(10), etk, etq
+  REAL(DP), EXTERNAL :: dos_ef, efermig, w0gauss
+  character(len=9) :: name
+  LOGICAL  :: exst
   !
   COMPLEX(DP) :: el_ph_sum (3*nat,3*nat)
-
+  !
   !
   WRITE (6, '(5x,"electron-phonon interaction  ..."/)')
   ngauss1 = 1
+  ngauss2 = 1
   nsig = 10
   IF (filelph.NE.' ') THEN
 
@@ -332,7 +388,7 @@ SUBROUTINE elphsum
              100, iostat = ios)
 100     CALL errore ('elphon', 'opening file'//filelph, ABS (ios) )
         REWIND (iuelph)
-        WRITE (iuelph, '(3f15.8,2i8)') xq, nsig, 3 * nat
+        WRITE (iuelph, '(3f15.8,2i8)') xq, nsig, 3*nat
         WRITE (iuelph, '(6e14.6)') (w2 (nu) , nu = 1, nmodes)
         !
      END IF
@@ -341,7 +397,260 @@ SUBROUTINE elphsum
      iuelph = 0
   ENDIF
   !
+  IF(la2F) THEN
+     !
+     ! read eigenvalues for the dense grid
+     !
+     CALL seqopn( iuna2Fsave, 'a2Fsave', 'FORMATTED', exst )
+     READ(iuna2Fsave,*) ibnd, nksfit
+     if ( ibnd /= nbnd ) call errore('elphsum','wrong file read',iuna2Fsave)
+     allocate (etfit(nbnd,nksfit), xkfit(3,nksfit), wkfit(nksfit))
+     READ(iuna2Fsave,*) etfit
+     READ(iuna2Fsave,*) ((xkfit(i,ik), i=1,3), ik=1,nksfit)
+     READ(iuna2Fsave,*) wkfit
+     READ(iuna2Fsave,*) nk1fit, nk2fit, nk3fit
+     nkfit=nk1fit*nk2fit*nk3fit
+     ! 
+     !    Read symmetries for q=0 from file (needed for symmetrization)
+     !
+     READ( iuna2Fsave, * )  nsymgam
+     do k=1,nsymgam
+        READ( iuna2Fsave, * )  ((sgam(i,j,k),j=1,3),i=1,3)
+     enddo
+     READ( iuna2Fsave, * )  ((irtgam(i,j),i=1,nsymgam),j=1,nat)
+     !
+     ! find S^{-1} for q=0 
+     !
+     call multable (nsymgam, sgam, tablegam)
+     do k = 1, nsymgam
+        do nn = 1, nsymgam
+           if (tablegam (k, nn) ==  1 ) invsgam (k) = nn
+        enddo
+     enddo
+     !
+     ! find rtau = S tau for q=0 
+     !
+     symgam(1:nsymgam) = .true.
+     CALL sgam_ph (at, bg, nsymgam, sgam, irtgam, tau, rtaugam, nat, symgam)
+     !
+     !
+     CLOSE( UNIT = iuna2Fsave, STATUS = 'KEEP' )
+     !
+     ! calculate Ef and DOS(Ef) using dense grid
+     !
+     do isig=1,nsig
+        deg(isig) = 0.005d0*isig
+        effit(isig) = efermig &
+             ( etfit, nbnd, nksfit, nelec, wkfit, deg(isig), ngauss1, 0, isk)
+        dosfit(isig) = dos_ef ( ngauss1, deg(isig), effit(isig), etfit, &
+             wkfit, nksfit, nbnd) / 2.0d0
+     enddo
+     allocate (eqkfit(nkfit), eqqfit(nkfit), sfit(nkfit))
+     !
+     ! map k-points in the IBZ top k-points in the complete uniform grid
+     !
+     call lint ( nsymgam, sgam, .true., at, bg, npk, 0,0,0, &
+          nk1fit,nk2fit,nk3fit, nksfit, xkfit, 1, nkfit, eqkfit, sfit)
+     deallocate (sfit, xkfit, wkfit)
+     !
+     ! find epsilon(k+q) in the dense grid
+     !
+     call cryst_to_cart (1, xq, at, -1)
+     qx = nint(nk1fit*xq(1))
+     if (abs(qx-nk1fit*xq(1)) > eps) &
+          call errore('elphsum','q is not a vector in the dense grid',1)
+     if (qx < 0) qx = qx + nk1fit
+     if (qx > nk1fit) qx = qx - nk1fit
+     qy = nint(nk2fit*xq(2))
+     if (abs(qy-nk2fit*xq(2)) > eps) &
+          call errore('elphsum','q is not a vector in the dense grid',2)
+     if (qy < 0) qy = qy + nk2fit
+     if (qy > nk2fit) qy = qy - nk2fit
+     qz = nint(nk3fit*xq(3))
+     if (abs(qz-nk3fit*xq(3)) > eps) &
+          call errore('elphsum','q is not a vector in the dense grid',3)
+     if (qz < 0) qz = qz + nk3fit
+     if (qz > nk3fit) qz = qz - nk3fit  
+     call cryst_to_cart (1, xq, bg, 1)
+     !
+     eqqfit(:) = 0
+     do i=1,nk1fit
+        do j=1,nk2fit
+           do k=1,nk3fit
+              ik = k-1 + (j-1)*nk3fit + (i-1)*nk2fit*nk3fit + 1
+              iq = i+qx 
+              if (iq > nk1fit) iq = iq - nk1fit
+              jq = j+qy 
+              if (jq > nk2fit) jq = jq - nk2fit
+              kq = k+qz 
+              if (kq > nk3fit) kq = kq - nk3fit
+              nn = (kq-1)+(jq-1)*nk3fit+(iq-1)*nk2fit*nk3fit + 1
+              eqqfit(ik) = eqkfit(nn)
+           enddo
+        enddo
+     enddo
+     !
+     ! calculate the electron-phonon coefficient using the dense grid
+     !
+     nti  = nk1fit/nk1 
+     ntj  = nk2fit/nk2
+     ntk  = nk3fit/nk3
+     nkBZ  = nk1*nk2*nk3
+     allocate (eqBZ(nkBZ), sBZ(nkBZ))
+     !
+     IF ( lgamma ) THEN
+        call lint ( nsym, s, minus_q, at, bg, npk, 0,0,0, &
+             nk1,nk2,nk3, nks, xk, 1, nkBZ, eqBZ, sBZ)
+     ELSE
+        call lint ( nsym, s, minus_q, at, bg, npk, 0,0,0, &
+             nk1,nk2,nk3, nks, xk, 2, nkBZ, eqBZ, sBZ)
+     END IF
+     !
+     allocate (gf(3*nat,3*nat,nsig))
+     gf = (0.0d0,0.0d0)
+     !
+     wqa  = 2.0d0/nkfit
+     do ibnd = 1, nbnd
+        do jbnd = 1, nbnd
+           allocate (g3(nkBZ,3*nat,3*nat))
+           allocate (g0(nksq,3*nat,3*nat))
+           do ik = 1, nksq
+              do ii = 1, 3*nat
+                 do jj = 1, 3*nat
+                    g0(ik,ii,jj)=conjg(el_ph_mat(jbnd,ibnd,ik,ii))* &
+                         el_ph_mat(jbnd,ibnd,ik,jj)
+                 enddo    ! ipert
+              enddo    !jpert
+           enddo   ! ik
+!
+           allocate (g1(3*nat,3*nat))
+           allocate (g2(3*nat,3*nat))
+           do i=1,nk1
+              do j=1,nk2
+                 do k=1,nk3
+                    nn = k-1 + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
+                    itemp1 = eqBZ(nn)
+                    g1(:,:) = g0(itemp1,:,:)
+                    itemp2 = sBZ(nn)
+                    call symm( g1, g2, u, xq, s, itemp2, rtau, irt, &
+                         at, bg, nat)
+                    g3(nn,:,:) = g2(:,:)
+                 enddo ! k
+              enddo !j
+           enddo !i
+           deallocate (g2)
+           deallocate (g1)
+           deallocate (g0)
+           !
+           allocate (point(nkBZ))
+           allocate (noint(nkfit))
+           do jpert = 1, 3 * nat
+              do ipert = 1, 3 * nat
+                 !
+                 point(:) = g3(:,ipert,jpert)
+                 !
+                 CALL clinear(nk1,nk2,nk3,nti,ntj,ntk,point,noint)
+                 !
+                 do isig = 1, nsig
+                    degauss2 = deg(isig)
+                    ctemp = (0.0d0,0.0d0)
+                    do ik=1,nkfit
+                       etk = etfit(ibnd,eqkfit(ik))
+                       etq = etfit(jbnd,eqqfit(ik))
+                       w0g1 = w0gauss( (effit(isig)-etk) &
+                                      / degauss2,ngauss2) / degauss2 
+                       w0g2 = w0gauss( (effit(isig)-etq) &
+                                      / degauss2,ngauss2) / degauss2
+                       weight = wqa * w0g1 * w0g2
+                       ctemp = ctemp + noint(ik)*weight
+                    enddo
+                    gf(ipert,jpert,isig) = gf(ipert,jpert,isig) + ctemp
+                 enddo ! isig 
+              enddo    ! ipert
+           enddo    !jpert
+           deallocate (point)
+           deallocate (noint)
+           deallocate (g3)
+           ! 
+        enddo    ! ibnd 
+     enddo    ! jbnd
+
+     deallocate (eqqfit, eqkfit)
+     deallocate (etfit)
+     deallocate (eqBZ, sBZ)
+!
+     allocate (gam(3*nat,nsig), lamb(3*nat,nsig))
+     lamb(:,:) = 0.0d0
+     gam (:,:) = 0.0d0
+     do isig= 1,nsig
+        do nu = 1,3*nat
+           gam(nu,isig) = 0.0d0
+           do mu = 1, 3 * nat
+              do vu = 1, 3 * nat
+                 gam(nu,isig) = gam(nu,isig) + DBLE(conjg(dyn(mu,nu)) * &
+                      gf(mu,vu,isig) * dyn(vu,nu))
+              enddo
+           enddo
+           gam(nu,isig) = gam(nu,isig) *  3.1415926/2.0d0
+           if (sqrt(abs(w2(nu))) > epsw) then
+              ! lambda is the adimensional el-ph coupling for mode nu:
+              ! lambda(nu)= gamma(nu)/(pi N(Ef) \omega_{q,nu}^2)
+              lamb(nu,isig) = gam(nu,isig) / 3.1415926/ &
+                   w2(nu)/dosfit(isig)
+           else
+              lamb(nu,isig) = 0.0d0
+           endif
+        enddo  !nu
+     enddo  ! isig
+     !      write(60,*) ' Finally lambda for modes '
+     !      write(60,*) ' mode   frequency [THz]   lambda    gamma [GHz]'
+     do isig= 1,nsig
+        degauss2 = deg(isig) 
+        write(*,'(A13,F6.4)') ' Broadening ',degauss2
+        do nu=1,3*nat
+           write(*,'(A6,I4,3F20.10)') ' mode ',nu, &
+                sqrt(w2(nu))*3289.828, lamb(nu,isig), gam(nu,isig)*3.289828d6
+           gam(nu,isig) = gam(nu,isig)*3.289828d6
+        enddo
+     enddo
+     write(*,*)
+     do isig= 1,nsig
+        degauss2 = deg(isig)
+        write(*,'(F6.4,3F20.10)') degauss2, (gam(nu,isig),nu=1,3*nat)
+     enddo
+     if(allocated(gam)) deallocate (gam)
+     if(allocated(lamb)) deallocate (lamb)
+     write(*,*)
+     write(*,*)
+     write(*,*)
+     !
+     !    Prepare interface to q2r and matdyn
+     !
+     call star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, nr1, &
+          nr2, nr3, nsymloc, sloc, invsloc, irtloc, rtauloc, nqloc, sxqloc, &
+          isqloc, imqloc, noinv, modenum)
+     !
+     do isig=1,nsig
+        ifile = 50 + isig
+        write(name,"(A7,I2)") 'a2Fq2r.',ifile
+        open(ifile, file=name, STATUS = 'unknown', POSITION = 'append')
+        do mu = 1, 3 * nat
+           do vu = 1, 3 * nat
+              dyn22(mu,vu) = gf(mu,vu,isig)
+           enddo
+        enddo
+        write(ifile,*) deg(isig), effit(isig), dosfit(isig)
+        write(ifile,*) nqloc
+        call q2qstar_ph (dyn22, at, bg, nat, nsymloc, sgam, invsgam, irtgam, &
+             rtaugam, nqloc, sxqloc, isqloc, imqloc, ifile)
+     enddo
+     if(allocated(gf)) deallocate (gf)
+     !    
+  ENDIF !la2F
   !
+  ! ======================================================================  
+  !
+  !  IF(.not.la2F) THEN
   DO isig = 1, nsig
      degauss1 = 0.01 * isig
      el_ph_sum(:,:) = (0.d0, 0.d0)
@@ -361,7 +670,6 @@ SUBROUTINE elphsum
      ! Sum over bands with gaussian weights
      !
      DO ik = 1, nksq
-
         !
         ! see subroutine elphel for the logic of indices
         !
@@ -383,15 +691,15 @@ SUBROUTINE elphsum
               DO jpert = 1, 3 * nat
                  DO ipert = 1, 3 * nat
                     el_ph_sum (ipert, jpert) = el_ph_sum (ipert, jpert)  +  weight * &
-                                        CONJG (el_ph_mat (jbnd, ibnd, ik, ipert) ) * &
-                                               el_ph_mat (jbnd, ibnd, ik, jpert)
+                         CONJG (el_ph_mat (jbnd, ibnd, ik, ipert) ) * &
+                                el_ph_mat (jbnd, ibnd, ik, jpert)
                  ENDDO
               ENDDO
               phase_space = phase_space+weight
            ENDDO
         ENDDO
-
-     ENDDO
+        
+     ENDDO  ! nksq
      !
      ! el_ph_sum(mu,nu)=\sum_k\sum_{i,j}[ <psi_{k+q,j}|dvscf_q(mu)*psi_{k,i}>
      !                                  x <psi_{k+q,j}|dvscf_q(nu)*psi_{k,i}>
@@ -438,7 +746,7 @@ SUBROUTINE elphsum
         ! is absent because we sum, not average, over the Fermi surface.
         ! The factor 2 is provided by the sum over spins
         !
-        IF (SQRT (ABS (w2 (nu) ) ) .GT.eps) THEN
+        IF (SQRT (ABS (w2 (nu) ) ) > epsw) THEN
            ! lambda is the adimensional el-ph coupling for mode nu:
            ! lambda(nu)= gamma(nu)/(pi N(Ef) \omega_{q,nu}^2)
            lambda = gamma / 3.1415926 / w2 (nu) / dosef
@@ -453,15 +761,15 @@ SUBROUTINE elphsum
   ENDDO
 9000 FORMAT(5x,'Gaussian Broadening: ',f7.3,' Ry, ngauss=',i4)
 9005 FORMAT(5x,'DOS =',f10.6,' states/spin/Ry/Unit Cell at Ef=', &
-       &       f10.6,' eV')
+          &       f10.6,' eV')
 9006 FORMAT(5x,'double delta at Ef =',f10.6)
 9010 FORMAT(5x,'lambda(',i2,')=',f8.4,'   gamma=',f8.2,' GHz')
   !
   !
+  !  ENDIF !(.not.la2F)
   IF (iuelph.NE.0) CLOSE (unit = iuelph)
   RETURN
 END SUBROUTINE elphsum
-!
 !-----------------------------------------------------------------------
 FUNCTION dos_ef (ngauss, degauss, ef, et, wk, nks, nbnd)
   !-----------------------------------------------------------------------
@@ -473,7 +781,7 @@ FUNCTION dos_ef (ngauss, degauss, ef, et, wk, nks, nbnd)
   REAL(DP) :: et (nbnd, nks), wk (nks), ef, degauss
   !
   INTEGER :: ik, ibnd
-  REAL(DP) :: w0gauss
+  REAL(DP), EXTERNAL :: w0gauss
   !
   !     Compute DOS at E_F (states per Ry per unit cell)
   !
@@ -491,3 +799,102 @@ FUNCTION dos_ef (ngauss, degauss, ef, et, wk, nks, nbnd)
   !
   RETURN
 END FUNCTION dos_ef
+
+!a2F
+subroutine lint ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
+     nk1,nk2,nk3, nks, xk, kunit, nkBZ, eqBZ, sBZ)
+  !-----------------------------------------------------------------------
+  !
+  ! Find which k-points of a uniform grid are in the IBZ
+  !
+  use kinds, only : DP
+
+  implicit none
+  integer, intent (IN) :: nks, nsym, s(3,3,48), npk, k1, k2, k3, &
+       nk1, nk2, nk3, kunit, nkBZ
+  logical, intent (IN) :: minus_q
+  real(kind=DP), intent(IN):: at(3,3), bg(3,3), xk(3,npk)
+  integer, INTENT(OUT) :: eqBZ(nkBZ), sBZ(nkBZ)
+  !
+  real(kind=DP) :: xkr(3), deltap(3), deltam(3)
+  real(kind=DP), parameter:: eps=1.0d-5
+  real(kind=DP), allocatable :: xkg(:,:), xp(:,:)
+  integer ::  i,j,k, ns, n, nk, ip1,jp1,kp1, &
+       n1,n2,n3,n4,n5,n6,n7,n8
+  integer :: nkh
+  !
+  ! Re-generate a uniform grid of k-points xkg
+  !
+  allocate (xkg( 3,nkBZ))
+  !
+  if(kunit < 1 .or. kunit > 2) call errore('lint','bad kunit value',kunit)
+  !
+  ! kunit=2: get only "true" k points, not k+q points, from the list
+  !
+  nkh=nks/kunit
+  allocate (xp(3,nkh))
+  if (kunit ==1) then
+     xp(:,1:nkh) = xk(:,1:nkh)
+  else
+     do j=1,nkh
+        xp(:,j) = xk(:,2*j-1)
+     enddo
+  end if
+
+  do i=1,nk1
+     do j=1,nk2
+        do k=1,nk3
+           n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
+           xkg(1,n) = dble(i-1)/nk1 + dble(k1)/2/nk1
+           xkg(2,n) = dble(j-1)/nk2 + dble(k2)/2/nk2
+           xkg(3,n) = dble(k-1)/nk3 + dble(k3)/2/nk3
+        end do
+     end do
+  end do
+
+  call cryst_to_cart (nkh,xp,at,-1)
+
+  do nk=1,nkBZ
+     do n=1,nkh
+        do ns=1,nsym
+           do i=1,3
+              xkr(i) = s(i,1,ns) * xp(1,n) + &
+                       s(i,2,ns) * xp(2,n) + &
+                       s(i,3,ns) * xp(3,n)
+           end do
+           do i=1,3
+              deltap(i) = xkr(i)-xkg(i,nk) - nint (xkr(i)-xkg(i,nk) )
+              deltam(i) = xkr(i)+xkg(i,nk) - nint (xkr(i)+xkg(i,nk) )
+           end do
+           if ( sqrt ( deltap(1)**2 + &
+                       deltap(2)**2 + &
+                       deltap(3)**2 ) < eps .or. ( minus_q .and. &
+                sqrt ( deltam(1)**2 +  &
+                       deltam(2)**2 +  &
+                       deltam(3)**2 ) < eps ) ) then
+              eqBZ(nk) = n
+              sBZ(nk) = ns
+              go to 15
+           end if
+        end do
+     end do
+
+     call errore('lint','cannot locate  k point  xk',nk)
+15   continue
+  end do
+
+  do n=1,nkh
+     do nk=1,nkBZ
+        if (eqBZ(nk) == n) go to 20
+     end do
+     !  this failure of the algorithm may indicate that the displaced grid
+     !  (with k1,k2,k3.ne.0) does not have the full symmetry of the lattice
+     call errore('lint','cannot remap grid on k-point list',n)
+20   continue
+  end do
+
+  deallocate(xkg)
+  deallocate(xp)
+
+  return
+end subroutine lint
