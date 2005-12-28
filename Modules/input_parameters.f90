@@ -447,6 +447,8 @@ MODULE input_parameters
 
         CHARACTER(LEN=80) :: U_projection_type = 'atomic'
           ! ONLY PWSCF
+        LOGICAL :: la2F = .FALSE.
+          !
 #if defined (EXX)
         INTEGER :: nqx1 = 1, nqx2 = 1, nqx3=1
           ! ONLY PWSCF
@@ -521,7 +523,6 @@ MODULE input_parameters
 ! The three components of the magnetic field are given in Ry.
 ! Only B_field(3) can be used if nspin=2.
 !
-
         CHARACTER(LEN=80) :: sic = 'none'
           ! sic = 'none' | 'sic_mac' 
           ! 'none'          no SIC 
@@ -540,16 +541,14 @@ MODULE input_parameters
           ! while neld== number of el with spin down
           ! define the unpaired el with spin up
 
-
-
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat,&
              ntyp, nbnd, nelec, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s, &
              nr3s, nr1b, nr2b, nr3b, nosym, starting_magnetization, &
              occupations, degauss, nelup, neldw, nspin, ecfixed, &
              qcutz, q2sigma, xc_type, lda_plus_U, Hubbard_U, Hubbard_alpha, &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue, &
-             U_projection_type,  &
-             input_dft, &
+             U_projection_type, &
+             input_dft, la2F, &
 #if defined (EXX)
              nqx1, nqx2, nqx3, &
 #endif
@@ -1400,8 +1399,6 @@ MODULE input_parameters
           ! 'crystal'    k points mesh is given in stdin in scaled units
           ! 'tpiba'      k points mesh is given in stdin in units of ( 2 PI / alat )
           ! 'gamma'      only gamma point is used ( default in CPMD simulation )
-
-
 !
 !    NEWNFI
 !

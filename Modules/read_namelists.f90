@@ -176,6 +176,9 @@ MODULE read_namelists_module
        eopreg = 0.1D0
        eamp = 1.0D-3
        !
+       !  ... postprocessing of DOS & phonons & el-ph
+       la2F = .FALSE.
+       !
        ! ... non collinear program variables
        !
        lspinorb = .FALSE.
@@ -684,6 +687,7 @@ MODULE read_namelists_module
        CALL mp_bcast( emaxpos,                ionode_id )
        CALL mp_bcast( eopreg,                 ionode_id )
        CALL mp_bcast( eamp,                   ionode_id )
+       CALL mp_bcast( la2F,                   ionode_id )
        !
        ! ... non collinear broadcast
        !
@@ -1181,6 +1185,8 @@ MODULE read_namelists_module
                           & ' starting_magnetization is not used in CP ', -1)
           IF( lda_plus_U ) &
              CALL infomsg( sub_name ,' lda_plus_U is not used in CP ', -1)
+          IF( la2F ) &
+             CALL infomsg( sub_name ,' la2F is not used in CP ', -1)
           IF( ANY(Hubbard_U /= 0.D0) ) &
              CALL infomsg( sub_name ,' Hubbard_U is not used in CP ', -1)
           IF( ANY(Hubbard_alpha /= 0.D0) ) &
