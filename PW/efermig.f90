@@ -9,7 +9,8 @@
 FUNCTION efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
   !--------------------------------------------------------------------
   !
-  !     Finds the Fermi energy - Gaussian Broadening (Methfessel-Paxton)
+  !     Finds the Fermi energy - Gaussian Broadening
+  !     (see Methfessel and Paxton, PRB 40, 3616 (1989 )
   !
   USE io_global, ONLY : stdout
   USE kinds
@@ -49,7 +50,7 @@ FUNCTION efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
   sumkup = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Eup, is, isk)
   sumklw = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Elw, is, isk)
   if ( (sumkup - nelec) < -eps .or. (sumklw - nelec) > eps )  &
-       call errore ('Efermi', 'unexpected error', 1)
+       call errore ('efermig', 'internal error, cannot braket Ef', 1)
   do i = 1, maxiter
      Ef = (Eup + Elw) / 2.d0
      sumkmid = sumkg (et, nbnd, nks, wk, Degauss, Ngauss, Ef, is, isk)

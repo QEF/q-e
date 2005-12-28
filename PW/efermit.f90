@@ -10,7 +10,8 @@
 FUNCTION efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, is, isk)
   !--------------------------------------------------------------------
   !
-  !     Finds the Fermi energy - tetrahedron method (Bloechl)
+  !     Finds the Fermi energy - tetrahedron method
+  !     (see P. E. Bloechl et al, PRB49, 16223 (1994))
   !
   USE io_global, ONLY : stdout
   USE kinds
