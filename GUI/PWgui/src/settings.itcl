@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: settings.itcl,v 1.4 2005-09-26 11:54:13 kokalj Exp $ 
+# $Id: settings.itcl,v 1.5 2005-12-28 15:12:09 giannozz Exp $ 
 #
 proc ::pwscf::settings {gui} {
 
@@ -169,7 +169,6 @@ proc ::pwscf::_settingsModule {} {
 		var PW -variable ::pwscf::settings(PW) -label "Executable \"pw.x\":" -widget entryfileselect
 		var PH -variable ::pwscf::settings(PH) -label "Executable \"ph.x\":" -widget entryfileselect
 		var PP -variable ::pwscf::settings(PP) -label "Executable \"pp.x\":" -widget entryfileselect
-		var CHDENS  -variable ::pwscf::settings(CHDENS)  -label "Executable \"chdens.x\":"  -widget entryfileselect
 		var PROJWFC -variable ::pwscf::settings(PROJWFC) -label "Executable \"projwfc.x\":" -widget entryfileselect
 		var D3      -variable ::pwscf::settings(D3) -label "Executable \"d3.x\":" -widget entryfileselect
 	    }
