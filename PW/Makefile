@@ -79,6 +79,7 @@ dynamics.o \
 efermig.o \
 efermit.o \
 electrons.o \
+enfdos.o \
 eqvect.o \
 error_handler.o \
 estimate.o \
