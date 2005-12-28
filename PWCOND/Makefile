@@ -199,7 +199,6 @@ PWOBJS = \
 ../PW/print_clock_pw.o \
 ../PW/psymrho.o \
 ../PW/psymrho_mag.o \
-../PW/punch.o \
 ../PW/pwcom.o \
 ../PW/pw_gemm.o \
 ../PW/pw_restart.o \

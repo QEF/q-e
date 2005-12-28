@@ -109,7 +109,6 @@ PHOBJS = \
 ../PH/dynmatcc.o \
 ../PH/ef_shift.o \
 ../PH/elph.o \
-../PH/elphon.o \
 ../PH/h_psiq.o \
 ../PH/incdrhoscf.o \
 ../PH/incdrhous.o \
@@ -139,7 +138,6 @@ PHOBJS = \
 ../PH/setqmod.o \
 ../PH/setup_dgc.o \
 ../PH/smallgq.o \
-../PH/solve_linter.o \
 ../PH/star_q.o \
 ../PH/stop_ph.o \
 ../PH/sym_and_write_zue.o \
