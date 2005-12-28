@@ -225,8 +225,9 @@ Pascal Thibaudeau,
 Antonio Tilocca,
 Paolo Umari,
 Renata Wentzcovitch,
-Yudong Wu,
+Malgorzata Wierzbowska,
 Xiaofei Wang,
+Yudong Wu,
 and let us apologize to everybody we have forgotten.
 
 This guide was mostly written by Paolo Giannozzi, Gerardo Ballabio,
@@ -2707,15 +2708,14 @@ The default, \texttt{occupations='fixed'}, occupies the lowest
 In all other cases, use \texttt{'smearing'} or \texttt{'tetrahedra'}.
 See file \texttt{INPUT\_PW} for more details.
 
-\paragraph{\texttt{pw.x} stops with ``unexpected error'' in
-           \texttt{efermi}.}
+\paragraph{\texttt{pw.x} stops with ``internal error: cannot braket Ef'' in
+           \texttt{efermig}.}
 
 Possible reasons:
 \begin{itemize}
   \item
     serious error in data, such as bad number of electrons,
-    insufficient number of bands, absurd value of broadening, or too
-    few tetrahedra;
+    insufficient number of bands, absurd value of broadening;
   \item
     the Fermi energy is found by bisection assuming that the
     integrated DOS $N(E)$ is an increasing function of the energy. 
@@ -2724,6 +2724,24 @@ Possible reasons:
     Use some other smearing function: simple Gaussian broadening or,
     better, Marzari-Vanderbilt ``cold smearing''.
 \end{itemize}
+
+\paragraph{\texttt{pw.x} yields ``internal error: cannot braket Ef'' message
+in \texttt{efermit}, then stops because ``charge is incorrect''.}
+
+There is either a serious error in data (bad number of electrons, 
+insufficient number of bands), or too few tetrahedra (i.e. k-points). 
+The tetrahedron method may become unstable in the latter case, especially 
+if the bands are very narrow. Remember that tetrahedra should be used only
+in conjunction with uniform k-point grids.
+
+\paragraph{\texttt{pw.x} yields ``internal error: cannot braket Ef'' message
+in \texttt{efermit} but doesn't stop.}
+
+This may happens under special circumstances when you are calculating the band 
+structure for selected high-symmetry lines. The message signals that 
+occupations and Fermi energy are not correct (but eigenvalues and eigenvectors 
+are). Remove \texttt{occupations='tetrahedra'} in the input data to get rid of 
+the message.
 
 \paragraph{in parallel execution, \texttt{pw.x} stops complaining that
            ``some processors have no planes'' or ``smooth planes'' or
