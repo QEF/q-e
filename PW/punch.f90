@@ -24,6 +24,7 @@ SUBROUTINE punch()
   USE restart_module,       ONLY : writefile_new
   USE mp_global,            ONLY : kunit
   USE pw_restart,           ONLY : pw_writefile
+  USE a2F,                  ONLY : la2F
   !
   IMPLICIT NONE
   !
@@ -101,6 +102,8 @@ SUBROUTINE punch()
   CALL writefile_new( 'all', iunpun, et, wg, kunittmp )
   !
 #endif
+  !
+  IF (la2F) CALL enfdos ( )
   !
   RETURN
   !

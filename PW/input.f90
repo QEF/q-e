@@ -108,7 +108,9 @@ SUBROUTINE iosys()
                             Hubbard_alpha_ => hubbard_alpha, &
                             niter_with_fixed_ns, starting_ns, U_projection, &
                             lda_plus_u_ => lda_plus_u
-
+  !
+  USE a2F,           ONLY : la2F_ => la2F
+  !
   USE exx,           ONLY : nqx1_   => nq1,  &
                             nqx2_   => nq2,  &
                             nqx3_   => nq3
@@ -196,7 +198,7 @@ SUBROUTINE iosys()
                                nspin, ecfixed, qcutz, q2sigma, &
                                lda_plus_U, Hubbard_U, Hubbard_alpha, &
                                starting_ns_eigenvalue, U_projection_type, &
-                               input_dft, &
+                               input_dft, la2F, &
 #if defined (EXX)                               
                                nqx1, nqx2, nqx3, &
 #endif
@@ -1130,6 +1132,7 @@ SUBROUTINE iosys()
   Hubbard_U_(1:ntyp)      = hubbard_u(1:ntyp)
   Hubbard_alpha_(1:ntyp)  = hubbard_alpha(1:ntyp)
   lda_plus_u_             = lda_plus_u
+  la2F_                   = la2F
   nspin_                  = nspin
   starting_magnetization_ = starting_magnetization
   starting_ns             = starting_ns_eigenvalue

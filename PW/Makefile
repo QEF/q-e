@@ -3,6 +3,7 @@
 include ../make.sys
 
 PWOBJS = \
+a2fmod.o \
 add_bfield.o \
 add_efield.o \
 add_vuspsi.o \
