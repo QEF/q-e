@@ -171,7 +171,7 @@ links : bindir
 	    ../CPV/cppp.x \
 	    ../Gamma/phcg.x \
 	    ../PH/ph.x \
-	    ../PP/average.x ../PP/bands.x ../PP/chdens.x ../PP/dos.x \
+	    ../PP/average.x ../PP/bands.x ../PP/dos.x \
 	      ../PP/efg.x ../PP/plotband.x ../PP/plotrho.x ../PP/pmw.x \
 	      ../PP/pp.x ../PP/projwfc.x ../PP/pw2casino.x ../PP/pw2wan.x \
 	      ../PP/voronoy.x ../PP/pw_export.x \
