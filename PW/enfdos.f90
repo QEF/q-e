@@ -10,7 +10,7 @@ SUBROUTINE enFdos
   USE wvfct,        ONLY : et, nbnd
   USE ktetra,       ONLY : nk1, nk2, nk3 
   USE lsda_mod,     ONLY : isk
-  USE symme,        ONLY : s, nsym, minus_q, irt
+  USE symme,        ONLY : s, nsym, irt
   implicit none
   !
   INTEGER :: iuna2Fsave  = 40, i, j, ik, ns, na
