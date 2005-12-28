@@ -152,7 +152,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_default_values
      !
      !
      !----------------------------------------------------------------------
@@ -295,7 +295,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE read_cards
      !
      !
      ! ... Description of the allowed input CARDS for FPMD code
@@ -375,7 +375,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_atomic_species
      !
      !
      !------------------------------------------------------------------------
@@ -697,7 +697,7 @@ MODULE read_cards_module
            !
          END SUBROUTINE path_read_images
          !
-     END SUBROUTINE
+       END SUBROUTINE card_atomic_positions
      !
      !
      !------------------------------------------------------------------------
@@ -821,8 +821,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
-     !
+     END SUBROUTINE card_kpoints
      !
      !------------------------------------------------------------------------
      !    BEGIN manual
@@ -868,7 +867,7 @@ MODULE read_cards_module
        ! 
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_setnfi
      !
      !
      !------------------------------------------------------------------------
@@ -972,7 +971,7 @@ MODULE read_cards_module
        ! 
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_occupations
      !
      !
      !------------------------------------------------------------------------
@@ -1020,7 +1019,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_vhmean
      !
      !
      !------------------------------------------------------------------------
@@ -1074,7 +1073,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_optical
      !
      !
      !------------------------------------------------------------------------
@@ -1114,7 +1113,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_dipole
      !
      !
      !------------------------------------------------------------------------
@@ -1164,7 +1163,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_esr
      !
      !
      !------------------------------------------------------------------------
@@ -1215,8 +1214,7 @@ MODULE read_cards_module
        ! 
        RETURN
        !
-     END SUBROUTINE
-     !
+     END SUBROUTINE card_neighbours
      !
      !
      !------------------------------------------------------------------------
@@ -1289,7 +1287,7 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE
+     END SUBROUTINE card_cell_parameters
      !
      !
      !------------------------------------------------------------------------

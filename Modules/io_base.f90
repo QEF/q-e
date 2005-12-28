@@ -765,9 +765,8 @@
 
       IF( .NOT. twrite_ ) &
         CALL errore(' read_restart_ldaU ',' Data Section not present in restart file ', 1)
-
-! aggiungere qualche check
-
+!
+! some checks should be added here
 !
 
         IF( ionode ) THEN
