@@ -3,6 +3,7 @@
 include ../make.sys
 
 PWOBJS = \
+../PW/a2fmod.o \
 ../PW/add_bfield.o \
 ../PW/add_efield.o \
 ../PW/addusdens.o \
@@ -70,6 +71,7 @@ PWOBJS = \
 ../PW/efermig.o \
 ../PW/efermit.o \
 ../PW/electrons.o \
+../PW/enfdos.o \
 ../PW/eqvect.o \
 ../PW/estimate.o \
 ../PW/exx.o \
