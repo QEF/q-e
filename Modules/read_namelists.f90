@@ -1054,10 +1054,10 @@ MODULE read_namelists_module
           CALL errore( sub_name, ' calculation '''// &
                        & TRIM(calculation)//''' not allowed ',1)
        IF( calculation == ' ' ) &
-          CALL errore( sub_name,' calculation not specifyed ',1)
+          CALL errore( sub_name,' calculation not specified ',1)
        IF( prog == 'CP' ) THEN
           IF( calculation == 'nscf' .OR. calculation == 'phonon' ) &
-             CALL errore( sub_name,' calculation '//calculation// &
+             CALL errore( sub_name,' calculation '//TRIM(calculation)// &
                           & ' not implemented ',1)
        END IF
        IF( ndr < 50 ) &
