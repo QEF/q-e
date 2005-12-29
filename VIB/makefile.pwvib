@@ -3,6 +3,7 @@
 include	../make.sys
 
 VIB_OBJ    =    \
+poles.o \
 vibrations.o     \
 environment.o    \
 vib_rdiagh.o         \

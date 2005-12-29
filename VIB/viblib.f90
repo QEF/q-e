@@ -112,14 +112,23 @@ SUBROUTINE calculate_dipole (dipole, dipole_moment,tau)
   !
   ! ... modules
   !
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : nat
 #ifdef DFT_CP
-  USE cp_main_variables,    ONLY : irb, eigrb, bec, rhor, rhog, rhos
+  USE cp_main_variables,    ONLY : irb, eigrb, bec, charge_density=>rhor, &
+                                   rhog, rhos
   USE electrons_base,       ONLY : nspin
   USE energies,             ONLY : ekin, enl
-  USE ions_base,            ONLY : nat
-  USE kinds,                ONLY : DP
   USE wavefunctions_module, ONLY : c0
   USE uspp,                 ONLY : becsum
+  USE grid_dimensions,      ONLY : nnrx
+#endif
+#ifdef DFT_PW
+  USE scf,                  ONLY : charge_density=>rho
+  USE lsda_mod,             ONLY : nspin
+  USE gvect,                ONLY : nrxx
+  USE cell_base,            ONLY : alat
+#endif
   !
   IMPLICIT NONE
   !
@@ -136,26 +145,54 @@ SUBROUTINE calculate_dipole (dipole, dipole_moment,tau)
   REAL (KIND=DP)                :: quadrupole
   INTEGER                       :: nfi=10 ! ... dummy value
   LOGICAL                       :: ion_flag = .TRUE., coc_flag=.TRUE.
+#ifdef DFT_PW
+   REAL(DP)                     :: tmp_rho(nrxx,nspin)
+#endif
+#ifdef DFT_CP
+   REAL(DP)                     :: tmp_rho(nnrx,nspin)
+#endif
   !
   !
   !
-  dipole        = 0.0
-  dipole_moment = 0.0
-  rhor          = 0.0
-  rhog          = 0.0
-  rhos          = 0.0
+  ! ... initiating variables
+  dipole         = 0.0
+  dipole_moment  = 0.0
   !
-  CALL rhoofr(nfi,c0,irb,eigrb,bec,becsum,rhor,rhog,rhos,enl,ekin)
-  IF (nspin.EQ.2) THEN
-     rhor(:,1)=rhor(:,1)+rhor(:,2)
-  END IF
-  CALL poles (dipole_moment,dipole,quadrupole,rhor(:,1),&
-       ion_flag,tau,coc_flag)
+#ifdef DFT_CP
   !
-  ! STILL HAVE TO ADD IN THE WANNIER BASED DIPOLE
-  ! AS AN ALTERNATIVE WAY OF DOING THE CALCULATION
+  ! ... CP charge density
+  !
+  rhog           = 0.0
+  rhos           = 0.0
+  !
+  CALL rhoofr(nfi,c0,irb,eigrb,bec,becsum,charge_density,rhog,rhos,enl,ekin)
+#endif
+
+#ifdef DFT_PW
+  !
+  ! ... PW charge density
   !
 #endif
+  !
+  tmp_rho = charge_density
+  IF (nspin.EQ.2) THEN
+     tmp_rho(:,1)=tmp_rho(:,1)+tmp_rho(:,2)
+  END IF
+  !
+  ! ... computing dipole
+  !
+#ifdef DFT_CP
+  CALL poles (dipole_moment,dipole,quadrupole,tmp_rho(:,1),&
+       ion_flag,tau,coc_flag)
+#endif
+#ifdef DFT_PW
+  CALL poles (dipole_moment,dipole,quadrupole,tmp_rho(:,1),&
+       ion_flag,tau*alat,coc_flag)
+#endif
+  !
+  ! STILL HAVE TO ADD IN THE WANNIER BASED DIPOLE
+  ! AS AN ALTERNATIVE WAY FOR CALCULATING THE DIPOLE
+  !
   RETURN
 END SUBROUTINE calculate_dipole
 !
@@ -510,3 +547,38 @@ SUBROUTINE cofmass( tau, mass, nat, com )
   !
   RETURN
 END SUBROUTINE cofmass
+
+!-----------------------------------------------------------------------
+SUBROUTINE vib_pbc(rin,a1,a2,a3,ainv,rout)
+  !-----------------------------------------------------------------------
+  !
+  !     brings atoms inside the unit cell
+  !
+  IMPLICIT NONE
+  ! input
+  REAL(8) rin(3), a1(3),a2(3),a3(3), ainv(3,3)
+  ! output
+  REAL(8) rout(3)
+  ! local
+  REAL(8) x,y,z
+  !
+  ! bring atomic positions to crystal axis
+  !
+  x = ainv(1,1)*rin(1)+ainv(1,2)*rin(2)+ainv(1,3)*rin(3)
+  y = ainv(2,1)*rin(1)+ainv(2,2)*rin(2)+ainv(2,3)*rin(3)
+  z = ainv(3,1)*rin(1)+ainv(3,2)*rin(2)+ainv(3,3)*rin(3)
+  !
+  ! bring x,y,z in the range between -0.5 and 0.5
+  !
+  x = x - NINT(x)
+  y = y - NINT(y)
+  z = z - NINT(z)
+  !
+  ! bring atomic positions back in cartesian axis
+  !
+  rout(1) = x*a1(1)+y*a2(1)+z*a3(1)
+  rout(2) = x*a1(2)+y*a2(2)+z*a3(2)
+  rout(3) = x*a1(3)+y*a2(3)+z*a3(3)
+  !
+  RETURN
+END SUBROUTINE vib_pbc
