@@ -12,6 +12,7 @@ read_input_vib.o \
 viblib.o         
 
 PW_OBJS = \
+../PW/a2fmod.o \
 ../PW/add_bfield.o \
 ../PW/add_efield.o \
 ../PW/add_vuspsi.o \
@@ -87,6 +88,7 @@ PW_OBJS = \
 ../PW/efermig.o \
 ../PW/efermit.o \
 ../PW/electrons.o \
+../PW/enfdos.o \
 ../PW/eqvect.o \
 ../PW/error_handler.o \
 ../PW/estimate.o \
@@ -272,13 +274,13 @@ PW_OBJS = \
 ../PW/write_ns.o \
 ../PW/wsweight.o
 
-LOBJS = \
-../CPV/adjef.o \
-../CPV/entropy.o \
-../CPV/forceconv.o \
-../CPV/geninv.o \
-../CPV/indices.o \
-../CPV/miller.o
+#LOBJS = \
+#../CPV/adjef.o \
+#../CPV/entropy.o \
+#../CPV/forceconv.o \
+#../CPV/geninv.o \
+#../CPV/indices.o \
+#../CPV/miller.o
 
 MODULES = \
 ../Modules/atom.o \
@@ -351,7 +353,7 @@ pwvib.x : FFLAGS += -DDFT_PW
 pwvib.x : cleanpw $(PW_OBJS) $(VIB_OBJ) $(LOBJS) $(LIBOBJS) ../PW/pw.x vibstart.o
 	$(MPIF90) $(LDFLAGS) -o pwvib.x -I../PW \
 		vibstart.o $(PW_OBJS) $(VIB_OBJ) $(LOBJS) $(MODULES) \
-		../flib/eispack.o $(LIBOBJS) $(LIBS)
+		$(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../CPVIB/pwvib.x . )
 
 pwvib_version.o : pwvibver.h

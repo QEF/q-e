@@ -58,8 +58,8 @@ d3 : bindir mods libs pw ph
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 vib : bindir mods libs cp pw
-	if test -d CPVIB ; then \
-	( cd CPVIB ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	if test -d VIB ; then \
+	( cd VIB ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 tools : bindir mods libs pw
