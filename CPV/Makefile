@@ -51,6 +51,7 @@ gtable.o \
 guess.o \
 init.o \
 init_run.o \
+inner_loop.o \
 input.o \
 interfaces_main.o \
 interfaces.o \

@@ -62,7 +62,7 @@
       use io_files, only: psfile, pseudo_dir
       use io_files, only: outdir
 
-      use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
+      use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq,qq
       use uspp_param, only: nh
       use cg_module, only: ltresh, itercg, etotnew, etotold, tcutoff, &
           restartcg, passof, passov, passop, ene_ok, numok, maxiter, &
@@ -73,45 +73,55 @@
       use efield_module, only: tefield, evalue, ctable, qmat, detq, ipolp, &
             berry_energy, ctabin, gqq, gqqm, df, pberryel
       use mp, only: mp_sum,mp_bcast
+      use cp_electronic_mass,       ONLY :  emass_cutoff
+
 !
       implicit none
 !
       integer :: nfi
       logical :: tfirst , tlast
-      complex(8) :: eigr(ngw,nat)
-      real(8) :: bec(nhsa,n)
-      real(8) :: becdr(nhsa,n,3)
+      complex(dp) :: eigr(ngw,nat)
+      real(dp) :: bec(nhsa,n)
+      real(dp) :: becdr(nhsa,n,3)
       integer irb(3,nat)
-      complex(8) :: eigrb(ngb,nat)
-      real(8) :: rhor(nnr,nspin)
-      real(8) :: rhog(ngm,nspin)
-      real(8) :: rhos(nnrsx,nspin)
-      real(8) :: rhoc(nnr)
-      complex(8) :: ei1(-nr1:nr1,nat)
-      complex(8) :: ei2(-nr2:nr2,nat)
-      complex(8) :: ei3(-nr3:nr3,nat)
-      complex(8) :: sfac( ngs, nsp )
-      real(8) :: fion(3,natx)
-      real(8) :: ema0bg(ngw)
-      real(8) :: lambdap(nx,nx)
-      real(8) :: lambda(nx,nx)
+      complex(dp) :: eigrb(ngb,nat)
+      real(dp) :: rhor(nnr,nspin)
+      real(dp) :: rhog(ngm,nspin)
+      real(dp) :: rhos(nnrsx,nspin)
+      real(dp) :: rhoc(nnr)
+      complex(dp) :: ei1(-nr1:nr1,nat)
+      complex(dp) :: ei2(-nr2:nr2,nat)
+      complex(dp) :: ei3(-nr3:nr3,nat)
+      complex(dp) :: sfac( ngs, nsp )
+      real(dp) :: fion(3,natx)
+      real(dp) :: ema0bg(ngw)
+      real(dp) :: lambdap(nx,nx)
+      real(dp) :: lambda(nx,nx)
 !
 !
-      integer :: i, j, ig, k, is, ia, iv, jv, il
+      integer :: i, j, ig, k, is, iss,ia, iv, jv, il
       integer :: inl, jnl, niter, istart, nss
-      real(8) :: enb, enbi, x
-      complex(8) :: c2( ngw )
-      complex(8) :: c3( ngw )
-      real(8) :: gamma, entmp, sta
+      real(dp) :: enb, enbi, x
+      complex(dp) :: c2( ngw )
+      complex(dp) :: c3( ngw )
+      real(dp) :: gamma, entmp, sta
+      complex(dp),allocatable :: hpsi0(:,:)
+      real(dp) :: sca
+      logical  :: newscheme
 !
 !
+      newscheme=.true.
 
-
-     fion2=0.d0
+      allocate(hpsi0(ngw,n))
+      fion2=0.d0
 
       if(ionode) open(37,file='convergence.dat',status='unknown')!for debug and tuning purposes
       if(tfirst.and.ionode) write(stdout,*) 'PERFORMING CONJUGATE GRADIENT MINIMIZATION OF EL. STATES'
 
+!set tpa preconditioning
+
+      call  emass_precond_tpa( ema0bg, tpiba2, emass_cutoff )
+     
       call prefor(eigr,betae) 
 
       ltresh    = .false.
@@ -134,7 +144,58 @@
       !calculates phi for pcdaga
 
       call calphiid(c0,bec,betae,phi)
-         
+
+      !calculates the factors for S and K inversion in US case
+      if(nvb.gt.0) then
+        call  set_s_minus1(betae)
+        call  set_k_minus1(betae, ema0bg)
+      endif  
+
+
+!-------------verifica
+!      do i=1,n
+!      do ig=1,ngw
+!      	phi(ig,i,1,1)=phi(ig,i,1,1)+c0(ig,i,1,1)*(1.d0/ema0bg(ig)-1.d0)
+!      enddo
+!      enddo
+!      !call calbec(1,nsp,eigr,phi,becm)
+!      !call sminus1(phi,becm,betae)
+!      call kminus1(phi,betae,ema0bg)
+!      call calbec(1,nsp,eigr,phi,becm)
+!      do i=1,n
+!         do j=1,n
+!             sca=0.d0
+!                do ig=1,ngw
+!                 sca=sca+2*DBLE(CONJG(phi(ig,i,1,1))*phi(ig,j,1,1))
+!              enddo
+!              if (ng0.eq.2) then
+!                 sca=sca-DBLE(CONJG(phi(1,i,1,1))*phi(1,j,1,1))
+!              endif
+
+
+!           if (nvb.gt.0) then
+!              do is=1,nvb
+!                 do iv=1,nh(is)
+!                    do jv=1,nh(is)
+!                       do ia=1,na(is)
+!                          inl=ish(is)+(iv-1)*na(is)+ia
+!                          jnl=ish(is)+(jv-1)*na(is)+ia
+!                          sca=sca+ qq(iv,jv,is)*becm(inl,i)*becm(jnl,j)
+!                       end do
+!                    end do
+!                 end do
+!              end do
+!           endif
+!            write(6,*) 'VERIFCA S :',i,j,sca
+!         enddo
+!       enddo
+
+
+
+
+
+
+ 
       !set index on number of converged iterations
 
       numok = 0
@@ -147,6 +208,11 @@
           if(.not.tens) then
             call rhoofr(nfi,c0,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
           else
+
+           if(newscheme) then 
+               call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+                 rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec  )
+           endif
             !     calculation of the rotated quantities
             call rotate(z0,c0(:,:,1,1),bec,c0diag,becdiag)
             !     calculation of rho corresponding to the rotated wavefunctions
@@ -214,9 +280,10 @@
 
         etotold=etotnew
         ene0=etot
+        if(tens .and. newscheme) then
+          ene0=ene0+entropy
+        endif
 
-        ! cal_emme style of orhogonalization              
-        !               call cal_emme(c0,bec,emme, 1)
 
         !update d
 
@@ -241,27 +308,105 @@
           end if
         enddo
 
-        gi(1:ngw,1:n) = hpsi(1:ngw,1:n)
                
-        ! cal_emme strategy             
-        !               call pc_emmedaga(c0,phi,gi,emme)
-
-        call pcdaga2(c0,phi,gi)
-
-        DO i = 1, n
-          gi(1:ngw,i) = gi(1:ngw,i) * ema0bg(1:ngw)
-        END DO
+        call pcdaga2(c0,phi,hpsi)
+               
+        hpsi0(1:ngw,1:n)=hpsi(1:ngw,1:n)
+        gi(1:ngw,1:n) = hpsi(1:ngw,1:n)
         
-        call calcmt(f,z0,fmat0)
+        call calbec(1,nsp,eigr,hpsi,becm)
+        call sminus1(hpsi,becm,betae)
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!look if the following two lines are really needed
+        call calbec(1,nsp,eigr,hpsi,becm)
+        call pc2(c0,bec,hpsi,becm)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        call kminus1(gi,betae,ema0bg)
+        call calbec(1,nsp,eigr,gi,becm)
+        call pc2(c0,bec,gi,becm)
+
+        
+        if(tens) call calcmt(f,z0,fmat0)
 
         call calbec(1,nsp,eigr,gi,becm)
+        call calbec(1,nsp,eigr,hpsi,bec0) 
 
-        call pcdaga2(c0,phi,gi)
-        call pcdaga2(c0,phi,hpsi) 
+!  calculates gamma
+        gamma=0.d0
+        
+        if(.not.tens) then
+           
+           do i=1,n
+              do ig=1,ngw
+                 gamma=gamma+2*DBLE(CONJG(gi(ig,i))*hpsi(ig,i))
+              enddo
+              if (ng0.eq.2) then
+                 gamma=gamma-DBLE(CONJG(gi(1,i))*hpsi(1,i))
+              endif
+           enddo
+           
+           call mp_sum(gamma)
+           
+           if (nvb.gt.0) then
+              do is=1,nvb
+                 do iv=1,nh(is)
+                    do jv=1,nh(is)
+                       do ia=1,na(is)
+                          inl=ish(is)+(iv-1)*na(is)+ia
+                          jnl=ish(is)+(jv-1)*na(is)+ia
+                          gamma=gamma+ qq(iv,jv,is)*becm(inl,i)*bec0(jnl,i)
+                       end do
+                    end do
+                 end do
+              end do
+           endif
 
-        !cal_emme strategy
-        !              call pc_emmedaga(c0,phi,gi,emme)
-        !              call pc_emmedaga(c0,phi,hpsi,emme)
+        else
+
+           do iss=1,nspin
+              nss=nupdwn(iss)
+              istart=iupdwn(iss)
+              do i=1,nss
+                 do j=1,nss
+                    do ig=1,ngw
+                       gamma=gamma+2*DBLE(CONJG(gi(ig,i+istart-1))*hpsi(ig,j+istart-1))*fmat0(j,i,iss)
+                    enddo
+                    if (ng0.eq.2) then
+                       gamma=gamma-DBLE(CONJG(gi(1,i+istart-1))*hpsi(1,j+istart-1))*fmat0(j,i,iss)
+                    endif
+                    
+                 enddo
+              enddo
+           enddo
+
+           call mp_sum(gamma)
+           
+           if(nvb.gt.0) then
+              do iss=1,nspin
+                 nss=nupdwn(iss)
+                 istart=iupdwn(iss)
+                 do i=1,nss
+                    do j=1,nss
+                       do is=1,nvb
+                          do iv=1,nh(is)
+                             do jv=1,nh(is)
+                                do ia=1,na(is)
+                                   inl=ish(is)+(iv-1)*na(is)+ia
+                                   jnl=ish(is)+(jv-1)*na(is)+ia
+                                   gamma=gamma+ qq(iv,jv,is)*becm(inl,i+istart-1)*bec0(jnl,j+istart-1)*fmat0(j,i,iss)
+                                end do
+                             end do
+                          end do
+                       enddo
+                    enddo
+                 enddo
+              enddo
+          endif
+        endif
+
+
 
         !case of first iteration
 
@@ -269,114 +414,15 @@
 
           restartcg=.false.
           passof=passop
-          hi(1:ngw,1:n)=gi(1:ngw,1:n)
-
-          !calculates esse for the second iteration
-
-          gamma=0.d0
-          if(.not.tens) then
-            call calbec(1,nsp,eigr,gi,becm)
-            do i=1,n        
-              do ig=1,ngw
-                gamma=gamma+2*DBLE(CONJG(gi(ig,i))*gi(ig,i))
-              enddo
-              if (ng0.eq.2) then
-                gamma=gamma-DBLE(CONJG(gi(1,i))*gi(1,i))
-              endif
-            enddo
-            call mp_sum(gamma)
-             
- !           if (nvb.gt.0) then
- !              do is=1,nvb
- !                 do iv=1,nh(is)
- !                    do jv=1,nh(is)
- !                       do ia=1,na(is)
- !                          inl=ish(is)+(iv-1)*na(is)+ia
- !                          jnl=ish(is)+(jv-1)*na(is)+ia
- !                          !      gamma=gamma+ qq(iv,jv,is)*becm(inl,i)*becm(jnl,i)  
- !                       end do
- !                    end do
- !                 end do
- !              end do
- !           endif
-
-          else
-
-            do is=1,nspin
-               nss=nupdwn(is)
-               istart=iupdwn(is)
-               do i=1,nss
-                  do j=1,nss
-                     do ig=1,ngw
-                       gamma=gamma+2*DBLE(CONJG(gi(ig,i+istart-1))*gi(ig,j+istart-1))*fmat0(j,i,is)
-                     enddo
-                     if (ng0.eq.2) then
-                       gamma=gamma-DBLE(CONJG(gi(1,i+istart-1))*gi(1,j+istart-1))*fmat0(j,i,is)
-                     endif
-                  enddo
-                enddo
-            enddo
-            call mp_sum(gamma)
-
-          endif
-
+          hi(1:ngw,1:n)=gi(1:ngw,1:n)!hi is the search direction
           esse=gamma
+
 
         else
 
           !find direction hi for general case 
           !calculates gamma for general case, not using Polak Ribiere
-
-          gamma=0.d0
-
-          if(.not.tens) then
-
-            call calbec(1,nsp,eigr,gi,becm)
-            do i=1,n        
-               do ig=1,ngw
-                  gamma=gamma+2*DBLE(CONJG(gi(ig,i))*gi(ig,i))
-               enddo
-               if (ng0.eq.2) then
-                  gamma=gamma-DBLE(CONJG(gi(1,i))*gi(1,i))
-               endif
-            enddo
-                
-            call mp_sum(gamma)
-             
-!            if (nvb.gt.0) then
-!             do is=1,nvb
-!                do iv=1,nh(is)
-!                   do jv=1,nh(is)      
-!                      do ia=1,na(is)
-!                         inl=ish(is)+(iv-1)*na(is)+ia
-!                         jnl=ish(is)+(jv-1)*na(is)+ia
-!                         ! gamma=gamma+ qq(iv,jv,is)*becm(inl,i)*becm(jnl,i)  
-!                      end do
-!                   end do
-!                end do
-!             end do
-!            endif
-
-          else
-           do is=1,nspin
-               nss=nupdwn(is)
-               istart=iupdwn(is)
-               do i=1,nss
-                  do j=1,nss
-                     do ig=1,ngw
-                       gamma=gamma+2*DBLE(CONJG(gi(ig,i+istart-1))*gi(ig,j+istart-1))*fmat0(j,i,is)
-                     enddo
-                     if (ng0.eq.2) then
-                       gamma=gamma-DBLE(CONJG(gi(1,i+istart-1))*gi(1,j+istart-1))*fmat0(j,i,is)
-                     endif
-                  enddo
-                enddo
-            enddo
-
-            call mp_sum(gamma)
-
-          endif
-
+          
           essenew=gamma
           gamma=gamma/esse
           esse=essenew
@@ -384,6 +430,7 @@
           hi(1:ngw,1:n)=gi(1:ngw,1:n)+gamma*hi(1:ngw,1:n)
 
         endif
+!note that hi, is saved  on gi, because we need it before projection on conduction states
 
         !find minimum along direction hi:
 
@@ -391,8 +438,7 @@
 
         call calbec(1,nsp,eigr,hi,bec0)
         call pc2(c0,bec,hi,bec0)
-        ! cal_emme strategy
-        !     call pc_emme(c0,bec,hi,bec0,emme)
+        
         call calbec(1,nsp,eigr,hi,bec0)
 
         !do quadratic minimization
@@ -403,10 +449,10 @@
         if(.not.tens) then
           do i=1,n               
             do ig=1,ngw
-              dene0=dene0-4.d0*DBLE(CONJG(hi(ig,i))*hpsi(ig,i))
+              dene0=dene0-4.d0*DBLE(CONJG(hi(ig,i))*hpsi0(ig,i))
             enddo
             if (ng0.eq.2) then
-              dene0=dene0+2.d0*DBLE(CONJG(hi(1,i))*hpsi(1,i))
+              dene0=dene0+2.d0*DBLE(CONJG(hi(1,i))*hpsi0(1,i))
             endif
           end do
         else
@@ -419,12 +465,12 @@
              do i=1,nss
                 do j=1,nss
                    do ig=1,ngw
-                    dene0=dene0-2.d0*DBLE(CONJG(hi(ig,i+istart-1))*hpsi(ig,j+istart-1))*fmat0(j,i,is)
-                    dene0=dene0-2.d0*DBLE(CONJG(hpsi(ig,i+istart-1))*hi(ig,j+istart-1))*fmat0(j,i,is)
+                    dene0=dene0-2.d0*DBLE(CONJG(hi(ig,i+istart-1))*hpsi0(ig,j+istart-1))*fmat0(j,i,is)
+                    dene0=dene0-2.d0*DBLE(CONJG(hpsi0(ig,i+istart-1))*hi(ig,j+istart-1))*fmat0(j,i,is)
                    enddo
                    if (ng0.eq.2) then
-                    dene0=dene0+DBLE(CONJG(hi(1,i+istart-1))*hpsi(1,j+istart-1))*fmat0(j,i,is)
-                    dene0=dene0+DBLE(CONJG(hpsi(1,i+istart-1))*hi(1,j+istart-1))*fmat0(j,i,is)
+                    dene0=dene0+DBLE(CONJG(hi(1,i+istart-1))*hpsi0(1,j+istart-1))*fmat0(j,i,is)
+                    dene0=dene0+DBLE(CONJG(hpsi0(1,i+istart-1))*hi(1,j+istart-1))*fmat0(j,i,is)
                    end if
                   enddo
             enddo
@@ -434,7 +480,6 @@
         call mp_sum(dene0)
 
         !if the derivative is positive, search along opposite direction
-
         if(dene0.gt.0.d0) then
           spasso=-1.D0
         else
@@ -456,6 +501,9 @@
         if(.not.tens) then
           call rhoofr(nfi,cm,irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
         else
+          if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm  )
+
           !     calculation of the rotated quantities
           call rotate(z0,cm(:,:,1,1),becm,c0diag,becdiag)
           !     calculation of rho corresponding to the rotated wavefunctions
@@ -481,6 +529,10 @@
           etot=etot+enb+enbi
         endif
         ene1=etot
+        if(tens.and.newscheme) then
+          call compute_entropy2( entropy, f, n, nspin )
+          ene1=ene1+entropy
+        endif
               
             
         !find the minimum
@@ -510,6 +562,8 @@
         if(.not.tens) then
           call rhoofr(nfi,cm,irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
         else
+          if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+              rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm  )
           !     calculation of the rotated quantities
           call rotate(z0,cm(:,:,1,1),becm,c0diag,becdiag)
           !     calculation of rho corresponding to the rotated wavefunctions
@@ -534,9 +588,17 @@
           etot=etot+enb+enbi
         endif
         enever=etot
-        if(ionode) write(37,'(a3,4f20.10)') 'CG1',ene0+entropy,ene1+entropy,enesti+entropy,enever+entropy
-        if(ionode) write(37,'(a3,4f10.7)')  'CG2',spasso,passov,passo,(enever-ene0)/passo/dene0
-
+        if(tens.and.newscheme) then
+          call compute_entropy2( entropy, f, n, nspin )
+          enever=enever+entropy
+        endif
+        if(tens.and.newscheme) then
+          if(ionode) write(37,'(a3,4f20.10)') 'CG1',ene0,ene1,enesti,enever
+          if(ionode) write(37,'(a3,4f10.7)')  'CG2',spasso,passov,passo,(enever-ene0)/passo/dene0
+        else
+          if(ionode) write(37,'(a3,4f20.10)') 'CG1',ene0+entropy,ene1+entropy,enesti+entropy,enever+entropy
+          if(ionode) write(37,'(a3,4f10.7)')  'CG2',spasso,passov,passo,(enever-ene0)/passo/dene0
+        endif
         !check with  what supposed
 
         if(ionode) then
@@ -551,6 +613,15 @@
           c0(:,:,1,1)=cm(:,:,1,1)
           bec(:,:)=becm(:,:)
           ene_ok=.true.
+        elseif( (enever.ge.ene1) .and. (enever.lt.ene0)) then
+          if(ionode) then
+             write(stdout,*) 'cg_sub: missed minimum, case 1, iteration',itercg
+          endif
+          c0(1:ngw,1:n,1,1)=c0(1:ngw,1:n,1,1)+spasso*passov*hi(1:ngw,1:n)
+          restartcg=.true.
+          call calbec(1,nsp,eigr,c0,bec)
+          call gram(betae,bec,nhsa,c0,ngw,n)
+          ene_ok=.false.
           !if  ene1 << energy <  ene0; go to  ene1
         else if( (enever.ge.ene0).and.(ene0.gt.ene1)) then
           if(ionode) then
@@ -580,6 +651,8 @@
             if(.not.tens) then
               call rhoofr(nfi,cm,irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
             else
+              if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+              rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm  )
               !     calculation of the rotated quantities
               call rotate(z0,cm(:,:,1,1),becm,c0diag,becdiag)
               !     calculation of rho corresponding to the rotated wavefunctions
@@ -605,14 +678,20 @@
               etot=etot+enb+enbi
             endif
             enever=etot
-           
+           if(tens.and.newscheme) then
+             call compute_entropy2( entropy, f, n, nspin )
+             enever=enever+entropy
+           endif
+
           end do
   
           c0(:,:,1,1)=cm(:,:,1,1)
           restartcg=.true.
           ene_ok=.false.
         end if
-  
+        
+        if(tens.and.newscheme) enever=enever-entropy
+ 
         call calbec (1,nsp,eigr,c0,bec)
         !calculates phi for pc_daga
         call calphiid(c0,bec,betae,phi)
@@ -623,427 +702,22 @@
         !                 (Uij degrees of freedom)
         !
         !=======================================================================
-  
+        if(tens.and. .not.newscheme) call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec  )
+
+ 
             
-        if(tens) then
-          if(.not. ene_ok) then
-            !     calculation of the array bec:
-            call calbec (1,nsp,eigr,c0,bec)
-  
-                   
-            call rotate(z0,c0(:,:,1,1),bec,c0diag,becdiag)
-  
-            call rhoofr (nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin)
-  
-            !     put core charge (if present) in rhoc(r)
-            if (nlcc_any) call set_cc(irb,eigrb,rhoc)
-  
-            !     calculation of the potential 
-  
-            call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,                &
-                 ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion2)
-            !     calculation of the array deeq: 
-
-            call compute_entropy2( entropy, f, n, nspin )
-
-    
-            !     deeq_i,lm = \int V_eff(r) q_i,lm(r) dr
-          endif
-  
-          ene_ok=.false.
- !     calculation of ekinc
-            call calcmt(f,z0,fmat0)
-          call newd(rhor,irb,eigrb,rhovan,fion2)
-    
-          !     free energy at x=0
-          atot0=etot+entropy    
-          etot0=etot      
-  
-          !     start of the loop
-          call prefor(eigr,betae)!ATTENZIONE
-  
-  
-          do niter=1,ninner
-            h0c0 = 0.0d0
-
-
-
-            do i=1,n,2                      
-              call dforce(bec,betae,i,c0(1,i,1,1), &
-              &     c0(1,i+1,1,1),h0c0(1,i),h0c0(1,i+1),rhos)
-            end do
-                   
-            do is=1,nspin
-              nss=nupdwn(is)
-              istart=iupdwn(is)
-              do i=1,nss
-                do k=1,nss
-                  c0hc0(k,i,is)=0.d0
-                  do ig=1,ngw
-                    c0hc0(k,i,is)=c0hc0(k,i,is)- &
-                 &   2.0*DBLE(CONJG(c0(ig,k+istart-1,1,1))*h0c0(ig,i+istart-1))
-                  enddo
-                  if (ng0.eq.2) then
-                    c0hc0(k,i,is)=c0hc0(k,i,is)+&
-                 &   DBLE(CONJG(c0(1,k+istart-1,1,1))*h0c0(1,i+istart-1))
-                  endif
-                end do
-              end do
-              call mp_sum(c0hc0(1:nss,1:nss,is))
-            end do
- 
-!           do is=1,nspin
-!              nss=nupdwn(is)
-!              istart=iupdwn(is)
-!              do i=1,nss
-!                do k=i,nss
-!                     c0hc0(k,i,is)=0.5d0*(c0hc0(k,i,is)+c0hc0(i,k,is))
-!                     c0hc0(i,k,is)=c0hc0(k,i,is)
-!                enddo
-!             enddo
-!           enddo 
-
- 
-  
-            do is=1,nspin
-              nss=nupdwn(is)
-              epsi0(1:nss,1:nss,is)=c0hc0(1:nss,1:nss,is)!ATTENZIONE
-            end do
-   
-
-          
-            !    diagonalization of the matrix epsi0_ij
-            e0 = 0.0d0
-            do  is=1,nspin
-              istart=iupdwn(is)
-              nss=nupdwn(is) 
-              if(ionode) then
-                 call ddiag(nss,nss,epsi0(1,1,is),dval(1),z1(1,1,is),1)
-              endif
-              call mp_bcast(dval,ionode_id)
-              call mp_bcast(z1(:,:,is),ionode_id)
-             do i=1,nss
-                e0(i+istart-1)=dval(i)
-              enddo
-            enddo
-  
-
-            !     calculation of the occupations and the fermi energy
-            !     corresponding to the chosen ismear,etemp and nspin
-  
-           call efermi(nelt,n,etemp,1,f1,ef1,e0,enocc,ismear,nspin)
-  
-  
-            !     calculation of the initial and final occupation matrices
-            !     in the z0-rotated orbital basis
-              
-            call calcm(f1,z1,fmat1)
-             
-            !     calculation of dfmat
-            do is=1,nspin
-              nss=nupdwn(is)
-              dfmat(1:nss,1:nss,is)=-fmat0(1:nss,1:nss,is)+fmat1(1:nss,1:nss,is)
-            end do
-                   
-            f0(1:n)=f(1:n)
-                   
-            !     initialization when xmin is determined by sampling 
-            do il=1,1
-              !     this loop is useful to check that the sampling is correct
-              x=1.*DBLE(il)
-              do is=1,nspin
-                nss=nupdwn(is)
-                fmatx(1:nss,1:nss,is)=fmat0(1:nss,1:nss,is)+x*dfmat(1:nss,1:nss,is)
-              end do
-                      
-              !     diagonalization of fmatx
-              fx = 0.0d0
-              do  is=1,nspin
-                nss=nupdwn(is)
-                istart=iupdwn(is)
-                if(ionode) then
-                   call ddiag(nss,nss,fmatx(1,1,is),dval(1),zaux(1,1,is),1)
-                endif
-                call mp_bcast(dval,ionode_id)
-                call mp_bcast(zaux(:,:,is),ionode_id)
-                do i=1,nss
-                  faux(i+istart-1)=dval(i)
-                enddo
-              enddo
-              !     reordering of the eigenvalues fx and eigenvectors zx
-              do  is=1,nspin
-                nss=nupdwn(is)
-                istart=iupdwn(is)
-                do i=1,nss
-                  fx(i+istart-1)=faux(nss-i+istart)
-                  do j=1,nss
-                    zx(i,j,is)=zaux(i,nss-j+1,is)
-                  end do
-                enddo
-              end do
-              
-              !     calculation of the entropy at x
-              CALL compute_entropy2( entropy, fx, n, nspin )
-  
-              !     calculation of the entropy derivative at x
-              CALL compute_entropy_der( ex, fx, n, nspin )
-  
-              !    update of f
-              f(1:n)=fx(1:n)
-  
-              !    transposition of zx (recall zx^-1=zx^t)
-              !    to obtain the rotation matrix at x
-              do is=1,nspin
-                nss=nupdwn(is)
-                do i=1,nss
-                  do k=1,nss
-                    zxt(k,i,is)=zx(i,k,is)
-                  end do
-                end do
-              end do
-                         
-              !     calculation of the quantities at x=1
-              !     using the previously calculated rotation matrix 
-              !     (similar to what has been done at x=0)
-              call calcmt(f,zxt,fmatx)
-             
-              !     calculation of the rotated quantities for the calculation
-              !     of the epsi0_ij matrix at x=1
-              call rotate(zxt,c0(:,:,1,1),bec,c0diag,becdiag)   
-              call rhoofr (nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin) 
-              !     put core charge (if present) in rhoc(r)
-              if (nlcc_any) call set_cc(irb,eigrb,rhoc)
-  
-              call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,                 &
-                           &            ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion2)
-              call newd(rhor,irb,eigrb,rhovan,fion2)
-              call prefor(eigr,betae)
-    
-              !     free energy at x=1
-              atot1=etot+entropy
-              etot1=etot
-              !if(ionode) write(37,'(a5,f4.2,3f15.10)') 'x :',x,etot,entropy,atot1
-           end do
-  
-  
-            !     calculation of c0hc0_ij at x=1
-            call prefor(eigr,betae)!ATTENZIONE
-            h0c0 = 0.0d0
-            do i=1,n,2
-              call dforce(bec,betae,i,c0(1,i,1,1),c0(1,i+1,1,1),&
-                h0c0(1,i),h0c0(1,i+1),rhos)
-            end do
-  
-            do is=1,nspin
-              nss=nupdwn(is)
-              istart=iupdwn(is)
-              do i=1,nss
-                do k=1,nss
-                  c0hc0(k,i,is)=0.d0
-                  do ig=1,ngw
-                    c0hc0(k,i,is)=c0hc0(k,i,is)-&
-                    2.0*DBLE(CONJG(c0(ig,k+istart-1,1,1))*h0c0(ig,i+istart-1))
-                  enddo
-                  if (ng0.eq.2) then
-                    c0hc0(k,i,is)=c0hc0(k,i,is)+&
-                    DBLE(CONJG(c0(1,k+istart-1,1,1))*h0c0(1,i+istart-1))
-                  endif
-                end do
-              end do
-              call mp_sum(c0hc0(1:nss,1:nss,is))
-            end do
-  
-            do is=1,nspin
-              nss=nupdwn(is)
-              epsi0(1:nss,1:nss,is)=c0hc0(1:nss,1:nss,is)
-            end do
-                   
-            !     calculation of da/dx(x=1)=da/df_ji*delta(f_ji) 
-            !     recall: dtrS(f)/df_ij = S'(f)_ji
-            !     The calculation of the d(-TS)/dx is done using 
-            !       (ex)_j [(zt)_ji (dfmat)_ik (zt)_jk] 
-            !     instead of [(zt)_jk (ex)_j (zt)_ji] (dfmat)_ik 
-            !     because of the quantity (ex)_j is not well conditioned
-                      
-            dedx1=0.0
-            dentdx1=0.0
-            
-            do is=1,nspin
-              nss=nupdwn(is)
-              istart=iupdwn(is)
-              do i=1,nss
-                 dx(i+istart-1)=0.
-                 do k=1,nss
-                    do j=1,nss
-                       dx(i+istart-1)=dx(i+istart-1)-                              &
-                            &         zxt(i,k,is)*fmat0(k,j,is)*zxt(i,j,is)
-                    end do
-                 end do
-                 dx(i+istart-1)=dx(i+istart-1)+fx(i+istart-1)
-              end do
-            end do
-  
-            do is=1,nspin
-              nss=nupdwn(is)
-              istart=iupdwn(is)
-              do i=1,nss
-                 dentdx1=dentdx1-etemp*dx(i+istart-1)*ex(i+istart-1)
-                 do k=1,nss
-                    dedx1=dedx1+dfmat(i,k,is)*epsi0(k,i,is)
-                 end do
-              end do
-            end do
-            dadx1=dedx1+dentdx1
-                   
-            !     line minimization (using a second degree interpolation)
-            !     (fermi-dirac distribution)
-            !     The free energy curve is approximated as follows
-            !     (a) E+Ek -> 2nd order polynomial P(x)=eqa*x**2+eqb*x+eqc
-            !         such that P(1)=E+EK(1), P(0)=E+EK(0), P'(1)=(E+EK)'(1)
-            !     (b) S -> S~(x)=\sum_i s(a_i*x**2+b_i*x+c_i)
-            !         (where s(f)=-f*ln(f)-(1-f)*ln(1-f))
-            !         such that S~(1)=S(1), S~(0)=S(0), S~'(1)=S'(1) 
-            !         => S~=\sum_i s(f1_i+(x-1)*d_i+(-f1_i+d_i+f0_i)*(x-1)**2
-            !            where d_i=zxt_i,k*dfmat_k,j*zxt_i,j
-  
-            eqc=etot0
-            eqa=dedx1-etot1+etot0
-            eqb=etot1-etot0-eqa
-  
-            !     sampling along the search direction to find xmin
-            atotmin=atot0
-            xmin=0.0
-                   
-            do il=0,2000
-                      
-              x=0.0005*DBLE(il)     
-              entropy2=0.0
-                      
-              do is=1,nspin
-                nss=nupdwn(is)
-                istart=iupdwn(is)
-                do i=1,nss
-                  f2=fx(i+istart-1)+(x-1)*dx(i+istart-1) + &
-                     (-fx(i+istart-1)+dx(i+istart-1)+f0(i+istart-1))*(x-1)**2
-                  CALL compute_entropy( entmp, f2, nspin )
-                  entropy2 = entropy2 + entmp
-                end do
-              end do
-              etot2=eqa*x**2+eqb*x+eqc
-!              write(*,*) 'Energie2: ',x,etot2+entropy2,entropy2
-              if ((etot2+entropy2).lt.atotmin) then
-                xmin=x
-                atotmin=etot2+entropy2
-              endif
-  
-            end do
- 
-  
-            !                     eqc=atot0
-            !                     eqa=dadx1-atot1+atot0
-            !                     eqb=atot1-atot0-eqa
-  
-            !                     xmin=-eqb/(2.d0*eqa)
-  
-  
-            !     if xmin=1, no need do recalculate the quantities
-            if(ionode) write(37,'(a5,2f15.10)') 'XMIN', xmin,atotmin 
-            if (xmin.eq.1.) goto 300
-  
-            !     calculation of the fmat at x=xmin
-            !     this part can be optimized in the case where xmin=0
-            do is=1,nspin
-              nss=nupdwn(is)
-              do i=1,nss
-                do j=1,nss
-                  fmatx(i,j,is)=fmat0(i,j,is)+xmin*dfmat(i,j,is)
-                end do
-              end do
-            enddo
-               
-            !     diagonalization of fmat at x=xmin
-            fx = 0.0d0
-            do is=1,nspin
-               nss=nupdwn(is)
-               istart=iupdwn(is)
-               if(ionode) call ddiag(nss,nss,fmatx(1,1,is),dval(1),zaux(1,1,is),1)  
-               call mp_bcast(dval,ionode_id)
-               call mp_bcast(zaux(:,:,is),ionode_id)
-               do i=1,n
-                  faux(i+istart-1)=dval(i)
-               enddo
-            enddo
-            do  is=1,nspin
-               nss=nupdwn(is)
-               istart=iupdwn(is)
-               do i=1,nss
-                  fx(i+istart-1)=faux(nss-i+istart)
-                  do j=1,nss
-                     zx(i,j,is)=zaux(i,nss-j+1,is)
-                  end do
-               enddo
-            end do
-    
-            !     calculation of the entropy at x=xmin
-                CALL compute_entropy2( entropy, fx, n, nspin )
-  
-            !     update of f
-            f(1:n)=fx(1:n)
-  
-            !     update of z0  
- 300        continue
-            do is=1,nspin
-              nss=nupdwn(is)
-              do i=1,nss
-                do k=1,nss
-                  z0(k,i,is)=zx(i,k,is)
-                end do
-              end do
-            end do
-  
-            !     calculation of the rotated quantities
-
-
-
-
-
-            call calcmt(f,z0,fmat0)
-            call rotate(z0,c0(:,:,1,1),bec,c0diag,becdiag)
-
-            call rhoofr (nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin) 
-  
-            !     put core charge (if present) in rhoc(r)
-            if (nlcc_any) call set_cc(irb,eigrb,rhoc)
-  
-            call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,                &
-                    &            ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion2)
-            call newd(rhor,irb,eigrb,rhovan,fion2)
-            CALL compute_entropy2( entropy, f, n, nspin )
-            call prefor(eigr,betae)
-            ene_ok=.true. !so does not calculate the energy again
-    
-            !     free energy at x=xmin
-            atotmin=etot+entropy      
-            if(ionode) write(37,'(a3,i2,2f15.10)') 'CI',niter,atot0,atotmin
-  
-  
-            atot0=atotmin
-            etot0=etot
-            enever=etot
-! set atot
-            atot=atot0
-            !     end of the loop
-  
-          end do!su ninnner
       
           !=======================================================================
           !                 end of the inner loop
           !=======================================================================
   
-        endif !su tens
   
         itercg=itercg+1
-  
+
+!   restore hi
+!        hi(:,:)=gi(:,:) 
+ 
       end do!on conjugate gradient iterations
       !calculates atomic forces and lambda
       call newd(rhor,irb,eigrb,rhovan,fion)
@@ -1120,5 +794,6 @@
 
         endif
 
-      if(ionode) close(37)!for debug and tuning purposes
+        deallocate( hpsi0) 
+       if(ionode) close(37)!for debug and tuning purposes
 END SUBROUTINE

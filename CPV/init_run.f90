@@ -32,7 +32,7 @@ SUBROUTINE init_run()
   USE fft_base,                 ONLY : dfftp
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
   USE electrons_module,         ONLY : n_emp, pmss_init
-  USE uspp,                     ONLY : nkb, vkb, deeq, becsum
+  USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
   USE core,                     ONLY : rhoc
   USE smooth_grid_dimensions,   ONLY : nnrsx
   USE wavefunctions_module,     ONLY : c0, cm, cp, ce
@@ -205,7 +205,7 @@ SUBROUTINE init_run()
      CALL allocate_ensemble_dft( nkb, nbsp, ngw, &
                                  nudx, nspin, nbspx, nnrsx, natx )
   !
-  IF ( tcg ) CALL allocate_cg( ngw, nbspx )
+  IF ( tcg ) CALL allocate_cg( ngw, nbspx,nkbus )
   !
   IF ( tefield ) CALL allocate_efield( ngw, nbspx, nhm, nax, nsp )
   !

@@ -8,36 +8,40 @@
 
 MODULE cg_module
 
+ USE kinds, ONLY: DP
+
   IMPLICIT NONE
   SAVE
 
       logical      :: tcg        = .false.   ! if true do conjugate gradient minimization for electrons
       integer      :: maxiter    = 100      ! maximum number of iterations
-      real(8) :: etresh    = 1.d-5   !energy treshold 
-      real(8) :: passop    =0.3d0    !small step for conjugate gradient
+      real(DP) :: etresh    = 1.d-5   !energy treshold 
+      real(DP) :: passop    =0.3d0    !small step for conjugate gradient
 
 !***
 !***  Conjugate Gradient
 !***
-      real(8)  esse,essenew !factors in c.g.
-      COMPLEX(8), ALLOCATABLE :: gi(:,:)!conjugates 
-      COMPLEX(8), ALLOCATABLE :: hi(:,:)!gradients 
-      COMPLEX(8), ALLOCATABLE :: c0old(:,:)!old wfcs for extrapolation
-      COMPLEX(8), ALLOCATABLE :: hpsi(:,:) !terms H|Psi_i>
-      real(8)  ene0,ene1,dene0,enever,enesti !energy terms for linear minimization along hi
-      real(8)  passof,passov !step to minimum: effective, estimated
+      real(DP)  esse,essenew !factors in c.g.
+      COMPLEX(DP), ALLOCATABLE :: gi(:,:)!conjugates 
+      COMPLEX(DP), ALLOCATABLE :: hi(:,:)!gradients 
+      COMPLEX(DP), ALLOCATABLE :: c0old(:,:)!old wfcs for extrapolation
+      COMPLEX(DP), ALLOCATABLE :: hpsi(:,:) !terms H|Psi_i>
+      real(DP), allocatable::               s_minus1(:,:)!factors for inverting US S matrix
+      real(DP), allocatable::               k_minus1(:,:)!factors for inverting US preconditioning matrix 
+      real(DP)  ene0,ene1,dene0,enever,enesti !energy terms for linear minimization along hi
+      real(DP)  passof,passov !step to minimum: effective, estimated
       integer itercg !iteration number
       logical ltresh!flag for convergence on energy
-      real(8) passo!step to minimum
-      real(8) etotnew,etotold!energies
-      real(8) spasso!sign of small step
+      real(DP) passo!step to minimum
+      real(DP) etotnew,etotold!energies
+      real(DP) spasso!sign of small step
       logical tcutoff!
-      real(8), ALLOCATABLE :: emme(:,:)!matrix used for cal_emme style of projection
+      real(DP), ALLOCATABLE :: emme(:,:)!matrix used for cal_emme style of projection
       logical restartcg!if .true. restart again the CG algorithm, performing a SD step
       integer numok!counter on converged iterations
-      real(8) pcnum,pcden
+      real(DP) pcnum,pcden
       integer iter3
-      real(8) ebanda
+      real(DP) ebanda
       logical ene_ok!if .true. do not recalculate energy
       integer ninner_ef
 
@@ -74,14 +78,16 @@ CONTAINS
   END SUBROUTINE cg_info
 
 
-  SUBROUTINE allocate_cg( ngw, nx )
+  SUBROUTINE allocate_cg( ngw, nx, nhsavb )
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: ngw, nx
+    INTEGER, INTENT(IN) :: ngw, nx, nhsavb
     allocate(hi(ngw,nx))
     allocate(gi(ngw,nx))
     allocate(c0old(ngw,nx))
     allocate( emme(nx,nx))
     allocate( hpsi(ngw,nx))
+    allocate( s_minus1(nhsavb,nhsavb))
+    allocate( k_minus1(nhsavb,nhsavb))
     RETURN
   END SUBROUTINE allocate_cg
 
@@ -92,6 +98,8 @@ CONTAINS
     IF( ALLOCATED( c0old ) ) deallocate(c0old )
     IF( ALLOCATED( emme ) ) deallocate( emme )
     IF( ALLOCATED( hpsi ) ) deallocate( hpsi )
+    IF( ALLOCATED( s_minus1) ) deallocate( s_minus1)
+    IF( ALLOCATED( k_minus1) ) deallocate( k_minus1)
     RETURN
   END SUBROUTINE deallocate_cg
 
@@ -99,7 +107,7 @@ CONTAINS
     use gvecw, only: ngw
     use electrons_base, only: n => nbsp
     IMPLICIT NONE
-    COMPLEX(8) :: c0( :, :, :, : )
+    COMPLEX(DP) :: c0( :, :, :, : )
     INTEGER :: nfi
     LOGICAL :: tfirst
     INTEGER :: i, ig
