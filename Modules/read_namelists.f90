@@ -1568,19 +1568,19 @@ MODULE read_namelists_module
              END IF
           CASE ('nscf')
              IF( prog == 'CP' ) &
-                CALL errore( sub_name,' calculation '//calculation// &
+                CALL errore( sub_name,' calculation '//TRIM(calculation)// &
                              & ' not implemented ',1)
              IF( prog == 'CP' ) occupations = 'bogus'
              IF( prog == 'CP' ) electron_dynamics = 'damp'
              IF( prog == 'PW' ) startingpot = 'file'
           CASE ('phonon')
              IF( prog == 'CP' ) &
-                CALL errore( sub_name,' calculation '//calculation// &
+                CALL errore( sub_name,' calculation '//TRIM(calculation)// &
                              & ' not implemented ',1)
              IF( prog == 'PW' ) startingpot = 'file'
           CASE ('raman')
              IF( prog == 'CP' ) &
-                  CALL errore( sub_name,' calculation '//calculation// &
+                  CALL errore( sub_name,' calculation '//TRIM(calculation)// &
                   & ' not implemented ',1)
              IF( prog == 'PW' ) startingpot = 'file'
           CASE ( 'cp-wf' )
@@ -1659,7 +1659,7 @@ MODULE read_namelists_module
           CASE DEFAULT
              !
              CALL errore( sub_name,' calculation '// & 
-                        & calculation//' not implemented ', 1 )
+                        & TRIM(calculation)//' not implemented ', 1 )
              !
        END SELECT
        !              
