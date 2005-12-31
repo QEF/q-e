@@ -344,6 +344,18 @@ MODULE input_parameters
           ! spin multiplicity (2s+1), 1 for singlet, 2 for doublet etc.
           ! when multiplicity = 0, it is unspecified
 
+        INTEGER :: tot_magnetization = -1
+          ! majority - minority spin. 
+          ! A value < 0 ==> unspecified
+!
+! A comment about variables nelup, neldw, multiplicity and tot_magnetization:
+! All these variables contain the same information and must be kept harmonized.
+! Variables nelup and neldw will be removed in future versions of the code.
+! Variables multiplicity and tot_magnetization, though redundent will probably 
+! coexist since multiplicity is the more natural way (?)for defining the spin 
+! configuratio in the quantum-chemistry community while tot_magnetization is
+! more natural (?) when dealing with extended systems.
+!
         REAL(DP) :: ecutwfc = 0.0d0
           ! energy cutoff for wave functions in k-space ( in Rydbergs )
           ! this parameter is MANDATORY in FPMD
@@ -555,7 +567,7 @@ MODULE input_parameters
              noncolin, lspinorb, lambda, angle1, angle2, report, &
              constrained_magnetization, B_field, fixed_magnetization, &
              sic, sic_epsilon, force_pairing, sic_alpha, &
-	     tot_charge, multiplicity
+	     tot_charge, multiplicity, tot_magnetization
 
 
 !=----------------------------------------------------------------------------=!

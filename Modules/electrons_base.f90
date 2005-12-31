@@ -39,20 +39,21 @@
 
 
     SUBROUTINE electrons_base_initval( zv_ , na_ , nsp_ , nelec_ , nelup_ , neldw_ , nbnd_ , &
-               nspin_ , occupations_ , f_inp, tot_charge_, multiplicity_ )
+               nspin_ , occupations_ , f_inp, tot_charge_, multiplicity_, tot_magnetization_ )
 
-      USE constants, ONLY: eps8
-      USE io_global, ONLY: stdout
-      USE control_flags, ONLY: iprsta
+      USE constants,         ONLY   : eps8
+      USE io_global,         ONLY   : stdout
+      USE control_flags,     ONLY   : iprsta
 
-      REAL(DP), INTENT(IN) :: zv_ (:), tot_charge_
-      INTEGER, INTENT(IN) :: na_ (:) , nsp_, multiplicity_
-      REAL(DP), INTENT(IN) :: nelec_ , nelup_ , neldw_
-      INTEGER, INTENT(IN) :: nbnd_ , nspin_
+      REAL(DP),         INTENT(IN) :: zv_ (:), tot_charge_
+      REAL(DP),         INTENT(IN) :: nelec_ , nelup_ , neldw_
+      REAL(DP),         INTENT(IN) :: f_inp(:,:)
+      INTEGER,          INTENT(IN) :: na_ (:) , nsp_, multiplicity_, tot_magnetization_
+      INTEGER,          INTENT(IN) :: nbnd_ , nspin_
       CHARACTER(LEN=*), INTENT(IN) :: occupations_
-      REAL(DP), INTENT(IN) :: f_inp(:,:)
-      REAL(DP) :: nelec, nelup, neldw, ocp, fsum
-      INTEGER   :: iss, i, in
+
+      REAL(DP)                     :: nelec, nelup, neldw, ocp, fsum
+      INTEGER                      :: iss, i, in
 
       nspin = nspin_
 
@@ -76,24 +77,73 @@
         neldw = neldw_
         nelup = nelec - neldw_
       ELSE
-         IF ( multiplicity_ == 0 ) THEN
-            ! default when multiplicity is unspecified
+         IF ( multiplicity_ == 0 .AND. tot_magnetization_ < 0 ) THEN
+            ! default when multiplicity/tot_magnetization is unspecified
             nelup = INT( nelec + 1 ) / 2
             neldw = nelec - nelup
          else
-            ! non singlet multiplicity requires nspin=2
-            if ( (multiplicity_ > 1) .and. (nspin==1) ) &
-                 CALL errore(' electrons_base_initval ', &
-                 ' spin multiplicity incosistent with nspin=1 ', 2 )
-            ! odd multiplicity requires an even number of electrons
-            ! even multiplicity requires an odd number of electrons
-            if ( ((MOD(multiplicity_,2) == 0) .and. (MOD(NINT(nelec),2)==0)) .or.   &
-                 ((MOD(multiplicity_,2) == 1) .and. (MOD(NINT(nelec),2)==1))      ) &
-                 CALL errore(' electrons_base_initval ',                           &
-                 ' spin multiplicity incosistent with total number of electrons ', 2 )
-
-            nelup = ( INT(nelec) + ( multiplicity_-1 ) ) / 2
-            neldw = ( INT(nelec) - ( multiplicity_-1 ) ) / 2
+            if ( multiplicity_ > 0 .AND. tot_magnetization_ < 0 ) then
+               ! only multiplicity was specified in the input
+               !
+               ! ... various checks
+               ! non singlet multiplicity requires nspin=2
+               if ( (multiplicity_ > 1) .and. (nspin==1) ) &
+                    CALL errore(' electrons_base_initval ', &
+                    ' spin multiplicity incosistent with nspin=1 ', 2 )
+               ! odd  multiplicity requires an even number of electrons
+               ! even multiplicity requires an odd  number of electrons
+               if ( ((MOD(multiplicity_,2) == 0) .and. (MOD(NINT(nelec),2)==0)) .or.   &
+                    ((MOD(multiplicity_,2) == 1) .and. (MOD(NINT(nelec),2)==1))      ) &
+                    CALL errore(' electrons_base_initval ',                           &
+                    ' spin multiplicity incosistent with total number of electrons ', 2 )
+               !
+               ! ... setting nelup/neldw
+               nelup = ( INT(nelec) + ( multiplicity_-1 ) ) / 2
+               neldw = ( INT(nelec) - ( multiplicity_-1 ) ) / 2
+            elseif ( multiplicity_ == 0 .AND. tot_magnetization_ >= 0 ) then
+               ! only tot_magnetization was specified
+               !
+               ! ... various checks
+               if ( (tot_magnetization_ > 0) .and. (nspin==1) ) &
+                    CALL errore(' electrons_base_initval ', &
+                    ' tot_magnetization is incosistent with nspin=1 ', 2 )
+               ! odd  tot_magnetization requires an odd  number of electrons
+               ! even tot_magnetization requires an even number of electrons
+               if ( ((MOD(tot_magnetization_,2) == 0) .and. (MOD(NINT(nelec),2)==1)) .or.   &
+                    ((MOD(tot_magnetization_,2) == 1) .and. (MOD(NINT(nelec),2)==0))      ) &
+                    CALL errore(' electrons_base_initval ',                           &
+                    ' tot_magnetization is incosistent with total number of electrons ', 2 )
+               !
+               ! ... setting nelup/neldw
+               nelup = ( INT(nelec) + tot_magnetization_ ) / 2
+               neldw = ( INT(nelec) - tot_magnetization_ ) / 2
+            elseif ( multiplicity_ > 0 .AND. tot_magnetization_ >= 0 ) then
+               ! both multiplicity and tot_magnetization are specified
+               !
+               ! various checks
+               call infomsg(' electrons_base_initval ',                           &
+                    'It is recommended to specify EITHER tot_magnetization OR multiplicity, not both!', -1)
+               ! compatibility check
+               if ( (tot_magnetization_+1) .NE. multiplicity_ ) &
+                    CALL errore(' electrons_base_initval ', &
+                    'tot_magnetization and multiplicity are incompatible', 1)
+               !
+               !
+               !
+               if ( (tot_magnetization_ > 0) .and. (nspin==1) ) &
+                    CALL errore(' electrons_base_initval ', &
+                    ' tot_magnetization is incosistent with nspin=1 ', 2 )
+               ! odd  tot_magnetization requires an odd  number of electrons
+               ! even tot_magnetization requires an even number of electrons
+               if ( ((MOD(tot_magnetization_,2) == 0) .and. (MOD(NINT(nelec),2)==1)) .or.   &
+                    ((MOD(tot_magnetization_,2) == 1) .and. (MOD(NINT(nelec),2)==0))      ) &
+                    CALL errore(' electrons_base_initval ',                           &
+                    ' tot_magnetization is incosistent with total number of electrons ', 2 )
+               !
+               ! ... setting nelup/neldw
+               nelup = ( INT(nelec) + tot_magnetization_ ) / 2
+               neldw = ( INT(nelec) - tot_magnetization_ ) / 2
+            end if
          end IF
       END IF
 

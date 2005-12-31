@@ -265,6 +265,16 @@ multiplicity   INTEGER
                if unspecified or a non-zero value is specified in nelup/neldw
                then multiplicity variable is ignored.
 
+tot_magnetization INTEGER
+               majority spin - minority spin (nelup - neldw).
+               if unspecified or a non-zero value is specified in nelup/neldw
+               then multiplicity variable is ignored.
+               YES, there is redundancy! nelup/neldw are enough to specify
+               the spin state. However these variables are not very convenient
+               and will be eliminated from the input in future versions.
+	       It is recommended to use either 'multiplicity' or equivalently
+               'tot_magnetization' to specify the spin state.
+
 ecfixed        REAL ( default = 0.0 )
 qcutz          REAL ( default = 0.0 )
 q2sigma        REAL ( default = 0.1 )
