@@ -233,6 +233,10 @@ nelec          REAL
                A compensating jellium background is inserted
                to remove divergencies if the cell is not neutral
 
+tot_charge     INTEGER ( default = 0 )
+               total system charge. Used only if nelec is unspecified,
+               otherwise it is ignored.
+
 ecutwfc        REAL
                kinetic energy cutoff (Ry) for wavefunctions
                (must be specified)
