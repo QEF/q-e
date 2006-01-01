@@ -55,6 +55,7 @@ SUBROUTINE setup()
                                  tot_charge, tot_magnetization, multiplicity
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
                                  starting_magnetization
+  USE electrons_base,     ONLY : set_nelup_neldw
   USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                  tetra, ntetra, ltetra
   USE symme,              ONLY : s, t_rev, irt, ftau, nsym, invsym
@@ -312,6 +313,11 @@ SUBROUTINE setup()
             .AND. .NOT. lgauss .AND. .NOT. ltetra &
             .AND. .NOT. tfixed_occ .AND. .NOT. two_fermi_energies ) &
       CALL errore( 'setup', 'spin-polarized system, specify occupations', 1 )
+  !
+  ! ... setting nelup/neldw if not set in the input
+  !
+  call set_nelup_neldw(nelec, nelup, neldw, tot_magnetization, &
+       multiplicity)
   !
   ! ... Set the number of occupied bands if not given in input
   !
