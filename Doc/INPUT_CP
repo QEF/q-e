@@ -260,12 +260,12 @@ nelup, neldw   REAL
                The sum must yield nelec that must also be specified
                explicitely in this case.
 
-multiplicity   INTEGER
+multiplicity   INTEGER ( default = 0 [unspecified] )
                spin multiplicity (2s+1). 1 is singlet, 2 for doublet etc.
                if unspecified or a non-zero value is specified in nelup/neldw
                then multiplicity variable is ignored.
 
-tot_magnetization INTEGER
+tot_magnetization INTEGER ( default = -1 [unspecified] )
                majority spin - minority spin (nelup - neldw).
                if unspecified or a non-zero value is specified in nelup/neldw
                then multiplicity variable is ignored.
