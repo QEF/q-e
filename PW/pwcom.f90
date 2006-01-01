@@ -143,19 +143,22 @@ MODULE klist
   SAVE
   !
   REAL(DP) :: &
-       xk(3,npk),      &! coordinates of k points
-       wk(npk),        &! weight of k points
-       xqq(3),         &! coordinates of q point (used with iswitch=-2)
-       degauss,        &! smearing parameter
-       nelec,          &! number of electrons
-       nelup,          &! number of spin-up electrons (if two_fermi_energies=t)
-       neldw,          &! number of spin-dw electrons (if two_fermi_energies=t)
-       b_length         ! length of the b vectors
+       xk(3,npk),         &! coordinates of k points
+       wk(npk),           &! weight of k points
+       xqq(3),            &! coordinates of q point (used with iswitch=-2)
+       degauss,           &! smearing parameter
+       nelec,             &! number of electrons
+       nelup,             &! number of spin-up electrons (if two_fermi_energies=t)
+       neldw,             &! number of spin-dw electrons (if two_fermi_energies=t)
+       tot_charge,        &! total charge
+       b_length            ! length of the b vectors
   INTEGER :: &
-       ngk(npk),       &! number of plane waves for each k point
-       nks,            &! number of k points in this pool
-       nkstot,         &! total number of k points
-       ngauss           ! type of smearing technique
+       ngk(npk),          &! number of plane waves for each k point
+       nks,               &! number of k points in this pool
+       nkstot,            &! total number of k points
+       ngauss,            &! type of smearing technique
+       tot_magnetization, &! nelup-neldw >= 0 (negative value means unspecified)
+       multiplicity        ! spin multiplicity
   LOGICAL :: &
        lgauss,         &! if .TRUE.: use gaussian broadening
        lxkcry,         &! if .TRUE.:k-pnts in cryst. basis accepted in input

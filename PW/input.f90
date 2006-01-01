@@ -100,7 +100,10 @@ SUBROUTINE iosys()
                             nelup_   => nelup, &
                             neldw_   => neldw, &
                             b_length_ => b_length, &
-                            lcart_   => lcart
+                            lcart_   => lcart, &
+                            tot_charge_ => tot_charge, &
+                            tot_magnetization_ => tot_magnetization, &
+                            multiplicity_ => multiplicity
   !
   USE ktetra,        ONLY : nk1, nk2, nk3, k1, k2, k3, ltetra
   !
@@ -191,6 +194,7 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
                                nat, ntyp, nbnd, nelec, nelup, neldw, &
+                               tot_charge, tot_magnetization, multiplicity, &
                                ecutwfc, ecutrho, &
                                nr1, nr2, nr3, nr1s, nr2s, nr3s, &
                                nosym, starting_magnetization, &
@@ -374,7 +378,8 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-  IF ( nelup == 0.D0 .AND. neldw == 0.D0 ) THEN
+  IF ( nelup == 0.D0 .AND. neldw == 0.D0 .AND. &
+       tot_magnetization < 0 .AND. multiplicity == 0) THEN
      !
      two_fermi_energies = .FALSE.
      !
@@ -1121,6 +1126,9 @@ SUBROUTINE iosys()
   nelec_   = nelec
   nelup_   = nelup
   neldw_   = neldw
+  tot_charge_ = tot_charge
+  tot_magnetization_ = tot_magnetization
+  multiplicity_ = multiplicity
   !
   lspinorb_ = lspinorb
   noncolin_ = noncolin

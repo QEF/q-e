@@ -51,7 +51,8 @@ SUBROUTINE setup()
   USE gsmooth,            ONLY : doublegrid, gcutms
   USE klist,              ONLY : xk, wk, xqq, nks, nelec, degauss, lgauss, &
                                  lxkcry, nkstot, b_length, lcart, &
-                                 nelup, neldw, two_fermi_energies
+                                 nelup, neldw, two_fermi_energies, &
+                                 tot_charge, tot_magnetization, multiplicity
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
                                  starting_magnetization
   USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
@@ -157,10 +158,10 @@ SUBROUTINE setup()
      !
 #if defined (__PGI)
      DO na = 1, nat
-        nelec = nelec + zv( ityp(na) )
+        nelec = nelec + zv( ityp(na) ) - tot_charge
      END DO
 #else
-     nelec = SUM( zv(ityp(1:nat)) )
+     nelec = SUM( zv(ityp(1:nat)) ) - tot_charge
 #endif
      !
   END IF
