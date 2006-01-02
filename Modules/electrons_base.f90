@@ -324,7 +324,7 @@
          IF ( multiplicity_ == 0 .AND. tot_magnetization_ < 0 ) THEN
             ! default when multiplicity/tot_magnetization is unspecified
             nelup_loc = INT( nelec_ + 1 ) / 2
-            neldw_loc = nelec_ - nelup_
+            neldw_loc = nelec_ - nelup_loc
          else
             if ( multiplicity_ > 0 .AND. tot_magnetization_ < 0 ) then
                ! only multiplicity was specified in the input
