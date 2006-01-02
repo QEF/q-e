@@ -132,6 +132,9 @@ MODULE read_namelists_module
        ntyp   = 0
        nbnd   = 0
        nelec  = 0.D0
+       tot_charge = 0.D0
+       tot_magnetization = -1
+       multiplicity = 0
        ecutwfc = 0.D0
        ecutrho = 0.D0
        nr1  = 0
@@ -649,6 +652,9 @@ MODULE read_namelists_module
        CALL mp_bcast( ntyp,                   ionode_id )
        CALL mp_bcast( nbnd,                   ionode_id )
        CALL mp_bcast( nelec,                  ionode_id )
+       CALL mp_bcast( tot_charge,             ionode_id )
+       CALL mp_bcast( tot_magnetization,      ionode_id )
+       CALL mp_bcast( multiplicity,           ionode_id )
        CALL mp_bcast( ecutwfc,                ionode_id )
        CALL mp_bcast( ecutrho,                ionode_id )
        CALL mp_bcast( nr1,                    ionode_id )            
