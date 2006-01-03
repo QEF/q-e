@@ -36,7 +36,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, g2kin, &
                                    gamma_only
   USE noncollin_module,     ONLY : noncolin, npol
-  USE spin_orb,             ONLY : lspinorb, fcoef
+  USE spin_orb,             ONLY : lspinorb, so, fcoef
   USE io_files,             ONLY : iunwfc, nwordwfc
 #ifdef __PARA
   USE mp,                   ONLY : mp_bcast
@@ -235,7 +235,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
                   do na = 1, nat
                     if (ityp (na) == np) then
                       if (noncolin) then
-                        if (lspinorb) then
+                        if (so(np)) then
                           be1=(0.d0,0.d0)
                           be2=(0.d0,0.d0)
                           do ih = 1, nh(np)
@@ -262,7 +262,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
                         ijh = 1
                         do ih = 1, nh (np)
                           ikb = ijkb0 + ih
-                          if (lspinorb) then
+                          if (so(np)) then
                             becsum(ijh,na,1)=becsum(ijh,na,1)+ w1*    &
                                (be1(ih,1)*be2(ih,1)+be1(ih,2)*be2(ih,2))
                           else
@@ -275,7 +275,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
                           ijh = ijh + 1
                           do jh = ih + 1, nh (np)
                             jkb = ijkb0 + jh
-                            if (lspinorb) then 
+                            if (so(np)) then 
                               becsum(ijh,na,1)=becsum(ijh,na,1) &
                                  + w1*((be1(jh,1)*be2(ih,1)+   &
                                         be1(jh,2)*be2(ih,2))+  &

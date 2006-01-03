@@ -13,7 +13,7 @@ SUBROUTINE compute_sigma_avg(sigma_avg,becp_nc,ik,lsigma)
 USE kinds,                ONLY : DP
 USE noncollin_module,     ONLY : noncolin, npol
 USE cell_base,            ONLY : alat, at, tpiba, omega
-USE spin_orb,             ONLY : lspinorb, fcoef
+USE spin_orb,             ONLY : so, fcoef
 USE uspp,                 ONLY : nkb,qq,vkb,nhtol,nhtoj,nhtolm,indv
 USE uspp_param,           ONLY : nh, tvanp, nhm
 USE wvfct,                ONLY : nbnd, npwx, npw, igk 
@@ -204,7 +204,7 @@ DO ibnd = 1, nbnd
                be1 = 0.d0
                DO ih = 1, nh(np)
                   ikb = ijkb0 + ih
-                  IF (lspinorb) THEN
+                  IF (so(np)) THEN
                      DO kh = 1, nh(np)
                         IF ((nhtol(kh,np)==nhtol(ih,np)).AND. &
                             (nhtoj(kh,np)==nhtoj(ih,np)).AND.     &
