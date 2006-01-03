@@ -25,7 +25,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   !              4                 the local density of electronic entropy
   !              5                 stm images
   !              6                 spin polarisation (rho(up)-rho(down)
-  !              7                 square of a wavefunction
+  !              7                 square of a wavefunction (see below)
   !              8                 electron localization function (ELF)
   !              9                 planar averages of each wavefunction
   !             10                 integrated local dos from emin to emax
@@ -34,6 +34,11 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   !             13                 The noncolinear magnetization.
   !                                Unfinished and untested:
   !             14, 15, 16         The polarisation along x, y, z resp.
+  !
+  !     plot_num=7 in the noncollinear case, plot the contribution of the 
+  !                given state to the charge or to the magnetization 
+  !                along the direction indicated by spin_component 
+  !                (0 = charge, 1 = x, 2 = y, 3 = z ).
   !
   !     The output quantity is written (formatted) on file filplot.
   !
@@ -76,6 +81,12 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 #endif
 
   WRITE( stdout, '(/5x,"Calling punch_plot, plot_num = ",i3)') plot_num
+  IF (plot_num == 7 ) &
+     WRITE( stdout, '(/5x,"Plotting k_point = ",i3,"  band =", i3  )') &
+                                                   kpoint, kband
+  IF (plot_num == 7 .AND. noncolin .AND. spin_component .NE. 0 ) &
+     WRITE( stdout, '(/5x,"Plotting spin magnetization ipol = ",i3)') &
+                                                          spin_component
   IF ( plot_num == 9 .AND. gamma_only) CALL errore('punch_plot', &
       ' planar averge plot with  gamma tricks not yet implemented',1)
   !
@@ -174,8 +185,15 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   ELSEIF (plot_num == 7) THEN
 
-     CALL local_dos (0, lsign, kpoint, kband, emin, emax, raux)
-
+     IF (noncolin) THEN
+        IF (spin_component==0) THEN
+           CALL local_dos (0, lsign, kpoint, kband, emin, emax, raux)
+        ELSE
+           CALL local_dos_mag (spin_component, kpoint, kband, raux)
+        ENDIF
+     ELSE
+        CALL local_dos (0, lsign, kpoint, kband, emin, emax, raux)
+     END IF
   ELSEIF (plot_num == 8) THEN
 
      if (noncolin) &

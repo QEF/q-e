@@ -44,7 +44,7 @@
   !                4=local density of electronic entropy
   !                5=STM images
   !                6=spin polarization (rho(up)-rho(down))
-  !                7=|psi|^2
+  !                7=|psi|^2 (See below)
   !                8=electron localization function (ELF)
   !                9=planar average of all |psi|^2
   !               10=integrated local density of states (ILDOS)
@@ -53,6 +53,13 @@
   !               11=the V_bare + V_H potential
   !               12=the electric field potential
   !               13=the noncolinear magnetization.
+  !
+  !
+  !     plot_num=7 in the noncollinear case, plot the contribution of the
+  !                given state to the charge or to the magnetization
+  !                along the direction indicated by spin_component
+  !                (0 = charge, 1 = x, 2 = y, 3 = z ).
+  !
   !
   !             Options for total charge 
   !

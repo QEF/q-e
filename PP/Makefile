@@ -17,6 +17,7 @@ do_shift_ew.o \
 elf.o \
 ggen1d.o \
 local_dos.o \
+local_dos_mag.o \
 local_dos1d.o \
 openfil_pp.o\
 plan_avg.o \

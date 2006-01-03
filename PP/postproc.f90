@@ -134,7 +134,7 @@ SUBROUTINE extract (filplot)
      IF  (spin_component < 0 .OR. spin_component > 3) CALL errore &
           ('postproc', 'wrong spin_component', 1)
   ELSE
-     IF (spin_component < 0 .OR. spin_component > 2) CALL errore &
+     IF (spin_component < 0 ) CALL errore &
          ('postproc', 'wrong value of spin_component', 1)
   END IF
   !
