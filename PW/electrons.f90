@@ -36,6 +36,7 @@ SUBROUTINE electrons()
   USE ktetra,               ONLY : ltetra, ntetra, tetra  
   USE vlocal,               ONLY : strf, vnew  
   USE wvfct,                ONLY : nbnd, et, gamma_only, wg,npwx
+  USE fixed_occ,            ONLY : f_inp, tfixed_occ
   USE ener,                 ONLY : etot, eband, deband, ehart, vtxc, etxc, &
                                    etxcc, ewld, demet, ef, ef_up, ef_dw 
   USE scf,                  ONLY : rho, vr, vltot, vrs, rho_core
@@ -82,6 +83,7 @@ SUBROUTINE electrons()
       is,             &!  counter on spins
       ig,             &!  counter on G-vectors
       ik,             &!  counter on k points
+      kbnd,           &!  counter on bands
       ibnd,           &!  counter on bands
       idum,           &!  dummy counter on iterations
       iter,           &!  counter on iterations
@@ -493,10 +495,21 @@ SUBROUTINE electrons()
            END IF
         ELSE
            !
-           IF ( nspin == 1 ) THEN
-              ibnd =  NINT( nelec ) / 2.D0
+           IF ( tfixed_occ ) THEN
+              ibnd = 0
+              DO kbnd=1,nbnd
+                 IF (nspin==1.OR.nspin==4) THEN
+                    IF (f_inp(kbnd,1)>0.d0) ibnd=kbnd
+                 ELSE
+                    IF (f_inp(kbnd,1)>0.d0.OR.f_inp(kbnd,2)>0.d0) ibnd=kbnd
+                 END IF
+              END DO
            ELSE
-              ibnd =  NINT( nelec )
+              IF ( nspin == 1 ) THEN
+                 ibnd =  NINT( nelec ) / 2.D0
+              ELSE
+                 ibnd =  NINT( nelec )
+              END IF
            END IF
            !
            IF ( ionode .AND. nbnd > ibnd ) THEN
@@ -797,12 +810,23 @@ SUBROUTINE electrons()
           !
           WRITE( stdout, 9040 ) ef * rytoev
           !
-       ELSE
+       ELSE 
           !
-          IF ( nspin == 1 ) THEN
-             ibnd =  nint (nelec) / 2.d0
+          IF ( tfixed_occ ) THEN
+              ibnd = 0
+              DO kbnd=1,nbnd
+                 IF (nspin==1.OR.nspin==4) THEN
+                    IF (f_inp(kbnd,1)>0.d0) ibnd=kbnd
+                 ELSE
+                    IF (f_inp(kbnd,1)>0.d0.OR.f_inp(kbnd,2)>0.d0) ibnd=kbnd
+                 END IF
+              END DO
           ELSE
-             ibnd =  nint (nelec)
+             IF ( nspin == 1 ) THEN
+                ibnd =  nint (nelec) / 2.d0
+             ELSE
+                ibnd =  nint (nelec)
+             END IF
           END IF
           !
           IF ( ionode .AND. nbnd > ibnd ) THEN
