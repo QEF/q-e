@@ -122,6 +122,7 @@ MODULES = \
 ../Modules/clocks.o \
 ../Modules/constants.o \
 ../Modules/control_flags.o \
+../Modules/electrons_base.o \
 ../Modules/fft_base.o \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
