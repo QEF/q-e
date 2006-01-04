@@ -1482,6 +1482,7 @@ MODULE read_cards_module
        ! 
        CHARACTER(LEN=256) :: input_line
        INTEGER            :: i, nfield
+       LOGICAL            :: ltest
        LOGICAL, SAVE      :: tread = .FALSE.
        ! 
        ! 
@@ -1525,9 +1526,13 @@ MODULE read_cards_module
           !
           CALL field_count( nfield, input_line )
           !
-          IF ( nfield > SIZE( constr_inp(:,:), DIM = 1 ) ) &
+          ltest = ( ( nfield < SIZE( constr_inp(:,:), DIM = 1 ) ) .OR. &
+                    ( cg_phs_path_flag .AND. &
+                      ( nfield < SIZE( constr_inp(:,:), DIM = 1 ) + 2 ) ) )
+          !
+          IF ( .NOT. ltest ) &
              CALL errore( 'card_constraints', &
-                        & 'too many fields for this constraint', i )
+                          'too many fields for this constraint', i )
           !
           SELECT CASE( constr_type_inp(i) )         
           CASE( 1, 2 )
