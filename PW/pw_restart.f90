@@ -94,7 +94,7 @@ MODULE pw_restart
       CHARACTER(LEN=*), INTENT(IN) :: what
       !
       CHARACTER(LEN=20)     :: dft_name
-      CHARACTER(LEN=256)    :: dirname, filename, file_pseudo, rho_file
+      CHARACTER(LEN=256)    :: dirname, filename, file_pseudo, rho_file_base
       CHARACTER(LEN=80)     :: bravais_lattice
       INTEGER               :: i, ig, ik, ngg,ig_, ierr, ipol, &
                                flen, ik_eff, num_k_points
@@ -353,17 +353,17 @@ MODULE pw_restart
          !
       END IF
       !
-      rho_file = 'charge-density.dat'
+      rho_file_base = 'charge-density'
       !
       IF ( ionode ) &
-         CALL iotk_link( iunpun, "RHO_FILE", rho_file, &
+         CALL iotk_link( iunpun, "RHO", rho_file_base, &
                          CREATE = .FALSE., BINARY = .FALSE. )
       !
-      rho_file = TRIM( dirname ) // '/' // TRIM( rho_file )      
+      rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )      
       !
       IF ( nspin == 1 ) THEN
          !
-         CALL write_rho_xml( rho_file, rho(:,1), nr1, &
+         CALL write_rho_xml( rho_file_base, rho(:,1), nr1, &
                              nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
       ELSE IF ( nspin == 2 ) THEN
@@ -372,31 +372,31 @@ MODULE pw_restart
          !
          rhosum = rho(:,1) + rho(:,2) 
          !
-         CALL write_rho_xml( rho_file, rhosum, nr1, &
+         CALL write_rho_xml( rho_file_base, rhosum, nr1, &
                              nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          DEALLOCATE( rhosum )
          !
-         rho_file = 'charge-density-up.dat'
+         rho_file_base = 'charge-density-up'
          !
          IF ( ionode ) &
-            CALL iotk_link( iunpun, "RHO_FILE", rho_file, &
+            CALL iotk_link( iunpun, "RHO_UP", rho_file_base, &
                             CREATE = .FALSE., BINARY = .FALSE. )
          !
-         rho_file = TRIM( dirname ) // '/' // TRIM( rho_file )
+         rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
          !
-         CALL write_rho_xml( rho_file, rho(:,1), &
+         CALL write_rho_xml( rho_file_base, rho(:,1), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
-         rho_file = 'charge-density-dw.dat'
+         rho_file_base = 'charge-density-dw'
          !
          IF ( ionode ) &
-            CALL iotk_link( iunpun, "RHO_FILE", rho_file, &
+            CALL iotk_link( iunpun, "RHO_DW", rho_file_base, &
                             CREATE = .FALSE., BINARY = .FALSE. )
          !
-         rho_file = TRIM( dirname ) // '/' // TRIM( rho_file )
+         rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
          !
-         CALL write_rho_xml( rho_file, rho(:,2), &
+         CALL write_rho_xml( rho_file_base, rho(:,2), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
       END IF
@@ -417,7 +417,7 @@ MODULE pw_restart
          !
          CALL iotk_write_dat( iunpun, "NUMBER_OF_BANDS", nbnd )
          !
-         CALL iotk_write_attr( attr, "UNIT", "Hartree", FIRST = .TRUE. )
+         CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
          CALL iotk_write_dat( iunpun, "FERMI_ENERGY", ef / e2, ATTR = attr )
          !
          CALL iotk_write_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin )
@@ -433,7 +433,7 @@ MODULE pw_restart
             CALL iotk_write_begin( iunpun, &
                                    "K-POINT" // TRIM( iotk_index( ik ) ) )
             !
-            CALL iotk_write_attr( attr, "UNIT", "2 pi / a", FIRST = .TRUE. )
+            CALL iotk_write_attr( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
             CALL iotk_write_dat( iunpun, &
                                  "K-POINT_COORDS", xk(:,ik), ATTR = attr )
             !            
@@ -441,7 +441,7 @@ MODULE pw_restart
             !
             IF ( nspin == 2 ) THEN
                !
-               CALL iotk_write_attr( attr, "UNIT", "Hartree", FIRST = .TRUE. )
+               CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
                CALL iotk_write_dat( iunpun, "ET.1", &
                                     et(:,ik) / e2, ATTR = attr  )
                !
@@ -457,7 +457,7 @@ MODULE pw_restart
                !
                ik_eff = ik + num_k_points
                !
-               CALL iotk_write_attr( attr, "UNIT", "Hartree", FIRST = .TRUE. )
+               CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
                CALL iotk_write_dat( iunpun, "ET.2", &
                                     et(:,ik_eff) / e2, ATTR = attr  )
                !
@@ -474,7 +474,7 @@ MODULE pw_restart
                !
             ELSE
                !
-               CALL iotk_write_attr( attr, "UNIT", "Hartree", FIRST = .TRUE. )
+               CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
                CALL iotk_write_dat( iunpun, "ET.1", &
                                     et(:,ik) / e2, ATTR = attr  )
                !
@@ -496,7 +496,7 @@ MODULE pw_restart
                !
                filename = TRIM( wfc_filename( ".", 'gkvectors', ik ) )
                !
-               CALL iotk_link( iunpun, "gkvectors", &
+               CALL iotk_link( iunpun, "GK-VECTORS", &
                                filename, CREATE = .FALSE., BINARY = .TRUE. )
                !
                filename = TRIM( wfc_filename( dirname, 'gkvectors', ik ) )
@@ -525,7 +525,7 @@ MODULE pw_restart
                   !
                   filename = TRIM( wfc_filename( ".", 'evc', ik, ispin ) )
                   !
-                  CALL iotk_link( iunpun, "wfc", filename, &
+                  CALL iotk_link( iunpun, "WFC", filename, &
                                   CREATE = .FALSE., BINARY = .TRUE. )
                   !
                   filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
@@ -550,7 +550,7 @@ MODULE pw_restart
                   !
                   filename = TRIM( wfc_filename( ".", 'evc', ik, ispin ) )
                   !
-                  CALL iotk_link( iunpun, "wfc", filename, &
+                  CALL iotk_link( iunpun, "WFC", filename, &
                                   CREATE = .FALSE., BINARY = .TRUE. )
                   !
                   filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
@@ -581,7 +581,7 @@ MODULE pw_restart
                   !
                   filename = TRIM( wfc_filename( ".", 'evc', ik ) )
                   !
-                  CALL iotk_link( iunpun, "wfc", filename, &
+                  CALL iotk_link( iunpun, "WFC", filename, &
                                   CREATE = .FALSE., BINARY = .TRUE. )
                   !
                   filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
@@ -681,7 +681,8 @@ MODULE pw_restart
              !
              if ( itmp1(ig) == ig ) THEN
                 !
-                ngg          = ngg + 1
+                ngg = ngg + 1
+                !
                 igwk(ngg,ik) = ig
                 !
              END IF
@@ -699,7 +700,7 @@ MODULE pw_restart
              !
              CALL iotk_write_dat( iun, "INDEX", igwk(1:ngk_g(ik),ik) )
              CALL iotk_write_dat( iun, "GRID", itmp(1:3,igwk(1:ngk_g(ik),ik)), &
-                                  FMT = "(3I5)" )
+                                  COLUMNS = 3 )
              !
              CALL iotk_write_end( iun, "K-POINT" // iotk_index( ik ) )
              !

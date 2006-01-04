@@ -450,7 +450,7 @@ MODULE xml_io_base
       !
       CALL iotk_write_dat( iunpun, "CELL_SYMMETRY", symm_type )
       !
-      CALL iotk_write_attr( attr, "UNIT", "Bohr", FIRST = .TRUE. )
+      CALL iotk_write_attr( attr, "UNITS", "Bohr", FIRST = .TRUE. )
       CALL iotk_write_dat( iunpun, "LATTICE_PARAMETER", alat, ATTR = attr )
       !
       CALL iotk_write_dat( iunpun, "CELL_DIMENSIONS", celldm(1:6) )
@@ -461,7 +461,7 @@ MODULE xml_io_base
       CALL iotk_write_dat(   iunpun, "a3", a3(:) * alat, ATTR = attr )
       CALL iotk_write_end(   iunpun, "DIRECT_LATTICE_VECTORS" )
       !
-      CALL iotk_write_attr( attr, "UNIT", "2 pi / a", FIRST = .TRUE. )
+      CALL iotk_write_attr( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
       CALL iotk_write_begin( iunpun, "RECIPROCAL_LATTICE_VECTORS" )
       CALL iotk_write_dat(   iunpun, "b1", b1(:), ATTR = attr )
       CALL iotk_write_dat(   iunpun, "b2", b2(:), ATTR = attr )
@@ -522,7 +522,7 @@ MODULE xml_io_base
             CALL copy_file( TRIM( file_pseudo ), &
                             TRIM( dirname ) // "/" // TRIM( psfile(i) ) )
          !
-         CALL iotk_write_attr( attr, "UNIT", "a.m.u.", FIRST = .TRUE. )
+         CALL iotk_write_attr( attr, "UNITS", "a.m.u.", FIRST = .TRUE. )
          CALL iotk_write_dat( iunpun, TRIM( atm(i) ) // "_MASS", &
                               amass(i), ATTR = attr )
          !
@@ -531,7 +531,7 @@ MODULE xml_io_base
          !
       END DO
       !
-      CALL iotk_write_attr( attr, "UNIT", "Bohr", FIRST = .TRUE. )
+      CALL iotk_write_attr( attr, "UNITS", "Bohr", FIRST = .TRUE. )
       CALL iotk_write_empty( iunpun, "UNITS_FOR_ATOMIC_POSITIONS", attr )
       !
       DO i = 1, nat
@@ -577,7 +577,7 @@ MODULE xml_io_base
       !
       DO i = 1, nsym
          !
-         CALL iotk_write_attr( attr, "UNIT", "Crystal", FIRST = .TRUE. )
+         CALL iotk_write_attr( attr, "UNITS", "Crystal", FIRST = .TRUE. )
          !
          tmp(1) = ftau(1,i) / DBLE( nr1 )
          tmp(2) = ftau(2,i) / DBLE( nr2 )
@@ -614,7 +614,7 @@ MODULE xml_io_base
       !
       CALL iotk_write_begin( iunpun, "PLANE_WAVES" )
       !
-      CALL iotk_write_attr( attr, "UNIT", "Hartree", FIRST = .TRUE. )
+      CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
       !
       CALL iotk_write_dat( iunpun, "WFC_CUTOFF", ecutwfc / e2, ATTR = attr )
       !
@@ -628,14 +628,14 @@ MODULE xml_io_base
       CALL iotk_write_attr( attr, "nr1", nr1, FIRST = .TRUE. )
       CALL iotk_write_attr( attr, "nr2", nr2 )
       CALL iotk_write_attr( attr, "nr3", nr3 )
-      CALL iotk_write_empty( iunpun, "FFT_GRID", attr )
+      CALL iotk_write_empty( iunpun, "FFT_GRID", ATTR = attr )
       !
       CALL iotk_write_dat( iunpun, "GVECT_NUMBER", ngm_g )
       !
       CALL iotk_write_attr( attr, "nr1s", nr1s, FIRST = .TRUE. )
       CALL iotk_write_attr( attr, "nr2s", nr2s )
       CALL iotk_write_attr( attr, "nr3s", nr3s )
-      CALL iotk_write_empty( iunpun, "SMOOTH_FFT_GRID", attr )
+      CALL iotk_write_empty( iunpun, "SMOOTH_FFT_GRID", ATTR = attr )
       !
       CALL iotk_write_dat( iunpun, "SMOOTH_GVECT_NUMBER", ngms_g )
       !
@@ -646,16 +646,16 @@ MODULE xml_io_base
          CALL iotk_link( iunpun, "G-VECTORS_FILE", &
                          "gvectors.dat", CREATE = .TRUE., BINARY = .TRUE. )
          !
-         CALL iotk_write_begin( iunpun, "G-VECTORS", attr = attr )
-         CALL iotk_write_dat( iunpun, "g", itmp(1:3,1:ngm_g), FMT = "(3I5)" )
+         CALL iotk_write_begin( iunpun, "G-VECTORS", ATTR = attr )
+         CALL iotk_write_dat( iunpun, "g", itmp(1:3,1:ngm_g), COLUMNS = 3 )
          CALL iotk_write_end( iunpun, "G-VECTORS" )
          !
       END IF
       !
-      CALL iotk_write_attr( attr, "nr1b", nr1b , first = .TRUE. )
+      CALL iotk_write_attr( attr, "nr1b", nr1b , FIRST = .TRUE. )
       CALL iotk_write_attr( attr, "nr2b", nr2b )
       CALL iotk_write_attr( attr, "nr3b", nr3b )
-      CALL iotk_write_empty( iunpun, "SMALLBOX_FFT_GRID", attr )
+      CALL iotk_write_empty( iunpun, "SMALLBOX_FFT_GRID", ATTR = attr )
       !
       CALL iotk_write_end( iunpun, "PLANE_WAVES" )
       !
@@ -801,7 +801,7 @@ MODULE xml_io_base
       !
       CALL iotk_write_dat( iunpun, "NUMBER_OF_K-POINTS", num_k_points )
       !
-      CALL iotk_write_attr( attr, "UNIT", "2 pi / a", FIRST = .TRUE. )
+      CALL iotk_write_attr( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
       CALL iotk_write_empty( iunpun, "UNITS_FOR_K-POINTS", attr )
       !
       DO ik = 1, num_k_points
@@ -831,7 +831,7 @@ MODULE xml_io_base
       !
       CALL iotk_write_dat( iunpun, "NUMBER_OF_MODES", modenum )
       !
-      CALL iotk_write_attr( attr, "UNIT", "2 pi / a", FIRST = .TRUE. )
+      CALL iotk_write_attr( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
       CALL iotk_write_empty( iunpun, "UNITS_FOR_Q-POINT", attr )
       !
       CALL iotk_write_dat( iunpun, "Q-POINT", xqq(:) )
@@ -843,7 +843,7 @@ MODULE xml_io_base
     ! ... methods to write and read charge_density
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_rho_xml( rho_file, rho, &
+    SUBROUTINE write_rho_xml( rho_file_base, rho, &
                               nr1, nr2, nr3, nr1x, nr2x, ipp, npp )
       !------------------------------------------------------------------------
       !
@@ -862,22 +862,22 @@ MODULE xml_io_base
       !
       INTEGER,           INTENT(IN) :: nr1, nr2, nr3
       INTEGER,           INTENT(IN) :: nr1x, nr2x
-      CHARACTER(LEN=*),  INTENT(IN) :: rho_file
-
+      CHARACTER(LEN=*),  INTENT(IN) :: rho_file_base
       REAL(DP),          INTENT(IN) :: rho(:)
       INTEGER, OPTIONAL, INTENT(IN) :: ipp(:)
       INTEGER, OPTIONAL, INTENT(IN) :: npp(:)
       !
-      INTEGER                     :: ierr, i, j, k, kk, ldr, ip
-      INTEGER                     :: ierr_iotk
-      CHARACTER(LEN=iotk_attlenx) :: attr
-      REAL(DP), ALLOCATABLE       :: rho_plane(:)
-      INTEGER,  ALLOCATABLE       :: kowner(:)
+      INTEGER               :: ierr, i, j, k, kk, ldr, ip
+      CHARACTER(LEN=256)    :: rho_file
+      REAL(DP), ALLOCATABLE :: rho_plane(:)
+      INTEGER,  ALLOCATABLE :: kowner(:)
       !
+      !
+      rho_file = TRIM( rho_file_base ) // '.xml'
       !
       IF ( ionode ) &
          CALL iotk_open_write( rhounit, &
-                               FILE = rho_file, BINARY = .FALSE., ierr = ierr )
+                               FILE = rho_file, BINARY = .FALSE., IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id )
       !
@@ -961,8 +961,8 @@ MODULE xml_io_base
     END SUBROUTINE write_rho_xml
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_rho_xml( rho_file, rho, &
-                              nr1, nr2, nr3, nr1x, nr2x, ipp, npp )
+    SUBROUTINE read_rho_xml( rho_file_base, rho, &
+                             nr1, nr2, nr3, nr1x, nr2x, ipp, npp )
       !------------------------------------------------------------------------
       !
       ! ... Writes charge density rho, one plane at a time.
@@ -980,27 +980,27 @@ MODULE xml_io_base
       !
       INTEGER,           INTENT(IN)  :: nr1, nr2, nr3
       INTEGER,           INTENT(IN)  :: nr1x, nr2x
-      CHARACTER(LEN=*),  INTENT(IN)  :: rho_file
-
+      CHARACTER(LEN=*),  INTENT(IN)  :: rho_file_base
       REAL(DP),          INTENT(OUT) :: rho(:)
       INTEGER, OPTIONAL, INTENT(IN)  :: ipp(:)
       INTEGER, OPTIONAL, INTENT(IN)  :: npp(:)
       !
-      INTEGER                     :: ierr, i, j, k, kk, ldr, ip
-      INTEGER                     :: nr( 3 )
-      INTEGER                     :: ierr_iotk
-      CHARACTER(LEN=iotk_attlenx) :: attr
-      REAL(DP), ALLOCATABLE       :: rho_plane(:)
-      INTEGER,  ALLOCATABLE       :: kowner(:)
+      INTEGER               :: ierr, i, j, k, kk, ldr, ip
+      INTEGER               :: nr( 3 )
+      CHARACTER(LEN=256)    :: rho_file
+      REAL(DP), ALLOCATABLE :: rho_plane(:)
+      INTEGER,  ALLOCATABLE :: kowner(:)
       !
+      !
+      rho_file = TRIM( rho_file_base ) // '.xml'
       !
       IF ( ionode ) &
          CALL iotk_open_read( rhounit, FILE = TRIM( rho_file ), &
-                               BINARY = .FALSE., ierr = ierr )
+                               BINARY = .FALSE., IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id )
       !
-      CALL errore( ' read_rho_xml ', &
+      CALL errore( 'read_rho_xml', &
                    'cannot open rho_file file for writing', ierr )
       !
       IF ( ionode ) THEN
@@ -1017,9 +1017,8 @@ MODULE xml_io_base
       !
       CALL mp_bcast( nr, ionode_id )
       !
-      IF( nr1 /= nr( 1 ) .OR. nr2 /= nr( 2 ) .OR. nr3 /= nr( 3 ) ) THEN
+      IF ( nr1 /= nr( 1 ) .OR. nr2 /= nr( 2 ) .OR. nr3 /= nr( 3 ) ) &
          CALL errore( ' read_rho_xml ', ' dimensions do not match ', 1 )
-      END IF
       !
       ALLOCATE( rho_plane( nr1 * nr2 ) )
       ALLOCATE( kowner( nr3 ) )
@@ -1129,8 +1128,6 @@ MODULE xml_io_base
          !
          CALL iotk_open_write( iuni, FILE = TRIM( filename ), BINARY = .TRUE. )
          !
-         CALL iotk_write_begin( iuni, "K-POINT" // iotk_index( ik ) )
-         !
          CALL iotk_write_attr( attr, "ngw",          ngw, FIRST = .TRUE. )
          CALL iotk_write_attr( attr, "nbnd",         nbnd )
          CALL iotk_write_attr( attr, "ik",           ik )
@@ -1162,8 +1159,7 @@ MODULE xml_io_base
             !
          ELSE
             !
-            CALL mergewf( wf0(:,j), wtmp, ngwl, igl, &
-                          mpime, nproc, ionode_id )
+            CALL mergewf( wf0(:,j), wtmp, ngwl, igl, mpime, nproc, ionode_id )
             !
          END IF
          !
@@ -1172,13 +1168,7 @@ MODULE xml_io_base
          !
       END DO
       !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_write_end( iuni, "K-POINT" // iotk_index( ik ) )
-         !
-         CALL iotk_close_write( iuni )
-         !
-      END IF
+      IF ( ionode ) CALL iotk_close_write( iuni )
       !
       DEALLOCATE( wtmp )
       !
@@ -1229,8 +1219,6 @@ MODULE xml_io_base
                    'cannot open restart file for reading', ierr )
       !
       IF ( ionode ) THEN
-          !
-          CALL iotk_scan_begin( iuni, "K-POINT" // iotk_index( ik ) )
           !
           CALL iotk_scan_empty( iuni, "INFO", attr )
           !
@@ -1290,13 +1278,7 @@ MODULE xml_io_base
          !
       END DO
       !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_scan_end( iuni, "K-POINT" // iotk_index( ik ) )
-         !
-         CALL iotk_close_read( iuni )
-         !
-      END IF
+      IF ( ionode ) CALL iotk_close_read( iuni )
       !
       DEALLOCATE( wtmp )
       !

@@ -109,7 +109,7 @@ MODULE cp_restart
       REAL(DP),    OPTIONAL, INTENT(IN) :: mat_z(:,:,:) ! 
       !
       CHARACTER(LEN=20)     :: dft_name
-      CHARACTER(LEN=256)    :: dirname, filename, rho_file
+      CHARACTER(LEN=256)    :: dirname, filename, rho_file_base
       CHARACTER(LEN=4)      :: cspin
       INTEGER               :: kunit, ib, ik_eff
       INTEGER               :: k1, k2, k3
@@ -264,12 +264,12 @@ MODULE cp_restart
          CALL iotk_write_attr( attr, "ITERATION", nfi, FIRST = .TRUE. )
          CALL iotk_write_empty(iunpun, "STEP", attr )
          !
-         CALL iotk_write_attr( attr, "UNIT", "pico-seconds", FIRST = .TRUE. ) 
+         CALL iotk_write_attr( attr, "UNITS", "pico-seconds", FIRST = .TRUE. ) 
          CALL iotk_write_dat( iunpun, "TIME", simtime, ATTR = attr )
          !
          CALL iotk_write_dat( iunpun, "TITLE", TRIM( title ) )
          !
-         CALL iotk_write_attr( attr, "UNIT", "Hartree", FIRST = .TRUE. )
+         CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
          CALL iotk_write_dat( iunpun, "KINETIC_ENERGY", ekin,   ATTR = attr )
          CALL iotk_write_dat( iunpun, "HARTREE_ENERGY", eht,    ATTR = attr )
          CALL iotk_write_dat( iunpun, "EWALD_TERM",     esr,    ATTR = attr )
@@ -351,17 +351,17 @@ MODULE cp_restart
          !
       END IF
       !
-      rho_file = 'charge-density.dat'
+      rho_file_base = 'charge-density'
       !
       IF ( ionode )&
-         CALL iotk_link( iunpun, "RHO_FILE", rho_file, &
+         CALL iotk_link( iunpun, "RHO", rho_file_base, &
                          CREATE = .FALSE., BINARY = .FALSE. )
       !
-      rho_file = TRIM( dirname ) // '/' // TRIM( rho_file )
+      rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
       !
       IF ( nspin == 1 ) THEN
          !
-         CALL write_rho_xml( rho_file, rho(:,1), nr1, &
+         CALL write_rho_xml( rho_file_base, rho(:,1), nr1, &
                              nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
          !
       ELSE IF ( nspin == 2 ) THEN
@@ -370,31 +370,31 @@ MODULE cp_restart
          !
          rhosum = rho(:,1) + rho(:,2) 
          !
-         CALL write_rho_xml( rho_file, rhosum, nr1, &
+         CALL write_rho_xml( rho_file_base, rhosum, nr1, &
                              nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
          !
          DEALLOCATE( rhosum )
          !
-         rho_file = 'charge-density-up.dat'
+         rho_file_base = 'charge-density-up'
          !
          IF ( ionode ) &
-            CALL iotk_link( iunpun, "RHO_FILE", rho_file, &
+            CALL iotk_link( iunpun, "RHO_UP", rho_file_base, &
                             CREATE = .FALSE., BINARY = .FALSE. )
          !
-         rho_file = TRIM( dirname ) // '/' // TRIM( rho_file )
+         rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
          !
-         CALL write_rho_xml( rho_file, rho(:,1), &
+         CALL write_rho_xml( rho_file_base, rho(:,1), &
                              nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
          !
-         rho_file = 'charge-density-dw.dat'
+         rho_file_base = 'charge-density-dw'
          !
          IF ( ionode ) &
-            CALL iotk_link( iunpun, "RHO_FILE", rho_file, &
+            CALL iotk_link( iunpun, "RHO_DW", rho_file_base, &
                             CREATE = .FALSE., BINARY = .FALSE. )
          !
-         rho_file = TRIM( dirname ) // '/' // TRIM( rho_file )
+         rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
          !
-         CALL write_rho_xml( rho_file, rho(:,2), &
+         CALL write_rho_xml( rho_file_base, rho(:,2), &
                              nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
          !
       END IF
@@ -523,7 +523,7 @@ MODULE cp_restart
             !
             CALL iotk_write_begin( iunpun, "K-POINT" // TRIM( iotk_index(ik) ) )
             !
-            CALL iotk_write_attr( attr, "UNIT", "2 pi / a", FIRST = .TRUE. )
+            CALL iotk_write_attr( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
             CALL iotk_write_dat( iunpun, &
                                  "K-POINT_COORDS", xk(:,ik), ATTR = attr )
             !
@@ -533,7 +533,7 @@ MODULE cp_restart
                !
                cspin = iotk_index( ispin )
                !
-               CALL iotk_write_attr( attr, "UNIT", "Hartree", FIRST = .TRUE. )
+               CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
                CALL iotk_write_dat( iunpun, "ET" // TRIM( cspin ), &
                                     et(:,ik,ispin), ATTR = attr  )
                !
@@ -1729,7 +1729,7 @@ MODULE cp_restart
       END DO
       !
       CALL iotk_scan_empty( iunpun, "UNITS_FOR_ATOMIC_POSITIONS", attr )
-      CALL iotk_scan_attr( attr, "UNIT", pos_unit  )
+      CALL iotk_scan_attr( attr, "UNITS", pos_unit  )
       !
       DO i = 1, nat
          !
