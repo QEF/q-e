@@ -122,7 +122,7 @@
          IF( SIZE( rhos, 1 ) /= SIZE( s, 1 ) .OR. SIZE( rhos, 2 ) /= SIZE( s, 2 ) ) &
             CALL errore(" diagonalize_rho ", " input matrixes size do not match ", 1 )
 
-         IF ( ( nproc > 1 ) .AND. use_pdrv ) THEN
+         IF ( ( nproc > 1 ) .AND. lpdrv ) THEN
 
            !  distribute matrix rows to processors
            !
