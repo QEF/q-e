@@ -30,10 +30,12 @@ SUBROUTINE read_file()
   USE gvect,            ONLY : gg, ecutwfc, ngm, g, nr1, nr2, nr3, &
                                eigts1, eigts2, eigts3
   USE gsmooth,          ONLY : ngms, nls, nrx1s, nr1s, nr2s, nr3s
+  USE spin_orb,         ONLY : so
   USE scf,              ONLY : rho, vr
   USE vlocal,           ONLY : strf
   USE io_files,         ONLY : tmp_dir, prefix, iunpun
   USE restart_module,   ONLY : readfile_new
+  USE uspp_param,       ONLY : nbeta, jjj
   USE noncollin_module, ONLY : noncolin, npol
   USE mp_global,        ONLY : kunit
   USE pw_restart,       ONLY : pw_readfile
@@ -41,7 +43,7 @@ SUBROUTINE read_file()
   !
   IMPLICIT NONE
   !
-  INTEGER               :: i, ik, ibnd, ios, ierr
+  INTEGER               :: i, ik, ibnd, nb, nt, ios, ierr
   REAL(DP), ALLOCATABLE :: et_g(:,:), wg_g(:,:)
   REAL(DP)              :: rdum(1,1)
   !
@@ -131,6 +133,20 @@ SUBROUTINE read_file()
      !
   END IF
   !
+  ! Check for so pseudopotentials
+  !
+  DO nt = 1, nsp
+     !
+     so(nt) = .TRUE.
+     !
+     DO nb = 1, nbeta(nt)
+        !
+        so(nt) = so(nt) .AND. ( ABS( jjj(nb,nt) ) > 1.D-7 )
+        !
+     END DO
+     !
+  END DO
+  !
   cell_factor = 1.D0
   lmovecell = .FALSE.
   !
@@ -207,6 +223,19 @@ SUBROUTINE read_file()
      !
   END IF
   !
+  ! Check for so pseudopotentials
+  !
+  DO nt = 1, nsp
+     !
+     so(nt) = .TRUE.
+     !
+     DO nb = 1, nbeta(nt)
+        !
+        so(nt) = so(nt) .AND. ( ABS( jjj(nb,nt) ) > 1.D-7 )
+        !
+     END DO
+     !
+  END DO
   cell_factor = 1.D0
   lmovecell = .FALSE.
   !
