@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -144,7 +144,6 @@ SUBROUTINE update_pot()
   !
 END SUBROUTINE update_pot
 !
-!
 !----------------------------------------------------------------------------
 SUBROUTINE extrapolate_charge( rho_extr )
   !----------------------------------------------------------------------------
@@ -182,7 +181,18 @@ SUBROUTINE extrapolate_charge( rho_extr )
   INTEGER :: ir, is
   !
   !
-  IF ( rho_extr == 0 ) RETURN 
+  IF ( rho_extr == 0 ) THEN
+     !
+     ! ... calculate structure factors for the new positions
+     !
+     IF ( lmovecell ) CALL scale_h()
+     !
+     CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
+                      nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
+     !
+     RETURN
+     !
+  END IF
   !
   ALLOCATE( work(nrxx) )
   !
@@ -290,8 +300,8 @@ SUBROUTINE extrapolate_charge( rho_extr )
   !
   IF ( lmovecell ) CALL scale_h()
   !
-  CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, nr1, nr2, nr3, &
-                   strf, eigts1, eigts2, eigts3 )
+  CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
+                   nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
   !
   ! ... add atomic charges in the new positions
   !
@@ -327,12 +337,11 @@ SUBROUTINE extrapolate_charge( rho_extr )
                  nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
                  ehart, etxc, vtxc, etotefield, charge, vr )
   !
-  !
   IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
      !
      WRITE( stdout, &
             '(/,5X,"extrapolated charge ",F10.5,", renormalised to ",F10.5)') &
-               charge, nelec
+         charge, nelec
      !
      rho = rho / charge * nelec
      !
@@ -343,7 +352,6 @@ SUBROUTINE extrapolate_charge( rho_extr )
   RETURN
   !
 END SUBROUTINE extrapolate_charge
-!
 !
 !-----------------------------------------------------------------------
 SUBROUTINE extrapolate_wfcs( wfc_extr )
@@ -373,8 +381,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
     ! number of zero 'eigenvalues' of the s_m matrix
     ! used by singular value decomposition (ZGESVD)
     ! flag returned by ZGESVD
-  COMPLEX(DP), ALLOCATABLE :: s_m(:,:), sp_m(:,:), &
-                                   u_m(:,:), w_m(:,:), work(:)
+  COMPLEX(DP), ALLOCATABLE :: s_m(:,:), sp_m(:,:), u_m(:,:), w_m(:,:), work(:)
     ! the overlap matrix s (eq. 3.24)
     ! its dagger
     ! left unitary matrix in the SVD of sp_m
@@ -451,28 +458,24 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         ! ... sp_m = u_m * diag(ew) * w_m 
         ! ... becomes u_m * w_m
         !
-        CALL ZGESVD( 'A', 'A', nbnd, nbnd, sp_m, nbnd, ew, u_m, nbnd, &
-                     w_m, nbnd, work, lwork, rwork, info )
+        CALL ZGESVD( 'A', 'A', nbnd, nbnd, sp_m, nbnd, ew, u_m, &
+                     nbnd, w_m, nbnd, work, lwork, rwork, info )
         !
         ! ... check on eigenvalues
         !
-        DO i = 1, nbnd
-          !
-          IF ( ew(i) < 0.1D0 ) zero_ew = zero_ew + 1
-          !
-        END DO
+        zero_ew = COUNT( ew(:) < 0.1D0 )
         !
         ! ... use sp_m to store u_m * w_m
         !
-        CALL ZGEMM( 'N', 'N', nbnd, nbnd, nbnd, ONE, u_m, nbnd, w_m, &
-                    nbnd, ZERO, sp_m, nbnd )
+        CALL ZGEMM( 'N', 'N', nbnd, nbnd, nbnd, ONE, &
+                    u_m, nbnd, w_m, nbnd, ZERO, sp_m, nbnd )
         !
         ! ... now use evcold as workspace to calculate "aligned" wavefcts:
         !
         ! ... evcold_i = sum_j evc_j*sp_m_ji (eq.3.21)
         !
-        CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, evc, npwx, sp_m, &
-                    nbnd, ZERO, evcold, npwx )
+        CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, &
+                    evc, npwx, sp_m, nbnd, ZERO, evcold, npwx )
         !
         ! ... save on file the aligned wavefcts
         !
@@ -522,7 +525,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
      ! ... case :  wfc_extr = 3
      !
-     CALL diropn( iunoldwfc, 'oldwfc', nwordwfc, exst )
+     CALL diropn( iunoldwfc,  'oldwfc',  nwordwfc, exst )
      CALL diropn( iunoldwfc2, 'old2wfc', nwordwfc, exst )
      !
      ALLOCATE( evcold(npwx,nbnd) )
@@ -566,28 +569,24 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         ! ... sp_m = u_m * diag(ew) * w_m 
         ! ... becomes u_m * w_m
         !
-        CALL ZGESVD( 'A', 'A', nbnd, nbnd, sp_m, nbnd, ew, u_m, nbnd, &
-                    w_m, nbnd, work, lwork, rwork, info )
+        CALL ZGESVD( 'A', 'A', nbnd, nbnd, sp_m, nbnd, ew, u_m, &
+                     nbnd, w_m, nbnd, work, lwork, rwork, info )
         !
         ! ... check on eigenvalues
         !
-        DO i = 1, nbnd
-          !
-          IF ( ew(i) < 0.1D0 ) zero_ew = zero_ew + 1
-          !
-        END DO
+        zero_ew = COUNT( ew(:) < 0.1D0 )
         !
         ! ... use sp_m to store u_m * w_m
         !
-        CALL ZGEMM( 'N', 'N', nbnd, nbnd, nbnd, ONE, u_m, nbnd, w_m, &
-                    nbnd, ZERO, sp_m, nbnd )
+        CALL ZGEMM( 'N', 'N', nbnd, nbnd, nbnd, ONE, &
+                    u_m, nbnd, w_m, nbnd, ZERO, sp_m, nbnd )
         !
         ! ... now use evcold as workspace to calculate "aligned" wavefcts:
         !
         ! ... evcold_i = sum_j evc_j*sp_m_ji (eq.3.21)
         !
-        CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, evc, npwx, sp_m, &
-                    nbnd, ZERO, evcold, npwx )
+        CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, &
+                    evc, npwx, sp_m, nbnd, ZERO, evcold, npwx )
         !
         ! ... save on file the aligned wavefcts
         !
@@ -629,7 +628,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
      DEALLOCATE( evcold )
      !
-     CLOSE( UNIT = iunoldwfc, STATUS = 'KEEP' )
+     CLOSE( UNIT = iunoldwfc,  STATUS = 'KEEP' )
      CLOSE( UNIT = iunoldwfc2, STATUS = 'KEEP' )
      !
   END IF
