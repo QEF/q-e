@@ -124,7 +124,6 @@ PROGRAM q2r
      !
      ! check input
      !
-     IF (fildyn == ' ')  CALL errore ('q2r',' bad fildyn',1)
      IF (flfrc == ' ')  CALL errore ('q2r',' bad flfrc',1)
      !
      OPEN (unit=1, file=TRIM(fildyn)//'0', status='old', form='formatted', &
@@ -145,6 +144,8 @@ PROGRAM q2r
      IF (nr1 < 1 .OR. nr1 > 1024) CALL errore ('q2r',' nr1 wrong or missing',1)
      IF (nr2 < 1 .OR. nr2 > 1024) CALL errore ('q2r',' nr2 wrong or missing',1)
      IF (nr3 < 1 .OR. nr2 > 1024) CALL errore ('q2r',' nr3 wrong or missing',1)
+     IF (nfile < 1 .OR. nfile > 1024) &
+        CALL errore ('q2r','too few or too many file',MAX(1,nfile))
      !
      ! copy nrX -> nr(X)
      !
