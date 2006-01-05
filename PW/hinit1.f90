@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,13 +10,12 @@
 SUBROUTINE hinit1()
   !----------------------------------------------------------------------------
   !
-  ! ...  Atomic configuration dependent hamiltonian initialization
+  ! ... Atomic configuration dependent hamiltonian initialization
   !
-  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau
+  USE ions_base,     ONLY : nat, nsp, ityp, tau
   USE cell_base,     ONLY : at, bg, omega, tpiba2
   USE cellmd,        ONLY : lmovecell 
-  USE gvect,         ONLY : nr1, nr2, nr3, nrxx, ngm, g, &
-                            eigts1, eigts2, eigts3
+  USE gvect,         ONLY : nr1, nr2, nr3, nrxx, ngm, g, eigts1, eigts2, eigts3
   USE gsmooth,       ONLY : doublegrid
   USE ldaU,          ONLY : lda_plus_u
   USE lsda_mod,      ONLY : nspin
@@ -32,13 +31,13 @@ SUBROUTINE hinit1()
   CALL update_pot()
   !
   ! ... initialize structure factor array if it has not already been
-  ! ... calculated update_pot ( this is done if order > 0 )
+  ! ... calculated in update_pot ( this is done if pot_order > 0 )
   !
   IF ( pot_order == 0 ) THEN
      !
      IF ( lmovecell ) CALL scale_h()
      !
-     CALL struc_fact( nat, tau, ntyp, ityp, ngm, g, bg, &
+     CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
                       nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
      !
      ! ... calculate the core charge (if any) for the nonlinear 

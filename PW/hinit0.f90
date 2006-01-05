@@ -1,17 +1,17 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine hinit0
+SUBROUTINE hinit0()
   !-----------------------------------------------------------------------
   !
-  ! configuration-independent hamiltonian initialization
+  ! ... configuration-independent hamiltonian initialization
   !
-  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau
+  USE ions_base, ONLY : nat, nsp, ityp, tau
   USE basis,     ONLY : startingconfig
   USE cell_base, ONLY : at, bg, omega, tpiba2
   USE cellmd,    ONLY : omega_old, at_old, lmovecell
@@ -23,66 +23,73 @@ subroutine hinit0
   USE io_files,  ONLY : iunigk
   USE realus,    ONLY : tqr, qpointlist
   !
-  implicit none
+  IMPLICIT NONE
   !
-  integer :: ik
+  INTEGER :: ik
     ! counter on k points
   !
-  ! calculate the local part of the pseudopotentials
   !
-  call init_vloc
+  ! ... calculate the local part of the pseudopotentials
   !
-  !   k-point independent parameters of non-local pseudopotentials
+  CALL init_vloc()
   !
-  call init_us_1
-  call init_at_1
+  ! ... k-point independent parameters of non-local pseudopotentials
   !
-  rewind (iunigk)
-  do ik = 1, nks
+  CALL init_us_1()
+  CALL init_at_1()
+  !
+  REWIND( iunigk )
+  !
+  DO ik = 1, nks
      !
-     !  g2kin is used here as work space
+     ! ... g2kin is used here as work space
      !
-     call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     CALL gk_sort( xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin )
      !
-     call gk_l2gmap (ngm, ig_l2g(1), npw, igk, igk_l2g(1,ik) )
+     CALL gk_l2gmap( ngm, ig_l2g(1), npw, igk, igk_l2g(1,ik) )
      !
-     !  if there is only one k-point npw and igk stay in memory
+     ! ... if there is only one k-point npw and igk stay in memory
      !
-     if (nks.gt.1) write (iunigk) npw, igk
-  enddo
-  !
-  if (lmovecell.and.startingconfig.eq.'file') then
+     IF ( nks > 1 ) WRITE( iunigk ) npw, igk
      !
-     !  if lmovecell and restart are both true the cell shape read from the
-     !  restart file and stored in the xxx_old variable should be used
-     !  instead of the current (read from input) ones.
-     !  swap them, rescale the atomic positions and scale the hamiltonian
+  END DO
+  !
+  IF ( lmovecell .AND. startingconfig == 'file' ) THEN
      !
-     call cryst_to_cart (nat, tau, bg, - 1)
-     call swap (9, at, at_old)
-     call swap (1, omega, omega_old)
-     call cryst_to_cart (nat, tau, at, + 1)
-     call recips (at (1, 1), at (1, 2), at (1, 3), &
-                  bg (1, 1), bg (1, 2), bg (1, 3) )
-     call scale_h
-  endif
+     ! ... If lmovecell and restart are both true the cell shape is read from
+     ! ... the restart file and stored. The xxx_old variables are used instead 
+     ! ... of the current (read from input) ones.
+     ! ... xxx and xxx_old are swapped, the atomic positions rescaled and 
+     ! ... the hamiltonian scaled.
+     !
+     CALL cryst_to_cart( nat, tau, bg, - 1 )
+     !
+     CALL swap( 9, at, at_old )
+     CALL swap( 1, omega, omega_old )
+     !
+     CALL cryst_to_cart( nat, tau, at, + 1 )
+     !
+     CALL recips( at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
+     CALL scale_h()
+     !
+  END IF
   !
-  ! initialize the structure factor
+  ! ... initialize the structure factor
   !
-  call struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &
-       strf, eigts1, eigts2, eigts3)
+  CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
+                   nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
   !
-  !  calculate the total local potential
+  ! ... calculate the total local potential
   !
-  call setlocal
+  CALL setlocal()
   !
-  !  calculate the core charge (if any) for the nonlinear core correction
+  ! ... calculate the core charge (if any) for the nonlinear core correction
   !
-  call set_rhoc
+  CALL set_rhoc()
   !
-
-  if (tqr) call qpointlist
-
-  return
-end subroutine hinit0
+  IF ( tqr ) CALL qpointlist()
+  !
+  RETURN
+  !
+END SUBROUTINE hinit0
 
