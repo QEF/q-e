@@ -306,6 +306,7 @@ SUBROUTINE elphsum ( )
   !      New version by  Malgorzata Wierzbowska 
   !
   USE kinds,     ONLY : DP
+  USE constants, ONLY : pi, rytoev
   USE ions_base,     ONLY : nat, ityp, tau
   USE cell_base,     ONLY : at, bg, ibrav, symm_type
   USE gvect, ONLY: nr1, nr2, nr3
@@ -316,15 +317,17 @@ SUBROUTINE elphsum ( )
   USE wvfct, ONLY: nbnd, et
   USE phcom
   USE el_phon
-  USE mp_global, ONLY : me_pool, root_pool
+  USE io_global, ONLY : stdout, ionode, ionode_id
+  USE mp_global, ONLY : npool
+  USE mp, ONLY : mp_bcast
   USE control_flags, ONLY : modenum, noinv
   USE control_ph, ONLY : lgamma
   USE io_files,  ONLY : prefix
   !
   IMPLICIT NONE
   ! epsw = 20 cm^-1, in Ry
-  REAL(DP), PARAMETER :: epsw = 20.d0 / 13.6058d0 / 8065.5d0, &
-       eps = 1.0d-6
+  REAL(DP), PARAMETER :: Rytocm1 = 109737.57990d0, RytoGHz = 3.289828D6, &
+       RytoTHz = RytoGHz*1000.d0, epsw = 20.d0 / Rytocm1, eps = 1.0d-6
   !
   INTEGER :: iuna2Fsave  = 40
   !
@@ -346,8 +349,8 @@ SUBROUTINE elphsum ( )
   ! workspace used for symmetrisation
   !
   COMPLEX(DP), allocatable :: g0(:,:,:), g3(:,:,:), g1(:,:), g2(:,:), gf(:,:,:)
-  COMPLEX(DP), allocatable :: point(:), noint(:)
-  COMPLEX(DP) :: ctemp, dyn22(3*nat,3*nat)
+  COMPLEX(DP), allocatable :: point(:), noint(:), ctemp(:)
+  COMPLEX(DP) :: dyn22(3*nat,3*nat)
   !
   ! Quantities ending with "loc" are ... what???
   !
@@ -359,7 +362,7 @@ SUBROUTINE elphsum ( )
   !
   INTEGER :: ik, ikk, ikq, isig, ibnd, jbnd, ipert, jpert, nu, mu, &
        vu, ngauss1, ngauss2, nsig, iuelph, ios, i,k,j, ii, jj
-  INTEGER :: nkBZ, nti, ntj, ntk, nkr, itemp1, itemp2, nn, ifile, &
+  INTEGER :: nkBZ, nti, ntj, ntk, nkr, itemp1, itemp2, nn, &
        qx,qy,qz,iq,jq,kq
   INTEGER, ALLOCATABLE :: eqBZ(:), sBZ(:)
   REAL(DP) :: weight, wqa, w0g1, w0g2, degauss1, degauss2, dosef, &
@@ -376,48 +379,54 @@ SUBROUTINE elphsum ( )
   ngauss1 = 1
   ngauss2 = 1
   nsig = 10
-  IF (filelph.NE.' ') THEN
-
-     ! parallel case: only first node writes
-     IF ( me_pool /= root_pool ) THEN
-        iuelph = 0
-     ELSE
-        !
-        iuelph = 4
-        OPEN (unit = iuelph, file = filelph, status = 'unknown', err = &
-             100, iostat = ios)
-100     CALL errore ('elphon', 'opening file'//filelph, ABS (ios) )
-        REWIND (iuelph)
-        WRITE (iuelph, '(3f15.8,2i8)') xq, nsig, 3*nat
-        WRITE (iuelph, '(6e14.6)') (w2 (nu) , nu = 1, nmodes)
-        !
-     END IF
-     !
-  ELSE
-     iuelph = 0
-  ENDIF
   !
   IF(la2F) THEN
      !
-     ! read eigenvalues for the dense grid
+     IF (npool > 1) CALL errore ('elphsum', 'pools and a2F not implemented', 1)
      !
-     CALL seqopn( iuna2Fsave, 'a2Fsave', 'FORMATTED', exst )
-     READ(iuna2Fsave,*) ibnd, nksfit
+     ! read eigenvalues for the dense grid
+     ! parallel case: only first node reads
+     !
+     IF ( ionode ) THEN
+        CALL seqopn( iuna2Fsave, 'a2Fsave', 'FORMATTED', exst )
+        READ(iuna2Fsave,*) ibnd, nksfit
+     END IF
+     !
+     CALL mp_bcast (ibnd, ionode_id)
+     CALL mp_bcast (nksfit, ionode_id)
      if ( ibnd /= nbnd ) call errore('elphsum','wrong file read',iuna2Fsave)
      allocate (etfit(nbnd,nksfit), xkfit(3,nksfit), wkfit(nksfit))
-     READ(iuna2Fsave,*) etfit
-     READ(iuna2Fsave,*) ((xkfit(i,ik), i=1,3), ik=1,nksfit)
-     READ(iuna2Fsave,*) wkfit
-     READ(iuna2Fsave,*) nk1fit, nk2fit, nk3fit
-     nkfit=nk1fit*nk2fit*nk3fit
-     ! 
-     !    Read symmetries for q=0 from file (needed for symmetrization)
      !
-     READ( iuna2Fsave, * )  nsymgam
-     do k=1,nsymgam
-        READ( iuna2Fsave, * )  ((sgam(i,j,k),j=1,3),i=1,3)
-     enddo
-     READ( iuna2Fsave, * )  ((irtgam(i,j),i=1,nsymgam),j=1,nat)
+     IF ( ionode ) THEN
+        READ(iuna2Fsave,*) etfit
+        READ(iuna2Fsave,*) ((xkfit(i,ik), i=1,3), ik=1,nksfit)
+        READ(iuna2Fsave,*) wkfit
+        READ(iuna2Fsave,*) nk1fit, nk2fit, nk3fit
+        ! 
+        !    Read symmetries for q=0 from file (needed for symmetrization)
+        !
+        READ( iuna2Fsave, * )  nsymgam
+        do k=1,nsymgam
+           READ( iuna2Fsave, * )  ((sgam(i,j,k),j=1,3),i=1,3)
+        enddo
+        READ( iuna2Fsave, * )  ((irtgam(i,j),i=1,nsymgam),j=1,nat)
+        !
+        CLOSE( UNIT = iuna2Fsave, STATUS = 'KEEP' )
+     END IF
+     !
+     ! broadcast all variables read
+     !
+     CALL mp_bcast (etfit, ionode_id)
+     CALL mp_bcast (xkfit, ionode_id)
+     CALL mp_bcast (wkfit, ionode_id)
+     CALL mp_bcast (nk1fit, ionode_id)
+     CALL mp_bcast (nk2fit, ionode_id)
+     CALL mp_bcast (nk3fit, ionode_id)
+     CALL mp_bcast (nsymgam, ionode_id)
+     CALL mp_bcast (sgam, ionode_id)
+     CALL mp_bcast (irtgam, ionode_id)
+     !
+     nkfit=nk1fit*nk2fit*nk3fit
      !
      ! find S^{-1} for q=0 
      !
@@ -432,9 +441,6 @@ SUBROUTINE elphsum ( )
      !
      symgam(1:nsymgam) = .true.
      CALL sgam_ph (at, bg, nsymgam, sgam, irtgam, tau, rtaugam, nat, symgam)
-     !
-     !
-     CLOSE( UNIT = iuna2Fsave, STATUS = 'KEEP' )
      !
      ! calculate Ef and DOS(Ef) using dense grid
      !
@@ -510,6 +516,7 @@ SUBROUTINE elphsum ( )
      gf = (0.0d0,0.0d0)
      !
      wqa  = 2.0d0/nkfit
+     !
      do ibnd = 1, nbnd
         do jbnd = 1, nbnd
            allocate (g3(nkBZ,3*nat,3*nat))
@@ -522,7 +529,7 @@ SUBROUTINE elphsum ( )
                  enddo    ! ipert
               enddo    !jpert
            enddo   ! ik
-!
+           !
            allocate (g1(3*nat,3*nat))
            allocate (g2(3*nat,3*nat))
            do i=1,nk1
@@ -542,8 +549,7 @@ SUBROUTINE elphsum ( )
            deallocate (g1)
            deallocate (g0)
            !
-           allocate (point(nkBZ))
-           allocate (noint(nkfit))
+           allocate ( point(nkBZ), noint(nkfit), ctemp(nkfit) )
            do jpert = 1, 3 * nat
               do ipert = 1, 3 * nat
                  !
@@ -553,7 +559,6 @@ SUBROUTINE elphsum ( )
                  !
                  do isig = 1, nsig
                     degauss2 = deg(isig)
-                    ctemp = (0.0d0,0.0d0)
                     do ik=1,nkfit
                        etk = etfit(ibnd,eqkfit(ik))
                        etq = etfit(jbnd,eqqfit(ik))
@@ -561,15 +566,14 @@ SUBROUTINE elphsum ( )
                                       / degauss2,ngauss2) / degauss2 
                        w0g2 = w0gauss( (effit(isig)-etq) &
                                       / degauss2,ngauss2) / degauss2
-                       weight = wqa * w0g1 * w0g2
-                       ctemp = ctemp + noint(ik)*weight
+                       ctemp(ik) = noint(ik)* wqa * w0g1 * w0g2
                     enddo
-                    gf(ipert,jpert,isig) = gf(ipert,jpert,isig) + ctemp
+                    gf(ipert,jpert,isig) = gf(ipert,jpert,isig) + &
+                         SUM (ctemp) 
                  enddo ! isig 
               enddo    ! ipert
            enddo    !jpert
-           deallocate (point)
-           deallocate (noint)
+           deallocate (point, noint, ctemp)
            deallocate (g3)
            ! 
         enddo    ! ibnd 
@@ -591,38 +595,36 @@ SUBROUTINE elphsum ( )
                       gf(mu,vu,isig) * dyn(vu,nu))
               enddo
            enddo
-           gam(nu,isig) = gam(nu,isig) *  3.1415926/2.0d0
+           gam(nu,isig) = gam(nu,isig) *  pi/2.0d0
            if (sqrt(abs(w2(nu))) > epsw) then
               ! lambda is the adimensional el-ph coupling for mode nu:
               ! lambda(nu)= gamma(nu)/(pi N(Ef) \omega_{q,nu}^2)
-              lamb(nu,isig) = gam(nu,isig) / 3.1415926/ &
-                   w2(nu)/dosfit(isig)
+              lamb(nu,isig) = gam(nu,isig)/pi/w2(nu)/dosfit(isig)
            else
               lamb(nu,isig) = 0.0d0
            endif
         enddo  !nu
      enddo  ! isig
-     !      write(60,*) ' Finally lambda for modes '
-     !      write(60,*) ' mode   frequency [THz]   lambda    gamma [GHz]'
+     !
      do isig= 1,nsig
         degauss2 = deg(isig) 
-        write(*,'(A13,F6.4)') ' Broadening ',degauss2
+        write(stdout,'(A13,F6.4)') ' Broadening ',degauss2
         do nu=1,3*nat
-           write(*,'(A6,I4,3F20.10)') ' mode ',nu, &
-                sqrt(w2(nu))*3289.828, lamb(nu,isig), gam(nu,isig)*3.289828d6
-           gam(nu,isig) = gam(nu,isig)*3.289828d6
+           write(stdout,'(A6,I4,3F20.10)') ' mode ',nu, &
+                sqrt(w2(nu))*RytoTHz, lamb(nu,isig), gam(nu,isig)*RytoGHz
+           gam(nu,isig) = gam(nu,isig)*RytoGHz
         enddo
      enddo
-     write(*,*)
+     write(stdout,*)
      do isig= 1,nsig
         degauss2 = deg(isig)
-        write(*,'(F6.4,3F20.10)') degauss2, (gam(nu,isig),nu=1,3*nat)
+        write(stdout,'(F6.4,3F20.10)') degauss2, (gam(nu,isig),nu=1,3*nat)
      enddo
-     if(allocated(gam)) deallocate (gam)
-     if(allocated(lamb)) deallocate (lamb)
-     write(*,*)
-     write(*,*)
-     write(*,*)
+     deallocate (gam)
+     deallocate (lamb)
+     write(stdout,*)
+     write(stdout,*)
+     write(stdout,*)
      !
      !    Prepare interface to q2r and matdyn
      !
@@ -631,143 +633,167 @@ SUBROUTINE elphsum ( )
           isqloc, imqloc, noinv, modenum)
      !
      do isig=1,nsig
-        ifile = 50 + isig
-        write(name,"(A7,I2)") 'a2Fq2r.',ifile
-        open(ifile, file=name, STATUS = 'unknown', POSITION = 'append')
-        do mu = 1, 3 * nat
-           do vu = 1, 3 * nat
-              dyn22(mu,vu) = gf(mu,vu,isig)
-           enddo
-        enddo
-        write(ifile,*) deg(isig), effit(isig), dosfit(isig)
-        write(ifile,*) nqloc
-        call q2qstar_ph (dyn22, at, bg, nat, nsymloc, sgam, invsgam, irtgam, &
-             rtaugam, nqloc, sxqloc, isqloc, imqloc, ifile)
+        write(name,"(A7,I2)") 'a2Fq2r.',50 + isig
+        if (ionode) then 
+           iuelph = 4
+           open(iuelph, file=name, STATUS = 'unknown', FORM = 'formatted', &
+                POSITION='append')
+        else
+           !
+           ! this node doesn't write: unit 6 is redirected to /dev/null
+           !
+           iuelph =6
+        end if
+        dyn22(:,:) = gf(:,:,isig)
+        write(iuelph,*) deg(isig), effit(isig), dosfit(isig)
+        write(iuelph,*) nqloc
+        call q2qstar_ph (dyn22, at, bg, nat, nsymloc, sgam, invsgam, &
+             irtgam, rtaugam, nqloc, sxqloc, isqloc, imqloc, iuelph)
+        if (ionode) CLOSE( UNIT = iuelph, STATUS = 'KEEP' )
      enddo
-     if(allocated(gf)) deallocate (gf)
+     deallocate (gf)
      !    
-  ENDIF !la2F
-  !
-  ! ======================================================================  
-  !
-  !  IF(.not.la2F) THEN
-  DO isig = 1, nsig
-     degauss1 = 0.01 * isig
-     el_ph_sum(:,:) = (0.d0, 0.d0)
-     phase_space = 0.d0
+  ELSE
      !
-     ! Recalculate the Fermi energy Ef=ef1 and the DOS at Ef, dosef = N(Ef)
-     ! for this gaussian broadening
+     ! ======================================================================  
      !
-     ! Note that the weights of k+q points must be set to zero for the
-     ! following call to yield correct results
-     !
-     ef1 = efermig (et, nbnd, nks, nelec, wk, degauss1, ngauss1, 0, isk)
-     dosef = dos_ef (ngauss1, degauss1, ef1, et, wk, nks, nbnd)
-     ! N(Ef) is the DOS per spin, not summed over spin
-     dosef = dosef / 2.d0
-     !
-     ! Sum over bands with gaussian weights
-     !
-     DO ik = 1, nksq
-        !
-        ! see subroutine elphel for the logic of indices
-        !
-        IF (lgamma) THEN
-           ikk = ik
-           ikq = ik
+     IF (filelph.NE.' ') THEN
+        ! parallel case: only first node writes
+        IF ( ionode ) THEN
+           !
+           iuelph = 4
+           OPEN (unit = iuelph, file = filelph, status = 'unknown', err = &
+                100, iostat = ios)
+100        CALL errore ('elphon', 'opening file'//filelph, ABS (ios) )
+           REWIND (iuelph)
+           WRITE (iuelph, '(3f15.8,2i8)') xq, nsig, 3*nat
+           WRITE (iuelph, '(6e14.6)') (w2 (nu) , nu = 1, nmodes)
+           !
         ELSE
-           ikk = 2 * ik - 1
-           ikq = ikk + 1
-        ENDIF
-        DO ibnd = 1, nbnd
-           w0g1 = w0gauss ( (ef1 - et (ibnd, ikk) ) / degauss1, ngauss1) &
-                / degauss1
-           DO jbnd = 1, nbnd
-              w0g2 = w0gauss ( (ef1 - et (jbnd, ikq) ) / degauss1, ngauss1) &
-                   / degauss1
-              ! note that wk(ikq)=wk(ikk)
-              weight = wk (ikk) * w0g1 * w0g2
-              DO jpert = 1, 3 * nat
-                 DO ipert = 1, 3 * nat
-                    el_ph_sum (ipert, jpert) = el_ph_sum (ipert, jpert)  +  weight * &
-                         CONJG (el_ph_mat (jbnd, ibnd, ik, ipert) ) * &
-                                el_ph_mat (jbnd, ibnd, ik, jpert)
-                 ENDDO
-              ENDDO
-              phase_space = phase_space+weight
-           ENDDO
-        ENDDO
-        
-     ENDDO  ! nksq
-     !
-     ! el_ph_sum(mu,nu)=\sum_k\sum_{i,j}[ <psi_{k+q,j}|dvscf_q(mu)*psi_{k,i}>
-     !                                  x <psi_{k+q,j}|dvscf_q(nu)*psi_{k,i}>
-     !                                  x \delta(e_{k,i}-Ef) \delta(e_{k+q,j}
-     !
-     ! collect contributions from all pools (sum over k-points)
-     !
-     CALL poolreduce (2 * 3 * nat * 3 * nat, el_ph_sum)
-     CALL poolreduce (1, phase_space)
-     !
-     ! symmetrize el_ph_sum(mu,nu) : it transforms as the dynamical matrix
-     !
-     CALL symdyn_munu (el_ph_sum, u, xq, s, invs, rtau, irt, irgq, at, &
-          bg, nsymq, nat, irotmq, minus_q)
-     !
-     WRITE (6, 9000) degauss1, ngauss1
-     WRITE (6, 9005) dosef, ef1 * 13.6058
-     WRITE (6, 9006) phase_space
-     IF (iuelph.NE.0) THEN
-        WRITE (iuelph, 9000) degauss1, ngauss1
-        WRITE (iuelph, 9005) dosef, ef1 * 13.6058
+           iuelph = 0
+        END IF
+        !
+     ELSE
+        iuelph = 0
      ENDIF
      !
-     DO nu = 1, nmodes
-        gamma = 0.0
-        DO mu = 1, 3 * nat
-           DO vu = 1, 3 * nat
-              gamma = gamma + DBLE (CONJG (dyn (mu, nu) ) * el_ph_sum (mu, vu)&
-                   * dyn (vu, nu) )
+     DO isig = 1, nsig
+        degauss1 = 0.01 * isig
+        el_ph_sum(:,:) = (0.d0, 0.d0)
+        phase_space = 0.d0
+        !
+        ! Recalculate the Fermi energy Ef=ef1 and the DOS at Ef, dosef = N(Ef)
+        ! for this gaussian broadening
+        !
+        ! Note that the weights of k+q points must be set to zero for the
+        ! following call to yield correct results
+        !
+        ef1 = efermig (et, nbnd, nks, nelec, wk, degauss1, ngauss1, 0, isk)
+        dosef = dos_ef (ngauss1, degauss1, ef1, et, wk, nks, nbnd)
+        ! N(Ef) is the DOS per spin, not summed over spin
+        dosef = dosef / 2.d0
+        !
+        ! Sum over bands with gaussian weights
+        !
+        DO ik = 1, nksq
+           !
+           ! see subroutine elphel for the logic of indices
+           !
+           IF (lgamma) THEN
+              ikk = ik
+              ikq = ik
+           ELSE
+              ikk = 2 * ik - 1
+              ikq = ikk + 1
+           ENDIF
+           DO ibnd = 1, nbnd
+              w0g1 = w0gauss ( (ef1 - et (ibnd, ikk) ) / degauss1, ngauss1) &
+                   / degauss1
+              DO jbnd = 1, nbnd
+                 w0g2 = w0gauss ( (ef1 - et (jbnd, ikq) ) / degauss1, ngauss1) &
+                      / degauss1
+                 ! note that wk(ikq)=wk(ikk)
+                 weight = wk (ikk) * w0g1 * w0g2
+                 DO jpert = 1, 3 * nat
+                    DO ipert = 1, 3 * nat
+                       el_ph_sum (ipert, jpert) = el_ph_sum (ipert, jpert) + weight * &
+                            CONJG (el_ph_mat (jbnd, ibnd, ik, ipert) ) * &
+                            el_ph_mat (jbnd, ibnd, ik, jpert)
+                    ENDDO
+                 ENDDO
+                 phase_space = phase_space + weight
+              ENDDO
            ENDDO
-        ENDDO
-        gamma = 3.1415926 * gamma / 2.d0
+           
+        ENDDO  ! nksq
         !
-        ! the factor 2 comes from the factor sqrt(hbar/2/M/omega) that appears
-        ! in the definition of the electron-phonon matrix element g
-        ! The sqrt(1/M) factor is actually hidden into the normal modes
+        ! el_ph_sum(mu,nu)=\sum_k\sum_{i,j}[ <psi_{k+q,j}|dvscf_q(mu)*psi_{k,i}>
+        !                                  x <psi_{k+q,j}|dvscf_q(nu)*psi_{k,i}>
+        !                                  x \delta(e_{k,i}-Ef) \delta(e_{k+q,j}
         !
-        ! gamma = \pi \sum_k\sum_{i,j} \delta(e_{k,i}-Ef) \delta(e_{k+q,j}-Ef)
-        !         | \sum_mu z(mu,nu) <psi_{k+q,j}|dvscf_q(mu)*psi_{k,i}> |^2
-        ! where z(mu,nu) is the mu component of normal mode nu (z = dyn)
-        ! gamma(nu) is the phonon linewidth of mode nu
+        ! collect contributions from all pools (sum over k-points)
         !
-        ! The factor N(Ef)^2 that appears in most formulations of el-ph interact
-        ! is absent because we sum, not average, over the Fermi surface.
-        ! The factor 2 is provided by the sum over spins
+        CALL poolreduce (2 * 3 * nat * 3 * nat, el_ph_sum)
+        CALL poolreduce (1, phase_space)
         !
-        IF (SQRT (ABS (w2 (nu) ) ) > epsw) THEN
-           ! lambda is the adimensional el-ph coupling for mode nu:
-           ! lambda(nu)= gamma(nu)/(pi N(Ef) \omega_{q,nu}^2)
-           lambda = gamma / 3.1415926 / w2 (nu) / dosef
-        ELSE
-           lambda = 0.0
+        ! symmetrize el_ph_sum(mu,nu) : it transforms as the dynamical matrix
+        !
+        CALL symdyn_munu (el_ph_sum, u, xq, s, invs, rtau, irt, irgq, at, &
+             bg, nsymq, nat, irotmq, minus_q)
+        !
+        WRITE (6, 9000) degauss1, ngauss1
+        WRITE (6, 9005) dosef, ef1 * rytoev
+        WRITE (6, 9006) phase_space
+        IF (iuelph.NE.0) THEN
+           WRITE (iuelph, 9000) degauss1, ngauss1
+           WRITE (iuelph, 9005) dosef, ef1 * rytoev
         ENDIF
-        ! 3.289828x10^6 is the conversion factor from Ry to GHz
-        WRITE (6, 9010) nu, lambda, gamma * 3.289828d6
-        IF (iuelph.NE.0) WRITE (iuelph, 9010) nu, lambda, gamma * &
-             3.289828d6
+        !
+        DO nu = 1, nmodes
+           gamma = 0.0
+           DO mu = 1, 3 * nat
+              DO vu = 1, 3 * nat
+                 gamma = gamma + DBLE (CONJG (dyn (mu, nu) ) * el_ph_sum (mu, vu)&
+                      * dyn (vu, nu) )
+              ENDDO
+           ENDDO
+           gamma = pi * gamma / 2.d0
+           !
+           ! the factor 2 comes from the factor sqrt(hbar/2/M/omega) that appears
+           ! in the definition of the electron-phonon matrix element g
+           ! The sqrt(1/M) factor is actually hidden into the normal modes
+           !
+           ! gamma = \pi \sum_k\sum_{i,j} \delta(e_{k,i}-Ef) \delta(e_{k+q,j}-Ef)
+           !         | \sum_mu z(mu,nu) <psi_{k+q,j}|dvscf_q(mu)*psi_{k,i}> |^2
+           ! where z(mu,nu) is the mu component of normal mode nu (z = dyn)
+           ! gamma(nu) is the phonon linewidth of mode nu
+           !
+           ! The factor N(Ef)^2 that appears in most formulations of el-ph interact
+           ! is absent because we sum, not average, over the Fermi surface.
+           ! The factor 2 is provided by the sum over spins
+           !
+           IF (SQRT (ABS (w2 (nu) ) ) > epsw) THEN
+              ! lambda is the adimensional el-ph coupling for mode nu:
+              ! lambda(nu)= gamma(nu)/(pi N(Ef) \omega_{q,nu}^2)
+              lambda = gamma / pi / w2 (nu) / dosef
+           ELSE
+              lambda = 0.0
+           ENDIF
+           WRITE (6, 9010) nu, lambda, gamma * RytoGHz
+           IF (iuelph.NE.0) WRITE (iuelph, 9010) nu, lambda, gamma*RytoGHz
+        ENDDO
      ENDDO
-  ENDDO
 9000 FORMAT(5x,'Gaussian Broadening: ',f7.3,' Ry, ngauss=',i4)
 9005 FORMAT(5x,'DOS =',f10.6,' states/spin/Ry/Unit Cell at Ef=', &
           &       f10.6,' eV')
 9006 FORMAT(5x,'double delta at Ef =',f10.6)
 9010 FORMAT(5x,'lambda(',i2,')=',f8.4,'   gamma=',f8.2,' GHz')
+     !
+     !
+  ENDIF
   !
-  !
-  !  ENDIF !(.not.la2F)
   IF (iuelph.NE.0) CLOSE (unit = iuelph)
+  !
   RETURN
 END SUBROUTINE elphsum
 !-----------------------------------------------------------------------
@@ -808,7 +834,6 @@ subroutine lint ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
   ! Find which k-points of a uniform grid are in the IBZ
   !
   use kinds, only : DP
-
   implicit none
   integer, intent (IN) :: nks, nsym, s(3,3,48), npk, k1, k2, k3, &
        nk1, nk2, nk3, kunit, nkBZ
@@ -831,16 +856,15 @@ subroutine lint ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
   !
   ! kunit=2: get only "true" k points, not k+q points, from the list
   !
-  nkh=nks/kunit
+  nkh = nks/kunit
   allocate (xp(3,nkh))
-  if (kunit ==1) then
+  if (kunit == 1) then
      xp(:,1:nkh) = xk(:,1:nkh)
   else
      do j=1,nkh
         xp(:,j) = xk(:,2*j-1)
      enddo
   end if
-
   do i=1,nk1
      do j=1,nk2
         do k=1,nk3
@@ -878,7 +902,6 @@ subroutine lint ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
            end if
         end do
      end do
-
      call errore('lint','cannot locate  k point  xk',nk)
 15   continue
   end do

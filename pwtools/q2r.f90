@@ -89,7 +89,7 @@ PROGRAM q2r
   LOGICAL :: lq, lrigid, lrigid_save, lnogridinfo
   CHARACTER (LEN=10) :: zasr
   INTEGER :: m1, m2, m3, m(3), l1, l2, l3, i, j, j1, j2, na1, na2, ipol
-  INTEGER :: nat, nq, ntyp, iq, icar, nfile, nqtot, ifile, nqs
+  INTEGER :: nat, nq, ntyp, iq, icar, nfile, ifile, nqs, nq_log
   INTEGER :: na, nt
   !
   INTEGER :: gid, ibrav, ierr
@@ -101,8 +101,9 @@ PROGRAM q2r
   REAL(DP) :: q(3,48),omega, xq, amass(ntypx), resi
   REAL(DP) :: epsil(3,3)
   !
+  logical           :: la2F
   !
-  NAMELIST / input / fildyn, flfrc, zasr
+  NAMELIST / input / fildyn, flfrc, zasr, la2F
   !
   CALL mp_start()
   !
@@ -114,6 +115,8 @@ PROGRAM q2r
      !
      fildyn = ' '
      flfrc = ' '
+     !
+     la2F=.false.
      !
      CALL input_from_file ( ) 
      !
@@ -151,7 +154,6 @@ PROGRAM q2r
      !
      ! D matrix (analytical part)
      !
-     nqtot = 0
      ntyp = ntypx ! avoids spurious out-of-bound errors
      !
      ALLOCATE ( nc(nr1,nr2,nr3) )
@@ -194,7 +196,7 @@ PROGRAM q2r
            WRITE(6,'(a,3f12.8)') ' q= ',(q(i,nq),i=1,3)
            lq = .TRUE.
            DO ipol=1,3
-              xq = 0.0
+              xq = 0.0d0
               DO icar=1,3
                  xq = xq + at(icar,ipol) * q(icar,nq) * nr(ipol)
               END DO
@@ -213,7 +215,6 @@ PROGRAM q2r
                   tau,epsil,zeu,bg,omega,-1.d0)
               END IF
               CALL trasl ( phid, phiq, nq, nr1,nr2,nr3, nat, m(1),m(2),m(3))
-              nqtot=nqtot+1
            ELSE
               WRITE (*,'(3i4)') (m(i),i=1,3)
               CALL errore('init',' nc already filled: wrong q grid or wrong nr',1)
@@ -223,8 +224,9 @@ PROGRAM q2r
      !
      ! Check grid dimension
      !
-     IF (nqtot .EQ. nr1*nr2*nr3) THEN
-        WRITE (6,'(/5x,a,i4)') ' q-space grid ok, #points = ',nqtot
+     nq_log = SUM (nc)
+     IF (nq_log == nr1*nr2*nr3) THEN
+        WRITE (6,'(/5x,a,i4)') ' q-space grid ok, #points = ',nq_log
      ELSE
         CALL errore('init',' missing q-point(s)!',1)
      END IF
@@ -287,7 +289,11 @@ PROGRAM q2r
         WRITE (6,"(/5x,' fft-check success (sum of imaginary terms < 10^-12)')")
      END IF
      !
-     DEALLOCATE (phid, phiq, nc, tau, zeu, ityp) 
+     DEALLOCATE(phid, phiq, zeu, nc)
+     !
+     IF(la2F) CALL gammaq2r ( nfile, nat, nr1, nr2, nr3, at )
+     !
+     DEALLOCATE (tau, ityp)
      !
   END IF
   ! 
@@ -296,6 +302,134 @@ PROGRAM q2r
   CALL mp_end()
   !
 END PROGRAM q2r
+!
+!----------------------------------------------------------------------------
+SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
+  !----------------------------------------------------------------------------
+  !
+  USE kinds, ONLY : DP
+  !
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: nqtot, nat, nr1, nr2, nr3
+  REAL(DP), INTENT(IN) :: at(3,3)
+  !
+  INTEGER, ALLOCATABLE :: nc(:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: gaminp(:,:,:,:,:), gamout(:,:,:,:,:,:,:)
+  !
+  REAL(DP), PARAMETER :: eps=1.D-5, eps12=1.d-12
+  INTEGER  :: nsig = 10, isig, filea2F, nstar, count_q, nq, nq_log, iq, &
+       icar, ipol, m1,m2,m3, m(3), nr(3), j1,j2, na1, na2
+  LOGICAL :: lq
+  REAL(DP) :: deg, ef, dosscf
+  REAL(DP) :: q(3,48), xq, resi
+  character(len=14) :: name
+
+  !
+  ALLOCATE (gaminp(3,3,nat,nat,48), gamout(nr1,nr2,nr3,3,3,nat,nat) )
+  ALLOCATE ( nc (nr1,nr2,nr3) )
+  write (6,*)
+  write (6,*) '  Preparing gamma for a2F '
+  write (6,*)
+  !
+  nr(1) = nr1
+  nr(2) = nr2
+  nr(3) = nr3
+  !
+  DO isig=1, nsig
+     filea2F = 50 + isig
+     write(name,"(A7,I2)") 'a2Fq2r.',filea2F
+     open(filea2F, file=name, STATUS = 'old', FORM = 'formatted')
+     nc = 0
+     !
+     ! to pass to matdyn, for each isig, we read: degauss, Fermi energy and DOS
+     !
+     DO count_q=1,nqtot
+        !
+        READ(filea2F,*) deg, ef, dosscf
+        READ(filea2F,*) nstar
+        !
+        CALL read_gamma ( nstar, nat, filea2F, q, gaminp )
+        !
+        do nq = 1,nstar
+           lq = .true.
+           do ipol=1,3
+              xq = 0.0d0
+              do icar=1,3
+                 xq = xq + at(icar,ipol) * q(icar,nq) * nr(ipol)
+              end do
+              lq = lq .AND. (ABS(NINT(xq) - xq) < eps)
+              iq = NINT(xq)
+              !
+              m(ipol)= mod(iq,nr(ipol)) + 1
+              if (m(ipol) < 1) m(ipol) = m(ipol) + nr(ipol)
+           end do !ipol
+           IF (.NOT.lq) CALL errore('init','q not allowed',1)
+           !
+           if(nc(m(1),m(2),m(3)) == 0) then
+              nc(m(1),m(2),m(3)) = 1
+              CALL TRASL( gamout, gaminp, nq, nr1, nr2, nr3, nat, m(1), m(2), m(3) )
+           else
+              call errore('init',' nc already filled: wrong q grid or wrong nr',1)
+           end if
+        enddo ! stars for given q-point
+     ENDDO ! q-points
+     !
+     nq_log = SUM (nc)
+     if (nq_log == nr1*nr2*nr3) then
+        write (6,*)
+        write (6,'(" Broadening = ",F10.3)') deg
+        write (6,'(5x,a,i4)') ' q-space grid ok, #points = ',nq_log
+     else
+        call errore('init',' missing q-point(s)!',1)
+     end if
+     do j1=1,3
+        do j2=1,3
+           do na1=1,nat
+              do na2=1,nat
+                 call tolerant_cft3(gamout(1,1,1,j1,j2,na1,na2), &
+                      nr1,nr2,nr3, 1 )
+              end do
+           end do
+        end do
+     end do
+     gamout = gamout / DBLE (nr1*nr2*nr3)
+     !
+     close(filea2F)
+     !
+     filea2F = 60 + isig
+     write(name,"(A10,I2)") 'a2Fmatdyn.',filea2F
+     open(filea2F, file=name, STATUS = 'unknown')
+     !
+     WRITE(filea2F,*) deg, ef, dosscf
+     write(filea2F,'(3i4)') nr1, nr2, nr3
+     
+     do j1=1,3
+        do j2=1,3
+           do na1=1,nat
+              do na2=1,nat
+                 write(filea2F,'(4i4)') j1,j2,na1,na2
+                 write(filea2F,'(3i4,2x,1pe18.11)')   &
+                      (((m1,m2,m3,real(gamout(m1,m2,m3,j1,j2,na1,na2)), &
+                      m1=1,nr1),m2=1,nr2),m3=1,nr3)
+              end do  ! na2
+           end do  ! na1
+        end do   !  j2 
+     end do   ! j1
+     close(filea2F)
+
+     resi = SUM ( ABS ( AIMAG( gamout ) ) )
+     
+     IF (resi > eps12) THEN
+        WRITE (6,"(/5x,' fft-check warning: sum of imaginary terms = ',e12.7)") resi
+     ELSE
+        WRITE (6,"(/5x,' fft-check success (sum of imaginary terms < 10^-12)')")
+     END IF
+
+  ENDDO
+  !
+  DEALLOCATE (gaminp, gamout )
+  !
+END SUBROUTINE gammaq2r
 !
 !----------------------------------------------------------------------------
 SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
@@ -445,6 +579,50 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
   go to 100
   !
 END SUBROUTINE read_file
+!
+!-----------------------------------------------------------------------
+subroutine read_gamma (nqs, nat, ifn, xq, gaminp)
+  !-----------------------------------------------------------------------
+  !
+  USE kinds, ONLY : DP
+  implicit none
+  !
+  ! I/O variables
+  integer, intent(in) :: nqs, nat, ifn
+  real(DP), intent(out) :: xq(3,48)
+  complex(DP), intent(out) :: gaminp(3,3,nat,nat,48)
+  !
+  logical :: lrigid
+  integer :: i, j, na, nb, nt, iq
+  real(DP) :: phir(3),phii(3)
+  CHARACTER(LEN=75) :: line
+  !
+  !
+  Do iq=1,nqs
+     READ(ifn,*)
+     READ(ifn,*) 
+     READ(ifn,*)
+     READ(ifn,'("     q = ( ",3F14.9)," )"')  (xq(i,iq),i=1,3)
+     !     write(*,*) 'xq    ',iq,(xq(i,iq),i=1,3)
+     READ(ifn,*)
+     do na=1,nat
+        do nb=1,nat
+           read(ifn,*) i,j
+           if (i.ne.na) call errore('read_f','wrong na read',na)
+           if (j.ne.nb) call errore('read_f','wrong nb read',nb)
+           do i=1,3
+              read (ifn,*) (phir(j),phii(j),j=1,3)
+              do j = 1,3
+                 gaminp(i,j,na,nb,iq) = CMPLX (phir(j),phii(j))
+              end do
+              !           write(*,*) 'gaminp  ',(gaminp(i,j,na,nb,iq),j=1,3)
+           end do
+        end do
+     end do
+     !
+  Enddo
+  !
+end subroutine read_gamma
 !
 !----------------------------------------------------------------------------
 SUBROUTINE trasl( phid, phiq, nq, nr1, nr2, nr3, nat, m1, m2, m3 )

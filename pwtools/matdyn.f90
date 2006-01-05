@@ -1,4 +1,3 @@
-!
 ! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -62,7 +61,10 @@ PROGRAM matdyn
   !               supplied in input
   !     nk1,nk2,nk3  uniform q-point grid for DOS calculation (includes q=0)
   !     deltaE    energy step, in cm^(-1), for DOS calculation: from min
-  !               to max phonon energy (default: 1 cm^(-1))
+  !               to max phonon energy (default: 1 cm^(-1) if ndos is 
+  !               not specified)
+  !     ndos      number of energy steps for DOS calculations
+  !               (no default: calculated from deltaE if not specified)
   !     fldos     output file for dos (default: 'matdyn.dos')
   !               the dos is in states/cm(-1) plotted vs omega in cm(-1)
   !               and is normalised to 3*nat, i.e. the number of phonons
@@ -129,12 +131,14 @@ PROGRAM matdyn
              l1, l2, l3,                   &! supercell dimensions
              nrws                          ! number of nearest neighbor
   !
-  LOGICAL :: readtau
+  LOGICAL :: readtau, la2F
   !
-  REAL(DP) :: qhat(3), qh, deltaE, Emin, Emax, E, DOSofE(1)
+  REAL(DP) :: qhat(3), qh, DeltaE, Emin, Emax, E, DOSofE(1)
   INTEGER :: n, i, j, it, nq, nqx, na, nb, ndos, iout
-  NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, at, dos, deltaE,  &
-       &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau
+  !
+  NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, at, dos,  &
+       &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, & 
+                   la2F, ndos
   !
   !
   CALL mp_start()
@@ -149,6 +153,7 @@ PROGRAM matdyn
      !
      dos = .FALSE.
      deltaE = 1.0
+     ndos = 1
      nk1 = 0 
      nk2 = 0 
      nk3 = 0 
@@ -166,6 +171,8 @@ PROGRAM matdyn
      l1=1
      l2=1
      l3=1
+     la2F=.false.
+     dos=.false.
      !
      CALL input_from_file ( )
      !
@@ -230,9 +237,9 @@ PROGRAM matdyn
      ! read/generate atomic positions of the (super)cell
      !
      nat = nat_blk * nsc
+     nax = nat
      !!!
      nax_blk = nat_blk
-     nax = nat
      !!!
      ALLOCATE ( tau (3, nat), ityp(nat), itau_blk(nat_blk) )
      !
@@ -294,6 +301,8 @@ PROGRAM matdyn
      ALLOCATE ( dyn(3,3,nat,nat), dyn_blk(3,3,nat_blk,nat_blk) )
      ALLOCATE ( z(3*nat,3*nat), w2(3*nat,nq) )
 
+     if(la2F) open(300,file='dyna2F',status='unknown')
+
      DO n=1, nq
         dyn(:,:,:,:) = (0.d0, 0.d0)
 
@@ -327,6 +336,7 @@ PROGRAM matdyn
               END IF
            END IF
            qh = SQRT(qhat(1)**2+qhat(2)**2+qhat(3)**2)
+           write(*,*) ' qh,  has_zstar ',qh,  has_zstar
            IF (qh /= 0.d0) qhat(:) = qhat(:) / qh
            IF (qh /= 0.d0 .AND. .NOT. has_zstar) CALL infomsg  &
                 ('matdyn','Z* not found in file '//TRIM(flfrc)// &
@@ -338,18 +348,26 @@ PROGRAM matdyn
         !
         CALL dyndiag(nat,ntyp,amass,ityp,dyn,w2(1,n),z)
         !
+        if(la2F) then
+           write(300,*) n
+           do na=1,3*nat
+              write(300,*) (z(na,nb),nb=1,3*nat)
+           end do ! na
+        endif
+        !
         CALL writemodes(nax,nat,q(1,n),w2(1,n),z,iout)
         !
-     END DO
+     END DO  !nq
+     if(la2F) close(300)
      !
      IF(iout .NE. 6) CLOSE(unit=iout)
      !
      ALLOCATE (freq(3*nat, nq))
      DO n=1,nq
-        ! freq(i,n) = frequencies in cm^(-1)
+        ! freq(i,n) = frequencies in Rydberg, written to output in cm^(-1)
         !             negative sign if omega^2 is negative
         DO i=1,3*nat
-           freq(i,n)= SQRT(ABS(w2(i,n)))*rydcm1
+           freq(i,n)= SQRT(ABS(w2(i,n)))
            IF (w2(i,n).LT.0.0) freq(i,n) = -freq(i,n)
         END DO
      END DO
@@ -359,10 +377,11 @@ PROGRAM matdyn
         WRITE(2, '(" &plot nbnd=",i4,", nks=",i4," /")') 3*nat, nq
         DO n=1, nq
            WRITE(2, '(10x,3f10.6)')  q(1,n), q(2,n), q(3,n)
-           WRITE(2,'(6f10.4)') (freq(i,n),i=1,3*nat)
+           WRITE(2,'(6f10.4)') (freq(i,n)*rydcm1,i=1,3*nat)
         END DO
         CLOSE(unit=2)
      END IF
+     !
      !
      IF (dos) THEN
         Emin = 0.0 
@@ -374,7 +393,11 @@ PROGRAM matdyn
            END DO
         END DO
         !
-        ndos = NINT ( (Emax - Emin) / DeltaE+0.500001)  
+        if (ndos > 1) then
+           DeltaE = (Emax - Emin)/(ndos-1)
+        else
+           ndos = NINT ( (Emax - Emin) / DeltaE+0.500001)  
+        end if
         OPEN (unit=2,file=fldos,status='unknown',form='formatted')
         DO n= 1, ndos  
            E = Emin + (n - 1) * DeltaE  
@@ -383,10 +406,22 @@ PROGRAM matdyn
            ! The factor 0.5 corrects for the factor 2 in dos_t,
            ! that accounts for the spin in the electron DOS.
            !
-           WRITE (2, '(2e12.4)') E, 0.5d0*DOSofE(1)
+           !WRITE (2, '(F15.10,F15.2,F15.6,F20.5)') &
+           !     E, E*rydcm1, E*rydTHz, 0.5d0*DOSofE(1)
+           WRITE (2, '(F15.10,F20.5)') E, 0.5d0*DOSofE(1)
         END DO
         CLOSE(unit=2)
-     END IF
+     END IF  !dos
+     DEALLOCATE (z, w2, dyn, dyn_blk)
+     !
+     !    for a2F
+     !
+     IF(la2F) call a2Fdos (nat, nq, nr1, nr2, nr3, ibrav, &
+                           at, bg, tau, alat, &
+                           nsc, nat_blk, at_blk, bg_blk, itau_blk, omega_blk, &
+                           rws, nrws, dos, Emin, DeltaE, ndos, &
+                           ntetra, tetra, asr, q, freq)
+     DEALLOCATE ( freq)
      !
   END IF
   ! 
@@ -644,6 +679,8 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
   !
   RETURN
 END SUBROUTINE setupmat
+!
+!
 !----------------------------------------------------------------------
 SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   !-----------------------------------------------------------------------
@@ -1562,3 +1599,436 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
   !
   RETURN
 END SUBROUTINE gen_qpoints
+!
+!---------------------------------------------------------------------
+SUBROUTINE a2Fdos &
+     (nat, nq, nr1, nr2, nr3, ibrav, at, bg, tau, alat, &
+     nsc, nat_blk, at_blk, bg_blk, itau_blk, omega_blk, rws, nrws, &
+     dos, Emin, DeltaE, ndos, ntetra, tetra, asr, q, freq )
+  !-----------------------------------------------------------------------
+  !
+  USE kinds,      ONLY : DP
+  USE ifconstants
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(in) :: nat, nq, nr1, nr2, nr3, ibrav, ndos, ntetra, &
+       tetra(4, ntetra)
+  LOGICAL, INTENT(in) :: dos, asr
+  REAL(DP), INTENT(in) :: freq(3*nat,nq), q(3,nq), at(3,3), bg(3,3), &
+       tau(3,nat), alat, Emin, DeltaE
+  !
+  INTEGER, INTENT(in) :: nsc, nat_blk, itau_blk, nrws
+  REAL(DP), INTENT(in) :: rws(0:3,nrws), at_blk(3,3), bg_blk(3,3), omega_blk
+  !
+  REAL(DP), ALLOCATABLE    :: gamma(:,:), frcg(:,:,:,:,:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: gam(:,:,:,:), gam_blk(:,:,:,:), z(:,:)
+
+  real(DP)                 :: lambda, dos_a2F(50), temp, dos_ee(10), dos_tot, &
+                              deg(10), fermi(10), E
+  real(DP), parameter      :: rydTHz = 3289.828d0, eps_w2 = 0.0000001d0 
+  integer                  :: isig, ifn, n, m, na, nb, nc, nu, nmodes, &
+                              i,j,k, ngauss, jsig, p1, p2, p3, filea2F
+  character(len=14)        :: name
+  !
+  !
+  nmodes = 3*nat
+  do isig=1,10
+     filea2F = 60 + isig
+     write(name,"(A10,I2)") 'a2Fmatdyn.',filea2F
+     open(filea2F, file=name, STATUS = 'unknown')
+     READ(filea2F,*) deg(isig), fermi(isig), dos_ee(isig)
+  enddo
+  !
+  IF(dos) then
+     open(400,file='lambda',status='unknown')
+     write(400,*)
+     write(400,*) ' Electron-phonon coupling constant, lambda '
+     write(400,*)
+  ELSE
+     open (20,file='gam.lines' ,status='unknown')
+     write(20,*) 
+     write(20,*) ' Gamma lines for all modes [THz] '
+     write(20,*)
+     write(6,*)
+     write(6,*) ' Gamma lines for all modes [Rydberg] '
+     write(6,*)
+  ENDIF
+  !
+  ALLOCATE ( frcg(nr1,nr2,nr3,3,3,nat,nat) )
+  ALLOCATE ( gamma(3*nat,nq), gam(3,3,nat,nat), gam_blk(3,3,nat_blk,nat_blk) )
+  ALLOCATE ( z(3*nat,3*nat) )
+  !
+  frcg(:,:,:,:,:,:,:) = 0.d0
+  DO isig = 1, 10
+     filea2F = 60 + isig 
+     CALL readfg ( filea2F, nr1, nr2, nr3, nat, frcg )
+     !
+     if (asr /= 'no') then
+        CALL set_asr (asr, nr1, nr2, nr3, frcg, zeu, nat_blk, ibrav, tau_blk)
+     endif
+     !
+     open(300,file='dyna2F',status='old')
+     !
+     do n = 1 ,nq
+        gam(:,:,:,:) = (0.d0, 0.d0)
+        read(300,*)
+        do na=1,nmodes
+           read(300,*) (z(na,m),m=1,nmodes)
+        end do ! na
+        !
+        CALL setgam (q(1,n), gam, nat, at, bg, tau, itau_blk, nsc, alat, &
+             gam_blk, nat_blk, at_blk,bg_blk,tau_blk, omega_blk, &
+             frcg, nr1,nr2,nr3, rws, nrws)
+        !
+        ! here multiply dyn*gam*dyn for gamma and divide by w2 for lambda at given q
+        !
+        do nc = 1, nat
+           do k =1, 3
+              p1 = (nc-1)*3+k
+              nu = p1
+              gamma(nu,n) = 0.0d0
+              do i=1,3
+                 do na=1,nat
+                    p2 = (na-1)*3+i
+                    do j=1,3
+                       do nb=1,nat
+                          p3 = (nb-1)*3+j
+                          gamma(nu,n) = gamma(nu,n) + DBLE(conjg(z(p2,p1)) * &
+                               gam(i,j,na,nb) * z(p3,p1))
+                       enddo  ! nb
+                    enddo  ! j
+                 enddo  ! na
+              enddo  !i
+              gamma(nu,n) = gamma(nu,n) * 3.1415926d0 / 2.0d0
+           enddo  ! k
+        enddo  !nc
+        !
+        !
+     EndDo !nq    all points in BZ
+     close(300)   ! file with dyn vectors
+     !
+     ! after we know gamma(q) and lambda(q) calculate  DOS(omega) for spectrum a2F
+     !
+     if(dos) then
+        ! 
+        if(isig.le.9) then
+           write(name,'(A8,I1.1)') 'a2F.dos.',isig
+        else
+           write(name,'(A8,I2.2)') 'a2F.dos.',isig
+        endif
+        ifn = 200 + isig
+        open (ifn,file=name,status='unknown',form='formatted')
+        write(ifn,*)
+        write(ifn,*) ' Eliashberg function a2F (per both spin)'
+        write(ifn,*) '  frequencies in Rydberg  '
+        write(ifn,*) ' DOS normalized to E in Rydberg: a2F_total, a2F(mode) '
+        write(ifn,*)
+        !
+        !      correction for small frequencies
+        !
+        do n = 1, nq
+           do i = 1, nmodes 
+              if (freq(i,n).LE.eps_w2) then
+                 gamma(i,n) = 0.0d0                 
+              endif
+           enddo
+        enddo
+        !
+        lambda = 0.0d0
+        do n= 1, ndos
+           !
+           E = Emin + (n-1)*DeltaE + 0.5d0*DeltaE
+           dos_tot = 0.0d0 
+           do j=1,nmodes
+              !
+              dos_a2F(j) = 0.0d0
+              CALL dos_gam(nmodes, nq, j, ntetra, tetra, &
+                   gamma, freq, E, dos_a2F(j))
+              dos_a2F(j) = dos_a2F(j) / dos_ee(isig)
+              dos_tot = dos_tot + dos_a2F(j)
+              !
+           enddo
+           lambda = lambda + dos_tot/E * DeltaE / 3.1415926d0
+           write (ifn, 1050) E, dos_tot, (dos_a2F(j),j=1,nmodes)
+        enddo  !ndos
+        write(ifn,*) " lambda =",lambda,'   Delta = ',DeltaE
+        close (ifn)
+        write(400,'(" Broadening ",F8.4," lambda ",F12.4," dos_el ",F8.4)') &
+             deg(isig),lambda, dos_ee(isig)
+        !
+     endif !dos
+     !
+     !  OUTPUT
+     !
+     if(.not.dos) then
+        write(20,'(" Broadening ",F8.4)')  deg(isig)
+        write(6,'(" Broadening ",F8.4)')  deg(isig)
+        do n=1, nq
+           write(20,1030) n,(gamma(i,n)*rydTHz,i=1,3*nat)
+           write(6,1040) n, (gamma(i,n),i=1,3*nat)
+        end do
+     endif
+     !
+  ENDDO !isig
+  !
+  DEALLOCATE (z, frcg, gamma, gam, gam_blk )
+  !
+  close(400)   !lambda
+  close(20)
+  !
+1030 FORMAT( 3x,I5,'  ',9F8.4 )
+1040 FORMAT( 3x,I5,'  ',6F12.9 )
+1050 FORMAT( 3x,F12.6,6F16.8 )
+  !
+  RETURN
+END SUBROUTINE a2Fdos
+!
+!-----------------------------------------------------------------------
+subroutine setgam (q, gam, nat, at,bg,tau,itau_blk,nsc,alat, &
+     &             gam_blk, nat_blk,    at_blk,bg_blk,tau_blk,omega_blk, &
+     &             frcg, nr1,nr2,nr3, rws,nrws)
+  !-----------------------------------------------------------------------
+  ! compute the dynamical matrix (the analytic part only)
+  !
+  USE kinds,       ONLY : DP
+  implicit none
+  real(DP), parameter :: tpi=2.d0*3.14159265358979d0
+  !
+  ! I/O variables
+  !
+  integer        :: nr1, nr2, nr3, nat, nat_blk,  &
+                    nsc, nrws, itau_blk(nat)
+  real(DP)       :: q(3), tau(3,nat), at(3,3), bg(3,3), alat, rws(0:3,nrws)
+  real(DP)       :: tau_blk(3,nat_blk), at_blk(3,3), bg_blk(3,3), omega_blk, &
+                    frcg(nr1,nr2,nr3,3,3,nat_blk,nat_blk)
+  COMPLEX(DP)  :: gam_blk(3,3,nat_blk,nat_blk)
+  COMPLEX(DP) ::  gam(3,3,nat,nat)
+  !
+  ! local variables
+  !
+  real(DP)        :: arg
+  complex(DP)     :: cfac(nat)
+  integer         :: i,j,k, na,nb, na_blk, nb_blk, iq
+  real(DP)        :: qp(3), qbid(3,nsc) ! automatic array
+  !
+  !
+  call q_gen(nsc,qbid,at_blk,bg_blk,at,bg)
+  !
+  do iq=1,nsc
+     !
+     do k=1,3
+        qp(k)= q(k) + qbid(k,iq)
+     end do
+     !
+     gam_blk(:,:,:,:) = (0.d0,0.d0)
+     CALL frc_blk (gam_blk,qp,tau_blk,nat_blk,              &
+                   nr1,nr2,nr3,frcg,at_blk,bg_blk,rws,nrws)
+     !
+     do na=1,nat
+        na_blk = itau_blk(na)
+        do nb=1,nat
+           nb_blk = itau_blk(nb)
+           !
+           arg = tpi * ( qp(1) * ( (tau(1,na)-tau_blk(1,na_blk)) -   &
+                                (tau(1,nb)-tau_blk(1,nb_blk)) ) + &
+                      qp(2) * ( (tau(2,na)-tau_blk(2,na_blk)) -   &
+                                (tau(2,nb)-tau_blk(2,nb_blk)) ) + &
+                      qp(3) * ( (tau(3,na)-tau_blk(3,na_blk)) -   &
+                                (tau(3,nb)-tau_blk(3,nb_blk)) ) )
+           !
+           cfac(nb) = cmplx(cos(arg),sin(arg))/nsc
+           !
+        end do ! nb
+        do nb=1,nat
+           do i=1,3
+              do j=1,3
+                 nb_blk = itau_blk(nb)
+                 gam(i,j,na,nb) = gam(i,j,na,nb) + cfac(nb) * &
+                     gam_blk(i,j,na_blk,nb_blk)
+              end do ! j
+              end do ! i 
+        end do ! nb
+     end do ! na
+     !
+  end do ! iq
+  !
+  return
+end subroutine setgam
+!
+!--------------------------------------------------------------------
+subroutine dos_gam (nbndx, nq, jbnd, ntetra, &
+                    tetra, gamma, et, ef, dos_a2F)
+  !--------------------------------------------------------------------
+  ! calculates weights with the tetrahedron method (Bloechl version)
+  ! this subroutine is based on tweights.f90 belonging to PW 
+  ! it calculates a2F on the surface of given frequency <=> histogram
+  ! Band index means the frequency mode here 
+  ! and "et" means the frequency(mode,q-point)
+  !
+  USE kinds,       ONLY: DP
+  use parameters
+!  USE ifconstants, ONLY : gamma
+  implicit none
+  !
+  integer :: nq, nbndx, ntetra, tetra(4,ntetra), jbnd
+  real(DP) :: et(nbndx,nq), gamma(nbndx,nq), func
+  
+  real(DP) :: ef, dos_a2F
+  real(DP) :: e1, e2, e3, e4, c1, c2, c3, c4, etetra(4)
+  integer      :: ik, ibnd, nt, nk, ns, i, ik1, ik2, ik3, ik4, itetra(4)
+
+  real(DP) ::   f12,f13,f14,f23,f24,f34, f21,f31,f41,f42,f32,f43
+  real(DP) ::   P1,P2,P3,P4, G, Z, o13, Y1,Y2,Y3,Y4, WW, eps,vol, Tint
+
+
+      Tint = 0.0d0
+      eps  = 1.0d-14
+      vol  = 1.0d0/ntetra
+
+     do nt = 1, ntetra
+         ibnd = jbnd
+           !
+           ! etetra are the energies at the vertexes of the nt-th tetrahedron
+           !
+           do i = 1, 4
+              etetra(i) = et(ibnd, tetra(i,nt))
+           enddo
+           itetra(1) = 0
+           call hpsort (4,etetra,itetra)
+           !
+           ! ...sort in ascending order: e1 < e2 < e3 < e4
+           !
+           e1 = etetra (1)
+           e2 = etetra (2)
+           e3 = etetra (3)
+           e4 = etetra (4)
+           !
+           ! kp1-kp4 are the irreducible k-points corresponding to e1-e4
+           !
+           ik1 = tetra(itetra(1),nt)
+           ik2 = tetra(itetra(2),nt)
+           ik3 = tetra(itetra(3),nt)
+           ik4 = tetra(itetra(4),nt)
+           Y1  = gamma(ibnd,ik1)/et(ibnd,ik1)
+           Y2  = gamma(ibnd,ik2)/et(ibnd,ik2)
+           Y3  = gamma(ibnd,ik3)/et(ibnd,ik3)
+           Y4  = gamma(ibnd,ik4)/et(ibnd,ik4)
+
+
+           f12 = (ef-e2)/(e1-e2)
+           f13 = (ef-e3)/(e1-e3)
+           f14 = (ef-e4)/(e1-e4)
+           f23 = (ef-e3)/(e2-e3)
+           f24 = (ef-e4)/(e2-e4)
+           f34 = (ef-e4)/(e3-e4)
+
+           f21 = 1.0d0 - f12
+           f31 = 1.0d0 - f13
+           f41 = 1.0d0 - f14
+           f32 = 1.0d0 - f23
+           f42 = 1.0d0 - f24
+           f43 = 1.0d0 - f34
+
+           o13 = 1.0d0/3.0d0
+           G   = 0.0d0
+           P1  = 0.0d0
+           P2  = 0.0d0
+           P3  = 0.0d0
+           P4  = 0.0d0
+
+           IF(e1.gt.ef.or.e4.lt.ef) then
+                 goto 500
+           ENDIF
+
+       IF(e3.lt.ef.and.ef.lt.e4) THEN
+
+         Z  =  (1.0d0 - f14 * f24 * f34)
+         G  =  3.0d0 * (1.0d0 - Z) / (e4-ef)
+         P1 =  f14 * o13
+         P2 =  f24 * o13
+         P3 =  f34 * o13
+         P4 =  (f41 + f42 + f43) * o13
+         goto 200
+
+       ENDIF
+
+
+       IF(e2.lt.ef.and.ef.lt.e3) THEN
+
+         G   =  3.0d0 * (f23*f31 + f32*f24)
+         P1  =  f14 * o13 + f13*f31*f23 / G
+         P2  =  f23 * o13 + f24*f24*f32 / G
+         P3  =  f32 * o13 + f31*f31*f23 / G
+         P4  =  f41 * o13 + f42*f24*f32 / G
+         G   =  G / (e4-e1)
+         goto 200
+
+       ENDIF
+
+
+       IF(e1.lt.ef.and.ef.lt.e2) THEN
+
+         Z  =  f21 * f31 * f41
+         G  =  3.0d0 * Z / (ef-e1)
+         P1 =  o13 * (f12 + f12 + f14)
+         P2 =  o13 * f21
+         P3 =  o13 * f31
+         P4 =  o13 * f41
+         goto 200
+
+       ENDIF
+
+200      WW = G * (Y1*P1 + Y2*P2 + Y3*P3 + Y4*P4)
+
+         Tint = Tint + WW * vol
+
+500     continue
+     enddo   ! ntetra
+
+
+  dos_a2F = Tint  !2 because DOS_ee is per 1 spin
+
+  return
+end subroutine dos_gam
+!
+!
+!-----------------------------------------------------------------------
+subroutine readfg ( ifn, nr1, nr2, nr3, nat, frcg )
+  !-----------------------------------------------------------------------
+  !
+  USE kinds,       ONLY : DP
+  implicit none
+  ! I/O variable
+  integer, intent(in) ::  nr1,nr2,nr3, nat
+  real(DP), intent(out) :: frcg(nr1,nr2,nr3,3,3,nat,nat)
+  ! local variables
+  integer i, j, na, nb, m1,m2,m3, ifn
+  integer ibid, jbid, nabid, nbbid, m1bid,m2bid,m3bid
+  !
+  !
+  READ (ifn,*) m1, m2, m3
+  if ( m1 /= nr1 .or. m2 /= nr2 .or. m3 /= nr3) &
+       call errore('readfG','inconsistent nr1, nr2, nr3 read',1)
+  do i=1,3
+     do j=1,3
+        do na=1,nat
+           do nb=1,nat
+              read (ifn,*) ibid, jbid, nabid, nbbid
+              if(i.ne.ibid.or.j.ne.jbid.or.na.ne.nabid.or.nb.ne.nbbid)  then
+                  write(*,*) i,j,na,nb,'  <>  ', ibid, jbid, nabid, nbbid 
+                  call errore  ('readfG','error in reading',1)
+              else
+                  read (ifn,*) (((m1bid, m2bid, m3bid,     &
+                                 frcg(m1,m2,m3,i,j,na,nb), &
+                                 m1=1,nr1),m2=1,nr2),m3=1,nr3)
+              endif
+           end do
+        end do
+     end do
+  end do
+  !
+  close(ifn)
+  !
+  return
+end subroutine readfg
