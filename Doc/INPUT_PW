@@ -231,7 +231,7 @@ nelec          REAL
                (may be noninteger if you wish)
                Default: the same as ionic charge (neutral cell)
                A compensating jellium background is inserted
-               to remove divergencies if the cell is not neutral
+               to remove divergences if the cell is not neutral
 
 tot_charge     INTEGER ( default = 0 )
                total system charge. Used only if nelec is unspecified,
@@ -305,7 +305,7 @@ smearing       CHARACTER
 nelup, neldw   REAL
                number of spin-up and spin-down electrons, respectively
                The sum must yield nelec that must also be specified
-               explicitely in this case.
+               explicitly in this case.
 
 nspin          INTEGER
                nspin = 1 :   non-polarized calculation (default)
@@ -326,11 +326,17 @@ tot_magnetization INTEGER ( default = -1 [unspecified] )
                It is recommended to use either 'multiplicity' or equivalently
                'tot_magnetization' to specify the spin state.
 
-ecfixed        REAL                                      40.0
-qcutz          REAL                                       0.0
-q2sigma        REAL                                       0.1
+ecfixed        REAL ( default = 0.0 )
+qcutz          REAL ( default = 0.0 )
+q2sigma        REAL ( default = 0.1 )
                parameters for modified functional to be used in
-               variable-cell molecular dynamics (or in stress calculation)
+               variable-cell molecular dynamics (or in stress calculation).
+               "ecfixed" is the value (in Rydberg) of the constant-cutoff; 
+               "qcutz" and "q2sigma" are the height and the width (in Rydberg) 
+               of the energy step for reciprocal vectors whose square modulus 
+               is greater than "ecfixed". In the kinetic energy, G^2 is
+               replaced by G^2 + qcutz * (1 + erf ( (G^2 - ecfixed)/q2sigma) )
+               See: M. Bernasconi et al, J. Phys. Chem. Solids 56, 501 (1995)
 
 xc_type        CHARACTER
                Exchange-correlation functional
@@ -423,12 +429,12 @@ constrained_magnetization CHARACTER ( defalt = 'none' )
                         mcons(:,:) array is defined from starting_magnetization,
                         angle1 and angle2 variables. lambda is a real number
                `atomic direction`: not all the components of the atomic 
-                        magnetic moment are constrained but only the cosinus 
+                        magnetic moment are constrained but only the cosine 
                         of angle1, and the penalty functional is:
      - LAMBDA * SUM_{itype} ( mag_mom(3,itype)/mag_mom_tot - cos(angle1(ityp) )**2
 
 fixed_magnetization(3)  REAL (default 0.d0)
-               value of the total magnetization to be mantained fixed when 
+               value of the total magnetization to be maintained fixed when 
                constrained_magnetization='total'
 
 B_field(3)     REAL (default = 0.d0)
@@ -493,7 +499,7 @@ diagonalization
 
 diago_thr_init     
                REAL  ( default = 1.D-2 )
-               Convergence threshold for the firts iterative diagonalization.
+               Convergence threshold for the first iterative diagonalization.
                The threshold (ethr) is automatically updated along the
                self consistency loop.
 
@@ -664,7 +670,7 @@ w_1, w_2
 !
 
 num_of_images  INTEGER ( default = 0 )
-               number of points used to discrtize the path 
+               number of points used to discretize the path 
                (it must be larger than 3)
 
 opt_scheme     
@@ -700,7 +706,7 @@ first_last_opt LOGICAL ( default = .FALSE. )
 	       (these images do not feel the effect of the springs)
 
 damp           REAL ( default = 1.D0 )
-               Damping coefficent. Ignored when "opt_scheme" is different 
+               Damping coefficient. Ignored when "opt_scheme" is different 
                from "damped-dyn"
 
 temp_req       REAL ( default = 0.D0 Kelvin )
@@ -730,13 +736,13 @@ use_fourier    LOGICAL ( default = .FALSE. )
 
 use_multistep  LOGICAL ( default = .FALSE. )
                In the string method images are sequentially added to the path: 
-               new images are added as soon as the pervious path is converged 
+               new images are added as soon as the previous path is converged 
                (this starting from 3 images up to num_of_images).
 
 use_freezing   LOGICAL ( default = .FALSE. )
                If. TRUE. the images are optimised according to their error:
                only those images with an error larger than half of the largest
-               are optimised. The other images are kept forzen.
+               are optimised. The other images are kept frozen.
                
 free_energy    LOGICAL ( default = .FALSE. )
                Used in the evaluation of the free-energy profile with
@@ -753,7 +759,7 @@ write_save     LOGICAL ( default = .FALSE. )
 fe_step(i)     REAL ( default = 0.04 )
                meta-dynamics step length (in principle different for each
                collective variable), defined using the same units used 
-               to define the colletive variables themselves (constraints).
+               to define the collective variables themselves (constraints).
                The step also defines the spread of the Gaussian-like bias
                potential.
 
@@ -795,7 +801,7 @@ press          REAL ( default = 0.D0 )
                target pressure [KBar] in a variable-cell md simulation
 
 wmass          REAL ( default = sum of atomic masses in the cell )
-               ficticious cell mass [amu] for variable-cell md simulations
+               fictitious cell mass [amu] for variable-cell md simulations
 
 cell_factor    REAL ( default = 1.2D0 )
                used in the construction of the pseudopotential tables. 
@@ -905,7 +911,7 @@ ATOMIC_POSITIONS { alat | bohr | crystal | angstrom }
 K_POINTS { tpiba | automatic | crystal | gamma }
 
    gamma    : use k = 0 ( do not read anything after this card )
-              Note that a set of subroutines optimized for clculations at 
+              Note that a set of subroutines optimized for calculations at 
               the gamma point are used so that both memory and cpu requirements
               are reduced
    automatic: automatically generated uniform grid of k-points

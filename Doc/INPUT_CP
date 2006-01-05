@@ -103,7 +103,7 @@ restart_mode   CHARACTER ( default = 'restart' )
                                  performs  "nstep" new steps, resetting
                                  the counter and averages
                upto            = continue a previous simulation and stops 
-                                 swhen the counter value is equal "nstep"
+                                 when the counter value is equal "nstep"
 
 nstep          INTEGER                         
                number of ionic + electronic steps
@@ -148,7 +148,7 @@ forc_conv_thr  REAL ( default = 1.D-3 )
                See also etot_conv_thr - both criteria must be satisfied.
 
 max_seconds    REAL ( default = 1.D+7 )
-               smootly terminate program after the specified number of seconds
+               smoothly terminate program after the specified number of seconds
                this parameter is typically used to prevent an hard kill from
                the queuing system.
 
@@ -240,15 +240,15 @@ occupations    CHARACTER
                a string describing the occupation of the electronic states.
                In the case of conjugate gradient style of minimization
                of the electronic states, if occupations is set to 'ensemble',  
-               this allows ensemble dft calculations for metallic systems 
+               this allows ensemble DFT calculations for metallic systems 
                                                                                                                              
 smearing       CHARACTER
                a string describing the kind of occupations for electronic states
-               in the case of ensemble dft (occupations == 'ensemble' );
+               in the case of ensemble DFT (occupations == 'ensemble' );
                now only Fermi-Dirac ('fd') case is implemented
                                                                                                                              
 degauss        REAL ( default = 0.D0 )
-               parameter for the smearing function, only used for ensemble dft
+               parameter for the smearing function, only used for ensemble DFT
                calculations
 
 nspin          INTEGER ( default = 1 )
@@ -258,7 +258,7 @@ nspin          INTEGER ( default = 1 )
 nelup, neldw   REAL
                number of spin-up and spin-down electrons, respectively.
                The sum must yield nelec that must also be specified
-               explicitely in this case.
+               explicitly in this case.
 
 multiplicity   INTEGER ( default = 0 [unspecified] )
                spin multiplicity (2s+1). 1 is singlet, 2 for doublet etc.
@@ -279,11 +279,13 @@ ecfixed        REAL ( default = 0.0 )
 qcutz          REAL ( default = 0.0 )
 q2sigma        REAL ( default = 0.1 )
                parameters for modified functional to be used in
-               variable-cell molecular dynamics (or in stress calculation)
-               "ecfixed" is the value (in Rydberg) of the constant-cutoff 
+               variable-cell molecular dynamics (or in stress calculation).
+               "ecfixed" is the value (in Rydberg) of the constant-cutoff; 
                "qcutz" and "q2sigma" are the height and the width (in Rydberg) 
-               of the energy step for reciprocal vector whose square modulus 
-               is grather than "ecfixed"
+               of the energy step for reciprocal vectors whose square modulus 
+               is greater than "ecfixed". In the kinetic energy, G^2 is
+               replaced by G^2 + qcutz * (1 + erf ( (G^2 - ecfixed)/q2sigma) )
+               See: M. Bernasconi et al, J. Phys. Chem. Solids 56, 501 (1995)
 
 nr1,nr2,nr3    INTEGER
                three-dimensional FFT mesh (hard grid) for charge
@@ -313,7 +315,7 @@ electron_maxstep
 
 electron_dynamics 
                CHARACTER ( default = 'none' )
-               set how electrons shold be moved
+               set how electrons should be moved
                none    = electronic degrees of freedom (d.o.f.) are kept fixed 
                sd      = steepest descent algorithm is used to minimize 
                          electronic d.o.f. 
@@ -324,10 +326,10 @@ electron_dynamics
                          wavefunction at each ionic step. 'cg' can be used 
                          interchangeably with 'verlet' for a couple of ionic
                          steps in order to "cool down" the electrons and
-                         return them back to the BO surface. Then 'verlet' can 
-                         be restarted again. This procedure is useful when
-                         electronic adiabaticity in CP is lost yet the ionic 
-                         velocities need to be preserved.
+                         return them back to the Born-Oppenheimer surface.
+                         Then 'verlet' can be restarted again. This procedure 
+                         is useful when electronic adiabaticity in CP is lost
+                         yet the ionic velocities need to be preserved.
 
 emass          REAL ( default = 400.D0 )
                effective electron mass in the CP Lagrangian, in atomic units 
@@ -425,7 +427,7 @@ passop         REAL ( default =  0.3D0 )
 
 n_inner        INTEGER ( default = 2 )
                number of internal cycles for every conjugate gradient 
-               iteration only for ensemble dft
+               iteration only for ensemble DFT
 
 epol           INTEGER ( default = 3 )
                direction of the finite electric field (only if tefield == .TRUE.)
@@ -442,7 +444,7 @@ NAMELIST &IONS  ( only if calculation = 'cp', 'relax',
                                         'vc-relax', 'vc-cp', 'neb', 'smd' )
 
 ion_dynamics   CHARACTER ( default = 'none' )
-               set how ions shold be moved
+               set how ions should be moved
                none    = ions are kept fixed 
                sd      = steepest descent algorithm is used to minimize ionic 
                          configuration
@@ -456,7 +458,7 @@ ion_nstepe     INTEGER ( default = 1 )
 
 ion_radius(i)  REAL ( default = 0.5D0 )
                pseudo-atomic radius of the i-th atomic species for Ewald 
-               summation (une for each atomic type). 
+               summation (one for each atomic type). 
                values between 0.5 and 2.0 are usually used.
 
 ion_damping    REAL ( default = 0.1D0 )
@@ -551,7 +553,7 @@ greasp         REAL ( default = 1.D0 )
 !
 
 num_of_images  INTEGER ( default = 0 )
-               number of points used to discrtize the path 
+               number of points used to discretize the path 
                (it must be larger than 3)
 
 opt_scheme     
@@ -587,7 +589,7 @@ first_last_opt LOGICAL ( default = .FALSE. )
 	       (these images do not feel the effect of the springs)
 
 damp           REAL ( default = 1.D0 )
-               Damping coefficent. Ignored when "opt_scheme" is different 
+               Damping coefficient. Ignored when "opt_scheme" is different 
                from "damped-dyn"
 
 temp_req       REAL ( default = 0.D0 Kelvin )
@@ -614,7 +616,7 @@ use_fourier    LOGICAL ( default = .FALSE. )
 use_freezing   LOGICAL ( default = .FALSE. )
                if. TRUE. the images are optimised according to their error:
                only those images with an error larger than half of the largest
-               are optimised. The other images are kept forzen.
+               are optimised. The other images are kept frozen.
                
 free_energy    LOGICAL ( default = .FALSE. )
                Used in the evaluation of the free-energy profile with
@@ -627,7 +629,7 @@ free_energy    LOGICAL ( default = .FALSE. )
 fe_step(i)     REAL ( default = 0.04 )
                meta-dynamics step length (in principle different for each
                collective variable), defined using the same units used 
-               to define the colletive variables themselves (constraints).
+               to define the collective variables themselves (constraints).
                The step also defines the spread of the Gaussian-like bias
                potential.
 
@@ -655,7 +657,7 @@ cell_parameters
                               ( see the card 'CELL_PARAMETERS' )
 
 cell_dynamics  CHARACTER ( default = 'none' )
-               set how cell shold be moved
+               set how cell should be moved
                none      = cell is kept fixed 
                sd        = steepest descent algorithm is used to optimise the 
                            cell
@@ -666,7 +668,7 @@ cell_dynamics  CHARACTER ( default = 'none' )
 
 cell_velocities
                CHARACTER
-               zero      = restart setting cell velocitiy to zero
+               zero      = restart setting cell velocity to zero
                default   = restart using cell velocity of the previous run
 
 press          REAL ( default = 0.D0 )
@@ -753,19 +755,19 @@ maxwfdt        REAL ( default = 0.3D0 )
                either too small (takes forever to converge)  or too large   
                (code goes crazy) . This option keeps the step size between  
                wfdt and maxwfdt. In my experience 0.1 and 0.5 work quite    
-               well. (but dont blame me if it doesnt work for you           
+               well. (but don't blame me if it doesn't work for you           
 
 nit            INTEGER ( default = 10 )
                Number of iterations to do for Wannier convergence.
 
 nsd            INTEGER ( default = 10 )
-               Out of a total of NIT iteratons, NSD will be Steepest-Descent
+               Out of a total of NIT iterations, NSD will be Steepest-Descent
                and ( nit - nsd ) will be Conjugate-Gradient.
 
 wf_q	       REAL ( default = 1500.0D0 )
                Fictitious mass of the A matrix used for obtaining 	  
 	       maximally localized Wannier functions. The unitary
-	       transformation matrux U is written as exp(A) where 	  
+	       transformation matrix U is written as exp(A) where 	  
 	       A is a anti-hermitian matrix. The Damped-Dynamics is performed
 	       in terms of the A matrix, and then U is computed from A.	  
 	       Usually a value between 1500 and 2500 works fine, but should 
@@ -804,7 +806,7 @@ calwf          INTEGER ( default = 3 )
 	          converged KS groundstate and want to get to the converged   
 	          Wannier function groundstate in 1 CP Iteration.
                5. This option is similar to calwf 1, except that the output is
-	          the Wannier function/wafefunction, and not the orbital      
+	          the Wannier function/wavefunction, and not the orbital      
                   density. See nwf below.
 									  
 nwf            INTEGER ( default = 0 )
@@ -813,7 +815,7 @@ nwf            INTEGER ( default = 0 )
  	       output. With calwf=5, set this to 1(i.e calwf=5 only writes  
 	       one state during one run. so if you want 10 states, you have 
 	       to run the code 10 times). With calwf=1, you can print many  
-	       orbital densities in a singel run.
+	       orbital densities in a single run.
                See also the PLOT_WANNIER card for specifying the states to 
                be printed.
 
@@ -830,7 +832,7 @@ wffort	       INTEGER ( default = 40 )
 writev         LOGICAL ( default = .FALSE. )
                Output the charge density (g-space) and the list of g-vectors
                This is useful if you want to reconstruct the electrostatic  
-               potential using the poisson equation. If .TRUE. then the     
+               potential using the Poisson equation. If .TRUE. then the     
 	       code will output the g-space charge density and the list     
                if G-vectors, and STOP.                                      
                Charge density is written to : CH_DEN_G_PARA.ispin (1 or 2   
@@ -1173,8 +1175,8 @@ FORMER FPMD INPUT
 
         CHARACTER(LEN=80) :: electron_dynamics
           ! electron_dynamics = 'sd'* | 'cg' | 'damp' | 'md' | 'none' | 'diis'
-          ! set how electrons shold be moved
-          ! 'none'   electronic degrees of fredom (d.o.f.) are kept fixed
+          ! set how electrons should be moved
+          ! 'none'   electronic degrees of freedom (d.o.f.) are kept fixed
           ! 'sd'     steepest descent algorithm is used to minimize electronic d.o.f.
           ! 'cg'     conjugate gradient algorithm is used to minimize electronic d.o.f.
           ! 'diis'   DIIS algorithm is used to minimize electronic d.o.f.
@@ -1313,7 +1315,7 @@ FORMER FPMD INPUT
 
         CHARACTER(LEN=80) :: ion_dynamics
           ! ion_dynamics = 'sd' | 'cg' | 'damp' | 'verlet' | 'none'*
-          ! set how ions shold be moved
+          ! set how ions should be moved
           ! 'none'   ions are kept fixed
           ! 'sd'     steepest descent algorithm is used to minimize ionic configuration
           ! 'cg'     conjugate gradient algorithm is used to minimize ionic configuration
@@ -1410,7 +1412,7 @@ FORMER FPMD INPUT
 
         CHARACTER(LEN=80) :: cell_dynamics
           ! cell_dynamics = 'sd' | 'pr' | 'none'*
-          ! set how cell shold be moved
+          ! set how cell should be moved
           ! 'none'   cell is kept fixed
           ! 'sd'     steepest descent algorithm is used to minimize the cell
           ! 'pr'     standard Verlet algorithm is used to propagate the cell
@@ -1420,7 +1422,7 @@ FORMER FPMD INPUT
 
         CHARACTER(LEN=80) :: cell_velocities
           ! cell_velocities = 'zero' | 'default'*
-          ! 'zero'    restart setting cell velocitiy to zero
+          ! 'zero'    restart setting cell velocity to zero
           ! 'default' restart using cell velocity of the previous run
 
         REAL(dbl) :: press
@@ -1721,7 +1723,7 @@ FORMER FPMD INPUT
 
  NEIGHBOURS
 
-   calculate the neighbours of (and the disance from) each atoms below the
+   calculate the neighbours of (and the distance from) each atoms below the
    distance specified by the parameter
 
  Syntax:
@@ -1743,7 +1745,7 @@ FORMER FPMD INPUT
 
  PSTAB
 
-   calculate the pseudopotential form factor using an interpolaton table
+   calculate the pseudopotential form factor using an interpolation table
 
  Syntax:
 

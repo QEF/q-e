@@ -48,60 +48,70 @@ coming with the Quantum-ESPRESSO distribution.
 People who want to know about the methods or the physics
 behind Quantum-ESPRESSO should read the relevant literature. The
 following references are chosen for their completeness.
-\medskip
 
-\noindent
-Density-functional Theory (DFT), general:
-\begin{enumerate}
-  \item
-    \emph{Density Functional Theory of Atoms and Molecules}, 
-    R.G. Parr and W. Yang,
-    Oxford University Press, New York (1989).
-  \item
-    \emph{Density Functional Theory},
-    R.M. Dreizler and E.K.U. Gross,
-    Springer-Verlag, Berlin (1990) (more formal).
-\end{enumerate}
-Density-Functional Perturbation Theory (DFPT), phonons:
-\begin{enumerate}
-  \setcounter{enumi}{2}
-  \item
-    S. Baroni, S. de Gironcoli, A. Dal Corso, and P. Giannozzi,
-    Rev. Mod. Phys. \textbf{73}, 515--562 (2001).
-\end{enumerate}
-Plane-Wave (PW) pseudopotential (PP) method:
-\begin{enumerate}
-  \setcounter{enumi}{3}
-  \item
-    W.E. Pickett,
-    Computer Phys. Reports \textbf{9}, 115 (1989)
-    (hard to find).
-  \item
-    M.C. Payne, M.P. Teter, D.C. Allen, T.A. Arias, and
-    J.D. Joannopoulos,
-    Rev. Mod. Phys. \textbf{64}, 1045 (1992).
-\end{enumerate}
-Car-Parrinello (CP), first-principles Molecular Dynamics (MD) method:
-\begin{enumerate}
-  \setcounter{enumi}{5}
-  \item
-    D. Marx, J. Hutter,
-    in \emph{Modern Methods and Algorithms of Quantum Chemistry},
-    p.301--449,
-    John von Neumann Institute for Computing, FZ J\"ulich (2000).
-  \item
-    C. Cavazzoni, G.L. Chiarotti,
-    Computer Phys. Commun. \textbf{123}, 56 (1999).
-  \item
-    P. Giannozzi, F. de Angelis, R. Car,
-    J. Chem. Phys. \textbf{120}, 5903 (2004)
-    (\htmladdnormallink%
-     {\texttt{http://web1.sns.it/\~{}giannozz/Papers/JCP\_57.pdf}}%
-     {http://www.nest.sns.it/~giannozz/Papers/JCP_57.pdf}).
-  \item {\em Invariant molecular-dynamics approach to structural phase
-     transitions}, M. Wentzcovitch, Phys. Rev. B {\bf 44}, 2358-2361 (1991)
- % <http://prola.aps.org/abstract/PRB/v44/i5/p2358_1?qid=1333169f7de9ff4e&qseq=33&show=10>*
-\end{enumerate}
+\begin{itemize}
+\item Density-functional Theory (DFT) and Density-Functional Perturbation
+Theory (DFPT), in general: 
+\medskip \\
+\emph{Density Functional Theory of Atoms and Molecules}, 
+R.G. Parr and W. Yang,
+Oxford University Press, New York (1989).\\
+\emph{Density Functional Theory},
+R.M. Dreizler and E.K.U. Gross,
+Springer-Verlag, Berlin (1990) (more formal).\\
+\emph{Phonons and related crystal properties from density-functional
+  perturbation theory},
+S. Baroni, S. de Gironcoli, A. Dal Corso, and P. Giannozzi,
+Rev. Mod. Phys. \textbf{73}, 515--562 (2001).
+
+\item Plane-Wave (PW) pseudopotential (PP) method:
+\medskip \\
+  \emph{Pseudopotential methods in condensed matter applications},
+  W.E. Pickett,Computer Phys. Reports \textbf{9}, 115 (1989).\\
+  \emph{Iterative minization techniques for ab-initio total-energy 
+    calculations: molecular dynamics and conjugate gradient},
+  M.C. Payne, M.P. Teter, D.C. Allen, T.A. Arias, and J.D. Joannopoulos,
+  Rev. Mod. Phys. \textbf{64}, 1045 (1992).
+
+\item Car-Parrinello (CP), first-principles Molecular Dynamics (MD) method:
+\medskip \\
+  D. Marx, J. Hutter,
+  in \emph{Modern Methods and Algorithms of Quantum Chemistry},
+  p.301--449,
+  John von Neumann Institute for Computing, FZ J\"ulich (2000).\\
+  \emph{A parallel and modular deformable cell Car-Parrinello code},
+  C. Cavazzoni, G.L. Chiarotti,
+  Computer Phys. Commun. \textbf{123}, 56 (1999). \\
+  \emph{First-principle molecular dynamics with ultrasoft pseudopotentials:
+  Parallel implementation and application to extended bioinorganic systems},
+  P. Giannozzi, F. de Angelis, R. Car, J. Chem. Phys. \textbf{120}, 5903 (2004)
+  (\htmladdnormallink%
+  {\texttt{http://web1.sns.it/\~{}giannozz/Papers/JCP\_57.pdf}}%
+  {http://web1.sns.it/~giannozz/Papers/JCP_57.pdf}).
+
+\item Variable-cell MD: 
+\medskip \\
+  \emph{Invariant molecular-dynamics approach to structural phase
+    transitions}, M. Wentzcovitch, Phys. Rev. B \textbf{44}, 2358-2361 
+  (1991).\\
+   \emph{First-principle constant-pressure molecular dynamics},
+   M. Bernasconi \emph{et al.}, J. Phys. Chem. Solids \textbf{56}, 501 (1995).
+
+\item Advanced Topics: Nudged Elastic Band (NEB) and Strings Methods
+\medskip \\
+  \emph{A dimer method for finding saddle points on high dimensional 
+    potential surfaces using only first derivatives}, G. Henkelman and 
+    H. J{\'o}nsson, J. Chem. Phys. \textbf{111}, 7010 (1999).\\
+  \emph{String method for the study of rare events}, W.E \emph{et al.},
+  Phys. Rev. B \textbf{66}, 052301 (2002).\\
+  \emph{First-principles string molecular dynamics: An efficient approach
+    for finding chemical reaction pathways}, Y. Kanai \emph{et al.},
+  J. Chem. Phys. \textbf{121}, 3359 (2004).\\
+  {\em Finding transition states for crystalline solid-solid phase 
+    transformations}, K. J. Caspersen, E. A. Carter, 
+  PNAS \textbf{102}, no.19, 6738-43 (2005)
+
+\end{itemize}
 
 \subsection{How to Contribute to Quantum-ESPRESSO}
 
