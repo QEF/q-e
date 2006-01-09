@@ -136,8 +136,6 @@ SUBROUTINE dynamics()
         !
      END DO
      !
-     tau_old(:,:) = tau(:,:)
-     !
      IF ( lrescale_t ) THEN
         !
         ! ... initial thermalization. N.B. tau is in units of alat
@@ -145,6 +143,16 @@ SUBROUTINE dynamics()
         CALL start_therm()
         !
         temp_new = temperature
+        !
+        ! ... the old positions are updated to reflect the initial velocities
+        ! ... ( notice that vel is not the real velocity, but just a 
+        ! ... displacement vector )
+        !
+        tau_old(:,:) = tau(:,:) - vel(:,:)
+        !
+     ELSE
+        !
+        tau_old(:,:) = tau(:,:)
         !
      END IF
      !
