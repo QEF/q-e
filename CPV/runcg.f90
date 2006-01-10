@@ -53,7 +53,7 @@
 !  -----------------------------------------------------------------------
 !  BEGIN manual
 
-   SUBROUTINE runcg_new(tortho, tprint, rhoe, desc, atoms_0, &
+   SUBROUTINE runcg_new(tortho, tprint, rhoe, atoms_0, &
                 bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht0, occ, ei, &
                 vpot, doions, edft, maxnstep, cgthr, tconv )
 
@@ -66,7 +66,6 @@
       USE energies, ONLY: dft_energy_type, print_energies
       USE electrons_module, ONLY: pmss, eigs, nb_l
       USE cp_electronic_mass, ONLY: emass
-      USE descriptors_module, ONLY: get_local_dims, owner_of, local_index
       USE wave_functions, ONLY: cp_kinetic_energy, proj, fixwave
       USE wave_base, ONLY: dotp, hpsi
       USE wave_constrains, ONLY: update_lambda
@@ -80,7 +79,6 @@
       USE potentials, ONLY: kspotential
       USE time_step, ONLY: delt
       USE atoms_type_module, ONLY: atoms_type
-      USE charge_types, ONLY: charge_descriptor
       USE control_flags, ONLY: force_pairing
       USE environment, ONLY: start_cclock_val
       USE reciprocal_space_mesh, ONLY: gkmask_l
@@ -93,8 +91,7 @@
       TYPE (atoms_type) :: atoms_0
       COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cp(:,:,:,:)
       TYPE (wave_descriptor) :: cdesc
-      TYPE (charge_descriptor) :: desc
-      REAL(DP) :: rhoe(:,:,:,:)
+      REAL(DP) :: rhoe(:,:)
       COMPLEX(DP) :: eigr(:,:)
       COMPLEX(DP) :: ei1(:,:)
       COMPLEX(DP) :: ei2(:,:)
@@ -109,7 +106,7 @@
       REAL(DP) :: cgthr
 
       REAL(DP)    :: ei(:,:,:)
-      REAL(DP)    :: vpot(:,:,:,:)
+      REAL(DP)    :: vpot(:,:)
 
 ! ... declare other variables
       LOGICAL :: ttsde, ttprint, ttforce, ttstress, gzero
@@ -178,7 +175,7 @@
 
         s1 = cclock()
 
-        CALL kspotential( 1, ttprint, ttforce, ttstress, rhoe, desc, &
+        CALL kspotential( 1, ttprint, ttforce, ttstress, rhoe, &
           atoms_0, bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, vpot, edft, timepre )
 
         s2 = cclock()
@@ -189,7 +186,7 @@
 ! ...     |d H / dPsi_j > = H |Psi_j> - Sum{i} <Psi_i|H|Psi_j> |Psi_i>
 
           CALL dforce_all( ispin, c0(:,:,1,ispin), cdesc, occ(:,1,ispin), cp(:,:,1,ispin), &
-            vpot(:,:,:,ispin), eigr, bec )
+            vpot(:,ispin), eigr, bec )
  
 ! ...     Project the gradient
           IF( gamma_symmetry ) THEN
@@ -237,7 +234,7 @@
 
         !  perform line minimization in the direction of "hacca"
 
-        CALL CGLINMIN(emin, demin, tbad, edft, cp, c0, cdesc, occ, vpot, rhoe, desc, hacca, &
+        CALL CGLINMIN(emin, demin, tbad, edft, cp, c0, cdesc, occ, vpot, rhoe, hacca, &
           atoms_0, ht0, bec, becdr, eigr, ei1, ei2, ei3, sfac)
 
         ! CALL print_energies( edft )
@@ -323,7 +320,7 @@
         DO ispin = 1, nspin
 
           CALL dforce_all( ispin, c0(:,:,1,ispin), cdesc, occ(:,1,ispin), hacca(:,:,1,ispin), &
-            vpot(:,:,:,ispin), eigr, bec )
+            vpot(:,ispin), eigr, bec )
 
           nb_g( ispin ) = cdesc%nbt( ispin )
 
@@ -363,7 +360,7 @@
 !
 ! ---------------------------------------------------------------------- !
 
-    SUBROUTINE cglinmin(emin, ediff, tbad, edft, cp, c, cdesc, occ, vpot, rhoe, desc, hacca, &
+    SUBROUTINE cglinmin(emin, ediff, tbad, edft, cp, c, cdesc, occ, vpot, rhoe, hacca, &
         atoms, ht, bec, becdr, eigr, ei1, ei2, ei3, sfac)
 
 ! ... declare modules
@@ -376,7 +373,6 @@
         USE cell_module, ONLY: boxdimensions
         USE potentials, ONLY: kspotential
         USE atoms_type_module, ONLY: atoms_type
-        USE charge_types, ONLY: charge_descriptor
         USE reciprocal_space_mesh, ONLY: gkmask_l
         USE uspp,             ONLY : vkb, nkb
 
@@ -389,8 +385,7 @@
         COMPLEX(DP), INTENT(IN) :: c(:,:,:,:)
         COMPLEX(DP), INTENT(INOUT) :: cp(:,:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: cdesc
-        TYPE (charge_descriptor) :: desc
-        REAL(DP) :: rhoe(:,:,:,:)
+        REAL(DP) :: rhoe(:,:)
         COMPLEX(DP) :: sfac(:,:)
         COMPLEX(DP) :: eigr(:,:)
         COMPLEX(DP) :: ei1(:,:)
@@ -402,7 +397,7 @@
         REAL(DP) :: becdr(:,:,:)
         TYPE (dft_energy_type) :: edft
         COMPLEX (DP) ::  hacca(:,:,:,:)
-        REAL (DP), INTENT(in) ::  vpot(:,:,:,:)
+        REAL (DP), INTENT(in) ::  vpot(:,:)
 
 !
 ! ... LOCALS
@@ -605,7 +600,7 @@
         END DO
 
 
-        CALL kspotential( 1, ttprint, ttforce, ttstress, rhoe, desc, &
+        CALL kspotential( 1, ttprint, ttforce, ttstress, rhoe, &
             atoms, bec, becdr, eigr, ei1, ei2, ei3, sfac, cp, cdesc, tcel, ht, occ, vpot, edft, timepre )
 
         cgenergy = edft%etot

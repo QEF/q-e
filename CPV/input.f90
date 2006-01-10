@@ -320,8 +320,8 @@ MODULE input
           ! gvectors and charge density, in reciprocal space.
      !
      trhor_  = ( TRIM( calculation ) == 'nscf' )
-     trhow_  = ( TRIM( disk_io ) == 'high' )
-     tvlocw_ = .FALSE.
+     trhow_  = ( TRIM( disk_io ) == 'high' )     !  charge density now written to XML file
+     tvlocw_ = ( TRIM( disk_io ) == 'high' )     !  warning this is not working
      !
      SELECT CASE( TRIM( verbosity ) )
        CASE( 'minimal' )
@@ -1354,9 +1354,9 @@ MODULE input
 590 FORMAT( 3X,'Electron temperature control via nose thermostat')
     !
 700 FORMAT( /,3X, 'Verbosity: iprsta = ',i2,/)
-720 FORMAT(   3X, 'charge density is read from unit 47')
-721 FORMAT(   3X, 'charge density is written in unit 47')
-722 FORMAT(   3X, 'local potential is written in unit 46')
+720 FORMAT(   3X, 'charge density is read from file')
+721 FORMAT(   3X, 'warning trhow has no effect rho is now written to XML save file')
+722 FORMAT(   3X, 'warning tvlocw has no effect vloc is not written to file')
     !
   END SUBROUTINE modules_info
   !

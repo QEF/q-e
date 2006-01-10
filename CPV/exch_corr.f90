@@ -27,40 +27,31 @@
    CONTAINS
 !=----------------------------------------------------------------------------=!
 
-        SUBROUTINE v2gc(v2xc, grho, rhoer, vpot)
+        SUBROUTINE v2gc( v2xc, grho, rhoer, vpot )
 
-          USE kinds, ONLY: DP
-          USE fft
-          USE fft_base, ONLY: dfftp
-          USE cell_base, ONLY: tpiba
-          USE mp_global
+          USE kinds,              ONLY: DP
+          USE fft,                ONLY: pfwfft, pinvfft
+          USE cell_base,          ONLY: tpiba
           USE reciprocal_vectors, ONLY: gstart, gx
-          USE gvecp, ONLY: ngm
+          use grid_dimensions,    only: nnrx
+          USE gvecp,              ONLY: ngm
 !                                                                       
           implicit none
 !                                                                       
-          REAL(DP) ::  vpot(:,:,:,:)
-          REAL(DP), intent(in)  ::  v2xc(:,:,:,:,:)
-          REAL(DP), intent(in)  ::  grho(:,:,:,:,:)
-          REAL(DP), intent(in)  ::  rhoer(:,:,:,:)
+          REAL(DP) ::  vpot(:,:)
+          REAL(DP), intent(in)  ::  v2xc(:,:,:)
+          REAL(DP), intent(in)  ::  grho(:,:,:)
+          REAL(DP), intent(in)  ::  rhoer(:,:)
 !                                                                       
-          integer :: ig, ipol, nxl, nyl, nzl, i, j, k, is, js, nspin
-          integer :: ldx, ldy, ldz
-          COMPLEX(DP), allocatable ::  psi(:,:,:)
+          integer :: ig, ipol, is, js, nspin
+          COMPLEX(DP), allocatable ::  psi(:)
           COMPLEX(DP), allocatable ::  vtemp(:)
           COMPLEX(DP), allocatable ::  vtemp_pol(:)
-          REAL(DP), ALLOCATABLE :: v(:,:,:)
+          REAL(DP), ALLOCATABLE :: v(:)
           REAL(DP) :: fac
 ! ...                                                                   
-          ldx   = dfftp%nr1x
-          ldy   = dfftp%nr2x
-          ldz   = dfftp%npl
-          nxl   = MIN( dfftp%nr1, SIZE( grho, 1 ) )
-          nyl   = MIN( dfftp%nr2, SIZE( grho, 2 ) )
-          nzl   = MIN( dfftp%npl, SIZE( grho, 3 ) )
-          nspin = SIZE(rhoer,4)
+          nspin = SIZE(rhoer,2)
 
-          !fac = REAL(nspin)
           fac = 1.0d0
 
           ALLOCATE( vtemp( ngm ) )
@@ -68,20 +59,14 @@
 
           DO js = 1, nspin
             !
-            ALLOCATE( psi( ldx, ldy, ldz ) )
+            ALLOCATE( psi( nnrx ) )
             !
             vtemp = 0.0d0
 
             DO ipol = 1, 3
               DO is = 1, nspin
                 !
-                DO k = 1, nzl
-                  DO j = 1, nyl
-                    DO i = 1, nxl
-                      psi(i,j,k) = fac * v2xc(i,j,k,js,is) * grho(i,j,k,ipol,is)
-                    END DO
-                  END DO
-                END DO
+                psi( 1:nnrx ) = fac * v2xc( 1:nnrx, js, is ) * grho( 1:nnrx, ipol, is )
                 !
                 CALL pfwfft( vtemp_pol, psi )
                 !
@@ -94,17 +79,12 @@
             !
             DEALLOCATE( psi )
 
-            ALLOCATE( v( ldx, ldy, ldz ) )
+            ALLOCATE( v( nnrx ) )
+            v( 1:nnrx ) = 0.0d0
             !
             CALL pinvfft( v, vtemp )
 
-            DO k = 1, nzl
-              DO j = 1, nyl
-                DO i = 1, nxl
-                  vpot(i,j,k,js) = vpot(i,j,k,js) - v(i,j,k)
-                END DO
-              END DO
-            END DO
+            vpot( 1:nnrx, js ) = vpot( 1:nnrx, js) - v( 1:nnrx )
 
             DEALLOCATE( v )
 
@@ -120,25 +100,21 @@
 
     SUBROUTINE stress_gc(grho, v2xc, gcpail, omega)
 !
-      use grid_dimensions, only: nr1, nr2, nr3
-      USE fft_base, ONLY: dfftp
+      use grid_dimensions, only: nr1, nr2, nr3, nnrx
 
         IMPLICIT NONE
 !
-        REAL(DP) ::  v2xc(:,:,:,:,:)
-        REAL(DP) ::  grho(:,:,:,:,:)
+        REAL(DP) ::  v2xc(:,:,:)
+        REAL(DP) ::  grho(:,:,:)
         REAL(DP) ::  gcpail(6)
         REAL(DP) ::  omega
 !
         REAL(DP) :: stre, grhoi, grhoj
-        INTEGER :: i, j, k, ipol, jpol, ic, nxl, nyl, nzl, is, js, nspin
+        INTEGER :: i, ipol, jpol, ic, is, js, nspin
         INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
         INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
 ! ...
-        nxl   = MIN( dfftp%nr1, SIZE( grho, 1 ) )
-        nyl   = MIN( dfftp%nr2, SIZE( grho, 2 ) )
-        nzl   = MIN( dfftp%npl, SIZE( grho, 3 ) )
-        nspin = SIZE(grho,5)
+        nspin = SIZE(grho,3)
 
         DO ic = 1, 6
           ipol = alpha(ic)
@@ -146,12 +122,8 @@
           stre = 0.0d0
           DO is = 1, nspin
             DO js = 1, nspin
-              DO k = 1, nzl
-                DO j = 1, nyl
-                  DO i = 1, nxl
-                    stre = stre + v2xc(i,j,k,is,js) * grho(i,j,k,ipol,js) * grho(i,j,k,jpol,is)
-                  END DO
-                END DO
+              DO i = 1, nnrx
+                stre = stre + v2xc(i,is,js) * grho(i,ipol,js) * grho(i,jpol,is)
               END DO
             END DO
           END DO
@@ -184,8 +156,8 @@
       COMPLEX(DP) :: vxc(:,:)
       COMPLEX(DP), INTENT(IN) :: sfac(:,:)
       REAL(DP) :: dexc(:), strvxc
-      REAL(DP) :: grho(:,:,:,:,:)
-      REAL(DP) :: v2xc(:,:,:,:,:)
+      REAL(DP) :: grho(:,:,:)
+      REAL(DP) :: v2xc(:,:,:)
       REAL(DP) :: GAgx_L(:,:)
       REAL(DP) :: rhocp(:,:)
 
@@ -275,70 +247,44 @@
 
      SUBROUTINE exch_corr_energy(rhoetr, rhoetg, grho, vpot, sxc, vxc, v2xc)
 
-        USE kinds, ONLY: DP
-        USE grid_dimensions, ONLY: nr1l, nr2l, nr3l
+        USE kinds,           ONLY: DP
+        use grid_dimensions, only: nnrx
         USE funct, ONLY: dft_is_gradient
 
-        REAL (DP) :: rhoetr(:,:,:,:)
+        REAL (DP) :: rhoetr(:,:)
         COMPLEX(DP) :: rhoetg(:,:)
-        REAL (DP) :: grho(:,:,:,:,:)
-        REAL (DP) :: vpot(:,:,:,:)
+        REAL (DP) :: grho(:,:,:)
+        REAL (DP) :: vpot(:,:)
         REAL (DP) :: sxc              ! E_xc   energy
         REAL (DP) :: vxc              ! SUM ( v(r) * rho(r) )
-        REAL (DP) :: v2xc(:,:,:,:,:)
-        REAL (DP) :: ddot
+        REAL (DP) :: v2xc(:,:,:)
+        !
+        REAL (DP), EXTERNAL :: ddot
 
-        INTEGER :: nspin, nnr, ispin, j, k, i
-
+        INTEGER :: nspin, ispin
         logical :: is_gradient
 
         is_gradient =  dft_is_gradient()
 
-          !  vpot = vxc(rhoetr); vpot(r) <-- u(r)
 
-          nnr   = SIZE( rhoetr, 1 ) * SIZE( rhoetr, 2 ) * SIZE( rhoetr, 3 )
-          nspin = SIZE( rhoetr, 4 )
+        !  vpot = vxc(rhoetr); vpot(r) <-- u(r)
 
-          !
-          IF( nnr /= nr3l * nr2l * nr1l ) THEN
-            DO ispin = 1, nspin
-              DO k = 1, SIZE( rhoetr, 3 )
-                DO j = 1, SIZE( rhoetr, 2 )
-                  DO i = 1, SIZE( rhoetr, 1 )
-                    IF( i > nr1l .OR. j > nr2l .OR. k > nr3l ) THEN
-                      rhoetr( i, j, k,    ispin ) = 0.0d0
-                      IF( is_gradient ) THEN
-                        grho  ( i, j, k, :, ispin ) = 0.0d0
-                      END IF
-                    END IF
-                  END DO
-                END DO
-              END DO
-            END DO
-          END IF
+        nspin = SIZE( rhoetr, 2 )
+        !
+        CALL exch_corr_wrapper( nnrx, nspin, grho(1,1,1), rhoetr(1,1), sxc, vpot(1,1), v2xc(1,1,1) )
+        !
+        IF( dft_is_gradient() ) THEN
+          ! ... vpot additional term for gradient correction
+          CALL v2gc( v2xc, grho, rhoetr, vpot )
+        END If
 
-          !
-          CALL exch_corr_wrapper( nnr, nspin, grho(1,1,1,1,1), rhoetr(1,1,1,1), &
-                                  sxc, vpot(1,1,1,1), v2xc(1,1,1,1,1) )
-
-          !
-          IF( dft_is_gradient() ) THEN
-            ! ... vpot additional term for gradient correction
-            CALL v2gc( v2xc, grho, rhoetr, vpot )
-          END If
-
-          !
-          ! vxc = SUM( vpot * rhoetr )
-          !
-          vxc = 0.0d0
-          DO ispin = 1, nspin
-            DO k = 1, nr3l
-              DO j = 1, nr2l
-                vxc = vxc + &
-                DDOT ( nr1l, vpot(1,j,k,ispin), 1, rhoetr(1,j,k,ispin), 1 )
-              END DO
-            END DO
-          END DO
+        !
+        ! vxc = SUM( vpot * rhoetr )
+        !
+        vxc = 0.0d0
+        DO ispin = 1, nspin
+           vxc = vxc + DDOT ( nnrx, vpot(1,ispin), 1, rhoetr(1,ispin), 1 )
+        END DO
 
 
         RETURN

@@ -687,7 +687,7 @@
    SUBROUTINE cp_eigs( nfi, bec, c0, irb, eigrb, rhor, rhog, rhos, lambdap, lambda, tau0, h )
 
      use ensemble_dft, only: tens, ismear, z0, c0diag, becdiag
-     use electrons_base, only: nx => nbspx, n => nbsp, ispin => fspin, f, nspin
+     use electrons_base, only: nx => nbspx, n => nbsp, ispin, f, nspin
      use electrons_base, only: nel, iupdwn, nupdwn, nudx, nelt
      use energies, only: enl, ekin
      use uspp, only: rhovan => becsum

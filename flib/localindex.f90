@@ -122,3 +122,83 @@
 !     End of INDXG2L
 !
       END FUNCTION lind_block_cyclic
+
+
+!=----------------------------------------------------------------------------=!
+
+
+      INTEGER FUNCTION gind_cyclic( lind, n, np, me )
+
+!  This function computes the global index of a distributed array entry
+!  pointed to by the local index lind of the process indicated by me.
+!  lind      local index of the distributed matrix entry.
+!  N         is the size of the global array.
+!  me        The coordinate of the process whose local array row or
+!            column is to be determined.
+!  np        The total number processes over which the distributed
+!            matrix is distributed.
+!
+
+            INTEGER, INTENT(IN) :: lind, n, me, np
+            INTEGER r, q
+
+            gind_cyclic = (lind-1) * np + me + 1
+
+            RETURN
+      END FUNCTION gind_cyclic
+
+
+!=----------------------------------------------------------------------------=!
+
+
+      INTEGER FUNCTION gind_block( lind, n, np, me )
+
+!  This function computes the global index of a distributed array entry
+!  pointed to by the local index lind of the process indicated by me.
+!  lind      local index of the distributed matrix entry.
+!  N         is the size of the global array.
+!  me        The coordinate of the process whose local array row or
+!            column is to be determined.
+!  np        The total number processes over which the distributed
+!            matrix is distributed.
+
+
+            INTEGER, INTENT(IN) :: lind, n, me, np
+            INTEGER r, q
+
+              q = INT(n/np)
+              r = MOD(n,np)
+              IF( me < r ) THEN
+                gind_block = (Q+1)*me + lind
+              ELSE
+                gind_block = Q*me + R + lind
+              END IF
+
+         RETURN
+      END FUNCTION gind_block
+
+!=----------------------------------------------------------------------------=!
+
+      INTEGER FUNCTION gind_block_cyclic( lind, n, nb, np, me )
+
+!  This function computes the global index of a distributed array entry
+!  pointed to by the local index lind of the process indicated by me.
+!  lind      local index of the distributed matrix entry.
+!  N         is the size of the global array.
+!  NB        size of the blocks the distributed matrix is split into.
+!  me        The coordinate of the process whose local array row or
+!            column is to be determined.
+!  np        The total number processes over which the distributed
+!            matrix is distributed.
+
+
+            INTEGER, INTENT(IN) :: lind, n, nb, me, np
+            INTEGER r, q, isrc
+
+            isrc = 0
+            gind_block_cyclic = np*NB*((lind-1)/NB) + &
+                MOD(lind-1,NB) + MOD(np+me-isrc, np)*NB + 1
+
+         RETURN
+      END FUNCTION gind_block_cyclic
+

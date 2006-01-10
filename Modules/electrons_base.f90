@@ -31,7 +31,7 @@
 
       REAL(DP), ALLOCATABLE :: f(:)   ! occupation numbers ( at gamma )
       REAL(DP) :: qbac = 0.0d0        ! background neutralizing charge
-      INTEGER, ALLOCATABLE :: fspin(:) ! spin of each state
+      INTEGER, ALLOCATABLE :: ispin(:) ! spin of each state
 !
 !------------------------------------------------------------------------------!
   CONTAINS
@@ -113,9 +113,9 @@
       END IF
 
       ALLOCATE( f     ( nbspx ) )
-      ALLOCATE( fspin ( nbspx ) )
+      ALLOCATE( ispin ( nbspx ) )
       f     = 0.0d0
-      fspin = 0
+      ispin = 0
 
       iupdwn ( 1 ) = 1
       nel          = 0
@@ -265,7 +265,7 @@
 
       do iss = 1, nspin
          do in = iupdwn(iss), iupdwn(iss) - 1 + nupdwn(iss)
-            fspin(in) = iss
+            ispin(in) = iss
          end do
       end do
 
@@ -402,7 +402,7 @@
 
     SUBROUTINE deallocate_elct()
       IF( ALLOCATED( f ) ) DEALLOCATE( f )
-      IF( ALLOCATED( fspin ) ) DEALLOCATE( fspin )
+      IF( ALLOCATED( ispin ) ) DEALLOCATE( ispin )
       telectrons_base_initval = .FALSE.
       RETURN
     END SUBROUTINE deallocate_elct

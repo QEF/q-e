@@ -93,6 +93,8 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE mp_global,                ONLY : mp_global_start
   USE mp,                       ONLY : mp_sum
   USE fft_base,                 ONLY : dfftp
+  USE orthogonalize,            ONLY : ortho
+  USE orthogonalize_base,       ONLY : updatc, calphi
   !
 #if ! defined __NOSMD
   !
@@ -612,8 +614,8 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !     imposing the orthogonality
         !     ==========================================================
         !
-        CALL calphi( rep_el(sm_k)%cm, ngw, ema0bg,rep_el(sm_k)%bec, nkb, &
-             & vkb,rep_el(sm_k)%phi, nbsp )
+        CALL calphi( rep_el(sm_k)%cm, ngw, rep_el(sm_k)%bec, nkb, &
+             & vkb,rep_el(sm_k)%phi, nbsp, ema0bg )
         !
         !
         IF(ionode) WRITE( sm_file,*) ' out from calphi'
@@ -621,7 +623,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         IF(tortho) THEN
            CALL ortho  (eigr,rep_el(sm_k)%c0,rep_el(sm_k)%phi,rep_el(sm_k)%lambda, &
-                &                   bigr,iter,ccc(sm_k),ortho_eps,ortho_max,delt,bephi,becp)
+                &                   bigr,iter,ccc(sm_k),bephi,becp)
         ELSE
            CALL gram( vkb, rep_el(sm_k)%bec, nkb, rep_el(sm_k)%c0, ngw, nbsp )
            !
@@ -643,8 +645,9 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         ENDIF
         !
         IF(tortho) THEN
-           CALL updatc(ccc(sm_k),rep_el(sm_k)%lambda,rep_el(sm_k)%phi, &
-                & bephi,becp,rep_el(sm_k)%bec,rep_el(sm_k)%c0)
+           CALL updatc( ccc(sm_k), nbsp, rep_el(sm_k)%lambda, SIZE( rep_el(sm_k)%lambda, 1 ), &
+                        rep_el(sm_k)%phi, SIZE( rep_el(sm_k)%phi, 1 ), bephi, SIZE(bephi,1), &
+                        becp,rep_el(sm_k)%bec,rep_el(sm_k)%c0)
            !
            IF(ionode) WRITE( sm_file,*) ' out from updatc'
         ENDIF
@@ -959,7 +962,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !     calphi calculates phi
         !     the electron mass rises with g**2
         !
-        CALL calphi( rep_el(sm_k)%c0, ngw, ema0bg, rep_el(sm_k)%bec, nkb, vkb, rep_el(sm_k)%phi, nbsp )
+        CALL calphi( rep_el(sm_k)%c0, ngw, rep_el(sm_k)%bec, nkb, vkb, rep_el(sm_k)%phi, nbsp, ema0bg )
         !
         !     begin try and error loop (only one step!)
         !
@@ -1171,7 +1174,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         IF(tortho) THEN
            CALL ortho                                                     &
                 &         (eigr,rep_el(sm_k)%cm,rep_el(sm_k)%phi,rep_el(sm_k)%lambda, &
-                & bigr,iter,ccc(sm_k),ortho_eps,ortho_max,delt,bephi,becp)
+                & bigr,iter,ccc(sm_k),bephi,becp)
         ELSE
            CALL gram( vkb, rep_el(sm_k)%bec, nkb, rep_el(sm_k)%cm, ngw, nbsp )
            IF(iprsta.GT.4) CALL dotcsc(eigr,rep_el(sm_k)%cm)
@@ -1183,8 +1186,10 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         IF(iprsta.GE.3) CALL print_lambda( rep_el(sm_k)%lambda, nbsp, 9, 1.0d0 )
         !
-        IF(tortho) CALL updatc(ccc(sm_k),rep_el(sm_k)%lambda,rep_el(sm_k)%phi,bephi, &
-             & becp,rep_el(sm_k)%bec,rep_el(sm_k)%cm)
+        IF(tortho) &
+           CALL updatc( ccc(sm_k), nbsp, rep_el(sm_k)%lambda, SIZE(rep_el(sm_k)%lambda,1), &
+                        rep_el(sm_k)%phi, SIZE(rep_el(sm_k)%phi,1), bephi, SIZE(bephi,1), &
+                        becp, rep_el(sm_k)%bec, rep_el(sm_k)%cm )
         !
         CALL calbec (nvb+1,nsp,eigr,rep_el(sm_k)%cm,rep_el(sm_k)%bec)
         IF (tpre) CALL caldbec(ngw,nkb,nbsp,1,nsp,eigr,rep_el(sm_k)%cm,dbec,.true.)

@@ -9,7 +9,6 @@
 
         USE kinds, ONLY: DP
         USE parallel_types, ONLY: descriptor, processors_grid
-        USE descriptors_module, ONLY: desc_init
         IMPLICIT NONE
         PRIVATE
         SAVE

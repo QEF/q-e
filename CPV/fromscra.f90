@@ -25,7 +25,7 @@ MODULE from_scratch_module
   CONTAINS
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE from_scratch_fpmd( rhoe, desc, cm, c0, cp, ce, cdesc, edesc, &
+  SUBROUTINE from_scratch_fpmd( rhoe, cm, c0, cp, ce, cdesc, edesc, &
                                 eigr, ei1, ei2, ei3, sfac, fi, ht, atoms, &
                                 bec, becdr, vpot, edft )
     !------------------------------------------------------------------------
@@ -47,7 +47,6 @@ MODULE from_scratch_module
     USE orthogonalize,    ONLY : ortho
     USE control_flags,    ONLY : tcarpar, tfor, thdyn, tortho, tpre, tranp, &
                                  force_pairing, iprsta, tprnfor, amprp, tsde
-    USE charge_types,     ONLY : charge_descriptor
     USE time_step,        ONLY : delt
     USE runcp_module,     ONLY : runcp_ncpp
     use grid_dimensions,  only : nr1, nr2, nr3
@@ -69,15 +68,14 @@ MODULE from_scratch_module
     COMPLEX(DP),             INTENT(OUT) :: ei2(:,:)
     COMPLEX(DP),             INTENT(OUT) :: ei3(:,:)
     COMPLEX(DP),             INTENT(OUT) :: sfac(:,:)
-    REAL(DP),                INTENT(OUT) :: rhoe(:,:,:,:)
+    REAL(DP),                INTENT(OUT) :: rhoe(:,:)
     REAL(DP),                INTENT(OUT) :: bec(:,:)
     REAL(DP),                INTENT(OUT) :: becdr(:,:,:)
     REAL(DP),                INTENT(OUT) :: fi(:,:,:)
-    REAL(DP),                INTENT(OUT) :: vpot(:,:,:,:)
+    REAL(DP),                INTENT(OUT) :: vpot(:,:)
     TYPE(atoms_type)    ,    INTENT(OUT) :: atoms
     TYPE(dft_energy_type) ,  INTENT(OUT) :: edft
     TYPE(boxdimensions)  ,   INTENT(INOUT) :: ht 
-    TYPE(charge_descriptor), INTENT(IN)    :: desc
     TYPE(wave_descriptor),   INTENT(IN)    :: cdesc, edesc
     COMPLEX(DP),             INTENT(INOUT) :: cm(:,:,:,:), c0(:,:,:,:)
     COMPLEX(DP),             INTENT(INOUT) :: cp(:,:,:,:), ce(:,:,:,:)
@@ -164,9 +162,9 @@ MODULE from_scratch_module
     !
     edft%enl = nlrh_m( cm, cdesc, ttforce, atoms, fi, bec, becdr, eigr )
     !
-    CALL rhoofr( 0, cm, cdesc, fi, rhoe, desc, ht )
+    CALL rhoofr( 0, cm, cdesc, fi, rhoe, ht )
     !
-    CALL vofrhos( ttprint, ttforce, tstress, rhoe, desc, atoms, &
+    CALL vofrhos( ttprint, ttforce, tstress, rhoe, atoms, &
                   vpot, bec, cm, cdesc, fi, eigr, ei1, ei2, ei3, &
                   sfac, timepre, ht, edft )
     !
@@ -255,6 +253,8 @@ MODULE from_scratch_module
     USE runcp_module,         ONLY : runcp_uspp
     USE electrons_base,       ONLY : f, nspin
     USE phase_factors_module, ONLY : strucf
+    USE orthogonalize,        ONLY : ortho
+    USE orthogonalize_base,   ONLY : updatc, calphi
     !
     IMPLICIT NONE
     !
@@ -394,11 +394,10 @@ MODULE from_scratch_module
 !     calphi calculates phi
 !     the electron mass rises with g**2
 !
-      CALL calphi( cm, ngw, ema0bg, bec, nkb, vkb, phi, nbsp )
-
+      CALL calphi( cm, ngw, bec, nkb, vkb, phi, nbsp, ema0bg )
 
       if( tortho ) then
-         CALL ortho( eigr, c0, phi, lambda, bigr, iter, ccc, ortho_eps, ortho_max, delt, bephi, becp )
+         CALL ortho( eigr, c0(:,:,1,1), phi(:,:,1,1), lambda, bigr, iter, ccc, bephi, becp )
       else
          CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
       endif
@@ -410,8 +409,11 @@ MODULE from_scratch_module
 
       if ( tpre ) CALL nlfh( bec, dbec, lambda )
 !
-      if ( tortho ) CALL updatc( ccc, lambda, phi, bephi, becp, bec, c0 )
+      if ( tortho ) CALL updatc( ccc, nbsp, lambda, SIZE(lambda,1), phi, SIZE(phi,1), &
+                                 bephi, SIZE(bephi,1), becp, bec, c0 )
+      !
       CALL calbec ( nvb+1, nsp, eigr, c0, bec )
+
       if ( tpre ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .true. )
 
       if(iprsta.ge.3) CALL dotcsc(eigr,c0)

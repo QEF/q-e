@@ -85,7 +85,7 @@
 
 ! ... declare subroutine arguments
       REAL(DP) :: pail(:,:), desr(:), strvxc
-      REAL(DP) :: grho(:,:,:,:,:), v2xc(:,:,:,:,:)
+      REAL(DP) :: grho(:,:,:), v2xc(:,:,:)
       REAL(DP) :: bec(:,:)
       COMPLEX(DP) :: rhoeg(:,:), vxc(:,:)
       COMPLEX(DP), INTENT(IN) :: sfac(:,:)

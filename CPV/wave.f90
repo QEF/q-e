@@ -7,26 +7,10 @@
 !
 #include "f_defs.h"
 
-!  ----------------------------------------------
-!  BEGIN manual
 
 !=----------------------------------------------------------------------------=!
    MODULE wave_functions
 !=----------------------------------------------------------------------------=!
-
-!  (describe briefly what this module does...)
-!  ----------------------------------------------
-!  routines in this module:
-!  REAL(DP) FUNCTION dft_kinetic_energy(c,hg,f,nb)
-!  REAL(DP) FUNCTION cp_kinetic_energy(cp,cm,pmss,emass,delt)
-!  SUBROUTINE update_wave_functions(cm,c0,cp)
-!  SUBROUTINE crot_gamma (c0,lambda,eig)
-!  SUBROUTINE crot_kp (ik,c0,lambda,eig)
-!  SUBROUTINE proj_gamma(a,b,lambda)
-!  SUBROUTINE proj_kp(ik,a,b,lambda)
-!  ----------------------------------------------
-!  END manual
-
 
 ! ...   include modules
         USE kinds
@@ -47,202 +31,13 @@
             MODULE PROCEDURE fixwave_s, fixwave_v, fixwave_m
           END INTERFACE
 
-          PUBLIC :: dft_kinetic_energy, cp_kinetic_energy
+          PUBLIC :: cp_kinetic_energy
           PUBLIC :: update_wave_functions, wave_rand_init
-
-!  end of module-scope declarations
-!  ----------------------------------------------
 
 !=----------------------------------------------------------------------------=!
       CONTAINS
 !=----------------------------------------------------------------------------=!
 
-!  subroutines
-!  ----------------------------------------------
-!  ----------------------------------------------
-
-
-    REAL(DP) FUNCTION dft_kinetic_energy(c0, cdesc, f, xmkin)
-
-!  This function compute the Total Quanto-Mechanical Kinetic Energy of the Kohn-Sham
-!  wave function
-!  ----------------------------------------------
-
-        USE cell_base, ONLY: tpiba2
-        USE brillouin, ONLY: kpoints, kp
-        USE wave_types, ONLY: wave_descriptor
-        USE electrons_module, ONLY: pmss
-        USE control_flags, ONLY: force_pairing, gamma_only
-        USE reciprocal_space_mesh, ONLY: gkcutz_l
-        USE reciprocal_vectors,    ONLY: ggp
-
-        IMPLICIT NONE
-
-        COMPLEX(DP), INTENT(IN) :: c0(:,:,:,:)       !  wave functions coefficients
-        TYPE (wave_descriptor), INTENT(IN) :: cdesc   !  descriptor of c0
-        REAL(DP), INTENT(IN) :: f(:,:,:)             !  occupation numbers
-        REAL(DP), OPTIONAL, INTENT(INOUT) :: xmkin
-
-        INTEGER    :: ib, ik, ispin, ispin_wfc
-        REAL(DP)  :: xkin, fact, xkins, xmkins
-
-! ... end of declarations
-!  ----------------------------------------------
-
-
-      xkin = 0.d0
-
-      DO ispin = 1, cdesc%nspin
-
-        ispin_wfc = ispin
-        IF( force_pairing ) ispin_wfc = 1
-         
-        DO ik = 1, cdesc%nkl
-
-          fact = kp%weight(ik)
-          IF( cdesc%gamma ) THEN
-            fact = fact * 2.d0
-          END IF
-
-          IF( cdesc%gamma ) THEN
-             xkins = dft_kinetic_energy_s( ispin, c0(:,:,ik,ispin_wfc), cdesc, ggp, f(:,ik,ispin) )
-             IF( PRESENT( xmkin ) ) THEN
-               xmkins = dft_weighted_kinene( ispin, c0(:,:,ik,ispin_wfc), cdesc, ggp, f(:,ik,ispin) )
-             END IF
-          ELSE
-             xkins = dft_kinetic_energy_s( ispin, c0(:,:,ik,ispin_wfc), cdesc, gkcutz_l(:,ik), f(:,ik,ispin) )
-             IF( PRESENT( xmkin ) ) THEN
-               xmkins =  dft_weighted_kinene( ispin, c0(:,:,ik,ispin_wfc), cdesc, gkcutz_l(:,ik), f(:,ik,ispin) )
-             END IF
-          ENDIF
-
-          xkin  = xkin + fact * xkins
-
-          IF( PRESENT( xmkin ) ) THEN
-            xmkin = xmkin + fact * xmkins
-          END IF
-
-        END DO
-
-      END DO
-
-      dft_kinetic_energy = xkin
-
-      RETURN
-    END FUNCTION dft_kinetic_energy
-
-!=----------------------------------------------------------------------------=!
-
-
-      REAL(DP) FUNCTION dft_weighted_kinene( ispin, c, cdesc, g2, fi)
-
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
-
-        USE wave_types, ONLY: wave_descriptor
-        USE electrons_module, ONLY: pmss
-
-        COMPLEX(DP), INTENT(IN) :: c(:,:)
-        INTEGER, INTENT( IN ) :: ispin
-        TYPE (wave_descriptor), INTENT(IN) :: cdesc
-        REAL (DP), INTENT(IN) :: fi(:), g2(:)
-        INTEGER    ib, ig
-        REAL(DP)  skm, xmkin
-! ... end of declarations
-
-        xmkin = 0.0d0
-
-        IF( cdesc%nbl( ispin ) > SIZE( c, 2 ) .OR. &
-            cdesc%nbl( ispin ) > SIZE( fi )        ) &
-          CALL errore( ' dft_weighted_kinene ', ' wrong sizes ', 1 )
-        IF( cdesc%ngwl > SIZE( c, 1 ) .OR. &
-            cdesc%ngwl > SIZE( g2 )     .OR. &
-            cdesc%ngwl > SIZE( pmss )      ) &
-          CALL errore( ' dft_weighted_kinene ', ' wrong sizes ', 2 )
-
-        IF( cdesc%gamma .AND. cdesc%gzero ) THEN
-
-          DO ib = 1, cdesc%nbl( ispin )
-            skm = 0.d0
-            DO ig = 2, cdesc%ngwl
-              skm  = skm + g2(ig) * DBLE( CONJG(c(ig,ib)) * c(ig,ib) ) * pmss(ig)
-            END DO
-            skm = skm + g2(1) * DBLE( c(1,ib) )**2 * pmss(1) / 2.0d0
-            xmkin = xmkin + fi(ib) * skm * 0.5d0
-          END DO
-
-        ELSE
-
-          DO ib = 1, cdesc%nbl( ispin )
-            skm = 0.d0
-            DO ig = 1, cdesc%ngwl
-              skm  = skm + g2(ig) * DBLE( CONJG( c( ig, ib ) ) * c( ig, ib ) ) * pmss(ig)
-            END DO
-            xmkin = xmkin + fi(ib) * skm * 0.5d0
-          END DO
-
-        END IF
-
-        dft_weighted_kinene = xmkin
-
-        RETURN
-      END FUNCTION dft_weighted_kinene
-
-!=----------------------------------------------------------------------------=!
-
-      REAL(DP) FUNCTION dft_kinetic_energy_s( ispin, c, cdesc, g2, fi)
-
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
-
-        USE wave_types, ONLY: wave_descriptor
-        COMPLEX(DP), INTENT(IN) :: c(:,:)
-        INTEGER, INTENT( IN ) :: ispin
-        TYPE (wave_descriptor), INTENT(IN) :: cdesc
-        REAL (DP),  INTENT(IN) :: fi(:), g2(:)
-        INTEGER    ib, ig, igs
-        REAL(DP)  sk1, xkin
-! ... end of declarations
-
-        xkin = 0.0d0
-
-        IF( cdesc%nbl( ispin ) > SIZE( c, 2 ) .OR. &
-            cdesc%nbl( ispin ) > SIZE( fi )        ) &
-          CALL errore( ' dft_total_charge ', ' wrong sizes ', 1 )
-        IF( cdesc%ngwl > SIZE( c, 1 ) .OR. &
-            cdesc%ngwl > SIZE( g2 )      ) &
-          CALL errore( ' dft_total_charge ', ' wrong sizes ', 2 )
-
-        IF( cdesc%gamma .AND. cdesc%gzero ) THEN
-
-          DO ib = 1, cdesc%nbl( ispin )
-            sk1 = 0.d0
-            DO ig = 2, cdesc%ngwl
-              sk1 = sk1 + g2(ig) * DBLE( CONJG( c(ig,ib) ) * c(ig,ib) )
-            END DO
-            sk1  = sk1 + g2(1) * DBLE( c(1,ib) )**2 / 2.0d0
-            xkin = xkin + fi(ib) * sk1 * 0.5d0
-          END DO
-
-        ELSE
-
-          DO ib = 1, cdesc%nbl( ispin )
-            sk1 = 0.d0
-            DO ig = 1, cdesc%ngwl
-              sk1 = sk1 + g2(ig) * DBLE( CONJG( c(ig,ib) ) * c(ig,ib) )
-            END DO
-            xkin = xkin + fi(ib) * sk1 * 0.5d0
-          END DO
-
-        END IF
-
-        dft_kinetic_energy_s = xkin
-
-        RETURN
-      END FUNCTION dft_kinetic_energy_s
-
-
-!=----------------------------------------------------------------------------=!
 
    SUBROUTINE fixwave_s ( ispin, c, cdesc, kmask )
 

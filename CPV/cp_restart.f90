@@ -50,7 +50,7 @@ MODULE cp_restart
       USE gvecw,                    ONLY : ngw, ngwt, ecutw, gcutw
       USE reciprocal_vectors,       ONLY : ig_l2g, mill_l
       USE electrons_base,           ONLY : nspin, nbnd, nbsp, nelt, nel, &
-                                           nupdwn, iupdwn, f, fspin, nudx
+                                           nupdwn, iupdwn, f, nudx
       USE cell_base,                ONLY : ibrav, alat, celldm, &
                                            symm_type, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
@@ -1129,6 +1129,7 @@ MODULE cp_restart
          IF ( ( nspin_ /= nspin ) .OR. &
               ( nbnd_ /= nbnd ) .OR. ( NINT( nelec_ ) /= nelt ) ) THEN 
             !
+            attr = "electron, bands or spin do not match"
             ierr = 30
             !
             GOTO 100

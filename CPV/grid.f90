@@ -82,34 +82,26 @@
             RETURN
           END SUBROUTINE free_blacs_grid
 
-          SUBROUTINE get_blacs_grid(grid, rows, columns, debug)
+
+
+          SUBROUTINE get_blacs_grid(grid, debug)
+
             TYPE (processors_grid), INTENT(OUT) :: grid
-            INTEGER, INTENT(IN), OPTIONAL :: rows
-            INTEGER, INTENT(IN), OPTIONAL :: columns
             INTEGER, INTENT(IN), OPTIONAL :: debug
             INTEGER :: iam, nproc , nprow, npcol, context, myrow, mycol 
+
+            INTEGER :: ndims, dims(2), coor(2)
+            LOGICAL :: periods(2), reorder
+            INTEGER :: comm_cart
+            INTEGER :: ierr
 
 #if defined __SCALAPACK
             CALL BLACS_PINFO( iam, nproc  )
 #else
-            nproc  = -1
+            ndims = 2
+
 #endif
 
-            IF(.NOT.PRESENT(rows) .AND. .NOT.PRESENT(columns) ) THEN
-              CALL calculate_grid_dims(nproc , nprow, npcol)
-            ELSE IF (PRESENT(rows) .AND. .NOT.PRESENT(columns) ) THEN
-              !IF( rows .GT. nproc  ) THEN
-              !END IF 
-              nprow = rows; npcol = nproc  / rows
-            ELSE IF (.NOT.PRESENT(rows) .AND. PRESENT(columns) ) THEN
-              !IF( columns .GT. nproc  ) THEN
-              !END IF 
-              npcol = columns; nprow = nproc  / columns
-            ELSE
-              !IF( rows * columns .GT. nproc  ) THEN
-              !END IF 
-              nprow = rows; npcol = columns
-            END IF
 
 #if defined __SCALAPACK
             CALL BLACS_GET( -1, 0, context )

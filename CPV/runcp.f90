@@ -44,7 +44,6 @@
       USE mp, ONLY: mp_sum
       USE electrons_module, ONLY:  pmss, eigs, nb_l
       USE cp_electronic_mass, ONLY: emass
-      USE descriptors_module, ONLY: get_local_dims, owner_of, local_index
       USE wave_functions, ONLY : cp_kinetic_energy
       USE wave_base, ONLY: hpsi
       USE cell_module, ONLY: boxdimensions
@@ -68,7 +67,7 @@
       REAL(DP), INTENT(IN)  ::  fi(:,:,:)
       REAL(DP), INTENT(IN)  ::  bec(:,:)
       TYPE (boxdimensions), INTENT(IN)  ::  ht
-      REAL (DP) ::  vpot(:,:,:,:)
+      REAL (DP) ::  vpot(:,:)
       REAL(DP) :: ei(:,:,:)
       REAL(DP) :: timerd, timeorto
       REAL(DP) :: ekinc(:)
@@ -191,7 +190,7 @@
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       COMPLEX(DP) :: eigr(:,:)
       REAL(DP), INTENT(IN)  ::  fi(:,:,:)
-      REAL (DP) ::  vpot(:,:,:,:)
+      REAL (DP) ::  vpot(:,:)
       REAL (DP), INTENT(IN) ::  bec(:,:)
       REAL(DP), INTENT(IN) :: fccc
       LOGICAL, OPTIONAL, INTENT(IN) :: lambda, fromscra, diis, restart
@@ -255,7 +254,7 @@
 
           DO i = 1, nb, 2
 
-            CALL dforce( i, is, c0(:,:,1,is), cdesc, fi(:,1,is), c2, c3, vpot(:,:,:,is), eigr, bec )
+            CALL dforce( i, is, c0(:,:,1,is), cdesc, fi(:,1,is), c2, c3, vpot(:,is), eigr, bec )
 
             IF( tlam ) THEN
                CALL update_lambda( i, gam( :, :,is), c0(:,:,1,is), cdesc, c2 )
@@ -286,7 +285,7 @@
 
             nb = nx
 
-            CALL dforce( nx, is, c0(:,:,1,is), cdesc, fi(:,1,is), c2, c3, vpot(:,:,:,is), eigr, bec )
+            CALL dforce( nx, is, c0(:,:,1,is), cdesc, fi(:,1,is), c2, c3, vpot(:,is), eigr, bec )
 
             IF( tlam ) THEN
                CALL update_lambda( nb, gam( :, :,is), c0(:,:,1,is), cdesc, c2 )
@@ -337,7 +336,6 @@
       USE mp, ONLY: mp_sum
       USE electrons_module, ONLY: pmss, eigs, nb_l, nupdwn, nspin
       USE cp_electronic_mass, ONLY: emass
-      USE descriptors_module, ONLY: get_local_dims, owner_of, local_index
       USE wave_functions, ONLY : cp_kinetic_energy
       USE wave_base, ONLY: wave_steepest, wave_verlet
       USE wave_base, ONLY: hpsi
@@ -362,7 +360,7 @@
       COMPLEX(DP)  ::  eigr(:,:)
       REAL(DP), INTENT(INOUT) ::  fi(:,:,:)
       TYPE (boxdimensions), INTENT(IN)  ::  ht
-      REAL (DP) ::  vpot(:,:,:,:)
+      REAL (DP) ::  vpot(:,:)
       REAL(DP) :: ei(:,:,:)
       REAL(DP), INTENT(IN) :: bec(:,:)
       REAL(DP) :: timerd, timeorto
@@ -457,8 +455,8 @@
 
         DO i = 1, nb, 2
           !
-          CALL dforce( i, 2, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,:,:,1), eigr, bec )
-          CALL dforce( i, 2, c0(:,:,1,1), cdesc, fi(:,1,1), c4, c5, vpot(:,:,:,2), eigr, bec )
+          CALL dforce( i, 2, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,1), eigr, bec )
+          CALL dforce( i, 2, c0(:,:,1,1), cdesc, fi(:,1,1), c4, c5, vpot(:,2), eigr, bec )
           !
           c2 = occup(i  , ik)* (c2 + c4)
           c3 = occup(i+1, ik)* (c3 + c5)
@@ -490,8 +488,8 @@
           !
           nb = n_unp - 1
           !
-          CALL dforce( nb, 2, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,:,:,1), eigr, bec )
-          CALL dforce( nb, 2, c0(:,:,1,1), cdesc, fi(:,1,2), c4, c5, vpot(:,:,:,2), eigr, bec )
+          CALL dforce( nb, 2, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,1), eigr, bec )
+          CALL dforce( nb, 2, c0(:,:,1,1), cdesc, fi(:,1,2), c4, c5, vpot(:,2), eigr, bec )
 
           c2 = occup(nb , ik)* (c2 + c4)
 
@@ -509,7 +507,7 @@
         END IF
 
         !
-        CALL dforce( n_unp, 1, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,:,:,1), eigr, bec )
+        CALL dforce( n_unp, 1, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,1), eigr, bec )
 
         intermed  = -2.d0 * sum( c2 * conjg( c0(:, n_unp, ik, 1 ) ) )
         intermed3 = sum(c0(:,n_unp, ik, 1) * conjg( c0(:, n_unp, ik, 1)))

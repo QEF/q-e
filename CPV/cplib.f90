@@ -238,108 +238,6 @@
 !
 
 
-!-------------------------------------------------------------------------
-      SUBROUTINE calphi( c0, ngwx, ema0bg, bec, nkbx, betae, phi, n )
-!-----------------------------------------------------------------------
-!     input: c0 (orthonormal with s(r(t)), bec=<c0|beta>, betae=|beta>
-!     computes the matrix phi (with the old positions)
-!       where  |phi> = s'|c0> = |c0> + sum q_ij |i><j|c0>
-!     where s'=s(r(t))  
-!
-      USE kinds,          ONLY: DP
-      USE ions_base,      ONLY: na, nsp
-      USE io_global,      ONLY: stdout
-      USE cvan,           ONLY: ish, nvb
-      USE uspp_param,     ONLY: nh
-      USE uspp,           ONLY: nhsavb=>nkbus, qq
-      USE gvecw,          ONLY: ngw
-      USE constants,      ONLY: pi, fpi
-      USE control_flags,  ONLY: iprint, iprsta
-      USE mp,             ONLY: mp_sum
-!
-      IMPLICIT NONE
-      
-      INTEGER, INTENT(IN) :: ngwx, nkbx, n
-      COMPLEX(DP)         :: c0( ngwx, n ), phi( ngwx, n ), betae( ngwx, nkbx )
-      REAL(DP)            :: ema0bg( ngwx ), bec( nkbx, n ), emtot
-
-      ! local variables
-      !
-      INTEGER  :: is, iv, jv, ia, inl, jnl, i, j
-      REAL(DP), ALLOCATABLE :: qtemp( : , : )
-!
-      CALL start_clock( 'calphi' )
-
-      ALLOCATE( qtemp( nhsavb, n ) )
-
-      phi(:,:) = (0.d0, 0.d0)
-!
-      IF ( nvb > 0 ) THEN
-         qtemp (:,:) = 0.d0
-         DO is=1,nvb
-            DO iv=1,nh(is)
-               DO jv=1,nh(is)
-                  IF(ABS(qq(iv,jv,is)) > 1.e-5) THEN
-                     DO ia=1,na(is)
-                        inl=ish(is)+(iv-1)*na(is)+ia
-                        jnl=ish(is)+(jv-1)*na(is)+ia
-                        DO i=1,n
-                           qtemp(inl,i) = qtemp(inl,i) +                &
-     &                                    qq(iv,jv,is)*bec(jnl,i)
-                        END DO
-                     END DO
-                  ENDIF
-               END DO
-            END DO
-         END DO
-!
-         CALL MXMA                                                     &
-     &       ( betae, 1, 2*ngwx, qtemp, 1, nhsavb, phi, 1, 2*ngwx, 2*ngw, nhsavb, n )
-      END IF
-!
-      DO j=1,n
-         DO i=1,ngw
-            phi(i,j)=(phi(i,j)+c0(i,j))*ema0bg(i)
-         END DO
-      END DO
-!     =================================================================
-      IF(iprsta > 2) THEN
-         emtot=0.0d0
-         DO j=1,n
-            DO i=1,ngw
-               emtot=emtot                                              &
-     &        +2.0d0*DBLE(phi(i,j)*CONJG(c0(i,j)))*ema0bg(i)**(-2.0d0)
-            END DO
-         END DO
-         emtot=emtot/n
-
-         CALL mp_sum( emtot )
-
-         WRITE( stdout,*) 'in calphi sqrt(emtot)=',SQRT(emtot)
-         WRITE( stdout,*)
-         DO is=1,nsp
-            IF(nsp > 1) THEN
-               WRITE( stdout,'(33x,a,i4)') ' calphi: bec (is)',is
-               WRITE( stdout,'(8f9.4)')                                       &
-     &            ((bec(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,n)
-            ELSE
-               DO ia=1,na(is)
-                  WRITE( stdout,'(33x,a,i4)') ' calphi: bec (ia)',ia
-                  WRITE( stdout,'(8f9.4)')                                    &
-     &               ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,n)
-               END DO
-            END IF
-         END DO
-      ENDIF
-
-      DEALLOCATE( qtemp )
-
-      CALL stop_clock( 'calphi' )
-!
-      RETURN
-      END SUBROUTINE calphi
-
-
 
 !-----------------------------------------------------------------------
       REAL(8) FUNCTION cscnorm( bec, nkbx, cp, ngwx, i, n )
@@ -672,7 +570,7 @@
       USE uspp_param, ONLY: nhm, nh
       USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, &
             nr1sx, nr2sx, nr3sx, nnrsx
-      USE electrons_base, ONLY: n => nbsp, ispin => fspin, f, nspin
+      USE electrons_base, ONLY: n => nbsp, ispin, f, nspin
       USE constants, ONLY: pi, fpi
       USE ions_base, ONLY: nsp, na, nat
       USE gvecw, ONLY: ggp
@@ -1151,27 +1049,35 @@
 
 !
 !-----------------------------------------------------------------------
-      REAL(8) FUNCTION enkin(c)
+   FUNCTION enkin( c, ngwx, f, n )
 !-----------------------------------------------------------------------
-!
-! calculation of kinetic energy term
-!
-      USE constants, ONLY: pi, fpi
-      USE electrons_base, ONLY: nx => nbspx, n => nbsp, f
-      USE gvecw, ONLY: ngw
+      !
+      ! calculation of kinetic energy term
+      !
+      USE kinds,              ONLY: DP
+      USE constants,          ONLY: pi, fpi
+      USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
-      USE gvecw, ONLY: ggp
-      USE mp, ONLY: mp_sum
-      USE cell_base, ONLY: tpiba2
+      USE gvecw,              ONLY: ggp
+      USE mp,                 ONLY: mp_sum
+      USE mp_global,          ONLY: group
+      USE cell_base,          ONLY: tpiba2
 
       IMPLICIT NONE
-! input
-      COMPLEX(8) c(ngw,nx)
-! local
-      INTEGER ig, i
-      REAL(8) sk(n)  ! automatic array
-!
-!
+
+      REAL(DP)                :: enkin
+
+      ! input
+
+      INTEGER,     INTENT(IN) :: ngwx, n
+      COMPLEX(DP), INTENT(IN) :: c( ngwx, n )
+      REAL(DP),    INTENT(IN) :: f( n )
+      !
+      ! local
+
+      INTEGER  :: ig, i
+      REAL(DP) :: sk(n)  ! automatic array
+      !
       DO i=1,n
          sk(i)=0.0
          DO ig=gstart,ngw
@@ -1179,16 +1085,20 @@
          END DO
       END DO
 
-      CALL mp_sum( sk(1:n) )
+      CALL mp_sum( sk(1:n), group )
 
       enkin=0.0
       DO i=1,n
          enkin=enkin+f(i)*sk(i)
       END DO
-      enkin=enkin*tpiba2
+
+      ! ... reciprocal-space vectors are in units of alat/(2 pi) so a
+      ! ... multiplicative factor (2 pi/alat)**2 is required
+
+      enkin = enkin * tpiba2
 !
       RETURN
-      END FUNCTION enkin
+   END FUNCTION enkin
 !
 !
 !-----------------------------------------------------------------------
@@ -1464,7 +1374,7 @@
       USE cvan,           ONLY :nvb, ish
       USE uspp,           ONLY : nkb, nhsavb=>nkbus, qq
       USE uspp_param,     ONLY:  nh
-      USE electrons_base, ONLY: ispin => fspin
+      USE electrons_base, ONLY: ispin
       USE gvecw,          ONLY: ngw
       USE mp,             ONLY: mp_sum
       USE kinds,          ONLY: DP
@@ -2106,185 +2016,6 @@
       RETURN
       END SUBROUTINE nlfl
 
-
-!-----------------------------------------------------------------------
-      SUBROUTINE ortho                                                  &
-     &      (eigr,cp,phi,x0,diff,iter,ccc,eps,max,delt,bephi,becp)
-!-----------------------------------------------------------------------
-!     input = cp (non-orthonormal), beta
-!     input = phi |phi>=s'|c0>
-!     output= cp (orthonormal with s( r(t+dt) ) )
-!     output= bephi, becp
-!     the method used is similar to the version in les houches 1988
-!     'simple molecular systems at..'  p. 462-463  (18-22)
-!      xcx + b x + b^t x^t + a = 1
-!     where c = <s'c0|s|s'c0>   b = <s'c0|s cp>   a = <cp|s|cp>
-!     where s=s(r(t+dt)) and s'=s(r(t))  
-!     for vanderbilt pseudo pot - kl & ap
-!
-      USE ions_base, ONLY: na, nat
-      USE cvan, ONLY: ish, nvb
-      USE uspp, ONLY : nkb, qq
-      USE uspp_param, ONLY: nh
-      USE electrons_base, ONLY: n => nbsp, nbspx, nudx, nspin, nupdwn, iupdwn, f
-      USE gvecw, ONLY: ngw
-      USE control_flags, ONLY: iprint, iprsta
-      USE io_global, ONLY: stdout
-      USE orthogonalize_base, ONLY: ortho_iterate, diagonalize_rho, sigset, rhoset, &
-                                    tauset
-!
-      IMPLICIT NONE
-!
-      COMPLEX(8)   cp(ngw,n), phi(ngw,n), eigr(ngw,nat)
-      REAL(8) x0( nbspx, nbspx ), diff, ccc, eps, delt
-      INTEGER iter, max
-      REAL(8) bephi(nkb,n), becp(nkb,n)
-!
-      REAL(8), ALLOCATABLE :: diag(:), work1(:), work2(:), xloc(:,:), &
-                                   rhos(:,:), rhor(:,:), u(:,:), &
-                                   sig(:,:), rho(:,:), tau(:,:)
-
-      INTEGER :: ngwx, nkbx
-
-      INTEGER istart, nss, ifail, i, j, iss, iv, jv, ia, is, inl, jnl
-      REAL(8), ALLOCATABLE:: qbephi(:,:), qbecp(:,:)
-
-      ALLOCATE( diag( nudx ), work1( nudx ), work2( nudx ), xloc( nudx, nudx ),  &
-                rhos( nudx, nudx ), rhor( nudx, nudx ), u( nudx, nudx ),         &
-                sig( nudx, nudx ), rho( nudx, nudx ), tau( nudx, nudx ) )
-
-      ngwx = ngw
-      nkbx = nkb
-      !
-      !     calculation of becp and bephi
-      !
-      CALL start_clock( 'ortho' )
-
-      CALL nlsm1( n, 1, nvb, eigr,  cp,  becp )
-      CALL nlsm1( n, 1, nvb, eigr, phi, bephi )
-      !
-      !     calculation of qbephi and qbecp
-      !
-      ALLOCATE( qbephi( nkbx, n ) )
-      ALLOCATE( qbecp ( nkbx, n ) )
-      !
-      qbephi = 0.d0
-      qbecp  = 0.d0
-!
-      DO is=1,nvb
-         DO iv=1,nh(is)
-            DO jv=1,nh(is)
-               IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN
-                  DO ia=1,na(is)
-                     inl=ish(is)+(iv-1)*na(is)+ia
-                     jnl=ish(is)+(jv-1)*na(is)+ia
-                     DO i=1,n
-                        qbephi(inl,i)= qbephi(inl,i)                    &
-     &                       +qq(iv,jv,is)*bephi(jnl,i)
-                        qbecp (inl,i)=qbecp (inl,i)                     &
-     &                       +qq(iv,jv,is)*becp (jnl,i)
-                     END DO
-                  END DO
-               ENDIF
-            END DO
-         END DO
-      END DO
-!
-      DO iss = 1, nspin
-
-         nss    = nupdwn(iss)
-         istart = iupdwn(iss)
-
-         !
-         !     rho = <s'c0|s|cp>
-         !     sig = 1-<cp|s|cp>
-         !     tau = <s'c0|s|s'c0>
-         !
-         CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, rho, nudx )
-         !
-         CALL sigset( cp, ngwx, becp, nkbx, qbecp, n, nss, istart, sig, nudx )
-         !
-         CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, tau, nudx )
-         !
-!
-         IF(iprsta.GT.4) THEN
-            WRITE( stdout,*)
-            WRITE( stdout,'(26x,a)') '    rho '
-            DO i=1,nss
-               WRITE( stdout,'(7f11.6)') (rho(i,j),j=1,nss)
-            END DO
-            WRITE( stdout,*)
-            WRITE( stdout,'(26x,a)') '    sig '
-            DO i=1,nss
-               WRITE( stdout,'(7f11.6)') (sig(i,j),j=1,nss)
-            END DO
-            WRITE( stdout,*)
-            WRITE( stdout,'(26x,a)') '    tau '
-            DO i=1,nss
-               WRITE( stdout,'(7f11.6)') (tau(i,j),j=1,nss)
-            END DO
-         ENDIF
-!
-!
-!----------------------------------------------------------------by ap--
-! 
-         DO j=1,nss
-            DO i=1,nss
-               xloc(i,j) = x0(istart-1+i,istart-1+j)*ccc
-               rhos(i,j)=0.5d0*( rho(i,j)+rho(j,i) )
-!
-! on some machines (IBM RS/6000 for instance) the following test allows
-! to distinguish between Numbers and Sodium Nitride (NaN, Not a Number).
-! If a matrix of Not-Numbers is passed to rs, the most likely outcome is
-! that the program goes on forever doing nothing and writing nothing.
-!
-               IF (rhos(i,j).NE.rhos(i,j))                                &
-     &             CALL errore('ortho','ortho went bananas',1)
-               rhor(i,j)=rho(i,j)-rhos(i,j)
-            END DO
-         END DO
-!     
-         ifail=0
-         CALL start_clock( 'rsg' )
-         CALL diagonalize_rho( nss, rhos, diag, u )
-         ! CALL rs(nudx,nss,rhos,diag,1,u,work1,work2,ifail) 
-         CALL stop_clock( 'rsg' )
-!
-!                calculation of lagranges multipliers
-!
-         CALL ortho_iterate( u, diag, xloc, sig, rhor, rhos, tau, nudx, nss, max, eps )
-
-         IF(iprsta.GT.4) THEN
-            WRITE( stdout,*)
-            WRITE( stdout,'(26x,a)') '    lambda '
-            DO i=1,nss
-               WRITE( stdout,'(7f11.6)') (xloc(i,j)/f(i+istart-1),j=1,nss)
-            END DO
-         ENDIF
-!     
-         IF(iprsta.GT.2) THEN
-            WRITE( stdout,*) ' diff= ',diff,' iter= ',iter
-         ENDIF
-!     
-!     lagrange multipliers
-!
-         DO i=1,nss
-            DO j=1,nss
-               x0(istart-1+i,istart-1+j)=xloc(i,j)/ccc
-               IF (xloc(i,j).NE.xloc(i,j))                                &
-     &             CALL errore('ortho','ortho went bananas',2)
-            END DO
-         END DO
-!
-      END DO
-!
-      DEALLOCATE(qbecp )
-      DEALLOCATE(qbephi)
-      DEALLOCATE( diag, work1, work2, xloc, rhos, rhor, u, sig, rho, tau )
-!
-      CALL stop_clock( 'ortho' )
-      RETURN
-      END SUBROUTINE ortho
 !
 !-----------------------------------------------------------------------
       SUBROUTINE pbc(rin,a1,a2,a3,ainv,rout)
@@ -2624,6 +2355,7 @@
 !
       RETURN
       END SUBROUTINE rdiag
+
 !-----------------------------------------------------------------------
    SUBROUTINE rhoofr (nfi,c,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
 !-----------------------------------------------------------------------
@@ -2638,101 +2370,108 @@
 !
 !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
 !
-      USE kinds, ONLY: dp
-      USE control_flags, ONLY: iprint, tbuff, iprsta, thdyn, tpre, trhor
-      USE ions_base, ONLY: nat, nas => nax, nsp
-      USE parameters, ONLY: natx, nsx
-      USE gvecp, ONLY: ng => ngm
-      USE gvecs
-      USE gvecb, ONLY: ngb
-      USE gvecw, ONLY: ngw
+      USE kinds,              ONLY: DP
+      USE control_flags,      ONLY: iprint, tbuff, iprsta, thdyn, tpre, trhor
+      USE ions_base,          ONLY: nat
+      USE gvecp,              ONLY: ngm
+      USE gvecs,              ONLY: ngs, nps, nms
+      USE gvecb,              ONLY: ngb
+      USE gvecw,              ONLY: ngw
+      USE recvecs_indexes,    ONLY: np, nm
       USE reciprocal_vectors, ONLY: gstart
-      USE recvecs_indexes, ONLY: np, nm
-      USE uspp, ONLY: nhsa => nkb
-      USE uspp_param, ONLY: nh, nhm
-      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
-            nr1x, nr2x, nr3x, nnr => nnrx
-      USE cell_base, ONLY: omega
+      USE uspp,               ONLY: nkb
+      USE uspp_param,         ONLY: nh, nhm
+      USE grid_dimensions,    ONLY: nr1, nr2, nr3, &
+                                    nr1x, nr2x, nr3x, nnrx
+      USE cell_base,          ONLY: omega
       USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, &
-            nr1sx, nr2sx, nr3sx, nnrsx
-      USE electrons_base, ONLY: nx => nbspx, n => nbsp, f, ispin => fspin, nspin
-      USE constants, ONLY: pi, fpi
-      USE mp, ONLY: mp_sum
-      ! use local_pseudo
-!
-      USE cdvan
-      USE dener
-      USE io_global, ONLY: stdout
-      USE funct, ONLY: dft_is_meta
-      USE cg_module, ONLY : tcg
+                                        nr1sx, nr2sx, nr3sx, nnrsx
+      USE electrons_base,     ONLY: nx => nbspx, n => nbsp, f, ispin, nspin
+      USE constants,          ONLY: pi, fpi
+      USE mp,                 ONLY: mp_sum
+      USE dener,              ONLY: denl, dekin
+      USE io_global,          ONLY: stdout
+      USE funct,              ONLY: dft_is_meta
+      USE cg_module,          ONLY: tcg
+      USE cp_main_variables,  ONLY: rhopr
 !
       IMPLICIT NONE
-      REAL(8) bec(nhsa,n), rhovan(nhm*(nhm+1)/2,nat,nspin)
-      REAL(8) rhor(nnr,nspin), rhos(nnrsx,nspin)
-      REAL(8) enl, ekin
-      COMPLEX(8) eigrb(ngb,nat), c(ngw,nx), rhog(ng,nspin)
-      INTEGER irb(3,nat), nfi
+      REAL(DP) bec(nkb,n), rhovan( nhm * ( nhm + 1 ) / 2, nat, nspin )
+      REAL(DP) rhor(nnrx,nspin), rhos(nnrsx,nspin)
+      REAL(DP) enl, ekin
+      COMPLEX(DP) eigrb( ngb, nat ), c( ngw, nx ), rhog( ngm, nspin )
+      INTEGER irb( 3, nat ), nfi
+      
+
 ! local variables
+
       INTEGER iss, isup, isdw, iss1, iss2, ios, i, ir, ig
-      REAL(8) rsumr(2), rsumg(2), sa1, sa2
-      REAL(8) rnegsum, rmin, rmax, rsum
-      REAL(8), EXTERNAL :: enkin, ennl
-      COMPLEX(8) ci,fp,fm
-      COMPLEX(8), ALLOCATABLE :: psi(:), psis(:)
-!
-!
+      REAL(DP) rsumr(2), rsumg(2), sa1, sa2
+      REAL(DP) rnegsum, rmin, rmax, rsum
+      REAL(DP), EXTERNAL :: enkin, ennl
+      COMPLEX(DP) ci,fp,fm
+      COMPLEX(DP), ALLOCATABLE :: psi(:), psis(:)
+      LOGICAL, SAVE :: first = .TRUE.
+      
+      !
+
       CALL start_clock( 'rhoofr' )
-      ALLOCATE( psi( nnr ) ) 
+
+      ALLOCATE( psi( nnrx ) ) 
       ALLOCATE( psis( nnrsx ) ) 
+
       ci=(0.0,1.0)
+
       DO iss=1,nspin
          rhor(:,iss) = 0.d0
          rhos(:,iss) = 0.d0
          rhog(:,iss) = (0.d0, 0.d0)
       END DO
-!
-!     ==================================================================
-!     calculation of kinetic energy ekin
-!     ==================================================================
-      ekin=enkin(c)
-      IF(tpre) CALL denkin(c,dekin)
-!
-!     ==================================================================
-!     calculation of non-local energy
-!     ==================================================================
-      enl=ennl(rhovan, bec)
-      IF(tpre) CALL dennl(bec,denl)
-!    
-!    warning! trhor and thdyn are not compatible yet!   
-!
-      IF(trhor.AND.(.NOT.thdyn))THEN
-!     ==================================================================
-!     charge density is read from unit 47
-!     ==================================================================
-#ifdef __PARA
-         CALL read_rho(47,nspin,rhor)
-#else
-         READ(47) ((rhor(ir,iss),ir=1,nnr),iss=1,nspin)
-#endif
-         REWIND 47
+      !
+      !  calculation of kinetic energy ekin
+      !
+      ekin = enkin( c, ngw, f, n )
+      !
+      IF( tpre ) CALL denkin( c, dekin )
+      !
+      !     calculation of non-local energy
+      !
+      enl = ennl( rhovan, bec )
+      !
+      IF( tpre ) CALL dennl( bec, denl )
+      !    
+      !    warning! trhor and thdyn are not compatible yet!   
+      !
+      IF( trhor .AND. ( .NOT. thdyn ) ) THEN
+         !
+         !   non self-consistent calculation  
+         !   charge density is read from unit 47
+         !
+         IF( first ) THEN
+            CALL read_rho( 47, nspin, rhor )
+            rhopr = rhor
+            first = .FALSE.
+         ELSE
+            rhor = rhopr
+         END IF
 !
          IF(nspin.EQ.1)THEN
             iss=1
-            DO ir=1,nnr
+            DO ir=1,nnrx
                psi(ir)=CMPLX(rhor(ir,iss),0.d0)
             END DO
             CALL fwfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-            DO ig=1,ng
+            DO ig=1,ngm
                rhog(ig,iss)=psi(np(ig))
             END DO
          ELSE
             isup=1
             isdw=2
-            DO ir=1,nnr
+            DO ir=1,nnrx
                psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
             END DO
             CALL fwfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-            DO ig=1,ng
+            DO ig=1,ngm
                fp=psi(np(ig))+psi(nm(ig))
                fm=psi(np(ig))-psi(nm(ig))
                rhog(ig,isup)=0.5*CMPLX( DBLE(fp),AIMAG(fm))
@@ -2836,7 +2575,7 @@
                psi(np(ig))=      rhog(ig,iss)
             END DO
             CALL invfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-            DO ir=1,nnr
+            DO ir=1,nnrx
                rhor(ir,iss)=DBLE(psi(ir))
             END DO
          ELSE 
@@ -2851,7 +2590,7 @@
                psi(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
             END DO
             CALL invfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-            DO ir=1,nnr
+            DO ir=1,nnrx
                rhor(ir,isup)= DBLE(psi(ir))
                rhor(ir,isdw)=AIMAG(psi(ir))
             END DO
@@ -2898,7 +2637,7 @@
 !
 !
       IF(iprsta.GE.2) THEN
-         CALL checkrho(nnr,nspin,rhor,rmin,rmax,rsum,rnegsum)
+         CALL checkrho(nnrx,nspin,rhor,rmin,rmax,rsum,rnegsum)
          rnegsum=rnegsum*omega/DBLE(nr1*nr2*nr3)
          rsum=rsum*omega/DBLE(nr1*nr2*nr3)
          WRITE( stdout,'(a,4(1x,f12.6))')                                     &
@@ -3441,100 +3180,6 @@
       END SUBROUTINE spinsq
 
 !
-!-------------------------------------------------------------------------
-      SUBROUTINE updatc(ccc,x0,phi,bephi,becp,bec,cp)
-!-----------------------------------------------------------------------
-!     input ccc : dt**2/emass (unchanged in output)
-!     input x0  : converged lambdas from ortho-loop (unchanged in output)
-!     input cp  : non-orthonormal cp=c0+dh/dc*ccc
-!     input bec : <cp|beta_i>
-!     input phi 
-!     output cp : orthonormal cp=cp+lambda*phi
-!     output bec: bec=becp+lambda*bephi
-!
-      USE ions_base, ONLY: nsp, na
-      USE io_global, ONLY: stdout
-      USE cvan, ONLY: nvb, ish
-      USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus
-      USE uspp_param, ONLY: nh
-      USE gvecw, ONLY: ngw
-      USE electrons_base, ONLY: nx => nbspx, n => nbsp
-      USE control_flags, ONLY: iprint, iprsta
-!
-      IMPLICIT NONE
-!
-      COMPLEX(8) cp(ngw,n), phi(ngw,n)
-      REAL(8)   bec(nhsa,n), x0(nx,nx), ccc
-      REAL(8)   bephi(nhsa,n), becp(nhsa,n)
-! local variables
-      INTEGER i, j, ig, is, iv, ia, inl
-      REAL(8) wtemp(n,nhsa) ! automatic array
-      COMPLEX(8), ALLOCATABLE :: wrk2(:,:)
-!
-!     lagrange multipliers
-!
-      CALL start_clock( 'updatc' )
-      
-      ALLOCATE( wrk2( ngw, n ) )
-
-      wrk2 = (0.d0, 0.d0)
-      DO j=1,n
-         CALL DSCAL(n,ccc,x0(1,j),1)
-      END DO
-!
-!     wrk2 = sum_m lambda_nm s(r(t+dt))|m>
-!
-      CALL MXMA(phi,1,2*ngw,x0,nx,1,wrk2,1,2*ngw,2*ngw,n,n)
-!
-      DO i=1,n
-         DO ig=1,ngw
-            cp(ig,i)=cp(ig,i)+wrk2(ig,i)
-         END DO
-      END DO
-!    
-!     updating of the <beta|c(n,g)>
-!
-!     bec of vanderbilt species are updated 
-!
-      IF(nvb.GT.0)THEN
-         CALL MXMA(x0,1,nx,bephi,nhsa,1,wtemp,1,n,n,n,nhsavb)
-!
-         DO i=1,n
-            DO inl=1,nhsavb
-               bec(inl,i)=wtemp(i,inl)+becp(inl,i)
-            END DO
-         END DO
-      ENDIF
-!
-      IF (iprsta.GT.2) THEN
-         WRITE( stdout,*)
-         DO is=1,nsp
-            IF(nsp.GT.1) THEN
-               WRITE( stdout,'(33x,a,i4)') ' updatc: bec (is)',is
-               WRITE( stdout,'(8f9.4)')                                       &
-     &            ((bec(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,n)
-            ELSE
-               DO ia=1,na(is)
-                  WRITE( stdout,'(33x,a,i4)') ' updatc: bec (ia)',ia
-                  WRITE( stdout,'(8f9.4)')                                    &
-     &            ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,n)
-               END DO
-            END IF
-            WRITE( stdout,*)
-         END DO
-      ENDIF
-!
-      DO j=1,n
-         CALL DSCAL(n,1.0/ccc,x0(1,j),1)
-      END DO
-
-      DEALLOCATE( wrk2 )
-!
-      CALL stop_clock( 'updatc' )
-!
-      RETURN
-      END SUBROUTINE updatc
-!
 !-----------------------------------------------------------------------
       SUBROUTINE vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,           &
      &     ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
@@ -3551,7 +3196,7 @@
 !     rhos output: total potential on smooth real space grid
 !
       USE kinds, ONLY: dp
-      USE control_flags, ONLY: iprint, tvlocw, iprsta, thdyn, tpre, tfor, tprnfor
+      USE control_flags, ONLY: iprint, iprsta, thdyn, tpre, tfor, tprnfor
       USE io_global, ONLY: stdout
       USE parameters, ONLY: natx, nsx
       USE ions_base, ONLY: nas => nax, nsp, na, nat
@@ -3841,14 +3486,6 @@
 !
       etot=ekin+eht+epseu+enl+exc+ebac
       IF(tpre) detot=dekin+dh+dps+denl+dxc+dsr
-!
-      IF(tvlocw.AND.tlast)THEN
-#ifdef __PARA
-         CALL write_rho(46,nspin,rhor)
-#else
-         WRITE(46) ((rhor(ir,iss),ir=1,nnr),iss=1,nspin)
-#endif
-      ENDIF
 !
       DEALLOCATE(rhotmp)
       DEALLOCATE(vtemp)

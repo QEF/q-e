@@ -18,9 +18,8 @@
 !=----------------------------------------------------------------------------=!
 
         USE kinds
-        USE parallel_types, ONLY: processors_grid, descriptor, BLOCK_PARTITION_SHAPE
+        USE parallel_types, ONLY: processors_grid, descriptor, BLOCK_PARTITION_DIST
         USE processors_grid_module, ONLY: grid_init, get_grid_info, calculate_grid_dims
-        USE descriptors_module, ONLY: desc_init, get_local_dims
         USE grid_dimensions, ONLY: nr1,  nr2,  nr3, nr1x, nr2x, nr3x
         USE grid_dimensions, ONLY: nr1l, nr2l, nr3l, nnrx
         USE smooth_grid_dimensions, ONLY: nr1s,  nr2s,  nr3s, nr1sx, nr2sx, nr3sx

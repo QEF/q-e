@@ -48,7 +48,6 @@ infog1l.o \
 infog2l.o \
 localdim.o \
 localindex.o \
-matmul.o \
 npreroc.o \
 numroc.o \
 ownerof.o \

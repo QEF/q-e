@@ -1614,7 +1614,8 @@ SUBROUTINE a2Fdos &
   !
   INTEGER, INTENT(in) :: nat, nq, nr1, nr2, nr3, ibrav, ndos, ntetra, &
        tetra(4, ntetra)
-  LOGICAL, INTENT(in) :: dos, asr
+  LOGICAL, INTENT(in) :: dos
+  CHARACTER(LEN=*), INTENT(IN) :: asr
   REAL(DP), INTENT(in) :: freq(3*nat,nq), q(3,nq), at(3,3), bg(3,3), &
        tau(3,nat), alat, Emin, DeltaE
   !
@@ -1664,7 +1665,7 @@ SUBROUTINE a2Fdos &
      filea2F = 60 + isig 
      CALL readfg ( filea2F, nr1, nr2, nr3, nat, frcg )
      !
-     if (asr /= 'no') then
+     if ( asr /= 'no') then
         CALL set_asr (asr, nr1, nr2, nr3, frcg, zeu, nat_blk, ibrav, tau_blk)
      endif
      !

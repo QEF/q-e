@@ -337,7 +337,7 @@
       use cvan,           only : ish
       use uspp_param,     only : nhm, nh
       use uspp,           only : nkb, dvan
-      use electrons_base, only : n => nbsp, nspin, ispin => fspin, f
+      use electrons_base, only : n => nbsp, nspin, ispin, f
       use ions_base,      only : nsp, nat, na
       !
       implicit none
@@ -400,7 +400,7 @@
       use uspp_param,     only : nhm, nh
       use cvan,           only : ish, nvb
       use ions_base,      only : nax, nat, nsp, na
-      use electrons_base, only : n => nbsp, ispin => fspin, f
+      use electrons_base, only : n => nbsp, ispin, f
       use gvecw,          only : ngw
 !
       implicit none
@@ -641,7 +641,7 @@ subroutine dennl( bec, denl )
   use cdvan,      ONLY : drhovan, dbec
   use ions_base,  only : nsp, na
   !
-  use electrons_base,     only : n => nbsp, ispin => fspin, f, nspin
+  use electrons_base,     only : n => nbsp, ispin, f, nspin
   use reciprocal_vectors, only : gstart
 
   implicit none
@@ -710,7 +710,7 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   use uspp_param,     only : nhm, nh
   use cvan,           only : ish, nvb
   use ions_base,      only : nax, nat, nsp, na
-  use electrons_base, only : n => nbsp, ispin => fspin, f
+  use electrons_base, only : n => nbsp, ispin, f
   use gvecw,          only : ngw
   use constants,      only : pi, fpi
   !

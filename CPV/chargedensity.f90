@@ -32,7 +32,7 @@
 !  end of module-scope declarations
 !  ----------------------------------------------
 
-        PUBLIC :: checkrho, rhoofr, gradrho
+        PUBLIC :: rhoofr, gradrho
 
 !=----------------------------------------------------------------------=!
       CONTAINS
@@ -44,73 +44,6 @@
           RETURN
         END SUBROUTINE charge_density_closeup
 !
-!=----------------------------------------------------------------------=!
-    SUBROUTINE checkrho(rhoe, desc, rsum, omega)
-!=----------------------------------------------------------------------=!
-
-!     This Subroutine checks the value of the charge density integral
-!     that should be equal to the total charge 
-
-      USE constants, ONLY: rhothr
-      USE mp_global, ONLY: group, root, mpime
-      USE io_global, ONLY: ionode, stdout
-      USE mp, ONLY: mp_sum
-      USE charge_types, ONLY: charge_descriptor
-
-
-        IMPLICIT NONE
-
-        REAL(DP), INTENT(IN) :: omega 
-        REAL(DP) :: rsum(:)
-        REAL(DP), INTENT(IN) :: rhoe(:,:,:,:)
-        TYPE (charge_descriptor), INTENT(IN) :: desc
-        REAL(DP) :: rsum1
-        INTEGER :: i, j, k, ispin, nspin, nr1, nr2, nr3, ierr
-        INTEGER :: nxl, nyl, nzl
-
-        nr1 = desc%nx
-        nr2 = desc%ny
-        nr3 = desc%nz
-        nxl = desc%nxl
-        nyl = desc%nyl
-        nzl = desc%nzl
-        nspin  = desc%nspin
-
-! ...   recompute the integral of the charge density (for checking purpose)
-
-        DO ispin = 1, nspin
-
-          rsum1 = SUM( rhoe( 1:nxl, 1:nyl, 1:nzl, ispin ) )
-          rsum1 = rsum1 * omega / DBLE( nr1 * nr2 * nr3  )
-
-! ...     sum over all processors
-
-          CALL mp_sum( rsum1, group )
-          CALL mp_sum( rsum(ispin), group )
-
-! ...     write result (only processor 0)
-
-          IF( ionode ) THEN
-
-            WRITE( stdout,1) rsum(ispin), rsum1
-
-! ...       issue a warning if the result has changed
-
-            IF( ABS( rsum(ispin) - rsum1 ) > rhothr ) WRITE( stdout,100)
-
-          END IF
-
-        END DO
-
-    1 FORMAT(//,3X,'Total integrated electronic density',/ &
-     &         ,3X,'in G-space =',F11.6,4X,'in R-space =',F11.6)
-  100 FORMAT('** WARNING: CHARGE DENSITY **')
-
-        RETURN
-!=----------------------------------------------------------------------=!
-      END SUBROUTINE checkrho
-!=----------------------------------------------------------------------=!
-
 
       REAL(DP) FUNCTION dft_total_charge( ispin, c, cdesc, fi )
 
@@ -166,7 +99,7 @@
 !=----------------------------------------------------------------------=!
 !  BEGIN manual
 
-   SUBROUTINE rhoofr (nfi, c0, cdesc, fi, rhoe, desc, box)
+   SUBROUTINE rhoofr (nfi, c0, cdesc, fi, rhoe, box)
 
 !  this routine computes:
 !  rhoe = normalized electron density in real space
@@ -191,18 +124,19 @@
 
 ! ... declare modules
 
-    USE fft, ONLY: pw_invfft
-    USE fft_base, ONLY: dfftp
-    USE mp_global, ONLY: mpime
-    USE mp, ONLY: mp_sum
-    USE turbo, ONLY: tturbo, nturbo, turbo_states, allocate_turbo
-    USE cell_module, ONLY: boxdimensions
-    USE wave_types, ONLY: wave_descriptor
-    USE charge_types, ONLY: charge_descriptor
-    USE io_global, ONLY: stdout, ionode
-    USE control_flags, ONLY: force_pairing, iprint
-    USE parameters, ONLY: nspinx
-    USE brillouin, ONLY: kpoints, kp
+    USE fft,             ONLY: pw_invfft
+    USE fft_base,        ONLY: dfftp
+    USE mp_global,       ONLY: mpime
+    USE mp,              ONLY: mp_sum
+    USE turbo,           ONLY: tturbo, nturbo, turbo_states, allocate_turbo
+    USE cell_module,     ONLY: boxdimensions
+    USE wave_types,      ONLY: wave_descriptor
+    USE io_global,       ONLY: stdout, ionode
+    USE control_flags,   ONLY: force_pairing, iprint
+    USE parameters,      ONLY: nspinx
+    USE brillouin,       ONLY: kpoints, kp
+    USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nnrx
+
 
 
     IMPLICIT NONE
@@ -213,32 +147,23 @@
     COMPLEX(DP)                     :: c0(:,:,:,:)
     TYPE (boxdimensions), INTENT(IN) :: box
     REAL(DP),          INTENT(IN) :: fi(:,:,:)
-    REAL(DP),            INTENT(OUT) :: rhoe(:,:,:,:)
-    TYPE (charge_descriptor),    INTENT(IN) :: desc
+    REAL(DP),            INTENT(OUT) :: rhoe(:,:)
     TYPE (wave_descriptor), INTENT(IN) :: cdesc
 
 ! ... declare other variables
 
-    INTEGER :: i, is1, is2, j, k, ib, ik, nb, nxl, nyl, nzl, ispin
-    INTEGER :: nr1x, nr2x, nr3x, nspin, nbnd, nnr
+    INTEGER :: i, is1, is2, j, k, ib, ik, nb, ispin
+    INTEGER :: nspin, nbnd, nnr
     REAL(DP)  :: r2, r1, coef3, coef4, omega, rsumg( nspinx ), rsumgs
     REAL(DP)  :: fact, rsumr( nspinx )
-    REAL(DP), ALLOCATABLE :: rho(:,:,:)
-    COMPLEX(DP), ALLOCATABLE :: psi2(:,:,:)
+    COMPLEX(DP), ALLOCATABLE :: psi2(:)
     INTEGER :: ierr, ispin_wfc
     LOGICAL :: ttprint
 
 ! ... end of declarations
 !  ----------------------------------------------
 
-    nxl =  dfftp%nr1
-    nyl =  dfftp%nr2
-    nzl =  dfftp%npl
-    nnr =  dfftp%nr1 * dfftp%nr2 * dfftp%nr3
-
-    nr1x = dfftp%nr1x
-    nr2x = dfftp%nr2x
-    nr3x = dfftp%npl
+    nnr   =  dfftp%nr1x * dfftp%nr2x * dfftp%npl
 
     omega = box%deth
 
@@ -250,28 +175,19 @@
     ttprint = .FALSE.
     IF( nfi == 0 .or. mod( nfi, iprint ) == 0 ) ttprint = .TRUE.
 
-    ! ... Check consistensy of the charge density grid and fft grid
-
-    IF( SIZE( rhoe, 1 ) < nxl ) &
-      CALL errore(' rhoofr ', ' wrong X dimension for rhoe ',1)
-    IF( SIZE( rhoe, 2 ) < nyl ) &
-      CALL errore(' rhoofr ', ' wrong Y dimension for rhoe ',1)
-    IF( SIZE( rhoe, 3 ) < nzl ) &
-      CALL errore(' rhoofr ', ' wrong Z dimension for rhoe ',1)
-
-    ALLOCATE( psi2( nr1x, nr2x, nr3x ), STAT=ierr )
+    ALLOCATE( psi2( nnrx ), STAT=ierr )
     IF( ierr /= 0 ) CALL errore(' rhoofr ', ' allocating psi2 ', ABS(ierr) )
-    ALLOCATE( rho( nr1x, nr2x, nr3x ), STAT=ierr )
-    IF( ierr /= 0 ) CALL errore(' rhoofr ', ' allocating rho ', ABS(ierr) )
 
     IF( tturbo ) THEN
       !
       ! ... if tturbo=.TRUE. some data is stored in memory instead of being
       ! ... recalculated (see card 'TURBO')
       !
-      CALL allocate_turbo( dfftp%nr1x, dfftp%nr2x, dfftp%npl )
+      CALL allocate_turbo( nnrx )
 
     END IF
+
+    rhoe  = zero
 
     DO ispin = 1, nspin
 
@@ -285,7 +201,7 @@
         ! ...  Gamma-point calculation: wave functions are real and can be
         ! ...  Fourier-transformed two at a time as a complex vector
 
-        rho = zero
+        psi2 = zero
 
         nbnd = cdesc%nbl( ispin )
         nb   = ( nbnd - MOD( nbnd, 2 ) )
@@ -302,7 +218,7 @@
 
           IF( tturbo .AND. ( ib <= nturbo ) ) THEN
             ! ...  store real-space wave functions to be used in force 
-            turbo_states( :, :, :, ib ) = psi2( :, :, : )
+            turbo_states( :, ib ) = psi2( : )
           END IF
 
           ! ...  occupation numbers divided by cell volume
@@ -313,21 +229,17 @@
 
           ! ...  compute charge density from wave functions
 
-          DO k = 1, nzl
-            DO j = 1, nyl
-              DO i = 1, nxl
+          DO i = 1, nnr
 
                 ! ...  extract wave functions from psi2
 
-                r1 =  DBLE( psi2(i,j,k) ) 
-                r2 = AIMAG( psi2(i,j,k) ) 
+                r1 =  DBLE( psi2(i) ) 
+                r2 = AIMAG( psi2(i) ) 
 
                 ! ...  add squared moduli to charge density
 
-                rho(i,j,k) = rho(i,j,k) + coef3 * r1 * r1 + coef4 * r2 * r2
+                rhoe(i,ispin) = rhoe(i,ispin) + coef3 * r1 * r1 + coef4 * r2 * r2
 
-              END DO
-            END DO
           END DO
 
         END DO
@@ -346,20 +258,16 @@
 
           ! ...  compute charge density from wave functions
 
-          DO k = 1, nzl
-            DO j = 1, nyl
-              DO i = 1, nxl
+          DO i = 1, nnr
 
-                ! ...  extract wave functions from psi2
+             ! ...  extract wave functions from psi2
 
-                r1 = DBLE( psi2(i,j,k) )
+             r1 = DBLE( psi2(i) )
 
-                ! ...  add squared moduli to charge density
+             ! ...  add squared moduli to charge density
 
-                rho(i,j,k) = rho(i,j,k) + coef3 * r1 * r1
+             rhoe(i,ispin) = rhoe(i,ispin) + coef3 * r1 * r1
 
-              END DO
-            END DO
           END DO
 
         END IF
@@ -368,7 +276,7 @@
 
         ! ...  calculation with generic k points: wave functions are complex
 
-        rho = zero
+        psi2 = zero
 
         DO ik = 1, cdesc%nkl
 
@@ -385,25 +293,19 @@
 
             ! ...  compute charge density
 
-            DO k = 1, nzl
-              DO j = 1, nyl
-                DO i = 1, nxl
+            DO i = 1, nnr
 
-                  ! ...  add squared modulus to charge density
+                ! ...  add squared modulus to charge density
 
-                  rho(i,j,k) = rho(i,j,k) + coef3 * DBLE( psi2(i,j,k) * CONJG(psi2(i,j,k)) )
+                rhoe(i,ispin) = rhoe(i,ispin) + coef3 * DBLE( psi2(i) * CONJG(psi2(i)) )
 
-                END DO
-              END DO
             END DO
           END DO
         END DO
 
       END IF
 
-      IF( ttprint ) rsumr( ispin ) = SUM( rho ) * omega / nnr
-
-      rhoe( 1:nxl, 1:nyl, 1:nzl, ispin ) = rho( 1:nxl, 1:nyl, 1:nzl )
+      IF( ttprint ) rsumr( ispin ) = SUM( rhoe( :, ispin ) ) * omega / ( nr1 * nr2 * nr3 )
 
     END DO
 
@@ -443,8 +345,6 @@
 
     DEALLOCATE(psi2, STAT=ierr)
     IF( ierr /= 0 ) CALL errore(' rhoofr ', ' deallocating psi2 ', ABS(ierr) )
-    DEALLOCATE(rho, STAT=ierr)
-    IF( ierr /= 0 ) CALL errore(' rhoofr ', ' deallocating rho ', ABS(ierr) )
 
 
     RETURN
@@ -468,7 +368,7 @@
 
      COMPLEX(DP), INTENT(IN)  :: rhoeg(:)    ! charge density (Reciprocal Space)
      REAL(DP), INTENT(IN)  :: gx(:,:)        ! cartesian components of G-vectors
-     REAL(DP),  INTENT(OUT) :: grho(:,:,:,:) ! charge density gradient
+     REAL(DP),  INTENT(OUT) :: grho(:,:) ! charge density gradient
 
      INTEGER :: ig, ipol, ierr
      COMPLEX(DP), ALLOCATABLE :: tgrho(:)
@@ -484,7 +384,7 @@
          rg        = rhoeg(ig) * gx( ipol, ig )
          tgrho(ig) = tpiba * CMPLX( - AIMAG(rg), DBLE(rg) ) 
        END DO
-       CALL pinvfft( grho(:,:,:,ipol), tgrho )
+       CALL pinvfft( grho(:,ipol), tgrho )
      END DO
 
      DEALLOCATE(tgrho, STAT=ierr)

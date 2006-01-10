@@ -75,7 +75,7 @@
       use cell_base
       use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
             nr1sx, nr2sx, nr3sx, nnrsx
-      use electrons_base, only: nx => nbspx, n => nbsp, f, ispin => fspin, nspin
+      use electrons_base, only: nx => nbspx, n => nbsp, f, ispin, nspin
       use constants, only: pi, fpi
 !
       use cdvan

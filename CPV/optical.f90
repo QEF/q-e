@@ -90,7 +90,7 @@
           COMPLEX(DP), INTENT(INOUT) :: ce(:,:,:,:)
           TYPE(wave_descriptor), INTENT(IN) :: wempt, wfill
           REAL(DP), INTENT(IN) :: occ(:,:,:)
-          REAL (DP), INTENT(in) ::   vpot(:,:,:,:)
+          REAL (DP), INTENT(in) ::   vpot(:,:)
           REAL (DP) ::   bec(:,:)
           COMPLEX(DP) :: eigr(:,:)
 
@@ -139,7 +139,7 @@
             CALL nlsm1 ( nb_l, 1, nspnl, eigr, cf(1,1,1,ispin), bec )
 
             CALL dforce_all( ispin, cf(:,:,1,ispin), wfill, occ(:,1,ispin), eforce(:,:,1), &
-                             vpot(:,:,:,ispin), eigr, bec )
+                             vpot(:,ispin), eigr, bec )
 
             CALL kohn_sham( ispin, cf(:,:,:,ispin), wfill, eforce )
 
@@ -156,7 +156,7 @@
             CALL nlsm1 ( nb_l, 1, nspnl, eigr, ce(1,1,1,ispin), bece )
             !
             CALL dforce_all( ispin, ce(:,:,1,ispin), wempt, ff( :, 1), eforce(:,:,1), &
-                             vpot(:,:,:,ispin), eigr, bece )
+                             vpot(:,ispin), eigr, bece )
             !
             CALL kohn_sham( ispin, ce(:,:,:,ispin), wempt, eforce )
 

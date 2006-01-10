@@ -455,7 +455,7 @@
       COMPLEX(DP), INTENT(INOUT) ::  c_occ(:,:,:,:), c_emp(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) ::  wfill, wempt
       TYPE (atoms_type), INTENT(INOUT) :: atoms ! ions structure
-      REAL (DP), INTENT(IN) ::   vpot(:,:,:,:)
+      REAL (DP), INTENT(IN) ::   vpot(:,:)
       LOGICAL, INTENT(IN) :: tortho
       COMPLEX(DP) :: eigr(:,:)
 !
@@ -525,7 +525,7 @@
             CALL nlsm1 ( n_emp, 1, nspnl, eigr, c_emp( 1, 1, ik, ispin ), bece( 1, (ispin-1)*n_emp + 1 ) )
 
             CALL dforce_all( ispin, c_emp(:,:,1,ispin), wempt, fi(:,1,ispin), eforce(:,:,1,ispin), &
-              vpot(:,:,:,ispin), eigr, bece )
+              vpot(:,ispin), eigr, bece )
 
             ! ...       Steepest descent
             DO i = 1, n_emp
@@ -613,7 +613,7 @@
 
       COMPLEX(DP), INTENT(inout) ::  c_emp(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) ::  wempt
-      REAL (DP), INTENT(in) ::  vpot(:,:,:,:), fi(:,:,:)
+      REAL (DP), INTENT(in) ::  vpot(:,:), fi(:,:,:)
       COMPLEX (DP) ::  eforce(:,:,:,:)
       LOGICAL, INTENT(IN) :: TORTHO
       COMPLEX(DP) :: eigr(:,:)
@@ -649,7 +649,7 @@
         ! ...   Calculate | dH / dpsi(j) >
         !
         CALL dforce_all( ispin, c_emp(:,:,1,ispin), wempt, fi(:,1,ispin), eforce(:,:,1,ispin), &
-          vpot(:,:,:,ispin), eigr, bece )
+          vpot(:,ispin), eigr, bece )
 
         ! ...     Calculate Eij = < psi(i) | H | psi(j) > = < psi(i) | dH / dpsi(j) >
         DO i = 1, n_emp

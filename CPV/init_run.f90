@@ -51,8 +51,8 @@ SUBROUTINE init_run()
                                        becdr, sfac, eigr, ei1, ei2, ei3, taub, &
                                        irb, eigrb, rhog, rhos, rhor, bephi,    &
                                        becp, acc, acc_this_run, wfill, wempt,  &
-                                       edft, nfi, atoms0, vpot, occn, desc,    &
-                                       rhoe, atomsm, ht0, htm
+                                       edft, nfi, atoms0, vpot, occn,     &
+                                       atomsm, ht0, htm
   USE cp_main_variables,        ONLY : allocate_mainvar
   USE energies,                 ONLY : eself, enl, ekin, etot, enthal, ekincm
   USE stre,                     ONLY : stress
@@ -257,7 +257,7 @@ SUBROUTINE init_run()
         !
      ELSE IF ( program_name == 'FPMD' ) THEN
         !
-        CALL from_scratch( rhoe, desc, cm, c0, cp, ce, wfill, wempt, eigr, &
+        CALL from_scratch( rhor, cm, c0, cp, ce, wfill, wempt, eigr, &
                            ei1, ei2, ei3, sfac, occn, ht0, atoms0, bec, &
                            becdr, vpot, edft )
         !
@@ -280,7 +280,7 @@ SUBROUTINE init_run()
      ELSE IF( program_name == 'FPMD' ) THEN
         !
         CALL readfile( nfi, tps, c0, cm, wfill, occn, atoms0, atomsm, acc,     &
-                       taui, cdmi, htm, ht0, rhoe, desc, vpot)
+                       taui, cdmi, htm, ht0, rhor, vpot)
         !
      END IF
      !
@@ -294,7 +294,7 @@ SUBROUTINE init_run()
         !
      ELSE IF( program_name == 'FPMD' ) THEN
         !
-        CALL from_restart( nfi, acc, rhoe, desc, cm, c0, wfill, eigr, ei1, ei2, &
+        CALL from_restart( nfi, acc, rhor, cm, c0, wfill, eigr, ei1, ei2, &
                            ei3, sfac, occn, htm, ht0, atomsm, atoms0, bec, &
                            becdr, vpot, edft)
         !

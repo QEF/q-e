@@ -1000,8 +1000,8 @@ MODULE xml_io_base
       !
       CALL mp_bcast( ierr, ionode_id )
       !
-      CALL errore( 'read_rho_xml', &
-                   'cannot open rho_file file for writing', ierr )
+      CALL errore( ' read_rho_xml ', &
+                   'cannot open ' // rho_file // ' file for reading', ierr )
       !
       IF ( ionode ) THEN
          !

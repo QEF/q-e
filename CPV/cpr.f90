@@ -28,7 +28,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, &
                                        ekin, atot, entropy, egrand, enthal, &
                                        ekincm, print_energies
-  USE electrons_base,           ONLY : nbspx, nbsp, ispin => fspin, f, nspin
+  USE electrons_base,           ONLY : nbspx, nbsp, ispin, f, nspin
   USE electrons_base,           ONLY : nel, iupdwn, nupdwn, nudx, nelt
   USE efield_module,            ONLY : efield, epol, tefield, allocate_efield, &
                                        efield_update, ipolp, qmat, gqq,        &
@@ -130,6 +130,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE metadyn_base,             ONLY : set_target
   USE autopilot,                ONLY : pilot
   USE ions_nose,                ONLY : ions_nose_allocate, ions_nose_shiftvar
+  USE orthogonalize,            ONLY : ortho
+  USE orthogonalize_base,       ONLY : updatc
   !
   IMPLICIT NONE
   !
@@ -396,8 +398,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         IF ( tortho ) THEN
            !
-           CALL ortho( eigr, cm, phi, lambda, bigr, iter, ccc, &
-                       ortho_eps, ortho_max, delt, bephi, becp )
+           CALL ortho( eigr, cm(:,:,1,1), phi(:,:,1,1), lambda, bigr, iter, ccc, &
+                       bephi, becp )
            !
         ELSE
            !
@@ -417,7 +419,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         IF ( iprsta >= 3 ) CALL print_lambda( lambda, nbsp, 9, 1.D0 )
         !
-        IF ( tortho ) CALL updatc( ccc, lambda, phi, bephi, becp, bec, cm )
+        IF ( tortho ) &
+           CALL updatc( ccc, nbsp, lambda, SIZE(lambda,1), phi, SIZE(phi,1), &
+                        bephi, SIZE(bephi,1), becp, bec, cm )
         !
         CALL calbec( nvb+1, nsp, eigr, cm, bec )
         !

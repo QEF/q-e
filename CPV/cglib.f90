@@ -6,93 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #include "f_defs.h"
-!-------------------------------------------------------------------------
-      subroutine calphiid(c0,bec,betae,phi)
-!-----------------------------------------------------------------------
-!     input: c0 (orthonormal with s(r(t)), bec=<c0|beta>, betae=|beta>
-!     computes the matrix phi (with the old positions)
-!       where  |phi> = s'|c0> = |c0> + sum q_ij |i><j|c0>
-!     where s'=s(r(t))  
-!     
-      use ions_base, only: na, nsp
-      use io_global, only: stdout
-      use cvan
-      use uspp_param, only: nh
-      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
-      use electrons_base, only: n => nbsp
-      use gvecw, only: ngw
-      use constants, only: pi, fpi
-      use control_flags, only: iprint, iprsta
-      use mp, only: mp_sum
-!
-      implicit none
-      complex(8) c0(ngw,n), phi(ngw,n), betae(ngw,nhsa)
-      real(8)    bec(nhsa,n) ,emtot
-! local variables
-      integer is, iv, jv, ia, inl, jnl, i, j
-      real(8) qtemp(nhsavb,n) ! automatic array
-!
-      phi(1:ngw,1:n) = 0.0d0
-!
-      if (nvb.gt.0) then
-         qtemp = 0.0d0
-         do is=1,nvb
-            do iv=1,nh(is)
-               do jv=1,nh(is)
-                  if(abs(qq(iv,jv,is)).gt.1.e-5) then
-                     do ia=1,na(is)
-                        inl=ish(is)+(iv-1)*na(is)+ia
-                        jnl=ish(is)+(jv-1)*na(is)+ia
-                        do i=1,n
-                           qtemp(inl,i) = qtemp(inl,i) +                &
-     &                                    qq(iv,jv,is)*bec(jnl,i)
-                        end do
-                     end do
-                  endif
-               end do
-            end do
-         end do
-         !
-         call MXMA                                                     &
-     &       (betae,1,2*ngw,qtemp,1,nhsavb,phi,1,2*ngw,2*ngw,nhsavb,n)
-      end if
-!
-      do j=1,n
-         do i=1,ngw
-            phi(i,j)=(phi(i,j)+c0(i,j))
-         end do
-      end do
-!     =================================================================
-      if(iprsta.gt.2) then
-         emtot=0.
-         do j=1,n
-            do i=1,ngw
-               emtot=emtot                                              &
-     &        +2.*DBLE(phi(i,j)*CONJG(c0(i,j)))
-            end do
-         end do
-         emtot=emtot/n
-         call mp_sum(emtot)
-         WRITE( stdout,*) 'in calphi sqrt(emtot)=',sqrt(emtot)
-         WRITE( stdout,*)
-         do is=1,nsp
-            if(nsp.gt.1) then
-               WRITE( stdout,'(33x,a,i4)') ' calphi: bec (is)',is
-               WRITE( stdout,'(8f9.4)')                                       &
-     &            ((bec(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,n)
-            else
-               do ia=1,na(is)
-                  WRITE( stdout,'(33x,a,i4)') ' calphi: bec (ia)',ia
-                  WRITE( stdout,'(8f9.4)')                                    &
-     &               ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,n)
-               end do
-            end if
-         end do
-      endif
-!
-      return
-    end subroutine calphiid
-
 
 
 !-----------------------------------------------------------------------
@@ -176,44 +89,26 @@
 !
       use parallel_toolkit, only: dspev_drv
       implicit none
-      integer nx,n,naux,ndim,iopt,iflag,k,i,j,info
+      integer nx,n,ndim,iflag,k,i,j
       real(8)   dval(n)
       real(8) amat(nx,n), dvec(nx,n)
       real(8), allocatable::  ap(:)
-      real(8), allocatable::  aux(:)
-
 
       ndim=(n*(n+1))/2
-      naux=3*n
       allocate(ap(ndim))
-      allocate(aux(naux))
       ap(:)=0.d0
-      aux(:)=0.d0
-
-      if (iflag.eq.1) then
-       iopt=1
-      else if (iflag.eq.0) then
-       iopt=0
-      else
-       write(*,*) 'ERROR: diag, iflag not allowed'
-       stop
-      end if
 
       k=0
       do j=1,n
        do i=1,j
         k=k+1
-!       ap(i + (j-1)*j/2)=amat(i,j)
         ap(k)=amat(i,j)
        end do
       end do
 
       CALL dspev_drv( 'V', 'U', n, ap, dval, dvec, nx )
 
-      if(info.ne.0) write(6,*) 'Problems with ddiag'
-
       deallocate(ap)
-      deallocate(aux)
 
       return
     end subroutine ddiag
@@ -293,7 +188,7 @@ subroutine pc2(a,beca,b,becb)
       use control_flags, only: iprint, iprsta
       use reciprocal_vectors, only: ng0 => gstart
       use mp, only: mp_sum
-      use electrons_base, only: n => nbsp, fspin
+      use electrons_base, only: n => nbsp, ispin
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb
       use uspp, only :qq
@@ -312,7 +207,7 @@ subroutine pc2(a,beca,b,becb)
             if (ng0.eq.2) then
                b(1,i)=0.5d0*(b(1,i)+CONJG(b(1,i)))
             endif
-            if(fspin(j) == fspin(i)) then
+            if(ispin(j) == ispin(i)) then
                do  ig=1,ngw           !loop on g vectors
                   sca=sca+2.d0*DBLE(CONJG(a(ig,j))*b(ig,i)) !2. for real wavefunctions
                enddo
@@ -369,7 +264,7 @@ subroutine pc2(a,beca,b,becb)
       use control_flags, only: iprint, iprsta
       use reciprocal_vectors, only: ng0 => gstart
       use mp, only: mp_sum
-      use electrons_base, only: n => nbsp, fspin
+      use electrons_base, only: n => nbsp, ispin
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb
 
@@ -387,7 +282,7 @@ subroutine pc2(a,beca,b,becb)
             if (ng0.eq.2) then
                b(1,i)=0.5d0*(b(1,i)+CONJG(b(1,i)))
             endif
-            if(fspin(i) == fspin(j)) then
+            if(ispin(i) == ispin(j)) then
                do  ig=1,ngw           !loop on g vectors
                   sca=sca+2.*DBLE(CONJG(a(ig,j))*b(ig,i)) !2. for real weavefunctions
                enddo
@@ -422,7 +317,7 @@ subroutine pc2(a,beca,b,becb)
       use control_flags, only: iprint, iprsta
       use reciprocal_vectors, only: ng0 => gstart
       use mp, only: mp_sum, mp_bcast
-      use electrons_base, only: n => nbsp, fspin
+      use electrons_base, only: n => nbsp, ispin
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb,qq, nhsavb=>nkbus
       use io_global, ONLY: ionode, ionode_id
@@ -535,7 +430,7 @@ subroutine pc2(a,beca,b,becb)
       use control_flags, only: iprint, iprsta
       use reciprocal_vectors, only: ng0 => gstart
       use mp, only: mp_sum, mp_bcast
-      use electrons_base, only: n => nbsp, fspin
+      use electrons_base, only: n => nbsp, ispin
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb,qq,nhsavb=>nkbus
       use io_global, ONLY: ionode, ionode_id

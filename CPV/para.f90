@@ -88,7 +88,7 @@ end module para_mod
 !
 !
 !----------------------------------------------------------------------
-      subroutine read_rho(unit,nspin,rhor)
+      subroutine read_rho( unit, nspin, rhor )
 !----------------------------------------------------------------------
       !
       ! read rhor(nnr,nspin) from file

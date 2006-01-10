@@ -594,17 +594,15 @@
 !=----------------------------------------------------------------------------=!
 
 
-    SUBROUTINE print_sfac( rhoe, desc, sfac )
+    SUBROUTINE print_sfac( rhoe, sfac )
 
       USE mp_global, ONLY: mpime, nproc, group
       USE mp, ONLY: mp_max, mp_get, mp_put
       USE fft, ONLY : pfwfft, pinvfft
-      USE charge_types, ONLY: charge_descriptor
       USE reciprocal_vectors, ONLY: ig_l2g, gx, g
       USE gvecp, ONLY: ngm
 
-      TYPE (charge_descriptor), INTENT(IN) :: desc
-      REAL(DP), INTENT(IN) :: rhoe(:,:,:,:)
+      REAL(DP), INTENT(IN) :: rhoe(:,:)
       COMPLEX(DP), INTENT(IN) ::  sfac(:,:)
 
       INTEGER :: nspin, ispin, ip, nsp, ngx_l, ng, is, ig
@@ -615,7 +613,7 @@
       INTEGER     , ALLOCATABLE :: ig_rcv(:)
       COMPLEX(DP), ALLOCATABLE :: sfac_rcv(:,:)
 
-        nspin = SIZE(rhoe,4)
+        nspin = SIZE(rhoe,2)
         nsp   = SIZE(sfac,2)
         ngx_l = ngm
         CALL mp_max(ngx_l, group)
@@ -627,7 +625,7 @@
         ALLOCATE(sfac_rcv(ngx_l,nsp))
 ! ...   FFT: rho(r) --> rho(g)
         DO ispin = 1, nspin
-          CALL pfwfft(rhoeg(:,ispin),rhoe(:,:,:,ispin))
+          CALL pfwfft(rhoeg(:,ispin),rhoe(:,ispin))
         END DO
         IF( ionode ) THEN
           OPEN(sfacunit, FILE=TRIM(sfac_file), STATUS='UNKNOWN')
@@ -673,20 +671,15 @@
 !=----------------------------------------------------------------------------=!
 
 
-    SUBROUTINE printacc( nfi, rhoe, desc, atoms, ht, nstep_run, avgs, avgs_run )
+    SUBROUTINE printacc( nfi, nstep_run, avgs, avgs_run )
 
       USE cell_module, ONLY: boxdimensions
       USE atoms_type_module, ONLY: atoms_type
-      USE charge_types, ONLY: charge_descriptor
 
       IMPLICIT NONE
 
       INTEGER, INTENT(IN) :: nfi, nstep_run
-      REAL(DP), intent(in) :: rhoe(:,:,:,:)
-      TYPE (charge_descriptor), intent(in) :: desc
       REAL (DP) :: avgs(:), avgs_run(:)
-      TYPE (atoms_type) :: atoms
-      TYPE (boxdimensions), intent(in) :: ht
  
       IF ( nfi < 1 ) THEN
         RETURN
@@ -744,7 +737,7 @@
    
      use kinds, only: DP
      use ensemble_dft, only: tens, ismear, z0, c0diag, becdiag, dval, zaux, e0, zx
-     use electrons_base, only: nx => nbspx, n => nbsp, ispin => fspin, f, nspin
+     use electrons_base, only: nx => nbspx, n => nbsp, ispin, f, nspin
      use electrons_base, only: nel, iupdwn, nupdwn, nudx, nelt
      use energies, only: enl, ekin
      use ions_base, only: nsp

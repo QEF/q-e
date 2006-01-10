@@ -238,7 +238,7 @@
         TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
         COMPLEX(DP)  ::  eigr(:,:)
         REAL(DP), INTENT(IN)  ::  occ(:,:,:), bec(:,:)
-        REAL (DP) ::  vpot(:,:,:,:)
+        REAL (DP) ::  vpot(:,:)
 
 ! ...   declare other variables
         INTEGER ::  i, ik, ib, nk, ig, ngw, nb_g, nb_l, ispin, nspin, iks
@@ -279,7 +279,7 @@
             ALLOCATE(  eforce( ngw,  nb_l, nk ))
 
             CALL dforce_all( ispin, cf(:,:,1,ispin_wfc), wfill, occ(:,1,ispin), eforce(:,:,1), &
-              vpot(:,:,:,ispin), eigr, bec )
+              vpot(:,ispin), eigr, bec )
 
             CALL kohn_sham( ispin, cf(:,:,:,ispin_wfc), wfill, eforce )
 
@@ -302,7 +302,7 @@
               ALLOCATE(  eforce( ngw,  nb_l, nk ))
 
               CALL dforce_all( ispin, ce(:,:,1,ispin), wempt, fi(:,1), eforce(:,:,1), &
-                               vpot(:,:,:,ispin), eigr, bec )
+                               vpot(:,ispin), eigr, bec )
 
               CALL kohn_sham( ispin, ce(:,:,:,ispin), wempt, eforce )
 
@@ -400,7 +400,7 @@
         TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
         COMPLEX(DP)  ::  eigr(:,:)
         REAL(DP), INTENT(IN)  ::  occ(:,:,:), bec(:,:)
-        REAL (DP) ::  vpot(:,:,:,:)
+        REAL (DP) ::  vpot(:,:)
 
 ! ...   declare other variables
         INTEGER ::  i, ik, ib, nk, ig, ngw, nb_g, nb_l, iks, nb, ispin
@@ -440,9 +440,9 @@
           ALLOCATE(  eforce( ngw,  nb, 1, 2 ) )
 
           CALL dforce_all( 1, cf(:,:,1,1), wfill, occ(:,1,1), eforce(:,:,1,1), &
-              vpot(:,:,:,1), eigr, bec )
+              vpot(:,1), eigr, bec )
           CALL dforce_all( 2, cf(:,:,1,1), wfill, occ(:,1,2), eforce(:,:,1,2), &
-              vpot(:,:,:,2), eigr, bec )
+              vpot(:,2), eigr, bec )
 
           DO i = 1, nupdwn(2)
             eforce(:,i,1,1) = occ(i,1,1) * eforce(:,i,1,1) + occ(i,1,2) * eforce(:,i,1,2)
@@ -471,12 +471,12 @@
 
             ALLOCATE(  eforce( ngw,  nb_l, 1, 1 ))
 
-            CALL dforce_all( 1, ce(:,:,1,1), wempt, fi(:,1), eforce(:,:,1,1), vpot(:,:,:,1), &
+            CALL dforce_all( 1, ce(:,:,1,1), wempt, fi(:,1), eforce(:,:,1,1), vpot(:,1), &
                              eigr, bec )
 
             CALL kohn_sham( 1, ce(:,:,:,1), wempt, eforce(:,:,:,1) )
 
-            CALL dforce_all( 2, ce(:,:,1,2), wempt, fi(:,1), eforce(:,:,1,1), vpot(:,:,:,2), &
+            CALL dforce_all( 2, ce(:,:,1,2), wempt, fi(:,1), eforce(:,:,1,1), vpot(:,2), &
                              eigr, bec )
 
             CALL kohn_sham( 2, ce(:,:,:,2), wempt, eforce(:,:,:,1) )
@@ -555,6 +555,7 @@
         USE io_global, ONLY: ionode, ionode_id
         USE io_global, ONLY: stdout
         USE fft_base, ONLY: dfftp
+        USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnrx
 
         IMPLICIT NONE
 
@@ -562,27 +563,13 @@
         CHARACTER(LEN=*) :: file_name
         COMPLEX(DP), ALLOCATABLE :: zcomp(:)
         REAL(DP), ALLOCATABLE :: rcomp2(:)
-        COMPLEX(DP), ALLOCATABLE :: psi2(:,:,:)
-        INTEGER   ::  nr1_l, nr2_l, nr3_l, nr1_g, nr2_g, nr3_g
+        COMPLEX(DP), ALLOCATABLE :: psi2(:)
         INTEGER   ::  i, j, k, istr, izl
         REAL(DP) :: charge
         LOGICAL   :: top
 
-        nr1_g = dfftp%nr1
-        nr2_g = dfftp%nr2
-        nr3_g = dfftp%nr3
-
-        nr1_l = dfftp%nr1x
-        nr2_l = dfftp%nr2x
-        nr3_l = dfftp%npl
-
-        izl = 1
-        DO i = 1, mpime
-          izl = izl + dfftp%npp( i )
-        END DO
-
-        ALLOCATE( zcomp( nr3_g ), rcomp2( nr3_g ) )
-        ALLOCATE( psi2( nr1_l, nr2_l, nr3_l ) )
+        ALLOCATE( zcomp( nr3 ), rcomp2( nr3 ) )
+        ALLOCATE( psi2( nnrx ) )
 
         CALL pw_invfft( psi2, psi, psi )
         
@@ -597,25 +584,39 @@
         END IF
 
         charge = 0.0d0
-        DO i = 1, nr1_g
-          DO j = 1, nr2_g
+
+        izl = dfftp%ipp( mpime + 1 )
+
+        DO i = 1, nr1
+
+          DO j = 1, nr2
+
             zcomp = 0.0d0
-         
-            zcomp( izl : ( izl + nr3_l - 1 ) ) = psi2( i, j, 1 : nr3_l )
-            CALL mp_sum( zcomp(1:nr3_g) )
+
+            istr = i + nr1 * ( j - 1 )
+
+            DO k = 1, dfftp%npl 
+               zcomp( izl + k ) = psi2( istr + nr1 * nr2 * ( k - 1 ) )
+            END DO
+
+            CALL mp_sum( zcomp( 1 : nr3 ) )
+
             IF ( ionode ) THEN
               rcomp2 = DBLE(zcomp)**2
-              WRITE(ksunit, fmt='(F10.5)') ( rcomp2(k), k=1, nr3_g )
+              WRITE(ksunit, fmt='(F10.5)') ( rcomp2(k), k=1, nr3 )
               charge = charge + SUM(rcomp2)
             END IF
+
             CALL mp_barrier()
+
           END DO
+
         END DO
 
         IF ( ionode ) THEN
           CLOSE(ksunit)
           WRITE( stdout,'(3X,A15," integrated charge : ",F14.5)')  &
-     &      file_name(1:istr), charge / DBLE(nr1_g*nr2_g*nr3_g)
+     &      file_name(1:istr), charge / DBLE(nr1*nr2*nr3)
         END IF
         DEALLOCATE(zcomp, rcomp2, psi2)
 ! ...

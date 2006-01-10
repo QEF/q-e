@@ -25,7 +25,7 @@
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin,          &
      &                    atot, entropy, egrand
       use electrons_base, only: f, nspin, nel, iupdwn, nupdwn, nudx, nelt, &
-                                nx => nbspx, n => nbsp, ispin => fspin
+                                nx => nbspx, n => nbsp, ispin
 
       use ensemble_dft, only: tens, tgrand, ninner, ismear, etemp, ef,       &
      &                tdynz, tdynf, zmass, fmass, fricz, fricf, z0, c0diag,  &
@@ -73,7 +73,8 @@
       use efield_module, only: tefield, evalue, ctable, qmat, detq, ipolp, &
             berry_energy, ctabin, gqq, gqqm, df, pberryel
       use mp, only: mp_sum,mp_bcast
-      use cp_electronic_mass,       ONLY :  emass_cutoff
+      use cp_electronic_mass,       ONLY : emass_cutoff
+      use orthogonalize_base,       ONLY : calphi
 
 !
       implicit none
@@ -143,7 +144,8 @@
 
       !calculates phi for pcdaga
 
-      call calphiid(c0,bec,betae,phi)
+      ! call calphiid(c0,bec,betae,phi)
+      CALL calphi( c0, SIZE(c0,1), bec, nhsa, betae, phi, n )
 
       !calculates the factors for S and K inversion in US case
       if(nvb.gt.0) then
@@ -694,7 +696,8 @@
  
         call calbec (1,nsp,eigr,c0,bec)
         !calculates phi for pc_daga
-        call calphiid(c0,bec,betae,phi)
+        !call calphiid(c0,bec,betae,phi)
+        CALL calphi( c0, SIZE(c0,1), bec, nhsa, betae, phi, n )
   
         !=======================================================================
         !

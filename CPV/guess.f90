@@ -6,36 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #include "f_defs.h"
-#if defined __T3E
-#  define daxpy saxpy
-#  define zaxpy caxpy
-#endif
 
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-!  ----------------------------------------------
-!  Car-Parrinello Parallel Program
-!  Carlo Cavazzoni - Gerardo Ballabio
-!  SISSA, Trieste, Italy - 1997-99
-!  Last modified: Sun Nov 21 11:19:43 MET 1999
-!  ----------------------------------------------
-!  BEGIN manual
-
-      MODULE guess
-
-!  (describe briefly what this module does...)
-!  ----------------------------------------------
-!  routines in this module:
-!  SUBROUTINE guess_setup(tguess_inp)
-!  SUBROUTINE guessc0(tk,c0,cm)
-!  SUBROUTINE guessrho(rho,cm,c0,occ,ht) 
-!  SUBROUTINE ucalc_kp(a,b,ngw,gzero,n,lambda)
-!  SUBROUTINE ucalc(a,b,ngw,gzero,n,lambda)
-!  ----------------------------------------------
-!  END manual
+MODULE guess
 
 ! ...   declare modules
         USE kinds
-        USE parallel_toolkit, ONLY: matmulp, cmatmulp, &
+        USE parallel_toolkit, ONLY: rep_matmul_drv, &
           diagonalize, cdiagonalize
 
         IMPLICIT NONE
@@ -43,7 +19,7 @@
 
         PRIVATE
 
-        REAL(DP), ALLOCATABLE :: rho_save( :, :, :, : )
+        REAL(DP), ALLOCATABLE :: rho_save( :, : )
    
 ! ...   declare module-scope variables
         LOGICAL :: tguess
@@ -140,7 +116,8 @@
               DO ik = 1, nk
 
                 CALL ucalc_kp(cm(:,:,ik,1),c0(:,:,ik,1),ngw,cdesc%gzero,n,cuu)
-                CALL cmatmulp('N','C',cuu,cuu,ca,n)
+                ! CALL cmatmulp('N','C',cuu,cuu,ca,n)
+                CALL errore(' guess ', ' complex matrix mult to be implemented ', 1 )
                 CALL cdiagonalize(1,ca,costemp,cap,n,nproc,mpime)
                 DO j=1,n
                   DO i=1,n
@@ -150,7 +127,8 @@
                 DO i=1,n
                   costh2(i)=1.0d0/sqrt(costemp(n-i+1))
                 END DO
-                CALL cmatmulp('N','N',cuu,ca,cap,n)
+                !CALL cmatmulp('N','N',cuu,ca,cap,n)
+                CALL errore(' guess ', ' complex matrix mult to be implemented ', 1 )
                 DO j=1,n
                   DO i=1,n
                     cap(i,j)=cap(i,j) * costh2(i)
@@ -186,7 +164,7 @@
               ALLOCATE(crot(ngw,n))
 
               CALL ucalc(cm(:,:,1,1),c0(:,:,1,1),ngw,cdesc%gzero,n,uu)
-              CALL matmulp('T','N',uu,uu,a,n)
+              CALL rep_matmul_drv('T','N',n,n,n,1.0d0,uu,n,uu,n,0.0d0,a,n,group)
               CALL diagonalize(1,a,costemp,ap,n,nproc,mpime)
               DO j=1,n
                 DO i=1,n
@@ -196,7 +174,7 @@
               DO i=1,n
                 costh2(i)=1.0d0/sqrt(costemp(n-i+1))
               END DO
-              CALL matmulp('N','N',uu,a,ap,n)
+              CALL rep_matmul_drv('N','N',n,n,n,1.0d0,uu,n,a,n,0.0d0,ap,n,group)
               DO j=1,n
                 DO i=1,n
                   ap(i,j)=ap(i,j) * costh2(i)
@@ -245,7 +223,7 @@
       
 !  ----------------------------------------------
 !  ----------------------------------------------
-          SUBROUTINE guessrho(rho, desc, cm, c0, cdesc, occ, ht ) 
+          SUBROUTINE guessrho(rho, cm, c0, cdesc, occ, ht ) 
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
@@ -255,38 +233,33 @@
              use brillouin, only: kpoints, kp
              USE wave_types
              USE parameters, ONLY: nspinx
-             USE charge_types, ONLY: charge_descriptor
 
 ! ...        declare subroutine argument
-             REAL(DP), INTENT(OUT) :: rho(:,:,:,:)
-             TYPE (charge_descriptor), INTENT(IN) :: desc
+             REAL(DP), INTENT(OUT) :: rho(:,:)
              COMPLEX(DP), INTENT(IN) :: c0(:,:,:,:), cm(:,:,:,:)
              TYPE (wave_descriptor), INTENT(IN) :: cdesc
              TYPE (boxdimensions), INTENT(IN) :: ht
              REAL(DP), INTENT(IN) :: occ(:,:,:)
 
 ! ...        declare other variables
-             REAL(DP), ALLOCATABLE :: rho0( :, :, :, : )
+             REAL(DP), ALLOCATABLE :: rho0( :, : )
 
              LOGICAL, SAVE :: tfirst = .TRUE.
-             INTEGER :: ispin, nspin, nx, ny, nz
+             INTEGER :: ispin, nspin
 
 ! ...        end of declarations
 !  ----------------------------------------------
 
-             nx = SIZE( rho, 1 )
-             ny = SIZE( rho, 2 )
-             nz = SIZE( rho, 3 )
-             nspin = SIZE( rho, 4 )
+             nspin = SIZE( rho, 2 )
 
              IF( tfirst ) THEN
-               ALLOCATE( rho_save( nx, ny, nz, nspin ) )
-               CALL rhoofr( 1, cm, cdesc, occ, rho_save, desc, ht)
+               ALLOCATE( rho_save( SIZE( rho, 1 ), nspin ) )
+               CALL rhoofr( 1, cm, cdesc, occ, rho_save, ht)
                tfirst = .FALSE.
              END IF
 
-             ALLOCATE( rho0( nx, ny, nz, nspin ) )
-             CALL rhoofr( 1, c0, cdesc, occ, rho0, desc, ht)
+             ALLOCATE( rho0( SIZE( rho, 1 ), nspin ) )
+             CALL rhoofr( 1, c0, cdesc, occ, rho0, ht)
 
              rho = 2.0d0 * rho0 - rho_save
 
@@ -389,5 +362,5 @@
 !  ----------------------------------------------
 !  ----------------------------------------------
 
-      END MODULE guess
+END MODULE guess
 

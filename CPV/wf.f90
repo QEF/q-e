@@ -3569,7 +3569,7 @@ SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
   USE cvan,                   ONLY : ish
   USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s, &
                                      nr1sx, nr2sx, nr3sx, nnrsx
-  USE electrons_base,         ONLY : nbspx, nbsp, nspin, f, fspin
+  USE electrons_base,         ONLY : nbspx, nbsp, nspin, f, ispin
   USE constants,              ONLY : pi, fpi
   USE ions_base,              ONLY : nsp, na, nat
   USE gvecw,                  ONLY : ggp
@@ -3626,12 +3626,12 @@ SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
      !
   ENDIF
   ! 
-  iss1=fspin(i)
+  iss1=ispin(i)
   !
   ! the following avoids a potential out-of-bounds error
   !
   IF (i.NE.nbsp) THEN
-     iss2=fspin(i+1)
+     iss2=ispin(i+1)
   ELSE
      iss2=iss1
   END IF
@@ -3874,7 +3874,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   USE cell_base,              ONLY : omega
   USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s, &
                                      nr1sx, nr2sx, nr3sx, nnrsx
-  USE electrons_base,         ONLY : nbspx, nbsp, nspin, f, fspin
+  USE electrons_base,         ONLY : nbspx, nbsp, nspin, f, ispin
   USE constants,              ONLY : pi, fpi
   USE wannier_base,           ONLY : iwf
   USE dener,                  ONLY : dekin, denl
@@ -3914,7 +3914,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   !     ==================================================================
   !     calculation of kinetic energy ekin
   !     ==================================================================
-  ekin=enkin(c)
+  ekin=enkin(c,ngw,f,nbsp)
   IF(tpre) CALL denkin(c,dekin)
   !
   !     ==================================================================
@@ -4018,11 +4018,11 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
 #else
      IF(tbuff) WRITE(21,iostat=ios) psis
 #endif
-     !            iss1=fspin(i)
+     !            iss1=ispin(i)
      iss1=1
      sa1=f(i)/omega
      !            if (i.ne.nbsp) then
-     !              iss2=fspin(i+1)
+     !              iss2=ispin(i+1)
      !              sa2=f(i+1)/omega
      !            else
      iss2=iss1  ! carlo

@@ -28,7 +28,7 @@
 !  -----------------------------------------------------------------------
 !  BEGIN manual
 
-      SUBROUTINE runsd(tortho, tprint, tforce, rhoe, desc, atoms_0, &
+      SUBROUTINE runsd(tortho, tprint, tforce, rhoe, atoms_0, &
                  bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht0, occ, ei, &
                  vpot, doions, edft, maxnstep, sdthr )
 
@@ -47,7 +47,6 @@
       USE atoms_type_module,    ONLY: atoms_type
       USE runcp_module,         ONLY: runcp
       USE phase_factors_module, ONLY: strucf, phfacs
-      USE charge_types,         ONLY: charge_descriptor
       USE control_flags,        ONLY: force_pairing
       use grid_dimensions,      only: nr1, nr2, nr3
       USE reciprocal_vectors,   ONLY: mill_l
@@ -61,9 +60,8 @@
       TYPE (atoms_type), INTENT(INOUT) :: atoms_0
       COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cp(:,:,:,:)
       TYPE (wave_descriptor) :: cdesc
-      REAL(DP) :: rhoe(:,:,:,:)
+      REAL(DP) :: rhoe(:,:)
       COMPLEX(DP) :: sfac(:,:)
-      TYPE (charge_descriptor) :: desc
       COMPLEX(DP) :: eigr(:,:)
       COMPLEX(DP) :: ei1(:,:)
       COMPLEX(DP) :: ei2(:,:)
@@ -75,7 +73,7 @@
       TYPE (dft_energy_type) :: edft
 
       REAL(DP)    :: ei(:,:,:)
-      REAL(DP)    :: vpot(:,:,:,:)
+      REAL(DP)    :: vpot(:,:)
 
       INTEGER   :: maxnstep   !  maximum number of iteration
       REAL(DP) :: sdthr      !  threshold for convergence 
@@ -127,7 +125,7 @@
 
         s1 = cclock()
 
-        CALL kspotential( 1, ttprint, ttforce, ttstress, rhoe, desc, atoms_0, &
+        CALL kspotential( 1, ttprint, ttforce, ttstress, rhoe, atoms_0, &
                           bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0,  &
                           occ, vpot, edft, timepre )
 
@@ -171,7 +169,7 @@
 
       IF( tforce ) THEN
         atoms_0%for = 0.0d0
-        CALL kspotential( 1, ttprint, tforce, ttstress, rhoe, desc, &
+        CALL kspotential( 1, ttprint, tforce, ttstress, rhoe, &
           atoms_0, bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, vpot, edft, timepre )
         IF(ionode ) THEN
           WRITE( stdout,fmt="(12X,'runsd: fion and edft calculated = ',F14.6)") edft%etot

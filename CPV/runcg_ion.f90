@@ -29,7 +29,7 @@
 !  -----------------------------------------------------------------------
 !  BEGIN manual
 
-   SUBROUTINE runcg_ion(nfi, tortho, tprint, rhoe, desc, atomsp, atoms0, atomsm, &
+   SUBROUTINE runcg_ion(nfi, tortho, tprint, rhoe, atomsp, atoms0, atomsm, &
       bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
       vpot, doions, edft, etol, ftol, maxiter, sdthr, maxnstep )
 
@@ -52,7 +52,6 @@
       USE atoms_type_module, ONLY: atoms_type
       USE print_out_module
       USE parameters, ONLY: nacx
-      USE charge_types, ONLY: charge_descriptor
       USE runsd_module, ONLY: runsd
 
       IMPLICIT NONE
@@ -66,8 +65,7 @@
       TYPE (atoms_type) :: atomsm
       COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cp(:,:,:,:)
       TYPE (wave_descriptor) :: cdesc
-      TYPE (charge_descriptor) :: desc
-      REAL(DP) :: rhoe(:,:,:,:)
+      REAL(DP) :: rhoe(:,:)
       REAL(DP) :: bec(:,:)
       REAL(DP) :: becdr(:,:,:)
       COMPLEX(DP) :: eigr(:,:)
@@ -80,7 +78,7 @@
       TYPE (dft_energy_type) :: edft
 
       REAL(DP)    :: ei(:,:,:)
-      REAL(DP)    :: vpot(:,:,:,:)
+      REAL(DP)    :: vpot(:,:)
 
       INTEGER, INTENT(IN) :: maxnstep, maxiter
       REAL(DP), INTENT(IN) :: sdthr, etol, ftol
@@ -156,7 +154,7 @@
       s1 = cclock()
       old_clock_value = s1
 
-      CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atoms0, &
+      CALL runsd(ttortho, ttprint, ttforce, rhoe, atoms0, &
          bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
          vpot, doions, edft, maxnstep, sdthr )
 
@@ -184,7 +182,7 @@
         IF(ionode) &
           WRITE( stdout,fmt="(/,8X,'cgion: iter',I5,' line minimization along gradient starting')") iter
 
-        CALL CGLINMIN(fret, edft, cp, c0, cm, cdesc, occ, ei, vpot, rhoe, desc, xi, atomsp, atoms0, &
+        CALL CGLINMIN(fret, edft, cp, c0, cm, cdesc, occ, ei, vpot, rhoe, xi, atomsp, atoms0, &
           ht, bec, becdr, eigr, ei1, ei2, ei3, sfac, maxnstep, sdthr, displ)
 
         IF( tbad ) THEN
@@ -199,7 +197,7 @@
           IF( ionode ) WRITE( stdout, fmt='(8X,"cgion: bad step")')  ! perform steepest descent
           displ = displ / 2.0d0
 
-          CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atoms0, &
+          CALL runsd(ttortho, ttprint, ttforce, rhoe, atoms0, &
             bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
             vpot, doions, edft, maxnstep, sdthr )
         
@@ -289,7 +287,7 @@
 ! ---------------------------------------------------------------------- !
 
       SUBROUTINE cglinmin(emin, edft, cp, c0, cm, cdesc, occ, ei, vpot, &
-        rhoe, desc, hacca, atomsp, atoms0, ht, bec, becdr, eigr, ei1, ei2, ei3, sfac, &
+        rhoe, hacca, atomsp, atoms0, ht, bec, becdr, eigr, ei1, ei2, ei3, sfac, &
         maxnstep, sdthr, displ)
 
 ! ... declare modules
@@ -302,7 +300,6 @@
         USE cell_module, ONLY: boxdimensions, r_to_s
         USE atoms_type_module, ONLY: atoms_type
         USE check_stop, ONLY: check_stop_now
-        USE charge_types, ONLY: charge_descriptor
         USE runsd_module, ONLY: runsd
 
         IMPLICIT NONE
@@ -315,8 +312,7 @@
         COMPLEX(DP), INTENT(INOUT) :: cp(:,:,:,:)
         COMPLEX(DP), INTENT(INOUT) :: cm(:,:,:,:)
         TYPE (wave_descriptor) :: cdesc
-        TYPE (charge_descriptor) :: desc
-        REAL(DP) :: rhoe(:,:,:,:)
+        REAL(DP) :: rhoe(:,:)
         COMPLEX(DP) :: eigr(:,:)
         COMPLEX(DP) :: ei1(:,:)
         COMPLEX(DP) :: ei2(:,:)
@@ -326,7 +322,7 @@
         REAL(DP)  :: occ(:,:,:)
         TYPE (dft_energy_type) :: edft
         REAL (DP) ::  hacca(:,:)
-        REAL (DP), INTENT(in) ::  vpot(:,:,:,:)
+        REAL (DP), INTENT(in) ::  vpot(:,:)
         REAL(DP) :: bec(:,:)
         REAL(DP) :: becdr(:,:,:)
 
@@ -546,7 +542,7 @@
          ! ...  Calculate Forces (fion) and DFT Total Energy (edft) for the new ionic
          ! ...  positions (atomsp)
 
-           CALL runsd(ttortho, ttprint, ttforce, rhoe, desc, atomsp, &
+           CALL runsd(ttortho, ttprint, ttforce, rhoe, atomsp, &
              bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
              vpot, doions, edft, maxnstep, sdthr )
 

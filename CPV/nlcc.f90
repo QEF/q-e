@@ -150,7 +150,7 @@
 
      integer :: nsp
      COMPLEX(DP) :: rhoetg(:)
-     REAL(DP)    :: rhoetr(:,:,:)
+     REAL(DP)    :: rhoetr(:)
      REAL(DP)    :: rhoc(:,:)
      COMPLEX(DP), INTENT(IN) :: sfac(:,:)
           

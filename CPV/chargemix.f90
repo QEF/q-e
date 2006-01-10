@@ -160,7 +160,7 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      REAL(DP), INTENT(INOUT) :: rhoe(:,:,:)
+      REAL(DP), INTENT(INOUT) :: rhoe(:)
       REAL(DP), INTENT(OUT) ::  drho
       INTEGER, INTENT(IN) :: nfi
 
@@ -170,7 +170,7 @@
       REAL(DP) :: g02, g12, ar, den, num, rsc
       REAL(DP) :: alpha(daamax)
       REAL(DP), ALLOCATABLE :: aa(:,:)
-      REAL(DP), ALLOCATABLE :: rho_old(:,:,:)
+      REAL(DP), ALLOCATABLE :: rho_old(:)
       INTEGER :: ns, sp, is, ism, i, ig
       LOGICAL, SAVE :: tfirst = .TRUE.
       INTEGER, SAVE :: dimaa, dimaaold, nrho_t, ierr
@@ -305,7 +305,7 @@
 
       END IF
 
-      ALLOCATE( rho_old( SIZE(rhoe, 1), SIZE(rhoe, 2), SIZE(rhoe, 3) ), STAT=ierr )
+      ALLOCATE( rho_old( SIZE(rhoe) ), STAT=ierr )
       IF( ierr /= 0 ) CALL errore(' newrho ', ' allocating rho_old ', ierr)
       rho_old = rhoe 
 

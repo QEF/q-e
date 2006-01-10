@@ -18,7 +18,6 @@ MODULE cp_main_variables
   USE metagga,           ONLY : kedtaur, kedtaus, kedtaug
   USE atoms_type_module, ONLY : atoms_type
   USE cell_base,         ONLY : boxdimensions
-  USE charge_types,      ONLY : charge_descriptor, charge_descriptor_init
   USE wave_types,        ONLY : wave_descriptor, wave_descriptor_init
   USE energies,          ONLY : dft_energy_type
   !
@@ -80,19 +79,17 @@ MODULE cp_main_variables
   !
   ! charge densities and potentials
   !
-  REAL(DP), ALLOCATABLE :: rhoe(:,:,:,:)     ! charge density in real space
-  REAL(DP), ALLOCATABLE :: vpot(:,:,:,:)
-  TYPE (charge_descriptor)  :: desc           ! charge density descriptor
-  !
   ! rhog  = charge density in g space
   ! rhor  = charge density in r space (dense grid)
   ! rhos  = charge density in r space (smooth grid)
   ! rhopr   since rhor is overwritten in vofrho,
   !         this array is used to save rhor for restart file
+  ! vpot  = potential in r space (dense grid)
   !
   COMPLEX(DP), ALLOCATABLE :: rhog(:,:)
   REAL(DP),    ALLOCATABLE :: rhor(:,:), rhos(:,:)
   REAL(DP),    ALLOCATABLE :: rhopr(:,:)  
+  REAL(DP),    ALLOCATABLE :: vpot(:,:)
   !
   TYPE (wave_descriptor) :: wfill, wempt    ! wave function descriptor
                                             ! for filled and empty states
@@ -162,10 +159,11 @@ MODULE cp_main_variables
       !
       ALLOCATE( ema0bg( ngw ) )
       !
+      ALLOCATE( rhor( nnr, nspin ) )
+      !
       IF( program_name == 'CP90' ) THEN
          !
          ALLOCATE( rhopr( nnr,   nspin ) )
-         ALLOCATE( rhor( nnr,   nspin ) )
          ALLOCATE( rhos( nnrsx, nspin ) )
          ALLOCATE( rhog( ng,    nspin ) )
          !
@@ -179,12 +177,7 @@ MODULE cp_main_variables
          !
       ELSE IF( program_name == 'FPMD' ) THEN
          !
-         ALLOCATE( rhoe( nr1x, nr2x, npl, nspin ) )
-         !
-         CALL charge_descriptor_init( desc, nr1, nr2, nr3, &
-             nr1, nr2, npl, nr1x, nr2x, npl, nspin )
-         !
-         ALLOCATE( vpot( nr1x, nr2x, npl, nspin ) )
+         ALLOCATE( vpot( nnr, nspin ) )
          !
       END IF
       !
@@ -241,7 +234,7 @@ MODULE cp_main_variables
       IF( ALLOCATED( kedtaur ) ) DEALLOCATE( kedtaur )
       IF( ALLOCATED( kedtaus ) ) DEALLOCATE( kedtaus )
       IF( ALLOCATED( kedtaug ) ) DEALLOCATE( kedtaug )
-      IF( ALLOCATED( rhoe ) )    DEALLOCATE( rhoe )
+      ! IF( ALLOCATED( rhoe ) )    DEALLOCATE( rhoe )
       IF( ALLOCATED( vpot ) )    DEALLOCATE( vpot )
       IF( ALLOCATED( occn ) )    DEALLOCATE( occn )
       !

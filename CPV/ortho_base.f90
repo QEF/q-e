@@ -7,11 +7,14 @@
 !
 #include "f_defs.h"
 
-   MODULE orthogonalize_base
+
+MODULE orthogonalize_base
+
 
       USE kinds
-      USE parallel_toolkit, ONLY: matmulp, cmatmulp, pdspev_drv, dspev_drv, &
-                                  pzhpev_drv, zhpev_drv
+      USE parallel_toolkit, ONLY: pdspev_drv, dspev_drv, &
+                                  pzhpev_drv, zhpev_drv, &
+                                  rep_matmul_drv
 
       IMPLICIT NONE
 
@@ -27,131 +30,195 @@
       PARAMETER ( mcone = (-1.0d0, 0.0d0) )
       REAL(DP) :: small = 1.0d-14
 
-#if defined __AIX
-       INTEGER, PARAMETER :: nrlx_tune = 128
-#else
-       INTEGER, PARAMETER :: nrlx_tune = 4
-#endif
+      INTERFACE sqr_matmul
+         MODULE PROCEDURE sqr_dmatmul
+      END INTERFACE
 
-       INTERFACE sqr_matmul
-         MODULE PROCEDURE sqr_dmatmul, sqr_cmatmul
-       END INTERFACE
-
-       INTERFACE sigset
-         MODULE PROCEDURE rsigset, csigset, sigset_cp
-       END INTERFACE
-       INTERFACE rhoset
-         MODULE PROCEDURE rrhoset, crhoset, rhoset_cp
-       END INTERFACE
-
-       INTERFACE diagonalize_rho
+      INTERFACE diagonalize_rho
          MODULE PROCEDURE diagonalize_rrho, diagonalize_crho
-       END INTERFACE
+      END INTERFACE
 
-       PUBLIC :: sqr_matmul, sigset, rhoset, tauset, diagonalize_rho
-       PUBLIC :: backrhoset2, sigrhoset2, backrhoset, sigrhoset
-       PUBLIC :: ortho_iterate
+      PUBLIC :: sigset, rhoset, tauset, diagonalize_rho
+      PUBLIC :: ortho_iterate
+      PUBLIC :: ortho_alt_iterate
+      PUBLIC :: updatc, calphi
 
-  CONTAINS
+CONTAINS
 
 
-       SUBROUTINE sqr_dmatmul(transa,transb,a,b,c)
-         ! ...    Multiply square matrices A, B and return the result in C
-         USE mp_global, ONLY: nproc
-         REAL(DP) :: c(:,:), a(:,:), b(:,:)
-         CHARACTER*1 :: transa, transb
-         INTEGER :: n
-         n = SIZE(c,1)
-         IF ( ( nproc > 1 ) .AND. ( n >= nproc ) ) THEN
-           CALL matmulp( transa, transb, a, b, c, n )
-         ELSE
-           CALL DGEMM( transa, transb, n, n, n, one, a(1,1), n, b(1,1), n, zero, c(1,1), n)
+   SUBROUTINE sqr_dmatmul( transa, transb, n, a, b, c )
+
+      ! ...    Multiply square matrices A, B and return the result in C
+
+      USE control_flags, ONLY: iprsta
+      USE mp_global,     ONLY: nproc, mpime, root, group
+      USE io_global,     ONLY: ionode, stdout
+      USE mp,            ONLY: mp_bcast
+
+      REAL(DP) :: c(:,:), a(:,:), b(:,:)
+      CHARACTER(LEN=1), INTENT(IN) :: transa, transb
+      INTEGER, INTENT(IN) :: n
+
+      LOGICAL :: lpdrv
+      INTEGER, SAVE :: calls_cnt = 0
+      REAL(DP) :: t1
+      REAL(DP), SAVE :: tser, tpar
+      REAL(DP), EXTERNAL :: cclock
+      !
+      calls_cnt = calls_cnt + 1
+
+      IF( nproc == 1 ) THEN
+         lpdrv = .FALSE.          !  with one proc do not use parallel diag
+      ELSE IF ( calls_cnt == 1 ) THEN
+         lpdrv = .TRUE.           !  use parallel diag the first call to take the time
+      ELSE IF ( calls_cnt == 2 ) THEN
+         lpdrv = .FALSE.          !  use seria diag the second call to take the time
+      ELSE IF ( tpar < tser ) THEN
+         lpdrv = .TRUE.           !  use para diag if it is faster
+         IF( calls_cnt == 3 .AND. ionode .AND. iprsta > 1 ) WRITE( stdout, 10 ) tpar, tser
+      ELSE
+         lpdrv = .FALSE.          !  use scalar otherwise
+         IF( calls_cnt == 3 .AND. ionode .AND. iprsta > 1 ) WRITE( stdout, 20 ) tpar, tser
+      END IF
+
+10    FORMAT(3X,'ortho matmul, time for parallel and serial driver = ', 2D9.2, /, &
+             3X,'using parallel driver' )
+20    FORMAT(3X,'ortho matmul, time for parallel and serial driver = ', 2D9.2, /, &
+             3X,'using serial driver' )
+
+      IF ( lpdrv ) THEN
+
+         IF( calls_cnt < 3 )  t1 = cclock()
+
+         CALL rep_matmul_drv( transa, transb, n, n, n, one, A, SIZE(a,1), B, SIZE(b,1), zero, C, SIZE(c,1), group )
+
+         IF( calls_cnt < 3 )  THEN
+            tpar = cclock() - t1
+            CALL mp_bcast( tpar, root, group )
          END IF
-         RETURN
-       END SUBROUTINE sqr_dmatmul
+
+      ELSE
+
+         IF( calls_cnt < 3 )  t1 = cclock()
+
+         CALL DGEMM( transa, transb, n, n, n, one, a, SIZE(a,1), b, SIZE(b,1), zero, c, SIZE(c,1) )
+
+         IF( calls_cnt < 3 )  THEN
+            tser = cclock() - t1
+            CALL mp_bcast( tser, root, group )
+         END IF
+
+      END IF
+      !
+      RETURN
+   END SUBROUTINE sqr_dmatmul
 
 
 !  ----------------------------------------------
 
 
-       SUBROUTINE sqr_cmatmul(transa,transb,a,b,c)
-         ! ...    Multiply square matrices A, B and return the result in C
-         USE mp_global, ONLY: nproc
-         COMPLEX(DP) :: c(:,:), a(:,:), b(:,:)
-         CHARACTER*1 transa, transb
-         INTEGER :: n
-         n = SIZE(c,1)
-         IF ((nproc > 1 ).AND. (n >= nproc)) THEN
-           CALL cmatmulp(transa,transb,A,B,C,n)
-         ELSE
-           CALL ZGEMM(transa,transb,n,n,n,cone,a(1,1),n,b(1,1),n,czero,c(1,1),n)
-         END IF
-         RETURN
-       END SUBROUTINE sqr_cmatmul
-
-
-!  ----------------------------------------------
-
-
-   SUBROUTINE diagonalize_rrho( n, rhos, rhod, s, use_pdrv )
+   SUBROUTINE diagonalize_rrho( n, rhos, rhod, s )
 
          !   Diagonalization of rhos
 
-         USE mp_global, ONLY: nproc, mpime
-         USE mp,        ONLY: mp_sum
-         !
-         REAL(DP), INTENT(IN) :: rhos(:,:) !  input symmetric matrix
-         REAL(DP)             :: rhod(:)   !  output eigenvalues
-         REAL(DP)             :: s(:,:)    !  output eigenvectors
-         INTEGER, INTENT(IN)  :: n         !  matrix dimension
-         LOGICAL, OPTIONAL, &
-                  INTENT(IN)  :: use_pdrv  ! if true use parallel driver
+      USE control_flags, ONLY: iprsta
+      USE mp_global, ONLY: nproc, mpime, group, root
+      USE io_global, ONLY: ionode, stdout
+      USE mp,        ONLY: mp_sum, mp_bcast
+      !
+      REAL(DP), INTENT(IN) :: rhos(:,:) !  input symmetric matrix
+      REAL(DP)             :: rhod(:)   !  output eigenvalues
+      REAL(DP)             :: s(:,:)    !  output eigenvectors
+      INTEGER, INTENT(IN)  :: n         !  matrix dimension
 
-         REAL(DP),   ALLOCATABLE :: aux(:)
-         REAL(DP),   ALLOCATABLE :: diag(:,:)
-         REAL(DP),   ALLOCATABLE :: vv(:,:)
-         !
-         INTEGER :: nrl
-         LOGICAL :: lpdrv
+      REAL(DP),   ALLOCATABLE :: aux(:)
+      REAL(DP),   ALLOCATABLE :: diag(:,:)
+      REAL(DP),   ALLOCATABLE :: vv(:,:)
+      !
+      INTEGER :: nrl
+      LOGICAL :: lpdrv
+      INTEGER, SAVE :: calls_cnt = 0
+      REAL(DP) :: t1
+      REAL(DP), SAVE :: tser, tpar
+      REAL(DP), EXTERNAL :: cclock
 
-         lpdrv = .FALSE.
+      calls_cnt = calls_cnt + 1
+
+      IF( nproc == 1 ) THEN 
+         lpdrv = .FALSE.          !  with one proc do not use parallel diag
+      ELSE IF ( calls_cnt == 1 ) THEN 
+         lpdrv = .TRUE.           !  use parallel diag the first call to take the time
+      ELSE IF ( calls_cnt == 2 ) THEN 
+         lpdrv = .FALSE.          !  use seria diag the second call to take the time
+      ELSE IF ( tpar < tser ) THEN
+         lpdrv = .TRUE.           !  use para diag if it is faster
+         IF( calls_cnt == 3 .AND. ionode .AND. iprsta > 1 ) WRITE( stdout, 10 ) tpar, tser
+      ELSE
+         lpdrv = .FALSE.          !  use scalar otherwise
+         IF( calls_cnt == 3 .AND. ionode .AND. iprsta > 1 ) WRITE( stdout, 20 ) tpar, tser
+      END IF
+
+10    FORMAT(3X,'ortho diag, time for parallel and serial driver = ', 2D9.2, /, &
+             3X,'using parallel driver' )
+20    FORMAT(3X,'ortho diag, time for parallel and serial driver = ', 2D9.2, /, &
+             3X,'using serial driver' )
          
-         IF( PRESENT( use_pdrv ) ) lpdrv = use_pdrv
-         
 
-         IF( SIZE( rhos, 1 ) /= SIZE( s, 1 ) .OR. SIZE( rhos, 2 ) /= SIZE( s, 2 ) ) &
-            CALL errore(" diagonalize_rho ", " input matrixes size do not match ", 1 )
+      IF( SIZE( rhos, 1 ) /= SIZE( s, 1 ) .OR. SIZE( rhos, 2 ) /= SIZE( s, 2 ) ) &
+         CALL errore(" diagonalize_rho ", " input matrixes size do not match ", 1 )
 
-         IF ( ( nproc > 1 ) .AND. lpdrv ) THEN
 
-           !  distribute matrix rows to processors
-           !
-           nrl = n / nproc
-           IF( mpime < MOD( n, nproc ) ) THEN
-             nrl = nrl + 1
-           end if
+      IF ( lpdrv ) THEN
 
-           ALLOCATE( diag( nrl, n ), vv( nrl, n ) )
+        IF( calls_cnt < 3 )  t1 = cclock()
 
-           CALL prpack( n, diag, rhos)
-           CALL pdspev_drv( 'V', diag, nrl, rhod, vv, nrl, nrl, n, nproc, mpime)
-           CALL prunpack( n, s, vv)
+        !  distribute matrix rows to processors
+        !
 
-           DEALLOCATE( diag, vv )
+        nrl = n / nproc
+        IF( mpime < MOD( n, nproc ) ) THEN
+          nrl = nrl + 1
+        end if
 
-           CALL mp_sum( s )
+        ALLOCATE( diag( nrl, n ), vv( nrl, n ) )
 
-         ELSE
+        CALL prpack( n, diag, rhos)
+        CALL pdspev_drv( 'V', diag, nrl, rhod, vv, nrl, nrl, n, nproc, mpime)
+        CALL prunpack( n, s, vv)
 
-           ALLOCATE( aux( n * ( n + 1 ) / 2 ) )
+        DEALLOCATE( diag, vv )
 
-           CALL rpack( n, aux, rhos )   !  pack lower triangle of rho into aux
+        CALL mp_sum( s )
 
-           CALL dspev_drv( 'V', 'L', n, aux, rhod, s, SIZE(s,1) )
+        IF( calls_cnt < 3 )  THEN
 
-           DEALLOCATE( aux )
+           tpar = cclock() - t1
 
-         END IF
+           CALL mp_bcast( tpar, root, group )
+
+        END IF
+
+      ELSE
+
+        IF( calls_cnt < 3 )  t1 = cclock()
+
+        ALLOCATE( aux( n * ( n + 1 ) / 2 ) )
+
+        CALL rpack( n, aux, rhos )   !  pack lower triangle of rho into aux
+
+        CALL dspev_drv( 'V', 'L', n, aux, rhod, s, SIZE(s,1) )
+
+        DEALLOCATE( aux )
+
+        IF( calls_cnt < 3 )  THEN
+
+           tser = cclock() - t1
+
+           CALL mp_bcast( tser, root, group )
+
+        END IF
+
+      END IF
 
       RETURN
    END SUBROUTINE diagonalize_rrho
@@ -160,7 +227,7 @@
 !  ----------------------------------------------
 
 
-   SUBROUTINE diagonalize_crho(a,d,ev)
+   SUBROUTINE diagonalize_crho( n, a, d, ev, use_pdrv )
 
       !  this routine calls the appropriate Lapack routine for diagonalizing a
       !  complex Hermitian matrix
@@ -169,10 +236,13 @@
          USE mp, ONLY: mp_sum
          IMPLICIT NONE
 
-         REAL(DP)    :: d(:)
-         COMPLEX(DP) :: a(:,:), ev(:,:)
+         REAL(DP)             :: d(:)
+         COMPLEX(DP)          :: a(:,:), ev(:,:)
+         LOGICAL, OPTIONAL, &
+                  INTENT(IN)  :: use_pdrv  ! if true use parallel driver
+         INTEGER, INTENT(IN)  :: n
 
-         INTEGER :: n, nrl
+         INTEGER :: nrl
 
          COMPLEX(DP), ALLOCATABLE :: aloc(:)
          COMPLEX(DP), ALLOCATABLE :: ap(:,:)
@@ -180,22 +250,13 @@
 
 ! ...   end of declarations
 !  ----------------------------------------------
+         LOGICAL :: lpdrv
 
-         n = SIZE(a, 1)
+         lpdrv = .FALSE.
+         
+         IF( PRESENT( use_pdrv ) ) lpdrv = use_pdrv
 
-         IF((nproc.EQ.2) .OR. (n.LT.nproc) .OR. (n.LT.256)) THEN
-
-           ALLOCATE(aloc(n*(n+1)/2))
-
-! ...      copy the lower-diagonal part of the matrix according to the
-! ...      Lapack packed storage scheme for Hermitian matrices
-           CALL zpack(aloc, a)
-! ...      call the Lapack routine
-           CALL zhpev_drv('V', 'L', n, aloc, d, ev, n)
-
-           DEALLOCATE(aloc)
-
-         ELSE
+         IF ( ( nproc > 1 ) .AND. use_pdrv ) THEN
 
            nrl = n/nproc
            IF(mpime.LT.MOD(n,nproc)) THEN
@@ -211,56 +272,26 @@
 
            DEALLOCATE(ap, vp)
 
+         ELSE
+
+           ALLOCATE(aloc(n*(n+1)/2))
+
+           ! ...      copy the lower-diagonal part of the matrix according to the
+           ! ...      Lapack packed storage scheme for Hermitian matrices
+
+           CALL zpack(aloc, a)
+
+           ! ...      call the Lapack routine
+
+           CALL zhpev_drv('V', 'L', n, aloc, d, ev, n)
+
+           DEALLOCATE(aloc)
+
          END IF
 
          RETURN
        END SUBROUTINE diagonalize_crho
 
-
-!  ----------------------------------------------
-!  BEGIN manual
-
-      SUBROUTINE rsigset ( gstart, ngw, nb, cp, sig )
-
-!     SIG = REAL PART OF ONE-2.0*ADJ(CP)*CP+CP(*,1)*ADJ(CP(*,1))
-!     WHERE CP(*,1) IS REAL, AND THEREFORE TRANS() IS USED IN PLACE OF ADJ()
-!  ----------------------------------------------
-!  END manual
-
-      USE mp_global, ONLY: nproc, group
-      USE mp, ONLY: mp_sum
-
-      IMPLICIT NONE
-
-      COMPLEX(DP)        :: CP(:,:)
-      REAL(DP)           :: SIG(:,:)
-      INTEGER, INTENT(IN) :: nb, ngw, gstart
-      INTEGER :: i, ldc, twongw, j, k, lds, n
-
-      ldc = 2 * SIZE( cp, 1 )
-      lds =     SIZE( sig, 1 )
-      twongw = 2*ngw
-      n      = nb
-
-      CALL DGEMM('T','N', n, n, twongw, -2.0d0, cp(1,1), ldc, cp(1,1), ldc, zero, sig(1,1), lds)
-      DO i = 1, n
-        sig(i,i) = sig(i,i) + one / DBLE(nproc)
-      END DO
-
-!      WRITE( stdout,*) ' SIGSET 2 ', SUM(sig)  ! DEBUG
-
-      IF ( gstart == 2 ) THEN
-         DO j=1,n
-            DO i=1,n
-               sig(i,j) = sig(i,j) +  DBLE(cp(1,i))*DBLE(cp(1,j))
-            END DO
-         END DO
-      END IF
-
-      CALL mp_sum( sig, group )
-
-      RETURN
-      END SUBROUTINE rsigset
 
 !  ----------------------------------------------
 
@@ -302,59 +333,6 @@
 
       RETURN
       END SUBROUTINE csigset
-
-!  ----------------------------------------------
-
-      SUBROUTINE rrhoset ( gstart, ngw, nb, c0, cp, rho, tmass )
-
-      !     RHO   = REAL PART OF 2*ADJ(C0/PMSS)*CP + 
-      !             C0(*,1)/PMSS*TRANS(CP(*,1)) 
-      !             (CP(*,1) AND C0(*,1) REAL!)
-      !
-      !     TMASS = REAL PART OF 2*ADJ(C0/PMSS)*C0/PMSS + ...
-      !
-      !     RHO AND TMASS ARE PLACED IN COMMON /HOPE/
- 
-      USE mp_global, ONLY: nproc
-      USE mp, ONLY: mp_sum
-
-      IMPLICIT  NONE
-
-      COMPLEX(DP) :: CP(:,:), C0(:,:)
-      REAL(DP)    :: RHO(:,:), TMASS(:,:)
-      INTEGER, INTENT(IN) :: ngw, nb, gstart
-
-      INTEGER ::  i, j, ldc, ldr, tngw, n
-
-      ldc = 2*SIZE( cp, 1 )
-      ldr = SIZE( rho, 1 )
-      tngw = 2*ngw
-      n    = nb
-
-      CALL DGEMM('T','N',n,n,tngw,two,c0(1,1),ldc,cp(1,1),ldc,zero,rho(1,1),ldr)
-      CALL DGEMM('T','N',n,n,tngw,two,c0(1,1),ldc,c0(1,1),ldc,zero,tmass(1,1),ldr)
-
-      IF (gstart == 2) THEN
-         DO j=1,n
-            DO i=1,n
-               rho(i,j) = rho(i,j) - DBLE(c0(1,i))*DBLE(cp(1,j))
-            END DO
-         END DO
-      END IF
-
-      IF (gstart == 2) THEN
-         DO j=1,n
-            DO i=1,n
-               tmass(i,j) = tmass(i,j) - DBLE(c0(1,i))*DBLE(c0(1,j))
-            END DO
-         END DO
-      END IF
-
-      CALL mp_sum( rho )
-      CALL mp_sum( tmass )
-
-      RETURN
-      END SUBROUTINE rrhoset
 
 !  ----------------------------------------------
 
@@ -437,6 +415,9 @@
       real(DP) sqrtfact
       COMPLEX (DP) :: C0ji
       INTEGER :: ldc
+
+      INTEGER :: NUMROC
+      EXTERNAL NUMROC
 
 !
 !     SUBROUTINE BODY
@@ -588,6 +569,7 @@
       INTEGER :: ip, ldc
       INTEGER :: nngw, npz, mez, nproc, mpime
       INTEGER :: nrl_ip, nrlx
+      INTEGER :: nrlx_tune = 256
       REAL(DP), ALLOCATABLE :: RTMP(:,:,:)
       REAL(DP), ALLOCATABLE :: ebpmss(:)
       REAL(DP) :: sqrtfact
@@ -772,6 +754,9 @@
       REAL (DP)  :: FACT,ONE_BY_EMASS
       REAL (DP), allocatable :: SIGTMP(:)
 
+      INTEGER :: NUMROC
+      EXTERNAL NUMROC
+
 !
 !     SUBROUTINE BODY
 !
@@ -869,6 +854,7 @@
       INTEGER NRL, nrl_ip, n, ii, jj 
       INTEGER ip, nngw, nrlx
       INTEGER npz, mez, mpime, nproc, ldc
+      INTEGER :: nrlx_tune = 256
 
       REAL (DP)  :: DDOT
       REAL (DP)  :: FACT,ONE_BY_EMASS
@@ -1073,16 +1059,15 @@
 !=----------------------------------------------------------------------------=!
 
 
-   SUBROUTINE ortho_iterate( u, diag, xloc, sig, rhor, rhos, tau, nx, nss, max, eps )
+   SUBROUTINE ortho_iterate( iter, diff, u, diag, xloc, sig, rhor, rhos, tau, nx, nss )
 
-      USE kinds,     ONLY: DP
-      USE io_global, ONLY: stdout
+      USE kinds,         ONLY: DP
+      USE io_global,     ONLY: stdout
+      USE control_flags, ONLY: ortho_eps, ortho_max
 
       IMPLICIT NONE
 
-      INTEGER, INTENT(IN) :: max
       INTEGER, INTENT(IN) :: nx, nss
-      REAL(DP), INTENT(IN) :: eps
       REAL(DP) :: u( nx, nx )
       REAL(DP) :: diag( nx )
       REAL(DP) :: xloc( nx, nx )
@@ -1090,16 +1075,17 @@
       REAL(DP) :: rhos( nx, nx )
       REAL(DP) :: tau( nx, nx )
       REAL(DP) :: sig( nx, nx )
+      INTEGER, INTENT(OUT) :: iter
+      REAL(DP), INTENT(OUT) :: diff 
 
-      INTEGER :: iter, i, j
+      INTEGER :: i, j
       REAL(DP), ALLOCATABLE :: tmp1(:,:), tmp2(:,:), dd(:,:)
       REAL(DP), ALLOCATABLE :: con(:,:), x1(:,:)
-      REAL(DP) :: diff
 
       ALLOCATE( tmp1(nx,nx), tmp2(nx,nx), dd(nx,nx), x1(nx,nx), con(nx,nx) )
 
 
-      DO iter = 1, max
+      ITERATIVE_LOOP: DO iter = 1, ortho_max
          !
          !       the following 4 MXMA-calls do the following matrix
          !       multiplications:
@@ -1128,7 +1114,7 @@
             END DO
          END DO
 
-         IF( diff <= eps ) go to 20
+         IF( diff < ortho_eps ) EXIT ITERATIVE_LOOP
 
          !
          !     the following two MXMA-calls do:
@@ -1153,12 +1139,7 @@
          CALL MXMA(tmp1,1,nx,  u,nx,1,tmp2,1,nx,nss,nss,nss)
          CALL MXMA(   u,1,nx,tmp2,1,nx,xloc,1,nx,nss,nss,nss)
          !
-      END DO
-
-      WRITE( stdout,*) ' diff= ',diff,' iter= ',iter
-      CALL errore('ortho','max number of iterations exceeded',iter)
-
-20    CONTINUE
+      END DO ITERATIVE_LOOP
 
       DEALLOCATE( tmp1, tmp2, dd, x1, con )
 
@@ -1166,9 +1147,120 @@
    END SUBROUTINE ortho_iterate
 
 
+!=----------------------------------------------------------------------------=!
+!
+!  Alternative iterative cycle
+!
+!=----------------------------------------------------------------------------=!
+
+
+   SUBROUTINE ortho_alt_iterate( iter, diff, u, diag, xloc, sig, rhor, tau, nx, n )
+
+      USE kinds,         ONLY: DP
+      USE io_global,     ONLY: stdout
+      USE control_flags, ONLY: ortho_eps, ortho_max
+      USE mp_global,     ONLY: group
+
+      IMPLICIT NONE
+
+      INTEGER, INTENT(IN) :: nx, n
+      REAL(DP) :: u( nx, nx )
+      REAL(DP) :: diag( nx )
+      REAL(DP) :: xloc( nx, nx )
+      REAL(DP) :: rhor( nx, nx )
+      REAL(DP) :: tau( nx, nx )
+      REAL(DP) :: sig( nx, nx )
+      INTEGER, INTENT(OUT) :: iter
+      REAL(DP), INTENT(OUT) :: diff 
+
+      INTEGER :: i, j
+      REAL(DP), ALLOCATABLE :: tmp1(:,:), tmp2(:,:)
+      REAL(DP), ALLOCATABLE :: x1(:,:)
+      REAL(DP), ALLOCATABLE :: sigd(:)
+      REAL(DP) :: den, dx
+
+      ALLOCATE( tmp1(nx,nx), tmp2(nx,nx), x1(nx,nx), sigd(nx) )
+
+
+      !
+      ! ...   Transform "sig", "rhoa" and "tau" in the new basis through matrix "s"
+      !
+      CALL sqr_matmul( 'N', 'N', n, sig, u, tmp1 )
+      CALL sqr_matmul( 'T', 'N', n, u, tmp1, sig )
+      CALL sqr_matmul( 'N', 'N', n, rhor, u, tmp1 )
+      CALL sqr_matmul( 'T', 'N', n, u, tmp1, rhor )
+      CALL sqr_matmul( 'N', 'N', n, tau, u, tmp1 )
+      CALL sqr_matmul( 'T', 'N', n, u, tmp1, tau )
+      !
+      ! ...   Initialize x0
+      !
+      DO J = 1, N
+        DO I = 1, N
+          den = (diag(i)+diag(j))
+          IF( ABS( den ) <= small ) den = SIGN( small, den )
+          xloc(i,j) = sig(i,j) / den
+        ENDDO
+      ENDDO
+
+      !
+      ! ...   Starting iteration
+      !
+
+      ITERATIVE_LOOP: DO iter = 0, ortho_max
+
+        CALL sqr_matmul( 'N', 'N', n, xloc, rhor, tmp2 )
+        call mytranspose( tmp2, NX, tmp1, NX, N, N )
+        DO J=1,N
+          DO I=1,N
+            tmp2(I,J) = tmp2(I,J) + tmp1(I,J)
+          ENDDO
+        ENDDO
+!
+        CALL sqr_matmul( 'T', 'N', n, tau, xloc, tmp1 )
+        !
+        DO I = 1, N
+          SIGD(I)   =  tmp1(I,I)
+          tmp1(I,I) = -SIGD(I)
+        ENDDO
+
+        CALL sqr_matmul( 'T', 'N', n, xloc, tmp1, X1 )
+        !
+        call mytranspose( X1, NX, tmp1, NX, N, N )
+
+        ! ...     X1   = SIG - tmp2 - 0.5d0 * ( X1 + X1^t )
+
+        diff = 0.0d0
+        !
+        DO j = 1, n
+          DO i = 1, n
+            !
+            den = ( diag(i) + sigd(i) + diag(j) + sigd(j) )
+            IF( ABS( den ) <= small ) den = SIGN( small, den )
+            x1(i,j) = sig(i,j) - tmp2(i,j) - 0.5d0 * (x1(i,j)+tmp1(i,j))
+            x1(i,j) = x1(i,j) / den
+            diff = MAX( ABS( x1(i,j) - xloc(i,j) ), diff )
+            xloc(i,j) = x1(i,j)
+          END DO
+        END DO
+
+        IF( diff < ortho_eps ) EXIT ITERATIVE_LOOP
+
+      END DO ITERATIVE_LOOP
+      !
+      ! ...   Transform x0 back to the original basis
+
+      CALL sqr_matmul( 'N', 'N', n, u, xloc, tmp1 )
+      CALL sqr_matmul( 'N', 'T', n, u, tmp1, xloc )
+
+      DEALLOCATE( tmp1, tmp2, x1 )
+
+      RETURN
+   END SUBROUTINE ortho_alt_iterate
+
+
 
 !-------------------------------------------------------------------------
-      SUBROUTINE sigset_cp( cp, ngwx, becp, nkbx, qbecp, n, nss, ist, sig, nx )
+   SUBROUTINE sigset( cp, ngwx, becp, nkbx, qbecp, n, nss, ist, sig, nx )
 !-----------------------------------------------------------------------
 !     input: cp (non-orthonormal), becp, qbecp
 !     computes the matrix
@@ -1182,6 +1274,8 @@
       USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
       USE mp,                 ONLY: mp_sum
+      USE control_flags,      ONLY: iprsta
+      USE io_global,          ONLY: stdout
 !
       IMPLICIT NONE
 !
@@ -1192,18 +1286,9 @@
       INTEGER :: i, j
       REAL(DP), ALLOCATABLE :: tmp1(:,:)
 !
-      sig = 0.d0
-      !
-      CALL MXMA( cp( 1, ist ), 2*ngwx, 1, cp( 1, ist ), 1, 2*ngwx,                    &
-     &           sig, 1, nx, nss, 2*ngw, nss )
-      !
-      !     q >= 0  components with weight 2.0
-      !
-      DO j=1,nss
-         DO i=1,nss
-            sig(i,j) = -2.0d0 * sig(i,j)
-         END DO
-      END DO
+
+      CALL DGEMM( 'T', 'N',  nss, nss, 2*ngw, -2.0d0, cp( 1, ist ), 2*ngwx, &
+                  cp( 1, ist ), 2*ngwx, 0.0d0, sig, nx)
       !
       !     q = 0  components has weight 1.0
       !
@@ -1238,13 +1323,22 @@
          DEALLOCATE( tmp1 )
 
       ENDIF
+
+      IF(iprsta.GT.4) THEN
+         WRITE( stdout,*)
+         WRITE( stdout,'(26x,a)') '    sig '
+         DO i=1,nss
+            WRITE( stdout,'(7f11.6)') (sig(i,j),j=1,nss)
+         END DO
+      ENDIF
+
 !
       RETURN
-      END SUBROUTINE sigset_cp
+   END SUBROUTINE sigset
 
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE rhoset_cp( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, ist, rho, nx )
+   SUBROUTINE rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, ist, rho, nx )
 !-----------------------------------------------------------------------
 !     input: cp (non-orthonormal), phi, bephi, qbecp
 !     computes the matrix
@@ -1259,6 +1353,8 @@
       USE cvan,               ONLY: nvb
       USE kinds,              ONLY: DP
       USE mp,                 ONLY: mp_sum
+      USE control_flags,      ONLY: iprsta
+      USE io_global,          ONLY: stdout
 !
       IMPLICIT NONE
 !
@@ -1269,20 +1365,12 @@
       INTEGER     :: i, j
       REAL(DP), ALLOCATABLE :: tmp1(:,:)
       !
-      rho (:,:) = 0.d0
-      !
       !     <phi|cp>
       !
-      CALL MXMA( phi( 1, ist ), 2*ngwx, 1, cp( 1, ist ), 1, 2*ngwx,                   &
-     &           rho, 1, nx, nss, 2*ngw, nss )
       !
-      !     q >= 0  components with weight 2.0
-      !
-      DO j=1,nss
-         DO i=1,nss
-            rho(i,j)=2.*rho(i,j)
-         END DO
-      END DO
+
+      CALL DGEMM( 'T', 'N', nss, nss, 2*ngw, 2.0d0, phi( 1, ist ), 2*ngwx, &
+                  cp( 1, ist ), 2*ngwx, 0.0d0, rho, nx)
       !
       !     q = 0  components has weight 1.0
       !
@@ -1313,12 +1401,20 @@
          DEALLOCATE( tmp1 )
 
       ENDIF
+
+      IF(iprsta.GT.4) THEN
+         WRITE( stdout,*)
+         WRITE( stdout,'(26x,a)') '    rho '
+         DO i=1,nss
+            WRITE( stdout,'(7f11.6)') (rho(i,j),j=1,nss)
+         END DO
+      ENDIF
 !
       RETURN
-      END SUBROUTINE rhoset_cp
+   END SUBROUTINE rhoset
 
 !-------------------------------------------------------------------------
-      SUBROUTINE tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, ist, tau, nx )
+   SUBROUTINE tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, ist, tau, nx )
 !-----------------------------------------------------------------------
 !     input: phi
 !     computes the matrix
@@ -1332,6 +1428,8 @@
       USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
       USE mp,                 ONLY: mp_sum
+      USE control_flags,      ONLY: iprsta
+      USE io_global,          ONLY: stdout
 !
       IMPLICIT NONE
       INTEGER :: nss, ist, ngwx, nkbx, n, nx
@@ -1340,19 +1438,9 @@
       !
       INTEGER     :: i, j
       REAL(DP), ALLOCATABLE :: tmp1( :, : )
-!
-      tau = 0.0d0
       !
-      CALL MXMA( phi( 1, ist ), 2*ngwx, 1, phi( 1, ist ), 1, 2*ngwx,                  &
-     &           tau, 1, nx, nss, 2*ngw, nss )
-      !
-      !     q >= 0  components with weight 2.0
-      !
-      DO j=1,nss
-         DO i=1,nss
-            tau(i,j) = 2.0d0 * tau(i,j)
-         END DO
-      END DO
+      CALL DGEMM( 'T', 'N', nss, nss, 2*ngw, 2.0d0, phi( 1, ist ), 2*ngwx, &
+                  phi( 1, ist ), 2*ngwx, 0.0d0, tau, nx)
       !
       !     q = 0  components has weight 1.0
       !
@@ -1383,9 +1471,236 @@
          DEALLOCATE( tmp1 )
 
       ENDIF
+
+      IF(iprsta.GT.4) THEN
+         WRITE( stdout,*)
+         WRITE( stdout,'(26x,a)') '    tau '
+         DO i=1,nss
+            WRITE( stdout,'(7f11.6)') (tau(i,j),j=1,nss)
+         END DO
+      ENDIF
 !
       RETURN
-      END SUBROUTINE tauset
+   END SUBROUTINE tauset
 
+!
+!-------------------------------------------------------------------------
+   SUBROUTINE updatc( ccc, n, x0, nx, phi, ngwx, bephi, nkbx, becp, bec, cp )
+!-----------------------------------------------------------------------
+!
+      !     input ccc : dt**2/emass OR 1.0d0 demending on ortho
+      !     input x0  : converged lambdas from ortho-loop (unchanged in output)
+      !     input cp  : non-orthonormal cp=c0+dh/dc*ccc
+      !     input bec : <cp|beta_i>
+      !     input phi 
+      !     output cp : orthonormal cp=cp+lambda*phi
+      !     output bec: bec=becp+lambda*bephi
+      !
+      USE kinds,         ONLY: DP
+      USE ions_base,     ONLY: nsp, na
+      USE io_global,     ONLY: stdout
+      USE cvan,          ONLY: nvb, ish
+      USE uspp,          ONLY: nkb, nkbus
+      USE uspp_param,    ONLY: nh
+      USE gvecw,         ONLY: ngw
+      USE control_flags, ONLY: iprint, iprsta
+!
+      IMPLICIT NONE
+!
+      INTEGER, INTENT(IN) :: n, nx, ngwx, nkbx
+      COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
+      REAL(DP), INTENT(IN) :: ccc
+      REAL(DP)    :: bec( nkbx, n ), x0( nx, nx )
+      REAL(DP)    :: bephi( nkbx, n ), becp( nkbx, n )
+
+      ! local variables
+
+      INTEGER :: i, j, ig, is, iv, ia, inl
+      REAL(DP),    ALLOCATABLE :: wtemp(:,:) 
+      !
+      !     lagrange multipliers
+      !
+      CALL start_clock( 'updatc' )
+      
+      IF ( ccc /= 1.0d0 ) THEN
+         DO j = 1, n
+            CALL DSCAL( n, ccc, x0(1,j), 1 )
+         END DO
+      END IF
+      !
+      CALL DGEMM( 'N', 'N', 2*ngw, n, n, 1.0d0, phi, 2*ngwx, x0, nx, 1.0d0, cp, 2*ngwx )
+      !    
+      !     updating of the <beta|c(n,g)>
+      !
+      !     bec of vanderbilt species are updated 
+      !
+      IF( nvb > 0 )THEN
+
+         ALLOCATE( wtemp( n, nkb ) )
+
+         CALL MXMA(x0,1,nx,bephi,nkb,1,wtemp,1,n,n,n,nkbus)
+!
+         DO i=1,n
+            DO inl=1,nkbus
+               bec(inl,i)=wtemp(i,inl)+becp(inl,i)
+            END DO
+         END DO
+
+         DEALLOCATE( wtemp )
+
+      ENDIF
+!
+      IF ( iprsta > 2 ) THEN
+         WRITE( stdout,*)
+         DO is=1,nsp
+            IF(nsp.GT.1) THEN
+               WRITE( stdout,'(33x,a,i4)') ' updatc: bec (is)',is
+               WRITE( stdout,'(8f9.4)')                                       &
+     &            ((bec(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,n)
+            ELSE
+               DO ia=1,na(is)
+                  WRITE( stdout,'(33x,a,i4)') ' updatc: bec (ia)',ia
+                  WRITE( stdout,'(8f9.4)')                                    &
+     &            ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,n)
+               END DO
+            END IF
+            WRITE( stdout,*)
+         END DO
+      ENDIF
+!
+      IF ( ccc /= 1.0d0 ) THEN
+         DO j=1,n
+            CALL DSCAL(n,1.0/ccc,x0(1,j),1)
+         END DO
+      END IF
+!
+      CALL stop_clock( 'updatc' )
+!
+      RETURN
+   END SUBROUTINE updatc
+
+
+!-------------------------------------------------------------------------
+      SUBROUTINE calphi( c0, ngwx, bec, nkbx, betae, phi, n, ema0bg )
+!-----------------------------------------------------------------------
+!     input: c0 (orthonormal with s(r(t)), bec=<c0|beta>, betae=|beta>
+!     computes the matrix phi (with the old positions)
+!       where  |phi> = s'|c0> = |c0> + sum q_ij |i><j|c0>
+!     where s'=s(r(t))  
+!
+      USE kinds,          ONLY: DP
+      USE ions_base,      ONLY: na, nsp
+      USE io_global,      ONLY: stdout
+      USE cvan,           ONLY: ish, nvb
+      USE uspp_param,     ONLY: nh
+      USE uspp,           ONLY: nhsavb=>nkbus, qq
+      USE gvecw,          ONLY: ngw
+      USE constants,      ONLY: pi, fpi
+      USE control_flags,  ONLY: iprint, iprsta
+      USE mp,             ONLY: mp_sum
+!
+      IMPLICIT NONE
+      
+      INTEGER, INTENT(IN) :: ngwx, nkbx, n
+      COMPLEX(DP)         :: c0( ngwx, n ), phi( ngwx, n ), betae( ngwx, nkbx )
+      REAL(DP)            :: bec( nkbx, n ), emtot
+      REAL(DP), OPTIONAL  :: ema0bg( ngwx )
+
+      ! local variables
+      !
+      INTEGER  :: is, iv, jv, ia, inl, jnl, i, j
+      REAL(DP), ALLOCATABLE :: qtemp( : , : )
+!
+      CALL start_clock( 'calphi' )
+
+
+      phi(:,:) = (0.d0, 0.d0)
+!
+      IF ( nvb > 0 ) THEN
+
+         ALLOCATE( qtemp( nhsavb, n ) )
+
+         qtemp (:,:) = 0.d0
+         DO is=1,nvb
+            DO iv=1,nh(is)
+               DO jv=1,nh(is)
+                  IF(ABS(qq(iv,jv,is)) > 1.e-5) THEN
+                     DO ia=1,na(is)
+                        inl=ish(is)+(iv-1)*na(is)+ia
+                        jnl=ish(is)+(jv-1)*na(is)+ia
+                        DO i=1,n
+                           qtemp(inl,i) = qtemp(inl,i) +                &
+     &                                    qq(iv,jv,is)*bec(jnl,i)
+                        END DO
+                     END DO
+                  ENDIF
+               END DO
+            END DO
+         END DO
+!
+         CALL MXMA                                                     &
+     &       ( betae, 1, 2*ngwx, qtemp, 1, nhsavb, phi, 1, 2*ngwx, 2*ngw, nhsavb, n )
+
+         DEALLOCATE( qtemp )
+
+      END IF
+!
+      IF( PRESENT( ema0bg ) ) THEN
+         DO j=1,n
+            DO i=1,ngw
+               phi(i,j)=(phi(i,j)+c0(i,j))*ema0bg(i)
+            END DO
+         END DO
+      ELSE
+         DO j=1,n
+            DO i=1,ngw
+               phi(i,j)=phi(i,j)+c0(i,j)
+            END DO
+         END DO
+      END IF
+
+      !   
+
+      IF(iprsta > 2) THEN
+         emtot=0.0d0
+         IF( PRESENT( ema0bg ) ) THEN
+            DO j=1,n
+               DO i=1,ngw
+                  emtot=emtot +2.0d0*DBLE(phi(i,j)*CONJG(c0(i,j)))*ema0bg(i)**(-2.0d0)
+               END DO
+            END DO
+         ELSE
+            DO j=1,n
+               DO i=1,ngw
+                  emtot=emtot +2.0d0*DBLE(phi(i,j)*CONJG(c0(i,j)))
+               END DO
+            END DO
+         END IF
+         emtot=emtot/n
+
+         CALL mp_sum( emtot )
+
+         WRITE( stdout,*) 'in calphi sqrt(emtot)=',SQRT(emtot)
+         WRITE( stdout,*)
+         DO is=1,nsp
+            IF(nsp > 1) THEN
+               WRITE( stdout,'(33x,a,i4)') ' calphi: bec (is)',is
+               WRITE( stdout,'(8f9.4)')                                       &
+     &            ((bec(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,n)
+            ELSE
+               DO ia=1,na(is)
+                  WRITE( stdout,'(33x,a,i4)') ' calphi: bec (ia)',ia
+                  WRITE( stdout,'(8f9.4)')                                    &
+     &               ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,n)
+               END DO
+            END IF
+         END DO
+      ENDIF
+
+
+      CALL stop_clock( 'calphi' )
+!
+      RETURN
+      END SUBROUTINE calphi
 
    END MODULE orthogonalize_base

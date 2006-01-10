@@ -41,7 +41,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE runcp_module,         ONLY : runcp_uspp
   USE wave_constrains,      ONLY : interpolate_lambda
   USE gvecw,                ONLY : ngw
-  ! USE para_mod,             ONLY : 
+  USE orthogonalize_base,   ONLY : calphi
   !
   IMPLICIT NONE
   !
@@ -143,7 +143,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      ! ... calphi calculates phi
      ! ... the electron mass rises with g**2
      !
-     CALL calphi( c0, ngw, ema0bg, bec, nkb, vkb, phi, nbsp )
+     CALL calphi( c0, ngw, bec, nkb, vkb, phi, nbsp, ema0bg )
      !
      ! ... begin try and error loop (only one step!)
      !

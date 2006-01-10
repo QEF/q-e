@@ -10,31 +10,40 @@
 !-----------------------------------------------------------------------
 !
 
-      subroutine GRIDSETUP(NPROC,NPROW,NPCOL)
+SUBROUTINE GRID2D_DIMS( nproc, nprow, npcol )
+   !
+   ! This subroutine factorizes the number of processors (NPROC)
+   ! into NPROW and NPCOL,  that are the sizes of the 2D processors mesh.
+   !
+   !    Written by Carlo Cavazzoni
+   !
+   IMPLICIT NONE
+   INTEGER, INTENT(IN)  :: nproc
+   INTEGER, INTENT(OUT) :: nprow, npcol
+   integer sqrtnp,i
+   sqrtnp = int( sqrt( dble(nproc) ) + 1 )
+   do i=1,sqrtnp
+      if(mod(nproc,i).eq.0) nprow = i
+   end do
+   npcol = nproc/nprow
+   RETURN
+END SUBROUTINE
 
-!
-! This subroutine factorizes the number of processors (NPROC)
-! into NPROW and NPCOL,  that are the sizes of the 2D processors mesh.
-!
-! Written by Carlo Cavazzoni
-!
+SUBROUTINE GRID2D_COORDS( rank, nprow, npcol, row, col )
+   IMPLICIT NONE
+   INTEGER, INTENT(IN)  ::  rank          ! process index starting from 0
+   INTEGER, INTENT(IN)  ::  nprow, npcol  ! dimensions of the processor grid
+   INTEGER, INTENT(OUT) ::  row, col
+   row = MOD( rank, nprow )
+   col = rank / nprow
+   RETURN
+END SUBROUTINE
 
-      IMPLICIT NONE
-
-      integer nproc,nprow,npcol
-      integer sqrtnp,i
-
-      if(nproc.lt.2) then
-        npcol = 1
-        nprow = 1
-      else
-        sqrtnp = int( sqrt( DBLE(nproc) ) + 1 )
-        do i=1,sqrtnp
-          if(mod(nproc,i).eq.0) nprow = i
-        end do
-        npcol = nproc/nprow
-      endif
-
-      return
-      end subroutine gridsetup
-
+SUBROUTINE GRID2D_RANK( nprow, npcol, row, col, rank )
+   IMPLICIT NONE
+   INTEGER, INTENT(OUT) ::  rank         ! process index starting from 0
+   INTEGER, INTENT(IN)  ::  nprow, npcol  ! dimensions of the processor grid
+   INTEGER, INTENT(IN)  ::  row, col
+   rank = row + col * nprow
+   RETURN
+END SUBROUTINE

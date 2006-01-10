@@ -15,7 +15,7 @@
 
         LOGICAL :: TTURBO
         INTEGER :: NTURBO
-        COMPLEX(DP), ALLOCATABLE :: turbo_states(:,:,:,:) 
+        COMPLEX(DP), ALLOCATABLE :: turbo_states(:,:) 
 
         PUBLIC :: tturbo, nturbo, turbo_states, turbo_init, allocate_turbo
         PUBLIC :: deallocate_turbo
@@ -35,19 +35,19 @@
           RETURN
         END SUBROUTINE turbo_init
 
-        SUBROUTINE allocate_turbo( nr1, nr2, nr3 )
+        SUBROUTINE allocate_turbo( nnr )
           USE io_global, ONLY: ionode
           USE io_global, ONLY: stdout
 
           USE mp, ONLY: mp_sum
-          INTEGER :: nr1,nr2,nr3
+          INTEGER :: nnr
           INTEGER :: ierr
           IF( ionode ) THEN
             WRITE( stdout,fmt='(/,3X,"TURBO: allocating ",I10," bytes ")') &
-              16*nr1*nr2*nr3*nturbo
+              16*nnr*nturbo
           END IF
           IF( .NOT. ALLOCATED( turbo_states ) ) THEN
-            ALLOCATE( turbo_states( nr1, nr2, nr3, nturbo ), STAT = ierr)
+            ALLOCATE( turbo_states( nnr, nturbo ), STAT = ierr)
             CALL mp_sum(ierr)
             IF( ierr /= 0 ) THEN 
               IF( ionode ) THEN

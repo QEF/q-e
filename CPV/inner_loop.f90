@@ -24,7 +24,7 @@
       use energies, only: eht, epseu, exc, etot, eself, enl, ekin,          &
      &                    atot, entropy, egrand
       use electrons_base, only: f, nspin, nel, iupdwn, nupdwn, nudx, nelt, &
-                                nx => nbspx, n => nbsp, ispin => fspin
+                                nx => nbspx, n => nbsp, ispin 
 
       use ensemble_dft, only: tens, tgrand, ninner, ismear, etemp, ef,       &
      &                tdynz, tdynf, zmass, fmass, fricz, fricf, z0, c0diag,  &

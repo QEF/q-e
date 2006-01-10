@@ -1062,8 +1062,8 @@ MODULE read_namelists_module
        IF( calculation == ' ' ) &
           CALL errore( sub_name,' calculation not specified ',1)
        IF( prog == 'CP' ) THEN
-          IF( calculation == 'nscf' .OR. calculation == 'phonon' ) &
-             CALL errore( sub_name,' calculation '//TRIM(calculation)// &
+          IF( calculation == 'phonon' ) &
+             CALL errore( sub_name,' calculation '//calculation// &
                           & ' not implemented ',1)
        END IF
        IF( ndr < 50 ) &
@@ -1573,9 +1573,9 @@ MODULE read_namelists_module
                  cell_dynamics     = 'none'
              END IF
           CASE ('nscf')
-             IF( prog == 'CP' ) &
-                CALL errore( sub_name,' calculation '//TRIM(calculation)// &
-                             & ' not implemented ',1)
+             ! IF( prog == 'CP' ) &
+             !    CALL errore( sub_name,' calculation '//calculation// &
+             !                 & ' not implemented ',1)
              IF( prog == 'CP' ) occupations = 'bogus'
              IF( prog == 'CP' ) electron_dynamics = 'damp'
              IF( prog == 'PW' ) startingpot = 'file'

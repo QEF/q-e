@@ -33,7 +33,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
   use reciprocal_vectors, only: ng0 => gstart
   use uspp_param, only: nh, nhm
   use uspp, only : nhsa=> nkb
-  use electrons_base, only: nx => nbspx, n => nbsp, fspin
+  use electrons_base, only: nx => nbspx, n => nbsp, ispin
   use mp, only: mp_sum
   
 
@@ -80,7 +80,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
 ! first the local part
 
         sca=(0.,0.)
-        if(fspin(ix) == fspin(jx) ) then
+        if(ispin(ix) == ispin(jx) ) then
        
 !#ifdef NEC
 !        *vdir nodep
@@ -133,7 +133,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
 !  now the non local vanderbilt part
             
         sca =(0.,0.)
-        if(fspin(ix)==fspin(jx)) then
+        if(ispin(ix)==ispin(jx)) then
           do is=1,nvb!loop on vanderbilt species
              do ia=1,na(is)!loop on atoms
                 do iv=1,nh(is)!loop on projectors

@@ -187,7 +187,7 @@
       USE io_files        , ONLY: outdir, prefix
       USE printout_base   , ONLY: printout_base_init
       USE cp_main_variables, ONLY : atoms0, atomsp, atomsm, ei1, ei2, ei3, eigr, sfac, &
-                                    ht0, htm, htp, rhoe, vpot, desc, wfill, wempt,     &
+                                    ht0, htm, htp, rhor, vpot, wfill, wempt,     &
                                     acc, acc_this_run, occn, edft, nfi, bec, becdr
       USE cg_module,         ONLY : tcg
       IMPLICIT NONE
@@ -344,7 +344,7 @@
            !
            ! ...     perform DIIS minimization on electronic states
            !
-           CALL runsdiis(ttprint, rhoe, desc, atoms0, bec, becdr, &
+           CALL runsdiis(ttprint, rhor, atoms0, bec, becdr, &
                eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
                vpot, doions, edft )
            !
@@ -354,7 +354,7 @@
            !
            IF( nspin > 1 ) CALL errore(' cpmain ',' lsd+diis not allowed ',0)
            !
-           CALL rundiis(ttprint, rhoe, desc, atoms0, bec, becdr, &
+           CALL rundiis(ttprint, rhor, atoms0, bec, becdr, &
                eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
                vpot, doions, edft )
            !
@@ -362,7 +362,7 @@
            !
            ! ...     on entry c0 should contain the wavefunctions to be optimized
            !
-           CALL runcg(tortho, ttprint, rhoe, desc, atoms0, bec, becdr, &
+           CALL runcg(tortho, ttprint, rhor, atoms0, bec, becdr, &
                eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
                vpot, doions, edft, ekin_maxiter, etot_conv_thr, tconv_cg )
            !
@@ -371,13 +371,13 @@
            !
         ELSE IF ( tsteepdesc ) THEN
            !
-           CALL runsd(tortho, ttprint, ttforce, rhoe, desc, atoms0, bec, becdr, &
+           CALL runsd(tortho, ttprint, ttforce, rhor, atoms0, bec, becdr, &
                eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
                vpot, doions, edft, ekin_maxiter, ekin_conv_thr )
            !
         ELSE IF ( tconjgrad_ion%active ) THEN
            !
-           CALL runcg_ion(nfi, tortho, ttprint, rhoe, desc, atomsp, atoms0, &
+           CALL runcg_ion(nfi, tortho, ttprint, rhor, atomsp, atoms0, &
                atomsm, bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
                vpot, doions, edft, tconvthrs%derho, tconvthrs%force, tconjgrad_ion%nstepix, &
                tconvthrs%ekin, tconjgrad_ion%nstepex )
@@ -406,9 +406,9 @@
         s5      = cclock()
         timernl = s5 - s4
 
-        ! ...   compute the new charge density "rhoe"
+        ! ...   compute the new charge density "rhor"
         !
-        CALL rhoofr( nfi, c0, wfill, occn, rhoe, desc, ht0)
+        CALL rhoofr( nfi, c0, wfill, occn, rhor, ht0)
 
         IF(memchk) CALL memstat(6)
 
@@ -418,7 +418,7 @@
         ! ...   vofrhos compute the new DFT potential "vpot", and energies "edft",
         ! ...   ionc forces "fion" and stress "pail".
         !
-        CALL vofrhos(ttprint, ttforce, tstress, rhoe, desc, atoms0, &
+        CALL vofrhos(ttprint, ttforce, tstress, rhor, atoms0, &
           vpot, bec, c0, wfill, occn, eigr, ei1, ei2, ei3, sfac, timepre, ht0, edft)
 
         ! CALL debug_energies( edft ) ! DEBUG
@@ -578,7 +578,7 @@
 
         IF( self_interaction /= 0 ) THEN
            IF ( nat_localisation > 0 .AND. ttprint ) THEN
-              CALL localisation( cp( : , nupdwn(1), 1, 1 ), atoms0, ht0, desc)
+              CALL localisation( cp( : , nupdwn(1), 1, 1 ), atoms0, ht0)
            END IF
         END IF
 
@@ -700,7 +700,7 @@
         !
         IF( ttsave .OR. ttexit ) THEN
           CALL writefile( nfi, tps, c0, cm, wfill, occn, atoms0, atomsm, acc,  &
-                          taui, cdmi, htm, ht0, rhoe, desc, vpot )
+                          taui, cdmi, htm, ht0, rhor, vpot )
         END IF
 
         IF( ttexit .AND. .NOT. ttprint ) THEN
@@ -746,12 +746,12 @@
       END IF
 
       IF(tprnsfac) THEN
-        CALL print_sfac(rhoe, desc, sfac)
+        CALL print_sfac(rhor, sfac)
       END IF
 
       ! ... report statistics
 
-      CALL printacc(nfi, rhoe, desc, atomsm, htm, nstep_this_run, acc, acc_this_run)
+      CALL printacc(nfi, nstep_this_run, acc, acc_this_run)
       CALL mp_report_buffers()
       CALL mp_report()
 

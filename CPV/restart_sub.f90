@@ -72,6 +72,8 @@ MODULE from_restart_module
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh, cell_nosezero
     USE phase_factors_module, ONLY : strucf
     USE cg_module,            ONLY : tcg
+    USE orthogonalize,        ONLY : ortho
+    USE orthogonalize_base,   ONLY : updatc, calphi
     !
     COMPLEX(DP) :: eigr(:,:), ei1(:,:), ei2(:,:), ei3(:,:)
     COMPLEX(DP) :: eigrb(:,:)
@@ -239,7 +241,7 @@ MODULE from_restart_module
        !
        ! ... calphi calculates phi; the electron mass rises with g**2
        !
-       CALL calphi( c0, ngw, ema0bg, bec, nkb, vkb, phi, nbsp )
+       CALL calphi( c0, ngw, bec, nkb, vkb, phi, nbsp, ema0bg )
        !
        ! ... begin try and error loop ( only one step! )
        !
@@ -252,10 +254,11 @@ MODULE from_restart_module
        !
        IF ( tortho ) THEN
           !
-          CALL ortho( eigr, cm, phi, lambda, bigr, iter, &
-                      dt2bye, ortho_eps, ortho_max, delt0, bephi, becp )
+          CALL ortho( eigr, cm(:,:,1,1), phi(:,:,1,1), lambda, bigr, iter, &
+                      dt2bye, bephi, becp )
           !
-          CALL updatc( dt2bye, lambda, phi, bephi, becp, bec, cm )
+          CALL updatc( dt2bye, nbsp, lambda, SIZE(lambda,1), phi, SIZE(phi,1), &
+                       bephi, SIZE(bephi,1), becp, bec, cm )
           !
        ELSE
           !
@@ -414,7 +417,7 @@ MODULE from_restart_module
   END SUBROUTINE from_restart_sm
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE from_restart_fpmd( nfi, acc, rhoe, desc, cm, c0, cdesc, &
+  SUBROUTINE from_restart_fpmd( nfi, acc, rhoe, cm, c0, cdesc, &
                                 eigr, ei1, ei2, ei3, sfac, fi, ht_m, ht_0, &
                                 atoms_m, atoms_0, bec, becdr, vpot, edft )
     !--------------------------------------------------------------------------
@@ -454,7 +457,6 @@ MODULE from_restart_module
                                       tprnfor, tpre
     USE parameters,            ONLY : nacx
     USE atoms_type_module,     ONLY : atoms_type
-    USE charge_types,          ONLY : charge_descriptor
     USE ions_base,             ONLY : vel_srt, tau_units
     USE runcp_module,          ONLY : runcp_ncpp
     USE grid_dimensions,       ONLY : nr1, nr2, nr3
@@ -476,12 +478,11 @@ MODULE from_restart_module
     COMPLEX(DP), INTENT(INOUT) :: cm(:,:,:,:), c0(:,:,:,:)
     REAL(DP)                   :: fi(:,:,:)
     TYPE(boxdimensions)        :: ht_m, ht_0
-    REAL(DP)                   :: rhoe(:,:,:,:)
-    TYPE(charge_descriptor)    :: desc
+    REAL(DP)                   :: rhoe(:,:)
     TYPE(wave_descriptor)      :: cdesc
     REAL(DP)                   :: bec(:,:)
     REAL(DP)                   :: becdr(:,:,:)
-    REAL(DP)                   :: vpot(:,:,:,:)
+    REAL(DP)                   :: vpot(:,:)
     TYPE(dft_energy_type)      :: edft
     !
     INTEGER     :: ig, ib, i, j, k, ik, nb, is, ia, ierr, isa, iss
@@ -638,9 +639,9 @@ MODULE from_restart_module
        ! 
        edft%enl = nlrh_m( c0, cdesc, ttforce, atoms_0, fi, bec, becdr, eigr )
        !
-       CALL rhoofr( nfi, c0, cdesc, fi, rhoe, desc, ht_0 )
+       CALL rhoofr( nfi, c0, cdesc, fi, rhoe, ht_0 )
        !
-       CALL vofrhos( .true. , ttforce, tstress, rhoe, desc, &
+       CALL vofrhos( .true. , ttforce, tstress, rhoe, &
                      atoms_0, vpot, bec, c0, cdesc, fi, eigr, &
                      ei1, ei2, ei3, sfac, timepre, ht_0, edft )
        !

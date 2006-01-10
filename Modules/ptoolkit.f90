@@ -8,29 +8,10 @@
 
 #include "f_defs.h"
 
-!  BEGIN manual
-
 !==----------------------------------------------==!
     MODULE parallel_toolkit
 !==----------------------------------------------==!
 
-
-!  (describe briefly what this module does...)
-!  ----------------------------------------------
-!  routines in this module:
-!        MATMULP1(TRANSA, TRANSB, A, B, C, N)
-!        MATMULP(TRANSA, TRANSB, A, B, C, N)
-!        CMATMULP(TRANSA,TRANSB,A,B,C,N)
-!        PTREDV(A,LDA,D,E,V,LDV,NRL,N,NPROC,ME)
-!        ptqliv(d,e,n,z,ldz,nrl)
-!        peigsrtv(d,v,ldv,n,nrl)
-!        diagonalize(IOPT,A,D,EV,N,NPROC,MPIME)
-!        pdspev_drv( JOBZ, ap, lda, w, z, ldz, nrl, n, nproc, mpime)  
-!        dspev_drv( JOBZ, UPLO, N, AP, W, Z, LDZ )
-!        cdiagonalize(iflg,a,d,ev,n,nproc,mpime) 
-!        PZHPTRD( N, NRL, AP, LDA, D, E, TAU, NPROC, ME)
-!        PZUPGTR( N, NRL, AP, LDA, TAU, Q, LDQ, NPROC, ME)
-!  END manual  
 
     USE io_global,  ONLY : stdout
     USE parallel_include
@@ -40,487 +21,17 @@
     SAVE
     PRIVATE
 
-    PUBLIC ::  matmulp, cmatmulp, pdspev_drv, dspev_drv, &
+    PUBLIC ::  pdspev_drv, dspev_drv, &
       diagonalize, pzhpev_drv, zhpev_drv, cdiagonalize
+    PUBLIC ::  rep_matmul_drv
 
 !==----------------------------------------------==!
     CONTAINS
 !==----------------------------------------------==!
 
 
-    SUBROUTINE matmulp1(transa, transb, a, b, c, n)
 
-      !
-      ! Parallel driver for matrix multiplication of square matrixes
-      ! Compute:
-      !         C = OP( A ) * OP( B )
-      !
-      ! TRANSA = 'N', OP( A ) = A
-      ! TRANSA = 'T', OP( A ) = A'
-      ! TRANSB = 'N', OP( B ) = B
-      ! TRANSB = 'T', OP( B ) = B'
-      !
-      ! N is the dimension of the matrixes
-      !
-      ! NOTE: All matrixes should be replicated on all processors
-      !
-      ! Writte by Carlo Cavazzoni
-      !
-
-      USE kinds
-
-      IMPLICIT NONE
-
-#if defined __PARA
-#  if defined __SHMEM
-      include 'mpp/shmem.fh'
-#  endif
-#endif
-
-      INTEGER   :: N
-      REAL(DP) :: A(N,*), C(N,*), B(N,*)
-
-      CHARACTER*1, INTENT(IN) :: TRANSA, TRANSB
-
-#if defined __MPI
-
-      INTEGER, PARAMETER :: matmul_size = 2**20  ! 1Mb 2^20
-
-      INTEGER :: ISTATUS( MPI_STATUS_SIZE )
-
-      INTEGER :: ME, I, II, J, JJ, IP, SOUR, DEST, INFO, IERR, ioff, ldx
-      INTEGER :: NB, IB_S, NB_SOUR, IB_SOUR, IBUF
-      INTEGER :: nproc, mpime, q, r
-
-      REAL(DP) :: auxa( MATMUL_SIZE )
-      REAL(DP) :: auxb( MATMUL_SIZE )
-  
-      SAVE :: auxa, auxb
-
-      !
-      ! ... BODY
-      !
-
-      CALL MPI_COMM_SIZE( MPI_COMM_WORLD, NPROC, IERR )
-      CALL MPI_COMM_RANK( MPI_COMM_WORLD, MPIME, IERR )
-
-      ME = MPIME + 1
-      Q = INT(N/NPROC)
-      R = MOD(N,NPROC)
-
-      ! ... Find out the number of elements in the local block
-
-      NB = Q
-      IF(ME .LE. R ) NB = NB+1
-
-      ! ... Find out the global index of the local first row
-
-      IF(ME .LE. R) THEN
-        ib_s = (Q+1)*(ME-1) + 1
-      ELSE
-        ib_s = Q*(ME-1) + R + 1
-      END IF
-
-      if ( n*(nb+1) > matmul_size ) then
-        call errore('pmatmul','n*(nb+1)>matmul_size',n*(nb+1))
-      end if
-
-      ldx = n / nproc + 1
-
-      ! ...  Distribute blocks of A across processors
-
-      IF( TRANSA == 'N' .OR. TRANSA == 'n' ) THEN
-         ibuf=0
-         ioff=IB_S-1
-         DO J = 1,N
-           DO I = 1,NB
-             auxa(ibuf+I) = A(I+ioff,J)
-           END DO
-           ibuf = ibuf + ldx
-         END DO
-       ELSE 
-         ibuf = 0
-         ioff=IB_S-1
-         DO J = 1,N
-           DO I = 1,NB
-             auxa(ibuf+I) = A(J,I+ioff)
-           END DO
-           ibuf = ibuf + ldx
-         END DO
-       END IF
-
-       ! ... Use scalar lapack driver
-
-       CALL DGEMM( 'N', transb, NB, N, N, 1.0d0, auxa(1), ldx, B(1,1), N, 0.0d0, auxb(1), ldx )
-
-       ibuf = 0
-       ioff = IB_S - 1
-       DO J = 1, N
-         DO I = 1, NB
-           C( I + ioff, J ) = auxb( ibuf + I )
-         END DO
-         ibuf = ibuf + ldx
-       END DO
-
-       ! ... Here processors exchange blocks
-
-       DO IP = 1, NPROC - 1
-         SOUR = MOD(ME-IP-1+NPROC,NPROC)+1
-         DEST = MOD(ME+IP-1      ,NPROC)+1
-
-         ! ...    Find out the number of elements in the block of processor SOUR
-
-         NB_SOUR = q
-         IF(SOUR .LE. r ) NB_SOUR = NB_SOUR+1
-
-         ! ...    Find out the global index of the first row owned by SOUR
-
-         IF(SOUR .LE. R) THEN
-           ib_sour = (Q+1)*(SOUR-1) + 1
-         ELSE
-           ib_sour = Q*(SOUR-1) + R + 1
-         END IF
-
-#  if defined __SHMEM
-
-         call shmem_barrier_all
-         call shmem_get64(auxa, auxb, ldx*n, sour-1)
-
-#  elif defined __MPI
-
-         CALL MPI_SENDRECV(auxb,ldx*n,mpi_double_precision,DEST-1,ip, &
-              auxa, ldx*n, mpi_double_precision,SOUR-1, ip, &
-              MPI_COMM_WORLD,ISTATUS,IERR)
-
-#  endif
-
-         IBUF = 0
-         ioff = IB_SOUR - 1
-         DO J = 1, N
-           DO I = 1, NB_SOUR
-             C( I + ioff, J ) = AUXA( IBUF + I )
-           END DO
-           IBUF = IBUF + ldx
-         END DO
-
-       END DO
-
-#  if defined __SHMEM
-       call shmem_barrier_all
-#  endif
-         
-#else
-
-       CALL DGEMM(TRANSA,TRANSB,N,N,N,1.0d0,A(1,1),N,B(1,1),N,0.0d0,C(1,1),N)
-
-#endif
-
-       RETURN
-       END SUBROUTINE matmulp1
-
-
-!=----------------------------------------------------------------------------=!
-
-
-    SUBROUTINE matmulp( transa, transb, a, b, c, n )
-
-      !
-      ! Parallel driver for matrix multiplication of square matrixes
-      ! Compute:
-      !         C = OP( A ) * OP( B )
-      !
-      ! TRANSA = 'N', OP( A ) = A
-      ! TRANSA = 'T', OP( A ) = A'
-      ! TRANSB = 'N', OP( B ) = B
-      ! TRANSB = 'T', OP( B ) = B'
-      !
-      ! N is the dimension of the matrixes
-      !
-      ! NOTE: All matrixes should be replicated on all processors
-      !
-      ! Writte by Carlo Cavazzoni
-      !
-
-      USE kinds
-
-      IMPLICIT NONE
-
-      INTEGER   :: N
-      REAL(DP) :: A(N,*), C(N,*), B(N,*)
-
-      CHARACTER*1, INTENT(IN) :: TRANSA, TRANSB
-
-#if defined __MPI
-
-      INTEGER, PARAMETER :: matmul_size = 2**20  ! 1Mb 2^20
-
-      INTEGER :: ME, I, II, J, JJ, IP, SOUR, DEST, INFO, IERR, ioff, ldx
-      INTEGER :: NB, IB_S, NB_SOUR, IB_SOUR, IBUF
-      INTEGER :: nproc, mpime, q, r
-
-      REAL(DP) :: auxa( MATMUL_SIZE )
-      REAL(DP) :: auxb( MATMUL_SIZE )
-  
-      SAVE :: auxa, auxb
-
-      !
-      ! ... BODY
-      !
-
-      CALL MPI_COMM_SIZE(MPI_COMM_WORLD, NPROC, IERR)
-      CALL MPI_COMM_RANK(MPI_COMM_WORLD, MPIME, IERR)
-
-      ME = MPIME + 1
-      Q = INT(N/NPROC)
-      R = MOD(N,NPROC)
-
-      ! ... Find out the number of elements in the local block
-
-      NB = Q
-      IF(ME .LE. R ) NB = NB+1
-
-      ! ... Find out the global index of the local first row
-
-      IF(ME .LE. R) THEN
-        ib_s = (Q+1)*(ME-1) + 1
-      ELSE
-        ib_s = Q*(ME-1) + R + 1
-      END IF
-
-
-      IF ( n*(nb+1) > matmul_size ) THEN
-        call errore( ' pmatmul ', ' n*(nb+1) > matmul_size ', n*(nb+1) )
-      END IF
-
-      ldx = n/nproc + 1
-
-      IF(TRANSA == 'N' .OR. TRANSA == 'n' ) THEN
-         ibuf = 0
-         ioff = IB_S - 1
-         DO J = 1, N
-           DO I = 1, NB
-             auxa( ibuf + I ) = A( I + ioff, J )
-           END DO
-           ibuf = ibuf + ldx
-         END DO
-       ELSE 
-         ioff = IB_S - 1
-         call mytranspose( A( 1, ioff + 1 ), n, auxa(1), ldx, n, nb)
-       END IF
-
-       CALL DGEMM('N',transb,NB,N,N,1.0d0,auxa(1),ldx,B(1,1),N,0.0d0,auxb(1),ldx)
-
-       ! ... Here processors exchange blocks
-
-       DO IP = 0, NPROC-1
-
-         ! ...    Find out the number of elements in the block of processor SOUR
-
-         NB_SOUR = q
-         IF( (IP+1) .LE. r ) NB_SOUR = NB_SOUR+1
-
-         ! ...    Find out the global index of the first row owned by SOUR
-
-         IF( (IP+1) .LE. r ) THEN
-           ib_sour = (Q+1)*IP + 1
-         ELSE
-           ib_sour = Q*IP + R + 1
-         END IF
-
-         IF( mpime == ip ) auxa(1:n*ldx) = auxb(1:n*ldx)
-         CALL MPI_BCAST( auxa(1), ldx*n, mpi_double_precision, ip, MPI_COMM_WORLD, IERR)
-
-         IBUF = 0
-         ioff = IB_SOUR - 1
-         DO J = 1, N
-           DO I = 1, NB_SOUR
-             C( I + ioff, J ) = AUXA( IBUF + I )
-           END DO
-           IBUF = IBUF + ldx
-         END DO
-
-       END DO
-
-#else
-
-       CALL DGEMM(TRANSA, TRANSB, N, N, N, 1.0d0, A(1,1), N, B(1,1), N, 0.0d0, C(1,1), N)
-
-#endif
-
-       RETURN
-     END SUBROUTINE matmulp
-
-!==----------------------------------------------==!
-
-
-    SUBROUTINE cmatmulp(transa,transb,a,b,c,n)
-
-      !
-      ! Parallel driver for matrix multiplication of square matrixes
-      ! Compute:
-      !         C = OP( A ) * OP( B )
-      !
-      ! TRANSA = 'N', OP( A ) = A
-      ! TRANSA = 'T', OP( A ) = A'
-      ! TRANSB = 'N', OP( B ) = B
-      ! TRANSB = 'T', OP( B ) = B'
-      !
-      ! N is the dimension of the matrixes
-      !
-      ! NOTE: All matrixes should be replicated on all processors
-      !
-      ! Writte by Carlo Cavazzoni
-
-      USE kinds
-
-      IMPLICIT NONE
-
-#if defined __PARA
-#  if defined __SHMEM
-      include 'mpp/shmem.fh'
-#  endif
-#endif
-
-      INTEGER      :: N
-      COMPLEX(DP) :: A(N,*), C(N,*), B(N,*)
-
-      CHARACTER*1  :: TRANSA, TRANSB
-      COMPLEX(DP) :: zero = (0.0d0,0.0d0)
-      COMPLEX(DP) :: one = (1.0d0,0.0d0)
-
-#if defined __MPI
-
-      INTEGER, PARAMETER :: matmul_size = 2**20  ! 1Mb 2^20
-
-      INTEGER :: ISTATUS(MPI_STATUS_SIZE)
-
-      INTEGER :: ME, I, II, J, JJ, IP, SOUR, DEST, INFO, IERR, ioff
-      INTEGER :: NB_SOUR,IB_SOUR,IBUF,NB,IB_S,LDX
-      INTEGER :: nproc, mpime, r, q
-      COMPLEX(DP) :: auxa(MATMUL_SIZE)
-      COMPLEX(DP) :: auxb(MATMUL_SIZE)
-
-      save :: auxa, auxb
-
-      !
-      ! ... BODY
-      !
-
-      CALL MPI_COMM_SIZE(MPI_COMM_WORLD, NPROC, IERR)
-      CALL MPI_COMM_RANK(MPI_COMM_WORLD, MPIME, IERR)
-
-      ME = MPIME + 1
-      LDX = N/NPROC + 1
-
-      Q = INT(N/NPROC)
-      R = MOD(N,NPROC)
-
-      ! ...  Find out the number of elements in the local block
-
-      NB = Q
-      IF(ME .LE. R ) NB = NB+1
-
-      ! ...  Find out the global index of the local first row
-
-      IF(ME .LE. R) THEN
-        ib_s = (Q+1)*(ME-1) + 1
-      ELSE
-        ib_s = Q*(ME-1) + R + 1
-      END IF
-
-      if( n*(ldx+1) > matmul_size ) then
-        call errore('pmatmul','n*(ldx+1)>matmul_size',n*(ldx+1))
-      end if
-
-      ! ...  Distribute blocks of A across processors
-
-      IF( transa == 'N' .OR. transa == 'n' ) THEN
-        ibuf = 0
-        ioff = ib_s - 1
-        DO j = 1, n
-          DO i = 1, nb
-            auxa( ibuf + i ) = a( i + ioff, j )
-          END DO
-          ibuf = ibuf + ldx
-        END DO
-      ELSE 
-        ibuf = 0
-        ioff = ib_s - 1
-        DO j = 1, n
-          DO i = 1, nb
-            auxa( ibuf + i ) = CONJG( a( j, i + ioff ) )
-          END DO
-          ibuf = ibuf + ldx
-        END DO
-      END IF
-
-      ! ...  Now use the scalar driver with the local block of matrix A
-
-      CALL ZGEMM('N',TRANSB,NB,N,N,one,auxa(1),ldx,B(1,1),N,zero,auxb(1),ldx)
-
-      ibuf = 0
-      ioff = IB_S - 1
-      DO J = 1, N
-        DO I = 1, NB
-          C( I + ioff, J ) = auxb( ibuf + I )
-        END DO
-        ibuf = ibuf + ldx
-      END DO
-
-      !  Here processors exchange blocks
-
-      DO IP = 1, NPROC - 1
-
-        SOUR = MOD( ME - IP - 1 + NPROC, NPROC ) + 1
-        DEST = MOD( ME + IP - 1        , NPROC ) + 1
-
-        !  Find out the number of elements in the block of processor SOUR
-
-        NB_SOUR = q
-        IF(SOUR .LE. r ) NB_SOUR = NB_SOUR+1
-
-        !  Find out the global index of the first row owned by SOUR
-
-        IF(SOUR .LE. R) THEN
-          ib_sour = (Q+1)*(SOUR-1) + 1
-        ELSE
-          ib_sour = Q*(SOUR-1) + R + 1
-        END IF
-
-#  if defined __SHMEM
-        call shmem_barrier_all
-        call shmem_get64(auxa,auxb,2*ldx*N,sour-1)
-#  else
-        CALL MPI_SENDRECV(auxb(1), ldx*N, mpi_double_complex, DEST-1, ip, &
-            auxa(1), ldx*N, mpi_double_complex, SOUR-1, ip, &
-            MPI_COMM_WORLD,ISTATUS, IERR)
-#  endif
-
-        IBUF = 0
-        ioff = IB_SOUR - 1
-        DO J = 1, N
-          DO I = 1, NB_SOUR
-            C( I + ioff, J ) = AUXA( IBUF + I )
-          END DO
-          IBUF = IBUF + ldx
-        END DO
-      END DO
-
-#  if defined __SHMEM
-      CALL shmem_barrier_all
-#  endif
-         
-#else
-
-      CALL ZGEMM(TRANSA, TRANSB, B, N, N, one, A(1,1), N, B(1,1), N, zero, C(1,1), N)
-
-#endif
-
-      RETURN
-    END SUBROUTINE cmatmulp
-
-!==----------------------------------------------==!
-
+    SUBROUTINE ptredv( a, lda, d, e, v, ldv, nrl, n, nproc, me )
 
 !
 !     Parallel version of the famous HOUSEHOLDER tridiagonalization
@@ -539,8 +50,6 @@
 ! T.L. FREEMAN AND C.PHILLIPS,
 ! PRENTICE HALL INTERNATIONAL (1992). 
 !
-!
-      SUBROUTINE ptredv(a,lda,d,e,v,ldv,nrl,n,nproc,me)
 !
 !
 !     INPUTS :
@@ -935,10 +444,13 @@
       D(1:N) = U(1:N)
 #endif
 
-      RETURN
-      END SUBROUTINE ptredv
+    RETURN
+    END SUBROUTINE ptredv
 
 !==----------------------------------------------==!
+
+
+    SUBROUTINE ptqliv( d, e, n, z, ldz, nrl )
 
 !
 ! Modified QL algorithm for CRAY T3E PARALLEL MACHINE
@@ -967,8 +479,6 @@
 !        in fact there is no communication at all.
 !
 !  
-      SUBROUTINE ptqliv(d,e,n,z,ldz,nrl)
-
 !     INPUTS :
 !
 !     D(N)     Diagonal elements of the tridiagonal matrix
@@ -1141,6 +651,9 @@
 
 !==----------------------------------------------==!
 
+
+      SUBROUTINE peigsrtv(d,v,ldv,n,nrl)
+
 !
 !     This routine sort eigenvalues and eigenvectors 
 !     generated by PTREDV and PTQLIV.  
@@ -1148,10 +661,6 @@
 !     AUTHOR : Carlo Cavazzoni - SISSA 1997
 !              comments and suggestions to : cava@sissa.it
 !
-!
-
-      SUBROUTINE peigsrtv(d,v,ldv,n,nrl)
-
 
       USE kinds
       IMPLICIT NONE
@@ -1373,21 +882,12 @@
 !==----------------------------------------------==!
 
 
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-!  ----------------------------------------------
-!  Car-Parrinello Parallel Program
-!  Carlo Cavazzoni - Gerardo Ballabio
-!  SISSA, Trieste, Italy - 1997-99
-!  Last modified: Mon Nov 15 10:47:13 MET 1999
-!  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE cdiagonalize( iflg, a, d, ev, n, nproc, mpime )
+   SUBROUTINE cdiagonalize( iflg, a, d, ev, n, nproc, mpime )
 
-!  this routine calls the appropriate Lapack routine for diagonalizing a
-!  complex Hermitian matrix
-!  ----------------------------------------------
-!  END manual
+      !  this routine calls the appropriate Lapack routine for diagonalizing a
+      !  complex Hermitian matrix
+      !
 
 
         USE kinds     
@@ -1520,28 +1020,28 @@
 !==----------------------------------------------==!
 
 
-      SUBROUTINE pzhptrd( n, nrl, ap, lda, d, e, tau, nproc, me)
-!
-!  Parallel MPI version of the LAPACK routine ZHPTRD
-!
-!     Carlo Cavazzoni (carlo.cavazzoni@cineca.it) -- CINECA
-!     Dicember 12, 1999
-!
-!  REFERENCES :
-!
-!     NUMERICAL RECIPES, THE ART OF SCIENTIFIC COMPUTING.
-!     W.H. PRESS, B.P. FLANNERY, S.A. TEUKOLSKY, AND W.T. VETTERLING,
-!     CAMBRIDGE UNIVERSITY PRESS, CAMBRIDGE.
-!
-!     PARALLEL NUMERICAL ALGORITHMS,
-!     T.L. FREEMAN AND C.PHILLIPS,
-!     PRENTICE HALL INTERNATIONAL (1992).
-!
-!     LAPACK routine (version 2.0) --
-!     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
-!     Courant Institute, Argonne National Lab, and Rice University
+   SUBROUTINE pzhptrd( n, nrl, ap, lda, d, e, tau, nproc, me)
 
-!
+      !
+      !  Parallel MPI version of the LAPACK routine ZHPTRD
+      !
+      !     Carlo Cavazzoni (carlo.cavazzoni@cineca.it) -- CINECA
+      !     Dicember 12, 1999
+      !
+      !  REFERENCES :
+      !
+      !     NUMERICAL RECIPES, THE ART OF SCIENTIFIC COMPUTING.
+      !     W.H. PRESS, B.P. FLANNERY, S.A. TEUKOLSKY, AND W.T. VETTERLING,
+      !     CAMBRIDGE UNIVERSITY PRESS, CAMBRIDGE.
+      !
+      !     PARALLEL NUMERICAL ALGORITHMS,
+      !     T.L. FREEMAN AND C.PHILLIPS,
+      !     PRENTICE HALL INTERNATIONAL (1992).
+      !
+      !     LAPACK routine (version 2.0) --
+      !     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+      !     Courant Institute, Argonne National Lab, and Rice University
+      !
 
 
       USE kinds
@@ -1988,7 +1488,8 @@
 
 !==----------------------------------------------==!
 
-      SUBROUTINE pzupgtr( n, nrl, ap, lda, tau, q, ldq, nproc, me)
+   SUBROUTINE pzupgtr( n, nrl, ap, lda, tau, q, ldq, nproc, me)
+
 !
 !  Parallel MPI version of the LAPACK routine ZUPGTR
 !
@@ -2789,7 +2290,7 @@
 
 !==----------------------------------------------==!
 
-      SUBROUTINE zhpev_drv( JOBZ, UPLO, N, AP, W, Z, LDZ )
+   SUBROUTINE zhpev_drv( JOBZ, UPLO, N, AP, W, Z, LDZ )
 
         USE kinds
         IMPLICIT NONE
@@ -2822,11 +2323,11 @@
 #endif
 
         RETURN
-      END SUBROUTINE zhpev_drv
+   END SUBROUTINE zhpev_drv
 
 !==----------------------------------------------==!
 
-      SUBROUTINE pzhpev_drv( JOBZ, ap, lda, w, z, ldz, nrl, n, nproc, mpime)
+   SUBROUTINE pzhpev_drv( JOBZ, ap, lda, w, z, ldz, nrl, n, nproc, mpime)
         USE kinds
         IMPLICIT NONE
         CHARACTER :: JOBZ
@@ -2843,8 +2344,705 @@
         CALL pzsteqr( jobz, n, nrl, w, rwork, z, ldz, nproc, mpime)
 
         RETURN
-      END SUBROUTINE pzhpev_drv
+   END SUBROUTINE pzhpev_drv
 
+
+
+!==----------------------------------------------==!
+!
+!  My parallel blas
+!
+!==----------------------------------------------==!
+
+
+SUBROUTINE mattr_drv( m, k, a, lda, b, ldb, nb, dims, coor, comm )
+  !
+  !  Compute B as the transpose of matrix A 
+  !  A and B are distributed on a 2D cartesian processor
+  !  grid in a block cyclic way (as in scalapack),
+  !  using a block size of NB
+  !
+  !     B :=  A'
+  !
+  !  A is a K by M matrix
+  !  B is an M by K matrix
+  !
+  implicit none
+  !
+  INTEGER, INTENT(IN) :: m, k
+  INTEGER, INTENT(IN) :: lda, ldb
+  REAL*8              :: a(lda,*), b(ldb,*)
+  INTEGER, INTENT(IN) :: nb, dims(2), coor(2), comm
+  !
+#if defined __MPI
+
+  include 'mpif.h'
+
+  !
+  integer ierr
+  integer ndims, rowid, colid
+  integer coosrc(2), coodst(2), ipsrc, ipdst, mpime
+  integer ihsnd, ihrcv
+  logical periods(2)
+  !
+  integer :: iu
+  integer :: i, j, nk, nm
+  integer :: ii, jj
+  integer :: isrc, jsrc
+  integer :: idst, jdst
+  integer :: itag
+  integer :: nmb, nkb 
+  integer :: istatus( MPI_STATUS_SIZE )
+  real*8, allocatable :: abuf(:,:)
+  !
+  integer :: numroc
+  integer :: indxg2l
+  external :: numroc, indxg2l
+
+  !
+  CALL GRID2D_RANK( dims(1), dims(2), coor(1), coor(2), mpime )
+  !
+  iu = 200 + mpime
+  !
+  !  Compute the global number of blocks for matrix dimension
+  !
+  nmb = ( m + nb - 1 ) / nb  
+  nkb = ( k + nb - 1 ) / nb
+  !
+  ! WRITE(iu,*) 'TR',coor(1),coor(2),' m,k,nmb,nkb,nb = ',m,k,nmb,nkb,nb
+  ! WRITE(iu,*) 'TR',coor(1),coor(2),' ---------------- '
+  !
+  ALLOCATE( abuf( nb, nb ) )
+  !
+  DO i = 1, nmb
+     DO j = 1, nkb
+        !
+        itag = j + nkb * (i-1)
+        !
+        coosrc(1) = MOD( (j-1), dims(1) )
+        coosrc(2) = MOD( (i-1), dims(2) ) 
+        !
+        coodst(1) = MOD( (i-1), dims(1) )
+        coodst(2) = MOD( (j-1), dims(2) ) 
+        !
+        CALL GRID2D_RANK( dims(1), dims(2), coosrc(1), coosrc(2), ipsrc )
+        CALL GRID2D_RANK( dims(1), dims(2), coodst(1), coodst(2), ipdst )
+        !
+        jsrc = INDXG2L( 1 + (j-1)*nb, nb, coor(1), 0, dims(1) )
+        isrc = INDXG2L( 1 + (i-1)*nb, nb, coor(2), 0, dims(2) )
+        !
+        jdst = INDXG2L( 1 + (j-1)*nb, nb, coor(2), 0, dims(2) )
+        idst = INDXG2L( 1 + (i-1)*nb, nb, coor(1), 0, dims(1) )
+        !
+        nk = MIN( nb, k - (j-1)*nb ) !  number of element in the block
+        nm = MIN( nb, m - (i-1)*nb ) !  number of element in the block
+        !
+        ! WRITE(iu,*) 'TR',coor(1),coor(2),itag,' cccsrc,ipsrc   = ', coosrc(1), coosrc(2), ipsrc
+        ! WRITE(iu,*) 'TR',coor(1),coor(2),itag,' cccdst,ipdst   = ', coodst(1), coodst(2), ipdst
+        ! WRITE(iu,*) 'TR',coor(1),coor(2),itag,' i,j,nm,nk      = ', i,j,nm,nk 
+        ! WRITE(iu,*) 'TR',coor(1),coor(2),itag,' isrc,jsrc      = ', isrc,jsrc
+        ! WRITE(iu,*) 'TR',coor(1),coor(2),itag,' idst,jdst      = ', idst,jdst
+        !
+        IF( ipsrc == ipdst ) THEN
+          IF( ipsrc == mpime ) THEN
+            DO ii = 1, nm
+              DO jj = 1, nk
+                b( idst + ii - 1, jdst + jj - 1 ) = a( jsrc + jj - 1, isrc + ii - 1 )
+              END DO
+            END DO
+          END IF
+        ELSE
+          IF( ipsrc == mpime ) THEN
+            DO ii = 1, nm
+              DO jj = 1, nk
+                abuf( ii, jj ) = a( jsrc + jj - 1, isrc + ii - 1 )
+                !
+                ! WRITE(iu,*) 'TR',coor(1),coor(2),itag,' ii,jj,abuf_snd = ', ii,jj,abuf( ii, jj )
+                !
+              END DO
+            END DO
+            CALL MPI_ISEND( abuf, nb*nb, MPI_DOUBLE_PRECISION, ipdst, itag, comm, ihsnd, ierr )
+            CALL mpi_wait(ihsnd, istatus, ierr)
+          ELSE IF( ipdst == mpime ) THEN
+            CALL MPI_IRECV( abuf, nb*nb, MPI_DOUBLE_PRECISION, ipsrc, itag, comm, ihrcv, ierr )
+            CALL mpi_wait(ihrcv, istatus, ierr)
+            DO jj = 1, nk
+              DO ii = 1, nm
+                !
+                ! WRITE(iu,*) 'TR',coor(1),coor(2),itag,' ii,jj,abuf_rcv = ', ii,jj,abuf( ii, jj )
+                !
+                b( idst + ii - 1, jdst + jj - 1 ) = abuf( ii, jj )
+              END DO
+            END DO
+          END IF
+        END IF 
+        !
+        ! WRITE(iu,*) 'TR',coor(1),coor(2),itag,' ---------------- '
+        !
+     END DO
+  END DO
+
+#else
+
+  INTEGER :: i, j
+
+  DO j = 1, k
+     DO i = 1, m
+        B( i, j ) = A( j, i )
+     END DO
+  END DO
+
+#endif
+
+  RETURN
+
+END SUBROUTINE mattr_drv
+
+
+! ---------------------------------------------------------------------------------
+
+SUBROUTINE matsplit_drv( m, k, ar, ldar, a, lda, nb, dims, coor, comm )
+  !
+  implicit none
+  !
+  INTEGER, INTENT(IN) :: m, k
+  INTEGER, INTENT(IN) :: ldar
+  REAL*8              :: ar(ldar,*)  !  matrix to be splitted, replicated on all proc
+  INTEGER, INTENT(IN) :: lda
+  REAL*8              :: a(lda,*)
+  INTEGER, INTENT(IN) :: nb, coor(2), dims(2), comm
+  !
+  INTEGER :: i, j, nra, nca, ii, jj
+  !
+  INTEGER  :: numroc, INDXL2G
+  EXTERNAL :: numroc, INDXL2G
+
+  nra = NUMROC( m, nb, coor(1), 0, dims(1) )  !  total number of local row for matrix A, C
+  nca = NUMROC( k, nb, coor(2), 0, dims(2) )  !  total number of local columns of A
+
+  do j = 1, nca
+     jj = INDXL2G( j, NB, coor(2), 0, dims(2) )
+     do i = 1, nra
+        ii = INDXL2G( i, NB, coor(1), 0, dims(1) )
+        a( i, j ) = ar( ii, jj )
+     end do
+  end do
+
+  RETURN
+
+END SUBROUTINE matsplit_drv
+
+
+
+! ---------------------------------------------------------------------------------
+
+SUBROUTINE matmerge_drv( m, k, a, lda, ar, ldar, nb, dims, coor, comm )
+  !
+  implicit none
+  !
+  INTEGER, INTENT(IN) :: m, k
+  INTEGER, INTENT(IN) :: ldar
+  REAL*8              :: ar(ldar,*)  !  matrix to be merged, replicated on all proc
+  INTEGER, INTENT(IN) :: lda
+  REAL*8              :: a(lda,*)
+  INTEGER, INTENT(IN) :: nb, coor(2), dims(2), comm
+  !
+  INTEGER :: i, j, ii, jj, ierr
+
+#if defined __MPI
+
+  include 'mpif.h'
+  !
+
+  INTEGER :: jsrc, isrc, ipsrc, coosrc(2)
+  INTEGER :: nmb, nkb, nk, nm, mpime
+
+  REAL*8, ALLOCATABLE :: buf(:,:)
+  !
+  INTEGER  :: INDXG2L
+  EXTERNAL :: INDXG2L
+  !
+  CALL GRID2D_RANK( dims(1), dims(2), coor(1), coor(2), mpime )
+
+  nmb = ( m + nb - 1 ) / nb  
+  nkb = ( k + nb - 1 ) / nb
+
+  ALLOCATE( buf( nb, nb ) )
+
+  DO j = 1, nkb
+     DO i = 1, nmb
+        !
+        coosrc(1) = MOD( (i-1), dims(1) )
+        coosrc(2) = MOD( (j-1), dims(2) )
+        !
+        CALL GRID2D_RANK( dims(1), dims(2), coosrc(1), coosrc(2), ipsrc )
+        !
+        isrc = INDXG2L( 1 + (i-1)*nb, nb, coor(1), 0, dims(1) )
+        jsrc = INDXG2L( 1 + (j-1)*nb, nb, coor(2), 0, dims(2) )
+        !
+        nm = MIN( nb, m - (i-1)*nb ) !  number of element in the block
+        nk = MIN( nb, k - (j-1)*nb ) !  number of element in the block
+
+        IF( ipsrc == mpime ) THEN
+           DO jj = 1, nk
+              DO ii = 1, nm
+                 buf( ii, jj ) = a( isrc + ii - 1, jsrc + jj - 1 )
+              END DO
+           END DO
+        ENDIF
+        !
+        CALL MPI_BCAST( buf, nb*nb, MPI_DOUBLE_PRECISION, ipsrc, comm, ierr )
+        !
+        do jj = 1, nk
+           do ii = 1, nm
+              ar( ii + (i-1)*nb, jj + (j-1)*nb ) = buf( ii, jj )
+           end do
+        end do
+        !
+     END DO
+  END DO
+  !
+  DEALLOCATE( buf )
+
+#else
+
+  DO j = 1, k
+     DO i = 1, m
+        ar( i, j ) = a( i, j )
+     END DO
+  END DO
+
+#endif
+
+  RETURN
+END SUBROUTINE matmerge_drv
+
+
+
+! ---------------------------------------------------------------------------------
+
+
+SUBROUTINE matscal_drv( m, n, beta, c, ldc, nb, dims, coor, comm )
+  !
+  implicit none
+  !
+  INTEGER, INTENT(IN) :: m, n
+  REAL*8,  INTENT(IN) :: beta
+  INTEGER, INTENT(IN) :: ldc
+  REAL*8              :: c(ldc,*)
+  INTEGER, INTENT(IN) :: nb, coor(2), dims(2), comm
+  !
+  INTEGER :: i, j, nr, nc, ierr
+  !
+  INTEGER  :: numroc
+  EXTERNAL :: numroc
+
+  nr  = NUMROC( m, nb, coor(1), 0, dims(1) )  ! local row of C
+  nc  = NUMROC( n, nb, coor(2), 0, dims(2) )  ! local colum of C 
+
+  IF( beta == 0.0d0 ) THEN
+    do j = 1, nc
+      do i = 1, nr
+        c(i,j) = 0.0d0
+      end do
+    end do 
+  ELSE
+    do j = 1, nc
+      do i = 1, nr
+        c(i,j) = beta * c(i,j)
+      end do
+    end do 
+  END IF
+
+  RETURN
+
+END SUBROUTINE
+
+
+! ---------------------------------------------------------------------------------
+
+
+SUBROUTINE matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC, nb, dims, coor, comm )
+  !
+  implicit none
+  !
+  CHARACTER(LEN=1), INTENT(IN) :: transa, transb
+  INTEGER, INTENT(IN) :: m, n, k
+  REAL*8, INTENT(IN) :: alpha, beta
+  INTEGER, INTENT(IN) :: lda, ldb, ldc
+  REAL*8 :: a(lda,*), b(ldb,*), c(ldc,*)
+  INTEGER, INTENT(IN) :: nb, dims(2), coor(2), comm
+  !
+  !  DGEMM  PERFORMS ONE OF THE MATRIX-MATRIX OPERATIONS
+  !
+  !     C := ALPHA*OP( A )*OP( B ) + BETA*C,
+  !
+  !  WHERE  OP( X ) IS ONE OF
+  !
+  !     OP( X ) = X   OR   OP( X ) = X',
+  !
+  !  ALPHA AND BETA ARE SCALARS, AND A, B AND C ARE MATRICES, WITH OP( A )
+  !  AN M BY K MATRIX,  OP( B )  A  K BY N MATRIX AND  C AN M BY N MATRIX.
+  !
+  !
+  !
+
+#if defined __MPI
+
+  include 'mpif.h'
+  !
+  integer ierr
+  integer ndims, rowid, colid
+  integer comm_row, comm_col
+  !
+  integer :: ib, jb, kb, ibl, kbl, jbl
+  integer :: i, j, kk, ni, nj, nk, nm, il, jl
+  integer :: nnb, nmb, nkb 
+  integer :: nr, nra, nca, nc, nrb, ncb, ii, jj
+  integer :: nrt, ncat, nct, nrbt
+  real*8, allocatable :: abuf(:,:), bbuf(:,:)
+  real*8, allocatable :: at(:,:)
+  real*8, allocatable :: bt(:,:)
+  !
+  integer :: numroc
+  integer :: indxg2l
+  external :: numroc, indxg2l
+  !
+  IF( dims(1) * dims(2) == 1 ) THEN
+
+     !  if there is only one proc no need of using parallel alg.
+
+     call dgemm( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC )
+
+     RETURN
+
+  END IF
+  !
+
+  CALL MPI_COMM_SPLIT( COMM, coor(2), coor(1), COMM_COL, IERR )
+  CALL MPI_COMM_RANK( COMM_COL, rowid, IERR )
+  !
+  CALL MPI_COMM_SPLIT( COMM, coor(1), coor(2), COMM_ROW, IERR )
+  CALL MPI_COMM_RANK( COMM_ROW, colid, IERR )
+  !
+  !  Compute the global number of blocks for matrix dimension
+  !
+  nmb = ( m + nb - 1 ) / nb  
+  !
+  nnb = ( n + nb - 1 ) / nb
+  !
+  nkb = ( k + nb - 1 ) / nb
+  !
+  !  Compute the total number of local row for matrix A, C
+  !
+  nr  = NUMROC( m, nb, coor(1), 0, dims(1) )  ! local row of C
+  !
+  nra = NUMROC( m, nb, coor(1), 0, dims(1) )  ! local row of OP( A )
+  nca = NUMROC( k, nb, coor(2), 0, dims(2) )  ! local columns of OP( A )
+  !
+  nrb = NUMROC( k, nb, coor(1), 0, dims(1) )  ! local row of OP( B )
+  ncb = NUMROC( n, nb, coor(2), 0, dims(2) )  ! local colum of OP( B )
+  !
+  nc  = NUMROC( n, nb, coor(2), 0, dims(2) )  ! local colum of C 
+  !
+  IF( transa == 'T' .OR. transa == 't' ) THEN
+    !
+    ALLOCATE( at( nra, nca ) )
+    !
+    CALL mattr_drv( m, k, a, lda, at, nra, nb, dims, coor, comm )
+    !
+  END IF
+  !
+  IF( transb == 'T' .OR. transb == 't' ) THEN
+    !
+    ALLOCATE( bt( nrb, ncb ) )
+    !
+    CALL mattr_drv( k, n, b, ldb, bt, nrb, nb, dims, coor, comm )
+    !
+  END IF
+  !
+  !  Scale matrix C
+  !
+  CALL matscal_drv( m, n, beta, c, ldc, nb, dims, coor, comm )
+  !
+  !  loop over the rows/columns blocks of matrix OP(A)/OP(B)
+  !
+  do kb = 1, nkb
+    !
+    kk  = ( kb - 1 ) * nb + 1  !  first element of the block (global index)
+    nk = MIN( nb, k - kk + 1 ) !  number of element in the block
+
+    colid = MOD( (kb-1), dims(2) )  ! processor owning the block
+    rowid = MOD( (kb-1), dims(1) )
+
+    allocate( abuf( nr, nk ) )
+
+    if( colid == coor(2) ) then
+      nrt = 0
+      ibl = 0
+      kbl = INDXG2L( 1 + (kb-1)*nb, nb, coor(2), 0, dims(2) )
+      do ib = 1 + coor(1), nmb, dims(1)
+        i = ( ib - 1 ) * nb + 1
+        ni = MIN( nb, m - i + 1 )
+        IF( transa == 'T' .OR. transa == 't' ) THEN
+          do jj = 1, nk
+            do ii = 1, ni
+              abuf( ii + nrt, jj ) = at( ii + ibl*nb, jj + kbl - 1 )
+            end do
+          end do
+        ELSE
+          do jj = 1, nk
+            do ii = 1, ni
+              abuf( ii + nrt, jj ) = a( ii + ibl*nb, jj + kbl - 1 )
+            end do
+          end do
+        END IF
+        nrt = nrt + ni
+        ibl = ibl + 1
+      end do
+    end if
+    CALL MPI_BCAST( abuf(1,1), nr*nk, MPI_DOUBLE_PRECISION, colid, COMM_ROW, IERR )
+
+    allocate( bbuf( nk, nc ) )
+
+    if( rowid == coor(1) ) then
+      nct = 0 
+      jbl = 0
+      kbl = INDXG2L( 1 + (kb-1)*nb, nb, coor(1), 0, dims(1) )
+      do jb = 1 + coor(2), nnb, dims(2)
+        j = ( jb - 1 ) * nb + 1
+        nj = MIN( nb, n - j + 1 )
+        IF( transb == 'T' .OR. transb == 't' ) THEN
+          do jj = 1, nj
+            do ii = 1, nk
+              bbuf( ii, jj + nct ) = bt( ii + kbl - 1, jj + jbl*nb )
+            end do
+          end do
+        ELSE
+          do jj = 1, nj
+            do ii = 1, nk
+              bbuf( ii, jj + nct ) = b( ii + kbl - 1, jj + jbl*nb )
+            end do
+          end do
+        END IF
+        nct = nct + nj
+        jbl = jbl + 1
+      end do
+    end if
+
+    CALL MPI_BCAST( bbuf(1,1), nk*nc, MPI_DOUBLE_PRECISION, rowid, COMM_COL, IERR )
+
+    ii = 1
+    do ib = 1 + coor(1), nmb, dims(1)
+      i = ( ib - 1 ) * nb + 1
+      il = INDXG2L( i, nb, coor(1), 0, dims(1) )
+      ni = MIN( nb, m - i + 1 )
+      jj = 1
+      do jb = 1 + coor(2), nnb, dims(2)
+        j = ( jb - 1 ) * nb + 1
+        jl = INDXG2L( j, nb, coor(2), 0, dims(2) )
+        nj = MIN( nb, n - j + 1 )
+        call dgemm( 'n', 'n', ni, nj, nk, alpha, abuf( ii, 1 ), nra, bbuf( 1, jj ), nk, 1.0d0, c( il, jl ), ldc )
+        jj = jj + nj
+      end do
+      ii = ii + ni
+    end do
+
+    deallocate( abuf )
+    deallocate( bbuf )
+
+  end do
+
+  IF( ALLOCATED( at ) ) DEALLOCATE( at )
+  IF( ALLOCATED( bt ) ) DEALLOCATE( bt )
+
+
+#else
+
+     !  if we are not compiling with __MPI this is equivalent to a blas call
+
+     call dgemm( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC )
+
+#endif
+
+
+  RETURN
+
+END SUBROUTINE
+
+
+!==----------------------------------------------==!
+!
+! Copyright (C) 2005 Carlo Cavazzoni
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+
+
+SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC, comm )
+  !
+  !  Parallel matrix multiplication with replicated matrix
+  !
+  implicit none
+  !
+  CHARACTER(LEN=1), INTENT(IN) :: transa, transb
+  INTEGER, INTENT(IN) :: m, n, k
+  REAL*8, INTENT(IN) :: alpha, beta
+  INTEGER, INTENT(IN) :: lda, ldb, ldc
+  REAL*8 :: a(lda,*), b(ldb,*), c(ldc,*)
+  INTEGER, INTENT(IN) :: comm
+  !
+  !  DGEMM  PERFORMS ONE OF THE MATRIX-MATRIX OPERATIONS
+  !
+  !     C := ALPHA*OP( A )*OP( B ) + BETA*C,
+  !
+  !  WHERE  OP( X ) IS ONE OF
+  !
+  !     OP( X ) = X   OR   OP( X ) = X',
+  !
+  !  ALPHA AND BETA ARE SCALARS, AND A, B AND C ARE MATRICES, WITH OP( A )
+  !  AN M BY K MATRIX,  OP( B )  A  K BY N MATRIX AND  C AN M BY N MATRIX.
+  !
+  !
+  !
+
+#if defined __MPI
+
+  include 'mpif.h'
+  !
+
+  INTEGER :: ME, I, II, J, JJ, IP, SOUR, DEST, INFO, IERR, ioff, ldx
+  INTEGER :: NB, IB_S, NB_SOUR, IB_SOUR, IBUF
+  INTEGER :: nproc, mpime, q, r
+
+  REAL*8, ALLOCATABLE :: auxa( : )
+  REAL*8, ALLOCATABLE :: auxc( : )
+
+  !
+  ! ... BODY
+  !
+
+  CALL MPI_COMM_SIZE(comm, NPROC, IERR)
+  CALL MPI_COMM_RANK(comm, MPIME, IERR)
+
+  IF ( NPROC == 1 ) THEN
+
+     !  if there is only one proc no need of using parallel alg.
+
+     CALL DGEMM(TRANSA, TRANSB, M, N, K, alpha, A, lda, B, ldb, beta, C, ldc)
+
+     RETURN
+
+  END IF
+
+  ME = MPIME + 1
+  Q = INT( m / NPROC )
+  R = MOD( m , NPROC )
+
+  ! ... Find out the number of elements in the local block
+  !     along "M" first dimension os matrix A
+
+  NB = Q
+  IF( ME <= R ) NB = NB + 1
+
+  ! ... Find out the global index of the local first row
+
+  IF( ME <= R ) THEN
+     ib_s = (Q+1)*(ME-1) + 1
+  ELSE
+     ib_s = Q*(ME-1) + R + 1
+  END IF
+
+  ldx = m / nproc + 1
+
+  ALLOCATE( auxa( MAX( n, m ) * ldx ) )
+  ALLOCATE( auxc( MAX( n, m ) * ldx ) )
+
+  IF( TRANSA == 'N' .OR. TRANSA == 'n' ) THEN
+     ibuf = 0
+     ioff = ib_s - 1
+     DO J = 1, k
+        DO I = 1, NB
+           auxa( ibuf + I ) = A( I + ioff, J )
+        END DO
+        ibuf = ibuf + ldx
+     END DO
+  ELSE
+     ibuf = 0
+     ioff = ib_s - 1
+     DO J = 1, k
+        DO I = 1, NB
+           auxa( ibuf + I ) = A( J, I + ioff )
+        END DO
+        ibuf = ibuf + ldx
+     END DO
+     !ioff = ib_s - 1
+     !call mytranspose( A( 1, ioff + 1 ), lda, auxa(1), ldx, m, nb)
+  END IF
+
+  IF( beta /= 0.0d0 ) THEN
+     ibuf = 0
+     ioff = ib_s - 1
+     DO J = 1, n
+        DO I = 1, NB
+           auxc( ibuf + I ) = C( I + ioff, J )
+        END DO
+        ibuf = ibuf + ldx
+     END DO
+  END IF
+
+  CALL DGEMM( 'N', transb, nb, n, k, alpha, auxa(1), ldx, B, ldb, beta, auxc(1), ldx )
+
+  ! ... Here processors exchange blocks
+
+  DO IP = 0, NPROC-1
+
+     ! ...    Find out the number of elements in the block of processor SOUR
+
+     NB_SOUR = q
+     IF( (IP+1) .LE. r ) NB_SOUR = NB_SOUR+1
+
+     ! ...    Find out the global index of the first row owned by SOUR
+
+     IF( (IP+1) .LE. r ) THEN
+        ib_sour = (Q+1)*IP + 1
+     ELSE
+        ib_sour = Q*IP + R + 1
+     END IF
+
+     IF( mpime == ip ) auxa(1:n*ldx) = auxc(1:n*ldx)
+
+     CALL MPI_BCAST( auxa(1), ldx*n, mpi_double_precision, ip, comm, IERR)
+
+     IBUF = 0
+     ioff = IB_SOUR - 1
+     DO J = 1, N
+        DO I = 1, NB_SOUR
+           C( I + ioff, J ) = AUXA( IBUF + I )
+        END DO
+        IBUF = IBUF + ldx
+     END DO
+
+  END DO
+
+  DEALLOCATE( auxa, auxc )
+
+
+#else
+
+     !  if we are not compiling with __MPI this is equivalent to a blas call
+
+     CALL DGEMM(TRANSA, TRANSB, m, N, k, alpha, A, lda, B, ldb, beta, C, ldc)
+
+#endif
+
+
+
+  RETURN
+
+END SUBROUTINE rep_matmul_drv
 
 !==----------------------------------------------==!
     END MODULE parallel_toolkit

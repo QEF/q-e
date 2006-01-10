@@ -154,9 +154,9 @@
 
       IMPLICIT NONE
 
-      COMPLEX(DP), INTENT(INOUT) :: cpsi(:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: cpsi(:)
       COMPLEX(DP), INTENT(OUT) :: C(:)
-      COMPLEX(DP), ALLOCATABLE :: psi(:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: psi(:)
       COMPLEX(DP), ALLOCATABLE :: zwrk(:) 
       REAL(DP) :: t1
       INTEGER :: ierr
@@ -166,20 +166,16 @@
       IF ( first ) &
         CALL errore( ' pfwfft 2 ', ' fft not initialized ', 1 )
 
-      IF ( SIZE( cpsi, 1 ) /= dfftp%nr1x ) THEN
-        WRITE( stdout, * ) 'Values = ', SIZE( cpsi, 1 ), dfftp%nr1x
+      IF ( SIZE( cpsi ) /= dfftp%nnr ) THEN
+        WRITE( stdout, * ) 'Values = ', SIZE( cpsi ), dfftp%nnr
         CALL errore( ' pfwfft 2 ', ' inconsistent array dimensions ', 1 )
       END IF
-      IF ( SIZE( cpsi, 2 ) /= dfftp%nr2x ) &
-        CALL errore( ' pfwfft 2 ', ' inconsistent array dimensions ', 2 )
-      IF ( SIZE( cpsi, 3 ) /= dfftp%npl ) &
-        CALL errore( ' pfwfft 2 ', ' inconsistent array dimensions ', 3 )
 
 #if defined __PARA
 
       ALLOCATE( zwrk( dfftp%nsp( mpime + 1 ) * dfftp%nr3x ) )
 
-      CALL pc3fft_drv(cpsi(1,1,1), zwrk, -1, dfftp, FFT_MODE_POTE)
+      CALL pc3fft_drv(cpsi(1), zwrk, -1, dfftp, FFT_MODE_POTE)
 
       CALL psi2c( zwrk, SIZE( zwrk ), c(1), c(1), ng, 10 )
 
@@ -187,7 +183,7 @@
 
 #else
 
-      ALLOCATE( psi( SIZE( cpsi, 1 ),  SIZE( cpsi, 2 ), SIZE( cpsi, 3 ) ) )
+      ALLOCATE( psi( SIZE( cpsi ) ) )
 
       psi = cpsi
 
@@ -221,10 +217,10 @@
 
       IMPLICIT NONE
 
-      REAL(DP),  INTENT(IN) :: A(:,:,:)
+      REAL(DP),  INTENT(IN) :: A(:)
       COMPLEX(DP) :: C(:)
 
-      COMPLEX(DP), allocatable :: psi(:,:,:)
+      COMPLEX(DP), allocatable :: psi(:)
       COMPLEX(DP), ALLOCATABLE :: zwrk(:) 
       REAL(DP) :: t1
       INTEGER :: ierr, ig, k, is
@@ -234,14 +230,10 @@
       IF ( first ) &
         CALL errore( ' pfwfft 1 ', ' fft not initialized ', 1 )
 
-      IF ( SIZE( A, 1 ) /= dfftp%nr1x ) &
+      IF ( SIZE( A ) /= dfftp%nnr ) &
         CALL errore( ' pfwfft 1 ', ' inconsistent array dimensions ', 1 )
-      IF ( SIZE( A, 2 ) /= dfftp%nr2x ) &
-        CALL errore( ' pfwfft 1 ', ' inconsistent array dimensions ', 2 )
-      IF ( SIZE( A, 3 ) /= dfftp%npl ) &
-        CALL errore( ' pfwfft 1 ', ' inconsistent array dimensions ', 3 )
 
-      ALLOCATE( psi( SIZE(A,1), SIZE(A,2), SIZE(A,3) ), STAT=ierr)
+      ALLOCATE( psi( SIZE(A) ), STAT=ierr)
       IF( ierr /= 0 )  call errore(' PFWFFT ', ' allocation of psi failed ' ,0)
 
       psi = CMPLX( A, 0.d0 )
@@ -250,7 +242,7 @@
 
       ALLOCATE( zwrk( dfftp%nsp( mpime + 1 ) * dfftp%nr3x ) )
 
-      CALL pc3fft_drv(psi(1,1,1), zwrk, -1, dfftp, FFT_MODE_POTE)
+      CALL pc3fft_drv(psi(1), zwrk, -1, dfftp, FFT_MODE_POTE)
 
       CALL psi2c( zwrk(1), SIZE( zwrk ), c(1), c(1), ng, 10 )
 
@@ -287,12 +279,12 @@
 
       IMPLICIT NONE
 
-      REAL(DP), INTENT(INOUT)  :: C(:,:,:)
+      REAL(DP), INTENT(INOUT)  :: C(:)
       REAL(DP), INTENT(IN), OPTIONAL :: ALPHA
       COMPLEX(DP), INTENT(IN) :: A(:)
 
       INTEGER :: ierr
-      COMPLEX(DP), ALLOCATABLE :: psi(:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: psi(:)
       COMPLEX(DP), ALLOCATABLE :: zwrk(:) 
       REAL(DP) t1
 !
@@ -301,14 +293,10 @@
       IF ( first ) &
         CALL errore(' pinvfft ',' fft not initialized ', 0 )
 
-      IF ( SIZE( c, 1 ) /= dfftp%nr1x ) &
+      IF ( SIZE( c ) /= dfftp%nnr ) &
         CALL errore( ' pinvfft 2 ', ' inconsistent array dimensions ', 1 )
-      IF ( SIZE( c, 2 ) /= dfftp%nr2x ) &
-        CALL errore( ' pinvfft 2 ', ' inconsistent array dimensions ', 2 )
-      IF ( SIZE( c, 3 ) /= dfftp%npl ) &
-        CALL errore( ' pinvfft 2 ', ' inconsistent array dimensions ', 3 )
 
-      ALLOCATE( psi( SIZE( c, 1 ), SIZE( c, 2 ), SIZE( c, 3 ) ), STAT=ierr)
+      ALLOCATE( psi( SIZE( c ) ), STAT=ierr)
       IF( ierr /= 0 )  call errore(' PFWFFT ', ' allocation of psi failed ' ,0)
 
 #if defined __PARA
@@ -321,7 +309,7 @@
         CALL c2psi( zwrk, SIZE( zwrk ), a(1), a(1), ng, 11 )
       END IF
 
-      CALL pc3fft_drv(psi(1,1,1), zwrk, +1, dfftp, FFT_MODE_POTE)
+      CALL pc3fft_drv(psi(1), zwrk, +1, dfftp, FFT_MODE_POTE)
 
       DEALLOCATE( zwrk )
 
@@ -370,10 +358,10 @@
 
      COMPLEX(DP) :: C(:)
      COMPLEX(DP), OPTIONAL :: CA(:)
-     COMPLEX(DP) :: psi(:,:,:)
+     COMPLEX(DP) :: psi(:)
      REAL(DP)  :: T1
      INTEGER :: ierr
-     COMPLEX(DP), ALLOCATABLE :: psitmp(:,:,:)
+     COMPLEX(DP), ALLOCATABLE :: psitmp(:)
      COMPLEX(DP), ALLOCATABLE :: zwrk(:) 
 
      t1 = cclock()
@@ -381,19 +369,15 @@
      IF ( first ) &
        CALL errore(' pw_fwfft 1 ',' fft not initialized ', 1 )
 
-     IF ( SIZE( psi, 1 ) /= dffts%nr1x ) &
+     IF ( SIZE( psi ) /= dffts%nnr ) &
        CALL errore( ' pw_fwfft 1 ', ' inconsistent array dimensions ', 1 )
-     IF ( SIZE( psi, 2 ) /= dffts%nr2x ) &
-       CALL errore( ' pw_fwfft 1 ', ' inconsistent array dimensions ', 2 )
-     IF ( SIZE( psi, 3 ) /= dffts%npl ) &
-       CALL errore( ' pw_fwfft 1 ', ' inconsistent array dimensions ', 3 )
 
 #if defined __PARA
 
 
      ALLOCATE( zwrk( dffts%nsp( mpime + 1 ) * dffts%nr3x ) )
 
-     CALL pc3fft_drv(psi(1,1,1), zwrk, -1, dffts, FFT_MODE_WAVE)
+     CALL pc3fft_drv(psi(1), zwrk, -1, dffts, FFT_MODE_WAVE)
 
      IF( PRESENT( ca ) ) THEN
        CALL psi2c( zwrk, SIZE( zwrk ), c(1), ca(1), ngw, 2 )
@@ -405,7 +389,7 @@
 
 #else
 
-     ALLOCATE( psitmp( SIZE( psi, 1 ), SIZE( psi, 2 ), SIZE( psi, 3 ) ) )
+     ALLOCATE( psitmp( SIZE( psi ) ) )
  
      psitmp = psi
 
@@ -441,7 +425,7 @@
 
      COMPLEX(DP), INTENT(IN) :: C(:)
      COMPLEX(DP), INTENT(IN), OPTIONAL :: CA(:)
-     COMPLEX(DP) :: psi(:,:,:)
+     COMPLEX(DP) :: psi(:)
      COMPLEX(DP), ALLOCATABLE :: zwrk(:) 
      REAL(DP) :: T1
 
@@ -451,12 +435,8 @@
      T1 = cclock()
 
 
-     IF ( SIZE( psi, 1 ) /= dffts%nr1x ) &
+     IF ( SIZE( psi ) /= dffts%nnr ) &
        CALL errore( ' pw_invfft 1 ', ' inconsistent array dimensions ', 1 )
-     IF ( SIZE( psi, 2 ) /= dffts%nr2x ) &
-       CALL errore( ' pw_invfft 1 ', ' inconsistent array dimensions ', 2 )
-     IF ( SIZE( psi, 3 ) /= dffts%npl ) &
-       CALL errore( ' pw_invfft 1 ', ' inconsistent array dimensions ', 3 )
 
 #if defined __PARA
 
@@ -472,7 +452,7 @@
        END IF
      END IF
 
-     CALL pc3fft_drv(psi(1,1,1), zwrk, +1, dffts, FFT_MODE_WAVE)
+     CALL pc3fft_drv(psi(1), zwrk, +1, dffts, FFT_MODE_WAVE)
 
      DEALLOCATE( zwrk )
 

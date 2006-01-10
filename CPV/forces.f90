@@ -43,13 +43,13 @@
       COMPLEX(DP), INTENT(OUT) :: dco(:), dce(:)
       COMPLEX(DP), INTENT(IN)  :: co(:), ce(:)
       REAL(DP),    INTENT(IN)  :: fio, fie
-      REAL(DP),    INTENT(IN)  :: v(:,:,:)
+      REAL(DP),    INTENT(IN)  :: v(:)
       REAL(DP),    INTENT(IN)  :: hg(:)
-      COMPLEX(DP), OPTIONAL    :: psi_stored(:,:,:)
+      COMPLEX(DP), OPTIONAL    :: psi_stored(:)
 
       ! ... declare other variables
       !
-      COMPLEX(DP), ALLOCATABLE :: psi(:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: psi(:)
       COMPLEX(DP) :: fp, fm, aro, are
       REAL(DP)    :: fioby2, fieby2, arg
       INTEGER      :: ig
@@ -60,7 +60,7 @@
         psi_stored = psi_stored * CMPLX(v, 0.0d0)
         CALL pw_fwfft(psi_stored, dco, dce)
       ELSE
-        ALLOCATE( psi(SIZE(v,1), SIZE(v,2), SIZE(v,3)) )
+        ALLOCATE( psi( SIZE(v) ) )
         CALL pw_invfft(psi, co, ce)
         psi = psi * CMPLX(v, 0.0d0)
         CALL pw_fwfft(psi, dco, dce)
@@ -268,7 +268,7 @@
        INTEGER,      INTENT(IN)  :: ib, iss     ! band and spin index
        COMPLEX(DP), INTENT(IN)  :: c(:,:)
        COMPLEX(DP), INTENT(OUT) :: df(:), da(:)
-       REAL (DP),   INTENT(IN)  :: v(:,:,:), bec(:,:), f(:)
+       REAL (DP),   INTENT(IN)  :: v(:), bec(:,:), f(:)
        COMPLEX(DP), INTENT(IN)  :: eigr(:,:)
        type (wave_descriptor), INTENT(IN) :: cdesc
        !
@@ -327,7 +327,7 @@
         INTEGER,                INTENT(IN)    :: ispin
         COMPLEX(DP),           INTENT(INOUT) :: c(:,:)
         type (wave_descriptor), INTENT(IN)    :: cdesc
-        REAL(DP),              INTENT(IN)    :: vpot(:,:,:), f(:)
+        REAL(DP),              INTENT(IN)    :: vpot(:), f(:)
         COMPLEX(DP),           INTENT(OUT)   :: cgrad(:,:)
         COMPLEX(DP),           INTENT(IN)    :: eigr(:,:)
         REAL(DP),              INTENT(IN)    :: bec(:,:)

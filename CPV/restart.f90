@@ -230,7 +230,7 @@
 
    SUBROUTINE writefile_fpmd( nfi, trutime, c0, cm, cdesc, occ, &
      atoms_0, atoms_m, acc, taui, cdmi, &
-     ht_m, ht_0, rho, desc, vpot)
+     ht_m, ht_0, rho, vpot)
                                                                         
         USE cell_module, only: boxdimensions, r_to_s
         USE brillouin, only: kpoints, kp
@@ -240,7 +240,6 @@
         USE atoms_type_module, ONLY: atoms_type
         USE io_global, ONLY: ionode, ionode_id
         USE io_global, ONLY: stdout
-        USE charge_types, ONLY: charge_descriptor
         USE electrons_nose, ONLY: xnhe0, xnhem, vnhe
         USE electrons_base, ONLY: nbsp, nspin
         USE cell_nose, ONLY: xnhh0, xnhhm, vnhh
@@ -257,17 +256,15 @@
         REAL(DP), INTENT(IN) :: occ(:,:,:)
         TYPE (boxdimensions), INTENT(IN) :: ht_m, ht_0
         TYPE (atoms_type), INTENT(IN) :: atoms_0, atoms_m
-        REAL(DP), INTENT(IN) :: rho(:,:,:,:)
-        TYPE (charge_descriptor), INTENT(IN) :: desc
+        REAL(DP), INTENT(IN) :: rho(:,:)
         TYPE (wave_descriptor) :: cdesc
-        REAL(DP), INTENT(INOUT) :: vpot(:,:,:,:)
+        REAL(DP), INTENT(INOUT) :: vpot(:,:)
                                                                         
         REAL(DP), INTENT(IN) :: taui(:,:)
         REAL(DP), INTENT(IN) :: acc(:), cdmi(:) 
         REAL(DP), INTENT(IN) :: trutime
 
         REAL(DP), ALLOCATABLE :: lambda(:,:)
-        REAL(DP), ALLOCATABLE :: rhow(:,:)
         REAL(DP) :: ekincm
         INTEGER   :: i, j, k, iss, ir
              
@@ -278,36 +275,16 @@
         !   properties on the writefile subroutine
 
         ALLOCATE( lambda(nbsp,nbsp) )
-        ALLOCATE( rhow( nr1x * nr2x * SIZE( rho, 3 ), nspin ) )
         lambda  = 0.0d0
         ekincm = 0.0d0
         !
         !
-        IF( SIZE( rho, 1 ) /= nr1x .OR.  SIZE( rho, 2 ) /= nr2x ) THEN
-           WRITE( stdout, * ) nr1x, nr2x
-           WRITE( stdout, * ) SIZE( rho, 1 ), SIZE( rho, 2 )
-           CALL errore( ' writefile_fpmd ', ' rho dimensions do not correspond ', 1 )
-        END IF
-        !
-        DO iss = 1, nspin
-           ir = 0
-           DO k = 1, SIZE( rho, 3 )
-              DO j = 1, nr2x
-                 DO i = 1, nr1x
-                   ir = ir + 1
-                   rhow( ir, iss ) = rho( i, j, k, iss )
-                 END DO
-              END DO
-           END DO
-        END DO
-
         CALL cp_writefile( ndw, scradir, .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
           ht_0%a, ht_m%a, ht_0%hvel, ht_0%gvel, xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
           xnhp0, xnhpm, nhpcl, nhpdim, occ, occ, lambda, lambda,  &
-          xnhe0, xnhem, vnhe, ekincm, ei, rhow, c04 = c0, cm4 = cm )
+          xnhe0, xnhem, vnhe, ekincm, ei, rho, c04 = c0, cm4 = cm )
 
-        DEALLOCATE( rhow )
         DEALLOCATE( lambda )
 
      RETURN 
@@ -319,7 +296,7 @@
 
         SUBROUTINE readfile_fpmd( nfi, trutime, &
           c0, cm, cdesc, occ, atoms_0, atoms_m, acc, taui, cdmi, &
-          ht_m, ht_0, rho, desc, vpot )
+          ht_m, ht_0, rho, vpot )
                                                                         
         use electrons_base, only: nbsp
         USE cell_module, only: boxdimensions, cell_init, r_to_s, s_to_r
@@ -336,7 +313,6 @@
         USE gvecw, ONLY: ecutwfc => ecutw
         USE gvecp, ONLY: ecutrho => ecutp
         USE fft, ONLY : pfwfft, pinvfft
-        USE charge_types, ONLY: charge_descriptor
         USE ions_base, ONLY: nat, nsp, na
         USE electrons_module, ONLY: nspin
         USE control_flags, ONLY: twfcollect, force_pairing
@@ -354,10 +330,9 @@
         REAL(DP), INTENT(INOUT) :: occ(:,:,:)
         TYPE (boxdimensions), INTENT(INOUT) :: ht_m, ht_0
         TYPE (atoms_type), INTENT(INOUT) :: atoms_0, atoms_m
-        REAL(DP), INTENT(INOUT) :: rho(:,:,:,:)
-        TYPE (charge_descriptor), INTENT(IN) :: desc
+        REAL(DP), INTENT(INOUT) :: rho(:,:)
         TYPE (wave_descriptor) :: cdesc
-        REAL(DP), INTENT(INOUT) :: vpot(:,:,:,:)
+        REAL(DP), INTENT(INOUT) :: vpot(:,:)
                                                                         
         REAL(DP), INTENT(OUT) :: taui(:,:)
         REAL(DP), INTENT(OUT) :: acc(:), cdmi(:) 

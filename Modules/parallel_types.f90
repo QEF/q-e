@@ -27,12 +27,13 @@
                               !  0 <= mez < npz-1
         END TYPE
 
-! ...   Valid values for data shape
-        INTEGER, PARAMETER :: BLOCK_CYCLIC_SHAPE = 1
-        INTEGER, PARAMETER :: BLOCK_PARTITION_SHAPE = 2
-        INTEGER, PARAMETER :: FREE_PATTERN_SHAPE = 3
-        INTEGER, PARAMETER :: REPLICATED_DATA_SHAPE = 4
-        INTEGER, PARAMETER :: CYCLIC_SHAPE = 5
+        ! ...   Valid values for data distribution
+        !
+        INTEGER, PARAMETER :: BLOCK_CYCLIC_DIST    = 1
+        INTEGER, PARAMETER :: BLOCK_PARTITION_DIST = 2
+        INTEGER, PARAMETER :: FREE_PATTERN_DIST    = 3
+        INTEGER, PARAMETER :: REPLICATED_DATA_DIST = 4
+        INTEGER, PARAMETER :: CYCLIC_DIST          = 5
 
 !  ----------------------------------------------
 !  BEGIN manual
@@ -40,18 +41,18 @@
 !  Given the Array  |a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11|
 !  and three processors P0, P1, P2 
 !
-!  in the BLOCK_PARTITION_SHAPE scheme, the Array is partitioned 
+!  in the BLOCK_PARTITION_DIST scheme, the Array is partitioned 
 !  as follow
 !       P0            P1            P2
 !  |a1 a2 a3 a4| |a5 a6 a7 a8| |a9 a10 a11|
 !
-!  in the BLOCK_CYCLIC_SHAPE scheme the Array is first partitioned 
+!  in the BLOCK_CYCLIC_DIST scheme the Array is first partitioned 
 !  into blocks (i.e. of size 2)  |a1 a2|a3 a4|a5 a6|a7 a8|a9 a10|a11|
 !  Then the block are distributed cyclically among P0, P1 and P2
 !       P0             P1              P2
 !  |a1 a2|a7 a8|  |a3 a4|a9 a10|  |a5 a6|a11|
 !
-!  in the CYCLIC_SHAPE scheme the Array elements are distributed round robin
+!  in the CYCLIC_DIST scheme the Array elements are distributed round robin
 !  among P0, P1 and P2
 !       P0             P1              P2
 !  |a1 a4 a7 a10|  |a2 a5 a8 a11|  |a3 a6 a9|
@@ -67,7 +68,7 @@
           INTEGER :: nx     ! rows, number of rows in the global array
           INTEGER :: ny     ! columns, number of columns in the global array
           INTEGER :: nz     ! planes, number of planes in the global array
-          INTEGER :: nxblk  ! row_block, if shape = BLOCK_CICLYC_SHAPE,
+          INTEGER :: nxblk  ! row_block, if DIST = BLOCK_CICLYC_DIST,
                             ! this value represent the blocking factor
                             ! used to distribute the rows of the array,
                             ! otherwise this is the size of local block of rows
@@ -90,9 +91,9 @@
                             ! of the array
           INTEGER :: ldz    ! 
 
-          INTEGER :: xshape ! row_shape
-          INTEGER :: yshape ! column_shape
-          INTEGER :: zshape ! plane_shape
+          INTEGER :: xdist ! row_dist
+          INTEGER :: ydist ! column_dist
+          INTEGER :: zdist ! plane_dist
         END TYPE
         
         
@@ -150,8 +151,8 @@
           complex_parallel_vector, complex_parallel_matrix, &
           complex_parallel_tensor, parallel_allocate, parallel_deallocate
 
-        PUBLIC ::  BLOCK_CYCLIC_SHAPE, BLOCK_PARTITION_SHAPE, &
-          FREE_PATTERN_SHAPE, REPLICATED_DATA_SHAPE, CYCLIC_SHAPE
+        PUBLIC ::  BLOCK_CYCLIC_DIST, BLOCK_PARTITION_DIST, &
+          FREE_PATTERN_DIST, REPLICATED_DATA_DIST, CYCLIC_DIST
 
         INTERFACE parallel_allocate
           MODULE PROCEDURE allocate_real_vector, allocate_real_matrix, &
