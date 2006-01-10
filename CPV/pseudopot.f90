@@ -865,6 +865,8 @@ CONTAINS
          WRITE( stdout,*) ' nlinit  nh(is), ngb, is, kkbeta, lmaxq = ', &
      &        nh(is), ngb, is, kkbeta(is), nqlc(is)
          !
+         call fill_qrl (is)
+         !
          do l = 1, nqlc( is )
             !
             do il = 1, mmx
@@ -906,7 +908,7 @@ CONTAINS
                      !      note qrl(r)=r^2*q(r)
                      !
                      do ir=1,kkbeta(is)
-                        fint(ir)=qrl(ir,ijv,l,is)*jl(ir)
+                        fint(ir) = qrl(ir,ijv,l)*jl(ir)
                      end do
                      if (oldvan(is)) then
                         call herman_skillman_int (kkbeta(is),fint,rab(1,is),qradx(il,iv,jv,l,is))
@@ -918,7 +920,7 @@ CONTAINS
                      !
                      if( tpre ) then
                         do ir = 1, kkbeta(is)
-                           dfint(ir) = qrl(ir,ijv,l,is) * djl(ir)
+                           dfint(ir) = qrl(ir,ijv,l) * djl(ir)
                         end do
                         if ( oldvan(is) ) then
                            call herman_skillman_int(kkbeta(is),dfint,rab(1,is),dqradx(il,iv,jv,l,is))

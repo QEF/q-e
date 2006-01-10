@@ -852,10 +852,6 @@ subroutine upf2internal ( upf, is, ierr )
   !
   vloc_at (1:upf%mesh, is) = upf%vloc(1:upf%mesh)
   !
-  ! compatibility with old Vanderbilt formats
-  !
-  call fill_qrl(is)
-  !
   return
 end subroutine upf2internal
 
@@ -948,11 +944,6 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
     dion(il,il,is) = 1.0/dion(il,il,is)
   end do
   deallocate(fint)
-
-  !
-  ! compatibility with old Vanderbilt formats
-  !
-  call fill_qrl(is)
   !
   return
 end subroutine ncpp2internal
@@ -1420,7 +1411,6 @@ END SUBROUTINE read_atomic_cc
       use atom, only: rho_atc, r, rab, mesh, nlcc, lchi, chi, nchi, nchix
       use uspp_param, only: nqlc, qfunc, vloc_at, rinner,&
                        qqq, nbeta, nbrx, betar, dion, lll, kkbeta, tvanp
-      use qrl_mod, only: qrl
       use ions_base, only: zv
       use io_global, only: stdout
       use funct, only:  set_dft_from_indices
@@ -1576,22 +1566,6 @@ END SUBROUTINE read_atomic_cc
       do l=1,nqlc(is)
          rinner(l,is)=0.d0
       enddo
-!
-!    fill the q(r)
-!
-      nmb = 0
-      do nb=1,nbeta(is)
-         do mb=nb,nbeta(is)
-            nmb = nmb + 1
-            lmin=abs(lll(mb,is)-lll(nb,is))+1
-            lmax=lmin+2*lll(nb,is)
-            do l=lmin,lmax,2
-               do ir=1,kkbeta(is)
-                  qrl(ir,nmb,l,is)=qfunc(ir,nb,mb,is)
-               end do
-            end do
-         end do
-      end do
 !
 !    compute the radial mesh
 !
@@ -1970,9 +1944,9 @@ END SUBROUTINE read_atomic_cc
             lchi(iv,is) = nnlz(iv)/10 - i * 10
       enddo
 !
-      if (iver(1).eq.1) then
+      if (iver(1) == 1) then
 !
-!   old version: read the q(r) here
+!   old version: read the q(r) here and fit them with the Vanderbilt's form
 !
          ijv = 0
          do iv=1,nbeta(is)
@@ -1982,15 +1956,13 @@ END SUBROUTINE read_atomic_cc
                lmax=lmin+2*lll(iv,is)
                do l=lmin,lmax
                   read(iunps,*, err=100, iostat=ios)                    &
-     &                 (qrl(ir,ijv,l,is),ir=1,kkbeta(is))
+     &                 (qrl(ir,ijv,l),ir=1,kkbeta(is))
                end do
             end do
          end do
-      else
 !
-!   new version: fill the q(r) here
+         call fit_qrl(is)
 !
-         call fill_qrl(is)
       end if
 !
 !   vloc_at as read from Vanderbilt's format is r*v_loc(r)
@@ -2044,6 +2016,104 @@ END SUBROUTINE read_atomic_cc
 100   call errore('readvan','error reading pseudo file', abs(ios) )
       end subroutine readvan
 
+!-----------------------------------------------------------------------
+      subroutine fit_qrl(is)
+!-----------------------------------------------------------------------
+!
+! find coefficients qfcoef that fit the pseudized qrl in US PP
+! these coefficients are written to file in newer versions of the 
+! Vanderbilt PP generation code but not in some ancient versions
+!
+      use kinds, only: DP
+      use uspp_param, only: qfunc, nqf, qfcoef, rinner, lll, nbeta, &
+                       kkbeta
+      use qrl_mod, only: qrl
+      use atom, only: r
+      !
+      implicit none
+      integer :: is
+      !
+      real (kind=DP), allocatable :: a(:,:), ainv(:,:), b(:), x(:)
+      real (kind=DP) :: deta
+      integer :: iv, jv, ijv, lmin, lmax, l, ir, irinner, i,j
+      !
+      !
+      allocate ( a(nqf(is),nqf(is)), ainv(nqf(is),nqf(is)) )
+      allocate ( b(nqf(is)), x(nqf(is)) )
+      !
+      ijv = 0
+      do iv=1,nbeta(is)
+         do jv=iv,nbeta(is)
+            ijv = ijv + 1
+            lmin=lll(jv,is)-lll(iv,is)+1
+            lmax=lmin+2*lll(iv,is)
+            !
+            do l=lmin,lmax
+               !
+               ! reconstruct rinner
+               !
+               do ir=kkbeta(is),1,-1
+                  if ( abs(qrl(ir,ijv,l)-qfunc(ir,iv,jv,is)) > 1.0d-6) go to 10
+               end do
+10             irinner = ir+1
+               rinner(l,is) = r(irinner,is)
+               !
+               ! least square minimization: find
+               ! qrl = sum_i c_i r^{l+1}r^{2i-2} for r < rinner
+               !
+               a(:,:) = 0.d0
+               b(:)   = 0.d0
+               do i = 1, nqf(is)
+                  do ir=1,irinner
+                     b(i) = b(i) + r(ir,is)**(2*i-2+l+1) * qrl(ir,ijv,l)
+                  end do
+                  do j = i, nqf(is)
+                     do ir=1,irinner
+                        a(i,j) = a(i,j) + r(ir,is)**(2*i-2+l+1) * &
+                                          r(ir,is)**(2*j-2+l+1) 
+                     end do
+                     if (j>i) a(j,i) = a(i,j) 
+                  end do
+               end do
+               !
+               call invmat (nqf(is), a, ainv, deta)
+               !
+               do i = 1, nqf(is)
+                  qfcoef(i,l,iv,jv,is) = dot_product(ainv(i,:),b(:))
+               end do
+            end do
+         end do
+      end do
+      !
+      deallocate ( x, b , ainv, a )
+      !
+      ! test: recalculate qrl
+      !
+      !ijv = 0
+      !do iv=1,nbeta(is)
+      !   do jv=iv,nbeta(is)
+      !      ijv = ijv + 1
+      !      lmin=lll(jv,is)-lll(iv,is)+1
+      !      lmax=lmin+2*lll(iv,is)
+      !      do l=lmin,lmax
+      !         do ir=1,kkbeta(is)
+      !            if (r(ir,is).ge.rinner(l,is)) then
+      !               qrl(ir,ijv,l)=qfunc(ir,iv,jv,is)
+      !            else
+      !               qrl(ir,ijv,l)=qfcoef(1,l,iv,jv,is)
+      !               do i = 2, nqf(is)
+      !                  qrl(ir,ijv,l)=qrl(ir,ijv,l,is) +      &
+      !                       qfcoef(i,l,iv,jv)*r(ir,is)**(2*i-2)
+      !               end do
+      !               qrl(ir,ijv,l) = qrl(ir,ijv,l) * r(ir,is)**(l+1)
+      !            end if
+      !         end do
+      !      end do
+      !   end do
+      !end do
+
+      !
+    end subroutine fit_qrl
 
 !
 !  Description of the Native FPMD pseudopotential format

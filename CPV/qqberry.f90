@@ -88,10 +88,12 @@ subroutine qqberry2( gqq,gqqm, ipol)
      gmes=a3(1)**2+a3(2)**2+a3(3)**2
      gmes=2*pi/SQRT(gmes)
   endif    
-
-  do is=1,nvb!only for Vanderbilt species 
+  ! only for Vanderbilt species 
+  do is=1,nvb
      c=fpi                 !/omegab
-! now the radial part
+     !
+     call fill_qrl (is)
+     ! now the radial part
      do l=1,nqlc(is)                        
         xg= gmes !only orthorombic cells
         call bess(xg,l,kkbeta(is),r(1,is),jl)
@@ -103,7 +105,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
 !     note qrl(r)=r^2*q(r)
 !
               do ir=1,kkbeta(is)
-                 fint(ir)=qrl(ir,ijv,l,is)*jl(ir)
+                 fint(ir)=qrl(ir,ijv,l)*jl(ir)
               end do
               if (oldvan(is)) then
                  call herman_skillman_int     &

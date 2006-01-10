@@ -275,7 +275,7 @@ module qrl_mod
 !
 ! qrl       q(r) functions (old format)
 
-  real(8) :: qrl(ndmx,nbrx*(nbrx+1)/2,lqmax,nsx)
+  real(8) :: qrl(ndmx,nbrx*(nbrx+1)/2,lqmax)
 
 end module qrl_mod
 

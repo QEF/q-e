@@ -17,10 +17,9 @@
                        kkbeta
       use qrl_mod, only: qrl
       use atom, only: r
-      ! the above module variables has no dependency from iosys
 !
       implicit none
-      integer :: is
+      integer, intent(in) :: is
 !
       integer :: iv, jv, ijv, lmin, lmax, l, ir, i
 !
@@ -32,15 +31,15 @@
             lmax=lmin+2*lll(iv,is)
             do l=lmin,lmax
                do ir=1,kkbeta(is)
-                  if (r(ir,is).ge.rinner(l,is)) then
-                     qrl(ir,ijv,l,is)=qfunc(ir,iv,jv,is)
+                  if (r(ir,is) >= rinner(l,is)) then
+                     qrl(ir,ijv,l)=qfunc(ir,iv,jv,is)
                   else
-                     qrl(ir,ijv,l,is)=qfcoef(1,l,iv,jv,is)
+                     qrl(ir,ijv,l)=qfcoef(1,l,iv,jv,is)
                      do i = 2, nqf(is)
-                        qrl(ir,ijv,l,is)=qrl(ir,ijv,l,is) +      &
+                        qrl(ir,ijv,l)=qrl(ir,ijv,l) +      &
                              qfcoef(i,l,iv,jv,is)*r(ir,is)**(2*i-2)
                      end do
-                     qrl(ir,ijv,l,is) = qrl(ir,ijv,l,is) * r(ir,is)**(l+1)
+                     qrl(ir,ijv,l) = qrl(ir,ijv,l) * r(ir,is)**(l+1)
                   end if
                end do
             end do
