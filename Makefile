@@ -139,8 +139,11 @@ tar :
 	    configure.old \
 	    */*.f90 */*.c */*.f clib/*.h include/*.h* upftools/UPF \
 	    pwtools/*.awk pwtools/*.sh
+	# remove unneeded stuff from iotk
+	find iotk -type f | grep -v -e /CVS/ -e'\.o$$' -e'\.mod$$' -e'\.a$$' \
+	    -e'\.d$$' -e'\.i$$' -e'\.F90$$' | xargs tar rvf espresso.tar
 	# archive a few entire directories, but without CVS subdirs
-	find install Doc atomic_doc examples pseudo iotk -type f \
+	find install Doc atomic_doc examples pseudo -type f \
 		| grep -v -e /CVS/ -e /results | xargs tar rvf espresso.tar
 	gzip espresso.tar
 
