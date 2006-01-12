@@ -404,6 +404,9 @@ SUBROUTINE vcsmd()
   WRITE( stdout, '(/5X,"Ekin = ",F14.8," Ryd   T = ",F6.1," K ", &
        &       " Etot = ",F14.8)') ekint, tnew, edyn + e_start
   !
+  CALL output_tau( lmovecell )
+  !
+  !
   ! ... save MD history on file
   !
   CALL seqopn( 4, 'md', 'FORMATTED', exst )
