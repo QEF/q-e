@@ -323,7 +323,6 @@ subroutine nlinit
       !   initialize indexes
       !
       CALL pseudopotential_indexes( nlcc_any )
-
       !
       !   initialize array ap
       !
@@ -335,14 +334,14 @@ subroutine nlinit
       allocate( qradb( ngb, nbrx, nbrx, lmaxq, nsp ) )
       allocate( qgb( ngb, nhm*(nhm+1)/2, nsp ) )
       allocate( qq( nhm, nhm, nsp ) )
-!
-      allocate( dqrad( ngb, nbrx, nbrx, lmaxq, nsp, 3, 3 ) )
-      allocate( dqgb( ngb, nhm*(nhm+1)/2, nsp, 3, 3 ) )
-      allocate( dbeta( ngw, nhm, nsp, 3, 3 ) )
-!
       qradb(:,:,:,:,:) = 0.d0
       qq  (:,:,:) =0.d0
-      if(tpre) dqrad(:,:,:,:,:,:,:) = 0.d0
+      IF (tpre) THEN
+         allocate( dqrad( ngb, nbrx, nbrx, lmaxq, nsp, 3, 3 ) )
+         allocate( dqgb( ngb, nhm*(nhm+1)/2, nsp, 3, 3 ) )
+         allocate( dbeta( ngw, nhm, nsp, 3, 3 ) )
+         dqrad(:,:,:,:,:,:,:) = 0.d0
+      END IF
       !
       !     initialization for vanderbilt species
       !

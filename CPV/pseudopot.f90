@@ -847,7 +847,7 @@ CONTAINS
       IF( ALLOCATED(  qradx ) ) DEALLOCATE(  qradx )
       IF( ALLOCATED( dqradx ) ) DEALLOCATE( dqradx )
       ALLOCATE(  qradx( mmx, nbrx, nbrx, lmaxq, nsp ) )
-      ALLOCATE( dqradx( mmx, nbrx, nbrx, lmaxq, nsp ) )
+      IF (tpre) ALLOCATE( dqradx( mmx, nbrx, nbrx, lmaxq, nsp ) )
 
       DO is = 1, nvb
          !
