@@ -1182,9 +1182,19 @@ Update to the last version (presently 7.1.41, 8.0.046 or
 {\texttt{http://developer.intel.com/software/products/support/\#premier}}%
 {http://developer.intel.com/software/products/support/\#premier}.
 \hfill\break
-Intel v.~9 should work, but earlier releases had a bug in preprocessing
-that prevents compilation of {\tt iotk}. Use the last available version
-with the most patches.
+Intel v.~9 has a buggy preprocessing that either prevents compilation 
+of \texttt{iotk}, or produces runtime errors in \texttt{cft3}. Workaround:
+modify \texttt{make.sys} to explicitly perform preprocessing using
+\texttt{/lib/cpp}, as in the following example (courtesy from Sergei
+Lysenkov):
+\begin{verbatim}
+.f90.o:
+        $(CPP) $(CPPFLAGS) $< -o $*.F90
+        $(MPIF90) $(F90FLAGS) -c $*.F90 -o $*.o
+
+CPP            = /lib/cpp
+CPPFLAGS       = -P -C -traditional $(DFLAGS) $(IFLAGS)
+\end{verbatim}
 
 Warnings ``size of symbol ... changed ...'' are produced by ifc 7.1 at
 the loading stage.
@@ -3041,4 +3051,24 @@ group of \textbf{q}, the code compares \textbf{q} and the rotated
 You may run into trouble if your \textbf{q}-point differs from a
 high-symmetry point by an amount in that order of magnitude.
 
+\section{Frequently Asked Questions}
+
+\begin{itemize}
+\item {\em How can I optimize the structural parameters of a
+low-symmetry lattice? should I use $E(v)$ curves, the stress,
+variable-cell molecular dynamics?}
+
+  \item {\em Is there a simple way to determine the symmetry
+of a given phonon mode?}
+
+In some cases, degeneracy will help. In other cases, the character of a
+mode can be easily determined by direct inspection. In general, one needs
+to perform a group-symmetry analysis of the phonon mode, and this is 
+presently not implemented. So the short answer is: no, only not-so-simple 
+ways.
+
+You might find the ISOTROPY package useful:\\
+\htmladdnormallink{\texttt{http://stokes.byu.edu/iso/isotropy.html}}%
+                          {http://stokes.byu.edu/iso/isotropy.html}.
+\end{itemize}
 \end{document}

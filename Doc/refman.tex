@@ -463,6 +463,21 @@ that you have locally modified; conflicting files will contain lines like
 \end{verbatim}
 If this happen, you must edit the file manually to remove conflicts.
 
+You can compare your local copy with any version of the repository
+using 
+\begin{verbatim}
+  cvs diff -r tag
+\end{verbatim}
+or with the repository at a given date using 
+\begin{verbatim}
+  cvs diff -D date
+\end{verbatim}
+You can also compare two different versions/snapshots of the repository, 
+by specifying two different tags or dates. Options \texttt{-i} (ignore case),  
+\texttt{-w} (ignore all white spaces), \texttt{-b} (ignore changes in 
+the number of white spaces) may be useful to distinguish true changes
+from ``esthetic'' changes such as indentation.
+
 READ-WRITE ACCESS ONLY:
 
 In order to save your changes to the repository, use
