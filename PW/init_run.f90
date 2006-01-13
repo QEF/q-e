@@ -9,10 +9,11 @@
 SUBROUTINE init_run()
   !----------------------------------------------------------------------------
   !
-  USE ions_base,   ONLY : nat, tau, ityp
-  USE force_mod,   ONLY : force
-  USE wvfct,       ONLY : gamma_only
-  USE mp_global, ONLY : MPIME
+  USE ions_base,       ONLY : nat, tau, ityp
+  USE force_mod,       ONLY : force
+  USE wvfct,           ONLY : gamma_only
+  USE control_flags,   ONLY : lmd
+  USE dynamics_module, ONLY : allocate_dyn_vars
   !
   IMPLICIT NONE
   !
@@ -41,6 +42,8 @@ SUBROUTINE init_run()
   CALL newd()
   !
   CALL wfcinit()
+  !
+  IF ( lmd ) CALL allocate_dyn_vars()
   !
   CALL stop_clock ( 'init_run' )
   !

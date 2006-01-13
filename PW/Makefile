@@ -75,7 +75,7 @@ dprojdtau.o \
 dqvan2.o \
 drhoc.o \
 dvloc_of_g.o \
-dynamics.o \
+dynamics_module.o \
 efermig.o \
 efermit.o \
 electrons.o \

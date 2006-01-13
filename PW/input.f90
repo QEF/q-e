@@ -59,10 +59,10 @@ SUBROUTINE iosys()
                             press_       => press, &
                             calc, lmovecell
   !
-  USE dynam,         ONLY : temperature, amass, &
-                            dt_      => dt, &
-                            delta_t_ => delta_t, &
-                            nraise_  => nraise
+  USE dynamics_module, ONLY : temperature, amass, &
+                              dt_      => dt, &
+                              delta_t_ => delta_t, &
+                              nraise_  => nraise
   !
   USE extfield,      ONLY : tefield_  => tefield, &
                             dipfield_ => dipfield, &
@@ -76,7 +76,6 @@ SUBROUTINE iosys()
                             psfile, tmp_dir, wfc_dir, &
                             prefix_     => prefix, &
                             pseudo_dir_ => pseudo_dir
-  
   !
   USE force_mod,     ONLY : lforce, lstres, force
   !
@@ -1453,7 +1452,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
                                  f_inp_ => f_inp
   USE ions_base,          ONLY : fixatom, &
                                  if_pos_ =>  if_pos
-  USE dynam,              ONLY : amass
+  USE ions_base,          ONLY : amass
   USE control_flags,      ONLY : lfixatom
   USE read_cards_module,  ONLY : read_cards_base => read_cards
   !

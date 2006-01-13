@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,25 +23,6 @@ MODULE basis
        startingconfig      ! 'input' or 'file'
   !
 END MODULE basis
-!
-!
-MODULE dynam
-  !
-  ! ... Variables needed for the dynamics
-  !
-  USE kinds,      ONLY : DP
-  USE ions_base,  ONLY : amass
-  !
-  SAVE
-  !
-  REAL(DP) :: &
-       dt,            &! time step
-       temperature,   &! starting temperature
-       delta_T         ! rate of thermalization
-  INTEGER :: &
-       nraise          ! the frequency of temperature raising
-  !
-END MODULE dynam
 !
 !
 MODULE gvect
@@ -580,8 +561,6 @@ MODULE bp
 !
 END MODULE bp
 !
-
-
 MODULE pwcom
   !
   USE constants, ONLY : e2, rytoev, amconv, uakbar, pi, tpi, fpi
@@ -591,7 +570,6 @@ MODULE pwcom
   USE uspp
   ! TEMP
   USE basis
-  USE dynam
   USE gvect
   USE gsmooth
   USE klist

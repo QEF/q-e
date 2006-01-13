@@ -36,6 +36,7 @@ SUBROUTINE clean_pw( lflag )
   USE fft_types,            ONLY : fft_dlay_deallocate
   USE spin_orb,             ONLY : lspinorb, fcoef
   USE noncollin_module,     ONLY : deallocate_noncol
+  USE dynamics_module,      ONLY : deallocate_dyn_vars
   !
   IMPLICIT NONE
   !
@@ -141,6 +142,10 @@ SUBROUTINE clean_pw( lflag )
   ! ... stick-owner matrix allocated in sticks_base
   !
   CALL sticks_deallocate()
+  !
+  ! ... arrays allocated for dynamics
+  !
+  CALL deallocate_dyn_vars()
   !
   ! ... deallocate indices used in calculation of polarizability at gamma
   !

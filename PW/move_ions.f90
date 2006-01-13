@@ -11,7 +11,7 @@ SUBROUTINE move_ions()
   !
   ! ... This routine moves the ions according to the requested scheme:
   !
-  ! ... l(old)bfgs          bfgs minimizations
+  ! ... lbfgs               bfgs minimizations
   ! ... lmd                 molecular dynamics ( verlet of vcsmd )
   ! ... lmd + lconstrain    constrained molecular dynamics,
   !
@@ -35,13 +35,14 @@ SUBROUTINE move_ions()
   USE relax,                  ONLY : epse, epsf, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
   USE constraints_module,     ONLY : lagrange
-  USE metadyn_vars,           ONLY : dfe_acc
+  USE metadyn_vars,           ONLY : dfe_acc, etot_av
   USE metadyn_base,           ONLY : set_target
   USE mp_global,              ONLY : intra_image_comm
   USE io_global,              ONLY : ionode_id, ionode
   USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
+  USE dynamics_module,        ONLY : dynamics, compute_averages
   !
   IMPLICIT NONE
   !
@@ -190,6 +191,8 @@ SUBROUTINE move_ions()
            !
            CALL dynamics()
            !
+           CALL compute_averages()
+           !
         END IF
         !
         IF ( calc /= ' ' ) THEN
@@ -200,7 +203,13 @@ SUBROUTINE move_ions()
            !
         END IF
         !
-        IF ( lcoarsegrained ) dfe_acc(:) = dfe_acc(:) - lagrange(:)
+        IF ( lcoarsegrained ) THEN
+           !
+           etot_av = etot_av + etot
+           !
+           dfe_acc(:) = dfe_acc(:) - lagrange(:)
+           !
+        END IF
         !
      END IF
      !
