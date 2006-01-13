@@ -10,7 +10,7 @@
 #define __REMOVE_CONSTRAINT_FORCE
 !#define __DEBUG_CONSTRAINTS
 #define __USE_PBC
-#define __USE_LJ_PBC
+!#define __USE_LJ_PBC
 !
 !----------------------------------------------------------------------------
 MODULE constraints_module
