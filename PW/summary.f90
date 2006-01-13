@@ -25,7 +25,7 @@ SUBROUTINE summary()
   USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
   USE char,            ONLY : title, sname
   USE cellmd,          ONLY : calc, cmass
-  USE dynam,           ONLY : amass
+  USE ions_base,       ONLY : amass
   USE gvect,           ONLY : nr1, nr2, nr3, dual, ecutwfc, ecfixed, q2sigma, &
                               ngm, gcutm, qcutz
   USE gsmooth,         ONLY : nr1s, nr2s, nr3s, doublegrid, ngms, gcutms

@@ -45,7 +45,7 @@ MODULE restart_module
     USE wvfct,                ONLY : npwx, nbndx, nbnd, igk, g2kin, &
          igk_l2g, gamma_only
     USE char,                 ONLY : title, crystal, sname
-    USE dynam,                ONLY : amass
+    USE ions_base,            ONLY : amass
     USE symme,                ONLY : s, irt, ftau, nsym, invsym
     USE ener,                 ONLY : ef
     USE atom,                 ONLY : zmesh, xmin, dx, r, rab, chi, oc, rho_at, &
@@ -574,7 +574,7 @@ MODULE restart_module
          nrxxs, gcutms, doublegrid
     USE wvfct,                ONLY :  npwx, nbndx, nbnd, igk, g2kin, igk_l2g, gamma_only
     USE char,                 ONLY : title, crystal, sname
-    USE dynam,                ONLY : amass
+    USE ions_base,            ONLY : amass
     USE symme,                ONLY : s, irt, ftau, nsym, invsym
     USE ener,                 ONLY : ef
     USE atom,                 ONLY : zmesh, xmin, dx, r, rab, chi, oc, rho_at, &

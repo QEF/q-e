@@ -78,7 +78,7 @@ MODULE pw_restart
       USE symme,                ONLY : nsym, invsym, s, ftau, irt
       USE char,                 ONLY : sname
       USE lsda_mod,             ONLY : nspin, isk, lsda
-      USE dynam,                ONLY : amass
+      USE ions_base,            ONLY : amass
       USE funct,                ONLY : get_dft_name
       USE scf,                  ONLY : rho
       USE sticks,               ONLY : dfftp
