@@ -25,7 +25,7 @@ subroutine solve_e2
   USE wavefunctions_module,  ONLY: evc
   USE phcom
   USE ramanm
-  USE check_stop, ONLY: time_max => max_seconds
+  USE check_stop, ONLY: max_seconds
   implicit none
 
   real(DP) ::  thresh, weight, avg_iter, dr2
@@ -263,13 +263,13 @@ subroutine solve_e2
      close (unit = iunrec, status = 'keep')
 
      tcpu = get_clock ('PHONON')
-     if (convt.or.tcpu.gt.time_max) goto 155
+     if (convt .or. tcpu > max_second) goto 155
 
   enddo
 155 continue
-  if (tcpu.gt.time_max) then
+  if (tcpu > max_second) then
      write (6, "(/,5x,'Stopping for time limit ',2f10.0)") tcpu, &
-          time_max
+          max_second
      call stop_ph (.false.)
   endif
   deallocate (dvscfin )

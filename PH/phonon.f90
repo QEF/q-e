@@ -28,7 +28,7 @@ PROGRAM phonon
   USE lsda_mod,        ONLY : nspin
   USE gvect,           ONLY : nrx1, nrx2, nrx3
   USE parser,          ONLY : int_to_char
-  USE control_flags,   ONLY : restart, lphonon, tr2, &
+  USE control_flags,   ONLY : restart, lphonon, tr2, wg_set, &
                               mixing_beta, lscf, david, isolve
   USE qpoint,          ONLY : xq, nksq
   USE disp,            ONLY : nqs, x_q
@@ -53,8 +53,6 @@ PROGRAM phonon
   CHARACTER (LEN=9)   :: code = 'PHONON'
   CHARACTER (LEN=256) :: auxdyn
   CHARACTER (LEN=256) :: filname, filint
-  !
-  EXTERNAL date_and_tim
   !
   !
   CALL init_clocks( .TRUE. )
@@ -222,6 +220,7 @@ PROGRAM phonon
         startingconfig = 'input'
         startingpot    = 'file'
         startingwfc    = 'atomic'
+        wg_set=.false.
         !
         ! ... tr2 is set to a default value of 1.D-8
         !

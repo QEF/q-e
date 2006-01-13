@@ -24,7 +24,7 @@ subroutine solve_e
   USE io_global,             ONLY : stdout, ionode
   USE io_files,              ONLY : prefix, iunigk
   use pwcom
-  USE check_stop,            ONLY : time_max => max_seconds
+  USE check_stop,            ONLY : max_seconds
   USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP
   USE becmod,                ONLY : becp
@@ -360,13 +360,13 @@ subroutine solve_e
 
      close (unit = iunrec, status = 'keep')
      tcpu = get_clock ('PHONON')
-     if (convt .or. tcpu > time_max) goto 155
+     if (convt .or. tcpu > max_second) goto 155
 
   enddo
 155 continue
-  if (tcpu > time_max) then
+  if (tcpu > max_second) then
      WRITE( stdout, "(/,5x,'Stopping for time limit ',2f10.0)") tcpu, &
-          time_max
+          max_second
      call stop_ph (.false.)
   endif
   deallocate (eprec)

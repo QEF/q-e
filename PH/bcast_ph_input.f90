@@ -22,7 +22,7 @@ subroutine bcast_ph_input ( )
   use io_files
   USE control_flags, only: iverbosity, reduce_io
   USE ramanm, ONLY: lraman, elop, dek, eth_rps, eth_ns
-  USE check_stop, ONLY: time_max => max_seconds
+  USE check_stop, ONLY: max_seconds
 
 
   implicit none
@@ -58,7 +58,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (amass, root)
   call mp_bcast (alpha_mix, root)
   call mp_bcast (xq, root)
-  call mp_bcast (time_max, root)
+  call mp_bcast (max_second, root)
   call mp_bcast (dek, root)
   !
   ! characters

@@ -18,7 +18,7 @@ SUBROUTINE phqscf
   !
 
   USE io_global,  ONLY : stdout, ionode
-  USE check_stop, ONLY: time_max => max_seconds
+  USE check_stop, ONLY: max_seconds
   USE pwcom
   USE kinds, ONLY : DP
   USE phcom
@@ -92,11 +92,11 @@ SUBROUTINE phqscf
         ENDIF
         !
         tcpu = get_clock ('PHONON')
-        ! if (tcpu > time_max) then
+        ! if (tcpu > max_second) then
         ! temporary disabled: recover does not work if program stop here
            !
            ! WRITE( stdout, '(/,5x,"Stopping for time limit ",2f10.0)') &
-           !      tcpu, time_max
+           !      tcpu, max_second
            ! CALL stop_ph (.FALSE.)
         ! ENDIF
         !
