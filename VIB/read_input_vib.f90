@@ -18,7 +18,7 @@ SUBROUTINE read_input_vib()
   !
   USE constants,        ONLY : AMU_AU
   USE io_global,        ONLY : ionode, ionode_id, stdout
-  USE ions_base,        ONLY : nat, ityp, pmass
+  USE ions_base,        ONLY : nat, ityp, pmass, amass
   USE input_parameters, ONLY : atom_label
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_bcast
@@ -30,7 +30,6 @@ SUBROUTINE read_input_vib()
 #endif
 
 #ifdef DFT_PW
-  USE dynam,            ONLY : amass
   USE io_files,         ONLY : prefix, outdir=>tmp_dir
 #endif
   !

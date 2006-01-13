@@ -1002,10 +1002,7 @@ CONTAINS
     USE constants,            ONLY : AMU_AU
     USE control_flags,        ONLY : iprsta
     USE kinds,                ONLY : DP
-    USE ions_base,            ONLY : nat, pmass, ityp, nsp, na
-#ifdef DFT_PW
-    USE dynam,                ONLY : amass
-#endif
+    USE ions_base,            ONLY : nat, pmass, ityp, nsp, na, amass
     !
     ! ... input variables
     !
