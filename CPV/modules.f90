@@ -267,15 +267,3 @@ contains
 end module cvan
 
 
-module qrl_mod
-
-  use parameters, only: nsx, ndmx, nbrx, lqmax
-  implicit none
-  save
-!
-! qrl       q(r) functions (old format)
-
-  real(8) :: qrl(ndmx,nbrx*(nbrx+1)/2,lqmax)
-
-end module qrl_mod
-

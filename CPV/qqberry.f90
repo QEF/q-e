@@ -18,7 +18,6 @@ subroutine qqberry2( gqq,gqqm, ipol)
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
   use uspp_param, only: lqmax, nqlc, kkbeta, nbeta, nh, nhm
   use uspp, only: indv, lpx, lpl, ap,nhtolm
-  use qrl_mod, only: qrl
   use atom, only: r, rab
   use core
   use gvecw, only: ngw
@@ -31,24 +30,19 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use cell_base, only: a1, a2, a3
   use reciprocal_vectors, only: ng0 => gstart, gx, g
   use mp, only: mp_sum
-
-
   
   implicit none
-
 
   complex(8) gqq(nhm,nhm,nas,nsp)
   complex(8) gqqm(nhm,nhm,nas,nsp)
   real(8) gmes
   integer ipol, lx
 
-
 ! local variables
 
-  integer ig, is, iv, jv, i, istart, il,l,ir,    & 
-       &     igi,ia
+  integer ig, is, iv, jv, i, istart, il,l,ir, igi,ia
   real(8), allocatable:: fint(:),jl(:)
-  real(8), allocatable:: qradb2(:,:,:,:) 
+  real(8), allocatable:: qrl(:,:,:), qradb2(:,:,:,:) 
   real(8) c, xg
   complex(8) qgbs,sig
   integer ivs, jvs, ivl, jvl, lp, ijv
@@ -92,7 +86,9 @@ subroutine qqberry2( gqq,gqqm, ipol)
   do is=1,nvb
      c=fpi                 !/omegab
      !
-     call fill_qrl (is)
+     ALLOCATE ( qrl(kkbeta(is), nbeta(is)*(nbeta(is)+1)/2, nqlc(is)) )
+     !
+     call fill_qrl (is, SIZE(qrl, 1), SIZE(qrl, 2), SIZE(qrl, 3), qrl)
      ! now the radial part
      do l=1,nqlc(is)                        
         xg= gmes !only orthorombic cells
@@ -118,8 +114,9 @@ subroutine qqberry2( gqq,gqqm, ipol)
            end do
         end do
      end do
-         
+     DEALLOCATE ( qrl )    
   enddo
+
   igi=-1
   do ig=1,ngw
      if(ipol.eq.1 ) then

@@ -1650,7 +1650,6 @@ END SUBROUTINE read_atomic_cc
       use parameters, only: nchix, lmaxx, nbrx, ndmx, nsx, lqmax, nqfx
       use uspp_param, only: qfunc, qfcoef, qqq, betar, dion, vloc_at, &
            rinner, kkbeta, lll, nbeta, nqf, nqlc, tvanp
-      use qrl_mod, only: qrl
       use funct, only: set_dft_from_name, dft_is_hybrid
       use atom, only: nchi, chi, lchi, r, rab, mesh, nlcc, rho_atc
       use cvan, only: oldvan
@@ -1666,7 +1665,10 @@ END SUBROUTINE read_atomic_cc
      &      iunps       ! The unit of the pseudo file
 !
 !   The local variables which are used to read the Vanderbilt file.
-!   They are used only for the pseudopotential report. They are no 
+
+      real(DP), allocatable :: qrl(:,:,:) ! needed by old file versions
+
+!   these are used only for the pseudopotential report. They are no 
 !   longer used in the rest of the code.
 !
       real(DP)                                                     &
@@ -1948,6 +1950,7 @@ END SUBROUTINE read_atomic_cc
 !
 !   old version: read the q(r) here and fit them with the Vanderbilt's form
 !
+         ALLOCATE ( qrl(kkbeta(is), nbeta(is)*(nbeta(is)+1)/2, nqlc(is)) )
          ijv = 0
          do iv=1,nbeta(is)
             do jv=iv,nbeta(is)
@@ -1960,9 +1963,11 @@ END SUBROUTINE read_atomic_cc
                end do
             end do
          end do
-!
-         call fit_qrl(is)
-!
+         !
+         call fit_qrl(is, SIZE(qrl, 1), SIZE(qrl, 2), SIZE(qrl, 3), qrl)
+         !
+         DEALLOCATE (qrl)
+         !
       end if
 !
 !   vloc_at as read from Vanderbilt's format is r*v_loc(r)
@@ -2017,7 +2022,7 @@ END SUBROUTINE read_atomic_cc
       end subroutine readvan
 
 !-----------------------------------------------------------------------
-      subroutine fit_qrl(is)
+      subroutine fit_qrl(is, dim1, dim2, dim3, qrl)
 !-----------------------------------------------------------------------
 !
 ! find coefficients qfcoef that fit the pseudized qrl in US PP
@@ -2027,11 +2032,11 @@ END SUBROUTINE read_atomic_cc
       use kinds, only: DP
       use uspp_param, only: qfunc, nqf, qfcoef, rinner, lll, nbeta, &
                        kkbeta
-      use qrl_mod, only: qrl
       use atom, only: r
       !
       implicit none
-      integer :: is
+      integer, intent(in) :: is, dim1, dim2, dim3
+      real (kind=DP) :: qrl(dim1, dim2, dim3)
       !
       real (kind=DP), allocatable :: a(:,:), ainv(:,:), b(:), x(:)
       real (kind=DP) :: deta
@@ -2041,12 +2046,18 @@ END SUBROUTINE read_atomic_cc
       allocate ( a(nqf(is),nqf(is)), ainv(nqf(is),nqf(is)) )
       allocate ( b(nqf(is)), x(nqf(is)) )
       !
+      IF ( kkbeta(is) > dim1 ) &
+           CALL errore ('fit_qrl', 'bad 1st dimension for array qrl', 1)
       ijv = 0
       do iv=1,nbeta(is)
          do jv=iv,nbeta(is)
             ijv = ijv + 1
+            IF ( ijv > dim2) &
+                 CALL errore ('fit_qrl', 'bad 2nd dimension for array qrl', 2)
             lmin=lll(jv,is)-lll(iv,is)+1
             lmax=lmin+2*lll(iv,is)
+            IF ( lmax > dim3) &
+                 CALL errore ('fit_qrl', 'bad 3rd dimension for array qrl', 3)
             !
             do l=lmin,lmax
                !

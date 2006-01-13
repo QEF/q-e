@@ -2104,7 +2104,7 @@
       USE reciprocal_vectors, ONLY: gstart
       USE ions_base, ONLY: nsp, na, nas => nax, nat
       USE uspp, ONLY: nhsa => nkb
-      USE atom
+      USE atom, ONLY: nchi, lchi
 !
       IMPLICIT NONE
       COMPLEX(8), INTENT(in) :: c(ngw,nx), eigr(ngw,nat),      &

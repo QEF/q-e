@@ -6,30 +6,36 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-
 !-----------------------------------------------------------------------
-      subroutine fill_qrl(is)
+      subroutine fill_qrl(is, dim1, dim2, dim3, qrl)
 !-----------------------------------------------------------------------
 !
 ! for compatibility with old Vanderbilt formats
 !
       use uspp_param, only: qfunc, nqf, qfcoef, rinner, lll, nbeta, &
                        kkbeta
-      use qrl_mod, only: qrl
       use atom, only: r
 !
       implicit none
-      integer, intent(in) :: is
-!
+      integer, intent(in) :: is, dim1, dim2, dim3
+      real(8) :: qrl(dim1,dim2,dim3)
+      !
       integer :: iv, jv, ijv, lmin, lmax, l, ir, i
-!
+      !
+      !
+      IF ( kkbeta(is) > dim1 ) &
+           CALL errore ('fill_qrl', 'bad 1st dimension for array qrl', 1)
       ijv = 0
       do iv=1,nbeta(is)
          do jv=iv,nbeta(is)
             ijv = ijv + 1
+            IF ( ijv > dim2) &
+                 CALL errore ('fill_qrl', 'bad 2nd dimension for array qrl', 2)
             lmin=lll(jv,is)-lll(iv,is)+1
             lmax=lmin+2*lll(iv,is)
-            do l=lmin,lmax
+            IF ( lmax > dim3) &
+                 CALL errore ('fill_qrl', 'bad 3rd dimension for array qrl', 3)
+             do l=lmin,lmax
                do ir=1,kkbeta(is)
                   if (r(ir,is) >= rinner(l,is)) then
                      qrl(ir,ijv,l)=qfunc(ir,iv,jv,is)

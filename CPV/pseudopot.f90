@@ -833,7 +833,6 @@ CONTAINS
       USE uspp,       ONLY: nhtol, indv
       USE betax,      only: refg, qradx, mmx, dqradx
       USE cvan,       only: oldvan, ish, nvb
-      USE qrl_mod,    only: qrl
       use gvecb,      only: ngb
       !
       IMPLICIT NONE
@@ -841,7 +840,8 @@ CONTAINS
       LOGICAL, INTENT(IN) :: tpre
       !
       INTEGER :: is, iv, l, il, ltmp, i0, ir, jv, ijv
-      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:)
+      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:), &
+           qrl(:,:,:)
       REAL(DP) :: xg, xrg
 
       IF( ALLOCATED(  qradx ) ) DEALLOCATE(  qradx )
@@ -865,7 +865,8 @@ CONTAINS
          WRITE( stdout,*) ' nlinit  nh(is), ngb, is, kkbeta, lmaxq = ', &
      &        nh(is), ngb, is, kkbeta(is), nqlc(is)
          !
-         call fill_qrl (is)
+         ALLOCATE ( qrl(kkbeta(is), nbeta(is)*(nbeta(is)+1)/2, nqlc(is)) )
+         call fill_qrl (is,  SIZE(qrl, 1), SIZE(qrl, 2), SIZE(qrl, 3), qrl)
          !
          do l = 1, nqlc( is )
             !
@@ -941,6 +942,7 @@ CONTAINS
          end do
          WRITE( stdout,*)
          !
+         DEALLOCATE ( qrl )
          deallocate(jl)
          deallocate(fint)
          if (tpre) then
