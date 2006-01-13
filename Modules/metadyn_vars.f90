@@ -40,6 +40,8 @@ MODULE metadyn_vars
   !
   REAL(DP) :: g_amplitude
   !
+  REAL(DP) :: etot_av
+  !
   INTEGER :: first_metadyn_iter
   INTEGER :: first_fe_iter
   INTEGER :: first_shake_iter

@@ -1674,6 +1674,68 @@ MODULE read_cards_module
                 !
              END IF
              !
+          CASE( 6 )
+             !
+             IF ( cg_phs_path_flag ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i), &
+                                      constr_inp(2,i), &
+                                      constr_inp(3,i), &
+                                      pos(i,1),        &
+                                      pos(i,2)
+                !
+             ELSE IF ( nfield == 4 ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i), &
+                                      constr_inp(2,i), &
+                                      constr_inp(3,i)
+                !
+             ELSE IF ( nfield == 5 ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i), &
+                                      constr_inp(2,i), &
+                                      constr_inp(3,i), &
+                                      constr_target(i)
+                !
+                constr_target_set(i) = .TRUE.
+                !
+             ELSE
+                !
+                CALL errore( 'card_constraints', 'too many fields', nfield )
+                !
+             END IF   
+             !
+          CASE( 7 )
+             !
+             IF ( cg_phs_path_flag ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i), &
+                                      pos(i,1),        &
+                                      pos(i,2)
+                !
+             ELSE IF ( nfield == 2 ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i)
+                !
+             ELSE IF ( nfield == 3 ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i), &
+                                      constr_target(i)
+                !
+                constr_target_set(i) = .TRUE.
+                !
+             ELSE
+                !
+                CALL errore( 'card_constraints', 'too many fields', nfield )
+                !
+             END IF   
+             !             
           CASE DEFAULT
              !
              CALL errore( 'card_constraints', &

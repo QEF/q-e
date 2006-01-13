@@ -231,7 +231,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         new_target(:) = pos(:,image)
         !
-        to_target(:) = new_target(:) - target(:)
+        to_target(:) = ( new_target(:) - target(:) ) / DBLE( shake_nstep )
         !
         nfi    = 1
         nomore = shake_nstep
@@ -325,8 +325,10 @@ SUBROUTINE metadyn()
   USE metadyn_vars,       ONLY : fe_grad, new_target, to_target, metadyn_fmt, &
                                  to_new_target, fe_step, metadyn_history,     &
                                  max_metadyn_iter, first_metadyn_iter,        &
-                                 fe_nstep, shake_nstep, dfe_acc, gaussian_pos
-  USE metadyn_base,       ONLY : add_gaussians, evolve_collective_vars
+                                 fe_nstep, shake_nstep, dfe_acc, etot_av,     &
+                                 gaussian_pos
+  USE metadyn_base,       ONLY : add_gaussians, add_domain_poential, &
+                                 evolve_collective_vars
   USE metadyn_io,         ONLY : write_axsf_file, write_metadyn_restart
   USE io_global,          ONLY : ionode
   USE xml_io_base,        ONLY : restart_dir, check_restartfile
@@ -389,6 +391,8 @@ SUBROUTINE metadyn()
         !
         CALL add_gaussians( iter )
         !
+        CALL add_domain_poential()
+        !
         norm_fe_grad = norm( fe_grad )
         !
         CALL evolve_collective_vars( norm_fe_grad )
@@ -438,11 +442,15 @@ SUBROUTINE metadyn()
         !
         ! ... zero temperature
         !
+        etot_av = etot
+        !
         fe_grad(:) = - lagrange(:)
         !
      ELSE
         !
         ! ... finite temperature
+        !
+        etot_av = etot_av / DBLE( nomore )
         !
         fe_grad(:) = dfe_acc(:) / DBLE( nomore )
         !
@@ -451,14 +459,14 @@ SUBROUTINE metadyn()
      IF ( ionode ) THEN
         !
         WRITE( UNIT = iunmeta, FMT = metadyn_fmt ) &
-            iter, target(:), etot, gaussian_pos(:), fe_grad(:)
+            iter, target(:), etot_av, gaussian_pos(:), fe_grad(:)
         !
         CALL flush_unit( iunmeta )
         CALL flush_unit( iunaxsf )
         !
      END IF
      !
-     CALL write_metadyn_restart( dirname, iter, tau, etot, 1.D0 )
+     CALL write_metadyn_restart( dirname, iter, tau, etot_av, 1.D0 )
      !
      IF ( iter >= max_metadyn_iter ) EXIT metadyn_loop
      !

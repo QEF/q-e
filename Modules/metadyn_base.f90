@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!#define __USE_PBC
+#define __USE_PBC
 !
 !----------------------------------------------------------------------------
 MODULE metadyn_base
@@ -28,6 +28,7 @@ MODULE metadyn_base
   !
   PUBLIC :: set_target, &
             add_gaussians, &
+            add_domain_poential, &
             metadyn_init, &
             evolve_collective_vars
   !
@@ -68,7 +69,7 @@ MODULE metadyn_base
       !
       c_nconstr  = int_to_char( nconstr )
       !
-      metadyn_fmt = '(I4,' // TRIM( c_nconstr ) // '(2X,F10.5),2X,F14.8,' // &
+      metadyn_fmt = '(I5,' // TRIM( c_nconstr ) // '(2X,F10.5),2X,F14.8,' // &
                   & TRIM( c_nconstr ) // '(2X,F10.5),' // &
                   & TRIM( c_nconstr ) // '(2X,F10.7))'
       !
@@ -212,9 +213,80 @@ MODULE metadyn_base
     END SUBROUTINE add_gaussians
     !
     !------------------------------------------------------------------------
+    SUBROUTINE add_domain_poential()
+      !------------------------------------------------------------------------
+      !
+      ! ... a repulsive potential is added to confine the collective variables
+      ! ... within the appropriate domain :
+      !
+      ! ... V(s) = A * ( sigma / s )^8
+      !
+      ! ... where A is the amplitude of the gaussians
+      !
+      USE constraints_module, ONLY : nconstr, target, constr_type, dmax
+      USE metadyn_vars,       ONLY : fe_grad, g_amplitude
+      !
+      IMPLICIT NONE
+      !
+      INTEGER  :: i
+      REAL(DP) :: A, s, inv_s
+      !
+      REAL(DP), PARAMETER :: coord_sigma = 0.10D0
+      REAL(DP), PARAMETER :: dist_sigma  = 0.10D0
+      REAL(DP), PARAMETER :: stfac_sigma = 0.02D0
+      !
+      !
+      A = 8.D0 * g_amplitude
+      !
+      DO i = 1, nconstr
+         !
+         SELECT CASE( constr_type(i) )
+         CASE( 1, 2 )
+            !
+            ! ... coordination must always be larger than a minimum threshold
+            !
+            inv_s = 1.D0 / target(i)
+            !
+            fe_grad(i) = fe_grad(i) - A * inv_s * ( coord_sigma * inv_s )**7
+            !
+         CASE( 3 )
+            !
+            ! ... a distance can never be larger than dmax ( check file
+            ! ... constraints_module.f90 for its definition )
+            !
+            inv_s = 1.D0 / ( dmax - target(i) )
+            !
+            fe_grad(i) = fe_grad(i) - A * inv_s * ( dist_sigma * inv_s )**7
+            !
+         CASE( 6 )
+            !
+            ! ... the square modulus of the structure factor is never negative
+            ! ... or larger than one
+            !
+            inv_s = 1.D0 / target(i)
+            !
+            fe_grad(i) = fe_grad(i) - A * inv_s * ( stfac_sigma * inv_s )**7
+            !
+            inv_s = 1.D0 / ( 1.D0 - target(i) )
+            !
+            fe_grad(i) = fe_grad(i) - A * inv_s * ( stfac_sigma * inv_s )**7
+            !
+         END SELECT
+         !
+      END DO
+      !
+      RETURN
+      !
+    END SUBROUTINE add_domain_poential
+    !
+    !------------------------------------------------------------------------
     SUBROUTINE evolve_collective_vars( norm_fe_grad )
       !------------------------------------------------------------------------
       !
+      ! ... the collective variables are evolved taking care of the
+      ! ... additional constraints imposed by the domain definition
+      !
+      USE constants,          ONLY : eps32
       USE constraints_module, ONLY : nconstr, constr_type, target, dmax
       USE metadyn_vars,       ONLY : fe_grad, fe_step, new_target, &
                                      to_target, shake_nstep, gaussian_pos
@@ -229,6 +301,9 @@ MODULE metadyn_base
       REAL(DP), EXTERNAL :: rndm
       !
       !
+      IF ( norm_fe_grad < eps32 ) &
+         CALL errore( 'evolve_collective_vars', 'norm( fe_grad ) = 0', 1 )
+      !
       fe_grad(:) = fe_grad(:) / norm_fe_grad
       !
       DO i = 1, nconstr
@@ -239,18 +314,39 @@ MODULE metadyn_base
          !
          new_target(i) = target(i) - step * fe_grad(i)
          !
-#if defined (__USE_PBC)
-         !
-         IF ( constr_type(i) == 3 ) THEN
+         SELECT CASE( constr_type(i) )
+         CASE( 1, 2 )
             !
-            ! ... for constraints on distances we must use the minimum 
-            ! ... image convenction
+            ! ... coordination must always be larger than zero
             !
-            new_target(i) = new_target(i) - MAX( 0.D0, new_target(i) - dmax )
+            new_target(i) = ABS( new_target(i) )
             !
-         END IF
-         !
-#endif
+         CASE( 3 )
+            !
+            ! ... a distance can never be larger than dmax ( check file
+            ! ... constraints_module.f90 for its definition )
+            !
+            IF ( new_target(i) > dmax ) &
+               new_target(i) = 2.D0 * dmax - new_target(i)
+            !
+         CASE( 6 )
+            !
+            ! ... the square modulus of the structure factor is never 
+            ! ... negative or larger than one
+            !
+            new_target(i) = ABS( new_target(i) )
+            !
+            IF ( new_target(i) > 1.D0 ) new_target(i) = 2.D0 - new_target(i)
+            !
+         CASE( 7 )
+            !
+            ! ... the spherical average of the structure factor must be within
+            ! ... -1 and 1
+            !
+            IF ( new_target(i) > +1.D0 ) new_target(i) = +2.D0 - new_target(i)
+            IF ( new_target(i) < -1.D0 ) new_target(i) = -2.D0 - new_target(i)
+            !
+         END SELECT
          !
       END DO
       !
@@ -264,15 +360,11 @@ MODULE metadyn_base
     SUBROUTINE set_target()
       !------------------------------------------------------------------------
       !
-      USE metadyn_vars,       ONLY : to_target, to_new_target, shake_nstep
+      USE metadyn_vars,       ONLY : to_target, to_new_target
       USE constraints_module, ONLY : target
       !
       !
-      IF ( to_new_target ) THEN
-         !
-         target(:) = target(:) + to_target(:)
-         !
-      END IF
+      IF ( to_new_target ) target(:) = target(:) + to_target(:)
       !
       RETURN
       !

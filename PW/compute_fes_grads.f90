@@ -22,10 +22,10 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
                                  num_of_images, istep_path, suspended_image
   USE constraints_module, ONLY : lagrange, target, init_constraint, &
                                  deallocate_constraint
-  USE dynam,              ONLY : dt
-  USE control_flags,      ONLY : conv_elec, istep, history, wg_set, &
-                                 alpha0, beta0, ethr, pot_order,    &
-                                 conv_ions, ldamped
+  USE dynamics_module,    ONLY : dt
+  USE control_flags,      ONLY : conv_elec, istep, nstep, history, wg_set, &
+                                 alpha0, beta0, ethr, pot_order, conv_ions, &
+                                 ldamped
   USE cell_base,          ONLY : alat, at, bg
   USE gvect,              ONLY : ngm, g, nr1, nr2, nr3, eigts1, eigts2, eigts3
   USE vlocal,             ONLY : strf
@@ -264,7 +264,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         ! ... first the system is "adiabatically" moved to the new target
         ! ... by using MD without damping
         !
-        to_target(:) = new_target(:) - target(:)
+        to_target(:) = ( new_target(:) - target(:) ) / DBLE( shake_nstep )
         !
         ldamped = .FALSE.
         !
@@ -273,9 +273,9 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         to_new_target = .TRUE.
         !
-        DO iter = 1, shake_nstep
-           !
-           istep = iter
+        nstep = shake_nstep
+        !
+        DO istep = 1, shake_nstep
            !
            CALL electronic_scf( lfirst, stat )
            !
@@ -296,9 +296,9 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         to_new_target = .FALSE.
         !
-        DO iter = 1, fe_nstep
-           !
-           istep = iter
+        nstep = fe_nstep
+        !
+        DO istep = 1, fe_nstep
            !
            CALL electronic_scf( lfirst, stat )
            !
@@ -348,17 +348,17 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
            CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
            !
+           CALL write_axsf_file( image, tau, alat )
+           !
+           ! ... the restart file is written here
+           !
+           OPEN( UNIT = 1000, FILE = filename )
+           !
+           WRITE( 1000, * ) tau
+           !
+           CLOSE( UNIT = 1000 )
+           !
         END IF
-        !
-        IF ( ionode ) CALL write_axsf_file( image, tau, alat )
-        !
-        ! ... the restart file is written here
-        !
-        OPEN( UNIT = 1000, FILE = filename )
-        !
-        WRITE( 1000, * ) tau
-        !
-        CLOSE( UNIT = 1000 )
         !
      END IF
      !
@@ -415,15 +415,15 @@ SUBROUTINE metadyn()
   USE kinds,              ONLY : DP
   USE constants,          ONLY : eps8
   USE constraints_module, ONLY : nconstr, target
-  USE ener,               ONLY : etot
   USE ions_base,          ONLY : tau
   USE cell_base,          ONLY : alat
   USE io_files,           ONLY : iunaxsf, iunmeta, prefix, tmp_dir
   USE metadyn_vars,       ONLY : fe_grad, new_target, to_target, metadyn_fmt, &
                                  to_new_target, fe_step, metadyn_history, &
                                  max_metadyn_iter, first_metadyn_iter, &
-                                 gaussian_pos
-  USE metadyn_base,       ONLY : add_gaussians, evolve_collective_vars
+                                 gaussian_pos, etot_av
+  USE metadyn_base,       ONLY : add_gaussians, add_domain_poential, &
+                                 evolve_collective_vars
   USE metadyn_io,         ONLY : write_axsf_file, write_metadyn_restart
   USE io_global,          ONLY : ionode, stdout
   USE basic_algebra_routines
@@ -431,7 +431,7 @@ SUBROUTINE metadyn()
   IMPLICIT NONE
   !
   CHARACTER(LEN=256) :: dirname
-  INTEGER            :: iter, i
+  INTEGER            :: iter
   REAL(DP)           :: norm_fe_grad
   LOGICAL            :: lfirst_scf = .TRUE.
   !
@@ -445,6 +445,8 @@ SUBROUTINE metadyn()
      IF ( iter > 0 ) THEN
         !
         CALL add_gaussians( iter )
+        !
+        CALL add_domain_poential()
         !
         norm_fe_grad = norm( fe_grad )
         !
@@ -472,14 +474,14 @@ SUBROUTINE metadyn()
      IF ( ionode ) THEN
         !
         WRITE( UNIT = iunmeta, FMT = metadyn_fmt ) &
-            iter, target(:), etot, gaussian_pos(:), fe_grad(:)
+            iter, target(:), etot_av, gaussian_pos(:), fe_grad(:)
         !
         CALL flush_unit( iunmeta )
         CALL flush_unit( iunaxsf )
         !
      END IF
      !
-     CALL write_metadyn_restart( dirname,iter, tau, etot, alat )
+     CALL write_metadyn_restart( dirname, iter, tau, etot_av, alat )
      !
      IF ( iter >= max_metadyn_iter ) EXIT metadyn_loop
      !
@@ -503,8 +505,9 @@ SUBROUTINE metadyn()
       !------------------------------------------------------------------------
       !
       USE constants,          ONLY : e2
+      USE ener,               ONLY : etot
       USE control_flags,      ONLY : istep, ldamped, conv_ions, nstep
-      USE metadyn_vars,       ONLY : fe_nstep, dfe_acc
+      USE metadyn_vars,       ONLY : fe_nstep, dfe_acc, etot_av
       USE constraints_module, ONLY : lagrange
       USE io_files,           ONLY : tmp_dir, prefix
       USE parser,             ONLY : delete_if_present
@@ -517,6 +520,7 @@ SUBROUTINE metadyn()
       LOGICAL :: stat
       !
       !
+      etot_av = 0.D0
       dfe_acc = 0.D0
       !
       CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
@@ -541,17 +545,21 @@ SUBROUTINE metadyn()
          !
       END DO
       !
-      ! ... the averages are computed here
+      ! ... the averages are computed here and converted to Hartree
       !
       IF ( ldamped ) THEN
          !
          ! ... zero temperature
+         !
+         etot_av = etot / e2
          !
          fe_grad(:) = - lagrange(:) / e2
          !
       ELSE
          !
          ! ... finite temperature
+         !
+         etot_av = etot_av / DBLE( istep ) / e2
          !
          fe_grad(:) = dfe_acc(:) / DBLE( istep ) / e2
          !
