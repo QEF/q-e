@@ -29,7 +29,7 @@
  */
 
 /* fftw.h -- system-wide definitions */
-/* $Id: fftw.h,v 1.1.1.1 2003-01-19 21:58:43 giannozz Exp $ */
+/* $Id: fftw.h,v 1.2 2006-01-15 20:18:53 giannozz Exp $ */
 
 #ifndef FFTW_H
 #define FFTW_H
@@ -432,7 +432,11 @@ extern long clock(void);
 #endif
 #endif
 
+#if defined(__QK_USER__)
+#define fftw_get_time() ((long) (dclock() * 1000000.0L))
+#else
 #define fftw_get_time() clock()
+#endif
 #define fftw_time_diff(t1,t2) ((t1) - (t2))
 #define fftw_time_to_sec(t) (((double) (t)) / CLOCKS_PER_SEC)
 

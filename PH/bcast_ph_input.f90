@@ -23,7 +23,7 @@ subroutine bcast_ph_input ( )
   USE control_flags, only: iverbosity, reduce_io
   USE ramanm, ONLY: lraman, elop, dek, eth_rps, eth_ns
   USE check_stop, ONLY: max_seconds
-
+  USE ions_base,     ONLY : amass
 
   implicit none
   integer :: root = 0
@@ -58,7 +58,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (amass, root)
   call mp_bcast (alpha_mix, root)
   call mp_bcast (xq, root)
-  call mp_bcast (max_second, root)
+  call mp_bcast (max_seconds, root)
   call mp_bcast (dek, root)
   !
   ! characters

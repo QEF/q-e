@@ -534,12 +534,12 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      close (unit = iunrec, status = 'keep')
 
      call stop_clock ('write_rec')
-     if (convt .or. tcpu > max_second) goto 155
+     if (convt .or. tcpu > max_seconds) goto 155
 
   enddo
 155 iter0=0
-  if (tcpu > max_second .and..not.convt) then
-     WRITE( stdout, '(/,5x,"Stopping for time limit ",2f10.0)') tcpu, max_second
+  if (tcpu > max_seconds .and..not.convt) then
+     WRITE( stdout, '(/,5x,"Stopping for time limit ",2f10.0)') tcpu, max_seconds
      call stop_ph (.false.)
   endif
   !

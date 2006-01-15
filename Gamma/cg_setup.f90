@@ -12,7 +12,7 @@ SUBROUTINE cg_setup
   !-----------------------------------------------------------------------
   !
   USE kinds, ONLY: DP
-  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
   USE pwcom
   USE atom, ONLY: nlcc
   USE restart_module, ONLY: readfile_new

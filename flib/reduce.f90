@@ -6,8 +6,11 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-
-#if defined __LINUX
+! FIXME: this seems like a workaround for the MPICH defaults.
+!  NOTE: that this can worked around via environment variables.
+! AK 2005/10/18
+!
+#if defined(__LINUX) || defined(__LINUX64)
 #  define MESSAGE_MAX_SIZE         262144
 #  define INTEGER_MESSAGE_MAX_SIZE  65536
 #  define REAL_MESSAGE_MAX_SIZE     32768

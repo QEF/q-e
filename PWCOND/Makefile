@@ -45,11 +45,13 @@ transmit.o
 
 MODULES = \
 ../Modules/atom.o \
+../Modules/basic_algebra_routines.o \
 ../Modules/berry_phase.o \
 ../Modules/cell_base.o \
 ../Modules/clocks.o \
 ../Modules/check_stop.o \
 ../Modules/constants.o \
+../Modules/constraints_module.o \
 ../Modules/control_flags.o \
 ../Modules/fft_base.o \
 ../Modules/fft_scalar.o \
@@ -140,6 +142,7 @@ PWOBJS = \
 ../PW/dqvan2.o \
 ../PW/drhoc.o \
 ../PW/dvloc_of_g.o \
+../PW/dynamics_module.o \
 ../PW/efermig.o \
 ../PW/efermit.o \
 ../PW/eqvect.o \

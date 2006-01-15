@@ -16,7 +16,7 @@ SUBROUTINE d3_readin()
   !    allows it. A second routine readfile reads the variables saved
   !    on the data file by the self-consistent program.
   !
-  USE ions_base,     ONLY : nat, ntyp => nsp
+  USE ions_base,     ONLY : nat, ntyp => nsp, amass
   USE pwcom
   USE control_flags, ONLY : iverbosity
   USE phcom

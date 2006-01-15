@@ -14,7 +14,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   !-----------------------------------------------------------------------
   !
   !     This subroutine writes on output several quantities
-  !     in a real space 3D mesh which can be plotted using chdens.x
+  !     in a real space 3D mesh for subsequent processing or plotting
   !     The integer variable plot_num is used to choose the output quantity
   !
   !           plot_num                  quantity

@@ -263,13 +263,13 @@ subroutine solve_e2
      close (unit = iunrec, status = 'keep')
 
      tcpu = get_clock ('PHONON')
-     if (convt .or. tcpu > max_second) goto 155
+     if (convt .or. tcpu > max_seconds) goto 155
 
   enddo
 155 continue
-  if (tcpu > max_second) then
+  if (tcpu > max_seconds) then
      write (6, "(/,5x,'Stopping for time limit ',2f10.0)") tcpu, &
-          max_second
+          max_seconds
      call stop_ph (.false.)
   endif
   deallocate (dvscfin )

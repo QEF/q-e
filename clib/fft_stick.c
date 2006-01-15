@@ -13,7 +13,11 @@
 #if defined __USE_INTERNAL_FFTW
 #  include "fftw.c"
 #else
-#  include <fftw.h>
+#  if defined __FFTW_WITH_SIZE
+#    include <dfftw.h>
+#  else
+#    include <fftw.h>
+#  endif
 #endif
 
 

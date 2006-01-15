@@ -11,7 +11,7 @@
 SUBROUTINE cg_readin()
   !-----------------------------------------------------------------------
   !
-  USE ions_base, ONLY : nat
+  USE ions_base, ONLY : nat, amass
   USE pwcom
   USE cgcom
   USE io_files,  ONLY : tmp_dir, prefix

@@ -14,7 +14,11 @@ MODULE para_const
   SAVE
   !
   INTEGER, PARAMETER :: &
-      maxproc  = 128     !  maximum number of processors
+#if defined(__QK_USER__)
+      maxproc  = 2048     !  maximum number of processors. make it big for 'big iron'.
+#else
+      maxproc  = 128      !  maximum number of processors
+#endif
 END MODULE para_const
 !
 !

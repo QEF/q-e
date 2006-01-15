@@ -66,7 +66,6 @@ SUBROUTINE d3_setup()
   ! to set nbnd_occ in the metallic case
   ! minimum band energy
   ! maximum band energy
-  ! computes derivative of xc potential
   ! working array
 
   INTEGER :: table (48, 48)

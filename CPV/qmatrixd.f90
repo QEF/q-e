@@ -174,7 +174,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
   detq =cdet*10.**det
 #endif 
 
-#if defined(__ORIGIN) || defined(__AIX) || defined(__LINUX)
+#if defined(__ORIGIN) || defined(__AIX) || defined(__LINUX) || defined(__LINUX64)
 !LAPACK
   call zgetrf(n,n,qmat,nx,ipiv,info)!ATTENZIONE 
  !  write(6,*) 'info trf', info

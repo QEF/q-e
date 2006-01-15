@@ -255,7 +255,7 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
   !-----------------------------------------------------------------------
   !
 
-  USE ions_base,  ONLY : nat, tau, ityp
+  USE ions_base,  ONLY : nat, tau, ityp, amass
   USE io_global,  ONLY : stdout, ionode
   USE io_files,   ONLY : iunres
   USE pwcom
