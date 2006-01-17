@@ -364,7 +364,7 @@ SUBROUTINE metadyn()
      !
   ELSE IF ( check_restartfile( scradir, ndr ) ) THEN
      !
-     WRITE( stdout, '(/,3X,"restarting calling readfile",/)' )
+     WRITE( stdout, '(/,3X,"restarting from file",/)' )
      !
      do_first_scf = .FALSE.
      !
@@ -376,7 +376,7 @@ SUBROUTINE metadyn()
   !  
   IF ( do_first_scf ) THEN
      !
-     ! ... the wfc's are taken to the ground state
+     ! ... first we bring the system on the BO surface
      !
      CALL cprmain( tau, fion, etot )
      !
@@ -473,8 +473,6 @@ SUBROUTINE metadyn()
   END DO metadyn_loop
   !
   IF ( ionode ) THEN
-     !
-     CALL write_axsf_file( iter, tau, 1.D0 )
      !
      CLOSE( UNIT = iunaxsf )
      CLOSE( UNIT = iunmeta )

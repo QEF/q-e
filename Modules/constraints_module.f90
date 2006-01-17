@@ -42,10 +42,12 @@ MODULE constraints_module
   !
   ! ... public methods
   !
-  PUBLIC :: init_constraint,     &
-            check_constraint,    &
-            remove_constr_force, &
-            deallocate_constraint
+  PUBLIC :: init_constraint,       &
+            check_constraint,      &
+            remove_constr_force,   &
+            deallocate_constraint, &
+            compute_dmax,          &
+            pbc
   !
   ! ... public variables (assigned in the CONSTRAINTS input card)
   !
@@ -158,7 +160,7 @@ MODULE constraints_module
                    !
                    IF ( ityp(ia2) /= type_coord2 ) CYCLE
                    !
-                   dtau(:) = pbc( tau(:,ia1) - tau(:,ia2) ) * tau_units
+                   dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
                    !
                    norm_dtau = norm( dtau(:) )
                    !
@@ -201,7 +203,7 @@ MODULE constraints_module
                 !
                 IF ( ityp(ia2) /= type_coord1 ) CYCLE
                 !
-                dtau(:) = pbc( tau(:,ia1) - tau(:,ia2) ) * tau_units
+                dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
                 !
                 norm_dtau = norm( dtau(:) )
                 !
@@ -223,7 +225,7 @@ MODULE constraints_module
                 ia1 = ANINT( constr(1,ia) )
                 ia2 = ANINT( constr(2,ia) )
                 !
-                dtau(:) = pbc( tau(:,ia1) - tau(:,ia2) ) * tau_units
+                dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
                 !
                 target(ia) = norm( dtau(:) )
                 !
@@ -254,8 +256,8 @@ MODULE constraints_module
              ia1 = ANINT( constr(2,ia) )
              ia2 = ANINT( constr(3,ia) )
              !
-             d0(:) = pbc( tau(:,ia0) - tau(:,ia1) ) * tau_units
-             d1(:) = pbc( tau(:,ia1) - tau(:,ia2) ) * tau_units
+             d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) ) * tau_units )
+             d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
              !
              d0(:) = d0(:) / norm( d0(:) )
              d1(:) = d1(:) / norm( d1(:) )
@@ -283,9 +285,9 @@ MODULE constraints_module
              ia2 = ANINT( constr(3,ia) )
              ia3 = ANINT( constr(4,ia) )
              !
-             d0(:) = pbc( tau(:,ia0) - tau(:,ia1) ) * tau_units
-             d1(:) = pbc( tau(:,ia1) - tau(:,ia2) ) * tau_units
-             d2(:) = pbc( tau(:,ia2) - tau(:,ia3) ) * tau_units
+             d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) ) * tau_units )
+             d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
+             d2(:) = pbc( ( tau(:,ia2) - tau(:,ia3) ) * tau_units )
              !
              C00 = d0(:) .dot. d0(:)
              C01 = d0(:) .dot. d1(:)
@@ -311,15 +313,15 @@ MODULE constraints_module
                 !
              END IF
              !
-             k(1) = constr(1,ia) * tpi
-             k(2) = constr(2,ia) * tpi
-             k(3) = constr(3,ia) * tpi
+             k(1) = constr(1,ia) * tpi / tau_units
+             k(2) = constr(2,ia) * tpi / tau_units
+             k(3) = constr(3,ia) * tpi / tau_units
              !
              struc_fac = ( 0.D0, 0.D0 )
              !
              DO i = 1, nat
                 !
-                dtau(:) = pbc( tau(:,i) - tau(:,1) )
+                dtau(:) = pbc( ( tau(:,i) - tau(:,1) ) * tau_units )
                 !
                 phase = k(:) .dot. dtau(:)
                 !
@@ -349,7 +351,7 @@ MODULE constraints_module
              !
              DO i = 1, nat
                 !
-                dtau(:) = pbc( tau(:,i) - tau(:,1) ) * tau_units
+                dtau(:) = pbc( ( tau(:,i) - tau(:,1) ) * tau_units )
                 !
                 norm_dtau = norm( dtau(:) )
                 !
@@ -414,7 +416,7 @@ MODULE constraints_module
        REAL(DP)    :: smearing, r_c, r_max
        INTEGER     :: type_coord1, type_coord2
        REAL(DP)    :: dtau(3), norm_dtau, expo
-       REAL(DP)    :: k(3), phase, sin_phase, norm_k, sinxx
+       REAL(DP)    :: k(3), phase, ksin(3), norm_k, sinxx
        COMPLEX(DP) :: struc_fac
        !
        ! ... external function
@@ -450,7 +452,7 @@ MODULE constraints_module
                 !
                 IF ( ityp(ia2) /= type_coord2 ) CYCLE
                 !
-                dtau(:) = pbc( tau(:,ia1) - tau(:,ia2) ) * tau_units
+                dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
                 !
                 norm_dtau = norm( dtau(:) )
                 !
@@ -495,7 +497,7 @@ MODULE constraints_module
              !
              IF ( ityp(ia1) /= type_coord1 ) CYCLE
              !
-             dtau(:) = pbc( tau(:,ia) - tau(:,ia1) ) * tau_units
+             dtau(:) = pbc( ( tau(:,ia) - tau(:,ia1) ) * tau_units )
              !
              norm_dtau = norm( dtau(:) )
              !
@@ -521,7 +523,7 @@ MODULE constraints_module
           ia1 = ANINT( constr(1,index) )
           ia2 = ANINT( constr(2,index) )
           !
-          dtau(:) = pbc( tau(:,ia1) - tau(:,ia2) ) * tau_units
+          dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
           !
           norm_dtau = norm( dtau(:) )
           !
@@ -540,8 +542,8 @@ MODULE constraints_module
           ia1 = ANINT( constr(2,index) )
           ia2 = ANINT( constr(3,index) )
           !
-          d0(:) = pbc( tau(:,ia0) - tau(:,ia1) ) * tau_units
-          d1(:) = pbc( tau(:,ia1) - tau(:,ia2) ) * tau_units
+          d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) ) * tau_units )
+          d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
           !
           C00 = d0(:) .dot. d0(:)
           C01 = d0(:) .dot. d1(:)
@@ -565,9 +567,9 @@ MODULE constraints_module
           ia2 = ANINT( constr(3,index) )
           ia3 = ANINT( constr(4,index) )
           !
-          d0(:) = pbc( tau(:,ia0) - tau(:,ia1) ) * tau_units
-          d1(:) = pbc( tau(:,ia1) - tau(:,ia2) ) * tau_units
-          d2(:) = pbc( tau(:,ia2) - tau(:,ia3) ) * tau_units
+          d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) ) * tau_units )
+          d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
+          d2(:) = pbc( ( tau(:,ia2) - tau(:,ia3) ) * tau_units )
           !
           C00 = d0(:) .dot. d0(:)
           C01 = d0(:) .dot. d1(:)
@@ -609,15 +611,15 @@ MODULE constraints_module
           !
           ! ... constraint on structure factor at a given k vector
           !
-          k(1) = constr(1,index) * tpi
-          k(2) = constr(2,index) * tpi
-          k(3) = constr(3,index) * tpi
+          k(1) = constr(1,index) * tpi / tau_units
+          k(2) = constr(2,index) * tpi / tau_units
+          k(3) = constr(3,index) * tpi / tau_units
           !
           struc_fac = ( 1.D0, 0.D0 )
           !
           DO i = 1, nat - 1
              !
-             dtau(:) = pbc( tau(:,i+1) - tau(:,1) )
+             dtau(:) = pbc( ( tau(:,i+1) - tau(:,1) ) * tau_units )
              !
              phase = k(:) .dot. dtau(:)
              !
@@ -625,14 +627,14 @@ MODULE constraints_module
              !
              DO j = i + 1, nat
                 !
-                dtau(:) = pbc( tau(:,j) - tau(:,i) )
+                dtau(:) = pbc( ( tau(:,j) - tau(:,i) ) * tau_units )
                 !
                 phase = k(:) .dot. dtau(:)
                 !
-                sin_phase = SIN( phase )
+                ksin(:) = k(:) * SIN( phase )
                 !
-                dg(:,i) = dg(:,i) + k(:) * sin_phase
-                dg(:,j) = dg(:,j) - k(:) * sin_phase
+                dg(:,i) = dg(:,i) + ksin(:)
+                dg(:,j) = dg(:,j) - ksin(:)
                 !
              END DO
              !
@@ -642,7 +644,7 @@ MODULE constraints_module
           !
           g = ( g - target(index) )
           !
-          dg(:,:) = 2.D0 * dg(:,:) / DBLE( nat )**2
+          dg(:,:) = dg(:,:) * 2.D0 / DBLE( nat )**2
           !
        CASE( 7 )
           !
@@ -655,7 +657,7 @@ MODULE constraints_module
           !
           DO i = 1, nat
              !
-             dtau(:) = pbc( tau(:,i) - tau(:,1) ) * tau_units
+             dtau(:) = pbc( ( tau(:,i) - tau(:,1) ) * tau_units )
              !
              norm_dtau = norm( dtau(:) )
              !
@@ -694,15 +696,15 @@ MODULE constraints_module
                                   force, if_pos, ityp, tau_units, dt, massconv )
        !-----------------------------------------------------------------------
        !
-       ! ... update tau so that the constraint equation g=0 is satisfied,
-       ! ... use the recursion formula:
+       ! ... update taup (predicted positions) so that the constraint equation 
+       ! ... g=0 is satisfied, using the recursion formula:
        !
        ! ...                       g(taup)
        ! ... taup = taup - ----------------------- * dg(tau0)
        ! ...               M^-1<dg(taup)|dg(tau0)>
        !
-       ! ... in normal cases the constraint equation should be always 
-       ! ... satisfied at the very first iteration.
+       ! ... in normal cases the constraint equation should be satisfied at 
+       ! ... the very first iteration.
        !
        USE ions_base, ONLY : amass
        !
@@ -720,11 +722,10 @@ MODULE constraints_module
        !
        INTEGER               :: na, i, index, dim
        REAL(DP), ALLOCATABLE :: gp(:), dgp(:,:), dg0(:,:,:)
-       REAL(DP), ALLOCATABLE :: norm_dg0(:)
-       REAL(DP)              :: norm_dgp
        REAL(DP)              :: g0
        REAL(DP)              :: lambda, fac, invdtsq
-       LOGICAL               :: ltest(nconstr), global_test
+       LOGICAL, ALLOCATABLE  :: ltest(:)
+       LOGICAL               :: global_test
        INTEGER, PARAMETER    :: maxiter = 100
        !
        REAL(DP), EXTERNAL :: DDOT, DNRM2
@@ -733,8 +734,8 @@ MODULE constraints_module
        ALLOCATE( dgp( 3, nat ) )
        ALLOCATE( dg0( 3, nat, nconstr ) )
        !
-       ALLOCATE( gp(       nconstr ) )
-       ALLOCATE( norm_dg0( nconstr ) )
+       ALLOCATE( gp(    nconstr ) )
+       ALLOCATE( ltest( nconstr ) )
        !
        invdtsq  = 1.D0 / dt**2
        !
@@ -744,8 +745,6 @@ MODULE constraints_module
           !
           CALL constraint_grad( index, nat, tau0, &
                                 if_pos, ityp, tau_units, g0, dg0(:,:,index) )
-          !
-          norm_dg0(index) = DNRM2( dim, dg0(:,:,index), 1 )
           !
        END DO
        !
@@ -758,17 +757,13 @@ MODULE constraints_module
              CALL constraint_grad( index, nat, taup, &
                                    if_pos, ityp, tau_units, gp(index), dgp )
              !
-             norm_dgp = DNRM2( dim, dgp(:,:), 1 )
-             !
              ! ... check if gp = 0
              !
 #if defined (__DEBUG_CONSTRAINTS)
-             WRITE( stdout, '(2(2X,I3),3(2X,F12.8))' ) &
-                 i, index, ABS( gp(index) ), norm_dg0(index), norm_dgp
+             WRITE( stdout, '(2(2X,I3),F12.8)' ) i, index, ABS( gp(index) )
 #endif
              !
-             IF ( ABS( gp(index) ) < constr_tol .OR. &
-                  norm_dg0(index) < eps8 .OR. norm_dgp < eps8 ) THEN
+             IF ( ABS( gp(index) ) < constr_tol ) THEN
                 !
                 ltest(index) = .TRUE.
                 !
@@ -795,11 +790,15 @@ MODULE constraints_module
                 !
              END DO
              !
-             force(:,:) = force(:,:) - lambda * dg0(:,:,index) * invdtsq
-             !
              lagrange(index) = lagrange(index) + lambda * invdtsq
              !
+             force(:,:) = force(:,:) - lambda * dg0(:,:,index) * invdtsq
+             !
           END DO inner_loop
+          !
+#if defined (__DEBUG_CONSTRAINTS)
+          WRITE( *, '("* LAGRANGE ",I3,3F16.12)' ) i, lagrange(:)
+#endif
           !
           global_test = ALL( ltest(:) )
           !
@@ -831,7 +830,7 @@ MODULE constraints_module
        DEALLOCATE( dgp )
        DEALLOCATE( dg0 )
        DEALLOCATE( gp )
-       DEALLOCATE( norm_dg0 )
+       DEALLOCATE( ltest )
        !
        RETURN
        !
@@ -856,11 +855,11 @@ MODULE constraints_module
        REAL(DP), INTENT(INOUT) :: force(:,:)
        !
        INTEGER               :: i, j, dim
-       REAL(DP)              :: g, norm_dg, norm_before, norm_after
+       REAL(DP)              :: g, dgidgj
+       REAL(DP)              :: norm_before, norm_after
        REAL(DP), ALLOCATABLE :: dg(:,:,:)
        REAL(DP), ALLOCATABLE :: dg_matrix(:,:)
        INTEGER,  ALLOCATABLE :: iwork(:)
-       LOGICAL,  ALLOCATABLE :: skip(:)
        !
        REAL(DP), EXTERNAL :: DDOT, DNRM2
        !
@@ -874,70 +873,44 @@ MODULE constraints_module
        norm_before = DNRM2( 3 * nat, force, 1 )
        !
        ALLOCATE( dg( 3, nat, nconstr ) )
-       ALLOCATE( dg_matrix( nconstr, nconstr ) )
-       ALLOCATE( iwork( nconstr ) )
-       ALLOCATE( skip(  nconstr ) )
        !
-       DO i = 1, nconstr
+       IF ( nconstr == 1 ) THEN
           !
           CALL constraint_grad( i, nat, tau, &
-                                if_pos, ityp, tau_units, g, dg(:,:,i) )
+                                if_pos, ityp, tau_units, g, dg(:,:,1) )
           !
-          norm_dg = DNRM2( dim, dg(:,:,i), 1 )
+          lagrange(1) = DDOT( dim, force, 1, dg(:,:,1), 1 )
           !
-          IF ( norm_dg > eps8 ) THEN
-             !
-             dg(:,:,i) = dg(:,:,i) / norm_dg
-             !
-          ELSE
-             !
-             skip(i) = .TRUE.
-             !
-          END IF
+          force(:,:) = force(:,:) - lagrange(1) * dg(:,:,1)
           !
-       END DO
-       !
-       DO i = 1, nconstr
+       ELSE
           !
-          IF ( skip(i) ) THEN
+          ALLOCATE( dg_matrix( nconstr, nconstr ) )
+          ALLOCATE( iwork( nconstr ) )
+          !
+          DO i = 1, nconstr
              !
-             ! ... special case:  do not project out the components of the 
-             ! ...                force along the constraint gradient if the 
-             ! ...                latter is too small
+             CALL constraint_grad( i, nat, tau, &
+                                   if_pos, ityp, tau_units, g, dg(:,:,i) )
              !
-             dg_matrix(i,i) = 1.D0
+          END DO
+          !
+          DO i = 1, nconstr
              !
-             lagrange(i) = 0.D0
-             !
-             DO j = i + 1, nconstr
-                !
-                dg_matrix(i,j) = 0.D0
-                dg_matrix(j,i) = 0.D0
-                !
-             END DO
-             !
-          ELSE
-             !
-             dg_matrix(i,i) = 1.D0
+             dg_matrix(i,i) = DDOT( dim, dg(:,:,i), 1, dg(:,:,i), 1 )
              !
              lagrange(i) = DDOT( dim, force, 1, dg(:,:,i), 1 )
              !
              DO j = i + 1, nconstr
                 !
-                dg_matrix(i,j) = DDOT( dim, dg(:,:,i), 1, dg(:,:,j), 1 )
-                dg_matrix(j,i) = dg_matrix(i,j)
+                dgidgj = DDOT( dim, dg(:,:,i), 1, dg(:,:,j), 1 )
+                !
+                dg_matrix(i,j) = dgidgj
+                dg_matrix(j,i) = dgidgj  
                 !
              END DO
              !
-          END IF
-          !
-       END DO
-       !
-       IF ( nconstr == 1 ) THEN
-          !
-          force(:,:) = force(:,:) - lagrange(1) * dg(:,:,1)
-          !
-       ELSE
+          END DO
           !
           CALL DGESV( nconstr, 1, dg_matrix, &
                       nconstr, iwork, lagrange, nconstr, i )
@@ -952,9 +925,14 @@ MODULE constraints_module
              !
           END DO
           !
+          DEALLOCATE( dg_matrix )
+          DEALLOCATE( iwork )
+          !
        END IF
        !
 #if defined (__DEBUG_CONSTRAINTS)
+       !
+       WRITE( *, '("* LAGRANGE ",I3,3F16.12)' ) 0, lagrange(:)
        !
        WRITE( stdout, '(/,5X,"Intermediate forces (Ry/au):",/)')
        !
@@ -980,9 +958,6 @@ MODULE constraints_module
        END IF
        !
        DEALLOCATE( dg )
-       DEALLOCATE( dg_matrix )
-       DEALLOCATE( iwork )
-       DEALLOCATE( skip )
        !
 #endif
        !
@@ -1009,9 +984,9 @@ MODULE constraints_module
        !-----------------------------------------------------------------------
        !
        ! ... periodic boundary conditions ( vect is assumed to be given
-       ! ... in cartesian units )
+       ! ... in cartesian coordinates and in atomic units )
        !
-       USE cell_base, ONLY : at, bg
+       USE cell_base, ONLY : at, bg, alat
        !
        IMPLICIT NONE
        !
@@ -1023,15 +998,15 @@ MODULE constraints_module
        !
 #if defined (__USE_LJ_PBC)
        !
-       pbc(:) = vect(:) - ANINT( vect(:) )
+       pbc(:) = vect(:) - ANINT( vect(:) / alat ) * alat
        !
 #else
        !
-       pbc(:) = MATMUL( vect(:), bg(:,:) )
+       pbc(:) = MATMUL( vect(:), bg(:,:) ) / alat
        !
        pbc(:) = pbc(:) - ANINT( pbc(:) )
        !
-       pbc(:) = MATMUL( at(:,:), pbc(:) )
+       pbc(:) = MATMUL( at(:,:), pbc(:) ) * alat
        !
 #endif
        !
@@ -1054,11 +1029,11 @@ MODULE constraints_module
        !
        dmax = norm( MATMUL( at(:,:), (/ 0.5D0, 0.D0, 0.D0 /) ) ) * alat
        !
-       dmax = MIN( dmax, &
-                   norm( MATMUL( at(:,:), (/ 0.0D0, 0.5D0, 0.0D0 /) ) ) * alat )
+       dmax = MIN( dmax, norm( MATMUL( at(:,:), &
+                                       (/ 0.0D0, 0.5D0, 0.0D0 /) ) ) * alat )
        !
-       dmax = MIN( dmax, &
-                   norm( MATMUL( at(:,:), (/ 0.0D0, 0.0D0, 0.5D0 /) ) ) * alat )
+       dmax = MIN( dmax, norm( MATMUL( at(:,:), &
+                                       (/ 0.0D0, 0.0D0, 0.5D0 /) ) ) * alat )
        !
        RETURN
        !

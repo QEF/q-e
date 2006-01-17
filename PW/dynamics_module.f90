@@ -17,7 +17,8 @@ MODULE dynamics_module
   USE ions_base, ONLY : amass
   USE io_global, ONLY : stdout
   USE io_files,  ONLY : prefix, tmp_dir
-  USE constants, ONLY : amconv, convert_E_to_temp, au_ps, eps8, eps16
+  USE constants, ONLY : amconv, convert_E_to_temp, au_ps, BOHR_RADIUS_CM
+  USE constants, ONLY : eps8, eps16
   !
   USE basic_algebra_routines
   !
@@ -32,9 +33,13 @@ MODULE dynamics_module
   INTEGER :: &
        nraise          ! the frequency of temperature raising
   !
-  REAL(DP), ALLOCATABLE :: tau_old(:,:), tau_new(:,:), vel(:,:), acc(:,:)
+  REAL(DP), ALLOCATABLE :: tau_old(:,:), tau_new(:,:), tau_ref(:,:)
+  REAL(DP), ALLOCATABLE :: vel(:,:), acc(:,:)
   REAL(DP), ALLOCATABLE :: mass(:)
   REAL(DP), ALLOCATABLE :: diff_coeff(:)
+  !
+  INTEGER, PARAMETER :: hist_len = 1000
+  REAL(DP)           :: pair_distr(1:hist_len)
   !
   CONTAINS
     !
@@ -50,6 +55,8 @@ MODULE dynamics_module
       !
       ALLOCATE( tau_old( 3, nat ) )
       ALLOCATE( tau_new( 3, nat ) )
+      ALLOCATE( tau_ref( 3, nat ) )
+      !
       ALLOCATE( vel( 3, nat ) )
       ALLOCATE( acc( 3, nat ) )
       !
@@ -66,6 +73,7 @@ MODULE dynamics_module
       IF ( ALLOCATED( mass ) )        DEALLOCATE( mass )
       IF ( ALLOCATED( tau_old ) )     DEALLOCATE( tau_old )
       IF ( ALLOCATED( tau_new ) )     DEALLOCATE( tau_new )
+      IF ( ALLOCATED( tau_ref ) )     DEALLOCATE( tau_ref )
       IF ( ALLOCATED( vel )  )        DEALLOCATE( vel )         
       IF ( ALLOCATED( acc )  )        DEALLOCATE( acc )
       IF ( ALLOCATED( diff_coeff ) )  DEALLOCATE( diff_coeff )
@@ -123,9 +131,11 @@ MODULE dynamics_module
       INTEGER  :: i, na
       LOGICAL  :: file_exists
       !
+      REAL(DP), EXTERNAL :: DNRM2
       !
       tau_old = tau
       tau_new = 0.D0
+      tau_ref = tau
       vel     = 0.D0
       acc     = 0.D0
       !
@@ -152,7 +162,8 @@ MODULE dynamics_module
          ! ... the file is read
          !
          READ( UNIT = 4, FMT = * ) &
-            etotold, temp_new, mass, total_mass, elapsed_time, istep, tau_old
+            etotold, temp_new, mass, total_mass, &
+            elapsed_time, istep, tau_old, tau_ref
          !
          CLOSE( UNIT = 4, STATUS = 'KEEP' )
          !
@@ -318,6 +329,8 @@ MODULE dynamics_module
             !
          END DO
          !
+         WRITE( stdout, '(/5X,"Total force = ",F12.6)') DNRM2( 3*nat, force, 1 )
+         !
       END IF
       !
       ! ... check if convergence for structural minimization is achieved
@@ -354,6 +367,8 @@ MODULE dynamics_module
             !
             CALL output_tau( .TRUE. )
             !
+            CALL print_averages()
+            !
             RETURN
             !
          END IF
@@ -387,7 +402,7 @@ MODULE dynamics_module
       CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
       !
       WRITE( UNIT = 4, FMT = * ) &
-          etot, temp_new, mass, total_mass, elapsed_time, istep, tau
+          etot, temp_new, mass, total_mass, elapsed_time, istep, tau, tau_ref
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
@@ -422,13 +437,122 @@ MODULE dynamics_module
     END SUBROUTINE dynamics
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE compute_averages()
+    SUBROUTINE compute_averages( istep )
       !-----------------------------------------------------------------------
+      !
+      USE ions_base,          ONLY : nat, tau
+      USE cell_base,          ONLY : alat, at
+      USE constraints_module, ONLY : pbc
       !
       IMPLICIT NONE
       !
+      INTEGER, INTENT(IN) :: istep
+      !
+      INTEGER             :: i, j, index
+      REAL(DP)            :: dx, dy, dz, distsq
+      REAL(DP)            :: dtau(3)
+      REAL(DP)            :: dmax
+      REAL(DP), PARAMETER :: one_sixth = 1.D0 / 6.D0
+      !
+      ! ... diffusion coefficient
+      !
+      IF ( istep == 1 ) THEN
+         !
+         diff_coeff(:) = 0.D0
+         !
+         pair_distr(:) = 0.D0
+         !
+      END IF
+      !
+      DO i = 1, nat
+         !
+         dx = ( tau(1,i) - tau_ref(1,i) ) * alat
+         dy = ( tau(2,i) - tau_ref(2,i) ) * alat
+         dz = ( tau(3,i) - tau_ref(3,i) ) * alat
+         !
+         distsq = dx*dx + dy*dy + dz*dz
+         !
+         diff_coeff(i) = diff_coeff(i) + one_sixth * distsq
+         !
+      END DO
+      !
+      ! ... pair distribution g(r)
+      !
+      dmax = norm( MATMUL( at(:,:), (/ 0.5D0, 0.5D0, 0.5D0 /) ) ) * alat
+      !
+      DO i = 1, nat
+         !
+         DO j = 1, nat
+            !
+            IF ( i == j ) CYCLE
+            !
+            dtau(:) = pbc( tau(:,i) - tau(:,j) ) * alat
+            !
+            index = ANINT( norm( dtau(:) ) / dmax * DBLE( hist_len ) )
+            !
+            pair_distr(index) = pair_distr(index) + 1.D0
+            !
+         END DO
+         !
+      END DO
+      !
+      RETURN
       !
     END SUBROUTINE compute_averages
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE print_averages()
+      !-----------------------------------------------------------------------
+      !
+      USE control_flags,      ONLY : nstep
+      USE cell_base,          ONLY : omega, at, alat
+      USE ions_base,          ONLY : nat
+      !
+      IMPLICIT NONE
+      !
+      INTEGER  :: i, index
+      REAL(DP) :: dist, dmax
+      !
+      ! ... diffusion coefficient
+      !
+      WRITE( UNIT = stdout, &
+             FMT = '(/,5X,"diffusion coefficients :")' )
+      !
+      diff_coeff(:) = diff_coeff(:) * &
+                      BOHR_RADIUS_CM **2 / ( nstep * dt * 2.D-12 * au_ps )
+      !
+      DO i = 1, nat
+          !
+          WRITE( UNIT = stdout, &
+                 FMT = '(5X,"atom ",I5,"   D = ",F16.8," cm^2/s")' ) &
+              i, diff_coeff(i)
+          !
+      END DO
+      !
+      WRITE( UNIT = stdout, FMT = '(/,5X,"< D > = ",F16.8," cm^2/s")' ) &
+          SUM( diff_coeff(:) ) / DBLE( nat - 1 )
+      !
+      ! ... pair distribution g(r)
+      !
+      dmax = norm( MATMUL( at(:,:), (/ 0.5D0, 0.5D0, 0.5D0 /) ) ) * alat
+      !
+      pair_distr(:) = pair_distr(:) * omega / DBLE( nstep*nat*nat )
+      !
+      OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".pd.dat" )
+      !
+      DO index = 1, hist_len
+         !
+         dist = DBLE( index ) / DBLE( hist_len ) * dmax
+         !
+         WRITE( 4, '(2(2X,F16.8))' ) dist, pair_distr(index) / dist**2
+         !
+      END DO
+      !
+      CLOSE( UNIT = 4 )
+      !
+      RETURN
+      !
+    END SUBROUTINE print_averages
     !
     ! ... private methods
     !

@@ -53,7 +53,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   REAL(DP)              :: tcpu, error
   CHARACTER(LEN=256)    :: tmp_dir_saved, filename
   LOGICAL               :: opnd, file_exists
-  LOGICAL               :: lfirst, ldamped_saved
+  LOGICAL               :: ldamped_saved
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
     ! previous positions of atoms (needed for extrapolation)
   !
@@ -259,7 +259,6 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         END IF
         !
         wg_set = .FALSE.
-        lfirst = .TRUE.
         !
         ! ... first the system is "adiabatically" moved to the new target
         ! ... by using MD without damping
@@ -277,13 +276,11 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         DO istep = 1, shake_nstep
            !
-           CALL electronic_scf( lfirst, stat )
+           CALL electronic_scf( .FALSE., stat )
            !
            IF ( .NOT. stat ) RETURN
            !
            CALL move_ions()
-           !
-           lfirst = .FALSE.
            !
         END DO
         !
@@ -300,15 +297,13 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         DO istep = 1, fe_nstep
            !
-           CALL electronic_scf( lfirst, stat )
+           CALL electronic_scf( .FALSE., stat )
            !
            IF ( .NOT. stat )  RETURN
            !
            CALL move_ions()
            !
            IF ( ldamped .AND. conv_ions ) EXIT
-           !
-           lfirst = .FALSE.
            !
         END DO
         !
@@ -488,8 +483,6 @@ SUBROUTINE metadyn()
   END DO metadyn_loop
   !
   IF ( ionode ) THEN
-     !
-     CALL write_axsf_file( iter, tau, alat )
      !
      CLOSE( UNIT = iunaxsf )
      CLOSE( UNIT = iunmeta )

@@ -42,6 +42,7 @@ SUBROUTINE move_ions()
   USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
+  USE dynamics_module,        ONLY : diff_coeff
   USE dynamics_module,        ONLY : dynamics, compute_averages
   !
   IMPLICIT NONE
@@ -183,31 +184,29 @@ SUBROUTINE move_ions()
      !
      IF ( lmd ) THEN
         !
-        IF ( lcoarsegrained ) CALL set_target()
-        !
         IF ( calc == ' ' ) THEN
            !
            ! ... Verlet dynamics
            !
+           IF ( lcoarsegrained ) CALL set_target()
+           !
            CALL dynamics()
            !
-           CALL compute_averages()
+           CALL compute_averages( istep )
            !
-        END IF
-        !
-        IF ( calc /= ' ' ) THEN
+           IF ( lcoarsegrained ) THEN
+              !
+              etot_av = etot_av + etot
+              !
+              dfe_acc(:) = dfe_acc(:) - lagrange(:)
+              !
+           END IF
+           !
+        ELSE IF ( calc /= ' ' ) THEN
            !
            ! ... variable cell shape md
            !
            CALL vcsmd()
-           !
-        END IF
-        !
-        IF ( lcoarsegrained ) THEN
-           !
-           etot_av = etot_av + etot
-           !
-           dfe_acc(:) = dfe_acc(:) - lagrange(:)
            !
         END IF
         !

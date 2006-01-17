@@ -5,8 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#define __USE_PBC
-!
 !----------------------------------------------------------------------------
 MODULE metadyn_base
   !----------------------------------------------------------------------------
@@ -232,8 +230,8 @@ MODULE metadyn_base
       REAL(DP) :: A, s, inv_s
       !
       REAL(DP), PARAMETER :: coord_sigma = 0.10D0
-      REAL(DP), PARAMETER :: dist_sigma  = 0.10D0
-      REAL(DP), PARAMETER :: stfac_sigma = 0.02D0
+      REAL(DP), PARAMETER :: dist_sigma  = 0.05D0
+      REAL(DP), PARAMETER :: stfac_sigma = 0.01D0
       !
       !
       A = 8.D0 * g_amplitude
