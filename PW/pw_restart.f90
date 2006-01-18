@@ -1267,6 +1267,7 @@ MODULE pw_restart
       CALL mp_bcast( ityp,   ionode_id )
       CALL mp_bcast( tau,    ionode_id )
       CALL mp_bcast( if_pos, ionode_id )
+      CALL mp_bcast( psfile, ionode_id )
       !
       lions_read = .TRUE.
       !
