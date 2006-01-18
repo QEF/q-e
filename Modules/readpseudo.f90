@@ -358,12 +358,12 @@ subroutine read_pseudo_nl (upf, iunps)
   do nb = 1, upf%nbeta 
      call scan_begin (iunps, "BETA", .false.)  
      read (iunps, *, err = 100, end = 100) idum, upf%lll(nb), dummy
-     read (iunps, '(i6)', err = 100, end = 100) ikk  
+     read (iunps, *, err = 100, end = 100) ikk  
      upf%kkbeta(nb) = ikk
      read (iunps, *, err = 100, end = 100) (upf%beta(ir,nb), ir=1,ikk)
 
-     read (iunps, '(2x,2f6.2)', err=200,iostat=ios) upf%rcut(nb), upf%rcutus(nb)
-     read (iunps, '(2x,a2)', err=200,iostat=ios) upf%els_beta(nb)
+     read (iunps, *, err=200,iostat=ios) upf%rcut(nb), upf%rcutus(nb)
+     read (iunps, *, err=200,iostat=ios) upf%els_beta(nb)
      call scan_end (iunps, "BETA")  
 200  continue
   enddo
