@@ -375,9 +375,16 @@ SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
      !
      CALL cft3( aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
      !
-     gaux(nl(:)) = gaux(nl(:)) + g(ipol,:) * &
-          CMPLX( -AIMAG( aux(nl(:)) ) , DBLE( aux(nl(:)) ) )
+     !gaux(nl(:)) = gaux(nl(:)) + g(ipol,:) * &
+     !     CMPLX( -AIMAG( aux(nl(:)) ) , DBLE( aux(nl(:)) ) )
      !
+     ! Workaround for intel ifort bugginess
+     !
+     DO n = 1, ngm
+        gaux(nl(n)) = gaux(nl(n)) + g(ipol,n) * &
+          CMPLX( -AIMAG( aux(nl(n)) ) , DBLE( aux(nl(n)) ) )
+     END DO
+    !
   END DO
   !
   IF ( gamma_only ) THEN

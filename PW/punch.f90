@@ -32,15 +32,15 @@ SUBROUTINE punch()
   LOGICAL :: exst
   !
   !
-#if defined (__NEWPUNCH)
+#if defined (__OLDPUNCH)
   !
   WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
-       TRIM( prefix ) // '.save-new'
+       TRIM( prefix ) // '.save'
   !
 #else
   !
   WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
-       TRIM( prefix ) // '.save'
+       TRIM( prefix ) // '.save-new'
   !
 #endif
   !
@@ -93,13 +93,13 @@ SUBROUTINE punch()
   !
   iunpun = 4
   !
-#if defined (__NEWPUNCH)
+#if defined (__OLDPUNCH)
   !
-  CALL pw_writefile( 'all' )
+  CALL writefile_new( 'all', iunpun, et, wg, kunittmp )
   !
 #else
   !
-  CALL writefile_new( 'all', iunpun, et, wg, kunittmp )
+  CALL pw_writefile( 'all' )
   !
 #endif
   !

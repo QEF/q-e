@@ -54,14 +54,14 @@ SUBROUTINE openfil()
   !
   IF ( startingwfc == 'file' .AND. .NOT. exst ) THEN
      !
-#if defined (__NEWPUNCH)
-     !
-     CALL pw_readfile( 'wave', ierr )
-     !
-#else
+#if defined (__OLDPUNCH)
      !
      CALL readfile_new( 'wave', iunpun, edum, wdum, kunit, nwordwfc, &
                         iunwfc, ierr )
+     !
+#else
+     !
+     CALL pw_readfile( 'wave', ierr )
      !
 #endif
      !                   

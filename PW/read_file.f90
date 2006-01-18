@@ -56,9 +56,13 @@ SUBROUTINE read_file()
   ! ... in parallel execution, only root proc reads the file
   ! ... and then broadcasts the values to all other procs
   !
-#if defined(__NEWPUNCH)
+#if defined(__OLDPUNCH)
   !
-  ! ... a reset of the internal flgas is necessary because some codes call
+  CALL readfile_new( 'dim', iunpun, rdum, rdum, kunit, 0, 0, ierr )
+  !
+#else
+  !
+  ! ... a reset of the internal flags is necessary because some codes call
   ! ... read_file() more than once
   !
   CALL pw_readfile( 'reset', ierr )
@@ -66,10 +70,6 @@ SUBROUTINE read_file()
   !
   CALL errore( 'read_file ', 'problem reading file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.new-save', ierr )
-  !
-#else
-  !
-  CALL readfile_new( 'dim', iunpun, rdum, rdum, kunit, 0, 0, ierr )
   !
 #endif
   !
@@ -98,7 +98,7 @@ SUBROUTINE read_file()
   ! ... in parallel execution, only root proc read the file
   ! ... and then broadcast the values to all other procs
   !
-#if defined(__NEWPUNCH)
+#if ! defined(__OLDPUNCH)
   !
 !-------------------------------------------------------------------------------
 ! ... XML punch-file
@@ -133,20 +133,6 @@ SUBROUTINE read_file()
      !
   END IF
   !
-  ! Check for so pseudopotentials
-  !
-  DO nt = 1, nsp
-     !
-     so(nt) = .TRUE.
-     !
-     DO nb = 1, nbeta(nt)
-        !
-        so(nt) = so(nt) .AND. ( ABS( jjj(nb,nt) ) > 1.D-7 )
-        !
-     END DO
-     !
-  END DO
-  !
   cell_factor = 1.D0
   lmovecell = .FALSE.
   !
@@ -174,6 +160,20 @@ SUBROUTINE read_file()
   CALL pw_readfile( 'pseudo', ierr )
   !
   CALL readpp()
+  !
+  ! Check for spin-orbit pseudopotentials
+  !
+  DO nt = 1, nsp
+     !
+     so(nt) = .TRUE.
+     !
+     DO nb = 1, nbeta(nt)
+        !
+        so(nt) = so(nt) .AND. ( ABS( jjj(nb,nt) ) > 1.D-7 )
+        !
+     END DO
+     !
+  END DO
   !
   ! ... allocate the potential
   !

@@ -63,7 +63,8 @@ subroutine init_us_1
   ! the denominator in KB case
   ! interpolated value
   integer :: n1, m0, m1, n, li, mi, vi, vj, ijs, is1, is2, &
-             lk, mk, vk, kh, lh, sph_ind
+             lk, mk, vk, kh, lh
+  integer, external :: sph_ind
   complex(DP) :: coeff, qgm(1)
   real(DP) :: spinor, ji, jk
 

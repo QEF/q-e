@@ -7,7 +7,7 @@
 !
 #include "f_defs.h"
 !
-#if defined (__NEWPUNCH)
+#if ! defined (__OLDPUNCH)
 !
 !-----------------------------------------------------------------------
 SUBROUTINE read_config_from_file()

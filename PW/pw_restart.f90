@@ -1096,6 +1096,41 @@ MODULE pw_restart
          CALL iotk_scan_dat( iunpun, &
                              "BRAVAIS_LATTICE", bravais_lattice )
          !
+         SELECT CASE ( TRIM(bravais_lattice) )
+         CASE( "free" )
+            ibrav = 0
+         CASE( "cubic P (sc)" )
+            ibrav = 1
+         CASE( "cubic F (fcc)" )
+            ibrav = 2
+         CASE( "cubic I (bcc)" )
+            ibrav = 3
+         CASE( "Hexagonal and Trigonal P" )
+            ibrav = 4
+         CASE( "Trigonal R" )
+            ibrav = 5 
+         CASE( "Tetragonal P (st)" )
+            ibrav = 6
+         CASE( "Tetragonal I (bct)" )
+            ibrav = 7
+         CASE( "Orthorhombic P" )
+            ibrav = 8
+         CASE( "Orthorhombic base-centered(bco)" )
+            ibrav = 9
+         CASE( "Orthorhombic face-centered" )
+            ibrav = 10
+         CASE( "Orthorhombic body-centered" )
+            ibrav = 11
+         CASE( "Monoclinic P" )
+            ibrav = 12
+         CASE( "Monoclinic base-centered" )
+            ibrav = 13
+         CASE( "Triclinic P" )
+            ibrav = 14
+         CASE DEFAULT
+            ibrav = 0
+         END SELECT
+         !
          IF ( TRIM( bravais_lattice ) == "Trigonal R" .OR. &
               TRIM( bravais_lattice ) == "Hexagonal and Trigonal P" ) THEN
             !
@@ -1106,8 +1141,6 @@ MODULE pw_restart
             symm_type = 'cubic'
             !
          END IF
-         !
-         ibrav = 0
          !
          CALL iotk_scan_dat( iunpun, "LATTICE_PARAMETER", alat )
          !

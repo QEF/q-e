@@ -33,7 +33,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE ions_base,          ONLY : nat, nsp, tau, ityp, if_pos
   USE path_formats,       ONLY : scf_fmt, scf_fmt_para
   USE io_files,           ONLY : prefix, tmp_dir, iunpath, iunaxsf, &
-                                 iunupdate, exit_file, iunexit
+                                 iunupdate, iunexit
   USE parser,             ONLY : int_to_char, delete_if_present
   USE constants,          ONLY : bohr_radius_angs
   USE io_global,          ONLY : stdout, ionode, ionode_id, meta_ionode
