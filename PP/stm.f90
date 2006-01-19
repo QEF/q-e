@@ -201,13 +201,9 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
               gs (2, npws) = g (2, igk (ig) )
            endif
         enddo
-     endif
-     !
-
-     !
-     !     Now compute the contribution to the image
-     !
-     if (stm_wfc_matching) then
+        !
+        !     Now compute the contribution to the image
+        !
         do ibnd = first_band, last_band
 
            w1 = wg (ibnd, ik) / omega

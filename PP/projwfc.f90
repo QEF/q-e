@@ -294,7 +294,6 @@ SUBROUTINE projwave( )
      ELSE 
         CALL ccalbec (natomwfc, npwx, npw, natomwfc, overlap, wfcatom, swfcatom) 
      END IF 
- 
      ! 
      ! calculate O^{-1/2} 
      ! 

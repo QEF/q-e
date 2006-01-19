@@ -18,6 +18,14 @@ PROGRAM voronoy
   !  Note that this is a very rough way to associate charges to atoms
   !  and that it is well defined only if all atoms are of the same type!
   !
+  !  Codes computing Voronoy polyhedra can be found at:
+  !     http://netlib.bell-labs.com/netlib/voronoi/hull.html
+  !     http://www.csb.yale.edu/userguides/datamanip/volume/volume_descrip.html
+  !     http://www.qhull.org/
+  !  There is also an example (F35.F, A (2D) and B(3D), programs on 
+  !  microfiche) in the book M. P. Allen, D. J. Tildesley, Computer 
+  !  Simulation of Liquids (cubic box with periodic boundary conditions).
+  !
   !  On input: nr1big, nr2bug, nr3big are FFT grid dimensions larger than
   !  the original ones (the largest, the more accurate the integration)
   !

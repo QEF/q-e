@@ -20,7 +20,6 @@ local_dos.o \
 local_dos_mag.o \
 local_dos1d.o \
 openfil_pp.o\
-plan_avg.o \
 plot_io.o \
 plot_whole_cell.o \
 punch_plot.o \
@@ -283,7 +282,7 @@ TLDEPS= bindir mods libs pw
 
 all : tldeps average.x bands.x dos.x efg.x plotband.x plotrho.x \
       pmw.x pp.x projwfc.x pw2casino.x pw2wan.x pw2wannier90.x pw_export.x \
-      voronoy.x initial_state.x dipole.x sumpdos.x
+      voronoy.x initial_state.x dipole.x sumpdos.x plan_avg.x
 
 average.x : average.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
@@ -308,6 +307,12 @@ dos.x : dos.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 efg.x : efg.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
 		efg.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+plan_avg.x : plan_avg.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(MPIF90) $(LDFLAGS) -o $@ \
+		plan_avg.o $(PPOBJS) $(PWOBJS) $(MODULES) \
+		$(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 plotband.x : plotband.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)

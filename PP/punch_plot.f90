@@ -27,7 +27,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   !              6                 spin polarisation (rho(up)-rho(down)
   !              7                 square of a wavefunction (see below)
   !              8                 electron localization function (ELF)
-  !              9                 planar averages of each wavefunction
+  !              9                 no longer implemented, see plan_avg.f90
   !             10                 integrated local dos from emin to emax
   !             11                 the V_bare + V_H potential
   !             12                 The electric field potential
@@ -72,7 +72,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 #endif
   ! auxiliary vector
   REAL(DP), ALLOCATABLE :: raux (:)
-  REAL(DP), ALLOCATABLE :: averag (:,:,:), plan (:,:,:)
 
 
   IF (filplot == ' ') RETURN
@@ -87,8 +86,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   IF (plot_num == 7 .AND. noncolin .AND. spin_component .NE. 0 ) &
      WRITE( stdout, '(/5x,"Plotting spin magnetization ipol = ",i3)') &
                                                           spin_component
-  IF ( plot_num == 9 .AND. gamma_only) CALL errore('punch_plot', &
-      ' planar averge plot with  gamma tricks not yet implemented',1)
   !
   ALLOCATE (raux( nrxx))    
   !
@@ -202,11 +199,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   ELSEIF (plot_num == 9) THEN
 
-     if (noncolin) &
-        call errore('punch_plot','planar avg+noncolin not yet implemented',1)
-     ALLOCATE (averag( nat, nbnd, nkstot))    
-     ALLOCATE (plan(nr3, nbnd, nkstot))    
-     CALL plan_avg (averag, plan, ninter)
+     call errore('punch_plot','no longer implemented, see PP/plan_avg.f90',1)
 
   ELSEIF (plot_num == 10) THEN
 
@@ -261,8 +254,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   ENDIF
 
 #ifdef __PARA
-  IF (.NOT. (plot_num == 5 .OR. plot_num == 9) ) &
-       CALL gather (raux, raux1)
+  IF (.NOT. (plot_num == 5 ) CALL gather (raux, raux1)
   IF ( ionode ) &
      CALL plot_io (filplot, title, nrx1, &
          nrx2, nrx3, nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, &
@@ -273,29 +265,8 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   CALL plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
        nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num, &
        atm, ityp, zv, tau, raux, + 1)
+
 #endif
-  IF (plot_num == 9) THEN
-     !
-     IF ( ionode ) THEN
-        !
-        WRITE (4, '(3i8)') ninter, nkstot, nbnd
-        DO ik = 1, nkstot
-           DO ibnd = 1, nbnd
-              WRITE (4, '(3f15.9,i5)') xk (1, ik) , xk (2, ik) , xk (3, &
-                   ik) , ibnd
-              WRITE (4, '(4(1pe17.9))') (averag (ir, ibnd, ik) , ir = 1, &
-                   ninter)
-              DO ir = 1, nr3
-                 WRITE (4, * ) ir, plan (ir, ibnd, ik)
-              ENDDO
-           ENDDO
-        ENDDO
-        !
-     ENDIF
-     !
-     DEALLOCATE (plan)
-     DEALLOCATE (averag)
-  ENDIF
 
   DEALLOCATE (raux)
   RETURN

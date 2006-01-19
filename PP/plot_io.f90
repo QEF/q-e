@@ -13,7 +13,7 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
   !-----------------------------------------------------------------------
   !
   !     iflag >0 : write header and the quantity to be plotted ("plot")
-  !                on file "filplot"
+  !                to file "filplot"
   !     iflag< 0 : read everything (requires that all variables that are
   !                read are allocated with the correct dimensions!)
   !
@@ -62,8 +62,7 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
           (nt, atm (nt), zv (nt), nt=1, ntyp)
      write (iunplot, '(i4,3x,3f15.9,3x,i2)') (na, &
           (tau (ipol, na), ipol = 1, 3), ityp (na), na = 1, nat)
-     if (plot_num /= 9) write (iunplot, '(5(1pe17.9))') (plot (ir) , &
-          ir = 1, nrx1 * nrx2 * nr3)
+     write (iunplot, '(5(1pe17.9))') (plot (ir) , ir = 1, nrx1 * nrx2 * nr3)
   else
      read (iunplot, '(a)') title
      read (iunplot, * ) nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp
@@ -81,7 +80,7 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
      read (iunplot, * ) (plot (ir), ir = 1, nrx1 * nrx2 * nr3)
   endif
 
-  if (plot_num /= 9) close (unit = iunplot)
+  close (unit = iunplot)
 
   return
 end subroutine plot_io

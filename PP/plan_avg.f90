@@ -1,12 +1,121 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2006 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
+!-----------------------------------------------------------------------
+PROGRAM do_plan_avg
+  !-----------------------------------------------------------------------
+  !
+  ! calculate planar averages of each wavefunction
+  !
+  USE kinds,     ONLY : DP
+  USE char,      ONLY : title
+  USE cell_base, ONLY : ibrav, celldm, at
+  USE gvect,     ONLY : nrx1, nrx2, nrx3, nr1, nr2, nr3, gcutm, dual, ecutwfc
+  USE klist,     ONLY : nkstot, xk
+  USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau, atm, zv
+  USE io_files,  ONLY : tmp_dir, prefix, nd_nmbr
+  USE io_global, ONLY : ionode, ionode_id
+  USE noncollin_module, ONLY : noncolin
+  USE wvfct,     ONLY : nbnd, gamma_only
+  USE mp,        ONLY : mp_bcast
+  !
+  IMPLICIT NONE
+  INTEGER :: ninter
+  CHARACTER(len=256) :: filplot, outdir
+  REAL(DP), ALLOCATABLE :: averag (:,:,:), plan (:,:,:)
+  !
+  INTEGER :: iunplot = 4, ios, ibnd, ik, ir, nt, na, i
+  !
+  ! initialise parallel environment
+  !
+  CALL start_postproc (nd_nmbr)
+  IF ( ionode )  CALL input_from_file ( )
+  !
+  !
+  NAMELIST / inputpp / outdir, prefix, filplot
+  !
+  !   set default values for variables in namelist
+  !
+  prefix = 'pwscf'
+  outdir = './'
+  filplot = 'tmp.pp' 
+  !
+  IF ( ionode )  THEN
+     !
+     !     reading the namelist inputpp
+     !
+     READ (5, inputpp, err = 200, iostat = ios)
+200  CALL errore ('postproc', 'reading inputpp namelist', ABS (ios) )
+     tmp_dir = TRIM(outdir)
+     !
+  END IF
+  !
+  ! ... Broadcast variables
+  !
+  CALL mp_bcast( tmp_dir, ionode_id )
+  CALL mp_bcast( prefix, ionode_id )
+  CALL mp_bcast( filplot, ionode_id )
+  !
+  !   Now allocate space for pwscf variables, read and check them.
+  !
+  CALL read_file ( )
+  !
+  IF (noncolin)   CALL errore ('plan_avg', &
+	'planar avg + noncolin not yet implemented',1)
+  IF (gamma_only) CALL errore ('plan_avg', &
+       ' planar average with gamma tricks not yet implemented',2)
+  !
+  CALL openfil_pp ( )
+  !
+  ALLOCATE (averag( nat, nbnd, nkstot))    
+  ALLOCATE (plan(nr3, nbnd, nkstot))    
+  !
+  CALL plan_avg (averag, plan, ninter)
+  !
+  IF ( ionode ) THEN
+     !
+     OPEN (UNIT = iunplot, FILE = filplot, FORM = 'formatted', &
+          STATUS = 'unknown', err = 100, IOSTAT = ios)
+100  CALL errore ('plan_avg', 'opening file '//TRIM(filplot), abs (ios) )
+     WRITE (iunplot, '(a)') title
+     WRITE (iunplot, '(8i8)') nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp
+     WRITE (iunplot, '(i6,6f12.8)') ibrav, celldm
+     IF  (ibrav == 0) THEN
+        WRITE ( iunplot, * ) at(:,1)
+        WRITE ( iunplot, * ) at(:,2)
+        WRITE ( iunplot, * ) at(:,3)
+     END IF
+     WRITE (iunplot, '(3f20.10,i6)') gcutm, dual, ecutwfc, 9
+     WRITE (iunplot, '(i4,3x,a2,3x,f5.2)') &
+          (nt, atm (nt), zv (nt), nt=1, ntyp)
+     WRITE (iunplot, '(i4,3x,3f15.9,3x,i2)') (na, &
+          (tau (i, na), i = 1, 3), ityp (na), na = 1, nat)
+     !
+     WRITE (iunplot, '(3i8)') ninter, nkstot, nbnd
+     DO ik = 1, nkstot
+        DO ibnd = 1, nbnd
+           WRITE (iunplot, '(3f15.9,i5)') xk (1, ik) , xk (2, ik) , xk (3, &
+                ik) , ibnd
+           WRITE (iunplot, '(4(1pe17.9))') (averag (ir, ibnd, ik) , ir = 1, &
+                ninter)
+           DO ir = 1, nr3
+              WRITE (iunplot, * ) ir, plan (ir, ibnd, ik)
+           ENDDO
+        ENDDO
+     ENDDO
+     !
+  ENDIF
+  !
+  DEALLOCATE (plan)
+  DEALLOCATE (averag)
 
+END PROGRAM do_plan_avg
+!
 subroutine plan_avg (averag, plan, ninter)
   !
   !    This routine computes the planar average on the xy plane
@@ -122,6 +231,7 @@ subroutine plan_avg (averag, plan, ninter)
   averag(:,:,:) = 0.d0
   plan(:,:,:) = 0.d0
   allocate(becp(nkb,nbnd))
+  CALL init_us_1 ( )
   do ik = 1, nks
      if (lsda) current_spin = isk (ik)
      call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
