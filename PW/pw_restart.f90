@@ -63,9 +63,9 @@ MODULE pw_restart
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
                                        lgauss, ngauss, degauss, nelec, xqq
       USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, ngm, ngm_g, &
-                                       g, ig1, ig2, ig3, ecutwfc, dual, gcutm
+                                       g, ig1, ig2, ig3, ecutwfc, dual
       USE basis,                ONLY : natomwfc
-      USE gsmooth,              ONLY : nr1s, nr2s, nr3s, gcutms, ngms_g
+      USE gsmooth,              ONLY : nr1s, nr2s, nr3s, ngms_g
       USE ktetra,               ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                        ntetra, tetra, ltetra
       USE wvfct,                ONLY : gamma_only, npw, npwx, g2kin, et, wg, &
@@ -1262,12 +1262,12 @@ MODULE pw_restart
       !
       CALL mp_bcast( nat,    ionode_id )
       CALL mp_bcast( nsp,    ionode_id )
-      CALL mp_bcast( amass,  ionode_id )
       CALL mp_bcast( atm,    ionode_id )
+      CALL mp_bcast( amass,  ionode_id )
+      CALL mp_bcast( psfile, ionode_id )
       CALL mp_bcast( ityp,   ionode_id )
       CALL mp_bcast( tau,    ionode_id )
       CALL mp_bcast( if_pos, ionode_id )
-      CALL mp_bcast( psfile, ionode_id )
       !
       lions_read = .TRUE.
       !
@@ -1583,7 +1583,7 @@ MODULE pw_restart
     SUBROUTINE read_brillouin_zone( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE lsda_mod, ONLY : nspin
+      USE lsda_mod, ONLY : lsda
       USE klist,    ONLY : nkstot, xk, wk
       !
       IMPLICIT NONE
@@ -1612,7 +1612,7 @@ MODULE pw_restart
          !
          nkstot = num_k_points
          !
-         IF ( nspin == 2 ) nkstot = num_k_points * 2
+         IF ( lsda ) nkstot = num_k_points * 2
          !
          DO ik = 1, num_k_points
             !
@@ -1623,7 +1623,7 @@ MODULE pw_restart
             !            
             CALL iotk_scan_attr( attr, "WEIGHT", wk(ik) )
             !
-            IF ( nspin == 2 ) THEN
+            IF ( lsda ) THEN
                !
                xk(:,ik+num_k_points) = xk(:,ik)
                !
@@ -1757,7 +1757,7 @@ MODULE pw_restart
       !------------------------------------------------------------------------
       !
       USE basis,    ONLY : natomwfc
-      USE lsda_mod, ONLY : nspin, isk
+      USE lsda_mod, ONLY : lsda, isk
       USE klist,    ONLY : nkstot, wk, nelec
       USE wvfct,    ONLY : et, wg, nbnd
       USE ener,     ONLY : ef
@@ -1801,7 +1801,7 @@ MODULE pw_restart
          !
          num_k_points = nkstot
          !
-         IF ( nspin == 2 ) num_k_points = nkstot / 2
+         IF ( lsda ) num_k_points = nkstot / 2
          !
          CALL iotk_scan_begin( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
          !
@@ -1810,7 +1810,7 @@ MODULE pw_restart
             CALL iotk_scan_begin( iunpun, &
                                   "K-POINT" // TRIM( iotk_index( ik ) ) )
             !
-            IF ( nspin == 2 ) THEN
+            IF ( lsda ) THEN
                !
                isk(ik) = 1
                !
@@ -1853,6 +1853,7 @@ MODULE pw_restart
       END IF
       !
       CALL mp_bcast( nelec, ionode_id )
+      CALL mp_bcast( natomwfc, ionode_id )
       CALL mp_bcast( nbnd,  ionode_id )
       CALL mp_bcast( isk,   ionode_id )
       CALL mp_bcast( et,    ionode_id )
@@ -1972,7 +1973,7 @@ MODULE pw_restart
       !
       ALLOCATE( kisort( npwx ) )
       !
-      DO ik = 1, nks
+      DO ik = 1, nkstot
          !
          kisort = 0
          npw    = npwx
