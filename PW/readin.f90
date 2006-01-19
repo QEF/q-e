@@ -135,6 +135,7 @@ subroutine readpp
      deallocate ( chi2r )
      !
   enddo
+  !
   return
 end subroutine readpp
 !-----------------------------------------------------------------------

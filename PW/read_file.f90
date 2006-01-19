@@ -35,11 +35,11 @@ SUBROUTINE read_file()
   USE vlocal,           ONLY : strf
   USE io_files,         ONLY : tmp_dir, prefix, iunpun
   USE restart_module,   ONLY : readfile_new
-  USE uspp_param,       ONLY : nbeta, jjj
+  USE uspp_param,       ONLY : nbeta, jjj, tvanp
   USE noncollin_module, ONLY : noncolin, npol
   USE mp_global,        ONLY : kunit
   USE pw_restart,       ONLY : pw_readfile
-  
+  USE uspp,             ONLY : okvan
   !
   IMPLICIT NONE
   !
@@ -161,11 +161,13 @@ SUBROUTINE read_file()
   !
   CALL readpp()
   !
+  okvan = ANY ( tvanp(1:nsp) )
+  !
   ! Check for spin-orbit pseudopotentials
   !
   DO nt = 1, nsp
      !
-     so(nt) = .TRUE.
+     so(nt) = ( nbeta(nt) > 0 )
      !
      DO nb = 1, nbeta(nt)
         !

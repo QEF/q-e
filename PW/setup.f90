@@ -843,7 +843,7 @@ SUBROUTINE setup()
   !
   ! ... okvan = .TRUE. : at least one pseudopotential is US
   !
-  okvan = ANY( tvanp(:) )
+  okvan = ANY( tvanp(1:ntyp) )
   !
   ! ... initialize parameters for charge density extrapolation during dynamics
   !
