@@ -336,7 +336,7 @@ PROGRAM matdyn
               END IF
            END IF
            qh = SQRT(qhat(1)**2+qhat(2)**2+qhat(3)**2)
-           write(*,*) ' qh,  has_zstar ',qh,  has_zstar
+           ! write(*,*) ' qh,  has_zstar ',qh,  has_zstar
            IF (qh /= 0.d0) qhat(:) = qhat(:) / qh
            IF (qh /= 0.d0 .AND. .NOT. has_zstar) CALL infomsg  &
                 ('matdyn','Z* not found in file '//TRIM(flfrc)// &
@@ -364,11 +364,10 @@ PROGRAM matdyn
      !
      ALLOCATE (freq(3*nat, nq))
      DO n=1,nq
-        ! freq(i,n) = frequencies in Rydberg, written to output in cm^(-1)
-        !             negative sign if omega^2 is negative
+        ! freq(i,n) = frequencies in cm^(-1), with negative sign if omega^2 is negative
         DO i=1,3*nat
-           freq(i,n)= SQRT(ABS(w2(i,n)))
-           IF (w2(i,n).LT.0.0) freq(i,n) = -freq(i,n)
+           freq(i,n)= SQRT(ABS(w2(i,n))) * rydcm1
+           IF (w2(i,n) < 0.0) freq(i,n) = -freq(i,n)
         END DO
      END DO
      !
@@ -377,7 +376,7 @@ PROGRAM matdyn
         WRITE(2, '(" &plot nbnd=",i4,", nks=",i4," /")') 3*nat, nq
         DO n=1, nq
            WRITE(2, '(10x,3f10.6)')  q(1,n), q(2,n), q(3,n)
-           WRITE(2,'(6f10.4)') (freq(i,n)*rydcm1,i=1,3*nat)
+           WRITE(2,'(6f10.4)') (freq(i,n), i=1,3*nat)
         END DO
         CLOSE(unit=2)
      END IF
@@ -396,7 +395,7 @@ PROGRAM matdyn
         if (ndos > 1) then
            DeltaE = (Emax - Emin)/(ndos-1)
         else
-           ndos = NINT ( (Emax - Emin) / DeltaE+0.500001)  
+           ndos = NINT ( (Emax - Emin) / DeltaE + 1.51 )  
         end if
         OPEN (unit=2,file=fldos,status='unknown',form='formatted')
         DO n= 1, ndos  
@@ -408,7 +407,7 @@ PROGRAM matdyn
            !
            !WRITE (2, '(F15.10,F15.2,F15.6,F20.5)') &
            !     E, E*rydcm1, E*rydTHz, 0.5d0*DOSofE(1)
-           WRITE (2, '(F15.10,F20.5)') E, 0.5d0*DOSofE(1)
+           WRITE (2, '(E12.4,E12.4)') E, 0.5d0*DOSofE(1)
         END DO
         CLOSE(unit=2)
      END IF  !dos
@@ -416,11 +415,17 @@ PROGRAM matdyn
      !
      !    for a2F
      !
-     IF(la2F) call a2Fdos (nat, nq, nr1, nr2, nr3, ibrav, &
-                           at, bg, tau, alat, &
+     IF(la2F) THEN
+         !
+         ! convert frequencies to Ry
+         !
+         freq(:,:)= freq(:,:) / rydcm1
+         !
+         call a2Fdos (nat, nq, nr1, nr2, nr3, ibrav, at, bg, tau, alat, &
                            nsc, nat_blk, at_blk, bg_blk, itau_blk, omega_blk, &
                            rws, nrws, dos, Emin, DeltaE, ndos, &
                            ntetra, tetra, asr, q, freq)
+     END IF
      DEALLOCATE ( freq)
      !
   END IF
