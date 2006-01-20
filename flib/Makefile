@@ -17,6 +17,7 @@ iceil.o \
 iglocal.o \
 inpfile.o \
 invmat.o \
+invmat_complex.o \
 latgen.o \
 linpack.o \
 matches.o \
