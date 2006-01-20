@@ -31,13 +31,13 @@ PROGRAM do_plan_avg
   !
   INTEGER :: iunplot = 4, ios, ibnd, ik, ir, nt, na, i
   !
+  NAMELIST / inputpp / outdir, prefix, filplot
+  !
   ! initialise parallel environment
   !
   CALL start_postproc (nd_nmbr)
   IF ( ionode )  CALL input_from_file ( )
   !
-  !
-  NAMELIST / inputpp / outdir, prefix, filplot
   !
   !   set default values for variables in namelist
   !
