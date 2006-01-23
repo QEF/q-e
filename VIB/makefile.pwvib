@@ -84,7 +84,7 @@ PW_OBJS = \
 ../PW/dqvan2.o \
 ../PW/drhoc.o \
 ../PW/dvloc_of_g.o \
-../PW/dynamics.o \
+../PW/dynamics_module.o \
 ../PW/efermig.o \
 ../PW/efermit.o \
 ../PW/electrons.o \
