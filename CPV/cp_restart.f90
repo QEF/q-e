@@ -114,7 +114,7 @@ MODULE cp_restart
       INTEGER               :: kunit, ib, ik_eff
       INTEGER               :: k1, k2, k3
       INTEGER               :: nk1, nk2, nk3
-      INTEGER               :: j, i, ispin, ig, nspin_wfc
+      INTEGER               :: j, i, ispin, ig, nspin_wfc, iss_wfc
       INTEGER               :: is, ia, isa, iss, ise, ik, ierr
       INTEGER,  ALLOCATABLE :: mill(:,:)
       INTEGER,  ALLOCATABLE :: ftmp(:,:)
@@ -586,15 +586,18 @@ MODULE cp_restart
                !
             END IF
             !
+            iss_wfc = ispin
+            if( force_pairing ) iss_wfc = 1   ! only the WF for the first spin is allocated
+            !
             IF ( PRESENT( c04 ) ) THEN
                !
                CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin,   &
-                               c04(:,:,ik,ispin), ngwt, nbnd, ig_l2g, &
+                               c04(:,:,ik,iss_wfc), ngwt, nbnd, ig_l2g, &
                                ngw, filename, scalef )
                !
             ELSE IF ( PRESENT( c02 ) ) THEN
                !
-               ib = iupdwn(ispin)
+               ib = iupdwn( iss_wfc )
                !
                CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin, &
                                c02(:,ib:), ngwt, nbnd, ig_l2g, ngw, &
@@ -632,12 +635,12 @@ MODULE cp_restart
             IF ( PRESENT( cm4 ) ) THEN
                !
                CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin,   &
-                              cm4(:,:,ik,ispin), ngwt, nbnd, ig_l2g,  &
+                              cm4(:,:,ik,iss_wfc), ngwt, nbnd, ig_l2g,  &
                               ngw, filename, scalef )
                !
             ELSE IF ( PRESENT( c02 ) ) THEN
                !
-               ib = iupdwn(ispin)
+               ib = iupdwn(iss_wfc)
                !
                CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin, &
                                cm2(:,ib:), ngwt, nbnd, ig_l2g, ngw, &
@@ -1203,19 +1206,25 @@ MODULE cp_restart
                !
             END IF
             !
-            IF ( PRESENT( c04 ) ) THEN
+            IF( .NOT. ( ispin > 1 .AND. force_pairing ) ) THEN
                !
-               CALL read_wfc( iunout, ik_eff , nk, kunit, ispin_, nspin_, &
-                              c04(:,:,ik,ispin), ngwt_, nbnd_, ig_l2g, &
-                              ngw, filename, scalef_ )
+               ! Only WF with spin 1 are needed when force_pairing is active
                !
-            ELSE IF ( PRESENT( c02 ) ) THEN
-               !
-               ib = iupdwn(ispin)
-               !
-               CALL read_wfc( iunout, ik_eff , nk, kunit, ispin_, nspin_, &
-                              c02(:,ib:), ngwt_, nbnd_, ig_l2g, ngw, &
-                              filename, scalef_ )
+               IF ( PRESENT( c04 ) ) THEN
+                  !
+                  CALL read_wfc( iunout, ik_eff , nk, kunit, ispin_, nspin_, &
+                                 c04(:,:,ik,ispin), ngwt_, nbnd_, ig_l2g, &
+                                 ngw, filename, scalef_ )
+                  !
+               ELSE IF ( PRESENT( c02 ) ) THEN
+                  !
+                  ib = iupdwn(ispin)
+                  !
+                  CALL read_wfc( iunout, ik_eff , nk, kunit, ispin_, nspin_, &
+                                 c02(:,ib:), ngwt_, nbnd_, ig_l2g, ngw, &
+                                 filename, scalef_ )
+                  !
+               END IF
                !
             END IF
             !
@@ -1236,19 +1245,25 @@ MODULE cp_restart
                   !
                END IF
                !
-               IF ( PRESENT( cm4 ) ) THEN
+               IF( .NOT. ( ispin > 1 .AND. force_pairing ) ) THEN
                   !
-                  CALL read_wfc( iunout, ik_eff, nk, kunit, ispin_, nspin_,   &
-                                 cm4(:,:,ik,ispin), ngwt_, nbnd_, ig_l2g, &
-                                 ngw, filename, scalef_ )
+                  ! Only WF with spin 1 are needed when force_pairing is active
                   !
-               ELSE IF( PRESENT( cm2 ) ) THEN
-                  !
-                  ib = iupdwn(ispin)
-                  !
-                  CALL read_wfc( iunout, ik_eff, nk, kunit, ispin_, nspin_, &
-                                 cm2(:,ib:), ngwt_, nbnd_, ig_l2g, ngw, &
-                                 filename, scalef_ )
+                  IF ( PRESENT( cm4 ) ) THEN
+                     !
+                     CALL read_wfc( iunout, ik_eff, nk, kunit, ispin_, nspin_,   &
+                                    cm4(:,:,ik,ispin), ngwt_, nbnd_, ig_l2g, &
+                                    ngw, filename, scalef_ )
+                     !
+                  ELSE IF( PRESENT( cm2 ) ) THEN
+                     !
+                     ib = iupdwn(ispin)
+                     !
+                     CALL read_wfc( iunout, ik_eff, nk, kunit, ispin_, nspin_, &
+                                    cm2(:,ib:), ngwt_, nbnd_, ig_l2g, ngw, &
+                                    filename, scalef_ )
+                     !
+                  END IF
                   !
                END IF
                !
