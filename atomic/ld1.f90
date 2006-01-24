@@ -43,20 +43,25 @@ program ld1
      !   all-electron calculation
      !
      call all_electron(.true.)
+     !
   elseif (iswitch.eq.2) then
      !
      !   pseudopotential test
      !
-     call run_test
-     call ld1_writeout  
+     call run_test ( )
+     !
   elseif (iswitch.eq.3) then
      !
      !  pseudopotential generation and test
      !
      call all_electron(.false.)
-     call gener_pseudo
-     call run_test 
-     call ld1_writeout  
+     call gener_pseudo ( )
+     ! save energies used to generate PP (run_test overwrites them)
+     enlts(1:nwfs) = enls(1:nwfs)
+     call run_test ( )
+     enls(1:nwfs) = enlts(1:nwfs) 
+     call ld1_writeout ( )
+     !
   else
      call errore('ld1','iswitch not implemented',1)
   endif

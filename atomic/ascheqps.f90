@@ -94,7 +94,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
      !    if an asintote has been found use bisection
      !
      if (abs(de).gt.1.e3_dp*abs(eold)) then
-        write(*,*) 'BISECTION'
+        ! write(*,*) 'BISECTION'
         goto 800
      endif
      !
@@ -143,7 +143,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
      call compute_det(nn,lam,jam,eup,mesh,ndm,dx,r,r2,sqr,vpot, &
           beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk, &
           detup)
-if (detup*detlw.lt.0.0_DP) write(*,*) 'count0 = ', count0
+     if (detup*detlw.lt.0.0_DP) write(*,*) 'count0 = ', count0
      if (detup*detlw.lt.0.0_DP) goto 100
      elw=eup
      detlw=detup  

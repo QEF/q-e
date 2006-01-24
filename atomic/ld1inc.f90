@@ -139,6 +139,7 @@ module ld1inc
        nwfts             ! the number of pseudo wavefunctions
 
   real(DP) ::        &
+       enlts(nwfsx),       & ! the energies for the test configuration
        phits(ndm,nwfsx),   & ! the pseudo wavefunctions
        rcutts(nwfsx),      & ! cut-off radius for test wavefunction
        rcutusts(nwfsx),    & ! us cut-off radii for test wavefunct.

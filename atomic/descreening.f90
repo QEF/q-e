@@ -57,7 +57,7 @@ subroutine descreening
      iswts(n)=iswtsc(n,nc)
      octs(n)=octsc(n,nc)
      nstoae(n)=nstoaec(n,nc)
-     enls(n)=enl(nstoae(n))
+     enlts(n)=enl(nstoae(n))
      new(n)=.false.
   enddo
 
@@ -94,10 +94,10 @@ subroutine descreening
               vaux(n,1)=vpsloc(n)
            enddo
         endif
-        call ascheqps(nnts(ns),llts(ns),jjts(ns),enls(ns),    &
+        call ascheqps(nnts(ns),llts(ns),jjts(ns),enlts(ns),    &
              mesh,ndm,dx,r,r2,sqr,vaux,thresh,phis(1,ns), & 
              betas,bmat,qq,nbf,nwfsx,lls,jjs,ikk)
-        !            write(6,*) ns, nnts(ns),llts(ns), jjts(ns), enls(ns)
+        !            write(6,*) ns, nnts(ns),llts(ns), jjts(ns), enlts(ns)
      endif
   enddo
   !
