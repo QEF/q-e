@@ -22,7 +22,6 @@ subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
 
   use constants,  only : pi, fpi
   use ions_base,  ONLY : nsp, na, zv
-  use parameters, only : natx
   use cell_base,  only : a1, a2, a3
 
   implicit none

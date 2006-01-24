@@ -96,7 +96,6 @@
 ! nfft=1  add      real part of qv(r) to real part of array vr(r) 
 ! nfft=2  add imaginary part of qv(r) to real part of array vr(r) 
 !
-      USE parameters, ONLY: natx, nsx
       USE grid_dimensions, ONLY: nr1, nr2, nr3, &
             nr1x, nr2x, nnr => nnrx
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
@@ -146,7 +145,6 @@
 ! add array qv(r) on box grid to array v(r) on dense grid
 ! irb   : position of the box in the dense grid
 !
-      USE parameters, ONLY: nsx, natx
       USE grid_dimensions, ONLY: nr1, nr2, nr3, &
             nr1x, nr2x, nnr => nnrx
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
@@ -197,7 +195,6 @@
 ! nfft=1 (2): use real (imaginary) part of qv(r)
 ! Parallel execution: remember to sum the contributions from other nodes
 !
-      USE parameters, ONLY: nsx, natx
       USE grid_dimensions, ONLY: nr1, nr2, nr3, &
             nr1x, nr2x, nnr => nnrx
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
@@ -620,12 +617,7 @@
 !
 !     read psi from buffer 21
 !
-#if defined(__CRAYY)
-         buffer in(21,0) (psi(1),psi(nnrsx))
-         ios = unit(21)
-#else
          READ(21,iostat=ios) psi
-#endif
          IF(ios.NE.0) CALL errore                                        &
      &       (' dforce',' error in reading unit 21',ios)
 !
@@ -813,7 +805,6 @@
 !
       USE kinds, ONLY: dp
       USE control_flags, ONLY: iprint
-      USE parameters, ONLY: natx, nsx
       USE ions_base, ONLY: na, nsp, nat, nas => nax
       USE cvan
       USE uspp_param, ONLY: nhm, nh
@@ -1107,7 +1098,7 @@
 !
 !     forces on ions, ionic term in real space (also stress if requested)
 !
-      USE parameters, ONLY: nsx, natx
+      USE parameters, ONLY: natx
       USE control_flags, ONLY: iprint, tpre
       USE constants, ONLY: pi, fpi
       USE cell_base, ONLY: ainv, a1, a2, a3
@@ -1193,7 +1184,7 @@
       USE cell_base, ONLY: omega, tpiba, tpiba2
       USE ions_base, ONLY: nsp, na, nas => nax, nat
       USE grid_dimensions, ONLY: nr1, nr2, nr3
-      USE parameters, ONLY: nsx, natx
+      USE parameters, ONLY: natx
       USE local_pseudo, ONLY: vps, rhops
 !
       IMPLICIT NONE
@@ -1585,7 +1576,7 @@
 !     sets the indexes irb and positions taub for the small boxes 
 !     around atoms
 !
-      USE parameters, ONLY: natx, nsx
+      USE parameters, ONLY: natx
       USE ions_base, ONLY: nsp, na, nat
       USE grid_dimensions, ONLY: nr1, nr2, nr3
       USE cell_base, ONLY: ainv, a1, a2, a3
@@ -2505,11 +2496,7 @@
 
             !     wavefunctions in unit 21
             !
-#if defined(__CRAYY)
-            IF(tbuff) buffer out(21,0) (psis(1),psis(nnrsx))
-#else
             IF(tbuff) WRITE(21,iostat=ios) psis
-#endif
             iss1=ispin(i)
             sa1=f(i)/omega
             IF (i.NE.n) THEN
@@ -2528,9 +2515,6 @@
             !       buffer 21
             !     
             IF(tbuff) THEN
-#if defined(__CRAYY)
-               ios=unit(21)
-#endif
                IF(ios.NE.0) CALL errore(' rhoofr',' error in writing unit 21',ios)
             ENDIF
             !
@@ -2698,7 +2682,6 @@
       USE kinds, ONLY: dp
       USE ions_base, ONLY: nas => nax, nat, na, nsp
       USE io_global, ONLY: stdout
-      USE parameters, ONLY: natx, nsx
       USE cvan, ONLY: nvb
       USE uspp_param, ONLY: nh, nhm
       USE uspp, ONLY: deeq
@@ -3198,7 +3181,7 @@
       USE kinds, ONLY: dp
       USE control_flags, ONLY: iprint, iprsta, thdyn, tpre, tfor, tprnfor
       USE io_global, ONLY: stdout
-      USE parameters, ONLY: natx, nsx
+      USE parameters, ONLY: natx
       USE ions_base, ONLY: nas => nax, nsp, na, nat
       USE gvecs
       USE gvecp, ONLY: ng => ngm

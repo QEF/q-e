@@ -7,10 +7,6 @@
 !
 #include "f_defs.h"
 
-#if defined __ALPHA
-#  define DATAN2 ATAN2
-#endif
-
       MODULE polarization
 
         USE kinds
@@ -194,7 +190,7 @@
       CALL ZGEFA(DUMM,NX,N,IPIV,INFO)
       CALL ZGEDI(DUMM,NX,N,IPIV,DETC,AUX,10)
       DET=DETC(1)*10.D0**DETC(2)
-      D1=DATAN2(AIMAG(DET),DBLE(DET))
+      D1= ATAN2 (AIMAG(DET),DBLE(DET))
       IF(.NOT.FIRST) THEN
         IF(ABS(D1-D1OLD).GT.PI) THEN
           D1 = D1 - SIGN(2*PI,D1-D1OLD)
@@ -239,7 +235,7 @@
       CALL ZGEFA(DUMM,NX,N,IPIV,INFO)
       CALL ZGEDI(DUMM,NX,N,IPIV,DETC,AUX,10)
       DET=DETC(1)*10.D0**DETC(2)
-      D2=DATAN2(AIMAG(DET),DBLE(DET))
+      D2= ATAN2 (AIMAG(DET),DBLE(DET))
       IF(.NOT.FIRST) THEN
         IF(ABS(D2-D2OLD).GT.PI) THEN
           D2 = D2 - SIGN(2*PI,D2-D2OLD)
@@ -277,7 +273,7 @@
       CALL ZGEFA(DUMM,NX,N,IPIV,INFO)
       CALL ZGEDI(DUMM,NX,N,IPIV,DETC,AUX,10)
       DET=DETC(1)*10.D0**DETC(2)
-      D3=DATAN2(AIMAG(DET),DBLE(DET))
+      D3= ATAN2 (AIMAG(DET),DBLE(DET))
       IF(.NOT.FIRST) THEN
         IF(ABS(D3-D3OLD).GT.PI) THEN
           D3 = D3 - SIGN(2*PI,D3-D3OLD)

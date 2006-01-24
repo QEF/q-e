@@ -10,9 +10,5 @@
         USE global_version, only : version_number
         IMPLICIT NONE
         SAVE
-#if ! defined __G95
         INCLUDE 'cpver.h'
-#else
-        CHARACTER(LEN=70), PARAMETER :: version_date = 'Sat Jan 15 19:44:57 CET 2005'
-#endif
       END MODULE cp_version

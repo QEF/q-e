@@ -25,7 +25,6 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE kinds,                    ONLY : DP
   USE constants,                ONLY : pi, tpi
   USE ions_base,                ONLY : nsp, na, nax, nat
-  USE parameters,               ONLY : natx, nsx
   USE cvan,                     ONLY : nvb, ish
   USE cell_base,                ONLY : omega, a1, a2, a3, alat, h, ainv
   USE electrons_base,           ONLY : nbspx, nbsp, nupdwn, iupdwn, nspin
@@ -3616,12 +3615,7 @@ SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
      !
      !     read psi from buffer 21
      !
-#if defined(__CRAYY)
-     buffer in(21,0) (psi(1),psi(nnrsx))
-     ios = unit(21)
-#else
      READ(21,iostat=ios) psi
-#endif
      IF(ios.NE.0) CALL errore( 'dforce', 'error in reading unit 21', ios )
      !
   ENDIF
@@ -3862,7 +3856,6 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   USE control_flags,          ONLY : iprint, tbuff, iprsta, thdyn, tpre, trhor
   USE ions_base,              ONLY : nax, nat, nsp, na
   USE cell_base,              ONLY : a1, a2, a3
-  USE parameters,             ONLY : natx, nsx
   USE recvecs_indexes,        ONLY : np, nM
   USE gvecs,                  ONLY : nms, nps, ngs
   USE gvecp,                  ONLY : ngm
@@ -4013,11 +4006,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
      !
      !     wavefunctions in unit 21
      !
-#if defined(__CRAYY)
-     IF(tbuff) buffer out(21,0) (psis(1),psis(nnrsx))
-#else
      IF(tbuff) WRITE(21,iostat=ios) psis
-#endif
      !            iss1=ispin(i)
      iss1=1
      sa1=f(i)/omega
@@ -4036,9 +4025,6 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
      !       buffer 21
      !     
      IF(tbuff) THEN
-#if defined(__CRAYY)
-        ios=unit(21)
-#endif
         IF(ios.NE.0) CALL errore                                  &
              &              (' rhoofr',' error in writing unit 21',ios)
      ENDIF

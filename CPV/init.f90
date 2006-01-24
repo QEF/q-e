@@ -213,7 +213,7 @@
       use control_flags,    only: iprint, thdyn, ndr, nbeg, program_name, tbeg
       use io_global,        only: stdout, ionode
       USE io_files,         ONLY: scradir     
-      use ions_base,        only: na, nsp, nat, natx, tau_srt, ind_srt, if_pos, atm
+      use ions_base,        only: na, nsp, nat, tau_srt, ind_srt, if_pos, atm
       use cell_base,        only: a1, a2, a3, r_to_s, cell_init
 
       use cell_base,        only: ibrav, ainv, h, hold, tcell_base_init

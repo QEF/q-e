@@ -30,7 +30,6 @@
 SUBROUTINE REDIS(state)
 
   use ions_base, ONLY: na,nsp
-  use parameters, only: nsx,natx
   use path_variables, ONLY: &
         sm_p => smd_p, &
         ptr  => smd_ptr
@@ -206,7 +205,6 @@ END SUBROUTINE REDIS
 SUBROUTINE MESH(monitor,dis,dis_out)
 
   use ions_base, ONLY: na,nsp
-  use parameters, only: nsx,natx
   use path_variables, ONLY: &
         sm_p => smd_p
 

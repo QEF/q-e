@@ -194,11 +194,6 @@
         END SUBROUTINE diis_print_info
 
 !  ----------------------------------------------
-!  ----------------------------------------------
-#if defined __T3E
-#  define izamax icamax
-#  define zdotc cdotc
-#endif
 
       SUBROUTINE converg( c, cdesc, gemax, cnorm, tprint )
 
@@ -221,8 +216,9 @@
         REAL(DP), INTENT(OUT) :: gemax, cnorm
 
 ! ...   declare other variables
-        INTEGER    :: iabs, izamax, i, nb, ngw
-        REAL(DP)  :: gemax_l
+        INTEGER  :: iabs, i, nb, ngw
+        INTEGER, EXTERNAL :: IZAMAX
+        REAL(DP) :: gemax_l
 
 ! ...   end of declarations
 !  ----------------------------------------------
@@ -232,7 +228,7 @@
         gemax_l = 0.d0
         cnorm   = 0.d0
         DO i = 1, nb
-          iabs = izamax( ngw, c(1,i), 1)
+          iabs = IZAMAX ( ngw, c(1,i), 1)
           IF( gemax_l < ABS( c(iabs,i) ) ) THEN
             gemax_l = ABS ( c(iabs,i) )
           END IF
@@ -271,9 +267,10 @@
         LOGICAL,   INTENT(IN)  :: tprint
 
 ! ...   declare other variables
-        INTEGER    :: iabs, izamax, i, ik
+        INTEGER    :: iabs, i, ik
         REAL(DP)  :: gemax_l, cnormk
-        COMPLEX(DP) :: zdotc
+        INTEGER, EXTERNAL :: IZAMAX
+        COMPLEX(DP), EXTERNAL :: ZDOTC
 
 ! ...   end of declarations
 !  ----------------------------------------------
@@ -283,11 +280,11 @@
         DO ik = 1, cdesc%nkl
           cnormk  = 0.d0
           DO i = 1, cdesc%nbl( 1 )
-            iabs = izamax( cdesc%ngwl, c(1,i,ik), 1)
+            iabs = IZAMAX ( cdesc%ngwl, c(1,i,ik), 1)
             IF( gemax_l < ABS( c(iabs,i,ik) ) ) THEN
               gemax_l = ABS( c(iabs,i,ik) )
             END IF
-            cnormk = cnormk + DBLE( zdotc( cdesc%ngwl, c(1,i,ik), 1, c(1,i,ik), 1) )
+            cnormk = cnormk + DBLE( ZDOTC ( cdesc%ngwl, c(1,i,ik), 1, c(1,i,ik), 1) )
           END DO
           cnormk = cnormk * weight(ik)
           cnorm = cnorm + cnormk
@@ -902,14 +899,6 @@
         END SUBROUTINE diis_steepest
 
 !=----------------------------------------------------------------------------=!
-
-#if defined __T3E
-#  define zhptrf chptrf
-#  define zhptrs chptrs
-#  define dsptrf ssptrf
-#  define dsptrs ssptrs
-#endif
-
 !  ----------------------------------------------
 !  BEGIN manual
 
@@ -944,11 +933,11 @@
           ap(k) = b(i,j)
         END DO
       END DO
-      CALL dsptrf( 'L', ndim, ap, ipiv, info )
+      CALL DSPTRF ( 'L', ndim, ap, ipiv, info )
       IF(info .NE. 0) THEN
         CALL errore(' solve ',' dsptrf has failed ', info)
       END IF
-      CALL dsptrs( 'L', ndim, 1, ap, ipiv, v, ndim, info )
+      CALL DSPTRS ( 'L', ndim, 1, ap, ipiv, v, ndim, info )
       IF(info .NE. 0) THEN
         CALL errore(' solve ',' dsptrs has failed ', info)
       END IF
@@ -994,11 +983,11 @@
           ap(k) = b(i,j)
         END DO
       END DO
-      CALL zhptrf( 'L', ndim, ap, ipiv, info )
+      CALL ZHPTRF ( 'L', ndim, ap, ipiv, info )
       IF ( info .NE. 0 ) THEN
         CALL errore(' solve_kp ',' zhptrf has failed ', info)
       END IF
-      CALL zhptrs( 'L', ndim, 1, ap, ipiv, v, ndim, info )
+      CALL ZHPTRS ( 'L', ndim, 1, ap, ipiv, v, ndim, info )
       IF ( info .NE. 0 ) THEN
         CALL errore(' solve_kp ',' zhptrs has failed ', info)
       END IF

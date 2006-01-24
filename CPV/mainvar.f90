@@ -12,7 +12,7 @@ MODULE cp_main_variables
   !----------------------------------------------------------------------------
   !
   USE kinds,             ONLY : DP
-  USE parameters,        ONLY : natx, nsx, nacx
+  USE parameters,        ONLY : natx, nacx
   USE control_flags,     ONLY : program_name
   USE funct,             ONLY : dft_is_meta
   USE metagga,           ONLY : kedtaur, kedtaus, kedtaug

@@ -558,14 +558,10 @@
         !
         IF( ttdipole ) THEN
 
-#if defined __ALPHA
-           CALL errore( ' main ',' there are still problem on alpha with this routine ', 0 )
-#else
            IF( wfill%nspin > 1 ) &
               CALL errore( ' main ',' dipole with spin not yet implemented ', 0 )
            !
            CALL ddipole( nfi, ht0, c0(:,:,1,1), atoms0, tfor, ngw, wfill%nbl( 1 ), wfill%nbl( 1 ), ngw )
-#endif
 
         END IF
 

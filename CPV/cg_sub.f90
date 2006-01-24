@@ -57,7 +57,7 @@
       use derho
       use cdvan
       use stre
-      use parameters, only: nacx, natx, nsx, nbndxx
+      use parameters, only: natx
       use constants, only: pi, factem
       use io_files, only: psfile, pseudo_dir
       use io_files, only: outdir

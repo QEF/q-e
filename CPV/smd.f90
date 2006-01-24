@@ -49,7 +49,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   use betax, only: mmx, refg
   !use restartsm
   use restart_file
-  use parameters, only: nacx, nsx, natx, nhclm
+  use parameters, only: nacx, natx, nhclm
   USE smd_rep, only: rep
   USE path_variables, only: &
         sm_p => smd_p
@@ -318,7 +318,7 @@ SUBROUTINE PERP(vec,tan,paraforce)
 
 
   use ions_base, ONLY: na, nsp
-  use parameters, only: nsx,natx
+  use parameters, only: natx
 
   IMPLICIT NONE
 
@@ -379,7 +379,6 @@ SUBROUTINE LINEARP(state)
 
 
   use ions_base, ONLY: na, nsp
-  use parameters, only: nsx,natx
   USE path_variables, only: &
         sm_p => smd_p, &
         ptr => smd_ptr
@@ -437,7 +436,7 @@ SUBROUTINE ARC(state,alpha,t_alpha,key)
 
 
   use ions_base, ONLY: na, nsp
-  use parameters, only: nsx,natx
+  use parameters, only: natx
   USE path_variables, only: &
         sm_p => smd_p, &
         ptr => smd_ptr
@@ -548,7 +547,7 @@ SUBROUTINE ABSVEC(vec,norm)
 
 
   use ions_base, ONLY: na, nsp
-  use parameters, only: nsx,natx
+  use parameters, only: natx
 
   IMPLICIT NONE
 
@@ -592,7 +591,7 @@ SUBROUTINE IMPOSECD(state,als,bes,chs)
 
 
   use ions_base, ONLY: na, nsp
-  use parameters, only: nsx,natx
+  use parameters, only: natx
   use io_global, ONLY: stdout 
 
   IMPLICIT NONE
@@ -703,7 +702,7 @@ END SUBROUTINE IMPOSECD
 subroutine rot(state,phi,direction)
 
   use ions_base, ONLY: na, nsp
-  use parameters, only: nsx,natx
+  use parameters, only: natx
   use io_global, ONLY: stdout
 
 
@@ -831,7 +830,7 @@ END SUBROUTINE ROT
 SUBROUTINE TRAN(state,dist,direction)
 
   use ions_base, ONLY: na, nsp
-  use parameters, only: nsx,natx
+  use parameters, only: natx
   use io_global, ONLY: stdout
 
   IMPLICIT NONE
@@ -868,7 +867,7 @@ END SUBROUTINE TRAN
 SUBROUTINE DISTATOMS(state,mindist,isa1,isa2)
 
   use ions_base, ONLY: na, nsp
-  use parameters, only: nsx,natx
+  use parameters, only: natx
   use cell_base, only: ainv, a1, a2, a3
 
   real(8),intent(in) :: state(3,natx)

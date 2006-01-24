@@ -1407,7 +1407,7 @@ END SUBROUTINE read_atomic_cc
 !     Output parameters in module "uspp_param"
 !     info on DFT level in module "dft"
 !
-      use parameters, only: nsx, natx, lqmax, ndmx
+      use parameters, only: nsx, lqmax, ndmx
       use atom, only: rho_atc, r, rab, mesh, nlcc, lchi, chi, nchi, nchix
       use uspp_param, only: nqlc, qfunc, vloc_at, rinner,&
                        qqq, nbeta, nbrx, betar, dion, lll, kkbeta, tvanp

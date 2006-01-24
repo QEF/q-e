@@ -5,11 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-#if defined __ALPHA
-#  define DMIN1 MIN
-#  define DMAX1 MAX
-#endif
 !  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
 !  ----------------------------------------------
 !  Car-Parrinello Parallel Program
@@ -73,8 +68,8 @@
             fke(ie,ik,ispin)=fac
             sumq=sumq+wke(ie,ik,ispin)
             sume=sume+wke(ie,ik,ispin)*e(ie,ik,ispin)
-            emin=DMIN1(emin,e(ie,ik,ispin))
-            emax=DMAX1(emax,e(ie,ik,ispin))
+            emin= MIN (emin,e(ie,ik,ispin))
+            emax= MAX (emax,e(ie,ik,ispin))
           END DO
         END DO
       END DO
@@ -118,21 +113,6 @@
       END SUBROUTINE adjef
 
 !  ----------------------------------------------
-#if defined __T3E
-#  define derfc erfc
-#endif
-!  ----------------------------------------------
-!      FUNCTION stepf(x)
-!      USE kinds
-!      IMPLICIT NONE
-!      REAL(DP) stepf
-!      REAL(DP) x
-!      REAL(DP), PARAMETER :: c = 0.5641895835d0
-!      REAL(DP) derfc
-!      stepf=derfc(x)
-!!     stepf=derfc(x)-c*x*dexp(-x*x)
-!      RETURN
-!      END FUNCTION stepf
 
       DOUBLE PRECISION FUNCTION stepf(x)
       USE kinds

@@ -33,14 +33,6 @@ SUBROUTINE stop_run( flag )
   !
   IF ( lpath ) CALL io_path_stop()
   !
-#ifdef __T3E
-  !
-  ! ... set streambuffers off
-  !
-  CALL set_d_stream( 0 )
-  !
-#endif
-  !
   CALL deallocate_modules_var()
   !
   IF ( lconstrain ) CALL deallocate_constraint()

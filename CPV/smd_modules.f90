@@ -17,7 +17,7 @@
 !
 MODULE smd_rep
  !
-  use parameters, only: nsx,natx,nacx
+  use parameters, only: natx,nacx
  !
   implicit none
  !

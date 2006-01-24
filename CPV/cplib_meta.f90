@@ -250,7 +250,6 @@
       use kinds, only: dp
       use control_flags, only: iprint, tvlocw, iprsta, thdyn, tpre, tfor, tprnfor
       use io_global, only: stdout
-      use parameters, only: natx, nsx
       use ions_base, only: nas => nax, nsp, na, nat
       use gvecs
       use gvecp, only: ng => ngm

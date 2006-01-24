@@ -69,7 +69,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE cdvan,                    ONLY : dbec, drhovan
   USE stre,                     ONLY : stress
   USE gvecw,                    ONLY : ggp
-  USE parameters,               ONLY : nacx, natx, nsx, nbndxx
+  USE parameters,               ONLY : natx, nsx
   USE constants,                ONLY : pi, factem, au_gpa, au_ps, gpa_au
   USE io_files,                 ONLY : psfile, pseudo_dir
   USE wave_base,                ONLY : wave_steepest, wave_verlet
