@@ -263,6 +263,7 @@ SUBROUTINE move_ions()
   IF ( lcoarsegrained ) THEN
      !
      CALL mp_bcast( lagrange, ionode_id, intra_image_comm )
+     CALL mp_bcast( etot_av,  ionode_id, intra_image_comm )
      CALL mp_bcast( dfe_acc,  ionode_id, intra_image_comm )
      !
   END IF
@@ -280,7 +281,7 @@ SUBROUTINE move_ions()
   !
 END SUBROUTINE move_ions     
 !
-! ... this routine is used also by compute_scf (NEB)
+! ... this routine is used also by compute_scf (NEB) and compute_fes_grads
 !
 !----------------------------------------------------------------------------
 SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
