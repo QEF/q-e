@@ -1146,11 +1146,10 @@ MODULE pw_restart
          !
          ! ... some internal variables
          !
-         celldm(:) = 0.D0
-         celldm(1) = alat
-         !
          tpiba  = 2.D0 * pi / alat
          tpiba2 = tpiba**2 
+         !
+         CALL iotk_scan_dat( iunpun, "CELL_DIMENSIONS", celldm )
          !
          CALL iotk_scan_begin( iunpun, "DIRECT_LATTICE_VECTORS" )
          CALL iotk_scan_dat(   iunpun, "a1", at(:,1) )
@@ -1177,6 +1176,7 @@ MODULE pw_restart
       CALL mp_bcast( ibrav,     ionode_id )
       CALL mp_bcast( symm_type, ionode_id )
       CALL mp_bcast( alat,      ionode_id )
+      CALL mp_bcast( celldm,    ionode_id )
       CALL mp_bcast( tpiba,     ionode_id )
       CALL mp_bcast( tpiba2,    ionode_id )
       CALL mp_bcast( omega,     ionode_id )
