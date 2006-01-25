@@ -1279,10 +1279,12 @@ MODULE input_parameters
           ! where E1 E2 E3 are successive values of the DFT total energy 
           ! in a ionic steepest descent simulation
 
+        REAL(DP) :: press_conv_thr = 0.5D0
+
         NAMELIST / cell / cell_parameters, cell_dynamics, cell_velocities, &
                           press, wmass, cell_temperature, temph, fnoseh,   &
                           cell_dofree, greash, cell_factor, cell_nstepe,   &
-                          cell_damping
+                          cell_damping, press_conv_thr
 !
 !=----------------------------------------------------------------------------=!
 !  PHONON Namelist Input Parameters

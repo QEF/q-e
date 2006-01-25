@@ -123,7 +123,7 @@ SUBROUTINE iosys()
                             starting_magnetization_ => starting_magnetization, &
                             lsda
   !
-  USE relax,         ONLY : epsf, starting_scf_threshold, epse
+  USE relax,         ONLY : epse, epsf, epsp, starting_scf_threshold
   !
   USE control_flags, ONLY : diis_ndim, isolve, &
                             max_cg_iter, diis_buff, david, imix, nmix, &
@@ -234,7 +234,8 @@ SUBROUTINE iosys()
   ! ... CELL namelist
   !
   USE input_parameters, ONLY : cell_parameters, cell_dynamics, press, &
-                               wmass, cell_temperature, cell_factor
+                               wmass, cell_temperature, cell_factor, &
+                               press_conv_thr
   !
   ! ... PHONON namelist
   !
@@ -681,8 +682,9 @@ SUBROUTINE iosys()
      lforce    = .TRUE.
      ldamped   = .TRUE.
      !
-     epse = etot_conv_thr
-     epsf = forc_conv_thr
+     epse =  etot_conv_thr
+     epsf =  forc_conv_thr
+     epsp = press_conv_thr
      !
      SELECT CASE( TRIM( cell_dynamics ) )
      CASE( 'none' )
@@ -1093,7 +1095,7 @@ SUBROUTINE iosys()
   efield_     = efield
   nberrycyc_  = nberrycyc
   tqr_        = tqr
-
+  !
   title_      = title
   dt_         = dt
   tefield_    = tefield

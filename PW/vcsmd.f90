@@ -36,7 +36,7 @@ SUBROUTINE vcsmd()
                               cmass, ntcheck, lmovecell
   USE dynamics_module, ONLY : dt, temperature
   USE ions_base,       ONLY : fixatom, amass
-  USE relax,           ONLY : epse, epsf
+  USE relax,           ONLY : epse, epsf, epsp
   USE force_mod,       ONLY : force, sigma
   USE control_flags,   ONLY : istep, tolp, conv_ions 
   USE parameters,      ONLY : ntypx
@@ -88,7 +88,7 @@ SUBROUTINE vcsmd()
            sigmamet(3,3),        & ! sigma = avec^-1 * vcell = bg/alat*omega
            vx2(ntypx), vy2(ntypx), vz2(ntypx),     & ! work vectors
            vmean(ntypx), rms(ntypx), ekin(ntypx),  & ! work vectors
-           tempo, time_au, epsp
+           tempo, time_au
   CHARACTER(LEN=3) :: ios          ! status (old or new) for I/O files
   CHARACTER(LEN=6) :: ipos         ! status ('append' or 'asis') for I/O files
   LOGICAL :: exst
@@ -186,8 +186,6 @@ SUBROUTINE vcsmd()
      END IF
      !
   ELSE IF ( calc == 'nm' .OR. calc == 'cm' ) THEN
-     !
-     epsp = 0.5D0  ! kbar
      !
      conv_ions = ( eold - etot ) < epse
      !

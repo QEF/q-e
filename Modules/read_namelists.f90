@@ -473,6 +473,7 @@ MODULE read_namelists_module
        cell_factor = 0.D0
        cell_nstepe = 1
        cell_damping = 0.D0
+       press_conv_thr = 0.5D0
        !
        RETURN
        !
@@ -938,6 +939,7 @@ MODULE read_namelists_module
        CALL mp_bcast( cell_factor,      ionode_id )
        CALL mp_bcast( cell_nstepe,      ionode_id )
        CALL mp_bcast( cell_damping,     ionode_id )
+       CALL mp_bcast( press_conv_thr,   ionode_id )
        ! 
        RETURN
        !

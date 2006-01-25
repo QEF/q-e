@@ -808,6 +808,11 @@ cell_factor    REAL ( default = 1.2D0 )
                It should exceed the maximum linear contraction of the
                cell during a simulation.
 
+press_cov_thr  REAL ( default = 0.5D0 Kbar )
+               convergence threshold on the pressure for variable cell
+               relazations (note that in variable-cell relaxations the
+               other convergence thresholds for ionic relaxation apply
+               as well).
 
 ===============================================================================
 &PHONON ( only in calculation = 'phonon' )
