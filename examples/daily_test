@@ -1,14 +1,20 @@
 #!/bin/sh
 
+# cp does not write the restart file to outdir but to the current directory.
+# All other restart files are either written to outdir and cleaned by this 
+# script or ignored, but if this is found the code will restart from last run
+/bin/rm -r /scr/giannozz/espresso/examples/example28/results/metadyn-cp_50.save/
+
 # In order to use this script, you must be logged to anonymous cvs:
 # $ cvs login
 # (password: cvsanon)
 
 # choose a directory ROOT  in which to perform the test
-# the code is in     PWROOT=$ROOT/espresso)
-# temporary files in TMPDIR=$ROOT/tmp)
+# the code is in     PWROOT=$ROOT/espresso
+# temporary files in TMPDIR=$ROOT/tmp
 
 ROOT=/scr/giannozz
+MAILTO=p.giannozzi@sns.it
 
 # choose setting for the compiler you want to use
 . /opt/intel_fc_80/bin/ifortvars.sh
@@ -25,6 +31,9 @@ update=1
 export CVSROOT=:pserver:cvsanon@democritos.sissa.it:/home/cvs
 PWROOT=$ROOT/espresso
 TMPDIR=$ROOT/tmp
+OUT=$PWROOT/daily.out
+/bin/rm $OUT
+touch $OUT
 
 if ! test -d $PWROOT; then
     mkdir -p $PWROOT
@@ -46,47 +55,50 @@ else
    cd $PWROOT
    cvs update -d >& cvs.log
 fi
-conflicts=`cat cvs.log | grep '^C '`
-if test "$conflicts" != "" ; then
-   echo "#" 
-   echo "# CONFLICTS IN CVS CHECKOUT "
-   echo "#" 
-   echo $conflicts
-   exit 0
+conflicts=`grep -c '^C ' cvs.log`
+if test "$conflicts" != "0" ; then
+   echo "#" >> $OUT
+   echo "# CONFLICTS IN CVS CHECKOUT " >> $OUT
+   echo "#" >> $OUT
+   grep '^C ' cvs.log >> $OUT
+   mail -s "RESULTS OF DAILY QE TEST" $MAILTO < $OUT
+   exit 1
 fi
-changes=` cat cvs.log | grep -e '^U ' -e'^P ' `
+changes=` grep -c -e '^U ' -e'^P ' cvs.log`
 if test  "$changes" = "0" ; then
    # 
    # no changes to cvs, do nothing
    #
    exit 0
 else
-   echo "#" 
-   echo "# CHECKOUT ESPRESSO "
-   echo "#" 
-   cat cvs.log | grep -e '^U ' -e'^P ' -e '^M '
+   echo "#" >> $OUT
+   echo "# CHECKOUT ESPRESSO " >> $OUT
+   echo "#" >> $OUT
+   grep -e '^U ' -e'^P ' -e '^M ' cvs.log >> $OUT
 fi
-echo "#" 
-echo "# CONFIGURE "
-echo "#" 
+echo "#" >> $OUT
+echo "# CONFIGURE " >> $OUT
+echo "#" >> $OUT
 ./configure $CONFIG_OPTS >& configure.log
-tail -1 config.log
+tail -1 config.log >> $OUT
 
-echo "#" 
-echo "# MAKE ALL "
-echo "#" 
-make all >& make.log
+echo "#" >> $OUT
+echo "# MAKE ALL " >> $OUT
+echo "#" >> $OUT 
+make all vib >& make.log
 errors=`grep -c -e Error make.log`
 if test  "$errors" = "0" ; then
-   echo "make all: success"
+   echo "make all: success" >> $OUT
 else
-   echo "make all: failure"
+   echo "make all: failure" >> $OUT
+   cat make.log >>  $OUT
+   mail -s "RESULTS OF DAILY QE TEST" $MAILTO < $OUT
    exit $errors
 fi
 cd examples
-echo "#" 
-echo "# RUNNING ALL EXAMPLES "
-echo "#" 
+echo "#" >> $OUT
+echo "# RUNNING ALL EXAMPLES " >> $OUT
+echo "#" >> $OUT
 mv environment_variables environment_variables.orig
 cat > environment_variables << EOF
 BIN_DIR=$PWROOT/bin
@@ -120,13 +132,15 @@ do
     cat run.log >> ../run.log
     /bin/rm run.log
     N=`echo $example | sed 's/example//'`
-    echo "#" 
-    echo "# CHECKING EXAMPLE # " $N
-    echo "#" 
+    echo "#" >> $OUT
+    echo "# CHECKING EXAMPLE # " $N >> $OUT
+    echo "#" >> $OUT
 
-    ../check_example ./
+    ../check_example ./ >> $OUT
 
 done
 
-cd ../
-mv environment_variables.orig environment_variables
+cd $PWROOT/examples
+mv environment_variables environment_variables.orig
+
+mail -s "RESULTS OF DAILY QE TEST" $MAILTO < $OUT
