@@ -10,7 +10,6 @@
 #define __REMOVE_CONSTRAINT_FORCE
 !#define __DEBUG_CONSTRAINTS
 #define __USE_PBC
-!#define __USE_LJ_PBC
 !
 !----------------------------------------------------------------------------
 MODULE constraints_module
@@ -70,7 +69,7 @@ MODULE constraints_module
   REAL(DP)              :: dmax
   !
   INTEGER, PARAMETER :: tab_dim = 1000
-  REAL(DP)           :: sin_tab( 0 : tab_dim - 1 )
+  REAL(DP)           :: sin_tab(0:tab_dim-1)
   !
   CONTAINS
      !
@@ -97,7 +96,7 @@ MODULE constraints_module
        REAL(DP)    :: d0(3), d1(3), d2(3)
        REAL(DP)    :: C00, C01, C02, C11, C12, C22
        REAL(DP)    :: D01, D12
-       REAL(DP)    :: smearing, r_c, r_max
+       REAL(DP)    :: smoothing, r_c, r_max
        INTEGER     :: type_coord1, type_coord2
        REAL(DP)    :: dtau(3), norm_dtau
        REAL(DP)    :: k(3), phase, norm_k
@@ -144,7 +143,7 @@ MODULE constraints_module
              !
              r_c  = constr(3,ia)
              !
-             smearing = 1.D0 / constr(4,ia)
+             smoothing = 1.D0 / constr(4,ia)
              !
              target(ia) = 0.D0
              !
@@ -165,7 +164,7 @@ MODULE constraints_module
                    norm_dtau = norm( dtau(:) )
                    !
                    target(ia) = target(ia) + 1.D0 / &
-                                ( EXP( smearing * ( norm_dtau - r_c ) ) + 1.D0 )
+                                ( EXP( smoothing * ( norm_dtau - r_c ) ) + 1.D0 )
                    !
                 END DO
                 !
@@ -193,7 +192,7 @@ MODULE constraints_module
              !
              r_c = constr(3,ia)
              !
-             smearing = 1.D0 / constr(4,ia)
+             smoothing = 1.D0 / constr(4,ia)
              !
              target(ia) = 0.D0
              !
@@ -208,7 +207,7 @@ MODULE constraints_module
                 norm_dtau = norm( dtau(:) )
                 !
                 target(ia) = target(ia) + 1.D0 / &
-                             ( EXP( smearing * ( norm_dtau - r_c ) ) + 1.D0 )
+                             ( EXP( smoothing * ( norm_dtau - r_c ) ) + 1.D0 )
                 !
              END DO
              !
@@ -413,7 +412,7 @@ MODULE constraints_module
        REAL(DP)    :: inv_den, fac
        REAL(DP)    :: C00, C01, C02, C11, C12, C22
        REAL(DP)    :: D01, D12, invD01, invD12
-       REAL(DP)    :: smearing, r_c, r_max
+       REAL(DP)    :: smoothing, r_c, r_max
        INTEGER     :: type_coord1, type_coord2
        REAL(DP)    :: dtau(3), norm_dtau, expo
        REAL(DP)    :: k(3), phase, ksin(3), norm_k, sinxx
@@ -436,7 +435,7 @@ MODULE constraints_module
           !
           r_c = constr(3,index)
           !
-          smearing = 1.D0 / constr(4,index)
+          smoothing = 1.D0 / constr(4,index)
           !
           g = 0.D0
           !
@@ -458,11 +457,11 @@ MODULE constraints_module
                 !
                 dtau(:) = dtau(:) / norm_dtau
                 !
-                expo = EXP( smearing * ( norm_dtau - r_c ) )
+                expo = EXP( smoothing * ( norm_dtau - r_c ) )
                 !
                 g = g + 1.D0 / ( expo + 1.D0 )
                 !
-                dtau(:) = dtau(:) * smearing * expo / ( expo + 1.D0 )**2
+                dtau(:) = dtau(:) * smoothing * expo / ( expo + 1.D0 )**2
                 !
                 dg(:,ia2) = dg(:,ia2) + dtau(:)
                 dg(:,ia1) = dg(:,ia1) - dtau(:)
@@ -487,7 +486,7 @@ MODULE constraints_module
           !
           r_c = constr(3,index)
           !
-          smearing = 1.D0 / constr(4,index)
+          smoothing = 1.D0 / constr(4,index)
           !
           g = 0.D0
           !
@@ -503,11 +502,11 @@ MODULE constraints_module
              !
              dtau(:) = dtau(:) / norm_dtau
              !
-             expo = EXP( smearing * ( norm_dtau - r_c ) )
+             expo = EXP( smoothing * ( norm_dtau - r_c ) )
              !
              g = g + 1.D0 / ( expo + 1.D0 )
              !
-             dtau(:) = dtau(:) * smearing * expo / ( expo + 1.D0 )**2
+             dtau(:) = dtau(:) * smoothing * expo / ( expo + 1.D0 )**2
              !
              dg(:,ia1) = dg(:,ia1) + dtau(:)
              dg(:,ia)  = dg(:,ia)  - dtau(:)
@@ -996,19 +995,11 @@ MODULE constraints_module
        !
 #if defined (__USE_PBC)
        !
-#if defined (__USE_LJ_PBC)
-       !
-       pbc(:) = vect(:) - ANINT( vect(:) / alat ) * alat
-       !
-#else
-       !
        pbc(:) = MATMUL( vect(:), bg(:,:) ) / alat
        !
        pbc(:) = pbc(:) - ANINT( pbc(:) )
        !
        pbc(:) = MATMUL( at(:,:), pbc(:) ) * alat
-       !
-#endif
        !
 #else
        !
