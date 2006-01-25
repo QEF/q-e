@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
+!
 !---------------------------------------------------------------------
 subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
      irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
@@ -29,11 +31,10 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !     Revised Oct. 1995 by Andrea Dal Corso.
 !     April 1997: parallel stuff added (SdG)
 !
-#include "f_defs.h"
-
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   USE constants, ONLY: tpi
+  USE random_numbers, ONLY : set_rndm_seed
 #ifdef __PARA
   use mp, only: mp_bcast
 #endif

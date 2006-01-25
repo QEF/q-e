@@ -561,14 +561,11 @@
 
 !  randomize wave functions coefficients
 !  ----------------------------------------------
-
+      USE random_numbers, ONLY : rranf
       IMPLICIT NONE
 ! ... declare subroutine arguments
       COMPLEX(DP)          :: wf(:,:)
       REAL(DP), INTENT(IN) :: ampre
-
-      REAL(DP) :: rranf
-      EXTERNAL rranf
 
 ! ... declare other variables
       INTEGER i, j
@@ -591,13 +588,11 @@
 
 !  randomize wave functions coefficients
 !  ----------------------------------------------
-
+      USE random_numbers, ONLY : rranf
       IMPLICIT NONE
 ! ... declare subroutine arguments
       COMPLEX(DP)          :: wf(:)
       REAL(DP), INTENT(IN) :: ampre
-      REAL(DP) :: rranf
-      EXTERNAL rranf
 ! ... declare other variables
       INTEGER j
       REAL(DP)  rranf1, rranf2

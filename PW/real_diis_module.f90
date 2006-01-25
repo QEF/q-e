@@ -936,6 +936,7 @@ MODULE real_diis_module
       !------------------------------------------------------------------------
       !
       USE constants, ONLY : pi, tpi
+      USE random_numbers, ONLY : rndm
       !
       IMPLICIT NONE
       !
@@ -956,8 +957,6 @@ MODULE real_diis_module
       REAL (DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, &
                                         gg1, theta, cg0, e0, es(2)
       REAL (DP)                 :: rr, arg
-      !
-      REAL (DP), EXTERNAL :: rndm
       !
       !
       ALLOCATE( scg(  ndmx ) )    

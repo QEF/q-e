@@ -23,7 +23,7 @@ linpack.o \
 matches.o \
 ngnr_set.o \
 recips.o \
-rranf.o \
+random_numbers.o \
 scnds.o \
 simpsn.o \
 sort.o \

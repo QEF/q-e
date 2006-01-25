@@ -373,9 +373,6 @@
         TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
         REAL(DP)                  :: ampre  
 
-        REAL(DP) :: rranf
-        EXTERNAL rranf
-
 ! ...   Locals
         INTEGER   :: ig_local
         INTEGER   :: ngw, ngwt

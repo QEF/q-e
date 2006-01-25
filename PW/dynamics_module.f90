@@ -17,7 +17,8 @@ MODULE dynamics_module
   USE ions_base, ONLY : amass
   USE io_global, ONLY : stdout
   USE io_files,  ONLY : prefix, tmp_dir
-  USE constants, ONLY : amconv, convert_E_to_temp, au_ps, BOHR_RADIUS_CM
+  USE constants, ONLY : tpi, fpi
+  USE constants, ONLY : amconv, convert_E_to_temp, au_ps, bohr_radius_cm
   USE constants, ONLY : eps8, eps16
   !
   USE basic_algebra_routines
@@ -100,14 +101,14 @@ MODULE dynamics_module
       !
       ! ... delta_t, nraise are used to change the temperature as follows:
       !
-      ! ... delta_t = 1 :                  every 'nraise' step the actual 
-      ! ...                                temperature is rescaled to the
-      ! ...                                initial value.
-      ! ... delta_t /= 1 and delta_t > 0 : at each step the actual temperature is
-      ! ...                                multiplied by delta_t; this is done
-      ! ...                                rescaling all the velocities.
-      ! ... delta_t < 0 :                  every 'nraise' step the temperature
-      ! ...                                reduced by -delta_t.
+      ! ... delta_t = 1 :                   every 'nraise' step the actual 
+      ! ...                                 temperature is rescaled to the
+      ! ...                                 initial value.
+      ! ... delta_t /= 1 and delta_t > 0 :  at each step the actual temperature
+      ! ...                                 is multiplied by delta_t; this is
+      ! ...                                 done rescaling all the velocities.
+      ! ... delta_t < 0 :                   every 'nraise' step the temperature
+      ! ...                                 reduced by -delta_t.
       !
       ! ... Dario Alfe' 1997  and  Carlo Sbraccia 2004-2005
       !
@@ -133,11 +134,10 @@ MODULE dynamics_module
       !
       REAL(DP), EXTERNAL :: DNRM2
       !
-      tau_old = tau
-      tau_new = 0.D0
-      tau_ref = tau
-      vel     = 0.D0
-      acc     = 0.D0
+      tau_old(:,:) = tau(:,:)
+      tau_new(:,:) = 0.D0
+      vel(:,:)     = 0.D0
+      acc(:,:)     = 0.D0
       !
       IF ( istep == 1 ) THEN
          !
@@ -162,14 +162,22 @@ MODULE dynamics_module
          ! ... the file is read
          !
          READ( UNIT = 4, FMT = * ) &
-            etotold, temp_new, mass, total_mass, &
-            elapsed_time, istep, tau_old, tau_ref
+            etotold, temp_new, mass(:), total_mass, &
+            elapsed_time, istep, tau_old(:,:), tau_ref(:,:)
          !
          CLOSE( UNIT = 4, STATUS = 'KEEP' )
          !
       ELSE
          !
          CLOSE( UNIT = 4, STATUS = 'DELETE' )
+         !
+         ! ... atoms are refold in the central box
+         !
+         CALL refold_tau()
+         !
+         ! ... reference positions
+         !
+         tau_ref(:,:) = tau(:,:)
          !
          WRITE( UNIT = stdout, &
                 FMT = '(/,5X,"Starting temperature",T27," = ",F8.2," K")' ) &
@@ -244,9 +252,9 @@ MODULE dynamics_module
                !
                WRITE( UNIT = stdout, &
                       FMT = '(/,5X,"Thermalization: delta_t = ",F6.3, &
-                          & ", T = ",F6.1)' )  - delta_t, ( temp_new - delta_t )
+                          & ", T = ",F6.1)' )  delta_t, ( temp_new + delta_t )
                !
-               CALL thermalize( temp_new, ( temp_new - delta_t ) )
+               CALL thermalize( temp_new, ( temp_new + delta_t ) )
                !
             END IF
             !
@@ -269,7 +277,7 @@ MODULE dynamics_module
       !
       WRITE( UNIT = stdout, &
              FMT = '(/,5X,"Entering Dynamics:",T28,"iteration",T37," = ",&
-                    &I5,/,T28,"time",T37," =  ",F8.5," pico-seconds")' ) &
+                    &I5,/,T28,"time",T37," = ",F8.4," pico-seconds")' ) &
           istep, elapsed_time
       !
       IF ( lconstrain ) THEN
@@ -402,7 +410,8 @@ MODULE dynamics_module
       CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
       !
       WRITE( UNIT = 4, FMT = * ) &
-          etot, temp_new, mass, total_mass, elapsed_time, istep, tau, tau_ref
+          etot, temp_new, mass(:), total_mass, &
+          elapsed_time, istep, tau(:,:), tau_ref(:,:)
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
@@ -437,30 +446,58 @@ MODULE dynamics_module
     END SUBROUTINE dynamics
     !
     !-----------------------------------------------------------------------
+    SUBROUTINE refold_tau()
+      !-----------------------------------------------------------------------
+      !
+      USE ions_base,          ONLY : nat, tau
+      USE cell_base,          ONLY : alat
+      USE constraints_module, ONLY : pbc
+      !
+      IMPLICIT NONE
+      !
+      INTEGER :: ia
+      !
+      !
+      DO ia = 1, nat
+         !
+         tau(:,ia) = pbc( tau(:,ia) * alat ) / alat
+         !
+      END DO
+      !
+    END SUBROUTINE refold_tau
+    !
+    !-----------------------------------------------------------------------
     SUBROUTINE compute_averages( istep )
       !-----------------------------------------------------------------------
       !
       USE ions_base,          ONLY : nat, tau
       USE cell_base,          ONLY : alat, at
       USE constraints_module, ONLY : pbc
+      USE parser,             ONLY : delete_if_present
       !
       IMPLICIT NONE
       !
       INTEGER, INTENT(IN) :: istep
       !
-      INTEGER             :: i, j, index
-      REAL(DP)            :: dx, dy, dz, distsq
-      REAL(DP)            :: dtau(3)
-      REAL(DP)            :: dmax
-      REAL(DP), PARAMETER :: one_sixth = 1.D0 / 6.D0
+      INTEGER               :: i, j, index
+      REAL(DP)              :: dx, dy, dz, distsq
+      REAL(DP)              :: dtau(3)
+      REAL(DP)              :: dmax
+      REAL(DP), ALLOCATABLE :: rmsd(:)
+      REAL(DP), PARAMETER   :: one_sixth = 1.D0 / 6.D0
       !
-      ! ... diffusion coefficient
+      ! ... RMSD and diffusion coefficient
+      !
+      ALLOCATE( rmsd( nat ) )
       !
       IF ( istep == 1 ) THEN
          !
          diff_coeff(:) = 0.D0
          !
          pair_distr(:) = 0.D0
+         !
+         CALL delete_if_present( TRIM( tmp_dir ) // &
+                               & TRIM( prefix ) // ".rmsd.dat" )
          !
       END IF
       !
@@ -472,11 +509,23 @@ MODULE dynamics_module
          !
          distsq = dx*dx + dy*dy + dz*dz
          !
-         diff_coeff(i) = diff_coeff(i) + one_sixth * distsq
+         rmsd(i) = distsq
          !
       END DO
       !
-      ! ... pair distribution g(r)
+      diff_coeff(:) = diff_coeff(:) + one_sixth * rmsd(:)
+      !
+      OPEN( UNIT = 777, POSITION = 'APPEND', &
+            FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".rmsd.dat" )
+      !
+      WRITE( 777, '(2(2X,F16.8))' ) &
+          (istep * dt * 2.D0 * au_ps), SQRT( SUM( rmsd(:) ) / DBLE( nat - 1 ) )
+      !
+      CLOSE( UNIT = 777, STATUS = 'KEEP' )
+      !
+      DEALLOCATE( rmsd )
+      !
+      ! ... pair distribution function g(r)
       !
       dmax = norm( MATMUL( at(:,:), (/ 0.5D0, 0.5D0, 0.5D0 /) ) ) * alat
       !
@@ -486,7 +535,7 @@ MODULE dynamics_module
             !
             IF ( i == j ) CYCLE
             !
-            dtau(:) = pbc( tau(:,i) - tau(:,j) ) * alat
+            dtau(:) = pbc( ( tau(:,i) - tau(:,j) ) * alat )
             !
             index = ANINT( norm( dtau(:) ) / dmax * DBLE( hist_len ) )
             !
@@ -518,8 +567,9 @@ MODULE dynamics_module
       WRITE( UNIT = stdout, &
              FMT = '(/,5X,"diffusion coefficients :")' )
       !
-      diff_coeff(:) = diff_coeff(:) * &
-                      BOHR_RADIUS_CM **2 / ( nstep * dt * 2.D-12 * au_ps )
+      diff_coeff(:) = diff_coeff(:) / ( DBLE( nstep ) * dt )
+      !
+      diff_coeff(:) = diff_coeff(:) * bohr_radius_cm**2 / ( 2.D-12 * au_ps )
       !
       DO i = 1, nat
           !
@@ -532,11 +582,15 @@ MODULE dynamics_module
       WRITE( UNIT = stdout, FMT = '(/,5X,"< D > = ",F16.8," cm^2/s")' ) &
           SUM( diff_coeff(:) ) / DBLE( nat - 1 )
       !
-      ! ... pair distribution g(r)
+      ! ... pair distribution function g(r)
       !
       dmax = norm( MATMUL( at(:,:), (/ 0.5D0, 0.5D0, 0.5D0 /) ) ) * alat
       !
-      pair_distr(:) = pair_distr(:) * omega / DBLE( nstep*nat*nat )
+      pair_distr(:) = pair_distr(:) * omega / DBLE( nat*nat ) / fpi
+      !
+      pair_distr(:) = pair_distr(:) / ( dmax / DBLE( hist_len ) )
+      !
+      pair_distr(:) = pair_distr(:) / DBLE( nstep )
       !
       OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".pd.dat" )
       !
@@ -730,40 +784,32 @@ MODULE dynamics_module
       !
       ! ... Starting thermalization of the system
       !
-      USE symme,         ONLY : invsym, nsym, irt
-      USE control_flags, ONLY : lfixatom
-      USE cell_base,     ONLY : alat
-      USE ions_base,     ONLY : nat, if_pos
+      USE symme,          ONLY : invsym, nsym, irt
+      USE control_flags,  ONLY : lfixatom
+      USE cell_base,      ONLY : alat
+      USE ions_base,      ONLY : nat, if_pos
+      USE random_numbers, ONLY : gauss_dist
       !
       IMPLICIT NONE
       !
       INTEGER  :: na, nb
-      REAL(DP) :: total_mass, aux, velox, ek, &
-                  ml(3), dir_x, dir_y, dir_z, module, system_temp
-      !  
-      REAL(DP), EXTERNAL :: rndm
+      REAL(DP) :: total_mass, KT, sigma, coeff, ek, ml(3), system_temp
+      INTEGER  :: hist(-1000:1000), index
       !
-      !    
-      aux = temperature / convert_E_to_temp
       !
-      ! ... velocity in random direction, with modulus accordingly to mass 
-      ! ... and temperature: 3/2KT = 1/2mv^2
+      KT = temperature / convert_E_to_temp
+      !
+      ! ... starting velocities have a Maxwell-Boltzmann distribution
       !
       DO na = 1, nat
          !
-         ! ... N.B. velox is in a.u. units /alat
+         coeff = ( mass(na) / ( tpi * KT) )**( 3.D0 / 2.D0 )
          !
-         velox = SQRT( 3.D0 * aux / mass(na) ) / alat
+         sigma = SQRT( KT / mass(na) )
          !
-         dir_x = rndm() - 0.5D0
-         dir_y = rndm() - 0.5D0
-         dir_z = rndm() - 0.5D0
+         ! ... N.B. velocities must in a.u. units of alat
          !
-         module = 1.D0 / SQRT( dir_x**2 + dir_y**2 + dir_z**2 )
-         !
-         vel(1,na) = velox * dir_x * module
-         vel(2,na) = velox * dir_y * module
-         vel(3,na) = velox * dir_z * module
+         vel(:,na) = coeff * gauss_dist( 0.D0, sigma, 3 ) / alat
          !
       END DO
       !
@@ -824,10 +870,6 @@ MODULE dynamics_module
          !
       END DO   
       !
-      ! ... vel is used already multiplied by the time step
-      !
-      vel(:,:) = vel(:,:) * dt
-      !
       ! ... after the velocity of the center of mass has been subtracted the
       ! ... temperature is usually changed. Set again the temperature to the
       ! ... right value.
@@ -835,6 +877,10 @@ MODULE dynamics_module
       system_temp = 2.D0 * ek / ( 3.D0 * nat ) * alat**2 * convert_E_to_temp
       !
       CALL thermalize( system_temp, temperature )
+      !
+      ! ... vel is used already multiplied by the time step
+      !
+      vel(:,:) = vel(:,:) * dt
       !
       RETURN
       !

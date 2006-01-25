@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
+!
 !---------------------------------------------------------------
 SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)  
   !---------------------------------------------------------------
@@ -12,11 +14,11 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
   ! Provides symmetry operations in the j=1/2, j=3/2, j=5/2 and j=7/2 
   ! subspaces 
   !
-#include "f_defs.h"
   USE kinds, only: DP
   USE cell_base, ONLY : at, bg, ibrav, symm_type
   USE symme, ONLY:  nsym, s
   USE spin_orb,   ONLY : rot_ylm
+  USE random_numbers, ONLY : rndm
   !
   IMPLICIT NONE
   !
@@ -62,7 +64,6 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
                       yl1 (3, 3), yl2(5, 5), yl3(7,7), &
                       yl1_inv (3, 3), yl2_inv(5, 5),  yl3_inv(7, 7),  &
                       Ul1C(6,6), Ul1C_inv(6,6), Ul3C(14,14), Ul3C_inv(14,14)
-  REAL(DP), EXTERNAL :: rndm
   COMPLEX(DP), EXTERNAL :: ZDOTU
   !
   !    Here we find the true symmetries of the crystal 

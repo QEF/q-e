@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !----------------------------------------------------------------------
 subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
@@ -15,8 +16,8 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
   !   the dynamical matrix of the system
   !
   !
-#include "f_defs.h"
   USE kinds, only : DP
+  USE random_numbers, ONLY : rndm
   implicit none
   !
   !    The dummy variables
@@ -42,8 +43,6 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
   ! ira:   rotated atom
   ! iramq: rotated atom with the q->-q+G symmetry
   real(DP) :: arg
-  real(DP), EXTERNAL :: rndm
-  ! a function generating a random number
   !
   !
   wdyn (:, :, :, :) = (0d0, 0d0)

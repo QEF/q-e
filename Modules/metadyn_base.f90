@@ -217,9 +217,9 @@ MODULE metadyn_base
       ! ... a repulsive potential is added to confine the collective variables
       ! ... within the appropriate domain :
       !
-      ! ... V(s) = A * ( sigma / s )^8
+      ! ... V(s) = A * ( sigma / s )^12
       !
-      ! ... where A is the amplitude of the gaussians
+      ! ... where A is the amplitude of the gaussians used for meta-dynamics
       !
       USE constraints_module, ONLY : nconstr, target, constr_type, dmax
       USE metadyn_vars,       ONLY : fe_grad, g_amplitude
@@ -229,12 +229,12 @@ MODULE metadyn_base
       INTEGER  :: i
       REAL(DP) :: A, s, inv_s
       !
-      REAL(DP), PARAMETER :: coord_sigma = 0.10D0
-      REAL(DP), PARAMETER :: dist_sigma  = 0.05D0
-      REAL(DP), PARAMETER :: stfac_sigma = 0.01D0
+      REAL(DP), PARAMETER :: coord_sigma = 0.050D0
+      REAL(DP), PARAMETER :: dist_sigma  = 0.050D0
+      REAL(DP), PARAMETER :: stfac_sigma = 0.005D0
       !
       !
-      A = 8.D0 * g_amplitude
+      A = 12.D0 * g_amplitude
       !
       DO i = 1, nconstr
          !
@@ -245,7 +245,7 @@ MODULE metadyn_base
             !
             inv_s = 1.D0 / target(i)
             !
-            fe_grad(i) = fe_grad(i) - A * inv_s * ( coord_sigma * inv_s )**7
+            fe_grad(i) = fe_grad(i) - A * inv_s * ( coord_sigma * inv_s )**11
             !
          CASE( 3 )
             !
@@ -254,7 +254,7 @@ MODULE metadyn_base
             !
             inv_s = 1.D0 / ( dmax - target(i) )
             !
-            fe_grad(i) = fe_grad(i) - A * inv_s * ( dist_sigma * inv_s )**7
+            fe_grad(i) = fe_grad(i) - A * inv_s * ( dist_sigma * inv_s )**11
             !
          CASE( 6 )
             !
@@ -263,11 +263,11 @@ MODULE metadyn_base
             !
             inv_s = 1.D0 / target(i)
             !
-            fe_grad(i) = fe_grad(i) - A * inv_s * ( stfac_sigma * inv_s )**7
+            fe_grad(i) = fe_grad(i) - A * inv_s * ( stfac_sigma * inv_s )**11
             !
             inv_s = 1.D0 / ( 1.D0 - target(i) )
             !
-            fe_grad(i) = fe_grad(i) - A * inv_s * ( stfac_sigma * inv_s )**7
+            fe_grad(i) = fe_grad(i) - A * inv_s * ( stfac_sigma * inv_s )**11
             !
          END SELECT
          !
@@ -287,7 +287,9 @@ MODULE metadyn_base
       USE constants,          ONLY : eps32
       USE constraints_module, ONLY : nconstr, constr_type, target, dmax
       USE metadyn_vars,       ONLY : fe_grad, fe_step, new_target, &
-                                     to_target, shake_nstep, gaussian_pos
+                                     to_target, shake_nstep, gaussian_pos, &
+                                     g_amplitude
+      USE random_numbers,     ONLY : rndm
       !
       IMPLICIT NONE
       !
@@ -296,13 +298,11 @@ MODULE metadyn_base
       INTEGER  :: i
       REAL(DP) :: step
       !
-      REAL(DP), EXTERNAL :: rndm
-      !
       !
       IF ( norm_fe_grad < eps32 ) &
          CALL errore( 'evolve_collective_vars', 'norm( fe_grad ) = 0', 1 )
       !
-      fe_grad(:) = fe_grad(:) / norm_fe_grad
+      IF ( g_amplitude > 0.D0 ) fe_grad(:) = fe_grad(:) / norm_fe_grad
       !
       DO i = 1, nconstr
          !

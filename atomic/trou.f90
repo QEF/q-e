@@ -14,6 +14,7 @@ subroutine find_coefficients &
   !     recherche des coefficients du polynome
   !
   use kinds, only : DP
+  USE random_numbers, ONLY : rndm
   implicit none
   integer, intent(in) :: ndm, lam,  ik
   real(DP), intent(in):: vpot(ndm), psi(ndm), r(ndm), dx, energy
@@ -22,7 +23,7 @@ subroutine find_coefficients &
   real(DP ):: amat(6,6), y(6), rc, aenorm
   integer ipvt(6), i, info, n, ndiv
   real(DP):: c2o, dc2, dcmin, newvalue, oldvalue, precision
-  real(DP), external:: funz, rndm
+  real(DP), external:: funz
   character(len=10) :: prec
   !
   do i = 1,6

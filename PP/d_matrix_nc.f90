@@ -5,16 +5,18 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
+!
 !---------------------------------------------------------------
 SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)  
   !---------------------------------------------------------------
   !
   ! Provides symmetry operations in the (l, s) subspaces for l=0,1,2,3 
   !
-#include "f_defs.h"
   USE kinds, only: DP
   USE cell_base, ONLY : at, bg, ibrav, symm_type
   USE symme, ONLY:  nsym, s
+  USE random_numbers, ONLY : rndm
   !
   IMPLICIT NONE
   !
@@ -47,7 +49,6 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
                    dy1 (3, 3, 48), dy2 (5, 5, 48), dy3 (7, 7, 48)
   COMPLEX(DP) :: dy012_con(2,2), dy112_con(6,6), dy212_con(10,10), &
                       dy312_con(14,14), s_spin(2,2,48), delta(14,14)
-  REAL(DP), EXTERNAL :: rndm
   COMPLEX(DP), EXTERNAL :: ZDOTU
   !
   !    Here we find the true symmetries of the crystal

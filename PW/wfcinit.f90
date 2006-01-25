@@ -32,6 +32,7 @@ SUBROUTINE wfcinit()
   USE io_files,             ONLY : iunat, nwordwfc, iunwfc, iunigk, &
                                    nwordatwfc
   USE wavefunctions_module, ONLY : evc, evc_nc
+  USE random_numbers,       ONLY : rndm
   USE mp,                   ONLY : mp_bcast
   !
   IMPLICIT NONE
@@ -82,9 +83,6 @@ SUBROUTINE wfcinit()
        REAL(DP), ALLOCATABLE :: etatom(:)
          ! atomic eigenvalues
        REAL(DP) :: rr, arg
-       REAL(DP) :: rndm
-       EXTERNAL         rndm
-         ! random function generation
        !
        !
        ! ... state what is going to happen
@@ -259,9 +257,6 @@ SUBROUTINE wfcinit()
        REAL(DP), ALLOCATABLE :: etatom(:)
          ! atomic eigenvalues
        REAL (DP) :: rr, arg
-       REAL (DP) :: rndm
-       EXTERNAL          rndm
-         !  random function generation
        !
        !
        ! ... state what is going to happen

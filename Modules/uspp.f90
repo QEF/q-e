@@ -192,7 +192,9 @@ CONTAINS
     !-----------------------------------------------------------------------
     ! - generate an array of random vectors (uniform deviate on unitary sphere)
     !
-    USE constants, ONLY: tpi
+    USE constants,      ONLY: tpi
+    USE random_numbers, ONLY : rndm
+    
     implicit none
     !
     ! first the I/O variables
@@ -207,7 +209,6 @@ CONTAINS
     !
     integer :: ir
     real(DP) :: costheta, sintheta, phi
-    real(DP), external :: rndm
     
     do ir = 1, llx
        costheta = 2.d0 * rndm() - 1.d0

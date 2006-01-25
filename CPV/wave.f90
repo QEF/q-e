@@ -581,6 +581,7 @@
       USE mp_global, ONLY: mpime, nproc, root
       USE reciprocal_vectors, ONLY: ig_l2g, ngw, ngwt, gzero
       USE io_base, ONLY: stdout
+      USE random_numbers, ONLY : rranf
       
       IMPLICIT NONE
 
@@ -588,9 +589,6 @@
 
 ! ... declare subroutine arguments 
       COMPLEX(DP), INTENT(OUT) :: cm(:,:)
-      
-      REAL(DP) :: rranf
-      EXTERNAL rranf
 
 ! ... declare other variables
       INTEGER :: ntest, ig, ib

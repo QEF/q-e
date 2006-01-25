@@ -681,6 +681,7 @@
   subroutine ions_vrescal( tcap, tempw, tempp, taup, tau0, taum, na, nsp, fion, iforce, &
                            pmass, delt )
     use constants, only: pi, factem
+    USE random_numbers, ONLY : randy
     implicit none
     logical, intent(in) :: tcap
     REAL(DP), intent(inout) :: taup(:,:)
@@ -691,7 +692,6 @@
 
     REAL(DP) :: alfap, qr(3), alfar, gausp
     REAL(DP) :: dt2by2, ftmp
-    REAL(DP) :: randy
     integer :: i, ia, is, nat, isa
 
     dt2by2 = .5d0 * delt * delt

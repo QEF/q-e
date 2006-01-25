@@ -650,8 +650,10 @@ MODULE path_base
       !
       USE ions_base,         ONLY : if_pos
       USE path_variables,    ONLY : dim, mass, num_of_images, grad_pes, &
-                                    tangent, llangevin, lang, grad, fixed_tan
+                                    tangent, llangevin, lang, grad,     &
+                                    fixed_tan, temp_req, ds
       USE path_opt_routines, ONLY : grad_precond
+      USE random_numbers,    ONLY : gauss_dist
       !
       IMPLICIT NONE
       !
@@ -666,7 +668,9 @@ MODULE path_base
             !
             ! ... the random term used in langevin dynamics is generated here
             !
-            lang(:,i) = gaussian_vect() * DBLE( RESHAPE( if_pos, (/ dim /) ) )
+            lang(:,i) = gauss_dist( 0.D0, SQRT( 2.D0*temp_req*ds ), dim )
+            !
+            lang(:,i) = lang(:,i) * DBLE( RESHAPE( if_pos, (/ dim /) ) )
             !
          END IF
          !
@@ -850,56 +854,13 @@ MODULE path_base
       !
     END SUBROUTINE compute_error
     !
-    !-----------------------------------------------------------------------
-    FUNCTION gaussian_vect()
-      !-----------------------------------------------------------------------
-      !
-      USE path_variables, ONLY : dim, temp_req
-      !
-      IMPLICIT NONE
-      !
-      REAL(DP) :: gaussian_vect(dim)
-      REAL(DP) :: x1, x2, w, coeff
-      INTEGER  :: i
-      !
-      REAL(DP), EXTERNAL :: rndm
-      !
-      !
-      coeff = SQRT( 2.D0 * temp_req )
-      !
-      DO i = 1, dim, 2
-         !
-         gaussian_loop: DO
-            !
-            x1 = 2.D0 * rndm() - 1.D0
-            x2 = 2.D0 * rndm() - 1.D0
-            !
-            w = x1 * x1 + x2 * x2
-            !
-            IF ( w < 1.D0 ) EXIT gaussian_loop
-            !
-         END DO gaussian_loop
-         !
-         w = SQRT( ( - 2.D0 * LOG( w ) ) / w )
-         !
-         gaussian_vect(i) = x1 * w * coeff
-         !
-         IF ( i >= dim ) EXIT
-         !
-         gaussian_vect(i+1) = x2 * w * coeff
-         !
-      END DO
-      !
-      RETURN
-      !
-    END FUNCTION gaussian_vect
-    !
     !------------------------------------------------------------------------
     SUBROUTINE fe_profile()
       !------------------------------------------------------------------------
       !
-      USE path_variables, ONLY : num_of_images, pos, pes, grad_pes, &
-                                 Emin, Emax, Emax_index, tangent
+      USE path_variables, ONLY : ni => num_of_images
+      USE path_variables, ONLY : pos, pes, grad_pes, &
+                                 Emin, Emax, Emax_index
       !
       IMPLICIT NONE
       !
@@ -908,18 +869,16 @@ MODULE path_base
       !
       pes(:) = 0.D0
       !
-      DO i = 2, num_of_images
+      DO i = 2, ni
          !
-         pes(i) = pes(i-1) + &
-                  norm( pos(:,i) - pos(:,i-1) ) * 0.25D0 * &
-                  ( ( tangent(:,i-1) + tangent(:,i) ) .dot. &
-                    ( grad_pes(:,i-1) + grad_pes(:,i) ) )
+         pes(i) = pes(i-1) + 0.5D0 * ( ( pos(:,i) - pos(:,i-1) ) .dot. &
+                                       ( grad_pes(:,i) + grad_pes(:,i-1) ) )
          !
       END DO
       !
-      Emin       = MINVAL( pes(1:num_of_images) )
-      Emax       = MAXVAL( pes(1:num_of_images) )
-      Emax_index = MAXLOC( pes(1:num_of_images), 1 )
+      Emin       = MINVAL( pes(1:ni) )
+      Emax       = MAXVAL( pes(1:ni) )
+      Emax_index = MAXLOC( pes(1:ni), 1 )
       !
       RETURN
       !
@@ -960,7 +919,7 @@ MODULE path_base
       Emin       = MINVAL( pes(1:num_of_images) )
       Emax       = MAXVAL( pes(1:num_of_images) )
       Emax_index = MAXLOC( pes(1:num_of_images), 1 )
-      !
+       
       RETURN
       !
     END SUBROUTINE born_oppenheimer_pes

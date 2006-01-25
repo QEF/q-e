@@ -13,6 +13,7 @@ subroutine d_matrix (dy1, dy2, dy3)
   USE kinds, only: DP
   USE cell_base, ONLY : at, bg
   USE symme, ONLY:  nsym, s
+  USE random_numbers, ONLY : rndm
   implicit none
   real(DP) :: dy1 (3, 3, 48), dy2 (5, 5, 48), dy3 (7, 7, 48)
   !
@@ -26,7 +27,7 @@ subroutine d_matrix (dy1, dy2, dy3)
        yl1_inv (3, 3), yl2_inv(5, 5),  yl3_inv(7, 7), ylms(maxm, maxlm), &
        rl(3,maxm), rrl (maxm), srl(3,maxm), scart (3, 3), delta(7,7), capel
   real(DP), parameter :: eps = 1.0d-9
-  real(DP), external :: rndm, DDOT
+  real(DP), external :: DDOT
   !
   !  randomly distributed points on a sphere
   !

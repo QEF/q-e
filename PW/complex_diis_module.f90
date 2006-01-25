@@ -889,30 +889,29 @@ MODULE complex_diis_module
     SUBROUTINE holes_filler( ndmx, ndim, nbnd, psi, e, precondition, diis_iter )
       !------------------------------------------------------------------------
       !
-      USE constants, ONLY : pi, tpi
+      USE constants,      ONLY : pi, tpi
+      USE random_numbers, ONLY : rndm
       !
       IMPLICIT NONE
       !
       ! ... I/O variables 
       !
-      INTEGER,           INTENT(IN)    :: ndmx, ndim, nbnd
+      INTEGER,      INTENT(IN)    :: ndmx, ndim, nbnd
       REAL (DP),    INTENT(IN)    :: precondition(ndim)
       COMPLEX (DP), INTENT(INOUT) :: psi(ndmx,nbnd)
       REAL (DP),    INTENT(INOUT) :: e(nbnd)
-      INTEGER,           INTENT(INOUT) :: diis_iter
+      INTEGER,      INTENT(INOUT) :: diis_iter
         ! average number of iterations performed per band                       
       !
       ! ... local variables
       !
-      INTEGER                       :: i, j, ib
-      INTEGER                       :: cgter, holes_filler_iter
+      INTEGER                  :: i, j, ib
+      INTEGER                  :: cgter, holes_filler_iter
       COMPLEX(DP), ALLOCATABLE :: lagrange(:), g(:), &
-                                       cg(:), scg(:), ppsi(:), g0(:)
+                                  cg(:), scg(:), ppsi(:), g0(:)
       REAL(DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, &
-                                       gg1, theta, cg0, e0, es(2)
+                                  gg1, theta, cg0, e0, es(2)
       REAL(DP)                 :: rr, arg
-      !
-      REAL(DP), EXTERNAL :: rndm
       !
       !
       ALLOCATE( scg(  ndmx ) )    

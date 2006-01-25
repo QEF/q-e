@@ -40,8 +40,7 @@ MODULE path_opt_routines
        !
        pos(:,index) = pos(:,index) - ds * grad(:,index)
        !
-       IF ( llangevin ) &
-          pos(:,index) = pos(:,index) + SQRT( ds ) * lang(:,index)
+       IF ( llangevin ) pos(:,index) = pos(:,index) + lang(:,index)
        !
        RETURN
        !
