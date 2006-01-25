@@ -11,13 +11,13 @@ do
     # set inter-directory dependencies
     case $DIR in
 	Modules | clib )
-		  DEPENDS="../include ../iotk/src"                        ;;
+		  DEPENDS="../include ../flib ../iotk/src"                        ;;
 	PW | CPV | flib | pwtools | upftools | atomic )
-		  DEPENDS="../include ../Modules ../iotk/src"             ;;
+		  DEPENDS="../include ../flib ../Modules ../iotk/src"             ;;
 	PP | PWCOND | Gamma | PH )
-		  DEPENDS="../include ../Modules ../PW ../iotk/src"       ;;
-	D3 | Nmr) DEPENDS="../include ../Modules ../PW ../PH ../iotk/src" ;;
-        VIB )     DEPENDS="../include ../Modules ../PW ../iotk/src ../CPV";;
+		  DEPENDS="../include ../flib ../Modules ../PW ../iotk/src"       ;;
+	D3 | Nmr) DEPENDS="../include ../flib ../Modules ../PW ../PH ../iotk/src" ;;
+        VIB )     DEPENDS="../include ../flib ../Modules ../PW ../iotk/src ../CPV";;
     esac
 
     # generate dependencies file
