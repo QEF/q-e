@@ -7,7 +7,7 @@
 !
 #include "f_defs.h"
 !
-#if defined (__AIX) || defined (__FFTW) || defined (__SGI)
+#if defined (__AIX) || defined (__FFTW) || defined (__SCSL) || defined (__COMPLIB)
 #  define __FFT_MODULE_DRV
 #endif
 !

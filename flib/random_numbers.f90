@@ -51,14 +51,6 @@ MODULE random_numbers
       ! ... use machine-specific random-number generator when available
       !
       REAL(DP) :: randy
-#ifdef __CRAYY
-#define __USE_SYSTEM_RAND
-      randy = ranf()
-#endif
-#ifdef __SX4
-#define __USE_SYSTEM_RAND
-      randy = random(0)
-#endif
 #ifdef __AIX
 #define __USE_SYSTEM_RAND
       randy = rand()

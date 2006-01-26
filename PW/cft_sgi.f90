@@ -8,13 +8,11 @@
 
 #include "f_defs.h"
 
-#ifdef __FFTW
+#if defined (__FFTW)
 subroutine bidon_sgi
   stop 'cft_sgi'
 end subroutine bidon_sgi
-#else
-#if defined  (__ORIGIN) || defined (__ALTIX)
-#if defined (__COMPLIB)
+#elif defined (__COMPLIB)
 !----------------------------------------------------------------------
 
 subroutine cft_1 (f, m, n, nx, sgn, fout)
@@ -68,15 +66,14 @@ subroutine cft_2 (f, mplane, n1, n2, nx1, nx2, sgn)
   !
   !----------------------------------------------------------------------
   !
-USE kinds, only : DP
+  USE kinds, only : DP
   implicit none
   integer :: n1, n2, mplane, nx1, nx2, sgn
   complex (DP) :: f (nx1 * nx2 * mplane)
   !
-  integer :: isign, itype, on1 (2), on2 (2), m, i, k, istrt, naux1, &
-       naux2
+  integer :: isign, itype, on1(2), on2(2), m, i, k, istrt, naux1, naux2
   parameter (naux1 = 20000, naux2 = 10000)
- real (DP) :: aux1 (naux1, 2, 2), fj (naux2)
+  real (DP) :: aux1 (naux1, 2, 2), fj (naux2)
   !
   ! NOTA BENE: aux1 should be dimensioned aux1(??)
   !              fj should be dimensioned fj(2*n2)
@@ -90,8 +87,7 @@ USE kinds, only : DP
   if (isign.ne. - 1.and.isign.ne.1) call errore ('cft_2', 'wrong call', 1)
   itype = abs (sgn)
 
-  if (itype.le.0.or.itype.gt.2) call errore ('cft_2', 'wrong call', &
-       2)
+  if (itype.le.0.or.itype.gt.2) call errore ('cft_2', 'wrong call', 2)
 
   if (n2.ne.nx2) call errore ('cft_2', 'no longer implemented', 1)
   if (n1.ne.on1 (itype) ) then
@@ -109,8 +105,6 @@ USE kinds, only : DP
   do i = 1, m
      call zfft1d (isign, n1, f (1 + (i - 1) * nx1), 1, aux1 (1, 1, &
           itype) )
-
-
   enddo
   ! ... j-direction ...
   m = n1
@@ -128,8 +122,7 @@ USE kinds, only : DP
        (n1 * n2), f, 1)
   return
 end subroutine cft_2
-#endif
-#if defined (__SCSL)
+#elif defined (__SCSL)
 ! ----------------------------------------------------------------------
      SUBROUTINE cft_1 (f, m, n, nx, sgn, fout)
 ! ----------------------------------------------------------------------
@@ -266,10 +259,8 @@ end subroutine cft_2
 !
       RETURN
       END SUBROUTINE cft_2
-#endif
 #else
 subroutine bidon_sgi
   stop 'cft_sgi'
 end subroutine bidon_sgi
-#endif
 #endif

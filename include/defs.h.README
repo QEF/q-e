@@ -1,11 +1,9 @@
-/* Machine-dependent definitions :
 
-   Machine-dependent definitions are contained in two different files:
-   
-   1) f_defs.h	for definitions to be included in FORTRAN files ONLY
-   2) c_defs.h  for definitions to be included in C       files ONLY
+***  Machine- , compiler- , library-dependent preprocessing options  ***
 
-   Input Machine/Compiler definitions:
+Input machine-dependent preprocessing options used in include files
+  include/f_defs.h  (definitions to be included in FORTRAN files ONLY)
+  include/c_defs.h  (definitions to be included in C       files ONLY)
 
       __AIX     ibm rs/6000 machines
       __LINUX   intel/amd 32-bit pc's (pentium, athlon) running Linux
@@ -14,43 +12,52 @@
       __MAC64   64-bit mode for Macintosh 
       __HP      hp-compaq PA-RISC workstations and parallel machines
       __HP64    64-bit mode for hp-compaq machines
-      __SGI     all sgi machines
-      __SGI64   64-bit mode for sgi machines
       __ALTIX   sgi altix 350/3000 machines running Linux
       __ORIGIN  sgi origin 2k or 3k machines
-      __COMPLIB FFT routines from SGI CHALLENGEComplib scientific library
-      __SCSL    FFT routines from SGI SCSL scientific library
       __ALPHA   hp-compaq (formerly dec) alphas
       FUJ64     Fujitsu VPP5000 vector machines
       __SX6     nec sx-6 vector machines
       __G95     g95 compiler
-      ABSOFT    absoft compiler
+      __ABSOFT  absoft compiler
+      __LAM     LAM version of the MPI library
       ADD_BLAS_TWO_UNDERSCORES
       ADD_BLAS_ONE_UNDERSCORE
-                   may be needed depending on how blas/lapack are
-                   compiled and how they are called by the compiler
-      __LAM        LAM-MPI version
-   
-   Other definitions not used in the f_defs.h file:
-      __FFTW                use the FFTW library
-      DXML                  use hp-compaq cxml (formerly dxml) library for fft
+                some precompiled blas/lapack packages may contain underscores
+                at the end and need one of these in order to be linked
+
+Other machine-dependent preprocessing options used in other files:
+
+      __FFTW      FFT routines from the FFTW library
+      __COMPLIB   FFT routines from SGI CHALLENGEComplib scientific library
+      __SCSL      FFT routines from SGI SCSL scientific library
+      __SUN       FFT routines from SUN sunperf scientific library
+      DXML        FFT routines from hp-compaq cxml (formerly dxml) library
+      __MASS      use mathematical routines from MASS IBM library
+      ASL, MICRO  NEC SX-6 specific libraries
+      HITACHI     Hitachi SR8000 vector machine (obsolete?)
+      __PGI       workarounds for Portland Group compiler bugs
       __USE_INTERNAL_FFTW   use the local copy of FFTW, not an external lib
+      __QK_USER__       ? (added by Axel Kohlmeyer for cray xt3)
+      __FFTW_WITH_SIZE  ? (added by Axel Kohlmeyer for cray xt3)
 
-   Output Definitions:
+Output definitions from the include files:
 
-      DIRECT_IO_FACTOR : record length in direct-access I/O is given by
+      DIRECT_IO_FACTOR   record length in direct-access I/O is given by
                          the number of real*8 words times DIRECT_IO_FACTOR
-      C_POINTER        : the type for C pointer
+      C_POINTER          the type for C pointers called by fortran:
                             integer*8 for 64-bit machines,
                             integer on most other machines
-      Blas/Lapack names: single-precision names for 64-bit machines,
-                         double-precision names for 32-bit machines,
-                         with underscores appended if requested
-      C routine names  : converted to lowercase and with the appropriate
+      Blas/Lapack names  lowercase and with underscores appended if requested
+      C routine names    converted to lowercase and with the appropriate
                          number of underscores added (se c_defs.h)
+      flush, iargc,      system libraries that need to be redefined (i.e.
+      getarg, getenv     add an underscore) in some specific cases
+      CMPLX              force it to produce double-precision numbers
+      DREAL DIMAG DCMPLX fake names to prevent their usage
+      MPI_REAL8          to prevent compilation problems in some cases
 
-*/
+Machine-dependent preprocessing options no longer needed:
+   __LAHEY __X1 __X1_COA __SGI __SGI64
 
-/* Note that ZHETRD is not a call but a string passed as argument 
-   to "ilaenv". For this reason it should be defined as uppercase */
-
+Machine-dependent  preprocessing options no longer implemented:
+   __T3E  CRAYY  __SX4

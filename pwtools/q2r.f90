@@ -653,7 +653,7 @@ SUBROUTINE trasl( phid, phiq, nq, nr1, nr2, nr3, nat, m1, m2, m3 )
   RETURN 
 END SUBROUTINE trasl
 
-# if defined __AIX || defined __FFTW || defined __SGI
+#if defined (__AIX) || defined (__FFTW) || defined (__COMPLIB) || defined (__SCSL)
 #  define __FFT_MODULE_DRV
 # endif
 

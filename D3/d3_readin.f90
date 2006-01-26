@@ -76,18 +76,11 @@ SUBROUTINE d3_readin()
      !
      !     reading the namelist inputph
      !
-#ifdef CRAYY
-     !   The Cray does not accept "err" and "iostat" together with a namelist
-     READ (5, inputph)
-     ios = 0
-#else
-     !
      !   Note: for AIX machine (xlf compiler version 3.0 or higher):
      !   The variable XLFRTEOPTS must be set to "namelist=old"
      !   in order to have "&end" to end the namelist
      !
      READ (5, inputph, err = 200, iostat = ios)
-#endif
 
 200  CALL errore ('d3_readin', 'reading inputph namelist', ABS (ios) )
      !

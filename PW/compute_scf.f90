@@ -77,11 +77,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   IF ( my_image_id == root ) THEN
      !
-#if defined(__SGI)
      FORALL( image = N_in : N_fin,   .NOT. frozen(image)   )
-#else
-     FORALL( image = N_in : N_fin, ( .NOT. frozen(image) ) )
-#endif
         !
         pes(image)        = 0.D0
         grad_pes(:,image) = 0.D0

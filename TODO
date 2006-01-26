@@ -1,17 +1,12 @@
-TODO LIST - 11 Nov 2005
+TODO LIST - Feb. 2006
 
 BUGS TO EXAMINE
 
 - Zr pp buggy?
 - wavefunctions in Cu.pbe-d-rrkjus.UPF not normalized?
 
-NEW DEVELOPMENTS TO MERGE
-
-- support for FFTW3 (partly working) by Pascal Thibadeau
-
 INSTALLATION/PORTING
 
-- exotic architectures: __FUJITSU, FUJ64, HITACHI, NEC-SX5, ...
 - replacement for FFTW on Intel/AMD?
 
 COMMON
@@ -48,8 +43,6 @@ COMMON
 
 - cleanup and merge of routines reading and processing PPs;
   merge uspp-related stuff ("small box") of CP into PW
-  Fix the 'qrl' stuff in CP: too much memory, too intrusive
-  to maintain compatibility with obsolete format
 
 PW
 
@@ -85,8 +78,6 @@ Low priority:
 
 POSTPROCESSING
 
-- verify that postprocessing works with new file format
-
 - complete postprocessing in Gamma case (only average missing),
   and with CP/FPMD data
 
@@ -107,7 +98,7 @@ PH, D3, Gamma
 
 - same input for Gamma and PH
 
-- better algorithms for electron-phonon
+- new algorithm for electron-phonon: documentation, example
 
 - replace "use pwcom" into more "use" statements
 
@@ -121,7 +112,7 @@ DOCUMENTATION
 - tests/examples for some features (e.g. variable cell, many kinds
   of postprocessings) are still missing
 
-- automated testing procedure, quick and distinct from examples!
+- better automated testing procedure, quick and distinct from examples!
 
 - add some benchmarks
 

@@ -6,7 +6,7 @@
 !  or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-#if defined(__AIX) || defined (__MAC64) || defined (FUJ64)|| defined (__ALPHA) || defined (__SX6) || defined(__LINUX64) || defined (__HP64) || defined (__SGI64)
+#if defined(__AIX) || defined(__MAC64) || defined(FUJ64)|| defined(__ALPHA) || defined(__SX6) || defined(__LINUX64) || defined(__HP64) || defined(__ALTIX)|| defined(__ORIGIN) 
 #  define C_POINTER  integer(kind=8)
 #else
 #  define C_POINTER  integer(kind=4)

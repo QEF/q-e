@@ -7,7 +7,7 @@
 !
 #include "f_defs.h"
 !
-#if defined (__AIX) || defined (__FFTW) || defined (__SGI)
+#if defined (__AIX) || defined (__FFTW) || defined (__COMPLIB) || defined (__SCSL)
 #  define __FFT_MODULE_DRV
 #endif
 !
@@ -56,10 +56,10 @@ SUBROUTINE cft3( f, n1, n2, n3, nx1, nx2, nx3, sign )
   !
   me_p = me_pool + 1
   !
-  ! ... the following is needed if the fft is distributed over only one proces
-  ! ... for the special case nx3.ne.n3. Not an elegant solution, but simple, f
-  ! ... and better than the preceding one that did not work in some cases. Not
-  ! ... that fft_scatter does nothing if nproc_pool=1. PG
+  ! ... the following is needed for the parallel fft running on one processor
+  ! ... for the special case nx3.ne.n3. Not an elegant solution, but simple,
+  ! ... fast, better than the preceding one that did not work in some cases.
+  ! ... Note that fft_scatter does nothing if nproc_pool=1. PG
   !
   IF ( nproc_pool == 1 ) THEN
      !

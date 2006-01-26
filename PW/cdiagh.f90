@@ -40,18 +40,12 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
   !
   CALL cdiagh_aix()
   !
-#else 
-# if defined (CRAYY)
-  !
-  CALL cdiagh_crayy() 
-  !
-# else
+#else
   !   
   ! CALL cdiagh_lapack( )
   ! workaround for Intel ifc8 bug:
   CALL cdiagh_lapack( v )
   !
-# endif
 #endif
   !
   CALL stop_clock( 'cdiagh' )
@@ -118,37 +112,6 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
     END SUBROUTINE cdiagh_aix 
     !
 #else 
-# if defined (CRAYY)
-    !
-    !-----------------------------------------------------------------------
-    SUBROUTINE cdiagh_crayy()
-      !-----------------------------------------------------------------------
-      !
-      IMPLICIT NONE
-      !
-      ! ... local variables (Cray Eispack/Scilib version)
-      !
-      INTEGER       :: i, j, k, info
-      REAL(DP) :: ar(ldh,n), ai(ldh,n), zr(ldh,n), zi(ldh,n)
-        ! real and imaginary part of  h(ldh,n) and of  v(ldh,n)
-        ! (used as auxiliary arrays)
-      REAL(DP) :: rwork(2,ldh), work(ldh)
-      !
-      !
-      ar =  DBLE( h )
-      ai = AIMAG( h )
-      !
-      CALL ch( ldh, n, ar, ai, e, 1, zr, zi, work, work, rwork, info )
-      !
-      CALL errore( 'cdiagh', 'info =/= 0', ABS( info ) )
-      !
-      v = CMPLX( zr, zi )      
-      !
-      RETURN      
-      !      
-    END SUBROUTINE cdiagh_crayy 
-    !
-# else        
     !
     !-----------------------------------------------------------------------
     ! workaround for Intel ifc8 bug:
@@ -187,22 +150,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
       !
 #  if defined (__PARA)
       !
-      ! ... if scalapack library is present and we have just one pool
-      ! ... and the matrix is larger than 130 we use the scalapack driver
-      !
-#   if defined (__T3E)
-      !
-      IF ( npool == 1 .AND. n > 130 ) THEN
-         !
-         CALL scala_cdiag( n, h, ldh, e, v, ldh )
-         !
-         RETURN
-         !
-      END IF
-      !
-#   endif
-      !
-      ! ... else only the first processor diagonalize the matrix
+      ! ... only the first processor diagonalize the matrix
       !
       IF ( me_pool == root_pool ) THEN
 #  endif
@@ -236,7 +184,6 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
       !
     END SUBROUTINE cdiagh_lapack
     !
-# endif
 #endif
     !
 END SUBROUTINE cdiagh

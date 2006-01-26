@@ -500,42 +500,41 @@ subroutine read_pseudo_rhoatom (upf, iunps)
 end subroutine read_pseudo_rhoatom
 !
 !---------------------------------------------------------------------
-  subroutine read_pseudo_addinfo (upf, iunps)
+subroutine read_pseudo_addinfo (upf, iunps)
 !---------------------------------------------------------------------
 !
 !     This routine reads from the new UPF file,
-!     and the total angual momentum jjj of the beta and jchi of the
+!     and the total angular momentum jjj of the beta and jchi of the
 !     wave-functions.
 !
-USE pseudo_types, ONLY: pseudo_upf
-USE kinds
-implicit none
-integer :: iunps
+  USE pseudo_types, ONLY: pseudo_upf
+  USE kinds
+  implicit none
+  integer :: iunps
+  
+  TYPE (pseudo_upf), INTENT(INOUT) :: upf
+  integer :: nb
+  
+  ALLOCATE( upf%nn(upf%nwfc) )
+  ALLOCATE( upf%epseu(upf%nwfc), upf%jchi(upf%nwfc) )
+  ALLOCATE( upf%jjj(upf%nbeta) )
 
-TYPE (pseudo_upf), INTENT(INOUT) :: upf
-integer :: nb
+  upf%nn=0
+  upf%epseu=0.d0
+  upf%jchi=0.d0
+  do nb = 1, upf%nwfc
+     read (iunps, *,err=100,end=100) upf%els(nb),  &
+          upf%nn(nb), upf%lchi(nb), upf%jchi(nb), upf%oc(nb)
+  enddo
+  
+  upf%jjj=0.d0
+  do nb = 1, upf%nbeta
+     read (iunps, *, err=100,end=100) upf%lll(nb), upf%jjj(nb)
+  enddo
+  
+  read(iunps, *) upf%xmin, upf%rmax, upf%zmesh, upf%dx
 
-ALLOCATE( upf%nn(upf%nwfc) )
-ALLOCATE( upf%epseu(upf%nwfc), upf%jchi(upf%nwfc) )
-ALLOCATE( upf%jjj(upf%nbeta) )
-
-upf%nn=0
-upf%epseu=0.d0
-upf%jchi=0.d0
-do nb = 1, upf%nwfc
-  read (iunps, '(a2,2i3,2f6.2)',err=100,end=100) upf%els(nb),  &
-       upf%nn(nb), upf%lchi(nb), upf%jchi(nb), upf%oc(nb)
-enddo
-
-upf%jjj=0.d0
-do nb = 1, upf%nbeta
-  read (iunps, '(i5,f6.2)', err=100,end=100) upf%lll(nb), upf%jjj(nb)
-enddo
-
-read(iunps, '(4f15.8)') upf%xmin, upf%rmax, upf%zmesh, upf%dx
-
-
-return
+  return
 100 call errore ('read_pseudo_addinfo','Reading pseudo file', 1)
 end subroutine read_pseudo_addinfo
 

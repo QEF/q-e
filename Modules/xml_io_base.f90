@@ -162,7 +162,7 @@ MODULE xml_io_base
          !
          IF ( ierr < 0 ) EXIT copy_loop
          !
-         WRITE( UNIT = iun_out, FMT = * ) TRIM( string )
+         WRITE( UNIT = iun_out, FMT = '(A)' ) TRIM( string )
          !
       END DO copy_loop
       !

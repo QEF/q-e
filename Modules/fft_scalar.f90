@@ -1246,21 +1246,28 @@ integer function good_fft_dimension (n)
   ! Determines the optimal maximum dimensions of fft arrays
   ! Useful on some machines to avoid memory conflicts
   !
-  USE kinds
-  implicit none
-  integer :: n, nx
+  USE kinds, only : DP
+  IMPLICIT NONE
+  INTEGER :: n, nx
+  REAL(DP) :: log2n
+  !
   ! this is the default: max dimension = fft dimension
   nx = n
 #if defined(__AIX) || defined(DXML)
-  if ( n==8 .or. n==16 .or. n==32 .or. n==64 .or. n==128 .or. n==256) &
-       nx = n + 1
+  log2n = LOG ( dble (n) ) / LOG ( 2.0_DP )
+  ! log2n is the logarithm of n in base 2
+  IF ( ABS (NINT(log2n) - log2n) < 1.0d-8 ) nx = n + 1
+  ! if n is a power of 2 (log2n is integer) increase dimension by 1
 #endif
-#if defined(CRAYY) || defined(__SX4)
-  if (mod (nr1, 2) ==0) nx = n + 1
-#endif
+  !
+  ! for cray and nec vector machines, obsolete:
+  ! if n is even increase dimension by 1
+  !  if (mod (nr1, 2) ==0) nx = n + 1
+  !
   good_fft_dimension = nx
   return
 end function good_fft_dimension
+
 
 !=----------------------------------------------------------------------=!
 

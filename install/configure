@@ -1473,7 +1473,7 @@ mips )
 	try_f90="f90"
 	try_ar="ar"
 	try_arflags="ruv"
-	try_dflags="-D__SGI -D__SGI64 -D__ORIGIN"
+	try_dflags="-D__COMPLIB -D__SGI64 -D__ORIGIN"
 	;;
 alpha )
 	try_f90="f90"
