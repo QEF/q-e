@@ -319,7 +319,7 @@ multiplicity   INTEGER ( default = 0 [unspecified] )
 tot_magnetization INTEGER ( default = -1 [unspecified] )
                majority spin - minority spin (nelup - neldw).
                if unspecified or a non-zero value is specified in nelup/neldw
-               then multiplicity variable is ignored.
+               then tot_magnetization variable is ignored.
                YES, there is redundancy! nelup/neldw are enough to specify
                the spin state. However these variables are not very convenient
                and will be eliminated from the input in future versions.
