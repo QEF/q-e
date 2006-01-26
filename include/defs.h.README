@@ -5,13 +5,13 @@
    1) f_defs.h	for definitions to be included in FORTRAN files ONLY
    2) c_defs.h  for definitions to be included in C       files ONLY
 
-
-   Input Machine definitions:
+   Input Machine/Compiler definitions:
 
       __AIX     ibm rs/6000 machines
-      __T3E     t3d/t3e machines 
       __LINUX   intel/amd 32-bit pc's (pentium, athlon) running Linux
-      __LINUX64 intel/amd 64-bit cpu's (Opteron, Itanium?) pc's running Linux
+      __LINUX64 intel/amd 64-bit cpu's (Opteron, Itanium) pc's running Linux
+      __MAC     Macintosh with OS-X and xlf compiler
+      __MAC64   64-bit mode for Macintosh 
       __HP      hp-compaq PA-RISC workstations and parallel machines
       __HP64    64-bit mode for hp-compaq machines
       __SGI     all sgi machines
@@ -21,22 +21,19 @@
       __COMPLIB FFT routines from SGI CHALLENGEComplib scientific library
       __SCSL    FFT routines from SGI SCSL scientific library
       __ALPHA   hp-compaq (formerly dec) alphas
-      __SX4     nec sx-4/5 vector machines (obsolete)
-      __SX6     nec sx-6 vector machines
-      CRAYY     cray vector machines (obsolete)
       FUJ64     Fujitsu VPP5000 vector machines
-   
-   Other Input definitions:
-      ABSOFT       for intel pc's with absoft compiler
+      __SX6     nec sx-6 vector machines
+      __G95     g95 compiler
+      ABSOFT    absoft compiler
       ADD_BLAS_TWO_UNDERSCORES
       ADD_BLAS_ONE_UNDERSCORE
                    may be needed depending on how blas/lapack are
                    compiled and how they are called by the compiler
-      __BENCHLIB   t3e machines with benchlib library (obsolete)
       __LAM        LAM-MPI version
    
    Other definitions not used in the f_defs.h file:
       __FFTW                use the FFTW library
+      DXML                  use hp-compaq cxml (formerly dxml) library for fft
       __USE_INTERNAL_FFTW   use the local copy of FFTW, not an external lib
 
    Output Definitions:
@@ -46,18 +43,11 @@
       C_POINTER        : the type for C pointer
                             integer*8 for 64-bit machines,
                             integer on most other machines
-      DIMAG            : intrinsic functions for imaginary part of a 
-                         complex number in double precision
-                         dimag for 32-bit machines, aimag otherwise
-      DREAL            : intrinsic functions for real part of a 
-                         complex number in double precision
-                         dreal for 32-bit machines, real otherwise
-      DCMPLX           : intrinsic functions for (real,real) to complex 
-                         conversion in double precision
-                         dcmplx for 32-bit machines, cmplx otherwise
       Blas/Lapack names: single-precision names for 64-bit machines,
                          double-precision names for 32-bit machines,
                          with underscores appended if requested
+      C routine names  : converted to lowercase and with the appropriate
+                         number of underscores added (se c_defs.h)
 
 */
 
