@@ -45,9 +45,11 @@ MODULES = \
 ../Modules/parameters.o \
 ../Modules/parser.o \
 ../Modules/path_formats.o \
+../Modules/printout_base.o \
 ../Modules/recvec.o \
 ../Modules/splinelib.o \
-../Modules/timestep.o
+../Modules/timestep.o \
+../Modules/uspp.o
 
 TLDEPS= bindir mods libs pw
 
