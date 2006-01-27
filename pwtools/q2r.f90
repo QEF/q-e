@@ -238,8 +238,8 @@ PROGRAM q2r
         DO j2=1,3
            DO na1=1,nat
               DO na2=1,nat
-                 CALL tolerant_cft3 ( phid (1,1,1,j1,j2,na1,na2), &
-                      nr1,nr2,nr3, 1 )
+                 CALL cft_3 ( phid (1,1,1,j1,j2,na1,na2), &
+                      nr1,nr2,nr3, nr1,nr2,nr3, 1, 1 )
                  phid(:,:,:,j1,j2,na1,na2) = &
                       phid(:,:,:,j1,j2,na1,na2) / DBLE(nr1*nr2*nr3)
               END DO
@@ -387,8 +387,8 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
         do j2=1,3
            do na1=1,nat
               do na2=1,nat
-                 call tolerant_cft3(gamout(1,1,1,j1,j2,na1,na2), &
-                      nr1,nr2,nr3, 1 )
+                 call cft_3 ( gamout(1,1,1,j1,j2,na1,na2), &
+                      nr1,nr2,nr3, nr1,nr2,nr3, 1, 1 )
               end do
            end do
         end do
@@ -652,69 +652,6 @@ SUBROUTINE trasl( phid, phiq, nq, nr1, nr2, nr3, nat, m1, m2, m3 )
   !
   RETURN 
 END SUBROUTINE trasl
-
-#if defined (__AIX) || defined (__FFTW) || defined (__COMPLIB) || defined (__SCSL)
-#  define __FFT_MODULE_DRV
-# endif
-
-!----------------------------------------------------------------------------
-SUBROUTINE tolerant_cft3( f, nr1, nr2, nr3, iflg )
-  !----------------------------------------------------------------------------
-  !
-  !  cft3 called for vectors with arbitrary maximal dimensions
-  !
-  USE kinds,      ONLY : DP
-#if defined __FFT_MODULE_DRV
-  USE fft_scalar, ONLY : cfft3d
-#endif
-
-  IMPLICIT NONE
-  INTEGER :: nr1,nr2,nr3,iflg
-  COMPLEX(DP) :: f(nr1,nr2,nr3)
-#if defined __FFT_MODULE_DRV
-  COMPLEX(DP) :: ftmp(nr1*nr2*nr3)
-#endif
-  INTEGER :: i0,i1,i2,i3
-  !
-  i0=0
-  DO i3=1,nr3
-     DO i2=1,nr2
-        DO i1=1,nr1
-           i0 = i0 + 1
-#if defined __FFT_MODULE_DRV
-           ftmp(i0) = f(i1,i2,i3)
-#else
-           f(i0,1,1) = f(i1,i2,i3)
-#endif
-        ENDDO
-     ENDDO
-  ENDDO
-  !
-  IF (nr1.NE.1 .OR. nr2.NE.1 .OR. nr3.NE.1)                         &
-#if defined __FFT_MODULE_DRV
-       &    CALL cfft3d(ftmp,nr1,nr2,nr3,nr1,nr2,nr3,1)
-#else
-       &    CALL cft_3(f,nr1,nr2,nr3,nr1,nr2,nr3,1,iflg)
-#endif
-  !
-  i0=nr1*nr2*nr3
-  DO i3=nr3,1,-1
-     DO i2=nr2,1,-1
-        DO i1=nr1,1,-1
-#if defined __FFT_MODULE_DRV
-           f(i1,i2,i3) = ftmp(i0)
-#else
-           f(i1,i2,i3) = f(i0,1,1)
-#endif
-           i0 = i0 - 1
-        ENDDO
-     ENDDO
-  ENDDO
-
-  !
-  RETURN
-END SUBROUTINE tolerant_cft3
-
 !----------------------------------------------------------------------
 subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
   !-----------------------------------------------------------------------
