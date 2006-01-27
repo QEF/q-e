@@ -52,7 +52,7 @@ subroutine solve_e
                    dbecsum(:,:,:,:), & ! the becsum with dpsi
                    auxg (:), aux1 (:),  ps (:,:)
 
-  complex(DP) :: ZDOTC      ! the scalar product function
+  complex(DP), EXTERNAL :: ZDOTC      ! the scalar product function
 
   logical :: conv_root, exst
   ! conv_root: true if linear system is converged

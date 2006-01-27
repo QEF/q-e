@@ -64,6 +64,7 @@ subroutine phq_summary
 
   character :: ps * 5
   ! the name of the pseudo
+  !
   WRITE( stdout, 100) title_ph, crystal, ibrav, alat, omega, nat, ntyp, &
        ecutwfc, ecutwfc * dual, tr2_ph, alpha_mix (1), &
        nmix_ph
@@ -104,8 +105,7 @@ subroutine phq_summary
        &(na, atm (ityp (na) ) , amass (ityp (na) )  / amconv, na,  &
        &(tau (ipol, na) , ipol = 1, 3) , na = 1, nat)
   WRITE( stdout, '(/,5x,"Computing dynamical matrix for ")')
-  WRITE( stdout, '(20x,"q = (",3f11.5," )")') (xq (ipol) , ipol = 1, &
-       3)
+  WRITE( stdout, '(20x,"q = (",3f11.5," )")') (xq (ipol) , ipol = 1, 3)
   !
   !   description of symmetries
   !

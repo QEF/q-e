@@ -18,6 +18,7 @@ SUBROUTINE phq_readin()
   !
   !
   USE kinds,         ONLY : DP
+  USE parameters,    ONLY : nsx
   USE constants,     ONLY : amconv
   USE ions_base,     ONLY : nat, ntyp => nsp
   USE io_global,     ONLY : ionode_id
@@ -44,14 +45,15 @@ SUBROUTINE phq_readin()
   !
   IMPLICIT NONE
   !
-  INTEGER :: ios, ipol, iter, na, it
+  INTEGER :: ios, ipol, iter, na, it, modenum_aux
     ! integer variable for I/O control
     ! counter on polarizations
     ! counter on iterations
     ! counter on atoms
     ! counter on types
-  INTEGER :: modenum_aux
-    ! auxilary variable for saving the modenum
+    ! auxiliary variable
+  REAL(DP) :: amass_input(nsx)
+    ! save masses read from input here
   CHARACTER (LEN=256) :: outdir
   !
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
@@ -189,11 +191,13 @@ SUBROUTINE phq_readin()
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.
   !
-  !   modenum will also be read from file, copy first in aux.variable
+  !   modenum and amass will also be read from file:
+  !   save their content in auxiliary variables
   !
   modenum_aux = modenum
+  amass_input(:)= amass(:)
   !
-  CALL read_file
+  CALL read_file ( )
   !
   IF (gamma_only) CALL errore('phq_readin',&
      'cannot start from pw.x data file using Gamma-point tricks',1)
@@ -201,16 +205,22 @@ SUBROUTINE phq_readin()
   IF (noncolin) CALL errore('phq_readin', &
      'The non collinear phonon code is not yet available',1)
   !
-  !  workaround if modenum is set here
+  !  reset and broadcast modenum if it was read from input
   !
-  IF (modenum_aux .NE. -1) THEN
-     modenum = modenum_aux     
-  END IF
-  !
-  ! broadcast the  value
-  !
+  IF (modenum_aux .NE. -1) modenum = modenum_aux     
   CALL mp_bcast( modenum, ionode_id )
   !
+  !  set masses to values read from input, if available;
+  !  leave values read from file otherwise
+  !
+  DO it = 1, ntyp
+     IF (amass_input(it) > 0.D0) amass(it) = amass_input(it)
+     IF (amass(it) <= 0.D0) CALL errore ('phq_readin', 'Wrong masses', it)
+     !
+     !  convert masses to a.u.
+     !
+     amass(it) = amconv * amass(it)
+  ENDDO
   !
   IF (lgamma) THEN
      nksq = nks
@@ -256,11 +266,6 @@ SUBROUTINE phq_readin()
 
   IF (epsil.AND.degauss.NE.0.D0) &
         CALL errore ('phq_readin', 'no elec. field with metals', 1)
-
-  DO it = 1, ntyp
-     IF (amass (it) <= 0.D0) CALL errore ('phq_readin', 'Wrong masses', it)
-  ENDDO
-
   IF (maxirr.LT.0.OR.maxirr.GT.3 * nat) CALL errore ('phq_readin', ' &
        &Wrong maxirr ', ABS (maxirr) )
   IF (MOD (nks, 2) .NE.0.AND..NOT.lgamma) CALL errore ('phq_readin', &
@@ -283,10 +288,6 @@ SUBROUTINE phq_readin()
   !
   IF (ldisp .AND. (nq1 .LE. 0 .OR. nq2 .LE. 0 .OR. nq3 .LE. 0)) &
        CALL errore('phq_readin','nq1, nq2, and nq3 must be greater than 0',1)
-  !
-  !  mass renormalization
-  !
-  amass = amconv * amass
   !
   RETURN
   !
