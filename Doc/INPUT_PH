@@ -6,11 +6,8 @@ c                    namelist "inputph"
 c
 cc  variable             meaning                              default value
 c
-c*********     Variables that MUST BE SPECIFIED      ********** 
-c
-c amass(ntyp) atomic mass [amu] of each atomic type 
-c
-c*********           Optional Variables              **********
+c amass(ntyp) atomic mass [amu] of each atomic type                 0
+c             If not specified, masses are read from data file
 c
 c outdir      scratch directory                                     './'
 c

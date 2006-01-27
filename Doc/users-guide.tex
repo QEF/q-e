@@ -2862,6 +2862,23 @@ Some of them might be missing because:
     the mathematical sense of the term.
 \end{itemize}
 
+\paragraph{I don't get the same results in different machines!}
+
+If the difference is small, do not panic. It is quite normal for iterative 
+methods to reach convergence through different paths as soon as anything 
+changes. In particular, between serial and parallel execution there are 
+operations that are not performed in the same order. As the numerical 
+accuracy of computer numbers is finite, this can yield slightly different 
+results.
+
+It is also normal that the total energy converges to a better accuracy 
+than the parts it is composed of. Thus if the convergence threshold is 
+for instance $10^{-8}$, you get 8-digit accuracy on the total energy, 
+but one or two less on other terms. It is not a problem, but if you mind,
+try to reduce the threshold for instance to $10^{-10}$ or $10^{-12}$.
+The differences should go away (but it will probably take a few more 
+iterations to converge).
+
 \paragraph{the CPU time is time-dependent!}
 
 Yes it is!
