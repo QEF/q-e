@@ -1535,7 +1535,7 @@ MODULE read_cards_module
                           'too many fields for this constraint', i )
           !
           SELECT CASE( constr_type_inp(i) )         
-          CASE( 1, 2 )
+          CASE( 'type_coord', 'atom_coord' )
              !
              IF ( cg_phs_path_flag ) THEN
                 !
@@ -1572,7 +1572,7 @@ MODULE read_cards_module
                 !
              END IF
              !
-          CASE( 3 )
+          CASE( 'distance' )
              !
              IF ( cg_phs_path_flag ) THEN
                 !
@@ -1603,7 +1603,7 @@ MODULE read_cards_module
                 !
              END IF
              !
-          CASE( 4 )
+          CASE( 'planar_angle' )
              !
              IF ( cg_phs_path_flag ) THEN
                 !
@@ -1637,7 +1637,7 @@ MODULE read_cards_module
                 !
              END IF
              !
-          CASE( 5 )
+          CASE( 'torsional_angle' )
              !
              IF ( cg_phs_path_flag ) THEN
                 !
@@ -1674,7 +1674,7 @@ MODULE read_cards_module
                 !
              END IF
              !
-          CASE( 6 )
+          CASE( 'structure_factor' )
              !
              IF ( cg_phs_path_flag ) THEN
                 !
@@ -1708,7 +1708,7 @@ MODULE read_cards_module
                 !
              END IF   
              !
-          CASE( 7 )
+          CASE( 'sph_structure_factor' )
              !
              IF ( cg_phs_path_flag ) THEN
                 !
@@ -1735,11 +1735,11 @@ MODULE read_cards_module
                 CALL errore( 'card_constraints', 'too many fields', nfield )
                 !
              END IF   
-             !             
+             !
           CASE DEFAULT
              !
-             CALL errore( 'card_constraints', &
-                          'unknown contraint type', constr_type_inp(i) )
+             CALL errore( 'card_constraints', 'unknown constraint ' // &
+                        & 'type' // TRIM( constr_type_inp(i) ), 1 )
              !
           END SELECT
           !

@@ -22,14 +22,6 @@ MODULE metadyn_base
   !
   IMPLICIT NONE
   !
-  PRIVATE
-  !
-  PUBLIC :: set_target, &
-            add_gaussians, &
-            add_domain_poential, &
-            metadyn_init, &
-            evolve_collective_vars
-  !
   CONTAINS
     !
     !------------------------------------------------------------------------
@@ -211,7 +203,7 @@ MODULE metadyn_base
     END SUBROUTINE add_gaussians
     !
     !------------------------------------------------------------------------
-    SUBROUTINE add_domain_poential()
+    SUBROUTINE add_domain_potential()
       !------------------------------------------------------------------------
       !
       ! ... a repulsive potential is added to confine the collective variables
@@ -275,7 +267,7 @@ MODULE metadyn_base
       !
       RETURN
       !
-    END SUBROUTINE add_domain_poential
+    END SUBROUTINE add_domain_potential
     !
     !------------------------------------------------------------------------
     SUBROUTINE evolve_collective_vars( norm_fe_grad )
@@ -311,6 +303,30 @@ MODULE metadyn_base
          step = ( 1.D0 + 0.5D0*rndm() ) * fe_step(i)
          !
          new_target(i) = target(i) - step * fe_grad(i)
+         !
+      END DO
+      !
+      CALL impose_domain_constraints()
+      !
+      to_target(:) = ( new_target(:) - target(:) ) / DBLE( shake_nstep )
+      !
+      RETURN
+      !
+    END SUBROUTINE evolve_collective_vars
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE impose_domain_constraints()
+      !------------------------------------------------------------------------
+      !
+      USE constraints_module, ONLY : nconstr, constr_type, dmax
+      USE metadyn_vars,       ONLY : new_target
+      !
+      IMPLICIT NONE
+      !
+      INTEGER :: i
+      !
+      !
+      DO i = 1, nconstr
          !
          SELECT CASE( constr_type(i) )
          CASE( 1, 2 )
@@ -348,11 +364,9 @@ MODULE metadyn_base
          !
       END DO
       !
-      to_target(:) = ( new_target(:) - target(:) ) / DBLE( shake_nstep )
-      !
       RETURN
       !
-    END SUBROUTINE evolve_collective_vars
+    END SUBROUTINE impose_domain_constraints
     !
     !------------------------------------------------------------------------
     SUBROUTINE set_target()

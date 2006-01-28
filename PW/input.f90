@@ -249,6 +249,7 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : pos, full_phs_path_flag
   !
+  USE input_parameters, ONLY : nconstr_inp
   !
   USE constraints_module,    ONLY : init_constraint
   USE metadyn_vars,          ONLY : init_metadyn_vars
@@ -592,7 +593,6 @@ SUBROUTINE iosys()
   lraman    = .FALSE.
   lbfgs     = .FALSE.
   ldamped   = .FALSE.
-  lconstrain= .FALSE.  
   lforce    = tprnfor
   calc      = ' '
   !
@@ -631,12 +631,6 @@ SUBROUTINE iosys()
            CALL errore( 'iosys ', 'required etot_conv_thr is too small:' // &
                       & ' conv_thr must be reduced', 1 )   
         !
-     CASE( 'constrained-damp' )
-        !
-        lmd        = .TRUE.
-        ldamped    = .TRUE.
-        lconstrain = .TRUE.
-        !
      CASE ( 'damp' )
         !
         lmd     = .TRUE.
@@ -662,10 +656,6 @@ SUBROUTINE iosys()
      CASE( 'verlet' )
         !
         CONTINUE
-        !
-     CASE( 'constrained-verlet' )
-        !
-        lconstrain = .TRUE.
         !
      CASE DEFAULT
         !
@@ -910,15 +900,14 @@ SUBROUTINE iosys()
   !
   IF ( lcoarsegrained ) THEN
      !
-     lmd        = .TRUE.
-     lconstrain = .TRUE.
+     lmd = .TRUE.
      !
      SELECT CASE( TRIM( ion_dynamics ) )
-     CASE( 'constrained-verlet' )
+     CASE( 'verlet' )
         !
         CONTINUE
         !
-     CASE( 'constrained-damp' )
+     CASE( 'damp' )
         !
         ldamped = .TRUE.
         !
@@ -1396,9 +1385,11 @@ SUBROUTINE iosys()
      !
   END IF
   !
-  ! ... set constraints
+  ! ... variables for constrained dynamics are set here
   !
-  IF ( lconstrain ) CALL init_constraint( nat, tau, alat, ityp )
+  lconstrain = ( nconstr_inp > 0 )
+  !
+  IF ( lconstrain ) CALL init_constraint( nat, tau, ityp, alat )
   !
   ! ... set variables for metadynamics
   !
@@ -1625,9 +1616,9 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   END IF
   !
   IF ( ibrav == 0 .AND. .NOT. tcell ) &
-     CALL errore( ' cards ', ' ibrav=0: must read cell parameters', 1 )
+     CALL errore( 'cards', 'ibrav=0: must read cell parameters', 1 )
   IF ( ibrav /= 0 .AND. tcell ) &
-     CALL errore( ' cards ', ' redundant data for cell parameters', 2 )
+     CALL errore( 'cards', 'redundant data for cell parameters', 2 )
   !
   RETURN
   !

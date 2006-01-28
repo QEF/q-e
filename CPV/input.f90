@@ -831,8 +831,7 @@ MODULE input
            diis_nchmix, diis_g1chmix, empty_states_maxstep, empty_states_delt, &
            empty_states_emass, empty_states_ethr, empty_states_nbnd,           &
            tprnks_empty, vhrmax_inp, vhnr_inp, vhiunit_inp, vhrmin_inp,        &
-           tvhmean_inp, vhasse_inp, constr_target, constr_target_set,          &
-           constr_inp, nconstr_inp, constr_tol_inp, constr_type_inp, iesr_inp, &
+           tvhmean_inp, vhasse_inp, nconstr_inp, iesr_inp, &
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nelup, neldw, nbnd,     &
            nelec, tprnks, ks_path, press, cell_damping, cell_dofree, tf_inp,   &
            refg, greash, grease, greasp, epol, efield, tcg, maxiter, etresh,   &
@@ -1018,7 +1017,7 @@ MODULE input
      !
      lconstrain = ( nconstr_inp > 0 )
      !
-     IF ( lconstrain ) CALL init_constraint( nat, tau, 1.D0, ityp )
+     IF ( lconstrain ) CALL init_constraint( nat, tau, ityp, 1.D0 )
      !
      IF ( lcoarsegrained ) CALL init_metadyn_vars()
      !

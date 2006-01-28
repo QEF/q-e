@@ -325,8 +325,7 @@ MODULE read_namelists_module
        !
        phase_space = 'full'
        !
-       ! ... ( 'sd' | 'cg' | 'damp' | 'verlet' | 'none' )
-       ! ... ( 'constrained-verlet' | 'bfgs' | 'constrained-damp' | 'beeman' )
+       ! ... ( 'sd' | 'cg' | 'damp' | 'verlet' | 'none' | 'bfgs' | 'beeman' )
        !
        ion_dynamics = 'none'
        ion_radius   = 0.5D0
@@ -342,24 +341,29 @@ MODULE read_namelists_module
        !
        ! ... ( 'nose' | 'not_controlled' | 'rescaling' )
        !
-       ion_temperature   = 'not_controlled'
-       tempw             = 300.D0
-       fnosep            = -1.0D0
-       fnosep(1)         = 1.0D0
-       nhpcl             = 0
-       nhptyp            = 0
-       ndega             = 0
-       tranp             = .FALSE.
-       amprp             = 0.D0
-       greasp            = 1.D0
-       tolp              = 100.D0
-       ion_nstepe        = 1
-       ion_maxstep       = 100
-       delta_t           = 1.D0
-       nraise            = 100
+       ion_temperature = 'not_controlled'
+       !
+       tempw       = 300.D0
+       fnosep      = -1.0D0
+       fnosep(1)   = 1.0D0
+       nhpcl       = 0
+       nhptyp      = 0
+       ndega       = 0
+       tranp       = .FALSE.
+       amprp       = 0.D0
+       greasp      = 1.D0
+       tolp        = 100.D0
+       ion_nstepe  = 1
+       ion_maxstep = 100
+       delta_t     = 1.D0
+       nraise      = 100
+       !
+       monitor_constr = .FALSE.
+       !
        upscale           = 10
        pot_extrapolation = 'atomic'
        wfc_extrapolation = 'none'
+       !
        !
        ! ... defaults for "path" optimisations
        !
@@ -844,6 +848,7 @@ MODULE read_namelists_module
        CALL mp_bcast( ion_maxstep,       ionode_id )
        CALL mp_bcast( delta_t,           ionode_id )
        CALL mp_bcast( nraise,            ionode_id )
+       CALL mp_bcast( monitor_constr,    ionode_id )
        CALL mp_bcast( upscale,           ionode_id )
        CALL mp_bcast( pot_extrapolation, ionode_id )
        CALL mp_bcast( wfc_extrapolation, ionode_id )

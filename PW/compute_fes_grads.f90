@@ -43,6 +43,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE check_stop,         ONLY : check_stop_now
   USE path_io_routines,   ONLY : new_image_init, get_new_image, &
                                  stop_other_images  
+  USE metadyn_base,       ONLY : impose_domain_constraints, &
+                                 add_domain_potential
   USE metadyn_io,         ONLY : write_axsf_file
   !
   IMPLICIT NONE
@@ -189,13 +191,15 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         END IF
         !
         CALL deallocate_constraint()
-        CALL init_constraint( nat, tau, alat, ityp )
+        CALL init_constraint( nat, tau, ityp, alat )
         !
         CALL init_run()
         !
         ! ... the old and new values of the order-parameter are set here
         !
         new_target(:) = pos(:,image)
+        !
+        CALL impose_domain_constraints()
         !
         IF ( ionode ) THEN
            !     
@@ -379,6 +383,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   CLOSE( UNIT = iunaxsf )
   !
+  CALL add_domain_potential()
+  !
   DEALLOCATE( tauold )
   !
   tmp_dir = tmp_dir_saved
@@ -417,7 +423,7 @@ SUBROUTINE metadyn()
                                  to_new_target, fe_step, metadyn_history, &
                                  max_metadyn_iter, first_metadyn_iter, &
                                  gaussian_pos, etot_av
-  USE metadyn_base,       ONLY : add_gaussians, add_domain_poential, &
+  USE metadyn_base,       ONLY : add_gaussians, add_domain_potential, &
                                  evolve_collective_vars
   USE metadyn_io,         ONLY : write_axsf_file, write_metadyn_restart
   USE io_global,          ONLY : ionode, stdout
@@ -441,7 +447,7 @@ SUBROUTINE metadyn()
         !
         CALL add_gaussians( iter )
         !
-        CALL add_domain_poential()
+        CALL add_domain_potential()
         !
         norm_fe_grad = norm( fe_grad )
         !
@@ -462,7 +468,7 @@ SUBROUTINE metadyn()
      !
      IF ( ionode ) CALL write_axsf_file( iter, tau, alat )
      !
-     WRITE( stdout, '(/,5X,"calculation of the potential of mean force",/)' )
+     WRITE( stdout, '(/,5X,"calculation of the mean force",/)' )
      !
      CALL free_energy_grad( iter, lfirst_scf )
      !

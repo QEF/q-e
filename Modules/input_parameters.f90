@@ -917,16 +917,14 @@ MODULE input_parameters
           ! set how ions shold be moved
           ! 'none'     ions are kept fixed 
           ! 'bfgs'     a new BFGS algorithm is used to minimize ionic configuration
-          ! 'old-bfgs' old BFGS algorithm is used to minimize ionic configuration
           ! 'sd'       steepest descent algorithm is used to minimize ionic configuration
           ! 'cg'       conjugate gradient algorithm is used to minimize ionic configuration
           ! 'damp'     damped dynamics is used to propagate ions
           ! 'verlet'   standard Verlet algorithm is used to propagate ions
 
-        CHARACTER(LEN=80) :: ion_dynamics_allowed(10)
-        DATA ion_dynamics_allowed / 'sd', 'cg', 'damp', 'verlet', 'none',   &
-                                    'bfgs', 'old-bfgs', 'constrained-damp', &
-                                    'constrained-verlet', 'beeman' /
+        CHARACTER(LEN=80) :: ion_dynamics_allowed(8)
+        DATA ion_dynamics_allowed / 'none', 'sd', 'cg', 'damp', &
+                                    'verlet', 'bfgs', 'beeman', 'langevin' /
 
         REAL(DP) :: ion_radius(nsx) = 0.5d0
           ! pseudo-atomic radius of the i-th atomic species
@@ -1027,6 +1025,8 @@ MODULE input_parameters
         REAL(DP) :: delta_t = 1.D0
         
         INTEGER :: nraise
+        
+        LOGICAL :: monitor_constr = .FALSE.
         
         !
         ! ... variables added for "path" calculations
@@ -1182,10 +1182,10 @@ MODULE input_parameters
                           tempw, fnosep, nhpcl, nhptyp, ndega, tranp, amprp,   &
                           greasp, tolp, ion_nstepe, ion_maxstep, upscale,      &
                           delta_t, pot_extrapolation, wfc_extrapolation,       &
-                          nraise, num_of_images, CI_scheme, opt_scheme,        &
-                          use_masses, first_last_opt, use_multistep,           &
-                          write_save, damp, temp_req, ds, k_max, k_min,        &
-                          path_thr, fixed_tan, init_num_of_images,             &
+                          nraise, monitor_constr, num_of_images, CI_scheme,    &
+                          opt_scheme, use_masses, first_last_opt, damp,        &
+                          use_multistep, write_save, temp_req, ds, k_max,      &
+                          k_min, path_thr, fixed_tan, init_num_of_images,      &
                           free_energy, use_freezing, use_fourier,              &
                           trust_radius_max, trust_radius_min,                  &
                           trust_radius_ini, w_1, w_2, bfgs_ndim, sic_rloc,     &
@@ -1479,12 +1479,12 @@ MODULE input_parameters
 !
 !    CONSTRAINTS
 !
-      INTEGER   :: nconstr_inp               = 0
-      REAL (DP) :: constr_tol_inp            = 0.D0
-      INTEGER   :: constr_type_inp(natx)     = 0
-      REAL (DP) :: constr_inp(6,natx)        = 0
-      REAL (DP) :: constr_target(natx)       = 0.D0
-      LOGICAL   :: constr_target_set(natx)   = .FALSE.
+      INTEGER           :: nconstr_inp             = 0
+      REAL (DP)         :: constr_tol_inp          = 0.D0
+      CHARACTER(LEN=20) :: constr_type_inp(natx)   = ''
+      REAL (DP)         :: constr_inp(6,natx)      = 0
+      REAL (DP)         :: constr_target(natx)     = 0.D0
+      LOGICAL           :: constr_target_set(natx) = .FALSE.
 
 !
 !    KOHN_SHAM

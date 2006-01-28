@@ -39,6 +39,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE xml_io_base,        ONLY : check_restartfile
   USE path_io_routines,   ONLY : new_image_init, get_new_image, &
                                  stop_other_images
+  USE metadyn_base,       ONLY : impose_domain_constraints, &
+                                 add_domain_potential
   USE metadyn_io,         ONLY : write_axsf_file
   !
   IMPLICIT NONE
@@ -223,13 +225,15 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         ! ... the new value of the order-parameter is set here
         !
-        CALL init_constraint( nat, tau, alat, ityp )
+        CALL init_constraint( nat, tau, ityp, 1.D0 )
         !
         CALL cprmain( tau, fion, etot )
         !
         ! ... then the system is "adiabatically" moved to the new target
         !
         new_target(:) = pos(:,image)
+        !
+        CALL impose_domain_constraints()
         !
         to_target(:) = ( new_target(:) - target(:) ) / DBLE( shake_nstep )
         !
@@ -291,6 +295,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   CLOSE( UNIT = iunaxsf )
   !
+  CALL add_domain_potential()
+  !
   DEALLOCATE( tau, fion )
   !
   outdir = outdir_saved
@@ -327,7 +333,7 @@ SUBROUTINE metadyn()
                                  max_metadyn_iter, first_metadyn_iter,        &
                                  fe_nstep, shake_nstep, dfe_acc, etot_av,     &
                                  gaussian_pos
-  USE metadyn_base,       ONLY : add_gaussians, add_domain_poential, &
+  USE metadyn_base,       ONLY : add_gaussians, add_domain_potential, &
                                  evolve_collective_vars
   USE metadyn_io,         ONLY : write_axsf_file, write_metadyn_restart
   USE io_global,          ONLY : ionode
@@ -391,7 +397,7 @@ SUBROUTINE metadyn()
         !
         CALL add_gaussians( iter )
         !
-        CALL add_domain_poential()
+        CALL add_domain_potential()
         !
         norm_fe_grad = norm( fe_grad )
         !
@@ -428,7 +434,7 @@ SUBROUTINE metadyn()
      !
      to_new_target = .FALSE.
      !
-     WRITE( stdout, '(/,5X,"calculation of the potential of mean force",/)' )
+     WRITE( stdout, '(/,5X,"calculation of the mean force",/)' )
      !
      CALL reset_vel()
      !

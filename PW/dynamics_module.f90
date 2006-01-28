@@ -282,11 +282,27 @@ MODULE dynamics_module
       !
       IF ( lconstrain ) THEN
          !
-         ! ... we first remove the component of the force along the constraint
-         ! ... gradient (this constitutes the initial guess for the lagrange
-         ! ... multipliers)
-         !
-         CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
+         IF ( monitor_constr ) THEN
+            !
+            CALL constraint_val( nat, tau, ityp, alat )
+            !
+            WRITE( stdout, '(/,5X,"constraint values :")' )
+            !
+            DO i = 1, nconstr 
+               !
+               WRITE( *, '(5X,I3,2X,F16.10)' ) i, target(i)
+               !
+            END DO
+            !
+         ELSE
+            !
+            ! ... we first remove the component of the force along the 
+            ! ... constraint gradient (this constitutes the initial guess 
+            ! ... for the calculation of the lagrange multipliers)
+            !
+            CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
+            !
+         END IF
          !
       END IF
       !
@@ -321,7 +337,7 @@ MODULE dynamics_module
       !
       tau_new(:,:) = 2.D0 * tau(:,:) - tau_old(:,:) + dt**2 * acc(:,:)
       !
-      IF ( lconstrain ) THEN
+      IF ( lconstrain .AND..NOT. monitor_constr ) THEN
          !
          ! ... check if the new positions satisfy the constrain equation
          !
@@ -515,17 +531,17 @@ MODULE dynamics_module
       !
       diff_coeff(:) = diff_coeff(:) + one_sixth * rmsd(:)
       !
-      OPEN( UNIT = 777, POSITION = 'APPEND', &
+      OPEN( UNIT = 4, POSITION = 'APPEND', &
             FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".rmsd.dat" )
       !
-      WRITE( 777, '(2(2X,F16.8))' ) &
+      WRITE( 4, '(2(2X,F16.8))' ) &
           (istep * dt * 2.D0 * au_ps), SQRT( SUM( rmsd(:) ) / DBLE( nat - 1 ) )
       !
-      CLOSE( UNIT = 777, STATUS = 'KEEP' )
+      CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
       DEALLOCATE( rmsd )
       !
-      ! ... pair distribution function g(r)
+      ! ... radial distribution function g(r)
       !
       dmax = norm( MATMUL( at(:,:), (/ 0.5D0, 0.5D0, 0.5D0 /) ) ) * alat
       !
@@ -582,7 +598,7 @@ MODULE dynamics_module
       WRITE( UNIT = stdout, FMT = '(/,5X,"< D > = ",F16.8," cm^2/s")' ) &
           SUM( diff_coeff(:) ) / DBLE( nat - 1 )
       !
-      ! ... pair distribution function g(r)
+      ! ... radial distribution function g(r)
       !
       dmax = norm( MATMUL( at(:,:), (/ 0.5D0, 0.5D0, 0.5D0 /) ) ) * alat
       !
@@ -592,7 +608,7 @@ MODULE dynamics_module
       !
       pair_distr(:) = pair_distr(:) / DBLE( nstep )
       !
-      OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".pd.dat" )
+      OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".rdf.dat" )
       !
       DO index = 1, hist_len
          !
