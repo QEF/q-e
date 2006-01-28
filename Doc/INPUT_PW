@@ -539,10 +539,13 @@ startingwfc    CHARACTER
 
 ===============================================================================
 NAMELIST &IONS  ( only if calculation = 'relax', 'md', 
-                                        'vc-relax', 'vc-md', 'neb' )
+                                        'vc-relax', 'vc-md', 'neb', 'smd' )
 
 ion_dynamics   CHARACTER
-               specify the type of ionic dynamics. 
+               specify the type of ionic dynamics.
+               For constrained dynamics or constrained optimisations add the
+               CONSTRAINTS card (see also the keyword monitor_constr in this
+               namelist)
                For different type of calculation different possibilities are 
                allowed and different default values apply:
                
@@ -552,16 +555,9 @@ ion_dynamics   CHARACTER
                                         for structural relaxation (experimental)
 		 'damp' :               use damped (quick-min Verlet) 
                                         dynamics for structural relaxation
-                 'constrained-damp' :   use damped (quick-min Verlet) 
-                                        dynamics for structural relaxation with 
-                                        the constraint specified in the 
-                                        CONSTRAINTS CARD
                CASE ( calculation = 'md' )
                  'verlet' : (default)   use Verlet algorithm to integrate 
 		                        Newton's equation
-                 'constrained-verlet' : use Verlet algorithm to perform 
-                                        molecular dynamics with the constraint
-                                        specified in the CONSTRAINTS CARD 
                CASE ( calculation = 'vc-relax' )
                  'damp' :   (default)   use damped (Beeman) dynamics for 
 		                        structural relaxation
@@ -606,6 +602,11 @@ nraise         INTEGER (default = 100 )
                the temperature is reduced of -delta_T every 'nraise' steps.
                This keyword is NOT used in the case of variable cell
                calculations.
+
+monitor_constr LOGICAL (default = .FALSE.)
+               this keyword applies only when some constraint is defined in the
+               CONSTRAINTS card (see below). If true, the values of the
+               constraints are monitored, but the constraints are not imposed.
 
 pot_extrapolation     
                CHARACTER ( default = "atomic" )
@@ -986,47 +987,58 @@ CONSTRAINTS
 
  Where:
 
-      nconstr                      INTEGER, number of constraints
+      nconstr     INTEGER, number of constraints
+      constr_tol  REAL,    tolerance for keeping the constraints satisfied
 
-      constr_tol                   REAL,    tolerance for keeping the 
-                                            constraints satisfied
+      constr_type(.) CHARACTER, type of constrain :
+      
+        'type_coord'      : constraint on global coordination-number, i.e. the 
+                            average number of atoms of type B surrounding the 
+                            atoms of type A. The coordination is defined by
+                            using a Fermi-Dirac.
+                            (four indexes must be specified).
+ 
+        'atom_coord'      : constraint on local coordination-number, i.e. the 
+                            average number of atoms of type A surrounding a 
+                            specific atom. The coordination is defined by
+                            using a Fermi-Dirac.
+                            (four indexes must be specified).
+                            
+        'distance'        : constraint on interatomic distance (two atom indexes
+                            must be specified ).
+ 
+        'planar_angle'    : constraint on planar angle (three atom indexes must 
+                            be specified).
+ 
+        'torsional_angle' : constraint on torsional angle (four atom indexes 
+                            must be specified).
 
-      constr_type(.)               INTEGER, type of constrain :
-                                       1,2: for fixed coordination numbers:
-                                            four indexes must be specified
-                                         3: for fixed distances: 
-                                            two atom indexes must be specified 
-                                         4: for fixed planar angles: 
-                                            three atom indexes must be specified
-                                         5: for fixed torsional angles:
-                                            four atom indexes must be specified
-
-      constr(1,.) constr(2,.) ...  REAL,    these variables have different 
-                                            meanings for different constraint
-                                            types:
-                                         1: constr(1) is the first index of the
-                                            atomic type involved
-                                            constr(2) is the second index of the
-                                            atomic type involved
-                                            constr(3) is the cut-off radius for
-                                            estimating the coordination
-                                            constr(4) is a smoothing parameter     
-                                         2: constr(1) is the atom index of the
-                                            atom with constrained coordination
-                                            constr(2) is the index of the atomic
-                                            type involved in the coordination
-                                            constr(3) is the cut-off radius for
-                                            estimating the coordination
-                                            constr(4) is a smoothing parameter
-                                         3: atoms indices object of the 
-                                            constraint, as they appear in 
-                                            the 'POSITION' CARD
-                                       4,5: atoms indices object of the 
-                                            constraint, as they appear in the 
-                                            'POSITION' CARD (beware the order)
+      constr(1,.) constr(2,.) ...  REAL,  these variables have different 
+                                          meanings for different constraint
+                                          types:
+                           'type_coord' : constr(1) is the first index of the
+                                          atomic type involved
+                                          constr(2) is the second index of the
+                                          atomic type involved
+                                          constr(3) is the cut-off radius for
+                                          estimating the coordination
+                                          constr(4) is a smoothing parameter
+                           'atom_coord' : constr(1) is the atom index of the
+                                          atom with constrained coordination
+                                          constr(2) is the index of the atomic
+                                          type involved in the coordination
+                                          constr(3) is the cut-off radius for
+                                          estimating the coordination
+                                          constr(4) is a smoothing parameter
+                             'distance' : atoms indices object of the 
+                                          constraint, as they appear in 
+                                          the 'POSITION' CARD
+      'planar_angle', 'torsional_angle' : atoms indices object of the 
+                                          constraint, as they appear in the 
+                                          'POSITION' CARD (beware the order)
                                         
-      constr_target                 REAL,   target for the constrain ( planar 
-                                            angles are specified in degrees ).
+      constr_target                 REAL,   target for the constrain ( angles 
+                                            are specified in degrees ).
                                             This variable is optional.
 
 -------------------------------------------------------------------------------
