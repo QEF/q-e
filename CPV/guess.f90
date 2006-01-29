@@ -279,6 +279,7 @@ MODULE guess
 
 ! ...   declare modules
         USE mp
+        USE mp_global, ONLY: mpime, nproc, group
 
         IMPLICIT NONE
 
@@ -288,15 +289,11 @@ MODULE guess
         COMPLEX(DP), INTENT(IN) :: a(ngw,*),b(ngw,*)
         COMPLEX(DP), INTENT(OUT) :: lambda(n,n)
 
-! ...   declare other variables
-        INTEGER   nproc,mpime,gid
-
 ! ...   end of declarations
 !  ----------------------------------------------
 
-        CALL mp_env(nproc,mpime,gid)
         CALL DGEMM('C','N',n,n,ngw,1.0d0,a,n,b,ngw,0.0d0,lambda,n)
-        CALL mp_sum(lambda,gid)
+        CALL mp_sum(lambda,group)
 
         RETURN
       END SUBROUTINE ucalc_kp
@@ -310,6 +307,7 @@ MODULE guess
 
 ! ... declare modules
       USE mp
+      USE mp_global, ONLY: nproc, mpime, group
 
       IMPLICIT NONE
 
@@ -323,12 +321,10 @@ MODULE guess
       REAL(DP), ALLOCATABLE :: tmp(:,:)
 
       INTEGER i,j,jp1,jp2
-      INTEGER nproc,mpime,gid
 
 ! ... end of declarations
 !  ----------------------------------------------
 
-      CALL mp_env(nproc,mpime,gid)
       ALLOCATE(tmp(n,2*ngw))
 
       DO i=1,n
@@ -345,7 +341,7 @@ MODULE guess
         CALL DGER(n,n,-1.0d0,a,2*ngw,b,2*ngw,lambda,n)
       END IF
 
-      CALL mp_sum(lambda,gid)
+      CALL mp_sum(lambda,group)
 
       DEALLOCATE(tmp)
 

@@ -211,7 +211,7 @@ SUBROUTINE init_run()
   !
   IF ( ALLOCATED( deeq ) ) deeq(:,:,:,:) = 0.D0
   !
-  IF ( ALLOCATED( lambda ) ) lambda(:,:) = 0.D0
+  IF ( ALLOCATED( lambda ) ) lambda = 0.D0
   !
   taum  = tau0
   taup  = 0.D0

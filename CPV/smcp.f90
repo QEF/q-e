@@ -27,7 +27,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE cvan,                     ONLY : nvb
   USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, ekin, &
                                        esr, print_energies
-  USE electrons_base,           ONLY : nbspx, nbsp, f, nspin
+  USE electrons_base,           ONLY : nbspx, nbsp, f, nspin, nudx
   USE electrons_base,           ONLY : nel, iupdwn, nupdwn
   USE gvecp,                    ONLY : ngm
   USE gvecs,                    ONLY : ngs
@@ -152,7 +152,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   !
   REAL(DP) :: t_arc_pre, t_arc_now, t_arc_tot
   INTEGER        :: sm_k,sm_file,sm_ndr,sm_ndw,unico,unifo,unist
-  INTEGER        :: smpm,con_ite
+  INTEGER        :: smpm,con_ite, iss
   REAL(DP) :: workvec(3,natx,nsx)
   !
   REAL(DP), ALLOCATABLE :: deviation(:)
@@ -351,9 +351,9 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
      ALLOCATE(rep_el(sm_k)%c0(ngw,nbspx))
      ALLOCATE(rep_el(sm_k)%cm(ngw,nbspx))
      ALLOCATE(rep_el(sm_k)%phi(ngw,nbspx))
-     ALLOCATE(rep_el(sm_k)%lambda(nbspx,nbspx))
-     ALLOCATE(rep_el(sm_k)%lambdam(nbspx,nbspx))
-     ALLOCATE(rep_el(sm_k)%lambdap(nbspx,nbspx))
+     ALLOCATE(rep_el(sm_k)%lambda(nudx,nudx,nspin))
+     ALLOCATE(rep_el(sm_k)%lambdam(nudx,nudx,nspin))
+     ALLOCATE(rep_el(sm_k)%lambdap(nudx,nudx,nspin))
      ALLOCATE(rep_el(sm_k)%bec  (nkb,nbsp))
      ALLOCATE(rep_el(sm_k)%rhovan(nhm*(nhm+1)/2,nat,nspin))
   ENDDO
@@ -645,9 +645,11 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         ENDIF
         !
         IF(tortho) THEN
-           CALL updatc( ccc(sm_k), nbsp, rep_el(sm_k)%lambda, SIZE( rep_el(sm_k)%lambda, 1 ), &
+           DO iss = 1, nspin
+              CALL updatc( ccc(sm_k), nbsp, rep_el(sm_k)%lambda(:,:,iss), SIZE( rep_el(sm_k)%lambda, 1 ), &
                         rep_el(sm_k)%phi, SIZE( rep_el(sm_k)%phi, 1 ), bephi, SIZE(bephi,1), &
-                        becp,rep_el(sm_k)%bec,rep_el(sm_k)%c0)
+                        becp,rep_el(sm_k)%bec,rep_el(sm_k)%c0, nupdwn(iss), iupdwn(iss) )
+           END DO
            !
            IF(ionode) WRITE( sm_file,*) ' out from updatc'
         ENDIF
@@ -795,7 +797,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
      xnhem(sm_k)=0.
      vnhe(sm_k) =0.
      !
-     rep_el(sm_k)%lambdam(:,:)=rep_el(sm_k)%lambda(:,:)
+     rep_el(sm_k)%lambdam=rep_el(sm_k)%lambda
      !
   ENDDO INI2_REP_LOOP  ! <<<<<<<<<<<<<<<<<<<  !
 
@@ -954,9 +956,9 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
            !
            ! interpolate new lambda at (t+dt) from lambda(t) and lambda(t-dt):
            !
-           rep_el(sm_k)%lambdap(:,:) = 2.d0*rep_el(sm_k)%lambda(:,:)-rep_el(sm_k)%lambdam(:,:)
-           rep_el(sm_k)%lambdam(:,:)= rep_el(sm_k)%lambda (:,:)
-           rep_el(sm_k)%lambda (:,:)= rep_el(sm_k)%lambdap(:,:)
+           rep_el(sm_k)%lambdap = 2.d0*rep_el(sm_k)%lambda - rep_el(sm_k)%lambdam
+           rep_el(sm_k)%lambdam = rep_el(sm_k)%lambda 
+           rep_el(sm_k)%lambda  = rep_el(sm_k)%lambdap
         ENDIF
         !
         !     calphi calculates phi
@@ -1186,10 +1188,13 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         IF(iprsta.GE.3) CALL print_lambda( rep_el(sm_k)%lambda, nbsp, 9, 1.0d0 )
         !
-        IF(tortho) &
-           CALL updatc( ccc(sm_k), nbsp, rep_el(sm_k)%lambda, SIZE(rep_el(sm_k)%lambda,1), &
+        IF(tortho) THEN
+           DO iss = 1, nspin
+              CALL updatc( ccc(sm_k), nbsp, rep_el(sm_k)%lambda(:,:,iss), SIZE(rep_el(sm_k)%lambda,1), &
                         rep_el(sm_k)%phi, SIZE(rep_el(sm_k)%phi,1), bephi, SIZE(bephi,1), &
-                        becp, rep_el(sm_k)%bec, rep_el(sm_k)%cm )
+                        becp, rep_el(sm_k)%bec, rep_el(sm_k)%cm, nupdwn(iss), iupdwn(iss) )
+           END DO
+        END IF
         !
         CALL calbec (nvb+1,nsp,eigr,rep_el(sm_k)%cm,rep_el(sm_k)%bec)
         IF (tpre) CALL caldbec(ngw,nkb,nbsp,1,nsp,eigr,rep_el(sm_k)%cm,dbec,.true.)
@@ -1259,7 +1264,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         !
         IF(MOD(nfi-1,iprint).EQ.0 .OR. (nfi.EQ.(nomore))) THEN
-           CALL eigs0(.true.,nspin,nbspx,nupdwn,iupdwn,.true.,f,rep_el(sm_k)%lambda)
+           CALL eigs0(.true.,nspin,nupdwn,iupdwn,.true.,f,nbspx,rep_el(sm_k)%lambda,nudx)
            WRITE( stdout,*)
         ENDIF
         !

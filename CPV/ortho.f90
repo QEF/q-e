@@ -80,7 +80,7 @@
       CALL ortho_gamma( 1, cp, SIZE(cp,1), phi, dum, dum, 2, dum, dum, &
                            x0, n, diff, iter, n, n, 1 )
 
-      CALL updatc( 1.0d0, n, x0, n, phi, SIZE(phi,1), dum, 1, dum, dum, cp )
+      CALL updatc( 1.0d0, n, x0, n, phi, SIZE(phi,1), dum, 1, dum, dum, cp, n, 1 )
 
       DEALLOCATE( phi, x0 )
 
@@ -274,7 +274,7 @@
       IMPLICIT NONE
 !
       COMPLEX(DP) :: cp(ngw,nbsp), phi(ngw,nbsp), eigr(ngw,nat)
-      REAL(DP)    :: x0( nbspx, nbspx ), diff, ccc
+      REAL(DP)    :: x0( nudx, nudx, nspin ), diff, ccc
       INTEGER     :: iter
       REAL(DP)    :: bephi(nkb,nbsp), becp(nkb,nbsp)
 !
@@ -330,7 +330,7 @@
 
          DO j=1,nss
             DO i=1,nss
-               xloc(i,j) = x0( istart-1+i, istart-1+j ) * ccc
+               xloc(i,j) = x0( i, j, iss ) * ccc
             END DO
          END DO
 
@@ -357,7 +357,7 @@
          !
          DO i=1,nss
             DO j=1,nss
-               x0( istart-1+i, istart-1+j ) = xloc(i,j) / ccc
+               x0( i, j, iss ) = xloc(i,j) / ccc
             END DO
          END DO
 !

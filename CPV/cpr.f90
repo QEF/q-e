@@ -161,7 +161,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   REAL(DP) :: delta_etot
   REAL(DP) :: ftmp, enb, enbi
   INTEGER  :: is, nacc, ia, j, iter, i, isa, ipos
-  INTEGER   :: k, ii, l, m
+  INTEGER   :: k, ii, l, m, iss
   !
   REAL(DP) :: hgamma(3,3), temphh(3,3)
   REAL(DP) :: fcell(3,3)
@@ -425,9 +425,12 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         IF ( iprsta >= 3 ) CALL print_lambda( lambda, nbsp, 9, 1.D0 )
         !
-        IF ( tortho ) &
-           CALL updatc( ccc, nbsp, lambda, SIZE(lambda,1), phi, SIZE(phi,1), &
-                        bephi, SIZE(bephi,1), becp, bec, cm )
+        IF ( tortho ) THEN
+           DO iss = 1, nspin
+              CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
+                        bephi, SIZE(bephi,1), becp, bec, cm, nupdwn(iss), iupdwn(iss) )
+           END DO
+        END IF
         !
         CALL calbec( nvb+1, nsp, eigr, cm, bec )
         !
@@ -629,7 +632,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
             CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
             IF ( thdyn ) CALL formf( tfirst, eself )
             IF (tefield ) CALL efield_update( eigr )
-            lambdam(:,:)=lambda
+            lambdam = lambda
             CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
                           enthal, enb, enbi, fccc, ccc, dt2bye )
           END IF

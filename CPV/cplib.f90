@@ -1943,67 +1943,81 @@
       USE uspp, ONLY :nhsa=>nkb, qq
       USE uspp_param, ONLY: nhm, nh
       USE cvan, ONLY: ish, nvb
-      USE electrons_base, ONLY: nx => nbspx, n => nbsp
+      USE electrons_base, ONLY: nbspx, nbsp, nudx, nspin, iupdwn, nupdwn
       USE constants, ONLY: pi, fpi
 !
       IMPLICIT NONE
-      REAL(8) bec(nhsa,n), becdr(nhsa,n,3), lambda(nx,nx)
+      REAL(8) bec(nhsa,nbsp), becdr(nhsa,nbsp,3), lambda(nudx,nudx,nspin)
       REAL(8) fion(3,natx)
 !
-      INTEGER k, is, ia, iv, jv, i, j, inl, isa
-      REAL(8) temp(nx,nx), tmpbec(nhm,nx),tmpdr(nx,nhm) ! automatic arrays
-!
+      INTEGER k, is, ia, iv, jv, i, j, inl, isa, iss, nss, istart
+      REAL(8), ALLOCATABLE :: temp(:,:), tmpbec(:,:),tmpdr(:,:) 
+      !
       CALL start_clock( 'nlfl' )
+      !
+      ALLOCATE( temp( nudx, nudx ), tmpbec( nhm, nudx ), tmpdr( nudx, nhm ) )
+
       DO k=1,3
          isa = 0
          DO is=1,nvb
             DO ia=1,na(is)
                isa = isa + 1
+               !
+               DO iss = 1, nspin
+                  !
+                  nss = nupdwn( iss )
+                  istart = iupdwn( iss )
+                  !
+                  tmpbec = 0.d0
+                  tmpdr  = 0.d0
 !
-               tmpbec = 0.d0
-               tmpdr  = 0.d0
-!
-               DO iv=1,nh(is)
-                  DO jv=1,nh(is)
-                     inl=ish(is)+(jv-1)*na(is)+ia
-                     IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN
-                        DO i=1,n
-                           tmpbec(iv,i)=tmpbec(iv,i)                    &
-     &                          + qq(iv,jv,is)*bec(inl,i)
-                        END DO
-                     ENDIF
-                  END DO
-               END DO
-!
-               DO iv=1,nh(is)
-                  inl=ish(is)+(iv-1)*na(is)+ia
-                  DO i=1,n
-                     tmpdr(i,iv)=becdr(inl,i,k)
-                  END DO
-               END DO
-!
-               IF(nh(is).GT.0)THEN
-                  temp = 0.d0
-!
-                  CALL MXMA                                             &
-     &                 (tmpdr,1,nx,tmpbec,1,nhm,temp,1,nx,n,nh(is),n)
-!
-                  DO j=1,n
-                     DO i=1,n
-                        temp(i,j)=temp(i,j)*lambda(i,j)
+                  DO iv=1,nh(is)
+                     DO jv=1,nh(is)
+                        inl=ish(is)+(jv-1)*na(is)+ia
+                        IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN
+                           DO i=1,nss
+                              tmpbec(iv,i)=tmpbec(iv,i)                    &
+     &                             + qq(iv,jv,is)*bec(inl,i+istart-1)
+                           END DO
+                        ENDIF
                      END DO
                   END DO
 !
-                  fion(k,isa)=fion(k,isa)+2.*SUM(temp)
-               ENDIF
+                  DO iv=1,nh(is)
+                     inl=ish(is)+(iv-1)*na(is)+ia
+                     DO i=1,nss
+                        tmpdr(i,iv)=becdr(inl,i+istart-1,k)
+                     END DO
+                  END DO
+!
+                  IF(nh(is).GT.0)THEN
+                     !
+                     temp = 0.d0
+!
+                     CALL MXMA                                             &
+     &                 (tmpdr,1,nudx,tmpbec,1,nhm,temp,1,nudx,nss,nh(is),nss)
+!
+                     DO j=1,nss
+                        DO i=1,nss
+                           temp(i,j)=temp(i,j)*lambda(i,j,iss)
+                        END DO
+                     END DO
+!
+                     fion(k,isa)=fion(k,isa)+2.*SUM(temp)
+                  ENDIF
+
+               END DO
 !
             END DO
          END DO
       END DO
-!
-!     end of x/y/z loop
-!
+      !
+      !     end of x/y/z loop
+
+      DEALLOCATE( temp, tmpbec, tmpdr )
+      !
       CALL stop_clock( 'nlfl' )
+      !
       RETURN
       END SUBROUTINE nlfl
 
@@ -2228,59 +2242,6 @@
       DEALLOCATE(wfc)
       RETURN
       END SUBROUTINE projwfc
-!-----------------------------------------------------------------------
-      SUBROUTINE raddrizza(nspin,nx,nupdwn,iupdwn,f,lambda,ngw,c)
-!-----------------------------------------------------------------------
-!
-!     transform wavefunctions into eigenvectors of the hamiltonian
-!     via diagonalization of the constraint matrix lambda
-!
-      IMPLICIT NONE
-      INTEGER, INTENT(in)           :: nspin, nx, ngw, nupdwn(nspin),   &
-     &                                 iupdwn(nspin)
-      REAL   (8), INTENT(in)   :: lambda(nx,nx), f(nx)
-      COMPLEX(8), INTENT(inout):: c(ngw,nx)
-
-      REAL(8)                :: lambdar(nx,nx), wr(nx), zr(nx,nx)
-      COMPLEX(8), ALLOCATABLE:: csave(:,:)
-      INTEGER                     :: iss, n, j, i, i0
-!
-      DO iss=1,nspin
-         n=nupdwn(iss)
-         i0=iupdwn(iss)-1
-         ALLOCATE(csave(ngw,n))
-         DO i=1,n
-            DO j=1,n
-               lambdar(j,i)=lambda(i0+j,i0+i)
-            END DO
-         END DO
-
-         CALL rdiag(n,lambdar,nx,wr,zr)
-
-         csave=0.d0
-         DO i=1,n
-            DO j=1,n
-               csave(:,i) = csave(:,i) + zr(j,i)*c(:,i0+j)
-            END DO
-         END DO
-         DO i=1,n
-            c(:,i0+i)=csave(:,i)
-         END DO
-         DEALLOCATE(csave)
-
-!     uncomment to print out eigenvalues
-!         do i=1,n
-!            if (f(i0+i).gt.1.e-6) then
-!               wr(i)=27.212*wr(i)/f(i0+i)
-!            else
-!               wr(i)=0.0
-!            end if
-!         end do
-!         WRITE( stdout,'(/10f8.2/)') (wr(i),i=1,nupdwn(iss))
-      END DO
-      RETURN
-      END SUBROUTINE raddrizza
-!
 !---------------------------------------------------------------------
       SUBROUTINE randin(nmin,nmax,gstart,ngw,ampre,c)
 !---------------------------------------------------------------------

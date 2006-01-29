@@ -48,9 +48,9 @@ MODULE smd_rep
   complex(8), pointer :: c0(:,:)
   complex(8), pointer :: cm(:,:)
   complex(8), pointer :: phi(:,:)
-  real(8), pointer :: lambda(:,:)
-  real(8), pointer :: lambdam(:,:)
-  real(8), pointer :: lambdap(:,:)
+  real(8), pointer :: lambda(:,:,:)
+  real(8), pointer :: lambdam(:,:,:)
+  real(8), pointer :: lambdap(:,:,:)
   real(8), pointer :: bec(:,:)
   real(8), pointer :: rhovan(:,:,:)
  END TYPE ELE

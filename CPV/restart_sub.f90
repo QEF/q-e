@@ -47,7 +47,7 @@ MODULE from_restart_module
                                      hold, r_to_s, deth, wmass, iforceh,   &
                                      cell_force, cell_hmove
     USE efcalc,               ONLY : ef_force
-    USE electrons_base,       ONLY : nbsp
+    USE electrons_base,       ONLY : nbsp, nspin, nupdwn, iupdwn
     USE uspp,                 ONLY : vkb, becsum, deeq, nkb
     USE wavefunctions_module, ONLY : c0, cm, phi => cp
     USE io_global,            ONLY : stdout
@@ -87,7 +87,7 @@ MODULE from_restart_module
     COMPLEX(DP) :: rhog(:,:)
     REAL(DP)    :: rhor(:,:), rhos(:,:), rhoc(:)
     REAL(DP)    :: stress(:,:), detot(:,:), enthal, ekincm
-    REAL(DP)    :: lambda(:,:), lambdam(:,:), lambdap(:,:)
+    REAL(DP)    :: lambda(:,:,:), lambdam(:,:,:), lambdap(:,:,:)
     REAL(DP)    :: ema0bg(:)
     REAL(DP)    :: dbec(:,:,:,:)
     REAL(DP)    :: bephi(:,:), becp(:,:)
@@ -98,7 +98,7 @@ MODULE from_restart_module
     COMPLEX(DP), ALLOCATABLE :: c2(:), c3(:)
     REAL(DP)                 :: verl1, verl2
     REAL(DP)                 :: bigr
-    INTEGER                  :: i, j, iter
+    INTEGER                  :: i, j, iter, iss
     LOGICAL                  :: tlast = .FALSE.
     REAL(DP)                 :: fcell(3,3)
     REAL(DP)                 :: fccc = 0.5D0
@@ -161,7 +161,7 @@ MODULE from_restart_module
     !
     IF ( tzeroe ) THEN
        !
-       lambdam(:,:) = lambda(:,:)
+       lambdam = lambda
        cm(:,1:nbsp,1,1) = c0(:,1:nbsp,1,1)
        !
        WRITE( stdout, '(" Electronic velocities set to zero")' )
@@ -234,7 +234,7 @@ MODULE from_restart_module
              CALL interpolate_lambda( lambdap, lambda, lambdam )
           ELSE
              ! take care of the otherwise uninitialized lambdam
-             lambdam(:,:)=lambda(:,:)
+             lambdam = lambda
           END IF
           !
        END IF
@@ -257,8 +257,10 @@ MODULE from_restart_module
           CALL ortho( eigr, cm(:,:,1,1), phi(:,:,1,1), lambda, bigr, iter, &
                       dt2bye, bephi, becp )
           !
-          CALL updatc( dt2bye, nbsp, lambda, SIZE(lambda,1), phi, SIZE(phi,1), &
-                       bephi, SIZE(bephi,1), becp, bec, cm )
+          DO iss = 1, nspin
+             CALL updatc( dt2bye, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
+                       bephi, SIZE(bephi,1), becp, bec, cm, nupdwn(iss),iupdwn(iss) )
+          END DO
           !
        ELSE
           !
@@ -326,7 +328,7 @@ MODULE from_restart_module
        !     kinetic energy of the electrons
        !===========================================================
        !
-       lambdam(:,:) = lambda(:,:)
+       lambdam = lambda
        !
        CALL elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, nbsp, delt )
        !

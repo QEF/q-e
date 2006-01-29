@@ -64,7 +64,7 @@ MODULE cp_main_variables
   !
   ! ... constraints (lambda at t, lambdam at t-dt, lambdap at t+dt)
   !
-  REAL(DP), ALLOCATABLE :: lambda(:,:), lambdam(:,:), lambdap(:,:)
+  REAL(DP), ALLOCATABLE :: lambda(:,:,:), lambdam(:,:,:), lambdap(:,:,:)
   !
   REAL(DP) :: acc(nacx)
   REAL(DP) :: acc_this_run(nacx)
@@ -120,9 +120,12 @@ MODULE cp_main_variables
       LOGICAL                       :: nosmd
       INTEGER                       :: neupdwn( nspin )
       !
+      INTEGER                       :: nudx
+      !
       ! ... allocation of all arrays not already allocated in init and nlinit
       !
       nosmd = .TRUE.
+      nudx = MAXVAL( nupdwn( 1:nspin ) )
       !
       IF ( PRESENT( smd ) ) THEN
          !
@@ -169,9 +172,9 @@ MODULE cp_main_variables
          !
          IF ( nosmd ) THEN
             !
-            ALLOCATE( lambda(  nx, nx ) )
-            ALLOCATE( lambdam( nx, nx ) )
-            ALLOCATE( lambdap( nx, nx ) )
+            ALLOCATE( lambda(  nudx, nudx, nspin ) )
+            ALLOCATE( lambdam( nudx, nudx, nspin ) )
+            ALLOCATE( lambdap( nudx, nudx, nspin ) )
             !
          END IF
          !

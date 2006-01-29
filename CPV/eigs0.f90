@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-      subroutine eigs0( tprint, nspin, nx, nupdwn, iupdwn, lf, f, lambda )
+      subroutine eigs0( tprint, nspin, nupdwn, iupdwn, lf, f, nx, lambda, nudx )
 !-----------------------------------------------------------------------
 !     computes eigenvalues (wr) of the real symmetric matrix lambda
 !     Note that lambda as calculated is multiplied by occupation numbers
@@ -20,8 +20,8 @@
       implicit none
 ! input
       logical, intent(in) :: tprint, lf
-      integer, intent(in) :: nspin, nx, nupdwn(nspin), iupdwn(nspin)
-      real(DP), intent(in) :: lambda(nx,nx), f(nx)
+      integer, intent(in) :: nspin, nx, nudx, nupdwn(nspin), iupdwn(nspin)
+      real(DP), intent(in) :: lambda( nudx, nudx, nspin ), f( nx )
 ! local variables
       real(DP), allocatable :: lambdar(:)
       real(DP) wr(nx), fv1(nx),fm1(2,nx), zr(1)
@@ -38,7 +38,7 @@
          do i = 1, n
             do j = i, n
                k = k + 1
-               lambdar( k ) = lambda( iupdwn(iss) - 1 + j, iupdwn(iss) - 1 + i )
+               lambdar( k ) = lambda( j, i, iss )
             end do
          end do
 

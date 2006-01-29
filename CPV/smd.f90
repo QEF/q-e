@@ -43,7 +43,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   use gvecw, only: ngw
   use ions_base, only: na, pmass, nsp, randpos, nat
   use cell_base, only: ainv, a1, a2, a3, r_to_s, s_to_r
-  use electrons_base, only: nx => nbspx, f
+  use electrons_base, only: nx => nbspx, f, nudx, nspin
   use constants, only: pi, fpi
   use cell_base, only: hold, h
   use betax, only: mmx, refg
@@ -77,7 +77,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   ! YK
   complex(8) c0(ngw,nx),cm(ngw,nx)
   real(8) taum(3,natx),vel(3,natx),velm(3,natx),acc(nacx)
-  real(8) lambda(nx,nx),lambdam(nx,nx)
+  real(8) lambda(nudx,nudx,nspin),lambdam(nudx,nudx,nspin)
   real(8) xnhe0,xnhem,vnhe,xnhp0(nhclm),xnhpm(nhclm),vnhp(nhclm), ekincm
   real(8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
   real(8) fion(3,natx),tps

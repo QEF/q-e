@@ -251,7 +251,7 @@ MODULE from_scratch_module
     USE cg_module,            ONLY : tcg
     USE ensemble_dft,         ONLY : tens, compute_entropy
     USE runcp_module,         ONLY : runcp_uspp
-    USE electrons_base,       ONLY : f, nspin
+    USE electrons_base,       ONLY : f, nspin, nupdwn, iupdwn
     USE phase_factors_module, ONLY : strucf
     USE orthogonalize,        ONLY : ortho
     USE orthogonalize_base,   ONLY : updatc, calphi
@@ -271,7 +271,7 @@ MODULE from_scratch_module
     COMPLEX(DP) :: rhog(:,:)
     REAL(DP)    :: rhor(:,:), rhos(:,:), rhoc(:), enl, ekin
     REAL(DP)    :: stress(:,:), detot(:,:), enthal, etot
-    REAL(DP)    :: lambda(:,:), lambdam(:,:), lambdap(:,:)
+    REAL(DP)    :: lambda(:,:,:), lambdam(:,:,:), lambdap(:,:,:)
     REAL(DP)    :: ema0bg(:)
     REAL(DP)    :: dbec(:,:,:,:)
     REAL(DP)    :: delt
@@ -283,7 +283,7 @@ MODULE from_scratch_module
     COMPLEX(DP), ALLOCATABLE :: c2(:), c3(:)
     REAL(DP)                 :: verl1, verl2
     REAL(DP)                 :: bigr
-    INTEGER                  :: i, j, iter
+    INTEGER                  :: i, j, iter, iss
     LOGICAL                  :: tlast = .FALSE.
     REAL(DP)                 :: fcell(3,3), ccc, enb, enbi, fccc
     !
@@ -409,8 +409,12 @@ MODULE from_scratch_module
 
       if ( tpre ) CALL nlfh( bec, dbec, lambda )
 !
-      if ( tortho ) CALL updatc( ccc, nbsp, lambda, SIZE(lambda,1), phi, SIZE(phi,1), &
-                                 bephi, SIZE(bephi,1), becp, bec, c0 )
+      IF ( tortho ) THEN
+         DO iss = 1, nspin
+            CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
+                         bephi, SIZE(bephi,1), becp, bec, c0, nupdwn(iss), iupdwn(iss) )
+         END DO
+      END IF
       !
       CALL calbec ( nvb+1, nsp, eigr, c0, bec )
 
@@ -438,7 +442,7 @@ MODULE from_scratch_module
       xnhem=0.
       vnhe =0.
 
-      lambdam(:,:)=lambda(:,:)
+      lambdam = lambda
 
     ELSE
       !

@@ -1485,7 +1485,7 @@ CONTAINS
 
 !
 !-------------------------------------------------------------------------
-   SUBROUTINE updatc( ccc, n, x0, nx, phi, ngwx, bephi, nkbx, becp, bec, cp )
+   SUBROUTINE updatc( ccc, n, x0, nudx, phi, ngwx, bephi, nkbx, becp, bec, cp, nss, istart )
 !-----------------------------------------------------------------------
 !
       !     input ccc : dt**2/emass OR 1.0d0 demending on ortho
@@ -1507,10 +1507,10 @@ CONTAINS
 !
       IMPLICIT NONE
 !
-      INTEGER, INTENT(IN) :: n, nx, ngwx, nkbx
+      INTEGER, INTENT(IN) :: n, nudx, ngwx, nkbx, istart, nss
       COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
       REAL(DP), INTENT(IN) :: ccc
-      REAL(DP)    :: bec( nkbx, n ), x0( nx, nx )
+      REAL(DP)    :: bec( nkbx, n ), x0( nudx, nudx )
       REAL(DP)    :: bephi( nkbx, n ), becp( nkbx, n )
 
       ! local variables
@@ -1523,12 +1523,13 @@ CONTAINS
       CALL start_clock( 'updatc' )
       
       IF ( ccc /= 1.0d0 ) THEN
-         DO j = 1, n
-            CALL DSCAL( n, ccc, x0(1,j), 1 )
+         DO j = 1, nss
+            CALL DSCAL( nss, ccc, x0(1,j), 1 )
          END DO
       END IF
       !
-      CALL DGEMM( 'N', 'N', 2*ngw, n, n, 1.0d0, phi, 2*ngwx, x0, nx, 1.0d0, cp, 2*ngwx )
+      CALL DGEMM( 'N', 'N', 2*ngw, nss, nss, 1.0d0, phi(1,istart), 2*ngwx, &
+                  x0, nudx, 1.0d0, cp(1,istart), 2*ngwx )
       !    
       !     updating of the <beta|c(n,g)>
       !
@@ -1536,13 +1537,13 @@ CONTAINS
       !
       IF( nvb > 0 )THEN
 
-         ALLOCATE( wtemp( n, nkb ) )
+         ALLOCATE( wtemp( nss, nkb ) )
 
-         CALL MXMA(x0,1,nx,bephi,nkb,1,wtemp,1,n,n,n,nkbus)
+         CALL MXMA(x0,1,nudx,bephi(1,istart),nkb,1,wtemp,1,nss,nss,nss,nkbus)
 !
-         DO i=1,n
+         DO i=1,nss
             DO inl=1,nkbus
-               bec(inl,i)=wtemp(i,inl)+becp(inl,i)
+               bec(inl,i+istart-1)=wtemp(i,inl)+becp(inl,i+istart-1)
             END DO
          END DO
 
@@ -1556,12 +1557,12 @@ CONTAINS
             IF(nsp.GT.1) THEN
                WRITE( stdout,'(33x,a,i4)') ' updatc: bec (is)',is
                WRITE( stdout,'(8f9.4)')                                       &
-     &            ((bec(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,n)
+     &            ((bec(ish(is)+(iv-1)*na(is)+1,i+istart-1),iv=1,nh(is)),i=1,nss)
             ELSE
                DO ia=1,na(is)
                   WRITE( stdout,'(33x,a,i4)') ' updatc: bec (ia)',ia
                   WRITE( stdout,'(8f9.4)')                                    &
-     &            ((bec(ish(is)+(iv-1)*na(is)+ia,i),iv=1,nh(is)),i=1,n)
+     &            ((bec(ish(is)+(iv-1)*na(is)+ia,i+istart-1),iv=1,nh(is)),i=1,nss)
                END DO
             END IF
             WRITE( stdout,*)
@@ -1569,8 +1570,8 @@ CONTAINS
       ENDIF
 !
       IF ( ccc /= 1.0d0 ) THEN
-         DO j=1,n
-            CALL DSCAL(n,1.0/ccc,x0(1,j),1)
+         DO j=1,nss
+            CALL DSCAL(nss,1.0/ccc,x0(1,j),1)
          END DO
       END IF
 !
@@ -1578,6 +1579,8 @@ CONTAINS
 !
       RETURN
    END SUBROUTINE updatc
+
+
 
 
 !-------------------------------------------------------------------------

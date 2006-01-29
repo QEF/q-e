@@ -673,7 +673,7 @@ MODULE wannier_subroutines
     REAL(DP)    :: b1(:), b2(:), b3(:)
     REAL(DP)    :: taus(:,:), tausm(:,:), vels(:,:), velsm(:,:)
     REAL(DP)    :: acc(:)
-    REAL(DP)    :: lambda(:,:), lambdam(:,:)
+    REAL(DP)    :: lambda(:,:,:), lambdam(:,:,:)
     REAL(DP)    :: xnhe0, xnhem, vnhe, xnhp0(:), xnhpm(:), vnhp(:), ekincm
     INTEGER           :: nhpcl, nhpdim
     REAL(DP)    :: velh(:,:)

@@ -51,7 +51,7 @@
       use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
       use local_pseudo, only: vps, rhops
       use io_global, ONLY: io_global_start, stdout, ionode, ionode_id
-      use mp_global, ONLY: mp_global_start
+      use mp_global, ONLY: mp_global_start, group
       use para_mod
       use dener
       use derho
@@ -96,11 +96,11 @@
       complex(dp) :: sfac( ngs, nsp )
       real(dp) :: fion(3,natx)
       real(dp) :: ema0bg(ngw)
-      real(dp) :: lambdap(nx,nx)
-      real(dp) :: lambda(nx,nx)
+      real(dp) :: lambdap(nudx,nudx,nspin)
+      real(dp) :: lambda(nudx,nudx,nspin)
 !
 !
-      integer :: i, j, ig, k, is, iss,ia, iv, jv, il
+      integer :: i, j, ig, k, is, iss,ia, iv, jv, il, ii, jj, kk
       integer :: inl, jnl, niter, istart, nss
       real(dp) :: enb, enbi, x
       complex(dp) :: c2( ngw )
@@ -754,39 +754,65 @@
             gi(1,i+1)=CMPLX(DBLE(gi(1,i+1)),0.d0)
           end if
         enddo
-        do i=1,n
-          do j=i,n
-            lambda(i,j)=0.d0
-            do ig=1,ngw
-              lambda(i,j)=lambda(i,j)-2.d0*DBLE(CONJG(c0(ig,i,1,1))*gi(ig,j))
-            enddo
-            if(ng0.eq.2) then
-              lambda(i,j)=lambda(i,j)+DBLE(CONJG(c0(1,i,1,1))*gi(1,j))
-            endif
-            lambda(j,i)=lambda(i,j)
-          enddo
-        enddo
+
+        do is = 1, nspin
+           !
+           nss = nupdwn(is)
+           istart = iupdwn(is)
+           lambda(:,:,is)=0.d0
+           !
+           do i = 1, nss
+              do j = i, nss
+                 ii = i + istart - 1
+                 jj = j + istart - 1
+                 do ig = 1, ngw
+                    lambda( i, j, is ) = lambda( i, j, is ) - &
+                       2.d0 * DBLE( CONJG( c0( ig, ii, 1, 1 ) ) * gi( ig, jj) )
+                 enddo
+                 if( ng0 == 2 ) then
+                    lambda( i, j, is ) = lambda( i, j, is ) + &
+                       DBLE( CONJG( c0( 1, ii, 1, 1 ) ) * gi( 1, jj ) )
+                 endif
+                 lambda( j, i, is ) = lambda( i, j, is )
+              enddo
+           enddo
+           !
+        end do
   
-        call mp_sum(lambda)
+        call mp_sum( lambda, group )
   
         if(tens) then!in the ensemble case matrix labda must be multiplied with f
-          do i=1,n
-            do j=1,n
-              lambdap(i,j)=0.d0
-              do k=1,n
-                lambdap(i,j)=lambdap(i,j)+lambda(i,k)*fmat0(k,j,1)
-              end do
-            end do
-          enddo
-          do i=1,n
-            do j=1,n
-              sta=lambda(i,j)
-              lambda(i,j)=lambdap(i,j)
-              lambdap(i,j)=sta
-            enddo
-          enddo
-        call nlsm2(ngw,nhsa,n,eigr,c0(:,:,1,1),becdr,.true.)
+           do is = 1, nspin
+              !
+              nss = nupdwn(is)
+              istart = iupdwn(is)
+              !
+              lambdap(:,:,is) = 0.0d0
+              !
+              do k = 1, nss
+                 kk = k + istart - 1
+                 do j = 1, nss
+                    jj = j + istart - 1
+                    do i = 1, nss
+                       lambdap( i, j, is ) = lambdap( i, j, is ) + &
+                          lambda( i, k, is ) * fmat0( kk, jj, 1 )
+                    end do
+                 end do
+              enddo
+              !
+              do i = 1, nss
+                 do j = 1, nss
+                    sta = lambda(i,j,is)
+                    lambda(i,j,is) = lambdap(i,j,is)
+                    lambdap(i,j,is) = sta
+                 enddo
+              enddo
+           end do
+           !
+           call nlsm2(ngw,nhsa,n,eigr,c0(:,:,1,1),becdr,.true.)
+           !
         endif
+        !
         call nlfl(bec,becdr,lambda,fion)
           
         ! bforceion adds the force term due to electronic berry phase

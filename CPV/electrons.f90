@@ -699,7 +699,8 @@
      INTEGER :: nfi
      INTEGER :: irb(:,:)
      COMPLEX(DP) :: c0( :, :, :, : )
-     REAL(DP) :: bec( :, : ), rhor( :, : ), rhos( :, : ), lambda( :, : ), lambdap( :, : )
+     REAL(DP) :: bec( :, : ), rhor( :, : ), rhos( :, : )
+     REAL(DP) :: lambda( :, :, : ), lambdap( :, :, : )
      REAL(DP) :: tau0( :, : ), h( 3, 3 )
      COMPLEX(DP) :: eigrb( :, : ), rhog( :, : )
 
@@ -710,9 +711,9 @@
 
 
          if(.not.tens) then
-            call eigs0(.false.,nspin,nx,nupdwn,iupdwn,.true.,f,lambda)
+            call eigs0(.false.,nspin,nupdwn,iupdwn,.true.,f,nx,lambda,nudx)
          else
-            call eigs0(.false.,nspin,nx,nupdwn,iupdwn,.false.,f,lambdap)
+            call eigs0(.false.,nspin,nupdwn,iupdwn,.false.,f,nx,lambdap,nudx)
          endif
 
          WRITE( stdout,*)

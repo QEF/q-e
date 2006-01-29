@@ -239,23 +239,25 @@ MODULE cpr_subroutines
  
   subroutine print_lambda( lambda, n, nshow, ccc, iunit )
     use io_global, only: stdout, ionode
-    real(8), intent(in) :: lambda(:,:), ccc
+    real(8), intent(in) :: lambda(:,:,:), ccc
     integer, intent(in) :: n, nshow
     integer, intent(in), optional :: iunit
-    integer :: nnn, j, un, i
+    integer :: nnn, j, un, i, is
     if( present( iunit ) ) then
       un = iunit
     else
       un = stdout
     end if
-    nnn=min(n,nshow)
+    nnn = min( SIZE(lambda,1), nshow )
     if( ionode ) then
        WRITE( un,*)
-       WRITE( un,3370) '    lambda   n = ', n
-       IF( nnn < n ) WRITE( un,3370) '    print only first ', nnn
-       do i=1,nnn
-          WRITE( un,3380) (lambda(i,j)*ccc,j=1,nnn)
-       end do
+       DO is = 1, SIZE( lambda, 3 )
+          WRITE( un,3370) '    lambda   nudx, spin = ', SIZE(lambda,1), is
+          IF( nnn < n ) WRITE( un,3370) '    print only first ', nnn
+          do i=1,nnn
+             WRITE( un,3380) (lambda(i,j,is)*ccc,j=1,nnn)
+          end do
+       END DO
     end if
 3370     format(26x,a,i4)
 3380     format(9f8.4)

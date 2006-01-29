@@ -94,8 +94,8 @@ MODULE cp_restart
       INTEGER,               INTENT(IN) :: nhpdim       ! 
       REAL(DP),              INTENT(IN) :: occ0(:,:,:)  ! 
       REAL(DP),              INTENT(IN) :: occm(:,:,:)  ! 
-      REAL(DP),              INTENT(IN) :: lambda0(:,:) ! 
-      REAL(DP),              INTENT(IN) :: lambdam(:,:) ! 
+      REAL(DP),              INTENT(IN) :: lambda0(:,:,:) ! 
+      REAL(DP),              INTENT(IN) :: lambdam(:,:,:) ! 
       REAL(DP),              INTENT(IN) :: xnhe0        ! 
       REAL(DP),              INTENT(IN) :: xnhem        ! 
       REAL(DP),              INTENT(IN) :: vnhe         ! 
@@ -785,8 +785,8 @@ MODULE cp_restart
       INTEGER,               INTENT(INOUT) :: nhpdim       !  
       REAL(DP),              INTENT(INOUT) :: occ0(:,:,:)  !
       REAL(DP),              INTENT(INOUT) :: occm(:,:,:)  !
-      REAL(DP),              INTENT(INOUT) :: lambda0(:,:) !
-      REAL(DP),              INTENT(INOUT) :: lambdam(:,:) !
+      REAL(DP),              INTENT(INOUT) :: lambda0(:,:,:) !
+      REAL(DP),              INTENT(INOUT) :: lambdam(:,:,:) !
       REAL(DP),              INTENT(INOUT) :: b1(3)        !
       REAL(DP),              INTENT(INOUT) :: b2(3)        !
       REAL(DP),              INTENT(INOUT) :: b3(3)        !

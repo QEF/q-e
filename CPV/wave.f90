@@ -670,13 +670,13 @@
 
      SUBROUTINE interpolate_lambda( lambdap, lambda, lambdam )
        IMPLICIT NONE
-       REAL(DP) :: lambdap(:,:), lambda(:,:), lambdam(:,:) 
+       REAL(DP) :: lambdap(:,:,:), lambda(:,:,:), lambdam(:,:,:) 
        !
        ! interpolate new lambda at (t+dt) from lambda(t) and lambda(t-dt):
        !
-       lambdap(:,:) = 2.d0*lambda(:,:)-lambdam(:,:)
-       lambdam(:,:)=lambda (:,:)
-       lambda (:,:)=lambdap(:,:)
+       lambdap= 2.d0*lambda - lambdam
+       lambdam=lambda 
+       lambda =lambdap
        RETURN
      END SUBROUTINE interpolate_lambda
 

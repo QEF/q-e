@@ -751,7 +751,8 @@
      INTEGER :: nfi
      INTEGER :: irb(:,:)
      COMPLEX(DP) :: c0( :, :, :, : )
-     REAL(DP) :: bec( :, : ), rhor( :, : ), rhos( :, : ), lambda( :, : ), lambdap( :, : )
+     REAL(DP) :: bec( :, : ), rhor( :, : ), rhos( :, : )
+     REAL(DP) :: lambda( :, :, : ), lambdap( :, :, : )
      REAL(DP) :: tau0( :, : ), h( 3, 3 )
      COMPLEX(DP) :: eigrb( :, : ), rhog( :, : )
      COMPLEX(DP) :: eigr( :, : )
@@ -780,7 +781,7 @@
        do  is=1,nspin
          istart=iupdwn(is)
          nss=nupdwn(is)
-         call ddiag(nss,nss,lambda,dval(1),zaux(1,1,is),1)
+         call ddiag(SIZE(lambda,1),nss,lambda(1,1,is),dval(1),zaux(1,1,is),1)
          do i=1,nss
            e0(i+istart-1)=dval(i)
          enddo

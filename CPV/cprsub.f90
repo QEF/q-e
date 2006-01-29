@@ -183,21 +183,22 @@ subroutine nlfh( bec, dbec, lambda )
   use uspp,           ONLY : nhsa => nkb, qq
   use uspp_param,     ONLY : nh, nhm
   use ions_base,      ONLY : na
-  use electrons_base, ONLY : nx => nbspx, n => nbsp
+  use electrons_base, ONLY : nbspx, nbsp, nudx, nspin, nupdwn, iupdwn
   use cell_base,      ONLY : omega, h
   use constants,      ONLY : pi, fpi
   use stre,           ONLY : stress
 !
   implicit none
 
-  real(DP), intent(in) ::  bec(nhsa,n), dbec(nhsa,n,3,3), lambda(nx,nx)
+  real(DP), intent(in) ::  bec( nhsa, nbsp ), dbec( nhsa, nbsp, 3, 3 )
+  real(DP), intent(in) ::  lambda( nudx, nudx, nspin )
 !
-  integer   :: i, j, ii, jj, inl, iv, jv, ia, is
+  integer   :: i, j, ii, jj, inl, iv, jv, ia, is, iss, nss, istart
   real(DP) :: fpre(3,3)
   !
   REAL(DP), ALLOCATABLE :: tmpbec(:,:), tmpdh(:,:), temp(:,:)
   !
-  ALLOCATE ( tmpbec(nhm,nx), tmpdh(nx,nhm), temp(nx,nx) )
+  ALLOCATE ( tmpbec(nhm,nudx), tmpdh(nudx,nhm), temp(nudx,nudx) )
   !
       fpre(:,:) = 0.d0
       do ii=1,3
@@ -205,43 +206,51 @@ subroutine nlfh( bec, dbec, lambda )
             do is=1,nvb
                do ia=1,na(is)
 !
-                  tmpbec(:, 1:n) = 0.d0
-                  tmpdh (1:n, :) = 0.d0
+                  do iss = 1, nspin
+                     !
+                     istart = iupdwn( iss )
+                     nss    = nupdwn( iss )
+                     !
+                     tmpbec = 0.d0
+                     tmpdh  = 0.d0
 !
-                  do iv=1,nh(is)
-                     do jv=1,nh(is)
-                        inl=ish(is)+(jv-1)*na(is)+ia
-                        if(abs(qq(iv,jv,is)).gt.1.e-5) then
-                           do i=1,n
-                              tmpbec(iv,i) = tmpbec(iv,i) +             &
-     &                             qq(iv,jv,is)*bec(inl,i)
-                           end do
-                        endif
-                     end do
-                  end do
-!
-                  do iv=1,nh(is)
-                     inl=ish(is)+(iv-1)*na(is)+ia
-                     do i=1,n
-                        tmpdh(i,iv)=dbec(inl,i,ii,jj)
-                     end do
-                  end do
-!
-                  if(nh(is).gt.0)then
-                     temp(:, 1:n) = 0.d0
-!
-                     call MXMA                                          &
-     &                    (tmpdh,1,nx,tmpbec,1,nhm,temp,1,nx,n,nh(is),n)
-!
-                     do j=1,n
-                        do i=1,n
-                           temp(i,j)=temp(i,j)*lambda(i,j)
+                     do iv=1,nh(is)
+                        do jv=1,nh(is)
+                           inl=ish(is)+(jv-1)*na(is)+ia
+                           if(abs(qq(iv,jv,is)).gt.1.e-5) then
+                              do i = 1, nss
+                                 tmpbec(iv,i) = tmpbec(iv,i) +             &
+     &                              qq(iv,jv,is) * bec(inl, i + istart - 1)
+                              end do
+                           endif
                         end do
                      end do
 !
-                     fpre(ii,jj)=fpre(ii,jj)+2.*SUM(temp(1:n,1:n))
-                  endif
+                     do iv=1,nh(is)
+                        inl=ish(is)+(iv-1)*na(is)+ia
+                        do i = 1, nss
+                           tmpdh(i,iv) = dbec( inl, i+istart-1, ii, jj )
+                        end do
+                     end do
 !
+                     if(nh(is).gt.0)then
+
+                        temp = 0.d0
+!
+                        call MXMA                                          &
+     &                    (tmpdh,1,nudx,tmpbec,1,nhm,temp,1,nudx,nss,nh(is),nss)
+!
+                        do j=1,nss
+                           do i=1,nss
+                              temp(i,j)=temp(i,j)*lambda(i,j,iss)
+                           end do
+                        end do
+!
+                        fpre(ii,jj)=fpre(ii,jj)+2.*SUM(temp(1:nss,1:nss))
+                     endif
+                     !
+                  end do
+                  !
                end do
             end do
          end do

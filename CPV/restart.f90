@@ -58,7 +58,7 @@
       complex(8), INTENT(IN) :: c0(:,:), cm(:,:)
       REAL(DP), INTENT(IN) :: tausm(:,:), taus(:,:), fion(:,:)
       REAL(DP), INTENT(IN) :: vels(:,:), velsm(:,:)
-      REAL(DP), INTENT(IN) :: acc(:), lambda(:,:), lambdam(:,:)
+      REAL(DP), INTENT(IN) :: acc(:), lambda(:,:,:), lambdam(:,:,:)
       REAL(DP), INTENT(IN) :: xnhe0, xnhem, vnhe, ekincm
       REAL(DP), INTENT(IN) :: xnhp0(:), xnhpm(:), vnhp(:)
       integer,      INTENT(in) :: nhpcl, nhpdim
@@ -146,7 +146,7 @@
       complex(8) :: c0(:,:), cm(:,:)
       REAL(DP) :: tausm(:,:),taus(:,:), fion(:,:)
       REAL(DP) :: vels(:,:), velsm(:,:)
-      REAL(DP) :: acc(:),lambda(:,:), lambdam(:,:)
+      REAL(DP) :: acc(:),lambda(:,:,:), lambdam(:,:,:)
       REAL(DP) :: xnhe0,xnhem,vnhe
       REAL(DP) :: xnhp0(:), xnhpm(:), vnhp(:)
       integer, INTENT(inout) :: nhpcl,nhpdim
@@ -241,7 +241,7 @@
         USE io_global, ONLY: ionode, ionode_id
         USE io_global, ONLY: stdout
         USE electrons_nose, ONLY: xnhe0, xnhem, vnhe
-        USE electrons_base, ONLY: nbsp, nspin
+        USE electrons_base, ONLY: nbsp, nspin, nudx
         USE cell_nose, ONLY: xnhh0, xnhhm, vnhh
         USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, nhpcl, nhpdim
         USE cp_restart, ONLY: cp_writefile
@@ -264,7 +264,7 @@
         REAL(DP), INTENT(IN) :: acc(:), cdmi(:) 
         REAL(DP), INTENT(IN) :: trutime
 
-        REAL(DP), ALLOCATABLE :: lambda(:,:)
+        REAL(DP), ALLOCATABLE :: lambda(:,:,:)
         REAL(DP) :: ekincm
         INTEGER   :: i, j, k, iss, ir
              
@@ -274,7 +274,7 @@
         !   if ndw < 1 Do not save wave functions and other system
         !   properties on the writefile subroutine
 
-        ALLOCATE( lambda(nbsp,nbsp) )
+        ALLOCATE( lambda(nudx,nudx,nspin) )
         lambda  = 0.0d0
         ekincm = 0.0d0
         !
@@ -298,7 +298,7 @@
           c0, cm, cdesc, occ, atoms_0, atoms_m, acc, taui, cdmi, &
           ht_m, ht_0, rho, vpot )
                                                                         
-        use electrons_base, only: nbsp
+        use electrons_base, only: nbsp, nspin, nudx
         USE cell_module, only: boxdimensions, cell_init, r_to_s, s_to_r
         USE brillouin, only: kpoints, kp
         use parameters, only: npkx, nsx
@@ -314,7 +314,6 @@
         USE gvecp, ONLY: ecutrho => ecutp
         USE fft, ONLY : pfwfft, pinvfft
         USE ions_base, ONLY: nat, nsp, na
-        USE electrons_module, ONLY: nspin
         USE control_flags, ONLY: twfcollect, force_pairing
         USE grid_dimensions, ONLY: nr1, nr2, nr3
         USE electrons_nose, ONLY: xnhe0, xnhem, vnhe
@@ -338,7 +337,7 @@
         REAL(DP), INTENT(OUT) :: acc(:), cdmi(:) 
         REAL(DP), INTENT(OUT) :: trutime
 
-        REAL(DP), ALLOCATABLE :: lambda_ ( : , : )
+        REAL(DP), ALLOCATABLE :: lambda_ ( : , : , : )
         REAL(DP) :: ekincm
         REAL(DP) :: hp0_ (3,3)
         REAL(DP) :: hm1_ (3,3)
@@ -347,7 +346,7 @@
         REAL(DP) :: b1(3), b2(3), b3(3)
         LOGICAL :: tens = .FALSE.
 
-        ALLOCATE( lambda_( nbsp , nbsp ) )
+        ALLOCATE( lambda_( nudx , nudx, nspin ) )
         lambda_  = 0.0d0
 
         CALL cp_readfile( ndr, scradir, .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
