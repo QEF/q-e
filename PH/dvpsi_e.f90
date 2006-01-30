@@ -60,7 +60,6 @@ subroutine dvpsi_e (ik, ipol)
   end if
   !
   allocate (work ( npwx, MAX(nkb,1)))
-
   allocate (gk ( 3, npwx))    
   allocate (h_diag( npwx , nbnd))    
   allocate (eprec( nbnd))    

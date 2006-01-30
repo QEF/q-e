@@ -12,10 +12,9 @@ subroutine phq_setup
   !
   !  This subroutine prepares several variables which are needed in the
   !  phonon program:
-  !  1) put the correct units on the masses
-  !  2) computes the total local potential (external+scf) on the smoot
+  !  1) computes the total local potential (external+scf) on the smooth
   !     grid to be used in h_psi and similia
-  !  3) computes dmuxc 3.1) with GC if needed
+  !  2) computes dmuxc 3) with GC if needed
   !  4) set the inverse of every matrix invs
   !  5) for metals sets the occupied bands
   !  6) computes alpha_pv
@@ -95,22 +94,15 @@ subroutine phq_setup
 
   call start_clock ('phq_setup')
   !
-  ! 1) We start with the mass renormalization
-  !
-!  call DSCAL (ntyp, amconv, amass, 1)
-!     (now done in phq_readin.f90 to avoid to be done more than once)
-!
-  !
-  ! 2) Computes the total local potential (external+scf) on the smooth grid
+  ! 1) Computes the total local potential (external+scf) on the smooth grid
   !
   call set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)
   !
-  ! 2.a) Set non linear core correction stuff
+  ! 2) Set non linear core correction stuff
   !
   nlcc_any = .false.
   do nt = 1, ntyp
      nlcc_any = nlcc_any.or.nlcc (nt)
-
   enddo
   if (nlcc_any) allocate (drc( ngm, ntyp))    
   !
@@ -141,7 +133,7 @@ subroutine phq_setup
   call multable (nsym, s, table)
   do isym = 1, nsym
      do jsym = 1, nsym
-        if (table (isym, jsym) .eq.1) invs (isym) = jsym
+        if (table (isym, jsym) == 1) invs (isym) = jsym
      enddo
   enddo
   !
@@ -167,7 +159,6 @@ subroutine phq_setup
      if (ngauss.eq. - 99) then
         fac = 1.d0 / sqrt (small)
         xmax = 2.d0 * log (0.5d0 * (fac + sqrt (fac * fac - 4.d0) ) )
-
      endif
      target = ef + xmax * degauss
      do ik = 1, nks
@@ -237,7 +228,7 @@ subroutine phq_setup
           irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
           nirr, gi, gimq, iverbosity, modenum)
   else
-     if (nsym.gt.1) then
+     if (nsym > 1) then
         call set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
              irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
              nirr, gi, gimq, iverbosity)
@@ -274,7 +265,7 @@ subroutine phq_setup
   !      ubar(5)=(1.d0,0.d0)
   !      ubar(6)=(1.d0,0.d0)
   !
-  !  10) set the variables needed for the partial computation
+  !  9) set the variables needed for the partial computation
   !
   if (nrapp.eq.0) then
      if (nat_todo.eq.0) then
@@ -319,10 +310,10 @@ subroutine phq_setup
         do ipert = 1, npert (irr)
            mu = imode0 + ipert
            do na = 1, nat
-              if (ifat (na) .eq.1.and.comp_irr (irr) .eq.0) then
+              if (ifat (na) == 1 .and. comp_irr (irr) == 0) then
                  do ipol = 1, 3
                     nu = 3 * (na - 1) + ipol
-                    if (abs (u (nu, mu) ) .gt.1.d-6) comp_irr (irr) = 1
+                    if (abs (u (nu, mu) ) > 1.d-6)  comp_irr (irr) = 1
                  enddo
               endif
            enddo
@@ -330,12 +321,11 @@ subroutine phq_setup
         imode0 = imode0 + npert (irr)
      enddo
   else
-     if (nrapp.gt.nirr) call errore ('phq_setup', 'too many representati &
-          &on', 1)
+     if (nrapp > nirr) call errore ('phq_setup', 'too many representations', 1)
      do irr = 1, nirr
         comp_irr (irr) = 0
         do mu = 1, nrapp
-           if (list (mu) .eq.irr) comp_irr (irr) = 1
+           if (list (mu) == irr) comp_irr (irr) = 1
         enddo
      enddo
      do na = 1, nat
@@ -348,8 +338,7 @@ subroutine phq_setup
               do na = 1, nat
                  do ipol = 1, 3
                     mu = 3 * (na - 1) + ipol
-                    if (abs (u (mu, imode0 + ipert) ) .gt.1.d-12) ifat (na) &
-                         = 1
+                    if (abs (u (mu, imode0+ipert) ) > 1.d-12) ifat (na) = 1
                  enddo
               enddo
            enddo
@@ -358,7 +347,7 @@ subroutine phq_setup
      enddo
      nat_todo = 0
      do na = 1, nat
-        if (ifat (na) .eq.1) then
+        if (ifat (na) == 1) then
            nat_todo = nat_todo + 1
            atomo (nat_todo) = na
         endif
@@ -372,7 +361,6 @@ subroutine phq_setup
   do irr = 1, nirr
      done_irr (irr) = 0
      npertx = max (npertx, npert (irr) )
-
   enddo
   call stop_clock ('phq_setup')
   return

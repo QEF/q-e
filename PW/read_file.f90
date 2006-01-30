@@ -44,7 +44,6 @@ SUBROUTINE read_file()
   IMPLICIT NONE
   !
   INTEGER               :: i, ik, ibnd, nb, nt, ios, ierr
-  REAL(DP), ALLOCATABLE :: et_g(:,:), wg_g(:,:)
   REAL(DP)              :: rdum(1,1)
   !
   !
@@ -60,6 +59,9 @@ SUBROUTINE read_file()
   !
   CALL readfile_new( 'dim', iunpun, rdum, rdum, kunit, 0, 0, ierr )
   !
+  CALL errore( 'read_file ', 'problem reading file ' // &
+             & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
+  !
 #else
   !
   ! ... a reset of the internal flags is necessary because some codes call
@@ -72,9 +74,6 @@ SUBROUTINE read_file()
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.new-save', ierr )
   !
 #endif
-  !
-  CALL errore( 'read_file ', 'problem reading file ' // &
-             & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
   !
   ! ... allocate space for atomic positions, symmetries, forces, tetrahedra
   !
@@ -100,9 +99,9 @@ SUBROUTINE read_file()
   !
 #if ! defined(__OLDPUNCH)
   !
-!-------------------------------------------------------------------------------
-! ... XML punch-file
-!-------------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  ! ... XML punch-file
+  !-------------------------------------------------------------------------------
   !
   CALL set_dimensions()
   !
@@ -141,11 +140,10 @@ SUBROUTINE read_file()
   CALL allocate_fft()
   CALL ggen()
   !
-  ! ... allocate wavefunctions and related quantities (including et and wg)
+  ! ... allocate memory for eigenvalues and weights (read from file)
   !
   nbndx = nbnd
-  !
-  CALL allocate_wfc()
+  ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ) )
   !
   CALL pw_readfile( 'nowave', ierr )
   !
@@ -177,20 +175,21 @@ SUBROUTINE read_file()
      !
   END DO
   !
-  ! ... allocate the potential
+  ! ... allocate the potential and wavefunctions
   !
   CALL allocate_locpot()
   CALL allocate_nlpot()
+  CALL allocate_wfc()
   !
 #else
   !
-!-------------------------------------------------------------------------------
-! ... standard punch-file
-!-------------------------------------------------------------------------------
+  !-------------------------------------------------------------------------------
+  ! ... standard punch-file
+  !-------------------------------------------------------------------------------
   !
-  ALLOCATE( et_g( nbnd, nkstot ), wg_g( nbnd, nkstot ) )
+  ALLOCATE( et( nbnd, nkstot ), wg( nbnd, nkstot ) )
   !
-  CALL readfile_new( 'nowave', iunpun, et_g, wg_g, kunit, 0, 0, ierr )
+  CALL readfile_new( 'nowave', iunpun, et, wg, kunit, 0, 0, ierr )
   !
   CALL errore( 'read_file ', 'problem reading file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
@@ -229,7 +228,7 @@ SUBROUTINE read_file()
   !
   DO nt = 1, nsp
      !
-     so(nt) = .TRUE.
+     so(nt) = (nbeta(nt) > 0)
      !
      DO nb = 1, nbeta(nt)
         !
@@ -256,11 +255,6 @@ SUBROUTINE read_file()
   nbndx = nbnd
   !
   CALL allocate_wfc()
-  !
-  et = et_g
-  wg = wg_g
-  !
-  DEALLOCATE( et_g, wg_g )
   !
   CALL poolscatter( nbnd , nkstot, et, nks, et )
   CALL poolscatter( nbnd , nkstot, wg, nks, wg )

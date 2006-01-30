@@ -23,15 +23,15 @@ subroutine n_plane_waves (ecutwfc, tpiba2, nks, nkstot, xk, g, ngm, &
   integer :: npwx, ngk (nkstot)
   ! local
   integer :: nk, ng
-
   real(DP) :: q2
+  !
   npwx = 0
   do nk = 1, nks
      ngk (nk) = 0
      do ng = 1, ngm
         q2 = (xk (1, nk) + g (1, ng) ) **2 + (xk (2, nk) + g (2, ng) ) ** &
              2 + (xk (3, nk) + g (3, ng) ) **2
-        if (q2.le.ecutwfc / tpiba2) then
+        if (q2 <= ecutwfc / tpiba2) then
            !
            ! here if |k+G|^2 <= Ecut increase the number of G inside the sphere
            !
@@ -47,7 +47,6 @@ subroutine n_plane_waves (ecutwfc, tpiba2, nks, nkstot, xk, g, ngm, &
      enddo
 100  npwx = max (npwx, ngk (nk) )
   enddo
-
-  if (npwx.eq.0) call errore ('n_plane_waves', 'No PWs !', 1)
+  if (npwx <= 0) call errore ('n_plane_waves', 'No PWs !', 1)
   return
 end subroutine n_plane_waves

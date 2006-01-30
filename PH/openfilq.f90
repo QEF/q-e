@@ -41,26 +41,23 @@ SUBROUTINE openfilq()
   !
   REAL(DP) :: edum(1,1), wdum(1,1)
   INTEGER :: ndr, ierr, kunittmp
-
+  !
+  !
   IF (LEN_TRIM(prefix) == 0) CALL errore ('openfilq', 'wrong prefix', 1)
-
   !
   !     There are six direct access files to be opened in the tmp area
   !
   !     The file with the wavefunctions
   !
   iuwfc = 20
-
   lrwfc = 2 * nbnd * npwx
   CALL diropn (iuwfc, 'wfc', lrwfc, exst)
-
   IF (.NOT.exst) THEN
+#if defined (__OLDPUNCH)
     ndr      = 4
-    kunittmp = 1
-
     kunittmp = kunit
-
     CALL readfile_new( 'wave', ndr, edum, wdum, kunittmp, lrwfc, iuwfc, ierr )
+#endif
     IF( ierr > 0 ) &
       CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
     twfcollect=.NOT.exst

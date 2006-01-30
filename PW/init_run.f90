@@ -10,8 +10,9 @@ SUBROUTINE init_run()
   !----------------------------------------------------------------------------
   !
   USE ions_base,       ONLY : nat, tau, ityp
+  USE klist,           ONLY : nkstot
   USE force_mod,       ONLY : force
-  USE wvfct,           ONLY : gamma_only
+  USE wvfct,           ONLY : gamma_only, nbnd, et, wg
   USE control_flags,   ONLY : lmd
   USE dynamics_module, ONLY : allocate_dyn_vars
   !
@@ -29,10 +30,17 @@ SUBROUTINE init_run()
   ! ... generate reciprocal-lattice vectors and fft indices
   !
   CALL ggen()
+  !
   CALL summary()
+  !
+  ! ... allocate memory for all other arrays (potentials, wavefunctions etc)
+  !
   CALL allocate_nlpot()
   CALL allocate_locpot()
   CALL allocate_wfc()
+  !
+  ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ) )
+  et(:,:) = 0.D0
   !
   CALL openfil()
   !

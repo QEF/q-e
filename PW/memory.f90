@@ -134,11 +134,7 @@ subroutine memory_estimate ( )
   ! The following variables are real in order to prevent
   ! integer overflow for very large jobs
   !
-#if defined (FUJ64)|| defined (__ALPHA) || defined (__SX6) || defined(__LINUX64) || defined(__ALTIX) || defined(ORIGIN)
   real(DP), parameter :: real_size = 8, int_size = 8
-#else
-  real(DP), parameter :: real_size = 8, int_size = 4
-#endif
   real(DP), parameter :: comp_size = 2*real_size
   real(DP) :: total_mem, scalable_mem, nonscalable_mem
   real(DP) :: scalable_wspace, nonscalable_wspace
