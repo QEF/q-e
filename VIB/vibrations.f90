@@ -34,7 +34,7 @@ MODULE vibrations
   !
 #ifdef DFT_CP
   COMPLEX (KIND=DP), ALLOCATABLE :: ref_c0(:,:,:,:)
-  REAL    (KIND=DP), ALLOCATABLE :: ref_lambda(:,:)
+  REAL    (KIND=DP), ALLOCATABLE :: ref_lambda(:,:,:)
 #endif
 
   REAL    (KIND=DP), ALLOCATABLE :: ref_tau(:,:)
