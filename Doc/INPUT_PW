@@ -799,7 +799,7 @@ cell_dynamics
                             extended lagrangian
 
 press          REAL ( default = 0.D0 )
-               target pressure [KBar] in a variable-cell md simulation
+               target pressure [KBar] in a variable-cell md or relaxation run.
 
 wmass          REAL ( default = sum of atomic masses in the cell )
                fictitious cell mass [amu] for variable-cell md simulations
