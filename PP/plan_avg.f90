@@ -27,10 +27,10 @@ PROGRAM do_plan_avg
   IMPLICIT NONE
   INTEGER :: ninter
   CHARACTER(len=256) :: filplot, outdir
-  CHARACTER(len=256), EXTERNAL :: trimcheck
   REAL(DP), ALLOCATABLE :: averag (:,:,:), plan (:,:,:)
   !
   INTEGER :: iunplot = 4, ios, ibnd, ik, ir, nt, na, i
+  CHARACTER(len=256), EXTERNAL :: trimcheck
   !
   NAMELIST / inputpp / outdir, prefix, filplot
   !
@@ -66,8 +66,6 @@ PROGRAM do_plan_avg
   !
   CALL read_file ( )
   !
-  IF (noncolin)   CALL errore ('plan_avg', &
-	'planar avg + noncolin not yet implemented',1)
   IF (gamma_only) CALL errore ('plan_avg', &
        ' planar average with gamma tricks not yet implemented',2)
   !
@@ -141,9 +139,10 @@ subroutine plan_avg (averag, plan, ninter)
   USE lsda_mod, ONLY: lsda, current_spin, isk
   USE uspp, ONLY: vkb, nkb
   USE wvfct, ONLY: npw, npwx, nbnd, wg, igk, g2kin
-  USE wavefunctions_module,  ONLY: evc
+  USE wavefunctions_module,  ONLY: evc, evc_nc
+  USE noncollin_module, ONLY : noncolin, npol
   USE io_files, ONLY: iunwfc, nwordwfc
-  USE becmod, ONLY: becp
+  USE becmod, ONLY: becp, becp_nc
 
   implicit none
   integer :: ninter
@@ -231,15 +230,27 @@ subroutine plan_avg (averag, plan, ninter)
   !
   averag(:,:,:) = 0.d0
   plan(:,:,:) = 0.d0
-  allocate(becp(nkb,nbnd))
+  if (noncolin) then
+     allocate(becp_nc(nkb,npol,nbnd))
+  else
+     allocate(becp(nkb,nbnd))
+  endif
   CALL init_us_1 ( )
   do ik = 1, nks
      if (lsda) current_spin = isk (ik)
      call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-     call davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     if (noncolin) then
+        call davcio (evc_nc, nwordwfc, iunwfc, ik, - 1)
+     else
+        call davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     endif
      call init_us_2 (npw, igk, xk (1, ik), vkb)
 
-     call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+     if (noncolin) then
+        call ccalbec_nc (nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc_nc)
+     else
+        call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+     endif
      do ibnd = 1, nbnd
         call local_dos1d (ik, ibnd, plan (1, ibnd, ik) )
         !
@@ -262,7 +273,11 @@ subroutine plan_avg (averag, plan, ninter)
         enddo
      enddo
   enddo
-  deallocate (becp)
+  if (noncolin) then
+     deallocate (becp_nc)
+  else
+     deallocate (becp)
+  endif
 #ifdef __PARA
   call poolrecover (plan, nr3 * nbnd, nkstot, nks)
   call poolrecover (averag, nat * nbnd, nkstot, nks)

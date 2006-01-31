@@ -21,8 +21,9 @@ subroutine local_dos1d (ik, kband, plan)
   USE uspp, ONLY: becsum
   USE uspp_param, ONLY: nh, tvanp
   USE wvfct, ONLY: npw, wg, igk
-  USE wavefunctions_module,  ONLY: evc, psic
-  USE becmod, ONLY: becp
+  USE noncollin_module, ONLY: noncolin, npol
+  USE wavefunctions_module,  ONLY: evc, psic, evc_nc, psic_nc
+  USE becmod, ONLY: becp, becp_nc
   implicit none
   !
   ! input variables
@@ -37,7 +38,7 @@ subroutine local_dos1d (ik, kband, plan)
   !    Additional local variables for Ultrasoft PP's
   !
 
-  integer :: ikb, jkb, ijkb0, ih, jh, na, ijh, np
+  integer :: ikb, jkb, ijkb0, ih, jh, na, ijh, ipol, np
   ! counter on beta functions
   ! counter on beta functions
   ! auxiliary variable for ijkb0
@@ -72,20 +73,38 @@ subroutine local_dos1d (ik, kband, plan)
   wg (kband, ik) = 1.d0
   !
   !
-  !     First compute the square modulus of the state kband,ik on the smoo
+  !     First compute the square modulus of the state kband,ik on the smooth
   !     mesh
   !
+  if (noncolin) then
+     psic_nc = (0.d0,0.d0)
+     do ipol=1,npol
+        do ig = 1, npw
+           psic_nc (nls (igk (ig) ), ipol ) = evc_nc (ig, ipol, kband)
+        enddo
+        call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+     enddo
 
-  psic(1:nrxxs) = (0.d0,0.d0)
-  do ig = 1, npw
-     psic (nls (igk (ig) ) ) = evc (ig, kband)
-  enddo
-  call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+     w1 = wg (kband, ik) / omega
+     do ipol=1,npol
+        do ir = 1, nrxxs
+           aux(ir) = aux(ir) + w1 * (DBLE(psic_nc(ir,ipol))**2 + &
+                                     AIMAG(psic_nc(ir,ipol))**2)
+        enddo
+     enddo
+  else
+     psic(1:nrxxs) = (0.d0,0.d0)
+     do ig = 1, npw
+        psic (nls (igk (ig) ) ) = evc (ig, kband)
+     enddo
+     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
 
-  w1 = wg (kband, ik) / omega
-  do ir = 1, nrxxs
-     aux(ir) = aux(ir) + w1 * (DBLE(psic(ir))**2 + AIMAG(psic(ir))**2)
-  enddo
+     w1 = wg (kband, ik) / omega
+     do ir = 1, nrxxs
+        aux(ir) = aux(ir) + w1 * (DBLE(psic(ir))**2 + AIMAG(psic(ir))**2)
+     enddo
+  endif
+
   !
   !    If we have a US pseudopotential we compute here the becsum term
   !
@@ -100,15 +119,33 @@ subroutine local_dos1d (ik, kband, plan)
               ijh = 1
               do ih = 1, nh (np)
                  ikb = ijkb0 + ih
-                 becsum(ijh,na,current_spin) = &
+                 if (noncolin) then
+                    do ipol=1,npol
+                       becsum(ijh,na,current_spin) = &
+                           becsum(ijh,na,current_spin) + w1 * &
+                            DBLE( CONJG(becp_nc(ikb,ipol,ibnd)) * &
+                                        becp_nc(ikb,ipol,ibnd) )
+                    enddo
+                 else
+                    becsum(ijh,na,current_spin) = &
                         becsum(ijh,na,current_spin) + w1 * &
                         DBLE( CONJG(becp(ikb,ibnd)) * becp(ikb,ibnd) )
+                 endif
                  ijh = ijh + 1
                  do jh = ih + 1, nh (np)
                     jkb = ijkb0 + jh
-                    becsum(ijh,na,current_spin) = &
+                    if (noncolin) then
+                       do ipol=1,npol
+                          becsum(ijh,na,current_spin) = &
+                             becsum(ijh,na,current_spin) + w1 * 2.d0 * &
+                             DBLE( CONJG(becp_nc(ikb,ipol,ibnd))  &
+                                     * becp_nc(jkb,ipol,ibnd) )
+                       enddo
+                    else
+                       becsum(ijh,na,current_spin) = &
                            becsum(ijh,na,current_spin) + w1 * 2.d0 * &
                            DBLE( CONJG(becp(ikb,ibnd)) * becp(jkb,ibnd) )
+                    endif
                     ijh = ijh + 1
                  enddo
               enddo
