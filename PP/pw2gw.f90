@@ -23,6 +23,7 @@ PROGRAM pw2gw
   !
   IMPLICIT NONE
   INTEGER :: ios
+  CHARACTER(len=256), EXTERNAL :: trimcheck
 
   NAMELIST / inputpp / prefix, outdir
 
@@ -37,7 +38,7 @@ PROGRAM pw2gw
      !
      READ (5, inputpp, err=200, iostat=ios)
 200  CALL errore('pw2gw', 'reading inputpp namelist', ABS(ios))
-  tmp_dir = TRIM(outdir)
+  tmp_dir = trimcheck (outdir)
      !
   END IF
   ! 

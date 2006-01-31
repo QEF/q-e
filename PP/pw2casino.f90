@@ -20,6 +20,7 @@ PROGRAM pw2casino
   !
   IMPLICIT NONE
   INTEGER :: ios
+  CHARACTER(len=256), EXTERNAL :: trimcheck
 
   NAMELIST / inputpp / prefix, outdir
 
@@ -34,7 +35,7 @@ PROGRAM pw2casino
      !
      READ (5, inputpp, err=200, iostat=ios)
 200  CALL errore('pw2casino', 'reading inputpp namelist', ABS(ios))
-  tmp_dir = TRIM(outdir)
+     tmp_dir = trimcheck (outdir)
      !
   END IF
   ! 

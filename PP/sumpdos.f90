@@ -74,7 +74,7 @@ efermi = 0.0
       !
    CASE ( "-f" )
       !
-      ! read file names form file
+      ! read file names from file
       !
       CALL getarg ( 2, filein )
       IF ( LEN_TRIM(filein) == 0 ) CALL errore('sumpdos','provide filein name',2)

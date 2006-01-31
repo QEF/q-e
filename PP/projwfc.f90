@@ -90,8 +90,8 @@ PROGRAM projwfc
   USE mp,   ONLY : mp_bcast      
   !
   IMPLICIT NONE 
-  CHARACTER (len=256) :: filpdos, io_choice 
-  CHARACTER (len=256) :: outdir 
+  CHARACTER (len=256) :: filpdos, io_choice, outdir
+  CHARACTER (len=256), EXTERNAL :: trimcheck
   REAL (DP)      :: Emin, Emax, DeltaE, degauss1, smoothing
   INTEGER :: ngauss1, ios
   !
@@ -118,7 +118,7 @@ PROGRAM projwfc
      READ (5, inputpp, err = 200, iostat = ios) 
 200  CALL errore ('projwfc', 'reading inputpp namelist', ABS (ios) ) 
      ! 
-     tmp_dir = TRIM(outdir) 
+     tmp_dir = trimcheck (outdir) 
      ! save the value of degauss and ngauss: they are read from file
      ngauss1 = ngauss
      degauss1=degauss

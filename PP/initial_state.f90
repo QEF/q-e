@@ -28,6 +28,7 @@ PROGRAM initial_state
   !
   IMPLICIT NONE 
   CHARACTER(len=256) :: outdir 
+  CHARACTER(len=256), EXTERNAL :: trimcheck
   INTEGER :: ios, ik, excite(ntypx)
   NAMELIST / inputpp / outdir, prefix, excite
   ! 
@@ -44,7 +45,7 @@ PROGRAM initial_state
      READ (5, inputpp, err = 200, iostat = ios) 
 200  CALL errore ('postforces', 'reading inputpp namelist', ABS (ios) ) 
      ! 
-     tmp_dir = TRIM(outdir) 
+     tmp_dir = trimcheck (outdir) 
      !  
   END IF 
   ! 

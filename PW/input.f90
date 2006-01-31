@@ -262,6 +262,7 @@ SUBROUTINE iosys()
   INTEGER  :: i, ia, ios, is, image, nt
   LOGICAL  :: ltest
   REAL(DP) :: theta, phi
+  CHARACTER (LEN=256), external :: trimcheck
   !
   !
   CALL getenv( 'HOME', pseudo_dir )
@@ -1066,7 +1067,7 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-  tmp_dir = TRIM( outdir )
+  tmp_dir = trimcheck ( outdir )
   lstres = ( tstress .AND. lscf )
   !
   IF ( lberry .AND. npool > 1 ) &
@@ -1399,7 +1400,7 @@ SUBROUTINE iosys()
   !
   IF ( .NOT. TRIM( wfcdir ) == 'undefined' ) THEN
      !
-     wfc_dir = TRIM( wfcdir )
+     wfc_dir = trimcheck ( wfcdir )
      !
      CALL verify_tmpdir( wfc_dir )
      !
@@ -1645,24 +1646,6 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   CHARACTER (LEN=256) :: file_path, tmp_dir_saved
   INTEGER, EXTERNAL   :: c_mkdir
   !
-  !
-  ! ... verify if tmp_dir ends with /, add one if needed
-  !
-  l = LEN_TRIM( tmp_dir )
-  !
-  IF ( tmp_dir(l:l) /= '/' ) THEN
-     !
-     IF ( l > 0 .AND. l < LEN( tmp_dir ) ) THEN
-        !
-        tmp_dir(l+1:l+1) = '/'
-        !
-     ELSE
-        !
-        CALL errore( 'outdir: ', tmp_dir // ' truncated or empty', 1 )
-        !
-     END IF
-     !
-  END IF
   !
   ios = 0
   !

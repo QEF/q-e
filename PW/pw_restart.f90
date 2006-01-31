@@ -96,11 +96,10 @@ MODULE pw_restart
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname, filename, file_pseudo, rho_file_base
       CHARACTER(LEN=80)     :: bravais_lattice
-      INTEGER               :: i, ig, ik, ngg,ig_, ierr, ipol, &
-                               flen, ik_eff, num_k_points
+      INTEGER               :: i, ig, ik, ngg, ierr, ipol, ik_eff, num_k_points
       INTEGER,  ALLOCATABLE :: kisort(:)
       INTEGER               :: npool, nkbl, nkl, nkr, npwx_g
-      INTEGER               :: ike, iks, npw_g, ispin, local_pw
+      INTEGER               :: ike, iks, npw_g, ispin
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: itmp(:,:)
       LOGICAL               :: lgvec, lwfc
@@ -1896,11 +1895,10 @@ MODULE pw_restart
       !
       CHARACTER(LEN=4)     :: cspin
       CHARACTER(LEN=256)   :: filename
-      INTEGER              :: i, ig, ik, ngg,ig_, ipol, &
-                              flen, ik_eff, num_k_points
+      INTEGER              :: i, ig, ik, ipol, ik_eff, num_k_points
       INTEGER, ALLOCATABLE :: kisort(:)
       INTEGER              :: npool, nkbl, nkl, nkr, npwx_g
-      INTEGER              :: ike, iks, npw_g, ispin, local_pw
+      INTEGER              :: ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
       INTEGER, ALLOCATABLE :: itmp(:,:)
       REAL(DP)             :: scalef

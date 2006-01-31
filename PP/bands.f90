@@ -18,8 +18,8 @@ PROGRAM bands
   !
   IMPLICIT NONE
   !
-  CHARACTER (len=256) :: filband
-  CHARACTER (len=256) :: outdir
+  CHARACTER (len=256) :: filband, outdir
+  CHARACTER (len=256) :: trimcheck
   LOGICAL :: lsigma(4)
   INTEGER :: spin_component
   INTEGER :: ios
@@ -47,7 +47,7 @@ PROGRAM bands
 200  CALL errore ('do_bands', 'reading inputpp namelist', ABS (ios) )
      !
      lsigma(4)=.false.
-     tmp_dir = TRIM(outdir)
+     tmp_dir = trimcheck (outdir)
      !
   END IF
   !

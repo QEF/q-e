@@ -36,6 +36,7 @@ program pw2wannier90
    integer :: ik, i, kunittmp
    CHARACTER(LEN=4) :: spin_component
    CHARACTER(len=256) :: outdir
+   CHARACTER(len=256), EXTERNAL :: trimcheck
    integer :: ispinw
  
    namelist / inputpp / outdir, prefix, spin_component
@@ -54,7 +55,7 @@ program pw2wannier90
    !
    !     Check of namelist variables
    !
-   tmp_dir = TRIM(outdir) 
+   tmp_dir = trimcheck (outdir) 
    SELECT CASE ( TRIM( spin_component ) )
      CASE ( 'up' )
        ispinw = 1

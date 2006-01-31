@@ -60,8 +60,8 @@ PROGRAM dos
   USE mp,         ONLY : mp_bcast
   !
   IMPLICIT NONE
-  CHARACTER(len=256) :: fildos
-  CHARACTER(len=256) :: outdir
+  CHARACTER(len=256) :: fildos, outdir
+  CHARACTER(len=256), EXTERNAL :: trimcheck
   REAL(DP) :: E, DOSofE (2), DOSint, Elw, Eup, DeltaE, Emin, Emax, &
                    degauss1
   INTEGER :: nrot, ik, n, ndos, ngauss1, ios
@@ -90,7 +90,7 @@ PROGRAM dos
      READ (5, inputpp, err=200, iostat=ios )
 200  CALL errore('dos','reading inputpp namelist',ABS(ios))
      !
-     tmp_dir = TRIM(outdir)
+     tmp_dir = trimcheck (outdir)
      ! save the value of degauss and ngauss: they are read from file
      degauss1 = degauss
      ngauss1  = ngauss

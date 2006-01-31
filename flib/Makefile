@@ -31,6 +31,7 @@ sph_bes.o \
 sph_besr.o \
 sph_dbes.o \
 transto.o \
+trimcheck.o \
 date_and_tim.o \
 sort_gvec.o \
 volume.o \

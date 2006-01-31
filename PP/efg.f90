@@ -18,6 +18,7 @@ program efg
 
   implicit none
   character (len=256) :: filerec(ntypx)
+  CHARACTER(len=256), EXTERNAL :: trimcheck
   real(DP) :: Q(ntypx), rc(ntypx,0:lmaxx)
   integer :: ios
   integer :: nt, il
@@ -39,7 +40,7 @@ program efg
      read (5, inputpp, err=200, iostat=ios)
 200  call errore('efg.x', 'reading inputpp namelist', abs(ios))
 
-     tmp_dir = trim(outdir)
+     tmp_dir = trimcheck (outdir)
 
   end if
   ! 

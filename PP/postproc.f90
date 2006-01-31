@@ -67,12 +67,13 @@ SUBROUTINE extract (filplot)
   IMPLICIT NONE
   CHARACTER(len=256), INTENT(out) :: filplot
 
-  INTEGER :: plot_num, kpoint, kband, spin_component, ios
+  INTEGER :: plot_num, kpoint, kband, spin_component, ios, flen
   LOGICAL :: stm_wfc_matching, lsign
 
   REAL(DP) :: emin, emax, sample_bias, z, dz, epsilon
   ! directory for temporary files
   CHARACTER(len=256) :: outdir
+  CHARACTER(len=256), external :: trimcheck
 
   NAMELIST / inputpp / outdir, prefix, plot_num, stm_wfc_matching, &
        sample_bias, spin_component, z, dz, emin, emax, kpoint, kband,&
@@ -101,7 +102,8 @@ SUBROUTINE extract (filplot)
      !
      READ (5, inputpp, err = 200, iostat = ios)
 200  CALL errore ('postproc', 'reading inputpp namelist', ABS (ios) )
-     tmp_dir = TRIM(outdir)
+     !
+     tmp_dir = trimcheck ( outdir )
      !
   END IF
   !

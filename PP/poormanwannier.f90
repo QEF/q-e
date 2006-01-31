@@ -26,6 +26,7 @@ PROGRAM poormanwannier
   !
   IMPLICIT NONE 
   CHARACTER(len=256) :: outdir 
+  CHARACTER(len=256), EXTERNAL :: trimcheck
   INTEGER :: ios
   INTEGER :: first_band, last_band
   NAMELIST / inputpp / outdir, prefix, first_band, last_band
@@ -44,7 +45,7 @@ PROGRAM poormanwannier
      READ (5, inputpp, err = 200, iostat = ios) 
 200  CALL errore ('pmwannier', 'reading inputpp namelist', ABS (ios) ) 
      ! 
-     tmp_dir = TRIM(outdir) 
+     tmp_dir = trimcheck (outdir) 
      ! 
   END IF 
   ! 

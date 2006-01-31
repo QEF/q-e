@@ -27,6 +27,7 @@ PROGRAM do_plan_avg
   IMPLICIT NONE
   INTEGER :: ninter
   CHARACTER(len=256) :: filplot, outdir
+  CHARACTER(len=256), EXTERNAL :: trimcheck
   REAL(DP), ALLOCATABLE :: averag (:,:,:), plan (:,:,:)
   !
   INTEGER :: iunplot = 4, ios, ibnd, ik, ir, nt, na, i
@@ -51,7 +52,7 @@ PROGRAM do_plan_avg
      !
      READ (5, inputpp, err = 200, iostat = ios)
 200  CALL errore ('postproc', 'reading inputpp namelist', ABS (ios) )
-     tmp_dir = TRIM(outdir)
+     tmp_dir = trimcheck (outdir)
      !
   END IF
   !
