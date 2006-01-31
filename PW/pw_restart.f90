@@ -325,7 +325,7 @@ MODULE pw_restart
 ! ... BRILLOUIN_ZONE
 !-------------------------------------------------------------------------------
          !
-         CALL write_bz( num_k_points, xk, wk )
+         CALL write_bz( num_k_points, xk, wk, k1, k2, k3, nk1, nk2, nk3 )
          !
 !-------------------------------------------------------------------------------
 ! ... PHONON
@@ -1588,6 +1588,7 @@ MODULE pw_restart
       !
       USE lsda_mod, ONLY : lsda
       USE klist,    ONLY : nkstot, xk, wk
+      USE ktetra,   ONLY : nk1, nk2, nk3, k1, k2, k3
       !
       IMPLICIT NONE
       !
@@ -1617,6 +1618,15 @@ MODULE pw_restart
          !
          IF ( lsda ) nkstot = num_k_points * 2
          !
+         CALL iotk_scan_empty( iunpun, "MONKHORST_PACK_GRID", attr )
+         CALL iotk_scan_attr( attr, "nk1", nk1 )
+         CALL iotk_scan_attr( attr, "nk2", nk2 )
+         CALL iotk_scan_attr( attr, "nk3", nk3 )   
+         CALL iotk_scan_empty( iunpun, "MONKHORST_PACK_OFFSET", attr )
+         CALL iotk_scan_attr( attr, "k1", k1 )
+         CALL iotk_scan_attr( attr, "k2", k2 )
+         CALL iotk_scan_attr( attr, "k3", k3 )   
+         !
          DO ik = 1, num_k_points
             !
             CALL iotk_scan_empty( iunpun, "K-POINT" // &
@@ -1645,6 +1655,12 @@ MODULE pw_restart
       CALL mp_bcast( nkstot, ionode_id )
       CALL mp_bcast( xk,     ionode_id )
       CALL mp_bcast( wk,     ionode_id )
+      CALL mp_bcast( nk1, ionode_id )
+      CALL mp_bcast( nk2, ionode_id )
+      CALL mp_bcast( nk3, ionode_id )
+      CALL mp_bcast( k1, ionode_id )
+      CALL mp_bcast( k2, ionode_id )
+      CALL mp_bcast( k3, ionode_id )
       !
       lbz_read = .TRUE.
       !

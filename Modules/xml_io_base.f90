@@ -788,10 +788,10 @@ MODULE xml_io_base
     END SUBROUTINE write_occ
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_bz( num_k_points, xk, wk )
+    SUBROUTINE write_bz( num_k_points, xk, wk, k1, k2, k3, nk1, nk2, nk3 )
       !------------------------------------------------------------------------
       !
-      INTEGER,  INTENT(IN) :: num_k_points
+      INTEGER,  INTENT(IN) :: num_k_points, k1, k2, k3, nk1, nk2, nk3
       REAL(DP), INTENT(IN) :: xk(:,:), wk(:)
       !
       INTEGER :: ik
@@ -803,6 +803,15 @@ MODULE xml_io_base
       !
       CALL iotk_write_attr( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
       CALL iotk_write_empty( iunpun, "UNITS_FOR_K-POINTS", attr )
+      !
+      CALL iotk_write_attr( attr, "nk1", nk1, FIRST = .TRUE. )
+      CALL iotk_write_attr( attr, "nk2", nk2 )
+      CALL iotk_write_attr( attr, "nk3", nk3 )
+      CALL iotk_write_empty( iunpun, "MONKHORST_PACK_GRID", attr )
+      CALL iotk_write_attr( attr, "k1", k1, FIRST = .TRUE. )
+      CALL iotk_write_attr( attr, "k2", k2 )
+      CALL iotk_write_attr( attr, "k3", k3 )
+      CALL iotk_write_empty( iunpun, "MONKHORST_PACK_OFFSET", attr )
       !
       DO ik = 1, num_k_points
          !

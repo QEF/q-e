@@ -327,7 +327,7 @@ SUBROUTINE elphsum ( )
   IMPLICIT NONE
   ! epsw = 20 cm^-1, in Ry
   REAL(DP), PARAMETER :: Rytocm1 = 109737.57990d0, RytoGHz = 3.289828D6, &
-       RytoTHz = RytoGHz*1000.d0, epsw = 20.d0 / Rytocm1, eps = 1.0d-6
+       RytoTHz = RytoGHz/1000.d0, epsw = 20.d0 / Rytocm1, eps = 1.0d-6
   !
   INTEGER :: iuna2Fsave  = 40
   !
