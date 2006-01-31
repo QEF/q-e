@@ -129,7 +129,7 @@ CONTAINS
     USE cp_main_variables,    ONLY : lambda, lambdam, ema0bg, nfi, bec
     USE cp_main_variables,    ONLY : irb, eigrb, rhor, rhog, rhos, acc
     USE cp_main_variables,    ONLY : lambdap, eigr, rhopr
-    USE electrons_base,       ONLY : nbsp, nbspx, nel, f
+    USE electrons_base,       ONLY : nbsp, nbspx, nel, f, nudx, nspin
     USE electrons_module,     ONLY : cp_eigs
     USE ions_positions,       ONLY : tau0, taus, tausm, vels, velsm
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
@@ -168,7 +168,7 @@ CONTAINS
     !
 #ifdef DFT_CP
     ALLOCATE( ref_c0     ( ngw,   nbspx, 1, 1 ) )
-    ALLOCATE( ref_lambda ( nbsp,  nbsp        ) )
+    ALLOCATE( ref_lambda ( nudx,  nudx, nspin ) )
 #endif
     ALLOCATE( ref_tau    ( 3,     natx        ) )
     ALLOCATE( active_atom( nat                ) )
