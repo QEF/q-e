@@ -47,9 +47,6 @@ SUBROUTINE read_file()
   REAL(DP)              :: rdum(1,1)
   !
   !
-  ! ... a value of zero cause the parameter to be read from the ".save" file
-  !
-  kunit = 0
   !
   ! ... here we read the variables that dimension the system
   ! ... in parallel execution, only root proc reads the file
@@ -57,6 +54,9 @@ SUBROUTINE read_file()
   !
 #if defined(__OLDPUNCH)
   !
+  ! ... a value of zero cause the parameter to be read from the ".save" file
+  !
+  kunit = 0
   CALL readfile_new( 'dim', iunpun, rdum, rdum, kunit, 0, 0, ierr )
   !
   CALL errore( 'read_file ', 'problem reading file ' // &

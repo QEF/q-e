@@ -1460,17 +1460,21 @@ MODULE pw_restart
          !
          CALL iotk_scan_dat( iunpun, "LSDA", lsda )
          !
+         CALL iotk_scan_dat( iunpun, "NON-COLINEAR_CALCULATION", noncolin )
+         !
          IF ( lsda ) THEN
             !
             nspin = 2
+            !
+         ELSE IF ( noncolin ) THEN
+            !
+            nspin = 4
             !
          ELSE
             !
             nspin = 1
             !
          END IF
-         !
-         CALL iotk_scan_dat( iunpun, "NON-COLINEAR_CALCULATION", noncolin )
          !
          IF ( noncolin ) THEN
             !
