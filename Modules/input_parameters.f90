@@ -239,6 +239,11 @@ MODULE input_parameters
           ! if .TRUE. a finite electric field is added to the local potential
           ! only used in PW
 
+          LOGICAL :: tefield2  = .FALSE.
+          ! if .TRUE. a second finite electric field is added to the local potential
+          ! only used in PW
+
+
         LOGICAL :: dipfield = .FALSE. 
           ! if .TRUE. the dipole field is subtracted
           ! only used in PW
@@ -279,7 +284,7 @@ MODULE input_parameters
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, &
           wfcdir, max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
           pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, &
-          wf_collect, printwfc, scradir,lelfield, nberrycyc, refg, tqr
+          wf_collect, printwfc, scradir,lelfield, nberrycyc, refg, tqr, tefield2
 
 
 !
@@ -877,6 +882,13 @@ MODULE input_parameters
         REAL(DP) :: efield =0.d0 
           ! electric field intensity in atomic units
 
+       INTEGER  :: epol2 = 3
+          ! direzione campo elettrico
+
+        REAL(DP) :: efield2 =0.d0
+          ! electric field intensity in atomic units
+
+
 
         NAMELIST / electrons / emass, emass_cutoff, orthogonalization, &
           electron_maxstep, ortho_eps, ortho_max, electron_dynamics,   &
@@ -893,7 +905,7 @@ MODULE input_parameters
           diago_thr_init, n_inner, fermi_energy, rotmass, occmass,     &
           rotation_damping, occupation_damping, rotation_dynamics,     &
           occupation_dynamics, tcg, maxiter, etresh, passop, epol,     &
-          efield
+          efield, epol2, efield2
 
 
 !

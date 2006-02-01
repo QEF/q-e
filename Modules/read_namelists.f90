@@ -301,6 +301,8 @@ MODULE read_namelists_module
        !
        epol   = 3
        efield = 0.D0
+       epol2  = 3
+       efield2 = 0.d0
        ! 
        RETURN
        ! 
@@ -615,6 +617,7 @@ MODULE read_namelists_module
        CALL mp_bcast( refg,          ionode_id )
        CALL mp_bcast( disk_io,       ionode_id )
        CALL mp_bcast( tefield,       ionode_id )
+       CALL mp_bcast( tefield2,       ionode_id )
        CALL mp_bcast( dipfield,      ionode_id )
        CALL mp_bcast( lberry,        ionode_id )
        CALL mp_bcast( gdir,          ionode_id )
@@ -808,6 +811,9 @@ MODULE read_namelists_module
        CALL mp_bcast( epol,   ionode_id )
        CALL mp_bcast( efield, ionode_id )
        ! 
+       CALL mp_bcast( epol2,   ionode_id )
+       CALL mp_bcast( efield2, ionode_id )
+
        RETURN
        !
      END SUBROUTINE
