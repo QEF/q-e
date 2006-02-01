@@ -247,7 +247,9 @@ MODULE from_scratch_module
     USE cell_nose,            ONLY : xnhh0, xnhhm,  vnhh
     USE cp_electronic_mass,   ONLY : emass
     USE efield_module,        ONLY : tefield, efield_berry_setup, &
-                                     berry_energy, dforce_efield
+                                     berry_energy, dforce_efield, &
+                                     tefield2, efield_berry_setup2, &
+                                     berry_energy2, dforce_efield2
     USE cg_module,            ONLY : tcg
     USE ensemble_dft,         ONLY : tens, compute_entropy
     USE runcp_module,         ONLY : runcp_uspp
@@ -346,6 +348,10 @@ MODULE from_scratch_module
     IF( tefield ) THEN
       CALL efield_berry_setup( eigr, tau0 )
     END IF
+    IF( tefield2 ) THEN
+      CALL efield_berry_setup2( eigr, tau0 )
+    END IF
+
 
     IF( .NOT. tcg ) THEN
 
@@ -374,6 +380,11 @@ MODULE from_scratch_module
         CALL berry_energy( enb, enbi, bec, cm(:,:,1,1), fion ) 
         etot = etot + enb + enbi
       END IF
+      IF( tefield2 ) THEN
+        CALL berry_energy2( enb, enbi, bec, cm(:,:,1,1), fion )
+        etot = etot + enb + enbi
+      END IF
+
 
       CALL compute_stress( stress, detot, h, omega )
 

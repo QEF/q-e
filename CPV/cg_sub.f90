@@ -71,7 +71,9 @@
       use ions_positions, only: tau0
       use wavefunctions_module, only: c0, cm, phi => cp
       use efield_module, only: tefield, evalue, ctable, qmat, detq, ipolp, &
-            berry_energy, ctabin, gqq, gqqm, df, pberryel
+            berry_energy, ctabin, gqq, gqqm, df, pberryel, &
+            tefield2, evalue2, ctable2, qmat2, detq2, ipolp2, &
+            berry_energy2, ctabin2, gqq2, gqqm2, pberryel2
       use mp, only: mp_sum,mp_bcast
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi
@@ -108,10 +110,11 @@
       real(dp) :: gamma, entmp, sta
       complex(dp),allocatable :: hpsi0(:,:)
       real(dp) :: sca
-      logical  :: newscheme
+      logical  :: newscheme, firstiter
 !
 !
-      newscheme=.true.
+      newscheme=.false.
+      firstiter=.true.
 
       allocate(hpsi0(ngw,n))
       fion2=0.d0
@@ -211,9 +214,10 @@
             call rhoofr(nfi,c0,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
           else
 
-           if(newscheme) then 
+           if(newscheme.or.firstiter) then 
                call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                  rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec  )
+               firstiter=.false.
            endif
             !     calculation of the rotated quantities
             call rotate(z0,c0(:,:,1,1),bec,c0diag,becdiag)
@@ -252,6 +256,12 @@
              call berry_energy( enb, enbi, bec, c0(:,:,1,1), fion )
              etot=etot+enb+enbi
           endif
+          if(tefield2  ) then!just in this case calculates elfield stuff at zeo field-->to be bettered
+
+             call berry_energy2( enb, enbi, bec, c0(:,:,1,1), fion )
+             etot=etot+enb+enbi
+          endif
+
         else
 
           etot=enever
@@ -263,7 +273,7 @@
           ene_ok=.false.
 
         end if ENERGY_CHECK
-        if(ionode) write(37,*)itercg, etotnew,pberryel!for debug and tuning purposes
+        if(ionode) write(37,*)itercg, etotnew,pberryel,pberryel2!for debug and tuning purposes
 
 
         
@@ -302,6 +312,13 @@
             call dforceb(c0, i+1, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
             c3(1:ngw)=c3(1:ngw)+evalue*df(1:ngw)
           endif
+          if(tefield2 .and. (evalue2.ne.0.d0)) then
+            call dforceb(c0, i, betae, ipolp2, bec ,ctabin2(1,1,ipolp2), gqq2, gqqm2, qmat2, deeq, df)
+            c2(1:ngw)=c2(1:ngw)+evalue2*df(1:ngw)
+            call dforceb(c0, i+1, betae, ipolp2, bec ,ctabin2(1,1,ipolp2), gqq2, gqqm2, qmat2, deeq, df)
+            c3(1:ngw)=c3(1:ngw)+evalue2*df(1:ngw)
+          endif
+
           hpsi(1:ngw,  i)=c2(1:ngw)
           hpsi(1:ngw,i+1)=c3(1:ngw)
           if (ng0.eq.2) then
@@ -530,6 +547,11 @@
           call berry_energy( enb, enbi, becm, cm(:,:,1,1), fion )
           etot=etot+enb+enbi
         endif
+        if( tefield2  ) then!to be bettered
+          call berry_energy2( enb, enbi, becm, cm(:,:,1,1), fion )
+          etot=etot+enb+enbi
+        endif
+
         ene1=etot
         if(tens.and.newscheme) then
           call compute_entropy2( entropy, f, n, nspin )
@@ -589,6 +611,11 @@
           call berry_energy( enb, enbi, becm, cm(:,:,1,1), fion )
           etot=etot+enb+enbi
         endif
+        if( tefield2 )  then!to be bettered
+          call berry_energy2( enb, enbi, becm, cm(:,:,1,1), fion )
+          etot=etot+enb+enbi
+        endif
+
         enever=etot
         if(tens.and.newscheme) then
           call compute_entropy2( entropy, f, n, nspin )
@@ -611,7 +638,7 @@
         endif
 
         !if the energy has diminished with respect to  ene0 and ene1 , everything ok
-        if( (enever.lt.ene0) .and. (enever.lt.ene1)) then
+        if( ((enever.lt.ene0) .and. (enever.lt.ene1)).or.(tefield.or.tefield2)) then
           c0(:,:,1,1)=cm(:,:,1,1)
           bec(:,:)=becm(:,:)
           ene_ok=.true.
@@ -679,6 +706,11 @@
               call berry_energy( enb, enbi, becm, cm(:,:,1,1), fion )
               etot=etot+enb+enbi
             endif
+            if( tefield2)  then !to be bettered
+              call berry_energy2( enb, enbi, becm, cm(:,:,1,1), fion )
+              etot=etot+enb+enbi
+            endif
+
             enever=etot
            if(tens.and.newscheme) then
              call compute_entropy2( entropy, f, n, nspin )
@@ -745,6 +777,19 @@
               c3(ig)=c3(ig)+evalue*df(ig)
             enddo
           endif
+          if(tefield2.and.(evalue2 .ne. 0.d0)) then
+            call dforceb &
+               (c0, i, betae, ipolp2, bec ,ctabin2(1,1,ipolp2), gqq2, gqqm2, qmat2, deeq, df)
+            do ig=1,ngw
+              c2(ig)=c2(ig)+evalue2*df(ig)
+            enddo
+            call dforceb &
+               (c0, i+1, betae, ipolp2, bec ,ctabin2(1,1,ipolp2), gqq2, gqqm2, qmat2, deeq, df)
+            do ig=1,ngw
+              c3(ig)=c3(ig)+evalue2*df(ig)
+            enddo
+          endif
+
           do ig=1,ngw
             gi(ig,  i)=c2(ig)
             gi(ig,i+1)=c3(ig)
@@ -822,6 +867,10 @@
            call bforceion(fion,tfor.or.tprnfor,ipolp, qmat,bec,becdr,gqq,evalue)
 
         endif
+        if( tefield2.and.(evalue2 .ne. 0.d0) ) then
+           call bforceion(fion,tfor.or.tprnfor,ipolp2, qmat2,bec,becdr,gqq2,evalue2)
+        endif
+
 
         deallocate( hpsi0) 
        if(ionode) close(37)!for debug and tuning purposes

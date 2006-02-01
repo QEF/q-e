@@ -63,7 +63,8 @@ MODULE from_restart_module
     USE cvan,                 ONLY : nvb
     USE ions_nose,            ONLY : xnhp0, xnhpm, vnhp
     USE cp_electronic_mass,   ONLY : emass
-    USE efield_module,        ONLY : efield_berry_setup, tefield
+    USE efield_module,        ONLY : efield_berry_setup, tefield, &
+                                     efield_berry_setup2, tefield2
     USE runcp_module,         ONLY :  runcp_uspp
     USE wave_constrains,      ONLY : interpolate_lambda
     USE energies,             ONLY : eself, enl, etot, ekin
@@ -179,6 +180,7 @@ MODULE from_restart_module
     IF ( tpre ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, c0, dbec, .true. )
     !
     IF ( tefield ) CALL efield_berry_setup( eigr, tau0 )
+    IF ( tefield2 ) CALL efield_berry_setup2( eigr, tau0 )
     !
     IF ( tzerop .OR. tzeroe .OR. taurdr ) THEN
        !

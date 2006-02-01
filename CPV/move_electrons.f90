@@ -31,13 +31,14 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE ions_positions,       ONLY : tau0
   USE stre,                 ONLY : stress
   USE dener,                ONLY : detot
-  USE efield_module,        ONLY : tefield, ipolp, qmat, gqq, evalue
+  USE efield_module,        ONLY : tefield, ipolp, qmat, gqq, evalue, &
+                                   tefield2, ipolp2, qmat2, gqq2, evalue2
   !
   USE wannier_subroutines,  ONLY : get_wannier_center, wf_options, &
                                    write_charge_and_exit, ef_tune
   USE cpr_subroutines,      ONLY : compute_stress
   USE ensemble_dft,         ONLY : compute_entropy2
-  USE efield_module,        ONLY : berry_energy
+  USE efield_module,        ONLY : berry_energy, berry_energy2
   USE runcp_module,         ONLY : runcp_uspp
   USE wave_constrains,      ONLY : interpolate_lambda
   USE gvecw,                ONLY : ngw
@@ -104,6 +105,14 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
         etot = etot + enb + enbi
         !
      END IF
+     IF( tefield2 )  THEN
+        !
+        CALL berry_energy2( enb, enbi, bec, c0(:,:,1,1), fion )
+        !
+        etot = etot + enb + enbi
+        !
+     END IF
+
      !
      !=======================================================================
      !
@@ -132,6 +141,8 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      !
      IF ( (tfor.or.tprnfor) .AND. tefield ) &
         CALL bforceion( fion, .TRUE. , ipolp, qmat, bec, becdr, gqq, evalue )
+      IF ( (tfor.or.tprnfor) .AND. tefield2 ) &
+        CALL bforceion( fion, .TRUE. , ipolp2, qmat2, bec, becdr, gqq2, evalue2 )
      !
      IF ( tfor .OR. thdyn ) then
         CALL interpolate_lambda( lambdap, lambda, lambdam )

@@ -32,7 +32,11 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE electrons_base,           ONLY : nel, iupdwn, nupdwn, nudx, nelt
   USE efield_module,            ONLY : efield, epol, tefield, allocate_efield, &
                                        efield_update, ipolp, qmat, gqq,        &
-                                       evalue, berry_energy, pberryel, pberryion
+                                       evalue, berry_energy, pberryel, pberryion,&
+                                       efield2, epol2, tefield2, allocate_efield2, &
+                                       efield_update2, ipolp2, qmat2, gqq2,        &
+                                       evalue2, berry_energy2, pberryel2, pberryion2
+
   USE ensemble_dft,             ONLY : tens, tgrand, ninner, ismear, etemp,   &
                                        ef, tdynz, tdynf, zmass, fmass, fricz, &
                                        fricf, allocate_ensemble_dft,          &
@@ -255,7 +259,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      ! ... why this call ??? from Paolo Umari
      !
-     IF ( tefield ) CALL calbec( 1, nsp, eigr, c0, bec ) ! ATTENZIONE  
+     IF ( tefield.or.tefield2 ) CALL calbec( 1, nsp, eigr, c0, bec ) ! ATTENZIONE  
      !
      ! Autopilot (Dynamic Rules) Implimentation    
      !
@@ -263,6 +267,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
     
      !
      IF ( ( tfor .OR. tfirst ) .AND. tefield ) CALL efield_update( eigr )
+     IF ( ( tfor .OR. tfirst ) .AND. tefield2 ) CALL efield_update2( eigr )
+
      !
      !=======================================================================
      !
@@ -632,7 +638,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
             CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
             IF ( thdyn ) CALL formf( tfirst, eself )
             IF (tefield ) CALL efield_update( eigr )
-            lambdam = lambda
+            IF (tefield2 ) CALL efield_update2( eigr )
+            lambdam=lambda
             CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
                           enthal, enb, enbi, fccc, ccc, dt2bye )
           END IF

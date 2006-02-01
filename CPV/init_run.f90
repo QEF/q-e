@@ -42,7 +42,7 @@ SUBROUTINE init_run()
   USE cg_module,                ONLY : tcg
   USE electrons_base,           ONLY : nudx, nbnd
   USE parameters,               ONLY : natx, nspinx
-  USE efield_module,            ONLY : tefield
+  USE efield_module,            ONLY : tefield, tefield2
   USE uspp_param,               ONLY : nhm
   USE ions_nose,                ONLY : xnhp0, xnhpm, vnhp, nhpcl, nhpdim
   USE cell_base,                ONLY : h, hold, hnew, velh, tpiba2, ibrav, &
@@ -77,7 +77,7 @@ SUBROUTINE init_run()
   USE restart_file,             ONLY : readfile
   USE ions_base,                ONLY : ions_cofmass
   USE ensemble_dft,             ONLY : id_matrix_init, allocate_ensemble_dft
-  USE efield_module,            ONLY : allocate_efield
+  USE efield_module,            ONLY : allocate_efield, allocate_efield2
   USE cg_module,                ONLY : allocate_cg
   USE wannier_module,           ONLY : allocate_wannier  
   USE io_files,                 ONLY : outdir, prefix
@@ -208,6 +208,7 @@ SUBROUTINE init_run()
   IF ( tcg ) CALL allocate_cg( ngw, nbspx,nkbus )
   !
   IF ( tefield ) CALL allocate_efield( ngw, nbspx, nhm, nax, nsp )
+  IF ( tefield2 ) CALL allocate_efield2( ngw, nbspx, nhm, nax, nsp )
   !
   IF ( ALLOCATED( deeq ) ) deeq(:,:,:,:) = 0.D0
   !

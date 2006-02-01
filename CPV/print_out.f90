@@ -55,7 +55,8 @@
       USE ions_base,        ONLY : na, nsp, nat, ind_bck, atm, ityp, pmass, &
                                    cdm_displacement, ions_displacement
       USE cell_base,        ONLY : s_to_r
-      USE efield_module,    ONLY : tefield, pberryel, pberryion
+      USE efield_module,    ONLY : tefield, pberryel, pberryion, &
+                                   tefield2, pberryel2, pberryion2
       USE cg_module,        ONLY : tcg, itercg
       USE sic_module,       ONLY : self_interaction, sic_alpha, sic_epsilon
       USE electrons_module, ONLY : print_eigenvalues
@@ -226,8 +227,12 @@
       END IF
 
       IF( tefield) THEN
-         IF(ionode) write(stdout,'( A14,F12.6,A14,F12.6)') 'Elct. dipole',-pberryel,'Ionic dipole',-pberryion
+         IF(ionode) write(stdout,'( A14,F12.6,A14,F12.6)') 'Elct. dipole 1',-pberryel,'Ionic dipole 1',-pberryion
       ENDIF
+      IF( tefield2) THEN
+         IF(ionode) write(stdout,'( A14,F12.6,A14,F12.6)') 'Elct. dipole 2',-pberryel2,'Ionic dipole 2',-pberryion2
+      ENDIF
+
       !
       !
       DEALLOCATE( labelw )

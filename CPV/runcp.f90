@@ -597,7 +597,7 @@
      use reciprocal_vectors, only : gstart
      use electrons_base, only : n=>nbsp
      use wannier_subroutines, only: ef_potential
-     use efield_module, only: dforce_efield, tefield
+     use efield_module, only: dforce_efield, tefield, dforce_efield2, tefield2
 
      use gvecw, only: ngw
      !
@@ -658,6 +658,9 @@
            call dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos)
            if( tefield ) then
              CALL dforce_efield ( bec, i, c0, c2, c3, rhos)
+           end if
+           if( tefield2 ) then
+             CALL dforce_efield2 ( bec, i, c0, c2, c3, rhos)
            end if
            IF( iflag == 2 ) THEN
              cm(:,i)   = c0(:,i)

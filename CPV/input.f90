@@ -253,7 +253,11 @@ MODULE input
      !
      USE efield_module, ONLY:  tefield_    => tefield,  &
                                epol_       => epol,     &
-                               efield_     => efield
+                               efield_     => efield,   &
+                               tefield2_    => tefield2,  &
+                               epol2_       => epol2,     &
+                               efield2_     => efield2
+
 
      USE input_parameters, ONLY: &
         electron_dynamics, electron_damping, diis_rot, electron_temperature,   &
@@ -267,7 +271,7 @@ MODULE input
         tdipole_card, toptical_card, tnewnfi_card, newnfi_card,                &
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
         orthogonalization, electron_velocities, nat, if_pos, phase_space,      &
-        tefield, epol, efield
+        tefield, epol, efield, tefield2, epol2, efield2
      !
      IMPLICIT NONE
      !
@@ -294,6 +298,11 @@ MODULE input
      tefield_       = tefield
      epol_          = epol
      efield_        = efield
+  
+     tefield2_       = tefield2
+     epol2_          = epol2
+     efield2_        = efield2
+
      !
      ! ... Set internal time step variables ( delt, twodelt, dt2 ... )
      !
@@ -1226,7 +1235,7 @@ MODULE input
     USE ions_nose,            ONLY: ions_nose_info
     USE cell_nose,            ONLY: cell_nose_info
     USE cell_base,            ONLY: frich
-    USE efield_module,        ONLY: tefield, efield_info
+    USE efield_module,        ONLY: tefield, efield_info, tefield2, efield_info2
       !
     IMPLICIT NONE
 
@@ -1312,6 +1321,8 @@ MODULE input
       END IF
       !
       IF(tefield) call efield_info( ) 
+      IF(tefield2) call efield_info2( )
+
       WRITE( stdout,700) iprsta
 
     END IF
