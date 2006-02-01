@@ -6,17 +6,17 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-! ... SUBROUTINE con_cam:       counts the number of fields in a string 
-!                               separated by the optional character
-!
 ! ... SUBROUTINE field_count:   accepts two string (one of them is optional) 
 !                               and one integer and count the number of fields
 !                               in the string separated by a blank or a tab 
 !                               character. If the optional string is specified
 !                               (it has anyway len=1) it is assumed as the 
 !                               separator character.
-!                               Ignores any charcter following the exclamation 
+!                               Ignores any character following the exclamation
 !                               mark (fortran comment)
+!
+! ... SUBROUTINE con_cam:       counts the number of fields in a string 
+!                               separated by the optional character
 !
 ! ... SUBROUTINE field_compare: accepts two strings and one integer. Counts the
 !                               fields contained in the first string and 
@@ -33,116 +33,15 @@ MODULE parser
   !
   USE io_global, ONLY : stdout
   USE kinds
-
+  !
+  PRIVATE
+  !
+  PUBLIC :: parse_unit, field_count, read_line
+  !
   INTEGER :: parse_unit = 5 ! normally 5, but can be set otherwise
   !
   CONTAINS
   !
-  !-----------------------------------------------------------------------
-  PURE FUNCTION int_to_char( int )
-    !-----------------------------------------------------------------------
-    !
-    IMPLICIT NONE
-    !
-    INTEGER, INTENT(IN) :: int
-    CHARACTER (LEN=6)   :: int_to_char
-    !
-    !   
-    IF ( int < 10 ) THEN
-       !
-       WRITE( UNIT = int_to_char , FMT = "(I1)" ) int
-       !
-    ELSE IF ( int < 100 ) THEN
-       !
-       WRITE( UNIT = int_to_char , FMT = "(I2)" ) int
-       !
-    ELSE IF ( int < 1000 ) THEN
-       !
-       WRITE( UNIT = int_to_char , FMT = "(I3)" ) int
-       !
-    ELSE IF ( int < 10000 ) THEN
-       !
-       WRITE( UNIT = int_to_char , FMT = "(I4)" ) int
-       !
-    ELSE      
-       ! 
-       WRITE( UNIT = int_to_char , FMT = "(I5)" ) int     
-       !
-    END IF    
-    !
-    RETURN
-    !
-  END FUNCTION int_to_char
-  !
-  !
-  !--------------------------------------------------------------------------
-  FUNCTION find_free_unit()
-    !--------------------------------------------------------------------------
-    !
-    IMPLICIT NONE
-    !
-    INTEGER :: find_free_unit
-    INTEGER :: iunit
-    LOGICAL :: opnd
-    !
-    !
-    unit_loop: DO iunit = 99, 1, -1
-       !
-       INQUIRE( UNIT = iunit, OPENED = opnd )
-       !
-       IF ( .NOT. opnd ) THEN
-          !
-          find_free_unit = iunit
-          !
-          RETURN
-          !
-       END IF
-       !
-    END DO unit_loop
-    !
-    CALL errore( 'find_free_unit()', 'free unit not found ?!?', 1 )
-    !
-    RETURN
-    !
-  END FUNCTION find_free_unit
-  !
-  !--------------------------------------------------------------------------
-  SUBROUTINE delete_if_present( filename, in_warning )
-    !--------------------------------------------------------------------------
-    !
-    USE io_global, ONLY : ionode
-    !
-    IMPLICIT NONE
-    !
-    CHARACTER(LEN=*),  INTENT(IN) :: filename
-    LOGICAL, OPTIONAL, INTENT(IN) :: in_warning
-    LOGICAL                       :: exst, warning
-    INTEGER                       :: iunit
-    !
-    IF ( .NOT. ionode ) RETURN
-    !
-    INQUIRE( FILE = filename, EXIST = exst )
-    !
-    IF ( exst ) THEN
-       !
-       iunit = find_free_unit()
-       !
-       warning = .FALSE.
-       !
-       IF ( PRESENT( in_warning ) ) warning = in_warning
-       !
-       OPEN(  UNIT = iunit, FILE = filename , STATUS = 'OLD' )
-       CLOSE( UNIT = iunit, STATUS = 'DELETE' )
-       !
-       IF ( warning ) &
-          WRITE( UNIT = stdout, FMT = '(/,5X,"WARNING: ",A, &
-               & " file was present; old file deleted")' ) filename
-       !
-    END IF
-    !
-    RETURN
-    !
-  END SUBROUTINE delete_if_present
   !
   !--------------------------------------------------------------------------
   PURE SUBROUTINE field_count( num, line, car )

@@ -35,17 +35,16 @@
 
           USE io_global, ONLY: stdout, ionode
           USE mp_global, ONLY: mpime, nproc
-          USE parser, ONLY: int_to_char
           use para_mod, ONLY: me, node
           use mp, only: mp_env
           USE cp_version
 
           LOGICAL    :: texst
-          REAL(DP)  :: elapsed_seconds, cclock
-          EXTERNAL      elapsed_seconds, cclock
           INTEGER    :: nchar
           CHARACTER(LEN=80) :: uname
           CHARACTER(LEN=80) :: version_str
+          CHARACTER(LEN=6), EXTERNAL :: int_to_char
+          REAL(DP), EXTERNAL :: elapsed_seconds, cclock
 
 
           CALL init_clocks( .TRUE. )

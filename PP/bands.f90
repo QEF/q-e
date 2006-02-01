@@ -11,7 +11,7 @@
 PROGRAM bands
   !-----------------------------------------------------------------------
   !
-  USE io_files,  ONLY : nd_nmbr, prefix, tmp_dir
+  USE io_files,  ONLY : nd_nmbr, prefix, tmp_dir, trimcheck
   USE mp_global, ONLY : npool
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_bcast
@@ -19,7 +19,6 @@ PROGRAM bands
   IMPLICIT NONE
   !
   CHARACTER (len=256) :: filband, outdir
-  CHARACTER (len=256) :: trimcheck
   LOGICAL :: lsigma(4)
   INTEGER :: spin_component
   INTEGER :: ios

@@ -28,7 +28,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   USE control_flags,        ONLY : imix, tr2
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
-  USE parser,               ONLY : find_free_unit
+  USE io_files,             ONLY : find_free_unit
   USE cell_base,            ONLY : omega
   !
   IMPLICIT NONE

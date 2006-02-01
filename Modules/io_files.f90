@@ -123,6 +123,107 @@ MODULE io_files
   !
   INTEGER :: iunefield   = 31 ! unit to store wavefunction for calculatin electric field operator
   !
+CONTAINS
+  !
+  !-----------------------------------------------------------------------
+  FUNCTION trimcheck ( directory )
+    !-----------------------------------------------------------------------
+    !
+    ! ... verify if directory ends with /, add one if needed; 
+    ! ... trim white spaces and put the result in trimcheck
+    !
+    IMPLICIT NONE
+    !
+    CHARACTER (LEN=*), INTENT(IN) :: directory
+    CHARACTER (LEN=256) :: trimcheck
+    INTEGER  :: l
+    !
+    l = LEN_TRIM( directory )
+    IF ( l == 0 ) CALL errore( 'trimcheck', ' input name empty', 1)
+    !
+    IF ( directory(l:l) == '/' ) THEN
+       trimcheck = TRIM ( directory)
+    ELSE
+       IF ( l < LEN( trimcheck ) ) THEN
+          trimcheck = TRIM ( directory ) // '/'
+       ELSE
+          CALL errore(  'trimcheck', ' input name too long', l )
+       END IF
+    END IF
+    !
+    RETURN
+    !
+  END FUNCTION trimcheck
+  !
+  !--------------------------------------------------------------------------
+  FUNCTION find_free_unit()
+    !--------------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    !
+    INTEGER :: find_free_unit
+    INTEGER :: iunit
+    LOGICAL :: opnd
+    !
+    !
+    unit_loop: DO iunit = 99, 1, -1
+       !
+       INQUIRE( UNIT = iunit, OPENED = opnd )
+       !
+       IF ( .NOT. opnd ) THEN
+          !
+          find_free_unit = iunit
+          !
+          RETURN
+          !
+       END IF
+       !
+    END DO unit_loop
+    !
+    CALL errore( 'find_free_unit()', 'free unit not found ?!?', 1 )
+    !
+    RETURN
+    !
+  END FUNCTION find_free_unit
+  !
+  !--------------------------------------------------------------------------
+  SUBROUTINE delete_if_present( filename, in_warning )
+    !--------------------------------------------------------------------------
+    !
+    USE io_global, ONLY : ionode, stdout
+    !
+    IMPLICIT NONE
+    !
+    CHARACTER(LEN=*),  INTENT(IN) :: filename
+    LOGICAL, OPTIONAL, INTENT(IN) :: in_warning
+    LOGICAL                       :: exst, warning
+    INTEGER                       :: iunit
+    !
+    IF ( .NOT. ionode ) RETURN
+    !
+    INQUIRE( FILE = filename, EXIST = exst )
+    !
+    IF ( exst ) THEN
+       !
+       iunit = find_free_unit()
+       !
+       warning = .FALSE.
+       !
+       IF ( PRESENT( in_warning ) ) warning = in_warning
+       !
+       OPEN(  UNIT = iunit, FILE = filename , STATUS = 'OLD' )
+       CLOSE( UNIT = iunit, STATUS = 'DELETE' )
+       !
+       IF ( warning ) &
+          WRITE( UNIT = stdout, FMT = '(/,5X,"WARNING: ",A, &
+               & " file was present; old file deleted")' ) filename
+       !
+    END IF
+    !
+    RETURN
+    !
+  END SUBROUTINE delete_if_present
+  !
 !=----------------------------------------------------------------------------=!
 END MODULE io_files
 !=----------------------------------------------------------------------------=!

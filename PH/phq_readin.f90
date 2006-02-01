@@ -37,7 +37,7 @@ SUBROUTINE phq_readin()
   USE partial,       ONLY : atomo, list, nat_todo, nrapp
   USE output,        ONLY : fildyn, filelph, fildvscf, fildrho
   USE disp,          ONLY : nq1, nq2, nq3
-  USE io_files,      ONLY : tmp_dir, prefix
+  USE io_files,      ONLY : tmp_dir, prefix, trimcheck
   USE noncollin_module, ONLY : noncolin
   USE control_flags, ONLY : iverbosity, reduce_io, modenum
   USE io_global,     ONLY : ionode
@@ -183,7 +183,9 @@ SUBROUTINE phq_readin()
        'gamma is needed for elec.field', 1)
   IF (zue.AND..NOT.trans) CALL errore ('phq_readin', 'trans must be &
        &.t. for Zue calc.', 1)
-  tmp_dir = TRIM(outdir)
+  !
+  tmp_dir = trimcheck (outdir)
+  !
 400 CONTINUE
   CALL bcast_ph_input ( ) 
   xqq(:) = xq(:) 

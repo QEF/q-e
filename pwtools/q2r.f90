@@ -71,7 +71,6 @@ PROGRAM q2r
   USE mp,         ONLY : mp_start, mp_env, mp_end, mp_barrier
   USE mp_global,  ONLY : nproc, mpime, mp_global_start
   USE dynamicalq, ONLY : phiq, tau, ityp, zeu
-  USE parser,     ONLY : int_to_char
   !
   IMPLICIT NONE
   !
@@ -81,10 +80,10 @@ PROGRAM q2r
   !     dimensions of the FFT grid formed by the q-point grid
   !
   CHARACTER(len=20)  :: crystal
-  CHARACTER(len=80)  :: title
   CHARACTER(len=256) :: fildyn, filin, filj, filf, flfrc
   CHARACTER(len=3)   :: atm(ntypx)
   CHARACTER(len=9)   :: symm_type
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
   LOGICAL :: lq, lrigid, lrigid_save, lnogridinfo
   CHARACTER (LEN=10) :: zasr

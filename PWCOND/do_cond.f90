@@ -79,7 +79,7 @@ SUBROUTINE do_cond(nodenumber)
      !
      READ (5, inputcond, err=200, iostat=ios )
 200  CALL errore ('do_cond','reading inputcond namelist',ABS(ios))
-     tmp_dir=TRIM(outdir)
+     tmp_dir=trimcheck (outdir)
      !
      !     Reading 2D k-point
      READ(5, *, err=300, iostat=ios ) nkpts

@@ -49,7 +49,7 @@ PROGRAM dos
   !      file, degauss=DeltaE (in Ry) and ngauss=0 will be used
   !
   USE io_global,  ONLY : stdout, ionode, ionode_id
-  USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir
+  USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir, trimcheck
   USE constants,  ONLY : rytoev
   USE kinds,      ONLY : DP
   USE klist,      ONLY : xk, wk, degauss, ngauss, lgauss, nks, nkstot
@@ -61,7 +61,6 @@ PROGRAM dos
   !
   IMPLICIT NONE
   CHARACTER(len=256) :: fildos, outdir
-  CHARACTER(len=256), EXTERNAL :: trimcheck
   REAL(DP) :: E, DOSofE (2), DOSint, Elw, Eup, DeltaE, Emin, Emax, &
                    degauss1
   INTEGER :: nrot, ik, n, ndos, ngauss1, ios

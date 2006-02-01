@@ -86,7 +86,6 @@ MODULE constraints_module
                                     constr_type_inp, constr_inp, &
                                     constr_target, constr_target_set, &
                                     monitor_constr_ => monitor_constr
-       USE parser,           ONLY : int_to_char
        !
        IMPLICIT NONE
        !
@@ -105,6 +104,7 @@ MODULE constraints_module
        REAL(DP)    :: dtau(3), norm_dtau
        REAL(DP)    :: k(3), phase, norm_k
        COMPLEX(DP) :: struc_fac
+       CHARACTER(LEN=6), EXTERNAL :: int_to_char
        !
        !
        nconstr    = nconstr_inp

@@ -14,7 +14,7 @@ SUBROUTINE cg_readin()
   USE ions_base, ONLY : nat, amass
   USE pwcom
   USE cgcom
-  USE io_files,  ONLY : tmp_dir, prefix
+  USE io_files,  ONLY : tmp_dir, prefix, trimcheck
   USE io_global, ONLY : ionode, ionode_id
   USE noncollin_module, ONLY : noncolin
   USE mp,        ONLY : mp_bcast
@@ -51,7 +51,7 @@ SUBROUTINE cg_readin()
      READ(iunit,'(a)') title_ph
      READ(iunit,inputph)
      !
-     tmp_dir = TRIM(outdir)
+     tmp_dir = trimcheck (outdir)
      !
   END IF
   !

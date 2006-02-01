@@ -1951,8 +1951,6 @@ MODULE read_cards_module
      !
      SUBROUTINE card_climbing_images( input_line )
        !
-       USE parser,        ONLY :  int_to_char
-       !
        IMPLICIT NONE
        ! 
        CHARACTER(LEN=256) :: input_line
@@ -1960,7 +1958,8 @@ MODULE read_cards_module
        LOGICAL, EXTERNAL  :: matches
        ! 
        INTEGER            :: i
-       CHARACTER (LEN=5)  :: i_char 
+       CHARACTER(LEN=5)  :: i_char 
+       CHARACTER(LEN=6), EXTERNAL :: int_to_char
        !
        !
        IF ( tread ) &
@@ -2016,8 +2015,6 @@ MODULE read_cards_module
      !
      SUBROUTINE card_plot_wannier( input_line )
        !
-       USE parser, ONLY :  int_to_char
-       !
        IMPLICIT NONE
        ! 
        CHARACTER(LEN=256) :: input_line
@@ -2025,7 +2022,8 @@ MODULE read_cards_module
        LOGICAL, EXTERNAL  :: matches
        ! 
        INTEGER            :: i, ib
-       CHARACTER (LEN=5)  :: i_char
+       CHARACTER(LEN=5)  :: i_char
+       CHARACTER(LEN=6), EXTERNAL :: int_to_char
        !
        !
        IF ( tread ) &

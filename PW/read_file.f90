@@ -15,7 +15,6 @@ SUBROUTINE read_file()
   ! ... in the pwscf program and reads them from the data file.
   !
   USE kinds,            ONLY : DP
-  USE parameters,       ONLY : natx
   USE ions_base,        ONLY : nat, nsp, ityp, tau, if_pos
   USE basis,            ONLY : natomwfc
   USE cell_base,        ONLY : tpiba2, at, bg
@@ -77,7 +76,7 @@ SUBROUTINE read_file()
   !
   ! ... allocate space for atomic positions, symmetries, forces, tetrahedra
   !
-  IF ( nat <= 0 .OR. nat > natx ) &
+  IF ( nat <= 0 ) &
      CALL errore( 'read_file', 'wrong number of atoms', 1 )
   !
   ! ... allocation

@@ -10,9 +10,8 @@ SUBROUTINE restart_from_file
   !----------------------------------------------------------------------------
   !
   USE io_global,     ONLY : stdout, ionode
-  USE io_files,      ONLY : iunres, tmp_dir, prefix
+  USE io_files,      ONLY : iunres, tmp_dir, prefix, delete_if_present
   USE control_flags, ONLY : restart
-  USE parser,        ONLY : delete_if_present
   USE mp_global,     ONLY : mpime
   !
   IMPLICIT NONE

@@ -36,7 +36,6 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE path_variables,   ONLY : pos, pes, grad_pes, num_of_images, &
                                dim, suspended_image, istep_path,  &
                                first_last_opt, frozen, write_save
-  USE parser,           ONLY : int_to_char
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_global,        ONLY : inter_image_comm, intra_image_comm, &
                                my_image_id, nimage, root
@@ -58,8 +57,9 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   CHARACTER (LEN=256)        :: tmp_dir_saved
   LOGICAL                    :: file_exists, opnd   
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
-    ! previous positions of atoms (needed for extrapolation)
+  ! previous positions of atoms (needed for extrapolation)
   !
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
   REAL (DP), EXTERNAL :: get_clock
   !
   !

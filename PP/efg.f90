@@ -9,7 +9,7 @@
 program efg
   !-----------------------------------------------------------------------
   use kinds,      only : DP
-  use io_files,   only : nd_nmbr,prefix, outdir, tmp_dir
+  use io_files,   only : nd_nmbr,prefix, outdir, tmp_dir, trimcheck
   use parameters, only : ntypx, lmaxx
   use paw,        only : read_recon, paw_nbeta, aephi, psphi
   USE ions_base,  ONLY : ntyp => nsp
@@ -18,7 +18,6 @@ program efg
 
   implicit none
   character (len=256) :: filerec(ntypx)
-  CHARACTER(len=256), EXTERNAL :: trimcheck
   real(DP) :: Q(ntypx), rc(ntypx,0:lmaxx)
   integer :: ios
   integer :: nt, il

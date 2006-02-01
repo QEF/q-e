@@ -489,7 +489,7 @@ MODULE dynamics_module
       USE ions_base,          ONLY : nat, tau
       USE cell_base,          ONLY : alat, at
       USE constraints_module, ONLY : pbc
-      USE parser,             ONLY : delete_if_present
+      USE io_files,           ONLY : delete_if_present
       !
       IMPLICIT NONE
       !

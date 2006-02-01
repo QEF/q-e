@@ -42,12 +42,12 @@ MODULE xml_io_base
       !
       USE mp,        ONLY : mp_barrier
       USE mp_global, ONLY : mpime
-      USE parser,    ONLY : int_to_char
       !
       CHARACTER(LEN=*), INTENT(IN) :: dirname
       !
       INTEGER           :: ierr, ik
       INTEGER, EXTERNAL :: c_mkdir
+      CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
       ierr = 0
       !
@@ -69,7 +69,7 @@ MODULE xml_io_base
       CLOSE( UNIT = 4, STATUS = 'DELETE' )
       !
       CALL errore( 'create_directory: ', &
-                   TRIM( dirname ) // 'non existent or non writable', ierr )
+                   TRIM( dirname ) // ' non existent or non writable', ierr )
       !
       RETURN
       !
@@ -177,14 +177,13 @@ MODULE xml_io_base
     FUNCTION restart_dir( scradir, runit )
       !------------------------------------------------------------------------
       !
-      USE parser, ONLY: int_to_char
-      !
       CHARACTER(LEN=256)           :: restart_dir
       CHARACTER(LEN=*), INTENT(IN) :: scradir
       INTEGER,          INTENT(IN) :: runit
       !
       CHARACTER(LEN=256) :: dirname
       INTEGER            :: strlen
+      CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
       ! ... main restart directory
       !
@@ -211,7 +210,6 @@ MODULE xml_io_base
       !
       USE io_global, ONLY : ionode, ionode_id
       USE mp,        ONLY : mp_bcast
-      USE parser,    ONLY : int_to_char
       !
       IMPLICIT NONE
       !

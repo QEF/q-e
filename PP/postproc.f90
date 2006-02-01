@@ -60,7 +60,7 @@ SUBROUTINE extract (filplot)
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau
   USE gvect
   USE vlocal,    ONLY : strf
-  USE io_files,  ONLY : tmp_dir, prefix
+  USE io_files,  ONLY : tmp_dir, prefix, trimcheck
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_bcast
 
@@ -73,7 +73,6 @@ SUBROUTINE extract (filplot)
   REAL(DP) :: emin, emax, sample_bias, z, dz, epsilon
   ! directory for temporary files
   CHARACTER(len=256) :: outdir
-  CHARACTER(len=256), external :: trimcheck
 
   NAMELIST / inputpp / outdir, prefix, plot_num, stm_wfc_matching, &
        sample_bias, spin_component, z, dz, emin, emax, kpoint, kband,&

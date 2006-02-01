@@ -21,12 +21,11 @@ PROGRAM poormanwannier
   ! 
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE kinds,      ONLY : DP 
-  USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir 
+  USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir, trimcheck
   USE mp,         ONLY : mp_bcast
   !
   IMPLICIT NONE 
-  CHARACTER(len=256) :: outdir 
-  CHARACTER(len=256), EXTERNAL :: trimcheck
+  CHARACTER(len=256) :: outdir
   INTEGER :: ios
   INTEGER :: first_band, last_band
   NAMELIST / inputpp / outdir, prefix, first_band, last_band

@@ -16,6 +16,7 @@ more_functionals.o \
 iceil.o \
 iglocal.o \
 inpfile.o \
+int_to_char.o \
 invmat.o \
 invmat_complex.o \
 latgen.o \
@@ -31,7 +32,6 @@ sph_bes.o \
 sph_besr.o \
 sph_dbes.o \
 transto.o \
-trimcheck.o \
 date_and_tim.o \
 sort_gvec.o \
 volume.o \

@@ -343,16 +343,14 @@ contains
     !It saves the wavefunctions for the right density matrix. in real space
     !It saves all the wavefunctions in a single file called prefix.exx
     USE wavefunctions_module, ONLY : evc  
-    USE io_files,             ONLY : nwordwfc
-    USE io_files,             ONLY : prefix
-    USE io_files,             ONLY : tmp_dir, iunwfc, iunigk
+    USE io_files,             ONLY : nwordwfc, prefix, tmp_dir, iunwfc, &
+         iunigk, find_free_unit
     USE io_global,            ONLY : stdout
     USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
     USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                      nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
     USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, gamma_only
     USE klist,                ONLY : wk
-    USE parser,               ONLY : find_free_unit
     USE symme,                ONLY : nsym, s, ftau
 
     use mp_global,            ONLY : nproc_pool, me_pool

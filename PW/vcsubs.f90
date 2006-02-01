@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !*
+#include "f_defs.h"
 !*
 subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
      vcell, force, frr, calc, temp, vx2, vy2, vz2, rms, vmean, ekin, &
@@ -52,6 +53,7 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
   !
   !
   USE kinds
+  ! USE io_global, ONLY: stdout
   implicit none
   !
   real(DP) :: pi, twopi, zero, um, dois, tres, quatro, seis
@@ -430,8 +432,10 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   !     avmod(3) = lattice vectors moduli
   !
   !
-  USE kinds, only : DP
-  USE constants, ONLY: eps16
+  USE kinds,         only : DP
+  USE constants,     ONLY : eps16
+  USE io_global,     ONLY : stdout
+  
   implicit none
   !
   real(DP) :: pi, twopi, zero, um, dois, tres, quatro, seis
@@ -483,10 +487,12 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   !
   ! set the metric for the current step
   !
+  
   call setg (avec, g)
   !
   ! calculate (uncorrected) rat2d
   !
+  
   do na = 1, natot
      nt = ityp (na)
      do i = 1, 3
@@ -817,25 +823,18 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   endif
   if (calc (2:2) .eq.'m') then
      !         WRITE( stdout,109) alpha,nst
-     ! if(.true. ) = original version
+     ! if(.true. ) = original version modified by Cesar Da Silva
      ! if(.false.) = modified algorithm by SdG
-     !
-     if (.false.) then
+     if (.true.) then
         do na = 1, natot
            do k = 1, 3
               xx = rat2di (k, na) * rat2d (k, na)
               if (xx.lt.zero) then
                  ratd (k, na) = zero
-
-! ======================================================================
-!        Caution: Under testing!!!!!!!!!
-
                  rat(k,na)=rat2d(k,na)*rati(k,na)-rat2di(k,na)*rat(k,na)
                  rat(k,na)=rat(k,na)/(rat2d(k,na)-rat2di(k,na))
                  rat2d(k,na)=zero
                  rat2di(k,na)=zero
-! ======================================================================
-
               endif
            enddo
         enddo
@@ -868,14 +867,10 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
               xx = avec2d (l, k) * avec2di (l, k)
               if (xx.lt.zero) then
                  avecd (l, k) = zero
-! ======================================================================
-!        Caution: Under testing!!!!!!!!!
-
                  avec(l, k)=avec2d(l,k)*aveci(l,k)-avec2di(l,k)*avec(l,k)
                  avec(l, k)=avec(l,k)/(avec2d(l,k)-avec2di(l,k))
                  avec2d(l,k)=zero
                  avec2di(l,k)=zero
-! ======================================================================
               endif
            enddo
         enddo
@@ -1293,7 +1288,7 @@ subroutine updg (avec, avecd, g, gd, gm1, gmgd, sigma, vcell)
   !
   !      output:      t
   !      g(3,3) = avec * avec
-  !                    t                      t
+  !                     t                     t
   !      gd(3,3) = avecd * avec + avecd * avec
   !                  _1
   !      gm1(3,3) = g
@@ -1468,3 +1463,4 @@ real(8) function ran3 (idum)
   ran3 = mj * fac
   return
 end function ran3
+

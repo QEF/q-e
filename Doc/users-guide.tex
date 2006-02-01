@@ -3068,14 +3068,40 @@ group of \textbf{q}, the code compares \textbf{q} and the rotated
 You may run into trouble if your \textbf{q}-point differs from a
 high-symmetry point by an amount in that order of magnitude.
 
-\section{Frequently Asked Questions}
+\section{Frequently Asked (and Seldom Answered) Questions}
 
 \begin{itemize}
-\item {\em How can I optimize the structural parameters of a
-low-symmetry lattice? should I use $E(v)$ curves, the stress,
-variable-cell molecular dynamics?}
+\item {\em How can I choose parameters for variable-cell 
+molecular dynamics?}
 
-  \item {\em Is there a simple way to determine the symmetry
+``A common mistake many new users make is to set the time step 
+\texttt{dt} inproperly to the same order of magnitude as for CP 
+algorithm, or not setting \texttt{dt} at all. This will produce 
+a "not evolving dynamics". Good values for the original RMW
+(RM Wentzcovitch) dynamics are \texttt{dt}$=50\div70$. 
+
+The choice of the cell mass is a delicate matter. An off-optimal mass 
+will make convergence slower. Too small masses, as well as too long time 
+steps, can make the algorithm unstable. A good cell mass will make the 
+oscillation times for internal degrees of freedom comparable to 
+cell degrees of freedom in non-damped Variable-Cell MD. Test calculations 
+are advisable before extensive calculation.
+
+I have tested the damping algorithm that I have developed and it has
+worked well so far. It allows for a much longer time step 
+(\texttt{dt}$100\div150$) than the RMW one and is much more stable 
+with very small cell masses, which is useful when the cell shape, 
+not the internal degrees of freedom, is far out of equilibrium. 
+It also converges in  a smaller number of steps than RMW.''
+
+(Info from Cesar Da Silva: the new damping algorithm is the default
+since v. 3.1).
+
+% \item {\em How can I optimize the structural parameters of a
+% low-symmetry lattice? should I use $E(v)$ curves, the stress,
+% variable-cell molecular dynamics?}
+
+\item {\em Is there a simple way to determine the symmetry
 of a given phonon mode?}
 
 In some cases, degeneracy will help. In other cases, the character of a

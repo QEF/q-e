@@ -30,13 +30,12 @@ program pw2wannier90
    use lsda_mod,   ONLY : nspin, isk
    use klist,      ONLY : nkstot
    use ktetra,     ONLY : k1, k2, k3, nk1, nk2, nk3
-   use io_files,   ONLY : nd_nmbr, prefix, tmp_dir
+   use io_files,   ONLY : nd_nmbr, prefix, tmp_dir, trimcheck
    !
    implicit none
    integer :: ik, i, kunittmp
    CHARACTER(LEN=4) :: spin_component
    CHARACTER(len=256) :: outdir
-   CHARACTER(len=256), EXTERNAL :: trimcheck
    integer :: ispinw
  
    namelist / inputpp / outdir, prefix, spin_component
@@ -91,7 +90,7 @@ subroutine read_nnkp
    use klist, only: nkstot
    use cell_base, only : at, bg
    use gvect, only : g,gg
-   use parser, only : find_free_unit
+   use io_files, only : find_free_unit
  
    use wannier
    implicit none
@@ -151,10 +150,9 @@ subroutine compute_mmn
    use wavefunctions_module, only : evc, psic
    use gsmooth, only: nls, nrxxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
    use klist, only : nkstot, xk
-   use io_files, only : nwordwfc, iunwfc
+   use io_files, only : nwordwfc, iunwfc, find_free_unit
    use gvect, only : g, ngm, ecutwfc
    use cell_base, only : tpiba2
-   use parser, only : find_free_unit
    use wannier
    implicit none
    integer :: mmn_tot, ik, ikp, ipol, ib, ibnd, jbnd, npwq
@@ -223,10 +221,9 @@ subroutine compute_amn
    use klist, only: nkstot, xk
    use wvfct, only : nbnd, npw, npwx, igk, g2kin
    use wavefunctions_module, only : evc
-   use io_files, only : nwordwfc, iunwfc
+   use io_files, only : nwordwfc, iunwfc, find_free_unit
    use gvect, only : g, ngm, ecutwfc
    use cell_base, only : tpiba2
-   use parser, only : find_free_unit
    use wannier
    implicit none
    complex(DP) :: amn, ZDOTC
@@ -306,10 +303,11 @@ subroutine write_band
    use wvfct, only : nbnd, et
    use klist, only : nkstot
    use constants, only: rytoev
-   use parser, only : find_free_unit
+   use io_files, only : find_free_unit
    use wannier
    implicit none
    integer ik, ibnd
+   !
    iun_band = find_free_unit()
    open (unit=iun_band, file='BAND.dat',form='formatted')
    do ik=1,nkstot

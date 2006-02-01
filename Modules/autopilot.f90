@@ -212,13 +212,13 @@ CONTAINS
   ! Put this in setcontrol_flags on the select statement
   !-----------------------------------------------------------------------
   LOGICAL FUNCTION auto_check (ndr, scradir)
-    USE parser, ONLY: int_to_char
     USE io_global, ONLY: ionode, ionode_id
     USE mp,        ONLY : mp_bcast
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: ndr    !  I/O unit number
     CHARACTER(LEN=*), INTENT(IN) :: scradir
     CHARACTER(LEN=256) :: dirname, filename
+    CHARACTER (LEN=6), EXTERNAL :: int_to_char
     LOGICAL :: restart_p = .FALSE.
     INTEGER :: strlen
     ! right now cp_readfile is called with scradir = ' '

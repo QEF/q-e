@@ -744,8 +744,7 @@ MODULE bfgs_module
     SUBROUTINE terminate_bfgs( energy, stdout, scratch )
       !------------------------------------------------------------------------
       !
-      USE io_files, ONLY : prefix
-      USE parser,   ONLY : delete_if_present
+      USE io_files, ONLY : prefix, delete_if_present
       !
       IMPLICIT NONE
       !

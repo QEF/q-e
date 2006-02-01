@@ -38,8 +38,8 @@ MODULE metadyn_base
                                      metadyn_history, metadyn_fmt, fe_step,  &
                                      first_metadyn_iter, gaussian_pos
       USE metadyn_io,         ONLY : read_metadyn_restart
-      USE parser,             ONLY : delete_if_present, int_to_char
-      USE io_files,           ONLY : tmp_dir, scradir, prefix, iunaxsf, iunmeta
+      USE io_files,           ONLY : tmp_dir, scradir, prefix, iunaxsf, &
+                                     iunmeta, delete_if_present
       USE io_global,          ONLY : stdout, ionode, ionode_id
       USE mp,                 ONLY : mp_bcast
       USE xml_io_base,        ONLY : restart_dir
@@ -55,6 +55,7 @@ MODULE metadyn_base
       CHARACTER(LEN=256) :: dirname
       CHARACTER(LEN=4)   :: c_nconstr
       CHARACTER(LEN=16)  :: fe_step_fmt
+      CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
       !
       c_nconstr  = int_to_char( nconstr )

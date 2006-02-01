@@ -802,7 +802,8 @@ press          REAL ( default = 0.D0 )
                target pressure [KBar] in a variable-cell md or relaxation run.
 
 wmass          REAL ( default = sum of atomic masses in the cell )
-               fictitious cell mass [amu] for variable-cell md simulations
+               fictitious cell mass [amu] for variable-cell simulations
+               (both 'vc-md' and 'vc-relax')
 
 cell_factor    REAL ( default = 1.2D0 )
                used in the construction of the pseudopotential tables. 
@@ -811,9 +812,8 @@ cell_factor    REAL ( default = 1.2D0 )
 
 press_cov_thr  REAL ( default = 0.5D0 Kbar )
                convergence threshold on the pressure for variable cell
-               relazations (note that in variable-cell relaxations the
-               other convergence thresholds for ionic relaxation apply
-               as well).
+               relaxation ('vc-relax' : note that the other convergence
+               thresholds for ionic relaxation apply as well).
 
 ===============================================================================
 &PHONON ( only in calculation = 'phonon' )

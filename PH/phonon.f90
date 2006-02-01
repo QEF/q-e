@@ -22,12 +22,11 @@ PROGRAM phonon
   USE relax,           ONLY : restart_bfgs
   USE basis,           ONLY : startingwfc, startingpot, startingconfig
   USE force_mod,       ONLY : force
-  USE io_files,        ONLY : prefix, tmp_dir, nd_nmbr
+  USE io_files,        ONLY : prefix, tmp_dir, nd_nmbr, delete_if_present
   USE mp,              ONLY : mp_bcast
   USE ions_base,       ONLY : nat
   USE lsda_mod,        ONLY : nspin
   USE gvect,           ONLY : nrx1, nrx2, nrx3
-  USE parser,          ONLY : int_to_char
   USE control_flags,   ONLY : restart, lphonon, tr2, wg_set, &
                               mixing_beta, lscf, david, isolve
   USE qpoint,          ONLY : xq, nksq
@@ -35,8 +34,6 @@ PROGRAM phonon
   USE control_ph,      ONLY : ldisp, lnscf, lgamma, convt, epsil, trans, &
                               elph, zue, recover, maxirr, irr0
   USE output,          ONLY : fildyn, fildrho
-  USE parser,          ONLY : delete_if_present
-  USE mp_global,       ONLY : me_pool, root_pool
   USE global_version,  ONLY : version_number
   USE ramanm,          ONLY : lraman, elop
   !
@@ -51,8 +48,8 @@ PROGRAM phonon
     ! initial coordinates of k points
   LOGICAL :: exst
   CHARACTER (LEN=9)   :: code = 'PHONON'
-  CHARACTER (LEN=256) :: auxdyn
-  CHARACTER (LEN=256) :: filname, filint
+  CHARACTER (LEN=256) :: auxdyn, filname, filint
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
   !
   CALL init_clocks( .TRUE. )

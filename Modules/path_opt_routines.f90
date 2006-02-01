@@ -130,7 +130,6 @@ MODULE path_opt_routines
        !
        USE path_variables, ONLY : dim, use_precond, frozen
        USE io_files,       ONLY : iunpath, iunbfgs, tmp_dir, prefix
-       USE parser,         ONLY : int_to_char
        USE basic_algebra_routines
        !
        IMPLICIT NONE
@@ -144,6 +143,7 @@ MODULE path_opt_routines
        REAL(DP), ALLOCATABLE :: Hs(:), Hy(:), yH(:)
        REAL(DP)              :: sdoty, p_grad_norm
        CHARACTER(LEN=256)    :: bfgs_file
+       CHARACTER(LEN=6), EXTERNAL :: int_to_char
        LOGICAL               :: file_exists
        !
        REAL(DP), PARAMETER :: p_grad_norm_max = 0.6D0

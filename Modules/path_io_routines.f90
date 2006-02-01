@@ -19,7 +19,6 @@ MODULE path_io_routines
   USE kinds,      ONLY : DP
   USE constants,  ONLY : au, bohr_radius_angs
   !
-  USE parser
   USE basic_algebra_routines
   !
   IMPLICIT NONE
@@ -372,6 +371,7 @@ MODULE path_io_routines
        !
        INTEGER             :: i, j, ia
        CHARACTER (LEN=256) :: file
+       CHARACTER(LEN=6), EXTERNAL :: int_to_char
        !
        IF ( meta_ionode ) THEN
           !

@@ -55,7 +55,6 @@ MODULE path_routines
       USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
       USE control_flags, ONLY : lpath, lneb, lcoarsegrained, lconstrain, &
                                 lmd, ldamped, tprnfor
-      USE parser,        ONLY : int_to_char
       !
       IMPLICIT NONE
       !
@@ -64,6 +63,7 @@ MODULE path_routines
       REAL(DP), ALLOCATABLE :: tau(:,:) 
       CHARACTER(LEN=256)    :: outdir_saved
       CHARACTER(LEN=256)    :: filename
+      CHARACTER (LEN=6), EXTERNAL :: int_to_char
       !
       INTEGER, EXTERNAL :: c_mkdir
       !

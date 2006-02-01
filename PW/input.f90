@@ -75,7 +75,8 @@ SUBROUTINE iosys()
   USE io_files,      ONLY : input_drho, output_drho, &
                             psfile, tmp_dir, wfc_dir, &
                             prefix_     => prefix, &
-                            pseudo_dir_ => pseudo_dir
+                            pseudo_dir_ => pseudo_dir, &
+                            trimcheck
   !
   USE force_mod,     ONLY : lforce, lstres, force
   !
@@ -262,7 +263,6 @@ SUBROUTINE iosys()
   INTEGER  :: i, ia, ios, is, image, nt
   LOGICAL  :: ltest
   REAL(DP) :: theta, phi
-  CHARACTER (LEN=256), external :: trimcheck
   !
   !
   CALL getenv( 'HOME', pseudo_dir )
@@ -1631,12 +1631,11 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   !
   USE input_parameters, ONLY : restart_mode
   USE control_flags,    ONLY : lpath
-  USE io_files,         ONLY : prefix, nd_nmbr
+  USE io_files,         ONLY : prefix, nd_nmbr, delete_if_present
   USE path_variables,   ONLY : num_of_images
   USE mp_global,        ONLY : mpime, nproc
   USE io_global,        ONLY : ionode
   USE mp,               ONLY : mp_barrier
-  USE parser,           ONLY : int_to_char, delete_if_present
   !
   IMPLICIT NONE
   !
@@ -1644,6 +1643,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   !
   INTEGER             :: l, ios, image, proc
   CHARACTER (LEN=256) :: file_path, tmp_dir_saved
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
   INTEGER, EXTERNAL   :: c_mkdir
   !
   !

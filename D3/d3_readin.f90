@@ -22,7 +22,7 @@ SUBROUTINE d3_readin()
   USE phcom
   USE d3com
   USE noncollin_module, ONLY : noncolin
-  USE io_files,      ONLY : tmp_dir, prefix
+  USE io_files,      ONLY : tmp_dir, prefix, trimcheck
   USE io_global,     ONLY : ionode
   !
   IMPLICIT NONE
@@ -98,7 +98,7 @@ SUBROUTINE d3_readin()
 300  CALL errore ('d3_readin', 'reading xq', ABS (ios) )
 
      lgamma = xq (1) .EQ.0.d0.AND.xq (2) .EQ.0.d0.AND.xq (3) .EQ.0.d0
-     tmp_dir = TRIM(outdir)
+     tmp_dir = trimcheck (outdir)
      !
   END IF
   !

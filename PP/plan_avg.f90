@@ -18,7 +18,7 @@ PROGRAM do_plan_avg
   USE gvect,     ONLY : nrx1, nrx2, nrx3, nr1, nr2, nr3, gcutm, dual, ecutwfc
   USE klist,     ONLY : nkstot, xk
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau, atm, zv
-  USE io_files,  ONLY : tmp_dir, prefix, nd_nmbr
+  USE io_files,  ONLY : tmp_dir, prefix, nd_nmbr, trimcheck
   USE io_global, ONLY : ionode, ionode_id
   USE noncollin_module, ONLY : noncolin
   USE wvfct,     ONLY : nbnd, gamma_only

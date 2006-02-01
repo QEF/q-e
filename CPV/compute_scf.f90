@@ -21,7 +21,6 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE path_formats,      ONLY : scf_fmt
   USE path_variables,    ONLY : pos, pes, grad_pes, num_of_images, &
                                 dim, suspended_image, frozen
-  USE parser,            ONLY : int_to_char
   USE mp_global,         ONLY : mpime, my_pool_id
   USE mp,                ONLY : mp_barrier
   USE check_stop,        ONLY : check_stop_now
@@ -42,6 +41,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   REAL(DP), ALLOCATABLE :: fion(:,:)
   REAL(DP)              :: etot
   INTEGER               :: ia, is, isa, ipos
+  CHARACTER (LEN=6), EXTERNAL :: int_to_char
   REAL(DP), EXTERNAL    :: get_clock
   !
   !

@@ -27,8 +27,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
                                  sort_tau, tau_srt, ind_srt
   USE path_formats,       ONLY : scf_fmt, scf_fmt_para
   USE io_files,           ONLY : prefix, outdir, scradir, iunpath, iunaxsf, &
-                                 iunupdate, exit_file, iunexit
-  USE parser,             ONLY : int_to_char, delete_if_present
+                                 iunupdate, exit_file, iunexit, delete_if_present
   USE constants,          ONLY : bohr_radius_angs
   USE io_global,          ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_global,          ONLY : inter_image_comm, intra_image_comm, &
@@ -54,6 +53,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   REAL(DP), ALLOCATABLE :: tau(:,:)
   REAL(DP), ALLOCATABLE :: fion(:,:)
   REAL(DP)              :: etot
+  CHARACTER (LEN=6), EXTERNAL :: int_to_char
   REAL(DP), EXTERNAL    :: get_clock
   !
   !

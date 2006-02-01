@@ -65,7 +65,6 @@ MODULE path_base
       USE path_formats,       ONLY : summary_fmt
       USE mp_global,          ONLY : nimage
       USE io_global,          ONLY : meta_ionode
-      USE parser,             ONLY : int_to_char
       USE path_io_routines,   ONLY : read_restart
       USE path_variables,     ONLY : path_allocation
       !
@@ -77,6 +76,7 @@ MODULE path_base
       REAL(DP)              :: inter_image_dist, k_ratio
       REAL(DP), ALLOCATABLE :: d_R(:,:), image_spacing(:)
       CHARACTER(LEN=20)     :: num_of_images_char, nstep_path_char
+      CHARACTER(LEN=6), EXTERNAL :: int_to_char
       LOGICAL               :: file_exists
       !
       !

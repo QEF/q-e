@@ -732,7 +732,6 @@ MODULE cp_restart
                             ekincm, c04, cm4, c02, cm2, mat_z )
       !------------------------------------------------------------------------
       !
-      USE parser,                   ONLY : int_to_char
       USE control_flags,            ONLY : gamma_only, force_pairing
       USE io_files,                 ONLY : iunpun, xmlpun
       USE printout_base,            ONLY : title
@@ -1470,7 +1469,6 @@ MODULE cp_restart
                              htm, htvel, gvel, xnhh0, xnhhm, vnhh )
       !------------------------------------------------------------------------
       !
-      USE parser,   ONLY : int_to_char
       USE io_files, ONLY : iunpun, xmlpun
       USE mp,       ONLY : mp_sum
       !

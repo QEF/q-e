@@ -33,8 +33,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE ions_base,          ONLY : nat, nsp, tau, ityp, if_pos
   USE path_formats,       ONLY : scf_fmt, scf_fmt_para
   USE io_files,           ONLY : prefix, tmp_dir, iunpath, iunaxsf, &
-                                 iunupdate, iunexit
-  USE parser,             ONLY : int_to_char, delete_if_present
+                                 iunupdate, iunexit, delete_if_present
   USE constants,          ONLY : bohr_radius_angs
   USE io_global,          ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_global,          ONLY : inter_image_comm, intra_image_comm, &
@@ -57,8 +56,9 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   LOGICAL               :: opnd, file_exists
   LOGICAL               :: ldamped_saved
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
-    ! previous positions of atoms (needed for extrapolation)
+  ! previous positions of atoms (needed for extrapolation)
   !
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
   REAL(DP), EXTERNAL :: get_clock
   !
   !
@@ -508,8 +508,7 @@ SUBROUTINE metadyn()
       USE control_flags,      ONLY : istep, ldamped, conv_ions, nstep
       USE metadyn_vars,       ONLY : fe_nstep, dfe_acc, etot_av
       USE constraints_module, ONLY : lagrange
-      USE io_files,           ONLY : tmp_dir, prefix
-      USE parser,             ONLY : delete_if_present
+      USE io_files,           ONLY : tmp_dir, prefix, delete_if_present
       !
       IMPLICIT NONE
       !
@@ -574,8 +573,7 @@ SUBROUTINE metadyn()
       !
       USE metadyn_vars,  ONLY : shake_nstep
       USE control_flags, ONLY : istep, ldamped, nstep
-      USE io_files,      ONLY : tmp_dir, prefix
-      USE parser,        ONLY : delete_if_present
+      USE io_files,      ONLY : tmp_dir, prefix, delete_if_present
       !
       LOGICAL, INTENT(INOUT) :: lfirst_scf
       !

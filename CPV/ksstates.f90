@@ -229,7 +229,6 @@
         USE brillouin, ONLY: kpoints, kp
         USE pseudo_projector, ONLY: projector
         USE control_flags, ONLY: timing, force_pairing
-        USE parser, ONLY: int_to_char
 
         IMPLICIT NONE
 
@@ -253,6 +252,7 @@
         REAL(DP), ALLOCATABLE :: fi(:,:)
 
         REAL(DP), EXTERNAL :: cclock
+        CHARACTER (LEN=6), EXTERNAL :: int_to_char
 
 
 ! ...   end of declarations
@@ -391,7 +391,6 @@
         USE pseudo_projector, ONLY: projector
         USE control_flags, ONLY: timing
         USE electrons_module, ONLY: nupdwn, nspin
-        USE parser, ONLY: int_to_char
 
         IMPLICIT NONE
 
@@ -413,6 +412,7 @@
         COMPLEX(DP), ALLOCATABLE :: eforce(:,:,:,:)
         REAL(DP), ALLOCATABLE :: fi(:,:)
 
+        CHARACTER (LEN=6), EXTERNAL :: int_to_char
         REAL(DP), EXTERNAL :: cclock
 
 

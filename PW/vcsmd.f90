@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 SUBROUTINE vcsmd()
@@ -41,8 +40,7 @@ SUBROUTINE vcsmd()
   USE control_flags,   ONLY : istep, tolp, conv_ions 
   USE parameters,      ONLY : ntypx
   USE ener,            ONLY : etot
-  USE io_files,        ONLY : prefix
-  USE parser,          ONLY : delete_if_present
+  USE io_files,        ONLY : prefix, delete_if_present
   !
   IMPLICIT NONE
   !
