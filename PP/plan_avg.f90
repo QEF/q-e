@@ -30,7 +30,6 @@ PROGRAM do_plan_avg
   REAL(DP), ALLOCATABLE :: averag (:,:,:), plan (:,:,:)
   !
   INTEGER :: iunplot = 4, ios, ibnd, ik, ir, nt, na, i
-  CHARACTER(len=256), EXTERNAL :: trimcheck
   !
   NAMELIST / inputpp / outdir, prefix, filplot
   !

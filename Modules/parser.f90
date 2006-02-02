@@ -138,11 +138,11 @@ MODULE parser
     !
     !
     IF( LEN( line ) < 256 ) THEN
-       CALL errore(' read_line ', ' input line too short ', LEN( line ) )
+       CALL errore(' read_line ', ' input line too short ', MAX(LEN(line),1) )
     END IF
     !
     IF ( ionode ) THEN
-30     READ (parse_unit, fmt='(A256)', END=10) line
+30     READ (parse_unit, fmt='(A256)', ERR=10, END=10) line
        IF( line == ' ' .OR. line(1:1) == '#' ) GO TO 30
        tend = .FALSE.
        GO TO 20
@@ -156,7 +156,7 @@ MODULE parser
     IF( PRESENT(end_of_file) ) THEN
        end_of_file = tend
     ELSE IF( tend ) THEN
-       CALL errore(' read_line ', ' end of file ', 0 )
+       CALL infomsg(' read_line ', ' end of file ', -1 )
     ELSE
        IF( PRESENT(field) ) CALL field_compare( line, nfield, field )
     END IF
