@@ -1,37 +1,33 @@
 !
-! Copyright (C) 2002 FPMD group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
 #include "f_defs.h"
-
+!
 !==----------------------------------------------==!
     MODULE parallel_toolkit
 !==----------------------------------------------==!
 
-
-    USE io_global,  ONLY : stdout
+    USE kinds,     ONLY : DP
+    USE io_global, ONLY : stdout
     USE parallel_include
-
 
     IMPLICIT NONE
     SAVE
     PRIVATE
 
-    PUBLIC ::  pdspev_drv, dspev_drv, &
-      diagonalize, pzhpev_drv, zhpev_drv, cdiagonalize
-    PUBLIC ::  rep_matmul_drv
+    PUBLIC :: pdspev_drv, dspev_drv, &
+              diagonalize, pzhpev_drv, zhpev_drv, cdiagonalize
+    PUBLIC :: rep_matmul_drv
 
 !==----------------------------------------------==!
     CONTAINS
 !==----------------------------------------------==!
 
-
-
-    SUBROUTINE ptredv( a, lda, d, e, v, ldv, nrl, n, nproc, me )
+    SUBROUTINE ptredv( a, lda, d, e, v, ldv, nrl, n, nproc, me, comm )
 
 !
 !     Parallel version of the famous HOUSEHOLDER tridiagonalization
@@ -115,7 +111,7 @@
 #endif
 
       INTEGER :: N, NRL, LDA, LDV
-      INTEGER :: NPROC, ME
+      INTEGER :: NPROC, ME, comm
       REAL(DP) :: A(LDA,N), D(N), E(N), V(LDV,N)
 !
       REAL(DP) :: DDOT
@@ -182,7 +178,7 @@
            call shmem_barrier_all
            CALL SHMEM_REAL8_SUM_TO_ALL(SCALE, SCALE, 1, 0, 0, nproc, pWrk, pSync_sta)
 #  elif defined __MPI
-           CALL MPI_ALLREDUCE(SCALE, TMP, 1, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, IERR)
+           CALL MPI_ALLREDUCE(SCALE, TMP, 1, MPI_DOUBLE_PRECISION, MPI_SUM, comm, IERR)
            SCALE = TMP
 #  endif
 #endif
@@ -217,9 +213,9 @@
              CALL SHMEM_BROADCAST(F,F,1,RI(L),0,0,nproc,pSync_bc)
 #    endif
 #  elif defined __MPI
-             CALL MPI_ALLREDUCE(SIGMA, TMP, 1, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, IERR)
+             CALL MPI_ALLREDUCE(SIGMA, TMP, 1, MPI_DOUBLE_PRECISION, MPI_SUM, comm, IERR)
              SIGMA = TMP
-             CALL MPI_BCAST(F, 1, MPI_DOUBLE_PRECISION, RI(L), MPI_COMM_WORLD, IERR)
+             CALL MPI_BCAST(F, 1, MPI_DOUBLE_PRECISION, RI(L), comm, IERR)
 #  endif
 #endif
 
@@ -258,7 +254,7 @@
              call shmem_barrier_all
              CALL SHMEM_REAL8_SUM_TO_ALL(VTMP, U, L, 0, 0, nproc, pWrk, pSync_sta)
 #  elif defined __MPI
-             CALL MPI_ALLREDUCE(VTMP,U,L,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
+             CALL MPI_ALLREDUCE(VTMP,U,L,MPI_DOUBLE_PRECISION,MPI_SUM,comm,IERR)
 #  endif
 #else
              u(1:l) = vtmp(1:l)
@@ -301,9 +297,9 @@
              CALL SHMEM_REAL8_SUM_TO_ALL(vtmp, P, L, 0, 0, nproc, pWrk, pSync_sta)
              call shmem_barrier_all
 #  elif defined __MPI
-             CALL MPI_ALLREDUCE(KAPPA,TMP,1,MPI_DOUBLE_PRECISION,MPI_SUM, MPI_COMM_WORLD,IERR)
+             CALL MPI_ALLREDUCE(KAPPA,TMP,1,MPI_DOUBLE_PRECISION,MPI_SUM, comm,IERR)
              KAPPA = TMP
-             CALL MPI_ALLREDUCE(vtmp,p,L,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
+             CALL MPI_ALLREDUCE(vtmp,p,L,MPI_DOUBLE_PRECISION,MPI_SUM,comm,IERR)
 #  endif
 #else
              p(1:l) = vtmp(1:l)
@@ -348,7 +344,7 @@
            CALL SHMEM_BROADCAST(G,G,1,RI(L),0,0,nproc,pSync_bc)
 #    endif
 #  elif defined __MPI
-           CALL MPI_BCAST(G,1,MPI_DOUBLE_PRECISION,RI(L),MPI_COMM_WORLD,IERR)
+           CALL MPI_BCAST(G,1,MPI_DOUBLE_PRECISION,RI(L),comm,IERR)
 #  endif
 #endif
            E(I) = G
@@ -397,7 +393,7 @@
           call shmem_barrier_all
           CALL SHMEM_REAL8_SUM_TO_ALL(P, VTMP, L, 0, 0, nproc, pWrk, pSync_sta)
 #  elif defined __MPI
-          CALL MPI_ALLREDUCE(P,VTMP,L,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
+          CALL MPI_ALLREDUCE(P,VTMP,L,MPI_DOUBLE_PRECISION,MPI_SUM,comm,IERR)
 #  endif
 #else
           vtmp(1:l) = p(1:l)
@@ -438,7 +434,7 @@
 #endif
       call shmem_barrier_all
 #  elif defined __MPI
-      CALL MPI_ALLREDUCE(U,D,N,MPI_DOUBLE_PRECISION,MPI_SUM,MPI_COMM_WORLD,IERR)
+      CALL MPI_ALLREDUCE(U,D,N,MPI_DOUBLE_PRECISION,MPI_SUM,comm,IERR)
 #  endif
 #else
       D(1:N) = U(1:N)
@@ -720,130 +716,154 @@
       endif
       return
       END FUNCTION pythag
-
-!=----------------------------------------------------------------------------=!
-
-      SUBROUTINE diagonalize( iopt, a, d, ev, n, nproc, mpime )
-
-!
-! This subroutine calculate eigenvalues and optionally eigenvectors
-! of a real symmetric matrix "a" distributed or replicated across processors
-!
-! iopt     input, choose the distributions of "a"
-!          iopt = 0 matrix "a" and "ev" are distributed across procs
-!          iopt = 1 matrix "a" and "ev" are replicated across procs
-! a(:,:)   input, matrix to be diagonalize, overwritten on output 
-! d(:)     output, array of the eigenvalues
-! ev(:,:)  output, matrix of the eigenvectors
-! n        input, dimension of matrix a
-! nproc    input, number of processors
-! mpime    input, index of this processors (starting from 0!)
-!
-! When iopt = 0 the matrix "a" shoud have the following layout:
-!
-!     A(NRL,N) Local part of the global matrix A(N,N) to be reduced,
-!              The rows of the matrix are cyclically distributed amoung processors
-!              with blocking factor 1.
-!              Example for NPROC = 4 :
-!              ROW | PE
-!              1   | 0
-!              2   | 1
-!              3   | 2
-!              4   | 3 
-!              5   | 0
-!              6   | 1
-!              ..  | ..
-!
-
-
-        USE kinds
-        IMPLICIT NONE
-        
-        INTEGER, INTENT(IN) :: iopt, n, nproc, mpime
-        REAL(DP) :: a(n,n), d(n), ev(n,n)
-
-        REAL(DP), ALLOCATABLE :: aloc(:,:)
-        REAL(DP), ALLOCATABLE :: evloc(:,:)
-        REAL(DP), ALLOCATABLE :: e(:)
-
-        INTEGER :: nrl, i, j, jl, ierr
-
-        IF( nproc < 1 ) &
-          CALL errore( ' diagonalize ',' nproc less than 1 ', 1 )
-
-        nrl = n / nproc
-        IF ( mpime < MOD(n,nproc) ) THEN
-          nrl = nrl + 1
-        END IF                                                              
-
-        ALLOCATE( evloc( nrl, n ) )
-        ALLOCATE( e( n ) )
-
-        IF ( IOPT == 1 ) THEN
-          allocate( ALOC(nrl, n) )
-          do i = 1, n
-             do jl = 1, NRL
-                ALOC( jl, i ) = A( (jl-1)*nproc + MPIME + 1, i )
-             end do
-          end do
-          call ptredv( ALOC, NRL, D, E, EVLOC, NRL, NRL, N, NPROC, MPIME )
-          DEALLOCATE( ALOC )
-        ELSE
-          call ptredv( A, NRL, D, E, EVLOC, NRL, NRL, N, NPROC, MPIME )
-        END IF
-
-        call ptqliv( D, E, N, EVLOC, nrl, nrl )
-        call peigsrtv( D, EVLOC, nrl, N, nrl )
-
-        IF ( iopt == 1 ) THEN
-
-          DO i = 1,n
-             DO j = 1,n
-                A(j,i) = 0.0d0
-             END DO
-             DO jl = 1,NRL
-                A((jl-1)*nproc + MPIME + 1,i) = EVLOC(jl,i)
-             END DO
-          END DO
-
-#if defined __PARA
-#  if defined __MPI
-          CALL MPI_ALLREDUCE( A, EV, N*N, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, IERR )
+   !
+   !-------------------------------------------------------------------------
+   SUBROUTINE diagonalize( iopt, a, d, ev, n, nproc, mpime, comm_in )
+     !-------------------------------------------------------------------------
+     !
+     ! This subroutine calculate eigenvalues and optionally eigenvectors
+     ! of a real symmetric matrix "a" distributed or replicated across
+     ! processors
+     !
+     ! iopt     input, choose the distributions of "a"
+     !          iopt = 0 matrix "a" and "ev" are distributed across procs
+     !          iopt = 1 matrix "a" and "ev" are replicated across procs
+     ! a(:,:)   input, matrix to be diagonalized, overwritten on output 
+     ! d(:)     output, array of the eigenvalues
+     ! ev(:,:)  output, matrix of the eigenvectors
+     ! n        input, dimension of matrix a
+     ! nproc    input, number of processors
+     ! mpime    input, index of this processors (starting from 0!)
+     !
+     ! When iopt = 0 the matrix "a" shoud have the following layout:
+     !
+     !     A(NRL,N) Local part of the global matrix A(N,N) to be reduced,
+     !              The rows of the matrix are cyclically distributed among 
+     !              processors with blocking factor 1.
+     !              Example for NPROC = 4 :
+     !              ROW | PE
+     !              1   | 0
+     !              2   | 1
+     !              3   | 2
+     !              4   | 3 
+     !              5   | 0
+     !              6   | 1
+     !              ..  | ..
+     !
+     IMPLICIT NONE
+     !   
+     INTEGER,           INTENT(IN)    :: iopt, n, nproc, mpime
+     REAL(DP),          INTENT(OUT)   :: d(n)
+     REAL(DP),          INTENT(INOUT) :: a(n,n)
+     REAL(DP),          INTENT(OUT)   :: ev(n,n)
+     INTEGER, OPTIONAL, INTENT(IN)    :: comm_in
+     !
+     REAL(DP), ALLOCATABLE :: aloc(:,:)
+     REAL(DP), ALLOCATABLE :: evloc(:,:)
+     REAL(DP), ALLOCATABLE :: e(:)
+     INTEGER               :: nrl, i, j, jl, ierr, comm
+     !
+     !
+     IF ( PRESENT( comm_in ) ) THEN
+        !
+        comm = comm_in
+        !
+     ELSE
+        !
+        comm = MPI_COMM_WORLD
+        !
+     END IF
+     !
+     nrl = n / nproc
+     !
+     IF ( mpime < MOD( n, nproc ) ) nrl = nrl + 1
+     !
+     ALLOCATE( evloc( nrl, n ) )
+     ALLOCATE( e( n ) )
+     !
+     IF ( iopt == 1 ) THEN
+        !
+        ALLOCATE( aloc( nrl, n ) )
+        !
+        DO i = 1, n
+           DO jl = 1, nrl
+              aloc( jl, i ) = a( (jl-1)*nproc + mpime + 1, i )
+           END DO
+        END DO
+        !
+        CALL ptredv( aloc, nrl, d, e, evloc, nrl, nrl, n, nproc, mpime, comm )
+        !
+        DEALLOCATE( aloc )
+        !
+      ELSE
+         !
+         CALL ptredv( a, nrl, d, e, evloc, nrl, nrl, n, nproc, mpime, comm )
+         !
+      END IF
+      !
+      CALL ptqliv( d, e, n, evloc, nrl, nrl )
+      CALL peigsrtv( d, evloc, nrl, n, nrl )
+      !
+      IF ( iopt == 1 ) THEN
+         !
+         DO i = 1,n
+            DO j = 1,n
+               a(j,i) = 0.D0
+            END DO
+            DO jl = 1,nrl
+                a((jl-1)*nproc + mpime + 1,i) = evloc(jl,i)
+            END DO
+         END DO
+         !
+#if defined (__PARA)
+#  if defined (__MPI)
+         CALL MPI_ALLREDUCE( a, ev, n*n, &
+                             MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
 #  endif
 #else
-          ev = a
+         ev = a
 #endif
-
-        ELSE
-
-          do i = 1,n
-            do jl = 1,NRL
-              EV(jl,i) = EVLOC(jl,i)
-            end do
-          end do
-
-        END IF
-
-        DEALLOCATE( evloc )
-        DEALLOCATE( e )
- 
-        RETURN
-      END SUBROUTINE diagonalize
+         !
+      ELSE
+         !
+         DO i = 1, n
+            DO jl = 1, nrl
+              ev(jl,i) = evloc(jl,i)
+            END DO
+         END DO
+         !
+      END IF
+      !
+      DEALLOCATE( evloc )
+      DEALLOCATE( e )
+      !
+      RETURN
+      !
+   END SUBROUTINE diagonalize
 
 !==----------------------------------------------==!
 
-      SUBROUTINE pdspev_drv( JOBZ, ap, lda, w, z, ldz, nrl, n, nproc, mpime)
-        USE kinds
-        IMPLICIT NONE
-        CHARACTER :: JOBZ
-        INTEGER   :: lda, ldz, nrl, n, nproc, mpime
-        REAL(DP) :: ap( lda, * ), w( * ), z( ldz, * )
-        REAL(DP) :: sd( n )
-        CALL ptredv(ap, lda, w, sd, z, ldz, nrl, n, nproc, mpime)
-        CALL ptqliv(w, sd, n, z, ldz, nrl)
-        CALL peigsrtv(w, z, ldz, n, nrl)
-        RETURN
-      END SUBROUTINE pdspev_drv
+   SUBROUTINE pdspev_drv( jobz, ap, lda, w, z, ldz, &
+                          nrl, n, nproc, mpime, comm_in )
+     USE kinds
+     IMPLICIT NONE
+     CHARACTER :: JOBZ
+     INTEGER   :: lda, ldz, nrl, n, nproc, mpime
+     INTEGER, OPTIONAL, INTENT(IN) :: comm_in
+     REAL(DP) :: ap( lda, * ), w( * ), z( ldz, * )
+     REAL(DP) :: sd( n )
+     INTEGER   :: comm
+     !
+     IF ( PRESENT( comm_in ) ) THEN
+        comm = comm_in
+     ELSE
+        comm = MPI_COMM_WORLD
+     END IF
+     CALL ptredv(ap, lda, w, sd, z, ldz, nrl, n, nproc, mpime, comm)
+     CALL ptqliv(w, sd, n, z, ldz, nrl)
+     CALL peigsrtv(w, z, ldz, n, nrl)
+     RETURN
+   END SUBROUTINE pdspev_drv
  
 
 !==----------------------------------------------==!
@@ -879,149 +899,155 @@
         RETURN
       END SUBROUTINE dspev_drv
 
-!==----------------------------------------------==!
-
-
-
-   SUBROUTINE cdiagonalize( iflg, a, d, ev, n, nproc, mpime )
-
-      !  this routine calls the appropriate Lapack routine for diagonalizing a
-      !  complex Hermitian matrix
-      !
-
-
-        USE kinds     
-        IMPLICIT NONE
-
-        INTEGER, INTENT(IN) :: iflg, n, nproc, mpime
-        REAL(DP)    :: d(n)
-        COMPLEX(DP) :: a(n,n),ev(n,n)
-
-        INTEGER :: i, j, k, nrl, iopt, ierr
-        INTEGER :: info = 0
-
-        COMPLEX(DP), ALLOCATABLE :: aloc(:)
-        COMPLEX(DP), ALLOCATABLE :: ap(:,:)
-        COMPLEX(DP), ALLOCATABLE :: vp(:,:)
-        REAL(DP), ALLOCATABLE :: rwork(:)
-        COMPLEX(DP), ALLOCATABLE :: cwork(:)
-
-! ...   end of declarations
-!  ----------------------------------------------
-
-        IF( nproc < 1 ) &
-          CALL errore(' cdiagonalize ', ' nproc less than 1 ', 1 )
-
-        IF( ( nproc == 1 ) .OR. ( n < nproc ) ) THEN
-
-          !
-          !  here use the standard scalar lapack drivers
-          !
-
-          ALLOCATE(aloc(n*(n+1)/2))
-          ALLOCATE(rwork(4*n))
-          ALLOCATE(cwork(4*n))
-
-          !  copy the lower-diagonal part of the matrix according to the
-          !  Lapack packed storage scheme for Hermitian matrices
-
-          k=0
-          DO j=1,n
-            DO i=j,n
-              k=k+1
+   !-------------------------------------------------------------------------
+   SUBROUTINE cdiagonalize( iopt, a, d, ev, n, nproc, mpime, comm_in )
+     !-------------------------------------------------------------------------
+     !
+     ! ... this routine calls the appropriate Lapack routine for diagonalizing
+     ! ... a complex Hermitian matrix
+     !
+     IMPLICIT NONE
+     !
+     INTEGER,           INTENT(IN)    :: iopt, n, nproc, mpime
+     REAL(DP),          INTENT(OUT)   :: d(n)
+     COMPLEX(DP),       INTENT(INOUT) :: a(n,n)
+     COMPLEX(DP),       INTENT(OUT)   :: ev(n,n)
+     INTEGER, OPTIONAL, INTENT(IN)    :: comm_in
+     !
+     INTEGER :: i, j, k, nrl, comm, ierr
+     INTEGER :: info = 0
+     !
+     COMPLEX(DP), ALLOCATABLE :: aloc(:)
+     COMPLEX(DP), ALLOCATABLE :: ap(:,:)
+     COMPLEX(DP), ALLOCATABLE :: vp(:,:)
+     REAL(DP),    ALLOCATABLE :: rwork(:)
+     COMPLEX(DP), ALLOCATABLE :: cwork(:)
+     !
+     !
+     IF ( PRESENT( comm_in ) ) THEN
+        !
+        comm = comm_in
+        !
+     ELSE
+        !
+        comm = MPI_COMM_WORLD
+        !
+     END IF
+     !
+     IF ( ( nproc == 1 ) .OR. ( n < nproc ) ) THEN
+        !
+        ! ... here use the standard scalar lapack drivers
+        !
+        ALLOCATE( aloc( n*(n+1)/2 ) )
+        ALLOCATE( rwork( 4*n ) )
+        ALLOCATE( cwork( 4*n ) )
+        !
+        ! ... copy the lower-diagonal part of the matrix according to the
+        ! ... Lapack packed storage scheme for Hermitian matrices
+        !
+        k = 0
+        DO j = 1, n
+           DO i = j, n
+              k = k + 1
               aloc(k) = a(i,j)
-            END DO
-          END DO
- 
-          !  call the Lapack routine
-
-#if defined __AIX
-          iopt = 1
-          CALL ZHPEV(iopt,aloc,d,ev,n,n,cwork,4*n)
+           END DO
+        END DO
+        !
+        ! ... call the Lapack routine
+        !
+#if defined (__AIX)
+        !
+        iopt = 1
+        !
+        CALL ZHPEV( iopt, aloc, d, ev, n, n, cwork, 4*n )
+        !
 #else
-          CALL ZHPEV('V','L',n,aloc,d,ev,n,cwork,rwork,info)
+        CALL ZHPEV( 'V', 'L', n, aloc, d, ev, n, cwork, rwork, info )
 #endif
-
-          DEALLOCATE(cwork)
-          DEALLOCATE(rwork)
-          DEALLOCATE(aloc)
-                                                                                
-          IF( info /=  0 ) THEN
-            CALL errore(" cdiagonalize ", " info ", ABS(info) )
-          END IF
-
+        !
+        DEALLOCATE( cwork )
+        DEALLOCATE( rwork )
+        DEALLOCATE( aloc )
+        !                                                                       
+        IF ( info /=  0 ) &
+           CALL errore( 'cdiagonalize', 'info', ABS( info ) )
+        !
+     ELSE
+        !
+        nrl = n / nproc
+        !
+        IF ( mpime < MOD( n, nproc ) )  nrl = nrl + 1
+        !
+        ALLOCATE( vp( nrl, n ) )
+        ALLOCATE( rwork( n ) )
+        ALLOCATE( cwork( n ) )
+        !
+        IF ( iopt == 1 ) THEN
+           !
+           ALLOCATE( ap( nrl, n ) )
+           !
+           DO j = 1, n
+              DO i = 1, nrl
+                 ap(i,j) = a(mpime+(i-1)*nproc+1,j)
+              END DO
+           END DO
+           !
+           CALL pzhptrd( n, nrl, ap, nrl, d, rwork, cwork, nproc, mpime, comm )
+           CALL pzupgtr( n, nrl, ap, nrl, cwork, vp, nrl, nproc, mpime, comm)
+           !
+           DEALLOCATE( ap )
+           !
         ELSE
-
-          nrl = n/nproc
-          IF( mpime < MOD(n,nproc) ) THEN
-            nrl = nrl + 1
-          END IF
-
-          ALLOCATE(vp(nrl,n))
-          ALLOCATE(rwork(n))
-          ALLOCATE(cwork(n))
-
-          IF( iflg == 1 ) THEN
-            ALLOCATE(ap(nrl,n))
-            DO j = 1, n
-              DO i = 1, nrl
-                ap(i,j) = a(mpime+(i-1)*nproc+1,j)
-              END DO
-            END DO
-            CALL pzhptrd( n, nrl, ap, nrl, d, rwork, cwork, nproc, mpime)
-            CALL pzupgtr( n, nrl, ap, nrl, cwork, vp, nrl, nproc, mpime)
-            DEALLOCATE(ap)
-          ELSE
-            CALL pzhptrd( n, nrl, a, nrl, d, rwork, cwork, nproc, mpime)
-            CALL pzupgtr( n, nrl, a, nrl, cwork, vp, nrl, nproc, mpime)
-          END IF
-
-          CALL pzsteqr( 'V', n, nrl, d, rwork, vp, nrl, nproc, mpime)
-
-          IF ( iflg == 1 ) THEN
-
-            DO j = 1,n
+           !
+           CALL pzhptrd( n, nrl, a, nrl, d, rwork, cwork, nproc, mpime, comm )
+           CALL pzupgtr( n, nrl, a, nrl, cwork, vp, nrl, nproc, mpime, comm )
+           !
+        END IF
+        !
+        CALL pzsteqr( 'V', n, nrl, d, rwork, vp, nrl, nproc, mpime, comm )
+        !
+        IF ( iopt == 1 ) THEN
+           !
+           DO j = 1,n
               DO i = 1,n
-                a(i,j) = 0.0d0
+                 a(i,j) = 0.D0
               END DO
               DO i = 1, nrl
-                a((i-1)*nproc+mpime+1,j) = vp(i,j)
+                 a((i-1)*nproc+mpime+1,j) = vp(i,j)
               END DO
-            END DO
-
-#if defined __PARA
-#  if defined __MPI
-            CALL MPI_ALLREDUCE(A, EV, 2*n*n, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD,IERR)
+           END DO
+           !
+#if defined (__PARA)
+#  if defined (__MPI)
+           CALL MPI_ALLREDUCE( a, ev, 2*n*n, &
+                               MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
 #  endif
 #else
-            ev = a
+           ev(:,:) = a(:,:)
 #endif
-
-          ELSE
-
-            DO j = 1,n
+        ELSE
+           !
+           DO j = 1,n
               DO i = 1, nrl
-                ev(i,j) = vp(i,j)
+                 ev(i,j) = vp(i,j)
               END DO
-            END DO
-
-          END IF
-
-
-          DEALLOCATE(vp)
-          DEALLOCATE(rwork)
-          DEALLOCATE(cwork)
-
+           END DO
+           !
         END IF
-
-        RETURN
-      END SUBROUTINE cdiagonalize
-
-!==----------------------------------------------==!
-
-
-   SUBROUTINE pzhptrd( n, nrl, ap, lda, d, e, tau, nproc, me)
-
+        !
+        DEALLOCATE( vp )
+        DEALLOCATE( rwork )
+        DEALLOCATE( cwork )
+        !
+     END IF
+     !
+     RETURN
+     !
+   END SUBROUTINE cdiagonalize
+   !
+   !-------------------------------------------------------------------------
+   SUBROUTINE pzhptrd( n, nrl, ap, lda, d, e, tau, nproc, me, comm )
+     !-------------------------------------------------------------------------
       !
       !  Parallel MPI version of the LAPACK routine ZHPTRD
       !
@@ -1043,12 +1069,10 @@
       !     Courant Institute, Argonne National Lab, and Rice University
       !
 
-
-      USE kinds
-      IMPLICIT           NONE
+      IMPLICIT NONE
 
 !     .. __SCALAR Arguments ..
-      INTEGER            LDA, N, NRL, NPROC, ME
+      INTEGER            LDA, N, NRL, NPROC, ME, comm
 !     ..
 !     .. Array Arguments ..
       REAL(DP)             D( * ), E( * )
@@ -1209,7 +1233,7 @@
 
 #if defined __PARA
 #  if defined __MPI
-            CALL MPI_BCAST(ALPHA,1,MPI_DOUBLE_COMPLEX,OW(I+1),MPI_COMM_WORLD,IERR)
+            CALL MPI_BCAST(ALPHA,1,MPI_DOUBLE_COMPLEX,OW(I+1),comm,IERR)
 #  endif
 #endif
 
@@ -1229,7 +1253,7 @@
                 XNORM = XNORM ** 2 
 #  if defined __MPI
                 CALL MPI_ALLREDUCE(XNORM,TMP,1,MPI_DOUBLE_PRECISION, &
-     &                             MPI_SUM, MPI_COMM_WORLD,IERR)
+     &                             MPI_SUM, comm,IERR)
 #  endif
                 XNORM = SQRT(TMP)
 #endif
@@ -1265,7 +1289,7 @@
                     XNORM = XNORM ** 2 
 #  if defined __MPI
                     CALL MPI_ALLREDUCE(XNORM,TMP,1,MPI_DOUBLE_PRECISION, &
-     &                                 MPI_SUM, MPI_COMM_WORLD,IERR)
+     &                                 MPI_SUM, comm,IERR)
 #  endif
                     XNORM = SQRT(TMP)
 #endif
@@ -1332,7 +1356,7 @@
                END DO
 #  if defined __MPI
                CALL MPI_ALLREDUCE(CTMPV(I+1),APKI(I+1),N-I, &
-     &         MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD,IERR)
+     &         MPI_DOUBLE_COMPLEX, MPI_SUM, comm,IERR)
 #  endif
 #else
                DO J = I+1,N
@@ -1366,7 +1390,7 @@
                ! ... parallel sum TAU
 #  if defined __MPI
                CALL MPI_ALLREDUCE(TAU(I),CTMPV(I),N-I+1, &
-     &              MPI_DOUBLE_COMPLEX,MPI_SUM,MPI_COMM_WORLD,IERR)
+     &              MPI_DOUBLE_COMPLEX,MPI_SUM,comm,IERR)
 #  endif
                DO J = I, N
                  TAU(J) = CTMPV(J)
@@ -1395,7 +1419,7 @@
 #if defined __PARA
 #  if defined __MPI
                CALL MPI_ALLREDUCE(ALPHA,CTMP,1, &
-     &         MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD,IERR)
+     &         MPI_DOUBLE_COMPLEX, MPI_SUM, comm,IERR)
 #  endif
                ALPHA = CTMP
 #endif
@@ -1413,7 +1437,7 @@
                END DO
 #  if defined __MPI
                CALL MPI_ALLREDUCE(CTMPV(I),TAU(I),N-I+1, &
-     &         MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD,IERR)
+     &         MPI_DOUBLE_COMPLEX, MPI_SUM, comm,IERR)
 #  endif
 #else
                CALL ZAXPY(N-I,ALPHA,AP(I+1,I),1,TAU(I),1)
@@ -1440,7 +1464,7 @@
                END DO
 #  if defined __MPI
                CALL MPI_ALLREDUCE(CTMPV(I+1),APKI(I+1),N-I, &
-     &         MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD,IERR)
+     &         MPI_DOUBLE_COMPLEX, MPI_SUM, comm,IERR)
 #  endif
 #else
                DO J = I+1, N
@@ -1465,7 +1489,7 @@
             END IF
 #if defined __PARA
 #  if defined __MPI
-            CALL MPI_BCAST(D(I),1,MPI_DOUBLE_PRECISION,OW(I), MPI_COMM_WORLD,IERR)
+            CALL MPI_BCAST(D(I),1,MPI_DOUBLE_PRECISION,OW(I), comm,IERR)
 #  endif
 #endif
             TAU( I ) = TAUI
@@ -1475,7 +1499,7 @@
          END IF
 #if defined __PARA
 #  if defined __MPI
-         CALL MPI_BCAST(D(N),1,MPI_DOUBLE_PRECISION,OW(I), MPI_COMM_WORLD,IERR)
+         CALL MPI_BCAST(D(N),1,MPI_DOUBLE_PRECISION,OW(I), comm,IERR)
 #  endif
 #endif
 !
@@ -1488,7 +1512,7 @@
 
 !==----------------------------------------------==!
 
-   SUBROUTINE pzupgtr( n, nrl, ap, lda, tau, q, ldq, nproc, me)
+   SUBROUTINE pzupgtr( n, nrl, ap, lda, tau, q, ldq, nproc, me, comm)
 
 !
 !  Parallel MPI version of the LAPACK routine ZUPGTR
@@ -1517,7 +1541,7 @@
 !
 !     .. __SCALAR Arguments ..
 
-      INTEGER            INFO, LDQ, N, LDA, NRL, NPROC, ME
+      INTEGER            INFO, LDQ, N, LDA, NRL, NPROC, ME, comm
 !     ..
 !     .. Array Arguments ..
       COMPLEX(DP)         AP(LDA, * ), Q( LDQ, * ), TAU( * )
@@ -1682,7 +1706,7 @@
 #if defined __PARA
 #  if defined __MPI
               CALL MPI_ALLREDUCE(WORK,CTMPV,N-1-I,MPI_DOUBLE_COMPLEX, &
-     &             MPI_SUM, MPI_COMM_WORLD,IERR)
+     &             MPI_SUM, comm,IERR)
 #  endif
               DO J = 1,N-1-I
                 WORK(J) = CTMPV(J)
@@ -1734,7 +1758,7 @@
 
 !==----------------------------------------------==!
 
-      SUBROUTINE pzsteqr( compz, n, nrl, d, e, z, ldz, nproc, me )
+      SUBROUTINE pzsteqr( compz, n, nrl, d, e, z, ldz, nproc, me, comm )
 !
 !  Parallel MPI version of the LAPACK routine ZHPTRD
 !
@@ -1761,7 +1785,7 @@
 
 !     .. __SCALAR Arguments ..
       CHARACTER          COMPZ
-      INTEGER            LDZ, N, NRL, NPROC, ME
+      INTEGER            LDZ, N, NRL, NPROC, ME, comm
 !     ..
 !     .. Array Arguments ..
       REAL(DP)   D( * ), E( * )
@@ -2327,23 +2351,30 @@
 
 !==----------------------------------------------==!
 
-   SUBROUTINE pzhpev_drv( JOBZ, ap, lda, w, z, ldz, nrl, n, nproc, mpime)
-        USE kinds
-        IMPLICIT NONE
-        CHARACTER :: JOBZ
-        INTEGER   :: lda, ldz, nrl, n, nproc, mpime
-        COMPLEX(DP) :: ap( lda, * ), z( ldz, * )
-        REAL(DP) :: w( * )
-        REAL(DP) :: rwork( n )
-        COMPLEX(DP) :: cwork( n )
-
-        CALL pzhptrd( n, nrl, ap, lda, w, rwork, cwork, nproc, mpime)
-        IF( jobz == 'V' .OR. jobz == 'v' ) THEN
-          CALL pzupgtr( n, nrl, ap, lda, cwork, z, ldz, nproc, mpime)
-        END IF
-        CALL pzsteqr( jobz, n, nrl, w, rwork, z, ldz, nproc, mpime)
-
-        RETURN
+   SUBROUTINE pzhpev_drv( jobz, ap, lda, w, z, ldz, &
+                          nrl, n, nproc, mpime, comm_in )
+     USE kinds
+     IMPLICIT NONE
+     CHARACTER :: JOBZ
+     INTEGER   :: lda, ldz, nrl, n, nproc, mpime
+     INTEGER, OPTIONAL, INTENT(IN) :: comm_in
+     COMPLEX(DP) :: ap( lda, * ), z( ldz, * )
+     REAL(DP) :: w( * )
+     REAL(DP) :: rwork( n )
+     COMPLEX(DP) :: cwork( n )
+     INTEGER   :: comm
+     !
+     IF ( PRESENT( comm_in ) ) THEN
+        comm = comm_in
+     ELSE
+        comm = MPI_COMM_WORLD
+     END IF
+     CALL pzhptrd( n, nrl, ap, lda, w, rwork, cwork, nproc, mpime, comm)
+     IF( jobz == 'V' .OR. jobz == 'v' ) THEN
+        CALL pzupgtr( n, nrl, ap, lda, cwork, z, ldz, nproc, mpime, comm)
+     END IF
+     CALL pzsteqr( jobz, n, nrl, w, rwork, z, ldz, nproc, mpime, comm)
+     RETURN
    END SUBROUTINE pzhpev_drv
 
 
