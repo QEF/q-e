@@ -26,25 +26,25 @@ SUBROUTINE rcgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
   !
   ! ... I/O variables
   !
-  INTEGER,           INTENT(IN)    :: ndmx, ndim, nbnd, maxter
-  INTEGER,           INTENT(IN)    :: btype(nbnd)
+  INTEGER,      INTENT(IN)    :: ndmx, ndim, nbnd, maxter
+  INTEGER,      INTENT(IN)    :: btype(nbnd)
   REAL (DP),    INTENT(IN)    :: precondition(ndim), ethr
   COMPLEX (DP), INTENT(INOUT) :: psi(ndmx,nbnd)
   REAL (DP),    INTENT(INOUT) :: e(nbnd)
-  INTEGER,           INTENT(OUT)   :: notconv
+  INTEGER,      INTENT(OUT)   :: notconv
   REAL (DP),    INTENT(OUT)   :: avg_iter
   !
   ! ... local variables
   !
-  INTEGER                        :: i, j, m, iter, moved
+  INTEGER                   :: i, j, m, iter, moved
   REAL (DP),    ALLOCATABLE :: lagrange(:)
   COMPLEX (DP), ALLOCATABLE :: hpsi(:), spsi(:), g(:), cg(:), &
-                                    scg(:), ppsi(:), g0(:)  
+                               scg(:), ppsi(:), g0(:)  
   REAL (DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, gg1, &
-                                    cg0, e0, es(2)
+                               cg0, e0, es(2)
   REAL (DP)                 :: theta, cost, sint, cos2t, sin2t
-  LOGICAL                        :: reorder
-  INTEGER                        :: ndim2, ndmx2
+  LOGICAL                   :: reorder
+  INTEGER                   :: ndim2, ndmx2
   REAL (DP)                 :: empty_ethr
   !
   ! ... external functions

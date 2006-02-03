@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -32,25 +32,25 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
   !
   ! ... I/O variables
   !
-  INTEGER,           INTENT(IN)    :: ndmx, ndim, nbnd, maxter
-  INTEGER,           INTENT(IN)    :: btype(nbnd)
-  REAL (DP),    INTENT(IN)    :: precondition(ndmx*npol), ethr
-  COMPLEX (DP), INTENT(INOUT) :: psi(ndmx*npol,nbnd)
-  REAL (DP),    INTENT(INOUT) :: e(nbnd)
-  INTEGER,           INTENT(OUT)   :: notconv
-  REAL (DP),    INTENT(OUT)   :: avg_iter
+  INTEGER,     INTENT(IN)    :: ndmx, ndim, nbnd, maxter
+  INTEGER,     INTENT(IN)    :: btype(nbnd)
+  REAL(DP),    INTENT(IN)    :: precondition(ndmx*npol), ethr
+  COMPLEX(DP), INTENT(INOUT) :: psi(ndmx*npol,nbnd)
+  REAL(DP),    INTENT(INOUT) :: e(nbnd)
+  INTEGER,     INTENT(OUT)   :: notconv
+  REAL(DP),    INTENT(OUT)   :: avg_iter
   !
   ! ... local variables
   !
-  INTEGER                        :: i, j, m, iter, moved
-  COMPLEX (DP), ALLOCATABLE :: hpsi(:), spsi(:), lagrange(:), &
-                                    g(:), cg(:), scg(:), ppsi(:), g0(:)  
-  REAL (DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, gg1, &
-                                    cg0, e0, es(2)
-  REAL (DP)                 :: theta, cost, sint, cos2t, sin2t
-  LOGICAL                        :: reorder
-  INTEGER                        :: kdim, kdmx, kdim2
-  REAL (DP)                 :: empty_ethr, ethr_m
+  INTEGER                  :: i, j, m, iter, moved
+  COMPLEX(DP), ALLOCATABLE :: hpsi(:), spsi(:), lagrange(:), &
+                              g(:), cg(:), scg(:), ppsi(:), g0(:)  
+  REAL(DP)                 :: psi_norm, a0, b0, gg0, gamma, gg, gg1, &
+                              cg0, e0, es(2)
+  REAL(DP)                 :: theta, cost, sint, cos2t, sin2t
+  LOGICAL                  :: reorder
+  INTEGER                  :: kdim, kdmx, kdim2
+  REAL(DP)                 :: empty_ethr, ethr_m
   !
   ! ... external functions
   !
