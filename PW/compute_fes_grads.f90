@@ -42,8 +42,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE check_stop,         ONLY : check_stop_now
   USE path_io_routines,   ONLY : new_image_init, get_new_image, &
                                  stop_other_images  
-  USE metadyn_base,       ONLY : impose_domain_constraints, &
-                                 add_domain_potential
+  USE metadyn_base,       ONLY : add_domain_potential
   USE metadyn_io,         ONLY : write_axsf_file
   !
   IMPLICIT NONE
@@ -198,8 +197,6 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         ! ... the old and new values of the order-parameter are set here
         !
         new_target(:) = pos(:,image)
-        !
-        CALL impose_domain_constraints()
         !
         IF ( ionode ) THEN
            !     

@@ -960,6 +960,44 @@ MODULE path_base
     END SUBROUTINE born_oppenheimer_fes
     !
     !-----------------------------------------------------------------------
+    SUBROUTINE check_domain()
+      !-----------------------------------------------------------------------
+      !
+      USE path_variables,     ONLY : pos, num_of_images, &
+                                     istep_path, first_last_opt
+      USE constraints_module, ONLY : target
+      USE metadyn_base,       ONLY : impose_domain_constraints
+      !
+      IMPLICIT NONE
+      !
+      INTEGER :: N_in, N_fin, i
+      !
+      !
+      IF ( istep_path == 0 .OR. first_last_opt ) THEN
+         !
+         N_in  = 1
+         N_fin = num_of_images
+         !
+      ELSE
+         !
+         N_in  = 2
+         N_fin = ( num_of_images - 1 )
+         !
+      END IF      
+      !
+      DO i = N_in, N_fin
+         !
+         target(:) = pos(:,i)
+         !
+         CALL impose_domain_constraints()
+         !
+      END DO
+      !
+      RETURN
+      !
+    END SUBROUTINE check_domain
+    !
+    !-----------------------------------------------------------------------
     SUBROUTINE search_mep()
       !-----------------------------------------------------------------------
       !
@@ -1018,6 +1056,8 @@ MODULE path_base
             ! ... minimisation step is done only in case of no suspended images
             !
             CALL first_opt_step()
+            !
+            IF ( lcoarsegrained ) CALL check_domain()
             !
             IF ( lsmd .AND. .NOT. fixed_tan ) THEN
                !

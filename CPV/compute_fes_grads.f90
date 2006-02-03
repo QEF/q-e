@@ -38,8 +38,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE xml_io_base,        ONLY : check_restartfile
   USE path_io_routines,   ONLY : new_image_init, get_new_image, &
                                  stop_other_images
-  USE metadyn_base,       ONLY : impose_domain_constraints, &
-                                 add_domain_potential
+  USE metadyn_base,       ONLY : add_domain_potential
   USE metadyn_io,         ONLY : write_axsf_file
   !
   IMPLICIT NONE
@@ -232,8 +231,6 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         ! ... then the system is "adiabatically" moved to the new target
         !
         new_target(:) = pos(:,image)
-        !
-        CALL impose_domain_constraints()
         !
         to_target(:) = ( new_target(:) - target(:) ) / DBLE( shake_nstep )
         !

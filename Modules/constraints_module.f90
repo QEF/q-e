@@ -94,7 +94,7 @@ MODULE constraints_module
        INTEGER,  INTENT(IN) :: ityp(nat)
        REAL(DP), INTENT(IN) :: tau_units
        !
-       INTEGER     :: i, i_sin, i_cos
+       INTEGER     :: i, j, i_sin, i_cos
        INTEGER     :: ia, ia0, ia1, ia2, ia3, n_type_coord1
        REAL(DP)    :: d0(3), d1(3), d2(3)
        REAL(DP)    :: C00, C01, C02, C11, C12, C22
@@ -104,6 +104,7 @@ MODULE constraints_module
        REAL(DP)    :: dtau(3), norm_dtau
        REAL(DP)    :: k(3), phase, norm_k
        COMPLEX(DP) :: struc_fac
+       !
        CHARACTER(LEN=6), EXTERNAL :: int_to_char
        !
        !
@@ -350,8 +351,7 @@ MODULE constraints_module
           CASE( 'sph_structure_factor' )
              !
              ! ... constraint on spherical average of the structure factor for
-             ! ... a given k-vector of norm k ( the 4*pi coefficient is
-             ! ... understood )
+             ! ... a given k-vector of norm k
              !
              constr_type(ia) = 7
              !
@@ -367,27 +367,31 @@ MODULE constraints_module
              !
              target(ia) = 0.D0
              !
-             DO i = 1, nat
+             DO i = 1, nat - 1
                 !
-                dtau(:) = pbc( ( tau(:,i) - tau(:,1) ) * tau_units )
-                !
-                norm_dtau = norm( dtau(:) )
-                !
-                phase = norm_k * norm_dtau
-                !
-                IF ( phase < eps32 ) THEN
+                DO j = i + 1, nat
                    !
-                   target(ia) = target(ia) + 1.D0
+                   dtau(:) = pbc( ( tau(:,i) - tau(:,j) ) * tau_units )
                    !
-                ELSE
+                   norm_dtau = norm( dtau(:) )
                    !
-                   target(ia) = target(ia) + SIN( phase ) / phase
+                   phase = norm_k * norm_dtau
                    !
-                END IF
+                   IF ( phase < eps32 ) THEN
+                      !
+                      target(ia) = target(ia) + 1.D0
+                      !
+                   ELSE
+                      !
+                      target(ia) = target(ia) + SIN( phase ) / phase
+                      !
+                   END IF
+                   !
+                END DO
                 !
              END DO
              !
-             target(ia) = target(ia) / DBLE( nat )
+             target(ia) = 2.D0 * fpi * target(ia) / DBLE( nat )
              !
           CASE DEFAULT
              !
@@ -417,7 +421,7 @@ MODULE constraints_module
        !
        ! ... local variables
        !
-       INTEGER     :: i, i_sin, i_cos
+       INTEGER     :: i, j, i_sin, i_cos
        INTEGER     :: ia, ia0, ia1, ia2, ia3, n_type_coord1
        REAL(DP)    :: d0(3), d1(3), d2(3)
        REAL(DP)    :: C00, C01, C02, C11, C12, C22
@@ -583,33 +587,37 @@ MODULE constraints_module
           CASE( 7 )
              !
              ! ... constraint on spherical average of the structure factor for
-             ! ... a given k-vector of norm k (the 4*pi coefficient is understood)
+             ! ... a given k-vector of norm k
              !
              norm_k = constr(1,ia) * tpi / tau_units
              !
              target(ia) = 0.D0
              !
-             DO i = 1, nat
+             DO i = 1, nat - 1
                 !
-                dtau(:) = pbc( ( tau(:,i) - tau(:,1) ) * tau_units )
-                !
-                norm_dtau = norm( dtau(:) )
-                !
-                phase = norm_k * norm_dtau
-                !
-                IF ( phase < eps32 ) THEN
+                DO j = i + 1, nat
                    !
-                   target(ia) = target(ia) + 1.D0
+                   dtau(:) = pbc( ( tau(:,i) - tau(:,j) ) * tau_units )
                    !
-                ELSE
+                   norm_dtau = norm( dtau(:) )
                    !
-                   target(ia) = target(ia) + SIN( phase ) / phase
+                   phase = norm_k * norm_dtau
                    !
-                END IF
+                   IF ( phase < eps32 ) THEN
+                      !
+                      target(ia) = target(ia) + 1.D0
+                      !
+                   ELSE
+                      !
+                      target(ia) = target(ia) + SIN( phase ) / phase
+                      !
+                   END IF
+                   !
+                END DO
                 !
              END DO
              !
-             target(ia) = target(ia) / DBLE( nat )
+             target(ia) = 2.D0 * fpi * target(ia) / DBLE( nat )
              !
           END SELECT
           !
@@ -648,8 +656,8 @@ MODULE constraints_module
        REAL(DP)    :: D01, D12, invD01, invD12
        REAL(DP)    :: smoothing, r_c, r_max
        INTEGER     :: type_coord1, type_coord2
-       REAL(DP)    :: dtau(3), norm_dtau, expo
-       REAL(DP)    :: k(3), phase, ksin(3), norm_k, sinxx
+       REAL(DP)    :: dtau(3), norm_dtau, norm_dtau_sq, expo
+       REAL(DP)    :: r0(3), ri(3), k(3), phase, ksin(3), norm_k, sinxx
        COMPLEX(DP) :: struc_fac
        !
        ! ... external function
@@ -850,19 +858,23 @@ MODULE constraints_module
           !
           struc_fac = ( 1.D0, 0.D0 )
           !
+          r0(:) = tau(:,1)
+          !
           DO i = 1, nat - 1
              !
-             dtau(:) = pbc( ( tau(:,i+1) - tau(:,1) ) * tau_units )
+             dtau(:) = pbc( ( tau(:,i+1) - r0(:) ) * tau_units )
              !
-             phase = k(:) .dot. dtau(:)
+             phase = k(1)*dtau(1) + k(2)*dtau(2) + k(3)*dtau(3)
              !
              struc_fac = struc_fac + CMPLX( COS( phase ), SIN( phase ) )
              !
+             ri(:) = tau(:,i)
+             !
              DO j = i + 1, nat
                 !
-                dtau(:) = pbc( ( tau(:,j) - tau(:,i) ) * tau_units )
+                dtau(:) = pbc( ( tau(:,j) - ri(:) ) * tau_units )
                 !
-                phase = k(:) .dot. dtau(:)
+                phase = k(1)*dtau(1) + k(2)*dtau(2) + k(3)*dtau(3)
                 !
                 ksin(:) = k(:) * SIN( phase )
                 !
@@ -873,48 +885,59 @@ MODULE constraints_module
              !
           END DO
           !
-          g = ( CONJG( struc_fac ) * struc_fac ) / DBLE( nat )**2
+          g = ( CONJG( struc_fac ) * struc_fac ) / DBLE( nat*nat )
           !
           g = ( g - target(index) )
           !
-          dg(:,:) = dg(:,:) * 2.D0 / DBLE( nat )**2
+          dg(:,:) = dg(:,:) * 2.D0 / DBLE( nat*nat )
           !
        CASE( 7 )
           !
           ! ... constraint on spherical average of the structure factor for
-          ! ... a given k-vector of norm k (the 4*pi coefficient is understood)
+          ! ... a given k-vector of norm k
           !
           norm_k = constr(1,index) * tpi / tau_units
           !
           g = 0.D0
           !
-          DO i = 1, nat
+          DO i = 1, nat - 1
              !
-             dtau(:) = pbc( ( tau(:,i) - tau(:,1) ) * tau_units )
+             ri(:) = tau(:,i)
              !
-             norm_dtau = norm( dtau(:) )
-             !
-             phase = norm_k * norm_dtau
-             !
-             IF ( phase < eps32 ) THEN
+             DO j = i + 1, nat
                 !
-                g = g + 1.D0
+                dtau(:) = pbc( ( ri(:) - tau(:,j) ) * tau_units )
                 !
-             ELSE
+                norm_dtau_sq = dtau(1)**2 + dtau(2)**2 + dtau(3)**2
                 !
-                sinxx = SIN( phase ) / phase
+                norm_dtau = SQRT( norm_dtau_sq )
                 !
-                g = g + sinxx
+                phase = norm_k * norm_dtau
                 !
-                dg(:,i) = dtau(:) / norm_dtau**2 * ( COS( phase ) - sinxx )
+                IF ( phase < eps32 ) THEN
+                   !
+                   g = g + 1.D0
+                   !
+                ELSE
+                   !
+                   sinxx = SIN( phase ) / phase
+                   !
+                   g = g + sinxx
+                   !
+                   dtau(:) = dtau(:) / norm_dtau_sq * ( COS( phase ) - sinxx )
+                   !
+                   dg(:,i) = dg(:,i) + dtau(:)
+                   dg(:,j) = dg(:,j) - dtau(:)
+                   !
+                END IF
                 !
-             END IF
+             END DO
              !
           END DO
           !
-          g = ( g / DBLE( nat ) - target(index) )
+          g = ( 2.D0 * fpi * g / DBLE( nat ) - target(index) )
           !
-          dg(:,:) = dg(:,:) / DBLE( nat )
+          dg(:,:) = 4.D0 * fpi * dg(:,:) / DBLE( nat )
           !
        END SELECT
        !
@@ -1088,7 +1111,7 @@ MODULE constraints_module
        REAL(DP), INTENT(INOUT) :: force(:,:)
        !
        INTEGER               :: i, j, dim
-       REAL(DP)              :: g, dgidgj
+       REAL(DP)              :: g, ndg, dgidgj
        REAL(DP)              :: norm_before, norm_after
        REAL(DP), ALLOCATABLE :: dg(:,:,:)
        REAL(DP), ALLOCATABLE :: dg_matrix(:,:)
@@ -1109,12 +1132,14 @@ MODULE constraints_module
        !
        IF ( nconstr == 1 ) THEN
           !
-          CALL constraint_grad( i, nat, tau, &
+          CALL constraint_grad( 1, nat, tau, &
                                 if_pos, ityp, tau_units, g, dg(:,:,1) )
           !
           lagrange(1) = DDOT( dim, force, 1, dg(:,:,1), 1 )
           !
-          force(:,:) = force(:,:) - lagrange(1) * dg(:,:,1)
+          ndg = DDOT( dim, dg(:,:,1), 1, dg(:,:,1), 1 )
+          !
+          force(:,:) = force(:,:) - lagrange(1) * dg(:,:,1) / ndg
           !
        ELSE
           !
