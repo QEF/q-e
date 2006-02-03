@@ -23,9 +23,7 @@
               diagonalize, pzhpev_drv, zhpev_drv, cdiagonalize
     PUBLIC :: rep_matmul_drv
 
-!==----------------------------------------------==!
     CONTAINS
-!==----------------------------------------------==!
 
     SUBROUTINE ptredv( a, lda, d, e, v, ldv, nrl, n, nproc, me, comm )
 
@@ -91,7 +89,6 @@
 !
 !
 
-      USE kinds
       IMPLICIT NONE
 
       INTEGER, PARAMETER :: PTRED_WORK_SIZE = 2333
@@ -445,7 +442,6 @@
 
 !==----------------------------------------------==!
 
-
     SUBROUTINE ptqliv( d, e, n, z, ldz, nrl )
 
 !
@@ -527,7 +523,7 @@
 !
 !
 !
-      USE kinds
+
       IMPLICIT NONE
 
       INTEGER n,nrl,ldz
@@ -658,7 +654,6 @@
 !              comments and suggestions to : cava@sissa.it
 !
 
-      USE kinds
       IMPLICIT NONE
       INTEGER n,ldv,nrl
       REAL(DP) d(n),v(ldv,n)
@@ -699,7 +694,6 @@
       END SUBROUTINE peigsrtv
 
       FUNCTION pythag(a,b)
-      USE kinds
       IMPLICIT NONE
       REAL(DP) a,b,pythag
       REAL(DP) absa,absb
@@ -764,6 +758,7 @@
      INTEGER               :: nrl, i, j, jl, ierr, comm
      !
      !
+#if defined (__PARA) && defined (__MPI)
      IF ( PRESENT( comm_in ) ) THEN
         !
         comm = comm_in
@@ -775,6 +770,7 @@
         !
 #endif
      END IF
+#endif
      !
      nrl = n / nproc
      !
@@ -847,7 +843,6 @@
 
    SUBROUTINE pdspev_drv( jobz, ap, lda, w, z, ldz, &
                           nrl, n, nproc, mpime, comm_in )
-     USE kinds
      IMPLICIT NONE
      CHARACTER :: JOBZ
      INTEGER   :: lda, ldz, nrl, n, nproc, mpime
@@ -856,6 +851,7 @@
      REAL(DP) :: sd( n )
      INTEGER   :: comm
      !
+#if defined (__PARA) && defined (__MPI)
      IF ( PRESENT( comm_in ) ) THEN
         comm = comm_in
 #ifdef __MPI
@@ -863,17 +859,16 @@
         comm = MPI_COMM_WORLD
 #endif
      END IF
+#endif
      CALL ptredv(ap, lda, w, sd, z, ldz, nrl, n, nproc, mpime, comm)
      CALL ptqliv(w, sd, n, z, ldz, nrl)
      CALL peigsrtv(w, z, ldz, n, nrl)
      RETURN
    END SUBROUTINE pdspev_drv
  
-
 !==----------------------------------------------==!
 
       SUBROUTINE dspev_drv( JOBZ, UPLO, N, AP, W, Z, LDZ )
-        USE kinds
         IMPLICIT NONE
         CHARACTER ::       JOBZ, UPLO
         INTEGER   ::       IOPT, INFO, LDZ, N
@@ -928,6 +923,7 @@
      COMPLEX(DP), ALLOCATABLE :: cwork(:)
      !
      !
+#if defined (__PARA) && defined (__MPI)
      IF ( PRESENT( comm_in ) ) THEN
         !
         comm = comm_in
@@ -939,6 +935,7 @@
         !
 #endif
      END IF
+#endif
      !
      IF ( ( nproc == 1 ) .OR. ( n < nproc ) ) THEN
         !
@@ -963,9 +960,7 @@
         !
 #if defined (__AIX)
         !
-        iopt = 1
-        !
-        CALL ZHPEV( iopt, aloc, d, ev, n, n, cwork, 4*n )
+        CALL ZHPEV( 1, aloc, d, ev, n, n, cwork, 4*n )
         !
 #else
         CALL ZHPEV( 'V', 'L', n, aloc, d, ev, n, cwork, rwork, info )
@@ -1540,8 +1535,6 @@
 !     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
 !     Courant Institute, Argonne National Lab, and Rice University
 
-
-      USE kinds
       IMPLICIT NONE
 
 !
@@ -1786,7 +1779,6 @@
 !     Courant Institute, Argonne National Lab, and Rice University
 !
 
-      USE kinds
       IMPLICIT NONE
 
 !     .. __SCALAR Arguments ..
@@ -2322,7 +2314,6 @@
 
    SUBROUTINE zhpev_drv( JOBZ, UPLO, N, AP, W, Z, LDZ )
 
-        USE kinds
         IMPLICIT NONE
 
         CHARACTER ::       JOBZ, UPLO
@@ -2359,7 +2350,7 @@
 
    SUBROUTINE pzhpev_drv( jobz, ap, lda, w, z, ldz, &
                           nrl, n, nproc, mpime, comm_in )
-     USE kinds
+
      IMPLICIT NONE
      CHARACTER :: JOBZ
      INTEGER   :: lda, ldz, nrl, n, nproc, mpime
@@ -2370,6 +2361,7 @@
      COMPLEX(DP) :: cwork( n )
      INTEGER   :: comm
      !
+#if defined (__PARA) && defined (__MPI)
      IF ( PRESENT( comm_in ) ) THEN
         comm = comm_in
 #ifdef __MPI
@@ -2377,6 +2369,7 @@
         comm = MPI_COMM_WORLD
 #endif
      END IF
+#endif
      CALL pzhptrd( n, nrl, ap, lda, w, rwork, cwork, nproc, mpime, comm)
      IF( jobz == 'V' .OR. jobz == 'v' ) THEN
         CALL pzupgtr( n, nrl, ap, lda, cwork, z, ldz, nproc, mpime, comm)
@@ -2656,10 +2649,7 @@ SUBROUTINE matmerge_drv( m, k, a, lda, ar, ldar, nb, dims, coor, comm )
   RETURN
 END SUBROUTINE matmerge_drv
 
-
-
 ! ---------------------------------------------------------------------------------
-
 
 SUBROUTINE matscal_drv( m, n, beta, c, ldc, nb, dims, coor, comm )
   !
@@ -2697,9 +2687,7 @@ SUBROUTINE matscal_drv( m, n, beta, c, ldc, nb, dims, coor, comm )
 
 END SUBROUTINE
 
-
 ! ---------------------------------------------------------------------------------
-
 
 SUBROUTINE matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC, nb, dims, coor, comm )
   !
@@ -2909,7 +2897,6 @@ SUBROUTINE matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, 
 
 END SUBROUTINE
 
-
 !==----------------------------------------------==!
 !
 ! Copyright (C) 2005 Carlo Cavazzoni
@@ -2918,7 +2905,6 @@ END SUBROUTINE
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
 
 SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC, comm )
   !

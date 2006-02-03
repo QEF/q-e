@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -743,8 +743,8 @@ SUBROUTINE setup()
   !
   ! ... non scf calculation: do not change the number of k-points
   ! ... to account for reduced symmetry, unless you need to
-  ! ... (as in phonon or raman or DOS calculations, or whenever the
-  ! ...  Fermi energy has to be calculated)
+  ! ... ( as in phonon or raman or DOS calculations, or whenever the
+  ! ... Fermi energy has to be calculated )
   !
   ltest = ( nks /= input_nks ) .AND. & 
           ( .NOT. ( ltetra .OR. lgauss ) ) .AND. &
@@ -767,7 +767,7 @@ SUBROUTINE setup()
   IF ( lraman ) CALL set_kplusb(ibrav, xk, wk, b_length, nks, npk, lcart)
   !
 #if defined (EXX)
-  IF ( dft_is_hybrid() ) call exx_grid_init()
+  IF ( dft_is_hybrid() ) CALL exx_grid_init()
 #endif
   !
   IF ( lsda ) THEN
@@ -792,7 +792,9 @@ SUBROUTINE setup()
      !
      wk(1:nks)    = wk(1:nks) * degspin
      current_spin = 1
-     if (nspin /= 1) call errore ('setup','nspin should be 1; check iosys',1)
+     !
+     IF ( nspin /= 1 ) &
+        CALL errore( 'setup', 'nspin should be 1; check iosys', 1 )
      !
   END IF
   !
@@ -832,6 +834,8 @@ SUBROUTINE setup()
   ! ... distribute the k-points (and their weights and spin indices)
   !
   CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
+  !
+  CALL check_para_diag_efficiency()
   !
 #else
   !
@@ -892,7 +896,6 @@ SUBROUTINE setup()
   !
 END SUBROUTINE setup
 !
-!
 !----------------------------------------------------------------------------
 FUNCTION n_atom_wfc( nat, npsx, ityp, nchix, nchi, oc, lchi, jchi )
   !----------------------------------------------------------------------------
@@ -951,3 +954,112 @@ FUNCTION n_atom_wfc( nat, npsx, ityp, nchix, nchi, oc, lchi, jchi )
   RETURN
   !
 END FUNCTION n_atom_wfc
+!
+!----------------------------------------------------------------------------
+SUBROUTINE check_para_diag_efficiency()
+  !----------------------------------------------------------------------------
+  !
+  USE kinds,            ONLY : DP
+  USE wvfct,            ONLY : nbndx
+  USE control_flags,    ONLY : use_para_diago, para_diago_dim
+  USE io_global,        ONLY : stdout, ionode, ionode_id
+  USE random_numbers,   ONLY : rranf
+  USE parallel_toolkit, ONLY : diagonalize
+  USE mp_global,        ONLY : nproc_pool, me_pool, intra_pool_comm
+  USE mp,               ONLY : mp_bcast
+  !
+  IMPLICIT NONE
+  !
+  INTEGER               :: dim, dim_pool, i, j, m
+  REAL                  :: time_para, time_serial
+  REAL(DP), ALLOCATABLE :: a(:,:), v(:,:), e(:)
+  !
+  REAL(DP), EXTERNAL :: scnds
+  !
+  !
+  use_para_diago = .FALSE.
+  !
+  m = 50 * nproc_pool
+  !
+  IF ( nproc_pool == 1 .OR. m > nbndx ) RETURN
+  !
+  IF ( ionode ) THEN
+     !
+     WRITE( stdout, '(/,5X,"looking for " &
+                     &     "the optimal diagonalization algorithm ...",/)' )
+     !
+     WRITE( stdout, '(5X,"dimension   time para (sec)   time serial (sec)")' )
+     !
+  END IF
+  !
+  DO dim = m, nbndx, m
+     !
+     ALLOCATE( a( dim, dim ) )
+     ALLOCATE( v( dim, dim ) )
+     ALLOCATE( e( dim ) )
+     !
+     a(:,:) = 0.D0
+     !
+     dim_pool = dim / nproc_pool
+     !
+     DO i = me_pool*dim_pool + 1, ( me_pool + 1 )*dim_pool
+        !
+        DO j = 1, dim
+        !
+           a(i,j) = rranf() - 0.5D0
+        !
+        END DO
+        !
+     END DO
+     !
+     CALL reduce( dim*dim, a )
+     !
+     IF ( ionode ) time_para = scnds()
+     !
+     CALL diagonalize( 1, a, e, v, dim, nproc_pool, me_pool, intra_pool_comm )
+     !
+     IF ( ionode ) time_para = scnds() - time_para
+     !
+     IF ( ionode ) time_serial = scnds()
+     !
+     CALL rdiagh( dim, a, dim, e, v )
+     !
+     IF ( ionode ) time_serial = scnds() - time_serial
+     !
+     DEALLOCATE( a, v, e )
+     !
+     IF ( ionode ) &
+        WRITE( stdout, '(5X,I5,2(6X,F12.8))' ) dim, time_para, time_serial
+     !
+     IF ( ionode .AND. time_para < time_serial ) THEN
+        !
+        use_para_diago = .TRUE.
+        para_diago_dim = dim
+        !
+        EXIT
+        !
+     END IF
+     !
+  END DO
+  !
+  IF ( ionode ) THEN
+     !
+     IF ( use_para_diago ) THEN
+        !
+        WRITE( stdout, '(/,5X,"a parallel algorithm will be used for " &
+                        &     "matrices larger than ",I4,/)' ) para_diago_dim
+        !
+     ELSE
+        !
+        WRITE( stdout, '(/,5X,"a serial algorithm will be used",/)' )
+        !
+     END IF
+     !
+  END IF
+  !
+  CALL mp_bcast( use_para_diago, ionode_id )
+  CALL mp_bcast( para_diago_dim, ionode_id )
+  !
+  RETURN
+  !
+END SUBROUTINE check_para_diag_efficiency
