@@ -1,11 +1,14 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #include "f_defs.h"
+!
+#define ZERO ( 0.D0, 0.D0 )
+#define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
 SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
@@ -77,8 +80,7 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
        !
        IMPLICIT NONE
        !
-       REAL (DP), ALLOCATABLE :: ps(:)
-         ! the scalar products
+       REAL(DP), ALLOCATABLE :: ps(:)
        !
        !
        ALLOCATE( ps( finish ) )
@@ -87,16 +89,14 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
        !
        DO vec = start, finish
           !
-          DO vecp = 1, ( vec - 1 )
-             !
-             ps(vecp) = 2.D0 * DDOT( 2 * n, psi(1,vecp), 1, spsi(1,vec), 1 )
-             !
-             IF ( gstart == 2 ) ps(vecp) = ps(vecp) - psi(1,vecp) * spsi(1,vec)
-             !
-          END DO
+	  CALL DGEMV( 'T', 2*n, vec-1, 2.D0, &
+	              psi, 2*n, spsi(1,vec), 1, 0.D0, ps, 1 )
+          !
+          IF ( gstart == 2 ) &
+	     ps(1:vec-1) = ps(1:vec-1) - psi(1,1:vec-1) * spsi(1,vec)
           !
           CALL reduce( ( vec - 1 ), ps )
-          !
+	  !
           DO vecp = 1, ( vec - 1 )
              !
              psi(:,vec)  = psi(:,vec)  - ps(vecp) * psi(:,vecp)
@@ -115,31 +115,23 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
              !
              WRITE( stdout, '(/,5X,"norm = ",F16.10,I4,/)' ) psi_norm, vec
              !
-             CALL errore( 'cgramg1_gamma', ' negative norm in S ', 1 )
+             CALL errore( 'cgramg1_gamma', 'negative norm in S ', 1 )
              !
           END IF
           !
+	  psi_norm = 1.D0 / SQRT( psi_norm )
+          !
+          psi(:,vec)  = psi_norm * psi(:,vec)
+          hpsi(:,vec) = psi_norm * hpsi(:,vec)
+          spsi(:,vec) = psi_norm * spsi(:,vec)
+	  !
           IF ( psi_norm < eps8 ) THEN
-             !
-             psi_norm = 1.D0 / SQRT( psi_norm )
-             !
-             psi(:,vec)  = psi_norm * psi(:,vec)
-             hpsi(:,vec) = psi_norm * hpsi(:,vec)
-             spsi(:,vec) = psi_norm * spsi(:,vec)
              !
              ierr = ierr + 1
              !
              IF ( ierr <= ierrx ) CYCLE
              !
-             CALL errore( 'cgramg1_gamma', ' absurd correction vector', vec )
-             !
-          ELSE
-             !
-             psi_norm = 1.D0 / SQRT( psi_norm )
-             !
-             psi(:,vec)  = psi_norm * psi(:,vec)
-             hpsi(:,vec) = psi_norm * hpsi(:,vec)
-             spsi(:,vec) = psi_norm * spsi(:,vec)
+             CALL errore( 'cgramg1_gamma', 'absurd correction vector', vec )
              !
           END IF
           !
@@ -151,7 +143,6 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
        !
      END SUBROUTINE cgramg1_gamma
      !
-     !
      !-----------------------------------------------------------------------
      SUBROUTINE cgramg1_k()
        !-----------------------------------------------------------------------
@@ -159,9 +150,8 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
        IMPLICIT NONE
        !
        COMPLEX(DP), ALLOCATABLE :: ps(:)
-         ! the scalar products
+       !
        COMPLEX(DP) ::  ZDOTC
-         ! function which computes scalar products
        !
        !
        ALLOCATE( ps( finish ) )
@@ -170,13 +160,9 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
        !
        DO vec = start, finish
           !
-          DO vecp = 1, ( vec - 1 )
-             !
-             ps(vecp) = ZDOTC( n, psi(1,vecp), 1, spsi(1,vec), 1 )
-             !
-          END DO
-          !
-          CALL reduce( 2 * ( vec - 1 ), ps )
+	  CALL ZGEMV( 'C', n, vec-1, ONE, psi, n, spsi(1,vec), 1, ZERO, ps, 1 )
+	  !
+          CALL reduce( 2*( vec - 1 ), ps )
           !
           DO vecp = 1, ( vec - 1 )
              !
@@ -186,7 +172,7 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
              !
           END DO
           !
-          psi_norm = DDOT( 2 * n, psi(1,vec), 1, spsi(1,vec), 1 )
+          psi_norm = DDOT( 2*n, psi(1,vec), 1, spsi(1,vec), 1 )
           !
           CALL reduce( 1, psi_norm )
           !
@@ -198,27 +184,19 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
              !
           END IF
           !
+	  psi_norm = 1.D0 / SQRT( psi_norm )
+          !
+          psi(:,vec)  = psi_norm * psi(:,vec)
+          hpsi(:,vec) = psi_norm * hpsi(:,vec)
+          spsi(:,vec) = psi_norm * spsi(:,vec)
+	  !
           IF ( psi_norm < eps8 ) THEN
-             !
-             psi_norm = 1.D0 / SQRT( psi_norm )
-             !
-             psi(:,vec)  = psi_norm * psi(:,vec)
-             hpsi(:,vec) = psi_norm * hpsi(:,vec)
-             spsi(:,vec) = psi_norm * spsi(:,vec)
              !
              ierr = ierr + 1
              !
              IF ( ierr <= ierrx ) CYCLE
              !
              CALL errore( 'cgramg1_k', ' absurd correction vector', vec )
-             !
-          ELSE
-             !
-             psi_norm = 1.D0 / SQRT( psi_norm )
-             !
-             psi(:,vec)  = psi_norm * psi(:,vec)
-             hpsi(:,vec) = psi_norm * hpsi(:,vec)
-             spsi(:,vec) = psi_norm * spsi(:,vec)
              !
           END IF
           !
