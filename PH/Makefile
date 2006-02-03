@@ -145,6 +145,7 @@ MODULES = \
 ../Modules/parser.o \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
+../Modules/ptoolkit.o \
 ../Modules/read_cards.o \
 ../Modules/read_namelists.o \
 ../Modules/readpseudo.o \
@@ -311,6 +312,7 @@ PWOBJS = \
 ../PW/pw_restart.o \
 ../PW/pwcom.o \
 ../PW/qvan2.o \
+../PW/rdiagh.o \
 ../PW/rdiaghg.o \
 ../PW/read_conf_from_file.o \
 ../PW/read_file.o \

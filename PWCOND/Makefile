@@ -72,6 +72,7 @@ MODULES = \
 ../Modules/parser.o \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
+../Modules/ptoolkit.o \
 ../Modules/readpseudo.o \
 ../Modules/recvec.o \
 ../Modules/shmem_include.o \
@@ -207,6 +208,7 @@ PWOBJS = \
 ../PW/pw_restart.o \
 ../PW/qvan2.o \
 ../PW/rcgdiagg.o \
+../PW/rdiagh.o \
 ../PW/rdiaghg.o \
 ../PW/read_file.o \
 ../PW/read_ncpp.o \
