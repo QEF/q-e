@@ -160,6 +160,7 @@ pw_restart.o \
 pwcom.o \
 qvan2.o \
 rcgdiagg.o \
+rdiagh.o \
 rdiaghg.o \
 read_conf_from_file.o \
 read_file.o \
@@ -307,6 +308,7 @@ MODULES = \
 ../Modules/parser.o \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
+../Modules/ptoolkit.o \
 ../Modules/read_cards.o \
 ../Modules/read_namelists.o \
 ../Modules/readpseudo.o \
