@@ -271,9 +271,13 @@ MODULE control_flags
   ! ... miscellany
   !
   LOGICAL, PUBLIC :: &
+    use_para_diago = .FALSE.  ! if .TRUE. a parallel Householder algorithm can used
+  INTEGER, PUBLIC :: &
+   para_diago_dim = 0         ! minimum matrix dimension above which a parallel algorithm is used
+  LOGICAL, PUBLIC :: &
     wg_set = .FALSE.   ! if .TRUE. the occupations are known
   !
-  INTEGER   :: ortho_max = 0    ! maximum number of iterations in routine ortho
+  INTEGER  :: ortho_max = 0    ! maximum number of iterations in routine ortho
   REAL(DP) :: ortho_eps = 0.D0 ! threshold for convergence in routine ortho
   !
   ! ...  end of module-scope declarations
