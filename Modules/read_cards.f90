@@ -803,7 +803,6 @@ MODULE read_cards_module
           ! ... input k-points are in 2pi/a units
           !
           CALL read_line( input_line, end_of_file = tend )
-          print *, 'tend=',tend
           IF (tend) GO TO 10
           READ(input_line, *, END=10, ERR=10) nkstot
           !

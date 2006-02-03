@@ -768,10 +768,12 @@
         !
         comm = comm_in
         !
+#ifdef __MPI
      ELSE
         !
         comm = MPI_COMM_WORLD
         !
+#endif
      END IF
      !
      nrl = n / nproc
@@ -856,8 +858,10 @@
      !
      IF ( PRESENT( comm_in ) ) THEN
         comm = comm_in
+#ifdef __MPI
      ELSE
         comm = MPI_COMM_WORLD
+#endif
      END IF
      CALL ptredv(ap, lda, w, sd, z, ldz, nrl, n, nproc, mpime, comm)
      CALL ptqliv(w, sd, n, z, ldz, nrl)
@@ -928,10 +932,12 @@
         !
         comm = comm_in
         !
+#ifdef __MPI
      ELSE
         !
         comm = MPI_COMM_WORLD
         !
+#endif
      END IF
      !
      IF ( ( nproc == 1 ) .OR. ( n < nproc ) ) THEN
@@ -2366,8 +2372,10 @@
      !
      IF ( PRESENT( comm_in ) ) THEN
         comm = comm_in
+#ifdef __MPI
      ELSE
         comm = MPI_COMM_WORLD
+#endif
      END IF
      CALL pzhptrd( n, nrl, ap, lda, w, rwork, cwork, nproc, mpime, comm)
      IF( jobz == 'V' .OR. jobz == 'v' ) THEN
