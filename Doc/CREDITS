@@ -44,16 +44,16 @@ The pseudopotential generation package "atomic" was written by
 Andrea Dal Corso and it is the result of many additions to 
 the original code by Paolo Giannozzi.
 
-The input/output toolkit "iotk" was written by Giovanni Bussi
-(S3 Modena).
+The input/output toolkit "iotk" (http://www.s3.infm.it/iotk)
+was written by Giovanni Bussi (S3 Modena).
 
 A list of further contributors includes:
 Dario Alfe', Francesco Antoniella, Mauro Boero, Nicola Bonini, 
 Claudia Bungaro, Paolo Cazzato, Davide Ceresoli, Gabriele Cipriani,
 Matteo Cococcioni, Cesar Da Silva, Alberto Debernardi, Gernot Deinzer,
 Oswaldo Dieguez, Andrea Ferretti, Ralph Gebauer, Martin Hilgeman,
-Eyvaz Isaev, Yosuke Kanai, Axel Kohlmeyer,
-Konstantin Kudin, Michele Lazzeri, Kurt Maeder, Francesco Mauri, 
+Eyvaz Isaev,  Yosuke Kanai, Axel Kohlmeyer, Konstantin Kudin, 
+Michele Lazzeri, Sergey Lisenkov, Kurt Maeder, Francesco Mauri, 
 Nicolas Mounet, Huy-Viet Nguyen, Pasquale Pavone, Mickael Profeta, Guido Roma, 
 Manu Sharma, Alexander Smogunov, Kurt Stokbro, Pascal Thibaudeau,
 Antonio Tilocca, Paolo Umari, Renata Wentzcovitch, Malgorzata Wierzbowska,

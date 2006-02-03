@@ -1,6 +1,6 @@
 
 \documentclass[12pt,a4paper]{article}
- \def\version{3.0}
+ \def\version{3.1}
  \def\stableversion{3.0} % last stable release
 
  \usepackage{epsfig}
@@ -183,8 +183,10 @@ Andrea Dal Corso and it is the result of many additions to the
 original code by Paolo Giannozzi.
 
 \hyphenation{mo-de-na}
-The input/output toolkit ``iotk'' was written by Giovanni Bussi (S3,
-Modena).
+The input/output toolkit ``iotk''
+(\htmladdnormallink{\texttt{http://www.s3.infm.it/iotk}}%
+                   {http://www.s3.infm.it/iotk/}) 
+was written by Giovanni Bussi (S3, Modena).
 
 \hyphenation{fran-ce-sco}
 \hyphenation{ce-re-so-li}
@@ -211,6 +213,7 @@ Yosuke Kanai,
 Axel Kohlmeyer,
 Konstantin Kudin,
 Michele Lazzeri,
+Sergey Lisenkov,
 Kurt Maeder,
 Francesco Mauri,
 Nicolas Mounet,
@@ -1060,7 +1063,7 @@ upgrade to a more recent version.
 If you get an error in the loading phase that looks like ``ld: file
 XYZ.o: unknown (unrecognized, invalid, wrong, missing, \dots) file
 type'', or ``While processing relocatable file XYZ.o, no relocatable
-objects were found'' (T3E), one of the following things have happened:
+objects were found'', one of the following things have happened:
 
 \begin{enumerate}
   \item you have leftover object files from a compilation with another 
@@ -1159,7 +1162,7 @@ ifc)}
 
 \hfill\break
 If \texttt{configure} doesn't find the compiler, or if you get ``Error
-loading shared libraries...'' at run time, you have forgotten to
+loading shared libraries...'' at run time, you may have forgotten to
 execute the script that sets up the correct path and library path.
 Unless your system manager has done this for you, you should execute
 the appropriate script --- located in the directory containing the
@@ -1168,69 +1171,19 @@ Consult the documentation provided by Intel.
 
 Each major release of the Intel compiler differs a lot from
 the previous one. Do not mix compiled objects from different releases: 
-they are incompatible. Intel compiler v.~7 and later use a different 
-method to locate where modules are with respect to v.~$< 7$: if you
-are using the manual configuration, choose the appropriate line
-\texttt{MODULEFLAG=...} in \texttt{make.sys}.
+they are incompatible. 
 
-Some releases of Intel compiler v.~7 and 8 yield ``Compiler Internal 
-Error''.
-Update to the last version (presently 7.1.41, 8.0.046 or
-8.1.018, respectively), available via Intel Premier support 
-(registration free of charge for Linux): 
+In case of trouble, update your version with the most recent
+patches, available via Intel Premier support (registration free 
+of charge for Linux): 
 \htmladdnormallink%
 {\texttt{http://developer.intel.com/software/products/support/\#premier}}%
 {http://developer.intel.com/software/products/support/\#premier}.
-\hfill\break
-Intel v.~9 has a buggy preprocessing that either prevents compilation 
-of \texttt{iotk}, or produces runtime errors in \texttt{cft3}. Workaround:
-modify \texttt{make.sys} to explicitly perform preprocessing using
-\texttt{/lib/cpp}, as in the following example (courtesy from Sergei
-Lysenkov):
-\begin{verbatim}
-.f90.o:
-        $(CPP) $(CPPFLAGS) $< -o $*.F90
-        $(MPIF90) $(F90FLAGS) -c $*.F90 -o $*.o
 
-CPP            = /lib/cpp
-CPPFLAGS       = -P -C -traditional $(DFLAGS) $(IFLAGS)
-\end{verbatim}
-
-Warnings ``size of symbol ... changed ...'' are produced by ifc 7.1 at
-the loading stage.
-These seem to be harmless, but they may cause the loader to stop,
-depending on your system configuration.
-If this happens and no executable is produced, add the following to
-\texttt{LDFLAGS}: \texttt{-Xlinker --noinhibit-exec}.
-
-On Intel CPUs, it is very convenient to use Intel MKL libraries.
-If \texttt{configure} doesn't find them, try
-\texttt{configure --enable-shared}.
-MKL also contains optimized FFT routines, but they are
-presently not supported: use FFTW instead. Note that Intel 
-compiler v.~8 fails to load with MKL v.~5.2 or earlier versions,
-because some symbols that are referenced by MKL are missing. There
-is a fix for this (info from Konstantin Kudin): add libF90.a from 
-ifc 7.1 at the linking stage, as the last library.
-Note that some combinations of not-so-recent versions of MKL 
-and ifc may yield a lot of "undefined references" when statically 
-loaded: use \texttt{configure --enable-shared}, 
-or remove the \texttt{-static} option in \texttt{make.sys}.
-Note that \texttt{pwcond.x} works only with recent versions
-(v.7 or later) of MKL.
-
-When using/testing/benchmarking MKL on SMP (multiprocessor)
-machines, one should set the environmental variable 
-\texttt{OMP\_NUM\_THREADS} to 1, unless the OpenMP 
-parallelization is desired. MKL by default sets the
-variable to the number of CPUs installed and thus gives
-the impression of a much better performance, as the CPUu time
-is only measured for the master thread (info from Axel Kohlmeyer).
-
-The I/O libraries used by older versions of the Intel compiler 
-are incompatible 
-with those called by most precompiled BLAS/LAPACK libraries 
-(including ATLAS): you get error messages at linking stage.
+\paragraph{ifc v.~6 and earlier}
+The I/O libraries used by older versions of ifc are incompatible with 
+those called by most precompiled BLAS/LAPACK libraries (including ATLAS): 
+you get error messages at linking stage.
 A workaround is to recompile BLAS/LAPACK with ifc, or (better) to
 replace the BLAS routine \texttt{xerbla} and LAPACK routine
 \texttt{dlamch} (the only two containing I/O calls) with recompiled
@@ -1248,6 +1201,25 @@ in the following example:
 (assuming that the library and the two object files are in the same
 directory). See also Axel Kohlmeyer's web site.
 
+ifc 6 and earlier use a rather strange method to locate 
+where modules are: you need to specify a ``catalog file''. Such a file
+should be created in each directory as \texttt{intel.pcl} either by the 
+manual configuration script \texttt{configure.old} or by the newest
+\texttt{configure}. Starting with ifc 7, a more conventional method
+is used.
+
+\paragraph{ifc v.7}
+
+Some releases of ifc 7.0 and 7.1 yield ``Compiler Internal 
+Error''. Update to the last version (should be 7.1.41).
+
+Warnings ``size of symbol ... changed ...'' are produced by ifc 7.1 at
+the loading stage.
+These seem to be harmless, but they may cause the loader to stop,
+depending on your system configuration.
+If this happens and no executable is produced, add the following to
+\texttt{LDFLAGS}: \texttt{-Xlinker --noinhibit-exec}.
+
 Linux distributions using glibc 2.3 or later (such as e.g. RedHat 9)
 may be incompatible with ifc 7.0 and 7.1.
 The incompatibility shows up in the form of messages ``undefined
@@ -1257,10 +1229,62 @@ A workaround is available: see
 {\texttt{http://newweb.ices.utexas.edu/misc/ctype.c}}%
 {http://newweb.ices.utexas.edu/misc/ctype.c}.
 
-There is a well known problem with version 8 of Intel compiler and 
-pthreads (that are used both in Debian Woody and Sarge) that causes
+\paragraph{ifort v.8}
+
+Some releases of ifort 8 yield ``Compiler Internal Error''. 
+Update to a more patched version: 8.0.046 for v.~8.0,
+8.1.018 for v.~8.1.
+
+There is a well known problem with ifort 8 and pthreads 
+(that are used both in Debian Woody and Sarge) that causes
 "segmentation fault" errors (info from Lucas Fernandez Seivane). 
-Version 7 does not have this problem.
+Version 7 did not have this problem.
+
+\paragraph{ifort v.9}
+
+At least some versions of ifort 9 have a buggy preprocessor that 
+either prevents compilation of \texttt{iotk}, or produces runtime 
+errors in \texttt{cft3}. Workaround: modify \texttt{make.sys} to 
+explicitly perform preprocessing using \texttt{/lib/cpp}, as in 
+the following example (courtesy from Sergei Lysenkov):
+\begin{verbatim}
+.f90.o:
+        $(CPP) $(CPPFLAGS) $< -o $*.F90
+        $(MPIF90) $(F90FLAGS) -c $*.F90 -o $*.o
+
+CPP            = /lib/cpp
+CPPFLAGS       = -P -C -traditional $(DFLAGS) $(IFLAGS)
+\end{verbatim}
+
+On some versions of RedHat Linux, you may get an obscure error: 
+\texttt{IPO link: can not find "(" ... }, due to a bad system
+configuration. Add option \texttt{-no-ipo} to \texttt{LDFLAGS} 
+in file \texttt{make.sys}.
+
+\paragraph{MKL}
+On Intel CPUs, it is very convenient to use Intel MKL libraries.
+If \texttt{configure} doesn't find them, try
+\texttt{configure --enable-shared}.
+MKL also contains optimized FFT routines, but they are
+presently not supported: use FFTW instead. Note that ifort 8 fails 
+to load with MKL v.~5.2 or earlier versions,
+because some symbols that are referenced by MKL are missing. There
+is a fix for this (info from Konstantin Kudin): add libF90.a from 
+ifc 7.1 at the linking stage, as the last library.
+Note that some combinations of not-so-recent versions of MKL 
+and ifc may yield a lot of "undefined references" when statically 
+loaded: use \texttt{configure --enable-shared}, 
+or remove the \texttt{-static} option in \texttt{make.sys}.
+Note that \texttt{pwcond.x} works only with recent versions
+(v.7 or later) of MKL.
+
+When using/testing/benchmarking MKL on SMP (multiprocessor)
+machines, one should set the environmental variable 
+\texttt{OMP\_NUM\_THREADS} to 1, unless the OpenMP 
+parallelization is desired. MKL by default sets the
+variable to the number of CPUs installed and thus gives
+the impression of a much better performance, as the CPUu time
+is only measured for the master thread (info from Axel Kohlmeyer).
 
 \paragraph{AMD CPUs, Intel Itanium}
 
@@ -1312,24 +1336,12 @@ configuration of MPI libraries: see section ``Running on parallel machines''.
 If you get weird errors with LAM-MPI, add \texttt{-D\_\_LAM} to preprocessing
 options and recompile. See also Axel Kohlmeyer's web site for more info.      
 
-If you are dis satisfied with the performances in parallel 
+If you are dissatisfied with the performances in parallel 
 execution, read the ``Parallelization issues'' section.
 
 \paragraph{T3E}
 
-The following workaround is needed: in files \texttt{PW/bp\_zgefa.f}
-and \texttt{PW/bp\_zgedi.f}, replace all occurrences of
-\texttt{zscal}, \texttt{zaxpy}, \texttt{zswap}, \texttt{izamax} with
-\texttt{cscal}, \texttt{caxpy}, \texttt{cswap}, \texttt{icamax}.
-Also, in \texttt{PP/dist.f} you need to comment the call to
-\texttt{getarg} and uncomment the call to \texttt{pxfgetarg}.
-
-If you have a T3E with ``benchlib'' installed, you may want to use it
-by adding \texttt{-D\_\_BENCHLIB} to preprocessing flags.
-If you get errors at loading because symbols \texttt{LPUTP},
-\texttt{LGETV}, \texttt{LSETV} are undefined, you either need to link
-``benchlib'', or to remove \texttt{-D\_\_BENCHLIB} and recompile
-(after a \texttt{make clean}).
+T3D/T3E are no longer supported.
 
 \clearpage
 
@@ -2486,16 +2498,6 @@ warning messages and continues, pay attention to it but do not
 assume that something is necessarily wrong in your calculation:
 most warning messages signal harmless problems.
 
-Note for PC Linux clusters in parallel execution: in at least some 
-versions of MPICH, the current directory is set to the directory where
-the \emph{executable code} resides, instead of being set to the
-directory where the code is executed.
-This MPICH weirdness may cause unexpected failures in some
-postprocessing codes that expect a data file
-in the current directory.
-Workaround: use symbolic links, or copy the executable to the current
-directory.
-
 Typical \texttt{pw.x} and/or \texttt{ph.x} (mis-)behavior:
 
 \paragraph{\texttt{pw.x} yields a message like ``error while loading
@@ -2674,6 +2676,13 @@ See info from Axel Kohlmeyer:\hfill\break
 \htmladdnormallink%
 {{\small\texttt{http://www.democritos.it/pipermail/pw\_forum/2005-April/002338.html}}}%
 {http://www.democritos.it/pipermail/pw_forum/2005-April/002338.html}
+
+Random crashes due to MPI errors have often been reported in Linux
+PC clusters. These are due either to hardware problems (defective 
+RAM for instance) or to software bugs in MPI libraries or in the 
+operating system. While we cannot guarantee with 100\% confidence 
+that such problems are not due to Quantum-ESPRESSO, we think that 
+this is at least 99.9999\% true.
 
 \paragraph{\texttt{pw.x} runs but nothing happens.}
 
@@ -2989,6 +2998,18 @@ algorithm \\
 (\texttt{cell\_dynamics='damp-w'}) shouldn't break the symmetry.
 \end{itemize}
 
+\paragraph{Why are codes in PP/ complaining that they do not
+find some files?}
+
+For Linux PC clusters in parallel execution: in at least some 
+versions of MPICH, the current directory is set to the directory where
+the \emph{executable code} resides, instead of being set to the
+directory where the code is executed.
+This MPICH weirdness may cause unexpected failures in some
+postprocessing codes that expect a data file in the current directory.
+Workaround: use symbolic links, or copy the executable to the current
+directory.
+
 \paragraph{\texttt{ph.x} stops with ``error reading file''.}
 
 The data file produced by \texttt{pw.x} is bad or incomplete or
@@ -2998,7 +3019,7 @@ the number of processors and pools for the phonon run should be the
 same as for the self-consistent run; all files must be visible to all 
 processors.
 
-\paragraph{\texttt{ph.x} mumbles something like ``cannot recover'' or
+\paragraph{\texttt{ph.x} mumbles` something like ``cannot recover'' or
            ``error reading recover file''.}
 
 You have a bad restart file from a preceding failed execution.
@@ -3100,6 +3121,52 @@ since v. 3.1).
 % \item {\em How can I optimize the structural parameters of a
 % low-symmetry lattice? should I use $E(v)$ curves, the stress,
 % variable-cell molecular dynamics?}
+
+\item {\em How is the charge density (the potential, etc.) stored?
+What position in real space  corresponds to an array value? }
+
+The index of arrays used to store functions defined on 3D meshes is  
+actually a shorthand for three indeces, following the FORTRAN  
+convention ("leftmost index runs faster"). An example will explain  
+this better. Suppose you have a 3D array of dimension \texttt{(nr1,nr2,nr3)},
+say \texttt{psi(nr1,nr2,nr3)}. FORTRAN compilers store this array 
+sequentially  in the computer RAM in the following way:
+\begin{quote}
+\texttt{psi(1,1,1)}\\
+\texttt{psi(2,1,1)}\\
+...\\
+\texttt{psi(nr1,1,1)}\\
+\texttt{psi(1,2,1)}\\
+\texttt{psi(2,2,1)}\\
+...\\
+\texttt{psi(nr1,2,1)}\\
+...\\
+\texttt{psi(nr1,nr2,1)}\\
+\texttt{psi(1,1,nr3)}
+\end{quote}
+etc
+
+Let \texttt{ind} be the position of the \texttt{(i,j,k)} element 
+in the above list: the relation between \texttt{ind} and  \texttt{(i,j,k)}
+is:
+\begin{equation}
+ind = i + (j-1)*nr1 + (k-1)*nr2*nr1
+\end{equation}
+
+This should clarify the relation between 1D and 3D indexing. In real  
+space, the \texttt{(i,j,k)} point of the mesh is
+\begin{equation}
+{\bf r_{ijk}} = {i-1\over nr1}*\tau_1 
+              + {j-1\over nr2}*\tau_2
+              + {k-1\over nr3}*\tau_3
+\end{equation}
+
+where the $\tau$'s are the basis vectors of the Bravais lattice. The  
+latter are stored row-wise in the "AT" array:
+\begin{equation}
+\tau_1 = at(:,1), \tau_2 = at(:,2), \tau_3 = at(:,3)
+\end{equation}
+(info by Stefano Baroni)
 
 \item {\em Is there a simple way to determine the symmetry
 of a given phonon mode?}
