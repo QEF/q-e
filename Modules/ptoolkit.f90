@@ -763,12 +763,10 @@
         !
         comm = comm_in
         !
-#ifdef __MPI
      ELSE
         !
         comm = MPI_COMM_WORLD
         !
-#endif
      END IF
 #endif
      !
@@ -793,50 +791,50 @@
         !
         DEALLOCATE( aloc )
         !
-      ELSE
-         !
-         CALL ptredv( a, nrl, d, e, evloc, nrl, nrl, n, nproc, mpime, comm )
-         !
-      END IF
-      !
-      CALL ptqliv( d, e, n, evloc, nrl, nrl )
-      CALL peigsrtv( d, evloc, nrl, n, nrl )
-      !
-      IF ( iopt == 1 ) THEN
-         !
-         DO i = 1,n
-            DO j = 1,n
-               a(j,i) = 0.D0
-            END DO
-            DO jl = 1,nrl
-                a((jl-1)*nproc + mpime + 1,i) = evloc(jl,i)
-            END DO
-         END DO
-         !
+     ELSE
+        !
+        CALL ptredv( a, nrl, d, e, evloc, nrl, nrl, n, nproc, mpime, comm )
+        !
+     END IF
+     !
+     CALL ptqliv( d, e, n, evloc, nrl, nrl )
+     CALL peigsrtv( d, evloc, nrl, n, nrl )
+     !
+     IF ( iopt == 1 ) THEN
+        !
+        DO i = 1,n
+           DO j = 1,n
+              a(j,i) = 0.D0
+           END DO
+           DO jl = 1,nrl
+               a((jl-1)*nproc + mpime + 1,i) = evloc(jl,i)
+           END DO
+        END DO
+        !
 #if defined (__PARA)
 #  if defined (__MPI)
-         CALL MPI_ALLREDUCE( a, ev, n*n, &
-                             MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
+        CALL MPI_ALLREDUCE( a, ev, n*n, &
+                            MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
 #  endif
 #else
-         ev = a
+        ev = a
 #endif
-         !
-      ELSE
-         !
-         DO i = 1, n
-            DO jl = 1, nrl
-              ev(jl,i) = evloc(jl,i)
-            END DO
-         END DO
-         !
-      END IF
-      !
-      DEALLOCATE( evloc )
-      DEALLOCATE( e )
-      !
-      RETURN
-      !
+        !
+     ELSE
+        !
+        DO i = 1, n
+           DO jl = 1, nrl
+             ev(jl,i) = evloc(jl,i)
+           END DO
+        END DO
+        !
+     END IF
+     !
+     DEALLOCATE( evloc )
+     DEALLOCATE( e )
+     !
+     RETURN
+     !
    END SUBROUTINE diagonalize
 
 !==----------------------------------------------==!
@@ -854,10 +852,8 @@
 #if defined (__PARA) && defined (__MPI)
      IF ( PRESENT( comm_in ) ) THEN
         comm = comm_in
-#ifdef __MPI
      ELSE
         comm = MPI_COMM_WORLD
-#endif
      END IF
 #endif
      CALL ptredv(ap, lda, w, sd, z, ldz, nrl, n, nproc, mpime, comm)
@@ -878,19 +874,15 @@
         ALLOCATE( work( 3*n ) )
 
 #if defined __AIX
-
           IOPT = 0
           IF((JOBZ .EQ. 'V') .OR. (JOBZ .EQ. 'v') ) iopt = iopt + 1
           IF((UPLO .EQ. 'U') .OR. (UPLO .EQ. 'u') ) iopt = iopt + 20
           CALL DSPEV(IOPT, ap, w, z, ldz, n, work, 3*n)
-
 #else 
-
           CALL DSPEV(jobz, uplo, n, ap(1), w(1), z(1,1), ldz, work, INFO)
           IF( info .NE. 0 ) THEN
             CALL errore( ' dspev_drv ', ' diagonalization failed ',info )
           END IF
-
 #endif
 
         DEALLOCATE( work )
@@ -928,12 +920,10 @@
         !
         comm = comm_in
         !
-#ifdef __MPI
      ELSE
         !
         comm = MPI_COMM_WORLD
         !
-#endif
      END IF
 #endif
      !
@@ -1164,7 +1154,6 @@
       REAL(DP)      RONE, RZERO
       PARAMETER   ( RONE = 1.0D+0, RZERO = 0.0D+0 ) 
 
-
       INTEGER QI
       INTEGER IL(N+1)
       INTEGER OW(N+1)  
@@ -1206,7 +1195,6 @@
         RETURN
       END IF
 
-
       DO I = 1,N+1
         QI     = (I-1)/NPROC
         OW(I)  = MOD((I-1),NPROC) 
@@ -1232,10 +1220,8 @@
               ALPHA = AP( IL(I+1), I ) 
             END IF                                                             
 
-#if defined __PARA
-#  if defined __MPI
+#if defined (__PARA) && defined (__MPI)
             CALL MPI_BCAST(ALPHA,1,MPI_DOUBLE_COMPLEX,OW(I+1),comm,IERR)
-#  endif
 #endif
 
             IF( (N-I).LE.0 ) THEN
@@ -1488,20 +1474,16 @@
             IF(OW(I).EQ.ME) THEN
               D( I ) = DBLE(AP( IL(I),I ))
             END IF
-#if defined __PARA
-#  if defined __MPI
+#if defined __PARA && defined __MPI
             CALL MPI_BCAST(D(I),1,MPI_DOUBLE_PRECISION,OW(I), comm,IERR)
-#  endif
 #endif
             TAU( I ) = TAUI
          END DO
          IF(OW(I).EQ.ME) THEN
             D( N ) = DBLE(AP( IL(I),I ))
          END IF
-#if defined __PARA
-#  if defined __MPI
+#if defined __PARA && defined __MPI
          CALL MPI_BCAST(D(N),1,MPI_DOUBLE_PRECISION,OW(I), comm,IERR)
-#  endif
 #endif
 !
       RETURN
@@ -2324,25 +2306,20 @@
         COMPLEX(DP), ALLOCATABLE :: ZWORK(:)
 
 #if defined __AIX
-
         IOPT = 0
         IF((JOBZ .EQ. 'V') .OR. (JOBZ .EQ. 'v') ) iopt = iopt + 1
         IF((UPLO .EQ. 'U') .OR. (UPLO .EQ. 'u') ) iopt = iopt + 20
         ALLOCATE( rwork( 4*n ) )
         CALL ZHPEV(IOPT, ap, w, z, ldz, n, rwork, 4*n)
         DEALLOCATE( rwork )
-
 #else
-
         ALLOCATE( rwork( MAX(1, 3*n-2) ), zwork( MAX(1, 2*n-1)) )
         CALL ZHPEV(jobz, uplo, n, ap, w, z, ldz, zwork, rwork, INFO)
         DEALLOCATE( rwork, zwork )
         IF( info .NE. 0 ) THEN
           CALL errore( ' dspev_drv ', ' diagonalization failed ',info )
         END IF
-
 #endif
-
         RETURN
    END SUBROUTINE zhpev_drv
 
@@ -2364,10 +2341,8 @@
 #if defined (__PARA) && defined (__MPI)
      IF ( PRESENT( comm_in ) ) THEN
         comm = comm_in
-#ifdef __MPI
      ELSE
         comm = MPI_COMM_WORLD
-#endif
      END IF
 #endif
      CALL pzhptrd( n, nrl, ap, lda, w, rwork, cwork, nproc, mpime, comm)
@@ -2378,14 +2353,11 @@
      RETURN
    END SUBROUTINE pzhpev_drv
 
-
-
 !==----------------------------------------------==!
 !
 !  My parallel blas
 !
 !==----------------------------------------------==!
-
 
 SUBROUTINE mattr_drv( m, k, a, lda, b, ldb, nb, dims, coor, comm )
   !
@@ -2403,13 +2375,10 @@ SUBROUTINE mattr_drv( m, k, a, lda, b, ldb, nb, dims, coor, comm )
   !
   INTEGER, INTENT(IN) :: m, k
   INTEGER, INTENT(IN) :: lda, ldb
-  REAL*8              :: a(lda,*), b(ldb,*)
+  REAL(DP)            :: a(lda,*), b(ldb,*)
   INTEGER, INTENT(IN) :: nb, dims(2), coor(2), comm
   !
 #if defined __MPI
-
-  include 'mpif.h'
-
   !
   integer ierr
   integer ndims, rowid, colid
@@ -2425,7 +2394,7 @@ SUBROUTINE mattr_drv( m, k, a, lda, b, ldb, nb, dims, coor, comm )
   integer :: itag
   integer :: nmb, nkb 
   integer :: istatus( MPI_STATUS_SIZE )
-  real*8, allocatable :: abuf(:,:)
+  real(DP), allocatable :: abuf(:,:)
   !
   integer :: numroc
   integer :: indxg2l
@@ -2530,7 +2499,6 @@ SUBROUTINE mattr_drv( m, k, a, lda, b, ldb, nb, dims, coor, comm )
 
 END SUBROUTINE mattr_drv
 
-
 ! ---------------------------------------------------------------------------------
 
 SUBROUTINE matsplit_drv( m, k, ar, ldar, a, lda, nb, dims, coor, comm )
@@ -2539,9 +2507,9 @@ SUBROUTINE matsplit_drv( m, k, ar, ldar, a, lda, nb, dims, coor, comm )
   !
   INTEGER, INTENT(IN) :: m, k
   INTEGER, INTENT(IN) :: ldar
-  REAL*8              :: ar(ldar,*)  !  matrix to be splitted, replicated on all proc
+  REAL(DP)            :: ar(ldar,*)  !  matrix to be splitted, replicated on all proc
   INTEGER, INTENT(IN) :: lda
-  REAL*8              :: a(lda,*)
+  REAL(DP)            :: a(lda,*)
   INTEGER, INTENT(IN) :: nb, coor(2), dims(2), comm
   !
   INTEGER :: i, j, nra, nca, ii, jj
@@ -2564,8 +2532,6 @@ SUBROUTINE matsplit_drv( m, k, ar, ldar, a, lda, nb, dims, coor, comm )
 
 END SUBROUTINE matsplit_drv
 
-
-
 ! ---------------------------------------------------------------------------------
 
 SUBROUTINE matmerge_drv( m, k, a, lda, ar, ldar, nb, dims, coor, comm )
@@ -2574,16 +2540,14 @@ SUBROUTINE matmerge_drv( m, k, a, lda, ar, ldar, nb, dims, coor, comm )
   !
   INTEGER, INTENT(IN) :: m, k
   INTEGER, INTENT(IN) :: ldar
-  REAL*8              :: ar(ldar,*)  !  matrix to be merged, replicated on all proc
+  REAL(DP)            :: ar(ldar,*)  !  matrix to be merged, replicated on all proc
   INTEGER, INTENT(IN) :: lda
-  REAL*8              :: a(lda,*)
+  REAL(DP)            :: a(lda,*)
   INTEGER, INTENT(IN) :: nb, coor(2), dims(2), comm
   !
   INTEGER :: i, j, ii, jj, ierr
 
 #if defined __MPI
-
-  include 'mpif.h'
   !
 
   INTEGER :: jsrc, isrc, ipsrc, coosrc(2)
@@ -2655,11 +2619,11 @@ SUBROUTINE matscal_drv( m, n, beta, c, ldc, nb, dims, coor, comm )
   !
   implicit none
   !
-  INTEGER, INTENT(IN) :: m, n
-  REAL*8,  INTENT(IN) :: beta
-  INTEGER, INTENT(IN) :: ldc
-  REAL*8              :: c(ldc,*)
-  INTEGER, INTENT(IN) :: nb, coor(2), dims(2), comm
+  INTEGER,  INTENT(IN) :: m, n
+  REAL(DP), INTENT(IN) :: beta
+  INTEGER,  INTENT(IN) :: ldc
+  REAL(DP)             :: c(ldc,*)
+  INTEGER,  INTENT(IN) :: nb, coor(2), dims(2), comm
   !
   INTEGER :: i, j, nr, nc, ierr
   !
@@ -2694,10 +2658,10 @@ SUBROUTINE matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, 
   implicit none
   !
   CHARACTER(LEN=1), INTENT(IN) :: transa, transb
-  INTEGER, INTENT(IN) :: m, n, k
-  REAL*8, INTENT(IN) :: alpha, beta
-  INTEGER, INTENT(IN) :: lda, ldb, ldc
-  REAL*8 :: a(lda,*), b(ldb,*), c(ldc,*)
+  INTEGER,  INTENT(IN) :: m, n, k
+  REAL(DP), INTENT(IN) :: alpha, beta
+  INTEGER,  INTENT(IN) :: lda, ldb, ldc
+  REAL(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
   INTEGER, INTENT(IN) :: nb, dims(2), coor(2), comm
   !
   !  DGEMM  PERFORMS ONE OF THE MATRIX-MATRIX OPERATIONS
@@ -2715,8 +2679,6 @@ SUBROUTINE matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, 
   !
 
 #if defined __MPI
-
-  include 'mpif.h'
   !
   integer ierr
   integer ndims, rowid, colid
@@ -2883,7 +2845,6 @@ SUBROUTINE matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, 
   IF( ALLOCATED( at ) ) DEALLOCATE( at )
   IF( ALLOCATED( bt ) ) DEALLOCATE( bt )
 
-
 #else
 
      !  if we are not compiling with __MPI this is equivalent to a blas call
@@ -2891,7 +2852,6 @@ SUBROUTINE matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, 
      call dgemm( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC )
 
 #endif
-
 
   RETURN
 
@@ -2914,9 +2874,9 @@ SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA,
   !
   CHARACTER(LEN=1), INTENT(IN) :: transa, transb
   INTEGER, INTENT(IN) :: m, n, k
-  REAL*8, INTENT(IN) :: alpha, beta
+  REAL(DP), INTENT(IN) :: alpha, beta
   INTEGER, INTENT(IN) :: lda, ldb, ldc
-  REAL*8 :: a(lda,*), b(ldb,*), c(ldc,*)
+  REAL(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
   INTEGER, INTENT(IN) :: comm
   !
   !  DGEMM  PERFORMS ONE OF THE MATRIX-MATRIX OPERATIONS
@@ -2935,7 +2895,6 @@ SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA,
 
 #if defined __MPI
 
-  include 'mpif.h'
   !
 
   INTEGER :: ME, I, II, J, JJ, IP, SOUR, DEST, INFO, IERR, ioff, ldx
@@ -3054,7 +3013,6 @@ SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA,
 
   DEALLOCATE( auxa, auxc )
 
-
 #else
 
      !  if we are not compiling with __MPI this is equivalent to a blas call
@@ -3062,8 +3020,6 @@ SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA,
      CALL DGEMM(TRANSA, TRANSB, m, N, k, alpha, A, lda, B, ldb, beta, C, ldc)
 
 #endif
-
-
 
   RETURN
 
