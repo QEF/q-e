@@ -24,7 +24,6 @@ linpack.o \
 matches.o \
 ngnr_set.o \
 recips.o \
-random_numbers.o \
 scnds.o \
 simpsn.o \
 sort.o \

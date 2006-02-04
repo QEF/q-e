@@ -46,6 +46,7 @@ MODULES = \
 ../Modules/parser.o \
 ../Modules/path_formats.o \
 ../Modules/printout_base.o \
+../Modules/random_numbers.o \
 ../Modules/recvec.o \
 ../Modules/splinelib.o \
 ../Modules/timestep.o \

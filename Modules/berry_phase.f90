@@ -69,6 +69,7 @@
       IMPLICIT NONE
       integer LN_IND
       integer ig_local
+      external ln_ind, ig_local
 
       integer :: mill(:,:), ngw
 
@@ -194,6 +195,7 @@
 
           IMPLICIT NONE
           INTEGER :: LN_IND
+          EXTERNAL LN_IND
 !
           INTEGER, INTENT(IN) :: mill(:)
           INTEGER, INTENT(OUT) :: indi(:)
