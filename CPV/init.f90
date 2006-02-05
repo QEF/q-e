@@ -41,7 +41,6 @@
       USE stick_base,       ONLY: pstickset
       USE control_flags,    ONLY: tdipole
       USE berry_phase,      ONLY: berry_setup
-      USE real_space_mesh,  ONLY: realspace_procgrid_init
       USE electrons_module, ONLY: bmeshset
       USE problem_size,     ONLY: cpsizes
       USE mp_global,        ONLY: nproc
@@ -70,12 +69,6 @@
       !
 
       CALL realspace_grids_init( alat, a1, a2, a3, gcut, gcuts, ng_ , ngs_ )
-
-      !
-      ! ... Initialize real space processor grid
-      !
-
-      CALL realspace_procgrid_init( )
 
       !
       ! ... cell dimensions and lattice vectors

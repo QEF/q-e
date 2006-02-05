@@ -891,7 +891,7 @@
       END SUBROUTINE dspev_drv
 
    !-------------------------------------------------------------------------
-   SUBROUTINE cdiagonalize( iopt, a, d, ev, n, nproc, mpime, comm_in )
+   SUBROUTINE cdiagonalize( iopt, a, lda, d, ev, ldv, n, nproc, mpime, comm_in )
      !-------------------------------------------------------------------------
      !
      ! ... this routine calls the appropriate Lapack routine for diagonalizing
@@ -899,13 +899,13 @@
      !
      IMPLICIT NONE
      !
-     INTEGER,           INTENT(IN)    :: iopt, n, nproc, mpime
+     INTEGER,           INTENT(IN)    :: iopt, n, nproc, mpime, lda, ldv
      REAL(DP),          INTENT(OUT)   :: d(n)
-     COMPLEX(DP),       INTENT(INOUT) :: a(n,n)
-     COMPLEX(DP),       INTENT(OUT)   :: ev(n,n)
+     COMPLEX(DP),       INTENT(INOUT) :: a(lda,*)
+     COMPLEX(DP),       INTENT(OUT)   :: ev(ldv,*)
      INTEGER, OPTIONAL, INTENT(IN)    :: comm_in
      !
-     INTEGER :: i, j, k, nrl, comm, ierr
+     INTEGER :: i, j, k, nrl, comm, ierr, ip, nrl_ip
      INTEGER :: info = 0
      !
      COMPLEX(DP), ALLOCATABLE :: aloc(:)
@@ -950,10 +950,10 @@
         !
 #if defined (__AIX)
         !
-        CALL ZHPEV( 1, aloc, d, ev, n, n, cwork, 4*n )
+        CALL ZHPEV( 1, aloc, d, ev, ldv, n, cwork, 4*n )
         !
 #else
-        CALL ZHPEV( 'V', 'L', n, aloc, d, ev, n, cwork, rwork, info )
+        CALL ZHPEV( 'V', 'L', n, aloc, d, ev, ldv, cwork, rwork, info )
 #endif
         !
         DEALLOCATE( cwork )
@@ -999,26 +999,48 @@
         !
         IF ( iopt == 1 ) THEN
            !
-           DO j = 1,n
-              DO i = 1,n
-                 a(i,j) = 0.D0
-              END DO
-              DO i = 1, nrl
-                 a((i-1)*nproc+mpime+1,j) = vp(i,j)
-              END DO
-           END DO
-           !
 #if defined (__PARA)
 #  if defined (__MPI)
-           CALL MPI_ALLREDUCE( a, ev, 2*n*n, &
-                               MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
+
+           DO ip = 0, nproc - 1
+
+              nrl_ip = n / nproc
+              !
+              IF ( ip < MOD( n, nproc ) )  nrl_ip = nrl_ip + 1
+
+              ALLOCATE( ap( nrl_ip, n ) )
+
+              IF( mpime == ip ) THEN
+                 CALL MPI_BCAST( vp, 2*nrl_ip*n, MPI_DOUBLE_PRECISION, ip, comm, ierr )
+              ELSE
+                 CALL MPI_BCAST( ap, 2*nrl_ip*n, MPI_DOUBLE_PRECISION, ip, comm, ierr )
+              END IF
+
+              IF( mpime == ip ) THEN
+                 DO j = 1,n
+                    DO i = 1, nrl_ip
+                       a((i-1)*nproc+ip+1,j) = ap(i,j)
+                    END DO
+                 END DO
+              ELSE
+                 DO j = 1,n
+                    DO i = 1, nrl_ip
+                       a((i-1)*nproc+ip+1,j) = vp(i,j)
+                    END DO
+                 END DO
+              END IF
+              !
+              DEALLOCATE( ap )
+
+           END DO
+
 #  endif
 #else
-           ev(:,:) = a(:,:)
+           ev( 1:n, 1:n ) = vp( 1:n, 1:n )
 #endif
         ELSE
            !
-           DO j = 1,n
+           DO j = 1, n
               DO i = 1, nrl
                  ev(i,j) = vp(i,j)
               END DO

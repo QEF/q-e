@@ -88,7 +88,6 @@ read_pseudo.o \
 redis.o \
 restart.o \
 restart_sub.o \
-rsmesh.o \
 runcg_ion.o \
 runcg.o \
 runcp.o \

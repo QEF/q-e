@@ -36,23 +36,12 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
   REAL(DP)    :: e(n)      ! eigenvalues
   COMPLEX(DP) :: v(ldh,n)  ! eigenvectors (column-wise)
   !
-  COMPLEX(DP), ALLOCATABLE :: h_aux(:,:), v_aux(:,:)
-  !
-  !
   CALL start_clock( 'cdiagh' )  
   !
   IF ( use_para_diago .AND. n > para_diago_dim ) THEN
      !
-     ALLOCATE( h_aux(n,n), v_aux(n,n) )
-     !
-     h_aux(:,:) = h(1:n,1:n)
-     !
-     CALL cdiagonalize( 1, h_aux, e, v_aux, n, &
+     CALL cdiagonalize( 1, h, SIZE(h,1), e, v, SIZE(v,1), n, &
                         nproc_pool, me_pool, intra_pool_comm )
-     !
-     v(1:n,1:n) = v_aux(:,:)
-     !
-     DEALLOCATE( h_aux, v_aux )
      !
   ELSE
      !

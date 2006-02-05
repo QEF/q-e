@@ -118,7 +118,7 @@ MODULE guess
                 CALL ucalc_kp(cm(:,:,ik,1),c0(:,:,ik,1),ngw,cdesc%gzero,n,cuu)
                 ! CALL cmatmulp('N','C',cuu,cuu,ca,n)
                 CALL errore(' guess ', ' complex matrix mult to be implemented ', 1 )
-                CALL cdiagonalize(1,ca,costemp,cap,n,nproc,mpime)
+                CALL cdiagonalize(1,ca,size(ca,1),costemp,cap,size(cap,1),n,nproc,mpime)
                 DO j=1,n
                   DO i=1,n
                     ca(i,j)=cap(i,n-j+1)
