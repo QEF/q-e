@@ -960,19 +960,21 @@ SUBROUTINE check_para_diag_efficiency()
   !----------------------------------------------------------------------------
   !
   USE kinds,            ONLY : DP
-  USE wvfct,            ONLY : nbndx
+  USE wvfct,            ONLY : nbndx, gamma_only
   USE control_flags,    ONLY : use_para_diago, para_diago_dim
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE random_numbers,   ONLY : rranf
-  USE parallel_toolkit, ONLY : diagonalize
+  USE parallel_toolkit, ONLY : diagonalize, cdiagonalize
   USE mp_global,        ONLY : nproc_pool, me_pool, intra_pool_comm
   USE mp,               ONLY : mp_bcast
   !
   IMPLICIT NONE
   !
-  INTEGER               :: dim, dim_pool, i, j, m
-  REAL                  :: time_para, time_serial
-  REAL(DP), ALLOCATABLE :: a(:,:), v(:,:), e(:)
+  INTEGER                  :: dim, dim_pool, i, j, m
+  REAL                     :: time_para, time_serial
+  REAL(DP),    ALLOCATABLE :: ar(:,:), vr(:,:)
+  COMPLEX(DP), ALLOCATABLE :: ac(:,:), vc(:,:)
+  REAL(DP),    ALLOCATABLE :: e(:)
   !
   REAL(DP), EXTERNAL :: scnds
   !
@@ -994,39 +996,91 @@ SUBROUTINE check_para_diag_efficiency()
   !
   DO dim = m, nbndx, m
      !
-     ALLOCATE( a( dim, dim ) )
-     ALLOCATE( v( dim, dim ) )
-     ALLOCATE( e( dim ) )
-     !
-     a(:,:) = 0.D0
-     !
      dim_pool = dim / nproc_pool
      !
-     DO i = me_pool*dim_pool + 1, ( me_pool + 1 )*dim_pool
+     ALLOCATE( e( dim ) )
+     !
+     IF ( gamma_only ) THEN
         !
-        DO j = 1, dim
+        ALLOCATE( ar( dim, dim ) )
+        ALLOCATE( vr( dim, dim ) )
         !
-           a(i,j) = rranf() - 0.5D0
+        ar(:,:) = 0.D0
         !
+        DO i = me_pool*dim_pool + 1, ( me_pool + 1 )*dim_pool
+           !
+           DO j = i, dim
+              !
+              ar(i,j) = rranf() - 0.5D0
+              ar(j,i) = ar(i,j)
+              !
+           END DO
+           !
         END DO
         !
-     END DO
-     !
-     CALL reduce( dim*dim, a )
+        CALL reduce( dim*dim, ar )
+        !
+     ELSE
+        !
+        ALLOCATE( ac( dim, dim ) )
+        ALLOCATE( vc( dim, dim ) )
+        !
+        ac(:,:) = ( 0.D0, 0.D0 )
+        !
+        DO i = me_pool*dim_pool + 1, ( me_pool + 1 )*dim_pool
+           !
+           DO j = i, dim
+              !
+              ac(i,j) = CMPLX( rranf() - 0.5D0, rranf() - 0.5D0 )
+              ac(j,i) = ac(i,j)
+              !
+           END DO
+           !
+        END DO
+        !
+        CALL reduce( 2*dim*dim, ac )
+        !
+     END IF
      !
      IF ( ionode ) time_para = scnds()
      !
-     CALL diagonalize( 1, a, e, v, dim, nproc_pool, me_pool, intra_pool_comm )
+     IF ( gamma_only ) THEN
+        !
+        CALL diagonalize( 1, ar, e, vr, dim, &
+                          nproc_pool, me_pool, intra_pool_comm )
+        !
+     ELSE
+        !
+        CALL cdiagonalize( 1, ac, dim, e, vc, dim, dim, &
+                           nproc_pool, me_pool, intra_pool_comm )
+        !
+     END IF
      !
      IF ( ionode ) time_para = scnds() - time_para
      !
      IF ( ionode ) time_serial = scnds()
      !
-     CALL rdiagh( dim, a, dim, e, v )
+     IF ( gamma_only ) THEN
+        !
+        CALL rdiagh( dim, ar, dim, e, vr )
+        !
+     ELSE
+        !
+        CALL cdiagh( dim, ac, dim, e, vc )
+        !
+     END IF
      !
      IF ( ionode ) time_serial = scnds() - time_serial
      !
-     DEALLOCATE( a, v, e )
+     IF ( gamma_only ) THEN
+        !
+        DEALLOCATE( ar, vr, e )
+        !
+     ELSE
+        !
+        DEALLOCATE( ac, vc, e )
+        !
+     END IF
      !
      IF ( ionode ) &
         WRITE( stdout, '(5X,I5,2(6X,F12.8))' ) dim, time_para, time_serial
