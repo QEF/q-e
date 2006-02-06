@@ -161,11 +161,14 @@ SUBROUTINE c_phase_field
    INTEGER ipivi(nbnd,nbnd),ii
 
    LOGICAL l_cal!flag for doing mat calculation
+   INTEGER, ALLOCATABLE :: map_g(:)
 
 
 !  -------------------------------------------------------------------------   !
 !                               INITIALIZATIONS
 !  -------------------------------------------------------------------------   !
+
+  allocate(map_g(npwx))
 
   pola=0.d0!set to 0 electronic polarization   
 
@@ -376,6 +379,64 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
 !              --- Matrix elements calculation ---
 !               CALL setv(2*nbnd*nbnd,0.d0,mat,1)
 ! 
+
+
+
+
+
+
+               
+               IF (kpar == (nppstr+1)) THEN
+                  map_g(:) = 0
+                  do ig=1,npw1
+!                          --- If k'=k+G_o, the relation psi_k+G_o (G-G_o) ---
+!                          --- = psi_k(G) is used, gpar=G_o, gtr = G-G_o ---
+                           
+                     gtr(1)=g(1,igk1(ig)) - gpar(1)
+                     gtr(2)=g(2,igk1(ig)) - gpar(2) 
+                     gtr(3)=g(3,igk1(ig)) - gpar(3) 
+!                          --- Find crystal coordinates of gtr, n1,n2,n3 ---
+!                          --- and the position ng in the ngm array ---
+                     IF (gtr(1)**2+gtr(2)**2+gtr(3)**2 <= gcutm) THEN
+                        n1=NINT(gtr(1)*at(1,1)+gtr(2)*at(2,1) &
+                             +gtr(3)*at(3,1))
+                        n2=NINT(gtr(1)*at(1,2)+gtr(2)*at(2,2) &
+                             +gtr(3)*at(3,2))
+                        n3=NINT(gtr(1)*at(1,3)+gtr(2)*at(2,3) &
+                             +gtr(3)*at(3,3))
+                        ng=ln(n1,n2,n3) 
+                        IF ((ABS(g(1,ng)-gtr(1)) > eps) .OR. &
+                             (ABS(g(2,ng)-gtr(2)) > eps) .OR. &
+                             (ABS(g(3,ng)-gtr(3)) > eps)) THEN
+                           WRITE(6,*) ' error: translated G=', &
+                                gtr(1),gtr(2),gtr(3), &
+                                &     ' with crystal coordinates',n1,n2,n3, &
+                                &     ' corresponds to ng=',ng,' but G(ng)=', &
+                                &     g(1,ng),g(2,ng),g(3,ng)
+                           WRITE(6,*) ' probably because G_par is NOT', &
+                                &    ' a reciprocal lattice vector '
+                           WRITE(6,*) ' Possible choices as smallest ', &
+                                ' G_par:'
+                           DO i=1,50
+                              WRITE(6,*) ' i=',i,'   G=', &
+                                   g(1,i),g(2,i),g(3,i)
+                           ENDDO
+                           STOP
+                        ENDIF
+                     ELSE 
+                        WRITE(6,*) ' |gtr| > gcutm  for gtr=', &
+                             gtr(1),gtr(2),gtr(3) 
+                        STOP
+                     END IF
+                     map_g(ig)=ng
+                            
+                  enddo
+                           
+               ENDIF
+
+
+
+
                mat=(0.d0,0.d0)
                DO nb=1,nbnd
                   DO mb=1,nbnd
@@ -408,46 +469,8 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
                            enddo
                         ELSE
                            do ig=1,npw1
-!                          --- If k'=k+G_o, the relation psi_k+G_o (G-G_o) ---
-!                          --- = psi_k(G) is used, gpar=G_o, gtr = G-G_o ---
-                           
-                              gtr(1)=g(1,igk1(ig)) - gpar(1)
-                              gtr(2)=g(2,igk1(ig)) - gpar(2) 
-                              gtr(3)=g(3,igk1(ig)) - gpar(3) 
-!                          --- Find crystal coordinates of gtr, n1,n2,n3 ---
-!                          --- and the position ng in the ngm array ---
-                              IF (gtr(1)**2+gtr(2)**2+gtr(3)**2 <= gcutm) THEN
-                                 n1=NINT(gtr(1)*at(1,1)+gtr(2)*at(2,1) &
-                                      +gtr(3)*at(3,1))
-                                 n2=NINT(gtr(1)*at(1,2)+gtr(2)*at(2,2) &
-                                      +gtr(3)*at(3,2))
-                                 n3=NINT(gtr(1)*at(1,3)+gtr(2)*at(2,3) &
-                                      +gtr(3)*at(3,3))
-                                 ng=ln(n1,n2,n3) 
-                                 IF ((ABS(g(1,ng)-gtr(1)) > eps) .OR. &
-                                      (ABS(g(2,ng)-gtr(2)) > eps) .OR. &
-                                      (ABS(g(3,ng)-gtr(3)) > eps)) THEN
-                                    WRITE(6,*) ' error: translated G=', &
-                                         gtr(1),gtr(2),gtr(3), &
-                                 &     ' with crystal coordinates',n1,n2,n3, &
-                                 &     ' corresponds to ng=',ng,' but G(ng)=', &
-                                 &     g(1,ng),g(2,ng),g(3,ng)
-                                    WRITE(6,*) ' probably because G_par is NOT', &
-                                  &    ' a reciprocal lattice vector '
-                                    WRITE(6,*) ' Possible choices as smallest ', &
-                                      ' G_par:'
-                                    DO i=1,50
-                                       WRITE(6,*) ' i=',i,'   G=', &
-                                            g(1,i),g(2,i),g(3,i)
-                                    ENDDO
-                                    STOP
-                                 ENDIF
-                              ELSE 
-                                 WRITE(6,*) ' |gtr| > gcutm  for gtr=', &
-                                      gtr(1),gtr(2),gtr(3) 
-                                 STOP
-                              END IF
-                              aux(ng)=psi1(ig,mb)
+
+                              aux(map_g(ig))=psi1(ig,mb)
                            enddo
                            
                         ENDIF
@@ -558,7 +581,7 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
    DEALLOCATE(loc_k)
    DEALLOCATE(phik)
    DEALLOCATE(cphik)
-
+   DEALLOCATE(map_g)
 
 !------------------------------------------------------------------------------!
 
