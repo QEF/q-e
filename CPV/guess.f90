@@ -165,7 +165,7 @@ MODULE guess
 
               CALL ucalc(cm(:,:,1,1),c0(:,:,1,1),ngw,cdesc%gzero,n,uu)
               CALL rep_matmul_drv('T','N',n,n,n,1.0d0,uu,n,uu,n,0.0d0,a,n,group)
-              CALL diagonalize(1,a,costemp,ap,n,nproc,mpime)
+              CALL diagonalize(1,a,SIZE(a,1),costemp,ap,SIZE(ap,1),n,nproc,mpime)
               DO j=1,n
                 DO i=1,n
                   a(i,j)=ap(i,n-j+1)
