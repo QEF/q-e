@@ -220,7 +220,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          DO n = 1, nbase
             !
-            e(n)    = hc(n,n)
+            e(n) = hc(n,n)
             vc(n,n) = ONE
             !
          END DO
@@ -267,7 +267,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
             !
          END DO
          !
-         nb1 = nb1
+         nb1 = nbase + 1
          !
          ! ... expand the basis set with new basis vectors ( H - e*S )|psi> ...
          !
@@ -305,14 +305,16 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          DO n = 1, notcnv
             !
+	    nbn = nbase + n
+	    !
             IF ( npol == 1 ) THEN
                !
-               ew(n) = DDOT( 2*ndim, psi(1,1,nbase+n), 1, psi(1,1,nbase+n), 1 )
+               ew(n) = DDOT( 2*ndim, psi(1,1,nbn), 1, psi(1,1,nbn), 1 )
                !
             ELSE
                !
-               ew(n) = DDOT( 2*ndim, psi(1,1,nbase+n), 1, psi(1,1,nbase+n), 1 ) + &
-                       DDOT( 2*ndim, psi(1,2,nbase+n), 1, psi(1,2,nbase+n), 1 )
+               ew(n) = DDOT( 2*ndim, psi(1,1,nbn), 1, psi(1,1,nbn), 1 ) + &
+                       DDOT( 2*ndim, psi(1,2,nbn), 1, psi(1,2,nbn), 1 )
                !
             END IF
             !
@@ -365,7 +367,8 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
                !
             END IF
             !
-            CALL cgramg1( kdmx, nvecx, kdim, nb1, nbase+notcnv, psi, spsi, hpsi )
+            CALL cgramg1( kdmx, nvecx, kdim, &
+	                  nb1, nbase+notcnv, psi, spsi, hpsi )
             !
          END IF
          !
