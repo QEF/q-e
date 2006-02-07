@@ -960,8 +960,8 @@ SUBROUTINE check_para_diag_efficiency()
   !----------------------------------------------------------------------------
   !
   USE kinds,            ONLY : DP
-  USE wvfct,            ONLY : nbndx, gamma_only
-  USE control_flags,    ONLY : use_para_diago, para_diago_dim
+  USE wvfct,            ONLY : nbnd, nbndx, gamma_only
+  USE control_flags,    ONLY : use_para_diago, para_diago_dim, isolve
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE random_numbers,   ONLY : rranf
   USE parallel_toolkit, ONLY : diagonalize, cdiagonalize
@@ -970,7 +970,7 @@ SUBROUTINE check_para_diag_efficiency()
   !
   IMPLICIT NONE
   !
-  INTEGER                  :: dim, dim_pool, i, j, m
+  INTEGER                  :: dim, dim_pool, i, j, m, m_min
   REAL(DP)                 :: time_para, time_serial
   REAL(DP),    ALLOCATABLE :: ar(:,:), vr(:,:)
   COMPLEX(DP), ALLOCATABLE :: ac(:,:), vc(:,:)
@@ -981,7 +981,11 @@ SUBROUTINE check_para_diag_efficiency()
   !
   use_para_diago = .FALSE.
   !
-  m = 50 * nproc_pool
+  IF ( isolve /= 0 ) RETURN
+  !
+  m_min = nbnd / nproc_pool * nproc_pool
+  !
+  m = 100 / nproc_pool * nproc_pool
   !
   IF ( nproc_pool == 1 .OR. m > nbndx ) RETURN
   !
@@ -994,7 +998,7 @@ SUBROUTINE check_para_diag_efficiency()
      !
   END IF
   !
-  DO dim = m, nbndx, m
+  DO dim = m_min, nbndx, m
      !
      dim_pool = dim / nproc_pool
      !
@@ -1085,7 +1089,7 @@ SUBROUTINE check_para_diag_efficiency()
      IF ( ionode ) &
         WRITE( stdout, '(5X,I5,2(6X,F12.8))' ) dim, time_para, time_serial
      !
-     CALL mp_bcast( time_para, ionode_id )
+     CALL mp_bcast( time_para,   ionode_id )
      CALL mp_bcast( time_serial, ionode_id )
      !
      IF ( time_para < time_serial ) THEN
@@ -1113,9 +1117,6 @@ SUBROUTINE check_para_diag_efficiency()
      END IF
      !
   END IF
-  !
-  ! CALL mp_bcast( use_para_diago, ionode_id )
-  ! CALL mp_bcast( para_diago_dim, ionode_id )
   !
   RETURN
   !
