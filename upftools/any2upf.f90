@@ -36,8 +36,8 @@ program mypp2upf
   close (unit=2)
 
 stop
-20 call errore ('mypp2upf', 'Reading pseudo file name ', 1)
-
+20 write (6,'("mypp2upf: error reading pseudopotential file name")')
+   stop
 end program mypp2upf
 
 module mypp
@@ -60,8 +60,8 @@ subroutine read_mypp(iunps)
   !     ----------------------------------------------------------
   !
   return
-100 call errore ('read_mypp', 'Reading pseudo file', 100 )  
-
+100 write (6,'("read_mypp: error reading pseudopotential file")')
+    stop
 end subroutine read_mypp
 
 !     ----------------------------------------------------------

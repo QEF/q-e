@@ -39,8 +39,9 @@ SUBROUTINE input_from_file( )
         OPEN ( UNIT = unit, FILE = input_file, FORM = 'FORMATTED', &
                STATUS = 'OLD', IOSTAT = ierr )
         !
-        CALL errore( 'input_from_file', 'input file ' // TRIM( input_file ) &
-             & // ' not found' , ierr )
+        ! TODO: return error code instead
+        !CALL errore( 'input_from_file', 'input file ' // TRIM( input_file ) &
+        !     & // ' not found' , ierr )
         !
      END IF
      !
@@ -53,6 +54,7 @@ SUBROUTINE get_file( input_file )
   !
   ! This subroutine reads, either from command line or from terminal,
   ! the name of a file to be opened
+  ! TODO: return error code if an error occurs
   !
   IMPLICIT NONE
   !
@@ -78,9 +80,9 @@ SUBROUTINE get_file( input_file )
   ELSE IF ( nargs == 1 ) then
      CALL getarg (1,input_file)
   ELSE
-     CALL errore( TRIM(prgname), 'too many arguments' , nargs )
+     PRINT  '(A,": too many arguments ",i4)', TRIM(prgname), nargs
   END IF
   RETURN
-20 CALL errore( TRIM(prgname), 'reading file name' , 1 )
+20 PRINT  '(A,": reading file name ",A)', TRIM(prgname), TRIM(input_file)
   !
 END SUBROUTINE get_file

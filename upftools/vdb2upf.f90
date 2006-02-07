@@ -36,5 +36,6 @@ program vdb2upf
   close (unit=2)
 
   stop
-20 call errore ('vdb2upf', 'Reading pseudo file name ', 1)
+20 write (6,'("vdb2upf: error reading pseudopotential file name")')
+   stop
 end program vdb2upf

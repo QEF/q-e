@@ -39,8 +39,8 @@ program fhi2upf
   close (unit=2)
 
 stop
-20 call errore ('fhi2upf', 'Reading pseudo file name ', 1)
-
+20 write (6,'("fhi2upf: error reading pseudopotential file name")')
+   stop
 end program fhi2upf
 
 module fhi
@@ -90,7 +90,8 @@ subroutine read_fhi(iunps)
   lmax_ = lmax_ - 1
 
   if (lmax_+1 > Nl) then
-     call errore('read_fhi','too many l-components',1)
+     write (6,'("read_fhi: too many l-components...stopping")')
+     stop
   end if
 
   do i=1,10
@@ -105,7 +106,8 @@ subroutine read_fhi(iunps)
      if ( l > 0) then
         if (comp(l)%nmesh /= comp(0)%nmesh .or.   &
             comp(l)%amesh /= comp(0)%amesh )      then
-           call errore('read_fhi','different radial grids not allowed',i)
+           write(6,'("read_fhi: different radial grids not allowed...stopping")')
+           stop
         end if
      end if
      mesh = comp(l)%nmesh
@@ -126,7 +128,8 @@ subroutine read_fhi(iunps)
   do i=1,mesh
      read(iunps,*,end=10, err=20) r, rho_atc_(i), drhoc, d2rhoc
      if ( abs( r - comp(0)%grid(i) ) > 1.d-6 ) then
-        call errore('read_fhi','radial grid for core charge?',i)
+        write(6,'("read_fhi: radial grid for core charge? stopping")')
+        stop
      end if
   end do
   nlcc_ = .true.
@@ -140,9 +143,11 @@ subroutine read_fhi(iunps)
   !     ----------------------------------------------------------
   return
   !
-20 call errore('read_fhi','error reading core charge',i)
+20 write(6,'("read_fhi: error reading core charge")')
+  stop
   !
-100 call errore ('read_fhi', 'Reading pseudo file', 100 )  
+100  write(6,'("read_fhi: error reading pseudopotential file")')
+  stop
 
 end subroutine read_fhi
 

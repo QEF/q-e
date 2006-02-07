@@ -123,8 +123,9 @@ end subroutine write_upf
 
     write (ounps, '(a10)', err = 100, iostat = ios) "</PP_INFO>"  
     return
-100 call errore ('write_pseudo_comment', 'Writing pseudo file', abs ( &
-         ios))   
+100 write(6,'("write_pseudo_comment: error writing pseudopotential file")')
+    stop
+
   end subroutine write_pseudo_comment
 
   !
@@ -157,8 +158,8 @@ end subroutine write_upf
        write (ounps, '(a5,t24,a)', err = 100, iostat = ios) "US", &
             "Ultrasoft pseudopotential"
     else
-       call errore ('write_pseudo_header',&
-            'Unknown PP type: '//pseudotype, 1)
+       write(6,'("write_pseudo_header: unknown PP type ",A)') pseudotype
+       stop
     endif
     write (ounps, '(l5,t24,a)', err = 100, iostat = ios) nlcc , &
          "Nonlinear Core Correction"
@@ -182,8 +183,9 @@ end subroutine write_upf
     !---> End header writing
 
     write (ounps, '(a12)', err = 100, iostat = ios) "</PP_HEADER>"
-    return   
-100 call errore ('write_pseudo_header','Writing pseudo file', abs(ios) )
+    return
+100 write(6,'("write_pseudo_header: errore writing pseudopotential file")')
+    stop
 
   end subroutine write_pseudo_header
 
@@ -214,7 +216,8 @@ end subroutine write_upf
 
     return
 
-100 call errore ('write_pseudo_rhoatom','Writing pseudo file',abs(ios))
+100 write(6,'("write_pseudo_mesh: errore writing pseudopotential file")')
+    stop
 
   end subroutine write_pseudo_mesh
 
@@ -240,7 +243,8 @@ end subroutine write_upf
     write (ounps, '(a10)', err = 100, iostat = ios) "</PP_NLCC>"  
     return
 
-100 call errore ('write_pseudo_nlcc', 'Writing pseudo file', abs (ios))
+100 write(6,'("write_pseudo_nlcc: errore writing pseudopotential file")')
+    stop
 
   end subroutine write_pseudo_nlcc
   !
@@ -262,9 +266,10 @@ end subroutine write_upf
                                 ( vloc0(ir), ir = 1, mesh )
     write (ounps, '(a11)', err = 100, iostat = ios) "</PP_LOCAL>"  
     return
-100 call errore ('write_pseudo_local', 'Writing pseudo file', abs(ios) )  
-  end subroutine write_pseudo_local
+100 write(6,'("write_pseudo_local: errore writing pseudopotential file")')
+    stop
 
+  end subroutine write_pseudo_local
   !
   !---------------------------------------------------------------------
   subroutine write_pseudo_nl (ounps)  
@@ -342,7 +347,8 @@ end subroutine write_upf
     write (ounps, '(a14)', err = 100, iostat = ios) "</PP_NONLOCAL>"  
     return
 
-100 call errore ('write_pseudo_nl', 'Writing pseudo file', abs (ios) )  
+100 write(6,'("write_pseudo_nl: errore writing pseudopotential file")')
+    stop
 
   end subroutine write_pseudo_nl
 
@@ -371,7 +377,9 @@ end subroutine write_upf
     write (ounps, '(a11)', err = 100, iostat = ios) "</PP_PSWFC>"  
     return
 
-100 call errore ('write_pseudo_pswfc', 'Writing pseudo file', abs(ios) )  
+100 write(6,'("write_pseudo_pswfc: errore writing pseudopotential file")')
+    stop
+
   end subroutine write_pseudo_pswfc
   !
   !---------------------------------------------------------------------
@@ -393,7 +401,9 @@ end subroutine write_upf
     write (ounps, '(a13)', err = 100, iostat = ios) "</PP_RHOATOM>"  
     return
 
-100 call errore('write_pseudo_rhoatom','Writing pseudo file',abs(ios))
+100 write(6,'("write_pseudo_rhoatom: errore writing pseudopotential file")')
+    stop
+
   end subroutine write_pseudo_rhoatom
 
   !---------------------------------------------------------------------
