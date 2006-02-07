@@ -41,7 +41,7 @@ SUBROUTINE rdiagh( n, h, ldh, e, v )
   !
   IF ( use_para_diago .AND. n > para_diago_dim ) THEN
      !
-     CALL diagonalize( 1, h, SIZE(h,1), e, v, SIZE(v,1), n, &
+     CALL diagonalize( 1, h, ldh, e, v, ldh, n, &
                        nproc_pool, me_pool, intra_pool_comm )
      !
   ELSE
