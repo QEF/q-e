@@ -420,6 +420,8 @@ PROGRAM matdyn
          ! convert frequencies to Ry
          !
          freq(:,:)= freq(:,:) / rydcm1
+         Emin  = Emin / rydcm1
+         DeltaE=DeltaE/ rydcm1
          !
          call a2Fdos (nat, nq, nr1, nr2, nr3, ibrav, at, bg, tau, alat, &
                            nsc, nat_blk, at_blk, bg_blk, itau_blk, omega_blk, &
