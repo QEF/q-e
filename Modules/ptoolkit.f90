@@ -712,7 +712,7 @@
       END FUNCTION pythag
    !
    !-------------------------------------------------------------------------
-   SUBROUTINE diagonalize( iopt, a, d, ev, n, nproc, mpime, comm_in )
+   SUBROUTINE diagonalize( iopt, a, lda, d, ev, ldv, n, nproc, mpime, comm_in )
      !-------------------------------------------------------------------------
      !
      ! This subroutine calculate eigenvalues and optionally eigenvectors
@@ -746,16 +746,17 @@
      !
      IMPLICIT NONE
      !   
-     INTEGER,           INTENT(IN)    :: iopt, n, nproc, mpime
+     INTEGER,           INTENT(IN)    :: iopt, n, nproc, mpime, lda, ldv
      REAL(DP),          INTENT(OUT)   :: d(n)
-     REAL(DP),          INTENT(INOUT) :: a(n,n)
-     REAL(DP),          INTENT(OUT)   :: ev(n,n)
+     REAL(DP),          INTENT(IN)    :: a(lda,*)
+     REAL(DP),          INTENT(OUT)   :: ev(ldv,*)
      INTEGER, OPTIONAL, INTENT(IN)    :: comm_in
      !
      REAL(DP), ALLOCATABLE :: aloc(:,:)
      REAL(DP), ALLOCATABLE :: evloc(:,:)
      REAL(DP), ALLOCATABLE :: e(:)
      INTEGER               :: nrl, i, j, jl, ierr, comm
+     INTEGER               :: ip, nrl_ip
      !
      !
 #if defined (__PARA) && defined (__MPI)
@@ -776,10 +777,9 @@
      !
      ALLOCATE( evloc( nrl, n ) )
      ALLOCATE( e( n ) )
+     ALLOCATE( aloc( nrl, n ) )
      !
      IF ( iopt == 1 ) THEN
-        !
-        ALLOCATE( aloc( nrl, n ) )
         !
         DO i = 1, n
            DO jl = 1, nrl
@@ -789,36 +789,68 @@
         !
         CALL ptredv( aloc, nrl, d, e, evloc, nrl, nrl, n, nproc, mpime, comm )
         !
-        DEALLOCATE( aloc )
-        !
      ELSE
         !
-        CALL ptredv( a, nrl, d, e, evloc, nrl, nrl, n, nproc, mpime, comm )
+        DO i = 1, n
+           DO jl = 1, nrl
+              aloc( jl, i ) = a( jl, i )
+           END DO
+        END DO
+        !
+        CALL ptredv( aloc, nrl, d, e, evloc, nrl, nrl, n, nproc, mpime, comm )
         !
      END IF
+     !
+     DEALLOCATE( aloc )
      !
      CALL ptqliv( d, e, n, evloc, nrl, nrl )
      CALL peigsrtv( d, evloc, nrl, n, nrl )
      !
      IF ( iopt == 1 ) THEN
         !
-        DO i = 1,n
-           DO j = 1,n
-              a(j,i) = 0.D0
-           END DO
-           DO jl = 1,nrl
-               a((jl-1)*nproc + mpime + 1,i) = evloc(jl,i)
-           END DO
-        END DO
-        !
+
 #if defined (__PARA)
 #  if defined (__MPI)
-        CALL MPI_ALLREDUCE( a, ev, n*n, &
-                            MPI_DOUBLE_PRECISION, MPI_SUM, comm, ierr )
+
+           DO ip = 0, nproc - 1
+
+              nrl_ip = n / nproc
+              !
+              IF ( ip < MOD( n, nproc ) )  nrl_ip = nrl_ip + 1
+
+              ALLOCATE( aloc( nrl_ip, n ) )
+
+              IF( mpime == ip ) THEN
+                 CALL MPI_BCAST( evloc, nrl_ip*n, MPI_DOUBLE_PRECISION, ip, comm, ierr )
+              ELSE
+                 CALL MPI_BCAST( aloc, nrl_ip*n, MPI_DOUBLE_PRECISION, ip, comm, ierr )
+              END IF
+
+              IF( mpime == ip ) THEN
+                 DO j = 1,n
+                    DO i = 1, nrl_ip
+                       ev((i-1)*nproc+ip+1,j) = evloc(i,j)
+                    END DO
+                 END DO
+              ELSE
+                 DO j = 1,n
+                    DO i = 1, nrl_ip
+                       ev((i-1)*nproc+ip+1,j) = aloc(i,j)
+                    END DO
+                 END DO
+              END IF
+              !
+              DEALLOCATE( aloc )
+
+           END DO
+
 #  endif
 #else
-        ev = a
+
+           ev( 1:n, 1:n ) = evloc( 1:n, 1:n )
+
 #endif
+
         !
      ELSE
         !
@@ -901,7 +933,7 @@
      !
      INTEGER,           INTENT(IN)    :: iopt, n, nproc, mpime, lda, ldv
      REAL(DP),          INTENT(OUT)   :: d(n)
-     COMPLEX(DP),       INTENT(INOUT) :: a(lda,*)
+     COMPLEX(DP),       INTENT(IN)    :: a(lda,*)
      COMPLEX(DP),       INTENT(OUT)   :: ev(ldv,*)
      INTEGER, OPTIONAL, INTENT(IN)    :: comm_in
      !
@@ -910,10 +942,13 @@
      !
      COMPLEX(DP), ALLOCATABLE :: aloc(:)
      COMPLEX(DP), ALLOCATABLE :: ap(:,:)
+     COMPLEX(DP), ALLOCATABLE :: tmp(:,:)
      COMPLEX(DP), ALLOCATABLE :: vp(:,:)
      REAL(DP),    ALLOCATABLE :: rwork(:)
      COMPLEX(DP), ALLOCATABLE :: cwork(:)
+     REAL(DP) :: t1, t2, cclock
      !
+     ! t1 = cclock()
      !
 #if defined (__PARA) && defined (__MPI)
      IF ( PRESENT( comm_in ) ) THEN
@@ -972,30 +1007,42 @@
         ALLOCATE( vp( nrl, n ) )
         ALLOCATE( rwork( n ) )
         ALLOCATE( cwork( n ) )
+        ALLOCATE( ap( nrl, n ) )
         !
         IF ( iopt == 1 ) THEN
-           !
-           ALLOCATE( ap( nrl, n ) )
            !
            DO j = 1, n
               DO i = 1, nrl
                  ap(i,j) = a(mpime+(i-1)*nproc+1,j)
+                 ! IF( n == 1152 ) write(200+mpime,*) ap(i,j)  ! debug
               END DO
            END DO
+           ! IF( n == 1152 ) close( 200+mpime )  ! debug
            !
            CALL pzhptrd( n, nrl, ap, nrl, d, rwork, cwork, nproc, mpime, comm )
            CALL pzupgtr( n, nrl, ap, nrl, cwork, vp, nrl, nproc, mpime, comm)
            !
-           DEALLOCATE( ap )
            !
         ELSE
            !
-           CALL pzhptrd( n, nrl, a, nrl, d, rwork, cwork, nproc, mpime, comm )
-           CALL pzupgtr( n, nrl, a, nrl, cwork, vp, nrl, nproc, mpime, comm )
+           DO j = 1, n
+              DO i = 1, nrl
+                 ap(i,j) = a(i,j)
+              END DO
+           END DO
+           !
+           CALL pzhptrd( n, nrl, ap, nrl, d, rwork, cwork, nproc, mpime, comm )
+           CALL pzupgtr( n, nrl, ap, nrl, cwork, vp, nrl, nproc, mpime, comm )
            !
         END IF
         !
+        DEALLOCATE( ap )
+        !
+        ! t2 = cclock()
+        !
         CALL pzsteqr( 'V', n, nrl, d, rwork, vp, nrl, nproc, mpime, comm )
+        !
+        ! write(6,*) 'pzsteqr size,time = ', n, cclock()-t2, SUM( vp )
         !
         IF ( iopt == 1 ) THEN
            !
@@ -1019,13 +1066,13 @@
               IF( mpime == ip ) THEN
                  DO j = 1,n
                     DO i = 1, nrl_ip
-                       a((i-1)*nproc+ip+1,j) = ap(i,j)
+                       ev((i-1)*nproc+ip+1,j) = vp(i,j)
                     END DO
                  END DO
               ELSE
                  DO j = 1,n
                     DO i = 1, nrl_ip
-                       a((i-1)*nproc+ip+1,j) = vp(i,j)
+                       ev((i-1)*nproc+ip+1,j) = ap(i,j)
                     END DO
                  END DO
               END IF
@@ -1053,6 +1100,10 @@
         DEALLOCATE( cwork )
         !
      END IF
+     !
+     ! t2 = cclock()
+     !
+     ! write(6,*) 'cdiagonalize size,time = ', n, t2-t1
      !
      RETURN
      !
@@ -1877,6 +1928,8 @@
       INTEGER OW(N+1)
       REAL(DP)  WORK(2*N)
 
+      REAL(DP)  t2, cclock
+
 !     .. Local __SCALARs ..
       INTEGER            I, ICOMPZ, II, ISCALE, J, JTOT, K, L, L1, LEND, &
      &                   LENDM1, LENDP1, LENDSV, LM1, LSV, M, MM, MM1,   &
@@ -1901,6 +1954,8 @@
 !     Test the input parameters.
 !
       INFO = 0
+
+      t2 = cclock()
 !
       IF( LSAME( COMPZ, 'N' ) ) THEN
          ICOMPZ = 0
@@ -1976,6 +2031,7 @@
       NM1 = N - 1
 !
    10 CONTINUE
+
       IF( L1.GT.N )   GO TO 160
       IF( L1.GT.1 )   E( L1-1 ) = ZERO
       IF( L1.LE.NM1 ) THEN
@@ -2255,6 +2311,7 @@
 !     Undo scaling if necessary
 !
   140 CONTINUE
+
       IF( ISCALE.EQ.1 ) THEN
          CALL DLASCL( 'G', 0, 0, SSFMAX, ANORM, LENDSV-LSV+1, 1, &
      &                D( LSV ), N, INFO )
@@ -2270,10 +2327,11 @@
 !     Check for no convergence to an eigenvalue after a total
 !     of N*MAXIT iterations.
 !
-      IF( JTOT.EQ.NMAXIT ) THEN
+      IF( JTOT .EQ. NMAXIT ) THEN
          DO 150 I = 1, N - 1
-            IF( E( I ).NE.ZERO )  INFO = INFO + 1
+            IF( E( I ) .NE. ZERO )  INFO = INFO + 1
   150    CONTINUE
+         WRITE(6,*) 'WARNING pzsteqr, convergence not achieved INFO = ', INFO
          RETURN
       END IF
       GO TO 10
@@ -2281,6 +2339,7 @@
 !     Order eigenvalues and eigenvectors.
 !
   160 CONTINUE
+
       IF( ICOMPZ.EQ.0 ) THEN
 !
 !        Use Quick Sort
@@ -2308,6 +2367,7 @@
             END IF
   180    CONTINUE
       END IF
+
       RETURN
 !
 !     End of ZSTEQR
@@ -2432,9 +2492,6 @@ SUBROUTINE mattr_drv( m, k, a, lda, b, ldb, nb, dims, coor, comm )
   nmb = ( m + nb - 1 ) / nb  
   nkb = ( k + nb - 1 ) / nb
   !
-  ! WRITE(iu,*) 'TR',coor(1),coor(2),' m,k,nmb,nkb,nb = ',m,k,nmb,nkb,nb
-  ! WRITE(iu,*) 'TR',coor(1),coor(2),' ---------------- '
-  !
   ALLOCATE( abuf( nb, nb ) )
   !
   DO i = 1, nmb
@@ -2460,12 +2517,6 @@ SUBROUTINE mattr_drv( m, k, a, lda, b, ldb, nb, dims, coor, comm )
         nk = MIN( nb, k - (j-1)*nb ) !  number of element in the block
         nm = MIN( nb, m - (i-1)*nb ) !  number of element in the block
         !
-        ! WRITE(iu,*) 'TR',coor(1),coor(2),itag,' cccsrc,ipsrc   = ', coosrc(1), coosrc(2), ipsrc
-        ! WRITE(iu,*) 'TR',coor(1),coor(2),itag,' cccdst,ipdst   = ', coodst(1), coodst(2), ipdst
-        ! WRITE(iu,*) 'TR',coor(1),coor(2),itag,' i,j,nm,nk      = ', i,j,nm,nk 
-        ! WRITE(iu,*) 'TR',coor(1),coor(2),itag,' isrc,jsrc      = ', isrc,jsrc
-        ! WRITE(iu,*) 'TR',coor(1),coor(2),itag,' idst,jdst      = ', idst,jdst
-        !
         IF( ipsrc == ipdst ) THEN
           IF( ipsrc == mpime ) THEN
             DO ii = 1, nm
@@ -2480,8 +2531,6 @@ SUBROUTINE mattr_drv( m, k, a, lda, b, ldb, nb, dims, coor, comm )
               DO jj = 1, nk
                 abuf( ii, jj ) = a( jsrc + jj - 1, isrc + ii - 1 )
                 !
-                ! WRITE(iu,*) 'TR',coor(1),coor(2),itag,' ii,jj,abuf_snd = ', ii,jj,abuf( ii, jj )
-                !
               END DO
             END DO
             CALL MPI_ISEND( abuf, nb*nb, MPI_DOUBLE_PRECISION, ipdst, itag, comm, ihsnd, ierr )
@@ -2492,15 +2541,11 @@ SUBROUTINE mattr_drv( m, k, a, lda, b, ldb, nb, dims, coor, comm )
             DO jj = 1, nk
               DO ii = 1, nm
                 !
-                ! WRITE(iu,*) 'TR',coor(1),coor(2),itag,' ii,jj,abuf_rcv = ', ii,jj,abuf( ii, jj )
-                !
                 b( idst + ii - 1, jdst + jj - 1 ) = abuf( ii, jj )
               END DO
             END DO
           END IF
         END IF 
-        !
-        ! WRITE(iu,*) 'TR',coor(1),coor(2),itag,' ---------------- '
         !
      END DO
   END DO
