@@ -971,7 +971,7 @@ SUBROUTINE check_para_diag_efficiency()
   IMPLICIT NONE
   !
   INTEGER                  :: dim, dim_pool, i, j, m
-  REAL                     :: time_para, time_serial
+  REAL(DP)                 :: time_para, time_serial
   REAL(DP),    ALLOCATABLE :: ar(:,:), vr(:,:)
   COMPLEX(DP), ALLOCATABLE :: ac(:,:), vc(:,:)
   REAL(DP),    ALLOCATABLE :: e(:)
@@ -987,7 +987,7 @@ SUBROUTINE check_para_diag_efficiency()
   !
   IF ( ionode ) THEN
      !
-     WRITE( stdout, '(/,5X,"looking for " &
+     WRITE( stdout, '( /, 5X,"looking for " &
                      &     "the optimal diagonalization algorithm ...",/)' )
      !
      WRITE( stdout, '(5X,"dimension   time para (sec)   time serial (sec)")' )
@@ -1046,7 +1046,7 @@ SUBROUTINE check_para_diag_efficiency()
      !
      IF ( gamma_only ) THEN
         !
-        CALL diagonalize( 1, ar, e, vr, dim, &
+        CALL diagonalize( 1, ar, dim, e, vr, dim, dim, &
                           nproc_pool, me_pool, intra_pool_comm )
         !
      ELSE
@@ -1085,7 +1085,10 @@ SUBROUTINE check_para_diag_efficiency()
      IF ( ionode ) &
         WRITE( stdout, '(5X,I5,2(6X,F12.8))' ) dim, time_para, time_serial
      !
-     IF ( ionode .AND. time_para < time_serial ) THEN
+     CALL mp_bcast( time_para, ionode_id )
+     CALL mp_bcast( time_serial, ionode_id )
+     !
+     IF ( time_para < time_serial ) THEN
         !
         use_para_diago = .TRUE.
         para_diago_dim = dim
@@ -1111,8 +1114,8 @@ SUBROUTINE check_para_diag_efficiency()
      !
   END IF
   !
-  CALL mp_bcast( use_para_diago, ionode_id )
-  CALL mp_bcast( para_diago_dim, ionode_id )
+  ! CALL mp_bcast( use_para_diago, ionode_id )
+  ! CALL mp_bcast( para_diago_dim, ionode_id )
   !
   RETURN
   !
