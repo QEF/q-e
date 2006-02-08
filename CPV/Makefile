@@ -8,7 +8,6 @@ band_type.o \
 bessel.o \
 berryion.o \
 bforceion.o \
-blacs.o \
 brillouin.o \
 cg.o \
 cg_sub.o \
@@ -40,12 +39,10 @@ environment.o \
 exch_corr.o \
 fftdrv.o \
 fft.o \
-fields_type.o \
 fnl.o \
 forces.o \
 fromscra.o \
 greenf.o \
-grid.o \
 gsmesh.o \
 gtable.o \
 guess.o \
@@ -93,7 +90,6 @@ runcg.o \
 runcp.o \
 rundiis.o \
 runsd.o \
-scalapack.o \
 smcp.o \
 smd_modules.o \
 smd.o  \

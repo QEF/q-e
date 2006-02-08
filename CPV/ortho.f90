@@ -53,12 +53,6 @@
 
       CALL start_clock( 'ortho' )  
 
-#if defined __SCALAPACK
-
-      iter = ortho_scalapack( ispin, c0, cp, cdesc, pmss, emass)
-
-#else
-
       n   = cdesc%nbl( ispin )
       ngw = cdesc%ngwl
 
@@ -76,15 +70,12 @@
 
       ALLOCATE( x0( n, n ) )
 
-      ! CALL ortho_gamma( cp, phi, x0, diff, iter, n, n, 1 )
       CALL ortho_gamma( 1, cp, SIZE(cp,1), phi, dum, dum, 2, dum, dum, &
                            x0, n, diff, iter, n, n, 1 )
 
       CALL updatc( 1.0d0, n, x0, n, phi, SIZE(phi,1), dum, 1, dum, dum, cp, n, 1 )
 
       DEALLOCATE( phi, x0 )
-
-#endif
 
       IF( PRESENT( success ) ) THEN
              success = .TRUE.

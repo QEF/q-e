@@ -443,7 +443,7 @@
 
 
       IF( tstress .OR. tforce .OR. iflag == 0 )  THEN
-        CALL vofesr( edft%esr, desr, fion, atoms, tstress, box )
+        CALL vofesr( edft%esr, desr, fion, atoms%taus, tstress, box%hmat )
         IF( iflag == 0 ) &
           WRITE( stdout, fmt="(/,3X,'ESR (real part of Ewald sum) = ',D16.8,/)" ) edft%esr
         iflag = 1
@@ -754,7 +754,6 @@
       USE mp_global, ONLY: mpime
       USE fft, ONLY : pfwfft
       USE fft_base, ONLY: dfftp
-      USE processors_grid_module, ONLY: get_grid_info
       USE cell_module, ONLY: boxdimensions, s_to_r, alat
       USE constants, ONLY: gsmall, pi
       USE cell_base, ONLY: tpiba2
@@ -1050,27 +1049,25 @@
 
 !
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE vofesr(esr, desr, fion, atoms, tstress, ht)
+   SUBROUTINE vofesr( esr, desr, fion, taus, tstress, hmat )
 !=----------------------------------------------------------------------------=!
 
-      USE constants, ONLY: sqrtpm1
-      USE cell_module, ONLY: s_to_r, boxdimensions, pbcs
-      USE mp_global, ONLY: nproc, mpime, group
-      USE mp, ONLY: mp_sum
-      USE parallel_types, ONLY: BLOCK_PARTITION_DIST
-      USE atoms_type_module, ONLY: atoms_type
-      USE ions_base, ONLY: rcmax, zv
+      USE constants,   ONLY : sqrtpm1
+      USE cell_module, ONLY : s_to_r, pbcs
+      USE mp_global,   ONLY : nproc, mpime, group
+      USE mp,          ONLY : mp_sum
+      USE ions_base,   ONLY : rcmax, zv, nsp, na, nax
  
       IMPLICIT NONE
 
 ! ... ARGUMENTS 
       
-      TYPE (atoms_type) :: atoms
+      REAL(DP), INTENT(IN) :: taus(:,:)
       REAL(DP) :: ESR
       REAL(DP) :: DESR(:)
       REAL(DP) :: FION(:,:)
       LOGICAL   :: TSTRESS
-      TYPE (boxdimensions), INTENT(in) :: ht
+      REAL(DP), INTENT(in) :: hmat( 3, 3 )
 
 ! ... declare external function
       REAL(DP) :: erf, erfc
@@ -1097,6 +1094,7 @@
       REAL(DP)  :: rckj_m1
       REAL(DP)  :: zvk, zvj, zv2_kj
       REAL(DP)  :: fact_pre
+      REAL(DP)  :: iasp( nsp )
 
       INTEGER, DIMENSION(6), PARAMETER :: ALPHA = (/ 1,2,3,2,3,3 /)
       INTEGER, DIMENSION(6), PARAMETER :: BETA  = (/ 1,1,1,2,2,3 /)
@@ -1105,18 +1103,26 @@
 
       me = mpime + 1
 
+      !  get the index of the first atom of each specie
+
+      isa = 1
+      DO is = 1, nsp
+         iasp( is ) = isa
+         isa = isa + na( is )
+      END DO
+
       !  Here count the pairs of atoms
 
       npt = 0
-      DO k = 1, atoms%nsp
-        DO j = k, atoms%nsp
-          DO l = 1, atoms%na(k)
+      DO k = 1, nsp
+        DO j = k, nsp
+          DO l = 1, na(k)
             IF ( k == j ) THEN
               infm = l             ! If the specie is the same avoid  
             ELSE                   ! atoms double counting
               infm = 1
             END IF
-            DO m = infm, atoms%na(j)
+            DO m = infm, na(j)
               npt = npt + 1
             END DO
           END DO
@@ -1124,17 +1130,17 @@
       END DO
 
       ALLOCATE( iatom( 4, npt ) )
-      ALLOCATE( rc( atoms%nsp, atoms%nsp ) )
-      ALLOCATE( zv2( atoms%nsp, atoms%nsp ) )
-      ALLOCATE( fionloc( 3, atoms%nax, atoms%nsp ) )
+      ALLOCATE( rc( nsp, nsp ) )
+      ALLOCATE( zv2( nsp, nsp ) )
+      ALLOCATE( fionloc( 3, nax, nsp ) )
       rc      = 0.0_DP
       zv2     = 0.0_DP
       fionloc = 0.0_DP
 
       !  Here pre-compute some factors
 
-      DO k = 1, atoms%nsp
-        DO j = k, atoms%nsp
+      DO k = 1, nsp
+        DO j = k, nsp
           zv2( k, j ) = zv( k ) * zv( j )
           rc ( k, j ) = SQRT( rcmax(k)**2 + rcmax(j)**2 )
         END DO
@@ -1143,15 +1149,15 @@
       !  Here store the indexes of all pairs of atoms
 
       npt = 0
-      DO k = 1, atoms%nsp
-        DO j = k, atoms%nsp
-          DO l = 1, atoms%na(k)
+      DO k = 1, nsp
+        DO j = k, nsp
+          DO l = 1, na(k)
             IF (k.EQ.j) THEN
               infm = l
             ELSE
               infm = 1
             END IF
-            DO m = infm, atoms%na(j)
+            DO m = infm, na(j)
               npt = npt + 1
               iatom(1,npt) = k
               iatom(2,npt) = j
@@ -1188,11 +1194,11 @@
           xlm=0.0_DP; ylm=0.0_DP; zlm=0.0_DP; tzero=.TRUE.
         ELSE
 ! ...     different atoms
-          iakl = atoms%isa(k) + l - 1
-          iajm = atoms%isa(j) + m - 1
-          xlm = atoms%taus(1,iakl) - atoms%taus(1,iajm)
-          ylm = atoms%taus(2,iakl) - atoms%taus(2,iajm)
-          zlm = atoms%taus(3,iakl) - atoms%taus(3,iajm)
+          iakl = iasp(k) + l - 1
+          iajm = iasp(j) + m - 1
+          xlm = taus(1,iakl) - taus(1,iajm)
+          ylm = taus(2,iakl) - taus(2,iajm)
+          zlm = taus(3,iakl) - taus(3,iajm)
           CALL pbcs(xlm,ylm,zlm,xlm,ylm,zlm,1)
           TZERO=.FALSE.
         END IF
@@ -1205,7 +1211,7 @@
               TSHIFT= IX.EQ.0 .AND. IY.EQ.0 .AND. IZ.EQ.0
               IF(.NOT.(TZERO.AND.TSHIFT)) THEN
                 SXLM(3) = ZLM + DBLE(IZ)
-                CALL S_TO_R(SXLM,RXLM,ht)
+                CALL S_TO_R( SXLM, RXLM, hmat )
                 ERRE2 = RXLM(1)**2 + RXLM(2)**2 + RXLM(3)**2
                 RLM   = SQRT(ERRE2)
                 ARG   = RLM * rckj_m1
@@ -1239,8 +1245,8 @@
 !     each processor add its own contribution to the array FION
 !
       isa = 0
-      DO IS = 1, atoms%nsp
-        DO IA = 1, atoms%na(is)
+      DO IS = 1, nsp
+        DO IA = 1, na(is)
           isa = isa + 1
           FION(1,ISA) = FION(1,ISA)+FIONLOC(1,IA,IS)
           FION(2,ISA) = FION(2,ISA)+FIONLOC(2,IA,IS)
