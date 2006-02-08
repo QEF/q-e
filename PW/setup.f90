@@ -971,7 +971,8 @@ SUBROUTINE check_para_diag_efficiency()
   IMPLICIT NONE
   !
   INTEGER                  :: dim, dim_pool, i, j, m, m_min
-  REAL(DP)                 :: time_para, time_serial
+  REAL(DP)                 :: time_para, time_serial, delta_t, delta_t_old
+  LOGICAL                  :: lfirst
   REAL(DP),    ALLOCATABLE :: ar(:,:), vr(:,:)
   COMPLEX(DP), ALLOCATABLE :: ac(:,:), vc(:,:)
   REAL(DP),    ALLOCATABLE :: e(:)
@@ -997,6 +998,8 @@ SUBROUTINE check_para_diag_efficiency()
      WRITE( stdout, '(5X,"dimension   time para (sec)   time serial (sec)")' )
      !
   END IF
+  !
+  lfirst = .TRUE.
   !
   DO dim = m_min, nbndx, m
      !
@@ -1092,6 +1095,8 @@ SUBROUTINE check_para_diag_efficiency()
      CALL mp_bcast( time_para,   ionode_id )
      CALL mp_bcast( time_serial, ionode_id )
      !
+     delta_t = time_para - time_serial
+     !
      IF ( time_para < time_serial ) THEN
         !
         use_para_diago = .TRUE.
@@ -1099,7 +1104,17 @@ SUBROUTINE check_para_diag_efficiency()
         !
         EXIT
         !
+     ELSE IF ( .NOT. lfirst .AND. delta_t > delta_t_old ) THEN
+        !
+	! ... the parallel diagonalizer is getting slower and slower
+	!
+	EXIT
+	!
      END IF
+     !
+     lfirst = .FALSE.
+     !
+     delta_t_old = delta_t
      !
   END DO
   !
