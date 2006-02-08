@@ -114,7 +114,8 @@ SUBROUTINE iosys()
   !
   USE a2F,           ONLY : la2F_ => la2F
   !
-  USE exx,           ONLY : nqx1_   => nq1,  &
+  USE exx,           ONLY : x_gamma_extrapolation_ => x_gamma_extrapolation, &
+                            nqx1_   => nq1,  &
                             nqx2_   => nq2,  &
                             nqx3_   => nq3
 
@@ -204,7 +205,7 @@ SUBROUTINE iosys()
                                starting_ns_eigenvalue, U_projection_type, &
                                input_dft, la2F, &
 #if defined (EXX)                               
-                               nqx1, nqx2, nqx3, &
+                               x_gamma_extrapolation, nqx1, nqx2, nqx3, &
 #endif
                                edir, emaxpos, eopreg, eamp, &
                                noncolin, lambda, angle1, angle2, &
@@ -1141,6 +1142,7 @@ SUBROUTINE iosys()
   !
 #if defined (EXX)
   !
+  x_gamma_extrapolation_ = x_gamma_extrapolation
   nqx1_   = nqx1
   nqx2_   = nqx2
   nqx3_   = nqx3

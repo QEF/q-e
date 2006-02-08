@@ -467,6 +467,8 @@ MODULE input_parameters
         LOGICAL :: la2F = .FALSE.
           !
 #if defined (EXX)
+        LOGICAL :: x_gamma_extrapolation = .true.
+          ! ONLY PWSCF
         INTEGER :: nqx1 = 1, nqx2 = 1, nqx3=1
           ! ONLY PWSCF
 !        REAL(DP) :: yukawa = 0.d0
@@ -567,7 +569,7 @@ MODULE input_parameters
              U_projection_type, &
              input_dft, la2F, &
 #if defined (EXX)
-             nqx1, nqx2, nqx3, &
+             x_gamma_extrapolation, nqx1, nqx2, nqx3, &
 #endif
              noncolin, lspinorb, lambda, angle1, angle2, report, &
              constrained_magnetization, B_field, fixed_magnetization, &

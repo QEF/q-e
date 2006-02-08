@@ -687,6 +687,7 @@ MODULE read_namelists_module
        CALL mp_bcast( xc_type,                ionode_id )
        CALL mp_bcast( input_dft,              ionode_id )
 #ifdef EXX
+       CALL mp_bcast( x_gamma_extrapolation,  ionode_id )
        CALL mp_bcast( nqx1,                   ionode_id )
        CALL mp_bcast( nqx2,                   ionode_id )
        CALL mp_bcast( nqx3,                   ionode_id )

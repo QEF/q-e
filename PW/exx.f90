@@ -42,7 +42,12 @@ module exx
   integer, allocatable :: index_xk(:)    ! index_xk(nkqs)  
   integer, allocatable :: index_sym(:)   ! index_sym(nkqs)
 
-  real (DP):: exxdiv ! 1 if exx, 0 elsewhere
+  real (DP) :: exxdiv ! 1 if exx, 0 elsewhere
+  logical   :: x_gamma_extrapolation =.true.
+  logical   :: on_double_grid =.false.
+  real (DP) :: grid_factor = 8.d0/7.d0 ! 
+  real (DP) :: eps =1.d-6
+
 
 contains
   !------------------------------------------------------------------------
@@ -114,10 +119,20 @@ contains
   real (DP), allocatable :: temp_xkq(:,:)
   logical:: xk_not_found
   real (DP) :: sxk(3), dxk(3), xk_cryst(3)
-  real (DP) :: eps, dq1, dq2, dq3
+  real (DP) :: dq1, dq2, dq3
   logical:: no_pool_para
 
   call start_clock ('exx_grid')
+
+!  write (stdout,'(a)') " EXX: unshifted q-grid "
+  write (stdout,'(a,3i4)') " EXX : q-grid dimensions are ",nq1,nq2,nq3
+  if (x_gamma_extrapolation) then
+     write (stdout,'(a)') " EXX : q->0 dealt with 8/7 -1/7 trick"
+     grid_factor = 8.d0/7.d0
+  else 
+     write (stdout,'(a)') " EXX : q->0 term not estimated "
+     grid_factor = 1.d0
+  end if
 
   nqs = nq1 * nq2 * nq3
   !
@@ -130,8 +145,6 @@ contains
      call errore('exx_grid',&
               'pool parallelization not possible in this case', npool)
   end if
-  !
-  eps = 1.d-6
   !
   ! set a safe limit as the maximum number of auxiliary points we may need
   ! and allocate auxiliary arrays
@@ -237,8 +250,13 @@ contains
                   end if
                end if
             end do
-            if (xk_not_found) call errore('exx_grid_init', &
-                              ' k + q is not an S*k ', (ik-1) * nqs + iq )
+            if (xk_not_found) then
+               write (*,*) ik, iq, temp_nkqs
+               write (*,*) sxk(:)
+               call errore('exx_grid_init', &
+                           ' k + q is not an S*k ', (ik-1) * nqs + iq )
+            end if
+
          end do
        end do
      end do
@@ -343,8 +361,10 @@ contains
     !It saves the wavefunctions for the right density matrix. in real space
     !It saves all the wavefunctions in a single file called prefix.exx
     USE wavefunctions_module, ONLY : evc  
-    USE io_files,             ONLY : nwordwfc, prefix, tmp_dir, iunwfc, &
-         iunigk, find_free_unit
+    USE io_files,             ONLY : find_free_unit
+    USE io_files,             ONLY : nwordwfc
+    USE io_files,             ONLY : prefix
+    USE io_files,             ONLY : tmp_dir, iunwfc, iunigk
     USE io_global,            ONLY : stdout
     USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
     USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
@@ -544,7 +564,7 @@ contains
     integer          :: h_ibnd, half_nbnd, ibndp1
     real(DP) :: x1, x2
     real(DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, e2  = 2.d0
-    real(DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), alpha
+    real(DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), alpha, x, q(3)
 
     call start_clock ('vexx')
 
@@ -576,20 +596,30 @@ contains
           xkq(:) = bg(:,1)*sxk(1) + bg(:,2)*sxk(2) + bg(:,3)*sxk(3)
 
           do ig=1,ngm
-             qq = ( xk(1,current_k) - xkq(1) + g(1,ig) )**2 + &
-                  ( xk(2,current_k) - xkq(2) + g(2,ig) )**2 + &
-                  ( xk(3,current_k) - xkq(3) + g(3,ig) )**2
+             q(1)= xk(1,current_k) - xkq(1) + g(1,ig)
+             q(2)= xk(2,current_k) - xkq(2) + g(2,ig)
+             q(3)= xk(3,current_k) - xkq(3) + g(3,ig)
+             qq = ( q(1)*q(1) + q(2)*q(2) + q(3)*q(3) ) 
+             if (x_gamma_extrapolation) then
+                on_double_grid = .true.
+                x= 0.5d0*(q(1)*at(1,1)+q(2)*at(2,1)+q(3)*at(3,1))*nq1
+                on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
+                x= 0.5d0*(q(1)*at(1,2)+q(2)*at(2,2)+q(3)*at(3,2))*nq2
+                on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
+                x= 0.5d0*(q(1)*at(1,3)+q(2)*at(2,3)+q(3)*at(3,3))*nq3
+                on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
+             end if             
+
              if (qq.gt.1.d-8) then
-                fac(ig)=e2*fpi/(tpiba2*qq + yukawa ) 
+                fac(ig)=e2*fpi/(tpiba2*qq + yukawa ) * grid_factor
+                if (on_double_grid) fac(ig) = 0.d0
              else
                 fac(ig)= - exxdiv ! & ! or rather something else (see F.Gygi)
  !                         - e2*fpi   ! THIS ONLY APPLYS TO HYDROGEN
-                if (yukawa .gt. 1.d-8) then
+                if (yukawa .gt. 1.d-8 .and. .not.x_gamma_extrapolation) then
                    fac(ig) = fac(ig) + e2*fpi/(tpiba2*qq + yukawa )
                 end if
-!                fac(ig)= 0.d0 ! or rather something else (see F.Gygi)
              end if
-!             fac(ig)=e2*fpi/tpiba2/(qq + alpha)
           end do
           if (gamma_only) then
              half_nbnd = ( nbnd + 1 ) / 2
@@ -745,7 +775,7 @@ contains
     integer          :: half_nbnd, h_ibnd
     real(DP)    :: x1, x2
     real(DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, e2  = 2.d0
-    real(DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), alpha, vc
+    real(DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), alpha, vc, x, q(3)
 
     call start_clock ('exxen2')
 
@@ -785,21 +815,30 @@ contains
              xkq(:) = bg(:,1)*sxk(1) + bg(:,2)*sxk(2) + bg(:,3)*sxk(3)
 
              do ig=1,ngm
-                qq = ( xk(1,current_k) - xkq(1) + g(1,ig) )**2 + &
-                     ( xk(2,current_k) - xkq(2) + g(2,ig) )**2 + &
-                     ( xk(3,current_k) - xkq(3) + g(3,ig) )**2
+                q(1)= xk(1,current_k) - xkq(1) + g(1,ig)
+                q(2)= xk(2,current_k) - xkq(2) + g(2,ig)
+                q(3)= xk(3,current_k) - xkq(3) + g(3,ig)
+                qq = ( q(1)*q(1) + q(2)*q(2) + q(3)*q(3) )
+                if (x_gamma_extrapolation) then
+                   on_double_grid = .true.
+                   x= 0.5d0*(q(1)*at(1,1)+q(2)*at(2,1)+q(3)*at(3,1))*nq1
+                   on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
+                   x= 0.5d0*(q(1)*at(1,2)+q(2)*at(2,2)+q(3)*at(3,2))*nq2
+                   on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
+                   x= 0.5d0*(q(1)*at(1,3)+q(2)*at(2,3)+q(3)*at(3,3))*nq3
+                   on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
+                end if             
                 if (qq.gt.1.d-8) then
-                   fac(ig)=e2*fpi/(tpiba2*qq + yukawa )
+                   fac(ig)=e2*fpi/(tpiba2*qq + yukawa ) * grid_factor
                    if (gamma_only) fac(ig) = 2.d0 * fac(ig)
+                   if (on_double_grid) fac(ig) = 0.d0
                 else
                    fac(ig)= - exxdiv ! & ! or rather something else (see F.Gygi)
  !                            - e2*fpi   ! THIS ONLY APPLYS TO HYDROGEN
-                   if (yukawa .gt. 1.d-8) then
+                   if (yukawa .gt. 1.d-8 .and. .not. gamma_extrapolation) then
                       fac(ig) = fac(ig) + e2*fpi/(tpiba2*qq + yukawa )
                    end if
-!                   fac(ig)= 0.d0 ! or rather something else (see F.Gygi)
                 end if
-!                fac(ig)=e2*fpi/tpiba2/(qq + alpha)
              end do
 
              if (gamma_only) then
@@ -874,7 +913,7 @@ contains
 
   function exx_divergence ()
 
-     USE cell_base, ONLY : bg, alat, omega
+     USE cell_base, ONLY : bg, at, alat, omega
      USE gvect,     ONLY : ngm, g, ecutwfc
      USE wvfct,     ONLY : gamma_only
      USE io_global, ONLY : stdout
@@ -884,7 +923,7 @@ contains
 
      ! local variables
      integer :: iq1,iq2,iq3, ig
-     real(DP) :: div, dq1, dq2, dq3, xq(3), q, qq, tpiba2, alpha
+     real(DP) :: div, dq1, dq2, dq3, xq(3), q_, qq, tpiba2, alpha, x, q(3)
      real(DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, e2  = 2.d0
 
      integer :: nqq, iq
@@ -908,13 +947,26 @@ contains
                       bg(:,2) * (iq2-1) * dq2 + &
                       bg(:,3) * (iq3-1) * dq3 
               do ig=1,ngm
-                 qq = ( xq(1) + g(1,ig) )**2 + &
-                      ( xq(2) + g(2,ig) )**2 + &
-                      ( xq(3) + g(3,ig) )**2
-                 if ( qq.gt.1.d-8 .or. yukawa .gt. 1.d-8) then
-                    div = div + exp( -alpha * qq) / (qq + yukawa/tpiba2)
-                 else
-                    div = div - alpha ! or maybe something else
+                 q(1)= xq(1) + g(1,ig)
+                 q(2)= xq(2) + g(2,ig)
+                 q(3)= xq(3) + g(3,ig)
+                 qq = ( q(1)*q(1) + q(2)*q(2) + q(3)*q(3) ) 
+                 if (gamma_extrapolation) then
+                    on_double_grid = .true.
+                    x= 0.5d0*(q(1)*at(1,1)+q(2)*at(2,1)+q(3)*at(3,1))*nq1
+                    on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
+                    x= 0.5d0*(q(1)*at(1,2)+q(2)*at(2,2)+q(3)*at(3,2))*nq2
+                    on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
+                    x= 0.5d0*(q(1)*at(1,3)+q(2)*at(2,3)+q(3)*at(3,3))*nq3
+                    on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
+                 end if
+                 if (.not.on_double_grid) then
+                    if ( qq.gt.1.d-8 .or. yukawa .gt. 1.d-8) then
+                       div = div + exp( -alpha * qq) / (qq + yukawa/tpiba2) &
+                                                     * grid_factor
+                    else
+                       div = div - alpha ! or maybe something else
+                    end if
                  end if
               end do
            end do
@@ -940,8 +992,8 @@ contains
      dq = 5.0 / sqrt(alpha) /nqq
      aa = 0.d0
      do iq=0,  nqq
-        q = dq * (iq+0.5d0)
-        qq = q * q
+        q_ = dq * (iq+0.5d0)
+        qq = q_ * q_
         aa = aa - exp( -alpha * qq) * yukawa / (qq + yukawa) * dq
      end do
      aa = aa * 8.d0 /fpi
