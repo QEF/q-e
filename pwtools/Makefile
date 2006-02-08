@@ -95,6 +95,10 @@ matdyn.x : matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 		matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
+metadyn_pp.x : metadyn_pp.o $(LIBOBJS)
+	$(MPIF90) $(LDFLAGS) -o $@ metadyn_pp.o $(LIBOBJS) $(LIBS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+
 path_int.x : path_int.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
 		path_int.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
