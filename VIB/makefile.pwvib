@@ -347,11 +347,14 @@ MODULES = \
 ../Modules/timestep.o \
 ../Modules/xml_io_base.o
 
+.f90.o:
+	$(F90) $(F90FLAGS) -DDFT_PW -c $<
+
 WRAPPERS = wrapper.o
 all : pwvib.x
 
 pwvib: pwvib.x
-pwvib.x : FFLAGS += -DDFT_PW
+#pwvib.x : FFLAGS += -DDFT_PW
 pwvib.x : cleanpw $(PW_OBJS) $(VIB_OBJ) $(LOBJS) $(LIBOBJS) ../PW/pw.x vibstart.o
 	$(MPIF90) $(LDFLAGS) -o pwvib.x -I../PW \
 		vibstart.o $(PW_OBJS) $(VIB_OBJ) $(LOBJS) $(MODULES) \
