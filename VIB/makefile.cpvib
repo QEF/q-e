@@ -96,7 +96,6 @@ CP_OBJS = \
 ../CPV/redis.o \
 ../CPV/restart.o \
 ../CPV/restart_sub.o \
-../CPV/rsmesh.o \
 ../CPV/runcg_ion.o \
 ../CPV/runcg.o \
 ../CPV/runcp.o \
@@ -178,6 +177,7 @@ MODULES = \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
 ../Modules/ptoolkit.o \
+../Modules/random_numbers.o \
 ../Modules/read_cards.o \
 ../Modules/read_namelists.o \
 ../Modules/readpseudo.o \
