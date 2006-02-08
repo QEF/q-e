@@ -359,7 +359,7 @@ pwvib.x : cleanpw $(PW_OBJS) $(VIB_OBJ) $(LOBJS) $(LIBOBJS) ../PW/pw.x vibstart.
 	$(MPIF90) $(LDFLAGS) -o pwvib.x -I../PW \
 		vibstart.o $(PW_OBJS) $(VIB_OBJ) $(LOBJS) $(MODULES) \
 		$(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../CPVIB/pwvib.x . )
+	- ( cd ../bin ; ln -fs ../VIB/pwvib.x . )
 
 pwvib_version.o : pwvibver.h
 

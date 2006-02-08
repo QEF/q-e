@@ -207,7 +207,7 @@ cpvib.x : cleancp $(CP_OBJS) $(VIB_OBJ) $(LOBJS) $(LIBOBJS) ../CPV/cp.x vibstart
 	$(MPIF90) $(LDFLAGS) -o cpvib.x -I../CPV \
 		vibstart.o $(CP_OBJS) $(VIB_OBJ) $(LOBJS) $(MODULES) \
 		$(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../CPVIB/cpvib.x . )
+	- ( cd ../bin ; ln -fs ../VIB/cpvib.x . )
 
 
 cpvib_version.o : cpvibver.h
