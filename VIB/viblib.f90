@@ -512,12 +512,7 @@ subroutine set_guess_wfc ( disp_sign )
   cm      = c0
   lambdam = lambda
 #endif
-
-#ifdef DFT_PW
-  CALL struc_fact( nat, tau, ntyp, ityp, ngm, g, bg, &
-       nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
-#endif
-
+  !
   return
 end subroutine set_guess_wfc
 !
