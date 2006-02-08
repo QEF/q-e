@@ -170,6 +170,7 @@ PW_OBJS = \
 ../PW/qvan2.o \
 ../PW/rcgdiagg.o \
 ../PW/rdiaghg.o \
+../PW/rdiagh.o \
 ../PW/read_conf_from_file.o \
 ../PW/read_file.o \
 ../PW/read_ncpp.o \
