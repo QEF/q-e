@@ -835,7 +835,7 @@ contains
                 else
                    fac(ig)= - exxdiv ! & ! or rather something else (see F.Gygi)
  !                            - e2*fpi   ! THIS ONLY APPLYS TO HYDROGEN
-                   if (yukawa .gt. 1.d-8 .and. .not. gamma_extrapolation) then
+                   if (yukawa.gt.1.d-8 .and. .not. x_gamma_extrapolation) then
                       fac(ig) = fac(ig) + e2*fpi/(tpiba2*qq + yukawa )
                    end if
                 end if
@@ -951,7 +951,7 @@ contains
                  q(2)= xq(2) + g(2,ig)
                  q(3)= xq(3) + g(3,ig)
                  qq = ( q(1)*q(1) + q(2)*q(2) + q(3)*q(3) ) 
-                 if (gamma_extrapolation) then
+                 if (x_gamma_extrapolation) then
                     on_double_grid = .true.
                     x= 0.5d0*(q(1)*at(1,1)+q(2)*at(2,1)+q(3)*at(3,1))*nq1
                     on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
@@ -975,18 +975,18 @@ contains
      call reduce (1, div)
      if (gamma_only) then
         div = 2.d0 * div
-        if (yukawa .le. 1.d-8) then
-           div = div + alpha
-        else
-           div = div - tpiba2/yukawa
+        if ( .not. x_gamma_extrapolation ) then
+           if (yukawa .le. 1.d-8) then
+              div = div + alpha
+           else
+              div = div - tpiba2/yukawa
+           end if
         end if
      end if
 
      div = div * e2 * fpi / tpiba2 / nqs
 
-
      alpha = alpha / tpiba2
-     
 
      nqq = 100000
      dq = 5.0 / sqrt(alpha) /nqq
