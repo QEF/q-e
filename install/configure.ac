@@ -532,9 +532,9 @@ alinux:fort )
 alpha:f90 )
 	have_cpp=1
 	pre_fdflags="-cpp "
-	try_fflags="-O -real_size 64 -align dcommons -align records"
+	try_fflags="-O -real_size 64 -align dcommons -align records -assume buffered_io"
 	try_f90flags="\$(FFLAGS) -free"
-	try_fflags_noopt="-O0 -real_size 64 -align dcommons -align records"
+	try_fflags_noopt="-O0 -real_size 64 -align dcommons -align records -assume buffered_io"
 	try_f90flags_noopt="\$(FFLAGS_NOOPT) -free"
 	;;
 sparc:mpf90 | sparc:f90 )
