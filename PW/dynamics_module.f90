@@ -38,9 +38,9 @@ MODULE dynamics_module
   REAL(DP), ALLOCATABLE :: vel(:,:), acc(:,:)
   REAL(DP), ALLOCATABLE :: mass(:)
   REAL(DP), ALLOCATABLE :: diff_coeff(:)
+  REAL(DP), ALLOCATABLE :: radial_distr(:,:)
   !
   INTEGER, PARAMETER :: hist_len = 1000
-  REAL(DP)           :: pair_distr(1:hist_len)
   !
   CONTAINS
     !
@@ -63,6 +63,8 @@ MODULE dynamics_module
       !
       ALLOCATE( diff_coeff( nat ) )
       !
+      ALLOCATE( radial_distr( hist_len , nat ) )
+      !
       RETURN
       !
     END SUBROUTINE allocate_dyn_vars
@@ -71,20 +73,21 @@ MODULE dynamics_module
     SUBROUTINE deallocate_dyn_vars()
       !------------------------------------------------------------------------
       !
-      IF ( ALLOCATED( mass ) )        DEALLOCATE( mass )
-      IF ( ALLOCATED( tau_old ) )     DEALLOCATE( tau_old )
-      IF ( ALLOCATED( tau_new ) )     DEALLOCATE( tau_new )
-      IF ( ALLOCATED( tau_ref ) )     DEALLOCATE( tau_ref )
-      IF ( ALLOCATED( vel )  )        DEALLOCATE( vel )         
-      IF ( ALLOCATED( acc )  )        DEALLOCATE( acc )
-      IF ( ALLOCATED( diff_coeff ) )  DEALLOCATE( diff_coeff )
+      IF ( ALLOCATED( mass ) )          DEALLOCATE( mass )
+      IF ( ALLOCATED( tau_old ) )       DEALLOCATE( tau_old )
+      IF ( ALLOCATED( tau_new ) )       DEALLOCATE( tau_new )
+      IF ( ALLOCATED( tau_ref ) )       DEALLOCATE( tau_ref )
+      IF ( ALLOCATED( vel )  )          DEALLOCATE( vel )         
+      IF ( ALLOCATED( acc )  )          DEALLOCATE( acc )
+      IF ( ALLOCATED( diff_coeff ) )    DEALLOCATE( diff_coeff )
+      IF ( ALLOCATED( radial_distr ) )  DEALLOCATE( radial_distr )
       !
       RETURN
       !
     END SUBROUTINE deallocate_dyn_vars
     !
     !------------------------------------------------------------------------
-    SUBROUTINE dynamics()
+    SUBROUTINE verlet()
       !------------------------------------------------------------------------
       !
       ! ... This routine performs one step of molecular dynamics evolution
@@ -116,9 +119,8 @@ MODULE dynamics_module
       USE cell_base,     ONLY : alat
       USE ener,          ONLY : etot
       USE force_mod,     ONLY : force
-      USE relax,         ONLY : epse, epsf
-      USE control_flags, ONLY : istep, nstep, conv_ions, &
-                                lconstrain, ldamped, lfixatom, lrescale_t
+      USE control_flags, ONLY : istep, nstep, conv_ions, lconstrain, &
+                                lfixatom, lrescale_t
       !
       USE constraints_module
       !
@@ -134,6 +136,7 @@ MODULE dynamics_module
       !
       REAL(DP), EXTERNAL :: DNRM2
       !
+      !
       tau_old(:,:) = tau(:,:)
       tau_new(:,:) = 0.D0
       vel(:,:)     = 0.D0
@@ -141,17 +144,8 @@ MODULE dynamics_module
       !
       IF ( istep == 1 ) THEN
          !
-         IF ( ldamped ) THEN
-            !
-            WRITE( UNIT = stdout, &
-                   FMT = '(/,5X,"Damped Dynamics Calculation")' )
-            !
-         ELSE
-            !
-            WRITE( UNIT = stdout, &
+         WRITE( UNIT = stdout, &
                    FMT = '(/,5X,"Molecular Dynamics Calculation")' )
-            !
-         END IF
          !
       END IF
       !
@@ -275,11 +269,6 @@ MODULE dynamics_module
          !
       END IF
       !
-      WRITE( UNIT = stdout, &
-             FMT = '(/,5X,"Entering Dynamics:",T28,"iteration",T37," = ",&
-                    &I5,/,T28,"time",T37," = ",F8.4," pico-seconds")' ) &
-          istep, elapsed_time
-      !
       IF ( lconstrain ) THEN
          !
          IF ( monitor_constr ) THEN
@@ -306,34 +295,16 @@ MODULE dynamics_module
          !
       END IF
       !
-      IF ( ldamped ) THEN
-         !
-         ! ... Damped dynamics ( based on the quick-min algorithm )
-         !
-         vel(:,:) = tau(:,:) - tau_old(:,:)
-         !
-         acc(:,:) = force(:,:) / alat
-         !
-         CALL force_precond( acc, etotold )
-         !
-         acc(:,:) = acc(:,:) / amconv
-         !
-         CALL project_velocity()
-         !
-         ! ... the old positions are updated to reflect the new velocities
-         !
-         tau_old(:,:) = tau(:,:) - vel(:,:)
-         !
-      ELSE
-         !
-         ! ... calculate accelerations in a.u. units / alat
-         !
-         FORALL( na = 1:nat ) acc(:,na) = force(:,na) / mass(na) / alat
-         !
-      END IF
+      WRITE( UNIT = stdout, &
+             FMT = '(/,5X,"Entering Dynamics:",T28,"iteration",T37," = ",&
+                    &I5,/,T28,"time",T37," = ",F8.4," pico-seconds")' ) &
+          istep, elapsed_time
       !
-      ! ... atoms are moved accordingly to the classical equation of motion.
-      ! ... Verlet integration scheme.
+      ! ... calculate accelerations in a.u. units / alat
+      !
+      FORALL( na = 1:nat ) acc(:,na) = force(:,na) / mass(na) / alat
+      !
+      ! ... Verlet integration scheme
       !
       tau_new(:,:) = 2.D0 * tau(:,:) - tau_old(:,:) + dt**2 * acc(:,:)
       !
@@ -342,60 +313,22 @@ MODULE dynamics_module
          ! ... check if the new positions satisfy the constrain equation
          !
          CALL check_constraint( nat, tau_new, tau, &
-                                force, if_pos, ityp, alat, dt, amconv )
-         !
-         WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
-         !
-         DO na = 1, nat
-            !
-            WRITE( stdout, '(5X,"atom ",I3," type ",I2,3X,"force = ",3F14.8)' ) &
-                na, ityp(na), force(:,na)
-            !
-         END DO
-         !
-         WRITE( stdout, '(/5X,"Total force = ",F12.6)') DNRM2( 3*nat, force, 1 )
+                                force, if_pos, ityp, alat, dt**2, amconv )
          !
       END IF
       !
-      ! ... check if convergence for structural minimization is achieved
-      !
-      IF ( ldamped ) THEN
+      IF ( istep == nstep ) THEN
          !
-         conv_ions = ( etotold - etot ) < epse
-         conv_ions = conv_ions .AND. ( MAXVAL( ABS( force ) ) < epsf )
+         conv_ions = .TRUE.
          !
-         IF ( conv_ions ) THEN
-            !
-            WRITE( UNIT = stdout, &
-                   FMT = '(/,5X,"Damped Dynamics: convergence achieved in ",I3, &
-                              & " steps")' ) istep
-            WRITE( UNIT = stdout, &
-                   FMT = '(/,5X,"End of damped dynamics calculation")' )
-            WRITE( UNIT = stdout, &
-                   FMT = '(/,5X,"Final energy = ",F18.10," ryd"/)' ) etot
-            !
-            CALL output_tau( .TRUE. )
-            !
-            RETURN
-            !
-         END IF     
+         WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"End of molecular dynamics calculation")' )
          !
-      ELSE
+         CALL output_tau( .TRUE. )
          !
-         IF ( istep == nstep ) THEN
-            !
-            conv_ions = .TRUE.
-            !
-            WRITE( UNIT = stdout, &
-                   FMT = '(/,5X,"End of molecular dynamics calculation")' )
-            !
-            CALL output_tau( .TRUE. )
-            !
-            CALL print_averages()
-            !
-            RETURN
-            !
-         END IF
+         CALL print_averages()
+         !
+         RETURN
          !   
       END IF
       !
@@ -439,27 +372,192 @@ MODULE dynamics_module
       !
       CALL output_tau( .FALSE. )
       !
-      IF ( .NOT. ldamped ) THEN
-         !
-         WRITE( stdout, '(5X,"kinetic energy (Ekin) = ",F14.8," Ry",/,  &
-                        & 5X,"temperature           = ",F14.8," K ",/,  &
-                        & 5X,"Ekin + Etot (const)   = ",F14.8," Ry")' ) &
-             ekin, temp_new, ( ekin  + etot )
-         !
-         ! ... total linear momentum must be zero if all atoms move
-         !
-         mlt = norm( ml(:) )
-         !
-         IF ( mlt > eps8 .AND. .NOT.( lconstrain .OR. lfixatom ) ) &
-            CALL infomsg ( 'dynamics', 'Total linear momentum <> 0', -1 )
-         !
-         WRITE( stdout, '(/,5X,"Linear momentum :",3(2X,F14.10))' ) ml
-         !
-      END IF
+      WRITE( stdout, '(5X,"kinetic energy (Ekin) = ",F14.8," Ry",/,  &
+                     & 5X,"temperature           = ",F14.8," K ",/,  &
+                     & 5X,"Ekin + Etot (const)   = ",F14.8," Ry")' ) &
+          ekin, temp_new, ( ekin  + etot )
+      !
+      ! ... total linear momentum must be zero if all atoms move
+      !
+      mlt = norm( ml(:) )
+      !
+      IF ( mlt > eps8 .AND. .NOT.( lconstrain .OR. lfixatom ) ) &
+         CALL infomsg ( 'dynamics', 'Total linear momentum <> 0', -1 )
+      !
+      WRITE( stdout, '(/,5X,"Linear momentum :",3(2X,F14.10))' ) ml
       !
       RETURN
       !
-    END SUBROUTINE dynamics
+    END SUBROUTINE verlet
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE proj_verlet()
+      !------------------------------------------------------------------------
+      !
+      ! ... This routine performs one step of structural relaxation using
+      ! ... the projected-Verlet algorithm. 
+      !
+      USE ions_base,     ONLY : nat, nsp, ityp, tau, if_pos
+      USE cell_base,     ONLY : alat
+      USE ener,          ONLY : etot
+      USE force_mod,     ONLY : force
+      USE relax,         ONLY : epse, epsf
+      USE control_flags, ONLY : istep, nstep, conv_ions, lconstrain
+      !
+      USE constraints_module
+      !
+      IMPLICIT NONE
+      !
+      ! ... local variables
+      !
+      REAL(DP) :: etotold
+      INTEGER  :: i, na
+      LOGICAL  :: file_exists
+      !
+      REAL(DP), EXTERNAL :: DNRM2
+      !
+      !
+      tau_old(:,:) = tau(:,:)
+      tau_new(:,:) = 0.D0
+      vel(:,:)     = 0.D0
+      acc(:,:)     = 0.D0
+      !
+      IF ( istep == 1 ) THEN
+         !f
+         WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"Damped Dynamics Calculation")' )
+         !
+      END IF
+      !
+      CALL seqopn( 4, 'md', 'FORMATTED', file_exists )
+      !
+      IF ( file_exists ) THEN
+         !
+         ! ... the file is read
+         !
+         READ( UNIT = 4, FMT = * ) etotold, istep, tau_old(:,:)
+         !
+         CLOSE( UNIT = 4, STATUS = 'KEEP' )
+         !
+      ELSE
+         !
+         CLOSE( UNIT = 4, STATUS = 'DELETE' )
+         !
+         ! ... atoms are refold in the central box
+         !
+         CALL refold_tau()
+         !
+         tau_old(:,:) = tau(:,:)
+         !
+         istep = 0
+         !
+      END IF
+      !
+      istep = istep + 1
+      !
+      IF ( lconstrain ) THEN
+         !
+         IF ( monitor_constr ) THEN
+            !
+            CALL constraint_val( nat, tau, ityp, alat )
+            !
+            WRITE( stdout, '(/,5X,"constraint values :")' )
+            !
+            DO i = 1, nconstr 
+               !
+               WRITE( *, '(5X,I3,2X,F16.10)' ) i, target(i)
+               !
+            END DO
+            !
+         ELSE
+            !
+            ! ... we first remove the component of the force along the 
+            ! ... constraint gradient (this constitutes the initial guess 
+            ! ... for the calculation of the lagrange multipliers)
+            !
+            CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
+            !
+         END IF
+         !
+      END IF
+      !
+      WRITE( stdout, '(/,5X,"Entering Dynamics:",&
+                      & T28,"iteration",T37," = ",I5)' ) istep
+      !
+      ! ... Damped dynamics ( based on the projected-Verlet algorithm )
+      !
+      vel(:,:) = tau(:,:) - tau_old(:,:)
+      !
+      acc(:,:) = force(:,:) / alat
+      !
+      CALL force_precond( istep, acc, etotold )
+      !
+      acc(:,:) = acc(:,:) / amconv
+      !
+      CALL project_velocity()
+      !
+      tau_new(:,:) = tau(:,:) + vel(:,:) + dt**2 * acc(:,:)
+      !
+      IF ( lconstrain .AND..NOT. monitor_constr ) THEN
+         !
+         ! ... check if the new positions satisfy the constrain equation
+         !
+         CALL check_constraint( nat, tau_new, tau, &
+                                force, if_pos, ityp, alat, dt**2, amconv )
+         !
+         WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
+         !
+         DO na = 1, nat
+            !
+            WRITE( stdout, &
+                   '(5X,"atom ",I3," type ",I2,3X,"force = ",3F14.8)' ) &
+                na, ityp(na), force(:,na)
+            !
+         END DO
+         !
+         WRITE( stdout, '(/5X,"Total force = ",F12.6)') DNRM2( 3*nat, force, 1 )
+         !
+      END IF
+      !
+      ! ... check if convergence for structural minimization is achieved
+      !
+      conv_ions = ( etotold - etot ) < epse
+      conv_ions = conv_ions .AND. ( MAXVAL( ABS( force ) ) < epsf )
+      !
+      IF ( conv_ions ) THEN
+         !
+         WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"Damped Dynamics: convergence achieved in ",I3, &
+                           & " steps")' ) istep
+         WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"End of damped dynamics calculation")' )
+         WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"Final energy = ",F18.10," ryd"/)' ) etot
+         !
+         CALL output_tau( .TRUE. )
+         !
+         RETURN
+         !
+      END IF     
+      !
+      ! ... save on file all the needed quantities
+      !
+      CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
+      !
+      WRITE( UNIT = 4, FMT = * ) &
+          etot, istep, tau(:,:)
+      !
+      CLOSE( UNIT = 4, STATUS = 'KEEP' )
+      !
+      ! ... here the tau are shifted
+      !
+      tau(:,:) = tau_new(:,:)
+      !
+      CALL output_tau( .FALSE. )
+      !
+      RETURN
+      !
+    END SUBROUTINE proj_verlet
     !
     !-----------------------------------------------------------------------
     SUBROUTINE refold_tau()
@@ -486,7 +584,7 @@ MODULE dynamics_module
     SUBROUTINE compute_averages( istep )
       !-----------------------------------------------------------------------
       !
-      USE ions_base,          ONLY : nat, tau
+      USE ions_base,          ONLY : nat, tau, fixatom
       USE cell_base,          ONLY : alat, at
       USE constraints_module, ONLY : pbc
       USE io_files,           ONLY : delete_if_present
@@ -496,24 +594,22 @@ MODULE dynamics_module
       INTEGER, INTENT(IN) :: istep
       !
       INTEGER               :: i, j, index
-      REAL(DP)              :: dx, dy, dz, distsq
+      REAL(DP)              :: dx, dy, dz
       REAL(DP)              :: dtau(3)
-      REAL(DP)              :: dmax
-      REAL(DP), ALLOCATABLE :: rmsd(:)
-      REAL(DP), PARAMETER   :: one_sixth = 1.D0 / 6.D0
+      REAL(DP)              :: inv_dmax
+      REAL(DP), ALLOCATABLE :: msd(:)
+      REAL(DP), PARAMETER   :: max_dist(3) = (/ 0.5D0, 0.5D0, 0.5D0 /)
       !
-      ! ... RMSD and diffusion coefficient
+      ! ... MSD and diffusion coefficient
       !
-      ALLOCATE( rmsd( nat ) )
+      ALLOCATE( msd( nat ) )
       !
       IF ( istep == 1 ) THEN
          !
-         diff_coeff(:) = 0.D0
-         !
-         pair_distr(:) = 0.D0
+         radial_distr(:,:) = 0.D0
          !
          CALL delete_if_present( TRIM( tmp_dir ) // &
-                               & TRIM( prefix ) // ".rmsd.dat" )
+                               & TRIM( prefix ) // ".msd.dat" )
          !
       END IF
       !
@@ -523,27 +619,29 @@ MODULE dynamics_module
          dy = ( tau(2,i) - tau_ref(2,i) ) * alat
          dz = ( tau(3,i) - tau_ref(3,i) ) * alat
          !
-         distsq = dx*dx + dy*dy + dz*dz
-         !
-         rmsd(i) = distsq
+         msd(i) = dx*dx + dy*dy + dz*dz
          !
       END DO
       !
-      diff_coeff(:) = diff_coeff(:) + one_sixth * rmsd(:)
+      diff_coeff(:) = msd(:) / ( 6.D0 * DBLE( istep ) * dt )
+      !
+      ! ... conversion from Rydberg atomic units to cm^2/sec
+      !
+      diff_coeff(:) = diff_coeff(:) * bohr_radius_cm**2 / ( 2.D-12 * au_ps )
       !
       OPEN( UNIT = 4, POSITION = 'APPEND', &
-            FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".rmsd.dat" )
+            FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".msd.dat" )
       !
       WRITE( 4, '(2(2X,F16.8))' ) &
-          (istep * dt * 2.D0 * au_ps), SQRT( SUM( rmsd(:) ) / DBLE( nat - 1 ) )
+          (istep * dt * 2.D0 * au_ps), SUM( msd(:) ) / DBLE( nat - fixatom )
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
-      DEALLOCATE( rmsd )
+      DEALLOCATE( msd )
       !
       ! ... radial distribution function g(r)
       !
-      dmax = norm( MATMUL( at(:,:), (/ 0.5D0, 0.5D0, 0.5D0 /) ) ) * alat
+      inv_dmax = 1.D0 / ( norm( MATMUL( at(:,:), max_dist(:) ) ) * alat )
       !
       DO i = 1, nat
          !
@@ -553,9 +651,9 @@ MODULE dynamics_module
             !
             dtau(:) = pbc( ( tau(:,i) - tau(:,j) ) * alat )
             !
-            index = ANINT( norm( dtau(:) ) / dmax * DBLE( hist_len ) )
+            index = ANINT( norm( dtau(:) ) * inv_dmax * DBLE( hist_len ) )
             !
-            pair_distr(index) = pair_distr(index) + 1.D0
+            radial_distr(index,i) = radial_distr(index,i) + 1.D0
             !
          END DO
          !
@@ -569,23 +667,20 @@ MODULE dynamics_module
     SUBROUTINE print_averages()
       !-----------------------------------------------------------------------
       !
-      USE control_flags,      ONLY : nstep
-      USE cell_base,          ONLY : omega, at, alat
-      USE ions_base,          ONLY : nat
+      USE control_flags, ONLY : nstep
+      USE cell_base,     ONLY : omega, at, alat
+      USE ions_base,     ONLY : nat, fixatom
       !
       IMPLICIT NONE
       !
-      INTEGER  :: i, index
-      REAL(DP) :: dist, dmax
+      INTEGER             :: i, index
+      REAL(DP)            :: dist, dmax
+      REAL(DP), PARAMETER :: max_dist(3) = (/ 0.5D0, 0.5D0, 0.5D0 /)
       !
       ! ... diffusion coefficient
       !
       WRITE( UNIT = stdout, &
              FMT = '(/,5X,"diffusion coefficients :")' )
-      !
-      diff_coeff(:) = diff_coeff(:) / ( DBLE( nstep ) * dt )
-      !
-      diff_coeff(:) = diff_coeff(:) * bohr_radius_cm**2 / ( 2.D-12 * au_ps )
       !
       DO i = 1, nat
           !
@@ -596,17 +691,17 @@ MODULE dynamics_module
       END DO
       !
       WRITE( UNIT = stdout, FMT = '(/,5X,"< D > = ",F16.8," cm^2/s")' ) &
-          SUM( diff_coeff(:) ) / DBLE( nat - 1 )
+          SUM( diff_coeff(:) ) / DBLE( nat - fixatom )
       !
       ! ... radial distribution function g(r)
       !
-      dmax = norm( MATMUL( at(:,:), (/ 0.5D0, 0.5D0, 0.5D0 /) ) ) * alat
+      dmax = norm( MATMUL( at(:,:), max_dist(:) ) ) * alat
       !
-      pair_distr(:) = pair_distr(:) * omega / DBLE( nat*nat ) / fpi
+      radial_distr(:,:) = radial_distr(:,:) * omega / DBLE( nat ) / fpi
       !
-      pair_distr(:) = pair_distr(:) / ( dmax / DBLE( hist_len ) )
+      radial_distr(:,:) = radial_distr(:,:) / ( dmax / DBLE( hist_len ) )
       !
-      pair_distr(:) = pair_distr(:) / DBLE( nstep )
+      radial_distr(:,:) = radial_distr(:,:) / DBLE( nstep )
       !
       OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".rdf.dat" )
       !
@@ -614,7 +709,12 @@ MODULE dynamics_module
          !
          dist = DBLE( index ) / DBLE( hist_len ) * dmax
          !
-         WRITE( 4, '(2(2X,F16.8))' ) dist, pair_distr(index) / dist**2
+         IF ( dist > dmax / SQRT( 3.0 ) ) CYCLE
+         !
+         radial_distr(index,:) = radial_distr(index,:) / dist**2
+         !
+         WRITE( 4, '(2(2X,F16.8))' ) &
+             dist, SUM( radial_distr(index,:) ) / DBLE( nat )
          !
       END DO
       !
@@ -624,10 +724,8 @@ MODULE dynamics_module
       !
     END SUBROUTINE print_averages
     !
-    ! ... private methods
-    !
     !-----------------------------------------------------------------------
-    SUBROUTINE force_precond( force, etotold )
+    SUBROUTINE force_precond( istep, force, etotold )
       !-----------------------------------------------------------------------
       !
       ! ... this routine computes an estimate of H^-1 by using the BFGS
@@ -641,6 +739,7 @@ MODULE dynamics_module
       !
       IMPLICIT NONE
       !
+      INTEGER,  INTENT(IN)    :: istep
       REAL(DP), INTENT(INOUT) :: force(:,:)
       REAL(DP), INTENT(IN)    :: etotold
       !
@@ -655,6 +754,8 @@ MODULE dynamics_module
       INTEGER               :: dim
       CHARACTER(LEN=256)    :: bfgs_file
       LOGICAL               :: file_exists
+      !
+      INTEGER,  PARAMETER   :: nrefresh = 25
       REAL(DP), PARAMETER   :: max_step = 0.8D0  ! in bohr
       !
       !
@@ -683,6 +784,12 @@ MODULE dynamics_module
          READ( iunbfgs, * ) inv_hess
          !
          CLOSE( UNIT = iunbfgs )
+         !
+         ! ... the approximate inverse hessian is reset to one every nrefresh
+         ! ... iterations: this is one to clean-up the memory of the starting
+         ! ... configuration
+         !
+         IF ( MOD( nrefresh, istep ) == 0 ) inv_hess(:,:) = identity( dim )
          !
          IF ( etot < etotold ) THEN
             !

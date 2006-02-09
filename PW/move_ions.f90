@@ -29,7 +29,7 @@ SUBROUTINE move_ions()
   USE symme,                  ONLY : s, ftau, nsym, irt
   USE ener,                   ONLY : etot
   USE force_mod,              ONLY : force
-  USE control_flags,          ONLY : upscale, lbfgs, lmd, &
+  USE control_flags,          ONLY : upscale, lbfgs, lmd, ldamped, &
                                      lconstrain, lcoarsegrained, conv_ions, &
                                      history, alpha0, beta0, tr2, istep
   USE relax,                  ONLY : epse, epsf, starting_scf_threshold
@@ -43,7 +43,7 @@ SUBROUTINE move_ions()
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
   USE dynamics_module,        ONLY : diff_coeff
-  USE dynamics_module,        ONLY : dynamics, compute_averages
+  USE dynamics_module,        ONLY : verlet, proj_verlet, compute_averages
   !
   IMPLICIT NONE
   !
@@ -190,7 +190,15 @@ SUBROUTINE move_ions()
            !
            IF ( lcoarsegrained ) CALL set_target()
            !
-           CALL dynamics()
+           IF ( ldamped ) THEN
+              !
+              CALL proj_verlet() 
+              !
+           ELSE
+              !
+              CALL verlet()
+              !
+           END IF
            !
            CALL compute_averages( istep )
            !
