@@ -1,0 +1,386 @@
+
+     Program PWSCF     v.3.1    starts ...
+     Today is  8Feb2006 at 21:36:36 
+
+     !!! EXPERIMENTAL VERSION WITH EXX STUFF  !!!
+     !!! DO NOT USE IT FOR ANY PRODUCTION RUN !!!
+
+     Ultrasoft (Vanderbilt) Pseudopotentials
+
+     Current dimensions of program pwscf are:
+
+     ntypx = 10   npk = 40000  lmax =  3
+     nchix =  6  ndmx =  2000  nbrx = 14  nqfx =  8
+
+     !!! XC functional enforced from input :
+     Exchange-correlation      = PBE0 (6484)
+     !!! Any further DFT definition will be discarded
+     !!! Please, verify this is what you really want !
+
+     gamma-point specific algorithms are used
+
+     warning: symmetry operation #  2 not allowed.   fractional translation:
+      -0.0314954 -0.0629909  0.0000000  in crystal coordinates
+     warning: symmetry operation #  3 not allowed.   fractional translation:
+      -0.0314954  0.0000000 -0.0944863  in crystal coordinates
+     warning: symmetry operation #  4 not allowed.   fractional translation:
+       0.0000000 -0.0629909 -0.0944863  in crystal coordinates
+     warning: symmetry operation #  5 not allowed.   fractional translation:
+       0.0157477 -0.0157477 -0.0944863  in crystal coordinates
+     warning: symmetry operation #  6 not allowed.   fractional translation:
+      -0.0472432 -0.0472432 -0.0944863  in crystal coordinates
+     warning: symmetry operation #  7 not allowed.   fractional translation:
+       0.0157477 -0.0472432  0.0000000  in crystal coordinates
+     warning: symmetry operation #  8 not allowed.   fractional translation:
+      -0.0472432 -0.0157477  0.0000000  in crystal coordinates
+     warning: symmetry operation #  9 not allowed.   fractional translation:
+       0.0314954 -0.0629909 -0.0314954  in crystal coordinates
+     warning: symmetry operation # 10 not allowed.   fractional translation:
+      -0.0629909 -0.0629909 -0.0629909  in crystal coordinates
+     warning: symmetry operation # 11 not allowed.   fractional translation:
+       0.0314954  0.0000000 -0.0629909  in crystal coordinates
+     warning: symmetry operation # 12 not allowed.   fractional translation:
+      -0.0629909  0.0000000 -0.0314954  in crystal coordinates
+     warning: symmetry operation # 13 not allowed.   fractional translation:
+      -0.0314954  0.0157477 -0.0157477  in crystal coordinates
+     warning: symmetry operation # 14 not allowed.   fractional translation:
+      -0.0314954 -0.0787386 -0.0787386  in crystal coordinates
+     warning: symmetry operation # 15 not allowed.   fractional translation:
+       0.0000000  0.0157477 -0.0787386  in crystal coordinates
+     warning: symmetry operation # 16 not allowed.   fractional translation:
+       0.0000000 -0.0787386 -0.0157477  in crystal coordinates
+     warning: symmetry operation # 17 not allowed.   fractional translation:
+       0.0157477  0.0157477 -0.0314954  in crystal coordinates
+     warning: symmetry operation # 18 not allowed.   fractional translation:
+      -0.0472432  0.0157477 -0.0629909  in crystal coordinates
+     warning: symmetry operation # 19 not allowed.   fractional translation:
+       0.0157477 -0.0787386 -0.0629909  in crystal coordinates
+     warning: symmetry operation # 20 not allowed.   fractional translation:
+      -0.0472432 -0.0787386 -0.0314954  in crystal coordinates
+     warning: symmetry operation # 21 not allowed.   fractional translation:
+       0.0314954 -0.0157477 -0.0157477  in crystal coordinates
+     warning: symmetry operation # 22 not allowed.   fractional translation:
+       0.0314954 -0.0472432 -0.0787386  in crystal coordinates
+     warning: symmetry operation # 23 not allowed.   fractional translation:
+      -0.0629909 -0.0472432 -0.0157477  in crystal coordinates
+     warning: symmetry operation # 24 not allowed.   fractional translation:
+      -0.0629909 -0.0157477 -0.0787386  in crystal coordinates
+     warning: symmetry operation # 25 not allowed.   fractional translation:
+      -0.0314954 -0.0629909 -0.0944863  in crystal coordinates
+     warning: symmetry operation # 26 not allowed.   fractional translation:
+       0.0000000  0.0000000 -0.0944863  in crystal coordinates
+     warning: symmetry operation # 27 not allowed.   fractional translation:
+       0.0000000 -0.0629909  0.0000000  in crystal coordinates
+     warning: symmetry operation # 28 not allowed.   fractional translation:
+      -0.0314954  0.0000000  0.0000000  in crystal coordinates
+     warning: symmetry operation # 29 not allowed.   fractional translation:
+      -0.0472432 -0.0472432  0.0000000  in crystal coordinates
+     warning: symmetry operation # 30 not allowed.   fractional translation:
+       0.0157477 -0.0157477  0.0000000  in crystal coordinates
+     warning: symmetry operation # 31 not allowed.   fractional translation:
+      -0.0472432 -0.0157477 -0.0944863  in crystal coordinates
+     warning: symmetry operation # 32 not allowed.   fractional translation:
+       0.0157477 -0.0472432 -0.0944863  in crystal coordinates
+     warning: symmetry operation # 33 not allowed.   fractional translation:
+      -0.0629909  0.0000000 -0.0629909  in crystal coordinates
+     warning: symmetry operation # 34 not allowed.   fractional translation:
+       0.0314954  0.0000000 -0.0314954  in crystal coordinates
+     warning: symmetry operation # 35 not allowed.   fractional translation:
+      -0.0629909 -0.0629909 -0.0314954  in crystal coordinates
+     warning: symmetry operation # 36 not allowed.   fractional translation:
+       0.0314954 -0.0629909 -0.0629909  in crystal coordinates
+     warning: symmetry operation # 37 not allowed.   fractional translation:
+       0.0000000 -0.0787386 -0.0787386  in crystal coordinates
+     warning: symmetry operation # 38 not allowed.   fractional translation:
+       0.0000000  0.0157477 -0.0157477  in crystal coordinates
+     warning: symmetry operation # 39 not allowed.   fractional translation:
+      -0.0314954 -0.0787386 -0.0157477  in crystal coordinates
+     warning: symmetry operation # 40 not allowed.   fractional translation:
+      -0.0314954  0.0157477 -0.0787386  in crystal coordinates
+     warning: symmetry operation # 41 not allowed.   fractional translation:
+      -0.0472432 -0.0787386 -0.0629909  in crystal coordinates
+     warning: symmetry operation # 42 not allowed.   fractional translation:
+       0.0157477 -0.0787386 -0.0314954  in crystal coordinates
+     warning: symmetry operation # 43 not allowed.   fractional translation:
+      -0.0472432  0.0157477 -0.0314954  in crystal coordinates
+     warning: symmetry operation # 44 not allowed.   fractional translation:
+       0.0157477  0.0157477 -0.0629909  in crystal coordinates
+     warning: symmetry operation # 45 not allowed.   fractional translation:
+      -0.0629909 -0.0472432 -0.0787386  in crystal coordinates
+     warning: symmetry operation # 46 not allowed.   fractional translation:
+      -0.0629909 -0.0157477 -0.0157477  in crystal coordinates
+     warning: symmetry operation # 47 not allowed.   fractional translation:
+       0.0314954 -0.0157477 -0.0787386  in crystal coordinates
+     warning: symmetry operation # 48 not allowed.   fractional translation:
+       0.0314954 -0.0472432 -0.0157477  in crystal coordinates
+ EXX : q-grid dimensions are    1   1   1
+ EXX : q->0 dealt with 8/7 -1/7 trick
+  EXX GRID CHECK SUCCESSFUL 
+  EXX GRID CHECK SUCCESSFUL 
+
+
+     bravais-lattice index     =            1
+     lattice parameter (a_0)   =      12.0000  a.u.
+     unit-cell volume          =    1728.0000 (a.u.)^3
+     number of atoms/cell      =            1
+     number of atomic types    =            1
+     kinetic-energy cutoff     =      80.0000  Ry
+     charge density cutoff     =     320.0000  Ry
+     convergence threshold     =      5.0E-04
+     beta                      =       0.7000
+     number of iterations used =            8  plain     mixing
+     Exchange-correlation      = PBE0 (6484)
+     celldm(1)=  12.000000  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = (  1.000000  0.000000  0.000000 )  
+               a(2) = (  0.000000  1.000000  0.000000 )  
+               a(3) = (  0.000000  0.000000  1.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = (  1.000000  0.000000  0.000000 )  
+               b(2) = (  0.000000  1.000000  0.000000 )  
+               b(3) = (  0.000000  0.000000  1.000000 )  
+
+
+     PSEUDO 1 is            zval =  6.0   lmax= 2   lloc= 0
+     (in numerical form:  1095 grid points, xmin = -7.00, dx = 0.0125)
+
+     atomic species   valence    mass     pseudopotential
+        O              6.00    16.00000       ( 1.00)
+
+     Starting magnetic structure 
+     atomic species   magnetization
+        O            0.200
+
+     No symmetry!
+
+   Cartesian axes
+
+     site n.     atom                  positions (a_0 units)
+         1           O   tau(  1) = (   0.0157477   0.0314954   0.0472432  )
+
+     number of k points=    2
+                       cart. coord. in units 2pi/a_0
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   1.0000000
+        k(    2) = (   0.0000000   0.0000000   0.0000000), wk =   1.0000000
+
+     G cutoff = 1167.2200  (  83519 G-vectors)     FFT grid: ( 72, 72, 72)
+
+     nbndx  =    16  nbnd   =     4  natomwfc =     4  npwx   =   10408
+     nelec  =   6.00  nkb   =     8  ngl    =     975
+     nelup  =   4.00 neldw  =   2.00
+
+     Check: negative/imaginary core charge=   -0.000167    0.000000
+
+     Initial potential from superposition of free atoms
+     Check: negative starting charge=(component1):   -0.000329
+     Check: negative starting charge=(component2):   -0.000219
+
+     negative rho (up, down):  0.329E-03 0.219E-03
+     Starting wfc are atomic
+
+     total cpu time spent up to now is      3.49 secs
+
+     Self-consistent Calculation
+
+     iteration #  1     ecut=    80.00 ryd     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  1.0
+
+     negative rho (up, down):  0.532E-04 0.426E-04
+
+     total cpu time spent up to now is      6.95 secs
+
+ ------ SPIN UP ------------
+
+
+          k = 0.0000 0.0000 0.0000     band energies (ev):
+
+   -24.3443  -9.3515  -9.3513  -9.3500
+
+ ------ SPIN DOWN ----------
+
+
+          k = 0.0000 0.0000 0.0000     band energies (ev):
+
+   -22.3564  -7.5363  -7.5324  -7.5291
+
+!    total energy              =   -33.74873859 ryd
+     estimated scf accuracy    <     0.08079052 ryd
+
+     band energy sum           =    -6.04814060 ryd
+     one-electron contribution =   -35.08684833 ryd
+     hartree contribution      =    18.83758940 ryd
+     xc contribution           =    -8.92021300 ryd
+     ewald contribution        =    -8.51189244 ryd
+     Fock energy 1             =     0.00000000 ryd
+     Fock energy 2             =     0.00000000 ryd
+     Half Fock energy 2        =     0.00000000 ryd
+
+     total magnetization       =     2.00 Bohr mag/cell
+     absolute magnetization    =     2.01 Bohr mag/cell
+
+     iteration #  2     ecut=    80.00 ryd     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.35E-03,  avg # of iterations =  1.0
+
+     negative rho (up, down):  0.191E-06 0.417E-06
+
+     total cpu time spent up to now is     10.30 secs
+
+ ------ SPIN UP ------------
+
+
+          k = 0.0000 0.0000 0.0000     band energies (ev):
+
+   -24.9931 -10.4693 -10.4691  -9.0029
+
+ ------ SPIN DOWN ----------
+
+
+          k = 0.0000 0.0000 0.0000     band energies (ev):
+
+   -21.9272  -7.5044  -6.9551  -6.9483
+
+!    total energy              =   -33.76095363 ryd
+     estimated scf accuracy    <     0.00711492 ryd
+
+     band energy sum           =    -6.20073517 ryd
+     one-electron contribution =   -35.20872328 ryd
+     hartree contribution      =    18.96970052 ryd
+     xc contribution           =    -9.01197329 ryd
+     ewald contribution        =    -8.51189244 ryd
+     Fock energy 1             =     0.00000000 ryd
+     Fock energy 2             =     0.00000000 ryd
+     Half Fock energy 2        =     0.00000000 ryd
+
+     total magnetization       =     2.00 Bohr mag/cell
+     absolute magnetization    =     2.02 Bohr mag/cell
+
+     iteration #  3     ecut=    80.00 ryd     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.19E-04,  avg # of iterations =  2.0
+
+     total cpu time spent up to now is     13.60 secs
+
+     End of self-consistent calculation
+
+ ------ SPIN UP ------------
+
+
+          k = 0.0000 0.0000 0.0000 ( 10408 PWs)   bands (ev):
+
+   -24.9316 -10.6043 -10.6038  -8.5502
+
+ ------ SPIN DOWN ----------
+
+
+          k = 0.0000 0.0000 0.0000 ( 10408 PWs)   bands (ev):
+
+   -21.2773  -7.2154  -6.2179  -6.2099
+   1.59576912160573        1.59576912160573     
+EXX divergence (   1)=    -700.4071      0.1250
+     exx_div      :     0.02s CPU
+  ! EXXALFA SET TO   0.250000000000000     
+  NOW GO BACK TO REFINE HYBRID CALCULATION
+  -3.15985809532108     
+
+     Self-consistent Calculation
+
+     iteration #  1     ecut=    80.00 ryd     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.19E-04,  avg # of iterations =  2.0
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization with overlap
+     ethr =  5.94E-05,  avg # of iterations =  1.0
+
+     total cpu time spent up to now is     37.58 secs
+
+     End of self-consistent calculation
+
+ ------ SPIN UP ------------
+
+
+          k = 0.0000 0.0000 0.0000 ( 10408 PWs)   bands (ev):
+
+   -28.8091 -13.0295 -13.0289 -10.8007
+
+ ------ SPIN DOWN ----------
+
+
+          k = 0.0000 0.0000 0.0000 ( 10408 PWs)   bands (ev):
+
+   -23.7648  -9.2971  -4.2355  -4.2299
+  -3.15985809532108       -3.16932840171705       -3.17917881100327     
+     dexx                      =     0.00019005 ryd
+
+!    total energy              =   -33.20114402 ryd
+     estimated scf accuracy    <     0.00034305 ryd
+
+     band energy sum           =    -7.25647549 ryd
+     one-electron contribution =   -38.41841488 ryd
+     hartree contribution      =    19.03268013 ryd
+     xc contribution           =    -6.88325583 ryd
+     ewald contribution        =    -8.51189244 ryd
+     Fock energy 1             =    -3.16932840 ryd
+     Fock energy 2             =    -3.17917881 ryd
+     Half Fock energy 2        =    -1.58958941 ryd
+
+     total magnetization       =     2.00 Bohr mag/cell
+     absolute magnetization    =     2.03 Bohr mag/cell
+
+     convergence has been achieved
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =     0.00000000    0.00000000    0.00000000
+
+     Total force =     0.000000     Total SCF correction =     0.000253
+
+     Writing output data file o.save-new
+ 
+     PWSCF        :    46.95s CPU time
+
+     init_run     :     3.47s CPU
+     electrons    :    36.50s CPU
+     forces       :     2.32s CPU
+ 
+     electrons    :    36.50s CPU
+     c_bands      :    17.21s CPU (       5 calls,   3.442 s avg)
+     sum_band     :     0.93s CPU (       5 calls,   0.186 s avg)
+     v_of_rho     :    12.56s CPU (       6 calls,   2.093 s avg)
+     mix_rho      :     0.08s CPU (       5 calls,   0.015 s avg)
+ 
+     c_bands      :    17.21s CPU (       5 calls,   3.442 s avg)
+     init_us_2    :     0.19s CPU (      24 calls,   0.008 s avg)
+     cegterg      :    17.07s CPU (      10 calls,   1.707 s avg)
+ 
+     sum_band     :     0.93s CPU (       5 calls,   0.186 s avg)
+ 
+     cegterg      :    17.07s CPU (      10 calls,   1.707 s avg)
+     h_psi        :    17.06s CPU (      26 calls,   0.656 s avg)
+     g_psi        :     0.03s CPU (      14 calls,   0.002 s avg)
+     overlap      :     0.06s CPU (      14 calls,   0.004 s avg)
+     cdiaghg      :     0.01s CPU (      24 calls,   0.000 s avg)
+     update       :     0.05s CPU (      14 calls,   0.004 s avg)
+     last         :     0.03s CPU (      10 calls,   0.003 s avg)
+ 
+     h_psi        :    17.06s CPU (      26 calls,   0.656 s avg)
+     init         :     0.03s CPU (      26 calls,   0.001 s avg)
+     add_vuspsi   :     0.07s CPU (      26 calls,   0.003 s avg)
+ 
+     General routines
+     cft3         :     9.09s CPU (     149 calls,   0.061 s avg)
+     cft3s        :    17.07s CPU (     390 calls,   0.044 s avg)
+     davcio       :     1.08s CPU (     150 calls,   0.007 s avg)
+ 
+     EXX routines
+     exx_grid     :     0.00s CPU
+     exxinit      :     0.96s CPU (       2 calls,   0.482 s avg)
+     vexx         :    13.55s CPU (      10 calls,   1.355 s avg)
+     exxen2       :     5.27s CPU (       3 calls,   1.757 s avg)
