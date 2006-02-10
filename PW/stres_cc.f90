@@ -49,7 +49,7 @@ subroutine stres_cc (sigmaxcc)
   allocate ( vxc(nrxx,nspin) )
   call v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
        nl, ngm, g, nspin, alat, omega, etxc, vtxc, vxc)
-  if (nspin.eq.1) then
+  if (nspin.eq.1.or.nspin.eq.4) then
      do ir = 1, nrxx
         psic (ir) = vxc (ir, 1)
      enddo

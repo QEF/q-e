@@ -1,3 +1,4 @@
+
 !
 ! Copyright (C) 2001 PWSCF group
 ! This file is distributed under the terms of the
@@ -13,14 +14,16 @@ subroutine stres_gradcorr (rho, rho_core, nspin, nr1, nr2, nr3, &
   !--------------------------------------------------------------------
 #include "f_defs.h"
   USE kinds
-  use funct, ONLY: gcxc, gcx_spin, gcc_spin, gcc_spin_more, dft_is_gradient, get_igcc
+  USE noncollin_module, ONLY : noncolin
+  use funct, ONLY: gcxc, gcx_spin, gcc_spin, gcc_spin_more, &
+                   dft_is_gradient, get_igcc
   implicit none
 
   integer :: nspin, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, &
        nl (ngm)
   real(DP) :: rho (nrxx, nspin), rho_core (nrxx), g (3, ngm), &
        alat, omega, sigmaxc (3, 3)
-  integer :: k, l, m, ipol, is
+  integer :: k, l, m, ipol, is, nspin0
   real(DP) , allocatable :: grho (:,:,:)
   real(DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10, e2 = 2.d0
   real(DP) :: grh2, grho2 (2), sx, sc, v1x, v2x, v1c, v2c, fac, &
@@ -30,17 +33,21 @@ subroutine stres_gradcorr (rho, rho_core, nspin, nr1, nr2, nr3, &
   logical :: igcc_is_lyp
 
   if ( .not. dft_is_gradient() ) return
+  if (noncolin) call errore('stres_gradcorr', &
+                    'noncollinear stress + GGA not implemented',1)
 
   igcc_is_lyp = (get_igcc() == 3)
 
   sigma_gradcorr(:,:) = 0.d0
 
   allocate (grho( 3, nrxx, nspin))    
-  fac = 1.d0 / DBLE (nspin)
+  nspin0=nspin
+  if (nspin==4) nspin0=1
+  fac = 1.d0 / DBLE (nspin0)
   !
   !    calculate the gradient of rho+rhocore in real space
   !
-  do is = 1, nspin
+  do is = 1, nspin0
      call DAXPY (nrxx, fac, rho_core, 1, rho (1, is), 1)
      call gradient (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, rho (1, is), &
           ngm, g, nl, alat, grho (1, 1, is) )

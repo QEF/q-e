@@ -245,6 +245,8 @@ SUBROUTINE v_xc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                  !
                  v(ir,ipol) = e2 * vs * rho(ir,ipol) / amag
                  !
+                 vtxc = vtxc + v(ir,ipol) * rho(ir,ipol)
+                 !
               END DO
               !
            END IF

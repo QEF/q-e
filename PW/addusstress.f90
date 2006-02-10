@@ -71,9 +71,15 @@ subroutine addusstres (sigmanlc)
   ! fourier transform of the total effective potential
   !
   do is = 1, nspin
-     do ir = 1, nrxx
-        vg (ir) = vltot (ir) + vr (ir, is)
-     enddo
+     if ( nspin == 4 .and. is /= 1 ) then
+        !
+        vg(:) = vr(:,is)
+        !
+     ELSE
+        !
+        vg(:) = vltot(:) + vr(:,is)
+        !
+     END IF
      call cft3 (vg, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
      do ig = 1, ngm
         aux (ig, is) = vg (nl (ig) )

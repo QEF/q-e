@@ -19,12 +19,13 @@ subroutine stres_knl (sigmanlc, sigmakin)
   USE io_files,             ONLY: iunwfc, nwordwfc, iunigk
   USE symme,                ONLY: s, nsym
   USE wvfct,                ONLY: npw, npwx, nbnd, gamma_only, igk, wg
-  USE wavefunctions_module, ONLY: evc
+  USE noncollin_module,     ONLY: noncolin, npol
+  USE wavefunctions_module, ONLY: evc, evc_nc
   implicit none
   real(DP) :: sigmanlc (3, 3), sigmakin (3, 3)
   real(DP), allocatable :: gk (:,:), kfac (:)
   real(DP) :: twobysqrtpi, gk2, arg
-  integer :: kpoint, l, m, i, ibnd
+  integer :: kpoint, l, m, i, ibnd, is
 
   allocate (gk(  3, npwx))    
   allocate (kfac(   npwx))    
@@ -39,7 +40,11 @@ subroutine stres_knl (sigmanlc, sigmakin)
   do kpoint = 1, nks
      if (nks.gt.1) then
         read (iunigk) npw, igk
-        call davcio (evc, nwordwfc, iunwfc, kpoint, - 1)
+        if (noncolin) then
+           call davcio (evc_nc, nwordwfc, iunwfc, kpoint, - 1)
+        else
+           call davcio (evc, nwordwfc, iunwfc, kpoint, - 1)
+        endif
      endif
      do i = 1, npw
         gk (1, i) = (xk (1, kpoint) + g (1, igk (i) ) ) * tpiba
@@ -58,9 +63,17 @@ subroutine stres_knl (sigmanlc, sigmakin)
         do m = 1, l
            do ibnd = 1, nbnd
               do i = 1, npw
-                 sigmakin (l, m) = sigmakin (l, m) + wg (ibnd, kpoint) * &
-                      gk (l, i) * gk (m, i) * kfac (i) * &
-                       DBLE (CONJG(evc (i, ibnd) ) * evc (i, ibnd) )
+                 if (noncolin) then
+                    do is=1,npol
+                       sigmakin (l, m) = sigmakin (l, m) + wg (ibnd, kpoint) * &
+                        gk (l, i) * gk (m, i) * kfac (i) * &
+                          DBLE (CONJG(evc_nc(i,is,ibnd))*evc_nc(i,is,ibnd))
+                    end do
+                 else
+                    sigmakin (l, m) = sigmakin (l, m) + wg (ibnd, kpoint) * &
+                        gk (l, i) * gk (m, i) * kfac (i) * &
+                          DBLE (CONJG(evc (i, ibnd) ) * evc (i, ibnd) )
+                 end if
               enddo
            enddo
         enddo

@@ -33,10 +33,6 @@ subroutine stress
        sigmabare (3, 3), sigmah (3, 3)
   integer :: l, m
   !
-  if (nspin > 2) then
-     call infomsg ('stress','non-colinear case not implemented', -1)
-     return
-  end if
   call start_clock ('stress')
   WRITE( stdout, '(//5x,"entering subroutine stress ..."/)')
 

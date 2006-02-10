@@ -25,11 +25,13 @@ subroutine stres_har (sigmahar)
   !
   real(DP) :: sigmahar (3, 3), shart, g2
   real(DP), parameter :: eps = 1.d-8
-  integer :: is, ig, igl0, l, m
+  integer :: is, ig, igl0, l, m, nspin0
 
   sigmahar(:,:) = 0.d0
   psic (:) = (0.d0, 0.d0)
-  do is = 1, nspin
+  nspin0=nspin
+  if (nspin==4) nspin0=1
+  do is = 1, nspin0
      call DAXPY (nrxx, 1.d0, rho (1, is), 1, psic, 2)
   enddo
 

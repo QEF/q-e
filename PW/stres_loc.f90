@@ -30,7 +30,7 @@ subroutine stres_loc (sigmaloc)
   real(DP) :: sigmaloc (3, 3)
   real(DP) , allocatable :: dvloc(:)
   real(DP) :: evloc, fact
-  integer :: ng, nt, l, m, is
+  integer :: ng, nt, l, m, is, nspin0
   ! counter on g vectors
   ! counter on atomic type
   ! counter on angular momentum
@@ -39,7 +39,9 @@ subroutine stres_loc (sigmaloc)
   allocate(dvloc(ngl))
   sigmaloc(:,:) = 0.d0
   psic(:)=(0.d0,0.d0)
-  do is = 1, nspin
+  nspin0=nspin
+  if (nspin==4) nspin0=1
+  do is = 1, nspin0
      call DAXPY (nrxx, 1.d0, rho (1, is), 1, psic, 2)
   enddo
 
