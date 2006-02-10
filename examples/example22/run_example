@@ -88,7 +88,8 @@ Pt
     calculation = 'scf'
     restart_mode='from_scratch',
     prefix='Pt',
-    tprnfor = .true.
+    tprnfor = .true.,
+    tstress =.true.,
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
@@ -173,6 +174,7 @@ cat > pt.tet.in << EOF
     calculation='scf',
     restart_mode='from_scratch',
     pseudo_dir = '$PSEUDO_DIR/',
+    tstress=.true.,
     outdir='$TMP_DIR/',
     prefix='ptt',
  /
