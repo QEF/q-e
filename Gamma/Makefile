@@ -273,6 +273,7 @@ MODULES = \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
 ../Modules/ptoolkit.o \
+../Modules/random_numbers.o \
 ../Modules/readpseudo.o \
 ../Modules/recvec.o \
 ../Modules/shmem_include.o \
