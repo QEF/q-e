@@ -293,7 +293,7 @@ subroutine write_dipol(x0,dipol_el,quadrupol_el,tau,nat,alat,zv, &
   WRITE( stdout, '( 5x,"Ionic",3f8.4," au,  ", 3f8.4," Debye")') &
        ( dipol_ion(ipol),ipol=1,3), (dipol_ion(ipol)*debye,ipol=1,3)
   WRITE( stdout, '( 5x,"Total",3f8.4," au,  ", 3f8.4," Debye")') &
-       (-dipol(ipol),ipol=1,3),     (-dipol(ipol)*debye,   ipol=1,3)
+       ( dipol(ipol),ipol=1,3),     ( dipol(ipol)*debye,   ipol=1,3)
   !
   ! print the Makov-Payne correction
   !
