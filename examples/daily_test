@@ -90,8 +90,9 @@ errors=`grep -c -e Error make.log`
 if test  "$errors" = "0" ; then
    echo "make all: success" >> $OUT
 else
-   echo "make all: failure" >> $OUT
-   cat make.log >>  $OUT
+   echo "make all: failure! Last 50 lines from 'make all':" >> $OUT
+   echo "-------------------------------------------------" >> $OUT
+   tail -50 make.log >>  $OUT
    mail -s "RESULTS OF DAILY QE TEST" $MAILTO < $OUT
    exit $errors
 fi
@@ -141,6 +142,6 @@ do
 done
 
 cd $PWROOT/examples
-mv environment_variables environment_variables.orig
+mv environment_variables.orig environment_variables
 
 mail -s "RESULTS OF DAILY QE TEST" $MAILTO < $OUT
