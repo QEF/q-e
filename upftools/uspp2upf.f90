@@ -36,7 +36,7 @@ program uspp2upf
   close (unit=2)
 
   stop
-20write (6,'("uspp2upf: error reading pseudopotential file name")')
+20 write (6,'("uspp2upf: error reading pseudopotential file name")')
    stop
 end program uspp2upf
 
