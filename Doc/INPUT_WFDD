@@ -1,0 +1,64 @@
+!=========================================================================!
+!		            README.WANNIER				  !
+!					Author: Manu Sharma	          !
+!					msharma@alumni.Princeton.EDU	  !
+!=========================================================================!
+!                       INPUT FORMAT FOR WFDD.X                           !
+!=========================================================================!
+! This code was originally written by Yudong Wu and later modified by     !
+! Manu Sharma. This is intended to be a post-processing code and the      !
+! search for the appropriate Unitary transformation can be done using not !
+! only damped-dynamics, but  also Steepest descent and conjugate gradient !
+! algorithms. The advantage                                               !
+! is that SD/CG can serve as benchmarks to make sure that the DD is       !
+! converging to the correct values (in deciding the parameters Q and DT   !
+! for the DD). The disadvantage is that SD/CG schemes are slower than     !
+! the DD. It is useful however, before using DD in production runs, to    !
+! make sure that the parameters (Q and DT) give the same answer as the SD !
+! or CG. This code requires as input, the overlap matrix. This can be     !
+! calculated from the CP code by setting CALWF to 2 in the &WANNIER       !
+! namelist (The defaukt value is 3, for Wannier dynamics. This option     !
+! outputs the overlap matrix to unit 38, and wfdd.x reads it from the same!
+! file.  								  !
+! In addition to that, you need an input file of the following form.      !
+!									  !
+!									  !
+! 1       0.3    0.5    100  10       CGORDD  WFDT MAXWFDT  NIT  NSD      !    
+! 1500 5.0  0.3 .true.  100  1.0d-8   Q   DT   FRIC  ADAPT  NSTEPS   TOLW !
+! .true.                              RESTART				  !
+!									  !
+! CGORDD : Whether to do SD/CG optimization of damped dynamics            !
+!          Can take the values 1 or 2. 1 means SD/CG and 2 means DD       !
+! WFDT   : Used when GCORDD=1. This is the step length you take in the    !
+!          direction of steepest descent.                                 !
+! MAXWFDT: Used when CGORDD=1. This is the maximum step length you take   !
+!          in the direction if steepest descent. if WFDT or MAXWFDT are   !
+!          large, the calculation will not converge. The code uses the    !
+!          parabolic approximation to estimate the appropriate step length!
+!          and if it is less than WFDT, then WFDT is taken as the step    !
+!          length and if more than MAXWFDT then MAXWFDT is taken as the   !
+!          Step length.                                                   !
+! NIT    : Used when CGORDD=1. This is the maxumum number of iterations   !
+!          to do.							  !
+! NSD    : Used whdn CGORDD=1. This is the number of Steepest descent     !
+!          steps to do. If NSD = NIT then it is a pure SD optimization    !
+!          If NSD < NIT, then the code first does NSD Steepest descent    !
+!          steps and then NIT-NSD Conjugate gradient steps.               !
+! RESTART: Use this option to continue a SD/CG/DD optimization. This      !
+!          option reads the Unitray transform from fort.39, written at the!
+!          end of the last run and continues from there.                  !
+!									  !
+! The other  are used for the Damped dynamics and are  defined            !
+! in the INPUT_CP file in the Doc/ directory under NAMELIST &WANNIER.     !
+!								  	  !
+! The program may be compiled by make wfdd.x and then run as follows      !
+!       ./wfdd.x < [input-filename] > [output-filename] &                 !
+! The output file will contain the inverse spread (which is the functional!
+! that is actually maximized in the code rather than minimizing the       !
+! spread) at each step of the optimization.                               !
+!  									  !
+!                                                      Manu Sharma        !
+!                                                      February 14th,2006 !
+!=========================================================================!
+!      COPYRIGHT MANU SHARMA/YUDONG WU/NICOLA MARZARI/ROBERTO CAR	  !
+!=========================================================================!

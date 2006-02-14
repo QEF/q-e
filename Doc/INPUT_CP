@@ -783,7 +783,7 @@ nsteps         INTEGER ( default = 20 )
 tolw           REAL ( default = 1.D-8 )
                Convergence criterion for localization.
 
-adapt          LOGICAL ( default = .FALSE. )
+adapt          LOGICAL ( default = .TRUE. )
                Whether to adapt the damping parameter dynamically.
 
 calwf          INTEGER ( default = 3 )
