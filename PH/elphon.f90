@@ -453,7 +453,7 @@ SUBROUTINE elphsum ( )
      enddo
      allocate (eqkfit(nkfit), eqqfit(nkfit), sfit(nkfit))
      !
-     ! map k-points in the IBZ top k-points in the complete uniform grid
+     ! map k-points in the IBZ to k-points in the complete uniform grid
      !
      call lint ( nsymgam, sgam, .true., at, bg, npk, 0,0,0, &
           nk1fit,nk2fit,nk3fit, nksfit, xkfit, 1, nkfit, eqkfit, sfit)

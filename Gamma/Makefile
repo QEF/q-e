@@ -36,9 +36,6 @@ PWOBJS = \
 ../PW/cft_3.o \
 ../PW/cft3.o \
 ../PW/cft3s.o \
-../PW/cfts_3.o \
-../PW/cft_sgi.o \
-../PW/cft_sp.o \
 ../PW/cgramg1.o \
 ../PW/cgramg1_nc.o \
 ../PW/checkallsym.o \
