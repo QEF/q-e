@@ -45,7 +45,7 @@ CONTAINS
       USE kinds,      ONLY: DP
       use fft_cp,     only: cfft_cp
       use fft_base,   only: dfftp, dffts
-      use fft_scalar, only: cfft3d, cft_b
+      use fft_scalar, only: cfft3d, cfft3ds, cft_b
 
       IMPLICIT none
 
@@ -148,7 +148,7 @@ CONTAINS
       USE kinds,      ONLY: DP
       use fft_cp,     only: cfft_cp
       use fft_base,   only: dfftp, dffts
-      use fft_scalar, only: cfft3d
+      use fft_scalar, only: cfft3d, cfft3ds
 
       implicit none
 
