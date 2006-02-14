@@ -15,17 +15,6 @@
 !
 ! ... parallel case
 !
-#if defined (__FFTW)
-# define CFT_1S cft_1s
-#else
-# define CFT_1S cft_1
-#endif
-!
-#if defined (__FFTW) || defined (__AIX)
-# define CFT_2S cft_2s
-#else
-# define CFT_2S cft_2
-#endif
 !
 !----------------------------------------------------------------------------
 SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
@@ -35,15 +24,15 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
   ! ... sign = +-2 : parallel 3d fft for wavefunctions
   !
   ! ... sign = +   : G-space to R-space, output = \sum_G f(G)exp(+iG*R)
-  ! ...              fft along z using pencils        (cft_1)
+  ! ...              fft along z using pencils        (cft_1z)
   ! ...              transpose across nodes           (fft_scatter)
   ! ...                 and reorder
-  ! ...              fft along y (using planes) and x (cft_2)
+  ! ...              fft along y (using planes) and x (cft_2xy)
   ! ... sign = -   : R-space to G-space, output = \int_R f(R)exp(-iG*R)/Omega
-  ! ...              fft along x and y(using planes)  (cft_2)
+  ! ...              fft along x and y(using planes)  (cft_2xy)
   ! ...              transpose across nodes           (fft_scatter)
   ! ...                 and reorder
-  ! ...              fft along z using pencils        (cft_1)
+  ! ...              fft along z using pencils        (cft_1z)
   !
   ! ...  The array "planes" signals whether a fft is needed along y :
   ! ...    planes(i)=0 : column f(i,*,*) empty , don't do fft along y
@@ -102,7 +91,7 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
         !
 #else
         !
-        CALL CFT_1S( f, ncps(me_p), n3, nx3, sign, aux )
+        call cft_1 ( f, ncps(me_p), n3, nx3, sign, aux )
         !
 #endif
         !
@@ -132,7 +121,7 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
         !
 #else
         !
-        CALL CFT_1S( f, nkcp(me_p), n3, nx3, sign, aux )
+        CALL cft_1 ( f, nkcp(me_p), n3, nx3, sign, aux )
         !
 #endif
         !
@@ -172,7 +161,7 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
      !
 #else
      !
-     CALL CFT_2S( f, npps(me_p), n1, n2, nx1, nx2, sign, planes )
+     CALL cft_2  ( f, npps(me_p), n1, n2, nx1, nx2, sign, planes )
      !
 #endif
      !
@@ -208,7 +197,7 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
      !
 #else
      !
-     CALL CFT_2S( f, npps(me_p), n1, n2, nx1, nx2, sign, planes )
+     CALL cft_2  ( f, npps(me_p), n1, n2, nx1, nx2, sign, planes )
      !
 #endif
      !
@@ -234,7 +223,7 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
         
 #else
         !
-        CALL CFT_1S( aux, ncps(me_p), n3, nx3, sign, f )
+        CALL cft_1 ( aux, ncps(me_p), n3, nx3, sign, f )
         !
 #endif
         !
@@ -268,7 +257,7 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
         !
 #else
         !
-        CALL CFT_1S( aux, nkcp(me_p), n3, nx3, sign, f )
+        CALL cft_1 ( aux, nkcp(me_p), n3, nx3, sign, f )
         !
 #endif
      !
@@ -287,8 +276,6 @@ END SUBROUTINE cft3s
 #else
 !
 ! ... serial case
-!
-# define NOPENCILS
 !
 #if defined (__HPM)
 #  include "/cineca/prod/hpm/include/f_hpm.h"
@@ -353,13 +340,9 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
      !
      CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, 1 )
      !
-#elif defined (NOPENCILS)
-     !
-     CALL cft_3( f, n1, n2, n3, nx1, nx2, nx3, 2, 1 )
-     !
 #else
      !
-     CALL cfts_3( f, n1, n2, n3, nx1, nx2, nx3, 2, 1, dffts%isind, dffts%iplw )
+     CALL cft_3( f, n1, n2, n3, nx1, nx2, nx3, 2, 1 )
      !
 #endif
      !
@@ -373,13 +356,9 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
      !
      CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, -1 )
      !
-#elif defined (NOPENCILS)
-     !
-     CALL cft_3( f, n1, n2, n3, nx1, nx2, nx3, 2, -1 )
-     !
 #else
      !
-     CALL cfts_3( f, n1, n2, n3, nx1, nx2, nx3, 2, -1, dffts%isind, dffts%iplw )
+     CALL cft_3( f, n1, n2, n3, nx1, nx2, nx3, 2, -1 )
      !
 #endif
      !

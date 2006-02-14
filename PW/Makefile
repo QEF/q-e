@@ -38,11 +38,7 @@ cegterg.o \
 cft3.o \
 cft3s.o \
 cft_3.o \
-cft_sgi.o \
-cft_sp.o \
 cft_sun.o \
-cft_t3e.o \
-cfts_3.o \
 cgramg1.o \
 cgramg1_nc.o \
 checkallsym.o \
