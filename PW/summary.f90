@@ -42,12 +42,15 @@ SUBROUTINE summary()
   USE spin_orb,        ONLY : domag, lspinorb
   USE funct,           ONLY : write_dft_name
   USE bp,              ONLY : lelfield, gdir, nppstr, efield, nberrycyc
+  USE fixed_occ,       ONLY : f_inp, tfixed_occ
+  USE wvfct,           ONLY : nbnd
+  USE lsda_mod,        ONLY : nspin
   !
   IMPLICIT NONE
   !
   ! ... declaration of the local variables
   !
-  INTEGER :: i, ipol, apol, na, isym, ik, ib, nt, l, ngmtot
+  INTEGER :: i, ipol, apol, na, isym, ik, ib, nt, l, ngmtot, ibnd
     ! counter on the celldm elements
     ! counter on polarizations
     ! counter on direct or reciprocal lattice vect
@@ -376,6 +379,19 @@ SUBROUTINE summary()
 
   IF ( isolve == 2 ) &
      WRITE( stdout, '(/,5X,"reduced basis size: ",I5)' ) diis_ndim
+
+  IF (tfixed_occ) THEN
+     WRITE( stdout, '(/,5X,"Occupations read from input ")' ) 
+     IF (nspin==2) THEN
+        WRITE(stdout, '(/,5X," Spin-up")' ) 
+        WRITE(stdout, '(/,(5X,8f9.4))') (f_inp(ibnd,1),ibnd=1,nbnd)
+        WRITE(stdout, '(/,5X," Spin-down")' ) 
+        WRITE(stdout, '(/,(5X,8f9.4))') (f_inp(ibnd,2),ibnd=1,nbnd)
+     ELSE
+        WRITE(stdout, '(/,(5X,8f9.4))') (f_inp(ibnd,1), ibnd=1,nbnd)
+     END IF
+  END IF
+
   !
   CALL flush_unit( stdout )
   !

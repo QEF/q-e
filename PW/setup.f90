@@ -272,6 +272,10 @@ SUBROUTINE setup()
 #else
         iocc = iocc + SUM( f_inp(1:nbnd,1) )
 #endif        
+        DO ibnd = 1, nbnd
+           if (f_inp(ibnd,1).gt.1.d0.or.f_inp(ibnd,1).lt.0.d0) call &
+              errore('setup','wrong fixed occupations',1)
+        END DO
         !
      ELSE
         !
@@ -285,6 +289,10 @@ SUBROUTINE setup()
            iocc = iocc + SUM( f_inp(1:nbnd,is) )
 #endif
            !
+           DO ibnd = 1, nbnd
+              if (f_inp(ibnd,is).gt.2.d0/nspin.or.f_inp(ibnd,is).lt.0.d0) call &
+              errore('setup','wrong fixed occupations',1)
+           END DO
         END DO
         !
      END IF
