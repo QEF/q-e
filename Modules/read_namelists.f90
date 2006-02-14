@@ -565,7 +565,7 @@ MODULE read_namelists_module
        !   
        tolw = 1.D-8
        !
-       adapt = .FALSE.
+       adapt = .TRUE.
        !   
        calwf  = 3
        nwf    = 0

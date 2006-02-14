@@ -21,6 +21,8 @@ MODULE path_reparametrisation
   USE constants, ONLY : pi
   !
   USE basic_algebra_routines
+  ! moved here to work around a mips compiler bug
+  USE input_parameters, ONLY : num_of_images_inp => num_of_images
   !
   CONTAINS
     !
@@ -34,7 +36,6 @@ MODULE path_reparametrisation
       !
       USE splinelib,        ONLY : dosplineint
       USE path_variables,   ONLY : pos, num_of_images, dim
-      USE input_parameters, ONLY : num_of_images_inp => num_of_images
       USE path_variables,   ONLY : istep_path, path_thr, use_multistep, &
                                    err_max, frozen, vel
       USE io_global,        ONLY : meta_ionode
@@ -168,7 +169,6 @@ MODULE path_reparametrisation
     SUBROUTINE update_num_of_images()
       !-----------------------------------------------------------------------
       !
-      USE input_parameters, ONLY : num_of_images_inp => num_of_images
       USE path_variables,   ONLY : istep_path, num_of_images, &
                                    path_thr, Nft, ft_coeff, pos, pes, &
                                    use_multistep, grad_pes, err_max,  &
