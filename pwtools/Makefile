@@ -4,7 +4,6 @@ include ../make.sys
 
 PWOBJS = \
 ../PW/a2fmod.o \
-../PW/cft_3.o \
 ../PW/checksym.o \
 ../PW/coset.o \
 ../PW/cryst_to_car.o \

@@ -71,6 +71,7 @@ PROGRAM q2r
   USE mp,         ONLY : mp_start, mp_env, mp_end, mp_barrier
   USE mp_global,  ONLY : nproc, mpime, mp_global_start
   USE dynamicalq, ONLY : phiq, tau, ityp, zeu
+  USE fft_scalar, ONLY : cfft3d
   !
   IMPLICIT NONE
   !
@@ -87,14 +88,14 @@ PROGRAM q2r
   !
   LOGICAL :: lq, lrigid, lrigid_save, lnogridinfo
   CHARACTER (LEN=10) :: zasr
-  INTEGER :: m1, m2, m3, m(3), l1, l2, l3, i, j, j1, j2, na1, na2, ipol
+  INTEGER :: m1, m2, m3, m(3), l1, l2, l3, i, j, j1, j2, na1, na2, ipol, nn
   INTEGER :: nat, nq, ntyp, iq, icar, nfile, ifile, nqs, nq_log
   INTEGER :: na, nt
   !
   INTEGER :: gid, ibrav, ierr
   !
   INTEGER, ALLOCATABLE ::  nc(:,:,:)
-  COMPLEX(DP), ALLOCATABLE :: phid(:,:,:,:,:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: phid(:,:,:,:,:)
   !
   REAL(DP) :: celldm(6), at(3,3), bg(3,3)
   REAL(DP) :: q(3,48),omega, xq, amass(ntypx), resi
@@ -174,7 +175,7 @@ PROGRAM q2r
              ntyp, nat, ibrav, symm_type, celldm, at, atm, amass)
         IF (ifile == 1) THEN
            ! it must be allocated here because nat is read from file
-           ALLOCATE (phid(nr1,nr2,nr3,3,3,nat,nat) )
+           ALLOCATE (phid(nr1*nr2*nr3,3,3,nat,nat) )
            !
            lrigid_save=lrigid
 
@@ -231,16 +232,16 @@ PROGRAM q2r
         CALL errore('init',' missing q-point(s)!',1)
      END IF
      !
-     ! dyn.mat. FFT
+     ! dyn.mat. FFT (use serial version)
      !
      DO j1=1,3
         DO j2=1,3
            DO na1=1,nat
               DO na2=1,nat
-                 CALL cft_3 ( phid (1,1,1,j1,j2,na1,na2), &
-                      nr1,nr2,nr3, nr1,nr2,nr3, 1, 1 )
-                 phid(:,:,:,j1,j2,na1,na2) = &
-                      phid(:,:,:,j1,j2,na1,na2) / DBLE(nr1*nr2*nr3)
+                 CALL cfft3d ( phid (:,j1,j2,na1,na2), &
+                      nr1,nr2,nr3, nr1,nr2,nr3, 1 )
+                 phid(:,j1,j2,na1,na2) = &
+                      phid(:,j1,j2,na1,na2) / DBLE(nr1*nr2*nr3)
               END DO
            END DO
         END DO
@@ -274,9 +275,16 @@ PROGRAM q2r
            DO na1=1,nat
               DO na2=1,nat
                  WRITE (2,'(4i4)') j1,j2,na1,na2
-                 WRITE (2,'(3i4,2x,1pe18.11)')   &
-                      (((m1,m2,m3, DBLE(phid(m1,m2,m3,j1,j2,na1,na2)), &
-                      m1=1,nr1),m2=1,nr2),m3=1,nr3)
+                 nn=0
+                 DO m3=1,nr3
+                    DO m2=1,nr2
+                       DO m1=1,nr1
+                          nn=nn+1
+                          WRITE (2,'(3i4,2x,1pe18.11)')   &
+                               m1,m2,m3, DBLE(phid(nn,j1,j2,na1,na2))
+                       END DO
+                    END DO
+                 END DO
               END DO
            END DO
         END DO
@@ -308,24 +316,25 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
   !----------------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
+  USE fft_scalar, ONLY : cfft3d
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: nqtot, nat, nr1, nr2, nr3
   REAL(DP), INTENT(IN) :: at(3,3)
   !
   INTEGER, ALLOCATABLE :: nc(:,:,:)
-  COMPLEX(DP), ALLOCATABLE :: gaminp(:,:,:,:,:), gamout(:,:,:,:,:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: gaminp(:,:,:,:,:), gamout(:,:,:,:,:)
   !
   REAL(DP), PARAMETER :: eps=1.D-5, eps12=1.d-12
   INTEGER  :: nsig = 10, isig, filea2F, nstar, count_q, nq, nq_log, iq, &
-       icar, ipol, m1,m2,m3, m(3), nr(3), j1,j2, na1, na2
+       icar, ipol, m1,m2,m3, m(3), nr(3), j1,j2, na1, na2, nn
   LOGICAL :: lq
   REAL(DP) :: deg, ef, dosscf
   REAL(DP) :: q(3,48), xq, resi
   character(len=14) :: name
 
   !
-  ALLOCATE (gaminp(3,3,nat,nat,48), gamout(nr1,nr2,nr3,3,3,nat,nat) )
+  ALLOCATE (gaminp(3,3,nat,nat,48), gamout(nr1*nr2*nr3,3,3,nat,nat) )
   ALLOCATE ( nc (nr1,nr2,nr3) )
   write (6,*)
   write (6,*) '  Preparing gamma for a2F '
@@ -386,8 +395,8 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
         do j2=1,3
            do na1=1,nat
               do na2=1,nat
-                 call cft_3 ( gamout(1,1,1,j1,j2,na1,na2), &
-                      nr1,nr2,nr3, nr1,nr2,nr3, 1, 1 )
+                 call cfft3d ( gamout(:,j1,j2,na1,na2), &
+                      nr1,nr2,nr3, nr1,nr2,nr3, 1 )
               end do
            end do
         end do
@@ -408,9 +417,16 @@ SUBROUTINE gammaq2r( nqtot, nat, nr1, nr2, nr3, at )
            do na1=1,nat
               do na2=1,nat
                  write(filea2F,'(4i4)') j1,j2,na1,na2
-                 write(filea2F,'(3i4,2x,1pe18.11)')   &
-                      (((m1,m2,m3,real(gamout(m1,m2,m3,j1,j2,na1,na2)), &
-                      m1=1,nr1),m2=1,nr2),m3=1,nr3)
+                 nn=0
+                 DO m3=1,nr3
+                    DO m2=1,nr2
+                       DO m1=1,nr1
+                          nn=nn+1
+                          write(filea2F,'(3i4,2x,1pe18.11)')   &
+                               m1,m2,m3, DBLE(gamout(nn,j1,j2,na1,na2))
+                       END DO
+                    END DO
+                 END DO
               end do  ! na2
            end do  ! na1
         end do   !  j2 
