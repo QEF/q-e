@@ -5,22 +5,20 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
-!
 module wanpar
 ! nw:       the number of the G vectors
-! nit:      the number of total iteration during searching
-! nsd:      the number of steepest descent iterations
+! nit:	    the number of total iteration during searching
+! nsd:	    the number of steepest descent iterations
 ! ibrav:    the structure index, the same as ibrav in CP code.
   integer :: nw,  nit, nsd, ibrav
   logical adapt, restart
 ! wfdt:     time step during searching
 ! maxwfdt:  the maximum time step during searching
 ! b1,b2,b3: the reciprocal lattice
-! alat:     the lattice parameter
+! alat:	    the lattice parameter
 ! a1,a2,a3: the real-space lattice
-  real(8) :: wfdt, maxwfdt, b1(3), b2(3), b3(3), alat
-  real(8) :: a1(3), a2(3), a3(3), tolw
+  real(kind=8) :: wfdt, maxwfdt, b1(3), b2(3), b3(3), alat
+  real(kind=8) :: a1(3), a2(3), a3(3), tolw
 
 ! wfg:      the G vectors involoved in general symmetry calculation
 !           the units are b1, b2, b3.
@@ -29,17 +27,17 @@ module wanpar
   integer, allocatable :: wfg(:,:)
 
 ! weight:   the weight of each G vectors
-  real(8), allocatable :: weight(:)
+  real(kind=8), allocatable :: weight(:)
 !
-! These are the Input variables for Damped Dynamics
+!	These are the Input variables for Damped Dynamics
 !
-! q:            imaginary mass of the Unitary Matrix
-! dt:           Time Step for damped dynamics
-! cgordd:       1=conjugate gradient/SD 
-!               any other number = damped dynamics
-! fric:         damping coefficient, b/w 0 and 1
-! nsteps:       Max No. of MD Steps
-  real(8) :: q, dt, fric
+! q:		imaginary mass of the Unitary Matrix
+! dt:		Time Step for damped dynamics
+! cgordd:	1=conjugate gradient/SD 
+!		any other number = damped dynamics
+! fric:		damping coefficient, b/w 0 and 1
+! nsteps:	Max No. of MD Steps
+  real(kind=8) :: q, dt, fric
   integer :: cgordd, nsteps
 
 
@@ -58,14 +56,194 @@ program wf
 !
 !    Searching parameters are in the input file:
 !
-!    cgordd  wfdt   maxwfdt   nit   nsd  q dt fric nsteps
+!	cgordd  wfdt   maxwfdt   nit   nsd  q dt fric nsteps
 !
 !
 !    The final unitary matrix Uall is output to fort.39.
 !    Some running information is output to fort.24.
 !
 !                                            Yudong Wu 
-!                                            SEPTEMBER 17, 2001
+!                                            June 28,2001
+!
+!	This code has been modified to include Damped dynamics to
+!	find the maximally localized wannier functions.
+!	
+!						Manu
+!						September 16,2001
+!
+!
+!     copyright MANU/YUDONG WU/NICOLA MARZARI/ROBERTO CAR
+!
+!----------------------------------------------------------------------
+  use wanpar
+!
+  implicit none
+  
+  integer :: i, j, inw, n, nspin, nupdwn(2),ini
+  complex(kind=8), allocatable :: O(:, :, :), Ospin(:, :, :)
+  real(kind=8), allocatable :: Uall(:,:), Uspin(:,:), u1(:,:)
+
+  	read (5,*) cgordd, wfdt, maxwfdt, nit, nsd
+        read (5,*)  q, dt, fric, adapt, nsteps, tolw
+        read (5,*) restart
+	
+
+!
+!    input the overlap matrix from fort.38
+!
+  rewind 38
+  read(38, '(i5, 2i2, i3, f9.5)') n, nw, nspin, ibrav, alat
+  allocate(wfg(nw, 3), weight(nw), O(nw,n,n), Uall(n,n), u1(n,n))
+  if (nspin.eq.2) then
+     read(38, '(i5)') nupdwn(1)
+  end if
+  nupdwn(2)=n-nupdwn(1)
+  read(38, *) a1
+  read(38, *) a2
+  read(38, *) a3
+  read(38, *) b1
+  read(38, *) b2
+  read(38, *) b3
+  do inw=1, nw
+     read(38, *) wfg(inw, :), weight(inw)
+  end do
+  do inw=1, nw
+     do i=1, n
+        do j=1, n
+           read(38, *) O(inw, i, j)
+        end do
+     end do
+  end do
+  if(restart) then
+  do i=1, n
+     do j=1, n
+        read(39, *) Uall(i, j)
+     end do
+  end do
+  else
+  Uall=0.0
+     do i=1,n
+        Uall(i,i)=1.d0
+     end do 
+  end if
+
+  rewind 24
+
+  if(cgordd.eq.1) then
+    if (nspin.eq.1) then
+      call searchwf(n, O, Uall)
+    else
+!
+!   For those spin-polarized calculation,
+!    spin up and spin down parts are dealt with seperately
+!    and the total unitary matrices are put together.
+!
+     write(24, *) "spin up:"
+     allocate(Uspin(nupdwn(1), nupdwn(1)), Ospin(nw, nupdwn(1), nupdwn(1)))
+     do i=1, nupdwn(1)
+        do j=1, nupdwn(1)
+           Uspin(i, j)=Uall(i, j)
+           Ospin(:, i, j)=O(:, i, j)
+        end do
+     end do
+     call searchwf(nupdwn(1), Ospin, Uspin)
+     do i=1, nupdwn(1)
+        do j=1, nupdwn(1)
+           Uall(i, j)=Uspin(i, j)
+        end do
+     end do
+     deallocate(Uspin, Ospin)
+     write(24, *) "spin down:"
+     allocate(Uspin(nupdwn(2), nupdwn(2)), Ospin(nw, nupdwn(2), nupdwn(2)))
+     do i=1, nupdwn(2)
+        do j=1, nupdwn(2)
+           Uspin(i, j)=Uall(i+nupdwn(1), j+nupdwn(1))
+           Ospin(:, i, j)=O(:, i+nupdwn(1), j+nupdwn(1))
+        end do
+     end do
+     call searchwf(nupdwn(2), Ospin, Uspin)
+     do i=1, nupdwn(2)
+        do j=1, nupdwn(2)
+           Uall(i+nupdwn(1), j+nupdwn(1))=Uspin(i, j)
+        end do
+     end do
+     deallocate(Uspin, Ospin)
+    end if
+
+
+  else
+
+    if (nspin.eq.1) then
+      call ddyn(n,O,Uall)
+    else
+!
+!   For those spin-polarized calculation,
+!    spin up and spin down parts are dealt with seperately
+!    and the total unitary matrices are put together.
+!
+     write(24, *) "spin up:"
+     allocate(Uspin(nupdwn(1), nupdwn(1)), Ospin(nw, nupdwn(1), nupdwn(1)))
+     do i=1, nupdwn(1)
+        do j=1, nupdwn(1)
+           Uspin(i, j)=Uall(i, j)
+           Ospin(:, i, j)=O(:, i, j)
+        end do
+     end do
+     call ddyn(nupdwn(1), Ospin, Uspin)
+     do i=1, nupdwn(1)
+        do j=1, nupdwn(1)
+           Uall(i, j)=Uspin(i, j)
+        end do
+     end do
+     deallocate(Uspin, Ospin)
+     write(24, *) "spin down:"
+     allocate(Uspin(nupdwn(2), nupdwn(2)), Ospin(nw, nupdwn(2), nupdwn(2)))
+     do i=1, nupdwn(2)
+        do j=1, nupdwn(2)
+           Uspin(i, j)=Uall(i+nupdwn(1), j+nupdwn(1))
+           Ospin(:, i, j)=O(:, i+nupdwn(1), j+nupdwn(1))
+        end do
+     end do
+     call ddyn(nupdwn(2), Ospin, Uspin)
+     do i=1, nupdwn(2)
+        do j=1, nupdwn(2)
+           Uall(i+nupdwn(1), j+nupdwn(1))=Uspin(i, j)
+        end do
+     end do
+     deallocate(Uspin, Ospin)
+    end if	
+  endif
+	
+
+
+  rewind 39
+  do i=1, n
+     do j=1, n
+        write(39, *) Uall(i, j)
+     end do
+  end do
+
+!	u1=matmul(Uall,transpose(Uall))
+
+! do i=1, n
+!     do j=1, n
+!        write(6, *) u1(i, j)
+!     end do
+!  end do
+
+  deallocate(wfg, weight, O, Uall,u1)
+
+contains
+!-------------------------------------------------------------------------
+	subroutine ddyn(m,Omat,Umat)
+!    (m,m) is the size of the matrix Ospin.
+!    Ospin is input overlap matrix.
+!    Uspin is the output unitary transformation.
+!             Rough guess for Uspin can be carried in.
+!
+!
+!					MANU	
+!					SEPTEMBER 17, 2001	
 !-------------------------------------------------------------------------
 
   use wanpar
@@ -73,25 +251,25 @@ program wf
 !  implicit none
   integer :: f3(nw), f4(nw), i,j,inw
   integer ,intent(in) :: m
-  real(8), intent(inout) :: Umat(m,m)
-  complex(8), intent(inout) :: Omat(nw,m,m)
-  complex(8) :: U2(m,m),U3(m,m)
+  real(kind=8), intent(inout) :: Umat(m,m)
+  complex(kind=8), intent(inout) :: Omat(nw,m,m)
+  complex(kind=8) :: U2(m,m),U3(m,m)
   integer :: adjust,ini, ierr1,nnn
-  real(8), allocatable, dimension(:) :: wr
-  real(8), allocatable, dimension(:,:) :: W
-  real(8) :: t0, U(m,m), t2
-  real(8) :: A(m,m),oldt0,Wm(m,m),U1(m,m)
-  real(8) :: Aminus(m,m), Aplus(m,m),f2(3*m-2)
-!  real(8) :: Aminus(m,m), Aplus(m,m),f2(4*m)
-  real(8) :: temp(m,m)
-  complex(8) :: d(m,m), alpha, beta1, ci
-  complex(8) :: f1(2*m-1), wp(m*(m+1)/2),z(m,m)
-  complex(8), allocatable, dimension(:, :) :: X1
-  complex(8), allocatable, dimension(:, :, :) :: Oc
-  real(8) , allocatable , dimension(:) :: mt
-  real(8), parameter :: autoaf=0.529177d0
-  real(8) :: spread, sp, pi2, oldspread
-  real(8) :: wfc(3,n), gr(nw,3)
+  real(kind=8), allocatable, dimension(:) :: wr
+  real(kind=8), allocatable, dimension(:,:) :: W
+  real(kind=8) :: t0, U(m,m), t2
+  real(kind=8) :: A(m,m),oldt0,Wm(m,m),U1(m,m)
+  real(kind=8) :: Aminus(m,m), Aplus(m,m),f2(3*m-2)
+!  real(kind=8) :: Aminus(m,m), Aplus(m,m),f2(4*m)
+  real(kind=8) :: temp(m,m)
+  complex(kind=8) :: d(m,m), alpha, beta1, ci
+  complex(kind=8) :: f1(2*m-1), wp(m*(m+1)/2),z(m,m)
+  complex(kind=8), allocatable, dimension(:, :) :: X1
+  complex(kind=8), allocatable, dimension(:, :, :) :: Oc
+  real(kind=8) , allocatable , dimension(:) :: mt
+  real(kind=8), parameter :: autoaf=0.529177d0
+  real(kind=8) :: spread, sp, pi2, oldspread
+  real(kind=8) :: wfc(3,n), gr(nw,3)
 
   alpha=(1.d0,0.d0)
   beta1=(0.d0,0.d0)
@@ -109,8 +287,8 @@ program wf
 !   do i=1,m
 !       Umat(i,i)=1.d0
 !   end do
-
-  U2=Umat*alpha
+	
+	U2=Umat*alpha
 
 !
 ! update Oc using the initial guess of Uspin
@@ -126,13 +304,13 @@ program wf
     Oc(inw, :, :)=X1(:, :)
   end do
 
-  U2=beta1
-  U3=beta1
+	U2=beta1
+	U3=beta1
 
  oldspread=0.0
   write(24, *) "spread: (unit \AA^2)"
   do i=1, m
-     mt=1.d0-DBLE(Oc(:,i,i)*CONJG(Oc(:,i,i)))
+     mt=1.d0-DBLE(Oc(:,i,i)*conjg(Oc(:,i,i)))
      sp= (alat*autoaf/pi2)**2*SUM(mt*weight)
      write(24, '(f10.7)') (alat*autoaf/pi2)**2*SUM(mt*weight)
      oldspread=oldspread+sp
@@ -147,14 +325,14 @@ program wf
     temp=Aminus
 
 
-!   START ITERATIONS HERE
+!	START ITERATIONS HERE
 
   do ini=1, nsteps
 
     t0=0.d0     !use t0 to store the value of omega
     do inw=1, nw
        do i=1, m
-          t0=t0+DBLE(CONJG(Oc(inw, i, i))*Oc(inw, i, i))
+          t0=t0+DBLE(conjg(Oc(inw, i, i))*Oc(inw, i, i))
        end do
     end do
 
@@ -162,16 +340,16 @@ program wf
 
 
         if(ABS(t0-oldt0).lt.tolw) then
-           write(6,*) "MLWF Generated at Step",ini
-           go to 241
-        end if
+	   write(6,*) "MLWF Generated at Step",ini
+	   go to 241
+	end if
 
         if(adapt) then 
-           if(oldt0.lt.t0) then
-              fric=fric/2.
-              A=Aminus
-              Aminus=temp
-           end if
+	if(oldt0.lt.t0) then
+	    fric=fric/2.
+	    A=Aminus
+	    Aminus=temp
+	end if
         end if
 
 !   calculate d(omega)/dA and store result in W
@@ -183,29 +361,30 @@ program wf
        t2=weight(inw)
        do i=1,m
           do j=1,m
-             W(i,j)=W(i,j)+t2*DBLE(Oc(inw,i,j)*CONJG(Oc(inw,i,i)        &
-                  -Oc(inw,j,j))+CONJG(Oc(inw,j,i))*(Oc(inw,i,i)-Oc(inw,j,j)))
+             W(i,j)=W(i,j)+t2*DBLE(Oc(inw,i,j)*conjg(Oc(inw,i,i)        &
+                  -Oc(inw,j,j))+conjg(Oc(inw,j,i))*(Oc(inw,i,i)-Oc(inw,j,j)))
           end do
        end do
     end do
+	
 
 !   the verlet scheme to calculate A(t+dt)
-
-    Aplus=0.d0
+	
+	Aplus=0.d0
 
    do i=1,m
      do j=i+1,m
-        Aplus(i,j)=Aplus(i,j)+(2*dt/(2*dt+fric))*(2*A(i,j)               &
+ 	Aplus(i,j)=Aplus(i,j)+(2*dt/(2*dt+fric))*(2*A(i,j)               &
          -Aminus(i,j)+(dt*dt/q)*W(i,j)) + (fric/(2*dt+fric))*Aminus(i,j)
      enddo
    enddo
 
-   Aplus=Aplus-transpose(Aplus)
-   Aplus=(Aplus-A)
+	Aplus=Aplus-transpose(Aplus)
+	Aplus=(Aplus-A)
 
     do i=1, m
        do j=i,m 
-        wp(i + (j-1)*j/2) = CMPLX(0.d0, Aplus(i,j))
+        wp(i + (j-1)*j/2) = cmplx(0.0d0, Aplus(i,j))
        end do
     end do
 
@@ -223,12 +402,12 @@ program wf
     end do      !d=exp(d)
 
 !   U=z*exp(d)*z+
-!
+!	
      U3=beta1
      call ZGEMM ('N', 'N', m,m,m,alpha,z,m,d,m,beta1,U3,m)  
      U2=beta1
      call ZGEMM ('N','c', m,m,m,alpha,U3,m,z,m,beta1,U2,m)
-    U =DBLE(U2)
+    U=DBLE(U2)
     U2=beta1
     U3=beta1
 
@@ -257,9 +436,9 @@ program wf
     U2=beta1
     U3=beta1
 
-    if(ABS(t0-oldt0).ge.tolw.and.ini.ge.nsteps) then
-       go to 241
-    end if
+	if(ABS(t0-oldt0).ge.tolw.and.ini.ge.nsteps) then
+        go to 241
+        end if
 
     oldt0=t0
 
@@ -267,7 +446,7 @@ program wf
 241  spread=0.0
   write(24, *) "spread: (unit \AA^2)"
   do i=1, m
-     mt=1.d0-DBLE(Oc(:,i,i)*CONJG(Oc(:,i,i)))
+     mt=1.d0-DBLE(Oc(:,i,i)*conjg(Oc(:,i,i)))
      sp= (alat*autoaf/pi2)**2*SUM(mt*weight)
      write(24, '(f10.7)') (alat*autoaf/pi2)**2*SUM(mt*weight)
      spread=spread+sp
@@ -298,7 +477,7 @@ program wf
   end do
 !  write(24, *) "wannier function centers: (unit:\AA)"
   do i=1, m
-     mt=-AIMAG(log(Oc(:,i,i)))/pi2
+     mt=-aimag(log(Oc(:,i,i)))/pi2
      wfc(1, i)=SUM(mt*weight*gr(:,1))
      wfc(2, i)=SUM(mt*weight*gr(:,2))
      wfc(3, i)=SUM(mt*weight*gr(:,3))
@@ -337,9 +516,10 @@ program wf
   do i=1, m
      write(26, '(3f11.6)') wfc(:,i)*autoaf
   end do
- 
+ 	
      write(6,*) "Friction =", fric
      write(6,*) "Mass =", q
+	
 
   deallocate(wr, W)
  
@@ -363,21 +543,21 @@ program wf
 !
   implicit none
 !
-  real(8), parameter :: autoaf=0.529177d0
+  real(kind=8), parameter :: autoaf=0.529177d0
   integer, intent(in) :: m
-  complex(8), intent(in) :: Omat(nw, m, m)
-  real(8), intent(inout) :: Umat(m,m)
+  complex(kind=8), intent(in) :: Omat(nw, m, m)
+  real(kind=8), intent(inout) :: Umat(m,m)
 !
   integer :: i, j, k, l, ig, ierr, ti, tj, tk, inw, ir, adjust
   integer :: f3(nw), f4(nw), istep
-  real(8) :: slope, slope2, t1, t2, t3, pi2, mt(nw),t21,temp1,maxdt
-  real(8) :: U(m,m), wfc(3, m), Wm(m,m), schd(m,m), f2(3*m-2), gr(nw, 3)
-  real(8) :: Uspin2(m,m),temp2,wfdtold,oldt1,t01, d3(m,m), d4(m,m), U1(m,m)
-  real(8), allocatable, dimension(:) :: wr
-  real(8), allocatable, dimension(:,:) :: W
-  complex(8) :: ci, ct1, ct2, ct3, z(m, m), X(m, m), d(m,m), d2(m,m)
-  complex(8) :: f1(2*m-1), wp(m*(m+1)/2), Oc(nw, m, m), alpha, beta1
-  complex(8) ::  Oc2(nw, m, m),wp1(m*(m+1)/2), X1(m,m), U2(m,m), U3(m,m)
+  real(kind=8) :: slope, slope2, t1, t2, t3, pi2, mt(nw),t21,temp1,maxdt
+  real(kind=8) :: U(m,m), wfc(3, m), Wm(m,m), schd(m,m), f2(3*m-2), gr(nw, 3)
+  real(kind=8) :: Uspin2(m,m),temp2,wfdtold,oldt1,t01, d3(m,m), d4(m,m), U1(m,m)
+  real(kind=8), allocatable, dimension(:) :: wr
+  real(kind=8), allocatable, dimension(:,:) :: W
+  complex(kind=8) :: ci, ct1, ct2, ct3, z(m, m), X(m, m), d(m,m), d2(m,m)
+  complex(kind=8) :: f1(2*m-1), wp(m*(m+1)/2), Oc(nw, m, m), alpha, beta1
+  complex(kind=8) ::  Oc2(nw, m, m),wp1(m*(m+1)/2), X1(m,m), U2(m,m), U3(m,m)
 
 !
   ci=(0.d0,1.d0)
@@ -421,7 +601,7 @@ program wf
     t01=0.d0     !use t1 to store the value of omiga
     do inw=1, nw
        do i=1, m
-          t01=t01+DBLE(CONJG(Oc(inw, i, i))*Oc(inw, i, i))
+          t01=t01+DBLE(conjg(Oc(inw, i, i))*Oc(inw, i, i))
        end do
     end do
 
@@ -440,8 +620,8 @@ program wf
        t2=weight(inw)
        do i=1,m
           do j=i+1,m
-             W(i,j)=W(i,j)+t2*DBLE(Oc(inw,i,j)*CONJG(Oc(inw,i,i)        &
-              -Oc(inw,j,j))+CONJG(Oc(inw,j,i))*(Oc(inw,i,i)-Oc(inw,j,j)))
+             W(i,j)=W(i,j)+t2*DBLE(Oc(inw,i,j)*conjg(Oc(inw,i,i)        &
+              -Oc(inw,j,j))+conjg(Oc(inw,j,i))*(Oc(inw,i,i)-Oc(inw,j,j)))
           end do
        end do
     end do
@@ -457,9 +637,9 @@ program wf
           do tk=1, m
              t2=0.d0
              do inw=1, nw
-                t2=t2+DBLE(Oc(inw,tj,tk)*CONJG(Oc(inw,tj,tj)+Oc(inw,tk,tk) &
+                t2=t2+DBLE(Oc(inw,tj,tk)*conjg(Oc(inw,tj,tj)+Oc(inw,tk,tk) &
                           -2.d0*Oc(inw,ti,ti))-4.d0*Oc(inw,ti,tk)          &
-                          *CONJG(Oc(inw,ti,tj)))*weight(inw)
+                          *conjg(Oc(inw,ti,tj)))*weight(inw)
              end do
              slope2=slope2+W(tk,ti)*W(ti,tj)*2.d0*t2
           end do
@@ -480,7 +660,7 @@ program wf
 !       schd=schd*maxwfdt
     do i=1, m
        do j=i, m
-        wp1(i + (j-1)*j/2) = CMPLX(0.d0, schd(i,j))
+        wp1(i + (j-1)*j/2) = cmplx(0.0d0, schd(i,j))
        end do
     end do
 
@@ -514,16 +694,16 @@ program wf
           schd=W
        end if
 !
-!      calculate the new d(Lambda) for the new Search Direction
-!      added by Manu. September 19, 2001
+!	calculate the new d(Lambda) for the new Search Direction
+!	added by Manu. September 19, 2001
 !
 !   calculate slope=d(omiga)/d(lamda)
     slope=SUM(schd**2)
 !------------------------------------------------------------------------
-! schd=schd*maxwfdt
+!	schd=schd*maxwfdt
     do i=1, m
        do j=i, m
-        wp1(i + (j-1)*j/2) = CMPLX(0.d0, schd(i,j))
+        wp1(i + (j-1)*j/2) = cmplx(0.0d0, schd(i,j))
        end do
     end do
 
@@ -542,7 +722,7 @@ program wf
      call ZGEMM ('N', 'N', m,m,m,alpha,z,m,d,m,beta1,U3,m)
      U2=beta1
      call ZGEMM ('N','c', m,m,m,alpha,U3,m,z,m,beta1,U2,m)
-     U =DBLE(U2)
+     U=DBLE(U2)
      U2=beta1
      U3=beta1
 !
@@ -570,7 +750,7 @@ program wf
     t21=0.d0     !use t21 to store the value of omiga
     do inw=1, nw
        do i=1, m
-          t21=t21+DBLE(CONJG(Oc2(inw, i, i))*Oc2(inw, i, i))
+          t21=t21+DBLE(conjg(Oc2(inw, i, i))*Oc2(inw, i, i))
        end do
     end do
  
@@ -609,7 +789,7 @@ program wf
      call ZGEMM ('N', 'N', m,m,m,alpha,z,m,d,m,beta1,U3,m)
      U2=beta1
      call ZGEMM ('N','c', m,m,m,alpha,U3,m,z,m,beta1,U2,m)
-     U =DBLE(U2)
+     U=DBLE(U2)
      U2=beta1
      U3=beta1
 
@@ -641,7 +821,7 @@ program wf
 !
   write(24, *) "spread: (unit \AA^2)"
   do i=1, m
-     mt=1.d0-DBLE(Oc(:,i,i)*CONJG(Oc(:,i,i)))
+     mt=1.d0-DBLE(Oc(:,i,i)*conjg(Oc(:,i,i)))
      write(24, '(f10.7)') (alat*autoaf/pi2)**2*SUM(mt*weight)
   end do
 
@@ -664,7 +844,7 @@ program wf
   end do
 ! write(24, *) "wannier function centers: (unit:\AA)"
   do i=1, m
-     mt=-AIMAG(log(Oc(:,i,i)))/pi2
+     mt=-aimag(log(Oc(:,i,i)))/pi2
      wfc(1, i)=SUM(mt*weight*gr(:,1))
      wfc(2, i)=SUM(mt*weight*gr(:,2))
      wfc(3, i)=SUM(mt*weight*gr(:,3))
