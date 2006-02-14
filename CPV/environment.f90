@@ -35,7 +35,6 @@
 
           USE io_global, ONLY: stdout, ionode
           USE mp_global, ONLY: mpime, nproc
-          use para_mod, ONLY: me, node
           use mp, only: mp_env
           USE cp_version
 
@@ -54,10 +53,6 @@
           start_cclock_val = cclock( )
 
           version_str = TRIM (version_number) // " - " // TRIM (version_date)
-
-          ! ...  Temporary for para_mod
-
-          me = mpime + 1
 
           ! ...  search for file CRASH and delete it
 
@@ -83,18 +78,6 @@
             open( unit = stdout, file='/dev/null', status='unknown' )
 
           END IF
-
-          ! ...  Temporary for para_mod
-
-          if (me < 10) then
-             write(node,'(i1,2x)') me
-          else if (me < 100) then
-             write(node,'(i2,1x)') me
-          else if (me < 1000) then
-             write(node,'(i3)') me
-          else
-             call errore('startup','wow, >1000 nodes !!',nproc)
-          end if
 
           CALL opening_date_and_time( version_str )
 

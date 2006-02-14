@@ -65,6 +65,8 @@ CONTAINS
       REAL(DP), SAVE :: tser, tpar
       REAL(DP), EXTERNAL :: cclock
       !
+      IF( n < 1 ) RETURN
+      !
       calls_cnt = calls_cnt + 1
 
       IF( nproc == 1 ) THEN
@@ -141,6 +143,8 @@ CONTAINS
       REAL(DP) :: t1
       REAL(DP), SAVE :: tser, tpar
       REAL(DP), EXTERNAL :: cclock
+
+      IF( n < 1 ) RETURN
 
       calls_cnt = calls_cnt + 1
 
@@ -420,6 +424,8 @@ CONTAINS
       REAL(DP), ALLOCATABLE :: tmp1(:,:), tmp2(:,:), dd(:,:)
       REAL(DP), ALLOCATABLE :: con(:,:), x1(:,:)
 
+      IF( nss < 1 ) RETURN
+
       ALLOCATE( tmp1(nx,nx), tmp2(nx,nx), dd(nx,nx), x1(nx,nx), con(nx,nx) )
 
 
@@ -516,6 +522,8 @@ CONTAINS
       REAL(DP), ALLOCATABLE :: x1(:,:)
       REAL(DP), ALLOCATABLE :: sigd(:)
       REAL(DP) :: den, dx
+
+      IF( n < 1 ) RETURN
 
       ALLOCATE( tmp1(nx,nx), tmp2(nx,nx), x1(nx,nx), sigd(nx) )
 
@@ -624,6 +632,7 @@ CONTAINS
       INTEGER :: i, j
       REAL(DP), ALLOCATABLE :: tmp1(:,:)
 !
+      IF( nss < 1 ) RETURN
 
       CALL DGEMM( 'T', 'N',  nss, nss, 2*ngw, -2.0d0, cp( 1, ist ), 2*ngwx, &
                   cp( 1, ist ), 2*ngwx, 0.0d0, sig, nx)
@@ -706,6 +715,7 @@ CONTAINS
       !     <phi|cp>
       !
       !
+      IF( nss < 1 ) RETURN
 
       CALL DGEMM( 'T', 'N', nss, nss, 2*ngw, 2.0d0, phi( 1, ist ), 2*ngwx, &
                   cp( 1, ist ), 2*ngwx, 0.0d0, rho, nx)
@@ -776,6 +786,8 @@ CONTAINS
       !
       INTEGER     :: i, j
       REAL(DP), ALLOCATABLE :: tmp1( :, : )
+      !
+      IF( nss < 1 ) RETURN
       !
       CALL DGEMM( 'T', 'N', nss, nss, 2*ngw, 2.0d0, phi( 1, ist ), 2*ngwx, &
                   phi( 1, ist ), 2*ngwx, 0.0d0, tau, nx)
@@ -857,6 +869,8 @@ CONTAINS
       REAL(DP),    ALLOCATABLE :: wtemp(:,:) 
       !
       !     lagrange multipliers
+      !
+      IF( nss < 1 ) RETURN
       !
       CALL start_clock( 'updatc' )
       
@@ -952,6 +966,8 @@ CONTAINS
       INTEGER  :: is, iv, jv, ia, inl, jnl, i, j
       REAL(DP), ALLOCATABLE :: qtemp( : , : )
 !
+      IF( n < 1 ) RETURN
+      !
       CALL start_clock( 'calphi' )
 
 

@@ -141,10 +141,11 @@
    subroutine add_core_charge( rhoetg, rhoetr, sfac, rhoc, nsp)
 !=----------------------------------------------------------------------------=!
      USE kinds,          ONLY: DP
-     USE fft,            ONLY: pinvfft
+     USE fft_base,       ONLY: dfftp
      use electrons_base, only: nspin
      use gvecp,          only: ngm
      use atom,           only: nlcc
+     USE fft_module,     ONLY: invfft
 
      implicit none
 
@@ -154,11 +155,12 @@
      REAL(DP)    :: rhoc(:,:)
      COMPLEX(DP), INTENT(IN) :: sfac(:,:)
           
-     COMPLEX(DP), ALLOCATABLE :: vtemp(:)
+     COMPLEX(DP), ALLOCATABLE :: vtemp(:), psi(:)
      REAL(DP) :: fac
      integer :: is, ig
 
-     ALLOCATE( vtemp( ngm ) )
+     ALLOCATE( vtemp( ngm ), psi( dfftp%nnr ) )
+
      vtemp = CMPLX( 0.0d0, 0.0d0 )
 
      fac = 1.0d0 / DBLE( nspin )
@@ -173,9 +175,19 @@
      rhoetg( 1:ngm ) = rhoetg( 1:ngm ) + vtemp( 1:ngm )
 
      !  rhoetr = 1.0d0 * rhoetr + INVFFT( vtemp )
-     CALL pinvfft( rhoetr, vtemp, 1.0d0 )
 
-     DEALLOCATE( vtemp )
+     !  CALL pinvfft( rhoetr, vtemp, 1.0d0 )
+
+     CALL rho2psi( 'Dense', psi, dfftp%nnr, vtemp, ngm )
+     CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+
+     IF( SIZE( rhoetr ) /= SIZE( psi ) ) &
+        CALL errore( " add_core_charge ", " inconsistent sizes ", 1 )
+
+     rhoetr(:) = rhoetr(:) + DBLE( psi )
+
+
+     DEALLOCATE( vtemp, psi )
 
      RETURN
    end subroutine add_core_charge
@@ -297,6 +309,8 @@
 
       use grid_dimensions,    only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
+
+      USE fft_module, ONLY: fwfft
 !
       implicit none
       real(8), intent(in)   :: rhoc(nnr)
@@ -322,7 +336,7 @@
       do ir=1,nnr
          wrk1(ir)=rhoc(ir)
       end do
-      call fwfft(wrk1,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+      call fwfft('Dense',wrk1,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 ! In g-space:
       if (nspin.eq.1) then
          do ig=1,ngm
@@ -360,6 +374,7 @@
       use small_box,       only: tpibab
       use atom,            only: nlcc
       use core,            only: rhocb
+      use fft_module,      only: invfft
       use reciprocal_vectors, only: gstart
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
@@ -422,7 +437,7 @@
                   end do
                end if
 !
-               call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+               call invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
 !
 ! note that a factor 1/2 is hidden in fac if nspin=2
 !
@@ -466,6 +481,7 @@
       use gvecb,           only: ngb, npb, nmb
       use control_flags,   only: iprint
       use core,            only: rhocb
+      use fft_module,      only: invfft
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
 
@@ -520,7 +536,7 @@
                end do
             endif
 !
-            call ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+            call invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
 !
             call box2grid(irb(1,ia+isa),1,qv,wrk1)
             if (nfft.eq.2) call box2grid(irb(1,ia+1+isa),2,qv,wrk1)

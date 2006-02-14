@@ -106,7 +106,6 @@
       USE pseudopotential
       USE potentials, ONLY: vofrhos, localisation
       USE ions_module, ONLY: moveions, max_ion_forces, update_ions, resort_position
-      USE fft, ONLY : fft_closeup
       USE electrons_module, ONLY: ei, nspin, n_emp
       USE diis, ONLY: allocate_diis
       USE charge_density, ONLY: rhoofr
@@ -761,8 +760,6 @@
       END DO
 
       ! ... free memory
-
-      CALL fft_closeup( )
 
       IF( allocated( c0 ) ) deallocate(c0)
       IF( allocated( cp ) ) deallocate(cp)

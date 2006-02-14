@@ -26,14 +26,13 @@
       USE ions_base,        ONLY : nat, zv, ityp
       USE kinds,            ONLY : DP
       USE electrons_base,   ONLY : qbac
+      USE fft_base,         ONLY : dfftp 
+      USE mp_global,        ONLY : mpime
 #ifdef DFT_CP
-      USE para_mod
       USE grid_dimensions,  ONLY : nr1, nr2, nr3, nr1x, nr2x, nnr=> nnrx
 #endif
 #ifdef DFT_PW
       USE gvect,            ONLY : nr1, nr2, nr3, nr1x=>nrx1, nr2x=>nrx2, nnr=> nrxx
-      USE mp_global,        ONLY : me=>mpime
-      USE sticks,           ONLY : dfftp
 #endif
       !
       IMPLICIT NONE
@@ -54,7 +53,9 @@
       REAL(KIND=DP)              :: ax,ay,az,XG0,YG0,ZG0,X,Y,Z,D,rzero,x0,y0,z0
       REAL(KIND=DP)              :: pass1, pass2, pass3, rin(3),rout(3)
       REAL(KIND=DP), ALLOCATABLE :: dip(:)
-      INTEGER                    :: ix,ir, i, j, k
+      INTEGER                    :: ix,ir, i, j, k, me
+      !
+      me = mpime + 1
       !
       ALLOCATE(dip(nnr))
       tot_charge = 0.d0

@@ -312,7 +312,6 @@
         USE io_global, ONLY: stdout
         USE gvecw, ONLY: ecutwfc => ecutw
         USE gvecp, ONLY: ecutrho => ecutp
-        USE fft, ONLY : pfwfft, pinvfft
         USE ions_base, ONLY: nat, nsp, na
         USE control_flags, ONLY: twfcollect, force_pairing
         USE grid_dimensions, ONLY: nr1, nr2, nr3

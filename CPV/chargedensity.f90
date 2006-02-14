@@ -124,8 +124,7 @@
 
 ! ... declare modules
 
-    USE fft,             ONLY: pw_invfft
-    USE fft_base,        ONLY: dfftp
+    USE fft_base,        ONLY: dfftp, dffts
     USE mp_global,       ONLY: mpime
     USE mp,              ONLY: mp_sum
     USE turbo,           ONLY: tturbo, nturbo, turbo_states, allocate_turbo
@@ -136,6 +135,7 @@
     USE parameters,      ONLY: nspinx
     USE brillouin,       ONLY: kpoints, kp
     USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nnrx
+    USE fft_module,      ONLY: invfft
 
 
 
@@ -214,7 +214,8 @@
           ! ...  Fourier-transform wave functions to real-scaled space
           ! ...  psi(s,ib,ik) = INV_FFT (  c0(ig,ib,ik)  )
 
-          CALL pw_invfft( psi2, c0( :, is1, 1, ispin_wfc ), c0( :, is2, 1, ispin_wfc ) )
+          CALL c2psi( psi2, dffts%nnr, c0( 1, is1, 1, ispin_wfc ), c0( 1, is2, 1, ispin_wfc ), cdesc%ngwl, 2 )
+          CALL invfft( 'Wave',psi2, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
 
           IF( tturbo .AND. ( ib <= nturbo ) ) THEN
             ! ...  store real-space wave functions to be used in force 
@@ -250,7 +251,8 @@
 
           ! ...  Fourier-transform wave functions to real-scaled space
 
-          CALL pw_invfft(psi2, c0(:,nb,1,ispin_wfc), c0(:,nb,1,ispin_wfc) )
+          CALL c2psi( psi2, dffts%nnr, c0( 1, nb, 1, ispin_wfc ), c0( 1, nb, 1, ispin_wfc ), cdesc%ngwl, 1 )
+          CALL invfft( 'Wave', psi2, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
 
           ! ...  occupation numbers divided by cell volume
 
@@ -284,7 +286,8 @@
 
             ! ...  Fourier-transform wave function to real space
 
-            CALL pw_invfft( psi2, c0( :, ib, ik, ispin_wfc ) )
+            CALL c2psi( psi2, dffts%nnr, c0( 1, nb, 1, ispin_wfc ), c0( 1, nb, 1, ispin_wfc ), cdesc%ngwl, 0 )
+            CALL invfft( 'Wave', psi2, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
 
             ! ...  occupation numbers divided by cell volume
             ! ...  times the weight of this k point
@@ -361,8 +364,10 @@
 !     density in reciprocal space and transforms it to the
 !     real space.
 
-     USE fft, ONLY: pinvfft
-     USE cell_base, ONLY: tpiba
+     USE fft_base,   ONLY: dfftp
+     USE cell_base,  ONLY: tpiba
+     USE gvecp,      ONLY: ngm
+     USE fft_module, ONLY: invfft
 
      IMPLICIT NONE
 
@@ -373,22 +378,31 @@
      INTEGER :: ig, ipol, ierr
      COMPLEX(DP), ALLOCATABLE :: tgrho(:)
      COMPLEX(DP)              :: rg
+     COMPLEX(DP), ALLOCATABLE :: psi(:)
 
      ! ...
 
      ALLOCATE( tgrho( SIZE( rhoeg ) ), STAT=ierr)
      IF( ierr /= 0 ) CALL errore(' gradrho ', ' allocating tgrho ', ABS(ierr) )
+     !
+     ALLOCATE( psi( SIZE( grho, 1 ) ), STAT=ierr)
+     IF( ierr /= 0 ) CALL errore(' gradrho ', ' allocating psi ', ABS(ierr) )
 
      DO ipol = 1, 3
        DO ig = 1, SIZE( rhoeg )
          rg        = rhoeg(ig) * gx( ipol, ig )
          tgrho(ig) = tpiba * CMPLX( - AIMAG(rg), DBLE(rg) ) 
        END DO
-       CALL pinvfft( grho(:,ipol), tgrho )
+       CALL rho2psi( 'Dense', psi, dfftp%nnr, tgrho, ngm )
+       CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+       grho( :, ipol ) = DBLE( psi )
      END DO
 
      DEALLOCATE(tgrho, STAT=ierr)
      IF( ierr /= 0 ) CALL errore(' gradrho ', ' deallocating tgrho ', ABS(ierr) )
+
+     DEALLOCATE(psi, STAT=ierr)
+     IF( ierr /= 0 ) CALL errore(' gradrho ', ' deallocating psi ', ABS(ierr) )
 
      RETURN
   END SUBROUTINE gradrho
@@ -415,6 +429,7 @@
       use grid_dimensions, only: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       use cell_base, only: tpiba
+      USE fft_module, ONLY: invfft
 !
       implicit none
 ! input
@@ -439,7 +454,7 @@
             v(np(ig))=      ci*tpiba*gx(1,ig)*rhog(ig,iss)
             v(nm(ig))=CONJG(ci*tpiba*gx(1,ig)*rhog(ig,iss))
          end do
-         call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         call invfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          do ir=1,nnr
             gradr(ir,1,iss)=DBLE(v(ir))
          end do
@@ -452,7 +467,7 @@
             v(nm(ig))= tpiba*(CONJG(ci*gx(2,ig)*rhog(ig,iss)+           &
      &                                 gx(3,ig)*rhog(ig,iss)))
          end do
-         call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         call invfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          do ir=1,nnr
             gradr(ir,2,iss)= DBLE(v(ir))
             gradr(ir,3,iss)=AIMAG(v(ir))

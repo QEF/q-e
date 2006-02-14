@@ -549,13 +549,14 @@
       SUBROUTINE print_ks_states( psi, file_name )
 
         USE kinds
-        USE fft, ONLY: pw_invfft
         USE mp_global, ONLY: mpime, nproc, group, root
         USE mp, ONLY: mp_barrier, mp_sum
         USE io_global, ONLY: ionode, ionode_id
         USE io_global, ONLY: stdout
-        USE fft_base, ONLY: dfftp
+        USE gvecw, ONLY: ngw
+        USE fft_base, ONLY: dfftp, dffts
         USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnrx
+        USE fft_module, ONLY: invfft
 
         IMPLICIT NONE
 
@@ -571,7 +572,8 @@
         ALLOCATE( zcomp( nr3 ), rcomp2( nr3 ) )
         ALLOCATE( psi2( nnrx ) )
 
-        CALL pw_invfft( psi2, psi, psi )
+        CALL c2psi( psi2, dffts%nnr, psi, psi, ngw, 1 )
+        CALL invfft( 'Wave', psi, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
         
         INQUIRE( UNIT=ksunit, OPENED=top )
         IF( top ) THEN

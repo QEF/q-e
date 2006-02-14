@@ -35,7 +35,9 @@
 
     SUBROUTINE dforce1( co, ce, dco, dce, fio, fie, hg, v, psi_stored )
 
-      USE fft, ONLY: pw_invfft, pw_fwfft
+      USE fft_base, ONLY: dffts
+      USE gvecw, ONLY: ngw
+      USE fft_module, ONLY: fwfft, invfft
 
       IMPLICIT NONE
 
@@ -56,16 +58,20 @@
 
       !  end of declarations
 
+      ALLOCATE( psi( SIZE(v) ) )
+
       IF( PRESENT( psi_stored ) ) THEN
-        psi_stored = psi_stored * CMPLX(v, 0.0d0)
-        CALL pw_fwfft(psi_stored, dco, dce)
+        psi = psi_stored * CMPLX(v, 0.0d0)
       ELSE
-        ALLOCATE( psi( SIZE(v) ) )
-        CALL pw_invfft(psi, co, ce)
+        CALL c2psi( psi, dffts%nnr, co, ce, ngw, 2 )
+        CALL invfft( 'Wave', psi, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
         psi = psi * CMPLX(v, 0.0d0)
-        CALL pw_fwfft(psi, dco, dce)
-        DEALLOCATE(psi)
       END IF
+
+      CALL fwfft( 'Wave', psi, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
+      CALL psi2c( psi, dffts%nnr, dco, dce, ngw, 2 )
+
+      DEALLOCATE(psi)
 
       fioby2   = fio * 0.5
       fieby2   = fie * 0.5

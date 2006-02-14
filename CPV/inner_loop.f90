@@ -64,7 +64,6 @@
       USE io_global,      ONLY: io_global_start, stdout, ionode, &
                                 ionode_id
       USE mp_global,      ONLY: mp_global_start
-      USE para_mod
       USE dener
       USE derho
       USE cdvan

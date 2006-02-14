@@ -52,7 +52,6 @@
       use local_pseudo, only: vps, rhops
       use io_global, ONLY: io_global_start, stdout, ionode, ionode_id
       use mp_global, ONLY: mp_global_start, group
-      use para_mod
       use dener
       use derho
       use cdvan

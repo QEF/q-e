@@ -44,7 +44,9 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE uspp,                     ONLY : nkb
   USE io_global,                ONLY : ionode, stdout
   USE mp,                       ONLY : mp_barrier
-  USE para_mod,                 ONLY : dfftp, me, nproc
+  USE mp_global,                ONLY : nproc, mpime
+  USE fft_module,               ONLY : invfft
+  USE fft_base,                 ONLY : dfftp
   USE parallel_include
   !
   IMPLICIT NONE
@@ -78,7 +80,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   REAL(DP)    :: t1, t2, t3, taup(3)
   COMPLEX(DP) :: qvt
   REAL (DP)   :: temp_vec(3)
-  INTEGER           :: adjust,ini, ierr1,nnn
+  INTEGER           :: adjust,ini, ierr1,nnn, me
   COMPLEX(DP) :: U2(nbsp,nbsp)
   INTEGER           :: igx, igy, igz
   REAL(DP)    :: wfcx, wfcy, wfcz
@@ -110,6 +112,8 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
 #endif
   !
   ! ... set up the weights and the G vectors for wannie-function calculation
+  !
+  me = mpime + 1
   !
   te = 0.D0
   !
@@ -862,7 +866,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
 #ifdef __PARA
               irb3=irb(3,isa)
 #endif
-              CALL ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+              CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
               iqv=1
               qvt=(0.D0,0.D0)
               qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
@@ -903,7 +907,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                     qv(npb(ig))=eigrb(ig,isa)*qgb(ig,ijv,is)
                     qv(nmb(ig))=CONJG(eigrb(ig,isa)*qgb(ig,ijv,is))
                  END DO
-                 CALL ivfftbold(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+                 CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
                  iqv=1
                  qvt=0.D0
                  qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
@@ -1265,7 +1269,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   USE constants,        ONLY : tpi
   USE electrons_base,   ONLY : nbsp
   USE control_flags,    ONLY : iprsta
-  USE para_mod,         ONLY : me
+  USE mp_global,        ONLY : mpime
   USE parallel_include
   !
   IMPLICIT NONE
@@ -1291,7 +1295,9 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   REAL(DP), PARAMETER :: autoaf=0.529177d0
   REAL(DP) :: spread, sp
   REAL(DP) :: wfc(3,nbsp), gr(nw,3)
+  INTEGER  :: me
   !
+  me = mpime + 1
   !
   ALLOCATE(mt(nw))
   ALLOCATE(X1(m,m))
@@ -1529,7 +1535,8 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
                                  indexplusz, indexminusz, tag, tagp
   USE cvan,               ONLY : nvb
   USE mp,                 ONLY : mp_barrier, mp_bcast
-  USE para_mod,           ONLY : dfftp, nproc, me
+  USE mp_global,          ONLY : nproc, mpime
+  USE fft_base,           ONLY : dfftp
   USE parallel_include     
   !
   IMPLICIT NONE
@@ -1549,7 +1556,9 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   INTEGER :: ti, tj, tk
   REAL(DP) ::t1, vt, err1, err2, err3
   INTEGER :: ti1,tj1,tk1, clwf
+  INTEGER :: me
   !
+  me = mpime + 1
   !
   IF ( nbsp < nproc ) &
      CALL errore( 'cp-wf', &
@@ -2517,12 +2526,15 @@ SUBROUTINE grid_map()
   USE efcalc,                 ONLY : xdist, ydist, zdist
   USE smooth_grid_dimensions, ONLY : nnrsx, nr1s, nr2s, nr3s, &
                                      nr1sx, nr2sx, nr3sx
-  USE para_mod,               ONLY : dffts, me
+  USE fft_base,               ONLY : dffts
+  USE mp_global,              ONLY : mpime
   USE parallel_include
   !
   IMPLICIT NONE
   !
-  INTEGER :: ir1, ir2, ir3, ibig3
+  INTEGER :: ir1, ir2, ir3, ibig3, me
+  !
+  me = mpime + 1
   !
   ALLOCATE(xdist(nnrsx))
   ALLOCATE(ydist(nnrsx))
@@ -2651,7 +2663,8 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
   USE constants,              ONLY : fpi
   USE wannier_base,           ONLY : expo
   USE grid_dimensions,        ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nnrx
-  USE para_mod,               ONLY : dfftp, me
+  USE fft_base,               ONLY : dfftp
+  USE mp_global,              ONLY : mpime
   USE parallel_include
   !
   IMPLICIT NONE
@@ -2659,6 +2672,10 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
   INTEGER ir1, ir2, ir3, ibig3 , inw
   REAL(DP) x
   INTEGER , INTENT(in) :: nw1, i_1(nw1), j_1(nw1), k_1(nw1)
+  INTEGER :: me
+
+  me = mpime + 1
+
   ALLOCATE(expo(nnrx,nw1))
 
   DO inw=1,nw1
@@ -2703,7 +2720,8 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   USE grid_dimensions,          ONLY : nnrx, nr1, nr2, nr3, nr1x, nr2x, nr3x
   USE smallbox_grid_dimensions, ONLY : nnrbx, nr1b, nr2b, nr3b, &
                                        nr1bx, nr2bx, nr3bx
-  USE para_mod,                 ONLY : dfftp, me
+  USE fft_base,                 ONLY : dfftp
+  USE mp_global,                ONLY : mpime
   !
   IMPLICIT NONE
   !
@@ -2711,8 +2729,9 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   COMPLEX(DP), INTENT(IN):: qv(nnrbx), vr(nnrx)
   COMPLEX(DP)            :: boxdotgridcplx
   !
-  INTEGER :: ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
+  INTEGER :: ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig, me
   !
+  me = mpime + 1
   !
   boxdotgridcplx = ZERO
 
@@ -2752,7 +2771,8 @@ SUBROUTINE write_rho_g( rhog )
   USE gvecp,              ONLY : ngm
   USE reciprocal_vectors, ONLY : gx, mill_l
   USE electrons_base,     ONLY : nspin
-  USE para_mod,           ONLY : dfftp, nproc, me
+  USE fft_base,           ONLY : dfftp
+  USE mp_global,          ONLY : nproc, mpime
   USE parallel_include
   !
   IMPLICIT NONE
@@ -2761,13 +2781,15 @@ SUBROUTINE write_rho_g( rhog )
   REAL(DP),   ALLOCATABLE:: gnx(:,:), bigg(:,:)
   COMPLEX(DP),ALLOCATABLE :: bigrho(:)
   COMPLEX(DP) :: rhotmp_g(ngm)
-  INTEGER           :: ntot, i, j
+  INTEGER           :: ntot, i, j, me
 #ifdef __PARA
   INTEGER proc, ierr, root, ngdens(nproc),recvcount(nproc), displs(nproc)
   INTEGER recvcount2(nproc), displs2(nproc)
 #endif
   CHARACTER (LEN=6)  :: name
   CHARACTER (LEN=15) :: name2
+
+  me = mpime + 1
 
   ALLOCATE(gnx(3,ngm))
 
@@ -2904,7 +2926,8 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   USE ions_base,          ONLY : nsp, na, zv, nsx, nax
   USE constants,          ONLY : pi, tpi
   USE mp,                 ONLY : mp_barrier, mp_bcast
-  USE para_mod,           ONLY : dfftp, nproc, me
+  USE fft_base,           ONLY : dfftp
+  USE mp_global,          ONLY : nproc, mpime
   USE parallel_include
   !
   IMPLICIT NONE
@@ -2925,6 +2948,9 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   REAL(DP),ALLOCATABLE :: v_mr(:), dz(:), gz(:), g_1(:,:), vbar(:), cd(:), v_final(:)
   REAL(DP), ALLOCATABLE:: cdion(:), cdel(:), v_line(:), dist(:)
   COMPLEX(DP),ALLOCATABLE :: rho_ion(:),v_1(:),vmac(:),rho_tot(:),rhogz(:), bigrhog(:)
+  INTEGER :: me
+
+  me = mpime + 1
 
   ALLOCATE(gnx(3,ngm))
 
@@ -3201,7 +3227,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   USE cell_base,              ONLY : alat
   USE constants,              ONLY : tpi
   USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
-  USE para_mod,               ONLY : me
+  USE mp_global,              ONLY : mpime
   USE parallel_include
   !
   IMPLICIT NONE
@@ -3230,7 +3256,9 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   COMPLEX(DP) :: ct1, ct2, ct3, z(m, m), X(m, m), d(m,m), d2(m,m)
   COMPLEX(DP) :: f1(2*m-1), wp(m*(m+1)/2), Oc(nw, m, m)
   COMPLEX(DP) ::  Oc2(nw, m, m),wp1(m*(m+1)/2), X1(m,m), U2(m,m), U3(m,m)
+  INTEGER :: me
   !
+  me = mpime + 1
   !
   ALLOCATE(W(m,m), wr(m))
   !
@@ -3575,6 +3603,7 @@ SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
   USE uspp_param,             ONLY : nh, nhm
   USE uspp,                   ONLY : nkb, dvan
   USE cell_base,              ONLY : tpiba2
+  USE fft_module,             ONLY : fwfft, invfft
   !
   IMPLICIT NONE
   !
@@ -3609,7 +3638,7 @@ SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
         psi(nps(ig))=c(ig)+CI*ca(ig)
      END DO
      !
-     CALL ivfftw(psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+     CALL invfft('Wave',psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
      !     
   ELSE
      !
@@ -3634,7 +3663,7 @@ SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
      psi(ir)=CMPLX(v(ir,iss1)* DBLE(psi(ir)), v1(ir,iss2)*AIMAG(psi(ir)) )
   END DO
   !
-  CALL fwfftw(psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+  CALL fwfft('Wave',psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
   !
   !     note : the factor 0.5 appears 
   !       in the kinetic energy because it is defined as 0.5*g**2
@@ -3717,7 +3746,8 @@ SUBROUTINE write_psi( c, jw )
   USE gvecw ,                 ONLY : ngw
   USE reciprocal_vectors,     ONLY : mill_l
   USE mp,                     ONLY : mp_barrier
-  USE para_mod,               ONLY : dfftp, nproc, me
+  USE fft_base,               ONLY : dfftp
+  USE mp_global,              ONLY : nproc, mpime
   USE parallel_include
   !
   IMPLICIT NONE
@@ -3730,6 +3760,9 @@ SUBROUTINE write_psi( c, jw )
   INTEGER ::nmin(3), nmax(3), n1,n2,nzx,nz,nz_
   INTEGER ::root, displs(nproc), recvcount(nproc)
   COMPLEX(DP), ALLOCATABLE:: psitot(:), psiwr(:,:,:)
+  INTEGER :: me
+
+  me = mpime + 1
   !
   ! nmin, nmax are the bounds on (i,j,k) indexes of wavefunction G-vectors
   !
@@ -3874,6 +3907,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   USE io_global,              ONLY : stdout, ionode
   USE uspp_param,             ONLY : nh, nhm
   USE uspp,                   ONLY : nkb
+  USE fft_module,             ONLY : fwfft, invfft
   !
   IMPLICIT NONE
   !
@@ -3961,7 +3995,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
         DO ir=1,nnrx
            psi(ir)=CMPLX(rhor(ir,iss),0.d0)
         END DO
-        CALL fwfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+        CALL fwfft('Dense',psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
         DO ig=1,ngm
            rhog(ig,iss)=psi(np(ig))
         END DO
@@ -3971,7 +4005,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
         DO ir=1,nnrx
            psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
         END DO
-        CALL fwfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+        CALL fwfft('Dense',psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
         DO ig=1,ngm
            fp=psi(np(ig))+psi(nm(ig))
            fm=psi(np(ig))-psi(nm(ig))
@@ -4002,7 +4036,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
         psis(nps(ig))=c(ig,i)
      END DO
      !
-     CALL ivfftw(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+     CALL invfft('Wave',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
      !
      !     wavefunctions in unit 21
      !
@@ -4040,7 +4074,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
         DO ir=1,nnrsx
            psis(ir)=CMPLX(rhos(ir,iss),0.d0)
         END DO
-        CALL fwffts(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+        CALL fwfft('Smooth',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
         DO ig=1,ngs
            rhog(ig,iss)=psis(nps(ig))
         END DO
@@ -4050,7 +4084,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
         DO ir=1,nnrsx
            psis(ir)=CMPLX(rhos(ir,isup),rhos(ir,isdw))
         END DO
-        CALL fwffts(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+        CALL fwfft('Smooth',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
         DO ig=1,ngs
            fp= psis(nps(ig)) + psis(nms(ig))
            fm= psis(nps(ig)) - psis(nms(ig))
@@ -4069,7 +4103,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
            psi(nm(ig))=CONJG(rhog(ig,iss))
            psi(np(ig))=      rhog(ig,iss)
         END DO
-        CALL invfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+        CALL invfft('Dense',psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
         DO ir=1,nnrx
            rhor(ir,iss)=DBLE(psi(ir))
         END DO
@@ -4084,7 +4118,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
            psi(nm(ig))=CONJG(rhog(ig,isup))+CI*CONJG(rhog(ig,isdw))
            psi(np(ig))=rhog(ig,isup)+CI*rhog(ig,isdw)
         END DO
-        CALL invfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+        CALL invfft('Dense',psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
         DO ir=1,nnrx
            rhor(ir,isup)= DBLE(psi(ir))
            rhor(ir,isdw)=AIMAG(psi(ir))

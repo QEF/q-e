@@ -505,7 +505,6 @@
     SUBROUTINE print_time( tprint, texit, timeform_ , timernl_ , timerho_ , &
       timevof_ , timerd_ , timeorto_ , timeloop_ , timing )
 
-      USE fft, ONLY: fft_time_stat 
       USE potentials, ONLY: print_vofrho_time
       USE stress, ONLY: print_stress_time
       USE printout_base, ONLY: pprefix
@@ -583,13 +582,20 @@
       END IF
 
       IF ( texit ) THEN
+
         IF( index > 0 ) timeav  = timesum / DBLE( MAX( index, 1 ) )
+
         IF (ionode) THEN
           WRITE( stdout,*)
           WRITE( stdout, fmt='(3X,"Execution time statistics (SEC)")')
           WRITE( stdout, fmt='(3X,"Mean time for MD step ..",F12.3)') timeav
-          CALL fft_time_stat( index )
         END IF
+
+        CALL print_clock( 'fft' )
+        CALL print_clock( 'ffts' )
+        CALL print_clock( 'fftw' )
+        CALL print_clock( 'fftb' )
+
       ENDIF
 
       RETURN
@@ -603,15 +609,17 @@
 
       USE mp_global, ONLY: mpime, nproc, group
       USE mp, ONLY: mp_max, mp_get, mp_put
-      USE fft, ONLY : pfwfft, pinvfft
       USE reciprocal_vectors, ONLY: ig_l2g, gx, g
       USE gvecp, ONLY: ngm
+      USE fft_base, ONLY : dfftp
+      USE fft_module, ONLY: fwfft
 
       REAL(DP), INTENT(IN) :: rhoe(:,:)
       COMPLEX(DP), INTENT(IN) ::  sfac(:,:)
 
       INTEGER :: nspin, ispin, ip, nsp, ngx_l, ng, is, ig
       COMPLEX(DP), ALLOCATABLE :: rhoeg(:,:)
+      COMPLEX(DP), ALLOCATABLE :: psi(:)
       COMPLEX(DP), ALLOCATABLE :: rhoeg_rcv(:,:)
       REAL   (DP), ALLOCATABLE :: hg_rcv(:)
       REAL   (DP), ALLOCATABLE :: gx_rcv(:,:)
@@ -628,10 +636,19 @@
         ALLOCATE(ig_rcv(ngx_l))
         ALLOCATE(rhoeg_rcv(ngx_l,nspin))
         ALLOCATE(sfac_rcv(ngx_l,nsp))
-! ...   FFT: rho(r) --> rho(g)
+
+        ! ...   FFT: rho(r) --> rho(g)
+        !
+        ALLOCATE( psi( SIZE( rhoe, 1 ) ) )
+        !
         DO ispin = 1, nspin
-          CALL pfwfft(rhoeg(:,ispin),rhoe(:,ispin))
+          psi = rhoe(:,ispin)
+          CALL fwfft(   'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+          CALL psi2rho( 'Dense', psi, dfftp%nnr, rhoeg(:,ispin), ngm )
         END DO
+
+        DEALLOCATE( psi )
+
         IF( ionode ) THEN
           OPEN(sfacunit, FILE=TRIM(sfac_file), STATUS='UNKNOWN')
         END IF

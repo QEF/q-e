@@ -147,7 +147,8 @@
 !  ----------------------------------------------
 
 ! ... declare modules
-      USE fft, ONLY: pfwfft, pinvfft
+      USE fft_base, ONLY: dfftp
+      USE fft_module, ONLY: fwfft, invfft
       USE ions_base, ONLY: nsp
       USE cell_base, ONLY: tpiba2
       USE reciprocal_vectors, ONLY: gstart, gzero, g
@@ -174,6 +175,7 @@
       INTEGER :: ns, sp, is, ism, i, ig
       LOGICAL, SAVE :: tfirst = .TRUE.
       INTEGER, SAVE :: dimaa, dimaaold, nrho_t, ierr
+      COMPLEX(DP), ALLOCATABLE :: psi(:)
 
 ! ... end of declarations
 !  ----------------------------------------------
@@ -221,7 +223,16 @@
       if( is  == 0 ) is  = daamax
 
 ! ... Fourier tranform of rhoe
-      CALL pfwfft(rhoout,rhoe)
+
+      ALLOCATE( psi( SIZE( rhoe ) ) )
+
+      psi = rhoe
+
+      CALL fwfft(   'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+      CALL psi2rho( 'Dense', psi, dfftp%nnr, rhoout, ngm )
+
+      DEALLOCATE( psi )
+ 
 
       IF( nrho_t == 1 )THEN
 
@@ -309,12 +320,22 @@
       IF( ierr /= 0 ) CALL errore(' newrho ', ' allocating rho_old ', ierr)
       rho_old = rhoe 
 
-! ... rhoe back to real space rhoe = FFT( rhoout )
-      CALL pinvfft(rhoe, rhoout)
+      ! ... rhoe back to real space rhoe = FFT( rhoout )
+      ! CALL pinvfft(rhoe, rhoout)
+
+      ALLOCATE( psi( SIZE( rhoe ) ) )
+
+      CALL rho2psi( 'Dense', psi, dfftp%nnr, rhoout, ngm )
+      CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+
+      rhoe = DBLE( psi )
+
       drho = SUM( (rho_old - rhoe)**2 )
 
+      DEALLOCATE(psi)
       DEALLOCATE(rho_old, STAT=ierr)
       IF( ierr /= 0 ) CALL errore(' newrho ', ' deallocating rho_old ', ierr)
+
       CALL mp_sum(drho, group)
 
       RETURN

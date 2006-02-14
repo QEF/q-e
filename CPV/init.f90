@@ -37,7 +37,6 @@
       use gvecb, only: gcutb
       use fft_scalar, only: good_fft_dimension, good_fft_order
       USE fft_base, ONLY: dfftp, dffts, fft_dlay_descriptor
-      USE fft,       ONLY: fft_setup
       USE stick_base,       ONLY: pstickset
       USE control_flags,    ONLY: tdipole
       USE berry_phase,      ONLY: berry_setup
@@ -138,11 +137,6 @@
       ! ... Initialize (local) real space dimensions
       !
       CALL realspace_grids_para( dfftp, dffts )
-      !
-      !
-      ! ... Initialize FFT module
-      !
-      CALL fft_setup( gamma_only , ngm_ , ngs_ , ngw_ )
       !
       !
       ! ... generate g-space

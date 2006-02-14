@@ -18,7 +18,6 @@
                                                                         
       USE kinds
       USE parameters
-      use fft 
       use ions_base, only: nsp, nax 
       use electrons_base, only: nx => nbnd, nspin
       use electrons_module, only: n_emp

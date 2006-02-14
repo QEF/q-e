@@ -50,8 +50,6 @@ init.o \
 init_run.o \
 inner_loop.o \
 input.o \
-interfaces_main.o \
-interfaces.o \
 ions.o \
 ions_positions.o \
 ksstates.o \
@@ -115,8 +113,7 @@ adjef.o \
 entropy.o \
 forceconv.o \
 geninv.o \
-indices.o \
-miller.o
+indices.o
 
 MODULES = \
 ../Modules/atom.o \

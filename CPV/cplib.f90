@@ -87,154 +87,7 @@
       RETURN
       END SUBROUTINE atomic_wfc
 !
-!-----------------------------------------------------------------------
-      SUBROUTINE box2grid(irb,nfft,qv,vr)
-!-----------------------------------------------------------------------
 !
-! add array qv(r) on box grid to array vr(r) on dense grid
-! irb   : position of the box in the dense grid
-! nfft=1  add      real part of qv(r) to real part of array vr(r) 
-! nfft=2  add imaginary part of qv(r) to real part of array vr(r) 
-!
-      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
-            nr1x, nr2x, nnr => nnrx
-      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nnrb => nnrbx
-      USE para_mod
-      IMPLICIT NONE
-      INTEGER, INTENT(in):: nfft, irb(3)
-      REAL(8), INTENT(in):: qv(2,nnrb)
-      COMPLEX(8), INTENT(inout):: vr(nnr)
-!
-      INTEGER ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
-
-      IF(nfft.LE.0.OR.nfft.GT.2) CALL errore('box2grid','wrong data',nfft)
-
-      DO ir3=1,nr3b
-         ibig3=irb(3)+ir3-1
-         ibig3=1+MOD(ibig3-1,nr3)
-         IF(ibig3.LT.1.OR.ibig3.GT.nr3)                                 &
-     &        CALL errore('box2grid','ibig3 wrong',ibig3)
-         ibig3=ibig3-dfftp%ipp(me)
-         IF ( ibig3 .GT. 0 .AND. ibig3 .LE. ( dfftp%npp(me) ) ) THEN
-            DO ir2=1,nr2b
-               ibig2=irb(2)+ir2-1
-               ibig2=1+MOD(ibig2-1,nr2)
-               IF(ibig2.LT.1.OR.ibig2.GT.nr2)                           &
-     &              CALL errore('box2grid','ibig2 wrong',ibig2)
-               DO ir1=1,nr1b
-                  ibig1=irb(1)+ir1-1
-                  ibig1=1+MOD(ibig1-1,nr1)
-                  IF(ibig1.LT.1.OR.ibig1.GT.nr1)                        &
-     &                 CALL errore('box2grid','ibig1 wrong',ibig1)
-                  ibig=ibig1+(ibig2-1)*nr1x+(ibig3-1)*nr1x*nr2x
-                  ir=ir1+(ir2-1)*nr1bx+(ir3-1)*nr1bx*nr2bx
-                  vr(ibig) = vr(ibig)+qv(nfft,ir)
-               END DO
-            END DO
-         END IF
-      END DO
-!
-      RETURN
-      END SUBROUTINE box2grid
-!
-!-----------------------------------------------------------------------
-      SUBROUTINE box2grid2(irb,qv,v)
-!-----------------------------------------------------------------------
-!
-! add array qv(r) on box grid to array v(r) on dense grid
-! irb   : position of the box in the dense grid
-!
-      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
-            nr1x, nr2x, nnr => nnrx
-      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nnrb => nnrbx
-      USE para_mod
-      IMPLICIT NONE
-      INTEGER, INTENT(in):: irb(3)
-      COMPLEX(8), INTENT(in):: qv(nnrb)
-      COMPLEX(8), INTENT(inout):: v(nnr)
-!
-      INTEGER ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
-
-      DO ir3=1,nr3b
-         ibig3=irb(3)+ir3-1
-         ibig3=1+MOD(ibig3-1,nr3)
-         IF(ibig3.LT.1.OR.ibig3.GT.nr3)                                 &
-     &        CALL errore('box2grid2','ibig3 wrong',ibig3)
-         ibig3=ibig3-dfftp%ipp(me)
-         IF (ibig3.GT.0.AND.ibig3.LE. dfftp%npp(me) ) THEN
-            DO ir2=1,nr2b
-               ibig2=irb(2)+ir2-1
-               ibig2=1+MOD(ibig2-1,nr2)
-               IF(ibig2.LT.1.OR.ibig2.GT.nr2)                           &
-     &              CALL errore('box2grid2','ibig2 wrong',ibig2)
-               DO ir1=1,nr1b
-                  ibig1=irb(1)+ir1-1
-                  ibig1=1+MOD(ibig1-1,nr1)
-                  IF(ibig1.LT.1.OR.ibig1.GT.nr1)                        &
-     &                 CALL errore('box2grid2','ibig1 wrong',ibig1)
-                  ibig=ibig1+(ibig2-1)*nr1x+(ibig3-1)*nr1x*nr2x
-                  ir=ir1+(ir2-1)*nr1bx+(ir3-1)*nr1bx*nr2bx
-                  v(ibig) = v(ibig)+qv(ir)
-               END DO
-            END DO
-         END IF
-      END DO
-
-      RETURN
-      END SUBROUTINE box2grid2
-!
-!-----------------------------------------------------------------------
-      REAL(8) FUNCTION boxdotgrid(irb,nfft,qv,vr)
-!-----------------------------------------------------------------------
-!
-! Calculate \sum_i qv(r_i)*vr(r_i)  with r_i on box grid
-! array qv(r) is defined on box grid, array vr(r)on dense grid
-! irb   : position of the box in the dense grid
-! nfft=1 (2): use real (imaginary) part of qv(r)
-! Parallel execution: remember to sum the contributions from other nodes
-!
-      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
-            nr1x, nr2x, nnr => nnrx
-      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nnrb => nnrbx
-      USE para_mod
-      IMPLICIT NONE
-      INTEGER, INTENT(in):: nfft, irb(3)
-      REAL(8), INTENT(in):: qv(2,nnrb), vr(nnr)
-!
-      INTEGER ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
-!
-!
-      IF(nfft.LE.0.OR.nfft.GT.2) CALL errore('box2grid','wrong data',nfft)
-
-      boxdotgrid=0.d0
-
-      DO ir3=1,nr3b
-         ibig3=irb(3)+ir3-1
-         ibig3=1+MOD(ibig3-1,nr3)
-         ibig3=ibig3-dfftp%ipp(me)
-         IF (ibig3.GT.0.AND.ibig3.LE. dfftp%npp(me) ) THEN
-            DO ir2=1,nr2b
-               ibig2=irb(2)+ir2-1
-               ibig2=1+MOD(ibig2-1,nr2)
-               DO ir1=1,nr1b
-                  ibig1=irb(1)+ir1-1
-                  ibig1=1+MOD(ibig1-1,nr1)
-                  ibig=ibig1 + (ibig2-1)*nr1x + (ibig3-1)*nr1x*nr2x
-                  ir  =ir1 + (ir2-1)*nr1bx + (ir3-1)*nr1bx*nr2bx
-                  boxdotgrid = boxdotgrid + qv(nfft,ir)*vr(ibig)
-               END DO
-            END DO
-         ENDIF
-      END DO
-
-      RETURN
-      END FUNCTION boxdotgrid
-!
-
-
 
 !-----------------------------------------------------------------------
       REAL(8) FUNCTION cscnorm( bec, nkbx, cp, ngwx, i, n )
@@ -487,6 +340,7 @@
       USE mp, ONLY: mp_sum
       USE atom, ONLY: nlcc
       USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
+      USE fft_module, ONLY: fwfft
 
       IMPLICIT NONE
 
@@ -517,7 +371,7 @@
       !
       IF( nspin > 1 ) vxc(:) = vxc(:) + vxcr(:,2)
       !
-      CALL fwfft( vxc, nr1, nr2, nr3, nr1x, nr2x, nr3x )
+      CALL fwfft( 'Dense', vxc, nr1, nr2, nr3, nr1x, nr2x, nr3x )
       !
       DO i=1,3
          DO j=1,3
@@ -574,6 +428,7 @@
       USE cell_base, ONLY: tpiba2
       USE ensemble_dft, ONLY: tens
       USE funct, ONLY: dft_is_meta
+      USE fft_module, ONLY: fwfft, invfft
 !
       IMPLICIT NONE
 !
@@ -611,7 +466,7 @@
             psi(nps(ig))=c(ig)+ci*ca(ig)
          END DO
 !
-         CALL ivfftw(psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+         CALL invfft('Wave',psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
 !     
       ELSE
 !
@@ -637,7 +492,7 @@
          psi(ir)=CMPLX(v(ir,iss1)* DBLE(psi(ir)), v(ir,iss2)*AIMAG(psi(ir)) )
       END DO
 !
-      CALL fwfftw(psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+      CALL fwfft('Wave',psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
 !
 !     note : the factor 0.5 appears 
 !       in the kinetic energy because it is defined as 0.5*g**2
@@ -817,11 +672,11 @@
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       USE cell_base, ONLY: ainv
       USE qgb_mod
-      USE para_mod
       USE cdvan
       USE derho
       USE dqgb_mod
       USE recvecs_indexes, ONLY: nm, np
+      USE fft_module, ONLY: fwfft, invfft
 
       IMPLICIT NONE
 ! input
@@ -926,7 +781,7 @@
                         END DO
                      ENDIF
 !
-                     CALL ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+                     CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
 !
 !  qv = US contribution in real space on box grid
 !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
@@ -944,7 +799,7 @@
                   drhor(ir,iss,i,j)=drhor(ir,iss,i,j)+DBLE(v(ir))
                END DO
 !
-               CALL fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+               CALL fwfft('Dense', v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
                DO ig=1,ng
                   drhog(ig,iss,i,j)=drhog(ig,iss,i,j)+v(np(ig))
@@ -1001,7 +856,7 @@
      &                    +       ci*CONJG(eigrb(ig,isa)*dqgbt(ig,2))
                      END DO
 !
-                     CALL ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+                     CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
 !
 !  qv is the now the US augmentation charge for atomic species is
 !  and atom ia: real(qv)=spin up, imag(qv)=spin down
@@ -1018,7 +873,7 @@
                   drhor(ir,isdw,i,j) = drhor(ir,isdw,i,j) +AIMAG(v(ir))
                ENDDO
 !
-               CALL fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+               CALL fwfft('Dense', v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
                DO ig=1,ng
                   fp=v(np(ig))+v(nm(ig))
                   fm=v(np(ig))-v(nm(ig))
@@ -1576,21 +1431,19 @@
 !     sets the indexes irb and positions taub for the small boxes 
 !     around atoms
 !
-      USE parameters, ONLY: natx
       USE ions_base, ONLY: nsp, na, nat
       USE grid_dimensions, ONLY: nr1, nr2, nr3
       USE cell_base, ONLY: ainv, a1, a2, a3
-      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b
+      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx
       USE control_flags, ONLY: iprsta
-      USE cvan, ONLY: nvb
       USE io_global, ONLY: stdout
 
       IMPLICIT NONE
 ! input
-      REAL(8), INTENT(in):: tau0(3,natx)
+      REAL(8), INTENT(in):: tau0(3,nat)
 ! output
       INTEGER, INTENT(out):: irb(3,nat)
-      REAL(8), INTENT(out):: taub(3,natx)
+      REAL(8), INTENT(out):: taub(3,nat)
 ! local
       REAL(8) x(3), xmod
       INTEGER nr(3), nrb(3), xint, is, ia, i, isa
@@ -1659,7 +1512,7 @@
 
       IF( iprsta > 2 ) THEN
            isa = 1
-           DO is=1,nvb
+           DO is=1,nsp
               WRITE( stdout,'(/,2x,''species= '',i2)') is
               DO ia=1,na(is)
                  WRITE( stdout,2000) ia, (irb(i,isa),i=1,3)
@@ -1698,8 +1551,8 @@
       USE qgb_mod
       USE electrons_base, ONLY: nspin
       USE control_flags, ONLY: iprint, thdyn, tfor, tprnfor
-      USE para_mod
       USE mp, ONLY: mp_sum
+      USE fft_module, ONLY: invfft
 !
       IMPLICIT NONE
 ! input
@@ -1765,7 +1618,7 @@
                      END DO
                   END IF
 !
-                  CALL ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+                  CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
 !
                   DO iss=1,nspin
                      deeq(iv,jv,isa,iss) = fac *                        &
@@ -1852,7 +1705,7 @@
                      END DO
                   END DO
 !
-                  CALL ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+                  CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
 !
                   fvan(ik,ia,is) =                                      &
      &                    boxdotgrid(irb(1,isa),1,qv,vr(1,iss))
@@ -1904,7 +1757,7 @@
                      END DO
                   END DO
 !
-                  CALL ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+                  CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
 !
                   fvan(ik,ia,is) =                                      &
      &                    boxdotgrid(irb(1,isa),isup,qv,vr(1,isup)) + &
@@ -2346,6 +2199,7 @@
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
       USE cp_main_variables,  ONLY: rhopr
+      USE fft_module,         ONLY: fwfft, invfft
 !
       IMPLICIT NONE
       REAL(DP) bec(nkb,n), rhovan( nhm * ( nhm + 1 ) / 2, nat, nspin )
@@ -2412,7 +2266,7 @@
             DO ir=1,nnrx
                psi(ir)=CMPLX(rhor(ir,iss),0.d0)
             END DO
-            CALL fwfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+            CALL fwfft('Dense', psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
             DO ig=1,ngm
                rhog(ig,iss)=psi(np(ig))
             END DO
@@ -2422,7 +2276,7 @@
             DO ir=1,nnrx
                psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
             END DO
-            CALL fwfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+            CALL fwfft('Dense', psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
             DO ig=1,ngm
                fp=psi(np(ig))+psi(nm(ig))
                fm=psi(np(ig))-psi(nm(ig))
@@ -2453,7 +2307,7 @@
                ! write(6,'(I6,4F15.10)') ig, psis(nms(ig)), psis(nps(ig))
             END DO
 
-            CALL ivfftw(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+            CALL invfft('Wave',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
 
             !     wavefunctions in unit 21
             !
@@ -2490,7 +2344,7 @@
             DO ir=1,nnrsx
                psis(ir)=CMPLX(rhos(ir,iss),0.d0)
             END DO
-            CALL fwffts(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+            CALL fwfft('Smooth', psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
             DO ig=1,ngs
                rhog(ig,iss)=psis(nps(ig))
             END DO
@@ -2500,7 +2354,7 @@
              DO ir=1,nnrsx
                psis(ir)=CMPLX(rhos(ir,isup),rhos(ir,isdw))
             END DO
-            CALL fwffts(psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+            CALL fwfft('Smooth',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
             DO ig=1,ngs
                fp= psis(nps(ig)) + psis(nms(ig))
                fm= psis(nps(ig)) - psis(nms(ig))
@@ -2519,7 +2373,7 @@
                psi(nm(ig))=CONJG(rhog(ig,iss))
                psi(np(ig))=      rhog(ig,iss)
             END DO
-            CALL invfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+            CALL invfft('Dense',psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
             DO ir=1,nnrx
                rhor(ir,iss)=DBLE(psi(ir))
             END DO
@@ -2534,7 +2388,7 @@
                psi(nm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
                psi(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
             END DO
-            CALL invfft(psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+            CALL invfft('Dense',psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
             DO ir=1,nnrx
                rhor(ir,isup)= DBLE(psi(ir))
                rhor(ir,isdw)=AIMAG(psi(ir))
@@ -2657,8 +2511,8 @@
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       USE control_flags, ONLY: iprint, iprsta
       USE qgb_mod
-      USE para_mod
       USE recvecs_indexes, ONLY: np, nm
+      USE fft_module, ONLY: fwfft, invfft
 !
       IMPLICIT NONE
 !
@@ -2748,7 +2602,7 @@
                   END DO
                ENDIF
 
-               CALL ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+               CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
 
                !
                !  qv = US augmentation charge in real space on box grid
@@ -2790,7 +2644,7 @@
      &           ' rhov: int  n_v(r)  dr = ',omega*ca/(nr1*nr2*nr3)
          ENDIF
 !
-         CALL fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         CALL fwfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
          IF(iprsta.GT.2) THEN
             WRITE( stdout,*) ' rhov: smooth ',omega*rhog(1,iss)
@@ -2846,7 +2700,7 @@
      &                  + ci*   CONJG(eigrb(ig,isa)*qgbt(ig,2))
                END DO
 !
-               CALL ivfftb(qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,irb3)
+               CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
 !
 !  qv is the now the US augmentation charge for atomic species is
 !  and atom ia: real(qv)=spin up, imag(qv)=spin down
@@ -2882,7 +2736,7 @@
             WRITE( stdout,'(a,2f12.8)') 'rhov:in n_v  ',omega*ca/(nr1*nr2*nr3)
          ENDIF
 !
-         CALL fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         CALL fwfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
          IF(iprsta.GT.2) THEN
             WRITE( stdout,*) 'rhov: smooth up',omega*rhog(1,isup)
@@ -3164,6 +3018,7 @@
       USE derho
       USE mp, ONLY: mp_sum
       USE funct, ONLY: dft_is_meta
+      USE fft_module, ONLY: fwfft, invfft
 !
       IMPLICIT NONE
 !
@@ -3313,7 +3168,7 @@
 !
 !     v_xc(r) --> v_xc(g)
 !
-         CALL fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         CALL fwfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
          DO ig=1,ng
             rhog(ig,iss)=vtemp(ig)+v(np(ig))
@@ -3328,7 +3183,7 @@
          DO ir=1,nnr
             v(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
          END DO
-         CALL fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         CALL fwfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          DO ig=1,ng
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
@@ -3363,7 +3218,7 @@
 !
 !     v(g) --> v(r)
 !
-         CALL invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         CALL invfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
          DO ir=1,nnr
             rhor(ir,iss)=DBLE(v(ir))
@@ -3380,7 +3235,7 @@
             v(nm(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
          END DO
 !
-         CALL invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         CALL invfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          DO ir=1,nnr
             rhor(ir,isup)= DBLE(v(ir))
             rhor(ir,isdw)=AIMAG(v(ir))
@@ -3403,7 +3258,7 @@
             vs(nps(ig))=rhog(ig,iss)
          END DO
 !
-         CALL ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+         CALL invfft('Smooth',vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
 !
          DO ir=1,nnrsx
             rhos(ir,iss)=DBLE(vs(ir))
@@ -3415,7 +3270,7 @@
             vs(nps(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
             vs(nms(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
          END DO 
-         CALL ivffts(vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+         CALL invfft('Smooth',vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
          DO ir=1,nnrsx
             rhos(ir,isup)= DBLE(vs(ir))
             rhos(ir,isdw)=AIMAG(vs(ir))

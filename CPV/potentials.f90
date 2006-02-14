@@ -264,7 +264,6 @@
       USE cell_module,    ONLY: boxdimensions
       USE cell_base,      ONLY: tpiba2
       USE ions_base,      ONLY: rcmax, zv
-      USE fft,            ONLY : pfwfft, pinvfft
       USE fft_base,       ONLY: dfftp
       USE energies,       ONLY: total_energy, dft_energy_type
       USE stress,         ONLY: pstress
@@ -280,6 +279,7 @@
       USE atom,           ONLY: nlcc
       USE core,           ONLY: nlcc_any, rhocg
       USE core,           ONLY: add_core_charge, core_charge_forces
+      USE fft_module,     ONLY: fwfft, invfft
       !
       USE reciprocal_vectors,        ONLY: gx
       USE atoms_type_module,         ONLY: atoms_type
@@ -317,6 +317,7 @@
       COMPLEX(DP), ALLOCATABLE :: vloc(:), self_vloc(:)
       COMPLEX(DP), ALLOCATABLE :: rho12(:), rhoeg(:,:), self_rhoeg(:)
       COMPLEX(DP), ALLOCATABLE :: rhoetg(:,:)
+      COMPLEX(DP), ALLOCATABLE :: psi(:)
       REAL(DP), ALLOCATABLE :: rhoetr(:,:)
       REAL(DP), ALLOCATABLE :: fion_vdw(:,:)
       REAL(DP), ALLOCATABLE :: grho(:,:,:)
@@ -456,7 +457,14 @@
 
         ! ... FFT: rho(r) --> rho(g)  
 
-        CALL pfwfft( rhoeg(:,iss), rhoe(:,iss) )
+        ALLOCATE( psi( SIZE( rhoe, 1 ) ) )
+
+        psi = rhoe(:,iss)
+
+        CALL fwfft(   'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+        CALL psi2rho( 'Dense', psi, dfftp%nnr, rhoeg(:,iss), ngm )
+ 
+        DEALLOCATE( psi )
 
 
         ! ... add core contribution to the charge
@@ -543,15 +551,29 @@
       END IF
 
       IF( nlcc_any ) THEN
-! ...   xc potential (vpot) from real to G space, to compute nlcc forces
-! ...   rhoetg = fwfft(vpot)
+        !
+        ! ...   xc potential (vpot) from real to G space, to compute nlcc forces
+        ! ...   rhoetg = fwfft(vpot)
+        !
+        ALLOCATE( psi( SIZE( vpot, 1 ) ) )
+
         DO iss = 1, nspin
-          CALL pfwfft( rhoetg(:,iss), vpot(:,iss) )
+           !
+           psi = vpot(:,iss)
+           !
+           CALL fwfft(   'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+           CALL psi2rho( 'Dense', psi, dfftp%nnr, rhoetg(:,iss), ngm )
+           ! 
         END DO
-! ...   now rhoetg contains the xc potential
+
+        DEALLOCATE( psi )
+        !
+        ! ...   now rhoetg contains the xc potential
+        !
         IF (tforce) THEN
           CALL core_charge_forces( fion, rhoetg, rhocg, nlcc, atoms, box, ei1, ei2, ei3 )
         END IF
+        !
       END IF
 
 
@@ -589,16 +611,21 @@
 
         CALL self_vofloc( ttscreen, self_ehtep, self_vloc, self_rhoeg, box )
         !
-        CALL pinvfft( self_vpot(:,1), self_vloc(:))
+        ! CALL pinvfft( self_vpot(:,1), self_vloc(:))
 
-        self_vpot(:,1) = sic_epsilon * self_vpot(:,1)
+        ALLOCATE( psi( SIZE( self_vpot, 1 ) ) )
+        !
+        CALL rho2psi( 'Dense', psi, dfftp%nnr, self_vloc, ngm )
+        CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+
+        self_vpot(:,1) = sic_epsilon * DBLE( psi(:) )
         !
         edft%self_ehte     = sic_epsilon * DBLE( self_ehtep )
  
         vpot(:,1) =  vpot(:,1) - self_vpot(:,1)
         vpot(:,2) =  vpot(:,2) + self_vpot(:,1)
 
-        DEALLOCATE( self_vloc, self_rhoeg )
+        DEALLOCATE( self_vloc, self_rhoeg, psi )
 
       END IF
 
@@ -615,17 +642,24 @@
       IF(timing) s5 = cclock()
 
 
+      ALLOCATE( psi( SIZE( vpot, 1 ) ) )
+
       DO iss = 1, nspin
 
 ! ...   add hartree end local pseudo potentials ( invfft(vloc) )
 ! ...   to xc potential (vpot).
 ! ...   vpot = vpot + invfft(vloc)
 
-        CALL pinvfft( vpot(:,iss), vloc(:), 1.0d0 )
+        ! CALL pinvfft( vpot(:,iss), vloc(:), 1.0d0 )
+
+        CALL rho2psi( 'Dense', psi, dfftp%nnr, vloc, ngm )
+        CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+
+        vpot(:,1) = vpot(:,1) + DBLE( psi )
 
       END DO
 
-      DEALLOCATE(vloc)
+      DEALLOCATE( vloc, psi )
 
 ! ... now potentials are in real space
 ! ... vpot(r) = hartree + xc + local
@@ -752,8 +786,9 @@
 
       USE green_functions, ONLY: greenf
       USE mp_global, ONLY: mpime
-      USE fft, ONLY : pfwfft
       USE fft_base, ONLY: dfftp
+      USE fft_module, ONLY: fwfft
+      USE gvecp, ONLY: ngm
       USE cell_module, ONLY: boxdimensions, s_to_r, alat
       USE constants, ONLY: gsmall, pi
       USE cell_base, ONLY: tpiba2
@@ -768,7 +803,7 @@
       EXTERNAL erf, erfc
 
 ! ... Locals
-      REAL(DP), ALLOCATABLE :: grr(:)
+      COMPLEX(DP), ALLOCATABLE :: grr(:)
       COMPLEX(DP), ALLOCATABLE :: grg(:)
       REAL(DP) :: rc, r(3), s(3), rmod, g2, rc2, arg, omega, fact
       INTEGER   :: ig, i, j, k, ir
@@ -811,7 +846,10 @@
         END DO
       END DO
 
-      CALL pfwfft( grg, grr ) ! grg = FFT( grr )
+      ! grg = FFT( grr )
+
+      CALL fwfft(   'Dense', grr, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+      CALL psi2rho( 'Dense', grr, dfftp%nnr, grg, ngm )
 
       DO ig = 1, SIZE( screen_coul )
         IF( hg(ig) < gsmall ) THEN
@@ -1368,15 +1406,16 @@
       USE control_flags, ONLY: gamma_only
       USE cell_module, ONLY: boxdimensions, s_to_r
       USE atoms_type_module, ONLY: atoms_type
-      USE fft, ONLY : pw_invfft, pfwfft, pinvfft
       USE sic_module, ONLY: ind_localisation, nat_localisation, print_localisation
       USE sic_module, ONLY: sic_rloc, pos_localisation
       USE ions_base, ONLY: ind_srt
-      USE fft_base, ONLY: dfftp
+      USE fft_base, ONLY: dfftp, dffts
       USE cell_base, ONLY: tpiba2
       USE reciprocal_vectors, ONLY: gstart, g
       USE gvecp, ONLY: ngm
+      USE gvecw, ONLY: ngw
       use grid_dimensions, only: nr1, nr2, nr3, nr1l, nr2l, nr3l, nnrx
+      USE fft_module, ONLY: fwfft, invfft
 
       IMPLICIT NONE
 
@@ -1395,8 +1434,8 @@
       INTEGER      :: Xmin, Ymin, Zmin, Xmax, Ymax, Zmax, i,j,k, ir
       REAL(DP)    :: work, work2
       COMPLEX(DP) :: rhog
-      REAL(DP), ALLOCATABLE :: density(:), psi(:)
-      COMPLEX(DP), ALLOCATABLE :: k_density(:), cpsi(:)
+      COMPLEX(DP), ALLOCATABLE :: density(:), psi(:)
+      COMPLEX(DP), ALLOCATABLE :: k_density(:)
       COMPLEX(DP) :: vscreen
       COMPLEX(DP), ALLOCATABLE :: screen_coul(:)
 
@@ -1415,14 +1454,10 @@
       ALLOCATE( psi( nnrx ) )
       ALLOCATE( k_density( ngm ) )
 
-      ALLOCATE( cpsi( nnrx ) )
-      cpsi = 0.0d0
+      CALL c2psi(  psi, dffts%nnr, wfc, wfc, ngw, 1 )
+      CALL invfft( 'Wave', psi, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
 
-      CALL pw_invfft( cpsi(:), wfc(:), wfc(:) )
-
-      psi = DBLE( cpsi )
-
-      DEALLOCATE( cpsi )
+      psi = DBLE( psi )
 
       isa_sorted = 0
       isa_loc    = 0
@@ -1486,7 +1521,8 @@
                END DO
             END DO
 
-            CALL pfwfft( k_density, density )
+            CALL fwfft(   'Dense', density, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+            CALL psi2rho( 'Dense', density, dfftp%nnr, k_density, ngm )
 
 ! ... G /= 0 elements
 

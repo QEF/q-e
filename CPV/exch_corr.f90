@@ -30,11 +30,12 @@
         SUBROUTINE v2gc( v2xc, grho, rhoer, vpot )
 
           USE kinds,              ONLY: DP
-          USE fft,                ONLY: pfwfft, pinvfft
+          USE fft_base,           ONLY: dfftp
           USE cell_base,          ONLY: tpiba
           USE reciprocal_vectors, ONLY: gstart, gx
           use grid_dimensions,    only: nnrx
           USE gvecp,              ONLY: ngm
+          USE fft_module,         ONLY: fwfft, invfft
 !                                                                       
           implicit none
 !                                                                       
@@ -56,10 +57,9 @@
 
           ALLOCATE( vtemp( ngm ) )
           ALLOCATE( vtemp_pol( ngm ) )
+          ALLOCATE( psi( nnrx ) )
 
           DO js = 1, nspin
-            !
-            ALLOCATE( psi( nnrx ) )
             !
             vtemp = 0.0d0
 
@@ -68,7 +68,8 @@
                 !
                 psi( 1:nnrx ) = fac * v2xc( 1:nnrx, js, is ) * grho( 1:nnrx, ipol, is )
                 !
-                CALL pfwfft( vtemp_pol, psi )
+                CALL fwfft(   'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+                CALL psi2rho( 'Dense', psi, dfftp%nnr, vtemp_pol, ngm )
                 !
                 DO ig = gstart, ngm
                   vtemp(ig) = vtemp(ig) + vtemp_pol(ig) *  CMPLX( 0.d0, tpiba * gx( ipol, ig ) )
@@ -77,21 +78,16 @@
               END DO
             END DO
             !
-            DEALLOCATE( psi )
+            CALL rho2psi( 'Dense', psi, dfftp%nnr, vtemp, ngm )
+            CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
 
-            ALLOCATE( v( nnrx ) )
-            v( 1:nnrx ) = 0.0d0
-            !
-            CALL pinvfft( v, vtemp )
-
-            vpot( 1:nnrx, js ) = vpot( 1:nnrx, js) - v( 1:nnrx )
-
-            DEALLOCATE( v )
+            vpot( 1:nnrx, js ) = vpot( 1:nnrx, js) - DBLE( psi( 1:nnrx ) )
 
           END DO
 
-          DEALLOCATE(vtemp_pol)
-          DEALLOCATE(vtemp)
+          DEALLOCATE( psi )
+          DEALLOCATE( vtemp_pol )
+          DEALLOCATE( vtemp )
 
           RETURN
         END SUBROUTINE v2gc
@@ -460,6 +456,7 @@
       use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx, nr1x, nr2x, nr3x
       use cell_base, only: ainv, tpiba, omega
       use derho, only: drhog
+      USE fft_module, ONLY: fwfft, invfft
 !                 
       implicit none  
 ! input                   
@@ -487,7 +484,7 @@
          do ir=1,nnr
             v(ir)=CMPLX(gradr(ir,1,iss),0.d0)
          end do
-         call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         call fwfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          do ig=1,ng
             x(ig)=ci*tpiba*gx(1,ig)*v(np(ig))
          end do
@@ -508,7 +505,7 @@
          do ir=1,nnr
             v(ir)=CMPLX(gradr(ir,2,iss),gradr(ir,3,iss))
          end do
-         call fwfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         call fwfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !
          do ig=1,ng
             fp=v(np(ig))+v(nm(ig))
@@ -547,7 +544,7 @@
             v(np(ig))=x(ig)
             v(nm(ig))=CONJG(x(ig))
          end do
-         call invfft(v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         call invfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          do ir=1,nnr
             rhor(ir,iss)=rhor(ir,iss)-DBLE(v(ir))
          end do

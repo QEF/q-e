@@ -51,6 +51,7 @@
       COMPLEX(DP), ALLOCATABLE :: phi(:,:)
       INTEGER  :: n, ngw, info
 
+
       CALL start_clock( 'ortho' )  
 
       n   = cdesc%nbl( ispin )

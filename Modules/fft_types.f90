@@ -13,6 +13,7 @@ MODULE fft_types
   IMPLICIT NONE
   SAVE
 
+
   TYPE fft_dlay_descriptor
     INTEGER :: nst      ! total number of sticks
     INTEGER, POINTER :: nsp(:)   ! number of sticks per processor ( potential )
@@ -37,11 +38,31 @@ MODULE fft_types
     INTEGER, POINTER :: iss(:)   ! index of the first stick on each proc
     INTEGER, POINTER :: isind(:) ! for each position in the plane indicate the stick index
     INTEGER, POINTER :: ismap(:) ! for each stick in the plane indicate the position
-    INTEGER, POINTER :: iplp(:)   ! indicate which "Y" plane should be FFTed ( potential )
-    INTEGER, POINTER :: iplw(:)   ! indicate which "Y" plane should be FFTed ( wave func )
+    INTEGER, POINTER :: iplp(:)  ! indicate which "Y" plane should be FFTed ( potential )
+    INTEGER, POINTER :: iplw(:)  ! indicate which "Y" plane should be FFTed ( wave func )
+    !
+    !  descriptor id and pointer, for future use
+    !
     INTEGER :: id
     INTEGER :: tptr
   END TYPE
+
+  !
+  !  Sub (box) grid descriptor
+  !
+
+  TYPE fft_box_descriptor
+    INTEGER :: nr1      !
+    INTEGER :: nr2      ! effective FFT dimensions
+    INTEGER :: nr3      ! 
+    INTEGER :: nr1x     ! 
+    INTEGER :: nr2x     ! FFT grids leading dimensions
+    INTEGER :: nr3x     ! 
+    INTEGER :: irb(3) ! the offset of the box corner
+    INTEGER :: imin3  ! the starting local plane
+    INTEGER :: imax3  ! the last local plane
+  END TYPE
+
 
   INTEGER, PRIVATE :: icount = 0
 
@@ -51,6 +72,7 @@ CONTAINS
   SUBROUTINE fft_dlay_allocate( desc, nproc, nx, ny )
     TYPE (fft_dlay_descriptor) :: desc
     INTEGER, INTENT(IN) :: nproc, nx, ny
+    INTEGER :: nat_
     ALLOCATE( desc%nsp( nproc ) )
     ALLOCATE( desc%nsw( nproc ) )
     ALLOCATE( desc%ngl( nproc ) )
@@ -62,6 +84,7 @@ CONTAINS
     ALLOCATE( desc%ismap( nx * ny ) )
     ALLOCATE( desc%iplp( nx ) )
     ALLOCATE( desc%iplw( nx ) )
+
     desc%nsp   = 0
     desc%nsw   = 0
     desc%ngl   = 0
@@ -73,7 +96,9 @@ CONTAINS
     desc%iplp  = 0
     desc%iplw  = 0
     desc%id    = 0
+
   END SUBROUTINE fft_dlay_allocate
+
 
   SUBROUTINE fft_dlay_deallocate( desc )
     TYPE (fft_dlay_descriptor) :: desc
@@ -90,6 +115,11 @@ CONTAINS
     IF ( ASSOCIATED( desc%iplw ) )   DEALLOCATE( desc%iplw )
     desc%id = 0
   END SUBROUTINE fft_dlay_deallocate
+
+!=----------------------------------------------------------------------------=!
+
+
+
 
 !=----------------------------------------------------------------------------=!
 
@@ -369,6 +399,7 @@ CONTAINS
 
     RETURN
   END SUBROUTINE fft_dlay_scalar
+
 
 
 END MODULE fft_types

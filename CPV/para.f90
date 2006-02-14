@@ -7,23 +7,9 @@
 !
 #include "f_defs.h"
 
-module para_mod
-
-  USE fft_types, ONLY: fft_dlay_descriptor, fft_dlay_allocate, &
-     fft_dlay_deallocate, fft_dlay_set
-  USE fft_base, ONLY: dfftp, dffts
-  USE mp_global, ONLY: nproc, mygroup => group
-
-  character(len=3) :: node
-
-! node:    node number, useful for opening files
-
-  integer  me
-
 ! nproc:   number of processors
-! me:      number of this processor
+! me:      number of this processor ( starting from one )
 !
-
 ! parallel fft information for the dense grid
 !
 ! npp:     number of plane per processor                      
@@ -73,18 +59,6 @@ module para_mod
 ! icpls -> dffts%ismap
 ! nnrs_ -> dffts%nnr
 !
-
-contains
-
-  subroutine deallocate_para_mod
-    use stick_base, only: sticks_deallocate
-    call fft_dlay_deallocate( dfftp )
-    call fft_dlay_deallocate( dffts )
-    call sticks_deallocate()
-  end subroutine deallocate_para_mod
-
-end module para_mod
-
 !
 !
 !----------------------------------------------------------------------
@@ -152,37 +126,6 @@ end module para_mod
       end subroutine write_rho
 !
 !
-!----------------------------------------------------------------------
-      subroutine parabox(nr3b,irb3,nr3,imin3,imax3)
-!----------------------------------------------------------------------
-!
-! find if box grid planes in the z direction have component on the dense
-! grid on this processor, and if, which range imin3-imax3
-!
-      use para_mod
-! input
-      integer nr3b,irb3,nr3
-! output
-      integer imin3,imax3
-! local
-      integer ir3, ibig3
-!
-      imin3=nr3b
-      imax3=1
-      do ir3=1,nr3b
-         ibig3=1+mod(irb3+ir3-2,nr3)
-         if(ibig3.lt.1.or.ibig3.gt.nr3)                                 &
-     &        call errore('cfftpb','ibig3 wrong',ibig3)
-         ibig3=ibig3-dfftp%ipp(me)
-         if (ibig3.gt.0.and.ibig3.le.dfftp%npp(me)) then
-            imin3=min(imin3,ir3)
-            imax3=max(imax3,ir3)
-         end if
-      end do
-!
-      return
-      end subroutine parabox
-!
 !-----------------------------------------------------------------------
       subroutine reduce(size,ps)
 !-----------------------------------------------------------------------
@@ -190,8 +133,8 @@ end module para_mod
 !     sums a distributed variable s(size) over the processors.
 !     This version uses a fixed-length buffer of appropriate (?) size
 !
-      use para_mod
       use parallel_include
+      use mp_global, only: nproc
 !
       implicit none
       integer size
@@ -289,8 +232,9 @@ end module para_mod
       use ions_base, only: nsp, na, pmass
       use parameters
       use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
-      use para_mod
       use io_global, only: ionode
+      use mp_global, only: nproc, mpime
+      use fft_base, only: dfftp
       use mp, only: mp_bcast
 
       implicit none
@@ -307,12 +251,14 @@ end module para_mod
       real(8) ll1, ll2, ll3, tot_m
       real(8), allocatable:: rho_aux(:)
 
-      integer :: isa
+      integer :: isa, me
 
 #ifdef __PARA
       integer ip, ierr, incr(nproc), displs(nproc)
       real(8), allocatable:: rhow(:)
 #endif
+
+      me = mpime + 1
 
 #ifdef __PARA
 ! in parallel execution, only the first nodes writes
