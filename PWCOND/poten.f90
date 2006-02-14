@@ -19,6 +19,7 @@ SUBROUTINE poten(vppot,nrz,z)
   USE cond
   USE mp,               ONLY : mp_bcast
   USE io_global,        ONLY : ionode_id 
+  USE fft_scalar,       ONLY : cfft3d
 
   IMPLICIT NONE
 
@@ -117,16 +118,10 @@ DO ispin=1,nspin_eff
   aux(:) = CMPLX(auxr(:), 0.d0)
 #endif
 !
-! To find FFT of the local potential
+!  To find FFT of the local potential
+!  (use serial FFT even in the parallel case)
 !
-#ifdef __PARA
-!
-!  This FFT is needed to make a non-parallel FFT in the parallel case
-!
-  CALL cft3sp(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
-#else
-  CALL cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
-#endif
+  CALL cfft3d (aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
 
   DO i = 1, nrx
     IF(i.GT.nrx/2+1) THEN
