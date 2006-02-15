@@ -17,7 +17,6 @@ CP_OBJS = \
 ../CPV/bessel.o \
 ../CPV/berryion.o \
 ../CPV/bforceion.o \
-../CPV/blacs.o \
 ../CPV/brillouin.o \
 ../CPV/cg.o \
 ../CPV/cg_sub.o \
@@ -35,7 +34,6 @@ CP_OBJS = \
 ../CPV/cpr_mod.o \
 ../CPV/cpr.o \
 ../CPV/cprsub.o \
-../CPV/crayfft.o \
 ../CPV/dealloc.o \
 ../CPV/diis.o \
 ../CPV/dforceb.o \
@@ -48,12 +46,10 @@ CP_OBJS = \
 ../CPV/exch_corr.o \
 ../CPV/fftdrv.o \
 ../CPV/fft.o \
-../CPV/fields_type.o \
 ../CPV/fnl.o \
 ../CPV/forces.o \
 ../CPV/fromscra.o \
 ../CPV/greenf.o \
-../CPV/grid.o \
 ../CPV/gsmesh.o \
 ../CPV/gtable.o \
 ../CPV/guess.o \
@@ -61,8 +57,6 @@ CP_OBJS = \
 ../CPV/init_run.o \
 ../CPV/inner_loop.o \
 ../CPV/input.o \
-../CPV/interfaces_main.o \
-../CPV/interfaces.o \
 ../CPV/ions.o \
 ../CPV/ions_positions.o \
 ../CPV/ksstates.o \
@@ -101,7 +95,6 @@ CP_OBJS = \
 ../CPV/runcp.o \
 ../CPV/rundiis.o \
 ../CPV/runsd.o \
-../CPV/scalapack.o \
 ../CPV/smcp.o \
 ../CPV/smd_modules.o \
 ../CPV/smd.o  \
@@ -127,8 +120,7 @@ LOBJS = \
 ../CPV/entropy.o \
 ../CPV/forceconv.o \
 ../CPV/geninv.o \
-../CPV/indices.o \
-../CPV/miller.o
+../CPV/indices.o 
 
 MODULES = \
 ../Modules/atom.o \
