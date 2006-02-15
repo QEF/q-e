@@ -40,7 +40,6 @@ PHOBJS = \
 ../PH/compute_qdipol.o \
 ../PH/compute_weight.o \
 ../PH/deallocate_part.o \
-../PH/deallocate_phq.o \
 ../PH/d2ionq.o \
 ../PH/davcio_drho.o \
 ../PH/dgcxc.o \
@@ -62,8 +61,6 @@ PHOBJS = \
 ../PH/dynmat_us.o \
 ../PH/dynmatcc.o \
 ../PH/ef_shift.o \
-../PH/elph.o \
-../PH/elphon.o \
 ../PH/h_psiq.o \
 ../PH/incdrhoscf.o \
 ../PH/incdrhous.o \
@@ -130,9 +127,12 @@ MODULES = \
 ../Modules/parser.o \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
+../Modules/ptoolkit.o \
+../Modules/random_numbers.o \
 ../Modules/read_namelists.o \
 ../Modules/readpseudo.o \
 ../Modules/recvec.o \
+../Modules/splinelib.o \
 ../Modules/stick_base.o \
 ../Modules/timestep.o \
 ../Modules/uspp.o \
@@ -146,8 +146,6 @@ PWOBJS = \
 ../PW/add_vuspsi.o \
 ../PW/add_vuspsi_nc.o \
 ../PW/addusdens.o \
-../PW/addusforce.o \
-../PW/addusstress.o \
 ../PW/allocate_fft.o \
 ../PW/allocate_locpot.o \
 ../PW/allocate_nlpot.o \
@@ -164,11 +162,6 @@ PWOBJS = \
 ../PW/cft3.o \
 ../PW/cft3s.o \
 ../PW/cft_3.o \
-../PW/cft_sgi.o \
-../PW/cft_sp.o \
-../PW/cft_sun.o \
-../PW/cft_t3e.o \
-../PW/cfts_3.o \
 ../PW/cgramg1.o \
 ../PW/cgramg1_nc.o \
 ../PW/checkallsym.o \
@@ -250,7 +243,6 @@ PWOBJS = \
 ../PW/print_clock_pw.o \
 ../PW/psymrho.o \
 ../PW/psymrho_mag.o \
-../PW/punch.o \
 ../PW/pw_gemm.o \
 ../PW/pw_restart.o \
 ../PW/pwcom.o \
