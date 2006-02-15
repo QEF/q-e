@@ -1000,7 +1000,7 @@ SUBROUTINE check_para_diag_efficiency()
   !
   IF ( ionode ) THEN
      !
-     WRITE( stdout, '( /, 5X,"looking for " &
+     WRITE( stdout, '( /, 5X,"looking for ", &
                      &     "the optimal diagonalization algorithm ...",/)' )
      !
      WRITE( stdout, '(5X,"dimension   time para (sec)   time serial (sec)")' )
@@ -1130,7 +1130,7 @@ SUBROUTINE check_para_diag_efficiency()
      !
      IF ( use_para_diago ) THEN
         !
-        WRITE( stdout, '(/,5X,"a parallel algorithm will be used for " &
+        WRITE( stdout, '(/,5X,"a parallel algorithm will be used for ", &
                         &     "matrices larger than ",I4,/)' ) para_diago_dim
         !
      ELSE
