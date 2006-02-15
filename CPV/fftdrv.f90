@@ -39,15 +39,15 @@ CONTAINS
 !   sign = +-2 : parallel 3d fft for wavefunctions
 !
 !   sign = + : G-space to R-space, output = \sum_G f(G)exp(+iG*R)
-!              fft along z using pencils        (cft_1)
+!              fft along z using pencils        (cft_1z)
 !              transpose across nodes           (fft_scatter)
 !                 and reorder
-!              fft along y (using planes) and x (cft_2)
+!              fft along y (using planes) and x (cft_2xy)
 !   sign = - : R-space to G-space, output = \int_R f(R)exp(-iG*R)/Omega 
-!              fft along x and y(using planes)  (cft_2)
+!              fft along x and y(using planes)  (cft_2xy)
 !              transpose across nodes           (fft_scatter)
 !                 and reorder
-!              fft along z using pencils        (cft_1)
+!              fft along z using pencils        (cft_1z)
 !
 !   The array "planes" signals whether a fft is needed along y :
 !     planes(i)=0 : column f(i,*,*) empty , don't do fft along y

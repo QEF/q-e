@@ -25,7 +25,6 @@ cplib.o \
 cpr_mod.o \
 cpr.o \
 cprsub.o \
-crayfft.o \
 dealloc.o \
 diis.o \
 dforceb.o \

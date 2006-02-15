@@ -19,7 +19,7 @@ MODULE fft_module
 CONTAINS
 
 !-----------------------------------------------------------------------
-      subroutine invfft( grid_type, f, nr1, nr2, nr3, nr1x, nr2x, nr3x, nr3_big, irb3 )
+  subroutine invfft( grid_type, f, nr1, nr2, nr3, nr1x, nr2x, nr3x, nr3_big, irb3 )
 !-----------------------------------------------------------------------
 ! grid_type = 'Dense'
 !   inverse fourier transform of potentials and charge density
@@ -86,6 +86,7 @@ CONTAINS
       END IF
 
 #else
+
 # if defined __AIX || __FFTW 
 
       IF( grid_type == 'Dense' ) THEN
@@ -98,23 +99,12 @@ CONTAINS
          call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
       END IF
 
-# elif defined __COMPLIB || __SCSL
+# elif defined __COMPLIB || __SCSL || __SX6
 
       call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
 
-# else
-
-      IF( grid_type == 'Dense' ) THEN
-         call cfft3(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
-      ELSE IF( grid_type == 'Smooth' ) THEN
-         call cfft3s(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
-      ELSE IF( grid_type == 'Wave' ) THEN
-         call cfft3s(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
-      ELSE IF( grid_type == 'Box' ) THEN
-         call cfft3b(f,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,1)
-      END IF
-
 # endif
+
 #endif
 
       IF( grid_type == 'Dense' ) THEN
@@ -177,6 +167,7 @@ CONTAINS
       END IF
 
 #else 
+
 # if defined __AIX || __FFTW
 
       IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' ) THEN
@@ -185,21 +176,12 @@ CONTAINS
          call cfft3ds(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1,dffts%isind, dffts%iplw)
       END IF
 
-# elif defined __COMPLIB || __SCSL
+# elif defined __COMPLIB || __SCSL || __SX6
 
       call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
 
-# else
-
-      IF( grid_type == 'Dense' ) THEN
-         call cfft3(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
-      ELSE IF( grid_type == 'Smooth' ) THEN
-         call cfft3s(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
-      ELSE IF( grid_type == 'Wave' ) THEN
-         call cfft3s(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
-      END IF
-
 # endif
+
 #endif
 
       IF( grid_type == 'Dense' ) THEN
