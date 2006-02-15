@@ -7,10 +7,6 @@
 !
 #include "f_defs.h"
 !
-#if defined (__AIX) || defined (__FFTW) || defined (__COMPLIB) || defined (__SCSL)
-#  define __FFT_MODULE_DRV
-#endif
-!
 #if defined (__PARA)
 !
 !----------------------------------------------------------------------------
@@ -20,20 +16,18 @@ SUBROUTINE cft3( f, n1, n2, n3, nx1, nx2, nx3, sign )
   ! ...  sign = +-1 : parallel 3d fft for rho and for the potential
   !
   ! ...  sign = +1  : G-space to R-space, output = \sum_G f(G)exp(+iG*R)
-  ! ...               fft along z using pencils (cft_1)
+  ! ...               fft along z using pencils (cft_1z)
   ! ...               transpose across nodes    (fft_scatter)
   ! ...                  and reorder
-  ! ...               fft along y and x         (cft_2)
+  ! ...               fft along y and x         (cft_2xy)
   !
   ! ...  sign = -1  : R-space to G-space, output = \int_R f(R)exp(-iG*R)/Omega
-  ! ...               fft along x and y         (cft_2)
+  ! ...               fft along x and y         (cft_2xy)
   ! ...               transpose across nodes    (fft_scatter)
   ! ...                  and reorder
-  ! ...               fft along z using pencils (cft_1)
+  ! ...               fft along z using pencils (cft_1z)
   !
-#if defined (__FFT_MODULE_DRV)
   USE fft_scalar, ONLY : cft_1z, cft_2xy
-#endif
   USE sticks,     ONLY : dfftp
   USE fft_base,   ONLY : fft_scatter
   USE kinds,      ONLY : DP
@@ -73,15 +67,7 @@ SUBROUTINE cft3( f, n1, n2, n3, nx1, nx2, nx3, sign )
   !
   IF ( sign == 1 ) THEN
      !
-#if defined (__FFT_MODULE_DRV)
-     !
      CALL cft_1z( f, ncp(me_p), n3, nx3, sign, aux )
-     !
-#else
-     !
-     CALL cft_1( f, ncp(me_p), n3, nx3, sign, aux )
-     !
-#endif
      !
      CALL fft_scatter( aux, nx3, nxx, f, ncp, npp, sign )
      !
@@ -99,27 +85,11 @@ SUBROUTINE cft3( f, n1, n2, n3, nx1, nx2, nx3, sign )
         !
      END DO
      !
-#if defined (__FFT_MODULE_DRV)
-     !
      CALL cft_2xy( f, npp(me_p), n1, n2, nx1, nx2, sign )
-     !
-#else
-     !
-     CALL cft_2( f, npp(me_p), n1, n2, nx1, nx2, sign )
-     !
-#endif
      !
   ELSE IF ( sign == - 1) THEN
      !
-#if defined (__FFT_MODULE_DRV)
-     !
      CALL cft_2xy( f, npp(me_p), n1, n2, nx1, nx2, sign )
-     !
-#else
-     !
-     CALL cft_2( f, npp(me_p), n1, n2, nx1, nx2, sign )
-     !
-#endif
      !
      DO i = 1, nct
         !
@@ -135,15 +105,7 @@ SUBROUTINE cft3( f, n1, n2, n3, nx1, nx2, nx3, sign )
      !
      CALL fft_scatter( aux, nx3, nxx, f, ncp, npp, sign )
      !
-#if defined (__FFT_MODULE_DRV)
-     !
      CALL cft_1z( aux, ncp(me_p), n3, nx3, sign, f )
-     !
-#else
-     !
-     CALL cft_1( aux, ncp(me_p), n3, nx3, sign, f )
-     !
-#endif
      !
   ELSE
      !
@@ -161,6 +123,9 @@ END SUBROUTINE cft3
 !
 #else
 !
+#if defined (__AIX) || defined (__FFTW) || defined (__COMPLIB) || defined (__SCSL)
+#  define __FFT_MODULE_DRV
+#endif
 !----------------------------------------------------------------------------
 SUBROUTINE cft3( f, n1, n2, n3, nx1, nx2, nx3, sign )
   !----------------------------------------------------------------------------

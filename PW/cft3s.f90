@@ -7,10 +7,6 @@
 !
 #include "f_defs.h"
 !
-#if defined (__AIX) || defined (__FFTW) || defined (__SCSL) || defined (__COMPLIB)
-#  define __FFT_MODULE_DRV
-#endif
-!
 #if defined (__PARA)
 !
 ! ... parallel case
@@ -43,9 +39,7 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
   ! ...  Note that if sign=+/-1 (fft on rho and pot.) all fft's are needed
   ! ...  and all planes(i) are set to 1
   !
-#if defined (__FFT_MODULE_DRV)
   USE fft_scalar, ONLY : cft_1z, cft_2xy
-#endif
   USE fft_base,   ONLY : fft_scatter
   USE kinds,      ONLY : DP
   USE mp_global,  ONLY : me_pool, nproc_pool
@@ -85,15 +79,7 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
      !
      IF ( sign /= 2 ) THEN
         !
-#if defined (__FFT_MODULE_DRV)
-        !
         CALL cft_1z( f, ncps(me_p), n3, nx3, sign, aux )
-        !
-#else
-        !
-        call cft_1 ( f, ncps(me_p), n3, nx3, sign, aux )
-        !
-#endif
         !
         CALL fft_scatter( aux, nx3, nxxs, f, ncps, npps, sign )
         !
@@ -115,15 +101,7 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
         !
      ELSE
         !
-#if defined (__FFT_MODULE_DRV)
-        !
         CALL cft_1z( f, nkcp(me_p), n3, nx3, sign, aux )
-        !
-#else
-        !
-        CALL cft_1 ( f, nkcp(me_p), n3, nx3, sign, aux )
-        !
-#endif
         !
         CALL fft_scatter( aux, nx3, nxxs, f, nkcp, npps, sign )
         !
@@ -155,15 +133,7 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
         !
      END IF
      !
-#if defined (__FFT_MODULE_DRV)
-     !
      CALL cft_2xy( f, npps(me_p), n1, n2, nx1, nx2, sign, planes )
-     !
-#else
-     !
-     CALL cft_2  ( f, npps(me_p), n1, n2, nx1, nx2, sign, planes )
-     !
-#endif
      !
   ELSE
      !
@@ -191,15 +161,7 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
         !
      END IF
      !
-#if defined (__FFT_MODULE_DRV)
-     !
      CALL cft_2xy( f, npps(me_p), n1, n2, nx1, nx2, sign, planes )
-     !
-#else
-     !
-     CALL cft_2  ( f, npps(me_p), n1, n2, nx1, nx2, sign, planes )
-     !
-#endif
      !
      IF ( sign /= -2 ) THEN
         !
@@ -217,15 +179,7 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
         !
         CALL fft_scatter( aux, nx3, nxxs, f, ncps, npps, sign )
         !
-#if defined (__FFT_MODULE_DRV)
-        !
         CALL cft_1z( aux, ncps(me_p), n3, nx3, sign, f )
-        
-#else
-        !
-        CALL cft_1 ( aux, ncps(me_p), n3, nx3, sign, f )
-        !
-#endif
         !
      ELSE
         !
@@ -251,16 +205,8 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
         !
         CALL fft_scatter( aux, nx3, nxxs, f, nkcp, npps, sign )
         !
-#if defined (__FFT_MODULE_DRV)
-        !
         CALL cft_1z( aux, nkcp(me_p), n3, nx3, sign, f )
         !
-#else
-        !
-        CALL cft_1 ( aux, nkcp(me_p), n3, nx3, sign, f )
-        !
-#endif
-     !
      END IF
      !
   END IF
@@ -280,6 +226,10 @@ END SUBROUTINE cft3s
 #if defined (__HPM)
 #  include "/cineca/prod/hpm/include/f_hpm.h"
 #endif
+#if defined (__AIX) || defined (__FFTW) || defined (__SCSL) || defined (__COMPLIB)
+#  define __FFT_MODULE_DRV
+#endif
+!
 !
 !----------------------------------------------------------------------------
 SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )

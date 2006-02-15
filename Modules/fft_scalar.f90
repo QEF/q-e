@@ -1,23 +1,16 @@
 !
-! Copyright (C) 2002 FPMD group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-! Copyright (C) 2001-2003 PWSCF group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-!
-
 
 !----------------------------------------------------------------------!
-! FFT scalar drivers Module.
-! Written by Carlo Cavazzoni 
-! Last update January 2004
+! FFT scalar drivers Module - contains machine-dependent routines for:
+! FFTW, ESSL, SCSL, COMPLIB, SUNPERF libraries
+! Written by Carlo Cavazzoni, modified by Paolo Giannozzi
+! Last update February 2006
 !----------------------------------------------------------------------!
 
 
@@ -42,36 +35,44 @@
 
 ! ...   Local Parameter
 
-        INTEGER, PARAMETER :: ndims = 3          
+        INTEGER, PARAMETER :: ndims = 3, nfftx = 2049
 
         !   ndims   Number of different FFT tables that the module 
         !           could keep into memory without reinitialization
+        !   nfftx   Max allowed fft dimension
+        !
+
+! ...   Machine-Dependent Parameters
+
+        !   lwork   Dimension of the work space array
+        !   ltabl   Dimension of the tables of factors calculated at the
+        !           initialization stage
 
 #if defined __AIX
 
-        INTEGER, PARAMETER :: nfftx = 2049
         INTEGER, PARAMETER :: lwork = 20000 + ( 2 * nfftx + 256 ) * 64 + 3 * nfftx
         INTEGER, PARAMETER :: ltabl = 20000 + 3 * nfftx
 
-        !   see the ESSL manual ( DCFT ) for the workspace and table lenght formulas
+        !   see the ESSL manual ( DCFT ) for the workspace and table length formulas
 
 #elif defined __SCSL
 
-        INTEGER, PARAMETER :: nfftx = 1025
         INTEGER, PARAMETER :: lwork = 2 * nfftx
         INTEGER, PARAMETER :: ltabl = 2 * nfftx + 256
 
-#else
+#elif defined __COMPLIB
 
-        INTEGER, PARAMETER :: nfftx = 1025
         INTEGER, PARAMETER :: lwork = 20 * nfftx
         INTEGER, PARAMETER :: ltabl = 4 * nfftx
 
+#elif defined __SUN
+
+        INTEGER, PARAMETER :: ltabl = 4 * nfftx + 15
+        INTEGER, PARAMETER :: lwork = nfftx
+
 #endif
 
-        !   C_POINTER is defined in include/f_defs.h
-        !   for 32bit executables, C_POINTER is integer(4)
-        !   for 64bit executables, C_POINTER is integer(8)
+! ...   Machine-Dependent work arrays and tables of factors
 
 #if defined __FFTW
 
@@ -79,14 +80,15 @@
         C_POINTER :: bw_plan( 3, ndims ) = 0
 
         !   Pointers to the "C" structures containing FFT factors ( PLAN )
+        !   C_POINTER is defined in include/f_defs.h
+        !   for 32bit executables, C_POINTER is integer(4)
+        !   for 64bit executables, C_POINTER is integer(8)
 
 #elif defined __AIX
 
         REAL (DP) :: fw_table( ltabl, 3, ndims )
         REAL (DP) :: bw_table( ltabl, 3, ndims )
         REAL (DP) :: work( lwork ) 
-
-        !   Array containing FFT factors + workspace
 
 #elif defined __COMPLIB 
 
@@ -95,8 +97,6 @@
         REAL (DP) :: tablex(ltabl,ndims)
         REAL (DP) :: tabley(ltabl,ndims)
 
-        !   Array containing FFT factors + workspace
-
 #elif defined __SCSL
 
         COMPLEX (DP) :: work(lwork) 
@@ -104,9 +104,14 @@
         REAL    (DP) :: tablex(ltabl,ndims)
         REAL    (DP) :: tabley(ltabl,ndims)
         REAL (DP)    :: DUMMY
-        INTEGER       :: isys(0:1)
+        INTEGER      :: isys(0:1)
 
-        !   Array containing FFT factors + workspace
+#elif defined __SUN
+
+        COMPLEX (DP) :: work( lwork ) 
+        REAL    (DP) :: tablex(ltabl,ndims)
+        REAL    (DP) :: tabley(ltabl,ndims)
+        REAL    (DP) :: tablez(ltabl,ndims)
 
 #endif
 
@@ -130,23 +135,25 @@
 !=----------------------------------------------------------------------=!
 !
 
-   SUBROUTINE cft_1z(c, nsl, nz, ldc, sgn, cout)
+   SUBROUTINE cft_1z(c, nsl, nz, ldc, isign, cout)
 
-!     driver routine for m 1d complex fft's 
-!     nx=n+1 is allowed (in order to avoid memory conflicts)
-!     A separate initialization is stored each combination of input sizes
-!     NOTA BENE: the output in fout !
+!     driver routine for nsl 1d complex fft's of length nz 
+!     ldc >= nz is the actual dimension of c (may be useful on some
+!     architectures to prevent memory conflicts)
+!     A separate initialization is stored for each combination of input sizes
+!     NOTA BENE: not in-place! the output in cout
 
-     INTEGER, INTENT(IN) :: sgn
+     INTEGER, INTENT(IN) :: isign
      INTEGER, INTENT(IN) :: nsl, nz, ldc
      COMPLEX (DP) :: c(:), cout(:) 
      REAL(DP)  :: tscale
-     INTEGER    :: i, j, err, idir, ip, isign
+     INTEGER    :: i, j, err, idir, ip
      INTEGER, SAVE :: zdims( 3, ndims ) = -1
      INTEGER, SAVE :: icurrent = 1
+     LOGICAL :: done
 
 #if defined __HPM
-            CALL f_hpmstart( 30 + ABS(sgn), 'cft_1z' )
+            CALL f_hpmstart( 30 + ABS(isign), 'cft_1z' )
 #endif
 
      IF( nsl < 0 ) THEN
@@ -157,26 +164,23 @@
       isys(0) = 1
 #endif
 
-     isign = -sgn
-
      !
      !   Here initialize table only if necessary
      !
 
-     ip = -1
-     DO i = 1, ndims
+     DO ip = 1, ndims
 
-       !   first check if there is already a table initialized
-       !   for this combination of parameters
+        !   first check if there is already a table initialized
+        !   for this combination of parameters
 
-       IF( ( nz == zdims(1,i) ) .and. ( nsl == zdims(2,i) ) .and. ( ldc == zdims(3,i) ) ) THEN
-         ip = i
-         EXIT
-       END IF
-
+        done = ( nz == zdims(1,ip) )
+#if defined __AIX
+        done = done .AND. ( nsl == zdims(2,ip) ) .AND. ( ldc == zdims(3,ip) )
+#endif
+        IF (done) EXIT
      END DO
 
-     IF( ip == -1 ) THEN
+     IF( .NOT. done ) THEN
 
        !   no table exist for these parameters
        !   initialize a new one
@@ -207,6 +211,10 @@
        CALL DCFT ( 1, c(1), 1, ldc, cout(1), 1, ldc, nz, nsl, -1, &
           1.0d0, bw_table(1, 3, icurrent), ltabl, work(1), lwork)
 
+#elif defined __SUN
+
+       CALL zffti (nz, tablez (1, icurrent) )
+
 #else 
 
        CALL errore(' cft_1 ',' no scalar fft driver specified ', 1)
@@ -225,66 +233,77 @@
 
 #if defined __FFTW
 
-     IF (isign > 0) THEN
-       tscale = 1.0d0 / nz
-       CALL FFT_Z_STICK(fw_plan( 3, ip), c(1), ldc, nsl)
-       CALL ZDSCAL( ldc * nsl, tscale, c(1), 1)
-     ELSE IF (isign < 0) THEN
-       CALL FFT_Z_STICK(bw_plan( 3, ip), c(1), ldc, nsl)
+     IF (isign < 0) THEN
+        CALL FFT_Z_STICK(fw_plan( 3, ip), c(1), ldc, nsl)
+        cout( 1 : ldc * nsl ) = c( 1 : ldc * nsl ) / nz
+     ELSE IF (isign > 0) THEN
+        CALL FFT_Z_STICK(bw_plan( 3, ip), c(1), ldc, nsl)
+        cout( 1 : ldc * nsl ) = c( 1 : ldc * nsl )
      END IF
 
 #elif defined __COMPLIB
 
-     IF (isign /= 0) THEN
-       IF( isign < 0 ) idir = +1
-       IF( isign > 0 ) idir = -1
-       CALL zfftm1d( idir, nz, nsl, c(1), 1, ldc, tablez(1,ip) )
-       IF (isign > 0) THEN
-         tscale = 1.0d0 / nz
-         CALL ZDSCAL( ldc * nsl, tscale, c(1), 1)
-       END IF
+     IF (isign < 0) THEN
+        idir   = -1
+        CALL zfftm1d( idir, nz, nsl, c(1), 1, ldc, tablez(1,ip) )
+        cout( 1 : ldc * nsl ) = c( 1 : ldc * nsl ) / nz
+     ELSE IF( isign > 0 ) THEN
+        idir   = 1
+        CALL zfftm1d( idir, nz, nsl, c(1), 1, ldc, tablez(1,ip) )
+        cout( 1 : ldc * nsl ) = c( 1 : ldc * nsl )
      END IF
 
 #elif defined __SCSL
 
-     IF ( isign /= 0 ) THEN    
-        IF ( isign > 0 ) THEN
-           idir   = -1
-           tscale = 1.0d0 / nz
-        ELSE IF ( isign < 0 ) THEN
-           idir   = 1
-           tscale = 1.0d0
-        END IF
-        CALL ZZFFTM (idir, nz, nsl, tscale, c(1), ldc, cout(1), ldc,    &
-                    tablez(1,ip), work, isys)
+     IF ( isign < 0 ) THEN
+        idir   = -1
+        tscale = 1.0d0 / nz
+     ELSE IF ( isign > 0 ) THEN
+        idir   = 1
+        tscale = 1.0d0
      END IF
+     IF (isign /= 0) CALL ZZFFTM (idir, nz, nsl, tscale, c(1), ldc, &
+          cout(1), ldc, tablez(1,ip), work, isys)
 
 #elif defined __AIX
 
-     IF( isign > 0 ) THEN
-       tscale = 1.0d0 / nz
-       idir   = 1
-       CALL DCFT (0, c(1), 1, ldc, cout(1), 1, ldc, nz, nsl, idir, &
-          tscale, fw_table(1, 3, ip), ltabl, work, lwork)
-     ELSE IF( isign < 0 ) THEN
-       idir   = -1
-       tscale = 1.0d0
-       CALL DCFT (0, c(1), 1, ldc, cout(1), 1, ldc, nz, nsl, idir, &
-          tscale, bw_table(1, 3, ip), ltabl, work, lwork)
+     ! essl uses a different convention for forward/backward transforms
+     ! wrt most other implementations: notice the sign of "idir"
+
+     IF( isign < 0 ) THEN
+        idir   =+1
+        tscale = 1.0d0 / nz
+        CALL DCFT (0, c(1), 1, ldc, cout(1), 1, ldc, nz, nsl, idir, &
+             tscale, fw_table(1, 3, ip), ltabl, work, lwork)
+     ELSE IF( isign > 0 ) THEN
+        idir   =-1
+        tscale = 1.0d0
+        CALL DCFT (0, c(1), 1, ldc, cout(1), 1, ldc, nz, nsl, idir, &
+             tscale, bw_table(1, 3, ip), ltabl, work, lwork)
      END IF
 
-#else 
-                                                                                                      
-     CALL errore(' cft_1 ',' no scalar fft driver specified ', 1)
+#elif defined __SUN
 
-#endif
+     IF ( isign < 0) THEN
+        DO i = 1, nsl
+           CALL zfftf ( nz, c(1+(i-1)*ldc), tablez ( 1, ip) )
+        END DO
+        cout( 1 : ldc * nsl ) = c( 1 : ldc * nsl ) / nz
+     ELSE IF( isign > 0 ) THEN
+        DO i = 1, nsl
+           CALL zfftb ( nz, c(1+(i-1)*ldc), tablez ( 1, ip) )
+        enddo
+        cout( 1 : ldc * nsl ) = c( 1 : ldc * nsl )
+     END ID
 
-#if defined __FFTW || defined __COMPLIB
-     cout( 1 : ldc * nsl ) = c( 1 : ldc * nsl )
+#else
+
+    CALL errore(' cft_1 ',' no scalar fft driver specified ', 1)
+
 #endif
 
 #if defined __HPM
-            CALL f_hpmstop( 30 + ABS(sgn) )
+            CALL f_hpmstop( 30 + ABS(isign) )
 #endif
 
      RETURN
@@ -305,39 +324,37 @@
 !
 
 
-   SUBROUTINE cft_2xy(r, nzl, nx, ny, ldx, ldy, sgn, pl2ix)
+   SUBROUTINE cft_2xy(r, nzl, nx, ny, ldx, ldy, isign, pl2ix)
 
 !     driver routine for nzl 2d complex fft's of lengths nx and ny
-!     (sparse grid, both charge and wavefunctions) 
-!     on input, sgn=+/-1 for charge density, sgn=+/-2 for wavefunctions
-!     ldx is the actual dimension of f (may differ from n)
-!     for compatibility: ldy is not used
-!     A separate initialization is stored for each combination of input parameters
+!     ldx is the actual dimension of f (may differ from n), ldy is not used
+!     pl2ix(nx) (optional) is 1 for columns along y to be transformed
+!     A separate initialization is stored for each combination of input 
+!     parameters
+!     In-place: input and output transform in r
 
      IMPLICIT NONE
 
-     INTEGER, INTENT(IN) :: sgn, ldx, ldy, nx, ny, nzl
+     INTEGER, INTENT(IN) :: isign, ldx, ldy, nx, ny, nzl
      INTEGER, OPTIONAL, INTENT(IN) :: pl2ix(:)
      COMPLEX (DP) :: r( : )
-     INTEGER :: i, k, j, err, idir, ip, isign, kk
+     INTEGER :: i, k, j, err, idir, ip, kk
      REAL(DP) :: tscale
      INTEGER, SAVE :: icurrent = 1
      INTEGER, SAVE :: dims( 4, ndims) = -1
-     LOGICAL :: dofft( nfftx )
+     LOGICAL :: dofft( nfftx ), done
      INTEGER, PARAMETER  :: stdout = 6
 #if defined __SCSL
      COMPLEX(DP)           :: XY(nx+nx*ny)
 #endif
 
 #if defined __HPM
-      CALL f_hpmstart( 40 + ABS(sgn), 'cft_2xy' )
+      CALL f_hpmstart( 40 + ABS(isign), 'cft_2xy' )
 #endif
 
 #if defined __SCSL
      isys(0) = 1
 #endif
-
-     isign = - sgn
 
      dofft( 1 : nx ) = .TRUE.
      IF( PRESENT( pl2ix ) ) THEN
@@ -354,21 +371,19 @@
      !   Here initialize table only if necessary
      !
 
-     ip = -1
-     DO i = 1, ndims
+     DO ip = 1, ndims
             
        !   first check if there is already a table initialized
        !   for this combination of parameters
 
-       IF( ( ny == dims(1,i) ) .and. ( ldx == dims(2,i) ) .and. &
-           ( nx == dims(3,i) ) .and. ( nzl == dims(4,i) ) ) THEN
-         ip = i
-         EXIT
-       END IF
-
+       done = ( ny == dims(1,ip) ) .AND. ( nx == dims(3,ip) )
+#if defined __AIX
+       done = done .AND. ( ldx == dims(2,ip) ) .AND.  ( nzl == dims(4,ip) )
+#endif
+       IF (done) EXIT
      END DO
 
-     IF( ip == -1 ) THEN
+     IF( .NOT. done ) THEN
 
        !   no table exist for these parameters
        !   initialize a new one 
@@ -411,9 +426,14 @@
        CALL ZZFFTM  (0, nx, 0, 0.0D0, DUMMY, 1, DUMMY, 1,               &
                      tablex(1, icurrent), DUMMY, isys)
 
+#elif defined __SUN
+
+       CALL zffti (ny, tabley(1, icurrent) )
+       CALL zffti (nx, tablex(1, icurrent) )
+
 #else
 
-       CALL errore(' fft_y ',' no scalar fft driver specified ', 1)
+       CALL errore(' cft_2xy ',' no scalar fft driver specified ', 1)
 
 #endif
 
@@ -430,7 +450,7 @@
 
 #if defined __FFTW
 
-     IF( isign > 0 ) THEN
+     IF( isign < 0 ) THEN
 
        CALL FFT_X_STICK( fw_plan( 1, ip), r(1), nx, ny, nzl, ldx, ldy ) 
        do i = 1, nx
@@ -444,7 +464,7 @@
        tscale = 1.0d0 / ( nx * ny )
        CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
 
-     ELSE IF( isign < 0 ) THEN
+     ELSE IF( isign > 0 ) THEN
 
        do i = 1, nx
          do k = 1, nzl
@@ -460,7 +480,10 @@
 
 #elif defined __AIX
 
-     IF( isign > 0 ) THEN
+     ! essl uses a different convention for forward/backward transforms
+     ! wrt most other implementations: notice the sign of "idir"
+
+     IF( isign < 0 ) THEN
 
        idir = 1
        tscale = 1.0d0 / ( nx * ny )
@@ -477,7 +500,7 @@
          end do
        end do
 
-     ELSE IF( isign < 0 ) THEN
+     ELSE IF( isign > 0 ) THEN
 
        idir = -1
        DO k = 1, nzl
@@ -497,7 +520,7 @@
 
 #elif defined __COMPLIB
 
-     IF( isign > 0 ) THEN
+     IF( isign < 0 ) THEN
        idir =  -1
        DO i = 1, nzl
          k = 1 + ( i - 1 ) * ldx * ldy
@@ -510,7 +533,7 @@
        end do
        tscale = 1.0d0 / ( nx * ny )
        CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
-     ELSE IF( isign < 0 ) THEN
+     ELSE IF( isign > 0 ) THEN
        idir = 1
        do i = 1, nx
          IF( dofft( i ) ) THEN
@@ -525,7 +548,7 @@
 
 #elif defined __SCSL
 
-      IF( isign > 0 ) THEN
+      IF( isign < 0 ) THEN
 
        idir = -1
        tscale = 1.0d0 / (nx * ny)
@@ -553,9 +576,7 @@
           END DO
        END DO
 
-     END IF
-
-     IF ( isign < 0 ) THEN
+     ELSE IF ( isign > 0 ) THEN
 
        idir = 1
        tscale = 1.0d0
@@ -585,6 +606,53 @@
 
      END IF
 
+#elif defined __SUN
+
+     ! note that array "dofft" is not used to reduce the number of FFTs
+     ! in te present implementation (of course it could)
+
+     IF ( isign < 0 ) THEN
+        
+        !  i - direction, forward  ...
+
+        DO i = 1, ny * nzl
+           k = 1 + ( i - 1 ) * ldx
+           CALL zfftf ( nx, r (k), tablex (1, ip) )
+        END DO
+        
+        ! ... j-direction, forward ...
+        
+        DO i = 1, nzl
+           DO j = 1, nx
+              k = (i - 1) * ldx * ny + j
+              CALL ZCOPY (ny, r (k), ldx, work, 1)
+              CALL zfftf (ny, work, tabley (1, ip) )
+              CALL ZCOPY (ny, work, 1, r (k), ldx)
+           END DO
+        END DO
+        CALL ZDSCAL ( ldx * ny * nzl, 1d0/(nx * ny), r, 1)
+
+     ELSE IF (isign > 0) THEN
+
+        !  i - direction, backward ...
+
+        DO i = 1, ny * nzl
+           k = 1 + ( i - 1 ) * ldx
+           CALL zfftb ( nx, r (k), tablex (1, ip) )
+        END DO
+
+        !  j - direction, backward ...
+
+        DO i = 1, nzl
+           DO j = 1, nx
+              k = (i - 1) * ldx * ny + j
+              CALL ZCOPY (ny, r (k), ldx, work, 1)
+              CALL zfftb (ny, work, tabley (1, ip) )
+              CALL ZCOPY (ny, work, 1, r (k), ldx)
+           END DO
+        END DO
+     END IF
+
 #else
 
      CALL errore(' cft_2xy ',' no scalar fft driver specified ', 1)
@@ -592,7 +660,7 @@
 #endif
 
 #if defined __HPM
-            CALL f_hpmstop( 40 + ABS(sgn)  )
+            CALL f_hpmstop( 40 + ABS(isign)  )
 #endif
 
      RETURN
@@ -1315,7 +1383,7 @@ function allowed (nr)
 
   else
 
-#ifdef __AIX
+#if defined __AIX
 
      ! IBM machines with essl libraries
 
