@@ -37,7 +37,6 @@ cdiisg_nc.o \
 cegterg.o \
 cft3.o \
 cft3s.o \
-cft_3.o \
 cgramg1.o \
 cgramg1_nc.o \
 checkallsym.o \

@@ -123,16 +123,11 @@ END SUBROUTINE cft3
 !
 #else
 !
-#if defined (__AIX) || defined (__FFTW) || defined (__COMPLIB) || defined (__SCSL)
-#  define __FFT_MODULE_DRV
-#endif
 !----------------------------------------------------------------------------
 SUBROUTINE cft3( f, n1, n2, n3, nx1, nx2, nx3, sign )
   !----------------------------------------------------------------------------
   !
-#if defined( __FFT_MODULE_DRV)
   USE fft_scalar, ONLY : cfft3d
-#endif
   USE kinds,      ONLY : DP
   !
   IMPLICIT NONE
@@ -147,27 +142,11 @@ SUBROUTINE cft3( f, n1, n2, n3, nx1, nx2, nx3, sign )
   !
   IF ( sign == 1 ) THEN
      !
-#if defined (__FFT_MODULE_DRV)
-     !
      CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, 1 )
-     !
-#else
-     !
-     CALL cft_3( f, n1, n2, n3, nx1, nx2, nx3, 1, 1 )
-     !
-#endif
      !
   ELSE IF ( sign == - 1 ) THEN
      !
-#if defined (__FFT_MODULE_DRV)
-     !
      CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, -1 )
-     !
-#else
-     !
-     CALL cft_3( f, n1, n2, n3, nx1, nx2, nx3, 1, -1 )
-     !
-#endif
      !
   ELSE
      !

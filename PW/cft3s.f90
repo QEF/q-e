@@ -226,10 +226,6 @@ END SUBROUTINE cft3s
 #if defined (__HPM)
 #  include "/cineca/prod/hpm/include/f_hpm.h"
 #endif
-#if defined (__AIX) || defined (__FFTW) || defined (__SCSL) || defined (__COMPLIB)
-#  define __FFT_MODULE_DRV
-#endif
-!
 !
 !----------------------------------------------------------------------------
 SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
@@ -257,58 +253,35 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
   !
   IF ( sign == 1 ) THEN
      !
-#if defined (__FFT_MODULE_DRV)
-     !
      CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, 1 )
-     !
-#else
-     !
-     CALL cft_3( f, n1, n2, n3, nx1, nx2, nx3, 2, 1 )
-     !
-#endif
      !
   ELSE IF ( sign == -1 ) THEN
      !
-#if defined (__FFT_MODULE_DRV)
-     !
      CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, -1 )
-#else
-     !
-     CALL cft_3( f, n1, n2, n3, nx1, nx2, nx3, 2, -1 )
-     !
-#endif
      !
      ! ... sign = +-2 : if available, call the "short" fft (for psi's)
      !
   ELSE IF ( sign == 2 ) THEN
      !
-#if defined (__FFT_MODULE_DRV) && ( defined __AIX || defined __FFTW )
+#if defined __AIX || defined __FFTW
      !
      CALL cfft3ds( f, n1, n2, n3, nx1, nx2, nx3, 1, dffts%isind, dffts%iplw )
      !
-#elif defined (__FFT_MODULE_DRV)
-     !
-     CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, 1 )
-     !
 #else
      !
-     CALL cft_3( f, n1, n2, n3, nx1, nx2, nx3, 2, 1 )
+     CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, 1 )
      !
 #endif
      !
   ELSE IF ( sign == -2 ) THEN
      !
-#if defined (__FFT_MODULE_DRV) && ( defined __AIX || defined __FFTW )
+#if defined __AIX || defined __FFTW
      !
      CALL cfft3ds( f, n1, n2, n3, nx1, nx2, nx3, -1, dffts%isind, dffts%iplw )
      !
-#elif defined (__FFT_MODULE_DRV)
-     !
-     CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, -1 )
-     !
 #else
      !
-     CALL cft_3( f, n1, n2, n3, nx1, nx2, nx3, 2, -1 )
+     CALL cfft3d( f, n1, n2, n3, nx1, nx2, nx3, -1 )
      !
 #endif
      !

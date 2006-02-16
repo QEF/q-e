@@ -7,10 +7,12 @@
 !
 
 !----------------------------------------------------------------------!
-! FFT scalar drivers Module - contains machine-dependent routines for:
-! FFTW, ESSL, SCSL, COMPLIB, SUNPERF libraries
-! Written by Carlo Cavazzoni, modified by Paolo Giannozzi
-! Last update February 2006
+! FFT scalar drivers Module - contains machine-dependent routines for: !
+! FFTW, ESSL, SCSL, COMPLIB, SUNPERF libraries (both 3d and 1d+2d FFTs)!
+! NEC, ASL, CXML,  FFTVPLIB libraries (3d only, no parallel execution) !
+! Written by Carlo Cavazzoni, modified by Paolo Giannozzi, contains    !
+! contributions by several people (in particular Guido Roma)           !
+! Last update February 2006                                            !
 !----------------------------------------------------------------------!
 
 
@@ -43,6 +45,8 @@
         INTEGER, PARAMETER :: ndims = 3, nfftx = 2049
 
 ! ...   Machine-Dependent parameters, work arrays and tables of factors
+!       BEWARE: if the latter are shared between the serial and parallel 
+!               case, one should not call both 
 
         !   lwork   Dimension of the work space array
         !   ltabl   Dimension of the tables of factors calculated at the
@@ -73,9 +77,7 @@
         INTEGER, PARAMETER :: lwork = 2 * nfftx
         INTEGER, PARAMETER :: ltabl = 2 * nfftx + 256
         COMPLEX (DP) :: work(lwork) 
-        REAL    (DP) :: tablez(ltabl,ndims)
-        REAL    (DP) :: tablex(ltabl,ndims)
-        REAL    (DP) :: tabley(ltabl,ndims)
+        REAL    (DP) :: table (ltabl, 3, ndims)
         REAL (DP)    :: DUMMY
         INTEGER      :: isys(0:1)
 
@@ -84,25 +86,27 @@
         INTEGER, PARAMETER :: lwork = 20 * nfftx
         INTEGER, PARAMETER :: ltabl = 4 * nfftx
         REAL (DP) :: work(lwork) 
-        REAL (DP) :: tablez(ltabl,ndims)
-        REAL (DP) :: tablex(ltabl,ndims)
-        REAL (DP) :: tabley(ltabl,ndims)
+        REAL (DP) :: table (ltabl, 3, ndims)
 
 #elif defined __SUN
 
         INTEGER, PARAMETER :: ltabl = 4 * nfftx + 15
         INTEGER, PARAMETER :: lwork = nfftx
         COMPLEX (DP) :: work( lwork ) 
-        REAL    (DP) :: tablex(ltabl,ndims)
-        REAL    (DP) :: tabley(ltabl,ndims)
-        REAL    (DP) :: tablez(ltabl,ndims)
+        REAL    (DP) :: table (ltabl, 3, ndims)
 
 #elif defined __SX6
 
         INTEGER, PARAMETER :: ltabl = 60
         INTEGER, PARAMETER :: lwork = 195+6*nfftx
         INTEGER  :: iw0(ltabl, ndims)
-        REAL    (DP) :: auxp(lwork,ndims)
+        REAL    (DP) :: auxp (lwork, ndims)
+
+#elif defined FUJ64
+
+        INTEGER, PARAMETER :: ltabl = 2*3*nfftx+2*120
+        CHARACTER(LEN=2) :: init = 'is'
+        REAL    (DP) :: trig (ltabl, ndims)
 
 #endif
 
@@ -184,12 +188,12 @@
 
 #elif defined __COMPLIB
 
-       CALL ZFFT1DI( nz, tablez(1,icurrent) )
+       CALL ZFFT1DI( nz, table (1,3,icurrent) )
 
 #elif defined __SCSL
 
        CALL ZZFFTM (0, nz, 0, 0.0D0, DUMMY, 1, DUMMY, 1, &
-                    tablez(1,icurrent), DUMMY, isys)
+                    table (1,3,icurrent), DUMMY, isys)
 
 #elif defined __AIX
 
@@ -201,7 +205,7 @@
 
 #elif defined __SUN
 
-       CALL zffti (nz, tablez (1, icurrent) )
+       CALL zffti (nz, table (1, 3, icurrent) )
 
 #else 
 
@@ -233,11 +237,11 @@
 
      IF (isign < 0) THEN
         idir   = -1
-        CALL zfftm1d( idir, nz, nsl, c(1), 1, ldc, tablez(1,ip) )
+        CALL zfftm1d( idir, nz, nsl, c(1), 1, ldc, table (1,3,ip) )
         cout( 1 : ldc * nsl ) = c( 1 : ldc * nsl ) / nz
      ELSE IF( isign > 0 ) THEN
         idir   = 1
-        CALL zfftm1d( idir, nz, nsl, c(1), 1, ldc, tablez(1,ip) )
+        CALL zfftm1d( idir, nz, nsl, c(1), 1, ldc, table (1,3,ip) )
         cout( 1 : ldc * nsl ) = c( 1 : ldc * nsl )
      END IF
 
@@ -251,7 +255,7 @@
         tscale = 1.0d0
      END IF
      IF (isign /= 0) CALL ZZFFTM (idir, nz, nsl, tscale, c(1), ldc, &
-          cout(1), ldc, tablez(1,ip), work, isys)
+          cout(1), ldc, table (1,3,ip), work, isys)
 
 #elif defined __AIX
 
@@ -274,12 +278,12 @@
 
      IF ( isign < 0) THEN
         DO i = 1, nsl
-           CALL zfftf ( nz, c(1+(i-1)*ldc), tablez ( 1, ip) )
+           CALL zfftf ( nz, c(1+(i-1)*ldc), table ( 1, 3, ip) )
         END DO
         cout( 1 : ldc * nsl ) = c( 1 : ldc * nsl ) / nz
      ELSE IF( isign > 0 ) THEN
         DO i = 1, nsl
-           CALL zfftb ( nz, c(1+(i-1)*ldc), tablez ( 1, ip) )
+           CALL zfftb ( nz, c(1+(i-1)*ldc), table ( 1, 3, ip) )
         enddo
         cout( 1 : ldc * nsl ) = c( 1 : ldc * nsl )
      END ID
@@ -405,20 +409,20 @@
 
 #elif defined __COMPLIB
 
-       CALL ZFFT1DI( ny, tabley(1, icurrent) )
-       CALL ZFFT1DI( nx, tablex(1, icurrent) )
+       CALL ZFFT1DI( ny, table (1, 2, icurrent) )
+       CALL ZFFT1DI( nx, table (1, 1, icurrent) )
 
 #elif defined __SCSL
 
        CALL ZZFFTMR (0, ny, 0, 0.0D0, DUMMY, 1, DUMMY, 1,               &
-                     tabley(1, icurrent), DUMMY, isys)
+                     table (1, 2, icurrent), DUMMY, isys)
        CALL ZZFFTM  (0, nx, 0, 0.0D0, DUMMY, 1, DUMMY, 1,               &
-                     tablex(1, icurrent), DUMMY, isys)
+                     table (1, 1, icurrent), DUMMY, isys)
 
 #elif defined __SUN
 
-       CALL zffti (ny, tabley(1, icurrent) )
-       CALL zffti (nx, tablex(1, icurrent) )
+       CALL zffti (ny, table (1, 2, icurrent) )
+       CALL zffti (nx, table (1, 1, icurrent) )
 
 #else
 
@@ -513,11 +517,11 @@
        idir =  -1
        DO i = 1, nzl
          k = 1 + ( i - 1 ) * ldx * ldy
-         call zfftm1d( idir, nx, ny, r(k), 1, ldx, tablex(1,ip) )
+         call zfftm1d( idir, nx, ny, r(k), 1, ldx, table (1,1,ip) )
        END DO
        do i = 1, nx
          IF( dofft( i ) ) THEN
-           call zfftm1d( idir, ny, nzl, r(i), ldx, ldx*ldy, tabley(1, ip) )
+           call zfftm1d( idir, ny, nzl, r(i), ldx, ldx*ldy, table (1,2,ip) )
          END IF
        end do
        tscale = 1.0d0 / ( nx * ny )
@@ -526,12 +530,12 @@
        idir = 1
        do i = 1, nx
          IF( dofft( i ) ) THEN
-           call zfftm1d( idir, ny, nzl, r(i), ldx, ldx*ldy, tabley(1, ip) )
+           call zfftm1d( idir, ny, nzl, r(i), ldx, ldx*ldy, table (1,2,ip) )
          END IF
        end do
        DO i = 1, nzl
          k = 1 + ( i - 1 ) * ldx * ldy
-         call zfftm1d( idir, nx, ny, r(k), 1, ldx, tablex(1,ip) )
+         call zfftm1d( idir, nx, ny, r(k), 1, ldx, table (1,1,ip) )
        END DO
      END IF
 
@@ -545,7 +549,7 @@
           kk = k * ldx * ldy
 ! FORWARD: ny FFTs in the X direction
           CALL ZZFFTM ( idir, nx, ny, tscale, r(kk+1), ldx, r(kk+1), ldx,   &
-                        tablex(1, ip), work(1), isys )
+                        table (1,1,ip), work(1), isys )
 ! FORWARD: nx FFTs in the Y direction
           DO i = 1, nx
              IF ( dofft(i) ) THEN
@@ -554,7 +558,7 @@
                 DO j = 0, ny-1
                    XY(j+1) = r(i + (j) * ldx + kk)
                 END DO
-                CALL ZZFFT(idir, ny, 1.0D0, XY, XY, tabley(1, ip),      &
+                CALL ZZFFT(idir, ny, 1.0D0, XY, XY, table (1,2,ip),      &
                            work(1), isys)
 !DIR$IVDEP
 !DIR$LOOP COUNT (50)
@@ -579,7 +583,7 @@
                 DO j = 0, ny-1
                    XY(j+1) = r(i + (j) * ldx + kk)
                 END DO
-                CALL ZZFFT(idir, ny, 1.0D0, XY, XY, tabley(1, ip),      &
+                CALL ZZFFT(idir, ny, 1.0D0, XY, XY, table (1,2,ip),      &
                            work(1), isys)
 !DIR$IVDEP
 !DIR$LOOP COUNT (50)
@@ -590,7 +594,7 @@
           END DO
 ! BACKWARD: ny FFTs in the X direction
           CALL ZZFFTM ( idir, nx, ny, tscale, r(kk+1), ldx, r(kk+1), ldx,   &
-                        tablex(1, ip), work(1), isys )
+                        table (1,1,ip), work(1), isys )
        END DO
 
      END IF
@@ -601,7 +605,7 @@
         
         DO k = 1, ny * nzl
            kk = 1 + ( k - 1 ) * ldx
-           CALL zfftf ( nx, r (kk), tablex (1, ip) )
+           CALL zfftf ( nx, r (kk), table (1, 1, ip) )
         END DO
         
         DO i = 1, nx
@@ -609,7 +613,7 @@
               DO j = 1, nzl
                  kk = (j - 1) * ldx * ny + i
                  CALL ZCOPY (ny, r (kk), ldx, work, 1)
-                 CALL zfftf (ny, work, tabley (1, ip) )
+                 CALL zfftf (ny, work, table (1, 1, ip) )
                  CALL ZCOPY (ny, work, 1, r (kk), ldx)
               END DO
            END IF
@@ -623,7 +627,7 @@
               DO j = 1, nzl
                  kk = (j - 1) * ldx * ny + i
                  CALL ZCOPY (ny, r (kk), ldx, work, 1)
-                 CALL zfftb (ny, work, tabley (1, ip) )
+                 CALL zfftb (ny, work, table (1, 1, ip) )
                  CALL ZCOPY (ny, work, 1, r (kk), ldx)
               END DO
            END IF
@@ -631,7 +635,7 @@
      
         DO k = 1, ny * nzl
            kk = 1 + ( k - 1 ) * ldx
-           CALL zfftb ( nx, r (kk), tablex (1, ip) )
+           CALL zfftb ( nx, r (kk), table (1, 1, ip) )
         END DO
 
      END IF
@@ -675,12 +679,8 @@
 
 #if defined __FFTW
 
-     C_POINTER, save :: fw_plan(ndims) = 0
-     C_POINTER, save :: bw_plan(ndims) = 0
-
-#elif defined __COMPLIB || defined __SCSL
-
-      real(8), save :: table( 3 * ltabl,  ndims )
+     C_POINTER, save :: fw_plan3d(ndims) = 0
+     C_POINTER, save :: bw_plan3d(ndims) = 0
 
 #elif defined __SX6 
 
@@ -689,11 +689,42 @@
 #  if defined ASL && defined MICRO
       COMMON/NEC_ASL_PARA/nbtasks
       INTEGER :: nbtasks
-#endif
+#  endif
+
+#elif defined DXML
+
+      STRUCTURE / DXML_Z_FFT_STRUCTURE /
+      INTEGER :: N
+      LOGICAL :: STRIDE_1_FLAG
+      INTEGER :: N_TI (0:16)
+      INTEGER :: N_K (0:16)
+      INTEGER :: N_T (0:16)
+      INTEGER :: TYPE (0:16)
+      INTEGER :: NUM_STAGES
+      INTEGER (8) :: ROTATION_VECTOR
+      INTEGER :: ROTATION_VECTOR_SIZE
+      INTEGER (8) :: TEMP_AREA
+      INTEGER :: TEMP_AREA_SIZE
+      INTEGER :: SET_BLOCK_SIZE
+      INTEGER :: NUM_NON_SPECIAL_RADIX
+      INTEGER :: NON_SPECIAL_RADIX (0:16)
+      INTEGER :: NON_SPEC_RAD_TWIDDLE_SIZE
+      INTEGER (8) :: NON_SPEC_RAD_TWIDDLE_VEC
+      INTEGER (8) :: NON_SPECIAL_RADIX_COS (0:16)
+      INTEGER (8) :: NON_SPECIAL_RADIX_SIN (0:16)
+      INTEGER :: FUTURE_USE (20)
+      INTEGER :: GK (0:11)
+      ENDSTRUCTURE
+      record / DXML_Z_FFT_STRUCTURE / fft_struct (ndims)
+
+#elif defined FUJ64
+
+      REAL (DP), ALLOCATABLE :: workarray(:), ac(:,:)
+
 #endif
 
 #if defined __HPM
-            CALL f_hpmstart( 50 + ABS(sgn), 'cfft3d' )
+            CALL f_hpmstart( 50 + ABS(isign), 'cfft3d' )
 #endif
 
 #if defined __SCSL
@@ -703,7 +734,7 @@
 #if defined __SX6
 #  if defined ASL
        ALLOCATE (cw2(nr1x*nr2x*nr3x))
-       CALL zfc3cl (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, err)
+       CALL zfc3cl (f(1), nr1, nr2, nr3, nr1x, nr2x, nr3x, err)
 #  else
        ALLOCATE (cw2(6*nr1x*nr2x*nr3x))
 #  endif
@@ -736,43 +767,59 @@
        IF ( nr1 /= nr1x .or. nr2 /= nr2x .or. nr3 /= nr3x ) &
          call errore('cfft3','not implemented',1)
 
-       IF( fw_plan(icurrent) /= 0 ) CALL DESTROY_PLAN_3D( fw_plan(icurrent) )
-       IF( bw_plan(icurrent) /= 0 ) CALL DESTROY_PLAN_3D( bw_plan(icurrent) )
-       idir = -1; CALL CREATE_PLAN_3D( fw_plan(icurrent), nr1, nr2, nr3, idir) 
-       idir =  1; CALL CREATE_PLAN_3D( bw_plan(icurrent), nr1, nr2, nr3, idir) 
+       IF( fw_plan3d(icurrent) /= 0 ) CALL DESTROY_PLAN_3D( fw_plan3d(icurrent) )
+       IF( bw_plan3d(icurrent) /= 0 ) CALL DESTROY_PLAN_3D( bw_plan3d(icurrent) )
+       idir = -1; CALL CREATE_PLAN_3D( fw_plan3d(icurrent), nr1, nr2, nr3, idir) 
+       idir =  1; CALL CREATE_PLAN_3D( bw_plan3d(icurrent), nr1, nr2, nr3, idir) 
 
 #elif defined __AIX
 
-       ! no initialization for 3d FFt's from ESSL
+       ! no initialization for 3d FFT's from ESSL
 
 #elif defined __COMPLIB
 
-       CALL zfft3di( nr1, nr2, nr3, table(1,icurrent) )
+       CALL zfft3di( nr1, nr2, nr3, table(1,1,icurrent) )
 
 #elif defined __SCSL
 
        CALL zzfft3d (0, nr1, nr2, nr3, 0.0D0, DUMMY, 1, 1, DUMMY, 1, 1, &
-                     table(1, icurrent), work(1), isys)
+                     table(1,1,icurrent), work(1), isys)
+
+#elif defined __SUN
+
+       CALL zfft3i ( nr1, nr2, nr3, table (1,1,icurrent) )
 
 #elif defined __SX6
 
 #  if defined ASL
        ALLOCATE (cw2(nr1x*nr2x*nr3x))
-       CALL zfc3cl (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, err)
+       CALL zfc3cl (f(1), nr1, nr2, nr3, nr1x, nr2x, nr3x, err)
 #    if defined MICRO
-       CALL hfc3fb (nr1,nr2,nr3, f , nr1x, nr2x, nr3x, 0, &
-            iw0(1,icurrent), auxp(1,icurrent), cw2, nbtasks, err)
+       CALL hfc3fb (nr1,nr2,nr3, f(1) , nr1x, nr2x, nr3x, 0, &
+            iw0(1,icurrent), auxp(1,icurrent), cw2(1), nbtasks, err)
 #    else
-       CALL zfc3fb (nr1,nr2,nr3, f, nr1x, nr2x, nr3x, 0, &
-             iw0(1,icurrent), auxp(1,icurrent), cw2, err)
+       CALL zfc3fb (nr1,nr2,nr3, f(1), nr1x, nr2x, nr3x, 0, &
+             iw0(1,icurrent), auxp(1,icurrent), cw2(1), err)
 #    endif
 #  else
        ALLOCATE (cw2(6*nr1x*nr2x*nr3x))
-       CALL ZZFFT3D (0, nr1,nr2,nr3, 1.d0, f, nr1x, nr2x, &
-          &             f, nr1x, nr2x, auxp(1,icurrent), cw2, err)
+       CALL ZZFFT3D (0, nr1,nr2,nr3, 1.d0, f(1), nr1x, nr2x, &
+          &             f(1), nr1x, nr2x, auxp(1,icurrent), cw2(1), err)
 #  endif
 
        IF (err /= 0) CALL errore('cfft3d','FFT init returned an error ', err)
+
+#elif DXML
+
+       err = zfft_exit_3d (fft_struct (icurrent) )
+       ! not sure whether the above call is useful or not
+       err = zfft_init_3d (nr1, nr2, nr3, fft_struct (icurrent), .TRUE.)
+
+#elif FUJ64
+
+       IF ( nr1 /= nr1x .or. nr2 /= nr2x .or. nr3 /= nr3x ) &
+            call errore('cfft3','not implemented',1)
+       init(1:1)='i'
 
 #else
 
@@ -794,14 +841,14 @@
 
      IF( isign < 0 ) THEN
 
-       call FFTW_INPLACE_DRV_3D( fw_plan(ip), 1, f(1), 1, 1 )
+       call FFTW_INPLACE_DRV_3D( fw_plan3d(ip), 1, f(1), 1, 1 )
 
        tscale = 1.0d0 / DBLE( nr1 * nr2 * nr3 )
        call ZDSCAL( nr1 * nr2 * nr3, tscale, f(1), 1)
 
      ELSE IF( isign > 0 ) THEN
 
-       call FFTW_INPLACE_DRV_3D( bw_plan(ip), 1, f(1), 1, 1 )
+       call FFTW_INPLACE_DRV_3D( bw_plan3d(ip), 1, f(1), 1, 1 )
 
      END IF
 
@@ -823,7 +870,7 @@
      IF( isign /= 0 ) THEN
         IF( isign < 0 ) idir = -1
         IF( isign > 0 ) idir = +1
-        CALL zfft3d( idir, nr1, nr2, nr3, f(1), nr1x, nr2x, table(1,ip) )
+        CALL zfft3d( idir, nr1, nr2, nr3, f(1), nr1x, nr2x, table(1,1,ip) )
         IF( isign < 0 ) THEN
            tscale = 1.0d0 / DBLE( nr1 * nr2 * nr3 )
            call ZDSCAL( nr1x * nr2x * nr3x, tscale, f(1), 1)
@@ -841,22 +888,32 @@
            tscale = 1.0D0
         END IF
         CALL ZZFFT3D ( idir, nr1, nr2, nr3, tscale, f(1), nr1x, nr2x,   &
-                       f(1), nr1x, nr2x, table(1, ip), work(1), isys )
+                       f(1), nr1x, nr2x, table(1,1,ip), work(1), isys )
      END IF
+
+#elif defined __SUN
+
+     IF( isign < 0 ) THEN
+        CALL zfft3f ( nr1, nr2, nr3, f(1), nr1x, nr2x, table(1,1,ip), ltabl )
+        tscale = 1.0D0 / DBLE( nr1 * nr2 * nr3 )
+        CALL ZDSCAL ( nr1x*nr2x*nr3x, tscale, f(1), 1 )
+     ELSE IF( isign > 0 ) THEN
+        CALL zfft3b ( nr1, nr2, nr3, f(1), nr1x, nr2x, table(1,1,ip), ltabl )
+     ENDIF
 
 #elif defined __SX6
 
 #  if defined ASL
 #    if defined MICRO
-     CALL hfc3bf (nr1,nr2,nr3, f, nr1x,nr2x, nr3x, &
-          -isign, iw0(1,ip), auxp(1,ip), cw2, nbtasks, err)
+     CALL hfc3bf (nr1,nr2,nr3, f(1), nr1x,nr2x, nr3x, &
+          -isign, iw0(1,ip), auxp(1,ip), cw2(1), nbtasks, err)
 #    else
-     CALL zfc3bf (nr1,nr2,nr3, f, nr1x,nr2x, nr3x, &
-          -isign, iw0(1,ip), auxp(1,ip), cw2, err)     
+     CALL zfc3bf (nr1,nr2,nr3, f(1), nr1x,nr2x, nr3x, &
+          -isign, iw0(1,ip), auxp(1,ip), cw2(1), err)     
 #    endif
 #  else
-     CALL ZZFFT3D (isign, nr1,nr2,nr3, 1.d0, f, nr1x,nr2x, &
-          f, nr1x,nr2x, auxp(1,ip), cw2, err)
+     CALL ZZFFT3D (isign, nr1,nr2,nr3, 1.d0, f(1), nr1x,nr2x, &
+          f(1), nr1x,nr2x, auxp(1,ip), cw2(1), err)
 #   endif
      IF ( isign < 0) THEN
         tscale = 1.0d0 / DBLE( nr1 * nr2 * nr3 )
@@ -864,10 +921,46 @@
      END IF
      IF (err /= 0) CALL errore('cfft3d','FFT returned an error ', err)
      DEALLOCATE(cw2)
+
+#elif DXML
+
+     IF ( isign < 0) THEN
+        CALL zfft_apply_3d ('C', 'C', 'f', f, f, nr1x, nr2x, &
+             fft_struct (ip) , 1, 1, 1)
+        tscale = 1.0D0 / DBLE( nr1 * nr2 * nr3 )
+        CALL ZDSCAL ( nr1x*nr2x*nr3x, tscale, f(1), 1 )
+     ELSE IF ( isign > 0) THEN
+        CALL zfft_apply_3d ('C', 'C', 'b', f, f, nr1x, nr2x, &
+             fft_struct (ip) , 1, 1, 1)
+        tscale = DBLE( nr1 * nr2 * nr3 )
+        CALL ZDSCAL ( nr1x*nr2x*nr3x, tscale, f(1), 1 )
+     END IF
+
+#elif FUJ64
+
+     ALLOCATE (workarray(2*nr1*nr2*nr3), ac(2,nr1*nr2*nr3))
+     CALL DCOPY(2*nr1*nr2*nr3,f,1,ac,1)
+     IF ( isign < 0) THEN
+        init(2:2) = 'n'
+        CALL dftcbm( ac(1,:,:,:), ac(2,:,:,:), 3, dims(:,ip), workarray, &
+             trig(1,ip), 'm', init, err )
+        tscale = DBLE( nr1 * nr2 * nr3 )
+        CALL DSCAL (2*nr1x*nr2x*nr3x, tscale, ac(1,1), 1 )
+     ELSE IF ( isign > 0) THEN
+        init(2:2) = 'i'
+        CALL dftcbm( ac(1,:,:,:), ac(2,:,:,:), 3, dims(:,ip), workarray, &
+             trig(1,ip), 'p', init, err )
+        tscale = 1.0D0 / DBLE( nr1 * nr2 * nr3 )
+        CALL DSCAL (2*nr1x*nr2x*nr3x, tscale, ac(1,1), 1 )
+     END IF
+     init(1:1)='r'
+     CALL DCOPY(2*nr1*nr2*nr3,ac,1,f,1)
+     DEALLOCATE (ac, workarray))
+
 #endif
 
 #if defined __HPM
-            CALL f_hpmstop( 50 + ABS(sgn) )
+            CALL f_hpmstop( 50 + ABS(isign) )
 #endif
       
      RETURN
@@ -1363,16 +1456,17 @@ integer function good_fft_dimension (n)
   !
   ! this is the default: max dimension = fft dimension
   nx = n
+  !
 #if defined(__AIX) || defined(DXML)
   log2n = LOG ( dble (n) ) / LOG ( 2.0_DP )
   ! log2n is the logarithm of n in base 2
   IF ( ABS (NINT(log2n) - log2n) < 1.0d-8 ) nx = n + 1
   ! if n is a power of 2 (log2n is integer) increase dimension by 1
-#endif
+#elif defined(__SX6)
   !
-  ! for cray and nec vector machines, obsolete:
-  ! if n is even increase dimension by 1
-  !  if (mod (nr1, 2) ==0) nx = n + 1
+  if (mod (nr1, 2) ==0) nx = n + 1
+  ! for nec vector machines: if n is even increase dimension by 1
+#endif
   !
   good_fft_dimension = nx
   return
