@@ -33,7 +33,6 @@ PWOBJS = \
 ../PW/cdiagh.o \
 ../PW/cdiisg_nc.o \
 ../PW/cegterg.o \
-../PW/cft_3.o \
 ../PW/cft3.o \
 ../PW/cft3s.o \
 ../PW/cgramg1.o \

@@ -197,7 +197,6 @@ PWOBJS = \
 ../PW/cegterg.o \
 ../PW/cft3.o \
 ../PW/cft3s.o \
-../PW/cft_3.o \
 ../PW/cgramg1.o \
 ../PW/cgramg1_nc.o \
 ../PW/checkallsym.o \
