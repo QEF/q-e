@@ -117,14 +117,12 @@
       USE rundiis_module, ONLY: rundiis, runsdiis
       USE wave_types
       use wave_base, only: frice
-      USE charge_types
       USE kohn_sham_states, ONLY: ks_states, tksout, n_ksout, indx_ksout, ks_states_closeup
       USE kohn_sham_states, ONLY: ks_states_force_pairing
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
       USE optical_properties, ONLY: opticalp, optical_closeup
       USE wave_functions, ONLY: update_wave_functions
-      USE mp_buffers, ONLY: mp_report_buffers
       USE mp, ONLY: mp_report, mp_sum, mp_max
       USE runsd_module, ONLY: runsd
       USE guess, ONLY: guess_closeup
@@ -747,7 +745,6 @@
       ! ... report statistics
 
       CALL printacc(nfi, nstep_this_run, acc, acc_this_run)
-      CALL mp_report_buffers()
       CALL mp_report()
 
       DO iunit = 10, 99

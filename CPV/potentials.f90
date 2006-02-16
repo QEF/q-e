@@ -391,10 +391,11 @@
         ALLOCATE( grho( 1, 1, 1 ) )
         ALLOCATE( v2xc( 1, 1, 1 ) )
       END IF
+
       grho = 0.0d0
       v2xc = 0.0d0
 
-      ALLOCATE( rhoeg(ngm, nspin) )
+      ALLOCATE( rhoeg (ngm, nspin) )
       ALLOCATE( rhoetg(ngm, nspin) )
 
       IF( ttsic ) THEN
@@ -426,7 +427,7 @@
 
       IF(timing) s1 = cclock()
 
-! ... compute kinetic energy
+      ! ... compute kinetic energy
 
       edft%ekin  = 0.0_DP
       edft%emkin = 0.0_DP
@@ -466,7 +467,6 @@
  
         DEALLOCATE( psi )
 
-
         ! ... add core contribution to the charge
 
         CALL ZCOPY( SIZE(rhoeg,1) , rhoeg(1,iss), 1, rhoetg(1,iss), 1 )
@@ -488,14 +488,14 @@
 
           ! ...     chi2
 
-          IF(tchi2) THEN
+          IF( tchi2 ) THEN
             IF(nspin.GT.1) CALL errore(' vofrho ',' spin + tchi ',nspin)
             rhochi = rhoeg(:,1)
           END IF
 
         END IF
 
-        IF(tgc) THEN
+        IF( tgc ) THEN
           CALL gradrho( rhoetg(:,iss), grho(:,:,iss), gx )
         END IF
 
@@ -526,15 +526,17 @@
 
          vpot (:,1) = ( 1.0d0 - sic_alpha ) * vpot(:,1)
          ! 
-         vpot (:,2) = ( 1.0d0 - sic_alpha ) * vpot(:,2) + sic_alpha * ( self_vpot(:,2) + self_vpot(:,1) )
+         vpot (:,2) = ( 1.0d0 - sic_alpha ) * vpot(:,2) + &
+                      sic_alpha * ( self_vpot(:,2) + self_vpot(:,1) )
 
-      IF (tgc) THEN
-        !
-        v2xc(:,1,1) = ( 1.0d0 - sic_alpha ) * v2xc(:,1,1)
-        !
-        v2xc(:,2,2) = ( 1.0d0 - sic_alpha ) * v2xc(:,2,2) +sic_alpha * ( self_v2xc(:,2,2) + self_v2xc(:,1,1) )
-        !
-      END IF
+         IF (tgc) THEN
+           !
+           v2xc(:,1,1) = ( 1.0d0 - sic_alpha ) * v2xc(:,1,1)
+           !
+           v2xc(:,2,2) = ( 1.0d0 - sic_alpha ) * v2xc(:,2,2) + & 
+                         sic_alpha * ( self_v2xc(:,2,2) + self_v2xc(:,1,1) )
+           !
+         END IF
 
          edft%self_sxc = sic_alpha * ( sxcp - self_sxcp )
          !
@@ -577,17 +579,18 @@
       END IF
 
 
-! ... Van Der Waals energy and forces
-      IF (tvdw) THEN
-        CALL VdW(edft%evdw, atoms, fion, box)
+      ! ... Van Der Waals energy and forces
+      !
+      IF ( tvdw ) THEN
+        CALL VdW( edft%evdw, atoms, fion, box )
       END IF
 
       IF(timing) s4 = cclock()
 
 
-! ... Calculate hartree potential and energy (eh), and
-! ... local part of the pseudopotential and its energy contribution (eps)
-! ... Self-interaction correction --- Hartree part
+      ! ... Calculate hartree potential and energy (eh), and
+      ! ... local part of the pseudopotential and its energy contribution (eps)
+      ! ... Self-interaction correction --- Hartree part
 
       ALLOCATE( vloc( ngm ) )
       !
@@ -636,8 +639,8 @@
       IF( ALLOCATED( self_vpot  ) ) DEALLOCATE( self_vpot )
       IF( ALLOCATED( self_rho   ) ) DEALLOCATE( self_rho  )
 
-! ... vloc(g): hartree and local part of the pseudo potentials (in
-! ...          reciprocal space
+      ! ... vloc(g): hartree and local part of the pseudo potentials (in
+      ! ...          reciprocal space
  
       IF(timing) s5 = cclock()
 
@@ -646,16 +649,14 @@
 
       DO iss = 1, nspin
 
-! ...   add hartree end local pseudo potentials ( invfft(vloc) )
-! ...   to xc potential (vpot).
-! ...   vpot = vpot + invfft(vloc)
-
-        ! CALL pinvfft( vpot(:,iss), vloc(:), 1.0d0 )
+        ! ...   add hartree end local pseudo potentials ( invfft(vloc) )
+        ! ...   to xc potential (vpot).
+        ! ...   vpot = vpot + invfft(vloc)
 
         CALL rho2psi( 'Dense', psi, dfftp%nnr, vloc, ngm )
         CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
 
-        vpot(:,1) = vpot(:,1) + DBLE( psi )
+        vpot(:,iss) = vpot(:,iss) + DBLE( psi )
 
       END DO
 

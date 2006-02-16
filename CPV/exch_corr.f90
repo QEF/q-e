@@ -267,6 +267,9 @@
 
         nspin = SIZE( rhoetr, 2 )
         !
+        IF( SIZE( vpot, 1 ) /= nnrx ) &
+           CALL errore(" exch_corr_energy ", " inconsistent size for vpot ", 1 )
+        !
         CALL exch_corr_wrapper( nnrx, nspin, grho(1,1,1), rhoetr(1,1), sxc, vpot(1,1), v2xc(1,1,1) )
         !
         IF( dft_is_gradient() ) THEN

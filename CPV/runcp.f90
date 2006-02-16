@@ -254,6 +254,7 @@
 
           DO i = 1, nb, 2
 
+            !WRITE( 6, * ) 'DEBUG = ', fi(i,1,is), fi(i+1,1,is)
             CALL dforce( i, is, c0(:,:,1,is), cdesc, fi(:,1,is), c2, c3, vpot(:,is), eigr, bec )
 
             IF( tlam ) THEN

@@ -4,7 +4,6 @@ include	../make.sys
 
 FOBJS = \
 atoms_type.o \
-band_type.o \
 bessel.o \
 berryion.o \
 bforceion.o \
@@ -14,7 +13,6 @@ cg_sub.o \
 cglib.o \
 chargedensity.o \
 chargemix.o \
-charge_types.o \
 chi2.o \
 compute_fes_grads.o \
 compute_scf.o \
@@ -140,7 +138,6 @@ MODULES = \
 ../Modules/ions_base.o \
 ../Modules/ions_nose.o \
 ../Modules/kind.o \
-../Modules/mp_buffers.o \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \

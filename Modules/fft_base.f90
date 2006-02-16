@@ -1,11 +1,13 @@
 !
-! Copyright (C) 2002 FPMD group
+! Copyright (C) 2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!
 #include "f_defs.h"
+!
 !----------------------------------------------------------------------
 ! FFT base Module.
 ! Written by Carlo Cavazzoni 
@@ -16,15 +18,12 @@
 #  include "/cineca/prod/hpm/include/f_hpm.h"
 #endif
 
-#undef __FFT_BASE_TS1 
-!#define __FFT_BASE_TS1 
 
 !=----------------------------------------------------------------------=!
       MODULE fft_base
 !=----------------------------------------------------------------------=!
 
         USE kinds, ONLY: DP
-        USE mp, ONLY: mp_max, mp_sum, mp_barrier
         USE parallel_include
 
         USE fft_types, ONLY: fft_dlay_descriptor
@@ -39,65 +38,26 @@
 
         PRIVATE
 
-        PUBLIC :: fft_transpose, fft_scatter, fft_timing
+#if ! defined __PARA
+        INTERFACE fft_itranspose
+           MODULE procedure fft_transpose
+        END INTERFACE
+#endif
+
+        PUBLIC :: fft_itranspose, fft_transpose, fft_scatter
         PUBLIC :: dfftp, dffts, fft_dlay_descriptor
-
-
-        INTEGER, ALLOCATABLE :: stmask(:)
-        REAL(DP) :: fft_timing( 4, 2 ) = 0.0d0
 
 
 !=----------------------------------------------------------------------=!
       CONTAINS
 !=----------------------------------------------------------------------=!
 
-!=----------------------------------------------------------------------=!
-!  ...  FFT inizialization
-!
-        SUBROUTINE transpose_setup( dfft, me, nproc )
-
-          IMPLICIT NONE
-          
-          TYPE (fft_dlay_descriptor), INTENT(IN) :: dfft
-          INTEGER, INTENT(IN) :: me    ! processor index starting from 1
-          INTEGER, INTENT(IN) :: nproc ! number of processor
-
-          INTEGER :: ierr
-!
-! ...     Subroutine Body
-!
-
-          ierr = 0
-          IF( ALLOCATED(stmask) ) DEALLOCATE(stmask, STAT=ierr)
-          IF( ierr /= 0 ) &
-            CALL errore(' fft_base_setup ' , ' deallocation of stmask failed ', ierr)
-
-          ALLOCATE( stmask ( SIZE( dfft%ismap ) ), STAT=ierr)
-          IF( ierr /= 0 ) &
-            CALL errore(' fft_base_setup ' , ' allocation of stmask failed ', ierr)
-
-! ...     the stick mask is copied locally to increase the efficiency
-
-          stmask( : ) = dfft%ismap( : )
-
-          RETURN
-        END SUBROUTINE transpose_setup
-
-!
-!
-!=======================================================================
 !
 
 #if defined __PARA
 
-#  if defined __FFT_BASE_TS1
 
-        SUBROUTINE fft_transpose( zstick, ldz, r, ldx, ldy, dfft, me, nproc, iopt)
-
-          USE mp_buffers, ONLY: mp_allocate_buffers, &
-            mp_snd_buffer, mp_rcv_buffer, mp_sendrecv_buffers, &
-            mp_barrier_buffers, mp_deallocate_buffers, mp_alltoall_buffers, &
-            mp_p_snd_buffer, mp_p_rcv_buffer, mp_bufsize_msgmax
+        SUBROUTINE fft_transpose( zstick, ldz, r, ldx, ldy, dfft, me, group, nproc, iopt )
 
           IMPLICIT NONE
 
@@ -106,34 +66,20 @@
           TYPE (fft_dlay_descriptor), INTENT(IN) ::  dfft
           INTEGER, INTENT(IN) :: me    ! processor index starting from 1
           INTEGER, INTENT(IN) :: nproc
-          INTEGER, INTENT(IN) :: iopt, ldz, ldx, ldy
-
+          INTEGER, INTENT(IN) :: group, iopt, ldz, ldx, ldy
 
           INTEGER :: i, j, k, ipz, offset, k_start, k_end, is
           INTEGER :: npz, nz_l, ns_l, ns_lp, nz_lx
           INTEGER :: nsx_l, msgsiz
-          INTEGER :: mc1, mc2, mc3, mc4, is_offset, ns1
+          INTEGER :: mc1, mc2, mc3, mc4, is_offset, ns1, ierr
           COMPLEX (DP) :: zero
           COMPLEX (DP) :: bswp( ldz * 4 )
+          COMPLEX (DP), ALLOCATABLE :: mp_snd_buffer(:)
+          COMPLEX (DP), ALLOCATABLE :: mp_rcv_buffer(:)
 
-          INTEGER, SAVE :: dfft_id = -1
-
-#if defined __HPM
-            CALL f_hpmstart( 11, 'transpose' )
-#endif
-!
-! ... SUBROUTINE BODY
-!
-          IF( iopt == 0 ) THEN
-            CALL transpose_setup( dfft, me, nproc )
-            dfft_id = dfft%id
-            RETURN
-          END IF
-
-          IF( dfft_id /= dfft%id ) THEN
-            CALL transpose_setup( dfft, me, nproc )
-            dfft_id = dfft%id
-          END IF
+          !
+          ! ... SUBROUTINE BODY
+          !
 
           npz  = nproc
           nz_lx = MAXVAL( dfft%npp( 1 : nproc ) )
@@ -149,7 +95,8 @@
           zero = 0.0d0
 
           msgsiz = nsx_l * nz_lx 
-          CALL mp_allocate_buffers( msgsiz * npz )
+          ALLOCATE( mp_snd_buffer( msgsiz * npz ) )
+          ALLOCATE( mp_rcv_buffer( msgsiz * npz ) )
 
           IF ( iopt < 1 ) THEN
 
@@ -171,8 +118,9 @@
             END DO
 
 
-            CALL mp_alltoall_buffers(mp_snd_buffer, mp_rcv_buffer)
-
+            call MPI_ALLTOALL(mp_snd_buffer(1),msgsiz,MPI_DOUBLE_COMPLEX, &
+                        mp_rcv_buffer(1),msgsiz,MPI_DOUBLE_COMPLEX, &
+                        group, ierr)
 
             DO ipz = 1, npz
               nz_l = dfft%npp( me )
@@ -186,7 +134,7 @@
               ns1 = MOD( ns_lp, 4 )
               IF( ns1 /= 0 ) THEN
                 DO is = 1, ns1
-                  mc1 = stmask( is   + is_offset )
+                  mc1 = dfft%ismap( is   + is_offset )
                   DO k = 1 , nz_l
                     r( mc1 + (k-1)*ldx*ldy ) = mp_rcv_buffer( k + offset )
                   END DO
@@ -196,10 +144,10 @@
               IF( ns_lp >= 4 ) THEN
                 ns1 = ns1 + 1
                 DO is = ns1, ns_lp, 4
-                  mc1 = stmask( is   + is_offset )
-                  mc2 = stmask( is+1 + is_offset )
-                  mc3 = stmask( is+2 + is_offset )
-                  mc4 = stmask( is+3 + is_offset )
+                  mc1 = dfft%ismap( is   + is_offset )
+                  mc2 = dfft%ismap( is+1 + is_offset )
+                  mc3 = dfft%ismap( is+2 + is_offset )
+                  mc4 = dfft%ismap( is+3 + is_offset )
                   DO k = 1 , nz_l
                     bswp( k ) = mp_rcv_buffer( k + offset )
                   END DO
@@ -240,7 +188,7 @@
               ns1 = MOD( ns_lp, 4 )
               IF( ns1 /= 0 ) THEN
                 DO is = 1, ns1
-                  mc1 = stmask( is   + is_offset )
+                  mc1 = dfft%ismap( is   + is_offset )
                   DO k = 1 , nz_l
                     mp_snd_buffer( k + offset ) = r( mc1 + (k-1)*ldx*ldy )
                   END DO
@@ -250,10 +198,10 @@
               IF( ns_lp >= 4 ) THEN
                 ns1 = ns1 + 1
                 DO is = ns1, ns_lp, 4
-                  mc1 = stmask( is   + is_offset )
-                  mc2 = stmask( is+1 + is_offset )
-                  mc3 = stmask( is+2 + is_offset )
-                  mc4 = stmask( is+3 + is_offset )
+                  mc1 = dfft%ismap( is   + is_offset )
+                  mc2 = dfft%ismap( is+1 + is_offset )
+                  mc3 = dfft%ismap( is+2 + is_offset )
+                  mc4 = dfft%ismap( is+3 + is_offset )
                   DO k = 1, nz_l
                     bswp( k          ) = r( mc1 + (k-1)*ldx*ldy )
                     bswp( k +   nz_l ) = r( mc2 + (k-1)*ldx*ldy )
@@ -280,7 +228,9 @@
               END IF
             END DO
 
-            call mp_alltoall_buffers(mp_snd_buffer, mp_rcv_buffer)
+            call MPI_ALLTOALL(mp_snd_buffer(1),msgsiz,MPI_DOUBLE_COMPLEX, &
+                        mp_rcv_buffer(1),msgsiz,MPI_DOUBLE_COMPLEX, &
+                        group, ierr)
 
             k_start = 1
             DO IPZ = 1, NPZ
@@ -299,19 +249,23 @@
 
           END IF
 
-          CALL mp_deallocate_buffers()
-
-#if defined __HPM
-            CALL f_hpmstop( 11 )
-#endif
+          DEALLOCATE( mp_snd_buffer )
+          DEALLOCATE( mp_rcv_buffer )
 
           RETURN 
         END SUBROUTINE fft_transpose
 
-#  else
+
+        !=----------------------------------------------------------------------=!
 
 
-        SUBROUTINE fft_transpose( zstick, ldz, r, ldx, ldy, dfft, me, nproc, iopt)
+        SUBROUTINE fft_itranspose( zstick, ldz, r, ldx, ldy, dfft, me, group, nproc, iopt)
+
+          !
+          ! Non-blocking version of the transpose routine 
+          ! Transpose re-distribute fft data between 1D fft along Z dimension and
+          ! 2D fft in the XY plane
+          !
 
           IMPLICIT NONE
 
@@ -320,7 +274,7 @@
           TYPE (fft_dlay_descriptor), INTENT(IN) ::  dfft
           INTEGER, INTENT(IN) :: me    ! processor index starting from 1
           INTEGER, INTENT(IN) :: nproc
-          INTEGER, INTENT(IN) :: iopt
+          INTEGER, INTENT(IN) :: group, iopt
           INTEGER, INTENT(IN) :: ldz, ldx, ldy
 
           INTEGER :: i, j, k, ipz, offset, k_start, k_end, is, is_start, is_end
@@ -334,28 +288,9 @@
           COMPLEX(DP), ALLOCATABLE :: rcvbuf(:,:)
           INTEGER :: i1, i2, j1, j2, mc1, mc2, is_offset
 
-          INTEGER, SAVE :: dfft_id = -1
-
-!
-! ... SUBROUTINE BODY
-!
-
-#if defined __HPM
-            CALL f_hpmstart( 12, 'transpose' )
-#endif
-
-
-          IF( iopt == 0 ) THEN
-            CALL transpose_setup( dfft, me, nproc )
-            dfft_id = dfft%id
-            RETURN
-          END IF
-
-          IF( dfft_id /= dfft%id ) THEN
-            CALL transpose_setup( dfft, me, nproc )
-            dfft_id = dfft%id
-          END IF
-
+          !
+          ! ... SUBROUTINE BODY
+          !
 
           npz  = nproc
           mype = me - 1
@@ -380,7 +315,7 @@
             DO ipz = 1, npz
               itag = mype + 1 + npz * ( ipz - 1 )
               call mpi_irecv(rcvbuf(1,ipz), nbuf, MPI_DOUBLE_COMPLEX, ipz-1, itag, &
-                MPI_COMM_WORLD, irhand(ipz), ierr )
+                group, irhand(ipz), ierr )
             END DO
 
             k_start = 1
@@ -396,7 +331,7 @@
               END DO
               itag = ipz + npz * mype
               CALL mpi_isend( sndbuf(1,ipz), nbuf, MPI_DOUBLE_COMPLEX, ipz-1, itag, &
-                MPI_COMM_WORLD, ishand(ipz), ierr )
+                group, ishand(ipz), ierr )
               k_start = k_start + nz_l
             END DO
 
@@ -418,8 +353,8 @@
                 DO is = 1, ns_lp - 1, 2
                   !mc1 = dfft%ismap( is   + is_offset )
                   !mc2 = dfft%ismap( is+1 + is_offset )
-                  mc1 = stmask( is   + is_offset )
-                  mc2 = stmask( is+1 + is_offset )
+                  mc1 = dfft%ismap( is   + is_offset )
+                  mc2 = dfft%ismap( is+1 + is_offset )
                   DO k = 1 , nz_l
                     r( mc1 + (k-1)*ldx*ldy ) = rcvbuf(k + offset, ipz)
                   END DO
@@ -432,7 +367,7 @@
                 IF( MOD( ns_lp, 2 ) /= 0 ) THEN
                   is = ns_lp
                   ! mc1 = dfft%ismap( is   + is_offset )
-                  mc1 = stmask( is   + is_offset )
+                  mc1 = dfft%ismap( is   + is_offset )
                   DO k = 1 , nz_l
                     r( mc1 + (k-1)*ldx*ldy ) = rcvbuf(k + offset, ipz)
                   END DO
@@ -449,7 +384,7 @@
             DO IPZ = 1, NPZ
               itag = mype + 1 + npz * ( ipz - 1 )
               call mpi_irecv(rcvbuf(1,ipz), nbuf, MPI_DOUBLE_COMPLEX, ipz-1, itag, &
-                MPI_COMM_WORLD, irhand(ipz), ierr )
+                group, irhand(ipz), ierr )
             END DO
 
             DO ipz = 1, npz
@@ -463,7 +398,7 @@
               END IF
               DO is = 1, ns_lp
                 ! mc1 = dfft%ismap( is   + is_offset )
-                mc1 = stmask( is   + is_offset )
+                mc1 = dfft%ismap( is   + is_offset )
                 DO k = 1 , nz_l
                   sndbuf( k + offset, ipz ) = r( mc1 + (k-1)*ldx*ldy )
                 END DO
@@ -471,7 +406,7 @@
               END DO
               itag = ipz + npz * mype
               call mpi_isend(sndbuf(1,ipz), nbuf, MPI_DOUBLE_COMPLEX, ipz-1, itag, &
-                MPI_COMM_WORLD, ishand(ipz), ierr )
+                group, ishand(ipz), ierr )
             END DO
 
             rdone = .FALSE.
@@ -505,21 +440,15 @@
 
           DEALLOCATE(sndbuf, rcvbuf, ishand, irhand, rtest, rdone, istatus)
 
-#if defined __HPM
-            CALL f_hpmstop( 12 )
-#endif
-
           RETURN 
-        END SUBROUTINE fft_transpose
+        END SUBROUTINE fft_itranspose
 
-#  endif
 
-     
 #else 
 
 !     Scalar code
 
-        SUBROUTINE fft_transpose( zstick, ldz, r, ldx, ldy, dfft, me, nproc, iopt)
+        SUBROUTINE fft_transpose( zstick, ldz, r, ldx, ldy, dfft, me, group, nproc, iopt)
 
           IMPLICIT NONE
 
@@ -527,26 +456,10 @@
           COMPLEX (DP) :: r( * )
           TYPE (fft_dlay_descriptor), INTENT(IN) ::  dfft
           INTEGER, INTENT(IN) :: me    ! processor index starting from 1
-          INTEGER, INTENT(IN) :: nproc
+          INTEGER, INTENT(IN) :: group, nproc
           INTEGER, INTENT(IN) :: iopt, ldx, ldy, ldz
 
           INTEGER :: i, j, k, is, nz, ns, mc1
-          INTEGER, SAVE :: dfft_id = -1
-
-!
-! ... SUBROUTINE BODY
-!
-
-          IF( iopt == 0 ) THEN
-            CALL transpose_setup( dfft, me, nproc )
-            dfft_id = dfft%id
-            RETURN
-          END IF
-
-          IF( dfft_id /= dfft%id ) THEN
-            CALL transpose_setup( dfft, me, nproc )
-            dfft_id = dfft%id
-          END IF
 
           nz = dfft%npp( me )
 
@@ -561,8 +474,7 @@
             END IF
 
             DO is = 1, ns
-              ! mc1 = dfft%ismap( is )
-              mc1 = stmask( is )
+              mc1 = dfft%ismap( is )
               DO k = 1 , nz
                 r( mc1 + (k-1)*ldx*ldy ) = zstick( k + (is-1)*ldz )
               END DO
@@ -577,8 +489,7 @@
             END IF
 
             DO is = 1, ns
-              ! mc1 = dfft%ismap( is )
-              mc1 = stmask( is )
+              mc1 = dfft%ismap( is )
               DO k = 1 , nz
                 zstick( k + (is-1)*ldz ) = r( mc1 + (k-1)*ldx*ldy )
               END DO
@@ -589,16 +500,13 @@
           RETURN 
         END SUBROUTINE fft_transpose
 
+
 #endif
 
 
 !
-! Copyright (C) 2001 PWSCF group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
 !
+
 !
 !-----------------------------------------------------------------------
 subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)

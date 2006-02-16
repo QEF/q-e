@@ -583,11 +583,6 @@
 
       USE kinds
       USE parallel_include
-#if (defined __SHMEM && defined __ALTIX) || (defined __SHMEM && defined __ORIGIN)
-      USE mp_buffers, ONLY: mp_allocate_buffers, mp_snd_buffer,         &
-     &                      mp_rcv_buffer, mp_p_snd_buffer,             &
-     &                      mp_p_rcv_buffer
-#endif
 
       implicit none
 
@@ -607,16 +602,13 @@
       INTEGER :: me, idest, isour, ierr
 
       COMPLEX(DP), ALLOCATABLE :: my_buffer( : )
-#if ! (defined __SHMEM && defined __ALTIX) || ! (defined __SHMEM && defined __ORIGIN)
       COMPLEX(DP), ALLOCATABLE :: mp_snd_buffer( : )
       COMPLEX(DP), ALLOCATABLE :: mp_rcv_buffer( : )
-#endif
       INTEGER, ALLOCATABLE :: ibuf(:)
 
-
-!
-! ... SUBROUTINE BODY
-!
+      !
+      ! ... SUBROUTINE BODY
+      !
 
       me = mpime + 1
 
@@ -626,12 +618,8 @@
         icsize = icntix
       endif
 
-#if (defined __SHMEM && defined __ALTIX) || (defined __SHMEM && defined __ORIGIN)
-      CALL mp_allocate_buffers( icsize * nproc )
-#else
       ALLOCATE( mp_snd_buffer( icsize * nproc ) )
       ALLOCATE( mp_rcv_buffer( icsize * nproc ) )
-#endif
       ALLOCATE( my_buffer( ngw ) )
       ALLOCATE( ibuf( nproc ) )
       ctmp = CMPLX( 0.0d0, 0.d0 )
@@ -658,6 +646,7 @@
       CALL errore(' pwscatter ',' no communication protocol ',0)
 
 #endif
+
       ibuf = 0
       DO IG = 1, n_indi_rcv
         isour = sour_indi(ig)
@@ -672,10 +661,8 @@
         end if
       end do
 
-#if ! (defined __SHMEM && defined __ALTIX) || ! (defined __SHMEM && defined __ORIGIN)
       DEALLOCATE( mp_snd_buffer )
       DEALLOCATE( mp_rcv_buffer )
-#endif
       DEALLOCATE( my_buffer )
       DEALLOCATE( ibuf )
 
