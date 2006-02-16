@@ -30,9 +30,6 @@ SUBROUTINE clean_pw( lflag )
   USE sticks,               ONLY : dfftp, dffts  
   USE stick_base,           ONLY : sticks_deallocate
   ! USE berry_phase,          ONLY : berry_closeup
-#if defined (__SX6)
-  USE afftnec,              ONLY : auxp, first
-#endif  
   USE fft_types,            ONLY : fft_dlay_deallocate
   USE spin_orb,             ONLY : lspinorb, fcoef
   USE noncollin_module,     ONLY : deallocate_noncol
@@ -123,16 +120,6 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
   IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
   IF ( ALLOCATED( evc_nc ) )     DEALLOCATE( evc_nc )
-  !
-#ifdef __SX6
-  !
-  ! ... arrays allocated in cft_3.f90 ( and never deallocated )
-  !
-  IF ( ALLOCATED( auxp ) )       DEALLOCATE( auxp )
-  !
-  first(:) = .TRUE.
-  !
-#endif 
   !
   ! ... fft structures allocated in data_structure.f90  
   !
