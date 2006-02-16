@@ -876,7 +876,7 @@ SUBROUTINE iosys()
      !
      CALL errore( 'iosys ', &
                 & 'wfc extrapolation not implemented in the ' // &
-                & 'noncollinear case', -1 )
+                & 'noncollinear case', 1 )
      !
   END IF
   !
