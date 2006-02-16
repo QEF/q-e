@@ -26,6 +26,7 @@ Several utilities are also included, in particular:
 - the pseudopotential generation code "atomic", written by Andrea Dal Corso
 
 - the Input/Output Toolkit "iotk", written by Giovanni Bussi (S3 Modena)
+  (for more info, see http://www.s3.infm.it/iotk)
 
 This distribution is a step in the ongoing work aiming at a full 
 integration and interoperability of these codes. This project is 

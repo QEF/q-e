@@ -14,6 +14,8 @@ COMMON
 - cleanup of the scratch directory mess: 
   outdir, tmp_dir, wfc_dir, scradir...
 
+- cleanup of FFT's
+
 - Extend to CP/FPMD the possibility to save wavefunctions
   either 'distributed' or 'collected' in parallel execution
 
@@ -28,9 +30,6 @@ COMMON
 - fix shift in eigenvalues between CP/FPMD and PW
   The eigenvalues should be the same
   Total energies for charged systems should also be the same
-
-- merge (standard) diagonalization routines
-  use parallel diagonalization in CP and PW
 
 - merge spherical harmonics between CP-PW and FPMD
   merge integration routines, random number generators
@@ -63,6 +62,7 @@ PW
   - seek for CG and DIIS algoritms that only use (H-eS)|psi> and not
     the two vector separately ... compute it in one single call. (this way
     S|psi> is  inexpensive)
+  - disable DIIS until it really works (if ever)
 
 - output should be more informative and less confused
   the printout with UPF PP is incomplete or misleading (lloc=0)
@@ -71,6 +71,9 @@ PW
   and also what are exactly the output quantites!
 
 - some symmetry-related routines such as sgama are too complex
+
+- split calculation='nscf' into 'bands' and 'nscf', or 'nscf' and 'dos',
+  in order to have a clear distinction between the two cases
 
 Low priority:
 
@@ -89,8 +92,6 @@ POSTPROCESSING
   The file format should be reconsidered: XML ?
 
 PH, D3, Gamma
-
-- verify that everything works with new file format
 
 - use charge mixing instead of potential mixing
 

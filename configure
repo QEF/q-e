@@ -3778,7 +3778,7 @@ mips:f90 )
 	try_fflags_noopt="-mips4 -64 -O0"
 	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
 	try_ldflags="-mips4 -64"
-	pre_fdflags="-cpp "
+	pre_fdflags="-ftpp -macro_expand "
 	have_cpp=1
 	;;
 alinux:fort )
