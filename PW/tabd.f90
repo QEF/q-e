@@ -29,7 +29,7 @@ subroutine tabd (nt, occ_loc)
   elseif (psd (nt) .eq.'Fe') then
      occ_loc = 6.d0
   elseif (psd (nt) .eq.'Co') then
-     occ_loc = 9.d0
+     occ_loc = 7.d0
   elseif (psd (nt) .eq.'Ni') then
      occ_loc = 8.d0
   elseif (psd (nt) .eq.'Cu') then
