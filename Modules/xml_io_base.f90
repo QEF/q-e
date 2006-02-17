@@ -19,7 +19,6 @@ MODULE xml_io_base
   USE kinds,     ONLY : DP
   USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun
   USE io_global, ONLY : ionode, ionode_id, stdout
-  USE mp,        ONLY : mp_bcast  
   !
   IMPLICIT NONE
   !
@@ -40,33 +39,39 @@ MODULE xml_io_base
     SUBROUTINE create_directory( dirname )
       !------------------------------------------------------------------------
       !
-      USE mp,        ONLY : mp_barrier
+      USE mp,        ONLY : mp_barrier, mp_bcast
       USE mp_global, ONLY : mpime
       !
       CHARACTER(LEN=*), INTENT(IN) :: dirname
       !
-      INTEGER           :: ierr, ik
+      INTEGER           :: ierr
       INTEGER, EXTERNAL :: c_mkdir
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
-      ierr = 0
-      !
-      IF ( ionode ) &
+      IF ( ionode ) THEN
          ierr = c_mkdir( TRIM( dirname ), LEN_TRIM( dirname ) )
+      ELSE
+         ierr = 0
+      END IF
+      !
+      CALL mp_bcast ( ierr, ionode_id )
       !
       CALL errore( 'create_directory', &
                    'unable to create directory ' // TRIM( dirname ), ierr )
       !
-      ! ... all jobs are syncronized
+      ! ... syncronize all jobs (not sure it is really useful)
       !
       CALL mp_barrier()
       !
-      ! ... each job checks whether the scratch directory is accessible
-      ! ... or not
+      ! ... check whether the scratch directory is writable
       !
-      OPEN( UNIT = 4, FILE = TRIM( dirname ) // '/test' // &
-            TRIM( int_to_char( mpime ) ), STATUS = 'UNKNOWN', IOSTAT = ierr )
-      CLOSE( UNIT = 4, STATUS = 'DELETE' )
+      IF ( ionode ) THEN
+         OPEN( UNIT = 4, FILE = TRIM( dirname ) // '/test' // &
+              TRIM( int_to_char( mpime ) ), STATUS = 'UNKNOWN', IOSTAT = ierr )
+         CLOSE( UNIT = 4, STATUS = 'DELETE' )
+      END IF
+      !
+      CALL mp_bcast ( ierr, ionode_id )
       !
       CALL errore( 'create_directory: ', &
                    TRIM( dirname ) // ' non existent or non writable', ierr )
