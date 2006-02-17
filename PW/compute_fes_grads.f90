@@ -197,10 +197,10 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         wg_set = .FALSE.
         !
-	! ... the new values of the order-parameters are set here
+        ! ... the new values of the order-parameters are set here
         !
         new_target(:) = pos(:,image)
-	!
+        !
         ! ... first the system is "adiabatically" moved to the new target
         ! ... by using MD without damping
         !
@@ -208,8 +208,10 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         ldamped = .FALSE.
         !
-	history = 0
-	!
+        history = 0
+        !
+        lfirst_scf = .TRUE.
+        !
         CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
         CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.update' )
         !
@@ -223,8 +225,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
            IF ( .NOT. stat ) RETURN
            !
-	   lfirst_scf = .FALSE.
-	   !
+           lfirst_scf = .FALSE.
+           !
            CALL move_ions()
            !
         END DO
