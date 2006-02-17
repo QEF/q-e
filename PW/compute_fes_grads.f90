@@ -52,13 +52,14 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   INTEGER               :: image, iter
   REAL(DP)              :: tcpu, error
   CHARACTER(LEN=256)    :: tmp_dir_saved, filename
+  LOGICAL               :: lfirst_scf = .TRUE.
   LOGICAL               :: opnd, file_exists
   LOGICAL               :: ldamped_saved
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
   ! previous positions of atoms (needed for extrapolation)
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
-  REAL(DP), EXTERNAL :: get_clock
+  REAL(DP),         EXTERNAL :: get_clock
   !
   !
   CALL flush_unit( iunpath )
@@ -194,73 +195,12 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         CALL init_run()
         !
-        ! ... the old and new values of the order-parameter are set here
-        !
-        new_target(:) = pos(:,image)
-        !
-        IF ( ionode ) THEN
-           !     
-           ! ... the file containing old positions is opened 
-           ! ... ( needed for extrapolation )
-           !
-           CALL seqopn( iunupdate, 'update', 'FORMATTED', file_exists ) 
-           !
-           IF ( file_exists ) THEN
-              !
-              READ( UNIT = iunupdate, FMT = * ) history
-              READ( UNIT = iunupdate, FMT = * ) tauold
-              !
-           ELSE
-              !
-              history = 0
-              tauold  = 0.D0
-              !
-              WRITE( UNIT = iunupdate, FMT = * ) history
-              WRITE( UNIT = iunupdate, FMT = * ) tauold
-              !
-           END IF
-           !
-           CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
-           !
-        END IF
-        !
-        CALL mp_bcast( history, ionode_id, intra_image_comm )
-        CALL mp_bcast( tauold,  ionode_id, intra_image_comm )
-        !
-        IF ( conv_elec .AND. history > 0 ) THEN
-           !
-           ! ... potential and wavefunctions are extrapolated only if
-           ! ... we are starting a new self-consistency (scf on the 
-           ! ... previous image was achieved)
-           !
-           IF ( ionode ) THEN 
-              !
-              ! ... find the best coefficients for the extrapolation of 
-              ! ... the potential
-              !
-              CALL find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )        
-              !
-           END IF
-           !
-           CALL mp_bcast( alpha0, ionode_id, intra_image_comm )
-           CALL mp_bcast( beta0,  ionode_id, intra_image_comm )                
-           !
-           IF ( pot_order > 0 ) THEN
-              !
-              ! ... structure factors of the old positions are computed 
-              ! ... (needed for the old atomic charge)
-              !
-              CALL struc_fact( nat, tauold(:,:,1), nsp, ityp, ngm, g, bg, &
-                               nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
-              !
-           END IF
-           !
-           CALL update_pot()
-           !
-        END IF
-        !
         wg_set = .FALSE.
         !
+	! ... the new values of the order-parameters are set here
+        !
+        new_target(:) = pos(:,image)
+	!
         ! ... first the system is "adiabatically" moved to the new target
         ! ... by using MD without damping
         !
@@ -268,6 +208,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         ldamped = .FALSE.
         !
+	history = 0
+	!
         CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
         CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.update' )
         !
@@ -277,10 +219,12 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         DO istep = 1, shake_nstep
            !
-           CALL electronic_scf( .FALSE., stat )
+           CALL electronic_scf( lfirst_scf, stat )
            !
            IF ( .NOT. stat ) RETURN
            !
+	   lfirst_scf = .FALSE.
+	   !
            CALL move_ions()
            !
         END DO
@@ -323,36 +267,6 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            ! ... finite temperature
            !
            grad_pes(:,image) = dfe_acc(:) / DBLE( istep ) / e2
-           !
-        END IF
-        !
-        IF ( ionode ) THEN
-           !
-           ! ... save the previous two steps 
-           ! ... ( a total of three ionic steps is saved )
-           !
-           tauold(:,:,3) = tauold(:,:,2)
-           tauold(:,:,2) = tauold(:,:,1)
-           tauold(:,:,1) = tau(:,:)              
-           !
-           history = MIN( 3, ( history + 1 ) )
-           !
-           CALL seqopn( iunupdate, 'update', 'FORMATTED', file_exists ) 
-           !
-           WRITE( UNIT = iunupdate, FMT = * ) history
-           WRITE( UNIT = iunupdate, FMT = * ) tauold
-           !
-           CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
-           !
-           CALL write_axsf_file( image, tau, alat )
-           !
-           ! ... the restart file is written here
-           !
-           OPEN( UNIT = 1000, FILE = filename )
-           !
-           WRITE( 1000, * ) tau
-           !
-           CLOSE( UNIT = 1000 )
            !
         END IF
         !
