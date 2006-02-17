@@ -19,6 +19,7 @@ MODULE xml_io_base
   USE kinds,     ONLY : DP
   USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun
   USE io_global, ONLY : ionode, ionode_id, stdout
+  USE mp,        ONLY : mp_bcast
   !
   IMPLICIT NONE
   !
@@ -39,7 +40,7 @@ MODULE xml_io_base
     SUBROUTINE create_directory( dirname )
       !------------------------------------------------------------------------
       !
-      USE mp,        ONLY : mp_barrier, mp_bcast
+      USE mp,        ONLY : mp_barrier
       USE mp_global, ONLY : mpime
       !
       CHARACTER(LEN=*), INTENT(IN) :: dirname
@@ -214,7 +215,6 @@ MODULE xml_io_base
       !------------------------------------------------------------------------
       !
       USE io_global, ONLY : ionode, ionode_id
-      USE mp,        ONLY : mp_bcast
       !
       IMPLICIT NONE
       !
@@ -866,7 +866,7 @@ MODULE xml_io_base
       !
       USE io_files,  ONLY : rhounit
       USE io_global, ONLY : ionode, ionode_id
-      USE mp,        ONLY : mp_sum, mp_get, mp_bcast, mp_max
+      USE mp,        ONLY : mp_sum, mp_get, mp_max
       USE mp_global, ONLY : mpime, nproc, root, me_pool, my_pool_id, &
                             nproc_pool, intra_pool_comm, root_pool, my_image_id
       !
@@ -984,7 +984,7 @@ MODULE xml_io_base
       !
       USE io_files,  ONLY : rhounit
       USE io_global, ONLY : ionode, ionode_id
-      USE mp,        ONLY : mp_sum, mp_put, mp_bcast, mp_max
+      USE mp,        ONLY : mp_sum, mp_put, mp_max
       USE mp_global, ONLY : mpime, nproc, root, me_pool, my_pool_id, &
                             nproc_pool, intra_pool_comm, root_pool, my_image_id
       !
