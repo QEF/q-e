@@ -153,7 +153,7 @@ PROGRAM metadyn_PP
   !
   IF ( lsym ) THEN
      !
-     x_min = MAX( x_min, y_min ); y_min = x_min
+     x_min = MIN( x_min, y_min ); y_min = x_min
      x_max = MAX( x_max, y_max ); y_max = x_max
      !
   END IF
@@ -186,7 +186,7 @@ PROGRAM metadyn_PP
   !
   WRITE( *, '("MINIMUM VALUE = ",F12.7  )' ) E_min
   WRITE( *, '("MAXIMUM VALUE = ",F12.7,/)' ) E_max
-  WRITE( *, '("ISO-ENERGY SPACING= ",F12.7,/)' ) delta_E * 13.605826
+  WRITE( *, '("ISO-ENERGY SPACING= ",F12.7," eV"/)' ) delta_E * 13.605826
   !
   r_min(:) = MINLOC( surf(:,:) )
   !
@@ -295,13 +295,17 @@ PROGRAM metadyn_PP
   !
 #endif
   !
-  OPEN( UNIT = 99, FILE = TRIM( prefix) // '.dat' )
+  OPEN( UNIT = 99, FILE = TRIM( prefix ) // '.dat' )
   !
   DO i = 1, grid_points
      !
+     x = x_min + REAL( i - 1 ) * delta_x 
+     !
      DO j = 1, grid_points
         !
-        WRITE( 99, '(2(2X,I3),2X,F16.10)' ) i, j, surf(i,j)
+        y = y_min + REAL( j - 1 ) * delta_y
+        !
+        WRITE( 99, '(3(2X,F16.10))' ) x, y, surf(i,j)
         !
      END DO
      !
