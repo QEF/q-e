@@ -53,7 +53,7 @@ MODULE control_flags
             tscreen, gamma_only, force_pairing, tchi2
   !
   PUBLIC :: fix_dependencies, check_flags
-  PUBLIC :: tbuff, tvlocw, trhor, trhow, thdyn, iprsta
+  PUBLIC :: tbuff, tvlocw, trhor, thdyn, iprsta
   PUBLIC :: twfcollect, printwfc
   PUBLIC :: tuspp
   PUBLIC :: program_name
@@ -69,7 +69,6 @@ MODULE control_flags
   LOGICAL :: tbuff     = .FALSE. ! save wfc on        unit 21 (only cp, never used)
   LOGICAL :: tvlocw    = .FALSE. ! write potential to unit 46 (only cp, seldom used)
   LOGICAL :: trhor     = .FALSE. ! read rho from      unit 47 (only cp, seldom used)
-  LOGICAL :: trhow     = .FALSE. ! write rho to       unit 47 (only cp, seldom used)
   !
   LOGICAL :: tsde          = .FALSE. ! electronic steepest descent
   LOGICAL :: tzeroe        = .FALSE. ! set to zero the electronic velocities

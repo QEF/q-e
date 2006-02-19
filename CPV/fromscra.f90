@@ -19,13 +19,13 @@ MODULE from_scratch_module
   PUBLIC :: from_scratch
   !
   INTERFACE from_scratch
-     MODULE PROCEDURE from_scratch_fpmd, from_scratch_cp
+     MODULE PROCEDURE from_scratch_fpmd, from_scratch_cp, from_scratch_all
   END INTERFACE
   !
   CONTAINS
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE from_scratch_fpmd( rhoe, cm, c0, cp, ce, cdesc, edesc, &
+  SUBROUTINE from_scratch_fpmd( rhor, cm, c0, cp, ce, cdesc, edesc, &
                                 eigr, ei1, ei2, ei3, sfac, fi, ht, atoms, &
                                 bec, becdr, vpot, edft )
     !------------------------------------------------------------------------
@@ -68,7 +68,7 @@ MODULE from_scratch_module
     COMPLEX(DP),             INTENT(OUT) :: ei2(:,:)
     COMPLEX(DP),             INTENT(OUT) :: ei3(:,:)
     COMPLEX(DP),             INTENT(OUT) :: sfac(:,:)
-    REAL(DP),                INTENT(OUT) :: rhoe(:,:)
+    REAL(DP),                INTENT(OUT) :: rhor(:,:)
     REAL(DP),                INTENT(OUT) :: bec(:,:)
     REAL(DP),                INTENT(OUT) :: becdr(:,:,:)
     REAL(DP),                INTENT(OUT) :: fi(:,:,:)
@@ -162,9 +162,9 @@ MODULE from_scratch_module
     !
     edft%enl = nlrh_m( cm, cdesc, ttforce, atoms, fi, bec, becdr, eigr )
     !
-    CALL rhoofr( 0, cm, cdesc, fi, rhoe, ht )
+    CALL rhoofr( 0, cm, cdesc, fi, rhor, ht )
     !
-    CALL vofrhos( ttprint, ttforce, tstress, rhoe, atoms, &
+    CALL vofrhos( ttprint, ttforce, tstress, rhor, atoms, &
                   vpot, bec, cm, cdesc, fi, eigr, ei1, ei2, ei3, &
                   sfac, timepre, ht, edft )
     !
@@ -225,7 +225,7 @@ MODULE from_scratch_module
                                      tzeroc, tzerop, tzeroe, tfor, thdyn, &
                                      lwf, tprnfor, tortho, amprp, ampre,  &
                                      tsde, ortho_eps, ortho_max
-    USE ions_positions,       ONLY : taus, tau0, tausm, vels, velsm
+    USE ions_positions,       ONLY : taus, tau0, tausm, vels
     USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel, pmass
     USE cell_base,            ONLY : ainv, h, s_to_r, ibrav, omega, press, &
                                      hold, r_to_s, deth, wmass, iforceh,   &
@@ -257,6 +257,7 @@ MODULE from_scratch_module
     USE phase_factors_module, ONLY : strucf
     USE orthogonalize,        ONLY : ortho
     USE orthogonalize_base,   ONLY : updatc, calphi
+    USE charge_density,       ONLY : rhoofr
     !
     IMPLICIT NONE
     !
@@ -361,7 +362,7 @@ MODULE from_scratch_module
       CALL initbox ( tau0, taub, irb )
       CALL phbox( taub, eigrb )
 !
-      CALL rhoofr ( nfi, cm, irb, eigrb, bec, becsum, rhor, rhog, rhos, enl, ekin )
+      CALL rhoofr ( nfi, cm(:,:,1,1), irb, eigrb, bec, becsum, rhor, rhog, rhos, enl, ekin )
 !
 !     put core charge (if present) in rhoc(r)
 !
@@ -466,6 +467,392 @@ MODULE from_scratch_module
     RETURN
     !
   END SUBROUTINE from_scratch_cp
+  !
+  !
+  !
+  !
+  !--------------------------------------------------------------------------
+  SUBROUTINE from_scratch_all( sfac, eigr, ei1, ei2, ei3, bec, becdr, tfirst,   &
+                              eself, fion, taub, irb, eigrb, b1, b2, b3, nfi,  &
+                              rhog, rhor, rhos, rhoc, enl, ekin, stress, detot,&
+                              enthal, etot, lambda, lambdam, lambdap, ema0bg,  &
+                              dbec, delt, bephi, becp, velh, dt2bye, iforce,   &
+                              fionm, xnhe0, xnhem, vnhe, ekincm, atoms, edft,  &
+                              ht, cdesc, edesc, fi, vpot )
+    !--------------------------------------------------------------------------
+    !
+    USE kinds,                ONLY : DP
+    USE parameters,           ONLY : nacx
+    USE control_flags,        ONLY : tranp, trane, iprsta, tpre, tcarpar,  &
+                                     tzeroc, tzerop, tzeroe, tfor, thdyn, &
+                                     lwf, tprnfor, tortho, amprp, ampre,  &
+                                     tsde, ortho_eps, ortho_max, program_name, &
+                                     force_pairing
+    USE ions_positions,       ONLY : taus, tau0, tausm, vels
+    USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel, pmass
+    USE ions_base,            ONLY : taui, cdmi, nat
+    USE cell_base,            ONLY : ainv, h, s_to_r, ibrav, omega, press, &
+                                     hold, r_to_s, deth, wmass, iforceh,   &
+                                     cell_force
+    USE cell_nose,            ONLY : xnhh0, xnhhm,  vnhh
+    USE cell_module,          ONLY : boxdimensions
+    use electrons_base,       ONLY : nbsp
+    USE electrons_base,       ONLY : f, nspin, nupdwn, iupdwn
+    USE electrons_module,     ONLY : pmss, occn_init, occn_info
+    USE energies,             ONLY : entropy
+    USE energies,             ONLY : dft_energy_type, debug_energies
+    USE uspp,                 ONLY : vkb, becsum, deeq, nkb
+    USE io_global,            ONLY : stdout, ionode
+    USE cpr_subroutines,      ONLY : compute_stress, print_atomic_var, &
+                                     print_lambda, elec_fakekine
+    USE core,                 ONLY : nlcc_any
+    USE gvecw,                ONLY : ngw
+    USE reciprocal_vectors,   ONLY : gstart, mill_l, gx
+    USE gvecs,                ONLY : ngs
+    USE gvecp,                ONLY : ngm
+    USE cvan,                 ONLY : nvb
+    USE ions_nose,            ONLY : xnhp0,  xnhpm,  vnhp
+    USE cp_electronic_mass,   ONLY : emass
+    USE efield_module,        ONLY : tefield, efield_berry_setup, &
+                                     berry_energy, dforce_efield, &
+                                     tefield2, efield_berry_setup2, &
+                                     berry_energy2, dforce_efield2
+    USE cg_module,            ONLY : tcg
+    USE ensemble_dft,         ONLY : tens, compute_entropy
+    USE runcp_module,         ONLY : runcp_uspp, runcp_ncpp
+    USE phase_factors_module, ONLY : strucf, phfacs
+    USE orthogonalize,        ONLY : ortho
+    USE orthogonalize_base,   ONLY : updatc, calphi
+    USE atoms_type_module,    ONLY : atoms_type
+    USE wave_base,            ONLY : wave_steepest
+    USE wavefunctions_module, ONLY : c0, cm, phi => cp, ce
+    USE wave_types,           ONLY : wave_descriptor
+    USE wave_functions,       ONLY : fixwave, wave_rand_init
+    USE nl,                   ONLY : nlrh_m
+    USE charge_density,       ONLY : rhoofr
+    USE potentials,           ONLY : vofrhos
+    USE forces,               ONLY : dforce_all
+    USE grid_dimensions,      ONLY : nr1, nr2, nr3
+    USE print_out_module,     ONLY : printout
+
+
+    !
+    IMPLICIT NONE
+    !
+    COMPLEX(DP) :: eigr(:,:), ei1(:,:),  ei2(:,:),  ei3(:,:)
+    COMPLEX(DP) :: eigrb(:,:)
+    REAL(DP)    :: bec(:,:), fion(:,:), becdr(:,:,:), fionm(:,:)
+    REAL(DP)    :: eself
+    REAL(DP)    :: taub(:,:)
+    REAL(DP)    :: b1(:), b2(:), b3(:)
+    INTEGER     :: irb(:,:)
+    INTEGER     :: nfi, iforce(:,:)
+    LOGICAL     :: tfirst
+    COMPLEX(DP) :: sfac(:,:)
+    COMPLEX(DP) :: rhog(:,:)
+    REAL(DP)    :: rhor(:,:), rhos(:,:), rhoc(:), enl, ekin
+    REAL(DP)    :: stress(:,:), detot(:,:), enthal, etot
+    REAL(DP)    :: lambda(:,:,:), lambdam(:,:,:), lambdap(:,:,:)
+    REAL(DP)    :: ema0bg(:)
+    REAL(DP)    :: dbec(:,:,:,:)
+    REAL(DP)    :: delt
+    REAL(DP)    :: bephi(:,:), becp(:,:)
+    REAL(DP)    :: velh(:,:)
+    REAL(DP)    :: dt2bye, xnhe0, xnhem, vnhe, ekincm
+    TYPE(atoms_type)    ,    INTENT(OUT)   :: atoms
+    TYPE(dft_energy_type) ,  INTENT(OUT)   :: edft
+    TYPE(boxdimensions)  ,   INTENT(INOUT) :: ht
+    TYPE(wave_descriptor),   INTENT(IN)    :: cdesc, edesc
+    REAL(DP),                INTENT(OUT)   :: fi(:,:,:)
+    REAL(DP),                INTENT(OUT)   :: vpot(:,:)
+
+    !
+    REAL(DP),    ALLOCATABLE :: emadt2(:), emaver(:)
+    COMPLEX(DP), ALLOCATABLE :: c2(:), c3(:)
+    REAL(DP)                 :: verl1, verl2
+    REAL(DP)                 :: bigr, dum
+    REAL(DP)                 :: adum( nacx )
+    INTEGER                  :: i, j, iter, iss, ierr, nspin_wfc
+    LOGICAL                  :: tlast = .FALSE.
+    COMPLEX(DP)              :: cgam(1,1,1)
+    REAL(DP)                 :: gam(1,1,1)
+    REAL(DP)                 :: fcell(3,3), ccc, enb, enbi, fccc
+    LOGICAL                  :: ttforce
+    LOGICAL                  :: tstress
+    LOGICAL, PARAMETER       :: ttprint = .TRUE.
+    REAL(DP)                 :: timepre
+    !
+    ttforce = tfor  .or. tprnfor
+    tstress = thdyn .or. tpre
+    !
+    IF( tsde ) THEN
+       fccc = 1.0d0
+    ELSE
+       fccc = 0.5d0
+    END IF
+    !
+    IF( ANY( tranp( 1:nsp ) ) ) THEN
+       !
+       CALL invmat( 3, h, ainv, deth )
+       !
+       CALL randpos( taus, na, nsp, tranp, amprp, ainv, iforce )
+       !
+       CALL s_to_r( taus, tau0, na, nsp, h )
+       !
+       atoms%taus(:,1:nat) = taus(:,1:nat)
+       atoms%taur(:,1:nat) = tau0(:,1:nat)
+       !
+    END IF
+    !
+    IF( program_name == 'CP90' ) THEN
+       CALL phfac( tau0, ei1, ei2, ei3, eigr )
+       CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
+    ELSE
+       CALL phfacs( ei1, ei2, ei3, eigr, mill_l, &
+                 atoms%taus, nr1, nr2, nr3, atoms%nat )
+       CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
+    END IF
+    !     
+    CALL initbox ( tau0, taub, irb )
+    !     
+    CALL phbox( taub, eigrb )
+    !     
+    IF( program_name == 'CP90' ) THEN
+       !
+       !     random initialization
+       !     
+       CALL randin( 1, nbsp, gstart, ngw, ampre, cm )
+      
+    ELSE
+       !
+       nspin_wfc = nspin
+       !
+       IF( force_pairing ) nspin_wfc = 1
+       !
+       DO iss = 1, nspin_wfc
+          !
+          CALL wave_rand_init( cm( :, :, 1, iss ) )
+          !
+       END DO
+
+    END IF
+    !
+    IF ( ionode ) &
+       WRITE( stdout, fmt = '(//,3X, "Wave Initialization: random initial wave-functions" )' )
+    !
+    IF( program_name == 'CP90' ) THEN
+
+       ! ... prefor calculates vkb (used by gram)
+       !
+       CALL prefor( eigr, vkb )
+       !
+
+       CALL gram( vkb, bec, nkb, cm, ngw, nbsp )
+
+       if( iprsta .ge. 3 ) CALL dotcsc( eigr, cm )
+
+    ELSE
+
+       DO iss = 1, nspin_wfc
+          !
+          CALL gram( vkb, bec, nkb, cm(1,1,1,iss), SIZE(cm,1), cdesc%nbt( iss ) )
+          !
+       END DO
+
+    END IF
+    !
+    ! ... initialize bands
+    !
+    CALL occn_init( fi )
+    CALL occn_info( fi )
+    !
+    atoms%for  = 0.D0
+    atoms%vels = 0.D0
+    !
+    ! ... compute local form factors
+    !
+    hold = h
+    velh = 0.0d0
+    fion = 0.0d0
+    tausm = taus
+
+    IF( program_name == 'CP90' ) THEN
+       lambdam = lambda
+    END IF
+    
+    CALL formf( tfirst, eself )
+    !
+    edft%eself = eself
+
+    IF( tefield ) THEN
+      CALL efield_berry_setup( eigr, tau0 )
+    END IF
+    IF( tefield2 ) THEN
+      CALL efield_berry_setup2( eigr, tau0 )
+    END IF
+    !
+    !
+    IF( program_name == 'CP90' ) THEN
+
+       IF( .NOT. tcg ) THEN
+
+         CALL calbec ( 1, nsp, eigr, cm, bec )
+         if (tpre) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .true. )
+
+         CALL initbox ( tau0, taub, irb )
+         CALL phbox( taub, eigrb )
+         !
+         CALL rhoofr ( nfi, cm(:,:,1,1), irb, eigrb, bec, becsum, rhor, rhog, rhos, enl, ekin )
+         !
+         !     put core charge (if present) in rhoc(r)
+         !
+         if ( nlcc_any ) CALL set_cc( irb, eigrb, rhoc )
+   
+         IF( tens ) THEN
+           CALL compute_entropy( entropy, f(1), nspin )
+           entropy = entropy * nbsp
+         END IF
+
+         CALL vofrho( nfi, rhor(1,1), rhog(1,1), rhos(1,1), rhoc(1), tfirst, tlast, &
+        &  ei1(1,1), ei2(1,1), ei3(1,1), irb(1,1), eigrb(1,1), sfac(1,1),           & 
+        &  tau0(1,1), fion(1,1) )
+
+         IF( tefield ) THEN
+           CALL berry_energy( enb, enbi, bec, cm(:,:,1,1), fion ) 
+           etot = etot + enb + enbi
+         END IF
+         IF( tefield2 ) THEN
+           CALL berry_energy2( enb, enbi, bec, cm(:,:,1,1), fion )
+           etot = etot + enb + enbi
+         END IF
+
+
+         CALL compute_stress( stress, detot, h, omega )
+
+         if(iprsta.gt.2) CALL print_atomic_var( fion, na, nsp, ' fion ' )
+
+         CALL newd( rhor, irb, eigrb, becsum, fion )
+         CALL prefor( eigr, vkb )
+
+         !
+         !
+         CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:,1,1), &
+        &                 c0(:,:,1,1), fromscra = .TRUE. )
+
+         !
+         !     nlfq needs deeq bec
+         !
+         if( tfor .or. tprnfor ) CALL nlfq( cm, eigr, bec, becdr, fion )
+         !
+         !     calphi calculates phi
+         !     the electron mass rises with g**2
+         !
+         CALL calphi( cm, ngw, bec, nkb, vkb, phi, nbsp, ema0bg )
+
+         if( tortho ) then
+            CALL ortho( eigr, c0(:,:,1,1), phi(:,:,1,1), lambda, bigr, iter, ccc, bephi, becp )
+         else
+            CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
+         endif
+         !
+         !
+         if ( tfor .or. tprnfor ) CALL nlfl( bec, becdr, lambda, fion )
+
+         if ( iprsta >= 3 ) CALL print_lambda( lambda, nbsp, 9, ccc )
+
+         if ( tpre ) CALL nlfh( bec, dbec, lambda )
+         !
+         IF ( tortho ) THEN
+            DO iss = 1, nspin
+               CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
+                            bephi, SIZE(bephi,1), becp, bec, c0, nupdwn(iss), iupdwn(iss) )
+            END DO
+         END IF
+         !
+         CALL calbec ( nvb+1, nsp, eigr, c0, bec )
+
+         if ( tpre ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .true. )
+
+         if(iprsta.ge.3) CALL dotcsc(eigr,c0)
+         !
+         xnhp0=0.
+         xnhpm=0.
+         vnhp =0.
+         fionm=0.
+         CALL ions_vel( vels, taus, tausm, na, nsp, delt )
+         xnhh0(:,:)=0.
+         xnhhm(:,:)=0.
+         vnhh (:,:) =0.
+         velh (:,:)=(h(:,:)-hold(:,:))/delt
+         !
+         CALL elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, nbsp, delt )
+
+         xnhe0=0.
+         xnhem=0.
+         vnhe =0.
+
+         lambdam = lambda
+         !
+       ELSE 
+          !
+          c0 = cm
+          !
+       END IF
+
+    ELSE
+
+       edft%enl = nlrh_m( cm, cdesc, ttforce, atoms, fi, bec, becdr, eigr )
+       !
+       CALL rhoofr( 0, cm, cdesc, fi, rhor, ht )
+       !
+       CALL vofrhos( ttprint, ttforce, tstress, rhor, atoms, &
+                  vpot, bec, cm, cdesc, fi, eigr, ei1, ei2, ei3, &
+                  sfac, timepre, ht, edft )
+       !
+       IF( iprsta > 1 ) CALL debug_energies( edft )
+       !
+       IF ( tcarpar ) THEN
+          !
+          IF ( .NOT. force_pairing ) THEN
+             !
+             CALL runcp_ncpp( cm, cm, c0, cdesc, vpot, eigr, fi, &
+                              bec, fccc, gam, cgam, fromscra = .TRUE. )
+             !
+          ELSE
+             !
+             c0 = cm
+             !
+          END IF
+          !
+          IF ( tortho .AND. ( .NOT. force_pairing ) ) THEN
+             !
+             CALL ortho( cm, c0, cdesc, pmss, emass )
+             !
+          ELSE
+             !
+             DO iss = 1, nspin_wfc
+               !
+               CALL gram( vkb, bec, nkb, c0(1,1,1,iss), SIZE(c0,1), cdesc%nbt( iss ) )
+               !
+             END DO
+             !
+          END IF
+          !
+       ELSE 
+          !
+          c0 = cm
+          !
+       END IF
+
+       adum = 0.D0
+       !
+       CALL printout( nfi, atoms, 0.0d0, 0.0d0, ttprint, ht, adum, adum, edft )
+       !
+    END IF
+    !
+    RETURN
+    !
+  END SUBROUTINE from_scratch_all
   !
 !=----------------------------------------------------------------------------=!
 END MODULE from_scratch_module

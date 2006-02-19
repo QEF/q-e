@@ -201,11 +201,7 @@ MODULE cp_main_variables
       CALL wave_descriptor_init( wempt, ngw, ngwt, neupdwn, neupdwn, &
             nkpt, nkpt, nspin, kscheme, gzero )
       !
-      IF( program_name == 'FPMD' ) THEN
-         !
-         ALLOCATE( occn( wfill%ldb, wfill%ldk, wfill%lds ) )
-         !
-      END IF
+      ALLOCATE( occn( wfill%ldb, wfill%ldk, wfill%lds ) )
       !
       RETURN
       !
@@ -237,7 +233,6 @@ MODULE cp_main_variables
       IF( ALLOCATED( kedtaur ) ) DEALLOCATE( kedtaur )
       IF( ALLOCATED( kedtaus ) ) DEALLOCATE( kedtaus )
       IF( ALLOCATED( kedtaug ) ) DEALLOCATE( kedtaug )
-      ! IF( ALLOCATED( rhoe ) )    DEALLOCATE( rhoe )
       IF( ALLOCATED( vpot ) )    DEALLOCATE( vpot )
       IF( ALLOCATED( occn ) )    DEALLOCATE( occn )
       !

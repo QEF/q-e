@@ -34,6 +34,10 @@
 
         PUBLIC :: rhoofr, gradrho
 
+        INTERFACE rhoofr
+           MODULE PROCEDURE rhoofr_fpmd, rhoofr_cp
+        END INTERFACE
+
 !=----------------------------------------------------------------------=!
       CONTAINS
 !=----------------------------------------------------------------------=!
@@ -99,17 +103,17 @@
 !=----------------------------------------------------------------------=!
 !  BEGIN manual
 
-   SUBROUTINE rhoofr (nfi, c0, cdesc, fi, rhoe, box)
+   SUBROUTINE rhoofr_fpmd (nfi, c0, cdesc, fi, rhor, box)
 
 !  this routine computes:
-!  rhoe = normalized electron density in real space
+!  rhor = normalized electron density in real space
 !
-!    rhoe(r) = (sum over ik) weight(ik)
+!    rhor(r) = (sum over ik) weight(ik)
 !              (sum over ib) f%s(ib,ik) |psi(r,ib,ik)|^2
 !
 !    Using quantities in scaled space
-!    rhoe(r) = rhoe(s) / Omega
-!    rhoe(s) = (sum over ik) weight(ik)
+!    rhor(r) = rhor(s) / Omega
+!    rhor(s) = (sum over ik) weight(ik)
 !              (sum over ib) f%s(ib,ik) |psi(s,ib,ik)|^2 
 !
 !    f%s(ib,ik) = occupation numbers
@@ -147,7 +151,7 @@
     COMPLEX(DP)                     :: c0(:,:,:,:)
     TYPE (boxdimensions), INTENT(IN) :: box
     REAL(DP),          INTENT(IN) :: fi(:,:,:)
-    REAL(DP),            INTENT(OUT) :: rhoe(:,:)
+    REAL(DP),            INTENT(OUT) :: rhor(:,:)
     TYPE (wave_descriptor), INTENT(IN) :: cdesc
 
 ! ... declare other variables
@@ -187,7 +191,7 @@
 
     END IF
 
-    rhoe  = zero
+    rhor  = zero
 
     DO ispin = 1, nspin
 
@@ -223,7 +227,7 @@
           END IF
 
           ! ...  occupation numbers divided by cell volume
-          ! ...  Remember: rhoe( r ) =  rhoe( s ) / omega
+          ! ...  Remember: rhor( r ) =  rhor( s ) / omega
 
           coef3 = fi( is1, 1, ispin ) / omega
           coef4 = fi( is2, 1, ispin ) / omega 
@@ -239,7 +243,7 @@
 
                 ! ...  add squared moduli to charge density
 
-                rhoe(i,ispin) = rhoe(i,ispin) + coef3 * r1 * r1 + coef4 * r2 * r2
+                rhor(i,ispin) = rhor(i,ispin) + coef3 * r1 * r1 + coef4 * r2 * r2
 
           END DO
 
@@ -268,7 +272,7 @@
 
              ! ...  add squared moduli to charge density
 
-             rhoe(i,ispin) = rhoe(i,ispin) + coef3 * r1 * r1
+             rhor(i,ispin) = rhor(i,ispin) + coef3 * r1 * r1
 
           END DO
 
@@ -300,7 +304,7 @@
 
                 ! ...  add squared modulus to charge density
 
-                rhoe(i,ispin) = rhoe(i,ispin) + coef3 * DBLE( psi2(i) * CONJG(psi2(i)) )
+                rhor(i,ispin) = rhor(i,ispin) + coef3 * DBLE( psi2(i) * CONJG(psi2(i)) )
 
             END DO
           END DO
@@ -308,7 +312,7 @@
 
       END IF
 
-      IF( ttprint ) rsumr( ispin ) = SUM( rhoe( :, ispin ) ) * omega / ( nr1 * nr2 * nr3 )
+      IF( ttprint ) rsumr( ispin ) = SUM( rhor( :, ispin ) ) * omega / ( nr1 * nr2 * nr3 )
 
     END DO
 
@@ -352,12 +356,352 @@
 
     RETURN
 !=----------------------------------------------------------------------=!
-  END SUBROUTINE rhoofr
+  END SUBROUTINE rhoofr_fpmd
 !=----------------------------------------------------------------------=!
+
+!-----------------------------------------------------------------------
+   SUBROUTINE rhoofr_cp (nfi,c,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
+!-----------------------------------------------------------------------
+!     the normalized electron density rhor in real space
+!     the kinetic energy ekin
+!     subroutine uses complex fft so it computes two ft's
+!     simultaneously
+!
+!     rho_i,ij = sum_n < beta_i,i | psi_n >< psi_n | beta_i,j >
+!     < psi_n | beta_i,i > = c_n(0) beta_i,i(0) +
+!                   2 sum_g> re(c_n*(g) (-i)**l beta_i,i(g) e^-ig.r_i)
+!
+!     e_v = sum_i,ij rho_i,ij d^ion_is,ji
+!
+      USE kinds,              ONLY: DP
+      USE control_flags,      ONLY: iprint, tbuff, iprsta, thdyn, tpre, trhor
+      USE ions_base,          ONLY: nat
+      USE gvecp,              ONLY: ngm
+      USE gvecs,              ONLY: ngs, nps, nms
+      USE gvecb,              ONLY: ngb
+      USE gvecw,              ONLY: ngw
+      USE recvecs_indexes,    ONLY: np, nm
+      USE reciprocal_vectors, ONLY: gstart
+      USE uspp,               ONLY: nkb
+      USE uspp_param,         ONLY: nh, nhm
+      USE grid_dimensions,    ONLY: nr1, nr2, nr3, &
+                                    nr1x, nr2x, nr3x, nnrx
+      USE cell_base,          ONLY: omega
+      USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, &
+                                        nr1sx, nr2sx, nr3sx, nnrsx
+      USE electrons_base,     ONLY: nx => nbspx, n => nbsp, f, ispin, nspin
+      USE constants,          ONLY: pi, fpi
+      USE mp,                 ONLY: mp_sum
+      USE dener,              ONLY: denl, dekin
+      USE io_global,          ONLY: stdout
+      USE funct,              ONLY: dft_is_meta
+      USE cg_module,          ONLY: tcg
+      USE cp_main_variables,  ONLY: rhopr
+      USE fft_module,         ONLY: fwfft, invfft
+!
+      IMPLICIT NONE
+      INTEGER nfi
+      REAL(DP) bec(:,:)
+      REAL(DP) rhovan(:, :, : )
+      REAL(DP) rhor(:,:)
+      REAL(DP) rhos(:,:)
+      REAL(DP) enl, ekin
+      COMPLEX(DP) eigrb( :, : )
+      COMPLEX(DP) rhog( :, : )
+      COMPLEX(DP) c( :, : )
+      INTEGER irb( :, : )
+
+      !REAL(DP) bec(nkb,n)
+      !REAL(DP) rhovan( nhm * ( nhm + 1 ) / 2, nat, nspin )
+      !REAL(DP) rhor(nnrx,nspin)
+      !REAL(DP) rhos(nnrsx,nspin)
+      !COMPLEX(DP) eigrb( ngb, nat )
+      !COMPLEX(DP) rhog( ngm, nspin )
+      !COMPLEX(DP) c( ngw, nx )
+      !INTEGER irb( 3, nat )
+      
+
+      ! local variables
+
+      INTEGER iss, isup, isdw, iss1, iss2, ios, i, ir, ig
+      REAL(DP) rsumr(2), rsumg(2), sa1, sa2
+      REAL(DP) rnegsum, rmin, rmax, rsum
+      REAL(DP), EXTERNAL :: enkin, ennl
+      COMPLEX(DP) ci,fp,fm
+      COMPLEX(DP), ALLOCATABLE :: psi(:), psis(:)
+      LOGICAL, SAVE :: first = .TRUE.
+      
+      !
+
+      CALL start_clock( 'rhoofr' )
+
+      ALLOCATE( psi( nnrx ) ) 
+      ALLOCATE( psis( nnrsx ) ) 
+
+      ci=(0.0,1.0)
+
+      DO iss=1,nspin
+         rhor(:,iss) = 0.d0
+         rhos(:,iss) = 0.d0
+         rhog(:,iss) = (0.d0, 0.d0)
+      END DO
+      !
+      !  calculation of kinetic energy ekin
+      !
+      ekin = enkin( c, ngw, f, n )
+      !
+      IF( tpre ) CALL denkin( c, dekin )
+      !
+      !     calculation of non-local energy
+      !
+      enl = ennl( rhovan, bec )
+      !
+      IF( tpre ) CALL dennl( bec, denl )
+      !    
+      !    warning! trhor and thdyn are not compatible yet!   
+      !
+      IF( trhor .AND. ( .NOT. thdyn ) ) THEN
+         !
+         !   non self-consistent calculation  
+         !   charge density is read from unit 47
+         !
+         IF( first ) THEN
+            CALL read_rho( nspin, rhor )
+            rhopr = rhor
+            first = .FALSE.
+         ELSE
+            rhor = rhopr
+         END IF
+!
+         IF(nspin.EQ.1)THEN
+            iss=1
+            DO ir=1,nnrx
+               psi(ir)=CMPLX(rhor(ir,iss),0.d0)
+            END DO
+            CALL fwfft('Dense', psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+            DO ig=1,ngm
+               rhog(ig,iss)=psi(np(ig))
+            END DO
+         ELSE
+            isup=1
+            isdw=2
+            DO ir=1,nnrx
+               psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
+            END DO
+            CALL fwfft('Dense', psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+            DO ig=1,ngm
+               fp=psi(np(ig))+psi(nm(ig))
+               fm=psi(np(ig))-psi(nm(ig))
+               rhog(ig,isup)=0.5*CMPLX( DBLE(fp),AIMAG(fm))
+               rhog(ig,isdw)=0.5*CMPLX(AIMAG(fp),-DBLE(fm))
+            END DO
+         ENDIF
+!
+      ELSE
+
+         !     ==================================================================
+         !     self-consistent charge
+         !     ==================================================================
+         !
+         !     important: if n is odd then nx must be .ge.n+1 and c(*,n+1)=0.
+         ! 
+         IF (MOD(n,2).NE.0) THEN
+            DO ig=1,ngw
+               c(ig,n+1)=(0.,0.)
+            END DO
+         ENDIF
+         !
+         DO i=1,n,2
+            psis (:) = (0.d0, 0.d0)
+            DO ig=1,ngw
+               psis(nms(ig))=CONJG(c(ig,i))+ci*CONJG(c(ig,i+1))
+               psis(nps(ig))=c(ig,i)+ci*c(ig,i+1)
+               ! write(6,'(I6,4F15.10)') ig, psis(nms(ig)), psis(nps(ig))
+            END DO
+
+            CALL invfft('Wave',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+
+            !     wavefunctions in unit 21
+            !
+            IF(tbuff) WRITE(21,iostat=ios) psis
+            iss1=ispin(i)
+            sa1=f(i)/omega
+            IF (i.NE.n) THEN
+               iss2=ispin(i+1)
+               sa2=f(i+1)/omega
+            ELSE
+               iss2=iss1
+               sa2=0.0
+            END IF
+            DO ir=1,nnrsx
+               rhos(ir,iss1)=rhos(ir,iss1) + sa1*( DBLE(psis(ir)))**2
+               rhos(ir,iss2)=rhos(ir,iss2) + sa2*(AIMAG(psis(ir)))**2
+            END DO
+
+            !
+            !       buffer 21
+            !     
+            IF(tbuff) THEN
+               IF(ios.NE.0) CALL errore(' rhoofr',' error in writing unit 21',ios)
+            ENDIF
+            !
+         END DO
+         !
+         IF(tbuff) REWIND 21
+         !
+         !     smooth charge in g-space is put into rhog(ig)
+         !
+         IF(nspin.EQ.1)THEN
+            iss=1
+            DO ir=1,nnrsx
+               psis(ir)=CMPLX(rhos(ir,iss),0.d0)
+            END DO
+            CALL fwfft('Smooth', psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+            DO ig=1,ngs
+               rhog(ig,iss)=psis(nps(ig))
+            END DO
+         ELSE
+            isup=1
+            isdw=2
+             DO ir=1,nnrsx
+               psis(ir)=CMPLX(rhos(ir,isup),rhos(ir,isdw))
+            END DO
+            CALL fwfft('Smooth',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+            DO ig=1,ngs
+               fp= psis(nps(ig)) + psis(nms(ig))
+               fm= psis(nps(ig)) - psis(nms(ig))
+               rhog(ig,isup)=0.5*CMPLX( DBLE(fp),AIMAG(fm))
+               rhog(ig,isdw)=0.5*CMPLX(AIMAG(fp),-DBLE(fm))
+            END DO
+         ENDIF
+!
+         IF(nspin.EQ.1) THEN
+            ! 
+            !     case nspin=1
+            ! 
+            iss=1
+            psi (:) = (0.d0, 0.d0)
+            DO ig=1,ngs
+               psi(nm(ig))=CONJG(rhog(ig,iss))
+               psi(np(ig))=      rhog(ig,iss)
+            END DO
+            CALL invfft('Dense',psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+            DO ir=1,nnrx
+               rhor(ir,iss)=DBLE(psi(ir))
+            END DO
+         ELSE 
+            !
+            !     case nspin=2
+            !
+            isup=1
+            isdw=2
+            psi (:) = (0.d0, 0.d0)
+            DO ig=1,ngs
+               psi(nm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
+               psi(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
+            END DO
+            CALL invfft('Dense',psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+            DO ir=1,nnrx
+               rhor(ir,isup)= DBLE(psi(ir))
+               rhor(ir,isdw)=AIMAG(psi(ir))
+            END DO
+         ENDIF
+         IF (dft_is_meta()) CALL kedtauofr_meta(c, psi, psis) ! METAGGA
+!
+         IF(iprsta.GE.3)THEN
+            DO iss=1,nspin
+               rsumg(iss)=omega*DBLE(rhog(1,iss))
+               rsumr(iss)=SUM(rhor(:,iss))*omega/DBLE(nr1*nr2*nr3)
+            END DO
+
+            IF ( gstart /= 2 ) THEN
+               !
+               !    in the parallel case, only one processor has G=0 ! 
+               !
+               DO iss=1,nspin
+                  rsumg(iss)=0.0
+               END DO
+            END IF
+            CALL mp_sum( rsumg( 1:nspin ) )
+            CALL mp_sum( rsumr( 1:nspin ) )
+
+            IF ( nspin == 1 ) THEN
+              WRITE( stdout, 10) rsumg(1), rsumr(1)
+            ELSE
+              WRITE( stdout, 20) rsumg(1), rsumr(1), rsumg(2), rsumr(2)
+            ENDIF
+
+         ENDIF
+         !
+         !     add vanderbilt contribution to the charge density
+         !     drhov called before rhov because input rho must be the smooth part
+         !
+         IF (tpre) CALL drhov(irb,eigrb,rhovan,rhog,rhor)
+         !
+         CALL rhov(irb,eigrb,rhovan,rhog,rhor)
+
+         rhopr = rhor
+
+      ENDIF
+
+!     ======================================endif for trhor=============
+!
+!     here to check the integral of the charge density
+!
+!
+      IF( iprsta .GE. 2 ) THEN
+         CALL checkrho(nnrx,nspin,rhor,rmin,rmax,rsum,rnegsum)
+         rnegsum=rnegsum*omega/DBLE(nr1*nr2*nr3)
+         rsum=rsum*omega/DBLE(nr1*nr2*nr3)
+         WRITE( stdout,'(a,4(1x,f12.6))')                                     &
+     &     ' rhoofr: rmin rmax rnegsum rsum  ',rmin,rmax,rnegsum,rsum
+      END IF
+!
+      IF( nfi == 0 .OR. MOD(nfi, iprint) == 0 .AND. .NOT. tcg ) THEN
+
+         DO iss=1,nspin
+            rsumg(iss)=omega*DBLE(rhog(1,iss))
+            rsumr(iss)=SUM(rhor(:,iss),1)*omega/DBLE(nr1*nr2*nr3)
+         END DO
+
+         IF (gstart.NE.2) THEN
+            ! in the parallel case, only one processor has G=0 ! 
+            DO iss=1,nspin
+               rsumg(iss)=0.0
+            END DO
+         END IF
+
+         CALL mp_sum( rsumg( 1:nspin ) )
+         CALL mp_sum( rsumr( 1:nspin ) )
+
+         IF ( nspin == 1 ) THEN
+           WRITE( stdout, 10) rsumg(1), rsumr(1)
+         ELSE
+           WRITE( stdout, 20) rsumg(1), rsumr(1), rsumg(2), rsumr(2)
+         ENDIF
+
+      ENDIF
+
+      DEALLOCATE( psi ) 
+      DEALLOCATE( psis ) 
+
+10    FORMAT( /, 3X, 'from rhoofr: total integrated electronic density', &
+            & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 )
+20    FORMAT( /, 3X, 'from rhoofr: total integrated electronic density', &
+            & /, 3X, 'spin up', &
+            & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 , &
+            & /, 3X, 'spin down', &
+            & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 )
+!
+      CALL stop_clock( 'rhoofr' )
+
+!
+      RETURN
+      END SUBROUTINE rhoofr_cp
 
 
 !=----------------------------------------------------------------------=!
-   SUBROUTINE gradrho(rhoeg, grho, gx)
+   SUBROUTINE gradrho(rhog, grho, gx)
 !=----------------------------------------------------------------------=!
 
 !     This subroutine calculate the gradient of the charge
@@ -371,7 +715,7 @@
 
      IMPLICIT NONE
 
-     COMPLEX(DP), INTENT(IN)  :: rhoeg(:)    ! charge density (Reciprocal Space)
+     COMPLEX(DP), INTENT(IN)  :: rhog(:)    ! charge density (Reciprocal Space)
      REAL(DP), INTENT(IN)  :: gx(:,:)        ! cartesian components of G-vectors
      REAL(DP),  INTENT(OUT) :: grho(:,:) ! charge density gradient
 
@@ -382,15 +726,15 @@
 
      ! ...
 
-     ALLOCATE( tgrho( SIZE( rhoeg ) ), STAT=ierr)
+     ALLOCATE( tgrho( SIZE( rhog ) ), STAT=ierr)
      IF( ierr /= 0 ) CALL errore(' gradrho ', ' allocating tgrho ', ABS(ierr) )
      !
      ALLOCATE( psi( SIZE( grho, 1 ) ), STAT=ierr)
      IF( ierr /= 0 ) CALL errore(' gradrho ', ' allocating psi ', ABS(ierr) )
 
      DO ipol = 1, 3
-       DO ig = 1, SIZE( rhoeg )
-         rg        = rhoeg(ig) * gx( ipol, ig )
+       DO ig = 1, SIZE( rhog )
+         rg        = rhog(ig) * gx( ipol, ig )
          tgrho(ig) = tpiba * CMPLX( - AIMAG(rg), DBLE(rg) ) 
        END DO
        CALL rho2psi( 'Dense', psi, dfftp%nnr, tgrho, ngm )

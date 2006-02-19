@@ -766,13 +766,14 @@
      use uspp, only: rhovan => becsum
      use grid_dimensions, only: nnr => nnrx
      use io_global, only: ionode,stdout
-     USE control_flags, ONLY: printwfc, trhor
+     USE control_flags, ONLY: printwfc
+     use charge_density, only: rhoofr
 
      IMPLICIT NONE
 
      INTEGER :: nfi
      INTEGER :: irb(:,:)
-     COMPLEX(DP) :: c0( :, :, :, : )
+     COMPLEX(DP) :: c0( :, : )
      REAL(DP) :: bec( :, : ), rhor( :, : ), rhos( :, : )
      REAL(DP) :: lambda( :, :, : ), lambdap( :, :, : )
      REAL(DP) :: tau0( :, : ), h( 3, 3 )
@@ -780,26 +781,17 @@
      COMPLEX(DP) :: eigr( :, : )
 
      INTEGER :: is, istart, nss, i, j
-     LOGICAL, SAVE :: trhor_save
 
-     !if  printwfc==0 print charge density
-     if( printwfc == 0 ) then
-       call calbec(1,nsp,eigr,c0,bec)
-       if(.not.tens) then
-         call rhoofr(nfi,c0,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
-       else
-         if(ionode) write(stdout,*) 'Print wfc: ', printwfc
-         !     calculation of the rotated quantities
-         call rotate(z0,c0(:,:,1,1),bec,c0diag,becdiag)
-         !     calculation of rho corresponding to the rotated wavefunctions
-         call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin)
-       endif
-       call write_rho_xsf(tau0,h,rhor)
-     else if(printwfc <= n ) then
+     !
+     call calbec( 1, nsp, eigr, c0, bec )
+     !
+     !  Charge density by default is now always saved in restartd dir
+     !
+     if( printwfc > 0 .AND. printwfc <= n ) then
        !print |wfc| **2
        !NOW ONLY NSPIN=1 
-       trhor_save=trhor
        write(6,*) 'Plotting band :', printwfc
+       write(6,*) 'Plotting band  UNDER DEVELOPMENT ' 
        do  is=1,nspin
          istart=iupdwn(is)
          nss=nupdwn(is)
@@ -817,16 +809,17 @@
            end do
          enddo
        enddo
-
-       call rotate(zx,c0(:,:,1,1),bec,c0diag,becdiag)
+       call rotate(zx,c0(:,:),bec,c0diag,becdiag)
        do i=1,n
          if(i.ne.printwfc)  c0diag(:,i)= (0.d0,0.d0)
        enddo
        call calbec(1,nsp,eigr,c0diag,becdiag)
        call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin)
-       call write_rho_xsf(tau0,h,rhor)
-       trhor=trhor_save
      endif
+
+     ! PLEASE USE write_rho_xml to save any quantities defined on the 
+     ! charge density grid
+     ! 
 
      RETURN
    END SUBROUTINE cp_print_rho

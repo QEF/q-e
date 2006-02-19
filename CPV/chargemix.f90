@@ -27,7 +27,7 @@
 !  SUBROUTINE allocate_charge_mix(ng_l)
 !  SUBROUTINE deallocate_charge_mix
 !  SUBROUTINE charge_mix_print_info(unit)
-!  SUBROUTINE newrho(rhoe,nfi,tcel,drho)
+!  SUBROUTINE newrho(rhor,nfi,tcel,drho)
 !  SUBROUTINE invgen(aa,dimaa)
 !  ----------------------------------------------
 !  END manual
@@ -141,7 +141,7 @@
 !  ----------------------------------------------
 !  ----------------------------------------------
 
-      SUBROUTINE newrho(rhoe, drho, nfi)
+      SUBROUTINE newrho(rhor, drho, nfi)
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
@@ -161,7 +161,7 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      REAL(DP), INTENT(INOUT) :: rhoe(:)
+      REAL(DP), INTENT(INOUT) :: rhor(:)
       REAL(DP), INTENT(OUT) ::  drho
       INTEGER, INTENT(IN) :: nfi
 
@@ -222,11 +222,11 @@
       is       = MOD( nrho_t  , daamax )
       if( is  == 0 ) is  = daamax
 
-! ... Fourier tranform of rhoe
+! ... Fourier tranform of rhor
 
-      ALLOCATE( psi( SIZE( rhoe ) ) )
+      ALLOCATE( psi( SIZE( rhor ) ) )
 
-      psi = rhoe
+      psi = rhor
 
       CALL fwfft(   'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
       CALL psi2rho( 'Dense', psi, dfftp%nnr, rhoout, ngm )
@@ -316,21 +316,21 @@
 
       END IF
 
-      ALLOCATE( rho_old( SIZE(rhoe) ), STAT=ierr )
+      ALLOCATE( rho_old( SIZE(rhor) ), STAT=ierr )
       IF( ierr /= 0 ) CALL errore(' newrho ', ' allocating rho_old ', ierr)
-      rho_old = rhoe 
+      rho_old = rhor 
 
-      ! ... rhoe back to real space rhoe = FFT( rhoout )
-      ! CALL pinvfft(rhoe, rhoout)
+      ! ... rhor back to real space rhor = FFT( rhoout )
+      ! CALL pinvfft(rhor, rhoout)
 
-      ALLOCATE( psi( SIZE( rhoe ) ) )
+      ALLOCATE( psi( SIZE( rhor ) ) )
 
       CALL rho2psi( 'Dense', psi, dfftp%nnr, rhoout, ngm )
       CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
 
-      rhoe = DBLE( psi )
+      rhor = DBLE( psi )
 
-      drho = SUM( (rho_old - rhoe)**2 )
+      drho = SUM( (rho_old - rhor)**2 )
 
       DEALLOCATE(psi)
       DEALLOCATE(rho_old, STAT=ierr)

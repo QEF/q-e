@@ -37,7 +37,8 @@ SUBROUTINE deallocate_modules_var()
   USE wavefunctions_module, ONLY : deallocate_wavefunctions
   USE wannier_module,       ONLY : deallocate_wannier
   USE fft_types,            ONLY : fft_dlay_descriptor, fft_dlay_deallocate
-  USE fft_base,             ONLY : dfftp, dffts
+  USE fft_types,            ONLY : fft_box_deallocate
+  USE fft_base,             ONLY : dfftp, dffts, dfftb
   USE stick_base,           ONLY : sticks_deallocate
   USE electrons_module,     ONLY : deallocate_electrons
   USE diis,                 ONLY : deallocate_diis
@@ -93,6 +94,7 @@ SUBROUTINE deallocate_modules_var()
   !
   CALL fft_dlay_deallocate( dfftp )
   CALL fft_dlay_deallocate( dffts )
+  CALL fft_box_deallocate( dfftb )
   CALL sticks_deallocate()
   !
   CALL deallocate_ions_base()

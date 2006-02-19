@@ -45,22 +45,13 @@ MODULE fft_types
     !
     INTEGER :: id
     INTEGER :: tptr
-  END TYPE
-
-  !
-  !  Sub (box) grid descriptor
-  !
-
-  TYPE fft_box_descriptor
-    INTEGER :: nr1      !
-    INTEGER :: nr2      ! effective FFT dimensions
-    INTEGER :: nr3      ! 
-    INTEGER :: nr1x     ! 
-    INTEGER :: nr2x     ! FFT grids leading dimensions
-    INTEGER :: nr3x     ! 
-    INTEGER :: irb(3) ! the offset of the box corner
-    INTEGER :: imin3  ! the starting local plane
-    INTEGER :: imax3  ! the last local plane
+    !
+    !  Sub (box) grid descriptor
+    !
+    INTEGER, POINTER :: irb(:,:)  ! the offset of the box corner
+    INTEGER, POINTER :: imin3(:)  ! the starting local plane
+    INTEGER, POINTER :: imax3(:)  ! the last local plane
+    !
   END TYPE
 
 
@@ -72,7 +63,6 @@ CONTAINS
   SUBROUTINE fft_dlay_allocate( desc, nproc, nx, ny )
     TYPE (fft_dlay_descriptor) :: desc
     INTEGER, INTENT(IN) :: nproc, nx, ny
-    INTEGER :: nat_
     ALLOCATE( desc%nsp( nproc ) )
     ALLOCATE( desc%nsw( nproc ) )
     ALLOCATE( desc%ngl( nproc ) )
@@ -118,7 +108,29 @@ CONTAINS
 
 !=----------------------------------------------------------------------------=!
 
+  SUBROUTINE fft_box_allocate( desc, nproc, nat )
+    TYPE (fft_dlay_descriptor) :: desc
+    INTEGER, INTENT(IN) :: nat, nproc
+    ALLOCATE( desc%irb( 3, nat ) )
+    ALLOCATE( desc%imin3( nat ) )
+    ALLOCATE( desc%imax3( nat ) )
+    ALLOCATE( desc%npp( nproc ) )
+    ALLOCATE( desc%ipp( nproc ) )
+    desc%irb = 0
+    desc%imin3 = 0
+    desc%imax3 = 0
+    desc%npp = 0
+    desc%ipp = 0
+  END SUBROUTINE fft_box_allocate
 
+  SUBROUTINE fft_box_deallocate( desc )
+    TYPE (fft_dlay_descriptor) :: desc
+    IF( ASSOCIATED( desc%irb ) ) DEALLOCATE( desc%irb )
+    IF( ASSOCIATED( desc%imin3 ) ) DEALLOCATE( desc%imin3 )
+    IF( ASSOCIATED( desc%imax3 ) ) DEALLOCATE( desc%imax3 )
+    IF( ASSOCIATED( desc%npp ) ) DEALLOCATE( desc%npp )
+    IF( ASSOCIATED( desc%ipp ) ) DEALLOCATE( desc%ipp )
+  END SUBROUTINE fft_box_deallocate
 
 
 !=----------------------------------------------------------------------------=!
@@ -349,6 +361,60 @@ CONTAINS
 
     RETURN
   END SUBROUTINE fft_dlay_set
+
+!=----------------------------------------------------------------------------=!
+
+  SUBROUTINE fft_box_set( desc, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nat, &
+                          irb, me, nproc, npp, ipp )
+
+    TYPE (fft_dlay_descriptor) :: desc
+
+    INTEGER, INTENT(IN) :: nat, me, nproc
+    INTEGER, INTENT(IN) :: irb( :, : )
+    INTEGER, INTENT(IN) :: npp( : )
+    INTEGER, INTENT(IN) :: ipp( : )
+    INTEGER, INTENT(IN) :: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
+
+    INTEGER :: ir3, ibig3, irb3, imin3, imax3, nr3
+
+    IF( nat > SIZE( desc%irb, 2 ) ) &
+       CALL errore(" fft_box_set ", " inconsistent dimensions ", 1 )
+
+    IF( nproc > SIZE( desc%npp ) ) &
+       CALL errore(" fft_box_set ", " inconsistent dimensions ", 2 )
+
+    desc%nr1 = nr1b
+    desc%nr2 = nr2b
+    desc%nr3 = nr3b
+    desc%nr1x = nr1bx
+    desc%nr2x = nr2bx
+    desc%nr3x = nr3bx
+
+    desc%irb( 1:3, 1:nat ) = irb( 1:3, 1:nat ) 
+    desc%npp( 1:nproc )    = npp( 1:nproc ) 
+    desc%ipp( 1:nproc )    = ipp( 1:nproc ) 
+
+    nr3   = SUM( npp( 1:nproc ) )
+    imin3 = nr3b
+    imax3 = 1
+
+    do ir3 = 1, nr3b
+       ibig3 = 1 + MOD( irb3 + ir3 - 2, nr3 )
+       if( ibig3 < 1 .or. ibig3 > nr3 )   &
+     &        call errore(' fft_box_set ',' ibig3 wrong ', ibig3 )
+       ibig3 = ibig3 - ipp( me )
+       if ( ibig3 > 0 .and. ibig3 <= npp(me) ) then
+            imin3 = min( imin3, ir3 )
+            imax3 = max( imax3, ir3 )
+       end if
+    end do
+
+    desc%imin3 = imin3
+    desc%imax3 = imax3
+
+
+  END SUBROUTINE fft_box_set
+
 
 !=----------------------------------------------------------------------------=!
 

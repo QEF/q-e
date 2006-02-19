@@ -28,11 +28,11 @@
 
         USE fft_types, ONLY: fft_dlay_descriptor
 
-
         IMPLICIT NONE
         
-        TYPE ( fft_dlay_descriptor ) :: dfftp  ! fft descriptor for potentials
-        TYPE ( fft_dlay_descriptor ) :: dffts  ! fft descriptor for potentials
+        TYPE ( fft_dlay_descriptor ) :: dfftp ! descriptor for dense grid
+        TYPE ( fft_dlay_descriptor ) :: dffts ! descriptor for smooth grid
+        TYPE ( fft_dlay_descriptor ) :: dfftb ! descriptor for box grids
 
         SAVE
 
@@ -45,7 +45,7 @@
 #endif
 
         PUBLIC :: fft_itranspose, fft_transpose, fft_scatter
-        PUBLIC :: dfftp, dffts, fft_dlay_descriptor
+        PUBLIC :: dfftp, dffts, dfftb, fft_dlay_descriptor
 
 
 !=----------------------------------------------------------------------=!

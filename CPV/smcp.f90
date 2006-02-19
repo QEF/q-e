@@ -15,7 +15,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   !
   USE kinds,                    ONLY : DP
   USE control_flags,            ONLY : iprint, isave, thdyn, tpre, tbuff, &
-                                       iprsta, trhor, tfor, tvlocw, trhow,     &
+                                       iprsta, tfor, tvlocw,      &
                                        taurdr, tprnfor, tsdc, ndr, ndw, nbeg,  &
                                        nomore, tsde, tortho, tnosee, tnosep,   &
                                        trane, tranp, tsdp, tcp, tcap, ampre,   &
@@ -95,6 +95,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE fft_base,                 ONLY : dfftp
   USE orthogonalize,            ONLY : ortho
   USE orthogonalize_base,       ONLY : updatc, calphi
+  use charge_density,           only : rhoofr
   !
 #if ! defined __NOSMD
   !
@@ -884,19 +885,6 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
              & rep_el(sm_k)%rhovan,rhor,rhog,rhos,enl,ekin_ar(sm_k))
 
         ekin = ekin_ar(sm_k)
-
-
-        IF(trhow) THEN
-           WRITE(stdout,*) " TRHOW set to .FASLE., it is not implemented with SMD" 
-           trhow = .FALSE.   
-        ENDIF
-        !
-        ! Y.K.
-        !#ifdef __PARA     
-        !      if(trhow .and. tlast) call write_rho(47,nspin,rhor)
-        !#else
-        !      if(trhow .and. tlast) write(47) ((rhor(i,is),i=1,nnrx),is=1,nspin)
-        !#endif
         !
         !     put core charge (if present) in rhoc(r)
         !

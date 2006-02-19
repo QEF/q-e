@@ -5,8 +5,11 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-   MODULE rundiis_module
+
 #include "f_defs.h"
+
+MODULE rundiis_module
+
         IMPLICIT NONE
         SAVE
 
@@ -16,62 +19,59 @@
         LOGICAL, PARAMETER :: tstress = .FALSE.
 
         INTERFACE set_lambda
-          MODULE PROCEDURE set_lambda_r, set_lambda_c
+          MODULE PROCEDURE set_lambda_r
         END INTERFACE
 
         PUBLIC :: rundiis, runsdiis
 
 
-   CONTAINS
+CONTAINS
 
-!  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE rundiis(tprint, rhoe, atoms, &
+   SUBROUTINE rundiis( tprint, rhoe, atoms, &
                  bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cgrad, cdesc, tcel, ht0, fi, eig, &
                  vpot, doions, edft )
 
-!  this routine computes the electronic ground state via diagonalization
-!  by the DIIS method (Wood and Zunger, J.Phys.A 18,1343 (1985))
-!  resulting wave functions are the Kohn-Sham eigenfunctions
-!
-!  overview of the DIIS method:
-!  1) make a starting guess on the ground-state eigenfunctions, |A(0)>
-!  2) iterate:
-!     a) compute a new difference vector, |dA(n+1)>, by solving
-!        the equation
-!
-!          (H-E(n))|A(n)+dA(n+1)> = 0,  E(n) = <A(n)|H|A(n)>
-!
-!        in the "diagonal approximation"
-!
-!                                    <x(i)|H-E(n)|A(n)>
-!          |dA(n+1)> = -(sum over i) ------------------ |x(i)>
-!                                    <x(i)|H-E(n)|x(i)>
-!
-!        where the |x(i)> are suitable basis vectors
-!     b) compute a new approximate eigenvector, |A(n+1)>, as a linear
-!        combination of all |dA>'s (including |dA(0)> = |A(0)>), with
-!        coefficients chosen as to minimize the norm of the vector
-!
-!          |R(n+1)> = (H-E(n+1))|A(n+1)>,  E(n+1) = <A(n+1)|H|A(n+1)>
-!
-!        (which is exactly zero when |A(n+1)> is an eigenvector of H):
-!        they are obtained as the eigenvector of the lowest eigenvalue
-!        of equation
-!
-!          P|c> = lambda Q|c>
-!
-!          P(i,j) = <(H-E(n))dA(i)|(H-E(n))dA(j)>
-!          Q(i,j) = <dA(i)|dA(j)>
-!
-!        this equation has a small dimensionality (n+2) and is easily
-!        solved by standard techniques
-!  3) stop when <R|R> is zero within a given tolerance
-!  ----------------------------------------------
-!  END manual
+   !  this routine computes the electronic ground state via diagonalization
+   !  by the DIIS method (Wood and Zunger, J.Phys.A 18,1343 (1985))
+   !  resulting wave functions are the Kohn-Sham eigenfunctions
+   !
+   !  overview of the DIIS method:
+   !  1) make a starting guess on the ground-state eigenfunctions, |A(0)>
+   !  2) iterate:
+   !     a) compute a new difference vector, |dA(n+1)>, by solving
+   !        the equation
+   !
+   !          (H-E(n))|A(n)+dA(n+1)> = 0,  E(n) = <A(n)|H|A(n)>
+   !
+   !        in the "diagonal approximation"
+   !
+   !                                    <x(i)|H-E(n)|A(n)>
+   !          |dA(n+1)> = -(sum over i) ------------------ |x(i)>
+   !                                    <x(i)|H-E(n)|x(i)>
+   !
+   !        where the |x(i)> are suitable basis vectors
+   !     b) compute a new approximate eigenvector, |A(n+1)>, as a linear
+   !        combination of all |dA>'s (including |dA(0)> = |A(0)>), with
+   !        coefficients chosen as to minimize the norm of the vector
+   !
+   !          |R(n+1)> = (H-E(n+1))|A(n+1)>,  E(n+1) = <A(n+1)|H|A(n+1)>
+   !
+   !        (which is exactly zero when |A(n+1)> is an eigenvector of H):
+   !        they are obtained as the eigenvector of the lowest eigenvalue
+   !        of equation
+   !
+   !          P|c> = lambda Q|c>
+   !
+   !          P(i,j) = <(H-E(n))dA(i)|(H-E(n))dA(j)>
+   !          Q(i,j) = <dA(i)|dA(j)>
+   !
+   !        this equation has a small dimensionality (n+2) and is easily
+   !        solved by standard techniques
+   !  3) stop when <R|R> is zero within a given tolerance
 
-! ... declare modules
+   ! ... declare modules
+
       USE kinds
       USE mp_global, ONLY: mpime, nproc, group
       USE mp, ONLY: mp_sum
@@ -91,10 +91,9 @@
       USE nl, ONLY: nlrh_m
       USE potentials, ONLY: vofrhos
       USE forces
-      USE brillouin, ONLY: kpoints, kp
       USE wave_types, ONLY: wave_descriptor
       USE atoms_type_module, ONLY: atoms_type
-      USE control_flags, ONLY: force_pairing
+      USE control_flags, ONLY: force_pairing, gamma_only
       use grid_dimensions,    only: nr1, nr2, nr3
       USE reciprocal_vectors, ONLY: mill_l
       USE gvecp, ONLY: ngm
@@ -103,7 +102,8 @@
 
       IMPLICIT NONE
 
-! ... declare subroutine arguments
+      ! ... declare subroutine arguments
+      !
       LOGICAL    :: tcel, tprint, doions
       TYPE (atoms_type) :: atoms
       COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cgrad(:,:,:,:)
@@ -123,8 +123,9 @@
       REAL(DP)    :: eig(:,:,:)
       REAL(DP)    :: vpot(:,:) 
 
-! ... declare other variables
-      INTEGER ig, ib, j, k, ik, ngw, i, is, nrt, istate, nrl, ndiis, nowv
+      ! ... declare other variables
+      !
+      INTEGER ig, ib, j, k, ngw, i, is, nrt, istate, nrl, ndiis, nowv
       INTEGER idiis
       LOGICAL tlimit
       REAL(DP)  fions(3) 
@@ -143,6 +144,13 @@
 ! ... end of declarations
 !  ----------------------------------------------
 
+      IF( .NOT. gamma_only ) &
+         CALL errore( " rundiis", " diis and k-points not allowed ", 1 )
+
+      IF( force_pairing ) &
+        CALL errore(' rundiis ', ' force pairing not implemented ', 1 )
+
+ 
       nrt   = 0         ! electronic minimization at fixed potential
 
 ! ... Initialize DIIS
@@ -157,9 +165,6 @@
       edft%ent = 0.0d0
       eold     = 1.0d10  ! a large number
       nel = 2.0d0 * cdesc%nbt( 1 ) / DBLE( cdesc%nspin )
-
-      IF( force_pairing ) &
-        CALL errore(' rundiis ', ' force pairing not implemented ', 1 )
 
       IF( SIZE( fi, 3 ) > 1 ) THEN
         CALL errore(' rundiis ', ' nspin > 1 not allowed ', SIZE( fi, 2 ) )
@@ -181,13 +186,8 @@
       END IF
 
 ! ... Allocate and initialize lambda to the identity matrix
-      IF( .NOT. kp%gamma_only ) THEN
-        ALLOCATE(clambda(nrl,cdesc%nbl( 1 ),kp%nkpt))
-        CALL set_lambda(clambda)
-      ELSE
-        ALLOCATE(lambda(nrl,cdesc%nbl( 1 )))
-        CALL set_lambda(lambda)
-      END IF
+      ALLOCATE(lambda(nrl,cdesc%nbl( 1 )))
+      CALL set_lambda(lambda)
 
 
 ! ... starting guess on the wavefunctions
@@ -199,7 +199,7 @@
       CALL newrho(rhoe(:,1), drho, 0)  ! memorize density
       CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms%taus, nr1, nr2, nr3, atoms%nat )
       CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
-      CALL guessc0( .NOT. kp%gamma_only, bec, c0, cm, cdesc)
+      CALL guessc0( .NOT. gamma_only, bec, c0, cm, cdesc)
 
 ! ... Initialize the rotation index srot
       srot = srot0
@@ -217,14 +217,10 @@
           istate = 0  ! reset the diis internal state
 
           IF( idiis /= 1 ) THEN
-! ...       bring wave functions onto KS states
-            IF ( kp%gamma_only ) THEN
-              CALL crot( 1, c0(:,:,1,1), cdesc, lambda, eig(:,1,1) )
-            ELSE
-              DO ik = 1, kp%nkpt
-                CALL crot( 1, ik, c0(:,:,:,1), cdesc, clambda(:,:,ik), eig(:,ik,1) )
-              END DO
-            END IF
+
+             ! ...       bring wave functions onto KS states
+
+             CALL crot( 1, c0(:,:,1,1), cdesc, lambda, eig(:,1,1) )
 
              call adjef_s(eig(1,1,1),fi(1,1,1),efermi,nel, &
                cdesc%nbl( 1 ),temp_elec,sume)
@@ -269,15 +265,8 @@
 
           CALL dforce_all( 1, c0(:,:,1,1), cdesc, fi(:,1,1), cgrad(:,:,1,1), vpot(:,1), eigr, bec )
 
-          IF(.NOT.kp%gamma_only) THEN
-            DO ik = 1, kp%nkpt
-              CALL proj( 1, ik, cgrad(:,:,:,1), cdesc, c0(:,:,:,1), cdesc, clambda(:,:,ik) )
-              CALL crot( 1, ik, c0(:,:,:,1), cdesc, clambda(:,:,ik), eig(:,ik,1) )
-            END DO
-          ELSE
-            CALL proj( 1, cgrad(:,:,1,1), cdesc, c0(:,:,1,1), cdesc, lambda )
-            CALL crot( 1, c0(:,:,1,1), cdesc, lambda, eig(:,1,1) )
-          END IF
+          CALL proj( 1, cgrad(:,:,1,1), cdesc, c0(:,:,1,1), cdesc, lambda )
+          CALL crot( 1, c0(:,:,1,1), cdesc, lambda, eig(:,1,1) )
 
           call adjef_s(eig(1,1,1),fi(1,1,1),efermi,nel, cdesc%nbl( 1 ),temp_elec,sume)
           call entropy_s(fi(1,1,1),temp_elec,cdesc%nbl(1),edft%ent)
@@ -285,10 +274,8 @@
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fs, bec, becdr, eigr)
           CALL dforce_all( 1, c0(:,:,1,1), cdesc, fi(:,1,1), cgrad(:,:,1,1), vpot(:,1), eigr, bec )
 
-          DO ik = 1, kp%nkpt
-            DO ib = 1, cdesc%nbl( 1 )
-              cgrad(:,ib,ik,1) = cgrad(:,ib,ik,1) + eig(ib,ik,1)*c0(:,ib,ik,1)
-            END DO
+          DO ib = 1, cdesc%nbl( 1 )
+            cgrad(:,ib,1,1) = cgrad(:,ib,1,1) + eig(ib,1,1)*c0(:,ib,1,1)
           END DO
 
         ELSE
@@ -298,28 +285,14 @@
 
           CALL dforce_all( 1, c0(:,:,1,1), cdesc, fi(:,1,1), cgrad(:,:,1,1), vpot(:,1), eigr, bec )
 
-          IF( kp%gamma_only ) THEN
-            CALL proj( 1, cgrad(:,:,1,1), cdesc, c0(:,:,1,1), cdesc, lambda)
-          ELSE
-            DO ik = 1, kp%nkpt
-              CALL proj( 1, ik, cgrad(:,:,:,1), cdesc, c0(:,:,:,1), cdesc, clambda(:,:,ik))
-            END DO
-          END IF
+          CALL proj( 1, cgrad(:,:,1,1), cdesc, c0(:,:,1,1), cdesc, lambda)
 
         END IF
 
         edft%etot = 0.d0
-        IF(kp%gamma_only) THEN
-          DO ib=1,nrl
-            edft%etot = edft%etot + lambda(ib,(ib-1)*nproc+mpime+1)
-          END DO
-        ELSE
-          DO ik = 1, kp%nkpt
-            DO ib=1,nrl
-              edft%etot = edft%etot + DBLE(clambda(ib,(ib-1)*nproc+mpime+1,ik))
-            END DO
-          END DO
-        END IF
+        DO ib=1,nrl
+           edft%etot = edft%etot + lambda(ib,(ib-1)*nproc+mpime+1)
+        END DO
         CALL mp_sum(edft%etot, group)
 
         IF (ionode) WRITE( stdout,80) idiis, cnorm, edft%etot, edft%ent
@@ -359,16 +332,10 @@
       END IF
 
       IF( tprint ) THEN
-        DO ik = 1, kp%nkpt
-          WHERE( fi(:,ik,1) /= 0.d0 ) eig(:,ik,1) = eig(:,ik,1) / fi(:,ik,1)
-        END DO
+         WHERE( fi(:,1,1) /= 0.d0 ) eig(:,1,1) = eig(:,1,1) / fi(:,1,1)
       END IF
 
-      IF ( kp%gamma_only ) THEN
-        DEALLOCATE(lambda)
-      ELSE
-        DEALLOCATE(clambda)
-      END IF
+      DEALLOCATE(lambda)
       deallocate(fs)
 
       RETURN
@@ -377,14 +344,6 @@
 
 
 
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-!  ----------------------------------------------
-!  Car-Parrinello Parallel Program
-!  Carlo Cavazzoni - Gerardo Ballabio
-!  SISSA, Trieste, Italy - 1997-2000
-!  Last modified: Fri Feb 11 14:02:58 MET 2000
-!  ----------------------------------------------
-!  BEGIN manual
 
       SUBROUTINE runsdiis(tprint, rhoe, atoms, &
                  bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cgrad, cdesc, tcel, ht0, fi, eig, &
@@ -427,8 +386,6 @@
 !        this equation has a small dimensionality (n+2) and is easily
 !        solved by standard techniques
 !  3) stop when <R|R> is zero within a given tolerance
-!  ----------------------------------------------
-!  END manual
 
 ! ... declare modules
       USE kinds
@@ -446,7 +403,6 @@
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
       USE control_flags, ONLY: tortho, tsde
-      USE brillouin, ONLY: kpoints, kp
       USE wave_types
       USE atoms_type_module, ONLY: atoms_type
       USE local_pseudo, ONLY: vps
@@ -478,7 +434,7 @@
       LOGICAL :: tlimit, tsteep
       LOGICAL :: ttreset_diis(SIZE(fi, 3))
       LOGICAL :: ddoions(SIZE(fi, 3))
-      INTEGER ig, ib, ibg, j, k, ik, ibl, ispin
+      INTEGER ig, ib, ibg, j, k, ibl, ispin
       INTEGER nfi_l,nrt,istate
       INTEGER nspin
       INTEGER nx,nrl, ndiis,nowv, isteep
@@ -565,13 +521,8 @@
             END IF
 
 ! ...       initialize lambda to the identity matrix
-            IF( .NOT.kp%gamma_only ) THEN
-              ALLOCATE(clambda(nrl, nx, kp%nkpt))
-              CALL set_lambda(clambda)
-            ELSE
-              ALLOCATE(lambda(nrl, nx))
-              CALL set_lambda(lambda)
-            END IF
+            ALLOCATE(lambda(nrl, nx))
+            CALL set_lambda(lambda)
 
 ! ...       distribute lambda's rows across processors with a blocking factor
 ! ...       of 1, ( row 1 to PE 1, row 2 to PE 2, .. row NPROC+1 to PE 1 and
@@ -580,32 +531,15 @@
             CALL dforce_all( ispin, c0(:,:,1,ispin), cdesc, fi(:,1,ispin), cgrad(:,:,1,ispin), &
                              vpot(:,ispin), eigr, bec )
 
-            IF(.NOT.kp%gamma_only) THEN
-              DO ik = 1, kp%nkpt
-                CALL proj( ispin, ik, cgrad(:,:,:,ispin), cdesc, c0(:,:,:,ispin), cdesc, clambda(:,:,ik))
-              END DO
-            ELSE
-              CALL proj( ispin, cgrad(:,:,1,ispin), cdesc, c0(:,:,1,ispin), cdesc, lambda)
-            END IF
+            CALL proj( ispin, cgrad(:,:,1,ispin), cdesc, c0(:,:,1,ispin), cdesc, lambda)
 
             s4 = cclock()
-            IF(.NOT.kp%gamma_only) THEN
-              CALL simupd_kp(ekinc(ispin), ddoions(ispin), c0(:,:,:,ispin), &
-                cgrad(:,:,:,ispin), cdesc, svar1, svar2, svar3_0, edft%etot, fi(:,:,ispin), &
-                eigr, sfac, vps, ttreset_diis(ispin), istate, &
-                cnorm, eold, ndiis, nowv)
-            ELSE
-              CALL simupd(ekinc(ispin), ddoions(ispin), c0(:,:,:,ispin), cgrad(:,:,:,ispin), cdesc, &
+            CALL simupd(ekinc(ispin), ddoions(ispin), c0(:,:,:,ispin), cgrad(:,:,:,ispin), cdesc, &
                 svar1, svar2, svar3_0, edft%etot, fi(:,1,ispin), eigr, sfac, &
                 vps, ttreset_diis(ispin), istate, cnorm, &
                 eold, ndiis, nowv)
-            END IF
             CALL gram( vkb, bec, nkb, c0(1,1,1,ispin), SIZE(c0,1), cdesc%nbt( ispin ) )
-            IF (.NOT.kp%gamma_only) THEN
-              DEALLOCATE(clambda)
-            ELSE
-              DEALLOCATE(lambda)
-            END IF
+            DEALLOCATE(lambda)
           END DO SPIN
 
           IF( ANY( ttreset_diis ) ) THEN
@@ -642,33 +576,12 @@
 
 !  ----------------------------------------------
 
-      SUBROUTINE set_lambda_c( clambda )
-! ...   initialize lambda to the identity matrix
-        USE kinds
-        USE mp_global, ONLY: mpime, nproc
-        COMPLEX(DP) :: clambda(:,:,:)
-        INTEGER ik, ib, ibl, nrl, nk
-          nrl = SIZE(clambda, 1)
-          nk  = SIZE(clambda, 3)
-          clambda = CMPLX(0.d0,0.d0)
-          DO ik = 1, nk
-            ib = mpime + 1
-            DO ibl = 1, nrl
-              clambda(ibl,ib,ik) = CMPLX(1.0d0, 0.0d0) ! diagonal elements
-              ib = ib + nproc
-            END DO
-          END DO
-        RETURN
-      END SUBROUTINE set_lambda_c
-
-!  ----------------------------------------------
-
       SUBROUTINE set_lambda_r( lambda )
 ! ...   initialize lambda to the identity matrix
         USE kinds
         USE mp_global, ONLY: mpime, nproc
         REAL(DP) :: lambda(:,:)
-        INTEGER ik, ib, ibl, nrl, nk
+        INTEGER ib, ibl, nrl
           nrl = SIZE(lambda, 1)
           lambda = 0.d0
           ib = mpime + 1
@@ -692,7 +605,6 @@
         USE cell_base, ONLY: tpiba2
         USE electrons_module, ONLY: eigs, ei, pmss, emass, nb_l, ib_owner, ib_local
         USE forces, ONLY: dforce_all
-        USE brillouin, ONLY: kpoints, kp
         USE orthogonalize
         USE pseudopotential,       ONLY: nspnl
         USE nl,                    ONLY: nlsm1_s
@@ -716,9 +628,9 @@
         TYPE(atoms_type), INTENT(INOUT)  :: atoms     
 
 ! ...   LOCALS
-        INTEGER     kk, i, k, j, iopt, iter, nwh, ik, nk
+        INTEGER     kk, i, k, j, iopt, iter, nwh
         INTEGER     ngw, ngw_g, n_occ, n, n_l, nspin, ispin
-        INTEGER     ig, iprinte, iks, nrl, jl, ibl
+        INTEGER     ig, iprinte, nrl, jl, ibl
         LOGICAL     gamma_symmetry, gzero
 
         REAL(DP),    ALLOCATABLE :: gam(:,:)
@@ -727,7 +639,6 @@
 ! ...   SUBROUTINE BODY
 !
         nspin = cdesc%nspin
-        nk    = cdesc%nkl
         ngw   = cdesc%ngwl
         ngw_g = cdesc%ngwt
         n     = cdesc%nbl( 1 )
@@ -740,34 +651,31 @@
 ! ...   electronic state diagonalization ==
         DO ispin = 1, nspin
 
-          CALL nlsm1( n, 1, nspnl, eigr, c(1,1,ik,ispin), bec )
+          CALL nlsm1( n, 1, nspnl, eigr, c(1,1,1,ispin), bec )
 
 ! ...     Calculate | dH / dpsi(j) >
           CALL dforce_all( ispin, c(:,:,1,ispin), cdesc, fi(:,1,ispin), eforce(:,:,1,ispin), &
                            vpot(:,ispin), eigr, bec )
 
-          DO ik = 1, kp%nkpt
-
 ! ...       Calculate Eij = < psi(i) | H | psi(j) > = < psi(i) | dH / dpsi(j) >
             DO i = 1, n
               IF( gamma_symmetry ) THEN
-                CALL update_lambda( i,  gam, c( :, :, ik, ispin), cdesc, eforce( :, i, ik, ispin) ) 
+                CALL update_lambda( i,  gam, c( :, :, 1, ispin), cdesc, eforce( :, i, 1, ispin) ) 
               ELSE
-                CALL update_lambda( i, cgam, c( :, :, ik, ispin), cdesc, eforce( :, i, ik, ispin) ) 
+                CALL update_lambda( i, cgam, c( :, :, 1, ispin), cdesc, eforce( :, i, 1, ispin) ) 
               END IF
             END DO
 
 ! ...       Bring empty state wave function on kohn-sham base
 !           IF( gamma_symmetry ) THEN
-!             CALL crot(c(:,:,:,ispin), gam, ei(:,ik,ispin))
+!             CALL crot(c(:,:,:,ispin), gam, ei(:,1,ispin))
 !           ELSE
-!             CALL crot(ik, c(:,:,:,ispin), cgam, ei(:,ik,ispin))
+!             CALL crot(1, c(:,:,:,ispin), cgam, ei(:,1,ispin))
 !           END IF
-!           ei(:,ik,ispin) = ei(:,ik,ispin) / c(ispin)%f(:,ik)
+!           ei(:,1,ispin) = ei(:,1,ispin) / c(ispin)%f(:,1)
 
-            CALL eigs( n, gam, cgam, tortho, fi(:,ik,ispin), ei(:,ik,ispin), gamma_symmetry)
+            CALL eigs( n, gam, cgam, tortho, fi(:,1,ispin), ei(:,1,ispin), gamma_symmetry)
           END DO
-        END DO
 
         DEALLOCATE(gam, cgam)
 

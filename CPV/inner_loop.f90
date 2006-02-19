@@ -21,7 +21,7 @@
       ! declares modules
       USE kinds,          ONLY: dp
       USE control_flags,  ONLY: iprint, thdyn, tpre, tbuff, iprsta, &
-                                trhor, tfor, tvlocw, trhow, taurdr, &
+                                tfor, tvlocw, taurdr, &
                                 tprnfor, ndr, ndw, nbeg, nomore, &
                                 tsde, tortho, tnosee, tnosep, trane, &
                                 tranp, tsdp, tcp, tcap, ampre, &
@@ -81,6 +81,7 @@
                                 passo, iter3, enesti, ninner_ef, emme
       USE ions_positions, ONLY: tau0
       USE mp,             ONLY: mp_sum,mp_bcast
+      use charge_density, only: rhoofr
 
       !
       IMPLICIT NONE
@@ -95,7 +96,7 @@
       INTEGER                :: irb( 3, nat )
       COMPLEX (DP)           :: eigrb( ngb, nat )
       REAL(DP)               :: rhor( nnr, nspin )
-      REAL(DP)               :: rhog( ngm, nspin )
+      COMPLEX(DP)            :: rhog( ngm, nspin )
       REAL(DP)               :: rhos( nnrsx, nspin )
       REAL(DP)               :: rhoc( nnr )
       COMPLEX(DP)            :: ei1( nr1:nr1, nat )

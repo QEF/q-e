@@ -14,7 +14,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE kinds,                    ONLY : DP
   USE constants,                ONLY : bohr_radius_angs, amu_au
   USE control_flags,            ONLY : iprint, isave, thdyn, tpre, tbuff,      &
-                                       iprsta, trhor, tfor, tvlocw, trhow,     &
+                                       iprsta, tfor, tvlocw,      &
                                        taurdr, tprnfor, tsdc, lconstrain, lwf, &
                                        lneb, lcoarsegrained, ndr, ndw, nomore, &
                                        tsde, tortho, tnosee, tnosep, trane,    &
@@ -527,15 +527,10 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
      END IF
      !
-     IF ( MOD( nfi, iprint ) == 0 .OR. &
-          MOD( nfi, isave )  == 0 .OR. tlast ) THEN
+     IF ( MOD( nfi, iprint ) == 0 .OR. tlast ) THEN
         !
-        CALL cp_eigs( nfi, bec, c0, irb, eigrb, rhor, &
-                      rhog, rhos, lambdap, lambda, tau0, h )
+        CALL cp_eigs( nfi, lambdap, lambda )
         !
-        IF ( printwfc >= 0 ) &
-           CALL cp_print_rho( nfi, bec, c0, eigr, irb, eigrb, rhor, &
-                              rhog, rhos, lambdap, lambda, tau0, h )
         !
      END IF
      !
@@ -782,13 +777,14 @@ SUBROUTINE terminate_run()
   !
   USE kinds,                 ONLY : DP
   USE io_global,             ONLY : stdout, ionode
-  USE cp_main_variables,     ONLY : acc, nfi, lambda, lambdam, rhopr
+  USE cp_main_variables,     ONLY : acc, nfi, lambda, lambdam, rhopr, bec, &
+                                    eigr, irb, eigrb, rhog, rhos, lambdap
   USE cpr_subroutines,       ONLY : print_lambda
   USE cg_module,             ONLY : tcg, c0old
   USE wavefunctions_module,  ONLY : c0, cm
   USE control_flags,         ONLY : ndw, iprsta
   USE cell_base,             ONLY : h, hold, velh, ibrav, celldm
-  USE ions_positions,        ONLY : taus, tausm, vels, velsm
+  USE ions_positions,        ONLY : taus, tausm, vels, velsm, tau0
   USE electrons_nose,        ONLY : xnhe0, xnhem, vnhe
   USE ions_nose,             ONLY : vnhp, xnhp0, xnhpm, nhpcl, nhpdim
   USE cell_nose,             ONLY : xnhh0, xnhhm, vnhh
@@ -800,6 +796,7 @@ SUBROUTINE terminate_run()
   USE ensemble_dft,          ONLY : z0
   USE electrons_base,        ONLY : f, nbsp
   USE restart_file,          ONLY : writefile
+  USE print_out_module,      ONLY : cp_print_rho
   !
   IMPLICIT NONE
   !
@@ -847,6 +844,12 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'fftb' )
   CALL print_clock( 'rsg' )
   CALL print_clock( 'reduce' )
+  !
+  !
+  ! charge density
+  !
+  ! CALL cp_print_rho( nfi, bec, c0(:,:,1,1), eigr, irb, eigrb, rhopr, &
+  !                             rhog, rhos, lambdap, lambda, tau0, h )
   !
   IF ( tcg ) THEN
      !

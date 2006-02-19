@@ -684,42 +684,28 @@
 !
 !  ----------------------------------------------
 
-   SUBROUTINE cp_eigs( nfi, bec, c0, irb, eigrb, rhor, rhog, rhos, lambdap, lambda, tau0, h )
+   SUBROUTINE cp_eigs( nfi, lambdap, lambda )
 
-     use ensemble_dft, only: tens, ismear, z0, c0diag, becdiag
-     use electrons_base, only: nx => nbspx, n => nbsp, ispin, f, nspin
-     use electrons_base, only: nel, iupdwn, nupdwn, nudx, nelt
-     use energies, only: enl, ekin
-     use uspp, only: rhovan => becsum
-     use grid_dimensions, only: nnr => nnrx
-     use io_global, only: stdout
+     use ensemble_dft,   only: tens
+     use electrons_base, only: nx => nbspx, f, nspin
+     use electrons_base, only: iupdwn, nupdwn, nudx
+     use io_global,      only: stdout
 
      IMPLICIT NONE
 
      INTEGER :: nfi
-     INTEGER :: irb(:,:)
-     COMPLEX(DP) :: c0( :, :, :, : )
-     REAL(DP) :: bec( :, : ), rhor( :, : ), rhos( :, : )
      REAL(DP) :: lambda( :, :, : ), lambdap( :, :, : )
-     REAL(DP) :: tau0( :, : ), h( 3, 3 )
-     COMPLEX(DP) :: eigrb( :, : ), rhog( :, : )
 
-     real(DP), allocatable:: rhodip(:,:)
-     real(DP) :: dipol( 3 )
-     LOGICAL, SAVE :: lprimo
-     INTEGER :: i
+     if( .not. tens ) then
+         call eigs0( .false. , nspin, nupdwn, iupdwn, .true. , f, nx, lambda, nudx )
+     else
+         call eigs0( .false. , nspin, nupdwn, iupdwn, .false. , f, nx, lambdap, nudx )
+     endif
 
-
-         if(.not.tens) then
-            call eigs0(.false.,nspin,nupdwn,iupdwn,.true.,f,nx,lambda,nudx)
-         else
-            call eigs0(.false.,nspin,nupdwn,iupdwn,.false.,f,nx,lambdap,nudx)
-         endif
-
-         WRITE( stdout,*)
-
-        RETURN
-      END SUBROUTINE cp_eigs
+     WRITE( stdout, * )
+ 
+     RETURN
+   END SUBROUTINE cp_eigs
 
 
 !=----------------------------------------------------------------------------=!

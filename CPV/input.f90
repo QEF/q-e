@@ -210,7 +210,6 @@ MODULE input
                                tzeroe_        => tzeroe, &
                                tdamp_         => tdamp, &
                                trhor_         => trhor, &
-                               trhow_         => trhow, &
                                tvlocw_        => tvlocw, &
                                ortho_eps_     => ortho_eps, &
                                ortho_max_     => ortho_max, &
@@ -329,7 +328,6 @@ MODULE input
           ! gvectors and charge density, in reciprocal space.
      !
      trhor_  = ( TRIM( calculation ) == 'nscf' )
-     trhow_  = ( TRIM( disk_io ) == 'high' )     !  charge density now written to XML file
      tvlocw_ = ( TRIM( disk_io ) == 'high' )     !  warning this is not working
      !
      SELECT CASE( TRIM( verbosity ) )
@@ -1220,7 +1218,7 @@ MODULE input
       orthogonalization
 
     USE control_flags, ONLY:  program_name, tortho, tnosee, trane, ampre, &
-                              trhor, trhow, tvlocw, tfor, tnosep, iprsta, &
+                              trhor, tvlocw, tfor, tnosep, iprsta, &
                               thdyn, tnoseh
     !
     USE electrons_nose,       ONLY: electrons_nose_info
@@ -1288,9 +1286,6 @@ MODULE input
 
       IF ( trhor ) THEN
          WRITE( stdout,720)
-      ENDIF
-      IF( .NOT. trhor .AND. trhow )THEN
-         WRITE( stdout,721)
       ENDIF
       IF( tvlocw )THEN
          WRITE( stdout,722)
@@ -1365,7 +1360,6 @@ MODULE input
     !
 700 FORMAT( /,3X, 'Verbosity: iprsta = ',i2,/)
 720 FORMAT(   3X, 'charge density is read from file')
-721 FORMAT(   3X, 'warning trhow has no effect rho is now written to XML save file')
 722 FORMAT(   3X, 'warning tvlocw has no effect vloc is not written to file')
     !
   END SUBROUTINE modules_info

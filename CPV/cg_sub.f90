@@ -14,8 +14,8 @@
       lambdap, lambda  )
 
       use kinds, only: dp
-      use control_flags, only: iprint, thdyn, tpre, tbuff, iprsta, trhor, &
-            tfor, tvlocw, trhow, taurdr, tprnfor
+      use control_flags, only: iprint, thdyn, tpre, tbuff, iprsta, &
+            tfor, tvlocw, taurdr, tprnfor
       use control_flags, only: ndr, ndw, nbeg, nomore, tsde, tortho, tnosee, &
             tnosep, trane, tranp, tsdp, tcp, tcap, ampre, amprp, tnoseh
 
@@ -76,6 +76,7 @@
       use mp, only: mp_sum,mp_bcast
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi
+      use charge_density,           ONLY : rhoofr
 
 !
       implicit none
@@ -88,7 +89,7 @@
       integer irb(3,nat)
       complex(dp) :: eigrb(ngb,nat)
       real(dp) :: rhor(nnr,nspin)
-      real(dp) :: rhog(ngm,nspin)
+      complex(dp) :: rhog(ngm,nspin)
       real(dp) :: rhos(nnrsx,nspin)
       real(dp) :: rhoc(nnr)
       complex(dp) :: ei1(-nr1:nr1,nat)
@@ -210,7 +211,7 @@
         ENERGY_CHECK: if(.not. ene_ok ) then
           call calbec(1,nsp,eigr,c0,bec)
           if(.not.tens) then
-            call rhoofr(nfi,c0,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
+            call rhoofr(nfi,c0(:,:,1,1),irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
           else
 
            if(newscheme.or.firstiter) then 
@@ -517,7 +518,7 @@
                
         !calculate energy
         if(.not.tens) then
-          call rhoofr(nfi,cm,irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
+          call rhoofr(nfi,cm(:,:,1,1),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
         else
           if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
            rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm  )
@@ -583,7 +584,7 @@
 
         call calbec(1,nsp,eigr,cm,becm)
         if(.not.tens) then
-          call rhoofr(nfi,cm,irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
+          call rhoofr(nfi,cm(:,:,1,1),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
         else
           if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
               rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm  )
@@ -677,7 +678,7 @@
             call gram(betae,bec,nhsa,cm,ngw,n)
             call calbec(1,nsp,eigr,cm,becm)
             if(.not.tens) then
-              call rhoofr(nfi,cm,irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
+              call rhoofr(nfi,cm(:,:,1,1),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
             else
               if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
               rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm  )

@@ -7,219 +7,167 @@
 !
 #include "f_defs.h"
 
-!  BEGIN manual
 
-      MODULE kohn_sham_states
+MODULE kohn_sham_states
 
-!  (describe briefly what this module does...)
+
+   USE io_files, ONLY: ksunit, ks_file, ks_emp_file
+
+   IMPLICIT NONE
+   SAVE
+
+   PRIVATE
+
+   ! ...   print KS states to file KS.indx_ksout if ksout true
+   LOGICAL :: tksout                        
+   LOGICAL :: tksout_emp 
+
+   INTEGER, ALLOCATABLE :: indx_ksout(:,:)  ! (state inds, spin indxs)
+   INTEGER, ALLOCATABLE :: n_ksout(:)       ! (spin indxs)
+   INTEGER, ALLOCATABLE :: indx_ksout_emp(:,:)  ! (state inds, spin indxs)
+   INTEGER, ALLOCATABLE :: n_ksout_emp(:)       ! (spin indxs)
+
+   PUBLIC :: ks_states_init, kohn_sham, ks_states_closeup
+   PUBLIC :: n_ksout, indx_ksout, ks_states, tksout
+   PUBLIC :: ks_states_force_pairing
+
 !  ----------------------------------------------
-!  routines in this module:
-!  ----------------------------------------------
-!  END manual
-
-        USE io_files, ONLY: ksunit, ks_file, ks_emp_file
-
-        IMPLICIT NONE
-        SAVE
-
-        PRIVATE
-
-! ...   print KS states to file KS.indx_ksout if ksout true
-        LOGICAL :: tksout                        
-        LOGICAL :: tksout_emp 
-
-
-        INTEGER, ALLOCATABLE :: indx_ksout(:,:)  ! (state inds, spin indxs)
-        INTEGER, ALLOCATABLE :: n_ksout(:)       ! (spin indxs)
-        INTEGER, ALLOCATABLE :: indx_ksout_emp(:,:)  ! (state inds, spin indxs)
-        INTEGER, ALLOCATABLE :: n_ksout_emp(:)       ! (spin indxs)
-
-        PUBLIC :: ks_states_init, kohn_sham, ks_states_closeup
-        PUBLIC :: n_ksout, indx_ksout, ks_states, tksout
-        PUBLIC :: ks_states_force_pairing
-
-!  end of module-scope declarations
-!  ----------------------------------------------
-
-      CONTAINS
-
-!  subroutines
+CONTAINS
 !  ----------------------------------------------
 
 
-!  ----------------------------------------------
-!  BEGIN manual
+   SUBROUTINE ks_states_init( nspin, tprnks, tprnks_emp )
 
-      SUBROUTINE ks_states_init( nspin, tprnks, tprnks_emp )
+      INTEGER, INTENT(IN) :: nspin
+      LOGICAL, INTENT(IN) :: tprnks(:,:)
+      LOGICAL, INTENT(IN) :: tprnks_emp(:,:)
 
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
-!  END manual
+      INTEGER :: i, ip, k, nstates
 
-        INTEGER, INTENT(IN) :: nspin
-        LOGICAL, INTENT(IN) :: tprnks(:,:)
-        LOGICAL, INTENT(IN) :: tprnks_emp(:,:)
+      ! ...   Tell the code which Kohn-Sham state should be printed to file
+      !
+      tksout = .FALSE.
+      IF( ALLOCATED( n_ksout    ) ) DEALLOCATE( n_ksout )
+      IF( ALLOCATED( indx_ksout ) ) DEALLOCATE( indx_ksout )
+      !
+      IF( ANY( tprnks ) ) THEN
+         tksout = .TRUE.
+         ALLOCATE( n_ksout( nspin ) )
+         DO i = 1, nspin
+           n_ksout(i) = COUNT( tprnks(:,i) )
+         END DO
+         nstates = MAXVAL(n_ksout)
+         ALLOCATE( indx_ksout( nstates, nspin) )
+         indx_ksout = 0
+         DO i = 1, nspin
+           ip = 1
+           DO k = 1, SIZE( tprnks, 1)
+             IF( tprnks(k,i) ) THEN
+               indx_ksout( ip, i ) = k
+               ip = ip + 1
+             END IF
+           END DO
+         END DO
+      END IF
 
-        INTEGER :: i, ip, k, nstates
-
-
-! ...   Tell the code which Kohn-Sham state should be printed to file
-        !
-        tksout = .FALSE.
-        IF( ALLOCATED( n_ksout    ) ) DEALLOCATE( n_ksout )
-        IF( ALLOCATED( indx_ksout ) ) DEALLOCATE( indx_ksout )
-        !
-        IF( ANY( tprnks ) ) THEN
-          tksout = .TRUE.
-          ALLOCATE( n_ksout( nspin ) )
-          DO i = 1, nspin
-            n_ksout(i) = COUNT( tprnks(:,i) )
-          END DO
-          nstates = MAXVAL(n_ksout)
-          ALLOCATE( indx_ksout( nstates, nspin) )
-          indx_ksout = 0
-          DO i = 1, nspin
-            ip = 1
-            DO k = 1, SIZE( tprnks, 1)
-              IF( tprnks(k,i) ) THEN
-                indx_ksout( ip, i ) = k
-                ip = ip + 1
-              END IF
-            END DO
-          END DO
-        END IF
-
-        tksout_emp = .FALSE.
-        IF( ALLOCATED( n_ksout_emp    ) ) DEALLOCATE( n_ksout_emp )
-        IF( ALLOCATED( indx_ksout_emp ) ) DEALLOCATE( indx_ksout_emp )
-        !
-        IF( ANY( tprnks_emp ) ) THEN
-          tksout_emp = .TRUE.
-          ALLOCATE( n_ksout_emp( nspin ) )
-          DO i = 1, nspin
+      tksout_emp = .FALSE.
+      IF( ALLOCATED( n_ksout_emp    ) ) DEALLOCATE( n_ksout_emp )
+      IF( ALLOCATED( indx_ksout_emp ) ) DEALLOCATE( indx_ksout_emp )
+      !
+      IF( ANY( tprnks_emp ) ) THEN
+         tksout_emp = .TRUE.
+         ALLOCATE( n_ksout_emp( nspin ) )
+         DO i = 1, nspin
             n_ksout_emp(i) = COUNT( tprnks_emp(:,i) )
-          END DO
-          nstates = MAXVAL(n_ksout_emp)
-          ALLOCATE( indx_ksout_emp( nstates, nspin) )
-          indx_ksout_emp = 0
-          DO i = 1, nspin
+         END DO
+         nstates = MAXVAL(n_ksout_emp)
+         ALLOCATE( indx_ksout_emp( nstates, nspin) )
+         indx_ksout_emp = 0
+         DO i = 1, nspin
             ip = 1
             DO k = 1, SIZE( tprnks_emp, 1)
-              IF( tprnks_emp(k,i) ) THEN
-                indx_ksout_emp( ip, i ) = k
-                ip = ip + 1
-              END IF
+               IF( tprnks_emp(k,i) ) THEN
+                  indx_ksout_emp( ip, i ) = k
+                  ip = ip + 1
+               END IF
             END DO
-          END DO
-        END IF
+         END DO
+      END IF
 
-        RETURN
-      END SUBROUTINE ks_states_init
+      RETURN
+   END SUBROUTINE ks_states_init
+
+!  ----------------------------------------------
+
+   SUBROUTINE ks_states_closeup()
+      IF( ALLOCATED( indx_ksout ) ) DEALLOCATE( indx_ksout )
+      IF( ALLOCATED( n_ksout ) ) DEALLOCATE( n_ksout )
+      tksout = .FALSE.
+      IF( ALLOCATED( indx_ksout_emp ) ) DEALLOCATE( indx_ksout_emp )
+      IF( ALLOCATED( n_ksout_emp ) ) DEALLOCATE( n_ksout_emp )
+      tksout_emp = .FALSE.
+      RETURN
+   END SUBROUTINE ks_states_closeup
 
 !  ----------------------------------------------
 
-      SUBROUTINE ks_states_closeup()
-        IF( ALLOCATED( indx_ksout ) ) DEALLOCATE( indx_ksout )
-        IF( ALLOCATED( n_ksout ) ) DEALLOCATE( n_ksout )
-        tksout = .FALSE.
-        IF( ALLOCATED( indx_ksout_emp ) ) DEALLOCATE( indx_ksout_emp )
-        IF( ALLOCATED( n_ksout_emp ) ) DEALLOCATE( n_ksout_emp )
-        tksout_emp = .FALSE.
-        RETURN
-      END SUBROUTINE ks_states_closeup
+   SUBROUTINE kohn_sham(ispin, c, cdesc, eforces )
 
-!  ----------------------------------------------
-!  BEGIN manual
-
-      SUBROUTINE kohn_sham(ispin, c, cdesc, eforces )
-
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
-!  END manual
-
-! ...   declare modules
+        ! ...   declare modules
         USE kinds
-        USE mp_global, ONLY: mpime, nproc, group, root
-        USE mp, ONLY: mp_sum
-        USE io_global, ONLY: ionode
-        USE wave_base, ONLY: hpsi
-        USE wave_functions, ONLY: crot
-        USE wave_constrains, ONLY: update_lambda
-        USE wave_types, ONLY: wave_descriptor
+        USE wave_functions,   ONLY: crot
+        USE wave_constrains,  ONLY: update_lambda
+        USE wave_types,       ONLY: wave_descriptor
         USE electrons_module, ONLY: nb_l
-        USE forces
-        USE brillouin, ONLY: kpoints, kp
+        USE electrons_base,   ONLY: nupdwn
 
         IMPLICIT NONE
 
-! ...   declare subroutine arguments
-        COMPLEX(DP), INTENT(INOUT) ::  c(:,:,:)
+        ! ...   declare subroutine arguments
+        COMPLEX(DP), INTENT(INOUT) ::  c(:,:)
         TYPE (wave_descriptor), INTENT(IN) :: cdesc
         INTEGER, INTENT(IN) :: ispin
+        COMPLEX(DP) :: eforces(:,:)
 
-! ...   descriptor of the electronic state distribution
-                                       
-        COMPLEX(DP) :: eforces(:,:,:)
-
-! ...   declare other variables
-        INTEGER ::  ik, ib, nk, ngw, nb_g, nrl, ibl
-        COMPLEX(DP), ALLOCATABLE :: cgam(:,:)
+        ! ...   declare other variables
+        INTEGER ::  ib, nb_g, nrl
         REAL(DP),    ALLOCATABLE :: gam(:,:)
         REAL(DP),    ALLOCATABLE :: eig(:)
         LOGICAL :: tortho = .TRUE.
 
-! ...   end of declarations
-!  ----------------------------------------------
+        ! ...   end of declarations
 
-          nb_g = cdesc%nbt( ispin )
+        nb_g = nupdwn( ispin )
 
-          IF( nb_g < 1 ) THEN
+        IF( nb_g < 1 ) THEN
             
-            eforces = 0.0d0
+           eforces = 0.0d0
 
-          ELSE
+        ELSE
 
-            ! ...     Distribute electronic states cyclically across processors
-       
-            nrl = nb_l( ispin )
+           nrl = nb_l( ispin )
 
-            ALLOCATE( eig(nb_g) )
-            IF( kp%gamma_only ) THEN
-              ALLOCATE( cgam(1,1), gam(nrl,nb_g) )
-            ELSE
-              ALLOCATE(cgam(nrl,nb_g), gam(1,1))
-            END IF
-            DO ik = 1, kp%nkpt
-              IF( cdesc%gamma ) THEN
-                DO ib = 1, nb_g
-                  CALL update_lambda( ib, gam, c(:,:,ik), cdesc, eforces(:,ib,ik) )
-                END DO
-                CALL crot( ispin, c(:,:,ik), cdesc, gam, eig)
-              ELSE
-                DO ib = 1, nb_g
-                  CALL update_lambda( ib, cgam, c(:,:,ik), cdesc, eforces(:,ib,ik) )
-                END DO
-                CALL crot( ispin, ik, c(:,:,:), cdesc, cgam, eig)
-              END IF
-            END DO
-            DEALLOCATE(cgam, gam, eig)
+           ALLOCATE( eig( nb_g ) )
+           ALLOCATE( gam( nrl, nb_g ) )
 
-          END IF
+           DO ib = 1, nb_g
+              CALL update_lambda( ib, gam, c(:,:), cdesc, eforces(:,ib) )
+           END DO
+           CALL crot( ispin, c(:,:), cdesc, gam, eig )
+
+           DEALLOCATE( gam, eig )
+
+        END IF
 
         RETURN
-! ...
-      END SUBROUTINE kohn_sham
+        ! ...
+   END SUBROUTINE kohn_sham
 
 !  ----------------------------------------------
-!  BEGIN manual
 
       SUBROUTINE ks_states(cf, wfill, ce, wempt, occ, vpot, eigr, bec )
 
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
-!  END manual
-
-! ...   declare modules
+        ! ...   declare modules
         USE kinds
         USE mp_global, ONLY: mpime, nproc, group, root
         USE io_global, ONLY: ionode
@@ -232,14 +180,14 @@
 
         IMPLICIT NONE
 
-! ...   declare subroutine arguments
+        ! ...   declare subroutine arguments
         COMPLEX(DP), INTENT(INOUT) :: cf(:,:,:,:), ce(:,:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
         COMPLEX(DP)  ::  eigr(:,:)
         REAL(DP), INTENT(IN)  ::  occ(:,:,:), bec(:,:)
         REAL (DP) ::  vpot(:,:)
 
-! ...   declare other variables
+        ! ...   declare other variables
         INTEGER ::  i, ik, ib, nk, ig, ngw, nb_g, nb_l, ispin, nspin, iks
         INTEGER ::  ispin_wfc
         LOGICAL  :: tortho = .TRUE.
@@ -248,15 +196,14 @@
         CHARACTER(LEN=10), DIMENSION(2) :: spin_name
         REAL(DP) :: s0, s1, s2, s3
 
-        COMPLEX(DP), ALLOCATABLE :: eforce(:,:,:)
+        COMPLEX(DP), ALLOCATABLE :: eforce(:,:)
         REAL(DP), ALLOCATABLE :: fi(:,:)
 
         REAL(DP), EXTERNAL :: cclock
         CHARACTER (LEN=6), EXTERNAL :: int_to_char
 
 
-! ...   end of declarations
-!  ----------------------------------------------
+        ! ...   end of declarations
 
         nk    = wfill%nkl
         nspin = wfill%nspin
@@ -276,12 +223,12 @@
 
           IF( nb_l > 0 ) THEN
 
-            ALLOCATE(  eforce( ngw,  nb_l, nk ))
+            ALLOCATE(  eforce( ngw,  nb_l ) )
 
-            CALL dforce_all( ispin, cf(:,:,1,ispin_wfc), wfill, occ(:,1,ispin), eforce(:,:,1), &
+            CALL dforce_all( ispin, cf(:,:,1,ispin_wfc), wfill, occ(:,1,ispin), eforce, &
               vpot(:,ispin), eigr, bec )
 
-            CALL kohn_sham( ispin, cf(:,:,:,ispin_wfc), wfill, eforce )
+            CALL kohn_sham( ispin, cf(:,:,1,ispin_wfc), wfill, eforce )
 
             DEALLOCATE( eforce )
 
@@ -299,12 +246,12 @@
                 fi( 1:nb_l, ik ) = 2.0d0 / nspin
               END DO
 
-              ALLOCATE(  eforce( ngw,  nb_l, nk ))
+              ALLOCATE(  eforce( ngw,  nb_l ) )
 
-              CALL dforce_all( ispin, ce(:,:,1,ispin), wempt, fi(:,1), eforce(:,:,1), &
+              CALL dforce_all( ispin, ce(:,:,1,ispin), wempt, fi(:,1), eforce, &
                                vpot(:,ispin), eigr, bec )
 
-              CALL kohn_sham( ispin, ce(:,:,:,ispin), wempt, eforce )
+              CALL kohn_sham( ispin, ce(:,:,1,ispin), wempt, eforce )
 
               DEALLOCATE( eforce )
               DEALLOCATE( fi )
@@ -318,21 +265,66 @@
         IF( timing ) s1 = cclock()
 
         IF( tksout .OR. tksout_emp ) THEN
+          CALL print_all_states(cf, wfill, ce, wempt )
+        END IF
+
+        IF( timing ) THEN
+          s2 = cclock()
+          IF( ionode ) THEN
+            WRITE( stdout,fmt="(3X,'time for KS ortho     = ',F8.2)") (s1-s0)
+            WRITE( stdout,fmt="(3X,'time for KS print out = ',F8.2)") (s2-s1)
+          END IF
+        END IF
+        ! ...
+        RETURN
+        ! ...
+      END SUBROUTINE ks_states
+
+!  ----------------------------------------------
+
+      SUBROUTINE print_all_states(cf, wfill, ce, wempt )
+
+        ! ...   declare modules
+        USE kinds
+        USE mp_global, ONLY: mpime, nproc, group, root
+        USE io_global, ONLY: ionode
+        USE io_global, ONLY: stdout
+        USE wave_types, ONLY: wave_descriptor
+        USE forces
+        USE brillouin, ONLY: kpoints, kp
+        USE pseudo_projector, ONLY: projector
+        USE control_flags, ONLY: timing, force_pairing
+
+        IMPLICIT NONE
+
+        ! ...   declare subroutine arguments
+        COMPLEX(DP), INTENT(INOUT) :: cf(:,:,:,:), ce(:,:,:,:)
+        TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
+
+        ! ...   declare other variables
+        INTEGER ::  i, ispin, iks, ispin_wfc
+
+        CHARACTER(LEN=256) :: file_name
+        CHARACTER(LEN=10), DIMENSION(2) :: spin_name
+        CHARACTER (LEN=6), EXTERNAL :: int_to_char
+
+        IF( tksout .OR. tksout_emp ) THEN
+
           IF (ionode) THEN
             WRITE( stdout,*) 
             WRITE( stdout,'( "   Khon Sham state")') 
             WRITE( stdout,'( "   ---------------")') 
           END IF
 
-          IF(nspin .EQ. 2) THEN
-            spin_name(1) = '_UP.'
-            spin_name(2) = '_DW.'
+          IF( wfill%nspin == 2 ) THEN
+            spin_name(1) = '_UP_'
+            spin_name(2) = '_DW_'
           ELSE
-            spin_name(1) = '.'
-            spin_name(2) = '.'
+            spin_name(1) = '_'
+            spin_name(2) = '_'
           END IF
 
-          DO ispin = 1, nspin
+          DO ispin = 1, wfill%nspin
             ispin_wfc = ispin
             IF( force_pairing ) ispin_wfc = 1
             IF( tksout ) THEN
@@ -359,28 +351,17 @@
 
         END IF
 
-        IF( timing ) THEN
-          s2 = cclock()
-          IF( ionode ) THEN
-            WRITE( stdout,fmt="(3X,'time for KS ortho     = ',F8.2)") (s1-s0)
-            WRITE( stdout,fmt="(3X,'time for KS print out = ',F8.2)") (s2-s1)
-          END IF
-        END IF
-! ...
         RETURN
-! ...
-      END SUBROUTINE ks_states
+        ! ...
+      END SUBROUTINE print_all_states
+
 
 !  ----------------------------------------------
-!  BEGIN manual
+
 
       SUBROUTINE ks_states_force_pairing(cf, wfill, ce, wempt, occ, vpot, eigr, bec )
 
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
-!  END manual
-
-! ...   declare modules
+        ! ...   declare modules
         USE kinds
         USE mp_global, ONLY: mpime, nproc, group, root
         USE io_global, ONLY: ionode
@@ -394,14 +375,14 @@
 
         IMPLICIT NONE
 
-! ...   declare subroutine arguments
+        ! ...   declare subroutine arguments
         COMPLEX(DP), INTENT(INOUT) :: cf(:,:,:,:), ce(:,:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
         COMPLEX(DP)  ::  eigr(:,:)
         REAL(DP), INTENT(IN)  ::  occ(:,:,:), bec(:,:)
         REAL (DP) ::  vpot(:,:)
 
-! ...   declare other variables
+        ! ...   declare other variables
         INTEGER ::  i, ik, ib, nk, ig, ngw, nb_g, nb_l, iks, nb, ispin
         LOGICAL  :: tortho = .TRUE.
         CHARACTER(LEN=4) :: nom
@@ -409,15 +390,15 @@
         CHARACTER(LEN=10), DIMENSION(2) :: spin_name
         REAL(DP) :: s0, s1, s2, s3
 
-        COMPLEX(DP), ALLOCATABLE :: eforce(:,:,:,:)
+        COMPLEX(DP), ALLOCATABLE :: eforce(:,:,:)
         REAL(DP), ALLOCATABLE :: fi(:,:)
 
         CHARACTER (LEN=6), EXTERNAL :: int_to_char
         REAL(DP), EXTERNAL :: cclock
 
 
-! ...   end of declarations
-!  ----------------------------------------------
+        ! ...   end of declarations
+        !  ----------------------------------------------
 
         nk    = wfill%nkl
 
@@ -437,21 +418,21 @@
 
         IF( nb > 0 ) THEN
 
-          ALLOCATE(  eforce( ngw,  nb, 1, 2 ) )
+          ALLOCATE(  eforce( ngw, nb, 2 ) )
 
-          CALL dforce_all( 1, cf(:,:,1,1), wfill, occ(:,1,1), eforce(:,:,1,1), &
+          CALL dforce_all( 1, cf(:,:,1,1), wfill, occ(:,1,1), eforce(:,:,1), &
               vpot(:,1), eigr, bec )
-          CALL dforce_all( 2, cf(:,:,1,1), wfill, occ(:,1,2), eforce(:,:,1,2), &
+          CALL dforce_all( 2, cf(:,:,1,1), wfill, occ(:,1,2), eforce(:,:,2), &
               vpot(:,2), eigr, bec )
 
           DO i = 1, nupdwn(2)
-            eforce(:,i,1,1) = occ(i,1,1) * eforce(:,i,1,1) + occ(i,1,2) * eforce(:,i,1,2)
+            eforce(:,i,1) = occ(i,1,1) * eforce(:,i,1) + occ(i,1,2) * eforce(:,i,2)
           END DO
           DO i = nupdwn(2)+1, nupdwn(1)
-            eforce(:,i,1,1) = occ(i,1,1) * eforce(:,i,1,1)
+            eforce(:,i,1) = occ(i,1,1) * eforce(:,i,1)
           END DO
 
-          CALL kohn_sham( 1, cf(:,:,:,1), wfill, eforce(:,:,:,1) )
+          CALL kohn_sham( 1, cf(:,:,1,1), wfill, eforce(:,:,1) )
 
           DEALLOCATE( eforce )
 
@@ -469,17 +450,17 @@
               fi( 1:nb_l, ik ) = 2.0d0
             END DO
 
-            ALLOCATE(  eforce( ngw,  nb_l, 1, 1 ))
+            ALLOCATE(  eforce( ngw,  nb_l, 1 ))
 
-            CALL dforce_all( 1, ce(:,:,1,1), wempt, fi(:,1), eforce(:,:,1,1), vpot(:,1), &
+            CALL dforce_all( 1, ce(:,:,1,1), wempt, fi(:,1), eforce(:,:,1), vpot(:,1), &
                              eigr, bec )
 
-            CALL kohn_sham( 1, ce(:,:,:,1), wempt, eforce(:,:,:,1) )
+            CALL kohn_sham( 1, ce(:,:,1,1), wempt, eforce(:,:,1) )
 
-            CALL dforce_all( 2, ce(:,:,1,2), wempt, fi(:,1), eforce(:,:,1,1), vpot(:,2), &
+            CALL dforce_all( 2, ce(:,:,1,2), wempt, fi(:,1), eforce(:,:,1), vpot(:,2), &
                              eigr, bec )
 
-            CALL kohn_sham( 2, ce(:,:,:,2), wempt, eforce(:,:,:,1) )
+            CALL kohn_sham( 2, ce(:,:,1,2), wempt, eforce(:,:,1) )
 
             DEALLOCATE( eforce )
             DEALLOCATE( fi )
@@ -488,47 +469,10 @@
 
         END IF
 
-
         IF( timing ) s1 = cclock()
 
         IF( tksout .OR. tksout_emp ) THEN
-          IF (ionode) THEN
-            WRITE( stdout,*) 
-            WRITE( stdout,'( "   Khon Sham state")') 
-            WRITE( stdout,'( "   ---------------")') 
-          END IF
-
-          IF(nspin .EQ. 2) THEN
-            spin_name(1) = '_UP.'
-            spin_name(2) = '_DW.'
-          ELSE
-            spin_name(1) = '.'
-            spin_name(2) = '.'
-          END IF
-
-          DO ispin = 1, nspin
-            IF( tksout ) THEN
-              DO i = 1, n_ksout(ispin)
-                iks = indx_ksout(i, ispin)
-                IF( ( iks > 0 ) .AND. ( iks <= wfill%nbt( ispin ) ) ) THEN
-                  file_name = TRIM( ks_file ) // &
-                            & trim(spin_name(ispin)) // trim( int_to_char( iks ) )
-                  CALL print_ks_states( cf(:,iks,1,1), file_name )
-                END IF
-              END DO
-            END IF
-            IF( tksout_emp ) THEN
-              DO i = 1, n_ksout_emp(ispin)
-                iks = indx_ksout_emp(i, ispin)
-                IF( ( iks > 0 ) .AND. ( iks <= wempt%nbt( ispin ) ) ) THEN
-                  file_name = TRIM( ks_emp_file ) // &
-                            & trim(spin_name(ispin)) // trim( int_to_char( iks ) )
-                  CALL print_ks_states( ce(:,iks,1,ispin), file_name )
-                END IF
-              END DO
-            END IF
-          END DO
-
+          CALL print_all_states(cf, wfill, ce, wempt )
         END IF
 
         IF( timing ) THEN
@@ -538,95 +482,62 @@
             WRITE( stdout,fmt="(3X,'time for KS print out = ',F8.2)") (s2-s1)
           END IF
         END IF
-! ...
+        !
         RETURN
-! ...
+        !
       END SUBROUTINE ks_states_force_pairing
 
 
 !  ----------------------------------------------
 
-      SUBROUTINE print_ks_states( psi, file_name )
+      SUBROUTINE print_ks_states( c, file_name )
 
         USE kinds
         USE mp_global, ONLY: mpime, nproc, group, root
-        USE mp, ONLY: mp_barrier, mp_sum
+        USE mp, ONLY: mp_sum
         USE io_global, ONLY: ionode, ionode_id
         USE io_global, ONLY: stdout
         USE gvecw, ONLY: ngw
         USE fft_base, ONLY: dfftp, dffts
         USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnrx
         USE fft_module, ONLY: invfft
+        USE xml_io_base, ONLY: write_rho_xml
 
         IMPLICIT NONE
 
-        COMPLEX(DP), INTENT(IN) :: psi(:)
-        CHARACTER(LEN=*) :: file_name
-        COMPLEX(DP), ALLOCATABLE :: zcomp(:)
-        REAL(DP), ALLOCATABLE :: rcomp2(:)
-        COMPLEX(DP), ALLOCATABLE :: psi2(:)
-        INTEGER   ::  i, j, k, istr, izl
+        COMPLEX(DP),      INTENT(IN) :: c(:)
+        CHARACTER(LEN=*), INTENT(IN) :: file_name
+        REAL(DP),    ALLOCATABLE :: rpsi2(:)
+        COMPLEX(DP), ALLOCATABLE :: psi(:)
+        INTEGER   ::  i
         REAL(DP) :: charge
-        LOGICAL   :: top
 
-        ALLOCATE( zcomp( nr3 ), rcomp2( nr3 ) )
-        ALLOCATE( psi2( nnrx ) )
+        ALLOCATE( psi( nnrx ) )
+        ALLOCATE( rpsi2( nnrx ) )
 
-        CALL c2psi( psi2, dffts%nnr, psi, psi, ngw, 1 )
+        CALL c2psi( psi, dffts%nnr, c, c, ngw, 1 )
         CALL invfft( 'Wave', psi, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
-        
-        INQUIRE( UNIT=ksunit, OPENED=top )
-        IF( top ) THEN
-          WRITE( stdout,fmt="('** WARNING: Print_ks_states, ksunit already OPENED')")
-        END IF
-       
-        istr = INDEX( file_name, ' ' )
-        IF(ionode) THEN
-          OPEN(UNIT=ksunit, FILE=file_name(1:istr), STATUS='unknown')
-        END IF
 
-        charge = 0.0d0
-
-        izl = dfftp%ipp( mpime + 1 )
-
-        DO i = 1, nr1
-
-          DO j = 1, nr2
-
-            zcomp = 0.0d0
-
-            istr = i + nr1 * ( j - 1 )
-
-            DO k = 1, dfftp%npl 
-               zcomp( izl + k ) = psi2( istr + nr1 * nr2 * ( k - 1 ) )
-            END DO
-
-            CALL mp_sum( zcomp( 1 : nr3 ) )
-
-            IF ( ionode ) THEN
-              rcomp2 = DBLE(zcomp)**2
-              WRITE(ksunit, fmt='(F10.5)') ( rcomp2(k), k=1, nr3 )
-              charge = charge + SUM(rcomp2)
-            END IF
-
-            CALL mp_barrier()
-
-          END DO
-
+        DO i = 1, nnrx
+           rpsi2( i ) = DBLE( psi( i ) )**2
         END DO
+        charge = SUM( rpsi2 )
+
+        CALL write_rho_xml( file_name, rpsi2, nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+        
+        CALL mp_sum( charge, group )
 
         IF ( ionode ) THEN
-          CLOSE(ksunit)
           WRITE( stdout,'(3X,A15," integrated charge : ",F14.5)')  &
-     &      file_name(1:istr), charge / DBLE(nr1*nr2*nr3)
+     &      TRIM(file_name), charge / DBLE(nr1*nr2*nr3)
         END IF
-        DEALLOCATE(zcomp, rcomp2, psi2)
-! ...
+
+        DEALLOCATE( rpsi2, psi )
+        ! ...
         RETURN
-! ...
+        ! ...
       END SUBROUTINE print_ks_states
 
 !  ----------------------------------------------
-
-      END MODULE kohn_sham_states
-
+!
+END MODULE kohn_sham_states

@@ -3980,15 +3980,8 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   !    warning! trhor and thdyn are not compatible yet!   
   !
   IF(trhor.AND.(.NOT.thdyn))THEN
-     !     ==================================================================
-     !     charge density is read from unit 47
-     !     ==================================================================
-#ifdef __PARA
-     CALL read_rho(47,nspin,rhor)
-#else
-     READ(47) ((rhor(ir,iss),ir=1,nnrx),iss=1,nspin)
-#endif
-     REWIND 47
+     ! 
+     CALL read_rho( nspin, rhor )
      !
      IF(nspin.EQ.1)THEN
         iss=1
@@ -4172,16 +4165,6 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
          ( DBLE( nr3x - 1 ) / DBLE( nr3x ) ) * a3(3) * bohr_radius_angs
      !
   END IF
-  !
-#if defined (__PARA)
-  !
-  CALL write_rho( ndwwf, nspin, rhor )
-  !
-#else
-  !
-  WRITE( ndwwf, '(F14.9)' ) ( ( rhor(ir,iss), ir = 1, nnrx ), iss = 1, nspin )
-  !
-#endif
   !
   !     here to check the integral of the charge density
   !

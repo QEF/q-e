@@ -75,6 +75,7 @@ MODULE from_restart_module
     USE cg_module,            ONLY : tcg
     USE orthogonalize,        ONLY : ortho
     USE orthogonalize_base,   ONLY : updatc, calphi
+    use charge_density,       only : rhoofr
     !
     COMPLEX(DP) :: eigr(:,:), ei1(:,:), ei2(:,:), ei3(:,:)
     COMPLEX(DP) :: eigrb(:,:)
@@ -192,7 +193,7 @@ MODULE from_restart_module
           CALL get_wannier_center( tfirst, c0, bec, becdr, eigr, &
                                    eigrb, taub, irb, ibrav, b1, b2, b3 )
        !
-       CALL rhoofr( nfi, c0, irb, eigrb, bec, &
+       CALL rhoofr( nfi, c0(:,:,1,1), irb, eigrb, bec, &
                     becsum, rhor, rhog, rhos, enl, ekin )
        !
        ! ... put core charge (if present) in rhoc(r)

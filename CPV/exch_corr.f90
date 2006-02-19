@@ -27,7 +27,7 @@
    CONTAINS
 !=----------------------------------------------------------------------------=!
 
-        SUBROUTINE v2gc( v2xc, grho, rhoer, vpot )
+        SUBROUTINE v2gc( v2xc, grho, rhor, vpot )
 
           USE kinds,              ONLY: DP
           USE fft_base,           ONLY: dfftp
@@ -42,7 +42,7 @@
           REAL(DP) ::  vpot(:,:)
           REAL(DP), intent(in)  ::  v2xc(:,:,:)
           REAL(DP), intent(in)  ::  grho(:,:,:)
-          REAL(DP), intent(in)  ::  rhoer(:,:)
+          REAL(DP), intent(in)  ::  rhor(:,:)
 !                                                                       
           integer :: ig, ipol, is, js, nspin
           COMPLEX(DP), allocatable ::  psi(:)
@@ -51,7 +51,7 @@
           REAL(DP), ALLOCATABLE :: v(:)
           REAL(DP) :: fac
 ! ...                                                                   
-          nspin = SIZE(rhoer,2)
+          nspin = SIZE(rhor,2)
 
           fac = 1.0d0
 

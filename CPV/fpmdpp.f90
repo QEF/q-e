@@ -22,8 +22,9 @@
 ! --------------------------------------------------------------------
 PROGRAM fpmd_postproc
 
-  USE kinds,      ONLY: DP
-  USE constants,  ONLY: bohr => BOHR_RADIUS_ANGS
+  USE kinds,      ONLY : DP
+  USE constants,  ONLY : bohr => BOHR_RADIUS_ANGS
+  USE io_files,   ONLY : tmp_dir, prefix, iunpun, xmlpun, outdir
   USE iotk_module
   USE xml_io_base
 
@@ -31,7 +32,7 @@ PROGRAM fpmd_postproc
 
   INTEGER, PARAMETER :: maxsp = 20
 
-  INTEGER                    :: natoms, nsp, na(maxsp), species(maxsp)
+  INTEGER                    :: natoms, nsp, na(maxsp), atomic_number(maxsp)
   INTEGER                    :: ounit, cunit, punit, funit, dunit, bunit
   INTEGER                    :: nr1, nr2, nr3, ns1, ns2, ns3
   INTEGER                    :: np1, np2, np3, np, ispin
@@ -43,9 +44,11 @@ PROGRAM fpmd_postproc
   REAL(DP), ALLOCATABLE :: sigma(:,:), force(:,:)
   REAL(DP), ALLOCATABLE :: stau0(:,:), svel0(:,:), force0(:,:)
 
-  CHARACTER(len=256) :: prefix, filepp, fileout, output, scradir
+  CHARACTER(len=256) :: filepp, fileout, output, scradir
   CHARACTER(len=256) :: filecel, filepos, filefor, filepdb
+  CHARACTER(len=256) :: print_state
   CHARACTER(len=3)   :: atm( maxsp ), lab
+  CHARACTER(len=4)   :: charge_density
   LOGICAL            :: lcharge, lforces, ldynamics, lpdb, lrotation
   INTEGER            :: nframes
   INTEGER            :: ios, nat, ndr
@@ -55,37 +58,36 @@ PROGRAM fpmd_postproc
 
   REAL(DP) :: euler(6)
 
-  NAMELIST /inputpp/ prefix, filepp, fileout, output, scradir, &
+  NAMELIST /inputpp/ prefix, outdir, fileout, output, scradir, &
                      lcharge, lforces, ldynamics, lpdb, lrotation, &
-                     nr1, nr2, nr3, ns1, ns2, ns3, np1, np2, np3, &
-                     species, nframes, ndr
+                     ns1, ns2, ns3, np1, np2, np3, print_state, &
+                     atomic_number, nframes, ndr, charge_density
 
   ! default values
 
   dunit = 14
 
   prefix    = 'fpmd'
-  filepp    = 'restart.xml'
   fileout   = 'out'
-  output    = 'xsf'
+  output    = 'xsf'  ! 'grd'
+  outdir    = './'
   scradir   = './'
   lcharge   = .false.
   lforces   = .false.
   ldynamics = .false.
   lpdb      = .false.
   lrotation = .false.
-  nr1   = 0
-  nr2   = 0
-  nr3   = 0
   ns1   = 0
   ns2   = 0
   ns3   = 0
   np1   = 1
   np2   = 1
-  np3   = 1
-  nframes = 1
-  ndr   = 51
-  species = 1
+  np3   = 1                  ! 
+  nframes = 1                ! number of MD step to be read to buind the trajectory
+  ndr   = 51                 ! restart file number
+  atomic_number = 1          ! atomic number of the species in the restart file
+  charge_density = 'full'    ! specify the component to plot: 'full', 'up', 'down'
+  print_state = ' '          ! specify the Kohn-Sham state to plot: 'KS_1'
 
   
 
@@ -95,11 +97,15 @@ PROGRAM fpmd_postproc
   READ(*, inputpp, iostat=ios)
 
   ! set file names
-  filecel = TRIM(prefix) // '.cel'
-  filepos = TRIM(prefix) // '.pos'
-  filefor = TRIM(prefix) // '.for'
+  !
+  filecel = TRIM(outdir) // TRIM(prefix) // '.cel'
+  filepos = TRIM(outdir) // TRIM(prefix) // '.pos'
+  filefor = TRIM(outdir) // TRIM(prefix) // '.for'
+  !
   filepdb = TRIM(fileout) // '.pdb'
+  !
   ! append extension
+  !
   IF (output == 'xsf') THEN
      IF (ldynamics) THEN
         fileout = TRIM(fileout) // '.axsf'
@@ -113,11 +119,6 @@ PROGRAM fpmd_postproc
   np = np1 * np2 * np3
   IF (np1 < 1 .OR. np2 < 1 .OR. np3 < 1) THEN
      WRITE(*,*) 'Error: zero or negative replicas not allowed'
-     STOP
-  END IF
-
-  IF ( lcharge .AND. ( nr1 * nr2 * nr3 < 1 ) ) THEN
-     WRITE(*,*) 'Error: zero or negative grid dimensions'
      STOP
   END IF
 
@@ -141,7 +142,7 @@ PROGRAM fpmd_postproc
 
   filepp = restart_dir( scradir, ndr )
   !
-  filepp = TRIM( filepp ) // '/' // 'restart.xml'
+  filepp = TRIM( filepp ) // '/' // 'data-file.xml'
   !
   CALL iotk_open_read( dunit, file = TRIM( filepp ), BINARY = .FALSE., ROOT = attr )
 
@@ -177,6 +178,13 @@ PROGRAM fpmd_postproc
       END DO
 
      CALL iotk_scan_end( dunit, "IONS" )
+
+     CALL iotk_scan_begin( dunit, "PLANE_WAVES" )
+        CALL iotk_scan_empty( dunit, "FFT_GRID", attr )
+        CALL iotk_scan_attr( attr, "nr1", nr1 )
+        CALL iotk_scan_attr( attr, "nr2", nr2 )
+        CALL iotk_scan_attr( attr, "nr3", nr3 )
+     CALL iotk_scan_end( dunit, "PLANE_WAVES" )
 
      ALLOCATE( stau0( 3, nat ) )
      ALLOCATE( svel0( 3, nat ) )
@@ -220,7 +228,7 @@ PROGRAM fpmd_postproc
   DO i = 1, nsp
      DO j = 1, na(i)
         k = k + 1
-        ityp(k) = species(i)
+        ityp(k) = atomic_number(i)
      END DO
   END DO
 
@@ -266,7 +274,7 @@ PROGRAM fpmd_postproc
      ! read data from files produced by fpmd
      CALL read_fpmd( lforces, lcharge, cunit, punit, funit, dunit, &
                      natoms, nr1, nr2, nr3, ispin, at, tau_in, force, &
-                     rho_in, prefix, scradir, ndr )
+                     rho_in, prefix, scradir, ndr, charge_density )
 
      IF( nframes == 1 ) THEN
         !
@@ -356,9 +364,17 @@ PROGRAM fpmd_postproc
      END IF
   END DO
 
-  IF (output == 'grd') THEN
+  IF ( output == 'grd') THEN
      ! write data as GRD format
      CALL write_grd( ounit, at, rho_out, ns1, ns2, ns3 )
+  END IF
+
+  IF ( print_state /= ' ' ) THEN
+     CALL read_density( TRIM( print_state ) // '.xml', dunit, nr1, nr2, nr3, rho_in )
+     CALL scale_charge( rho_in, rho_out, nr1, nr2, nr3, ns1, ns2, ns3, np1, np2, np3 )
+     OPEN( unit = dunit, file = TRIM( print_state ) // '.grd' )
+     CALL write_grd( dunit, at, rho_out, ns1, ns2, ns3 )
+     CLOSE( dunit )
   END IF
 
   ! write atomic positions as PDB format
@@ -385,9 +401,15 @@ PROGRAM fpmd_postproc
   STOP
 END PROGRAM fpmd_postproc
 
+
+!
+!
+!
+
+
 SUBROUTINE read_fpmd( lforces, lcharge, cunit, punit, funit, dunit, &
                       natoms, nr1, nr2, nr3, ispin, at, tau, force, &
-                      rho, prefix, scradir, ndr )
+                      rho, prefix, scradir, ndr, charge_density )
 
   USE kinds,      ONLY: DP
   USE constants,  ONLY: bohr => BOHR_RADIUS_ANGS
@@ -403,6 +425,7 @@ SUBROUTINE read_fpmd( lforces, lcharge, cunit, punit, funit, dunit, &
   REAL(DP), INTENT(out) :: rho(nr1, nr2, nr3)
   CHARACTER(LEN=*), INTENT(IN) :: prefix
   CHARACTER(LEN=*), INTENT(IN) :: scradir
+  CHARACTER(LEN=*), INTENT(IN) :: charge_density
 
   INTEGER  :: i, j, ix, iy, iz, ierr
   REAL(DP) :: rhomin, rhomax, rhof
@@ -443,7 +466,43 @@ SUBROUTINE read_fpmd( lforces, lcharge, cunit, punit, funit, dunit, &
 
      filename = restart_dir( scradir, ndr )
      !
-     filename = TRIM( filename ) // '/' // TRIM( prefix ) // '.rho'
+     IF( charge_density == 'up' ) THEN
+        filename = TRIM( filename ) // '/' // 'charge-density-up.xml'
+     ELSE IF( charge_density == 'down' .OR. charge_density == 'dw' ) THEN
+        filename = TRIM( filename ) // '/' // 'charge-density-dw.xml'
+     ELSE
+        filename = TRIM( filename ) // '/' // 'charge-density.xml'
+     END IF
+     !
+     CALL read_density( filename, dunit, nr1, nr2, nr3, rho )
+     !
+  END IF
+
+  RETURN
+END SUBROUTINE read_fpmd
+
+
+
+SUBROUTINE read_density( filename, dunit, nr1, nr2, nr3, rho )
+
+   USE kinds,      ONLY: DP
+   USE xml_io_base
+   USE iotk_module
+
+   IMPLICIT NONE
+
+   INTEGER, INTENT(in)   :: dunit
+   INTEGER, INTENT(in)   :: nr1, nr2, nr3
+   REAL(DP), INTENT(out) :: rho(nr1, nr2, nr3)
+   CHARACTER(LEN=*), INTENT(IN) :: filename
+
+   INTEGER  :: ix, iy, iz, ierr
+   REAL(DP) :: rhomin, rhomax, rhof
+   INTEGER       :: n1, n2, n3
+   REAL(DP), ALLOCATABLE :: rho_plane(:)
+
+     !
+     WRITE(*,'("Reading density from: ", A50)' ) TRIM( filename )
      !
      CALL iotk_open_read( dunit, file = TRIM( filename ), BINARY = .FALSE., ROOT = attr, IERR = ierr )
 
@@ -475,17 +534,20 @@ SUBROUTINE read_fpmd( lforces, lcharge, cunit, punit, funit, dunit, &
      rhomax = MAXVAL(rho(:,:,:))
 
      ! print some info
-     WRITE(*,'(2x,"Charge density grid:")')
+     WRITE(*,'(2x,"Density grid:")')
      WRITE(*,'(3(2x,i6))') nr1, nr2, nr3
-     WRITE(*,'(2x,"ispin = ",i1)') ispin
+     WRITE(*,'(2x,"spin = ",A4)') filename
      WRITE(*,'(2x,"Minimum and maximum values:")')
      WRITE(*,'(3(2x,1pe12.4))') rhomin, rhomax
-  END IF
 
-  RETURN
-END SUBROUTINE read_fpmd
+   RETURN
+END SUBROUTINE read_density
 
+!
+!
+!
 ! compute inverse of 3*3 matrix
+!
 SUBROUTINE inverse( at, atinv )
   IMPLICIT NONE
 

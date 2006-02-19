@@ -141,7 +141,7 @@
             CALL dforce_all( ispin, cf(:,:,1,ispin), wfill, occ(:,1,ispin), eforce(:,:,1), &
                              vpot(:,ispin), eigr, bec )
 
-            CALL kohn_sham( ispin, cf(:,:,:,ispin), wfill, eforce )
+            CALL kohn_sham( ispin, cf(:,:,1,ispin), wfill, eforce(:,:,1) )
 
             ngw  = wempt%ngwl
             nb_l = wempt%nbl( ispin )
@@ -158,7 +158,7 @@
             CALL dforce_all( ispin, ce(:,:,1,ispin), wempt, ff( :, 1), eforce(:,:,1), &
                              vpot(:,ispin), eigr, bece )
             !
-            CALL kohn_sham( ispin, ce(:,:,:,ispin), wempt, eforce )
+            CALL kohn_sham( ispin, ce(:,:,1,ispin), wempt, eforce(:,:,1) )
 
             DEALLOCATE( bece )
             DEALLOCATE( eforce )

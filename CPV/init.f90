@@ -199,6 +199,7 @@
       USE kinds,            ONLY: DP
       use control_flags,    only: iprint, thdyn, ndr, nbeg, program_name, tbeg
       use io_global,        only: stdout, ionode
+      use mp_global,        only: nproc
       USE io_files,         ONLY: scradir     
       use ions_base,        only: na, nsp, nat, tau_srt, ind_srt, if_pos, atm
       use cell_base,        only: a1, a2, a3, r_to_s, cell_init
@@ -209,6 +210,8 @@
       USE cp_main_variables,     ONLY: ht0, htm, atomsm, atoms0, atomsp
       USE brillouin,             ONLY: kp
       USE ions_module,           ONLY: atoms_init
+      USE fft_base,         ONLY: dfftb, fft_dlay_descriptor
+      USE fft_types,        ONLY: fft_box_allocate
 
       implicit none
       !
@@ -243,7 +246,10 @@
       CALL r_to_s( tau0, taus, na, nsp, ainv )
 
       CALL atoms_init( atomsm, atoms0, atomsp, taus, ind_srt, if_pos, atm, ht0%hmat )
-
+      !
+      !  Allocate box descriptor
+      !
+      CALL fft_box_allocate( dfftb, nproc, nat )
       !
       !  if tbeg = .true.  the geometry is given in the standard input even if
       !  we are restarting a previous run

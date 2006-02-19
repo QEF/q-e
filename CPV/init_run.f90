@@ -130,7 +130,6 @@ SUBROUTINE init_run()
                          nspin, nbsp, nbspx, n_emp, nupdwn, nkb, gzero,       &
                          kp%nkpt, kp%scheme )
   !
-
   CALL allocate_local_pseudo( ngs, nsp )
   !
   !  initialize wave functions descriptors and allocate wf
@@ -140,6 +139,7 @@ SUBROUTINE init_run()
      ALLOCATE( c0( ngw, nbspx, 1, 1 ) )
      ALLOCATE( cm( ngw, nbspx, 1, 1 ) )
      ALLOCATE( cp( ngw, nbspx, 1, 1 ) )
+     ALLOCATE( ce( 1  , 1    , 1, 1 ) )
      !
   ELSE IF( program_name == 'FPMD' ) THEN
      !
@@ -226,6 +226,8 @@ SUBROUTINE init_run()
   !
   cm(:,:,:,:) = ( 0.D0, 0.D0 )
   c0(:,:,:,:) = ( 0.D0, 0.D0 )
+  cp(:,:,:,:) = ( 0.D0, 0.D0 )
+  ce(:,:,:,:) = ( 0.D0, 0.D0 )
   !
   IF ( tens ) CALL id_matrix_init( nupdwn, nspin )
   !
@@ -247,22 +249,30 @@ SUBROUTINE init_run()
      !
      nfi = 0
      !
-     IF ( program_name == 'CP90' ) THEN
-        !
-        CALL from_scratch( sfac, eigr, ei1, ei2, ei3, bec, becdr, .TRUE.,    &
-                           eself, fion, taub, irb, eigrb, b1, b2, b3, nfi,   &
-                           rhog, rhor, rhos, rhoc, enl, ekin, stress, detot, &
-                           enthal, etot, lambda, lambdam, lambdap, ema0bg,   &
-                           dbec, delt, bephi, becp, velh, dt2/emass, iforce, &
-                           fionm, xnhe0, xnhem, vnhe, ekincm )
-        !
-     ELSE IF ( program_name == 'FPMD' ) THEN
-        !
-        CALL from_scratch( rhor, cm, c0, cp, ce, wfill, wempt, eigr, &
-                           ei1, ei2, ei3, sfac, occn, ht0, atoms0, bec, &
-                           becdr, vpot, edft )
-        !
-     END IF
+     CALL from_scratch( sfac, eigr, ei1, ei2, ei3, bec, becdr, .TRUE.,    &
+                        eself, fion, taub, irb, eigrb, b1, b2, b3, nfi,   &
+                        rhog, rhor, rhos, rhoc, enl, ekin, stress, detot, &
+                        enthal, etot, lambda, lambdam, lambdap, ema0bg,   &
+                        dbec, delt, bephi, becp, velh, dt2/emass, iforce, &
+                        fionm, xnhe0, xnhem, vnhe, ekincm, atoms0, edft,   &
+                        ht0, wfill, wempt, occn, vpot )
+
+     ! IF ( program_name == 'CP90' ) THEN
+     !    !
+     !    CALL from_scratch( sfac, eigr, ei1, ei2, ei3, bec, becdr, .TRUE.,    &
+     !                       eself, fion, taub, irb, eigrb, b1, b2, b3, nfi,   &
+     !                       rhog, rhor, rhos, rhoc, enl, ekin, stress, detot, &
+     !                       enthal, etot, lambda, lambdam, lambdap, ema0bg,   &
+     !                       dbec, delt, bephi, becp, velh, dt2/emass, iforce, &
+     !                       fionm, xnhe0, xnhem, vnhe, ekincm )
+     !    !
+     ! ELSE IF ( program_name == 'FPMD' ) THEN
+     !    !
+     !    CALL from_scratch( rhor, cm, c0, cp, ce, wfill, wempt, eigr, &
+     !                       ei1, ei2, ei3, sfac, occn, ht0, atoms0, bec, &
+     !                       becdr, vpot, edft )
+     !    !
+     ! END IF
      !
   ELSE
      !

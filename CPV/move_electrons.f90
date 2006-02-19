@@ -16,10 +16,10 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   !
   USE kinds,                ONLY : DP
   USE parameters,           ONLY : natx
-  USE control_flags,        ONLY : lwf, trhow, tfor, tprnfor, thdyn
+  USE control_flags,        ONLY : lwf, tfor, tprnfor, thdyn
   USE cg_module,            ONLY : tcg
   USE cp_main_variables,    ONLY : eigr, bec, irb, eigrb, rhog, rhos, rhor, &
-                                   rhopr, ei1, ei2, ei3, sfac, ema0bg, becdr, &
+                                   ei1, ei2, ei3, sfac, ema0bg, becdr, &
                                    taub, lambda, lambdam, lambdap
   USE wavefunctions_module, ONLY : c0, cm, phi => cp
   USE cell_base,            ONLY : omega, ibrav, h, press
@@ -43,6 +43,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE wave_constrains,      ONLY : interpolate_lambda
   USE gvecw,                ONLY : ngw
   USE orthogonalize_base,   ONLY : calphi
+  use charge_density,       only : rhoofr
   !
   IMPLICIT NONE
   !
@@ -70,11 +71,9 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
           CALL get_wannier_center( tfirst, cm, bec, becdr, eigr, &
                                    eigrb, taub, irb, ibrav, b1, b2, b3 )
      !
-     CALL rhoofr( nfi, c0, irb, eigrb, bec, &
+     CALL rhoofr( nfi, c0(:,:,1,1), irb, eigrb, bec, &
                      becsum, rhor, rhog, rhos, enl, ekin )
-        !
      !
-     IF ( tfirst .OR. tlast ) rhopr = rhor
      !
      ! ... put core charge (if present) in rhoc(r)
      !

@@ -1062,6 +1062,9 @@ MODULE xml_io_base
          !
          ! ... planes are sent to the destination processor
          !
+         IF ( kowner( k ) /= ionode_id ) &
+            CALL mp_put( rho_plane, rho_plane, mpime, ionode_id, kowner(k), k )
+         !
          IF( kowner(k) == mpime ) THEN
             !
             kk = k
@@ -1079,10 +1082,6 @@ MODULE xml_io_base
             END DO
             !
          END IF
-         !
-         IF ( kowner( k ) /= ionode_id ) &
-            CALL mp_put( rho_plane, rho_plane, mpime, ionode_id, kowner(k), k )
-         !
          !
       END DO
       !
