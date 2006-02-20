@@ -122,6 +122,7 @@ SUBROUTINE calculate_dipole (dipole, dipole_moment,tau)
   USE wavefunctions_module, ONLY : c0
   USE uspp,                 ONLY : becsum
   USE grid_dimensions,      ONLY : nnrx
+  USE charge_density,       ONLY : rhoofr
 #endif
 #ifdef DFT_PW
   USE scf,                  ONLY : charge_density=>rho
@@ -165,7 +166,7 @@ SUBROUTINE calculate_dipole (dipole, dipole_moment,tau)
   rhog           = 0.0
   rhos           = 0.0
   !
-  CALL rhoofr(nfi,c0,irb,eigrb,bec,becsum,charge_density,rhog,rhos,enl,ekin)
+  CALL rhoofr(nfi,c0(:,:,1,1),irb,eigrb,bec,becsum,charge_density,rhog,rhos,enl,ekin)
 #endif
 
 #ifdef DFT_PW

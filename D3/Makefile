@@ -171,7 +171,6 @@ MODULES = \
 ../Modules/ions_base.o \
 ../Modules/input_parameters.o \
 ../Modules/kind.o \
-../Modules/mp_buffers.o \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \

@@ -13,7 +13,6 @@ viblib.o
 
 CP_OBJS = \
 ../CPV/atoms_type.o \
-../CPV/band_type.o \
 ../CPV/bessel.o \
 ../CPV/berryion.o \
 ../CPV/bforceion.o \
@@ -23,7 +22,6 @@ CP_OBJS = \
 ../CPV/cglib.o \
 ../CPV/chargedensity.o \
 ../CPV/chargemix.o \
-../CPV/charge_types.o \
 ../CPV/chi2.o \
 ../CPV/compute_fes_grads.o \
 ../CPV/compute_scf.o \
@@ -149,7 +147,6 @@ MODULES = \
 ../Modules/ions_base.o \
 ../Modules/ions_nose.o \
 ../Modules/kind.o \
-../Modules/mp_buffers.o \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
