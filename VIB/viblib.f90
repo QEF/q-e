@@ -115,7 +115,7 @@ SUBROUTINE calculate_dipole (dipole, dipole_moment,tau)
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat
 #ifdef DFT_CP
-  USE cp_main_variables,    ONLY : irb, eigrb, bec, charge_density=>rhor, &
+  USE cp_main_variables,    ONLY : irb, eigrb, bec, rhor, &
                                    rhog, rhos
   USE electrons_base,       ONLY : nspin
   USE energies,             ONLY : ekin, enl
@@ -125,7 +125,7 @@ SUBROUTINE calculate_dipole (dipole, dipole_moment,tau)
   USE charge_density,       ONLY : rhoofr
 #endif
 #ifdef DFT_PW
-  USE scf,                  ONLY : charge_density=>rho
+  USE scf,                  ONLY : rhor=>rho
   USE lsda_mod,             ONLY : nspin
   USE gvect,                ONLY : nrxx
   USE cell_base,            ONLY : alat
@@ -166,7 +166,7 @@ SUBROUTINE calculate_dipole (dipole, dipole_moment,tau)
   rhog           = 0.0
   rhos           = 0.0
   !
-  CALL rhoofr(nfi,c0(:,:,1,1),irb,eigrb,bec,becsum,charge_density,rhog,rhos,enl,ekin)
+  CALL rhoofr(nfi,c0(:,:,1,1),irb,eigrb,bec,becsum,rhor,rhog,rhos,enl,ekin)
 #endif
 
 #ifdef DFT_PW
@@ -175,7 +175,7 @@ SUBROUTINE calculate_dipole (dipole, dipole_moment,tau)
   !
 #endif
   !
-  tmp_rho = charge_density
+  tmp_rho = rhor
   IF (nspin.EQ.2) THEN
      tmp_rho(:,1)=tmp_rho(:,1)+tmp_rho(:,2)
   END IF
