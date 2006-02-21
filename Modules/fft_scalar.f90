@@ -9,9 +9,9 @@
 !----------------------------------------------------------------------!
 ! FFT scalar drivers Module - contains machine-dependent routines for: !
 ! FFTW, ESSL, SCSL, COMPLIB, SUNPERF libraries (both 3d and 1d+2d FFTs)!
-! NEC, ASL, CXML,  FFTVPLIB libraries (3d only, no parallel execution) !
-! Written by Carlo Cavazzoni, modified by Paolo Giannozzi, contains    !
-! contributions by several people (in particular Guido Roma)           !
+! NEC ASL, CXML libraries (3d only, no parallel execution)             !
+! Written by Carlo Cavazzoni, modified by P. Giannozzi, contributions  !
+! by Guido Roma, Pascal Thibaudeau, Stephane Lefranc, and others       !
 ! Last update February 2006                                            !
 !----------------------------------------------------------------------!
 
@@ -61,6 +61,18 @@
         INTEGER, PARAMETER :: lwork = 2 * nfftx
         COMPLEX (DP) :: work(lwork) 
 
+#if defined __FFTW3
+
+        !  Not sure these are correct with FFTW v.3 !
+        !  Only FFTW_ESTIMATE is actually used
+
+#  define  FFTW_ESTIMATE 0
+#  define  FFTW_MEASURE  1
+#  define FFTW_IN_PLACE  8
+#  define FFTW_USE_WISDOM 16
+
+#endif
+
 #endif
 !=----------------------------------------------------------------------=!
    CONTAINS
@@ -101,7 +113,7 @@
      !   ltabl   Dimension of the tables of factors calculated at the
      !           initialization stage
 
-#if defined __FFTW
+#if defined __FFTW || defined __FFTW3
 
      C_POINTER, SAVE :: fw_planz( ndims ) = 0
      C_POINTER, SAVE :: bw_planz( ndims ) = 0
@@ -125,7 +137,7 @@
 
      INTEGER, PARAMETER :: ltabl = 2 * nfftx + 256
      REAL (DP), SAVE :: tablez (ltabl, ndims)
-     REAL (DP)    :: DUMMY
+     REAL (DP)       :: DUMMY
      INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
 
 #elif defined __COMPLIB
@@ -162,8 +174,10 @@
         !   for this combination of parameters
 
         done = ( nz == zdims(1,ip) )
-#if defined __AIX
+#if defined __AIX || defined __FFTW3
+
         !   The initialization in ESSL depends on all three parameters
+        !   For FFTW v.3 I don't know: just in doubt...
 
         done = done .AND. ( nsl == zdims(2,ip) ) .AND. ( ldc == zdims(3,ip) )
 #endif
@@ -183,6 +197,23 @@
        IF( bw_planz( icurrent) /= 0 ) CALL DESTROY_PLAN_1D( bw_planz( icurrent) )
        idir = -1; CALL CREATE_PLAN_1D( fw_planz( icurrent), nz, idir) 
        idir =  1; CALL CREATE_PLAN_1D( bw_planz( icurrent), nz, idir) 
+
+#elif defined __FFTW3
+
+       write (6,*) "Warning:   FFTs using FFTW v.3 are untested"
+       write (6,*) "Warning:   Please locate and remove the following line in Modules/fft_scalar.f90:"
+       write (6,*) "           call errore('cft_1z','FFTW3 untested, please test',1)"
+       write (6,*) "Warning:   Please recompile, test, report if it works"
+       call errore('cft_1z','FFTW3 untested, please test',1)
+
+       IF( fw_planz( icurrent) /= 0 ) CALL dfftw_destroy_plan( fw_planz( icurrent) )
+       IF( bw_planz( icurrent) /= 0 ) CALL dfftw_destroy_plan( bw_planz( icurrent) )
+       idir = -1
+       CALL dfftw_plan_many_dft( fw_planz( icurrent), 1, nz, nsl, c, &
+            (/SIZE(c)/), 1, ldc, c, (/SIZE(c)/), 1, ldc, idir, FFTW_ESTIMATE) 
+       idir = 1
+       CALL dfftw_plan_many_dft( bw_planz( icurrent), 1, nz, nsl, c, &
+            (/SIZE(c)/), 1, ldc, c, (/SIZE(c)/), 1, ldc, idir, FFTW_ESTIMATE) 
 
 #elif defined __AIX
 
@@ -247,6 +278,15 @@
      ELSE IF (isign > 0) THEN
         CALL FFT_Z_STICK(bw_planz( ip), c(1), ldc, nsl)
         cout( 1 : ldc * nsl ) = c( 1 : ldc * nsl )
+     END IF
+
+#elif defined __FFTW3
+
+     IF (isign < 0) THEN
+        CALL dfftw_execute_dft( fw_planz( ip), c, cout)
+        cout( 1 : ldc * nsl ) = cout( 1 : ldc * nsl ) / nz
+     ELSE IF (isign > 0) THEN
+        CALL dfftw_execute_dft( bw_planz( ip), c, cout)
      END IF
 
 #elif defined __COMPLIB
@@ -358,6 +398,11 @@
      C_POINTER, SAVE :: fw_planx( ndims ) = 0, fw_plany( ndims ) = 0
      C_POINTER, SAVE :: bw_planx( ndims ) = 0, bw_plany( ndims ) = 0
 
+#elif defined __FFTW3
+
+     C_POINTER, SAVE :: fw_plan( 2, ndims ) = 0
+     C_POINTER, SAVE :: bw_plan( 2, ndims ) = 0
+
 #elif defined __AIX
 
      INTEGER, PARAMETER :: ltabl = 20000 + 3 * nfftx
@@ -414,7 +459,9 @@
        !   for this combination of parameters
 
        done = ( ny == dims(1,ip) ) .AND. ( nx == dims(3,ip) )
-#if defined __AIX
+#if defined __AIX || defined __FFTW3
+        !   The initialization in ESSL depends on all four parameters
+        !   For FFTW v.3 I don't know: just in doubt...
        done = done .AND. ( ldx == dims(2,ip) ) .AND.  ( nzl == dims(4,ip) )
 #endif
        IF (done) EXIT
@@ -438,6 +485,43 @@
        IF( bw_planx( icurrent) /= 0 ) CALL DESTROY_PLAN_1D( bw_planx( icurrent) )
        idir = -1; CALL CREATE_PLAN_1D( fw_planx( icurrent), nx, idir) 
        idir =  1; CALL CREATE_PLAN_1D( bw_planx( icurrent), nx, idir) 
+
+#elif defined __FFTW3
+
+       IF ( ldx /= nx .OR. ldy /= ny ) THEN
+          IF( fw_plan( 2,current) /= 0 )  CALL dfftw_destroy_plan( fw_plan( 2,current) )
+          IF( bw_plan( 2,current) /= 0 )  CALL dfftw_destroy_plan( bw_plan( 2,current) )
+          idir = -1
+          CALL dfftw_plan_many_dft( fw_plan( 2,current), 1, ny, 1, r(1:), &
+               (/ldx*ldy/), ldx, 1, r(1:), (/ldx*ldy/), ldx, 1, idir, &
+               FFTW_ESTIMATE)
+          idir =  1
+          CALL dfftw_plan_many_dft( bw_plan( 2,current), 1, ny, 1, r(1:), &
+               (/ldx*ldy/), ldx, 1, r(1:), (/ldx*ldy/), ldx, 1, idir, &
+               FFTW_ESTIMATE) !pour le y_stick
+
+          IF( fw_plan( 1,current) /= 0 ) CALL dfftw_destroy_plan( fw_plan( 1,current) )
+          IF( bw_plan( 1,current) /= 0 ) CALL dfftw_destroy_plan( bw_plan( 1,current) )
+          idir = -1
+          CALL dfftw_plan_many_dft( fw_plan( 1,current), 1, nx, ny, r(1:), &
+               (/ldx*ldy/), 1, ldx, r(1:), (/ldx*ldy/), 1, ldx, idir, &
+               FFTW_ESTIMATE)
+          idir =  1
+          CALL dfftw_plan_many_dft( bw_plan( 1,current), 1, nx, ny, r(1:), &
+               (/ldx*ldy/), 1, ldx, r(1:), (/ldx*ldy/), 1, ldx, idir, &
+               FFTW_ESTIMATE) 
+       ELSE
+          IF( fw_plan( 1, icurrent) /= 0 ) CALL dfftw_destroy_plan( fw_plan( 1, icurrent) )
+          IF( bw_plan( 1, icurrent) /= 0 ) CALL dfftw_destroy_plan( bw_plan( 1, icurrent) )
+          idir = -1
+          CALL dfftw_plan_many_dft( fw_plan( 1, icurrent), 2, (/nx, ny/), nzl, &
+               r(1:), (/nx, ny/), 1, nx*ny, r(1:), (/nx, ny/), 1, nx*ny, idir, &
+               FFTW_ESTIMATE)
+          idir = 1
+          CALL dfftw_plan_many_dft( bw_plan( 1, icurrent), 2, (/nx, ny/), nzl, &
+               r(1:), (/nx, ny/), 1, nx*ny, r(1:), (/nx, ny/), 1, nx*ny, idir, &
+               FFTW_ESTIMATE)
+       END IF
 
 #elif defined __AIX
 
@@ -515,45 +599,93 @@
 
      END IF
 
+#elif defined __FFTW3
+
+     write (6,*) "Warning:   FFTs using FFTW v.3 are untested"
+     write (6,*) "Warning:   Please locate and remove the following line in Modules/fft_scalar.f90:"
+     write (6,*) "           call errore('cft_2xy','FFTW3 untested, please test',1)"
+     write (6,*) "Warning:   Please recompile, test, report if it works"
+     call errore('cft_2xy','FFTW3 untested, please test',1)
+
+     IF ( ldx /= nx .OR. ldy /= ny ) THEN
+        IF( isign < 0 ) THEN
+           do ixstic = 0, nzl-1
+              CALL dfftw_execute_dft( fw_plan (1, ip), &
+                   r(1+ixstic*ldx*ldy:), r(1+ixstic*ldx*ldy:)) 
+           end do
+           do i = 1, nx
+              do k = 1, nzl
+                 IF( dofft( i ) ) THEN
+                    j = i + ldx*ldy * ( k - 1 )
+                    call dfftw_execute_dft( fw_plan ( 2, ip), r(j:), r(j:)) 
+                 END IF
+              end do
+           end do
+           tscale = 1.0d0 / ( nx * ny )
+           CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
+        ELSE IF( isign > 0 ) THEN
+           do i = 1, nx
+              do k = 1, nzl
+                 IF( dofft( i ) ) THEN
+                    j = i + ldx*ldy * ( k - 1 )
+                    call dfftw_execute_dft( bw_plan ( 2, ip), r(j:), r(j:)) 
+                 END IF
+              end do
+           end do
+           do ixstic = 0, nzl-1
+              CALL dfftw_execute_dft( bw_plan( 1, ip), &
+                   r(1+ixstic*ldx*ldy:), r(1+ixstic*ldx*ldy:)) 
+           end do
+        END IF
+     ELSE
+        IF( isign < 0 ) THEN
+           call dfftw_execute_dft( fw_plan( 1, ip), r(1:), r(1:))
+           tscale = 1.0d0 / ( nx * ny )
+           CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
+        ELSE IF( isign > 0 ) THEN
+           call dfftw_execute_dft( bw_plan( 1, ip), r(1:), r(1:))
+        END IF
+     END IF
+
 #elif defined __AIX
 
      ! essl uses a different convention for forward/backward transforms
      ! wrt most other implementations: notice the sign of "idir"
 
-     IF( isign < 0 ) THEN
+   IF( isign < 0 ) THEN
 
-       idir = 1
-       tscale = 1.0d0 / ( nx * ny )
-       do k = 1, nzl
+      idir = 1
+      tscale = 1.0d0 / ( nx * ny )
+      do k = 1, nzl
          kk = 1 + ( k - 1 ) * ldx * ldy
          CALL DCFT ( 0, r(kk), 1, ldx, r(kk), 1, ldx, nx, ny, idir, &
-           tscale, fw_tablex( 1, ip ), ltabl, work( 1 ), lwork)
+              tscale, fw_tablex( 1, ip ), ltabl, work( 1 ), lwork)
          do i = 1, nx
-           IF( dofft( i ) ) THEN
-             kk = i + ( k - 1 ) * ldx * ldy
-             call DCFT ( 0, r( kk ), ldx, 1, r( kk ), ldx, 1, ny, 1, &
-               idir, 1.0d0, fw_tabley(1, ip), ltabl, work( 1 ), lwork)
-           END IF
+            IF( dofft( i ) ) THEN
+               kk = i + ( k - 1 ) * ldx * ldy
+               call DCFT ( 0, r( kk ), ldx, 1, r( kk ), ldx, 1, ny, 1, &
+                    idir, 1.0d0, fw_tabley(1, ip), ltabl, work( 1 ), lwork)
+            END IF
          end do
-       end do
-
-     ELSE IF( isign > 0 ) THEN
-
-       idir = -1
-       DO k = 1, nzl
+      end do
+      
+   ELSE IF( isign > 0 ) THEN
+      
+      idir = -1
+      DO k = 1, nzl
          do i = 1, nx
-           IF( dofft( i ) ) THEN
-             kk = i + ( k - 1 ) * ldx * ldy
-             call DCFT ( 0, r( kk ), ldx, 1, r( kk ), ldx, 1, ny, 1, &
-               idir, 1.0d0, bw_tabley(1, ip), ltabl, work( 1 ), lwork)
-           END IF
+            IF( dofft( i ) ) THEN
+               kk = i + ( k - 1 ) * ldx * ldy
+               call DCFT ( 0, r( kk ), ldx, 1, r( kk ), ldx, 1, ny, 1, &
+                    idir, 1.0d0, bw_tabley(1, ip), ltabl, work( 1 ), lwork)
+            END IF
          end do
          kk = 1 + ( k - 1 ) * ldx * ldy
          CALL DCFT ( 0, r( kk ), 1, ldx, r( kk ), 1, ldx, nx, ny, idir, &
-           1.0d0, bw_tablex(1, ip), ltabl, work( 1 ), lwork)
-       END DO
-         
-     END IF
+              1.0d0, bw_tablex(1, ip), ltabl, work( 1 ), lwork)
+      END DO
+      
+   END IF
 
 #elif defined __COMPLIB
 
@@ -721,16 +853,16 @@
      INTEGER, SAVE :: icurrent = 1
      INTEGER, SAVE :: dims(3,ndims) = -1
 
-#if defined __FFTW
+#if defined __FFTW || defined __FFTW3
 
-     C_POINTER, save :: fw_plan3d(ndims) = 0
-     C_POINTER, save :: bw_plan3d(ndims) = 0
+     C_POINTER, save :: fw_plan(ndims) = 0
+     C_POINTER, save :: bw_plan(ndims) = 0
 
 #elif defined __SCSL
 
      INTEGER, PARAMETER :: ltabl = (2 * nfftx + 256)*3
      REAL (DP), SAVE :: table (ltabl, ndims)
-     REAL (DP)    :: DUMMY
+     REAL (DP)       :: DUMMY
      INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
 
 #elif defined __COMPLIB
@@ -785,13 +917,6 @@
       ENDSTRUCTURE
       record / DXML_Z_FFT_STRUCTURE / fft_struct (ndims)
 
-#elif defined FUJ64
-
-      INTEGER, PARAMETER :: ltabl = 2*3*nfftx+2*120
-      CHARACTER(LEN=2), SAVE :: init = 'is'
-      REAL (DP), SAVE :: trig (ltabl, ndims)
-      REAL (DP), ALLOCATABLE :: work(:), ac(:,:)
-
 #endif
 
 #if defined __HPM
@@ -834,10 +959,29 @@
        IF ( nr1 /= nr1x .or. nr2 /= nr2x .or. nr3 /= nr3x ) &
          call errore('cfft3','not implemented',1)
 
-       IF( fw_plan3d(icurrent) /= 0 ) CALL DESTROY_PLAN_3D( fw_plan3d(icurrent) )
-       IF( bw_plan3d(icurrent) /= 0 ) CALL DESTROY_PLAN_3D( bw_plan3d(icurrent) )
-       idir = -1; CALL CREATE_PLAN_3D( fw_plan3d(icurrent), nr1, nr2, nr3, idir) 
-       idir =  1; CALL CREATE_PLAN_3D( bw_plan3d(icurrent), nr1, nr2, nr3, idir) 
+       IF( fw_plan(icurrent) /= 0 ) CALL DESTROY_PLAN_3D( fw_plan(icurrent) )
+       IF( bw_plan(icurrent) /= 0 ) CALL DESTROY_PLAN_3D( bw_plan(icurrent) )
+       idir = -1; CALL CREATE_PLAN_3D( fw_plan(icurrent), nr1, nr2, nr3, idir) 
+       idir =  1; CALL CREATE_PLAN_3D( bw_plan(icurrent), nr1, nr2, nr3, idir) 
+
+#elif defined __FFTW3
+       
+       write (6,*) "Warning:   FFTs using FFTW v.3 are untested"
+       write (6,*) "Warning:   Please locate and remove the following line in Modules/fft_scalar.f90:"
+       write (6,*) "           call errore('cfft3d','FFTW3 untested, please test',1)"
+       write (6,*) "Warning:   Please recompile, test, report if it works"
+       call errore('cfft3d','FFTW3 untested, please test',1)
+
+       IF ( nr1 /= nr1x .or. nr2 /= nr2x .or. nr3 /= nr3x ) &
+            call errore('cfft3','not implemented',3)
+       IF( fw_plan(icurrent) /= 0 ) CALL dfftw_destroy_plan( fw_plan(icurrent) )
+       IF( bw_plan(icurrent) /= 0 ) CALL dfftw_destroy_plan( bw_plan(icurrent) )
+       idir = -1
+       CALL dfftw_plan_dft( fw_plan(icurrent), 3, nr1, nr2, nr3, f(1:), 1, 0, &
+            f(1:), 1, 0, idir, FFTW_ESTIMATE) 
+       idir =  1
+       CALL dfftw_plan_dft( bw_plan(icurrent), 3, nr1, nr2, nr3, f(1:), 1, 0, &
+            f(1:), 1, 0, idir, FFTW_ESTIMATE)
 
 #elif defined __AIX
 
@@ -912,18 +1056,6 @@
        ! not sure whether the above call is useful or not
        err = zfft_init_3d (nr1, nr2, nr3, fft_struct (icurrent), .TRUE.)
 
-#elif FUJ64
-
-       write (6,*) "Warning:   FFTs have been heavily restructured, those for Fujitsu are untested"
-       write (6,*) "Warning:   Please locate and remove the following line in Modules/fft_scalar.f90:"
-       write (6,*) "           call errore('cfft3d','fujitsu untested, please test',1)"
-       write (6,*) "Warning:   Please recompile, test, report if it works"
-       call errore('cfft3d','fujitsu untested, please test',1)
-
-       IF ( nr1 /= nr1x .or. nr2 /= nr2x .or. nr3 /= nr3x ) &
-            call errore('cfft3','not implemented',1)
-       init(1:1)='i'
-
 #else
 
        CALL errore(' cfft3d ',' no scalar fft driver specified ', 1)
@@ -944,16 +1076,29 @@
 
      IF( isign < 0 ) THEN
 
-       call FFTW_INPLACE_DRV_3D( fw_plan3d(ip), 1, f(1), 1, 1 )
-
+       call FFTW_INPLACE_DRV_3D( fw_plan(ip), 1, f(1), 1, 1 )
        tscale = 1.0d0 / DBLE( nr1 * nr2 * nr3 )
        call ZDSCAL( nr1 * nr2 * nr3, tscale, f(1), 1)
 
      ELSE IF( isign > 0 ) THEN
 
-       call FFTW_INPLACE_DRV_3D( bw_plan3d(ip), 1, f(1), 1, 1 )
+       call FFTW_INPLACE_DRV_3D( bw_plan(ip), 1, f(1), 1, 1 )
 
      END IF
+
+#elif defined __FFTW3
+
+   IF( isign < 0 ) THEN
+      
+      call dfftw_execute_dft( fw_plan(ip), f(1:), f(1:))
+      tscale = 1.0d0 / DBLE( nr1 * nr2 * nr3 )
+      call ZDSCAL( nr1 * nr2 * nr3, tscale, f(1), 1)
+
+   ELSE IF( isign > 0 ) THEN
+
+      call dfftw_execute_dft( bw_plan(ip), f(1:), f(1:))
+
+   END IF
 
 #elif defined __AIX
 
@@ -1038,27 +1183,6 @@
         tscale = DBLE( nr1 * nr2 * nr3 )
         CALL ZDSCAL ( nr1x*nr2x*nr3x, tscale, f(1), 1 )
      END IF
-
-#elif FUJ64
-
-     ALLOCATE (work(2*nr1*nr2*nr3), ac(2,nr1*nr2*nr3))
-     CALL DCOPY(2*nr1*nr2*nr3,f,1,ac,1)
-     IF ( isign < 0) THEN
-        init(2:2) = 'n'
-        CALL dftcbm( ac(1,:,:,:), ac(2,:,:,:), 3, dims(:,ip), work, &
-             trig(1,ip), 'm', init, err )
-        tscale = DBLE( nr1 * nr2 * nr3 )
-        CALL DSCAL (2*nr1x*nr2x*nr3x, tscale, ac(1,1), 1 )
-     ELSE IF ( isign > 0) THEN
-        init(2:2) = 'i'
-        CALL dftcbm( ac(1,:,:,:), ac(2,:,:,:), 3, dims(:,ip), work, &
-             trig(1,ip), 'p', init, err )
-        tscale = 1.0D0 / DBLE( nr1 * nr2 * nr3 )
-        CALL DSCAL (2*nr1x*nr2x*nr3x, tscale, ac(1,1), 1 )
-     END IF
-     init(1:1)='r'
-     CALL DCOPY(2*nr1*nr2*nr3,ac,1,f,1)
-     DEALLOCATE (ac, work))
 
 #endif
 
@@ -1495,20 +1619,20 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, &
 
       !   fft in the z-direction...
 
-      call dcft( 0, f(1), n1x*n2x, 1, f(1), n1x*n2x, 1, n3, n1x*n2x, isign,             &
-     &        tscale, aux3(1,ip), ltabl, work(1), lwork)
+      call dcft( 0, f(1), n1x*n2x, 1, f(1), n1x*n2x, 1, n3, n1x*n2x, isign, &
+           tscale, aux3(1,ip), ltabl, work(1), lwork)
 
       !   x-direction
 
-      call dcft( 0, f(nstart), 1, n1x, f(nstart), 1, n1x, n1, n2x*nplanes, isign,  &
-     &        tscale, aux1(1,ip), ltabl, work(1), lwork)
+      call dcft( 0, f(nstart), 1, n1x, f(nstart), 1, n1x, n1, n2x*nplanes, isign, &
+           tscale, aux1(1,ip), ltabl, work(1), lwork)
      
       !   y-direction
      
       DO K = imin3, imax3
         nstart = ( k - 1 ) * n1x * n2x + 1
-        call dcft( 0, f(nstart), n1x, 1, f(nstart), n1x, 1, n2, n1x, isign,        &
-     &        tscale, aux2(1,ip), ltabl, work(1), lwork)
+        call dcft( 0, f(nstart), n1x, 1, f(nstart), n1x, 1, n2, n1x, isign, &
+             tscale, aux2(1,ip), ltabl, work(1), lwork)
       END DO
 
 #elif defined __COMPLIB
