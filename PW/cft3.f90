@@ -7,7 +7,7 @@
 !
 #include "f_defs.h"
 !
-#if defined (__PARA)
+#if defined (__PARA) && ! defined (__USE_3D_FFT)
 !
 !----------------------------------------------------------------------------
 SUBROUTINE cft3( f, n1, n2, n3, nx1, nx2, nx3, sign )

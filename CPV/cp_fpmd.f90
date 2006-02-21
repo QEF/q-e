@@ -916,7 +916,7 @@ SUBROUTINE gfftindex( np, nm, ng, mill_l, nr1, nr2, nr3, isind, nr1x, nr2x, nr3x
          ! for the parallel case: columns along z are stored contiguously
          !
 
-#if defined __PARA
+#if defined __PARA && !defined __USE_3D_FFT
 
          isp = isind( n1p + ( n2p - 1 ) * nr1x )
          IF( isp <= 0 ) &

@@ -272,7 +272,7 @@ SUBROUTINE ggen()
         IF (n3.LT.1) n3 = n3 + nr3
         IF (n3s.LT.1) n3s = n3s + nr3s
         IF (n1.LE.nr1.AND.n2.LE.nr2.AND.n3.LE.nr3) THEN
-#ifdef __PARA
+#if defined (__PARA) && !defined (__USE_3D_FFT)
            nl (ng) = n3 + ( dfftp%isind (n1 + (n2 - 1) * nrx1) - 1) * nrx3
            IF (ng.LE.ngms) nls (ng) = n3s + ( dffts%isind (n1s + (n2s - 1) &
                 * nrx1s) - 1) * nrx3s
@@ -370,7 +370,7 @@ SUBROUTINE index_minusg()
         IF (n3 < 1) n3 = n3 + nr3
         IF (n3s < 1) n3s = n3s + nr3s
         IF (n1.LE.nr1 .AND. n2.LE.nr2 .AND. n3.LE.nr3) THEN
-#ifdef __PARA
+#if defined (__PARA) && !defined (__USE_3D_FFT)
            nlm(ng) = n3 + (dfftp%isind (n1 + (n2 - 1) * nrx1) - 1) * nrx3
            IF (ng.LE.ngms) nlsm(ng) = n3s + (dffts%isind (n1s + (n2s - 1) &
                 * nrx1s) - 1) * nrx3s

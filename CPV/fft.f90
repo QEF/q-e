@@ -68,7 +68,7 @@ CONTAINS
          call errore( ' invfft ', ' unknown grid: '//grid_type , 1 )
       END IF
 
-#ifdef __PARA
+#if defined __PARA && !defined __USE_3D_FFT
 
       IF( grid_type == 'Box' ) THEN
          call parabox( nr3, irb3, nr3_big, imin3, imax3 )
@@ -87,22 +87,19 @@ CONTAINS
 
 #else
 
-# if defined __AIX || __FFTW 
 
-      IF( grid_type == 'Dense' ) THEN
-         call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
-      ELSE IF( grid_type == 'Smooth' ) THEN
-         call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
-      ELSE IF( grid_type == 'Wave' ) THEN
-         call cfft3ds(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1,dffts%isind, dffts%iplw)
-      ELSE IF( grid_type == 'Box' ) THEN
-         call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
-      END IF
-
-# elif defined __COMPLIB || __SCSL || __SX6
+# if defined __COMPLIB || __SCSL || __SX6 || __USE_3D_FFT
 
       call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
 
+# elif defined __AIX || __FFTW
+
+      IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
+          grid_type == 'Box' ) THEN
+         call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
+      ELSE IF( grid_type == 'Wave' ) THEN
+         call cfft3ds(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1,dffts%isind, dffts%iplw)
+      END IF
 # endif
 
 #endif
@@ -156,7 +153,7 @@ CONTAINS
          call errore( ' fwfft ', ' unknown grid: '//grid_type , 1 )
       END IF
 
-#ifdef __PARA
+#if defined __PARA && !defined __USE_3D_FFT
 
       IF( grid_type == 'Dense' ) THEN
          call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1,dfftp)
@@ -168,17 +165,17 @@ CONTAINS
 
 #else 
 
-# if defined __AIX || __FFTW
+# if defined __COMPLIB || __SCSL || __SX6 || __USE_3D_FFT
+
+      call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
+
+# elif defined __AIX || __FFTW
 
       IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' ) THEN
          call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
       ELSE IF( grid_type == 'Wave' ) THEN
          call cfft3ds(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1,dffts%isind, dffts%iplw)
       END IF
-
-# elif defined __COMPLIB || __SCSL || __SX6
-
-      call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
 
 # endif
 
