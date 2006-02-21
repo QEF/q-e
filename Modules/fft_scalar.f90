@@ -54,14 +54,14 @@
         INTEGER, PARAMETER :: lwork = 20000 + ( 2*nfftx + 256 ) * 64 + 3*nfftx
         REAL (DP) :: work( lwork ) 
 
-#elif defined __SCSL
+#elif defined __SCSL || defined __SUN
 
-        !   SGI scientific library scsl
+        !   SGI scientific library scsl and SUN sunperf
 
         INTEGER, PARAMETER :: lwork = 2 * nfftx
         COMPLEX (DP) :: work(lwork) 
 
-#if defined __FFTW3
+#elif defined __FFTW3
 
         !  Not sure these are correct with FFTW v.3 !
         !  Only FFTW_ESTIMATE is actually used
@@ -70,8 +70,6 @@
 #  define  FFTW_MEASURE  1
 #  define FFTW_IN_PLACE  8
 #  define FFTW_USE_WISDOM 16
-
-#endif
 
 #endif
 !=----------------------------------------------------------------------=!
@@ -95,9 +93,11 @@
 !     driver routine for nsl 1d complex fft's of length nz 
 !     ldc >= nz is the distance between sequences to be transformed
 !     (ldc>nz is used on some architectures to reduce memory conflicts)
+!     input  :  c(ldc*nsl)   (complex)
+!     output : cout(ldc*nsl) (complex - NOTA BENE: transform is not in-place!)
+!     isign > 0 : forward (f(G)=>f(R)), isign <0 backward (f(R) => f(G))
 !     Up to "ndims" initializations (for different combinations of input
 !     parameters nz, nsl, ldc) are stored and re-used if available
-!     NOTA BENE: this routine is not in-place! the output in cout
 
      INTEGER, INTENT(IN) :: isign
      INTEGER, INTENT(IN) :: nsl, nz, ldc
@@ -176,8 +176,7 @@
         done = ( nz == zdims(1,ip) )
 #if defined __AIX || defined __FFTW3
 
-        !   The initialization in ESSL depends on all three parameters
-        !   For FFTW v.3 I don't know: just in doubt...
+        !   The initialization in ESSL and FFTW v.3 depends on all three parameters
 
         done = done .AND. ( nsl == zdims(2,ip) ) .AND. ( ldc == zdims(3,ip) )
 #endif
@@ -342,7 +341,7 @@
            CALL zfftb ( nz, c(1+(i-1)*ldc), tablez ( 1, ip) )
         enddo
         cout( 1 : ldc * nsl ) = c( 1 : ldc * nsl )
-     END ID
+     END IF
 
 #else
 
@@ -374,12 +373,14 @@
    SUBROUTINE cft_2xy(r, nzl, nx, ny, ldx, ldy, isign, pl2ix)
 
 !     driver routine for nzl 2d complex fft's of lengths nx and ny
-!     ldx is the first dimension of f (may differ from n)
-!     ldy is not actually used
+!     input : r(ldx*ldy)  complex, transform is in-place
+!     ldx >= nx, ldy >= ny are the physical dimensions of the equivalent
+!     2d array: r2d(ldx, ldy) (x first dimension, y second dimension)
+!     (ldx>nx, ldy>ny used on some architectures to reduce memory conflicts)
 !     pl2ix(nx) (optional) is 1 for columns along y to be transformed
+!     isign > 0 : forward (f(G)=>f(R)), isign <0 backward (f(R) => f(G))
 !     Up to "ndims" initializations (for different combinations of input
 !     parameters nx,ny,nzl,ldx) are stored and re-used if available
-!     In-place: input and output transform in r
 
      IMPLICIT NONE
 
@@ -412,7 +413,7 @@
 #elif defined __SCSL
 
      INTEGER, PARAMETER :: ltabl = 2 * nfftx + 256
-     REAL (DP), SAVE :: tablex (ltable, ndims), tabley(ltabl, ndims)
+     REAL (DP), SAVE :: tablex (ltabl, ndims), tabley(ltabl, ndims)
      COMPLEX (DP) :: XY(nx+nx*ny)
      REAL (DP)    :: DUMMY
      INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
@@ -460,8 +461,7 @@
 
        done = ( ny == dims(1,ip) ) .AND. ( nx == dims(3,ip) )
 #if defined __AIX || defined __FFTW3
-        !   The initialization in ESSL depends on all four parameters
-        !   For FFTW v.3 I don't know: just in doubt...
+        !   The initialization in ESSL and FFTW v.3 depends on all four parameters
        done = done .AND. ( ldx == dims(2,ip) ) .AND.  ( nzl == dims(4,ip) )
 #endif
        IF (done) EXIT
@@ -489,25 +489,25 @@
 #elif defined __FFTW3
 
        IF ( ldx /= nx .OR. ldy /= ny ) THEN
-          IF( fw_plan( 2,current) /= 0 )  CALL dfftw_destroy_plan( fw_plan( 2,current) )
-          IF( bw_plan( 2,current) /= 0 )  CALL dfftw_destroy_plan( bw_plan( 2,current) )
+          IF( fw_plan(2,icurrent) /= 0 )  CALL dfftw_destroy_plan( fw_plan(2,icurrent) )
+          IF( bw_plan(2,icurrent) /= 0 )  CALL dfftw_destroy_plan( bw_plan(2,icurrent) )
           idir = -1
-          CALL dfftw_plan_many_dft( fw_plan( 2,current), 1, ny, 1, r(1:), &
+          CALL dfftw_plan_many_dft( fw_plan(2,icurrent), 1, ny, 1, r(1:), &
                (/ldx*ldy/), ldx, 1, r(1:), (/ldx*ldy/), ldx, 1, idir, &
                FFTW_ESTIMATE)
           idir =  1
-          CALL dfftw_plan_many_dft( bw_plan( 2,current), 1, ny, 1, r(1:), &
+          CALL dfftw_plan_many_dft( bw_plan(2,icurrent), 1, ny, 1, r(1:), &
                (/ldx*ldy/), ldx, 1, r(1:), (/ldx*ldy/), ldx, 1, idir, &
-               FFTW_ESTIMATE) !pour le y_stick
+               FFTW_ESTIMATE)
 
-          IF( fw_plan( 1,current) /= 0 ) CALL dfftw_destroy_plan( fw_plan( 1,current) )
-          IF( bw_plan( 1,current) /= 0 ) CALL dfftw_destroy_plan( bw_plan( 1,current) )
+          IF( fw_plan(1,icurrent) /= 0 ) CALL dfftw_destroy_plan( fw_plan(1,icurrent) )
+          IF( bw_plan(1,icurrent) /= 0 ) CALL dfftw_destroy_plan( bw_plan(1,icurrent) )
           idir = -1
-          CALL dfftw_plan_many_dft( fw_plan( 1,current), 1, nx, ny, r(1:), &
+          CALL dfftw_plan_many_dft( fw_plan(1,icurrent), 1, nx, ny, r(1:), &
                (/ldx*ldy/), 1, ldx, r(1:), (/ldx*ldy/), 1, ldx, idir, &
                FFTW_ESTIMATE)
           idir =  1
-          CALL dfftw_plan_many_dft( bw_plan( 1,current), 1, nx, ny, r(1:), &
+          CALL dfftw_plan_many_dft( bw_plan(1,icurrent), 1, nx, ny, r(1:), &
                (/ldx*ldy/), 1, ldx, r(1:), (/ldx*ldy/), 1, ldx, idir, &
                FFTW_ESTIMATE) 
        ELSE
@@ -601,17 +601,11 @@
 
 #elif defined __FFTW3
 
-     write (6,*) "Warning:   FFTs using FFTW v.3 are untested"
-     write (6,*) "Warning:   Please locate and remove the following line in Modules/fft_scalar.f90:"
-     write (6,*) "           call errore('cft_2xy','FFTW3 untested, please test',1)"
-     write (6,*) "Warning:   Please recompile, test, report if it works"
-     call errore('cft_2xy','FFTW3 untested, please test',1)
-
      IF ( ldx /= nx .OR. ldy /= ny ) THEN
         IF( isign < 0 ) THEN
-           do ixstic = 0, nzl-1
+           do j = 0, nzl-1
               CALL dfftw_execute_dft( fw_plan (1, ip), &
-                   r(1+ixstic*ldx*ldy:), r(1+ixstic*ldx*ldy:)) 
+                   r(1+j*ldx*ldy:), r(1+j*ldx*ldy:)) 
            end do
            do i = 1, nx
               do k = 1, nzl
@@ -632,9 +626,9 @@
                  END IF
               end do
            end do
-           do ixstic = 0, nzl-1
+           do j = 0, nzl-1
               CALL dfftw_execute_dft( bw_plan( 1, ip), &
-                   r(1+ixstic*ldx*ldy:), r(1+ixstic*ldx*ldy:)) 
+                   r(1+j*ldx*ldy:), r(1+j*ldx*ldy:)) 
            end do
         END IF
      ELSE
@@ -843,6 +837,17 @@
 !
 
    SUBROUTINE cfft3d( f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign )
+
+  !     driver routine for 3d complex fft of lengths nx, ny, nz
+  !     input  :  f(nr1x*nr2x*nr3x)  complex, transform is in-place
+  !     nr1x >= nr1, nr2x >= nr2, nr3x >= nr3 are the physical dimensions 
+  !     of the equivalent 3d array: f3d(nr1x,nr2x,nr3x)
+  !     (nr1x>nr1, nr2x>nr2, nr3x>nr3 may be used on some architectures
+  !      to reduce memory conflicts - not implemented for FFTW)
+  !     isign > 0 : f(G) => f(R)   ; isign < 0 : f(R) => f(G)
+  !
+  !     Up to "ndims" initializations (for different combinations of input
+  !     parameters nr1,nr2,nr3) are stored and re-used if available
 
      IMPLICIT NONE
 
@@ -1205,27 +1210,15 @@
 !=----------------------------------------------------------------------=!
 !
 
-
-!
-! Copyright (C) 2001-2003 PWSCF group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-!
-!----------------------------------------------------------------------
-
 SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, &
      do_fft_x, do_fft_y)
   !
-  !     driver routine for 3d complex "reduced" fft
-  !     sign > 0 : f(G) => f(R)   ; sign < 0 : f(R) => f(G)
-  !
+  !     driver routine for 3d complex "reduced" fft - see cfft3d
   !     The 3D fft are computed only on lines and planes which have
   !     non zero elements. These lines and planes are defined by
-  !     the two vectors do_fft_x and do_fft_y 
-  !
-  !     The routine is implemented for essl and fftw library
+  !     the two integer vectors do_fft_x(nr2x*nr3) and do_fft_y(nr3)
+  !     (1 = perform fft, 0 = do not perform fft)
+  !     The routine is implemented for essl and fftw library only
   !
   !----------------------------------------------------------------------
   !
@@ -1477,10 +1470,11 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, &
 !
    SUBROUTINE cft_b ( f, n1, n2, n3, n1x, n2x, n3x, imin3, imax3, sgn )
 
-!     driver routine for 3d complex fft's on box grid
-!     fft along xy is done only on planes that correspond to
-!     dense grid planes on the current processor, i.e. planes
-!     with imin3 .le. n3 .le. imax3
+!     driver routine for 3d complex fft's on box grid, parallel case
+!     fft along xy is done only on planes that correspond to dense grid
+!     planes on the current processor, i.e. planes with imin3 <= n3 <= imax3
+!     implemented for essl, fftw, scsl, complib, only for sgn=1 (f(R) => f(G))
+!     (beware: here the "essl" convention for the sign of the fft is used!)
 !
       implicit none
       integer n1,n2,n3,n1x,n2x,n3x,imin3,imax3,sgn
@@ -1518,6 +1512,8 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, &
      real(8), save :: bw_coeffz( ltabl,  ndims )
      real(8), save :: bw_coeffy( ltabl,  ndims )
      real(8), save :: bw_coeffx( ltabl,  ndims )
+     REAL (DP)    :: DUMMY
+     INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
 
 #endif
 
@@ -1694,7 +1690,7 @@ integer function good_fft_dimension (n)
   ! if n is a power of 2 (log2n is integer) increase dimension by 1
 #elif defined(__SX6)
   !
-  if (mod (nr1, 2) ==0) nx = n + 1
+  if (mod (n, 2) ==0) nx = n + 1
   ! for nec vector machines: if n is even increase dimension by 1
 #endif
   !
