@@ -11,7 +11,7 @@
 ! FFTW, ESSL, SCSL, COMPLIB, SUNPERF libraries (both 3d and 1d+2d FFTs)!
 ! NEC ASL, CXML libraries (3d only, no parallel execution)             !
 ! Written by Carlo Cavazzoni, modified by P. Giannozzi, contributions  !
-! by Guido Roma, Pascal Thibaudeau, Stephane Lefranc, and others       !
+! by Martin Hilgemans, Guido Roma, Pascal Thibaudeau, Stephane Lefranc !
 ! Last update February 2006                                            !
 !----------------------------------------------------------------------!
 
@@ -63,13 +63,10 @@
 
 #elif defined __FFTW3
 
-        !  Not sure these are correct with FFTW v.3 !
         !  Only FFTW_ESTIMATE is actually used
 
-#  define  FFTW_ESTIMATE 0
-#  define  FFTW_MEASURE  1
-#  define FFTW_IN_PLACE  8
-#  define FFTW_USE_WISDOM 16
+#  define  FFTW_MEASURE  0
+#  define  FFTW_ESTIMATE 64
 
 #endif
 !=----------------------------------------------------------------------=!
@@ -198,12 +195,6 @@
        idir =  1; CALL CREATE_PLAN_1D( bw_planz( icurrent), nz, idir) 
 
 #elif defined __FFTW3
-
-       write (6,*) "Warning:   FFTs using FFTW v.3 are untested"
-       write (6,*) "Warning:   Please locate and remove the following line in Modules/fft_scalar.f90:"
-       write (6,*) "           call errore('cft_1z','FFTW3 untested, please test',1)"
-       write (6,*) "Warning:   Please recompile, test, report if it works"
-       call errore('cft_1z','FFTW3 untested, please test',1)
 
        IF( fw_planz( icurrent) /= 0 ) CALL dfftw_destroy_plan( fw_planz( icurrent) )
        IF( bw_planz( icurrent) /= 0 ) CALL dfftw_destroy_plan( bw_planz( icurrent) )
@@ -971,22 +962,16 @@
 
 #elif defined __FFTW3
        
-       write (6,*) "Warning:   FFTs using FFTW v.3 are untested"
-       write (6,*) "Warning:   Please locate and remove the following line in Modules/fft_scalar.f90:"
-       write (6,*) "           call errore('cfft3d','FFTW3 untested, please test',1)"
-       write (6,*) "Warning:   Please recompile, test, report if it works"
-       call errore('cfft3d','FFTW3 untested, please test',1)
-
        IF ( nr1 /= nr1x .or. nr2 /= nr2x .or. nr3 /= nr3x ) &
             call errore('cfft3','not implemented',3)
        IF( fw_plan(icurrent) /= 0 ) CALL dfftw_destroy_plan( fw_plan(icurrent) )
        IF( bw_plan(icurrent) /= 0 ) CALL dfftw_destroy_plan( bw_plan(icurrent) )
        idir = -1
-       CALL dfftw_plan_dft( fw_plan(icurrent), 3, nr1, nr2, nr3, f(1:), 1, 0, &
-            f(1:), 1, 0, idir, FFTW_ESTIMATE) 
+       CALL dfftw_plan_dft_3d ( fw_plan(icurrent), nr1, nr2, nr3, f(1:), &
+            f(1:), idir, FFTW_ESTIMATE) 
        idir =  1
-       CALL dfftw_plan_dft( bw_plan(icurrent), 3, nr1, nr2, nr3, f(1:), 1, 0, &
-            f(1:), 1, 0, idir, FFTW_ESTIMATE)
+       CALL dfftw_plan_dft_3d ( bw_plan(icurrent), nr1, nr2, nr3, f(1:), &
+            f(1:), idir, FFTW_ESTIMATE) 
 
 #elif defined __AIX
 
@@ -1094,7 +1079,6 @@
 #elif defined __FFTW3
 
    IF( isign < 0 ) THEN
-      
       call dfftw_execute_dft( fw_plan(ip), f(1:), f(1:))
       tscale = 1.0d0 / DBLE( nr1 * nr2 * nr3 )
       call ZDSCAL( nr1 * nr2 * nr3, tscale, f(1), 1)
@@ -1239,7 +1223,7 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, &
   INTEGER, SAVE :: icurrent = 1
   INTEGER, SAVE :: dims(3,ndims) = -1
 
-#if defined __FFTW
+#if defined __FFTW || __FFTW3
 
   C_POINTER, SAVE :: fw_plan ( 3, ndims ) = 0
   C_POINTER, SAVE :: bw_plan ( 3, ndims ) = 0
@@ -1299,6 +1283,44 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, &
        idir = -1; CALL CREATE_PLAN_1D( fw_plan( 3, icurrent), nr3, idir) 
        idir =  1; CALL CREATE_PLAN_1D( bw_plan( 3, icurrent), nr3, idir) 
 
+#elif defined __FFTW3
+       IF( fw_plan( 1, icurrent) /= 0 ) &
+            CALL dfftw_destroy_plan( fw_plan( 1, icurrent) )
+       IF( bw_plan( 1, icurrent) /= 0 ) &
+            CALL dfftw_destroy_plan( bw_plan( 1, icurrent) )
+       IF( fw_plan( 2, icurrent) /= 0 ) &
+            CALL dfftw_destroy_plan( fw_plan( 2, icurrent) )
+       IF( bw_plan( 2, icurrent) /= 0 ) &
+            CALL dfftw_destroy_plan( bw_plan( 2, icurrent) )
+       IF( fw_plan( 3, icurrent) /= 0 ) &
+            CALL dfftw_destroy_plan( fw_plan( 3, icurrent) )
+       IF( bw_plan( 3, icurrent) /= 0 ) &
+            CALL dfftw_destroy_plan( bw_plan( 3, icurrent) )
+       idir = -1
+       CALL dfftw_plan_many_dft( fw_plan( 1, icurrent), &
+            1, nr1, 1, f(1:), (/nr1x, nr2x, nr3x/), 1, nr1x, &
+            f(1:), (/nr1x, nr2x, nr3x/), 1, nr1x, idir, FFTW_ESTIMATE) 
+       idir = 1
+       CALL dfftw_plan_many_dft( bw_plan( 1, icurrent), &
+            1, nr1, 1, f(1:), (/nr1x, nr2x, nr3x/), 1, nr1x, &
+            f(1:), (/nr1x, nr2x, nr3x/), 1, nr1x, idir, FFTW_ESTIMATE)
+       idir = -1
+       CALL dfftw_plan_many_dft( fw_plan( 2, icurrent), &
+            1, nr2, nr1, f(1:), (/nr1x, nr2x, nr3x/), nr1x, 1, &
+            f(1:), (/nr1x, nr2x, nr3x/), nr1x, 1, idir, FFTW_ESTIMATE)
+       idir = 1
+       CALL dfftw_plan_many_dft( bw_plan( 2, icurrent), &
+            1, nr2, nr1, f(1:), (/nr1x, nr2x, nr3x/), nr1x, 1, &
+            f(1:), (/nr1x, nr2x, nr3x/), nr1x, 1, idir, FFTW_ESTIMATE)
+       idir = -1
+       CALL dfftw_plan_many_dft( fw_plan( 3, icurrent), &
+            1, nr3, nr1*nr2, f(1:), (/nr1x, nr2x, nr3x/), nr1x*nr2x, 1, &
+            f(1:), (/nr1x, nr2x, nr3x/), nr1x*nr2x, 1, idir, FFTW_ESTIMATE)
+       idir = 1
+       CALL dfftw_plan_many_dft( bw_plan( 3, icurrent), &
+            1, nr3, nr1*nr2, f(1:), (/nr1x, nr2x, nr3x/), nr1x*nr2x, 1, &
+            f(1:), (/nr1x, nr2x, nr3x/), nr1x*nr2x, 1, idir, FFTW_ESTIMATE)
+
 #elif defined __AIX
 
        tscale = 1.0d0 
@@ -1349,6 +1371,8 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, &
               if ( do_fft_x( jj ) == 1 ) THEN
 #if defined __FFTW
                 call FFTW_INPLACE_DRV_1D( bw_plan( 1, ip), m, f( ii ), incx1, incx2 )
+#elif defined __FFTW3
+                call dfftw_execute_dft( bw_plan( 1, ip), f( ii: ), f( ii: ) )
 #elif defined __AIX
                 call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nr1, m, &
                   -isign, 1.0d0, bw_table ( 1, 1,  ip ), ltabl, work( 1 ), lwork)
@@ -1370,6 +1394,8 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, &
            if ( do_fft_y( k ) == 1 ) then
 #if defined __FFTW
              call FFTW_INPLACE_DRV_1D( bw_plan( 2, ip), m, f( ii ), incx1, incx2 )
+#elif defined __FFTW3
+             call dfftw_execute_dft( bw_plan( 2, ip), f( ii: ), f( ii: ) )
 #elif defined __AIX
              call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nr2, m, &
                -isign, 1.0d0, bw_table ( 1, 2,  ip ), ltabl, work( 1 ), lwork)
@@ -1387,6 +1413,8 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, &
 
 #if defined __FFTW
         call FFTW_INPLACE_DRV_1D( bw_plan( 3, ip), m, f( 1 ), incx1, incx2 )
+#elif defined __FFTW3
+        call dfftw_execute_dft( bw_plan( 3, ip), f(1:), f(1:) )
 #elif defined __AIX
         call dcft (0, f( 1 ), incx1, incx2, f( 1 ), incx1, incx2, nr3, m, &
           -isign, 1.0d0, bw_table ( 1, 3, ip ), ltabl, work( 1 ), lwork)
@@ -1402,6 +1430,8 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, &
 
 #if defined __FFTW
         call FFTW_INPLACE_DRV_1D( fw_plan( 3, ip), m, f( 1 ), incx1, incx2 )
+#elif defined __FFTW3
+        call dfftw_execute_dft( fw_plan( 3, ip), f(1:), f(1:) )
 #elif defined __AIX
         call dcft (0, f( 1 ), incx1, incx2, f( 1 ), incx1, incx2, nr3, m, &
           -isign, 1.0d0, fw_table ( 1, 3, ip ), ltabl, work( 1 ), lwork)
@@ -1418,6 +1448,8 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, &
            if ( do_fft_y ( k ) == 1 ) then
 #if defined __FFTW
              call FFTW_INPLACE_DRV_1D( fw_plan( 2, ip), m, f( ii ), incx1, incx2 )
+#elif defined __FFTW3
+             call dfftw_execute_dft( fw_plan( 2, ip), f( ii: ), f( ii: ) )
 #elif defined __AIX
              call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nr2, m, &
                -isign, 1.0d0, fw_table ( 1, 2, ip ), ltabl, work( 1 ), lwork)
@@ -1440,6 +1472,8 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, &
               if ( do_fft_x( jj ) == 1 ) then
 #if defined __FFTW
                 call FFTW_INPLACE_DRV_1D( fw_plan( 1, ip), m, f( ii ), incx1, incx2 )
+#elif defined __FFTW3
+                call dfftw_execute_dft( fw_plan( 1, ip), f( ii: ), f( ii: ) )
 #elif defined __AIX
                 call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nr1, m, &
                    -isign, 1.0d0, fw_table ( 1, 1, ip ), ltabl, work( 1 ), lwork)
@@ -1487,7 +1521,7 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, &
       integer, save :: icurrent = 1
       integer, save :: dims( 4, ndims ) = -1
 
-#if defined __FFTW
+#if defined __FFTW || __FFTW3
 
       C_POINTER, save :: bw_planz(  ndims ) = 0
       C_POINTER, save :: bw_planxy( ndims ) = 0
@@ -1556,23 +1590,37 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, &
 
 #if defined __FFTW
 
-        if ( bw_planz(icurrent) /= 0 ) call DESTROY_PLAN_1D( bw_planz(icurrent) )
+        if ( bw_planz(icurrent) /= 0 ) &
+             call DESTROY_PLAN_1D( bw_planz(icurrent) )
         call CREATE_PLAN_1D( bw_planz(icurrent), n3, 1 )
 
-        if ( bw_planxy(icurrent) /= 0 ) call DESTROY_PLAN_2D( bw_planxy(icurrent) )
+        if ( bw_planxy(icurrent) /= 0 ) &
+             call DESTROY_PLAN_2D( bw_planxy(icurrent) )
         call CREATE_PLAN_2D( bw_planxy(icurrent), n1, n2, 1 )
 !
+#elif defined __FFTW3
+
+        if ( bw_planz(icurrent) /= 0 ) &
+             call dfftw_destroy_plan(bw_planz(icurrent))
+        call dfftw_plan_many_dft( bw_planz(icurrent), 1, n3, n1x*n2x, &
+             f(1:), n1x*n2x, 1, f(1:), n1x*n2x, 1, 1, FFTW_ESTIMATE )
+
+        if ( bw_planxy(icurrent) /= 0 ) &
+             call dfftw_destroy_plan(bw_planxy(icurrent))
+        call dfftw_plan_many_dft( bw_planxy(icurrent), 2, n1, n2, nplanes, &
+             f(nstart:), 1, n1x*n2x, f(nstart:), 1, n1x*n2x, 1, FFTW_ESTIMATE )
+
 #elif defined __AIX
 
          if( n3 /= dims(3,icurrent) ) then
-           call dcft( 1, f(1), n1x*n2x, 1, f(1), n1x*n2x, 1, n3, n1x*n2x, isign,          &
-     &        tscale, aux3(1,icurrent), ltabl, work(1), lwork)
+           call dcft( 1, f(1), n1x*n2x, 1, f(1), n1x*n2x, 1, n3, n1x*n2x, &
+              isign, tscale, aux3(1,icurrent), ltabl, work(1), lwork)
          end if
-         call dcft( 1, f(1), 1, n1x, f(1), 1, n1x, n1, n2x*nplanes, isign,              &
-     &        tscale, aux1(1,icurrent), ltabl, work(1), lwork)
+         call dcft( 1, f(1), 1, n1x, f(1), 1, n1x, n1, n2x*nplanes, isign, &
+              tscale, aux1(1,icurrent), ltabl, work(1), lwork)
          if( n2 /= dims(2,icurrent) ) then
-           call dcft( 1, f(1), n1x, 1, f(1), n1x, 1, n2, n1x, isign,                      &
-     &        tscale, aux2(1,icurrent), ltabl, work(1), lwork)
+           call dcft( 1, f(1), n1x, 1, f(1), n1x, 1, n2, n1x, isign,    &
+              tscale, aux2(1,icurrent), ltabl, work(1), lwork)
          end if
 
 #elif defined __COMPLIB
@@ -1594,7 +1642,6 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, &
 
         CALL errore(' cft_b ',' no scalar fft driver specified ', 1)
  
-
 #endif
 
         dims(1,icurrent) = n1; dims(2,icurrent) = n2
@@ -1610,8 +1657,12 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, &
       call FFTW_INPLACE_DRV_1D( bw_planz(ip), n1x*n2x, f(1), n1x*n2x, 1 )
       call FFTW_INPLACE_DRV_2D( bw_planxy(ip), nplanes, f(nstart), 1, n1x*n2x )
 
-#elif defined __AIX
+#elif defined __FFTW3
 
+      call dfftw_execute_dft(bw_planz(ip), f(1:), f(1:))
+      call dfftw_execute_dft(bw_planxy(ip), f(nstart:), f(nstart:))
+
+#elif defined __AIX
 
       !   fft in the z-direction...
 
@@ -1620,8 +1671,8 @@ SUBROUTINE cfft3ds (f, nr1, nr2, nr3, nr1x, nr2x, nr3x, isign, &
 
       !   x-direction
 
-      call dcft( 0, f(nstart), 1, n1x, f(nstart), 1, n1x, n1, n2x*nplanes, isign, &
-           tscale, aux1(1,ip), ltabl, work(1), lwork)
+      call dcft( 0, f(nstart), 1, n1x, f(nstart), 1, n1x, n1, n2x*nplanes, &
+           isign, tscale, aux1(1,ip), ltabl, work(1), lwork)
      
       !   y-direction
      

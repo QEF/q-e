@@ -317,7 +317,13 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
      !
      IF ( gamma_only ) THEN
         !
-        gaux(nlm(:)) = CMPLX( DBLE( gaux(nl(:)) ) , -AIMAG( gaux(nl(:)) ) )
+        ! gaux(nlm(:)) = CMPLX( DBLE( gaux(nl(:)) ) , -AIMAG( gaux(nl(:)) ) )
+        !
+        ! Workaround for intel ifort bugginess
+        !
+        DO n = 1, ngm
+           gaux(nlm(n)) = CONJG ( gaux(nl(n)) )
+        END DO
         !
      END IF
      !
@@ -389,7 +395,13 @@ SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   !
   IF ( gamma_only ) THEN
      !
-     gaux(nlm(:)) = CMPLX( DBLE( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) )
+     ! gaux(nlm(:)) = CMPLX( DBLE( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) )
+     !
+     ! Workaround for intel ifort bugginess
+     !
+     DO n = 1, ngm
+        gaux(nlm(n)) = CONJG ( gaux(nl(n)) )
+     END DO
      !
   END IF
   !

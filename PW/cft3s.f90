@@ -263,7 +263,7 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
      !
   ELSE IF ( sign == 2 ) THEN
      !
-#if (defined __AIX || defined __FFTW) && !defined(__USE_3D_FFT)
+#if (defined __AIX || defined __FFTW || defined __FFTW3) && !defined(__USE_3D_FFT)
      !
      CALL cfft3ds( f, n1, n2, n3, nx1, nx2, nx3, 1, dffts%isind, dffts%iplw )
      !
@@ -275,7 +275,7 @@ SUBROUTINE cft3s( f, n1, n2, n3, nx1, nx2, nx3, sign )
      !
   ELSE IF ( sign == -2 ) THEN
      !
-#if (defined __AIX || defined __FFTW) && !defined(__USE_3D_FFT)
+#if (defined __AIX || defined __FFTW || defined __FFTW3) && !defined(__USE_3D_FFT)
      !
      CALL cfft3ds( f, n1, n2, n3, nx1, nx2, nx3, -1, dffts%isind, dffts%iplw )
      !
