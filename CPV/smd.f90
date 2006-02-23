@@ -39,6 +39,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   !
   use control_flags, only: iprint, thdyn
   use io_global, only: stdout
+  use mp_global, only: nproc
   !use gvec
   use gvecw, only: ngw
   use ions_base, only: na, pmass, nsp, randpos, nat
@@ -53,6 +54,9 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   USE smd_rep, only: rep
   USE path_variables, only: &
         sm_p => smd_p
+  USE fft_base,         ONLY: dfftb, fft_dlay_descriptor
+  USE fft_types,        ONLY: fft_box_allocate
+
 
   implicit none
   ! input/output
@@ -96,6 +100,12 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   DO sm_k=0, sm_p
      call r_to_s( rep(sm_k)%tau0, rep(sm_k)%taus, na, nsp, ainv )
   ENDDO
+  !
+  !
+  !  Allocate box descriptor
+  !
+  CALL fft_box_allocate( dfftb, nproc, nat )
+  !
   !
   WRITE( stdout,*) '   NOTA BENE: refg, mmx = ', refg, mmx
   !

@@ -51,6 +51,7 @@ MODULE fft_types
     INTEGER, POINTER :: irb(:,:)  ! the offset of the box corner
     INTEGER, POINTER :: imin3(:)  ! the starting local plane
     INTEGER, POINTER :: imax3(:)  ! the last local plane
+    INTEGER, POINTER :: np3(:)    ! number of local plane for the box fft
     !
   END TYPE
 
@@ -116,11 +117,13 @@ CONTAINS
     ALLOCATE( desc%imax3( nat ) )
     ALLOCATE( desc%npp( nproc ) )
     ALLOCATE( desc%ipp( nproc ) )
+    ALLOCATE( desc%np3( nat ) )
     desc%irb = 0
     desc%imin3 = 0
     desc%imax3 = 0
     desc%npp = 0
     desc%ipp = 0
+    desc%np3 = 0
   END SUBROUTINE fft_box_allocate
 
   SUBROUTINE fft_box_deallocate( desc )
@@ -130,6 +133,7 @@ CONTAINS
     IF( ASSOCIATED( desc%imax3 ) ) DEALLOCATE( desc%imax3 )
     IF( ASSOCIATED( desc%npp ) ) DEALLOCATE( desc%npp )
     IF( ASSOCIATED( desc%ipp ) ) DEALLOCATE( desc%ipp )
+    IF( ASSOCIATED( desc%np3 ) ) DEALLOCATE( desc%np3 )
   END SUBROUTINE fft_box_deallocate
 
 
@@ -367,6 +371,8 @@ CONTAINS
   SUBROUTINE fft_box_set( desc, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nat, &
                           irb, me, nproc, npp, ipp )
 
+    IMPLICIT NONE
+
     TYPE (fft_dlay_descriptor) :: desc
 
     INTEGER, INTENT(IN) :: nat, me, nproc
@@ -375,10 +381,12 @@ CONTAINS
     INTEGER, INTENT(IN) :: ipp( : )
     INTEGER, INTENT(IN) :: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
 
-    INTEGER :: ir3, ibig3, irb3, imin3, imax3, nr3
+    INTEGER :: ir3, ibig3, irb3, imin3, imax3, nr3, isa
 
-    IF( nat > SIZE( desc%irb, 2 ) ) &
+    IF( nat > SIZE( desc%irb, 2 ) ) THEN 
+       WRITE( stdout, fmt="( ///,'NAT, SIZE = ',2I10)" ) nat, SIZE( desc%irb, 2 )
        CALL errore(" fft_box_set ", " inconsistent dimensions ", 1 )
+    END IF
 
     IF( nproc > SIZE( desc%npp ) ) &
        CALL errore(" fft_box_set ", " inconsistent dimensions ", 2 )
@@ -395,22 +403,29 @@ CONTAINS
     desc%ipp( 1:nproc )    = ipp( 1:nproc ) 
 
     nr3   = SUM( npp( 1:nproc ) )
-    imin3 = nr3b
-    imax3 = 1
 
-    do ir3 = 1, nr3b
-       ibig3 = 1 + MOD( irb3 + ir3 - 2, nr3 )
-       if( ibig3 < 1 .or. ibig3 > nr3 )   &
-     &        call errore(' fft_box_set ',' ibig3 wrong ', ibig3 )
-       ibig3 = ibig3 - ipp( me )
-       if ( ibig3 > 0 .and. ibig3 <= npp(me) ) then
-            imin3 = min( imin3, ir3 )
-            imax3 = max( imax3, ir3 )
-       end if
-    end do
+    DO isa = 1, nat
 
-    desc%imin3 = imin3
-    desc%imax3 = imax3
+       imin3 = nr3b
+       imax3 = 1
+       irb3  = irb( 3, isa )
+
+       do ir3 = 1, nr3b
+          ibig3 = 1 + MOD( irb3 + ir3 - 2, nr3 )
+          if( ibig3 < 1 .or. ibig3 > nr3 )   &
+        &        call errore(' fft_box_set ',' ibig3 wrong ', ibig3 )
+          ibig3 = ibig3 - ipp( me )
+          if ( ibig3 > 0 .and. ibig3 <= npp(me) ) then
+               imin3 = min( imin3, ir3 )
+               imax3 = max( imax3, ir3 )
+          end if
+       end do
+
+       desc%imin3( isa ) = imin3
+       desc%imax3( isa ) = imax3
+       desc%np3( isa )   = imax3 - imin3 + 1
+
+    END DO
 
 
   END SUBROUTINE fft_box_set

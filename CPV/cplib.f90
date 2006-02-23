@@ -677,6 +677,7 @@
       USE dqgb_mod
       USE recvecs_indexes, ONLY: nm, np
       USE fft_module, ONLY: fwfft, invfft
+      USE fft_base, ONLY: dfftb
 
       IMPLICIT NONE
 ! input
@@ -686,7 +687,7 @@
       COMPLEX(8), INTENT(in)::  eigrb(ngb,nat), rhog(ng,nspin)
 ! local
       INTEGER i, j, isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,   &
-     &     isa, ia, ir, irb3, imin3, imax3
+     &     isa, ia, ir
       REAL(8) sum, dsum
       COMPLEX(8) fp, fm, ci
       COMPLEX(8), ALLOCATABLE :: v(:)
@@ -730,9 +731,7 @@
 #ifdef __PARA
                   DO ia=1,na(is)
                      nfft=1
-                     irb3=irb(3,isa)
-                     CALL parabox(nr3b,irb3,nr3,imin3,imax3)
-                     IF (imax3-imin3+1.LE.0) go to 15
+                     IF ( dfftb%np3( isa ) <= 0 ) go to 15
 #else
                   DO ia=1,na(is),2
                      nfft=2
@@ -781,7 +780,7 @@
                         END DO
                      ENDIF
 !
-                     CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
+                     CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
 !
 !  qv = US contribution in real space on box grid
 !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
@@ -821,9 +820,7 @@
                DO is=1,nvb
                   DO ia=1,na(is)
 #ifdef __PARA
-                     irb3=irb(3,isa)
-                     CALL parabox(nr3b,irb3,nr3,imin3,imax3)
-                     IF (imax3-imin3+1.LE.0) go to 25
+                     IF ( dfftb%np3( isa ) <= 0 ) go to 25
 #endif
                      DO iss=1,2
                         dqgbt(:,iss) = (0.d0, 0.d0)
@@ -856,7 +853,7 @@
      &                    +       ci*CONJG(eigrb(ig,isa)*dqgbt(ig,2))
                      END DO
 !
-                     CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
+                     CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
 !
 !  qv is the now the US augmentation charge for atomic species is
 !  and atom ia: real(qv)=spin up, imag(qv)=spin down
@@ -1559,6 +1556,7 @@
       USE control_flags, ONLY: iprint, thdyn, tfor, tprnfor
       USE mp, ONLY: mp_sum
       USE fft_module, ONLY: invfft
+      USE fft_base, ONLY: dfftb
 !
       IMPLICIT NONE
 ! input
@@ -1570,7 +1568,6 @@
       REAL(8)  fion(3,natx)
 ! local
       INTEGER isup,isdw,iss, iv,ijv,jv, ik, nfft, isa, ia, is, ig
-      INTEGER irb3, imin3, imax3
       REAL(8)  fvan(3,natx,nsx), fac, fac1, fac2, boxdotgrid
       COMPLEX(8) ci, facg1, facg2
       COMPLEX(8), ALLOCATABLE :: qv(:)
@@ -1591,14 +1588,12 @@
 #ifdef __PARA
          DO ia=1,na(is)
             nfft=1
-            irb3=irb(3,isa)
-            CALL parabox(nr3b,irb3,nr3,imin3,imax3)
-            IF (imax3-imin3+1.LE.0) go to 15
+            IF ( dfftb%np3( isa ) <= 0 ) go to 15
 #else
          DO ia=1,na(is),2
             nfft=2
 #endif
-            IF(ia.EQ.na(is)) nfft=1
+            IF( ia .EQ. na(is) ) nfft=1
 !
 ! two ffts at the same time, on two atoms (if possible: nfft=2)
 !
@@ -1624,7 +1619,7 @@
                      END DO
                   END IF
 !
-                  CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
+                  CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
 !
                   DO iss=1,nspin
                      deeq(iv,jv,isa,iss) = fac *                        &
@@ -1662,9 +1657,7 @@
 #ifdef __PARA
             DO ia=1,na(is)
                nfft=1
-               irb3=irb(3,isa)
-               CALL parabox(nr3b,irb3,nr3,imin3,imax3)
-               IF (imax3-imin3+1.LE.0) go to 20
+               IF ( dfftb%np3( isa ) <= 0 ) go to 20
 #else
             DO ia=1,na(is),2
                nfft=2
@@ -1711,7 +1704,7 @@
                      END DO
                   END DO
 !
-                  CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
+                  CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
 !
                   fvan(ik,ia,is) =                                      &
      &                    boxdotgrid(irb(1,isa),1,qv,vr(1,iss))
@@ -1732,9 +1725,7 @@
          DO is=1,nvb
             DO ia=1,na(is)
 #ifdef __PARA
-               irb3=irb(3,isa)
-               CALL parabox(nr3b,irb3,nr3,imin3,imax3)
-               IF (imax3-imin3+1.LE.0) go to 25
+               IF ( dfftb%np3( isa ) <= 0 ) go to 25
 #endif
                DO ik=1,3
                   qv(:) = (0.d0, 0.d0)
@@ -1763,7 +1754,7 @@
                      END DO
                   END DO
 !
-                  CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
+                  CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
 !
                   fvan(ik,ia,is) =                                      &
      &                    boxdotgrid(irb(1,isa),isup,qv,vr(1,isup)) + &
@@ -2196,6 +2187,7 @@
       USE qgb_mod
       USE recvecs_indexes, ONLY: np, nm
       USE fft_module, ONLY: fwfft, invfft
+      USE fft_base, ONLY: dfftb
 !
       IMPLICIT NONE
 !
@@ -2206,7 +2198,7 @@
       COMPLEX(8),  INTENT(inout):: rhog(ng,nspin)
 !
       INTEGER isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,           &
-     &     isa, ia, ir, irb3, imin3, imax3
+     &     isa, ia, ir
       REAL(8) sumrho
       COMPLEX(8) ci, fp, fm, ca
       COMPLEX(8), ALLOCATABLE::  qgbt(:,:)
@@ -2235,18 +2227,16 @@
 
 #ifdef __PARA
 
-            DO ia=1,na(is)
-               nfft=1
-               irb3=irb(3,isa)
-               CALL parabox(nr3b,irb3,nr3,imin3,imax3)
-               IF (imax3-imin3+1.LE.0) go to 15
+            DO ia = 1, na(is)
+               nfft = 1
+               IF ( dfftb%np3( isa ) <= 0 ) go to 15
 #else
 
             DO ia = 1, na(is), 2
                nfft = 2
-               IF( ia .EQ. na(is) ) nfft = 1
-
 #endif
+
+               IF( ia .EQ. na(is) ) nfft = 1
 
                !
                !  nfft=2 if two ffts at the same time are performed
@@ -2285,7 +2275,7 @@
                   END DO
                ENDIF
 
-               CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
+               CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
 
                !
                !  qv = US augmentation charge in real space on box grid
@@ -2354,9 +2344,7 @@
          DO is=1,nvb
             DO ia=1,na(is)
 #ifdef __PARA
-               irb3=irb(3,isa)
-               CALL parabox(nr3b,irb3,nr3,imin3,imax3)
-               IF (imax3-imin3+1.LE.0) go to 25
+               IF ( dfftb%np3( isa ) <= 0 ) go to 25
 #endif
                DO iss=1,2
                   qgbt(:,iss) = (0.d0, 0.d0)
@@ -2383,7 +2371,7 @@
      &                  + ci*   CONJG(eigrb(ig,isa)*qgbt(ig,2))
                END DO
 !
-               CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
+               CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
 !
 !  qv is the now the US augmentation charge for atomic species is
 !  and atom ia: real(qv)=spin up, imag(qv)=spin down

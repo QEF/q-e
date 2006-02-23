@@ -375,6 +375,7 @@
       use atom,            only: nlcc
       use core,            only: rhocb
       use fft_module,      only: invfft
+      use fft_base,        only: dfftb
       use reciprocal_vectors, only: gstart
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
@@ -388,7 +389,7 @@
 ! output
       real(8), intent(inout):: fion1(3,natx)
 ! local
-      integer iss, ix, ig, is, ia, nfft, irb3, imin3, imax3, isa
+      integer iss, ix, ig, is, ia, nfft, isa
       real(8) fcc(3,natx), fac, boxdotgrid
       complex(8) ci, facg
       complex(8), allocatable :: qv(:)
@@ -408,9 +409,7 @@
 #ifdef __PARA
          do ia=1,na(is)
             nfft=1
-            irb3=irb(3,ia+isa)
-            call parabox(nr3b,irb3,nr3,imin3,imax3)
-            if (imax3-imin3+1.le.0) go to 15
+            if ( dfftb%np3( ia + isa ) <= 0 ) go to 15
 #else
          do ia=1,na(is),2
 !
@@ -437,7 +436,7 @@
                   end do
                end if
 !
-               call invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
+               call invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
 !
 ! note that a factor 1/2 is hidden in fac if nspin=2
 !
@@ -482,6 +481,7 @@
       use control_flags,   only: iprint
       use core,            only: rhocb
       use fft_module,      only: invfft
+      use fft_base,        only: dfftb
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
 
@@ -492,7 +492,7 @@
 ! output
       real(8), intent(out)  :: rhoc(nnr)
 ! local
-      integer nfft, ig, is, ia, irb3, imin3, imax3, isa
+      integer nfft, ig, is, ia, isa
       complex(8) ci
       complex(8), allocatable :: wrk1(:)
       complex(8), allocatable :: qv(:)
@@ -510,9 +510,7 @@
 #ifdef __PARA
          do ia=1,na(is)
             nfft=1
-            irb3=irb(3,ia+isa)
-            call parabox(nr3b,irb3,nr3,imin3,imax3)
-            if (imax3-imin3+1.le.0) go to 15
+            if ( dfftb%np3( ia + isa ) <= 0 ) go to 15
 #else
          do ia=1,na(is),2
             nfft=2
@@ -536,7 +534,7 @@
                end do
             endif
 !
-            call invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
+            call invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
 !
             call box2grid(irb(1,ia+isa),1,qv,wrk1)
             if (nfft.eq.2) call box2grid(irb(1,ia+1+isa),2,qv,wrk1)

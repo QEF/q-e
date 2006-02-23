@@ -19,7 +19,7 @@ MODULE fft_module
 CONTAINS
 
 !-----------------------------------------------------------------------
-  subroutine invfft( grid_type, f, nr1, nr2, nr3, nr1x, nr2x, nr3x, nr3_big, irb3 )
+  subroutine invfft( grid_type, f, nr1, nr2, nr3, nr1x, nr2x, nr3x, ia )
 !-----------------------------------------------------------------------
 ! grid_type = 'Dense'
 !   inverse fourier transform of potentials and charge density
@@ -44,13 +44,13 @@ CONTAINS
 !
       USE kinds,      ONLY: DP
       use fft_cp,     only: cfft_cp
-      use fft_base,   only: dfftp, dffts
+      use fft_base,   only: dfftp, dffts, dfftb
       use fft_scalar, only: cfft3d, cfft3ds, cft_b
 
       IMPLICIT none
 
       INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x
-      INTEGER, OPTIONAL, INTENT(IN) :: nr3_big, irb3
+      INTEGER, OPTIONAL, INTENT(IN) :: ia
       CHARACTER(LEN=*), INTENT(IN) :: grid_type
       COMPLEX(DP) :: f(nr1x*nr2x*nr3x)
       !
@@ -71,8 +71,9 @@ CONTAINS
 #if defined __PARA && !defined __USE_3D_FFT
 
       IF( grid_type == 'Box' ) THEN
-         call parabox( nr3, irb3, nr3_big, imin3, imax3 )
-         np3 = imax3 - imin3 + 1
+         imin3 = dfftb%imin3( ia )
+         imax3 = dfftb%imax3( ia )
+         np3   = dfftb%np3( ia )   ! imax3 - imin3 + 1
       END IF
       
       IF( grid_type == 'Dense' ) THEN

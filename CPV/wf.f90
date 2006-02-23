@@ -866,7 +866,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
 #ifdef __PARA
               irb3=irb(3,isa)
 #endif
-              CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
+              CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
               iqv=1
               qvt=(0.D0,0.D0)
               qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
@@ -907,7 +907,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                     qv(npb(ig))=eigrb(ig,isa)*qgb(ig,ijv,is)
                     qv(nmb(ig))=CONJG(eigrb(ig,isa)*qgb(ig,ijv,is))
                  END DO
-                 CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,nr3,irb3)
+                 CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
                  iqv=1
                  qvt=0.D0
                  qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
