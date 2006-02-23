@@ -588,11 +588,11 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      IF ( tnoseh ) &
         econt = econt + cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
      !
+     tps = tps + delt * au_ps
+     !
      CALL printout_new( nfi, tfirst, ttprint, ttprint, tps, hold, stress, &
                         tau0, vels, fion, ekinc, temphc, tempp, temps, etot, &
                         enthal, econs, econt, vnhh, xnhh0, vnhp, xnhp0, atot )
-     !
-     tps = tps + delt * au_ps
      !
      IF( tfor ) THEN
         !
