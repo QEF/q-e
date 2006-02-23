@@ -276,12 +276,13 @@ end subroutine read_gf_definition
 !
 subroutine generate_guiding_functions(ik)
    use constants, only : pi, tpi, fpi
-   use wvfct, only : npw, g2kin
+   use wvfct, only : npw, igk, g2kin
+   use klist, only: xk
    use gvect, only : g
    use cell_base,  ONLY :tpiba2, omega
    use wannier
    implicit none
-   integer iw, ig, ik
+   integer iw, ig, iig, ik
    real(DP) :: arg, anorm, fac, alpha_w2
    complex(DP) :: ZDOTC
 
@@ -289,7 +290,10 @@ subroutine generate_guiding_functions(ik)
       fac = ( sqrt(fpi)*alpha_w(iw) )**(1.5) / sqrt(omega)
       alpha_w2 = alpha_w(iw)**2
       do ig=1,npw
-         arg = tpi * (g(1,ig)*rw(1,iw)+g(2,ig)*rw(2,iw)+g(3,ig)*rw(3,iw))
+         iig = igk(ig)
+         arg = tpi * ( (xk(1,ik)+g(1,iig))*rw(1,iw) + &
+                       (xk(2,ik)+g(2,iig))*rw(2,iw) + &
+                       (xk(3,ik)+g(3,iig))*rw(3,iw) )
          gf(ig,iw) = fac * exp(-0.5d0*alpha_w2*g2kin(ig)*tpiba2) * &
                            CMPLX(cos(arg),-sin(arg))
       end do
