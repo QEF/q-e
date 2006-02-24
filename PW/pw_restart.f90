@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2005 Quantum-ESPRESSO group
+! Copyright (C) 2005-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -97,7 +97,7 @@ MODULE pw_restart
       CHARACTER(LEN=256)    :: dirname, filename, file_pseudo, rho_file_base
       CHARACTER(LEN=80)     :: bravais_lattice
       INTEGER               :: i, ig, ik, ngg, ierr, ipol, ik_eff, num_k_points
-      INTEGER,  ALLOCATABLE :: kisort(:)
+      !!!INTEGER,  ALLOCATABLE :: kisort(:)
       INTEGER               :: npool, nkbl, nkl, nkr, npwx_g
       INTEGER               :: ike, iks, npw_g, ispin
       INTEGER,  ALLOCATABLE :: ngk_g(:)
@@ -204,23 +204,23 @@ MODULE pw_restart
       !
       ! ... build the G+k array indexes
       !
-      ALLOCATE( kisort( npwx ) )
+      !!!ALLOCATE( kisort( npwx ) )
       !
-      DO ik = 1, nks
+      !!!DO ik = 1, nks
          !
-         kisort = 0
-         npw    = npwx
+         !!!kisort = 0
+         !!!npw    = npwx
          !
-         CALL gk_sort( xk(1,ik+iks-1), ngm, g, &
-                       ecutwfc/tpiba2, npw, kisort(1), g2kin )
+         !!!CALL gk_sort( xk(1,ik+iks-1), ngm, g, &
+         !!!              ecutwfc/tpiba2, npw, kisort(1), g2kin )
          !
-         CALL gk_l2gmap( ngm, ig_l2g(1), npw, kisort(1), igk_l2g(1,ik) )
+         !!!CALL gk_l2gmap( ngm, ig_l2g(1), npw, kisort(1), igk_l2g(1,ik) )
          !
-         ngk(ik) = npw
+         !!!ngk(ik) = npw
          !
-      END DO
+      !!!END DO
       !
-      DEALLOCATE( kisort )
+      !!!DEALLOCATE( kisort )
       !
       ! ... compute the global number of G+k vectors for each k point
       !
@@ -396,6 +396,36 @@ MODULE pw_restart
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
          !
          CALL write_rho_xml( rho_file_base, rho(:,2), &
+                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         !
+      ELSE IF ( nspin == 4 ) THEN
+         !
+         CALL write_rho_xml( rho_file_base, rho(:,1), nr1, &
+                             nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         !
+         rho_file_base = 'magnetization.x'
+         IF ( ionode ) &
+            CALL iotk_link( iunpun, "MAG_X", rho_file_base, &
+                            CREATE = .FALSE., BINARY = .FALSE. )
+         rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
+         CALL write_rho_xml( rho_file_base, rho(:,2), &
+                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         !
+         rho_file_base = 'magnetization.y'
+         IF ( ionode ) &
+            CALL iotk_link( iunpun, "MAG_Y", rho_file_base, &
+                            CREATE = .FALSE., BINARY = .FALSE. )
+         rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
+         CALL write_rho_xml( rho_file_base, rho(:,3), &
+                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         !
+         !
+         rho_file_base = 'magnetization.z'
+         IF ( ionode ) &
+            CALL iotk_link( iunpun, "MAG_Z", rho_file_base, &
+                            CREATE = .FALSE., BINARY = .FALSE. )
+         rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
+         CALL write_rho_xml( rho_file_base, rho(:,4), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
       END IF
@@ -725,7 +755,7 @@ MODULE pw_restart
       CHARACTER(LEN=256) :: dirname      
       LOGICAL            :: lexist, lcell, lpw, lions, lspin, &
                             lxc, locc, lbz, lbs, lwfc, lgvec, &
-                            lsymm, lph
+                            lsymm, lph, lrho
       !
       !
       ierr = 0
@@ -761,6 +791,7 @@ MODULE pw_restart
       lgvec = .FALSE.
       lsymm = .FALSE.
       lph   = .FALSE.
+      lrho  = .FALSE.
       !
       SELECT CASE( what )
       CASE( 'dim' )
@@ -777,6 +808,10 @@ MODULE pw_restart
          !
          lcell = .TRUE.
          lions = .TRUE.
+         !
+      CASE( 'rho' )
+         !
+         lrho  = .TRUE.
          !
       CASE( 'wave' )
          !
@@ -811,6 +846,7 @@ MODULE pw_restart
          lgvec = .TRUE.
          lsymm = .TRUE.
          lph   = .TRUE.
+         lrho  = .TRUE.
          !
       CASE( 'reset' )
          !
@@ -891,6 +927,13 @@ MODULE pw_restart
       IF ( lph ) THEN
          !
          CALL read_phonon( dirname, ierr )
+         IF ( ierr > 0 ) RETURN
+         !
+      END IF
+      !
+      IF ( lrho ) THEN
+         !
+         CALL read_rho( dirname, ierr )
          IF ( ierr > 0 ) RETURN
          !
       END IF
@@ -2190,6 +2233,61 @@ MODULE pw_restart
       RETURN
       !
     END SUBROUTINE read_phonon
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE read_rho( dirname, ierr )
+      !------------------------------------------------------------------------
+      !
+      USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2
+      USE lsda_mod,             ONLY : nspin
+      USE scf,                  ONLY : rho
+      USE sticks,               ONLY : dfftp
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
+      !
+      CHARACTER(LEN=256) :: rho_file_base
+      !
+      IF (nspin == 1) THEN
+         !
+         rho_file_base = TRIM( dirname ) // '/charge-density'
+         CALL read_rho_xml( rho_file_base, rho(:,1), &
+              nr1, nr2, nr3, nrx1, nrx2,  dfftp%ipp, dfftp%npp )
+         !
+      ELSE IF (nspin == 2) THEN
+         !
+         rho_file_base = TRIM( dirname ) // '/charge-density-up'
+         CALL read_rho_xml( rho_file_base, rho(:,1), &
+              nr1, nr2, nr3, nrx1, nrx2,  dfftp%ipp, dfftp%npp )
+         !
+         rho_file_base = TRIM( dirname ) // '/charge-density-dw'
+         CALL read_rho_xml( rho_file_base, rho(:,2), &
+              nr1, nr2, nr3, nrx1, nrx2,  dfftp%ipp, dfftp%npp )
+         !
+      ELSE IF (nspin == 4) THEN
+         !
+         rho_file_base = TRIM( dirname ) // '/charge-density'
+         CALL read_rho_xml( rho_file_base, rho(:,1), &
+              nr1, nr2, nr3, nrx1, nrx2,  dfftp%ipp, dfftp%npp )
+         !
+         rho_file_base = TRIM( dirname ) // '/magnetization.x'
+         CALL read_rho_xml( rho_file_base, rho(:,2), &
+              nr1, nr2, nr3, nrx1, nrx2,  dfftp%ipp, dfftp%npp )
+         !
+         rho_file_base = TRIM( dirname ) // '/magnetization.y'
+         CALL read_rho_xml( rho_file_base, rho(:,3), &
+              nr1, nr2, nr3, nrx1, nrx2,  dfftp%ipp, dfftp%npp )
+         !
+         rho_file_base = TRIM( dirname ) // '/magnetization.z'
+         CALL read_rho_xml( rho_file_base, rho(:,4), &
+              nr1, nr2, nr3, nrx1, nrx2,  dfftp%ipp, dfftp%npp )
+         !
+      END IF
+      ierr = 0
+      !
+    END SUBROUTINE read_rho
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_( dirname, ierr )

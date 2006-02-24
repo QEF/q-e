@@ -17,7 +17,7 @@ SUBROUTINE read_file()
   USE kinds,            ONLY : DP
   USE ions_base,        ONLY : nat, nsp, ityp, tau, if_pos
   USE basis,            ONLY : natomwfc
-  USE cell_base,        ONLY : tpiba2, at, bg
+  USE cell_base,        ONLY : tpiba2, alat,omega,  at, bg
   USE force_mod,        ONLY : force
   USE klist,            ONLY : nkstot, nks, xk, wk
   USE lsda_mod,         ONLY : lsda, nspin, current_spin, isk
@@ -26,11 +26,12 @@ SUBROUTINE read_file()
   USE ktetra,           ONLY : tetra, ntetra 
   USE extfield,         ONLY : forcefield, tefield
   USE cellmd,           ONLY : cell_factor, lmovecell
-  USE gvect,            ONLY : gg, ecutwfc, ngm, g, nr1, nr2, nr3, &
-                               eigts1, eigts2, eigts3
+  USE gvect,            ONLY : gg, ecutwfc, ngm, g, nr1, nr2, nr3, nrxx,&
+                               nrx1, nrx2, nrx3, eigts1, eigts2, eigts3, &
+                               nl, gstart
   USE gsmooth,          ONLY : ngms, nls, nrx1s, nr1s, nr2s, nr3s
   USE spin_orb,         ONLY : so
-  USE scf,              ONLY : rho, vr
+  USE scf,              ONLY : rho, rho_core, vr
   USE vlocal,           ONLY : strf
   USE io_files,         ONLY : tmp_dir, prefix, iunpun
   USE restart_module,   ONLY : readfile_new
@@ -43,7 +44,7 @@ SUBROUTINE read_file()
   IMPLICIT NONE
   !
   INTEGER               :: i, ik, ibnd, nb, nt, ios, ierr
-  REAL(DP)              :: rdum(1,1)
+  REAL(DP)              :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
   !
   !
   !
@@ -180,6 +181,29 @@ SUBROUTINE read_file()
   CALL allocate_nlpot()
   CALL allocate_wfc()
   !
+  ! ... read the charge density
+  !
+  CALL pw_readfile( 'rho', ierr )
+  !
+  ! ... re-calculate the local part of the pseudopotential vltot
+  ! ... and the core correction charge (if any) - This is done here
+  ! ... for compatibility with the previous version of read_file
+  !
+  CALL init_vloc()
+  !
+  CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
+                   nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
+  !
+  CALL setlocal()
+  !
+  CALL set_rhoc()
+  !
+  ! ... recalculate the potential
+  !
+  CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
+       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+       ehart, etxc, vtxc, etotefield, charge, vr )
+  !
 #else
   !
   !-------------------------------------------------------------------------------
@@ -258,8 +282,6 @@ SUBROUTINE read_file()
   CALL poolscatter( nbnd , nkstot, et, nks, et )
   CALL poolscatter( nbnd , nkstot, wg, nks, wg )
   !
-#endif
-  !
   ! ... read the charge density
   !
   CALL io_pot( - 1, 'rho', rho, nspin )
@@ -280,6 +302,8 @@ SUBROUTINE read_file()
   CALL setlocal()
   !
   CALL set_rhoc()
+  !
+#endif
   !
   RETURN
   !
