@@ -552,10 +552,14 @@ They can be downloaded freely (but not redistributed!) from:
 {\texttt{http://www.cs.utexas.edu/users/flame/goto/}}%
 {http://www.cs.utexas.edu/users/flame/goto/}
 
-The FFTW library can also be replaced by vendor-specific FFT
-libraries, when available, or you can link to a precompiled FFTW
-library.  Please note that you must use FFTW version 2.  Support for
-version 3 is in progress: contact the developers if you want to try.
+At compilation time you have to choose whether to use the built-in
+copy of FFTW (v.<3), a precompiled FFTW v.<3 library, or a
+precompiled FFTW v.3 library. This is done using preprocessing
+options with rather obvious meaning : 
+\texttt(__FFTW}, \texttt(__USE_INTERNAL_FFTW}, \texttt(__FFTW3}.
+
+The FFTW library can also be replaced by vendor-specific FFT libraries, 
+when available.
 
 Finally, Quantum-ESPRESSO can use the MASS vector math library from
 IBM, if available (only on AIX).
@@ -585,15 +589,14 @@ specified value, and won't do any extra search.  This is so that if
 \texttt{configure} finds any library that you don't want to use, you
 can override it.
 
-If you want to use a precompiled FFTW library, the corresponding
-\texttt{fftw.h} include file is also required.
-That may or may not have been installed on your system together with
-the library: in particular, most Linux distributions split libraries
-into ``base'' and ``development'' packages, include files normally
-belonging to the latter.
-Thus if you can't find \texttt{fftw.h} on your machine, chances are
-you must install the FFTW development package (how exactly it's called
-depends on your distribution).
+If you want to link to a precompiled FFTW v.<3 library, you will need 
+the corresponding \texttt{fftw.h} include file. That may or may not 
+have been installed on your system together with the library: in
+particular, most Linux distributions split libraries into ``base'' 
+and ``development'' packages, include files normally belonging to the 
+latter. Thus if you can't find \texttt{fftw.h} on your machine, chances
+are you must install the FFTW development package (how to do this and
+what it is exactly called depends  on your operating system version).
 
 If instead the file is there, but \texttt{configure} doesn't find it,
 you may specify its location in the \texttt{INCLUDEFFTW} environment
@@ -1244,9 +1247,10 @@ Version 7 did not have this problem.
 
 At least some versions of ifort 9 have a buggy preprocessor that 
 either prevents compilation of \texttt{iotk}, or produces runtime 
-errors in \texttt{cft3}. Workaround: modify \texttt{make.sys} to 
-explicitly perform preprocessing using \texttt{/lib/cpp}, as in 
-the following example (courtesy from Sergei Lysenkov):
+errors in \texttt{cft3}. Update to a more patched version, or
+modify \texttt{make.sys} to explicitly perform preprocessing 
+using \texttt{/lib/cpp}, as in the following example (courtesy 
+from Sergei Lysenkov):
 \begin{verbatim}
 .f90.o:
         $(CPP) $(CPPFLAGS) $< -o $*.F90
@@ -2645,9 +2649,8 @@ Possible solutions:
     or the cell size.
   \item
     use conjugate-gradient (\texttt{diagonalization='cg'}: slow 
-    but very robust) or DIIS (\texttt{diagonalization='diis'}: 
-    fast but not very robust):
-    both requires less memory than the default Davidson algorithm.
+    but very robust): it requires less memory than the default 
+    Davidson algorithm.
   \item
     in parallel execution, use more processors, or use the same number
     of processors with less pools.
@@ -2677,12 +2680,11 @@ See info from Axel Kohlmeyer:\hfill\break
 {{\small\texttt{http://www.democritos.it/pipermail/pw\_forum/2005-April/002338.html}}}%
 {http://www.democritos.it/pipermail/pw_forum/2005-April/002338.html}
 
-Random crashes due to MPI errors have often been reported in Linux
-PC clusters. These are due either to hardware problems (defective 
-RAM for instance) or to software bugs in MPI libraries or in the 
-operating system. While we cannot guarantee with 100\% confidence 
-that such problems are not due to Quantum-ESPRESSO, we think that 
-this is at least 99.9999\% true.
+Random crashes due to MPI errors have often been reported in Linux PC 
+clusters. We cannot rule out the possibility that bugs in Quantum-ESPRESSO
+cause such behavior, but we are quite confident that the likely explanation
+is a hardware problem (defective RAM for instance) or a software bug (in MPI 
+libraries, compiler, operating system).
 
 \paragraph{\texttt{pw.x} runs but nothing happens.}
 
@@ -3180,5 +3182,45 @@ ways.
 You might find the ISOTROPY package useful:\\
 \htmladdnormallink{\texttt{http://stokes.byu.edu/iso/isotropy.html}}%
                           {http://stokes.byu.edu/iso/isotropy.html}.
+
+\item {\em What are the \texttt{nr1b}, \texttt{nr2b}, \texttt{nr3b}?}
+
+``\texttt{ecutrho} defines the resolution on the real space FFT mesh 
+(as expressed by \texttt{nr1}, \texttt{nr2} and \texttt{nr3}, that
+the code left on its own sets automatically). In the ultrasoft
+case we refer to this mesh as the "hard" mesh, since
+it is denser than the smooth mesh that is needed to
+represent the square of the non-norm-conserving wavefunctions.
+
+On this "hard", fine-spaced mesh, you need to determine the size
+of the cube that will encompass the largest of the augmentation
+charges - this is what \texttt{nr1b}, \texttt{nr2b}, \texttt{nr3b} are.
+
+So, \texttt{nr1b} is independent of the system size, but dependent on the
+size of the augmentation charge (that doesn't vary that much)
+and on the real-space resolution needed by augmentation charges
+(rule of thumb: \texttt{ecutrho} is between 6 and 12 times \texttt{ecutwfc}).
+
+In practice, \texttt{nr1b} et al. are often in the region of 20-24-28;
+testing seems again a necessity (unless the code started
+automagically to estimate these).
+
+The core charge is in principle finite only at the core region (as 
+defined by $r_{cut}$) and vanishes out side the core. Numerically the charge 
+is represented in a Fourier series which may give rise to small charge 
+oscillations outside the core and even to negative charge density, but 
+only if the cut-off is too low. Having these small boxes removes the 
+charge oscillations problem (at least outside the box) and also offers 
+some numerical advantages in going to higher cut-offs.
+
+The small boxes should be set as small as possible, but large enough to 
+contain the core of the largest element in your system. The formula for 
+determining the box size is quite simple:
+$nr1b=(2*r_{cut})/L_x*nr1$,
+where $r_{cut}$ is the cut-off radius for the largest element and $L_x$ 
+is the physical length of your box along the $x$ axis. You have to round 
+your result to the nearest larger integer.'' (info by Nicola Marzari)
 \end{itemize}
+
+
 \end{document}
