@@ -284,7 +284,7 @@ TLDEPS= bindir mods libs pw
 
 all : tldeps average.x bands.x dos.x efg.x plotband.x plotrho.x wfdd.x \
       pmw.x pp.x projwfc.x pw2casino.x pw2wan.x pw2wannier90.x pw_export.x \
-      voronoy.x initial_state.x dipole.x sumpdos.x plan_avg.x
+      voronoy.x initial_state.x dipole.x sumpdos.x plan_avg.x pw2gw.x
 
 average.x : average.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
@@ -375,12 +375,12 @@ initial_state.x : initial_state.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
-pw2gw.x : pw2gw.o $(PPOBJS) $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
+pw2gw.x : pw2gw.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		pw2gw.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LDFLAGS)
+		pw2gw.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
-pw_export.x : pw_export.o $(PWOBJS) $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
+pw_export.x : pw_export.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
 		pw_export.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )

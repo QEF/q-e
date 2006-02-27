@@ -173,10 +173,10 @@ SUBROUTINE compute_gw
   ! matrix, in units of a_i, written columnwise
   !
   write(6,*)'nrot=',nsym
-  write(6,'(3E26.18)') (((float(s(i,j,k)),j=1,3),i=1,3),k=1,nsym) 
+  write(6,'(3E26.18)') (((REAL(s(i,j,k), kind=sgl),j=1,3),i=1,3),k=1,nsym) 
   IF (t_form) THEN
      WRITE (io,'(I2)') nsym
-     WRITE (io,'(3E26.18)') (((float(s(i,j,k)),j=1,3),i=1,3),k=1,nsym)
+     WRITE (io,'(3E26.18)') (((REAL(s(i,j,k), KIND=sgl),j=1,3),i=1,3),k=1,nsym)
    IF (ii(3) == 1) THEN 
         ! READ (10,1020) ((VOFFSET(I,J),I=1,3),J=1,NOP)
         ! WRITE (6,'(//" Run program CNVNSY to convert QPLDA file first.")')
@@ -185,9 +185,9 @@ SUBROUTINE compute_gw
   ELSE
      WRITE (io) nsym
    IF (t_single) THEN
-      WRITE (io) (((float(s(i,j,k)),j=1,3),i=1,3),k=1,nsym)
+      WRITE (io) (((REAL(s(i,j,k), KIND=sgl),j=1,3),i=1,3),k=1,nsym)
    ELSE
-      WRITE (io) (((dfloat(s(i,j,k)),j=1,3),i=1,3),k=1,nsym) 
+      WRITE (io) (((REAL(s(i,j,k), KIND=DP ), j=1,3),i=1,3),k=1,nsym) 
    ENDIF
    IF (ii(3) == 1) THEN
        ! READ (10,1020) ((VOFFSET(I,J),I=1,3),J=1,NOP)
