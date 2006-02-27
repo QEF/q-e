@@ -204,6 +204,11 @@ SUBROUTINE read_file()
        nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
        ehart, etxc, vtxc, etotefield, charge, vr )
   !
+  ! ... read the wavefunctions, write them in 'distributed' for 
+  ! ... to unit iunwfc (for compatibility)
+  !
+  CALL pw_readfile( 'wave', ierr )
+  !
 #else
   !
   !-------------------------------------------------------------------------------

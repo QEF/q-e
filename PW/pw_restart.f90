@@ -43,7 +43,6 @@ MODULE pw_restart
              lbz_read   = .FALSE., &
              lbs_read   = .FALSE., &
              lwfc_read  = .FALSE., &
-             lgvec_read = .FALSE., &
              lsymm_read = .FALSE.
   !
   CONTAINS
@@ -754,7 +753,7 @@ MODULE pw_restart
       !
       CHARACTER(LEN=256) :: dirname      
       LOGICAL            :: lexist, lcell, lpw, lions, lspin, &
-                            lxc, locc, lbz, lbs, lwfc, lgvec, &
+                            lxc, locc, lbz, lbs, lwfc, &
                             lsymm, lph, lrho
       !
       !
@@ -788,7 +787,6 @@ MODULE pw_restart
       lbz   = .FALSE.
       lbs   = .FALSE.
       lwfc  = .FALSE.
-      lgvec = .FALSE.
       lsymm = .FALSE.
       lph   = .FALSE.
       lrho  = .FALSE.
@@ -817,7 +815,6 @@ MODULE pw_restart
          !
          lpw   = .TRUE.
          lwfc  = .TRUE.
-         lgvec = .TRUE.
          !
       CASE( 'nowave' )
          !
@@ -843,7 +840,6 @@ MODULE pw_restart
          lbz   = .TRUE.
          lbs   = .TRUE.
          lwfc  = .TRUE.
-         lgvec = .TRUE.
          lsymm = .TRUE.
          lph   = .TRUE.
          lrho  = .TRUE.
@@ -859,7 +855,6 @@ MODULE pw_restart
          lbz_read   = .FALSE.
          lbs_read   = .FALSE.
          lwfc_read  = .FALSE.
-         lgvec_read = .FALSE.
          lsymm_read = .FALSE.
          !
       END SELECT
@@ -1932,6 +1927,10 @@ MODULE pw_restart
     SUBROUTINE read_wavefunctions( dirname, ierr )
       !------------------------------------------------------------------------
       !
+      ! ... This routines reads wavefunctions from the new file format, 
+      ! ... writes then into the old format, opening and closing files
+      ! ... Presently a hack, to be fixed at a later stage (PG)
+      !
       USE cell_base,            ONLY : tpiba2
       USE lsda_mod,             ONLY : nspin, isk
       USE klist,                ONLY : nkstot, wk, nelec, nks, xk, ngk
@@ -1952,7 +1951,6 @@ MODULE pw_restart
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
-      CHARACTER(LEN=4)     :: cspin
       CHARACTER(LEN=256)   :: filename
       INTEGER              :: i, ig, ik, ipol, ik_eff, num_k_points
       INTEGER, ALLOCATABLE :: kisort(:)
@@ -1960,8 +1958,12 @@ MODULE pw_restart
       INTEGER              :: ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
       INTEGER, ALLOCATABLE :: itmp(:,:)
+      LOGICAL              :: exst
       REAL(DP)             :: scalef
       !
+      !
+      nwordwfc = 2 * nbnd * npwx
+      CALL diropn (iunwfc, 'wfc', nwordwfc, exst)
       !
       IF ( ionode ) THEN
          !
@@ -2069,7 +2071,13 @@ MODULE pw_restart
       !
       npwx_g = MAXVAL( ngk_g( 1:nkstot ) )
       !      
-      IF ( ionode ) CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE" )
+      IF ( ionode ) THEN
+         !
+         CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE" )
+         !
+         CALL iotk_scan_begin( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
+         !
+      END IF
       !
       num_k_points = nkstot
       !
@@ -2086,9 +2094,8 @@ MODULE pw_restart
          !
          IF ( nspin == 2 ) THEN
             !
+            ispin = 1 
             isk(ik) = 1
-            !
-            cspin = iotk_index( 1 )
             !
             IF ( ionode ) THEN
                !
@@ -2096,7 +2103,7 @@ MODULE pw_restart
                !
             END IF
             !
-            CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
+            CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,     &
                            evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),       &
                            ngk(ik-iks+1), filename, scalef )
             !
@@ -2106,15 +2113,13 @@ MODULE pw_restart
                !
             END IF
             !
+            ispin = 2
             ik_eff = ik + num_k_points
-            !
             isk(ik_eff) = 2
-            !
-            cspin = iotk_index( 2 )
             !
             IF ( ionode ) THEN
                !
-               filename = TRIM( wfc_filename( dirname, 'evc', ik_eff, ispin ) )
+               filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
                !
             END IF
             !
@@ -2130,15 +2135,15 @@ MODULE pw_restart
             !
          ELSE
             !
-            isk(ik) = 1
+            IF ( ionode ) filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
             !
-            cspin = iotk_index( 1 )
+            isk(ik) = 1
             !
             IF ( noncolin ) THEN
                !
                DO ipol = 1, npol
                   !
-                  CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, &
+                  CALL read_wfc( iunout, ik, nkstot, kunit, ispin, &
                                  nspin, evc_nc(:,ipol,:), npw_g, nbnd, &
                                  igk_l2g(:,ik-iks+1), ngk(ik-iks+1),   &
                                  filename, scalef )
@@ -2147,7 +2152,7 @@ MODULE pw_restart
                !
             ELSE
                !
-                CALL read_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
+               CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
                                evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),       &
                                ngk(ik-iks+1), filename, scalef )
                !
@@ -2179,11 +2184,15 @@ MODULE pw_restart
       !
       IF ( ionode ) THEN
          !
+         CALL iotk_scan_end( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
+         !
          CALL iotk_scan_end( iunpun, "BAND_STRUCTURE" )
          !
          CALL iotk_close_read( iunpun )
          !
       END IF
+      !
+      CLOSE (iunwfc, STATUS='keep')
       !
       RETURN
       !
