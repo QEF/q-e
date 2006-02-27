@@ -29,9 +29,9 @@ MODULE path_routines
       !
       USE input_parameters, ONLY : full_phs_path_flag, atomic_positions
       USE input_parameters, ONLY : pos, CI_scheme, opt_scheme, num_of_images, &
-                                   first_last_opt, damp, temp_req, ds,        &
-                                   k_max, k_min, path_thr, restart_mode,      &
-                                   calculation, nstep, max_seconds,           &
+                                   first_last_opt, damp, temp_req, ds, k_max, &
+                                   k_min, path_thr, restart_mode, nstep,      &
+                                   calculation, max_seconds, use_freezing,    &
                                    phase_space, ion_dynamics, etot_conv_thr,  &
                                    forc_conv_thr
       !
@@ -45,7 +45,8 @@ MODULE path_routines
                                  ds_             => ds, &
                                  k_max_          => k_max, &
                                  k_min_          => k_min, &
-                                 path_thr_       => path_thr
+                                 path_thr_       => path_thr, &
+                                 use_freezing_   => use_freezing
       !
       USE io_files,      ONLY : prefix, outdir, tmp_dir
       USE io_global,     ONLY : ionode, ionode_id
@@ -54,7 +55,8 @@ MODULE path_routines
       USE mp_global,     ONLY : mpime
       USE mp,            ONLY : mp_bcast, mp_barrier, mp_sum
       USE control_flags, ONLY : lpath, lneb, lcoarsegrained, lconstrain, &
-                                lmd, ldamped, tprnfor
+                                lmd, tprnfor
+      USE metadyn_vars,  ONLY : init_metadyn_vars
       !
       IMPLICIT NONE
       !
@@ -86,11 +88,13 @@ MODULE path_routines
       !
       IF ( lcoarsegrained ) THEN
         !
+        CALL init_metadyn_vars()
+        !
         lmd        = .TRUE.
         lconstrain = .TRUE.
         !
         SELECT CASE( TRIM( ion_dynamics ) )
-        CASE( 'constrained-verlet' )
+        CASE( 'verlet', 'damp' )
            !
            CONTINUE
            !
@@ -168,12 +172,13 @@ MODULE path_routines
       k_max_          = k_max
       k_min_          = k_min
       path_thr_       = path_thr
+      use_freezing_   = use_freezing
       !
       lpath      = .TRUE.
       lneb       = .TRUE.
       nstep_path = nstep
       !
-      outdir_saved  = outdir
+      outdir_saved = outdir
       !
       IF ( full_phs_path_flag ) THEN
          !
@@ -222,7 +227,7 @@ MODULE path_routines
                !
             CASE DEFAULT
                !
-               CALL errore( 'iosys_path',' tau_units = ' // &
+               CALL errore( 'iosys_path', ' tau_units = ' // &
                           & TRIM( atomic_positions ) // ' not implemented ', 1 )
                !
             END SELECT
@@ -267,7 +272,7 @@ MODULE path_routines
         CALL mp_sum( ios )
         !
         IF ( ios /= 0 ) &
-           CALL errore( 'outdir: ', TRIM( outdir ) // &
+           CALL errore( 'outdir:', TRIM( outdir ) // &
                       & ' non existent or non writable', 1 )
         !
         ! ... if starting from scratch all temporary files are removed

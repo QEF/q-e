@@ -21,7 +21,7 @@ MODULE input
    PUBLIC :: read_input_file    !  a) This sub. should be called first
    PUBLIC :: iosys_pseudo       !  b) then read pseudo files
    PUBLIC :: iosys              !  c) finally copy variables to modules
-   PUBLIC :: modules_setup
+   PUBLIC :: modules_setup, set_control_flags
    !
    LOGICAL :: has_been_read = .FALSE.
    !
@@ -143,23 +143,23 @@ MODULE input
      !
      CALL set_control_flags()
      !
-     ! ... Write to stdout basic simulation parameters
+     ! ... write to stdout basic simulation parameters
      !
      CALL input_info()
      !
-     ! . CALL the Module specific setup routine
+     ! ... call the module specific setup routine
      !
      CALL modules_setup()
      !
-     ! ... Initialize SMD variables and path
+     ! ... initialize SMD variables and path
      !
      IF ( lsmd ) CALL smd_initvar()
      !
-     ! ... Fix values for dependencies
+     ! ... fix values for dependencies
      !
      IF ( program_name == 'FPMD' ) CALL fix_dependencies()
      !
-     ! ... Write to stdout input module information
+     ! ... write to stdout input module information
      !
      CALL modules_info()
      !
@@ -569,12 +569,7 @@ MODULE input
          !
       END SELECT
       !
-      IF ( lmetadyn ) THEN
-         !
-         ldamped         = .TRUE.
-         lcoarsegrained  = .TRUE.
-         !
-      END IF
+      IF ( lmetadyn ) lcoarsegrained  = .TRUE.
 
       ! ... Ions dynamics
 
@@ -619,6 +614,7 @@ MODULE input
           IF( program_name == 'CP90' ) &
             CALL errore( "iosys ", " ion_dynamics = '//TRIM(ion_dynamics)//' not yet implemented ", 1 )
         CASE ('damp')
+          ldamped    = .TRUE.
           tsdp_      = .FALSE.
           tfor_      = .TRUE.
           tdampions_ = .TRUE.
@@ -815,7 +811,7 @@ MODULE input
    SUBROUTINE modules_setup()
      !-------------------------------------------------------------------------
      !
-     USE control_flags,    ONLY : program_name, lconstrain, lneb, lcoarsegrained
+     USE control_flags,    ONLY : program_name, lconstrain, lneb, lmetadyn
      USE constants,        ONLY : amu_au, pi
      !
      USE input_parameters, ONLY: ibrav , celldm , trd_ht, dt,    &
@@ -1026,7 +1022,7 @@ MODULE input
      !
      IF ( lconstrain ) CALL init_constraint( nat, tau, ityp, 1.D0 )
      !
-     IF ( lcoarsegrained ) CALL init_metadyn_vars()
+     IF ( lmetadyn ) CALL init_metadyn_vars()
      !
      IF( program_name == 'FPMD' ) THEN
         !
@@ -1070,12 +1066,12 @@ MODULE input
     ! ... this subroutine copies SMD variables from input 
     ! ... module to path_variables
     !
-      USE input_parameters, ONLY: calculation, &
+    USE input_parameters, ONLY: calculation, &
            smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2, smd_stcd3, smd_codf, &
            smd_forf, smd_smwf, smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, smd_smopt, smd_smlm, &
            num_of_images, smd_ene_ini, smd_ene_fin
 
-      USE path_variables, ONLY: &
+    USE path_variables, ONLY: &
            sm_p_ => smd_p, &
            smcp_ => smd_cp, &
            smlm_ => smd_lm, &
@@ -1092,9 +1088,9 @@ MODULE input
            ene_ini_ => smd_ene_ini, &
            ene_fin_ => smd_ene_fin
 
-      USE ions_base,      ONLY: nat, nsp, tions_base_init
-      USE control_flags,  ONLY: nbeg
-      USE cell_base,      ONLY: cell_alat
+    USE ions_base,      ONLY: nat, nsp, tions_base_init
+    USE control_flags,  ONLY: nbeg
+    USE cell_base,      ONLY: cell_alat
       !
       IMPLICIT NONE
       !

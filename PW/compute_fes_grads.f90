@@ -47,24 +47,20 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN)   :: N_in, N_fin
-  LOGICAL, INTENT(OUT)  :: stat
-  INTEGER               :: image, iter
-  REAL(DP)              :: tcpu, error
-  CHARACTER(LEN=256)    :: tmp_dir_saved, filename
-  LOGICAL               :: lfirst_scf = .TRUE.
-  LOGICAL               :: opnd, file_exists
-  LOGICAL               :: ldamped_saved
-  REAL(DP), ALLOCATABLE :: tauold(:,:,:)
-  ! previous positions of atoms (needed for extrapolation)
+  INTEGER, INTENT(IN)  :: N_in, N_fin
+  LOGICAL, INTENT(OUT) :: stat
+  INTEGER              :: image, iter
+  REAL(DP)             :: tcpu, error
+  CHARACTER(LEN=256)   :: tmp_dir_saved, filename
+  LOGICAL              :: lfirst_scf = .TRUE.
+  LOGICAL              :: opnd, file_exists
+  LOGICAL              :: ldamped_saved
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   REAL(DP),         EXTERNAL :: get_clock
   !
   !
   CALL flush_unit( iunpath )
-  !
-  ALLOCATE( tauold( 3, nat, 3 ) )
   !
   IF ( ionode ) THEN
      !
@@ -146,8 +142,6 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
      !
      IF ( .NOT. frozen(image) ) THEN
         !
-        CALL clean_pw( .FALSE. )
-        !
         tcpu = get_clock( 'PWSCF' )
         !
         IF ( nimage > 1 ) THEN
@@ -182,15 +176,23 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         IF ( file_exists ) THEN
            !
-           OPEN( UNIT = 1000, FILE = filename )
+           IF ( ionode ) THEN
+              !
+              OPEN( UNIT = 1000, FILE = filename )
+              !
+              READ( 1000, * ) tau
+              !
+              CLOSE( UNIT = 1000 )
+              !
+           END IF
            !
-           READ( 1000, * ) tau
-           !
-           CLOSE( UNIT = 1000 )
+           CALL mp_bcast( tau, ionode_id )
            !
         END IF
         !
+        CALL clean_pw( .FALSE. )
         CALL deallocate_constraint()
+        !
         CALL init_constraint( nat, tau, ityp, alat )
         !
         CALL init_run()
@@ -201,10 +203,10 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         new_target(:) = pos(:,image)
         !
+        to_target(:) = ( new_target(:) - target(:) ) / DBLE( shake_nstep )
+        !
         ! ... first the system is "adiabatically" moved to the new target
         ! ... by using MD without damping
-        !
-        to_target(:) = ( new_target(:) - target(:) ) / DBLE( shake_nstep )
         !
         ldamped = .FALSE.
         !
@@ -274,6 +276,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
      END IF
      !
+     IF ( ionode ) CALL write_axsf_file( image, tau, alat )
+     !
      ! ... the new image is obtained (by ionode only)
      !
      CALL get_new_image( image, tmp_dir_saved )
@@ -298,8 +302,6 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   CALL add_domain_potential()
   !
-  DEALLOCATE( tauold )
-  !
   tmp_dir = tmp_dir_saved
   !
   IF ( nimage > 1 ) THEN
@@ -317,6 +319,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   startingwfc = 'file'
   startingpot_ = startingpot
   startingwfc_ = startingwfc
+  !
+  stat = .TRUE.
   !
   RETURN  
   !

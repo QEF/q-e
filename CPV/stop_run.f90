@@ -13,7 +13,7 @@ SUBROUTINE stop_run( flag )
   ! ... Close all files and synchronize processes before stopping.
   !
   USE io_global,          ONLY : stdout, ionode
-  USE control_flags,      ONLY : lpath, lneb, lsmd, lconstrain, &
+  USE control_flags,      ONLY : program_name, lpath, lneb, lsmd, lconstrain, &
                                  lcoarsegrained
   USE io_files,           ONLY : prefix
   USE environment,        ONLY : environment_end
@@ -29,7 +29,7 @@ SUBROUTINE stop_run( flag )
   LOGICAL             :: exst
   !
   !
-  CALL environment_end()
+  CALL environment_end( program_name )
   !
   IF ( lpath ) CALL io_path_stop()
   !

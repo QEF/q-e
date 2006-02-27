@@ -60,9 +60,9 @@ MODULE path_io_routines
        ionode_id = root_image
        !
        ! ... stdout is connected to a file ( different for each image ) 
-       ! ... via unit 17 ( only root_image performes I/O )
+       ! ... via unit 117 ( only root_image performes I/O )
        !
-       IF ( me_image == root_image ) stdout = 17
+       IF ( me_image == root_image ) stdout = 117
        !
        RETURN
        !

@@ -242,7 +242,7 @@
       tau0 = 0.0d0
       taus = 0.0d0
       tau0 ( 1:3 , 1:nat ) = tau_srt ( 1:3 , 1:nat )
-
+      
       CALL r_to_s( tau0, taus, na, nsp, ainv )
 
       CALL atoms_init( atomsm, atoms0, atomsp, taus, ind_srt, if_pos, atm, ht0%hmat )

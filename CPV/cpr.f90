@@ -31,12 +31,12 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE electrons_base,           ONLY : nbspx, nbsp, ispin, f, nspin
   USE electrons_base,           ONLY : nel, iupdwn, nupdwn, nudx, nelt
   USE efield_module,            ONLY : efield, epol, tefield, allocate_efield, &
-                                       efield_update, ipolp, qmat, gqq,        &
-                                       evalue, berry_energy, pberryel, pberryion,&
-                                       efield2, epol2, tefield2, allocate_efield2, &
-                                       efield_update2, ipolp2, qmat2, gqq2,        &
-                                       evalue2, berry_energy2, pberryel2, pberryion2
-
+                                       efield_update, ipolp, qmat, gqq, evalue,&
+                                       berry_energy, pberryel, pberryion,      &
+                                       efield2, epol2, tefield2,               &
+                                       allocate_efield2, efield_update2,       &
+                                       ipolp2, qmat2, gqq2, evalue2,           &
+                                       berry_energy2, pberryel2, pberryion2
   USE ensemble_dft,             ONLY : tens, tgrand, ninner, ismear, etemp,   &
                                        ef, tdynz, tdynf, zmass, fmass, fricz, &
                                        fricf, allocate_ensemble_dft,          &
@@ -179,11 +179,11 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   dt2bye   = dt2 / emass
   etot_out = 0.D0
-  enow     = 1.d9
+  enow     = 1.D9
   !
-  tfirst   = .TRUE.
-  tlast    = .FALSE.
-  nacc     = 5
+  tfirst = .TRUE.
+  tlast  = .FALSE.
+  nacc   = 5
   !
   ! ... Check for restart_p from Autopilot Feature Suite
   !
@@ -192,10 +192,6 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      ! ... do not add past nfi
      !
      nomore = nomore
-     !
-  ELSE
-     !
-     ! nomore = nomore + nfi  ! nfi already added in subroutine init_run
      !
   END IF
   !
@@ -410,8 +406,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         IF ( tortho ) THEN
            !
-           CALL ortho( eigr, cm(:,:,1,1), phi(:,:,1,1), lambda, bigr, iter, ccc, &
-                       bephi, becp )
+           CALL ortho( eigr, cm(:,:,1,1), phi(:,:,1,1), &
+                       lambda, bigr, iter, ccc, bephi, becp )
            !
         ELSE
            !
@@ -518,7 +514,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      IF ( tcp .OR. tcap .AND. tfor .AND. .NOT.thdyn ) THEN
         !
-        IF ( tempp > (tempw+tolp) .OR. tempp < (tempw-tolp) .AND. tempp /= 0.D0 ) THEN
+        IF ( tempp > (tempw+tolp) .OR. &
+             tempp < (tempw-tolp) .AND. tempp /= 0.D0 ) THEN
            !
            CALL  ions_vrescal( tcap, tempw, tempp, taup, &
                                tau0, taum, na, nsp, fion, iforce, pmass, delt )
@@ -622,23 +619,28 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         CALL cg_update( tfirst, nfi, c0 )
         !
-!
-! Uncomment the following lines for smooth restart CG--->CP
-! 
-          IF(tfor.and..not.tens.and.(( MOD( nfi, isave ) == 0 ).or.tlast)) then
-!!in this case optimize c0 and lambda for smooth restart with CP
-            CALL initbox( tau0, taub, irb )
-            CALL phbox( taub, eigrb )
-            CALL phfac( tau0, ei1, ei2, ei3, eigr )
-            CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
-            IF ( thdyn ) CALL formf( tfirst, eself )
-            IF (tefield ) CALL efield_update( eigr )
-            IF (tefield2 ) CALL efield_update2( eigr )
-            lambdam=lambda
-            CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
-                          enthal, enb, enbi, fccc, ccc, dt2bye )
-          END IF
-          !
+        IF ( tfor .AND. .NOT. tens .AND. &
+             ( ( MOD( nfi, isave ) == 0 ) .OR. tlast ) ) THEN
+           !
+           ! ... in this case optimize c0 and lambda for smooth
+           ! ... restart with CP
+           !
+           CALL initbox( tau0, taub, irb )
+           CALL phbox( taub, eigrb )
+           CALL phfac( tau0, ei1, ei2, ei3, eigr )
+           CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
+           !
+           IF ( thdyn )    CALL formf( tfirst, eself )
+           IF ( tefield )  CALL efield_update( eigr )
+           IF ( tefield2 ) CALL efield_update2( eigr )
+           !
+           lambdam = lambda
+           !
+           CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, &
+                                fion, enthal, enb, enbi, fccc, ccc, dt2bye )
+           !
+        END IF
+        !
      END IF
      !
      ! ... now:  cm=c(t) c0=c(t+dt)
@@ -651,10 +653,10 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         IF ( tcg ) THEN
           !
-          CALL writefile( ndw, h, hold ,nfi, c0(:,:,1,1), c0old, taus, tausm, &
-                          vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,    &
+          CALL writefile( ndw, h, hold ,nfi, c0(:,:,1,1), c0old, taus, tausm,  &
+                          vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,     &
                           vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
-                          xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass, ibrav,&
+                          xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, &
                           celldm, fion, tps, z0, f, rhopr )
            !
         ELSE
@@ -731,9 +733,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         CALL wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, &
                                  irb, ibrav, b1, b2, b3, taus, tausm, vels,  &
                                  velsm, acc, lambda, lambdam, xnhe0, xnhem,  &
-                                 vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm,&
-                                 xnhh0, xnhhm, vnhh, velh, ecutp, ecutw,     &
-                                 delt, celldm, fion, tps, z0, f, rhopr )
+                                 vnhe, xnhp0, xnhpm, vnhp, nhpcl, nhpdim,    &
+                                 ekincm, xnhh0, xnhhm, vnhh, velh, ecutp,    &
+                                 ecutw, delt, celldm, fion, tps, z0, f, rhopr )
      !
      IF ( ( nfi >= nomore ) .OR. tstop ) EXIT main_loop
      !
@@ -767,6 +769,28 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   conv_elec = .TRUE.
   !
+  acc = acc / DBLE( nfi )
+  !
+  IF ( tcg ) THEN
+     !
+     CALL writefile( ndw, h, hold, nfi, c0(:,:,1,1), c0old, taus, tausm, vels, &
+                     velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe, xnhp0,   &
+                     xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm, vnhh,     &
+                     velh, ecutp, ecutw, delt, pmass, ibrav, celldm, fion,     &
+                     tps, z0, f, rhopr )
+     !
+  ELSE
+     !
+     CALL writefile( ndw, h, hold, nfi, c0(:,:,1,1), cm(:,:,1,1), taus, tausm, &
+                     vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe,    &
+                     xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm,    &
+                     vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, celldm,     &
+                     fion, tps, z0, f, rhopr )
+     !
+  END IF
+  !
+  IF( iprsta > 1 ) CALL print_lambda( lambda, nbsp, nbsp, 1.D0 )
+  !
   RETURN
   !
 END SUBROUTINE cprmain
@@ -775,36 +799,15 @@ END SUBROUTINE cprmain
 SUBROUTINE terminate_run()
   !----------------------------------------------------------------------------
   !
-  USE kinds,                 ONLY : DP
-  USE io_global,             ONLY : stdout, ionode
-  USE cp_main_variables,     ONLY : acc, nfi, lambda, lambdam, rhopr, bec, &
-                                    eigr, irb, eigrb, rhog, rhos, lambdap
-  USE cpr_subroutines,       ONLY : print_lambda
-  USE cg_module,             ONLY : tcg, c0old
-  USE wavefunctions_module,  ONLY : c0, cm
-  USE control_flags,         ONLY : ndw, iprsta
-  USE cell_base,             ONLY : h, hold, velh, ibrav, celldm
-  USE ions_positions,        ONLY : taus, tausm, vels, velsm, tau0
-  USE electrons_nose,        ONLY : xnhe0, xnhem, vnhe
-  USE ions_nose,             ONLY : vnhp, xnhp0, xnhpm, nhpcl, nhpdim
-  USE cell_nose,             ONLY : xnhh0, xnhhm, vnhh
-  USE energies,              ONLY : ekincm
-  USE gvecw,                 ONLY : ecutw
-  USE gvecp,                 ONLY : ecutp
-  USE time_step,             ONLY : delt, tps
-  USE ions_base,             ONLY : pmass, fion
-  USE ensemble_dft,          ONLY : z0
-  USE electrons_base,        ONLY : f, nbsp
-  USE restart_file,          ONLY : writefile
-  USE print_out_module,      ONLY : cp_print_rho
+  USE kinds,             ONLY : DP
+  USE io_global,         ONLY : stdout, ionode
+  USE cp_main_variables, ONLY : acc
   !
   IMPLICIT NONE
   !
   INTEGER  :: i, nacc = 5
   !
-  ! ...  Calculate statistics
-  !
-  acc = acc / DBLE( nfi )
+  ! ...  print statistics
   !
   IF ( ionode ) THEN
      !
@@ -844,32 +847,6 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'fftb' )
   CALL print_clock( 'rsg' )
   CALL print_clock( 'reduce' )
-  !
-  !
-  ! charge density
-  !
-  ! CALL cp_print_rho( nfi, bec, c0(:,:,1,1), eigr, irb, eigrb, rhopr, &
-  !                             rhog, rhos, lambdap, lambda, tau0, h )
-  !
-  IF ( tcg ) THEN
-     !
-     CALL writefile( ndw, h, hold, nfi, c0(:,:,1,1), c0old, taus, tausm, vels, &
-                     velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe, xnhp0,   &
-                     xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm, vnhh, velh,&
-                     ecutp, ecutw, delt, pmass, ibrav, celldm, fion, tps,      &
-                     z0, f, rhopr )
-     !
-  ELSE
-     !
-     CALL writefile( ndw, h, hold, nfi, c0(:,:,1,1), cm(:,:,1,1), taus, tausm, &
-                     vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe,    &
-                     xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm, vnhh,&
-                     velh, ecutp, ecutw, delt, pmass, ibrav, celldm, fion, tps,&
-                     z0, f, rhopr )
-     !
-  END IF
-  !
-  IF( iprsta > 1 ) CALL print_lambda( lambda, nbsp, nbsp, 1.D0 )
   !
 1974 FORMAT( 1X,2I5,3F10.4,2X,3F10.4 )
 1975 FORMAT( /1X,'Scaled coordinates '/1X,'species',' atom #' )

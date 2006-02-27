@@ -31,23 +31,24 @@
 !==-----------------------------------------------------------------------==!
     
 
-        SUBROUTINE environment_start( )
+        SUBROUTINE environment_start( progname )
 
           USE io_global, ONLY: stdout, ionode
           USE mp_global, ONLY: mpime, nproc
           use mp, only: mp_env
           USE cp_version
 
-          LOGICAL    :: texst
-          INTEGER    :: nchar
+          CHARACTER(LEN=*), INTENT(IN) :: progname
+          LOGICAL           :: texst
+          INTEGER           :: nchar
           CHARACTER(LEN=80) :: uname
           CHARACTER(LEN=80) :: version_str
-          REAL(DP), EXTERNAL  :: elapsed_seconds, cclock
-          CHARACTER (LEN=6), EXTERNAL :: int_to_char
+          REAL(DP),         EXTERNAL :: elapsed_seconds, cclock
+          CHARACTER(LEN=6), EXTERNAL :: int_to_char
 
 
           CALL init_clocks( .TRUE. )
-          CALL start_clock( 'CP' )
+          CALL start_clock( progname )
 
           start_seconds    = elapsed_seconds()
           start_cclock_val = cclock( )
@@ -98,21 +99,19 @@
 
 !==-----------------------------------------------------------------------==!
 
-        SUBROUTINE environment_end( )
+        SUBROUTINE environment_end( progname )
 
           USE io_global, ONLY: stdout, ionode
 
-          REAL(DP)  :: total_seconds
+          CHARACTER(LEN=*), INTENT(IN) :: progname
+          REAL(DP)                     :: total_seconds
+          REAL(DP)                     :: elapsed_seconds
+          EXTERNAL                        elapsed_seconds
 
-          REAL(DP)  :: elapsed_seconds
-          EXTERNAL      elapsed_seconds
+          IF ( ionode ) WRITE( stdout, * )
 
-          IF(ionode) THEN
-            WRITE( stdout,*)
-          END IF
-
-          CALL print_clock( 'CP' )
-          CALL stop_clock( 'CP' )
+          CALL print_clock( progname )
+          CALL stop_clock(  progname )
 
           CALL closing_date_and_time( )
 

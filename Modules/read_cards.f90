@@ -434,17 +434,17 @@ MODULE read_cards_module
        !
        !
        IF ( tread ) THEN
-          CALL errore( ' card_atomic_positions  ', ' two occurrence ', 2 )
+          CALL errore( 'card_atomic_positions', 'two occurrence', 2 )
        END IF
        IF ( .NOT. taspc ) THEN
-          CALL errore( ' card_atomic_positions  ', &
-                     & ' ATOMIC_SPECIES must be present before ', 2 )
+          CALL errore( 'card_atomic_positions', &
+                     & 'ATOMIC_SPECIES must be present before', 2 )
        END IF
        IF ( ntyp > nsx ) THEN
-          CALL errore(' card_atomic_positions ', ' nsp out of range ', ntyp )
+          CALL errore( 'card_atomic_positions', 'nsp out of range', ntyp )
        END IF
        IF ( nat > natx ) THEN
-          CALL errore(' card_atomic_positions ', ' nat out of range ', nat )
+          CALL errore( 'card_atomic_positions', 'nat out of range', nat )
        END IF
        !
        if_pos = 1
@@ -463,81 +463,85 @@ MODULE read_cards_module
           atomic_positions = 'alat'
        ELSE
           IF ( TRIM( ADJUSTL( input_line ) ) /= 'ATOMIC_POSITIONS' ) THEN
-             CALL errore( ' read_cards ', &
-                        & ' unknow unit option for ATOMIC_POSITION: '&
-                        & //input_line, 1 )
+             CALL errore( 'read_cards ', &
+                        & 'unknow unit option for ATOMIC_POSITION: '&
+                        & // input_line, 1 )
           END IF
           IF ( prog == 'FP' ) atomic_positions = 'bohr'
           IF ( prog == 'CP' ) atomic_positions = 'bohr'
           IF ( prog == 'PW' ) atomic_positions = 'alat'
        END IF
        !
-       IF ( calculation == 'smd' .AND. prog == 'CP' ) THEN
+       IF ( full_phs_path_flag ) THEN
           !
-          rep_loop : DO rep_i = 1, smd_kwnp
+          IF ( calculation == 'smd' .AND. prog == 'CP' ) THEN
              !
-             CALL read_line( input_line )
-             !
-             IF ( matches( "first_image", input_line ) .OR. &
-                  matches( "image", input_line )       .OR. &
-                  matches( "last_image", input_line) ) THEN
+             rep_loop : DO rep_i = 1, smd_kwnp
                 !
-                CALL path_read_images( rep_i )
+                CALL read_line( input_line )
                 !
-             ELSE
-                CALL errore( ' read_cards ', ' missing or wrong image' // &
-                           & ' identifier in ATOMIC_POSITION', 1 )
-             ENDIF
-             !
-          END DO rep_loop
-          !
-       ELSE IF ( full_phs_path_flag ) THEN
-          !
-          CALL read_line( input_line )
-          !
-          IF ( matches( "first_image", input_line ) ) THEN
-             !                
-             input_images = 1
-             !
-             CALL path_read_images( input_images )
+                IF ( matches( "first_image", input_line ) .OR. &
+                     matches( "image", input_line )       .OR. &
+                     matches( "last_image", input_line) ) THEN
+                   !
+                   CALL path_read_images( rep_i )
+                   !
+                ELSE
+                   CALL errore( 'read_cards', 'missing or wrong image ' // &
+                              & 'identifier in ATOMIC_POSITION', 1 )
+                END IF
+                !
+             END DO rep_loop
              !
           ELSE
              !
-             CALL errore( ' read_cards ', &
-                        & ' first_image missing in ATOMIC_POSITION', 1 )
-             !
-          END IF      
-          !
-          read_conf_loop: DO 
-             !
              CALL read_line( input_line )
              !
-             input_images = input_images + 1             
-             !
-             IF ( input_images > num_of_images ) &
-                CALL errore( ' read_cards ', &
-                           & ' too many images in ATOMIC_POSITION', 1 )
-             !
-             IF ( matches( "intermediate_image", input_line )  ) THEN
+             IF ( matches( "first_image", input_line ) ) THEN
+                !                
+                input_images = 1
                 !
                 CALL path_read_images( input_images )
                 !
              ELSE
                 !
-                EXIT read_conf_loop
+                CALL errore( 'read_cards', &
+                           & 'first_image missing in ATOMIC_POSITION', 1 )
+                !
+             END IF      
+             !
+             read_conf_loop: DO 
+                !
+                CALL read_line( input_line )
+                !
+                input_images = input_images + 1             
+                !
+                IF ( input_images > num_of_images ) &
+                   CALL errore( 'read_cards', &
+                              & 'too many images in ATOMIC_POSITION', 1 )
+                !
+                IF ( matches( "intermediate_image", input_line )  ) THEN
+                   !
+                   CALL path_read_images( input_images )
+                   !
+                ELSE
+                   !
+                   EXIT read_conf_loop
+                   !
+                END IF
+                !
+             END DO read_conf_loop
+             !
+             IF ( matches( "last_image", input_line ) ) THEN
+                !
+                CALL path_read_images( input_images )
+                !
+             ELSE
+                !
+                CALL errore( 'read_cards ', &
+                           & 'last_image missing in ATOMIC_POSITION', 1 )
                 !
              END IF
-             !
-          END DO read_conf_loop
-          !
-          IF ( matches( "last_image", input_line ) ) THEN
-             !
-             CALL path_read_images( input_images )
-             !
-          ELSE
-             !
-             CALL errore( ' read_cards ', &
-                        & ' last_image missing in ATOMIC_POSITION', 1 )
              !
           END IF
           !
@@ -549,7 +553,8 @@ MODULE read_cards_module
              CALL field_count( nfield, input_line )
              !
              IF( sic /= 'none' .AND. nfield /= 8 ) &
-               CALL errore(' read_cards ', ' ATOMIC_POSITIONS with sic, 8 columns required ', 1 )
+               CALL errore( 'read_cards', &
+                          & 'ATOMIC_POSITIONS with sic, 8 columns required', 1 )
              !
              IF ( nfield == 4 ) THEN
                 !     
@@ -576,8 +581,8 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( ' read_cards ', ' wrong number of columns ' // &
-                           & ' in ATOMIC_POSITIONS ', sp_pos(ia) )
+                CALL errore( 'read_cards', 'wrong number of columns' // &
+                           & 'in ATOMIC_POSITIONS', sp_pos(ia) )
                 !           
              END IF
              !
@@ -596,13 +601,14 @@ MODULE read_cards_module
              !
              IF( ( sp_pos(ia) < 1 ) .OR. ( sp_pos(ia) > ntyp ) ) THEN
                 !
-                CALL errore( ' read_cards ', &
-                           & ' wrong index in ATOMIC_POSITIONS ', ia )
+                CALL errore( 'read_cards', &
+                           & 'wrong index in ATOMIC_POSITIONS', ia )
                 !           
              END IF
              !
-             is  =  sp_pos(ia)
-             na_inp( is ) = na_inp( is ) + 1
+             is = sp_pos(ia)
+             !
+             na_inp(is) = na_inp(is) + 1
              !
           END DO
           !
@@ -641,9 +647,9 @@ MODULE read_cards_module
                  !
                  IF ( image /= 1 ) THEN
                     !
-                    CALL errore( ' read_cards ', &
-                               & ' wrong number of columns  in' // &
-                               & ' ATOMIC_POSITIONS', sp_pos(ia) )                    
+                    CALL errore( 'read_cards', &
+                               & 'wrong number of columns in ' // &
+                               & 'ATOMIC_POSITIONS', sp_pos(ia) )                    
                     !
                  END IF
                  !
@@ -656,9 +662,9 @@ MODULE read_cards_module
                  !
               ELSE
                  ! 
-                 CALL errore( ' read_cards ', &
-                            & ' wrong number of columns  in' // &
-                            & ' ATOMIC_POSITIONS', sp_pos(ia) )
+                 CALL errore( 'read_cards', &
+                            & 'wrong number of columns in ' // &
+                            & 'ATOMIC_POSITIONS', sp_pos(ia) )
                  !           
               END IF
               !
@@ -680,8 +686,8 @@ MODULE read_cards_module
                  !
                  IF ( ( sp_pos(ia) < 1 ) .OR. ( sp_pos(ia) > ntyp ) ) THEN
                     !     
-                    CALL errore( ' read_cards ', &
-                               & ' wrong index in ATOMIC_POSITIONS ', ia )
+                    CALL errore( 'read_cards', &
+                               & 'wrong index in ATOMIC_POSITIONS', ia )
                     !    
                  END IF
                  !
@@ -697,8 +703,7 @@ MODULE read_cards_module
            !
          END SUBROUTINE path_read_images
          !
-       END SUBROUTINE card_atomic_positions
-     !
+     END SUBROUTINE card_atomic_positions
      !
      !------------------------------------------------------------------------
      !    BEGIN manual

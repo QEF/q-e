@@ -100,10 +100,6 @@ MODULE path_base
       !
       IF ( lcoarsegrained ) THEN
          !
-         IF ( lneb ) &
-            CALL errore( 'initialize_path ', 'coarsegrained phase-space' // &
-                       & ' dynamics is implemented for smd only', 1 )
-         !
          dim = nconstr
          !
          use_masses = .FALSE.
@@ -919,7 +915,7 @@ MODULE path_base
       Emin       = MINVAL( pes(1:num_of_images) )
       Emax       = MAXVAL( pes(1:num_of_images) )
       Emax_index = MAXLOC( pes(1:num_of_images), 1 )
-       
+      !
       RETURN
       !
     END SUBROUTINE born_oppenheimer_pes
@@ -952,8 +948,6 @@ MODULE path_base
       IF ( suspended_image /= 0 ) N_in = suspended_image
       !
       CALL compute_fes_grads( N_in, N_fin, stat )
-      !
-      IF ( .NOT. stat ) RETURN
       !
       RETURN
       !

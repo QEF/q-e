@@ -12,22 +12,21 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !----------------------------------------------------------------------------
   !
   USE kinds,              ONLY : DP
-  USE control_flags,      ONLY : program_name, nomore, ldamped, &
-                                 trane, ampre, nbeg, tfor, taurdr, ndr
-  USE cg_module,          ONLY : tcg
+  USE control_flags,      ONLY : program_name, nomore, ldamped, tconvthrs, &
+                                 trane, ampre, nbeg, tfor, taurdr, ndr, isave
   USE metadyn_vars,       ONLY : new_target, to_target, dfe_acc, &
                                  shake_nstep, fe_nstep, to_new_target
   USE path_variables,     ONLY : pos, pes, grad_pes, frozen, &
                                  num_of_images, istep_path, suspended_image
-  USE constraints_module, ONLY : lagrange, target, init_constraint, &
-                                 deallocate_constraint
+  USE constraints_module, ONLY : lagrange, target, deallocate_constraint
   USE cell_base,          ONLY : alat, at
   USE cp_main_variables,  ONLY : nfi
   USE ions_base,          ONLY : nat, nsp, ityp, if_pos, &
                                  sort_tau, tau_srt, ind_srt
   USE path_formats,       ONLY : scf_fmt, scf_fmt_para
   USE io_files,           ONLY : prefix, outdir, scradir, iunpath, iunaxsf, &
-                                 iunupdate, exit_file, iunexit, delete_if_present
+                                 iunupdate, exit_file, iunexit, &
+                                 delete_if_present
   USE constants,          ONLY : bohr_radius_angs
   USE io_global,          ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_global,          ONLY : inter_image_comm, intra_image_comm, &
@@ -46,15 +45,18 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   INTEGER, INTENT(IN)   :: N_in, N_fin
   LOGICAL, INTENT(OUT)  :: stat
   INTEGER               :: image, iter
-  CHARACTER (LEN=256)   :: outdir_saved, filename
-  LOGICAL               :: file_exists, opnd, tstop
+  CHARACTER (LEN=256)   :: outdir_saved, scradir_saved, filename
+  LOGICAL               :: file_exists, opnd
   REAL(DP)              :: tcpu
   REAL(DP), ALLOCATABLE :: tau(:,:)
   REAL(DP), ALLOCATABLE :: fion(:,:)
   REAL(DP)              :: etot
-  CHARACTER (LEN=6), EXTERNAL :: int_to_char
-  REAL(DP), EXTERNAL    :: get_clock
   !
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  REAL(DP),         EXTERNAL :: get_clock
+  !
+  !
+  stat = .TRUE.
   !
   ALLOCATE( tau( 3, nat ), fion( 3, nat ) )
   !
@@ -84,7 +86,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
      !
   END IF
   !
-  outdir_saved = outdir
+  outdir_saved  = outdir
+  scradir_saved = scradir
   !
   ! ... vectors pes and grad_pes are initalized to zero for all images on
   ! ... all nodes: this is needed for the final mp_sum()
@@ -170,10 +173,9 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         ! ... initialization
         !
         CALL deallocate_modules_var()
+        CALL deallocate_constraint()
         !
         CALL modules_setup()
-        !
-        CALL deallocate_constraint()
         !
         ! ... we read the previous positions for this image from a restart file
         !
@@ -183,72 +185,89 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         IF ( file_exists ) THEN
            !
-           OPEN( UNIT = 1000, FILE = filename )
+           IF ( ionode ) THEN
+              !
+              OPEN( UNIT = 1000, FILE = filename )
+              !
+              READ( 1000, * ) tau
+              !
+              CLOSE( UNIT = 1000 )
+              !
+           END IF
            !
-           READ( 1000, * ) tau
+           CALL mp_bcast( tau, ionode_id )
            !
-           CLOSE( UNIT = 1000 )
+           CALL sort_tau( tau_srt, ind_srt, tau, ityp, nat, nsp )
            !
         END IF
         !
-        CALL sort_tau( tau_srt, ind_srt, tau, ityp, nat, nsp )
-        !
-        ! ... first the wfc are taken to the ground state using CG algorithm
+        ! ... first we bring the system on the BO surface
         !
         taurdr = .TRUE.
-        nfi    = 1
-        tcg    = .TRUE.
+        nfi    = 0
         tfor   = .FALSE.
         !
         IF ( check_restartfile( scradir, ndr ) ) THEN
            !
-           WRITE( stdout, '(/,2X,"restarting calling readfile",/)' )
+           WRITE( stdout, '(/,3X,"restarting from file",/)' )
            !
            nbeg   = 0
-           nomore = 100
+           nomore = 50
            !
         ELSE
            !
-           WRITE( stdout, '(/,2X,"restarting from scratch",/)' )
+           WRITE( stdout, '(/,3X,"restarting from scratch",/)' )
            !
            nbeg   = -1
-           nomore = 500
+           nomore = 100
            trane  = .TRUE.
            ampre  = 0.02D0
            !
         END IF
         !
-        ! ... initialization of the CP-dynamics
+        isave = nomore
         !
         CALL init_run()
         !
-        ! ... the new value of the order-parameter is set here
-        !
-        CALL init_constraint( nat, tau, ityp, 1.D0 )
-        !
         CALL cprmain( tau, fion, etot )
         !
-        ! ... then the system is "adiabatically" moved to the new target
+        ! ... the new value of the order-parameter is set here
         !
         new_target(:) = pos(:,image)
         !
         to_target(:) = ( new_target(:) - target(:) ) / DBLE( shake_nstep )
         !
-        nfi    = 1
-        nomore = shake_nstep
-        tcg    = .FALSE.
-        tfor   = .TRUE.
+        ! ... then the system is "adiabatically" moved to the new target
         !
-        to_new_target = .TRUE.
+        tfor   = .TRUE.
+        nfi    = 0
+        nomore = shake_nstep
+        isave  = nomore
+        !
+        tconvthrs%active = .FALSE.
+        to_new_target    = .TRUE.
+        !
+        CALL reset_vel()
+        !
+        WRITE( stdout, '(/,5X,"adiabatic switch of the system ", &
+                            & "to the new coarse-grained positions",/)' )
         !
         CALL cprmain( tau, fion, etot )
         !
         ! ... and finally the free energy gradients are computed
-        !
-        nfi    = 1
+        !    
+        nfi    = 0
         nomore = fe_nstep
+        isave  = nomore
         !
-        to_new_target = .FALSE.
+        tconvthrs%active = .TRUE.
+        to_new_target    = .FALSE.
+        !
+        WRITE( stdout, '(/,5X,"calculation of the mean force",/)' )
+        !
+        CALL reset_vel()
+        !
+        dfe_acc(:) = 0.D0
         !
         CALL cprmain( tau, fion, etot )
         !
@@ -270,19 +289,23 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
         END IF
         !
-        IF ( ionode ) CALL write_axsf_file( image, tau, 1.D0 )
-        !
-        ! ... the restart file is written here
-        !
-        OPEN( UNIT = 1000, FILE = filename )
-        !
-        WRITE( 1000, * ) tau
-        !
-        CLOSE( UNIT = 1000 )
+        IF ( ionode ) THEN
+           !
+           CALL write_axsf_file( image, tau, 1.D0 )
+           !
+           ! ... the restart file is written here
+           !
+           OPEN( UNIT = 1000, FILE = filename )
+           !
+           WRITE( 1000, * ) tau
+           !
+           CLOSE( UNIT = 1000 )
+           !
+        END IF
         !
      END IF
      !
-     ! ... the new image is obtained (by ionode only)
+     ! ... the new image is obtained
      !
      CALL get_new_image( image, outdir_saved )
      !
@@ -296,7 +319,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   DEALLOCATE( tau, fion )
   !
-  outdir = outdir_saved
+  outdir  = outdir_saved
+  scradir = scradir_saved
   !
   IF ( nimage > 1 ) THEN
      !
@@ -319,8 +343,8 @@ SUBROUTINE metadyn()
   USE constraints_module, ONLY : nconstr, target, lagrange
   USE cp_main_variables,  ONLY : nfi
   USE control_flags,      ONLY : program_name, nomore, ldamped, tconvthrs, &
-                                 trane, ampre, nbeg, tfor, taurdr, ndr, ndw
-  USE cg_module,          ONLY : tcg
+                                 trane, ampre, nbeg, tfor, taurdr, ndr, ndw, &
+                                 isave
   USE ions_base,          ONLY : nat, nsp, ityp, if_pos, &
                                  sort_tau, tau_srt, ind_srt
   USE io_global,          ONLY : stdout
@@ -361,7 +385,7 @@ SUBROUTINE metadyn()
      !
      do_first_scf = .TRUE.
      !
-     nomore = 500
+     nomore = 200
      trane  = .TRUE.
      ampre  = 0.02D0
      !
@@ -375,8 +399,10 @@ SUBROUTINE metadyn()
      !
   END IF
   !
+  isave = nomore
+  !
   CALL init_run()
-  !  
+  !
   IF ( do_first_scf ) THEN
      !
      ! ... first we bring the system on the BO surface
@@ -402,17 +428,17 @@ SUBROUTINE metadyn()
         !
         ! ... the system is "adiabatically" moved to the new target
         !
-        nfi    = 0
-        nomore = shake_nstep
-        !
-        tconvthrs%active = .FALSE.
-        !
-        to_new_target = .TRUE.
-        !
-        CALL reset_vel()
-        !
         WRITE( stdout, '(/,5X,"adiabatic switch of the system ", &
                             & "to the new coarse-grained positions",/)' )
+        !
+        nfi    = 0
+        nomore = shake_nstep
+        isave  = nomore
+        !
+        tconvthrs%active = .FALSE.
+        to_new_target    = .TRUE.
+        !
+        CALL reset_vel()
         !
         CALL cprmain( tau, fion, etot )
         !
@@ -424,14 +450,14 @@ SUBROUTINE metadyn()
      !
      IF ( ionode ) CALL write_axsf_file( iter, tau, 1.D0 )
      !
+     WRITE( stdout, '(/,5X,"calculation of the mean force",/)' )
+     !
      nfi    = 0
      nomore = fe_nstep
+     isave  = nomore
      !
      tconvthrs%active = .TRUE.
-     !
-     to_new_target = .FALSE.
-     !
-     WRITE( stdout, '(/,5X,"calculation of the mean force",/)' )
+     to_new_target    = .FALSE.
      !
      CALL reset_vel()
      !
@@ -486,22 +512,20 @@ SUBROUTINE metadyn()
   !
   RETURN
   !
-  CONTAINS
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE reset_vel()
-      !------------------------------------------------------------------------
-      !
-      USE ions_positions, ONLY : tau0, taum, taus, tausm
-      !
-      IMPLICIT NONE
-      !
-      !
-      taum(:,:)  = tau0(:,:)
-      tausm(:,:) = taus(:,:)
-      !
-      RETURN
-      !
-    END SUBROUTINE reset_vel
-    !
 END SUBROUTINE metadyn
+!
+!------------------------------------------------------------------------
+SUBROUTINE reset_vel()
+  !------------------------------------------------------------------------
+  !
+  USE ions_positions, ONLY : tau0, taum, taus, tausm
+  !
+  IMPLICIT NONE
+  !
+  !
+  taum(:,:)  = tau0(:,:)
+  tausm(:,:) = taus(:,:)
+  !
+  RETURN
+  !
+END SUBROUTINE reset_vel

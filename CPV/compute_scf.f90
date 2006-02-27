@@ -15,7 +15,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE kinds,             ONLY : DP
   USE ions_base,         ONLY : nat, sort_tau, tau_srt, ind_srt, ityp, nsp
   USE control_flags,     ONLY : conv_elec, ndr, program_name, nbeg, taurdr, &
-                                trane, ampre, nomore
+                                trane, ampre, nomore, tfor, isave
+  USE cp_main_variables, ONLY : nfi
   USE io_files,          ONLY : iunpath, iunexit, outdir, prefix, scradir
   USE io_global,         ONLY : stdout, ionode
   USE path_formats,      ONLY : scf_fmt
@@ -35,14 +36,14 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! 
   INTEGER               :: image
   REAL(DP)              :: tcpu 
-  CHARACTER(LEN=256)    :: outdir_saved
-  LOGICAL               :: file_exists, opnd, tstop 
+  CHARACTER(LEN=256)    :: outdir_saved, scradir_saved
+  LOGICAL               :: file_exists, opnd
   REAL(DP), ALLOCATABLE :: tau(:,:)
   REAL(DP), ALLOCATABLE :: fion(:,:)
   REAL(DP)              :: etot
-  INTEGER               :: ia, is, isa, ipos
-  CHARACTER (LEN=6), EXTERNAL :: int_to_char
-  REAL(DP), EXTERNAL    :: get_clock
+  !
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  REAL(DP),         EXTERNAL :: get_clock
   !
   !
   stat = .TRUE.
@@ -50,7 +51,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   ALLOCATE( tau( 3, nat ), fion( 3, nat ) )
   !
-  outdir_saved = outdir
+  outdir_saved  = outdir
+  scradir_saved = scradir
   ! 
   DO image = N_in, N_fin
      !
@@ -58,10 +60,13 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      suspended_image = image
      !
-     tstop = check_stop_now()
-     stat  = .NOT. tstop
-     !
-     IF ( tstop ) RETURN
+     IF ( check_stop_now() ) THEN
+        !
+        stat = .FALSE.
+        !
+        RETURN
+        !
+     END IF
      !
      outdir = TRIM( outdir_saved ) // "/" // TRIM( prefix ) // "_" // &
               TRIM( int_to_char( image ) ) // "/"
@@ -83,21 +88,24 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
      END IF
      !
-     ! ... do everything as if position are read from input
+     CALL deallocate_modules_var()
+     !
+     CALL modules_setup()
+     !
+     tau = RESHAPE( pos(:,image), SHAPE( tau ) )
+     !
+     CALL sort_tau( tau_srt, ind_srt, tau, ityp, nat, nsp )
      !
      taurdr = .TRUE.
+     nfi    = 0
+     tfor   = .FALSE.
      !
      IF ( check_restartfile( scradir, ndr ) ) THEN
         !
-        WRITE( stdout, '(/,2X,"restarting calling readfile",/)' )
+        WRITE( stdout, '(/,2X,"restarting from file",/)' )
         !
         nbeg   = 0
-        nomore = 100
-        !
-       ! nbeg   = -1
-       ! nomore = 500
-       ! trane  = .TRUE.
-       ! ampre  = 0.02D0
+        nomore = 200
         !
      ELSE
         !
@@ -110,15 +118,9 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
      END IF
      !
+     isave = nomore
+     !
      ! ... perform an electronic minimisation using cpmain
-     !
-     CALL deallocate_modules_var()
-     !
-     CALL modules_setup()
-     !
-     tau = RESHAPE( pos(:,image), SHAPE( tau ) )
-     !
-     CALL sort_tau( tau_srt, ind_srt, tau, ityp, nat, nsp )
      !
      CALL init_run()
      !
@@ -163,7 +165,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
   END DO
   !
-  outdir = outdir_saved
+  outdir  = outdir_saved
+  scradir = scradir_saved
   !
   suspended_image = 0
   !

@@ -174,54 +174,48 @@
     return
   end subroutine ions_nose_init
 
-
   SUBROUTINE ions_nose_allocate()
     !
     IMPLICIT NONE
     !
-    LOGICAL, SAVE :: nose_allocated = .FALSE.
+    IF ( .NOT. ALLOCATED( vnhp ) )     ALLOCATE( vnhp(  nhpcl*nhpdim ) )
+    IF ( .NOT. ALLOCATED( xnhp0 ) )    ALLOCATE( xnhp0( nhpcl*nhpdim ) )
+    IF ( .NOT. ALLOCATED( xnhpm ) )    ALLOCATE( xnhpm( nhpcl*nhpdim ) )
+    IF ( .NOT. ALLOCATED( xnhpp ) )    ALLOCATE( xnhpp( nhpcl*nhpdim ) )
+    IF ( .NOT. ALLOCATED( ekin2nhp ) ) ALLOCATE( ekin2nhp( nhpdim ) )
+    IF ( .NOT. ALLOCATED( gkbt2nhp ) ) ALLOCATE( gkbt2nhp( nhpdim ) )
+    IF ( .NOT. ALLOCATED( anum2nhp ) ) ALLOCATE( anum2nhp( nhpdim ) )
+    IF ( .NOT. ALLOCATED( qnp ) )      ALLOCATE( qnp( nhpcl*nhpdim ) )
+    IF ( .NOT. ALLOCATED( qnp_ ) )     ALLOCATE( qnp_( nhpcl ) )
     !
-    ! ... nose arrays are allocated only at the first call ( autopilot
-    ! ... calls this routine every time the temperature is changed )
-    !
-    IF ( nose_allocated ) RETURN
-    !
-    allocate(vnhp(nhpcl*nhpdim))
-    vnhp = 0.0d0
-    allocate(xnhp0(nhpcl*nhpdim))
-    xnhp0 = 0.0d0
-    allocate(xnhpm(nhpcl*nhpdim))
-    xnhpm = 0.0d0
-    allocate(xnhpp(nhpcl*nhpdim))
-    xnhpp = 0.0d0
-    allocate(ekin2nhp(nhpdim))
-    allocate(gkbt2nhp(nhpdim))
-    allocate(anum2nhp(nhpdim))
-    allocate(qnp(nhpcl*nhpdim))
-    qnp = 0.0d0
-    allocate(qnp_(nhpcl))
-    qnp_ = 0.0d0
-    !
-    nose_allocated = .TRUE.
+    vnhp  = 0.D0
+    xnhp0 = 0.D0
+    xnhpm = 0.D0
+    xnhpp = 0.D0
+    qnp   = 0.D0
+    qnp_  = 0.D0
     !
     RETURN
     !
   END SUBROUTINE ions_nose_allocate
 
-  SUBROUTINE ions_nose_deallocate()  
+  SUBROUTINE ions_nose_deallocate()
+    !
     IMPLICIT NONE
-    IF( ALLOCATED( vnhp ) ) deallocate(vnhp )
-    IF( ALLOCATED( xnhp0 ) ) deallocate(xnhp0 )
-    IF( ALLOCATED( xnhpm ) ) deallocate(xnhpm )
-    IF( ALLOCATED( xnhpp ) ) deallocate(xnhpp )
-    IF( ALLOCATED( ekin2nhp ) ) deallocate(ekin2nhp )
-    IF( ALLOCATED( gkbt2nhp ) ) deallocate(gkbt2nhp )
-    IF( ALLOCATED( anum2nhp ) ) deallocate(anum2nhp )
-    IF( ALLOCATED( qnp ) ) deallocate(qnp )
-    IF( ALLOCATED( qnp_ ) ) deallocate(qnp_ )
+    !
+    IF ( ALLOCATED( vnhp ) )     DEALLOCATE( vnhp )
+    IF ( ALLOCATED( xnhp0 ) )    DEALLOCATE( xnhp0 )
+    IF ( ALLOCATED( xnhpm ) )    DEALLOCATE( xnhpm )
+    IF ( ALLOCATED( xnhpp ) )    DEALLOCATE( xnhpp )
+    IF ( ALLOCATED( ekin2nhp ) ) DEALLOCATE( ekin2nhp )
+    IF ( ALLOCATED( gkbt2nhp ) ) DEALLOCATE( gkbt2nhp )
+    IF ( ALLOCATED( anum2nhp ) ) DEALLOCATE( anum2nhp )
+    IF ( ALLOCATED( qnp ) )      DEALLOCATE( qnp )
+    IF ( ALLOCATED( qnp_ ) )     DEALLOCATE( qnp_ )
+    !
     RETURN
+    !
   END SUBROUTINE ions_nose_deallocate
-
 
   SUBROUTINE ions_nose_info()
 

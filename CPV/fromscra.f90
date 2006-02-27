@@ -775,6 +775,7 @@ MODULE from_scratch_module
 
          if(iprsta.ge.3) CALL dotcsc(eigr,c0)
          !
+
          xnhp0=0.
          xnhpm=0.
          vnhp =0.
