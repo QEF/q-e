@@ -52,18 +52,19 @@ MODULE dynamics_module
       !
       USE ions_base, ONLY : nat
       !
-      ALLOCATE( mass( nat ) )
+      IF ( .NOT.ALLOCATED( mass ) ) ALLOCATE( mass( nat ) )
       !
-      ALLOCATE( tau_old( 3, nat ) )
-      ALLOCATE( tau_new( 3, nat ) )
-      ALLOCATE( tau_ref( 3, nat ) )
+      IF ( .NOT.ALLOCATED( tau_old ) ) ALLOCATE( tau_old( 3, nat ) )
+      IF ( .NOT.ALLOCATED( tau_new ) ) ALLOCATE( tau_new( 3, nat ) )
+      IF ( .NOT.ALLOCATED( tau_ref ) ) ALLOCATE( tau_ref( 3, nat ) )
       !
-      ALLOCATE( vel( 3, nat ) )
-      ALLOCATE( acc( 3, nat ) )
+      IF ( .NOT.ALLOCATED( vel )  ) ALLOCATE( vel( 3, nat ) )
+      IF ( .NOT.ALLOCATED( acc )  ) ALLOCATE( acc( 3, nat ) )
       !
-      ALLOCATE( diff_coeff( nat ) )
+      IF ( .NOT.ALLOCATED( diff_coeff ) ) ALLOCATE( diff_coeff( nat ) )
       !
-      ALLOCATE( radial_distr( hist_len , nat ) )
+      IF ( .NOT.ALLOCATED( radial_distr ) ) &
+         ALLOCATE( radial_distr( hist_len , nat ) )
       !
       RETURN
       !
@@ -314,6 +315,18 @@ MODULE dynamics_module
          !
          CALL check_constraint( nat, tau_new, tau, &
                                 force, if_pos, ityp, alat, dt**2, amconv )
+         !
+         WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
+         !
+         DO na = 1, nat
+            !
+            WRITE( stdout, &
+                   '(5X,"atom ",I3," type ",I2,3X,"force = ",3F14.8)' ) &
+                na, ityp(na), force(:,na)
+            !
+         END DO
+         !
+         WRITE( stdout, '(/5X,"Total force = ",F12.6)') DNRM2( 3*nat, force, 1 )
          !
       END IF
       !
