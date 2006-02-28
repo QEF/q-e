@@ -31,14 +31,13 @@
 !==-----------------------------------------------------------------------==!
     
 
-        SUBROUTINE environment_start( progname )
+        SUBROUTINE environment_start( )
 
           USE io_global, ONLY: stdout, ionode
           USE mp_global, ONLY: mpime, nproc
           use mp, only: mp_env
           USE cp_version
 
-          CHARACTER(LEN=*), INTENT(IN) :: progname
           LOGICAL           :: texst
           INTEGER           :: nchar
           CHARACTER(LEN=80) :: uname
@@ -48,7 +47,7 @@
 
 
           CALL init_clocks( .TRUE. )
-          CALL start_clock( progname )
+          CALL start_clock( 'CP' )
 
           start_seconds    = elapsed_seconds()
           start_cclock_val = cclock( )
@@ -99,19 +98,18 @@
 
 !==-----------------------------------------------------------------------==!
 
-        SUBROUTINE environment_end( progname )
+        SUBROUTINE environment_end( )
 
           USE io_global, ONLY: stdout, ionode
 
-          CHARACTER(LEN=*), INTENT(IN) :: progname
           REAL(DP)                     :: total_seconds
           REAL(DP)                     :: elapsed_seconds
           EXTERNAL                        elapsed_seconds
 
           IF ( ionode ) WRITE( stdout, * )
 
-          CALL print_clock( progname )
-          CALL stop_clock(  progname )
+          CALL print_clock( 'CP' )
+          CALL stop_clock(  'CP' )
 
           CALL closing_date_and_time( )
 

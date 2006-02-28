@@ -104,7 +104,7 @@ PROGRAM main
   CALL io_global_start( mpime, root )
   CALL io_global_getionode( ionode, ionode_id )
   !
-  CALL environment_start( program_name )
+  CALL environment_start( )
   !
   ! ... readin the input file
   !
