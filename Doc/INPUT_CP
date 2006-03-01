@@ -559,34 +559,26 @@ num_of_images  INTEGER ( default = 0 )
 opt_scheme     
                CHARACTER ( default = "quick-min" )
                specify the type of optimization scheme      
-               "sd"         = steepest descent
-               "broyden"    = quasi-Newton Broyden's second method (suggested)
-	       "quick-min"  = a minimization algorithm based on
-	                      molecular dynamics
-               "damped-dyn" = damped molecular dynamics. See also the 
-	                      keyword damp
-               "mol-dyn"    = constant temperature molecular dynamics. See 
-	                      also the keyword temp_req.
-	                      Note that, in order to perform such molecular 
-			      dynamics, spring forces are NOT projected 
-			      along the path.
-               "langevin"   = finite temperature langevin dynamics of the 
+               "sd"         : steepest descent
+               "broyden"    : quasi-Newton Broyden's second method (suggested)
+	       "quick-min"  : an optimisation algorithm based on the
+	                      projected velovity Verlet scheme
+               "langevin"   : finite temperature langevin dynamics of the 
                               string (smd only). It is used to compute the
                               average path and the free-energy profile.
 
 CI_scheme      CHARACTER. ( default = "no-CI" )
                specify the type of Climbing Image scheme
-               "no-CI"      = climbing image is not used
-               "highest-TS" = original CI scheme. The image highest in energy 
+               "no-CI"      : climbing image is not used
+               "auto"       : original CI scheme. The image highest in energy 
 	                      does not feel the effect of springs and is 
 			      allowed to climb along the path
-               "manual"     = images that have to climb are manually selected. 
-	                      See also CLIMBING_IMAGES card 
+               "manual"     : images that have to climb are manually selected. 
+	                      See also CLIMBING_IMAGES card
 
 first_last_opt LOGICAL ( default = .FALSE. )
                also the first and the last configurations are optimised
-               "on the fly" 
-	       (these images do not feel the effect of the springs)
+               "on the fly" (these images do not feel the effect of the springs)
 
 damp           REAL ( default = 1.D0 )
                Damping coefficient. Ignored when "opt_scheme" is different 
@@ -598,7 +590,7 @@ temp_req       REAL ( default = 0.D0 Kelvin )
 ds             REAL ( default = 1.D0 )
                optimisation step length ( Hartree atomic units ).
                If opt_scheme="broyden" ds is used as a guess for the diagonal
-               Jacobian matrix.
+               part of the Jacobian matrix.
 	              
 k_max, k_min   REAL ( default = 0.1D0 Hartree atomic units )
                set them to use a Variable Elastic Constants scheme 
