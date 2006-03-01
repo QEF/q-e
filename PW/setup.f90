@@ -1114,10 +1114,10 @@ SUBROUTINE check_para_diag_efficiency()
         !
      ELSE IF ( .NOT. lfirst .AND. delta_t > delta_t_old ) THEN
         !
-	! ... the parallel diagonalizer is getting slower and slower
-	!
-	EXIT
-	!
+        ! ... the parallel diagonalizer is getting slower and slower
+        !
+        EXIT
+        !
      END IF
      !
      lfirst = .FALSE.

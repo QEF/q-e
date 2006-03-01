@@ -605,20 +605,20 @@ MODULE pw_restart
                   !
                END IF
                !
-               IF ( ionode ) THEN
-                  !
-                  filename = TRIM( wfc_filename( ".", 'evc', ik ) )
-                  !
-                  CALL iotk_link( iunpun, "WFC", filename, &
-                                  CREATE = .FALSE., BINARY = .TRUE. )
-                  !
-                  filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
-                  !
-               END IF
-               !
                IF ( noncolin ) THEN
                   !
                   DO ipol = 1, npol
+                     !
+                     IF ( ionode ) THEN
+                        !
+                        filename = TRIM( wfc_filename( ".", 'evc', ik, ipol ) )
+                        !
+                        CALL iotk_link( iunpun, "WFC", filename, &
+                             CREATE = .FALSE., BINARY = .TRUE. )
+                        !
+                        filename = TRIM( wfc_filename( dirname, 'evc', ik, ipol ) )
+                        !
+                     END IF
                      !
                      CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
                                      evc_nc(:,ipol,:), npw_g, nbnd,           &
@@ -628,6 +628,17 @@ MODULE pw_restart
                   END DO
                   !
                ELSE
+                  !
+                  IF ( ionode ) THEN
+                     !
+                     filename = TRIM( wfc_filename( ".", 'evc', ik ) )
+                     !
+                     CALL iotk_link( iunpun, "WFC", filename, &
+                          CREATE = .FALSE., BINARY = .TRUE. )
+                     !
+                     filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
+                     !
+                  END IF
                   !
                   CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
                                   evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),   &
@@ -1962,7 +1973,7 @@ MODULE pw_restart
       REAL(DP)             :: scalef
       !
       !
-      nwordwfc = 2 * nbnd * npwx
+      nwordwfc = 2 * nbnd * npwx * npol
       CALL diropn (iunwfc, 'wfc', nwordwfc, exst)
       !
       IF ( ionode ) THEN
@@ -2135,13 +2146,17 @@ MODULE pw_restart
             !
          ELSE
             !
-            IF ( ionode ) filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
-            !
             isk(ik) = 1
             !
             IF ( noncolin ) THEN
                !
                DO ipol = 1, npol
+                  !
+                  IF ( ionode ) THEN
+                     !
+                     filename = TRIM( wfc_filename( dirname, 'evc', ik, ipol ) )
+                     !
+                  END IF
                   !
                   CALL read_wfc( iunout, ik, nkstot, kunit, ispin, &
                                  nspin, evc_nc(:,ipol,:), npw_g, nbnd, &
@@ -2151,6 +2166,8 @@ MODULE pw_restart
                END DO
                !
             ELSE
+               !
+               IF ( ionode ) filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
                !
                CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
                                evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),       &

@@ -305,8 +305,8 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          DO n = 1, notcnv
             !
-	    nbn = nbase + n
-	    !
+            nbn = nbase + n
+            !
             IF ( npol == 1 ) THEN
                !
                ew(n) = DDOT( 2*ndim, psi(1,1,nbn), 1, psi(1,1,nbn), 1 )
@@ -368,7 +368,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
             END IF
             !
             CALL cgramg1( kdmx, nvecx, kdim, &
-	                  nb1, nbase+notcnv, psi, spsi, hpsi )
+                 nb1, nbase+notcnv, psi, spsi, hpsi )
             !
          END IF
          !
@@ -426,7 +426,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          ! ... eigenvectors;  set the basis dimension to nvec.
          !
          IF ( notcnv == 0 .OR. &
-	      nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
+              nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
             !
             CALL start_clock( 'last' )
             !
@@ -446,7 +446,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
                ! ... last iteration, some roots not converged: return
                !
                WRITE( stdout, '(5X,"WARNING: ",I5, &
-	                       &   " eigenvalues not converged")' ) notcnv
+                    &   " eigenvalues not converged")' ) notcnv
                !
                CALL stop_clock( 'last' )
                !
@@ -616,8 +616,8 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
             END IF
             !
          END DO
-	 !
-	 nb1 = nbase + 1
+         !
+         nb1 = nbase + 1
          !
          ! ... expand the basis set with new basis vectors ( H - e*S )|psi> ...
          !
@@ -649,7 +649,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          IF ( noncolin ) THEN
             !
             CALL g_psi_nc( ndmx, ndim, notcnv, &
-	                   npol, psi(1,1,nb1), ew(nb1) )
+                 npol, psi(1,1,nb1), ew(nb1) )
             !
          ELSE
             !
@@ -695,8 +695,8 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
             CALL h_psi_nc( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
             !
             IF ( lelfield ) &
-	       CALL h_epsi_her( ndmx, ndim, &
-	                        notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+                 CALL h_epsi_her( ndmx, ndim, &
+                 notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
 
             IF ( overlap ) &
                CALL s_psi_nc( ndmx, ndim, notcnv, &
@@ -707,8 +707,8 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
             CALL h_psi( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
             !
             IF ( lelfield ) &
-	       CALL h_epsi_her( ndmx, ndim, &
-	                        notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+                 CALL h_epsi_her( ndmx, ndim, &
+                 notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
 
             IF ( overlap ) &
                  CALL s_psi( ndmx, ndim, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
@@ -785,7 +785,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          ! ... eigenvectors;  set the basis dimension to nvec.
          !
          IF ( notcnv == 0 .OR. &
-	      nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
+              nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
             !
             CALL start_clock( 'last' )
             !
@@ -805,7 +805,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
                ! ... last iteration, some roots not converged: return
                !
                WRITE( stdout, '(5X,"WARNING: ",I5, &
-	                       &   " eigenvalues not converged")' ) notcnv
+                    &   " eigenvalues not converged")' ) notcnv
                !
                CALL stop_clock( 'last' )
                !

@@ -343,7 +343,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          ! ... eigenvectors;  set the basis dimension to nvec.
          !
          IF ( notcnv == 0 .OR. &
-	      nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
+              nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
             !
             CALL start_clock( 'last' )
             !
@@ -363,7 +363,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
                ! ... last iteration, some roots not converged: return
                !
                WRITE( stdout, '(5X,"WARNING: ",I5, &
-	                       &   " eigenvalues not converged")' ) notcnv
+                    &   " eigenvalues not converged")' ) notcnv
                !
                CALL stop_clock( 'last' )
                !
@@ -533,8 +533,8 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
             !
          END DO
          !
-	 nb1 = nbase + 1
-	 !
+         nb1 = nbase + 1
+         !
          ! ... expand the basis set with new basis vectors ( H - e*S )|psi> ...
          !
          IF ( overlap ) THEN
@@ -662,7 +662,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          notcnv = COUNT( .NOT. conv(:) )
          !
          e(1:nvec) = ew(1:nvec)
-	 !
+         !
          ! ... if overall convergence has been achieved, or the dimension of
          ! ... the reduced basis set is becoming too large, or in any case if
          ! ... we are at the last iteration refresh the basis set. i.e. replace
@@ -670,7 +670,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          ! ... eigenvectors;  set the basis dimension to nvec.
          !
          IF ( notcnv == 0 .OR. &
-	      nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
+              nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
             !
             CALL start_clock( 'last' )
             !
@@ -690,7 +690,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
                ! ... last iteration, some roots not converged: return
                !
                WRITE( stdout, '(5X,"WARNING: ",I5, &
-	                       &   " eigenvalues not converged")' ) notcnv
+                    &   " eigenvalues not converged")' ) notcnv
                !
                CALL stop_clock( 'last' )
                !

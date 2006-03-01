@@ -89,16 +89,16 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
        !
        DO vec = start, finish
           !
-	  IF ( vec > 1 ) THEN
-	     !
-	     CALL DGEMV( 'T', 2*n, vec-1, 2.D0, &
-	                 psi, 2*n, spsi(1,vec), 1, 0.D0, ps, 1 )
+          IF ( vec > 1 ) THEN
+             !
+             CALL DGEMV( 'T', 2*n, vec-1, 2.D0, &
+                  psi, 2*n, spsi(1,vec), 1, 0.D0, ps, 1 )
              !
              IF ( gstart == 2 ) &
-	        ps(1:vec-1) = ps(1:vec-1) - psi(1,1:vec-1) * spsi(1,vec)
+                  ps(1:vec-1) = ps(1:vec-1) - psi(1,1:vec-1) * spsi(1,vec)
              !
              CALL reduce( ( vec - 1 ), ps )
-	     !
+             !
              DO vecp = 1, ( vec - 1 )
                 !
                 psi(:,vec)  = psi(:,vec)  - ps(vecp) * psi(:,vecp)
@@ -106,8 +106,8 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
                 spsi(:,vec) = spsi(:,vec) - ps(vecp) * spsi(:,vecp)
                 !
              END DO
-	     !
-	  END IF
+             !
+          END IF
           !
           psi_norm = 2.D0 * DDOT( 2 * n, psi(1,vec), 1, spsi(1,vec), 1 )
           !
@@ -123,12 +123,12 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
              !
           END IF
           !
-	  psi_norm = 1.D0 / SQRT( psi_norm )
+          psi_norm = 1.D0 / SQRT( psi_norm )
           !
           psi(:,vec)  = psi_norm * psi(:,vec)
           hpsi(:,vec) = psi_norm * hpsi(:,vec)
           spsi(:,vec) = psi_norm * spsi(:,vec)
-	  !
+          !
           IF ( psi_norm < eps8 ) THEN
              !
              ierr = ierr + 1
@@ -164,11 +164,11 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
        !
        DO vec = start, finish
           !
-	  IF ( vec > 1 ) THEN
-	     !
-	     CALL ZGEMV( 'C', n, vec-1, ONE, &
-	                 psi, n, spsi(1,vec), 1, ZERO, ps, 1 )
-	     !
+          IF ( vec > 1 ) THEN
+             !
+             CALL ZGEMV( 'C', n, vec-1, ONE, &
+                  psi, n, spsi(1,vec), 1, ZERO, ps, 1 )
+             !
              CALL reduce( 2*( vec - 1 ), ps )
              !
              DO vecp = 1, ( vec - 1 )
@@ -178,8 +178,8 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
                 spsi(:,vec) = spsi(:,vec) - ps(vecp) * spsi(:,vecp)
                 !
              END DO
-	     !
-	  END IF
+             !
+          END IF
           !
           psi_norm = DDOT( 2*n, psi(1,vec), 1, spsi(1,vec), 1 )
           !
@@ -193,12 +193,12 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
              !
           END IF
           !
-	  psi_norm = 1.D0 / SQRT( psi_norm )
+          psi_norm = 1.D0 / SQRT( psi_norm )
           !
           psi(:,vec)  = psi_norm * psi(:,vec)
           hpsi(:,vec) = psi_norm * hpsi(:,vec)
           spsi(:,vec) = psi_norm * spsi(:,vec)
-	  !
+          !
           IF ( psi_norm < eps8 ) THEN
              !
              ierr = ierr + 1
