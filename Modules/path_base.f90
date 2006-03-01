@@ -71,7 +71,7 @@ MODULE path_base
       INTEGER                    :: i
       REAL(DP)                   :: inter_image_dist, k_ratio
       REAL(DP), ALLOCATABLE      :: d_R(:,:), image_spacing(:)
-      CHARACTER(LEN=20)          :: nin_char, nstep_path_char
+      CHARACTER(LEN=20)          :: nim_char, nstep_path_char
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       LOGICAL                    :: file_exists
       !
@@ -577,7 +577,7 @@ MODULE path_base
     END SUBROUTINE neb_gradient
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE fourier_tangent( ie )
+    SUBROUTINE fourier_tangent( i )
       !-----------------------------------------------------------------------
       !
       USE path_variables, ONLY : pos, ft_pos, num_of_modes, num_of_images, &
@@ -590,7 +590,7 @@ MODULE path_base
       REAL(DP)            :: s, pi_n
       !
       !
-      s = DBLE( image - 1 ) / DBLE( num_of_images - 1 )
+      s = DBLE( i - 1 ) / DBLE( num_of_images - 1 )
       !
       tangent(:,i) = ( pos(:,num_of_images) - pos(:,1) )
       !
