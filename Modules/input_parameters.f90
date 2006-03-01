@@ -1062,14 +1062,14 @@ MODULE input_parameters
         INTEGER :: init_num_of_images = 0
 
         CHARACTER(LEN=80) :: CI_scheme = 'no-CI' 
-          ! CI_scheme = 'no-CI' | 'highest-TS' | 'all-SP' | 'manual'
+          ! CI_scheme = 'no-CI' | 'auto' | 'manual'
           ! set the Climbing Image scheme
           ! 'no-CI'       Climbing Image is not used
-          ! 'highest-TS'  Standard Climbing Image
+          ! 'auto'        Standard Climbing Image
           ! 'manual'      the image is selected by hand
         
-        CHARACTER(LEN=80) :: CI_scheme_allowed(4)
-        DATA CI_scheme_allowed / 'no-CI', 'highest-TS', 'all-SP', 'manual' /
+        CHARACTER(LEN=80) :: CI_scheme_allowed(3)
+        DATA CI_scheme_allowed / 'no-CI', 'auto', 'manual' /
         
         LOGICAL :: first_last_opt = .FALSE.
         
@@ -1092,23 +1092,17 @@ MODULE input_parameters
           !                       'mol-dyn'   | 'sd'
           ! set the minimization algorithm
           ! 'quick-min'   projected molecular dynamics
-          ! 'damped-dyn'  damped molecular dynamics
-          ! 'mol-dyn'     constant temperature molecular dynamics
           ! 'sd'          steepest descent
           ! 'broyden'     broyden acceleration
           ! 'langevin'    langevin dynamics
 
-        CHARACTER(LEN=80) :: opt_scheme_allowed(6)
-        DATA opt_scheme_allowed / 'quick-min', 'damped-dyn', 'broyden', &
-                                  'mol-dyn', 'sd', 'langevin' /  
-
-        REAL (DP)  :: damp = 1.D0
-          ! meaningful only when minimization_scheme = 'damped-verlet'
+        CHARACTER(LEN=80) :: opt_scheme_allowed(4)
+        DATA opt_scheme_allowed / 'quick-min', 'broyden', 'sd', 'langevin' /  
         
         REAL (DP)  :: temp_req = 0.D0
           ! meaningful only when minimization_scheme = 'sim-annealing'
 
-        REAL (DP)  :: ds = 1.5D0
+        REAL (DP)  :: ds = 1.D0
 
         REAL (DP)  :: k_max = 0.1D0, k_min = 0.1D0
 
@@ -1197,10 +1191,10 @@ MODULE input_parameters
                           greasp, tolp, ion_nstepe, ion_maxstep, upscale,      &
                           delta_t, pot_extrapolation, wfc_extrapolation,       &
                           nraise, monitor_constr, num_of_images, CI_scheme,    &
-                          opt_scheme, use_masses, first_last_opt, damp,        &
-                          use_multistep, write_save, temp_req, ds, k_max,      &
-                          k_min, path_thr, fixed_tan, init_num_of_images,      &
-                          free_energy, use_freezing, use_fourier,              &
+                          opt_scheme, use_masses, first_last_opt, ds, k_max,   &
+                          k_min, use_multistep, write_save, temp_req, path_thr,&
+                          fixed_tan, init_num_of_images, free_energy,          &
+                          use_freezing, use_fourier,                           &
                           trust_radius_max, trust_radius_min,                  &
                           trust_radius_ini, w_1, w_2, bfgs_ndim, sic_rloc,     &
                           smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1,   &

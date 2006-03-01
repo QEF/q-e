@@ -35,8 +35,7 @@ MODULE path_routines
                                    phase_space, ion_dynamics, etot_conv_thr,  &
                                    forc_conv_thr
       !
-      USE path_variables, ONLY : lsteep_des, lquick_min , ldamped_dyn, &
-                                 lbroyden, lmol_dyn, nstep_path, &
+      USE path_variables, ONLY : lsteep_des, lquick_min, lbroyden, nstep_path, &
                                  num_of_images_  => num_of_images, &
                                  CI_scheme_      => CI_scheme, &
                                  first_last_opt_ => first_last_opt, &
@@ -60,11 +59,11 @@ MODULE path_routines
       !
       IMPLICIT NONE
       !
-      INTEGER               :: image, i, ia
-      INTEGER               :: ios
-      REAL(DP), ALLOCATABLE :: tau(:,:) 
-      CHARACTER(LEN=256)    :: outdir_saved
-      CHARACTER(LEN=256)    :: filename
+      INTEGER                     :: image, i, ia
+      INTEGER                     :: ios
+      REAL(DP), ALLOCATABLE       :: tau(:,:) 
+      CHARACTER(LEN=256)          :: outdir_saved
+      CHARACTER(LEN=256)          :: filename
       CHARACTER (LEN=6), EXTERNAL :: int_to_char
       !
       INTEGER, EXTERNAL :: c_mkdir
@@ -112,10 +111,9 @@ MODULE path_routines
          CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
                     & ': num_of_images must be at least 2', 1 )
       !
-      IF ( ( CI_scheme /= "no-CI"      ) .AND. &
-           ( CI_scheme /= "highest-TS" ) .AND. &
-           ( CI_scheme /= "all-SP"     ) .AND. &
-           ( CI_scheme /= "manual"     ) ) THEN
+      IF ( ( CI_scheme /= "no-CI"  ) .AND. &
+           ( CI_scheme /= "auto"   ) .AND. &
+           ( CI_scheme /= "manual" ) ) THEN
          !
          CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
                     & ': unknown CI_scheme', 1 )
@@ -143,22 +141,9 @@ MODULE path_routines
          !
          lbroyden = .TRUE.
          !
-      CASE ( "damped-dyn" )
-         !
-         ldamped_dyn = .TRUE.
-         !
-      CASE ( "mol-dyn" )
-         !
-         lmol_dyn = .TRUE.
-         !
-         IF ( temp_req == 0 ) &
-            WRITE( stdout,'(/,T2,"WARNING: tepm_req has not been set" )')
-         !
-         temp_req = temp_req / ( eV_to_kelvin * au )
-         !
       CASE default
          !
-         CALL errore( ' iosys ','calculation=' // TRIM( calculation ) // &
+         CALL errore( 'iosys', 'calculation = ' // TRIM( calculation ) // &
                     & ': unknown opt_scheme', 1 )
          !
       END SELECT
@@ -166,7 +151,6 @@ MODULE path_routines
       num_of_images_  = num_of_images
       CI_scheme_      = CI_scheme
       first_last_opt_ = first_last_opt
-      damp_           = damp
       temp_req_       = temp_req
       ds_             = ds
       k_max_          = k_max

@@ -59,7 +59,6 @@ MODULE path_variables
   REAL(DP) :: &
        ds,                       &! the optimization step
        path_thr,                 &! convergence threshold
-       damp,                     &! damp coefficient
        temp_req,                 &! required temperature
        activation_energy,        &! forward activatation energy
        err_max,                  &! the largest error
@@ -67,8 +66,6 @@ MODULE path_variables
   LOGICAL :: &
        lsteep_des  = .FALSE.,    &! .TRUE. if opt_scheme = "sd"
        lquick_min  = .FALSE.,    &! .TRUE. if opt_scheme = "quick-min"
-       ldamped_dyn = .FALSE.,    &! .TRUE. if opt_scheme = "damped-dyn"
-       lmol_dyn    = .FALSE.,    &! .TRUE. if opt_scheme = "mol-dyn"
        lbroyden    = .FALSE.,    &! .TRUE. if opt_scheme = "broyden"
        llangevin   = .FALSE.      ! .TRUE. if opt_scheme = "langevin"
   INTEGER :: &                   

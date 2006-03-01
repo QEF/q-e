@@ -147,7 +147,7 @@ SUBROUTINE iosys()
   USE fixed_occ,     ONLY : tfixed_occ
   !
   USE path_variables, ONLY : nstep_path, lsteep_des, lquick_min, lbroyden, &
-                             ldamped_dyn, lmol_dyn, llangevin, &
+                             llangevin, &
                              ds_                 => ds, &
                              write_save_         => write_save, &
                              use_masses_         => use_masses, &
@@ -162,7 +162,6 @@ SUBROUTINE iosys()
                              k_min_              => k_min, &
                              num_of_images_      => num_of_images, &
                              first_last_opt_     => first_last_opt, &
-                             damp_               => damp, &
                              temp_req_           => temp_req, &
                              path_thr_           => path_thr
   !
@@ -227,11 +226,12 @@ SUBROUTINE iosys()
                                upscale, pot_extrapolation,  wfc_extrapolation, &
                                num_of_images, path_thr, CI_scheme, opt_scheme, &
                                use_masses, use_multistep, first_last_opt,      &
-                               damp, init_num_of_images, temp_req, k_max,      &
-                               k_min, ds, use_fourier, use_freezing,           &
-                               fixed_tan, free_energy, write_save, w_1, w_2,   &
-                               trust_radius_max, trust_radius_min, bfgs_ndim,  &
-                               trust_radius_ini
+                               init_num_of_images, temp_req, k_max, k_min,     &
+                               ds, use_fourier, use_freezing, fixed_tan,       &
+                               free_energy, write_save,                        &
+                               w_1, w_2, trust_radius_max, trust_radius_min,   &
+                               trust_radius_ini, bfgs_ndim
+                               
   !
   ! ... CELL namelist
   !
@@ -936,10 +936,9 @@ SUBROUTINE iosys()
         CALL errore( 'iosys ', 'calculation=' // TRIM( calculation ) // &
                    & ': num_of_images must be at least 2', 1 )
      !
-     IF ( ( CI_scheme /= "no-CI"      ) .AND. &
-          ( CI_scheme /= "highest-TS" ) .AND. &
-          ( CI_scheme /= "all-SP"     ) .AND. &
-          ( CI_scheme /= "manual"     ) ) THEN
+     IF ( ( CI_scheme /= "no-CI"  ) .AND. &
+          ( CI_scheme /= "auto"   ) .AND. &
+          ( CI_scheme /= "manual" ) ) THEN
         !
         CALL errore( 'iosys ', 'calculation=' // TRIM( calculation ) // &
                    & ': unknown CI_scheme', 1 )  
@@ -951,8 +950,6 @@ SUBROUTINE iosys()
      lsteep_des  = .FALSE.     
      lquick_min  = .FALSE.
      lbroyden    = .FALSE.
-     ldamped_dyn = .FALSE.
-     lmol_dyn    = .FALSE.     
      !
      SELECT CASE( opt_scheme )
      CASE( "sd" )
@@ -966,14 +963,6 @@ SUBROUTINE iosys()
      CASE( "broyden" )
         !
         lbroyden     = .TRUE.
-        !
-     CASE( "damped-dyn" )
-        !
-        ldamped_dyn = .TRUE.
-        !
-     CASE( "mol-dyn" )
-        !
-        lmol_dyn = .TRUE.
         !
      CASE( "langevin" )
         !
@@ -1174,7 +1163,6 @@ SUBROUTINE iosys()
   free_energy_    = free_energy
   use_fourier_    = use_fourier
   use_freezing_   = use_freezing
-  damp_           = damp
   temp_req_       = temp_req
   path_thr_       = path_thr 
   !

@@ -101,8 +101,7 @@ MODULE path_io_routines
        USE input_parameters, ONLY : if_pos
        USE path_variables,   ONLY : istep_path, nstep_path, suspended_image, &
                                     dim, num_of_images, pos, pes, grad_pes,  &
-                                    frozen , lquick_min, lmol_dyn,           &
-                                    ldamped_dyn, first_last_opt
+                                    frozen , lquick_min, first_last_opt
        USE path_variables,   ONLY : vel, Emax, Emin, Emax_index
        USE path_variables,   ONLY : Nft, ft_coeff, num_of_modes
        USE io_global,        ONLY : meta_ionode, meta_ionode_id
@@ -260,8 +259,7 @@ MODULE path_io_routines
           !
           READ( UNIT = iunrestart, FMT = '(256A)', IOSTAT = ierr ) input_line
           !
-          IF ( ( ierr == 0 ) .AND. &
-               ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) ) THEN
+          IF ( ( ierr == 0 ) .AND. lquick_min ) THEN
              !
              IF ( matches( "QUICK-MIN FIELDS", input_line ) ) THEN
                 !
@@ -339,7 +337,7 @@ MODULE path_io_routines
           !
        END IF
        !
-       IF ( lquick_min .OR. ldamped_dyn .OR. lmol_dyn ) THEN
+       IF ( lquick_min ) THEN
           !
           CALL mp_bcast( frozen, meta_ionode_id )
           CALL mp_bcast( vel,    meta_ionode_id )
@@ -359,8 +357,8 @@ MODULE path_io_routines
        USE control_flags,    ONLY : conv_elec, lneb, lsmd, lcoarsegrained
        USE path_variables,   ONLY : istep_path, nstep_path, suspended_image,  &
                                     dim, num_of_images, pos, pes, grad_pes,   &
-                                    vel, frozen, Nft, num_of_modes, lmol_dyn, &
-                                    lquick_min, ldamped_dyn, first_last_opt
+                                    vel, frozen, Nft, num_of_modes,           &
+                                    lquick_min, first_last_opt
        USE path_formats,     ONLY : energy, restart_first, restart_others, &
                                     quick_min
        USE io_global,        ONLY : meta_ionode
@@ -382,7 +380,7 @@ MODULE path_io_routines
           !
           CALL write_common_fields( iunrestart )
           !
-          IF (  lquick_min .OR. ldamped_dyn .OR. lmol_dyn  ) THEN
+          IF (  lquick_min ) THEN
              !
              CALL write_quick_min_fields( iunrestart )
              ! 
@@ -403,7 +401,7 @@ MODULE path_io_routines
              !
              CALL write_common_fields( iunrestart )
              !
-             IF (  lquick_min .OR. ldamped_dyn .OR. lmol_dyn  ) THEN
+             IF (  lquick_min ) THEN
                 !
                 CALL write_quick_min_fields( iunrestart )
                 ! 
@@ -780,7 +778,7 @@ MODULE path_io_routines
        !
        inter_image_distance = path_length / DBLE( num_of_images - 1 )
        !
-       IF ( CI_scheme == "highest-TS" ) &
+       IF ( CI_scheme == "auto" ) &
           WRITE( UNIT = iunpath, &
                  FMT = '(/,5X,"climbing image = ",I2)' ) Emax_index
        !

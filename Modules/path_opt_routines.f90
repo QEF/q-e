@@ -46,50 +46,9 @@ MODULE path_opt_routines
        !
      END SUBROUTINE steepest_descent 
      !
-     ! ... Molecular Dynamics based algorithms 
-     ! ... velocity Verlet and quick min       
-     !
      !----------------------------------------------------------------------
-     SUBROUTINE velocity_Verlet_first_step( index )
+     SUBROUTINE quick_min( index )
        !---------------------------------------------------------------------- 
-       !
-       USE path_variables, ONLY : vel
-       !
-       IMPLICIT NONE
-       !
-       INTEGER, INTENT(IN) :: index
-       !
-       !
-       vel(:,index) = vel(:,index) - 0.5D0 * ds * precond_grad(:,index)
-       !
-       pos(:,index) = pos(:,index) + ds * vel(:,index)
-       !       
-       RETURN
-       !
-     END SUBROUTINE velocity_Verlet_first_step
-     !
-     !----------------------------------------------------------------------
-     SUBROUTINE velocity_Verlet_second_step( index )
-       !----------------------------------------------------------------------
-       !
-       USE path_variables, ONLY : vel, damp, ldamped_dyn, lmol_dyn
-       !
-       IMPLICIT NONE
-       !
-       INTEGER, INTENT(IN) :: index
-       !
-       !
-       vel(:,index) = vel(:,index) - 0.5D0 * ds * precond_grad(:,index)
-       !
-       IF ( ldamped_dyn ) vel(:,index) = damp * vel(:,index)
-       !
-       RETURN
-       !
-     END SUBROUTINE velocity_Verlet_second_step
-     !
-     !----------------------------------------------------------------------
-     SUBROUTINE quick_min_second_step( index )
-       !----------------------------------------------------------------------
        !
        USE path_variables, ONLY : dim, vel
        !
@@ -115,11 +74,15 @@ MODULE path_opt_routines
           !
           vel(:,index) = 0.D0
           !
-       END IF
+       END IF       
        !
+       vel(:,index) = vel(:,index) - 0.5D0 * ds * precond_grad(:,index)
+       !
+       pos(:,index) = pos(:,index) + ds * vel(:,index)
+       !       
        RETURN
        !
-     END SUBROUTINE quick_min_second_step
+     END SUBROUTINE quick_min
      !
      !-----------------------------------------------------------------------
      SUBROUTINE grad_precond( index )
@@ -136,15 +99,15 @@ MODULE path_opt_routines
        !
        INTEGER, INTENT(IN) :: index
        !
-       REAL(DP), ALLOCATABLE :: pos_p(:)
-       REAL(DP), ALLOCATABLE :: grad_p(:)
-       REAL(DP), ALLOCATABLE :: inv_hess(:,:)
-       REAL(DP), ALLOCATABLE :: y(:), s(:)
-       REAL(DP), ALLOCATABLE :: Hs(:), Hy(:), yH(:)
-       REAL(DP)              :: sdoty, p_grad_norm
-       CHARACTER(LEN=256)    :: bfgs_file
+       REAL(DP), ALLOCATABLE      :: pos_p(:)
+       REAL(DP), ALLOCATABLE      :: grad_p(:)
+       REAL(DP), ALLOCATABLE      :: inv_hess(:,:)
+       REAL(DP), ALLOCATABLE      :: y(:), s(:)
+       REAL(DP), ALLOCATABLE      :: Hs(:), Hy(:), yH(:)
+       REAL(DP)                   :: sdoty, p_grad_norm
+       CHARACTER(LEN=256)         :: bfgs_file
        CHARACTER(LEN=6), EXTERNAL :: int_to_char
-       LOGICAL               :: file_exists
+       LOGICAL                    :: file_exists
        !
        REAL(DP), PARAMETER :: p_grad_norm_max = 0.6D0
        !

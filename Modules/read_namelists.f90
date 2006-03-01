@@ -376,7 +376,6 @@ MODULE read_namelists_module
        use_fourier     = .FALSE.
        use_freezing    = .FALSE.
        opt_scheme      = 'quick-min'
-       damp            = 1.D0
        temp_req        = 0.D0
        ds              = 1.D0
        path_thr        = 0.05D0
@@ -874,7 +873,6 @@ MODULE read_namelists_module
        CALL mp_bcast( write_save,         ionode_id )
        CALL mp_bcast( CI_scheme,          ionode_id )
        CALL mp_bcast( opt_scheme,         ionode_id )
-       CALL mp_bcast( damp,               ionode_id )
        CALL mp_bcast( temp_req,           ionode_id )
        CALL mp_bcast( ds,                 ionode_id )
        CALL mp_bcast( k_max,              ionode_id )
@@ -1380,8 +1378,6 @@ MODULE read_namelists_module
        !
        IF ( ds < 0.D0 ) &
           CALL errore( sub_name,' ds out of range ',1)
-       IF ( damp < 0.D0 ) &
-          CALL errore( sub_name,' damp out of range ',1)
        IF ( temp_req < 0.D0 ) &
           CALL errore( sub_name,' temp_req out of range ',1)
        !
