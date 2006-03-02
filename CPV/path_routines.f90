@@ -29,7 +29,7 @@ MODULE path_routines
       !
       USE input_parameters, ONLY : full_phs_path_flag, atomic_positions
       USE input_parameters, ONLY : pos, CI_scheme, opt_scheme, num_of_images, &
-                                   first_last_opt, damp, temp_req, ds, k_max, &
+                                   first_last_opt, temp_req, ds, k_max,       &
                                    k_min, path_thr, restart_mode, nstep,      &
                                    calculation, max_seconds, use_freezing,    &
                                    phase_space, ion_dynamics, etot_conv_thr,  &
@@ -39,7 +39,6 @@ MODULE path_routines
                                  num_of_images_  => num_of_images, &
                                  CI_scheme_      => CI_scheme, &
                                  first_last_opt_ => first_last_opt, &
-                                 damp_           => damp, &
                                  temp_req_       => temp_req, &
                                  ds_             => ds, &
                                  k_max_          => k_max, &
@@ -125,8 +124,6 @@ MODULE path_routines
       lsteep_des  = .FALSE.
       lquick_min  = .FALSE.
       lbroyden    = .FALSE.
-      ldamped_dyn = .FALSE.
-      lmol_dyn    = .FALSE.
       !
       SELECT CASE ( opt_scheme )
       CASE ( "sd" )
