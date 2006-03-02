@@ -729,7 +729,7 @@ CONTAINS
       IF( ALLOCATED( betagx  ) ) DEALLOCATE( betagx )
       IF( ALLOCATED( dbetagx ) ) DEALLOCATE( dbetagx )
       ALLOCATE( betagx ( mmx, nhm, nsp ) )
-      ALLOCATE( dbetagx( mmx, nhm, nsp ) )
+      IF (tpre) ALLOCATE( dbetagx( mmx, nhm, nsp ) )
 
       !
       do is = 1, nsp
@@ -1309,7 +1309,7 @@ CONTAINS
 
       ALLOCATE( ylm( ngw, (lmaxkb+1)**2 ) )
       ALLOCATE( betagx ( ngw, nhm, nsp ) )
-      ALLOCATE( dbetagx( ngw, nhm, nsp ) )
+      IF (tpre) ALLOCATE( dbetagx( ngw, nhm, nsp ) )
 
       CALL ylmr2 ( (lmaxkb+1)**2, ngw, gx, g, ylm)
 
