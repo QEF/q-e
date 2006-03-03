@@ -20,7 +20,6 @@ subroutine scale_h
   USE cellmd,     ONLY : at_old, omega_old
   USE gvect,      ONLY : g, gg, ngm
   USE klist,      ONLY : xk, wk, nkstot
-  USE uspp_param, ONLY : lmaxq, nbrx
   USE us,         ONLY : nqxq, nqx, qrad, tab
   !
   implicit none
@@ -44,19 +43,18 @@ subroutine scale_h
   call cryst_to_cart (ngm, g, at_old, - 1)
   call cryst_to_cart (ngm, g, bg, + 1)
   do ig = 1, ngm
-     gg (ig) = g (1, ig) * g (1, ig) + g (2, ig) * g (2, ig) + g (3, ig) * g (3, ig)
+     gg (ig) = g(1, ig) * g(1, ig) + g(2, ig) * g(2, ig) + g(3, ig) * g(3, ig)
   enddo
   !
   ! scale the non-local pseudopotential tables
   !
-  call DSCAL (nqx * nbrx * ntyp, sqrt (omega_old / omega), tab, 1)
-  call DSCAL (nqxq * nbrx * (nbrx + 1) / 2 * lmaxq * ntyp, omega_old / &
-       omega, qrad, 1)
+  tab(:,:,:) = tab(:,:,:) * sqrt (omega_old/omega)
+  qrad(:,:,:,:) = qrad(:,:,:,:) * omega_old/omega
   !
   ! recalculate the local part of the pseudopotential
   !
-
-  call init_vloc
+  call init_vloc ( )
+  !
   return
 end subroutine scale_h
 

@@ -13,14 +13,14 @@
       USE kinds, ONLY: DP
       USE ions_base,  ONLY : ntyp => nsp
       USE us, ONLY: dq, qrad
-      USE uspp_param, ONLY: lmaxq, nbrx
+      USE uspp_param, ONLY: lmaxq, nbetam
       USE uspp, ONLY: nlx, lpl, lpx, ap, indv, nhtol, nhtolm
 
       implicit none
       integer :: iv,jv,is
       complex(DP) :: qg,sig
       real(DP) :: ylm_k(lmaxq*lmaxq)
-      real(DP) :: qr(nbrx,nbrx,lmaxq,ntyp)
+      real(DP) :: qr(nbetam,nbetam,lmaxq,ntyp)
       
       integer ivs,jvs,ivl,jvl,ig,lp,l,i
 !       IV  = 1..8    ! s_1 p_x1 p_y1 p_z1 s_2 p_x2 p_z2 p_y2
@@ -35,10 +35,10 @@
       ivl = nhtolm(iv,is)
       jvl = nhtolm(jv,is)
 
-      IF(IVL.GT.NLX)  CALL ERRORE(' QVAN ',' IVL.GT.NLX  ',IVL)
-      IF(JVL.GT.NLX)  CALL ERRORE(' QVAN ',' JVL.GT.NLX  ',JVL)
-      IF(IVS.GT.NBRX) CALL ERRORE(' QVAN ',' IVS.GT.NBRX ',IVS)
-      IF(JVS.GT.NBRX) CALL ERRORE(' QVAN ',' JVS.GT.NBRX ',JVS)
+      if (ivs > nbetam .OR. jvs > nbetam) &
+           call errore (' qvan ', ' wrong dimensions (1)', MAX(ivs,jvs))
+      if (ivl > nlx .OR. jvl > nlx) &
+       call errore (' qvan ', ' wrong dimensions (2)', MAX(ivl,jvl))
  
       qg = (0.0d0,0.0d0)
 

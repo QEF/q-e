@@ -124,7 +124,7 @@ subroutine h_epsi_her(lda, n,nbande, psi, hpsi)
    REAL(dp) :: phidw
    REAL(dp) :: phiup
    REAL(dp) :: rmod
-   REAL(dp) :: qrad_dk(nbrx,nbrx,lmaxq,ntyp)
+   REAL(dp) :: qrad_dk(nbetam,nbetam,lmaxq,ntyp)
    REAL(dp) :: upol(3)
    REAL(dp) :: weight
    REAL(dp) :: ylm_dk(lmaxq*lmaxq)

@@ -15,7 +15,6 @@ subroutine gen_us_dj (ik, dvkb)
   !   the derivative of the Bessel functions
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nbrx
   USE constants,  ONLY : tpi
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
   USE cell_base,  ONLY : tpiba
@@ -24,7 +23,7 @@ subroutine gen_us_dj (ik, dvkb)
   USE wvfct,      ONLY : npw, npwx, igk
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
   USE us,         ONLY : tab, dq
-  USE uspp_param, ONLY : lmaxkb, nbeta, nh
+  USE uspp_param, ONLY : lmaxkb, nbeta, nbetam, nh
   !
   implicit none
   !
@@ -58,7 +57,7 @@ subroutine gen_us_dj (ik, dvkb)
   call start_clock('stres_us31')
 
   if (nkb.eq.0) return
-  allocate (djl( npw , nbrx , ntyp))    
+  allocate (djl( npw , nbetam , ntyp))    
   allocate (ylm( npw ,(lmaxkb + 1) **2))    
   allocate (gk( 3, npw))    
   allocate (q( npw))    

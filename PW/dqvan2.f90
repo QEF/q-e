@@ -22,10 +22,9 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   !
 #include "f_defs.h"
   USE kinds, ONLY: DP
-  USE parameters, ONLY: nbrx
   USE gvect, ONLY: g
   USE us, ONLY: dq, qrad
-  USE uspp_param, ONLY: lmaxq
+  USE uspp_param, ONLY: lmaxq, nbetam
   USE uspp, ONLY: nlx, lpl, lpx, ap, indv, nhtol, nhtolm
   implicit none
   integer :: ngy, ih, jh, np, ipol
@@ -84,10 +83,10 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   ivl = nhtolm (ih, np)
   jvl = nhtolm (jh, np)
 
-  if (nb.gt.nbrx) call errore (' qvan2 ', ' nb.gt.nbrx ', nb)
-  if (mb.gt.nbrx) call errore (' qvan2 ', ' mb.gt.nbrx ', mb)
-  if (ivl.gt.nlx) call errore (' qvan2 ', ' ivl.gt.nlx  ', ivl)
-  if (jvl.gt.nlx) call errore (' qvan2 ', ' jvl.gt.nlx  ', jvl)
+  if (nb > nbetam .OR. mb > nbetam) &
+       call errore (' dqvan2 ', ' wrong dimensions (1)', MAX(nb,mb))
+  if (ivl > nlx .OR. jvl > nlx) &
+       call errore (' dqvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
 
   dqg(:) = (0.d0,0.d0) 
   !

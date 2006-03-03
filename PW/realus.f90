@@ -55,7 +55,6 @@ contains
     USE atom,                 ONLY : r
     USE io_global,  ONLY : stdout
     USE cell_base,  ONLY : at, bg
-    USE parameters, ONLY : nbrx
     USE pfft,       ONLY : npp
     USE mp_global,  ONLY : me_pool
     USE splinelib,  ONLY : spline, splint

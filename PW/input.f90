@@ -808,6 +808,7 @@ SUBROUTINE iosys()
      !
   CASE ( 'diis' )
      !
+     call errore ( ' input',' diis diagonalization disabled', 1)
      isolve = 2
      !
      max_cg_iter = diago_cg_maxiter

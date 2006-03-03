@@ -21,10 +21,11 @@ subroutine allocate_nlpot
   !     nkb           !  number of beta functions for the solid
   !     nqx           !  number of points of the interpolation table
   !     nh            !  number of beta functions for each atom type
-  !     nhm           !  maximum number of beta functions
+  !     nhm           !  maximum number of different beta functions
+  !     nbetam        !  maximum number of beta functions
   !
   !
-  USE parameters,       ONLY : nbrx, nchix
+  USE parameters,       ONLY : nchix
   USE ions_base,        ONLY : nat, nsp, ityp
   USE cell_base,        ONLY : tpiba2
   USE cellmd,           ONLY : cell_factor
@@ -37,7 +38,7 @@ subroutine allocate_nlpot
   USE us,               ONLY : qrad, tab, tab_at, dq, nqx, nqxq
   USE uspp,             ONLY : indv, nhtol, nhtolm, qq, dvan, deeq, vkb, nkb, &
                                nkbus, nhtoj, becsum, qq_so, dvan_so, deeq_nc
-  USE uspp_param,       ONLY : lmaxq, lmaxkb, lll, nbeta, nh, nhm, tvanp
+  USE uspp_param,       ONLY : lmaxq, lmaxkb, lll, nbeta, nh, nhm, nbetam,tvanp
   USE spin_orb,         ONLY : lspinorb, fcoef
   !
   implicit none
@@ -74,6 +75,7 @@ subroutine allocate_nlpot
   ! calculate the maximum number of beta functions
   !
   nhm = MAXVAL (nh (1:nsp))
+  nbetam = MAXVAL (nbeta (1:nsp))
   !
   ! calculate the number of beta functions of the solid
   !
@@ -107,7 +109,7 @@ subroutine allocate_nlpot
           / dq + 4) * cell_factor )
   lmaxq = 2*lmaxkb+1
   !
-  if (lmaxq > 0) allocate (qrad( nqxq, nbrx*(nbrx+1)/2, lmaxq, nsp))    
+  if (lmaxq > 0) allocate (qrad( nqxq, nbetam*(nbetam+1)/2, lmaxq, nsp))    
   if (nkb > 0) allocate (vkb( npwx,  nkb))    
   allocate (becsum( nhm * (nhm + 1)/2, nat, nspin))    
   !
@@ -129,7 +131,7 @@ subroutine allocate_nlpot
   !
   nqx = INT( (sqrt (ecutwfc) / dq + 4) * cell_factor )
 
-  allocate (tab( nqx , nbrx , nsp))    
+  allocate (tab( nqx , nbetam , nsp))    
 
   allocate (tab_at( nqx , nchix , nsp))
 

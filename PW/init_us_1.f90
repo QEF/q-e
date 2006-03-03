@@ -28,7 +28,7 @@ subroutine init_us_1
   !   h) It fills the interpolation table for the beta functions
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : lmaxx, nbrx, lqmax
+  USE parameters, ONLY : lmaxx
   USE constants,  ONLY : fpi
   USE atom,       ONLY : r, rab
   USE ions_base,  ONLY : ntyp => nsp
@@ -39,7 +39,8 @@ subroutine init_us_1
   USE uspp,       ONLY : nhtol, nhtoj, nhtolm, dvan, qq, indv, ap, aainit, &
                          qq_so, dvan_so, okvan
   USE uspp_param, ONLY : lmaxq, dion, betar, qfunc, qfcoef, rinner, nbeta, &
-                         kkbeta, nqf, nqlc, lll, jjj, lmaxkb, nh, tvanp, nhm
+                         kkbeta, nqf, nqlc, lll, jjj, lmaxkb, nh, tvanp, &
+                         nbetam, nhm
   USE spin_orb,   ONLY : lspinorb, so, rot_ylm, fcoef
   !
   implicit none
@@ -76,7 +77,7 @@ subroutine init_us_1
   allocate (aux ( ndm))    
   allocate (aux1( ndm))    
   allocate (besr( ndm))    
-  allocate (qtot( ndm , nbrx , nbrx))    
+  allocate (qtot( ndm , nbetam , nbetam))    
   allocate (ylmk0( lmaxq * lmaxq))    
   ap (:,:,:)   = 0.d0
   if (lmaxq > 0) qrad(:,:,:,:)= 0.d0
@@ -274,7 +275,7 @@ subroutine init_us_1
         enddo
         qrad (:, :, :, nt) = qrad (:, :, :, nt)*prefr
 #ifdef __PARA
-        call reduce (nqxq * nbrx * (nbrx + 1) / 2 * lmaxq, qrad (1, 1, 1, nt) )
+        call reduce (nqxq * nbetam*(nbetam+1) / 2 * lmaxq, qrad (1, 1, 1, nt) )
 #endif
      endif
      ! ntyp
@@ -359,7 +360,7 @@ subroutine init_us_1
      enddo
   enddo
 #ifdef __PARA
-  call reduce (nqx * nbrx * ntyp, tab)
+  call reduce (nqx * nbetam * ntyp, tab)
 #endif
   deallocate (ylmk0)
   deallocate (qtot)

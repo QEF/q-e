@@ -15,7 +15,6 @@ subroutine gen_us_dy (ik, u, dvkb)
   !  derivative of the spherical harmonics projected on vector u
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nbrx
   USE io_global,  ONLY : stdout
   USE constants,  ONLY : tpi
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
@@ -25,7 +24,7 @@ subroutine gen_us_dy (ik, u, dvkb)
   USE wvfct,      ONLY : npw, npwx, igk
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
   USE us,         ONLY : tab, dq
-  USE uspp_param, ONLY : lmaxkb, nbeta, nh
+  USE uspp_param, ONLY : lmaxkb, nbeta, nbetam, nh
   !
   implicit none
   !
@@ -48,7 +47,7 @@ subroutine gen_us_dy (ik, u, dvkb)
   dvkb(:,:) = (0.d0, 0.d0)
   if (lmaxkb.le.0) return
 
-  allocate ( vkb0(npw,nbrx,ntyp), dylm_u(npw,(lmaxkb+1)**2), gk(3,npw) )
+  allocate ( vkb0(npw,nbetam,ntyp), dylm_u(npw,(lmaxkb+1)**2), gk(3,npw) )
   allocate ( q(npw) )
 
   do ig = 1, npw

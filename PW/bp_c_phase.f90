@@ -152,7 +152,6 @@ SUBROUTINE c_phase
 
 !  --- Make use of the module with common information ---
    USE kinds,                ONLY : DP
-   USE parameters,           ONLY : nbrx
    USE io_global,            ONLY : stdout
    USE io_files,             ONLY : iunwfc, nwordwfc
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
@@ -161,7 +160,7 @@ SUBROUTINE c_phase
    USE gvect,                ONLY : ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                                     ecutwfc, g, gcutm
    USE uspp,                 ONLY : nkb, vkb
-   USE uspp_param,           ONLY : lmaxq, nh, nhm
+   USE uspp_param,           ONLY : lmaxq, nbetam, nh, nhm
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk
    USE wvfct,                ONLY : npwx, npw, nbnd
@@ -245,7 +244,7 @@ SUBROUTINE c_phase
    REAL(DP) :: phidw
    REAL(DP) :: phiup
    REAL(DP) :: rmod
-   REAL(DP) :: qrad_dk(nbrx,nbrx,lmaxq,ntyp)
+   REAL(DP) :: qrad_dk(nbetam,nbetam,lmaxq,ntyp)
    REAL(DP) :: upol(3)
    REAL(DP) :: weight
    REAL(DP), ALLOCATABLE :: wstring(:)

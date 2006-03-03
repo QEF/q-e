@@ -22,7 +22,7 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
 #include "f_defs.h"
   USE kinds, ONLY: DP
   USE us, ONLY: dq, qrad
-  USE uspp_param, ONLY: lmaxq, nbrx
+  USE uspp_param, ONLY: lmaxq, nbetam
   USE uspp, ONLY: nlx, lpl, lpx, ap, indv, nhtolm
   implicit none
 
@@ -79,10 +79,10 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   endif
   ivl = nhtolm(ih, np)
   jvl = nhtolm(jh, np)
-  if (nb.gt.nbrx) call errore (' qvan2 ', ' nb.gt.nbrx ', nb)
-  if (mb.gt.nbrx) call errore (' qvan2 ', ' mb.gt.nbrx ', mb)
-  if (ivl.gt.nlx) call errore (' qvan2 ', ' ivl.gt.nlx  ', ivl)
-  if (jvl.gt.nlx) call errore (' qvan2 ', ' jvl.gt.nlx  ', jvl)
+  if (nb > nbetam .OR. mb > nbetam) &
+       call errore (' qvan2 ', ' wrong dimensions (1)', MAX(nb,mb))
+  if (ivl > nlx .OR. jvl > nlx) &
+       call errore (' qvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
   qg(:) = (0.d0, 0.d0)
   !
   !    and make the sum over the non zero LM

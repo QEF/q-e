@@ -16,19 +16,20 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
   USE atom, ONLY: r, rab, dx
   USE ions_base, ONLY : ntyp => nsp
   USE cell_base, ONLY: omega
-  USE parameters, ONLY:  ndmx, nbrx
+  USE parameters, ONLY:  ndmx
   USE kinds, ONLY: DP
   USE constants, ONLY: fpi
   USE uspp_param, ONLY: lmaxq, qfunc, qfcoef, nqf, rinner, lll, &
-       nbeta, kkbeta, tvanp
+       nbeta, nbetam, kkbeta, tvanp
   !
   IMPLICIT NONE
   !
-  INTEGER :: ik,  msh_bp, i, np, m, k, l
-  INTEGER :: n,idbes,ilmin,ilmax,iv,jv
-  REAL(DP)  :: jl(ndmx), ql, sum, jlp1(ndmx), aux(ndmx), &
-       qr_k(nbrx,nbrx,lmaxq,ntyp)
-
+  REAL(DP)  :: ql, qr_k(nbetam,nbetam,lmaxq,ntyp)
+  INTEGER :: idbes
+  !
+  INTEGER :: ik, msh_bp, i, np, m, k, l
+  INTEGER :: n, ilmin, ilmax, iv, jv
+  REAL(DP)  :: jl(ndmx), jlp1(ndmx), aux(ndmx), sum
   !
   DO np=1,ntyp
      msh_bp=kkbeta(np)
