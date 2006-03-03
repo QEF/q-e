@@ -1040,9 +1040,6 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-  IF ( imix > 0 .AND. noncolin )  CALL errore( ' iosys ', &
-      ' only simple mixing is implemented in noncolinear calculations', 1 )
-  !
   starting_scf_threshold = tr2
   nmix = mixing_ndim
   niter_with_fixed_ns = mixing_fixed_ns

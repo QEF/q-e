@@ -647,9 +647,6 @@ SUBROUTINE approx_screening2( drho, rhobest )
   REAL(DP), EXTERNAL :: rho_dot_product
   !
   !
-  IF ( nspin == 4 ) CALL errore ('approx_screening2', &
-       'noncolinear not implemented',1)
-  !
   IF ( nspin == 2 ) THEN
      !
      DO ig = 1, ngm
@@ -685,14 +682,14 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   psic(:) = ZERO
   !
-  IF ( nspin == 1 ) THEN
+  IF ( nspin_save == 2 ) THEN
      !
-     psic(nl(:)) = rhobest(:,1) * EXP( - 0.5D0 * l2smooth * tpiba2 * gg(:) )
+     psic(nl(:)) = ( rhobest(:,1) + rhobest(:,2) ) !* &
+     !              EXP( - 0.5D0 * l2smooth * tpiba2 * gg(:) )
      !
   ELSE
      !
-     psic(nl(:)) = ( rhobest(:,1) + rhobest(:,2) ) * &
-                   EXP( - 0.5D0 * l2smooth * tpiba2 * gg(:) )
+     psic(nl(:)) = rhobest(:,1) !* EXP( - 0.5D0 * l2smooth * tpiba2 * gg(:) )
      !
   END IF
   !
