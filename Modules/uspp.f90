@@ -29,6 +29,7 @@ MODULE uspp_param
        nbeta(npsx),          &! number of beta functions
        nh(npsx),             &! number of beta functions per atomic type
        nhm,                  &! max number of different beta functions per atom
+       nbetam,               &! max number of beta functions
        kkbeta(npsx),         &! point where the beta are zero
        nqf(npsx),            &! number of coefficients for Q
        nqlc(npsx),           &! number of angular momenta in Q
