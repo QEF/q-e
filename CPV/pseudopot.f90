@@ -120,6 +120,7 @@ CONTAINS
                             lmaxkb, &!
                             lll,    &!
                             nhm,    &!
+                            nbetam, &!
                             nh,     &!
                             tvanp,  &!
                             nqlc,   &!
@@ -140,7 +141,6 @@ CONTAINS
       !     total number of beta functions (all and Vanderbilt only)
       !     ------------------------------------------------------------------
       lmaxkb   = -1
-      nhm      =  0
       nkb      =  0
       nkbus    =  0
       nlcc_any = .false.
@@ -152,12 +152,13 @@ CONTAINS
             ind = ind + 2 * lll( iv, is ) + 1
          end do
          nh(is) = ind
-         nhm    = max( nhm, nh(is) )
          ish(is)=nkb
          nkb = nkb + na(is) * nh(is)
          if( tvanp(is) ) nkbus = nkbus + na(is) * nh(is)
          nlcc_any = nlcc_any .OR. nlcc(is)
       end do
+      nhm    = MAXVAL( nh(1:nsp) )
+      nbetam = MAXVAL(nbeta(1:nsp))
       if (lmaxkb > lmaxx) call errore(' pseudopotential_indexes ',' l > lmax ',lmaxkb)
       lmaxq = 2*lmaxkb + 1
       !
@@ -485,18 +486,16 @@ CONTAINS
         USE pseudo_base,        ONLY: nlin_stress_base
         USE pseudo_types,       ONLY: pseudo_ncpp, pseudo_upf
         USE reciprocal_vectors, ONLY: g, gstart
-        USE uspp_param,         ONLY: nbeta
+        USE uspp_param,         ONLY: nbeta, nbetam
         USE read_pseudo_module_fpmd, ONLY: ap
 
         IMPLICIT NONE
 
         REAL(DP), ALLOCATABLE :: fintl(:,:)
-        INTEGER    :: is, l, i, nbetax
+        INTEGER    :: is, l, i
         REAL(DP)  :: xgmax, xgmin
         LOGICAL    :: compute_tab
         REAL(DP)  :: xgtabmax = 0.0d0
-
-        nbetax = MAXVAL( nbeta( 1:nsp ) )
 
         compute_tab = chkpstab( g, xgtabmax )
 
@@ -504,7 +503,7 @@ CONTAINS
 
            IF( .NOT. compute_tab ) return
 
-           DO l = 1, nbetax
+           DO l = 1, nbetam
               DO i = 1, nspnl
                  CALL kill_spline( wnl_sp( l, i ), 'a' )
                  CALL kill_spline( wnla_sp( l, i ), 'a' )
@@ -518,12 +517,12 @@ CONTAINS
 
         CALL compute_xgtab( xgmin, xgmax, xgtabmax )
 
-        ALLOCATE( wnl_sp( nbetax, nspnl ) )
-        ALLOCATE( wnla_sp( nbetax, nspnl ) )
+        ALLOCATE( wnl_sp( nbetam, nspnl ) )
+        ALLOCATE( wnla_sp( nbetam, nspnl ) )
 
         DO is = 1, nspnl
 
-           DO l = 1, nbetax
+           DO l = 1, nbetam
               CALL nullify_spline(  wnl_sp( l, is ) )
               CALL nullify_spline( wnla_sp( l, is ) )
            END DO
@@ -817,10 +816,11 @@ CONTAINS
 
 
 !     ---------------------------------------------------------------
-!     calculation of array qradx(igb,iv,jv,is)
+!     calculation of array qradx(igb,iv,jv,is) for interpolation table
+!     (symmetric wrt exchange of iv and jv: a single index ijv is used)
 !
-!       qradb(ig,l,k,is) = 4pi/omega int_0^r dr r^2 j_l(qr) q(r,l,k,is)
-!
+!       qradx(ig,l,k,is) = 4pi/omega int_0^r dr r^2 j_l(qr) q(r,l,k,is)
+!     
 !     ---------------------------------------------------------------
 
 
@@ -828,7 +828,8 @@ CONTAINS
       !
       use io_global,  only: stdout
       USE ions_base,  ONLY: nsp
-      USE uspp_param, ONLY: nh, kkbeta, betar, nhm, nqlc, qqq, nbrx, lmaxq, nbeta
+      USE uspp_param, ONLY: nh, kkbeta, betar, nhm, nbetam, nqlc, qqq, &
+           lmaxq, nbeta
       USE atom,       ONLY: r, numeric, rab
       USE uspp,       ONLY: nhtol, indv
       USE betax,      only: refg, qradx, mmx, dqradx
@@ -846,8 +847,8 @@ CONTAINS
 
       IF( ALLOCATED(  qradx ) ) DEALLOCATE(  qradx )
       IF( ALLOCATED( dqradx ) ) DEALLOCATE( dqradx )
-      ALLOCATE(  qradx( mmx, nbrx, nbrx, lmaxq, nsp ) )
-      IF (tpre) ALLOCATE( dqradx( mmx, nbrx, nbrx, lmaxq, nsp ) )
+      ALLOCATE(  qradx( mmx, nbetam*(nbetam+1)/2, lmaxq, nsp ) )
+      IF (tpre) ALLOCATE( dqradx( mmx, nbetam*(nbetam+1)/2, lmaxq, nsp ) )
 
       DO is = 1, nvb
          !
@@ -912,21 +913,23 @@ CONTAINS
                         fint(ir) = qrl(ir,ijv,l)*jl(ir)
                      end do
                      if (oldvan(is)) then
-                        call herman_skillman_int (kkbeta(is),fint,rab(1,is),qradx(il,iv,jv,l,is))
+                        call herman_skillman_int &
+                             (kkbeta(is),fint,rab(1,is),qradx(il,ijv,l,is))
                      else
-                        call simpson_cp90(kkbeta(is),fint,rab(1,is),qradx(il,iv,jv,l,is))
+                        call simpson_cp90 &
+                             (kkbeta(is),fint,rab(1,is),qradx(il,ijv,l,is))
                      end if
-                     !
-                     qradx(il,jv,iv,l,is)=qradx(il,iv,jv,l,is)
                      !
                      if( tpre ) then
                         do ir = 1, kkbeta(is)
                            dfint(ir) = qrl(ir,ijv,l) * djl(ir)
                         end do
                         if ( oldvan(is) ) then
-                           call herman_skillman_int(kkbeta(is),dfint,rab(1,is),dqradx(il,iv,jv,l,is))
+                           call herman_skillman_int &
+                                (kkbeta(is),dfint,rab(1,is),dqradx(il,ijv,l,is))
                         else
-                           call simpson_cp90(kkbeta(is),dfint,rab(1,is),dqradx(il,iv,jv,l,is))
+                           call simpson_cp90 &
+                                (kkbeta(is),dfint,rab(1,is),dqradx(il,ijv,l,is))
                         end if
                      end if
                      !
@@ -1010,7 +1013,7 @@ CONTAINS
       USE gvecw, only: ngw
       USE ions_base, only: nsp
       USE reciprocal_vectors, only: g, gx, gstart
-      USE uspp_param, only: lmaxq, nqlc, lmaxkb, kkbeta, nbrx, nbeta, nh
+      USE uspp_param, only: lmaxq, nqlc, lmaxkb, kkbeta, nbeta, nh
       USE uspp, only: qq, nhtolm, beta
       USE cell_base, only: ainv, omega, tpiba2, tpiba
       USE betax, ONLY : refg, betagx, dbetagx
@@ -1112,7 +1115,7 @@ CONTAINS
       use uspp, only: qq, nhtolm, beta
       use constants, only: pi, fpi
       use ions_base, only: nsp
-      use uspp_param, only: lmaxq, nqlc, lmaxkb, kkbeta, nbrx, nbeta, nh
+      use uspp_param, only: lmaxq, nqlc, lmaxkb, kkbeta, nbeta, nbetam, nh
       use qradb_mod, only: qradb
       use qgb_mod, only: qgb
       use gvecb, only: gb, gxb, ngb
@@ -1126,7 +1129,7 @@ CONTAINS
       LOGICAL, INTENT(IN) :: tpre
 
       integer  is, l, lp, ig, ir, iv, jv, ijv, i,j, jj, ierr
-      real(8), allocatable:: fint(:), jl(:), dqradb(:,:,:,:,:)
+      real(8), allocatable:: fint(:), jl(:), dqradb(:,:,:,:)
       real(8), allocatable:: ylmb(:,:), dylmb(:,:,:,:)
       complex(8), allocatable:: dqgbs(:,:,:)
       real(8) xg, c, betagl, dbetagl, gg
@@ -1147,21 +1150,22 @@ CONTAINS
          !
          c = fpi / omegab
          !
-         do l=1,nqlc(is)
-            do iv= 1,nbeta(is)
-               do jv=iv,nbeta(is)
-                  do ig=1,ngb
-                     gg=gb(ig)*tpibab*tpibab/refg
-                     jj=int(gg)+1
+         ijv=0
+         do iv= 1,nbeta(is)
+            do jv=iv,nbeta(is)
+               ijv=ijv+1
+               do ig=1,ngb
+                  gg=gb(ig)*tpibab*tpibab/refg
+                  jj=int(gg)+1
+                  do l=1,nqlc(is)
                      if(jj.ge.mmx) then
                         qradb(ig,iv,jv,l,is)=0.
-                        qradb(ig,jv,iv,l,is)=qradb(ig,iv,jv,l,is)
                      else
                         qradb(ig,iv,jv,l,is)=                           &
-     &                       c*qradx(jj+1,iv,jv,l,is)*(gg-DBLE(jj-1))+  &
-     &                       c*qradx(jj,iv,jv,l,is)*(DBLE(jj)-gg)
-                        qradb(ig,jv,iv,l,is)=qradb(ig,iv,jv,l,is)
+     &                       c*qradx(jj+1,ijv,l,is)*(gg-DBLE(jj-1))+  &
+     &                       c*qradx(jj,ijv,l,is)*(DBLE(jj)-gg)
                      endif
+                     qradb(ig,jv,iv,l,is)=qradb(ig,iv,jv,l,is)
                   enddo
                enddo
             enddo
@@ -1193,7 +1197,7 @@ CONTAINS
 !     ---------------------------------------------------------------
 !     arrays required for stress calculation, variable-cell dynamics
 !     ---------------------------------------------------------------
-         allocate(dqradb(ngb,nbrx,nbrx,lmaxq,nsp))
+         allocate(dqradb(ngb,nbetam*(nbetam+1)/2,lmaxq,nsp))
          allocate(dylmb(ngb,lmaxq*lmaxq,3,3))
          allocate(dqgbs(ngb,3,3))
          dqrad(:,:,:,:,:,:,:) = 0.d0
@@ -1202,18 +1206,20 @@ CONTAINS
          !
          do is=1,nvb
             !
-            do l=1,nqlc(is)
-               do iv= 1,nbeta(is)
-                  do jv=iv,nbeta(is)
-                    do ig=1,ngb
+            ijv=0
+            do iv= 1,nbeta(is)
+               do jv=iv,nbeta(is)
+                  ijv=ijv+1
+                  do l=1,nqlc(is)
+                     do ig=1,ngb
                         gg=gb(ig)*tpibab*tpibab/refg
                         jj=int(gg)+1
                         if(jj.ge.mmx) then
-                           dqradb(ig,iv,jv,l,is) = 0.
+                           dqradb(ig,ijv,l,is) = 0.
                         else
-                           dqradb(ig,iv,jv,l,is) =                      &
-     &                       dqradx(jj+1,iv,jv,l,is)*(gg-DBLE(jj-1))+   &
-     &                       dqradx(jj,iv,jv,l,is)*(DBLE(jj)-gg)
+                           dqradb(ig,ijv,l,is) =  &
+                                dqradx(jj+1,ijv,l,is)*(gg-DBLE(jj-1)) +  &
+                                dqradx(jj,ijv,l,is)*(DBLE(jj)-gg)
                         endif
                      enddo
                      do i=1,3
@@ -1225,7 +1231,7 @@ CONTAINS
                            do ig=2,ngb
                               dqrad(ig,iv,jv,l,is,i,j) =                &
      &                          -qradb(ig,iv,jv,l,is)*ainv(j,i)         &
-     &                          -c*dqradb(ig,iv,jv,l,is)*               &
+     &                          -c*dqradb(ig,ijv,l,is)*               &
      &                          gxb(i,ig)/gb(ig)*                       &
      &                          (gxb(1,ig)*ainv(j,1)+                   &
      &                           gxb(2,ig)*ainv(j,2)+                   &
@@ -1285,7 +1291,7 @@ CONTAINS
       USE io_global,     only : stdout
       USE gvecw,         only : ngw
       USE ions_base,     only : nsp
-      USE uspp_param,    only : lmaxq, nqlc, lmaxkb, kkbeta, nbrx, nbeta, nh
+      USE uspp_param,    only : lmaxq, nqlc, lmaxkb, kkbeta, nbeta, nh
       USE uspp_param,    ONLY : betar, nhm
       USE uspp,          only : qq, nhtolm, beta
       USE uspp,          ONLY : nhtol, indv

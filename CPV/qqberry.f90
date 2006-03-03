@@ -16,13 +16,12 @@ subroutine qqberry2( gqq,gqqm, ipol)
 
   use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
-  use uspp_param, only: lqmax, nqlc, kkbeta, nbeta, nh, nhm
+  use uspp_param, only: lmaxq, nqlc, kkbeta, nbeta, nbetam, nh, nhm
   use uspp, only: indv, lpx, lpl, ap,nhtolm
   use atom, only: r, rab
   use core
   use gvecw, only: ngw
   use reciprocal_vectors, only: mill_l
-  use parameters
   use  constants
   use cvan, only: oldvan, nvb
   use  ions_base
@@ -36,26 +35,24 @@ subroutine qqberry2( gqq,gqqm, ipol)
   complex(8) gqq(nhm,nhm,nas,nsp)
   complex(8) gqqm(nhm,nhm,nas,nsp)
   real(8) gmes
-  integer ipol, lx
+  integer :: ipol
 
 ! local variables
 
-  integer ig, is, iv, jv, i, istart, il,l,ir, igi,ia
+  integer :: ndm, ig, is, iv, jv, i, istart, il,l,ir, igi,ia
   real(8), allocatable:: fint(:),jl(:)
   real(8), allocatable:: qrl(:,:,:), qradb2(:,:,:,:) 
   real(8) c, xg
   complex(8) qgbs,sig
-  integer ivs, jvs, ivl, jvl, lp, ijv
+  integer :: ivs, jvs, ivl, jvl, lp, ijv
   real(8), allocatable:: ylm(:,:)
 
-  lx = lqmax
+  ndm = MAXVAL (kkbeta(1:nsp))
+  allocate( fint( ndm), jl(ndm))
+  allocate( qradb2(nbetam,nbetam,lmaxq,nsp))
+  allocate( ylm(ngw, lmaxq*lmaxq))
 
-  allocate( fint( ndmx))
-  allocate( jl(ndmx))
-  allocate( qradb2(nbrx,nbrx,lx,nsp))
-  allocate( ylm(ngw, lqmax*lqmax))
-
-  CALL ylmr2( lqmax*lqmax, ngw, gx, g, ylm )
+  CALL ylmr2( lmaxq*lmaxq, ngw, gx, g, ylm )
 
   qradb2 = 0.0d0
      
@@ -132,8 +129,6 @@ subroutine qqberry2( gqq,gqqm, ipol)
   if( igi.ne.-1) then
 
 !setting array beigr
-
-      
              
      do is=1,nvb
         do iv= 1,nh(is)
@@ -174,8 +169,6 @@ subroutine qqberry2( gqq,gqqm, ipol)
                  qgbs=qgbs+sig*ylm(igi,lp)*qradb2(ivs,jvs,l,is)
                 
               end do
-   
-
               
               do ia=1,na(is)
                      

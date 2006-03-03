@@ -51,7 +51,7 @@ module betax
   INTEGER              :: mmx = 5000
   REAL(DP)             :: refg
   REAL(DP),ALLOCATABLE :: betagx(:,:,:), dbetagx(:,:,:), &
-                          qradx(:,:,:,:,:), dqradx(:,:,:,:,:)
+                          qradx(:,:,:,:), dqradx(:,:,:,:)
   !
   CONTAINS
   !
