@@ -28,7 +28,8 @@ subroutine data_structure( lgamma )
   USE pffts,      ONLY : nkcp, ncplanes, npps, ncp0s, nxxs, ncts, ncps
 
   USE mp,         ONLY : mp_sum
-  USE mp_global,  ONLY : intra_pool_comm, nproc_pool, me_pool, my_image_id
+  USE mp_global,  ONLY : intra_pool_comm, nproc_pool, me_pool, my_image_id, &
+                         nogrp
   USE stick_base
   USE fft_scalar, ONLY : good_fft_dimension
   USE fft_types,  ONLY : fft_dlay_allocate, fft_dlay_set, fft_dlay_scalar
@@ -218,10 +219,10 @@ subroutine data_structure( lgamma )
 
   CALL fft_dlay_set( dfftp, &
        tk, nct, nr1, nr2, nr3, nrx1, nrx2, nrx3, (me_pool+1), &
-       nproc_pool, ub, lb, index, in1(:), in2(:), ncp, nkcp, ngp, ngkp, st, stw)
+       nproc_pool, nogrp, ub, lb, index, in1(:), in2(:), ncp, nkcp, ngp, ngkp, st, stw)
   CALL fft_dlay_set( dffts, &
        tk, ncts, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, (me_pool+1), &
-       nproc_pool, ub, lb, index, in1(:), in2(:), ncps, nkcp, ngps, ngkp, sts, stw)
+       nproc_pool, nogrp, ub, lb, index, in1(:), in2(:), ncps, nkcp, ngps, ngkp, sts, stw)
 
   !  if tk = .FALSE. only half reciprocal space is considered, then we
   !  need to correct the number of sticks

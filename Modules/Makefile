@@ -58,6 +58,7 @@ sic.o \
 smallbox.o \
 splinelib.o \
 stick_base.o \
+task_groups.o \
 timestep.o \
 version.o \
 uspp.o \

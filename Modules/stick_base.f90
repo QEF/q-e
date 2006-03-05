@@ -560,7 +560,7 @@
           ngw, ngm, ngs )
 
           USE kinds, ONLY: DP
-          USE mp_global, ONLY: mpime, nproc, group
+          USE mp_global, ONLY: mpime, nproc, group, nogrp
           USE mp, ONLY: mp_max
           USE control_flags, ONLY: gamma_only
           USE io_global, ONLY: ionode
@@ -749,9 +749,9 @@
           CALL fft_dlay_allocate( dffts, nproc, nr1sx, nr2sx )
 
           CALL fft_dlay_set( dfftp, tk, nst, nr1, nr2, nr3, nr1x, nr2x, nr3x, (mpime+1), &
-            nproc, ub, lb, index, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
+            nproc, nogrp, ub, lb, index, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
           CALL fft_dlay_set( dffts, tk, nsts, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, (mpime+1), &
-            nproc, ub, lb, index, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
+            nproc, nogrp, ub, lb, index, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
 
 #else
 

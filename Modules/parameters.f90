@@ -47,4 +47,7 @@ MODULE parameters
   !
   INTEGER, PARAMETER :: max_nconstr = 100
   !
+  INTEGER, PARAMETER  ::  MAXCPU = 2**17  ! Maximum number of CPU
+  INTEGER, PARAMETER  ::  MAXGRP = 128    ! Maximum number of task-groups
+  !
 END MODULE parameters

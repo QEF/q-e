@@ -18,6 +18,7 @@
       USE kinds,     ONLY : DP, i4b
       USE io_global, ONLY : stdout
       USE parallel_include
+      !
       IMPLICIT NONE
 
 !      PRIVATE
@@ -76,6 +77,8 @@
       INTEGER, PRIVATE, SAVE :: mp_high_watermark = 0
 
       INTEGER, PRIVATE, PARAMETER :: mp_msgsiz_max = 900000000
+
+      CHARACTER(LEN=80), PRIVATE :: err_msg = ' '
 
 !------------------------------------------------------------------------------!
 !
@@ -934,7 +937,10 @@
           msg_dest(1:SIZE(msg_sour)) = msg_sour(:)
           msglen = SIZE(msg_sour)
         END IF
-        IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8919)
+        IF( msglen*8 > mp_msgsiz_max ) THEN
+          WRITE( err_msg, * ) "Message too long, ", msglen
+          CALL mp_stop(8919)
+        END IF
 #if defined(__MPI)
         CALL MPI_BARRIER(group, IERR)
         IF (ierr/=0) CALL mp_stop(8140)
@@ -1279,6 +1285,7 @@
         IMPLICIT NONE
         INTEGER, INTENT (IN) :: code
         WRITE( stdout, fmt='( "*** error in Message Passing (mp) module ***")' )
+        WRITE( stdout, fmt='( "*** error msg:  ",A60)' ) TRIM( err_msg )
         WRITE( stdout, fmt='( "*** error code: ",I5)' ) code
 #if defined(__MPI)
         CALL mpi_abort(mpi_comm_world,code)

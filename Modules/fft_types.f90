@@ -140,7 +140,7 @@ CONTAINS
 !=----------------------------------------------------------------------------=!
 
   SUBROUTINE fft_dlay_set( desc, tk, nst, nr1, nr2, nr3, nr1x, nr2x, nr3x, me, &
-    nproc, ub, lb, index, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
+    nproc, nogrp, ub, lb, index, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
 
     TYPE (fft_dlay_descriptor) :: desc
 
@@ -149,6 +149,7 @@ CONTAINS
     INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x
     INTEGER, INTENT(IN) :: me       ! processor index Starting from 1
     INTEGER, INTENT(IN) :: nproc    ! number of processor
+    INTEGER, INTENT(IN) :: nogrp    ! number of groups for task-grouping
     INTEGER, INTENT(IN) :: index(:)
     INTEGER, INTENT(IN) :: in1(:)
     INTEGER, INTENT(IN) :: in2(:)
@@ -162,6 +163,10 @@ CONTAINS
 
     INTEGER :: npp( nproc ), n3( nproc ), nsp( nproc )
     INTEGER :: np, nq, i, is, iss, i1, i2, m1, m2, n1, n2, ip
+
+    !  Task-grouping C. Bekas
+    !
+    INTEGER :: sm
 
     IF( ( SIZE( desc%ngl ) < nproc ) .OR. ( SIZE( desc%npp ) < nproc ) .OR.  &
         ( SIZE( desc%ipp ) < nproc ) .OR. ( SIZE( desc%iss ) < nproc ) )     &
@@ -180,15 +185,25 @@ CONTAINS
     !  Set the number of "xy" planes for each processor
     !  in other word do a slab partition along the z axis
 
+    sm  = 0
     npp = 0
     IF ( nproc == 1 ) THEN
       npp(1) = nr3
-    ELSE
+    ELSE IF( nproc <= nr3 ) THEN
       np = nr3 / nproc
       nq = nr3 - np * nproc
       DO i = 1, nproc
         npp(i) = np
         IF ( i <= nq ) npp(i) = np + 1
+      END DO
+    ELSE
+      DO ip = 1, nr3  !  some compiler complains for empty DO loops
+        DO i = 1, nproc, nogrp
+             npp(i) = npp(i) + 1
+             sm = sm + 1
+             IF ( sm == nr3 ) EXIT
+        END DO
+        IF ( sm == nr3 ) EXIT
       END DO
     END IF
 

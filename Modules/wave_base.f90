@@ -40,6 +40,13 @@
 
           PUBLIC :: frice, grease
 
+          !
+          ! C. Bekas
+          !
+          PUBLIC :: my_wave_steepest
+          PUBLIC :: my_wave_verlet
+
+
           INTERFACE dotp
             MODULE PROCEDURE dotp_gamma, dotp_kp, dotp_gamma_n, dotp_kp_n
           END INTERFACE
@@ -688,6 +695,40 @@
      wave_speed2 = ekinc
      RETURN
    END FUNCTION wave_speed2
+
+!======================
+!C. Bekas, IBM Research
+!======================
+   SUBROUTINE my_wave_steepest( CP, C0, dt2m, grad, ngw, index)
+      !USE GROUPS_MODULE
+      IMPLICIT NONE
+
+      COMPLEX(DP), INTENT(OUT) :: CP(:)
+      COMPLEX(DP), INTENT(IN) :: C0(:)
+      COMPLEX(DP), INTENT(IN) :: grad(:)
+      REAL(DP), INTENT(IN) ::  dt2m(:)
+      INTEGER, INTENT(IN) :: ngw, index
+       CP( : )  = C0( :  )  + dt2m(:) * grad((index-1)*ngw+1:index*ngw)
+      RETURN
+   END SUBROUTINE
+
+!======================
+!C. Bekas, IBM Research
+!======================
+
+   SUBROUTINE my_wave_verlet( cm, c0, ver1, ver2, ver3, grad, ngw, index)
+      USE mp_global, ONLY: nogrp
+      IMPLICIT NONE
+      COMPLEX(DP), INTENT(INOUT) :: cm(ngw)
+      COMPLEX(DP), INTENT(IN) :: c0(ngw)
+      COMPLEX(DP), INTENT(IN) :: grad((NOGRP+1)*ngw)
+      INTEGER, INTENT(IN) :: ngw, index
+
+      REAL(DP), INTENT(IN) ::  ver1, ver2, ver3(:)
+        cm( : )  = ver1 * c0( : ) + ver2 * cm( : ) + &
+                   ver3( : ) * grad( (index-1)*ngw+1:index*ngw)
+      RETURN
+   END SUBROUTINE
 
 
 
