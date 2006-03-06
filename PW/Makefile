@@ -162,7 +162,6 @@ read_ncpp.o \
 read_pseudo.o \
 readin.o \
 readnewvan.o \
-readvan.o \
 regterg.o \
 remove_atomic_rho.o \
 report_mag.o \
@@ -306,6 +305,7 @@ MODULES = \
 ../Modules/read_cards.o \
 ../Modules/read_namelists.o \
 ../Modules/readpseudo.o \
+../Modules/read_oldpseudo.o \
 ../Modules/recvec.o \
 ../Modules/shmem_include.o \
 ../Modules/splinelib.o \

@@ -20,7 +20,11 @@ subroutine readpp
   USE funct,      ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE io_files,   ONLY : pseudo_dir, psfile
   USE io_global,  ONLY : stdout
-  !
+  !!! temp
+  use ions_base, only: zv
+  use pseud, only: zp, lmax, lloc
+  USE uspp_param, ONLY : lll, nbeta
+  !!! end of temp
   implicit none
   !
   character(len=256) :: file_pseudo
@@ -33,6 +37,10 @@ subroutine readpp
   !
   iunps = 4
   l = len_trim (pseudo_dir)
+  !!! temp
+  lmax = -1
+  lloc = -1
+  !!! end of temp
   do nt = 1, ntyp
      !
      ! iver, xmin, dx are not read from UPF format
@@ -78,7 +86,12 @@ subroutine readpp
            if (pseudo_type (psfile (nt) ) == 1) then
               newpseudo (nt) = .false.
               tvanp (nt) = .true.
+              !
               call readvan (nt, iunps)
+              ! temp
+              zp (nt) = zv (nt)
+              lmax = max (lmax, MAXVAL(lll(nt,1:nbeta(nt))))
+              ! end of temp
            endif
            if (pseudo_type (psfile (nt) ) == 2) then
               newpseudo (nt) = .true.
