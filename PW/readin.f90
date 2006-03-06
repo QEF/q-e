@@ -14,18 +14,21 @@ subroutine readpp
   !    Read pseudopotentials
   !
   USE kinds,      ONLY : DP
+  USE pseudo_types
+  USE read_pseudo_module
+  USE upf_to_internal
   USE atom,       ONLY : chi, nchi, oc, mesh, rab, numeric, xmin, dx
   USE uspp_param, ONLY : iver, tvanp, newpseudo
   USE ions_base,  ONLY : ntyp => nsp
   USE funct,      ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE io_files,   ONLY : pseudo_dir, psfile
   USE io_global,  ONLY : stdout
-  !!! temp
-  use ions_base, only: zv
-  use pseud, only: zp, lmax, lloc
+  use ions_base,  only: zv
+  use pseud,      only: zp, lmax, lloc
   USE uspp_param, ONLY : lll, nbeta
-  !!! end of temp
   implicit none
+  !
+  TYPE (pseudo_upf) :: upf
   !
   character(len=256) :: file_pseudo
   ! file name complete with path
@@ -37,10 +40,6 @@ subroutine readpp
   !
   iunps = 4
   l = len_trim (pseudo_dir)
-  !!! temp
-  lmax = -1
-  lloc = -1
-  !!! end of temp
   do nt = 1, ntyp
      !
      ! iver, xmin, dx are not read from UPF format
@@ -48,7 +47,15 @@ subroutine readpp
      iver(:,nt) = 0
      xmin(nt) = 0.d0
      dx(nt) = 0.d0
+     !
+     ! obsolescent variables
+     !
+     lmax(nt) = -1
+     lloc(nt) = -1
+     numeric (nt) = .true.
+     !
      ! add / if needed
+     !
      if (pseudo_dir (l:l) .ne.'/') then
         file_pseudo = pseudo_dir (1:l) //'/'//psfile (nt)
      else
@@ -58,10 +65,18 @@ subroutine readpp
      open (unit = iunps, file = file_pseudo, status = 'old', form = &
           'formatted', iostat = ios)
      call errore ('readpp', 'file '//trim(file_pseudo)//' not found', ios)
-     call read_pseudo (nt, iunps, isupf)
-     !   The new pseudopotential UPF format is detected via the presence
-     !   of the keyword '<PP_HEADER>' at the beginning of the file
-     if (isupf /= 0) then
+     !
+     ! read UPF  pseudopotentials - the UPF format is detected via the
+     ! presence of the keyword '<PP_HEADER>' at the beginning of the file
+     !
+     call read_pseudo_upf(iunps, upf, isupf)
+     !
+     if (isupf == 0) then
+        call set_pseudo_upf (nt, upf)
+        CALL deallocate_pseudo_upf( upf )
+        ! UPF is RRKJ3-like
+        newpseudo (nt) = .true.
+     else
         rewind (unit = iunps)
         !
         !     The type of the pseudopotential is determined by the file name:
@@ -72,49 +87,30 @@ subroutine readpp
         if ( pseudo_type (psfile (nt) ) == 1 .or. &
              pseudo_type (psfile (nt) ) == 2 ) then
            !
-           !    The vanderbilt pseudopotential is always in numeric form
-           !
-           numeric (nt) = .true.
-           open (unit = iunps, file = file_pseudo, status = 'old', &
-                form = 'formatted', iostat = ios)
-
-           !
            !    newpseudo distinguishes beteween US pseudopotentials
            !    produced by Vanderbilt code and those produced
            !    by Andrea's atomic code.
            !
-           if (pseudo_type (psfile (nt) ) == 1) then
-              newpseudo (nt) = .false.
-              tvanp (nt) = .true.
-              !
+           newpseudo (nt) = ( pseudo_type (psfile (nt) ) == 2 )
+           !
+           if ( newpseudo (nt) ) then
+              call readrrkj (nt, iunps)
+           else
               call readvan (nt, iunps)
-              ! temp
-              zp (nt) = zv (nt)
-              lmax = max (lmax, MAXVAL(lll(nt,1:nbeta(nt))))
-              ! end of temp
            endif
-           if (pseudo_type (psfile (nt) ) == 2) then
-              newpseudo (nt) = .true.
-              ! tvanp is read inside readnewvan
-              call readnewvan (nt, iunps)
-           endif
-           close (iunps)
+           !
+           zp (nt) = zv (nt)
+           lmax(nt) = max ( lmax(nt), MAXVAL( lll( 1:nbeta(nt), nt) ) )
+           !
         else
            tvanp (nt) = .false.
            newpseudo (nt) = .false.
-           open (unit = iunps, file = file_pseudo, status = 'old', &
-                form='formatted', iostat = ios)
            ! numeric is read inside read_ncpp
            call read_ncpp (nt, iunps)
-           close (iunps)
+           !
         endif
-     else
-        ! UPF is always numeric
-        numeric (nt) = .true.
-        ! UPF is RRKJ3-like
-        newpseudo (nt) = .true.
-        close (iunps)
      endif
+     close (iunps)
      !
      if (nt == 1) then
         iexch_ = get_iexch()
