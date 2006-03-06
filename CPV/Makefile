@@ -161,6 +161,7 @@ MODULES = \
 ../Modules/read_cards.o \
 ../Modules/read_namelists.o \
 ../Modules/readpseudo.o \
+../Modules/read_oldpseudo.o \
 ../Modules/recvec.o \
 ../Modules/shmem_include.o \
 ../Modules/sic.o \

@@ -41,7 +41,9 @@ MODULE uspp_param
        lmaxq                  ! max angular momentum + 1 for Q functions
   LOGICAL :: &
        tvanp(npsx),          &! if .TRUE. the atom is of Vanderbilt type
-       newpseudo(npsx)        ! if .TRUE. multiple projectors are allowed
+       newpseudo(npsx),      &! if .TRUE. multiple projectors are allowed
+       oldvan(npsx)           ! old version of Vanderbilt PPs, using 
+                              ! Herman-Skillman grid - obsolescent
 END MODULE uspp_param
 !
 MODULE uspp

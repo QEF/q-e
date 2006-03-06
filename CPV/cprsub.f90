@@ -25,10 +25,9 @@ subroutine formf( tfirst, eself )
   use gvecs,           ONLY : ngs
   use cell_base,       ONLY : omega, tpiba2, tpiba
   use ions_base,       ONLY : rcmax, zv, nsp, na
-  use cvan,            ONLY : oldvan
   use local_pseudo,    ONLY : vps, rhops, dvps, drhops
   use atom,            ONLY : r, rab, mesh, numeric
-  use uspp_param,      ONLY : vloc_at
+  use uspp_param,      ONLY : vloc_at, oldvan
   use pseudo_base,     ONLY : compute_rhops, formfn, formfa, compute_eself
   use pseudopotential, ONLY : tpstab, build_pstab, vps_sp, dvps_sp
   use splines,         ONLY : spline
@@ -292,14 +291,14 @@ subroutine nlinit
       use control_flags,   ONLY : iprint, tpre, program_name
       use io_global,       ONLY : stdout, ionode
       use gvecw,           ONLY : ngw
-      use cvan,            ONLY : ish, nvb, oldvan
+      use cvan,            ONLY : ish, nvb
       use core,            ONLY : rhocb, nlcc_any, allocate_core
       use constants,       ONLY : pi, fpi
       use ions_base,       ONLY : na, nsp
-      use uspp,            ONLY : aainit, beta, qq, dvan, nhtol, nhtolm, indv, &
+      use uspp,            ONLY : aainit, beta, qq, dvan, nhtol, nhtolm, indv,&
                                   nhsa => nkb, nhsavb=>nkbus
-      use uspp_param,      ONLY : kkbeta, qqq, nqlc, betar, nbrx, lmaxq, dion, &
-                                  nbeta, lmaxkb, lll, nhm, nh, tvanp
+      use uspp_param,      ONLY : kkbeta, qqq, nqlc, betar, lmaxq, dion,&
+                                  nbeta, nbetam, lmaxkb, lll, nhm, nh, tvanp
       use atom,            ONLY : mesh, r, rab, nlcc, numeric
       use qradb_mod,       ONLY : qradb
       use qgb_mod,         ONLY : qgb
@@ -340,13 +339,13 @@ subroutine nlinit
       CALL allocate_core( nnrx, ngm, ngb, nsp )
       !
       allocate( beta( ngw, nhm, nsp ) )
-      allocate( qradb( ngb, nbrx, nbrx, lmaxq, nsp ) )
+      allocate( qradb( ngb, nbetam, nbetam, lmaxq, nsp ) )
       allocate( qgb( ngb, nhm*(nhm+1)/2, nsp ) )
       allocate( qq( nhm, nhm, nsp ) )
       qradb(:,:,:,:,:) = 0.d0
       qq  (:,:,:) =0.d0
       IF (tpre) THEN
-         allocate( dqrad( ngb, nbrx, nbrx, lmaxq, nsp, 3, 3 ) )
+         allocate( dqrad( ngb, nbetam, nbetam, lmaxq, nsp, 3, 3 ) )
          allocate( dqgb( ngb, nhm*(nhm+1)/2, nsp, 3, 3 ) )
          allocate( dbeta( ngw, nhm, nsp, 3, 3 ) )
          dqrad(:,:,:,:,:,:,:) = 0.d0
@@ -376,7 +375,7 @@ subroutine nlinit
          WRITE( stdout,*)
          WRITE( stdout,'(20x,a)') '    dion '
          do iv = 1, nbeta(is)
-            WRITE( stdout,'(8f9.4)') ( fac * dion(iv,jv,is), jv = 1, nbeta(is) )
+            WRITE( stdout,'(8f9.4)') ( fac*dion(iv,jv,is), jv = 1, nbeta(is) )
          end do
          !
       end do

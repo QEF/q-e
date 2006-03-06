@@ -242,9 +242,6 @@ module cvan
   use parameters, only: nsx
   implicit none
   save
-  logical :: oldvan(nsx)
-  !     oldvan(is) = an old version of Vanderbilt PPs (using Herman-Skillman
-  !                  grid) is read - replaces old "ipp=0" flag
   integer nvb, ish(nsx)
   !     nvb    = number of species with Vanderbilt PPs
   !     ish(is)= used for indexing the nonlocal projectors betae

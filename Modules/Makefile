@@ -52,6 +52,7 @@ random_numbers.o \
 read_cards.o \
 read_namelists.o \
 readpseudo.o \
+read_oldpseudo.o \
 recvec.o \
 shmem_include.o \
 sic.o \

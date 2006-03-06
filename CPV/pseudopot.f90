@@ -343,9 +343,8 @@ CONTAINS
       use bhs,           ONLY : rc1, rc2, wrc2, wrc1, rcl, al, bl, lloc
       USE splines,       ONLY : init_spline, allocate_spline, kill_spline, nullify_spline
       USE pseudo_base,   ONLY : formfn, formfa
-      USE uspp_param,    only : vloc_at
+      USE uspp_param,    only : vloc_at, oldvan
       USE control_flags, only : tpre
-      use cvan,          ONLY : oldvan
       use reciprocal_vectors, ONLY : g, gstart
 
       IMPLICIT NONE
@@ -711,11 +710,10 @@ CONTAINS
       !
 
       USE ions_base,  ONLY: nsp
-      USE uspp_param, ONLY: nh, kkbeta, betar, nhm, nbeta
+      USE uspp_param, ONLY: nh, kkbeta, betar, nhm, nbeta, oldvan
       USE atom,       ONLY: r, numeric, rab
       USE uspp,       ONLY: nhtol, indv
       USE betax,      only: refg, betagx, mmx, dbetagx
-      USE cvan,       only: oldvan
       !
       IMPLICIT NONE
       !
@@ -829,11 +827,11 @@ CONTAINS
       use io_global,  only: stdout
       USE ions_base,  ONLY: nsp
       USE uspp_param, ONLY: nh, kkbeta, betar, nhm, nbetam, nqlc, qqq, &
-           lmaxq, nbeta
+           lmaxq, nbeta, oldvan
       USE atom,       ONLY: r, numeric, rab
       USE uspp,       ONLY: nhtol, indv
       USE betax,      only: refg, qradx, mmx, dqradx
-      USE cvan,       only: oldvan, ish, nvb
+      USE cvan,       only: ish, nvb
       use gvecb,      only: ngb
       !
       IMPLICIT NONE
@@ -1291,13 +1289,11 @@ CONTAINS
       USE io_global,     only : stdout
       USE gvecw,         only : ngw
       USE ions_base,     only : nsp
-      USE uspp_param,    only : lmaxq, nqlc, lmaxkb, kkbeta, nbeta, nh
-      USE uspp_param,    ONLY : betar, nhm
-      USE uspp,          only : qq, nhtolm, beta
-      USE uspp,          ONLY : nhtol, indv
+      USE uspp_param,    only : lmaxq, nqlc, lmaxkb, kkbeta, nbeta, nh, &
+           betar, nhm, oldvan
+      USE uspp,          only : qq, nhtolm, beta, nhtol, indv
       USE cell_base,     only : ainv, omega, tpiba2, tpiba
       USE cdvan,         ONLY : dbeta
-      USE cvan,          only : oldvan
       USE atom,          ONLY : r, numeric, rab
       USE reciprocal_vectors, only : g, gx, gstart
 
