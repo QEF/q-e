@@ -129,7 +129,8 @@ MODULES = \
 ../Modules/ptoolkit.o \
 ../Modules/random_numbers.o \
 ../Modules/read_namelists.o \
-../Modules/readpseudo.o \
+../Modules/read_upf.o \
+../Modules/read_uspp.o \
 ../Modules/recvec.o \
 ../Modules/splinelib.o \
 ../Modules/stick_base.o \
@@ -249,11 +250,8 @@ PWOBJS = \
 ../PW/read_conf_from_file.o \
 ../PW/read_file.o \
 ../PW/read_ncpp.o \
-../PW/read_pseudo.o \
 ../PW/realus.o \
 ../PW/readin.o \
-../PW/readnewvan.o \
-../PW/readvan.o \
 ../PW/report_mag.o \
 ../PW/restart.o \
 ../PW/reset_k_points.o \
