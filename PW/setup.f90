@@ -974,7 +974,7 @@ SUBROUTINE check_para_diag_efficiency()
   USE random_numbers,   ONLY : rranf
   USE parallel_toolkit, ONLY : diagonalize, cdiagonalize
   USE mp_global,        ONLY : nproc_pool, me_pool, intra_pool_comm
-  USE mp,               ONLY : mp_bcast
+  USE mp,               ONLY : mp_bcast, mp_barrier
   !
   IMPLICIT NONE
   !
@@ -990,17 +990,17 @@ SUBROUTINE check_para_diag_efficiency()
   !
   use_para_diago = .FALSE.
   !
-  IF ( isolve /= 0 ) RETURN
+  IF ( isolve /= 0 .OR. nproc_pool == 1 ) RETURN
   !
   m_min = nbnd / nproc_pool * nproc_pool
   !
   m = 100 / nproc_pool * nproc_pool
   !
-  IF ( nproc_pool == 1 .OR. m > nbndx ) RETURN
+  IF ( m > nbndx ) RETURN
   !
   IF ( ionode ) THEN
      !
-     WRITE( stdout, '( /, 5X,"looking for ", &
+     WRITE( stdout, '(/,5X,"looking for ", &
                      &     "the optimal diagonalization algorithm ...",/)' )
      !
      WRITE( stdout, '(5X,"dimension   time para (sec)   time serial (sec)")' )
@@ -1057,6 +1057,8 @@ SUBROUTINE check_para_diag_efficiency()
         !
      END IF
      !
+     CALL mp_barrier()
+     !
      IF ( ionode ) time_para = scnds()
      !
      IF ( gamma_only ) THEN
@@ -1071,6 +1073,8 @@ SUBROUTINE check_para_diag_efficiency()
         !
      END IF
      !
+     CALL mp_barrier()
+     !
      IF ( ionode ) time_para = scnds() - time_para
      !
      IF ( ionode ) time_serial = scnds()
@@ -1084,6 +1088,8 @@ SUBROUTINE check_para_diag_efficiency()
         CALL cdiagh( dim, ac, dim, e, vc )
         !
      END IF
+     !
+     CALL mp_barrier()
      !
      IF ( ionode ) time_serial = scnds() - time_serial
      !
