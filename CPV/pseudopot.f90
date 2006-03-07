@@ -900,10 +900,9 @@ CONTAINS
                   if (i0.eq.2) djl(1) = djl(2)
                endif
                !
-               ijv = 0
                do iv = 1, nbeta(is)
-                  do jv = iv, nbeta(is)
-                     ijv = ijv + 1
+                  do jv = 1, iv
+                     ijv = iv*(iv-1)/2 + jv
                      !
                      !      note qrl(r)=r^2*q(r)
                      !
@@ -1137,7 +1136,7 @@ CONTAINS
       IF( ierr  /= 0 ) &
         CALL errore(' interpolate_qradb ', ' cannot allocate ylmb ', 1 )
 !
-      qradb(:,:,:,:,:) = 0.d0
+      qradb(:,:,:,:) = 0.d0
       call ylmr2 (lmaxq*lmaxq, ngb, gxb, gb, ylmb)
 
       do is = 1, nvb
@@ -1148,22 +1147,20 @@ CONTAINS
          !
          c = fpi / omegab
          !
-         ijv=0
          do iv= 1,nbeta(is)
-            do jv=iv,nbeta(is)
-               ijv=ijv+1
+            do jv = 1, iv
+               ijv = iv*(iv-1)/2 + jv
                do ig=1,ngb
                   gg=gb(ig)*tpibab*tpibab/refg
                   jj=int(gg)+1
                   do l=1,nqlc(is)
                      if(jj.ge.mmx) then
-                        qradb(ig,iv,jv,l,is)=0.
+                        qradb(ig,ijv,l,is)=0.
                      else
-                        qradb(ig,iv,jv,l,is)=                           &
+                        qradb(ig,ijv,l,is)=                           &
      &                       c*qradx(jj+1,ijv,l,is)*(gg-DBLE(jj-1))+  &
      &                       c*qradx(jj,ijv,l,is)*(DBLE(jj)-gg)
                      endif
-                     qradb(ig,jv,iv,l,is)=qradb(ig,iv,jv,l,is)
                   enddo
                enddo
             enddo
@@ -1172,15 +1169,14 @@ CONTAINS
 !     ---------------------------------------------------------------
 !     stocking of qgb(igb,ijv,is) and of qq(iv,jv,is)
 !     ---------------------------------------------------------------
-         ijv=0
          do iv= 1,nh(is)
-            do jv=iv,nh(is)
+            do jv=1,iv
 !
 !       compact indices because qgb is symmetric:
-!       ivjv:  11 12 13 ... 22 23...
-!       ijv :   1  2  3 ...
+!       ivjv:  11 21 22 31 32 33 ... 
+!       ijv :   1  2  3  4  5  6 ...
 !
-               ijv=ijv+1
+               ijv = iv*(iv-1)/2 + jv
                call qvan2b(ngb,iv,jv,is,ylmb,qgb(1,ijv,is) )
 !
                qq(iv,jv,is)=omegab*DBLE(qgb(1,ijv,is))
@@ -1204,10 +1200,9 @@ CONTAINS
          !
          do is=1,nvb
             !
-            ijv=0
             do iv= 1,nbeta(is)
-               do jv=iv,nbeta(is)
-                  ijv=ijv+1
+               do jv=1,iv
+                  ijv = iv*(iv-1)/2 + jv
                   do l=1,nqlc(is)
                      do ig=1,ngb
                         gg=gb(ig)*tpibab*tpibab/refg
@@ -1223,13 +1218,13 @@ CONTAINS
                      do i=1,3
                         do j=1,3
                            dqrad(1,iv,jv,l,is,i,j) = &
-                                -qradb(1,iv,jv,l,is) * ainv(j,i)
+                                -qradb(1,ijv,l,is) * ainv(j,i)
                            dqrad(1,jv,iv,l,is,i,j) = &
                                 dqrad(1,iv,jv,l,is,i,j)
                            do ig=2,ngb
                               dqrad(ig,iv,jv,l,is,i,j) =                &
-     &                          -qradb(ig,iv,jv,l,is)*ainv(j,i)         &
-     &                          -c*dqradb(ig,ijv,l,is)*               &
+     &                          -qradb(ig,ijv,l,is)*ainv(j,i)           &
+     &                          -c*dqradb(ig,ijv,l,is)*                 &
      &                          gxb(i,ig)/gb(ig)*                       &
      &                          (gxb(1,ig)*ainv(j,1)+                   &
      &                           gxb(2,ig)*ainv(j,2)+                   &
@@ -1243,16 +1238,14 @@ CONTAINS
                enddo
             enddo
             !
-            ijv=0
-            !
             do iv= 1,nh(is)
-               do jv=iv,nh(is)
+               do jv=1,iv
                   !
                   !       compact indices because qgb is symmetric:
-                  !       ivjv:  11 12 13 ... 22 23...
-                  !       ijv :   1  2  3 ...
+                  !       ivjv:  11 21 22 31 32 33 ... 
+                  !       ijv :   1  2  3  4  5  6 ...
                   !
-                  ijv=ijv+1
+                  ijv = iv*(iv-1)/2 + jv
                   call dqvan2b(ngb,iv,jv,is,ylmb,dylmb,dqgbs )
                   do i=1,3
                      do j=1,3

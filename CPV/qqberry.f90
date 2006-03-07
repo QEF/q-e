@@ -90,10 +90,9 @@ subroutine qqberry2( gqq,gqqm, ipol)
      do l=1,nqlc(is)                        
         xg= gmes !only orthorombic cells
         call bess(xg,l,kkbeta(is),r(1,is),jl)
-        ijv = 0
         do iv= 1,nbeta(is)
-           do jv=iv,nbeta(is)
-              ijv = ijv + 1
+           do jv=1,iv
+              ijv = (iv-1)*iv/2 + jv
 !     
 !     note qrl(r)=r^2*q(r)
 !

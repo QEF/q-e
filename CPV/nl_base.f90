@@ -355,10 +355,9 @@
       ennl = 0.d0
       !
       do is = 1, nsp
-         ijv = 0
          do iv = 1, nh(is)
-            do jv = iv, nh(is)
-               ijv = ijv + 1
+            do jv = 1, iv
+               ijv = (iv-1)*iv/2 + jv
                isa = 0
                do ism = 1, is - 1
                   isa = isa + na(ism)
@@ -654,10 +653,9 @@ subroutine dennl( bec, denl )
   !
   denl=0.d0
   do is=1,nsp
-     ijv=0
      do iv=1,nh(is)
-        do jv=iv,nh(is)
-           ijv=ijv+1
+        do jv=1, iv
+           ijv = (iv-1)*iv/2 + jv
            isa=0
            do ism=1,is-1
               isa=isa+na(ism)

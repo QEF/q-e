@@ -10,7 +10,7 @@
       subroutine fill_qrl(is, dim1, dim2, dim3, qrl)
 !-----------------------------------------------------------------------
 !
-! for compatibility with old Vanderbilt formats
+! fill l-components of Q(r) as in Vanderbilt's approach
 !
       use uspp_param, only: qfunc, nqf, qfcoef, rinner, lll, nbeta, &
                        kkbeta
@@ -25,10 +25,9 @@
       !
       IF ( kkbeta(is) > dim1 ) &
            CALL errore ('fill_qrl', 'bad 1st dimension for array qrl', 1)
-      ijv = 0
       do iv=1,nbeta(is)
-         do jv=iv,nbeta(is)
-            ijv = ijv + 1
+         do jv=1,iv
+            ijv = (iv-1)*iv/2 + jv
             IF ( ijv > dim2) &
                  CALL errore ('fill_qrl', 'bad 2nd dimension for array qrl', 2)
             lmin=lll(jv,is)-lll(iv,is)+1

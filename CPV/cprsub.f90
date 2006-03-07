@@ -339,10 +339,10 @@ subroutine nlinit
       CALL allocate_core( nnrx, ngm, ngb, nsp )
       !
       allocate( beta( ngw, nhm, nsp ) )
-      allocate( qradb( ngb, nbetam, nbetam, lmaxq, nsp ) )
+      allocate( qradb( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp ) )
       allocate( qgb( ngb, nhm*(nhm+1)/2, nsp ) )
       allocate( qq( nhm, nhm, nsp ) )
-      qradb(:,:,:,:,:) = 0.d0
+      qradb(:,:,:,:) = 0.d0
       qq  (:,:,:) =0.d0
       IF (tpre) THEN
          allocate( dqrad( ngb, nbetam, nbetam, lmaxq, nsp, 3, 3 ) )
@@ -415,7 +415,7 @@ subroutine qvan2b(ngy,iv,jv,is,ylm,qg)
   real(DP),    intent(in)  :: ylm( ngb, lmaxq*lmaxq )
   complex(DP), intent(out) :: qg( ngb )
 !
-  integer      :: ivs, jvs, ivl, jvl, i, ii, ij, l, lp, ig
+  integer      :: ivs, jvs, ijvs, ivl, jvl, i, ii, ij, l, lp, ig
   complex(DP) :: sig
   ! 
   !       iv  = 1..8     s_1 p_x1 p_z1 p_y1 s_2 p_x2 p_z2 p_y2
@@ -424,10 +424,16 @@ subroutine qvan2b(ngy,iv,jv,is,ylm,qg)
   ! 
   ivs=indv(iv,is)
   jvs=indv(jv,is)
+  if (ivs >= jvs) then
+     ijvs = ivs*(ivs-1)/2 + jvs
+  else
+     ijvs = jvs*(jvs-1)/2 + ivs
+  end if
+  ! ijvs is the packed index for (ivs,jvs)
   ivl=nhtolm(iv,is)
   jvl=nhtolm(jv,is)
-  if(ivl > nlx)  call errore(' qvan2b ',' ivl out of bounds ',ivl)
-  if(jvl > nlx)  call errore(' qvan2b ',' jvl out of bounds ',jvl)
+  if (ivl > nlx .OR. jvl > nlx) &
+       call errore (' qvan2b ', ' wrong dimensions', MAX(ivl,jvl))
   !
   qg(:) = (0.d0, 0.d0)
   !
@@ -464,7 +470,7 @@ subroutine qvan2b(ngy,iv,jv,is,ylm,qg)
      sig=(0.,-1.)**(l-1)
      sig=sig*ap(lp,ivl,jvl)
      do ig=1,ngy
-        qg(ig)=qg(ig)+sig*ylm(ig,lp)*qradb(ig,ivs,jvs,l,is)
+        qg(ig)=qg(ig)+sig*ylm(ig,lp)*qradb(ig,ijvs,l,is)
      end do
   end do
 
@@ -491,7 +497,7 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
   REAL(DP),    INTENT(IN)  :: ylm( ngb, lmaxq*lmaxq ), dylm( ngb, lmaxq*lmaxq, 3, 3 )
   complex(DP), intent(out) :: dqg( ngb, 3, 3 )
 
-  integer      :: ivs, jvs, ivl, jvl, i, ii, ij, l, lp, ig
+  integer      :: ivs, jvs, ijvs, ivl, jvl, i, ii, ij, l, lp, ig
   complex(DP) :: sig
   !
   ! 
@@ -502,11 +508,17 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
 
   ivs=indv(iv,is)
   jvs=indv(jv,is)
+  if (ivs >= jvs) then
+     ijvs = ivs*(ivs-1)/2 + jvs
+  else
+     ijvs = jvs*(jvs-1)/2 + ivs
+  end if
+  ! ijvs is the packed index for (ivs,jvs)
   ivl=nhtolm(iv,is)
   jvl=nhtolm(jv,is)
-  if(ivl > nlx)  call errore(' dqvan2b ',' ivl out of bounds ',ivl)
-  if(jvl > nlx)  call errore(' dqvan2b ',' jvl out of bounds ',jvl)
-
+  if (ivl > nlx .OR. jvl > nlx) &
+       call errore (' qvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
+  !
   dqg(:,:,:) = (0.d0, 0.d0)
 
   !  lpx = max number of allowed y_lm
@@ -546,7 +558,7 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
            do ig=1,ngy
               dqg(ig,ii,ij) = dqg(ig,ii,ij) +  sig *                &
  &                    ( ylm(ig,lp) * dqrad(ig,ivs,jvs,l,is,ii,ij) + &
- &                     dylm(ig,lp,ii,ij)*qradb(ig,ivs,jvs,l,is)   )
+ &                     dylm(ig,lp,ii,ij)*qradb(ig,ijvs,l,is)   )
            end do
         end do
      end do

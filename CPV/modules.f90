@@ -125,7 +125,7 @@ end module qgb_mod
 module qradb_mod
   implicit none
   save
-  real(8), allocatable:: qradb(:,:,:,:,:)
+  real(8), allocatable:: qradb(:,:,:,:)
 contains
   subroutine deallocate_qradb_mod
       IF( ALLOCATED( qradb ) ) DEALLOCATE( qradb )
