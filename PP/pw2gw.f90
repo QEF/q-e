@@ -266,7 +266,7 @@ SUBROUTINE compute_gw
   xk_s(:,:) = xk(:,1:nkpt)
   !
   OPEN(65,file='k.dat')
-  WRITE(65,'(1x,3f10.6,x,f10.6)')  ( xk_s(:,ik), wk(ik)*0.5, ik=1,nks )
+  WRITE(65,'(1x,3f10.6,1x,f10.6)')  ( xk_s(:,ik), wk(ik)*0.5, ik=1,nks )
   CLOSE(unit=65)
   IF (t_form) THEN
      WRITE (io,'(I12)') nkpt

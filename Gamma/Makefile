@@ -140,9 +140,6 @@ PWOBJS = \
 ../PW/read_conf_from_file.o \
 ../PW/read_file.o \
 ../PW/readin.o \
-../PW/read_pseudo.o \
-../PW/readvan.o \
-../PW/readnewvan.o \
 ../PW/read_ncpp.o \
 ../PW/realus.o \
 ../PW/regterg.o \
@@ -269,7 +266,8 @@ MODULES = \
 ../Modules/pseudo_types.o \
 ../Modules/ptoolkit.o \
 ../Modules/random_numbers.o \
-../Modules/readpseudo.o \
+../Modules/read_upf.o \
+../Modules/read_uspp.o \
 ../Modules/recvec.o \
 ../Modules/shmem_include.o \
 ../Modules/splinelib.o \
