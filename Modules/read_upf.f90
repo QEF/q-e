@@ -19,7 +19,7 @@
         IMPLICIT NONE
         SAVE
         PRIVATE
-        PUBLIC :: read_pseudo_upf
+        PUBLIC :: read_pseudo_upf, scan_begin, scan_end
       CONTAINS
 !
 !---------------------------------------------------------------------
