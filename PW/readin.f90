@@ -15,7 +15,8 @@ subroutine readpp
   !
   USE kinds,      ONLY : DP
   USE pseudo_types
-  USE read_pseudo_module
+  USE read_upf_module , ONLY : read_pseudo_upf
+  USE read_uspp_module, ONLY : readvan, readrrkj
   USE upf_to_internal
   USE atom,       ONLY : chi, nchi, oc, mesh, rab, numeric, xmin, dx
   USE uspp_param, ONLY : iver, tvanp, newpseudo

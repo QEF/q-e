@@ -86,7 +86,7 @@ CONTAINS
   !  needed for PAW reconstruction
   !
 
-  use read_pseudo_module, only: scan_begin, scan_end
+  use read_upf_module, only: scan_begin, scan_end
   USE ions_base,          ONLY : ntyp => nsp
   use atom, only: mesh 
   use kinds, only: DP

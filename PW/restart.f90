@@ -80,7 +80,7 @@ MODULE restart_module
     USE parameters,           ONLY : nacx, nsx, npk
     USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
          Hubbard_U, Hubbard_alpha
-    USE read_pseudo_module
+    USE read_upf_module
     USE pseudo_types
     USE spin_orb, ONLY : lspinorb
     USE noncollin_module, ONLY : noncolin, npol

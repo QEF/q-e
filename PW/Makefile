@@ -302,8 +302,8 @@ MODULES = \
 ../Modules/random_numbers.o \
 ../Modules/read_cards.o \
 ../Modules/read_namelists.o \
-../Modules/readpseudo.o \
-../Modules/read_oldpseudo.o \
+../Modules/read_upf.o \
+../Modules/read_uspp.o \
 ../Modules/recvec.o \
 ../Modules/shmem_include.o \
 ../Modules/splinelib.o \
