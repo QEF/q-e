@@ -94,7 +94,7 @@ MODULES = \
 ../Modules/io_files.o \
 ../Modules/pseudo_types.o \
 ../Modules/random_numbers.o \
-../Modules/readpseudo.o \
+../Modules/read_upf.o \
 ../Modules/version.o \
 ../Modules/parameters.o ../Modules/parallel_include.o
 

@@ -21,7 +21,7 @@ subroutine read_pseudoupf
   use funct, only: set_dft_from_name
   !
   use pseudo_types
-  use read_pseudo_module
+  use read_upf_module
   !
   implicit none
   !

@@ -99,7 +99,7 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho)
 !
    call dvxc_dn(mesh, rho, dvxc)
 !
-!write(*,'(PE20.12)')sum(abs(dvxc))
+!write(*,'(1PE20.12)')sum(abs(dvxc))
 !stop
    write(6,'(5x,''Frequency dependent polarizability is written into freq-pol.dat'',/)')
 
@@ -163,7 +163,7 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho)
 !         write (*,'(4e16.6)') alpha, dalpha, error, error2
       end do
 
-      write (1,'(17x, f8.4, 3x, PE14.6, 9x, PE14.6)') u, pp(mesh)*0.529177**3, pp(mesh)
+      write (1,'(17x, f8.4, 3x, 1PE14.6, 9x, 1PE14.6)') u, pp(mesh)*0.529177**3, pp(mesh)
       if (iu .eq. 0) & 
       write (6,'(5x, "Static polarizability: ", f10.5, " (in angstrom^3)   --->", f10.5,&
                 & "  (in e^2a0^3)")') pp(mesh)*0.529177**3, pp(mesh)
@@ -208,7 +208,7 @@ subroutine veff_of_rho(mesh,dx,r,r2,rho,y,veff)
    ! local variables
    !
    real (kind=8), allocatable :: vold(:)
-	real (kind=8) :: dx2, error
+   real (kind=8) :: dx2, error
    integer i, iter, k
 
 !
