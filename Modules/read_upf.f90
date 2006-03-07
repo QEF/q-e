@@ -9,7 +9,7 @@
 !  extracted from module "readpseudo" of FPMD
 
 !=----------------------------------------------------------------------------=!
-      MODULE read_pseudo_module
+      MODULE read_upf_module
 !=----------------------------------------------------------------------------=!
 
 !  this module handles the reading of pseudopotential data
@@ -18,7 +18,8 @@
         USE kinds, ONLY: DP
         IMPLICIT NONE
         SAVE
-
+        PRIVATE
+        PUBLIC :: read_pseudo_upf
       CONTAINS
 !
 !---------------------------------------------------------------------
@@ -539,5 +540,5 @@ subroutine read_pseudo_addinfo (upf, iunps)
 end subroutine read_pseudo_addinfo
 
 !=----------------------------------------------------------------------------=!
-      END MODULE read_pseudo_module
+      END MODULE read_upf_module
 !=----------------------------------------------------------------------------=!

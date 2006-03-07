@@ -190,7 +190,8 @@ END FUNCTION calculate_dx
       USE atom, ONLY: numeric, nlcc
       USE cvan, ONLY: nvb
       use ions_base, only: nsp
-      use read_pseudo_module, only: read_pseudo_upf
+      use read_upf_module, only: read_pseudo_upf
+      use read_uspp_module, only: readvan, readrrkj
       use control_flags, only: program_name, tuspp
       use funct, only: get_iexch, get_icorr, get_igcx, get_igcc, set_dft_from_name, dft_is_hybrid
 

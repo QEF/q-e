@@ -51,8 +51,8 @@ printout_base.o \
 random_numbers.o \
 read_cards.o \
 read_namelists.o \
-readpseudo.o \
-read_oldpseudo.o \
+read_upf.o \
+read_uspp.o \
 recvec.o \
 shmem_include.o \
 sic.o \
