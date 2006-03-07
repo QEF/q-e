@@ -665,7 +665,7 @@ CONTAINS
          call errore('readrrkj','wrong potential read',is)
     !
     read( iunps, '(4e17.11,i5)',err=100, iostat=ios ) &
-         xmin (is), zmesh(is), dx (is), mesh(is)
+         xmin (is), rdum, zmesh(is), dx (is), mesh(is)
     !
     if (mesh(is) > ndmx .or. mesh(is) < 0) &
          call errore('readrrkj', 'wrong mesh',is)
