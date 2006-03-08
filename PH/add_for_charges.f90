@@ -63,7 +63,7 @@ subroutine add_for_charges (ik, uact)
   allocate (ps1 ( nkb , nbnd))    
   allocate (ps2 ( nkb , nbnd , 3))    
   allocate (aux ( npwx))
-  allocate (aux1( npwx, npwx))
+  allocate (aux1( npwx, nbnd))
   allocate (bedp( nkb, nbnd) )
   allocate (alphapp (nkb,nbnd,3))
   if (lgamma) then
