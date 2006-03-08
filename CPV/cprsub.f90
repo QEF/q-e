@@ -239,13 +239,19 @@ subroutine nlfh( bec, dbec, lambda )
                         call MXMA                                          &
      &                    (tmpdh,1,nudx,tmpbec,1,nhm,temp,1,nudx,nss,nh(is),nss)
 !
-                        do j=1,nss
-                           do i=1,nss
-                              temp(i,j)=temp(i,j)*lambda(i,j,iss)
-                           end do
-                        end do
-!
-                        fpre(ii,jj)=fpre(ii,jj)+2.*SUM(temp(1:nss,1:nss))
+                        ! do j=1,nss
+                        !    do i=1,nss
+                        !       temp(i,j)=temp(i,j)*lambda(i,j,iss)
+                        !    end do
+                        ! end do
+                        ! fpre(ii,jj)=fpre(ii,jj)+2.*SUM(temp(1:nss,1:nss))
+                        !
+                        DO j = 1, nss
+                           DO i = 1, nss
+                              fpre(ii,jj) = fpre(ii,jj) + 2*temp(i,j)*lambda(i,j,iss)
+                           END DO
+                        END DO
+
                      endif
                      !
                   end do

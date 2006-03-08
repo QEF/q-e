@@ -56,6 +56,7 @@ SUBROUTINE deallocate_modules_var()
   USE metagga,              ONLY : deallocate_metagga
   USE ncpp,                 ONLY : deallocate_ncpp
   USE pseudo_projector,     ONLY : fnl, projector, deallocate_projector
+  USE groups_module,        ONLY : deallocate_groups
   !
   IMPLICIT NONE
   !
@@ -91,6 +92,8 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_cdvan()
   CALL deallocate_dqrad_mod()
   CALL deallocate_betax()
+  !
+  CALL deallocate_groups()
   !
   CALL fft_dlay_deallocate( dfftp )
   CALL fft_dlay_deallocate( dffts )

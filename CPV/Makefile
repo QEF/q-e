@@ -172,6 +172,7 @@ MODULES = \
 ../Modules/version.o \
 ../Modules/wavefunctions.o \
 ../Modules/wave_base.o \
+../Modules/task_groups.o \
 ../Modules/timestep.o \
 ../Modules/xml_io_base.o
 
