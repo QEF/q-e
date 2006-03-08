@@ -235,14 +235,15 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           END DO
        END DO
        !
+10     CONTINUE
+       !
        ! ... the factor 2 accounts for the other half of the G-vector sphere
        !
        sigmanlc(:,:) = 2.D0 * sigmanlc(:,:)
+       !
        DO l = 1, 3
           sigmanlc(l,l) = sigmanlc(l,l) - evps
        END DO
-       !
-10     CONTINUE
        !
        DEALLOCATE( becp )
        DEALLOCATE( dvkb )
@@ -388,7 +389,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           sigmanlc(l,l) = sigmanlc(l,l) - evps
        END DO
        !
-       
 100    CONTINUE
        !
        ! ... non diagonal contribution - derivative of the bessel function

@@ -308,11 +308,12 @@ MODULES = \
 ../Modules/shmem_include.o \
 ../Modules/splinelib.o \
 ../Modules/stick_base.o \
+../Modules/task_groups.o \
+../Modules/timestep.o \
 ../Modules/uspp.o \
 ../Modules/version.o \
 ../Modules/wavefunctions.o \
 ../Modules/wave_base.o \
-../Modules/timestep.o \
 ../Modules/xml_io_base.o
 
 TLDEPS=bindir mods libs libiotk
