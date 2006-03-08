@@ -253,6 +253,8 @@ SUBROUTINE projwave( filproj, lsym )
   ! ... or for gamma-point. 
   REAL(DP), ALLOCATABLE :: charges(:,:,:), proj1 (:)
   REAL(DP) :: psum, totcharge(nspinx)
+  INTEGER  :: nksinit, nkslast
+  CHARACTER(LEN=256) :: filename
   INTEGER, ALLOCATABLE :: INDEX(:) 
   LOGICAL :: lsym
   ! 
@@ -495,21 +497,34 @@ SUBROUTINE projwave( filproj, lsym )
      ! write on the file filproj
      ! 
      IF (filproj.NE.' ') THEN
-        iunproj=33
-        CALL write_io_header(filproj, iunproj, title, nrx1, nrx2, nrx3, &
-           nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
-           nkstot,nbnd,natomwfc) 
-        DO nwfc = 1, natomwfc 
-           WRITE(iunproj,'(2i5,a3,3i5)') & 
-                nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), & 
-                nlmchi(nwfc)%n, nlmchi(nwfc)%l, nlmchi(nwfc)%m 
-           DO ik=1,nkstot
-              DO ibnd=1,nbnd
-                 WRITE(iunproj,'(2i8,f20.10)') ik,ibnd,abs(proj(nwfc,ibnd,ik)) 
+        DO is=1,nspin
+           IF (nspin==2) THEN
+              if (is==1) filename=TRIM(filproj)//'.up'
+              if (is==2) filename=TRIM(filproj)//'.down'
+              nksinit=(nkstot/2)*(is-1)+1
+              nkslast=(nkstot/2)*is
+           ELSE
+              filename=TRIM(filproj)
+              nksinit=1
+              nkslast=nkstot
+           END IF
+           iunproj=33
+           CALL write_io_header(filename, iunproj, title, nrx1, nrx2, nrx3, &
+                nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, &
+                ecutwfc, nkstot/nspin,nbnd,natomwfc) 
+           DO nwfc = 1, natomwfc 
+              WRITE(iunproj,'(2i5,a3,3i5)') & 
+                  nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), & 
+                  nlmchi(nwfc)%n, nlmchi(nwfc)%l, nlmchi(nwfc)%m 
+              DO ik=nksinit,nkslast
+                 DO ibnd=1,nbnd
+                   WRITE(iunproj,'(2i8,f20.10)') ik,ibnd, &
+                                                 abs(proj(nwfc,ibnd,ik)) 
+                 END DO
               END DO
            END DO
+           CLOSE(iunproj)
         END DO
-        CLOSE(iunproj)
      END IF
      ! 
      ! write on the standard output file 
