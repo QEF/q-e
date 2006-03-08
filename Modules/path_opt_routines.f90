@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2005 Quantum-ESPRESSO group
+! Copyright (C) 2003-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,7 +12,7 @@ MODULE path_opt_routines
   ! ... This module contains all subroutines and functions needed for
   ! ... the optimisation of the reaction path (NEB and SMD calculations)
   !
-  ! ... Written by Carlo Sbraccia ( 2003-2005 )
+  ! ... Written by Carlo Sbraccia ( 2003-2006 )
   !
   USE kinds,          ONLY : DP
   USE constants,      ONLY : eps8, eps16
@@ -47,89 +47,107 @@ MODULE path_opt_routines
      END SUBROUTINE steepest_descent 
      !
      !----------------------------------------------------------------------
-     SUBROUTINE quick_min( index )
+     SUBROUTINE quick_min( index, istep )
        !---------------------------------------------------------------------- 
        !
-       USE path_variables, ONLY : dim, vel
+       USE path_variables, ONLY : dim, posold
        !
        IMPLICIT NONE
        !
-       INTEGER, INTENT(IN) :: index
-       REAL(DP)            :: force_versor(dim)
-       REAL(DP)            :: norm_pgrad
+       INTEGER, INTENT(IN) :: index, istep
+       !
+       REAL(DP), ALLOCATABLE :: vel(:), force_versor(:), step(:)
+       REAL(DP)              :: projection, norm_pgrad, norm_vel, norm_step
+       !
+       REAL(DP), PARAMETER :: max_step = 0.6D0  ! in bohr
        !
        !
-       vel(:,index) = vel(:,index) - 0.5D0 * ds * precond_grad(:,index)
+       ALLOCATE( vel( dim ), force_versor( dim ), step( dim ) )
+       !
+       CALL grad_precond( index, istep )
+       !
+       vel(:) = pos(:,index) - posold(:,index)
        !
        norm_pgrad = norm( precond_grad(:,index) )
        !
-       IF ( norm_pgrad > eps16 ) THEN
+       norm_vel = norm( vel(:) )
+       !
+       IF ( norm_pgrad > eps16 .AND. norm_vel > eps16 ) THEN
           !
-          force_versor = - precond_grad(:,index) / norm_pgrad
+          force_versor(:) = - precond_grad(:,index) / norm_pgrad
           !
-          vel(:,index) = force_versor * &
-                         MAX( 0.D0, ( vel(:,index) .dot. force_versor ) )
+          projection = ( vel(:) .dot. force_versor(:) )
+          !
+          WRITE( *, * ) index, norm_vel, projection / norm_vel
+          !
+          vel(:) = MAX( 0.D0, projection ) * force_versor(:)
           !
        ELSE
           !
-          vel(:,index) = 0.D0
+          vel(:) = 0.D0
           !
-       END IF       
+       END IF
        !
-       vel(:,index) = vel(:,index) - 0.5D0 * ds * precond_grad(:,index)
+       posold(:,index) = pos(:,index)
        !
-       pos(:,index) = pos(:,index) + ds * vel(:,index)
-       !       
+       step(:) = vel(:) - ds**2 * precond_grad(:,index)
+       !
+       norm_step = norm( step(:) )
+       !
+       step(:) = step(:) / norm_step
+       !
+       pos(:,index) = pos(:,index) + step(:) * MIN( norm_step, max_step )
+       !
+       DEALLOCATE( vel, force_versor, step )
+       !
        RETURN
        !
      END SUBROUTINE quick_min
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE grad_precond( index )
+     SUBROUTINE grad_precond( i, istep )
        !-----------------------------------------------------------------------
        !
        ! ... this routine computes an estimate of H^-1 by using the BFGS
        ! ... algorithm and the preconditioned gradient  pg = H^-1 * g
        !
-       USE path_variables, ONLY : dim, use_precond, frozen
+       USE path_variables, ONLY : dim, use_precond
        USE io_files,       ONLY : iunpath, iunbfgs, tmp_dir, prefix
-       USE basic_algebra_routines
        !
        IMPLICIT NONE
        !
-       INTEGER, INTENT(IN) :: index
+       INTEGER, INTENT(IN) :: i, istep
        !
        REAL(DP), ALLOCATABLE      :: pos_p(:)
        REAL(DP), ALLOCATABLE      :: grad_p(:)
        REAL(DP), ALLOCATABLE      :: inv_hess(:,:)
        REAL(DP), ALLOCATABLE      :: y(:), s(:)
-       REAL(DP), ALLOCATABLE      :: Hs(:), Hy(:), yH(:)
-       REAL(DP)                   :: sdoty, p_grad_norm
+       REAL(DP), ALLOCATABLE      :: Hy(:), yH(:)
+       REAL(DP)                   :: sdoty, pg_norm
        CHARACTER(LEN=256)         :: bfgs_file
        CHARACTER(LEN=6), EXTERNAL :: int_to_char
        LOGICAL                    :: file_exists
        !
-       REAL(DP), PARAMETER :: p_grad_norm_max = 0.6D0
+       INTEGER,  PARAMETER :: nrefresh    = 25
+       REAL(DP), PARAMETER :: max_pg_norm = 0.6D0
        !
        !
        IF ( .NOT. use_precond ) THEN
           !
-          precond_grad(:,index) = grad(:,index)
+          precond_grad(:,i) = grad(:,i)
           !
           RETURN
           !
        END IF
        !
-       IF ( frozen(index) ) RETURN
-       !
-       ALLOCATE( pos_p( dim ) )
+       ALLOCATE( pos_p(  dim ) )
        ALLOCATE( grad_p( dim ) )
        ALLOCATE( y( dim ), s( dim ) )
        ALLOCATE( inv_hess( dim, dim ) )
-       ALLOCATE( Hs( dim ), Hy( dim ), yH( dim ) )       
+       ALLOCATE( Hy( dim ), yH( dim ) )       
        !
        bfgs_file = TRIM( tmp_dir ) // TRIM( prefix ) // "_" // &
-                   TRIM( int_to_char( index ) )//"/"//TRIM( prefix )//'.bfgs'
+                   TRIM( int_to_char( i ) ) // "/" // TRIM( prefix ) // '.bfgs'
        !
        INQUIRE( FILE = TRIM( bfgs_file ), EXIST = file_exists )
        !
@@ -144,16 +162,21 @@ MODULE path_opt_routines
           !
           CLOSE( UNIT = iunbfgs )
           !
+          ! ... the approximate inverse hessian is reset to one every nrefresh
+          ! ... iterations: this is one to clean-up the memory of the starting
+          ! ... configuration
+          !
+          IF ( MOD( nrefresh, istep ) == 0 ) inv_hess(:,:) = identity( dim )
+          !
           ! ... BFGS update
           !
-          s(:) = pos(:,index)  - pos_p(:)
-          y(:) = grad(:,index) - grad_p(:)
+          s(:) = pos(:,i)  - pos_p(:)
+          y(:) = grad(:,i) - grad_p(:)
           !
           sdoty = ( s(:) .dot. y(:) )
           !
           IF ( sdoty > eps8 ) THEN
              !
-             Hs(:) = ( inv_hess(:,:) .times. s(:) )
              Hy(:) = ( inv_hess(:,:) .times. y(:) )
              yH(:) = ( y(:) .times. inv_hess(:,:) )
              !
@@ -169,30 +192,30 @@ MODULE path_opt_routines
           !
        END IF
        !
-       precond_grad(:,index) = ( inv_hess(:,:) .times. grad(:,index) )
+       precond_grad(:,i) = ( inv_hess(:,:) .times. grad(:,i) )
        !
-       IF ( ( precond_grad(:,index) .dot. grad(:,index) ) < 0.D0 ) THEN
+       IF ( ( precond_grad(:,i) .dot. grad(:,i) ) < 0.D0 ) THEN
           !
-          WRITE( UNIT = iunpath, FMT = '(5X,/,"image ",I3)' ) index
+          WRITE( UNIT = iunpath, FMT = '(5X,/,"image ",I3)' ) i
           WRITE( UNIT = iunpath, &
                  FMT = '(5X,"uphill step: resetting bfgs history",/)' )
           !
-          precond_grad(:,index) = grad(:,index)
+          precond_grad(:,i) = grad(:,i)
           !
           inv_hess(:,:) = identity( dim )
           !
        END IF
        !
-       p_grad_norm = norm( precond_grad(:,index) )
+       pg_norm = norm( precond_grad(:,i) )
        !
-       precond_grad(:,index) = precond_grad(:,index) / &
-                               p_grad_norm * MIN( p_grad_norm, p_grad_norm_max )
+       precond_grad(:,i) = precond_grad(:,i) / pg_norm
+       precond_grad(:,i) = precond_grad(:,i) * MIN( pg_norm, max_pg_norm )
        !
        OPEN( UNIT = iunbfgs, &
              FILE = TRIM( bfgs_file ), STATUS = 'UNKNOWN', ACTION = 'WRITE' )
        !
-       WRITE( iunbfgs, * ) pos(:,index)
-       WRITE( iunbfgs, * ) grad(:,index)
+       WRITE( iunbfgs, * ) pos(:,i)
+       WRITE( iunbfgs, * ) grad(:,i)
        WRITE( iunbfgs, * ) inv_hess(:,:)
        !
        CLOSE( UNIT = iunbfgs )
@@ -201,7 +224,7 @@ MODULE path_opt_routines
        DEALLOCATE( grad_p )
        DEALLOCATE( inv_hess )
        DEALLOCATE( y, s )
-       DEALLOCATE( Hs, Hy, yH )
+       DEALLOCATE( Hy, yH )
        !
        RETURN
        !

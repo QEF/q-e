@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2005 Quantum-ESPRESSO group
+! Copyright (C) 2003-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,7 @@ MODULE path_reparametrisation
   ! ... This module contains all subroutines and functions needed for
   ! ... the reparametrisation of the path in the smd method
   !
-  ! ... Written by Carlo Sbraccia ( 2003-2005 )
+  ! ... Written by Carlo Sbraccia ( 2003-2006 )
   !
   USE io_files,  ONLY : iunpath
   USE kinds,     ONLY : DP
@@ -28,17 +28,17 @@ MODULE path_reparametrisation
     !
     ! ... module procedures    
     !
-    ! ... in direct space
+    ! ... reparametrisation routines in direct space
     !
     !------------------------------------------------------------------------
     SUBROUTINE spline_reparametrisation()
       !------------------------------------------------------------------------
       !
-      USE splinelib,        ONLY : dosplineint
-      USE path_variables,   ONLY : pos, num_of_images, dim
-      USE path_variables,   ONLY : istep_path, path_thr, use_multistep, &
-                                   err_max, frozen, vel
-      USE io_global,        ONLY : meta_ionode
+      USE splinelib,      ONLY : dosplineint
+      USE path_variables, ONLY : pos, num_of_images, dim
+      USE path_variables, ONLY : istep_path, path_thr, use_multistep, &
+                                 err_max, frozen, posold
+      USE io_global,      ONLY : meta_ionode
       !
       IMPLICIT NONE
       !
@@ -92,7 +92,7 @@ MODULE path_reparametrisation
                N_in  = 2
                N_fin = new_num_of_images - 1
                !
-               vel(:,N_in:N_fin) = 0.D0
+               posold(:,N_in:N_fin) = 0.D0
                !
                frozen(N_in:N_fin) = .FALSE.
                !
@@ -154,7 +154,7 @@ MODULE path_reparametrisation
           pes(n)        = pes(num_of_images)
           grad_pes(:,n) = grad_pes(:,num_of_images)
           error(n)      = error(num_of_images)
-          vel(:,n)      = vel(:,num_of_images)
+          posold(:,n)   = posold(:,num_of_images)
           grad(:,n)     = grad(:,num_of_images)
           !
           RETURN
@@ -163,7 +163,7 @@ MODULE path_reparametrisation
       !
     END SUBROUTINE spline_reparametrisation
     !
-    ! ... in reciprocal space
+    ! ... reparametrisation routines in reciprocal space
     !
     !-----------------------------------------------------------------------
     SUBROUTINE update_num_of_images()
@@ -172,7 +172,7 @@ MODULE path_reparametrisation
       USE path_variables,   ONLY : istep_path, num_of_images, &
                                    path_thr, Nft, ft_coeff, pos, pes, &
                                    use_multistep, grad_pes, err_max,  &
-                                   frozen, vel
+                                   frozen, posold
       USE io_global,        ONLY : meta_ionode
       !
       IMPLICIT NONE
@@ -223,7 +223,7 @@ MODULE path_reparametrisation
             N_in  = 2
             N_fin = new_num_of_images - 1
             !
-            vel(:,N_in:N_fin) = 0.D0
+            posold(:,N_in:N_fin) = 0.D0
             !
             frozen(N_in:N_fin) = .FALSE.
             !
@@ -264,7 +264,7 @@ MODULE path_reparametrisation
           pes(n)        = pes(num_of_images)
           grad_pes(:,n) = grad_pes(:,num_of_images)
           error(n)      = error(num_of_images)
-          vel(:,n)      = vel(:,num_of_images)
+          posold(:,n)   = posold(:,num_of_images)
           grad(:,n)     = grad(:,num_of_images)
           !
           RETURN
@@ -339,7 +339,7 @@ MODULE path_reparametrisation
       IMPLICIT NONE
       !
       REAL(DP), ALLOCATABLE :: r_h(:), r_n(:), delta_pos(:)
-      REAL(DP)              :: x, delta_x, s, s_image, pi_n
+      REAL(DP)              :: x, delta_x, s, s_image
       INTEGER               :: i, j, n, image
       !
       !
@@ -417,7 +417,7 @@ MODULE path_reparametrisation
       ! ...                               0  and  Nft - 1 ( = N - 2 )
       !
       USE path_variables, ONLY : nim => num_of_images
-      USE path_variables, ONLY : dim, num_of_modes, Nft, Nft_smooth, ft_coeff
+      USE path_variables, ONLY : dim, num_of_modes, Nft, ft_coeff
       !
       IMPLICIT NONE
       !

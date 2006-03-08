@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2004 PWSCF group
+! Copyright (C) 2002-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! ... this subroutine is the main scf-driver for all "path" calculations
   ! ... ( called by Modules/path_base.f90/born_oppenheimer() subroutine )
   !
-  ! ... Written by Carlo Sbraccia (2003-2004)
+  ! ... Written by Carlo Sbraccia (2003-2006)
   !
   USE kinds,            ONLY : DP
   USE input_parameters, ONLY : startingwfc, startingpot, diago_thr_init
@@ -33,9 +33,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE io_files,         ONLY : prefix, tmp_dir, &
                                iunpath, iunupdate, exit_file, iunexit
   USE path_formats,     ONLY : scf_fmt, scf_fmt_para
-  USE path_variables,   ONLY : pos, pes, grad_pes, num_of_images, &
-                               dim, suspended_image, istep_path,  &
-                               first_last_opt, frozen, write_save
+  USE path_variables,   ONLY : pos, pes, grad_pes, dim, suspended_image, &
+                               istep_path, frozen, write_save
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_global,        ONLY : inter_image_comm, intra_image_comm, &
                                my_image_id, nimage, root
@@ -52,15 +51,15 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   ! ... local variables definition
   !
-  INTEGER                    :: image, ia, istat
-  REAL (DP)             :: tcpu 
-  CHARACTER (LEN=256)        :: tmp_dir_saved
-  LOGICAL                    :: file_exists, opnd   
+  INTEGER               :: image, istat
+  REAL(DP)              :: tcpu 
+  CHARACTER (LEN=256)   :: tmp_dir_saved
+  LOGICAL               :: file_exists, opnd   
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
-  ! previous positions of atoms (needed for extrapolation)
+   ! previous positions of atoms (needed for extrapolation)
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
-  REAL (DP), EXTERNAL :: get_clock
+  REAL(DP),         EXTERNAL :: get_clock
   !
   !
   istep = istep_path + 1
@@ -158,6 +157,10 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         ! ... tau is in alat units ( pos is in bohr )
         !
         tau = RESHAPE( pos(:,image), SHAPE( tau ) ) / alat
+        !
+        WRITE( stdout, '(/,5X,"coordinates at iteration ",I3,/)' ) istep
+        !
+        CALL output_tau( .FALSE. )
         !
         ! ... initialization of the scf calculation
         !

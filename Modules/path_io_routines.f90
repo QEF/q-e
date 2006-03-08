@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum-ESPRESSO group
+! Copyright (C) 2002-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,7 @@ MODULE path_io_routines
   ! ... This module contains all subroutines used for I/O in path
   ! ... optimisations
   !
-  ! ... Written by Carlo Sbraccia ( 2003-2005 )
+  ! ... Written by Carlo Sbraccia ( 2003-2006 )
   !
   USE kinds,      ONLY : DP
   USE constants,  ONLY : au, bohr_radius_angs
@@ -73,8 +73,8 @@ MODULE path_io_routines
      SUBROUTINE io_path_stop()
        !-----------------------------------------------------------------------
        !
-       USE io_global,  ONLY : stdout, io_global_start
-       USE mp_global,  ONLY : mpime, root
+       USE io_global, ONLY : stdout, io_global_start
+       USE mp_global, ONLY : mpime, root
        !
        IMPLICIT NONE
        !
@@ -95,14 +95,13 @@ MODULE path_io_routines
      SUBROUTINE read_restart()
        !-----------------------------------------------------------------------
        !
-       USE control_flags,    ONLY : istep, nstep, conv_elec, &
-                                    lneb, lsmd, lcoarsegrained
+       USE control_flags,    ONLY : conv_elec, lsmd, lcoarsegrained
        USE io_files,         ONLY : iunpath, iunrestart, path_file   
        USE input_parameters, ONLY : if_pos
        USE path_variables,   ONLY : istep_path, nstep_path, suspended_image, &
                                     dim, num_of_images, pos, pes, grad_pes,  &
-                                    frozen , lquick_min, first_last_opt
-       USE path_variables,   ONLY : vel, Emax, Emin, Emax_index
+                                    frozen , lquick_min
+       USE path_variables,   ONLY : posold, Emax, Emin, Emax_index
        USE path_variables,   ONLY : Nft, ft_coeff, num_of_modes
        USE io_global,        ONLY : meta_ionode, meta_ionode_id
        USE mp,               ONLY : mp_bcast
@@ -111,11 +110,10 @@ MODULE path_io_routines
        !
        ! ... local variables
        !    
-       INTEGER              :: i, j, ia, ierr
-       CHARACTER (LEN=256)  :: input_line
-       REAL (DP)       :: val
-       LOGICAL              :: exists
-       LOGICAL, EXTERNAL    :: matches
+       INTEGER             :: i, j, ia, ierr
+       CHARACTER (LEN=256) :: input_line
+       LOGICAL             :: exists
+       LOGICAL, EXTERNAL   :: matches
        !
        !
        IF ( meta_ionode ) THEN
@@ -274,7 +272,7 @@ MODULE path_io_routines
                       !
                       DO j = 1, dim
                          !
-                         READ( UNIT = iunrestart, FMT = * ) vel(j,i)
+                         READ( UNIT = iunrestart, FMT = * ) posold(j,i)
                          !
                       END DO
                       !
@@ -290,14 +288,14 @@ MODULE path_io_routines
                       DO j = 1, dim, 3
                          !
                          READ( UNIT = iunrestart, FMT = * ) &
-                             vel(j+0,i),                    & 
-                             vel(j+1,i),                    &
-                             vel(j+2,i)
+                             posold(j+0,i),                    & 
+                             posold(j+1,i),                    &
+                             posold(j+2,i)
                          !
                       END DO
                       !
-                      vel(:,i) = vel(:,i) * &
-                                 DBLE( RESHAPE( if_pos, (/ dim /) ) )
+                      posold(:,i) = posold(:,i) * &
+                                    DBLE( RESHAPE( if_pos, (/ dim /) ) )
                       !
                    END DO
                    !
@@ -340,7 +338,7 @@ MODULE path_io_routines
        IF ( lquick_min ) THEN
           !
           CALL mp_bcast( frozen, meta_ionode_id )
-          CALL mp_bcast( vel,    meta_ionode_id )
+          CALL mp_bcast( posold, meta_ionode_id )
           !
        END IF
        !
@@ -354,11 +352,10 @@ MODULE path_io_routines
        !
        USE input_parameters, ONLY : if_pos       
        USE io_files,         ONLY : iunrestart, path_file, tmp_dir 
-       USE control_flags,    ONLY : conv_elec, lneb, lsmd, lcoarsegrained
-       USE path_variables,   ONLY : istep_path, nstep_path, suspended_image,  &
-                                    dim, num_of_images, pos, pes, grad_pes,   &
-                                    vel, frozen, Nft, num_of_modes,           &
-                                    lquick_min, first_last_opt
+       USE control_flags,    ONLY : conv_elec, lcoarsegrained
+       USE path_variables,   ONLY : istep_path, nstep_path, suspended_image, &
+                                    dim, num_of_images, pos, pes, grad_pes,  &
+                                    posold, frozen, lquick_min
        USE path_formats,     ONLY : energy, restart_first, restart_others, &
                                     quick_min
        USE io_global,        ONLY : meta_ionode
@@ -369,6 +366,7 @@ MODULE path_io_routines
        !
        INTEGER             :: i, j, ia
        CHARACTER (LEN=256) :: file
+       !
        CHARACTER(LEN=6), EXTERNAL :: int_to_char
        !
        IF ( meta_ionode ) THEN
@@ -518,7 +516,7 @@ MODULE path_io_routines
                  DO j = 1, dim
                     !
                     WRITE( UNIT = in_unit, &
-                           FMT = '(2X,F18.12)' ) vel(j,i)
+                           FMT = '(2X,F18.12)' ) posold(j,i)
                     !
                  END DO
                  !
@@ -527,9 +525,9 @@ MODULE path_io_routines
                  DO j = 1, dim, 3
                     !
                     WRITE( UNIT = in_unit, FMT = quick_min ) &
-                        vel(j+0,i),                          & 
-                        vel(j+1,i),                          &
-                        vel(j+2,i)
+                        posold(j+0,i),                          & 
+                        posold(j+1,i),                          &
+                        posold(j+2,i)
                     !
                  END DO
                  !
@@ -554,8 +552,7 @@ MODULE path_io_routines
        USE ions_base,        ONLY : ityp, nat
        USE path_formats,     ONLY : dat_fmt, int_fmt, xyz_fmt, axsf_fmt
        USE path_variables,   ONLY : pos, grad_pes, pes, num_of_images, &
-                                    path_length, react_coord, tangent, &
-                                    dim, Emax_index, error
+                                    react_coord, tangent, dim, error
        USE io_files,         ONLY : iundat, iunint, iunxyz, iunaxsf, &
                                     dat_file, int_file, xyz_file, axsf_file
        USE io_global,        ONLY : meta_ionode
@@ -564,12 +561,12 @@ MODULE path_io_routines
        !
        ! ... local variables
        !
-       REAL (DP)              :: R, delta_R, x, delta_x
+       REAL (DP)              :: R, delta_R, x
        REAL (DP), ALLOCATABLE :: d_R(:)
        REAL (DP), ALLOCATABLE :: a(:), b(:), c(:), d(:), F(:)
        REAL (DP)              :: ener, ener_0
-       INTEGER                     :: i, j, n, atom, image
-       INTEGER, PARAMETER          :: max_i = 100
+       INTEGER                :: j, atom, image
+       INTEGER, PARAMETER     :: max_i = 100
        !
        !
        IF ( .NOT. meta_ionode ) RETURN
@@ -740,7 +737,7 @@ MODULE path_io_routines
        USE io_files,       ONLY : iunpath
        USE path_variables, ONLY : num_of_images, error, path_length, &
                                   activation_energy, pes, pos, frozen, &
-                                  first_last_opt, CI_scheme, Emax_index
+                                  CI_scheme, Emax_index
        USE path_formats,   ONLY : run_info, run_output
        USE io_global,      ONLY : meta_ionode
        !
@@ -748,7 +745,7 @@ MODULE path_io_routines
        !
        ! ... local variables
        !
-       INTEGER        :: mode, image
+       INTEGER   :: image
        REAL (DP) :: inter_image_distance
        !
        !
@@ -841,7 +838,7 @@ MODULE path_io_routines
        !
        INTEGER            :: ioerr
        CHARACTER(LEN=256) :: filename
-       LOGICAL            :: opened, exists
+       LOGICAL            :: opened
        !
        !
        IF ( .NOT. ionode ) RETURN

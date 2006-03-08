@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2005 Quantum-ESPRESSO group
+! Copyright (C) 2003-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,7 +11,7 @@ MODULE path_variables
   !
   ! ... This module contains all variables needed by path optimisations
   !
-  ! ... Written by Carlo Sbraccia ( 2003-2005 )
+  ! ... Written by Carlo Sbraccia ( 2003-2006 )
   !
   USE kinds, ONLY : DP
   !
@@ -46,7 +46,7 @@ MODULE path_variables
                                   !           parallelisation is tuned at 
                                   !           runtime
   LOGICAL, PARAMETER :: &
-       use_precond = .FALSE.      ! if .TRUE. a preconditioned gradient is ussed
+       use_precond = .FALSE.      ! if .TRUE. a preconditioned gradient is used
   INTEGER :: &
        dim,                      &! dimension of the configuration space
        num_of_images,            &! number of images
@@ -109,7 +109,7 @@ MODULE path_variables
        k(:),                     &! elastic constants
        react_coord(:)             ! the reaction coordinate (in bohr)
   REAL(DP), ALLOCATABLE :: &
-       vel(:,:),                 &! 
+       posold(:,:),              &! old positions (for the quick-min)
        grad(:,:),                &!
        precond_grad(:,:),        &!
        lang(:,:)                  ! langevin random force
@@ -172,8 +172,7 @@ MODULE path_variables
        !
        ALLOCATE( pos( dim, num_of_images ) )
        !
-       ALLOCATE( vel( dim, num_of_images ) ) 
-       !
+       ALLOCATE( posold(       dim, num_of_images ) ) 
        ALLOCATE( grad(         dim, num_of_images ) )
        ALLOCATE( precond_grad( dim, num_of_images ) )
        ALLOCATE( grad_pes(     dim, num_of_images ) )
@@ -213,28 +212,28 @@ MODULE path_variables
        CHARACTER (LEN=*), INTENT(IN) :: method
        !
        !
-       IF ( ALLOCATED( pos ) )            DEALLOCATE( pos )
-       IF ( ALLOCATED( vel ) )            DEALLOCATE( vel )
-       IF ( ALLOCATED( grad ) )           DEALLOCATE( grad )
-       IF ( ALLOCATED( precond_grad ) )   DEALLOCATE( precond_grad )
-       IF ( ALLOCATED( react_coord ) )    DEALLOCATE( react_coord )
-       IF ( ALLOCATED( pes ) )            DEALLOCATE( pes )
-       IF ( ALLOCATED( grad_pes ) )       DEALLOCATE( grad_pes )
-       IF ( ALLOCATED( k ) )              DEALLOCATE( k )
-       IF ( ALLOCATED( mass ) )           DEALLOCATE( mass )
-       IF ( ALLOCATED( elastic_grad ) )   DEALLOCATE( elastic_grad )
-       IF ( ALLOCATED( tangent ) )        DEALLOCATE( tangent ) 
-       IF ( ALLOCATED( error ) )          DEALLOCATE( error )
-       IF ( ALLOCATED( climbing ) )       DEALLOCATE( climbing )
-       IF ( ALLOCATED( frozen ) )         DEALLOCATE( frozen )
+       IF ( ALLOCATED( pos ) )          DEALLOCATE( pos )
+       IF ( ALLOCATED( posold ) )       DEALLOCATE( posold )
+       IF ( ALLOCATED( grad ) )         DEALLOCATE( grad )
+       IF ( ALLOCATED( precond_grad ) ) DEALLOCATE( precond_grad )
+       IF ( ALLOCATED( react_coord ) )  DEALLOCATE( react_coord )
+       IF ( ALLOCATED( pes ) )          DEALLOCATE( pes )
+       IF ( ALLOCATED( grad_pes ) )     DEALLOCATE( grad_pes )
+       IF ( ALLOCATED( k ) )            DEALLOCATE( k )
+       IF ( ALLOCATED( mass ) )         DEALLOCATE( mass )
+       IF ( ALLOCATED( elastic_grad ) ) DEALLOCATE( elastic_grad )
+       IF ( ALLOCATED( tangent ) )      DEALLOCATE( tangent ) 
+       IF ( ALLOCATED( error ) )        DEALLOCATE( error )
+       IF ( ALLOCATED( climbing ) )     DEALLOCATE( climbing )
+       IF ( ALLOCATED( frozen ) )       DEALLOCATE( frozen )
        !
        IF ( method == "smd" ) THEN
           !
-          IF ( ALLOCATED( ft_pos ) )      DEALLOCATE( ft_pos )
+          IF ( ALLOCATED( ft_pos ) )    DEALLOCATE( ft_pos )
           !
           IF ( llangevin ) THEN
              !
-             IF ( ALLOCATED( lang ) )     DEALLOCATE( lang )
+             IF ( ALLOCATED( lang ) )   DEALLOCATE( lang )
              !
           END IF
           !

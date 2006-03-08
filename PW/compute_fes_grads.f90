@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum-ESPRESSO group
+! Copyright (C) 2002-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,18 +22,14 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
                                  num_of_images, istep_path, suspended_image
   USE constraints_module, ONLY : lagrange, target, init_constraint, &
                                  deallocate_constraint
-  USE dynamics_module,    ONLY : dt
-  USE control_flags,      ONLY : conv_elec, istep, nstep, history, wg_set, &
-                                 alpha0, beta0, ethr, pot_order, conv_ions, &
-                                 ldamped
-  USE cell_base,          ONLY : alat, at, bg
-  USE gvect,              ONLY : ngm, g, nr1, nr2, nr3, eigts1, eigts2, eigts3
-  USE vlocal,             ONLY : strf
+  USE control_flags,      ONLY : istep, nstep, history, wg_set, ethr, &
+                                 conv_ions, ldamped
+  USE cell_base,          ONLY : alat, at
   USE ener,               ONLY : etot
-  USE ions_base,          ONLY : nat, nsp, tau, ityp, if_pos
+  USE ions_base,          ONLY : nat, tau, ityp
   USE path_formats,       ONLY : scf_fmt, scf_fmt_para
   USE io_files,           ONLY : prefix, tmp_dir, iunpath, iunaxsf, &
-                                 iunupdate, iunexit, delete_if_present
+                                 delete_if_present
   USE constants,          ONLY : bohr_radius_angs
   USE io_global,          ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_global,          ONLY : inter_image_comm, intra_image_comm, &
@@ -49,8 +45,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   INTEGER, INTENT(IN)  :: N_in, N_fin
   LOGICAL, INTENT(OUT) :: stat
-  INTEGER              :: image, iter
-  REAL(DP)             :: tcpu, error
+  INTEGER              :: image
+  REAL(DP)             :: tcpu
   CHARACTER(LEN=256)   :: tmp_dir_saved, filename
   LOGICAL              :: lfirst_scf = .TRUE.
   LOGICAL              :: opnd, file_exists
@@ -332,14 +328,13 @@ SUBROUTINE metadyn()
   !
   USE kinds,              ONLY : DP
   USE constants,          ONLY : eps8
-  USE constraints_module, ONLY : nconstr, target
+  USE constraints_module, ONLY : target
   USE ions_base,          ONLY : tau
   USE cell_base,          ONLY : alat
   USE io_files,           ONLY : iunaxsf, iunmeta, prefix, tmp_dir
-  USE metadyn_vars,       ONLY : fe_grad, new_target, to_target, metadyn_fmt, &
-                                 to_new_target, fe_step, metadyn_history, &
-                                 max_metadyn_iter, first_metadyn_iter, &
-                                 gaussian_pos, etot_av
+  USE metadyn_vars,       ONLY : fe_grad, metadyn_fmt, to_new_target, &
+                                 metadyn_history, max_metadyn_iter,   &
+                                 first_metadyn_iter, gaussian_pos, etot_av
   USE metadyn_base,       ONLY : add_gaussians, add_domain_potential, &
                                  evolve_collective_vars
   USE metadyn_io,         ONLY : write_axsf_file, write_metadyn_restart
@@ -387,7 +382,7 @@ SUBROUTINE metadyn()
      !
      WRITE( stdout, '(/,5X,"calculation of the mean force",/)' )
      !
-     CALL free_energy_grad( iter, lfirst_scf )
+     CALL free_energy_grad( lfirst_scf )
      !
      IF ( ionode ) THEN
         !
@@ -417,11 +412,12 @@ SUBROUTINE metadyn()
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE free_energy_grad( iter, lfirst_scf )
+    SUBROUTINE free_energy_grad( lfirst_scf )
       !------------------------------------------------------------------------
       !
       USE constants,          ONLY : e2
       USE ener,               ONLY : etot
+      USE lsda_mod,           ONLY : lsda
       USE control_flags,      ONLY : istep, ldamped, conv_ions, nstep
       USE metadyn_vars,       ONLY : fe_nstep, dfe_acc, etot_av
       USE constraints_module, ONLY : lagrange
@@ -429,7 +425,6 @@ SUBROUTINE metadyn()
       !
       IMPLICIT NONE
       !
-      INTEGER, INTENT(IN)    :: iter
       LOGICAL, INTENT(INOUT) :: lfirst_scf
       !
       LOGICAL :: stat
@@ -437,6 +432,8 @@ SUBROUTINE metadyn()
       !
       etot_av = 0.D0
       dfe_acc = 0.D0
+      !
+      IF ( lsda ) CALL reset_init_mag()
       !
       CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
       CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.bfgs' )
@@ -489,6 +486,7 @@ SUBROUTINE metadyn()
       !------------------------------------------------------------------------
       !
       USE metadyn_vars,  ONLY : shake_nstep
+      USE lsda_mod,      ONLY : lsda
       USE control_flags, ONLY : istep, ldamped, nstep
       USE io_files,      ONLY : tmp_dir, prefix, delete_if_present
       !
@@ -498,6 +496,8 @@ SUBROUTINE metadyn()
       !
       !
       ldamped_saved = ldamped
+      !
+      IF ( lsda ) CALL reset_init_mag()
       !
       CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
       CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.update' )
@@ -527,6 +527,21 @@ SUBROUTINE metadyn()
     END SUBROUTINE move_to_target
     !
 END SUBROUTINE metadyn
+!
+!----------------------------------------------------------------------------
+SUBROUTINE reset_init_mag()
+  !----------------------------------------------------------------------------
+  !
+  IMPLICIT NONE
+  !
+  CALL hinit0()
+  CALL potinit()
+  CALL newd()
+  CALL wfcinit()
+  !
+  RETURN
+  !
+END SUBROUTINE reset_init_mag
 !
 !----------------------------------------------------------------------------
 SUBROUTINE electronic_scf( lfirst_scf, stat )

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2005 Quantum-ESPRESSO group
+! Copyright (C) 2003-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -36,25 +36,24 @@ MODULE path_base
     SUBROUTINE initialize_path( prog )
       !-----------------------------------------------------------------------
       !
-      USE input_parameters,   ONLY : pos, restart_mode, calculation, &
-                                     opt_scheme, climbing, nstep, input_images
+      USE input_parameters,   ONLY : pos_ => pos, &
+                                     restart_mode, calculation, opt_scheme, &
+                                     climbing, nstep, input_images
       USE control_flags,      ONLY : conv_elec, lneb, lsmd, lcoarsegrained
       USE ions_base,          ONLY : nat, amass, ityp, if_pos
       USE constraints_module, ONLY : nconstr
       USE io_files,           ONLY : prefix, tmp_dir, path_file, dat_file, &
                                      int_file, xyz_file, axsf_file, broy_file
       USE cell_base,          ONLY : alat
-      USE path_variables,     ONLY : pos_ => pos,                           &
-                                     climbing_ => climbing,                 &
-                                     istep_path, nstep_path, dim,           &
+      USE path_variables,     ONLY : climbing_ => climbing,                 &
+                                     pos, istep_path, nstep_path, dim,      &
                                      num_of_images, pes, grad_pes, tangent, &
                                      error, path_length, path_thr, mass,    &
-                                     deg_of_freedom, ds, react_coord,       &
-                                     use_masses, first_last_opt, frozen,    &
-                                     llangevin,temp_req, use_freezing, k,   &
-                                     tune_load_balance,  lbroyden, grad,    &
-                                     CI_scheme, vel, elastic_grad, k_min,   &
-                                     k_max, Emax_index, lquick_min,         &
+                                     deg_of_freedom, ds, use_masses,        &
+                                     first_last_opt, frozen, llangevin,     &
+                                     temp_req, use_freezing, k,             &
+                                     tune_load_balance, grad, CI_scheme,    &
+                                     posold, elastic_grad, k_min, k_max,    &
                                      num_of_modes, ft_pos, Nft, fixed_tan,  &
                                      ft_coeff, Nft_smooth, use_multistep,   &
                                      use_fourier, use_precond
@@ -66,10 +65,10 @@ MODULE path_base
       !
       IMPLICIT NONE
       !
-      CHARACTER(LEN=2), INTENT(IN) :: prog   ! the calling program
+      CHARACTER(LEN=2), INTENT(IN) :: prog
       !
       INTEGER                    :: i
-      REAL(DP)                   :: inter_image_dist, k_ratio
+      REAL(DP)                   :: inter_image_dist
       REAL(DP), ALLOCATABLE      :: d_R(:,:), image_spacing(:)
       CHARACTER(LEN=20)          :: nim_char, nstep_path_char
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
@@ -138,43 +137,15 @@ MODULE path_base
          !
       END IF
       !  
-      ! ... dynamical allocation of arrays and initialisation
+      ! ... dynamical allocation of arrays
       !
       IF ( lneb ) THEN
          !
          CALL path_allocation( 'neb' )
          !
-         vel          = 0.D0
-         pes          = 0.D0
-         grad_pes     = 0.D0
-         elastic_grad = 0.D0
-         tangent      = 0.D0
-         grad         = 0.D0
-         error        = 0.D0
-         k            = k_min
-         frozen       = .FALSE.
-         !
-         climbing_ = climbing(1:num_of_images)
-         !
       ELSE IF ( lsmd ) THEN
          !
          CALL path_allocation( 'smd' )
-         !
-         pes       = 0.D0
-         grad_pes  = 0.D0
-         tangent   = 0.D0
-         error     = 0.D0
-         vel       = 0.D0
-         grad      = 0.D0
-         frozen    = .FALSE.
-         !
-         IF ( use_fourier ) THEN
-            !
-            ! ... fourier components of the path
-            !
-            ft_pos = 0.D0
-            !
-         END IF
          !
       END IF
       !
@@ -231,7 +202,7 @@ MODULE path_base
          !
          DO i = 1, ( num_of_images - 1 )
             !
-            image_spacing(i) = norm( pos_(:,i+1) - pos_(:,i) )
+            image_spacing(i) = norm( pos(:,i+1) - pos(:,i) )
             !
          END DO
          !
@@ -244,6 +215,35 @@ MODULE path_base
       ELSE
          !
          CALL initial_guess()
+         !
+      END IF
+      !
+      ! ... initialization of the allocatable arrays
+      !
+      posold       = pos
+      pes          = 0.D0
+      grad_pes     = 0.D0
+      elastic_grad = 0.D0
+      tangent      = 0.D0
+      grad         = 0.D0
+      error        = 0.D0
+      frozen       = .FALSE.
+      !
+      IF ( lneb ) THEN
+         !
+         k = k_min
+         !
+         climbing_ = climbing(1:num_of_images)
+         !
+      ELSE IF ( lsmd ) THEN
+         !
+         IF ( use_fourier ) THEN
+            !
+            ! ... fourier components of the path
+            !
+            ft_pos = 0.D0
+            !
+         END IF
          !
       END IF
       !
@@ -338,14 +338,14 @@ MODULE path_base
           REAL(DP) :: s
           INTEGER  :: i, j
           !
-          ! ... linear interpolation
+          ! ... linear interpolation ( pos_ indicate the input coordinates)
           !
           ALLOCATE( image_spacing( input_images - 1 ) )
           ALLOCATE( d_R( dim,    ( input_images - 1 ) ) )
           !
           DO i = 1, ( input_images - 1 )
              !
-             d_R(1:dim,i) = ( pos(1:dim,i+1) - pos(1:dim,i) )
+             d_R(1:dim,i) = ( pos_(1:dim,i+1) - pos_(1:dim,i) )
              !
              image_spacing(i) = norm( d_R(:,i) )
              !
@@ -361,7 +361,7 @@ MODULE path_base
              !
           END DO
           !
-          pos_(1:dim,1) = pos(1:dim,1)
+          pos(1:dim,1) = pos_(1:dim,1)
           !
           i = 1
           s = 0.D0
@@ -381,11 +381,11 @@ MODULE path_base
              IF ( i >= input_images ) &
                 CALL errore( 'initialize_path', ' i >= input_images ', i )
              !
-             pos_(:,j) = pos(1:dim,i) + s * d_R(:,i)
+             pos(:,j) = pos_(1:dim,i) + s * d_R(:,i)
              !
           END DO
           !
-          pos_(:,num_of_images) = pos(1:dim,input_images)
+          pos(:,num_of_images) = pos_(1:dim,input_images)
           !
           IF ( prog == 'PW' .AND. .NOT. lcoarsegrained ) THEN
              !
@@ -395,7 +395,7 @@ MODULE path_base
              !
              inter_image_dist = inter_image_dist * alat
              !
-             pos_(:,:) = pos_(:,:) * alat
+             pos(:,:) = pos(:,:) * alat
              !
           END IF
           !
@@ -411,7 +411,7 @@ MODULE path_base
     SUBROUTINE real_space_tangent( i )
       !-----------------------------------------------------------------------
       !
-      USE path_variables, ONLY : pos, dim, num_of_images, pes, tangent
+      USE path_variables, ONLY : pos, num_of_images, pes, tangent
       !
       IMPLICIT NONE
       !
@@ -486,8 +486,8 @@ MODULE path_base
     SUBROUTINE elastic_constants()
       !------------------------------------------------------------------------
       ! 
-      USE path_variables, ONLY : pos, num_of_images, Emax, Emin, &
-                                 k_max, k_min, k, pes, dim
+      USE path_variables, ONLY : num_of_images, Emax, Emin, &
+                                 k_max, k_min, k, pes
       !
       IMPLICIT NONE
       !
@@ -528,7 +528,6 @@ MODULE path_base
       !
       USE path_variables,    ONLY : pos, grad, elastic_grad, grad_pes, k, &
                                     num_of_images, climbing, mass, tangent
-      USE path_opt_routines, ONLY : grad_precond
       !
       IMPLICIT NONE
       !
@@ -567,8 +566,6 @@ MODULE path_base
                         tangent(:,i) * ( grad(:,i) .dot. tangent(:,i) )
             !
          END IF
-         !
-         CALL grad_precond( i )
          !
       END DO gradient_loop
       !
@@ -616,7 +613,6 @@ MODULE path_base
       USE path_variables,    ONLY : dim, mass, num_of_images, grad_pes, &
                                     tangent, llangevin, lang, grad, ds, &
                                     temp_req
-      USE path_opt_routines, ONLY : grad_precond
       USE random_numbers,    ONLY : gauss_dist
       !
       IMPLICIT NONE
@@ -656,8 +652,6 @@ MODULE path_base
             !
          END IF
          !
-         CALL grad_precond( i )
-         !
       END DO
       !
       RETURN
@@ -671,7 +665,7 @@ MODULE path_base
       !-----------------------------------------------------------------------
       !
       USE path_variables, ONLY : fixed_tan, use_fourier, num_of_images, &
-                                 frozen, first_last_opt, istep_path
+                                 istep_path
       !
       IMPLICIT NONE
       !
@@ -702,9 +696,9 @@ MODULE path_base
     SUBROUTINE compute_error( err_out )
       !-----------------------------------------------------------------------
       !
-      USE path_variables, ONLY : num_of_images, grad, llangevin, &
-                                 use_freezing, first_last_opt,   &
-                                 path_thr, error, frozen, lquick_min, vel
+      USE path_variables, ONLY : pos, posold, num_of_images, grad, &
+                                 use_freezing, first_last_opt, path_thr, &
+                                 error, frozen, lquick_min
       USE mp_global,      ONLY : nimage, inter_image_comm
       USE mp,             ONLY : mp_bcast
       USE io_global,      ONLY : meta_ionode, meta_ionode_id
@@ -713,7 +707,7 @@ MODULE path_base
       !
       REAL(DP), OPTIONAL, INTENT(OUT) :: err_out
       !
-      INTEGER  :: i, n
+      INTEGER  :: i
       INTEGER  :: N_in, N_fin, free_me, num_of_scf_images
       REAL(DP) :: err_max
       !
@@ -788,9 +782,10 @@ MODULE path_base
       !
       IF ( use_freezing .AND. lquick_min ) THEN
          !
-         ! ... the velocity of the frozen images is set to zero
+         ! ... the old positions of the frozen images are set to the present
+         ! ... position (equivalent to resetting the velocity)
          !
-         FORALL( i = N_in:N_fin, frozen(i) ) vel(:,i) = 0.D0
+         FORALL( i = N_in:N_fin, frozen(i) ) posold(:,i) = pos(:,i)
          !
       END IF
       !
@@ -880,7 +875,7 @@ MODULE path_base
       IMPLICIT NONE
       !
       LOGICAL, INTENT(OUT) :: stat
-      INTEGER              :: N_in, N_fin, i
+      INTEGER              :: N_in, N_fin
       !
       !
       IF ( istep_path == 0 .OR. first_last_opt ) THEN
@@ -945,7 +940,6 @@ MODULE path_base
     SUBROUTINE search_mep()
       !-----------------------------------------------------------------------
       !
-      USE path_reparametrisation
       USE control_flags,    ONLY : lneb, lsmd, lcoarsegrained
       USE path_variables,   ONLY : conv_path, istep_path, nstep_path,  &
                                    suspended_image, activation_energy, &
@@ -956,10 +950,11 @@ MODULE path_base
       USE check_stop,       ONLY : check_stop_now
       USE io_global,        ONLY : meta_ionode
       USE path_formats,     ONLY : scf_iter_fmt
+      USE path_reparametrisation
       !
       IMPLICIT NONE
       !
-      INTEGER :: mode, image
+      INTEGER :: mode
       LOGICAL :: stat
       !
       REAL(DP), EXTERNAL :: get_clock
@@ -1201,9 +1196,9 @@ MODULE path_base
       !
       ! ... the program checks if the convergence has been achieved
       !
-      exit_condition = .NOT. llangevin .AND. & 
-                       ( num_of_images == num_of_images_inp ) .AND. &
-                       ( err_max <= path_thr )
+      exit_condition = ( .NOT. llangevin .AND. & 
+                         ( num_of_images == num_of_images_inp ) .AND. &
+                         ( err_max <= path_thr ) )
       !
       IF ( exit_condition )  THEN
          !
@@ -1268,10 +1263,9 @@ MODULE path_base
     SUBROUTINE optimisation_step()
       !------------------------------------------------------------------------
       !
-      USE path_variables, ONLY : first_last_opt, num_of_images, frozen, &
-                                 lsteep_des, lquick_min, lbroyden,      &
-                                 llangevin, istep_path
-      USE path_opt_routines
+      USE path_variables,    ONLY : num_of_images, frozen, lsteep_des, &
+                                    lquick_min, lbroyden, llangevin, istep_path
+      USE path_opt_routines, ONLY : broyden, steepest_descent, quick_min
       !
       IMPLICIT NONE
       !
@@ -1294,7 +1288,7 @@ MODULE path_base
                !
             ELSE IF ( lquick_min ) THEN
                !
-               CALL quick_min( image )
+               CALL quick_min( image, istep_path )
                !
             END IF
             !
