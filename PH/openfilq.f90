@@ -52,16 +52,16 @@ SUBROUTINE openfilq()
   iuwfc = 20
   lrwfc = 2 * nbnd * npwx
   CALL diropn (iuwfc, 'wfc', lrwfc, exst)
-  IF (.NOT.exst) THEN
 #if defined (__OLDPUNCH)
+  IF (.NOT.exst) THEN
     ndr      = 4
     kunittmp = kunit
     CALL readfile_new( 'wave', ndr, edum, wdum, kunittmp, lrwfc, iuwfc, ierr )
-#endif
     IF( ierr > 0 ) &
       CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
     twfcollect=.NOT.exst
   END IF
+#endif
   !
   !    The file with deltaV_{bare} * psi
   !
