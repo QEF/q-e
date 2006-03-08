@@ -1,6 +1,6 @@
 #!/bin/sh -x
 #
-VERSION=3.0
+VERSION=3.1
 TARGET_MACHINE=cibs.sns.it:public_html/public/
 #
 TMPDIR=espresso-$VERSION
