@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2005 Quantum-ESPRESSO group
+! Copyright (C) 2003-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -151,11 +151,11 @@ MODULE bfgs_module
       !
       IF ( .NOT. ALLOCATED( inv_hess ) ) ALLOCATE( inv_hess( dim, dim ) )
       !
-      IF ( .NOT. ALLOCATED( pos_p ) )    ALLOCATE( pos_p(  dim ) )
-      IF ( .NOT. ALLOCATED( grad_p ) )   ALLOCATE( grad_p( dim ) )
-      IF ( .NOT. ALLOCATED( step ) )     ALLOCATE( step(      dim ) )
-      IF ( .NOT. ALLOCATED( step_old ) ) ALLOCATE( step_old(  dim ) )
-      IF ( .NOT. ALLOCATED( pos_best ) ) ALLOCATE( pos_best(  dim ) )
+      IF ( .NOT. ALLOCATED( pos_p ) )    ALLOCATE( pos_p(    dim ) )
+      IF ( .NOT. ALLOCATED( grad_p ) )   ALLOCATE( grad_p(   dim ) )
+      IF ( .NOT. ALLOCATED( step ) )     ALLOCATE( step(     dim ) )
+      IF ( .NOT. ALLOCATED( step_old ) ) ALLOCATE( step_old( dim ) )
+      IF ( .NOT. ALLOCATED( pos_best ) ) ALLOCATE( pos_best( dim ) )
       !
       ! ... the BFGS file is read
       !
@@ -206,7 +206,7 @@ MODULE bfgs_module
          !
          ! ... s_min = - 0.5 * ( dE(0)*s'*s' ) / ( E(s') - E(0) - dE(0)*s' )
          !
-         dE0s = ( grad_p(:) .dot. step_old )
+         dE0s = ( grad_p(:) .dot. step_old(:) )
          !
          den = energy - energy_p - dE0s
          !              
@@ -226,10 +226,18 @@ MODULE bfgs_module
               & FMT = '(5X,"new trust radius",T30,"= ",F18.10," bohr")' ) &
               trust_radius          
          !
+         ! ... values from the last succeseful bfgs step are restored
+         !
+         pos(:)  = pos_p(:)
+         energy  = energy_p
+         grad(:) = grad_p(:)         
+         !
          IF ( trust_radius < trust_radius_min ) THEN
             !
             ! ... the history is reset
-            !                  
+            !
+            WRITE( UNIT = stdout, &
+                   FMT = '(/,5X,"trust_radius < trust_radius_min")' )
             WRITE( UNIT = stdout, FMT = '(/,5X,"resetting bfgs history",/)' )
             !
             IF ( trust_radius_old == trust_radius_min ) THEN
@@ -237,28 +245,22 @@ MODULE bfgs_module
                ! ... the history has already been reset at the previous step :
                ! ... something is going wrong
                !
-               WRITE( UNIT = stdout, FMT = '(5X,"Notice: bfgs history", &
-                      & " already reset at previous step",/)' )
+               CALL errore( 'bfgs', &
+                            'bfgs history already reset at previous step', 1 )
                !
             END IF
             !
-            inv_hess = identity( dim )
+            inv_hess(:,:) = identity( dim )
             !
-            step = - grad
+            step(:) = - grad(:)
             !
             trust_radius = trust_radius_min
             !
          ELSE
             !
-            ! ... values from the last succeseful bfgs step are restored
-            !
-            pos    = pos_p
-            energy = energy_p
-            grad   = grad_p
-            !
             ! ... old bfgs direction ( normalized ) is recovered
             !
-            step = step_old / trust_radius_old
+            step(:) = step_old(:) / trust_radius_old
             !
          END IF
          !
@@ -327,8 +329,8 @@ MODULE bfgs_module
                CALL DGEMM( 'T', 'N', k, k, dim, 1.D0, res, &
                            dim, res, dim, 0.D0, overlap, k_m )
                !
-               overlap( :,   k_m ) = 1.D0
-               overlap( k_m, k_m ) = 0.D0
+               overlap(:,  k_m) = 1.D0
+               overlap(k_m,k_m) = 0.D0
                !
                ! ... overlap is inverted
                !
@@ -343,31 +345,31 @@ MODULE bfgs_module
                   !
                END FORALL
                !
-               work = (/ ( 0.D0, i = 1, k ), 1.D0 /)
+               work(:) = (/ ( 0.D0, i = 1, k ), 1.D0 /)
                !
-               pos_best = 0.D0
-               step     = 0.D0
+               pos_best(:) = 0.D0
+               step(:)     = 0.D0
                !
                DO i = 1, k
                   !
                   gamma0 = SUM( overlap(:,i) * work(:) )
                   !
-                  pos_best = pos_best + gamma0 * pos_old(:,i)
+                  pos_best(:) = pos_best(:) + gamma0 * pos_old(:,i)
                   !
-                  step = step - gamma0 * res(:,i)
+                  step(:) = step(:) - gamma0 * res(:,i)
                   !
                END DO
                !
                ! ... the step must be consistent with the old positions
                !
-               step = step + ( pos_best - pos )
+               step(:) = step(:) + ( pos_best(:) - pos(:) )
                !
-               IF ( ( grad .dot. step ) > 0.D0 ) THEN
+               IF ( ( grad(:) .dot. step(:) ) > 0.D0 ) THEN
                   !
                   ! ... if the extrapolated direction is uphill the last
                   ! ... gradient only is uded
                   !
-                  step = - ( inv_hess .times. grad )
+                  step(:) = - ( inv_hess(:,:) .times. grad(:) )
                   !
                END IF
                !
@@ -375,7 +377,7 @@ MODULE bfgs_module
                !
             ELSE
                !
-               step = - ( inv_hess .times. grad )
+               step(:) = - ( inv_hess(:,:) .times. grad(:) )
                !
             END IF
             !
@@ -390,14 +392,14 @@ MODULE bfgs_module
             !
          END IF
          !
-         IF ( ( grad .dot. step ) > 0.D0 ) THEN
+         IF ( ( grad(:) .dot. step(:) ) > 0.D0 ) THEN
             !
             WRITE( UNIT = stdout, &
                    FMT = '(5X,"uphill step: resetting bfgs history",/)' )
             !
-            step = - grad
+            step(:) = - grad(:)
             !
-            inv_hess = identity( dim )
+            inv_hess(:,:) = identity( dim )
             !
          END IF
          !  
@@ -425,17 +427,17 @@ MODULE bfgs_module
       !
       ! ... step along the bfgs direction
       !
-      IF ( norm( step ) < eps16 ) THEN
+      IF ( norm( step(:) ) < eps16 ) THEN
          !
          WRITE( UNIT = stdout, &
               & FMT = '(5X,"WARNING : norm( step )",T30,"= ",F18.10)' ) &
-              norm( step )
+              norm( step(:) )
          !
-         step = - grad
+         step(:) = - grad(:)
          !
       ELSE
          !
-         step = trust_radius * step / norm( step )
+         step(:) = trust_radius * step(:) / norm( step(:) )
          !
       END IF
       !
@@ -446,7 +448,7 @@ MODULE bfgs_module
       !
       ! ... positions are updated
       !
-      pos = pos + step
+      pos(:) = pos(:) + step(:)
       !
     END SUBROUTINE bfgs
     !
@@ -605,9 +607,9 @@ MODULE bfgs_module
          !
          ! ... the history is reset
          !
-         WRITE( stdout, '(/,5X,"WARINIG: unexpected behaviour in ", &
-              & "update_inverse_hessian")' )
-         WRITE( stdout, '(5X,"         resetting bfgs history",/)' )
+         WRITE( stdout, '(/,5X,"WARINIG: unexpected ", &
+                         &     "behaviour in update_inverse_hessian")' )
+         WRITE( stdout, '(  5X,"         resetting bfgs history",/)' )
          !
          inv_hess = identity( dim )
          !
