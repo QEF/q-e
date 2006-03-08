@@ -150,8 +150,6 @@
 !     NEL(EF) - Z = 0   is always found.
 !-----------------------------------------------------------------------
 
-! ismear=0 riempie solo stati bassi
-! ismear=-1 homo-lumo
 
 
 
@@ -179,6 +177,7 @@
 
       fspin=DBLE(nspin)
       entrofac=3.0-fspin
+      entrospin=2./fspin
 
       if ((nspin.eq.2).and.(ismear.ne.2)) then
        write(*,*) 'ERROR: EFERMI with nspin.eq.2 and ismear.ne.2'
@@ -249,7 +248,6 @@
 !  Fermi energy between the HOMO and LUMO
 !-----------------------------------------------------------------------
 
-        if ((ismear.ne.0).and.(ismear.ne.-1)) then
  
            if ((abs(del).le.1.d-9).and.(nspin.eq.1)) then
               if ((2*(nel/2)).ne.nel) then
@@ -298,31 +296,7 @@
               write(*,*) 'ERROR: EFERMI with etemp.eq.0 and nspin.eq.2'
               stop
            end if
-        endif
 
-
-       if (ismear.eq.-1 .or. ismear.eq.0) then
-
-           nel2=nel/2
-             ef=0.5*(sort(NKPTS*nel2)+sort(NKPTS*nel2+1))
-                DO ISPPT = 1,NKPTS
-                      DO J = 1, NBANDS
-                          if (eigval(J,ISPPT).le.ef) then
-                              occ(j,isppt)=2.0
-                          else
-                              occ(j,isppt)=0.0
-                          end if
-                      end do
-                 end do
-              if( ismear.eq.-1) then
-                 write(6,*) 'CALCOLO STATO ECCITATO'
-                 do j=1,nbands
-                    if(eigval(j,1) .eq. sort(NKPTS*nel2))  occ(j,1)=1.0
-                  if(eigval(j,1) .eq. sort(NKPTS*nel2+1))  occ(j,1)=1.0
-                 enddo
-              endif
-           return
-       endif
 
 
 !-----------------------------------------------------------------------
