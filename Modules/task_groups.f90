@@ -86,7 +86,7 @@ SUBROUTINE GROUPS( nogrp_ , dffts )
    USE mp,         ONLY : mp_bcast
    USE parameters, ONLY : MAXGRP
    USE io_global,  only : stdout
-   USE fft_type,   only : fft_dlay_descriptor
+   USE fft_types,  only : fft_dlay_descriptor
    USE electrons_base, only: nspin
    USE parallel_include
 
@@ -253,7 +253,7 @@ SUBROUTINE GROUPS_NEW( nogrp_ , dffts )
    USE mp_global,  ONLY : NOGRP, ME_OGRP, ME_PGRP  !Variables: NOGRP, MAXGRP, ME_OGRP, ME_PGRP
    USE parameters, ONLY : MAXGRP
    USE io_global,  only : stdout
-   USE fft_type,   only : fft_dlay_descriptor
+   USE fft_types,  only : fft_dlay_descriptor
    USE electrons_base, only: nspin
    USE parallel_include
 
