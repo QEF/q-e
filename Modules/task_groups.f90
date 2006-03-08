@@ -27,7 +27,7 @@ MODULE GROUPS_MODULE
    INTEGER,  DIMENSION(:),   ALLOCATABLE  ::  nnrsx_vec !INCREASE THIS TO THE MAXIMUM NUMBER OF PROCS IF NEEDED
    REAL(DP), DIMENSION(:,:), ALLOCATABLE  ::  tmp_rhos, local_rhos
    INTEGER  :: recv_cnt(MAXGRP), recv_displ(MAXGRP), send_cnt(MAXGRP), send_displ(MAXGRP)
-   INTEGER  :: SZ, RANK, CLOCK1, CLOCK2, CLOCK3, CLOCK4
+   INTEGER  :: SZ, CLOCK1, CLOCK2, CLOCK3, CLOCK4
    INTEGER  :: sticks_index, eig_offset, strd       
    REAL(DP) :: tm_tg, tm_rhoofr
 
@@ -76,19 +76,24 @@ END SUBROUTINE DEALLOCATE_GROUPS
 !      Define groups for task group parallilization
 !=======================================================================
 !-----------------------------------------------------------------------
-SUBROUTINE GROUPS
+SUBROUTINE GROUPS( nogrp_ , dffts )
    !------------
    !Modules used
    !------------
 
+   USE mp_global,  ONLY : mpime, nproc, group, root
    USE mp_global,  ONLY : NOGRP, ME_OGRP, ME_PGRP  !Variables: NOGRP, MAXGRP, ME_OGRP, ME_PGRP
+   USE mp,         ONLY : mp_bcast
    USE parameters, ONLY : MAXGRP
    USE io_global,  only : stdout
-   USE fft_base,   only : dffts
+   USE fft_type,   only : fft_dlay_descriptor
    USE electrons_base, only: nspin
    USE parallel_include
 
    IMPLICIT NONE 
+
+   INTEGER, INTENT(IN) :: nogrp_
+   TYPE(fft_dlay_descriptor), INTENT(IN) :: dffts
 
 #if defined (__MPI)
 
@@ -98,7 +103,7 @@ SUBROUTINE GROUPS
    !NPROC:      Total number of processors
    !NPGRP:      Number of processors per group
    INTEGER  ::  MSGLEN, I, J, N1, LABEL, IPOS, WORLD, NEWGROUP
-   INTEGER  ::  NPROC, NPGRP, ios, IERR
+   INTEGER  ::  NPGRP, ios, IERR
 
    !--------------------------------------------------------------
    !Allocations
@@ -107,36 +112,12 @@ SUBROUTINE GROUPS
    ALLOCATE(NPLIST(MAXGRP))
    
 
-   tm_tg = 0D0
+   tm_tg     = 0D0
    tm_rhoofr = 0D0
 
    !Find the number of processors and my rank
-   CALL MPI_COMM_RANK(MPI_COMM_WORLD, RANK, IERR)
-   CALL MPI_COMM_SIZE(MPI_COMM_WORLD, NPROC, IERR)
    SZ = NPROC
- 
-   ALLOCATE(PGROUP(NPROC))
-   DO I=1, NPROC
-      PGROUP(I) = I-1
-   ENDDO
 
-   IF (RANK.EQ.0) THEN
-      !READ groups.in file
-      OPEN (UNIT=15, FORM = "FORMATTED", FILE="groups.in", IOSTAT=ios)
-      READ (15,FMT=101) NOGRP
-      IF (ios.NE.0) THEN 
-         PRINT *, "groups.in file missing or corrupted! Aborting...!"
-         CALL MPI_Abort ! Terminate program
-      ENDIF
-      CLOSE(15)
-   ENDIF
-101 FORMAT(I)
-
-   allocate(nnrsx_vec(SZ))
-   !Find maximum chunk of local data concerning coefficients of eigenfunctions in g-space
-   CALL MPI_Allgather(dffts%nnr, 1, MPI_INTEGER, nnrsx_vec, 1, MPI_INTEGER, MPI_COMM_WORLD, IERR)
-   strd = maxval(nnrsx_vec(1:SZ))
-  
    !--------------------------------------------------------------
    !SUBDIVIDE THE PROCESSORS IN GROUPS
    !
@@ -144,18 +125,33 @@ SUBROUTINE GROUPS
    !OF PROCESSORS
    !--------------------------------------------------------------
 
+   IF( MOD( nproc, nogrp_ ) /= 0 ) &
+      CALL errore( " groups ", " nogrp should be a divisor of nproc ", 1 )
+ 
+   ALLOCATE( PGROUP( NPROC ) )
+   DO I=1, NPROC
+      PGROUP(I) = I-1
+   ENDDO
+
+   nogrp = nogrp_
+
+   allocate( nnrsx_vec( SZ ) )
+
+   !Find maximum chunk of local data concerning coefficients of eigenfunctions in g-space
+
+#if defined __MPI
+   CALL MPI_Allgather(dffts%nnr, 1, MPI_INTEGER, nnrsx_vec, 1, MPI_INTEGER, group, IERR)
+   strd = maxval( nnrsx_vec( 1:SZ ) )
+#else
+   strd = dffts%nnr 
+#endif
+
+
    !---------------------------------------------------------------
    !Broadcast the number of groups: NOGRP
    !---------------------------------------------------------------
 
-   CALL MPI_BCAST(NOGRP ,1, MPI_INTEGER, 0, MPI_COMM_WORLD, IERR)
-   !Error check for broadcast
-   IF (RANK.EQ.0) THEN
-      IF (IERR.NE.0) THEN
-         !Abort: Broadcast has failed
-         CALL MPI_Abort !To be replaced by a proper exit routine
-      ENDIF
-   ENDIF
+   CALL mp_bcast( nogrp, root, group )
 
    !-------------------------------------------------------------------------------------
    !C. Bekas...TASK GROUP RELATED. FFT DATA STRUCTURES ARE ALREADY DEFINED ABOVE
@@ -167,11 +163,15 @@ SUBROUTINE GROUPS
    !we choose to do the latter one.
    !-------------------------------------------------------------------------------------
    !
-
-
    ALLOCATE(ALL_Z_STICKS(SZ))
+   !
    !ALL-Gather number of Z-sticks from all processors
-   CALL MPI_Allgather(dffts%nsw(RANK+1), 1, MPI_INTEGER, ALL_Z_STICKS, 1, MPI_INTEGER,  MPI_COMM_WORLD, IERR)
+   !
+#if defined __MPI
+   CALL MPI_Allgather(dffts%nsw(mpime+1), 1, MPI_INTEGER, ALL_Z_STICKS, 1, MPI_INTEGER, group, IERR)
+#else
+   all_z_sticks( 1 ) = dffts%nsw( 1 )
+#endif
    IF (.NOT.ALLOCATED(tmp_nsw)) ALLOCATE(tmp_nsw(SZ))
    IF (.NOT.ALLOCATED(tmp_npp)) THEN
       ALLOCATE(tmp_npp(SZ))
@@ -179,76 +179,61 @@ SUBROUTINE GROUPS
    ENDIF
 
 
+   IF( NOGRP == 1 ) RETURN
 
-   IF(NOGRP.EQ.1) RETURN
-   IF(NOGRP.GT.MAXGRP) THEN
-      IF(RANK.EQ.0) THEN
-         WRITE(stdout,*) ' MAXIMUM NUMBER OF GROUPS IS ',MAXGRP
-         WRITE(stdout,*) ' NUMBER OF GROUPS     :',NOGRP
-         CALL MPI_Abort !To be replaced by a proper exit routine
-      ENDIF
-   ENDIF
-   IF(MOD(NPROC,NOGRP).NE.0) THEN
-      IF(RANK.EQ.0) THEN
-         WRITE(stdout,*) ' THE NUMBER OF GROUPS HAS TO BE A DIVISOR OF THE NUMBER OF PROCESSORS'
-         WRITE(stdout,*) ' NUMBER OF PROCESSORS :',NPROC
-         WRITE(stdout,*) ' NUMBER OF GROUPS     :',NOGRP
-         CALL MPI_Abort !To be replaced by a proper exit routine
-      ENDIF
-   ENDIF
-   NPGRP=NPROC/NOGRP
-   IF(NPGRP.GT.MAXGRP) THEN
-      IF(RANK.EQ.0) THEN
-         WRITE(stdout,*) ' MINIMUM NUMBER OF GROUPS IS ',NPROC/MAXGRP
-         WRITE(stdout,*) ' NUMBER OF GROUPS     :',NOGRP
-         CALL MPI_Abort !To be replaced by a proper exit routine
-      ENDIF
-   ENDIF
+   NPGRP = NPROC / NOGRP
 
+   IF( NPGRP > MAXGRP ) THEN
+      CALL errore( "groups", "too many npgrp", 1 )
+   ENDIF
 
    !--------------------------------------
    !LIST OF PROCESSORS IN MY ORBITAL GROUP
    !--------------------------------------
-   N1 = (RANK/NOGRP)*NOGRP-1
-   DO I=1,NOGRP
-      NOLIST(I)=PGROUP(N1+I+1)
-      IF(RANK.EQ.NOLIST(I)) IPOS=I-1
+   N1 = ( mpime / NOGRP ) * NOGRP - 1
+   DO I = 1, NOGRP
+      NOLIST( I ) = PGROUP( N1 + I + 1 )
+      IF( mpime .EQ. NOLIST( I ) ) IPOS = I - 1
    ENDDO
-
 
    !-----------------------------------------
    !LIST OF PROCESSORS IN MY PLANE WAVE GROUP
    !-----------------------------------------
-   DO I=1,NPGRP
-      NPLIST(I)=PGROUP(IPOS+(I-1)*NOGRP+1)
+   DO I = 1, NPGRP
+      NPLIST( I ) = PGROUP( IPOS + ( I - 1 ) * NOGRP + 1 )
    ENDDO
+
    !-----------------
    !SET UP THE GROUPS
    !-----------------
-   DO I=1,NPGRP
-      IF(RANK.EQ.NPLIST(I)) LABEL=I
+   DO I = 1, NPGRP
+      IF( mpime .EQ. NPLIST( I ) ) LABEL = I
    ENDDO
 
 
    !---------------------------------------
    !CREATE ORBITAL GROUPS
    !---------------------------------------
-   CALL MPI_COMM_GROUP(MPI_COMM_WORLD,WORLD,IERR)
-   CALL MPI_GROUP_INCL(WORLD, NOGRP, NOLIST, NEWGROUP, IERR)
-   CALL MPI_COMM_CREATE(MPI_COMM_WORLD,NEWGROUP, ME_OGRP, IERR)
+#if defined __MPI
+   CALL MPI_COMM_GROUP( group, WORLD, IERR )
+   CALL MPI_GROUP_INCL( WORLD, NOGRP, NOLIST, NEWGROUP, IERR )
+   CALL MPI_COMM_CREATE( group, NEWGROUP, ME_OGRP, IERR )
+#endif
 
 
-   DO I=1,NOGRP
-      IF(RANK.EQ.NOLIST(I)) LABEL=I+MAXCPU
+   DO I = 1, NOGRP
+      IF( mpime .EQ. NOLIST( I ) ) LABEL = I + MAXCPU
    ENDDO
 
 
    !---------------------------------------
    !CREATE PLANEWAVE GROUPS
    !---------------------------------------
-   CALL MPI_COMM_GROUP(MPI_COMM_WORLD, WORLD, IERR)
+#if defined __MPI
+   CALL MPI_COMM_GROUP(group, WORLD, IERR)
    CALL MPI_GROUP_INCL(WORLD, NPGRP, NPLIST, NEWGROUP, IERR)
-   CALL MPI_COMM_CREATE(MPI_COMM_WORLD,NEWGROUP, ME_PGRP, IERR)
+   CALL MPI_COMM_CREATE(group, NEWGROUP, ME_PGRP, IERR)
+#endif
 
    !--------
    !END
@@ -260,18 +245,22 @@ SUBROUTINE GROUPS
 
    END SUBROUTINE GROUPS
 
-SUBROUTINE GROUPS_NEW
+SUBROUTINE GROUPS_NEW( nogrp_ , dffts )
    !------------
    !Modules used
    !------------
+   USE mp_global,  ONLY : mpime, nproc, group
    USE mp_global,  ONLY : NOGRP, ME_OGRP, ME_PGRP  !Variables: NOGRP, MAXGRP, ME_OGRP, ME_PGRP
    USE parameters, ONLY : MAXGRP
    USE io_global,  only : stdout
-   USE fft_base,   only : dffts
+   USE fft_type,   only : fft_dlay_descriptor
    USE electrons_base, only: nspin
    USE parallel_include
 
    IMPLICIT NONE
+
+   INTEGER, INTENT(IN) :: nogrp_
+   TYPE(fft_dlay_descriptor), INTENT(IN) :: dffts
 
 #if defined (__MPI)
 
@@ -281,7 +270,7 @@ SUBROUTINE GROUPS_NEW
    !NPROC:      Total number of processors
    !NPGRP:      Number of processors per group
    INTEGER  ::  MSGLEN, I, J, N1, LABEL, IPOS, WORLD, NEWGROUP
-   INTEGER  ::  NPROC, NPGRP, ios, IERR
+   INTEGER  ::  NPGRP, ios, IERR
    INTEGER, DIMENSION(:,:), ALLOCATABLE :: NOLIST_MATRIX, T_NOLIST_MATRIX
    INTEGER, DIMENSION(MPI_STATUS_SIZE)  :: STATUS
 
@@ -297,8 +286,6 @@ SUBROUTINE GROUPS_NEW
    tm_rhoofr = 0D0
 
    !Find the number of processors and my rank
-   CALL MPI_COMM_RANK(MPI_COMM_WORLD, RANK, IERR)
-   CALL MPI_COMM_SIZE(MPI_COMM_WORLD, NPROC, IERR)
    SZ = NPROC
 
    ALLOCATE(PGROUP(NPROC))
@@ -306,18 +293,7 @@ SUBROUTINE GROUPS_NEW
       PGROUP(I) = I-1
    ENDDO
 
-
-   IF (RANK.EQ.0) THEN
-      !READ groups.in file
-      OPEN (UNIT=15, FORM = "FORMATTED", FILE="groups.in", IOSTAT=ios)
-      READ (15,FMT=101) NOGRP
-      IF (ios.NE.0) THEN
-         PRINT *, "groups.in file missing or corrupted! Aborting...!"
-         CALL MPI_Abort ! Terminate program
-      ENDIF
-      CLOSE(15)
-   ENDIF
-101 FORMAT(I)
+   nogrp = nogrp_
 
    allocate(nnrsx_vec(SZ))
    !Find maximum chunk of local data concerning coefficients of eigenfunctions in g-space
@@ -336,7 +312,7 @@ SUBROUTINE GROUPS_NEW
    !---------------------------------------------------------------
    CALL MPI_BCAST(NOGRP ,1, MPI_INTEGER, 0, MPI_COMM_WORLD, IERR)
    !Error check for broadcast
-   IF (RANK.EQ.0) THEN
+   IF (mpime.EQ.0) THEN
       IF (IERR.NE.0) THEN
          !Abort: Broadcast has failed
          CALL MPI_Abort !To be replaced by a proper exit routine
@@ -357,7 +333,7 @@ SUBROUTINE GROUPS_NEW
 
    ALLOCATE(ALL_Z_STICKS(SZ))
    !ALL-Gather number of Z-sticks from all processors
-   CALL MPI_Allgather(dffts%nsw(RANK+1), 1, MPI_INTEGER, ALL_Z_STICKS, 1, MPI_INTEGER,  MPI_COMM_WORLD, IERR)
+   CALL MPI_Allgather(dffts%nsw(mpime+1), 1, MPI_INTEGER, ALL_Z_STICKS, 1, MPI_INTEGER,  MPI_COMM_WORLD, IERR)
    IF (.NOT.ALLOCATED(tmp_nsw)) ALLOCATE(tmp_nsw(SZ))
    IF (.NOT.ALLOCATED(tmp_npp)) THEN
       ALLOCATE(tmp_npp(SZ))
@@ -368,14 +344,14 @@ SUBROUTINE GROUPS_NEW
 
    IF(NOGRP.EQ.1) RETURN
    IF(NOGRP.GT.MAXGRP) THEN
-      IF(RANK.EQ.0) THEN
+      IF(mpime.EQ.0) THEN
          WRITE(stdout,*) ' MAXIMUM NUMBER OF GROUPS IS ',MAXGRP
          WRITE(stdout,*) ' NUMBER OF GROUPS     :',NOGRP
          CALL MPI_Abort !To be replaced by a proper exit routine
       ENDIF
    ENDIF
    IF(MOD(NPROC,NOGRP).NE.0) THEN
-      IF(RANK.EQ.0) THEN
+      IF(mpime.EQ.0) THEN
          WRITE(stdout,*) ' THE NUMBER OF GROUPS HAS TO BE A DIVISOR OF THE NUMBER OF PROCESSORS'
          WRITE(stdout,*) ' NUMBER OF PROCESSORS :',NPROC
          WRITE(stdout,*) ' NUMBER OF GROUPS     :',NOGRP
@@ -384,7 +360,7 @@ SUBROUTINE GROUPS_NEW
    ENDIF
    NPGRP=NPROC/NOGRP
    IF(NPGRP.GT.MAXGRP) THEN
-      IF(RANK.EQ.0) THEN
+      IF(mpime.EQ.0) THEN
          WRITE(stdout,*) ' MINIMUM NUMBER OF GROUPS IS ',NPROC/MAXGRP
          WRITE(stdout,*) ' NUMBER OF GROUPS     :',NOGRP
          CALL MPI_Abort !To be replaced by a proper exit routine
@@ -395,13 +371,13 @@ SUBROUTINE GROUPS_NEW
    !--------------------------------------
    !LIST OF PROCESSORS IN MY ORBITAL GROUP
    !--------------------------------------
-   !N1 = (RANK/NOGRP)*NOGRP-1
+   !N1 = (mpime/NOGRP)*NOGRP-1
    !DO I=1,NOGRP
    !   NOLIST(I)=PGROUP(N1+I+1)
-   !   IF(RANK.EQ.NOLIST(I)) IPOS=I-1
+   !   IF(mpime.EQ.NOLIST(I)) IPOS=I-1
    !ENDDO
 
-   IF (RANK.EQ.0) THEN
+   IF (mpime.EQ.0) THEN
       ALLOCATE(NOLIST_MATRIX(NOGRP,NPROC/NOGRP), T_NOLIST_MATRIX(NPROC/NOGRP,NOGRP))
       DO I=1,NPROC/NOGRP
          DO J=1, NOGRP
@@ -426,7 +402,7 @@ SUBROUTINE GROUPS_NEW
       CALL MPI_Recv(NOLIST, NOGRP, MPI_INTEGER, 0, 0, MPI_COMM_WORLD, STATUS, IERR)
    ENDIF
    T_NOLIST_MATRIX = transpose(NOLIST_MATRIX)
-   IF (RANK.EQ.0) THEN
+   IF (mpime.EQ.0) THEN
       NPLIST(1:NPROC/NOGRP) = NOLIST_MATRIX(1,1:NPROC/NOGRP)
       DO J=1, NOGRP
          DO I=1, NPROC/NOGRP
@@ -440,7 +416,7 @@ SUBROUTINE GROUPS_NEW
    ENDIF
 
 
-   IF (RANK.EQ.0) DEALLOCATE(NOLIST_MATRIX, T_NOLIST_MATRIX)
+   IF (mpime.EQ.0) DEALLOCATE(NOLIST_MATRIX, T_NOLIST_MATRIX)
 
    CALL MPI_Barrier(MPI_COMM_WORLD, IERR)
 
@@ -460,7 +436,7 @@ SUBROUTINE GROUPS_NEW
    !SET UP THE GROUPS
    !-----------------
    DO I=1,NPGRP
-      IF(RANK.EQ.NPLIST(I)) LABEL=I
+      IF(mpime.EQ.NPLIST(I)) LABEL=I
    ENDDO
 
 
@@ -473,7 +449,7 @@ SUBROUTINE GROUPS_NEW
 
 
    DO I=1,NOGRP
-      IF(RANK.EQ.NOLIST(I)) LABEL=I+MAXCPU
+      IF(mpime.EQ.NOLIST(I)) LABEL=I+MAXCPU
    ENDDO
 
 
