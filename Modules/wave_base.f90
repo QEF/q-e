@@ -719,10 +719,10 @@
    SUBROUTINE my_wave_verlet( cm, c0, ver1, ver2, ver3, grad, ngw, index)
       USE mp_global, ONLY: nogrp
       IMPLICIT NONE
+      INTEGER, INTENT(IN) :: ngw, index
       COMPLEX(DP), INTENT(INOUT) :: cm(ngw)
       COMPLEX(DP), INTENT(IN) :: c0(ngw)
       COMPLEX(DP), INTENT(IN) :: grad((NOGRP+1)*ngw)
-      INTEGER, INTENT(IN) :: ngw, index
 
       REAL(DP), INTENT(IN) ::  ver1, ver2, ver3(:)
         cm( : )  = ver1 * c0( : ) + ver2 * cm( : ) + &

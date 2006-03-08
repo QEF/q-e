@@ -430,6 +430,7 @@ MODULE read_cards_module
        CHARACTER(LEN=4)   :: lb_pos
        INTEGER            :: ia, i, k, is, nfield, index, rep_i
        LOGICAL, EXTERNAL  :: matches
+       LOGICAL            :: tend
        LOGICAL, SAVE      :: tread = .FALSE.
        !
        !
@@ -478,7 +479,10 @@ MODULE read_cards_module
              !
              rep_loop : DO rep_i = 1, smd_kwnp
                 !
-                CALL read_line( input_line )
+                CALL read_line( input_line, end_of_file = tend )
+                !
+                IF ( tend ) CALL errore( 'read_cards', &
+                     'end of file reading atomic positions (smd)', rep_i )
                 !
                 IF ( matches( "first_image", input_line ) .OR. &
                      matches( "image", input_line )       .OR. &
@@ -495,7 +499,10 @@ MODULE read_cards_module
              !
           ELSE
              !
-             CALL read_line( input_line )
+             CALL read_line( input_line, end_of_file = tend )
+             !
+             IF ( tend ) CALL errore( 'read_cards', &
+                  'end of file reading atomic positions (neb)', 1 )
              !
              IF ( matches( "first_image", input_line ) ) THEN
                 !                
@@ -506,13 +513,17 @@ MODULE read_cards_module
              ELSE
                 !
                 CALL errore( 'read_cards', &
-                           & 'first_image missing in ATOMIC_POSITION', 1 )
+                     'first_image missing in ATOMIC_POSITION', 1 )
                 !
              END IF      
              !
              read_conf_loop: DO 
                 !
-                CALL read_line( input_line )
+                CALL read_line( input_line, end_of_file = tend )
+                !
+                IF ( tend ) CALL errore( 'read_cards', &
+                     'end of file reading atomic positions (neb)', &
+                     input_images + 1 )
                 !
                 input_images = input_images + 1             
                 !
@@ -539,7 +550,7 @@ MODULE read_cards_module
              ELSE
                 !
                 CALL errore( 'read_cards ', &
-                           & 'last_image missing in ATOMIC_POSITION', 1 )
+                     'last_image missing in ATOMIC_POSITION', 1 )
                 !
              END IF
              !
@@ -549,12 +560,16 @@ MODULE read_cards_module
           !
           DO ia = 1, nat
              !
-             CALL read_line( input_line )
+             CALL read_line( input_line, end_of_file = tend )
+             !
+             IF ( tend ) CALL errore( 'read_cards', &
+                  'end of file reading atomic positions', ia )
+             !
              CALL field_count( nfield, input_line )
              !
              IF( sic /= 'none' .AND. nfield /= 8 ) &
-               CALL errore( 'read_cards', &
-                          & 'ATOMIC_POSITIONS with sic, 8 columns required', 1 )
+                  CALL errore( 'read_cards', &
+                  'ATOMIC_POSITIONS with sic, 8 columns required', 1 )
              !
              IF ( nfield == 4 ) THEN
                 !     
@@ -634,7 +649,11 @@ MODULE read_cards_module
               !
               index = 3 * ( ia - 1 )
               !
-              CALL read_line( input_line )
+              CALL read_line( input_line, end_of_file = tend )
+              !
+              IF ( tend ) CALL errore( 'read_cards', &
+                   'end of file reading atomic positions', ia )
+              !
               CALL field_count( nfield, input_line )
               !
               IF ( nfield == 4 ) THEN
