@@ -90,6 +90,8 @@ SUBROUTINE GROUPS
 
    IMPLICIT NONE 
 
+#if defined (__MPI)
+
    !----------------------------------
    !Local Variables declaration
    !----------------------------------
@@ -145,6 +147,7 @@ SUBROUTINE GROUPS
    !---------------------------------------------------------------
    !Broadcast the number of groups: NOGRP
    !---------------------------------------------------------------
+
    CALL MPI_BCAST(NOGRP ,1, MPI_INTEGER, 0, MPI_COMM_WORLD, IERR)
    !Error check for broadcast
    IF (RANK.EQ.0) THEN
@@ -251,6 +254,7 @@ SUBROUTINE GROUPS
    !END
    !--------
 
+#endif
 
    RETURN
 
@@ -268,6 +272,8 @@ SUBROUTINE GROUPS_NEW
    USE parallel_include
 
    IMPLICIT NONE
+
+#if defined (__MPI)
 
    !----------------------------------
    !Local Variables declaration
@@ -483,6 +489,8 @@ SUBROUTINE GROUPS_NEW
    !--------
 
    PRINT *, "AFTER GROUPS"
+
+#endif
 
    RETURN
 
