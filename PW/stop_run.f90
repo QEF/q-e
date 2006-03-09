@@ -1,10 +1,9 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
 !
 !----------------------------------------------------------------------------
 SUBROUTINE stop_run( flag )
@@ -30,6 +29,10 @@ SUBROUTINE stop_run( flag )
   LOGICAL, INTENT(IN) :: flag
   LOGICAL             :: exst
   !
+  !
+  ! ... here we write all the data required to restart
+  !
+  CALL punch()
   !
   IF ( lpath ) CALL io_path_stop()
   !
