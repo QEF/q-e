@@ -1010,15 +1010,7 @@
 
 #elif defined __SX6
 
-       write (6,*) "Warning:   FFTs have been heavily restructured, those for Nec SX6 are untested"
-       write (6,*) "Warning:   Please locate and remove the following line in Modules/fft_scalar.f90:"
-       write (6,*) "           call errore('cfft3d','Nec-SX6 untested, please test',1)"
-       write (6,*) "Warning:   Please recompile, test, report if it works"
-       call errore('cfft3d','Nec-SX6 untested, please test',1)
-
 #  if defined ASL
-       ALLOCATE (cw2(ldx*ldy*ldz))
-       CALL zfc3cl (f(1), nx, ny, nz, ldx, ldy, ldz, err)
 #    if defined MICRO
        CALL hfc3fb (nx,ny,nz, f(1) , ldx, ldy, ldz, 0, &
             iw0(1,icurrent), auxp(1,icurrent), cw2(1), nbtasks, err)
@@ -1027,7 +1019,6 @@
              iw0(1,icurrent), auxp(1,icurrent), cw2(1), err)
 #    endif
 #  else
-       ALLOCATE (cw2(6*ldx*ldy*ldz))
        CALL ZZFFT3D (0, nx,ny,nz, 1.d0, f(1), ldx, ldy, &
           &             f(1), ldx, ldy, auxp(1,icurrent), cw2(1), err)
 #  endif
