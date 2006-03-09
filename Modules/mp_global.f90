@@ -29,7 +29,6 @@ MODULE mp_global
   !
   INTEGER :: me_pool     = 0  ! index of the processor within a pool 
   INTEGER :: me_image    = 0  ! index of the processor within an image
-  INTEGER :: me_ogrp     = 0  ! index of the processor in orbital group (task grouping)
   INTEGER :: root_pool   = 0  ! index of the root processor within a pool
   INTEGER :: root_image  = 0  ! index of the root processor within an image
   INTEGER :: my_pool_id  = 0  ! index of my pool
@@ -38,6 +37,7 @@ MODULE mp_global
   INTEGER :: npool       = 1  ! number of "k-points"-pools
   INTEGER :: nimage      = 1  ! number of "path-images"-pools
   INTEGER :: nogrp       = 1  ! number of "task groups" 
+  INTEGER :: npgrp       = 1  ! number of processor withing a "task group" 
   INTEGER :: nproc_pool  = 1  ! number of processor within a pool
   INTEGER :: nproc_image = 1  ! number of processor within an image
   !
@@ -48,6 +48,7 @@ MODULE mp_global
   INTEGER :: inter_image_comm = 0  ! inter image communicator
   INTEGER :: intra_image_comm = 0  ! intra image communicator  
   INTEGER :: me_pgrp          = 0  ! index of the processor in plane-wave group (task grouping)
+  INTEGER :: me_ogrp          = 0  ! index of the processor in orbital group (task grouping)
   !
   CONTAINS
      !

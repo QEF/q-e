@@ -42,10 +42,11 @@ CONTAINS
 !
 
 !
-      USE kinds,      ONLY: DP
-      use fft_cp,     only: cfft_cp
-      use fft_base,   only: dfftp, dffts, dfftb
-      use fft_scalar, only: cfft3d, cfft3ds, cft_b
+      USE kinds,         ONLY: DP
+      use fft_cp,        only: cfft_cp, tg_cfft_cp
+      use fft_base,      only: dfftp, dffts, dfftb
+      use fft_scalar,    only: cfft3d, cfft3ds, cft_b
+      USE control_flags, ONLY: use_task_groups
 
       IMPLICIT none
 
@@ -81,7 +82,11 @@ CONTAINS
       ELSE IF( grid_type == 'Smooth' ) THEN
          call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1,dffts)
       ELSE IF( grid_type == 'Wave' ) THEN
-         call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,2,dffts)
+         IF( use_task_groups ) THEN
+            call tg_cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,2,dffts)
+         ELSE
+            call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,2,dffts)
+         END IF
       ELSE IF( grid_type == 'Box' .AND. np3 > 0 ) THEN
          call cft_b(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,imin3,imax3,1)
       END IF
@@ -133,10 +138,11 @@ CONTAINS
 !   forward fourier transform of  wave functions
 !   on the smooth grid . On output, f is overwritten
 ! 
-      USE kinds,      ONLY: DP
-      use fft_cp,     only: cfft_cp
-      use fft_base,   only: dfftp, dffts
-      use fft_scalar, only: cfft3d, cfft3ds
+      USE kinds,         ONLY: DP
+      use fft_cp,        only: cfft_cp, tg_cfft_cp
+      use fft_base,      only: dfftp, dffts
+      use fft_scalar,    only: cfft3d, cfft3ds
+      USE control_flags, ONLY: use_task_groups
 
       implicit none
 
@@ -161,7 +167,11 @@ CONTAINS
       ELSE IF( grid_type == 'Smooth' ) THEN
          call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1,dffts)
       ELSE IF( grid_type == 'Wave' ) THEN
-         call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-2,dffts)
+         IF( use_task_groups ) THEN
+            call tg_cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-2,dffts)
+         ELSE
+            call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-2,dffts)
+         END IF
       END IF
 
 #else 

@@ -279,6 +279,11 @@ MODULE control_flags
   INTEGER  :: ortho_max = 0    ! maximum number of iterations in routine ortho
   REAL(DP) :: ortho_eps = 0.D0 ! threshold for convergence in routine ortho
   !
+  ! ... Task Groups parallelization
+  !
+  LOGICAL, PUBLIC :: &
+    use_task_groups = .FALSE.  ! if TRUE task groups parallelization is used
+  !
   ! ...  end of module-scope declarations
   ! 
   !=--------------------------------------------------------------------------=!
