@@ -32,7 +32,7 @@ SUBROUTINE stop_run( flag )
   !
   ! ... here we write all the data required to restart
   !
-  CALL punch()
+  IF ( .NOT. flag ) CALL punch()
   !
   IF ( lpath ) CALL io_path_stop()
   !
