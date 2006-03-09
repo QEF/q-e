@@ -494,8 +494,8 @@ diagonalization
                CHARACTER
                'david':  Davidson iterative diagonalization with overlap matrix
                          (default)
-               'diis' :  DIIS-like diagonalization
                'cg' :    conjugate-gradient-like band-by-band diagonalization
+               'diis' :  DIIS-like diagonalization - PRESENTLY DISABLED
 
 diago_thr_init     
                REAL  ( default = 1.D-2 )
