@@ -169,18 +169,20 @@ MODULES = \
 ../Modules/random_numbers.o \
 ../Modules/read_cards.o \
 ../Modules/read_namelists.o \
-../Modules/readpseudo.o \
+../Modules/read_upf.o \
+../Modules/read_uspp.o \
 ../Modules/recvec.o \
 ../Modules/shmem_include.o \
 ../Modules/sic.o \
 ../Modules/smallbox.o \
 ../Modules/splinelib.o \
 ../Modules/stick_base.o \
+../Modules/task_groups.o \
+../Modules/timestep.o \
 ../Modules/uspp.o \
 ../Modules/version.o \
 ../Modules/wavefunctions.o \
 ../Modules/wave_base.o \
-../Modules/timestep.o \
 ../Modules/xml_io_base.o
 
 .f90.o:
