@@ -70,6 +70,7 @@ MODULES = \
 ../Modules/shmem_include.o \
 ../Modules/stick_base.o \
 ../Modules/splinelib.o \
+../Modules/task_groups.o \
 ../Modules/timestep.o \
 ../Modules/uspp.o \
 ../Modules/version.o \

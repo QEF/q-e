@@ -34,16 +34,12 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
   !
   INTEGER, PARAMETER :: maxl = 3, maxm = 2*maxl+1, &
        maxlm = (maxl+1)*(maxl+1)
-  REAL(DP), PARAMETER :: maxj=DBLE(maxl)+0.5d0
-  INTEGER, PARAMETER :: maxmj = INT(2*maxj)+1, & 
-       maxjmj = (INT(2*maxj)+1)*(INT(2*maxj)+3)/4
+  INTEGER, PARAMETER :: maxmj = 2*maxl+2
   !
   ! maxl = max value of l allowed
   ! maxm = number of m components for l=maxl
   ! maxlm= number of l,m spherical harmonics for l <= maxl
-  ! maxj = max value of j allowed
-  ! maxmj = number of mj components for j=maxj 
-  ! maxjmj = number of spin-angle functions for j <= maxj
+  ! maxmj = number of mj components
   !
   REAL(DP), PARAMETER :: eps = 1.0d-9
   !
