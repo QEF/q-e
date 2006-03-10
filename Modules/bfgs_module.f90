@@ -74,6 +74,11 @@ MODULE bfgs_module
       scf_iter,               &! number of scf iterations
       bfgs_iter                ! number of bfgs iterations
   !
+  LOGICAL :: &
+      tr_min_hit               ! .TRUE. if the trust_radius has already been set
+                               !        to the minimum value at the previous
+                               !        step
+  !
   ! ... default values for all these variables are set in 
   ! ... Modules/read_namelist.f90 (SUBROUTINE ions_defaults)
   !
@@ -240,7 +245,7 @@ MODULE bfgs_module
                    FMT = '(/,5X,"trust_radius < trust_radius_min")' )
             WRITE( UNIT = stdout, FMT = '(/,5X,"resetting bfgs history",/)' )
             !
-            IF ( trust_radius_old == trust_radius_min ) THEN
+            IF ( tr_min_hit ) THEN
                !
                ! ... the history has already been reset at the previous step :
                ! ... something is going wrong
@@ -256,11 +261,15 @@ MODULE bfgs_module
             !
             trust_radius = trust_radius_min
             !
+            tr_min_hit = .TRUE.
+            !
          ELSE
             !
             ! ... old bfgs direction ( normalized ) is recovered
             !
             step(:) = step_old(:) / trust_radius_old
+            !
+            tr_min_hit = .FALSE.
             !
          END IF
          !
@@ -409,6 +418,8 @@ MODULE bfgs_module
             !
             trust_radius =  trust_radius_ini
             !
+            tr_min_hit = .FALSE.
+            !
          ELSE
             !
             trust_radius =  trust_radius_old
@@ -491,6 +502,7 @@ MODULE bfgs_module
          READ( iunbfgs, * ) pos_old
          READ( iunbfgs, * ) grad_old
          READ( iunbfgs, * ) inv_hess
+         READ( iunbfgs, * ) tr_min_hit
          !     
          CLOSE( UNIT = iunbfgs )
          !
@@ -543,6 +555,8 @@ MODULE bfgs_module
             !
          END IF
          !
+         tr_min_hit = .FALSE.
+         !
       END IF
       !
     END SUBROUTINE read_bfgs_file
@@ -570,6 +584,7 @@ MODULE bfgs_module
       WRITE( iunbfgs, * ) pos_old
       WRITE( iunbfgs, * ) grad_old
       WRITE( iunbfgs, * ) inv_hess
+      WRITE( iunbfgs, * ) tr_min_hit
       ! 
       CLOSE( UNIT = iunbfgs )
       !
@@ -730,6 +745,16 @@ MODULE bfgs_module
          !
          ! ... the history is reset
          !
+         IF ( tr_min_hit ) THEN
+            !
+            ! ... the history has already been reset at the previous step :
+            ! ... something is going wrong
+            !
+            CALL errore( 'bfgs', &
+                         'bfgs history already reset at previous step', 1 )
+            !
+         END IF
+         !
          WRITE( UNIT = stdout, FMT = '(5X,"resetting bfgs history",/)' )
          !
          inv_hess = identity( dim )
@@ -737,6 +762,12 @@ MODULE bfgs_module
          step = - grad
          !
          trust_radius = trust_radius_min
+         !
+         tr_min_hit = .TRUE.
+         !
+      ELSE
+         !
+         tr_min_hit = .FALSE.
          !
       END IF
       !
