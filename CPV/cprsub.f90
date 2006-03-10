@@ -149,6 +149,7 @@ SUBROUTINE newnlinit()
   !
   CALL interpolate_qradb( tpre )
   !
+  !
   !     initialization that is common to all species
   !
   IF( tpstab ) THEN
@@ -343,6 +344,7 @@ subroutine nlinit
       call aainit( lmaxkb + 1 )
       !
       CALL allocate_core( nnrx, ngm, ngb, nsp )
+      !
       !
       allocate( beta( ngw, nhm, nsp ) )
       allocate( qradb( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp ) )

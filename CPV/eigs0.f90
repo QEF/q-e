@@ -17,6 +17,8 @@
       use constants, only        : au
       use electrons_module, only : ei
       use parallel_toolkit, only : dspev_drv
+      USE sic_module, only       : self_interaction
+
       implicit none
 ! input
       logical, intent(in) :: tprint, lf
@@ -25,9 +27,20 @@
 ! local variables
       real(DP), allocatable :: lambdar(:)
       real(DP) wr(nx), fv1(nx),fm1(2,nx), zr(1)
-      integer iss, j, i, ierr, k, n
+      integer :: iss, j, i, ierr, k, n, nspin_eig, npaired
+      logical :: tsic
 !
-      do iss = 1, nspin
+      tsic = ( ABS( self_interaction) /= 0 )
+
+      IF( tsic ) THEN
+         nspin_eig = 1
+         npaired   = nupdwn(2)
+      ELSE
+         nspin_eig = nspin
+         npaired   = 0
+      END IF
+
+      do iss = 1, nspin_eig
 
          n = nupdwn(iss)
 
@@ -54,26 +67,39 @@
             end do
          end if
          !
+         !     store eigenvalues
+         !
+         IF( SIZE( ei, 1 ) < nupdwn(iss) ) &
+            CALL errore( ' eigs0 ', ' wrong dimension array ei ', 1 )
+
+         IF( tsic ) THEN
+            !
+            !  only paired states are stored
+            !
+            ei( 1:npaired, 1, iss )     = wr( 1:npaired )
+         ELSE
+            ei( 1:nupdwn(iss), 1, iss ) = wr( 1:nupdwn(iss) )
+         END IF
+
+         deallocate( lambdar )
+
+      end do
+      !
+      !
+      do iss = 1, nspin
+
+         IF( tsic .AND. iss > 1 ) THEN
+            ei( 1:npaired, 1, iss ) = ei( 1:npaired, 1, 1 )
+         END IF
+
          IF( tprint ) THEN
             !
             !     print out eigenvalues
             !
             WRITE( stdout,12) 0., 0., 0.
-            WRITE( stdout,14) (wr(i)*au,i=1,nupdwn(iss))
+            WRITE( stdout,14) ( ei( i, 1, iss ) * au, i = 1, nupdwn(iss) )
 
-         ELSE
-            !
-            !     store eigenvalues
-            !
-            IF( SIZE( ei, 1 ) < nupdwn(iss) ) &
-               CALL errore( ' eigs0 ', ' wrong dimension array ei ', 1 )
-
-            ei( 1:nupdwn(iss), 1, iss ) = wr( 1:nupdwn(iss) )
-
-         END IF
-
-
-         deallocate( lambdar )
+         ENDIF
 
       end do
 

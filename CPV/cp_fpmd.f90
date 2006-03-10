@@ -7,53 +7,6 @@
 !
 
 !-----------------------------------------------------------------------
-      subroutine fill_qrl(is, dim1, dim2, dim3, qrl)
-!-----------------------------------------------------------------------
-!
-! fill l-components of Q(r) as in Vanderbilt's approach
-!
-      use uspp_param, only: qfunc, nqf, qfcoef, rinner, lll, nbeta, &
-                       kkbeta
-      use atom, only: r
-!
-      implicit none
-      integer, intent(in) :: is, dim1, dim2, dim3
-      real(8) :: qrl(dim1,dim2,dim3)
-      !
-      integer :: iv, jv, ijv, lmin, lmax, l, ir, i
-      !
-      !
-      IF ( kkbeta(is) > dim1 ) &
-           CALL errore ('fill_qrl', 'bad 1st dimension for array qrl', 1)
-      do iv=1,nbeta(is)
-         do jv=1,iv
-            ijv = (iv-1)*iv/2 + jv
-            IF ( ijv > dim2) &
-                 CALL errore ('fill_qrl', 'bad 2nd dimension for array qrl', 2)
-            lmin=lll(jv,is)-lll(iv,is)+1
-            lmax=lmin+2*lll(iv,is)
-            IF ( lmax > dim3) &
-                 CALL errore ('fill_qrl', 'bad 3rd dimension for array qrl', 3)
-             do l=lmin,lmax
-               do ir=1,kkbeta(is)
-                  if (r(ir,is) >= rinner(l,is)) then
-                     qrl(ir,ijv,l)=qfunc(ir,iv,jv,is)
-                  else
-                     qrl(ir,ijv,l)=qfcoef(1,l,iv,jv,is)
-                     do i = 2, nqf(is)
-                        qrl(ir,ijv,l)=qrl(ir,ijv,l) +      &
-                             qfcoef(i,l,iv,jv,is)*r(ir,is)**(2*i-2)
-                     end do
-                     qrl(ir,ijv,l) = qrl(ir,ijv,l) * r(ir,is)**(l+1)
-                  end if
-               end do
-            end do
-         end do
-      end do
-    end subroutine fill_qrl
-
-
-!-----------------------------------------------------------------------
 subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
 !-----------------------------------------------------------------------
    !

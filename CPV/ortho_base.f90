@@ -437,10 +437,16 @@ CONTAINS
          !                       dd   = x0*tau*x0  (2nd and 3rd call)
          !                       tmp2 = x0*rhos    (4th call)
          !
-         CALL MXMA( xloc,1,nx,rhor,1,nx,tmp1,1,nx,nss,nss,nss)
-         CALL MXMA( tau ,1,nx,xloc,1,nx,tmp2,1,nx,nss,nss,nss)
-         CALL MXMA( xloc,1,nx,tmp2,1,nx,  dd,1,nx,nss,nss,nss)
-         CALL MXMA( xloc,1,nx,rhos,1,nx,tmp2,1,nx,nss,nss,nss)
+
+         CALL sqr_matmul( 'N', 'N', nss, xloc, rhor, tmp1 )
+         CALL sqr_matmul( 'N', 'N', nss, tau,  xloc, tmp2 )
+         CALL sqr_matmul( 'N', 'N', nss, xloc, tmp2, dd )
+         CALL sqr_matmul( 'N', 'N', nss, xloc, rhos, tmp2 )
+
+         ! CALL MXMA( xloc,1,nx,rhor,1,nx,tmp1,1,nx,nss,nss,nss)
+         ! CALL MXMA( tau ,1,nx,xloc,1,nx,tmp2,1,nx,nss,nss,nss)
+         ! CALL MXMA( xloc,1,nx,tmp2,1,nx,  dd,1,nx,nss,nss,nss)
+         ! CALL MXMA( xloc,1,nx,rhos,1,nx,tmp2,1,nx,nss,nss,nss)
          !
          DO i=1,nss
             DO j=1,nss
@@ -465,8 +471,11 @@ CONTAINS
          !                       tmp1 = x1*u
          !                       tmp2 = ut*x1*u
          !
-         CALL MXMA(x1,1,nx,   u,1,nx,tmp1,1,nx,nss,nss,nss)
-         CALL MXMA(u ,nx,1,tmp1,1,nx,tmp2,1,nx,nss,nss,nss)
+         CALL sqr_matmul( 'N', 'N', nss, x1,    u, tmp1 )
+         CALL sqr_matmul( 'T', 'N', nss,  u, tmp1, tmp2 )
+         !
+         ! CALL MXMA(x1,1,nx,   u,1,nx,tmp1,1,nx,nss,nss,nss)
+         ! CALL MXMA(u ,nx,1,tmp1,1,nx,tmp2,1,nx,nss,nss,nss)
          !
          !       g=ut*x1*u/d  (g is stored in tmp1)
          !
@@ -480,8 +489,11 @@ CONTAINS
          !                       tmp2 = g*ut
          !                       x0 = u*g*ut
          !
-         CALL MXMA(tmp1,1,nx,  u,nx,1,tmp2,1,nx,nss,nss,nss)
-         CALL MXMA(   u,1,nx,tmp2,1,nx,xloc,1,nx,nss,nss,nss)
+         CALL sqr_matmul( 'N', 'T', nss, tmp1,    u, tmp2 )
+         CALL sqr_matmul( 'N', 'N', nss,    u, tmp2, xloc )
+         !
+         ! CALL MXMA(tmp1,1,nx,  u,nx,1,tmp2,1,nx,nss,nss,nss)
+         ! CALL MXMA(   u,1,nx,tmp2,1,nx,xloc,1,nx,nss,nss,nss)
          !
       END DO ITERATIVE_LOOP
 
@@ -656,18 +668,21 @@ CONTAINS
 !
       IF( nvb > 0 ) THEN
 
-         ALLOCATE( tmp1( nx, nx ) )
+         CALL DGEMM( 'T', 'N', nss, nss, nkbus, -1.0d0, becp( 1, ist ), nkbx, &
+                  qbecp( 1, ist ), nkbx, 1.0d0, sig, nx )
 !
-         CALL MXMA( becp( 1, ist ), nkbx, 1, qbecp( 1, ist ), 1, nkbx,                &
-     &              tmp1, 1, nx, nss, nkbus, nss )
+!         ALLOCATE( tmp1( nx, nx ) )
 !
-         DO j=1,nss
-            DO i=1,nss
-               sig(i,j)=sig(i,j)-tmp1(i,j)
-            END DO
-         END DO
-
-         DEALLOCATE( tmp1 )
+!         CALL MXMA( becp( 1, ist ), nkbx, 1, qbecp( 1, ist ), 1, nkbx,                &
+!     &              tmp1, 1, nx, nss, nkbus, nss )
+!
+!         DO j=1,nss
+!            DO i=1,nss
+!               sig(i,j)=sig(i,j)-tmp1(i,j)
+!            END DO
+!         END DO
+!
+!         DEALLOCATE( tmp1 )
 
       ENDIF
 
@@ -734,19 +749,24 @@ CONTAINS
       CALL mp_sum( rho )
 !
       IF( nvb > 0 ) THEN
+         !
+         ! rho(i,j) = rho(i,j) + SUM_b bephi( b, i ) * qbecp( b, j ) 
+         !
+         CALL DGEMM( 'T', 'N', nss, nss, nkbus, 1.0d0, bephi( 1, ist ), nkbx, &
+                  qbecp( 1, ist ), nkbx, 1.0d0, rho, nx )
 
-         ALLOCATE( tmp1( nx, nx ) )
+!         ALLOCATE( tmp1( nx, nx ) )
 !
-         CALL MXMA( bephi( 1, ist ), nkbx, 1, qbecp( 1, ist ), 1, nkbx,               &
-     &                                tmp1, 1, nx, nss, nkbus, nss )
+!         CALL MXMA( bephi( 1, ist ), nkbx, 1, qbecp( 1, ist ), 1, nkbx,               &
+!     &                                tmp1, 1, nx, nss, nkbus, nss )
 !
-         DO j=1,nss
-            DO i=1,nss
-               rho(i,j)=rho(i,j)+tmp1(i,j)
-            END DO
-         END DO
-
-         DEALLOCATE( tmp1 )
+!         DO j=1,nss
+!            DO i=1,nss
+!               rho(i,j)=rho(i,j)+tmp1(i,j)
+!            END DO
+!         END DO
+!
+!         DEALLOCATE( tmp1 )
 
       ENDIF
 
@@ -807,18 +827,21 @@ CONTAINS
 !
       IF( nvb > 0 ) THEN
          !
-         ALLOCATE( tmp1( nx, nx ) )
-!
-         CALL MXMA( bephi( 1, ist ), nkbx, 1, qbephi( 1, ist ), 1, nkbx,              &
-     &              tmp1, 1, nx, nss, nkbus, nss )
-!
-         DO j=1,nss
-            DO i=1,nss
-               tau(i,j)=tau(i,j)+tmp1(i,j)
-            END DO
-         END DO
+         CALL DGEMM( 'T', 'N', nss, nss, nkbus, 1.0d0, bephi( 1, ist ), nkbx, &
+                  qbephi( 1, ist ), nkbx, 1.0d0, tau, nx )
 
-         DEALLOCATE( tmp1 )
+!         ALLOCATE( tmp1( nx, nx ) )
+!
+!         CALL MXMA( bephi( 1, ist ), nkbx, 1, qbephi( 1, ist ), 1, nkbx,              &
+!     &              tmp1, 1, nx, nss, nkbus, nss )
+!
+!         DO j=1,nss
+!            DO i=1,nss
+!               tau(i,j)=tau(i,j)+tmp1(i,j)
+!            END DO
+!         END DO
+!
+!         DEALLOCATE( tmp1 )
 
       ENDIF
 
@@ -891,11 +914,14 @@ CONTAINS
 
          ALLOCATE( wtemp( nss, nkb ) )
 
-         CALL MXMA(x0,1,nudx,bephi(1,istart),nkb,1,wtemp,1,nss,nss,nss,nkbus)
+         CALL DGEMM( 'N', 'T', nss, nkbus, nss, 1.0d0, x0, nudx, &
+                  bephi( 1, istart ), nkbx, 0.0d0, wtemp, nss )
+
+         ! CALL MXMA(x0,1,nudx,bephi(1,istart),nkb,1,wtemp,1,nss,nss,nss,nkbus)
 !
-         DO i=1,nss
-            DO inl=1,nkbus
-               bec(inl,i+istart-1)=wtemp(i,inl)+becp(inl,i+istart-1)
+         DO i = 1, nss
+            DO inl = 1, nkbus
+               bec( inl, i + istart - 1 ) = wtemp( i, inl ) + becp( inl, i + istart - 1 )
             END DO
          END DO
 

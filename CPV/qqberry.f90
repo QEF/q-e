@@ -29,6 +29,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use cell_base, only: a1, a2, a3
   use reciprocal_vectors, only: ng0 => gstart, gx, g
   use mp, only: mp_sum
+  use pseudopotential, only: fill_qrl
   
   implicit none
 
@@ -85,7 +86,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
      !
      ALLOCATE ( qrl(kkbeta(is), nbeta(is)*(nbeta(is)+1)/2, nqlc(is)) )
      !
-     call fill_qrl (is, SIZE(qrl, 1), SIZE(qrl, 2), SIZE(qrl, 3), qrl)
+     call fill_qrl ( is, qrl )
      ! now the radial part
      do l=1,nqlc(is)                        
         xg= gmes !only orthorombic cells

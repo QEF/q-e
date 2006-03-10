@@ -54,7 +54,7 @@ MODULE pseudopotential
   PUBLIC :: interpolate_beta, interpolate_qradb, exact_beta
   PUBLIC :: rhoc1_sp, rhocp_sp, build_cctab, tpstab, chkpstab
   PUBLIC :: build_pstab, vps_sp, dvps_sp
-  PUBLIC :: check_tables
+  PUBLIC :: check_tables, fill_qrl
 
   !  ----------------------------------------------
 
@@ -838,25 +838,20 @@ CONTAINS
       !
       LOGICAL, INTENT(IN) :: tpre
       !
-      INTEGER :: is, iv, l, il, ltmp, i0, ir, jv, ijv
+      INTEGER :: is, iv, l, il, ltmp, i0, ir, jv, ijv, ierr
+      INTEGER :: nr
       REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:), &
            qrl(:,:,:)
       REAL(DP) :: xg, xrg
 
       IF( ALLOCATED(  qradx ) ) DEALLOCATE(  qradx )
       IF( ALLOCATED( dqradx ) ) DEALLOCATE( dqradx )
+      !
       ALLOCATE(  qradx( mmx, nbetam*(nbetam+1)/2, lmaxq, nsp ) )
-      IF (tpre) ALLOCATE( dqradx( mmx, nbetam*(nbetam+1)/2, lmaxq, nsp ) )
+      !
+      IF ( tpre ) ALLOCATE( dqradx( mmx, nbetam*(nbetam+1)/2, lmaxq, nsp ) )
 
       DO is = 1, nvb
-         !
-         IF ( tpre ) THEN
-            ALLOCATE( dfint( kkbeta(is) ) )
-            ALLOCATE( djl  ( kkbeta(is) ) )
-            ALLOCATE( jltmp( kkbeta(is) ) )
-         END IF
-         allocate( fint( kkbeta(is) ) )
-         allocate( jl  ( kkbeta(is) ) )
          !
          !     qqq and beta are now indexed and taken in the same order
          !     as vanderbilts ppot-code prints them out
@@ -864,17 +859,30 @@ CONTAINS
          WRITE( stdout,*) ' nlinit  nh(is), ngb, is, kkbeta, lmaxq = ', &
      &        nh(is), ngb, is, kkbeta(is), nqlc(is)
          !
-         ALLOCATE ( qrl(kkbeta(is), nbeta(is)*(nbeta(is)+1)/2, nqlc(is)) )
-         call fill_qrl (is,  SIZE(qrl, 1), SIZE(qrl, 2), SIZE(qrl, 3), qrl)
+         nr = kkbeta(is)
+         !
+         IF ( tpre ) THEN
+            ALLOCATE( djl  ( nr ) )
+            ALLOCATE( jltmp( nr ) )
+            ALLOCATE( dfint( nr ) )
+         END IF
+         !
+         ALLOCATE( fint( nr ) )
+         ALLOCATE( jl  ( nr ) )
+         ALLOCATE( qrl( nr, nbeta(is)*(nbeta(is)+1)/2, nqlc(is)) )
+         !
+         call fill_qrl ( is, qrl )
+         ! qrl = 0.0d0
          !
          do l = 1, nqlc( is )
             !
             do il = 1, mmx
                !
-               xg = sqrt( refg * (il-1) )
-               call sph_bes (kkbeta(is), r(1,is), xg, l-1, jl)
+               xg = sqrt( refg * DBLE(il-1) )
                !
-               if(tpre) then
+               call sph_bes ( nr, r(1,is), xg, l-1, jl(1) )
+               !
+               if( tpre ) then
                   !
                   ltmp = l - 1
                   !
@@ -891,65 +899,70 @@ CONTAINS
                         jltmp(:) = 0.0d0
                      end if
                   else
-                     call sph_bes (kkbeta(is)+1-i0, r(i0,is), xg, ltmp-1, jltmp )
+                     call sph_bes ( nr + 1 - i0, r(i0,is), xg, ltmp-1, jltmp )
                   end if
-                  do ir = i0, kkbeta(is)
+                  do ir = i0, nr
                      xrg = r(ir,is) * xg
                      djl(ir) = jltmp(ir) * xrg - l * jl(ir)
                   end do
                   if (i0.eq.2) djl(1) = djl(2)
                endif
                !
+               ! 
                do iv = 1, nbeta(is)
                   do jv = 1, iv
-                     ijv = iv*(iv-1)/2 + jv
+                     ijv = iv * ( iv - 1 ) / 2 + jv
                      !
                      !      note qrl(r)=r^2*q(r)
                      !
-                     do ir=1,kkbeta(is)
-                        fint(ir) = qrl(ir,ijv,l)*jl(ir)
+                     do ir = 1, nr
+                        fint( ir ) = qrl( ir, ijv, l ) * jl( ir )
                      end do
                      if (oldvan(is)) then
                         call herman_skillman_int &
-                             (kkbeta(is),fint,rab(1,is),qradx(il,ijv,l,is))
+                             (nr,fint(1),rab(1,is),qradx(il,ijv,l,is))
                      else
                         call simpson_cp90 &
-                             (kkbeta(is),fint,rab(1,is),qradx(il,ijv,l,is))
+                             (nr,fint(1),rab(1,is),qradx(il,ijv,l,is))
                      end if
                      !
                      if( tpre ) then
-                        do ir = 1, kkbeta(is)
+                        do ir = 1, nr
                            dfint(ir) = qrl(ir,ijv,l) * djl(ir)
                         end do
                         if ( oldvan(is) ) then
                            call herman_skillman_int &
-                                (kkbeta(is),dfint,rab(1,is),dqradx(il,ijv,l,is))
+                                (nr,dfint(1),rab(1,is),dqradx(il,ijv,l,is))
                         else
                            call simpson_cp90 &
-                                (kkbeta(is),dfint,rab(1,is),dqradx(il,ijv,l,is))
+                                (nr,dfint(1),rab(1,is),dqradx(il,ijv,l,is))
                         end if
                      end if
                      !
                   end do
                end do
+               !
+               !
             end do
          end do
          !
+         DEALLOCATE (  jl )
+         DEALLOCATE ( qrl )
+         DEALLOCATE ( fint  )
+         !
+         if ( tpre ) then
+            DEALLOCATE(jltmp)
+            DEALLOCATE(djl)
+            DEALLOCATE ( dfint )
+         end if
+         !
          WRITE( stdout,*)
          WRITE( stdout,'(20x,a)') '    qqq '
+         !
          do iv=1,nbeta(is)
             WRITE( stdout,'(8f9.4)') (qqq(iv,jv,is),jv=1,nbeta(is))
          end do
          WRITE( stdout,*)
-         !
-         DEALLOCATE ( qrl )
-         deallocate(jl)
-         deallocate(fint)
-         if (tpre) then
-            deallocate(jltmp)
-            deallocate(djl)
-            deallocate(dfint)
-         end if
          !
       end do
 
@@ -1453,6 +1466,79 @@ CONTAINS
 
       RETURN
     END SUBROUTINE exact_beta
+
+!
+!
+!-----------------------------------------------------------------------
+      subroutine fill_qrl( is, qrl )
+!-----------------------------------------------------------------------
+!
+! fill l-components of Q(r) as in Vanderbilt's approach
+!
+      use uspp_param, only: qfunc, nqf, qfcoef, rinner, lll, nbeta, &
+                       kkbeta
+      use atom,       only: r
+      use kinds,      only: DP
+      use io_global,  only: stdout
+!
+      implicit none
+      integer, intent(in) :: is
+      real(DP), intent(out) :: qrl( :, :, : )
+      !
+      integer :: iv, jv, ijv, lmin, lmax, l, ir, i
+      integer :: dim1, dim2, dim3
+      !
+      dim1 = SIZE( qrl, 1 )
+      dim2 = SIZE( qrl, 2 )
+      dim3 = SIZE( qrl, 3 )
+      !
+      ! WRITE( 6, * ) 'DEBUG fill_qrl = ', dim1, dim2, dim3
+      !
+      IF ( kkbeta(is) > dim1 ) &
+           CALL errore ('fill_qrl', 'bad 1st dimension for array qrl', 1)
+      !
+      do iv = 1, nbeta(is)
+         !
+         do jv = 1, iv
+            !
+            ijv = (iv-1)*iv/2 + jv
+            !
+            IF ( ijv > dim2) &
+                 CALL errore ('fill_qrl', 'bad 2nd dimension for array qrl', 2)
+
+            ! lmin = lll(jv,is) - lll(iv,is) + 1
+            ! lmax = lmin + 2 * lll(iv,is)
+            !
+            lmin = lll(iv,is) - lll(jv,is) + 1
+            lmax = lmin + 2 * lll(jv,is)
+
+            ! WRITE( stdout, * ) ' is, jv, iv = ', is, jv, iv
+            ! WRITE( stdout, * ) ' lll jv, iv = ', lll(jv,is), lll(iv,is)
+
+            IF ( lmin < 1 .OR. lmax > dim3) THEN
+                 WRITE( stdout, * ) ' lmin, lmax = ', lmin, lmax
+                 CALL errore ('fill_qrl', 'bad 3rd dimension for array qrl', 3)
+            END IF
+
+             do l = lmin, lmax
+               do ir = 1, kkbeta(is)
+                  if ( r(ir,is) >= rinner(l,is) ) then
+                     qrl(ir,ijv,l)=qfunc(ir,iv,jv,is)
+                  else
+                     qrl(ir,ijv,l)=qfcoef(1,l,iv,jv,is)
+                     do i = 2, nqf(is)
+                        qrl(ir,ijv,l)=qrl(ir,ijv,l) +      &
+                             qfcoef(i,l,iv,jv,is) * r(ir,is)**(2*i-2)
+                     end do
+                     qrl(ir,ijv,l) = qrl(ir,ijv,l) * r(ir,is)**(l+1)
+                  end if
+               end do
+            end do
+         end do
+      end do
+    end subroutine fill_qrl
+
+!
 
 !  ----------------------------------------------
    END MODULE pseudopotential

@@ -694,6 +694,232 @@
 
    END SUBROUTINE runcp_uspp
 
+!
+!=----------------------------------------------------------------------------=!
+!
+   SUBROUTINE runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, &
+                                         fromscra, restart )
+  !
+      USE wave_base, ONLY: wave_steepest, wave_verlet
+      USE control_flags, ONLY: tbuff, lwf, tsde
+  !   use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
+      USE uspp, ONLY : deeq, betae => vkb
+      USE reciprocal_vectors, ONLY : gstart
+      USE electrons_base, ONLY : n=>nbsp
+      USE wannier_subroutines, ONLY: ef_potential
+      USE efield_module, ONLY: dforce_efield, tefield
+  !
+      USE gvecw, ONLY: ngw
+  !
+  !
+      USE electrons_base,   ONLY: nx=>nbnd, nupdwn, iupdwn, nbspx, nbsp
+      USE mp, ONLY: mp_sum 
+  !
+      IMPLICIT NONE
+
+      INTEGER, INTENT(in) :: nfi
+      REAL(8) :: fccc, ccc
+      REAL(8) :: ema0bg(:), dt2bye
+      REAL(8) :: rhos(:,:)
+      REAL(8) :: bec(:,:)
+      COMPLEX(8) :: c0(:,:), cm(:,:)
+      LOGICAL, OPTIONAL, INTENT(in) :: fromscra
+      LOGICAL, OPTIONAL, INTENT(in) :: restart
+!
+      REAL(8) ::  verl1, verl2, verl3
+      REAL(8), ALLOCATABLE:: emadt2(:)
+      REAL(8), ALLOCATABLE:: emaver(:)
+      COMPLEX(8), ALLOCATABLE:: c2(:), c3(:)
+      INTEGER :: i
+      INTEGER :: iflag
+      LOGICAL :: ttsde
+!
+       INTEGER    :: ierr, n_unp, nb, nsp_d, i_plus, n_dwn 
+       REAL(8)    :: intermed, ei_unp_mem, ei_unp_wfc
+       COMPLEX(8) ::  intermed3
+       INTEGER(8), ALLOCATABLE:: occup(:), occdwn(:)
+       COMPLEX(8), ALLOCATABLE:: c4(:), c5(:)
+
+! ... Controlling on sic applicanility
+!
+       IF( lwf ) &
+            &  CALL errore('Wannier function and sic are not compatibile',1)
+       IF( tefield ) &
+            &  CALL errore('Electric field and sic are not implemeted',2)
+!       
+       ALLOCATE( emadt2( ngw ) )
+       ALLOCATE( emaver( ngw ) )      
+!
+       iflag = 0
+       IF( PRESENT( fromscra ) ) THEN
+          IF( fromscra ) iflag = 1
+       END IF
+       IF( PRESENT( restart ) ) THEN
+          IF( restart ) iflag = 2
+       END IF
+!       
+       IF( iflag == 0 ) THEN
+          ttsde  = tsde
+       ELSE IF( iflag == 1 ) THEN
+          ttsde = .TRUE.
+       ELSE IF( iflag == 2 ) THEN
+          ttsde = .FALSE.
+       END IF
+!
+       ALLOCATE(c2(ngw),c3(ngw),c4(ngw),c5(ngw) )
+!
+  !
+  ! ...  set verlet variables
+  !
+!
+       verl1 = 2.0d0 * fccc
+       verl2 = 1.0d0 - verl1
+       verl3 = 1.0d0 * fccc !delt * delt / pmss(1:ngw) * fccc
+!
+       ccc    = fccc * dt2bye
+       emadt2 = dt2bye * ema0bg
+       emaver = emadt2 * verl3
+!
+       n_unp = nupdwn(1)
+       n_dwn = nupdwn(2)
+       nsp_d = iupdwn(2) - 1 
+
+       write(*,*) 'DEBUG:: in runcp_fp'
+       write(*,*) 'TOTAL BAND: nbnd :=',nx,'nbsp:=',nbsp,'nbspx:=',nbspx
+       write(*,*) 'UP STATES:',n_unp,'DWN STATES',n_dwn 
+       write(*,*) 'inizio stati dwn', iupdwn(2)
+!
+       ALLOCATE( occup(n_unp), occdwn(n_unp))
+!
+       occup(:)  = 1
+       occdwn(:) = 1
+       occdwn(n_unp)  = 0
+!
+! c0(dwn_paired) == c0(up_paired)
+! cm(dwn_paired) == cm(up_paired)
+! the nbsp dwn state has to be empty
+!
+      c0(:, iupdwn(2):iupdwn(2)-1+n_dwn) = c0(:, 1:n_dwn)
+      c0(:, nbspx) = 0.d0
+
+      IF( nx == 1 .AND. n_dwn == 0 ) THEN
+!
+           CALL dforce(bec,betae,n_unp,c0(1,n_unp),c0(1,nbsp),c2,c3,rhos(:,1))
+
+            IF( ttsde ) THEN
+             CALL wave_steepest( cm(:, n_unp), c0(:, n_unp), emaver, c2 )
+            ELSE
+             CALL wave_verlet( cm(:, n_unp), c0(:, n_unp), verl1, verl2, emaver, c2 )
+            ENDIF
+!
+           IF ( gstart == 2 ) cm(1, n_unp) = CMPLX(DBLE(cm(1, n_unp)),0.d0)
+!        
+      ELSE
+        DO i=1, n_dwn, 2
+!
+           i_plus = i + nsp_d 
+!
+          WRITE(*,*) 'AGAIN DEBUG',&
+              &'call dforce for',i,'DWN',i_plus,'AND',i+1,'DWN',i_plus+1
+!
+            CALL dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos(:,1))
+            CALL dforce(bec,betae,i,c0(1,i),c0(1,i+1),c4,c5,rhos(:,2))
+!
+          IF( iflag == 2 ) THEN
+              cm(:,i)        = c0(:,i)
+              cm(:,i+1)      = c0(:,i+1)
+           END IF
+!
+          IF( i+1 < n_unp ) THEN
+!
+            c2 = occup(i  )* (c2 + c4)  
+            c3 = occup(i+1)* (c3 + c5) 
+!
+          IF( ttsde ) THEN
+             CALL wave_steepest( cm(:, i  ), c0(:, i  ), emaver, c2 )
+             CALL wave_steepest( cm(:, i+1), c0(:, i+1), emaver, c3 )
+          ELSE
+             CALL wave_verlet( cm(:, i  ), c0(:, i  ), verl1, verl2, emaver, c2 )
+             CALL wave_verlet( cm(:, i+1), c0(:, i+1), verl1, verl2, emaver, c3 )
+          END IF
+!
+             c0(:,  i_plus) = c0(:,   i)
+             c0(:,i_plus+1) = c0(:, i+1)
+             cm(:,  i_plus) = cm(:,   i)
+             cm(:,i_plus+1) = cm(:, i+1)
+!
+              IF ( gstart == 2 ) THEN
+                cm(1,  i)       = CMPLX(DBLE(cm(1,  i)),0.d0)
+                cm(1,  i_plus)  = CMPLX(DBLE(cm(1,  i)),0.d0)
+                cm(1,  i+1)     = CMPLX(DBLE(cm(1,  i+1)),0.d0)
+                cm(1,  i_plus+1)= CMPLX(DBLE(cm(1,  i+1)),0.d0)
+              END IF
+!
+          ELSEIF( (i+1) == n_unp ) THEN
+!
+            c2 = occup(i) *(c2 + c4) 
+            c3 = c3
+!
+          IF( ttsde ) THEN
+             CALL wave_steepest( cm(:, i), c0(:, i), emaver, c2 )
+             CALL wave_steepest( cm(:, i+1), c0(:, i+1), emaver, c3 )
+          ELSE
+             CALL wave_verlet( cm(:, i), c0(:, i), verl1, verl2, emaver, c2 )
+             CALL wave_verlet( cm(:, i+1), c0(:, i+1), verl1, verl2, emaver, c3 )
+          END IF
+!
+              c0(:,  i_plus) = c0(:,   i)
+              cm(:,  i_plus) = cm(:,   i) 
+              c0(:,i_plus+1) = 0.d0
+              cm(:,i_plus+1) = 0.d0 
+!
+              IF ( gstart == 2 ) THEN
+                cm(1,  i)       = CMPLX(DBLE(cm(1,  i)),0.d0)
+                cm(1,  i_plus)  = CMPLX(DBLE(cm(1,  i)),0.d0)
+                cm(1,  i+1)     = CMPLX(DBLE(cm(1,  i+1)),0.d0)
+              END IF
+!
+          ELSEIF( MOD(n_dwn,2) == 0 .AND. i == n_dwn ) THEN
+!
+           CALL dforce(bec,betae,n_unp,c0(1,n_unp),c0(1,nbsp),c2,c3,rhos(:,1))
+             
+            IF( ttsde ) THEN
+             CALL wave_steepest( cm(:, n_unp), c0(:, n_unp), emaver, c2 )
+            ELSE
+             CALL wave_verlet( cm(:, n_unp), c0(:, n_unp), verl1, verl2, emaver, c2 )
+            ENDIF 
+!
+           IF ( gstart == 2 ) cm(1, n_unp) = CMPLX(DBLE(cm(1, n_unp)),0.d0)
+!        
+        ENDIF
+!
+      END DO 
+     ENDIF
+!
+! for the unpaired electron
+! IT IS "TRUE" ONLY WHEN THE POT is NORM_CONSERVING
+!
+         intermed  = -2.d0 * sum(c2 * conjg(c0(:,n_unp)))
+         intermed3 =         sum(c0(:,n_unp) * conjg(c0(:,n_unp)))
+           CALL mp_sum ( intermed )
+           CALL mp_sum ( intermed3 )
+!
+           write(6,*) 'Debug_only_NC::  <psi|psi> = ', intermed3, '  ei_unp(au) = ', intermed
+!
+       DEALLOCATE( occup, occdwn)
+       DEALLOCATE( emadt2 )
+       DEALLOCATE( emaver )
+       DEALLOCATE(c2, c4)
+       DEALLOCATE(c3, c5)
+!
+!==== end of loop which updates electronic degrees of freedom
+!
+!     buffer for wavefunctions is unit 21
+!
+       IF(tbuff) REWIND 21
+
+    END SUBROUTINE runcp_uspp_force_pairing
+
 
 !=----------------------------------------------------------------------------=!
    END MODULE runcp_module
