@@ -30,7 +30,7 @@ SUBROUTINE ions()
      !
      ! ... first we save restart info for this configuration
      !
-     CALL punch( '' )
+     CALL punch( 'config' )
      !
      ! ... then we move the ions
      !

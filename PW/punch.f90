@@ -1,12 +1,12 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE punch()
+SUBROUTINE punch( what )
   !----------------------------------------------------------------------------
   !
   ! ... This routine is called at the end of the run to save to a file
@@ -28,8 +28,9 @@ SUBROUTINE punch()
   !
   IMPLICIT NONE
   !
-  INTEGER :: ik, i, ibnd, kunittmp
-  LOGICAL :: exst
+  CHARACTER(LEN=*) :: what
+  INTEGER          :: ik, i, ibnd, kunittmp
+  LOGICAL          :: exst
   !
   !
 #if defined (__OLDPUNCH)
@@ -95,11 +96,11 @@ SUBROUTINE punch()
   !
 #if defined (__OLDPUNCH)
   !
-  CALL writefile_new( 'all', iunpun, et, wg, kunittmp )
+  CALL writefile_new( TRIM( what ), iunpun, et, wg, kunittmp )
   !
 #else
   !
-  CALL pw_writefile( 'all' )
+  CALL pw_writefile( TRIM( what ) )
   !
 #endif
   !
