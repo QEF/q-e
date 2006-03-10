@@ -137,10 +137,10 @@ SUBROUTINE iosys()
                             iprint_      => iprint, &
                             nosym_       => nosym, &
                             modenum_     => modenum, &
-                            reduce_io, ethr, lscf, lbfgs, lmd, lpath, lneb, &
-                            lsmd, lphonon, ldamped, lraman, lrescale_t, &
-                            lmetadyn, lconstrain, lcoarsegrained, restart, &
-                            twfcollect
+                            reduce_io, langevin_rescaling, ethr, lscf, lbfgs, &
+                            lmd, lpath, lneb, lsmd, lphonon, ldamped, lraman, &
+                            lrescale_t, lmetadyn, lconstrain, lcoarsegrained, &
+                            restart, twfcollect
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
   !
@@ -1006,9 +1006,17 @@ SUBROUTINE iosys()
      !
   CASE( 'rescaling' )
      !
-     lrescale_t  = .TRUE.
-     temperature = tempw
-     tolp_       = tolp
+     lrescale_t         = .TRUE.
+     langevin_rescaling = .FALSE.
+     temperature        = tempw
+     tolp_              = tolp
+     !
+  CASE( 'langevin' )
+     !
+     lrescale_t         = .TRUE.
+     langevin_rescaling = .TRUE.
+     temperature        = tempw
+     tolp_              = tolp
      !
   CASE DEFAULT
      !

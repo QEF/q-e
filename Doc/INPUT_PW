@@ -575,6 +575,7 @@ phase_space    CHARACTER ( defauld = 'full' )
 ion_temperature   
                CHARACTER
                'rescaling'     : velocity rescaling
+               'langevin'      : ion dynamics is over-damped Langevin
                'not_controlled': default
 
 tempw          REAL ( default = 300.D0 )

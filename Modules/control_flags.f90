@@ -188,22 +188,23 @@ MODULE control_flags
   ! ... logical flags controlling the execution
   !
   LOGICAL, PUBLIC :: &
-    lfixatom,         &! if .TRUE. some atom is kept fixed
-    lscf,             &! if .TRUE. the calc. is selfconsistent
-    lbfgs,            &! if .TRUE. the calc. is a relaxation based on new BFGS scheme
-    lmd,              &! if .TRUE. the calc. is a dynamics
-    lmetadyn,         &! if .TRUE. the calc. is a meta-dynamics
-    lpath,            &! if .TRUE. the calc. is a path optimizations
-    lneb,             &! if .TRUE. the calc. is NEB dynamics
-    lsmd,             &! if .TRUE. the calc. is string dynamics
-    lwf,              &! if .TRUE. the calc. is with wannier functions
-    lphonon,          &! if .TRUE. the calc. is phonon
-    lraman,           &! if .TRUE. the calc. is raman
-    lconstrain,       &! if .TRUE. the calc. is constraint
-    ldamped,          &! if .TRUE. the calc. is a damped dynamics
-    lrescale_t,       &! if .TRUE. the ionic temperature is rescaled
-    lcoarsegrained,   &! if .TRUE. a coarse-grained phase-space is used
-    restart            ! if .TRUE. restart from results of a preceding run
+    lfixatom,           &! if .TRUE. some atom is kept fixed
+    lscf,               &! if .TRUE. the calc. is selfconsistent
+    lbfgs,              &! if .TRUE. the calc. is a relaxation based on new BFGS scheme
+    lmd,                &! if .TRUE. the calc. is a dynamics
+    lmetadyn,           &! if .TRUE. the calc. is a meta-dynamics
+    lpath,              &! if .TRUE. the calc. is a path optimizations
+    lneb,               &! if .TRUE. the calc. is NEB dynamics
+    lsmd,               &! if .TRUE. the calc. is string dynamics
+    lwf,                &! if .TRUE. the calc. is with wannier functions
+    lphonon,            &! if .TRUE. the calc. is phonon
+    lraman,             &! if .TRUE. the calc. is raman
+    lconstrain,         &! if .TRUE. the calc. is constraint
+    ldamped,            &! if .TRUE. the calc. is a damped dynamics
+    lrescale_t,         &! if .TRUE. the ionic temperature is rescaled
+    langevin_rescaling, &! if .TRUE. the ionic dynamics is overdamped Langevin
+    lcoarsegrained,     &! if .TRUE. a coarse-grained phase-space is used
+    restart              ! if .TRUE. restart from results of a preceding run
   !
   ! ... pw self-consistency
   !

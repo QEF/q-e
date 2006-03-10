@@ -341,7 +341,7 @@ MODULE read_namelists_module
        !
        ion_velocities = 'default' 
        !
-       ! ... ( 'nose' | 'not_controlled' | 'rescaling' )
+       ! ... ( 'nose' | 'not_controlled' | 'rescaling' | 'langevin' )
        !
        ion_temperature = 'not_controlled'
        !
@@ -396,9 +396,9 @@ MODULE read_namelists_module
        ! ... BFGS defaults
        !
        bfgs_ndim        = 1
-       trust_radius_max = 0.8D0
-       trust_radius_min = 1.D-3
-       trust_radius_ini = 0.5D0
+       trust_radius_max = 0.8D0  ! bohr
+       trust_radius_min = 1.D-4  ! bohr
+       trust_radius_ini = 0.5D0  ! bohr
        w_1              = 0.01D0
        w_2              = 0.50D0
        !

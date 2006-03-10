@@ -121,7 +121,7 @@ MODULE dynamics_module
       USE ener,          ONLY : etot
       USE force_mod,     ONLY : force
       USE control_flags, ONLY : istep, nstep, conv_ions, lconstrain, &
-                                lfixatom, lrescale_t
+                                lfixatom, lrescale_t, langevin_rescaling
       !
       USE constraints_module
       !
@@ -241,7 +241,17 @@ MODULE dynamics_module
             !
             IF ( delta_t == 1.D0 ) THEN
                !
-               CALL thermalize( temp_new, temperature )
+               IF ( langevin_rescaling ) THEN
+                  !
+                  CALL start_therm()
+                  !
+                  temp_new = temperature
+                  !
+               ELSE
+                  !
+                  CALL thermalize( temp_new, temperature )
+                  !
+               END IF
                !
             ELSE IF ( delta_t < 0 ) THEN
                !
@@ -408,7 +418,7 @@ MODULE dynamics_module
       !------------------------------------------------------------------------
       !
       ! ... This routine performs one step of structural relaxation using
-      ! ... the projected-Verlet algorithm. 
+      ! ... the preconditioned-projected-Verlet algorithm. 
       !
       USE ions_base,     ONLY : nat, nsp, ityp, tau, if_pos
       USE cell_base,     ONLY : alat
@@ -423,24 +433,22 @@ MODULE dynamics_module
       !
       ! ... local variables
       !
-      REAL(DP) :: etotold
-      INTEGER  :: i, na
-      LOGICAL  :: file_exists
+      REAL(DP), ALLOCATABLE :: step(:,:)
+      REAL(DP)              :: norm_step, etotold
+      INTEGER               :: i, na
+      LOGICAL               :: file_exists
+      !
+      REAL(DP), PARAMETER :: step_max = 0.6D0  ! bohr
       !
       REAL(DP), EXTERNAL :: DNRM2
       !
+      !
+      ALLOCATE( step( 3, nat ) )
       !
       tau_old(:,:) = tau(:,:)
       tau_new(:,:) = 0.D0
       vel(:,:)     = 0.D0
       acc(:,:)     = 0.D0
-      !
-      IF ( istep == 1 ) THEN
-         !f
-         WRITE( UNIT = stdout, &
-                FMT = '(/,5X,"Damped Dynamics Calculation")' )
-         !
-      END IF
       !
       CALL seqopn( 4, 'md', 'FORMATTED', file_exists )
       !
@@ -466,8 +474,6 @@ MODULE dynamics_module
          !
       END IF
       !
-      istep = istep + 1
-      !
       IF ( lconstrain ) THEN
          !
          IF ( monitor_constr ) THEN
@@ -478,7 +484,7 @@ MODULE dynamics_module
             !
             DO i = 1, nconstr 
                !
-               WRITE( *, '(5X,I3,2X,F16.10)' ) i, target(i)
+               WRITE( stdout, '(5X,I3,2X,F16.10)' ) i, target(i)
                !
             END DO
             !
@@ -489,6 +495,51 @@ MODULE dynamics_module
             ! ... for the calculation of the lagrange multipliers)
             !
             CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
+            !
+            WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
+            !
+            DO na = 1, nat
+               !
+               WRITE( stdout, &
+                      '(5X,"atom ",I3," type ",I2,3X,"force = ",3F14.8)' ) &
+                   na, ityp(na), force(:,na)
+               !
+            END DO
+            !
+            WRITE( stdout, &
+                   '(/5X,"Total force = ",F12.6)') DNRM2( 3*nat, force, 1 )
+            !
+         END IF
+         !
+      END IF
+      !
+      istep = istep + 1
+      !
+      IF ( istep == 1 ) THEN
+         !
+         WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"Damped Dynamics Calculation")' )
+         !
+      ELSE
+         !
+         ! ... check if convergence for structural minimization is achieved
+         !
+         conv_ions = ( etotold - etot ) < epse
+         conv_ions = conv_ions .AND. ( MAXVAL( ABS( force ) ) < epsf )
+         !
+         IF ( conv_ions ) THEN
+            !
+            WRITE( UNIT = stdout, &
+                   FMT = '(/,5X,"Damped Dynamics: convergence achieved in " &
+                          & ,I3," steps")' ) istep
+            WRITE( UNIT = stdout, &
+                   FMT = '(/,5X,"End of damped dynamics calculation")' )
+            WRITE( UNIT = stdout, &
+                   FMT = '(/,5X,"Final energy = ",F18.10," ryd"/)' ) etot
+            !
+            CALL output_tau( .TRUE. )
+            !
+            RETURN
             !
          END IF
          !
@@ -501,15 +552,19 @@ MODULE dynamics_module
       !
       vel(:,:) = tau(:,:) - tau_old(:,:)
       !
-      acc(:,:) = force(:,:) / alat
+      CALL force_precond( istep, force, etotold )
       !
-      CALL force_precond( istep, acc, etotold )
-      !
-      acc(:,:) = acc(:,:) / amconv
+      acc(:,:) = force(:,:) / alat / amconv
       !
       CALL project_velocity()
       !
-      tau_new(:,:) = tau(:,:) + vel(:,:) + dt**2 * acc(:,:)
+      step(:,:) = vel(:,:) + dt**2 * acc(:,:)
+      !
+      norm_step = DNRM2( 3*nat, step, 1 )
+      !
+      step(:,:) = step(:,:) / norm_step
+      !
+      tau_new(:,:) = tau(:,:) + step(:,:) * MIN( norm_step, step_max / alat )
       !
       IF ( lconstrain .AND..NOT. monitor_constr ) THEN
          !
@@ -518,40 +573,7 @@ MODULE dynamics_module
          CALL check_constraint( nat, tau_new, tau, &
                                 force, if_pos, ityp, alat, dt**2, amconv )
          !
-         WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
-         !
-         DO na = 1, nat
-            !
-            WRITE( stdout, &
-                   '(5X,"atom ",I3," type ",I2,3X,"force = ",3F14.8)' ) &
-                na, ityp(na), force(:,na)
-            !
-         END DO
-         !
-         WRITE( stdout, '(/5X,"Total force = ",F12.6)') DNRM2( 3*nat, force, 1 )
-         !
       END IF
-      !
-      ! ... check if convergence for structural minimization is achieved
-      !
-      conv_ions = ( etotold - etot ) < epse
-      conv_ions = conv_ions .AND. ( MAXVAL( ABS( force ) ) < epsf )
-      !
-      IF ( conv_ions ) THEN
-         !
-         WRITE( UNIT = stdout, &
-                FMT = '(/,5X,"Damped Dynamics: convergence achieved in ",I3, &
-                           & " steps")' ) istep
-         WRITE( UNIT = stdout, &
-                FMT = '(/,5X,"End of damped dynamics calculation")' )
-         WRITE( UNIT = stdout, &
-                FMT = '(/,5X,"Final energy = ",F18.10," ryd"/)' ) etot
-         !
-         CALL output_tau( .TRUE. )
-         !
-         RETURN
-         !
-      END IF     
       !
       ! ... save on file all the needed quantities
       !
@@ -567,6 +589,8 @@ MODULE dynamics_module
       tau(:,:) = tau_new(:,:)
       !
       CALL output_tau( .FALSE. )
+      !
+      DEALLOCATE( step )
       !
       RETURN
       !
@@ -743,7 +767,7 @@ MODULE dynamics_module
       !
       ! ... this routine computes an estimate of H^-1 by using the BFGS
       ! ... algorithm and the preconditioned gradient  pg = H^-1 * g
-      ! ... ( it works in units of alat )
+      ! ... ( it works in atomic units )
       !
       USE ener,      ONLY : etot
       USE cell_base, ONLY : alat
@@ -762,14 +786,14 @@ MODULE dynamics_module
       REAL(DP), ALLOCATABLE :: grad(:), grad_p(:), precond_grad(:)
       REAL(DP), ALLOCATABLE :: inv_hess(:,:)
       REAL(DP), ALLOCATABLE :: y(:), s(:)
-      REAL(DP), ALLOCATABLE :: Hs(:), Hy(:), yH(:)
+      REAL(DP), ALLOCATABLE :: Hy(:), yH(:)
       REAL(DP)              :: sdoty, pg_norm
       INTEGER               :: dim
       CHARACTER(LEN=256)    :: bfgs_file
       LOGICAL               :: file_exists
       !
-      INTEGER,  PARAMETER   :: nrefresh = 25
-      REAL(DP), PARAMETER   :: max_step = 0.8D0  ! in bohr
+      INTEGER,  PARAMETER   :: nrefresh    = 25
+      REAL(DP), PARAMETER   :: max_pg_norm = 0.8D0
       !
       !
       dim = 3 * nat
@@ -778,9 +802,9 @@ MODULE dynamics_module
       ALLOCATE( grad( dim ), grad_p( dim ), precond_grad( dim ) )
       ALLOCATE( y( dim ), s( dim ) )
       ALLOCATE( inv_hess( dim, dim ) )
-      ALLOCATE( Hs( dim ), Hy( dim ), yH( dim ) )       
+      ALLOCATE( Hy( dim ), yH( dim ) )       
       !
-      pos(:)  =   RESHAPE( tau,   (/ dim /) )
+      pos(:)  =   RESHAPE( tau,   (/ dim /) ) * alat
       grad(:) = - RESHAPE( force, (/ dim /) )
       !
       bfgs_file = TRIM( tmp_dir ) // TRIM( prefix ) // '.bfgs'
@@ -815,7 +839,6 @@ MODULE dynamics_module
             !
             IF ( sdoty > eps8 ) THEN
                !
-               Hs(:) = ( inv_hess(:,:) .times. s(:) )
                Hy(:) = ( inv_hess(:,:) .times. y(:) )
                yH(:) = ( y(:) .times. inv_hess(:,:) )
                !
@@ -859,8 +882,8 @@ MODULE dynamics_module
       !
       pg_norm = norm( precond_grad(:) )
       !
-      precond_grad(:) = precond_grad(:) / pg_norm * &
-                        MIN( max_step / alat, pg_norm )
+      precond_grad(:) = precond_grad(:) / pg_norm
+      precond_grad(:) = precond_grad(:) * MIN( pg_norm, max_pg_norm )
       !
       force(:,:) = - RESHAPE( precond_grad(:), (/ 3, nat /) )
       !
@@ -868,7 +891,7 @@ MODULE dynamics_module
       DEALLOCATE( grad, grad_p, precond_grad )
       DEALLOCATE( inv_hess )
       DEALLOCATE( y, s )
-      DEALLOCATE( Hs, Hy, yH )
+      DEALLOCATE( Hy, yH )
       !
 #endif
       !
@@ -929,17 +952,17 @@ MODULE dynamics_module
       IMPLICIT NONE
       !
       INTEGER  :: na, nb
-      REAL(DP) :: total_mass, KT, sigma, coeff, ek, ml(3), system_temp
+      REAL(DP) :: total_mass, kt, sigma, coeff, ek, ml(3), system_temp
       INTEGER  :: hist(-1000:1000), index
       !
       !
-      KT = temperature / convert_E_to_temp
+      kt = temperature / convert_E_to_temp
       !
       ! ... starting velocities have a Maxwell-Boltzmann distribution
       !
       DO na = 1, nat
          !
-         coeff = ( mass(na) / ( tpi * KT) )**( 3.D0 / 2.D0 )
+         coeff = ( mass(na) / ( tpi*kt ) )**( 3.D0 / 2.D0 )
          !
          sigma = SQRT( KT / mass(na) )
          !
@@ -953,12 +976,10 @@ MODULE dynamics_module
       !
       vel = vel * DBLE( if_pos )
       !
-      ! ... if there is inversion symmetry, equivalent atoms have 
-      ! ... opposite velocities
-      !
-      ml(:) = 0.D0
-      !
       IF ( invsym ) THEN
+         !
+         ! ... if there is inversion symmetry, equivalent atoms have 
+         ! ... opposite velocities
          !
          DO na = 1, nat
             !
@@ -974,7 +995,10 @@ MODULE dynamics_module
          !
       ELSE
          !
-         ! ... put total linear momentum equal zero if all atoms move
+         ! ... put total linear momentum equal zero if all atoms
+         ! ... are free to move
+         !
+         ml(:) = 0.D0
          !
          IF ( .NOT. lfixatom ) THEN
             !
