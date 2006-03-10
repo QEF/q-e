@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,7 +18,7 @@ PROGRAM pwscf
   USE noncollin_module, ONLY : noncolin
   USE control_flags,    ONLY : nstep, istep, conv_elec, conv_ions, &
                                lpath, lmetadyn
-  USE io_files,         ONLY : nd_nmbr, iunpath, tmp_dir
+  USE io_files,         ONLY : nd_nmbr
   USE ions_base,        ONLY : tau
   USE path_variables,   ONLY : conv_path
   USE check_stop,       ONLY : check_stop_init
@@ -126,8 +126,6 @@ PROGRAM pwscf
         END DO main_loop
         !
      END IF
-     !
-     CALL punch()
      !
      CALL stop_run( conv_ions )
      !

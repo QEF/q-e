@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,7 @@ SUBROUTINE ions()
   !
   ! ... recover from a previous run, if appropriate
   !
-  IF ( restart .and. lscf ) CALL restart_in_ions()
+  IF ( restart .AND. lscf ) CALL restart_in_ions()
   !
   IF ( lforce ) CALL forces()
   !
@@ -28,7 +28,13 @@ SUBROUTINE ions()
   !
   IF ( lmd .OR. lbfgs ) THEN
      !
-     CALL move_ions
+     ! ... first we save restart info for this configuration
+     !
+     CALL punch( '' )
+     !
+     ! ... then we move the ions
+     !
+     CALL move_ions()
      !
      ! ... save restart information
      !
