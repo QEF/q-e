@@ -61,6 +61,7 @@ SUBROUTINE openfil()
      !
 #else
      !
+     CLOSE ( unit=iunwfc, status='delete')
      CALL pw_readfile( 'wave', ierr )
      !
 #endif
