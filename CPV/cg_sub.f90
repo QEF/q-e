@@ -111,10 +111,13 @@
       complex(dp),allocatable :: hpsi0(:,:)
       real(dp) :: sca
       logical  :: newscheme, firstiter
+      integer :: maxiter3
 !
 !
       newscheme=.false.
       firstiter=.true.
+
+      maxiter3=250
 
       allocate(hpsi0(ngw,n))
       fion2=0.d0
@@ -668,7 +671,7 @@
          endif
 
           iter3=0
-          do while(enever.gt.ene0 .and. iter3.lt.4)
+          do while(enever.gt.ene0 .and. iter3.lt.maxiter3)
             iter3=iter3+1
             passov=passov*0.5d0
             cm(1:ngw,1:n,1,1)=c0(1:ngw,1:n,1,1)+spasso*passov*hi(1:ngw,1:n)
@@ -718,7 +721,7 @@
            endif
 
           end do
-  
+          if(iter3 == maxiter3) write(stdout,*) 'missed minimun: iter3 = maxiter3'
           c0(:,:,1,1)=cm(:,:,1,1)
           restartcg=.true.
           ene_ok=.false.
