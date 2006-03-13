@@ -106,8 +106,7 @@ MODULE metadyn_io
       !
       DO i = 1, iter
          !
-         filename = TRIM( metadyn_dir ) // '/' // &
-                  & 'iteration' // TRIM( iotk_index( i ) ) // '.xml'
+         filename = 'iteration' // TRIM( iotk_index( i ) ) // '.xml'
          !
          CALL iotk_link( iunit, "ITERATION" // TRIM( iotk_index( i ) ), &
                          filename, CREATE = .FALSE., BINARY = .FALSE. )
@@ -117,6 +116,9 @@ MODULE metadyn_io
       CALL iotk_close_write( iunit )
       !
       ! ... information about the last step
+      !
+      filename = TRIM( metadyn_dir ) // '/' // &
+               & 'iteration' // TRIM( iotk_index( iter ) ) // '.xml'
       !
       CALL iotk_open_write( iunit, FILE = filename, ROOT = 'iteration' // &
                           & TRIM( iotk_index( iter ) ), BINARY = .FALSE. )
