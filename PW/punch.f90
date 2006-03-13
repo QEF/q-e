@@ -36,12 +36,12 @@ SUBROUTINE punch( what )
 #if defined (__OLDPUNCH)
   !
   WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
-       TRIM( prefix ) // '.save'
+      TRIM( prefix ) // '.save'
   !
 #else
   !
   WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
-       TRIM( prefix ) // '.save-new'
+      TRIM( prefix ) // '.save-new'
   !
 #endif
   !
@@ -52,7 +52,7 @@ SUBROUTINE punch( what )
   IF ( noncolin ) THEN
      !
      IF ( nks == 1 .AND. reduce_io ) &
-        CALL davcio(evc_nc, nwordwfc, iunwfc, 1, +1 )
+        CALL davcio( evc_nc, nwordwfc, iunwfc, 1, +1 )
      !
   ELSE
      !
@@ -104,7 +104,7 @@ SUBROUTINE punch( what )
   !
 #endif
   !
-  IF (la2F) CALL enfdos ( )
+  IF ( la2F ) CALL enfdos()
   !
   RETURN
   !

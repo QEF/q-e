@@ -30,11 +30,17 @@ SUBROUTINE stop_run( flag )
   LOGICAL             :: exst
   !
   !
-  ! ... here we write all the data required to restart
-  !
-  CALL punch( 'all' )
-  !
-  IF ( lpath ) CALL io_path_stop()
+  IF ( lpath ) THEN
+     !
+     CALL io_path_stop()
+     !
+  ELSE
+     !
+     ! ... here we write all the data required to restart
+     !
+     CALL punch( 'all' )
+     !
+  END IF
   !
   ! ... iunwfc contains wavefunctions and is kept open during
   ! ... the execution - close the file and save it (or delete it 
