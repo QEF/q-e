@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -27,14 +27,22 @@ SUBROUTINE davcio( vect, nword, unit, nrec, io )
   !
   INTEGER :: ios
     ! integer variable for I/O control
+  LOGICAL :: opnd
   !
   !
   CALL start_clock( 'davcio' )
   !
-  IF ( unit  <= 0 ) CALL errore( 'davcio', 'wrong unit', 1 )
-  IF ( nrec  <= 0 ) CALL errore( 'davcio', 'wrong record number', 2 )
-  IF ( nword <= 0 ) CALL errore( 'davcio', 'wrong record length', 3 )
-  IF ( io    == 0 ) CALL infomsg('davcio', 'nothing to do?', -1 )
+  INQUIRE( UNIT = unit )
+  !
+  IF ( unit  <= 0 ) CALL errore(  'davcio', 'wrong unit', 1 )
+  IF ( nrec  <= 0 ) CALL errore(  'davcio', 'wrong record number', 2 )
+  IF ( nword <= 0 ) CALL errore(  'davcio', 'wrong record length', 3 )
+  IF ( io    == 0 ) CALL infomsg( 'davcio', 'nothing to do?', -1 )
+  !
+  INQUIRE( UNIT = unit, OPENED = opnd )
+  !
+  IF ( .NOT. opnd ) &
+     CALL errore(  'davcio', 'unit is not opened', 1 )
   !
   ios = 0
   !
@@ -51,6 +59,7 @@ SUBROUTINE davcio( vect, nword, unit, nrec, io )
   IF ( ios /= 0 ) THEN
      !
      WRITE( stdout, '(1X,"IOS = ",I2)' ) ios
+     !
      CALL errore( 'davcio', 'i/o error in davcio', unit )
      !
   END IF
