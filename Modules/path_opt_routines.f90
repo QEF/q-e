@@ -78,8 +78,6 @@ MODULE path_opt_routines
           !
           projection = ( vel(:) .dot. force_versor(:) )
           !
-          WRITE( *, * ) index, norm_vel, projection / norm_vel
-          !
           vel(:) = MAX( 0.D0, projection ) * force_versor(:)
           !
        ELSE
