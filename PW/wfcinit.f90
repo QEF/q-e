@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 PWSCF group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -98,9 +98,7 @@ SUBROUTINE wfcinit()
           !
           RETURN
           !
-       END IF
-       !
-       IF ( startingwfc == 'atomic' ) THEN
+       ELSE IF ( startingwfc == 'atomic' ) THEN
           !
           IF ( natomwfc >= nbnd ) THEN
              !
@@ -136,7 +134,8 @@ SUBROUTINE wfcinit()
        !
        DO ik = 1, nks
           !
-          current_k = ik 
+          current_k = ik
+          !
           IF ( lsda ) current_spin = isk(ik)
           !
           IF ( nks > 1 ) READ( iunigk ) npw, igk
@@ -156,7 +155,7 @@ SUBROUTINE wfcinit()
           g2kin(:) = g2kin(:) * tpiba2
           !
           IF ( lda_plus_u ) &
-               CALL davcio( swfcatom, nwordatwfc, iunat, ik, - 1 )
+             CALL davcio( swfcatom, nwordatwfc, iunat, ik, - 1 )
           !
           IF ( startingwfc == 'atomic' ) THEN
              !
@@ -270,20 +269,18 @@ SUBROUTINE wfcinit()
           IF ( noncolin ) THEN
              !
              IF ( nks == 1 .AND. reduce_io ) &
-                 CALL davcio( evc_nc, nwordwfc, iunwfc, 1, -1 )
+                CALL davcio( evc_nc, nwordwfc, iunwfc, 1, -1 )
              !
           ELSE
              !
              IF ( nks == 1 .AND. reduce_io ) &
-                 CALL davcio( evc, nwordwfc, iunwfc, 1, -1 )
+                CALL davcio( evc, nwordwfc, iunwfc, 1, -1 )
              !
           ENDIF
           !
           RETURN
           !
-       END IF
-       !
-       IF ( startingwfc == 'atomic' ) THEN
+       ELSE IF ( startingwfc == 'atomic' ) THEN
           !
           IF ( natomwfc >= nbnd ) THEN
              !
@@ -349,11 +346,13 @@ SUBROUTINE wfcinit()
           !
           IF ( noncolin ) THEN
              !
-             IF ( lda_plus_u ) CALL davcio(swfcatom_nc,nwordatwfc,iunat,ik,-1)
+             IF ( lda_plus_u ) &
+                CALL davcio( swfcatom_nc, nwordatwfc, iunat, ik, -1 )
              !
           ELSE
              !
-             IF ( lda_plus_u ) CALL davcio(swfcatom,nwordatwfc,iunat,ik,-1)
+             IF ( lda_plus_u ) &
+                CALL davcio( swfcatom, nwordatwfc, iunat, ik, -1 )
              !
           END IF
           !
@@ -385,8 +384,8 @@ SUBROUTINE wfcinit()
                          !
                          wfcatom_nc(ig,ipol,ibnd) = &
                               CMPLX( rr*COS( arg ), rr*SIN( arg ) ) / &
-                                    ( ( xk(1,ik) + g(1,igk(ig) ) )**2 +       &
-                                      ( xk(2,ik) + g(2,igk(ig) ) )**2 +       &
+                                    ( ( xk(1,ik) + g(1,igk(ig) ) )**2 + &
+                                      ( xk(2,ik) + g(2,igk(ig) ) )**2 + &
                                       ( xk(3,ik) + g(3,igk(ig) ) )**2 + 1.0D0 )
                       END DO
                       !
@@ -426,8 +425,8 @@ SUBROUTINE wfcinit()
                          !
                          wfcatom_nc(ig,ipol,ibnd) = &
                               CMPLX( rr*COS( arg ), rr*SIN( arg ) ) / &
-                                     ( ( xk(1,ik) + g(1,igk(ig)) )**2 +       &
-                                       ( xk(2,ik) + g(2,igk(ig)) )**2 +       &
+                                     ( ( xk(1,ik) + g(1,igk(ig)) )**2 + &
+                                       ( xk(2,ik) + g(2,igk(ig)) )**2 + &
                                        ( xk(3,ik) + g(3,igk(ig)) )**2 + 1.D0 )
                       END DO
                       !
@@ -464,9 +463,6 @@ SUBROUTINE wfcinit()
                 !
                 CALL cinitcgg( npwx, npw, n_starting_wfc, &
                                nbnd, wfcatom_nc, wfcatom_nc, etatom )
-                !
-               ! CALL cinitcgg_nc( npwx, npw, n_starting_wfc, nbnd, &
-               !                   wfcatom_nc, wfcatom_nc, etatom, okvan, npol )
                 !
              ELSE
                 !

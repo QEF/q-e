@@ -1938,9 +1938,8 @@ MODULE pw_restart
     SUBROUTINE read_wavefunctions( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      ! ... This routines reads wavefunctions from the new file format, 
-      ! ... writes then into the old format, opening and closing files
-      ! ... Presently a hack, to be fixed at a later stage (PG)
+      ! ... This routines reads wavefunctions from the new file format and
+      ! ... writes them into the old format
       !
       USE cell_base,            ONLY : tpiba2
       USE lsda_mod,             ONLY : nspin, isk
@@ -1969,12 +1968,15 @@ MODULE pw_restart
       INTEGER              :: ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
       INTEGER, ALLOCATABLE :: itmp(:,:)
-      LOGICAL              :: exst
+      LOGICAL              :: exst, opnd
       REAL(DP)             :: scalef
       !
       !
-      nwordwfc = 2 * nbnd * npwx * npol
-      CALL diropn (iunwfc, 'wfc', nwordwfc, exst)
+      INQUIRE( UNIT = iunwfc, OPENED = opnd )
+      !
+      IF ( .NOT. opnd ) &
+         CALL errore( 'read_wavefunctions', &
+                    & 'wavefunctions unit (iunwfc) is not opened', 1 )
       !
       IF ( ionode ) THEN
          !
@@ -2208,8 +2210,6 @@ MODULE pw_restart
          CALL iotk_close_read( iunpun )
          !
       END IF
-      !
-      CLOSE (iunwfc, STATUS='keep')
       !
       RETURN
       !

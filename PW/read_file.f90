@@ -21,7 +21,7 @@ SUBROUTINE read_file()
   USE force_mod,        ONLY : force
   USE klist,            ONLY : nkstot, nks, xk, wk
   USE lsda_mod,         ONLY : lsda, nspin, current_spin, isk
-  USE wvfct,            ONLY : nbnd, nbndx, et, wg
+  USE wvfct,            ONLY : nbnd, nbndx, et, wg, npwx
   USE symme,            ONLY : irt, nsym, ftau, s
   USE ktetra,           ONLY : tetra, ntetra 
   USE extfield,         ONLY : forcefield, tefield
@@ -33,7 +33,7 @@ SUBROUTINE read_file()
   USE spin_orb,         ONLY : so
   USE scf,              ONLY : rho, rho_core, vr
   USE vlocal,           ONLY : strf
-  USE io_files,         ONLY : tmp_dir, prefix, iunpun
+  USE io_files,         ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE restart_module,   ONLY : readfile_new
   USE uspp_param,       ONLY : nbeta, jjj, tvanp
   USE noncollin_module, ONLY : noncolin, npol
@@ -43,8 +43,9 @@ SUBROUTINE read_file()
   !
   IMPLICIT NONE
   !
-  INTEGER               :: i, ik, ibnd, nb, nt, ios, ierr
-  REAL(DP)              :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
+  INTEGER  :: i, ik, ibnd, nb, nt, ios, ierr
+  REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
+  LOGICAL  :: exst
   !
   !
   !
@@ -97,7 +98,107 @@ SUBROUTINE read_file()
   ! ... in parallel execution, only root proc read the file
   ! ... and then broadcast the values to all other procs
   !
-#if ! defined(__OLDPUNCH)
+#if defined(__OLDPUNCH)
+  !
+  !-------------------------------------------------------------------------------
+  ! ... standard punch-file
+  !-------------------------------------------------------------------------------
+  !
+  ALLOCATE( et( nbnd, nkstot ), wg( nbnd, nkstot ) )
+  !
+  CALL readfile_new( 'nowave', iunpun, et, wg, kunit, 0, 0, ierr )
+  !
+  CALL errore( 'read_file ', 'problem reading file ' // &
+             & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
+  !
+  ! ... parallel execution: distribute across pools k-points and
+  ! ... related variables (not a smart implementation)
+  !
+  nks = nkstot
+  !
+  ! ... nks and nkstot are redefined by the following routine
+  !
+  CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
+  !
+  ! ... check whether LSDA
+  !
+  IF ( lsda ) THEN
+     !
+     nspin = 2
+     npol  = 1
+     !
+  ELSE IF ( noncolin ) THEN
+     !
+     nspin        = 4
+     npol         = 2
+     current_spin = 1
+     !
+  ELSE
+     !
+     nspin        = 1
+     npol         = 1
+     current_spin = 1
+     !
+  END IF
+  !
+  ! ... check for so pseudopotentials
+  !
+  DO nt = 1, nsp
+     !
+     so(nt) = (nbeta(nt) > 0)
+     !
+     DO nb = 1, nbeta(nt)
+        !
+        so(nt) = so(nt) .AND. ( ABS( jjj(nb,nt) ) > 1.D-7 )
+        !
+     END DO
+     !
+  END DO
+  !
+  cell_factor = 1.D0
+  lmovecell = .FALSE.
+  !
+  ! ... allocate memory for G- and R-space fft arrays
+  !
+  CALL allocate_fft()
+  CALL ggen()
+  !
+  ! ... allocate the potential
+  !
+  CALL allocate_locpot()
+  CALL allocate_nlpot()
+  !
+  ! ... allocate wavefunctions and related quantities (including et and wg)
+  !
+  nbndx = nbnd
+  !
+  CALL allocate_wfc()
+  !
+  CALL poolscatter( nbnd , nkstot, et, nks, et )
+  CALL poolscatter( nbnd , nkstot, wg, nks, wg )
+  !
+  ! ... read the charge density
+  !
+  CALL io_pot( - 1, 'rho', rho, nspin )
+  !
+  ! read the potential
+  !
+  CALL io_pot( - 1, 'pot', vr, nspin )
+  !
+  ! ... re-calculate the local part of the pseudopotential vltot
+  ! ... and the core correction charge (if any) - This is done here
+  ! ... for compatibility with the previous version of read_file
+  !
+  CALL init_vloc()
+  !
+  CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
+                   nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
+  !
+  CALL setlocal()
+  !
+  CALL set_rhoc()
+  !
+else
   !
   !-------------------------------------------------------------------------------
   ! ... XML punch-file
@@ -161,7 +262,7 @@ SUBROUTINE read_file()
   !
   okvan = ANY ( tvanp(1:nsp) )
   !
-  ! Check for spin-orbit pseudopotentials
+  ! ... check for spin-orbit pseudopotentials
   !
   DO nt = 1, nsp
      !
@@ -201,112 +302,19 @@ SUBROUTINE read_file()
   ! ... recalculate the potential
   !
   CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-       ehart, etxc, vtxc, etotefield, charge, vr )
+                 nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                 ehart, etxc, vtxc, etotefield, charge, vr )
   !
-  ! ... read the wavefunctions, write them in 'distributed' for 
+  ! ... reads the wavefunctions and writes them in 'distributed' form 
   ! ... to unit iunwfc (for compatibility)
+  !
+  nwordwfc = 2*nbnd*npwx*npol
+  !
+  CALL diropn( iunwfc, 'wfc', nwordwfc, exst )
   !
   CALL pw_readfile( 'wave', ierr )
   !
-#else
-  !
-  !-------------------------------------------------------------------------------
-  ! ... standard punch-file
-  !-------------------------------------------------------------------------------
-  !
-  ALLOCATE( et( nbnd, nkstot ), wg( nbnd, nkstot ) )
-  !
-  CALL readfile_new( 'nowave', iunpun, et, wg, kunit, 0, 0, ierr )
-  !
-  CALL errore( 'read_file ', 'problem reading file ' // &
-             & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
-  !
-  ! ... parallel execution: distribute across pools k-points and
-  ! ... related variables (not a smart implementation)
-  !
-  nks = nkstot
-  !
-  ! ... nks and nkstot are redefined by the following routine
-  !
-  CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
-  !
-  ! ... check whether LSDA
-  !
-  IF ( lsda ) THEN
-     !
-     nspin = 2
-     npol  = 1
-     !
-  ELSE IF ( noncolin ) THEN
-     !
-     nspin        = 4
-     npol         = 2
-     current_spin = 1
-     !
-  ELSE
-     !
-     nspin        = 1
-     npol         = 1
-     current_spin = 1
-     !
-  END IF
-  !
-  ! Check for so pseudopotentials
-  !
-  DO nt = 1, nsp
-     !
-     so(nt) = (nbeta(nt) > 0)
-     !
-     DO nb = 1, nbeta(nt)
-        !
-        so(nt) = so(nt) .AND. ( ABS( jjj(nb,nt) ) > 1.D-7 )
-        !
-     END DO
-     !
-  END DO
-  cell_factor = 1.D0
-  lmovecell = .FALSE.
-  !
-  ! ... allocate memory for G- and R-space fft arrays
-  !
-  CALL allocate_fft()
-  CALL ggen()
-  !
-  ! ... allocate the potential
-  !
-  CALL allocate_locpot()
-  CALL allocate_nlpot()
-  !
-  ! ... allocate wavefunctions and related quantities (including et and wg)
-  !
-  nbndx = nbnd
-  !
-  CALL allocate_wfc()
-  !
-  CALL poolscatter( nbnd , nkstot, et, nks, et )
-  CALL poolscatter( nbnd , nkstot, wg, nks, wg )
-  !
-  ! ... read the charge density
-  !
-  CALL io_pot( - 1, 'rho', rho, nspin )
-  !
-  ! read the potential
-  !
-  CALL io_pot( - 1, 'pot', vr, nspin )
-  !
-  ! ... re-calculate the local part of the pseudopotential vltot
-  ! ... and the core correction charge (if any) - This is done here
-  ! ... for compatibility with the previous version of read_file
-  !
-  CALL init_vloc()
-  !
-  CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
-                   nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
-  !
-  CALL setlocal()
-  !
-  CALL set_rhoc()
+  CLOSE( UNIT = iunwfc, STATUS = 'KEEP' )
   !
 #endif
   !

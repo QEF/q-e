@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -30,25 +30,28 @@ SUBROUTINE openfil()
   !
   IMPLICIT NONE
   !
-  LOGICAL  :: exst
-  INTEGER  :: ierr
-  REAL(DP) :: edum(1,1), wdum(1,1)
-  CHARACTER(len=256) :: tmp_dir_sav
+  LOGICAL            :: exst
+  INTEGER            :: ierr
+  REAL(DP)           :: edum(1,1), wdum(1,1)
+  CHARACTER(LEN=256) :: tmp_dir_save
   !
   !
   ! ... nwordwfc is the record length for the direct-access file
   ! ... containing wavefunctions
   !
-  ! we'll swap wfc_dir for tmp_dir for large files
-  tmp_dir_sav = tmp_dir
+  ! ... we'll swap wfc_dir for tmp_dir for large files
   !
-  !  WRITE( stdout, '(5X,"openfil: wfc storage path = ",A)' ) TRIM(wfc_dir)
-  IF (.not.(wfc_dir=='undefined')) THEN
+  tmp_dir_save = tmp_dir
+  !
+  IF ( .NOT. ( wfc_dir == 'undefined' ) ) THEN
+     !
      WRITE( stdout, '(5X,"writing wfc files to a dedicated directory")' )
+     !
      tmp_dir = wfc_dir
-  ENDIF
+     !
+  END IF
   !
-  nwordwfc = 2 * nbnd * npwx * npol
+  nwordwfc = 2*nbnd*npwx*npol
   !
   CALL diropn( iunwfc, 'wfc', nwordwfc, exst )
   !
@@ -61,14 +64,16 @@ SUBROUTINE openfil()
      !
 #else
      !
-     CLOSE ( unit=iunwfc, status='delete')
+     ! ... wavefunctions are read from the "save" file and rewritten (directly
+     ! ... in pw_readfile) using the interal format
+     !
      CALL pw_readfile( 'wave', ierr )
      !
 #endif
      !                   
      IF ( ierr > 0 ) THEN
         !
-        WRITE( stdout, '(5X,"Cannot read wfc file: not found")' )
+        WRITE( stdout, '(5X,"Cannot read wfc : file not found")' )
         !
         startingwfc = 'atomic'
         !
@@ -82,10 +87,9 @@ SUBROUTINE openfil()
   ! ... iunocc contains the atomic occupations computed in new_ns
   ! ... it is opened and closed for each reading-writing operation  
   !
-  nwordatwfc = 2 * npwx * natomwfc * npol
+  nwordatwfc = 2*npwx*natomwfc*npol
   !
-  IF ( lda_plus_u ) &
-     CALL diropn( iunat, 'atwfc', nwordatwfc, exst )
+  IF ( lda_plus_u ) CALL diropn( iunat, 'atwfc', nwordatwfc, exst )
   !
   ! ... iunigk contains the number of PW and the indices igk
   ! ... Note that unit 15 is reserved for error messages 
@@ -96,7 +100,7 @@ SUBROUTINE openfil()
   !
   IF ( lelfield ) CALL diropn( iunefield, 'ewfc', nwordwfc, exst )
   !
-  tmp_dir = tmp_dir_sav
+  tmp_dir = tmp_dir_save
   !
   RETURN
   !
