@@ -131,7 +131,7 @@ MODULE pw_restart
       CALL errore( 'pw_writefile ', &
                    'no free units to write wavefunctions', ierr )
       !
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.new-save'
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
       !
       ! ... create the main restart directory
       !
@@ -770,7 +770,7 @@ MODULE pw_restart
       !
       ierr = 0
       !
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.new-save'
+      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
       !
       INQUIRE( FILE = TRIM( dirname ) // '/' // TRIM( xmlpun ), EXIST = lexist )
       !

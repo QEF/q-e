@@ -32,7 +32,7 @@ SUBROUTINE read_config_from_file()
   WRITE( *, '(/5X,"*****  NEW PUNCH  *****")' )
   !
   WRITE( stdout, '(/5X,"Starting configuration read from file ",A16)') &
-      TRIM( prefix ) // ".new-save"
+      TRIM( prefix ) // ".save"
   !
   ! ... check if restart file is present, if yes read config parameters
   !
@@ -41,7 +41,7 @@ SUBROUTINE read_config_from_file()
   IF ( ierr == 1 ) THEN
      !
      WRITE( stdout, '(/5X,"Failed to open file ",A16)' ) &
-         TRIM( prefix ) // ".new-save"
+         TRIM( prefix ) // ".save"
      !
      WRITE( stdout, '(/5X,"Using input configuration")' )
      !

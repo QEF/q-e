@@ -136,7 +136,7 @@ MODULE restart_module
 
     !
     IF( ionode ) THEN
-       CALL seqopn (ndw, 'save', 'unformatted', exst)
+       CALL seqopn (ndw, 'rest', 'unformatted', exst)
        REWIND ndw
     END IF
 
@@ -670,7 +670,7 @@ MODULE restart_module
     WRITE( stdout, '(/,5x,"Reading file ",a," ... ",$)') TRIM(prefix)//'.save'
     !
     IF( ionode ) THEN
-       CALL seqopn (ndr, 'save', 'unformatted', exst)
+       CALL seqopn (ndr, 'rest', 'unformatted', exst)
        IF (.NOT.exst) THEN
           CLOSE (unit = ndr, status = 'delete')
           ierr = 33
@@ -1245,7 +1245,7 @@ MODULE restart_module
     WRITE( stdout, '(/,5x,"Reading file ",a)') TRIM( prefix )//'.save'
     !
     IF( ionode ) THEN
-       CALL seqopn (ndr, 'save', 'unformatted', exst)
+       CALL seqopn (ndr, 'rest', 'unformatted', exst)
        IF ( .NOT. exst ) THEN
           CLOSE (unit = ndr, status = 'delete')
           ierr = 1

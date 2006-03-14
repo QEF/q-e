@@ -48,7 +48,6 @@ SUBROUTINE read_file()
   LOGICAL  :: exst
   !
   !
-  !
   ! ... here we read the variables that dimension the system
   ! ... in parallel execution, only root proc reads the file
   ! ... and then broadcasts the values to all other procs
@@ -72,7 +71,7 @@ SUBROUTINE read_file()
   CALL pw_readfile( 'dim',   ierr )
   !
   CALL errore( 'read_file ', 'problem reading file ' // &
-             & TRIM( tmp_dir ) // TRIM( prefix ) // '.new-save', ierr )
+             & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
   !
 #endif
   !
@@ -198,7 +197,7 @@ SUBROUTINE read_file()
   !
   CALL set_rhoc()
   !
-else
+#else
   !
   !-------------------------------------------------------------------------------
   ! ... XML punch-file

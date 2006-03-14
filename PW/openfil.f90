@@ -65,7 +65,7 @@ SUBROUTINE openfil()
 #else
      !
      ! ... wavefunctions are read from the "save" file and rewritten (directly
-     ! ... in pw_readfile) using the interal format
+     ! ... in pw_readfile) using the internal format
      !
      CALL pw_readfile( 'wave', ierr )
      !

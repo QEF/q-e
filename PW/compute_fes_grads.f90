@@ -349,7 +349,7 @@ SUBROUTINE metadyn()
   LOGICAL            :: lfirst_scf = .TRUE.
   !
   !
-  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.new-save'
+  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
   !
   iter = first_metadyn_iter
   !
