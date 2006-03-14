@@ -12,7 +12,7 @@ subroutine read_ncpp (np, iunps)
   !
   USE kinds, only: dp
   USE parameters, ONLY: nchix, lmaxx, ndmx
-  use atom,  only: zmesh, msh, mesh, xmin, dx, r, rab, chi, oc, &
+  use atom,  only: zmesh, mesh, xmin, dx, r, rab, chi, oc, &
        nchi, lchi, rho_at, rho_atc, numeric, nlcc
   use pseud, only: cc, alpc, zp, aps, alps, nlc, nnl, lmax, lloc, &
        a_nlcc, b_nlcc, alpha_nlcc
@@ -132,15 +132,15 @@ subroutine read_ncpp (np, iunps)
   enddo
   do ir = 1, mesh (np)
      if ( r (ir, np) > rcut) then
-        msh(np) = ir
+        kkbeta(np) = ir
         go to 5
      end if
   end do
-  msh(np) = mesh(np)
+  kkbeta(np) = mesh(np)
   !
-  ! ... force msh to be odd for simpson integration (obsolete?)
+  ! ... force kkbeta to be odd for simpson integration (obsolete?)
   !
-5 msh(np) = 2 * ( ( msh(np) + 1 ) / 2) - 1
+5 kkbeta(np) = 2 * ( ( kkbeta(np) + 1 ) / 2) - 1
   !
   vloc_at (:, np) = 0.d0
   if (.not. numeric(np)) then
@@ -151,7 +151,7 @@ subroutine read_ncpp (np, iunps)
           CALL bachel( alps(1,0,np), aps(1,0,np), 1, lmax(np) )
      !
      do i = 1, nlc (np)
-        do ir = 1, msh(np)
+        do ir = 1, kkbeta(np)
            vloc_at (ir, np) = vloc_at (ir, np) - zp(np) * e2 * &
                  cc (i, np) * erf ( sqrt (alpc (i, np)) * r (ir, np) ) &
                  / r (ir, np)
@@ -191,17 +191,16 @@ subroutine read_ncpp (np, iunps)
   !====================================================================
   ! convert to separable (KB) form
   !
-  kkbeta (np) = msh (np)
   dion (:,:,np) = 0.d0
   nb = 0
   do l = 0, lmax (np)
      if (l /= lloc (np) ) then
         nb = nb + 1
         ! betar is used here as work space
-        do ir = 1, msh (np)
+        do ir = 1, kkbeta(np)
            betar (ir, nb, np) = chi(ir, l+1, np) **2 * vnl(ir, l)
         end do
-        call simpson (msh (np), betar (1, nb, np), rab (1, np), vll )
+        call simpson (kkbeta (np), betar (1, nb, np), rab (1, np), vll )
         dion (nb, nb, np) = 1.d0 / vll
         ! betar stores projectors  |beta(r)> = |V_nl(r)phi(r)>
         do ir = 1, kkbeta (np)

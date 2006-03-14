@@ -17,8 +17,8 @@ subroutine readpp
   USE pseudo_types
   USE read_upf_module , ONLY : read_pseudo_upf
   USE read_uspp_module, ONLY : readvan, readrrkj
-  USE upf_to_internal
-  USE atom,       ONLY : chi, nchi, oc, mesh, rab, numeric, xmin, dx
+  USE upf_to_internal,  ONLY : set_pseudo_upf
+  USE atom,       ONLY : chi, nchi, oc, mesh, msh, r, rab, numeric, xmin, dx
   USE uspp_param, ONLY : iver, tvanp, newpseudo
   USE ions_base,  ONLY : ntyp => nsp
   USE funct,      ONLY : get_iexch, get_icorr, get_igcx, get_igcc
@@ -29,13 +29,15 @@ subroutine readpp
   USE uspp_param, ONLY : lll, nbeta
   implicit none
   !
+  real(DP), parameter :: rcut = 10.d0, eps = 1.0D-08
+  !
   TYPE (pseudo_upf) :: upf
   !
   character(len=256) :: file_pseudo
   ! file name complete with path
   real(DP), allocatable :: chi2r(:)
-  real(DP):: norm, eps = 1.0D-08
-  integer :: iunps, isupf, l, nt, nb, ios
+  real(DP):: norm
+  integer :: iunps, isupf, l, nt, nb, ir, ios
   integer :: iexch_, icorr_, igcx_, igcc_
   integer, external :: pseudo_type
   !
@@ -124,6 +126,23 @@ subroutine readpp
            CALL errore( 'readpp','inconsistent DFT read',nt)
         end if
      end if
+     !
+     ! the radial grid is defined up to r(mesh) but we introduce 
+     ! an auxiliary variable msh to limit the grid up to rcut=10 a.u. 
+     ! This is used to cut off the numerical mnoise arising from the
+     ! large-r tail in cases like the integration of V_loc-Z/r
+     !
+     do ir = 1, mesh (nt)
+        if (r (ir, nt) > rcut) then
+           msh (nt) = ir
+           goto 5
+        endif
+     enddo
+     msh (nt) = mesh (nt)
+     !
+     ! force msh to be odd for simpson integration (maybe obsolete)
+     !
+5    msh (nt) = 2 * ( (msh (nt) + 1) / 2) - 1
      !
      ! Check that there are no zero wavefunctions
      !

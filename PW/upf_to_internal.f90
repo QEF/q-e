@@ -30,7 +30,7 @@ subroutine set_pseudo_upf (is, upf)
   ! PWSCF modules
   !
   USE parameters, ONLY: ndmx
-  USE atom,  ONLY: zmesh, mesh, msh, dx, r, rab, &
+  USE atom,  ONLY: zmesh, mesh, dx, r, rab, &
        chi, oc, nchi, lchi, jchi, rho_at, rho_atc, nlcc
   USE pseud, ONLY: lloc, lmax, zp
   USE uspp_param, ONLY: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, &
@@ -43,12 +43,11 @@ subroutine set_pseudo_upf (is, upf)
   !
   implicit none
   !
-  real(DP), parameter :: rcut = 10.d0
-  integer :: is, ir
+  integer :: is
   !
   !     Local variables
   !
-  integer :: nb
+  integer :: nb, ir
   TYPE (pseudo_upf) :: upf
   !
   !
@@ -118,18 +117,6 @@ subroutine set_pseudo_upf (is, upf)
   lloc(is) = 0
   !!!
   vloc_at(1:upf%mesh,is) = upf%vloc(1:upf%mesh)
-
-  do ir = 1, mesh (is)
-    if (r (ir, is) .gt.rcut) then
-        msh (is) = ir
-        goto 5
-    endif
-  enddo
-  msh (is) = mesh (is)
-  !
-  ! force msh to be odd for simpson integration
-  !
-5 msh (is) = 2 * ( (msh (is) + 1) / 2) - 1
 
   zv(is) = zp(is)  !!! maybe not needed: it is done in setup
 

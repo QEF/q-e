@@ -17,7 +17,6 @@ SUBROUTINE setup()
   ! ... 3) generates k-points corresponding to the crystal symmetry
   !
   ! ... Calculated parameters:
-  ! ...   msh       mesh point (atomic grid) for which R(msh) > Rcut = 10a.u.
   ! ...   zv        charge of each atomic type
   ! ...   nelec     total number of electrons
   ! ...   nbnd      total number of bands
@@ -59,7 +58,7 @@ SUBROUTINE setup()
   USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                  tetra, ntetra, ltetra
   USE symme,              ONLY : s, t_rev, irt, ftau, nsym, invsym
-  USE atom,               ONLY : r, oc, chi, nchi, lchi, jchi, mesh, msh
+  USE atom,               ONLY : r, oc, chi, nchi, lchi, jchi, mesh
   USE pseud,              ONLY : zp
   USE wvfct,              ONLY : nbnd, nbndx, gamma_only
   USE control_flags,      ONLY : tr2, ethr, alpha0, beta0, lscf, lmd, lpath, &
@@ -88,7 +87,6 @@ SUBROUTINE setup()
   ! ... local variables
   !
   REAL(DP), PARAMETER :: &
-      rcut = 10.D0,   &!  cut-off radius for radial integrations
       eps  = 1.0D-12   !  small number
   INTEGER :: & 
       na,             &!
@@ -126,28 +124,6 @@ SUBROUTINE setup()
   !
   IF ( nimage > 1 .AND. .NOT. lpath ) &
      CALL errore( 'setup', 'images parallelization not permitted', 1 )
-  !
-  DO nt = 1, ntyp
-     !
-     DO ir = 1, mesh(nt)
-        !
-        IF ( r(ir,nt) > rcut ) THEN
-           !
-           msh(nt) = ir
-           !
-           GO TO 5
-           !
-        END IF
-        !
-     END DO
-     !
-     msh(nt) = mesh(nt)
-     !
-     ! ... force msh to be odd for simpson integration
-     !
-5    msh(nt) = 2 * ( ( msh(nt) + 1 ) / 2 ) - 1
-     !
-  END DO
   !
   ! ... Compute the ionic charge for each atom type
   !
