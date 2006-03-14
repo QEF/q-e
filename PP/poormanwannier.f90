@@ -57,7 +57,9 @@ PROGRAM poormanwannier
   ! 
   !   Now allocate space for pwscf variables, read and check them. 
   ! 
-  CALL read_file 
+  CALL read_file ( )
+  !
+  CALL openfil_pp ( ) 
   !
   CALL projection( first_band, last_band)
   ! 

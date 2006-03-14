@@ -144,9 +144,9 @@ PROGRAM projwfc
   ! 
   !   Now allocate space for pwscf variables, read and check them. 
   ! 
-  CALL read_file 
-  CALL openfil_pp
-
+  CALL read_file ( )
+  !
+  CALL openfil_pp ( )
   ! 
   !   decide Gaussian broadening
   !
