@@ -58,7 +58,6 @@ PROGRAM poormanwannier
   !   Now allocate space for pwscf variables, read and check them. 
   ! 
   CALL read_file 
-  CALL openfil_pp
   !
   CALL projection( first_band, last_band)
   ! 
@@ -120,6 +119,10 @@ SUBROUTINE projection (first_band, last_band)
   WRITE( stdout, '(/5x,"Calling projection .... ")') 
   IF ( gamma_only ) WRITE( stdout, '(5x,"gamma-point specific algorithms are used")') 
   ! 
+  iunat = 13
+  nwordatwfc = 2 * npwx * natomwfc
+  CALL diropn( iunat, 'atwfc', nwordatwfc, exst )
+  !
   ALLOCATE(proj (natomwfc, nbnd, nkstot) ) 
   ALLOCATE(wfcatom (npwx, natomwfc) ) 
   ! Allocate the array containing <beta|wfcatom>

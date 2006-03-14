@@ -42,34 +42,21 @@ SUBROUTINE openfil_pp()
   CALL diropn( iunwfc, 'wfc', nwordwfc, exst )
   !
   IF ( .NOT. exst ) THEN
+#if defined __OLDPUNCH
      ndr      = 4
-     kunittmp = 1
 #  ifdef __PARA
      kunittmp = kunit
+# else
+     kunittmp = 1
 #  endif
      !
      CALL readfile_new( 'wave', ndr, edum, wdum, kunittmp, nwordwfc, &
                         iunwfc, ierr )
      IF ( ierr > 0 ) &
+#endif
         call errore ('openfil_pp','file '//TRIM( prefix )//'.wfc'//' not found',1)     
      twfcollect=.not.exst
   END IF
-  !
-  ! ... Needed for LDA+U
-  !
-  ! ... iunat contains the orthogonalized wfcs
-  !
-  iunat = 13
-  nwordatwfc = 2 * npwx * natomwfc
-  !
-  IF ( lda_plus_u ) &
-     CALL diropn( iunat, 'atwfc', nwordatwfc, exst )
-  !
-  ! ... iunigk contains the number of PW and the indices igk
-  ! ... Note that unit 15 is reserved for error messages 
-  !
-  iunigk = 16
-  CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
   !
   RETURN
   !
