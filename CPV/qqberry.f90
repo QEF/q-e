@@ -92,8 +92,8 @@ subroutine qqberry2( gqq,gqqm, ipol)
         xg= gmes !only orthorombic cells
         call bess(xg,l,kkbeta(is),r(1,is),jl)
         do iv= 1,nbeta(is)
-           do jv=1,iv
-              ijv = (iv-1)*iv/2 + jv
+           do jv=iv,nbeta(is)
+              ijv = (jv-1)*jv/2 + iv
 !     
 !     note qrl(r)=r^2*q(r)
 !
@@ -107,7 +107,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
                  call simpson (kkbeta(is),fint,rab(1,is),qradb2(iv,jv,l,is))
               endif
               qradb2(iv,jv,l,is)=  c*qradb2(iv,jv,l,is)
-              qradb2(jv,iv,l,is)=  qradb2(iv,jv,l,is)
+              if ( iv /= jv ) qradb2(jv,iv,l,is)=  qradb2(iv,jv,l,is)
            end do
         end do
      end do

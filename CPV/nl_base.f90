@@ -356,8 +356,8 @@
       !
       do is = 1, nsp
          do iv = 1, nh(is)
-            do jv = 1, iv
-               ijv = (iv-1)*iv/2 + jv
+            do jv = iv, nh(is)
+               ijv = (jv-1)*jv/2 + iv
                isa = 0
                do ism = 1, is - 1
                   isa = isa + na(ism)
@@ -654,8 +654,8 @@ subroutine dennl( bec, denl )
   denl=0.d0
   do is=1,nsp
      do iv=1,nh(is)
-        do jv=1, iv
-           ijv = (iv-1)*iv/2 + jv
+        do jv=iv,nh(is)
+           ijv = (jv-1)*jv/2 + iv
            isa=0
            do ism=1,is-1
               isa=isa+na(ism)

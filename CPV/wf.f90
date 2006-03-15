@@ -857,7 +857,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
            DO iv = 1, nh(is)
               inl = ish(is) + (iv-1)*na(is) + ia
               jv = iv 
-              ijv=(iv-1)*iv/2 + jv
+              ijv=(jv-1)*jv/2 + iv
               qv( 1 : nnrbx ) = 0.D0 
               DO ig=1,ngb
                  qv(npb(ig))=eigrb(ig,isa)*qgb(ig,ijv,is)
@@ -899,9 +899,9 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                     END DO
                  END DO
               END IF
-              DO jv = 1, iv-1
+              DO jv = iv+1, nh(is)
                  jnl = ish(is) + (jv-1)*na(is) + ia
-                 ijv = (iv-1)*iv/2 + jv
+                 ijv = (jv-1)*jv/2 + iv
                  qv( 1:nnrbx ) = 0.D0
                  DO ig=1,ngb
                     qv(npb(ig))=eigrb(ig,isa)*qgb(ig,ijv,is)

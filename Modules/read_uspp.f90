@@ -98,7 +98,6 @@ CONTAINS
     !
     !   Local variables
 
-    real(DP), allocatable :: qrl(:,:,:) ! needed by old file versions
     real(DP)                                                     &
          &       exfact,        &! index of the exchange and correlation used 
          &       etotpseu,      &! total pseudopotential energy
@@ -386,25 +385,9 @@ CONTAINS
     !
     if (iver(1,is) == 1) then
        !
-       !   old version: read the q(r) here and fit them with the Vanderbilt's form
+       !   old version: read the q_l(r) and fit them with the Vanderbilt's form
        !
-       ALLOCATE ( qrl(kkbeta(is), nbeta(is)*(nbeta(is)+1)/2, nqlc(is)) )
-       ijv = 0
-       do iv=1,nbeta(is)
-          do jv=iv,nbeta(is)
-             ijv = ijv + 1
-             lmin=lll(jv,is)-lll(iv,is)+1
-             lmax=lmin+2*lll(iv,is)
-             do l=lmin,lmax
-                read(iunps,*, err=100, iostat=ios) &
-                     (qrl(ir,ijv,l),ir=1,kkbeta(is))
-             end do
-          end do
-       end do
-       !
-       call fit_qrl(is, qrl)
-       !
-       DEALLOCATE (qrl)
+       call fit_qrl(iunps, is)
        !
     end if
     !
@@ -452,7 +435,7 @@ CONTAINS
   end subroutine readvan
 
   !-----------------------------------------------------------------------
-  subroutine fit_qrl(is, qrl)
+  subroutine fit_qrl(iunps, is)
     !-----------------------------------------------------------------------
     !
     ! find coefficients qfcoef that fit the pseudized qrl in US PP
@@ -461,36 +444,43 @@ CONTAINS
     !
     !
     implicit none
-    integer, intent(in) :: is
-    real (kind=DP) :: qrl(:,:,:)
+    integer, intent(in) :: iunps, is
     !
-    real (kind=DP), allocatable :: a(:,:), ainv(:,:), b(:), x(:)
+    real (kind=DP), allocatable :: qrl(:,:), a(:,:), ainv(:,:), b(:), x(:)
     real (kind=DP) :: deta
     integer :: iv, jv, ijv, lmin, lmax, l, ir, irinner, i,j
     !
     !
     allocate ( a(nqf(is),nqf(is)), ainv(nqf(is),nqf(is)) )
     allocate ( b(nqf(is)), x(nqf(is)) )
+    ALLOCATE ( qrl(kkbeta(is), nqlc(is)) )
     !
-    IF ( kkbeta(is) > SIZE(qrl,1) ) &
-         CALL errore ('fit_qrl', 'bad 1st dimension for array qrl', 1)
     ijv = 0
     do iv=1,nbeta(is)
        do jv=iv,nbeta(is)
           ijv = ijv + 1
-          IF ( ijv > SIZE(qrl,2)) &
-               CALL errore ('fit_qrl', 'bad 2nd dimension for array qrl', 2)
-          lmin=lll(jv,is)-lll(iv,is)+1
-          lmax=lmin+2*lll(iv,is)
-          IF ( lmax >  SIZE(qrl,3)) &
-               CALL errore ('fit_qrl', 'bad 3rd dimension for array qrl', 3)
+          !
+          ! original version, assuming lll(jv) >= lll(iv) 
+          !   lmin=lll(jv,is)-lll(iv,is)+1
+          !   lmax=lmin+2*lll(iv,is)
+          ! note that indices run from 1 to Lmax+1, not from 0 to Lmax
+          !
+          lmin = ABS( lll(jv,is) - lll(iv,is) ) + 1
+          lmax =      lll(jv,is) + lll(iv,is)   + 1
+          IF ( lmin < 1 .OR. lmax >  SIZE(qrl,2)) &
+               CALL errore ('fit_qrl', 'bad 2rd dimension for array qrl', 1)
+          !
+          !  read q_l(r) for all l
+          !
+          read(iunps,*, err=100) &
+                  ( (qrl(ir,l),ir=1,kkbeta(is)), l=lmin,lmax)
           !
           do l=lmin,lmax
              !
              ! reconstruct rinner
              !
              do ir=kkbeta(is),1,-1
-                if ( abs(qrl(ir,ijv,l)-qfunc(ir,iv,jv,is)) > 1.0d-6) go to 10
+                if ( abs(qrl(ir,l)-qfunc(ir,iv,jv,is)) > 1.0d-6) go to 10
              end do
 10           irinner = ir+1
              rinner(l,is) = r(irinner,is)
@@ -502,14 +492,14 @@ CONTAINS
              b(:)   = 0.d0
              do i = 1, nqf(is)
                 do ir=1,irinner
-                   b(i) = b(i) + r(ir,is)**(2*i-2+l+1) * qrl(ir,ijv,l)
+                   b(i) = b(i) + r(ir,is)**(2*i-2+l+1) * qrl(ir,l)
                 end do
                 do j = i, nqf(is)
                    do ir=1,irinner
                       a(i,j) = a(i,j) + r(ir,is)**(2*i-2+l+1) * &
                            r(ir,is)**(2*j-2+l+1) 
                    end do
-                   if (j>i) a(j,i) = a(i,j) 
+                   if (j > i) a(j,i) = a(i,j) 
                 end do
              end do
              !
@@ -517,40 +507,16 @@ CONTAINS
              !
              do i = 1, nqf(is)
                 qfcoef(i,l,iv,jv,is) = dot_product(ainv(i,:),b(:))
-                qfcoef(i,l,jv,iv,is) = qfcoef(i,l,iv,jv,is)
+                if (iv /= jv) qfcoef(i,l,jv,iv,is) = qfcoef(i,l,iv,jv,is)
              end do
           end do
        end do
     end do
     !
-    deallocate ( x, b , ainv, a )
+    deallocate ( qrl, x, b , ainv, a )
+    return
     !
-    ! test: recalculate qrl
-    !
-    !ijv = 0
-    !do iv=1,nbeta(is)
-    !   do jv=iv,nbeta(is)
-    !      ijv = ijv + 1
-    !      lmin=lll(jv,is)-lll(iv,is)+1
-    !      lmax=lmin+2*lll(iv,is)
-    !      do l=lmin,lmax
-    !         do ir=1,kkbeta(is)
-    !            if (r(ir,is).ge.rinner(l,is)) then
-    !               qrl(ir,ijv,l)=qfunc(ir,iv,jv,is)
-    !            else
-    !               qrl(ir,ijv,l)=qfcoef(1,l,iv,jv,is)
-    !               do i = 2, nqf(is)
-    !                  qrl(ir,ijv,l)=qrl(ir,ijv,l,is) +      &
-    !                       qfcoef(i,l,iv,jv)*r(ir,is)**(2*i-2)
-    !               end do
-    !               qrl(ir,ijv,l) = qrl(ir,ijv,l) * r(ir,is)**(l+1)
-    !            end if
-    !         end do
-    !      end do
-    !   end do
-    !end do
-
-    !
+100 call errore('readvan','error reading Q_L(r)', 1 )
   end subroutine fit_qrl
   !
   !-----------------------------------------------------------------------

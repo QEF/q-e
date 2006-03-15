@@ -910,8 +910,8 @@ CONTAINS
                !
                ! 
                do iv = 1, nbeta(is)
-                  do jv = 1, iv
-                     ijv = iv * ( iv - 1 ) / 2 + jv
+                  do jv = iv, nbeta(is)
+                     ijv = jv * ( jv - 1 ) / 2 + iv
                      !
                      !      note qrl(r)=r^2*q(r)
                      !
@@ -1161,8 +1161,8 @@ CONTAINS
          c = fpi / omegab
          !
          do iv= 1,nbeta(is)
-            do jv = 1, iv
-               ijv = iv*(iv-1)/2 + jv
+            do jv = iv, nbeta(is)
+               ijv = jv*(jv-1)/2 + iv
                do ig=1,ngb
                   gg=gb(ig)*tpibab*tpibab/refg
                   jj=int(gg)+1
@@ -1183,13 +1183,11 @@ CONTAINS
 !     stocking of qgb(igb,ijv,is) and of qq(iv,jv,is)
 !     ---------------------------------------------------------------
          do iv= 1,nh(is)
-            do jv=1,iv
+            do jv=iv,nh(is)
 !
-!       compact indices because qgb is symmetric:
-!       ivjv:  11 21 22 31 32 33 ... 
-!       ijv :   1  2  3  4  5  6 ...
+!       compact indices because qgb is symmetric
 !
-               ijv = iv*(iv-1)/2 + jv
+               ijv = jv*(jv-1)/2 + iv
                call qvan2b(ngb,iv,jv,is,ylmb,qgb(1,ijv,is) )
 !
                qq(iv,jv,is)=omegab*DBLE(qgb(1,ijv,is))
@@ -1207,15 +1205,15 @@ CONTAINS
          allocate(dqradb(ngb,nbetam*(nbetam+1)/2,lmaxq,nsp))
          allocate(dylmb(ngb,lmaxq*lmaxq,3,3))
          allocate(dqgbs(ngb,3,3))
-         dqrad(:,:,:,:,:,:,:) = 0.d0
+         dqrad(:,:,:,:,:,:) = 0.d0
          !
          call dylmr2_(lmaxq*lmaxq, ngb, gxb, gb, ainv, dylmb)
          !
          do is=1,nvb
             !
             do iv= 1,nbeta(is)
-               do jv=1,iv
-                  ijv = iv*(iv-1)/2 + jv
+               do jv=iv,nbeta(is)
+                  ijv = jv*(jv-1)/2 + iv
                   do l=1,nqlc(is)
                      do ig=1,ngb
                         gg=gb(ig)*tpibab*tpibab/refg
@@ -1230,20 +1228,16 @@ CONTAINS
                      enddo
                      do i=1,3
                         do j=1,3
-                           dqrad(1,iv,jv,l,is,i,j) = &
+                           dqrad(1,ijv,l,is,i,j) = &
                                 -qradb(1,ijv,l,is) * ainv(j,i)
-                           dqrad(1,jv,iv,l,is,i,j) = &
-                                dqrad(1,iv,jv,l,is,i,j)
                            do ig=2,ngb
-                              dqrad(ig,iv,jv,l,is,i,j) =                &
+                              dqrad(ig,ijv,l,is,i,j) =                  &
      &                          -qradb(ig,ijv,l,is)*ainv(j,i)           &
      &                          -c*dqradb(ig,ijv,l,is)*                 &
      &                          gxb(i,ig)/gb(ig)*                       &
      &                          (gxb(1,ig)*ainv(j,1)+                   &
      &                           gxb(2,ig)*ainv(j,2)+                   &
      &                           gxb(3,ig)*ainv(j,3))
-                              dqrad(ig,jv,iv,l,is,i,j) =                &
-     &                          dqrad(ig,iv,jv,l,is,i,j)
                            enddo
                         enddo
                      enddo
@@ -1252,13 +1246,11 @@ CONTAINS
             enddo
             !
             do iv= 1,nh(is)
-               do jv=1,iv
+               do jv=iv,nh(is)
                   !
-                  !       compact indices because qgb is symmetric:
-                  !       ivjv:  11 21 22 31 32 33 ... 
-                  !       ijv :   1  2  3  4  5  6 ...
+                  !       compact indices because qgb is symmetric
                   !
-                  ijv = iv*(iv-1)/2 + jv
+                  ijv = jv*(jv-1)/2 + iv
                   call dqvan2b(ngb,iv,jv,is,ylmb,dylmb,dqgbs )
                   do i=1,3
                      do j=1,3
@@ -1499,18 +1491,17 @@ CONTAINS
       !
       do iv = 1, nbeta(is)
          !
-         do jv = 1, iv
+         do jv = iv, nbeta(is)
             !
-            ijv = (iv-1)*iv/2 + jv
+            ijv = (jv-1)*jv/2 + iv
             !
             IF ( ijv > dim2) &
                  CALL errore ('fill_qrl', 'bad 2nd dimension for array qrl', 2)
 
-            ! lmin = lll(jv,is) - lll(iv,is) + 1
-            ! lmax = lmin + 2 * lll(iv,is)
-            !
-            lmin = lll(iv,is) - lll(jv,is) + 1
-            lmax = lmin + 2 * lll(jv,is)
+            ! notice that L runs from 1 to Lmax+1
+
+            lmin = ABS (lll(jv,is) - lll(iv,is)) + 1
+            lmax = lll(jv,is) + lll(iv,is) + 1
 
             ! WRITE( stdout, * ) ' is, jv, iv = ', is, jv, iv
             ! WRITE( stdout, * ) ' lll jv, iv = ', lll(jv,is), lll(iv,is)

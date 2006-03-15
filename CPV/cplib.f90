@@ -743,8 +743,8 @@
 !
                      DO ifft=1,nfft
                         DO iv=1,nh(is)
-                           DO jv=1,iv
-                              ijv = (iv-1)*iv/2 + jv
+                           DO jv=iv,nh(is)
+                              ijv = (jv-1)*jv/2 + iv
                               sum = rhovan(ijv,isa+ifft-1,iss)
                               dsum=drhovan(ijv,isa+ifft-1,iss,i,j)
                               IF(iv.NE.jv) THEN
@@ -824,8 +824,8 @@
                      DO iss=1,2
                         dqgbt(:,iss) = (0.d0, 0.d0)
                         DO iv= 1,nh(is)
-                           DO jv=1,iv
-                              ijv = (iv-1)*iv/2 + jv
+                           DO jv=iv,nh(is)
+                              ijv = (jv-1)*jv/2 + iv
                               sum=rhovan(ijv,isa,iss)
                               dsum =drhovan(ijv,isa,iss,i,j)
                               IF(iv.NE.jv) THEN
@@ -1527,8 +1527,8 @@
 ! two ffts at the same time, on two atoms (if possible: nfft=2)
 !
             DO iv=1,nh(is)
-               DO jv=1,iv
-                  ijv = (iv-1)*iv/2 + jv
+               DO jv=iv,nh(is)
+                  ijv = (jv-1)*jv/2 + iv
                   qv(:) = (0.d0, 0.d0)
                   IF (nfft.EQ.2) THEN
                      DO ig=1,ngb
@@ -1594,8 +1594,8 @@
                DO ik=1,3
                   qv(:) = (0.d0, 0.d0)
                   DO iv=1,nh(is)
-                     DO jv=1,iv
-                        ijv = (iv-1)*iv/2 + jv
+                     DO jv=iv,nh(is)
+                        ijv = (jv-1)*jv/2 + iv
                         IF(iv.NE.jv) THEN
                            fac1=2.d0*fac*tpibab*rhovan(ijv,isa,iss)
                            IF (nfft.EQ.2) fac2=2.d0*fac*tpibab*         &
@@ -1658,8 +1658,8 @@
                   qv(:) = (0.d0, 0.d0)
 !
                   DO iv=1,nh(is)
-                     DO jv=1,iv
-                        ijv = (iv-1)*iv/2 + jv
+                     DO jv=iv,nh(is)
+                        ijv = (jv-1)*jv/2 + iv
                         IF(iv.NE.jv) THEN
                            fac1=2.d0*fac*tpibab*rhovan(ijv,isa,isup)
                            fac2=2.d0*fac*tpibab*rhovan(ijv,isa,isdw)
@@ -2170,8 +2170,8 @@
                DO ifft=1,nfft
                   qgbt(:,ifft) = (0.d0, 0.d0)
                   DO iv= 1,nh(is)
-                     DO jv=1,iv
-                        ijv = (iv-1)*iv/2 + jv
+                     DO jv=iv,nh(is)
+                        ijv = (jv-1)*jv/2 + iv
                         sumrho=rhovan(ijv,isa+ifft-1,iss)
                         IF(iv.NE.jv) sumrho=2.*sumrho
                         DO ig=1,ngb
@@ -2274,8 +2274,8 @@
                DO iss=1,2
                   qgbt(:,iss) = (0.d0, 0.d0)
                   DO iv=1,nh(is)
-                     DO jv=1,iv
-                        ijv = (iv-1)*iv/2 + jv
+                     DO jv=iv,nh(is)
+                        ijv = (jv-1)*jv/2 + iv
                         sumrho=rhovan(ijv,isa,iss)
                         IF(iv.NE.jv) sumrho=2.*sumrho
                         DO ig=1,ngb

@@ -27,7 +27,7 @@ MODULE dqrad_mod
   IMPLICIT NONE 
   SAVE
   !
-  REAL(DP), ALLOCATABLE :: dqrad(:,:,:,:,:,:,:)
+  REAL(DP), ALLOCATABLE :: dqrad(:,:,:,:,:,:)
   !
   CONTAINS
   !

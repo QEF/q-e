@@ -353,10 +353,10 @@ subroutine nlinit
       qradb(:,:,:,:) = 0.d0
       qq  (:,:,:) =0.d0
       IF (tpre) THEN
-         allocate( dqrad( ngb, nbetam, nbetam, lmaxq, nsp, 3, 3 ) )
+         allocate( dqrad( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp, 3, 3 ) )
          allocate( dqgb( ngb, nhm*(nhm+1)/2, nsp, 3, 3 ) )
          allocate( dbeta( ngw, nhm, nsp, 3, 3 ) )
-         dqrad(:,:,:,:,:,:,:) = 0.d0
+         dqrad(:,:,:,:,:,:) = 0.d0
       END IF
       !
       !     initialization for vanderbilt species
@@ -565,7 +565,7 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
         do ii=1,3
            do ig=1,ngy
               dqg(ig,ii,ij) = dqg(ig,ii,ij) +  sig *                &
- &                    ( ylm(ig,lp) * dqrad(ig,ivs,jvs,l,is,ii,ij) + &
+ &                    ( ylm(ig,lp) * dqrad(ig,ijvs,l,is,ii,ij) +    &
  &                     dylm(ig,lp,ii,ij)*qradb(ig,ijvs,l,is)   )
            end do
         end do
