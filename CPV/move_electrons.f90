@@ -26,7 +26,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE uspp,                 ONLY : becsum, vkb, nkb
   USE energies,             ONLY : ekin, enl, entropy, etot
   USE grid_dimensions,      ONLY : nnrx
-  USE electrons_base,       ONLY : nbsp, nspin, f
+  USE electrons_base,       ONLY : nbsp, nspin, f, nudx
   USE core,                 ONLY : nlcc_any, rhoc
   USE ions_positions,       ONLY : tau0
   USE stre,                 ONLY : stress
@@ -39,11 +39,13 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE cpr_subroutines,      ONLY : compute_stress
   USE ensemble_dft,         ONLY : compute_entropy2
   USE efield_module,        ONLY : berry_energy, berry_energy2
-  USE runcp_module,         ONLY : runcp_uspp
+  USE runcp_module,         ONLY : runcp_uspp, runcp_uspp_force_pairing
   USE wave_constrains,      ONLY : interpolate_lambda
   USE gvecw,                ONLY : ngw
   USE orthogonalize_base,   ONLY : calphi
-  use charge_density,       only : rhoofr
+  USE control_flags,        ONLY : force_pairing 
+  USE charge_density,       only : rhoofr
+  USE electrons_base,       ONLY : nupdwn 
   !
   IMPLICIT NONE
   !
@@ -55,8 +57,9 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   REAL(DP), INTENT(IN)    :: fccc, ccc
   REAL(DP), INTENT(INOUT) :: enb, enbi
   REAL(DP), INTENT(INOUT) :: enthal
+  REAL(DP)                :: ei_unp
   !
-  INTEGER :: i, is
+  INTEGER :: i, is, n2
   !
   !
   electron_dynamic: IF ( tcg ) THEN
@@ -127,8 +130,16 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      !
      CALL prefor( eigr, vkb )
      !
+     IF( force_pairing ) THEN
+     CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, &
+                      rhos, bec, c0(:,:,1,1), cm(:,:,1,1), ei_unp )
+     lambda( nudx, nudx, 1) = ei_unp
+     !
+     ELSE
+     !
      CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, &
                       rhos, bec, c0(:,:,1,1), cm(:,:,1,1) )
+     ENDIF
      !
      !----------------------------------------------------------------------
      !                 contribution to fion due to lambda
@@ -143,6 +154,12 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
       IF ( (tfor.or.tprnfor) .AND. tefield2 ) &
         CALL bforceion( fion, .TRUE. , ipolp2, qmat2, bec, becdr, gqq2, evalue2 )
      !
+     IF( force_pairing ) THEN
+      lambda( nudx, nudx, 2) = 0.d0 
+      lambda( 1:nupdwn(2), 1:nupdwn(2), 2 ) =  lambda(1:nupdwn(2), 1:nupdwn(2), 1 )
+     lambdam( 1:nupdwn(2), 1:nupdwn(2), 2 ) = lambdam(1:nupdwn(2), 1:nupdwn(2), 1 )
+     ENDIF
+     ! 
      IF ( tfor .OR. thdyn ) then
         CALL interpolate_lambda( lambdap, lambda, lambdam )
      ELSE
@@ -150,6 +167,12 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
         lambdam = lambda
      END IF
      !
+     IF( force_pairing ) THEN
+      lambda( nudx, nudx, 2) = 0.d0 
+      lambda( 1:nupdwn(2), 1:nupdwn(2), 2 ) =  lambda(1:nupdwn(2), 1:nupdwn(2), 1 )
+     lambdam( 1:nupdwn(2), 1:nupdwn(2), 2 ) = lambdam(1:nupdwn(2), 1:nupdwn(2), 1 )
+     ENDIF
+     ! 
      ! ... calphi calculates phi
      ! ... the electron mass rises with g**2
      !

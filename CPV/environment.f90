@@ -74,8 +74,8 @@
 
             !
             ! useful for debugging purposes 
-            !     open( unit = stdout, file = uname(1:nchar),status='unknown')
-            open( unit = stdout, file='/dev/null', status='unknown' )
+                 open( unit = stdout, file = uname(1:nchar),status='unknown')
+            !open( unit = stdout, file='/dev/null', status='unknown' )
 
           END IF
 

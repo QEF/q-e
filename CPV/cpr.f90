@@ -136,6 +136,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE ions_nose,                ONLY : ions_nose_allocate, ions_nose_shiftvar
   USE orthogonalize,            ONLY : ortho
   USE orthogonalize_base,       ONLY : updatc
+  USE control_flags,            ONLY : force_pairing
   !
   IMPLICIT NONE
   !
@@ -175,6 +176,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   REAL(DP), ALLOCATABLE :: tauw(:,:)  
     ! temporary array used to printout positions
   CHARACTER(LEN=3) :: labelw( natx )
+  ! for force_pairing
+  INTEGER   :: n_spin_start 
   !
   !
   dt2bye   = dt2 / emass
@@ -184,6 +187,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   tfirst = .TRUE.
   tlast  = .FALSE.
   nacc   = 5
+  !
+  n_spin_start = nspin
+  IF( force_pairing ) n_spin_start = 1
   !
   ! ... Check for restart_p from Autopilot Feature Suite
   !
@@ -271,6 +277,15 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !    electronic degrees of freedom are updated here
      !
      !=======================================================================
+     !
+     IF( force_pairing ) THEN
+          c0(:,iupdwn(2):nbsp,1,1)       =     c0(:,1:nupdwn(2),1,1)
+          cm(:,iupdwn(2):nbsp,1,1)       =     cm(:,1:nupdwn(2),1,1)
+         phi(:,iupdwn(2):nbsp,1,1)       =    phi(:,1:nupdwn(2),1,1)
+      lambda(1:nupdwn(2),1:nupdwn(2), 2) = lambda(1:nupdwn(2),1:nupdwn(2), 1)
+      lambda(nudx, nudx, 2) = 0.d0
+     ENDIF
+     !
      !
      CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
                           enthal, enb, enbi, fccc, ccc, dt2bye )
@@ -428,11 +443,19 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         IF ( iprsta >= 3 ) CALL print_lambda( lambda, nbsp, 9, 1.D0 )
         !
         IF ( tortho ) THEN
-           DO iss = 1, nspin
+           DO iss = 1, n_spin_start
               CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
                         bephi, SIZE(bephi,1), becp, bec, cm, nupdwn(iss), iupdwn(iss) )
            END DO
         END IF
+        !
+        IF( force_pairing ) THEN
+              c0(:,iupdwn(2):nbsp,1,1)       =     c0(:,1:nupdwn(2),1,1)
+              cm(:,iupdwn(2):nbsp,1,1)       =     cm(:,1:nupdwn(2),1,1)
+             phi(:,iupdwn(2):nbsp,1,1)       =    phi(:,1:nupdwn(2),1,1)
+          lambda(1:nupdwn(2),1:nupdwn(2), 2) = lambda(1:nupdwn(2),1:nupdwn(2), 1)
+          lambda(nudx, nudx, 2) = 0.d0
+        ENDIF
         !
         CALL calbec( nvb+1, nsp, eigr, cm, bec )
         !
@@ -525,6 +548,15 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      END IF
      !
      IF ( MOD( nfi, iprint ) == 0 .OR. tlast ) THEN
+        !
+        IF( force_pairing )  THEN
+           lambda(:, :, 2) =  lambda(:, :, 1)
+           lambdap(:, :, 2) = lambdap(:, :, 1)
+           lambda(nudx, nudx, 2) = 0.d0  
+           lambdap(nudx, nudx, 2) = 0.d0
+           WRITE( stdout, '("Occupations in CPR:")' )
+           WRITE( stdout, '(10F9.6)' ) ( f(i), i = 1, nbspx )  
+        END IF
         !
         CALL cp_eigs( nfi, lambdap, lambda )
         !

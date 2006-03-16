@@ -2614,6 +2614,8 @@
       USE mp, ONLY: mp_sum
       USE funct, ONLY: dft_is_meta
       USE fft_module, ONLY: fwfft, invfft
+      USE sic_module, ONLY: self_interaction, sic_epsilon, sic_alpha
+      USE energies,   ONLY: self_sxc, self_ehte
 !
       IMPLICIT NONE
 !
@@ -2631,6 +2633,12 @@
       COMPLEX(8), ALLOCATABLE :: v(:), vs(:)
       COMPLEX(8), ALLOCATABLE :: rhotmp(:), vtemp(:), drhotmp(:,:,:)
 !
+      COMPLEX(8), ALLOCATABLE :: self_vloc(:)
+      COMPLEX(8)              :: self_rhoeg
+      REAL(8)                 :: self_ehtet , fpibg
+      LOGICAL                 :: ttsic
+!
+
       CALL start_clock( 'vofrho' )
       ci=(0.,1.)
 !
@@ -2642,6 +2650,12 @@
       ALLOCATE(vtemp(ng))
       ALLOCATE(rhotmp(ng))
       IF (tpre) ALLOCATE(drhotmp(ng,3,3))
+!
+      ttsic = ( ABS(self_interaction) /= 0 )
+      IF( tpre .AND. ttsic ) &
+      &   CALL errore('in cplib tpre and ttsic are not possible', 1)
+
+      IF( ttsic ) ALLOCATE(self_vloc(ng))
 !
 !     first routine in which fion is calculated: annihilation
 !
@@ -2706,6 +2720,10 @@
 !     ===================================================================
 !     calculation hartree energy
 !     -------------------------------------------------------------------
+     !
+      self_ehtet = 0.d0
+      self_vloc = 0.d0
+
       DO is=1,nsp
          DO ig=1,ngs
             rhotmp(ig)=rhotmp(ig)+sfac(ig,is)*rhops(ig,is)
@@ -2717,6 +2735,28 @@
       END DO
 !
       eh=DBLE(SUM(vtemp))*wz*0.5*fpi/tpiba2
+!
+      IF ( ttsic ) THEN
+       DO ig = gstart,ng
+!
+         fpibg = fpi /(tpiba2 *g(ig))
+!
+         self_rhoeg    = rhog(ig,1) - rhog(ig,2)
+         self_ehtet    = self_ehtet +  fpibg * DBLE(self_rhoeg * CONJG(self_rhoeg))
+         self_vloc(ig) = sic_epsilon * fpibg * self_rhoeg
+!
+       ENDDO
+
+        IF(gstart == 2) self_vloc(1) = 0.D0
+         self_ehte = sic_epsilon * self_ehtet * wz * 0.5d0
+         eh = eh - self_ehte
+
+         CALL mp_sum( self_ehte )
+!        IF(sic_epsilon > 0) &
+!     &   write(*,*) 'Debug ::','EH', eh * omega, &
+!     &                              ' SIC_EHTE', self_ehte * omega
+      ENDIF
+!
       CALL reduce(1,eh)
       IF(tpre) CALL denh(rhotmp,drhotmp,sfac,vtemp,eh,dh)
       IF(tpre) DEALLOCATE(drhotmp)
@@ -2747,7 +2787,7 @@
 !     -------------------------------------------------------------------
       IF (nlcc_any) CALL add_cc(rhoc,rhog,rhor)
 !
-      CALL exch_corr_h(nspin,rhog,rhor,rhoc,sfac,exc,dxc)
+      CALL exch_corr_h(nspin,rhog,rhor,rhoc,sfac,exc,dxc,self_sxc)
 !
 !     rhor contains the xc potential in r-space
 !
@@ -2782,8 +2822,13 @@
          DO ig=1,ng
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
-            rhog(ig,isup)=vtemp(ig)+0.5*CMPLX( DBLE(fp),AIMAG(fm))
-            rhog(ig,isdw)=vtemp(ig)+0.5*CMPLX(AIMAG(fp),-DBLE(fm))
+            IF( ttsic ) THEN
+             rhog(ig,isup)=vtemp(ig)-self_vloc(ig) +0.5*CMPLX( DBLE(fp),AIMAG(fm))
+             rhog(ig,isdw)=vtemp(ig)+self_vloc(ig) +0.5*CMPLX(AIMAG(fp),-DBLE(fm))
+            ELSE
+             rhog(ig,isup)=vtemp(ig)+0.5*CMPLX( DBLE(fp),AIMAG(fm))
+             rhog(ig,isdw)=vtemp(ig)+0.5*CMPLX(AIMAG(fp),-DBLE(fm))
+            ENDIF
          END DO
       ENDIF
 !
@@ -2800,6 +2845,9 @@
          fion = fion + fion1
 
       END IF
+!
+      IF(ALLOCATED(self_vloc)) DEALLOCATE(self_vloc)
+!
 !     ===================================================================
 !     fourier transform of total potential to r-space (dense grid)
 !     -------------------------------------------------------------------

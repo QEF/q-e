@@ -648,7 +648,7 @@ MODULE cp_restart
                ib = iupdwn(iss_wfc)
                !
                CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin, &
-                               cm2(:,ib:), ngwt, nbnd, ig_l2g, ngw, &
+                               cm2(:,ib:SIZE(cm2,2)), ngwt, nbnd, ig_l2g, ngw, &
                                filename, scalef )
                !
             END IF
@@ -1396,7 +1396,7 @@ MODULE cp_restart
       RETURN
       !
     END SUBROUTINE cp_readfile
-    !
+    ! 
     !------------------------------------------------------------------------
     SUBROUTINE cp_read_wfc( ndr, scradir, ik, nk, ispin, nspin, c2, c4, tag )
       !------------------------------------------------------------------------

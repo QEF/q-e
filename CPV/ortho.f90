@@ -261,6 +261,7 @@
       USE electrons_base, ONLY: nbsp, nbspx, nudx, nspin, nupdwn, iupdwn, f
       USE gvecw,          ONLY: ngw
       USE control_flags,  ONLY: iprint, iprsta, ortho_max
+      USE control_flags,  ONLY: force_pairing
       USE io_global,      ONLY: stdout, ionode
       !
       IMPLICIT NONE
@@ -275,6 +276,7 @@
 
       INTEGER :: ngwx, nkbx
       INTEGER :: istart, nss, ifail, i, j, iss, iv, jv, ia, is, inl, jnl
+      INTEGER :: nspin_sub
 
       ngwx = ngw
       nkbx = nkb
@@ -315,7 +317,11 @@
       !
       ALLOCATE( xloc( nudx, nudx ) )
       !
-      DO iss = 1, nspin
+      !
+      nspin_sub = nspin 
+      if( force_pairing ) nspin_sub = 1
+      !
+      DO iss = 1, nspin_sub
 
          nss    = nupdwn(iss)
          istart = iupdwn(iss)
@@ -354,6 +360,13 @@
          END DO
 !
       END DO
+
+      IF( force_pairing .AND. nspin > 1 ) THEN
+         !
+         x0(1:nupdwn(2), 1:nupdwn(2), 2) = x0(1:nupdwn(2), 1:nupdwn(2), 1)
+         x0(nudx, nudx, 2) = 0.d0
+         !
+      ENDIF
 !
       DEALLOCATE( xloc )
       DEALLOCATE(qbecp )

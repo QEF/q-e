@@ -252,11 +252,12 @@ MODULE from_scratch_module
                                      berry_energy2, dforce_efield2
     USE cg_module,            ONLY : tcg
     USE ensemble_dft,         ONLY : tens, compute_entropy
-    USE runcp_module,         ONLY : runcp_uspp
+    USE runcp_module,         ONLY : runcp_uspp, runcp_uspp_force_pairing
     USE electrons_base,       ONLY : f, nspin, nupdwn, iupdwn
     USE phase_factors_module, ONLY : strucf
     USE orthogonalize,        ONLY : ortho
     USE orthogonalize_base,   ONLY : updatc, calphi
+    USE control_flags,        ONLY : force_pairing
     USE charge_density,       ONLY : rhoofr
     !
     IMPLICIT NONE
@@ -288,6 +289,9 @@ MODULE from_scratch_module
     REAL(DP)                 :: bigr
     INTEGER                  :: i, j, iter, iss
     LOGICAL                  :: tlast = .FALSE.
+    REAL(DP)                 :: ei_unp 
+    INTEGER                  :: n_spin_start 
+
     REAL(DP)                 :: fcell(3,3), ccc, enb, enbi, fccc
     !
     !
@@ -314,7 +318,18 @@ MODULE from_scratch_module
        !     random initialization
        !     
        CALL randin( 1, nbsp, gstart, ngw, ampre, cm )
-      
+       !
+       IF( force_pairing ) THEN
+            cm(:, iupdwn(2):(iupdwn(2) + nupdwn(2) - 1), 1, 1) =  cm(:, 1:nupdwn(2), 1, 1) 
+            c0(:, iupdwn(2):(iupdwn(2) + nupdwn(2) - 1), 1, 1) =  c0(:, 1:nupdwn(2), 1, 1) 
+           phi(:, iupdwn(2):(iupdwn(2) + nupdwn(2) - 1), 1, 1) = phi(:, 1:nupdwn(2), 1, 1) 
+       !
+            lambda(1:nupdwn(2), 1:nupdwn(2), 2) =  lambda(:, 1:nupdwn(2), 1) 
+           lambdam(1:nupdwn(2), 1:nupdwn(2), 2) = lambdam(:, 1:nupdwn(2), 1) 
+           lambdap(1:nupdwn(2), 1:nupdwn(2), 2) = lambdap(:, 1:nupdwn(2), 1) 
+       ENDIF
+       !
+
     else 
        !       
        !     gaussian initialization
@@ -395,8 +410,16 @@ MODULE from_scratch_module
       CALL prefor( eigr, vkb )
 
 !
+      IF( force_pairing ) THEN
       !
-      CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:,1,1), c0(:,:,1,1), fromscra = .TRUE. )
+         CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec,&
+                                     cm(:,:,1,1), c0(:,:,1,1), ei_unp, fromscra = .TRUE. )
+      ELSE
+      !
+         CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, &
+                          cm(:,:,1,1), c0(:,:,1,1), fromscra = .TRUE. )
+
+      END IF
 
 !
 !     nlfq needs deeq bec
@@ -422,11 +445,19 @@ MODULE from_scratch_module
       if ( tpre ) CALL nlfh( bec, dbec, lambda )
 !
       IF ( tortho ) THEN
-         DO iss = 1, nspin
+         n_spin_start = nspin 
+         IF( force_pairing ) n_spin_start = 1
+         DO iss = 1, n_spin_start
             CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
                          bephi, SIZE(bephi,1), becp, bec, c0, nupdwn(iss), iupdwn(iss) )
          END DO
       END IF
+      IF( force_pairing ) THEN
+           c0( : , iupdwn(2): (iupdwn(2)+nupdwn(2) - 1), 1 ,  1 ) =     c0( : , 1 : nupdwn(2) , 1, 1 )
+          phi( : , iupdwn(2): (iupdwn(2)+nupdwn(2) - 1), 1 ,  1 ) =    phi( : , 1 : nupdwn(2) , 1, 1 )
+         lambda(1:nupdwn(2), 1:nupdwn(2), 2)                      = lambda(1:nupdwn(2), 1 : nupdwn(2), 1)
+      ENDIF
+      !
       !
       CALL calbec ( nvb+1, nsp, eigr, c0, bec )
 
@@ -519,7 +550,7 @@ MODULE from_scratch_module
                                      berry_energy2, dforce_efield2
     USE cg_module,            ONLY : tcg
     USE ensemble_dft,         ONLY : tens, compute_entropy
-    USE runcp_module,         ONLY : runcp_uspp, runcp_ncpp
+    USE runcp_module,         ONLY : runcp_uspp, runcp_ncpp, runcp_uspp_force_pairing
     USE phase_factors_module, ONLY : strucf, phfacs
     USE orthogonalize,        ONLY : ortho
     USE orthogonalize_base,   ONLY : updatc, calphi
@@ -581,6 +612,8 @@ MODULE from_scratch_module
     LOGICAL                  :: tstress
     LOGICAL, PARAMETER       :: ttprint = .TRUE.
     REAL(DP)                 :: timepre
+    REAL(DP)                 :: ei_unp  
+    INTEGER                  :: n_spin_start 
     !
     ttforce = tfor  .or. tprnfor
     tstress = thdyn .or. tpre
@@ -622,7 +655,17 @@ MODULE from_scratch_module
        !     random initialization
        !     
        CALL randin( 1, nbsp, gstart, ngw, ampre, cm )
-      
+       !
+       IF( force_pairing ) THEN
+            cm(:, iupdwn(2):(iupdwn(2) + nupdwn(2) - 1), 1, 1) =  cm(:, 1:nupdwn(2), 1, 1)
+            c0(:, iupdwn(2):(iupdwn(2) + nupdwn(2) - 1), 1, 1) =  c0(:, 1:nupdwn(2), 1, 1)
+           phi(:, iupdwn(2):(iupdwn(2) + nupdwn(2) - 1), 1, 1) = phi(:, 1:nupdwn(2), 1, 1)
+       !
+            lambda(1:nupdwn(2), 1:nupdwn(2), 2) =  lambda(:, 1:nupdwn(2), 1)
+           lambdam(1:nupdwn(2), 1:nupdwn(2), 2) = lambdam(:, 1:nupdwn(2), 1)
+           lambdap(1:nupdwn(2), 1:nupdwn(2), 2) = lambdap(:, 1:nupdwn(2), 1)
+       ENDIF
+       !  
     ELSE
        !
        nspin_wfc = nspin
@@ -734,10 +777,19 @@ MODULE from_scratch_module
          CALL newd( rhor, irb, eigrb, becsum, fion )
          CALL prefor( eigr, vkb )
 
+	 !
+         IF( force_pairing ) THEN
          !
+         CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:,1,1), &
+        &                 c0(:,:,1,1), ei_unp, fromscra = .TRUE. )
+          lambda(nupdwn(1), nupdwn(1), 1) = ei_unp
+          lambda(nupdwn(1), nupdwn(1), 2) = 0.d0 
          !
-         CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:,1,1), &
+         ELSE
+            !
+            CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:,1,1), &
         &                 c0(:,:,1,1), fromscra = .TRUE. )
+         ENDIF
 
          !
          !     nlfq needs deeq bec
@@ -748,6 +800,10 @@ MODULE from_scratch_module
          !     the electron mass rises with g**2
          !
          CALL calphi( cm, ngw, bec, nkb, vkb, phi, nbsp, ema0bg )
+         !
+         IF( force_pairing ) &
+         &   phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1), 1 ,1 ) =    phi( :, 1:nupdwn(2), 1, 1)
+
 
          if( tortho ) then
             CALL ortho( eigr, c0(:,:,1,1), phi(:,:,1,1), lambda, bigr, iter, ccc, bephi, becp )
@@ -762,12 +818,23 @@ MODULE from_scratch_module
 
          if ( tpre ) CALL nlfh( bec, dbec, lambda )
          !
+         n_spin_start = nspin
+         IF( force_pairing ) n_spin_start = 1
+         !
          IF ( tortho ) THEN
-            DO iss = 1, nspin
+            DO iss = 1, n_spin_start
                CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
                             bephi, SIZE(bephi,1), becp, bec, c0, nupdwn(iss), iupdwn(iss) )
             END DO
          END IF
+         !
+         IF( force_pairing ) THEN
+         !
+              c0( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1), 1 ,1 ) =     c0( :, 1:nupdwn(2), 1, 1)
+             phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1), 1 ,1 ) =    phi( :, 1:nupdwn(2), 1, 1)
+            lambda(1:nupdwn(2), 1:nupdwn(2), 2)                = lambda(1:nupdwn(2), 1:nupdwn(2), 1 )
+         !
+         ENDIF
          !
          CALL calbec ( nvb+1, nsp, eigr, c0, bec )
 
