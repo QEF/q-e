@@ -108,6 +108,7 @@ MODULE cp_restart
       COMPLEX(DP), OPTIONAL, INTENT(IN) :: cm2(:,:)     ! 
       REAL(DP),    OPTIONAL, INTENT(IN) :: mat_z(:,:,:) ! 
       !
+      LOGICAL, PARAMETER    :: write_charge_density=.true.
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname, filename, rho_file_base
       CHARACTER(LEN=4)      :: cspin
@@ -347,61 +348,65 @@ MODULE cp_restart
 ! ... CHARGE-DENSITY
 !-------------------------------------------------------------------------------
          !
-         CALL iotk_write_begin( iunpun, "CHARGE-DENSITY" )
+         IF (write_charge_density) CALL iotk_write_begin( iunpun, "CHARGE-DENSITY" )
          !
       END IF
       !
-      rho_file_base = 'charge-density'
-      !
-      IF ( ionode )&
-         CALL iotk_link( iunpun, "RHO", rho_file_base, &
-                         CREATE = .FALSE., BINARY = .FALSE. )
-      !
-      rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
-      !
-      IF ( nspin == 1 ) THEN
+      IF (write_charge_density) then
          !
-         CALL write_rho_xml( rho_file_base, rho(:,1), nr1, &
-                             nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+         rho_file_base = 'charge-density'
          !
-      ELSE IF ( nspin == 2 ) THEN
-         !
-         ALLOCATE( rhosum( SIZE( rho, 1 ) ) )
-         !
-         rhosum = rho(:,1) + rho(:,2) 
-         !
-         CALL write_rho_xml( rho_file_base, rhosum, nr1, &
-                             nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
-         !
-         DEALLOCATE( rhosum )
-         !
-         rho_file_base = 'charge-density-up'
-         !
-         IF ( ionode ) &
-            CALL iotk_link( iunpun, "RHO_UP", rho_file_base, &
-                            CREATE = .FALSE., BINARY = .FALSE. )
+         IF ( ionode )&
+              CALL iotk_link( iunpun, "RHO", rho_file_base, &
+              CREATE = .FALSE., BINARY = .FALSE. )
          !
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
          !
-         CALL write_rho_xml( rho_file_base, rho(:,1), &
-                             nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+         IF ( nspin == 1 ) THEN
+            !
+            CALL write_rho_xml( rho_file_base, rho(:,1), nr1, &
+                 nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+            !
+         ELSE IF ( nspin == 2 ) THEN
+            !
+            ALLOCATE( rhosum( SIZE( rho, 1 ) ) )
+            !
+            rhosum = rho(:,1) + rho(:,2) 
+            !
+            CALL write_rho_xml( rho_file_base, rhosum, nr1, &
+                 nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+            !
+            DEALLOCATE( rhosum )
+            !
+            rho_file_base = 'charge-density-up'
+            !
+            IF ( ionode ) &
+                 CALL iotk_link( iunpun, "RHO_UP", rho_file_base, &
+                 CREATE = .FALSE., BINARY = .FALSE. )
+            !
+            rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
+            !
+            CALL write_rho_xml( rho_file_base, rho(:,1), &
+                 nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+            !
+            rho_file_base = 'charge-density-dw'
+            !
+            IF ( ionode ) &
+                 CALL iotk_link( iunpun, "RHO_DW", rho_file_base, &
+                 CREATE = .FALSE., BINARY = .FALSE. )
+            !
+            rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
+            !
+            CALL write_rho_xml( rho_file_base, rho(:,2), &
+                 nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+            !
+         END IF
          !
-         rho_file_base = 'charge-density-dw'
-         !
-         IF ( ionode ) &
-            CALL iotk_link( iunpun, "RHO_DW", rho_file_base, &
-                            CREATE = .FALSE., BINARY = .FALSE. )
-         !
-         rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
-         !
-         CALL write_rho_xml( rho_file_base, rho(:,2), &
-                             nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
-         !
-      END IF
+      END IF ! write_charge_density
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_write_end( iunpun, "CHARGE-DENSITY" )
+         if (write_charge_density) CALL iotk_write_end( iunpun, "CHARGE-DENSITY" )
          !
 !-------------------------------------------------------------------------------
 ! ... TIMESTEPS

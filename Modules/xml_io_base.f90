@@ -193,6 +193,9 @@ MODULE xml_io_base
       !
       ! ... main restart directory
       !
+      ! Please keep the line below !
+      ! This is the old style RESTARTXX
+!      dirname = 'RESTART' // int_to_char( runit )
       dirname = TRIM( prefix ) // '_' // &
               & TRIM( int_to_char( runit ) )// '.save'
       !
