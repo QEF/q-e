@@ -122,6 +122,10 @@ CONTAINS
        f = 1.0d0
     END IF
     !
+    IF( PRESENT( what ) ) THEN
+       IF ( what == 'xyz' ) WRITE( iunit, *) nat
+    END IF
+    !
     IF( PRESENT( nfi ) .AND. PRESENT( tps ) ) THEN
        WRITE( iunit, 30 ) nfi, tps
     ELSE IF( PRESENT( what ) ) THEN

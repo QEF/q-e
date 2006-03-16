@@ -51,7 +51,7 @@
       USE energies,         ONLY : print_energies, dft_energy_type
       USE printout_base,    ONLY : printout_base_open, printout_base_close, &
                                    printout_pos, printout_cell, printout_stress
-      USE constants,        ONLY : factem, au_gpa, au, amu_si, bohr_radius_cm, scmass
+      USE constants,        ONLY : factem, au_gpa, au, amu_si, bohr_radius_cm, scmass, BOHR_RADIUS_ANGS
       USE ions_base,        ONLY : na, nsp, nat, ind_bck, atm, ityp, pmass, &
                                    cdm_displacement, ions_displacement
       USE cell_base,        ONLY : s_to_r
@@ -86,6 +86,7 @@
       REAL(DP),         ALLOCATABLE :: tauw( :, : )
       CHARACTER(LEN=3), ALLOCATABLE :: labelw( : )
       LOGICAL  :: tsic
+      LOGICAL, PARAMETER :: nice_output_files=.false.
       !
       ALLOCATE( labelw( nat ) )
       !
@@ -142,7 +143,15 @@
             CALL printout_pos( stdout, tau0, nat, what = 'pos', &
                                label = labelw, sort = ind_bck )
             !
-            IF( tfile ) CALL printout_pos( 35, tau0, nat, nfi = nfi, tps = tps )
+            IF( tfile ) then
+               if (.not.nice_output_files) then
+                  CALL printout_pos( 35, tau0, nat, nfi = nfi, tps = tps )
+               else
+                  CALL printout_pos( 35, tau0, nat, what = 'xyz', &
+                               nfi = nfi, tps = tps, label = labelw, &
+                               fact= BOHR_RADIUS_ANGS ,sort = ind_bck )
+               endif
+            END IF
             !
             ALLOCATE( tauw( 3, nat ) )
             !
@@ -165,14 +174,28 @@
             CALL printout_pos( stdout, tauw, nat, &
                                what = 'vel', label = labelw, sort = ind_bck )
             !
-            IF( tfile ) CALL printout_pos( 34, tauw, nat, nfi = nfi, tps = tps )
+            IF( tfile ) then
+               if (.not.nice_output_files) then
+                  CALL printout_pos( 34, tauw, nat, nfi = nfi, tps = tps )
+               else
+                  CALL printout_pos( 34, tauw, nat, nfi = nfi, tps = tps, &
+                               what = 'vel', label = labelw, sort = ind_bck )
+               endif
+            END IF
             !
             WRITE( stdout, * )
             !
             CALL printout_pos( stdout, fion, nat, &
                                what = 'for', label = labelw, sort = ind_bck )
             !
-            IF( tfile ) CALL printout_pos( 37, fion, nat, nfi = nfi, tps = tps )
+            IF( tfile ) then
+               if (.not.nice_output_files) then
+                  CALL printout_pos( 37, fion, nat, nfi = nfi, tps = tps )
+               else
+                  CALL printout_pos( 37, fion, nat, nfi = nfi, tps = tps, &
+                       what = 'for', label = labelw, sort = ind_bck )
+               endif
+            END IF
             !
             DEALLOCATE( tauw )
             !
