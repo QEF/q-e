@@ -130,7 +130,7 @@
               enddo
             END IF
 
-#if defined __AIX
+#if defined __ESSL
           case (3)
 
             CALL DGETMO (x, ldx, n, m, y, ldy)
@@ -264,7 +264,7 @@
               enddo
             END IF
 
-#if defined __AIX
+#if defined __ESSL
           case (3)
 
             CALL ZGETMO (x, ldx, n, m, y, ldy)

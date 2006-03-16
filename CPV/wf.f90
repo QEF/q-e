@@ -1405,7 +1405,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
         END DO
      END DO
 
-#if ! defined __AIX
+#if ! defined __ESSL
      CALL zhpev('V','U',m,wp,wr,z,m,f1,f2,ierr1)
 #else
      CALL zhpev(21, wp, wr, z, m, m, f2, 4*m)
@@ -3369,7 +3369,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
            END DO
         END DO
 
-#if defined (__AIX)
+#if defined (__ESSL)
         !
         CALL zhpev(21, wp1, wr, z, m, m, f2, 4*m)
         !
@@ -3417,7 +3417,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
            END DO
         END DO
 
-#if defined __AIX
+#if defined __ESSL
         CALL zhpev(21, wp1, wr, z, m, m, f2, 4*m)
         ierr1 = 0
 #else

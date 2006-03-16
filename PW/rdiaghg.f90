@@ -96,7 +96,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
         !
         v(:,1:n) = h(:,:)
         !
-#if defined (__AIX)
+#if defined (__ESSL)
         !
         ! ... there is a name conflict between essl and lapack ...
         !

@@ -46,7 +46,7 @@ SUBROUTINE rdiagh( n, h, ldh, e, v )
      !
   ELSE
      !
-#if defined (__AIX)
+#if defined (__ESSL)
      CALL rdiagh_aix()
 #else
      CALL rdiagh_lapack()
@@ -62,7 +62,7 @@ SUBROUTINE rdiagh( n, h, ldh, e, v )
     !
     ! ... internal procedures
     !
-#if defined (__AIX)
+#if defined (__ESSL)
     ! 
     !-----------------------------------------------------------------------
     SUBROUTINE rdiagh_aix()

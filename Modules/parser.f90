@@ -52,7 +52,7 @@ MODULE parser
     INTEGER,                    INTENT(OUT) :: num
     CHARACTER(LEN=*),           INTENT(IN)  :: line
     CHARACTER(LEN=1), OPTIONAL, INTENT(IN)  :: car
-#if defined (__XLF) 
+#if defined (__AIX) || defined (__MAC)
     ! ... with the IBM xlf compiler some combination of flags lead to
     ! ... variables being defined as static, hence giving a conflict
     ! ... with PURE function. We then force the variable to be AUTOMATIC

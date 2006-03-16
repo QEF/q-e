@@ -72,7 +72,7 @@ program plotrho
   read (5, '(a)') fileout
 
   WRITE( stdout, '("Read ",i3," *",i3,"  grid")') nxi+1, nyi+1
-#ifdef __AIX
+#ifdef __ESSL
   !
   ! interpolation implemented only for ESSL routines ...
   !
@@ -97,7 +97,7 @@ program plotrho
   do i = 0, ny
      y (i) = (yi (nyi) - yi (0) ) * DBLE (i) / DBLE (ny)
   enddo
-#ifdef __AIX
+#ifdef __ESSL
   call dcsin2 (xi, yi, rhoi, nxi + 1, nyi + 1, nximax + 1, x, y, nx &
        + 1, ny + 1, rhoo, nxmax + 1, wrk, nwrk)
 #else

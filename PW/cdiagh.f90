@@ -45,7 +45,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
      !
   ELSE
      !
-#if defined (__AIX)
+#if defined (__ESSL)
      CALL cdiagh_aix()
 #else
      CALL cdiagh_lapack( v )
@@ -61,7 +61,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
     !
     ! ... internal procedures
     !
-#if defined (__AIX)
+#if defined (__ESSL)
     ! 
     !-----------------------------------------------------------------------
     SUBROUTINE cdiagh_aix()

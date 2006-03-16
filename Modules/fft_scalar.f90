@@ -47,7 +47,7 @@
         !   in order to avoid multiple copies of the same workspace
         !   lwork:   Dimension of the work space array (if any)
 
-#if defined __AIX
+#if defined __ESSL
 
         !   ESSL IBM library: see the ESSL manual for DCFT
 
@@ -120,7 +120,7 @@
      !   for 32bit executables, C_POINTER is integer(4)
      !   for 64bit executables, C_POINTER is integer(8)
 
-#elif defined __AIX
+#elif defined __ESSL
 
      !   ESSL IBM library: see the ESSL manual for DCFT
 
@@ -171,7 +171,7 @@
         !   for this combination of parameters
 
         done = ( nz == zdims(1,ip) )
-#if defined __AIX || defined __FFTW3
+#if defined __ESSL || defined __FFTW3
 
         !   The initialization in ESSL and FFTW v.3 depends on all three parameters
 
@@ -205,7 +205,7 @@
        CALL dfftw_plan_many_dft( bw_planz( icurrent), 1, nz, nsl, c, &
             (/SIZE(c)/), 1, ldz, c, (/SIZE(c)/), 1, ldz, idir, FFTW_ESTIMATE) 
 
-#elif defined __AIX
+#elif defined __ESSL
 
        tscale = 1.0d0 / nz
        CALL DCFT ( 1, c(1), 1, ldz, cout(1), 1, ldz, nz, nsl,  1, &
@@ -303,7 +303,7 @@
      IF (isign /= 0) CALL ZZFFTM (idir, nz, nsl, tscale, c(1), ldz, &
           cout(1), ldz, tablez (1, ip), work, isys)
 
-#elif defined __AIX
+#elif defined __ESSL
 
      ! essl uses a different convention for forward/backward transforms
      ! wrt most other implementations: notice the sign of "idir"
@@ -395,7 +395,7 @@
      C_POINTER, SAVE :: fw_plan( 2, ndims ) = 0
      C_POINTER, SAVE :: bw_plan( 2, ndims ) = 0
 
-#elif defined __AIX
+#elif defined __ESSL
 
      INTEGER, PARAMETER :: ltabl = 20000 + 3 * nfftx
      REAL (DP), SAVE :: fw_tablex( ltabl, ndims ), fw_tabley( ltabl, ndims )
@@ -451,7 +451,7 @@
        !   for this combination of parameters
 
        done = ( ny == dims(1,ip) ) .AND. ( nx == dims(3,ip) )
-#if defined __AIX || defined __FFTW3
+#if defined __ESSL || defined __FFTW3
         !   The initialization in ESSL and FFTW v.3 depends on all four parameters
        done = done .AND. ( ldx == dims(2,ip) ) .AND.  ( nzl == dims(4,ip) )
 #endif
@@ -514,7 +514,7 @@
                FFTW_ESTIMATE)
        END IF
 
-#elif defined __AIX
+#elif defined __ESSL
 
        tscale = 1.0d0 / ( nx * ny )
        CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, 1,  1, 1.0d0, &
@@ -632,7 +632,7 @@
         END IF
      END IF
 
-#elif defined __AIX
+#elif defined __ESSL
 
      ! essl uses a different convention for forward/backward transforms
      ! wrt most other implementations: notice the sign of "idir"
@@ -973,7 +973,7 @@
        CALL dfftw_plan_dft_3d ( bw_plan(icurrent), nx, ny, nz, f(1:), &
             f(1:), idir, FFTW_ESTIMATE) 
 
-#elif defined __AIX
+#elif defined __ESSL
 
        ! no initialization for 3d FFT's from ESSL
 
@@ -1080,7 +1080,7 @@
 
    END IF
 
-#elif defined __AIX
+#elif defined __ESSL
 
      IF ( isign < 0 ) THEN
        tscale = 1.0d0 / ( nx * ny * nz )
@@ -1219,7 +1219,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
   C_POINTER, SAVE :: fw_plan ( 3, ndims ) = 0
   C_POINTER, SAVE :: bw_plan ( 3, ndims ) = 0
 
-#elif defined __AIX
+#elif defined __ESSL
 
   INTEGER, PARAMETER :: ltabl = 20000 + 3 * nfftx
   REAL (DP), SAVE :: fw_table( ltabl, 3, ndims )
@@ -1312,7 +1312,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
             1, nz, nx*ny, f(1:), (/ldx, ldy, ldz/), ldx*ldy, 1, &
             f(1:), (/ldx, ldy, ldz/), ldx*ldy, 1, idir, FFTW_ESTIMATE)
 
-#elif defined __AIX
+#elif defined __ESSL
 
        tscale = 1.0d0 
        !  x - direction
@@ -1364,7 +1364,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
                 call FFTW_INPLACE_DRV_1D( bw_plan( 1, ip), m, f( ii ), incx1, incx2 )
 #elif defined __FFTW3
                 call dfftw_execute_dft( bw_plan( 1, ip), f( ii: ), f( ii: ) )
-#elif defined __AIX
+#elif defined __ESSL
                 call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nx, m, &
                   -isign, 1.0d0, bw_table ( 1, 1,  ip ), ltabl, work( 1 ), lwork)
 #else
@@ -1387,7 +1387,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
              call FFTW_INPLACE_DRV_1D( bw_plan( 2, ip), m, f( ii ), incx1, incx2 )
 #elif defined __FFTW3
              call dfftw_execute_dft( bw_plan( 2, ip), f( ii: ), f( ii: ) )
-#elif defined __AIX
+#elif defined __ESSL
              call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, ny, m, &
                -isign, 1.0d0, bw_table ( 1, 2,  ip ), ltabl, work( 1 ), lwork)
 #else
@@ -1406,7 +1406,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
         call FFTW_INPLACE_DRV_1D( bw_plan( 3, ip), m, f( 1 ), incx1, incx2 )
 #elif defined __FFTW3
         call dfftw_execute_dft( bw_plan( 3, ip), f(1:), f(1:) )
-#elif defined __AIX
+#elif defined __ESSL
         call dcft (0, f( 1 ), incx1, incx2, f( 1 ), incx1, incx2, nz, m, &
           -isign, 1.0d0, bw_table ( 1, 3, ip ), ltabl, work( 1 ), lwork)
 #endif
@@ -1423,7 +1423,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
         call FFTW_INPLACE_DRV_1D( fw_plan( 3, ip), m, f( 1 ), incx1, incx2 )
 #elif defined __FFTW3
         call dfftw_execute_dft( fw_plan( 3, ip), f(1:), f(1:) )
-#elif defined __AIX
+#elif defined __ESSL
         call dcft (0, f( 1 ), incx1, incx2, f( 1 ), incx1, incx2, nz, m, &
           -isign, 1.0d0, fw_table ( 1, 3, ip ), ltabl, work( 1 ), lwork)
 #endif
@@ -1441,7 +1441,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
              call FFTW_INPLACE_DRV_1D( fw_plan( 2, ip), m, f( ii ), incx1, incx2 )
 #elif defined __FFTW3
              call dfftw_execute_dft( fw_plan( 2, ip), f( ii: ), f( ii: ) )
-#elif defined __AIX
+#elif defined __ESSL
              call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, ny, m, &
                -isign, 1.0d0, fw_table ( 1, 2, ip ), ltabl, work( 1 ), lwork)
 #else
@@ -1465,7 +1465,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
                 call FFTW_INPLACE_DRV_1D( fw_plan( 1, ip), m, f( ii ), incx1, incx2 )
 #elif defined __FFTW3
                 call dfftw_execute_dft( fw_plan( 1, ip), f( ii: ), f( ii: ) )
-#elif defined __AIX
+#elif defined __ESSL
                 call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nx, m, &
                    -isign, 1.0d0, fw_table ( 1, 1, ip ), ltabl, work( 1 ), lwork)
 #else
@@ -1517,7 +1517,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
       C_POINTER, save :: bw_planz(  ndims ) = 0
       C_POINTER, save :: bw_planxy( ndims ) = 0
 
-#elif defined __AIX
+#elif defined __ESSL
 
       INTEGER, PARAMETER :: ltabl = 20000 + 3 * nfftx
       real(8), save :: aux3( ltabl, ndims )
@@ -1603,7 +1603,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
              f(nstart:),  (/ldx, ldy/), 1, ldx*ldy, f(nstart:), (/ldx, ldy/), &
              1, ldx*ldy, 1, FFTW_ESTIMATE )
 
-#elif defined __AIX
+#elif defined __ESSL
 
          if( nz /= dims(3,icurrent) ) then
            call dcft( 1, f(1), ldx*ldy, 1, f(1), ldx*ldy, 1, nz, ldx*ldy, &
@@ -1655,7 +1655,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
       call dfftw_execute_dft(bw_planz(ip), f(1:), f(1:))
       call dfftw_execute_dft(bw_planxy(ip), f(nstart:), f(nstart:))
 
-#elif defined __AIX
+#elif defined __ESSL
 
       !   fft in the z-direction...
 
@@ -1727,7 +1727,7 @@ integer function good_fft_dimension (n)
   ! this is the default: max dimension = fft dimension
   nx = n
   !
-#if defined(__AIX) || defined(DXML)
+#if defined(__ESSL) || defined(DXML)
   log2n = LOG ( dble (n) ) / LOG ( 2.0_DP )
   ! log2n is the logarithm of n in base 2
   IF ( ABS (NINT(log2n) - log2n) < 1.0d-8 ) nx = n + 1
@@ -1789,7 +1789,7 @@ function allowed (nr)
 
   else
 
-#if defined __AIX
+#if defined __ESSL
 
      ! IBM machines with essl libraries
 

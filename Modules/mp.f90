@@ -223,7 +223,7 @@
         IF (ierr/=0) CALL mp_stop(8000)
 #endif
 
-#if defined __HPM && defined __AIX
+#if defined __HPM 
 
         !   initialize the IBM Harware performance monitor
       
@@ -246,7 +246,7 @@
         ierr = 0
         taskid = 0
 
-#if defined __HPM && defined __AIX
+#if defined __HPM 
 
         !   terminate the IBM Harware performance monitor
 

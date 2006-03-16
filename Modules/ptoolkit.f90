@@ -905,7 +905,7 @@
 
         ALLOCATE( work( 3*n ) )
 
-#if defined __AIX
+#if defined __ESSL
           IOPT = 0
           IF((JOBZ .EQ. 'V') .OR. (JOBZ .EQ. 'v') ) iopt = iopt + 1
           IF((UPLO .EQ. 'U') .OR. (UPLO .EQ. 'u') ) iopt = iopt + 20
@@ -983,7 +983,7 @@
         !
         ! ... call the Lapack routine
         !
-#if defined (__AIX)
+#if defined __ESSL
         !
         CALL ZHPEV( 1, aloc, d, ev, ldv, n, cwork, 4*n )
         !
@@ -2387,7 +2387,7 @@
         REAL(DP), ALLOCATABLE :: RWORK(:)
         COMPLEX(DP), ALLOCATABLE :: ZWORK(:)
 
-#if defined __AIX
+#if defined __ESSL
         IOPT = 0
         IF((JOBZ .EQ. 'V') .OR. (JOBZ .EQ. 'v') ) iopt = iopt + 1
         IF((UPLO .EQ. 'U') .OR. (UPLO .EQ. 'u') ) iopt = iopt + 20
