@@ -102,7 +102,7 @@ aix )
 	try_f90="xlf90_r xlf90 f90"
 	try_ar="ar"
 	try_arflags="-X64 ruv"
-	try_dflags="-D__AIX -D__XLF"
+	try_dflags="-D__AIX"
 	;;
 mips )
 	try_f90="f90"
@@ -141,7 +141,7 @@ mac )
 	try_f90="xlf90 f90"
 	try_ar="ar"
 	try_arflags="ruv"
-	try_dflags="-D__MAC -D__XLF"
+	try_dflags="-D__MAC"
 	ranlib="ranlib"
 	;;
 cygwin )
@@ -846,7 +846,8 @@ then
 		LDFLAGS="$test_ldflags"
 		LIBS=""
 		AC_SEARCH_LIBS(dgemm, essl, have_essl=1 have_blas=1
-			       blas_libs="$LIBS")
+			       blas_libs="$LIBS" 
+                               try_dflags="$try_dflags -D__ESSL")
 		;;
 
 	mips:* )
