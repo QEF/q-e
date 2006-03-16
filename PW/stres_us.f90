@@ -173,13 +173,15 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              END DO
           END DO
           !
+          ! ... a factor 2 accounts for the other half of the G-vector sphere
+          !
           DO ipol = 1, 3
              DO jpol = 1, ipol
                 DO i = 1, npw
                    work1(i) = evc(i,ibnd) * gk(ipol,i) * gk(jpol,i) * qm1(i)
                 END DO
                 sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                                      2.D0 * wg(ibnd,ik) * &
+                                      4.D0 * wg(ibnd,ik) * &
                                       DDOT( 2 * npw, work1, 1, work2, 1 )
              END DO
           END DO
@@ -224,22 +226,20 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                 END DO
              END DO
              !
+             ! ... a factor 2 accounts for the other half of the G-vector sphere
+             !
              DO jpol = 1, ipol
                 DO i = 1, npw
                    work1(i) = evc(i,ibnd) * gk(jpol,i)
                 END DO
                 sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                                      2.D0 * wg(ibnd,ik) * &
+                                      4.D0 * wg(ibnd,ik) * &
                                       DDOT( 2 * npw, work1, 1, work2, 1 )
              END DO
           END DO
        END DO
        !
 10     CONTINUE
-       !
-       ! ... the factor 2 accounts for the other half of the G-vector sphere
-       !
-       sigmanlc(:,:) = 2.D0 * sigmanlc(:,:)
        !
        DO l = 1, 3
           sigmanlc(l,l) = sigmanlc(l,l) - evps
@@ -600,7 +600,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                    sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
                                       2.D0 * wg(ibnd,ik) * & 
                                       DDOT( 2 * npw, work1, 1, work2, 1 )
-                END IF
+               END IF
              END DO
           END DO
        END DO
