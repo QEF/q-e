@@ -97,8 +97,6 @@ SUBROUTINE punch_band (filband, spin_component, lsigma)
 
   IMPLICIT NONE
   CHARACTER (len=*) :: filband
-  REAL(DP) :: proold
-  ! the best overlap product
   COMPLEX(DP) :: pro
   ! the product of wavefunctions
   INTEGER :: spin_component
@@ -115,7 +113,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma)
   ! as above for the noncolinear case
   INTEGER :: ibnd, jbnd, ik, ikb, ig, npwold, ios, nks1, nks2, ipol, ih, is1
   ! counters
-  INTEGER, ALLOCATABLE :: ok (:), igkold (:), il (:)
+  INTEGER, ALLOCATABLE :: ok (:), igkold (:), il (:), ilold(:)
   ! ok: keeps track of which bands have been already ordered
   ! igkold: indices of k+G at previous k-point
   ! il: band ordering
@@ -125,13 +123,14 @@ SUBROUTINE punch_band (filband, spin_component, lsigma)
   ! ndeg : number of degenerate states
   INTEGER, ALLOCATABLE :: degeneracy(:), degbands(:,:), INDEX(:)
   ! degbands keeps track of which states are degenerate
-  INTEGER :: iunpun_sigma(4)
+  INTEGER :: iunpun_sigma(4), indjbnd
   CHARACTER(LEN=256) :: nomefile
   REAL(DP), ALLOCATABLE:: edeg(:)
   REAL(DP), ALLOCATABLE:: sigma_avg(:,:,:)
   ! expectation value of sigma
-  REAL(DP), PARAMETER :: eps = 0.001
+  REAL(DP), PARAMETER :: eps = 0.00001
   ! threshold (Ry) for degenerate states 
+  REAL(DP) :: minene
   COMPLEX(DP), EXTERNAL :: cgracsc, cgracsc_nc
  ! scalar product with the S matrix
 
@@ -179,9 +178,9 @@ SUBROUTINE punch_band (filband, spin_component, lsigma)
   END IF
 
   ALLOCATE (igkold (npwx))    
-  ALLOCATE (ok (nbnd), il (nbnd))    
+  ALLOCATE (ok (nbnd), il (nbnd), ilold(nbnd) )
   ALLOCATE (degeneracy(nbnd), edeg(nbnd))
-  ALLOCATE (INDEX(maxdeg), degbands(nbnd,maxdeg))
+  ALLOCATE (INDEX(nbnd), degbands(nbnd,maxdeg))
   !
   IF (nspin==1.OR.nspin==4) THEN
      nks1=1
@@ -242,17 +241,31 @@ SUBROUTINE punch_band (filband, spin_component, lsigma)
         DO ibnd = 1, nbnd
            ok (ibnd) = 0
         ENDDO
+!
+! The bands are checked in order of increasing energy.
+!
+        DO ibnd=1,nbnd
+           index(ibnd)=ibnd
+           edeg(ibnd)=et(il(ibnd),ik-1)
+        ENDDO
+        CALL hpsort(nbnd, edeg, index)
         DO ibnd = 1, nbnd
            IF (noncolin) THEN
               old_nc = (0.d0, 0.d0)
               DO ipol=1, npol
                  DO ig = 1, npwold
-                    old_nc(igkold(ig),ipol)=psiold_nc(ig,ipol,ibnd)
+                    old_nc(igkold(ig),ipol)=psiold_nc(ig,ipol,index(ibnd))
                  END DO
               END DO
-              proold = 0.d0
-              DO jbnd = 1, nbnd
-                 IF (ok (jbnd) == 0) THEN
+           ELSE
+              old = (0.d0, 0.d0)
+              DO ig = 1, npwold
+                 old (igkold (ig) ) = psiold (ig, index(ibnd))
+              END DO
+           END IF
+           DO jbnd = 1, nbnd
+              IF (ok (jbnd) == 0) THEN
+                 IF (noncolin) THEN
                     new_nc = (0.d0, 0.d0)
                     DO ipol=1,npol
                        DO ig = 1, npw
@@ -260,37 +273,41 @@ SUBROUTINE punch_band (filband, spin_component, lsigma)
                        END DO
                     END DO
                     pro = cgracsc_nc (nkb,becp_nc(1,1,jbnd), &
-                              becpold_nc(1,1,ibnd), nhm, ntyp, nh, &
+                              becpold_nc(1,1,index(ibnd)), nhm, ntyp, nh, &
                               nat, ityp, ngm, npol, new_nc, old_nc, tvanp)
-                    IF (abs (pro) > proold) THEN
-                       il (ibnd) = jbnd
-                       proold = abs (pro)
-                    END IF
-                 END IF
-              END DO
-              ok (il (ibnd) ) = 1
-           ELSE
-              old = (0.d0, 0.d0)
-              DO ig = 1, npwold
-                 old (igkold (ig) ) = psiold (ig, ibnd)
-              END DO
-              proold = 0.d0
-              DO jbnd = 1, nbnd
-                 IF (ok (jbnd) == 0) THEN
+                 ELSE
                     new (:) = (0.d0, 0.d0)
                     DO ig = 1, npw
                        new (igk (ig) ) = evc (ig, jbnd)
                     END DO
-                    pro = cgracsc (nkb, becp (1, jbnd), becpold (1, ibnd), &
+                    pro=cgracsc(nkb,becp(1,jbnd),becpold(1,index(ibnd)), &
                          nhm, ntyp, nh, qq, nat, ityp, ngm, NEW, old, tvanp)
-                    IF (ABS (pro) > proold) THEN
-                       il (ibnd) = jbnd
-                       proold = ABS (pro)
-                    END IF
                  END IF
-              END DO
-              ok (il (ibnd) ) = 1
-           END IF
+!                 write(6,'(3i5,f15.10)') ik,index(ibnd), jbnd, abs(pro)
+                 IF (abs (pro) > 1.d-2 ) THEN
+                    il (index(ibnd)) = jbnd
+                    GOTO 10
+                 END IF
+              END IF
+           END DO
+!           WRITE(6,*) '  no band found', ik, ilold(index(ibnd)), &
+!                        et(ilold(index(ibnd)),ik-1)*rytoev
+!
+!     no band found. Takes the closest in energy. NB: This should happen only
+!     for high energy bands. 
+!
+           minene=1.d10
+           DO jbnd = 1, nbnd
+              IF (ok (jbnd) == 0) THEN
+                 IF (abs(et(index(ibnd),ik)-et(jbnd,ik))<minene) THEN
+                    indjbnd=jbnd
+                    minene=abs(et(index(ibnd),ik)-et(jbnd,ik))
+                 ENDIF
+              ENDIF
+           ENDDO
+           il(index(ibnd))=indjbnd
+10         CONTINUE
+           ok (il (index(ibnd)) ) = 1
         END DO
         !
         !  if there were bands crossing at degenerate eigenvalues
@@ -334,6 +351,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma)
      DO ig = 1, npw
         igkold (ig) = igk (ig)
      ENDDO
+     ilold=il
      npwold = npw
      !
      !  find degenerate eigenvalues
@@ -396,7 +414,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma)
   !
   DEALLOCATE (index, degbands)
   DEALLOCATE (edeg, degeneracy)
-  DEALLOCATE (il, ok)
+  DEALLOCATE (ilold, il, ok)
   DEALLOCATE (igkold)
   IF (noncolin) THEN
      DEALLOCATE (sigma_avg)
