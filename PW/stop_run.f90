@@ -27,7 +27,7 @@ SUBROUTINE stop_run( flag )
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: flag
-  LOGICAL             :: exst
+  LOGICAL             :: exst, opnd
   !
   !
   IF ( lpath ) THEN
@@ -48,11 +48,15 @@ SUBROUTINE stop_run( flag )
   !
   IF ( twfcollect .AND. flag ) THEN
      !
-     CLOSE( UNIT = iunwfc, STATUS = 'DELETE' )
+     INQUIRE( UNIT = iunwfc, OPENED = opnd )
+     !
+     IF ( opnd ) CLOSE( UNIT = iunwfc, STATUS = 'DELETE' )
      !
   ELSE
      !
-     CLOSE( UNIT = iunwfc, STATUS = 'KEEP' )
+     INQUIRE( UNIT = iunwfc, OPENED = opnd )
+     !
+     IF ( opnd ) CLOSE( UNIT = iunwfc, STATUS = 'KEEP' )
      !
   END IF
   !      
@@ -79,11 +83,19 @@ SUBROUTINE stop_run( flag )
   !
   ! ... close unit for electric field if needed
   !
-  IF ( lelfield ) CLOSE( UNIT = iunefield, STATUS = 'KEEP' )
+  IF ( lelfield ) THEN
+     !
+     INQUIRE( UNIT = iunefield, OPENED = opnd )
+     !
+     IF ( opnd ) CLOSE( UNIT = iunefield, STATUS = 'KEEP' )
+     !
+  END IF
   !
   ! ... iunigk is kept open during the execution - close and remove
   !
-  CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
+  INQUIRE( UNIT = iunigk, OPENED = opnd )
+  !
+  IF ( opnd ) CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
   !
   CALL print_clock_pw()
   !
@@ -91,11 +103,12 @@ SUBROUTINE stop_run( flag )
   !
   CALL mp_end()
   !
-#ifdef __T3E
+#if defined (__T3E)
   !
   ! ... set streambuffers off
   !
   CALL set_d_stream( 0 )
+  !
 #endif
   !
   CALL clean_pw( .TRUE. )
