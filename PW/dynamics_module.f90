@@ -18,7 +18,7 @@ MODULE dynamics_module
   USE io_global, ONLY : stdout
   USE io_files,  ONLY : prefix, tmp_dir
   USE constants, ONLY : tpi, fpi
-  USE constants, ONLY : amconv, convert_E_to_temp, au_ps, bohr_radius_cm
+  USE constants, ONLY : amconv, ry_to_kelvin, au_ps, bohr_radius_cm
   USE constants, ONLY : eps8, eps16
   !
   USE basic_algebra_routines
@@ -375,7 +375,7 @@ MODULE dynamics_module
       !
       ! ... find the new temperature
       !
-      temp_new = 2.D0 / 3.D0 * ekin / nat * convert_E_to_temp
+      temp_new = 2.D0 / 3.D0 * ekin / nat * ry_to_kelvin
       !
       ! ... save on file all the needed quantities
       !
@@ -953,10 +953,9 @@ MODULE dynamics_module
       !
       INTEGER  :: na, nb
       REAL(DP) :: total_mass, kt, sigma, coeff, ek, ml(3), system_temp
-      INTEGER  :: hist(-1000:1000), index
       !
       !
-      kt = temperature / convert_E_to_temp
+      kt = temperature / ry_to_kelvin
       !
       ! ... starting velocities have a Maxwell-Boltzmann distribution
       !
@@ -1034,7 +1033,7 @@ MODULE dynamics_module
       ! ... temperature is usually changed. Set again the temperature to the
       ! ... right value.
       !
-      system_temp = 2.D0 * ek / ( 3.D0 * nat ) * alat**2 * convert_E_to_temp
+      system_temp = 2.D0 * ek / ( 3.D0 * nat ) * alat**2 * ry_to_kelvin
       !
       CALL thermalize( system_temp, temperature )
       !

@@ -87,7 +87,7 @@ MODULE constants
   REAL(DP), PARAMETER :: eps16 = 1.0D-16
   REAL(DP), PARAMETER :: eps32 = 1.0D-32
   !
-  REAL(DP), PARAMETER :: eV_to_kelvin      = 1.1604D4            ! from eV to Kelvin
-  REAL(DP), PARAMETER :: convert_E_to_temp = 315642.28D0 * 0.5D0 ! from Ry to Kelvin
+  REAL(DP), PARAMETER :: eV_to_kelvin = 1.1604D4            ! from eV to Kelvin
+  REAL(DP), PARAMETER :: ry_to_kelvin = 315642.28D0 * 0.5D0 ! from Ry to Kelvin
   !
 END MODULE constants
