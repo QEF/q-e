@@ -38,7 +38,7 @@ MODULE from_restart_module
     USE control_flags,        ONLY : tranp, trane, trhor, iprsta, tpre, &
                                      tzeroc, tzerop, tzeroe, tfor, thdyn, &
                                      lwf,  tprnfor, tortho, tv0rd, amprp, &
-                                     taurdr, ortho_eps, ortho_max, nbeg
+                                     taurdr, ortho_eps, ortho_max, nbeg, dt_old
     USE ions_positions,       ONLY : taus, tau0, tausm, taum, vels, velsm, &
                                      ions_hmove
     USE ions_base,            ONLY : na, nat, nsp, randpos, zv, ions_vel, &
@@ -384,6 +384,14 @@ MODULE from_restart_module
        !
        END IF
     END IF
+    !
+    ! dt_old should be -1.0 here if untouched ...
+    !
+    if (dt_old.gt.0.0d0) then
+       tausm = taus - (taus-tausm)*delt/dt_old
+       xnhpm = xnhp0 - (xnhp0-xnhpm)*delt/dt_old
+       WRITE( stdout, '(" tausm & xnhpm were rescaled ")' )
+    endif
     !
     RETURN
     !

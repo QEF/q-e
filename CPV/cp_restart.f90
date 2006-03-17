@@ -39,7 +39,7 @@ MODULE cp_restart
                              et, rho, c04, cm4, c02, cm2, mat_z )
       !------------------------------------------------------------------------
       !
-      USE control_flags,            ONLY : gamma_only, force_pairing
+      USE control_flags,            ONLY : gamma_only, force_pairing, reduce_io
       USE io_files,                 ONLY : psfile, pseudo_dir
       USE printout_base,            ONLY : title
       USE grid_dimensions,          ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3l
@@ -108,7 +108,7 @@ MODULE cp_restart
       COMPLEX(DP), OPTIONAL, INTENT(IN) :: cm2(:,:)     ! 
       REAL(DP),    OPTIONAL, INTENT(IN) :: mat_z(:,:,:) ! 
       !
-      LOGICAL, PARAMETER    :: write_charge_density=.true.
+      LOGICAL               :: write_charge_density
       CHARACTER(LEN=20)     :: dft_name
       CHARACTER(LEN=256)    :: dirname, filename, rho_file_base
       CHARACTER(LEN=4)      :: cspin
@@ -130,6 +130,8 @@ MODULE cp_restart
       LOGICAL               :: lsda
       REAL(DP)              :: s0, s1, cclock
       !
+      !
+      write_charge_density = .NOT.reduce_io
       !
       IF ( ionode ) THEN
          !

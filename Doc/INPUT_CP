@@ -176,6 +176,7 @@ outdir         CHARACTER ( default = current directory ('./') )
 
 disk_io        CHARACTER
                'high', 'default', 'low', 'minimal'
+               'low' will skip writing charge density files in CP
 
 pseudo_dir     CHARACTER ( default = current directory ('./') )
                directory containing pseudopotential files.
@@ -480,6 +481,10 @@ ion_velocities CHARACTER
                initial ionic velocities
                default     = restart the simulation with atomic velocities read
                              from the restart file
+               change_step = restart the simulation with atomic velocities read
+                             from the restart file, with rescaling due to the
+                             timestep change, specify the old step via tolp
+                             as in tolp = 'old_time_step_value' in au
                random      = start the simulation with random atomic velocities
                from_input  = restart the simulation with atomic velocities read
                              from standard input 
@@ -535,6 +540,8 @@ tolp           REAL ( default = 100.D0 )
                tolerance (in Kelvin) of the rescaling. When ionic temperature
                differs from "tempw" more than "tolp" apply rescaling.
                meaningful only with " ion_temperature = 'rescaling' "
+               and with ion_velocities='change_step', where it specifies 
+               the old timestep
 
 tranp(i)       LOGICAL ( default = .FALSE. )
                If .TRUE. randomize ionic positions ( see "amprp" ) for the

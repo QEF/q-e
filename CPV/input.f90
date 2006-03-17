@@ -200,7 +200,8 @@ MODULE input
                                tatomicwfc_ => tatomicwfc, &
                                printwfc_   => printwfc, &
                                tortho_     => tortho,   &
-                               nstep_      => nstep    
+                               nstep_      => nstep,    &    
+                               reduce_io_      => reduce_io    
      USE control_flags, ONLY : t_diis_simple_ => t_diis_simple, &
                                t_diis_        => t_diis, &
                                tsde_          => tsde, &
@@ -225,7 +226,8 @@ MODULE input
                                tzerop_ => tzerop, &
                                tv0rd_  => tv0rd, &
                                tranp_  => tranp, &
-                               amprp_  => amprp
+                               amprp_  => amprp, &
+                               dt_old_ => dt_old
      USE control_flags, ONLY : tionstep_ => tionstep, &
                                nstepe_   => nstepe
      USE control_flags, ONLY : tzeroc_ => tzeroc, &
@@ -329,6 +331,8 @@ MODULE input
      !
      trhor_  = ( TRIM( calculation ) == 'nscf' )
      tvlocw_ = ( TRIM( disk_io ) == 'high' )     !  warning this is not working
+     ! for now use reduce_io in CP to specify if the charge density is saved
+     reduce_io_ = ( TRIM( disk_io ) == 'low' )
      !
      SELECT CASE( TRIM( verbosity ) )
        CASE( 'minimal' )
@@ -662,6 +666,11 @@ MODULE input
           tzerop_ = .FALSE.
           tv0rd_ = .FALSE.
           tcap_ = .FALSE.
+        CASE ('change_step')
+          tzerop_ = .FALSE.
+          tv0rd_ = .FALSE.
+          tcap_ = .FALSE.
+          dt_old_ = tolp
         CASE ('zero')
           tzerop_ = .TRUE.
           tv0rd_ = .FALSE.

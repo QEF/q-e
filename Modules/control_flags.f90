@@ -46,7 +46,7 @@ MODULE control_flags
             newnfi, tnewnfi, tfor, tpre, tzeroe, tsde, tsdp, tsdc, taurdr,   &
             ndr, ndw, tortho, ortho_eps, ortho_max, tstress, tprnfor,        &
             timing, memchk, tconjgrad, tprnsfac, toptical, tcarpar,          &
-            trane, ampre, tranp, amprp, tdipole, t_diis, t_diis_simple,      &
+            trane,dt_old,ampre, tranp, amprp, tdipole, t_diis, t_diis_simple,&
             t_diis_rot, tnosee, tnosep, tnoseh, tcp, tcap, tdamp, tdampions, &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
             tsteepdesc, ionic_conjugate_gradient, tconjgrad_ion, tatomicwfc, &
@@ -134,6 +134,10 @@ MODULE control_flags
   !
   LOGICAL :: tnewnfi = .FALSE.
   INTEGER :: newnfi  = 0
+  !
+  ! This variable is used whenever a timestep change is requested
+  !
+  REAL(DP) :: dt_old = -1.0D0
   !
   ! ... Wave function randomization
   !
