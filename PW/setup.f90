@@ -966,9 +966,14 @@ SUBROUTINE check_para_diag_efficiency()
   !
   use_para_diago = .FALSE.
   !
-  !!! not yet working
+#if defined(__AIX)
+  !
+  ! ... *** not yet working on IBM ***
+  !
   IF ( gamma_only ) RETURN
-  !!!
+  !
+#endif
+  !
   IF ( isolve /= 0 .OR. nproc_pool == 1 ) RETURN
   !
   m_min = nbnd / nproc_pool * nproc_pool
