@@ -14,9 +14,9 @@
 	$(CC) $(CFLAGS) -c $<
 
 ## If the mass library is available, use
-# CPPFLAGS     = -D__AIX,-D__PARA,-D__MPI,-D__MASS,-DHAS_ZHEGVX
+# CPPFLAGS     = -D__AIX,-D__PARA,-D__MPI,-D__MASS,-D__ESSL
 
-CPPFLAGS     = -D__AIX,-D__PARA,-D__MPI,-DHAS_ZHEGVX
+CPPFLAGS     = -D__AIX,-D__PARA,-D__MPI,-D__ESSL
 
 # Fortran compiler:
 # Use -g -C without -s in LDFLAGS for debugging

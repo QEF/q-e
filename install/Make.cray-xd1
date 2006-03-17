@@ -1,41 +1,41 @@
 
-# System-dependent definitions for Mac OS-X - Contributed by Stefano Baroni
-# xlf compiler, veclib framework (optimized blas and lapack for mac)
-# edit according to your needs
+# make.sys for CRAY-XD1, enhanced version for CINECA by Carlo Cavazzoni
+# Edit according to your need
+
+# compilation rules
 
 .SUFFIXES :
 .SUFFIXES : .o .c .f .f90
 
 .f90.o:
-	$(MPIF90) $(F90FLAGS) -c $<
+        $(MPIF90) $(F90FLAGS) -c $<
 
 .f.o:
-	$(F77) $(FFLAGS) -c $<
+        $(F77) $(FFLAGS) -c $<
 
 .c.o:
-	$(CC) $(CFLAGS) -c $<
+        $(CC) $(CFLAGS) -c $<
 
 
-CC             = gcc
-MPICC          = gcc
-CFLAGS         = -O3 -fomit-frame-pointer -I/usr/include/malloc $(DFLAGS) $(IFLAGS)
+CC             = pgcc
+MPICC          = mpicc
+CFLAGS         = -fast  -Mpreprocess -O2 -tp amd64 -fastsse $(DFLAGS) $(IFLAGS)
 CPP            = cpp
 CPPFLAGS       = -P -traditional $(DFLAGS) $(IFLAGS)
-F90            = xlf90
-MPIF90         = xlf90
-F90FLAGS       = $(FFLAGS) -qfree=f90 -WF,$(FDFLAGS) $(IFLAGS) $(MODFLAGS)
-F90FLAGS_NOOPT = $(FFLAGS_NOOPT) -qfree=f90 -WF,$(FDFLAGS) $(IFLAGS) $(MODFLAGS)
-F77            = xlf
-MPIF77         = xlf
-FFLAGS         = -O2 -qarch=auto -qtune=auto -qsuffix=cpp=f90 -qdpc -qalias=nointptr
-# higher optimizations -O3 and -O4 may yield problems
+F90            = pgf90
+MPIF90         = mpif90
+F90FLAGS       = $(FFLAGS) $(FDFLAGS) $(IFLAGS) $(MODFLAGS)
+F90FLAGS_NOOPT = $(FFLAGS_NOOPT) $(FDFLAGS) $(IFLAGS) $(MODFLAGS)
+F77            = pgf77
+MPIF77         = mpif77
+FFLAGS         = -fast -r8 -Mpreprocess -O2 -tp amd64 -fastsse
 FFLAGS_NOOPT   = -O0
-LD             = xlf90
-LDFLAGS        =
+LD             = mpif90
+LDFLAGS        = 
 AR             = ar
 ARFLAGS        = ruv
-RANLIB         = ranlib
-BLAS_LIBS      =  -Wl,-framework -Wl,vecLib
+RANLIB         = echo
+BLAS_LIBS      = -L/opt/acml2.5-64bit/pgi64/lib/ -lacml
 LAPACK_LIBS    = 
 FFT_LIBS       = 
 MPI_LIBS       = 
@@ -46,14 +46,15 @@ MASS_LIBS      =
 
 # See include/defs.h.README for a list of precompilation options
 # (possible arguments to -D or -U) and their meaning
-DFLAGS         = -D__MAC -D__FFTW -D__USE_INTERNAL_FFTW
-FDFLAGS        = -D__MAC,-D__FFTW,-D__USE_INTERNAL_FFTW
+#DFLAGS         = -D__LINUX64 -D__PGI -D__FFTW -D__USE_INTERNAL_FFTW -D__MPI -D__PARA -D__NOSMD
+DFLAGS         = -D__LINUX64 -D__PGI -D__FFTW -D__USE_INTERNAL_FFTW -D__MPI -D__PARA
+FDFLAGS        = $(DFLAGS)
 IFLAGS         = -I../include 
-MODFLAGS       = -I. -I../Modules -I../PW -I../PH -I../iotk/src
+MODFLAGS       = -I. -I../Modules -I../PW -I../PH -I../iotk/src -I../CPV
 
 LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a
 # LIBS must contain the location of all needed external libraries
-LIBS           = ../flib/blas_mac.o $(LAPACK_LIBS) $(BLAS_LIBS) $(FFT_LIBS) $(MPI_LIBS) $(MASS_LIBS) -lSystemStubs
+LIBS           = $(LAPACK_LIBS) $(BLAS_LIBS) $(FFT_LIBS) $(MPI_LIBS) $(MASS_LIBS)
 # MYLIB can be one of the following (depending on LIBS):
 # blas       : compile the local copy of blas routines
 # lapack     : compile the local copy of lapack routines
@@ -65,4 +66,6 @@ LIBS           = ../flib/blas_mac.o $(LAPACK_LIBS) $(BLAS_LIBS) $(FFT_LIBS) $(MP
 #              use this together with T3E scilib
 # lapack_mkl : compile only lapack routines not present in Intel MKL
 #              use this together with Intel MKL
-MYLIB          = blas_mac.o
+MYLIB          = 
+
+
