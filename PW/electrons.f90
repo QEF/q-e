@@ -42,7 +42,7 @@ SUBROUTINE electrons()
   USE scf,                  ONLY : rho, vr, vltot, vrs, rho_core
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix,       &
                                    iprint, istep, lscf, lmd, conv_elec,       &
-                                   restart, reduce_io, iverbosity
+                                   lbands, restart, reduce_io, iverbosity
   USE io_files,             ONLY : prefix, iunwfc, iunocc, nwordwfc, iunpath, &
                                    output_drho, iunefield
   USE ldaU,                 ONLY : ns, nsnew, eth, Hubbard_U, &
@@ -807,13 +807,13 @@ SUBROUTINE electrons()
           !
        END DO
        !
-       IF ( lgauss ) THEN
+       IF ( lgauss .AND. .NOT. lbands ) THEN
           !
           ef = efermig( et, nbnd, nks, nelec, wk, degauss, ngauss, 0, isk )
           !
           WRITE( stdout, 9040 ) ef * rytoev
           !
-       ELSE IF ( ltetra ) THEN
+       ELSE IF ( ltetra .AND. .NOT. lbands ) THEN
           !
           ef = efermit( et, nbnd, nks, nelec, nspin, ntetra, tetra, 0, isk )
           !

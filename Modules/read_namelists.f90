@@ -508,26 +508,6 @@ MODULE read_namelists_module
      !
      !=----------------------------------------------------------------------=!
      !
-     !  Variables initialization for Namelist RAMAN
-     !
-     !----------------------------------------------------------------------
-     SUBROUTINE raman_defaults( prog )
-       !----------------------------------------------------------------------
-       !
-       IMPLICIT NONE
-       !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
-       !
-       !
-       b_length = 0.d0
-       lcart = .false.
-       ! 
-       RETURN
-       !
-     END SUBROUTINE
-     !
-     !=----------------------------------------------------------------------=!
-     !
      !  Variables initialization for Namelist WANNIER
      !
      !----------------------------------------------------------------------
@@ -977,30 +957,6 @@ MODULE read_namelists_module
        RETURN
        !
      END SUBROUTINE     
-     !
-     !=----------------------------------------------------------------------------=!
-     !
-     !  Broadcast variables values for Namelist RAMAN
-     !
-     !=----------------------------------------------------------------------------=!
-     !
-     !----------------------------------------------------------------------
-     SUBROUTINE raman_bcast()
-       !----------------------------------------------------------------------
-       !
-       USE io_global, ONLY: ionode_id
-       USE mp,        ONLY: mp_bcast
-       !
-       IMPLICIT NONE
-       !
-       !
-       CALL mp_bcast( b_length, ionode_id )
-       CALL mp_bcast( lcart,    ionode_id )
-       !
-       RETURN
-       !
-     END SUBROUTINE
-     !
      !
      !=----------------------------------------------------------------------------=!
      !
@@ -1516,25 +1472,6 @@ MODULE read_namelists_module
      !
      !=----------------------------------------------------------------------=!
      !
-     !  Check input values for Namelist RAMAN
-     !
-     !=----------------------------------------------------------------------=!
-     !
-     !----------------------------------------------------------------------
-     SUBROUTINE raman_checkin( prog )
-       !--------------------------------------------------------------------
-       !
-       IMPLICIT NONE
-       !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
-       !
-       !
-       RETURN
-       !
-     END SUBROUTINE
-     !
-     !=----------------------------------------------------------------------=!
-     !
      !  Check input values for Namelist WANNIER
      !
      !=----------------------------------------------------------------------=!
@@ -1582,10 +1519,7 @@ MODULE read_namelists_module
                  ion_dynamics      = 'none'
                  cell_dynamics     = 'none'
              END IF
-          CASE ('nscf')
-             ! IF( prog == 'CP' ) &
-             !    CALL errore( sub_name,' calculation '//calculation// &
-             !                 & ' not implemented ',1)
+          CASE ('nscf', 'bands')
              IF( prog == 'CP' ) occupations = 'bogus'
              IF( prog == 'CP' ) electron_dynamics = 'damp'
              IF( prog == 'PW' ) startingpot = 'file'
@@ -1595,10 +1529,8 @@ MODULE read_namelists_module
                              & ' not implemented ',1)
              IF( prog == 'PW' ) startingpot = 'file'
           CASE ('raman')
-             IF( prog == 'CP' ) &
-                  CALL errore( sub_name,' calculation '//TRIM(calculation)// &
-                  & ' not implemented ',1)
-             IF( prog == 'PW' ) startingpot = 'file'
+             CALL errore( sub_name,' calculation '//TRIM(calculation)// &
+                  & ' no longer implemented ',1)
           CASE ( 'cp-wf' )
              IF( prog == 'CP' ) THEN
                 electron_dynamics = 'damp'
@@ -1694,7 +1626,6 @@ MODULE read_namelists_module
           END IF
           !
           IF ( calculation == 'nscf' .OR. &
-               calculation == 'raman'.OR. &
                calculation == 'phonon' ) THEN
              !
              startingpot = 'file'
@@ -1882,24 +1813,6 @@ MODULE read_namelists_module
        !
        CALL phonon_bcast()
        CALL phonon_checkin( prog )
-       !
-       ! ... RAMAN NAMELIST 
-       !
-       CALL raman_defaults( prog )
-       ios = 0
-       IF( ionode ) THEN
-          IF( TRIM( calculation ) == 'raman' ) THEN
-             READ( 5, raman, iostat = ios )
-          END IF
-       END IF
-       CALL mp_bcast( ios, ionode_id )
-       IF( ios /= 0 ) THEN
-          CALL errore( ' read_namelists ', &
-                     & ' reading namelist raman ', ABS(ios) )
-       END IF
-       !
-       CALL raman_bcast()
-       CALL raman_checkin( prog )
        !
        ! ... WANNIER NAMELIST
        !

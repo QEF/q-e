@@ -99,8 +99,6 @@ SUBROUTINE iosys()
                             nelec_   => nelec, &
                             nelup_   => nelup, &
                             neldw_   => neldw, &
-                            b_length_ => b_length, &
-                            lcart_   => lcart, &
                             tot_charge_ => tot_charge, &
                             tot_magnetization_ => tot_magnetization, &
                             multiplicity_ => multiplicity
@@ -138,7 +136,7 @@ SUBROUTINE iosys()
                             nosym_       => nosym, &
                             modenum_     => modenum, &
                             reduce_io, langevin_rescaling, ethr, lscf, lbfgs, &
-                            lmd, lpath, lneb, lsmd, lphonon, ldamped, lraman, &
+                            lmd, lpath, lneb, lsmd, lphonon, ldamped, lbands, &
                             lrescale_t, lmetadyn, lconstrain, lcoarsegrained, &
                             restart, twfcollect
   !
@@ -242,10 +240,6 @@ SUBROUTINE iosys()
   ! ... PHONON namelist
   !
   USE input_parameters, ONLY : phonon, modenum, xqq
-  !
-  ! ... RAMAN namelist
-  !
-  USE input_parameters, ONLY : b_length, lcart
   !
   ! ... "path" specific
   !
@@ -592,7 +586,7 @@ SUBROUTINE iosys()
   lsmd      = .FALSE.
   lmovecell = .FALSE.
   lphonon   = .FALSE.
-  lraman    = .FALSE.
+  lbands    = .FALSE.
   lbfgs     = .FALSE.
   ldamped   = .FALSE.
   lforce    = tprnfor
@@ -607,6 +601,12 @@ SUBROUTINE iosys()
   CASE( 'nscf' )
      !
      lforce = .FALSE.
+     nstep  = 1
+     !
+  CASE( 'bands' )
+     !
+     lforce = .FALSE.
+     lbands = .TRUE.
      nstep  = 1
      !
   CASE( 'phonon' )
@@ -741,11 +741,6 @@ SUBROUTINE iosys()
         CALL errore( 'iosys ', 'calculation=' // TRIM( calculation ) // &
                    & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
                    & ' not supported', 1 )
-     !
-  CASE( 'raman' )
-     !
-     lraman    = .TRUE.
-     nstep     = 1
      !
   CASE( 'neb' )
      !
@@ -1155,9 +1150,6 @@ SUBROUTINE iosys()
   cell_factor_ = cell_factor
   modenum_     = modenum
   xqq_         = xqq
-  !
-  b_length_    = b_length
-  lcart_       = lcart
   !
   ! ... general "path" variables
   !

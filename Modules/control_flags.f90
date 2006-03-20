@@ -202,7 +202,7 @@ MODULE control_flags
     lsmd,               &! if .TRUE. the calc. is string dynamics
     lwf,                &! if .TRUE. the calc. is with wannier functions
     lphonon,            &! if .TRUE. the calc. is phonon
-    lraman,             &! if .TRUE. the calc. is raman
+    lbands,             &! if .TRUE. the calc. is band structure
     lconstrain,         &! if .TRUE. the calc. is constraint
     ldamped,            &! if .TRUE. the calc. is a damped dynamics
     lrescale_t,         &! if .TRUE. the ionic temperature is rescaled

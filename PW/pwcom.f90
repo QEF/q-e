@@ -131,8 +131,7 @@ MODULE klist
        nelec,             &! number of electrons
        nelup,             &! number of spin-up electrons (if two_fermi_energies=t)
        neldw,             &! number of spin-dw electrons (if two_fermi_energies=t)
-       tot_charge,        &! total charge
-       b_length            ! length of the b vectors
+       tot_charge
   INTEGER :: &
        ngk(npk),          &! number of plane waves for each k point
        nks,               &! number of k points in this pool
@@ -143,7 +142,6 @@ MODULE klist
   LOGICAL :: &
        lgauss,         &! if .TRUE.: use gaussian broadening
        lxkcry,         &! if .TRUE.:k-pnts in cryst. basis accepted in input
-       lcart,          &! if .TRUE.: b vectors in cartesian coordinates
        two_fermi_energies ! if .TRUE.: nelup and neldw set ef_up and ef_dw 
                           ! separately
   !

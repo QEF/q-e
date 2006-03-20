@@ -49,7 +49,7 @@ SUBROUTINE setup()
   USE gvect,              ONLY : gcutm, ecutwfc, dual, nr1, nr2, nr3
   USE gsmooth,            ONLY : doublegrid, gcutms
   USE klist,              ONLY : xk, wk, xqq, nks, nelec, degauss, lgauss, &
-                                 lxkcry, nkstot, b_length, lcart, &
+                                 lxkcry, nkstot, &
                                  nelup, neldw, two_fermi_energies, &
                                  tot_charge, tot_magnetization, multiplicity
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
@@ -63,7 +63,7 @@ SUBROUTINE setup()
   USE wvfct,              ONLY : nbnd, nbndx, gamma_only
   USE control_flags,      ONLY : tr2, ethr, alpha0, beta0, lscf, lmd, lpath, &
                                  lphonon, david, isolve, niter, noinv, nosym, &
-                                 modenum, lraman
+                                 modenum, lbands
   USE relax,              ONLY : starting_diag_threshold
   USE cellmd,             ONLY : calc
   USE uspp_param,         ONLY : psd, betar, nbeta, dion, jjj, lll, tvanp
@@ -345,7 +345,7 @@ SUBROUTINE setup()
   !
   ltest = ( ethr == 0.D0 )
   !
-  IF ( lphonon .or. lraman ) THEN
+  IF ( lphonon ) THEN
      !
      ! ... in the case of a phonon calculation ethr can not be specified
      ! ... in the input file
@@ -689,66 +689,47 @@ SUBROUTINE setup()
   ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
   ! ... lattice, with the full point symmetry of the lattice.
   ! ... If some symmetries are missing in the crystal, "sgama" computes
-  ! ... the missing k-points. If nosym is true (see above) we do not use
-  ! ... any point-group symmetry and leave k-points unchanged.
+  ! ... the missing k-points. If nosym is true (see above) or if calculating
+  ! ... bands, we do not use any point-group symmetry and leave k-points unchanged.
   !
-  input_nks = nks
-  !
-  CALL sgama( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, nr1,&
-              nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q,  &
-              xqq, modenum, noncolin, m_loc )
-  !
-  CALL checkallsym( nsym, s, nat, tau, ityp, at, &
-                    bg, nr1, nr2, nr3, irt, ftau )
-  !
-  ! ... if dynamics is done the system should have no symmetries
-  ! ... (inversion symmetry alone is allowed)
-  !
-  IF ( lmd .AND. ( nsym == 2 .AND. .NOT. invsym .OR. nsym > 2 ) &
-           .AND. .NOT. ( calc == 'mm' .OR. calc == 'nm' ) ) &
-     CALL infomsg( 'setup', 'Dynamics, you should have no symmetries', -1 )
-  !
-  ! ... Calculate quantities used in tetrahedra method
-  !
-  IF ( ltetra ) THEN
+  IF ( .NOT. lbands ) THEN
      !
-     ntetra = 6 * nk1 * nk2 * nk3
+     CALL sgama( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, nr1,&
+          nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q,  &
+          xqq, modenum, noncolin, m_loc )
      !
-     ALLOCATE( tetra( 4, ntetra ) )    
+     CALL checkallsym( nsym, s, nat, tau, ityp, at, &
+          bg, nr1, nr2, nr3, irt, ftau )
      !
-     CALL tetrahedra( nsym, s, minus_q, at, bg, npk, k1, k2, k3, &
-                      nk1, nk2, nk3, nks, xk, wk, ntetra, tetra )
+     ! ... if dynamics is done the system should have no symmetries
+     ! ... (inversion symmetry alone is allowed)
      !
-  ELSE
+     IF ( lmd .AND. ( nsym == 2 .AND. .NOT. invsym .OR. nsym > 2 ) &
+          .AND. .NOT. ( calc == 'mm' .OR. calc == 'nm' ) ) &
+          CALL infomsg( 'setup', 'Dynamics, you should have no symmetries', -1 )
      !
-     ntetra = 0
+     ! ... Calculate quantities used in tetrahedra method
      !
-  END IF
-  !
-  ! ... non scf calculation: do not change the number of k-points
-  ! ... to account for reduced symmetry, unless you need to
-  ! ... ( as in phonon or raman or DOS calculations, or whenever the
-  ! ... Fermi energy has to be calculated )
-  !
-  ltest = ( nks /= input_nks ) .AND. & 
-          ( .NOT. ( ltetra .OR. lgauss ) ) .AND. &
-          ( .NOT. lscf ) .AND. ( .NOT. ( lphonon .OR. lraman ) ) 
-  IF ( ltest ) THEN
-     !
-     WRITE( stdout, '(/,5X,"Only input k-points are used ", &
-                         & "(inequivalent points not generated)",/)' )
-     !
-     nks = input_nks
+     IF ( ltetra ) THEN
+        !
+        ntetra = 6 * nk1 * nk2 * nk3
+        !
+        ALLOCATE( tetra( 4, ntetra ) )    
+        !
+        CALL tetrahedra( nsym, s, minus_q, at, bg, npk, k1, k2, k3, &
+             nk1, nk2, nk3, nks, xk, wk, ntetra, tetra )
+        !
+     ELSE
+        !
+        ntetra = 0
+        !
+     END IF
      !
   END IF
   !
   ! ... phonon calculation: add k+q to the list of k
   !
   IF ( lphonon ) CALL set_kplusq( xk, wk, xqq, nks, npk ) 
-  !
-  ! ... raman calculation: add k+b to the list of k
-  !
-  IF ( lraman ) CALL set_kplusb(ibrav, xk, wk, b_length, nks, npk, lcart)
   !
 #if defined (EXX)
   IF ( dft_is_hybrid() ) CALL exx_grid_init()
@@ -798,22 +779,6 @@ SUBROUTINE setup()
      kunit = 2
      !
   ENDIF
-  !
-  IF ( lraman ) THEN
-     !
-     IF( lcart ) THEN
-        !
-        kunit = 7
-        !
-     ELSE
-        !
-        IF ( ibrav == 1 ) kunit =  7
-        IF ( ibrav == 2 ) kunit =  9
-        IF ( ibrav == 3 ) kunit = 13
-        !
-     END IF
-     !
-  END IF
   !
   ! ... distribute the k-points (and their weights and spin indices)
   !

@@ -94,10 +94,11 @@ MODULE input_parameters
           ! title = 'title for this simulation'
 
         CHARACTER(LEN=80) :: calculation = 'none'  
-          ! calculation = 'scf', 'relax', 'md', 'cp'*, 'vc-relax', 'vc-md', 
-          !               'vc-cp', 'neb', 'smd', 'cp-wf', 'fpmd', 'metadyn'
           ! Specify the type of the simulation
-          ! 'scf'      = electron minimization
+          ! 'scf'      = electron minimization/selfconsistency
+          ! 'nscf'     = nonselfconsistent calculation of electron states
+          ! 'bands'    = as above, band structure calculation only
+          ! 'phonon'   = as above, plus data needed for a phonon calculation
           ! 'relax'    = ionic minimization
           ! 'cp'       = Car-Parrinello MD
           ! 'md'       = Car-Parrinello MD
@@ -113,7 +114,7 @@ MODULE input_parameters
 
         CHARACTER(LEN=80) :: calculation_allowed(15)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
-          'vc-relax', 'vc-md', 'vc-cp', 'phonon', 'raman', 'neb', 'smd', &
+          'vc-relax', 'vc-md', 'vc-cp', 'phonon', 'bands', 'neb', 'smd', &
           'cp-wf', 'fpmd', 'metadyn' /
           ! Allowed value for calculation parameters
 
@@ -1310,17 +1311,6 @@ MODULE input_parameters
         REAL(DP) :: tr2_ph
 
         NAMELIST / phonon / modenum, xqq, nq1, nq2, nq3, tr2_ph
-
-!=----------------------------------------------------------------------------=!
-!  RAMAN Namelist Input Parameters
-!=----------------------------------------------------------------------------=!
- 
-         REAL(DP) :: b_length
-           ! length of the b-vector
-         LOGICAL :: lcart
-           ! cartesian directions
- 
-         NAMELIST / raman / b_length, lcart
 
 !=----------------------------------------------------------------------------=!  
 !  WANNIER Namelist Input Parameters

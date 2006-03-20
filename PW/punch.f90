@@ -16,7 +16,7 @@ SUBROUTINE punch( what )
   USE klist,                ONLY : nks, nkstot
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho
-  USE control_flags,        ONLY : reduce_io, lscf
+  USE control_flags,        ONLY : reduce_io, lscf, lbands
   USE wvfct,                ONLY : et, wg, nbnd
   USE wavefunctions_module, ONLY : evc, evc_nc
   USE io_files,             ONLY : prefix, iunpun, iunwfc, nwordwfc
@@ -58,7 +58,7 @@ SUBROUTINE punch( what )
   ! ... with few k-points is followed by a non-self-consistent one with added
   ! ... k-points, whose weight is set to zero.
   !
-  IF ( .NOT. lscf ) CALL sum_band()
+  IF ( .NOT. lscf .AND. .NOT. lbands ) CALL sum_band()
   !
   ! ... Write: general variables (including dimensions of the arrays),
   ! ... atomic positions, forces, k-points, eigenvalues
