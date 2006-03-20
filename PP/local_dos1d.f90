@@ -1,3 +1,4 @@
+
 !
 ! Copyright (C) 2001 PWSCF group
 ! This file is distributed under the terms of the
@@ -18,10 +19,11 @@ subroutine local_dos1d (ik, kband, plan)
   USE gvect
   USE gsmooth
   USE lsda_mod, ONLY: current_spin
-  USE uspp, ONLY: becsum
-  USE uspp_param, ONLY: nh, tvanp
+  USE uspp, ONLY: becsum, indv, nhtol, nhtoj
+  USE uspp_param, ONLY: nh, tvanp, nhm
   USE wvfct, ONLY: npw, wg, igk
   USE noncollin_module, ONLY: noncolin, npol
+  USE spin_orb, ONLY: lspinorb, so, fcoef
   USE wavefunctions_module,  ONLY: evc, psic, evc_nc, psic_nc
   USE becmod, ONLY: becp, becp_nc
   implicit none
@@ -50,7 +52,7 @@ subroutine local_dos1d (ik, kband, plan)
   !
   !    And here the local variables
   !
-  integer :: ir, is, ig, ibnd
+  integer :: ir, is, ig, ibnd, is1, is2, kkb, kh
   ! counter on 3D r points
   ! counter on spin polarizations
   ! counter on g vectors
@@ -61,11 +63,15 @@ subroutine local_dos1d (ik, kband, plan)
   real(DP), allocatable :: aux (:)
   ! auxiliary for rho
 
-  complex(DP), allocatable :: prho (:)
+  complex(DP), allocatable :: prho (:), be1(:,:), be2(:,:)
   ! complex charge for fft
 
   allocate (prho(nrxx))    
   allocate (aux(nrxx))    
+  if (lspinorb) then
+     allocate(be1(nhm,2))
+     allocate(be2(nhm,2))
+  endif
 
   aux(:) = 0.d0
   becsum(:,:,:) = 0.d0
@@ -116,16 +122,47 @@ subroutine local_dos1d (ik, kband, plan)
      if (tvanp (np) ) then
         do na = 1, nat
            if (ityp (na) == np) then
+              if (noncolin) then
+                 if (so(np)) then
+                    be1=(0.d0,0.d0)
+                    be2=(0.d0,0.d0)
+                    do ih = 1, nh(np)
+                       ikb = ijkb0 + ih
+                       do kh = 1, nh(np)
+                          if ((nhtol(kh,np).eq.nhtol(ih,np)).and. &
+                              (nhtoj(kh,np).eq.nhtoj(ih,np)).and. &
+                              (indv(kh,np).eq.indv(ih,np))) then
+                             kkb=ijkb0 + kh
+                             do is1=1,2
+                                do is2=1,2
+                                   be1(ih,is1)=be1(ih,is1)+ &
+                                        fcoef(ih,kh,is1,is2,np)* &
+                                        becp_nc(kkb,is2,ibnd)
+                                   be2(ih,is1)=be2(ih,is1)+ &
+                                        fcoef(kh,ih,is2,is1,np)* &
+                                     CONJG(becp_nc(kkb,is2,ibnd))
+                                enddo
+                             enddo
+                          endif
+                       enddo
+                    enddo
+                 endif
+              endif
               ijh = 1
               do ih = 1, nh (np)
                  ikb = ijkb0 + ih
                  if (noncolin) then
-                    do ipol=1,npol
-                       becsum(ijh,na,current_spin) = &
-                           becsum(ijh,na,current_spin) + w1 * &
-                            DBLE( CONJG(becp_nc(ikb,ipol,ibnd)) * &
-                                        becp_nc(ikb,ipol,ibnd) )
-                    enddo
+                    if (so(np)) then
+                        becsum(ijh,na,1)=becsum(ijh,na,1)+ w1*    &
+                            (be1(ih,1)*be2(ih,1)+be1(ih,2)*be2(ih,2))
+                    else
+                       do ipol=1,npol
+                          becsum(ijh,na,current_spin) = &
+                             becsum(ijh,na,current_spin) + w1 * &
+                               DBLE( CONJG(becp_nc(ikb,ipol,ibnd)) * &
+                                           becp_nc(ikb,ipol,ibnd) )
+                       enddo
+                    endif
                  else
                     becsum(ijh,na,current_spin) = &
                         becsum(ijh,na,current_spin) + w1 * &
@@ -135,12 +172,20 @@ subroutine local_dos1d (ik, kband, plan)
                  do jh = ih + 1, nh (np)
                     jkb = ijkb0 + jh
                     if (noncolin) then
-                       do ipol=1,npol
-                          becsum(ijh,na,current_spin) = &
-                             becsum(ijh,na,current_spin) + w1 * 2.d0 * &
-                             DBLE( CONJG(becp_nc(ikb,ipol,ibnd))  &
-                                     * becp_nc(jkb,ipol,ibnd) )
-                       enddo
+                       if (so(np)) then
+                          becsum(ijh,na,1)=becsum(ijh,na,1) &
+                              + w1*((be1(jh,1)*be2(ih,1)+   &
+                                     be1(jh,2)*be2(ih,2))+  &
+                                    (be1(ih,1)*be2(jh,1)+   &
+                                     be1(ih,2)*be2(jh,2)) )
+                       else
+                          do ipol=1,npol
+                             becsum(ijh,na,current_spin) = &
+                                becsum(ijh,na,current_spin) + w1 * 2.d0 * &
+                                DBLE( CONJG(becp_nc(ikb,ipol,ibnd))  &
+                                        * becp_nc(jkb,ipol,ibnd) )
+                          enddo
+                       endif
                     else
                        becsum(ijh,na,current_spin) = &
                            becsum(ijh,na,current_spin) + w1 * 2.d0 * &
@@ -176,6 +221,10 @@ subroutine local_dos1d (ik, kband, plan)
   !
   deallocate (aux)
   deallocate (prho)
+  if (lspinorb) then
+     deallocate(be1)
+     deallocate(be2)
+  endif
   !
   return
 end subroutine local_dos1d
