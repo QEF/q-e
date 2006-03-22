@@ -113,7 +113,6 @@ MODULES = \
 ../Modules/fft_types.o \
 ../Modules/functionals.o \
 ../Modules/input_parameters.o \
-../Modules/io_base.o \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
 ../Modules/ions_base.o \
@@ -134,6 +133,7 @@ MODULES = \
 ../Modules/recvec.o \
 ../Modules/splinelib.o \
 ../Modules/stick_base.o \
+../Modules/task_groups.o \
 ../Modules/timestep.o \
 ../Modules/uspp.o \
 ../Modules/version.o \
@@ -324,7 +324,7 @@ TLDEPS=bindir mods libs libiotk pw ph
 all : tldeps nmr.x
 
 nmr.x : $(NMROBJ) $(PHOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(F90) $(LDFLAGS) -o nmr.x \
+	$(MPIF90) $(LDFLAGS) -o nmr.x \
 		$(NMROBJ) $(PHOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
