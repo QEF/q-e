@@ -21,7 +21,7 @@ program nmr
  USE ions_base,        ONLY : ntyp => nsp, ityp
  use parameters,       only : ntypx
  use gvect,            only : g, ngm, ecutwfc, nrxx
- use klist,            only : nks, xk, wk, b_length
+ use klist,            only : nks, xk, wk
  use cell_base,        only : tpiba2
  use wavefunctions_module, only: evc
  use wvfct,            only : npwx, nbnd, npw, igk, g2kin, et
@@ -50,7 +50,7 @@ program nmr
  complex (DP) :: kkterm_hh(3,3), kkterm_vv(3,3), dchi, &
       chihh(3,3), chivv(3,3)
 
- real (DP) :: emin, emax, chi_macro, test 
+ real (DP) :: emin, emax, chi_macro, test , b_length
 
  complex (DP) :: ZDOTC
 
