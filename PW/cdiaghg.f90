@@ -54,23 +54,6 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   CALL start_clock( 'cdiaghg' )
   !
-#if defined (__PARA) && defined (__T3E)
-  !
-  ! ... NB: 150 has been determined empirically on the T3E as the point
-  ! ...     where it is convenient to use a parallel routines.
-  !
-  IF ( npool == 1 .AND. n > 150 ) THEN
-     !
-     CALL scala_cdiaghg( n, h, ldh, s, ldh, e, v, ldh )
-     !
-     CALL stop_clock( 'cdiaghg' )
-     !
-     RETURN
-     !
-  END IF
-  !
-#endif
-  !
   all_eigenvalues = ( m == n )
   !
   ! ... check for optimal block size

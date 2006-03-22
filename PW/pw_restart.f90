@@ -201,7 +201,11 @@ MODULE pw_restart
       !
       CALL mp_sum( itmp, intra_pool_comm )
       !
-      ! ... build the G+k array indexes
+      ! ... build the G+k array indexes - BEWARE:
+      !!! The following operations are commented out because igk_l2g
+      !!! is already calculated in the initialization (routine hinit0)
+      !!! It should be done here, but there is a problem with variable
+      !!! cell: the starting unit cell and G-vectors should be used
       !
       !!!ALLOCATE( kisort( npwx ) )
       !

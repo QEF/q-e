@@ -8,6 +8,7 @@
 !-----------------------------------------------------------------------
 subroutine write_config_to_file
   !-----------------------------------------------------------------------
+#if defined (__OLDPUNCH)
   USE control_flags, ONLY : lscf
   USE kinds, ONLY : DP
   USE io_files, ONLY : prefix, iunres
@@ -33,5 +34,6 @@ subroutine write_config_to_file
     call writefile_new( 'config', iunres, et_g, wg_g, kunittmp )
   end if
   !
+#endif
   return
 end subroutine write_config_to_file

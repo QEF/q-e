@@ -183,15 +183,10 @@ s_psi_nc.o \
 save_in_cbands.o \
 save_in_electrons.o \
 save_in_ions.o \
-scala_cdiag.o \
-scala_cdiaghg.o \
-scala_utils.o \
 scale_h.o \
-scopy_t3e.o \
 seqopn.o \
 set_fft_dim.o \
 set_hubbard_l.o \
-set_kplusb.o \
 set_kplusq.o \
 set_kup_and_kdw.o \
 set_rhoc.o \

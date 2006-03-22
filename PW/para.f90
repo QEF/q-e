@@ -76,7 +76,7 @@ SUBROUTINE reduce( dim, ps )
   !
   ! ... sums a distributed variable ps(dim) over the processors.
   ! ... This version uses a fixed-length buffer of appropriate (?) dim
-  ! ...              uses SHMEM for the T3D/T3E, MPI otherwhise
+  ! ...              uses SHMEM if available, MPI otherwhise
   !
   USE mp_global, ONLY : intra_pool_comm, my_pool_id, nproc_pool, npool
   USE mp,        ONLY : mp_barrier
@@ -93,7 +93,7 @@ SUBROUTINE reduce( dim, ps )
   INTEGER            :: info, n, nbuf
   INTEGER, PARAMETER :: maxb = 10000
   !
-# if (defined __SHMEM && defined __ALTIX) || (defined __SHMEM && defined __ORIGIN)
+# if defined (__SHMEM) && (defined __ALTIX || defined __ORIGIN)
   INTEGER            :: sym_len
   LOGICAL            :: first
   REAL (DP)     :: buff(*), snd_buff(*)
@@ -114,6 +114,7 @@ SUBROUTINE reduce( dim, ps )
       DATA pWrkSync /SHMEM_REDUCE_SYNC_SIZE*SHMEM_SYNC_VALUE/
       DATA pWrkData / 1048576 * 0 /
 # else
+  ! T3E ? likely obsolete
   INTEGER :: pWrkSync, pWrkData, start
   COMMON / SH_SYNC / pWrkSync(SHMEM_BARRIER_SYNC_dim)
   COMMON / SH_DATA / pWrkData(1024*1024)
@@ -130,7 +131,7 @@ SUBROUTINE reduce( dim, ps )
   !
   CALL start_clock( 'reduce' )
   !
-  ! ... syncronize processes - maybe unneeded on T3D but necessary on T3E !!!
+  ! ... synchronize processes
   !
   CALL mp_barrier( intra_pool_comm )
   !
