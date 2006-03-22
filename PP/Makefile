@@ -75,6 +75,7 @@ MODULES = \
 ../Modules/uspp.o \
 ../Modules/version.o \
 ../Modules/wavefunctions.o \
+../Modules/wannier.o \
 ../Modules/xml_io_base.o
 
 PWOBJS = \

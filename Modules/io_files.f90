@@ -89,9 +89,11 @@ MODULE io_files
   INTEGER :: iunigk      = 16 ! unit for saving indices
   INTEGER :: iunres      =  1 ! unit for the restart of the run
   INTEGER :: iunbfgs     = 30 ! unit for the bfgs restart file
+  INTEGER :: iunatsicwfc = 31 ! unit for sic wfc
   !
   INTEGER :: nwordwfc    =  2 ! lenght of record in wavefunction file
   INTEGER :: nwordatwfc  =  2 ! lenght of record in atomic wfc file
+  INTEGER :: nwordwann   =  2 ! lenght of record in sic wfc file
   !
   INTEGER :: iunexit     = 26 ! unit for a soft exit  
   INTEGER :: iunupdate   = 27 ! unit for saving old positions (extrapolation)
