@@ -266,8 +266,8 @@ SUBROUTINE setup()
 #endif
            !
            DO ibnd = 1, nbnd
-              if (f_inp(ibnd,is).gt.2.d0/nspin.or.f_inp(ibnd,is).lt.0.d0) call &
-              errore('setup','wrong fixed occupations',1)
+              if (f_inp(ibnd,is) > 2.d0/nspin .or. f_inp(ibnd,is) < 0.d0) &
+                   call errore('setup','wrong fixed occupations',1)
            END DO
         END DO
         !
@@ -688,42 +688,43 @@ SUBROUTINE setup()
   ! ... "sgama" eliminates rotations that are not symmetry operations
   ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
   ! ... lattice, with the full point symmetry of the lattice.
-  ! ... If some symmetries are missing in the crystal, "sgama" computes
-  ! ... the missing k-points. If nosym is true (see above) or if calculating
-  ! ... bands, we do not use any point-group symmetry and leave k-points unchanged.
+  ! ... If some symmetries of the lattice are missing in the crystal,
+  ! ... "sgama" computes the missing k-points. 
   !
-  IF ( .NOT. lbands ) THEN
+  input_nks = nks
+  !
+  CALL sgama( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, nr1,&
+       nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q,  &
+       xqq, modenum, noncolin, m_loc )
+  !
+  CALL checkallsym( nsym, s, nat, tau, ityp, at, &
+       bg, nr1, nr2, nr3, irt, ftau )
+  !
+  ! ... if dynamics is done the system should have no symmetries
+  ! ... (inversion symmetry alone is allowed)
+  !
+  IF ( lmd .AND. ( nsym == 2 .AND. .NOT. invsym .OR. nsym > 2 ) &
+           .AND. .NOT. ( calc == 'mm' .OR. calc == 'nm' ) ) &
+       CALL infomsg( 'setup', 'Dynamics, you should have no symmetries', -1 )
+  !
+  ntetra = 0
+  !
+  IF ( lbands ) THEN
      !
-     CALL sgama( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, nr1,&
-          nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q,  &
-          xqq, modenum, noncolin, m_loc )
+     ! ... if calculating bands, we leave k-points unchanged
      !
-     CALL checkallsym( nsym, s, nat, tau, ityp, at, &
-          bg, nr1, nr2, nr3, irt, ftau )
+     nks = input_nks
      !
-     ! ... if dynamics is done the system should have no symmetries
-     ! ... (inversion symmetry alone is allowed)
-     !
-     IF ( lmd .AND. ( nsym == 2 .AND. .NOT. invsym .OR. nsym > 2 ) &
-          .AND. .NOT. ( calc == 'mm' .OR. calc == 'nm' ) ) &
-          CALL infomsg( 'setup', 'Dynamics, you should have no symmetries', -1 )
+  ELSE IF ( ltetra ) THEN
      !
      ! ... Calculate quantities used in tetrahedra method
      !
-     IF ( ltetra ) THEN
-        !
-        ntetra = 6 * nk1 * nk2 * nk3
-        !
-        ALLOCATE( tetra( 4, ntetra ) )    
-        !
-        CALL tetrahedra( nsym, s, minus_q, at, bg, npk, k1, k2, k3, &
-             nk1, nk2, nk3, nks, xk, wk, ntetra, tetra )
-        !
-     ELSE
-        !
-        ntetra = 0
-        !
-     END IF
+     ntetra = 6 * nk1 * nk2 * nk3
+     !
+     ALLOCATE( tetra( 4, ntetra ) )    
+     !
+     CALL tetrahedra( nsym, s, minus_q, at, bg, npk, k1, k2, k3, &
+          nk1, nk2, nk3, nks, xk, wk, ntetra, tetra )
      !
   END IF
   !
@@ -1067,11 +1068,11 @@ SUBROUTINE check_para_diag_efficiency()
         !
         EXIT
         !
-     ELSE IF ( .NOT. lfirst .AND. delta_t > delta_t_old ) THEN
+     ELSE IF ( .NOT. lfirst ) THEN
         !
         ! ... the parallel diagonalizer is getting slower and slower
         !
-        EXIT
+        IF ( delta_t > delta_t_old ) EXIT
         !
      END IF
      !

@@ -122,58 +122,63 @@ SUBROUTINE orthoatwfc
         CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
      ENDIF
 
-     IF (orthogonalize_wfc) THEN
-        !
-        ! calculate overlap matrix
-        !
-        IF (noncolin) THEN
-           CALL ZGEMM ('c', 'n', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), &
-            wfcatom_nc,npwx,swfcatom_nc,npwx,(0.d0,0.d0),overlap,natomwfc)
-        ELSE
-            CALL ZGEMM ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0) , &
-                wfcatom, npwx, swfcatom, npwx, (0.d0, 0.d0) , overlap, natomwfc)
-        END IF
+     !
+     ! calculate overlap matrix
+     !
+     IF (noncolin) THEN
+        CALL ZGEMM ('c', 'n', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), &
+         wfcatom_nc,npwx,swfcatom_nc,npwx,(0.d0,0.d0),overlap,natomwfc)
+     ELSE
+         CALL ZGEMM ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0) , &
+             wfcatom, npwx, swfcatom, npwx, (0.d0, 0.d0) , overlap, natomwfc)
+     END IF
 #ifdef __PARA
-        CALL reduce (2 * natomwfc * natomwfc, overlap)
+     CALL reduce (2 * natomwfc * natomwfc, overlap)
 #endif
-        !
-        ! find O^-.5
-        !
-        CALL cdiagh (natomwfc, overlap, natomwfc, e, work)
+     IF (.not.orthogonalize_wfc) THEN
         DO i = 1, natomwfc
-           e (i) = 1.d0 / dsqrt (e (i) )
-        ENDDO
-        DO i = 1, natomwfc
-           DO j = i, natomwfc
-              temp = (0.d0, 0.d0)
-              DO k = 1, natomwfc
-                 temp = temp + e (k) * work (j, k) * CONJG (work (i, k) )
-              ENDDO
-              overlap (i, j) = temp
-              IF (j.NE.i) overlap (j, i) = CONJG (temp)
+           DO j = i+1, natomwfc
+              overlap(i,j) = cmplx(0.d0,0.d0)
+              overlap(j,i) = cmplx(0.d0,0.d0)
            ENDDO
         ENDDO
-        !
-        ! trasform atomic orbitals O^-.5 psi
-        !
-        DO i = 1, npw
-           work(:,1) = (0.d0,0.d0)
-           IF (noncolin) THEN
-              DO ipol=1,npol
-                 CALL ZGEMV ('n',natomwfc,natomwfc,(1.d0,0.d0),overlap, &
-                      natomwfc,swfcatom_nc(i,ipol,1),npwx*npol, &
-                                          (0.d0,0.d0),work,1)
-                 CALL ZCOPY (natomwfc,work,1,swfcatom_nc(i,ipol,1),npwx*npol)
-              END DO
-           ELSE
-              CALL ZGEMV ('n', natomwfc, natomwfc, (1.d0, 0.d0) , overlap, &
-                   natomwfc, swfcatom (i, 1) , npwx, (0.d0, 0.d0) , work, 1)
-              CALL ZCOPY (natomwfc, work, 1, swfcatom (i, 1), npwx)
-           END IF
-        ENDDO
-        
      END IF
-     
+     !
+     ! find O^-.5
+     !
+     CALL cdiagh (natomwfc, overlap, natomwfc, e, work)
+     DO i = 1, natomwfc
+        e (i) = 1.d0 / dsqrt (e (i) )
+     ENDDO
+     DO i = 1, natomwfc
+        DO j = i, natomwfc
+           temp = (0.d0, 0.d0)
+           DO k = 1, natomwfc
+              temp = temp + e (k) * work (j, k) * CONJG (work (i, k) )
+           ENDDO
+           overlap (i, j) = temp
+           IF (j.NE.i) overlap (j, i) = CONJG (temp)
+        ENDDO
+     ENDDO
+     !
+     ! trasform atomic orbitals O^-.5 psi
+     !
+     DO i = 1, npw
+        work(:,1) = (0.d0,0.d0)
+        IF (noncolin) THEN
+           DO ipol=1,npol
+              CALL ZGEMV ('n',natomwfc,natomwfc,(1.d0,0.d0),overlap, &
+                   natomwfc,swfcatom_nc(i,ipol,1),npwx*npol, &
+                                       (0.d0,0.d0),work,1)
+              CALL ZCOPY (natomwfc,work,1,swfcatom_nc(i,ipol,1),npwx*npol)
+           END DO
+        ELSE
+           CALL ZGEMV ('n', natomwfc, natomwfc, (1.d0, 0.d0) , overlap, &
+                natomwfc, swfcatom (i, 1) , npwx, (0.d0, 0.d0) , work, 1)
+           CALL ZCOPY (natomwfc, work, 1, swfcatom (i, 1), npwx)
+        END IF
+     ENDDO
+        
      IF (noncolin) THEN
         CALL davcio (swfcatom_nc, nwordatwfc, iunat, ik, 1)
      ELSE

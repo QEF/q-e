@@ -778,7 +778,7 @@ SUBROUTINE iosys()
   !
   IF ( .NOT. lscf .AND. startingpot /= 'file' ) THEN
      !
-     CALL infomsg( 'iosys', 'wrong startingpot: use default', -1 )
+     CALL infomsg( 'iosys', 'wrong startingpot: use default', -2 )
      !
      startingpot = 'file'
      !

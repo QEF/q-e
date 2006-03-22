@@ -1510,8 +1510,6 @@ MODULE read_namelists_module
        CHARACTER(LEN=20) :: sub_name = ' fixval '
        !
        !
-       IF( prog == 'PW' ) startingpot = 'atomic'
-       !       
        SELECT CASE( TRIM( calculation ) )
           CASE ('scf')
              IF( prog == 'CP' ) THEN
@@ -1522,12 +1520,10 @@ MODULE read_namelists_module
           CASE ('nscf', 'bands')
              IF( prog == 'CP' ) occupations = 'bogus'
              IF( prog == 'CP' ) electron_dynamics = 'damp'
-             IF( prog == 'PW' ) startingpot = 'file'
           CASE ('phonon')
              IF( prog == 'CP' ) &
                 CALL errore( sub_name,' calculation '//TRIM(calculation)// &
                              & ' not implemented ',1)
-             IF( prog == 'PW' ) startingpot = 'file'
           CASE ('raman')
              CALL errore( sub_name,' calculation '//TRIM(calculation)// &
                   & ' no longer implemented ',1)
@@ -1613,7 +1609,14 @@ MODULE read_namelists_module
        !              
        IF ( prog == 'PW' ) THEN
           !       
-          IF ( restart_mode == "from_scratch" ) THEN
+          IF ( calculation == 'nscf' .OR. &
+               calculation == 'bands'.OR. &
+               calculation == 'phonon' ) THEN
+             !
+             startingpot = 'file'
+             startingwfc = 'atomic'
+             !
+          ELSE IF ( restart_mode == "from_scratch" ) THEN
              !
              startingwfc = 'atomic'
              startingpot = 'atomic'
@@ -1625,14 +1628,6 @@ MODULE read_namelists_module
              !
           END IF
           !
-          IF ( calculation == 'nscf' .OR. &
-               calculation == 'phonon' ) THEN
-             !
-             startingpot = 'file'
-             startingwfc = 'atomic'
-             !
-          END IF   
-          !      
        END IF                   
        !
        IF ( TRIM( sic ) /= 'none' ) THEN 
