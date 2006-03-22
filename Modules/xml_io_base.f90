@@ -392,7 +392,7 @@ MODULE xml_io_base
       !
       CALL mp_max( ierr ) 
       !
-      CALL errore( 'write_wfc ', 'wrong size ngl', ierr )
+      CALL errore( 'set_kpoint_vars ', 'wrong size ngl', ierr )
       !
       IF ( ipsour /= ionode_id ) &
          CALL mp_get( igwx, igwx, mpime, ionode_id, ipsour, 1 )

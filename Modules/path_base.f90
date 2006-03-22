@@ -277,8 +277,8 @@ MODULE path_base
                 FMT = '(5X,"first_last_opt",T35," = ",1X,L1))' ) first_last_opt
          !
          WRITE( UNIT = iunpath, &
-                FMT = '(5X,"coarse-grained phase-space",T35, &
-                       &   " = ",1X,L1))' ) lcoarsegrained
+                FMT = '(5X,"coarse-grained phase-space",T35, " = ",1X,L1))' ) &
+               lcoarsegrained
          !
          WRITE( UNIT = iunpath, &
                 FMT = '(5X,"use_freezing",T35," = ",1X,L1))' ) use_freezing
