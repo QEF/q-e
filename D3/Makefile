@@ -331,11 +331,7 @@ PWOBJS = \
 ../PW/save_in_cbands.o \
 ../PW/save_in_electrons.o \
 ../PW/save_in_ions.o \
-../PW/scala_cdiag.o \
-../PW/scala_cdiaghg.o \
-../PW/scala_utils.o \
 ../PW/scale_h.o \
-../PW/scopy_t3e.o \
 ../PW/seqopn.o \
 ../PW/set_fft_dim.o \
 ../PW/set_hubbard_l.o \
