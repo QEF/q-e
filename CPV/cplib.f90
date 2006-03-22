@@ -2574,8 +2574,8 @@
 
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,           &
-     &     ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
+      SUBROUTINE vofrho( nfi, rhor, rhog, rhos, rhoc, tfirst, tlast,           &
+     &     ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion )
 !-----------------------------------------------------------------------
 !     computes: the one-particle potential v in real space,
 !               the total energy etot,
@@ -2612,6 +2612,7 @@
       USE dener
       USE derho
       USE mp, ONLY: mp_sum
+      USE mp_global, ONLY: group
       USE funct, ONLY: dft_is_meta
       USE fft_module, ONLY: fwfft, invfft
       USE sic_module, ONLY: self_interaction, sic_epsilon, sic_alpha
@@ -2619,24 +2620,24 @@
 !
       IMPLICIT NONE
 !
-      LOGICAL tlast,tfirst
-      INTEGER nfi
-      REAL(8)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx)
-      REAL(8)  rhoc(nnr), tau0(3,natx)
-      COMPLEX(8) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
+      LOGICAL :: tlast, tfirst
+      INTEGER :: nfi
+      REAL(DP)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx)
+      REAL(DP)  rhoc(nnr), tau0(3,natx)
+      COMPLEX(DP) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
      &                ei3(-nr3:nr3,nat), eigrb(ngb,nat),        &
      &                rhog(ng,nspin), sfac(ngs,nsp)
 !
       INTEGER irb(3,nat), iss, isup, isdw, ig, ir,i,j,k,is, ia
-      REAL(8) fion1(3,natx), vave, ebac, wz, eh
-      COMPLEX(8)  fp, fm, ci
-      COMPLEX(8), ALLOCATABLE :: v(:), vs(:)
-      COMPLEX(8), ALLOCATABLE :: rhotmp(:), vtemp(:), drhotmp(:,:,:)
+      REAL(DP) fion1(3,natx), vave, ebac, wz, eh
+      COMPLEX(DP)  fp, fm, ci
+      COMPLEX(DP), ALLOCATABLE :: v(:), vs(:)
+      COMPLEX(DP), ALLOCATABLE :: rhotmp(:), vtemp(:), drhotmp(:,:,:)
 !
-      COMPLEX(8), ALLOCATABLE :: self_vloc(:)
-      COMPLEX(8)              :: self_rhoeg
-      REAL(8)                 :: self_ehtet , fpibg
-      LOGICAL                 :: ttsic
+      COMPLEX(DP), ALLOCATABLE :: self_vloc(:)
+      COMPLEX(DP)              :: self_rhoeg
+      REAL(DP)                 :: self_ehtet , fpibg
+      LOGICAL                  :: ttsic
 !
 
       CALL start_clock( 'vofrho' )
@@ -2666,10 +2667,11 @@
 !     forces on ions, ionic term in real space
 !     -------------------------------------------------------------------
       IF( tprnfor .OR. tfor .OR. tfirst .OR. tpre ) THEN
-        CALL force_ion(tau0,esr,fion,dsr)
+        CALL force_ion( tau0, esr, fion, dsr )
       END IF
 !
-      IF(nspin.EQ.1) THEN
+
+      IF( nspin == 1 ) THEN
          iss=1
          DO ig=1,ng
             rhotmp(ig)=rhog(ig,iss)
@@ -2709,10 +2711,10 @@
             vtemp(ig)=vtemp(ig)+CONJG(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
          END DO
       END DO
-!
+
       epseu=wz*DBLE(SUM(vtemp))
       IF (gstart == 2) epseu=epseu-vtemp(1)
-      CALL reduce(1,epseu)
+      CALL mp_sum( epseu, group )
       epseu=epseu*omega
 !
       IF(tpre) CALL denps(rhotmp,drhotmp,sfac,vtemp,dps)
@@ -2722,7 +2724,7 @@
 !     -------------------------------------------------------------------
      !
       self_ehtet = 0.d0
-      self_vloc = 0.d0
+      IF( ALLOCATED( self_vloc ) ) self_vloc = 0.d0
 
       DO is=1,nsp
          DO ig=1,ngs
@@ -2751,15 +2753,15 @@
          self_ehte = sic_epsilon * self_ehtet * wz * 0.5d0
          eh = eh - self_ehte
 
-         CALL mp_sum( self_ehte )
-!        IF(sic_epsilon > 0) &
-!     &   write(*,*) 'Debug ::','EH', eh * omega, &
-!     &                              ' SIC_EHTE', self_ehte * omega
+         CALL mp_sum( self_ehte, group )
+
       ENDIF
 !
-      CALL reduce(1,eh)
+      CALL mp_sum( eh, group )
+      !
       IF(tpre) CALL denh(rhotmp,drhotmp,sfac,vtemp,eh,dh)
       IF(tpre) DEALLOCATE(drhotmp)
+
 !     ===================================================================
 !     forces on ions, ionic term in reciprocal space
 !     -------------------------------------------------------------------
@@ -2787,7 +2789,8 @@
 !     -------------------------------------------------------------------
       IF (nlcc_any) CALL add_cc(rhoc,rhog,rhor)
 !
-      CALL exch_corr_h(nspin,rhog,rhor,rhoc,sfac,exc,dxc,self_sxc)
+      CALL exch_corr_h( nspin, rhog, rhor, rhoc, sfac, exc, dxc, self_sxc )
+
 !
 !     rhor contains the xc potential in r-space
 !
@@ -2795,23 +2798,23 @@
 !     fourier transform of xc potential to g-space (dense grid)
 !     -------------------------------------------------------------------
 !
-      IF(nspin.EQ.1) THEN
-         iss=1
-         DO ir=1,nnr
-            v(ir)=CMPLX(rhor(ir,iss),0.d0)
+      IF( nspin == 1 ) THEN
+         iss = 1
+         DO ir = 1, nnr
+            v(ir) = CMPLX( rhor( ir, iss ), 0.d0 )
          END DO
+         !
+         !     v_xc(r) --> v_xc(g)
+         !
+         CALL fwfft( 'Dense', v, nr1, nr2, nr3, nr1x, nr2x, nr3x )
 !
-!     v_xc(r) --> v_xc(g)
-!
-         CALL fwfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-!
-         DO ig=1,ng
-            rhog(ig,iss)=vtemp(ig)+v(np(ig))
+         DO ig = 1, ng
+            rhog( ig, iss ) = vtemp(ig) + v( np( ig ) )
          END DO
-!
-!     v_tot(g) = (v_tot(g) - v_xc(g)) +v_xc(g)
-!     rhog contains the total potential in g-space
-!
+         !
+         !     v_tot(g) = (v_tot(g) - v_xc(g)) +v_xc(g)
+         !     rhog contains the total potential in g-space
+         !
       ELSE
          isup=1
          isdw=2
@@ -2831,22 +2834,23 @@
             ENDIF
          END DO
       ENDIF
+
 !
 !     rhog contains now the total (local+Hartree+xc) potential in g-space
 !
       IF( tprnfor .OR. tfor ) THEN
 
-         IF (nlcc_any) CALL force_cc(irb,eigrb,rhor,fion1)
+         IF ( nlcc_any ) CALL force_cc( irb, eigrb, rhor, fion1 )
 
          CALL mp_sum( fion1 )
-!
-!    add g-space ionic and core correction contributions to fion
-!
+         !
+         !    add g-space ionic and core correction contributions to fion
+         !
          fion = fion + fion1
 
       END IF
 !
-      IF(ALLOCATED(self_vloc)) DEALLOCATE(self_vloc)
+      IF( ALLOCATED( self_vloc ) ) DEALLOCATE( self_vloc )
 !
 !     ===================================================================
 !     fourier transform of total potential to r-space (dense grid)
@@ -2889,11 +2893,14 @@
          vave=(SUM(rhor(:,isup))+SUM(rhor(:,isdw)))       &
      &        /2.0/DBLE(nr1*nr2*nr3)
       ENDIF
-      CALL reduce(1,vave)
-!     ===================================================================
-!     fourier transform of total potential to r-space (smooth grid)
-!     -------------------------------------------------------------------
+
+      CALL mp_sum( vave, group )
+
+      !
+      !     fourier transform of total potential to r-space (smooth grid)
+      !
       vs (:) = (0.d0, 0.d0)
+      !
       IF(nspin.EQ.1)THEN
          iss=1
          DO ig=1,ngs
@@ -2919,7 +2926,9 @@
             rhos(ir,isdw)=AIMAG(vs(ir))
          END DO
       ENDIF
-      IF(dft_is_meta()) CALL vofrho_meta(v,vs)  !METAGGA
+
+      IF( dft_is_meta() ) CALL vofrho_meta( v, vs )  !METAGGA
+
       ebac=0.0
 !
       eht=eh*omega+esr-eself
@@ -2934,11 +2943,10 @@
       DEALLOCATE( v )
       DEALLOCATE( vs )
 !
-!
       CALL stop_clock( 'vofrho' )
 
-      IF((nfi.EQ.0).OR.tfirst.OR.tlast) GOTO 999
-      IF(MOD(nfi-1,iprint).NE.0 ) RETURN
+      IF( ( nfi == 0 ) .OR. tfirst .OR. tlast ) GOTO 999
+      IF( MOD( nfi - 1, iprint) /= 0 ) RETURN
 !
  999  IF ( tpre ) THEN
          IF( iprsta >= 2 ) THEN  

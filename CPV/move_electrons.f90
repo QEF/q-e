@@ -89,8 +89,8 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
         !
      END IF
      !
-     CALL vofrho( nfi, rhor, rhog, rhos, rhoc, tfirst, tlast, &
-                     ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion )
+     CALL vofrho( nfi, rhor(1,1), rhog(1,1), rhos(1,1), rhoc(1), tfirst, tlast, &
+                     ei1, ei2, ei3, irb(1,1), eigrb(1,1), sfac(1,1), tau0(1,1), fion(1,1) )
      !
      IF ( lwf ) CALL wf_options( tfirst, nfi, cm, becsum, bec, becdr, &
                                  eigr, eigrb, taub, irb, ibrav, b1,   &

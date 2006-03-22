@@ -392,6 +392,7 @@ MODULE from_scratch_module
         &  ei1(1,1), ei2(1,1), ei3(1,1), irb(1,1), eigrb(1,1), sfac(1,1), & 
         &  tau0(1,1), fion(1,1) )
 
+
       IF( tefield ) THEN
         CALL berry_energy( enb, enbi, bec, cm(:,:,1,1), fion ) 
         etot = etot + enb + enbi
@@ -408,6 +409,8 @@ MODULE from_scratch_module
 
       CALL newd( rhor, irb, eigrb, becsum, fion )
       CALL prefor( eigr, vkb )
+
+!
 
 !
       IF( force_pairing ) THEN
