@@ -132,7 +132,6 @@ MODULES = \
 ../Modules/functionals.o \
 ../Modules/griddim.o \
 ../Modules/input_parameters.o \
-../Modules/io_base.o \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
 ../Modules/ions_base.o \

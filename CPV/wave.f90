@@ -580,7 +580,7 @@
       USE mp_wave, ONLY: splitwf
       USE mp_global, ONLY: mpime, nproc, root
       USE reciprocal_vectors, ONLY: ig_l2g, ngw, ngwt, gzero
-      USE io_base, ONLY: stdout
+      USE io_global, ONLY: stdout
       USE random_numbers, ONLY : rranf
       
       IMPLICIT NONE
