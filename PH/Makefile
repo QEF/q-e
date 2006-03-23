@@ -130,7 +130,6 @@ MODULES = \
 ../Modules/fft_types.o \
 ../Modules/functionals.o \
 ../Modules/input_parameters.o \
-../Modules/io_base.o \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
 ../Modules/ions_base.o \
@@ -319,7 +318,6 @@ PWOBJS = \
 ../PW/regterg.o \
 ../PW/remove_atomic_rho.o \
 ../PW/reset_k_points.o \
-../PW/restart.o \
 ../PW/restart_from_file.o \
 ../PW/restart_in_electrons.o \
 ../PW/restart_in_ions.o \
@@ -401,7 +399,6 @@ PWOBJS = \
 ../PW/w1gauss.o \
 ../PW/wfcinit.o \
 ../PW/wgauss.o \
-../PW/write_config_to_file.o \
 ../PW/write_ns.o \
 ../PW/wsweight.o
 

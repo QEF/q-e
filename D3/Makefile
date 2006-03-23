@@ -165,7 +165,6 @@ MODULES = \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
 ../Modules/functionals.o \
-../Modules/io_base.o \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
 ../Modules/ions_base.o \
@@ -314,7 +313,6 @@ PWOBJS = \
 ../PW/readin.o \
 ../PW/read_ncpp.o \
 ../PW/realus.o \
-../PW/restart.o \
 ../PW/report_mag.o \
 ../PW/rgen.o \
 ../PW/rho2zeta.o \

@@ -34,7 +34,6 @@ SUBROUTINE read_file()
   USE scf,              ONLY : rho, rho_core, vr
   USE vlocal,           ONLY : strf
   USE io_files,         ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
-  USE restart_module,   ONLY : readfile_new
   USE uspp_param,       ONLY : nbeta, jjj, tvanp
   USE noncollin_module, ONLY : noncolin, npol
   USE mp_global,        ONLY : kunit
@@ -52,18 +51,6 @@ SUBROUTINE read_file()
   ! ... in parallel execution, only root proc reads the file
   ! ... and then broadcasts the values to all other procs
   !
-#if defined(__OLDPUNCH)
-  !
-  ! ... a value of zero cause the parameter to be read from the ".save" file
-  !
-  kunit = 0
-  CALL readfile_new( 'dim', iunpun, rdum, rdum, kunit, 0, 0, ierr )
-  !
-  CALL errore( 'read_file ', 'problem reading file ' // &
-             & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
-  !
-#else
-  !
   ! ... a reset of the internal flags is necessary because some codes call
   ! ... read_file() more than once
   !
@@ -72,8 +59,6 @@ SUBROUTINE read_file()
   !
   CALL errore( 'read_file ', 'problem reading file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
-  !
-#endif
   !
   ! ... allocate space for atomic positions, symmetries, forces, tetrahedra
   !
@@ -96,108 +81,6 @@ SUBROUTINE read_file()
   ! ... here we read all the variables defining the system
   ! ... in parallel execution, only root proc read the file
   ! ... and then broadcast the values to all other procs
-  !
-#if defined(__OLDPUNCH)
-  !
-  !-------------------------------------------------------------------------------
-  ! ... standard punch-file
-  !-------------------------------------------------------------------------------
-  !
-  ALLOCATE( et( nbnd, nkstot ), wg( nbnd, nkstot ) )
-  !
-  CALL readfile_new( 'nowave', iunpun, et, wg, kunit, 0, 0, ierr )
-  !
-  CALL errore( 'read_file ', 'problem reading file ' // &
-             & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
-  !
-  ! ... parallel execution: distribute across pools k-points and
-  ! ... related variables (not a smart implementation)
-  !
-  nks = nkstot
-  !
-  ! ... nks and nkstot are redefined by the following routine
-  !
-  CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
-  !
-  ! ... check whether LSDA
-  !
-  IF ( lsda ) THEN
-     !
-     nspin = 2
-     npol  = 1
-     !
-  ELSE IF ( noncolin ) THEN
-     !
-     nspin        = 4
-     npol         = 2
-     current_spin = 1
-     !
-  ELSE
-     !
-     nspin        = 1
-     npol         = 1
-     current_spin = 1
-     !
-  END IF
-  !
-  ! ... check for so pseudopotentials
-  !
-  DO nt = 1, nsp
-     !
-     so(nt) = (nbeta(nt) > 0)
-     !
-     DO nb = 1, nbeta(nt)
-        !
-        so(nt) = so(nt) .AND. ( ABS( jjj(nb,nt) ) > 1.D-7 )
-        !
-     END DO
-     !
-  END DO
-  !
-  cell_factor = 1.D0
-  lmovecell = .FALSE.
-  !
-  ! ... allocate memory for G- and R-space fft arrays
-  !
-  CALL allocate_fft()
-  CALL ggen()
-  !
-  ! ... allocate the potential
-  !
-  CALL allocate_locpot()
-  CALL allocate_nlpot()
-  !
-  ! ... allocate wavefunctions and related quantities (including et and wg)
-  !
-  nbndx = nbnd
-  !
-  CALL allocate_wfc()
-  !
-  CALL poolscatter( nbnd , nkstot, et, nks, et )
-  CALL poolscatter( nbnd , nkstot, wg, nks, wg )
-  !
-  ! ... read the charge density
-  !
-  CALL io_pot( - 1, 'rho', rho, nspin )
-  !
-  ! read the potential
-  !
-  CALL io_pot( - 1, 'pot', vr, nspin )
-  !
-  ! ... re-calculate the local part of the pseudopotential vltot
-  ! ... and the core correction charge (if any) - This is done here
-  ! ... for compatibility with the previous version of read_file
-  !
-  CALL init_vloc()
-  !
-  CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
-                   nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
-  !
-  CALL setlocal()
-  !
-  CALL set_rhoc()
-  !
-#else
   !
   !-------------------------------------------------------------------------------
   ! ... XML punch-file
@@ -314,8 +197,6 @@ SUBROUTINE read_file()
   CALL pw_readfile( 'wave', ierr )
   !
   CLOSE( UNIT = iunwfc, STATUS = 'KEEP' )
-  !
-#endif
   !
   RETURN
   !

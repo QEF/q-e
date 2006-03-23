@@ -253,7 +253,6 @@ PWOBJS = \
 ../PW/realus.o \
 ../PW/readin.o \
 ../PW/report_mag.o \
-../PW/restart.o \
 ../PW/reset_k_points.o \
 ../PW/rgen.o \
 ../PW/rho2zeta.o \

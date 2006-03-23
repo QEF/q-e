@@ -15,7 +15,6 @@ SUBROUTINE cg_setup
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
   USE pwcom
   USE atom, ONLY: nlcc
-  USE restart_module, ONLY: readfile_new
   USE mp_global,           ONLY : kunit
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: prefix, iunpun, iunres
@@ -102,16 +101,7 @@ SUBROUTINE cg_setup
   lrwfc=2*nbnd*npwx
   CALL diropn(iunpun, 'wfc',lrwfc,exst)
   IF(.NOT.exst) THEN 
-     ndr      = 34
-     kunittmp = 1
-#  ifdef __PARA
-     kunittmp = kunit
-#  endif
-     !
-     CALL readfile_new( 'wave', ndr, edum, wdum, kunittmp, lrwfc, &
-                        iunpun, ierr )
-     IF ( ierr > 0 ) &
-        CALL errore('main','file '//trim(prefix) // '.wfc not found',1)
+     CALL errore('main','file '//trim(prefix) // '.wfc not found',1)
   END IF
   !  read wave functions and calculate indices
   !

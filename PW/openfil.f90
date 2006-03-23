@@ -23,7 +23,6 @@ SUBROUTINE openfil()
                                nwordwfc, nwordatwfc, iunefield, &
                                tmp_dir, wfc_dir
   USE pw_restart,       ONLY : pw_readfile
-  USE restart_module,   ONLY : readfile_new
   USE noncollin_module, ONLY : npol
   USE mp_global,        ONLY : kunit
   USE bp,               ONLY : lelfield
@@ -57,20 +56,11 @@ SUBROUTINE openfil()
   !
   IF ( startingwfc == 'file' .AND. .NOT. exst ) THEN
      !
-#if defined (__OLDPUNCH)
-     !
-     CALL readfile_new( 'wave', iunpun, edum, wdum, kunit, nwordwfc, &
-                        iunwfc, ierr )
-     !
-#else
-     !
      ! ... wavefunctions are read from the "save" file and rewritten (directly
      ! ... in pw_readfile) using the internal format
      !
      CALL pw_readfile( 'wave', ierr )
      !
-#endif
-     !                   
      IF ( ierr > 0 ) THEN
         !
         WRITE( stdout, '(5X,"Cannot read wfc : file not found")' )

@@ -48,7 +48,6 @@ MODULES = \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
 ../Modules/functionals.o \
-../Modules/io_base.o \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
 ../Modules/ions_base.o \
@@ -209,7 +208,6 @@ PWOBJS = \
 ../PW/read_ncpp.o \
 ../PW/realus.o \
 ../PW/report_mag.o \
-../PW/restart.o\
 ../PW/rgen.o \
 ../PW/rho2zeta.o \
 ../PW/rinitcgg.o \
@@ -279,7 +277,7 @@ PWOBJS = \
 TLDEPS= bindir mods libs pw
 
 all : tldeps average.x bands.x dos.x efg.x plotband.x plotrho.x wfdd.x \
-      pmw.x pp.x projwfc.x pw2casino.x pw2wan.x pw2wannier90.x pw_export.x \
+      pmw.x pp.x projwfc.x pw2casino.x pw2wannier90.x pw_export.x \
       voronoy.x initial_state.x dipole.x sumpdos.x plan_avg.x pw2gw.x
 
 average.x : average.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
@@ -348,11 +346,6 @@ projwfc.x : projwfc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 pw2casino.x : pw2casino.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
 		pw2casino.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../PP/$@ . )
-
-pw2wan.x : pw2wan.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
-		pw2wan.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 pw2wannier90.x : pw2wannier90.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)

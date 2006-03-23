@@ -164,7 +164,6 @@ regterg.o \
 remove_atomic_rho.o \
 report_mag.o \
 reset_k_points.o \
-restart.o \
 restart_from_file.o \
 restart_in_electrons.o \
 restart_in_ions.o \
@@ -248,7 +247,6 @@ w0gauss.o \
 w1gauss.o \
 wfcinit.o \
 wgauss.o \
-write_config_to_file.o \
 write_ns.o \
 wsweight.o
 
@@ -270,7 +268,6 @@ MODULES = \
 ../Modules/fft_types.o \
 ../Modules/functionals.o \
 ../Modules/input_parameters.o \
-../Modules/io_base.o \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
 ../Modules/ions_base.o \

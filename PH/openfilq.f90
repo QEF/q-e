@@ -25,7 +25,6 @@ SUBROUTINE openfilq()
   USE uspp,           ONLY : nkb, okvan
   USE io_files,       ONLY : prefix, iunigk
   USE control_flags,  ONLY : twfcollect
-  USE restart_module, ONLY : readfile_new
   USE mp_global,      ONLY : me_pool, kunit
   USE io_global,      ONLY : ionode
   USE ramanm, ONLY: lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
@@ -52,16 +51,9 @@ SUBROUTINE openfilq()
   iuwfc = 20
   lrwfc = 2 * nbnd * npwx
   CALL diropn (iuwfc, 'wfc', lrwfc, exst)
-#if defined (__OLDPUNCH)
   IF (.NOT.exst) THEN
-    ndr      = 4
-    kunittmp = kunit
-    CALL readfile_new( 'wave', ndr, edum, wdum, kunittmp, lrwfc, iuwfc, ierr )
-    IF( ierr > 0 ) &
-      CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
-    twfcollect=.NOT.exst
+     CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
   END IF
-#endif
   !
   !    The file with deltaV_{bare} * psi
   !

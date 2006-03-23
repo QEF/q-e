@@ -56,7 +56,6 @@ MODULES = \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
 ../Modules/functionals.o \
-../Modules/io_base.o \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
 ../Modules/ions_base.o \
@@ -212,7 +211,6 @@ PWOBJS = \
 ../PW/remove_atomic_rho.o \
 ../PW/regterg.o \
 ../PW/report_mag.o \
-../PW/restart.o \
 ../PW/restart_from_file.o \
 ../PW/restart_in_electrons.o \
 ../PW/restart_in_ions.o \

@@ -38,8 +38,6 @@ SUBROUTINE ions()
      !
      ! ... save restart information
      !
-     CALL write_config_to_file()
-     !
      CALL save_in_ions()
      !
   END IF

@@ -22,7 +22,6 @@ fft_types.o \
 functionals.o \
 griddim.o \
 input_parameters.o \
-io_base.o \
 io_files.o \
 io_global.o  \
 ions_base.o \

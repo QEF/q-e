@@ -18,7 +18,6 @@ SUBROUTINE openfild3
   USE d3com
   USE control_flags,   ONLY : twfcollect
   USE io_files,        ONLY : iunigk, prefix
-  USE restart_module,  ONLY : readfile_new
   USE io_global,       ONLY : ionode
   USE mp_global,       ONLY : kunit, me_pool, root_pool
   !
@@ -32,7 +31,7 @@ SUBROUTINE openfild3
   ! logical variable to check file existe
   INTEGER       :: ndr, kunittmp, ierr
   REAL(DP) :: edum(1,1), wdum(1,1)
-
+  
   twfcollect=.FALSE.
 
   IF (LEN_TRIM(prefix) == 0) CALL errore ('openfild3', 'wrong prefix', 1)
@@ -43,14 +42,8 @@ SUBROUTINE openfild3
 
   lrwfc = 2 * nbnd * npwx
   CALL diropn (iuwfc, 'wfc', lrwfc, exst)
-  IF (.NOT.exst) THEN 
-     ndr      = 4
-     kunittmp = 1
-     kunittmp = kunit
-     CALL readfile_new( 'wave', ndr, edum, wdum, kunittmp, lrwfc, iuwfc, ierr )
-     IF ( ierr > 0 ) &
-        CALL errore ('openfild3', 'file ' // TRIM(prefix) //'.wfc not found', 1)
-     twfcollect=.NOT.exst
+  IF (.NOT.exst) THEN
+     CALL errore ('openfild3', 'file ' // TRIM(prefix) //'.wfc not found', 1)
   END IF
   !
   !    The file with deltaV_{bare} * psi

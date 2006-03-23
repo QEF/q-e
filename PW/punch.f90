@@ -21,7 +21,6 @@ SUBROUTINE punch( what )
   USE wavefunctions_module, ONLY : evc, evc_nc
   USE io_files,             ONLY : prefix, iunpun, iunwfc, nwordwfc
   USE noncollin_module,     ONLY : noncolin
-  USE restart_module,       ONLY : writefile_new
   USE mp_global,            ONLY : kunit
   USE pw_restart,           ONLY : pw_writefile
   USE a2F,                  ONLY : la2F
@@ -85,15 +84,7 @@ SUBROUTINE punch( what )
   !
   iunpun = 4
   !
-#if defined (__OLDPUNCH)
-  !
-  CALL writefile_new( TRIM( what ), iunpun, et, wg, kunittmp )
-  !
-#else
-  !
   CALL pw_writefile( TRIM( what ) )
-  !
-#endif
   !
   IF ( la2F ) CALL enfdos()
   !
