@@ -196,9 +196,9 @@ MODULE xml_io_base
       !
       ! ... keep the line below ( this is the old style RESTARTXX ) !!!
       !
-      dirname = 'RESTART' // int_to_char( runit )
+!      dirname = 'RESTART' // int_to_char( runit )
       !
-!      dirname = TRIM( prefix ) // '_' // TRIM( int_to_char( runit ) )// '.save'
+      dirname = TRIM( prefix ) // '_' // TRIM( int_to_char( runit ) )// '.save'
       !
       IF ( LEN( scradir ) > 1 ) THEN
          !
