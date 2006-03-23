@@ -207,11 +207,12 @@
       use cell_base,        only: ibrav, ainv, h, hold, tcell_base_init
       USE ions_positions,   ONLY: tau0, taus
       use cp_restart,       only: cp_read_cell
-      USE cp_main_variables,     ONLY: ht0, htm, atomsm, atoms0, atomsp
-      USE brillouin,             ONLY: kp
-      USE ions_module,           ONLY: atoms_init
       USE fft_base,         ONLY: dfftb, fft_dlay_descriptor
       USE fft_types,        ONLY: fft_box_allocate
+      USE cp_main_variables,     ONLY: ht0, htm, atomsm, atoms0, atomsp, taub
+      USE brillouin,             ONLY: kp
+      USE ions_module,           ONLY: atoms_init
+      USE atoms_type_module,     ONLY: atoms_type, allocate_atoms_type
 
       implicit none
       !
@@ -245,9 +246,15 @@
       
       CALL r_to_s( tau0, taus, na, nsp, ainv )
 
+      CALL allocate_atoms_type( atomsm, nsp, nat )
+      CALL allocate_atoms_type( atoms0, nsp, nat )
+      CALL allocate_atoms_type( atomsp, nsp, nat )
+
       CALL atoms_init( atomsm, atoms0, atomsp, taus, ind_srt, if_pos, atm, ht0%hmat )
       !
       !  Allocate box descriptor
+      !
+      ALLOCATE( taub( 3, nat ) )
       !
       CALL fft_box_allocate( dfftb, nproc, nat )
       !

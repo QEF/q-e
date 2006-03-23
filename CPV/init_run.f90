@@ -20,7 +20,7 @@ SUBROUTINE init_run()
                                        force_pairing, newnfi, tnewnfi
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, pmass, &
-                                       fion, fionm, cdmi, ityp, taui, cdms
+                                       cdmi, ityp, taui, cdms
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
                                        vels, velsm, velsp
   USE gvecw,                    ONLY : ngw, ecutw, ngwt, ggp
@@ -41,7 +41,7 @@ SUBROUTINE init_run()
   USE ensemble_dft,             ONLY : tens, z0
   USE cg_module,                ONLY : tcg
   USE electrons_base,           ONLY : nudx, nbnd
-  USE parameters,               ONLY : natx, nspinx
+  USE parameters,               ONLY : nspinx
   USE efield_module,            ONLY : tefield, tefield2
   USE uspp_param,               ONLY : nhm
   USE ions_nose,                ONLY : xnhp0, xnhpm, vnhp, nhpcl, nhpdim
@@ -51,8 +51,8 @@ SUBROUTINE init_run()
                                        becdr, sfac, eigr, ei1, ei2, ei3, taub, &
                                        irb, eigrb, rhog, rhos, rhor, bephi,    &
                                        becp, acc, acc_this_run, wfill, wempt,  &
-                                       edft, nfi, atoms0, vpot, occn,     &
-                                       atomsm, ht0, htm
+                                       edft, nfi, atoms0, vpot, occn, atomsp,  &
+                                       atomsm, ht0, htm, fion, fionm
   USE cp_main_variables,        ONLY : allocate_mainvar
   USE energies,                 ONLY : eself, enl, ekin, etot, enthal, ekincm
   USE stre,                     ONLY : stress
@@ -204,7 +204,7 @@ SUBROUTINE init_run()
   !
   IF ( tens .OR. tcg ) &
      CALL allocate_ensemble_dft( nkb, nbsp, ngw, &
-                                 nudx, nspin, nbspx, nnrsx, natx )
+                                 nudx, nspin, nbspx, nnrsx, nat )
   !
   IF ( tcg ) CALL allocate_cg( ngw, nbspx,nkbus )
   !

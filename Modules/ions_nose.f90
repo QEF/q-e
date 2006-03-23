@@ -10,7 +10,7 @@
 !------------------------------------------------------------------------------!
 
       USE kinds, ONLY: DP
-      USE parameters, ONLY: nhclm, natx
+      USE parameters, ONLY: nhclm
 !
       IMPLICIT NONE
 ! Some comments are in order on how Nose-Hoover chains work here (K.N. Kudin)
@@ -35,7 +35,7 @@
 ! nhclm is now mostly not used, needs to be cleaned up at some point
 !
       INTEGER   :: nhpcl=1, ndega, nhpdim=1, nhptyp=0, nhpend=0
-      INTEGER   :: atm2nhp(natx)
+      INTEGER, ALLOCATABLE   :: atm2nhp(:)
       INTEGER, ALLOCATABLE   :: anum2nhp(:)
       REAL(DP), ALLOCATABLE :: vnhp(:), xnhp0(:), xnhpm(:), xnhpp(:), &
       ekin2nhp(:), gkbt2nhp(:), qnp(:), qnp_(:)
@@ -59,8 +59,14 @@
 
     IF( .NOT. tions_base_init ) &
       CALL errore(' ions_nose_init ', ' you should call ions_base_init first ', 1 )
+    !
     tempw     = tempw_
+    !
+    IF( ALLOCATED( atm2nhp ) ) DEALLOCATE( atm2nhp )
+    ALLOCATE( atm2nhp( nat ) )
+    !
     atm2nhp(1:nat) = 1
+    !
     if (tnosep) then
        nhpcl = MAX( nhpcl_ , 1 )
        if (abs(nhptyp_).eq.1) then
@@ -212,6 +218,8 @@
     IF ( ALLOCATED( anum2nhp ) ) DEALLOCATE( anum2nhp )
     IF ( ALLOCATED( qnp ) )      DEALLOCATE( qnp )
     IF ( ALLOCATED( qnp_ ) )     DEALLOCATE( qnp_ )
+    !
+    IF( ALLOCATED( atm2nhp ) ) DEALLOCATE( atm2nhp )
     !
     RETURN
     !

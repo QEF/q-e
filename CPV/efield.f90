@@ -7,8 +7,6 @@
 !
 MODULE efield_module
 
-  USE parameters, ONLY: natx
-
   IMPLICIT NONE
   SAVE
 
@@ -46,7 +44,6 @@ MODULE efield_module
       complex(8) detq
       complex(8) detq2
       real(8) cdzp(3),cdzm(3), cdz0(3)!centers of ionic charges
-      real(8) taunew(3, natx)!the electric field must be always along the column direction
 
 
 CONTAINS

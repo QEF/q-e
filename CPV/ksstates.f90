@@ -36,60 +36,46 @@ CONTAINS
 !  ----------------------------------------------
 
 
-   SUBROUTINE ks_states_init( nspin, tprnks, tprnks_emp )
+   SUBROUTINE ks_states_init( nspin, nprnks, iprnks, nprnks_emp, iprnks_emp )
 
-      INTEGER, INTENT(IN) :: nspin
-      LOGICAL, INTENT(IN) :: tprnks(:,:)
-      LOGICAL, INTENT(IN) :: tprnks_emp(:,:)
+      INTEGER, INTENT(IN) :: nspin, nprnks(:), nprnks_emp(:)
+      INTEGER, INTENT(IN) :: iprnks(:,:)
+      INTEGER, INTENT(IN) :: iprnks_emp(:,:)
 
       INTEGER :: i, ip, k, nstates
 
       ! ...   Tell the code which Kohn-Sham state should be printed to file
       !
-      tksout = .FALSE.
       IF( ALLOCATED( n_ksout    ) ) DEALLOCATE( n_ksout )
       IF( ALLOCATED( indx_ksout ) ) DEALLOCATE( indx_ksout )
       !
-      IF( ANY( tprnks ) ) THEN
-         tksout = .TRUE.
+      tksout = ANY( nprnks > 0 )
+      !
+      IF( tksout ) THEN
+         nstates = MAXVAL( nprnks )
          ALLOCATE( n_ksout( nspin ) )
-         DO i = 1, nspin
-           n_ksout(i) = COUNT( tprnks(:,i) )
-         END DO
-         nstates = MAXVAL(n_ksout)
          ALLOCATE( indx_ksout( nstates, nspin) )
-         indx_ksout = 0
+         n_ksout( 1:nspin ) = nprnks( 1:nspin )
          DO i = 1, nspin
-           ip = 1
-           DO k = 1, SIZE( tprnks, 1)
-             IF( tprnks(k,i) ) THEN
-               indx_ksout( ip, i ) = k
-               ip = ip + 1
-             END IF
+           DO k = 1, nprnks( i )
+              indx_ksout( k, i ) = iprnks( k, i )
            END DO
          END DO
       END IF
 
-      tksout_emp = .FALSE.
       IF( ALLOCATED( n_ksout_emp    ) ) DEALLOCATE( n_ksout_emp )
       IF( ALLOCATED( indx_ksout_emp ) ) DEALLOCATE( indx_ksout_emp )
       !
-      IF( ANY( tprnks_emp ) ) THEN
-         tksout_emp = .TRUE.
+      tksout_emp = ANY( nprnks_emp > 0 )
+      !
+      IF( tksout_emp ) THEN
+         nstates = MAXVAL( nprnks_emp )
          ALLOCATE( n_ksout_emp( nspin ) )
+         ALLOCATE( indx_ksout_emp( nstates, nspin ) )
+         n_ksout_emp( 1:nspin ) = nprnks_emp( 1:nspin )
          DO i = 1, nspin
-            n_ksout_emp(i) = COUNT( tprnks_emp(:,i) )
-         END DO
-         nstates = MAXVAL(n_ksout_emp)
-         ALLOCATE( indx_ksout_emp( nstates, nspin) )
-         indx_ksout_emp = 0
-         DO i = 1, nspin
-            ip = 1
-            DO k = 1, SIZE( tprnks_emp, 1)
-               IF( tprnks_emp(k,i) ) THEN
-                  indx_ksout_emp( ip, i ) = k
-                  ip = ip + 1
-               END IF
+            DO k = 1, n_ksout_emp( i )
+               indx_ksout_emp( k, i ) = iprnks_emp( k, i )
             END DO
          END DO
       END IF

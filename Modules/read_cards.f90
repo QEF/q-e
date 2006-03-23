@@ -57,15 +57,16 @@ MODULE read_cards_module
        f_inp = 0.D0  
        !
        ! ... mask that control the printing of selected Kohn-Sham occupied 
-       ! ... orbitals
+       ! ... orbitals, default allocation
        !
-       tprnks  = .FALSE.       
-       ks_path = ' '
+       CALL allocate_input_iprnks( 0, nspin )
+       nprnks  = 0
        !
        ! ... mask that control the printing of selected Kohn-Sham unoccupied 
-       ! ... orbitals
+       ! ... orbitals, default allocation
        !
-       tprnks_empty = .FALSE.
+       CALL allocate_input_iprnks_empty( 0, nspin )
+       nprnks_empty  = 0
        !
        ! ... Simulation cell from standard input
        !
@@ -147,15 +148,6 @@ MODULE read_cards_module
        !
        newnfi_card  = -1
        tnewnfi_card = .FALSE.
-       !
-       ! ... ion_positions
-       !
-       pos = 0.0d0
-       !
-       constr_inp = 0.0d0
-       !
-       tprnks = .FALSE.
-       tprnks_empty = .FALSE.
        !
        CALL init_autopilot()
        !
@@ -453,7 +445,7 @@ MODULE read_cards_module
        IF ( ntyp > nsx ) THEN
           CALL errore( 'card_atomic_positions', 'nsp out of range', ntyp )
        END IF
-       IF ( nat > natx ) THEN
+       IF ( nat < 1 ) THEN
           CALL errore( 'card_atomic_positions', 'nat out of range', nat )
        END IF
        !
@@ -1836,41 +1828,52 @@ MODULE read_cards_module
      !
      SUBROUTINE card_ksout( input_line )
        ! 
+       USE parameters, ONLY : nbndxx
        IMPLICIT NONE
        ! 
        CHARACTER(LEN=256) :: input_line
        LOGICAL, SAVE      :: tread = .FALSE.
-       INTEGER            :: nks, i, s
-       INTEGER            :: is( SIZE( tprnks, 1 ) )
-       !
+       INTEGER            :: i, s, nksx
+       INTEGER, ALLOCATABLE :: is( :, : )
        !
        IF ( tread ) THEN
           CALL errore( ' card_ksout ', ' two occurrence ', 2 )
        END IF
        !
+       ALLOCATE( is( nbndxx, nspin ) )
+       !
+       nprnks = 0 
+       nksx   = 0
+       !
        DO s = 1, nspin
           !
           CALL read_line( input_line )
-          READ(input_line, *) nks
+          READ(input_line, *) nprnks( s )
           !
-          IF ( nks > SIZE( tprnks, 1 ) .OR. nks < 1 ) THEN
-             CALL errore( ' card_ksout ', &
-                        & ' wrong number of states ', 2 )
+          IF ( nprnks( s ) > nbndxx .OR. nprnks( s ) < 1 ) THEN
+             CALL errore( ' card_ksout ', ' wrong number of states ', 2 )
           END IF
           !
           CALL read_line( input_line )
-          READ(input_line, *) ( is( i ), i = 1, nks )
+          READ(input_line, *) ( is( i, s ), i = 1, nprnks( s ) )
           !
-          DO i = 1, nks
+          nksx = MAX( nksx, nprnks( s ) )
+          !
+       END DO
+       !
+       CALL allocate_input_iprnks( nksx, nspin )
+       !
+       DO s = 1, nspin
+          !
+          DO i = 1, nprnks( s )
              !
-             IF ( ( is(i) > SIZE( tprnks, 1 ) ) .OR. ( is(i) < 1 ) ) &
-                CALL errore( ' card_ksout ', ' wrong state index ', 2 )
-             !   
-             tprnks( is( i ), s ) = .TRUE.
+             iprnks( i, s ) = is( i, s )
              !
           END DO
           !
        END DO
+       !
+       DEALLOCATE( is )
        !
        tread = .TRUE.
        !
@@ -1927,38 +1930,52 @@ MODULE read_cards_module
      !
      SUBROUTINE card_ksout_empty( input_line )
        ! 
+       USE parameters, ONLY : nbndxx
        IMPLICIT NONE
        ! 
        CHARACTER(LEN=256) :: input_line
        LOGICAL, SAVE      :: tread = .FALSE.
-       INTEGER            :: nks, i, s
-       INTEGER            :: is( SIZE( tprnks_empty, 1 ) )
-       !
+       INTEGER            :: nksx, i, s
+       INTEGER, ALLOCATABLE :: is( :, : )
        !
        IF ( tread ) THEN
           CALL errore( ' card_ksout_empty ', ' two occurrence ', 2 )
        END IF
        !
+       ALLOCATE( is( nbndxx, nspin ) )
+       !
+       nprnks_empty = 0 
+       nksx   = 0
+       !
        DO s = 1, nspin
           !
           CALL read_line( input_line )
-          READ(input_line,*) nks
+          READ(input_line,*) nprnks_empty( s )
           !
-          IF ( ( nks > SIZE( tprnks_empty, 1 ) ) .OR. ( nks < 1 ) ) THEN
-             CALL errore( ' card_ksout_empty ', &
-                        & ' wrong number of states ', 2 )
+          IF ( ( nprnks_empty( s ) >  nbndxx ) .OR. ( nprnks_empty( s ) < 1 ) ) THEN
+             CALL errore( ' card_ksout_empty ', ' wrong number of states ', 2 )
           END IF
           !
           CALL read_line( input_line )
-          READ(input_line,*) ( is( i ), i = 1, nks )
+          READ(input_line,*) ( is( i, s ), i = 1, nprnks_empty( s ) )
           !
-          DO i = 1, nks
-            IF ( ( is(i) > SIZE( tprnks_empty, 1 ) ) .OR. ( is(i) < 1 ) ) &
-               CALL errore( ' card_ksout_empty ', ' wrong state index ', 2 )
-            tprnks_empty( is( i ), s ) = .TRUE.
+          nksx = MAX( nksx, nprnks_empty( s ) )
+          !
+       END DO
+       ! 
+       CALL allocate_input_iprnks_empty( nksx, nspin )
+       !
+       DO s = 1, nspin
+          !
+          DO i = 1, nprnks_empty( s )
+             !
+             iprnks_empty( i, s ) = is( i, s )
+             !
           END DO
           !
        END DO
+       !
+       DEALLOCATE( is )
        ! 
        tread = .TRUE.
        !

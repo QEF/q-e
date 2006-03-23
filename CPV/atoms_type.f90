@@ -12,24 +12,14 @@
 
 !  this module contains the definition of TYPE structure
 !  relative to the ionic degrees of freedom
-!  ----------------------------------------------
-!  routines in this module:
-!  ----------------------------------------------
-!  SUBROUTINE specie_index(isa, na, is, ia)
-!  SUBROUTINE allocate_atoms_type(atoms, staur, ismbl, pma, na)
-
 
         USE kinds
-        USE parameters, ONLY: nsx, natx
+        USE parameters, ONLY: nsx
 
         IMPLICIT NONE
         SAVE
 
         PRIVATE
-
-!  BEGIN manual
-!  TYPE DEFINITIONS
-
 
 ! ...   title ...
         TYPE atoms_type
@@ -43,31 +33,23 @@
           INTEGER   :: na(nsx)  !   number of atoms per specie
           INTEGER   :: isa(nsx) !   index of the first atom (in the whole list) of a given specie
           REAL(DP) :: m(nsx)   !   atomic masses
-          REAL(DP) :: taur(3,natx)  
-          REAL(DP) :: taus(3,natx)  
+          REAL(DP), POINTER :: taur(:,:)  ! (3,nat)  
+          REAL(DP), POINTER :: taus(:,:)  ! (3,nat)  
           ! ... tau: atomic positions, sorted by specie. Atomic positions of specie "is" are
           !          stored in array elements whose index are "isa(is) ... isa(is)+na(is)-1"
-          REAL(DP) :: vels(3,natx)  !  scaled velocities, same layout of "tau"
-          REAL(DP) :: for(3,natx)  !  total force acting on the atom
-          INTEGER :: mobile(3,natx) !  atomic freedom, same layout of "tau" ( 1 atom can move )
-          INTEGER :: ityp(natx)     !  index of the specie to which the atom belong
+          REAL(DP), POINTER :: vels(:,:)  ! (3,nat)  !  scaled velocities, same layout of "tau"
+          REAL(DP), POINTER :: for (:,:)  ! (3,nat)  !  total force acting on the atom
+          INTEGER, POINTER :: mobile(:,:) ! (3,nat) !  atomic freedom, same layout of "tau" ( 1 atom can move )
+          INTEGER, POINTER :: ityp(:)     ! (nat)     !  index of the specie to which the atom belong
           LOGICAL :: tscfor         !  indicate if the force are scaled or real
           REAL(DP) :: ekin(nsx)    !  kinetic energy per specie
           REAL(DP) :: ekint        !  total kinetic energy
         END TYPE atoms_type
 
-! .. 4 int + nsx int + 4 char + 2 ( nsx int ) + nsx DP + 3 ( 3 DP natx ) + 3 lg natx +
-! .. natx int + 3 lg + nsx DP + DP 
-
-!  ----------------------------------------------
-!  END manual
-
 
         PUBLIC :: atoms_type
+        PUBLIC :: allocate_atoms_type, deallocate_atoms_type
         PUBLIC :: atoms_type_init
-
-!  end of module-scope declarations
-!  ----------------------------------------------
 
 !=----------------------------------------------------------------------------=!
       CONTAINS
@@ -167,6 +149,34 @@
 
           RETURN
         END SUBROUTINE atoms_type_init
+
+
+
+        SUBROUTINE allocate_atoms_type( atoms, nsp, nat )
+           INTEGER, INTENT(IN) :: nsp, nat
+           TYPE (atoms_type) :: atoms
+
+           ALLOCATE( atoms %  taur( 3, nat ) )
+           ALLOCATE( atoms %  taus( 3, nat ) )
+           ALLOCATE( atoms %  vels( 3, nat ) )
+           ALLOCATE( atoms %  for ( 3, nat ) )
+           ALLOCATE( atoms %  mobile ( 3, nat ) )
+           ALLOCATE( atoms %  ityp ( nat ) )
+
+           RETURN
+        END SUBROUTINE allocate_atoms_type
+
+        SUBROUTINE deallocate_atoms_type( atoms )
+           TYPE (atoms_type) :: atoms
+           IF( ASSOCIATED( atoms %  taur ) ) DEALLOCATE( atoms %  taur )
+           IF( ASSOCIATED( atoms %  taus ) ) DEALLOCATE( atoms %  taus )
+           IF( ASSOCIATED( atoms %  vels ) ) DEALLOCATE( atoms %  vels )
+           IF( ASSOCIATED( atoms %  for ) ) DEALLOCATE( atoms %  for )
+           IF( ASSOCIATED( atoms %  mobile ) ) DEALLOCATE( atoms %  mobile )
+           IF( ASSOCIATED( atoms %  ityp ) ) DEALLOCATE( atoms %  ityp )
+           RETURN
+        END SUBROUTINE deallocate_atoms_type
+
 
 
 !=----------------------------------------------------------------------------=!

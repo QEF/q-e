@@ -1120,9 +1120,6 @@ MODULE read_namelists_module
        !
        IF( nat < 1 ) &
           CALL errore( sub_name ,' nat less than one ', MAX( nat, 1) )
-       IF( nat > natx ) &
-          CALL errore( sub_name , &
-                       & ' nat too large, increase NATX ', MAX( nat, 1) )
        !
        IF( ntyp < 1 ) &
           CALL errore( sub_name ,' ntyp less than one ', MAX( ntyp, 1) )
@@ -1294,6 +1291,8 @@ MODULE read_namelists_module
      !----------------------------------------------------------------------
      SUBROUTINE ions_checkin( prog )
        !----------------------------------------------------------------------
+       !
+       USE parameters, ONLY: max_num_of_images
        !
        IMPLICIT NONE
        !
@@ -1726,7 +1725,11 @@ MODULE read_namelists_module
        END IF
        !
        CALL system_bcast( )
+       !
        CALL system_checkin( prog )
+       !
+       CALL allocate_input_ions( ntyp, nat )
+       CALL allocate_input_constr( nat )
        !
        ! ... ELECTRONS namelist
        !
@@ -1770,6 +1773,8 @@ MODULE read_namelists_module
        !
        CALL ions_bcast( )
        CALL ions_checkin( prog )
+
+       CALL allocate_input_neb ( nat, num_of_images )
        !
        ! ... CELL namelist
        !

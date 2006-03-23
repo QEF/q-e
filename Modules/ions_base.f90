@@ -10,7 +10,7 @@
 !------------------------------------------------------------------------------!
 
       USE kinds,      ONLY : DP
-      USE parameters, ONLY : nsx, natx, ntypx
+      USE parameters, ONLY : ntypx
 !
       IMPLICIT NONE
       SAVE
@@ -21,7 +21,7 @@
       !     nat       = total number of atoms of all species
 
       INTEGER :: nsp     = 0
-      INTEGER :: na(nsx) = 0    
+      INTEGER :: na(ntypx) = 0    
       INTEGER :: nax     = 0
       INTEGER :: nat     = 0
 
@@ -29,10 +29,10 @@
       !     pmass(is) = mass (converted to a.u.) of ions
       !     rcmax(is) = Ewald radius (for ion-ion interactions)
 
-      REAL(DP) :: zv(nsx)    = 0.0d0
-      REAL(DP) :: pmass(nsx) = 0.0d0
-      REAL(DP) :: amass(nsx) = 0.0d0
-      REAL(DP) :: rcmax(nsx) = 0.0d0
+      REAL(DP) :: zv(ntypx)    = 0.0d0
+      REAL(DP) :: pmass(ntypx) = 0.0d0
+      REAL(DP) :: amass(ntypx) = 0.0d0
+      REAL(DP) :: rcmax(ntypx) = 0.0d0
 
       !     ityp( i ) = the type of i-th atom in stdin
       !     atm( j )  = name of the type of the j-th atomic specie
@@ -78,7 +78,6 @@
 
       REAL(DP) :: cdms(3)
       !
-      REAL(DP) :: fion(3,natx), fionm(3,natx)
 
       LOGICAL :: tions_base_init = .FALSE.
       LOGICAL, PRIVATE :: tdebug = .FALSE.
@@ -217,7 +216,7 @@
          CALL errore( 'ions_base_init ', 'nsp out of range', 1 )
       IF ( nsp > SIZE( na ) ) &
          CALL errore( 'ions_base_init ', &
-                    & 'nsp too large, increase nsx parameter ', 1 )
+                    & 'nsp too large, increase ntypx parameter ', 1 )
       !
       na(1:nsp) = na_(1:nsp)
       nax       = MAXVAL( na(1:nsp) )

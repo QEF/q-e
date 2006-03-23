@@ -56,7 +56,6 @@
       use derho
       use cdvan
       use stre
-      use parameters, only: natx
       use constants, only: pi, factem
       use io_files, only: psfile, pseudo_dir
       use io_files, only: outdir
@@ -96,7 +95,7 @@
       complex(dp) :: ei2(-nr2:nr2,nat)
       complex(dp) :: ei3(-nr3:nr3,nat)
       complex(dp) :: sfac( ngs, nsp )
-      real(dp) :: fion(3,natx)
+      real(dp) :: fion(3,nat)
       real(dp) :: ema0bg(ngw)
       real(dp) :: lambdap(nudx,nudx,nspin)
       real(dp) :: lambda(nudx,nudx,nspin)

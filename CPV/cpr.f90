@@ -55,7 +55,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                                        ions_temp, ions_thermal_stress, if_pos
   USE ions_base,                ONLY : ions_vrescal, fricp, greasp, &
                                        iforce, ndfrz, ions_shiftvar, ityp, &
-                                       atm, ind_bck, cdm, cdms, fion, fionm
+                                       atm, ind_bck, cdm, cdms
   USE cell_base,                ONLY : a1, a2, a3, b1, b2, b3, ainv, frich, &
                                        greash, tpiba2, omega, alat, ibrav,  &
                                        celldm, h, hold, hnew, velh, deth,   &
@@ -73,7 +73,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE cdvan,                    ONLY : dbec, drhovan
   USE stre,                     ONLY : stress
   USE gvecw,                    ONLY : ggp
-  USE parameters,               ONLY : natx, nsx
+  USE parameters,               ONLY : nsx
   USE constants,                ONLY : pi, factem, au_gpa, au_ps, gpa_au
   USE io_files,                 ONLY : psfile, pseudo_dir
   USE wave_base,                ONLY : wave_steepest, wave_verlet
@@ -118,7 +118,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                                        acc, bec, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, ei1, ei2, ei3,  &
                                        irb, becdr, taub, eigrb, rhog, rhos, &
-                                       rhor, rhopr, bephi, becp, nfi
+                                       rhor, rhopr, bephi, becp, nfi, fion, fionm
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
   USE metadyn_vars,             ONLY : dfe_acc, etot_av
@@ -175,10 +175,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   REAL(DP), ALLOCATABLE :: tauw(:,:)  
     ! temporary array used to printout positions
-  CHARACTER(LEN=3) :: labelw( natx )
+  CHARACTER(LEN=3) :: labelw( nat )
   ! for force_pairing
   INTEGER   :: n_spin_start 
-  !
   !
   dt2bye   = dt2 / emass
   etot_out = 0.D0

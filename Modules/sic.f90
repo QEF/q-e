@@ -36,12 +36,11 @@
 
 
       USE kinds, ONLY: DP
-      USE parameters, ONLY: natx
 !
       IMPLICIT NONE
       SAVE
 
-      INTEGER :: ind_localisation(natx) = 0   ! true if we want to know the localization arount the atom
+      INTEGER, ALLOCATABLE :: ind_localisation(:) 
       INTEGER :: nat_localisation = 0 
       LOGICAL :: print_localisation = .FALSE. ! Calculates hartree energy around specified atoms
       INTEGER :: self_interaction = 0 
@@ -74,6 +73,8 @@
       sic_alpha       = sic_alpha_
       sic_rloc        = sic_rloc_
       ! counting the atoms around which i want to calculate the charge localization
+      IF( ALLOCATED( ind_localisation ) ) DEALLOCATE( ind_localisation )
+      ALLOCATE( ind_localisation( nat_ ) )
       ind_localisation( 1 : nat_ ) = id_loc_ ( 1 : nat_ )
       nat_localisation = COUNT( ind_localisation > 0 ) 
       IF( ALLOCATED( pos_localisation ) ) DEALLOCATE( pos_localisation )
@@ -89,6 +90,7 @@
     SUBROUTINE deallocate_sic()
       IMPLICIT NONE
       IF( ALLOCATED( pos_localisation ) ) DEALLOCATE( pos_localisation )
+      IF( ALLOCATED( ind_localisation ) ) DEALLOCATE( ind_localisation )
       RETURN
     END SUBROUTINE deallocate_sic
 

@@ -15,7 +15,6 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   ! ... this routine updates the electronic degrees of freedom
   !
   USE kinds,                ONLY : DP
-  USE parameters,           ONLY : natx
   USE control_flags,        ONLY : lwf, tfor, tprnfor, thdyn
   USE cg_module,            ONLY : tcg
   USE cp_main_variables,    ONLY : eigr, bec, irb, eigrb, rhog, rhos, rhor, &
@@ -29,6 +28,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE electrons_base,       ONLY : nbsp, nspin, f, nudx
   USE core,                 ONLY : nlcc_any, rhoc
   USE ions_positions,       ONLY : tau0
+  USE ions_base,            ONLY : nat
   USE stre,                 ONLY : stress
   USE dener,                ONLY : detot
   USE efield_module,        ONLY : tefield, ipolp, qmat, gqq, evalue, &
@@ -52,7 +52,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   INTEGER,        INTENT(IN)    :: nfi
   LOGICAL,        INTENT(IN)    :: tfirst, tlast
   REAL(DP), INTENT(IN)    :: b1(3), b2(3), b3(3)
-  REAL(DP), INTENT(IN)    :: fion(3,natx)
+  REAL(DP), INTENT(IN)    :: fion(3,nat)
   REAL(DP), INTENT(IN)    :: dt2bye
   REAL(DP), INTENT(IN)    :: fccc, ccc
   REAL(DP), INTENT(INOUT) :: enb, enbi

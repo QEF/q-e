@@ -842,12 +842,12 @@ MODULE input
            diis_size, diis_hcut, diis_rothr, diis_chguess, diis_g0chmix,       &
            diis_nchmix, diis_g1chmix, empty_states_maxstep, empty_states_delt, &
            empty_states_emass, empty_states_ethr, empty_states_nbnd,           &
-           tprnks_empty, vhrmax_inp, vhnr_inp, vhiunit_inp, vhrmin_inp,        &
-           tvhmean_inp, vhasse_inp, nconstr_inp, iesr_inp, &
+           iprnks_empty, vhrmax_inp, vhnr_inp, vhiunit_inp, vhrmin_inp,        &
+           tvhmean_inp, vhasse_inp, nconstr_inp, iesr_inp, iprnks, nprnks,     &
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nelup, neldw, nbnd,     &
-           nelec, tprnks, ks_path, press, cell_damping, cell_dofree, tf_inp,   &
+           nelec, press, cell_damping, cell_dofree, tf_inp, nprnks_empty,      &
            refg, greash, grease, greasp, epol, efield, tcg, maxiter, etresh,   &
-           passop, tot_charge, multiplicity, tot_magnetization
+           passop, tot_charge, multiplicity, tot_magnetization, nprnks_empty
      !
      USE input_parameters, ONLY : wf_efield, wf_switch, sw_len, efx0, efy0,    &
                                   efz0, efx1, efy1, efz1, wfsd, wfdt, maxwfdt, &
@@ -1010,7 +1010,7 @@ MODULE input
      CALL potential_init( tvhmean_inp,vhnr_inp, vhiunit_inp, &
                           vhrmin_inp, vhrmax_inp, vhasse_inp, iesr_inp )
 
-     CALL ks_states_init( nspin, tprnks, tprnks_empty )
+     CALL ks_states_init( nspin, nprnks, iprnks, nprnks_empty, iprnks_empty )
 
      CALL electrons_base_initval( zv, na_inp, ntyp, nelec, nelup,         &
                                   neldw, nbnd, nspin, occupations, f_inp, &

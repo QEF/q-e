@@ -2923,7 +2923,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   USE tune,               ONLY : npts, xdir, ydir, zdir, B, &
                                  shift, start, av0, av1
   USE cell_base,          ONLY : a1, a2, a3, tpiba, omega
-  USE ions_base,          ONLY : nsp, na, zv, nsx, nax
+  USE ions_base,          ONLY : nsp, na, zv, nax
   USE constants,          ONLY : pi, tpi
   USE mp,                 ONLY : mp_barrier, mp_bcast
   USE fft_base,           ONLY : dfftp
@@ -2942,7 +2942,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   INTEGER proc, ierr, root, ngdens(nproc),recvcount(nproc), displs(nproc)
   INTEGER recvcount2(nproc), displs2(nproc)
 #endif
-  REAL(DP) zlen,vtot, pos(3,nax,nsx), a_direct(3,3),a_trans(3,3), e_slp, e_int
+  REAL(DP) zlen,vtot, pos(3,nax,nsp), a_direct(3,3),a_trans(3,3), e_slp, e_int
   REAL(DP), INTENT(out) :: e_tuned(3)
   REAL(DP), INTENT(in) :: tau0(3,nax)
   REAL(DP),ALLOCATABLE :: v_mr(:), dz(:), gz(:), g_1(:,:), vbar(:), cd(:), v_final(:)

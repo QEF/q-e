@@ -370,7 +370,7 @@
       use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx
       use cell_base,       only: omega
       use ions_base,       only: nsp, na, nat
-      use parameters,      only: natx, nsx
+      use parameters,      only: nsx
       use small_box,       only: tpibab
       use atom,            only: nlcc
       use core,            only: rhocb
@@ -387,10 +387,10 @@
       complex(8), intent(in):: eigrb(ngb,nat)
       real(8), intent(in)   :: vxc(nnr,nspin)
 ! output
-      real(8), intent(inout):: fion1(3,natx)
+      real(8), intent(inout):: fion1(3,nat)
 ! local
       integer iss, ix, ig, is, ia, nfft, isa
-      real(8) fcc(3,natx), fac, boxdotgrid
+      real(8) fcc(3,nat), fac, boxdotgrid
       complex(8) ci, facg
       complex(8), allocatable :: qv(:)
       external  boxdotgrid
@@ -474,7 +474,7 @@
 !     Same logic as for rhov: use box grid for core charges
 !
       use ions_base,       only: nsp, na, nat
-      use parameters,      only: natx, nsx
+      use parameters,      only: nsx
       use atom,            only: nlcc
       use grid_dimensions, only: nr3, nnr => nnrx
       use gvecb,           only: ngb, npb, nmb

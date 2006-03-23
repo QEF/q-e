@@ -954,16 +954,15 @@
 !
 !     forces on ions, ionic term in real space (also stress if requested)
 !
-      USE parameters, ONLY: natx
       USE control_flags, ONLY: iprint, tpre
       USE constants, ONLY: pi, fpi
       USE cell_base, ONLY: ainv, a1, a2, a3
-      USE ions_base, ONLY: nsp, na, rcmax, zv
+      USE ions_base, ONLY: nsp, na, rcmax, zv, nat
       IMPLICIT NONE
 ! input
-      REAL(8) tau0(3,natx)
+      REAL(8) tau0(3,nat)
 ! output
-      REAL(8) fion(3,natx), dsr(3,3), esr
+      REAL(8) fion(3,nat), dsr(3,3), esr
 ! local variables
       INTEGER i,j,k,l,m, ii, lax, inf, isak, isaj
       REAL(8) rlm(3), rckj, rlmn, arg, addesr, addpre, repand, fxx
@@ -1040,7 +1039,6 @@
       USE cell_base, ONLY: omega, tpiba, tpiba2
       USE ions_base, ONLY: nsp, na, nas => nax, nat
       USE grid_dimensions, ONLY: nr1, nr2, nr3
-      USE parameters, ONLY: natx
       USE local_pseudo, ONLY: vps, rhops
 !
       IMPLICIT NONE
@@ -1050,7 +1048,7 @@
      &           ei2(-nr2:nr2,nat),                                 &
      &           ei3(-nr3:nr3,nat)
 ! output
-      REAL(8) fion1(3,natx)
+      REAL(8) fion1(3,nat)
 ! local
       INTEGER ig, is, isa, ism, ia, ix, iss, isup, isdw
       INTEGER i, j, k
@@ -1480,7 +1478,7 @@
       USE uspp, ONLY: deeq
       USE cvan, ONLY: nvb
       USE ions_base, ONLY: nas => nax, nat, nsp, na
-      USE parameters, ONLY: natx, nsx
+      USE parameters, ONLY: nsx
       USE constants, ONLY: pi, fpi
       USE grid_dimensions, ONLY: nr3, nnr => nnrx
       USE gvecb
@@ -1502,10 +1500,10 @@
       COMPLEX(8) eigrb(ngb,nat)
       REAL(8)  vr(nnr,nspin)
 ! output
-      REAL(8)  fion(3,natx)
+      REAL(8)  fion(3,nat)
 ! local
       INTEGER isup,isdw,iss, iv,ijv,jv, ik, nfft, isa, ia, is, ig
-      REAL(8)  fvan(3,natx,nsx), fac, fac1, fac2, boxdotgrid
+      REAL(8)  fvan(3,nat,nsx), fac, fac1, fac2, boxdotgrid
       COMPLEX(8) ci, facg1, facg2
       COMPLEX(8), ALLOCATABLE :: qv(:)
       EXTERNAL boxdotgrid
@@ -1722,8 +1720,7 @@
 ! 
 !
       USE io_global, ONLY: stdout
-      USE ions_base, ONLY: na, nsp
-      USE parameters, ONLY: natx
+      USE ions_base, ONLY: na, nsp, nat
       USE uspp, ONLY :nhsa=>nkb, qq
       USE uspp_param, ONLY: nhm, nh
       USE cvan, ONLY: ish, nvb
@@ -1732,7 +1729,7 @@
 !
       IMPLICIT NONE
       REAL(8) bec(nhsa,nbsp), becdr(nhsa,nbsp,3), lambda(nudx,nudx,nspin)
-      REAL(8) fion(3,natx)
+      REAL(8) fion(3,nat)
 !
       INTEGER k, is, ia, iv, jv, i, j, inl, isa, iss, nss, istart
       REAL(8), ALLOCATABLE :: temp(:,:), tmpbec(:,:),tmpdr(:,:) 
@@ -2605,7 +2602,6 @@
       USE kinds, ONLY: dp
       USE control_flags, ONLY: iprint, iprsta, thdyn, tpre, tfor, tprnfor
       USE io_global, ONLY: stdout
-      USE parameters, ONLY: natx
       USE ions_base, ONLY: nas => nax, nsp, na, nat
       USE gvecs
       USE gvecp, ONLY: ng => ngm
@@ -2636,14 +2632,14 @@
 !
       LOGICAL :: tlast, tfirst
       INTEGER :: nfi
-      REAL(DP)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,natx)
-      REAL(DP)  rhoc(nnr), tau0(3,natx)
+      REAL(DP)  rhor(nnr,nspin), rhos(nnrsx,nspin), fion(3,nat)
+      REAL(DP)  rhoc(nnr), tau0(3,nat)
       COMPLEX(DP) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
      &                ei3(-nr3:nr3,nat), eigrb(ngb,nat),        &
      &                rhog(ng,nspin), sfac(ngs,nsp)
 !
       INTEGER irb(3,nat), iss, isup, isdw, ig, ir,i,j,k,is, ia
-      REAL(DP) fion1(3,natx), vave, ebac, wz, eh
+      REAL(DP) fion1(3,nat), vave, ebac, wz, eh
       COMPLEX(DP)  fp, fm, ci
       COMPLEX(DP), ALLOCATABLE :: v(:), vs(:)
       COMPLEX(DP), ALLOCATABLE :: rhotmp(:), vtemp(:), drhotmp(:,:,:)

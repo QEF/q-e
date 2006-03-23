@@ -19,8 +19,8 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nsx, natx, npkx, nbndxx, nspinx, &
-                         lqmax, nhclm, max_num_of_images, max_nconstr
+  USE parameters, ONLY : nsx, npkx, nbndxx, nspinx, &
+                         lqmax, nhclm, max_nconstr
   !
   IMPLICIT NONE
   !
@@ -1368,18 +1368,18 @@ MODULE input_parameters
 !
         CHARACTER(LEN=3)  :: atom_label(nsx) = 'XX'  ! label of the atomic species being read
         CHARACTER(LEN=80) :: atom_pfile(nsx) = 'YY'  ! pseudopotential file name
-        REAL(DP)         :: atom_mass(nsx)  = 0.0d0 ! atomic mass of the i-th atomic species
+        REAL(DP)          :: atom_mass(nsx)  = 0.0d0 ! atomic mass of the i-th atomic species
           ! in atomic mass units: 1 a.m.u. = 1822.9 a.u. = 1.6605 * 10^-27 kg
         LOGICAL   :: taspc = .FALSE.
 
 !
 !    ATOMIC_POSITIONS
 !
-        REAL(DP) :: rd_pos(3,natx) = 0.D0 ! unsorted position from input
-        INTEGER  :: sp_pos(natx)   = 0
-        INTEGER  :: if_pos(3,natx) = 1
-        INTEGER  :: id_loc(natx)   = 0
-        INTEGER  :: na_inp(nsx)    = 0    ! number of atom for each specie
+        REAL(DP), ALLOCATABLE :: rd_pos(:,:)  ! unsorted positions from input
+        INTEGER,  ALLOCATABLE :: sp_pos(:)   
+        INTEGER,  ALLOCATABLE :: if_pos(:,:) 
+        INTEGER,  ALLOCATABLE :: id_loc(:)
+        INTEGER,  ALLOCATABLE :: na_inp(:)
         LOGICAL  :: tapos = .FALSE.
         CHARACTER(LEN=80) :: atomic_positions = 'crystal'
           ! atomic_positions = 'bohr' | 'angstrong' | 'crystal' | 'alat'
@@ -1388,18 +1388,16 @@ MODULE input_parameters
         !
         ! ... variable added for NEB  ( C.S. 17/10/2003 )
         !
-        REAL(DP) :: pos( 3*natx, max_num_of_images )
+        REAL(DP), ALLOCATABLE :: pos( :, : )
         !
         ! ... workaround for IBM xlf bug, compiler can't manage large 
         !     array initialization
-        !
-	! DATA pos / 0.0d0 /
 
 !
 !    ION_VELOCITIES
 !
-        REAL(DP) :: rd_vel(3,natx) = 0.0d0   ! unsorted velocities from input
-        INTEGER  :: sp_vel(natx)   = 0 
+        REAL(DP), ALLOCATABLE :: rd_vel(:,:)   ! unsorted velocities from input
+        INTEGER,  ALLOCATABLE :: sp_vel(:)
         LOGICAL  :: tavel          = .FALSE.
 
 !
@@ -1485,22 +1483,23 @@ MODULE input_parameters
 !
       INTEGER           :: nconstr_inp             = 0
       REAL (DP)         :: constr_tol_inp          = 0.D0
-      CHARACTER(LEN=20) :: constr_type_inp(natx)   = ' '
-      REAL (DP)         :: constr_inp(6,natx)        ! xlf bug, cannot initialize array
-      REAL (DP)         :: constr_target(natx)     = 0.D0
-      LOGICAL           :: constr_target_set(natx) = .FALSE.
+      CHARACTER(LEN=20), ALLOCATABLE :: constr_type_inp(:)
+      REAL (DP),         ALLOCATABLE :: constr_inp(:,:)
+      REAL (DP),         ALLOCATABLE :: constr_target(:)
+      LOGICAL,           ALLOCATABLE :: constr_target_set(:)
 
 
 !
 !    KOHN_SHAM
 !
-      LOGICAL :: tprnks( nbndxx, nspinx )
+      INTEGER, ALLOCATABLE :: iprnks( :, : )
+      INTEGER :: nprnks( nspinx ) = 0
         ! logical mask used to specify which kohn sham orbital should be
         ! written to files 'KS.'
-      LOGICAL :: tprnks_empty( nbndxx, nspinx )
+      INTEGER, ALLOCATABLE :: iprnks_empty( :, : )
+      INTEGER :: nprnks_empty( nspinx ) = 0
         ! logical mask used to specify which empty kohn sham orbital should be
         ! written to files 'KS_EMP.'
-      CHARACTER(LEN=256) :: ks_path = './'
 
 !
 !    CHI2
@@ -1510,11 +1509,10 @@ MODULE input_parameters
 !
 !   CLIMBING_IMAGES
 !
-
       !
       ! ... variable added for NEB  ( C.S. 20/11/2003 )
       !
-      LOGICAL :: climbing( max_num_of_images ) = .FALSE.
+      LOGICAL, ALLOCATABLE :: climbing( : )
 
 !
 !   PLOT_WANNIER
@@ -1526,6 +1524,128 @@ MODULE input_parameters
 
 !  END manual
 ! ----------------------------------------------------------------------
+
+CONTAINS
+
+  SUBROUTINE allocate_input_ions( ntyp, nat )
+    INTEGER, INTENT(IN) :: ntyp, nat
+
+    IF( ALLOCATED( rd_pos ) ) DEALLOCATE( rd_pos )
+    IF( ALLOCATED( sp_pos ) ) DEALLOCATE( sp_pos )
+    IF( ALLOCATED( if_pos ) ) DEALLOCATE( if_pos )
+    IF( ALLOCATED( id_loc ) ) DEALLOCATE( id_loc )
+    IF( ALLOCATED( na_inp ) ) DEALLOCATE( na_inp )
+    IF( ALLOCATED( rd_vel ) ) DEALLOCATE( rd_vel )
+    IF( ALLOCATED( sp_vel ) ) DEALLOCATE( sp_vel )
+    
+    ALLOCATE( rd_pos(3,nat) )
+    ALLOCATE( sp_pos(nat)   )
+    ALLOCATE( if_pos(3,nat) )
+    ALLOCATE( id_loc(nat)   )
+    ALLOCATE( na_inp(ntyp)  )
+    ALLOCATE( rd_vel(3,nat) )
+    ALLOCATE( sp_vel(nat)   )
+    !
+    rd_pos = 0.D0 
+    sp_pos = 0
+    if_pos = 1
+    id_loc = 0
+    na_inp = 0
+    rd_vel = 0.0d0
+    sp_vel = 0
+
+    RETURN
+  END SUBROUTINE allocate_input_ions
+
+
+  SUBROUTINE allocate_input_constr( nat )
+    INTEGER, INTENT(IN) :: nat
+    !
+    IF( ALLOCATED( constr_type_inp ) ) DEALLOCATE( constr_type_inp ) 
+    IF( ALLOCATED( constr_inp ) ) DEALLOCATE( constr_inp )
+    IF( ALLOCATED( constr_target ) ) DEALLOCATE( constr_target )
+    IF( ALLOCATED( constr_target_set ) ) DEALLOCATE( constr_target_set )
+    !
+    ALLOCATE( constr_type_inp( nat ) ) 
+    ALLOCATE( constr_inp( 6, nat ) )
+    ALLOCATE( constr_target( nat ) )
+    ALLOCATE( constr_target_set( nat ) )
+    !
+    constr_type_inp = ' '
+    constr_inp = 0.0d0
+    constr_target = 0.0d0
+    constr_target_set = .FALSE.
+    !
+    RETURN
+  END SUBROUTINE allocate_input_constr
+
+
+  SUBROUTINE allocate_input_neb( nat, num_of_images )
+     INTEGER, INTENT(IN) :: nat, num_of_images
+     !
+     IF( ALLOCATED( pos ) ) DEALLOCATE( pos )
+     IF( ALLOCATED( climbing ) ) DEALLOCATE( climbing )
+     !
+     ALLOCATE( pos( 3*nat, MAX( 1, num_of_images ) ) )
+     ALLOCATE( climbing( MAX( 1, num_of_images ) ) )
+     !
+     pos      = 0.0d0
+     climbing = .FALSE.
+     !
+     RETURN
+  END SUBROUTINE allocate_input_neb
+
+
+
+  SUBROUTINE allocate_input_iprnks( nksx, nspin )
+     INTEGER, INTENT(IN) :: nksx, nspin
+     !
+     IF( ALLOCATED( iprnks ) ) DEALLOCATE( iprnks )
+     !
+     ALLOCATE( iprnks( MAX( 1, nksx), nspin ) )
+     !
+     iprnks = 0
+     !
+     RETURN
+  END SUBROUTINE allocate_input_iprnks
+
+
+
+  SUBROUTINE allocate_input_iprnks_empty( nksx, nspin )
+     INTEGER, INTENT(IN) :: nksx, nspin
+     !
+     IF( ALLOCATED( iprnks_empty ) ) DEALLOCATE( iprnks_empty )
+     !
+     ALLOCATE( iprnks_empty( MAX( 1, nksx), nspin ) )
+     !
+     iprnks_empty = 0
+     !
+     RETURN
+  END SUBROUTINE allocate_input_iprnks_empty
+
+
+
+  SUBROUTINE deallocate_input_parameters()
+     IF( ALLOCATED( rd_pos ) ) DEALLOCATE( rd_pos )
+     IF( ALLOCATED( sp_pos ) ) DEALLOCATE( sp_pos )
+     IF( ALLOCATED( if_pos ) ) DEALLOCATE( if_pos )
+     IF( ALLOCATED( id_loc ) ) DEALLOCATE( id_loc )
+     IF( ALLOCATED( na_inp ) ) DEALLOCATE( na_inp )
+     IF( ALLOCATED( rd_vel ) ) DEALLOCATE( rd_vel )
+     IF( ALLOCATED( sp_vel ) ) DEALLOCATE( sp_vel )
+     !
+     IF( ALLOCATED( pos )    ) DEALLOCATE( pos )
+     IF( ALLOCATED( climbing ) ) DEALLOCATE( climbing )
+     !
+     IF( ALLOCATED( constr_type_inp ) ) DEALLOCATE( constr_type_inp ) 
+     IF( ALLOCATED( constr_inp ) ) DEALLOCATE( constr_inp )
+     IF( ALLOCATED( constr_target ) ) DEALLOCATE( constr_target )
+     IF( ALLOCATED( constr_target_set ) ) DEALLOCATE( constr_target_set )
+     !
+     IF( ALLOCATED( iprnks ) ) DEALLOCATE( iprnks )
+     IF( ALLOCATED( iprnks_empty ) ) DEALLOCATE( iprnks_empty )
+     RETURN
+  END SUBROUTINE deallocate_input_parameters
   !
 !=----------------------------------------------------------------------------=!
 !

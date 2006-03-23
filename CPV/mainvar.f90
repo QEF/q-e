@@ -12,11 +12,11 @@ MODULE cp_main_variables
   !----------------------------------------------------------------------------
   !
   USE kinds,             ONLY : DP
-  USE parameters,        ONLY : natx, nacx
+  USE parameters,        ONLY : nacx
   USE control_flags,     ONLY : program_name
   USE funct,             ONLY : dft_is_meta
   USE metagga,           ONLY : kedtaur, kedtaus, kedtaug
-  USE atoms_type_module, ONLY : atoms_type
+  USE atoms_type_module, ONLY : atoms_type, deallocate_atoms_type
   USE cell_base,         ONLY : boxdimensions
   USE wave_types,        ONLY : wave_descriptor, wave_descriptor_init
   USE energies,          ONLY : dft_energy_type
@@ -44,7 +44,7 @@ MODULE cp_main_variables
   !
   ! ... indexes, positions, and structure factors for the box grid
   !
-  REAL(DP)                 :: taub(3,natx)
+  REAL(DP), ALLOCATABLE :: taub(:,:)
   COMPLEX(DP), ALLOCATABLE :: eigrb(:,:)
   INTEGER,     ALLOCATABLE :: irb(:,:)
   ! 
@@ -72,6 +72,8 @@ MODULE cp_main_variables
   ! atomic positions
   !
   TYPE (atoms_type) :: atoms0, atomsp, atomsm
+  REAL(DP),    ALLOCATABLE :: fion(:,:)
+  REAL(DP),    ALLOCATABLE :: fionm(:,:)
   !
   ! cell geometry
   !
@@ -205,6 +207,9 @@ MODULE cp_main_variables
       !
       ALLOCATE( occn( wfill%ldb, wfill%ldk, wfill%lds ) )
       !
+      ALLOCATE( fion( 3, nat ) )
+      ALLOCATE( fionm( 3, nat ) )
+      !
       RETURN
       !
     END SUBROUTINE allocate_mainvar
@@ -237,6 +242,13 @@ MODULE cp_main_variables
       IF( ALLOCATED( kedtaug ) ) DEALLOCATE( kedtaug )
       IF( ALLOCATED( vpot ) )    DEALLOCATE( vpot )
       IF( ALLOCATED( occn ) )    DEALLOCATE( occn )
+      IF( ALLOCATED( fion ) )    DEALLOCATE( fion )
+      IF( ALLOCATED( fionm ) )   DEALLOCATE( fionm )
+      IF( ALLOCATED( taub ) )    DEALLOCATE( taub )
+      !
+      CALL deallocate_atoms_type( atoms0 )
+      CALL deallocate_atoms_type( atomsp )
+      CALL deallocate_atoms_type( atomsm )
       !
       RETURN
       !
