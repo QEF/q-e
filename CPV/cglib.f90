@@ -305,125 +305,12 @@ subroutine pc2(a,beca,b,becb)
       return
       end subroutine pcdaga2
 
-      subroutine set_s_minus1(betae)
-
-! this function calculates the factors for the inverse of the US S matrix
-
-      use kinds, only: dp   
-      use cg_module, only: s_minus1
-      use ions_base, only: na, nsp
-      use io_global, only: stdout
-      use cvan
-      use gvecw, only: ngw
-      use constants, only: pi, fpi
-      use control_flags, only: iprint, iprsta
-      use reciprocal_vectors, only: ng0 => gstart
-      use mp, only: mp_sum, mp_bcast
-      use electrons_base, only: n => nbsp, ispin
-      use uspp_param, only: nh
-      use uspp, only :nhsa=>nkb,qq, nhsavb=>nkbus
-      use io_global, ONLY: ionode, ionode_id
-
-      implicit none
-
-      complex(DP) :: betae(ngw,nhsa)
-     
-
-! local variables
-      real(DP),allocatable :: q_matrix(:,:), b_matrix(:,:),c_matrix(:,:)
-      integer is, iv, jv, ia, inl, jnl, i, j, k,ig, js, ja
-      real(DP) sca, dval(nhsavb)
-      integer ipiv(nhsavb),info, lwork
-      real(DP) work(nhsavb)
-
-      allocate(q_matrix(nhsavb,nhsavb),b_matrix(nhsavb,nhsavb),c_matrix(nhsavb,nhsavb))
-      lwork=nhsavb
-!construct q matrix
-      q_matrix(:,:) = 0.d0
-
-      do is=1,nvb
-         do iv=1,nh(is)
-            do jv=1,nh(is)
-               do ia=1,na(is)
-                    inl=ish(is)+(iv-1)*na(is)+ia
-                    jnl=ish(is)+(jv-1)*na(is)+ia
-                    q_matrix(inl,jnl)= qq(iv,jv,is)
-               enddo
-            enddo
-         enddo
-      enddo
-
-!construct b matrix
-
-      b_matrix(:,:) = 0.d0
-      do is=1,nvb
-         do ia=1,na(is)
-            do iv=1,nh(is)
-               do js=1,nvb
-                  do ja=1,na(js)
-                     do jv=1,nh(js)
-                        inl=ish(is)+(iv-1)*na(is)+ia
-                        jnl=ish(js)+(jv-1)*na(js)+ja
-                        sca=0.d0
-                        do  ig=1,ngw           !loop on g vectors
-                           sca=sca+2.*DBLE(CONJG(betae(ig,inl))*betae(ig,jnl)) !2. for real weavefunctions
-                        enddo
-                        if (ng0.eq.2) then
-                           sca=sca-DBLE(CONJG(betae(1,inl))*betae(1,jnl))
-                        endif
-                        call mp_sum(sca)
-                        b_matrix(inl,jnl)=sca
-                     enddo
-                  enddo
-               enddo
-            enddo
-         enddo
-      enddo
-
-!calculate -(1+QB)**(-1) * Q
-      c_matrix(:,:)=0.d0
-      do i=1,nhsavb
-         do j=1,nhsavb
-            do k=1,nhsavb
-                c_matrix(i,j)=c_matrix(i,j) + q_matrix(i,k)*b_matrix(k,j)
-            enddo
-         enddo
-      enddo
-
-      do i=1,nhsavb
-         c_matrix(i,i)=c_matrix(i,i)+1.d0
-      enddo
-
-      if(ionode) then
-        call dgetrf(nhsavb,nhsavb,c_matrix,nhsavb,ipiv,info)
-        if(info .ne. 0) write(stdout,*) 'Problem with dgetrf :', info
-        call dgetri(nhsavb,c_matrix,nhsavb,ipiv,work,lwork,info)
-        if(info .ne. 0) write(stdout,*) 'Problem with dgetrf :', info
-      endif
-      call mp_bcast(c_matrix, ionode_id)
-
-      s_minus1(:,:)=0.d0
-
-      do i=1,nhsavb
-         do j=1,nhsavb
-             do k=1,nhsavb
-                s_minus1(i,j)=s_minus1(i,j)-c_matrix(i,k)*q_matrix(k,j)
-             enddo 
-         enddo
-      enddo
-
-               
-      deallocate(q_matrix,b_matrix,c_matrix)
-      return
-      end subroutine set_s_minus1
-
-      subroutine set_k_minus1(betae,ema0bg)
+     subroutine set_x_minus1(betae,m_minus1,ema0bg,use_ema)
 
 ! this function calculates the factors for the inverse of the US K  matrix
 ! it takes care of the preconditioning
 
       use kinds, only: dp
-      use cg_module, only: k_minus1
       use ions_base, only: na, nsp
       use io_global, only: stdout
       use cvan
@@ -440,7 +327,9 @@ subroutine pc2(a,beca,b,becb)
       implicit none
 
       complex(DP) :: betae(ngw,nhsa)
+      real(DP)    :: m_minus1(nhsavb,nhsavb)
       real(DP)    :: ema0bg(ngw)
+      logical     :: use_ema
 
 
 ! local variables
@@ -452,7 +341,7 @@ subroutine pc2(a,beca,b,becb)
 
       lwork=nhsavb
 
-      allocate(q_matrix(nhsavb,nhsavb),b_matrix(nhsavb,nhsavb),c_matrix(nhsavb,nhsavb))
+      allocate(q_matrix(nhsavb,nhsavb),c_matrix(nhsavb,nhsavb))
 !construct q matrix
       q_matrix(:,:) = 0.d0
 
@@ -469,8 +358,8 @@ subroutine pc2(a,beca,b,becb)
       enddo
 
 !construct b matrix
-
-      b_matrix(:,:) = 0.d0
+! m_minus1 used to be b matrix
+      m_minus1(:,:) = 0.d0
       do is=1,nvb
          do ia=1,na(is)
             do iv=1,nh(is)
@@ -480,14 +369,25 @@ subroutine pc2(a,beca,b,becb)
                         inl=ish(is)+(iv-1)*na(is)+ia
                         jnl=ish(js)+(jv-1)*na(js)+ja
                         sca=0.d0
+                        if (use_ema) then
+                           ! k_minus case
                         do  ig=1,ngw           !loop on g vectors
                            sca=sca+2.*DBLE(CONJG(betae(ig,inl))*ema0bg(ig)*betae(ig,jnl)) !2. for real weavefunctions
                         enddo
                         if (ng0.eq.2) then
                            sca=sca-DBLE(CONJG(betae(1,inl))*ema0bg(1)*betae(1,jnl))
                         endif
+                        else
+                           ! s_minus case
+                        do  ig=1,ngw           !loop on g vectors
+                           sca=sca+2.*DBLE(CONJG(betae(ig,inl))*betae(ig,jnl)) !2. for real weavefunctions
+                        enddo
+                        if (ng0.eq.2) then
+                           sca=sca-DBLE(CONJG(betae(1,inl))*betae(1,jnl))
+                        endif
+                        endif
                         call mp_sum(sca)
-                        b_matrix(inl,jnl)=sca
+                        m_minus1(inl,jnl)=sca
                      enddo
                   enddo
                enddo
@@ -496,14 +396,7 @@ subroutine pc2(a,beca,b,becb)
       enddo
 
 !calculate -(1+QB)**(-1) * Q
-      c_matrix(:,:)=0.d0
-      do i=1,nhsavb
-         do j=1,nhsavb
-            do k=1,nhsavb
-                c_matrix(i,j)=c_matrix(i,j) + q_matrix(i,k)*b_matrix(k,j)
-            enddo
-         enddo
-      enddo
+      CALL DGEMM('N','N',nhsavb,nhsavb,nhsavb,1.0d0,q_matrix,nhsavb,m_minus1,nhsavb,0.0d0,c_matrix,nhsavb)
 
       do i=1,nhsavb
          c_matrix(i,i)=c_matrix(i,i)+1.d0
@@ -518,97 +411,25 @@ subroutine pc2(a,beca,b,becb)
       call mp_bcast(c_matrix, ionode_id)
 
 
+      CALL DGEMM('N','N',nhsavb,nhsavb,nhsavb,-1.0d0,c_matrix,nhsavb,q_matrix,nhsavb,0.0d0,m_minus1,nhsavb)
 
-      k_minus1(:,:)=0.d0
-
-      do i=1,nhsavb
-         do j=1,nhsavb
-             do k=1,nhsavb
-                k_minus1(i,j)=k_minus1(i,j)-c_matrix(i,k)*q_matrix(k,j)
-             enddo
-         enddo
-      enddo
-
-
-      deallocate(q_matrix,b_matrix,c_matrix)
+      deallocate(q_matrix,c_matrix)
       return
-      end subroutine set_k_minus1
-
-      subroutine sminus1(c0,bec,betae)
-!-----------------------------------------------------------------------
-!     input: c0 , bec=<c0|beta>, betae=|beta>
-!     computes the matrix phi (with the old positions)
-!       where  |phi> = s^{-1}|c0> 
-
-      use kinds, only: dp
-      use cg_module, only: s_minus1
-      use ions_base, only: na, nsp
-      use io_global, only: stdout
-      use cvan
-      use uspp_param, only: nh
-      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
-      use electrons_base, only: n => nbsp
-      use gvecw, only: ngw
-      use constants, only: pi, fpi
-      use control_flags, only: iprint, iprsta
-      use mp, only: mp_sum
+    end subroutine set_x_minus1
 !
-      implicit none
-      complex(dp) c0(ngw,n), betae(ngw,nhsa)
-      real(dp)    bec(nhsa,n)
-! local variables
-      complex(dp), allocatable :: phi(:,:)
-      integer is, iv, jv, ia, inl, jnl, i, j, js, ja
-      real(dp) qtemp(nhsavb,n) ! automatic array
-!
-
-!
-      if (nvb.gt.0) then
-      allocate(phi(ngw,n))
-      phi(1:ngw,1:n) = 0.0d0
-         qtemp = 0.0d0
-         do is=1,nvb
-            do iv=1,nh(is)
-               do js=1,nvb
-                  do jv=1,nh(js)
-                     do ia=1,na(is)
-                        do ja=1,na(js)
-                          inl=ish(is)+(iv-1)*na(is)+ia
-                          jnl=ish(js)+(jv-1)*na(js)+ja
-                           do i=1,n
-                             qtemp(inl,i) = qtemp(inl,i) +                &
-     &                                   s_minus1(inl,jnl)*bec(jnl,i)
-                           end do
-                        enddo
-                     end do
-                  end do
-               end do
-            end do
-         end do
-!NB nhsavb is the total number of US projectors, it works because the first pseudos are the vanderbilt's ones
-         call MXMA                                                     &
-     &       (betae,1,2*ngw,qtemp,1,nhsavb,phi,1,2*ngw,2*ngw,nhsavb,n)
-!
-      do j=1,n
-         do i=1,ngw
-            c0(i,j)=(phi(i,j)+c0(i,j))
-         end do
-      end do
-
-      deallocate(phi)
-      endif
-      return
-      end subroutine sminus1
- 
-
-      subroutine kminus1(c0,betae,ema0bg)
+      subroutine xminus1(c0,betae,ema0bg,beck,m_minus1,do_k)
+! if (do_k) then
 !-----------------------------------------------------------------------
 !     input: c0 , bec=<c0|beta>, betae=|beta>
 !     computes the matrix phi (with the old positions)
 !       where  |phi> = K^{-1}|c0>
-
+! else
+!-----------------------------------------------------------------------
+!     input: c0 , bec=<c0|beta>, betae=|beta>
+!     computes the matrix phi (with the old positions)
+!       where  |phi> = s^{-1}|c0> 
+! endif
       use kinds, only: dp
-      use cg_module, only: k_minus1
       use ions_base, only: na, nsp
       use io_global, only: stdout
       use cvan
@@ -624,40 +445,46 @@ subroutine pc2(a,beca,b,becb)
       implicit none
       complex(dp) c0(ngw,n), betae(ngw,nhsa)
       real(dp)    beck(nhsa,n), ema0bg(ngw)
+      real(DP)    :: m_minus1(nhsavb,nhsavb)
+      logical :: do_k
 ! local variables
       complex(dp), allocatable :: phi(:,:)
+      real(dp) , allocatable   :: qtemp(:,:)
       integer is, iv, jv, ia, inl, jnl, i, j, js, ja,ig
-      real(dp) qtemp(nhsavb,n) ! automatic array
+!      real(dp) qtemp(nhsavb,n) ! automatic array
 !
 
 
-      allocate(phi(ngw,n))
-      phi(1:ngw,1:n) = 0.0d0
-
-!calculates beck
-      beck(:,:) = 0.d0
       if (nvb.gt.0) then
-      
-      do is=1,nvb
-          do iv=1,nh(is)
-             do ia=1,na(is)
-                inl=ish(is)+(iv-1)*na(is)+ia
-                do i=1,n
-                   do ig=1,ngw
-                      beck(inl,i)=beck(inl,i)+2.*DBLE(CONJG(betae(ig,inl))*ema0bg(ig)*c0(ig,i))
-                   enddo
-                    if (ng0.eq.2) then
-                         beck(inl,i)=beck(inl,i)-DBLE(CONJG(betae(1,inl))*ema0bg(1)*c0(1,i))
-                    endif
-                 enddo
-             enddo
-          enddo
-      enddo
+!calculates beck
+         if (do_k) then
+            beck(:,:) = 0.d0
+
+            do is=1,nvb
+               do iv=1,nh(is)
+                  do ia=1,na(is)
+                     inl=ish(is)+(iv-1)*na(is)+ia
+                     do i=1,n
+                        do ig=1,ngw
+                           beck(inl,i)=beck(inl,i)+2.*DBLE(CONJG(betae(ig,inl))*ema0bg(ig)*c0(ig,i))
+                        enddo
+                        if (ng0.eq.2) then
+                           beck(inl,i)=beck(inl,i)-DBLE(CONJG(betae(1,inl))*ema0bg(1)*c0(1,i))
+                        endif
+                     enddo
+                  enddo
+               enddo
+            enddo
 
 
-      call mp_sum(beck)
+            call mp_sum(beck)
+         endif
 !
-         qtemp = 0.0d0
+!
+      allocate(phi(ngw,n))
+      allocate(qtemp(nhsavb,n))
+      phi(1:ngw,1:n) = 0.0d0
+      qtemp = 0.0d0
          do is=1,nvb
             do iv=1,nh(is)
                do js=1,nvb
@@ -668,7 +495,7 @@ subroutine pc2(a,beca,b,becb)
                           jnl=ish(js)+(jv-1)*na(js)+ja
                            do i=1,n
                              qtemp(inl,i) = qtemp(inl,i) +                &
-     &                                   k_minus1(inl,jnl)*beck(jnl,i)
+     &                                   m_minus1(inl,jnl)*beck(jnl,i)
                            end do
                         enddo
                      end do
@@ -679,17 +506,32 @@ subroutine pc2(a,beca,b,becb)
 !NB nhsavb is the total number of US projectors, it works because the first pseudos are the vanderbilt's ones
          call MXMA                                                     &
      &       (betae,1,2*ngw,qtemp,1,nhsavb,phi,1,2*ngw,2*ngw,nhsavb,n)
-      end if
-!
-      do j=1,n
-         do ig=1,ngw
-            c0(ig,j)=(phi(ig,j)+c0(ig,j))*ema0bg(ig)
-         end do
-      end do
+         if (do_k) then
+            do j=1,n
+               do ig=1,ngw
+                  c0(ig,j)=(phi(ig,j)+c0(ig,j))*ema0bg(ig)
+               end do
+            end do
+         else
+            do j=1,n
+               do i=1,ngw
+                  c0(i,j)=(phi(i,j)+c0(i,j))
+               end do
+            end do
+         endif
+      deallocate(qtemp,phi)
 
-      deallocate(phi)
+      else
+         if (do_k) then
+            do j=1,n
+               do ig=1,ngw
+                  c0(ig,j)=c0(ig,j)*ema0bg(ig)
+               end do
+            end do
+         endif
+      endif
       return
-     end subroutine kminus1
+     end subroutine xminus1
 
       SUBROUTINE emass_precond_tpa( ema0bg, tpiba2, emaec )
        use kinds, ONLY : dp

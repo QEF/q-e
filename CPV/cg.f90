@@ -22,12 +22,7 @@ MODULE cg_module
 !***  Conjugate Gradient
 !***
       real(DP)  esse,essenew !factors in c.g.
-      COMPLEX(DP), ALLOCATABLE :: gi(:,:)!conjugates 
-      COMPLEX(DP), ALLOCATABLE :: hi(:,:)!gradients 
       COMPLEX(DP), ALLOCATABLE :: c0old(:,:)!old wfcs for extrapolation
-      COMPLEX(DP), ALLOCATABLE :: hpsi(:,:) !terms H|Psi_i>
-      real(DP), allocatable::               s_minus1(:,:)!factors for inverting US S matrix
-      real(DP), allocatable::               k_minus1(:,:)!factors for inverting US preconditioning matrix 
       real(DP)  ene0,ene1,dene0,enever,enesti !energy terms for linear minimization along hi
       real(DP)  passof,passov !step to minimum: effective, estimated
       integer itercg !iteration number
@@ -36,7 +31,6 @@ MODULE cg_module
       real(DP) etotnew,etotold!energies
       real(DP) spasso!sign of small step
       logical tcutoff!
-      real(DP), ALLOCATABLE :: emme(:,:)!matrix used for cal_emme style of projection
       logical restartcg!if .true. restart again the CG algorithm, performing a SD step
       integer numok!counter on converged iterations
       real(DP) pcnum,pcden
@@ -81,25 +75,13 @@ CONTAINS
   SUBROUTINE allocate_cg( ngw, nx, nhsavb )
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: ngw, nx, nhsavb
-    allocate(hi(ngw,nx))
-    allocate(gi(ngw,nx))
     allocate(c0old(ngw,nx))
-    allocate( emme(nx,nx))
-    allocate( hpsi(ngw,nx))
-    allocate( s_minus1(nhsavb,nhsavb))
-    allocate( k_minus1(nhsavb,nhsavb))
     RETURN
   END SUBROUTINE allocate_cg
 
   SUBROUTINE deallocate_cg( )
     IMPLICIT NONE
-    IF( ALLOCATED( hi ) ) deallocate(hi )
-    IF( ALLOCATED( gi ) ) deallocate(gi )
     IF( ALLOCATED( c0old ) ) deallocate(c0old )
-    IF( ALLOCATED( emme ) ) deallocate( emme )
-    IF( ALLOCATED( hpsi ) ) deallocate( hpsi )
-    IF( ALLOCATED( s_minus1) ) deallocate( s_minus1)
-    IF( ALLOCATED( k_minus1) ) deallocate( k_minus1)
     RETURN
   END SUBROUTINE deallocate_cg
 

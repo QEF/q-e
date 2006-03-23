@@ -61,12 +61,12 @@
       use io_files, only: psfile, pseudo_dir
       use io_files, only: outdir
 
-      use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq,qq
+      use uspp, only : nhsa=> nkb, nhsavb=> nkbus, betae => vkb, rhovan => becsum, deeq,qq
       use uspp_param, only: nh
       use cg_module, only: ltresh, itercg, etotnew, etotold, tcutoff, &
           restartcg, passof, passov, passop, ene_ok, numok, maxiter, &
-          enever, etresh, ene0, hpsi, gi, hi, esse, essenew, dene0, spasso, &
-          ene1, passo, iter3, enesti, ninner_ef, emme
+          enever, etresh, ene0, esse, essenew, dene0, spasso, &
+          ene1, passo, iter3, enesti, ninner_ef
       use ions_positions, only: tau0
       use wavefunctions_module, only: c0, cm, phi => cp
       use efield_module, only: tefield, evalue, ctable, qmat, detq, ipolp, &
@@ -108,8 +108,10 @@
       complex(dp) :: c2( ngw )
       complex(dp) :: c3( ngw )
       real(dp) :: gamma, entmp, sta
-      complex(dp),allocatable :: hpsi0(:,:)
-      real(dp) :: sca
+      complex(dp),allocatable :: hpsi(:,:), hpsi0(:,:), gi(:,:), hi(:,:)
+      real(DP), allocatable::               s_minus1(:,:)!factors for inverting US S matrix
+      real(DP), allocatable::               k_minus1(:,:)!factors for inverting US preconditioning matrix 
+      real(dp) :: sca, dumm(1)
       logical  :: newscheme, firstiter
       integer :: maxiter3
 !
@@ -119,7 +121,6 @@
 
       maxiter3=250
 
-      allocate(hpsi0(ngw,n))
       fion2=0.d0
 
       if(ionode) open(37,file='convergence.dat',status='unknown')!for debug and tuning purposes
@@ -155,8 +156,13 @@
 
       !calculates the factors for S and K inversion in US case
       if(nvb.gt.0) then
-        call  set_s_minus1(betae)
-        call  set_k_minus1(betae, ema0bg)
+         allocate( s_minus1(nhsavb,nhsavb))
+         allocate( k_minus1(nhsavb,nhsavb))
+        call  set_x_minus1(betae,s_minus1,dumm,.false.)
+        call  set_x_minus1(betae,k_minus1,ema0bg,.true.)
+      else
+         allocate( s_minus1(1,1))
+         allocate( k_minus1(1,1))
       endif  
 
 
@@ -208,6 +214,7 @@
 
       numok = 0
 
+      allocate(hpsi(ngw,n),hpsi0(ngw,n),gi(ngw,n),hi(ngw,n))
       do while ( itercg .lt. maxiter .and. (.not.ltresh) )
 
 
@@ -337,7 +344,8 @@
         gi(1:ngw,1:n) = hpsi(1:ngw,1:n)
         
         call calbec(1,nsp,eigr,hpsi,becm)
-        call sminus1(hpsi,becm,betae)
+        call xminus1(hpsi,betae,dumm,becm,s_minus1,.false.)
+!        call sminus1(hpsi,becm,betae)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !look if the following two lines are really needed
@@ -345,7 +353,8 @@
         call pc2(c0,bec,hpsi,becm)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-        call kminus1(gi,betae,ema0bg)
+!        call kminus1(gi,betae,ema0bg)
+        call xminus1(gi,betae,ema0bg,becm,k_minus1,.true.)
         call calbec(1,nsp,eigr,gi,becm)
         call pc2(c0,bec,gi,becm)
 
@@ -875,6 +884,7 @@
         endif
 
 
-        deallocate( hpsi0) 
+        deallocate( hpsi,hpsi0,gi,hi) 
+        deallocate( s_minus1,k_minus1)
        if(ionode) close(37)!for debug and tuning purposes
 END SUBROUTINE
