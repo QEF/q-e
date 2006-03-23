@@ -46,7 +46,7 @@ MODULE cp_main_variables
   !
   REAL(DP)                 :: taub(3,natx)
   COMPLEX(DP), ALLOCATABLE :: eigrb(:,:)
-  INTEGER,           ALLOCATABLE :: irb(:,:)
+  INTEGER,     ALLOCATABLE :: irb(:,:)
   ! 
   ! ... nonlocal projectors:
   ! ...    bec   = scalar product of projectors and wave functions
@@ -96,17 +96,19 @@ MODULE cp_main_variables
   !
   REAL(DP), ALLOCATABLE :: occn(:,:,:)     ! occupation numbers for filled state
   !
-  TYPE (dft_energy_type) :: edft
+  TYPE(dft_energy_type) :: edft
   !
-  INTEGER                :: nfi             ! counter on the electronic iterations
+  INTEGER :: nfi             ! counter on the electronic iterations
+  INTEGER :: nprint_nfi=-1   ! counter indicating the last time data have been
+                             ! printed on file ( prefix.pos, ... )
   !
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE allocate_mainvar( ngw, ngwt, ngb, ngs, ng, nr1, nr2, nr3, nr1x, & 
-                                 nr2x, npl, nnr, nnrsx, nat, nax, nsp, nspin,  &
-                                 n, nx, n_emp, nupdwn, nhsa, gzero, nkpt,      &
-                                 kscheme, smd )
+    SUBROUTINE allocate_mainvar( ngw, ngwt, ngb, ngs, ng, nr1, nr2, nr3, &
+                                 nr1x, nr2x, npl, nnr, nnrsx, nat, nax,  &
+                                 nsp, nspin, n, nx, n_emp, nupdwn, nhsa, &
+                                 gzero, nkpt, kscheme, smd )
       !------------------------------------------------------------------------
       !
       INTEGER,           INTENT(IN) :: ngw, ngwt, ngb, ngs, ng, nr1, nr2, nr3, &

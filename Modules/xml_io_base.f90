@@ -27,7 +27,8 @@ MODULE xml_io_base
   !
   PUBLIC :: attr
   PUBLIC :: create_directory, kpoint_dir, wfc_filename, copy_file,          &
-            restart_dir, check_restartfile, save_history, set_kpoints_vars, &
+            restart_dir, check_restartfile, save_history,             &
+            save_print_counter, read_print_counter, set_kpoints_vars, &
             write_cell, write_ions, write_symmetry, write_planewaves,       &
             write_spin, write_xc, write_occ, write_bz, write_phonon,        &
             write_rho_xml, write_wfc, read_wfc, read_rho_xml
@@ -193,11 +194,11 @@ MODULE xml_io_base
       !
       ! ... main restart directory
       !
-      ! Please keep the line below !
-      ! This is the old style RESTARTXX
-!      dirname = 'RESTART' // int_to_char( runit )
-      dirname = TRIM( prefix ) // '_' // &
-              & TRIM( int_to_char( runit ) )// '.save'
+      ! ... keep the line below ( this is the old style RESTARTXX ) !!!
+      !
+      dirname = 'RESTART' // int_to_char( runit )
+      !
+!      dirname = TRIM( prefix ) // '_' // TRIM( int_to_char( runit ) )// '.save'
       !
       IF ( LEN( scradir ) > 1 ) THEN
          !
@@ -285,6 +286,105 @@ MODULE xml_io_base
       RETURN
       !
     END SUBROUTINE save_history
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE save_print_counter( iter, scradir, wunit )
+      !------------------------------------------------------------------------
+      !
+      ! ... a counter indicating the last successful pritout iteration is saved
+      !
+      USE io_global, ONLY : ionode, ionode_id
+      USE mp,        ONLY : mp_bcast
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,          INTENT(IN) :: iter
+      CHARACTER(LEN=*), INTENT(IN) :: scradir
+      INTEGER,          INTENT(IN) :: wunit
+      !
+      INTEGER            :: ierr
+      CHARACTER(LEN=256) :: filename, dirname
+      !
+      !
+      dirname = restart_dir( scradir, wunit )
+      !
+      IF ( ionode ) THEN
+         !
+         filename = TRIM( dirname ) // '/print_counter.xml'
+         !
+         CALL iotk_open_write( iunpun, FILE = filename, &
+                             & ROOT = "PRINT_COUNTER",  IERR = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      CALL errore( 'save_print_counter', &
+                   'cannot open restart file for writing', ierr )
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_write_begin( iunpun, "LAST_SUCCESSFUL_PRINTOUT" )
+         CALL iotk_write_dat(   iunpun, "STEP", iter )
+         CALL iotk_write_end(   iunpun, "LAST_SUCCESSFUL_PRINTOUT" )
+         !
+         CALL iotk_close_write( iunpun )
+         !
+      END IF
+      !
+      RETURN
+      !
+    END SUBROUTINE save_print_counter
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE read_print_counter( nprint_nfi, scradir, runit )
+      !------------------------------------------------------------------------
+      !
+      ! ... the counter indicating the last successful pritout iteration 
+      ! ... is read here
+      !
+      USE io_global, ONLY : ionode, ionode_id
+      USE mp,        ONLY : mp_bcast
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,          INTENT(OUT) :: nprint_nfi
+      CHARACTER(LEN=*), INTENT(IN)  :: scradir
+      INTEGER,          INTENT(IN)  :: runit
+      !
+      INTEGER            :: ierr
+      CHARACTER(LEN=256) :: filename, dirname
+      !
+      !
+      dirname = restart_dir( scradir, runit )
+      !
+      IF ( ionode ) THEN
+         !
+         filename = TRIM( dirname ) // '/print_counter.xml'
+         !
+         CALL iotk_open_read( iunpun, FILE = filename, IERR = ierr )
+         !
+         IF ( ierr > 0 ) THEN
+            !
+            nprint_nfi = -1
+            !
+         ELSE
+            !
+            CALL iotk_scan_begin( iunpun, "LAST_SUCCESSFUL_PRINTOUT" )
+            CALL iotk_scan_dat(   iunpun, "STEP", nprint_nfi )
+            CALL iotk_scan_end(   iunpun, "LAST_SUCCESSFUL_PRINTOUT" )
+            !
+            CALL iotk_close_read( iunpun )
+            !
+         END IF
+         !
+      END IF
+      !
+      CALL mp_bcast( nprint_nfi, ionode_id )
+      !
+      RETURN
+      !
+    END SUBROUTINE read_print_counter   
     !
     !------------------------------------------------------------------------
     SUBROUTINE set_kpoints_vars( ik, nk, kunit, ngwl, igl, &

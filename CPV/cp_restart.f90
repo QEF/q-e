@@ -755,6 +755,7 @@ MODULE cp_restart
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, pmass, &
                                            sort_tau, ityp, ions_cofmass
       USE reciprocal_vectors,       ONLY : ig_l2g, mill_l
+      USE cp_main_variables,        ONLY : nprint_nfi
       USE mp,                       ONLY : mp_sum
       USE parameters,               ONLY : nhclm, ntypx
       USE constants,                ONLY : eps8, angstrom_au
@@ -1394,6 +1395,8 @@ MODULE cp_restart
                 '(3X,"restart file read in ",F8.3," sec.",/)' )  ( s1 - s0 )
          !
       END IF
+      !
+      CALL read_print_counter( nprint_nfi, scradir, ndr )
       !
       RETURN
       !

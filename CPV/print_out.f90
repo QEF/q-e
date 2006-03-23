@@ -61,6 +61,11 @@
       USE sic_module,       ONLY : self_interaction, sic_alpha, sic_epsilon
       USE electrons_module, ONLY : print_eigenvalues
 
+!********************************************
+ USE xml_io_base,   ONLY : save_print_counter
+ USE io_files,      ONLY : scradir
+ USE control_flags, ONLY : ndw
+!********************************************
       !
       IMPLICIT NONE
       !
@@ -94,7 +99,10 @@
          CALL printout_base_open()
       END IF
       !
-
+!********************************************
+! CALL save_print_counter( nfi, scradir, ndw )
+!********************************************
+      !
       IF( ionode ) THEN
          !
          IF( tprint ) THEN
