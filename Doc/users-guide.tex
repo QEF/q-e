@@ -1660,8 +1660,14 @@ We may distinguish the following typical cases for \texttt{pw.x}:
   \item [band structure calculation.]
 
     First perform a SCF calculation as above; then do a non-SCF
-    calculation specifying \texttt{calculation='nscf'}, with the
-    desired k-point grid and number \texttt{nbnd} of bands.
+    calculation by specifying \texttt{calculation='bands'} or
+    \texttt{calculation='nscf'}, with the desired k-point grid 
+    and number \texttt{nbnd} of bands.
+    If you are interested in calculating only the Kohn-Sham states 
+    for the given set of k-points, use \texttt{calculation='bands'}. 
+    If you are interested in further processing of the results of
+    non-SCF calculations (for instance, in DOS calculations) use
+    \texttt{calculations='nscf'}.
 
     Specify \texttt{nosym=.true.} to avoid generation of additional
     k-points in low symmetry cases.  Variables \texttt{prefix} and

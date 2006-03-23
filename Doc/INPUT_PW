@@ -75,8 +75,8 @@ NAMELIST &CONTROL
 
 calculation    CHARACTER
                a string describing the task to be performed:
-               'scf', 'nscf', 'phonon', 'relax', 'md', 'vc-relax', 
-	       'vc-md', 'neb', 'smd', 'metadyn'
+               'scf', 'nscf', 'bands', 'phonon', 'relax', 'md', 
+	       'vc-relax', 'vc-md', 'neb', 'smd', 'metadyn'
                (vc = variable-cell). Default: 'scf'
 
 title          CHARACTER
@@ -104,7 +104,7 @@ wf_collect     LOGICAL ( default = .FALSE. )
 
 nstep          INTEGER                         
                number of ionic + electronic steps
-               default: 1 if calculation = 'scf', 'nscf'
+               default: 1 if calculation = 'scf', 'nscf', 'bands'
 	                0 if calculation = 'neb', 'smd'
                        50 for the other cases
 
@@ -527,7 +527,7 @@ startingpot    CHARACTER
                'atomic': starting potential from atomic charge superposition
                          ( default for scf, *relax, *md, neb, smd )
                'file'  : start from existing "prefix".pot file
-                         ( default and only possibility for nscf and phonon )
+                         ( default, only possibility for nscf, bands, phonon )
 
 startingwfc    CHARACTER
                'atomic': start from superposition of atomic orbitals ( default )
@@ -832,7 +832,7 @@ ATOMIC_SPECIES
 Description:
  X           CHARACTER : label of the atom
  Mass_X      REAL      : mass of the atomic species [amu: mass of C = 12]
-                         not used if calculation='scf', 'nscf', 'phonon'
+                         not used if calculation='scf','nscf', 'bands', 'phonon'
  PseudoPot_X CHARACTER:  file containing PP for this species
 
  The pseudopotential file is assumed to be in the new UPF format.

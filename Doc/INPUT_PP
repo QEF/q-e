@@ -167,11 +167,10 @@
   !                   (if present, must be orthogonal)
   !               x0  3D vector, origin of the parallelepiped
   !         nx,ny,nz  number of points in the parallelepiped:
-  !                   rho(i,j,k) = rho( x0 + e1 * (i-1)/(nx-1)
-  !                                        + e2 * (j-1)/(ny-1)
-  !                                        + e3 * (k-1)/(nz-1) ),
+  !                   rho(i,j,k) = rho( x0 + e1 * (i-1)/nx
+  !                                        + e2 * (j-1)/ny
+  !                                        + e3 * (k-1)/nz ),
   !                                i = 1, nx ; j = 1, ny ; k = 1, nz
-  !
   !                 - If output_format = 3 (XCRYSDEN), the above variables
   !                   are used to determine the grid to plot. 
   !                 - If output_format = 5 (XCRYSDEN), the above variables
