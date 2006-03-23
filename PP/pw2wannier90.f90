@@ -241,7 +241,7 @@ subroutine read_nnkp
            zaxis(3,n_wannier), xaxis(3,n_wannier), csph(16,n_wannier) )
 
 
- write(*,'("  - Number of wannier functions is ok (",i3,")")'), n_wannier 
+ write(*,'("  - Number of wannier functions is ok (",i3,")")')  n_wannier 
  do iw=1,numwan
     read(iun_nnkp,*) (center_w(i,iw), i=1,3), l_w(iw), mr_w(iw), r_w(iw)
     read(iun_nnkp,*) (zaxis(i,iw), i=1,3), (xaxis(i,iw), i=1,3), alpha_w(iw), box
