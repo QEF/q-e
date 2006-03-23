@@ -49,7 +49,7 @@
 
       INTERFACE mp_sum
         MODULE PROCEDURE mp_sum_i1, mp_sum_iv, mp_sum_im, mp_sum_it, & 
-          mp_sum_r1, mp_sum_rv, mp_sum_rm, mp_sum_rt, &
+          mp_sum_r1, mp_sum_rv, mp_sum_rm, mp_sum_rt, mp_sum_r4d, &
           mp_sum_c1, mp_sum_cv, mp_sum_cm, mp_sum_ct, mp_sum_c4d, &
           mp_sum_rmm, mp_sum_cmm
       END INTERFACE
@@ -1536,6 +1536,36 @@
 #endif
       END SUBROUTINE mp_sum_rt
 
+!
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_sum_r4d(msg,gid)
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT) :: msg(:,:,:,:)
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: i, msglen, ierr
+        REAL (DP), ALLOCATABLE :: res(:,:,:,:)
+#if defined(__MPI)
+        msglen = size(msg)
+        IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8938)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        ALLOCATE (res(size(msg,1),size(msg,2),size(msg,3),size(msg,4)), STAT=ierr)
+        IF (ierr/=0) CALL mp_stop(8204)
+        CALL mpi_allreduce(msg,res,msglen,mpi_double_precision,mpi_sum,group, ierr)
+        IF (ierr/=0) CALL mp_stop(8205)
+        msg = res
+        DEALLOCATE (res, STAT=ierr)
+        IF (ierr/=0) CALL mp_stop(8205)
+        mp_high_watermark = MAX( mp_high_watermark, 8 * msglen )
+#endif
+      END SUBROUTINE mp_sum_r4d
+
+
+
 !------------------------------------------------------------------------------!
 
       SUBROUTINE mp_sum_c1(msg,gid)
@@ -1688,6 +1718,7 @@
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
 #endif
       END SUBROUTINE mp_sum_c4d
+
 
 
 !------------------------------------------------------------------------------!

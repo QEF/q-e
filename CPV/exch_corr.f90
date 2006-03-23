@@ -316,6 +316,7 @@
       use mp,              only : mp_sum
       use metagga,         ONLY : kedtaur
       USE io_global,       ONLY : stdout
+      USE mp_global,       ONLY : intra_image_comm
       use kinds,           ONLY : DP
 !
       USE sic_module,      ONLY : self_interaction, sic_alpha
@@ -401,8 +402,8 @@
 !
       end if
 
-      call mp_sum( exc )
-      IF ( ttsic ) call mp_sum( self_exc )
+      call mp_sum( exc, intra_image_comm )
+      IF ( ttsic ) call mp_sum( self_exc, intra_image_comm )
 
       exc = exc * omega / DBLE( nr1 * nr2 * nr3 )
       IF ( ttsic ) self_exc = self_exc * omega/DBLE(nr1 * nr2 *nr3 )
@@ -445,7 +446,7 @@
          !
          dxc = dxc * omega / ( nr1*nr2*nr3 )
          !
-         call mp_sum ( dxc )
+         call mp_sum ( dxc, intra_image_comm )
          !
          do j=1,3
             do i=1,3
@@ -470,7 +471,7 @@
          !
          if (tpre) then
             !
-            call mp_sum ( dexc )
+            call mp_sum ( dexc, intra_image_comm )
             !
             dxc = dxc + dexc
             !

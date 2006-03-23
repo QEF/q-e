@@ -98,60 +98,6 @@
       end subroutine read_rho
 !
 !
-!-----------------------------------------------------------------------
-      subroutine reduce(size,ps)
-!-----------------------------------------------------------------------
-!
-!     sums a distributed variable s(size) over the processors.
-!     This version uses a fixed-length buffer of appropriate (?) size
-!
-      use parallel_include
-      use mp_global, only: nproc
-!
-      implicit none
-      integer size
-      real(8)  ps(size)
-!
-      integer ierr, n, nbuf
-      integer, parameter:: MAXB=10000
-      real(8) buff(MAXB)
-!
-      if (nproc.le.1) return
-      if (size.le.0) return
-      call start_clock( 'reduce' )
-!
-!  syncronize processes
-!
-#if defined __PARA
-      call mpi_barrier(MPI_COMM_WORLD,ierr)
-      if (ierr.ne.0) call errore('reduce','error in barrier',ierr)
-!
-      nbuf=size/MAXB
-!
-      do n=1,nbuf
-         call mpi_allreduce (ps(1+(n-1)*MAXB), buff, MAXB,              &
-     &        MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
-         if (ierr.ne.0)                                                 &
-     &        call errore('reduce','error in allreduce1',ierr)
-         call DCOPY(MAXB,buff,1,ps(1+(n-1)*MAXB),1)
-      end do
-!
-!    possible remaining elements < maxb
-!
-      if (size-nbuf*MAXB.gt.0) then
-          call mpi_allreduce (ps(1+nbuf*MAXB), buff, size-nbuf*MAXB,    &
-     &          MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
-          if (ierr.ne.0)                                                &
-     &         call errore('reduce','error in allreduce2',ierr)
-          call DCOPY(size-nbuf*MAXB,buff,1,ps(1+nbuf*MAXB),1)
-      endif
-#endif
-
-      call stop_clock( 'reduce' )
-!
-      return
-      end subroutine reduce
-!
 !----------------------------------------------------------------------
       subroutine nrbounds(ngw,nr1s,nr2s,nr3s,mill,nmin,nmax)
 !----------------------------------------------------------------------
@@ -162,6 +108,7 @@
 !
       use parallel_include
       use mp, only: mp_min, mp_max
+      use mp_global, only: intra_image_comm
       implicit none
 ! input
       integer ngw,nr1s,nr2s,nr3s,mill(3,*)
@@ -189,8 +136,8 @@
 !
 ! find minima and maxima for the FFT box across all nodes
 !
-      CALL mp_min( nmin0 )
-      CALL mp_max( nmax0 )
+      CALL mp_min( nmin0, intra_image_comm )
+      CALL mp_max( nmax0, intra_image_comm )
       nmin = nmin0
       nmax = nmax0
 

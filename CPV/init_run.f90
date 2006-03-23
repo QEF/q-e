@@ -257,23 +257,6 @@ SUBROUTINE init_run()
                         dbec, delt, bephi, becp, velh, dt2/emass, iforce, &
                         fionm, xnhe0, xnhem, vnhe, ekincm, atoms0, edft,   &
                         ht0, wfill, wempt, occn, vpot )
-
-     ! IF ( program_name == 'CP90' ) THEN
-     !    !
-     !    CALL from_scratch( sfac, eigr, ei1, ei2, ei3, bec, becdr, .TRUE.,    &
-     !                       eself, fion, taub, irb, eigrb, b1, b2, b3, nfi,   &
-     !                       rhog, rhor, rhos, rhoc, enl, ekin, stress, detot, &
-     !                       enthal, etot, lambda, lambdam, lambdap, ema0bg,   &
-     !                       dbec, delt, bephi, becp, velh, dt2/emass, iforce, &
-     !                       fionm, xnhe0, xnhem, vnhe, ekincm )
-     !    !
-     ! ELSE IF ( program_name == 'FPMD' ) THEN
-     !    !
-     !    CALL from_scratch( rhor, cm, c0, cp, ce, wfill, wempt, eigr, &
-     !                       ei1, ei2, ei3, sfac, occn, ht0, atoms0, bec, &
-     !                       becdr, vpot, edft )
-     !    !
-     ! END IF
      !
   ELSE
      !

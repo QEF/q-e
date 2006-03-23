@@ -148,6 +148,15 @@ MODULE read_cards_module
        newnfi_card  = -1
        tnewnfi_card = .FALSE.
        !
+       ! ... ion_positions
+       !
+       pos = 0.0d0
+       !
+       constr_inp = 0.0d0
+       !
+       tprnks = .FALSE.
+       tprnks_empty = .FALSE.
+       !
        CALL init_autopilot()
        !
        RETURN

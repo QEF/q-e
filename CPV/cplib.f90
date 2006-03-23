@@ -101,6 +101,7 @@
       USE uspp_param, ONLY: nh
       USE uspp,       ONLY: qq
       USE mp,         ONLY: mp_sum
+      USE mp_global,  ONLY: intra_image_comm
       USE kinds,      ONLY: DP
 !
       IMPLICIT NONE
@@ -121,7 +122,7 @@
       rsum=2.*SUM(temp)
       IF (gstart == 2) rsum=rsum-temp(1)
 
-      CALL mp_sum( rsum )
+      CALL mp_sum( rsum, intra_image_comm )
 
       DEALLOCATE(temp)
 !
@@ -156,6 +157,7 @@
       USE cell_base, ONLY: ainv, tpiba2
       USE gvecw, ONLY: ggp, ecutz, ecsig, ecfix
       USE mp, ONLY: mp_sum
+      USE mp_global, ONLY: intra_image_comm
 !
       IMPLICIT NONE
 ! input
@@ -191,7 +193,7 @@
       END DO
       DEALLOCATE (gtmp)
 
-      CALL mp_sum( dekin( 1:3, 1:3 ) )
+      CALL mp_sum( dekin( 1:3, 1:3 ), intra_image_comm )
 !
       RETURN
       END SUBROUTINE denkin
@@ -218,6 +220,7 @@
       USE cell_base, ONLY: ainv, tpiba2
       USE local_pseudo, ONLY: rhops, drhops
       USE mp, ONLY: mp_sum
+      USE mp_global, ONLY: intra_image_comm
 
       IMPLICIT NONE
 ! input
@@ -254,7 +257,7 @@
          ENDDO
       ENDDO
 
-      CALL mp_sum( dh( 1:3, 1:3 ) )
+      CALL mp_sum( dh( 1:3, 1:3 ), intra_image_comm )
 
       DO i=1,3
          DO j=1,3
@@ -285,6 +288,7 @@
       USE cell_base, ONLY: ainv, tpiba2
       USE local_pseudo, ONLY: vps, dvps
       USE mp, ONLY: mp_sum
+      USE mp_global, ONLY: intra_image_comm
 
       IMPLICIT NONE
 ! input
@@ -318,7 +322,7 @@
          ENDDO
       ENDDO
 
-      CALL mp_sum( dps( 1:3, 1:3 ) )
+      CALL mp_sum( dps( 1:3, 1:3 ), intra_image_comm )
 
       RETURN
       END SUBROUTINE denps
@@ -338,6 +342,7 @@
       USE recvecs_indexes, ONLY: np
       USE cell_base, ONLY: omega, ainv, tpiba2
       USE mp, ONLY: mp_sum
+      USE mp_global, ONLY: intra_image_comm
       USE atom, ONLY: nlcc
       USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
       USE fft_module, ONLY: fwfft
@@ -394,7 +399,7 @@
 
       dcc = dcc * omega
 
-      CALL mp_sum( dcc( 1:3, 1:3 ) )
+      CALL mp_sum( dcc( 1:3, 1:3 ), intra_image_comm )
 
       RETURN
       END SUBROUTINE denlcc
@@ -591,6 +596,7 @@
       USE uspp, ONLY: nhsa=>nkb, qq
       USE uspp_param, ONLY: nh
       USE mp, ONLY: mp_sum
+      USE mp_global, ONLY: intra_image_comm
 !
       IMPLICIT NONE
 !
@@ -619,7 +625,7 @@
             IF (gstart == 2) csc(k)=csc(k)-DBLE(temp(1))
          END DO
 
-         CALL mp_sum( csc( 1:kmax ) )
+         CALL mp_sum( csc( 1:kmax ), intra_image_comm )
 
          DO k=1,kmax
             rsum=0.
@@ -901,7 +907,7 @@
       USE reciprocal_vectors, ONLY: gstart
       USE gvecw,              ONLY: ggp
       USE mp,                 ONLY: mp_sum
-      USE mp_global,          ONLY: group
+      USE mp_global,          ONLY: intra_image_comm
       USE cell_base,          ONLY: tpiba2
 
       IMPLICIT NONE
@@ -926,7 +932,7 @@
          END DO
       END DO
 
-      CALL mp_sum( sk(1:n), group )
+      CALL mp_sum( sk(1:n), intra_image_comm )
 
       enkin=0.0
       DO i=1,n
@@ -1218,6 +1224,7 @@
       USE electrons_base, ONLY: ispin
       USE gvecw,          ONLY: ngw
       USE mp,             ONLY: mp_sum
+      USE mp_global,      ONLY: intra_image_comm
       USE kinds,          ONLY: DP
       USE reciprocal_vectors, ONLY: gstart
 !
@@ -1249,7 +1256,7 @@
          ENDIF
       END DO
 
-      CALL mp_sum( csc( 1:kmax ) )
+      CALL mp_sum( csc( 1:kmax ), intra_image_comm )
 
       !
       !     calculate bec(i)=<cp(i)|beta>
@@ -1263,7 +1270,7 @@
          IF (gstart == 2) bec(inl,i)= bec(inl,i)-temp(1)
       END DO
 
-      CALL mp_sum( bec( 1:nhsavb, i ) )
+      CALL mp_sum( bec( 1:nhsavb, i ), intra_image_comm )
 !
 !     calculate csc(k)=<cp(i)|S|cp(k)>,  k<i
 !
@@ -1484,6 +1491,7 @@
       USE electrons_base, ONLY: nspin
       USE control_flags, ONLY: iprint, thdyn, tfor, tprnfor
       USE mp, ONLY: mp_sum
+      USE mp_global, ONLY: intra_image_comm
       USE fft_module, ONLY: invfft
       USE fft_base, ONLY: dfftb
 !
@@ -1568,7 +1576,7 @@
          END DO
       END DO
 
-      CALL reduce(nat*nhm*nhm*nspin,deeq)
+      CALL mp_sum( deeq, intra_image_comm )
 
       IF (.NOT.( tfor .OR. thdyn .OR. tprnfor ) ) go to 10
 !
@@ -1691,7 +1699,7 @@
          END DO
       END IF
 
-      CALL reduce(3*natx*nvb,fvan)
+      CALL mp_sum( fvan, intra_image_comm )
 
       isa = 0
       DO is = 1, nvb
@@ -1880,6 +1888,8 @@
 ! Projection on atomic wavefunctions
 !
       USE io_global, ONLY: stdout
+      USE mp_global, ONLY: intra_image_comm
+      USE mp, ONLY: mp_sum
       USE electrons_base, ONLY: nx => nbspx, n => nbsp
       USE gvecw, ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
@@ -1932,7 +1942,7 @@
       CALL MXMA(wfc,2*ngw,1,swfc,1,2*ngw,overlap,1,                     &
      &          n_atomic_wfc,n_atomic_wfc,2*ngw,n_atomic_wfc)
 
-      CALL reduce(n_atomic_wfc**2,overlap)
+      CALL mp_sum( overlap, intra_image_comm )
 
       overlap=overlap*2.d0
       IF (gstart == 2) THEN
@@ -1985,7 +1995,7 @@
       END DO
       DEALLOCATE(temp)
 
-      CALL reduce(n*n_atomic_wfc,proj)
+      CALL mp_sum( proj, intra_image_comm )
 
       i=0
       WRITE( stdout,'(/''Projection on atomic states:'')')
@@ -2097,6 +2107,8 @@
       USE kinds, ONLY: dp
       USE ions_base, ONLY: nas => nax, nat, na, nsp
       USE io_global, ONLY: stdout
+      USE mp_global, ONLY: intra_image_comm
+      USE mp, ONLY: mp_sum
       USE cvan, ONLY: nvb
       USE uspp_param, ONLY: nh, nhm
       USE uspp, ONLY: deeq
@@ -2236,7 +2248,7 @@
          IF(iprsta.GT.2) THEN
             ca = SUM(v)
 
-            CALL reduce(2,ca)
+            CALL mp_sum( ca, intra_image_comm )
 
             WRITE( stdout,'(a,2f12.8)')                                  &
      &           ' rhov: int  n_v(r)  dr = ',omega*ca/(nr1*nr2*nr3)
@@ -2327,7 +2339,7 @@
 !
          IF(iprsta.GT.2) THEN
             ca = SUM(v)
-            CALL reduce(2,ca)
+            CALL mp_sum( ca, intra_image_comm )
             WRITE( stdout,'(a,2f12.8)') 'rhov:in n_v  ',omega*ca/(nr1*nr2*nr3)
          ENDIF
 !
@@ -2453,6 +2465,8 @@
 !
       USE electrons_base, ONLY: nx => nbspx, n => nbsp, iupdwn, nupdwn, f, nel, nspin
       USE io_global, ONLY: stdout
+      USE mp_global, ONLY: intra_image_comm
+      USE mp, ONLY: mp_sum
       USE gvecw, ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
       USE grid_dimensions, ONLY: nr1, nr2, nr3, &
@@ -2507,7 +2521,7 @@
       DO ir=1,nnr
          spin1 = spin1 - MIN(rhor(ir,1),rhor(ir,2))
       END DO
-      CALL reduce(1,spin1)
+      CALL mp_sum( spin1, intra_image_comm )
       spin1 = spin0 + omega/(nr1*nr2*nr3)*spin1
       IF (frac) THEN
          WRITE( stdout,'(/'' Spin contamination: s(s+1)='',f5.2,'' (Becke) '',&
@@ -2532,7 +2546,7 @@
          END DO
       END DO
       DEALLOCATE (temp)
-      CALL reduce(nup*ndw,overlap)
+      CALL mp_sum( overlap, intra_image_comm )
       DO j=1,ndw
          jj=j+iupdwn(2)-1
          DO i=1,nup
@@ -2612,7 +2626,7 @@
       USE dener
       USE derho
       USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: group
+      USE mp_global, ONLY: intra_image_comm
       USE funct, ONLY: dft_is_meta
       USE fft_module, ONLY: fwfft, invfft
       USE sic_module, ONLY: self_interaction, sic_epsilon, sic_alpha
@@ -2714,7 +2728,7 @@
 
       epseu=wz*DBLE(SUM(vtemp))
       IF (gstart == 2) epseu=epseu-vtemp(1)
-      CALL mp_sum( epseu, group )
+      CALL mp_sum( epseu, intra_image_comm )
       epseu=epseu*omega
 !
       IF(tpre) CALL denps(rhotmp,drhotmp,sfac,vtemp,dps)
@@ -2753,11 +2767,11 @@
          self_ehte = sic_epsilon * self_ehtet * wz * 0.5d0
          eh = eh - self_ehte
 
-         CALL mp_sum( self_ehte, group )
+         CALL mp_sum( self_ehte, intra_image_comm )
 
       ENDIF
 !
-      CALL mp_sum( eh, group )
+      CALL mp_sum( eh, intra_image_comm )
       !
       IF(tpre) CALL denh(rhotmp,drhotmp,sfac,vtemp,eh,dh)
       IF(tpre) DEALLOCATE(drhotmp)
@@ -2842,7 +2856,7 @@
 
          IF ( nlcc_any ) CALL force_cc( irb, eigrb, rhor, fion1 )
 
-         CALL mp_sum( fion1 )
+         CALL mp_sum( fion1, intra_image_comm )
          !
          !    add g-space ionic and core correction contributions to fion
          !
@@ -2894,7 +2908,7 @@
      &        /2.0/DBLE(nr1*nr2*nr3)
       ENDIF
 
-      CALL mp_sum( vave, group )
+      CALL mp_sum( vave, intra_image_comm )
 
       !
       !     fourier transform of total potential to r-space (smooth grid)
@@ -2988,28 +3002,33 @@
 !
 !     check \int rho(r)dr and the negative part of rho
 !
+      USE kinds,     ONLY: DP
+      USE mp,        ONLY: mp_sum
+      USE mp_global, ONLY: intra_image_comm
+
       IMPLICIT NONE
+
       INTEGER nnr, nspin
-      REAL(8) rhor(nnr,nspin), rmin, rmax, rsum, rnegsum
-!
-      REAL(8) roe
+      REAL(DP) rhor(nnr,nspin), rmin, rmax, rsum, rnegsum
+      !
+      REAL(DP) roe
       INTEGER ir, iss
 !
       rsum   =0.0
       rnegsum=0.0
       rmin   =100.
       rmax   =0.0
-      DO iss=1,nspin
-         DO ir=1,nnr
-            roe=rhor(ir,iss)
-            rsum=rsum+roe
-            IF (roe.LT.0.0) rnegsum=rnegsum+roe
-            rmax=MAX(rmax,roe)
-            rmin=MIN(rmin,roe)
+      DO iss = 1, nspin
+         DO ir = 1, nnr
+            roe  = rhor(ir,iss)
+            rsum = rsum + roe
+            IF ( roe < 0.0 ) rnegsum = rnegsum + roe
+            rmax = MAX( rmax, roe )
+            rmin = MIN( rmin, roe )
          END DO
       END DO
-      CALL reduce(1,rsum)
-      CALL reduce(1,rnegsum)
+      CALL mp_sum( rsum, intra_image_comm )
+      CALL mp_sum( rnegsum, intra_image_comm )
       RETURN
     END SUBROUTINE checkrho
 !______________________________________________________________________

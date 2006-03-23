@@ -38,7 +38,6 @@
 
       ! ... declare modules
 
-      USE mp_global, ONLY: mpime, nproc
       USE energies, ONLY: dft_energy_type, print_energies
       USE electrons_module, ONLY: emass, pmss, eigs
       USE wave_functions, ONLY: update_wave_functions

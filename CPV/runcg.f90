@@ -62,7 +62,6 @@
 
 ! ... declare modules
       USE mp_global, ONLY: mpime, nproc
-      USE mp, ONLY: mp_sum
       USE energies, ONLY: dft_energy_type, print_energies
       USE electrons_module, ONLY: pmss, eigs, nb_l
       USE cp_electronic_mass, ONLY: emass

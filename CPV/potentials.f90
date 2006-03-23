@@ -95,7 +95,7 @@
         USE constants, ONLY: fpi
         USE cell_base, ONLY: tpiba2, tpiba
         USE mp,        ONLY: mp_sum
-        USE mp_global, ONLY: nproc, mpime, group, root
+        USE mp_global, ONLY: nproc, mpime, intra_image_comm, root
         USE io_global, ONLY: ionode
         USE gvecp,     ONLY: ngm
         USE reciprocal_vectors, ONLY: gstart, gx, g
@@ -158,7 +158,7 @@
           END DO
           vrmean(ir) = 2.0d0 * vrmean(ir)
         END DO
-        CALL mp_sum(vrmean,group)
+        CALL mp_sum( vrmean, intra_image_comm )
 
         IF(ionode) THEN
           DO ir = 1, vhnr
@@ -259,7 +259,7 @@
       ! ... include modules
 
       USE control_flags,  ONLY: tscreen, tchi2, iprsta, force_pairing
-      USE mp_global,      ONLY: nproc, mpime, root, group
+      USE mp_global,      ONLY: nproc, mpime, root, intra_image_comm
       USE mp,             ONLY: mp_sum
       USE cell_module,    ONLY: boxdimensions
       USE cell_base,      ONLY: tpiba2
@@ -669,21 +669,21 @@
 
 ! ... sum up forces
       IF (tforce) THEN
-        CALL mp_sum(fion, group)
+        CALL mp_sum(fion, intra_image_comm)
       END IF
       ! WRITE(6,*) 'DEBUG end = ', SUM(fion)
 
 ! ... sum up energies
-      CALL mp_sum(eps, group)
-      CALL mp_sum(edft%sxc, group)
-      CALL mp_sum(edft%self_sxc, group)
-      CALL mp_sum(vxc, group)
-      CALL mp_sum(edft%eh, group)
-      CALL mp_sum(edft%ehte, group)
-      CALL mp_sum(edft%ehti, group)
-      CALL mp_sum(edft%self_ehte, group)
+      CALL mp_sum(eps, intra_image_comm)
+      CALL mp_sum(edft%sxc, intra_image_comm)
+      CALL mp_sum(edft%self_sxc, intra_image_comm)
+      CALL mp_sum(vxc, intra_image_comm)
+      CALL mp_sum(edft%eh, intra_image_comm)
+      CALL mp_sum(edft%ehte, intra_image_comm)
+      CALL mp_sum(edft%ehti, intra_image_comm)
+      CALL mp_sum(edft%self_ehte, intra_image_comm)
       ! CALL mp_sum(edft%ekin, group)  ! already summed up
-      CALL mp_sum(edft%emkin, group)
+      CALL mp_sum(edft%emkin, intra_image_comm)
 
       CALL total_energy(edft,omega,vxc,eps,self_vxc,nr1*nr2*nr3)
 
@@ -1093,7 +1093,7 @@
 
       USE constants,   ONLY : sqrtpm1
       USE cell_module, ONLY : s_to_r, pbcs
-      USE mp_global,   ONLY : nproc, mpime, group
+      USE mp_global,   ONLY : nproc, mpime, intra_image_comm
       USE mp,          ONLY : mp_sum
       USE ions_base,   ONLY : rcmax, zv, nsp, na, nax
  
@@ -1293,7 +1293,7 @@
         END DO
       END DO
 
-      CALL mp_sum(esr, group)
+      CALL mp_sum(esr, intra_image_comm)
      
       DEALLOCATE(iatom)
       DEALLOCATE(rc)

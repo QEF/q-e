@@ -40,8 +40,6 @@
 
 ! ...   declare modules
       USE kinds
-      USE mp_global, ONLY: mpime, nproc
-      USE mp, ONLY: mp_sum
       USE electrons_module, ONLY:  pmss, eigs, nb_l
       USE cp_electronic_mass, ONLY: emass
       USE wave_functions, ONLY : cp_kinetic_energy
@@ -167,8 +165,6 @@
 
 ! ...   declare modules
       USE kinds
-      USE mp_global, ONLY: mpime, nproc
-      USE mp, ONLY: mp_sum
       USE electrons_module, ONLY:  pmss
       USE cp_electronic_mass, ONLY: emass
       USE wave_base, ONLY: wave_steepest, wave_verlet
@@ -333,7 +329,7 @@
 
 ! ...   declare modules
       USE kinds
-      USE mp_global, ONLY: mpime, nproc, group
+      USE mp_global, ONLY: intra_image_comm
       USE mp, ONLY: mp_sum
       USE electrons_module, ONLY: pmss, eigs, nb_l, nupdwn, nspin
       USE cp_electronic_mass, ONLY: emass
@@ -513,8 +509,8 @@
         intermed  = -2.d0 * sum( c2 * conjg( c0(:, n_unp, ik, 1 ) ) )
         intermed3 = sum(c0(:,n_unp, ik, 1) * conjg( c0(:, n_unp, ik, 1)))
 
-        CALL mp_sum ( intermed, group )
-        CALL mp_sum ( intermed3, group )
+        CALL mp_sum ( intermed, intra_image_comm )
+        CALL mp_sum ( intermed3, intra_image_comm )
         !  Eigenvalue of unpaired
         ei_unp_mem = intermed
         !  <Phiunpaired|Phiunpaired>
@@ -711,6 +707,7 @@
   !
       USE electrons_base,   ONLY: nx=>nbnd, nupdwn, iupdwn, nbspx, nbsp
       USE mp, ONLY: mp_sum 
+      USE mp_global, ONLY: intra_image_comm 
   !
       IMPLICIT NONE
       INTEGER, INTENT(in) :: nfi
@@ -873,7 +870,7 @@
       IF ( gstart == 2 ) cm(1, n_unp) = CMPLX(DBLE(cm(1, n_unp)),0.d0)
       !
       intermed  = -2.d0 * sum(c2 * conjg(c0(:,n_unp)))
-      CALL mp_sum ( intermed )
+      CALL mp_sum ( intermed, intra_image_comm )
 !
 !           write(6,*) 'Debug:: ei_unp(au) = ', intermed
 !

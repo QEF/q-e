@@ -169,7 +169,7 @@ CONTAINS
 
         ! ...   declare modules
         USE kinds
-        USE mp_global, ONLY: mpime, nproc, group, root
+        USE mp_global, ONLY: mpime, nproc, intra_image_comm, root
         USE io_global, ONLY: ionode
         USE io_global, ONLY: stdout
         USE wave_types, ONLY: wave_descriptor
@@ -286,7 +286,7 @@ CONTAINS
 
         ! ...   declare modules
         USE kinds
-        USE mp_global, ONLY: mpime, nproc, group, root
+        USE mp_global, ONLY: mpime, nproc, intra_image_comm, root
         USE io_global, ONLY: ionode
         USE io_global, ONLY: stdout
         USE wave_types, ONLY: wave_descriptor
@@ -363,7 +363,7 @@ CONTAINS
 
         ! ...   declare modules
         USE kinds
-        USE mp_global, ONLY: mpime, nproc, group, root
+        USE mp_global, ONLY: mpime, nproc, intra_image_comm, root
         USE io_global, ONLY: ionode
         USE io_global, ONLY: stdout
         USE wave_types, ONLY: wave_descriptor
@@ -493,7 +493,7 @@ CONTAINS
       SUBROUTINE print_ks_states( c, file_name )
 
         USE kinds
-        USE mp_global, ONLY: mpime, nproc, group, root
+        USE mp_global, ONLY: mpime, nproc, intra_image_comm, root
         USE mp, ONLY: mp_sum
         USE io_global, ONLY: ionode, ionode_id
         USE io_global, ONLY: stdout
@@ -525,7 +525,7 @@ CONTAINS
 
         CALL write_rho_xml( file_name, rpsi2, nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
         
-        CALL mp_sum( charge, group )
+        CALL mp_sum( charge, intra_image_comm )
 
         IF ( ionode ) THEN
           WRITE( stdout,'(3X,A15," integrated charge : ",F14.5)')  &

@@ -41,6 +41,7 @@ MODULE cp_restart
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, reduce_io
       USE io_files,                 ONLY : psfile, pseudo_dir
+      USE mp_global,                ONLY : intra_image_comm
       USE printout_base,            ONLY : title
       USE grid_dimensions,          ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3l
       USE smooth_grid_dimensions,   ONLY : nr1s, nr2s, nr3s
@@ -222,7 +223,7 @@ MODULE cp_restart
       !
       mill(:,ig_l2g(1:ngm)) = mill_l(:,1:ngm)
       !
-      CALL mp_sum( mill )
+      CALL mp_sum( mill, intra_image_comm )
       !
       lsda = ( nspin == 2 )
       !

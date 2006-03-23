@@ -122,7 +122,7 @@
 
 ! ... declare modules
       USE mp, ONLY: mp_sum
-      USE mp_global, ONLY:  group
+      USE mp_global, ONLY:  intra_image_comm
       USE brillouin, ONLY: kpoints, kp
       USE wave_types, ONLY: wave_descriptor
       USE wave_base, ONLY: wave_speed2
@@ -163,7 +163,7 @@
 
       END DO
 
-      CALL mp_sum( ekinct, group )
+      CALL mp_sum( ekinct, intra_image_comm )
 
       cp_kinetic_energy = ekinct / (4.0d0 * dt2)
 
@@ -223,7 +223,7 @@
 
 ! ... declare modules
       USE mp, ONLY: mp_bcast
-      USE mp_global, ONLY: nproc, mpime, group
+      USE mp_global, ONLY: nproc, mpime, intra_image_comm
       USE wave_types, ONLY: wave_descriptor
       USE parallel_toolkit, ONLY: pdspev_drv, dspev_drv
 
@@ -276,7 +276,7 @@
         IF(mpime.EQ.(ip-1)) THEN
           uu = vv
         END IF
-        CALL mp_bcast(uu, (ip-1), group)
+        CALL mp_bcast(uu, (ip-1), intra_image_comm)
 
         j      = ip
         DO jl = 1, nrl_ip
@@ -306,7 +306,7 @@
 
 ! ... declare modules
       USE mp, ONLY: mp_bcast
-      USE mp_global, ONLY: nproc, mpime, group
+      USE mp_global, ONLY: nproc, mpime, intra_image_comm
       USE wave_types, ONLY: wave_descriptor
       USE parallel_toolkit, ONLY: pzhpev_drv, zhpev_drv
 
@@ -357,7 +357,7 @@
           IF(mpime.EQ.(ip-1)) THEN
             uu = vv
           END IF
-          CALL mp_bcast(uu, (ip-1), group)
+          CALL mp_bcast(uu, (ip-1), intra_image_comm)
           DO jl=1,nrl_ip
             DO i=1,nx
               CALL ZAXPY(ngw,uu(jl,i),c0(1,j,ik),1,c0rot(1,i),1)
@@ -392,7 +392,7 @@
 !  ----------------------------------------------
 
 ! ...   declare modules
-        USE mp_global, ONLY: nproc,mpime,group
+        USE mp_global, ONLY: nproc,mpime,intra_image_comm
         USE wave_types, ONLY: wave_descriptor
         USE wave_base, ONLY: dotp
 
@@ -452,7 +452,7 @@
 !  ----------------------------------------------
 
 ! ...   declare modules
-        USE mp_global, ONLY: nproc,mpime,group
+        USE mp_global, ONLY: nproc,mpime,intra_image_comm
         USE wave_types, ONLY: wave_descriptor
         USE wave_base, ONLY: dotp
 
@@ -683,7 +683,7 @@
 
      SUBROUTINE update_rlambda( i, lambda, c0, cdesc, c2 )
        USE electrons_module, ONLY: ib_owner, ib_local
-       USE mp_global, ONLY: mpime
+       USE mp_global, ONLY: mpime, intra_image_comm
        USE mp, ONLY: mp_sum
        USE wave_base, ONLY: hpsi
        USE wave_types, ONLY: wave_descriptor
@@ -698,7 +698,7 @@
        !
        ALLOCATE( prod( SIZE( c0, 2 ) ) )
        prod = hpsi( cdesc%gzero, c0(:,:), c2 )
-       CALL mp_sum( prod )
+       CALL mp_sum( prod, intra_image_comm )
        IF( mpime == ib_owner( i ) ) THEN
            ibl = ib_local( i )
            lambda( ibl, : ) = prod( : )
@@ -709,7 +709,7 @@
 
      SUBROUTINE update_clambda( i, lambda, c0, cdesc, c2 )
        USE electrons_module, ONLY: ib_owner, ib_local
-       USE mp_global, ONLY: mpime
+       USE mp_global, ONLY: mpime, intra_image_comm
        USE mp, ONLY: mp_sum
        USE wave_base, ONLY: hpsi
        USE wave_types, ONLY: wave_descriptor
@@ -724,7 +724,7 @@
        !
        ALLOCATE( prod( SIZE( c0, 2 ) ) )
        prod = hpsi( cdesc%gzero, c0(:,:), c2 )
-       CALL mp_sum( prod )
+       CALL mp_sum( prod, intra_image_comm )
        IF( mpime == ib_owner( i ) ) THEN
            ibl = ib_local( i )
            lambda( ibl, : ) = prod( : )

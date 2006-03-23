@@ -36,9 +36,8 @@
         END SUBROUTINE turbo_init
 
         SUBROUTINE allocate_turbo( nnr )
-          USE io_global, ONLY: ionode
-          USE io_global, ONLY: stdout
-
+          USE io_global, ONLY: ionode, stdout
+          USE mp_global, ONLY: intra_image_comm
           USE mp, ONLY: mp_sum
           INTEGER :: nnr
           INTEGER :: ierr
@@ -48,7 +47,7 @@
           END IF
           IF( .NOT. ALLOCATED( turbo_states ) ) THEN
             ALLOCATE( turbo_states( nnr, nturbo ), STAT = ierr)
-            CALL mp_sum(ierr)
+            CALL mp_sum( ierr, intra_image_comm )
             IF( ierr /= 0 ) THEN 
               IF( ionode ) THEN
                 WRITE( stdout,fmt='(3X,"TURBO: insufficient memory, turbo is switched off ")')

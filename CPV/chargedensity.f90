@@ -129,7 +129,7 @@
 ! ... declare modules
 
     USE fft_base,        ONLY: dfftp, dffts
-    USE mp_global,       ONLY: mpime
+    USE mp_global,       ONLY: mpime, intra_image_comm
     USE mp,              ONLY: mp_sum
     USE turbo,           ONLY: tturbo, nturbo, turbo_states, allocate_turbo
     USE cell_module,     ONLY: boxdimensions
@@ -330,8 +330,8 @@
         END DO
       END DO
       !
-      CALL mp_sum( rsumg( 1:nspin ) )
-      CALL mp_sum( rsumr( 1:nspin ) )
+      CALL mp_sum( rsumg( 1:nspin ), intra_image_comm )
+      CALL mp_sum( rsumr( 1:nspin ), intra_image_comm )
       !
       if ( nspin == 1 ) then
         WRITE( stdout, 10) rsumg(1), rsumr(1)
@@ -394,6 +394,7 @@
       USE mp,                 ONLY: mp_sum
       USE dener,              ONLY: denl, dekin
       USE io_global,          ONLY: stdout
+      USE mp_global,          ONLY: intra_image_comm
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
       USE cp_main_variables,  ONLY: rhopr
@@ -622,8 +623,8 @@
                   rsumg(iss)=0.0
                END DO
             END IF
-            CALL mp_sum( rsumg( 1:nspin ) )
-            CALL mp_sum( rsumr( 1:nspin ) )
+            CALL mp_sum( rsumg( 1:nspin ), intra_image_comm )
+            CALL mp_sum( rsumr( 1:nspin ), intra_image_comm )
 
             IF ( nspin == 1 ) THEN
               WRITE( stdout, 10) rsumg(1), rsumr(1)
@@ -671,8 +672,8 @@
             END DO
          END IF
 
-         CALL mp_sum( rsumg( 1:nspin ) )
-         CALL mp_sum( rsumr( 1:nspin ) )
+         CALL mp_sum( rsumg( 1:nspin ), intra_image_comm )
+         CALL mp_sum( rsumr( 1:nspin ), intra_image_comm )
 
          IF ( nspin == 1 ) THEN
            WRITE( stdout, 10) rsumg(1), rsumr(1)

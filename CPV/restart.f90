@@ -302,8 +302,7 @@
         USE cell_module, only: boxdimensions, cell_init, r_to_s, s_to_r
         USE brillouin, only: kpoints, kp
         use parameters, only: npkx, nsx
-        USE mp, ONLY: mp_sum, mp_barrier
-        USE mp_global, ONLY: mpime, nproc, group, root
+        USE mp_global, ONLY: mpime, nproc, intra_image_comm, root
         USE mp_wave, ONLY: mergewf
         USE wave_types, ONLY: wave_descriptor
         USE control_flags, ONLY: ndr, tbeg, gamma_only

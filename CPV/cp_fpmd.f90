@@ -340,6 +340,7 @@ end subroutine ggenb
       USE fft_base,           ONLY: dfftp, dffts, fft_dlay_descriptor
       use mp,                 ONLY: mp_sum, mp_max
       use io_global,          only: ionode
+      use mp_global,          only: intra_image_comm
       use constants,          only: eps8
       use control_flags,      only: iprsta
       !
@@ -367,8 +368,8 @@ end subroutine ggenb
       ng_g = ng
       ngwt = ngw
 
-      CALL mp_sum( ng_g )
-      CALL mp_sum( ngwt )
+      CALL mp_sum( ng_g, intra_image_comm )
+      CALL mp_sum( ngwt, intra_image_comm )
 
       !
       !     Temporary global and replicated arrays, used for sorting
@@ -497,7 +498,7 @@ end subroutine ggenb
       end if
 
       ichk = gstart
-      CALL mp_max( ichk )
+      CALL mp_max( ichk, intra_image_comm )
       IF( ichk /= 2 ) &
         CALL errore( ' ggencp ', ' inconsistent value for gstart ', ichk )
 !
@@ -1573,7 +1574,7 @@ SUBROUTINE gmeshinfo( )
    !
    !   Print out the number of g vectors for the different mesh
    !
-   USE mp_global, ONLY: nproc, mpime, group
+   USE mp_global, ONLY: nproc, mpime, intra_image_comm
    USE io_global, ONLY: ionode, ionode_id, stdout
    USE mp,        ONLY: mp_max, mp_gather
    use gvecb,     only: ngb
@@ -1598,7 +1599,7 @@ SUBROUTINE gmeshinfo( )
    ng_snd(1) = ng_g
    ng_snd(2) = ng_l
    ng_snd(3) = ng_lx
-   CALL mp_gather(ng_snd, ng_rcv, ionode_id, group)
+   CALL mp_gather(ng_snd, ng_rcv, ionode_id, intra_image_comm)
    !
    IF(ionode) THEN
       WRITE( stdout,1000)
@@ -1610,7 +1611,7 @@ SUBROUTINE gmeshinfo( )
    ng_snd(1) = ngst
    ng_snd(2) = ngs
    ng_snd(3) = ngsx
-   CALL mp_gather(ng_snd, ng_rcv, ionode_id, group)
+   CALL mp_gather(ng_snd, ng_rcv, ionode_id, intra_image_comm)
    !
    IF(ionode) THEN
       WRITE( stdout,1001)
@@ -1622,7 +1623,7 @@ SUBROUTINE gmeshinfo( )
    ng_snd(1) = ngw_g
    ng_snd(2) = ngw_l
    ng_snd(3) = ngw_lx
-   CALL mp_gather(ng_snd, ng_rcv, ionode_id, group)
+   CALL mp_gather(ng_snd, ng_rcv, ionode_id, intra_image_comm)
    !
    IF(ionode) THEN
       WRITE( stdout,1002)

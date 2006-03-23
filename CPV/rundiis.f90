@@ -73,7 +73,7 @@ CONTAINS
    ! ... declare modules
 
       USE kinds
-      USE mp_global, ONLY: mpime, nproc, group
+      USE mp_global, ONLY: mpime, nproc, intra_image_comm
       USE mp, ONLY: mp_sum
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
@@ -293,7 +293,7 @@ CONTAINS
         DO ib=1,nrl
            edft%etot = edft%etot + lambda(ib,(ib-1)*nproc+mpime+1)
         END DO
-        CALL mp_sum(edft%etot, group)
+        CALL mp_sum(edft%etot, intra_image_comm)
 
         IF (ionode) WRITE( stdout,80) idiis, cnorm, edft%etot, edft%ent
 80      FORMAT("STEP NORMG ETOT ENT: ",I3,2X,F12.8,2X,F16.6,4(1x,f8.5))
@@ -609,7 +609,7 @@ CONTAINS
         USE pseudopotential,       ONLY: nspnl
         USE nl,                    ONLY: nlsm1_s
         USE mp,                    ONLY: mp_sum
-        USE mp_global,             ONLY: mpime, nproc, group
+        USE mp_global,             ONLY: mpime, nproc, intra_image_comm
         USE atoms_type_module,     ONLY: atoms_type
         USE reciprocal_space_mesh, ONLY: gkx_l, gk_l
         USE reciprocal_vectors,    ONLY: g, gx

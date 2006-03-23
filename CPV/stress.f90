@@ -67,7 +67,7 @@
       USE cell_module,          ONLY: boxdimensions
       USE energies,             ONLY: dft_energy_type
       USE ions_base,            ONLY: nsp
-      USE mp_global,            ONLY: mpime, nproc, group
+      USE mp_global,            ONLY: mpime, intra_image_comm
       USE mp,                   ONLY: mp_sum
       USE wave_types,           ONLY: wave_descriptor
       USE pseudo_projector,     ONLY: projector
@@ -174,7 +174,7 @@
 
       pail(:,:) = matmul( paiu(:,:), box%m1(:,:) )
     
-      CALL mp_sum(pail, group)
+      CALL mp_sum( pail, intra_image_comm )
   
       DEALLOCATE(gagx_l)
 
@@ -243,7 +243,7 @@
       USE pseudopotential, ONLY: nlin_stress, nlin, nspnl, nsanl
       USE ions_base, ONLY: nsp, na
       USE spherical_harmonics, ONLY: set_dmqm, set_fmrm, set_pmtm
-      USE mp_global, ONLY: mpime, nproc
+      USE mp_global, ONLY: mpime, intra_image_comm
       USE io_global, ONLY: stdout
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
@@ -540,8 +540,8 @@
         END DO
         detmp = MATMUL( detmp(:,:), htm1(:,:) )
         WRITE( stdout,*) "FROM stress_nl derivative of e(nl)"
-        CALL mp_sum( detmp )
-        CALL mp_sum( denl_new )
+        CALL mp_sum( detmp, intra_image_comm )
+        CALL mp_sum( denl_new, intra_image_comm )
         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
         WRITE( stdout,5555) ((denl_new(i,j),j=1,3),i=1,3)
       END IF
@@ -701,7 +701,7 @@
 
       use ions_base,          only: nsp, rcmax
       USE cell_module,        only: boxdimensions
-      use mp_global,          ONLY: mpime, nproc
+      use mp_global,          ONLY: mpime
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2
       USE reciprocal_vectors, ONLY: gstart, g

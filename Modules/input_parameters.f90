@@ -1294,6 +1294,7 @@ MODULE input_parameters
                           press, wmass, cell_temperature, temph, fnoseh,   &
                           cell_dofree, greash, cell_factor, cell_nstepe,   &
                           cell_damping, press_conv_thr
+
 !
 !=----------------------------------------------------------------------------=!
 !  PHONON Namelist Input Parameters
@@ -1387,7 +1388,12 @@ MODULE input_parameters
         !
         ! ... variable added for NEB  ( C.S. 17/10/2003 )
         !
-        REAL(DP) :: pos( 3*natx, max_num_of_images ) = 0.D0
+        REAL(DP) :: pos( 3*natx, max_num_of_images )
+        !
+        ! ... workaround for IBM xlf bug, compiler can't manage large 
+        !     array initialization
+        !
+	! DATA pos / 0.0d0 /
 
 !
 !    ION_VELOCITIES
@@ -1479,21 +1485,23 @@ MODULE input_parameters
 !
       INTEGER           :: nconstr_inp             = 0
       REAL (DP)         :: constr_tol_inp          = 0.D0
-      CHARACTER(LEN=20) :: constr_type_inp(natx)   = ''
-      REAL (DP)         :: constr_inp(6,natx)      = 0
+      CHARACTER(LEN=20) :: constr_type_inp(natx)   = ' '
+      REAL (DP)         :: constr_inp(6,natx)        ! xlf bug, cannot initialize array
       REAL (DP)         :: constr_target(natx)     = 0.D0
       LOGICAL           :: constr_target_set(natx) = .FALSE.
+
 
 !
 !    KOHN_SHAM
 !
-      LOGICAL :: tprnks( nbndxx, nspinx ) = .FALSE.
+      LOGICAL :: tprnks( nbndxx, nspinx )
         ! logical mask used to specify which kohn sham orbital should be
         ! written to files 'KS.'
-      LOGICAL :: tprnks_empty( nbndxx, nspinx ) = .FALSE.
+      LOGICAL :: tprnks_empty( nbndxx, nspinx )
         ! logical mask used to specify which empty kohn sham orbital should be
         ! written to files 'KS_EMP.'
       CHARACTER(LEN=256) :: ks_path = './'
+
 !
 !    CHI2
 !

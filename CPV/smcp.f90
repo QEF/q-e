@@ -90,8 +90,6 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE cp_main_variables,        ONLY : ei1, ei2, ei3, eigr, sfac, irb, taub, &
                                        eigrb, rhog, rhor, rhos, becdr, bephi, &
                                        becp, ema0bg, allocate_mainvar, nfi
-  USE mp_global,                ONLY : mp_global_start
-  USE mp,                       ONLY : mp_sum
   USE fft_base,                 ONLY : dfftp
   USE orthogonalize,            ONLY : ortho
   USE orthogonalize_base,       ONLY : updatc, calphi
@@ -1538,7 +1536,6 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         CALL print_clock( 'fftw' )
         CALL print_clock( 'fftb' )
         CALL print_clock( 'rsg' )
-        CALL print_clock( 'reduce' )
      END IF
      !
      !

@@ -52,7 +52,7 @@ MODULE guess
 !  ----------------------------------------------
 
 ! ...     declare modules
-          USE mp_global,        ONLY : nproc, mpime, group
+          USE mp_global,        ONLY : nproc, mpime, intra_image_comm
           USE wave_types,       ONLY : wave_descriptor
           USE control_flags,    ONLY : force_pairing
           USE uspp,             ONLY : vkb, nkb
@@ -164,7 +164,7 @@ MODULE guess
               ALLOCATE(crot(ngw,n))
 
               CALL ucalc(cm(:,:,1,1),c0(:,:,1,1),ngw,cdesc%gzero,n,uu)
-              CALL rep_matmul_drv('T','N',n,n,n,1.0d0,uu,n,uu,n,0.0d0,a,n,group)
+              CALL rep_matmul_drv('T','N',n,n,n,1.0d0,uu,n,uu,n,0.0d0,a,n,intra_image_comm)
               CALL diagonalize(1,a,SIZE(a,1),costemp,ap,SIZE(ap,1),n,nproc,mpime)
               DO j=1,n
                 DO i=1,n
@@ -174,7 +174,7 @@ MODULE guess
               DO i=1,n
                 costh2(i)=1.0d0/sqrt(costemp(n-i+1))
               END DO
-              CALL rep_matmul_drv('N','N',n,n,n,1.0d0,uu,n,a,n,0.0d0,ap,n,group)
+              CALL rep_matmul_drv('N','N',n,n,n,1.0d0,uu,n,a,n,0.0d0,ap,n,intra_image_comm)
               DO j=1,n
                 DO i=1,n
                   ap(i,j)=ap(i,j) * costh2(i)
@@ -279,7 +279,7 @@ MODULE guess
 
 ! ...   declare modules
         USE mp
-        USE mp_global, ONLY: mpime, nproc, group
+        USE mp_global, ONLY: mpime, nproc, intra_image_comm
 
         IMPLICIT NONE
 
@@ -293,7 +293,7 @@ MODULE guess
 !  ----------------------------------------------
 
         CALL DGEMM('C','N',n,n,ngw,1.0d0,a,n,b,ngw,0.0d0,lambda,n)
-        CALL mp_sum(lambda,group)
+        CALL mp_sum(lambda,intra_image_comm)
 
         RETURN
       END SUBROUTINE ucalc_kp
@@ -307,7 +307,7 @@ MODULE guess
 
 ! ... declare modules
       USE mp
-      USE mp_global, ONLY: nproc, mpime, group
+      USE mp_global, ONLY: nproc, mpime, intra_image_comm
 
       IMPLICIT NONE
 
@@ -341,7 +341,7 @@ MODULE guess
         CALL DGER(n,n,-1.0d0,a,2*ngw,b,2*ngw,lambda,n)
       END IF
 
-      CALL mp_sum(lambda,group)
+      CALL mp_sum(lambda,intra_image_comm)
 
       DEALLOCATE(tmp)
 

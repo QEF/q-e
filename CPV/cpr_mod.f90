@@ -178,6 +178,7 @@ MODULE cpr_subroutines
   !
   subroutine elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, n, delt )
     use mp, only: mp_sum
+    use mp_global, only: intra_image_comm
     use reciprocal_vectors, only: gstart
     use wave_base, only: wave_speed2
     real(8), intent(out) :: ekincm
@@ -200,7 +201,7 @@ MODULE cpr_subroutines
     end do
     ekincm = ekincm * emass / ( delt * delt )
 
-    CALL mp_sum( ekincm )
+    CALL mp_sum( ekincm, intra_image_comm )
     DEALLOCATE( emainv )
 
     return
@@ -208,6 +209,7 @@ MODULE cpr_subroutines
 
   subroutine elec_fakekine2( ekincm, ema0bg, emass, c0, cm, ngw, n, delt )
     use mp, only: mp_sum
+    use mp_global, only: intra_image_comm
     use reciprocal_vectors, only: gstart
     use wave_base, only: wave_speed2
     real(8), intent(out) :: ekincm
@@ -230,7 +232,7 @@ MODULE cpr_subroutines
     end do
     ekincm = ekincm * emass / ( delt * delt )
 
-    CALL mp_sum( ekincm )
+    CALL mp_sum( ekincm, intra_image_comm )
     DEALLOCATE( emainv )
 
     return

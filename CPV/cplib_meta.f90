@@ -272,6 +272,7 @@
       use dener
       use derho
       use mp,      ONLY : mp_sum
+      use mp_global, ONLY : intra_image_comm
       use metagga, ONLY : kedtaur, kedtaug, kedtaus, dkedtaus
       USE fft_module, ONLY: fwfft, invfft
 !
@@ -368,7 +369,7 @@
              end do
           end do
 #ifdef PARA
-          call reduce(9,dkedxc)
+          call mp_sum( dkedxc, intra_image_comm )
 #endif
           do j=1,3
              do i=1,3

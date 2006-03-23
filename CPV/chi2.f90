@@ -39,7 +39,7 @@
       USE cell_base, ONLY: tpiba
       USE cell_module, only: boxdimensions
       use mp, ONLY: mp_sum
-      USE mp_global, ONLY: nproc, mpime, group
+      USE mp_global, ONLY: nproc, mpime, intra_image_comm
       USE io_files, ONLY: chiunit, chifile
       USE reciprocal_vectors, ONLY: gstart, gx
       USE gvecp, ONLY: ngm
@@ -96,7 +96,7 @@
         end do
       END DO
 
-      CALL mp_sum(CHI,group)
+      CALL mp_sum(CHI,intra_image_comm)
 !
       CHI = CHI * OMEGA * CMPLX(0.0d0,1.0d0)
 
@@ -122,7 +122,7 @@
 
       END IF
 
-      CALL mp_sum( ierr, group )
+      CALL mp_sum( ierr, intra_image_comm )
       IF( ierr > 0 ) &
          CALL errore( ' printchi2 ', ' writing to file '//TRIM( chifile ), 1 )
 

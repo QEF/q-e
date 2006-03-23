@@ -21,6 +21,7 @@ subroutine formf( tfirst, eself )
   use mp,              ONLY : mp_sum
   use control_flags,   ONLY : iprint, tpre, iprsta
   use io_global,       ONLY : stdout
+  use mp_global,       ONLY : intra_image_comm
   use bhs,             ONLY : rc1, rc2, wrc2, wrc1, rcl, al, bl, lloc
   use gvecs,           ONLY : ngs
   use cell_base,       ONLY : omega, tpiba2, tpiba
@@ -106,8 +107,8 @@ subroutine formf( tfirst, eself )
      if( tfirst .or. ( iprsta >= 4 ) )then
         vpsum = SUM( vps( 1:ngs, is ) )
         rhopsum = SUM( rhops( 1:ngs, is ) )
-        call mp_sum( vpsum )
-        call mp_sum( rhopsum )
+        call mp_sum( vpsum, intra_image_comm )
+        call mp_sum( rhopsum, intra_image_comm )
         WRITE( stdout,1250) vps(1,is),rhops(1,is)
         WRITE( stdout,1300) vpsum,rhopsum
      endif

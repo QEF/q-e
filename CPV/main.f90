@@ -123,7 +123,7 @@
       USE io_global, ONLY: stdout
       USE optical_properties, ONLY: opticalp, optical_closeup
       USE wave_functions, ONLY: update_wave_functions
-      USE mp, ONLY: mp_report, mp_sum, mp_max
+      USE mp, ONLY: mp_report
       USE runsd_module, ONLY: runsd
       USE guess, ONLY: guess_closeup
       USE input, ONLY: iosys
@@ -131,7 +131,6 @@
       USE cell_base, ONLY: frich, greash
       USE stick_base, ONLY: pstickset
       USE electrons_module, ONLY: bmeshset
-      USE mp_global, ONLY: nproc, mpime, group
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b
       USE ions_base, ONLY: taui, cdmi, nat, nsp
       USE sic_module, ONLY: self_interaction, nat_localisation

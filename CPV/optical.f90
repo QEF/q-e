@@ -72,7 +72,7 @@
           USE constants, ONLY: au, pi, k_boltzman_au, au_to_ohmcmm1
           USE cell_base, ONLY: tpiba2
           USE mp, ONLY: mp_sum
-          USE mp_global, ONLY: group
+          USE mp_global, ONLY: intra_image_comm
           USE io_global, ONLY: ionode
           USE atoms_type_module, ONLY: atoms_type
           USE io_files, ONLY: dielecunit, dielecfile
@@ -173,7 +173,7 @@
           IF( ionode ) THEN
              OPEN(UNIT=dielecunit, FILE=dielecfile, STATUS='unknown', POSITION='append', IOSTAT=ierr)
           END IF
-          CALL mp_sum( ierr )
+          CALL mp_sum( ierr, intra_image_comm )
           IF( ierr /= 0 ) &
             CALL errore(' opticalp ', ' opening file '//TRIM(dielecfile), 1 )
 
@@ -238,7 +238,7 @@
                           AIMAG( ce( ig, cie, ik, ispin ) * CONJG( cf( ig, cif, ik, ispin ) )
                       END DO
                       ! parallel sum of curr
-                      CALL mp_sum( curr, group ) 
+                      CALL mp_sum( curr, intra_image_comm ) 
                       ! the factor 4.0d0 accounts for gamma symmetry
                       currt = 4.0d0 * (fi(if)-fi(ie)) * ( curr(1)**2 + curr(2)**2 + curr(3)**2 )
                       currt = currt * tpiba2  / wef 
@@ -309,7 +309,7 @@
                       curr(3) = curr(3) + gx(3,ig) * &
                           AIMAG( ce( ig, ie, ik, ispin ) * CONJG( cf( ig, if, ik, ispin ) ) )
                     END DO
-                    CALL mp_sum( curr, group )
+                    CALL mp_sum( curr, intra_image_comm )
                     currt = 2.0d0 * ( curr(1)**2 + curr(2)**2 + curr(3)**2 )
                   ELSE
                     ccurr = 0.0d0
@@ -321,7 +321,7 @@
                       ccurr(3) = ccurr(3) + gkx_l(3, ig, ik) * &
                           ce( ig, ie, ik, ispin ) * CONJG( cf( ig, if, ik, ispin ) )
                     END DO
-                    CALL mp_sum( ccurr, group )
+                    CALL mp_sum( ccurr, intra_image_comm )
                     ccurrt = ccurr(1)*CONJG(ccurr(1)) + ccurr(2)*CONJG(ccurr(2)) + ccurr(3)*CONJG(ccurr(3))
                     WRITE( dielecunit ,100 ) ispin, ik, ie, if, wef, ccurrt
   100               FORMAT(4I5,1D14.6,3X,2D14.6)
@@ -337,7 +337,7 @@
           IF( ionode ) THEN
              CLOSE(UNIT=dielecunit, IOSTAT=ierr)
           END IF
-          CALL mp_sum( ierr )
+          CALL mp_sum( ierr, intra_image_comm )
           IF( ierr /= 0 ) &
             CALL errore(' opticalp ', ' opening file '//TRIM(dielecfile), 1 )
 
@@ -360,6 +360,7 @@
           USE constants, ONLY: au, au_to_ohmcmm1
           USE io_files, ONLY: dielecunit, dielecfile
           USE io_global, ONLY: ionode
+          USE mp_global, ONLY: intra_image_comm
           USE mp, ONLY: mp_sum
 
           INTEGER, INTENT(IN) :: nfi
@@ -373,7 +374,7 @@
           IF( ionode ) THEN
              OPEN(UNIT=dielecunit, FILE=dielecfile, STATUS='unknown', POSITION='append', IOSTAT=ierr)
           END IF
-          CALL mp_sum( ierr )
+          CALL mp_sum( ierr, intra_image_comm )
           IF( ierr /= 0 ) &
             CALL errore(' write_dielec ', ' opening file '//TRIM(dielecfile), 1 )
 
@@ -390,7 +391,7 @@
           IF( ionode ) THEN
              CLOSE(UNIT=dielecunit, IOSTAT=ierr)
           END IF
-          CALL mp_sum( ierr )
+          CALL mp_sum( ierr, intra_image_comm )
           IF( ierr /= 0 ) &
             CALL errore(' write_dielec ', ' closing file '//TRIM(dielecfile), 1 )
 

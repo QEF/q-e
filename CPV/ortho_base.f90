@@ -51,7 +51,7 @@ CONTAINS
       ! ...    Multiply square matrices A, B and return the result in C
 
       USE control_flags, ONLY: iprsta
-      USE mp_global,     ONLY: nproc, mpime, root, group
+      USE mp_global,     ONLY: nproc, mpime, root, intra_image_comm
       USE io_global,     ONLY: ionode, stdout
       USE mp,            ONLY: mp_bcast
 
@@ -92,11 +92,12 @@ CONTAINS
 
          IF( calls_cnt < 3 )  t1 = cclock()
 
-         CALL rep_matmul_drv( transa, transb, n, n, n, one, A, SIZE(a,1), B, SIZE(b,1), zero, C, SIZE(c,1), group )
+         CALL rep_matmul_drv( transa, transb, n, n, n, one, A, SIZE(a,1), B, SIZE(b,1), zero, C, &
+                              SIZE(c,1), intra_image_comm )
 
          IF( calls_cnt < 3 )  THEN
             tpar = cclock() - t1
-            CALL mp_bcast( tpar, root, group )
+            CALL mp_bcast( tpar, root, intra_image_comm )
          END IF
 
       ELSE
@@ -107,7 +108,7 @@ CONTAINS
 
          IF( calls_cnt < 3 )  THEN
             tser = cclock() - t1
-            CALL mp_bcast( tser, root, group )
+            CALL mp_bcast( tser, root, intra_image_comm )
          END IF
 
       END IF
@@ -124,7 +125,7 @@ CONTAINS
          !   Diagonalization of rhos
 
       USE control_flags, ONLY: iprsta
-      USE mp_global, ONLY: nproc, mpime, group, root
+      USE mp_global, ONLY: nproc, mpime, intra_image_comm, root
       USE io_global, ONLY: ionode, stdout
       USE mp,        ONLY: mp_sum, mp_bcast
       !
@@ -192,13 +193,13 @@ CONTAINS
 
         DEALLOCATE( diag, vv )
 
-        CALL mp_sum( s )
+        CALL mp_sum( s, intra_image_comm )
 
         IF( calls_cnt < 3 )  THEN
 
            tpar = cclock() - t1
 
-           CALL mp_bcast( tpar, root, group )
+           CALL mp_bcast( tpar, root, intra_image_comm )
 
         END IF
 
@@ -218,7 +219,7 @@ CONTAINS
 
            tser = cclock() - t1
 
-           CALL mp_bcast( tser, root, group )
+           CALL mp_bcast( tser, root, intra_image_comm )
 
         END IF
 
@@ -236,7 +237,7 @@ CONTAINS
       !  this routine calls the appropriate Lapack routine for diagonalizing a
       !  complex Hermitian matrix
 
-         USE mp_global, ONLY: nproc, mpime
+         USE mp_global, ONLY: nproc, mpime, intra_image_comm
          USE mp, ONLY: mp_sum
          IMPLICIT NONE
 
@@ -272,7 +273,7 @@ CONTAINS
            CALL pzpack(ap, a)
            CALL pzhpev_drv( 'V', ap, nrl, d, vp, nrl, nrl, n, nproc, mpime)
            CALL pzunpack(a, vp)
-           CALL mp_sum(a, ev)
+           CALL mp_sum(a, ev, intra_image_comm)
 
            DEALLOCATE(ap, vp)
 
@@ -515,7 +516,7 @@ CONTAINS
       USE kinds,         ONLY: DP
       USE io_global,     ONLY: stdout
       USE control_flags, ONLY: ortho_eps, ortho_max
-      USE mp_global,     ONLY: group
+      USE mp_global,     ONLY: intra_image_comm
 
       IMPLICIT NONE
 
@@ -634,6 +635,7 @@ CONTAINS
       USE mp,                 ONLY: mp_sum
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
+      USE mp_global,          ONLY: intra_image_comm
 !
       IMPLICIT NONE
 !
@@ -660,7 +662,7 @@ CONTAINS
          END DO
       END IF
       !
-      CALL mp_sum( sig )
+      CALL mp_sum( sig, intra_image_comm )
       !
       DO i = 1, nss
          sig(i,i) = sig(i,i) + 1.0d0
@@ -715,6 +717,7 @@ CONTAINS
       USE cvan,               ONLY: nvb
       USE kinds,              ONLY: DP
       USE mp,                 ONLY: mp_sum
+      USE mp_global,          ONLY: intra_image_comm
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
 !
@@ -746,7 +749,7 @@ CONTAINS
          END DO
       END IF
 
-      CALL mp_sum( rho )
+      CALL mp_sum( rho, intra_image_comm )
 !
       IF( nvb > 0 ) THEN
          !
@@ -798,6 +801,7 @@ CONTAINS
       USE mp,                 ONLY: mp_sum
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
+      USE mp_global,          ONLY: intra_image_comm
 !
       IMPLICIT NONE
       INTEGER :: nss, ist, ngwx, nkbx, n, nx
@@ -823,7 +827,7 @@ CONTAINS
          END DO
       END IF
 
-      CALL mp_sum( tau )
+      CALL mp_sum( tau, intra_image_comm )
 !
       IF( nvb > 0 ) THEN
          !
@@ -972,6 +976,7 @@ CONTAINS
       USE kinds,          ONLY: DP
       USE ions_base,      ONLY: na, nsp
       USE io_global,      ONLY: stdout
+      USE mp_global,      ONLY: intra_image_comm
       USE cvan,           ONLY: ish, nvb
       USE uspp_param,     ONLY: nh
       USE uspp,           ONLY: nhsavb=>nkbus, qq
@@ -1061,7 +1066,7 @@ CONTAINS
          END IF
          emtot=emtot/n
 
-         CALL mp_sum( emtot )
+         CALL mp_sum( emtot, intra_image_comm )
 
          WRITE( stdout,*) 'in calphi sqrt(emtot)=',SQRT(emtot)
          WRITE( stdout,*)

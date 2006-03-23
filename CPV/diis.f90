@@ -174,7 +174,7 @@ CONTAINS
 
         USE wave_base, ONLY: dotp
         USE wave_types, ONLY: wave_descriptor
-        USE mp_global, ONLY: group
+        USE mp_global, ONLY: intra_image_comm
         USE io_global, ONLY: stdout
         USE mp, ONLY: mp_max
         IMPLICIT NONE
@@ -204,7 +204,7 @@ CONTAINS
           END IF
           cnorm = cnorm + dotp( cdesc%gzero, ngw, c(:,i), c(:,i) )
         END DO
-        CALL mp_max(gemax_l, group)
+        CALL mp_max(gemax_l, intra_image_comm)
         gemax = gemax_l
         cnorm = SQRT( cnorm / ( cdesc%nbt( 1 ) * cdesc%ngwt ) )
 
@@ -227,7 +227,7 @@ CONTAINS
        USE cell_base, ONLY: tpiba2
        USE pseudopotential, ONLY: nspnl
        USE ions_base, ONLY: nsp, na
-       USE mp_global, ONLY: group
+       USE mp_global, ONLY: intra_image_comm
        USE mp, ONLY: mp_sum, mp_max
        USE reciprocal_vectors, ONLY: gstart, gzero, ggp
        USE reciprocal_space_mesh, ONLY: gkmask_l, gkcutz_l
@@ -260,7 +260,7 @@ CONTAINS
             vp = vp + DBLE( sfac(1,i) ) * vps(1,i)
           END DO
         END IF
-        CALL mp_sum(vp, group)
+        CALL mp_sum(vp, intra_image_comm)
 
       vpp = vp
 
@@ -316,7 +316,7 @@ CONTAINS
 
 ! ... declare modules
       USE wave_types, ONLY: wave_descriptor
-      USE mp_global, ONLY: group
+      USE mp_global, ONLY: intra_image_comm
       USE io_global, ONLY: stdout
       USE mp, ONLY: mp_sum, mp_max
       USE gvecw, ONLY: ngw
@@ -477,7 +477,7 @@ CONTAINS
           END DO
         END DO
         DO i=1,nsize-1
-          CALL mp_sum( bc(1:nsize,i), group)
+          CALL mp_sum( bc(1:nsize,i), intra_image_comm)
         END DO
 
         DO i=1,nsize-1
@@ -587,7 +587,7 @@ CONTAINS
 
    SUBROUTINE solve(b, ldb, ndim, v)
 
-      USE mp_global, ONLY: root, group
+      USE mp_global, ONLY: root, intra_image_comm
       USE mp, ONLY: mp_bcast
       !
       IMPLICIT NONE
@@ -619,7 +619,7 @@ CONTAINS
         CALL errore(' solve ',' dsptrs has failed ', info)
       END IF
 
-      CALL mp_bcast(v, root, group)
+      CALL mp_bcast(v, root, intra_image_comm)
 
       RETURN
       END SUBROUTINE solve

@@ -310,7 +310,7 @@
         SUBROUTINE rceigs( nei, gam, cgam, tortho, f, ei, gamma_symmetry )
 
           USE mp, ONLY: mp_sum
-          USE mp_global, ONLY: mpime, nproc, group
+          USE mp_global, ONLY: mpime, nproc, intra_image_comm
           USE energies, only: eig_total_energy
           USE constants, only: au
 
@@ -439,7 +439,7 @@
                 END IF
               END IF
             END DO
-            CALL mp_sum(ei,group)
+            CALL mp_sum(ei,intra_image_comm)
             index(1) = 0
             CALL hpsort(n, ei, index)
             DEALLOCATE(index, STAT=ierr)
@@ -499,7 +499,7 @@
 
 
         SUBROUTINE cpackgam(cgam, f, caux)
-          USE mp_global, ONLY: mpime, nproc, group
+          USE mp_global, ONLY: mpime, nproc, intra_image_comm
           USE mp, ONLY: mp_sum
           IMPLICIT NONE
           COMPLEX(DP), INTENT(INOUT)  :: cgam(:,:)
@@ -523,7 +523,7 @@
                 END DO
               END DO
             END IF
-            CALL mp_sum(caux, group)
+            CALL mp_sum(caux, intra_image_comm)
           ELSE
             IF( mpime < n ) THEN
               DO i = 1, n
@@ -541,7 +541,7 @@
 !  ----------------------------------------------
 
         SUBROUTINE rpackgam(gam, f, aux)
-          USE mp_global, ONLY: mpime, nproc, group
+          USE mp_global, ONLY: mpime, nproc, intra_image_comm
           USE mp, ONLY: mp_sum
           IMPLICIT NONE
           REAL(DP), INTENT(INOUT)  :: gam(:,:)
@@ -565,7 +565,7 @@
                 END DO
               END DO
             END IF
-            CALL mp_sum(aux, group)
+            CALL mp_sum(aux, intra_image_comm)
           ELSE
             IF( mpime < n ) THEN
               DO i = 1, n

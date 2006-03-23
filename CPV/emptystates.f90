@@ -79,7 +79,7 @@
 ! ...   This subroutine reads empty states from unit emptyunit
 
         USE wave_types, ONLY: wave_descriptor
-        USE mp_global, ONLY: mpime, nproc, group, root
+        USE mp_global, ONLY: mpime, nproc, intra_image_comm, root
         USE io_global, ONLY: stdout
         USE mp, ONLY: mp_bcast
         USE mp_wave, ONLY: splitwf
@@ -138,9 +138,9 @@
  10     FORMAT('*** EMPTY STATES : wavefunctions dimensions changed  ', &
           /,'*** NGW = ', I8, ' NE1 = ', I4, ' NE2 = ', I4, ' NK = ', I4, ' NSPIN = ', I2)
 
-        CALL mp_bcast(exst, 0, group)
-        CALL mp_bcast(ne_rd, 0, group)
-        CALL mp_bcast(ngw_rd, 0, group)
+        CALL mp_bcast(exst, 0, intra_image_comm)
+        CALL mp_bcast(ne_rd, 0, intra_image_comm)
+        CALL mp_bcast(ngw_rd, 0, intra_image_comm)
 
         IF (exst) THEN
 
@@ -178,7 +178,7 @@
 ! ...   This subroutine writes empty states to unit emptyunit
 
         USE wave_types, ONLY: wave_descriptor
-        USE mp_global, ONLY: mpime, nproc, group, root
+        USE mp_global, ONLY: mpime, nproc, intra_image_comm, root
         USE mp_wave, ONLY: mergewf
         USE io_files, ONLY: scradir
         USE reciprocal_vectors, ONLY: ig_l2g
@@ -250,7 +250,7 @@
 
       USE wave_types, ONLY: wave_descriptor
       USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: nproc, mpime, group
+      USE mp_global, ONLY: nproc, mpime, intra_image_comm
 
       REAL(DP) SQRT, DNRM2
       
@@ -287,7 +287,7 @@
             CALL DAXPY( nf, -DBLE( ce(1,i) ), cf(1,1), 2*ngw, sf, 1 )
           END IF
           CALL DGEMV( 'T', 2*ngw, nf, 2.0d0, cf(1,1), ldw, ce(1,i), 1, 1.d0, sf, 1 )
-          CALL mp_sum( SF, group )
+          CALL mp_sum( SF, intra_image_comm )
           temp = 0.0d0  
           CALL DGEMV( 'N', 2*ngw, nf, 1.d0, cf(1,1), ldw, sf, 1, 1.d0, TEMP, 1 )
           IF(.NOT.TORTHO) THEN
@@ -297,7 +297,7 @@
                 CALL DAXPY( i-1, -DBLE( ce(1,i) ), ce(1,1), 2*ngw, se, 1 )
               END IF
               CALL DGEMV( 'T', 2*ngw, i-1, 2.0d0, ce(1,1), ldw, ce(1,i), 1, 1.d0, se, 1 )
-              CALL mp_sum( SE, group )
+              CALL mp_sum( SE, intra_image_comm )
               CALL DGEMV( 'N', 2*ngw, i-1, 1.d0, ce(1,1), ldw, se, 1, 1.d0, temp, 1 )
             END IF
           END IF
@@ -310,7 +310,7 @@
               ANORM = DNRM2(2*NGW,CE(1,I),1)
               ANORM=2.D0*ANORM*ANORM
             END IF
-            CALL mp_sum(ANORM,group)
+            CALL mp_sum(ANORM,intra_image_comm)
             ANORM=SQRT(ANORM)
             CALL DSCAL(2*NGW,1.0D0/ANORM,CE(1,I),1)
           END IF
@@ -325,7 +325,7 @@
           csf   = 0.0d0
           CALL ZGEMV('C', ngw, nf, cone, cf(1,1), ldw, &
             ce(1,i), 1, czero, csf(1), 1)
-          CALL mp_sum(csf, group)
+          CALL mp_sum(csf, intra_image_comm)
           CALL ZGEMV('N', ngw, nf, cone, cf(1,1), ldw, &
             csf(1), 1, czero, ctemp, 1)
           IF( .NOT. TORTHO ) THEN
@@ -333,7 +333,7 @@
             IF( i .GT. 1 ) THEN
               CALL ZGEMV('C', ngw, i-1, cone, ce(1,1), ldw, &
                 ce(1,i), 1, czero, cse(1), 1)
-              CALL mp_sum(cse, group)
+              CALL mp_sum(cse, intra_image_comm)
               CALL ZGEMV('N', ngw, i-1, cone, ce(1,1), ldw, &
                 cse(1), 1, cone, ctemp, 1)
             END IF
@@ -344,7 +344,7 @@
             do ig = 1, ngw
               anorm = anorm + DBLE( ce(ig,i) * CONJG(ce(ig,i)) )
             enddo
-            CALL mp_sum(anorm,group)
+            CALL mp_sum(anorm,intra_image_comm)
             anorm = 1.0d0 / MAX( sqrt(anorm), 1.d-14 )
             CALL ZDSCAL(NGW, anorm, CE(1,i), 1)
           END IF
@@ -433,7 +433,7 @@
       USE orthogonalize, ONLY: ortho
       USE nl, ONLY: nlsm1_s
       USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: mpime, nproc, group
+      USE mp_global, ONLY: mpime, nproc
       USE check_stop, ONLY: check_stop_now
       USE atoms_type_module, ONLY: atoms_type
       USE io_global, ONLY: ionode

@@ -24,6 +24,7 @@ subroutine gtable( ipol, ctable)
   use reciprocal_vectors, only: mill_l
   use mp, only: mp_sum
   use io_global, only: ionode, stdout
+  use mp_global, only: intra_image_comm 
 
   implicit none
   integer :: ipol, ctable(ngw,2)
@@ -95,7 +96,7 @@ subroutine gtable( ipol, ctable)
      endif
   enddo
 
-  call mp_sum(test)
+  call mp_sum(test, intra_image_comm)
   if(ionode) write(stdout,*) '#not found, gtable: ', test
 
   return
@@ -116,6 +117,7 @@ subroutine gtablein( ipol, ctabin)
   use reciprocal_vectors, only: mill_l
   use mp, only: mp_sum
   use io_global, only: ionode, stdout
+  use mp_global, only: intra_image_comm
 
   implicit none
 
@@ -176,7 +178,7 @@ subroutine gtablein( ipol, ctabin)
      endif
   enddo
 
-  call mp_sum(test)
+  call mp_sum(test, intra_image_comm)
   if(ionode) write(stdout,*) '#not found, gtabin: ', test
 
   return

@@ -498,10 +498,9 @@ MODULE from_restart_module
     USE potentials,            ONLY : vofrhos
     USE forces,                ONLY : dforce_all
     USE orthogonalize,         ONLY : ortho
-    USE mp_global,             ONLY : mpime, root, nproc, group
+    USE mp_global,             ONLY : mpime, root, nproc, intra_image_comm
     USE io_global,             ONLY : ionode, ionode_id
     USE io_global,             ONLY : stdout
-    USE mp,                    ONLY : mp_bcast
     USE wave_types,            ONLY : wave_descriptor
     USE pseudo_projector,      ONLY : projector
     USE control_flags,         ONLY : tcarpar, nbeg, tranp, amprp, tfor, tsdp, &

@@ -342,7 +342,7 @@
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
       USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: nproc, mpime, group
+      USE mp_global, ONLY: nproc, mpime, intra_image_comm
       USE atoms_type_module, ONLY: atoms_type
       USE uspp_param, only: nh, lmaxkb
       USE uspp, only: nhtol, nhtolm, indv
@@ -444,9 +444,9 @@
       ! ... since G vectors only span half space, multiply results by two
       IF ( cdesc%gamma ) THEN
         CALL DSCAL( size( fnl%r ), 2.0d0, fnl%r(1,1,1), 1 )
-        CALL mp_sum( fnl%r, group )
+        CALL mp_sum( fnl%r, intra_image_comm )
       ELSE
-        CALL mp_sum( fnl%c, group )
+        CALL mp_sum( fnl%c, intra_image_comm )
       END IF
 
       RETURN

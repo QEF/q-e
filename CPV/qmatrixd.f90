@@ -32,6 +32,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
   use uspp, only : nhsa=> nkb
   use electrons_base, only: nx => nbspx, n => nbsp, ispin
   use mp, only: mp_sum
+  use mp_global, only: intra_image_comm
   
   implicit none
   
@@ -89,7 +90,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
              endif
           enddo
         
-          call mp_sum(sca)
+          call mp_sum( sca, intra_image_comm )
        endif
        qmat(ix,jx)=sca
        

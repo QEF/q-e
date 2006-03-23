@@ -276,6 +276,7 @@ CONTAINS
       !
       USE mp,            ONLY: mp_max
       USE io_global,     ONLY: stdout
+      USE mp_global,     ONLY: intra_image_comm
       USE cell_base,     ONLY: tpiba
       USE control_flags, ONLY: iprsta
       !
@@ -288,7 +289,7 @@ CONTAINS
       chkpstab = .FALSE.
       !
       xgmax = tpiba * SQRT( MAXVAL( hg ) )
-      CALL mp_max(xgmax)
+      CALL mp_max( xgmax, intra_image_comm )
       !
       IF( xgmax > xgtabmax ) THEN
          chkpstab = .TRUE.
@@ -306,7 +307,7 @@ CONTAINS
       !
       USE cell_base, ONLY: tpiba, tpiba2
       USE mp, ONLY: mp_max
-      USE mp_global, ONLY: mpime, group, nproc
+      USE mp_global, ONLY: mpime, intra_image_comm, nproc
       USE reciprocal_vectors, ONLY: g
       !
       REAL(DP), INTENT(OUT)  :: xgmax, xgmin, xgtabmax
@@ -319,7 +320,7 @@ CONTAINS
       !
       xgmin = 0.0d0
       xgmax = tpiba * SQRT( MAXVAL( g ) )
-      CALL mp_max(xgmax, group)
+      CALL mp_max(xgmax, intra_image_comm)
       xgmax = xgmax + (xgmax-xgmin)
       dxg   = (xgmax - xgmin) / DBLE(nval-1)
       !
@@ -980,6 +981,7 @@ CONTAINS
       USE kinds, ONLY : DP
       USE betax, ONLY : refg
       USE mp,    ONLY : mp_max
+      USE mp_global, ONLY : intra_image_comm
       USE gvecw, ONLY: ngw
       USE cell_base, ONLY: tpiba2
       USE small_box, ONLY: tpibab
@@ -998,7 +1000,7 @@ CONTAINS
       !
       gmax = MAX( gg, ggb )
       !
-      CALL mp_max( gmax )
+      CALL mp_max( gmax, intra_image_comm )
       !
       check_tables = .FALSE.
       IF( ( INT( gmax ) + 2 ) > mmx ) check_tables = .TRUE.

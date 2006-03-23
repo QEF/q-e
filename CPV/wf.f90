@@ -43,7 +43,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE uspp_param,               ONLY : nh, nhm
   USE uspp,                     ONLY : nkb
   USE io_global,                ONLY : ionode, stdout
-  USE mp,                       ONLY : mp_barrier
+  USE mp,                       ONLY : mp_barrier, mp_sum
   USE mp_global,                ONLY : nproc, mpime
   USE fft_module,               ONLY : invfft
   USE fft_base,                 ONLY : dfftp
@@ -872,7 +872,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
               qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
 
 #ifdef __PARA
-              CALL reduce(2, qvt)
+              CALL mp_sum( qvt)
 #endif
               !
               IF (nspin.EQ.1) THEN
@@ -912,7 +912,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                  qvt=0.D0
                  qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
 #ifdef __PARA
-                 CALL reduce(2, qvt)
+                 CALL mp_sum( qvt)
 #endif
                  !
                  IF (nspin.EQ.1) THEN
@@ -976,7 +976,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         CALL ZGEMM('c','nbsp',nbsp,nbsp,ngw,ONE,c,ngw,c_p,ngw,ONE,X,nbsp)
         CALL ZGEMM('T','nbsp',nbsp,nbsp,ngw,ONE,c,ngw,c_m,ngw,ONE,X,nbsp)
 #ifdef __PARA
-        CALL reduce (2*nbsp*nbsp,X)
+        CALL mp_sum ( X )
 #endif
         O(inw,:,:)=Oa(inw,:,:)+X(:,:)
         IF(iprsta.GT.4) THEN
@@ -1004,7 +1004,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         CALL ZGEMM('c','nbsp',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
         CALL ZGEMM('T','nbsp',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
 #ifdef __PARA
-        CALL reduce (2*nbsp*nupdwn(1),Xsp)
+        CALL mp_sum ( Xsp )
 #endif
         DO i=1,nupdwn(1)
            DO j=1,nbsp
@@ -1031,7 +1031,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         CALL ZGEMM('c','nbsp',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
         CALL ZGEMM('T','nbsp',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
 #ifdef __PARA
-        CALL reduce (2*nbsp*nupdwn(2),Xsp)
+        CALL mp_sum ( Xsp )
 #endif
         DO i=iupdwn(2),nbsp
            DO j=1,nbsp
@@ -1535,7 +1535,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
                                  indexplusz, indexminusz, tag, tagp
   USE cvan,               ONLY : nvb
   USE mp,                 ONLY : mp_barrier, mp_bcast
-  USE mp_global,          ONLY : nproc, mpime
+  USE mp_global,          ONLY : nproc, mpime, intra_image_comm
   USE fft_base,           ONLY : dfftp
   USE parallel_include     
   !
@@ -2501,10 +2501,10 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
 
   CALL mp_barrier()
   !
-  CALL mp_bcast( indexplus,  root )
-  CALL mp_bcast( indexminus, root )
-  CALL mp_bcast( tag,        root )
-  CALL mp_bcast( tagp,       root )
+  CALL mp_bcast( indexplus,  root, intra_image_comm )
+  CALL mp_bcast( indexminus, root, intra_image_comm )
+  CALL mp_bcast( tag,        root, intra_image_comm )
+  CALL mp_bcast( tagp,       root, intra_image_comm )
 
   IF (me.EQ.1) THEN
 #endif
@@ -3745,7 +3745,7 @@ SUBROUTINE write_psi( c, jw )
   USE smooth_grid_dimensions, ONLY : nnrsx, nr3sx, nr1s, nr2s, nr3s
   USE gvecw ,                 ONLY : ngw
   USE reciprocal_vectors,     ONLY : mill_l
-  USE mp,                     ONLY : mp_barrier
+  USE mp,                     ONLY : mp_barrier, mp_sum
   USE fft_base,               ONLY : dfftp
   USE mp_global,              ONLY : nproc, mpime
   USE parallel_include
@@ -3908,6 +3908,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   USE uspp_param,             ONLY : nh, nhm
   USE uspp,                   ONLY : nkb
   USE fft_module,             ONLY : fwfft, invfft
+  USE mp,                     ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -4131,8 +4132,8 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
            rsumg(iss)=0.0
         END DO
      END IF
-     CALL reduce(nspin,rsumg)
-     CALL reduce(nspin,rsumr)
+     CALL mp_sum(rsumg)
+     CALL mp_sum(rsumr)
 #endif
      IF (nspin.EQ.1) THEN
         WRITE( stdout,1) rsumg(1),rsumr(1)
@@ -4192,8 +4193,8 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
            rsumg(iss)=0.0
         END DO
      END IF
-     CALL reduce(nspin,rsumg)
-     CALL reduce(nspin,rsumr)
+     CALL mp_sum(rsumg)
+     CALL mp_sum(rsumr)
 #endif
      IF (nspin.EQ.1) THEN
         WRITE( stdout,1) rsumg(1),rsumr(1)

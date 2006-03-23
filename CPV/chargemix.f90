@@ -154,7 +154,7 @@
       USE reciprocal_vectors, ONLY: gstart, gzero, g
       USE gvecp, ONLY: ngm
       USE wave_base, ONLY: scalw
-      USE mp_global, ONLY: group
+      USE mp_global, ONLY: intra_image_comm
       USE io_global, ONLY: stdout
       USE mp, ONLY: mp_sum
 
@@ -336,7 +336,7 @@
       DEALLOCATE(rho_old, STAT=ierr)
       IF( ierr /= 0 ) CALL errore(' newrho ', ' deallocating rho_old ', ierr)
 
-      CALL mp_sum(drho, group)
+      CALL mp_sum(drho, intra_image_comm)
 
       RETURN
       END SUBROUTINE newrho

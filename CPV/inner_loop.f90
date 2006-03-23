@@ -63,7 +63,7 @@
       USE local_pseudo,   ONLY: vps, rhops
       USE io_global,      ONLY: io_global_start, stdout, ionode, &
                                 ionode_id
-      USE mp_global,      ONLY: mp_global_start
+      USE mp_global,      ONLY: intra_image_comm
       USE dener
       USE derho
       USE cdvan
@@ -76,9 +76,9 @@
       USE cg_module,      ONLY: ltresh, itercg, etotnew, etotold, &
                                 tcutoff, restartcg, passof, passov, &
                                 passop, ene_ok, numok, maxiter, &
-                                enever, etresh, ene0, hpsi, gi, hi, &
+                                enever, etresh, ene0, &
                                 esse, essenew, dene0, spasso, ene1, &
-                                passo, iter3, enesti, ninner_ef, emme
+                                passo, iter3, enesti, ninner_ef
       USE ions_positions, ONLY: tau0
       USE mp,             ONLY: mp_sum,mp_bcast
       use charge_density, only: rhoofr
@@ -205,7 +205,7 @@
               END IF
             END DO
           END DO
-          CALL mp_sum( c0hc0( 1:nss, 1:nss, is ) )
+          CALL mp_sum( c0hc0( 1:nss, 1:nss, is ), intra_image_comm )
         END DO
  
         DO is= 1, nspin
@@ -222,8 +222,8 @@
             CALL ddiag( nss, nss, epsi0(1,1,is), dval(1), &
                         z1(1,1,is), 1 )
           END IF
-          CALL mp_bcast( dval, ionode_id )
-          CALL mp_bcast( z1(:,:,is), ionode_id )
+          CALL mp_bcast( dval, ionode_id, intra_image_comm )
+          CALL mp_bcast( z1(:,:,is), ionode_id, intra_image_comm )
           DO i= 1, nss
             e0( i+istart-1 )= dval( i )
           END DO
@@ -266,8 +266,8 @@
             CALL ddiag( nss, nss, fmatx(1,1,is), dval(1), &
                         zaux(1,1,is), 1 )
           END IF
-          CALL mp_bcast( dval, ionode_id )
-          CALL mp_bcast( zaux(:,:,is), ionode_id )
+          CALL mp_bcast( dval, ionode_id, intra_image_comm )
+          CALL mp_bcast( zaux(:,:,is), ionode_id, intra_image_comm )
           DO i= 1, nss
             faux( i+istart-1 )= dval( i )
           END DO
@@ -341,7 +341,7 @@
               END IF
             END DO
           END DO
-          CALL mp_sum( c0hc0( 1:nss, 1:nss, is ) )
+          CALL mp_sum( c0hc0( 1:nss, 1:nss, is ), intra_image_comm )
         END DO
         DO is= 1, nspin
           nss= nupdwn( is )
@@ -457,8 +457,8 @@
           istart= iupdwn( is )
           IF(ionode) CALL ddiag( nss, nss, fmatx(1,1,is), &
                                  dval(1), zaux(1,1,is), 1 )  
-          CALL mp_bcast( dval, ionode_id )
-          CALL mp_bcast( zaux(:,:,is), ionode_id )
+          CALL mp_bcast( dval, ionode_id, intra_image_comm )
+          CALL mp_bcast( zaux(:,:,is), ionode_id, intra_image_comm )
           DO i= 1, n
             faux( i+istart-1 )= dval( i )
           END DO

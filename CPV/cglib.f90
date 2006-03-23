@@ -184,6 +184,7 @@ subroutine pc2(a,beca,b,becb)
      
       use ions_base, only: na, nsp
       use io_global, only: stdout
+      use mp_global, only: intra_image_comm
       use cvan 
       use gvecw, only: ngw
       use constants, only: pi, fpi
@@ -217,7 +218,7 @@ subroutine pc2(a,beca,b,becb)
                   sca=sca-DBLE(CONJG(a(1,j))*b(1,i))
                endif
 
-               call mp_sum( sca )
+               call mp_sum( sca, intra_image_comm )
 
                if (nvb.gt.0) then
 
@@ -260,6 +261,7 @@ subroutine pc2(a,beca,b,becb)
 
       use ions_base, only: na, nsp
       use io_global, only: stdout
+      use mp_global, only: intra_image_comm
       use cvan
       use gvecw, only: ngw
       use constants, only: pi, fpi
@@ -291,7 +293,7 @@ subroutine pc2(a,beca,b,becb)
                if (ng0.eq.2) then
                   sca=sca-DBLE(CONJG(a(1,j))*b(1,i))
                endif
-               call mp_sum(sca)
+               call mp_sum( sca, intra_image_comm )
                do ig=1,ngw
                   b(ig,i)=b(ig,i)-sca*as(ig,j)
                enddo
@@ -313,6 +315,7 @@ subroutine pc2(a,beca,b,becb)
       use kinds, only: dp
       use ions_base, only: na, nsp
       use io_global, only: stdout
+      use mp_global, only: intra_image_comm
       use cvan
       use gvecw, only: ngw
       use constants, only: pi, fpi
@@ -386,7 +389,7 @@ subroutine pc2(a,beca,b,becb)
                            sca=sca-DBLE(CONJG(betae(1,inl))*betae(1,jnl))
                         endif
                         endif
-                        call mp_sum(sca)
+                        call mp_sum( sca, intra_image_comm )
                         m_minus1(inl,jnl)=sca
                      enddo
                   enddo
@@ -432,6 +435,7 @@ subroutine pc2(a,beca,b,becb)
       use kinds, only: dp
       use ions_base, only: na, nsp
       use io_global, only: stdout
+      use mp_global, only: intra_image_comm
       use cvan
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
@@ -477,7 +481,7 @@ subroutine pc2(a,beca,b,becb)
             enddo
 
 
-            call mp_sum(beck)
+            call mp_sum( beck, intra_image_comm )
          endif
 !
 !

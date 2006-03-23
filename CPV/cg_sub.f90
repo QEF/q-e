@@ -51,7 +51,7 @@
       use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
       use local_pseudo, only: vps, rhops
       use io_global, ONLY: io_global_start, stdout, ionode, ionode_id
-      use mp_global, ONLY: mp_global_start, group
+      use mp_global, ONLY: intra_image_comm
       use dener
       use derho
       use cdvan
@@ -73,7 +73,7 @@
             berry_energy, ctabin, gqq, gqqm, df, pberryel, &
             tefield2, evalue2, ctable2, qmat2, detq2, ipolp2, &
             berry_energy2, ctabin2, gqq2, gqqm2, pberryel2
-      use mp, only: mp_sum,mp_bcast
+      use mp, only: mp_sum, mp_bcast
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi
       use charge_density,           ONLY : rhoofr
@@ -378,7 +378,7 @@
               endif
            enddo
            
-           call mp_sum(gamma)
+           call mp_sum( gamma, intra_image_comm )
            
            if (nvb.gt.0) then
               do is=1,nvb
@@ -412,7 +412,7 @@
               enddo
            enddo
 
-           call mp_sum(gamma)
+           call mp_sum( gamma, intra_image_comm )
            
            if(nvb.gt.0) then
               do iss=1,nspin
@@ -508,7 +508,7 @@
           enddo
         endif
 
-        call mp_sum(dene0)
+        call mp_sum( dene0, intra_image_comm )
 
         !if the derivative is positive, search along opposite direction
         if(dene0.gt.0.d0) then
@@ -836,7 +836,7 @@
            !
         end do
   
-        call mp_sum( lambda, group )
+        call mp_sum( lambda, intra_image_comm )
   
         if(tens) then!in the ensemble case matrix labda must be multiplied with f
            do is = 1, nspin

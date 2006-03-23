@@ -62,7 +62,7 @@ CONTAINS
 !
 !   based on code written by Stefano de Gironcoli for PWSCF
 !
-      use mp_global, only: mpime, nproc, group
+      use mp_global, only: mpime, nproc, intra_image_comm
       use fft_scalar, only: cft_1z, cft_2xy
 !
       implicit none
@@ -141,9 +141,9 @@ CONTAINS
          IF( iopt == 2 ) THEN
             !
             IF( what_scatter == 1 ) THEN
-               call fft_transpose ( aux, nr3, f, nr1x, nr2x, dfft, me, group, nproc, -2)
+               call fft_transpose ( aux, nr3, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc, -2)
             ELSE IF( what_scatter == 2 ) THEN
-               call fft_itranspose( aux, nr3, f, nr1x, nr2x, dfft, me, group, nproc, -2)
+               call fft_itranspose( aux, nr3, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc, -2)
             ELSE 
                if ( nproc == 1 ) then
                   nppx = dfft%nr3x
@@ -198,9 +198,9 @@ CONTAINS
          IF( iopt == -2 ) THEN
             !
             IF( what_scatter == 1 ) THEN
-               call fft_transpose ( aux, nr3, f, nr1x, nr2x, dfft, me, group, nproc, 2)
+               call fft_transpose ( aux, nr3, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc, 2)
             ELSE IF( what_scatter == 2 ) THEN
-               call fft_itranspose( aux, nr3, f, nr1x, nr2x, dfft, me, group, nproc, 2)
+               call fft_itranspose( aux, nr3, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc, 2)
             ELSE 
                if ( nproc == 1 ) then
                   nppx = dfft%nr3x

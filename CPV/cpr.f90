@@ -878,7 +878,6 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'fftw' )
   CALL print_clock( 'fftb' )
   CALL print_clock( 'rsg' )
-  CALL print_clock( 'reduce' )
   !
 1974 FORMAT( 1X,2I5,3F10.4,2X,3F10.4 )
 1975 FORMAT( /1X,'Scaled coordinates '/1X,'species',' atom #' )

@@ -290,7 +290,7 @@
                                   toptical, tconjgrad
       use constants,        only: factem, au_gpa, au, amu_si, bohr_radius_cm, scmass
       use energies,         only: print_energies, dft_energy_type
-      use mp_global,        only: mpime
+      use mp_global,        only: mpime, intra_image_comm
       use electrons_module, only: print_eigenvalues
       use brillouin,        only: kpoints, kp
       use time_step,        ONLY: tps
@@ -638,7 +638,7 @@
 
     SUBROUTINE print_sfac( rhoe, sfac )
 
-      USE mp_global, ONLY: mpime, nproc, group
+      USE mp_global, ONLY: mpime, nproc, intra_image_comm
       USE mp, ONLY: mp_max, mp_get, mp_put
       USE reciprocal_vectors, ONLY: ig_l2g, gx, g
       USE gvecp, ONLY: ngm
@@ -660,7 +660,7 @@
         nspin = SIZE(rhoe,2)
         nsp   = SIZE(sfac,2)
         ngx_l = ngm
-        CALL mp_max(ngx_l, group)
+        CALL mp_max(ngx_l, intra_image_comm)
         ALLOCATE(rhoeg(ngm,nspin))
         ALLOCATE(hg_rcv(ngx_l))
         ALLOCATE(gx_rcv(3,ngx_l))
