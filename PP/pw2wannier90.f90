@@ -1138,7 +1138,7 @@ subroutine radialpart(ng, q, alfa, rvalue, lmax, radial)
      do ig=1,ng
        call sph_bes (mesh_r, r(1), q(ig), l, bes)
        aux(:) = bes(ir) * func_r(:) * r(:)
-       call simpson (mesh_r, func_r, rij(1), rad_int)
+       call simpson (mesh_r, aux, rij(1), rad_int)
        radial(ig,l) = rad_int * pref
      enddo
   enddo
