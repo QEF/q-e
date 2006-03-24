@@ -73,6 +73,7 @@
       use xml_io_base,     ONLY: read_rho_xml, restart_dir
       use control_flags,   ONLY: ndr
       USE io_files,        ONLY: scradir
+      USE mp_global,       ONLY: nproc, mpime
       !
       implicit none
       !
@@ -92,7 +93,8 @@
         ELSE
            filename = TRIM(filename) // '/' // 'charge-density'
         END IF
-        CALL read_rho_xml( filename, rhor(:,is), nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+        CALL read_rho_xml( filename, mpime, nproc, rhor(:,is), &
+                           nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
       END DO
       return
       end subroutine read_rho

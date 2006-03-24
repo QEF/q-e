@@ -81,8 +81,7 @@ MODULE pw_restart
       USE funct,                ONLY : get_dft_name
       USE scf,                  ONLY : rho
       USE sticks,               ONLY : dfftp
-      !
-      USE mp_global,            ONLY : kunit, nproc, nproc_pool, mpime
+      USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool
       USE mp_global,            ONLY : my_pool_id, &
                                        intra_pool_comm, inter_pool_comm
       USE mp,                   ONLY : mp_sum, mp_max
@@ -155,7 +154,7 @@ MODULE pw_restart
          !
          nkbl = nkstot / kunit
          !
-         !  k points per pool
+         ! ... k points per pool
          !
          nkl = kunit * ( nkbl / npool )
          !
@@ -242,7 +241,7 @@ MODULE pw_restart
       !
       ! ... compute the maximum number of G vector among all k points
       !
-      npwx_g = MAXVAL( ngk_g( 1:nkstot ) )
+      npwx_g = MAXVAL( ngk_g(1:nkstot) )
       !
       IF ( ionode ) THEN
          !
@@ -365,8 +364,8 @@ MODULE pw_restart
       !
       IF ( nspin == 1 ) THEN
          !
-         CALL write_rho_xml( rho_file_base, rho(:,1), nr1, &
-                             nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         CALL write_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,1), &
+                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
       ELSE IF ( nspin == 2 ) THEN
          !
@@ -374,8 +373,8 @@ MODULE pw_restart
          !
          rhosum = rho(:,1) + rho(:,2) 
          !
-         CALL write_rho_xml( rho_file_base, rhosum, nr1, &
-                             nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         CALL write_rho_xml( rho_file_base, me_pool, nproc_pool, rhosum, &
+                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          DEALLOCATE( rhosum )
          !
@@ -387,7 +386,7 @@ MODULE pw_restart
          !
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
          !
-         CALL write_rho_xml( rho_file_base, rho(:,1), &
+         CALL write_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,1), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          rho_file_base = 'charge-density-dw'
@@ -398,37 +397,46 @@ MODULE pw_restart
          !
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
          !
-         CALL write_rho_xml( rho_file_base, rho(:,2), &
+         CALL write_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,2), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
       ELSE IF ( nspin == 4 ) THEN
          !
-         CALL write_rho_xml( rho_file_base, rho(:,1), nr1, &
-                             nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         CALL write_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,1), &
+                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          rho_file_base = 'magnetization.x'
+         !
          IF ( ionode ) &
             CALL iotk_link( iunpun, "MAG_X", rho_file_base, &
                             CREATE = .FALSE., BINARY = .FALSE. )
+         !
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
-         CALL write_rho_xml( rho_file_base, rho(:,2), &
+         !
+         CALL write_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,2), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          rho_file_base = 'magnetization.y'
+         !
          IF ( ionode ) &
             CALL iotk_link( iunpun, "MAG_Y", rho_file_base, &
                             CREATE = .FALSE., BINARY = .FALSE. )
+         !
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
-         CALL write_rho_xml( rho_file_base, rho(:,3), &
+         !
+         CALL write_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,3), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          !
          rho_file_base = 'magnetization.z'
+         !
          IF ( ionode ) &
             CALL iotk_link( iunpun, "MAG_Z", rho_file_base, &
                             CREATE = .FALSE., BINARY = .FALSE. )
+         !
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
-         CALL write_rho_xml( rho_file_base, rho(:,4), &
+         !
+         CALL write_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,4), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
       END IF
@@ -474,8 +482,7 @@ MODULE pw_restart
             IF ( nspin == 2 ) THEN
                !
                CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
-               CALL iotk_write_dat( iunpun, "ET.1", &
-                                    et(:,ik) / e2, ATTR = attr  )
+               CALL iotk_write_dat( iunpun, "ET.1", et(:,ik) / e2, ATTR = attr )
                !
                IF ( wk(ik) == 0.D0 ) THEN
                   !
@@ -507,8 +514,7 @@ MODULE pw_restart
             ELSE
                !
                CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
-               CALL iotk_write_dat( iunpun, "ET.1", &
-                                    et(:,ik) / e2, ATTR = attr  )
+               CALL iotk_write_dat( iunpun, "ET.1", et(:,ik) / e2, ATTR = attr )
                !
                IF ( wk(ik) == 0.D0 ) THEN
                   !
@@ -526,12 +532,12 @@ MODULE pw_restart
                !
                ! ... G+K vectors
                !
-               filename = TRIM( wfc_filename( ".", 'gkvectors', ik ) )
+               filename = wfc_filename( ".", 'gkvectors', ik )
                !
                CALL iotk_link( iunpun, "GK-VECTORS", &
                                filename, CREATE = .FALSE., BINARY = .TRUE. )
                !
-               filename = TRIM( wfc_filename( dirname, 'gkvectors', ik ) )
+               filename = wfc_filename( dirname, 'gkvectors', ik )
                !
             END IF
             !
@@ -555,12 +561,12 @@ MODULE pw_restart
                !
                IF ( ionode ) THEN
                   !
-                  filename = TRIM( wfc_filename( ".", 'evc', ik, ispin ) )
+                  filename = wfc_filename( ".", 'evc', ik, ispin )
                   !
                   CALL iotk_link( iunpun, "WFC", filename, &
                                   CREATE = .FALSE., BINARY = .TRUE. )
                   !
-                  filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
+                  filename = wfc_filename( dirname, 'evc', ik, ispin )
                   !
                END IF
                !
@@ -580,12 +586,12 @@ MODULE pw_restart
                !
                IF ( ionode ) THEN
                   !
-                  filename = TRIM( wfc_filename( ".", 'evc', ik, ispin ) )
+                  filename = wfc_filename( ".", 'evc', ik, ispin )
                   !
                   CALL iotk_link( iunpun, "WFC", filename, &
                                   CREATE = .FALSE., BINARY = .TRUE. )
                   !
-                  filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
+                  filename = wfc_filename( dirname, 'evc', ik, ispin )
                   !
                END IF
                !
@@ -615,12 +621,12 @@ MODULE pw_restart
                      !
                      IF ( ionode ) THEN
                         !
-                        filename = TRIM( wfc_filename( ".", 'evc', ik, ipol ) )
+                        filename = wfc_filename( ".", 'evc', ik, ipol )
                         !
                         CALL iotk_link( iunpun, "WFC", filename, &
-                             CREATE = .FALSE., BINARY = .TRUE. )
+                                        CREATE = .FALSE., BINARY = .TRUE. )
                         !
-                        filename = TRIM( wfc_filename( dirname, 'evc', ik, ipol ) )
+                        filename = wfc_filename( dirname, 'evc', ik, ipol )
                         !
                      END IF
                      !
@@ -635,12 +641,12 @@ MODULE pw_restart
                   !
                   IF ( ionode ) THEN
                      !
-                     filename = TRIM( wfc_filename( ".", 'evc', ik ) )
+                     filename = wfc_filename( ".", 'evc', ik )
                      !
                      CALL iotk_link( iunpun, "WFC", filename, &
-                          CREATE = .FALSE., BINARY = .TRUE. )
+                                     CREATE = .FALSE., BINARY = .TRUE. )
                      !
-                     filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
+                     filename = wfc_filename( dirname, 'evc', ik )
                      !
                   END IF
                   !
@@ -2268,10 +2274,11 @@ MODULE pw_restart
     SUBROUTINE read_rho( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2
-      USE lsda_mod,             ONLY : nspin
-      USE scf,                  ONLY : rho
-      USE sticks,               ONLY : dfftp
+      USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2
+      USE lsda_mod,  ONLY : nspin
+      USE scf,       ONLY : rho
+      USE sticks,    ONLY : dfftp
+      USE mp_global, ONLY : me_pool, nproc_pool
       !
       IMPLICIT NONE
       !
@@ -2280,41 +2287,50 @@ MODULE pw_restart
       !
       CHARACTER(LEN=256) :: rho_file_base
       !
-      IF (nspin == 1) THEN
+      !
+      IF ( nspin == 1 ) THEN
          !
          rho_file_base = TRIM( dirname ) // '/charge-density'
-         CALL read_rho_xml( rho_file_base, rho(:,1), &
-              nr1, nr2, nr3, nrx1, nrx2,  dfftp%ipp, dfftp%npp )
          !
-      ELSE IF (nspin == 2) THEN
+         CALL read_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,1), &
+                            nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         !
+      ELSE IF ( nspin == 2 ) THEN
          !
          rho_file_base = TRIM( dirname ) // '/charge-density-up'
-         CALL read_rho_xml( rho_file_base, rho(:,1), &
-              nr1, nr2, nr3, nrx1, nrx2,  dfftp%ipp, dfftp%npp )
+         !
+         CALL read_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,1), &
+                            nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          rho_file_base = TRIM( dirname ) // '/charge-density-dw'
-         CALL read_rho_xml( rho_file_base, rho(:,2), &
-              nr1, nr2, nr3, nrx1, nrx2,  dfftp%ipp, dfftp%npp )
          !
-      ELSE IF (nspin == 4) THEN
+         CALL read_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,2), &
+                            nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         !
+      ELSE IF ( nspin == 4 ) THEN
          !
          rho_file_base = TRIM( dirname ) // '/charge-density'
-         CALL read_rho_xml( rho_file_base, rho(:,1), &
-              nr1, nr2, nr3, nrx1, nrx2,  dfftp%ipp, dfftp%npp )
+         !
+         CALL read_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,1), &
+                            nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          rho_file_base = TRIM( dirname ) // '/magnetization.x'
-         CALL read_rho_xml( rho_file_base, rho(:,2), &
-              nr1, nr2, nr3, nrx1, nrx2,  dfftp%ipp, dfftp%npp )
+         !
+         CALL read_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,2), &
+                            nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          rho_file_base = TRIM( dirname ) // '/magnetization.y'
-         CALL read_rho_xml( rho_file_base, rho(:,3), &
-              nr1, nr2, nr3, nrx1, nrx2,  dfftp%ipp, dfftp%npp )
+         !
+         CALL read_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,3), &
+                            nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          rho_file_base = TRIM( dirname ) // '/magnetization.z'
-         CALL read_rho_xml( rho_file_base, rho(:,4), &
-              nr1, nr2, nr3, nrx1, nrx2,  dfftp%ipp, dfftp%npp )
+         !
+         CALL read_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,4), &
+                            nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
       END IF
+      !
       ierr = 0
       !
     END SUBROUTINE read_rho

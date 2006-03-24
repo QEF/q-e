@@ -26,11 +26,11 @@ MODULE xml_io_base
   PRIVATE
   !
   PUBLIC :: attr
-  PUBLIC :: create_directory, kpoint_dir, wfc_filename, copy_file,          &
+  PUBLIC :: create_directory, kpoint_dir, wfc_filename, copy_file,    &
             restart_dir, check_restartfile, save_history,             &
             save_print_counter, read_print_counter, set_kpoints_vars, &
-            write_cell, write_ions, write_symmetry, write_planewaves,       &
-            write_spin, write_xc, write_occ, write_bz, write_phonon,        &
+            write_cell, write_ions, write_symmetry, write_planewaves, &
+            write_spin, write_xc, write_occ, write_bz, write_phonon,  &
             write_rho_xml, write_wfc, read_wfc, read_rho_xml
   !
   CHARACTER(iotk_attlenx) :: attr
@@ -46,15 +46,11 @@ MODULE xml_io_base
       !
       CHARACTER(LEN=*), INTENT(IN) :: dirname
       !
-      INTEGER           :: ierr
-      INTEGER, EXTERNAL :: c_mkdir
+      INTEGER                    :: ierr
+      INTEGER, EXTERNAL          :: c_mkdir
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
-      IF ( ionode ) THEN
-         ierr = c_mkdir( TRIM( dirname ), LEN_TRIM( dirname ) )
-      ELSE
-         ierr = 0
-      END IF
+      IF ( ionode ) ierr = c_mkdir( TRIM( dirname ), LEN_TRIM( dirname ) )
       !
       CALL mp_bcast ( ierr, ionode_id )
       !
@@ -68,14 +64,16 @@ MODULE xml_io_base
       ! ... check whether the scratch directory is writable
       !
       IF ( ionode ) THEN
+         !
          OPEN( UNIT = 4, FILE = TRIM( dirname ) // '/test' // &
               TRIM( int_to_char( mpime ) ), STATUS = 'UNKNOWN', IOSTAT = ierr )
          CLOSE( UNIT = 4, STATUS = 'DELETE' )
+         !
       END IF
       !
       CALL mp_bcast ( ierr, ionode_id )
       !
-      CALL errore( 'create_directory: ', &
+      CALL errore( 'create_directory:', &
                    TRIM( dirname ) // ' non existent or non writable', ierr )
       !
       RETURN
@@ -188,15 +186,15 @@ MODULE xml_io_base
       CHARACTER(LEN=*), INTENT(IN) :: scradir
       INTEGER,          INTENT(IN) :: runit
       !
-      CHARACTER(LEN=256) :: dirname
-      INTEGER            :: strlen
+      CHARACTER(LEN=256)         :: dirname
+      INTEGER                    :: strlen
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
       ! ... main restart directory
       !
       ! ... keep the line below ( this is the old style RESTARTXX ) !!!
       !
-!      dirname = 'RESTART' // int_to_char( runit )
+     ! dirname = 'RESTART' // int_to_char( runit )
       !
       dirname = TRIM( prefix ) // '_' // TRIM( int_to_char( runit ) )// '.save'
       !
@@ -969,7 +967,7 @@ MODULE xml_io_base
     ! ... methods to write and read charge_density
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_rho_xml( rho_file_base, rho, &
+    SUBROUTINE write_rho_xml( rho_file_base, me, np, rho, &
                               nr1, nr2, nr3, nr1x, nr2x, ipp, npp )
       !------------------------------------------------------------------------
       !
@@ -979,16 +977,16 @@ MODULE xml_io_base
       ! ... on a single proc.
       !
       USE io_files,  ONLY : rhounit
-      USE io_global, ONLY : ionode, ionode_id
-      USE mp,        ONLY : mp_sum, mp_get, mp_max
-      USE mp_global, ONLY : mpime, nproc, root, me_pool, my_pool_id, &
-                            nproc_pool, intra_pool_comm, root_pool, my_image_id
+      USE io_global, ONLY : ionode
+      USE mp,        ONLY : mp_get
       !
       IMPLICIT NONE
       !
+      CHARACTER(LEN=*),  INTENT(IN) :: rho_file_base
+      INTEGER,           INTENT(IN) :: me
+      INTEGER,           INTENT(IN) :: np
       INTEGER,           INTENT(IN) :: nr1, nr2, nr3
       INTEGER,           INTENT(IN) :: nr1x, nr2x
-      CHARACTER(LEN=*),  INTENT(IN) :: rho_file_base
       REAL(DP),          INTENT(IN) :: rho(:)
       INTEGER, OPTIONAL, INTENT(IN) :: ipp(:)
       INTEGER, OPTIONAL, INTENT(IN) :: npp(:)
@@ -1007,7 +1005,7 @@ MODULE xml_io_base
       !
       CALL mp_bcast( ierr, ionode_id )
       !
-      CALL errore( 'write_rho_xml ', 'cannot open' // &
+      CALL errore( 'write_rho_xml', 'cannot open' // &
                  & TRIM( rho_file ) // ' file for writing', ierr )
       !
       IF ( ionode ) THEN
@@ -1022,14 +1020,14 @@ MODULE xml_io_base
          !
       END IF
       !
-      ALLOCATE( rho_plane( nr1 * nr2 ) )
+      ALLOCATE( rho_plane( nr1*nr2 ) )
       ALLOCATE( kowner( nr3 ) )
       !
       ! ... find out the owner of each "z" plane
       !
       IF ( PRESENT( ipp ) .AND. PRESENT( npp ) ) THEN
          !
-         DO ip = 1, nproc
+         DO ip = 1, np
             !
             kowner((ipp(ip)+1):(ipp(ip)+npp(ip))) = ip - 1
             !
@@ -1041,15 +1039,15 @@ MODULE xml_io_base
          !
       END IF
       !
-      ldr = nr1x * nr2x
+      ldr = nr1x*nr2x
       !
       DO k = 1, nr3
          !
-         IF( kowner(k) == mpime ) THEN
+         IF( kowner(k) == me ) THEN
             !
             kk = k
             !
-            IF ( PRESENT( ipp ) ) kk = k - ipp(mpime+1)
+            IF ( PRESENT( ipp ) ) kk = k - ipp(me+1)
             ! 
             DO j = 1, nr2
                !
@@ -1064,7 +1062,7 @@ MODULE xml_io_base
          END IF
          !
          IF ( kowner( k ) /= ionode_id ) &
-            CALL mp_get( rho_plane, rho_plane, mpime, ionode_id, kowner(k), k )
+            CALL mp_get( rho_plane, rho_plane, me, ionode_id, kowner(k), k )
          !
          IF ( ionode ) &
             CALL iotk_write_dat( rhounit, "z" // iotk_index( k ), rho_plane )
@@ -1087,7 +1085,7 @@ MODULE xml_io_base
     END SUBROUTINE write_rho_xml
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_rho_xml( rho_file_base, rho, &
+    SUBROUTINE read_rho_xml( rho_file_base, me, np, rho, &
                              nr1, nr2, nr3, nr1x, nr2x, ipp, npp )
       !------------------------------------------------------------------------
       !
@@ -1098,15 +1096,15 @@ MODULE xml_io_base
       !
       USE io_files,  ONLY : rhounit
       USE io_global, ONLY : ionode, ionode_id
-      USE mp,        ONLY : mp_sum, mp_put, mp_max
-      USE mp_global, ONLY : mpime, nproc, root, me_pool, my_pool_id, &
-                            nproc_pool, intra_pool_comm, root_pool, my_image_id
+      USE mp,        ONLY : mp_put
       !
       IMPLICIT NONE
       !
+      CHARACTER(LEN=*),  INTENT(IN)  :: rho_file_base
+      INTEGER,           INTENT(IN)  :: me
+      INTEGER,           INTENT(IN)  :: np
       INTEGER,           INTENT(IN)  :: nr1, nr2, nr3
       INTEGER,           INTENT(IN)  :: nr1x, nr2x
-      CHARACTER(LEN=*),  INTENT(IN)  :: rho_file_base
       REAL(DP),          INTENT(OUT) :: rho(:)
       INTEGER, OPTIONAL, INTENT(IN)  :: ipp(:)
       INTEGER, OPTIONAL, INTENT(IN)  :: npp(:)
@@ -1121,13 +1119,13 @@ MODULE xml_io_base
       rho_file = TRIM( rho_file_base ) // '.xml'
       !
       IF ( ionode ) &
-         CALL iotk_open_read( rhounit, FILE = TRIM( rho_file ), &
-                               BINARY = .FALSE., IERR = ierr )
+         CALL iotk_open_read( rhounit, &
+                              FILE = rho_file, BINARY = .FALSE., IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id )
       !
-      CALL errore( ' read_rho_xml ', &
-                   'cannot open ' // rho_file // ' file for reading', ierr )
+      CALL errore( 'read_rho_xml', 'cannot open ' // &
+                 & TRIM( rho_file ) // ' file for reading', ierr )
       !
       IF ( ionode ) THEN
          !
@@ -1135,25 +1133,25 @@ MODULE xml_io_base
          !
          CALL iotk_scan_empty( rhounit, "INFO", attr )
          !
-         CALL iotk_scan_attr( attr, "nr1",   nr( 1 ) )
-         CALL iotk_scan_attr( attr, "nr2",   nr( 2 ) )
-         CALL iotk_scan_attr( attr, "nr3",   nr( 3 ) )
+         CALL iotk_scan_attr( attr, "nr1", nr(1) )
+         CALL iotk_scan_attr( attr, "nr2", nr(2) )
+         CALL iotk_scan_attr( attr, "nr3", nr(3) )
          !
       END IF
       !
       CALL mp_bcast( nr, ionode_id )
       !
-      IF ( nr1 /= nr( 1 ) .OR. nr2 /= nr( 2 ) .OR. nr3 /= nr( 3 ) ) &
-         CALL errore( ' read_rho_xml ', ' dimensions do not match ', 1 )
+      IF ( nr1 /= nr(1) .OR. nr2 /= nr(2) .OR. nr3 /= nr(3) ) &
+         CALL errore( 'read_rho_xml', 'dimensions do not match', 1 )
       !
-      ALLOCATE( rho_plane( nr1 * nr2 ) )
+      ALLOCATE( rho_plane( nr1*nr2 ) )
       ALLOCATE( kowner( nr3 ) )
       !
       ! ... find out the owner of each "z" plane
       !
       IF ( PRESENT( ipp ) .AND. PRESENT( npp ) ) THEN
          !
-         DO ip = 1, nproc
+         DO ip = 1, np
             !
             kowner((ipp(ip)+1):(ipp(ip)+npp(ip))) = ip - 1
             !
@@ -1165,7 +1163,7 @@ MODULE xml_io_base
          !
       END IF
       !
-      ldr = nr1x * nr2x
+      ldr = nr1x*nr2x
       !
       DO k = 1, nr3
          !
@@ -1176,14 +1174,14 @@ MODULE xml_io_base
          !
          ! ... planes are sent to the destination processor
          !
-         IF ( kowner( k ) /= ionode_id ) &
-            CALL mp_put( rho_plane, rho_plane, mpime, ionode_id, kowner(k), k )
+         IF ( kowner(k) /= ionode_id ) &
+            CALL mp_put( rho_plane, rho_plane, me, ionode_id, kowner(k), k )
          !
-         IF( kowner(k) == mpime ) THEN
+         IF( kowner(k) == me ) THEN
             !
             kk = k
             !
-            IF ( PRESENT( ipp ) ) kk = k - ipp(mpime+1)
+            IF ( PRESENT( ipp ) ) kk = k - ipp(me+1)
             ! 
             DO j = 1, nr2
                !
@@ -1335,7 +1333,7 @@ MODULE xml_io_base
                              npool, ikt, iks, ike, igwx, ipmask, ipdest )
       !
       IF ( ionode ) &
-         CALL iotk_open_read( iuni, FILE = TRIM( filename ), &
+         CALL iotk_open_read( iuni, FILE = filename, &
                               BINARY = .TRUE., IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id )
@@ -1347,15 +1345,15 @@ MODULE xml_io_base
           !
           CALL iotk_scan_empty( iuni, "INFO", attr )
           !
-          CALL iotk_scan_attr( attr, "ngw",           ngw )
-          CALL iotk_scan_attr( attr, "nbnd",          nbnd )
-          CALL iotk_scan_attr( attr, "ik",            ik_ )
-          CALL iotk_scan_attr( attr, "nk",            nk_ )
-          CALL iotk_scan_attr( attr, "kunit",         kunit_ )
-          CALL iotk_scan_attr( attr, "ispin",         ispin )
-          CALL iotk_scan_attr( attr, "nspin",         nspin )
-          CALL iotk_scan_attr( attr, "igwx",          igwx_ )
-          CALL iotk_scan_attr( attr, "scale_factor",  scalef )
+          CALL iotk_scan_attr( attr, "ngw",          ngw )
+          CALL iotk_scan_attr( attr, "nbnd",         nbnd )
+          CALL iotk_scan_attr( attr, "ik",           ik_ )
+          CALL iotk_scan_attr( attr, "nk",           nk_ )
+          CALL iotk_scan_attr( attr, "kunit",        kunit_ )
+          CALL iotk_scan_attr( attr, "ispin",        ispin )
+          CALL iotk_scan_attr( attr, "nspin",        nspin )
+          CALL iotk_scan_attr( attr, "igwx",         igwx_ )
+          CALL iotk_scan_attr( attr, "scale_factor", scalef )
           !
       END IF
       !
