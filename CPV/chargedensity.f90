@@ -129,7 +129,7 @@
 ! ... declare modules
 
     USE fft_base,        ONLY: dfftp, dffts
-    USE mp_global,       ONLY: mpime, intra_image_comm
+    USE mp_global,       ONLY: intra_image_comm
     USE mp,              ONLY: mp_sum
     USE turbo,           ONLY: tturbo, nturbo, turbo_states, allocate_turbo
     USE cell_module,     ONLY: boxdimensions

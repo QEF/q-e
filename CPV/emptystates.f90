@@ -79,8 +79,8 @@
 ! ...   This subroutine reads empty states from unit emptyunit
 
         USE wave_types, ONLY: wave_descriptor
-        USE mp_global, ONLY: mpime, nproc, intra_image_comm, root
-        USE io_global, ONLY: stdout
+        USE mp_global, ONLY: me_image, nproc_image, intra_image_comm
+        USE io_global, ONLY: stdout, ionode, ionode_id
         USE mp, ONLY: mp_bcast
         USE mp_wave, ONLY: splitwf
         USE io_files, ONLY: scradir
@@ -119,7 +119,7 @@
           fileempty = TRIM( empty_file )
         END IF
 
-        IF ( mpime == 0 ) THEN
+        IF ( ionode ) THEN
 
           INQUIRE( FILE = TRIM(fileempty), EXIST = EXST )
 
@@ -138,20 +138,20 @@
  10     FORMAT('*** EMPTY STATES : wavefunctions dimensions changed  ', &
           /,'*** NGW = ', I8, ' NE1 = ', I4, ' NE2 = ', I4, ' NK = ', I4, ' NSPIN = ', I2)
 
-        CALL mp_bcast(exst, 0, intra_image_comm)
-        CALL mp_bcast(ne_rd, 0, intra_image_comm)
-        CALL mp_bcast(ngw_rd, 0, intra_image_comm)
+        CALL mp_bcast(exst, ionode_id, intra_image_comm)
+        CALL mp_bcast(ne_rd, ionode_id, intra_image_comm)
+        CALL mp_bcast(ngw_rd, ionode_id, intra_image_comm)
 
         IF (exst) THEN
 
           DO ispin = 1, nspin
             DO ik = 1, nk
               DO i = 1, ne_rd(ispin)
-                IF (mpime == 0) THEN
+                IF ( ionode ) THEN
                   READ(emptyunit) ( ctmp(ig), ig = 1, MIN( SIZE(ctmp), ngw_rd ) )
                 END IF
                 IF( i <= ne(ispin) ) THEN
-                  CALL splitwf(c_emp(:,i,ik,ispin), ctmp, wempt%ngwl, ig_l2g, mpime, nproc, root)
+                  CALL splitwf(c_emp(:,i,ik,ispin), ctmp, wempt%ngwl, ig_l2g, me_image, nproc_image, ionode_id)
                 END IF
               END DO
             END DO
@@ -159,7 +159,7 @@
 
         END IF
 
-        IF (mpime == 0 .AND. EXST ) THEN
+        IF ( ionode .AND. EXST ) THEN
           CLOSE(emptyunit)
         END IF
 
@@ -178,9 +178,10 @@
 ! ...   This subroutine writes empty states to unit emptyunit
 
         USE wave_types, ONLY: wave_descriptor
-        USE mp_global, ONLY: mpime, nproc, intra_image_comm, root
+        USE mp_global, ONLY: me_image, nproc_image, intra_image_comm
         USE mp_wave, ONLY: mergewf
         USE io_files, ONLY: scradir
+        USE io_global, ONLY: ionode, ionode_id
         USE reciprocal_vectors, ONLY: ig_l2g
 
         COMPLEX(DP), INTENT(IN) :: c_emp(:,:,:,:)
@@ -211,7 +212,7 @@
           fileempty = TRIM( empty_file )
         END IF
 
-        IF( mpime == 0 ) THEN
+        IF( ionode ) THEN
           OPEN(UNIT=emptyunit, FILE=TRIM(fileempty), status='unknown', FORM='UNFORMATTED')
           WRITE (emptyunit)  ngwm_g, ne(1), ne(2), nk, nspin
         END IF
@@ -220,15 +221,15 @@
           DO ik = 1, nk
             DO i = 1, ne(ispin)
               ctmp = 0.0d0
-              CALL MERGEWF( c_emp(:,i,ik,ispin), ctmp(:), ngw, ig_l2g, mpime, nproc, root)
-              IF( mpime == 0 ) THEN
+              CALL MERGEWF( c_emp(:,i,ik,ispin), ctmp(:), ngw, ig_l2g, me_image, nproc_image, ionode_id)
+              IF( ionode ) THEN
                 WRITE (emptyunit) ( ctmp(ig), ig=1, ngwm_g )
               END IF
             END DO
           END DO
         END DO
 
-        IF( mpime == 0 ) THEN
+        IF( ionode ) THEN
           CLOSE (emptyunit)
         END IF
 
@@ -250,7 +251,7 @@
 
       USE wave_types, ONLY: wave_descriptor
       USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: nproc, mpime, intra_image_comm
+      USE mp_global, ONLY: nproc_image, intra_image_comm
 
       REAL(DP) SQRT, DNRM2
       
@@ -362,7 +363,7 @@
       SUBROUTINE sodomizza(c_occ, wfill, ampre, c_emp, wempt)
         USE wave_types, ONLY: wave_descriptor
         USE reciprocal_vectors, ONLY: ig_l2g
-        USE mp_global, ONLY: mpime, nproc, root
+        USE mp_global, ONLY: nproc_image
         USE mp_wave, ONLY: splitwf
         USE control_flags, ONLY: force_pairing, gamma_only
         USE reciprocal_space_mesh, ONLY: gkmask_l
@@ -433,7 +434,7 @@
       USE orthogonalize, ONLY: ortho
       USE nl, ONLY: nlsm1_s
       USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: mpime, nproc
+      USE mp_global, ONLY: nproc_image
       USE check_stop, ONLY: check_stop_now
       USE atoms_type_module, ONLY: atoms_type
       USE io_global, ONLY: ionode

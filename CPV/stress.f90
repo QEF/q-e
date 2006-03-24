@@ -67,7 +67,7 @@
       USE cell_module,          ONLY: boxdimensions
       USE energies,             ONLY: dft_energy_type
       USE ions_base,            ONLY: nsp
-      USE mp_global,            ONLY: mpime, intra_image_comm
+      USE mp_global,            ONLY: intra_image_comm
       USE mp,                   ONLY: mp_sum
       USE wave_types,           ONLY: wave_descriptor
       USE pseudo_projector,     ONLY: projector
@@ -243,7 +243,7 @@
       USE pseudopotential, ONLY: nlin_stress, nlin, nspnl, nsanl
       USE ions_base, ONLY: nsp, na
       USE spherical_harmonics, ONLY: set_dmqm, set_fmrm, set_pmtm
-      USE mp_global, ONLY: mpime, intra_image_comm
+      USE mp_global, ONLY: intra_image_comm, root_image, me_image
       USE io_global, ONLY: stdout
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
@@ -274,7 +274,7 @@
       REAL(DP)  DDOT
 
 ! ... declare other variables
-      INTEGER :: is, l, ll, me, al, be, s, k
+      INTEGER :: is, l, ll, al, be, s, k
       INTEGER :: ir, kk, m, mm, isa, ig, iy, iv, iyy, ih, ihh
       INTEGER :: ia, in, i, iss, nx, ispin, ngw, j, inl
       INTEGER :: iss_wfc, ispin_wfc, mi(16), igh(0:3)
@@ -306,7 +306,6 @@
 !  end of declarations
 !  ----------------------------------------------
 
-      me = mpime + 1
 
       IF( new_stress ) then
 
@@ -501,7 +500,7 @@
                 DO ia = 1, na(is)
                   isa = iss + ia - 1
                   temp2 = 0.d0
-                  IF( me == 1 ) THEN
+                  IF( me_image == root_image ) THEN
                     DO ihh = igh(l), igh(l) + 2*l
                       temp2 = temp2 + facty( ihh ) * fnlb( isa, ihh, in, ispin )
                     END DO
@@ -701,7 +700,7 @@
 
       use ions_base,          only: nsp, rcmax
       USE cell_module,        only: boxdimensions
-      use mp_global,          ONLY: mpime
+      use mp_global,          ONLY: me_image, root_image
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2
       USE reciprocal_vectors, ONLY: gstart, g
@@ -758,7 +757,7 @@
         DEHC   = DEHC + CFACT * GAgx_L(:,IG)
       END DO
 
-      if (mpime.EQ.0) then
+      if ( me_image == root_image ) then
         deht = 2.0_DP * omega * REAL(dehc) - ehr * dalbe
       else
         deht = 2.0_DP * omega * REAL(dehc)

@@ -22,7 +22,6 @@ invmat_complex.o \
 latgen.o \
 linpack.o \
 matches.o \
-ngnr_set.o \
 recips.o \
 scnds.o \
 simpsn.o \

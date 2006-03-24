@@ -342,7 +342,7 @@
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
       USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: nproc, mpime, intra_image_comm
+      USE mp_global, ONLY: intra_image_comm
       USE atoms_type_module, ONLY: atoms_type
       USE uspp_param, only: nh, lmaxkb
       USE uspp, only: nhtol, nhtolm, indv
@@ -417,13 +417,6 @@
           l   = ll - 1
           igh = ih
           gxtmp(1:ngw) = csign(l) * wnl(1:ngw, iv, is) * gwork(1:ngw, iy )
-          !DO ig = 1, ngw, 10
-          !  write(101+mpime,*) l,ig,beta(ig,ih,is)/(ftmp * wnl( ig, iv, is) * gwork( ig, iy )), &
-          !                     beta(ig,ih,is), (ftmp * wnl( ig, iv, is) * gwork( ig, iy ))
-          !  write(201+mpime,*) iv, ig, wnl( ig, iv, is)
-          !  write(301+mpime,*) iy, ig, g2(ig), gx(1,ig), gx(2,ig), gx(3,ig), gwork( ig, iy )
-          !END DO
-          ! WRITE(6,* ) 'debug is, igh, ll, iy, iv = ', is, igh, ll, iy, iv  ! debug
           IF( cdesc%gamma .AND. cdesc%gzero ) gxtmp(1) = gxtmp(1) * 0.5d0
           DO ia = 1, atoms%na(is)
             auxc(1:ngw,ia) = gxtmp(1:ngw) * eigr(1:ngw,iss+ia-1)

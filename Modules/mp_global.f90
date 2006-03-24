@@ -65,6 +65,7 @@ MODULE mp_global
        group            = group_i
        nproc            = nproc_i
        nproc_pool       = nproc_i
+       nproc_image      = nproc_i
        my_pool_id       = 0
        my_image_id      = 0
        me_pool          = mpime

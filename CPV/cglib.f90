@@ -411,7 +411,7 @@ subroutine pc2(a,beca,b,becb)
         call dgetri(nhsavb,c_matrix,nhsavb,ipiv,work,lwork,info)
         if(info .ne. 0) write(stdout,*) 'set_k_minus1 Problem with dgetri :', info
       endif
-      call mp_bcast(c_matrix, ionode_id)
+      call mp_bcast( c_matrix, ionode_id, intra_image_comm )
 
 
       CALL DGEMM('N','N',nhsavb,nhsavb,nhsavb,-1.0d0,c_matrix,nhsavb,q_matrix,nhsavb,0.0d0,m_minus1,nhsavb)

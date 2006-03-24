@@ -73,7 +73,7 @@ CONTAINS
    ! ... declare modules
 
       USE kinds
-      USE mp_global, ONLY: mpime, nproc, intra_image_comm
+      USE mp_global, ONLY: me_image, nproc_image, intra_image_comm
       USE mp, ONLY: mp_sum
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
@@ -176,12 +176,12 @@ CONTAINS
 
 
 ! ... distribute lambda's rows across processors with a blocking factor
-! ... of 1, ( row 1 to PE 1, row 2 to PE 2, .. row NPROC+1 to PE 1 and
+! ... of 1, ( row 1 to PE 1, row 2 to PE 2, .. row nproc_image+1 to PE 1 and
 ! ... so on).
 
 ! ... compute local number of rows
-      nrl = cdesc%nbl( 1 ) / nproc
-      IF( mpime < MOD( cdesc%nbl( 1 ), nproc) ) THEN
+      nrl = cdesc%nbl( 1 ) / nproc_image
+      IF( me_image < MOD( cdesc%nbl( 1 ), nproc_image) ) THEN
         nrl = nrl + 1
       END IF
 
@@ -291,7 +291,7 @@ CONTAINS
 
         edft%etot = 0.d0
         DO ib=1,nrl
-           edft%etot = edft%etot + lambda(ib,(ib-1)*nproc+mpime+1)
+           edft%etot = edft%etot + lambda(ib,(ib-1)*nproc_image+me_image+1)
         END DO
         CALL mp_sum(edft%etot, intra_image_comm)
 
@@ -389,7 +389,7 @@ CONTAINS
 
 ! ... declare modules
       USE kinds
-      USE mp_global, ONLY: mpime, nproc
+      USE mp_global, ONLY: me_image, nproc_image
       USE runcp_module, ONLY: runcp
       USE energies, ONLY: dft_energy_type
       USE electrons_module, ONLY: ei, pmss
@@ -515,8 +515,8 @@ CONTAINS
 
 ! ...       compute local number of rows
             nx  = cdesc%nbt( ispin )
-            nrl = nx / nproc
-            IF( mpime .LT. MOD(nx, nproc) ) THEN
+            nrl = nx / nproc_image
+            IF( me_image .LT. MOD(nx, nproc_image) ) THEN
               nrl = nrl + 1
             END IF
 
@@ -525,7 +525,7 @@ CONTAINS
             CALL set_lambda(lambda)
 
 ! ...       distribute lambda's rows across processors with a blocking factor
-! ...       of 1, ( row 1 to PE 1, row 2 to PE 2, .. row NPROC+1 to PE 1 and
+! ...       of 1, ( row 1 to PE 1, row 2 to PE 2, .. row nproc_image+1 to PE 1 and
 ! ...       so on).
 
             CALL dforce_all( ispin, c0(:,:,1,ispin), cdesc, fi(:,1,ispin), cgrad(:,:,1,ispin), &
@@ -579,15 +579,15 @@ CONTAINS
       SUBROUTINE set_lambda_r( lambda )
 ! ...   initialize lambda to the identity matrix
         USE kinds
-        USE mp_global, ONLY: mpime, nproc
+        USE mp_global, ONLY: me_image, nproc_image
         REAL(DP) :: lambda(:,:)
         INTEGER ib, ibl, nrl
           nrl = SIZE(lambda, 1)
           lambda = 0.d0
-          ib = mpime + 1
+          ib = me_image + 1
           DO ibl = 1, nrl
             lambda(ibl,ib) = 1.d0  ! diagonal elements
-            ib = ib + nproc
+            ib = ib + nproc_image
           END DO
         RETURN
       END SUBROUTINE set_lambda_r
@@ -609,7 +609,7 @@ CONTAINS
         USE pseudopotential,       ONLY: nspnl
         USE nl,                    ONLY: nlsm1_s
         USE mp,                    ONLY: mp_sum
-        USE mp_global,             ONLY: mpime, nproc, intra_image_comm
+        USE mp_global,             ONLY: me_image, nproc_image, intra_image_comm
         USE atoms_type_module,     ONLY: atoms_type
         USE reciprocal_space_mesh, ONLY: gkx_l, gk_l
         USE reciprocal_vectors,    ONLY: g, gx

@@ -22,7 +22,8 @@ SUBROUTINE init_run()
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, pmass, &
                                        cdmi, ityp, taui, cdms
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
-                                       vels, velsm, velsp
+                                       vels, velsm, velsp, fion, fionm,      &
+                                       atoms0, atomsm, atomsp
   USE gvecw,                    ONLY : ngw, ecutw, ngwt, ggp
   USE gvecb,                    ONLY : ngb
   USE gvecs,                    ONLY : ngs
@@ -51,8 +52,7 @@ SUBROUTINE init_run()
                                        becdr, sfac, eigr, ei1, ei2, ei3, taub, &
                                        irb, eigrb, rhog, rhos, rhor, bephi,    &
                                        becp, acc, acc_this_run, wfill, wempt,  &
-                                       edft, nfi, atoms0, vpot, occn, atomsp,  &
-                                       atomsm, ht0, htm, fion, fionm
+                                       edft, nfi, vpot, occn, ht0, htm
   USE cp_main_variables,        ONLY : allocate_mainvar
   USE energies,                 ONLY : eself, enl, ekin, etot, enthal, ekincm
   USE stre,                     ONLY : stress

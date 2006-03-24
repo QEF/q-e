@@ -111,7 +111,7 @@
       !
       USE kinds,      ONLY : DP
       USE mp,         ONLY : mp_sum
-      USE mp_global,  ONLY : nproc, intra_image_comm
+      USE mp_global,  ONLY : nproc_image, intra_image_comm
       USE ions_base,  only : na, nax, nat
       USE gvecw,      only : ngw
       USE uspp,       only : nkb, nhtol, beta
@@ -195,7 +195,7 @@
          end do
 
 
-         IF( nproc > 1 ) THEN
+         IF( nproc_image > 1 ) THEN
             inl=ish(is)+1
             do i=1,n
                CALL mp_sum( becp( inl : (inl + na(is)*nh(is) - 1), i ), intra_image_comm )
@@ -234,7 +234,7 @@
       use uspp_param, only : nh
       use cell_base,  only : tpiba
       use mp,         only : mp_sum
-      use mp_global,  only : nproc, intra_image_comm
+      use mp_global,  only : nproc_image, intra_image_comm
 
       use reciprocal_vectors, only: gx, gstart
 !
@@ -315,7 +315,7 @@
          end do
       end do
 
-      if( tred .AND. ( nproc > 1 ) ) call mp_sum( becdr, intra_image_comm )
+      if( tred .AND. ( nproc_image > 1 ) ) call mp_sum( becdr, intra_image_comm )
 
       deallocate( gk )
       deallocate( wrk2 )
@@ -534,7 +534,7 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
   !
   USE kinds,      ONLY : DP
   use mp,         only : mp_sum
-  use mp_global,  only : nproc, intra_image_comm
+  use mp_global,  only : nproc_image, intra_image_comm
   use ions_base,  only : na, nax, nat
   use cvan,       only : ish
   use cdvan,      only : dbeta
@@ -609,7 +609,7 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
               call MXMA(wrk2,2*ngw,1,c,1,2*ngw,dbec(inl,1,i,j),1,  &
  &                      nkb,na(is),2*ngw,n)
            end do
-           if( ( nproc > 1 ) .AND. tred ) then
+           if( ( nproc_image > 1 ) .AND. tred ) then
               inl=ish(is)+1
               do ii=1,n
                  call mp_sum( dbec( inl : (inl + na(is)*nh(is) - 1), ii,i,j), intra_image_comm )

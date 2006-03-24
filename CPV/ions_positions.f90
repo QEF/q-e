@@ -9,19 +9,137 @@
 MODULE ions_positions
 !------------------------------------------------------------------------------!
   !
-  USE kinds,      ONLY : DP
-  USE parameters, ONLY : natx
+  USE kinds,             ONLY : DP
+  USE atoms_type_module, ONLY : atoms_type
   !
   IMPLICIT NONE
   !
   ! ... Atomic positions arrays used in the cp codes during the dynamic
   !
-  REAL(DP) :: tau0(3,natx), taum(3,natx),  taup(3,natx)
-  REAL(DP) :: taus(3,natx), tausm(3,natx), tausp(3,natx)
-  REAL(DP) :: vels(3,natx), velsm(3,natx), velsp(3,natx)
+  REAL(DP), TARGET, ALLOCATABLE :: tau0(:,:), taum(:,:),  taup(:,:)
+  REAL(DP), TARGET, ALLOCATABLE :: taus(:,:), tausm(:,:), tausp(:,:)
+  REAL(DP), TARGET, ALLOCATABLE :: vels(:,:), velsm(:,:), velsp(:,:)
+  REAL(DP), TARGET, ALLOCATABLE :: fion(:,:), fionm(:,:), fionp(:,:)
+  INTEGER,  TARGET, ALLOCATABLE :: ityp(:), mobil(:,:)
+  !
+  TYPE (atoms_type) :: atoms0, atomsp, atomsm
   !
   CONTAINS 
   !
+  SUBROUTINE allocate_ions_positions( nsp, nat )
+     INTEGER, INTENT(IN) :: nsp, nat
+     !
+     IF( ALLOCATED( tau0  ) ) DEALLOCATE( tau0  )
+     IF( ALLOCATED( taum  ) ) DEALLOCATE( taum  ) 
+     IF( ALLOCATED( taup  ) ) DEALLOCATE( taup  )
+     IF( ALLOCATED( taus  ) ) DEALLOCATE( taus  )
+     IF( ALLOCATED( tausm ) ) DEALLOCATE( tausm )
+     IF( ALLOCATED( tausp ) ) DEALLOCATE( tausp )
+     IF( ALLOCATED( vels  ) ) DEALLOCATE( vels  )
+     IF( ALLOCATED( velsm ) ) DEALLOCATE( velsm )
+     IF( ALLOCATED( velsp ) ) DEALLOCATE( velsp )
+     IF( ALLOCATED( fion  ) ) DEALLOCATE( fion  )
+     IF( ALLOCATED( fionm ) ) DEALLOCATE( fionm )
+     IF( ALLOCATED( fionp ) ) DEALLOCATE( fionp )
+     IF( ALLOCATED( ityp  ) ) DEALLOCATE( ityp  )
+     IF( ALLOCATED( mobil ) ) DEALLOCATE( mobil )
+     !
+     ALLOCATE( tau0( 3, nat ) )
+     ALLOCATE( taum( 3, nat ) )
+     ALLOCATE( taup( 3, nat ) )
+     ALLOCATE( taus( 3, nat ) )
+     ALLOCATE( tausm( 3, nat ) )
+     ALLOCATE( tausp( 3, nat ) )
+     ALLOCATE( vels( 3, nat )  )
+     ALLOCATE( velsm( 3, nat ) )
+     ALLOCATE( velsp( 3, nat ) )
+     ALLOCATE( fion( 3, nat )  )
+     ALLOCATE( fionm( 3, nat ) )
+     ALLOCATE( fionp( 3, nat ) )
+     ALLOCATE( ityp( nat ) )
+     ALLOCATE( mobil( 3, nat ) )
+     !
+     NULLIFY( atoms0 % taur   )
+     NULLIFY( atoms0 % taus   )
+     NULLIFY( atoms0 % vels   )
+     NULLIFY( atoms0 % for    )
+     NULLIFY( atoms0 % mobile )
+     NULLIFY( atoms0 % ityp   )
+     NULLIFY( atomsm % taur   )
+     NULLIFY( atomsm % taus   )
+     NULLIFY( atomsm % vels   )
+     NULLIFY( atomsm % for    )
+     NULLIFY( atomsm % mobile )
+     NULLIFY( atomsm % ityp   )
+     NULLIFY( atomsp % taur   )
+     NULLIFY( atomsp % taus   )
+     NULLIFY( atomsp % vels   )
+     NULLIFY( atomsp % for    )
+     NULLIFY( atomsp % mobile )
+     NULLIFY( atomsp % ityp   )
+     !
+     atoms0 % taur   => tau0
+     atoms0 % taus   => taus
+     atoms0 % vels   => vels
+     atoms0 % for    => fion
+     atoms0 % mobile => mobil
+     atoms0 % ityp   => ityp
+     atomsm % taur   => taum
+     atomsm % taus   => tausm
+     atomsm % vels   => velsm
+     atomsm % for    => fionm
+     atomsm % mobile => mobil
+     atomsm % ityp   => ityp
+     atomsp % taur   => taup
+     atomsp % taus   => tausp
+     atomsp % vels   => velsp
+     atomsp % for    => fionp
+     atomsp % mobile => mobil
+     atomsp % ityp   => ityp
+     !
+     RETURN
+  END SUBROUTINE allocate_ions_positions
+
+  !--------------------------------------------------------------------------
+
+  SUBROUTINE deallocate_ions_positions( )
+     IF( ALLOCATED( tau0  ) ) DEALLOCATE( tau0  )
+     IF( ALLOCATED( taum  ) ) DEALLOCATE( taum  )
+     IF( ALLOCATED( taup  ) ) DEALLOCATE( taup  )
+     IF( ALLOCATED( taus  ) ) DEALLOCATE( taus  )
+     IF( ALLOCATED( tausm ) ) DEALLOCATE( tausm )
+     IF( ALLOCATED( tausp ) ) DEALLOCATE( tausp )
+     IF( ALLOCATED( vels  ) ) DEALLOCATE( vels  )
+     IF( ALLOCATED( velsm ) ) DEALLOCATE( velsm )
+     IF( ALLOCATED( velsp ) ) DEALLOCATE( velsp )
+     IF( ALLOCATED( fion  ) ) DEALLOCATE( fion  )
+     IF( ALLOCATED( fionm ) ) DEALLOCATE( fionm )
+     IF( ALLOCATED( fionp ) ) DEALLOCATE( fionp )
+     IF( ALLOCATED( ityp  ) ) DEALLOCATE( ityp  )
+     IF( ALLOCATED( mobil ) ) DEALLOCATE( mobil )
+     NULLIFY( atoms0 % taur   )
+     NULLIFY( atoms0 % taus   )
+     NULLIFY( atoms0 % vels   )
+     NULLIFY( atoms0 % for    )
+     NULLIFY( atoms0 % mobile )
+     NULLIFY( atoms0 % ityp   )
+     NULLIFY( atomsm % taur   )
+     NULLIFY( atomsm % taus   )
+     NULLIFY( atomsm % vels   )
+     NULLIFY( atomsm % for    )
+     NULLIFY( atomsm % mobile )
+     NULLIFY( atomsm % ityp   )
+     NULLIFY( atomsp % taur   )
+     NULLIFY( atomsp % taus   )
+     NULLIFY( atomsp % vels   )
+     NULLIFY( atomsp % for    )
+     NULLIFY( atomsp % mobile )
+     NULLIFY( atomsp % ityp   )
+     RETURN
+  END SUBROUTINE deallocate_ions_positions
+
+
+
   !--------------------------------------------------------------------------
   SUBROUTINE ions_hmove( taus, tausm, iforce, pmass, fion, ainv, delt, na, nsp )
     !--------------------------------------------------------------------------

@@ -15,7 +15,6 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
    use gvecb, only: ngb, ngbt, ngbl, ngbx, gb, gxb, glb, npb, nmb
    use gvecb, only: iglb, mill_b
    use io_global, only: stdout, ionode
-   use mp_global, only: nproc
    use control_flags, only: iprsta
 !
    implicit none
@@ -1574,7 +1573,7 @@ SUBROUTINE gmeshinfo( )
    !
    !   Print out the number of g vectors for the different mesh
    !
-   USE mp_global, ONLY: nproc, mpime, intra_image_comm
+   USE mp_global, ONLY: nproc_image, intra_image_comm
    USE io_global, ONLY: ionode, ionode_id, stdout
    USE mp,        ONLY: mp_max, mp_gather
    use gvecb,     only: ngb
@@ -1588,7 +1587,7 @@ SUBROUTINE gmeshinfo( )
 
    IMPLICIT NONE
 
-   INTEGER :: ip, ng_snd(3), ng_rcv(3,nproc)
+   INTEGER :: ip, ng_snd(3), ng_rcv( 3, nproc_image )
 
    IF(ionode) THEN
       WRITE( stdout,*)
@@ -1603,7 +1602,7 @@ SUBROUTINE gmeshinfo( )
    !
    IF(ionode) THEN
       WRITE( stdout,1000)
-      DO ip = 1, nproc
+      DO ip = 1, nproc_image
          WRITE( stdout,1010) ip, ng_rcv(1,ip), ng_rcv(2,ip), ng_rcv(3,ip)
       END DO
    END IF
@@ -1615,7 +1614,7 @@ SUBROUTINE gmeshinfo( )
    !
    IF(ionode) THEN
       WRITE( stdout,1001)
-      DO ip = 1, nproc
+      DO ip = 1, nproc_image
          WRITE( stdout,1010) ip, ng_rcv(1,ip), ng_rcv(2,ip), ng_rcv(3,ip)
       END DO
    END IF
@@ -1627,7 +1626,7 @@ SUBROUTINE gmeshinfo( )
    !
    IF(ionode) THEN
       WRITE( stdout,1002)
-      DO ip = 1, nproc
+      DO ip = 1, nproc_image
          WRITE( stdout,1010) ip, ng_rcv(1,ip), ng_rcv(2,ip), ng_rcv(3,ip)
       END DO
    END IF

@@ -42,7 +42,7 @@
       USE berry_phase,      ONLY: berry_setup
       USE electrons_module, ONLY: bmeshset
       USE problem_size,     ONLY: cpsizes
-      USE mp_global,        ONLY: nproc
+      USE mp_global,        ONLY: nproc_image
 
       implicit none
 ! 
@@ -178,7 +178,7 @@
       !
       IF( program_name == 'FPMD' ) THEN
         !
-        CALL cpsizes( nproc )
+        CALL cpsizes( nproc_image )
         !
       END IF
       !
@@ -199,20 +199,21 @@
       USE kinds,            ONLY: DP
       use control_flags,    only: iprint, thdyn, ndr, nbeg, program_name, tbeg
       use io_global,        only: stdout, ionode
-      use mp_global,        only: nproc
+      use mp_global,        only: nproc_image
       USE io_files,         ONLY: scradir     
       use ions_base,        only: na, nsp, nat, tau_srt, ind_srt, if_pos, atm
       use cell_base,        only: a1, a2, a3, r_to_s, cell_init
 
       use cell_base,        only: ibrav, ainv, h, hold, tcell_base_init
-      USE ions_positions,   ONLY: tau0, taus
+      USE ions_positions,   ONLY: allocate_ions_positions, &
+                                  atoms0, atomsm, atomsp
       use cp_restart,       only: cp_read_cell
       USE fft_base,         ONLY: dfftb, fft_dlay_descriptor
       USE fft_types,        ONLY: fft_box_allocate
-      USE cp_main_variables,     ONLY: ht0, htm, atomsm, atoms0, atomsp, taub
+      USE cp_main_variables,     ONLY: ht0, htm, taub
       USE brillouin,             ONLY: kp
       USE ions_module,           ONLY: atoms_init
-      USE atoms_type_module,     ONLY: atoms_type, allocate_atoms_type
+      USE atoms_type_module,     ONLY: atoms_type
 
       implicit none
       !
@@ -221,6 +222,7 @@
       integer :: i, j
       real(DP) :: gvel(3,3), ht(3,3)
       real(DP) :: xnhh0(3,3), xnhhm(3,3), vnhh(3,3), velh(3,3)
+      REAL(DP), ALLOCATABLE :: taus_srt( :, : )
 
       IF( .NOT. tcell_base_init ) &
          CALL errore( ' init_geometry ', ' cell_base_init has not been call yet! ', 1 )
@@ -235,28 +237,25 @@
       CALL cell_init( ht0, a1, a2, a3 )
       CALL cell_init( htm, a1, a2, a3 )
 
+      CALL allocate_ions_positions( nsp, nat )
       ! 
       ! Scale positions that have been read from standard input 
       ! according to the cell given in the standard input too
-      ! taus = scaled, tau0 = atomic units
+      ! taus_srt = scaled, tau_srt = atomic units
       !
-      tau0 = 0.0d0
-      taus = 0.0d0
-      tau0 ( 1:3 , 1:nat ) = tau_srt ( 1:3 , 1:nat )
+      ALLOCATE( taus_srt( 3, nat ) )
       
-      CALL r_to_s( tau0, taus, na, nsp, ainv )
+      CALL r_to_s( tau_srt, taus_srt, na, nsp, ainv )
 
-      CALL allocate_atoms_type( atomsm, nsp, nat )
-      CALL allocate_atoms_type( atoms0, nsp, nat )
-      CALL allocate_atoms_type( atomsp, nsp, nat )
-
-      CALL atoms_init( atomsm, atoms0, atomsp, taus, ind_srt, if_pos, atm, ht0%hmat )
+      CALL atoms_init( atomsm, atoms0, atomsp, taus_srt, ind_srt, if_pos, atm, ht0%hmat )
+      !
+      DEALLOCATE( taus_srt )
       !
       !  Allocate box descriptor
       !
       ALLOCATE( taub( 3, nat ) )
       !
-      CALL fft_box_allocate( dfftb, nproc, nat )
+      CALL fft_box_allocate( dfftb, nproc_image, nat )
       !
       !  if tbeg = .true.  the geometry is given in the standard input even if
       !  we are restarting a previous run

@@ -474,7 +474,7 @@ END MODULE fft_module
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nnrb => nnrbx
       USE fft_base, ONLY: dfftp
-      USE mp_global, ONLY: mpime
+      USE mp_global, ONLY: me_image
 
       IMPLICIT NONE
       INTEGER, INTENT(in):: nfft, irb(3)
@@ -486,7 +486,7 @@ END MODULE fft_module
 
       IF(nfft.LE.0.OR.nfft.GT.2) CALL errore('box2grid','wrong data',nfft)
 
-      me = mpime + 1
+      me = me_image + 1
 
       DO ir3=1,nr3b
          ibig3=irb(3)+ir3-1
@@ -529,7 +529,7 @@ END MODULE fft_module
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nnrb => nnrbx
       USE fft_base, ONLY: dfftp
-      USE mp_global, ONLY: mpime
+      USE mp_global, ONLY: me_image
       !
       IMPLICIT NONE
       !
@@ -540,7 +540,7 @@ END MODULE fft_module
       INTEGER ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig
       INTEGER me
 
-      me = mpime + 1
+      me = me_image + 1
 
       DO ir3=1,nr3b
          ibig3=irb(3)+ir3-1
@@ -586,7 +586,7 @@ END MODULE fft_module
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nnrb => nnrbx
       USE fft_base, ONLY: dfftp
-      USE mp_global, ONLY: mpime
+      USE mp_global, ONLY: me_image
       IMPLICIT NONE
       INTEGER, INTENT(in):: nfft, irb(3)
       REAL(8), INTENT(in):: qv(2,nnrb), vr(nnr)
@@ -597,7 +597,7 @@ END MODULE fft_module
 !
       IF(nfft.LE.0.OR.nfft.GT.2) CALL errore('boxdotgrid','wrong data',nfft)
 
-      me = mpime + 1
+      me = me_image + 1
 
       boxdotgrid=0.d0
 
@@ -632,7 +632,7 @@ END MODULE fft_module
 ! find if box grid planes in the z direction have component on the dense
 ! grid on this processor, and if, which range imin3-imax3
 !
-      use mp_global, only: mpime
+      use mp_global, only: me_image
       use fft_base, only: dfftp
 ! input
       integer nr3b,irb3,nr3
@@ -641,7 +641,7 @@ END MODULE fft_module
 ! local
       integer ir3, ibig3, me
 !
-      me = mpime + 1
+      me = me_image + 1
       imin3=nr3b
       imax3=1
       do ir3=1,nr3b

@@ -44,7 +44,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE uspp,                     ONLY : nkb
   USE io_global,                ONLY : ionode, stdout
   USE mp,                       ONLY : mp_barrier, mp_sum
-  USE mp_global,                ONLY : nproc, mpime
+  USE mp_global,                ONLY : nproc_image, me_image, root_image, intra_image_comm
   USE fft_module,               ONLY : invfft
   USE fft_base,                 ONLY : dfftp
   USE parallel_include
@@ -91,17 +91,16 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
 #if defined (__PARA)
   !
-  INTEGER :: proc, ntot, ncol, mc, ngpwpp(nproc)
+  INTEGER :: proc, ntot, ncol, mc, ngpwpp(nproc_image)
   INTEGER :: ncol1,nz1, nz_1 
   INTEGER :: nmin(3), nmax(3), n1,n2,nzx,nz,nz_
   INTEGER :: nmin1(3), nmax1(3)
-  INTEGER :: root
-  INTEGER :: rdispls(nproc),  recvcount(nproc)
-  INTEGER :: rdispls1(nproc), recvcount1(nproc)
-  INTEGER :: rdispls2(nproc), recvcount2(nproc)
-  INTEGER :: sendcount(nproc),  sdispls(nproc)
-  INTEGER :: sendcount1(nproc), sdispls1(nproc)
-  INTEGER :: sendcount2(nproc), sdispls2(nproc)
+  INTEGER :: rdispls(nproc_image),  recvcount(nproc_image)
+  INTEGER :: rdispls1(nproc_image), recvcount1(nproc_image)
+  INTEGER :: rdispls2(nproc_image), recvcount2(nproc_image)
+  INTEGER :: sendcount(nproc_image),  sdispls(nproc_image)
+  INTEGER :: sendcount1(nproc_image), sdispls1(nproc_image)
+  INTEGER :: sendcount2(nproc_image), sdispls2(nproc_image)
   !
   COMPLEX(DP), ALLOCATABLE :: psitot(:,:), psitot_pl(:,:)
   COMPLEX(DP), ALLOCATABLE :: psitot1(:), psitot_p(:)
@@ -113,7 +112,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   ! ... set up the weights and the G vectors for wannie-function calculation
   !
-  me = mpime + 1
+  me = me_image + 1
   !
   te = 0.D0
   !
@@ -590,17 +589,17 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
 #if defined (__PARA)
   !
-  ALLOCATE( ns( nproc ) )
+  ALLOCATE( ns( nproc_image ) )
   !
-  ns(1:nproc) = 0
+  ns(1:nproc_image) = 0
   !
-  IF ( nbsp == nproc ) THEN
+  IF ( nbsp == nproc_image ) THEN
      !
      ns(1:nbsp)=1
      !
   ELSE
      i=0
-1    DO j=1,nproc   
+1    DO j=1,nproc_image   
         ns(j)=ns(j)+1
         i=i+1
         IF(i.GE.nbsp) GO TO 2
@@ -608,13 +607,13 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      IF(i.LT.nbsp) GO TO 1 
   END IF
 2 IF(iprsta.GT.4) THEN
-     DO j=1,nproc
+     DO j=1,nproc_image
         WRITE( stdout, * ) ns(j)
      END DO
   END IF
 
   total = 0   
-  DO proc=1,nproc
+  DO proc=1,nproc_image
      ngpwpp(proc)=(dfftp%nwl(proc)+1)/2
      total=total+ngpwpp(proc)
      !           nstat=ns(proc)
@@ -638,14 +637,14 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   END IF
 
 
-  DO proc=1,nproc
+  DO proc=1,nproc_image
      sendcount(proc)=ngpwpp(me)*ns(proc)
      recvcount(proc)=ngpwpp(proc)*ns(me)
   END DO
   sdispls(1)=0
   rdispls(1)=0
 
-  DO proc=2,nproc
+  DO proc=2,nproc_image
      sdispls(proc)=sdispls(proc-1)+sendcount(proc-1)
      rdispls(proc)=rdispls(proc-1)+recvcount(proc-1)
   END DO
@@ -659,7 +658,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   CALL MPI_ALLTOALLV(c, sendcount, sdispls, MPI_DOUBLE_COMPLEX,             &
        &             psitot1, recvcount, rdispls, MPI_DOUBLE_COMPLEX,       &
-       &            MPI_COMM_WORLD,ierr)
+       &            intra_image_comm,ierr)
   IF (ierr.NE.0) CALL errore('WF','alltoallv 1',ierr)
   !
 #endif   
@@ -690,7 +689,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !   and nstat states instead of all nbsp states
   !
   ngpww=0
-  DO proc=1,nproc
+  DO proc=1,nproc_image
      DO i=1,ns(me)
         DO j=1,ngpwpp(proc)
            psitot(j+ngpww,i)=psitot1(rdispls(proc)+j+(i-1)*ngpwpp(proc))
@@ -757,7 +756,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      !   arrays
      !
      ngpww=0
-     DO proc=1,nproc
+     DO proc=1,nproc_image
         DO i=1,ns(me)
            DO j=1,ngpwpp(proc)
               psitot_p(rdispls(proc)+j+(i-1)*ngpwpp(proc))=psitot_pl(j+ngpww,i)
@@ -781,7 +780,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      !
      CALL MPI_alltoallv(psitot_p, recvcount, rdispls, MPI_DOUBLE_COMPLEX,          &
           &                       c_p, sendcount , sdispls, MPI_DOUBLE_COMPLEX,              &
-          &                       MPI_COMM_WORLD,ierr)
+          &                       intra_image_comm,ierr)
      IF (ierr.NE.0) CALL errore('WF','alltoallv 2',ierr)
 
      c_m = 0.D0
@@ -789,7 +788,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      !
      CALL MPI_alltoallv(psitot_m, recvcount, rdispls, MPI_DOUBLE_COMPLEX,          &
           &                       c_m, sendcount, sdispls, MPI_DOUBLE_COMPLEX,               &
-          &                       MPI_COMM_WORLD,ierr)
+          &                       intra_image_comm,ierr)
      IF (ierr.NE.0) CALL errore('WF','alltoallv 3',ierr)
      IF(iprsta.GT.4) THEN
         WRITE( stdout, * ) "Step 5. Redistribute among processors...Done, wf"
@@ -1269,7 +1268,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   USE constants,        ONLY : tpi
   USE electrons_base,   ONLY : nbsp
   USE control_flags,    ONLY : iprsta
-  USE mp_global,        ONLY : mpime
+  USE mp_global,        ONLY : me_image
   USE parallel_include
   !
   IMPLICIT NONE
@@ -1297,7 +1296,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   REAL(DP) :: wfc(3,nbsp), gr(nw,3)
   INTEGER  :: me
   !
-  me = mpime + 1
+  me = me_image + 1
   !
   ALLOCATE(mt(nw))
   ALLOCATE(X1(m,m))
@@ -1535,7 +1534,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
                                  indexplusz, indexminusz, tag, tagp
   USE cvan,               ONLY : nvb
   USE mp,                 ONLY : mp_barrier, mp_bcast
-  USE mp_global,          ONLY : nproc, mpime, intra_image_comm
+  USE mp_global,          ONLY : nproc_image, me_image, intra_image_comm, root_image
   USE fft_base,           ONLY : dfftp
   USE parallel_include     
   !
@@ -1543,8 +1542,8 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   !
   REAL(DP), INTENT(in) :: b1(3),b2(3),b3(3)
 #ifdef __PARA
-  INTEGER :: ntot, proc, ierr, root, i,j,inw,ngppp(nproc)
-  INTEGER :: ii,ig,recvcount(nproc), sendcount(nproc),displs(nproc)
+  INTEGER :: ntot, proc, ierr, i,j,inw,ngppp(nproc_image)
+  INTEGER :: ii,ig,recvcount(nproc_image), sendcount(nproc_image),displs(nproc_image)
 #else
   INTEGER :: ierr, i,j,inw, ntot
   INTEGER :: ii,ig
@@ -1558,17 +1557,14 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   INTEGER :: ti1,tj1,tk1, clwf
   INTEGER :: me
   !
-  me = mpime + 1
+  me = me_image + 1
   !
-  IF ( nbsp < nproc ) &
+  IF ( nbsp < nproc_image ) &
      CALL errore( 'cp-wf', &
                 & 'Number of Processors is greater than the number of states', 1 )
   !
   ALLOCATE(gnx(3,ngw))
   ALLOCATE(gnn(3,ngw))
-#ifdef __PARA
-  root=0
-#endif
   vt=1.0d-4
   j=0
   DO i=1,ngw
@@ -1581,11 +1577,11 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   END DO
 #ifdef __PARA
   ntot=0
-  DO i=1,nproc
+  DO i=1,nproc_image
      ngppp(i)=(dfftp%nwl(i)+1)/2
   END DO
 
-  DO proc=1,nproc
+  DO proc=1,nproc_image
      recvcount(proc)=ngppp(proc)*3
      IF(proc.EQ.1) THEN
         displs(proc)=0
@@ -2276,14 +2272,14 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   !
   CALL MPI_GATHERV(gnx, recvcount(me), MPI_REAL8,              &
        bigg, recvcount, displs, MPI_REAL8,         &
-       root, MPI_COMM_WORLD, ierr)
+       root_image, intra_image_comm, ierr)
   IF (ierr.NE.0) CALL errore('wfunc_init','MPI_GATHERV' , ierr)
   !
   CALL mp_barrier()
   !
   CALL MPI_GATHERV(gnn, recvcount(me), MPI_INTEGER,              &
        bign, recvcount, displs, MPI_INTEGER,         &
-       root, MPI_COMM_WORLD, ierr)
+       root_image, intra_image_comm, ierr)
   IF (ierr.NE.0) CALL errore('wfunc_init','MPI_GATHERV' , ierr)
 #endif
 #ifdef __PARA
@@ -2501,10 +2497,10 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
 
   CALL mp_barrier()
   !
-  CALL mp_bcast( indexplus,  root, intra_image_comm )
-  CALL mp_bcast( indexminus, root, intra_image_comm )
-  CALL mp_bcast( tag,        root, intra_image_comm )
-  CALL mp_bcast( tagp,       root, intra_image_comm )
+  CALL mp_bcast( indexplus,  root_image, intra_image_comm )
+  CALL mp_bcast( indexminus, root_image, intra_image_comm )
+  CALL mp_bcast( tag,        root_image, intra_image_comm )
+  CALL mp_bcast( tagp,       root_image, intra_image_comm )
 
   IF (me.EQ.1) THEN
 #endif
@@ -2527,14 +2523,14 @@ SUBROUTINE grid_map()
   USE smooth_grid_dimensions, ONLY : nnrsx, nr1s, nr2s, nr3s, &
                                      nr1sx, nr2sx, nr3sx
   USE fft_base,               ONLY : dffts
-  USE mp_global,              ONLY : mpime
+  USE mp_global,              ONLY : me_image
   USE parallel_include
   !
   IMPLICIT NONE
   !
   INTEGER :: ir1, ir2, ir3, ibig3, me
   !
-  me = mpime + 1
+  me = me_image + 1
   !
   ALLOCATE(xdist(nnrsx))
   ALLOCATE(ydist(nnrsx))
@@ -2664,7 +2660,7 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
   USE wannier_base,           ONLY : expo
   USE grid_dimensions,        ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nnrx
   USE fft_base,               ONLY : dfftp
-  USE mp_global,              ONLY : mpime
+  USE mp_global,              ONLY : me_image
   USE parallel_include
   !
   IMPLICIT NONE
@@ -2674,7 +2670,7 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
   INTEGER , INTENT(in) :: nw1, i_1(nw1), j_1(nw1), k_1(nw1)
   INTEGER :: me
 
-  me = mpime + 1
+  me = me_image + 1
 
   ALLOCATE(expo(nnrx,nw1))
 
@@ -2721,7 +2717,7 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   USE smallbox_grid_dimensions, ONLY : nnrbx, nr1b, nr2b, nr3b, &
                                        nr1bx, nr2bx, nr3bx
   USE fft_base,                 ONLY : dfftp
-  USE mp_global,                ONLY : mpime
+  USE mp_global,                ONLY : me_image
   !
   IMPLICIT NONE
   !
@@ -2731,7 +2727,7 @@ FUNCTION boxdotgridcplx(irb,qv,vr)
   !
   INTEGER :: ir1, ir2, ir3, ir, ibig1, ibig2, ibig3, ibig, me
   !
-  me = mpime + 1
+  me = me_image + 1
   !
   boxdotgridcplx = ZERO
 
@@ -2772,7 +2768,7 @@ SUBROUTINE write_rho_g( rhog )
   USE reciprocal_vectors, ONLY : gx, mill_l
   USE electrons_base,     ONLY : nspin
   USE fft_base,           ONLY : dfftp
-  USE mp_global,          ONLY : nproc, mpime
+  USE mp_global,          ONLY : nproc_image, me_image, root_image, intra_image_comm
   USE parallel_include
   !
   IMPLICIT NONE
@@ -2783,20 +2779,15 @@ SUBROUTINE write_rho_g( rhog )
   COMPLEX(DP) :: rhotmp_g(ngm)
   INTEGER           :: ntot, i, j, me
 #ifdef __PARA
-  INTEGER proc, ierr, root, ngdens(nproc),recvcount(nproc), displs(nproc)
-  INTEGER recvcount2(nproc), displs2(nproc)
+  INTEGER proc, ierr, ngdens(nproc_image),recvcount(nproc_image), displs(nproc_image)
+  INTEGER recvcount2(nproc_image), displs2(nproc_image)
 #endif
   CHARACTER (LEN=6)  :: name
   CHARACTER (LEN=15) :: name2
 
-  me = mpime + 1
+  me = me_image + 1
 
   ALLOCATE(gnx(3,ngm))
-
-
-#ifdef __PARA
-  root=0
-#endif
 
   DO i=1,ngm
      gnx(1,i)=gx(1,i)
@@ -2806,11 +2797,11 @@ SUBROUTINE write_rho_g( rhog )
 
 #ifdef __PARA
   ntot=0
-  DO i=1,nproc
+  DO i=1,nproc_image
      ngdens(i)=(dfftp%ngl(i)+1)/2
   END DO
 
-  DO proc=1,nproc
+  DO proc=1,nproc_image
      recvcount(proc)=ngdens(proc)*3
      recvcount2(proc)=ngdens(proc)
      IF(proc.EQ.1) THEN
@@ -2827,11 +2818,11 @@ SUBROUTINE write_rho_g( rhog )
      ALLOCATE(bigg(3,ntot))
   END IF
 
-  CALL mpi_barrier(MPI_COMM_WORLD,ierr)
+  CALL mpi_barrier(intra_image_comm,ierr)
   IF(ierr.NE.0) CALL errore('write_rho_g0','mpi_barrier', ierr)
   CALL MPI_GATHERV(gnx,recvcount(me),MPI_REAL8,                        &
        bigg,recvcount,displs,MPI_REAL8,                    &
-       root,MPI_COMM_WORLD, ierr)
+       root_image,intra_image_comm, ierr)
   IF(ierr.NE.0) CALL errore('write_rho_g0','MPI_GATHERV', ierr)
   DO i=1,nspin
 
@@ -2841,11 +2832,11 @@ SUBROUTINE write_rho_g( rhog )
         ALLOCATE (bigrho(ntot))
      END IF
 
-     CALL mpi_barrier(MPI_COMM_WORLD,ierr)
+     CALL mpi_barrier(intra_image_comm,ierr)
      IF(ierr.NE.0) CALL errore('write_rho_g1','mpi_barrier', ierr)
      CALL MPI_GATHERV(rhotmp_g,recvcount2(me),MPI_DOUBLE_COMPLEX,                &
           bigrho,recvcount2,displs2,MPI_DOUBLE_COMPLEX,              &
-          root,MPI_COMM_WORLD, ierr)
+          root_image,intra_image_comm, ierr)
      IF(ierr.NE.0) CALL errore('write_rho_g1','MPI_GATHERV', ierr)
 
 
@@ -2927,7 +2918,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   USE constants,          ONLY : pi, tpi
   USE mp,                 ONLY : mp_barrier, mp_bcast
   USE fft_base,           ONLY : dfftp
-  USE mp_global,          ONLY : nproc, mpime
+  USE mp_global,          ONLY : nproc_image, me_image, root_image, intra_image_comm
   USE parallel_include
   !
   IMPLICIT NONE
@@ -2939,8 +2930,8 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   INTEGER ntot, i, j, ngz, l, isa
   INTEGER ,ALLOCATABLE :: g_red(:,:)
 #ifdef __PARA
-  INTEGER proc, ierr, root, ngdens(nproc),recvcount(nproc), displs(nproc)
-  INTEGER recvcount2(nproc), displs2(nproc)
+  INTEGER proc, ierr, ngdens(nproc_image),recvcount(nproc_image), displs(nproc_image)
+  INTEGER recvcount2(nproc_image), displs2(nproc_image)
 #endif
   REAL(DP) zlen,vtot, pos(3,nax,nsp), a_direct(3,3),a_trans(3,3), e_slp, e_int
   REAL(DP), INTENT(out) :: e_tuned(3)
@@ -2950,14 +2941,9 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   COMPLEX(DP),ALLOCATABLE :: rho_ion(:),v_1(:),vmac(:),rho_tot(:),rhogz(:), bigrhog(:)
   INTEGER :: me
 
-  me = mpime + 1
+  me = me_image + 1
 
   ALLOCATE(gnx(3,ngm))
-
-
-#ifdef __PARA
-  root=0
-#endif
 
   DO i=1,ngm
      gnx(1,i)=gx(1,i)
@@ -2967,11 +2953,11 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
 
 #ifdef __PARA
   ntot=0
-  DO i=1,nproc
+  DO i=1,nproc_image
      ngdens(i)=(dfftp%ngl(i)+1)/2
   END DO
 
-  DO proc=1,nproc
+  DO proc=1,nproc_image
      recvcount(proc)=ngdens(proc)*3
      recvcount2(proc)=ngdens(proc)
      IF(proc.EQ.1) THEN
@@ -2992,7 +2978,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   !
   CALL MPI_GATHERV(gnx,recvcount(me),MPI_REAL8,                        &
        bigg,recvcount,displs,MPI_REAL8,                    &
-       root,MPI_COMM_WORLD, ierr)
+       root_image,intra_image_comm, ierr)
   IF(ierr.NE.0) CALL errore('macroscopic_avergae','MPI_GATHERV', ierr)
   !
   CALL mpi_bcast( bigg )
@@ -3006,10 +2992,10 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   !
   CALL MPI_GATHERV(rhotmp_g,recvcount2(me),MPI_DOUBLE_COMPLEX,       &
        bigrho,recvcount2,displs2,MPI_DOUBLE_COMPLEX,       &
-       root,MPI_COMM_WORLD, ierr)
+       root_image,intra_image_comm, ierr)
   IF(ierr.NE.0) CALL errore('macroscopic_avergae','MPI_GATHERV', ierr)
   !
-  CALL mp_bcast( bigrho, root )
+  CALL mp_bcast( bigrho, root_image, intra_image_comm )
   !
 #else
   ntot=ngm
@@ -3227,7 +3213,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   USE cell_base,              ONLY : alat
   USE constants,              ONLY : tpi
   USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
-  USE mp_global,              ONLY : mpime
+  USE mp_global,              ONLY : me_image
   USE parallel_include
   !
   IMPLICIT NONE
@@ -3258,7 +3244,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   COMPLEX(DP) ::  Oc2(nw, m, m),wp1(m*(m+1)/2), X1(m,m), U2(m,m), U3(m,m)
   INTEGER :: me
   !
-  me = mpime + 1
+  me = me_image + 1
   !
   ALLOCATE(W(m,m), wr(m))
   !
@@ -3747,7 +3733,7 @@ SUBROUTINE write_psi( c, jw )
   USE reciprocal_vectors,     ONLY : mill_l
   USE mp,                     ONLY : mp_barrier, mp_sum
   USE fft_base,               ONLY : dfftp
-  USE mp_global,              ONLY : nproc, mpime
+  USE mp_global,              ONLY : nproc_image, me_image, root_image, intra_image_comm
   USE parallel_include
   !
   IMPLICIT NONE
@@ -3756,13 +3742,13 @@ SUBROUTINE write_psi( c, jw )
   COMPLEX(DP) :: c(ngw,nbspx)
   COMPLEX(DP), ALLOCATABLE :: psis(:)
   !
-  INTEGER ::i, ii, ig, proc, ierr, ntot, ncol, mc,ngpwpp(nproc)
+  INTEGER ::i, ii, ig, proc, ierr, ntot, ncol, mc,ngpwpp(nproc_image)
   INTEGER ::nmin(3), nmax(3), n1,n2,nzx,nz,nz_
-  INTEGER ::root, displs(nproc), recvcount(nproc)
+  INTEGER ::displs(nproc_image), recvcount(nproc_image)
   COMPLEX(DP), ALLOCATABLE:: psitot(:), psiwr(:,:,:)
   INTEGER :: me
 
-  me = mpime + 1
+  me = me_image + 1
   !
   ! nmin, nmax are the bounds on (i,j,k) indexes of wavefunction G-vectors
   !
@@ -3772,16 +3758,14 @@ SUBROUTINE write_psi( c, jw )
   !
   nzx=nmax(3)-nmin(3)+1
   !
-  root = 0
-  ! root is the first node
   ntot = 0
   !
-  DO proc=1,nproc
+  DO proc=1,nproc_image
      ngpwpp(proc)=(dfftp%nwl(proc)+1)/2
      ntot=ntot+ngpwpp(proc)
   END DO
 
-  DO proc=1,nproc
+  DO proc=1,nproc_image
 
      recvcount(proc) = ngpwpp(proc)
      !
@@ -3842,7 +3826,7 @@ SUBROUTINE write_psi( c, jw )
   !
   CALL MPI_GATHERV (psis, recvcount(me),     MPI_DOUBLE_COMPLEX, &
        &                      psitot,recvcount, displs,MPI_DOUBLE_COMPLEX, &
-       &                 root, MPI_COMM_WORLD, ierr)
+       &                 root_image, intra_image_comm, ierr)
   IF (ierr.NE.0) CALL errore('write_wfc','MPI_GATHERV',ierr)
   !
   ! write the node-number-independent array

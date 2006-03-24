@@ -17,8 +17,8 @@
       SUBROUTINE cpsizes(nproc) 
                                                                         
       USE kinds
-      USE parameters
-      use ions_base, only: nsp, nax 
+      USE parameters, ONLY: ndmx
+      use ions_base, only: nsp, nax, nat
       use electrons_base, only: nx => nbnd, nspin
       use electrons_module, only: n_emp
       use brillouin, only: get_kpoints_number
@@ -70,8 +70,8 @@
                                                                         
                                                                         
 ! ... Atoms type
-      nbyte = nbyte + 3 * ( 4 * isiz + nsx * isiz + 4 * csiz + 2 * ( nsx * isiz ) + nsx * dsiz + &
-        3 * ( 3 * dsiz * natx ) + 3 * lsiz * natx + isiz * natx + 3 * lsiz + nsx * dsiz + dsiz )
+      nbyte = nbyte + 3 * ( 4 * isiz + nsp * isiz + 4 * csiz + 2 * ( nsp * isiz ) + nsp * dsiz + &
+        3 * ( 3 * dsiz * nat ) + 3 * lsiz * nat + isiz * nat + 3 * lsiz + nsp * dsiz + dsiz )
 
 ! ... HG_L mill gx_L
       nbyte = nbyte + 8 * ngmx 

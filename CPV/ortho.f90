@@ -34,7 +34,6 @@
 
       USE control_flags,      ONLY: ortho_eps, ortho_max
       USE wave_types,         ONLY: wave_descriptor
-      USE mp_global,          ONLY: nproc
       USE orthogonalize_base, ONLY: updatc, calphi
 
       COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cp(:,:)
@@ -140,7 +139,6 @@
       ! 
       ! 
 
-      USE mp_global,          ONLY: nproc, mpime
       USE orthogonalize_base, ONLY: rhoset, sigset, tauset, ortho_iterate, &
                                     ortho_alt_iterate, updatc, diagonalize_rho
 

@@ -1368,7 +1368,7 @@
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
       USE control_flags, ONLY: iprsta
       USE io_global, ONLY: stdout
-      USE mp_global, ONLY: nproc, mpime
+      USE mp_global, ONLY: nproc_image, me_image
       USE fft_base,  ONLY: dfftb, dfftp, fft_dlay_descriptor
       USE fft_types, ONLY: fft_box_set
 
@@ -1445,7 +1445,7 @@
       END DO
 
       CALL fft_box_set( dfftb, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, &
-                        nat, irb, mpime+1, nproc, dfftp%npp, dfftp%ipp )
+                        nat, irb, me_image+1, nproc_image, dfftp%npp, dfftp%ipp )
 
       IF( iprsta > 2 ) THEN
            isa = 1

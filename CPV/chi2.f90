@@ -39,7 +39,8 @@
       USE cell_base, ONLY: tpiba
       USE cell_module, only: boxdimensions
       use mp, ONLY: mp_sum
-      USE mp_global, ONLY: nproc, mpime, intra_image_comm
+      USE mp_global, ONLY: intra_image_comm
+      USE io_global, ONLY: ionode
       USE io_files, ONLY: chiunit, chifile
       USE reciprocal_vectors, ONLY: gstart, gx
       USE gvecp, ONLY: ngm
@@ -101,7 +102,7 @@
       CHI = CHI * OMEGA * CMPLX(0.0d0,1.0d0)
 
       ierr = 0
-      IF( mpime == 0 ) THEN
+      IF( ionode ) THEN
 
          OPEN(UNIT=chiunit, FILE=chifile, STATUS='unknown', POSITION='append', ERR=300)
 

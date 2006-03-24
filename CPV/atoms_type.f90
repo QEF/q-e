@@ -48,7 +48,6 @@
 
 
         PUBLIC :: atoms_type
-        PUBLIC :: allocate_atoms_type, deallocate_atoms_type
         PUBLIC :: atoms_type_init
 
 !=----------------------------------------------------------------------------=!

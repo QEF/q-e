@@ -587,7 +587,7 @@ CONTAINS
 
    SUBROUTINE solve(b, ldb, ndim, v)
 
-      USE mp_global, ONLY: root, intra_image_comm
+      USE mp_global, ONLY: root_image, intra_image_comm
       USE mp, ONLY: mp_bcast
       !
       IMPLICIT NONE
@@ -619,7 +619,7 @@ CONTAINS
         CALL errore(' solve ',' dsptrs has failed ', info)
       END IF
 
-      CALL mp_bcast(v, root, intra_image_comm)
+      CALL mp_bcast(v, root_image, intra_image_comm)
 
       RETURN
       END SUBROUTINE solve

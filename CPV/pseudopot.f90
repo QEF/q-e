@@ -307,7 +307,7 @@ CONTAINS
       !
       USE cell_base, ONLY: tpiba, tpiba2
       USE mp, ONLY: mp_max
-      USE mp_global, ONLY: mpime, intra_image_comm, nproc
+      USE mp_global, ONLY: intra_image_comm
       USE reciprocal_vectors, ONLY: g
       !
       REAL(DP), INTENT(OUT)  :: xgmax, xgmin, xgtabmax

@@ -62,7 +62,7 @@ CONTAINS
 !
 !   based on code written by Stefano de Gironcoli for PWSCF
 !
-      use mp_global, only: mpime, nproc, intra_image_comm
+      use mp_global, only: me_image, nproc_image, intra_image_comm
       use fft_scalar, only: cft_1z, cft_2xy
 !
       implicit none
@@ -84,7 +84,7 @@ CONTAINS
       if ( nr2x /= dfft%nr2x ) call errore(' cfft ',' wrong dims ', 5)
       if ( nr3x /= dfft%nr3x ) call errore(' cfft ',' wrong dims ', 6)
 
-      me = mpime + 1
+      me = me_image + 1
 
       allocate( aux( dfft%nnr ) )
 
@@ -141,11 +141,11 @@ CONTAINS
          IF( iopt == 2 ) THEN
             !
             IF( what_scatter == 1 ) THEN
-               call fft_transpose ( aux, nr3, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc, -2)
+               call fft_transpose ( aux, nr3, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc_image, -2)
             ELSE IF( what_scatter == 2 ) THEN
-               call fft_itranspose( aux, nr3, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc, -2)
+               call fft_itranspose( aux, nr3, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc_image, -2)
             ELSE 
-               if ( nproc == 1 ) then
+               if ( nproc_image == 1 ) then
                   nppx = dfft%nr3x
                else
                   nppx = dfft%npp( me )
@@ -153,7 +153,7 @@ CONTAINS
                call fft_scatter( aux, nr3x, dfft%nnr, f, dfft%nsw, dfft%npp, iopt )
                f(:) = (0.d0, 0.d0)
                ii = 0
-               do proc = 1, nproc
+               do proc = 1, nproc_image
                   do i = 1, dfft%nsw( proc )
                      mc = dfft%ismap( i + dfft%iss( proc ) )
                      ii = ii + 1 
@@ -166,7 +166,7 @@ CONTAINS
             !
          ELSE IF( iopt == 1 ) THEN
             !
-            if ( nproc == 1 ) then
+            if ( nproc_image == 1 ) then
                nppx = dfft%nr3x
             else
                nppx = dfft%npp( me )
@@ -198,17 +198,17 @@ CONTAINS
          IF( iopt == -2 ) THEN
             !
             IF( what_scatter == 1 ) THEN
-               call fft_transpose ( aux, nr3, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc, 2)
+               call fft_transpose ( aux, nr3, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc_image, 2)
             ELSE IF( what_scatter == 2 ) THEN
-               call fft_itranspose( aux, nr3, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc, 2)
+               call fft_itranspose( aux, nr3, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc_image, 2)
             ELSE 
-               if ( nproc == 1 ) then
+               if ( nproc_image == 1 ) then
                   nppx = dfft%nr3x
                else
                   nppx = dfft%npp( me )
                end if
                ii = 0
-               do proc = 1, nproc
+               do proc = 1, nproc_image
                   do i = 1, dfft%nsw( proc )
                      mc = dfft%ismap( i + dfft%iss( proc ) )
                      ii = ii + 1 
@@ -222,7 +222,7 @@ CONTAINS
             !
          ELSE IF( iopt == -1 ) THEN
             !
-            if ( nproc == 1 ) then
+            if ( nproc_image == 1 ) then
                nppx = dfft%nr3x
             else
                nppx = dfft%npp( me )
@@ -284,7 +284,8 @@ CONTAINS
 !
 !   based on code written by Stefano de Gironcoli for PWSCF
 !
-      USE mp_global,  only: mpime, nproc, me_ogrp, me_pgrp, npgrp, nogrp
+      USE mp_global,  only: me_image, nproc_image, me_ogrp, me_pgrp, npgrp, nogrp, &
+                            intra_image_comm
       USE fft_base,   only: fft_scatter, group_fft_scatter
       USE fft_scalar, only: cft_1z, cft_2xy
       USE groups_module
@@ -323,9 +324,9 @@ CONTAINS
       if ( nr2x /= dfft%nr2x ) call errore(' cfft ',' wrong dims ', 5)
       if ( nr3x /= dfft%nr3x ) call errore(' cfft ',' wrong dims ', 6)
 
-      me = mpime + 1
+      me = me_image + 1
 
-      if ( nproc == 1 ) then
+      if ( nproc_image == 1 ) then
          nppx = dfft%nr3x
       else
          nppx = dfft%npp(me)
@@ -404,12 +405,12 @@ CONTAINS
             !WAVE - FUNCTION FFT calculation
             !-----------------------------------
 
-            local_send_cnt(1) = nr3x*dfft%nsw(mpime+1)
+            local_send_cnt(1) = nr3x*dfft%nsw(me_image+1)
             local_send_displ(1) = 0
             local_recv_cnt(1) = nr3x*dfft%nsw(NOLIST(1)+1)
             local_recv_displ(1) = 0
             DO index=2, NOGRP
-               local_send_cnt(index) = nr3x*dfft%nsw(mpime+1)
+               local_send_cnt(index) = nr3x*dfft%nsw(me_image+1)
                local_send_displ(index) = local_send_displ(index-1) + strd ! local_send_cnt(index-1)
 
                local_recv_cnt(index) = nr3x*dfft%nsw(NOLIST(index)+1)
@@ -474,8 +475,8 @@ CONTAINS
 
             IF (tmp_npp(1).EQ.-1) THEN
 #if defined __MPI
-               CALL MPI_ALLGATHER(num_sticks, 1, MPI_INTEGER, tmp_nsw, 1, MPI_INTEGER, MPI_COMM_WORLD, IERR)
-               CALL MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, tmp_npp, 1, MPI_INTEGER, MPI_COMM_WORLD, IERR)
+               CALL MPI_ALLGATHER(num_sticks, 1, MPI_INTEGER, tmp_nsw, 1, MPI_INTEGER, intra_image_comm, IERR)
+               CALL MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, tmp_npp, 1, MPI_INTEGER, intra_image_comm, IERR)
 #endif
             ENDIF
 
@@ -486,7 +487,7 @@ CONTAINS
             f(:) = (0.d0, 0.d0)
 
             ii=0
-            do proc=1,nproc
+            do proc=1,nproc_image
                   do i=1,dfft%nsw(proc)
                      mc = dfft%ismap( i + dfft%iss(proc))
                      ii = ii + 1
@@ -544,7 +545,7 @@ CONTAINS
          !-----------------------------------
          else
             ii = 0
-            do proc=1,nproc
+            do proc=1,nproc_image
                do i=1,dfft%nsw(proc)
                   mc = dfft%ismap( i + dfft%iss(proc) )
                   ii = ii + 1

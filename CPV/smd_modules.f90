@@ -17,7 +17,7 @@
 !
 MODULE smd_rep
  !
-  use parameters, only: natx,nacx
+  use parameters, only: nacx
  !
   implicit none
  !
@@ -25,17 +25,17 @@ MODULE smd_rep
  !--- For ionic variables ---------
  !
  TYPE ION
-  real(8) :: tau0(3,natx)
-  real(8) :: taup(3,natx)
-  real(8) :: taum(3,natx)
-  real(8) :: taus(3,natx)
-  real(8) :: tausp(3,natx)
-  real(8) :: tausm(3,natx)
-  real(8) :: fion(3,natx)
-  real(8) :: fionm(3,natx)
-  real(8) :: vels(3,natx)
-  real(8) :: velsm(3,natx)
-  real(8) :: tan(3,natx)
+  real(8), pointer :: tau0(:,:)
+  real(8), pointer :: taup(:,:)
+  real(8), pointer :: taum(:,:)
+  real(8), pointer :: taus(:,:)
+  real(8), pointer :: tausp(:,:)
+  real(8), pointer :: tausm(:,:)
+  real(8), pointer :: fion(:,:)
+  real(8), pointer :: fionm(:,:)
+  real(8), pointer :: vels(:,:)
+  real(8), pointer :: velsm(:,:)
+  real(8), pointer :: tan(:,:)
   real(8) :: cdm0(3)
   real(8) :: cdmvel(3)
   real(8) :: acc(nacx)
@@ -63,8 +63,37 @@ MODULE smd_rep
  !
  CONTAINS
     subroutine deallocate_smd_rep()
+      integer :: i
+      !
+      DO i = 0, SIZE( rep ) - 1
+         DEALLOCATE(rep(i)%tau0)
+         DEALLOCATE(rep(i)%taup)
+         DEALLOCATE(rep(i)%taum)
+         DEALLOCATE(rep(i)%taus)
+         DEALLOCATE(rep(i)%tausp)
+         DEALLOCATE(rep(i)%tausm)
+         DEALLOCATE(rep(i)%fion)
+         DEALLOCATE(rep(i)%fionm)
+         DEALLOCATE(rep(i)%vels)
+         DEALLOCATE(rep(i)%velsm)
+         DEALLOCATE(rep(i)%tan)
+      END DO
+      !
       IF( ALLOCATED( rep    ) ) DEALLOCATE( rep    )
+      !
+      DO i = 1, SIZE( rep_el )
+         DEALLOCATE(rep_el(i)%c0)
+         DEALLOCATE(rep_el(i)%cm)
+         DEALLOCATE(rep_el(i)%phi)
+         DEALLOCATE(rep_el(i)%lambda)
+         DEALLOCATE(rep_el(i)%lambdam)
+         DEALLOCATE(rep_el(i)%lambdap)
+         DEALLOCATE(rep_el(i)%bec)
+         DEALLOCATE(rep_el(i)%rhovan)
+      END DO
+      !
       IF( ALLOCATED( rep_el ) ) DEALLOCATE( rep_el )
+      !
   end subroutine deallocate_smd_rep
  !
  !

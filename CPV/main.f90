@@ -182,9 +182,10 @@
       !
       USE io_files        , ONLY: outdir, prefix
       USE printout_base   , ONLY: printout_base_init
-      USE cp_main_variables, ONLY : atoms0, atomsp, atomsm, ei1, ei2, ei3, eigr, sfac, &
+      USE cp_main_variables, ONLY : ei1, ei2, ei3, eigr, sfac, &
                                     ht0, htm, htp, rhor, vpot, wfill, wempt,     &
                                     acc, acc_this_run, occn, edft, nfi, bec, becdr
+      USE ions_positions,    ONLY : atoms0, atomsp, atomsm
       USE cg_module,         ONLY : tcg
       IMPLICIT NONE
 

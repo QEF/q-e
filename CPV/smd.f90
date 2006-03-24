@@ -39,7 +39,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   !
   use control_flags, only: iprint, thdyn
   use io_global, only: stdout
-  use mp_global, only: nproc
+  use mp_global, only: nproc_image
   !use gvec
   use gvecw, only: ngw
   use ions_base, only: na, pmass, nsp, randpos, nat
@@ -50,7 +50,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   use betax, only: mmx, refg
   !use restartsm
   use restart_file
-  use parameters, only: nacx, natx, nhclm
+  use parameters, only: nacx, nhclm
   USE smd_rep, only: rep
   USE path_variables, only: &
         sm_p => smd_p
@@ -60,7 +60,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
 
   implicit none
   ! input/output
-  integer ibrav, ndr, nbeg, iforce(3,natx)
+  integer ibrav, ndr, nbeg, iforce(3,nat)
   logical tfirst
   real(8) celldm(6), ecut, ecutw
   real(8) delt
@@ -80,11 +80,11 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
 
   ! YK
   complex(8) c0(ngw,nx),cm(ngw,nx)
-  real(8) taum(3,natx),vel(3,natx),velm(3,natx),acc(nacx)
+  real(8) taum(3,nat),vel(3,nat),velm(3,nat),acc(nacx)
   real(8) lambda(nudx,nudx,nspin),lambdam(nudx,nudx,nspin)
   real(8) xnhe0,xnhem,vnhe,xnhp0(nhclm),xnhpm(nhclm),vnhp(nhclm), ekincm
   real(8) xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-  real(8) fion(3,natx),tps
+  real(8) fion(3,nat),tps
   real(8) mat_z(1,1,1)
   integer      nhpcl, nhpdim
   !
@@ -104,7 +104,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   !
   !  Allocate box descriptor
   !
-  CALL fft_box_allocate( dfftb, nproc, nat )
+  CALL fft_box_allocate( dfftb, nproc_image, nat )
   !
   !
   WRITE( stdout,*) '   NOTA BENE: refg, mmx = ', refg, mmx
@@ -327,14 +327,13 @@ END SUBROUTINE TANGENT
 SUBROUTINE PERP(vec,tan,paraforce)
 
 
-  use ions_base, ONLY: na, nsp
-  use parameters, only: natx
+  use ions_base, ONLY: na, nsp, nat
 
   IMPLICIT NONE
 
   integer :: i,is,ia,isa
 
-  real(8) :: vec(3,natx),tan(3,natx)
+  real(8) :: vec(3,nat),tan(3,nat)
   real(8) :: paraforce
   real(8) :: dotp
 
@@ -445,8 +444,7 @@ END SUBROUTINE LINEARP
 SUBROUTINE ARC(state,alpha,t_alpha,key)
 
 
-  use ions_base, ONLY: na, nsp
-  use parameters, only: natx
+  use ions_base, ONLY: na, nsp, nat
   USE path_variables, only: &
         sm_p => smd_p, &
         ptr => smd_ptr
@@ -460,7 +458,7 @@ SUBROUTINE ARC(state,alpha,t_alpha,key)
   type(ptr) :: state(0:sm_p)
 
   real(8), intent(out) :: alpha(0:sm_p),t_alpha 
-  real(8) :: tmp(3,natx), dalpha(0:sm_p) 
+  real(8) :: tmp(3,nat), dalpha(0:sm_p) 
 
   ! -------------------------------------------------
 
@@ -556,13 +554,12 @@ END SUBROUTINE ARC
 SUBROUTINE ABSVEC(vec,norm)
 
 
-  use ions_base, ONLY: na, nsp
-  use parameters, only: natx
+  use ions_base, ONLY: na, nsp, nat
 
   IMPLICIT NONE
 
   integer :: i,is,ia,isa
-  real(8),intent(in) :: vec(3,natx)
+  real(8),intent(in) :: vec(3,nat)
   real(8),intent(out) :: norm 
 
 
@@ -600,15 +597,14 @@ END SUBROUTINE ABSVEC
 SUBROUTINE IMPOSECD(state,als,bes,chs)
 
 
-  use ions_base, ONLY: na, nsp
-  use parameters, only: natx
+  use ions_base, ONLY: na, nsp, nat
   use io_global, ONLY: stdout 
 
   IMPLICIT NONE
 
   integer :: i,is,ia
   integer,intent(in) :: als,bes,chs
-  real(8) :: state(3,natx)
+  real(8) :: state(3,nat)
   real(8) :: dotp,theta,mag1,mag2
 
 
@@ -711,18 +707,17 @@ END SUBROUTINE IMPOSECD
 
 subroutine rot(state,phi,direction)
 
-  use ions_base, ONLY: na, nsp
-  use parameters, only: natx
+  use ions_base, ONLY: na, nsp, nat
   use io_global, ONLY: stdout
 
 
   IMPLICIT NONE
 
   integer :: i,j,k,isa
-  integer :: ia,is,nat
+  integer :: ia,is
   integer :: a,b,c
   real(8) :: rotm(3,3,3)
-  real(8) :: state(3,natx)
+  real(8) :: state(3,nat)
   real(8), allocatable :: cd(:,:)
   real(8), allocatable :: newcd(:,:)
   real(8) :: tmp
@@ -732,8 +727,6 @@ subroutine rot(state,phi,direction)
 
 
   write(stdout,*) "ROT : ", direction
-
-  nat = SUM( na(1:nsp) )
 
   allocate(cd(3,nat))
   allocate(newcd(3,nat))
@@ -839,14 +832,13 @@ END SUBROUTINE ROT
 
 SUBROUTINE TRAN(state,dist,direction)
 
-  use ions_base, ONLY: na, nsp
-  use parameters, only: natx
+  use ions_base, ONLY: na, nsp, nat
   use io_global, ONLY: stdout
 
   IMPLICIT NONE
 
   integer :: i,j,k,is,ia,isa
-  real(8) :: state(3,natx)
+  real(8) :: state(3,nat)
   real(8),intent(in) :: dist 
   character,intent(in) :: direction
 
@@ -876,11 +868,10 @@ END SUBROUTINE TRAN
 
 SUBROUTINE DISTATOMS(state,mindist,isa1,isa2)
 
-  use ions_base, ONLY: na, nsp
-  use parameters, only: natx
+  use ions_base, ONLY: na, nsp, nat
   use cell_base, only: ainv, a1, a2, a3
 
-  real(8),intent(in) :: state(3,natx)
+  real(8),intent(in) :: state(3,nat)
   real(8),intent(out) :: mindist
   integer,intent(out) :: isa1, isa2
   real(8) :: dist, in(3), out(3) 
@@ -925,7 +916,7 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
        & stcd1 => smd_stcd1, stcd2 => smd_stcd2, stcd3 => smd_stcd3, &
        & atomic_positions 
 
-  USE parameters, ONLY: nsx, natx
+  USE parameters, ONLY: nsx
   USE smd_rep
   USE path_variables, only: &
         ptr => smd_ptr
@@ -961,6 +952,21 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
   ALLOCATE(rep(0:sm_p))
   ALLOCATE(rep_el(1:sm_p-1))
 
+  DO sm_k=0,sm_p
+     ALLOCATE(rep(sm_k)%tau0(3,nat))
+     ALLOCATE(rep(sm_k)%taup(3,nat))
+     ALLOCATE(rep(sm_k)%taum(3,nat))
+     ALLOCATE(rep(sm_k)%taus(3,nat))
+     ALLOCATE(rep(sm_k)%tausp(3,nat))
+     ALLOCATE(rep(sm_k)%tausm(3,nat))
+     ALLOCATE(rep(sm_k)%fion(3,nat))
+     ALLOCATE(rep(sm_k)%fionm(3,nat))
+     ALLOCATE(rep(sm_k)%vels(3,nat))
+     ALLOCATE(rep(sm_k)%velsm(3,nat))
+     ALLOCATE(rep(sm_k)%tan(3,nat))
+  ENDDO
+
+
 
   ! compute na(is)
 
@@ -991,7 +997,7 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
               IF( sp_pos(ia) == is ) THEN 
 
                  isa    = isa + 1
-                 if( isa > natx) call errore(' init_path ',' isa > natx', isa )
+                 if( isa > nat) call errore(' init_path ',' isa > nat', isa )
 
                  rep(sm_k)%tau0(:,isa) = rd_pos(:, ia) 
 
@@ -1037,7 +1043,7 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
 
            IF( sp_pos(ia) == is ) THEN
               isa = isa + 1
-              if( isa > natx) call errore(' init_path ',' isa > natx', isa )
+              if( isa > nat) call errore(' init_path ',' isa > nat', isa )
               rep(0)%tau0(:,isa) = rd_pos(:, ia)
            ENDIF
 
@@ -1092,8 +1098,8 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
 
 
      ALLOCATE(p_tau0(0:sm_p))
-     ALLOCATE(guess(3,natx,0:kwnp-1))
-     ALLOCATE(guess2(3,natx,0:sm_p))
+     ALLOCATE(guess(3,nat,0:kwnp-1))
+     ALLOCATE(guess2(3,nat,0:sm_p))
      ALLOCATE(arc_in(0:kwnp-1))
      ALLOCATE(arc_out(0:sm_p))
      ALLOCATE(darc(0:kwnp-1))
@@ -1113,7 +1119,7 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
               rd_pos(:,ia) = pos(( 3 * ia - 2):( 3 * ia ),j)
               IF( sp_pos(ia) == is) THEN
                  isa = isa + 1
-                 if( isa > natx) call errore(' init_path ',' isa > natx', isa )
+                 if( isa > nat) call errore(' init_path ',' isa > nat', isa )
                  guess(:,isa,j-1) = rd_pos(:, ia)
                  IF(ia==stcd1) THEN
                     als = isa
@@ -1272,7 +1278,7 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
                  rd_pos(:,ia) = pos(( 3 * ia - 2):( 3 * ia ),sm_k+1)
                  IF( sp_pos(ia) == is) THEN
                     isa = isa + 1
-                    if( isa > natx) call errore(' init_path ',' isa > natx', isa )
+                    if( isa > nat) call errore(' init_path ',' isa > nat', isa )
                     rep(sm_k)%tau0(i,isa) = rd_pos(i, ia)
                     IF(ia==stcd1) THEN
                        als = isa
@@ -1306,7 +1312,7 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
               rd_pos(:,ia) = pos(( 3 * ia - 2):( 3 * ia ),1)
               IF( sp_pos(ia) == is) THEN
                  isa = isa + 1
-                 if( isa > natx) call errore(' init_path ',' isa > natx', isa )
+                 if( isa > nat) call errore(' init_path ',' isa > nat', isa )
                  rep(0)%tau0(:,isa) = rd_pos(:, ia)
               ENDIF
               rd_pos(:,ia) = pos(( 3 * ia - 2):( 3 * ia ),sm_p+1)

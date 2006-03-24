@@ -301,7 +301,7 @@
                                   toptical, tconjgrad
       use constants,        only: factem, au_gpa, au, amu_si, bohr_radius_cm, scmass
       use energies,         only: print_energies, dft_energy_type
-      use mp_global,        only: mpime, intra_image_comm
+      use mp_global,        only: me_image, intra_image_comm
       use electrons_module, only: print_eigenvalues
       use brillouin,        only: kpoints, kp
       use time_step,        ONLY: tps
@@ -426,7 +426,7 @@
 
       ! ...   Check Memory
 
-      IF( iprsta > 1 ) CALL memstat(mpime)
+      IF( iprsta > 1 ) CALL memstat(me_image)
 
       ! ...   Print physical variables to fortran units
 
@@ -649,7 +649,7 @@
 
     SUBROUTINE print_sfac( rhoe, sfac )
 
-      USE mp_global, ONLY: mpime, nproc, intra_image_comm
+      USE mp_global, ONLY: me_image, nproc_image, intra_image_comm
       USE mp, ONLY: mp_max, mp_get, mp_put
       USE reciprocal_vectors, ONLY: ig_l2g, gx, g
       USE gvecp, ONLY: ngm
@@ -695,16 +695,16 @@
           OPEN(sfacunit, FILE=TRIM(sfac_file), STATUS='UNKNOWN')
         END IF
 
-        DO ip = 1, nproc
-          CALL mp_get(ng, ngm, mpime, ionode_id, ip-1, ip)
-          CALL mp_get(hg_rcv(:), g(:), mpime, ionode_id, ip-1, ip)
-          CALL mp_get(gx_rcv(:,:), gx(:,:), mpime, ionode_id, ip-1, ip)
-          CALL mp_get(ig_rcv(:), ig_l2g(:), mpime, ionode_id, ip-1, ip)
+        DO ip = 1, nproc_image
+          CALL mp_get(ng, ngm, me_image, ionode_id, ip-1, ip)
+          CALL mp_get(hg_rcv(:), g(:), me_image, ionode_id, ip-1, ip)
+          CALL mp_get(gx_rcv(:,:), gx(:,:), me_image, ionode_id, ip-1, ip)
+          CALL mp_get(ig_rcv(:), ig_l2g(:), me_image, ionode_id, ip-1, ip)
           DO ispin = 1, nspin
-            CALL mp_get( rhoeg_rcv(:,ispin), rhoeg(:,ispin), mpime, ionode_id, ip-1, ip)
+            CALL mp_get( rhoeg_rcv(:,ispin), rhoeg(:,ispin), me_image, ionode_id, ip-1, ip)
           END DO
           DO is = 1, nsp
-            CALL mp_get( sfac_rcv(:,is), sfac(:,is), mpime, ionode_id, ip-1, ip)
+            CALL mp_get( sfac_rcv(:,is), sfac(:,is), me_image, ionode_id, ip-1, ip)
           END DO
           IF( ionode ) THEN
             DO ig = 1, ng

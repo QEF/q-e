@@ -56,7 +56,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE gvecw,                    ONLY : ggp, ecutw
   USE gvecp,                    ONLY : ecutp
   USE restart_file,             ONLY : writefile, readfile
-  USE parameters,               ONLY : nacx, natx, nsx, nbndxx, nhclm
+  USE parameters,               ONLY : nacx, nsx, nbndxx, nhclm
   USE constants,                ONLY : pi, factem, au_gpa, au_ps, gpa_au
   USE io_files,                 ONLY : psfile, pseudo_dir, smwout, outdir
   USE wave_base,                ONLY : wave_steepest, wave_verlet
@@ -152,7 +152,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   REAL(DP) :: t_arc_pre, t_arc_now, t_arc_tot
   INTEGER        :: sm_k,sm_file,sm_ndr,sm_ndw,unico,unifo,unist
   INTEGER        :: smpm,con_ite, iss
-  REAL(DP) :: workvec(3,natx,nsx)
+  REAL(DP), ALLOCATABLE :: workvec(:,:,:)
   !
   REAL(DP), ALLOCATABLE :: deviation(:)
   REAL(DP), ALLOCATABLE :: maxforce(:)
@@ -987,6 +987,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
            CALL PERP(rep(sm_k)%fion,rep(sm_k)%tan,paraforce(sm_k))
         ENDDO
 
+        ALLOCATE( workvec(3,nat,nsp) )
 
         DO sm_k=1,smpm 
 
@@ -1009,6 +1010,8 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
            deviation(sm_k) = DSQRT(deviation(sm_k))
            maxforce(sm_k) = MAX(ABS(MAXVAL(workvec)),ABS(MINVAL(workvec)))
         ENDDO
+        !
+        DEALLOCATE( workvec )
         !
      ENDIF ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<!
      !

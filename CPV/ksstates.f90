@@ -155,7 +155,7 @@ CONTAINS
 
         ! ...   declare modules
         USE kinds
-        USE mp_global, ONLY: mpime, nproc, intra_image_comm, root
+        USE mp_global, ONLY: intra_image_comm
         USE io_global, ONLY: ionode
         USE io_global, ONLY: stdout
         USE wave_types, ONLY: wave_descriptor
@@ -272,7 +272,7 @@ CONTAINS
 
         ! ...   declare modules
         USE kinds
-        USE mp_global, ONLY: mpime, nproc, intra_image_comm, root
+        USE mp_global, ONLY: intra_image_comm
         USE io_global, ONLY: ionode
         USE io_global, ONLY: stdout
         USE wave_types, ONLY: wave_descriptor
@@ -349,7 +349,7 @@ CONTAINS
 
         ! ...   declare modules
         USE kinds
-        USE mp_global, ONLY: mpime, nproc, intra_image_comm, root
+        USE mp_global, ONLY: intra_image_comm
         USE io_global, ONLY: ionode
         USE io_global, ONLY: stdout
         USE wave_types, ONLY: wave_descriptor
@@ -479,7 +479,7 @@ CONTAINS
       SUBROUTINE print_ks_states( c, file_name )
 
         USE kinds
-        USE mp_global, ONLY: mpime, nproc, intra_image_comm, root
+        USE mp_global, ONLY: intra_image_comm
         USE mp, ONLY: mp_sum
         USE io_global, ONLY: ionode, ionode_id
         USE io_global, ONLY: stdout

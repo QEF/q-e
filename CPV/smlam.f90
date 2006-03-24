@@ -23,8 +23,8 @@
 
 SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
 
-  use ions_base, ONLY: na, nsp
-  use parameters, only: nsx,natx
+  use ions_base, ONLY: na, nsp, nat
+  use parameters, only: nsx
   use path_variables, ONLY: &
         sm_p => smd_p, &
         ptr  => smd_ptr, &
@@ -46,7 +46,7 @@ SUBROUTINE SMLAMBDA(statep,state,tan,con_ite,err_const)
   type(ptr) :: state(0:sm_p)
   type(ptr) :: tan(0:sm_p)
 
-  real(8) :: mov(3,natx,0:sm_p) 
+  real(8) :: mov(3,nat,0:sm_p) 
   real(8) :: lambda(0:sm_p), dotp1, dotp2
   real(8) :: dalpha(0:sm_p),t_alpha
   real(8), ALLOCATABLE :: dotp1a(:), dotp2a(:), lam_f(:), lam_b(:)
@@ -253,8 +253,8 @@ END SUBROUTINE SMLAMBDA
 SUBROUTINE CALC(state,n_const,exit_sign,err_const,cons) 
 
 
-  use ions_base, ONLY: na,nsp
-  use parameters, only: nsx,natx
+  use ions_base, ONLY: na,nsp, nat
+  use parameters, only: nsx
   use path_variables, ONLY: &
         sm_p => smd_p, &
         tol => smd_tol
@@ -269,7 +269,7 @@ SUBROUTINE CALC(state,n_const,exit_sign,err_const,cons)
   real(8), intent(out) :: err_const(sm_p)
   real(8), intent(out) :: cons
 
-  real(8) :: state(3,natx,0:sm_p),temp(3,natx)
+  real(8) :: state(3,nat,0:sm_p),temp(3,nat)
   real(8) :: dalpha(0:sm_p),t_alpha,alpha(0:sm_p)
   real(8) :: diff, total
 

@@ -85,7 +85,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff, emass_precond
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
                                        vels, velsm, velsp, ions_hmove,       &
-                                       ions_move
+                                       ions_move, fion, fionm
   USE ions_nose,                ONLY : gkbt, kbt, qnp, ndega, nhpcl, nhpdim, &
                                        nhpend, vnhp, xnhp0, xnhpm, xnhpp,    &
                                        atm2nhp, ions_nosevel, ions_noseupd,  &
@@ -118,7 +118,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                                        acc, bec, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, ei1, ei2, ei3,  &
                                        irb, becdr, taub, eigrb, rhog, rhos, &
-                                       rhor, rhopr, bephi, becp, nfi, fion, fionm
+                                       rhor, rhopr, bephi, becp, nfi
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
   USE metadyn_vars,             ONLY : dfe_acc, etot_av

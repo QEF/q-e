@@ -154,7 +154,7 @@
      !   distribution across processors of the overlap matrixes 
      !   of sizes ( nx, nx )
 
-     USE mp_global, ONLY: mpime, nproc
+     USE mp_global, ONLY: me_image, nproc_image
 
      IMPLICIT NONE
 
@@ -166,10 +166,10 @@
 
      DO i = 1, nspin 
        IF( i > nspinx ) CALL errore( ' bmeshset ',' spin too large ', i)
-       nb_l( i ) = nupdwn( i ) / nproc
-       IF( mpime < MOD( nupdwn( i ), nproc ) ) nb_l( i ) = nb_l( i ) + 1
-       n_emp_l( i ) = n_emp / nproc
-       IF( mpime < MOD( n_emp, nproc ) ) n_emp_l( i ) = n_emp_l( i ) + 1
+       nb_l( i ) = nupdwn( i ) / nproc_image
+       IF( me_image < MOD( nupdwn( i ), nproc_image ) ) nb_l( i ) = nb_l( i ) + 1
+       n_emp_l( i ) = n_emp / nproc_image
+       IF( me_image < MOD( n_emp, nproc_image ) ) n_emp_l( i ) = n_emp_l( i ) + 1
      END DO
 
      IF( ALLOCATED( ib_owner ) ) DEALLOCATE( ib_owner )
@@ -185,9 +185,9 @@
      ib_local =  0
      ib_owner = -1
      DO i = 1, nbndx
-       ib_local( i ) = ( i - 1 ) / nproc        !  local index of the i-th band 
-       ib_owner( i ) = MOD( ( i - 1 ), nproc )  !  owner of th i-th band
-       IF( mpime <= ib_owner( i ) ) THEN
+       ib_local( i ) = ( i - 1 ) / nproc_image        !  local index of the i-th band 
+       ib_owner( i ) = MOD( ( i - 1 ), nproc_image )  !  owner of th i-th band
+       IF( me_image <= ib_owner( i ) ) THEN
          ib_local( i ) = ib_local( i ) + 1
        END IF
      END DO
@@ -310,7 +310,7 @@
         SUBROUTINE rceigs( nei, gam, cgam, tortho, f, ei, gamma_symmetry )
 
           USE mp, ONLY: mp_sum
-          USE mp_global, ONLY: mpime, nproc, intra_image_comm
+          USE mp_global, ONLY: me_image, nproc_image, intra_image_comm
           USE energies, only: eig_total_energy
           USE constants, only: au
 
@@ -353,8 +353,8 @@
           END IF
 
           n   = nei
-          nrl = n / nproc
-          IF( mpime < MOD( n, nproc ) ) nrl = nrl + 1
+          nrl = n / nproc_image
+          IF( me_image < MOD( n, nproc_image ) ) nrl = nrl + 1
 
           IF ( gamma_symmetry ) THEN
             IF( n > SIZE( gam, 2 ) ) CALL errore( ' eigs ',' n and gam inconsistent dimensions ',n )
@@ -385,7 +385,7 @@
           IF (tortho) THEN
 
             IF( gamma_symmetry ) THEN
-              IF ( ( nproc < 2 ) .OR. ( n < nproc ) ) THEN
+              IF ( ( nproc_image < 2 ) .OR. ( n < nproc_image ) ) THEN
                 ALLOCATE( aux( n*(n+1)/2 ), STAT=ierr)
                 IF( ierr/=0 ) CALL errore( ' eigs ',' allocating aux ',ierr )
                 ! debug
@@ -403,12 +403,12 @@
                 CALL rpackgam( g, ftmp(:) )
                 ALLOCATE( vv(nrl,n), STAT=ierr)
                 IF( ierr/=0 ) CALL errore( ' eigs ',' allocating vv ',ierr )
-                CALL pdspev_drv('N', g, nrl, ei, vv, nrl, nrl, n, nproc, mpime)
+                CALL pdspev_drv('N', g, nrl, ei, vv, nrl, nrl, n, nproc_image, me_image)
                 DEALLOCATE( vv, STAT=ierr)
                 IF( ierr/=0 ) CALL errore( ' eigs ',' deallocating vv ',ierr )
               END IF
             ELSE 
-              IF ( (nproc < 2) .OR. (n < nproc) ) THEN
+              IF ( (nproc_image < 2) .OR. (n < nproc_image) ) THEN
                 ALLOCATE(caux(n*(n+1)/2), STAT=ierr)
                 IF( ierr/=0 ) CALL errore( ' eigs ',' allocating caux ',ierr )
                 CALL cpackgam( cg, ftmp(:), caux )
@@ -419,7 +419,7 @@
                 ALLOCATE(caux(1), STAT=ierr)
                 IF( ierr/=0 ) CALL errore( ' eigs ',' allocating caux ',ierr )
                 CALL cpackgam( cg, ftmp(:) )
-                CALL pzhpev_drv('N', cg, nrl, ei, caux, nrl, nrl, n, nproc, mpime)
+                CALL pzhpev_drv('N', cg, nrl, ei, caux, nrl, nrl, n, nproc_image, me_image)
                 DEALLOCATE(caux, STAT=ierr)
                 IF( ierr/=0 ) CALL errore( ' eigs ',' deallocating caux ',ierr )
               END IF
@@ -431,7 +431,7 @@
             IF( ierr/=0 ) CALL errore( ' eigs ',' allocating index ',ierr )
             ei = 0.0_DP
             DO i = 1, n
-              IF ( ib_owner(i) == mpime ) THEN
+              IF ( ib_owner(i) == me_image ) THEN
                 IF ( gamma_symmetry ) THEN
                   ei(i) = gam(ib_local(i),i) / ftmp(i)
                 ELSE
@@ -499,7 +499,7 @@
 
 
         SUBROUTINE cpackgam(cgam, f, caux)
-          USE mp_global, ONLY: mpime, nproc, intra_image_comm
+          USE mp_global, ONLY: me_image, nproc_image, intra_image_comm
           USE mp, ONLY: mp_sum
           IMPLICIT NONE
           COMPLEX(DP), INTENT(INOUT)  :: cgam(:,:)
@@ -510,27 +510,27 @@
           n   = SIZE(cgam, 2)
           IF( PRESENT( caux ) ) THEN
             caux = CMPLX(0.0d0, 0.d0)
-            IF( mpime < n ) THEN
+            IF( me_image < n ) THEN
               DO i = 1, n
-                j = mpime + 1
+                j = me_image + 1
                 DO jl = 1, nrl
                   IF( j >= i ) THEN
                     !   maps (j,i) index to low-tri packed (k) index
                     k = (i-1)*n + j - i*(i-1)/2  
                     caux(k) = cgam(jl,i) / f(j)
                   END IF
-                  j = j + nproc
+                  j = j + nproc_image
                 END DO
               END DO
             END IF
             CALL mp_sum(caux, intra_image_comm)
           ELSE
-            IF( mpime < n ) THEN
+            IF( me_image < n ) THEN
               DO i = 1, n
-                j = mpime + 1
+                j = me_image + 1
                 DO jl = 1, nrl
                   cgam( jl, i ) = cgam( jl, i ) / f(j)
-                  j = j + nproc
+                  j = j + nproc_image
                 END DO
               END DO
             END IF
@@ -541,7 +541,7 @@
 !  ----------------------------------------------
 
         SUBROUTINE rpackgam(gam, f, aux)
-          USE mp_global, ONLY: mpime, nproc, intra_image_comm
+          USE mp_global, ONLY: me_image, nproc_image, intra_image_comm
           USE mp, ONLY: mp_sum
           IMPLICIT NONE
           REAL(DP), INTENT(INOUT)  :: gam(:,:)
@@ -552,27 +552,27 @@
           n   = SIZE(gam, 2)
           IF( PRESENT( aux ) ) THEN
             aux = 0.0d0
-            IF( mpime < n ) THEN
+            IF( me_image < n ) THEN
               DO i = 1, n
-                j = mpime + 1
+                j = me_image + 1
                 DO jl = 1, nrl
                   IF( j >= i ) THEN
                     !   maps (j,i) index to low-tri packed (k) index
                     k = (i-1)*n + j - i*(i-1)/2  
                     aux(k) = gam(jl,i) / f(j)
                   END IF
-                  j = j + nproc
+                  j = j + nproc_image
                 END DO
               END DO
             END IF
             CALL mp_sum(aux, intra_image_comm)
           ELSE
-            IF( mpime < n ) THEN
+            IF( me_image < n ) THEN
               DO i = 1, n
-                j = mpime + 1
+                j = me_image + 1
                 DO jl = 1, nrl
                   gam(jl,i) = gam(jl,i) / f(j)
-                  j = j + nproc
+                  j = j + nproc_image
                 END DO
               END DO
             END IF

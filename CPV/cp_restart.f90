@@ -143,7 +143,7 @@ MODULE cp_restart
          !
       END IF
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       CALL errore( 'cp_writefile', &
                    'no free units to write wavefunctions', ierr )
@@ -251,7 +251,7 @@ MODULE cp_restart
          !
       END IF
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       CALL errore( 'cp_writefile ', &
                    'cannot open restart file for writing', ierr )
@@ -759,6 +759,7 @@ MODULE cp_restart
       USE reciprocal_vectors,       ONLY : ig_l2g, mill_l
       USE cp_main_variables,        ONLY : nprint_nfi
       USE mp,                       ONLY : mp_sum
+      USE mp_global,                ONLY : intra_image_comm
       USE parameters,               ONLY : nhclm, ntypx
       USE constants,                ONLY : eps8, angstrom_au
       !
@@ -874,7 +875,7 @@ MODULE cp_restart
          !
       END IF
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       CALL errore( 'cp_readfile', &
                    'cannot open restart file for reading', ierr )
@@ -926,7 +927,7 @@ MODULE cp_restart
          !
       END IF
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       CALL errore( 'cp_readfile', &
                    'cannot read positions from restart file', ierr )
@@ -1112,7 +1113,7 @@ MODULE cp_restart
       !
       IF ( ionode ) CALL invmat( 3, ht, htm1, omega )
       !
-      CALL mp_bcast( omega, ionode_id )
+      CALL mp_bcast( omega, ionode_id, intra_image_comm )
       !
       scalef = 1.D0 / SQRT( ABS( omega ) )
       !
@@ -1199,7 +1200,7 @@ MODULE cp_restart
                !
             END IF
             !
-            CALL mp_bcast( tread_cm, ionode_id )
+            CALL mp_bcast( tread_cm, ionode_id, intra_image_comm )
             !
             IF ( ionode ) THEN
                !
@@ -1315,49 +1316,49 @@ MODULE cp_restart
       !
  100  CONTINUE
       !
-      CALL mp_bcast( ierr, ionode_id )
-      CALL mp_bcast( attr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      CALL mp_bcast( attr, ionode_id, intra_image_comm )
       !
       CALL errore( 'cp_readfile ', TRIM( attr ), ierr )
       !
-      CALL mp_bcast( nfi,     ionode_id )
-      CALL mp_bcast( simtime, ionode_id )
-      CALL mp_bcast( title,   ionode_id )
-      CALL mp_bcast( acc,     ionode_id )
+      CALL mp_bcast( nfi,     ionode_id, intra_image_comm )
+      CALL mp_bcast( simtime, ionode_id, intra_image_comm )
+      CALL mp_bcast( title,   ionode_id, intra_image_comm )
+      CALL mp_bcast( acc,     ionode_id, intra_image_comm )
       !
-      CALL mp_bcast( ht,    ionode_id )
-      CALL mp_bcast( htm,   ionode_id )
-      CALL mp_bcast( htvel, ionode_id )
-      CALL mp_bcast( gvel,  ionode_id )
-      CALL mp_bcast( xnhh0, ionode_id )
-      CALL mp_bcast( xnhhm, ionode_id )
-      CALL mp_bcast( vnhh,  ionode_id )
-      CALL mp_bcast( b1,    ionode_id )
-      CALL mp_bcast( b2,    ionode_id )
-      CALL mp_bcast( b3,    ionode_id )
+      CALL mp_bcast( ht,    ionode_id, intra_image_comm )
+      CALL mp_bcast( htm,   ionode_id, intra_image_comm )
+      CALL mp_bcast( htvel, ionode_id, intra_image_comm )
+      CALL mp_bcast( gvel,  ionode_id, intra_image_comm )
+      CALL mp_bcast( xnhh0, ionode_id, intra_image_comm )
+      CALL mp_bcast( xnhhm, ionode_id, intra_image_comm )
+      CALL mp_bcast( vnhh,  ionode_id, intra_image_comm )
+      CALL mp_bcast( b1,    ionode_id, intra_image_comm )
+      CALL mp_bcast( b2,    ionode_id, intra_image_comm )
+      CALL mp_bcast( b3,    ionode_id, intra_image_comm )
       !
-      CALL mp_bcast( stau0, ionode_id )
-      CALL mp_bcast( svel0, ionode_id )
-      CALL mp_bcast( staum, ionode_id )
-      CALL mp_bcast( svelm, ionode_id )
-      CALL mp_bcast( taui,  ionode_id )
-      CALL mp_bcast( force, ionode_id )
-      CALL mp_bcast( cdmi,  ionode_id )
-      CALL mp_bcast( xnhp0, ionode_id )
-      CALL mp_bcast( xnhpm, ionode_id ) 
-      CALL mp_bcast( vnhp,  ionode_id )
+      CALL mp_bcast( stau0, ionode_id, intra_image_comm )
+      CALL mp_bcast( svel0, ionode_id, intra_image_comm )
+      CALL mp_bcast( staum, ionode_id, intra_image_comm )
+      CALL mp_bcast( svelm, ionode_id, intra_image_comm )
+      CALL mp_bcast( taui,  ionode_id, intra_image_comm )
+      CALL mp_bcast( force, ionode_id, intra_image_comm )
+      CALL mp_bcast( cdmi,  ionode_id, intra_image_comm )
+      CALL mp_bcast( xnhp0, ionode_id, intra_image_comm )
+      CALL mp_bcast( xnhpm, ionode_id, intra_image_comm ) 
+      CALL mp_bcast( vnhp,  ionode_id, intra_image_comm )
       !
-      CALL mp_bcast( xnhe0, ionode_id )
-      CALL mp_bcast( xnhem, ionode_id )
-      CALL mp_bcast( vnhe,  ionode_id )
+      CALL mp_bcast( xnhe0, ionode_id, intra_image_comm )
+      CALL mp_bcast( xnhem, ionode_id, intra_image_comm )
+      CALL mp_bcast( vnhe,  ionode_id, intra_image_comm )
       !
-      CALL mp_bcast( kunit, ionode_id )
+      CALL mp_bcast( kunit, ionode_id, intra_image_comm )
 
-      CALL mp_bcast( occ0(:,:,:), ionode_id )
-      CALL mp_bcast( occm(:,:,:), ionode_id )
+      CALL mp_bcast( occ0(:,:,:), ionode_id, intra_image_comm )
+      CALL mp_bcast( occm(:,:,:), ionode_id, intra_image_comm )
       !
       IF ( PRESENT( mat_z ) ) &
-         CALL mp_bcast( mat_z(:,:,:), ionode_id )
+         CALL mp_bcast( mat_z(:,:,:), ionode_id, intra_image_comm )
       !
       IF ( ionode ) &
          CALL iotk_close_read( iunpun )
@@ -1386,8 +1387,8 @@ MODULE cp_restart
          !
       END IF
       !
-      CALL mp_bcast( lambda0, ionode_id )
-      CALL mp_bcast( lambdam, ionode_id )
+      CALL mp_bcast( lambda0, ionode_id, intra_image_comm )
+      CALL mp_bcast( lambdam, ionode_id, intra_image_comm )
       !
       s1 = cclock()
       !
@@ -1403,7 +1404,7 @@ MODULE cp_restart
          CALL read_print_counter( nprint_nfi, scradir, ndr )
          write( stdout,*) 'nprint_nfi= ',nprint_nfi
       endif
-      CALL mp_bcast( nprint_nfi, ionode_id )
+      CALL mp_bcast( nprint_nfi, ionode_id, intra_image_comm )
       !
       RETURN
       !
@@ -1486,8 +1487,9 @@ MODULE cp_restart
                              htm, htvel, gvel, xnhh0, xnhhm, vnhh )
       !------------------------------------------------------------------------
       !
-      USE io_files, ONLY : iunpun, xmlpun
-      USE mp,       ONLY : mp_sum
+      USE io_files,  ONLY : iunpun, xmlpun
+      USE mp_global, ONLY : intra_image_comm
+      USE mp,        ONLY : mp_sum
       !
       IMPLICIT NONE
       !
@@ -1525,7 +1527,7 @@ MODULE cp_restart
          CALL iotk_open_read( iunpun, FILE = TRIM( filename ), &
                               BINARY = .FALSE., ROOT = attr, IERR = ierr )
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       CALL errore( 'cp_read_cell', &
                    'cannot open restart file for reading', ierr )
@@ -1609,18 +1611,18 @@ MODULE cp_restart
       !
  100  CONTINUE
       !
-      CALL mp_bcast( ierr, ionode_id )
-      CALL mp_bcast( attr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      CALL mp_bcast( attr, ionode_id, intra_image_comm )
       !
       CALL errore( 'cp_read_cell ', attr, ierr )
       !
-      CALL mp_bcast( ht,    ionode_id )
-      CALL mp_bcast( htm,   ionode_id )
-      CALL mp_bcast( htvel, ionode_id )
-      CALL mp_bcast( gvel,  ionode_id )
-      CALL mp_bcast( xnhh0, ionode_id )
-      CALL mp_bcast( xnhhm, ionode_id )
-      CALL mp_bcast( vnhh,  ionode_id )
+      CALL mp_bcast( ht,    ionode_id, intra_image_comm )
+      CALL mp_bcast( htm,   ionode_id, intra_image_comm )
+      CALL mp_bcast( htvel, ionode_id, intra_image_comm )
+      CALL mp_bcast( gvel,  ionode_id, intra_image_comm )
+      CALL mp_bcast( xnhh0, ionode_id, intra_image_comm )
+      CALL mp_bcast( xnhhm, ionode_id, intra_image_comm )
+      CALL mp_bcast( vnhh,  ionode_id, intra_image_comm )
       !
       IF ( ionode ) CALL iotk_close_read( iunpun )
       !

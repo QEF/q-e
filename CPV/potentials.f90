@@ -95,7 +95,7 @@
         USE constants, ONLY: fpi
         USE cell_base, ONLY: tpiba2, tpiba
         USE mp,        ONLY: mp_sum
-        USE mp_global, ONLY: nproc, mpime, intra_image_comm, root
+        USE mp_global, ONLY: nproc_image, me_image, intra_image_comm
         USE io_global, ONLY: ionode
         USE gvecp,     ONLY: ngm
         USE reciprocal_vectors, ONLY: gstart, gx, g
@@ -259,7 +259,7 @@
       ! ... include modules
 
       USE control_flags,  ONLY: tscreen, tchi2, iprsta, force_pairing
-      USE mp_global,      ONLY: nproc, mpime, root, intra_image_comm
+      USE mp_global,      ONLY: nproc_image, me_image, intra_image_comm
       USE mp,             ONLY: mp_sum
       USE cell_module,    ONLY: boxdimensions
       USE cell_base,      ONLY: tpiba2
@@ -726,7 +726,7 @@
       END IF
 
       IF(iprsta>2) THEN
-        CALL memstat(mpime)
+        CALL memstat(me_image)
       END IF
 
       IF(timing) THEN
@@ -786,7 +786,7 @@
   SUBROUTINE cluster_bc( screen_coul, hg, box )
 
       USE green_functions, ONLY: greenf
-      USE mp_global, ONLY: mpime
+      USE mp_global, ONLY: me_image
       USE fft_base, ONLY: dfftp
       USE fft_module, ONLY: fwfft
       USE gvecp, ONLY: ngm
@@ -813,7 +813,7 @@
       ir1 = 1
       ir2 = 1
       ir3 = 1
-      DO k = 1, mpime
+      DO k = 1, me_image
         ir3 = ir3 + dfftp%npp( k )
       END DO
 
@@ -1093,7 +1093,7 @@
 
       USE constants,   ONLY : sqrtpm1
       USE cell_module, ONLY : s_to_r, pbcs
-      USE mp_global,   ONLY : nproc, mpime, intra_image_comm
+      USE mp_global,   ONLY : nproc_image, me_image, intra_image_comm
       USE mp,          ONLY : mp_sum
       USE ions_base,   ONLY : rcmax, zv, nsp, na, nax
  
@@ -1140,7 +1140,7 @@
 
 ! ... SUBROUTINE BODY 
 
-      me = mpime + 1
+      me = me_image + 1
 
       !  get the index of the first atom of each specie
 
@@ -1213,8 +1213,8 @@
       ESR     = 0.0_DP
       DESR    = 0.0_DP
 
-      NA_LOC = ldim_block( npt, nproc, mpime)
-      IA_S   = gind_block( 1, npt, nproc, mpime )
+      NA_LOC = ldim_block( npt, nproc_image, me_image)
+      IA_S   = gind_block( 1, npt, nproc_image, me_image )
       IA_E   = IA_S + NA_LOC - 1
 
       DO ia = ia_s, ia_e

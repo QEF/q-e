@@ -432,7 +432,6 @@
       USE cell_module,        ONLY : dgcell, r_to_s, s_to_r, boxdimensions
       use control_flags,      ONLY : tnosep, tcap, tcp, tdampions, lconstrain
       use time_step,          ONLY : delt
-      use mp_global,          ONLY : mpime
       use ions_base,          ONLY : fricp, if_pos
       USE constraints_module, ONLY : check_constraint
 

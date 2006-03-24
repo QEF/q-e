@@ -57,6 +57,7 @@ SUBROUTINE deallocate_modules_var()
   USE ncpp,                 ONLY : deallocate_ncpp
   USE pseudo_projector,     ONLY : fnl, projector, deallocate_projector
   USE groups_module,        ONLY : deallocate_groups
+  USE ions_positions,       ONLY : deallocate_ions_positions
   !
   IMPLICIT NONE
   !
@@ -76,6 +77,7 @@ SUBROUTINE deallocate_modules_var()
   END IF
   !
   CALL deallocate_mainvar()
+  CALL deallocate_ions_positions()
   CALL deallocate_cvan()
   CALL deallocate_efield( )
   CALL deallocate_ensemble_dft()

@@ -216,14 +216,14 @@
 !  lambda(1+2*NPE,1:nx)   lambda(2+2*NPE,1:nx) ..  lambda(NPE+2*NPE,1:nx)
 !
 !  distributes lambda's rows across processors with a blocking factor
-!  of 1, ( row 1 to PE 1, row 2 to PE 2, .. row NPROC+1 to PE 1 and
+!  of 1, ( row 1 to PE 1, row 2 to PE 2, .. row nproc_image+1 to PE 1 and
 !  so on).
 !  nrl = local number of rows
 !  ----------------------------------------------
 
 ! ... declare modules
       USE mp, ONLY: mp_bcast
-      USE mp_global, ONLY: nproc, mpime, intra_image_comm
+      USE mp_global, ONLY: nproc_image, me_image, intra_image_comm
       USE wave_types, ONLY: wave_descriptor
       USE parallel_toolkit, ONLY: pdspev_drv, dspev_drv
 
@@ -261,19 +261,19 @@
       c0rot = 0.0d0
       uu    = lambda
 
-      CALL pdspev_drv( 'V', uu, nrl, eig, vv, nrl, nrl, nx, nproc, mpime)
+      CALL pdspev_drv( 'V', uu, nrl, eig, vv, nrl, nrl, nx, nproc_image, me_image)
 
       DEALLOCATE(uu)
 
-      DO ip = 1, nproc
+      DO ip = 1, nproc_image
 
-        nrl_ip = nx/nproc
-        IF((ip-1).LT.mod(nx,nproc)) THEN
+        nrl_ip = nx/nproc_image
+        IF((ip-1).LT.mod(nx,nproc_image)) THEN
           nrl_ip = nrl_ip + 1
         END IF
 
         ALLOCATE(uu(nrl_ip,nx))
-        IF(mpime.EQ.(ip-1)) THEN
+        IF(me_image.EQ.(ip-1)) THEN
           uu = vv
         END IF
         CALL mp_bcast(uu, (ip-1), intra_image_comm)
@@ -283,7 +283,7 @@
           DO i = 1, nx
             CALL DAXPY(2*ngw,uu(jl,i),c0(1,j),1,c0rot(1,i),1)
           END DO
-          j = j + nproc
+          j = j + nproc_image
         END DO
         DEALLOCATE(uu)
 
@@ -306,7 +306,7 @@
 
 ! ... declare modules
       USE mp, ONLY: mp_bcast
-      USE mp_global, ONLY: nproc, mpime, intra_image_comm
+      USE mp_global, ONLY: nproc_image, me_image, intra_image_comm
       USE wave_types, ONLY: wave_descriptor
       USE parallel_toolkit, ONLY: pzhpev_drv, zhpev_drv
 
@@ -344,17 +344,17 @@
 
         ALLOCATE(uu(nrl,nx))
         uu    = lambda
-        CALL pzhpev_drv( 'V', uu, nrl, eig, vv, nrl, nrl, nx, nproc, mpime)
+        CALL pzhpev_drv( 'V', uu, nrl, eig, vv, nrl, nrl, nx, nproc_image, me_image)
         DEALLOCATE(uu)
 
-        DO ip = 1,nproc
+        DO ip = 1,nproc_image
           j = ip
-          nrl_ip = nx/nproc
-          IF((ip-1).LT.mod(nx,nproc)) THEN
+          nrl_ip = nx/nproc_image
+          IF((ip-1).LT.mod(nx,nproc_image)) THEN
             nrl_ip = nrl_ip + 1
           END IF
           ALLOCATE(uu(nrl_ip,nx))
-          IF(mpime.EQ.(ip-1)) THEN
+          IF(me_image.EQ.(ip-1)) THEN
             uu = vv
           END IF
           CALL mp_bcast(uu, (ip-1), intra_image_comm)
@@ -362,7 +362,7 @@
             DO i=1,nx
               CALL ZAXPY(ngw,uu(jl,i),c0(1,j,ik),1,c0rot(1,i),1)
             END DO
-            j = j + nproc
+            j = j + nproc_image
           END DO
           DEALLOCATE(uu)
         END DO
@@ -388,11 +388,11 @@
 !  lambda(1+2*NPE,1:nx)   lambda(2+2*NPE,1:nx) ..  lambda(NPE+2*NPE,1:nx)
 !
 !  distribute lambda's rows across processors with a blocking factor
-!  of 1, ( row 1 to PE 1, row 2 to PE 2, .. row NPROC+1 to PE 1 and so on).
+!  of 1, ( row 1 to PE 1, row 2 to PE 2, .. row nproc_image+1 to PE 1 and so on).
 !  ----------------------------------------------
 
 ! ...   declare modules
-        USE mp_global, ONLY: nproc,mpime,intra_image_comm
+        USE mp_global, ONLY: nproc_image,me_image,intra_image_comm
         USE wave_types, ONLY: wave_descriptor
         USE wave_base, ONLY: dotp
 
@@ -427,9 +427,9 @@
             ee(j) = -dotp(adesc%gzero, ngwc, b(:,j), a(:,i))
           END DO
           IF( PRESENT(lambda) ) THEN
-            IF( MOD( (i-1), nproc ) == mpime ) THEN
+            IF( MOD( (i-1), nproc_image ) == me_image ) THEN
               DO j = 1, MIN( SIZE( lambda, 2 ), SIZE( ee ) )
-                lambda( (i-1) / nproc + 1, j ) = ee(j)
+                lambda( (i-1) / nproc_image + 1, j ) = ee(j)
               END DO
             END IF
           END IF
@@ -452,7 +452,7 @@
 !  ----------------------------------------------
 
 ! ...   declare modules
-        USE mp_global, ONLY: nproc,mpime,intra_image_comm
+        USE mp_global, ONLY: nproc_image,me_image,intra_image_comm
         USE wave_types, ONLY: wave_descriptor
         USE wave_base, ONLY: dotp
 
@@ -516,7 +516,7 @@
 !  ----------------------------------------------
 
 ! ...   declare modules
-        USE mp_global, ONLY: mpime, nproc
+        USE mp_global, ONLY: me_image, nproc_image
         USE wave_types, ONLY: wave_descriptor
         USE wave_base, ONLY: dotp
 
@@ -552,9 +552,9 @@
             ee(j) = -dotp(ngwc, b(:,j,ik), a(:,i,ik))
           END DO
           IF( PRESENT( lambda ) ) THEN
-            IF(mod((i-1),nproc).EQ.mpime) THEN
+            IF(mod((i-1),nproc_image).EQ.me_image) THEN
               DO j = 1, MIN( SIZE( lambda, 2 ), SIZE( ee ) )
-                lambda((i-1)/nproc+1,j) = ee(j)
+                lambda((i-1)/nproc_image+1,j) = ee(j)
               END DO
             END IF
           END IF
@@ -578,7 +578,7 @@
 ! ... declare modules
       USE mp, ONLY: mp_sum
       USE mp_wave, ONLY: splitwf
-      USE mp_global, ONLY: mpime, nproc, root
+      USE mp_global, ONLY: me_image, nproc_image
       USE reciprocal_vectors, ONLY: ig_l2g, ngw, ngwt, gzero
       USE io_global, ONLY: stdout
       USE random_numbers, ONLY : rranf
@@ -629,7 +629,7 @@
           rranf2 = rranf()
           pwt( ig ) = ampre * CMPLX(rranf1, rranf2)
         END DO
-        CALL splitwf ( cm( :, ib ), pwt, ngw, ig_l2g, mpime, nproc, 0 )
+        CALL splitwf ( cm( :, ib ), pwt, ngw, ig_l2g, me_image, nproc_image, 0 )
       END DO
       IF ( gzero ) THEN
         cm( 1, : ) = (0.0d0, 0.0d0)
@@ -683,7 +683,7 @@
 
      SUBROUTINE update_rlambda( i, lambda, c0, cdesc, c2 )
        USE electrons_module, ONLY: ib_owner, ib_local
-       USE mp_global, ONLY: mpime, intra_image_comm
+       USE mp_global, ONLY: me_image, intra_image_comm
        USE mp, ONLY: mp_sum
        USE wave_base, ONLY: hpsi
        USE wave_types, ONLY: wave_descriptor
@@ -699,7 +699,7 @@
        ALLOCATE( prod( SIZE( c0, 2 ) ) )
        prod = hpsi( cdesc%gzero, c0(:,:), c2 )
        CALL mp_sum( prod, intra_image_comm )
-       IF( mpime == ib_owner( i ) ) THEN
+       IF( me_image == ib_owner( i ) ) THEN
            ibl = ib_local( i )
            lambda( ibl, : ) = prod( : )
        END IF
@@ -709,7 +709,7 @@
 
      SUBROUTINE update_clambda( i, lambda, c0, cdesc, c2 )
        USE electrons_module, ONLY: ib_owner, ib_local
-       USE mp_global, ONLY: mpime, intra_image_comm
+       USE mp_global, ONLY: me_image, intra_image_comm
        USE mp, ONLY: mp_sum
        USE wave_base, ONLY: hpsi
        USE wave_types, ONLY: wave_descriptor
@@ -725,7 +725,7 @@
        ALLOCATE( prod( SIZE( c0, 2 ) ) )
        prod = hpsi( cdesc%gzero, c0(:,:), c2 )
        CALL mp_sum( prod, intra_image_comm )
-       IF( mpime == ib_owner( i ) ) THEN
+       IF( me_image == ib_owner( i ) ) THEN
            ibl = ib_local( i )
            lambda( ibl, : ) = prod( : )
        END IF

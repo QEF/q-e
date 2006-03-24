@@ -24,7 +24,7 @@
       subroutine VdW(evdw, atoms, fion, box) 
 
       USE cell_module, ONLY: s_to_r, boxdimensions, pbcs
-      USE mp_global, ONLY: mpime, root
+      USE mp_global, ONLY: me_image, root_image
       USE atoms_type_module, ONLY: atoms_type
 
 ! 
@@ -151,7 +151,7 @@
         enddo !i
         evdw=evdw/2.
 
-        IF( mpime .EQ. root ) THEN
+        IF( me_image == root_image ) THEN
           fion( :, 1:atoms%nat ) = fion( :, 1:atoms%nat ) + force( :, 1:atoms%nat )
         END IF
 

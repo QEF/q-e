@@ -52,7 +52,7 @@ MODULE guess
 !  ----------------------------------------------
 
 ! ...     declare modules
-          USE mp_global,        ONLY : nproc, mpime, intra_image_comm
+          USE mp_global,        ONLY : nproc_image, me_image, intra_image_comm
           USE wave_types,       ONLY : wave_descriptor
           USE control_flags,    ONLY : force_pairing
           USE uspp,             ONLY : vkb, nkb
@@ -118,7 +118,7 @@ MODULE guess
                 CALL ucalc_kp(cm(:,:,ik,1),c0(:,:,ik,1),ngw,cdesc%gzero,n,cuu)
                 ! CALL cmatmulp('N','C',cuu,cuu,ca,n)
                 CALL errore(' guess ', ' complex matrix mult to be implemented ', 1 )
-                CALL cdiagonalize(1,ca,size(ca,1),costemp,cap,size(cap,1),n,nproc,mpime)
+                CALL cdiagonalize(1,ca,size(ca,1),costemp,cap,size(cap,1),n,nproc_image,me_image)
                 DO j=1,n
                   DO i=1,n
                     ca(i,j)=cap(i,n-j+1)
@@ -165,7 +165,7 @@ MODULE guess
 
               CALL ucalc(cm(:,:,1,1),c0(:,:,1,1),ngw,cdesc%gzero,n,uu)
               CALL rep_matmul_drv('T','N',n,n,n,1.0d0,uu,n,uu,n,0.0d0,a,n,intra_image_comm)
-              CALL diagonalize(1,a,SIZE(a,1),costemp,ap,SIZE(ap,1),n,nproc,mpime)
+              CALL diagonalize(1,a,SIZE(a,1),costemp,ap,SIZE(ap,1),n,nproc_image,me_image)
               DO j=1,n
                 DO i=1,n
                   a(i,j)=ap(i,n-j+1)
@@ -279,7 +279,7 @@ MODULE guess
 
 ! ...   declare modules
         USE mp
-        USE mp_global, ONLY: mpime, nproc, intra_image_comm
+        USE mp_global, ONLY: intra_image_comm
 
         IMPLICIT NONE
 
@@ -306,8 +306,8 @@ MODULE guess
 !  ----------------------------------------------
 
 ! ... declare modules
-      USE mp
-      USE mp_global, ONLY: nproc, mpime, intra_image_comm
+      USE mp,        ONLY: mp_sum
+      USE mp_global, ONLY: intra_image_comm
 
       IMPLICIT NONE
 

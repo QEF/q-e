@@ -51,7 +51,7 @@ CONTAINS
       ! ...    Multiply square matrices A, B and return the result in C
 
       USE control_flags, ONLY: iprsta
-      USE mp_global,     ONLY: nproc, mpime, root, intra_image_comm
+      USE mp_global,     ONLY: nproc_image, me_image, root_image, intra_image_comm
       USE io_global,     ONLY: ionode, stdout
       USE mp,            ONLY: mp_bcast
 
@@ -69,7 +69,7 @@ CONTAINS
       !
       calls_cnt = calls_cnt + 1
 
-      IF( nproc == 1 ) THEN
+      IF( nproc_image == 1 ) THEN
          lpdrv = .FALSE.          !  with one proc do not use parallel diag
       ELSE IF ( calls_cnt == 1 ) THEN
          lpdrv = .TRUE.           !  use parallel diag the first call to take the time
@@ -97,7 +97,7 @@ CONTAINS
 
          IF( calls_cnt < 3 )  THEN
             tpar = cclock() - t1
-            CALL mp_bcast( tpar, root, intra_image_comm )
+            CALL mp_bcast( tpar, root_image, intra_image_comm )
          END IF
 
       ELSE
@@ -108,7 +108,7 @@ CONTAINS
 
          IF( calls_cnt < 3 )  THEN
             tser = cclock() - t1
-            CALL mp_bcast( tser, root, intra_image_comm )
+            CALL mp_bcast( tser, root_image, intra_image_comm )
          END IF
 
       END IF
@@ -125,7 +125,7 @@ CONTAINS
          !   Diagonalization of rhos
 
       USE control_flags, ONLY: iprsta
-      USE mp_global, ONLY: nproc, mpime, intra_image_comm, root
+      USE mp_global, ONLY: nproc_image, me_image, intra_image_comm, root_image
       USE io_global, ONLY: ionode, stdout
       USE mp,        ONLY: mp_sum, mp_bcast
       !
@@ -149,7 +149,7 @@ CONTAINS
 
       calls_cnt = calls_cnt + 1
 
-      IF( nproc == 1 ) THEN 
+      IF( nproc_image == 1 ) THEN 
          lpdrv = .FALSE.          !  with one proc do not use parallel diag
       ELSE IF ( calls_cnt == 1 ) THEN 
          lpdrv = .TRUE.           !  use parallel diag the first call to take the time
@@ -180,15 +180,15 @@ CONTAINS
         !  distribute matrix rows to processors
         !
 
-        nrl = n / nproc
-        IF( mpime < MOD( n, nproc ) ) THEN
+        nrl = n / nproc_image
+        IF( me_image < MOD( n, nproc_image ) ) THEN
           nrl = nrl + 1
         end if
 
         ALLOCATE( diag( nrl, n ), vv( nrl, n ) )
 
         CALL prpack( n, diag, rhos)
-        CALL pdspev_drv( 'V', diag, nrl, rhod, vv, nrl, nrl, n, nproc, mpime)
+        CALL pdspev_drv( 'V', diag, nrl, rhod, vv, nrl, nrl, n, nproc_image, me_image)
         CALL prunpack( n, s, vv)
 
         DEALLOCATE( diag, vv )
@@ -199,7 +199,7 @@ CONTAINS
 
            tpar = cclock() - t1
 
-           CALL mp_bcast( tpar, root, intra_image_comm )
+           CALL mp_bcast( tpar, root_image, intra_image_comm )
 
         END IF
 
@@ -219,7 +219,7 @@ CONTAINS
 
            tser = cclock() - t1
 
-           CALL mp_bcast( tser, root, intra_image_comm )
+           CALL mp_bcast( tser, root_image, intra_image_comm )
 
         END IF
 
@@ -237,7 +237,7 @@ CONTAINS
       !  this routine calls the appropriate Lapack routine for diagonalizing a
       !  complex Hermitian matrix
 
-         USE mp_global, ONLY: nproc, mpime, intra_image_comm
+         USE mp_global, ONLY: nproc_image, me_image, intra_image_comm
          USE mp, ONLY: mp_sum
          IMPLICIT NONE
 
@@ -261,17 +261,17 @@ CONTAINS
          
          IF( PRESENT( use_pdrv ) ) lpdrv = use_pdrv
 
-         IF ( ( nproc > 1 ) .AND. use_pdrv ) THEN
+         IF ( ( nproc_image > 1 ) .AND. use_pdrv ) THEN
 
-           nrl = n/nproc
-           IF(mpime.LT.MOD(n,nproc)) THEN
+           nrl = n/nproc_image
+           IF(me_image.LT.MOD(n,nproc_image)) THEN
              nrl = nrl + 1
            END IF
 
            ALLOCATE(ap(nrl,n), vp(nrl,n))
 
            CALL pzpack(ap, a)
-           CALL pzhpev_drv( 'V', ap, nrl, d, vp, nrl, nrl, n, nproc, mpime)
+           CALL pzhpev_drv( 'V', ap, nrl, d, vp, nrl, nrl, n, nproc_image, me_image)
            CALL pzunpack(a, vp)
            CALL mp_sum(a, ev, intra_image_comm)
 
@@ -302,38 +302,38 @@ CONTAINS
 
 
       SUBROUTINE prpack( n, ap, a)
-        USE mp_global, ONLY: mpime, nproc
+        USE mp_global, ONLY: me_image, nproc_image
         REAL(DP), INTENT(IN) :: a(:,:)
         REAL(DP), INTENT(OUT) :: ap(:,:)
         INTEGER, INTENT(IN) :: n
         INTEGER :: i, j, jl
         DO i = 1, SIZE( ap, 2)
-           j = mpime + 1
+           j = me_image + 1
            DO jl = 1, SIZE( ap, 1)
              ap(jl,i) = a(j,i)
-             j = j + nproc
+             j = j + nproc_image
            END DO
         END DO
         RETURN
       END SUBROUTINE prpack
 
       SUBROUTINE pzpack( ap, a)
-        USE mp_global, ONLY: mpime, nproc
+        USE mp_global, ONLY: me_image, nproc_image
         COMPLEX(DP), INTENT(IN) :: a(:,:)
         COMPLEX(DP), INTENT(OUT) :: ap(:,:)
         INTEGER :: i, j, jl
         DO i = 1, SIZE( ap, 2)
-           j = mpime + 1
+           j = me_image + 1
            DO jl = 1, SIZE( ap, 1)
              ap(jl,i) = a(j,i)
-             j = j + nproc
+             j = j + nproc_image
            END DO
         END DO
         RETURN
       END SUBROUTINE pzpack
 
       SUBROUTINE prunpack( n, a, ap )
-        USE mp_global, ONLY: mpime, nproc
+        USE mp_global, ONLY: me_image, nproc_image
         REAL(DP), INTENT(IN) :: ap(:,:)
         REAL(DP), INTENT(OUT) :: a(:,:)
         INTEGER, INTENT(IN) :: n
@@ -342,17 +342,17 @@ CONTAINS
           DO j = 1, n
             a(j,i) = zero
           END DO
-          j = mpime + 1
+          j = me_image + 1
           DO jl = 1, SIZE(ap, 1)
             a(j,i) = ap(jl,i)
-            j = j + nproc
+            j = j + nproc_image
           END DO
         END DO
         RETURN
       END SUBROUTINE prunpack
 
       SUBROUTINE pzunpack( a, ap)
-        USE mp_global, ONLY: mpime, nproc
+        USE mp_global, ONLY: me_image, nproc_image
         COMPLEX(DP), INTENT(IN) :: ap(:,:)
         COMPLEX(DP), INTENT(OUT) :: a(:,:)
         INTEGER :: i, j, jl
@@ -360,10 +360,10 @@ CONTAINS
           DO j = 1, SIZE(a, 1)
             a(j,i) = zero
           END DO
-          j = mpime + 1
+          j = me_image + 1
           DO jl = 1, SIZE(ap, 1)
             a(j,i) = ap(jl,i)
-            j = j + nproc
+            j = j + nproc_image
           END DO
         END DO
         RETURN
