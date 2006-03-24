@@ -368,7 +368,7 @@ MODULE cp_restart
          !
          IF ( nspin == 1 ) THEN
             !
-            CALL write_rho_xml( rho_file_base, mpime, nproc, rho(:,1), nr1, &
+            CALL write_rho_xml( rho_file_base, rho(:,1), nr1, &
                                 nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
             !
          ELSE IF ( nspin == 2 ) THEN
@@ -377,7 +377,7 @@ MODULE cp_restart
             !
             rhosum = rho(:,1) + rho(:,2) 
             !
-            CALL write_rho_xml( rho_file_base, mpime, nproc, rhosum, nr1, &
+            CALL write_rho_xml( rho_file_base, rhosum, nr1, &
                                 nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
             !
             DEALLOCATE( rhosum )
@@ -390,7 +390,7 @@ MODULE cp_restart
             !
             rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
             !
-            CALL write_rho_xml( rho_file_base, mpime, nproc, rho(:,1), nr1, &
+            CALL write_rho_xml( rho_file_base, rho(:,1), nr1, &
                                 nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
             !
             rho_file_base = 'charge-density-dw'
@@ -401,7 +401,7 @@ MODULE cp_restart
             !
             rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
             !
-            CALL write_rho_xml( rho_file_base, mpime, nproc, rho(:,2), nr1, &
+            CALL write_rho_xml( rho_file_base, rho(:,2), nr1, &
                                 nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
             !
          END IF

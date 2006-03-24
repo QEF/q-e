@@ -488,7 +488,7 @@ CONTAINS
         USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnrx
         USE fft_module, ONLY: invfft
         USE xml_io_base, ONLY: write_rho_xml
-        USE mp_global,       ONLY: nproc, mpime
+        USE mp_global,       ONLY: nproc_image, me_image
 
         IMPLICIT NONE
 
@@ -510,7 +510,7 @@ CONTAINS
         END DO
         charge = SUM( rpsi2 )
 
-        CALL write_rho_xml( file_name, mpime, nproc, rpsi2, nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+        CALL write_rho_xml( file_name, rpsi2, nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
         
         CALL mp_sum( charge, intra_image_comm )
 
