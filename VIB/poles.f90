@@ -28,6 +28,7 @@
       USE electrons_base,   ONLY : qbac
       USE fft_base,         ONLY : dfftp 
       USE mp_global,        ONLY : mpime
+      USE mp,               ONLY : mp_sum
 #ifdef DFT_CP
       USE grid_dimensions,  ONLY : nr1, nr2, nr3, nr1x, nr2x, nnr=> nnrx
 #endif
@@ -117,7 +118,7 @@
          !
       END DO !!!!!!! ix
       !
-      CALL reduce(3,dipole_vec)
+      CALL mp_sum(dipole_vec)
       !
       DO ix=1,3
          dipole_vec(ix)=dipole_vec(ix)*omega/DBLE(nr1*nr2*nr3)
@@ -184,7 +185,7 @@
          quad(ix)=SUM(dip(1:nnr))
       END DO
       !
-      CALL reduce(6,quad)
+      CALL mp_sum(quad)
 
       DO ix=1,6
          quad(ix)=quad(ix)*omega/DBLE(nr1*nr2*nr3)
