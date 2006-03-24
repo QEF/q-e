@@ -104,20 +104,20 @@
          CALL printout_base_open()
       END IF
       !
+      IF( tprint ) THEN
+         IF ( tfile ) THEN
+            ! we're writing files, let's save nfi
+            CALL save_print_counter( nfi, scradir, ndw )
+         ELSE IF ( tfilei ) then
+            ! not there yet, save the old nprint_nfi
+            CALL save_print_counter( nprint_nfi, scradir, ndw )
+         END IF
+      END IF
+
       IF( ionode ) THEN
          !
          IF( tprint ) THEN
             !
-            !********************************************
-            if (tfile) then
-               ! we're writing files, let's save nfi
-               CALL save_print_counter( nfi, scradir, ndw )
-            elseif (tfilei) then
-               ! not there yet, save the old nprint_nfi
-               CALL save_print_counter( nprint_nfi, scradir, ndw )
-            endif
-            !********************************************
-         !
             tsic = ( self_interaction /= 0 )
             !
             CALL print_energies( tsic, sic_alpha = sic_alpha, sic_epsilon = sic_epsilon )
