@@ -152,117 +152,112 @@ subroutine read_nnkp
    use wannier
    use constants,       only : tpi
 
- implicit none
- real(DP) :: g_(3), gg_, epsilon
- integer :: ik, ib, ig, ipol, iw, idum
- integer numwan, numk, i, j
- real(DP) :: rlatt(3,3), glatt(3,3), xx(3), bohr, box, xnorm, znorm, coseno
+   implicit none
+   real(DP) :: g_(3), gg_, epsilon
+   integer :: ik, ib, ig, ipol, iw, idum
+   integer numwan, numk, i, j
+   real(DP) :: rlatt(3,3), glatt(3,3), xx(3), bohr, box, xnorm, znorm, coseno
+   CHARACTER(LEN=80) :: line1, line2
 
- 
- iun_nnkp = find_free_unit()
- open (unit=iun_nnkp, file='wannier.nnkp',form='formatted')
- nnbx=0
-
+   iun_nnkp = find_free_unit()
+   open (unit=iun_nnkp, file='wannier.nnkp',form='formatted')
+   nnbx=0
 
 !   check the information from *.nnkp with the nscf_save data
- write(*,*) ' Checking info from wannier.nnkp file' 
- write(*,*)
- bohr = 0.5291772108d0
- epsilon = 1.0d-5
- do i=1,4
-    read(iun_nnkp,*)
- enddo
- read(iun_nnkp,*)
- do j=1,3
-    read(iun_nnkp,*) (rlatt(i,j),i=1,3)
-    do i = 1,3
-       rlatt(i,j) = rlatt(i,j)/(alat*bohr)
-    enddo
- enddo
- read(iun_nnkp,*) 
- do j=1,3
- do i=1,3
-    if(abs(rlatt(i,j)-at(i,j)).gt.epsilon) then
-       write(*,*)  ' Something wrong! '
-       write(*,*)  ' rlatt(i,j) =',rlatt(i,j),  ' at(i,j)=',at(i,j)
-       stop
-    endif  
- enddo
- enddo
- read(iun_nnkp,*)
- write(*,*) ' - Real lattice is ok'
- read(iun_nnkp,*)
- do j=1,3
-    read(iun_nnkp,*) (glatt(i,j),i=1,3)
-    do i = 1,3
-       glatt(i,j) = (alat*bohr)*glatt(i,j)/tpi
-    enddo
- enddo
- read(iun_nnkp,*)
- do j=1,3
- do i=1,3
-    if(abs(glatt(i,j)-bg(i,j)).gt.epsilon) then
+   write(*,*) ' Checking info from wannier.nnkp file' 
+   write(*,*)
+   bohr = 0.5291772108d0
+   epsilon = 1.0d-5
+
+   call scan_file_to('real_lattice')
+   do j=1,3
+   read(iun_nnkp,*) (rlatt(i,j),i=1,3)
+      do i = 1,3
+         rlatt(i,j) = rlatt(i,j)/(alat*bohr)
+      enddo
+   enddo
+   do j=1,3
+      do i=1,3
+         if(abs(rlatt(i,j)-at(i,j)).gt.epsilon) then
+            write(*,*)  ' Something wrong! '
+            write(*,*)  ' rlatt(i,j) =',rlatt(i,j),  ' at(i,j)=',at(i,j)
+            stop
+         endif  
+      enddo
+   enddo
+   write(*,*) ' - Real lattice is ok'
+
+   call scan_file_to('recip_lattice')
+   do j=1,3
+      read(iun_nnkp,*) (glatt(i,j),i=1,3)
+      do i = 1,3
+         glatt(i,j) = (alat*bohr)*glatt(i,j)/tpi
+      enddo
+   enddo
+   do j=1,3
+      do i=1,3
+         if(abs(glatt(i,j)-bg(i,j)).gt.epsilon) then
+            write(*,*)  ' Something wrong! '
+            write(*,*)  ' glatt(i,j)=',glatt(i,j), ' bg(i,j)=',bg(i,j)
+            stop
+         endif
+      enddo
+   enddo
+   write(*,*) ' - Reciprocal lattice is ok'
+
+   call scan_file_to('kpoints')
+   read(iun_nnkp,*) numk
+   if(numk.ne.iknum) then
       write(*,*)  ' Something wrong! '
-      write(*,*)  ' glatt(i,j)=',glatt(i,j), ' bg(i,j)=',bg(i,j)
+      write(*,*)  ' numk=',numk, ' iknum=',iknum
       stop
-    endif
- enddo
- enddo
- read(iun_nnkp,*)
- write(*,*) ' - Reciprocal lattice is ok'
- read(iun_nnkp,*)
- read(iun_nnkp,*) numk
- if(numk.ne.iknum) then
-    write(*,*)  ' Something wrong! '
-    write(*,*)  ' numk=',numk, ' iknum=',iknum
-    stop
- endif
- do i=1,numk
-    read(iun_nnkp,*) xx(1), xx(2), xx(3)
-    CALL cryst_to_cart( 1, xx, bg, 1 )
-    if(abs(xx(1)-xk(1,i)).gt.epsilon.or. &
-       abs(xx(2)-xk(2,i)).gt.epsilon.or. &
-       abs(xx(3)-xk(3,i)).gt.epsilon) then
-       write(*,*)  ' Something wrong! '
-       write(*,*) ' k-point ',i,' is wrong'
-       write(*,*) xx(1), xx(2), xx(3) 
-       write(*,*) xk(1,i), xk(2,i), xk(3,i)
-       stop
-    endif
- enddo
- read(iun_nnkp,*)
- write(*,*) ' - K-points are ok'
- read(iun_nnkp,*)
- read(iun_nnkp,*)
- read(iun_nnkp,*) numwan
- n_wannier = numwan
- allocate( center_w(3,n_wannier), alpha_w(n_wannier), gf(npwx,n_wannier), &
-           l_w(n_wannier), mr_w(n_wannier), r_w(n_wannier), &
-           zaxis(3,n_wannier), xaxis(3,n_wannier), csph(16,n_wannier) )
+   endif
+   do i=1,numk
+      read(iun_nnkp,*) xx(1), xx(2), xx(3)
+      CALL cryst_to_cart( 1, xx, bg, 1 )
+      if(abs(xx(1)-xk(1,i)).gt.epsilon.or. &
+         abs(xx(2)-xk(2,i)).gt.epsilon.or. &
+         abs(xx(3)-xk(3,i)).gt.epsilon) then
+         write(*,*)  ' Something wrong! '
+         write(*,*) ' k-point ',i,' is wrong'
+         write(*,*) xx(1), xx(2), xx(3) 
+         write(*,*) xk(1,i), xk(2,i), xk(3,i)
+         stop
+      endif
+   enddo
+   write(*,*) ' - K-points are ok'
 
-
- write(*,'("  - Number of wannier functions is ok (",i3,")")')  n_wannier 
- do iw=1,numwan
-    read(iun_nnkp,*) (center_w(i,iw), i=1,3), l_w(iw), mr_w(iw), r_w(iw)
-    read(iun_nnkp,*) (zaxis(i,iw), i=1,3), (xaxis(i,iw), i=1,3), alpha_w(iw), box
-    xnorm = sqrt(xaxis(1,iw)*xaxis(1,iw) + xaxis(2,iw)*xaxis(2,iw) + xaxis(3,iw)*xaxis(3,iw))
-    if (xnorm < eps8) call errore ('read_nnkp',' |xaxis| < eps ',1)
-    znorm = sqrt(zaxis(1,iw)*zaxis(1,iw) + zaxis(2,iw)*zaxis(2,iw) + zaxis(3,iw)*zaxis(3,iw))
-    if (znorm < eps8) call errore ('read_nnkp',' |zaxis| < eps ',1)
-    coseno = (xaxis(1,iw)*zaxis(1,iw) + xaxis(2,iw)*zaxis(2,iw) + xaxis(3,iw)*zaxis(3,iw))/xnorm/znorm
-    if (abs(coseno) > eps8) call errore('read_nnkp',' xaxis and zaxis are not orthogonal !',1)
-    if (alpha_w(iw) < eps8) call errore('read_nnkp',' zona value must be positive', 1)
-    ! convert wannier center in cartesian coordinates (in unit of alat)
-    CALL cryst_to_cart( 1, center_w(:,iw), at, 1 )
- enddo
- !
- read(iun_nnkp,*)
- read(iun_nnkp,*)
- read(iun_nnkp,*)
- read (iun_nnkp,*) nnb 
- nnbx = max (nnbx, nnb )
-! end of check
-
+   call scan_file_to('projections')
+   read(iun_nnkp,*) numwan
+   n_wannier = numwan
+   allocate( center_w(3,n_wannier), alpha_w(n_wannier), gf(npwx,n_wannier), &
+             l_w(n_wannier), mr_w(n_wannier), r_w(n_wannier), &
+             zaxis(3,n_wannier), xaxis(3,n_wannier), csph(16,n_wannier) )
+   write(*,'("  - Number of wannier functions is ok (",i3,")")'), n_wannier 
+   do iw=1,numwan
+      read(iun_nnkp,*) (center_w(i,iw), i=1,3), l_w(iw), mr_w(iw), r_w(iw)
+      read(iun_nnkp,*) (zaxis(i,iw),i=1,3),(xaxis(i,iw),i=1,3),alpha_w(iw),box
+      xnorm = sqrt(xaxis(1,iw)*xaxis(1,iw) + xaxis(2,iw)*xaxis(2,iw) + &
+                                             xaxis(3,iw)*xaxis(3,iw))
+      if (xnorm < eps8) call errore ('read_nnkp',' |xaxis| < eps ',1)
+      znorm = sqrt(zaxis(1,iw)*zaxis(1,iw) + zaxis(2,iw)*zaxis(2,iw) + &
+                                             zaxis(3,iw)*zaxis(3,iw))
+      if (znorm < eps8) call errore ('read_nnkp',' |zaxis| < eps ',1)
+      coseno = (xaxis(1,iw)*zaxis(1,iw) + xaxis(2,iw)*zaxis(2,iw) + &
+                                          xaxis(3,iw)*zaxis(3,iw))/xnorm/znorm
+      if (abs(coseno) > eps8) &
+          call errore('read_nnkp',' xaxis and zaxis are not orthogonal !',1)
+      if (alpha_w(iw) < eps8) &
+          call errore('read_nnkp',' zona value must be positive', 1)
+      ! convert wannier center in cartesian coordinates (in unit of alat)
+      CALL cryst_to_cart( 1, center_w(:,iw), at, 1 )
+   enddo
+   write(*,*) ' - All guiding functions are given '
+   !
+   call scan_file_to('nnkpts')
+   read (iun_nnkp,*) nnb 
+   nnbx = max (nnbx, nnb )
+!  end of check
    allocate ( kpb(iknum,nnbx), g_kpb(3,iknum,nnbx),ig_(iknum,nnbx) )
 !  read data about neighbours
    write(*,*)
@@ -284,10 +279,33 @@ subroutine read_nnkp
          end do
       end do
    end do
+   write(*,*) ' All neighbours are found '
+   write(*,*)
+
    close (iun_nnkp)
 
    return
 end subroutine read_nnkp
+
+subroutine scan_file_to (keyword)
+   use wannier, only :iun_nnkp
+   implicit none
+   character(len=*) :: keyword
+   character(len=80) :: line1, line2
+!
+! by uncommenting the following line the file scan restarts every time 
+! from the beginning thus making the reading independent on the order 
+! of data-blocks
+!   rewind (iun_nnkp)
+!
+10 continue
+   read(iun_nnkp,*,end=20) line1, line2
+   if(line1.ne.'begin')  goto 10
+   if(line2.ne.keyword) goto 10
+   return
+20 write (*,*) keyword," data-block missing "
+   stop
+end subroutine scan_file_to
 !
 subroutine compute_mmn
    !-----------------------------------------------------------------------
@@ -563,20 +581,20 @@ subroutine generate_guiding_functions(ik)
    use constants, only : pi, tpi, fpi, eps8
    use wvfct, only : npw, g2kin, igk
    use gvect, only : ig1, ig2, ig3, g
-   use cell_base,  ONLY : tpiba2, omega
+   use cell_base,  ONLY : tpiba2, omega, tpiba
    use wannier
    use klist,      only : xk 
    USE cell_base, ONLY : bg
    implicit none
-   integer, parameter :: lmax2=16
-   integer :: iw, ig, ik, bgtau(3), isph, l
+   integer, parameter :: lmax=3, lmax2=(lmax+1)**2
+   integer :: iw, ig, ik, bgtau(3), isph, l, mesh_r
    integer :: lmax_iw, lm, ipol, n1, n2, n3, nr1, nr2, nr3, iig
-   real(DP) :: arg, anorm, fac, alpha_w2, yy
+   real(DP) :: arg, anorm, fac, alpha_w2, yy, alfa
    complex(DP) :: ZDOTC, kphase, lphase, gff, lph
-   real(DP), allocatable :: gk(:,:), qg(:), ylm(:,:)
+   real(DP), allocatable :: gk(:,:), qg(:), ylm(:,:), radial(:,:)
    complex(DP), allocatable :: sk(:) 
    !
-   allocate( gk(3,npw), qg(npw), ylm(npw,lmax2), sk(npw) )
+   allocate( gk(3,npw), qg(npw), ylm(npw,lmax2), sk(npw), radial(npw,0:lmax) )
    !
    do ig = 1, npw
       gk (1,ig) = xk(1, ik) + g(1, igk(ig) )
@@ -585,25 +603,28 @@ subroutine generate_guiding_functions(ik)
       qg(ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
    enddo
    call ylmr2 (lmax2, npw, gk, qg, ylm)
-   !
+   ! define qg as the norm of (k+g) in a.u.
+   qg(:) = sqrt(qg(:)) * tpiba
+
    do iw = 1, n_wannier
       !
-      alpha_w2 = alpha_w(iw)**2
       gf(:,iw) = (0.d0,0.d0)
+
+      call radialpart(npw, qg, alpha_w(iw), r_w(iw), lmax, radial) 
+
       do lm = 1, lmax2
          if ( abs(csph(lm,iw)) < eps8 ) cycle
          l = int (sqrt( lm-1.d0))
-         lphase = (0.d0,1.d0)**l
+         !lphase = (0.d0,1.d0)**(l-1)
          !
          do ig=1,npw
-!            gf(ig,iw) = gf(ig,iw) + csph(lm,iw) * ylm(ig,lm) * lphase * radial(ig,l)
-            gf(ig,iw) = gf(ig,iw) + csph(lm,iw) * ylm(ig,lm) * lphase * &
-                                                  exp(-0.5d0*alpha_w2*qg(ig)*tpiba2) 
+            gf(ig,iw) = gf(ig,iw) + csph(lm,iw) * ylm(ig,lm) * radial(ig,l)
          end do !ig
       end do ! lm
       do ig=1,npw
          iig = igk(ig)
-         arg = ( gk(1,ig)*center_w(1,iw) + gk(2,ig)*center_w(2,iw) + gk(3,ig)*center_w(3,iw) ) * tpi
+         arg = ( gk(1,ig)*center_w(1,iw) + gk(2,ig)*center_w(2,iw) + &
+                                           gk(3,ig)*center_w(3,iw) ) * tpi
          ! center_w are cartesian coordinates in units of alat 
          sk(ig) = CMPLX(cos(arg), -sin(arg) )
          gf(ig,iw) = gf(ig,iw) * sk(ig) 
@@ -612,7 +633,8 @@ subroutine generate_guiding_functions(ik)
       gf(:,iw) = gf(:,iw) / anorm
       write (*,*) ik, iw, anorm
    end do
-   deallocate ( gk, qg, ylm, sk)
+   !
+   deallocate ( gk, qg, ylm, sk, radial)
    return
 end subroutine generate_guiding_functions
 
@@ -1068,3 +1090,61 @@ function fy3x2my2(cost,phi)
    fy3x2my2 =  0.25d0*sqrt(17.5d0/pi) * sint * sint * sint * sin(3.d0*phi)
    return
 end function fy3x2my2
+!
+!
+!-----------------------------------------------------------------------
+subroutine radialpart(ng, q, alfa, rvalue, lmax, radial)
+  !-----------------------------------------------------------------------
+  !
+  ! This routine computes a table with the radial Fourier transform 
+  ! of the radial functions.
+  !
+  USE kinds,      ONLY : dp
+  USE constants,  ONLY : fpi
+  USE cell_base,  ONLY : omega
+  !
+  implicit none
+  ! I/O
+  integer :: ng, rvalue, lmax
+  real(DP) :: q(ng), alfa, radial(ng,0:lmax)
+  ! local variables
+  real(DP), parameter :: xmin=-6.d0, dx=0.025d0, rmax=10.d0
+
+  real(DP) :: rad_int, pref, x
+  integer :: l, lp1, ir, ig, mesh_r
+  real(DP), allocatable :: bes(:), func_r(:), r(:), rij(:), aux(:)
+
+  mesh_r = nint ( ( log ( rmax ) - xmin ) / dx + 1 )
+  allocate ( bes(mesh_r), func_r(mesh_r), r(mesh_r), rij(mesh_r) )
+  allocate ( aux(mesh_r))
+  !
+  !    compute the radial mesh
+  !
+  do ir = 1, mesh_r
+     x = xmin  + DBLE (ir - 1) * dx 
+     r (ir) = exp (x) / alfa
+     rij (ir) = dx  * r (ir)
+  enddo
+  !
+  if (rvalue==1) func_r(:) = 2.d0 * alfa**(3.d0/2.d0) * exp(-alfa*r(:))
+  if (rvalue==2) func_r(:) = 1.d0/sqrt(8.d0) * alfa**(3.d0/2.d0) * & 
+                     (2.0d0 - alfa*r(:)) * exp(-alfa*r(:)*0.5d0)
+  if (rvalue==3) func_r(:) = sqrt(4.d0/27.d0) * alfa**(3.0d0/2.0d0) * &
+                     (1.d0 - 1.5d0*alfa*r(:) + 2.d0*(alfa*r(:))**2/27.d0) * &
+                                           exp(-alfa*r(ir)/3.0d0)
+  pref = fpi/sqrt(omega)
+  !
+  do l = 0, lmax
+     do ig=1,ng
+       call sph_bes (mesh_r, r(1), q(ig), l, bes)
+       aux(:) = bes(ir) * func_r(:) * r(:)
+       call simpson (mesh_r, func_r, rij(1), rad_int)
+       radial(ig,l) = rad_int * pref
+     enddo
+  enddo
+
+  deallocate (bes, func_r, r, rij, aux )
+  return
+end subroutine radialpart
+
+
