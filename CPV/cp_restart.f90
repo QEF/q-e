@@ -1397,7 +1397,12 @@ MODULE cp_restart
          !
       END IF
       !
-      CALL read_print_counter( nprint_nfi, scradir, ndr )
+      if (ionode.and.(nprint_nfi.eq.-2)) then
+         write( stdout,*) 'nprint_nfi= ',nprint_nfi
+         CALL read_print_counter( nprint_nfi, scradir, ndr )
+         write( stdout,*) 'nprint_nfi= ',nprint_nfi
+      endif
+      CALL mp_bcast( nprint_nfi, ionode_id )
       !
       RETURN
       !

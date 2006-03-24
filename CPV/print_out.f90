@@ -42,7 +42,7 @@
 
 
    SUBROUTINE printout_new &
-     ( nfi, tfirst, tfile, tprint, tps, h, stress, tau0, vels, &
+     ( nfi, tfirst, tfilei, tprint, tps, h, stress, tau0, vels, &
        fion, ekinc, temphc, tempp, temps, etot, enthal, econs, econt, &
        vnhh, xnhh0, vnhp, xnhp0, atot )
 
@@ -63,6 +63,7 @@
 
 !********************************************
  USE xml_io_base,   ONLY : save_print_counter
+ USE cp_main_variables,        ONLY : nprint_nfi
  USE io_files,      ONLY : scradir
  USE control_flags, ONLY : ndw
 !********************************************
@@ -70,7 +71,7 @@
       IMPLICIT NONE
       !
       INTEGER, INTENT(IN) :: nfi
-      LOGICAL, INTENT(IN) :: tfirst, tfile, tprint
+      LOGICAL, INTENT(IN) :: tfirst, tfilei, tprint
       REAL(DP), INTENT(IN) :: tps
       REAL(DP), INTENT(IN) :: h( 3, 3 )
       REAL(DP), INTENT(IN) :: stress( 3, 3 )
@@ -90,23 +91,33 @@
       INTEGER  :: isa, is, ia
       REAL(DP),         ALLOCATABLE :: tauw( :, : )
       CHARACTER(LEN=3), ALLOCATABLE :: labelw( : )
-      LOGICAL  :: tsic
+      LOGICAL  :: tsic, tfile
       LOGICAL, PARAMETER :: nice_output_files=.false.
       !
       ALLOCATE( labelw( nat ) )
+      !
+      ! avoid double printing to files by refering to nprint_nfi
+      !
+      tfile=tfilei.and.(nfi.gt.nprint_nfi)
       !
       IF( ionode .AND. tfile .AND. tprint ) THEN
          CALL printout_base_open()
       END IF
       !
-!********************************************
-! CALL save_print_counter( nfi, scradir, ndw )
-!********************************************
-      !
       IF( ionode ) THEN
          !
          IF( tprint ) THEN
             !
+            !********************************************
+            if (tfile) then
+               ! we're writing files, let's save nfi
+               CALL save_print_counter( nfi, scradir, ndw )
+            elseif (tfilei) then
+               ! not there yet, save the old nprint_nfi
+               CALL save_print_counter( nprint_nfi, scradir, ndw )
+            endif
+            !********************************************
+         !
             tsic = ( self_interaction /= 0 )
             !
             CALL print_energies( tsic, sic_alpha = sic_alpha, sic_epsilon = sic_epsilon )

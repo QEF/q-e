@@ -315,6 +315,12 @@ MODULE xml_io_base
          CALL iotk_open_write( iunpun, FILE = filename, &
                              & ROOT = "PRINT_COUNTER",  IERR = ierr )
          !
+         if (ierr.gt.0) then
+            ! try to create the restart directory if non-existent
+            CALL create_directory( TRIM( dirname )) 
+            CALL iotk_open_write( iunpun, FILE = filename, &
+                 & ROOT = "PRINT_COUNTER",  IERR = ierr )
+         endif
       END IF
       !
       CALL mp_bcast( ierr, ionode_id )
