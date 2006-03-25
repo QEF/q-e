@@ -510,7 +510,8 @@ CONTAINS
         END DO
         charge = SUM( rpsi2 )
 
-        CALL write_rho_xml( file_name, rpsi2, nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+        CALL write_rho_xml( file_name, me_image, nproc_image, rpsi2, nr1, nr2, nr3, nr1x, nr2x, &
+                            dfftp%ipp, dfftp%npp )
         
         CALL mp_sum( charge, intra_image_comm )
 

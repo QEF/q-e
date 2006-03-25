@@ -41,7 +41,7 @@ MODULE cp_restart
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, reduce_io
       USE io_files,                 ONLY : psfile, pseudo_dir
-      USE mp_global,                ONLY : intra_image_comm
+      USE mp_global,                ONLY : intra_image_comm, me_image, nproc_image
       USE printout_base,            ONLY : title
       USE grid_dimensions,          ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3l
       USE smooth_grid_dimensions,   ONLY : nr1s, nr2s, nr3s
@@ -368,7 +368,7 @@ MODULE cp_restart
          !
          IF ( nspin == 1 ) THEN
             !
-            CALL write_rho_xml( rho_file_base, rho(:,1), nr1, &
+            CALL write_rho_xml( rho_file_base, me_image, nproc_image, rho(:,1), nr1, &
                                 nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
             !
          ELSE IF ( nspin == 2 ) THEN
@@ -377,7 +377,7 @@ MODULE cp_restart
             !
             rhosum = rho(:,1) + rho(:,2) 
             !
-            CALL write_rho_xml( rho_file_base, rhosum, nr1, &
+            CALL write_rho_xml( rho_file_base, me_image, nproc_image, rhosum, nr1, &
                                 nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
             !
             DEALLOCATE( rhosum )
@@ -390,7 +390,7 @@ MODULE cp_restart
             !
             rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
             !
-            CALL write_rho_xml( rho_file_base, rho(:,1), nr1, &
+            CALL write_rho_xml( rho_file_base, me_image, nproc_image, rho(:,1), nr1, &
                                 nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
             !
             rho_file_base = 'charge-density-dw'
@@ -401,7 +401,7 @@ MODULE cp_restart
             !
             rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
             !
-            CALL write_rho_xml( rho_file_base, rho(:,2), nr1, &
+            CALL write_rho_xml( rho_file_base, me_image, nproc_image, rho(:,2), nr1, &
                                 nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
             !
          END IF
