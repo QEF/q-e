@@ -151,7 +151,8 @@
                   READ(emptyunit) ( ctmp(ig), ig = 1, MIN( SIZE(ctmp), ngw_rd ) )
                 END IF
                 IF( i <= ne(ispin) ) THEN
-                  CALL splitwf(c_emp(:,i,ik,ispin), ctmp, wempt%ngwl, ig_l2g, me_image, nproc_image, ionode_id)
+                  CALL splitwf(c_emp(:,i,ik,ispin), ctmp, wempt%ngwl, ig_l2g, me_image, &
+                       nproc_image, ionode_id, intra_image_comm)
                 END IF
               END DO
             END DO
@@ -221,7 +222,8 @@
           DO ik = 1, nk
             DO i = 1, ne(ispin)
               ctmp = 0.0d0
-              CALL MERGEWF( c_emp(:,i,ik,ispin), ctmp(:), ngw, ig_l2g, me_image, nproc_image, ionode_id)
+              CALL MERGEWF( c_emp(:,i,ik,ispin), ctmp(:), ngw, ig_l2g, me_image, &
+                            nproc_image, ionode_id, intra_image_comm )
               IF( ionode ) THEN
                 WRITE (emptyunit) ( ctmp(ig), ig=1, ngwm_g )
               END IF

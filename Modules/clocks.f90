@@ -217,7 +217,7 @@ SUBROUTINE print_this_clock( n )
   USE mytime,    ONLY : no, nclock, clock_label, myclock, &
                         notrunning, called, t0
   USE mp,        ONLY : mp_max, mp_min
-  USE mp_global, ONLY : group, inter_pool_comm, my_image_id
+  USE mp_global, ONLY : intra_image_comm, my_image_id
   !
   IMPLICIT NONE
   !
@@ -254,8 +254,7 @@ SUBROUTINE print_this_clock( n )
   !
 #  ifndef DEBUG
   !
-  CALL mp_max( elapsed_cpu_time, group )
-  CALL mp_max( elapsed_cpu_time, inter_pool_comm )
+  CALL mp_max( elapsed_cpu_time, intra_image_comm )
   !
 #  endif
 #endif
@@ -336,7 +335,7 @@ FUNCTION get_clock( label )
   USE mytime,    ONLY : no, nclock, clock_label, myclock, &
                         notrunning, called, t0
   USE mp,        ONLY : mp_max, mp_min
-  USE mp_global, ONLY : group, intra_image_comm 
+  USE mp_global, ONLY : intra_image_comm 
   !
   IMPLICIT NONE
   !

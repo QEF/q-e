@@ -36,7 +36,7 @@
       SUBROUTINE sticks_maps( tk, ub, lb, b1, b2, b3, gcut, gcutw, gcuts, st, stw, sts )
 
           USE mp, ONLY: mp_sum
-          USE mp_global, ONLY: me_pool, nproc_pool, intra_pool_comm, my_image_id
+          USE mp_global, ONLY: me_pool, nproc_pool, intra_pool_comm
 
           LOGICAL, INTENT(IN) :: tk    !  if true use the full space grid
           INTEGER, INTENT(IN) :: ub(:) !  upper bounds for i-th grid dimension
@@ -560,8 +560,7 @@
           ngw, ngm, ngs )
 
           USE kinds, ONLY: DP
-          USE mp_global, ONLY: mpime, nproc, group, nogrp
-          USE mp, ONLY: mp_max
+          USE mp_global, ONLY: me_pool, nproc_pool, intra_pool_comm, nogrp
           USE control_flags, ONLY: gamma_only
           USE io_global, ONLY: ionode
           USE io_global, ONLY: stdout
@@ -702,14 +701,14 @@
 
           ALLOCATE(ist(nst,5))
 
-          ALLOCATE(nstp(nproc))
-          ALLOCATE(sstp(nproc))
+          ALLOCATE(nstp(nproc_pool))
+          ALLOCATE(sstp(nproc_pool))
 
-          ALLOCATE(nstpw(nproc))
-          ALLOCATE(sstpw(nproc))
+          ALLOCATE(nstpw(nproc_pool))
+          ALLOCATE(sstpw(nproc_pool))
 
-          ALLOCATE(nstps(nproc))
-          ALLOCATE(sstps(nproc))
+          ALLOCATE(nstps(nproc_pool))
+          ALLOCATE(sstps(nproc_pool))
 
 ! ...       initialize the sticks indexes array ist
 
@@ -734,9 +733,9 @@
           CALL sticks_dist( tk, ub, lb, index, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
              nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts )
 
-          ngw = sstpw( mpime + 1 )
-          ngm = sstp( mpime + 1 )
-          ngs = sstps( mpime + 1 )
+          ngw = sstpw( me_pool + 1 )
+          ngm = sstp( me_pool + 1 )
+          ngs = sstps( me_pool + 1 )
 
           CALL sticks_pairup( tk, ub, lb, index, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
              nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts )
@@ -745,13 +744,13 @@
 
 #if defined __PARA
 
-          CALL fft_dlay_allocate( dfftp, nproc, nr1x,  nr2x )
-          CALL fft_dlay_allocate( dffts, nproc, nr1sx, nr2sx )
+          CALL fft_dlay_allocate( dfftp, nproc_pool, nr1x,  nr2x )
+          CALL fft_dlay_allocate( dffts, nproc_pool, nr1sx, nr2sx )
 
-          CALL fft_dlay_set( dfftp, tk, nst, nr1, nr2, nr3, nr1x, nr2x, nr3x, (mpime+1), &
-            nproc, nogrp, ub, lb, index, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
-          CALL fft_dlay_set( dffts, tk, nsts, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, (mpime+1), &
-            nproc, nogrp, ub, lb, index, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
+          CALL fft_dlay_set( dfftp, tk, nst, nr1, nr2, nr3, nr1x, nr2x, nr3x, (me_pool+1), &
+            nproc_pool, nogrp, ub, lb, index, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
+          CALL fft_dlay_set( dffts, tk, nsts, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, (me_pool+1), &
+            nproc_pool, nogrp, ub, lb, index, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
 
 #else
 
@@ -763,8 +762,8 @@
           IF( ngm_ /= ngm ) CALL errore( ' pstickset ', ' inconsistent ngm ', ABS( ngm - ngm_ ) )
           IF( ngs_ /= ngs ) CALL errore( ' pstickset ', ' inconsistent ngs ', ABS( ngs - ngs_ ) )
 
-          CALL fft_dlay_allocate( dfftp, nproc, MAX(nr1x, nr3x),  nr2x  )
-          CALL fft_dlay_allocate( dffts, nproc, MAX(nr1sx, nr3sx), nr2sx )
+          CALL fft_dlay_allocate( dfftp, nproc_pool, MAX(nr1x, nr3x),  nr2x  )
+          CALL fft_dlay_allocate( dffts, nproc_pool, MAX(nr1sx, nr3sx), nr2sx )
 
           CALL fft_dlay_scalar( dfftp, ub, lb, nr1, nr2, nr3, nr1x, nr2x, nr3x, stw )
           CALL fft_dlay_scalar( dffts, ub, lb, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, stw )
@@ -778,7 +777,7 @@
 
           IF (ionode) WRITE( stdout,119)
  119      FORMAT(3X,'     PEs    n.st   n.stw   n.sts    n.g    n.gw   n.gs')
-          DO ip = 1, nproc
+          DO ip = 1, nproc_pool
             IF (ionode) THEN
               WRITE( stdout,120) ip, nstp(ip),  nstpw(ip), nstps(ip), sstp(ip), sstpw(ip), sstps(ip)
             END IF

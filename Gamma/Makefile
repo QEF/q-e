@@ -99,7 +99,6 @@ PWOBJS = \
 ../PW/h_psi.o \
 ../PW/h_psi_nc.o \
 ../PW/init_ns.o \
-../PW/init_pool.o \
 ../PW/init_run.o \
 ../PW/init_us_1.o \
 ../PW/init_us_2.o \

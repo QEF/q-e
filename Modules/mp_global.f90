@@ -22,7 +22,7 @@ MODULE mp_global
   INTEGER :: mpime = 0  ! absolute processor index starting from 0
   INTEGER :: root  = 0  ! index of the absolute root processor
   INTEGER :: nproc = 1  ! absolute number of processor
-  INTEGER :: group = 0  ! group communicator
+  INTEGER :: world_comm = 0  ! communicator of all processor
   INTEGER :: kunit = 1  ! granularity of k-point distribution
   !
   ! ... indeces ( all starting from 0 !!! )
@@ -62,7 +62,7 @@ MODULE mp_global
        !
        root             = root_i
        mpime            = mpime_i
-       group            = group_i
+       world_comm       = group_i
        nproc            = nproc_i
        nproc_pool       = nproc_i
        nproc_image      = nproc_i
@@ -97,5 +97,96 @@ MODULE mp_global
        RETURN
        !
      END SUBROUTINE mp_global_group_start
+     !
+!
+!----------------------------------------------------------------------------
+SUBROUTINE init_pool()
+  !----------------------------------------------------------------------------
+  !
+  ! ... This routine initialize the pool :  MPI division in pools and images
+  !
+  USE mp,        ONLY : mp_barrier, mp_bcast
+  USE parallel_include
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: ierr = 0
+  ! 
+  !
+#if defined (__PARA)
+  !  
+  ! ... here we set all parallel indeces (defined in mp_global): 
+  !
+  !
+  ! ... number of cpus per image
+  !
+  nproc_image = nproc / nimage
+  !
+  IF ( nproc < nimage ) &
+     CALL errore( 'startup', 'nproc < nimage', 1 )
+  !
+  IF ( MOD( nproc, nimage ) /= 0 ) &
+     CALL errore( 'startup', 'nproc /= nproc_image * nimage', 1 ) 
+  !
+  ! ... my_image_id  =  image index for this processor   ( 0 : nimage - 1 )
+  ! ... me_image     =  processor index within the image ( 0 : nproc_image - 1 )
+  !
+  my_image_id = mpime / nproc_image
+  me_image    = MOD( mpime, nproc_image )
+  !
+  CALL mp_barrier()
+  !
+  ! ... the intra_image_comm communicator is created
+  !
+  CALL MPI_COMM_SPLIT( MPI_COMM_WORLD, &
+                       my_image_id, mpime, intra_image_comm, ierr )
+  !
+  CALL errore( 'init_pool', 'intra_image_comm is wrong', ierr )
+  !
+  CALL mp_barrier()
+  !
+  ! ... the inter_image_comm communicator is created                     
+  !     
+  CALL MPI_COMM_SPLIT( MPI_COMM_WORLD, &
+                       me_image, mpime, inter_image_comm, ierr )  
+  !
+  CALL errore( 'init_pool', 'inter_image_comm is wrong', ierr )
+  !
+  ! ... number of cpus per pool of k-points (they are created inside each image)
+  !
+  nproc_pool = nproc_image / npool
+  !
+  IF ( MOD( nproc, npool ) /= 0 ) &
+     CALL errore( 'startup', 'nproc /= nproc_pool * npool', 1 )  
+  !
+  ! ... my_pool_id  =  pool index for this processor    ( 0 : npool - 1 )
+  ! ... me_pool     =  processor index within the pool  ( 0 : nproc_pool - 1 )
+  !
+  my_pool_id = me_image / nproc_pool    
+  me_pool    = MOD( me_image, nproc_pool )
+  !
+  CALL mp_barrier( intra_image_comm )
+  !
+  ! ... the intra_pool_comm communicator is created
+  !
+  CALL MPI_COMM_SPLIT( intra_image_comm, &
+                       my_pool_id, me_image, intra_pool_comm, ierr )
+  !
+  CALL errore( 'init_pool', 'intra_pool_comm is wrong', ierr )
+  !
+  CALL mp_barrier( intra_image_comm )
+  !
+  ! ... the inter_pool_comm communicator is created
+  !
+  CALL MPI_COMM_SPLIT( intra_image_comm, &
+                       me_pool, me_image, inter_pool_comm, ierr )
+  !
+  call errore( 'init_pool', 'inter_pool_comm is wrong', ierr )
+  !
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE init_pool
      !
 END MODULE mp_global

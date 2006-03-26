@@ -263,7 +263,7 @@
 !  END manual
 
         USE mp, ONLY: mp_sum, mp_max
-        USE mp_global, ONLY: group
+        USE mp_global, ONLY: intra_image_comm
 
         IMPLICIT NONE
 
@@ -293,9 +293,9 @@
           cnorm = cnorm + dotp(gzero, cgrad(:,i,1), cgrad(:,i,1))
         END DO
 
-        CALL mp_max(gemax_l, group)
-        CALL mp_sum(nb, group)
-        CALL mp_sum(ngw, group)
+        CALL mp_max(gemax_l, intra_image_comm)
+        CALL mp_sum(nb, intra_image_comm)
+        CALL mp_sum(ngw, intra_image_comm)
 
         gemax = gemax_l
         cnorm = SQRT( cnorm / (nb * ngw) )
@@ -317,7 +317,7 @@
 !  END manual
 
         USE mp, ONLY: mp_sum, mp_max
-        USE mp_global, ONLY: group
+        USE mp_global, ONLY: intra_image_comm
 
         IMPLICIT NONE
 
@@ -354,10 +354,10 @@
           cnorm = cnorm + cnormk
         END DO
 
-        CALL mp_max(gemax_l, group)
-        CALL mp_sum(cnorm, group)
-        CALL mp_sum(nb, group)
-        CALL mp_sum(ngw, group)
+        CALL mp_max(gemax_l, intra_image_comm)
+        CALL mp_sum(cnorm, intra_image_comm)
+        CALL mp_sum(nb, intra_image_comm)
+        CALL mp_sum(ngw, intra_image_comm)
 
         gemax = gemax_l
         cnorm = SQRT( cnorm / ( nb * ngw ) )
@@ -408,7 +408,7 @@
 ! ... dotp = < a | b >
 !
 
-            USE mp_global, ONLY: group
+            USE mp_global, ONLY: intra_image_comm
             USE mp, ONLY: mp_sum
 
             REAL(DP) :: DDOT
@@ -436,7 +436,7 @@
               dot_tmp = 2.0d0*dot_tmp
             END IF 
 
-            CALL mp_sum( dot_tmp, group )
+            CALL mp_sum( dot_tmp, intra_image_comm )
             dotp_gamma = dot_tmp
 
             RETURN
@@ -452,7 +452,7 @@
 ! ...  a( -G ) = CONJG( a( G ) ). Only half of the values plus G=0 are really
 ! ...  stored in the array.
 
-            USE mp_global, ONLY: group
+            USE mp_global, ONLY: intra_image_comm
             USE mp, ONLY: mp_sum
 
             REAL(DP) :: DDOT
@@ -481,7 +481,7 @@
 ! ...  Compute the dot product between distributed complex vectors "a" and "b"
 ! ...  representing FULL-SPACE complex wave functions 
 
-            USE mp_global, ONLY: group
+            USE mp_global, ONLY: intra_image_comm
             USE mp, ONLY: mp_sum
 
             COMPLEX(DP) :: ZDOTC
@@ -499,7 +499,7 @@
 
             dot_tmp = ZDOTC(ng, a(1), 1, b(1), 1)
 
-            CALL mp_sum(dot_tmp, group)
+            CALL mp_sum(dot_tmp, intra_image_comm)
             dotp_kp = dot_tmp
 
             RETURN
@@ -513,7 +513,7 @@
 ! ...  Compute the dot product between distributed complex vectors "a" and "b"
 ! ...  representing FULL-SPACE complex wave functions 
 
-            USE mp_global, ONLY: group
+            USE mp_global, ONLY: intra_image_comm
             USE mp, ONLY: mp_sum
 
             COMPLEX(DP) ZDOTC
@@ -529,7 +529,7 @@
 
             dot_tmp = ZDOTC( n, a(1), 1, b(1), 1)
 
-            CALL mp_sum( dot_tmp, group )
+            CALL mp_sum( dot_tmp, intra_image_comm )
             dotp_kp_n = dot_tmp
 
             RETURN
@@ -619,7 +619,7 @@
 
        REAL(DP) FUNCTION scalw(gzero, RR1, RR2, metric)
 
-         USE mp_global, ONLY: group
+         USE mp_global, ONLY: intra_image_comm
          USE mp, ONLY: mp_sum
 
          IMPLICIT NONE
@@ -639,7 +639,7 @@
            rsc = rsc + rr1( ig ) * CONJG( rr2( ig ) ) * metric( ig )
          END DO
 
-         CALL mp_sum(rsc, group)
+         CALL mp_sum(rsc, intra_image_comm)
 
          scalw = rsc
 

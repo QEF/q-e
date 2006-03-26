@@ -44,7 +44,7 @@
       USE mp_wave
       USE mp, ONLY: mp_sum, mp_get, mp_bcast, mp_max
       USE mp_global, ONLY: mpime, nproc, root, me_pool, my_pool_id, &
-        nproc_pool, intra_pool_comm, root_pool
+        nproc_pool, intra_pool_comm, root_pool, world_comm
       USE io_global, ONLY: ionode, ionode_id
       USE iotk_module
 !
@@ -171,10 +171,10 @@
                 CALL mergewf(wf0(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm)
               END IF
               IF( ipsour /= ionode_id ) THEN
-                CALL mp_get( wtmp, wtmp, mpime, ionode_id, ipsour, j )
+                CALL mp_get( wtmp, wtmp, mpime, ionode_id, ipsour, j, world_comm )
               END IF
             ELSE
-              CALL mergewf(wf0(:,j), wtmp, ngwl, igl, mpime, nproc, ionode_id)
+              CALL mergewf(wf0(:,j), wtmp, ngwl, igl, mpime, nproc, ionode_id, world_comm )
             END IF
 
             if( ionode ) then
@@ -191,10 +191,10 @@
                 CALL mergewf(wfm(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm)
               END IF
               IF( ipsour /= ionode_id ) THEN
-                CALL mp_get( wtmp, wtmp, mpime, ionode_id, ipsour, j )
+                CALL mp_get( wtmp, wtmp, mpime, ionode_id, ipsour, j, world_comm )
               END IF
             ELSE
-              CALL mergewf(wfm(:,j), wtmp, ngwl, igl, mpime, nproc, ionode_id)
+              CALL mergewf(wfm(:,j), wtmp, ngwl, igl, mpime, nproc, ionode_id, world_comm )
             END IF
             if( ionode ) then
               call iotk_write_dat(iuni,"Wfcm"//iotk_index(j),wtmp(1:igwx))
@@ -217,7 +217,6 @@
 
     SUBROUTINE write_restart_wfc2(iuni, nbnd)
       USE io_global, ONLY: ionode, ionode_id
-      USE mp_global, ONLY: group
       USE mp, ONLY: mp_bcast
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iuni, nbnd

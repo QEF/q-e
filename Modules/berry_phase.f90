@@ -61,7 +61,7 @@
     SUBROUTINE berry_setup( ngw, mill )
 
       USE io_global, only: ionode, stdout
-      USE mp_global, ONLY: nproc, mpime, group
+      USE mp_global, ONLY: nproc_image, me_image, intra_image_comm
       USE mp, ONLY: mp_max, mp_sum
       USE stick_base, ONLY : sticks_owner
       USE reciprocal_vectors, ONLY: ig_l2g, sortedig_l2g
@@ -74,8 +74,8 @@
       integer :: mill(:,:), ngw
 
       integer in(8)
-      integer, allocatable :: icnt_snd(:,:) ! icnt_snd(nproc,8)
-      integer, allocatable :: icnt_rcv(:,:) ! icnt_rcv(nproc,8)
+      integer, allocatable :: icnt_snd(:,:) ! icnt_snd(nproc_image,8)
+      integer, allocatable :: icnt_rcv(:,:) ! icnt_rcv(nproc_image,8)
       integer :: i, j, ig, itmp, in_l, igowner, igl, ngwt
 
 
@@ -83,8 +83,8 @@
          WRITE( stdout, fmt="(3X,'Polarizability using berry phase')" )
       END IF
 
-      allocate( icnt_snd( nproc, 8 ) )
-      allocate( icnt_rcv( nproc, 8 ) )
+      allocate( icnt_snd( nproc_image, 8 ) )
+      allocate( icnt_rcv( nproc_image, 8 ) )
 
       !  compute global number of G vectors
       !
@@ -130,7 +130,7 @@
             end if
 
           end if
-          if( sticks_owner( mill(1,ig),  mill(2,ig) ) == ( mpime+1 ) ) then
+          if( sticks_owner( mill(1,ig),  mill(2,ig) ) == ( me_image+1 ) ) then
             n_indi_rcv(i) = n_indi_rcv(i) + 1
             if( in(i) > 0 ) then
               sour_indi( n_indi_rcv(i), i ) = sticks_owner( mill( 1 , in(i) ), mill( 2 , in(i) ) )
@@ -147,14 +147,14 @@
       do i = 1,8
         do ig = 1,n_indi_snd(i)
           itmp = dest_indi(ig,i)
-          if(itmp.ne.(mpime+1)) then
+          if(itmp.ne.(me_image+1)) then
             icnt_snd(itmp,i) = icnt_snd(itmp,i) + 1
           end if
         end do
       end do
       do i = 1,8
         icntix(i) = 0
-        do j=1,nproc
+        do j=1,nproc_image
           if(icnt_snd(j,i).gt.icntix(i)) then
             icntix(i) = icnt_snd(j,i)
           end if
@@ -162,7 +162,7 @@
       end do
 
 
-      call mp_max( icntix(1:8), group )
+      call mp_max( icntix(1:8), intra_image_comm )
       WRITE( stdout, fmt="(3X,'Dipole init ')" )
       DO i = 1, 8
         WRITE( stdout, fmt="(3X,'icntix ',I3,' = ',I5)" ) i, icntix(i)

@@ -82,7 +82,7 @@ MODULE pw_restart
       USE scf,                  ONLY : rho
       USE sticks,               ONLY : dfftp
       USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool
-      USE mp_global,            ONLY : my_pool_id, &
+      USE mp_global,            ONLY : my_pool_id, intra_image_comm, &
                                        intra_pool_comm, inter_pool_comm
       USE mp,                   ONLY : mp_sum, mp_max
       
@@ -125,7 +125,7 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       CALL errore( 'pw_writefile ', &
                    'no free units to write wavefunctions', ierr )
@@ -138,7 +138,7 @@ MODULE pw_restart
       !
       ! ... create the k-points subdirectories
       !
-      DO i = 1, nks
+      DO i = 1, nkstot
          !
          CALL create_directory( kpoint_dir( dirname, i ) )
          !
@@ -364,7 +364,7 @@ MODULE pw_restart
       !
       IF ( nspin == 1 ) THEN
          !
-         CALL write_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,1), &
+         CALL write_rho_xml( rho_file_base, rho(:,1), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
       ELSE IF ( nspin == 2 ) THEN
@@ -373,7 +373,7 @@ MODULE pw_restart
          !
          rhosum = rho(:,1) + rho(:,2) 
          !
-         CALL write_rho_xml( rho_file_base, me_pool, nproc_pool, rhosum, &
+         CALL write_rho_xml( rho_file_base, rhosum, &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          DEALLOCATE( rhosum )
@@ -386,7 +386,7 @@ MODULE pw_restart
          !
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
          !
-         CALL write_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,1), &
+         CALL write_rho_xml( rho_file_base, rho(:,1), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          rho_file_base = 'charge-density-dw'
@@ -397,12 +397,12 @@ MODULE pw_restart
          !
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
          !
-         CALL write_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,2), &
+         CALL write_rho_xml( rho_file_base, rho(:,2), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
       ELSE IF ( nspin == 4 ) THEN
          !
-         CALL write_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,1), &
+         CALL write_rho_xml( rho_file_base, rho(:,1), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          rho_file_base = 'magnetization.x'
@@ -413,7 +413,7 @@ MODULE pw_restart
          !
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
          !
-         CALL write_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,2), &
+         CALL write_rho_xml( rho_file_base, rho(:,2), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          rho_file_base = 'magnetization.y'
@@ -424,7 +424,7 @@ MODULE pw_restart
          !
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
          !
-         CALL write_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,3), &
+         CALL write_rho_xml( rho_file_base, rho(:,3), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          !
@@ -436,7 +436,7 @@ MODULE pw_restart
          !
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
          !
-         CALL write_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,4), &
+         CALL write_rho_xml( rho_file_base, rho(:,4), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
       END IF
@@ -2292,41 +2292,41 @@ MODULE pw_restart
          !
          rho_file_base = TRIM( dirname ) // '/charge-density'
          !
-         CALL read_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,1), &
+         CALL read_rho_xml( rho_file_base, rho(:,1), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
       ELSE IF ( nspin == 2 ) THEN
          !
          rho_file_base = TRIM( dirname ) // '/charge-density-up'
          !
-         CALL read_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,1), &
+         CALL read_rho_xml( rho_file_base, rho(:,1), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          rho_file_base = TRIM( dirname ) // '/charge-density-dw'
          !
-         CALL read_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,2), &
+         CALL read_rho_xml( rho_file_base, rho(:,2), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
       ELSE IF ( nspin == 4 ) THEN
          !
          rho_file_base = TRIM( dirname ) // '/charge-density'
          !
-         CALL read_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,1), &
+         CALL read_rho_xml( rho_file_base, rho(:,1), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          rho_file_base = TRIM( dirname ) // '/magnetization.x'
          !
-         CALL read_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,2), &
+         CALL read_rho_xml( rho_file_base, rho(:,2), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          rho_file_base = TRIM( dirname ) // '/magnetization.y'
          !
-         CALL read_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,3), &
+         CALL read_rho_xml( rho_file_base, rho(:,3), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          rho_file_base = TRIM( dirname ) // '/magnetization.z'
          !
-         CALL read_rho_xml( rho_file_base, me_pool, nproc_pool, rho(:,4), &
+         CALL read_rho_xml( rho_file_base, rho(:,4), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
       END IF

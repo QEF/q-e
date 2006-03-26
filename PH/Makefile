@@ -268,7 +268,6 @@ PWOBJS = \
 ../PW/init_ns.o \
 ../PW/init_paw_1.o \
 ../PW/init_paw_2.o \
-../PW/init_pool.o \
 ../PW/init_run.o \
 ../PW/init_us_1.o \
 ../PW/init_us_2.o \

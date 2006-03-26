@@ -111,7 +111,6 @@ hinit1.o \
 init_ns.o \
 init_paw_1.o \
 init_paw_2.o \
-init_pool.o \
 init_run.o \
 init_us_1.o \
 init_us_2.o \

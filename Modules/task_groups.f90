@@ -81,7 +81,7 @@ SUBROUTINE GROUPS( nogrp_ , dffts )
    !Modules used
    !------------
 
-   USE mp_global,  ONLY : mpime, nproc, group, root
+   USE mp_global,  ONLY : me_image, nproc_image, intra_image_comm, root
    USE mp_global,  ONLY : NOGRP, NPGRP, ME_OGRP, ME_PGRP  
    USE mp,         ONLY : mp_bcast
    USE parameters, ONLY : MAXGRP
@@ -98,7 +98,7 @@ SUBROUTINE GROUPS( nogrp_ , dffts )
    !----------------------------------
    !Local Variables declaration
    !----------------------------------
-   !NPROC:      Total number of processors
+   !nproc_image:      Total number of processors
    !NPGRP:      Number of processors per group
    INTEGER  ::  MSGLEN, I, J, N1, LABEL, IPOS, WORLD, NEWGROUP
    INTEGER  ::  ios, IERR
@@ -116,7 +116,7 @@ SUBROUTINE GROUPS( nogrp_ , dffts )
 
    !  Find the number of processors and my rank
    !
-   SZ = NPROC
+   SZ = nproc_image
 
    !--------------------------------------------------------------
    !SUBDIVIDE THE PROCESSORS IN GROUPS
@@ -125,11 +125,11 @@ SUBROUTINE GROUPS( nogrp_ , dffts )
    !OF PROCESSORS
    !--------------------------------------------------------------
 
-   IF( MOD( nproc, nogrp_ ) /= 0 ) &
-      CALL errore( " groups ", " nogrp should be a divisor of nproc ", 1 )
+   IF( MOD( nproc_image, nogrp_ ) /= 0 ) &
+      CALL errore( " groups ", " nogrp should be a divisor of nproc_image ", 1 )
  
-   ALLOCATE( PGROUP( NPROC ) )
-   DO I = 1, NPROC
+   ALLOCATE( PGROUP( nproc_image ) )
+   DO I = 1, nproc_image
       PGROUP( I ) = I - 1
    ENDDO
 
@@ -140,7 +140,7 @@ SUBROUTINE GROUPS( nogrp_ , dffts )
    !Find maximum chunk of local data concerning coefficients of eigenfunctions in g-space
 
 #if defined __MPI
-   CALL MPI_Allgather(dffts%nnr, 1, MPI_INTEGER, nnrsx_vec, 1, MPI_INTEGER, group, IERR)
+   CALL MPI_Allgather(dffts%nnr, 1, MPI_INTEGER, nnrsx_vec, 1, MPI_INTEGER, intra_image_comm, IERR)
    strd = MAXVAL( nnrsx_vec( 1:sz ) )
 #else
    strd = dffts%nnr 
@@ -151,7 +151,7 @@ SUBROUTINE GROUPS( nogrp_ , dffts )
    !Broadcast the number of groups: NOGRP
    !---------------------------------------------------------------
 
-   CALL mp_bcast( nogrp, root, group )
+   CALL mp_bcast( nogrp, root, intra_image_comm )
 
    !-------------------------------------------------------------------------------------
    !C. Bekas...TASK GROUP RELATED. FFT DATA STRUCTURES ARE ALREADY DEFINED ABOVE
@@ -168,7 +168,7 @@ SUBROUTINE GROUPS( nogrp_ , dffts )
    !ALL-Gather number of Z-sticks from all processors
    !
 #if defined __MPI
-   CALL MPI_Allgather(dffts%nsw(mpime+1), 1, MPI_INTEGER, ALL_Z_STICKS, 1, MPI_INTEGER, group, IERR)
+   CALL MPI_Allgather(dffts%nsw(me_image+1), 1, MPI_INTEGER, ALL_Z_STICKS, 1, MPI_INTEGER, intra_image_comm, IERR)
 #else
    all_z_sticks( 1 ) = dffts%nsw( 1 )
 #endif
@@ -181,7 +181,7 @@ SUBROUTINE GROUPS( nogrp_ , dffts )
 
    IF( NOGRP == 1 ) RETURN
 
-   NPGRP = NPROC / NOGRP
+   NPGRP = nproc_image / NOGRP
 
    IF( NPGRP > MAXGRP ) THEN
       CALL errore( "groups", "too many npgrp", 1 )
@@ -194,10 +194,10 @@ SUBROUTINE GROUPS( nogrp_ , dffts )
    !--------------------------------------
    !LIST OF PROCESSORS IN MY ORBITAL GROUP
    !--------------------------------------
-   N1 = ( mpime / NOGRP ) * NOGRP - 1
+   N1 = ( me_image / NOGRP ) * NOGRP - 1
    DO I = 1, NOGRP
       NOLIST( I ) = PGROUP( N1 + I + 1 )
-      IF( mpime .EQ. NOLIST( I ) ) IPOS = I - 1
+      IF( me_image .EQ. NOLIST( I ) ) IPOS = I - 1
    ENDDO
 
    !-----------------------------------------
@@ -211,7 +211,7 @@ SUBROUTINE GROUPS( nogrp_ , dffts )
    !SET UP THE GROUPS
    !-----------------
    DO I = 1, NPGRP
-      IF( mpime .EQ. NPLIST( I ) ) LABEL = I
+      IF( me_image .EQ. NPLIST( I ) ) LABEL = I
    ENDDO
 
    !---------------------------------------
@@ -220,16 +220,16 @@ SUBROUTINE GROUPS( nogrp_ , dffts )
    !
 #if defined __MPI
    ! get the handle world to the main group
-   CALL MPI_COMM_GROUP( group, WORLD, IERR )  
+   CALL MPI_COMM_GROUP( intra_image_comm, WORLD, IERR )  
    ! create a new group handle containing processor whose indices are
    ! contained in array nogrp()
    CALL MPI_GROUP_INCL( WORLD, NOGRP, NOLIST, NEWGROUP, IERR )
    ! build a communicator for the newgroup and store it in ME_OGRP
-   CALL MPI_COMM_CREATE( group, NEWGROUP, ME_OGRP, IERR )
+   CALL MPI_COMM_CREATE( intra_image_comm, NEWGROUP, ME_OGRP, IERR )
 #endif
 
    DO I = 1, NOGRP
-      IF( mpime .EQ. NOLIST( I ) ) LABEL = I + MAXCPU
+      IF( me_image .EQ. NOLIST( I ) ) LABEL = I + MAXCPU
    ENDDO
 
    !---------------------------------------
@@ -237,9 +237,9 @@ SUBROUTINE GROUPS( nogrp_ , dffts )
    !---------------------------------------
    !
 #if defined __MPI
-   CALL MPI_COMM_GROUP( group, WORLD, IERR )
+   CALL MPI_COMM_GROUP( intra_image_comm, WORLD, IERR )
    CALL MPI_GROUP_INCL( WORLD, NPGRP, NPLIST, NEWGROUP, IERR )
-   CALL MPI_COMM_CREATE( group, NEWGROUP, ME_PGRP, IERR )
+   CALL MPI_COMM_CREATE( intra_image_comm, NEWGROUP, ME_PGRP, IERR )
 #endif
 
    RETURN

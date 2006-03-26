@@ -17,9 +17,7 @@ MODULE read_cards_module
   USE io_global,         ONLY: stdout 
   USE constants,         ONLY: angstrom_au
   USE parser,            ONLY: field_count, read_line
-  USE mp_global,         ONLY: mpime, nproc, group
   USE io_global,         ONLY: ionode, ionode_id
-  USE mp,                ONLY: mp_bcast
   !
   USE input_parameters
   !

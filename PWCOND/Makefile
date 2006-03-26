@@ -167,7 +167,6 @@ PWOBJS = \
 ../PW/hinit0.o \
 ../PW/hinit1.o \
 ../PW/init_ns.o \
-../PW/init_pool.o \
 ../PW/init_us_1.o \
 ../PW/init_us_2.o \
 ../PW/init_at_1.o \

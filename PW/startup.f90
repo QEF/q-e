@@ -50,7 +50,7 @@ SUBROUTINE startup( nd_nmbr, code, version )
   USE io_global,  ONLY : stdout, io_global_start, meta_ionode, meta_ionode_id
   USE mp_global,  ONLY : nproc, nproc_image, nimage, mpime, me_image, &
                          my_image_id, root_image, npool, nproc_pool
-  USE mp_global,  ONLY : mp_global_start
+  USE mp_global,  ONLY : mp_global_start, init_pool
   USE mp,         ONLY : mp_start, mp_env, mp_barrier, mp_bcast
   USE para_const, ONLY : maxproc
   !

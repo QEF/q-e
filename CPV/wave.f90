@@ -578,7 +578,7 @@
 ! ... declare modules
       USE mp, ONLY: mp_sum
       USE mp_wave, ONLY: splitwf
-      USE mp_global, ONLY: me_image, nproc_image
+      USE mp_global, ONLY: me_image, nproc_image, root_image, intra_image_comm
       USE reciprocal_vectors, ONLY: ig_l2g, ngw, ngwt, gzero
       USE io_global, ONLY: stdout
       USE random_numbers, ONLY : rranf
@@ -629,7 +629,7 @@
           rranf2 = rranf()
           pwt( ig ) = ampre * CMPLX(rranf1, rranf2)
         END DO
-        CALL splitwf ( cm( :, ib ), pwt, ngw, ig_l2g, me_image, nproc_image, 0 )
+        CALL splitwf ( cm( :, ib ), pwt, ngw, ig_l2g, me_image, nproc_image, root_image, intra_image_comm )
       END DO
       IF ( gzero ) THEN
         cm( 1, : ) = (0.0d0, 0.0d0)

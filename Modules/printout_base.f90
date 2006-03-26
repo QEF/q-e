@@ -29,7 +29,7 @@ CONTAINS
   SUBROUTINE printout_base_init( outdir, prefix )
 
      USE io_global, ONLY: ionode, ionode_id
-     USE mp_global, ONLY: group
+     USE mp_global, ONLY: intra_image_comm
      USE mp, ONLY: mp_bcast
 
      INTEGER :: iunit, ierr
@@ -69,7 +69,7 @@ CONTAINS
         END DO
      END IF
 
-     CALL mp_bcast(ierr, ionode_id, group)
+     CALL mp_bcast(ierr, ionode_id, intra_image_comm)
      IF( ierr /= 0 ) &
         CALL errore(' printout_base_init ',' error in opening unit, check outdir ',iunit)
 

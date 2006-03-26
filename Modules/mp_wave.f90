@@ -36,7 +36,7 @@
       INTEGER, INTENT(IN) :: mpime     ! index of the calling processor ( starting from 0 )
       INTEGER, INTENT(IN) :: nproc     ! number of processors
       INTEGER, INTENT(IN) :: root      ! root processor ( the one that should receive the data )
-      INTEGER, OPTIONAL, INTENT(IN) :: comm    ! communicator
+      INTEGER, INTENT(IN) :: comm    ! communicator
       INTEGER, INTENT(IN) :: ig_l2g(:)
       INTEGER, INTENT(IN) :: ngwl
 
@@ -57,8 +57,7 @@
 
 #if defined __MPI
 
-      gid = MPI_COMM_WORLD
-      IF( PRESENT( comm ) ) gid = comm
+      gid = comm
 
 ! ... Get local and global wavefunction dimensions
       CALL MPI_ALLREDUCE( ngwl, ngw_lmax, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
@@ -140,7 +139,7 @@
       COMPLEX(DP), INTENT(OUT) :: PW(:)
       COMPLEX(DP), INTENT(IN) :: PWT(:)
       INTEGER, INTENT(IN) :: mpime, nproc, root
-      INTEGER, OPTIONAL, INTENT(IN) :: comm    ! communicator
+      INTEGER, INTENT(IN) :: comm    ! communicator
       INTEGER, INTENT(IN) :: ig_l2g(:)
       INTEGER, INTENT(IN) :: ngwl
 
@@ -161,8 +160,7 @@
 
 #if defined __MPI
 
-      gid = MPI_COMM_WORLD
-      IF( PRESENT( comm ) ) gid = comm
+      gid = comm
 
 ! ... Get local and global wavefunction dimensions
       CALL MPI_ALLREDUCE(ngwl, ngw_lmax, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
@@ -409,7 +407,7 @@
       INTEGER, INTENT(IN) :: mpime     ! index of the calling processor ( starting from 0 )
       INTEGER, INTENT(IN) :: nproc     ! number of processors
       INTEGER, INTENT(IN) :: root      ! root processor ( the one that should receive the data )
-      INTEGER, OPTIONAL, INTENT(IN) :: comm    ! communicator
+      INTEGER, INTENT(IN) :: comm    ! communicator
       INTEGER, INTENT(IN) :: ngl
 
       INTEGER, ALLOCATABLE :: ig_ip(:)
@@ -422,8 +420,7 @@
 
 #if defined __MPI
 
-      gid = MPI_COMM_WORLD
-      IF( PRESENT( comm ) ) gid = comm
+      gid = comm
 
 ! ... Get local and global wavefunction dimensions
       CALL MPI_ALLREDUCE( ngl, ng_lmax, 1, MPI_INTEGER, MPI_MAX, gid, IERR )
@@ -499,7 +496,7 @@
       INTEGER, INTENT(OUT) :: igl(:)
       INTEGER, INTENT(IN)  :: igtot(:)
       INTEGER, INTENT(IN)  :: mpime, nproc, root
-      INTEGER, OPTIONAL, INTENT(IN) :: comm    ! communicator
+      INTEGER, INTENT(IN) :: comm    ! communicator
       INTEGER, INTENT(IN) :: ngl
 
       INTEGER ierr, i, ng_ip, ip, ng_lmax, ng_g, gid, igs
@@ -512,8 +509,7 @@
 
 #if defined __MPI
 
-      gid = MPI_COMM_WORLD
-      IF( PRESENT( comm ) ) gid = comm
+      gid = comm
 
 ! ... Get local and global wavefunction dimensions
       CALL MPI_ALLREDUCE(ngl, ng_lmax, 1, MPI_INTEGER, MPI_MAX, gid, IERR )

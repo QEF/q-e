@@ -479,7 +479,6 @@ CONTAINS
       SUBROUTINE print_ks_states( c, file_name )
 
         USE kinds
-        USE mp_global, ONLY: intra_image_comm
         USE mp, ONLY: mp_sum
         USE io_global, ONLY: ionode, ionode_id
         USE io_global, ONLY: stdout
@@ -488,7 +487,7 @@ CONTAINS
         USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnrx
         USE fft_module, ONLY: invfft
         USE xml_io_base, ONLY: write_rho_xml
-        USE mp_global,       ONLY: nproc_image, me_image
+        USE mp_global,       ONLY: nproc_image, me_image, intra_image_comm
 
         IMPLICIT NONE
 
@@ -510,8 +509,8 @@ CONTAINS
         END DO
         charge = SUM( rpsi2 )
 
-        CALL write_rho_xml( file_name, me_image, nproc_image, rpsi2, nr1, nr2, nr3, nr1x, nr2x, &
-                            dfftp%ipp, dfftp%npp )
+        CALL write_rho_xml( file_name, rpsi2, &
+                            nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
         
         CALL mp_sum( charge, intra_image_comm )
 

@@ -1658,7 +1658,6 @@ MODULE read_namelists_module
        !
        ! ... declare modules
        !
-       USE mp_global, ONLY : mpime, nproc, group
        USE io_global, ONLY : ionode, ionode_id
        USE mp,        ONLY : mp_bcast
        !
