@@ -60,9 +60,10 @@ SUBROUTINE iosys()
                             calc, lmovecell
   !
   USE dynamics_module, ONLY : temperature, amass, &
-                              dt_      => dt, &
-                              delta_t_ => delta_t, &
-                              nraise_  => nraise
+                              dt_         => dt, &
+                              delta_t_    => delta_t, &
+                              nraise_     => nraise, &
+                              refold_pos_ => refold_pos
   !
   USE extfield,      ONLY : tefield_  => tefield, &
                             dipfield_ => dipfield, &
@@ -116,8 +117,8 @@ SUBROUTINE iosys()
                             nqx1_   => nq1,  &
                             nqx2_   => nq2,  &
                             nqx3_   => nq3
-
-  USE realus,        ONLY : tqr_    => tqr
+  !
+  USE realus,        ONLY : tqr_ => tqr
   !
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
                             starting_magnetization_ => starting_magnetization, &
@@ -221,7 +222,8 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : phase_space, ion_dynamics, ion_positions, tolp, &
                                tempw, delta_t, nraise, ion_temperature,        &
-                               upscale, pot_extrapolation,  wfc_extrapolation, &
+                               refold_pos, upscale, pot_extrapolation,         &
+                               wfc_extrapolation,                              &
                                num_of_images, path_thr, CI_scheme, opt_scheme, &
                                use_masses, use_multistep, first_last_opt,      &
                                init_num_of_images, temp_req, k_max, k_min,     &
@@ -1146,6 +1148,7 @@ SUBROUTINE iosys()
   upscale_     = upscale
   delta_t_     = delta_t
   nraise_      = nraise
+  refold_pos_  = refold_pos
   press_       = press
   cell_factor_ = cell_factor
   modenum_     = modenum

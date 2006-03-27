@@ -609,6 +609,11 @@ monitor_constr LOGICAL (default = .FALSE.)
                CONSTRAINTS card (see below). If true, the values of the
                constraints are monitored, but the constraints are not imposed.
 
+refold_pos     LOGICAL (default = .FALSE.)
+               this keyword applies only in the case of molecular dynamics or
+               damped dynamics. If true the ions are refolded into the 
+               supercell at each step.
+
 pot_extrapolation     
                CHARACTER ( default = "atomic" )
                used to extrapolate the potential from preceding ionic steps

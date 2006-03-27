@@ -33,7 +33,10 @@ MODULE dynamics_module
        delta_t         ! rate of thermalization
   INTEGER :: &
        nraise          ! the frequency of temperature raising
+  LOGICAL :: &
+       refold_pos      ! if true the positions are refolded into the supercell
   !
+  
   REAL(DP), ALLOCATABLE :: tau_old(:,:), tau_new(:,:), tau_ref(:,:)
   REAL(DP), ALLOCATABLE :: vel(:,:), acc(:,:)
   REAL(DP), ALLOCATABLE :: mass(:)
@@ -127,8 +130,6 @@ MODULE dynamics_module
       !
       IMPLICIT NONE
       !
-      ! ... local variables
-      !
       REAL(DP) :: ekin, etotold
       REAL(DP) :: total_mass, temp_new, elapsed_time
       REAL(DP) :: ml(3), mlt
@@ -168,7 +169,7 @@ MODULE dynamics_module
          !
          ! ... atoms are refold in the central box
          !
-         CALL refold_tau()
+         IF ( refold_pos ) CALL refold_tau()
          !
          ! ... reference positions
          !
@@ -431,8 +432,6 @@ MODULE dynamics_module
       !
       IMPLICIT NONE
       !
-      ! ... local variables
-      !
       REAL(DP), ALLOCATABLE :: step(:,:)
       REAL(DP)              :: norm_step, etotold
       INTEGER               :: i, na
@@ -466,7 +465,7 @@ MODULE dynamics_module
          !
          ! ... atoms are refold in the central box
          !
-         CALL refold_tau()
+         IF ( refold_pos ) CALL refold_tau()
          !
          tau_old(:,:) = tau(:,:)
          !
@@ -944,7 +943,7 @@ MODULE dynamics_module
       ! ... Starting thermalization of the system
       !
       USE symme,          ONLY : invsym, nsym, irt
-      USE control_flags,  ONLY : lfixatom
+      USE control_flags,  ONLY : lfixatom, langevin_rescaling
       USE cell_base,      ONLY : alat
       USE ions_base,      ONLY : nat, if_pos
       USE random_numbers, ONLY : gauss_dist
@@ -952,7 +951,7 @@ MODULE dynamics_module
       IMPLICIT NONE
       !
       INTEGER  :: na, nb
-      REAL(DP) :: total_mass, kt, sigma, coeff, ek, ml(3), system_temp
+      REAL(DP) :: total_mass, kt, sigma, ek, ml(3), system_temp
       !
       !
       kt = temperature / ry_to_kelvin
@@ -961,19 +960,27 @@ MODULE dynamics_module
       !
       DO na = 1, nat
          !
-         coeff = ( mass(na) / ( tpi*kt ) )**( 3.D0 / 2.D0 )
-         !
-         sigma = SQRT( KT / mass(na) )
+         sigma = SQRT( kt / mass(na) )
          !
          ! ... N.B. velocities must in a.u. units of alat
          !
-         vel(:,na) = coeff * gauss_dist( 0.D0, sigma, 3 ) / alat
+         vel(:,na) = gauss_dist( 0.D0, sigma, 3 ) / alat
          !
       END DO
       !
       ! ... the velocity of fixed ions must be zero
       !
       vel = vel * DBLE( if_pos )
+      !
+      IF ( langevin_rescaling ) THEN
+         !
+         ! ... vel is used already multiplied by the time step
+         !
+         vel(:,:) = vel(:,:) * dt
+         !
+         RETURN
+         !
+      END IF
       !
       IF ( invsym ) THEN
          !
@@ -1023,9 +1030,8 @@ MODULE dynamics_module
          !
          vel(:,na) = vel(:,na) - ml(:)
          !
-         ek = ek + 0.5D0 * mass(na) * ( ( vel(1,na) - ml(1) )**2 + &
-                                        ( vel(2,na) - ml(2) )**2 + &
-                                        ( vel(3,na) - ml(3) )**2 )
+         ek = ek + 0.5D0 * mass(na) * &
+                   ( ( vel(1,na) )**2 + ( vel(2,na) )**2 + ( vel(3,na) )**2 )
          !
       END DO   
       !

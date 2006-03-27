@@ -1041,6 +1041,8 @@ MODULE input_parameters
         
         INTEGER :: nraise
         
+        LOGICAL :: refold_pos
+        
         LOGICAL :: monitor_constr = .FALSE.
         
         !

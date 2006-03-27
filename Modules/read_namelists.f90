@@ -360,6 +360,7 @@ MODULE read_namelists_module
        delta_t     = 1.D0
        nraise      = 100
        !
+       refold_pos     = .FALSE.
        monitor_constr = .FALSE.
        !
        upscale           = 10
@@ -834,6 +835,7 @@ MODULE read_namelists_module
        CALL mp_bcast( ion_maxstep,       ionode_id )
        CALL mp_bcast( delta_t,           ionode_id )
        CALL mp_bcast( nraise,            ionode_id )
+       CALL mp_bcast( refold_pos,        ionode_id )
        CALL mp_bcast( monitor_constr,    ionode_id )
        CALL mp_bcast( upscale,           ionode_id )
        CALL mp_bcast( pot_extrapolation, ionode_id )
