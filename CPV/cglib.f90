@@ -181,7 +181,8 @@ subroutine pc2(a,beca,b,becb)
 !    a input :unperturbed wavefunctions
 !    b input :first order wavefunctions
 !    b output:b_i =b_i-a_j><a_j|S|b_i>
-     
+    
+      use kinds, only: dp 
       use ions_base, only: na, nsp
       use io_global, only: stdout
       use mp_global, only: intra_image_comm
@@ -198,13 +199,15 @@ subroutine pc2(a,beca,b,becb)
                            
       implicit none        
                            
-      complex(8) a(ngw,n), b(ngw,n)
+      complex(kind=DP) a(ngw,n), b(ngw,n)
                      
-      real(8)    beca(nhsa,n),becb(nhsa,n)
+      real(kind=DP)    beca(nhsa,n),becb(nhsa,n)
 ! local variables
       integer is, iv, jv, ia, inl, jnl, i, j,ig
-      real(8) sca
+      real(kind=DP) sca
+      real(kind=DP)  becp(nhsa)
       do i=1,n
+         becp(:)=0.d0
          do j=1,n
             sca=0.
             if (ng0.eq.2) then
@@ -238,13 +241,15 @@ subroutine pc2(a,beca,b,becb)
                do ig=1,ngw
                   b(ig,i)=b(ig,i)-sca*a(ig,j)
                enddo
+!it also update becb
+               becp(:)=becp(:)-beca(:,j)*sca
                ! this to prevent numerical errors
                if (ng0.eq.2) then
                   b(1,i)=0.5d0*(b(1,i)+CONJG(b(1,i)))
                endif
             endif
          enddo
-
+         becb(:,i)=becb(:,i)-becp(:)
       enddo
       return
       end subroutine pc2

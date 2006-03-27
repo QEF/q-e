@@ -1297,7 +1297,7 @@
 !     corresponing bec:  bec(i)=<cp(i)|beta>-csc(k)<cp(k)|beta>
 !
       DO k=1,kmax
-         DO inl=1,nhsavb
+          DO inl=1,nkbx
             bec(inl,i)=bec(inl,i)-csc(k)*bec(inl,k)
          END DO
       END DO
@@ -1345,7 +1345,7 @@
          !
          !         these are the final bec's
          !
-         CALL DSCAL( nhsavb, 1.0/anorm, bec(1,i), 1 )
+         CALL DSCAL( nkbx, 1.0/anorm, bec(1,i), 1 )
       END DO
 !
       DEALLOCATE( csc )

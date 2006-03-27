@@ -146,7 +146,7 @@
 
       call gram(betae,bec,nhsa,c0,ngw,n)
 
-      call calbec(1,nsp,eigr,c0,bec)
+      !call calbec(1,nsp,eigr,c0,bec)
 
       !calculates phi for pcdaga
 
@@ -244,20 +244,13 @@
           !
           !---ensemble-DFT
 
+          call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
+                 &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
           if (.not.tens) then
-
-            call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
-                  &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
             etotnew=etot
-
           else
-
             call compute_entropy2( entropy, f, n, nspin )
-           
-            call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,                &
-                     &            ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
             etotnew=etot+entropy
-
           end if
 
           if(tefield  ) then!just in this case calculates elfield stuff at zeo field-->to be bettered
@@ -360,7 +353,6 @@
         
         if(tens) call calcmt(f,z0,fmat0)
 
-        call calbec(1,nsp,eigr,gi,becm)
         call calbec(1,nsp,eigr,hpsi,bec0) 
 
 !  calculates gamma
@@ -469,7 +461,6 @@
         call calbec(1,nsp,eigr,hi,bec0)
         call pc2(c0,bec,hi,bec0)
         
-        call calbec(1,nsp,eigr,hi,bec0)
 
         !do quadratic minimization
         !             
@@ -525,7 +516,7 @@
 
         call calbec(1,nsp,eigr,cm,becm)
         call gram(betae,becm,nhsa,cm,ngw,n)
-        call calbec(1,nsp,eigr,cm,becm)
+        !call calbec(1,nsp,eigr,cm,becm)
                
         !calculate energy
         if(.not.tens) then
@@ -546,13 +537,8 @@
         !
         if (nlcc_any) call set_cc(irb,eigrb,rhoc)
 !
-        if (.not.tens) then
-          call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
+        call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
                       &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
-        else
-          call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
-                      &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
-        end if
 
         if( tefield  ) then!to be bettered
           call berry_energy( enb, enbi, becm, cm(:,:,1,1), fion )
@@ -593,7 +579,7 @@
 
         !test on energy: check the energy has really diminished
 
-        call calbec(1,nsp,eigr,cm,becm)
+        !call calbec(1,nsp,eigr,cm,becm)
         if(.not.tens) then
           call rhoofr(nfi,cm(:,:,1,1),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
         else
@@ -611,13 +597,9 @@
         !
         if (nlcc_any) call set_cc(irb,eigrb,rhoc)
 !
-        if (.not.tens) then
-          call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
+        call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
                        &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
-        else
-          call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
-                       &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
-        end if
+
         if( tefield )  then!to be bettered
           call berry_energy( enb, enbi, becm, cm(:,:,1,1), fion )
           etot=etot+enb+enbi
@@ -705,14 +687,9 @@
             !
             if (nlcc_any) call set_cc(irb,eigrb,rhoc)
   !
-            if (.not.tens) then
-              call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
+            call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
                         &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
-                    
-            else
-              call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
-                        &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
-            end if
+
             if( tefield)  then !to be bettered
               call berry_energy( enb, enbi, becm, cm(:,:,1,1), fion )
               etot=etot+enb+enbi
@@ -737,9 +714,9 @@
         
         if(tens.and.newscheme) enever=enever-entropy
  
-        call calbec (1,nsp,eigr,c0,bec)
+        if(.not. ene_ok) call calbec (1,nsp,eigr,c0,bec)
+
         !calculates phi for pc_daga
-        !call calphiid(c0,bec,betae,phi)
         CALL calphi( c0, SIZE(c0,1), bec, nhsa, betae, phi, n )
   
         !=======================================================================
