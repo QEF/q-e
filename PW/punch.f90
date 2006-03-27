@@ -21,21 +21,17 @@ SUBROUTINE punch( what )
   USE wavefunctions_module, ONLY : evc, evc_nc
   USE io_files,             ONLY : prefix, iunpun, iunwfc, nwordwfc
   USE noncollin_module,     ONLY : noncolin
-  USE mp_global,            ONLY : kunit
   USE pw_restart,           ONLY : pw_writefile
   USE a2F,                  ONLY : la2F
   !
   IMPLICIT NONE
   !
   CHARACTER(LEN=*) :: what
-  INTEGER          :: ik, i, ibnd, kunittmp
   LOGICAL          :: exst
   !
   !
   WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
       TRIM( prefix ) // '.save'
-  !
-  kunittmp = 1
   !
   ! ... if the wavefunction has not been written on file, do it now
   !
@@ -73,8 +69,6 @@ SUBROUTINE punch( what )
   CALL poolrecover( wg, nbnd, nkstot, nks )
   !
   ! ... In parallel execution, only the first node writes this file
-  !
-  kunittmp = kunit
   !
 #endif
   !

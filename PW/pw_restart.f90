@@ -51,7 +51,7 @@ MODULE pw_restart
     SUBROUTINE pw_writefile( what )
       !------------------------------------------------------------------------
       !
-      USE control_flags,        ONLY : istep, modenum
+      USE control_flags,        ONLY : istep, modenum, twfcollect
       USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
                                        ibrav, symm_type, celldm
       USE reciprocal_vectors,   ONLY : ig_l2g
@@ -111,7 +111,7 @@ MODULE pw_restart
       CASE( "all" )
          !
          lgvec = .TRUE.
-         lwfc  = .TRUE.
+         lwfc  = twfcollect
          !
       CASE DEFAULT
          !
@@ -1951,6 +1951,7 @@ MODULE pw_restart
       ! ... This routines reads wavefunctions from the new file format and
       ! ... writes them into the old format
       !
+      USE control_flags,        ONLY : twfcollect
       USE cell_base,            ONLY : tpiba2
       USE lsda_mod,             ONLY : nspin, isk
       USE klist,                ONLY : nkstot, wk, nelec, nks, xk, ngk
@@ -2113,6 +2114,24 @@ MODULE pw_restart
             CALL iotk_scan_begin( iunpun, &
                                   "K-POINT" // TRIM( iotk_index( ik ) ) )
             !
+            CALL iotk_scan_begin( iunpun, "WFC", FOUND = twfcollect  )
+            !
+            IF ( twfcollect ) CALL iotk_scan_end( iunpun, "WFC" )
+            !
+         END IF
+         !
+         CALL mp_bcast( twfcollect, ionode_id )
+         !
+         IF ( .NOT. twfcollect ) THEN
+            !
+            IF ( ionode ) THEN
+               !
+               CALL iotk_scan_end( iunpun, "K-POINT" // TRIM( iotk_index( ik ) ) )
+               !
+            END IF
+            !
+            EXIT k_points_loop
+            !
          END IF
          !
          IF ( nspin == 2 ) THEN
@@ -2126,9 +2145,10 @@ MODULE pw_restart
                !
             END IF
             !
-            CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,     &
-                           evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),       &
-                           ngk(ik-iks+1), filename, scalef )
+            !
+            CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
+                 evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),   &
+                 ngk(ik-iks+1), filename, scalef )
             !
             IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                !
@@ -2170,7 +2190,7 @@ MODULE pw_restart
                      !
                   END IF
                   !
-                  CALL read_wfc( iunout, ik, nkstot, kunit, ispin, &
+                  CALL read_wfc( iunout, ik, nkstot, kunit, ispin,     &
                                  nspin, evc_nc(:,ipol,:), npw_g, nbnd, &
                                  igk_l2g(:,ik-iks+1), ngk(ik-iks+1),   &
                                  filename, scalef )
@@ -2179,11 +2199,15 @@ MODULE pw_restart
                !
             ELSE
                !
-               IF ( ionode ) filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
+               IF ( ionode ) THEN
+                  !
+                  filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
+                  !
+               END IF
                !
-               CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
-                               evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),       &
-                               ngk(ik-iks+1), filename, scalef )
+               CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,    &
+                              evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),      &
+                              ngk(ik-iks+1), filename, scalef )
                !
             END IF
             !
