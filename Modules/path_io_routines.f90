@@ -219,7 +219,7 @@ MODULE path_io_routines
                     if_pos(3,ia) 
                 !
                 grad_pes(:,1) = grad_pes(:,1) * &
-                               DBLE( RESHAPE( if_pos, (/ dim /) ) )
+                                DBLE( RESHAPE( if_pos, (/ dim /) ) )
                 !
              END DO
              !

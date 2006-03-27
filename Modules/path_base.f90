@@ -167,6 +167,34 @@ MODULE path_base
          !
       END IF
       !
+      ! ... initialization of the allocatable arrays
+      !
+      pes          = 0.D0
+      grad_pes     = 0.D0
+      elastic_grad = 0.D0
+      tangent      = 0.D0
+      grad         = 0.D0
+      error        = 0.D0
+      frozen       = .FALSE.      
+      !
+      IF ( lneb ) THEN
+         !
+         k = k_min
+         !
+         climbing_ = climbing(1:num_of_images)
+         !
+      ELSE IF ( lsmd ) THEN
+         !
+         IF ( use_fourier ) THEN
+            !
+            ! ... fourier components of the path
+            !
+            ft_pos = 0.D0
+            !
+         END IF
+         !
+      END IF
+      !
       ! ... initial path is read from file ( restart_mode == "restart" ) or
       ! ... generated from the input images ( restart_mode = "from_scratch" )
       ! ... It is always read from file in the case of "free-energy" 
@@ -216,34 +244,7 @@ MODULE path_base
          !
          CALL initial_guess()
          !
-      END IF
-      !
-      ! ... initialization of the allocatable arrays
-      !
-      posold       = pos
-      pes          = 0.D0
-      grad_pes     = 0.D0
-      elastic_grad = 0.D0
-      tangent      = 0.D0
-      grad         = 0.D0
-      error        = 0.D0
-      frozen       = .FALSE.
-      !
-      IF ( lneb ) THEN
-         !
-         k = k_min
-         !
-         climbing_ = climbing(1:num_of_images)
-         !
-      ELSE IF ( lsmd ) THEN
-         !
-         IF ( use_fourier ) THEN
-            !
-            ! ... fourier components of the path
-            !
-            ft_pos = 0.D0
-            !
-         END IF
+         posold(:,:) = pos(:,:)
          !
       END IF
       !
