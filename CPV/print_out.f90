@@ -54,7 +54,7 @@
       USE constants,        ONLY : factem, au_gpa, au, amu_si, bohr_radius_cm, scmass, BOHR_RADIUS_ANGS
       USE ions_base,        ONLY : na, nsp, nat, ind_bck, atm, ityp, pmass, &
                                    cdm_displacement, ions_displacement
-      USE cell_base,        ONLY : s_to_r
+      USE cell_base,        ONLY : s_to_r, get_volume
       USE efield_module,    ONLY : tefield, pberryel, pberryion, &
                                    tefield2, pberryel2, pberryion2
       USE cg_module,        ONLY : tcg, itercg
@@ -84,7 +84,6 @@
       REAL(DP), INTENT(IN) :: atot! enthalpy of system for c.g. case
       !
       REAL(DP) :: stress_gpa( 3, 3 )
-      REAL(DP) :: hinv( 3, 3 )
       REAL(DP) :: dis( nsp )
       REAL(DP) :: out_press, volume
       REAL(DP) :: totalmass
@@ -128,7 +127,7 @@
             !
             CALL printout_cell( stdout, h )
             !
-            CALL invmat( 3, h, hinv, volume )
+            volume = get_volume( h )
             !
             IF( tfile ) CALL printout_cell( 36, h, nfi, tps )
             !
@@ -696,15 +695,15 @@
         END IF
 
         DO ip = 1, nproc_image
-          CALL mp_get(ng, ngm, me_image, ionode_id, ip-1, ip)
-          CALL mp_get(hg_rcv(:), g(:), me_image, ionode_id, ip-1, ip)
-          CALL mp_get(gx_rcv(:,:), gx(:,:), me_image, ionode_id, ip-1, ip)
-          CALL mp_get(ig_rcv(:), ig_l2g(:), me_image, ionode_id, ip-1, ip)
+          CALL mp_get(ng, ngm, me_image, ionode_id, ip-1, ip, intra_image_comm )
+          CALL mp_get(hg_rcv(:), g(:), me_image, ionode_id, ip-1, ip, intra_image_comm )
+          CALL mp_get(gx_rcv(:,:), gx(:,:), me_image, ionode_id, ip-1, ip, intra_image_comm )
+          CALL mp_get(ig_rcv(:), ig_l2g(:), me_image, ionode_id, ip-1, ip, intra_image_comm )
           DO ispin = 1, nspin
-            CALL mp_get( rhoeg_rcv(:,ispin), rhoeg(:,ispin), me_image, ionode_id, ip-1, ip)
+            CALL mp_get( rhoeg_rcv(:,ispin), rhoeg(:,ispin), me_image, ionode_id, ip-1, ip, intra_image_comm )
           END DO
           DO is = 1, nsp
-            CALL mp_get( sfac_rcv(:,is), sfac(:,is), me_image, ionode_id, ip-1, ip)
+            CALL mp_get( sfac_rcv(:,is), sfac(:,is), me_image, ionode_id, ip-1, ip, intra_image_comm )
           END DO
           IF( ionode ) THEN
             DO ig = 1, ng

@@ -72,7 +72,7 @@
             berry_energy, ctabin, gqq, gqqm, df, pberryel, &
             tefield2, evalue2, ctable2, qmat2, detq2, ipolp2, &
             berry_energy2, ctabin2, gqq2, gqqm2, pberryel2
-      use mp, only: mp_sum, mp_bcast
+      use mp, only: mp_sum
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi
       use charge_density,           ONLY : rhoofr

@@ -22,8 +22,6 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE path_formats,      ONLY : scf_fmt
   USE path_variables,    ONLY : pos, pes, grad_pes, num_of_images, &
                                 dim, suspended_image, frozen
-  USE mp_global,         ONLY : my_pool_id
-  USE mp,                ONLY : mp_barrier
   USE check_stop,        ONLY : check_stop_now
   USE xml_io_base,       ONLY : check_restartfile
   USE main_module,       ONLY : cpmain

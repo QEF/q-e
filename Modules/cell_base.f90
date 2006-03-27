@@ -311,6 +311,17 @@
         !
         RETURN
       END SUBROUTINE gethinv
+
+
+      FUNCTION get_volume( hmat )
+         IMPLICIT NONE
+         REAL(DP) :: get_volume
+         REAL(DP) :: hmat( 3, 3 )
+         get_volume = hmat(1,1)*(hmat(2,2)*hmat(3,3)-hmat(2,3)*hmat(3,2)) + &
+                      hmat(1,2)*(hmat(2,3)*hmat(3,1)-hmat(2,1)*hmat(3,3)) + &
+                      hmat(1,3)*(hmat(2,1)*hmat(3,2)-hmat(2,2)*hmat(3,1))
+         RETURN
+      END FUNCTION get_volume
 !
 !------------------------------------------------------------------------------!
 !

@@ -51,8 +51,7 @@ localindex.o \
 npreroc.o \
 numroc.o \
 ownerof.o \
-error.o \
-reduce.o
+error.o
 
 all: flib.a ptools.a $(MYLIB)
 

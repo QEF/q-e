@@ -534,13 +534,15 @@
             END DO
           END DO
 
-      ELSE  !....   NEWTON DYNAMICS FOR IONIC DEGREES OF FREEDOM
+      ELSE  
 
-          IF(TNOSEP.OR.thdyn) THEN
+          !....   NEWTON DYNAMICS FOR IONIC DEGREES OF FREEDOM
+
+          IF( tnosep .OR. thdyn ) THEN
     
-!....       Determines friction matrix annep according to nose dynamics
-! ...       ANNEP = 1 + (GCM1*GCDOT + VRNOS)*DELT/2 
-! ...       SVARPD = ANNEP^-1
+            !....       Determines friction matrix annep according to nose dynamics
+            ! ...       ANNEP = 1 + (GCM1*GCDOT + VRNOS)*DELT/2 
+            ! ...       SVARPD = ANNEP^-1
 
             DO j = 1, 3
               DO i = 1, 3
@@ -557,7 +559,7 @@
                 END DO
               END DO
             END IF
-            CALL invmat (3, annep,svarpd,dumm)
+            CALL invmat ( 3, annep, svarpd, dumm )
 
           ELSE
 
@@ -567,9 +569,11 @@
                                /), (/ 3, 3 /) )
           END IF
 
-! ...     Verlet
+          ! ...     Verlet
+
           isa = 0
           DO is = 1, atoms_0%nsp
+
             dt2bym = dt2 / atoms_0%m(is)
             DO ia = 1, atoms_0%na(is) 
               isa = isa + 1
@@ -590,6 +594,7 @@
                 END IF
               END DO
             END DO
+
           END DO
 
         END IF

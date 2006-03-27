@@ -654,7 +654,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   ! ... G-vectors. This information is stored in the 1-d array 
   ! ... psitot1.
   !
-  CALL mp_barrier()
+  CALL mp_barrier( intra_image_comm )
   !
   CALL MPI_ALLTOALLV(c, sendcount, sdispls, MPI_DOUBLE_COMPLEX,             &
        &             psitot1, recvcount, rdispls, MPI_DOUBLE_COMPLEX,       &
@@ -662,26 +662,23 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   IF (ierr.NE.0) CALL errore('WF','alltoallv 1',ierr)
   !
 #endif   
-  IF(clwf.EQ.5) THEN
+
+  IF( clwf .EQ. 5 ) THEN
      !
 #if defined (__PARA)
      !
-     CALL write_psi(c,jw)
-     CALL MPI_finalize(ierr)
-     WRITE( stdout, * ) "State written", jw
-     STOP
-  END IF
-  !
+     CALL write_psi( c, jw )
 #else
-    !
-    DO i=1,ngw
-       WRITE(22,*) c(i,jw)
-    END DO
-    WRITE( stdout, * ) "State written", jw
-    STOP
+     DO i=1,ngw
+        WRITE(22,*) c(i,jw)
+     END DO
+#endif
+     WRITE( stdout, * ) "State written", jw
+     CALL stop_run( .TRUE. ) 
+
   END IF
   !
-#endif
+  !
 #if defined (__PARA)
   !
   !   Step 2. Convert the 1-d array psitot1 into a 2-d array consistent with the
@@ -776,7 +773,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      !
      c_p = 0.D0
      !
-     CALL mp_barrier()
+     CALL mp_barrier( intra_image_comm )
      !
      CALL MPI_alltoallv(psitot_p, recvcount, rdispls, MPI_DOUBLE_COMPLEX,          &
           &                       c_p, sendcount , sdispls, MPI_DOUBLE_COMPLEX,              &
@@ -784,7 +781,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      IF (ierr.NE.0) CALL errore('WF','alltoallv 2',ierr)
 
      c_m = 0.D0
-     CALL mp_barrier()
+     CALL mp_barrier( intra_image_comm )
      !
      CALL MPI_alltoallv(psitot_m, recvcount, rdispls, MPI_DOUBLE_COMPLEX,          &
           &                       c_m, sendcount, sdispls, MPI_DOUBLE_COMPLEX,               &
@@ -871,7 +868,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
               qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
 
 #ifdef __PARA
-              CALL mp_sum( qvt)
+              CALL mp_sum( qvt, intra_image_comm )
 #endif
               !
               IF (nspin.EQ.1) THEN
@@ -911,7 +908,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                  qvt=0.D0
                  qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
 #ifdef __PARA
-                 CALL mp_sum( qvt)
+                 CALL mp_sum( qvt, intra_image_comm )
 #endif
                  !
                  IF (nspin.EQ.1) THEN
@@ -975,7 +972,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         CALL ZGEMM('c','nbsp',nbsp,nbsp,ngw,ONE,c,ngw,c_p,ngw,ONE,X,nbsp)
         CALL ZGEMM('T','nbsp',nbsp,nbsp,ngw,ONE,c,ngw,c_m,ngw,ONE,X,nbsp)
 #ifdef __PARA
-        CALL mp_sum ( X )
+        CALL mp_sum ( X, intra_image_comm )
 #endif
         O(inw,:,:)=Oa(inw,:,:)+X(:,:)
         IF(iprsta.GT.4) THEN
@@ -1003,7 +1000,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         CALL ZGEMM('c','nbsp',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
         CALL ZGEMM('T','nbsp',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
 #ifdef __PARA
-        CALL mp_sum ( Xsp )
+        CALL mp_sum ( Xsp, intra_image_comm )
 #endif
         DO i=1,nupdwn(1)
            DO j=1,nbsp
@@ -1030,7 +1027,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         CALL ZGEMM('c','nbsp',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
         CALL ZGEMM('T','nbsp',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
 #ifdef __PARA
-        CALL mp_sum ( Xsp )
+        CALL mp_sum ( Xsp, intra_image_comm )
 #endif
         DO i=iupdwn(2),nbsp
            DO j=1,nbsp
@@ -2268,14 +2265,14 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   !
   IF(nvb.GT.0) CALL small_box_wf(i_1, j_1, k_1, nw1)
 #ifdef __PARA
-  CALL mp_barrier()
+  CALL mp_barrier( intra_image_comm )
   !
-  CALL MPI_GATHERV(gnx, recvcount(me), MPI_REAL8,              &
-       bigg, recvcount, displs, MPI_REAL8,         &
+  CALL MPI_GATHERV(gnx, recvcount(me), MPI_DOUBLE_PRECISION,  &
+       bigg, recvcount, displs, MPI_DOUBLE_PRECISION,         &
        root_image, intra_image_comm, ierr)
   IF (ierr.NE.0) CALL errore('wfunc_init','MPI_GATHERV' , ierr)
   !
-  CALL mp_barrier()
+  CALL mp_barrier( intra_image_comm )
   !
   CALL MPI_GATHERV(gnn, recvcount(me), MPI_INTEGER,              &
        bign, recvcount, displs, MPI_INTEGER,         &
@@ -2495,7 +2492,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
 
 #ifdef __PARA
 
-  CALL mp_barrier()
+  CALL mp_barrier( intra_image_comm )
   !
   CALL mp_bcast( indexplus,  root_image, intra_image_comm )
   CALL mp_bcast( indexminus, root_image, intra_image_comm )
@@ -2769,6 +2766,7 @@ SUBROUTINE write_rho_g( rhog )
   USE electrons_base,     ONLY : nspin
   USE fft_base,           ONLY : dfftp
   USE mp_global,          ONLY : nproc_image, me_image, root_image, intra_image_comm
+  USE mp,                 ONLY : mp_barrier
   USE parallel_include
   !
   IMPLICIT NONE
@@ -2818,10 +2816,9 @@ SUBROUTINE write_rho_g( rhog )
      ALLOCATE(bigg(3,ntot))
   END IF
 
-  CALL mpi_barrier(intra_image_comm,ierr)
-  IF(ierr.NE.0) CALL errore('write_rho_g0','mpi_barrier', ierr)
-  CALL MPI_GATHERV(gnx,recvcount(me),MPI_REAL8,                        &
-       bigg,recvcount,displs,MPI_REAL8,                    &
+  CALL mp_barrier(intra_image_comm)
+  CALL MPI_GATHERV(gnx,recvcount(me),MPI_DOUBLE_PRECISION,                        &
+       bigg,recvcount,displs,MPI_DOUBLE_PRECISION,                    &
        root_image,intra_image_comm, ierr)
   IF(ierr.NE.0) CALL errore('write_rho_g0','MPI_GATHERV', ierr)
   DO i=1,nspin
@@ -2832,8 +2829,7 @@ SUBROUTINE write_rho_g( rhog )
         ALLOCATE (bigrho(ntot))
      END IF
 
-     CALL mpi_barrier(intra_image_comm,ierr)
-     IF(ierr.NE.0) CALL errore('write_rho_g1','mpi_barrier', ierr)
+     CALL mp_barrier(intra_image_comm)
      CALL MPI_GATHERV(rhotmp_g,recvcount2(me),MPI_DOUBLE_COMPLEX,                &
           bigrho,recvcount2,displs2,MPI_DOUBLE_COMPLEX,              &
           root_image,intra_image_comm, ierr)
@@ -2974,21 +2970,21 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   ALLOCATE(g_1(3,2*ntot-1))
   ALLOCATE(g_red(3,2*ntot-1))
 
-  CALL mp_barrier()
+  CALL mp_barrier( intra_image_comm )
   !
-  CALL MPI_GATHERV(gnx,recvcount(me),MPI_REAL8,                        &
-       bigg,recvcount,displs,MPI_REAL8,                    &
+  CALL MPI_GATHERV(gnx,recvcount(me),MPI_DOUBLE_PRECISION,                        &
+       bigg,recvcount,displs,MPI_DOUBLE_PRECISION,                    &
        root_image,intra_image_comm, ierr)
   IF(ierr.NE.0) CALL errore('macroscopic_avergae','MPI_GATHERV', ierr)
   !
-  CALL mpi_bcast( bigg )
+  CALL mp_bcast( bigg, root_image, intra_image_comm )
   !
   rhotmp_g(1:ngm)=rhog(1:ngm,1)
 
   ALLOCATE (bigrho(ntot))
   ALLOCATE (bigrhog(2*ntot-1))
 
-  CALL mp_barrier()
+  CALL mp_barrier( intra_image_comm )
   !
   CALL MPI_GATHERV(rhotmp_g,recvcount2(me),MPI_DOUBLE_COMPLEX,       &
        bigrho,recvcount2,displs2,MPI_DOUBLE_COMPLEX,       &
@@ -3731,7 +3727,7 @@ SUBROUTINE write_psi( c, jw )
   USE smooth_grid_dimensions, ONLY : nnrsx, nr3sx, nr1s, nr2s, nr3s
   USE gvecw ,                 ONLY : ngw
   USE reciprocal_vectors,     ONLY : mill_l
-  USE mp,                     ONLY : mp_barrier, mp_sum
+  USE mp,                     ONLY : mp_barrier
   USE fft_base,               ONLY : dfftp
   USE mp_global,              ONLY : nproc_image, me_image, root_image, intra_image_comm
   USE parallel_include
@@ -3822,7 +3818,7 @@ SUBROUTINE write_psi( c, jw )
   !
   ! ... gather all psis arrays on the first node, in psitot
   !
-  CALL mp_barrier()
+  CALL mp_barrier( intra_image_comm )
   !
   CALL MPI_GATHERV (psis, recvcount(me),     MPI_DOUBLE_COMPLEX, &
        &                      psitot,recvcount, displs,MPI_DOUBLE_COMPLEX, &
@@ -3889,6 +3885,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   USE wannier_base,           ONLY : iwf
   USE dener,                  ONLY : dekin, denl
   USE io_global,              ONLY : stdout, ionode
+  USE mp_global,              ONLY : intra_image_comm
   USE uspp_param,             ONLY : nh, nhm
   USE uspp,                   ONLY : nkb
   USE fft_module,             ONLY : fwfft, invfft
@@ -4116,8 +4113,8 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
            rsumg(iss)=0.0
         END DO
      END IF
-     CALL mp_sum(rsumg)
-     CALL mp_sum(rsumr)
+     CALL mp_sum(rsumg, intra_image_comm)
+     CALL mp_sum(rsumr, intra_image_comm)
 #endif
      IF (nspin.EQ.1) THEN
         WRITE( stdout,1) rsumg(1),rsumr(1)
@@ -4177,8 +4174,8 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
            rsumg(iss)=0.0
         END DO
      END IF
-     CALL mp_sum(rsumg)
-     CALL mp_sum(rsumr)
+     CALL mp_sum(rsumg, intra_image_comm)
+     CALL mp_sum(rsumr, intra_image_comm)
 #endif
      IF (nspin.EQ.1) THEN
         WRITE( stdout,1) rsumg(1),rsumr(1)
