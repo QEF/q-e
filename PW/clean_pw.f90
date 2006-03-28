@@ -15,6 +15,7 @@ SUBROUTINE clean_pw( lflag )
   USE gvect,                ONLY : g, gg, nl, nlm, igtongl, ig1, ig2, ig3, &
                                    eigts1, eigts2, eigts3
   USE gsmooth,              ONLY : nls, nlsm, doublegrid
+  USE fixed_occ,            ONLY : f_inp
   USE ktetra,               ONLY : tetra
   USE reciprocal_vectors,   ONLY : ig_l2g
   USE symme,                ONLY : irt
@@ -53,6 +54,7 @@ SUBROUTINE clean_pw( lflag )
      !
   END IF
   !
+  IF ( ALLOCATED( f_inp ) )      DEALLOCATE( f_inp )
   IF ( ALLOCATED( tetra ) )      DEALLOCATE( tetra )
   IF ( ALLOCATED( irt ) )        DEALLOCATE( irt )
   !

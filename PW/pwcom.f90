@@ -509,12 +509,11 @@ MODULE fixed_occ
   ! ... The quantities needed in calculations with fixed occupations
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nbndxx, nspinx
   !
   SAVE
   !
-  REAL(DP) :: &
-       f_inp(nbndxx,nspinx)   ! the occupations for each spin
+  REAL(DP), ALLOCATABLE :: &
+       f_inp(:,:)             ! the occupations for each spin
   LOGICAL :: &
        tfixed_occ             ! if .TRUE. the occupations are fixed.
   !

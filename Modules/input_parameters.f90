@@ -19,7 +19,7 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nsx, npkx, nbndxx, nspinx, &
+  USE parameters, ONLY : nsx, npkx, nspinx, &
                          lqmax, nhclm, max_nconstr
   !
   IMPLICIT NONE
@@ -1431,7 +1431,7 @@ MODULE input_parameters
 !
 !    OCCUPATIONS
 !
-        REAL(DP) :: f_inp(nbndxx, nspinx) = 0.0d0
+        REAL(DP), ALLOCATABLE :: f_inp(:,:)
         LOGICAL   :: tf_inp = .FALSE.
 
 !

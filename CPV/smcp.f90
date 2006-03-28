@@ -56,7 +56,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE gvecw,                    ONLY : ggp, ecutw
   USE gvecp,                    ONLY : ecutp
   USE restart_file,             ONLY : writefile, readfile
-  USE parameters,               ONLY : nacx, nsx, nbndxx, nhclm
+  USE parameters,               ONLY : nacx, nsx, nhclm
   USE constants,                ONLY : pi, factem, au_gpa, au_ps, gpa_au
   USE io_files,                 ONLY : psfile, pseudo_dir, smwout, outdir
   USE wave_base,                ONLY : wave_steepest, wave_verlet

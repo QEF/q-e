@@ -1731,10 +1731,11 @@ MODULE pw_restart
     SUBROUTINE read_occupations( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE lsda_mod,  ONLY : lsda
+      USE lsda_mod,  ONLY : lsda, nspin
       USE fixed_occ, ONLY : tfixed_occ, f_inp
       USE ktetra,    ONLY : ntetra, tetra, ltetra
       USE klist,     ONLY : lgauss, ngauss, degauss
+      USE wvfct,     ONLY : nbnd
       !
       IMPLICIT NONE
       !
@@ -1789,10 +1790,18 @@ MODULE pw_restart
          !
          IF ( tfixed_occ ) THEN
             !
-            CALL iotk_write_dat( iunpun, "INPUT_OCC_UP", f_inp(:,1) )
+            IF ( .NOT. ALLOCATED( f_inp ) ) THEN
+               IF ( nspin == 4 ) THEN
+                  ALLOCATE( f_inp( nbnd, 1 ) )
+               ELSE
+                  ALLOCATE( f_inp( nbnd, nspin ) )
+               END IF
+            END IF
+            !
+            CALL iotk_scan_dat( iunpun, "INPUT_OCC_UP", f_inp(:,1) )
             !
             IF ( lsda ) &
-               CALL iotk_write_dat( iunpun, "INPUT_OCC_DOWN", f_inp(:,2) )
+               CALL iotk_scan_dat( iunpun, "INPUT_OCC_DOWN", f_inp(:,2) )
             !
          END IF         
          !

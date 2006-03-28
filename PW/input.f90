@@ -143,7 +143,7 @@ SUBROUTINE iosys()
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
   !
-  USE fixed_occ,     ONLY : tfixed_occ
+  USE fixed_occ,     ONLY : tfixed_occ, f_inp
   !
   USE path_variables, ONLY : nstep_path, lsteep_des, lquick_min, lbroyden, &
                              llangevin, &
@@ -1192,8 +1192,15 @@ SUBROUTINE iosys()
   !
   ALLOCATE( ityp( nat_ ) )
   ALLOCATE( tau(    3, nat_ ) )
-  ALLOCATE( force(  3, nat_ ) )  ! ... compatibility with old readin
+  ALLOCATE( force(  3, nat_ ) )
   ALLOCATE( if_pos( 3, nat_ ) )
+  IF ( tfixed_occ ) THEN
+     IF ( nspin_ == 4 ) THEN
+        ALLOCATE( f_inp( nbnd_, 1 ) )
+     ELSE
+        ALLOCATE( f_inp( nbnd_, nspin_ ) )
+     END IF
+  END IF
   !
   IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
   !
@@ -1596,6 +1603,8 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
                    & 'only one k point with fixed occupations', 1 )
      !
      f_inp_ = f_inp
+     !
+     DEALLOCATE ( f_inp )
      !
   END IF
   !

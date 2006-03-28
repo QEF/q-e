@@ -23,6 +23,8 @@ MODULE read_cards_module
   !
   IMPLICIT NONE
   !
+  INTEGER, PARAMETER :: nbndxx  = 10000
+  !
   SAVE
   !
   PRIVATE
@@ -49,10 +51,6 @@ MODULE read_cards_module
        !
        CHARACTER(LEN=2) :: prog
        !
-       !
-       ! ... f_inp is a temporary array to store the occupation numbers
-       !
-       f_inp = 0.D0  
        !
        ! ... mask that control the printing of selected Kohn-Sham occupied 
        ! ... orbitals, default allocation
@@ -981,6 +979,7 @@ MODULE read_cards_module
        nspin0=nspin
        if (nspin == 4) nspin0=1
        !
+       ALLOCATE ( f_inp ( nbnd, nspin0 ) )
        DO is = 1, nspin0
           !
           nx10 = 10 * INT( nbnd / 10 )
@@ -1826,7 +1825,6 @@ MODULE read_cards_module
      !
      SUBROUTINE card_ksout( input_line )
        ! 
-       USE parameters, ONLY : nbndxx
        IMPLICIT NONE
        ! 
        CHARACTER(LEN=256) :: input_line
@@ -1928,7 +1926,6 @@ MODULE read_cards_module
      !
      SUBROUTINE card_ksout_empty( input_line )
        ! 
-       USE parameters, ONLY : nbndxx
        IMPLICIT NONE
        ! 
        CHARACTER(LEN=256) :: input_line
