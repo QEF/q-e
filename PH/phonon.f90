@@ -18,7 +18,7 @@ PROGRAM phonon
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout, ionode, ionode_id
   USE wvfct,           ONLY : gamma_only
-  USE klist,           ONLY : xk, wk, xqq, degauss, nks
+  USE klist,           ONLY : xk, wk, xqq, degauss, nks, tot_magnetization
   USE relax,           ONLY : restart_bfgs
   USE basis,           ONLY : startingwfc, startingpot, startingconfig
   USE force_mod,       ONLY : force
@@ -217,7 +217,8 @@ PROGRAM phonon
         startingconfig = 'input'
         startingpot    = 'file'
         startingwfc    = 'atomic'
-        wg_set=.false.
+        wg_set         = .false.
+        tot_magnetization=-1
         !
         ! ... tr2 is set to a default value of 1.D-8
         !
