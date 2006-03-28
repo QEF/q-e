@@ -921,6 +921,7 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
   USE path_variables, only: &
         ptr => smd_ptr
   USE io_global, ONLY: stdout    
+  USE cp_main_variables, ONLY: taub    
 
   implicit none
 
@@ -966,7 +967,8 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
      ALLOCATE(rep(sm_k)%tan(3,nat))
   ENDDO
 
-
+  IF( ALLOCATED( taub ) ) DEALLOCATE( taub )
+  ALLOCATE(taub(3,nat))
 
   ! compute na(is)
 
