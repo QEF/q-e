@@ -3904,10 +3904,12 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   INTEGER is,iv,jv,isa,isn, jnl, j, k, inl, ism, ia
   REAL(DP) rsumr(2), rsumg(2), sa1, sa2, sums(2)
   REAL(DP) rnegsum, rmin, rmax, rsum
-  REAL(DP) enkin, ennl
+  CHARACTER(LEN=12) :: filename
   COMPLEX(DP) fp,fm
   COMPLEX(DP), ALLOCATABLE :: psi(:), psis(:)
-  EXTERNAL ennl, enkin
+  !
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  REAL(DP),         EXTERNAL :: ennl, enkin
   !
   !
   CALL start_clock(' rhoiofr ')
@@ -4133,6 +4135,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
      CALL rhov(irb,eigrb,rhovan,rhog,rhor)
   ENDIF
   !     ======================================endif for trhor=============
+  !
   REWIND ndwwf
   !
   IF ( ionode ) THEN
@@ -4150,14 +4153,16 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   !
 #if defined (__PARA)
   !
-  CALL write_rho( ndwwf ,nspin, rhor )
+  CALL old_write_rho( ndwwf, nspin, rhor )
   !
 #else
-  WRITE( ndwwf, '(F12.7)' ) ( ( rhor(ir,iss), ir = 1, nnrx ), iss = 1, nspin )
+  !
+  WRITE( ndwwf, '(F12.7)' ) &
+      ( ( rhor(ir,iss), ir = 1, nnrx ), iss = 1, nspin )
+  !
 #endif
   !
   !     here to check the integral of the charge density
-  !
   !
   IF(iprsta.GE.2) THEN
      CALL checkrho(nnrx,nspin,rhor,rmin,rmax,rsum,rnegsum)
@@ -4170,7 +4175,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   IF(nfi.EQ.0.OR.MOD(nfi-1,iprint).EQ.0) THEN
 
      WRITE( stdout, * ) 
-     WRITE( stdout, * ) 'Smooth part + Augmentatio Part: '
+     WRITE( stdout, * ) 'Smooth part + Augmentation Part: '
      DO iss=1,nspin
         rsumg(iss)=omega*DBLE(rhog(1,iss))
         rsumr(iss)=SUM(rhor(1:nnrx,iss))*omega/DBLE(nr1*nr2*nr3)
@@ -4201,7 +4206,6 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
        &     ' density'/' in g-space =',f10.6,4x,                         &
        &     ' in r-space =',f10.6)
   !
-
   WRITE( stdout, * ) 
   WRITE( stdout , * ) 'State Written : ' ,iwf, 'to unit',ndwwf
   WRITE( stdout, * ) 
