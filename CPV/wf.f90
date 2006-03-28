@@ -4148,6 +4148,14 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
      !
   END IF
   !
+#if defined (__PARA)
+  !
+  CALL write_rho( ndwwf ,nspin, rhor )
+  !
+#else
+  WRITE( ndwwf, '(F12.7)' ) ( ( rhor(ir,iss), ir = 1, nnrx ), iss = 1, nspin )
+#endif
+  !
   !     here to check the integral of the charge density
   !
   !

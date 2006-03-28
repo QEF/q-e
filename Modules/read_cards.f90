@@ -2075,19 +2075,18 @@ MODULE read_cards_module
        LOGICAL, SAVE      :: tread = .FALSE.
        LOGICAL, EXTERNAL  :: matches
        ! 
-       INTEGER            :: i, ib
-       CHARACTER(LEN=5)  :: i_char
+       INTEGER                    :: i, ib
+       CHARACTER(LEN=5)           :: i_char
        CHARACTER(LEN=6), EXTERNAL :: int_to_char
        !
        !
        IF ( tread ) &
-          CALL errore( 'card_plot_wannier ', 'two occurrence', 2 )
+          CALL errore( 'card_plot_wannier', 'two occurrence', 2 )
        !
        IF ( nwf > 0 ) THEN
           !
           IF ( nwf > nwf_max ) &
-             CALL errore( 'card_plot_wannier ', &
-                          'too many wannier functions', 1 )
+             CALL errore( 'card_plot_wannier', 'too many wannier functions', 1 )
           !
           CALL read_line( input_line )
           !
@@ -2097,20 +2096,20 @@ MODULE read_cards_module
              !
              i_char = int_to_char( i ) 
              !
-             IF ( matches( ' ' // TRIM( i_char ) // ',' , & 
+             IF ( matches( ' ' // TRIM( i_char ) // ',', & 
                            ' ' // TRIM( input_line ) // ',' ) ) THEN
                 !
                 ib = ib + 1
                 !
                 IF ( ib > nwf ) &
-                   CALL errore( 'card_plot_wannier ', 'too many indices', 1 )
-                 !
-                wannier_index( ib ) = i
+                   CALL errore( 'card_plot_wannier', 'too many indices', 1 )
+                !
+                wannier_index(ib) = i
                 !
              END IF
              !
           END DO
-          !   
+          !
        END IF
        ! 
        tread = .TRUE.

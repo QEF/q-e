@@ -18,17 +18,17 @@ MODULE wannier_base
   LOGICAL              :: wf_efield
   LOGICAL              :: wf_switch
   INTEGER              :: sw_len
-  REAL(DP)       :: efx0, efy0, efz0
-  REAL(DP)       :: efx1, efy1, efz1
+  REAL(DP)             :: efx0, efy0, efz0
+  REAL(DP)             :: efx1, efy1, efz1
   LOGICAL              :: wfsd
-  REAL(DP)       :: wfdt
-  REAL(DP)       :: maxwfdt
-  REAL(DP)       :: wf_q
-  REAL(DP)       :: wf_friction
+  REAL(DP)             :: wfdt
+  REAL(DP)             :: maxwfdt
+  REAL(DP)             :: wf_q
+  REAL(DP)             :: wf_friction
   INTEGER              :: nit
   INTEGER              :: nsd
   INTEGER              :: nsteps
-  REAL(DP)       :: tolw
+  REAL(DP)             :: tolw
   LOGICAL              :: adapt
   INTEGER              :: calwf
   INTEGER              :: nwf
@@ -38,14 +38,14 @@ MODULE wannier_base
   !
   ! ... other internal variables
   !
-  INTEGER                        :: nw, nwrwf, iwf, jwf
-  INTEGER, ALLOCATABLE           :: wfg1(:), wfg(:,:)
-  INTEGER, ALLOCATABLE           :: indexplus(:,:), indexminus(:,:)
-  INTEGER, ALLOCATABLE           :: indexplusz(:), indexminusz(:)
-  INTEGER, ALLOCATABLE           :: tag(:,:), tagp(:,:)
+  INTEGER                  :: nw, nwrwf, iwf, jwf
+  INTEGER,     ALLOCATABLE :: wfg1(:), wfg(:,:)
+  INTEGER,     ALLOCATABLE :: indexplus(:,:), indexminus(:,:)
+  INTEGER,     ALLOCATABLE :: indexplusz(:), indexminusz(:)
+  INTEGER,     ALLOCATABLE :: tag(:,:), tagp(:,:)
   REAL(DP),    ALLOCATABLE :: weight(:)            ! weights of G vectors
   REAL(DP),    ALLOCATABLE :: gnx(:,:)
-  INTEGER ,          ALLOCATABLE :: gnn(:,:)
+  INTEGER ,    ALLOCATABLE :: gnn(:,:)
   COMPLEX(DP), ALLOCATABLE :: expo(:,:)
   !
   CONTAINS
@@ -63,17 +63,17 @@ MODULE wannier_base
       LOGICAL,          INTENT(IN) :: wf_efield_
       LOGICAL,          INTENT(IN) :: wf_switch_
       INTEGER,          INTENT(IN) :: sw_len_
-      REAL(DP),   INTENT(IN) :: efx0_, efy0_, efz0_
-      REAL(DP),   INTENT(IN) :: efx1_, efy1_, efz1_
+      REAL(DP),         INTENT(IN) :: efx0_, efy0_, efz0_
+      REAL(DP),         INTENT(IN) :: efx1_, efy1_, efz1_
       LOGICAL,          INTENT(IN) :: wfsd_
-      REAL(DP),   INTENT(IN) :: wfdt_
-      REAL(DP),   INTENT(IN) :: maxwfdt_
-      REAL(DP),   INTENT(IN) :: wf_q_
-      REAL(DP),   INTENT(IN) :: wf_friction_
+      REAL(DP),         INTENT(IN) :: wfdt_
+      REAL(DP),         INTENT(IN) :: maxwfdt_
+      REAL(DP),         INTENT(IN) :: wf_q_
+      REAL(DP),         INTENT(IN) :: wf_friction_
       INTEGER,          INTENT(IN) :: nit_
       INTEGER,          INTENT(IN) :: nsd_
       INTEGER,          INTENT(IN) :: nsteps_
-      REAL(DP),   INTENT(IN) :: tolw_
+      REAL(DP),         INTENT(IN) :: tolw_
       LOGICAL,          INTENT(IN) :: adapt_
       INTEGER,          INTENT(IN) :: calwf_
       INTEGER,          INTENT(IN) :: nwf_
@@ -122,9 +122,8 @@ MODULE wannier_base
       IF ( TRIM( restart_mode_ ) == "from_scratch" ) THEN
          !
          IF ( wf_efield ) &
-            CALL errore( 'wannier_init ', &
-                       & 'electric field not allowed when starting ' // &
-                       & 'from scratch', 1 )
+            CALL errore( 'wannier_init', 'electric field not ' // &
+                       & 'allowed when starting from scratch', 1 )
          !
       END IF
       !
