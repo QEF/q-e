@@ -49,70 +49,70 @@ program pw2wannier90
    !   Now allocate space for pwscf variables, read and check them.
    !
    logwann = .true.
-   write(*,*)
-   write(*,*) ' Reading nscf_save data'
+   write(stdout,*)
+   write(stdout,*) ' Reading nscf_save data'
    call read_file  
-   write(*,*)
+   write(stdout,*)
    !
    SELECT CASE ( TRIM( spin_component ) )
      CASE ( 'up' )
-       write(*,*) ' Spin CASE ( up )'
+       write(stdout,*) ' Spin CASE ( up )'
        ispinw  = 1
        ikstart = 1
        ikstop  = nkstot/2
        iknum   = nkstot/2
      CASE ( 'down' )
-       write(*,*) ' Spin CASE ( down )'
+       write(stdout,*) ' Spin CASE ( down )'
        ispinw = 2
        ikstart = nkstot/2 + 1
        ikstop  = nkstot
        iknum   = nkstot/2
      CASE DEFAULT
-       write(*,*) ' Spin CASE ( default = unpolarized )'
+       write(stdout,*) ' Spin CASE ( default = unpolarized )'
        ispinw = 0
        ikstart = 1
        ikstop  = nkstot
        iknum   = nkstot
    END SELECT
    !
-   write(*,*)
-   write(*,*) ' Wannier mode is: ',wan_mode
-   write(*,*)
+   write(stdout,*)
+   write(stdout,*) ' Wannier mode is: ',wan_mode
+   write(stdout,*)
    !
    if(wan_mode.eq.'standalone') then
    !
-      write(*,*) ' -----------------'
-      write(*,*) ' *** Reading nnkp '
-      write(*,*) ' -----------------'
-      write(*,*)
+      write(stdout,*) ' -----------------'
+      write(stdout,*) ' *** Reading nnkp '
+      write(stdout,*) ' -----------------'
+      write(stdout,*)
       call read_nnkp
-      write(*,*) ' Opening pp-files '
+      write(stdout,*) ' Opening pp-files '
       call openfil_pp
       call ylm_expansion
-      write(*,*)
-      write(*,*)
-      write(*,*) ' ---------------'
-      write(*,*) ' *** Compute  A '
-      write(*,*) ' ---------------'
-      write(*,*)
+      write(stdout,*)
+      write(stdout,*)
+      write(stdout,*) ' ---------------'
+      write(stdout,*) ' *** Compute  A '
+      write(stdout,*) ' ---------------'
+      write(stdout,*)
       call compute_amn
-      write(*,*)
-      write(*,*) ' ---------------'
-      write(*,*) ' *** Compute  M '
-      write(*,*) ' ---------------'
-      write(*,*) 
+      write(stdout,*)
+      write(stdout,*) ' ---------------'
+      write(stdout,*) ' *** Compute  M '
+      write(stdout,*) ' ---------------'
+      write(stdout,*) 
       call compute_mmn
-      write(*,*)
-      write(*,*) ' ----------------'
-      write(*,*) ' *** Write bands '
-      write(*,*) ' ----------------'
-      write(*,*)
+      write(stdout,*)
+      write(stdout,*) ' ----------------'
+      write(stdout,*) ' *** Write bands '
+      write(stdout,*) ' ----------------'
+      write(stdout,*)
       call write_band
-      write(*,*)
-      write(*,*) ' ------------'
-      write(*,*) ' *** Stop pp '
-      write(*,*) ' ------------' 
-      write(*,*)
+      write(stdout,*)
+      write(stdout,*) ' ------------'
+      write(stdout,*) ' *** Stop pp '
+      write(stdout,*) ' ------------' 
+      write(stdout,*)
       call stop_pp
    !
    endif
@@ -142,6 +142,7 @@ end program pw2wannier90
 subroutine read_nnkp
    !-----------------------------------------------------------------------
    !
+   USE io_global,  ONLY : stdout
    use kinds,     only: DP
    use constants, only : eps8
    use cell_base, only : at, bg, alat
@@ -164,8 +165,8 @@ subroutine read_nnkp
    nnbx=0
 
 !   check the information from *.nnkp with the nscf_save data
-   write(*,*) ' Checking info from wannier.nnkp file' 
-   write(*,*)
+   write(stdout,*) ' Checking info from wannier.nnkp file' 
+   write(stdout,*)
    bohr = 0.5291772108d0
    epsilon = 1.0d-5
 
@@ -179,13 +180,13 @@ subroutine read_nnkp
    do j=1,3
       do i=1,3
          if(abs(rlatt(i,j)-at(i,j)).gt.epsilon) then
-            write(*,*)  ' Something wrong! '
-            write(*,*)  ' rlatt(i,j) =',rlatt(i,j),  ' at(i,j)=',at(i,j)
+            write(stdout,*)  ' Something wrong! '
+            write(stdout,*)  ' rlatt(i,j) =',rlatt(i,j),  ' at(i,j)=',at(i,j)
             stop
          endif  
       enddo
    enddo
-   write(*,*) ' - Real lattice is ok'
+   write(stdout,*) ' - Real lattice is ok'
 
    call scan_file_to('recip_lattice')
    do j=1,3
@@ -197,19 +198,19 @@ subroutine read_nnkp
    do j=1,3
       do i=1,3
          if(abs(glatt(i,j)-bg(i,j)).gt.epsilon) then
-            write(*,*)  ' Something wrong! '
-            write(*,*)  ' glatt(i,j)=',glatt(i,j), ' bg(i,j)=',bg(i,j)
+            write(stdout,*)  ' Something wrong! '
+            write(stdout,*)  ' glatt(i,j)=',glatt(i,j), ' bg(i,j)=',bg(i,j)
             stop
          endif
       enddo
    enddo
-   write(*,*) ' - Reciprocal lattice is ok'
+   write(stdout,*) ' - Reciprocal lattice is ok'
 
    call scan_file_to('kpoints')
    read(iun_nnkp,*) numk
    if(numk.ne.iknum) then
-      write(*,*)  ' Something wrong! '
-      write(*,*)  ' numk=',numk, ' iknum=',iknum
+      write(stdout,*)  ' Something wrong! '
+      write(stdout,*)  ' numk=',numk, ' iknum=',iknum
       stop
    endif
    do i=1,numk
@@ -218,14 +219,14 @@ subroutine read_nnkp
       if(abs(xx(1)-xk(1,i)).gt.epsilon.or. &
          abs(xx(2)-xk(2,i)).gt.epsilon.or. &
          abs(xx(3)-xk(3,i)).gt.epsilon) then
-         write(*,*)  ' Something wrong! '
-         write(*,*) ' k-point ',i,' is wrong'
-         write(*,*) xx(1), xx(2), xx(3) 
-         write(*,*) xk(1,i), xk(2,i), xk(3,i)
+         write(stdout,*)  ' Something wrong! '
+         write(stdout,*) ' k-point ',i,' is wrong'
+         write(stdout,*) xx(1), xx(2), xx(3) 
+         write(stdout,*) xk(1,i), xk(2,i), xk(3,i)
          stop
       endif
    enddo
-   write(*,*) ' - K-points are ok'
+   write(stdout,*) ' - K-points are ok'
 
    call scan_file_to('projections')
    read(iun_nnkp,*) numwan
@@ -233,7 +234,7 @@ subroutine read_nnkp
    allocate( center_w(3,n_wannier), alpha_w(n_wannier), gf(npwx,n_wannier), &
              l_w(n_wannier), mr_w(n_wannier), r_w(n_wannier), &
              zaxis(3,n_wannier), xaxis(3,n_wannier), csph(16,n_wannier) )
-   write(*,'("  - Number of wannier functions is ok (",i3,")")') n_wannier 
+   write(stdout,'("  - Number of wannier functions is ok (",i3,")")') n_wannier 
    do iw=1,numwan
       read(iun_nnkp,*) (center_w(i,iw), i=1,3), l_w(iw), mr_w(iw), r_w(iw)
       read(iun_nnkp,*) (zaxis(i,iw),i=1,3),(xaxis(i,iw),i=1,3),alpha_w(iw),box
@@ -252,7 +253,7 @@ subroutine read_nnkp
       ! convert wannier center in cartesian coordinates (in unit of alat)
       CALL cryst_to_cart( 1, center_w(:,iw), at, 1 )
    enddo
-   write(*,*) ' - All guiding functions are given '
+   write(stdout,*) ' - All guiding functions are given '
    !
    call scan_file_to('nnkpts')
    read (iun_nnkp,*) nnb 
@@ -260,9 +261,9 @@ subroutine read_nnkp
 !  end of check
    allocate ( kpb(iknum,nnbx), g_kpb(3,iknum,nnbx),ig_(iknum,nnbx) )
 !  read data about neighbours
-   write(*,*)
-   write(*,*) ' Reading data about k-point neighbours '
-   write(*,*)
+   write(stdout,*)
+   write(stdout,*) ' Reading data about k-point neighbours '
+   write(stdout,*)
    do ik=1, iknum
       do ib = 1, nnb
          read(iun_nnkp,*) idum, kpb(ik,ib), (g_kpb(ipol,ik,ib), ipol =1,3)
@@ -279,8 +280,8 @@ subroutine read_nnkp
          end do
       end do
    end do
-   write(*,*) ' All neighbours are found '
-   write(*,*)
+   write(stdout,*) ' All neighbours are found '
+   write(stdout,*)
 
    close (iun_nnkp)
 
@@ -289,6 +290,7 @@ end subroutine read_nnkp
 
 subroutine scan_file_to (keyword)
    use wannier, only :iun_nnkp
+   USE io_global,  ONLY : stdout
    implicit none
    character(len=*) :: keyword
    character(len=80) :: line1, line2
@@ -303,13 +305,14 @@ subroutine scan_file_to (keyword)
    if(line1.ne.'begin')  goto 10
    if(line2.ne.keyword) goto 10
    return
-20 write (*,*) keyword," data-block missing "
+20 write (stdout,*) keyword," data-block missing "
    stop
 end subroutine scan_file_to
 !
 subroutine compute_mmn
    !-----------------------------------------------------------------------
    !
+   USE io_global,  ONLY : stdout
    use kinds,           only: DP
    use wvfct,           only : nbnd, npw, npwx, igk, g2kin
    use wavefunctions_module, only : evc, psic
@@ -318,7 +321,7 @@ subroutine compute_mmn
    use io_files,        only : nwordwfc, iunwfc
    use io_files,        only : find_free_unit
    use gvect,           only : g, ngm, ecutwfc
-   use cell_base,       only : tpiba2, omega, alat
+   use cell_base,       only : tpiba2, omega, alat, tpiba, at, bg
    USE ions_base,       only : nat, ntyp => nsp, ityp, tau
    use constants,       only : tpi
    use uspp,            only : nkb, vkb
@@ -326,7 +329,7 @@ subroutine compute_mmn
    use becmod,          only : becp
    use wannier
    implicit none
-   integer :: mmn_tot, ik, ikp, ipol, ib, ibnd, jbnd, npwq, i
+   integer :: mmn_tot, ik, ikp, ipol, ib, npwq, i, m, n
    integer :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
    integer :: ikevc, ikpevcq
    complex(DP), allocatable :: phase(:), aux(:), evcq(:,:), becp2(:,:), Mkb(:,:)
@@ -334,7 +337,7 @@ subroutine compute_mmn
    real(DP), allocatable    :: qg(:), ylm(:,:), dxk(:,:)
    integer, allocatable     :: igkq(:)
    complex(DP)              :: mmn, ZDOTC, phase1
-   real(DP)                 :: aa, arg
+   real(DP)                 :: aa, arg, g_(3)
 
    allocate( phase(nrxxs), aux(npwx), evcq(npwx,nbnd), igkq(npwx) )
    
@@ -367,15 +370,19 @@ subroutine compute_mmn
          ind = ind + 1
          ikp = kpb(ik,ib) 
          !
-         dxk(:,ind) = xk(:,ikp) - xk(:,ik) 
+         g_(:) = REAL( g_kpb(:,ik,ib) )
+         call trnvect (g_, at, bg, 1)
+         dxk(:,ind) = xk(:,ikp) +g_(:) - xk(:,ik) 
          qg(ind) = dxk(1,ind)*dxk(1,ind)+dxk(2,ind)*dxk(2,ind)+dxk(3,ind)*dxk(3,ind)
       enddo
+      write (*,'(i3,12f8.4)')  ik, qg((ik-1)*nnb+1:ik*nnb)
    enddo 
    !
    allocate( ylm(nbt,lmaxq*lmaxq), qgm(nbt) )
    allocate( qb (nkb, nkb, ntyp, nbt) )
    !
    call ylmr2 (lmaxq*lmaxq, nbt, dxk, qg, ylm)
+   qg(:) = sqrt(qg(:)) * tpiba
    !
    do nt = 1, ntyp
       if (tvanp (nt) ) then 
@@ -390,17 +397,17 @@ subroutine compute_mmn
    !
    deallocate (qg, qgm, ylm )
    !
-   write (*,*) "MMN"
+   write (stdout,*) "MMN"
    write (iun_mmn,*) mmn_tot
    write (iun_mmn,*) nbnd, iknum, nnb 
    !
    allocate( Mkb(nbnd,nbnd) )
    !
-  write(*,*) " iknum = ",iknum
+  write(stdout,*) " iknum = ",iknum
 
    ind = 0
    do ik=1,iknum
-   write (*,*) ik
+   write (stdout,*) ik
       ikevc = ik + ikstart - 1 
       call davcio (evc, nwordwfc, iunwfc, ikevc, -1 )
       call gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
@@ -447,11 +454,11 @@ subroutine compute_mmn
                         do ih = 1, nh(nt)
                            ikb = ijkb0 + ih
                            !
-                           do ibnd = 1,nbnd
-                           do jbnd = 1,nbnd
-                           Mkb(ibnd,jbnd) = Mkb(ibnd,jbnd) + &
+                           do m = 1,nbnd
+                           do n = 1,nbnd
+                           Mkb(m,n) = Mkb(m,n) + &
                                   phase1 * qb(ih,jh,nt,ind) * &
-                                  CONJG( becp(ikb,ibnd) ) * becp2(jkb,jbnd) 
+                                  CONJG( becp(ikb,m) ) * becp2(jkb,n) 
                            enddo
                            enddo
                         enddo !ih
@@ -472,9 +479,9 @@ subroutine compute_mmn
          write (iun_mmn,'(7i5)') ik, ikp, (g_kpb(ipol,ik,ib), ipol=1,3)
          
          !
-         do ibnd=1,nbnd
+         do m=1,nbnd
             psic(:) = (0.d0, 0.d0)
-            psic(nls (igk (1:npw) ) ) = evc (1:npw, ibnd)
+            psic(nls (igk (1:npw) ) ) = evc (1:npw, m)
             call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
             psic(1:nrxxs) = psic(1:nrxxs) * phase(1:nrxxs)
             call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
@@ -482,23 +489,23 @@ subroutine compute_mmn
             aa = 0.d0
             !
             !
-            do jbnd=1,nbnd   
+            do n=1,nbnd   
               !
-              mmn = ZDOTC (npwq, aux,1,evcq(1,jbnd),1)
+              mmn = ZDOTC (npwq, aux,1,evcq(1,n),1)
               !
-              !  Mkb(m,n) = Mkb(m,n) + \sum_{ijI} qb_{ij}^I * e^i(b*tau_I)
+              !  Mkb(m,n) = Mkb(m,n) + \sum_{ijI} qb_{ij}^I * e^-i(b*tau_I)
               !             <psi_m,k1| beta_i,k1 > < beta_j,k2 | psi_n,k2 > 
               !
-              Mkb(jbnd,ibnd) = mmn + Mkb(jbnd,ibnd)
+              call reduce(2,mmn)
+              Mkb(m,n) = mmn + Mkb(m,n)
               !
-              call reduce(mmn,2)
               aa = aa + abs(mmn)**2
               !
-            end do !band_j
-         end do   !band_i
-         do ibnd=1,nbnd
-         do jbnd=1,nbnd
-            write (iun_mmn,'(2f18.12)') Mkb(ibnd,jbnd)
+            end do ! n
+         end do   ! m
+         do n=1,nbnd
+         do m=1,nbnd
+            write (iun_mmn,'(2f18.12)') Mkb(m,n)
          enddo
          enddo
       end do !ikp
@@ -515,6 +522,7 @@ end subroutine compute_mmn
 subroutine compute_amn
    !-----------------------------------------------------------------------
    !
+   USE io_global,  ONLY : stdout
    use kinds,           only : DP
    use klist,           only : nkstot, xk
    use wvfct,           only : nbnd, npw, npwx, igk, g2kin
@@ -537,7 +545,7 @@ subroutine compute_amn
    iun_amn = find_free_unit()
    open (unit=iun_amn, file='wannier.amn',form='formatted')
    amn_tot = iknum * nbnd * n_wannier
-   write (*,*) "AMN"
+   write (stdout,*) "AMN"
    write (iun_amn,*) amn_tot
    write (iun_amn,*) nbnd,  iknum, n_wannier 
    !
@@ -546,7 +554,7 @@ subroutine compute_amn
    CALL init_us_1
    !
    do ik=1,iknum
-      write (*,*) ik
+      write (stdout,*) ik
       ikevc = ik + ikstart - 1
       call davcio (evc, nwordwfc, iunwfc, ikevc, -1 )
       call gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
@@ -554,16 +562,17 @@ subroutine compute_amn
       !
       !  USPP
       !
-      call init_us_2 (npw, igk, xk (1, ik), vkb)
-      ! below we compute the product of beta functions with trial func.
-      call ccalbec (nkb, npwx, npw, n_wannier, becp, vkb, gf)
-      ! and we use it for the product S|trial_func>
-      call s_psi (npwx, npw, n_wannier, gf, sgf)  
+!      call init_us_2 (npw, igk, xk (1, ik), vkb)
+!      ! below we compute the product of beta functions with trial func.
+!      call ccalbec (nkb, npwx, npw, n_wannier, becp, vkb, gf)
+!      ! and we use it for the product S|trial_func>
+!      call s_psi (npwx, npw, n_wannier, gf, sgf)  
+      sgf(:,:) = gf(:,:)
       !
       do iw = 1,n_wannier
          do ibnd = 1,nbnd
             amn = ZDOTC(npw,evc(1,ibnd),1,sgf(1,iw),1) 
-            call reduce(amn,2)
+            call reduce(2,amn)
             write(iun_amn,'(3i5,2f18.12)') ibnd, iw, ik, amn
          end do
       end do
@@ -578,6 +587,7 @@ end subroutine compute_amn
 !
 subroutine generate_guiding_functions(ik)
    !
+   USE io_global,  ONLY : stdout
    use constants, only : pi, tpi, fpi, eps8
    use wvfct, only : npw, g2kin, igk
    use gvect, only : ig1, ig2, ig3, g
@@ -602,6 +612,7 @@ subroutine generate_guiding_functions(ik)
       gk (3,ig) = xk(3, ik) + g(3, igk(ig) )
       qg(ig) = gk(1, ig)**2 +  gk(2, ig)**2 + gk(3, ig)**2
    enddo
+
    call ylmr2 (lmax2, npw, gk, qg, ylm)
    ! define qg as the norm of (k+g) in a.u.
    qg(:) = sqrt(qg(:)) * tpiba
@@ -615,10 +626,10 @@ subroutine generate_guiding_functions(ik)
       do lm = 1, lmax2
          if ( abs(csph(lm,iw)) < eps8 ) cycle
          l = int (sqrt( lm-1.d0))
-         !lphase = (0.d0,1.d0)**(l-1)
+         lphase = (0.d0,-1.d0)**l
          !
          do ig=1,npw
-            gf(ig,iw) = gf(ig,iw) + csph(lm,iw) * ylm(ig,lm) * radial(ig,l)
+            gf(ig,iw) = gf(ig,iw) + csph(lm,iw) * ylm(ig,lm) * radial(ig,l) * lphase
          end do !ig
       end do ! lm
       do ig=1,npw
@@ -629,9 +640,10 @@ subroutine generate_guiding_functions(ik)
          sk(ig) = CMPLX(cos(arg), -sin(arg) )
          gf(ig,iw) = gf(ig,iw) * sk(ig) 
       end do
-      anorm = ZDOTC(npw,gf(1,iw),1,gf(1,iw),1)
-      gf(:,iw) = gf(:,iw) / anorm
-      write (*,*) ik, iw, anorm
+      anorm = REAL(ZDOTC(npw,gf(1,iw),1,gf(1,iw),1))
+      call reduce(1,anorm)
+      write (stdout,*) ik, iw, anorm
+      gf(:,iw) = gf(:,iw) / dsqrt(anorm)
    end do
    !
    deallocate ( gk, qg, ylm, sk, radial)
@@ -639,6 +651,7 @@ subroutine generate_guiding_functions(ik)
 end subroutine generate_guiding_functions
 
 subroutine write_band
+   USE io_global,  ONLY : stdout
    use wvfct, only : nbnd, et
    use klist, only : nkstot
    use constants, only: rytoev
@@ -660,6 +673,7 @@ end subroutine write_band
 
 subroutine wan2sic 
 
+  USE io_global,  ONLY : stdout
   USE kinds, only : DP
   use io_files, only : iunwfc, iunatsicwfc, nwordwfc, nwordwann
   USE cell_base, only : omega, tpiba2
@@ -674,7 +688,7 @@ subroutine wan2sic
   complex(DP), allocatable :: orbital(:,:), orb(:,:), u_matrix(:,:,:) 
 
   open (20, file = 'wannier.dat', form = 'formatted', status = 'unknown')
-  write(*,*) ' wannier plot '
+  write(stdout,*) ' wannier plot '
 
   allocate ( u_matrix( n_wannier, n_wannier, nkstot) )
   allocate ( orbital( npwx, n_wannier), orb( nrxxs, n_wannier))
@@ -697,13 +711,13 @@ subroutine wan2sic
      ikevc = ik + ikstart - 1
      call davcio (evc, nwordwfc, iunwfc, ikevc, -1)
      call gk_sort (xk(1,ik), ngm, g, ecutwfc/tpiba2, npw, igk, g2kin)
-     write(*,*) 'npw ',npw
+     write(stdout,*) 'npw ',npw
      do iw=1,n_wannier
         do j=1,npw
            orbital(j,iw) = (0.0d0,0.0d0)
            do ibnd=1,n_wannier
               orbital(j,iw) = orbital(j,iw) + u_matrix(iw,ibnd,ik)*evc(j,ibnd)
-              write(*,*) j, iw, ibnd, ik, orbital(j,iw), u_matrix(iw,ibnd,ik), evc(j,ibnd)
+              write(stdout,*) j, iw, ibnd, ik, orbital(j,iw), u_matrix(iw,ibnd,ik), evc(j,ibnd)
            enddo !ibnd
         end do  !j
      end do !wannier
@@ -711,15 +725,16 @@ subroutine wan2sic
   end do ! k-points
 
   deallocate ( u_matrix) 
-  write(*,*) ' dealloc u '
+  write(stdout,*) ' dealloc u '
   deallocate (  orbital)
-  write(*,*) ' dealloc orbital '
+  write(stdout,*) ' dealloc orbital '
   deallocate ( orb )
-  write(*,*) ' dealloc orb '
+  write(stdout,*) ' dealloc orb '
   !
 end subroutine wan2sic 
 
 subroutine ylm_expansion 
+   USE io_global,  ONLY : stdout
    use kinds, ONLY :  DP
    USE random_numbers,       ONLY : rndm
    use wannier
@@ -759,10 +774,10 @@ subroutine ylm_expansion
 
       csph(:,iw) = matmul (mly(:,:), ylm_w(:))
 
-      write (*,*) 
-      write (*,'(2i4,2(2x,3f6.3))') l_w(iw), mr_w(iw), xaxis(:,iw), zaxis(:,iw)
-      write (*,'(16i6)')   (lm, lm=1,lmax2)
-      write (*,'(16f6.3)') (csph(lm,iw), lm=1,lmax2)
+      write (stdout,*) 
+      write (stdout,'(2i4,2(2x,3f6.3))') l_w(iw), mr_w(iw), xaxis(:,iw), zaxis(:,iw)
+      write (stdout,'(16i6)')   (lm, lm=1,lmax2)
+      write (stdout,'(16f6.3)') (csph(lm,iw), lm=1,lmax2)
 
    end do
    deallocate (r, rp, rr, ylm_w, ylm, mly )
@@ -789,7 +804,7 @@ subroutine check_inverse(lmax2, ylm, mly)
       uno(lm,lm) = uno(lm,lm) - 1.d0
    end do
    capel = capel + SUM ( abs(uno(1:lmax2,1:lmax2) ) )
-!   write (*,*) "capel = ", capel
+!   write (stdout,*) "capel = ", capel
    if (capel > eps8) call errore('ylm_expansion', &
                     ' inversion failed: r(*,1:nr) are not all independent !!',1)
    deallocate (uno)
@@ -823,7 +838,7 @@ subroutine set_u_matrix(x,z,u)
    u(2,:) = y(:)
    u(3,:) = z(:)/zz
 
-!   write (*,'(3f10.7)') u(:,:)
+!   write (stdout,'(3f10.7)') u(:,:)
 
    return
 
@@ -1138,7 +1153,7 @@ subroutine radialpart(ng, q, alfa, rvalue, lmax, radial)
      do ig=1,ng
        call sph_bes (mesh_r, r(1), q(ig), l, bes)
        aux(:) = bes(:) * func_r(:) * r(:)
-       call simpson (mesh_r, aux, rij(1), rad_int)
+       call simpson (mesh_r, aux, rij, rad_int)
        radial(ig,l) = rad_int * pref
      enddo
   enddo
