@@ -98,7 +98,13 @@ SUBROUTINE chdens (filplot)
   read (5, plot, iostat = ios)
   !
   if (ios /= 0) then
-     call infomsg ('chdens', 'namelist plot not found or invalid, exiting', -1)
+     if (nfile > nfilemax) then
+        ! if this happens the reading of the namelist will fail
+        ! tell to user why
+        call infomsg('chdens ', 'nfile is too large, exiting', -1)
+     else
+        call infomsg ('chdens', 'namelist plot not found or invalid, exiting', -1)     
+     endif
      return
   end if
   if (output_format == -1 .or. iflag == -1) then
