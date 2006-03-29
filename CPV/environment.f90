@@ -108,8 +108,8 @@
 
           IF ( ionode ) WRITE( stdout, * )
 
-          CALL print_clock( 'CP' )
           CALL stop_clock(  'CP' )
+          CALL print_clock( 'CP' )
 
           CALL closing_date_and_time( )
 

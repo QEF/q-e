@@ -1371,6 +1371,7 @@
       USE mp_global, ONLY: nproc_image, me_image
       USE fft_base,  ONLY: dfftb, dfftp, fft_dlay_descriptor
       USE fft_types, ONLY: fft_box_set
+      USE cvan,      ONLY: nvb
 
       IMPLICIT NONE
 ! input
@@ -1459,6 +1460,22 @@
             END DO
       ENDIF
 
+#ifdef __PARA
+      ! 
+      ! for processor that do not call fft on the box
+      ! artificially start the clock
+      ! 
+      isa=1
+      DO is=1,nvb
+         DO ia=1,na(is)
+            IF ( dfftb%np3( isa ) <= 0 ) then
+               CALL start_clock( 'fftb' )
+               CALL stop_clock( 'fftb' )
+            END IF
+            isa = isa + 1
+         END DO
+      END DO   
+#endif
 !
       RETURN
       END SUBROUTINE initbox

@@ -35,7 +35,7 @@ SUBROUTINE init_clocks( go )
   ! flag = .FALSE. : only clock #1 will run
   !
   USE kinds,  ONLY : DP
-  USE mytime, ONLY : called, t0, myclock, no, notrunning, maxclock
+  USE mytime, ONLY : called, t0, myclock, no, notrunning, maxclock, clock_label
   !
   IMPLICIT NONE
   !
@@ -50,6 +50,7 @@ SUBROUTINE init_clocks( go )
      called(n)  = 0
      myclock(n) = 0.D0
      t0(n)      = notrunning
+     clock_label(n) = ' '
      !
   END DO
   !
@@ -70,7 +71,6 @@ SUBROUTINE start_clock( label )
   REAL (DP)    :: scnds
   CHARACTER (LEN=*) :: label
   INTEGER           :: n
-  !
   !
   IF ( no .AND. ( nclock == 1 ) ) RETURN
   !
@@ -103,7 +103,7 @@ SUBROUTINE start_clock( label )
   ELSE
      !
      nclock              = nclock + 1
-     clock_label(nclock) = label
+     clock_label(nclock) = TRIM(label)
      t0(nclock)          = scnds()
      !
   END IF
@@ -177,7 +177,6 @@ SUBROUTINE print_clock( label )
   CHARACTER (LEN=*) :: label
   INTEGER           :: n
   !
-  !
   IF ( label == ' ' ) THEN
      !
      WRITE( stdout, * )
@@ -196,7 +195,7 @@ SUBROUTINE print_clock( label )
            !
            CALL print_this_clock( n )
            !
-           RETURN
+           EXIT
            !
         END IF
         !
@@ -224,7 +223,7 @@ SUBROUTINE print_this_clock( n )
   REAL(DP) :: scnds
   INTEGER       :: n
   REAL(DP) :: elapsed_cpu_time, nsec
-  INTEGER       :: nday, nhour, nmin
+  INTEGER       :: nday, nhour, nmin, nmax
   !
   !
   IF ( t0(n) == notrunning ) THEN
@@ -241,6 +240,8 @@ SUBROUTINE print_this_clock( n )
      !
   END If
   !
+  nmax = called(n)
+  !
 #if defined (__PARA)
   !
   ! ... In the parallel case it is far from clear which value to print
@@ -250,13 +251,14 @@ SUBROUTINE print_this_clock( n )
   ! ... by uncommenting the following line the extreme operation is removed
   ! ... may be useful for testing purposes :
   !
-!#define DEBUG
-  !
-#  ifndef DEBUG
-  !
   CALL mp_max( elapsed_cpu_time, intra_image_comm )
   !
-#  endif
+  ! ... In parallel execution, some processor
+  ! ... can use the clock less than other, we assume that the maximum
+  ! ... elapsed time can be associated with the maximum number of calls
+  !
+  CALL mp_max( nmax, intra_image_comm )
+  !
 #endif
   !
   IF ( n == 1 ) THEN
@@ -296,14 +298,14 @@ SUBROUTINE print_this_clock( n )
         !
      END IF
      !
-  ELSE IF ( called(n) == 1 .OR. t0(n) /= notrunning ) THEN
+  ELSE IF ( nmax == 1 .OR. t0(n) /= notrunning ) THEN
      !
      ! ... for clocks that have been called only once
      !
      WRITE( stdout, &
             '(5X,A12," :",F9.2,"s CPU")') clock_label(n), elapsed_cpu_time
      !
-  ELSE IF ( called(n) == 0 ) THEN
+  ELSE IF ( nmax == 0 ) THEN
      !
      ! ... for clocks that have never been called
      !
@@ -318,7 +320,7 @@ SUBROUTINE print_this_clock( n )
      WRITE( stdout, &
             '(5X,A12," :",F9.2,"s CPU (",I8," calls,",F8.3," s avg)")' ) &
          clock_label(n), elapsed_cpu_time, &
-         called(n), ( elapsed_cpu_time / called(n) )
+         nmax, ( elapsed_cpu_time / nmax )
      !
   END IF
   !
