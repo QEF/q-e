@@ -74,6 +74,10 @@ c             effective charges are calculated using a different
 c             algorithm. The results should be the same within
 c             numerical noise.
 c
+c fpol        if .true. calculate dynamic polarizabilities            .false.
+c             ( experimantal stage, see example33 for calculation
+c               of methane )
+c
 c lnscf       If .TRUE. the run makes first a nscf calculation        .false.
 c
 c ldisp       If .TRUE. the run calculates phonons for a grid of      .false.

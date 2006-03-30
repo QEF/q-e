@@ -1,0 +1,11 @@
+
+This example illustrates how to use pw.x and ph.x to calculate 
+dynamic polarizability of methane molecules (experiment stage)
+
+The calculation proceeds as follows 
+
+1) make a self-consistent calculation (input=ch4.scf.in,
+   output=ch4.scf.out)
+
+2) make a (imaginary) frequency dependent polarizability calculation 
+   (input=ch4.fpol.in, output=ch4.fpol.out). 

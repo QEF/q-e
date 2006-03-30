@@ -266,6 +266,24 @@ MODULE control_ph
 END MODULE control_ph
 !
 !
+MODULE freq_ph
+  !
+  USE kinds,   ONLY : DP
+  !
+  SAVE
+  !
+  ! ... the variables for computing frequency dependent dielectric constant
+  !
+  LOGICAL :: fpol ! if .TRUE. dynamic dielectric constant is computed
+  !
+  INTEGER, PARAMETER :: nfsmax=50  ! # of maximum frequencies
+  INTEGER :: nfs                   ! # of frequencies
+  !
+  REAL (KIND=DP) :: fiu(nfsmax)    ! values  of frequency
+  !
+END MODULE freq_ph
+!
+!
 MODULE char_ph
   !
   ! ... a character common for phonon
@@ -356,6 +374,7 @@ MODULE phcom
   USE phus
   USE partial
   USE control_ph
+  USE freq_ph
   USE char_ph
   USE units_ph
   USE output

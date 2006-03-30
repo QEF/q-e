@@ -42,6 +42,7 @@ SUBROUTINE phq_readin()
   USE control_flags, ONLY : iverbosity, reduce_io, modenum
   USE io_global,     ONLY : ionode
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
+  USE freq_ph
   !
   IMPLICIT NONE
   !
@@ -56,13 +57,20 @@ SUBROUTINE phq_readin()
     ! save masses read from input here
   CHARACTER (LEN=256) :: outdir
   !
+  CHARACTER(LEN=256)         :: input_line
+  CHARACTER(LEN=80)          :: card
+  CHARACTER(LEN=1), EXTERNAL :: capital
+  LOGICAL                    :: tend
+  LOGICAL                    :: end_of_file
+  INTEGER                    :: i
+  !
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
                        maxirr, nat_todo, iverbosity, outdir, epsil,  &
                        trans, elph, zue, nrapp, max_seconds, reduce_io, &
                        prefix, fildyn, filelph, fildvscf, fildrho,   &
                        lnscf, ldisp, nq1, nq2, nq3, modenum,         &
                        eth_rps, eth_ns, lraman, elop, dek, recover, &
-                       la2F
+                       la2F, fpol
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
   ! alpha_mix    : the mixing parameter
@@ -121,6 +129,7 @@ SUBROUTINE phq_readin()
   trans        = .TRUE.
   epsil        = .FALSE.
   zue          = .FALSE.
+  fpol         = .FALSE.
   elph         = .FALSE.
   lraman       = .FALSE.
   elop         = .FALSE.
@@ -184,10 +193,24 @@ SUBROUTINE phq_readin()
   IF (zue.AND..NOT.trans) CALL errore ('phq_readin', 'trans must be &
        &.t. for Zue calc.', 1)
   !
+  ! reads the frequencies ( just if fpol = .true. )
+  !
+  IF ( fpol ) THEN
+     READ (5, *, err = 10, iostat = ios) card
+     IF ( TRIM(card) == 'FREQUENCIES' ) THEN
+        READ (5, *, err = 10, iostat = ios) nfs
+        DO i = 1, nfs
+           READ (5, *, err = 10, iostat = ios) fiu(i)
+        END DO
+     END IF
+  END IF
+10 CALL errore ('phq_readin', 'reading FREQUENCIES card', ABS(ios) )
+  !
   tmp_dir = trimcheck (outdir)
   !
 400 CONTINUE
   CALL bcast_ph_input ( ) 
+  call mp_bcast ( fpol, ionode_id )
   xqq(:) = xq(:) 
   !
   !   Here we finished the reading of the input file.

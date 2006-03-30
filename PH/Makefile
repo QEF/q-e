@@ -22,8 +22,10 @@ allocate_phq.o \
 bcast_ph_input.o \
 bcast_ph_input1.o \
 cg_psi.o \
+ccg_psi.o \
 cgsolve_all.o \
 ch_psi_all.o \
+cch_psi_all.o \
 clinear.o \
 close_phq.o \
 compute_alphasum.o \
@@ -61,6 +63,7 @@ dynmatrix.o \
 ef_shift.o \
 elph.o \
 elphon.o \
+gmressolve_all.o \
 h_psiq.o \
 incdrhoscf.o \
 incdrhous.o \
@@ -76,6 +79,7 @@ phq_recover.o \
 phq_setup.o \
 phq_summary.o \
 phqscf.o \
+polariz.o \
 print_clock_ph.o \
 psidspsi.o \
 psymdvscf.o \
@@ -95,6 +99,7 @@ setqmod.o \
 setup_dgc.o \
 smallgq.o \
 solve_e.o \
+solve_e_fpol.o \
 solve_linter.o \
 star_q.o \
 stop_ph.o \

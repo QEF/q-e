@@ -33,13 +33,14 @@ PROGRAM phonon
   USE disp,            ONLY : nqs, x_q
   USE control_ph,      ONLY : ldisp, lnscf, lgamma, convt, epsil, trans, &
                               elph, zue, recover, maxirr, irr0
+  USE freq_ph
   USE output,          ONLY : fildyn, fildrho
   USE global_version,  ONLY : version_number
   USE ramanm,          ONLY : lraman, elop
   !
   IMPLICIT NONE
   !
-  INTEGER :: iq, iq_start, iustat, ierr
+  INTEGER :: iq, iq_start, iustat, ierr, iu
   INTEGER :: nks_start
     ! number of initial k points
   REAL(DP), ALLOCATABLE :: wk_start(:)
@@ -271,8 +272,28 @@ PROGRAM phonon
      !
      IF ( epsil .AND. irr0 <=  0 ) THEN
         !
+        IF (fpol) THEN    ! calculate freq. dependent polarizability
+           !
+           WRITE( stdout, '(/,5X,"Frequency Dependent Polarizability Calculation",/)' )
+           !
+           iu = nfs
+           !
+           freq_loop : DO WHILE ( iu .gt. 0)
+              !
+              CALL solve_e_fpol( fiu(iu) )
+              IF ( convt ) CALL polariz ( fiu(iu) )
+              iu = iu - 1
+              !
+           END DO freq_loop
+           !
+           WRITE( stdout, '(/,5X,"End of Frequency Dependent Polarizability Calculation")' )
+           !
+        ENDIF
+        !
         WRITE( stdout, '(/,5X,"Electric Fields Calculation")' )
+        !
         CALL solve_e()
+        !
         WRITE( stdout, '(/,5X,"End of electric fields calculation")' )
         !
         IF ( convt ) THEN
