@@ -95,12 +95,15 @@ restart_mode   CHARACTER
                'restart'       : from previous interrupted run
 
 wf_collect     LOGICAL ( default = .FALSE. )
-               This flag controls the way in which wave functions are stored
-               to disk :
-               .TRUE.  collect wave functions from all processors and store 
-                       them in a single restart file ( outdir/prefix.save )
-               .FALSE. do not collect wave function and leave them in temporary
-                       local files (one per processor)
+               This flag controls the way wavefunctions are stored to disk :
+               .TRUE.  collect wavefunctions from all processors and store 
+                       them into the output data directory outdir/prefix.save
+               .FALSE. do not collect wavefunctions, leave them in temporary
+                       local files (one per processor). The resulting format
+                       will be readable only by jobs running on the same
+                       number of processors and pools. Useful if you do not
+                       need the wavefunction or if you want to reduce the I/O
+                       or the disk occupancy.
 
 nstep          INTEGER                         
                number of ionic + electronic steps

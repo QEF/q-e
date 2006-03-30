@@ -1423,12 +1423,14 @@ PARA_PREFIX="mpprun -n 16", PARA_POSTFIX="-npool 8"
 \end{description}
 
 Note that each processor writes its own set of temporary wavefunction
-files during the calculation.
-If \texttt{wf\_collect=.true.} (in namelist \texttt{control}), the
-final result is collected into a single file, whose format is
-independent on the number of processors; otherwise, one wavefunction
-file per processor is left on the disk.
-In the latter case, the files are readable only by a job running on
+files during the calculation. If \texttt{wf\_collect=.true.} (in namelist
+\texttt{control}), the final wavefunctions are collected into a single
+directory, written by a single processor, whose format is independent 
+on the number of processors. If \texttt{wf\_collect=.false.} (this is the
+default), the final wavefunctions are left on disk in the internal format 
+used by PWscf. The former case requires more disk I/O and disk space,
+but produces portable data files; the latter case requires less I/O and
+disk space, but the data so produced can be read only by a job running on
 the same number of processors and pools, and if all files are on a
 file system that is visible to all processors (i.e., you cannot use
 local scratch directories: there is presently no way to ensure that
@@ -2672,8 +2674,13 @@ Possible solutions:
     or clusters have this problem. For Intel ifort 8.1, the problem
     seems to be due to the allocation of large automatic arrays
     that exceeds the available stack. Increasing the stack size 
-    (with commands \texttt{limits} or \texttt{ulimit}) may solve the
-    problem.
+    (with commands \texttt{limits} or \texttt{ulimit}) may (or may
+    not) solve the problem. In particular, if you try to run \texttt{ph.x} 
+    on a PC with ifort you will get segmentation faults unless you run
+    small systems.
+    It is a compiler problem and the only solution is to reduce the
+    size of arrays if you can (for instance by running in parallel 
+    or on more processors) or to find a different machine or compiler.
 \end{itemize}
 
 \paragraph{\texttt{pw.x} crashes in parallel execution with an obscure
