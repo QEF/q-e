@@ -962,8 +962,10 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
      ALLOCATE(rep(sm_k)%tausm(3,nat))
      ALLOCATE(rep(sm_k)%fion(3,nat))
      ALLOCATE(rep(sm_k)%fionm(3,nat))
+     ALLOCATE(rep(sm_k)%fionp(3,nat))
      ALLOCATE(rep(sm_k)%vels(3,nat))
      ALLOCATE(rep(sm_k)%velsm(3,nat))
+     ALLOCATE(rep(sm_k)%velsp(3,nat))
      ALLOCATE(rep(sm_k)%tan(3,nat))
   ENDDO
 
@@ -1390,3 +1392,10 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
   return
 
 end subroutine init_path
+
+
+
+subroutine allocate_path
+  return
+end subroutine allocate_path
+

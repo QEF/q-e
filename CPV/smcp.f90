@@ -65,7 +65,6 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE check_stop,               ONLY : check_stop_now
   USE cpr_subroutines,          ONLY : print_atomic_var, print_lambda, &
                                        compute_stress, elec_fakekine2
-  USE ions_positions,           ONLY : tau0, velsp
   USE ions_positions,           ONLY : ions_hmove, ions_move
   USE cell_base,                ONLY : cell_kinene, cell_move, cell_gamma, &
                                        cell_hmove
@@ -439,19 +438,19 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   gkbt = DBLE( ndega ) * tempw / factem
   kbt = tempw / factem
 
-  etot_ar(0   ) = smd_ene_ini
+  etot_ar(0   )  = smd_ene_ini
   etot_ar(smd_p) = smd_ene_fin
 
-  DO sm_k=0,smd_p
-     rep(sm_k)%tausm=rep(sm_k)%taus
-     rep(sm_k)%tausp=0.
-     rep(sm_k)%taum=rep(sm_k)%tau0
-     rep(sm_k)%taup=0.
+  DO sm_k = 0, smd_p
+     rep(sm_k)%tausm = rep(sm_k)%taus
+     rep(sm_k)%tausp = 0.0d0
+     rep(sm_k)%taum  = rep(sm_k)%tau0
+     rep(sm_k)%taup  = 0.0d0
      rep(sm_k)%vels  = 0.0d0
      rep(sm_k)%velsm = 0.0d0
+     rep(sm_k)%velsp = 0.0d0
   ENDDO
   !
-  velsp = 0.
   !
   hnew = h
   !
@@ -1078,18 +1077,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
 
            CALL ions_move( rep(sm_k)%tausp, rep(sm_k)%taus, rep(sm_k)%tausm, iforce, pmass, &
                 rep(sm_k)%fion, ainv, delt, na, nsp, fricp, hgamma, rep(sm_k)%vels, tsdp, &
-                tnosep, rep(sm_k)%fionm, vnhp(:,sm_k), velsp, rep(sm_k)%velsm, 1, 1, atm2nhp )
-           !
-           !cc   call cofmass(velsp,rep(sm_k)%cdmvel)
-           !         call cofmass(rep(sm_k)%tausp,cdm)
-           !         do is=1,nsp
-           !            do ia=1,na(is)
-           !               do i=1,3
-           !cc   velsp(i,ia,is)=velsp(i,ia,is)-cdmvel(i)
-           !                  tausp(i,ia,is)=tausp(i,ia,is) ! +cdm0(i)-cdm(i)
-           !               enddo
-           !            enddo
-           !         enddo
+                tnosep, rep(sm_k)%fionm, vnhp(:,sm_k), rep(sm_k)%velsp, rep(sm_k)%velsm, 1, 1, atm2nhp )
            !
            !  ... taup is obtained from tausp ...
            !
@@ -1334,12 +1322,12 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
            !
            !     new variables for next step
            !
-           rep(sm_k)%tausm(:,1:nat)=rep(sm_k)%taus(:,1:nat)
-           rep(sm_k)%taus(:,1:nat)=rep(sm_k)%tausp(:,1:nat)
-           rep(sm_k)%taum(:,1:nat)=rep(sm_k)%tau0(:,1:nat)
-           rep(sm_k)%tau0(:,1:nat)=rep(sm_k)%taup(:,1:nat)
+           rep(sm_k)%tausm(:,1:nat) = rep(sm_k)%taus(:,1:nat)
+           rep(sm_k)%taus(:,1:nat)  = rep(sm_k)%tausp(:,1:nat)
+           rep(sm_k)%taum(:,1:nat)  = rep(sm_k)%tau0(:,1:nat)
+           rep(sm_k)%tau0(:,1:nat)  = rep(sm_k)%taup(:,1:nat)
            rep(sm_k)%velsm(:,1:nat) = rep(sm_k)%vels(:,1:nat)
-           rep(sm_k)%vels(:,1:nat)  = velsp(:,1:nat)
+           rep(sm_k)%vels(:,1:nat)  = rep(sm_k)%velsp(:,1:nat)
            IF(tnosep) THEN
               xnhpm(:,sm_k) = xnhp0(:,sm_k)
               xnhp0(:,sm_k) = xnhpp(:,sm_k)
