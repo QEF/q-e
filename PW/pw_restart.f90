@@ -782,7 +782,13 @@ MODULE pw_restart
       !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
       !
-      INQUIRE( FILE = TRIM( dirname ) // '/' // TRIM( xmlpun ), EXIST = lexist )
+      IF ( ionode ) THEN
+         !
+         INQUIRE( FILE = TRIM( dirname ) // '/' // TRIM( xmlpun ), EXIST = lexist )
+         !
+      END IF
+      !
+      CALL mp_bcast( lexist, ionode_id )
       !
       IF ( .NOT. lexist ) THEN
          !
