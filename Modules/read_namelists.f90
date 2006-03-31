@@ -1730,7 +1730,6 @@ MODULE read_namelists_module
        CALL system_checkin( prog )
        !
        CALL allocate_input_ions( ntyp, nat )
-       CALL allocate_input_constr( nat )
        !
        ! ... ELECTRONS namelist
        !
@@ -1774,8 +1773,6 @@ MODULE read_namelists_module
        !
        CALL ions_bcast( )
        CALL ions_checkin( prog )
-
-       CALL allocate_input_neb ( nat, num_of_images )
        !
        ! ... CELL namelist
        !

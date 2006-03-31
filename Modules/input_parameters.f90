@@ -1390,7 +1390,7 @@ MODULE input_parameters
         !
         ! ... variable added for NEB  ( C.S. 17/10/2003 )
         !
-        REAL(DP), ALLOCATABLE :: pos( :, : )
+        REAL(DP), ALLOCATABLE :: pos(:,:)
         !
         ! ... workaround for IBM xlf bug, compiler can't manage large 
         !     array initialization
@@ -1522,7 +1522,7 @@ MODULE input_parameters
 
       INTEGER, PARAMETER :: nwf_max = 1000
       !
-      INTEGER :: wannier_index(nwf_max)
+      INTEGER :: wannier_index( nwf_max )
 
 !  END manual
 ! ----------------------------------------------------------------------
@@ -1559,45 +1559,40 @@ CONTAINS
     RETURN
   END SUBROUTINE allocate_input_ions
 
-
-  SUBROUTINE allocate_input_constr( nat )
-    INTEGER, INTENT(IN) :: nat
+  SUBROUTINE allocate_input_constr()
     !
-    IF( ALLOCATED( constr_type_inp ) ) DEALLOCATE( constr_type_inp ) 
-    IF( ALLOCATED( constr_inp ) ) DEALLOCATE( constr_inp )
-    IF( ALLOCATED( constr_target ) ) DEALLOCATE( constr_target )
+    IF( ALLOCATED( constr_type_inp ) )   DEALLOCATE( constr_type_inp ) 
+    IF( ALLOCATED( constr_inp ) )        DEALLOCATE( constr_inp )
+    IF( ALLOCATED( constr_target ) )     DEALLOCATE( constr_target )
     IF( ALLOCATED( constr_target_set ) ) DEALLOCATE( constr_target_set )
     !
-    ALLOCATE( constr_type_inp( nat ) ) 
-    ALLOCATE( constr_inp( 6, nat ) )
-    ALLOCATE( constr_target( nat ) )
-    ALLOCATE( constr_target_set( nat ) )
+    ALLOCATE( constr_type_inp(   nconstr_inp ) ) 
+    ALLOCATE( constr_inp( 6,     nconstr_inp ) )
+    ALLOCATE( constr_target(     nconstr_inp ) )
+    ALLOCATE( constr_target_set( nconstr_inp ) )
     !
-    constr_type_inp = ' '
-    constr_inp = 0.0d0
-    constr_target = 0.0d0
+    constr_type_inp   = ' '
+    constr_inp        = 0.D0
+    constr_target     = 0.D0
     constr_target_set = .FALSE.
     !
     RETURN
   END SUBROUTINE allocate_input_constr
 
-
-  SUBROUTINE allocate_input_neb( nat, num_of_images )
-     INTEGER, INTENT(IN) :: nat, num_of_images
+  SUBROUTINE allocate_input_path( dim, num_of_images )
+     INTEGER, INTENT(IN) :: dim, num_of_images
      !
-     IF( ALLOCATED( pos ) ) DEALLOCATE( pos )
+     IF( ALLOCATED( pos ) )      DEALLOCATE( pos )
      IF( ALLOCATED( climbing ) ) DEALLOCATE( climbing )
      !
-     ALLOCATE( pos( 3*nat, MAX( 1, num_of_images ) ) )
+     ALLOCATE( pos( dim, MAX( 1, num_of_images ) ) )
      ALLOCATE( climbing( MAX( 1, num_of_images ) ) )
      !
-     pos      = 0.0d0
+     pos      = 0.D0
      climbing = .FALSE.
      !
      RETURN
-  END SUBROUTINE allocate_input_neb
-
-
+  END SUBROUTINE allocate_input_path
 
   SUBROUTINE allocate_input_iprnks( nksx, nspin )
      INTEGER, INTENT(IN) :: nksx, nspin
@@ -1611,8 +1606,6 @@ CONTAINS
      RETURN
   END SUBROUTINE allocate_input_iprnks
 
-
-
   SUBROUTINE allocate_input_iprnks_empty( nksx, nspin )
      INTEGER, INTENT(IN) :: nksx, nspin
      !
@@ -1624,8 +1617,6 @@ CONTAINS
      !
      RETURN
   END SUBROUTINE allocate_input_iprnks_empty
-
-
 
   SUBROUTINE deallocate_input_parameters()
      IF( ALLOCATED( rd_pos ) ) DEALLOCATE( rd_pos )
