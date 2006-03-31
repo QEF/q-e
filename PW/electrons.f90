@@ -59,6 +59,8 @@ SUBROUTINE electrons()
   USE exx,                  ONLY : exxinit, init_h_wfc, exxenergy, exxenergy2 
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
 #endif
+  USE mp_global,       ONLY : intra_pool_comm
+  USE mp,              ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -445,7 +447,7 @@ SUBROUTINE electrons()
         !
         ngkp(1:nks) = ngk(1:nks)
         !
-        CALL ireduce( nks, ngkp )
+        CALL mp_sum( ngkp(1:nks), intra_pool_comm )
         CALL ipoolrecover( ngkp, 1, nkstot, nks )
         CALL poolrecover( et, nbnd, nkstot, nks )
         !
@@ -906,8 +908,8 @@ SUBROUTINE electrons()
           magtot = magtot * omega / ( nr1 * nr2 * nr3 )
           absmag = absmag * omega / ( nr1 * nr2 * nr3 )
           !
-          CALL reduce( 1, magtot )
-          CALL reduce( 1, absmag )
+          CALL mp_sum ( magtot, intra_pool_comm )
+          CALL mp_sum ( absmag, intra_pool_comm )
           !
        ELSE IF ( noncolin ) THEN
           !
@@ -928,8 +930,8 @@ SUBROUTINE electrons()
              !
           END DO
           !
-          CALL reduce( 3, magtot_nc )
-          CALL reduce( 1, absmag )
+          CALL mp_sum( magtot_nc, intra_pool_comm )
+          CALL mp_sum( absmag, intra_pool_comm )
           !
           DO i = 1, 3
              !
@@ -1005,7 +1007,7 @@ SUBROUTINE electrons()
        !
        delta_e = omega * delta_e / ( nr1 * nr2 * nr3 )
        !
-       CALL reduce( 1, delta_e )
+       CALL mp_sum( delta_e, intra_pool_comm )
        !
        RETURN
        !
@@ -1038,7 +1040,7 @@ SUBROUTINE electrons()
        !
        delta_escf = omega * delta_escf / ( nr1 * nr2 * nr3 )
        !
-       CALL reduce( 1, delta_escf )
+       CALL mp_sum ( delta_escf, intra_pool_comm )
        !
        RETURN
        !

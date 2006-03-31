@@ -218,65 +218,6 @@ SUBROUTINE reduce( dim, ps )
   !
 END SUBROUTINE reduce
 !
-!----------------------------------------------------------------------------
-SUBROUTINE ireduce( dim, is )
-  !----------------------------------------------------------------------------
-  !
-  ! ... sums a distributed variable is(dim) over the processors.
-  !
-  USE mp_global, ONLY : intra_pool_comm, nproc_pool, npool
-  USE mp,        ONLY : mp_barrier
-  USE parallel_include    
-  !
-  IMPLICIT NONE
-  !
-  INTEGER            :: dim, is(dim)
-  !
-#if defined (__PARA)  
-  !
-  INTEGER            :: info, n, m, nbuf
-  INTEGER, PARAMETER :: maxi = 500
-  INTEGER            :: buff(maxi)
-  !
-  !
-  IF ( dim <= 0 .OR. nproc_pool <= 1 ) RETURN
-  !
-  ! ... syncronize processes
-  !
-  CALL mp_barrier( intra_pool_comm )
-  !
-  nbuf = dim / maxi
-  !
-  DO n = 1, nbuf
-     !
-     CALL MPI_ALLREDUCE( is(1+(n-1)*maxi), buff, maxi, MPI_INTEGER, &
-                         MPI_SUM, intra_pool_comm, info )
-     !   
-     CALL errore( 'ireduce', 'error in allreduce 1', info )
-     !
-     is((1+(n-1)*maxi):(n*maxi)) = buff(1:maxi)
-     !
-  END DO
-  !
-  ! ... possible remaining elements < maxi
-  !
-  IF ( ( dim - nbuf * maxi ) > 0 ) THEN
-     !
-     CALL MPI_ALLREDUCE( is(1+nbuf*maxi), buff, (dim-nbuf*maxi), MPI_INTEGER, &
-                         MPI_SUM, intra_pool_comm, info )
-     !
-     CALL errore( 'reduce', 'error in allreduce 2', info )
-     !
-     is((1+nbuf*maxi):dim) = buff(1:(dim-nbuf*maxi))
-     !
-  END IF
-  !
-#endif
-  !
-  RETURN
-  !
-END SUBROUTINE ireduce
-!
 !------------------------------------------------------------------------
 SUBROUTINE poolreduce( dim, ps )
   !-----------------------------------------------------------------------

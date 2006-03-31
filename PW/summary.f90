@@ -45,6 +45,8 @@ SUBROUTINE summary()
   USE fixed_occ,       ONLY : f_inp, tfixed_occ
   USE wvfct,           ONLY : nbnd
   USE lsda_mod,        ONLY : nspin
+  USE mp_global,       ONLY : intra_pool_comm
+  USE mp,              ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -361,16 +363,14 @@ SUBROUTINE summary()
      ENDDO
   ENDIF
   ngmtot = ngm
-#ifdef __PARA
-  CALL ireduce (1, ngmtot)
-#endif
+  CALL mp_sum (ngmtot, intra_pool_comm)
   WRITE( stdout, '(/5x,"G cutoff =",f10.4,"  (", &
        &       i7," G-vectors)","     FFT grid: (",i3, &
        &       ",",i3,",",i3,")")') gcutm, ngmtot, nr1, nr2, nr3
   IF (doublegrid) THEN
-     ngmtot = ngms
      !
-     CALL ireduce (1, ngmtot)
+     ngmtot = ngms
+     CALL mp_sum (ngmtot, intra_pool_comm)
      !
      WRITE( stdout, '(5x,"G cutoff =",f10.4,"  (", &
           &    i7," G-vectors)","  smooth grid: (",i3, &

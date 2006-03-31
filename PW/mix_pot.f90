@@ -31,6 +31,8 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !    conv      true if dr2.le.tr2
 #include "f_defs.h"
   USE kinds, only : DP
+  USE mp_global,       ONLY : intra_pool_comm
+  USE mp,              ONLY : mp_sum
   implicit none
   !
   !   First the dummy variables
@@ -75,8 +77,8 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   dr2 = DNRM2 (ndim, vout, 1) **2
   ndimtot = ndim
 #ifdef __PARA
-  call reduce (1, dr2)
-  call ireduce (1, ndimtot)
+  call mp_sum (dr2, intra_pool_comm)
+  call mp_sum (ndimtot, intra_pool_comm)
 #endif
   dr2 = (sqrt (dr2) / ndimtot) **2
 
@@ -138,7 +140,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
      enddo
      norm = (DNRM2 (ndim, df (1, ipos), 1) ) **2
 #ifdef __PARA
-     call reduce (1, norm)
+     call mp_sum (norm, intra_pool_comm)
 #endif
      norm = sqrt (norm)
      call DSCAL (ndim, 1.d0 / norm, df (1, ipos), 1)
@@ -166,7 +168,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
      do j = i + 1, iter_used
         beta (i, j) = w (i) * w (j) * DDOT (ndim, df (1, j), 1, df (1, i), 1)
 #ifdef __PARA
-        call reduce (1, beta (i, j) )
+        call mp_sum ( beta (i, j), intra_pool_comm )
 #endif
      enddo
      beta (i, i) = w0**2 + w (i) **2
@@ -187,7 +189,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
      work (i) = DDOT (ndim, df (1, i), 1, vout, 1)
   enddo
 #ifdef __PARA
-  call reduce (iter_used, work)
+  call mp_sum ( work(1:iter_used), intra_pool_comm )
 #endif
   !
   do n = 1, ndim
