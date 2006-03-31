@@ -831,6 +831,7 @@ SUBROUTINE terminate_run()
   USE kinds,             ONLY : DP
   USE io_global,         ONLY : stdout, ionode
   USE cp_main_variables, ONLY : acc
+  USE cg_module,                ONLY : tcg, print_clock_tcg
   !
   IMPLICIT NONE
   !
@@ -875,6 +876,7 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'fftw' )
   CALL print_clock( 'fftb' )
   CALL print_clock( 'rsg' )
+  if (tcg) call print_clock_tcg()
   !
 1974 FORMAT( 1X,2I5,3F10.4,2X,3F10.4 )
 1975 FORMAT( /1X,'Scaled coordinates '/1X,'species',' atom #' )

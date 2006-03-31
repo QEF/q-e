@@ -110,5 +110,19 @@ CONTAINS
     RETURN
   END SUBROUTINE cg_update
 
+  SUBROUTINE print_clock_tcg()
+  CALL print_clock( 'runcg_uspp')
+  CALL print_clock( 'inner_loop')
+  CALL print_clock( 'rotate' )
+  CALL print_clock( 'calcmt' )
+  CALL print_clock( 'calcm' )
+  CALL print_clock( 'pc2' )
+  CALL print_clock( 'pcdaga2' )
+  CALL print_clock( 'set_x_minus1' )
+  CALL print_clock( 'xminus1' )
+  CALL print_clock( 'emass_p_tpa' )
+  CALL print_clock( 'mxma' )
+  return
+  END SUBROUTINE print_clock_tcg
 
 END MODULE cg_module

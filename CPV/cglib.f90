@@ -21,6 +21,7 @@
       real(8) zmat(nudx,nudx,nspin), fmat(nudx,nudx,nspin),        &
    &                fdiag(nx)
 
+      call start_clock('calcmt')
       do iss=1,nspin
        nss=nupdwn(iss)
        istart=iupdwn(iss)
@@ -35,6 +36,7 @@
        end do
       end do
 
+      call stop_clock('calcmt')
       return
       end subroutine calcmt
 
@@ -56,6 +58,7 @@
       real(8) bec(nhsa,n), becdiag(nhsa,n)
       complex(8) c0(ngw,nx), c0diag(ngw,nx)
 
+      CALL start_clock( 'rotate' )
       c0diag(1:ngw,1:nx)=0.d0
         do iss=1,nspin
          nss=nupdwn(iss)
@@ -81,6 +84,7 @@
          end do
         end do
         end do
+      CALL stop_clock( 'rotate' )
       return
       end subroutine rotate
 
@@ -128,6 +132,7 @@
       real(8) zmat(nudx,nudx,nspin), fmat(nudx,nudx,nspin),         &
     &   fdiag(nx)
 
+      call start_clock('calcm')
       do iss=1,nspin
        nss=nupdwn(iss)
        istart=iupdwn(iss)
@@ -142,6 +147,7 @@
        end do
       end do
 
+      call stop_clock('calcm')
       return
       end subroutine calcm
 
@@ -206,6 +212,7 @@ subroutine pc2(a,beca,b,becb)
       integer is, iv, jv, ia, inl, jnl, i, j,ig
       real(kind=DP) sca
       real(kind=DP)  becp(nhsa)
+      CALL start_clock( 'pc2' )
       do i=1,n
          becp(:)=0.d0
          do j=1,n
@@ -251,6 +258,7 @@ subroutine pc2(a,beca,b,becb)
          enddo
          becb(:,i)=becb(:,i)-becp(:)
       enddo
+      CALL stop_clock( 'pc2' )
       return
       end subroutine pc2
 
@@ -285,6 +293,7 @@ subroutine pc2(a,beca,b,becb)
       integer is, iv, jv, ia, inl, jnl, i, j,ig
       real(8) sca
       !
+      call start_clock('pcdaga2')
       do i=1,n
          do j=1,n
             sca=0.
@@ -309,6 +318,7 @@ subroutine pc2(a,beca,b,becb)
             endif
          enddo
       enddo
+      call stop_clock('pcdaga2')
       return
       end subroutine pcdaga2
 
@@ -347,6 +357,7 @@ subroutine pc2(a,beca,b,becb)
       integer ipiv(nhsavb),info, lwork
       real(DP) work(nhsavb)
 
+      call start_clock('set_x_minus1')
       lwork=nhsavb
 
       allocate(q_matrix(nhsavb,nhsavb),c_matrix(nhsavb,nhsavb))
@@ -422,6 +433,7 @@ subroutine pc2(a,beca,b,becb)
       CALL DGEMM('N','N',nhsavb,nhsavb,nhsavb,-1.0d0,c_matrix,nhsavb,q_matrix,nhsavb,0.0d0,m_minus1,nhsavb)
 
       deallocate(q_matrix,c_matrix)
+      call stop_clock('set_x_minus1')
       return
     end subroutine set_x_minus1
 !
@@ -463,7 +475,7 @@ subroutine pc2(a,beca,b,becb)
 !      real(dp) qtemp(nhsavb,n) ! automatic array
 !
 
-
+      call start_clock('xminus1')
       if (nvb.gt.0) then
 !calculates beck
          if (do_k) then
@@ -539,6 +551,7 @@ subroutine pc2(a,beca,b,becb)
             end do
          endif
       endif
+      call stop_clock('xminus1')
       return
      end subroutine xminus1
 
@@ -552,12 +565,13 @@ subroutine pc2(a,beca,b,becb)
 
        real(DP) :: x
 
+       call start_clock('emass_p_tpa')
        do i = 1, ngw
 
           x=0.5d0*tpiba2*ggp(i)/emaec
           ema0bg(i) = 1.d0/(1.d0+(16.d0*x**4)/(27.d0+18.d0*x+12.d0*x**2+8.d0*x**3))
        end do
-
+       call stop_clock('emass_p_tpa')
       RETURN
       END SUBROUTINE emass_precond_tpa
 

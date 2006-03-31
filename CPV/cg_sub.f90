@@ -115,6 +115,7 @@
       integer :: maxiter3
 !
 !
+      call start_clock('runcg_uspp')
       newscheme=.false.
       firstiter=.true.
 
@@ -863,4 +864,6 @@
         deallocate( hpsi,hpsi0,gi,hi) 
         deallocate( s_minus1,k_minus1)
        if(ionode) close(37)!for debug and tuning purposes
-END SUBROUTINE
+       call stop_clock('runcg_uspp')
+       return
+     END SUBROUTINE runcg_uspp

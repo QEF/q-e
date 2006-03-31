@@ -130,6 +130,7 @@
       REAL(DP)               :: deltaxmin
       REAL(DP)               :: xinit
  
+      CALL start_clock( 'inner_loop' )
       ! initializes variables
       fion2( :, : )= 0.D0
       npt=10
@@ -509,7 +510,8 @@
         enever=etot
   
      END DO INNERLOOP
-
+     CALL stop_clock( 'inner_loop' )
+     return
 !====================================================================      
    END SUBROUTINE inner_loop
 !====================================================================
