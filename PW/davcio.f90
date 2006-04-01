@@ -42,7 +42,7 @@ SUBROUTINE davcio( vect, nword, unit, nrec, io )
   INQUIRE( UNIT = unit, OPENED = opnd )
   !
   IF ( .NOT. opnd ) &
-     CALL errore(  'davcio', 'unit is not opened', 1 )
+     CALL errore(  'davcio', 'unit is not opened', unit )
   !
   ios = 0
   !
