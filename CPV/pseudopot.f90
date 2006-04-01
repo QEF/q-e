@@ -1074,26 +1074,34 @@ CONTAINS
                betagl = betagx(1,iv,is)
                do i=1,3
                   do j=1,3
-                     dbeta(1,iv,is,i,j)=-0.5*beta(1,iv,is)*ainv(j,i)    &
-     &                                 +c*dylm(1,lp,i,j)*betagl
+                     dbeta( 1, iv, is, i, j ) = -0.5 * beta( 1, iv, is ) * ainv( j, i )    &
+     &                                          - c * dylm( 1, lp, i, j ) * betagl         ! SEGNO
+                     
+                     !dbeta(1,iv,is,i,j)=-0.5*beta(1,iv,is)*ainv(j,i)  !DEBUG stress ok!
+                     !dbeta(1,iv,is,i,j)=+c*dylm(1,lp,i,j)*betagl  !DEBUG stress ok!
+                     !dbeta(1,iv,is,i,j)=0.0d0  !DEBUG stress
+
                   enddo
                enddo
-               do ig=gstart,ngw
-                  gg=g(ig)*tpiba*tpiba/refg
+               do ig = gstart, ngw
+                  gg = g(ig) * tpiba * tpiba / refg
                   jj=int(gg)+1
-                  betagl = betagx(jj+1,iv,is)*(gg-DBLE(jj-1)) +         &
-     &                     betagx(jj,iv,is)*(DBLE(jj)-gg)
-                  dbetagl= dbetagx(jj+1,iv,is)*(gg-DBLE(jj-1)) +        &
-     &                     dbetagx(jj,iv,is)*(DBLE(jj)-gg)
+                  betagl = betagx(  jj+1, iv, is ) * ( gg - DBLE(jj-1) ) +         &
+     &                     betagx(  jj  , iv, is ) * ( DBLE(jj) - gg )
+                  dbetagl= dbetagx( jj+1, iv, is ) * ( gg - DBLE(jj-1) ) +        &
+     &                     dbetagx( jj  , iv, is ) * ( DBLE(jj) - gg )
                   do i=1,3
                      do j=1,3
-                        dbeta(ig,iv,is,i,j)=                            &
-     &                    -0.5*beta(ig,iv,is)*ainv(j,i)                 &
-     &                    +c*dylm(ig,lp,i,j)*betagl                     &
-     &                    -c*ylm (ig,lp)*dbetagl*gx(i,ig)/g(ig)         &
-     &                    *(gx(1,ig)*ainv(j,1)+                         &
-     &                      gx(2,ig)*ainv(j,2)+                         &
-     &                      gx(3,ig)*ainv(j,3))
+                        dbeta( ig, iv, is, i, j ) =                            &
+     &                    - 0.5d0 * beta( ig, iv, is ) * ainv( j, i )          &
+     &                    - c * dylm( ig, lp, i, j ) * betagl                  &  ! SEGNO
+     &                    - c * ylm ( ig, lp )       * dbetagl * gx( i, ig ) / g( ig )         &
+     &                    * ( gx( 1, ig ) * ainv( j, 1 ) + gx( 2, ig ) * ainv( j, 2 ) + gx( 3, ig ) * ainv( j, 3 ) )
+                        !dbeta(ig,iv,is,i,j)=- 0.5d0 * beta( ig, iv, is ) * ainv( j, i )  !DEBUG stress ok!
+                        !dbeta(ig,iv,is,i,j)=+ c * dylm( ig, lp, i, j ) * betagl  !DEBUG stress ok!
+                        !dbeta( ig, iv, is, i, j ) =                            &
+                        !  - c * ylm ( ig, lp )       * dbetagl * gx( i, ig ) / g( ig )         &
+                        !  * ( gx( 1, ig ) * ainv( j, 1 ) + gx( 2, ig ) * ainv( j, 2 ) + gx( 3, ig ) * ainv( j, 3 ) )
                      end do
                   end do
                end do
@@ -1429,7 +1437,7 @@ CONTAINS
                do i=1,3
                   do j=1,3
                      dbeta(1,iv,is,i,j)=-0.5*beta(1,iv,is)*ainv(j,i)    &
-     &                                 +c*dylm(1,lp,i,j)*betagl
+     &                                 -c*dylm(1,lp,i,j)*betagl  ! SEGNO
                   enddo
                enddo
                do ig=gstart,ngw
@@ -1439,7 +1447,7 @@ CONTAINS
                      do j=1,3
                         dbeta(ig,iv,is,i,j)=                            &
      &                    -0.5*beta(ig,iv,is)*ainv(j,i)                 &
-     &                    +c*dylm(ig,lp,i,j)*betagl                     &
+     &                    -c*dylm(ig,lp,i,j)*betagl                     &  ! SEGNO
      &                    -c*ylm (ig,lp)*dbetagl*gx(i,ig)/g(ig)         &
      &                    *(gx(1,ig)*ainv(j,1)+                         &
      &                      gx(2,ig)*ainv(j,2)+                         &

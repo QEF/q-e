@@ -157,7 +157,7 @@
       IF(timing) s6 = cclock()
 
 ! ... compute enl (non-local) contribution
-      CALL stress_nl(denl, gagx_l, c0, cdesc, occ, eigr, bec, edft%enl, box%m1 )
+      CALL stress_nl(denl, gagx_l, c0, cdesc, occ, eigr, bec, edft%enl, box%a, box%m1 )
 
       IF(timing) s7 = cclock()
 
@@ -231,7 +231,7 @@
 
 !  BEGIN manual
 
-      SUBROUTINE stress_nl(denl, gagx_l, c0, cdesc, occ, eigr, bec, enl, htm1)
+      SUBROUTINE stress_nl(denl, gagx_l, c0, cdesc, occ, eigr, bec, enl, ht, htm1)
 
 !  this routine computes nl part of the stress tensor from dft total energy
 !  ----------------------------------------------
@@ -239,7 +239,7 @@
 
 
 ! ... declare modules
-      USE constants, ONLY: pi
+      USE constants, ONLY: pi, au_gpa
       USE pseudopotential, ONLY: nlin_stress, nlin, nspnl, nsanl
       USE ions_base, ONLY: nsp, na
       USE spherical_harmonics, ONLY: set_dmqm, set_fmrm, set_pmtm
@@ -268,7 +268,8 @@
       COMPLEX(DP), INTENT(IN) :: eigr(:,:)
       REAL(DP) :: bec(:,:)
       REAL(DP), INTENT(IN) :: enl
-      REAL(DP) :: htm1(3,3)
+      REAL(DP), INTENT(IN) :: ht(3,3)
+      REAL(DP), INTENT(IN) :: htm1(3,3)
 
 ! ... declare functions
       REAL(DP)  DDOT
@@ -284,7 +285,7 @@
       REAL(DP)  dm(6,5), dmqm(6,5,5)
       REAL(DP)  fm(3,3,3,7), fmrm(6,7,7)
       REAL(DP)  facty(16)
-      REAL(DP)  denl_new(3,3), detmp(3,3)
+      REAL(DP)  denl_new(3,3), detmp(3,3), denl_gpa(3,3)
       LOGICAL :: new_stress = .false.
 
       COMPLEX(DP), ALLOCATABLE :: auxc(:,:)
@@ -309,29 +310,29 @@
 
       IF( new_stress ) then
 
-      DO iss = 1, nspin
-         !
-         iss_wfc = iss
-         IF( force_pairing ) iss_wfc = 1
-         !
-         ALLOCATE( btmp( nkb, nupdwn( iss ), 3, 3 ) )
-         ! 
-         CALL caldbec( cdesc%ngwl, nkb, nupdwn( iss ), 1, nspnl, eigr(1,1), &
-                       c0( 1, 1, 1, iss_wfc ), btmp( 1, 1, 1, 1 ), .false. )
-         !
-         DO j = 1, 3
-            DO i = 1, 3
-               DO in = iupdwn( iss ), iupdwn( iss ) + nupdwn( iss ) - 1
-                  dbec( :, in , i, j ) = btmp( :, in - iupdwn( iss ) + 1, i, j )
+         DO iss = 1, nspin
+            !
+            iss_wfc = iss
+            IF( force_pairing ) iss_wfc = 1
+            !
+            ALLOCATE( btmp( nkb, nupdwn( iss ), 3, 3 ) )
+            ! 
+            CALL caldbec( cdesc%ngwl, nkb, nupdwn( iss ), 1, nspnl, eigr(1,1), &
+                          c0( 1, 1, 1, iss_wfc ), btmp( 1, 1, 1, 1 ), .false. )
+            !
+            DO j = 1, 3
+               DO i = 1, 3
+                  DO in = iupdwn( iss ), iupdwn( iss ) + nupdwn( iss ) - 1
+                     dbec( :, in , i, j ) = btmp( :, in - iupdwn( iss ) + 1, i, j )
+                  END DO
                END DO
             END DO
+            !
+            DEALLOCATE( btmp )
+            !
          END DO
-         !
-         DEALLOCATE( btmp )
-         !
-      END DO
  
-      CALL dennl( bec, denl_new )
+         CALL dennl( bec, denl_new )
 
       end if
 
@@ -341,6 +342,11 @@
       ELSE
         denl = 0.0_DP
       END IF
+
+      !WRITE(6,*) 'DEBUG enl (CP) = '
+      !detmp = denl_new
+      !detmp = MATMUL( detmp(:,:), ht(:,:) )
+      !WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
   
       ngw = cdesc%ngwl
       
@@ -537,12 +543,18 @@
           detmp(alpha(k),beta(k)) = denl(k)
           detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
         END DO
+        denl_gpa = detmp
         detmp = MATMUL( detmp(:,:), htm1(:,:) )
         WRITE( stdout,*) "FROM stress_nl derivative of e(nl)"
         CALL mp_sum( detmp, intra_image_comm )
         CALL mp_sum( denl_new, intra_image_comm )
+        CALL mp_sum( denl_gpa, intra_image_comm )
+        WRITE( stdout,*) "denl FPMD"
         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+        WRITE( stdout,*) "denl CP"
         WRITE( stdout,5555) ((denl_new(i,j),j=1,3),i=1,3)
+        WRITE( stdout,*) "Stress nl (GPa)"
+        WRITE( stdout,5555) ((-denl_gpa(i,j)*au_gpa/omega,j=1,3),i=1,3)
       END IF
 
 5555  format(1x,f12.5,1x,f12.5,1x,f12.5/                                &

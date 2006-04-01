@@ -180,18 +180,19 @@ contains
   end subroutine deallocate_dqgb_mod
 end module dqgb_mod
 
-module cdvan
-  implicit none
-  save
-  real(8),allocatable:: dbeta(:,:,:,:,:), dbec(:,:,:,:), &
+MODULE cdvan
+  USE kinds, ONLY: DP
+  IMPLICIT NONE
+  SAVE
+  REAL(DP), ALLOCATABLE :: dbeta(:,:,:,:,:), dbec(:,:,:,:), &
                              drhovan(:,:,:,:,:)
-contains
-  subroutine deallocate_cdvan
+CONTAINS
+  SUBROUTINE deallocate_cdvan
       IF( ALLOCATED( dbeta ) ) DEALLOCATE( dbeta )
       IF( ALLOCATED( dbec ) ) DEALLOCATE( dbec )
       IF( ALLOCATED( drhovan ) ) DEALLOCATE( drhovan )
-  end subroutine deallocate_cdvan
-end module cdvan
+  END SUBROUTINE deallocate_cdvan
+END MODULE cdvan
 
 
 MODULE ncpp

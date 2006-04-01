@@ -592,7 +592,7 @@ subroutine dylmr2_( nylm, ngy, g, gg, ainv, dylm )
   real(DP), intent(IN)  :: g (3, ngy), gg (ngy), ainv(3,3)
   real(DP), intent(OUT) :: dylm (ngy, nylm, 3, 3)
   !
-  integer :: ipol, jpol, lm
+  integer :: ipol, jpol, lm, ig
   real(DP), allocatable :: dylmaux (:,:,:)
   !
   allocate ( dylmaux(ngy,nylm,3) )
@@ -606,14 +606,12 @@ subroutine dylmr2_( nylm, ngy, g, gg, ainv, dylm )
   do ipol =1,3
      do jpol =1,3
         do lm=1,nylm
-!           dylm (:,lm,ipol,jpol) = (g(1,:) * ainv(jpol,1) + &
-!                                    g(2,:) * ainv(jpol,2) + &
-!                                    g(3,:) * ainv(jpol,3) ) &
-!                                    * dylmaux(:,lm,ipol)
-           dylm (:,lm,ipol,jpol) = (dylmaux(:,lm,1) * ainv(jpol,1) + &
-                                    dylmaux(:,lm,2) * ainv(jpol,2) + &
-                                    dylmaux(:,lm,3) * ainv(jpol,3) ) &
-                                    * g(ipol,:)
+           do ig = 1, ngy
+              dylm (ig,lm,ipol,jpol) = (dylmaux(ig,lm,1) * ainv(jpol,1) + &
+                                        dylmaux(ig,lm,2) * ainv(jpol,2) + &
+                                        dylmaux(ig,lm,3) * ainv(jpol,3) ) &
+                                       * g(ipol,ig)
+           end do
         end do
      end do
   end do
