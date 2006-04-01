@@ -973,7 +973,8 @@ MODULE xml_io_base
     ! ... methods to write and read charge_density
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_rho_xml( rho_file_base, rho, nr1, nr2, nr3, nr1x, nr2x, ipp, npp )
+    SUBROUTINE write_rho_xml( rho_file_base, rho, &
+                              nr1, nr2, nr3, nr1x, nr2x, ipp, npp )
       !------------------------------------------------------------------------
       !
       ! ... Writes charge density rho, one plane at a time.
@@ -1059,9 +1060,6 @@ MODULE xml_io_base
       !
       DO k = 1, nr3
          !
-         ! WRITE(100+me_image,*) 'DEBUG kowner, my_pool_id, me_pool, me_image = ', &
-         ! kowner(k), my_pool_id, me_pool, me_image
-         !
          IF( kowner(k) == me_pool ) THEN
             !
             kk = k
@@ -1081,7 +1079,8 @@ MODULE xml_io_base
          END IF
          !
          IF ( kowner( k ) /= ionode_pool .AND. my_pool_id == iopool_id ) &
-            CALL mp_get( rho_plane, rho_plane, me_pool, ionode_pool, kowner(k), k, intra_pool_comm )
+            CALL mp_get( rho_plane, rho_plane, &
+                         me_pool, ionode_pool, kowner(k), k, intra_pool_comm )
          !
          IF ( ionode ) &
             CALL iotk_write_dat( rhounit, "z" // iotk_index( k ), rho_plane )
@@ -1104,7 +1103,8 @@ MODULE xml_io_base
     END SUBROUTINE write_rho_xml
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_rho_xml( rho_file_base, rho, nr1, nr2, nr3, nr1x, nr2x, ipp, npp )
+    SUBROUTINE read_rho_xml( rho_file_base, rho, &
+                             nr1, nr2, nr3, nr1x, nr2x, ipp, npp )
       !------------------------------------------------------------------------
       !
       ! ... Writes charge density rho, one plane at a time.

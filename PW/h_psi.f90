@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2002-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -30,9 +30,8 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   USE lsda_mod, ONLY : current_spin
   USE scf,      ONLY : vrs  
   USE gvect,    ONLY : gstart
-
 #ifdef EXX
-  USE exx,      ONLY : vexx !Suriano
+  USE exx,      ONLY : vexx
   USE funct,    ONLY : exx_is_active
 #endif
 
@@ -41,7 +40,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   !
   ! ... input/output arguments
   !
-  INTEGER          :: lda, n, m
+  INTEGER     :: lda, n, m
   COMPLEX(DP) :: psi(lda,m) 
   COMPLEX(DP) :: hpsi(lda,m)   
   !
@@ -104,13 +103,16 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        !
        ! ... Here the product with the non local potential V_NL psi
        !
-       IF ( nkb > 0 ) &
+       IF ( nkb > 0 ) THEN
+          !
           CALL pw_gemm( 'Y', nkb, m, n, vkb, lda, psi, lda, rbecp, nkb )
-       !
-       IF ( nkb > 0 ) CALL add_vuspsi( lda, n, m, psi, hpsi )
+          !
+          CALL add_vuspsi( lda, n, m, psi, hpsi )
+          !
+       END IF
        !
 #ifdef EXX
-       if (exx_is_active()) call vexx(lda, n, m, psi, hpsi)
+       IF ( exx_is_active() ) CALL vexx( lda, n, m, psi, hpsi )
 #endif
        !
        RETURN
@@ -125,7 +127,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        ! ... k-points version
        !
        USE wavefunctions_module, ONLY : psic
-       USE becmod,  ONLY : becp
+       USE becmod,               ONLY : becp
        !
        IMPLICIT NONE
        !
@@ -192,7 +194,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        END IF
        !
 #ifdef EXX
-       if (exx_is_active()) call vexx(lda, n, m, psi, hpsi)
+       IF ( exx_is_active() ) CALL vexx( lda, n, m, psi, hpsi )
 #endif
        !
        RETURN

@@ -8,6 +8,7 @@
 #include "f_defs.h"
 !
 #define __BFGS
+!#define __MIXEDBFGSMS
 !
 !----------------------------------------------------------------------------
 MODULE dynamics_module
@@ -578,8 +579,7 @@ MODULE dynamics_module
       !
       CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
       !
-      WRITE( UNIT = 4, FMT = * ) &
-          etot, istep, tau(:,:)
+      WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:)
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
@@ -801,7 +801,7 @@ MODULE dynamics_module
       ALLOCATE( grad( dim ), grad_p( dim ), precond_grad( dim ) )
       ALLOCATE( y( dim ), s( dim ) )
       ALLOCATE( inv_hess( dim, dim ) )
-      ALLOCATE( Hy( dim ), yH( dim ) )       
+      ALLOCATE( Hy( dim ), yH( dim ) )
       !
       pos(:)  =   RESHAPE( tau,   (/ dim /) ) * alat
       grad(:) = - RESHAPE( force, (/ dim /) )
@@ -860,7 +860,7 @@ MODULE dynamics_module
       IF ( ( precond_grad(:) .dot. grad(:) ) < 0.D0 ) THEN
          !
          WRITE( UNIT = stdout, &
-                FMT = '(5X,/,"uphill step: resetting bfgs history",/)' )
+                FMT = '(/,5X,"uphill step: resetting bfgs history",/)' )
          !
          precond_grad(:) = grad(:)
          !
