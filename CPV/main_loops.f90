@@ -93,8 +93,9 @@ SUBROUTINE cpr_loop( nloop )
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat
-  USE control_flags, ONLY : lmetadyn
+  USE control_flags, ONLY : lmetadyn, program_name
   USE metadyn_base,  ONLY : metadyn_init
+  USE main_module,   ONLY : cpmain
   !
   IMPLICIT NONE
   !
@@ -129,7 +130,15 @@ SUBROUTINE cpr_loop( nloop )
      !
      DO iloop = 1, nloop
         !
-        CALL cprmain( tau(1,1), fion(1,1), etot )
+        IF( program_name == 'CP90' ) THEN
+           !
+           CALL cprmain( tau(1,1), fion(1,1), etot )
+           !
+        ELSE
+           !
+           CALL cpmain( tau, fion, etot )
+           !
+        END IF
         !
         CALL memstat( 1 )
         !
@@ -144,65 +153,3 @@ SUBROUTINE cpr_loop( nloop )
   RETURN
   !
 END SUBROUTINE cpr_loop
-!
-!----------------------------------------------------------------------------
-SUBROUTINE fpmd_loop( iloop )
-  !----------------------------------------------------------------------------
-  !
-  USE kinds,            ONLY : DP
-  USE main_module,      ONLY : cpmain
-  USE input_parameters, ONLY : restart_mode
-  USE io_files,         ONLY : outdir
-  USE ions_base,        ONLY : nat
-  USE io_global,        ONLY : stdout
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN) :: iloop
-  !
-  CHARACTER(LEN=256), SAVE :: outdir_orig
-  !
-  REAL(DP), ALLOCATABLE :: tau(:,:)
-  REAL(DP), ALLOCATABLE :: fion(:,:)
-  REAL(DP)              :: etot
-  !
-  !
-  IF ( iloop == 1 ) outdir_orig = outdir
-  !
-  IF ( iloop > 1 ) THEN
-     !
-     restart_mode = 'restart'
-     !
-  END IF
-  !
-  SELECT CASE( iloop )
-  CASE( 1 )
-     !
-     outdir = TRIM( outdir_orig ) // '/' // 'image01'
-     !
-  CASE( 2 )
-     !  
-     outdir = TRIM( outdir_orig ) // '/' // 'image02'
-     !
-  END SELECT
-  !
-  ! ... Car-Parrinello main routine
-  !
-  IF ( nat > 0 ) THEN
-     !
-     ALLOCATE( tau(  3, nat ) )
-     ALLOCATE( fion( 3, nat ) )
-     !
-  ELSE
-     !
-     CALL errore( ' fpmd_loop ', ' nat less or equal 0 ', 1 )
-     !
-  END IF
-  !
-  CALL init_run()
-  !
-  CALL cpmain( tau, fion, etot )
-  !
-  RETURN
-  !
-END SUBROUTINE fpmd_loop

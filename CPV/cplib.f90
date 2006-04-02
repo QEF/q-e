@@ -2814,7 +2814,7 @@
 !     ===================================================================
 !      calculation exchange and correlation energy and potential
 !     -------------------------------------------------------------------
-      IF (nlcc_any) CALL add_cc(rhoc,rhog,rhor)
+      IF ( nlcc_any ) CALL add_cc( rhoc, rhog, rhor )
 !
       CALL exch_corr_h( nspin, rhog, rhor, rhoc, sfac, exc, dxc, self_sxc )
 

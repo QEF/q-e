@@ -109,13 +109,14 @@ MODULE input_parameters
           ! 'smd'      = String Method search of the Minimum Energy Path (MEP)
           ! 'cp-wf'    = Car-Parrinello with wannier functions
           ! 'fpmd'     = Compatibility with the old FPMD code
+          ! 'fpmd-neb' = NEB using fpmd as scf engine
           ! 'metadyn'  = meta-dynamics (Laio-Parrinello dynamics)
 
 
-        CHARACTER(LEN=80) :: calculation_allowed(15)
+        CHARACTER(LEN=80) :: calculation_allowed(16)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
           'vc-relax', 'vc-md', 'vc-cp', 'phonon', 'bands', 'neb', 'smd', &
-          'cp-wf', 'fpmd', 'metadyn' /
+          'cp-wf', 'fpmd', 'metadyn', 'fpmd-neb' /
           ! Allowed value for calculation parameters
 
 

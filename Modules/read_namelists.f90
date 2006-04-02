@@ -1344,7 +1344,7 @@ MODULE read_namelists_module
           CALL errore( sub_name, ' opt_scheme '''// &
                      & TRIM( opt_scheme )//''' not allowed ', 1 )
        !
-       IF ( calculation == 'neb' .OR. calculation == 'smd' ) THEN
+       IF ( calculation == 'neb' .OR. calculation == 'smd' .OR. calculation == 'fpmd-neb' ) THEN
           !
           IF ( phase_space == 'coarse-grained' ) THEN
              !
@@ -1571,6 +1571,14 @@ MODULE read_namelists_module
                 !
              END IF
              !
+          CASE ( 'fpmd-neb' )
+             !
+             ! ... "path" optimizations using fpmd as scf engine
+             !
+             electron_dynamics = 'damp'
+             ion_dynamics      = 'none'
+             cell_dynamics     = 'none'
+             !
           CASE ( 'smd' )
              !
              IF( prog == 'CP' ) THEN
@@ -1755,6 +1763,7 @@ MODULE read_namelists_module
                TRIM( calculation ) == 'cp-wf'    .OR. &
                TRIM( calculation ) == 'neb'      .OR. &
                TRIM( calculation ) == 'fpmd'     .OR. &
+               TRIM( calculation ) == 'fpmd-neb' .OR. &
                TRIM( calculation ) == 'metadyn' ) READ( 5, ions, iostat = ios ) 
           !
        END IF
@@ -1775,6 +1784,7 @@ MODULE read_namelists_module
               TRIM( calculation ) == 'vc-cp'    .OR. &
               TRIM( calculation ) == 'vc-md'    .OR. &
               TRIM( calculation ) == 'fpmd'     .OR. &
+              TRIM( calculation ) == 'fpmd-neb' .OR. &
               TRIM( calculation ) == 'vc-md' ) THEN
              READ( 5, cell, iostat = ios ) 
           END IF

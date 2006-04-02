@@ -157,8 +157,9 @@
        nr2sx = nr2s
        nr3sx = good_fft_dimension(nr3s)
 
-       IF ( nr1s > nr1 .or. nr2s > nr2 .or. nr3s > nr3 ) &
-         CALL errore(' realspace_grids_init ', ' smooth grid larger than dense grid?',1)
+       IF ( nr1s > nr1 .or. nr2s > nr2 .or. nr3s > nr3 ) THEN
+          CALL errore(' realspace_grids_init ', ' smooth grid larger than dense grid?',1)
+       END IF
 
        IF( nr1b < 1 ) nr1b = 1
        IF( nr2b < 1 ) nr2b = 1
@@ -178,7 +179,7 @@
        nr3bl = nr3b
 
        IF ( nr1b > nr1 .or. nr2b > nr2 .or. nr3b > nr3 ) THEN
-         CALL errore(' realspace_grids_init ', ' box grid larger than dense grid?',1)
+          CALL errore(' realspace_grids_init ', ' box grid larger than dense grid?',1)
        END IF
 
        RETURN

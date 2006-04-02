@@ -142,7 +142,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
      !
      IF ( .NOT. frozen(image) ) THEN
         !
-        tcpu = get_clock( program_name )
+        tcpu = get_clock( 'CP' )
         !
         IF ( nimage > 1 ) THEN
            !

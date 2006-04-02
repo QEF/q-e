@@ -32,8 +32,8 @@
 
 
         PUBLIC :: printout_new
-        PUBLIC :: printout, printmain
-        PUBLIC :: print_time, print_sfac, printacc, print_legend
+        PUBLIC :: printout
+        PUBLIC :: print_sfac, printacc, print_legend
         PUBLIC :: cp_print_rho
 
 !=----------------------------------------------------------------------------=!
@@ -475,49 +475,6 @@
 
 !=----------------------------------------------------------------------------=!
 
-
-  SUBROUTINE printmain( tbeg, taurdr, atoms )
-
-      use ions_module, only: print_scaled_positions
-      USE atoms_type_module, ONLY: atoms_type
-
-      implicit none
-
-      logical TBEG,TAURDR
-      TYPE (atoms_type) :: atoms
-
-      if(ionode) then
-        WRITE( stdout,*)
-        WRITE( stdout,*) '  ===> MAIN (FROM FILE NDR) <==='
-        WRITE( stdout,*)
-
-        IF(.NOT.TBEG) THEN
-          WRITE( stdout,*) '  Initial cell (HT0) from restart file NDR'
-        ELSE
-          WRITE( stdout,*) '  Initial cell (HT0) from input file'
-        END IF
-
-        WRITE( stdout,*)
-        IF(TAURDR) THEN
-          WRITE( stdout,10) 
-        ELSE
-          WRITE( stdout,9) 
-        END IF
-        call print_scaled_positions(atoms,  stdout )
-
-      end if
-
- 35   FORMAT(3(1X,F6.2),6X,F6.4,14X,I5)
-  9   FORMAT('   SCALED ATOMIC COORDINATES (FROM NDR)  : ')
- 10   FORMAT('   SCALED ATOMIC COORDINATES (FROM STDIN): ')
-555   FORMAT(3(4X,3(1X,F8.4)))
-600   FORMAT(4X,I3,3(2X,F12.8))
-
-    RETURN
-  END SUBROUTINE printmain
-
-!=----------------------------------------------------------------------------=!
-
   SUBROUTINE print_legend()
     !
     IMPLICIT NONE
@@ -542,109 +499,6 @@
   END SUBROUTINE print_legend
 
 !=----------------------------------------------------------------------------=!
-
-    SUBROUTINE print_time( tprint, texit, timeform_ , timernl_ , timerho_ , &
-      timevof_ , timerd_ , timeorto_ , timeloop_ , timing )
-
-      USE potentials, ONLY: print_vofrho_time
-      USE stress, ONLY: print_stress_time
-      USE printout_base, ONLY: pprefix
-
-      IMPLICIT NONE
-
-      REAL(DP) :: timeform_ , timernl_ , timerho_ , timevof_ , timerd_
-      REAL(DP) :: timeorto_ , timeloop_
-      LOGICAL, INTENT(IN) :: timing, tprint, texit
-
-      REAL(DP)  :: timeav
-      REAL(DP), SAVE :: timesum = 0.0d0
-      INTEGER, SAVE   :: index   = 0
-      CHARACTER(LEN=256) :: file_name
-
-      timeform = timeform + timeform_
-      timernl  = timernl + timernl_
-      timerho  = timerho + timerho_
-      timevof  = timevof + timevof_
-      timerd   = timerd + timerd_
-      timeorto = timeorto + timeorto_
-      timeloop = timeloop + timeloop_
-      timecnt = timecnt + 1
-
-      ! IF( timing .AND. ( tprint .OR. texit ) ) THEN
-      IF( timing ) THEN
-
-        IF( ionode ) THEN
-
-          file_name = trim(pprefix)//'.tmv'
-          CALL open_and_append( opt_unit, file_name )
-          IF( index == 0 ) WRITE( opt_unit, 940 ) 
-          CALL print_vofrho_time( opt_unit )
-          CLOSE( opt_unit )
- 940      FORMAT('        ESR     FWFFT        XC       HAR    INVFFT    STRESS       TOT')
-
-          file_name = trim(pprefix)//'.tms'
-          CALL open_and_append( opt_unit, file_name )
-          IF( index == 0 ) WRITE( opt_unit, 920 ) 
-          CALL print_stress_time( opt_unit )
-          CLOSE( opt_unit )
- 920      FORMAT('        EK        EXC       ESR        EH        EL       ENL       TOT')
-
-          file_name = trim(pprefix)//'.tml'
-          CALL open_and_append( opt_unit, file_name )
-          IF( index == 0 ) WRITE( opt_unit, 910 ) 
-          IF( timecnt > 0 ) THEN
-            timeform = timeform / timecnt
-            timernl  = timernl  / timecnt
-            timerho  = timerho  / timecnt
-            timevof  = timevof  / timecnt
-            timerd   = timerd   / timecnt
-            timeorto = timeorto / timecnt
-            timeloop = timeloop / timecnt
-            WRITE( opt_unit, 999 ) TIMEFORM, TIMERNL, TIMERHO, TIMEVOF, TIMERD, TIMEORTO, TIMELOOP
- 999        FORMAT(7(F9.3))
-          END IF
-          CLOSE( opt_unit )
- 910      FORMAT('     FORM     NLRH   RHOOFR   VOFRHO    FORCE    ORTHO     LOOP')
-
-          index   = index + 1
-          timesum = timesum + timeloop
-
-        END IF
-
-        timeform = 0.0d0
-        timernl  = 0.0d0
-        timerho  = 0.0d0
-        timevof  = 0.0d0
-        timerd   = 0.0d0
-        timeorto = 0.0d0
-        timeloop = 0.0d0
-        timecnt = 0
-
-      END IF
-
-      IF ( texit ) THEN
-
-        IF( index > 0 ) timeav  = timesum / DBLE( MAX( index, 1 ) )
-
-        IF (ionode) THEN
-          WRITE( stdout,*)
-          WRITE( stdout, fmt='(3X,"Execution time statistics (SEC)")')
-          WRITE( stdout, fmt='(3X,"Mean time for MD step ..",F12.3)') timeav
-        END IF
-
-        CALL print_clock( 'fft' )
-        CALL print_clock( 'ffts' )
-        CALL print_clock( 'fftw' )
-        CALL print_clock( 'fftb' )
-
-      ENDIF
-
-      RETURN
-    END SUBROUTINE print_time
-
-
-!=----------------------------------------------------------------------------=!
-
 
     SUBROUTINE print_sfac( rhoe, sfac )
 

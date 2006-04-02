@@ -493,7 +493,6 @@ MODULE from_restart_module
     USE energies,              ONLY : dft_energy_type
     USE cell_module,           ONLY : boxdimensions, gethinv, alat
     USE cell_base,             ONLY : r_to_s, s_to_r
-    USE print_out_module,      ONLY : printmain
     USE nl,                    ONLY : nlrh_m
     USE potentials,            ONLY : vofrhos
     USE forces,                ONLY : dforce_all

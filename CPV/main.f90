@@ -96,7 +96,7 @@
                   tsteepdesc, ekin_conv_thr, ekin_maxiter, ionic_conjugate_gradient, &
                   tconjgrad_ion, conv_elec, lneb, tnoseh, tuspp, etot_conv_thr, tdamp
       USE atoms_type_module, ONLY: atoms_type
-      USE print_out_module, ONLY: printout, print_time, print_sfac, &
+      USE print_out_module, ONLY: printout, print_sfac, &
           printacc
       USE cell_module, ONLY: movecell, press, boxdimensions, updatecell
       USE empty_states, ONLY: empty
@@ -121,11 +121,9 @@
       USE kohn_sham_states, ONLY: ks_states_force_pairing
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
-      USE optical_properties, ONLY: opticalp, optical_closeup
+      USE optical_properties, ONLY: opticalp
       USE wave_functions, ONLY: update_wave_functions
-      USE mp, ONLY: mp_report
       USE runsd_module, ONLY: runsd
-      USE guess, ONLY: guess_closeup
       USE input, ONLY: iosys
       USE cell_base, ONLY: alat, a1, a2, a3, cell_kinene, velh
       USE cell_base, ONLY: frich, greash
@@ -143,8 +141,6 @@
                            vnhh, xnhh0, xnhhm, xnhhp, qnh, temph
       USE cell_base, ONLY: cell_gamma
       USE grid_subroutines, ONLY: realspace_grids_init, realspace_grids_para
-      !
-      USE reciprocal_space_mesh, ONLY:  gindex_closeup
       !
       USE reciprocal_vectors, ONLY: &
            g,      & ! G-vectors square modulus
@@ -204,9 +200,8 @@
       REAL(DP) :: ekinc, ekcell, ekinp, erhoold, maxfion
       REAL(DP) :: derho
       REAL(DP) :: ekincs( nspinx )
-      REAL(DP) :: s1, s2, s3, s4, s5, s6, s7, s8
-      REAL(DP) :: timernl, timerho, timevof, timepre
-      REAL(DP) :: timeform, timerd, timeorto, timeloop
+      REAL(DP) :: timepre
+      REAL(DP) :: timerd, timeorto
       REAL(DP) :: ekmt(3,3) = 0.0d0
       REAL(DP) :: hgamma(3,3) = 0.0d0
       REAL(DP) :: temphh(3,3) = 0.0d0
@@ -221,8 +216,6 @@
 
       REAL(DP) :: fccc, vnosep
 
-      REAL(DP), EXTERNAL  :: cclock
-
       !
       ! ... end of declarations
       !
@@ -236,19 +229,18 @@
       ekinc     = 0.0_DP
       ekcell    = 0.0_DP
       timepre   = 0.0_DP
-      timernl   = 0.0_DP
-      timerho   = 0.0_DP
-      timevof   = 0.0_DP
       timerd    = 0.0_DP
       timeorto  = 0.0_DP
-      timeform  = 0.0_DP
-      timeloop  = 0.0_DP
       fccc      = 1.0d0
       nstep_this_run  = 0
 
+
+      ttexit = .FALSE.
+
+
       MAIN_LOOP: DO 
 
-        s3 = cclock()
+        call start_clock( 'main_loop' )
 
         ! ...   increment simulation steps counter
         !
@@ -264,11 +256,12 @@
 
         ! ...   set the right flags for the current MD step
         !
-        if(.not.tcg) then
-           ttprint   = ( MOD(nfi, iprint) == 0 )  .OR. ( iprsta > 2 )
-        else
-           ttprint = .true.
-        endif
+        IF ( .NOT. tcg ) THEN
+           ttprint   = ( MOD(nfi, iprint) == 0 )  .OR. ( iprsta > 2 ) .OR. ttexit
+        ELSE
+           ttprint = .TRUE.
+        ENDIF
+        !
         ttsave    =   MOD(nfi, isave)  == 0
         !
         ttconvchk =  tconvthrs%active .AND. ( MOD( nfi, tconvthrs%nstep ) == 0 )
@@ -289,8 +282,6 @@
            !
         END IF
 
-        IF( memchk ) CALL memstat(0)
-
         IF( thdyn .AND. tnoseh ) THEN
            !
            CALL cell_nosevel( vnhh, xnhh0, xnhhm, delt )
@@ -309,8 +300,6 @@
            !
         END IF
 
-        IF(memchk) CALL memstat(1)
-
         IF( tfor .OR. thdyn ) THEN
            !
            ! ...     ionic positions aren't fixed, recompute structure factors 
@@ -321,8 +310,6 @@
            !
         END IF
 
-        IF(memchk) CALL memstat(2)
-
         IF( thdyn ) THEN
            !
            !      the simulation cell isn't fixed, recompute local 
@@ -331,11 +318,6 @@
            CALL formf( .false. , edft%eself )
            !
         END IF
-
-        IF(memchk) CALL memstat(3)
-
-        s4       = cclock()
-        timeform = s4 - s3
 
         IF( ttdiis .AND. t_diis_simple ) THEN
            !
@@ -390,27 +372,15 @@
            !
         END IF
 
-        IF(memchk) CALL memstat(4)
-
         ! ...   compute nonlocal pseudopotential
         !
         atoms0%for = 0.0d0
         !
         edft%enl = nlrh_m( c0, wfill, ttforce, atoms0, occn, bec, becdr, eigr)
 
-        IF(memchk) CALL memstat(5)
-
-        s5      = cclock()
-        timernl = s5 - s4
-
         ! ...   compute the new charge density "rhor"
         !
         CALL rhoofr( nfi, c0, wfill, occn, rhor, ht0)
-
-        IF(memchk) CALL memstat(6)
-
-        s6      = cclock()
-        timerho = s6 - s5
 
         ! ...   vofrhos compute the new DFT potential "vpot", and energies "edft",
         ! ...   ionc forces "fion" and stress "pail".
@@ -419,11 +389,6 @@
           vpot, bec, c0, wfill, occn, eigr, ei1, ei2, ei3, sfac, timepre, ht0, edft)
 
         ! CALL debug_energies( edft ) ! DEBUG
-
-        IF(memchk) CALL memstat(7)
-
-        s7      = cclock()
-        timevof = s7 - s6
 
         ! ...   Car-Parrinello dynamics for the electrons
         !
@@ -483,8 +448,6 @@
            !
         END IF
 
-        IF(memchk) CALL memstat(8)
-
         ! ...   Ions Dynamics
         !
         ekinp  = 0.d0  ! kinetic energy of ions
@@ -542,8 +505,7 @@
 
         END IF
 
-
-        IF(memchk) CALL memstat(10)
+        call stop_clock( 'main_loop' )
 
         ! ...   Here find Empty states eigenfunctions and eigenvalues
         !
@@ -597,7 +559,9 @@
               tconv = tconv .AND. ( ekinc < tconvthrs%ekin )
            END IF
            !
-           tconv = tconv .AND. ( maxfion < tconvthrs%force )
+           IF( .NOT. lneb ) THEN
+              tconv = tconv .AND. ( maxfion < tconvthrs%force )
+           END IF
            !
            IF( ionode ) THEN
               !
@@ -610,9 +574,9 @@
                     ekinc, tconvthrs%ekin, derho, tconvthrs%derho, maxfion, tconvthrs%force
                  !
                  IF( tconv ) THEN
-                    WRITE( stdout,fmt="(3X,'MAIN: convergence achieved for system relaxation')")
+                    WRITE( stdout,fmt="(3X,'MAIN: convergence achieved for system relaxation',/)")
                  ELSE
-                    WRITE( stdout,fmt="(3X,'MAIN: convergence NOT achieved for system relaxation')")
+                    WRITE( stdout,fmt="(3X,'MAIN: convergence NOT achieved for system relaxation',/)")
                  END IF
                  !
               END IF
@@ -627,8 +591,6 @@
         !
 
         CALL printout( nfi, atoms0, ekinc, ekcell, ttprint, ht0, acc, acc_this_run, edft)
-
-        IF(memchk) CALL memstat(11)
 
         ! ...   Update variables
 
@@ -673,8 +635,6 @@
         END IF
 
 
-        IF(memchk) CALL memstat(12)
-
         frich = frich * greash
 
         ! ...   stop the code if either the file .cp_stop is present or the
@@ -685,31 +645,42 @@
         ! ...   stop if only the electronic minimization was required
         !        IF(.NOT. (tfor .OR. thdyn) .AND. ttdiis ) tstop = .TRUE.
 
-        tstop = tstop .OR. tconv
+        tstop = tstop .OR. tconv .OR. ( nfi >= nomore )
+        !
+        !
+        tstop = tstop .OR. ttexit
+        !
 
-        ttexit = tstop .OR. ( nfi >= nomore )
-
+        IF( tstop ) THEN
+           !
+           ! ... all condition to stop the code are satisfied
+           !
+           IF( ttprint ) THEN
+              !
+              ! ...   we are in a step where printing is active,
+              ! ...   exit immediately
+              !
+              ttexit = .TRUE.
+              !
+           ELSE IF( .NOT. ttexit ) THEN
+              !
+              ! ...   perform an additional step, in order to compute
+              ! ...   quantity to print out
+              !
+              ttexit = .TRUE.
+              !
+              CYCLE MAIN_LOOP
+              !
+           END IF
+           !
+        END IF
+        !
         ! ...   write the restart file
         !
         IF( ttsave .OR. ttexit ) THEN
           CALL writefile( nfi, tps, c0, cm, wfill, occn, atoms0, atomsm, acc,  &
                           taui, cdmi, htm, ht0, rhor, vpot )
         END IF
-
-        IF( ttexit .AND. .NOT. ttprint ) THEN
-           !
-           ! When code stop write to stdout quantities regardles of the value of nfi
-           ! but do not print if MOD( nfi, iprint ) == 0  
-           !
-           CALL printout( nfi, atoms0, ekinc, ekcell, ttexit, ht0, acc, acc_this_run, edft)
-           !
-        END IF
-
-        s8 = cclock()
-        timeloop = s8 - s3
-
-        CALL print_time( ttprint, ttexit, timeform, timernl, timerho,  &
-                         timevof, timerd, timeorto, timeloop, timing )
 
         ! ...   loop back
         !
@@ -745,7 +716,6 @@
       ! ... report statistics
 
       CALL printacc(nfi, nstep_this_run, acc, acc_this_run)
-      CALL mp_report()
 
       DO iunit = 10, 99
         IF( iunit == stdout ) CYCLE
@@ -755,20 +725,6 @@
           CLOSE(iunit)
         END IF
       END DO
-
-      ! ... free memory
-
-      IF( allocated( c0 ) ) deallocate(c0)
-      IF( allocated( cp ) ) deallocate(cp)
-      IF( allocated( cm ) ) deallocate(cm)
-      IF( allocated( ce ) ) deallocate(ce)
-
-      CALL optical_closeup()
-      CALL gindex_closeup
-      CALL guess_closeup
-      CALL ks_states_closeup
-
-      CALL deallocate_modules_var()
 
       RETURN
     END SUBROUTINE cpmain

@@ -831,7 +831,8 @@ SUBROUTINE terminate_run()
   USE kinds,             ONLY : DP
   USE io_global,         ONLY : stdout, ionode
   USE cp_main_variables, ONLY : acc
-  USE cg_module,                ONLY : tcg, print_clock_tcg
+  USE cg_module,         ONLY : tcg, print_clock_tcg
+  USE mp,                ONLY : mp_report
   !
   IMPLICIT NONE
   !
@@ -852,6 +853,7 @@ SUBROUTINE terminate_run()
   !
   CALL print_clock( 'initialize' )
   CALL print_clock( 'total_time' )
+  CALL print_clock( 'main_loop' )
   CALL print_clock( 'formf' )
   CALL print_clock( 'rhoofr' )
   CALL print_clock( 'vofrho' )
@@ -877,6 +879,8 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'fftb' )
   CALL print_clock( 'rsg' )
   if (tcg) call print_clock_tcg()
+  !
+  CALL mp_report()
   !
 1974 FORMAT( 1X,2I5,3F10.4,2X,3F10.4 )
 1975 FORMAT( /1X,'Scaled coordinates '/1X,'species',' atom #' )

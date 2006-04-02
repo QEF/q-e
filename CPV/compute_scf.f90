@@ -71,7 +71,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      scradir = outdir
      !
-     tcpu = get_clock( program_name )
+     tcpu = get_clock( 'CP' )
      !
      WRITE( UNIT = iunpath, FMT = scf_fmt ) tcpu, image
      !

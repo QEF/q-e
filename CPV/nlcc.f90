@@ -146,6 +146,11 @@
      use gvecp,          only: ngm
      use atom,           only: nlcc
      USE fft_module,     ONLY: invfft
+     USE io_global,      ONLY: stdout
+     USE mp_global,      ONLY: intra_image_comm
+     USE cell_base,      ONLY: omega
+     USE mp,             ONLY: mp_sum
+     USE control_flags,  ONLY: iprsta
 
      implicit none
 
@@ -157,6 +162,7 @@
           
      COMPLEX(DP), ALLOCATABLE :: vtemp(:), psi(:)
      REAL(DP) :: fac
+     REAL(DP) :: rsum
      integer :: is, ig
 
      ALLOCATE( vtemp( ngm ), psi( dfftp%nnr ) )
@@ -174,15 +180,19 @@
      
      rhoetg( 1:ngm ) = rhoetg( 1:ngm ) + vtemp( 1:ngm )
 
-     !  rhoetr = 1.0d0 * rhoetr + INVFFT( vtemp )
-
-     !  CALL pinvfft( rhoetr, vtemp, 1.0d0 )
-
      CALL rho2psi( 'Dense', psi, dfftp%nnr, vtemp, ngm )
      CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
 
      IF( SIZE( rhoetr ) /= SIZE( psi ) ) &
         CALL errore( " add_core_charge ", " inconsistent sizes ", 1 )
+
+     IF( iprsta > 2 ) THEN
+        rsum = DBLE( SUM( psi ) ) * omega / DBLE( dfftp%nr1 * dfftp%nr2 * dfftp%nr3 )
+        CALL mp_sum( rsum, intra_image_comm )
+        WRITE( stdout, 10 ) rsum 
+10      FORMAT( 3X, 'Core Charge = ', D14.6 )
+     END IF
+
 
      rhoetr(:) = rhoetr(:) + DBLE( psi )
 
@@ -294,50 +304,68 @@
 
 
 !-----------------------------------------------------------------------
-      subroutine add_cc(rhoc,rhog,rhor)
+      subroutine add_cc( rhoc, rhog, rhor )
 !-----------------------------------------------------------------------
 !
 ! add core correction to the charge density for exch-corr calculation
 !
-      use electrons_base,  only: nspin
-      use recvecs_indexes, only: np
+      USE kinds,              ONLY: DP
+      use electrons_base,     only: nspin
+      use control_flags,      only: iprsta
+      use io_global,          only: stdout
+      use mp_global,          only: intra_image_comm
+      use cell_base,          only: omega
+      use recvecs_indexes,    only: np
+      USE mp,                 ONLY: mp_sum
 
       ! this isn't really needed, but if I remove it, ifc 7.1
       ! gives an "internal compiler error"
       use reciprocal_vectors, only: gstart
       use gvecp,              only: ngm
-
       use grid_dimensions,    only: nr1, nr2, nr3, &
-            nr1x, nr2x, nr3x, nnr => nnrx
-
-      USE fft_module, ONLY: fwfft
+                                    nr1x, nr2x, nr3x, nnrx
+      USE fft_module,         ONLY: fwfft
 !
       implicit none
-      real(8), intent(in)   :: rhoc(nnr)
-      real(8), intent(inout):: rhor(nnr,nspin)
-      complex(8), intent(inout)::  rhog(ngm,nspin)
-      complex(8), allocatable :: wrk1( : )
+      !
+      REAL(DP),    INTENT(IN)   :: rhoc( nnrx )
+      REAL(DP),    INTENT(INOUT):: rhor( nnrx, nspin )
+      COMPLEX(DP), INTENT(INOUT):: rhog( ngm,  nspin )
+      !
+      COMPLEX(DP), ALLOCATABLE :: wrk1( : )
 !
-      integer ig, ir, iss, isup, isdw
-!
-! In r-space:
-!
-      if (nspin.eq.1) then
+      integer :: ig, ir, iss, isup, isdw
+      REAL(DP) :: rsum
+      !
+      IF( iprsta > 2 ) THEN
+         rsum = SUM( rhoc ) * omega / DBLE(nr1*nr2*nr3)
+         CALL mp_sum( rsum, intra_image_comm )
+         WRITE( stdout, 10 ) rsum 
+10       FORMAT( 3X, 'Core Charge = ', D14.6 )
+      END IF
+      !
+      ! In r-space:
+      !
+      if ( nspin .eq. 1 ) then
          iss=1
-         call DAXPY(nnr,1.d0,rhoc,1,rhor(1,iss),1)
+         call DAXPY(nnrx,1.d0,rhoc,1,rhor(1,iss),1)
       else
          isup=1
          isdw=2
-         call DAXPY(nnr,0.5d0,rhoc,1,rhor(1,isup),1)
-         call DAXPY(nnr,0.5d0,rhoc,1,rhor(1,isdw),1)
+         call DAXPY(nnrx,0.5d0,rhoc,1,rhor(1,isup),1)
+         call DAXPY(nnrx,0.5d0,rhoc,1,rhor(1,isdw),1)
       end if 
-! rhoc(r) -> rhoc(g)  (wrk1 is used as work space)
-      allocate( wrk1( nnr ) )
-      do ir=1,nnr
-         wrk1(ir)=rhoc(ir)
-      end do
+      !
+      ! rhoc(r) -> rhoc(g)  (wrk1 is used as work space)
+      !
+      allocate( wrk1( nnrx ) )
+
+      wrk1(:) = rhoc(:)
+
       call fwfft('Dense',wrk1,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-! In g-space:
+      !
+      ! In g-space:
+      !
       if (nspin.eq.1) then
          do ig=1,ngm
             rhog(ig,iss)=rhog(ig,iss)+wrk1(np(ig))
@@ -534,7 +562,7 @@
                end do
             endif
 !
-            call invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
+            call invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa+ia)
 !
             call box2grid(irb(1,ia+isa),1,qv,wrk1)
             if (nfft.eq.2) call box2grid(irb(1,ia+1+isa),2,qv,wrk1)

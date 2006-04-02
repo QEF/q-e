@@ -54,7 +54,7 @@
 
         PRIVATE
 
-        PUBLIC :: recvecs_units, newgk, gindex_closeup
+        PUBLIC :: recvecs_units, newgk, deallocate_gkvec
         PUBLIC :: gkmask_l, gkcutz_l, gkx_l, gk_l
 
 ! ...   end of module-scope declarations
@@ -195,13 +195,15 @@
       RETURN
       END SUBROUTINE newgk
 
-!=----------------------------------------------------------------------------=!
-
-      SUBROUTINE gindex_closeup
-        IMPLICIT NONE
+      
+   SUBROUTINE deallocate_gkvec 
+      IF( ALLOCATED( gk_l ) )       DEALLOCATE( gk_l )
+      IF( ALLOCATED( gkx_l ) )      DEALLOCATE( gkx_l )
+      IF( ALLOCATED( gkcutz_l ) )   DEALLOCATE( gkcutz_l )
+      IF( ALLOCATED( gkmask_l ) )   DEALLOCATE( gkmask_l ) 
       RETURN
-      END SUBROUTINE gindex_closeup
-     
+   END SUBROUTINE deallocate_gkvec
+
 
 !=----------------------------------------------------------------------------=!
       END MODULE reciprocal_space_mesh

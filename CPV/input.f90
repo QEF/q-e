@@ -57,7 +57,16 @@ MODULE input
      !
      IF( TRIM( calculation ) == 'fpmd' ) program_name = 'FPMD'
      !
-     lneb = ( TRIM( calculation ) == 'neb' )
+     IF( TRIM( calculation ) == 'fpmd-neb' ) THEN
+        !
+        program_name = 'FPMD'
+        lneb = .TRUE.
+        !
+     ELSE
+        !
+        lneb = ( TRIM( calculation ) == 'neb' )
+        !
+     END IF
      !
      lsmd = ( TRIM( calculation ) == 'smd' )
      !

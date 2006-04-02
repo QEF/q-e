@@ -433,6 +433,12 @@ CONTAINS
 
        adum = 0.D0
        !
+    END IF
+
+    IF( iprsta > 1 ) THEN
+       !
+       !  Printout values at step 0, useful for debugging
+       !
        CALL printout( nfi, atoms, 0.0d0, 0.0d0, ttprint, ht, adum, adum, edft )
        !
     END IF

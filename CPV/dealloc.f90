@@ -58,6 +58,10 @@ SUBROUTINE deallocate_modules_var()
   USE pseudo_projector,     ONLY : fnl, projector, deallocate_projector
   USE groups_module,        ONLY : deallocate_groups
   USE ions_positions,       ONLY : deallocate_ions_positions
+  USE reciprocal_space_mesh, ONLY: deallocate_gkvec
+  USE optical_properties,   ONLY : optical_closeup
+  USE guess,                ONLY : guess_closeup
+  USE kohn_sham_states,     ONLY : ks_states_closeup
   !
   IMPLICIT NONE
   !
@@ -121,6 +125,10 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_sic()
   CALL deallocate_metagga()
   CALL ions_nose_deallocate()
+  CALL deallocate_gkvec()
+  CALL optical_closeup()
+  CALL guess_closeup()
+  CALL ks_states_closeup()
   !
   RETURN
   !
