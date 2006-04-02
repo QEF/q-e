@@ -184,8 +184,8 @@ PROGRAM metadyn_PP
   !
   delta_E = ( E_max - E_min ) / REAL( num_lev )
   !
-  WRITE( *, '("MINIMUM VALUE = ",F12.7  )' ) E_min
-  WRITE( *, '("MAXIMUM VALUE = ",F12.7,/)' ) E_max
+  WRITE( *, '("MINIMUM VALUE = ",F12.7," eV"  )' ) E_min * 13.605826
+  WRITE( *, '("MAXIMUM VALUE = ",F12.7," eV",/)' ) E_max * 13.605826
   WRITE( *, '("ISO-ENERGY SPACING= ",F12.7," eV"/)' ) delta_E * 13.605826
   !
   r_min(:) = MINLOC( surf(:,:) )
