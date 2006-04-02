@@ -27,8 +27,6 @@ SUBROUTINE read_config_from_file()
   !
   IF ( TRIM( startingconfig ) /= 'file' ) RETURN
   !
-  ! WRITE( *, '(/5X,"*****  NEW PUNCH  *****")' )
-  !
   WRITE( stdout, '(/5X,"Starting configuration read from file ",A16)') &
       TRIM( prefix ) // ".save"
   !

@@ -28,15 +28,13 @@ SUBROUTINE ions()
   !
   IF ( lmd .OR. lbfgs ) THEN
      !
-     ! ... first we save restart info for this configuration
-     !
-     CALL punch( 'config' )
-     !
-     ! ... then we move the ions
+     ! ... first we move the ions
      !
      CALL move_ions()
      !
-     ! ... save restart information
+     ! ... then we save restart information for the new configuration
+     !
+     CALL punch( 'config' )
      !
      CALL save_in_ions()
      !

@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !----------------------------------------------------------------------------
 SUBROUTINE hinit1()
   !----------------------------------------------------------------------------
@@ -31,7 +30,7 @@ SUBROUTINE hinit1()
   CALL update_pot()
   !
   ! ... initialize structure factor array if it has not already been
-  ! ... calculated in update_pot ( this is done if pot_order > 0 )
+  ! ... calculated in update_pot ( i.e. when pot_order > 0 )
   !
   IF ( pot_order == 0 ) THEN
      !

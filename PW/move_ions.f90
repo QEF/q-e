@@ -97,7 +97,7 @@ SUBROUTINE move_ions()
      !
      IF ( lmovecell .AND. lconstrain ) &
         CALL errore( 'move_ions', &
-                   & 'variable cell and constrain not implemented', 1 )
+                   & 'variable cell and constraints not implemented', 1 )
      !
      ! ... BFGS algorithm is used to minimize ionic configuration
      !
