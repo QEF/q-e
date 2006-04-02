@@ -1294,8 +1294,6 @@ MODULE read_namelists_module
      SUBROUTINE ions_checkin( prog )
        !----------------------------------------------------------------------
        !
-       USE parameters, ONLY: max_num_of_images
-       !
        IMPLICIT NONE
        !
        CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
@@ -1369,22 +1367,17 @@ MODULE read_namelists_module
        !
        ! ... NEB specific checkin
        !
-       IF ( num_of_images > max_num_of_images ) &
-          CALL errore( sub_name, &
-                     & ' num_of_images too large (increase max_num_of_images)', 1)
-       IF ( k_max < 0.D0 ) &
-          CALL errore( sub_name, ' k_max out of range', 1 )
-       IF ( k_min < 0.D0 ) &
-          CALL errore( sub_name, ' k_min out of range', 1 )
-       IF ( k_max < k_min ) &
-          CALL errore( sub_name, ' k_max < k_min', 1 )
+       IF ( k_max < 0.D0 )  CALL errore( sub_name, 'k_max out of range', 1 )
+       IF ( k_min < 0.D0 )  CALL errore( sub_name, 'k_min out of range', 1 )
+       IF ( k_max < k_min ) CALL errore( sub_name, 'k_max < k_min', 1 )
        ! 
        DO i = 1, SIZE( CI_scheme_allowed )
           IF ( TRIM( CI_scheme ) == CI_scheme_allowed(i) ) allowed = .TRUE.
        END DO
+       !
        IF ( .NOT. allowed ) &
-          CALL errore( sub_name, ' CI_scheme '''// &
-                       & TRIM( CI_scheme )//''' not allowed ', 1 )
+          CALL errore( sub_name, ' CI_scheme ''' // &
+                      & TRIM( CI_scheme ) //''' not allowed ', 1 )
        !
        ! ... SMD checking ( Y.K. 15/04/2004 )
        !

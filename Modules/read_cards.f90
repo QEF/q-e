@@ -416,7 +416,6 @@ MODULE read_cards_module
      !
      ! ... routine modified for NEB           ( C.S. 21/10/2003 )
      ! ... routine modified for SMD           ( Y.K. 15/04/2004 )
-     ! ... updated manual not yet available
      !
      SUBROUTINE card_atomic_positions( input_line, prog )
        !
@@ -445,8 +444,6 @@ MODULE read_cards_module
           CALL errore( 'card_atomic_positions', 'nat out of range', nat )
        END IF
        !
-       
-       !
        if_pos = 1
        !
        sp_pos = 0
@@ -474,6 +471,12 @@ MODULE read_cards_module
        !
        IF ( full_phs_path_flag ) THEN
           !
+          IF ( ALLOCATED( pos ) ) DEALLOCATE( pos )
+          !
+          ALLOCATE( pos( 3*nat, num_of_images ) )
+          !
+          pos(:,:) = 0.D0
+          !
           IF ( calculation == 'smd' .AND. prog == 'CP' ) THEN
              !
              rep_loop : DO rep_i = 1, smd_kwnp
@@ -498,8 +501,6 @@ MODULE read_cards_module
              END DO rep_loop
              !
           ELSE
-             !
-             CALL allocate_input_path( 3*nat, num_of_images )
              !
              CALL read_line( input_line, end_of_file = tend )
              !
@@ -1548,7 +1549,9 @@ MODULE read_cards_module
           !
           input_images = 2
           !
-          CALL allocate_input_path( nconstr_inp, input_images )
+          IF( ALLOCATED( pos ) ) DEALLOCATE( pos )
+          !
+          ALLOCATE( pos( nconstr_inp, input_images ) )
           !
           pos(:,:) = 0.D0
           !
@@ -2016,31 +2019,34 @@ MODULE read_cards_module
        LOGICAL, SAVE      :: tread = .FALSE.
        LOGICAL, EXTERNAL  :: matches
        ! 
-       INTEGER            :: i
-       CHARACTER(LEN=5)  :: i_char 
+       INTEGER          :: i
+       CHARACTER(LEN=5) :: i_char
+       !
        CHARACTER(LEN=6), EXTERNAL :: int_to_char
        !
        !
        IF ( tread ) &
           CALL errore( ' card_climbing_images ', ' two occurrence ', 2 )
        !
-       IF ( calculation == 'neb' ) THEN
-          !   
-          IF ( CI_scheme == 'manual' ) THEN
+       IF ( calculation == 'neb' .AND. CI_scheme == 'manual' ) THEN
+          !
+          IF ( ALLOCATED( climbing ) ) DEALLOCATE( climbing )
+          !
+          ALLOCATE( climbing( num_of_images ) )   
+          !
+          climbing(:) = .FALSE.
+          !
+          CALL read_line( input_line )
+          !
+          DO i = 1, num_of_images
              !
-             CALL read_line( input_line )
+             i_char = int_to_char( i ) 
              !
-             DO i = 1, num_of_images
-                !
-                i_char = int_to_char( i ) 
-                !
-                IF ( matches( ' ' // TRIM( i_char ) // ',' , & 
-                              ' ' // TRIM( input_line ) // ',' ) ) &
-                   climbing(i) = .TRUE.
-                !
-             END DO
+             IF ( matches( ' ' // TRIM( i_char ) // ',' , & 
+                           ' ' // TRIM( input_line ) // ',' ) ) &
+                climbing(i) = .TRUE.
              !
-          END IF
+          END DO
           !   
        END IF
        ! 

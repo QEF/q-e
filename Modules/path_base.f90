@@ -36,20 +36,20 @@ MODULE path_base
     SUBROUTINE initialize_path( prog )
       !-----------------------------------------------------------------------
       !
-      USE input_parameters,   ONLY : pos_ => pos, &
+      USE input_parameters,   ONLY : pos_      => pos, &
+                                     climbing_ => climbing, &
                                      restart_mode, calculation, opt_scheme, &
-                                     climbing, nstep, input_images
+                                     nstep, input_images
       USE control_flags,      ONLY : conv_elec, lneb, lsmd, lcoarsegrained
       USE ions_base,          ONLY : nat, amass, ityp, if_pos
       USE constraints_module, ONLY : nconstr
       USE io_files,           ONLY : prefix, tmp_dir, path_file, dat_file, &
                                      int_file, xyz_file, axsf_file, broy_file
       USE cell_base,          ONLY : alat
-      USE path_variables,     ONLY : climbing_ => climbing,                 &
-                                     pos, istep_path, nstep_path, dim,      &
-                                     num_of_images, pes, grad_pes, tangent, &
-                                     error, path_length, path_thr, mass,    &
-                                     deg_of_freedom, ds, use_masses,        &
+      USE path_variables,     ONLY : climbing, pos, istep_path, nstep_path, &
+                                     dim, num_of_images, pes, grad_pes,     &
+                                     tangent, error, path_length, path_thr, &
+                                     mass, deg_of_freedom, ds, use_masses,  &
                                      first_last_opt, frozen, llangevin,     &
                                      temp_req, use_freezing, k,             &
                                      tune_load_balance, grad, CI_scheme,    &
@@ -181,7 +181,15 @@ MODULE path_base
          !
          k = k_min
          !
-         climbing_ = climbing(1:num_of_images)
+         IF ( ALLOCATED( climbing_ ) ) THEN
+            !
+            climbing = climbing_(1:num_of_images)
+            !
+         ELSE
+            !
+            climbing = .FALSE.
+            !
+         END IF
          !
       ELSE IF ( lsmd ) THEN
          !

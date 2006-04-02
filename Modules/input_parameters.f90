@@ -1579,21 +1579,6 @@ CONTAINS
     RETURN
   END SUBROUTINE allocate_input_constr
 
-  SUBROUTINE allocate_input_path( dim, num_of_images )
-     INTEGER, INTENT(IN) :: dim, num_of_images
-     !
-     IF( ALLOCATED( pos ) )      DEALLOCATE( pos )
-     IF( ALLOCATED( climbing ) ) DEALLOCATE( climbing )
-     !
-     ALLOCATE( pos( dim, MAX( 1, num_of_images ) ) )
-     ALLOCATE( climbing( MAX( 1, num_of_images ) ) )
-     !
-     pos      = 0.D0
-     climbing = .FALSE.
-     !
-     RETURN
-  END SUBROUTINE allocate_input_path
-
   SUBROUTINE allocate_input_iprnks( nksx, nspin )
      INTEGER, INTENT(IN) :: nksx, nspin
      !
@@ -1619,24 +1604,25 @@ CONTAINS
   END SUBROUTINE allocate_input_iprnks_empty
 
   SUBROUTINE deallocate_input_parameters()
-     IF( ALLOCATED( rd_pos ) ) DEALLOCATE( rd_pos )
-     IF( ALLOCATED( sp_pos ) ) DEALLOCATE( sp_pos )
-     IF( ALLOCATED( if_pos ) ) DEALLOCATE( if_pos )
-     IF( ALLOCATED( id_loc ) ) DEALLOCATE( id_loc )
-     IF( ALLOCATED( na_inp ) ) DEALLOCATE( na_inp )
-     IF( ALLOCATED( rd_vel ) ) DEALLOCATE( rd_vel )
-     IF( ALLOCATED( sp_vel ) ) DEALLOCATE( sp_vel )
      !
-     IF( ALLOCATED( pos )    ) DEALLOCATE( pos )
-     IF( ALLOCATED( climbing ) ) DEALLOCATE( climbing )
+     IF ( ALLOCATED( rd_pos ) ) DEALLOCATE( rd_pos )
+     IF ( ALLOCATED( sp_pos ) ) DEALLOCATE( sp_pos )
+     IF ( ALLOCATED( if_pos ) ) DEALLOCATE( if_pos )
+     IF ( ALLOCATED( id_loc ) ) DEALLOCATE( id_loc )
+     IF ( ALLOCATED( na_inp ) ) DEALLOCATE( na_inp )
+     IF ( ALLOCATED( rd_vel ) ) DEALLOCATE( rd_vel )
+     IF ( ALLOCATED( sp_vel ) ) DEALLOCATE( sp_vel )
      !
-     IF( ALLOCATED( constr_type_inp ) ) DEALLOCATE( constr_type_inp ) 
-     IF( ALLOCATED( constr_inp ) ) DEALLOCATE( constr_inp )
-     IF( ALLOCATED( constr_target ) ) DEALLOCATE( constr_target )
-     IF( ALLOCATED( constr_target_set ) ) DEALLOCATE( constr_target_set )
+     IF ( ALLOCATED( pos )    )   DEALLOCATE( pos )
+     IF ( ALLOCATED( climbing ) ) DEALLOCATE( climbing )
      !
-     IF( ALLOCATED( iprnks ) ) DEALLOCATE( iprnks )
-     IF( ALLOCATED( iprnks_empty ) ) DEALLOCATE( iprnks_empty )
+     IF ( ALLOCATED( constr_type_inp ) )   DEALLOCATE( constr_type_inp ) 
+     IF ( ALLOCATED( constr_inp ) )        DEALLOCATE( constr_inp )
+     IF ( ALLOCATED( constr_target ) )     DEALLOCATE( constr_target )
+     IF ( ALLOCATED( constr_target_set ) ) DEALLOCATE( constr_target_set )
+     !
+     IF ( ALLOCATED( iprnks ) )       DEALLOCATE( iprnks )
+     IF ( ALLOCATED( iprnks_empty ) ) DEALLOCATE( iprnks_empty )
      RETURN
   END SUBROUTINE deallocate_input_parameters
   !
