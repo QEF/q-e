@@ -6,7 +6,7 @@ cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 TOPDIR=`pwd`
 
 for DIR in Modules clib PW CPV flib pwtools upftools PP PWCOND \
-           Gamma PH D3 atomic Nmr VIB
+           Gamma PH D3 atomic Nmr VIB VdW
 do
     # set inter-directory dependencies
     case $DIR in
@@ -16,7 +16,8 @@ do
 		  DEPENDS="../include ../flib ../Modules ../iotk/src"             ;;
 	PP | PWCOND | Gamma | PH )
 		  DEPENDS="../include ../flib ../Modules ../PW ../iotk/src"       ;;
-	D3 | Nmr) DEPENDS="../include ../flib ../Modules ../PW ../PH ../iotk/src" ;;
+	D3 | Nmr | VdW ) 
+                  DEPENDS="../include ../flib ../Modules ../PW ../PH ../iotk/src" ;;
         VIB )     DEPENDS="../include ../flib ../Modules ../PW ../iotk/src ../CPV";;
     esac
 

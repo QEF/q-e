@@ -10,6 +10,7 @@ default :
 	@echo '  gamma        Gamma-only version of phonon code'
 	@echo '  pwcond       ballistic conductance'
 	@echo '  d3           third-order derivatives'
+	@echo '  vdw          vdW calculation'
 	@echo '  vib          vibrational analysis of isolated systems'
 	@echo '  tools        misc tools for data analysis'
 	@echo '  ld1          utilities for pseudopotential generation'
@@ -57,6 +58,11 @@ d3 : bindir mods libs pw ph
 	( cd D3 ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
+vdw : bindir mods libs pw ph
+	if test -d VdW ; then \
+	( cd VdW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+
 vib : bindir mods libs cp pw
 	if test -d VIB ; then \
 	( cd VIB ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
@@ -87,7 +93,7 @@ pw_export : libiotk bindir mods libs pw
 	( cd PP ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= pw_export.x ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= pw_export.x ; fi ) ; fi
 
-pwall : pw ph pp gamma pwcond d3 tools
+pwall : pw ph pp gamma pwcond d3 vdw tools
 all   : pwall cp ld1 upf 
 
 mods : libiotk
