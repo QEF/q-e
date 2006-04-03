@@ -66,7 +66,7 @@ as big as possible, but ensuring that
 
 A typical time step for classical MD is given by 1/50 to 1/100 of the
 inverse of the maximum ionic frequency (1/10 is an upper limit). As
-an example: Si, omega_0=15 THz, 1/omega_0=60 ps, time step=1 fs or so.
+an example: Si, omega_0=15 THz, 1/omega_0=60 fs, time step=1 fs or so.
 We assume here that the ionic masses are set to their physical values.
 The typical DELTAT for Car-Parrinello MD is a few times smaller than 
 the time step for a classical MD (in the example above, 0.2-0.3 fs, 

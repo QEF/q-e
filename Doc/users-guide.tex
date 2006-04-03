@@ -188,6 +188,13 @@ The input/output toolkit ``iotk''
                    {http://www.s3.infm.it/iotk/}) 
 was written by Giovanni Bussi (S3, Modena).
 
+The frozen-phonon code was contributed by Silviu Zilberman
+(Princeton).
+
+The calculation of the finite (imaginary) frequency molecular 
+polarizability using the approximated Thomas-Fermi  + von Weiz\"acker
+scheme was contributed by V.H. Nguyen (Sissa and Hanoi University).
+
 \hyphenation{fran-ce-sco}
 \hyphenation{ce-re-so-li}
 An alphabetical list of further contributors includes:
@@ -882,6 +889,22 @@ The utility programs in \texttt{pwtools/} are:
         from those in the original one. Useful for NEB calculations.
   \item \texttt{kvecs\_FS.x, bands\_FS.x}: utilities for Fermi Surface
         plotting usingX CrySDen
+\end{itemize}
+
+Other utilities: 
+\begin{itemize}
+  \item \texttt{VIB/} contains the sources of a frozen-phonon code,
+        using either \texttt{pw.x} or \texttt{cp.x} as computational
+        engine. Contributed by Silviu Zilberman (Princeton). Compile with
+        \texttt{make vib}, executables in \texttt{VIB/pwvib.x} and
+        \texttt{VIB/cpvib.x}, documentation in \texttt{Doc/INPUT\_CPVIB}, 
+        example in \texttt{examples/example32}.
+  \item \texttt{VdW/} contains the sources  for the calculation of the 
+        finite (imaginary) frequency molecular polarizability using the
+        approximated Thomas-Fermi  + von Weiz\"acker scheme, contributed
+        by V.H. Nguyen (Sissa and Hanoi University). Compile with
+        \texttt{make vdw}, executables in \texttt{VdW/vdw.x}, no
+        documentation yet, but an example in \texttt{examples/example34}.
 \end{itemize}
 
 \subsection{Run examples}
@@ -3195,6 +3218,25 @@ ways.
 You might find the ISOTROPY package useful:\\
 \htmladdnormallink{\texttt{http://stokes.byu.edu/iso/isotropy.html}}%
                           {http://stokes.byu.edu/iso/isotropy.html}.
+
+You might also find the following info from Pascal Thibeadeau useful:\\
+``please follow 
+\htmladdnormallink{\texttt{http://dx.doi.org/10.1016/0010-4655(94)00164-W}}%
+                          {http://dx.doi.org/10.1016/0010-4655(94)00164-W}
+and
+\htmladdnormallink{\texttt{http://dx.doi.org/10.1016/0010-4655(74)90057-5}}%
+                          {http://dx.doi.org/10.1016/0010-4655(74)90057-5}. 
+These are connected to some programs found in the Computer Physics 
+Communications Program Library 
+(\htmladdnormallink{\texttt{http://www.cpc.cs.qub.ac.uk}}%
+                           {http://www.cpc.cs.qub.ac.uk} ) 
+which are described in the articles:\\
+ACKJ\_v1.0 {\em Normal coordinate analysis of crystals,}
+J.Th.M. de Hosson.\\
+ACMI\_v1.0 {\em Group-theoretical analysis of lattice vibrations},
+T.G. Worlton, J.L. Warren. See erratum Comp. Phys. Commun. 4(1972)382.\\
+ACMM\_v1.0 {\em Improved version of group-theoretical analysis of lattice 
+dynamics}, J.L. Warren, T.G. Worlton.''
 
 \item {\em What are the \texttt{nr1b}, \texttt{nr2b}, \texttt{nr3b}?}
 

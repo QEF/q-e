@@ -57,8 +57,12 @@ D3/        Source files for third-order derivative calculations (d3.x)
 PWCOND/    Source files for conductance calculations (pwcond.x)
 pwtools/   Source files for post-processing of ph.x results,
            miscellaneous analysis programs
+vdW/       Source files for calculation of the molecular polarizability 
+           at finite (imaginary) frequency using approximated Thomas-Fermi
+           + von Weizacker scheme (contributed by V.H. Nguyen, Sissa and
+           Hanoi University).
 
-CPV/       Source files for CP
+CPV/       Source files for Car-Parrinello code CP/FPMD
 
 GUI/ or PWgui-*/ Source files for the GUI (GUI/ for CVS sources, while
                  PWgui-*/ for the tarball *.tar.gz).
@@ -67,6 +71,9 @@ atomic/    Source files for the pseudopotential generation package
 atomic_doc/ Documentation, tests and examples for the above
 
 iotk/      Input/Output Toolkit
+
+VIB/       Source files for the frozen-phonon code (contributed by 
+           Silviu Zilberman, Princeton)
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU

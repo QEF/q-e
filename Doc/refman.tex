@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
- \def\version{3.0}
+ \def\version{3.1}
  \def\developersmail{\texttt{pwscf@pwscf.org}}
 
  \usepackage{epsfig}
@@ -28,7 +28,7 @@
 
 \section{Introduction}
 
-\subsection{Who should read this guide (and who should {\em write} it)}
+\subsection{Who should read (and who should {\em write}) this guide}
 
 The audience of this guide is everybody who wants to:
 \begin{itemize}
@@ -119,7 +119,7 @@ Rev. Mod. Phys. \textbf{73}, 515--562 (2001).
 
 \subsection{How to Contribute to Quantum-ESPRESSO}
 
-You can contribute to a better quantum-ESPRESSO by
+You can contribute to a better Quantum-ESPRESSO by
 \begin{itemize}
 \item answering other people's questions on the mailing list
   (correct answers are strongly preferred to wrong ones).
@@ -147,9 +147,9 @@ You can contribute to a better quantum-ESPRESSO by
   message alone is usually not a sufficient piece of information
 \item
   adding new features to the code. If you like to have something added
-  to ESPRESSO, contact the developers at \developersmail. Unless there
-  are technical reasons not to include your changes, we will try to
-  make you happy (no warranty that we will actually succeed)
+  to Quantum-ESPRESSO, contact the developers at \developersmail. 
+  Unless there are technical reasons not to include your changes,
+  we will try to make you happy (no warranty that we will actually succeed)
 \end{itemize}
   If your changes are straightforward, it will be sufficient to send 
   the modified file(s), or patches, to \developersmail.
@@ -322,10 +322,41 @@ execution.
 \end{itemize}
 \subsection{Programming style (or lack of it)}
 
+Guidelines for developers:
+\begin{itemize}
+\item preprocessing options should be capitalized and start with two
+underscores. Examples: \texttt{\_\_AIX}, \texttt{\_\_LINUX}, ...
+\item fortran commands should be capitalized: \texttt{CALL something( )}
+\item variable names should be lowercase: \texttt{foo = bar/2}
+\item use \texttt{KIND=DP} to define the type of real and complex variables
+(\texttt{DP} is defined in module ``kind'')
+\item all constants should be defined to be of kind \texttt{DP}.
+Preferred syntax: \texttt{0.0\_dp}.
+\item conversions should be explicitely indicated. For conversions to real
+(including taking the real part of a complex number), use \texttt{DBLE}.
+For conversions to complex, use \texttt{CMPLX}. For the complex conjugate,
+use \texttt{CONJG}. For the imaginary part, use \texttt{AIMAG}.
+Note that \texttt{CMPLX} is preprocessed by \texttt{f\_defs.h} 
+and performs an explicit cast:
+\begin{verbatim}
+    #define CMPLX(a,b)  cmplx(a,b,kind=DP)
+\end{verbatim}
+This implies that 1) \texttt{f\_defs.h} must be included whenever a
+\texttt{CMPLX} is present, 2) \texttt{CMPLX} should stay in a single line, 
+3) \texttt{DP} must be defined.
+\item indent \texttt{DO}'s and  \texttt{IF}'s with three white spaces
+(editors like emacs will do this automatically for you)
+\item do not write crammed code: leave spaces, insert empty separation
+lines
+\item comments (introduced by \texttt{!}) should be used to explain 
+what is not obvious from the code, not to repeat what is already 
+evident. Obscure comments serve no purpose.
+\item do not use machine-dependent extensions or sloppy syntax.
 Standard f90 requires that a \& is needed both at end of line 
 AND at the beginning of continuation line if there is a ' ' 
 or " " spanning two lines. Some compilers do not complain
 if the latter \& is missing, others do.
+\end{itemize}
 
 \subsection{Adding or modifying input variables}
 
