@@ -1643,8 +1643,9 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   !
   INTEGER             :: l, ios, image, proc
   CHARACTER (LEN=256) :: file_path, tmp_dir_saved
+  !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
-  INTEGER, EXTERNAL   :: c_mkdir
+  INTEGER,          EXTERNAL :: c_mkdir
   !
   !
   ios = 0
@@ -1667,6 +1668,10 @@ SUBROUTINE verify_tmpdir( tmp_dir )
      !
      IF ( ionode ) THEN
         !
+        ! ... save directory is removed
+        !     
+        CALL delete_if_present( TRIM( file_path ) // '.save' )
+        !
         ! ... extrapolation file is removed
         !     
         CALL delete_if_present( TRIM( file_path ) // '.update' )
@@ -1683,9 +1688,8 @@ SUBROUTINE verify_tmpdir( tmp_dir )
      !
   END IF    
   !
-  ! ... "path" optimisation specific :
-  ! ... in the scratch directory the tree of subdirectories needed by "path"
-  ! ... calculations are created
+  ! ... "path" optimisation specific :   in the scratch directory the tree of 
+  ! ... subdirectories needed by "path" calculations are created
   !
   IF ( lpath ) THEN
      !
