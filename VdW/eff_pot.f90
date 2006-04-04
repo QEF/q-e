@@ -21,6 +21,9 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, nrx1s,&
                                    nrx2s, nrx3s, nrxxs, doublegrid
   USE eff_v,                ONLY : rho_fft, veff
+  USE mp_global,            ONLY : intra_pool_comm
+  USE mp,                   ONLY : mp_sum
+
 !  USE control_vdw,          ONLY : thresh_veff
 !  USE wavefunctions_module, ONLY : evc, psic
   implicit none
@@ -163,7 +166,7 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
 #ifdef __PARA
      call reduce(1,avg1)
      call reduce(1,avg2)
-     call ireduce(1,nnn)
+     call mp_sum(nnn, intra_pool_comm) 
 #endif
      if (nnn > 0 ) then
         do ir = 1, nrxx
