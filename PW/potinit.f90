@@ -40,11 +40,12 @@ SUBROUTINE potinit()
   USE ldaU,             ONLY : lda_plus_u, Hubbard_lmax, ns, nsnew
   USE noncollin_module, ONLY : noncolin, factlist, pointlist, pointnum, &
                                mcons, i_cons, lambda, vtcon, report
-  USE io_files,         ONLY : prefix, iunocc, input_drho
+  USE io_files,         ONLY : tmp_dir, prefix, iunocc, input_drho
   USE spin_orb,         ONLY : domag
   USE mp,               ONLY : mp_bcast
   USE mp_global,        ONLY : intra_image_comm
   USE io_global,        ONLY : ionode, ionode_id
+  USE pw_restart,       ONLY : pw_readfile
   !
   IMPLICIT NONE
   !
@@ -55,21 +56,14 @@ SUBROUTINE potinit()
   INTEGER        :: ios
   INTEGER        :: ldim             ! integer variable for I/O control
   LOGICAL        :: exst 
+  CHARACTER(LEN=256)    :: filename
   !
+  !
+  filename =  TRIM( prefix ) // '.save/charge-density.xml'
   !
   IF ( ionode ) THEN
      !
-     CALL seqopn( 4, 'rho', 'UNFORMATTED', exst )
-     !
-     IF ( exst ) THEN
-        !
-        CLOSE( UNIT = 4, STATUS = 'KEEP' )
-        !
-     ELSE
-        !
-        CLOSE( UNIT = 4, STATUS = 'DELETE' )
-        !
-     END IF
+     INQUIRE( FILE = TRIM( tmp_dir ) // TRIM( filename ), EXIST = exst )
      !
   END IF
   !
@@ -79,14 +73,24 @@ SUBROUTINE potinit()
      ! 
      ! ... Cases a) and b): the charge density is read from file
      !
-     CALL io_pot( -1, 'rho', rho, nspin )
+     CALL pw_readfile ( 'rho', ios )
      !       
-     IF ( lscf ) THEN
-        WRITE( stdout, '(/5X,"The initial density is read from file ", A20)' )&
-           TRIM( prefix ) // '.rho'
+     IF ( ios /= 0 ) THEN
+        !
+        WRITE( stdout, '(/5X,"Error reading from file:"/5X,A)' )&
+             TRIM( filename )
+        CALL errore ( 'potinit' , 'reading starting density' , ios)
+        !
+     ELSE IF ( lscf ) THEN
+        !
+        WRITE( stdout, '(/5X,"The initial density is read from file:"/5X,A)' )&
+             TRIM( filename )
+        !
      ELSE
-        WRITE( stdout, '(/5X,"The potential is recalculated from file ",A20)')&
-           TRIM( prefix ) // '.rho'
+        !
+        WRITE( stdout, '(/5X,"The potential is recalculated from file:"/5X,A)')&
+             TRIM( filename )
+        !
      END IF
      !
      ! ... The occupations ns also need to be read in order to build up 

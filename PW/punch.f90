@@ -68,13 +68,7 @@ SUBROUTINE punch( what )
   CALL poolrecover( et, nbnd, nkstot, nks )
   CALL poolrecover( wg, nbnd, nkstot, nks )
   !
-  ! ... In parallel execution, only the first node writes this file
-  !
 #endif
-  !
-  ! ... Write the charge density on a separate file
-  !
-  CALL io_pot( + 1, 'rho', rho, nspin )
   !
   iunpun = 4
   !
