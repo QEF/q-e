@@ -18,9 +18,9 @@ SUBROUTINE close_phq( flag )
   USE mp_global,     ONLY : me_pool
   USE uspp,          ONLY : okvan
   USE units_ph,      ONLY : iuwfc, iudwf, iubar, iudrhous, iuebar, iudrho, &
-                            iunrec
+                            iunrec, iudvscf
   USE control_ph,    ONLY : zue, epsil
-  USE output,        ONLY : fildrho
+  USE output,        ONLY : fildrho, fildvscf
   !
   IMPLICIT NONE
   !
@@ -55,6 +55,8 @@ SUBROUTINE close_phq( flag )
      CLOSE( UNIT = iunrec, STATUS = 'DELETE' )
      !
   END IF
+  !
+  IF ( fildvscf /= ' ' ) CLOSE( UNIT = iudvscf, STATUS = 'KEEP' )
   !
   CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
   !

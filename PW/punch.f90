@@ -22,7 +22,7 @@ SUBROUTINE punch( what )
   USE io_files,             ONLY : prefix, iunpun, iunwfc, nwordwfc
   USE noncollin_module,     ONLY : noncolin
   USE pw_restart,           ONLY : pw_writefile
-  USE a2F,                  ONLY : la2F
+  USE a2F,                  ONLY : la2F, a2Fsave
   !
   IMPLICIT NONE
   !
@@ -74,7 +74,7 @@ SUBROUTINE punch( what )
   !
   CALL pw_writefile( TRIM( what ) )
   !
-  IF ( la2F ) CALL enfdos()
+  IF ( la2F ) CALL a2Fsave()
   !
   RETURN
   !

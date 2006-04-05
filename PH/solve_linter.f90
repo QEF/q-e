@@ -550,7 +550,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   !
   if (convt) then
      call drhodvus (irr, imode0, dvscfin, npe)
-     !!! if (fildvscf.ne.' ') write (iudvscf) dvscfin
      if (fildvscf.ne.' ') then
         do ipert = 1, npert (irr)
            call davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &

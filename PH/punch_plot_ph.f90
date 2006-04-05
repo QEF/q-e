@@ -105,7 +105,7 @@ SUBROUTINE punch_plot_ph()
      !       Here we write some information quantity which are always necessa
      !
      plot_num = 0
-     WRITE (iunplot, '(a)') title
+     WRITE (iunplot, '(a)') title_ph
      WRITE (iunplot, '(8i8)') nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, &
           ntyp
      WRITE (iunplot, '(i6,6f12.8)') ibrav, celldm

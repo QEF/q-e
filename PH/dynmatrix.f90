@@ -22,13 +22,20 @@ subroutine dynmatrix
   USE control_flags, ONLY : modenum, noinv
   USE cell_base,     ONLY : at, bg, celldm, ibrav, symm_type
   USE gvect,         ONLY : nr1, nr2, nr3
-  USE printout_base, ONLY : title
   USE symme,         ONLY : s, irt, nsym
   use phcom
   USE ramanm,        ONLY: lraman, ramtns
   implicit none
   ! local variables
-
+  INTEGER :: s_ (3, 3, 48), invs_ (48), nsym_
+  INTEGER, ALLOCATABLE :: irt_ (:,:)
+  REAL (KIND=DP), ALLOCATABLE :: rtau_ (:,:,:)
+  !
+  ! s, irt, nsym, rtau, invs are recalculated by star_q because the full
+  ! crystal symmetry is needed. Local variables are used to prevent trouble 
+  ! with subsequent electron-phonon symmetrization. 
+  ! FIXME: both the full symmetry group and the small group of q should be
+  !        stored and clearly distinguishable - see also elphon
   integer :: nq, isq (48), imq, na, nt, imode0, jmode0, irr, jrr, &
        ipert, jpert, mu, nu, i, j
   ! nq :  degeneracy of the star of q
@@ -38,9 +45,11 @@ subroutine dynmatrix
   real(DP) :: sxq (3, 48)
   ! list of vectors in the star of q
   !
-  !     Puts all noncomputed elements to zero
-  !
   call start_clock('dynmatrix')
+  ALLOCATE ( rtau_ (3, 48, nat), irt_ (48, nat) )
+  ! 
+  !     set all noncomputed elements to zero
+  !
   imode0 = 0
   do irr = 1, nirr
      jmode0 = 0
@@ -87,12 +96,12 @@ subroutine dynmatrix
   !   Generates the star of q
   !
   call star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, nr1, &
-       nr2, nr3, nsym, s, invs, irt, rtau, nq, sxq, isq, imq, noinv, &
-       modenum)
+       nr2, nr3, nsym_, s_, invs_, irt_, rtau_, nq, sxq, isq, imq,&
+       noinv, modenum)
   !
   ! write on file information on the system
   !
-  write (iudyn, '(a)') title
+  write (iudyn, '("Dynamical matrix file")') 
   write (iudyn, '(a)') title_ph
   write (iudyn, '(i3,i5,i3,6f11.7)') ntyp, nat, ibrav, celldm
   if (ibrav==0) then
@@ -108,8 +117,9 @@ subroutine dynmatrix
   !
   !   Rotates and writes on iudyn the dynamical matrices of the star of q
   !
-  call q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, nq, &
-       sxq, isq, imq, iudyn)
+  call q2qstar_ph (dyn, at, bg, nat, nsym_, s_, invs_, irt_, rtau_, &
+       nq, sxq, isq, imq, iudyn)
+  DEALLOCATE ( irt_, rtau_ )
   !
   !   Writes (if the case) results for quantities involving electric field
   !

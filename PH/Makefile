@@ -235,7 +235,6 @@ PWOBJS = \
 ../PW/efermig.o \
 ../PW/efermit.o \
 ../PW/electrons.o \
-../PW/enfdos.o \
 ../PW/eqvect.o \
 ../PW/error_handler.o \
 ../PW/estimate.o \

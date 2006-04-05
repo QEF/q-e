@@ -118,8 +118,6 @@ SUBROUTINE openfilq()
   !
 400 IF (fildvscf.NE.' ') THEN
      iudvscf = 27
-     !!! CALL seqopn (iudvscf, fildvscf, 'unformatted', exst)
-     !!! REWIND (iudvscf)
      IF ( me_pool == 0 ) THEN
         CALL diropn (iudvscf, fildvscf, lrdrho, exst)
      END IF
