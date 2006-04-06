@@ -81,7 +81,7 @@ $ECHO
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
-$ECHO " done"
+$ECHO "  done"
 
 #
 # SCF at dense k-mesh, good enough for electronic DOS  
@@ -111,9 +111,9 @@ ATOMIC_POSITIONS
 K_POINTS {automatic}
  16 16 16  0 0 0
 EOF
-$ECHO " running the scf calculation with dense k-point grid...\c"
+$ECHO "  running the scf calculation with dense k-point grid...\c"
 $PW_COMMAND  < al.scf.fit.in > al.scf.fit.out
-$ECHO " done"
+$ECHO "  done"
 #
 #  SCF at k-mesh good enough for phonons
 #
@@ -141,12 +141,12 @@ ATOMIC_POSITIONS
 K_POINTS {automatic}
  8 8 8  0 0 0
 EOF
-$ECHO " running the scf calculation...\c"
+$ECHO "  running the scf calculation...\c"
 $PW_COMMAND < al.scf.in > al.scf.out
-$ECHO " done"
+$ECHO "  done"
 #
 cat > al.elph.in << EOF
-Al el-phonon at X
+Electron-phonon coefficients for Al
  &inputph
   tr2_ph=1.0d-10,
   prefix='al',
@@ -160,9 +160,9 @@ Al el-phonon at X
   nq1=4, nq2=4, nq3=4
  /
 EOF
-$ECHO ' running the el-ph calculation; \c '
+$ECHO "  running the el-ph calculation...\c"
 $PH_COMMAND < al.elph.in > al.elph.out
-$ECHO " done"
+$ECHO "  done"
 #
 #   q2r and matdyn
 #
@@ -171,9 +171,9 @@ cat > q2r.in << EOF
   zasr='simple',  fildyn='al.dyn', flfrc='Al444.fc', la2F=.true.
  /
 EOF
-$ECHO ' running q2r '
+$ECHO "  running q2r...\c"
 $Q2R_COMMAND < q2r.in > q2r.out
-$ECHO " done"
+$ECHO "  done"
 #
 #
 #
@@ -203,9 +203,9 @@ cat > matdyn.in.freq << EOF
   0.325 0.325 0.000 0.0
   0.500 0.500 0.000 0.0
 EOF
-$ECHO ' running matdyn for frequency calculation\c'
+$ECHO "  running matdyn for frequency calculation...\c"
 $MATDYN_COMMAND < matdyn.in.freq > matdyn.out.freq
-$ECHO " done"
+$ECHO "  done"
 #
 #
 #
@@ -216,8 +216,8 @@ cat > matdyn.in.dos << EOF
     fldos='phonon.dos', nk1=10, nk2=10, nk3=10, ndos=50
  /
 EOF
-$ECHO ' running matdyn for a2F(omega) calculation\c'
+$ECHO "  running matdyn for a2F(omega) calculation...\c"
 $MATDYN_COMMAND < matdyn.in.dos > matdyn.out.dos
-$ECHO " done"
+$ECHO "  done"
 
 

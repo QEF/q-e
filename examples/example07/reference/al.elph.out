@@ -1,6 +1,6 @@
 
      Program PHONON    v.3.1    starts ...
-     Today is  6Apr2006 at 11:46:13 
+     Today is  6Apr2006 at 14: 3:32 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -20,7 +20,7 @@
        7     0.00000    -1.00000     0.00000
        8    -0.50000    -1.00000     0.00000
 
-     Al el-phonon at X                                                          
+     Electron-phonon coefficients for Al                                        
 
      crystal is                     
 
@@ -103,7 +103,7 @@
      There are   1 irreducible representations
 
      Representation     1      3 modes - To be done
-     PHONON       :     0.45s CPU time
+     PHONON       :     0.49s CPU time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -212,7 +212,7 @@
      Calculation of q =  -0.2500  0.2500 -0.2500
 
      Title: 
-                                                                                
+     Electron-phonon coefficients for Al                                        
 
 
      bravais-lattice index     =            2
@@ -506,13 +506,13 @@
      al.save/charge-density.xml
      Starting wfc are atomic
 
-     total cpu time spent up to now is     11.03 secs
+     total cpu time spent up to now is     10.92 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  3.33E-10,  avg # of iterations = 10.3
 
-     total cpu time spent up to now is     19.09 secs
+     total cpu time spent up to now is     18.87 secs
 
      End of band structure calculation
 
@@ -1478,7 +1478,7 @@
 
      the Fermi energy is     8.1819 ev
 
-     Al el-phonon at X                                                          
+     Electron-phonon coefficients for Al                                        
 
      crystal is                     
 
@@ -1774,7 +1774,7 @@
      Representation     1      1 modes - To be done
 
      Representation     2      2 modes - To be done
-     PHONON       :    19.97s CPU time
+     PHONON       :    19.78s CPU time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -1784,22 +1784,22 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    21.3 secs   av.it.:   4.3
+      iter #   1 total cpu time :    21.0 secs   av.it.:   4.3
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.223E-01
 
-      iter #   2 total cpu time :    22.3 secs   av.it.:   5.0
+      iter #   2 total cpu time :    22.0 secs   av.it.:   5.0
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.907E+00
 
-      iter #   3 total cpu time :    23.2 secs   av.it.:   4.8
+      iter #   3 total cpu time :    22.9 secs   av.it.:   4.8
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.444E-06
 
-      iter #   4 total cpu time :    24.2 secs   av.it.:   5.6
+      iter #   4 total cpu time :    23.9 secs   av.it.:   5.6
       thresh= 0.667E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.198E-08
 
-      iter #   5 total cpu time :    25.2 secs   av.it.:   5.5
+      iter #   5 total cpu time :    24.9 secs   av.it.:   5.5
       thresh= 0.445E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.174E-09
 
-      iter #   6 total cpu time :    26.1 secs   av.it.:   5.2
+      iter #   6 total cpu time :    25.8 secs   av.it.:   5.2
       thresh= 0.132E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.415E-10
 
      End of self-consistent calculation
@@ -1811,13 +1811,13 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    29.0 secs   av.it.:   3.4
+      iter #   1 total cpu time :    28.4 secs   av.it.:   3.4
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.373E-07
 
-      iter #   2 total cpu time :    31.1 secs   av.it.:   6.1
+      iter #   2 total cpu time :    30.5 secs   av.it.:   6.1
       thresh= 0.193E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.348E-08
 
-      iter #   3 total cpu time :    33.0 secs   av.it.:   5.7
+      iter #   3 total cpu time :    32.5 secs   av.it.:   5.7
       thresh= 0.590E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.114E-10
 
      End of self-consistent calculation
@@ -1913,7 +1913,7 @@
      diago_thr_init overwritten with conv_thr / nelec
 
      Title: 
-                                                                                
+     Electron-phonon coefficients for Al                                        
 
 
      bravais-lattice index     =            2
@@ -2097,13 +2097,13 @@
      al.save/charge-density.xml
      Starting wfc are atomic
 
-     total cpu time spent up to now is     41.13 secs
+     total cpu time spent up to now is     40.52 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  3.33E-10,  avg # of iterations = 10.1
 
-     total cpu time spent up to now is     45.47 secs
+     total cpu time spent up to now is     44.81 secs
 
      End of band structure calculation
 
@@ -2629,7 +2629,7 @@
 
      the Fermi energy is     8.1819 ev
 
-     Al el-phonon at X                                                          
+     Electron-phonon coefficients for Al                                        
 
      crystal is                     
 
@@ -2815,7 +2815,7 @@
      Representation     1      2 modes - To be done
 
      Representation     2      1 modes - To be done
-     PHONON       :    46.16s CPU time
+     PHONON       :    45.52s CPU time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -2825,13 +2825,13 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    47.5 secs   av.it.:   3.5
+      iter #   1 total cpu time :    46.7 secs   av.it.:   3.5
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.410E-07
 
-      iter #   2 total cpu time :    48.7 secs   av.it.:   6.1
+      iter #   2 total cpu time :    47.9 secs   av.it.:   6.1
       thresh= 0.202E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.359E-08
 
-      iter #   3 total cpu time :    49.8 secs   av.it.:   5.6
+      iter #   3 total cpu time :    49.0 secs   av.it.:   5.6
       thresh= 0.599E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.201E-10
 
      End of self-consistent calculation
@@ -2843,19 +2843,19 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    51.0 secs   av.it.:   4.4
+      iter #   1 total cpu time :    50.1 secs   av.it.:   4.4
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.277E-03
 
-      iter #   2 total cpu time :    51.5 secs   av.it.:   5.6
+      iter #   2 total cpu time :    50.7 secs   av.it.:   5.6
       thresh= 0.167E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.333E-03
 
-      iter #   3 total cpu time :    52.0 secs   av.it.:   5.0
+      iter #   3 total cpu time :    51.2 secs   av.it.:   5.0
       thresh= 0.183E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.701E-08
 
-      iter #   4 total cpu time :    52.6 secs   av.it.:   5.6
+      iter #   4 total cpu time :    51.7 secs   av.it.:   5.6
       thresh= 0.837E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.340E-09
 
-      iter #   5 total cpu time :    53.1 secs   av.it.:   5.0
+      iter #   5 total cpu time :    52.2 secs   av.it.:   5.0
       thresh= 0.184E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.126E-11
 
      End of self-consistent calculation
@@ -2943,7 +2943,7 @@
      diago_thr_init overwritten with conv_thr / nelec
 
      Title: 
-                                                                                
+     Electron-phonon coefficients for Al                                        
 
 
      bravais-lattice index     =            2
@@ -3197,13 +3197,13 @@
      al.save/charge-density.xml
      Starting wfc are atomic
 
-     total cpu time spent up to now is     61.01 secs
+     total cpu time spent up to now is     60.00 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  3.33E-10,  avg # of iterations = 10.1
 
-     total cpu time spent up to now is     67.57 secs
+     total cpu time spent up to now is     66.50 secs
 
      End of band structure calculation
 
@@ -4009,7 +4009,7 @@
 
      the Fermi energy is     8.1819 ev
 
-     Al el-phonon at X                                                          
+     Electron-phonon coefficients for Al                                        
 
      crystal is                     
 
@@ -4265,7 +4265,7 @@
      Representation     1      1 modes - To be done
 
      Representation     2      2 modes - To be done
-     PHONON       :  1m 8.39s CPU time
+     PHONON       :  1m 7.33s CPU time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -4275,19 +4275,19 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    69.5 secs   av.it.:   4.0
+      iter #   1 total cpu time :    68.3 secs   av.it.:   4.0
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.885E-02
 
-      iter #   2 total cpu time :    70.2 secs   av.it.:   4.6
+      iter #   2 total cpu time :    69.1 secs   av.it.:   4.6
       thresh= 0.941E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.195E+00
 
-      iter #   3 total cpu time :    71.0 secs   av.it.:   4.4
+      iter #   3 total cpu time :    69.8 secs   av.it.:   4.4
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.552E-07
 
-      iter #   4 total cpu time :    71.9 secs   av.it.:   5.8
+      iter #   4 total cpu time :    70.7 secs   av.it.:   5.8
       thresh= 0.235E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.119E-08
 
-      iter #   5 total cpu time :    72.6 secs   av.it.:   5.0
+      iter #   5 total cpu time :    71.5 secs   av.it.:   5.0
       thresh= 0.345E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.476E-12
 
      End of self-consistent calculation
@@ -4299,16 +4299,16 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    75.0 secs   av.it.:   3.4
+      iter #   1 total cpu time :    73.6 secs   av.it.:   3.4
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.101E-06
 
-      iter #   2 total cpu time :    76.8 secs   av.it.:   6.0
+      iter #   2 total cpu time :    75.4 secs   av.it.:   6.0
       thresh= 0.318E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.354E-08
 
-      iter #   3 total cpu time :    78.4 secs   av.it.:   5.4
+      iter #   3 total cpu time :    77.0 secs   av.it.:   5.4
       thresh= 0.595E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.197E-09
 
-      iter #   4 total cpu time :    80.0 secs   av.it.:   5.2
+      iter #   4 total cpu time :    78.6 secs   av.it.:   5.2
       thresh= 0.140E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.196E-13
 
      End of self-consistent calculation
@@ -4400,7 +4400,7 @@
      diago_thr_init overwritten with conv_thr / nelec
 
      Title: 
-                                                                                
+     Electron-phonon coefficients for Al                                        
 
 
      bravais-lattice index     =            2
@@ -5030,13 +5030,13 @@
      al.save/charge-density.xml
      Starting wfc are atomic
 
-     total cpu time spent up to now is     90.31 secs
+     total cpu time spent up to now is     88.96 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  3.33E-10,  avg # of iterations = 10.6
 
-     total cpu time spent up to now is    110.00 secs
+     total cpu time spent up to now is    108.47 secs
 
      End of band structure calculation
 
@@ -7346,7 +7346,7 @@
 
      the Fermi energy is     8.1819 ev
 
-     Al el-phonon at X                                                          
+     Electron-phonon coefficients for Al                                        
 
      crystal is                     
 
@@ -7980,7 +7980,7 @@
      Representation     2      1 modes - To be done
 
      Representation     3      1 modes - To be done
-     PHONON       :  1m51.51s CPU time
+     PHONON       :  1m50.02s CPU time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -7990,22 +7990,22 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   114.8 secs   av.it.:   4.1
+      iter #   1 total cpu time :   113.0 secs   av.it.:   4.1
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.130E-03
 
-      iter #   2 total cpu time :   117.2 secs   av.it.:   5.5
+      iter #   2 total cpu time :   115.4 secs   av.it.:   5.5
       thresh= 0.114E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.196E-03
 
-      iter #   3 total cpu time :   119.4 secs   av.it.:   4.8
+      iter #   3 total cpu time :   117.6 secs   av.it.:   4.8
       thresh= 0.140E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.131E-06
 
-      iter #   4 total cpu time :   122.0 secs   av.it.:   5.9
+      iter #   4 total cpu time :   120.2 secs   av.it.:   5.9
       thresh= 0.362E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.278E-08
 
-      iter #   5 total cpu time :   124.4 secs   av.it.:   5.6
+      iter #   5 total cpu time :   122.6 secs   av.it.:   5.6
       thresh= 0.527E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.167E-09
 
-      iter #   6 total cpu time :   126.9 secs   av.it.:   5.7
+      iter #   6 total cpu time :   125.1 secs   av.it.:   5.7
       thresh= 0.129E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.500E-11
 
      End of self-consistent calculation
@@ -8017,16 +8017,16 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   130.9 secs   av.it.:   3.4
+      iter #   1 total cpu time :   128.7 secs   av.it.:   3.4
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.553E-06
 
-      iter #   2 total cpu time :   133.3 secs   av.it.:   5.6
+      iter #   2 total cpu time :   131.1 secs   av.it.:   5.6
       thresh= 0.744E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.139E-07
 
-      iter #   3 total cpu time :   135.5 secs   av.it.:   4.8
+      iter #   3 total cpu time :   133.4 secs   av.it.:   4.8
       thresh= 0.118E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.105E-08
 
-      iter #   4 total cpu time :   137.8 secs   av.it.:   4.8
+      iter #   4 total cpu time :   135.6 secs   av.it.:   4.8
       thresh= 0.325E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.934E-13
 
      End of self-consistent calculation
@@ -8038,19 +8038,19 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   141.9 secs   av.it.:   4.2
+      iter #   1 total cpu time :   139.4 secs   av.it.:   4.2
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.892E-04
 
-      iter #   2 total cpu time :   144.4 secs   av.it.:   5.6
+      iter #   2 total cpu time :   141.9 secs   av.it.:   5.6
       thresh= 0.945E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.124E-03
 
-      iter #   3 total cpu time :   146.6 secs   av.it.:   4.9
+      iter #   3 total cpu time :   144.1 secs   av.it.:   4.9
       thresh= 0.111E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.367E-06
 
-      iter #   4 total cpu time :   149.1 secs   av.it.:   5.7
+      iter #   4 total cpu time :   146.6 secs   av.it.:   5.7
       thresh= 0.606E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.221E-08
 
-      iter #   5 total cpu time :   151.6 secs   av.it.:   5.7
+      iter #   5 total cpu time :   149.0 secs   av.it.:   5.7
       thresh= 0.470E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.979E-10
 
      End of self-consistent calculation
@@ -8178,7 +8178,7 @@
      diago_thr_init overwritten with conv_thr / nelec
 
      Title: 
-                                                                                
+     Electron-phonon coefficients for Al                                        
 
 
      bravais-lattice index     =            2
@@ -8560,13 +8560,13 @@
      al.save/charge-density.xml
      Starting wfc are atomic
 
-     total cpu time spent up to now is    161.01 secs
+     total cpu time spent up to now is    158.30 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  3.33E-10,  avg # of iterations = 10.3
 
-     total cpu time spent up to now is    172.02 secs
+     total cpu time spent up to now is    169.20 secs
 
      End of band structure calculation
 
@@ -9884,7 +9884,7 @@
 
      the Fermi energy is     8.1819 ev
 
-     Al el-phonon at X                                                          
+     Electron-phonon coefficients for Al                                        
 
      crystal is                     
 
@@ -10270,7 +10270,7 @@
      Representation     2      1 modes - To be done
 
      Representation     3      1 modes - To be done
-     PHONON       :  2m53.06s CPU time
+     PHONON       :  2m50.31s CPU time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -10280,16 +10280,16 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   174.8 secs   av.it.:   3.6
+      iter #   1 total cpu time :   171.9 secs   av.it.:   3.6
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.574E-05
 
-      iter #   2 total cpu time :   176.2 secs   av.it.:   5.5
+      iter #   2 total cpu time :   173.3 secs   av.it.:   5.5
       thresh= 0.240E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.391E-06
 
-      iter #   3 total cpu time :   177.6 secs   av.it.:   5.4
+      iter #   3 total cpu time :   174.7 secs   av.it.:   5.4
       thresh= 0.625E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.302E-08
 
-      iter #   4 total cpu time :   179.0 secs   av.it.:   5.2
+      iter #   4 total cpu time :   176.0 secs   av.it.:   5.2
       thresh= 0.550E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.117E-11
 
      End of self-consistent calculation
@@ -10301,16 +10301,16 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   181.2 secs   av.it.:   3.3
+      iter #   1 total cpu time :   178.1 secs   av.it.:   3.3
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.203E-06
 
-      iter #   2 total cpu time :   182.6 secs   av.it.:   5.4
+      iter #   2 total cpu time :   179.4 secs   av.it.:   5.4
       thresh= 0.450E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.146E-07
 
-      iter #   3 total cpu time :   183.9 secs   av.it.:   5.0
+      iter #   3 total cpu time :   180.8 secs   av.it.:   5.0
       thresh= 0.121E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.215E-09
 
-      iter #   4 total cpu time :   185.2 secs   av.it.:   5.1
+      iter #   4 total cpu time :   182.1 secs   av.it.:   5.1
       thresh= 0.147E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.148E-12
 
      End of self-consistent calculation
@@ -10322,19 +10322,19 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   187.6 secs   av.it.:   4.0
+      iter #   1 total cpu time :   184.3 secs   av.it.:   4.0
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.647E-03
 
-      iter #   2 total cpu time :   188.9 secs   av.it.:   5.0
+      iter #   2 total cpu time :   185.6 secs   av.it.:   5.0
       thresh= 0.254E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.220E-02
 
-      iter #   3 total cpu time :   190.1 secs   av.it.:   4.1
+      iter #   3 total cpu time :   186.8 secs   av.it.:   4.1
       thresh= 0.469E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.455E-07
 
-      iter #   4 total cpu time :   191.6 secs   av.it.:   6.1
+      iter #   4 total cpu time :   188.2 secs   av.it.:   6.1
       thresh= 0.213E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.164E-08
 
-      iter #   5 total cpu time :   192.9 secs   av.it.:   5.4
+      iter #   5 total cpu time :   189.4 secs   av.it.:   5.4
       thresh= 0.405E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.740E-10
 
      End of self-consistent calculation
@@ -10438,7 +10438,7 @@
      diago_thr_init overwritten with conv_thr / nelec
 
      Title: 
-                                                                                
+     Electron-phonon coefficients for Al                                        
 
 
      bravais-lattice index     =            2
@@ -10610,13 +10610,13 @@
      al.save/charge-density.xml
      Starting wfc are atomic
 
-     total cpu time spent up to now is    200.90 secs
+     total cpu time spent up to now is    197.20 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  3.33E-10,  avg # of iterations =  9.8
 
-     total cpu time spent up to now is    204.75 secs
+     total cpu time spent up to now is    200.99 secs
 
      End of band structure calculation
 
@@ -11094,7 +11094,7 @@
 
      the Fermi energy is     8.1819 ev
 
-     Al el-phonon at X                                                          
+     Electron-phonon coefficients for Al                                        
 
      crystal is                     
 
@@ -11268,7 +11268,7 @@
      Representation     1      2 modes - To be done
 
      Representation     2      1 modes - To be done
-     PHONON       :  3m25.41s CPU time
+     PHONON       :  3m21.68s CPU time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -11278,16 +11278,16 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   206.7 secs   av.it.:   3.5
+      iter #   1 total cpu time :   202.8 secs   av.it.:   3.5
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.318E-06
 
-      iter #   2 total cpu time :   207.7 secs   av.it.:   5.9
+      iter #   2 total cpu time :   203.8 secs   av.it.:   5.9
       thresh= 0.564E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.448E-08
 
-      iter #   3 total cpu time :   208.7 secs   av.it.:   5.5
+      iter #   3 total cpu time :   204.8 secs   av.it.:   5.5
       thresh= 0.669E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.420E-09
 
-      iter #   4 total cpu time :   209.7 secs   av.it.:   5.3
+      iter #   4 total cpu time :   205.8 secs   av.it.:   5.3
       thresh= 0.205E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.187E-13
 
      End of self-consistent calculation
@@ -11299,16 +11299,16 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   210.7 secs   av.it.:   3.8
+      iter #   1 total cpu time :   206.8 secs   av.it.:   3.8
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.683E-04
 
-      iter #   2 total cpu time :   211.2 secs   av.it.:   5.1
+      iter #   2 total cpu time :   207.2 secs   av.it.:   5.1
       thresh= 0.827E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.258E-04
 
-      iter #   3 total cpu time :   211.7 secs   av.it.:   4.9
+      iter #   3 total cpu time :   207.7 secs   av.it.:   4.9
       thresh= 0.508E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.509E-08
 
-      iter #   4 total cpu time :   212.2 secs   av.it.:   5.2
+      iter #   4 total cpu time :   208.2 secs   av.it.:   5.2
       thresh= 0.714E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.252E-10
 
      End of self-consistent calculation
@@ -11394,7 +11394,7 @@
      diago_thr_init overwritten with conv_thr / nelec
 
      Title: 
-                                                                                
+     Electron-phonon coefficients for Al                                        
 
 
      bravais-lattice index     =            2
@@ -11622,13 +11622,13 @@
      al.save/charge-density.xml
      Starting wfc are atomic
 
-     total cpu time spent up to now is    219.90 secs
+     total cpu time spent up to now is    215.89 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  3.33E-10,  avg # of iterations = 10.1
 
-     total cpu time spent up to now is    225.69 secs
+     total cpu time spent up to now is    221.61 secs
 
      End of band structure calculation
 
@@ -12330,7 +12330,7 @@
 
      the Fermi energy is     8.1819 ev
 
-     Al el-phonon at X                                                          
+     Electron-phonon coefficients for Al                                        
 
      crystal is                     
 
@@ -12560,7 +12560,7 @@
      Representation     1      2 modes - To be done
 
      Representation     2      1 modes - To be done
-     PHONON       :  3m46.46s CPU time
+     PHONON       :  3m42.41s CPU time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -12570,16 +12570,16 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   228.3 secs   av.it.:   3.6
+      iter #   1 total cpu time :   224.1 secs   av.it.:   3.6
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.522E-05
 
-      iter #   2 total cpu time :   229.9 secs   av.it.:   5.9
+      iter #   2 total cpu time :   225.7 secs   av.it.:   5.9
       thresh= 0.228E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.101E-05
 
-      iter #   3 total cpu time :   231.4 secs   av.it.:   5.6
+      iter #   3 total cpu time :   227.2 secs   av.it.:   5.6
       thresh= 0.101E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.102E-08
 
-      iter #   4 total cpu time :   233.0 secs   av.it.:   5.6
+      iter #   4 total cpu time :   228.8 secs   av.it.:   5.6
       thresh= 0.319E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.856E-12
 
      End of self-consistent calculation
@@ -12591,16 +12591,16 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   234.5 secs   av.it.:   3.8
+      iter #   1 total cpu time :   230.2 secs   av.it.:   3.8
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.928E-05
 
-      iter #   2 total cpu time :   235.3 secs   av.it.:   5.6
+      iter #   2 total cpu time :   230.9 secs   av.it.:   5.6
       thresh= 0.305E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.136E-05
 
-      iter #   3 total cpu time :   236.0 secs   av.it.:   5.5
+      iter #   3 total cpu time :   231.7 secs   av.it.:   5.5
       thresh= 0.116E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.379E-08
 
-      iter #   4 total cpu time :   236.8 secs   av.it.:   5.4
+      iter #   4 total cpu time :   232.5 secs   av.it.:   5.4
       thresh= 0.616E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.657E-11
 
      End of self-consistent calculation
@@ -12688,106 +12688,106 @@
           5   0.000000000   1.000000000  -0.500000000
           6   0.000000000   1.000000000   0.500000000
  
-     PWSCF        :   243.71s CPU
-     init_run     :    10.03s CPU (       7 calls,   1.433 s avg)
-     electrons    :    59.50s CPU (       7 calls,   8.500 s avg)
+     PWSCF        :   239.20s CPU
+     init_run     :     9.94s CPU (       7 calls,   1.420 s avg)
+     electrons    :    58.84s CPU (       7 calls,   8.406 s avg)
  
-     electrons    :    59.50s CPU (       7 calls,   8.500 s avg)
-     c_bands      :    59.30s CPU (       7 calls,   8.471 s avg)
+     electrons    :    58.84s CPU (       7 calls,   8.406 s avg)
+     c_bands      :    58.66s CPU (       7 calls,   8.380 s avg)
      sum_band     :     2.85s CPU (       7 calls,   0.407 s avg)
-     v_of_rho     :     0.03s CPU (       8 calls,   0.004 s avg)
+     v_of_rho     :     0.01s CPU (       8 calls,   0.001 s avg)
  
-     c_bands      :    59.30s CPU (       7 calls,   8.471 s avg)
-     init_us_2    :     1.45s CPU (   21852 calls,   0.000 s avg)
-     cegterg      :    58.39s CPU (    1766 calls,   0.033 s avg)
+     c_bands      :    58.66s CPU (       7 calls,   8.380 s avg)
+     init_us_2    :     1.43s CPU (   21852 calls,   0.000 s avg)
+     cegterg      :    57.67s CPU (    1766 calls,   0.033 s avg)
  
      sum_band     :     2.85s CPU (       7 calls,   0.407 s avg)
  
-     wfcrot       :     8.69s CPU (    1766 calls,   0.005 s avg)
-     cegterg      :    58.39s CPU (    1766 calls,   0.033 s avg)
-     h_psi        :    54.44s CPU (   21748 calls,   0.003 s avg)
-     g_psi        :     0.46s CPU (   18216 calls,   0.000 s avg)
-     overlap      :     1.55s CPU (   18216 calls,   0.000 s avg)
-     cdiaghg      :     7.38s CPU (   19982 calls,   0.000 s avg)
-     update       :     1.51s CPU (   18216 calls,   0.000 s avg)
-     last         :     2.41s CPU (   72734 calls,   0.000 s avg)
+     wfcrot       :     8.64s CPU (    1766 calls,   0.005 s avg)
+     cegterg      :    57.67s CPU (    1766 calls,   0.033 s avg)
+     h_psi        :    54.73s CPU (   21748 calls,   0.003 s avg)
+     g_psi        :     0.56s CPU (   18216 calls,   0.000 s avg)
+     overlap      :     1.12s CPU (   18216 calls,   0.000 s avg)
+     cdiaghg      :     7.19s CPU (   19982 calls,   0.000 s avg)
+     update       :     1.05s CPU (   18216 calls,   0.000 s avg)
+     last         :     2.07s CPU (   72734 calls,   0.000 s avg)
  
-     h_psi        :    54.44s CPU (   21748 calls,   0.003 s avg)
-     init         :     0.93s CPU (   89534 calls,   0.000 s avg)
-     firstfft     :    52.09s CPU (  217532 calls,   0.000 s avg)
-     secondfft    :    53.84s CPU (  217532 calls,   0.000 s avg)
-     add_vuspsi   :     0.84s CPU (   89534 calls,   0.000 s avg)
-     s_psi        :     0.45s CPU (  147492 calls,   0.000 s avg)
+     h_psi        :    54.73s CPU (   21748 calls,   0.003 s avg)
+     init         :     0.78s CPU (   89534 calls,   0.000 s avg)
+     firstfft     :    51.95s CPU (  217532 calls,   0.000 s avg)
+     secondfft    :    53.01s CPU (  217532 calls,   0.000 s avg)
+     add_vuspsi   :     1.52s CPU (   89534 calls,   0.000 s avg)
+     s_psi        :     0.26s CPU (  147492 calls,   0.000 s avg)
  
      General routines
-     ccalbec      :     1.79s CPU (  189333 calls,   0.000 s avg)
-     cft3         :     0.15s CPU (     341 calls,   0.000 s avg)
-     cft3s        :   146.27s CPU (  592147 calls,   0.000 s avg)
-     davcio       :     2.15s CPU (   72764 calls,   0.000 s avg)
+     ccalbec      :     2.16s CPU (  189333 calls,   0.000 s avg)
+     cft3         :     0.11s CPU (     341 calls,   0.000 s avg)
+     cft3s        :   142.88s CPU (  592147 calls,   0.000 s avg)
+     davcio       :     2.49s CPU (   72764 calls,   0.000 s avg)
  
  
-     PHONON       :  4m 4.13s CPU time
+     PHONON       :  3m59.66s CPU time
 
      INITIALIZATION: 
-     phq_setup    :     0.01s CPU (       8 calls,   0.001 s avg)
-     phq_init     :     0.36s CPU (       8 calls,   0.045 s avg)
+     phq_setup    :     0.02s CPU (       8 calls,   0.003 s avg)
+     phq_init     :     0.41s CPU (       8 calls,   0.051 s avg)
  
-     phq_init     :     0.36s CPU (       8 calls,   0.045 s avg)
-     init_vloc    :     0.01s CPU (      16 calls,   0.001 s avg)
-     init_us_1    :     0.12s CPU (      15 calls,   0.008 s avg)
+     phq_init     :     0.41s CPU (       8 calls,   0.051 s avg)
+     init_vloc    :     0.00s CPU (      16 calls,   0.000 s avg)
+     init_us_1    :     0.14s CPU (      15 calls,   0.009 s avg)
  
      DYNAMICAL MATRIX:
-     dynmat0      :     0.28s CPU (       8 calls,   0.035 s avg)
-     phqscf       :   114.78s CPU (       8 calls,  14.347 s avg)
-     dynmatrix    :     0.15s CPU (       8 calls,   0.019 s avg)
+     dynmat0      :     0.27s CPU (       8 calls,   0.034 s avg)
+     phqscf       :   111.34s CPU (       8 calls,  13.918 s avg)
+     dynmatrix    :     0.13s CPU (       8 calls,   0.016 s avg)
  
-     phqscf       :   114.78s CPU (       8 calls,  14.347 s avg)
-     solve_linter :   114.33s CPU (      17 calls,   6.725 s avg)
-     drhodv       :     0.44s CPU (      17 calls,   0.026 s avg)
+     phqscf       :   111.34s CPU (       8 calls,  13.918 s avg)
+     solve_linter :   110.85s CPU (      17 calls,   6.521 s avg)
+     drhodv       :     0.49s CPU (      17 calls,   0.029 s avg)
  
-     dynmat0      :     0.28s CPU (       8 calls,   0.035 s avg)
-     dynmat_us    :     0.28s CPU (       8 calls,   0.035 s avg)
+     dynmat0      :     0.27s CPU (       8 calls,   0.034 s avg)
+     dynmat_us    :     0.27s CPU (       8 calls,   0.034 s avg)
      d2ionq       :     0.00s CPU (       8 calls,   0.000 s avg)
  
-     dynmat_us    :     0.28s CPU (       8 calls,   0.035 s avg)
+     dynmat_us    :     0.27s CPU (       8 calls,   0.034 s avg)
  
-     phqscf       :   114.78s CPU (       8 calls,  14.347 s avg)
-     solve_linter :   114.33s CPU (      17 calls,   6.725 s avg)
+     phqscf       :   111.34s CPU (       8 calls,  13.918 s avg)
+     solve_linter :   110.85s CPU (      17 calls,   6.521 s avg)
  
-     solve_linter :   114.33s CPU (      17 calls,   6.725 s avg)
-     dvqpsi_us    :    13.17s CPU (    2736 calls,   0.005 s avg)
-     ortho        :     1.03s CPU (   11920 calls,   0.000 s avg)
-     cgsolve      :    62.06s CPU (   11920 calls,   0.005 s avg)
-     incdrhoscf   :    15.91s CPU (   11920 calls,   0.001 s avg)
-     vpsifft      :     9.37s CPU (    9184 calls,   0.001 s avg)
-     dv_of_drho   :     0.14s CPU (      97 calls,   0.001 s avg)
-     mix_pot      :     0.16s CPU (      73 calls,   0.002 s avg)
-     ef_shift     :     0.00s CPU (       4 calls,   0.000 s avg)
-     localdos     :     0.04s CPU
-     symdvscf     :     0.43s CPU (      73 calls,   0.006 s avg)
+     solve_linter :   110.85s CPU (      17 calls,   6.521 s avg)
+     dvqpsi_us    :    11.18s CPU (    2736 calls,   0.004 s avg)
+     ortho        :     0.88s CPU (   11920 calls,   0.000 s avg)
+     cgsolve      :    60.56s CPU (   11920 calls,   0.005 s avg)
+     incdrhoscf   :    16.40s CPU (   11920 calls,   0.001 s avg)
+     vpsifft      :     9.26s CPU (    9184 calls,   0.001 s avg)
+     dv_of_drho   :     0.11s CPU (      97 calls,   0.001 s avg)
+     mix_pot      :     0.18s CPU (      73 calls,   0.002 s avg)
+     ef_shift     :     0.02s CPU (       4 calls,   0.005 s avg)
+     localdos     :     0.03s CPU
+     symdvscf     :     0.52s CPU (      73 calls,   0.007 s avg)
  
-     dvqpsi_us    :    13.17s CPU (    2736 calls,   0.005 s avg)
-     dvqpsi_us_on :     0.41s CPU (    2736 calls,   0.000 s avg)
+     dvqpsi_us    :    11.18s CPU (    2736 calls,   0.004 s avg)
+     dvqpsi_us_on :     0.34s CPU (    2736 calls,   0.000 s avg)
  
-     cgsolve      :    62.06s CPU (   11920 calls,   0.005 s avg)
-     ch_psi       :    60.64s CPU (   67786 calls,   0.001 s avg)
+     cgsolve      :    60.56s CPU (   11920 calls,   0.005 s avg)
+     ch_psi       :    59.27s CPU (   67786 calls,   0.001 s avg)
  
-     ch_psi       :    60.64s CPU (   67786 calls,   0.001 s avg)
-     h_psiq       :    58.49s CPU (   67786 calls,   0.001 s avg)
-     last         :     2.41s CPU (   72734 calls,   0.000 s avg)
+     ch_psi       :    59.27s CPU (   67786 calls,   0.001 s avg)
+     h_psiq       :    57.51s CPU (   67786 calls,   0.001 s avg)
+     last         :     2.07s CPU (   72734 calls,   0.000 s avg)
  
-     h_psiq       :    58.49s CPU (   67786 calls,   0.001 s avg)
-     firstfft     :    52.09s CPU (  217532 calls,   0.000 s avg)
-     secondfft    :    53.84s CPU (  217532 calls,   0.000 s avg)
-     add_vuspsi   :     0.84s CPU (   89534 calls,   0.000 s avg)
+     h_psiq       :    57.51s CPU (   67786 calls,   0.001 s avg)
+     firstfft     :    51.95s CPU (  217532 calls,   0.000 s avg)
+     secondfft    :    53.01s CPU (  217532 calls,   0.000 s avg)
+     add_vuspsi   :     1.52s CPU (   89534 calls,   0.000 s avg)
  
-     incdrhoscf   :    15.91s CPU (   11920 calls,   0.001 s avg)
+     incdrhoscf   :    16.40s CPU (   11920 calls,   0.001 s avg)
  
  
       General routines
-     ccalbec      :     1.79s CPU (  189333 calls,   0.000 s avg)
-     cft3         :     0.15s CPU (     341 calls,   0.000 s avg)
-     cft3s        :   146.27s CPU (  592147 calls,   0.000 s avg)
-     davcio       :     2.15s CPU (   72764 calls,   0.000 s avg)
-     write_rec    :     0.04s CPU (      73 calls,   0.001 s avg)
+     ccalbec      :     2.16s CPU (  189333 calls,   0.000 s avg)
+     cft3         :     0.11s CPU (     341 calls,   0.000 s avg)
+     cft3s        :   142.88s CPU (  592147 calls,   0.000 s avg)
+     davcio       :     2.49s CPU (   72764 calls,   0.000 s avg)
+     write_rec    :     0.05s CPU (      73 calls,   0.001 s avg)
  
