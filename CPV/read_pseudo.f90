@@ -162,14 +162,21 @@ END SUBROUTINE check_types_order
 !=----------------------------------------------------------------------------=!
 
 REAL(DP) FUNCTION calculate_dx( a, m )
+  USE constants, ONLY: eps14
   REAL(DP), INTENT(IN) :: a(:)
   INTEGER, INTENT(IN) :: m 
-  INTEGER :: n
+  INTEGER :: n, nn
   REAL(DP) :: ra, rb 
-  n = MIN( SIZE( a ), m )
-  ra = a(1)
+  n  = MIN( SIZE( a ), m )
+  nn = n
+  IF( a(1) < eps14 ) THEN
+     ra = a(2)
+     nn = n - 1
+  ELSE
+     ra = a(1)
+  END IF
   rb = a(n)
-  calculate_dx = LOG( rb / ra ) / DBLE( n - 1 )
+  calculate_dx = LOG( rb / ra ) / DBLE( nn - 1 )
   RETURN
 END FUNCTION calculate_dx
 
