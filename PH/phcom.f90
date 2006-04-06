@@ -362,7 +362,6 @@ MODULE phcom
   USE partial
   USE control_ph
   USE freq_ph
-  USE char_ph
   USE units_ph
   USE output
   USE disp 
