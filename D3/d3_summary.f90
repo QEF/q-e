@@ -55,7 +55,7 @@ subroutine d3_summary
 
   character :: ps * 5
   ! the name of the pseudo
-  WRITE( stdout, 100) title_ph, crystal, ibrav, alat, omega, nat, ntyp, &
+  WRITE( stdout, 100) title, crystal, ibrav, alat, omega, nat, ntyp, &
        ecutwfc, ecutwfc * dual
 100 format (/,5x,a75,/,/,5x, 'crystal is ',a20,/,/,5x, &
        &     'bravais-lattice index     = ',i12,/,5x, &

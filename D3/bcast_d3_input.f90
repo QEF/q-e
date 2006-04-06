@@ -49,7 +49,7 @@ subroutine bcast_d3_input
   !
   ! characters
   !
-  call mp_bcast (title_ph, root)
+  call mp_bcast (title, root)
   call mp_bcast (fildyn, root)
   call mp_bcast (fildrho, root)
   call mp_bcast (fild0rho, root)

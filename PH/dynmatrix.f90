@@ -23,6 +23,7 @@ subroutine dynmatrix
   USE cell_base,     ONLY : at, bg, celldm, ibrav, symm_type
   USE gvect,         ONLY : nr1, nr2, nr3
   USE symme,         ONLY : s, irt, nsym
+  USE printout_base, ONLY : title
   use phcom
   USE ramanm,        ONLY: lraman, ramtns
   implicit none
@@ -102,7 +103,7 @@ subroutine dynmatrix
   ! write on file information on the system
   !
   write (iudyn, '("Dynamical matrix file")') 
-  write (iudyn, '(a)') title_ph
+  write (iudyn, '(a)') title
   write (iudyn, '(i3,i5,i3,6f11.7)') ntyp, nat, ibrav, celldm
   if (ibrav==0) then
      write (iudyn,'(a)') symm_type

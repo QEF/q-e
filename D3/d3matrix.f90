@@ -46,8 +46,8 @@ subroutine d3matrix
   !
   ! Write on file information on the system
   !
+  write (iudyn, '("Derivative of the force constants")')
   write (iudyn, '(a)') title
-  write (iudyn, '(a)') title_ph
   write (iudyn, '(i3,i5,i3,6f11.7)') ntyp, nat, ibrav, celldm
   do nt = 1, ntyp
      write (iudyn, * ) nt, " '", atm (nt) , "' ", amass (nt)

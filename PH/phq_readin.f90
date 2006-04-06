@@ -29,7 +29,7 @@ SUBROUTINE phq_readin()
   USE wvfct,         ONLY : gamma_only
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda
-  USE char_ph,       ONLY : title_ph
+  USE printout_base, ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma, epsil, zue, trans, &
                             elph, tr2_ph, niter_ph, nmix_ph, maxirr, lnscf, &
                             ldisp, recover
@@ -108,7 +108,7 @@ SUBROUTINE phq_readin()
   !
   ! ... Read the first line of the input file
   !
-  READ( 5, '(A)', ERR = 100, IOSTAT = ios ) title_ph
+  READ( 5, '(A)', ERR = 100, IOSTAT = ios ) title
   !
 100 CALL errore( 'phq_readin', 'reading title ', ABS( ios ) )
   !

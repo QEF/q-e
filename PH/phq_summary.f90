@@ -32,6 +32,7 @@ subroutine phq_summary
   USE uspp_param,    ONLY : psd, lll, iver, nbeta, nqf, rinner, nqlc, &
        tvanp
   USE constants,     ONLY : amconv
+  USE printout_base, ONLY : title
   use phcom
   USE control_flags, ONLY : iverbosity
   
@@ -65,7 +66,7 @@ subroutine phq_summary
   character :: ps * 5
   ! the name of the pseudo
   !
-  WRITE( stdout, 100) title_ph, crystal, ibrav, alat, omega, nat, ntyp, &
+  WRITE( stdout, 100) title, crystal, ibrav, alat, omega, nat, ntyp, &
        ecutwfc, ecutwfc * dual, tr2_ph, alpha_mix (1), &
        nmix_ph
 100 format (/,5x,a75,/,/,5x, 'crystal is ',a20,/,/,5x, &

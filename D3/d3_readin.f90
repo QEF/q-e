@@ -52,7 +52,7 @@ SUBROUTINE d3_readin()
      !
      !    Read the first line of the input file
      !
-     READ (5, '(a)', err = 100, iostat = ios) title_ph
+     READ (5, '(a)', err = 100, iostat = ios) title
 100  CALL errore ('d3_readin', 'reading title ', ABS (ios) )
      !
      !   set default values for variables in namelist

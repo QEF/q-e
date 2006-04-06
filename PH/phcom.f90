@@ -283,18 +283,6 @@ MODULE freq_ph
 END MODULE freq_ph
 !
 !
-MODULE char_ph
-  !
-  ! ... a character common for phonon
-  !
-  SAVE
-  !
-  CHARACTER(LEN=75) :: title_ph  ! * 75
-  ! title of the phonon run
-  !
-END MODULE char_ph
-!
-!
 MODULE units_ph
   !
   ! ... the units of the files and the record lengths
