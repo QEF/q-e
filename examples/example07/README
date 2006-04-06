@@ -1,35 +1,43 @@
 
 This example illustrates how to calculate electron-phonon interaction
-coefficients at X for fcc Al.
+coefficients, for a (444) Monkhorst-Pack (MP) grid of q-points, in fcc Al.
 
 The calculation proceeds as follows (for the meaning of the cited input
 variables see the appropriate INPUT_* file)
 
-1) make a self-consistent calculation for Al.
+1) make a self-consistent calculation for Al using a dense grid of k-points.
+   The dense grid must contain all k and k+q grid points used in the
+   subsequent electron-phonon calculation and must be dense enough to
+   produce accurate el-phon coefficients (in particular the double-delta 
+   integral at Ef is very critical). This example uses a (16 16 16) MP
+   grid. Note that the k-point grids used here are NOT dense enough for
+   a serious calculation!!!
+   The option "la2F=.true." instructs the code to save data into a 
+   "a2Fsave" file, subsequently read during the el-phon calculation
+   (input=al.scf.fit.in, output=al.scf.fit.out) 
+
+2) make a self-consistent calculation for Al using a grid of k-points
+   that is suitable for good self-consistency and phonon calculation.
+   This example uses a (888) MP grid.
    (input=al.scf.in, output=al.scf.out) 
 
-2) make a non self-consistent calculation for X point.
-   (input=al.nscf.in, output=al.nscf.out)
+3) make the phonon and electron-phonon calculation for the grid of q-points.
+   Specify elph=.true., and the name of a file where the derivative of the
+   potential is stored "fildvscf". This example uses a (444) MP grid of
+   q-points (nq1=4, nq2=4, nq3=4).
+   The output contains the results for the el-ph coefficient at each q-point
+   lambda(q), gamma(q), and the double-delta integral at several values of
+   the gaussian broadening (set in file PH/elphon.f90). These are useful
+   for convergence testing.
+   (input=al.elph.in, output=al.elph.out) 
+   The results are also written into output files "a2Fq2r.*", one per value
+   of the gaussian broadening, for further use.
 
-3) make a phonon calculation at X, saving the dynamical matrix in file
-   'al.dyn' and the self-consistent first-order variation of the
-   potential into file 'aldv' (variable fildvscf) written in the
-   directory $TMP_DIR.  The grid of k-points used in this step should be
-   large enough to get converged results for phonons (note that the grid
-   used in the example is NOT large enough)
+4) Bring to r-space both force constants and el-phon coefficients using "q2r.x"
+   Output in files "a2Fmatdyn.*", one per value of the gaussian broadening
 
-4) make a non scf calculation as required by a phonon calculation at X,
-   with a larger k-point grid.
-   (input=al.nscf2.in, output=al.nscf2.out)
+5) Calculate gamma on selected lines using "matdyn.x" (dos=.false.) 
 
-5) make the electron-phonon calculation by specifying
-   elph=.true., trans=-.false., and the input files:
-   fildvscf='aldv', fildyn='al.dyn'
-   The grid of k-points that is used in this step should be large enough
-   to get converged results for the electron-phonon coefficients at X
-   (note that the one used in the example is NOT large enough).
+6) Calculate  lambda coefficient (in file "lambda") and the a^2F(omega) function
+   using "matdyn.x" (dos=.true.)
 
-In principle it should be possible to use the same grid of k-points to
-calculate both phonons and electron-phonon coefficients. However, this is
-not convenient, because the latter are much more difficult to converge
-with respect to the number of k-points than the former.
