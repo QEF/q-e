@@ -566,8 +566,8 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
         do ii=1,3
            do ig=1,ngy
               dqg(ig,ii,ij) = dqg(ig,ii,ij) +  sig *                &
- &                    ( ylm(ig,lp) * dqrad(ig,ijvs,l,is,ii,ij) +    &
- &                     dylm(ig,lp,ii,ij)*qradb(ig,ijvs,l,is)   )
+ &                    ( ylm(ig,lp) * dqrad(ig,ijvs,l,is,ii,ij) -    &
+ &                     dylm(ig,lp,ii,ij)*qradb(ig,ijvs,l,is)   ) ! SEGNO
            end do
         end do
      end do
