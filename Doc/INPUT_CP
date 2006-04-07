@@ -287,6 +287,11 @@ q2sigma        REAL ( default = 0.1 )
                is greater than "ecfixed". In the kinetic energy, G^2 is
                replaced by G^2 + qcutz * (1 + erf ( (G^2 - ecfixed)/q2sigma) )
                See: M. Bernasconi et al, J. Phys. Chem. Solids 56, 501 (1995)
+               Comment: For what would have been ecutwfc = 25.0 Ryd in fixed cell
+               calculations one should use the following set of parameters for
+               cell dynamics:
+               (ecutwfc = 30.0, ecfixed = 25.0, qcutz = 25.0, q2sigma = 3.0)
+
 
 nr1,nr2,nr3    INTEGER
                three-dimensional FFT mesh (hard grid) for charge
@@ -664,6 +669,16 @@ cell_dynamics  CHARACTER ( default = 'none' )
                            ( Parrinello-Rahman method ).
                pr        = standard Verlet algorithm is used to propagate 
                            the cell ( Parrinello-Rahman method ).
+
+cell_damping 
+               REAL ( default = 0.1D0 )
+               damping frequency times delta t, optimal values could be
+               calculated with the formula :
+                        SQRT( 0.5 * LOG( ( E1 - E2 ) / ( E2 - E3 ) ) )
+               where E1, E2, E3 are successive values of the DFT total energy 
+               in a steepest descent simulations.
+               meaningful only if " cell_dynamics = 'damp' "
+
 
 cell_velocities
                CHARACTER
