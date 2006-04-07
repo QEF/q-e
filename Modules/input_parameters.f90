@@ -269,11 +269,10 @@ MODULE input_parameters
 
 
         LOGICAL :: wf_collect = .FALSE.
-          ! This flag is effective only with PW code, and controls the way 
-          ! in which wave functions are stored to disk, 
-          !  .TRUE.  collect all wave functions and store them in restart file 
-          !          ( .save )
-          !  .FALSE. do not collect wave function they are left in temporary
+          ! This flag controls the way wavefunctions are stored to disk:
+          !  .TRUE.  collect all wavefunctions and store them in a single
+          !          restart file ( outdir/prefix.save )
+          !  .FALSE. do not collect wavefunctions, leave them in temporary
           !          local file
 
         LOGICAL :: tqr = .FALSE.

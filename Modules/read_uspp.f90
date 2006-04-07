@@ -652,10 +652,11 @@ CONTAINS
     do nb=1,nchi(is)
        read(iunps,'(a2,2i3,f6.2)',err=100,iostat=ios) &
             rdum, ndum, lchi(nb,is), oc(nb,is)
+       lll(nb,is)=lchi(nb,is)
        !
        ! oc < 0 distinguishes between bound states from unbound states
        !
-       lll(nb,is)=lchi(nb,is)
+       if (oc (nb, is) <= 0.d0) oc (nb, is) = -1.0
     enddo
     !
     kkbeta(is)=0
