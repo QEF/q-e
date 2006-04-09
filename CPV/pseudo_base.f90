@@ -225,8 +225,7 @@
           end do
           call simpson_cp90( mesh,fint,rab(1),rhocb(ig))
           if( what == 1 ) then
-            !IF( gb(ig) > gsmall ) THEN
-              IF( abs(xg*r(1)) > gsmall ) THEN
+            IF( abs(xg*r(1)) > gsmall ) THEN
               call sph_bes ( mesh, r(1), xg, -1, djl )
               do ir=1,mesh
                 djl(ir) = jl(ir) / ( r(ir) * xg ) - djl(ir) 

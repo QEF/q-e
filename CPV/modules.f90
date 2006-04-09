@@ -163,12 +163,18 @@ contains
   end subroutine deallocate_metagga
 END MODULE metagga  !end metagga
 
-module dener
-  implicit none
-  save
-  real(8) detot(3,3), dekin(3,3), dh(3,3), dps(3,3), &
-  &       denl(3,3), dxc(3,3), dsr(3,3)
-end module dener
+MODULE dener
+  USE kinds, ONLY: DP
+  IMPLICIT NONE
+  SAVE
+  REAL(DP) :: dekin(3,3)
+  REAL(DP) :: dh(3,3)
+  REAL(DP) :: dps(3,3)
+  REAL(DP) :: denl(3,3)
+  REAL(DP) :: dxc(3,3)
+  REAL(DP) :: dsr(3,3)
+  REAL(DP) :: detot(3,3)
+END MODULE dener
 
 module dqgb_mod
   implicit none

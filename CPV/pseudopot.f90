@@ -55,6 +55,7 @@ MODULE pseudopotential
   PUBLIC :: rhoc1_sp, rhocp_sp, build_cctab, tpstab, chkpstab
   PUBLIC :: build_pstab, vps_sp, dvps_sp
   PUBLIC :: check_tables, fill_qrl
+  PUBLIC :: exact_qradb
 
   !  ----------------------------------------------
 
@@ -970,6 +971,283 @@ CONTAINS
       RETURN
     END SUBROUTINE compute_qradx
 
+
+
+    SUBROUTINE exact_qradb( tpre )
+      !
+      use io_global,  only: stdout
+      USE ions_base,  ONLY: nsp
+      USE uspp_param, ONLY: nh, kkbeta, betar, nhm, nbetam, nqlc, qqq, &
+           lmaxq, nbeta, oldvan
+      use uspp_param, only: lmaxkb
+      USE atom,       ONLY: r, numeric, rab
+      USE uspp,       ONLY: nhtol, indv
+      use uspp,       only: qq, nhtolm, beta
+      USE betax,      only: refg, qradx, mmx, dqradx
+      USE cvan,       only: ish, nvb
+      use gvecb,      only: ngb
+      use control_flags, only: iprint, iprsta
+      use cell_base,  only: ainv
+      use constants,  only: pi, fpi
+      use qradb_mod,  only: qradb
+      use qgb_mod,    only: qgb
+      use gvecb,      only: gb, gxb
+      use small_box,  only: omegab, tpibab
+      use dqrad_mod,  only: dqrad
+      use dqgb_mod,   only: dqgb
+      !
+      IMPLICIT NONE
+      !
+      LOGICAL, INTENT(IN) :: tpre
+      !
+      INTEGER :: is, iv, l, il, ltmp, i0, ir, jv, ijv, ierr
+      INTEGER :: lp, ig, i,j, jj, nr
+      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:), &
+           qrl(:,:,:)
+      REAL(DP) :: xg, xrg, c, betagl, dbetagl, gg
+      REAL(DP), ALLOCATABLE :: dqradb(:,:,:,:)
+      REAL(DP), ALLOCATABLE :: ylmb(:,:), dylmb(:,:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: dqgbs(:,:,:)
+
+      IF( ALLOCATED(  qradx ) ) DEALLOCATE(  qradx )
+      IF( ALLOCATED( dqradx ) ) DEALLOCATE( dqradx )
+      !
+      ALLOCATE(  qradx( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp ) )
+      !
+      IF ( tpre ) ALLOCATE( dqradx( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp ) )
+
+      DO is = 1, nvb
+         !
+         !     qqq and beta are now indexed and taken in the same order
+         !     as vanderbilts ppot-code prints them out
+         !
+         WRITE( stdout,*) ' nlinit  nh(is), ngb, is, kkbeta, lmaxq = ', &
+     &        nh(is), ngb, is, kkbeta(is), nqlc(is)
+         !
+         nr = kkbeta(is)
+         !
+         IF ( tpre ) THEN
+            ALLOCATE( djl  ( nr ) )
+            ALLOCATE( jltmp( nr ) )
+            ALLOCATE( dfint( nr ) )
+         END IF
+         !
+         ALLOCATE( fint( nr ) )
+         ALLOCATE( jl  ( nr ) )
+         ALLOCATE( qrl( nr, nbeta(is)*(nbeta(is)+1)/2, nqlc(is)) )
+         !
+         call fill_qrl ( is, qrl )
+         ! qrl = 0.0d0
+         !
+         do l = 1, nqlc( is )
+            !
+            do il = 1, ngb
+               !
+               xg = sqrt( gb( il ) * tpibab * tpibab )
+               !
+               call sph_bes ( nr, r(1,is), xg, l-1, jl(1) )
+               !
+               if( tpre ) then
+                  !
+                  ltmp = l - 1
+                  !
+                  ! r(i0) is the first point such that r(i0) >0
+                  !
+                  i0 = 1
+                  if ( r(1,is) < 1.0d-8 ) i0 = 2
+                  ! special case q=0
+                  if ( xg < 1.0d-8 ) then
+                     if (l == 1) then
+                        ! Note that dj_1/dx (x=0) = 1/3
+                        jltmp(:) = 1.0d0/3.d0
+                     else
+                        jltmp(:) = 0.0d0
+                     end if
+                  else
+                     call sph_bes ( nr + 1 - i0, r(i0,is), xg, ltmp-1, jltmp )
+                  end if
+                  do ir = i0, nr
+                     xrg = r(ir,is) * xg
+                     djl(ir) = jltmp(ir) * xrg - l * jl(ir)
+                  end do
+                  if (i0.eq.2) djl(1) = djl(2)
+               endif
+               !
+               ! 
+               do iv = 1, nbeta(is)
+                  do jv = iv, nbeta(is)
+                     ijv = jv * ( jv - 1 ) / 2 + iv
+                     !
+                     !      note qrl(r)=r^2*q(r)
+                     !
+                     do ir = 1, nr
+                        fint( ir ) = qrl( ir, ijv, l ) * jl( ir )
+                     end do
+                     if (oldvan(is)) then
+                        call herman_skillman_int &
+                             (nr,fint(1),rab(1,is),qradx(il,ijv,l,is))
+                     else
+                        call simpson_cp90 &
+                             (nr,fint(1),rab(1,is),qradx(il,ijv,l,is))
+                     end if
+                     !
+                     if( tpre ) then
+                        do ir = 1, nr
+                           dfint(ir) = qrl(ir,ijv,l) * djl(ir)
+                        end do
+                        if ( oldvan(is) ) then
+                           call herman_skillman_int &
+                                (nr,dfint(1),rab(1,is),dqradx(il,ijv,l,is))
+                        else
+                           call simpson_cp90 &
+                                (nr,dfint(1),rab(1,is),dqradx(il,ijv,l,is))
+                        end if
+                     end if
+                     !
+                  end do
+               end do
+               !
+               !
+            end do
+         end do
+         !
+         DEALLOCATE (  jl )
+         DEALLOCATE ( qrl )
+         DEALLOCATE ( fint  )
+         !
+         if ( tpre ) then
+            DEALLOCATE(jltmp)
+            DEALLOCATE(djl)
+            DEALLOCATE ( dfint )
+         end if
+         !
+         WRITE( stdout,*)
+         WRITE( stdout,'(20x,a)') '    qqq '
+         !
+         do iv=1,nbeta(is)
+            WRITE( stdout,'(8f9.4)') (qqq(iv,jv,is),jv=1,nbeta(is))
+         end do
+         WRITE( stdout,*)
+         !
+      end do
+
+      allocate( ylmb( ngb, lmaxq*lmaxq ), STAT=ierr )
+      IF( ierr  /= 0 ) &
+        CALL errore(' exact_qradb ', ' cannot allocate ylmb ', 1 )
+!
+      qradb(:,:,:,:) = 0.d0
+      call ylmr2 (lmaxq*lmaxq, ngb, gxb, gb, ylmb)
+
+      do is = 1, nvb
+         !
+         !     calculation of array qradb(igb,iv,jv,is)
+         !
+         if( iprsta .ge. 4 ) WRITE( stdout,*)  '  qradb  '
+         !
+         c = fpi / omegab
+         !
+         do iv= 1,nbeta(is)
+            do jv = iv, nbeta(is)
+               ijv = jv*(jv-1)/2 + iv
+               do ig=1,ngb
+                  do l=1,nqlc(is)
+                     qradb(ig,ijv,l,is)= c*qradx(ig,ijv,l,is)
+                     WRITE(100,'(4I4,2D14.6)') ig,ijv,l,is,qradb(ig,ijv,l,is)
+                  enddo
+               enddo
+            enddo
+         enddo
+         !
+         !     ---------------------------------------------------------------
+         !     stocking of qgb(igb,ijv,is) and of qq(iv,jv,is)
+         !     ---------------------------------------------------------------
+         !
+         do iv= 1,nh(is)
+            do jv=iv,nh(is)
+               !
+               !       compact indices because qgb is symmetric
+               !
+               ijv = jv*(jv-1)/2 + iv
+               call qvan2b(ngb,iv,jv,is,ylmb,qgb(1,ijv,is) )
+!
+               qq(iv,jv,is)=omegab*DBLE(qgb(1,ijv,is))
+               qq(jv,iv,is)=qq(iv,jv,is)
+!
+            end do
+         end do
+
+      end do
+!
+      if (tpre) then
+!     ---------------------------------------------------------------
+!     arrays required for stress calculation, variable-cell dynamics
+!     ---------------------------------------------------------------
+         allocate(dqradb(ngb,nbetam*(nbetam+1)/2,lmaxq,nsp))
+         allocate(dylmb(ngb,lmaxq*lmaxq,3,3))
+         allocate(dqgbs(ngb,3,3))
+         dqrad(:,:,:,:,:,:) = 0.d0
+         !
+         call dylmr2_(lmaxq*lmaxq, ngb, gxb, gb, ainv, dylmb)
+         !
+         do is=1,nvb
+            !
+            do iv= 1,nbeta(is)
+               do jv=iv,nbeta(is)
+                  ijv = jv*(jv-1)/2 + iv
+                  do l=1,nqlc(is)
+                     do ig=1,ngb
+                           dqradb(ig,ijv,l,is) =  dqradx(ig,ijv,l,is)
+                     enddo
+                     do i=1,3
+                        do j=1,3
+                           dqrad(1,ijv,l,is,i,j) = &
+                                -qradb(1,ijv,l,is) * ainv(j,i)
+                           do ig=2,ngb
+                              dqrad(ig,ijv,l,is,i,j) =                  &
+     &                          -qradb(ig,ijv,l,is)*ainv(j,i)           &
+     &                          -c*dqradb(ig,ijv,l,is)*                 &
+     &                          gxb(i,ig)/gb(ig)*                       &
+     &                          (gxb(1,ig)*ainv(j,1)+                   &
+     &                           gxb(2,ig)*ainv(j,2)+                   &
+     &                           gxb(3,ig)*ainv(j,3))
+                           enddo
+                        enddo
+                     enddo
+                  end do
+               enddo
+            enddo
+            !
+            do iv= 1,nh(is)
+               do jv=iv,nh(is)
+                  !
+                  !       compact indices because qgb is symmetric
+                  !
+                  ijv = jv*(jv-1)/2 + iv
+                  call dqvan2b(ngb,iv,jv,is,ylmb,dylmb,dqgbs )
+                  do i=1,3
+                     do j=1,3
+                        do ig=1,ngb
+                           dqgb(ig,ijv,is,i,j)=dqgbs(ig,i,j)
+                        enddo
+                     enddo
+                  enddo
+               end do
+            end do
+         end do
+         deallocate(dqgbs)
+         deallocate(dylmb)
+         deallocate(dqradb)
+      end if
+
+      deallocate( ylmb )
+
+      IF( ALLOCATED(  qradx ) ) DEALLOCATE(  qradx )
+      IF( ALLOCATED( dqradx ) ) DEALLOCATE( dqradx )
+
+      RETURN
+    END SUBROUTINE exact_qradb
+
+
 ! ----------------------------------------------
 
 ! check table size against cell variations
@@ -1078,7 +1356,7 @@ CONTAINS
      &                                          - c * dylm( 1, lp, i, j ) * betagl         ! SEGNO
                      
                      !dbeta(1,iv,is,i,j)=-0.5*beta(1,iv,is)*ainv(j,i)  !DEBUG stress ok!
-                     !dbeta(1,iv,is,i,j)=+c*dylm(1,lp,i,j)*betagl  !DEBUG stress ok!
+                     !dbeta(1,iv,is,i,j)=-c*dylm(1,lp,i,j)*betagl  !DEBUG stress ok!
                      !dbeta(1,iv,is,i,j)=0.0d0  !DEBUG stress
 
                   enddo
@@ -1098,7 +1376,7 @@ CONTAINS
      &                    - c * ylm ( ig, lp )       * dbetagl * gx( i, ig ) / g( ig )         &
      &                    * ( gx( 1, ig ) * ainv( j, 1 ) + gx( 2, ig ) * ainv( j, 2 ) + gx( 3, ig ) * ainv( j, 3 ) )
                         !dbeta(ig,iv,is,i,j)=- 0.5d0 * beta( ig, iv, is ) * ainv( j, i )  !DEBUG stress ok!
-                        !dbeta(ig,iv,is,i,j)=+ c * dylm( ig, lp, i, j ) * betagl  !DEBUG stress ok!
+                        !dbeta(ig,iv,is,i,j)=- c * dylm( ig, lp, i, j ) * betagl  !DEBUG stress ok!
                         !dbeta( ig, iv, is, i, j ) =                            &
                         !  - c * ylm ( ig, lp )       * dbetagl * gx( i, ig ) / g( ig )         &
                         !  * ( gx( 1, ig ) * ainv( j, 1 ) + gx( 2, ig ) * ainv( j, 2 ) + gx( 3, ig ) * ainv( j, 3 ) )
@@ -1240,6 +1518,7 @@ CONTAINS
                         do j=1,3
                            dqrad(1,ijv,l,is,i,j) = &
                                 -qradb(1,ijv,l,is) * ainv(j,i)
+                           ! dqrad(1,ijv,l,is,i,j) = 0.d0 ! DEBUG
                            do ig=2,ngb
                               dqrad(ig,ijv,l,is,i,j) =                  &
      &                          -qradb(ig,ijv,l,is)*ainv(j,i)           &
@@ -1248,6 +1527,7 @@ CONTAINS
      &                          (gxb(1,ig)*ainv(j,1)+                   &
      &                           gxb(2,ig)*ainv(j,2)+                   &
      &                           gxb(3,ig)*ainv(j,3))
+                           ! dqrad(ig,ijv,l,is,i,j) = -qradb(ig,ijv,l,is)*ainv(j,i) ! DEBUG
                            enddo
                         enddo
                      enddo

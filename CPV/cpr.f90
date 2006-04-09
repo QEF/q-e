@@ -575,12 +575,6 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      epot = eht + epseu + exc
      !
-     acc(1) = acc(1) + ekinc
-     acc(2) = acc(2) + ekin
-     acc(3) = acc(3) + epot
-     acc(4) = acc(4) + etot
-     acc(5) = acc(5) + tempp
-     !
      IF ( .NOT. tcg ) THEN
         !
         econs = ekinp + ekinh + enthal
@@ -618,7 +612,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
      CALL printout_new( nfi, tfirst, ttprint, ttprint, tps, hold, stress, &
                         tau0, vels, fion, ekinc, temphc, tempp, temps, etot, &
-                        enthal, econs, econt, vnhh, xnhh0, vnhp, xnhp0, atot )
+                        enthal, econs, econt, vnhh, xnhh0, vnhp, xnhp0, atot, &
+                        ekin, epot )
      !
      IF( tfor ) THEN
         !
@@ -798,8 +793,6 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   conv_elec = .TRUE.
   !
-  acc = acc / DBLE( nfi )
-  !
   IF ( tcg ) THEN
      !
      CALL writefile( ndw, h, hold, nfi, c0(:,:,1,1), c0old, taus, tausm, vels, &
@@ -833,23 +826,13 @@ SUBROUTINE terminate_run()
   USE cp_main_variables, ONLY : acc
   USE cg_module,         ONLY : tcg, print_clock_tcg
   USE mp,                ONLY : mp_report
+  USE print_out_module,  ONLY : printacc
   !
   IMPLICIT NONE
   !
-  INTEGER  :: i, nacc = 5
-  !
   ! ...  print statistics
   !
-  IF ( ionode ) THEN
-     !
-     WRITE( stdout, 1949 )
-     WRITE( stdout, 1950 ) ( acc(i), i = 1, nacc )
-     !
-  END IF
-  !
-1949 FORMAT( //'              averaged quantities :',/,9X, &
-           & 'ekinc',10X,'ekin',10X,'epot',10X,'etot',5X,'tempp' )
-1950 FORMAT( 4F14.5,F10.1 )
+  CALL printacc()
   !
   CALL print_clock( 'initialize' )
   CALL print_clock( 'total_time' )
@@ -881,13 +864,6 @@ SUBROUTINE terminate_run()
   if (tcg) call print_clock_tcg()
   !
   CALL mp_report()
-  !
-1974 FORMAT( 1X,2I5,3F10.4,2X,3F10.4 )
-1975 FORMAT( /1X,'Scaled coordinates '/1X,'species',' atom #' )
-1976 FORMAT( 1X,2I5,3F10.4 )
-  !
-  IF ( ionode ) &
-     WRITE( stdout, '(5X,//,24("=")," end cp ",24("="),//)' ) 
   !
   CALL memory()
   !

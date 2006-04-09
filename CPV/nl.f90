@@ -155,7 +155,6 @@
       USE pseudo_projector, ONLY: projector
       USE atoms_type_module, ONLY: atoms_type
       USE control_flags, ONLY: force_pairing, gamma_only
-      USE reciprocal_space_mesh, ONLY: gkx_l, gk_l
       USE reciprocal_vectors, ONLY: gx, g
 
       IMPLICIT NONE
@@ -179,12 +178,7 @@
         ispin_wfc = ispin
         IF( force_pairing ) ispin_wfc = 1
         DO ik = 1, cdesc%nkl
-          IF( gamma_only ) THEN
-            CALL nlsm1_s( ispin, wnl(:,:,:,ik), atoms, eigr, c0(:, :, ik, ispin_wfc), cdesc, g, gx, fnl(ik, ispin))
-          ELSE
-            CALL nlsm1_s( ispin, wnl(:,:,:,ik), atoms, eigr, c0(:, :, ik, ispin_wfc), cdesc, &
-                          gk_l(:,ik), gkx_l(:,:,ik), fnl(ik, ispin))
-          END IF
+           CALL nlsm1_s( ispin, wnl(:,:,:,ik), atoms, eigr, c0(:, :, ik, ispin_wfc), cdesc, g, gx, fnl(ik, ispin))
         END DO
       END DO
       RETURN
@@ -252,7 +246,6 @@
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector, allocate_projector, deallocate_projector
       USE atoms_type_module, ONLY: atoms_type
-      USE reciprocal_space_mesh, ONLY: gkx_l, gk_l
       USE control_flags, ONLY: gamma_only
       USE reciprocal_vectors, ONLY: gx, g
       USE uspp_param, ONLY: nhm
@@ -280,12 +273,7 @@
       KAPPA: DO ik = 1, cdesc%nkl
         CARTE: DO k = 1, 3  ! x,y,z directions
           CALL allocate_projector( dfnl, nsanl, cdesc%nbl( ispin ), nhm, cdesc%gamma )
-          IF( gamma_only ) THEN
-            CALL nlsm2_s( ispin, wnl(:,:,:,ik), atoms, eigr, c0(:,:,ik), cdesc, g, gx, dfnl, k)
-          ELSE
-            CALL nlsm2_s( ispin, wnl(:,:,:,ik), atoms, eigr, c0(:,:,ik), cdesc, &
-                          gk_l(:,ik), gkx_l(:,:,ik), dfnl, k)
-          END IF
+          CALL nlsm2_s( ispin, wnl(:,:,:,ik), atoms, eigr, c0(:,:,ik), cdesc, g, gx, dfnl, k)
           CHANN: DO igh = 1, nhm
             BANDE: DO ib = 1, cdesc%nbl( ispin )
               isa=0

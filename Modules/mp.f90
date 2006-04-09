@@ -1945,8 +1945,13 @@
       END FUNCTION mp_size
 
       SUBROUTINE mp_report
+        WRITE( stdout, *)
+#if defined(__MPI)
+        WRITE( stdout, 10 ) mp_high_watermark
+10      FORMAT(3X,'Message Passing, maximum message size (bytes) : ',I15)
+#else
         WRITE( stdout, *) 
-        WRITE( stdout, *) '  mp: high_watermark (bytes): ', mp_high_watermark
+#endif
         RETURN
       END SUBROUTINE mp_report
 

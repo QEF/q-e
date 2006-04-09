@@ -134,6 +134,7 @@ SUBROUTINE newnlinit()
   use control_flags,    ONLY : tpre
   use pseudopotential,  ONLY : interpolate_beta, interpolate_qradb
   use pseudopotential,  ONLY : exact_beta, tpstab, check_tables
+  use pseudopotential,  ONLY : exact_qradb
   USE core,             ONLY : core_charge_ftr
   !
   IMPLICIT NONE
@@ -142,26 +143,27 @@ SUBROUTINE newnlinit()
   ! 
   ! ... initialization for vanderbilt species
   !
-  recompute_table = tpre .AND. check_tables()
-  !
-  IF ( recompute_table ) &
-     CALL errore( ' newnlinit', &
-                  'interpolation tables recalculation, not implemented yet', 1 )
-  !
-  CALL interpolate_qradb( tpre )
-  !
-  !
-  !     initialization that is common to all species
-  !
   IF( tpstab ) THEN
+
+     recompute_table = tpre .AND. check_tables()
+     !
+     IF ( recompute_table ) &
+        CALL errore( ' newnlinit', &
+                  'interpolation tables recalculation, not implemented yet', 1 )
+     !
+     !     initialization that is common to all species
      !
      CALL interpolate_beta( tpre )
+     !
+     CALL interpolate_qradb( tpre )
      !
   ELSE
      !
      ! ... this is mainly for testing
      !
      CALL exact_beta( tpre )
+     !
+     CALL exact_qradb( tpre )
      !
   END IF
   !
@@ -186,8 +188,10 @@ subroutine nlfh( bec, dbec, lambda )
   use ions_base,      ONLY : na
   use electrons_base, ONLY : nbspx, nbsp, nudx, nspin, nupdwn, iupdwn
   use cell_base,      ONLY : omega, h
-  use constants,      ONLY : pi, fpi
+  use constants,      ONLY : pi, fpi, au_gpa
   use stre,           ONLY : stress
+  use io_global,      ONLY : stdout
+  use control_flags,  ONLY : iprsta
 !
   implicit none
 
@@ -250,7 +254,7 @@ subroutine nlfh( bec, dbec, lambda )
                         !
                         DO j = 1, nss
                            DO i = 1, nss
-                              fpre(ii,jj) = fpre(ii,jj) + 2*temp(i,j)*lambda(i,j,iss)
+                              fpre(ii,jj) = fpre(ii,jj) + 2.0d0*temp(i,j)*lambda(i,j,iss)
                            END DO
                         END DO
 
@@ -262,14 +266,26 @@ subroutine nlfh( bec, dbec, lambda )
             end do
          end do
       end do
+
       do i=1,3
          do j=1,3
             stress(i,j)=stress(i,j)+(fpre(i,1)*h(j,1)+                  &
      &           fpre(i,2)*h(j,2)+fpre(i,3)*h(j,3))/omega
          enddo
       enddo
+
+      IF( iprsta >= 2 ) THEN
+         WRITE( stdout,*) "constraints contribution to stress"
+         WRITE( stdout,5555) ((-fpre(i,j),j=1,3),i=1,3)
+         fpre = MATMUL( fpre, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
+         WRITE( stdout,5555) ((fpre(i,j),j=1,3),i=1,3)
+      END IF
 !
-  DEALLOCATE ( tmpbec, tmpdh, temp )
+      DEALLOCATE ( tmpbec, tmpdh, temp )
+
+5555  FORMAT(1x,f12.5,1x,f12.5,1x,f12.5/                                &
+     &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
+     &       1x,f12.5,1x,f12.5,1x,f12.5//)
 
   return
 end subroutine nlfh
@@ -507,7 +523,7 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
   complex(DP), intent(out) :: dqg( ngb, 3, 3 )
 
   integer      :: ivs, jvs, ijvs, ivl, jvl, i, ii, ij, l, lp, ig
-  complex(DP) :: sig
+  complex(DP) :: sig, z1, z2
   !
   ! 
   !       iv  = 1..8     s_1 p_x1 p_z1 p_y1 s_2 p_x2 p_z2 p_y2
@@ -533,6 +549,8 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
   !  lpx = max number of allowed y_lm
   !  lp  = composite lm to indentify them
 
+  z1 = 0.0d0
+  z2 = 0.0d0
   do i=1,lpx(ivl,jvl)
      lp=lpl(ivl,jvl,i)
      if (lp > lmaxq*lmaxq) call errore(' dqvan2b ',' lp out of bounds ',lp)
@@ -561,7 +579,8 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
      !       sig= (-i)^l
      !
      sig=(0.,-1.)**(l-1)
-     sig=sig*ap(lp,ivl,jvl)
+     sig=sig*ap(lp,ivl,jvl) 
+     ! WRITE(200,'(3I4,2D14.6)') ijvs,l,is,SUM(qradb(:,ijvs,l,is))
      do ij=1,3
         do ii=1,3
            do ig=1,ngy
@@ -572,6 +591,8 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
         end do
      end do
   end do
+  !
+  ! WRITE(6,*) 'DEBUG dqvan2b: ', z1, z2
   !
   return
 end subroutine dqvan2b
@@ -607,7 +628,7 @@ subroutine dylmr2_( nylm, ngy, g, gg, ainv, dylm )
      do jpol =1,3
         do lm=1,nylm
            do ig = 1, ngy
-              dylm (ig,lm,ipol,jpol) = (dylmaux(ig,lm,1) * ainv(jpol,1) + &
+              dylm (ig,lm,ipol,jpol) = (dylmaux(ig,lm,1) * ainv(jpol,1) + & 
                                         dylmaux(ig,lm,2) * ainv(jpol,2) + &
                                         dylmaux(ig,lm,3) * ainv(jpol,3) ) &
                                        * g(ipol,ig)

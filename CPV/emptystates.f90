@@ -368,7 +368,6 @@
         USE mp_global, ONLY: nproc_image
         USE mp_wave, ONLY: splitwf
         USE control_flags, ONLY: force_pairing, gamma_only
-        USE reciprocal_space_mesh, ONLY: gkmask_l
         USE wave_functions, ONLY: wave_rand_init
 
 ! ...   Arguments
@@ -398,12 +397,6 @@
           IF( force_pairing ) ispin_wfc = 1
           DO ik = 1, wempt%nkl
             CALL wave_rand_init( c_emp( :, :, ik, ispin ) )
-            IF ( .NOT. gamma_only ) THEN
-              ! ..  set to zero all elements outside the cutoff sphere
-              DO ib = 1, wempt%nbl( ispin )
-                c_emp(:,ib,ik,ispin) = c_emp(:,ib,ik,ispin) * gkmask_l(:,ik)
-              END DO
-            END IF
             IF ( wempt%gzero ) THEN
               c_emp(1,:,ik,ispin) = (0.0d0, 0.0d0)
             END IF

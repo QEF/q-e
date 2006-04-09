@@ -18,7 +18,6 @@
 
         PRIVATE
 
-        REAL(DP)          :: start_seconds
         REAL(DP)          :: start_cclock_val
 
         PUBLIC :: environment_start
@@ -42,14 +41,13 @@
           INTEGER           :: nchar
           CHARACTER(LEN=80) :: uname
           CHARACTER(LEN=80) :: version_str
-          REAL(DP),         EXTERNAL :: elapsed_seconds, cclock
+          REAL(DP),         EXTERNAL :: cclock
           CHARACTER(LEN=6), EXTERNAL :: int_to_char
 
 
           CALL init_clocks( .TRUE. )
           CALL start_clock( 'CP' )
 
-          start_seconds    = elapsed_seconds()
           start_cclock_val = cclock( )
 
           version_str = TRIM (version_number) // " - " // TRIM (version_date)
@@ -102,10 +100,6 @@
 
           USE io_global, ONLY: stdout, ionode
 
-          REAL(DP)                     :: total_seconds
-          REAL(DP)                     :: elapsed_seconds
-          EXTERNAL                        elapsed_seconds
-
           IF ( ionode ) WRITE( stdout, * )
 
           CALL stop_clock(  'CP' )
@@ -113,10 +107,7 @@
 
           CALL closing_date_and_time( )
 
-          total_seconds = elapsed_seconds() - start_seconds
-
           IF(ionode) THEN
-            WRITE( stdout,'(A,F7.1)') '   ELAPSED SECONDS: ', total_seconds
             WRITE( stdout,'(A)')      '   JOB DONE.'
             WRITE( stdout,3335)
           END IF

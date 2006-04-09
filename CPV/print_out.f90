@@ -30,11 +30,13 @@
 
         REAL(DP), EXTERNAL :: cclock
 
+        INTEGER :: nstep_run = 0
 
         PUBLIC :: printout_new
         PUBLIC :: printout
         PUBLIC :: print_sfac, printacc, print_legend
         PUBLIC :: cp_print_rho
+        PUBLIC :: update_accomulators
 
 !=----------------------------------------------------------------------------=!
    CONTAINS
@@ -44,7 +46,7 @@
    SUBROUTINE printout_new &
      ( nfi, tfirst, tfilei, tprint, tps, h, stress, tau0, vels, &
        fion, ekinc, temphc, tempp, temps, etot, enthal, econs, econt, &
-       vnhh, xnhh0, vnhp, xnhp0, atot )
+       vnhh, xnhh0, vnhp, xnhp0, atot, ekin, epot )
 
       !
       USE control_flags,    ONLY : iprint
@@ -61,12 +63,10 @@
       USE sic_module,       ONLY : self_interaction, sic_alpha, sic_epsilon
       USE electrons_module, ONLY : print_eigenvalues
 
-!********************************************
- USE xml_io_base,   ONLY : save_print_counter
- USE cp_main_variables,        ONLY : nprint_nfi
- USE io_files,      ONLY : scradir
- USE control_flags, ONLY : ndw
-!********************************************
+      USE xml_io_base,      ONLY : save_print_counter
+      USE cp_main_variables, ONLY : nprint_nfi
+      USE io_files,         ONLY : scradir
+      USE control_flags,    ONLY : ndw
       !
       IMPLICIT NONE
       !
@@ -82,6 +82,8 @@
       REAL(DP), INTENT(IN) :: temps( : ) ! partial temperature for different ionic species
       REAL(DP), INTENT(IN) :: vnhh( 3, 3 ), xnhh0( 3, 3 ), vnhp( 1 ), xnhp0( 1 )
       REAL(DP), INTENT(IN) :: atot! enthalpy of system for c.g. case
+      REAL(DP), INTENT(IN) :: ekin
+      REAL(DP), INTENT(IN) :: epot ! ( epseu + eht + exc )
       !
       REAL(DP) :: stress_gpa( 3, 3 )
       REAL(DP) :: dis( nsp )
@@ -112,6 +114,17 @@
             CALL save_print_counter( nprint_nfi, scradir, ndw )
          END IF
       END IF
+      !
+      volume = get_volume( h )
+      !
+      stress_gpa = stress * au_gpa
+      !
+      out_press = ( stress_gpa(1,1) + stress_gpa(2,2) + stress_gpa(3,3) ) / 3.0d0
+      !
+      IF( nfi > 0 ) THEN
+         CALL update_accomulators &
+              ( ekinc, ekin, epot, etot, tempp, enthal, econs, out_press, volume )
+      END IF
 
       IF( ionode ) THEN
          !
@@ -126,8 +139,6 @@
             WRITE( stdout, * )
             !
             CALL printout_cell( stdout, h )
-            !
-            volume = get_volume( h )
             !
             IF( tfile ) CALL printout_cell( 36, h, nfi, tps )
             !
@@ -146,11 +157,7 @@
             !
             CALL ions_displacement( dis, tau0 )
             !
-            stress_gpa = stress * au_gpa
-            !
             CALL printout_stress( stdout, stress_gpa )
-            !
-            out_press = ( stress_gpa(1,1) + stress_gpa(2,2) + stress_gpa(3,3) ) / 3.0d0
             !
             IF( tfile ) CALL printout_stress( 38, stress_gpa, nfi, tps )
             !
@@ -294,7 +301,7 @@
    END SUBROUTINE
    !  
    !
-   SUBROUTINE printout(nfi, atoms, ekinc, ekcell, tprint, ht, avgs, avgs_run, edft) 
+   SUBROUTINE printout(nfi, atoms, ekinc, ekcell, tprint, ht, edft) 
 
       USE control_flags,    ONLY: tdipole, tnosee, tnosep, tnoseh, iprsta, iprint, &
                                   toptical, tconjgrad
@@ -327,14 +334,13 @@
       TYPE (atoms_type)   :: atoms
       LOGICAL             :: tprint
       type (boxdimensions), intent(in) :: ht
-      REAL(DP) :: avgs(:), avgs_run(:)
       TYPE (dft_energy_type) :: edft
 !
 ! ...
       INTEGER   :: is, ia, k, i, j, ik, isa, iunit, nfill, nempt
       REAL(DP) :: tau(3), vel(3), stress_tensor(3,3), temps( atoms%nsp )
       REAL(DP) :: tempp, econs, ettt, out_press, ekinpr, enosee
-      REAL(DP) :: ekinc, ekcell
+      REAL(DP) :: ekinc, ekcell, epot
       REAL(DP) :: enthal, totalmass, enoseh, temphc, enosep
       REAL(DP) :: h(3,3)
       !!REAL(DP) :: dis( nsp )
@@ -350,11 +356,14 @@
       
       ! ...   Calculate Ions temperature tempp (in Kelvin )
 
-      CALL ions_temp( tempp, temps, ekinpr, atoms%vels, atoms%na, atoms%nsp, ht%hmat, atoms%m, ndega, nhpdim, atm2nhp, ekin2nhp )
+      CALL ions_temp &
+           ( tempp, temps, ekinpr, atoms%vels, atoms%na, atoms%nsp, ht%hmat, &
+             atoms%m, ndega, nhpdim, atm2nhp, ekin2nhp )
 
       ! ...   Stress tensor (in GPa) and pressure (in GPa)
 
       stress_tensor = MATMUL( ht%pail(:,:), ht%a(:,:) ) * au_gpa / ht%deth
+      !
       out_press = ( stress_tensor(1,1) + stress_tensor(2,2) + stress_tensor(3,3) ) / 3.0d0
 
       ! ...   Enthalpy (in Hartree)
@@ -385,7 +394,6 @@
         enosee = 0
       END IF
 
-
       ! ...   Energy expectation value for physical ions hamiltonian
       ! ...   in Born-Oppenheimer approximation
  
@@ -395,37 +403,7 @@
 
       ettt   = econs + ekinc + enosee + enosep + enoseh
 
-      IF( nfi > 0 ) THEN
-
-        ! ...   sum up values to be averaged
-
-        avgs(1) = avgs(1) + ekinc
-        avgs(2) = avgs(2)
-        avgs(3) = avgs(3)
-        avgs(4) = avgs(4) + edft%etot
-        avgs(5) = avgs(5) + tempp
-        avgs(6) = avgs(6) + enthal
-        avgs(7) = avgs(7) + econs
-        avgs(8) = avgs(8) + out_press  ! pressure in GPa
-        avgs(9) = avgs(9) + ht%deth
-
-        ! ...   sum up values to be averaged
-
-        avgs_run(1) = avgs_run(1) + ekinc
-        avgs_run(2) = avgs_run(2)
-        avgs_run(3) = avgs_run(3)
-        avgs_run(4) = avgs_run(4) + edft%etot
-        avgs_run(5) = avgs_run(5) + tempp
-        avgs_run(6) = avgs_run(6) + enthal
-        avgs_run(7) = avgs_run(7) + econs
-        avgs_run(8) = avgs_run(8) + out_press  ! pressure in GPa
-        avgs_run(9) = avgs_run(9) + ht%deth
-
-      END IF
-
-      ! ...   Check Memory
-
-      IF( iprsta > 1 ) CALL memstat(me_image)
+      epot   = edft%eht + edft%exc + edft%epseu
 
       ! ...   Print physical variables to fortran units
 
@@ -442,7 +420,7 @@
       CALL  printout_new &
      ( nfi, tfirst, tfile, tprint, tps, ht%hmat, stress_tensor, tauw, atoms%vels, &
        atoms%for, ekinc, temphc, tempp, temps, edft%etot, enthal, econs, ettt, &
-       vnhh, xnhh0, vnhp, xnhp0, 0.0d0 )
+       vnhh, xnhh0, vnhp, xnhp0, 0.0d0, edft%ekin, epot )
 
       DEALLOCATE( tauw )
 
@@ -588,26 +566,32 @@
 !=----------------------------------------------------------------------------=!
 
 
-    SUBROUTINE printacc( nfi, nstep_run, avgs, avgs_run )
+    SUBROUTINE printacc( )
 
-      USE cell_module, ONLY: boxdimensions
-      USE atoms_type_module, ONLY: atoms_type
+      USE kinds,               ONLY : DP
+      USE cp_main_variables,   ONLY : acc, acc_this_run, nfi
 
       IMPLICIT NONE
-
-      INTEGER, INTENT(IN) :: nfi, nstep_run
-      REAL (DP) :: avgs(:), avgs_run(:)
+      !
+      REAL(DP) :: avgs(9)
+      REAL(DP) :: avgs_run(9)
  
-      IF ( nfi < 1 ) THEN
-        RETURN
+      avgs     = 0.0d0
+      avgs_run = 0.0d0
+      !
+      IF ( nfi > 0 ) THEN
+         avgs  = acc( 1:9 ) / DBLE( nfi )
       END IF
-
-      avgs     = avgs     / DBLE( nfi )
-      avgs_run = avgs_run / DBLE( nstep_run )
+      !
+      IF ( nstep_run > 0 ) THEN
+         avgs_run = acc_this_run(1:9) / DBLE( nstep_run )
+      END IF
 
       IF( ionode ) THEN
         WRITE( stdout,1949)
         WRITE( stdout,1951) avgs(1), avgs_run(1)
+        WRITE( stdout,1952) avgs(2), avgs_run(2)
+        WRITE( stdout,1953) avgs(3), avgs_run(3)
         WRITE( stdout,1954) avgs(4), avgs_run(4)
         WRITE( stdout,1955) avgs(5), avgs_run(5)
         WRITE( stdout,1956) avgs(6), avgs_run(6)
@@ -616,14 +600,16 @@
         WRITE( stdout,1959) avgs(9), avgs_run(9)
         WRITE( stdout,1990)
  1949   FORMAT(//,3X,'Averaged Physical Quantities',/ &
-                ,3X,'             ',' accomulated','    this run')
- 1951   FORMAT(3X,'EKINC        ',F12.5,F12.5,' (AU)')
- 1954   FORMAT(3X,'TOTEL ENERGY ',F12.5,F12.5,' (AU)')
- 1955   FORMAT(3X,'TEMPERATURE  ',F12.5,F12.5,' (K )')
- 1956   FORMAT(3X,'ENTHALPY     ',F12.5,F12.5,' (AU)')
- 1957   FORMAT(3X,'ECONS        ',F12.5,F12.5,' (AU)')
- 1958   FORMAT(3X,'PRESSURE     ',F12.5,F12.5,' (Gpa)')
- 1959   FORMAT(3X,'VOLUME       ',F12.5,F12.5,' (AU)')
+              ,3X,'                  ',' accomulated','      this run')
+ 1951   FORMAT(3X,'ekinc         : ',F14.5,F14.5,' (AU)')
+ 1952   FORMAT(3X,'ekin          : ',F14.5,F14.5,' (AU)')
+ 1953   FORMAT(3X,'epot          : ',F14.5,F14.5,' (AU)')
+ 1954   FORMAT(3X,'totel energy  : ',F14.5,F14.5,' (AU)')
+ 1955   FORMAT(3X,'temperature   : ',F14.5,F14.5,' (K )')
+ 1956   FORMAT(3X,'enthalpy      : ',F14.5,F14.5,' (AU)')
+ 1957   FORMAT(3X,'econs         : ',F14.5,F14.5,' (AU)')
+ 1958   FORMAT(3X,'pressure      : ',F14.5,F14.5,' (Gpa)')
+ 1959   FORMAT(3X,'volume        : ',F14.5,F14.5,' (AU)')
  1990   FORMAT(/)
       END IF
 
@@ -719,6 +705,48 @@
      RETURN
    END SUBROUTINE cp_print_rho
 
+
+!=----------------------------------------------------------------------------=!
+
+
+   SUBROUTINE update_accomulators( ekinc, ekin, epot, etot, tempp, enthal, econs, press, volume )
+
+      USE kinds,               ONLY : DP
+      USE cp_main_variables,   ONLY : acc, acc_this_run
+
+      IMPLICIT NONE
+
+      REAL(DP), INTENT(IN) :: ekinc, ekin, epot, etot, tempp
+      REAL(DP), INTENT(IN) :: enthal, econs, press, volume
+
+        nstep_run = nstep_run + 1
+
+        ! ...   sum up values to be averaged
+
+        acc(1) = acc(1) + ekinc
+        acc(2) = acc(2) + ekin
+        acc(3) = acc(3) + epot
+        acc(4) = acc(4) + etot
+        acc(5) = acc(5) + tempp
+        acc(6) = acc(6) + enthal
+        acc(7) = acc(7) + econs
+        acc(8) = acc(8) + press  ! pressure in GPa
+        acc(9) = acc(9) + volume
+
+        ! ...   sum up values to be averaged
+
+        acc_this_run(1) = acc_this_run(1) + ekinc
+        acc_this_run(2) = acc_this_run(2) + ekin
+        acc_this_run(3) = acc_this_run(3) + epot
+        acc_this_run(4) = acc_this_run(4) + etot
+        acc_this_run(5) = acc_this_run(5) + tempp
+        acc_this_run(6) = acc_this_run(6) + enthal
+        acc_this_run(7) = acc_this_run(7) + econs
+        acc_this_run(8) = acc_this_run(8) + press  ! pressure in GPa
+        acc_this_run(9) = acc_this_run(9) + volume
+
+      RETURN
+   END SUBROUTINE
 
 !=----------------------------------------------------------------------------=!
    END MODULE print_out_module

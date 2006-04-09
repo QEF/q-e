@@ -230,7 +230,6 @@ CONTAINS
        USE mp_global, ONLY: intra_image_comm
        USE mp, ONLY: mp_sum, mp_max
        USE reciprocal_vectors, ONLY: gstart, gzero, ggp
-       USE reciprocal_space_mesh, ONLY: gkmask_l, gkcutz_l
        USE uspp_param, only: nh
        USE uspp, only: nhtol, indv
 

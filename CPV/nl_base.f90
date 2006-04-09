@@ -639,6 +639,8 @@ subroutine dennl( bec, denl )
   use uspp,       only : nkb, dvan
   use cdvan,      ONLY : drhovan, dbec
   use ions_base,  only : nsp, na
+  use cell_base,  only : h
+  use io_global,  only : stdout
   !
   use electrons_base,     only : n => nbsp, ispin, f, nspin
   use reciprocal_vectors, only : gstart
@@ -648,7 +650,7 @@ subroutine dennl( bec, denl )
   real(DP), intent(in)  :: bec( nkb, n )
   real(DP), intent(out) :: denl( 3, 3 )
 
-  real(DP) :: dsum(3,3),dsums(2,3,3)
+  real(DP) :: dsum(3,3),dsums(2,3,3), detmp(3,3)
   integer   :: is, iv, jv, ijv, inl, jnl, isa, ism, ia, iss, i,j,k
   !
   denl=0.d0
@@ -690,6 +692,15 @@ subroutine dennl( bec, denl )
         end do
      end do
   end do
+
+!  WRITE(6,*) 'DEBUG enl (CP) = '
+!  detmp = denl
+!  detmp = MATMUL( detmp(:,:), TRANSPOSE( h ) )
+!  WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+5555  format(1x,f12.5,1x,f12.5,1x,f12.5/                                &
+     &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
+     &       1x,f12.5,1x,f12.5,1x,f12.5//)
+
   !
   return
 end subroutine dennl

@@ -132,7 +132,7 @@
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE stress_xc( dexc, strvxc, sfac, vxc, grho, v2xc, &
-        gagx_l, tnlcc, rhocp, box)
+        gagb, tnlcc, rhocp, box)
 
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
@@ -154,7 +154,7 @@
       REAL(DP) :: dexc(:), strvxc
       REAL(DP) :: grho(:,:,:)
       REAL(DP) :: v2xc(:,:,:)
-      REAL(DP) :: GAgx_L(:,:)
+      REAL(DP) :: gagb(:,:)
       REAL(DP) :: rhocp(:,:)
 
       INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
@@ -192,7 +192,7 @@
             tex2 = tex2 + CONJG( vxc(ig, ispin) )
           END DO
           tex3 = DBLE(tex1 * tex2) / SQRT( g( ig ) ) / tpiba
-          dcc = dcc + tex3 * gagx_l(:,ig)
+          dcc = dcc + tex3 * gagb(:,ig)
         END DO
         dcc = dcc * 2.0_DP * omega
 
@@ -308,9 +308,9 @@
       use gvecp,           only : ng => ngm
       use gvecs,           only : ngs
       use grid_dimensions, only : nr1, nr2, nr3, nnr => nnrx
-      use cell_base,       only : ainv, omega
+      use cell_base,       only : ainv, omega, h
       use ions_base,       only : nsp
-      use control_flags,   only : tpre
+      use control_flags,   only : tpre, iprsta
       use derho,           only : drhor
       use core,            only : drhocg, nlcc_any
       use mp,              only : mp_sum
@@ -318,8 +318,9 @@
       USE io_global,       ONLY : stdout
       USE mp_global,       ONLY : intra_image_comm
       use kinds,           ONLY : DP
-!
+      use constants,       ONLY : au_gpa
       USE sic_module,      ONLY : self_interaction, sic_alpha
+      USE charge_density,  ONLY : fillgrad
 !
       implicit none
 
@@ -351,6 +352,7 @@
       REAL(DP), ALLOCATABLE :: self_rho( :,: ), self_gradr(:,:,:)
       complex(DP), ALLOCATABLE :: self_rhog( :,: )
       LOGICAL  :: ttsic
+      real(DP) :: detmp(3,3)
       !
       !     filling of gradr with the gradient of rho using fft's
       !
@@ -463,6 +465,17 @@
          !
       end if
       !
+      IF( iprsta >= 2 ) THEN
+         DO i=1,3
+            DO j=1,3
+               detmp(i,j)=exc*ainv(j,i)
+            END DO
+         END DO
+         WRITE( stdout,*) "derivative of e(xc) - diag - kbar"
+         detmp = -1.0d0 * MATMUL( detmp, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
+         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+      END IF
+      !
       !     second part of the xc-potential
       !
       if (dft_is_gradient()) then
@@ -476,8 +489,6 @@
             dxc = dxc + dexc
             !
          end if
-         !
-         deallocate(gradr)
          !
       end if
       !
@@ -503,6 +514,8 @@
 !
       ENDIF
 
+
+      IF( ALLOCATED( gradr ) ) DEALLOCATE( gradr )
 
 5555  format(1x,f12.5,1x,f12.5,1x,f12.5/                                &
      &       1x,f12.5,1x,f12.5,1x,f12.5/                                &

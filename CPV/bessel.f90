@@ -10,14 +10,13 @@
    MODULE bessel_functions
 !=----------------------------------------------------------------------------=!
 
-        USE kinds
+        USE kinds,     ONLY: DP
+        USE constants, ONLY: eps14
 
         IMPLICIT NONE
         SAVE
  
         PRIVATE
-
-        REAL(DP) :: small = 1.0d-14
 
         PUBLIC :: bessel1, bessel2, bessel3
 
@@ -50,26 +49,29 @@
 
 ! ... Local Variables
 
-      REAL(DP) :: ARG_S(MMAX)
-      REAL(DP) :: XRGM1(MMAX)
-      INTEGER :: IR
+      INTEGER :: IR, mmin
 
 ! ... Subroutine Body
 
-      IF( ABS(XG) < small ) THEN 
+      IF( ABS(XG) < eps14 ) THEN 
         CALL errore( ' bessel1',' xg too small ', 1)
       END IF
 
-      DO ir = 1, mmax
-        arg_s( ir ) = rw( ir ) * xg 
-      END DO
-      DO ir = 1, mmax
-        xrgm1( ir ) = 1.0d0 / arg_s( ir )
+      IF( rw( 1 ) < eps14 ) THEN
+         mmin = 2
+      ELSE
+         mmin = 1
+      END IF
+      !
+      CALL sph_bes( mmax, rw(1), xg,  0, jl(1) )
+      !
+      CALL sph_bes( (mmax-mmin+1), rw(mmin), xg, -1, djl(mmin) )
+      !
+      DO ir = mmin, mmax
+         djl( ir ) = jl( ir ) / ( rw( ir ) * xg ) - djl( ir )
       END DO
 
-      CALL sph_bes( mmax, rw(1), xg,  0, jl(1) )
-      CALL sph_bes( mmax, rw(1), xg, -1, djl(1) )
-      djl(1:mmax) = jl(1:mmax) * xrgm1(1:mmax) - djl(1:mmax)
+      IF( mmin == 2 ) djl( 1 ) = djl( 2 )  !  1.0d/3.0d0
 
       RETURN
 
@@ -99,8 +101,6 @@
 
 ! ... Local Variables
 
-      REAL(DP) :: ARG_S(MMAX)
-      REAL(DP) :: XRGM1(MMAX)
       REAL(DP) :: J0(MMAX)
       REAL(DP) :: J1(MMAX)
       REAL(DP) :: J2(MMAX)
@@ -109,13 +109,10 @@
 
 ! ... Subroutine Body
 
-      IF( ABS(XG) < small ) THEN 
+      IF( ABS(XG) < eps14 ) THEN 
         CALL errore( ' bessel2 ',' xg too small ', 2)
       END IF
-
-      ARG_S(1:mmax) = RW(1:mmax) * XG 
-      xrgm1 = 1.0d0 / arg_s
-
+      !
       LMAX = MAXVAL( INDL ) + 1
 
       IF ( LMAX > 0 ) THEN
@@ -130,12 +127,12 @@
 
       IF ( LMAX > 2 ) THEN
 ! ...   Calculate J2(|G||r|) = 3 * J1(|G||r|) / (|G||r|) - J0
-        J2(1:mmax) = (J1(1:mmax) * 3.0d0 * XRGM1(1:mmax) - J0(1:mmax))
+        CALL sph_bes( mmax, rw(1), xg,  2, j2(1) )
       END IF
 
       IF ( LMAX > 3 ) THEN
 ! ...   Calculate J3(|G||r|) = 5 * J2(|G||r|) / (|G||r|) - J1
-        J3(1:mmax) = (J2(1:mmax) * 5.0d0 * XRGM1(1:mmax) - J1(1:mmax))
+        CALL sph_bes( mmax, rw(1), xg,  3, j3(1) )
       END IF
 
       DO L = 1,LNL
@@ -186,29 +183,34 @@
 ! ... Local Variables
 
       REAL(DP) :: XRG(MMAX)
-      REAL(DP) :: XRGM1(MMAX)
       REAL(DP) :: F0(MMAX)
       REAL(DP) :: F1(MMAX)
       REAL(DP) :: F2(MMAX)
       REAL(DP) :: F3(MMAX)
-      INTEGER :: IR, L, LL, LMAX
+      INTEGER :: IR, L, LL, LMAX, mmin
 
 ! ... Subroutine Body
 
       LMAX = MAXVAL( INDL ) + 1
 
-      IF( ABS(XG) < small ) THEN 
-        CALL errore( ' bessel3 ',' xg too small ', 1)
+
+      IF( ABS( xg * rw( 1 ) ) < eps14 ) THEN
+         mmin = 2
+      ELSE
+         mmin = 1
       END IF
 
       xrg(1:mmax) = RW(1:mmax) * XG 
 
       IF( LMAX > 0 ) THEN
         
-! ...   Calculate F0(|G||r|) = COS(|G||r|) 
+        ! ...   Calculate F0(|G||r|) = COS(|G||r|) 
 
-        CALL sph_bes( mmax, rw(1), xg, -1, F0(1) )
-        F0 = F0 * xrg
+        CALL sph_bes( (mmax-mmin+1), rw(mmin), xg, -1, F0(mmin) )
+        !
+        F0(mmin:mmax) = F0(mmin:mmax) * xrg(mmin:mmax)
+
+        IF( mmin == 2 ) F0( 1 ) = F0( 2 )
 
       END IF
 
@@ -217,6 +219,7 @@
 ! ...   Calculate F1(|G||r|) = SIN(|G||r|)  = |G||r| * J0(|G||r|)
 
         CALL sph_bes( mmax, rw(1), xg,  0, F1(1) )
+
         F1 = F1 * xrg
 
       END IF
@@ -225,9 +228,9 @@
 
 ! ...   Calculate F2(|G||r|) = SIN(|G||r|) / |G||r| - COS(|G||r|)  = |G||r| * J1(|G||r|)
 
-        XRGM1(1:mmax) = 1.0d0/xrg(1:mmax)
+        F2(mmin:mmax) = (F1(mmin:mmax) / XRG(mmin:mmax) - F0(mmin:mmax))
 
-        F2(1:mmax) = (F1(1:mmax) * XRGM1(1:mmax) - F0(1:mmax))
+        IF( mmin == 2 ) F2( 1 ) = F2( 2 )
 
       END IF
 
@@ -235,7 +238,9 @@
 
 ! ...   Calculate F3(|G||r|) = 3 F2(|G||r|)/|G||r| - F1(|G||r|) = |G||r| * J2(|G||r|)
 
-        F3(1:mmax) = (3.0d0 * F2(1:mmax) * XRGM1(1:mmax) - F1(1:mmax))
+        F3(mmin:mmax) = (3.0d0 * F2(mmin:mmax) / XRG(mmin:mmax) - F1(mmin:mmax))
+
+        IF( mmin == 2 ) F3( 1 ) = F3( 2 )
 
       END IF
 

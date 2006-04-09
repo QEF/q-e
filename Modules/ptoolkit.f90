@@ -91,22 +91,6 @@
 
       IMPLICIT NONE
 
-      INTEGER, PARAMETER :: PTRED_WORK_SIZE = 2333
-
-#if defined __PARA
-#  if defined __SHMEM
-      include "mpp/shmem.fh"
-      INTEGER PSYNC_BC(SHMEM_BCAST_SYNC_SIZE)
-      INTEGER PSYNC_B(SHMEM_BARRIER_SYNC_SIZE)
-      INTEGER PSYNC_STA(SHMEM_REDUCE_SYNC_SIZE)
-      REAL(DP)  pWrk(MAX(PTRED_WORK_SIZE,SHMEM_REDUCE_MIN_WRKDATA_SIZE))
-      DATA PSYNC_BC /SHMEM_BCAST_SYNC_SIZE*SHMEM_SYNC_VALUE/
-      DATA PSYNC_B /SHMEM_BARRIER_SYNC_SIZE*SHMEM_SYNC_VALUE/
-      DATA PSYNC_STA /SHMEM_REDUCE_SYNC_SIZE*SHMEM_SYNC_VALUE/
-      SAVE PSYNC_B, PSYNC_STA, PSYNC_BC,pWrk
-#  endif 
-#endif
-
       INTEGER :: N, NRL, LDA, LDV
       INTEGER :: NPROC, ME, comm
       REAL(DP) :: A(LDA,N), D(N), E(N), V(LDV,N)
@@ -114,40 +98,28 @@
       REAL(DP) :: DDOT
 !
       REAL(DP) :: g, scale, sigma, kappa, f, h, tmp
-      REAL(DP) :: u(PTRED_WORK_SIZE)
-      REAL(DP) :: p(PTRED_WORK_SIZE)
-      REAL(DP) :: vtmp(PTRED_WORK_SIZE)
+      REAL(DP), ALLOCATABLE :: u(:)
+      REAL(DP), ALLOCATABLE :: p(:)
+      REAL(DP), ALLOCATABLE :: vtmp(:)
 
       REAL(DP) :: tu, tp, one_over_h
       REAL(DP) :: one_over_scale
-      REAL(DP) :: ul(PTRED_WORK_SIZE)
-      REAL(DP) :: pl(PTRED_WORK_SIZE)
-#if (defined __SHMEM && defined __ALTIX) || (defined __SHMEM && defined __ORIGIN)
-      REAL(DP), SAVE :: d_tmp(PTRED_WORK_SIZE)
-#endif
+      REAL(DP), ALLOCATABLE :: ul(:)
+      REAL(DP), ALLOCATABLE :: pl(:)
       integer :: l, i, j, k, t, tl, ierr
       integer :: kl, jl, ks, lloc
-      integer :: is(PTRED_WORK_SIZE)
-      integer :: ri(PTRED_WORK_SIZE)
+      integer, ALLOCATABLE :: is(:)
+      integer, ALLOCATABLE :: ri(:)
      
-      save :: g,h,scale,sigma,kappa,f,u,p,tmp,vtmp
-      save :: tu,tp,one_over_h,one_over_scale,ul,pl
-      save :: l,i,j,k,t,tl,ierr,kl,jl,is,ri,ks,lloc
-
       
-!     .......... FOR I=N STEP -1 UNTIL 1 DO -- ..........
-
-!      ttot = 0
-!      mem1 = 0
+      !     .......... FOR I=N STEP -1 UNTIL 1 DO -- ..........
 
       IF( N == 0 ) THEN
         RETURN
-      ELSE IF( (N > PTRED_WORK_SIZE) .OR. (N < 0) ) THEN
-        WRITE( stdout,*) ' *** ERROR IN PTREDV'
-        WRITE( stdout,*) ' N OUT OF RANGE : ',N
-        STOP
       END IF
-      
+
+      ALLOCATE( u( n ), p( n ), vtmp( n ), ul( n ), pl( n ), is( n ), ri( n ) )
+
       DO I = N, 1, -1
         IS(I)  = (I-1)/NPROC
         RI(I)  = MOD((I-1),NPROC)
@@ -171,10 +143,7 @@
            END DO
 
 #if defined __PARA
-#  if defined __SHMEM
-           call shmem_barrier_all
-           CALL SHMEM_REAL8_SUM_TO_ALL(SCALE, SCALE, 1, 0, 0, nproc, pWrk, pSync_sta)
-#  elif defined __MPI
+#  if defined __MPI
            CALL MPI_ALLREDUCE(SCALE, TMP, 1, MPI_DOUBLE_PRECISION, MPI_SUM, comm, IERR)
            SCALE = TMP
 #  endif
@@ -186,7 +155,7 @@
              END IF
            ELSE 
 
-!  ......  CALCOLO DI SIGMA E DI H
+             !  ......  CALCOLO DI SIGMA E DI H
 
              ONE_OVER_SCALE = 1.0d0/SCALE
              SIGMA = 0.0D0
@@ -200,16 +169,7 @@
              END IF
 
 #if defined __PARA
-#  if defined __SHMEM
-             call shmem_barrier_all
-             CALL SHMEM_REAL8_SUM_TO_ALL(SIGMA, SIGMA, 1, 0, 0, nproc, pWrk, pSync_sta)
-             call shmem_barrier_all
-#    if defined __ALTIX || defined __ORIGIN
-             CALL SHMEM_BROADCAST8(F,F,1,RI(L),0,0,nproc,pSync_bc)
-#    else
-             CALL SHMEM_BROADCAST(F,F,1,RI(L),0,0,nproc,pSync_bc)
-#    endif
-#  elif defined __MPI
+#  if defined __MPI
              CALL MPI_ALLREDUCE(SIGMA, TMP, 1, MPI_DOUBLE_PRECISION, MPI_SUM, comm, IERR)
              SIGMA = TMP
              CALL MPI_BCAST(F, 1, MPI_DOUBLE_PRECISION, RI(L), comm, IERR)
@@ -223,18 +183,12 @@
 
 !  ......  COSTRUZIONE DEL VETTORE U
 
-#if defined __T3E
-!DIR$ UNROLL 8
-#endif
              DO k = 1,L          
                vtmp(k) = 0.0d0 
              END DO
 
              k = ME + 1
 
-#if defined __T3E
-!DIR$ UNROLL 4
-#endif
              DO kl = 1,is(l)          
                vtmp(k)   = A(kl,I)
                UL(kl) = A(kl,I)
@@ -247,10 +201,7 @@
              END IF
 
 #if defined __PARA
-#  if defined __SHMEM
-             call shmem_barrier_all
-             CALL SHMEM_REAL8_SUM_TO_ALL(VTMP, U, L, 0, 0, nproc, pWrk, pSync_sta)
-#  elif defined __MPI
+#  if defined __MPI
              CALL MPI_ALLREDUCE(VTMP,U,L,MPI_DOUBLE_PRECISION,MPI_SUM,comm,IERR)
 #  endif
 #else
@@ -265,18 +216,12 @@
 
                vtmp(j) = 0.0d0
 
-#if defined __T3E
-!DIR$ UNROLL 8
-#endif
                DO KL = 1, IS(J)
                  vtmp(J) = vtmp(J) + A(KL,J) * UL(KL)
                END DO
 
                IF(L.GT.J .AND. ME.EQ.RI(J)) then
 
-#if defined __T3E
-!DIR$ UNROLL 8
-#endif
                  DO K = J+1,L
                    vtmp(J) = vtmp(J) + A(IS(J),K) * U(K)
                  END DO
@@ -287,13 +232,7 @@
              END DO 
 
 #if defined __PARA
-#  if defined __SHMEM
-             call shmem_barrier_all
-             CALL SHMEM_REAL8_SUM_TO_ALL(KAPPA, KAPPA, 1, 0, 0, nproc, pWrk, pSync_sta)
-             call shmem_barrier_all
-             CALL SHMEM_REAL8_SUM_TO_ALL(vtmp, P, L, 0, 0, nproc, pWrk, pSync_sta)
-             call shmem_barrier_all
-#  elif defined __MPI
+#  if defined __MPI
              CALL MPI_ALLREDUCE(KAPPA,TMP,1,MPI_DOUBLE_PRECISION,MPI_SUM, comm,IERR)
              KAPPA = TMP
              CALL MPI_ALLREDUCE(vtmp,p,L,MPI_DOUBLE_PRECISION,MPI_SUM,comm,IERR)
@@ -305,9 +244,6 @@
              CALL DAXPY(l, -kappa, u, 1, p, 1)
 
              k = me + 1
-#if defined __T3E
-!DIR$ UNROLL 8
-#endif
              DO kl = 1,is(l)          
                PL(kl) = P(k)
                k      = k + NPROC
@@ -316,9 +252,6 @@
              DO J = 1,L
                tu= U(J)
                tp= P(J)
-#if defined __T3E
-!DIR$ UNROLL 12
-#endif
                DO KL = 1,is(l)
                  A(KL,j) = A(KL,j) - UL(KL) * tp 
                  A(KL,j) = A(KL,j) - PL(KL) * tu 
@@ -333,14 +266,7 @@
            END IF
 
 #if defined __PARA
-#  if defined __SHMEM
-           call shmem_barrier_all
-#    if defined __ALTIX || defined __ORIGIN
-           CALL SHMEM_BROADCAST8(G,G,1,RI(L),0,0,nproc,pSync_bc)
-#    else
-           CALL SHMEM_BROADCAST(G,G,1,RI(L),0,0,nproc,pSync_bc)
-#    endif
-#  elif defined __MPI
+#  if defined __MPI
            CALL MPI_BCAST(G,1,MPI_DOUBLE_PRECISION,RI(L),comm,IERR)
 #  endif
 #endif
@@ -350,24 +276,12 @@
 
          D(I) = H
 
-#if defined __PARA
-#  if defined __SHMEM
-         call shmem_barrier_all
-#  endif
-#endif
-
       END DO
       
       E(1) = 0.0d0
       D(1) = 0.0d0
 
-
-!      t1 = mclock()
-
       DO J = 1,N
-#if defined __T3E
-!DIR$ UNROLL 12
-#endif
         DO I = 1,NRL
           V(I,J) = 0.0d0
         END DO
@@ -386,10 +300,7 @@
           END DO
 
 #if defined __PARA
-#  if defined __SHMEM
-          call shmem_barrier_all
-          CALL SHMEM_REAL8_SUM_TO_ALL(P, VTMP, L, 0, 0, nproc, pWrk, pSync_sta)
-#  elif defined __MPI
+#  if defined __MPI
           CALL MPI_ALLREDUCE(P,VTMP,L,MPI_DOUBLE_PRECISION,MPI_SUM,comm,IERR)
 #  endif
 #else
@@ -402,12 +313,6 @@
 
         END IF
 
-#if defined __PARA
-#  if defined __SHMEM
-         call shmem_barrier_all
-#  endif
-#endif
-
       END DO 
 
 
@@ -419,23 +324,14 @@
       END DO
 
 #if defined __PARA
-#  if defined __SHMEM
-#if defined __ALTIX || defined __ORIGIN
-      d_tmp(1:n) = d(1:n)
-      call shmem_barrier_all
-      CALL SHMEM_REAL8_SUM_TO_ALL(U, d_tmp, N, 0, 0, nproc, pWrk,       &
-     &                            pSync_sta)
-#else
-      call shmem_barrier_all
-      CALL SHMEM_REAL8_SUM_TO_ALL(U, D, N, 0, 0, nproc, pWrk, pSync_sta)
-#endif
-      call shmem_barrier_all
-#  elif defined __MPI
+#  if defined __MPI
       CALL MPI_ALLREDUCE(U,D,N,MPI_DOUBLE_PRECISION,MPI_SUM,comm,IERR)
 #  endif
 #else
       D(1:N) = U(1:N)
 #endif
+
+      DEALLOCATE( u, p, vtmp, ul, pl, is, ri )
 
     RETURN
     END SUBROUTINE ptredv
@@ -526,35 +422,21 @@
 
       IMPLICIT NONE
 
-      INTEGER n,nrl,ldz
-      REAL(DP) d(n),e(n)
-      REAL(DP) z(ldz,n)
+      INTEGER  :: n, nrl, ldz
+      REAL(DP) :: d(n), e(n)
+      REAL(DP) :: z(ldz,n)
 
-      INTEGER FV_WORK_SIZE
-      INTEGER CSV_WORK_SIZE
-      PARAMETER ( FV_WORK_SIZE = 2000 )
-      PARAMETER ( CSV_WORK_SIZE = 2000 )
+      INTEGER  :: i, iter, mk, k, l, m
+      REAL(DP) :: b, dd, f, g, p, r, c, s
+      REAL(DP), ALLOCATABLE :: cv(:)
+      REAL(DP), ALLOCATABLE :: sv(:)
+      REAL(DP), ALLOCATABLE :: fv1(:)
+      REAL(DP), ALLOCATABLE :: fv2(:)
 
-      INTEGER i,iter,mk,k,l,m
-      REAL(DP) b,dd,f,g,p,r,c,s
-      REAL(DP) cv(CSV_WORK_SIZE)
-      REAL(DP) sv(CSV_WORK_SIZE)
-      REAL(DP) fv1(FV_WORK_SIZE)
-      REAL(DP) fv2(FV_WORK_SIZE)
-
-
-      save cv,sv,fv1,fv2,b,dd,f,g,p,r,c,s
-      save i,iter,mk,k,l,m
-
-
-      if(n.gt.CSV_WORK_SIZE) then
-        print *,' ptqli CSV_WORK_SIZE too small '
-        stop
-      end if
-      if(nrl.gt.FV_WORK_SIZE) then
-        print *,' ptqli FV_WORK_SIZE too small '
-        stop
-      end if
+      ALLOCATE( cv( n ) )
+      ALLOCATE( sv( n ) )
+      ALLOCATE( fv1( nrl ) )
+      ALLOCATE( fv2( nrl ) )
 
       do l = 2,n
         e(l-1) = e(l)
@@ -597,33 +479,18 @@
             d(i+1)=g+p
             g=c*r-b
 
-!            do k=1,nrl
-!              f=z(k,i+1)
-!              z(k,i+1)=s*z(k,i)+c*f
-!              z(k,i)=c*z(k,i)-s*f
-!            end do
-
             cv(i) = c
             sv(i) = s
 
           end do
 
           do i=m-1,l,-1
-#if defined __T3E
-!DIR$ UNROLL 12
-#endif
             do k=1,nrl
               fv2(k)  =z(k,i+1)
             end do
-#if defined __T3E
-!DIR$ UNROLL 12
-#endif
             do k=1,nrl
               fv1(k)  =z(k,i)
             end do
-#if defined __T3E
-!DIR$ UNROLL 12
-#endif
             do k=1,nrl
               z(k,i+1)  =sv(i)*fv1(k) + cv(i)*fv2(k)
               z(k,i)    =cv(i)*fv1(k) - sv(i)*fv2(k)
@@ -637,6 +504,11 @@
 
         endif
 15    continue
+
+      DEALLOCATE( cv )
+      DEALLOCATE( sv )
+      DEALLOCATE( fv1 )
+      DEALLOCATE( fv2 )
 
       return
       END SUBROUTINE ptqliv
@@ -662,7 +534,6 @@
       REAL(DP) p
       save i,j,k
       save p
-!      REAL(DP) fv(nrl)
 
       do 13 i=1,n-1
         k=i
@@ -679,9 +550,6 @@
 !
 !         Exchange local elements of eigenvectors.
 !
-#if defined __T3E
-!DIR$ UNROLL 12
-#endif
           do j=1,nrl
             p=v(j,i)
             v(j,i)=v(j,k)
@@ -693,10 +561,12 @@
       return
       END SUBROUTINE peigsrtv
 
-      FUNCTION pythag(a,b)
+   !
+   !-------------------------------------------------------------------------
+   FUNCTION pythag(a,b)
       IMPLICIT NONE
-      REAL(DP) a,b,pythag
-      REAL(DP) absa,absb
+      REAL(DP) :: a, b, pythag
+      REAL(DP) :: absa, absb
       absa=abs(a)
       absb=abs(b)
       if(absa.gt.absb)then
@@ -709,7 +579,9 @@
         endif
       endif
       return
-      END FUNCTION pythag
+   END FUNCTION pythag
+   !
+   !
    !
    !-------------------------------------------------------------------------
    SUBROUTINE diagonalize( iopt, a, lda, d, ev, ldv, n, nproc, mpime, comm_in )

@@ -611,7 +611,6 @@ CONTAINS
         USE mp,                    ONLY: mp_sum
         USE mp_global,             ONLY: me_image, nproc_image, intra_image_comm
         USE atoms_type_module,     ONLY: atoms_type
-        USE reciprocal_space_mesh, ONLY: gkx_l, gk_l
         USE reciprocal_vectors,    ONLY: g, gx
         USE control_flags,         ONLY: gamma_only
 

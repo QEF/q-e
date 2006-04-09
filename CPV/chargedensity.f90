@@ -32,7 +32,7 @@
 !  end of module-scope declarations
 !  ----------------------------------------------
 
-        PUBLIC :: rhoofr, gradrho
+        PUBLIC :: rhoofr, fillgrad
 
         INTERFACE rhoofr
            MODULE PROCEDURE rhoofr_fpmd, rhoofr_cp
@@ -412,16 +412,6 @@
       COMPLEX(DP) c( :, : )
       INTEGER irb( :, : )
 
-      !REAL(DP) bec(nkb,n)
-      !REAL(DP) rhovan( nhm * ( nhm + 1 ) / 2, nat, nspin )
-      !REAL(DP) rhor(nnrx,nspin)
-      !REAL(DP) rhos(nnrsx,nspin)
-      !COMPLEX(DP) eigrb( ngb, nat )
-      !COMPLEX(DP) rhog( ngm, nspin )
-      !COMPLEX(DP) c( ngw, nx )
-      !INTEGER irb( 3, nat )
-      
-
       ! local variables
 
       INTEGER iss, isup, isdw, iss1, iss2, ios, i, ir, ig
@@ -701,119 +691,62 @@
       END SUBROUTINE rhoofr_cp
 
 
-!=----------------------------------------------------------------------=!
-   SUBROUTINE gradrho(rhog, grho, gx)
-!=----------------------------------------------------------------------=!
-
-!     This subroutine calculate the gradient of the charge
-!     density in reciprocal space and transforms it to the
-!     real space.
-
-     USE fft_base,   ONLY: dfftp
-     USE cell_base,  ONLY: tpiba
-     USE gvecp,      ONLY: ngm
-     USE fft_module, ONLY: invfft
-
-     IMPLICIT NONE
-
-     COMPLEX(DP), INTENT(IN)  :: rhog(:)    ! charge density (Reciprocal Space)
-     REAL(DP), INTENT(IN)  :: gx(:,:)        ! cartesian components of G-vectors
-     REAL(DP),  INTENT(OUT) :: grho(:,:) ! charge density gradient
-
-     INTEGER :: ig, ipol, ierr
-     COMPLEX(DP), ALLOCATABLE :: tgrho(:)
-     COMPLEX(DP)              :: rg
-     COMPLEX(DP), ALLOCATABLE :: psi(:)
-
-     ! ...
-
-     ALLOCATE( tgrho( SIZE( rhog ) ), STAT=ierr)
-     IF( ierr /= 0 ) CALL errore(' gradrho ', ' allocating tgrho ', ABS(ierr) )
-     !
-     ALLOCATE( psi( SIZE( grho, 1 ) ), STAT=ierr)
-     IF( ierr /= 0 ) CALL errore(' gradrho ', ' allocating psi ', ABS(ierr) )
-
-     DO ipol = 1, 3
-       DO ig = 1, SIZE( rhog )
-         rg        = rhog(ig) * gx( ipol, ig )
-         tgrho(ig) = tpiba * CMPLX( - AIMAG(rg), DBLE(rg) ) 
-       END DO
-       CALL rho2psi( 'Dense', psi, dfftp%nnr, tgrho, ngm )
-       CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
-       grho( :, ipol ) = DBLE( psi )
-     END DO
-
-     DEALLOCATE(tgrho, STAT=ierr)
-     IF( ierr /= 0 ) CALL errore(' gradrho ', ' deallocating tgrho ', ABS(ierr) )
-
-     DEALLOCATE(psi, STAT=ierr)
-     IF( ierr /= 0 ) CALL errore(' gradrho ', ' deallocating psi ', ABS(ierr) )
-
-     RETURN
-  END SUBROUTINE gradrho
-
 
 !=----------------------------------------------------------------------=!
-      END MODULE charge_density
-!=----------------------------------------------------------------------=!
 
+   SUBROUTINE fillgrad( nspin, rhog, gradr )
 
-!=----------------------------------------------------------------------=!
-!   CP subroutine to compute gradient
-!=----------------------------------------------------------------------=!
-
-      subroutine fillgrad(nspin,rhog,gradr)
-!     _________________________________________________________________
-!
-!     calculates gradient of charge density for gradient corrections
-!     in: charge density on G-space    out: gradient in R-space
-!
+      !
+      !     calculates gradient of charge density for gradient corrections
+      !     in: charge density on G-space    out: gradient in R-space
+      !
+      USE kinds,              ONLY: DP
       use reciprocal_vectors, only: gx
-      use recvecs_indexes, only: np, nm
-      use gvecp, only: ng => ngm
-      use grid_dimensions, only: nr1, nr2, nr3, &
-            nr1x, nr2x, nr3x, nnr => nnrx
-      use cell_base, only: tpiba
-      USE fft_module, ONLY: invfft
+      use recvecs_indexes,    only: np, nm
+      use gvecp,              only: ngm
+      use grid_dimensions,    only: nr1, nr2, nr3, &
+                                    nr1x, nr2x, nr3x, nnrx
+      use cell_base,          only: tpiba
+      USE fft_module,         ONLY: invfft
 !
       implicit none
 ! input
       integer nspin
-      complex(8) rhog(ng,nspin)
+      complex(DP) :: rhog( ngm, nspin )
 ! output
-      real(8)    gradr(nnr,3,nspin)
+      real(DP) ::    gradr( nnrx, 3, nspin )
 ! local
-      complex(8), allocatable :: v(:)
-      complex(8) ci
-      integer iss, ig, ir
+      complex(DP), allocatable :: v(:)
+      complex(DP) :: ci
+      integer     :: iss, ig, ir
 !
 !
-      allocate( v( nnr ) ) 
+      allocate( v( nnrx ) ) 
       !
-      ci=(0.0,1.0)
-      do iss=1,nspin
-         do ig=1,nnr
-            v(ig)=(0.0,0.0)
+      ci = ( 0.0d0, 1.0d0 )
+      do iss = 1, nspin
+         do ig = 1, nnrx
+            v( ig ) = ( 0.0d0, 0.0d0 )
          end do
-         do ig=1,ng
+         do ig=1,ngm
             v(np(ig))=      ci*tpiba*gx(1,ig)*rhog(ig,iss)
             v(nm(ig))=CONJG(ci*tpiba*gx(1,ig)*rhog(ig,iss))
          end do
-         call invfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-         do ir=1,nnr
+         call invfft( 'Dense', v, nr1, nr2, nr3, nr1x, nr2x, nr3x )
+         do ir=1,nnrx
             gradr(ir,1,iss)=DBLE(v(ir))
          end do
-         do ig=1,nnr
+         do ig=1,nnrx
             v(ig)=(0.0,0.0)
          end do
-         do ig=1,ng
+         do ig=1,ngm
             v(np(ig))= tpiba*(      ci*gx(2,ig)*rhog(ig,iss)-           &
      &                                 gx(3,ig)*rhog(ig,iss) )
             v(nm(ig))= tpiba*(CONJG(ci*gx(2,ig)*rhog(ig,iss)+           &
      &                                 gx(3,ig)*rhog(ig,iss)))
          end do
          call invfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-         do ir=1,nnr
+         do ir=1,nnrx
             gradr(ir,2,iss)= DBLE(v(ir))
             gradr(ir,3,iss)=AIMAG(v(ir))
          end do
@@ -821,6 +754,10 @@
       !
       deallocate( v )
 !
-      return
-      end subroutine fillgrad
+      RETURN
+    END SUBROUTINE fillgrad
 
+
+!=----------------------------------------------------------------------=!
+      END MODULE charge_density
+!=----------------------------------------------------------------------=!

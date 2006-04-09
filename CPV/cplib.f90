@@ -197,6 +197,8 @@
 !
       RETURN
       END SUBROUTINE denkin
+
+
 !
 !-----------------------------------------------------------------------
       SUBROUTINE denh(rhotmp,drhotmp,sfac,vtemp,eh,dh)
@@ -211,12 +213,14 @@
 ! wtemp work space
 ! eh input: hartree energy
 !
-      USE constants, ONLY: pi, fpi
+      USE constants, ONLY: pi, fpi, au_gpa
+      USE control_flags, ONLY: iprsta
+      USE io_global, ONLY: stdout
       USE ions_base, ONLY: nsp
       USE gvecs
       USE gvecp, ONLY: ng => ngm
       USE reciprocal_vectors, ONLY: gstart, gx, g
-      USE cell_base, ONLY: omega
+      USE cell_base, ONLY: omega, h
       USE cell_base, ONLY: ainv, tpiba2
       USE local_pseudo, ONLY: rhops, drhops
       USE mp, ONLY: mp_sum
@@ -228,6 +232,7 @@
       REAL(8) eh
 ! output
       REAL(8) dh(3,3)
+      REAL(8) detmp(3,3)
 ! local
       INTEGER i, j, ig, is
       REAL(8) wz
@@ -265,36 +270,49 @@
          END DO
       END DO
 
+5555  FORMAT(1x,f12.5,1x,f12.5,1x,f12.5/                                &
+     &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
+     &       1x,f12.5,1x,f12.5,1x,f12.5//)     
+
       RETURN
       END SUBROUTINE denh
+
+
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE denps(rhotmp,drhotmp,sfac,vtemp,dps)
+      SUBROUTINE denh_box(rhotmp,drhotmp,sfac,vtemp,eh,dh)
 !-----------------------------------------------------------------------
 !
-! derivative of local potential energy wrt cell parameters h
-! Output in dps
+! derivative of hartree energy wrt cell parameters h
+! Output in dh
 !
-! rhotmp input : rho(G) (up and down spin components summed)
-! drhotmp input
+! rhotmp input : total electronic + ionic broadened charge (G)
+! drhotmp input and work space
 ! sfac   input : structure factors
 ! wtemp work space
+! eh input: hartree energy
 !
+      USE kinds, ONLY:DP
+      USE constants, ONLY: pi, fpi, au_gpa
+      USE control_flags, ONLY: iprsta
+      USE io_global, ONLY: stdout
       USE ions_base, ONLY: nsp
-      USE gvecs, ONLY: ngs
+      USE gvecs
       USE gvecp, ONLY: ng => ngm
-      USE reciprocal_vectors, ONLY: gstart, gx
-      USE cell_base, ONLY: omega
+      USE reciprocal_vectors, ONLY: gstart, gx, g
+      USE cell_base, ONLY: omega, h
       USE cell_base, ONLY: ainv, tpiba2
-      USE local_pseudo, ONLY: vps, dvps
+      USE local_pseudo, ONLY: rhops, drhops
       USE mp, ONLY: mp_sum
       USE mp_global, ONLY: intra_image_comm
 
       IMPLICIT NONE
 ! input
       COMPLEX(8) rhotmp(ng), drhotmp(ng,3,3), vtemp(ng), sfac(ngs,nsp)
+      REAL(8) eh
 ! output
-      REAL(8) dps(3,3)
+      REAL(8) dh(3,3)
+      REAL(8) detmp(3,3)
 ! local
       INTEGER i, j, ig, is
       REAL(8) wz
@@ -302,30 +320,95 @@
 !     wz = factor for g.neq.0 because of c*(g)=c(-g)
 !
       wz=2.d0
-      DO i=1,3
-         DO j=1,3
-            DO ig=1,ngs
-               vtemp(ig)=(0.,0.)
-            ENDDO
+      DO j=1,3
+         DO i=1,3
             DO is=1,nsp
                DO ig=1,ngs
-                  vtemp(ig)=vtemp(ig)-CONJG(rhotmp(ig))*sfac(ig,is)*    &
-     &                    dvps(ig,is)*2.d0*tpiba2*gx(i,ig)*             &
-     &                    (gx(1,ig)*ainv(j,1) +                         &
-     &                     gx(2,ig)*ainv(j,2) +                         &
-     &                     gx(3,ig)*ainv(j,3) ) +                       &
-     &                    CONJG(drhotmp(ig,i,j))*sfac(ig,is)*vps(ig,is)
+                  drhotmp(ig,i,j) = drhotmp(ig,i,j) -                   &
+     &                    sfac(ig,is)*rhops(ig,is)*ainv(j,i)
                ENDDO
             ENDDO
-            dps(i,j)=omega*DBLE(wz*SUM(vtemp))
-            IF (gstart == 2) dps(i,j)=dps(i,j)-omega*DBLE(vtemp(1))
+            IF (gstart == 2) vtemp(1)=(0.d0,0.d0)
+            DO ig=gstart,ng
+               vtemp(ig)=  CONJG(rhotmp(ig))/(tpiba2*g(ig))*drhotmp(ig,i,j)
+            ENDDO
+            dh(i,j)=fpi*omega*DBLE(SUM(vtemp))*wz
          ENDDO
       ENDDO
 
-      CALL mp_sum( dps( 1:3, 1:3 ), intra_image_comm )
+      CALL mp_sum( dh( 1:3, 1:3 ), intra_image_comm )
+
+      DO i=1,3
+         DO j=1,3
+            dh(i,j)=dh(i,j)+omega*eh*ainv(j,i)
+         END DO
+      END DO
+
+5555  FORMAT(1x,f12.5,1x,f12.5,1x,f12.5/                                &
+     &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
+     &       1x,f12.5,1x,f12.5,1x,f12.5//)     
 
       RETURN
-      END SUBROUTINE denps
+      END SUBROUTINE denh_box
+
+
+!
+!-----------------------------------------------------------------------
+      SUBROUTINE denps_box( drhotmp, sfac, vtemp, dps)
+!-----------------------------------------------------------------------
+!
+! Charge density term of the
+! derivative of local potential energy wrt cell parameters h
+!
+! Output in dps
+!
+! drhotmp input
+! sfac   input : structure factors
+! vtemp work space
+!
+      USE kinds, ONLY: DP
+      USE ions_base, ONLY: nsp
+      USE gvecs, ONLY: ngs
+      USE gvecp, ONLY: ngm
+      USE reciprocal_vectors, ONLY: gstart
+      USE cell_base, ONLY: omega
+      USE local_pseudo, ONLY: vps
+      USE mp, ONLY: mp_sum
+      USE mp_global, ONLY: intra_image_comm
+
+      IMPLICIT NONE
+      !
+      COMPLEX(DP), INTENT(IN) :: drhotmp( ngm, 3, 3 ), sfac( ngs, nsp )
+      COMPLEX(DP) :: vtemp( ngm )
+      !
+      REAL(DP), INTENT(OUT) :: dps( 3, 3 )
+      !
+      INTEGER  :: i, j, ig, is
+      REAL(DP) :: wz
+      !
+      !     wz = factor for g.neq.0 because of c*(g)=c(-g)
+      !
+      wz = 2.d0
+      !
+      DO i = 1, 3
+         DO j = 1, 3
+            vtemp( 1:ngs ) = (0.d0,0.d0)
+            DO is = 1, nsp
+               DO ig = 1, ngs
+                  vtemp(ig) = vtemp(ig) + &
+                              CONJG( drhotmp(ig,i,j) ) * sfac(ig,is) * vps(ig,is)
+               ENDDO
+            ENDDO
+            dps(i,j) = omega * DBLE( wz * SUM( vtemp(1:ngs) ) )
+            IF (gstart == 2) dps(i,j) = dps(i,j) - omega * DBLE( vtemp(1) )
+         ENDDO
+      ENDDO
+
+      CALL mp_sum( dps, intra_image_comm )
+
+      RETURN
+      END SUBROUTINE denps_box
+
 
 
 !-----------------------------------------------------------------------
@@ -587,7 +670,7 @@
       SUBROUTINE dotcsc(eigr,cp)
 !-----------------------------------------------------------------------
 !
-      USE ions_base, ONLY: nas => nax, na, nsp, nat
+      USE ions_base, ONLY: na, nsp, nat
       USE io_global, ONLY: stdout
       USE gvecw, ONLY: ngw
       USE electrons_base, ONLY: n => nbsp
@@ -666,7 +749,7 @@
 !
       USE kinds, ONLY: dp
       USE control_flags, ONLY: iprint
-      USE ions_base, ONLY: na, nsp, nat, nas => nax
+      USE ions_base, ONLY: na, nsp, nat
       USE cvan
       USE uspp_param, ONLY: nhm, nh
       USE grid_dimensions, ONLY: nr1, nr2, nr3, &
@@ -948,81 +1031,6 @@
    END FUNCTION enkin
 !
 !
-!-----------------------------------------------------------------------
-      SUBROUTINE force_ion(tau0,esr,fion,dsr)
-!-----------------------------------------------------------------------
-!
-!     forces on ions, ionic term in real space (also stress if requested)
-!
-      USE control_flags, ONLY: iprint, tpre
-      USE constants, ONLY: pi, fpi
-      USE cell_base, ONLY: ainv, a1, a2, a3
-      USE ions_base, ONLY: nsp, na, rcmax, zv, nat
-      IMPLICIT NONE
-! input
-      REAL(8) tau0(3,nat)
-! output
-      REAL(8) fion(3,nat), dsr(3,3), esr
-! local variables
-      INTEGER i,j,k,l,m, ii, lax, inf, isak, isaj
-      REAL(8) rlm(3), rckj, rlmn, arg, addesr, addpre, repand, fxx
-      REAL(8), EXTERNAL :: erfc
-!
-!
-      esr=0.d0
-      IF(tpre) dsr=0.d0
-!
-      isak = 0
-      DO k=1,nsp
-         isaj = 0
-         DO j = 1, k-1
-           isaj = isaj + na(j)
-         END DO
-         DO j=k,nsp
-            rckj=SQRT(rcmax(k)**2+rcmax(j)**2)
-            lax=na(k)
-            IF(k.EQ.j) lax=lax-1
-!
-            DO l=1,lax
-               inf=1
-               IF(k.EQ.j) inf=l+1
-!
-               DO m=inf,na(j)
-                  rlm(1) = tau0(1,l + isak) - tau0(1,m + isaj)
-                  rlm(2) = tau0(2,l + isak) - tau0(2,m + isaj)
-                  rlm(3) = tau0(3,l + isak) - tau0(3,m + isaj)
-                  CALL pbc(rlm,a1,a2,a3,ainv,rlm)
-!
-                  rlmn=SQRT(rlm(1)**2+rlm(2)**2+rlm(3)**2)
-!
-                  arg=rlmn/rckj
-                  addesr=zv(k)*zv(j)*erfc(arg)/rlmn
-                  esr=esr+addesr
-                  addpre=2.d0*zv(k)*zv(j)*EXP(-arg*arg)/rckj/SQRT(pi)
-                  repand=(addesr+addpre)/rlmn/rlmn
-!
-                  DO i=1,3
-                     fxx=repand*rlm(i)
-                     fion(i,l+isak)=fion(i,l+isak)+fxx
-                     fion(i,m+isaj)=fion(i,m+isaj)-fxx
-                     IF(tpre)THEN
-                        DO ii=1,3
-                           dsr(i,ii)=dsr(i,ii)-                         &
-     &                             repand*rlm(i)*rlm(1)*ainv(ii,1)-     &
-     &                             repand*rlm(i)*rlm(2)*ainv(ii,2)-     &
-     &                             repand*rlm(i)*rlm(3)*ainv(ii,3)
-                        END DO
-                     ENDIF
-                  END DO
-               END DO
-            END DO
-            isaj = isaj + na(j)
-         END DO
-         isak = isak + na(k)
-      END DO
-
-      RETURN
-      END SUBROUTINE force_ion
 !
 !-----------------------------------------------------------------------
       SUBROUTINE force_ps(rhotemp,rhog,vtemp,ei1,ei2,ei3,fion1)
@@ -1037,7 +1045,7 @@
       USE gvecp, ONLY: ng => ngm
       USE reciprocal_vectors, ONLY: gstart, gx, mill_l, g
       USE cell_base, ONLY: omega, tpiba, tpiba2
-      USE ions_base, ONLY: nsp, na, nas => nax, nat
+      USE ions_base, ONLY: nsp, na, nat
       USE grid_dimensions, ONLY: nr1, nr2, nr3
       USE local_pseudo, ONLY: vps, rhops
 !
@@ -1109,7 +1117,7 @@
 !
 ! initialize wavefunctions with gaussians - edit to fit your system
 !
-      USE ions_base, ONLY: nas => nax, na, nsp, nat
+      USE ions_base, ONLY: na, nsp, nat
       USE electrons_base, ONLY: n => nbsp
       USE gvecw, ONLY: ngw
       USE reciprocal_vectors, ONLY: gx, g
@@ -1466,7 +1474,7 @@
       ! artificially start the clock
       ! 
       isa=1
-      DO is=1,nvb
+      DO is=1,nsp
          DO ia=1,na(is)
             IF ( dfftb%np3( isa ) <= 0 ) then
                CALL start_clock( 'fftb' )
@@ -1494,7 +1502,7 @@
       USE uspp_param, ONLY: nh, nhm
       USE uspp, ONLY: deeq
       USE cvan, ONLY: nvb
-      USE ions_base, ONLY: nas => nax, nat, nsp, na
+      USE ions_base, ONLY: nat, nsp, na
       USE parameters, ONLY: nsx
       USE constants, ONLY: pi, fpi
       USE grid_dimensions, ONLY: nr3, nnr => nnrx
@@ -1863,7 +1871,7 @@
 !     input :        eigr =  e^-ig.r_i
 !     output:        betae_i,i(g) = (-i)**l beta_i,i(g) e^-ig.r_i 
 !
-      USE ions_base, ONLY: nas => nax, nsp, na, nat
+      USE ions_base, ONLY: nsp, na, nat
       USE gvecw, ONLY: ngw
       USE cvan, ONLY: ish
       USE uspp, ONLY :nhsa=>nkb, beta, nhtol
@@ -1907,7 +1915,7 @@
       USE electrons_base, ONLY: nx => nbspx, n => nbsp
       USE gvecw, ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
-      USE ions_base, ONLY: nsp, na, nas => nax, nat
+      USE ions_base, ONLY: nsp, na, nat
       USE uspp, ONLY: nhsa => nkb
       USE atom, ONLY: nchi, lchi
 !
@@ -2119,7 +2127,7 @@
 !     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
 !
       USE kinds, ONLY: dp
-      USE ions_base, ONLY: nas => nax, nat, na, nsp
+      USE ions_base, ONLY: nat, na, nsp
       USE io_global, ONLY: stdout
       USE mp_global, ONLY: intra_image_comm
       USE mp, ONLY: mp_sum
@@ -2616,27 +2624,27 @@
 !     rhor output: total potential on dense real space grid
 !     rhos output: total potential on smooth real space grid
 !
-      USE kinds, ONLY: dp
+      USE kinds,         ONLY: dp
       USE control_flags, ONLY: iprint, iprsta, thdyn, tpre, tfor, tprnfor
-      USE io_global, ONLY: stdout
-      USE ions_base, ONLY: nas => nax, nsp, na, nat
+      USE io_global,     ONLY: stdout
+      USE ions_base,     ONLY: nsp, na, nat
       USE gvecs
       USE gvecp, ONLY: ng => ngm
       USE cell_base, ONLY: omega
-      USE cell_base, ONLY: a1, a2, a3, tpiba2
-      USE reciprocal_vectors, ONLY: gstart, g
+      USE cell_base, ONLY: a1, a2, a3, tpiba2, h, ainv
+      USE reciprocal_vectors, ONLY: gstart, g, gx
       USE recvecs_indexes, ONLY: np, nm
       USE grid_dimensions, ONLY: nr1, nr2, nr3, &
             nr1x, nr2x, nr3x, nnr => nnrx
       USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, &
             nr1sx, nr2sx, nr3sx, nnrsx
       USE electrons_base, ONLY: nspin
-      USE constants, ONLY: pi, fpi
+      USE constants, ONLY: pi, fpi, au_gpa
       USE energies, ONLY: etot, eself, enl, ekin, epseu, esr, eht, exc 
-      USE local_pseudo, ONLY: vps, rhops
+      USE local_pseudo, ONLY: vps, dvps, rhops
       USE core, ONLY: nlcc_any
       USE gvecb
-      USE dener
+      USE dener, ONLY: detot, dekin, dps, dh, dsr, dxc, denl
       USE derho
       USE mp, ONLY: mp_sum
       USE mp_global, ONLY: intra_image_comm
@@ -2644,6 +2652,9 @@
       USE fft_module, ONLY: fwfft, invfft
       USE sic_module, ONLY: self_interaction, sic_epsilon, sic_alpha
       USE energies,   ONLY: self_sxc, self_ehte
+      USE ions_positions,   ONLY: taus
+      USE potentials,       ONLY: vofesr
+      USE stress,           ONLY: pseudo_stress, compute_gagb, stress_har
 !
       IMPLICIT NONE
 !
@@ -2654,84 +2665,94 @@
       COMPLEX(DP) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),     &
      &                ei3(-nr3:nr3,nat), eigrb(ngb,nat),        &
      &                rhog(ng,nspin), sfac(ngs,nsp)
-!
-      INTEGER irb(3,nat), iss, isup, isdw, ig, ir,i,j,k,is, ia
-      REAL(DP) fion1(3,nat), vave, ebac, wz, eh
+      !
+      INTEGER irb(3,nat)
+      !
+      INTEGER iss, isup, isdw, ig, ir,i,j,k,is, ia
+      REAL(DP) vave, ebac, wz, eh, ehpre
       COMPLEX(DP)  fp, fm, ci
-      COMPLEX(DP), ALLOCATABLE :: v(:), vs(:)
       COMPLEX(DP), ALLOCATABLE :: rhotmp(:), vtemp(:), drhotmp(:,:,:)
-!
+      COMPLEX(DP), ALLOCATABLE :: v(:), vs(:)
+      REAL(DP), ALLOCATABLE    :: gagb(:,:)
+      !
+      REAL(DP) :: fion1( 3, nat )
+      !
       COMPLEX(DP), ALLOCATABLE :: self_vloc(:)
       COMPLEX(DP)              :: self_rhoeg
-      REAL(DP)                 :: self_ehtet , fpibg
+      REAL(DP)                 :: self_ehtet, fpibg
       LOGICAL                  :: ttsic
+      REAL(DP)                 :: detmp( 3, 3 ), desr( 6 ), deps( 6 )
+      REAL(DP)                 :: deht( 6 )
 !
+      INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
+      INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
+
 
       CALL start_clock( 'vofrho' )
-      ci=(0.,1.)
-!
-!     wz = factor for g.neq.0 because of c*(g)=c(-g)
-!
+
+      ci = ( 0.0d0, 1.0d0 )
+      !
+      !     wz = factor for g.neq.0 because of c*(g)=c(-g)
+      !
       wz = 2.0
+      !
       ALLOCATE( v( nnr ) )
       ALLOCATE( vs( nnrsx ) )
-      ALLOCATE(vtemp(ng))
-      ALLOCATE(rhotmp(ng))
-      IF (tpre) ALLOCATE(drhotmp(ng,3,3))
-!
-      ttsic = ( ABS(self_interaction) /= 0 )
+      ALLOCATE( vtemp( ng ) )
+      ALLOCATE( rhotmp( ng ) )
+      !
+      IF ( tpre ) THEN
+         ALLOCATE( drhotmp( ng, 3, 3 ) )
+         ALLOCATE( gagb( 6, ng ) )
+         CALL compute_gagb( gagb, gx, ng, tpiba2 )
+      END IF
+      !
+      ttsic = ( ABS( self_interaction ) /= 0 )
+      !
       IF( tpre .AND. ttsic ) &
-      &   CALL errore('in cplib tpre and ttsic are not possible', 1)
+      &   CALL errore( ' vofrho ', ' in cplib tpre and ttsic are not possible ', 1 )
 
-      IF( ttsic ) ALLOCATE(self_vloc(ng))
-!
-!     first routine in which fion is calculated: annihilation
-!
-      fion =0.d0
-      fion1=0.d0
-!
-!     ===================================================================
-!     forces on ions, ionic term in real space
-!     -------------------------------------------------------------------
+      IF( ttsic ) ALLOCATE( self_vloc( ng ) )
+      !
+      !     first routine in which fion is calculated: annihilation
+      !
+      fion  = 0.d0
+      fion1 = 0.d0
+      !
+      !     forces on ions, ionic term in real space
+      !
       IF( tprnfor .OR. tfor .OR. tfirst .OR. tpre ) THEN
-        CALL force_ion( tau0, esr, fion, dsr )
+         !
+         CALL vofesr( 0, esr, desr, fion, taus, tpre, h )
+         !
+         call mp_sum( fion, intra_image_comm )
+         !
+         IF( tpre ) THEN
+            call mp_sum( desr, intra_image_comm )
+            DO k = 1, 6
+               detmp( alpha(k), beta(k) ) = desr(k)
+               detmp( beta(k), alpha(k) ) = detmp( alpha(k), beta(k) )
+            END DO
+            dsr = MATMUL( detmp(:,:), TRANSPOSE( ainv(:,:) ) )
+         END IF
+         !
       END IF
 !
 
-      IF( nspin == 1 ) THEN
-         iss=1
-         DO ig=1,ng
-            rhotmp(ig)=rhog(ig,iss)
-         END DO
+      rhotmp( 1:ng ) = rhog( 1:ng, 1 )
+      IF( tpre ) THEN
+         drhotmp( 1:ng, :, : ) = drhog( 1:ng, 1, :, : )
+      END IF
+      IF( nspin == 2 ) THEN
+         rhotmp( 1:ng ) = rhotmp( 1:ng ) + rhog( 1:ng, 2 )
          IF(tpre)THEN
-            DO j=1,3
-               DO i=1,3
-                  DO ig=1,ng
-                     drhotmp(ig,i,j)=drhog(ig,iss,i,j)
-                  ENDDO
-               ENDDO
-            ENDDO
-         ENDIF
-      ELSE
-         isup=1
-         isdw=2
-         DO ig=1,ng
-            rhotmp(ig)=rhog(ig,isup)+rhog(ig,isdw)
-         END DO
-         IF(tpre)THEN
-            DO i=1,3
-               DO j=1,3
-                  DO ig=1,ng
-                     drhotmp(ig,i,j) = drhog(ig,isup,i,j) +           &
-     &                                 drhog(ig,isdw,i,j)
-                  ENDDO
-               ENDDO
-            ENDDO
+            drhotmp( 1:ng, :, : ) = drhotmp( 1:ng, :, : ) + drhog( 1:ng, 2, :, : )
          ENDIF
       END IF
-!     ===================================================================
-!     calculation local potential energy
-!     -------------------------------------------------------------------
+
+      !
+      !     calculation local potential energy
+      !
       vtemp=(0.,0.)
       DO is=1,nsp
          DO ig=1,ngs
@@ -2739,54 +2760,80 @@
          END DO
       END DO
 
-      epseu=wz*DBLE(SUM(vtemp))
+      epseu = wz * DBLE(SUM(vtemp))
       IF (gstart == 2) epseu=epseu-vtemp(1)
       CALL mp_sum( epseu, intra_image_comm )
-      epseu=epseu*omega
+      epseu = epseu * omega
 !
-      IF(tpre) CALL denps(rhotmp,drhotmp,sfac,vtemp,dps)
+      IF( tpre ) THEN
+         !
+         CALL denps_box( drhotmp, sfac, vtemp, dps )
+         CALL pseudo_stress( deps, 0.0d0, gagb, sfac, dvps, rhog, omega )
+         call mp_sum( deps, intra_image_comm )
+         DO k = 1, 6
+            detmp( alpha(k), beta(k) ) = deps(k)
+            detmp( beta(k), alpha(k) ) = detmp( alpha(k), beta(k) )
+         END DO
+         dps = dps + MATMUL( detmp(:,:), TRANSPOSE( ainv(:,:) ) )
+         !
+      END IF
+
 !
 !     ===================================================================
 !     calculation hartree energy
 !     -------------------------------------------------------------------
      !
-      self_ehtet = 0.d0
-      IF( ALLOCATED( self_vloc ) ) self_vloc = 0.d0
+      self_ehtet = 0.d0  
+      !
+      IF( ALLOCATED( self_vloc ) ) THEN
+         self_vloc = 0.d0 
+      END IF
 
       DO is=1,nsp
          DO ig=1,ngs
             rhotmp(ig)=rhotmp(ig)+sfac(ig,is)*rhops(ig,is)
          END DO
       END DO
+      !
       IF (gstart == 2) vtemp(1)=0.0
-      DO ig=gstart,ng
-         vtemp(ig)=CONJG(rhotmp(ig))*rhotmp(ig)/g(ig)
+      DO ig = gstart, ng
+         vtemp(ig) = CONJG( rhotmp( ig ) ) * rhotmp( ig ) / g( ig )
       END DO
 !
-      eh=DBLE(SUM(vtemp))*wz*0.5*fpi/tpiba2
+      eh = DBLE( SUM( vtemp ) ) * wz * 0.5 * fpi / tpiba2
 !
       IF ( ttsic ) THEN
-       DO ig = gstart,ng
-!
-         fpibg = fpi /(tpiba2 *g(ig))
-!
-         self_rhoeg    = rhog(ig,1) - rhog(ig,2)
-         self_ehtet    = self_ehtet +  fpibg * DBLE(self_rhoeg * CONJG(self_rhoeg))
-         self_vloc(ig) = sic_epsilon * fpibg * self_rhoeg
-!
-       ENDDO
+         !
+         DO ig = gstart,ng
+            fpibg = fpi /(tpiba2 *g(ig))
+            self_rhoeg    = rhog(ig,1) - rhog(ig,2)
+            self_ehtet    = self_ehtet +  fpibg * DBLE(self_rhoeg * CONJG(self_rhoeg))
+            self_vloc(ig) = sic_epsilon * fpibg * self_rhoeg
+         ENDDO
 
-        IF(gstart == 2) self_vloc(1) = 0.D0
+         IF(gstart == 2) self_vloc(1) = 0.D0
          self_ehte = sic_epsilon * self_ehtet * wz * 0.5d0
          eh = eh - self_ehte
 
          CALL mp_sum( self_ehte, intra_image_comm )
-
-      ENDIF
-!
+         !
+      END IF
+      !
       CALL mp_sum( eh, intra_image_comm )
       !
-      IF(tpre) CALL denh(rhotmp,drhotmp,sfac,vtemp,eh,dh)
+      IF(tpre) THEN
+         !CALL denh_box( rhotmp, drhotmp, sfac, vtemp, eh, dh )
+         !CALL stress_har( deht, 0.0d0, sfac, rhog, gagb, omega )
+         !call mp_sum( deht, intra_image_comm )
+         !DO k = 1, 6
+         !   detmp( alpha(k), beta(k) ) = deht(k)
+         !   detmp( beta(k), alpha(k) ) = detmp( alpha(k), beta(k) )
+         !END DO
+         !dh = dh + MATMUL( detmp(:,:), TRANSPOSE( ainv(:,:) ) )
+         !WRITE( stdout,*) 'DEBUG eh, dh = ', eh
+         !WRITE( stdout,5555) ((dh(i,j),j=1,3),i=1,3)
+         CALL denh( rhotmp, drhotmp, sfac, vtemp, eh, dh )
+      END IF
       IF(tpre) DEALLOCATE(drhotmp)
 
 !     ===================================================================
@@ -2794,10 +2841,11 @@
 !     -------------------------------------------------------------------
       IF( tprnfor .OR. tfor .OR. tpre)                                                  &
      &    CALL force_ps(rhotmp,rhog,vtemp,ei1,ei2,ei3,fion1)
-!     ===================================================================
-!     calculation hartree + local pseudo potential
-!     -------------------------------------------------------------------
-!
+
+      !
+      !     calculation hartree + local pseudo potential
+      !
+      !
       IF (gstart == 2) vtemp(1)=(0.,0.)
       DO ig=gstart,ng
          vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*g(ig))
@@ -2914,11 +2962,10 @@
             rhor(ir,isup)= DBLE(v(ir))
             rhor(ir,isdw)=AIMAG(v(ir))
          END DO
-!
-!     calculation of average potential
-!
-         vave=(SUM(rhor(:,isup))+SUM(rhor(:,isdw)))       &
-     &        /2.0/DBLE(nr1*nr2*nr3)
+         !
+         !     calculation of average potential
+         !
+         vave=(SUM(rhor(:,isup))+SUM(rhor(:,isdw))) / 2.0d0 / DBLE( nr1 * nr2 * nr3 )
       ENDIF
 
       CALL mp_sum( vave, intra_image_comm )
@@ -2956,56 +3003,89 @@
 
       IF( dft_is_meta() ) CALL vofrho_meta( v, vs )  !METAGGA
 
-      ebac=0.0
-!
-      eht=eh*omega+esr-eself
-!
-!     etot is the total energy ; ekin, enl were calculated in rhoofr
-!
-      etot=ekin+eht+epseu+enl+exc+ebac
-      IF(tpre) detot=dekin+dh+dps+denl+dxc+dsr
-!
-      DEALLOCATE(rhotmp)
-      DEALLOCATE(vtemp)
-      DEALLOCATE( v )
-      DEALLOCATE( vs )
-!
+      ebac = 0.0
+      !
+      eht = eh * omega + esr - eself
+      !
+      !     etot is the total energy ; ekin, enl were calculated in rhoofr
+      !
+      etot = ekin + eht + epseu + enl + exc + ebac
+      !
+      IF(tpre) detot = dekin + dh + dps + denl + dxc + dsr
+      !
+      !
       CALL stop_clock( 'vofrho' )
-
-      IF( ( nfi == 0 ) .OR. tfirst .OR. tlast ) GOTO 999
-      IF( MOD( nfi - 1, iprint) /= 0 ) RETURN
-!
- 999  IF ( tpre ) THEN
-         IF( iprsta >= 2 ) THEN  
+      !
+      !
+      IF ( tpre ) THEN
+         !
+         DEALLOCATE( gagb )
+         !
+         IF( ( iprsta >= 2 ) .AND. ( MOD( nfi - 1, iprint) == 0 ) ) THEN  
+            !
             WRITE( stdout,*)
             WRITE( stdout,*) "From vofrho:"
             WRITE( stdout,*) "cell parameters h"
             WRITE( stdout,5555) (a1(i),a2(i),a3(i),i=1,3)
+            !
             WRITE( stdout,*)
             WRITE( stdout,*) "derivative of e(tot)"
             WRITE( stdout,5555) ((detot(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "kbar"
+            detmp = -1.0d0 * MATMUL( detot, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
+            WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+            !
             WRITE( stdout,*)
             WRITE( stdout,*) "derivative of e(kin)"
             WRITE( stdout,5555) ((dekin(i,j),j=1,3),i=1,3)
-            WRITE( stdout,*) "derivative of e(electrostatic)"
-            WRITE( stdout,5555) (((dh(i,j)+dsr(i,j)),j=1,3),i=1,3)
+            WRITE( stdout,*) "kbar"
+            detmp = -1.0d0 * MATMUL( dekin, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
+            WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+            !
             WRITE( stdout,*) "derivative of e(h)"
             WRITE( stdout,5555) ((dh(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "kbar"
+            detmp = -1.0d0 * MATMUL( dh, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
+            WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+             !
             WRITE( stdout,*) "derivative of e(sr)"
             WRITE( stdout,5555) ((dsr(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "kbar"
+            detmp = -1.0d0 * MATMUL( dsr, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
+            WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+            !
             WRITE( stdout,*) "derivative of e(ps)"
             WRITE( stdout,5555) ((dps(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "kbar"
+            detmp = -1.0d0 * MATMUL( dps, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
+            WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+            !
             WRITE( stdout,*) "derivative of e(nl)"
             WRITE( stdout,5555) ((denl(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "kbar"
+            detmp = -1.0d0 * MATMUL( denl, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
+            WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+            !
             WRITE( stdout,*) "derivative of e(xc)"
             WRITE( stdout,5555) ((dxc(i,j),j=1,3),i=1,3)
+            WRITE( stdout,*) "kbar"
+            detmp = -1.0d0 * MATMUL( dxc, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
+            WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
          ENDIF
       ENDIF
+
+      DEALLOCATE( rhotmp )
+      DEALLOCATE( vtemp )
+      DEALLOCATE( v )
+      DEALLOCATE( vs )
+
+      RETURN
+
 5555  FORMAT(1x,f12.5,1x,f12.5,1x,f12.5/                                &
      &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
      &       1x,f12.5,1x,f12.5,1x,f12.5//)
 !
-      RETURN
+
       END SUBROUTINE vofrho
 
 !

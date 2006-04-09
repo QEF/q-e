@@ -590,7 +590,7 @@
         ! ...   printout 
         !
 
-        CALL printout( nfi, atoms0, ekinc, ekcell, ttprint, ht0, acc, acc_this_run, edft)
+        CALL printout( nfi, atoms0, ekinc, ekcell, ttprint, ht0, edft)
 
         ! ...   Update variables
 
@@ -700,7 +700,6 @@
         END DO
       END IF
       !
-
       IF(tksout) THEN
         IF ( force_pairing ) THEN 
           CALL ks_states_force_pairing(c0, wfill, ce, wempt, occn, vpot, eigr, bec )
@@ -712,10 +711,6 @@
       IF(tprnsfac) THEN
         CALL print_sfac(rhor, sfac)
       END IF
-
-      ! ... report statistics
-
-      CALL printacc(nfi, nstep_this_run, acc, acc_this_run)
 
       DO iunit = 10, 99
         IF( iunit == stdout ) CYCLE

@@ -288,7 +288,6 @@ CONTAINS
            etot = etot + enb + enbi
          END IF
 
-
          CALL compute_stress( stress, detot, h, omega )
 
          if(iprsta.gt.2) CALL print_atomic_var( fion, na, nsp, ' fion ' )
@@ -439,7 +438,7 @@ CONTAINS
        !
        !  Printout values at step 0, useful for debugging
        !
-       CALL printout( nfi, atoms, 0.0d0, 0.0d0, ttprint, ht, adum, adum, edft )
+       CALL printout( nfi, atoms, 0.0d0, 0.0d0, ttprint, ht, edft )
        !
     END IF
     !

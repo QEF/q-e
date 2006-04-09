@@ -674,6 +674,7 @@
     !    The matrix "ht" in FPMD correspond to the transpose of matrix "at" in PW
     !
     at     = TRANSPOSE( ht )
+    !
     IF( iprsta > 3 ) THEN
       WRITE( stdout, 210 )
       WRITE( stdout, 220 ) ( ht( 1, j ), j = 1, 3 )

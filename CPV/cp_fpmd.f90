@@ -1043,6 +1043,7 @@ END SUBROUTINE gshcount
           USE gvecp, ONLY: ecutp
           USE gvecs, ONLY: ecuts, dual, doublegrid
           use betax, only: mmx, refg
+          USE pseudopotential, only: tpstab
 
           IMPLICIT NONE
           REAL(DP), INTENT(IN) ::  ecutwfc, ecutrho, ecfixed, qcutz, q2sigma
@@ -1082,7 +1083,13 @@ END SUBROUTINE gshcount
           ecutz = qcutz
           ecsig = q2sigma
 
-          refg = refg_
+          IF( refg_ < 0.0001 ) THEN
+             tpstab = .FALSE.
+             refg = 0.05
+          ELSE
+             refg = refg_
+          END IF
+
           mmx  = NINT( 1.2d0 * ecutp / refg )
 
           RETURN

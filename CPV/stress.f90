@@ -26,6 +26,7 @@
        SAVE
 
        PUBLIC :: pstress, print_stress_time
+       PUBLIC :: pseudo_stress, compute_gagb, stress_har
 
        INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
        INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
@@ -101,7 +102,7 @@
 
       REAL(DP), DIMENSION (6) :: dekin, deht, deps, denl, dexc, dvdw
       REAL(DP), DIMENSION (3,3) :: paiu
-      REAL(DP), ALLOCATABLE :: gagx_l(:,:)
+      REAL(DP), ALLOCATABLE :: gagb(:,:)
       REAL(DP) :: omega, ehr
 
       INTEGER k, ig
@@ -117,30 +118,25 @@
       
       IF(timing) s0 = cclock()
 
-! ... compute G_alpha * G_beta
-
-      ALLOCATE(gagx_l(6,ngm))
-      DO k = 1, 6
-        DO ig = 1, ngm
-          gagx_l(k,ig) = gx(alpha(k),ig) * gx(beta(k),ig) * tpiba2
-        END DO
-      END DO
+      ALLOCATE( gagb( 6, ngm ) )
+      !
+      CALL compute_gagb( gagb, gx, ngm, tpiba2 )
 
       IF(timing) s1 = cclock()
 
 ! ... compute kinetic energy contribution
 
-      CALL stress_kin(dekin, c0, cdesc, occ, gagx_l)
+      CALL stress_kin( dekin, c0, cdesc, occ, gagb )
 
       IF(timing) s2 = cclock()
 
 ! ... compute hartree energy contribution
-      CALL stress_har(deht, ehr, sfac, rhoeg, gagx_l, box)
+      CALL stress_har(deht, ehr, sfac, rhoeg, gagb, box%deth)
 
       IF(timing) s3 = cclock()
 
 ! ... compute exchange & correlation energy contribution
-      CALL stress_xc(dexc, strvxc, sfac, vxc, grho, v2xc, gagx_l, &
+      CALL stress_xc(dexc, strvxc, sfac, vxc, grho, v2xc, gagb, &
         nlcc, drhocg, box)
 
       IF(timing) s4 = cclock()
@@ -152,12 +148,12 @@
 
       IF(timing) s5 = cclock()
 
-      CALL pseudo_stress(deps, edft%epseu, gagx_l, sfac, dvps, rhoeg, box)
+      CALL pseudo_stress(deps, edft%epseu, gagb, sfac, dvps, rhoeg, box%deth)
 
       IF(timing) s6 = cclock()
 
 ! ... compute enl (non-local) contribution
-      CALL stress_nl(denl, gagx_l, c0, cdesc, occ, eigr, bec, edft%enl, box%a, box%m1 )
+      CALL stress_nl(denl, gagb, c0, cdesc, occ, eigr, bec, edft%enl, box%a, box%m1 )
 
       IF(timing) s7 = cclock()
 
@@ -176,7 +172,7 @@
     
       CALL mp_sum( pail, intra_image_comm )
   
-      DEALLOCATE(gagx_l)
+      DEALLOCATE(gagb)
 
       IF( timing ) THEN
         s8 = cclock()
@@ -231,7 +227,7 @@
 
 !  BEGIN manual
 
-      SUBROUTINE stress_nl(denl, gagx_l, c0, cdesc, occ, eigr, bec, enl, ht, htm1)
+      SUBROUTINE stress_nl(denl, gagb, c0, cdesc, occ, eigr, bec, enl, ht, htm1)
 
 !  this routine computes nl part of the stress tensor from dft total energy
 !  ----------------------------------------------
@@ -264,7 +260,7 @@
       COMPLEX(DP), INTENT(IN) :: c0(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       REAL(DP), INTENT(OUT) :: denl(:)
-      REAL(DP), INTENT(IN) :: gagx_l(:,:)
+      REAL(DP), INTENT(IN) :: gagb(:,:)
       COMPLEX(DP), INTENT(IN) :: eigr(:,:)
       REAL(DP) :: bec(:,:)
       REAL(DP), INTENT(IN) :: enl
@@ -343,11 +339,6 @@
         denl = 0.0_DP
       END IF
 
-      !WRITE(6,*) 'DEBUG enl (CP) = '
-      !detmp = denl_new
-      !detmp = MATMUL( detmp(:,:), ht(:,:) )
-      !WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
-  
       ngw = cdesc%ngwl
       
       ! ... initialize array wnla
@@ -451,7 +442,7 @@
 
               gwtmp(1) = 0.0d0
               DO ig = gstart, ngw
-                gwtmp( ig ) = gagx_l(kk,ig) * gspha(ig,iy) * ( anm * wnl(ig,iv,is,1) - wnla(ig,iv,is) )
+                gwtmp( ig ) = gagb(kk,ig) * gspha(ig,iy) * ( anm * wnl(ig,iv,is,1) - wnla(ig,iv,is) )
               END DO
 
               IF( igh(l) < 0 ) igh(l) = ih
@@ -568,55 +559,45 @@
 !  ----------------------------------------------
 !  ----------------------------------------------
 
-      SUBROUTINE pseudo_stress(deps, epseu, gagx_l, sfac, dvps, rhoeg, ht)
+      SUBROUTINE pseudo_stress( deps, epseu, gagb, sfac, dvps, rhoeg, omega )
 
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
+      !  
 
-! ... declare modules
-      USE cell_module,        only: boxdimensions
       USE ions_base,          ONLY: nsp
-      USE reciprocal_vectors, ONLY: gstart, gzero
-      USE gvecp,              ONLY: ngm
+      USE reciprocal_vectors, ONLY: gstart
+      USE gvecs,              ONLY: ngs
+      USE electrons_base,     ONLY: nspin
 
-! ... declare subroutine arguments
-      TYPE (boxdimensions), INTENT(IN) :: ht
+      REAL(DP),     INTENT(IN)  :: omega
       REAL(DP),     INTENT(OUT) :: deps(:)
-      REAL(DP),     INTENT(IN) ::  gagx_l(:,:)
-      COMPLEX(DP),  INTENT(IN) ::  rhoeg(:,:)
-      COMPLEX(DP),  INTENT(IN) ::  sfac(:,:)
-      REAL(DP),     INTENT(IN) ::  dvps(:,:)
-      REAL(DP),     INTENT(IN) ::  epseu
+      REAL(DP),     INTENT(IN)  :: gagb(:,:)
+      COMPLEX(DP),  INTENT(IN)  :: rhoeg(:,:)
+      COMPLEX(DP),  INTENT(IN)  :: sfac(:,:)
+      REAL(DP),     INTENT(IN)  :: dvps(:,:)
+      REAL(DP),     INTENT(IN)  :: epseu
 
-! ... declare other variables
-      INTEGER :: ig,k,is, ispin, nspin
-      REAL(DP) :: omega
+      INTEGER     :: ig,k,is, ispin
       COMPLEX(DP) :: rhets, depst(6)
-
-!  end of declarations
-!  ----------------------------------------------
-      omega    = ht%deth
-      nspin    = SIZE(rhoeg,2)
-
+      !  
       depst = (0.d0,0.d0)
 
       DO is = 1, nsp
-        DO ig = gstart, ngm
+        DO ig = gstart, ngs
           rhets = rhoeg(ig, 1)
           IF( nspin > 1) THEN
             rhets = rhets + rhoeg(ig, 2)
           END IF
           rhets = -2.d0 * sfac( ig, is ) * dvps(ig,is) * CONJG(rhets)
-          depst(1) = depst(1) + rhets * gagx_l(1,ig)
-          depst(2) = depst(2) + rhets * gagx_l(2,ig)
-          depst(3) = depst(3) + rhets * gagx_l(3,ig)
-          depst(4) = depst(4) + rhets * gagx_l(4,ig)
-          depst(5) = depst(5) + rhets * gagx_l(5,ig)
-          depst(6) = depst(6) + rhets * gagx_l(6,ig)
+          depst(1) = depst(1) + rhets * gagb(1,ig)
+          depst(2) = depst(2) + rhets * gagb(2,ig)
+          depst(3) = depst(3) + rhets * gagb(3,ig)
+          depst(4) = depst(4) + rhets * gagb(4,ig)
+          depst(5) = depst(5) + rhets * gagb(5,ig)
+          depst(6) = depst(6) + rhets * gagb(6,ig)
         END DO
       END DO
 
-      IF(gzero) THEN
+      IF( gstart == 2 ) THEN
         deps = 2.0_DP * omega * REAL(depst) - epseu * dalbe
       ELSE
         deps = 2.0_DP * omega * REAL(depst)
@@ -627,28 +608,27 @@
 
 
 !  ----------------------------------------------
-!  ----------------------------------------------
 
-!  BEGIN manual
 
-      SUBROUTINE stress_kin(dekin, c0, cdesc, occ, gagx_l) 
+      SUBROUTINE stress_kin(dekin, c0, cdesc, occ, gagb) 
 
 !  this routine computes the kinetic energy contribution to the stress 
 !  tensor
 !
-!  dekin(:) = - 2 (sum over i) occ%s(i) * 
-!    ( (sum over ig) gagx(:,ig) CONJG( c0%w(ig,ib) ) c0%w(ig,ib)
+!  dekin(:) = - 2 (sum over i) f(i) * 
+!    ( (sum over g) gagb(:,g) CONJG( c0(g,i) ) c0(g,i) )
 !                       
 !  ----------------------------------------------
 !  END manual
 
 ! ... declare modules
-      USE gvecw, ONLY: ecsig, ecfix, ecutz
-      USE wave_types, ONLY: wave_descriptor
-      USE constants, ONLY: pi
-      USE control_flags, ONLY: force_pairing
+      USE gvecw,              ONLY: ecsig, ecfix, ecutz, ngw
+      USE wave_types,         ONLY: wave_descriptor
+      USE constants,          ONLY: pi
+      USE control_flags,      ONLY: force_pairing
       USE reciprocal_vectors, ONLY: gstart, g
-      USE cell_base, ONLY: tpiba2
+      USE cell_base,          ONLY: tpiba2
+      USE electrons_base,     ONLY: nspin
 
       IMPLICIT NONE
 
@@ -657,43 +637,43 @@
       COMPLEX(DP), INTENT(IN) :: c0(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       REAL(DP), INTENT(IN) :: occ(:,:,:)
-      REAL(DP) gagx_l(:,:)
+      REAL(DP) gagb(:,:)
 
 ! ... declare other variables
       REAL(DP)  :: sk(6), scg, efac
       REAL(DP), ALLOCATABLE :: arg(:)
-      INTEGER    :: ib, ig, ispin, nspin, ispin_wfc
+      INTEGER    :: ib, ig, ispin, ispin_wfc
 
 ! ... end of declarations
 !  ----------------------------------------------
 
-      nspin = cdesc%nspin
       dekin = 0.0_DP
-      ALLOCATE( arg( cdesc%ldg ) ) 
+      ALLOCATE( arg( ngw ) ) 
 
       efac = 2.0d0 * ecutz / ecsig / SQRT(pi)
       IF( efac > 0.0d0 ) THEN
-        DO ig = gstart, cdesc%ngwl
+        DO ig = gstart, ngw
           arg(ig) = 1.0d0 + efac * exp( -( ( tpiba2 * g(ig) - ecfix ) / ecsig )**2 )
         END DO
       ELSE
         arg = 1.0d0
       END IF
 
-! ... compute kinetic energy contribution
+      ! ... compute kinetic energy contribution
+
       DO ispin = 1, nspin
         ispin_wfc = ispin
         IF( force_pairing ) ispin_wfc = 1
         DO ib = 1, cdesc%nbl( ispin )
           sk = 0.0_DP
-          DO ig = gstart, cdesc%ngwl
+          DO ig = gstart, ngw
             scg = arg(ig) * CONJG( c0(ig,ib,1,ispin_wfc) ) * c0(ig,ib,1,ispin_wfc)
-            sk(1)  = sk(1) + scg * gagx_l(1,ig)
-            sk(2)  = sk(2) + scg * gagx_l(2,ig)
-            sk(3)  = sk(3) + scg * gagx_l(3,ig)
-            sk(4)  = sk(4) + scg * gagx_l(4,ig)
-            sk(5)  = sk(5) + scg * gagx_l(5,ig)
-            sk(6)  = sk(6) + scg * gagx_l(6,ig)
+            sk(1)  = sk(1) + scg * gagb(1,ig)
+            sk(2)  = sk(2) + scg * gagb(2,ig)
+            sk(3)  = sk(3) + scg * gagb(3,ig)
+            sk(4)  = sk(4) + scg * gagb(4,ig)
+            sk(5)  = sk(5) + scg * gagb(5,ig)
+            sk(6)  = sk(6) + scg * gagb(6,ig)
           END DO
           dekin = dekin  + occ(ib,1,ispin) * sk
         END DO
@@ -704,11 +684,11 @@
       END SUBROUTINE stress_kin
 
 
-!=======================================================================
-!==          COMPUTES HARTREE ENERGY CONTRIBUTION                     ==
-!=======================================================================
+!  ----------------------------------------------
+!  ----------------------------------------------
 
-      SUBROUTINE stress_har(deht, ehr, sfac, rhoeg, gagx_l, box ) 
+
+      SUBROUTINE stress_har(deht, ehr, sfac, rhoeg, gagb, omega ) 
 
       use ions_base,          only: nsp, rcmax
       USE cell_module,        only: boxdimensions
@@ -716,68 +696,58 @@
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2
       USE reciprocal_vectors, ONLY: gstart, g
+      USE gvecs,              ONLY: ngs
       USE gvecp,              ONLY: ngm
       USE local_pseudo,       ONLY: rhops
+      USE electrons_base,     ONLY: nspin
 
       IMPLICIT NONE
 
-!---------------------------------------------------ARGUMENT
-
-      type (boxdimensions) :: box
-      REAL(DP)    :: DEHT(:), EHR, GAgx_L(:,:)
+      REAL(DP)    :: omega, DEHT(:), EHR, gagb(:,:)
       COMPLEX(DP) :: RHOEG(:,:)
       COMPLEX(DP), INTENT(IN) :: sfac(:,:)
 
-!---------------------------------------------------LOCAL
-
-      COMPLEX(DP)    CHGM1,DEHC(6)
-      COMPLEX(DP)    RHOP,RHOPR,CFPIBG
+      COMPLEX(DP)    DEHC(6)
+      COMPLEX(DP)    RHOP,DRHOP
       COMPLEX(DP)    RHET,RHOG,RHETS,RHOGS
       COMPLEX(DP)    CFACT
-      REAL(DP)        r2,hgm1
-      REAL(DP)        HG_TPIBA2,fpibg
-      REAL(DP)        ONE_BY_OMEGA
-      REAL(DP)        ONE_BY_TPIBA2
-      REAL(DP)        omega
+      REAL(DP)       hgm1
 
-      INTEGER       ig, is, k, ispin, nspin
+      INTEGER       ig, is, k, ispin
 
-!---------------------------------------------------SUBROUTINE BODY
-
-      omega         = box%deth 
-      ONE_BY_OMEGA  = 1.0d0/omega
-      ONE_BY_TPIBA2 = 1.0d0/TPIBA2
-      nspin         = SIZE(rhoeg,2)
-      
       DEHC  = (0.D0,0.D0)
       DEHT  = 0.D0
 
-      DO IG = gstart, ngm
-        RHOP = (0.D0,0.D0)
-        RHOPR= (0.D0,0.D0)
-        DO IS = 1, NSP
-          RHOP  = RHOP  + sfac( IG, is ) *  RHOPS(IG,is)
-          RHOPR = RHOPR + sfac( IG, is ) * RHOPS(IG,is) * rcmax(is)**2 * 0.5D0
-        END DO
+      DO ig = gstart, ngm
+        RHOP  = (0.D0,0.D0)
+        DRHOP = (0.D0,0.D0)
+        IF( ig <= ngs ) THEN
+          DO IS = 1, NSP
+            RHOP  = RHOP  + sfac( IG, is ) * RHOPS(IG,is)
+            DRHOP = DRHOP - sfac( IG, is ) * RHOPS(IG,is) * rcmax(is)**2 * 0.5D0
+          END DO
+        END  IF
         HGM1   = 1.D0 / g(IG) / TPIBA2 
-        RHET   = 0.0_DP
+        RHET   = 0.0d0
         DO ispin = 1, nspin
           RHET   = RHET + RHOEG(ig,ispin)
         END DO
         RHOG   = RHET + RHOP
-        CFACT  = FPI * HGM1 * CONJG(RHOG) * (RHOG * HGM1 + RHOPR)
-        DEHC   = DEHC + CFACT * GAgx_L(:,IG)
+        CFACT  = HGM1 * CONJG(RHOG) * ( RHOG * HGM1 - DRHOP )
+        DEHC   = DEHC + CFACT * gagb(:,ig)
       END DO
 
       if ( me_image == root_image ) then
-        deht = 2.0_DP * omega * REAL(dehc) - ehr * dalbe
+        deht = 2.0d0 * fpi * omega * DBLE(dehc) - ehr * dalbe
       else
-        deht = 2.0_DP * omega * REAL(dehc)
+        deht = 2.0d0 * fpi * omega * DBLE(dehc)
       end if
 
       RETURN
       END SUBROUTINE stress_har
 
+!  ----------------------------------------------
+!  ----------------------------------------------
 
 
       SUBROUTINE stress_debug(dekin, deht, dexc, desr, deps, denl, htm1)
@@ -864,5 +834,32 @@
       RETURN
       END SUBROUTINE stress_debug
 
+!=----------------------------------------------------------------------------=!
+
+
+      SUBROUTINE compute_gagb( gagb, gx, ngm, tpiba2 )
+
+         ! ... compute G_alpha * G_beta  
+
+         USE kinds, ONLY: DP
+         INTEGER,  INTENT(IN)  :: ngm
+         REAL(DP), INTENT(IN)  :: gx(:,:)
+         REAL(DP), INTENT(OUT) :: gagb(:,:)
+         REAL(DP), INTENT(IN)  :: tpiba2
+
+         INTEGER :: k, ig
+      
+         DO k = 1, 6
+            DO ig = 1, ngm          
+               gagb( k, ig ) = gx( alpha( k ), ig ) * gx( beta( k ), ig ) * tpiba2
+            END DO
+         END DO
+
+      END SUBROUTINE compute_gagb
+
+
+!=----------------------------------------------------------------------------=!
 
   END MODULE stress
+
+!=----------------------------------------------------------------------------=!

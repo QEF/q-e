@@ -969,6 +969,7 @@ SUBROUTINE upf2ncpp( upf, ap )
   !
 
   use pseudo_types
+  use constants, ONLY: eps14
 
   TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
   TYPE (pseudo_upf ), INTENT(INOUT) :: upf
@@ -1011,11 +1012,12 @@ SUBROUTINE upf2ncpp( upf, ap )
   ap%rw( 1:upf%mesh )     = upf%r( 1:upf%mesh )
   ap%vnl( 1:upf%mesh, 1 ) = upf%vloc( 1:upf%mesh ) / 2.0d0  ! Rydberg to Hartree atomic units
   ap%dx   = calculate_dx( ap%rw, ap%mesh )
-  ap%rab  = ap%dx * ap%rw
-  ! WRITE(6,*) 'read_pseudo RAB:'         ! DEBUG
-  ! DO i = 1, upf%mesh                    ! DEBUG
-  !   WRITE(6,*) ap%rab(i)/upf%rab(i)     ! DEBUG
-  ! END DO                                ! DEBUG
+  IF( ap%rw( 1 ) < eps14 ) THEN
+     ap%rab  = upf%rab 
+  ELSE
+     ap%rab  = ap%dx * ap%rw
+  END IF
+  !
   ap%vloc( 1:upf%mesh ) = upf%vloc( 1:upf%mesh ) / 2.0d0
   ap%nrps = upf%nwfc
   ap%lrps( 1:upf%nwfc ) = upf%lchi( 1:upf%nwfc )

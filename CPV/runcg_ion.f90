@@ -227,7 +227,7 @@
 113       FORMAT(8X,'cgion:',I5,2X,F14.6,2X,2D12.4)
         END IF
 
-        CALL printout(iter, atoms0, 0.0d0, 0.0d0, .TRUE., ht, avgs, avgs_this_run, edft)
+        CALL printout(iter, atoms0, 0.0d0, 0.0d0, .TRUE., ht, edft)
 
         fp  = fret
         xi(1:3,1:nat) = - atoms0%for(1:3,1:nat) 
@@ -271,7 +271,7 @@
         WRITE( stdout,fmt="(8X,'cgion:  maximum number of iteration exceeded',/)")
       END IF
 
-      CALL printout(iter, atoms0, 0.0d0, 0.0d0, .TRUE., ht, avgs, avgs_this_run, edft)
+      CALL printout(iter, atoms0, 0.0d0, 0.0d0, .TRUE., ht, edft)
 
       DEALLOCATE( hacca, gnew, xi, STAT=ierr )
       IF( ierr/=0 ) CALL errore(' runcg_ion ', ' deallocating hacca ',ierr)

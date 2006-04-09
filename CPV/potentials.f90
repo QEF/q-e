@@ -34,7 +34,7 @@
         INTEGER   :: timcnt = 0
 
         PUBLIC :: vofrhos, potential_init, potential_print_info, &
-                  kspotential, print_vofrho_time, localisation
+                  kspotential, print_vofrho_time, localisation, vofesr
 
         REAL(DP), EXTERNAL :: cclock
 
@@ -268,7 +268,7 @@
       USE energies,       ONLY: total_energy, dft_energy_type
       USE stress,         ONLY: pstress
       USE funct,          ONLY: dft_is_gradient
-      USE charge_density, ONLY: gradrho
+      USE charge_density, ONLY: fillgrad
       USE chi2,           ONLY: rhochi, allocate_chi2, deallocate_chi2
       USE vanderwaals,    ONLY: tvdw, vdw
       USE wave_types,     ONLY: wave_descriptor
@@ -443,14 +443,14 @@
            WRITE( stdout,fmt="(3X,'Using screened Coulomb potential for cluster calculation')")
       END IF
 
-
       IF( tstress .OR. tforce .OR. iflag == 0 )  THEN
-        CALL vofesr( edft%esr, desr, fion, atoms%taus, tstress, box%hmat )
-        IF( iflag == 0 ) &
-          WRITE( stdout, fmt="(/,3X,'ESR (real part of Ewald sum) = ',D16.8,/)" ) edft%esr
-        iflag = 1
-        ! WRITE(6,*) 'DEBUG esr = ', SUM(fion)
+         CALL vofesr( iesr, edft%esr, desr, fion, atoms%taus, tstress, box%hmat )
+         IF( iflag == 0 ) &
+            WRITE( stdout, fmt="(/,3X,'ESR (real part of Ewald sum) = ',D16.8,/)" ) edft%esr
+         iflag = 1
+         ! WRITE(6,*) 'DEBUG esr = ', SUM(fion)
       END IF
+
 
       IF(timing) s2 = cclock()
 
@@ -495,12 +495,11 @@
 
         END IF
 
-        IF( tgc ) THEN
-          CALL gradrho( rhoetg(:,iss), grho(:,:,iss), gx )
-        END IF
-
       END DO
 
+      IF( tgc ) THEN
+         CALL fillgrad( nspin, rhoetg, grho )
+      END IF
 
       IF(timing) s3 = cclock()
 
@@ -1088,24 +1087,25 @@
 
 !
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE vofesr( esr, desr, fion, taus, tstress, hmat )
+   SUBROUTINE vofesr( iesr, esr, desr, fion, taus, tstress, hmat )
 !=----------------------------------------------------------------------------=!
 
       USE constants,   ONLY : sqrtpm1
       USE cell_module, ONLY : s_to_r, pbcs
       USE mp_global,   ONLY : nproc_image, me_image, intra_image_comm
       USE mp,          ONLY : mp_sum
-      USE ions_base,   ONLY : rcmax, zv, nsp, na, nax
+      USE ions_base,   ONLY : rcmax, zv, nsp, na, nat
  
       IMPLICIT NONE
 
 ! ... ARGUMENTS 
       
+      INTEGER,  INTENT(IN) :: iesr
       REAL(DP), INTENT(IN) :: taus(:,:)
       REAL(DP) :: ESR
       REAL(DP) :: DESR(:)
       REAL(DP) :: FION(:,:)
-      LOGICAL   :: TSTRESS
+      LOGICAL,  INTENT(IN) :: TSTRESS
       REAL(DP), INTENT(in) :: hmat( 3, 3 )
 
 ! ... declare external function
@@ -1126,7 +1126,7 @@
       INTEGER, ALLOCATABLE   :: iatom(:,:)
       REAL(DP), ALLOCATABLE :: zv2(:,:)
       REAL(DP), ALLOCATABLE :: rc(:,:)  
-      REAL(DP), ALLOCATABLE :: fionloc(:,:,:) 
+      REAL(DP), ALLOCATABLE :: fionloc(:,:) 
       REAL(DP)  :: RXLM(3), SXLM(3)
       REAL(DP)  :: xlm, ylm, zlm, erre2, rlm, arg, esrtzero
       REAL(DP)  :: addesr, addpre, repand, fxx
@@ -1171,7 +1171,7 @@
       ALLOCATE( iatom( 4, npt ) )
       ALLOCATE( rc( nsp, nsp ) )
       ALLOCATE( zv2( nsp, nsp ) )
-      ALLOCATE( fionloc( 3, nax, nsp ) )
+      ALLOCATE( fionloc( 3, nat ) )
       rc      = 0.0_DP
       zv2     = 0.0_DP
       fionloc = 0.0_DP
@@ -1213,6 +1213,8 @@
       ESR     = 0.0_DP
       DESR    = 0.0_DP
 
+      !  Distribute the atoms pairs to processors
+
       NA_LOC = ldim_block( npt, nproc_image, me_image)
       IA_S   = gind_block( 1, npt, nproc_image, me_image )
       IA_E   = IA_S + NA_LOC - 1
@@ -1228,18 +1230,20 @@
         rckj_m1  = 1.0_DP / rc(k,j)
         fact_pre = (2.0_DP * zv2_kj * sqrtpm1) * rckj_m1
 
+        iakl = iasp(k) + l - 1
+        iajm = iasp(j) + m - 1
+
         IF( (l.EQ.m) .AND. (k.EQ.j)) THEN      
-! ...     same atoms
-          xlm=0.0_DP; ylm=0.0_DP; zlm=0.0_DP; tzero=.TRUE.
+           ! ...     same atoms
+           xlm=0.0_DP; ylm=0.0_DP; zlm=0.0_DP; 
+           tzero=.TRUE.
         ELSE
-! ...     different atoms
-          iakl = iasp(k) + l - 1
-          iajm = iasp(j) + m - 1
-          xlm = taus(1,iakl) - taus(1,iajm)
-          ylm = taus(2,iakl) - taus(2,iajm)
-          zlm = taus(3,iakl) - taus(3,iajm)
-          CALL pbcs(xlm,ylm,zlm,xlm,ylm,zlm,1)
-          TZERO=.FALSE.
+           ! ...     different atoms
+           xlm = taus(1,iakl) - taus(1,iajm)
+           ylm = taus(2,iakl) - taus(2,iajm)
+           zlm = taus(3,iakl) - taus(3,iajm)
+           CALL pbcs(xlm,ylm,zlm,xlm,ylm,zlm,1)
+           TZERO=.FALSE.
         END IF
 
         DO IX=-IESR,IESR
@@ -1248,7 +1252,7 @@
             SXLM(2) = YLM + DBLE(IY)
             DO IZ=-IESR,IESR
               TSHIFT= IX.EQ.0 .AND. IY.EQ.0 .AND. IZ.EQ.0
-              IF(.NOT.(TZERO.AND.TSHIFT)) THEN
+              IF( .NOT. ( TZERO .AND. TSHIFT ) ) THEN
                 SXLM(3) = ZLM + DBLE(IZ)
                 CALL S_TO_R( SXLM, RXLM, hmat )
                 ERRE2 = RXLM(1)**2 + RXLM(2)**2 + RXLM(3)**2
@@ -1263,17 +1267,20 @@
                 ESR    = ESR + ESRTZERO*ADDESR
                 ADDPRE = FACT_PRE * EXP(-ARG*ARG)
                 REPAND = ESRTZERO*(ADDESR + ADDPRE)/ERRE2
-                DO I=1,3
-                  FXX = REPAND*RXLM(I)
-                  FIONLOC(I,L,K) = FIONLOC(I,L,K) + FXX
-                  FIONLOC(I,M,J) = FIONLOC(I,M,J) - FXX
+                !
+                DO i = 1, 3
+                   fxx = repand * rxlm( i )
+                   fionloc( i, iakl ) = fionloc( i, iakl ) + fxx
+                   fionloc( i, iajm ) = fionloc( i, iajm ) - fxx
                 END DO
-                IF(TSTRESS) THEN
-                  DO I=1,6
-                    FXX = REPAND * RXLM(ALPHA(I))*RXLM(BETA(I))
-                    DESR(I) = DESR(I) - FXX
-                  END DO
+                !
+                IF( tstress ) THEN
+                   DO i = 1, 6
+                      fxx = repand * rxlm( alpha( i ) ) * rxlm( beta( i ) )
+                      desr( i ) = desr( i ) - fxx
+                   END DO
                 END IF
+                !
               END IF
             END DO    ! IZ
           END DO      ! IY
@@ -1287,9 +1294,9 @@
       DO IS = 1, nsp
         DO IA = 1, na(is)
           isa = isa + 1
-          FION(1,ISA) = FION(1,ISA)+FIONLOC(1,IA,IS)
-          FION(2,ISA) = FION(2,ISA)+FIONLOC(2,IA,IS)
-          FION(3,ISA) = FION(3,ISA)+FIONLOC(3,IA,IS)
+          FION(1,ISA) = FION(1,ISA)+FIONLOC(1,ISA)
+          FION(2,ISA) = FION(2,ISA)+FIONLOC(2,ISA)
+          FION(3,ISA) = FION(3,ISA)+FIONLOC(3,ISA)
         END DO
       END DO
 
