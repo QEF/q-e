@@ -2630,7 +2630,7 @@
       USE ions_base,     ONLY: nsp, na, nat
       USE gvecs
       USE gvecp, ONLY: ng => ngm
-      USE cell_base, ONLY: omega
+      USE cell_base, ONLY: omega, r_to_s
       USE cell_base, ONLY: a1, a2, a3, tpiba2, h, ainv
       USE reciprocal_vectors, ONLY: gstart, g, gx
       USE recvecs_indexes, ONLY: np, nm
@@ -2652,7 +2652,6 @@
       USE fft_module, ONLY: fwfft, invfft
       USE sic_module, ONLY: self_interaction, sic_epsilon, sic_alpha
       USE energies,   ONLY: self_sxc, self_ehte
-      USE ions_positions,   ONLY: taus
       USE potentials,       ONLY: vofesr
       USE stress,           ONLY: pseudo_stress, compute_gagb, stress_har
 !
@@ -2676,6 +2675,7 @@
       REAL(DP), ALLOCATABLE    :: gagb(:,:)
       !
       REAL(DP) :: fion1( 3, nat )
+      REAL(DP), ALLOCATABLE :: stmp( :, : )
       !
       COMPLEX(DP), ALLOCATABLE :: self_vloc(:)
       COMPLEX(DP)              :: self_rhoeg
@@ -2723,7 +2723,11 @@
       !
       IF( tprnfor .OR. tfor .OR. tfirst .OR. tpre ) THEN
          !
-         CALL vofesr( 0, esr, desr, fion, taus, tpre, h )
+         ALLOCATE( stmp( 3, nat ) )
+         !
+         CALL r_to_s( tau0, stmp, na, nsp, ainv )
+         !
+         CALL vofesr( 0, esr, desr, fion, stmp, tpre, h )
          !
          call mp_sum( fion, intra_image_comm )
          !
@@ -2735,6 +2739,8 @@
             END DO
             dsr = MATMUL( detmp(:,:), TRANSPOSE( ainv(:,:) ) )
          END IF
+         !
+         DEALLOCATE( stmp )
          !
       END IF
 !
