@@ -16,7 +16,8 @@ module wannier
    integer, allocatable :: ig_(:,:)     ! G_k+b (ipol,ik,ib)
    integer, allocatable :: lw(:,:), mw(:,:) ! l and m of wannier (16,n_wannier)
    integer, allocatable :: num_sph(:)   ! num. func. in lin. comb., (n_wannier)
-   integer  :: iun_nnkp, iun_mmn, iun_amn, iun_band, nnbx, n_wannier
+   logical, allocatable :: excluded_band(:)
+   integer  :: iun_nnkp, iun_mmn, iun_amn, iun_band, iun_plot, nnbx, n_wannier, nexband
    complex(DP), allocatable :: gf(:,:)  ! guding_function(npwx,n_wannier)
    integer               :: ispinw, ikstart, ikstop, iknum
    character(LEN=15)     :: wan_mode    ! running mode
@@ -29,5 +30,6 @@ module wannier
    real(DP), allocatable :: alpha_w(:)  ! alpha_w(n_wannier) ( called zona in wannier spec)
    !
    real(DP), allocatable :: csph(:,:)    ! expansion coefficients of gf on QE ylm function (16,n_wannier)
+   CHARACTER(len=256) :: seedname  = 'wannier'  ! prepended to file names in wannier90
 end module wannier
 !

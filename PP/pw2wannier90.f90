@@ -27,7 +27,7 @@ program pw2wannier90
    CHARACTER(len=256) :: outdir
    ! these are in wannier module.....-> integer :: ispinw, ikstart, ikstop, iknum
  
-   namelist / inputpp / outdir, prefix, spin_component, wan_mode
+   namelist / inputpp / outdir, prefix, spin_component, wan_mode, seedname
    !
    call start_postproc (nd_nmbr)
    !
@@ -35,6 +35,7 @@ program pw2wannier90
    !
    outdir = './'
    prefix = ' '
+   seedname = 'wannier'
    spin_component = 'none'
    wan_mode = 'standalone'
    !
@@ -109,6 +110,12 @@ program pw2wannier90
       write(stdout,*)
       call write_band
       write(stdout,*)
+      write(stdout,*) ' --------------------'
+      write(stdout,*) ' *** Write plot info '
+      write(stdout,*) ' --------------------'
+      write(stdout,*)
+      call write_plot
+      write(stdout,*)
       write(stdout,*) ' ------------'
       write(stdout,*) ' *** Stop pp '
       write(stdout,*) ' ------------' 
@@ -144,31 +151,30 @@ subroutine read_nnkp
    !
    USE io_global,  ONLY : stdout
    use kinds,     only: DP
-   use constants, only : eps8
+   use constants, only : eps6
    use cell_base, only : at, bg, alat
    use gvect,     only : g, gg
    use io_files,  only : find_free_unit
    use klist,     only : nkstot, xk
-   use wvfct,     only : npwx
+   use wvfct,     only : npwx, nbnd
    use wannier
    use constants,       only : tpi
 
    implicit none
-   real(DP) :: g_(3), gg_, epsilon
-   integer :: ik, ib, ig, ipol, iw, idum
+   real(DP) :: g_(3), gg_
+   integer :: ik, ib, ig, ipol, iw, idum, indexb
    integer numwan, numk, i, j
    real(DP) :: rlatt(3,3), glatt(3,3), xx(3), bohr, box, xnorm, znorm, coseno
    CHARACTER(LEN=80) :: line1, line2
 
    iun_nnkp = find_free_unit()
-   open (unit=iun_nnkp, file='wannier.nnkp',form='formatted')
+   open (unit=iun_nnkp, file=TRIM(seedname)//".nnkp",form='formatted')
    nnbx=0
 
 !   check the information from *.nnkp with the nscf_save data
    write(stdout,*) ' Checking info from wannier.nnkp file' 
    write(stdout,*)
    bohr = 0.5291772108d0
-   epsilon = 1.0d-5
 
    call scan_file_to('real_lattice')
    do j=1,3
@@ -179,7 +185,7 @@ subroutine read_nnkp
    enddo
    do j=1,3
       do i=1,3
-         if(abs(rlatt(i,j)-at(i,j)).gt.epsilon) then
+         if(abs(rlatt(i,j)-at(i,j)).gt.eps6) then
             write(stdout,*)  ' Something wrong! '
             write(stdout,*)  ' rlatt(i,j) =',rlatt(i,j),  ' at(i,j)=',at(i,j)
             stop
@@ -197,7 +203,7 @@ subroutine read_nnkp
    enddo
    do j=1,3
       do i=1,3
-         if(abs(glatt(i,j)-bg(i,j)).gt.epsilon) then
+         if(abs(glatt(i,j)-bg(i,j)).gt.eps6) then
             write(stdout,*)  ' Something wrong! '
             write(stdout,*)  ' glatt(i,j)=',glatt(i,j), ' bg(i,j)=',bg(i,j)
             stop
@@ -216,9 +222,9 @@ subroutine read_nnkp
    do i=1,numk
       read(iun_nnkp,*) xx(1), xx(2), xx(3)
       CALL cryst_to_cart( 1, xx, bg, 1 )
-      if(abs(xx(1)-xk(1,i)).gt.epsilon.or. &
-         abs(xx(2)-xk(2,i)).gt.epsilon.or. &
-         abs(xx(3)-xk(3,i)).gt.epsilon) then
+      if(abs(xx(1)-xk(1,i)).gt.eps6.or. &
+         abs(xx(2)-xk(2,i)).gt.eps6.or. &
+         abs(xx(3)-xk(3,i)).gt.eps6) then
          write(stdout,*)  ' Something wrong! '
          write(stdout,*) ' k-point ',i,' is wrong'
          write(stdout,*) xx(1), xx(2), xx(3) 
@@ -240,15 +246,15 @@ subroutine read_nnkp
       read(iun_nnkp,*) (zaxis(i,iw),i=1,3),(xaxis(i,iw),i=1,3),alpha_w(iw),box
       xnorm = sqrt(xaxis(1,iw)*xaxis(1,iw) + xaxis(2,iw)*xaxis(2,iw) + &
                                              xaxis(3,iw)*xaxis(3,iw))
-      if (xnorm < eps8) call errore ('read_nnkp',' |xaxis| < eps ',1)
+      if (xnorm < eps6) call errore ('read_nnkp',' |xaxis| < eps ',1)
       znorm = sqrt(zaxis(1,iw)*zaxis(1,iw) + zaxis(2,iw)*zaxis(2,iw) + &
                                              zaxis(3,iw)*zaxis(3,iw))
-      if (znorm < eps8) call errore ('read_nnkp',' |zaxis| < eps ',1)
+      if (znorm < eps6) call errore ('read_nnkp',' |zaxis| < eps ',1)
       coseno = (xaxis(1,iw)*zaxis(1,iw) + xaxis(2,iw)*zaxis(2,iw) + &
                                           xaxis(3,iw)*zaxis(3,iw))/xnorm/znorm
-      if (abs(coseno) > eps8) &
+      if (abs(coseno) > eps6) &
           call errore('read_nnkp',' xaxis and zaxis are not orthogonal !',1)
-      if (alpha_w(iw) < eps8) &
+      if (alpha_w(iw) < eps6) &
           call errore('read_nnkp',' zona value must be positive', 1)
       ! convert wannier center in cartesian coordinates (in unit of alat)
       CALL cryst_to_cart( 1, center_w(:,iw), at, 1 )
@@ -272,10 +278,10 @@ subroutine read_nnkp
          gg_ = g_(1)*g_(1) + g_(2)*g_(2) + g_(3)*g_(3)
          ig_(ik,ib) = 0
          ig = 1
-         do while  (gg(ig) <= gg_ + eps8) 
-            if ( (abs(g(1,ig)-g_(1)) < eps8) .and.  &
-                 (abs(g(2,ig)-g_(2)) < eps8) .and.  &
-                 (abs(g(3,ig)-g_(3)) < eps8)  ) ig_(ik,ib) = ig
+         do while  (gg(ig) <= gg_ + eps6) 
+            if ( (abs(g(1,ig)-g_(1)) < eps6) .and.  &
+                 (abs(g(2,ig)-g_(2)) < eps6) .and.  &
+                 (abs(g(3,ig)-g_(3)) < eps6)  ) ig_(ik,ib) = ig
             ig= ig +1
          end do
       end do
@@ -283,8 +289,18 @@ subroutine read_nnkp
    write(stdout,*) ' All neighbours are found '
    write(stdout,*)
 
+   call scan_file_to('exclude_bands')
+   read (iun_nnkp,*) nexband
+   allocate( excluded_band(nbnd) )
+   excluded_band(1:nbnd)=.false.
+   do i=1,nexband
+     read(iun_nnkp,*) indexb
+     if (indexb<1 .or. indexb>nbnd) &
+          call errore('read_nnkp',' wrong excluded band index ', 1)
+     excluded_band(indexb)=.true.
+   enddo
+    
    close (iun_nnkp)
-
    return
 end subroutine read_nnkp
 
@@ -342,7 +358,7 @@ subroutine compute_mmn
    allocate( phase(nrxxs), aux(npwx), evcq(npwx,nbnd), igkq(npwx) )
    
    iun_mmn = find_free_unit()
-   open (unit=iun_mmn, file='wannier.mmn',form='formatted')
+   open (unit=iun_mmn, file=TRIM(seedname)//".mmn",form='formatted')
 
    mmn_tot = 0
    do ik=1,iknum
@@ -399,7 +415,7 @@ subroutine compute_mmn
    !
    write (stdout,*) "MMN"
    write (iun_mmn,*) mmn_tot
-   write (iun_mmn,*) nbnd, iknum, nnb 
+   write (iun_mmn,*) nbnd-nexband, iknum, nnb 
    !
    allocate( Mkb(nbnd,nbnd) )
    !
@@ -503,11 +519,15 @@ subroutine compute_mmn
               !
             end do ! n
          end do   ! m
+
          do n=1,nbnd
-         do m=1,nbnd
-            write (iun_mmn,'(2f18.12)') Mkb(m,n)
+            if (excluded_band(n)) cycle
+            do m=1,nbnd
+               if (excluded_band(m)) cycle
+               write (iun_mmn,'(2f18.12)') Mkb(m,n)
+            enddo
          enddo
-         enddo
+
       end do !ikp
    end do  !ik
 !
@@ -537,17 +557,17 @@ subroutine compute_amn
    implicit none
    complex(DP) :: amn, ZDOTC
    complex(DP), allocatable :: sgf(:,:)
-   integer :: amn_tot, ik, ibnd, iw,i
+   integer :: amn_tot, ik, ibnd, ibnd1, iw,i
    integer :: ikevc
 
    !call read_gf_definition.....>   this is done at the begin
 
    iun_amn = find_free_unit()
-   open (unit=iun_amn, file='wannier.amn',form='formatted')
+   open (unit=iun_amn, file=TRIM(seedname)//".amn",form='formatted')
    amn_tot = iknum * nbnd * n_wannier
    write (stdout,*) "AMN"
    write (iun_amn,*) amn_tot
-   write (iun_amn,*) nbnd,  iknum, n_wannier 
+   write (iun_amn,*) nbnd-nexband,  iknum, n_wannier 
    !
    allocate( sgf(npwx,n_wannier))
    allocate ( becp(nkb,n_wannier))
@@ -562,18 +582,21 @@ subroutine compute_amn
       !
       !  USPP
       !
-!      call init_us_2 (npw, igk, xk (1, ik), vkb)
+      call init_us_2 (npw, igk, xk (1, ik), vkb)
 !      ! below we compute the product of beta functions with trial func.
-!      call ccalbec (nkb, npwx, npw, n_wannier, becp, vkb, gf)
+      call ccalbec (nkb, npwx, npw, n_wannier, becp, vkb, gf)
 !      ! and we use it for the product S|trial_func>
-!      call s_psi (npwx, npw, n_wannier, gf, sgf)  
-      sgf(:,:) = gf(:,:)
-      !
+      call s_psi (npwx, npw, n_wannier, gf, sgf)  
+       ! sgf(:,:) = gf(:,:)
+       !
       do iw = 1,n_wannier
+         ibnd1 = 0 
          do ibnd = 1,nbnd
             amn = ZDOTC(npw,evc(1,ibnd),1,sgf(1,iw),1) 
             call reduce(2,amn)
-            write(iun_amn,'(3i5,2f18.12)') ibnd, iw, ik, amn
+            if (excluded_band(ibnd)) cycle
+            ibnd1=ibnd1+1
+            write(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
          end do
       end do
    end do  ! k-points
@@ -584,6 +607,7 @@ subroutine compute_amn
    close (iun_amn)
    return
 end subroutine compute_amn
+!
 !
 subroutine generate_guiding_functions(ik)
    !
@@ -660,7 +684,7 @@ subroutine write_band
    implicit none
    integer ik, ibnd, ikevc
    iun_band = find_free_unit()
-   open (unit=iun_band, file='wannier.eig',form='formatted')
+   open (unit=iun_band, file=TRIM(seedname)//".eig",form='formatted')
    do ik=ikstart,ikstop
       ikevc = ik - ikstart + 1
       do ibnd=1,nbnd
@@ -670,6 +694,58 @@ subroutine write_band
    return
 end subroutine write_band
 
+subroutine write_plot
+   USE io_global,  ONLY : stdout
+   use wvfct, only : nbnd, npw, igk, g2kin
+   use wavefunctions_module, only : evc, psic
+   use io_files, only : find_free_unit, nwordwfc, iunwfc
+   use wannier
+   use gsmooth,         only : nls, nrxxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
+   use klist,           only : nkstot, xk
+   use gvect,           only : g, ngm, ecutwfc
+   use cell_base,       only : tpiba2
+
+   implicit none
+   integer ik, ibnd, ibnd1, ikevc, i1
+#ifdef __PARA
+   integer nxxs
+   COMPLEX(DP),allocatable :: psic_all(:)
+
+   nxxs = nrx1s * nrx2s * nrx3s
+   allocate(psic_all(nxxs) )
+
+#endif
+
+   
+   iun_plot = find_free_unit()
+
+   open (unit=iun_plot, file=TRIM(seedname)//".bloch",form='formatted')
+   do ik=ikstart,ikstop
+      ikevc = ik - ikstart + 1
+      call davcio (evc, nwordwfc, iunwfc, ikevc, -1 )
+      call gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+
+      ibnd1 = 0
+      do ibnd=1,nbnd
+         if (excluded_band(ibnd)) cycle
+         ibnd1=ibnd1 + 1
+         psic(:) = (0.d0, 0.d0)
+         psic(nls (igk (1:npw) ) ) = evc (1:npw, ibnd)
+         call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
+#ifdef __PARA
+         call cgather_smooth(psic,psic_all)
+         write (iun_plot,'(2i5,f18.12)') ibnd1, ikevc, psic_all(1:nxxs)
+#else
+         write (iun_plot,'(2i5,f18.12)') ibnd1, ikevc, psic(1:nrxxs)
+#endif
+      end do
+
+   end do  !ik
+#ifdef __PARA
+   deallocate( psic_all )
+#endif
+   return
+end subroutine write_plot
 
 subroutine wan2sic 
 
@@ -687,7 +763,7 @@ subroutine wan2sic
   integer :: i, j, nn, ik, ibnd, iw, ikevc 
   complex(DP), allocatable :: orbital(:,:), orb(:,:), u_matrix(:,:,:) 
 
-  open (20, file = 'wannier.dat', form = 'formatted', status = 'unknown')
+  open (20, file = TRIM(seedname)//".dat" , form = 'formatted', status = 'unknown')
   write(stdout,*) ' wannier plot '
 
   allocate ( u_matrix( n_wannier, n_wannier, nkstot) )
@@ -717,7 +793,8 @@ subroutine wan2sic
            orbital(j,iw) = (0.0d0,0.0d0)
            do ibnd=1,n_wannier
               orbital(j,iw) = orbital(j,iw) + u_matrix(iw,ibnd,ik)*evc(j,ibnd)
-              write(stdout,*) j, iw, ibnd, ik, orbital(j,iw), u_matrix(iw,ibnd,ik), evc(j,ibnd)
+              write(stdout,*) j, iw, ibnd, ik, orbital(j,iw), &
+                              u_matrix(iw,ibnd,ik), evc(j,ibnd)
            enddo !ibnd
         end do  !j
      end do !wannier

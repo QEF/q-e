@@ -82,6 +82,7 @@ MODULE constants
   ! ... zero up to a given accuracy
   !
   REAL(DP), PARAMETER :: eps4  = 1.0D-4
+  REAL(DP), PARAMETER :: eps6  = 1.0D-6
   REAL(DP), PARAMETER :: eps8  = 1.0D-8
   REAL(DP), PARAMETER :: eps14 = 1.0D-14
   REAL(DP), PARAMETER :: eps16 = 1.0D-16
