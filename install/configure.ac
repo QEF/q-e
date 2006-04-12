@@ -1142,7 +1142,7 @@ then
 			LIBS=""
 			AC_SEARCH_LIBS(vexp, massvp4 massv, , , -lmass)
 			if test "$ac_cv_search_vexp" = "-lmassvp4" \
-				-or "$ac_cv_search_vexp" = "-lmassv"
+				-o "$ac_cv_search_vexp" = "-lmassv"
 			then mass_libs="$try_loption $ac_cv_search_vexp -lmass"
 			fi
 			if test "$ac_cv_search_vexp" != "no" ; then break ; fi
