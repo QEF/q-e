@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2002-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -32,9 +32,7 @@ SUBROUTINE rinitcgg( npwx, npw, nstart, nbnd, psi, evc, e )
   REAL(DP) :: e(nbnd)
     ! eigenvalues
   !
-  !... local variables
-  !
-  INTEGER                        :: m, i, j, npw2, npwx2
+  INTEGER                   :: m, i, j, npw2, npwx2
   REAL (DP)                 :: rtmp(2)
   COMPLEX (DP), ALLOCATABLE :: aux(:,:)
   COMPLEX (DP), ALLOCATABLE :: ctmp(:)
@@ -44,8 +42,8 @@ SUBROUTINE rinitcgg( npwx, npw, nstart, nbnd, psi, evc, e )
   !
   CALL start_clock( 'wfcrot1' )
   !
-  npw2  = 2 * npw
-  npwx2 = 2 * npwx
+  npw2  = 2*npw
+  npwx2 = 2*npwx
   !
   ALLOCATE( aux( npwx, 2 ) )
   ALLOCATE( ctmp( nbnd ) )
@@ -61,7 +59,7 @@ SUBROUTINE rinitcgg( npwx, npw, nstart, nbnd, psi, evc, e )
      !
      CALL DGEMV( 'T', npw2, 2, 2.D0, aux, npwx2, psi(1,m), 1, 0.D0, rtmp, 1 )
      !
-     IF ( gstart == 2 ) rtmp(:) = rtmp(:) - psi(1,m) * aux(1,:)
+     IF ( gstart == 2 ) rtmp(:) = rtmp(:) - psi(1,m)*aux(1,:)
      !
      hr(m,m,1) = rtmp(1)
      sr(m,m)   = rtmp(2)
@@ -70,7 +68,7 @@ SUBROUTINE rinitcgg( npwx, npw, nstart, nbnd, psi, evc, e )
         !
         CALL DGEMV( 'T', npw2, 2, 2.D0, aux, npwx2, psi(1,j), 1, 0.D0, rtmp, 1 )
         !
-        IF ( gstart == 2 ) rtmp(:) = rtmp(:) - psi(1,j) * aux(1,:)
+        IF ( gstart == 2 ) rtmp(:) = rtmp(:) - psi(1,j)*aux(1,:)
         !
         hr(j,m,1) = rtmp(1)
         sr(j,m)   = rtmp(2)
@@ -82,8 +80,8 @@ SUBROUTINE rinitcgg( npwx, npw, nstart, nbnd, psi, evc, e )
      !
   END DO
   !
-  CALL reduce( 2 * nstart * nstart, hr(1,1,1) )
-  CALL reduce( 2 * nstart * nstart, sr(1,1) )
+  CALL reduce( nstart*nstart, hr(1,1,1) )
+  CALL reduce( nstart*nstart, sr(1,1) )
   !
   ! ... diagonalize
   !
@@ -97,7 +95,7 @@ SUBROUTINE rinitcgg( npwx, npw, nstart, nbnd, psi, evc, e )
      !
      DO m = 1, nbnd
         !
-        ctmp(m) = SUM( hr(:,m,2) * psi(i,:) )
+        ctmp(m) = SUM( hr(:,m,2)*psi(i,:) )
         !
      END DO
      !
