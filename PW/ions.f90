@@ -9,7 +9,7 @@
 SUBROUTINE ions()
   !----------------------------------------------------------------------------
   !
-  USE control_flags, ONLY : conv_ions, restart, lscf, lmd, lbfgs
+  USE control_flags, ONLY : conv_ions, istep, nstep, restart, lscf, lmd, lbfgs
   USE force_mod,     ONLY : lforce, lstres
   !
   IMPLICIT NONE
@@ -34,9 +34,13 @@ SUBROUTINE ions()
      !
      ! ... then we save restart information for the new configuration
      !
-     CALL punch( 'config' )
-     !
-     CALL save_in_ions()
+     IF ( istep < nstep .AND. .NOT. conv_ions ) THEN
+        !
+        CALL punch( 'config' )
+        !
+        CALL save_in_ions()
+        !
+     END IF
      !
   END IF
   !
