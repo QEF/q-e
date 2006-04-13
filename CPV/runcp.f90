@@ -346,6 +346,7 @@
       USE wave_constrains, ONLY: update_lambda
       USE reciprocal_space_mesh, ONLY: gkmask_l
       USE uspp,             ONLY : vkb, nkb
+      use reciprocal_vectors, only : gstart
 
         IMPLICIT NONE
 
@@ -507,12 +508,16 @@
         CALL dforce( n_unp, 1, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,1), eigr, bec )
 
         intermed  = -2.d0 * sum( c2 * conjg( c0(:, n_unp, ik, 1 ) ) )
+        IF ( gstart == 2 ) THEN
+           intermed  = intermed + 1.d0 * c2(1) * conjg( c0( 1, n_unp, ik, 1 ) )
+         END IF
         intermed3 = sum(c0(:,n_unp, ik, 1) * conjg( c0(:, n_unp, ik, 1)))
 
         CALL mp_sum ( intermed, intra_image_comm )
         CALL mp_sum ( intermed3, intra_image_comm )
         !  Eigenvalue of unpaired
         ei_unp_mem = intermed
+
         !  <Phiunpaired|Phiunpaired>
         ei_unp_wfc = intermed3
         !write(6,*) '  <psi|psi> = ', intermed3, '  ei_unp(au) = ', intermed
@@ -759,15 +764,13 @@
           ttsde = .FALSE.
        END IF
 !
-       ALLOCATE(c2(ngw),c3(ngw),c4(ngw),c5(ngw) )
-!
-  !
-  ! ...  set verlet variables
-  !
-!
+       ALLOCATE( c2(ngw), c3(ngw), c4(ngw), c5(ngw) )
+       !
+       ! ...  set verlet variables
+       !
        verl1 = 2.0d0 * fccc
        verl2 = 1.0d0 - verl1
-       verl3 = 1.0d0 * fccc !delt * delt / pmss(1:ngw) * fccc
+       verl3 = 1.0d0 * fccc 
 !
        ccc    = fccc * dt2bye
        emadt2 = dt2bye * ema0bg
@@ -778,10 +781,10 @@
        is_dw = iupdwn(2) 
        np_dw = nbsp 
 !
-       ALLOCATE( occ(nbspx))
+       ALLOCATE( occ( nbspx ) )
 !
-       occ(1:np_dw)  = 1
-       occ(nbspx)  = 0
+       occ( 1:np_dw )  = 1
+       occ( nbspx   )  = 0
 !
 ! c0(dwn_paired) == c0(up_paired)
 ! cm(dwn_paired) == cm(up_paired)
@@ -799,37 +802,38 @@
 
       DO i = 1, npair, 2 
       !
-            CALL dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos(1,1))
-            CALL dforce(bec,betae,i,c0(1,i),c0(1,i+1),c4,c5,rhos(1,2))
+         CALL dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos(1,1))
+         CALL dforce(bec,betae,i,c0(1,i),c0(1,i+1),c4,c5,rhos(1,2))
       !
-            c2 = occ( i )*(c2 + c4)  
-            c3 = occ(i+1)*(c3 + c5) 
+         c2 = occ( i )*(c2 + c4)  
+         c3 = occ(i+1)*(c3 + c5) 
       !
          IF( iflag == 2 ) THEN
               cm(:,i)        = c0(:,i)
               cm(:,i+1)      = c0(:,i+1)
          END IF
       !
-          IF( ttsde ) THEN
+         IF( ttsde ) THEN
              CALL wave_steepest( cm(:, i  ), c0(:, i  ), emaver, c2 )
              CALL wave_steepest( cm(:, i+1), c0(:, i+1), emaver, c3 )
-          ELSE
+         ELSE
              CALL wave_verlet( cm(:, i  ), c0(:, i  ), verl1, verl2, emaver, c2 )
              CALL wave_verlet( cm(:, i+1), c0(:, i+1), verl1, verl2, emaver, c3 )
-          END IF
+         END IF
       !
-              IF ( gstart == 2 ) THEN
+         IF ( gstart == 2 ) THEN
                 cm(1,  i)    = CMPLX(DBLE(cm(1,  i)),0.d0)
                 cm(1, i+1)   = CMPLX(DBLE(cm(1,  i+1)),0.d0)
-              END IF
+         END IF
       !
       END DO
       !
-    IF( MOD(n_unp, 2) == 0 ) THEN
+      IF( MOD(n_unp, 2) == 0 ) THEN
+
          npair = n_unp - 1 
 !
-         CALL dforce(bec,betae,i,c0(1,npair),c0(1,npair+1),c2,c3,rhos(1,1))
-         CALL dforce(bec,betae,i,c0(1,nbsp), c0(1,nbspx)  ,c4,c5,rhos(1,2))
+         CALL dforce(bec,betae,npair,c0(1,npair),c0(1,nbspx),c2,c3,rhos(1,1))
+         CALL dforce(bec,betae,npair,c0(1,npair),c0(1,nbspx),c4,c5,rhos(1,2))
 !
          c2 = c2 + c4
 !
@@ -843,7 +847,7 @@
 !
          IF ( gstart == 2 ) cm(1, npair) = CMPLX(DBLE(cm(1, npair)),0.d0)
 
-    ENDIF
+      ENDIF
 !
       c0(:, is_dw:np_dw ) = c0(:, 1:n_dwn )
       cm(:, is_dw:np_dw ) = cm(:, 1:n_dwn )
@@ -857,10 +861,18 @@
 ! for the unpaired electron the ei_unp is the value of lambda
 ! "TRUE" ONLY WHEN THE POT is NORM_CONSERVING
 !
-      CALL dforce(bec,betae,n_unp,c0(1,n_unp),c0(1,nbspx),c2,c3,rhos(1,1))
+
+      CALL dforce( bec, betae, n_unp, c0(1,n_unp), c0(1,n_unp), c2, c3, rhos(1,1) )
       !
-      IF( iflag == 2 ) cm(:, n_unp) = c0(:, n_unp) 
+      intermed  = - 2.d0 * sum(c2 * conjg(c0(:,n_unp)))
+      IF ( gstart == 2 ) THEN
+        intermed  = intermed + 1.d0 * c2(1) * conjg(c0(1,n_unp))
+      END IF
+      CALL mp_sum ( intermed, intra_image_comm )
       !           
+
+      IF( iflag == 2 ) cm(:, n_unp) = c0(:, n_unp) 
+      !
       IF( ttsde ) THEN
         CALL wave_steepest( cm(:, n_unp), c0(:, n_unp), emaver, c2 )
       ELSE
@@ -869,22 +881,11 @@
       !
       IF ( gstart == 2 ) cm(1, n_unp) = CMPLX(DBLE(cm(1, n_unp)),0.d0)
       !
-      intermed  = -2.d0 * sum(c2 * conjg(c0(:,n_unp)))
-      CALL mp_sum ( intermed, intra_image_comm )
-!
-!           write(6,*) 'Debug:: ei_unp(au) = ', intermed
-!
-       DEALLOCATE( occ )
-       DEALLOCATE( emadt2 )
-       DEALLOCATE( emaver )
-       DEALLOCATE(c2, c4)
-       DEALLOCATE(c3, c5)
-!
-!==== end of loop which updates electronic degrees of freedom
-!
-!     buffer for wavefunctions is unit 21
-!
-       IF(tbuff) REWIND 21
+      DEALLOCATE( occ )
+      DEALLOCATE( emadt2 )
+      DEALLOCATE( emaver )
+      DEALLOCATE(c2, c4)
+      DEALLOCATE(c3, c5)
 
      END SUBROUTINE runcp_uspp_force_pairing
 

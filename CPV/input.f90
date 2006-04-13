@@ -269,7 +269,7 @@ MODULE input
                                efield2_     => efield2
 
 
-     USE input_parameters, ONLY: &
+     USE input_parameters,   ONLY: &
         electron_dynamics, electron_damping, diis_rot, electron_temperature,   &
         ion_dynamics, ekin_conv_thr, etot_conv_thr, forc_conv_thr, ion_maxstep,&
         electron_maxstep, ion_damping, ion_temperature, ion_velocities, tranp, &
@@ -282,6 +282,8 @@ MODULE input
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
         orthogonalization, electron_velocities, nat, if_pos, phase_space,      &
         tefield, epol, efield, tefield2, epol2, efield2
+
+     USE cvan,               ONLY: nvb
      !
      IMPLICIT NONE
      !
@@ -794,6 +796,9 @@ MODULE input
 
       ! . Set internal flags according to the input .......................!
 
+      IF( ( nvb > 0 ) .and. ( program_name == 'FPMD' ) ) &
+        CALL errore(' iosys ',' USPP not yet implemented in FPMD ',1)
+
       ! ... the 'ATOMIC_SPECIES' card must be present, check it
 
       IF( .NOT. taspc ) &
@@ -829,7 +834,9 @@ MODULE input
    SUBROUTINE modules_setup()
      !-------------------------------------------------------------------------
      !
-     USE control_flags,    ONLY : program_name, lconstrain, lneb, lmetadyn
+     USE control_flags,    ONLY : program_name, lconstrain, lneb, lmetadyn, &
+                                  tpre, thdyn
+
      USE constants,        ONLY : amu_au, pi
      !
      USE input_parameters, ONLY: ibrav , celldm , trd_ht, dt,    &
@@ -908,7 +915,6 @@ MODULE input
      USE constraints_module, ONLY : init_constraint
      USE metadyn_vars,       ONLY : init_metadyn_vars
      USE efield_module,      ONLY : tefield
-     !
      !
      IMPLICIT NONE
      !
@@ -1001,8 +1007,8 @@ MODULE input
      CALL cg_init( tcg , maxiter , etresh , passop )
 
      !
-     IF( ( program_name == 'CP90' ) .AND. ( TRIM(sic) /= 'none' ) ) &
-        CALL errore(' modules_setup ', ' sic not implemented yet in cp ', 1 )
+     IF( ( TRIM( sic ) /= 'none' ) .and. ( tpre .or. thdyn ) ) &
+        CALL errore( ' module setup ', ' Stress is not yet implemented with SIC ', 1 )
      !
      CALL sic_initval( nat, id_loc, sic, sic_epsilon, sic_alpha, sic_rloc  )
 
@@ -1248,7 +1254,8 @@ MODULE input
     USE cell_nose,            ONLY: cell_nose_info
     USE cell_base,            ONLY: frich
     USE efield_module,        ONLY: tefield, efield_info, tefield2, efield_info2
-      !
+    !
+    !
     IMPLICIT NONE
 
     INTEGER :: is

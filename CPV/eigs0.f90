@@ -42,7 +42,11 @@
 
       do iss = 1, nspin_eig
 
-         n = nupdwn(iss)
+         IF( tsic ) THEN
+            n = npaired
+         ELSE
+            n = nupdwn(iss)
+         END IF
 
          allocate( lambdar( n * ( n + 1 ) / 2 ) )
 
@@ -58,8 +62,8 @@
          CALL dspev_drv( 'N', 'L', n, lambdar, wr, zr, 1 )
 
          if( lf ) then
-            do i=1,nupdwn(iss)
-               if (f(iupdwn(iss)-1+i).gt.1.e-6) then
+            do i = 1, n
+               if ( f(iupdwn(iss)-1+i).gt.1.e-6) then
                   wr(i)=wr(i)/f(iupdwn(iss)-1+i)
                else
                   wr(i)=0.0
@@ -72,13 +76,15 @@
          IF( SIZE( ei, 1 ) < nupdwn(iss) ) &
             CALL errore( ' eigs0 ', ' wrong dimension array ei ', 1 )
 
+         ei( 1:n, 1, iss ) = wr( 1:n )
+
          IF( tsic ) THEN
             !
-            !  only paired states are stored
+            !  store unpaired state
             !
-            ei( 1:npaired, 1, iss )     = wr( 1:npaired )
-         ELSE
-            ei( 1:nupdwn(iss), 1, iss ) = wr( 1:nupdwn(iss) )
+            ei( 1:n,       1, 1 ) = ei( 1:n, 1, 1 ) / 2.0d0
+            ei( nupdwn(1), 1, 1 ) = lambda( nupdwn(1), nupdwn(1), 1 )
+            !
          END IF
 
          deallocate( lambdar )
@@ -88,8 +94,8 @@
       !
       do iss = 1, nspin
 
-         IF( tsic .AND. iss > 1 ) THEN
-            ei( 1:npaired, 1, iss ) = ei( 1:npaired, 1, 1 )
+         IF( tsic .AND. iss == 2 ) THEN
+            ei( 1:npaired, 1, 2 ) = ei( 1:npaired, 1, 1 )
          END IF
 
          IF( tprint ) THEN

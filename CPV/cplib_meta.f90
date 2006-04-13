@@ -84,6 +84,10 @@
       use metagga, ONLY : kedtaur, kedtaus, kedtaug, crosstaus, gradwfc, &
                           dkedtaus
       USE fft_module, ONLY: fwfft, invfft
+#if defined __BGL
+      USE task_groups, ONLY: strd
+      USE mp_global,   ONLY: nogrp
+#endif
       
       implicit none
 
@@ -92,7 +96,11 @@
       integer ipol, ix,iy, ipol2xy(3,3)
       real(8) sa1, sa2
       complex(8) ci,fp,fm,c(ngw,nx)
+#if defined __BGL
+      complex(8) psi(strd*(NOGRP+1)), psis(strd*(NOGRP+1))
+#else
       complex(8) psi(nnr), psis(nnrsx)
+#endif
 !
 !
       ci=(0.0,1.0)

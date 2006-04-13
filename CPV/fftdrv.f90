@@ -288,7 +288,7 @@ CONTAINS
                             intra_image_comm
       USE fft_base,   only: fft_scatter, group_fft_scatter
       USE fft_scalar, only: cft_1z, cft_2xy
-      USE groups_module
+      USE task_groups
       USE parallel_include
 
       IMPLICIT NONE

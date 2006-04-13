@@ -241,14 +241,13 @@
 !=----------------------------------------------------------------------------=!
 
 
-     SUBROUTINE exch_corr_energy(rhoetr, rhoetg, grho, vpot, sxc, vxc, v2xc)
+     SUBROUTINE exch_corr_energy(rhoetr, grho, vpot, sxc, vxc, v2xc)
 
         USE kinds,           ONLY: DP
         use grid_dimensions, only: nnrx
         USE funct, ONLY: dft_is_gradient
 
         REAL (DP) :: rhoetr(:,:)
-        COMPLEX(DP) :: rhoetg(:,:)
         REAL (DP) :: grho(:,:,:)
         REAL (DP) :: vpot(:,:)
         REAL (DP) :: sxc              ! E_xc   energy
@@ -365,42 +364,42 @@
 !
            !  allocate the sic_arrays
 !
-       ttsic = (self_interaction /= 0 )
+      ttsic = (self_interaction /= 0 )
 !
-       IF ( ttsic .AND. dft_is_meta() ) CALL errore ('SIC and metadynamics not together', 1)
-       IF ( ttsic .AND. tpre ) CALL errore( 'SIC and stress not implemented', 1)
+      IF ( ttsic .AND. dft_is_meta() ) CALL errore ('SIC and metadynamics not together', 1)
+      IF ( ttsic .AND. tpre ) CALL errore( 'SIC and stress not implemented', 1)
 !
-           IF ( ttsic ) THEN
-              ALLOCATE( self_rho( nnr, nspin ) )
-              ALLOCATE( self_rhog( ng, nspin ) )
-              IF( dft_is_gradient() ) ALLOCATE( self_gradr( nnr, 3, nspin ) )
-!
-              self_rho(:, 1) = rhor( :, 2)
-              self_rho(:, 2) = rhor( :, 2)
-!
-             IF( dft_is_gradient() ) THEN
-              self_gradr(:, :, 1) = gradr(:, :, 2)
-              self_gradr(:, :, 2) = gradr(:, :, 2)
-             ENDIF
-!
-              self_rhog(:, 1) = rhog( :, 2)
-              self_rhog(:, 2) = rhog( :, 2)
-!
-           END IF
-!
-           self_exc = 0.d0
+      IF ( ttsic ) THEN
+         !
+         ALLOCATE( self_rho( nnr, nspin ) )
+         ALLOCATE( self_rhog( ng, nspin ) )
+         IF( dft_is_gradient() ) ALLOCATE( self_gradr( nnr, 3, nspin ) )
 
+         self_rho(:, 1) = rhor( :, 2)
+         self_rho(:, 2) = rhor( :, 2)
+
+         IF( dft_is_gradient() ) THEN
+            self_gradr(:, :, 1) = gradr(:, :, 2)
+            self_gradr(:, :, 2) = gradr(:, :, 2)
+         ENDIF
+
+         self_rhog(:, 1) = rhog( :, 2)
+         self_rhog(:, 2) = rhog( :, 2)
+!
+      END IF
+!
+      self_exc = 0.d0
 !
       if( dft_is_meta() ) then
-            call tpssmeta( nnr, nspin, gradr, rhor, kedtaur, exc )
+         call tpssmeta( nnr, nspin, gradr, rhor, kedtaur, exc )
       else
-            CALL exch_corr_cp(nnr, nspin, gradr, rhor, exc)
+         CALL exch_corr_cp(nnr, nspin, gradr, rhor, exc)
 !
-             IF ( ttsic ) THEN
-                CALL exch_corr_cp(nnr, nspin, self_gradr, self_rho, self_exc)
-                self_exc = sic_alpha * (exc - self_exc)
-                exc = exc - self_exc
-              END IF
+         IF ( ttsic ) THEN
+            CALL exch_corr_cp(nnr, nspin, self_gradr, self_rho, self_exc)
+            self_exc = sic_alpha * (exc - self_exc)
+            exc = exc - self_exc
+         END IF
 !
       end if
 
@@ -476,9 +475,11 @@
          WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
       END IF
       !
-      !     second part of the xc-potential
       !
       if (dft_is_gradient()) then
+         !
+         !  Add second part of the xc-potential to rhor
+         !  Compute contribution to the stress dexc
          !
          call gradh( nspin, gradr, rhog, rhor, dexc)
          !
@@ -495,25 +496,25 @@
 
       IF( ttsic ) THEN
 !
-               rhor(:, 1) = (1.d0 - sic_alpha ) * rhor(:, 1)
-               rhor(:, 2) = (1.d0 - sic_alpha ) * rhor(:, 2) + &
-                          &  sic_alpha * ( self_rho(:,1) + self_rho(:,2) )
       !
          IF (dft_is_gradient()) then
-      !
-         call gradh( nspin, self_gradr, self_rhog, self_rho, dexc)
+      
+            call gradh( nspin, self_gradr, self_rhog, self_rho, dexc)
          !
-                gradr(:,:, 1) = (1.d0 - sic_alpha ) * gradr(:,:, 1)
-                gradr(:,:, 2) = (1.d0 - sic_alpha ) * gradr(:,:, 2) + &
-                           &  sic_alpha * ( self_gradr(:,:,1) + self_gradr(:,:,2) )
+            gradr(:,:, 1) = (1.d0 - sic_alpha ) * gradr(:,:, 1)
+            gradr(:,:, 2) = (1.d0 - sic_alpha ) * gradr(:,:, 2) + &
+                          &  sic_alpha * ( self_gradr(:,:,1) + self_gradr(:,:,2) )
          ENDIF
+
+         rhor(:, 1) = (1.d0 - sic_alpha ) * rhor(:, 1)
+         rhor(:, 2) = (1.d0 - sic_alpha ) * rhor(:, 2) + &
+                    &  sic_alpha * ( self_rho(:,1) + self_rho(:,2) )
 
          IF(ALLOCATED(self_gradr)) DEALLOCATE(self_gradr)
          IF(ALLOCATED(self_rhog)) DEALLOCATE(self_rhog)
          IF(ALLOCATED(self_rho)) DEALLOCATE(self_rho)
 !
       ENDIF
-
 
       IF( ALLOCATED( gradr ) ) DEALLOCATE( gradr )
 

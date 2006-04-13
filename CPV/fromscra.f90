@@ -183,6 +183,10 @@ CONTAINS
             lambda(1:nupdwn(2), 1:nupdwn(2), 2) =  lambda(:, 1:nupdwn(2), 1)
            lambdam(1:nupdwn(2), 1:nupdwn(2), 2) = lambdam(:, 1:nupdwn(2), 1)
            lambdap(1:nupdwn(2), 1:nupdwn(2), 2) = lambdap(:, 1:nupdwn(2), 1)
+
+            lambda(1:nupdwn(2), 1:nupdwn(2), 2) =  lambda(:, 1:nupdwn(2), 1)
+           lambdam(1:nupdwn(2), 1:nupdwn(2), 2) = lambdam(:, 1:nupdwn(2), 1)
+           lambdap(1:nupdwn(2), 1:nupdwn(2), 2) = lambdap(:, 1:nupdwn(2), 1)
        ENDIF
        !  
     ELSE
@@ -300,7 +304,7 @@ CONTAINS
          !
          CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:,1,1), &
         &                 c0(:,:,1,1), ei_unp, fromscra = .TRUE. )
-          lambda(nupdwn(1), nupdwn(1), 1) = ei_unp
+!          lambda(nupdwn(1), nupdwn(1), 1) = ei_unp
           lambda(nupdwn(1), nupdwn(1), 2) = 0.d0 
          !
          ELSE

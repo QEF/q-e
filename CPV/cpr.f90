@@ -175,7 +175,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
     ! temporary array used to printout positions
   CHARACTER(LEN=3) :: labelw( nat )
   ! for force_pairing
-  INTEGER   :: n_spin_start 
+  INTEGER   :: nspin_sub 
   !
   dt2bye   = dt2 / emass
   etot_out = 0.D0
@@ -185,8 +185,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   tlast  = .FALSE.
   nacc   = 5
   !
-  n_spin_start = nspin
-  IF( force_pairing ) n_spin_start = 1
+  nspin_sub = nspin
+  IF( force_pairing ) nspin_sub = 1
   !
   ! ... Check for restart_p from Autopilot Feature Suite
   !
@@ -440,7 +440,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         IF ( iprsta >= 3 ) CALL print_lambda( lambda, nbsp, 9, 1.D0 )
         !
         IF ( tortho ) THEN
-           DO iss = 1, n_spin_start
+           DO iss = 1, nspin_sub
               CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
                         bephi, SIZE(bephi,1), becp, bec, cm, nupdwn(iss), iupdwn(iss) )
            END DO

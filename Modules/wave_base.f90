@@ -700,7 +700,6 @@
 !C. Bekas, IBM Research
 !======================
    SUBROUTINE my_wave_steepest( CP, C0, dt2m, grad, ngw, index)
-      !USE GROUPS_MODULE
       IMPLICIT NONE
 
       COMPLEX(DP), INTENT(OUT) :: CP(:)

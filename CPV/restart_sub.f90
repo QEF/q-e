@@ -237,8 +237,8 @@ MODULE from_restart_module
           CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
                            bec, c0(:,:,1,1), cm(:,:,1,1), ei_unp, restart = .TRUE. )
           lambda(1:nupdwn(2), 1:nupdwn(2), 2) = lambda(1:nupdwn(2), 1:nupdwn(2), 1) 
-          lambda(nupdwn(1), nupdwn(1), 1) = ei_unp
-          lambda(nupdwn(1), nupdwn(1), 2) = 0.d0 
+!          lambda(nupdwn(1), nupdwn(1), 1) = ei_unp
+!          lambda(nupdwn(1), nupdwn(1), 2) = 0.d0 
          ELSE
 
           CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &

@@ -43,6 +43,7 @@
       USE electrons_module, ONLY: bmeshset
       USE problem_size,     ONLY: cpsizes
       USE mp_global,        ONLY: nproc_image
+      USE task_groups,      ONLY: task_groups_init
 
       implicit none
 ! 
@@ -181,6 +182,12 @@
         CALL cpsizes( nproc_image )
         !
       END IF
+      !
+#if defined __BGL
+      !
+      CALL task_groups_init( 1 , dffts )
+      !
+#endif
       !
       !   Flush stdout
       !

@@ -699,7 +699,7 @@ subroutine group_fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
   USE kinds,     only: DP
   use mp_global, ONLY: nproc_pool, me_pool, intra_pool_comm, nproc, &
                        my_image_id, nogrp, me_pgrp
-  USE GROUPS_MODULE
+  USE task_groups
 
   implicit none
 

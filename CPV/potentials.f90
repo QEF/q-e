@@ -504,7 +504,7 @@
       IF(timing) s3 = cclock()
 
 
-      CALL exch_corr_energy(rhoetr, rhoetg, grho, vpot, sxcp, vxc, v2xc)
+      CALL exch_corr_energy(rhoetr, grho, vpot, sxcp, vxc, v2xc)
 
       edft%sxc       = sxcp
       edft%self_sxc  = 0.d0
@@ -520,7 +520,7 @@
             self_grho(:,:,2) = grho(:,:,2)
          ENDIF
 
-         CALL exch_corr_energy( self_rho, rhoetg, self_grho, self_vpot, &
+         CALL exch_corr_energy( self_rho, self_grho, self_vpot, &
                  self_sxcp, self_vxc, self_v2xc )
 
          vpot (:,1) = ( 1.0d0 - sic_alpha ) * vpot(:,1)

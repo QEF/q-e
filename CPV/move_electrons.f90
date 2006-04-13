@@ -15,6 +15,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   ! ... this routine updates the electronic degrees of freedom
   !
   USE kinds,                ONLY : DP
+  USE constants,            ONLY : au
   USE control_flags,        ONLY : lwf, tfor, tprnfor, thdyn
   USE cg_module,            ONLY : tcg
   USE cp_main_variables,    ONLY : eigr, bec, irb, eigrb, rhog, rhos, rhor, &
@@ -59,7 +60,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   REAL(DP), INTENT(INOUT) :: enthal
   REAL(DP)                :: ei_unp
   !
-  INTEGER :: i, is, n2
+  INTEGER :: i, j, is, n2
   !
   !
   electron_dynamic: IF ( tcg ) THEN
@@ -131,14 +132,16 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      CALL prefor( eigr, vkb )
      !
      IF( force_pairing ) THEN
-     CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, &
+        !
+        CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, &
                       rhos, bec, c0(:,:,1,1), cm(:,:,1,1), ei_unp )
-     lambda( nudx, nudx, 1) = ei_unp
-     !
+!        lambda( nudx, nudx, 1) = ei_unp
+        !
      ELSE
-     !
-     CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, &
+        !
+        CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, &
                       rhos, bec, c0(:,:,1,1), cm(:,:,1,1) )
+        !
      ENDIF
      !
      !----------------------------------------------------------------------
@@ -151,13 +154,13 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      !
      IF ( (tfor.or.tprnfor) .AND. tefield ) &
         CALL bforceion( fion, .TRUE. , ipolp, qmat, bec, becdr, gqq, evalue )
-      IF ( (tfor.or.tprnfor) .AND. tefield2 ) &
+     IF ( (tfor.or.tprnfor) .AND. tefield2 ) &
         CALL bforceion( fion, .TRUE. , ipolp2, qmat2, bec, becdr, gqq2, evalue2 )
      !
      IF( force_pairing ) THEN
-      lambda( nudx, nudx, 2) = 0.d0 
-      lambda( 1:nupdwn(2), 1:nupdwn(2), 2 ) =  lambda(1:nupdwn(2), 1:nupdwn(2), 1 )
-     lambdam( 1:nupdwn(2), 1:nupdwn(2), 2 ) = lambdam(1:nupdwn(2), 1:nupdwn(2), 1 )
+        lambda( nudx, nudx, 2 ) = 0.d0 
+        lambda( 1:nupdwn(2), 1:nupdwn(2), 2 ) =  lambda(1:nupdwn(2), 1:nupdwn(2), 1 )
+        lambdam( 1:nupdwn(2), 1:nupdwn(2), 2 ) = lambdam(1:nupdwn(2), 1:nupdwn(2), 1 )
      ENDIF
      ! 
      IF ( tfor .OR. thdyn ) then
@@ -168,9 +171,9 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      END IF
      !
      IF( force_pairing ) THEN
-      lambda( nudx, nudx, 2) = 0.d0 
-      lambda( 1:nupdwn(2), 1:nupdwn(2), 2 ) =  lambda(1:nupdwn(2), 1:nupdwn(2), 1 )
-     lambdam( 1:nupdwn(2), 1:nupdwn(2), 2 ) = lambdam(1:nupdwn(2), 1:nupdwn(2), 1 )
+        lambda( 1:nupdwn(2), 1:nupdwn(2), 2 ) =  lambda(1:nupdwn(2), 1:nupdwn(2), 1 )
+        lambdam( 1:nupdwn(2), 1:nupdwn(2), 2 ) = lambdam(1:nupdwn(2), 1:nupdwn(2), 1 )
+        lambdap( 1:nupdwn(2), 1:nupdwn(2), 2 ) = lambdap(1:nupdwn(2), 1:nupdwn(2), 1 )
      ENDIF
      ! 
      ! ... calphi calculates phi

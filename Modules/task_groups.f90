@@ -8,7 +8,7 @@
 !MAXGRP:	Maximum number of task-groups
 !--------------------------------------------
 
-MODULE GROUPS_MODULE
+MODULE task_groups
 
    USE kinds, ONLY: DP
    USE parameters, ONLY: MAXCPU, MAXGRP
@@ -76,7 +76,7 @@ END SUBROUTINE DEALLOCATE_GROUPS
 !      Define groups for task group parallilization
 !=======================================================================
 !-----------------------------------------------------------------------
-SUBROUTINE GROUPS( nogrp_ , dffts )
+SUBROUTINE task_groups_init( nogrp_ , dffts )
    !------------
    !Modules used
    !------------
@@ -244,7 +244,7 @@ SUBROUTINE GROUPS( nogrp_ , dffts )
 
    RETURN
 
-   END SUBROUTINE GROUPS
+   END SUBROUTINE task_groups_init
 
 
-END MODULE GROUPS_MODULE
+END MODULE task_groups

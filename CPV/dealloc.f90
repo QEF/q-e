@@ -56,7 +56,7 @@ SUBROUTINE deallocate_modules_var()
   USE metagga,              ONLY : deallocate_metagga
   USE ncpp,                 ONLY : deallocate_ncpp
   USE pseudo_projector,     ONLY : fnl, projector, deallocate_projector
-  USE groups_module,        ONLY : deallocate_groups
+  USE task_groups,          ONLY : deallocate_groups
   USE ions_positions,       ONLY : deallocate_ions_positions
   USE reciprocal_space_mesh, ONLY: deallocate_gkvec
   USE optical_properties,   ONLY : optical_closeup
