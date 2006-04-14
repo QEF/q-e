@@ -51,6 +51,8 @@
       USE electrons_module, ONLY: ei
       USE io_files,         ONLY: scradir
       USE ensemble_dft,     ONLY: tens
+      USE mp,               ONLY: mp_bcast
+      USE mp_global,        ONLY: root_image, intra_image_comm
 !
       implicit none
       integer, INTENT(IN) :: ndw, nfi
@@ -101,6 +103,13 @@
           occ_ ( i - iupdwn ( ispin ) + 1, 1, ispin ) = occ_f( i ) 
         end do
       end do
+
+      !
+      !  Sincronize lambdas, whose replicas could diverge on
+      !  different processors
+      !
+      CALL mp_bcast( lambda, root_image, intra_image_comm )
+      CALL mp_bcast( lambdam, root_image, intra_image_comm )
 
       IF( tens ) THEN
         CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
