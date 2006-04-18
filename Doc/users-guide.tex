@@ -560,7 +560,7 @@ They can be downloaded freely (but not redistributed!) from:
 {http://www.cs.utexas.edu/users/flame/goto/}
 
 At compilation time you have to choose whether to use the built-in
-copy of FFTW (v.<3), a precompiled FFTW v.<3 library, or a
+copy of FFTW (v.$<$3), a precompiled FFTW v.$<$3 library, or a
 precompiled FFTW v.3 library. This is done using preprocessing
 options with rather obvious meaning : 
 \texttt{\_\_FFTW}, \texttt{\_\_USE\_INTERNAL\_FFTW}, \texttt{\_\_FFTW3}.
@@ -596,7 +596,7 @@ specified value, and won't do any extra search.  This is so that if
 \texttt{configure} finds any library that you don't want to use, you
 can override it.
 
-If you want to link to a precompiled FFTW v.<3 library, you will need 
+If you want to link to a precompiled FFTW v.$<$3 library, you will need 
 the corresponding \texttt{fftw.h} include file. That may or may not 
 have been installed on your system together with the library: in
 particular, most Linux distributions split libraries into ``base'' 
@@ -801,7 +801,7 @@ file instead.
 The codes for data postprocessing in \texttt{PP/} are:
 \begin{itemize}
   \item \texttt{pp.x} extracts the specified data from files
-        produced by \texttt{pw.x}, prepare data fro plotting
+        produced by \texttt{pw.x}, prepare data for plotting
         by writing them into formats that can be read by
         several plotting programs
   \item \texttt{bands.x} extracts and reorders eigenvalues
@@ -1137,14 +1137,14 @@ using glibc-2.2.4 and older seem ok: compile on these machines
 if you want to share precompiled binaries. Crashes due to multithreading 
 (e.g. when using a multithreaded ATLAS or MKL) on machines with 
 the newer threads (nptl) can be worked around by setting the 
-environment variable \texttt{LD\_ASSUME\_KERNEL} to '2.2.5'. For 
+environment variable \texttt{LD\_ASSUME\_KERNEL} to `2.2.5'. For 
 the newest Intel compilers, \texttt{-static-libcxa} does the 
 trick most of the time. (info from Axel Kohlmeyer)
 
 Since there is no standard compiler for Linux, different compilers
 have different ideas about the right way to call external libraries.
 As a consequence you may have a mismatch between what your compiler
-calls ("symbols") and the actual name of the required library call.
+calls (``symbols") and the actual name of the required library call.
 Use the \texttt{nm} command to determine the name of a library call,
 as in the following examples:%
 \begin{verbatim}
@@ -1263,7 +1263,7 @@ Update to a more patched version: 8.0.046 for v.~8.0,
 
 There is a well known problem with ifort 8 and pthreads 
 (that are used both in Debian Woody and Sarge) that causes
-"segmentation fault" errors (info from Lucas Fernandez Seivane). 
+``segmentation fault" errors (info from Lucas Fernandez Seivane). 
 Version 7 did not have this problem.
 
 \paragraph{ifort v.9}
@@ -1299,7 +1299,7 @@ because some symbols that are referenced by MKL are missing. There
 is a fix for this (info from Konstantin Kudin): add libF90.a from 
 ifc 7.1 at the linking stage, as the last library.
 Note that some combinations of not-so-recent versions of MKL 
-and ifc may yield a lot of "undefined references" when statically 
+and ifc may yield a lot of ``undefined references" when statically 
 loaded: use \texttt{configure --enable-shared}, 
 or remove the \texttt{-static} option in \texttt{make.sys}.
 Note that \texttt{pwcond.x} works only with recent versions
@@ -1805,7 +1805,7 @@ First, dynamical matrices $D(\mathbf{q})$ are calculated and saved
 for a suitable uniform grid of \textbf{q}-vectors (only those in the 
 Irreducible Brillouin Zone of the crystal are needed). Although
 this can be done one \textbf{q}-vector at the time, a simpler procedure
-is to specify variable \texttt{ldisp=.true} and to set variables
+is to specify variable \texttt{ldisp=.true.} and to set variables
 \texttt{nq1,nq2,nq3} to some suitable Monkhorst-Pack grid, that
 will be automatically generated, centered at $\mathbf{q}=0$.
 Do not forget to specify \texttt{epsil=.true.} in the input data
@@ -1876,7 +1876,7 @@ polar) and output formats (including the popular {\tt cube} format) can
 be specified. The output files can be directly read by the free plotting
 system Gnuplot (1D or 2D plots), 
 or by code \texttt{plotrho.x} that comes with PWscf (2D plots), or 
-by advanced plotting software XCrySDen and gOpenMol (3D plots)
+by advanced plotting software XCrySDen and gOpenMol (3D plots).
 
 See file \texttt{INPUT\_PP} for a detailed description of the input
 for code \texttt{pp.x}.
@@ -1930,7 +1930,7 @@ This section is intended to explain how to perform basic
 Car-Parrinello (CP) simulations using the CP codes.
 
 It is important to understand that a CP simulation is a sequence of 
-different runs, some of them used to "prepare" the initial state
+different runs, some of them used to ``prepare" the initial state
 of the system, and other performed to collect statistics,
 or to modify the state of the system itself, i.e. modify the temperature
 or the pressure.
@@ -2095,7 +2095,7 @@ ATOMIC_POSITIONS (bohr)
     Minimize ionic positions.
 
     As we pointed out in 4) if the interatomic forces are too high,
-    the system could "explode" if we switch on the ionic dynamics.
+    the system could ``explode" if we switch on the ionic dynamics.
     To avoid that we need to relax the system. 
 
     Again there are different strategies to relax the system, but the
@@ -2317,15 +2317,15 @@ H 1.00d0 h.ps
     transfer of energy between ionic and electronic degrees of
     freedom. Beware: the usage of electronic thermostats is quite
     delicate. The following information comes from K. Kudin:
-    {\em The main issue is that there is usually some "natural" fictitious
-    kinetic energy that electrons gain from the ionic motion ("drag"). One
+    {\em The main issue is that there is usually some ``natural" fictitious
+    kinetic energy that electrons gain from the ionic motion (``drag"). One
     could easily quantify how much of the fictitious energy comes from this
     drag by doing a CP run, then a couple of CG (same as BO) steps, and
     then going back to CP. The fictitious electronic energy at the last CP
     restart will be purely due to the drag effect.
 
     The thermostat on electrons will either try to overexcite the
-    otherwise "cold" electrons, or, will try to take them down to an
+    otherwise ``cold" electrons, or, will try to take them down to an
     unnaturally cold state where their fictitious kinetic energy is even
     below what would be just due pure drag. Neither of this is good.
 
@@ -2515,7 +2515,7 @@ Note also that Beowulf-style machines (PC clusters) may have
 disappointing parallelization performances unless they have a decent
 communication hardware (at least Gigabit ethernet).
 Do not expect good scaling with cheap hardware: plane-wave
-calculations are not at all an "embarrassing parallel" problem. 
+calculations are not at all an ``embarrassing parallel" problem. 
 Note that multiprocessor motherboards for Intel Pentium CPUs typically
 have just one memory bus for all processors.
 This dramatically slows down any code doing massive access to memory
@@ -2743,7 +2743,7 @@ Possible reasons:
 Possible solutions:
 \begin{itemize}
   \item
-    if this happen after a change in the code or in compilation or
+    if this happens after a change in the code or in compilation or
     preprocessing options, try \texttt{make clean} and recompile.
     The \texttt{make} command should take care of all dependencies,
     but do not rely too heavily on it. 
@@ -2794,7 +2794,7 @@ in conjunction with uniform k-point grids.
 \paragraph{\texttt{pw.x} yields ``internal error: cannot braket Ef'' message
 in \texttt{efermit} but doesn't stop.}
 
-This may happens under special circumstances when you are calculating the band 
+This may happen under special circumstances when you are calculating the band 
 structure for selected high-symmetry lines. The message signals that 
 occupations and Fermi energy are not correct (but eigenvalues and eigenvectors 
 are). Remove \texttt{occupations='tetrahedra'} in the input data to get rid of 
@@ -2967,7 +2967,7 @@ Reduce \texttt{mixing\_beta} from the default value (0.7) to $\sim
 0.3-0.1$ or smaller. Try the \texttt{mixing\_mode} value that is
 more appropriate for your problem. For slab geometries used in surface 
 problems or for elongated cells, \texttt{mixing\_mode='local-TF'} should
-be the better choice, dampening "charge sloshing".  You may also try to 
+be the better choice, dampening ``charge sloshing".  You may also try to 
 increase \texttt{mixing\_ndim} to more than 8 (default value). Beware: 
 the larger \texttt{mixing\_ndim}, the larger the amount of memory you need.
 
@@ -3026,7 +3026,7 @@ situation improves somewhat by increasing the \texttt{ecutrho} cutoff.
 in \texttt{checkallsym} with ``non orthogonal operation'' error.}
 
 Variable-cell optimization may occasionally break the starting
-symmetry of the cell. When this happen, the run is stopped
+symmetry of the cell. When this happens, the run is stopped
 because the number of k-points calculated for the starting
 configuration may no longer be suitable. Possible solutions:
 \begin{itemize}
@@ -3084,7 +3084,7 @@ cm$^{-1}$.
 The ultimate test is to diagonalize the dynamical matrix with program
 \texttt{dynmat.x}, imposing the ASR.
 If you obtain an acoustic mode with a much smaller $\omega$ (let's say
-$<1 \textrm{cm}^{-1}$) with all other modes virtually unchanged, you
+$<1$ cm$^{-1}$) with all other modes virtually unchanged, you
 can trust your results.
 
 \paragraph{\texttt{ph.x} yields really lousy phonons, with bad or
@@ -3136,7 +3136,7 @@ molecular dynamics?}
 ``A common mistake many new users make is to set the time step 
 \texttt{dt} inproperly to the same order of magnitude as for CP 
 algorithm, or not setting \texttt{dt} at all. This will produce 
-a "not evolving dynamics". Good values for the original RMW
+a ``not evolving dynamics". Good values for the original RMW
 (RM Wentzcovitch) dynamics are \texttt{dt}$=50\div70$. 
 
 The choice of the cell mass is a delicate matter. An off-optimal mass 
@@ -3146,9 +3146,9 @@ oscillation times for internal degrees of freedom comparable to
 cell degrees of freedom in non-damped Variable-Cell MD. Test calculations 
 are advisable before extensive calculation.
 
-I have tested the damping algorithm that I have developed and it has
+``I have tested the damping algorithm that I have developed and it has
 worked well so far. It allows for a much longer time step 
-(\texttt{dt}$100\div150$) than the RMW one and is much more stable 
+(\texttt{dt}=$100\div150$) than the RMW one and is much more stable 
 with very small cell masses, which is useful when the cell shape, 
 not the internal degrees of freedom, is far out of equilibrium. 
 It also converges in  a smaller number of steps than RMW.''
@@ -3165,7 +3165,7 @@ What position in real space  corresponds to an array value? }
 
 The index of arrays used to store functions defined on 3D meshes is  
 actually a shorthand for three indeces, following the FORTRAN  
-convention ("leftmost index runs faster"). An example will explain  
+convention (``leftmost index runs faster"). An example will explain  
 this better. Suppose you have a 3D array of dimension \texttt{(nr1,nr2,nr3)},
 say \texttt{psi(nr1,nr2,nr3)}. FORTRAN compilers store this array 
 sequentially  in the computer RAM in the following way:
@@ -3194,13 +3194,13 @@ ind = i + (j-1)*nr1 + (k-1)*nr2*nr1
 This should clarify the relation between 1D and 3D indexing. In real  
 space, the \texttt{(i,j,k)} point of the mesh is
 \begin{equation}
-{\bf r_{ijk}} = {i-1\over nr1}*\tau_1 
+{\bf r}_{ijk} = {i-1\over nr1}*\tau_1 
               + {j-1\over nr2}*\tau_2
               + {k-1\over nr3}*\tau_3
 \end{equation}
 
 where the $\tau$'s are the basis vectors of the Bravais lattice. The  
-latter are stored row-wise in the "AT" array:
+latter are stored row-wise in the ``AT" array:
 \begin{equation}
 \tau_1 = at(:,1), \tau_2 = at(:,2), \tau_3 = at(:,3)
 \end{equation}
@@ -3243,11 +3243,11 @@ dynamics}, J.L. Warren, T.G. Worlton.''
 ``\texttt{ecutrho} defines the resolution on the real space FFT mesh 
 (as expressed by \texttt{nr1}, \texttt{nr2} and \texttt{nr3}, that
 the code left on its own sets automatically). In the ultrasoft
-case we refer to this mesh as the "hard" mesh, since
+case we refer to this mesh as the ``hard" mesh, since
 it is denser than the smooth mesh that is needed to
 represent the square of the non-norm-conserving wavefunctions.
 
-On this "hard", fine-spaced mesh, you need to determine the size
+On this ``hard", fine-spaced mesh, you need to determine the size
 of the cube that will encompass the largest of the augmentation
 charges - this is what \texttt{nr1b}, \texttt{nr2b}, \texttt{nr3b} are.
 

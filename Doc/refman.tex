@@ -174,7 +174,7 @@ You can contribute to a better Quantum-ESPRESSO by
     at date {\em date}:
     this may be useful if you suspect that the incompatibile change 
     happened after date {\em date}.
-    CVS versions can be "tagged"; tags are visible with 
+    CVS versions can be ``tagged"; tags are visible with 
     \texttt{cvs status -v}. Use \texttt{cvs update -r}{\em tag} 
     to update to the CVS version with tag {\em tag}.
     In all cases, use \texttt{cvs update -A} to revert to the last version.
@@ -208,10 +208,10 @@ There are two ways to do preprocessing of fortran files:
   \item directly with the fortran compiler, if supported;
   \item by first pre-compiling with the C preprocessor {\tt cpp}.
 \end{itemize}
-In the first case, one needs to specify in the "make.sys" file the
+In the first case, one needs to specify in the ``make.sys" file the
 fortran compiler option that tells the compiler 
 to pre-process first. In the second case, one needs to 
-specify the C precompiler and options (if needed) in "make.sys".
+specify the C precompiler and options (if needed) in ``make.sys".
 
 \subsection{Adding new directories or routines}
 
@@ -240,7 +240,7 @@ specify the C precompiler and options (if needed) in "make.sys".
 \label{preproc}
 The code contains C-style preprocessing directives. Most
 fortran compilers directly support them; some don't, and
-preprocessing is "hand-made" by the makefile using the C
+preprocessing is ``hand-made" by the makefile using the C
 preprocessor {\tt cpp}.
 
 The C preprocessor may:
@@ -250,7 +250,7 @@ The C preprocessor may:
     \texttt{\#define THIS that}, or the option in the command line:
     \texttt{-DTHIS=that}, will replace all occurrence of \texttt{THIS}
     with \texttt{that}.
-    "Preprocessed" variables are usually, but not always nor 
+    ``Preprocessed" variables are usually, but not always nor 
     necessarily,  written in uppercase.
   \item
     execute conditional expressions such as
@@ -261,7 +261,7 @@ The C preprocessor may:
     ...code B...
   #endif
 \end{verbatim}
-    If "expression" is defined (with a \texttt{\#define} command or
+    If ``expression" is defined (with a \texttt{\#define} command or
     from the command line with option \texttt{-Dexpression}), then
     \texttt{...code A...} is sent to output; otherwise
     \texttt{...code B...} is sent to output.
@@ -329,7 +329,7 @@ underscores. Examples: \texttt{\_\_AIX}, \texttt{\_\_LINUX}, ...
 \item fortran commands should be capitalized: \texttt{CALL something( )}
 \item variable names should be lowercase: \texttt{foo = bar/2}
 \item use \texttt{KIND=DP} to define the type of real and complex variables
-(\texttt{DP} is defined in module ``kind'')
+(\texttt{DP} is defined in module ``kinds'')
 \item all constants should be defined to be of kind \texttt{DP}.
 Preferred syntax: \texttt{0.0\_dp}.
 \item conversions should be explicitely indicated. For conversions to real
@@ -370,7 +370,7 @@ has its own version of \texttt{input.f90}  used to copy input values
 into internal variables ).
 
 EXAMPLE:
-suppose you need to add a new input variable called "pippo"
+suppose you need to add a new input variable called ``pippo"
 to the namelist control, then:
 
 \begin{verbatim}
@@ -416,7 +416,7 @@ developers to work and maintain a single copy of a software in
 a central location (repository). It is installed by default on
 most Unix machines, or otherwise it can be very easily installed:
 see {\tt http://www.cvshome.org}. For a tutorial, see:\\
-{\tt http://www.loria.fr/~{}molli/cvs/cvs-tut/cvs\_tutorial\_toc.html}
+{\tt http://www.loria.fr/\~{}molli/cvs/cvs-tut/cvs\_tutorial\_toc.html}
 
 \subsection{Anonymous CVS}
 
@@ -473,11 +473,11 @@ When updating, you should get lines looking like
   P Modules/Makefile
   U Modules/control_flags.f90
 \end{verbatim}
-where P means "patched", U means "updated" (a new file is added); or
+where P means ``patched", U means ``updated" (a new file is added); or
 \begin{verbatim}
   M PW/Makefile
 \end{verbatim}
-where M means "locally modified" (i.e., wrt the CVS repository
+where M means ``locally modified" (i.e., wrt the CVS repository
 version); or
 \begin{verbatim}
   cvs server: FPMD/control.f90 is no longer in the repository
