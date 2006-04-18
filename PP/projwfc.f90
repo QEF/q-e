@@ -690,7 +690,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:),work1(:), proj0(:,:)
   ! Some workspace for k-point calculation ... 
   REAL(DP), ALLOCATABLE :: charges(:,:,:), proj1 (:)
-  REAL(DP) :: psum, totcharge(nspinx), fact(2), spinor
+  REAL(DP) :: psum, totcharge(nspinx), fact(2), spinor, compute_mj
   INTEGER, ALLOCATABLE :: INDEX(:) 
   !
   COMPLEX(DP) :: d12(2, 2, 48), d32(4, 4, 48), d52(6, 6, 48), &
@@ -1004,7 +1004,8 @@ SUBROUTINE projwave_nc(filproj, lsym )
            IF (lspinorb) THEN
               WRITE(iunproj,1000) &
                    nwfc, nlmchi(nwfc)%na,atm(ityp(nlmchi(nwfc)%na)), &
-                   nlmchi(nwfc)%n,nlmchi(nwfc)%jj,nlmchi(nwfc)%l,nlmchi(nwfc)%m
+                   nlmchi(nwfc)%n,nlmchi(nwfc)%jj,nlmchi(nwfc)%l, &
+                   compute_mj(nlmchi(nwfc)%jj,nlmchi(nwfc)%l,nlmchi(nwfc)%m)
            ELSE
               WRITE(iunproj,1500) &
                    nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), &
@@ -1027,10 +1028,11 @@ SUBROUTINE projwave_nc(filproj, lsym )
         DO nwfc = 1, natomwfc 
            WRITE(stdout,1000) & 
              nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), & 
-             nlmchi(nwfc)%n, nlmchi(nwfc)%jj, nlmchi(nwfc)%l, nlmchi(nwfc)%m 
+             nlmchi(nwfc)%n, nlmchi(nwfc)%jj, nlmchi(nwfc)%l,   &
+             compute_mj(nlmchi(nwfc)%jj,nlmchi(nwfc)%l,nlmchi(nwfc)%m)
         END DO
 1000    FORMAT (5x,"state #",i3,": atom ",i3," (",a3,"), wfc ",i2, &
-                   " (j=",f3.1," l=",i1," m=",i2,")")
+                   " (j=",f3.1," l=",i1," m_j=",f4.1,")")
      ELSE 
         DO nwfc = 1, natomwfc 
            WRITE(stdout,1500) & 
@@ -1619,3 +1621,20 @@ WRITE (iunplot, '(2l5)') noncolin, lspinorb
 
 RETURN
 END SUBROUTINE write_io_header
+
+FUNCTION compute_mj(j,l,m)
+USE kinds, ONLY: DP
+IMPLICIT NONE
+REAL(DP) :: compute_mj, j
+INTEGER  :: l, m
+
+IF (ABS(j-l-0.5d0).lt.1.d-4) THEN
+   compute_mj=m+0.5d0
+ELSE IF (ABS(j-l+0.5d0).lt.1.d-4) THEN
+   compute_mj=m-0.5d0
+ELSE
+   call errore('compute_mj','l and j not compatible',1)
+END IF
+
+RETURN
+END
