@@ -668,14 +668,14 @@ SUBROUTINE projwave_nc(filproj, lsym )
   USE ldaU 
   USE lsda_mod, ONLY: nspin
   USE noncollin_module, ONLY: noncolin, npol
-  USE symme, ONLY: nsym, irt 
+  USE symme, ONLY: nsym, irt, t_rev 
   USE wvfct 
   USE uspp, ONLY: nkb, vkb
   USE becmod,   ONLY: becp_nc
   USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc 
   USE wavefunctions_module, ONLY: evc_nc 
   !
-  USE spin_orb,   ONLY: lspinorb, so
+  USE spin_orb,   ONLY: lspinorb, so, domag
   USE projections_nc
   !
   IMPLICIT NONE 
@@ -683,7 +683,8 @@ SUBROUTINE projwave_nc(filproj, lsym )
   CHARACTER(LEN=*) :: filproj
   LOGICAL :: lsym
   INTEGER :: ik, ibnd, ipol, i, j, k, na, nb, nt, isym, ind, n, m, m1, n1, &
-             n2, s1, l, lm, nwfc, nwfc1, lmax_wfc, is, nspin0, iunproj, ios 
+             n2, s1, l, lm, nwfc, nwfc1, lmax_wfc, is, nspin0, iunproj,    &
+             ind0, ios 
   REAL(DP) :: jj
   REAL(DP), ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom_nc (:,:,:)
@@ -870,10 +871,17 @@ SUBROUTINE projwave_nc(filproj, lsym )
               n = nlmchi(nwfc)%n 
               l = nlmchi(nwfc)%l 
               m = nlmchi(nwfc)%m 
-              ind = nlmchi(nwfc)%ind
+              ind0 = nlmchi(nwfc)%ind
               jj = nlmchi(nwfc)%jj
               ! 
               DO isym = 1, nsym 
+!-- check for the time reversal
+                 IF (t_rev(isym) == 1) THEN
+                   ind = 2*jj + 2 - ind0
+                 ELSE
+                   ind = ind0
+                 ENDIF
+!--
                  nb = irt (isym, na) 
                  DO nwfc1 =1, natomwfc 
                     IF (nlmchi(nwfc1)%na == nb             .AND. & 
@@ -913,15 +921,36 @@ SUBROUTINE projwave_nc(filproj, lsym )
                          work1(ibnd) * CONJG (work1(ibnd)) / nsym 
                  ENDDO 
                  ! on symmetries
+!--  in a nonmagnetic case - another loop with the time reversal
+                 IF (.not.domag.and.ind.eq.ind0) THEN
+                   ind = 2*jj + 2 - ind0
+                   nwfc1 = nwfc1 + 1
+                   GOTO 10
+                 ENDIF
+!--
               ENDDO 
+!--  in a nonmagnetic case - rescale
+              IF (.not.domag) THEN
+                DO ibnd = 1, nbnd
+                  proj(nwfc,ibnd,ik) = 0.5d0*proj(nwfc,ibnd,ik)
+                ENDDO
+              ENDIF
+!--
            ELSE
               na= nlmchi(nwfc)%na 
               n = nlmchi(nwfc)%n 
               l = nlmchi(nwfc)%l 
               m = nlmchi(nwfc)%m 
-              ind = nlmchi(nwfc)%ind
+              ind0 = nlmchi(nwfc)%ind
               ! 
               DO isym = 1, nsym 
+!-- check for the time reversal
+                 IF (t_rev(isym) == 1) THEN
+                   ind = 2*m - ind0 + 2*l + 1
+                 ELSE
+                   ind = ind0
+                 ENDIF
+!--
                  nb = irt (isym, na) 
                  DO nwfc1 =1, natomwfc 
                     IF (nlmchi(nwfc1)%na == nb             .AND. & 
