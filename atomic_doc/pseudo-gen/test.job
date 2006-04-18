@@ -14,7 +14,7 @@ $ld1dir/ld1.x < pt.in > $work/pt.out
 $ld1dir/ld1.x < si_nc.in > $work/si_nc.out
 $ld1dir/ld1.x < si_nc_paw.in > $work/si_nc_paw.out
 
-/bin/rm difference > /dev/null
+if test -e difference ; then /bin/rm difference > /dev/null ; fi
 touch difference
 
 for file in o.out al.out as.out pt.out si_nc.out si_nc_paw.out ; do

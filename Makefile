@@ -130,6 +130,7 @@ distclean veryclean : clean
 		      espresso.tar.gz CPV/version.h \
 		      intel.pcl */intel.pcl
 	- cd examples ; ./make_clean
+	- cd atomic_doc ; ./make_clean
 	- if test -d GUI ; then \
 	( cd GUI ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= veryclean ; \
 		else $(MAKE) $(MFLAGS) TLDEPS= veryclean ; fi ) \

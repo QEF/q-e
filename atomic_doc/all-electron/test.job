@@ -7,7 +7,7 @@ ld1dir=../../atomic/
 mkdir $work
 rm -f $work/*
 
-/bin/rm difference > /dev/null
+if test -e difference ; then /bin/rm difference > /dev/null ; fi
 touch difference
 
 for atom in ar f he cu cu1 h pt mg u u1 w ne_oep c_oep ; do
