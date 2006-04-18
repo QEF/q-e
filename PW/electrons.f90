@@ -821,7 +821,7 @@ SUBROUTINE electrons()
           !
           WRITE( stdout, 9040 ) ef * rytoev
           !
-       ELSE 
+       ELSE IF (.NOT. lbands) THEN
           !
           IF ( tfixed_occ ) THEN
               ibnd = 0
