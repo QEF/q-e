@@ -673,7 +673,7 @@ MODULE xml_io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_symmetry( ibrav, symm_type, nsym, &
-                               invsym, nr1, nr2, nr3, ftau, s, sname, irt )
+                       invsym, nr1, nr2, nr3, ftau, s, sname, irt, t_rev )
       !------------------------------------------------------------------------
       !
       INTEGER,          INTENT(IN) :: ibrav, nsym,  nr1, nr2, nr3
@@ -681,7 +681,7 @@ MODULE xml_io_base
       LOGICAL,          INTENT(IN) :: invsym
       INTEGER,          INTENT(IN) :: s(:,:,:), ftau(:,:)
       CHARACTER(LEN=*), INTENT(IN) :: sname(:)
-      INTEGER,          INTENT(IN) :: irt(:,:)
+      INTEGER,          INTENT(IN) :: irt(:,:), t_rev(:)
       !
       INTEGER  :: i
       REAL(DP) :: tmp(3)
@@ -705,6 +705,7 @@ MODULE xml_io_base
          tmp(3) = ftau(3,i) / DBLE( nr3 )
          !
          CALL iotk_write_attr( attr, "ROT", s(:,:,i) )
+         CALL iotk_write_attr( attr, "T_REV", t_rev(i) )
          CALL iotk_write_attr( attr, "FRAC_TRANS", tmp(:) )
          CALL iotk_write_attr( attr, "NAME", TRIM( sname(i) ) )
          CALL iotk_write_attr( attr, "EQ_IONS", irt(i,:) )
@@ -783,10 +784,10 @@ MODULE xml_io_base
     END SUBROUTINE write_planewaves
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_spin( lsda, noncolin, npol, lspinorb )
+    SUBROUTINE write_spin( lsda, noncolin, npol, lspinorb, domag )
       !------------------------------------------------------------------------
       !
-      LOGICAL, INTENT(IN) :: lsda, noncolin, lspinorb
+      LOGICAL, INTENT(IN) :: lsda, noncolin, lspinorb, domag
       INTEGER, INTENT(IN) :: npol
       !
       !
@@ -800,6 +801,7 @@ MODULE xml_io_base
          CALL iotk_write_dat( iunpun, "SPINOR_DIM", npol )
       !
       CALL iotk_write_dat( iunpun, "SPIN-ORBIT_CALCULATION", lspinorb )
+      CALL iotk_write_dat( iunpun, "SPIN-ORBIT_DOMAG", domag )
       !
       CALL iotk_write_end( iunpun, "SPIN" )
       !

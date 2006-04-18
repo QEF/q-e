@@ -73,8 +73,8 @@ MODULE pw_restart
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
       USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
                                        Hubbard_U, Hubbard_alpha
-      USE spin_orb,             ONLY : lspinorb
-      USE symme,                ONLY : nsym, invsym, s, ftau, irt
+      USE spin_orb,             ONLY : lspinorb, domag
+      USE symme,                ONLY : nsym, invsym, s, ftau, irt, t_rev
       USE char,                 ONLY : sname
       USE lsda_mod,             ONLY : nspin, isk, lsda
       USE ions_base,            ONLY : amass
@@ -281,7 +281,7 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          CALL write_symmetry( ibrav, symm_type, nsym, &
-                              invsym, nr1, nr2, nr3, ftau, s, sname, irt )
+                          invsym, nr1, nr2, nr3, ftau, s, sname, irt, t_rev )
          !
 !-------------------------------------------------------------------------------
 ! ... PLANE_WAVES
@@ -295,7 +295,7 @@ MODULE pw_restart
 ! ... SPIN
 !-------------------------------------------------------------------------------
          !
-         CALL write_spin( lsda, noncolin, npol, lspinorb )
+         CALL write_spin( lsda, noncolin, npol, lspinorb, domag )
          !
 !-------------------------------------------------------------------------------
 ! ... EXCHANGE_CORRELATION
@@ -1131,7 +1131,7 @@ MODULE pw_restart
       !------------------------------------------------------------------------
       !
       USE constants, ONLY : pi
-      USE char,      ONLY : crystal
+      USE char,      ONLY : title, crystal
       USE cell_base, ONLY : ibrav, alat, symm_type, at, bg, celldm
       USE cell_base, ONLY : tpiba, tpiba2, omega
       !
@@ -1250,6 +1250,7 @@ MODULE pw_restart
       ! ... crystal is always set to empty string (see PW/input.f90)
       !
       crystal = ' '
+      title = ' '
       !
       lcell_read = .TRUE.
       !
@@ -1343,7 +1344,7 @@ MODULE pw_restart
     SUBROUTINE read_symmetry( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE symme, ONLY : nsym, invsym, s, ftau, irt
+      USE symme, ONLY : nsym, invsym, s, ftau, irt, t_rev
       USE char,  ONLY : sname
       USE gvect, ONLY : nr1, nr2, nr3
       !
@@ -1383,6 +1384,7 @@ MODULE pw_restart
                                   "SYMM" // TRIM( iotk_index( i ) ), attr )
             !
             CALL iotk_scan_attr( attr, "ROT",        s(:,:,i) )
+            CALL iotk_scan_attr( attr, "T_REV",      t_rev(i) )
             CALL iotk_scan_attr( attr, "FRAC_TRANS", tmp(:) )
             CALL iotk_scan_attr( attr, "NAME",       sname(i) )
             CALL iotk_scan_attr( attr, "EQ_IONS",    irt(i,:) )
@@ -1498,7 +1500,7 @@ MODULE pw_restart
     SUBROUTINE read_spin( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE spin_orb,         ONLY : lspinorb
+      USE spin_orb,         ONLY : lspinorb, domag
       USE lsda_mod,         ONLY : nspin, lsda
       USE noncollin_module, ONLY : noncolin, npol
       !
@@ -1551,6 +1553,7 @@ MODULE pw_restart
          END IF
          !
          CALL iotk_scan_dat( iunpun, "SPIN-ORBIT_CALCULATION", lspinorb )
+         CALL iotk_scan_dat( iunpun, "SPIN-ORBIT_DOMAG", domag )
          !
          CALL iotk_scan_end( iunpun, "SPIN" )
          !

@@ -314,7 +314,7 @@ MODULE cp_restart
 ! ... SPIN
 !-------------------------------------------------------------------------------
          !
-         CALL write_spin( lsda, .FALSE., 1, .FALSE. )
+         CALL write_spin( lsda, .FALSE., 1, .FALSE., .TRUE. )
          !
 !-------------------------------------------------------------------------------
 ! ... EXCHANGE_CORRELATION
