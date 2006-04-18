@@ -3572,7 +3572,7 @@ SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
   ! ...                                e^-ig.r_i < beta_i,j | c_n > }
   !
   USE kinds,                  ONLY : DP
-  USE control_flags,          ONLY : iprint, tbuff
+  USE control_flags,          ONLY : iprint
   USE gvecs,                  ONLY : nms, nps
   USE gvecw,                  ONLY : ngw
   USE cvan,                   ONLY : ish
@@ -3612,25 +3612,15 @@ SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
      END DO
   ENDIF
   !
-  IF (.NOT.tbuff) THEN
-     !
-     psi( 1:nnrsx ) = 0.D0
-     DO ig=1,ngw
-        psi(nms(ig))=CONJG(c(ig)-CI*ca(ig))
-        psi(nps(ig))=c(ig)+CI*ca(ig)
-     END DO
-     !
-     CALL invfft('Wave',psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
-     !     
-  ELSE
-     !
-     !     read psi from buffer 21
-     !
-     READ(21,iostat=ios) psi
-     IF(ios.NE.0) CALL errore( 'dforce', 'error in reading unit 21', ios )
-     !
-  ENDIF
-  ! 
+  !
+  psi( 1:nnrsx ) = 0.D0
+  DO ig=1,ngw
+     psi(nms(ig))=CONJG(c(ig)-CI*ca(ig))
+     psi(nps(ig))=c(ig)+CI*ca(ig)
+  END DO
+  !
+  CALL invfft('Wave',psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+  !     
   iss1=ispin(i)
   !
   ! the following avoids a potential out-of-bounds error
@@ -3866,7 +3856,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   !
   USE constants,              ONLY : bohr_radius_angs
   USE kinds,                  ONLY : DP
-  USE control_flags,          ONLY : iprint, tbuff, iprsta, thdyn, tpre, trhor
+  USE control_flags,          ONLY : iprint, iprsta, thdyn, tpre, trhor
   USE ions_base,              ONLY : nax, nat, nsp, na
   USE cell_base,              ONLY : a1, a2, a3
   USE recvecs_indexes,        ONLY : np, nM
@@ -3889,6 +3879,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   USE uspp_param,             ONLY : nh, nhm
   USE uspp,                   ONLY : nkb
   USE fft_module,             ONLY : fwfft, invfft
+  USE charge_density,         ONLY : checkrho
   USE mp,                     ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -4015,9 +4006,6 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
      !
      CALL invfft('Wave',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
      !
-     !     wavefunctions in unit 21
-     !
-     IF(tbuff) WRITE(21,iostat=ios) psis
      !            iss1=ispin(i)
      iss1=1
      sa1=f(i)/omega
@@ -4033,16 +4021,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
         rhos(ir,iss2)=rhos(ir,iss2) + sa2*(AIMAG(psis(ir)))**2
      END DO
      !
-     !       buffer 21
-     !     
-     IF(tbuff) THEN
-        IF(ios.NE.0) CALL errore                                  &
-             &              (' rhoofr',' error in writing unit 21',ios)
-     ENDIF
-     !
      !         end do
-     !
-     IF(tbuff) REWIND 21
      !
      !     smooth charge in g-space is put into rhog(ig)
      !

@@ -32,7 +32,7 @@
 !  end of module-scope declarations
 !  ----------------------------------------------
 
-        PUBLIC :: rhoofr, fillgrad
+        PUBLIC :: rhoofr, fillgrad, checkrho
 
         INTERFACE rhoofr
            MODULE PROCEDURE rhoofr_fpmd, rhoofr_cp
@@ -359,6 +359,7 @@
   END SUBROUTINE rhoofr_fpmd
 !=----------------------------------------------------------------------=!
 
+
 !-----------------------------------------------------------------------
    SUBROUTINE rhoofr_cp (nfi,c,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
 !-----------------------------------------------------------------------
@@ -374,7 +375,7 @@
 !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
 !
       USE kinds,              ONLY: DP
-      USE control_flags,      ONLY: iprint, tbuff, iprsta, thdyn, tpre, trhor
+      USE control_flags,      ONLY: iprint, iprsta, thdyn, tpre, trhor
       USE ions_base,          ONLY: nat
       USE gvecp,              ONLY: ngm
       USE gvecs,              ONLY: ngs, nps, nms
@@ -511,34 +512,23 @@
             END DO
 
             CALL invfft('Wave',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
-
-            !     wavefunctions in unit 21
             !
-            IF(tbuff) WRITE(21,iostat=ios) psis
-            iss1=ispin(i)
-            sa1=f(i)/omega
-            IF (i.NE.n) THEN
-               iss2=ispin(i+1)
-               sa2=f(i+1)/omega
+            iss1 = ispin(i)
+            sa1  = f(i) / omega
+            IF ( i .NE. n ) THEN
+               iss2 = ispin(i+1)
+               sa2  = f(i+1) / omega
             ELSE
-               iss2=iss1
-               sa2=0.0
+               iss2 = iss1
+               sa2  = 0.0
             END IF
-            DO ir=1,nnrsx
-               rhos(ir,iss1)=rhos(ir,iss1) + sa1*( DBLE(psis(ir)))**2
-               rhos(ir,iss2)=rhos(ir,iss2) + sa2*(AIMAG(psis(ir)))**2
-            END DO
-
             !
-            !       buffer 21
-            !     
-            IF(tbuff) THEN
-               IF(ios.NE.0) CALL errore(' rhoofr',' error in writing unit 21',ios)
-            ENDIF
+            DO ir = 1, nnrsx
+               rhos(ir,iss1) = rhos(ir,iss1) + sa1 * ( DBLE(psis(ir)))**2
+               rhos(ir,iss2) = rhos(ir,iss2) + sa2 * (AIMAG(psis(ir)))**2
+            END DO
             !
          END DO
-         !
-         IF(tbuff) REWIND 21
          !
          !     smooth charge in g-space is put into rhog(ig)
          !
@@ -597,39 +587,15 @@
                rhor(ir,isdw)=AIMAG(psi(ir))
             END DO
          ENDIF
-         IF (dft_is_meta()) CALL kedtauofr_meta(c, psi, psis) ! METAGGA
-!
-         IF(iprsta.GE.3)THEN
-            DO iss=1,nspin
-               rsumg(iss)=omega*DBLE(rhog(1,iss))
-               rsumr(iss)=SUM(rhor(:,iss))*omega/DBLE(nr1*nr2*nr3)
-            END DO
-
-            IF ( gstart /= 2 ) THEN
-               !
-               !    in the parallel case, only one processor has G=0 ! 
-               !
-               DO iss=1,nspin
-                  rsumg(iss)=0.0
-               END DO
-            END IF
-            CALL mp_sum( rsumg( 1:nspin ), intra_image_comm )
-            CALL mp_sum( rsumr( 1:nspin ), intra_image_comm )
-
-            IF ( nspin == 1 ) THEN
-              WRITE( stdout, 10) rsumg(1), rsumr(1)
-            ELSE
-              WRITE( stdout, 20) rsumg(1), rsumr(1), rsumg(2), rsumr(2)
-            ENDIF
-
-         ENDIF
+         !
+         IF ( dft_is_meta() ) CALL kedtauofr_meta( c, psi, psis ) ! METAGGA
          !
          !     add vanderbilt contribution to the charge density
          !     drhov called before rhov because input rho must be the smooth part
          !
-         IF (tpre) CALL drhov(irb,eigrb,rhovan,rhog,rhor)
+         IF ( tpre ) CALL drhov( irb, eigrb, rhovan, rhog, rhor )
          !
-         CALL rhov(irb,eigrb,rhovan,rhog,rhor)
+         CALL rhov( irb, eigrb, rhovan, rhog, rhor )
 
          rhopr = rhor
 
@@ -639,31 +605,18 @@
 !
 !     here to check the integral of the charge density
 !
-!
-      IF( iprsta .GE. 2 ) THEN
-         CALL checkrho(nnrx,nspin,rhor,rmin,rmax,rsum,rnegsum)
-         rnegsum=rnegsum*omega/DBLE(nr1*nr2*nr3)
-         rsum=rsum*omega/DBLE(nr1*nr2*nr3)
-         WRITE( stdout,'(a,4(1x,f12.6))')                                     &
+      IF( ( iprsta >= 2 ) .OR. ( nfi == 0 ) .OR. &
+          ( MOD(nfi, iprint) == 0 ) .AND. ( .NOT. tcg ) ) THEN
+
+         IF( iprsta >= 2 ) THEN
+            CALL checkrho( nnrx, nspin, rhor, rmin, rmax, rsum, rnegsum )
+            rnegsum = rnegsum * omega / DBLE(nr1*nr2*nr3)
+            rsum    = rsum    * omega / DBLE(nr1*nr2*nr3)
+            WRITE( stdout,'(a,4(1x,f12.6))')                                     &
      &     ' rhoofr: rmin rmax rnegsum rsum  ',rmin,rmax,rnegsum,rsum
-      END IF
-!
-      IF( nfi == 0 .OR. MOD(nfi, iprint) == 0 .AND. .NOT. tcg ) THEN
-
-         DO iss=1,nspin
-            rsumg(iss)=omega*DBLE(rhog(1,iss))
-            rsumr(iss)=SUM(rhor(:,iss),1)*omega/DBLE(nr1*nr2*nr3)
-         END DO
-
-         IF (gstart.NE.2) THEN
-            ! in the parallel case, only one processor has G=0 ! 
-            DO iss=1,nspin
-               rsumg(iss)=0.0
-            END DO
          END IF
 
-         CALL mp_sum( rsumg( 1:nspin ), intra_image_comm )
-         CALL mp_sum( rsumr( 1:nspin ), intra_image_comm )
+         CALL sum_charge( rsumg, rsumr )
 
          IF ( nspin == 1 ) THEN
            WRITE( stdout, 10) rsumg(1), rsumr(1)
@@ -688,7 +641,38 @@
 
 !
       RETURN
-      END SUBROUTINE rhoofr_cp
+
+
+   CONTAINS   
+      !
+      !
+      SUBROUTINE sum_charge( rsumg, rsumr )
+         !
+         REAL(DP), INTENT(OUT) :: rsumg( : )
+         REAL(DP), INTENT(OUT) :: rsumr( : )
+         INTEGER :: iss
+         !
+         DO iss=1,nspin
+            rsumg(iss)=omega*DBLE(rhog(1,iss))
+            rsumr(iss)=SUM(rhor(:,iss),1)*omega/DBLE(nr1*nr2*nr3)
+         END DO
+
+         IF (gstart.NE.2) THEN
+            ! in the parallel case, only one processor has G=0 !
+            DO iss=1,nspin
+               rsumg(iss)=0.0
+            END DO
+         END IF
+
+         CALL mp_sum( rsumg( 1:nspin ), intra_image_comm )
+         CALL mp_sum( rsumr( 1:nspin ), intra_image_comm )
+
+         RETURN
+      END SUBROUTINE
+
+!-----------------------------------------------------------------------
+   END SUBROUTINE rhoofr_cp
+!-----------------------------------------------------------------------
 
 
 
@@ -756,6 +740,44 @@
 !
       RETURN
     END SUBROUTINE fillgrad
+
+
+!
+!----------------------------------------------------------------------
+      SUBROUTINE checkrho(nnr,nspin,rhor,rmin,rmax,rsum,rnegsum)
+!----------------------------------------------------------------------
+!
+!     check \int rho(r)dr and the negative part of rho
+!
+      USE kinds,     ONLY: DP
+      USE mp,        ONLY: mp_sum
+      USE mp_global, ONLY: intra_image_comm
+
+      IMPLICIT NONE
+
+      INTEGER nnr, nspin
+      REAL(DP) rhor(nnr,nspin), rmin, rmax, rsum, rnegsum
+      !
+      REAL(DP) roe
+      INTEGER ir, iss
+!
+      rsum   =0.0
+      rnegsum=0.0
+      rmin   =100.
+      rmax   =0.0 
+      DO iss = 1, nspin
+         DO ir = 1, nnr
+            roe  = rhor(ir,iss)
+            rsum = rsum + roe
+            IF ( roe < 0.0 ) rnegsum = rnegsum + roe
+            rmax = MAX( rmax, roe )
+            rmin = MIN( rmin, roe )
+         END DO
+      END DO
+      CALL mp_sum( rsum, intra_image_comm )
+      CALL mp_sum( rnegsum, intra_image_comm )
+      RETURN
+    END SUBROUTINE checkrho
 
 
 !=----------------------------------------------------------------------=!

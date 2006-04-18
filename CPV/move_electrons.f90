@@ -170,12 +170,6 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
         lambdam = lambda
      END IF
      !
-     IF( force_pairing ) THEN
-        lambda( 1:nupdwn(2), 1:nupdwn(2), 2 ) =  lambda(1:nupdwn(2), 1:nupdwn(2), 1 )
-        lambdam( 1:nupdwn(2), 1:nupdwn(2), 2 ) = lambdam(1:nupdwn(2), 1:nupdwn(2), 1 )
-        lambdap( 1:nupdwn(2), 1:nupdwn(2), 2 ) = lambdap(1:nupdwn(2), 1:nupdwn(2), 1 )
-     ENDIF
-     ! 
      ! ... calphi calculates phi
      ! ... the electron mass rises with g**2
      !

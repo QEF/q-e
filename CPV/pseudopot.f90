@@ -727,8 +727,9 @@ CONTAINS
       !
       IF( ALLOCATED( betagx  ) ) DEALLOCATE( betagx )
       IF( ALLOCATED( dbetagx ) ) DEALLOCATE( dbetagx )
+      !
       ALLOCATE( betagx ( mmx, nhm, nsp ) )
-      IF (tpre) ALLOCATE( dbetagx( mmx, nhm, nsp ) )
+      IF ( tpre ) ALLOCATE( dbetagx( mmx, nhm, nsp ) )
 
       !
       do is = 1, nsp
@@ -738,6 +739,7 @@ CONTAINS
             allocate( djl  ( kkbeta( is ) ) )
             allocate( jltmp( kkbeta( is ) ) )
          end if
+         !
          allocate( fint ( kkbeta( is ) ) )
          allocate( jl   ( kkbeta( is ) ) )
          !
@@ -758,21 +760,29 @@ CONTAINS
                   !
                   i0 = 1
                   if ( r(1,is) < 1.0d-8 ) i0 = 2
-                  ! special case q=0
+                  !
                   if ( xg < 1.0d-8 ) then
+                     !
+                     ! special case q=0
+                     !
                      if (l == 1) then
                         ! Note that dj_1/dx (x=0) = 1/3
                         jltmp(:) = 1.0d0/3.d0
                      else
                         jltmp(:) = 0.0d0
                      end if
+                     !
                   else
+                     !
                      call sph_bes (kkbeta(is)+1-i0, r(i0,is), xg, ltmp-1, jltmp )
+                     !
                   end if
+                  !
                   do ir = i0, kkbeta(is)
                      xrg = r(ir,is) * xg
                      djl(ir) = jltmp(ir) * xrg - l * jl(ir)
                   end do
+                  !
                   if ( i0 == 2 ) djl(1) = djl(2)
                   !
                endif
@@ -804,6 +814,7 @@ CONTAINS
 !
          deallocate(jl)
          deallocate(fint)
+         !
          if (tpre) then
             deallocate(jltmp)
             deallocate(djl)
@@ -874,7 +885,6 @@ CONTAINS
          ALLOCATE( qrl( nr, nbeta(is)*(nbeta(is)+1)/2, nqlc(is)) )
          !
          call fill_qrl ( is, qrl )
-         ! qrl = 0.0d0
          !
          do l = 1, nqlc( is )
             !
@@ -1152,7 +1162,6 @@ CONTAINS
                do ig=1,ngb
                   do l=1,nqlc(is)
                      qradb(ig,ijv,l,is)= c*qradx(ig,ijv,l,is)
-                     WRITE(100,'(4I4,2D14.6)') ig,ijv,l,is,qradb(ig,ijv,l,is)
                   enddo
                enddo
             enddo
@@ -1354,11 +1363,6 @@ CONTAINS
                   do j=1,3
                      dbeta( 1, iv, is, i, j ) = -0.5 * beta( 1, iv, is ) * ainv( j, i )    &
      &                                          - c * dylm( 1, lp, i, j ) * betagl         ! SEGNO
-                     
-                     !dbeta(1,iv,is,i,j)=-0.5*beta(1,iv,is)*ainv(j,i)  !DEBUG stress ok!
-                     !dbeta(1,iv,is,i,j)=-c*dylm(1,lp,i,j)*betagl  !DEBUG stress ok!
-                     !dbeta(1,iv,is,i,j)=0.0d0  !DEBUG stress
-
                   enddo
                enddo
                do ig = gstart, ngw
@@ -1375,11 +1379,6 @@ CONTAINS
      &                    - c * dylm( ig, lp, i, j ) * betagl                  &  ! SEGNO
      &                    - c * ylm ( ig, lp )       * dbetagl * gx( i, ig ) / g( ig )         &
      &                    * ( gx( 1, ig ) * ainv( j, 1 ) + gx( 2, ig ) * ainv( j, 2 ) + gx( 3, ig ) * ainv( j, 3 ) )
-                        !dbeta(ig,iv,is,i,j)=- 0.5d0 * beta( ig, iv, is ) * ainv( j, i )  !DEBUG stress ok!
-                        !dbeta(ig,iv,is,i,j)=- c * dylm( ig, lp, i, j ) * betagl  !DEBUG stress ok!
-                        !dbeta( ig, iv, is, i, j ) =                            &
-                        !  - c * ylm ( ig, lp )       * dbetagl * gx( i, ig ) / g( ig )         &
-                        !  * ( gx( 1, ig ) * ainv( j, 1 ) + gx( 2, ig ) * ainv( j, 2 ) + gx( 3, ig ) * ainv( j, 3 ) )
                      end do
                   end do
                end do
@@ -1451,7 +1450,10 @@ CONTAINS
          do iv= 1,nbeta(is)
             do jv = iv, nbeta(is)
                ijv = jv*(jv-1)/2 + iv
-               do ig=1,ngb
+               do l=1,nqlc(is)
+                  qradb(1,ijv,l,is) = c * qradx(1,ijv,l,is)
+               end do
+               do ig=2,ngb
                   gg=gb(ig)*tpibab*tpibab/refg
                   jj=int(gg)+1
                   do l=1,nqlc(is)
@@ -1495,7 +1497,7 @@ CONTAINS
          allocate(dqgbs(ngb,3,3))
          dqrad(:,:,:,:,:,:) = 0.d0
          !
-         call dylmr2_(lmaxq*lmaxq, ngb, gxb, gb, ainv, dylmb)
+         call dylmr2_( lmaxq*lmaxq, ngb, gxb, gb, ainv, dylmb )
          !
          do is=1,nvb
             !
@@ -1503,7 +1505,8 @@ CONTAINS
                do jv=iv,nbeta(is)
                   ijv = jv*(jv-1)/2 + iv
                   do l=1,nqlc(is)
-                     do ig=1,ngb
+                     dqradb(1,ijv,l,is) =  dqradx(1,ijv,l,is)
+                     do ig=2,ngb
                         gg=gb(ig)*tpibab*tpibab/refg
                         jj=int(gg)+1
                         if(jj.ge.mmx) then
@@ -1516,18 +1519,15 @@ CONTAINS
                      enddo
                      do i=1,3
                         do j=1,3
-                           dqrad(1,ijv,l,is,i,j) = &
-                                -qradb(1,ijv,l,is) * ainv(j,i)
-                           ! dqrad(1,ijv,l,is,i,j) = 0.d0 ! DEBUG
+                           dqrad(1,ijv,l,is,i,j) = - qradb(1,ijv,l,is) * ainv(j,i)
                            do ig=2,ngb
                               dqrad(ig,ijv,l,is,i,j) =                  &
-     &                          -qradb(ig,ijv,l,is)*ainv(j,i)           &
-     &                          -c*dqradb(ig,ijv,l,is)*                 &
+     &                          - qradb(ig,ijv,l,is)*ainv(j,i)          &  
+     &                          - c * dqradb(ig,ijv,l,is)*              &
      &                          gxb(i,ig)/gb(ig)*                       &
      &                          (gxb(1,ig)*ainv(j,1)+                   &
      &                           gxb(2,ig)*ainv(j,2)+                   &
      &                           gxb(3,ig)*ainv(j,3))
-                           ! dqrad(ig,ijv,l,is,i,j) = -qradb(ig,ijv,l,is)*ainv(j,i) ! DEBUG
                            enddo
                         enddo
                      enddo
@@ -1611,6 +1611,7 @@ CONTAINS
             allocate( djl  ( kkbeta( is ) ) )
             allocate( jltmp( kkbeta( is ) ) )
          end if
+         !
          allocate( fint ( kkbeta( is ) ) )
          allocate( jl   ( kkbeta( is ) ) )
          !
@@ -1677,6 +1678,7 @@ CONTAINS
 !
          deallocate(jl)
          deallocate(fint)
+         !
          if (tpre) then
             deallocate(jltmp)
             deallocate(djl)
@@ -1779,6 +1781,8 @@ CONTAINS
       IF ( kkbeta(is) > dim1 ) &
            CALL errore ('fill_qrl', 'bad 1st dimension for array qrl', 1)
       !
+      qrl = 0.0d0
+      !
       do iv = 1, nbeta(is)
          !
          do jv = iv, nbeta(is)
@@ -1793,8 +1797,10 @@ CONTAINS
             lmin = ABS (lll(jv,is) - lll(iv,is)) + 1
             lmax = lll(jv,is) + lll(iv,is) + 1
 
-            ! WRITE( stdout, * ) ' is, jv, iv = ', is, jv, iv
-            ! WRITE( stdout, * ) ' lll jv, iv = ', lll(jv,is), lll(iv,is)
+            ! WRITE( stdout, * ) 'QRL is, jv, iv = ', is, jv, iv
+            ! WRITE( stdout, * ) 'QRL lll jv, iv = ', lll(jv,is), lll(iv,is)
+            ! WRITE( stdout, * ) 'QRL lmin, lmax = ', lmin, lmax
+            ! WRITE( stdout, * ) '---------------- '
 
             IF ( lmin < 1 .OR. lmax > dim3) THEN
                  WRITE( stdout, * ) ' lmin, lmax = ', lmin, lmax

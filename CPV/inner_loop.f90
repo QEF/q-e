@@ -20,7 +20,7 @@
 
       ! declares modules
       USE kinds,          ONLY: dp
-      USE control_flags,  ONLY: iprint, thdyn, tpre, tbuff, iprsta, &
+      USE control_flags,  ONLY: iprint, thdyn, tpre, iprsta, &
                                 tfor, tvlocw, taurdr, &
                                 tprnfor, ndr, ndw, nbeg, nomore, &
                                 tsde, tortho, tnosee, tnosep, trane, &

@@ -13,7 +13,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   USE kinds,                    ONLY : DP
   USE constants,                ONLY : bohr_radius_angs, amu_au
-  USE control_flags,            ONLY : iprint, isave, thdyn, tpre, tbuff,      &
+  USE control_flags,            ONLY : iprint, isave, thdyn, tpre,       &
                                        iprsta, tfor, tvlocw,      &
                                        taurdr, tprnfor, tsdc, lconstrain, lwf, &
                                        lneb, lcoarsegrained, ndr, ndw, nomore, &

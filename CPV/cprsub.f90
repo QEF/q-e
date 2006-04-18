@@ -183,7 +183,7 @@ subroutine nlfh( bec, dbec, lambda )
   !
   USE kinds,          ONLY : DP
   use cvan,           ONLY : nvb, ish
-  use uspp,           ONLY : nhsa => nkb, qq
+  use uspp,           ONLY : nkb, qq
   use uspp_param,     ONLY : nh, nhm
   use ions_base,      ONLY : na
   use electrons_base, ONLY : nbspx, nbsp, nudx, nspin, nupdwn, iupdwn
@@ -195,11 +195,12 @@ subroutine nlfh( bec, dbec, lambda )
 !
   implicit none
 
-  real(DP), intent(in) ::  bec( nhsa, nbsp ), dbec( nhsa, nbsp, 3, 3 )
+  real(DP), intent(in) ::  bec( nkb, nbsp ), dbec( nkb, nbsp, 3, 3 )
   real(DP), intent(in) ::  lambda( nudx, nudx, nspin )
 !
-  integer   :: i, j, ii, jj, inl, iv, jv, ia, is, iss, nss, istart
-  real(DP) :: fpre(3,3)
+  INTEGER  :: i, j, ii, jj, inl, iv, jv, ia, is, iss, nss, istart
+  INTEGER  :: jnl
+  REAL(DP) :: fpre(3,3), TT, T1, T2
   !
   REAL(DP), ALLOCATABLE :: tmpbec(:,:), tmpdh(:,:), temp(:,:)
   !
@@ -208,6 +209,7 @@ subroutine nlfh( bec, dbec, lambda )
       fpre(:,:) = 0.d0
       do ii=1,3
          do jj=1,3
+
             do is=1,nvb
                do ia=1,na(is)
 !
@@ -241,30 +243,27 @@ subroutine nlfh( bec, dbec, lambda )
                      if(nh(is).gt.0)then
 
                         temp = 0.d0
-!
+
                         call MXMA                                          &
      &                    (tmpdh,1,nudx,tmpbec,1,nhm,temp,1,nudx,nss,nh(is),nss)
-!
-                        ! do j=1,nss
-                        !    do i=1,nss
-                        !       temp(i,j)=temp(i,j)*lambda(i,j,iss)
-                        !    end do
-                        ! end do
-                        ! fpre(ii,jj)=fpre(ii,jj)+2.*SUM(temp(1:nss,1:nss))
-                        !
-                        DO j = 1, nss
-                           DO i = 1, nss
-                              fpre(ii,jj) = fpre(ii,jj) + 2.0d0*temp(i,j)*lambda(i,j,iss)
-                           END DO
-                        END DO
 
+                        do j=1,nss
+                           do i=1,nss
+                              temp(i,j)=temp(i,j)*lambda(i,j,iss)
+                           end do
+                        end do
+                        fpre(ii,jj)=fpre(ii,jj)+2.0d0*SUM(temp(1:nss,1:nss))
+                       
                      endif
                      !
                   end do
                   !
                end do
+               !
             end do
+            !
          end do
+         !
       end do
 
       do i=1,3
@@ -274,14 +273,17 @@ subroutine nlfh( bec, dbec, lambda )
          enddo
       enddo
 
+      DEALLOCATE ( tmpbec, tmpdh, temp )
+
       IF( iprsta >= 2 ) THEN
+         WRITE( stdout,*) 
          WRITE( stdout,*) "constraints contribution to stress"
          WRITE( stdout,5555) ((-fpre(i,j),j=1,3),i=1,3)
          fpre = MATMUL( fpre, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
          WRITE( stdout,5555) ((fpre(i,j),j=1,3),i=1,3)
+         WRITE( stdout,*) 
       END IF
 !
-      DEALLOCATE ( tmpbec, tmpdh, temp )
 
 5555  FORMAT(1x,f12.5,1x,f12.5,1x,f12.5/                                &
      &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
@@ -319,8 +321,7 @@ subroutine nlinit
       use core,            ONLY : rhocb, nlcc_any, allocate_core
       use constants,       ONLY : pi, fpi
       use ions_base,       ONLY : na, nsp
-      use uspp,            ONLY : aainit, beta, qq, dvan, nhtol, nhtolm, indv,&
-                                  nhsa => nkb, nhsavb=>nkbus
+      use uspp,            ONLY : aainit, beta, qq, dvan, nhtol, nhtolm, indv
       use uspp_param,      ONLY : kkbeta, qqq, nqlc, betar, lmaxq, dion,&
                                   nbeta, nbetam, lmaxkb, lll, nhm, nh, tvanp
       use atom,            ONLY : mesh, r, rab, nlcc, numeric
@@ -533,14 +534,18 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
 
   ivs=indv(iv,is)
   jvs=indv(jv,is)
+  !
   if (ivs >= jvs) then
      ijvs = ivs*(ivs-1)/2 + jvs
   else
      ijvs = jvs*(jvs-1)/2 + ivs
   end if
+  !
   ! ijvs is the packed index for (ivs,jvs)
+  !
   ivl=nhtolm(iv,is)
   jvl=nhtolm(jv,is)
+  !
   if (ivl > nlx .OR. jvl > nlx) &
        call errore (' qvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
   !
@@ -578,15 +583,16 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
      !     
      !       sig= (-i)^l
      !
-     sig=(0.,-1.)**(l-1)
-     sig=sig*ap(lp,ivl,jvl) 
-     ! WRITE(200,'(3I4,2D14.6)') ijvs,l,is,SUM(qradb(:,ijvs,l,is))
+     sig = (0.0d0,-1.0d0)**(l-1)
+     !
+     sig = sig * ap( lp, ivl, jvl ) 
+     !
      do ij=1,3
         do ii=1,3
            do ig=1,ngy
               dqg(ig,ii,ij) = dqg(ig,ii,ij) +  sig *                &
  &                    ( ylm(ig,lp) * dqrad(ig,ijvs,l,is,ii,ij) -    &
- &                     dylm(ig,lp,ii,ij)*qradb(ig,ijvs,l,is)   ) ! SEGNO
+ &                     dylm(ig,lp,ii,ij) * qradb(ig,ijvs,l,is)   ) ! SEGNO
            end do
         end do
      end do

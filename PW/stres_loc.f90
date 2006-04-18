@@ -61,7 +61,8 @@ subroutine stres_loc (sigmaloc)
              * vloc (igtongl (ng), nt) * fact
      enddo
   enddo
-  !      WRITE( stdout,*) ' evloc ', evloc, evloc*omega
+  !
+  !      WRITE( 6,*) ' evloc ', evloc, evloc*omega   ! DEBUG
   !
   do nt = 1, ntyp
      ! dvloc contains dV_loc(G)/dG

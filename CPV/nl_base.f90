@@ -494,9 +494,9 @@
 !
 !
       call start_clock( 'calbec' )
-      call nlsm1(n,nspmn,nspmx,eigr,c,bec)
+      call nlsm1( n, nspmn, nspmx, eigr, c, bec )
 !
-      if (iprsta.gt.2) then
+      if ( iprsta > 2 ) then
          WRITE( stdout,*)
          do is=1,nspmx
             if(nspmx.gt.1) then
@@ -590,6 +590,8 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
                  ixi = 1
                  signre = -1.0
                  signim =  1.0
+              else
+                 CALL errore(' caldbec  ', ' l not implemented ', ABS( l ) )
               endif
               !
               do ia=1,na(is)
@@ -636,13 +638,13 @@ subroutine dennl( bec, denl )
   USE kinds,      ONLY : DP
   use cvan,       only : ish
   use uspp_param, only : nh
-  use uspp,       only : nkb, dvan
+  use uspp,       only : nkb, dvan, deeq
   use cdvan,      ONLY : drhovan, dbec
   use ions_base,  only : nsp, na
   use cell_base,  only : h
   use io_global,  only : stdout
   !
-  use electrons_base,     only : n => nbsp, ispin, f, nspin
+  use electrons_base,     only : n => nbsp, ispin, f, nspin, ispin
   use reciprocal_vectors, only : gstart
 
   implicit none
@@ -677,17 +679,18 @@ subroutine dennl( bec, denl )
                     enddo
                  enddo
               end do
-              dsum=0.d0
+              !
               do iss=1,nspin
+                 dsum=0.d0
                  do k=1,3
                     do j=1,3
                        drhovan(ijv,isa,iss,j,k)=dsums(iss,j,k)
                        dsum(j,k)=dsum(j,k)+dsums(iss,j,k)
                     enddo
                  enddo
+                 if(iv.ne.jv) dsum=2.d0*dsum
+                 denl = denl + dsum * dvan(jv,iv,is)
               end do
-              if(iv.ne.jv) dsum=2.d0*dsum
-              denl = denl + dsum*dvan(jv,iv,is)
            end do
         end do
      end do

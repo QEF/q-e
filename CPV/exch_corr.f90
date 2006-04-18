@@ -181,29 +181,29 @@
       IF ( ANY( tnlcc ) ) THEN
 
         DO ig = gstart, ngm
-          tex1 = (0.0_DP , 0.0_DP)
+          tex1 = ( 0.0d0 , 0.0d0 )
           DO is=1,nsp
             IF ( tnlcc(is) ) THEN
               tex1 = tex1 + sfac( ig, is ) * CMPLX(rhocp(ig,is), 0.d0)
             END IF
           END DO
-          tex2 = 0.0_DP
+          tex2 = 0.0d0
           DO ispin = 1, nspin
             tex2 = tex2 + CONJG( vxc(ig, ispin) )
           END DO
           tex3 = DBLE(tex1 * tex2) / SQRT( g( ig ) ) / tpiba
           dcc = dcc + tex3 * gagb(:,ig)
         END DO
-        dcc = dcc * 2.0_DP * omega
+        dcc = dcc * 2.0d0 * omega
 
         ! DEBUG
-        ! DO k=1,6
-        !   detmp(alpha(k),beta(k)) = dcc(k)
-        !   detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
-        ! END DO
-        ! detmp = MATMUL( detmp(:,:), box%m1(:,:) )
-        ! WRITE( stdout,*) "derivative of e(xc) - nlcc part"
-        ! WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+        !DO k=1,6
+        !  detmp(alpha(k),beta(k)) = dcc(k)
+        !  detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
+        !END DO
+        !detmp = MATMUL( detmp(:,:), box%m1(:,:) )
+        !WRITE( stdout,*) "derivative of e(xc) - nlcc part"
+        !WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
 
 
       END IF
@@ -391,10 +391,13 @@
       self_exc = 0.d0
 !
       if( dft_is_meta() ) then
+         !
          call tpssmeta( nnr, nspin, gradr, rhor, kedtaur, exc )
+         !
       else
+         !
          CALL exch_corr_cp(nnr, nspin, gradr, rhor, exc)
-!
+         !
          IF ( ttsic ) THEN
             CALL exch_corr_cp(nnr, nspin, self_gradr, self_rho, self_exc)
             self_exc = sic_alpha * (exc - self_exc)
@@ -415,14 +418,8 @@
       !
       dxc = 0.0d0
       !
-      if (tpre) then
+      if ( tpre ) then
          !
-         IF( nlcc_any ) CALL  denlcc( nnr, nspin, rhor, sfac, drhocg, dcc )
-         !
-         ! DEBUG
-         !
-         ! write (stdout,*) "derivative of e(xc) - nlcc part"
-         ! write (stdout,5555) ((dcc(i,j),j=1,3),i=1,3)
          !
          do iss = 1, nspin
             do j=1,3
@@ -432,26 +429,15 @@
                   end do
                end do
             end do
-            drc = 0.0d0
-            IF( nlcc_any ) THEN
-               do j=1,3
-                  do i=1,3
-                     do ir=1,nnr
-                        drc(i,j) = drc(i,j) + rhor( ir, iss ) * rhoc( ir ) * ainv(j,i)
-                     end do
-                  end do
-               end do
-            END IF
-            dxc = dxc - drc * 1.0d0 / nspin
          end do
          !
          dxc = dxc * omega / ( nr1*nr2*nr3 )
          !
          call mp_sum ( dxc, intra_image_comm )
          !
-         do j=1,3
-            do i=1,3
-               dxc(i,j) = dxc(i,j) + exc * ainv(j,i)
+         do j = 1, 3
+            do i = 1, 3
+               dxc( i, j ) = dxc( i, j ) + exc * ainv( j, i )
             end do
          end do
          !
@@ -460,20 +446,18 @@
          ! write (stdout,*) "derivative of e(xc)"
          ! write (stdout,5555) ((dxc(i,j),j=1,3),i=1,3)
          !
-         dxc = dxc + dcc
+         IF( iprsta >= 2 ) THEN
+            DO i=1,3
+               DO j=1,3
+                  detmp(i,j)=exc*ainv(j,i)
+               END DO
+            END DO
+            WRITE( stdout,*) "derivative of e(xc) - diag - kbar"
+            detmp = -1.0d0 * MATMUL( detmp, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
+            WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+         END IF
          !
       end if
-      !
-      IF( iprsta >= 2 ) THEN
-         DO i=1,3
-            DO j=1,3
-               detmp(i,j)=exc*ainv(j,i)
-            END DO
-         END DO
-         WRITE( stdout,*) "derivative of e(xc) - diag - kbar"
-         detmp = -1.0d0 * MATMUL( detmp, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
-         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
-      END IF
       !
       !
       if (dft_is_gradient()) then
@@ -496,11 +480,10 @@
 
       IF( ttsic ) THEN
 !
-      !
          IF (dft_is_gradient()) then
       
             call gradh( nspin, self_gradr, self_rhog, self_rho, dexc)
-         !
+          
             gradr(:,:, 1) = (1.d0 - sic_alpha ) * gradr(:,:, 1)
             gradr(:,:, 2) = (1.d0 - sic_alpha ) * gradr(:,:, 2) + &
                           &  sic_alpha * ( self_gradr(:,:,1) + self_gradr(:,:,2) )
@@ -515,6 +498,36 @@
          IF(ALLOCATED(self_rho)) DEALLOCATE(self_rho)
 !
       ENDIF
+
+      IF( tpre ) THEN
+         !
+         dcc = 0.0d0
+         !
+         IF( nlcc_any ) CALL  denlcc( nnr, nspin, rhor, sfac, drhocg, dcc )
+         !
+         ! DEBUG
+         !
+         ! write (stdout,*) "derivative of e(xc) - nlcc part"
+         ! write (stdout,5555) ((dcc(i,j),j=1,3),i=1,3)
+         !
+         dxc = dxc + dcc
+         !
+         do iss = 1, nspin
+            drc = 0.0d0
+            IF( nlcc_any ) THEN
+               do j=1,3
+                  do i=1,3
+                     do ir=1,nnr
+                        drc(i,j) = drc(i,j) + rhor( ir, iss ) * rhoc( ir ) * ainv(j,i)
+                     end do
+                  end do
+               end do
+               call mp_sum ( drc, intra_image_comm )
+            END IF
+            dxc = dxc - drc * ( 1.0d0 / nspin ) * omega / ( nr1*nr2*nr3 )
+         end do
+         !
+      END IF
 
       IF( ALLOCATED( gradr ) ) DEALLOCATE( gradr )
 

@@ -935,8 +935,8 @@ CONTAINS
 !
       IF ( iprsta > 2 ) THEN
          WRITE( stdout,*)
-         DO is=1,nsp
-            IF(nsp.GT.1) THEN
+         DO is = 1, nvb
+            IF( nvb .GT. 1 ) THEN
                WRITE( stdout,'(33x,a,i4)') ' updatc: bec (is)',is
                WRITE( stdout,'(8f9.4)')                                       &
      &            ((bec(ish(is)+(iv-1)*na(is)+1,i+istart-1),iv=1,nh(is)),i=1,nss)
@@ -1070,8 +1070,8 @@ CONTAINS
 
          WRITE( stdout,*) 'in calphi sqrt(emtot)=',SQRT(emtot)
          WRITE( stdout,*)
-         DO is=1,nsp
-            IF(nsp > 1) THEN
+         DO is = 1, nvb
+            IF( nvb > 1 ) THEN
                WRITE( stdout,'(33x,a,i4)') ' calphi: bec (is)',is
                WRITE( stdout,'(8f9.4)')                                       &
      &            ((bec(ish(is)+(iv-1)*na(is)+1,i),iv=1,nh(is)),i=1,n)

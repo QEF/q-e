@@ -14,7 +14,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   ! ... main subroutine for SMD by Yosuke Kanai
   !
   USE kinds,                    ONLY : DP
-  USE control_flags,            ONLY : iprint, isave, thdyn, tpre, tbuff, &
+  USE control_flags,            ONLY : iprint, isave, thdyn, tpre, &
                                        iprsta, tfor, tvlocw,      &
                                        taurdr, tprnfor, tsdc, ndr, ndw, nbeg,  &
                                        nomore, tsde, tortho, tnosee, tnosep,   &
@@ -226,12 +226,6 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   dt2bye = dt2/emass
   dt2hbe = dt2by2/emass
   smpm = smd_p -1
-  !
-  !
-  IF(tbuff) THEN
-     WRITE(stdout,*) "TBUFF set to .FALSE., Option not implemented with SMD"
-     tbuff = .FALSE.
-  ENDIF
   !
   !
   !     Opening files
@@ -600,10 +594,6 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         CALL runcp_uspp( nfi, fccc(sm_k), ccc(sm_k), ema0bg, dt2bye, rhos, &
              rep_el(sm_k)%bec, rep_el(sm_k)%cm, rep_el(sm_k)%c0, fromscra = .TRUE. )
         !
-        !     buffer for wavefunctions is unit 21
-        !
-        IF(tbuff) REWIND 21
-        !
         !     nlfq needs deeq calculated in newd
         !
         IF ( tfor .OR. tprnfor ) CALL nlfq(rep_el(sm_k)%cm,eigr, &
@@ -923,10 +913,6 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
 
         CALL runcp_uspp( nfi, fccc(sm_k), ccc(sm_k), ema0bg, dt2bye, rhos, &
              rep_el(sm_k)%bec, rep_el(sm_k)%c0, rep_el(sm_k)%cm )
-        !
-        !     buffer for wavefunctions is unit 21
-        !
-        IF(tbuff) REWIND 21
         !
         !----------------------------------------------------------------------
         !                 contribution to fion due to lambda

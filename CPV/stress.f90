@@ -560,9 +560,7 @@
 !  ----------------------------------------------
 
       SUBROUTINE pseudo_stress( deps, epseu, gagb, sfac, dvps, rhoeg, omega )
-
-      !  
-
+      !
       USE ions_base,          ONLY: nsp
       USE reciprocal_vectors, ONLY: gstart
       USE gvecs,              ONLY: ngs
@@ -578,7 +576,7 @@
 
       INTEGER     :: ig,k,is, ispin
       COMPLEX(DP) :: rhets, depst(6)
-      !  
+      !
       depst = (0.d0,0.d0)
 
       DO is = 1, nsp
@@ -605,7 +603,6 @@
 
       RETURN
       END SUBROUTINE pseudo_stress
-
 
 !  ----------------------------------------------
 
@@ -752,23 +749,30 @@
 
       SUBROUTINE stress_debug(dekin, deht, dexc, desr, deps, denl, htm1)
         USE io_global, ONLY: stdout
+        USE mp_global, ONLY: intra_image_comm
+        USE mp,        ONLY: mp_sum
         REAL(DP) :: dekin(:), deht(:), dexc(:), desr(:), deps(:), denl(:)
         REAL(DP) :: detot( 6 ), htm1(3,3)
         REAL(DP) :: detmp(3,3)
+
         INTEGER :: k, i, j
+
         detot = dekin + deht + dexc + desr + deps + denl
-        WRITE( stdout,106) detot
-        WRITE( stdout,100) dekin
-        WRITE( stdout,101) deht
-        WRITE( stdout,102) dexc
-        WRITE( stdout,103) desr
-        WRITE( stdout,104) deps
-        WRITE( stdout,105) denl
+
+        DO k=1,6
+          detmp(alpha(k),beta(k)) = detot(k)
+          detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
+        END DO
+        CALL mp_sum( detmp, intra_image_comm )
+        detmp = MATMUL( detmp(:,:), htm1(:,:) )
+        WRITE( stdout,*) "derivative of e(tot)"
+        WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
 
         DO k=1,6
           detmp(alpha(k),beta(k)) = dekin(k)
           detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
         END DO
+        CALL mp_sum( detmp, intra_image_comm )
         detmp = MATMUL( detmp(:,:), htm1(:,:) )
         WRITE( stdout,*) "derivative of e(kin)"
         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
@@ -777,6 +781,7 @@
           detmp(alpha(k),beta(k)) = deht(k) + desr(k)
           detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
         END DO
+        CALL mp_sum( detmp, intra_image_comm )
         detmp = MATMUL( detmp(:,:), htm1(:,:) )
         WRITE( stdout,*) "derivative of e(electrostatic)"
         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
@@ -785,6 +790,7 @@
           detmp(alpha(k),beta(k)) = deht(k)
           detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
         END DO
+        CALL mp_sum( detmp, intra_image_comm )
         detmp = MATMUL( detmp(:,:), htm1(:,:) )
         WRITE( stdout,*) "derivative of e(h)"
         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
@@ -793,6 +799,7 @@
           detmp(alpha(k),beta(k)) = desr(k)
           detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
         END DO
+        CALL mp_sum( detmp, intra_image_comm )
         detmp = MATMUL( detmp(:,:), htm1(:,:) )
         WRITE( stdout,*) "derivative of e(sr)"
         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
@@ -801,6 +808,7 @@
           detmp(alpha(k),beta(k)) = deps(k)
           detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
         END DO
+        CALL mp_sum( detmp, intra_image_comm )
         detmp = MATMUL( detmp(:,:), htm1(:,:) )
         WRITE( stdout,*) "derivative of e(ps)"
         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
@@ -809,6 +817,7 @@
           detmp(alpha(k),beta(k)) = denl(k)
           detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
         END DO
+        CALL mp_sum( detmp, intra_image_comm )
         detmp = MATMUL( detmp(:,:), htm1(:,:) )
         WRITE( stdout,*) "derivative of e(nl)"
         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
@@ -817,20 +826,15 @@
           detmp(alpha(k),beta(k)) = dexc(k)
           detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
         END DO
+        CALL mp_sum( detmp, intra_image_comm )
         detmp = MATMUL( detmp(:,:), htm1(:,:) )
         WRITE( stdout,*) "derivative of e(xc)"
         WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+
 5555  format(1x,f12.5,1x,f12.5,1x,f12.5/                                &
      &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
      &       1x,f12.5,1x,f12.5,1x,f12.5//)
 
-  100   FORMAT(' dekin :',6F12.4)
-  101   FORMAT(' deht  :',6F12.4)
-  102   FORMAT(' dexc  :',6F12.4)
-  103   FORMAT(' desr  :',6F12.4)
-  104   FORMAT(' deps  :',6F12.4)
-  105   FORMAT(' denl  :',6F12.4)
-  106   FORMAT(' detot :',6F12.4)
       RETURN
       END SUBROUTINE stress_debug
 

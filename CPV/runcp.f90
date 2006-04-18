@@ -17,6 +17,7 @@
 
         PUBLIC :: runcp, runcp_force_pairing
         PUBLIC :: runcp_uspp, runcp_uspp_force_pairing, runcp_ncpp
+        PUBLIC :: runcp_uspp_bgl
 
 !=----------------------------------------------------------------------------=!
         CONTAINS
@@ -593,7 +594,7 @@
               fromscra, restart )
      !
      use wave_base, only: wave_steepest, wave_verlet
-     use control_flags, only: tbuff, lwf, tsde
+     use control_flags, only: lwf, tsde
      !use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
      use uspp, only : deeq, betae => vkb
      use reciprocal_vectors, only : gstart
@@ -687,20 +688,187 @@
      deallocate(c2)
      deallocate(c3)
 !
-!==== end of loop which updates electronic degrees of freedom
-!
-!     buffer for wavefunctions is unit 21
-!
-     if(tbuff) rewind 21
-
    END SUBROUTINE runcp_uspp
 !
+!
 !=----------------------------------------------------------------------------=!
+!
+!
+
+   SUBROUTINE runcp_uspp_bgl( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, &
+              fromscra, restart )
+     !
+     use wave_base,              only: my_wave_steepest, my_wave_verlet
+     use control_flags,          only: lwf, tsde
+     use uspp,                   only: deeq, betae => vkb
+     use reciprocal_vectors,     only: gstart
+     use electrons_base,         only: n=>nbsp, nspin
+     use wannier_subroutines,    only: ef_potential
+     use efield_module,          only: dforce_efield, tefield, dforce_efield2, tefield2
+     use gvecw,                  only: ngw
+     use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nnrsx
+     USE fft_base,               ONLY: dffts
+     USE mp_global,              ONLY: me_image, nogrp, me_ogrp
+     USE parallel_include
+     use task_groups
+
+     !
+     IMPLICIT NONE
+     integer, intent(in) :: nfi
+     real(8) :: fccc, ccc
+     real(8) :: ema0bg(:), dt2bye
+     real(8) :: rhos(:,:)
+     real(8) :: bec(:,:)
+     complex(8) :: c0(:,:), cm(:,:)
+     logical, optional, intent(in) :: fromscra
+     logical, optional, intent(in) :: restart
+     !
+     real(8) ::  verl1, verl2, verl3
+     real(8), allocatable:: emadt2(:)
+     real(8), allocatable:: emaver(:)
+     complex(8), allocatable:: c2(:), c3(:)
+     integer :: i, index_in, index
+     integer :: iflag, ierr
+     logical :: ttsde
+
+     iflag = 0
+     IF( PRESENT( fromscra ) ) THEN
+       IF( fromscra ) iflag = 1
+     END IF
+     IF( PRESENT( restart ) ) THEN
+       IF( restart ) iflag = 2
+     END IF
+
+     !
+     ! ...  set verlet variables 
+     !
+     verl1 = 2.0d0 * fccc
+     verl2 = 1.0d0 - verl1
+     verl3 = 1.0d0 * fccc
+
+     allocate(c2(ngw))
+     allocate(c3(ngw))
+     ALLOCATE( emadt2( ngw ) )
+     ALLOCATE( emaver( ngw ) )
+
+     ccc    = fccc * dt2bye
+     emadt2 = dt2bye * ema0bg
+     emaver = emadt2 * verl3
+
+     IF( iflag == 0 ) THEN
+       ttsde  = tsde
+     ELSE IF( iflag == 1 ) THEN
+       ttsde = .TRUE.
+     ELSE IF( iflag == 2 ) THEN
+       ttsde = .FALSE.
+     END IF
+
+     if( lwf ) then
+        !
+        call ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, verl1, verl2, c2, c3 )
+        !
+     else
+
+        IF (.NOT.(ALLOCATED(tg_c2))) ALLOCATE(tg_c2((NOGRP+1)*ngw))
+        IF (.NOT.(ALLOCATED(tg_c3))) ALLOCATE(tg_c3((NOGRP+1)*ngw))
+
+        !---------------------------------------------------------------
+        !This loop is parallelized accross the eigenstates as well as
+        !in the FFT, similar to rhoofr
+        !---------------------------------------------------------------
+
+        !------------------------------------
+        !The potential in rhos
+        !is distributed accros all processors
+        !We need to redistribute it so that
+        !it is completely contained in the
+        !processors of an orbital TASK-GROUP
+        !------------------------------------
+        !
+        recv_cnt(1)   = dffts%npp(NOLIST(1)+1)*nr1sx*nr2sx
+        recv_displ(1) = 0
+        DO i = 2, NOGRP
+           recv_cnt(i) = dffts%npp(NOLIST(i)+1)*nr1sx*nr2sx
+           recv_displ(i) = recv_displ(i-1) + recv_cnt(i)
+        ENDDO
+        IF (.NOT.ALLOCATED(tg_rhos)) ALLOCATE(tg_rhos( (NOGRP+1)*nr1sx*nr2sx*maxval(dffts%npp),nspin))
+
+        tg_c3(:) = 0D0
+        tg_c3(:) = 0D0
+        tg_rhos(:,:) = 0D0
+
+        DO i = 1, nspin
+           CALL MPI_Allgatherv(rhos(1,i), dffts%npp(me_image+1)*nr1sx*nr2sx, MPI_DOUBLE_PRECISION, &
+                tg_rhos(1,i), recv_cnt, recv_displ, MPI_DOUBLE_PRECISION, ME_OGRP, IERR)
+        ENDDO
+
+        do i = 1, n, 2*NOGRP ! 2*NOGRP eigenvalues are treated at each iteration
+
+           !----------------------------------------------------------------
+           !The input coefficients to dforce cover eigenstates i:i+2*NOGRP-1
+           !Thus, in dforce the dummy arguments for c0(1,i,1,1) and
+           !c0(1,i+1,1,1) hold coefficients for eigenstates i,i+2*NOGRP-2,2
+           !and i+1,i+2*NOGRP...for example if NOGRP is 4 then we would have
+           !1-3-5-7 and 2-4-6-8
+           !----------------------------------------------------------------
+
+           call dforce( bec, betae, i, c0(1,i), c0(1,i+1), tg_c2, tg_c3, tg_rhos)
+
+           !-------------------------------------------------------
+           !C. Bekas: This is not implemented yet! I need to see it
+           !-------------------------------------------------------
+
+           if( tefield ) then
+             CALL errore( ' runcp_uspp ', ' electric field on BGL not implemented yet ', 1 )
+           end if
+
+           IF( iflag == 2 ) THEN
+             DO index = 1, 2 * NOGRP, 2
+                cm(:,i+index-1) = c0(:,i+index-1)
+                cm(:,i+index) = c0(:,i+index)
+             ENDDO
+           END IF
+
+           index_in = 1
+           DO index = 1, 2*NOGRP, 2
+              IF (tsde) THEN
+                 CALL my_wave_steepest( cm(:, i+index-1 ), c0(:, i+index-1 ), emaver, tg_c2, ngw, index_in )
+                 CALL my_wave_steepest( cm(:, i+index), c0(:, i+index), emaver, tg_c3, ngw, index_in )
+              ELSE
+                 CALL my_wave_verlet( cm(:, i+index-1 ), c0(:, i+index-1 ), &
+                      verl1, verl2, emaver, tg_c2, ngw, index_in )
+                 CALL my_wave_verlet( cm(:, i+index), c0(:, i+index ), &
+                      verl1, verl2, emaver, tg_c3, ngw, index_in )
+
+              ENDIF
+              if ( gstart == 2 ) then
+                 cm(1,  i+index-1)=cmplx(real(cm(1,  i+index-1)),0.0)
+                 cm(1,i+index)=cmplx(real(cm(1,i+index)),0.0)
+              end if
+             index_in = index_in+1
+
+           ENDDO ! End loop accross 2*NOGRP current eigenstates
+
+        end do ! End loop accross eigenstates
+
+     end if
+
+     DEALLOCATE( emadt2 )
+     DEALLOCATE( emaver )
+     deallocate(c2)
+     deallocate(c3)
+
+
+   END SUBROUTINE runcp_uspp_bgl
+!
+!=----------------------------------------------------------------------------=!
+!=----------------------------------------------------------------------------=!
+
     SUBROUTINE runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, &
                                          intermed, fromscra, restart )
   !
       USE wave_base, ONLY: wave_steepest, wave_verlet
-      USE control_flags, ONLY: tbuff, lwf, tsde
+      USE control_flags, ONLY: lwf, tsde
   !   use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
       USE uspp, ONLY : deeq, betae => vkb
       USE reciprocal_vectors, ONLY : gstart

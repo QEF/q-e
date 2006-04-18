@@ -418,6 +418,11 @@ subroutine read_pseudo_nl (upf, iunps)
               call scan_begin (iunps, "QFCOEF", .false.)  
               read (iunps,*,err=106,end=106) &
                         ( ( upf%qfcoef(i,lp,nb,mb), i=1,upf%nqf ), lp=1,upf%nqlc )
+              do i = 1, upf%nqf
+                 do lp = 1, upf%nqlc
+                    upf%qfcoef(i,lp,mb,nb) = upf%qfcoef(i,lp,nb,mb)
+                 end do
+              end do
               call scan_end (iunps, "QFCOEF")  
            end if
 

@@ -14,7 +14,7 @@
       lambdap, lambda  )
 
       use kinds, only: dp
-      use control_flags, only: iprint, thdyn, tpre, tbuff, iprsta, &
+      use control_flags, only: iprint, thdyn, tpre, iprsta, &
             tfor, tvlocw, taurdr, tprnfor
       use control_flags, only: ndr, ndw, nbeg, nomore, tsde, tortho, tnosee, &
             tnosep, trane, tranp, tsdp, tcp, tcap, ampre, amprp, tnoseh

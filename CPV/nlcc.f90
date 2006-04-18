@@ -464,10 +464,10 @@
                   end do
                end if
 !
-               call invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
-!
-! note that a factor 1/2 is hidden in fac if nspin=2
-!
+               call invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,ia+isa)
+               !
+               ! note that a factor 1/2 is hidden in fac if nspin=2
+               !
                do iss=1,nspin
                   fcc(ix,ia+isa) = fcc(ix,ia+isa) + fac *               &
      &                 boxdotgrid(irb(1,ia  +isa),1,qv,vxc(1,iss))
@@ -495,7 +495,7 @@
 
 !
 !-----------------------------------------------------------------------
-      subroutine set_cc(irb,eigrb,rhoc)
+      subroutine set_cc( irb, eigrb, rhoc )
 !-----------------------------------------------------------------------
 !
 !     Calculate core charge contribution in real space, rhoc(r)

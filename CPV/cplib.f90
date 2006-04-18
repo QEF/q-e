@@ -501,7 +501,7 @@
 !              sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
 !                                 e^-ig.r_i < beta_i,j | c_n >}
       USE kinds, ONLY: dp
-      USE control_flags, ONLY: iprint, tbuff
+      USE control_flags, ONLY: iprint
       USE gvecs
       USE gvecw, ONLY: ngw
       USE cvan, ONLY: ish
@@ -546,26 +546,14 @@
 !
       ci=(0.0,1.0)
 !
-      IF (.NOT.tbuff) THEN
-!
-         psi (:) = (0.d0, 0.d0)
-         DO ig=1,ngw
+      psi (:) = (0.d0, 0.d0)
+      DO ig=1,ngw
             psi(nms(ig))=CONJG(c(ig)-ci*ca(ig))
             psi(nps(ig))=c(ig)+ci*ca(ig)
-         END DO
-!
-         CALL invfft('Wave',psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+      END DO
+
+      CALL invfft('Wave',psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
 !     
-      ELSE
-!
-!     read psi from buffer 21
-!
-         READ(21,iostat=ios) psi
-         IF(ios.NE.0) CALL errore                                        &
-     &       (' dforce',' error in reading unit 21',ios)
-!
-      ENDIF
-! 
       iss1=ispin(i)
 !
 ! the following avoids a potential out-of-bounds error
@@ -796,26 +784,27 @@
             END DO
          END DO
       END DO
-!
-      IF (nvb.EQ.0) RETURN
-!
+
+      IF ( nvb == 0 ) RETURN
+
       ALLOCATE( v( nnr ) )
       ALLOCATE( qv( nnrb ) )
       ALLOCATE( dqgbt( ngb, 2 ) )
 
-      ci=(0.,1.)
-!
-      IF(nspin.EQ.1) THEN
-!     ------------------------------------------------------------------
-!     nspin=1 : two fft at a time, one per atom, if possible
-!     ------------------------------------------------------------------
+      ci =( 0.0d0, 1.0d0 )
+
+      IF( nspin == 1 ) THEN
+         !  
+         !  nspin=1 : two fft at a time, one per atom, if possible
+         ! 
          DO i=1,3
             DO j=1,3
-!
+
                v(:) = (0.d0, 0.d0)
-!
+
                iss=1
                isa=1
+
                DO is=1,nvb
 #ifdef __PARA
                   DO ia=1,na(is)
@@ -827,9 +816,9 @@
 #endif
                      dqgbt(:,:) = (0.d0, 0.d0) 
                      IF (ia.EQ.na(is)) nfft=1
-!
-!  nfft=2 if two ffts at the same time are performed
-!
+                     !
+                     !  nfft=2 if two ffts at the same time are performed
+                     !
                      DO ifft=1,nfft
                         DO iv=1,nh(is)
                            DO jv=iv,nh(is)
@@ -848,9 +837,9 @@
                            END DO
                         END DO
                      END DO
-!     
-! add structure factor
-!
+                     !     
+                     ! add structure factor
+                     !
                      qv(:) = (0.d0, 0.d0)
                      IF(nfft.EQ.2) THEN
                         DO ig=1,ngb
@@ -869,36 +858,37 @@
                      ENDIF
 !
                      CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
-!
-!  qv = US contribution in real space on box grid
-!       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
-!
-!  add qv(r) to v(r), in real space on the dense grid
-!
-                     CALL box2grid(irb(1,isa),1,qv,v)
+                     !
+                     !  qv = US contribution in real space on box grid
+                     !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
+                     !
+                     !  add qv(r) to v(r), in real space on the dense grid
+                     !
+                     CALL box2grid( irb(1,isa), 1, qv, v )
                      IF (nfft.EQ.2) CALL box2grid(irb(1,isa+1),2,qv,v)
-  15                 isa=isa+nfft
+
+  15                 isa = isa + nfft
 !
                   END DO
                END DO
 !
                DO ir=1,nnr
-                  drhor(ir,iss,i,j)=drhor(ir,iss,i,j)+DBLE(v(ir))
+                  drhor(ir,iss,i,j) = drhor(ir,iss,i,j) + DBLE(v(ir))
                END DO
 !
-               CALL fwfft('Dense', v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+               CALL fwfft( 'Dense', v, nr1, nr2, nr3, nr1x, nr2x, nr3x )
 !
                DO ig=1,ng
-                  drhog(ig,iss,i,j)=drhog(ig,iss,i,j)+v(np(ig))
+                  drhog(ig,iss,i,j) = drhog(ig,iss,i,j) + v(np(ig))
                END DO
 !
             ENDDO
          ENDDO
 !
       ELSE
-!     ------------------------------------------------------------------
-!     nspin=2: two fft at a time, one for spin up and one for spin down
-!     ------------------------------------------------------------------
+         !
+         !     nspin=2: two fft at a time, one for spin up and one for spin down
+         ! 
          isup=1
          isdw=2
          DO i=1,3
@@ -929,9 +919,9 @@
                            END DO
                         END DO
                      END DO
-!     
-! add structure factor
-!
+                     !     
+                     ! add structure factor
+                     !
                      qv(:) = (0.d0, 0.d0)
                      DO ig=1,ngb
                         qv(npb(ig))= eigrb(ig,isa)*dqgbt(ig,1)        &
@@ -941,14 +931,16 @@
                      END DO
 !
                      CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
-!
-!  qv is the now the US augmentation charge for atomic species is
-!  and atom ia: real(qv)=spin up, imag(qv)=spin down
-!
-!  add qv(r) to v(r), in real space on the dense grid
-!
+                     !
+                     !  qv is the now the US augmentation charge for atomic species is
+                     !  and atom ia: real(qv)=spin up, imag(qv)=spin down
+                     !
+                     !  add qv(r) to v(r), in real space on the dense grid
+                     !
                      CALL box2grid2(irb(1,isa),qv,v)
-  25                 isa=isa+1
+                     !
+  25                 isa = isa + 1
+                     !
                   END DO
                END DO
 !
@@ -2674,7 +2666,7 @@
       COMPLEX(DP), ALLOCATABLE :: v(:), vs(:)
       REAL(DP), ALLOCATABLE    :: gagb(:,:)
       !
-      REAL(DP) :: fion1( 3, nat )
+      REAL(DP), ALLOCATABLE :: fion1( :, : )
       REAL(DP), ALLOCATABLE :: stmp( :, : )
       !
       COMPLEX(DP), ALLOCATABLE :: self_vloc(:)
@@ -2682,6 +2674,7 @@
       REAL(DP)                 :: self_ehtet, fpibg
       LOGICAL                  :: ttsic
       REAL(DP)                 :: detmp( 3, 3 ), desr( 6 ), deps( 6 )
+      REAL(DP)                 :: detmp2( 3, 3 )
       REAL(DP)                 :: deht( 6 )
 !
       INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
@@ -2709,15 +2702,11 @@
       !
       ttsic = ( ABS( self_interaction ) /= 0 )
       !
-      IF( tpre .AND. ttsic ) &
-      &   CALL errore( ' vofrho ', ' in cplib tpre and ttsic are not possible ', 1 )
-
       IF( ttsic ) ALLOCATE( self_vloc( ng ) )
       !
       !     first routine in which fion is calculated: annihilation
       !
       fion  = 0.d0
-      fion1 = 0.d0
       !
       !     forces on ions, ionic term in real space
       !
@@ -2727,7 +2716,7 @@
          !
          CALL r_to_s( tau0, stmp, na, nsp, ainv )
          !
-         CALL vofesr( 0, esr, desr, fion, stmp, tpre, h )
+         CALL vofesr( 1, esr, desr, fion, stmp, tpre, h )
          !
          call mp_sum( fion, intra_image_comm )
          !
@@ -2755,7 +2744,6 @@
             drhotmp( 1:ng, :, : ) = drhotmp( 1:ng, :, : ) + drhog( 1:ng, 2, :, : )
          ENDIF
       END IF
-
       !
       !     calculation local potential energy
       !
@@ -2769,17 +2757,23 @@
       epseu = wz * DBLE(SUM(vtemp))
       IF (gstart == 2) epseu=epseu-vtemp(1)
       CALL mp_sum( epseu, intra_image_comm )
+
       epseu = epseu * omega
+
 !
       IF( tpre ) THEN
          !
          CALL denps_box( drhotmp, sfac, vtemp, dps )
+         !
          CALL pseudo_stress( deps, 0.0d0, gagb, sfac, dvps, rhog, omega )
+         !
          call mp_sum( deps, intra_image_comm )
+         !
          DO k = 1, 6
             detmp( alpha(k), beta(k) ) = deps(k)
             detmp( beta(k), alpha(k) ) = detmp( alpha(k), beta(k) )
          END DO
+         !
          dps = dps + MATMUL( detmp(:,:), TRANSPOSE( ainv(:,:) ) )
          !
       END IF
@@ -2791,9 +2785,7 @@
      !
       self_ehtet = 0.d0  
       !
-      IF( ALLOCATED( self_vloc ) ) THEN
-         self_vloc = 0.d0 
-      END IF
+      IF( ttsic ) self_vloc = 0.d0 
 
       DO is=1,nsp
          DO ig=1,ngs
@@ -2842,11 +2834,16 @@
       END IF
       IF(tpre) DEALLOCATE(drhotmp)
 
-!     ===================================================================
-!     forces on ions, ionic term in reciprocal space
-!     -------------------------------------------------------------------
-      IF( tprnfor .OR. tfor .OR. tpre)                                                  &
-     &    CALL force_ps(rhotmp,rhog,vtemp,ei1,ei2,ei3,fion1)
+      !    
+      !     forces on ions, ionic term in reciprocal space
+      !     
+      ALLOCATE( fion1( 3, nat ) )
+      !
+      fion1 = 0.d0
+      !
+      IF( tprnfor .OR. tfor .OR. tpre) THEN
+          CALL force_ps(rhotmp,rhog,vtemp,ei1,ei2,ei3,fion1)
+      END IF
 
       !
       !     calculation hartree + local pseudo potential
@@ -2930,8 +2927,10 @@
          fion = fion + fion1
 
       END IF
+
+      DEALLOCATE( fion1 )
 !
-      IF( ALLOCATED( self_vloc ) ) DEALLOCATE( self_vloc )
+      IF( ttsic ) DEALLOCATE( self_vloc )
 !
 !     ===================================================================
 !     fourier transform of total potential to r-space (dense grid)
@@ -3093,42 +3092,3 @@
 !
 
       END SUBROUTINE vofrho
-
-!
-!----------------------------------------------------------------------
-      SUBROUTINE checkrho(nnr,nspin,rhor,rmin,rmax,rsum,rnegsum)
-!----------------------------------------------------------------------
-!
-!     check \int rho(r)dr and the negative part of rho
-!
-      USE kinds,     ONLY: DP
-      USE mp,        ONLY: mp_sum
-      USE mp_global, ONLY: intra_image_comm
-
-      IMPLICIT NONE
-
-      INTEGER nnr, nspin
-      REAL(DP) rhor(nnr,nspin), rmin, rmax, rsum, rnegsum
-      !
-      REAL(DP) roe
-      INTEGER ir, iss
-!
-      rsum   =0.0
-      rnegsum=0.0
-      rmin   =100.
-      rmax   =0.0
-      DO iss = 1, nspin
-         DO ir = 1, nnr
-            roe  = rhor(ir,iss)
-            rsum = rsum + roe
-            IF ( roe < 0.0 ) rnegsum = rnegsum + roe
-            rmax = MAX( rmax, roe )
-            rmin = MIN( rmin, roe )
-         END DO
-      END DO
-      CALL mp_sum( rsum, intra_image_comm )
-      CALL mp_sum( rnegsum, intra_image_comm )
-      RETURN
-    END SUBROUTINE checkrho
-!______________________________________________________________________
-
