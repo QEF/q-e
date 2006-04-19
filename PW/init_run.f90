@@ -42,6 +42,7 @@ SUBROUTINE init_run()
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ) )
   !
   et(:,:) = 0.D0
+  wg(:,:) = 0.D0
   !
   CALL openfil()
   !
