@@ -56,7 +56,7 @@
       use derho
       use cdvan
       use stre
-      use constants, only: pi, factem
+      use constants, only: pi, factem, au_gpa
       use io_files, only: psfile, pseudo_dir
       use io_files, only: outdir
 
@@ -76,6 +76,9 @@
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi
       use charge_density,           ONLY : rhoofr
+      USE cpr_subroutines,      ONLY : compute_stress!ATTENZIONE
+      USE printout_base,    ONLY: printout_stress!ATTENZIONE
+
 
 !
       implicit none
@@ -744,6 +747,41 @@
  
       end do!on conjugate gradient iterations
       !calculates atomic forces and lambda
+
+
+       if(tpre) then!if pressure is need the following is written because of caldbec
+          call  calbec(1,nsp,eigr,c0,bec)
+          call  caldbec( ngw, nhsa, n, 1, nsp, eigr, c0, dbec, .true. )
+          if(.not.tens) then
+            call rhoofr(nfi,c0(:,:,1,1),irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
+          else
+
+            !     calculation of the rotated quantities
+            call rotate(z0,c0(:,:,1,1),bec,c0diag,becdiag)
+            !     calculation of rho corresponding to the rotated wavefunctions
+            call rhoofr(nfi,c0diag,irb,eigrb,becdiag                         &
+                     &                    ,rhovan,rhor,rhog,rhos,enl,ekin)
+          endif
+
+          !calculates the potential
+          !
+          !     put core charge (if present) in rhoc(r)
+          !
+          if (nlcc_any) call set_cc(irb,eigrb,rhoc)
+
+          !
+          !---ensemble-DFT
+
+          call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
+                 &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
+
+   
+
+     endif
+
+
+
+
       call newd(rhor,irb,eigrb,rhovan,fion)
       if (.not.tens) then
         if (tfor .or. tprnfor) call nlfq(c0,eigr,bec,becdr,fion)

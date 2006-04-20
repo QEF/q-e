@@ -44,7 +44,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE wave_constrains,      ONLY : interpolate_lambda
   USE gvecw,                ONLY : ngw
   USE orthogonalize_base,   ONLY : calphi
-  USE control_flags,        ONLY : force_pairing 
+  USE control_flags,        ONLY : force_pairing
   USE charge_density,       only : rhoofr
   USE electrons_base,       ONLY : nupdwn 
   !
@@ -68,6 +68,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      CALL runcg_uspp( nfi, tfirst, tlast, eigr, bec, irb, eigrb, &
                       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, &
                       fion, ema0bg, becdr, lambdap, lambda  )
+     CALL compute_stress( stress, detot, h, omega )
      !
   ELSE
      !
