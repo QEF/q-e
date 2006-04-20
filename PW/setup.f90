@@ -403,7 +403,7 @@ SUBROUTINE setup()
   !
   DO nt = 1, ntyp
      !
-     so(nt) = .TRUE.
+     so(nt) = ( nbeta(nt) > 0 )
      !
      DO nb = 1, nbeta(nt)
         !
