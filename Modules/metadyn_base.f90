@@ -119,7 +119,7 @@ MODULE metadyn_base
          !
          IF ( progname == 'PW' ) THEN
             !
-            dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.new-save'
+            dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
             !
          ELSE IF ( progname == 'CP' ) THEN
             !
