@@ -797,11 +797,12 @@
         tg_c3(:) = 0D0
         tg_rhos(:,:) = 0D0
 
+#if defined (__PARA) && defined (__MPI)
         DO i = 1, nspin
            CALL MPI_Allgatherv(rhos(1,i), dffts%npp(me_image+1)*nr1sx*nr2sx, MPI_DOUBLE_PRECISION, &
                 tg_rhos(1,i), recv_cnt, recv_displ, MPI_DOUBLE_PRECISION, ME_OGRP, IERR)
         ENDDO
-
+#endif
         do i = 1, n, 2*NOGRP ! 2*NOGRP eigenvalues are treated at each iteration
 
            !----------------------------------------------------------------
