@@ -751,14 +751,15 @@
 
        if(tpre) then!if pressure is need the following is written because of caldbec
           call  calbec(1,nsp,eigr,c0,bec)
-          call  caldbec( ngw, nhsa, n, 1, nsp, eigr, c0, dbec, .true. )
           if(.not.tens) then
+            call  caldbec( ngw, nhsa, n, 1, nsp, eigr, c0, dbec, .true. )
             call rhoofr(nfi,c0(:,:,1,1),irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
           else
 
             !     calculation of the rotated quantities
             call rotate(z0,c0(:,:,1,1),bec,c0diag,becdiag)
             !     calculation of rho corresponding to the rotated wavefunctions
+            call  caldbec( ngw, nhsa, n, 1, nsp, eigr, c0diag, dbec, .true. )
             call rhoofr(nfi,c0diag,irb,eigrb,becdiag                         &
                      &                    ,rhovan,rhor,rhog,rhos,enl,ekin)
           endif

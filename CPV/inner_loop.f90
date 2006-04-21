@@ -508,7 +508,7 @@
         atot=atotmin
         etot0=etot
         enever=etot
-  
+        if(xmin==0.d0) exit 
      END DO INNERLOOP
      CALL stop_clock( 'inner_loop' )
      return
