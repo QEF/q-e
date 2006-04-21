@@ -191,7 +191,7 @@ subroutine pc2(a,beca,b,becb)
       use kinds, only: dp 
       use ions_base, only: na, nsp
       use io_global, only: stdout
-      use mp_global, only: intra_image_comm
+      use mp_global, only: intra_image_comm, mpime
       use cvan 
       use gvecw, only: ngw
       use constants, only: pi, fpi
@@ -211,54 +211,59 @@ subroutine pc2(a,beca,b,becb)
 ! local variables
       integer is, iv, jv, ia, inl, jnl, i, j,ig
       real(kind=DP) sca
-      real(kind=DP)  becp(nhsa)
+      real(DP), allocatable:: scar(:), bectmp(:,:)
+!      real(kind=DP)  becp(nhsa)
       CALL start_clock( 'pc2' )
-      do i=1,n
-         becp(:)=0.d0
+      allocate(scar(n))
+      allocate(bectmp(n,n))
+      bectmp = 0.0d0
+      !      write(6,*) 'mpime= ',mpime,'n=',n,'ngw=',ngw
+         !         becp(:)=0.d0
          do j=1,n
-            sca=0.
-            if (ng0.eq.2) then
-               b(1,i)=0.5d0*(b(1,i)+CONJG(b(1,i)))
-            endif
-            if(ispin(j) == ispin(i)) then
-               do  ig=1,ngw           !loop on g vectors
-                  sca=sca+2.d0*DBLE(CONJG(a(ig,j))*b(ig,i)) !2. for real wavefunctions
-               enddo
-               if (ng0.eq.2) then
-                  sca=sca-DBLE(CONJG(a(1,j))*b(1,i))
+            do i=1,n
+               sca=0.d0
+               if(ispin(j) == ispin(i)) then
+                  if (ng0.eq.2) b(1,i)=cmplx(dble(b(1,i)),0.0d0)
+                  do  ig=1,ngw           !loop on g vectors
+                     sca=sca+DBLE(CONJG(a(ig,j))*b(ig,i))
+                  enddo
+                  sca = sca*2.0d0 !2. for real wavefunctions
+                  if (ng0.eq.2) sca=sca-DBLE(a(1,j))*DBLE(b(1,i))
                endif
+               scar(i) = sca
+            enddo
+            call mp_sum( scar, intra_image_comm )
 
-               call mp_sum( sca, intra_image_comm )
+            do i=1,n
+               if(ispin(j) == ispin(i)) then
+                  sca = scar(i)
+                  if (nvb.gt.0) then
 
-               if (nvb.gt.0) then
-
-                  do is=1,nvb
-                     do iv=1,nh(is)
-                        do jv=1,nh(is)
-                           do ia=1,na(is)
-                              inl=ish(is)+(iv-1)*na(is)+ia
-                              jnl=ish(is)+(jv-1)*na(is)+ia
-                              sca=sca+ qq(iv,jv,is)*beca(inl,j)*becb(jnl,i)  
+                     do is=1,nvb
+                        do iv=1,nh(is)
+                           do jv=1,nh(is)
+                              do ia=1,na(is)
+                                 inl=ish(is)+(iv-1)*na(is)+ia
+                                 jnl=ish(is)+(jv-1)*na(is)+ia
+                                 sca=sca+ qq(iv,jv,is)*beca(inl,j)*becb(jnl,i)  
+                              end do
                            end do
                         end do
                      end do
-                  end do
-               end if
+                  end if
 
-               do ig=1,ngw
-                  b(ig,i)=b(ig,i)-sca*a(ig,j)
-               enddo
-!it also update becb
-               becp(:)=becp(:)-beca(:,j)*sca
-               ! this to prevent numerical errors
-               if (ng0.eq.2) then
-                  b(1,i)=0.5d0*(b(1,i)+CONJG(b(1,i)))
+                  do ig=1,ngw
+                     b(ig,i)=b(ig,i)-sca*a(ig,j)
+                  enddo
+                  ! this to prevent numerical errors
+                  if (ng0.eq.2) b(1,i)=cmplx(dble(b(1,i)),0.0d0)
+                  bectmp(j,i) = sca
                endif
-            endif
+            enddo
          enddo
-         becb(:,i)=becb(:,i)-becp(:)
-      enddo
-      CALL stop_clock( 'pc2' )
+         call dgemm('N','N',nhsa,n,n,1.0d0,beca,nhsa,bectmp,n,1.0d0,becb,nhsa)
+         deallocate(bectmp,scar)
+         CALL stop_clock( 'pc2' )
       return
       end subroutine pc2
 
@@ -272,6 +277,7 @@ subroutine pc2(a,beca,b,becb)
 !    b input :first order wavefunctions
 !    b output:b_i =b_i - S|a_j><a_j|b_i>
 
+      use kinds
       use ions_base, only: na, nsp
       use io_global, only: stdout
       use mp_global, only: intra_image_comm
@@ -285,6 +291,7 @@ subroutine pc2(a,beca,b,becb)
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb
 
+
       implicit none
 
       complex(8) a(ngw,n), b(ngw,n), as(ngw,n)
@@ -292,32 +299,36 @@ subroutine pc2(a,beca,b,becb)
       ! local variables
       integer is, iv, jv, ia, inl, jnl, i, j,ig
       real(8) sca
+      real(DP), allocatable:: scar(:)
       !
       call start_clock('pcdaga2')
-      do i=1,n
-         do j=1,n
-            sca=0.
-            if (ng0.eq.2) then
-               b(1,i)=0.5d0*(b(1,i)+CONJG(b(1,i)))
-            endif
+      allocate(scar(n))
+      do j=1,n
+         do i=1,n
+            sca=0.0d0
             if(ispin(i) == ispin(j)) then
+               if (ng0.eq.2) b(1,i) = cmplx(dble(b(1,i)),0.0d0)
                do  ig=1,ngw           !loop on g vectors
-                  sca=sca+2.*DBLE(CONJG(a(ig,j))*b(ig,i)) !2. for real weavefunctions
+                  sca=sca+DBLE(CONJG(a(ig,j))*b(ig,i))
                enddo
-               if (ng0.eq.2) then
-                  sca=sca-DBLE(CONJG(a(1,j))*b(1,i))
-               endif
-               call mp_sum( sca, intra_image_comm )
+               sca = sca*2.0d0  !2. for real weavefunctions
+               if (ng0.eq.2) sca = sca - dble(a(1,j))*dble(b(1,i))
+            endif
+            scar(i) = sca
+         enddo
+         call mp_sum( scar, intra_image_comm )
+         do i=1,n
+            if(ispin(i) == ispin(j)) then
+               sca = scar(i)
                do ig=1,ngw
                   b(ig,i)=b(ig,i)-sca*as(ig,j)
                enddo
                ! this to prevent numerical errors
-               if (ng0.eq.2) then
-                  b(1,i)=0.5d0*(b(1,i)+CONJG(b(1,i)))
-               endif
+               if (ng0.eq.2) b(1,i) = cmplx(dble(b(1,i)),0.0d0)
             endif
          enddo
       enddo
+      deallocate(scar)
       call stop_clock('pcdaga2')
       return
       end subroutine pcdaga2
@@ -391,21 +402,18 @@ subroutine pc2(a,beca,b,becb)
                         if (use_ema) then
                            ! k_minus case
                         do  ig=1,ngw           !loop on g vectors
-                           sca=sca+2.*DBLE(CONJG(betae(ig,inl))*ema0bg(ig)*betae(ig,jnl)) !2. for real weavefunctions
+                           sca=sca+ema0bg(ig)*DBLE(CONJG(betae(ig,inl))*betae(ig,jnl))
                         enddo
-                        if (ng0.eq.2) then
-                           sca=sca-DBLE(CONJG(betae(1,inl))*ema0bg(1)*betae(1,jnl))
-                        endif
+                        sca = sca*2.0d0  !2. for real weavefunctions
+                        if (ng0.eq.2) sca = sca - ema0bg(1)*DBLE(CONJG(betae(1,inl))*betae(1,jnl))
                         else
                            ! s_minus case
                         do  ig=1,ngw           !loop on g vectors
-                           sca=sca+2.*DBLE(CONJG(betae(ig,inl))*betae(ig,jnl)) !2. for real weavefunctions
+                           sca=sca+DBLE(CONJG(betae(ig,inl))*betae(ig,jnl))
                         enddo
-                        if (ng0.eq.2) then
-                           sca=sca-DBLE(CONJG(betae(1,inl))*betae(1,jnl))
+                        sca = sca*2.0d0  !2. for real weavefunctions
+                        if (ng0.eq.2) sca = sca - DBLE(CONJG(betae(1,inl))*betae(1,jnl))
                         endif
-                        endif
-                        call mp_sum( sca, intra_image_comm )
                         m_minus1(inl,jnl)=sca
                      enddo
                   enddo
@@ -413,6 +421,7 @@ subroutine pc2(a,beca,b,becb)
             enddo
          enddo
       enddo
+      call mp_sum( m_minus1, intra_image_comm )
 
 !calculate -(1+QB)**(-1) * Q
       CALL DGEMM('N','N',nhsavb,nhsavb,nhsavb,1.0d0,q_matrix,nhsavb,m_minus1,nhsavb,0.0d0,c_matrix,nhsavb)
@@ -472,6 +481,7 @@ subroutine pc2(a,beca,b,becb)
       complex(dp), allocatable :: phi(:,:)
       real(dp) , allocatable   :: qtemp(:,:)
       integer is, iv, jv, ia, inl, jnl, i, j, js, ja,ig
+      real(dp) becktmp
 !      real(dp) qtemp(nhsavb,n) ! automatic array
 !
 
@@ -486,18 +496,17 @@ subroutine pc2(a,beca,b,becb)
                   do ia=1,na(is)
                      inl=ish(is)+(iv-1)*na(is)+ia
                      do i=1,n
+                        becktmp = 0.0d0
                         do ig=1,ngw
-                           beck(inl,i)=beck(inl,i)+2.*DBLE(CONJG(betae(ig,inl))*ema0bg(ig)*c0(ig,i))
+                           becktmp=becktmp+ema0bg(ig)*DBLE(CONJG(betae(ig,inl))*c0(ig,i))
                         enddo
-                        if (ng0.eq.2) then
-                           beck(inl,i)=beck(inl,i)-DBLE(CONJG(betae(1,inl))*ema0bg(1)*c0(1,i))
-                        endif
+                        becktmp = becktmp*2.0d0
+                        if (ng0.eq.2) becktmp = becktmp-ema0bg(1)*DBLE(CONJG(betae(1,inl))*c0(1,i)) 
+                        beck(inl,i) = beck(inl,i) + becktmp
                      enddo
                   enddo
                enddo
             enddo
-
-
             call mp_sum( beck, intra_image_comm )
          endif
 !
