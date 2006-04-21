@@ -92,12 +92,19 @@ program pw2wannier90
       call ylm_expansion
       write(stdout,*)
       write(stdout,*)
-      write(stdout,*) ' ---------------'
-      write(stdout,*) ' *** Compute  A '
-      write(stdout,*) ' ---------------'
-      write(stdout,*)
-      call compute_amn
-      write(stdout,*)
+      if(write_am) then
+        write(stdout,*) ' ---------------'
+        write(stdout,*) ' *** Compute  A '
+        write(stdout,*) ' ---------------'
+        write(stdout,*)
+        call compute_amn
+        write(stdout,*)
+      else
+        write(stdout,*) ' -----------------------------'
+        write(stdout,*) ' *** A matrix is not computed '
+        write(stdout,*) ' -----------------------------'
+        write(stdout,*)
+      endif
       write(stdout,*) ' ---------------'
       write(stdout,*) ' *** Compute  M '
       write(stdout,*) ' ---------------'
@@ -110,12 +117,19 @@ program pw2wannier90
       write(stdout,*)
       call write_band
       write(stdout,*)
-      write(stdout,*) ' --------------------'
-      write(stdout,*) ' *** Write plot info '
-      write(stdout,*) ' --------------------'
-      write(stdout,*)
-      call write_plot
-      write(stdout,*)
+      if(write_unk) then
+        write(stdout,*) ' --------------------'
+        write(stdout,*) ' *** Write plot info '
+        write(stdout,*) ' --------------------'
+        write(stdout,*)
+        call write_plot
+        write(stdout,*)
+      else
+        write(stdout,*) ' -----------------------------'
+        write(stdout,*) ' *** Plot info is not printed '
+        write(stdout,*) ' -----------------------------'
+        write(stdout,*)
+      endif
       write(stdout,*) ' ------------'
       write(stdout,*) ' *** Stop pp '
       write(stdout,*) ' ------------' 
@@ -128,9 +142,14 @@ program pw2wannier90
    !
       !call setup_nnkp
       call compute_mmn
-      call compute_amn
+      if(write_am) then
+         call compute_amn
+      endif
       call write_band
       !call run_wannier
+      if(write_unk) then
+         call write_plot
+      endif 
       call stop_pp
    !
    endif
@@ -299,7 +318,13 @@ subroutine read_nnkp
           call errore('read_nnkp',' wrong excluded band index ', 1)
      excluded_band(indexb)=.true.
    enddo
-    
+   wvfn_formatted = .false.
+   write_unk = .false.
+   write_am = .true.
+
+   call scan_file_to('flow_control')
+   read(iun_nnkp,*) write_am, write_unk, wvfn_formatted
+
    close (iun_nnkp)
    return
 end subroutine read_nnkp
@@ -682,13 +707,17 @@ subroutine write_band
    use io_files, only : find_free_unit
    use wannier
    implicit none
-   integer ik, ibnd, ikevc
+   integer ik, ibnd, ibnd1, ikevc
    iun_band = find_free_unit()
    open (unit=iun_band, file=TRIM(seedname)//".eig",form='formatted')
    do ik=ikstart,ikstop
       ikevc = ik - ikstart + 1
+
+      ibnd1=0
       do ibnd=1,nbnd
-         write (iun_band,'(2i5,f18.12)') ibnd, ikevc, et(ibnd,ik)*rytoev
+         if (excluded_band(ibnd)) cycle
+         ibnd1=ibnd1 + 1
+         write (iun_band,'(2i5,f18.12)') ibnd1, ikevc, et(ibnd,ik)*rytoev
       end do
    end do
    return
@@ -706,22 +735,36 @@ subroutine write_plot
    use cell_base,       only : tpiba2
 
    implicit none
-   integer ik, ibnd, ibnd1, ikevc, i1
+   integer ik, ibnd, ibnd1, ikevc, i1, j, spin
+   character*20 wfnname
+
 #ifdef __PARA
    integer nxxs
    COMPLEX(DP),allocatable :: psic_all(:)
-
    nxxs = nrx1s * nrx2s * nrx3s
    allocate(psic_all(nxxs) )
-
 #endif
 
    
-   iun_plot = find_free_unit()
 
-   open (unit=iun_plot, file=TRIM(seedname)//".bloch",form='formatted')
    do ik=ikstart,ikstop
+
       ikevc = ik - ikstart + 1
+
+      iun_plot = find_free_unit()
+      !write(wfnname,200) p,spin
+      spin=ispinw
+      if(ispinw.eq.0) spin=1
+      write(wfnname,200) ikevc, spin
+200   format ('UNK',i5,'.',i1)
+      if(wvfn_formatted) then
+        open (unit=iun_plot, file=wfnname,form='formatted')
+        write(iun_plot,*)  nr1s,nr2s,nr3s, ikevc, nbnd-nexband
+      else
+        open (unit=iun_plot, file=wfnname,form='unformatted')
+        write(iun_plot)  nr1s,nr2s,nr3s, ikevc, nbnd-nexband
+      endif
+
       call davcio (evc, nwordwfc, iunwfc, ikevc, -1 )
       call gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
 
@@ -734,11 +777,19 @@ subroutine write_plot
          call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
 #ifdef __PARA
          call cgather_smooth(psic,psic_all)
-         write (iun_plot,'(2i5,f18.12)') ibnd1, ikevc, psic_all(1:nxxs)
+         if(wvfn_formatted) then
+            write (iun_plot,*) (psic_all(j),j=1,nr1s*nr2s*nr3s)
+         else
+            write (iun_plot) (psic_all(j),j=1,nr1s*nr2s*nr3s)
+         endif
 #else
-         write (iun_plot,'(2i5,f18.12)') ibnd1, ikevc, psic(1:nrxxs)
+         if(wvfn_formatted) then 
+            write (iun_plot,*) (psic(j),j=1,nr1s*nr2s*nr3s)
+         else
+            write (iun_plot) (psic(j),j=1,nr1s*nr2s*nr3s)
+         endif
 #endif
-      end do
+      end do !ibnd
 
    end do  !ik
 #ifdef __PARA
