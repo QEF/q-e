@@ -318,6 +318,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   stat = .TRUE.
   !
+  suspended_image = 0
+  !
   RETURN  
   !
 END SUBROUTINE compute_fes_grads

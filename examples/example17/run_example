@@ -97,11 +97,11 @@ cat > H2+H.in << EOF
   degauss                = 0.03D0,
 /
 &ELECTRONS
-  conv_thr    = 1.0D-8,
+  conv_thr    = 1.D-8,
   mixing_beta = 0.3D0,
 /
 &IONS
-  ds                = 4.D0,
+  ds                = 2.D0,
   opt_scheme        = "broyden",
   num_of_images     = 7,
   k_max             = 0.3D0,
@@ -159,11 +159,11 @@ cat > symmetric_H2+H.in << EOF
   degauss                = 0.03D0,
 /
 &ELECTRONS
-  conv_thr    = 1.0D-8,
+  conv_thr    = 1.D-8,
   mixing_beta = 0.3D0,
 /
 &IONS
-  ds                = 4.D0,
+  ds                = 2.D0,
   opt_scheme        = "broyden",
   num_of_images     = 8,
   k_max             = 0.3D0,
@@ -228,11 +228,11 @@ cat > asymmetric_H2+H.in << EOF
   degauss                = 0.03D0,
 /
 &ELECTRONS
-  conv_thr    = 1.0D-8,
+  conv_thr    = 1.D-8,
   mixing_beta = 0.3D0,
 /
 &IONS
-  ds                = 4.D0,
+  ds                = 2.D0,
   opt_scheme        = "broyden",
   num_of_images     = 8,
   k_max             = 0.3D0,

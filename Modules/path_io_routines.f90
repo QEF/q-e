@@ -17,7 +17,7 @@ MODULE path_io_routines
   ! ... Written by Carlo Sbraccia ( 2003-2006 )
   !
   USE kinds,      ONLY : DP
-  USE constants,  ONLY : au, bohr_radius_angs
+  USE constants,  ONLY : pi, au, bohr_radius_angs, eV_to_kelvin
   !
   USE basic_algebra_routines
   !
@@ -26,6 +26,7 @@ MODULE path_io_routines
   PRIVATE
   !
   PUBLIC :: io_path_start, io_path_stop
+  PUBLIC :: path_summary
   PUBLIC :: read_restart
   PUBLIC :: write_restart, write_dat_files, write_output
   PUBLIC :: new_image_init, get_new_image, stop_other_images
@@ -92,25 +93,112 @@ MODULE path_io_routines
      END SUBROUTINE io_path_stop
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE read_restart()
+     SUBROUTINE path_summary()
        !-----------------------------------------------------------------------
        !
-       USE control_flags,    ONLY : conv_elec, lsmd, lcoarsegrained
-       USE io_files,         ONLY : iunpath, iunrestart, path_file   
-       USE input_parameters, ONLY : if_pos
-       USE path_variables,   ONLY : istep_path, nstep_path, suspended_image, &
-                                    dim, num_of_images, pos, pes, grad_pes,  &
-                                    frozen , lquick_min
-       USE path_variables,   ONLY : posold, Emax, Emin, Emax_index
-       USE path_variables,   ONLY : Nft, ft_coeff, num_of_modes
-       USE io_global,        ONLY : meta_ionode, meta_ionode_id
-       USE mp,               ONLY : mp_bcast
+       USE input_parameters, ONLY : restart_mode, calculation, opt_scheme
+       USE control_flags,    ONLY : lneb, lsmd, lcoarsegrained
+       USE path_variables,   ONLY : climbing, nstep_path, num_of_images, &
+                                    path_length, path_thr, ds, use_masses, &
+                                    first_last_opt, temp_req, use_freezing, &
+                                    k_min, k_max, CI_scheme, fixed_tan, &
+                                    llangevin
+       USE path_formats,     ONLY : summary_fmt
+       USE io_files,         ONLY : iunpath
+       USE io_global,        ONLY : meta_ionode
        !
        IMPLICIT NONE
        !
-       ! ... local variables
-       !    
+       REAL(DP)          :: k_ratio
+       CHARACTER(LEN=20) :: nim_char, nstep_path_char
+       !
+       CHARACTER(LEN=6), EXTERNAL :: int_to_char
+       !
+       !
+       IF ( .NOT. meta_ionode ) RETURN
+       !
+       ! ... details of the calculation are written on output
+       !
+       nstep_path_char = int_to_char( nstep_path )
+       nim_char        = int_to_char( num_of_images )
+       !
+       WRITE( iunpath, * )
+       WRITE( iunpath, summary_fmt ) "calculation",   TRIM( calculation )
+       WRITE( iunpath, summary_fmt ) "restart_mode",  TRIM( restart_mode )
+       WRITE( iunpath, summary_fmt ) "opt_scheme",    TRIM( opt_scheme )
+       WRITE( iunpath, summary_fmt ) "num_of_images", TRIM( nim_char )
+       WRITE( iunpath, summary_fmt ) "nstep",         TRIM( nstep_path_char )
+       WRITE( iunpath, summary_fmt ) "CI_scheme",     TRIM( CI_scheme )
+       !
+       WRITE( UNIT = iunpath, &
+              FMT = '(5X,"first_last_opt",T35," = ",1X,L1))' ) first_last_opt
+       !
+       WRITE( UNIT = iunpath, &
+              FMT = '(5X,"coarse-grained phase-space",T35, " = ",1X,L1))' ) &
+           lcoarsegrained
+       !
+       WRITE( UNIT = iunpath, &
+              FMT = '(5X,"use_freezing",T35," = ",1X,L1))' ) use_freezing
+       !
+       WRITE( UNIT = iunpath, &
+              FMT = '(5X,"ds",T35," = ",1X,F6.4," a.u.")' ) ds
+       !
+       IF ( lneb ) THEN
+          !
+          WRITE( UNIT = iunpath, &
+                 FMT = '(5X,"k_max",T35," = ",1X,F6.4," a.u.")' ) k_max
+          WRITE( UNIT = iunpath, &
+                 FMT = '(5X,"k_min",T35," = ",1X,F6.4," a.u.")' ) k_min
+          !
+          k_ratio = k_min / k_max
+          !
+          WRITE( UNIT = iunpath, FMT = '(5X,"suggested k_max",T35, &
+               & " = ",1X,F6.4," a.u.")' ) ( pi / ds )**2 / 16.D0
+          !
+          WRITE( UNIT = iunpath, FMT = '(5X,"suggested k_min",T35, &
+               & " = ",1X,F6.4," a.u.")' ) ( pi / ds )**2 / 16.D0 * k_ratio
+          !
+       END IF
+       !
+       IF ( lsmd ) THEN
+          !
+          WRITE( UNIT = iunpath, &
+                 FMT = '(5X,"fixed_tan",T35," = ",1X,L1))' ) fixed_tan
+          !
+          IF ( llangevin ) &
+             WRITE( UNIT = iunpath, &
+                    FMT = '(5X,"required temperature",T35, &
+                           &" = ",F6.1," K")' ) temp_req * eV_to_kelvin * au
+          !
+       END IF
+       !
+       WRITE( UNIT = iunpath, &
+              FMT = '(5X,"path_thr",T35," = ",1X,F6.4," eV / A")' ) path_thr
+       !
+       RETURN
+       !
+     END SUBROUTINE path_summary
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE read_restart()
+       !-----------------------------------------------------------------------
+       !
+       USE control_flags,          ONLY : conv_elec, lsmd, lcoarsegrained
+       USE io_files,               ONLY : iunpath, iunrestart, path_file
+       USE input_parameters,       ONLY : if_pos
+       USE path_variables,         ONLY : nim => num_of_images
+       USE path_variables,         ONLY : istep_path, nstep_path, frozen, dim, &
+                                          suspended_image, pos, pes, grad_pes, &
+                                          lquick_min, posold, Emax, Emin,      &
+                                          Emax_index
+       USE io_global,              ONLY : meta_ionode, meta_ionode_id
+       USE mp,                     ONLY : mp_bcast
+       USE path_reparametrisation, ONLY : spline_interpolation
+       !
+       IMPLICIT NONE
+       !
        INTEGER             :: i, j, ia, ierr
+       INTEGER             :: nim_inp
        CHARACTER (LEN=256) :: input_line
        LOGICAL             :: exists
        LOGICAL, EXTERNAL   :: matches
@@ -124,7 +212,7 @@ MODULE path_io_routines
           INQUIRE( FILE = TRIM( path_file ), EXIST = exists )
           !
           IF ( .NOT. exists ) &
-             CALL errore( 'read_restart()', 'restart file not found', 1 )
+             CALL errore( 'read_restart', 'restart file not found', 1 )
           !
           OPEN( UNIT = iunrestart, FILE = path_file, STATUS = "OLD", &
                 ACTION = "READ" )
@@ -142,31 +230,27 @@ MODULE path_io_routines
              !
              ! ... mandatory fields
              !
-             CALL errore( 'read_restart()', 'RESTART INFORMATION missing', 1 )
+             CALL errore( 'read_restart', 'RESTART INFORMATION missing', 1 )
              !
           END IF
           !
           READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
           !
-          IF( matches( "NUMBER OF IMAGES", input_line ) ) THEN
+          IF ( matches( "NUMBER OF IMAGES", input_line ) ) THEN
              !
              ! ... optional field
              !
-             READ( UNIT = iunrestart, FMT = * ) num_of_images
+             READ( UNIT = iunrestart, FMT = * ) nim_inp
              !
-             IF ( lsmd ) THEN
-                !
-                ! ... fourier dimensions updated
-                !
-                Nft = ( num_of_images - 1 )
-                !
-                num_of_modes = ( Nft - 1 )
-                !
-                ft_coeff = 2.D0 / DBLE( Nft )
-                !
-             END IF
+             IF ( nim_inp > nim ) &
+                CALL errore( 'read_restart', &
+                             'wrong number of images in the restart file', 1 )
              !
              READ( UNIT = iunrestart, FMT = '(256A)' ) input_line
+             !
+          ELSE
+             !
+             nim_inp = nim
              !
           END IF
           !
@@ -175,14 +259,14 @@ MODULE path_io_routines
              !
              ! ... mandatory fields
              !
-             CALL errore( 'read_restart()', &
+             CALL errore( 'read_restart', &
                           'ENERGIES, POSITIONS AND GRADIENTS missing', 1 )
              !
           END IF
           !
           IF ( lcoarsegrained ) THEN
              !
-             DO i = 1, num_of_images
+             DO i = 1, nim_inp
                 !
                 READ( UNIT = iunrestart, FMT = * )
                 !
@@ -223,7 +307,7 @@ MODULE path_io_routines
                 !
              END DO
              !
-             DO i = 2, num_of_images
+             DO i = 2, nim_inp
                 !
                 READ( UNIT = iunrestart, FMT = * )
                 READ( UNIT = iunrestart, FMT = * ) pes(i)
@@ -245,14 +329,6 @@ MODULE path_io_routines
                 !
              END DO
              !
-             IF ( suspended_image == 0 ) THEN
-                !
-                Emin       = MINVAL( pes(:) )
-                Emax       = MAXVAL( pes(:) )
-                Emax_index = MAXLOC( pes(:), 1 )
-                !
-             END IF
-             !
           END IF
           !
           READ( UNIT = iunrestart, FMT = '(256A)', IOSTAT = ierr ) input_line
@@ -265,7 +341,7 @@ MODULE path_io_routines
                 !
                 IF ( lcoarsegrained ) THEN
                    !
-                   DO i = 1, num_of_images
+                   DO i = 1, nim_inp
                       !
                       READ( UNIT = iunrestart, FMT = * )
                       READ( UNIT = iunrestart, FMT = * ) frozen(i)                      
@@ -280,7 +356,7 @@ MODULE path_io_routines
                    !
                 ELSE
                    !
-                   DO i = 1, num_of_images
+                   DO i = 1, nim_inp
                       !
                       READ( UNIT = iunrestart, FMT = * )
                       READ( UNIT = iunrestart, FMT = * ) frozen(i)
@@ -307,6 +383,33 @@ MODULE path_io_routines
           !
           CLOSE( iunrestart )
           !
+          IF ( nim_inp /= nim ) THEN
+             !
+             ! ... the input path is reinterpolated to have the required
+             ! ... number of images
+             !
+             CALL spline_interpolation( pos,      1, nim, nim_inp )
+             CALL spline_interpolation( pes,      1, nim, nim_inp )
+             CALL spline_interpolation( grad_pes, 1, nim, nim_inp )
+             !
+             IF ( lquick_min ) THEN
+                !
+                CALL spline_interpolation( posold, 1, nim, nim_inp )
+                !
+                frozen(:) = .FALSE.
+                !
+             END IF
+             !
+          END IF
+          !
+          IF ( suspended_image == 0 ) THEN
+             !
+             Emin       = MINVAL( pes(:) )
+             Emax       = MAXVAL( pes(:) )
+             Emax_index = MAXLOC( pes(:), 1 )
+             !
+          END IF
+          !
        END IF
        !
        ! ... broadcast to all nodes
@@ -321,19 +424,9 @@ MODULE path_io_routines
        CALL mp_bcast( pes,      meta_ionode_id )
        CALL mp_bcast( grad_pes, meta_ionode_id )
        !
-       CALL mp_bcast( num_of_images, meta_ionode_id )
-       !
        CALL mp_bcast( Emax,       meta_ionode_id )
        CALL mp_bcast( Emin,       meta_ionode_id )
        CALL mp_bcast( Emax_index, meta_ionode_id )
-       !
-       IF ( lsmd ) THEN
-          !          
-          CALL mp_bcast( num_of_modes, meta_ionode_id )
-          CALL mp_bcast( Nft,          meta_ionode_id )
-          CALL mp_bcast( ft_coeff,     meta_ionode_id )
-          !
-       END IF
        !
        IF ( lquick_min ) THEN
           !
@@ -361,8 +454,6 @@ MODULE path_io_routines
        USE io_global,        ONLY : meta_ionode
        !
        IMPLICIT NONE
-       !
-       ! ... local variables
        !
        INTEGER             :: i, j, ia
        CHARACTER (LEN=256) :: file
@@ -552,21 +643,18 @@ MODULE path_io_routines
        USE ions_base,        ONLY : ityp, nat
        USE path_formats,     ONLY : dat_fmt, int_fmt, xyz_fmt, axsf_fmt
        USE path_variables,   ONLY : pos, grad_pes, pes, num_of_images, &
-                                    react_coord, tangent, dim, error
+                                    tangent, dim, error
        USE io_files,         ONLY : iundat, iunint, iunxyz, iunaxsf, &
                                     dat_file, int_file, xyz_file, axsf_file
        USE io_global,        ONLY : meta_ionode
        !
        IMPLICIT NONE
        !
-       ! ... local variables
-       !
-       REAL (DP)              :: R, delta_R, x
-       REAL (DP), ALLOCATABLE :: d_R(:)
-       REAL (DP), ALLOCATABLE :: a(:), b(:), c(:), d(:), F(:)
-       REAL (DP)              :: ener, ener_0
-       INTEGER                :: j, atom, image
-       INTEGER, PARAMETER     :: max_i = 100
+       REAL(DP)              :: r, delta, x
+       REAL(DP), ALLOCATABLE :: a(:), b(:), c(:), d(:), f(:), s(:)
+       REAL(DP)              :: ener, ener_0
+       INTEGER               :: i, j, ia
+       INTEGER, PARAMETER    :: max_i = 100
        !
        !
        IF ( .NOT. meta_ionode ) RETURN
@@ -578,84 +666,70 @@ MODULE path_io_routines
        OPEN( UNIT = iunint, FILE = int_file, STATUS = "UNKNOWN", &
              ACTION = "WRITE" )
        !
-       ALLOCATE( d_R( dim ) )
-       !
        ALLOCATE( a( num_of_images - 1 ) )
        ALLOCATE( b( num_of_images - 1 ) )
        ALLOCATE( c( num_of_images - 1 ) )
        ALLOCATE( d( num_of_images - 1 ) )
-       ALLOCATE( F( num_of_images ) )
+       ALLOCATE( f( num_of_images ) )
+       ALLOCATE( s( num_of_images ) )
        !
-       F = 0.D0
+       f(:) = 0.D0
        !
-       DO image = 2, ( num_of_images - 1 )
+       DO i = 2, num_of_images - 1
           !
-          F(image) = - ( grad_pes(:,image) .dot. tangent(:,image) )
+          f(i) = - ( grad_pes(:,i) .dot. tangent(:,i) )
           !
        END DO
        !
-       react_coord(1) = 0.D0
+       s(1) = 0.D0
        !
-       DO image = 1, ( num_of_images - 1 )
+       DO i = 1, num_of_images - 1
           !
-          d_R = pos(:,( image + 1 )) - pos(:,image)
+          r = norm( pos(:,i+1) - pos(:,i) )
           !
-          R = norm( d_R )
-          !
-          react_coord(image+1) = react_coord(image) + R
+          s(i+1) = s(i) + r
           !
           ! ... cubic interpolation
           !
-          a(image) = 2.D0 * ( pes(image) - pes(image+1) ) / R**(3) - &
-                     ( F(image) + F(image+1) ) / R**(2)
+          a(i) = 2.D0*( pes(i) - pes(i+1) ) / r**3 - ( f(i) + f(i+1) ) / r**2
           !
-          b(image) = 3.D0 * ( pes(image+1) - pes(image) ) / R**(2) + &
-                     ( 2.D0 * F(image) + F(image+1) ) / R
+          b(i) = 3.D0*( pes(i+1) - pes(i) ) / r**2 + ( 2.D0*f(i) + f(i+1) ) / r
           !
-          c(image) = - F(image)
+          c(i) = - f(i)
           !
-          d(image) = pes(image)
-          !
-       END DO          
-       !
-       DO image = 1, num_of_images
-          !
-          WRITE( UNIT = iundat, FMT = dat_fmt ) &
-              ( react_coord(image) / react_coord(num_of_images) ), &
-              ( pes(image) - pes(1) ) * au, error(image)
+          d(i) = pes(i)
           !
        END DO
        !
-       image = 1
+       DO i = 1, num_of_images
+          !
+          WRITE( UNIT = iundat, FMT = dat_fmt ) &
+              ( s(i) / s(num_of_images) ), ( pes(i) - pes(1) )*au, error(i)
+          !
+       END DO
        !
-       delta_R = react_coord(num_of_images) / DBLE( max_i )
+       i = 1
+       !
+       delta = s(num_of_images) / DBLE( max_i )
        !
        DO j = 0, max_i
           !
-          R = DBLE( j ) * delta_R 
+          r = DBLE( j ) * delta
           !
-          IF ( ( R > react_coord(image+1) ) .AND. &
-               ( image < ( num_of_images - 1 ) ) ) image = image + 1
+          IF ( r >= s(i+1) .AND. i < num_of_images - 1 ) i = i + 1
           !
-          x = R - react_coord(image)
+          x = r - s(i)
           !
-          ener = a(image)*(x**3) + b(image)*(x**2) + c(image)*x + d(image) 
+          ener = a(i)*x**3 + b(i)*x**2 + c(i)*x + d(i)
           !
           IF ( j == 0 ) ener_0 = ener
           !
           WRITE( UNIT = iunint, FMT = int_fmt ) &
-              ( R / react_coord(num_of_images) ), &
-              ( ener - ener_0 ) * au
+              ( r / s(num_of_images) ), ( ener - ener_0 )*au
           !
        END DO
        !
-       DEALLOCATE( d_R )
-       !
-       DEALLOCATE( a )
-       DEALLOCATE( b )
-       DEALLOCATE( c )
-       DEALLOCATE( d )
-       DEALLOCATE( F )
+       DEALLOCATE( a, b, c, d, f, s )
        !
        CLOSE( UNIT = iundat )
        CLOSE( UNIT = iunint )
@@ -667,17 +741,17 @@ MODULE path_io_routines
        OPEN( UNIT = iunxyz, FILE = xyz_file, &
              STATUS = "UNKNOWN", ACTION = "WRITE" )
        !
-       DO image = 1, num_of_images
+       DO i = 1, num_of_images
           !
           WRITE( UNIT = iunxyz, FMT = '(I5,/)' ) nat
           !
-          DO atom = 1, nat
+          DO ia = 1, nat
              !
              WRITE( UNIT = iunxyz, FMT = xyz_fmt ) &
-                 TRIM( atom_label( ityp( atom ) ) ), &
-                 pos(3*atom-2,image)*bohr_radius_angs, &
-                 pos(3*atom-1,image)*bohr_radius_angs, &
-                 pos(3*atom-0,image)*bohr_radius_angs
+                 TRIM( atom_label( ityp( ia ) ) ), &
+                 pos(3*ia-2,i) * bohr_radius_angs, &
+                 pos(3*ia-1,i) * bohr_radius_angs, &
+                 pos(3*ia-0,i) * bohr_radius_angs
              !
           END DO   
           !
@@ -706,21 +780,21 @@ MODULE path_io_routines
            at(2,3) * alat * bohr_radius_angs, &
            at(3,3) * alat * bohr_radius_angs
        !
-       DO image = 1, num_of_images
+       DO i = 1, num_of_images
           !
-          WRITE( UNIT = iunaxsf, FMT = '(" PRIMCOORD ",I3)' ) image
+          WRITE( UNIT = iunaxsf, FMT = '(" PRIMCOORD ",I3)' ) i
           WRITE( UNIT = iunaxsf, FMT = '(I5,"  1")' ) nat
           !
-          DO atom = 1, nat
+          DO ia = 1, nat
              !
              WRITE( UNIT = iunaxsf, FMT = axsf_fmt ) &
-                 TRIM( atom_label(ityp(atom)) ), &
-                 pos(3*atom-2,image)*bohr_radius_angs, &
-                 pos(3*atom-1,image)*bohr_radius_angs, &
-                 pos(3*atom-0,image)*bohr_radius_angs, &
-                 - grad_pes(3*atom-2,image)/bohr_radius_angs, &
-                 - grad_pes(3*atom-1,image)/bohr_radius_angs, &
-                 - grad_pes(3*atom-0,image)/bohr_radius_angs
+                 TRIM( atom_label(ityp(ia)) ), &
+                 pos(3*ia-2,i) * bohr_radius_angs, &
+                 pos(3*ia-1,i) * bohr_radius_angs, &
+                 pos(3*ia-0,i) * bohr_radius_angs, &
+                 - grad_pes(3*ia-2,i) / bohr_radius_angs, &
+                 - grad_pes(3*ia-1,i) / bohr_radius_angs, &
+                 - grad_pes(3*ia-0,i) / bohr_radius_angs
              !
           END DO   
           !

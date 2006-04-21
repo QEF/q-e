@@ -1,19 +1,27 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
+!---------------------------------------------------------------------------
 MODULE splinelib
+  !---------------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
   !
   IMPLICIT NONE
   !
   PRIVATE
+  !
   PUBLIC :: dosplineint, spline, splint
+  !
+  INTERFACE dosplineint
+     !
+     MODULE PROCEDURE dosplineint_1D, dosplineint_2D
+     !
+  END INTERFACE dosplineint
   !
   CONTAINS
     !
@@ -23,43 +31,44 @@ MODULE splinelib
       !
       IMPLICIT NONE
       !
-      REAL (DP), INTENT(IN)  :: xdata(:), ydata(:), startu, startd 
-      REAL (DP), INTENT(OUT) :: d2y(:)
-      INTEGER                     :: i, k, old_num_of_images
-      REAL (DP)              :: p, qn, sig, un
-      REAL (DP), ALLOCATABLE :: u(:)
+      REAL(DP), INTENT(IN)  :: xdata(:), ydata(:), startu, startd 
+      REAL(DP), INTENT(OUT) :: d2y(:)
+      !
+      INTEGER               :: i, k, ydim
+      REAL(DP)              :: p, qn, sig, un
+      REAL(DP), ALLOCATABLE :: u(:)
       !
       !
-      old_num_of_images = SIZE( ydata )
+      ydim = SIZE( ydata )
       !
-      allocate(u(old_num_of_images))
+      ALLOCATE( u( ydim ) )
+      !
       u(1)   = startu
       d2y(1) = startd
       !
-      DO  i = 2, ( old_num_of_images - 1 ) 
+      DO  i = 2, ydim - 1
          !
-         sig    = ( xdata(i) - xdata(i - 1) ) / ( xdata(i + 1) - xdata(i - 1) ) 
-         p      = sig * d2y(i - 1) + 2.D0 
+         sig    = ( xdata(i) - xdata(i-1) ) / ( xdata(i+1) - xdata(i-1) ) 
+         p      = sig * d2y(i- 1) + 2.D0 
          d2y(i) = ( sig - 1.D0 ) / p 
-         u(i)   = ( 6.D0 * ( (ydata(i + 1) - ydata(i) ) / &
-                  ( xdata(i + 1) - xdata(i) ) - ( ydata(i) - ydata(i - 1) ) / &
-                  ( xdata(i) - xdata(i - 1) ) ) / &
-                  ( xdata(i + 1) - xdata(i - 1) ) - sig * u(i - 1) ) / p 
+         u(i)   = ( 6.D0 * ( ( ydata(i+1) - ydata(i) ) / &
+                    ( xdata(i+1) - xdata(i) ) - ( ydata(i) - ydata(i-1) ) / &
+                    ( xdata(i) - xdata(i-1) ) ) / &
+                    ( xdata(i+1) - xdata(i-1) ) - sig * u(i-1) ) / p 
          !       
       END DO
       !
-      d2y(old_num_of_images) = 0  
+      d2y(ydim) = 0  
       !
-      DO  k = ( old_num_of_images - 1 ), 1, -1 
+      DO  k = ydim - 1, 1, -1 
          !
-         d2y(k) = d2y(k) * d2y(k + 1) + u(k) 
+         d2y(k) = d2y(k) * d2y(k+1) + u(k) 
          !
       END DO
       !
-      DEALLOCATE (u)
+      DEALLOCATE( u )
       !
     END SUBROUTINE spline
-    !
     !
     !------------------------------------------------------------------------
     FUNCTION splint( xdata, ydata, d2y, x )
@@ -67,18 +76,20 @@ MODULE splinelib
       !
       IMPLICIT NONE
       !
-      REAL (DP), INTENT(IN)  :: xdata(:), ydata(:), d2y(:)
-      REAL (DP), INTENT(IN)  :: x
-      REAL (DP)              :: splint
-      INTEGER                     :: k, khi, klo, dim
-      REAL (DP)              :: a, b, h
+      REAL(DP), INTENT(IN) :: xdata(:), ydata(:), d2y(:)
+      REAL(DP), INTENT(IN) :: x
+      !
+      REAL(DP) :: splint
+      INTEGER  :: k, khi, klo, xdim
+      REAL(DP) :: a, b, h
       !
       !
-      dim = SIZE( xdata )
+      xdim = SIZE( xdata )
+      !
       klo = 1
-      khi = dim
+      khi = xdim
       !
-      klo = MAX( MIN( locate( xdata , x ) , ( dim - 1 ) ) , 1 )
+      klo = MAX( MIN( locate( xdata, x ), ( xdim - 1 ) ), 1 )
       !
       khi = klo + 1
       !
@@ -94,16 +105,17 @@ MODULE splinelib
       CONTAINS
          !
          !-------------------------------------------------------------------
-         FUNCTION locate( xx , x )
+         FUNCTION locate( xx, x )
            !-------------------------------------------------------------------
            !
            IMPLICIT NONE
            !
-           REAL (DP), INTENT(IN)  :: xx(:)
-           REAL (DP), INTENT(IN)  :: x
-           INTEGER                     :: locate
-           INTEGER                     :: n, jl, jm, ju
-           LOGICAL                     :: ascnd
+           REAL(DP), INTENT(IN) :: xx(:)
+           REAL(DP), INTENT(IN) :: x
+           !
+           INTEGER :: locate
+           INTEGER :: n, jl, jm, ju
+           LOGICAL :: ascnd
            !
            !
            n     = SIZE( xx )
@@ -147,69 +159,91 @@ MODULE splinelib
          !
     END FUNCTION splint
     !
-    !
     !------------------------------------------------------------------------
-    SUBROUTINE dosplineint( old_mesh, old_vect, new_mesh, new_vect )
+    SUBROUTINE dosplineint_1D( old_mesh, old_vec, new_mesh, new_vec )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
-      REAL (DP), INTENT(IN)   :: old_mesh(:), new_mesh(:)
-      REAL (DP), INTENT(IN)   :: old_vect(:,:)
-      REAL (DP), INTENT(OUT)  :: new_vect(:,:)
-      REAL (DP), ALLOCATABLE  :: d2y(:)
-      INTEGER                      :: dim, i, j
-      INTEGER                      :: old_num_of_images, new_num_of_images
+      REAL (DP), INTENT(IN)  :: old_mesh(:), new_mesh(:)
+      REAL (DP), INTENT(IN)  :: old_vec(:)
+      REAL (DP), INTENT(OUT) :: new_vec(:)
+      !
+      REAL (DP), ALLOCATABLE :: d2y(:)
+      INTEGER                :: dim, i, j
+      INTEGER                :: old_dim, new_dim
       !
       !
-      dim = SIZE( old_vect , 1 )
+      old_dim = SIZE( old_vec )
+      new_dim = SIZE( new_vec )
       !
-      IF( dim /= SIZE( new_vect , 1 ) ) THEN
+      IF ( old_dim /= SIZE( old_mesh ) ) &
+         CALL errore( 'dosplineint', &
+                      'dimensions of old_mesh and old_vec do not match', 1 )         
+      !
+      IF ( new_dim /= SIZE( new_mesh ) ) &
+         CALL errore( 'dosplineint', &
+                      'dimensions of new_mesh and new_vec do not match', 1 ) 
+      !
+      ALLOCATE( d2y( old_dim ) )
+      !
+      d2y = 0
+      !
+      CALL spline( old_mesh , old_vec(:), 0.D0, 0.D0, d2y  ) 
+      !
+      DO j = 1, new_dim
          !
-         WRITE(*,'("ERROR in dosplineint: ", &
-                  &"dimensions of old_vect and new_vect")')
-         WRITE(*,'("                      do not match")')
-         STOP
+         new_vec(j) = splint( old_mesh, old_vec(:), d2y, new_mesh(j) )
          !
-      END IF  
+      END DO
       !
-      old_num_of_images = SIZE( old_vect , 2 )
-      new_num_of_images = SIZE( new_vect , 2 )
+      DEALLOCATE( d2y )
       !
-      IF ( old_num_of_images /= SIZE( old_mesh , 1 ) ) THEN
-         !
-         WRITE(*,'("ERROR in dosplineint: ", &
-                  &"dimensions of old_mesh and old_vect")')
-         WRITE(*,'("                      do not match")')
-         STOP
-         !
-      ELSE IF( new_num_of_images /= SIZE( new_mesh , 1 ) ) THEN
-         !
-         WRITE(*,'("ERROR in dosplineint: ", &
-                  &"dimensions of new_mesh and new_vect")')
-         WRITE(*,'("                      do not match")')
-         STOP
-         !
-      END IF
+    END SUBROUTINE dosplineint_1D
+    !    
+    !------------------------------------------------------------------------
+    SUBROUTINE dosplineint_2D( old_mesh, old_vec, new_mesh, new_vec )
+      !------------------------------------------------------------------------
       !
-#if defined ( _DEBUG ) || ( _DEBUG_SPLINELIB )
+      IMPLICIT NONE
       !
-      PRINT *, dim            
-      PRINT *, old_num_of_images, new_num_of_images
+      REAL (DP), INTENT(IN)  :: old_mesh(:), new_mesh(:)
+      REAL (DP), INTENT(IN)  :: old_vec(:,:)
+      REAL (DP), INTENT(OUT) :: new_vec(:,:)
       !
-#endif      
+      REAL (DP), ALLOCATABLE :: d2y(:)
+      INTEGER                :: dim, i, j
+      INTEGER                :: old_dim, new_dim
       !
-      ALLOCATE( d2y( old_num_of_images ) )
+      !
+      dim = SIZE( old_vec, 1 )
+      !
+      IF( dim /= SIZE( new_vec, 1 ) ) &
+         CALL errore( 'dosplineint', &
+                      'dimensions of old_vec and new_vec do not match', 1 )
+      !
+      old_dim = SIZE( old_vec, 2 )
+      new_dim = SIZE( new_vec, 2 )
+      !
+      IF ( old_dim /= SIZE( old_mesh, 1 ) ) &
+         CALL errore( 'dosplineint', &
+                      'dimensions of old_mesh and old_vec do not match', 1 )         
+      !
+      IF ( new_dim /= SIZE( new_mesh, 1 ) ) &
+         CALL errore( 'dosplineint', &
+                      'dimensions of new_mesh and new_vec do not match', 1 ) 
+      !
+      ALLOCATE( d2y( old_dim ) )
       !
       DO i = 1, dim
          ! 
          d2y = 0
          !
-         CALL spline( old_mesh , old_vect(i,:), 0.d0, 0.d0, d2y  ) 
+         CALL spline( old_mesh , old_vec(i,:), 0.D0, 0.D0, d2y  ) 
          !
-         DO j = 1, new_num_of_images
+         DO j = 1, new_dim
             !
-            new_vect(i,j) = splint( old_mesh, old_vect(i,:), d2y, new_mesh(j) )
+            new_vec(i,j) = splint( old_mesh, old_vec(i,:), d2y, new_mesh(j) )
             !
          END DO
          !
@@ -217,6 +251,6 @@ MODULE splinelib
       !
       DEALLOCATE( d2y )
       !
-    END SUBROUTINE dosplineint
+    END SUBROUTINE dosplineint_2D
     !
 END MODULE splinelib

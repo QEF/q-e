@@ -14,7 +14,7 @@ SUBROUTINE stop_run( flag )
   ! ... or during execution with flag = .FALSE. (does not remove 'restart')
   !
   USE io_global,          ONLY : stdout, ionode
-  USE control_flags,      ONLY : lpath, lneb, lsmd, twfcollect, lconstrain, &
+  USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
                                  lcoarsegrained
   USE io_files,           ONLY : prefix, iunwfc, iunigk, iunres, iunefield
   USE path_variables,     ONLY : path_deallocation
@@ -117,15 +117,7 @@ SUBROUTINE stop_run( flag )
   !
   IF ( lcoarsegrained ) CALL deallocate_metadyn_vars()
   !
-  IF ( lneb ) THEN
-     !
-     CALL path_deallocation( 'neb' )
-     !
-  ELSE IF ( lsmd ) THEN
-     !
-     CALL path_deallocation( 'smd' )
-     !
-  END IF
+  IF ( lpath ) CALL path_deallocation()
   !
   IF ( flag ) THEN
      !

@@ -784,7 +784,7 @@ MODULE pw_restart
       !
       IF ( ionode ) THEN
          !
-         INQUIRE( FILE = TRIM( dirname ) // '/' // TRIM( xmlpun ), EXIST = lexist )
+         INQUIRE( FILE = TRIM( dirname )//'/'//TRIM( xmlpun ), EXIST = lexist )
          !
       END IF
       !

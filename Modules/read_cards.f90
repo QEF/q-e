@@ -2028,7 +2028,7 @@ MODULE read_cards_module
        IF ( tread ) &
           CALL errore( ' card_climbing_images ', ' two occurrence ', 2 )
        !
-       IF ( calculation == 'neb' .AND. CI_scheme == 'manual' ) THEN
+       IF ( CI_scheme == 'manual' ) THEN
           !
           IF ( ALLOCATED( climbing ) ) DEALLOCATE( climbing )
           !

@@ -1057,39 +1057,26 @@ MODULE input_parameters
         LOGICAL :: full_phs_path_flag = .FALSE. 
         LOGICAL :: cg_phs_path_flag   = .FALSE.        
         !
-        
         INTEGER :: input_images = 0
-        
+        !
         INTEGER :: num_of_images = 0
-        
-        INTEGER :: init_num_of_images = 0
-
+        !
         CHARACTER(LEN=80) :: CI_scheme = 'no-CI' 
           ! CI_scheme = 'no-CI' | 'auto' | 'manual'
           ! set the Climbing Image scheme
           ! 'no-CI'       Climbing Image is not used
           ! 'auto'        Standard Climbing Image
           ! 'manual'      the image is selected by hand
-        
+        !
         CHARACTER(LEN=80) :: CI_scheme_allowed(3)
         DATA CI_scheme_allowed / 'no-CI', 'auto', 'manual' /
-        
+        !
         LOGICAL :: first_last_opt = .FALSE.
-        
         LOGICAL :: use_masses     = .FALSE.
-        
-        LOGICAL :: use_fourier    = .FALSE.
-        
-        LOGICAL :: use_multistep  = .FALSE.
-        
         LOGICAL :: use_freezing   = .FALSE.
-        
         LOGICAL :: fixed_tan      = .FALSE.
-        
-        LOGICAL :: free_energy    = .FALSE.
-                
         LOGICAL :: write_save     = .FALSE.
-        
+        !
         CHARACTER(LEN=80) :: opt_scheme = 'quick-min' 
           ! minimization_scheme = 'quick-min' | 'damped-dyn' | 
           !                       'mol-dyn'   | 'sd'
@@ -1098,17 +1085,16 @@ MODULE input_parameters
           ! 'sd'          steepest descent
           ! 'broyden'     broyden acceleration
           ! 'langevin'    langevin dynamics
-
+        !
         CHARACTER(LEN=80) :: opt_scheme_allowed(4)
         DATA opt_scheme_allowed / 'quick-min', 'broyden', 'sd', 'langevin' /  
-        
+        !
         REAL (DP)  :: temp_req = 0.D0
           ! meaningful only when minimization_scheme = 'sim-annealing'
-
         REAL (DP)  :: ds = 1.D0
-
+        !
         REAL (DP)  :: k_max = 0.1D0, k_min = 0.1D0
-
+        !
         REAL (DP)  :: path_thr = 0.05D0
 
         !
@@ -1195,10 +1181,8 @@ MODULE input_parameters
                           delta_t, pot_extrapolation, wfc_extrapolation,       &
                           nraise, monitor_constr, num_of_images, CI_scheme,    &
                           opt_scheme, use_masses, first_last_opt, ds, k_max,   &
-                          k_min, use_multistep, write_save, temp_req, path_thr,&
-                          fixed_tan, init_num_of_images, free_energy,          &
-                          use_freezing, use_fourier,                           &
-                          trust_radius_max, trust_radius_min,                  &
+                          k_min, write_save, temp_req, path_thr, fixed_tan,    &
+                          use_freezing, trust_radius_max, trust_radius_min,    &
                           trust_radius_ini, w_1, w_2, bfgs_ndim, sic_rloc,     &
                           smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1,   &
                           smd_stcd2, smd_stcd3, smd_codf, smd_forf, smd_smwf,  &
@@ -1214,7 +1198,8 @@ MODULE input_parameters
         CHARACTER(LEN=80) :: cell_parameters = 'default' 
           ! cell_parameters = 'default'* | 'from_input' 
           ! 'default'    restart the simulation with cell parameters read
-          !              from the restart file or "celldm" if "restart = 'from_scratch'"
+          !              from the restart file or "celldm" if 
+          !              "restart = 'from_scratch'"
           ! 'from_input' restart the simulation with cell parameters
           !              from standard input ( see the card 'CELL_PARAMETERS' )
 

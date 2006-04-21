@@ -147,22 +147,19 @@ SUBROUTINE iosys()
   !
   USE path_variables, ONLY : nstep_path, lsteep_des, lquick_min, lbroyden, &
                              llangevin, &
-                             ds_                 => ds, &
-                             write_save_         => write_save, &
-                             use_masses_         => use_masses, &
-                             init_num_of_images_ => init_num_of_images, &
-                             use_fourier_        => use_fourier, &
-                             use_multistep_      => use_multistep, &
-                             CI_scheme_          => CI_scheme, &
-                             fixed_tan_          => fixed_tan, &
-                             free_energy_        => free_energy, &
-                             use_freezing_       => use_freezing, &
-                             k_max_              => k_max, & 
-                             k_min_              => k_min, &
-                             num_of_images_      => num_of_images, &
-                             first_last_opt_     => first_last_opt, &
-                             temp_req_           => temp_req, &
-                             path_thr_           => path_thr
+                             ds_              => ds, &
+                             write_save_      => write_save, &
+                             use_masses_      => use_masses, &
+                             use_multistep_   => use_multistep, &
+                             CI_scheme_       => CI_scheme, &
+                             fixed_tan_       => fixed_tan, &
+                             use_freezing_    => use_freezing, &
+                             k_max_           => k_max, & 
+                             k_min_           => k_min, &
+                             num_of_images_   => num_of_images, &
+                             first_last_opt_  => first_last_opt, &
+                             temp_req_        => temp_req, &
+                             path_thr_        => path_thr
   !
   USE noncollin_module, ONLY : i_cons, mcons, &
                                noncolin_  => noncolin, &
@@ -225,10 +222,8 @@ SUBROUTINE iosys()
                                refold_pos, upscale, pot_extrapolation,         &
                                wfc_extrapolation,                              &
                                num_of_images, path_thr, CI_scheme, opt_scheme, &
-                               use_masses, use_multistep, first_last_opt,      &
-                               init_num_of_images, temp_req, k_max, k_min,     &
-                               ds, use_fourier, use_freezing, fixed_tan,       &
-                               free_energy, write_save,                        &
+                               use_masses, first_last_opt, temp_req, k_max,    &
+                               k_min, ds, use_freezing, fixed_tan, write_save, &
                                w_1, w_2, trust_radius_max, trust_radius_min,   &
                                trust_radius_ini, bfgs_ndim
                                
@@ -980,12 +975,7 @@ SUBROUTINE iosys()
            WRITE( UNIT = stdout, &
                   FMT = '(5X,"warning: freezing cannot be used in langevin")' )
         !
-        IF ( use_multistep ) &
-           WRITE( UNIT = stdout, &
-                  FMT = '(5X,"warning: multistep cannot be used in langevin")' )
-        !
-        use_freezing  = .FALSE.
-        use_multistep = .FALSE.
+        use_freezing = .FALSE.
         !
      CASE default
         !
@@ -1154,30 +1144,20 @@ SUBROUTINE iosys()
   modenum_     = modenum
   xqq_         = xqq
   !
-  ! ... general "path" variables
+  ! ... "path"-optimization variables
   !
   ds_             = ds
   num_of_images_  = num_of_images
   first_last_opt_ = first_last_opt
   use_masses_     = use_masses
   write_save_     = write_save
-  free_energy_    = free_energy
-  use_fourier_    = use_fourier
   use_freezing_   = use_freezing
   temp_req_       = temp_req
   path_thr_       = path_thr 
-  !
-  ! ... NEB specific
-  !
-  CI_scheme_ = CI_scheme
-  k_max_     = k_max 
-  k_min_     = k_min
-  !
-  ! ... SMD specific
-  !
-  init_num_of_images_ = init_num_of_images
-  use_multistep_      = use_multistep
-  fixed_tan_          = fixed_tan 
+  CI_scheme_      = CI_scheme
+  k_max_          = k_max 
+  k_min_          = k_min
+  fixed_tan_      = fixed_tan 
   !
   ! ... BFGS specific
   !
@@ -1282,7 +1262,9 @@ SUBROUTINE iosys()
            !
         END SELECT
         !
-        pos(1:3*nat_,image) = RESHAPE( tau, (/ 3 * nat_ /) )
+        ! ... note that this positions array is in Bohr
+        !
+        pos(1:3*nat_,image) = RESHAPE( tau, (/ 3 * nat_ /) ) * alat
         !
      END DO 
      !

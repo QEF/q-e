@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum-ESPRESSO group
+! Copyright (C) 2002-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,10 +12,11 @@ MODULE path_routines
   ! ... This module contains some interface subroutines needed for
   ! ... the NEB implementation into the FPMD code
   !
+  ! ... Written by Carlo Sbraccia ( 2003-2006 )
+  !
   USE io_global,  ONLY : stdout
   USE kinds,      ONLY : DP
   USE constants,  ONLY : au, bohr_radius_angs, eV_to_kelvin
-  USE path_base,  ONLY : initialize_path, search_mep
   !
   PRIVATE
   !
@@ -202,7 +203,7 @@ MODULE path_routines
                !
             CASE( 'angstrom' )
                !
-               ! ... atomic positions in A
+               ! ... atomic positions in Angstrom
                !
                tau(:,1:nat) = tau(:,1:nat) / bohr_radius_angs
                !

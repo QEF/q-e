@@ -613,18 +613,10 @@ path_thr       REAL ( default = 0.05D0 eV / Angstrom )
                the simulation stops when the error ( the norm of the force 
 	       orthogonal to the path in eV/A ) is less than path_thr.
 
-use_fourier    LOGICAL ( default = .FALSE. )
-               In the string method the path is described by its 
-               Fourier components.
-
 use_freezing   LOGICAL ( default = .FALSE. )
                if. TRUE. the images are optimised according to their error:
                only those images with an error larger than half of the largest
                are optimised. The other images are kept frozen.
-               
-free_energy    LOGICAL ( default = .FALSE. )
-               Used in the evaluation of the free-energy profile with
-               finite-temperature string dynamics.
 
 !
 ! ... keywords used only in meta-dynamics calculations

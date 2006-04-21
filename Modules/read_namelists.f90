@@ -368,31 +368,21 @@ MODULE read_namelists_module
        wfc_extrapolation = 'none'
        !
        !
-       ! ... defaults for "path" optimisations
+       ! ... defaults for "path" optimisations variables
        !
-       num_of_images   = 0
-       first_last_opt  = .FALSE.
-       use_masses      = .FALSE.       
-       write_save      = .FALSE.
-       use_fourier     = .FALSE.
-       use_freezing    = .FALSE.
-       opt_scheme      = 'quick-min'
-       temp_req        = 0.D0
-       ds              = 1.D0
-       path_thr        = 0.05D0
-       !
-       ! ... NEB specific
-       !
-       CI_scheme = 'no-CI'
-       k_max     = 0.1D0
-       k_min     = 0.1D0
-       !
-       ! ... SMD specific
-       !
-       init_num_of_images = 3
-       use_multistep      = .FALSE.
-       fixed_tan          = .FALSE.
-       free_energy        = .FALSE.
+       num_of_images  = 0
+       first_last_opt = .FALSE.
+       use_masses     = .FALSE.       
+       write_save     = .FALSE.
+       use_freezing   = .FALSE.
+       opt_scheme     = 'quick-min'
+       temp_req       = 0.D0
+       ds             = 1.D0
+       path_thr       = 0.05D0
+       CI_scheme      = 'no-CI'
+       k_max          = 0.1D0
+       k_min          = 0.1D0
+       fixed_tan      = .FALSE.
        !
        ! ... BFGS defaults
        !
@@ -846,12 +836,8 @@ MODULE read_namelists_module
        CALL mp_bcast( num_of_images,      ionode_id )
        CALL mp_bcast( first_last_opt,     ionode_id )
        CALL mp_bcast( use_masses,         ionode_id )
-       CALL mp_bcast( init_num_of_images, ionode_id )
-       CALL mp_bcast( use_multistep,      ionode_id )
-       CALL mp_bcast( use_fourier,        ionode_id )
        CALL mp_bcast( use_freezing,       ionode_id )
        CALL mp_bcast( fixed_tan,          ionode_id )
-       CALL mp_bcast( free_energy,        ionode_id )
        CALL mp_bcast( write_save,         ionode_id )
        CALL mp_bcast( CI_scheme,          ionode_id )
        CALL mp_bcast( opt_scheme,         ionode_id )

@@ -13,8 +13,7 @@ SUBROUTINE stop_run( flag )
   ! ... Close all files and synchronize processes before stopping.
   !
   USE io_global,          ONLY : stdout, ionode
-  USE control_flags,      ONLY : lpath, lneb, lsmd, lconstrain, &
-                                 lcoarsegrained
+  USE control_flags,      ONLY : lpath, lconstrain, lcoarsegrained
   USE io_files,           ONLY : prefix
   USE environment,        ONLY : environment_end
   USE path_variables,     ONLY : path_deallocation
@@ -39,15 +38,7 @@ SUBROUTINE stop_run( flag )
   !
   IF ( lcoarsegrained ) CALL deallocate_metadyn_vars()
   !
-  IF ( lneb ) THEN
-     !
-     CALL path_deallocation( 'neb' )
-     !
-  ELSE IF ( lsmd ) THEN
-     !
-     CALL path_deallocation( 'smd' )
-     !
-  END IF
+  IF ( lpath ) CALL path_deallocation()
   !
   CALL mp_barrier()
   !

@@ -24,7 +24,7 @@ PROGRAM pwscf
   USE check_stop,       ONLY : check_stop_init
   USE path_base,        ONLY : initialize_path, search_mep
   USE metadyn_base,     ONLY : metadyn_init
-  USE path_io_routines, ONLY : io_path_start, io_path_stop
+  USE path_io_routines, ONLY : io_path_start, io_path_stop, path_summary
   !
   IMPLICIT NONE
   !
@@ -73,10 +73,10 @@ PROGRAM pwscf
      !
      CALL io_path_start()
      !
-     CALL initialize_path( 'PW' )
+     CALL initialize_path()
      !
-     ! ... this routine does all the "string" job
-     !   
+     CALL path_summary()
+     !
      CALL search_mep()
      !
      CALL io_path_stop()

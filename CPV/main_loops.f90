@@ -67,7 +67,7 @@ SUBROUTINE neb_loop( )
   !
   USE path_base,        ONLY : initialize_path, search_mep
   USE path_routines,    ONLY : iosys_path
-  USE path_io_routines, ONLY : io_path_start, io_path_stop
+  USE path_io_routines, ONLY : io_path_start, io_path_stop, path_summary
   !
   IMPLICIT NONE
   !
@@ -75,9 +75,9 @@ SUBROUTINE neb_loop( )
   !
   CALL io_path_start()
   !
-  CALL initialize_path( 'FP' )
+  CALL initialize_path()
   !
-  ! ... this routine does all the NEB job
+  CALL path_summary()
   !
   CALL search_mep()
   !

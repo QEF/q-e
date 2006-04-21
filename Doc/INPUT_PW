@@ -728,24 +728,11 @@ use_masses     LOGICAL ( default = .FALSE. )
                If. TRUE. the optimisation of the path is performed using 
                mass-weighted coordinates.
 
-use_fourier    LOGICAL ( default = .FALSE. )
-               In the string method the path is described by its 
-               Fourier components.
-
-use_multistep  LOGICAL ( default = .FALSE. )
-               In the string method images are sequentially added to the path: 
-               new images are added as soon as the previous path is converged 
-               (this starting from 3 images up to num_of_images).
-
 use_freezing   LOGICAL ( default = .FALSE. )
                If. TRUE. the images are optimised according to their error:
                only those images with an error larger than half of the largest
                are optimised. The other images are kept frozen.
-               
-free_energy    LOGICAL ( default = .FALSE. )
-               Used in the evaluation of the free-energy profile with
-               finite-temperature string dynamics.
-               
+
 write_save     LOGICAL ( default = .FALSE. )
                used to write the prefix.save file for each image ( needed for
                post-processing )

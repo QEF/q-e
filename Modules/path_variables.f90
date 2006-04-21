@@ -19,8 +19,6 @@ MODULE path_variables
   !
   SAVE
   !
-  INTEGER, PARAMETER :: history_ndim = 8
-  !
   ! ... "general" variables :
   !
   LOGICAL :: &
@@ -29,15 +27,12 @@ MODULE path_variables
   LOGICAL :: &
        first_last_opt,           &! if .TRUE. the first and the last image
                                   !           are optimised too.
-       use_fourier,              &! if .TRUE. a Fourier representation of
-                                  !           the path is used
        use_multistep,            &! if .TRUE. a multistep algorithm is used 
                                   !           in smd optimization
        use_masses,               &! if .TRUE. mass weighted coordinates are 
                                   !           used
        write_save,               &! if .TRUE. the save file is written for each
                                   !           image
-       free_energy,              &! if .TRUE. a free-energy calculations is done
        fixed_tan,                &! if. TRUE. the projection is done using the
                                   !           tangent of the average path
        use_freezing,             &! if .TRUE. images are optimised according
@@ -45,13 +40,9 @@ MODULE path_variables
        tune_load_balance          ! if .TRUE. the load balance for image
                                   !           parallelisation is tuned at 
                                   !           runtime
-  LOGICAL, PARAMETER :: &
-       use_precond = .FALSE.      ! if .TRUE. a preconditioned gradient is used
   INTEGER :: &
        dim,                      &! dimension of the configuration space
        num_of_images,            &! number of images
-       init_num_of_images,       &! number of images used in the initial
-                                  ! discretization (SMD only)
        deg_of_freedom,           &! number of degrees of freedom 
                                   ! ( dim - #( of fixed coordinates ) )
        suspended_image            ! last image for which scf has not been
@@ -97,7 +88,6 @@ MODULE path_variables
   REAL (DP) :: &
        k_max,                    &! 
        k_min,                    &!
-       Eref,                     &!
        Emax,                     &!
        Emin                       !
   !
@@ -106,26 +96,11 @@ MODULE path_variables
   REAL(DP), ALLOCATABLE :: &
        elastic_grad(:),          &! elastic part of the gradients
        mass(:),                  &! atomic masses
-       k(:),                     &! elastic constants
-       react_coord(:)             ! the reaction coordinate (in bohr)
+       k(:)                       ! elastic constants
   REAL(DP), ALLOCATABLE :: &
        posold(:,:),              &! old positions (for the quick-min)
        grad(:,:),                &!
-       precond_grad(:,:),        &!
        lang(:,:)                  ! langevin random force
-  !
-  ! ... "smd specific" variables :
-  !
-  INTEGER :: &
-       num_of_modes               ! number of modes
-  INTEGER :: &
-       Nft,                      &! number of discretization points in the
-                                  ! discrete fourier transform
-       Nft_smooth                 ! smooth real-space grid
-  REAL(DP) :: &
-       ft_coeff                   ! normalization in fourier transformation
-  REAL(DP), ALLOCATABLE :: &
-       ft_pos(:,:)                ! fourier components of the path
   !
   ! ... Y. Kanai variabiles for combined smd/cp dynamics :
   !
@@ -162,61 +137,41 @@ MODULE path_variables
   CONTAINS
      !
      !----------------------------------------------------------------------
-     SUBROUTINE path_allocation( method )
+     SUBROUTINE path_allocation()
        !----------------------------------------------------------------------
        !
        IMPLICIT NONE
        !
-       CHARACTER (LEN=*), INTENT(IN) :: method
-       !
-       !
        ALLOCATE( pos( dim, num_of_images ) )
        !
-       ALLOCATE( posold(       dim, num_of_images ) ) 
-       ALLOCATE( grad(         dim, num_of_images ) )
-       ALLOCATE( precond_grad( dim, num_of_images ) )
-       ALLOCATE( grad_pes(     dim, num_of_images ) )
-       ALLOCATE( tangent(      dim, num_of_images ) )
+       ALLOCATE( posold(   dim, num_of_images ) ) 
+       ALLOCATE( grad(     dim, num_of_images ) )
+       ALLOCATE( grad_pes( dim, num_of_images ) )
+       ALLOCATE( tangent(  dim, num_of_images ) )
        !
-       ALLOCATE( react_coord( num_of_images ) )
-       ALLOCATE( pes(         num_of_images ) )
-       ALLOCATE( k(           num_of_images ) )
-       ALLOCATE( error(       num_of_images ) )
-       ALLOCATE( climbing(    num_of_images ) )
-       ALLOCATE( frozen(      num_of_images ) )
+       ALLOCATE( pes(      num_of_images ) )
+       ALLOCATE( k(        num_of_images ) )
+       ALLOCATE( error(    num_of_images ) )
+       ALLOCATE( climbing( num_of_images ) )
+       ALLOCATE( frozen(   num_of_images ) )
        !
        ALLOCATE( mass(         dim ) )
        ALLOCATE( elastic_grad( dim ) )
        !
-       IF ( method == "smd" ) THEN
-          !
-          ALLOCATE( ft_pos( dim, ( Nft - 1 ) ) )
-          !
-          IF ( llangevin ) THEN
-             !
-             ALLOCATE( lang( dim, num_of_images ) )
-             !
-          END IF
-          !
-       END IF
+       ALLOCATE( lang( dim, num_of_images ) )
        !
      END SUBROUTINE path_allocation     
      !
      !
      !----------------------------------------------------------------------
-     SUBROUTINE path_deallocation( method )
+     SUBROUTINE path_deallocation()
        !----------------------------------------------------------------------
        !
        IMPLICIT NONE
        !
-       CHARACTER (LEN=*), INTENT(IN) :: method
-       !
-       !
        IF ( ALLOCATED( pos ) )          DEALLOCATE( pos )
        IF ( ALLOCATED( posold ) )       DEALLOCATE( posold )
        IF ( ALLOCATED( grad ) )         DEALLOCATE( grad )
-       IF ( ALLOCATED( precond_grad ) ) DEALLOCATE( precond_grad )
-       IF ( ALLOCATED( react_coord ) )  DEALLOCATE( react_coord )
        IF ( ALLOCATED( pes ) )          DEALLOCATE( pes )
        IF ( ALLOCATED( grad_pes ) )     DEALLOCATE( grad_pes )
        IF ( ALLOCATED( k ) )            DEALLOCATE( k )
@@ -226,18 +181,7 @@ MODULE path_variables
        IF ( ALLOCATED( error ) )        DEALLOCATE( error )
        IF ( ALLOCATED( climbing ) )     DEALLOCATE( climbing )
        IF ( ALLOCATED( frozen ) )       DEALLOCATE( frozen )
-       !
-       IF ( method == "smd" ) THEN
-          !
-          IF ( ALLOCATED( ft_pos ) )    DEALLOCATE( ft_pos )
-          !
-          IF ( llangevin ) THEN
-             !
-             IF ( ALLOCATED( lang ) )   DEALLOCATE( lang )
-             !
-          END IF
-          !
-       END IF
+       IF ( ALLOCATED( lang ) )         DEALLOCATE( lang )
        !
      END SUBROUTINE path_deallocation
      !
