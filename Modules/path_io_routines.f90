@@ -18,6 +18,8 @@ MODULE path_io_routines
   !
   USE kinds,      ONLY : DP
   USE constants,  ONLY : pi, au, bohr_radius_angs, eV_to_kelvin
+  USE io_global,  ONLY : meta_ionode, meta_ionode_id
+  USE mp,         ONLY : mp_bcast
   !
   USE basic_algebra_routines
   !
@@ -84,7 +86,7 @@ MODULE path_io_routines
        !
        CALL io_global_start( mpime, root )
        !
-       ! ... stdout is reconnected to standard output
+       ! ... stdout is reconnected to standard output unit
        !
        stdout = 6
        !
@@ -105,7 +107,6 @@ MODULE path_io_routines
                                     llangevin
        USE path_formats,     ONLY : summary_fmt
        USE io_files,         ONLY : iunpath
-       USE io_global,        ONLY : meta_ionode
        !
        IMPLICIT NONE
        !
@@ -191,8 +192,6 @@ MODULE path_io_routines
                                           suspended_image, pos, pes, grad_pes, &
                                           lquick_min, posold, Emax, Emin,      &
                                           Emax_index
-       USE io_global,              ONLY : meta_ionode, meta_ionode_id
-       USE mp,                     ONLY : mp_bcast
        USE path_reparametrisation, ONLY : spline_interpolation
        !
        IMPLICIT NONE
@@ -451,7 +450,6 @@ MODULE path_io_routines
                                     posold, frozen, lquick_min
        USE path_formats,     ONLY : energy, restart_first, restart_others, &
                                     quick_min
-       USE io_global,        ONLY : meta_ionode
        !
        IMPLICIT NONE
        !
@@ -646,7 +644,6 @@ MODULE path_io_routines
                                     tangent, dim, error
        USE io_files,         ONLY : iundat, iunint, iunxyz, iunaxsf, &
                                     dat_file, int_file, xyz_file, axsf_file
-       USE io_global,        ONLY : meta_ionode
        !
        IMPLICIT NONE
        !
@@ -813,7 +810,6 @@ MODULE path_io_routines
                                   activation_energy, pes, pos, frozen, &
                                   CI_scheme, Emax_index
        USE path_formats,   ONLY : run_info, run_output
-       USE io_global,      ONLY : meta_ionode
        !
        IMPLICIT NONE
        !

@@ -18,7 +18,8 @@ MODULE path_reparametrisation
   !
   USE kinds,     ONLY : DP
   USE io_files,  ONLY : iunpath
-  USE io_global, ONLY : meta_ionode
+  USE io_global, ONLY : meta_ionode, meta_ionode_id
+  USE mp,        ONLY : mp_bcast
   !
   USE basic_algebra_routines
   !
@@ -49,34 +50,40 @@ MODULE path_reparametrisation
       INTEGER  :: i, ni, nf
       !
       !
-      IF ( ANY( climbing(:) ) ) THEN
+      IF ( meta_ionode ) THEN
          !
-         ni = 1
-         !
-         DO i = 2, nim
+         IF ( ANY( climbing(:) ) ) THEN
             !
-            IF ( .NOT. climbing(i) ) CYCLE
+            ni = 1
             !
-            nf = i
+            DO i = 2, nim
+               !
+               IF ( .NOT. climbing(i) ) CYCLE
+               !
+               nf = i
+               !
+               CALL spline_interpolation( pos, ni, nf )
+               !
+               ni = nf
+               !
+            END DO
+            !
+            nf = nim
             !
             CALL spline_interpolation( pos, ni, nf )
             !
-            ni = nf
+         ELSE
             !
-         END DO
-         !
-         nf = nim
-         !
-         CALL spline_interpolation( pos, ni, nf )
-         !
-      ELSE
-         !
-         ni = 1
-         nf = nim
-         !
-         CALL spline_interpolation( pos, ni, nf )
+            ni = 1
+            nf = nim
+            !
+            CALL spline_interpolation( pos, ni, nf )
+            !
+         END IF
          !
       END IF
+      !
+      CALL mp_bcast( pos, meta_ionode_id )
       !
       RETURN
       !

@@ -16,8 +16,9 @@ MODULE path_opt_routines
   !
   USE kinds,          ONLY : DP
   USE constants,      ONLY : eps8, eps16
-  USE path_variables, ONLY : ds
-  USE path_variables, ONLY : pos, grad
+  USE path_variables, ONLY : ds, pos, grad
+  USE io_global,      ONLY : meta_ionode, meta_ionode_id
+  USE mp,             ONLY : mp_bcast
   !
   USE basic_algebra_routines
   !
@@ -39,7 +40,13 @@ MODULE path_opt_routines
        !
        INTEGER, INTENT(IN) :: index
        !
-       pos(:,index) = pos(:,index) - ds * grad(:,index) + lang(:,index)
+       IF ( meta_ionode ) THEN
+          !
+          pos(:,index) = pos(:,index) - ds * grad(:,index) + lang(:,index)
+          !
+       END IF
+       !
+       CALL mp_bcast( pos, meta_ionode_id )
        !
        RETURN
        !
@@ -53,7 +60,13 @@ MODULE path_opt_routines
        !
        INTEGER, INTENT(IN) :: index
        !
-       pos(:,index) = pos(:,index) - ds*ds * grad(:,index)
+       IF ( meta_ionode ) THEN
+          !
+          pos(:,index) = pos(:,index) - ds*ds * grad(:,index)
+          !
+       END IF
+       !
+       CALL mp_bcast( pos, meta_ionode_id )
        !
        RETURN
        !
@@ -77,39 +90,46 @@ MODULE path_opt_routines
        REAL(DP), PARAMETER :: max_step = 0.6D0  ! in bohr
        !
        !
-       ALLOCATE( vel( dim ), force_versor( dim ), step( dim ) )
-       !
-       vel(:) = pos(:,index) - posold(:,index)
-       !
-       norm_grad = norm( grad(:,index) )
-       !
-       norm_vel = norm( vel(:) )
-       !
-       IF ( norm_grad > eps16 .AND. norm_vel > eps16 ) THEN
+       IF ( meta_ionode ) THEN
           !
-          force_versor(:) = - grad(:,index) / norm_grad
+          ALLOCATE( vel( dim ), force_versor( dim ), step( dim ) )
           !
-          projection = ( vel(:) .dot. force_versor(:) )
+          vel(:) = pos(:,index) - posold(:,index)
           !
-          vel(:) = MAX( 0.D0, projection ) * force_versor(:)
+          norm_grad = norm( grad(:,index) )
           !
-       ELSE
+          norm_vel = norm( vel(:) )
           !
-          vel(:) = 0.D0
+          IF ( norm_grad > eps16 .AND. norm_vel > eps16 ) THEN
+             !
+             force_versor(:) = - grad(:,index) / norm_grad
+             !
+             projection = ( vel(:) .dot. force_versor(:) )
+             !
+             vel(:) = MAX( 0.D0, projection ) * force_versor(:)
+             !
+          ELSE
+             !
+             vel(:) = 0.D0
+             !
+          END IF
+          !
+          posold(:,index) = pos(:,index)
+          !
+          step(:) = vel(:) - ds**2 * grad(:,index)
+          !
+          norm_step = norm( step(:) )
+          !
+          step(:) = step(:) / norm_step
+          !
+          pos(:,index) = pos(:,index) + step(:) * MIN( norm_step, max_step )
+          !
+          DEALLOCATE( vel, force_versor, step )
           !
        END IF
        !
-       posold(:,index) = pos(:,index)
-       !
-       step(:) = vel(:) - ds**2 * grad(:,index)
-       !
-       norm_step = norm( step(:) )
-       !
-       step(:) = step(:) / norm_step
-       !
-       pos(:,index) = pos(:,index) + step(:) * MIN( norm_step, max_step )
-       !
-       DEALLOCATE( vel, force_versor, step )
+       CALL mp_bcast( pos,    meta_ionode_id )
+       CALL mp_bcast( posold, meta_ionode_id )
        !
        RETURN
        !
@@ -124,8 +144,6 @@ MODULE path_opt_routines
        USE control_flags,  ONLY : lsmd
        USE io_files,       ONLY : broy_file, iunbroy, iunpath
        USE path_variables, ONLY : dim, frozen, tangent, nim => num_of_images
-       USE io_global,      ONLY : meta_ionode, meta_ionode_id
-       USE mp,             ONLY : mp_bcast
        !
        IMPLICIT NONE
        !
@@ -147,17 +165,17 @@ MODULE path_opt_routines
        ALLOCATE( s( dim*nim, broyden_ndim ) )
        ALLOCATE( t( dim*nim ) )
        !
-       g = 0.D0
-       t = 0.D0
+       g(:) = 0.D0
+       t(:) = 0.D0
        !
        DO i = 1, nim
           !
-          I_in  = ( i - 1 ) * dim + 1
+          I_in  = ( i - 1 )*dim + 1
           I_fin = i * dim
           !
-          IF ( lsmd ) t(I_in:I_fin) = tangent(:,i)
-          !
           IF ( frozen(i) ) CYCLE
+          !
+          IF ( lsmd ) t(I_in:I_fin) = tangent(:,i)
           !
           g(I_in:I_fin) = grad(:,i)
           !

@@ -17,8 +17,10 @@ MODULE path_base
   ! ... Written by Carlo Sbraccia ( 2003-2006 )
   !
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : iunpath
   USE constants, ONLY : eps32, pi, au, bohr_radius_angs, eV_to_kelvin
+  USE io_files,  ONLY : iunpath
+  USE io_global, ONLY : meta_ionode, meta_ionode_id
+  USE mp,        ONLY : mp_bcast
   !
   USE basic_algebra_routines
   !
@@ -157,7 +159,13 @@ MODULE path_base
       !
       IF ( restart_mode == "restart" ) THEN
          !
-         INQUIRE( FILE = path_file, EXIST = file_exists )
+         IF ( meta_ionode ) THEN
+            !
+            INQUIRE( FILE = path_file, EXIST = file_exists )
+            !
+         END IF
+         !
+         CALL mp_bcast( file_exists, meta_ionode_id )
          !
          IF ( .NOT. file_exists ) restart_mode = "from_scratch"
          !
@@ -224,7 +232,6 @@ MODULE path_base
       USE cell_base,        ONLY : alat
       USE path_formats,     ONLY : summary_fmt
       USE io_files,         ONLY : iunpath
-      USE io_global,        ONLY : meta_ionode
       !
       IMPLICIT NONE
       !
@@ -234,63 +241,63 @@ MODULE path_base
       REAL(DP), ALLOCATABLE :: pos_n(:,:), dr(:,:), image_spacing(:)
       !
       !
-      ALLOCATE( pos_n( dim, num_of_images ) )
-      ALLOCATE( dr( dim, input_images - 1 ) )
-      ALLOCATE( image_spacing( input_images - 1 ) )
-      !
-      DO i = 1, input_images - 1
-         !
-         dr(:,i) = ( pos(:,i+1) - pos(:,i) )
-         !
-         image_spacing(i) = norm( dr(:,i) )
-         !
-      END DO
-      !
-      path_length = SUM( image_spacing(:) )
-      !
-      DO i = 1, input_images - 1
-         !
-         dr(:,i) = dr(:,i) / image_spacing(i)
-         !
-      END DO
-      !
-      pos_n(:,1) = pos(:,1)
-      !
-      i = 1
-      s = 0.D0
-      !
-      DO j = 2, num_of_images - 1
-         !
-         s = s + path_length / DBLE( num_of_images - 1 )
-         !
-         IF ( s > image_spacing(i) ) THEN
-            !
-            s = s - image_spacing(i)
-            !
-            i = i + 1
-            !
-         END IF   
-         !
-         IF ( i >= input_images ) &
-            CALL errore( 'initialize_path', 'i >= input_images', i )
-         !
-         pos_n(:,j) = pos(:,i) + s * dr(:,i)
-         !
-      END DO
-      !
-      pos_n(:,num_of_images) = pos(:,input_images)
-      !
-      pos(:,:) = pos_n(:,:)
-      !
-      path_length = 0.D0
-      !
-      DO i = 1, num_of_images - 1
-         !
-         path_length = path_length + norm( pos(:,i+1) - pos(:,i) )
-         !
-      END DO
-      !
       IF ( meta_ionode ) THEN
+         !
+         ALLOCATE( pos_n( dim, num_of_images ) )
+         ALLOCATE( dr( dim, input_images - 1 ) )
+         ALLOCATE( image_spacing( input_images - 1 ) )
+         !
+         DO i = 1, input_images - 1
+            !
+            dr(:,i) = ( pos(:,i+1) - pos(:,i) )
+            !
+            image_spacing(i) = norm( dr(:,i) )
+            !
+         END DO
+         !
+         path_length = SUM( image_spacing(:) )
+         !
+         DO i = 1, input_images - 1
+            !
+            dr(:,i) = dr(:,i) / image_spacing(i)
+            !
+         END DO
+         !
+         pos_n(:,1) = pos(:,1)
+         !
+         i = 1
+         s = 0.D0
+         !
+         DO j = 2, num_of_images - 1
+            !
+            s = s + path_length / DBLE( num_of_images - 1 )
+            !
+            IF ( s > image_spacing(i) ) THEN
+               !
+               s = s - image_spacing(i)
+               !
+               i = i + 1
+               !
+            END IF   
+            !
+            IF ( i >= input_images ) &
+               CALL errore( 'initialize_path', 'i >= input_images', i )
+            !
+            pos_n(:,j) = pos(:,i) + s * dr(:,i)
+            !
+         END DO
+         !
+         pos_n(:,num_of_images) = pos(:,input_images)
+         !
+         pos(:,:) = pos_n(:,:)
+         !
+         path_length = 0.D0
+         !
+         DO i = 1, num_of_images - 1
+            !
+            path_length = path_length + norm( pos(:,i+1) - pos(:,i) )
+            !
+         END DO
          !
          WRITE( UNIT = iunpath, &
                  FMT = '(5X,"initial path length",&
@@ -300,9 +307,12 @@ MODULE path_base
                 FMT = '(5X,"initial inter-image distance",T35," = ",F7.4, &
                        &" bohr")' ) path_length / DBLE( num_of_images - 1 )
          !
+         DEALLOCATE( image_spacing, dr, pos_n )
+         !
       END IF
       !
-      DEALLOCATE( image_spacing, dr, pos_n )
+      CALL mp_bcast( pos,         meta_ionode_id )
+      CALL mp_bcast( path_length, meta_ionode_id )
       !
       RETURN
       !
@@ -436,40 +446,46 @@ MODULE path_base
       INTEGER :: i
       !
       !
-      CALL elastic_constants()
-      !
-      gradient_loop: DO i = 1, num_of_images
+      IF ( meta_ionode ) THEN
          !
-         IF ( ( i > 1 ) .AND. ( i < num_of_images ) ) THEN
+         CALL elastic_constants()
+         !
+         gradient_loop: DO i = 1, num_of_images
             !
-            ! ... elastic gradient only along the path ( variable elastic
-            ! ... consatnt is used ) NEB recipe
-            !
-            elastic_grad = tangent(:,i) * 0.5D0 * &
+            IF ( ( i > 1 ) .AND. ( i < num_of_images ) ) THEN
+               !
+               ! ... elastic gradient only along the path ( variable elastic
+               ! ... consatnt is used ) NEB recipe
+               !
+               elastic_grad = tangent(:,i) * 0.5D0 * &
                        ( ( k(i) + k(i-1) ) * norm( pos(:,i) - pos(:,(i-1)) ) - &
                          ( k(i) + k(i+1) ) * norm( pos(:,(i+1)) - pos(:,i) ) )
+               !
+            END IF
             !
-         END IF
-         !
-         ! ... total gradient on each image ( climbing image is used if needed )
-         ! ... only the component of the pes gradient orthogonal to the path is 
-         ! ... taken into account
-         !
-         grad(:,i) = grad_pes(:,i) / SQRT( mass(:) )
-         !
-         IF ( climbing(i) ) THEN
+            ! ... total gradient on each image ( climbing image is used if 
+            ! ... required ) only the component of the pes gradient orthogonal
+            ! ... to the path is used
             !
-            grad(:,i) = grad(:,i) - 2.D0 * tangent(:,i) * &
-                                    ( grad(:,i) .dot. tangent(:,i) )
-            ! 
-         ELSE IF ( ( i > 1 ) .AND. ( i < num_of_images ) ) THEN
+            grad(:,i) = grad_pes(:,i) / SQRT( mass(:) )
             !
-            grad(:,i) = elastic_grad + grad(:,i) - &
-                        tangent(:,i) * ( grad(:,i) .dot. tangent(:,i) )
+            IF ( climbing(i) ) THEN
+               !
+               grad(:,i) = grad(:,i) - 2.D0 * tangent(:,i) * &
+                                       ( grad(:,i) .dot. tangent(:,i) )
+               !
+            ELSE IF ( ( i > 1 ) .AND. ( i < num_of_images ) ) THEN
+               !
+               grad(:,i) = elastic_grad + grad(:,i) - &
+                           tangent(:,i) * ( grad(:,i) .dot. tangent(:,i) )
+               !
+            END IF
             !
-         END IF
+         END DO gradient_loop
          !
-      END DO gradient_loop
+      END IF
+      !
+      CALL mp_bcast( grad, meta_ionode_id )
       !
       RETURN
       !
@@ -491,47 +507,54 @@ MODULE path_base
       INTEGER :: i
       !
       !
-      grad(:,:) = 0.D0
-      lang(:,:) = 0.D0
-      !
-      ! ... we project pes gradients and gaussian noise
-      !
-      DO i = 1, num_of_images
+      IF ( meta_ionode ) THEN
          !
-         IF ( llangevin ) THEN
-            !
-            ! ... the random term used in langevin dynamics is generated here
-            !
-            lang(:,i) = gauss_dist( 0.D0, SQRT( 2.D0*temp_req*ds ), dim )
-            !
-            lang(:,i) = lang(:,i) * DBLE( RESHAPE( if_pos, (/ dim /) ) )
-            !
-         END IF
+         grad(:,:) = 0.D0
+         lang(:,:) = 0.D0
          !
-         grad(:,i) = grad_pes(:,i) / SQRT( mass(:) )
+         ! ... we project pes gradients and gaussian noise
          !
-         IF ( climbing(i) ) THEN
-            !
-            grad(:,i) = grad(:,i) - &
-                        2.D0 * tangent(:,i) * ( tangent(:,i) .dot. grad(:,i) )
-            ! 
-         ELSE IF ( ( i > 1 ) .AND. ( i < num_of_images ) ) THEN
-            !
-            ! ... projection of the pes gradients 
-            !
-            grad(:,i) = grad(:,i) - &
-                        tangent(:,i) * ( tangent(:,i) .dot. grad(:,i) )
+         DO i = 1, num_of_images
             !
             IF ( llangevin ) THEN
                !
-               lang(:,i) = lang(:,i) - &
-                           tangent(:,i) * ( tangent(:,i) .dot. lang(:,i) )
+               ! ... the random term used in langevin dynamics is generated here
+               !
+               lang(:,i) = gauss_dist( 0.D0, SQRT( 2.D0*temp_req*ds ), dim )
+               !
+               lang(:,i) = lang(:,i) * DBLE( RESHAPE( if_pos, (/ dim /) ) )
                !
             END IF
             !
-         END IF
+            grad(:,i) = grad_pes(:,i) / SQRT( mass(:) )
+            !
+            IF ( climbing(i) ) THEN
+               !
+               grad(:,i) = grad(:,i) - 2.D0 * &
+                           tangent(:,i) * ( tangent(:,i) .dot. grad(:,i) )
+               ! 
+            ELSE IF ( ( i > 1 ) .AND. ( i < num_of_images ) ) THEN
+               !
+               ! ... projection of the pes gradients 
+               !
+               grad(:,i) = grad(:,i) - &
+                           tangent(:,i) * ( tangent(:,i) .dot. grad(:,i) )
+               !
+               IF ( llangevin ) THEN
+                  !
+                  lang(:,i) = lang(:,i) - &
+                              tangent(:,i) * ( tangent(:,i) .dot. lang(:,i) )
+                  !
+               END IF
+               !
+            END IF
+            !
+         END DO
          !
-      END DO
+      END IF
+      !
+      CALL mp_bcast( grad, meta_ionode_id )
+      CALL mp_bcast( lang, meta_ionode_id )
       !
       RETURN
       !
@@ -552,11 +575,17 @@ MODULE path_base
       INTEGER :: i
       !
       !
-      DO i = 1, num_of_images
+      IF ( meta_ionode ) THEN
          !
-         ntan(:,i) = real_space_tangent( i )
+         DO i = 1, num_of_images
+            !
+            ntan(:,i) = real_space_tangent( i )
+            !
+         END DO
          !
-      END DO
+      END IF
+      !
+      CALL mp_bcast( ntan, meta_ionode_id )
       !
       RETURN
       !
@@ -569,9 +598,7 @@ MODULE path_base
       USE path_variables, ONLY : pos, posold, num_of_images, grad, &
                                  use_freezing, first_last_opt, path_thr, &
                                  error, frozen, lquick_min
-      USE mp_global,      ONLY : nimage, inter_image_comm
-      USE mp,             ONLY : mp_bcast
-      USE io_global,      ONLY : meta_ionode, meta_ionode_id
+      USE mp_global,      ONLY : nimage
       !
       IMPLICIT NONE
       !
@@ -603,34 +630,34 @@ MODULE path_base
          !
       END IF   
       !
-      DO i = 1, num_of_images
+      IF ( meta_ionode ) THEN
          !
-         ! ... the error is given by the largest component of the gradient 
-         ! ... vector ( PES + SPRINGS in the neb case )
+         DO i = 1, num_of_images
+            !
+            ! ... the error is given by the largest component of the gradient 
+            ! ... vector ( PES + SPRINGS in the neb case )
+            !
+            error(i) = MAXVAL( ABS( grad(:,i) ) ) / bohr_radius_angs * au
+            !
+         END DO
          !
-         error(i) = MAXVAL( ABS( grad(:,i) ) ) / bohr_radius_angs * au
+         err_max = MAXVAL( error(N_in:N_fin), 1 )
          !
-      END DO
-      !
-      err_max = MAXVAL( error(N_in:N_fin), 1 )
-      !
-      IF ( use_freezing ) THEN
+         IF ( use_freezing ) THEN
+            !
+            frozen(N_in:N_fin) = ( error(N_in:N_fin) < &
+                                   MAX( 0.5D0 * err_max, path_thr ) )
+            !
+         END IF
          !
-         frozen(N_in:N_fin) = ( error(N_in:N_fin) < &
-                                MAX( 0.5D0 * err_max, path_thr ) )
-         !
-      END IF
-      !
-      IF ( nimage > 1 .AND. use_freezing ) THEN
-         !
-         IF ( meta_ionode ) THEN
+         IF ( nimage > 1 .AND. use_freezing ) THEN
             !
             ! ... in the case of image-parallelisation the number of images
             ! ... to be optimised must be larger than nimage
             !
             IF ( nimage > ( N_fin - N_in + 1 ) ) &
-               CALL errore( 'search_MEP', &
-                          & 'nimage is larger than the number of images ', 1 )
+               CALL errore( 'compute_error', 'nimage is ' // &
+                          & 'larger than the number of available images ', 1 )
             !
             find_scf_images: DO
                !
@@ -646,18 +673,21 @@ MODULE path_base
             !
          END IF
          !
-         CALL mp_bcast( frozen, meta_ionode_id, inter_image_comm )
+         IF ( use_freezing .AND. lquick_min ) THEN
+            !
+            ! ... the old positions of the frozen images are set to the
+            ! ... present position (equivalent to resetting the velocity)
+            !
+            FORALL( i = N_in:N_fin, frozen(i) ) posold(:,i) = pos(:,i)
+            !
+         END IF
          !
       END IF
       !
-      IF ( use_freezing .AND. lquick_min ) THEN
-         !
-         ! ... the old positions of the frozen images are set to the present
-         ! ... position (equivalent to resetting the velocity)
-         !
-         FORALL( i = N_in:N_fin, frozen(i) ) posold(:,i) = pos(:,i)
-         !
-      END IF
+      CALL mp_bcast( error,   meta_ionode_id )
+      CALL mp_bcast( err_max, meta_ionode_id )
+      CALL mp_bcast( frozen,  meta_ionode_id )
+      CALL mp_bcast( posold,  meta_ionode_id )
       !
       IF ( PRESENT( err_out ) ) err_out = err_max
       !
@@ -816,10 +846,10 @@ MODULE path_base
       USE path_variables,   ONLY : conv_path, istep_path, nstep_path,  &
                                    suspended_image, activation_energy, &
                                    err_max, pes, climbing, CI_scheme,  &
-                                   Emax_index, fixed_tan, pos, tangent
+                                   Emax_index, fixed_tan, pos, tangent, &
+                                   num_of_images
       USE path_io_routines, ONLY : write_restart, write_dat_files, write_output
       USE check_stop,       ONLY : check_stop_now
-      USE io_global,        ONLY : meta_ionode
       USE path_formats,     ONLY : scf_iter_fmt
       !
       USE path_reparametrisation
@@ -827,6 +857,7 @@ MODULE path_base
       IMPLICIT NONE
       !
       LOGICAL :: stat
+      INTEGER :: i
       !
       REAL(DP), EXTERNAL :: get_clock
       !
@@ -983,7 +1014,6 @@ MODULE path_base
       !
       USE input_parameters, ONLY : num_of_images_inp => num_of_images
       USE control_flags,    ONLY : lneb, lsmd
-      USE io_global,        ONLY : meta_ionode
       USE path_variables,   ONLY : path_thr, istep_path, nstep_path, &
                                    conv_path, suspended_image, &
                                    num_of_images, llangevin
