@@ -27,7 +27,9 @@ program pw2wannier90
    CHARACTER(len=256) :: outdir
    ! these are in wannier module.....-> integer :: ispinw, ikstart, ikstop, iknum
  
-   namelist / inputpp / outdir, prefix, spin_component, wan_mode, seedname
+   namelist / inputpp / outdir, prefix, spin_component, wan_mode, &
+                        seedname, write_unk, write_am, wvfn_formatted
+
    !
    call start_postproc (nd_nmbr)
    !
@@ -38,6 +40,9 @@ program pw2wannier90
    seedname = 'wannier'
    spin_component = 'none'
    wan_mode = 'standalone'
+   wvfn_formatted = .false.
+   write_unk = .false.
+   write_am = .true.
    !
    !     reading the namelist inputpp
    !
@@ -318,12 +323,6 @@ subroutine read_nnkp
           call errore('read_nnkp',' wrong excluded band index ', 1)
      excluded_band(indexb)=.true.
    enddo
-   wvfn_formatted = .false.
-   write_unk = .false.
-   write_am = .true.
-
-   call scan_file_to('flow_control')
-   read(iun_nnkp,*) write_am, write_unk, wvfn_formatted
 
    close (iun_nnkp)
    return
@@ -379,6 +378,9 @@ subroutine compute_mmn
    integer, allocatable     :: igkq(:)
    complex(DP)              :: mmn, ZDOTC, phase1
    real(DP)                 :: aa, arg, g_(3)
+   character (len=9)        :: cdate,ctime
+   character (len=60)       :: header
+   logical                  :: any_uspp
 
    allocate( phase(nrxxs), aux(npwx), evcq(npwx,nbnd), igkq(npwx) )
    
@@ -392,8 +394,12 @@ subroutine compute_mmn
    !
    !   USPP
    !
-   CALL init_us_1
-   allocate ( becp(nkb,nbnd),becp2(nkb,nbnd))
+   any_uspp = ANY(tvanp(1:ntyp))
+   !
+   if(any_uspp) then
+      CALL init_us_1
+      allocate ( becp(nkb,nbnd),becp2(nkb,nbnd))
+   end if
    !
    !     qb is  FT of Q(r) 
    !
@@ -419,27 +425,35 @@ subroutine compute_mmn
       write (*,'(i3,12f8.4)')  ik, qg((ik-1)*nnb+1:ik*nnb)
    enddo 
    !
-   allocate( ylm(nbt,lmaxq*lmaxq), qgm(nbt) )
-   allocate( qb (nkb, nkb, ntyp, nbt) )
+   !  USPP
    !
-   call ylmr2 (lmaxq*lmaxq, nbt, dxk, qg, ylm)
-   qg(:) = sqrt(qg(:)) * tpiba
-   !
-   do nt = 1, ntyp
-      if (tvanp (nt) ) then 
-         do ih = 1, nh (nt)
-            do jh = 1, nh (nt)
-               CALL qvan2 (nbt, ih, jh, nt, qg, qgm, ylm)
-               qb (ih, jh, nt, 1:nbt) = omega * qgm(1:nbt)
+   if(any_uspp) then
+
+      allocate( ylm(nbt,lmaxq*lmaxq), qgm(nbt) )
+      allocate( qb (nkb, nkb, ntyp, nbt) )
+      !
+      call ylmr2 (lmaxq*lmaxq, nbt, dxk, qg, ylm)
+      qg(:) = sqrt(qg(:)) * tpiba
+      !
+      do nt = 1, ntyp
+         if (tvanp (nt) ) then 
+            do ih = 1, nh (nt)
+               do jh = 1, nh (nt)
+                  CALL qvan2 (nbt, ih, jh, nt, qg, qgm, ylm)
+                  qb (ih, jh, nt, 1:nbt) = omega * qgm(1:nbt)
+               enddo 
             enddo 
-         enddo 
-      endif 
-   enddo 
-   !
-   deallocate (qg, qgm, ylm )
-   !
+         endif 
+      enddo 
+      !
+      deallocate (qg, qgm, ylm )
+      !
+   end if
    write (stdout,*) "MMN"
-   write (iun_mmn,*) mmn_tot
+   CALL date_and_tim( cdate, ctime )
+   header='Created on '//cdate//' at '//ctime
+   write (iun_mmn,*) header
+   !write (iun_mmn,*) mmn_tot
    write (iun_mmn,*) nbnd-nexband, iknum, nnb 
    !
    allocate( Mkb(nbnd,nbnd) )
@@ -455,9 +469,11 @@ subroutine compute_mmn
       !
       !  USPP
       !
-      call init_us_2 (npw, igk, xk(1,ik), vkb)
-      ! below we compute the product of beta functions with |psi> 
-      call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+      if(any_uspp) then
+         call init_us_2 (npw, igk, xk(1,ik), vkb)
+         ! below we compute the product of beta functions with |psi> 
+         call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+      end if
       !
       !
       !do ib=1,nnb(ik)
@@ -475,44 +491,49 @@ subroutine compute_mmn
          !
          !  USPP
          !
-         call init_us_2 (npwq, igkq, xk(1,ikp), vkb)
-         ! below we compute the product of beta functions with |psi> 
-         call ccalbec (nkb, npwx, npwq, nbnd, becp2, vkb, evcq)
+         if(any_uspp) then
+            call init_us_2 (npwq, igkq, xk(1,ikp), vkb)
+            ! below we compute the product of beta functions with |psi> 
+            call ccalbec (nkb, npwx, npwq, nbnd, becp2, vkb, evcq)
+         end if
          !
          !
          Mkb(:,:) = (0.0d0,0.0d0) 
-         ijkb0 = 0
-         do nt = 1, ntyp
-            if ( tvanp(nt) ) then
-               do na = 1, nat
-                  !
-                  arg = DOT_PRODUCT( dxk(:,ind), tau(:,na) ) * tpi 
-                  phase1 = CMPLX ( COS(arg), -SIN(arg) )
-                  !
-                  if ( ityp(na) == nt ) then
-                     do jh = 1, nh(nt)
-                        jkb = ijkb0 + jh
-                        do ih = 1, nh(nt)
-                           ikb = ijkb0 + ih
-                           !
-                           do m = 1,nbnd
-                           do n = 1,nbnd
-                           Mkb(m,n) = Mkb(m,n) + &
-                                  phase1 * qb(ih,jh,nt,ind) * &
-                                  CONJG( becp(ikb,m) ) * becp2(jkb,n) 
-                           enddo
-                           enddo
-                        enddo !ih
-                     enddo !jh
-                     ijkb0 = ijkb0 + nh(nt)
-                  endif  !ityp
-               enddo  !nat 
-            else  !tvanp
-               do na = 1, nat
-                  if ( ityp(na) == nt ) ijkb0 = ijkb0 + nh(nt)
-               enddo
-            endif !tvanp
-         enddo !ntyp
+         !
+         if (any_uspp) then
+            ijkb0 = 0
+            do nt = 1, ntyp
+               if ( tvanp(nt) ) then
+                  do na = 1, nat
+                     !
+                     arg = DOT_PRODUCT( dxk(:,ind), tau(:,na) ) * tpi 
+                     phase1 = CMPLX ( COS(arg), -SIN(arg) )
+                     !
+                     if ( ityp(na) == nt ) then
+                        do jh = 1, nh(nt)
+                           jkb = ijkb0 + jh
+                           do ih = 1, nh(nt)
+                              ikb = ijkb0 + ih
+                              !
+                              do m = 1,nbnd
+                              do n = 1,nbnd
+                                 Mkb(m,n) = Mkb(m,n) + &
+                                     phase1 * qb(ih,jh,nt,ind) * &
+                                     CONJG( becp(ikb,m) ) * becp2(jkb,n) 
+                              enddo
+                              enddo
+                           enddo !ih
+                        enddo !jh
+                        ijkb0 = ijkb0 + nh(nt)
+                     endif  !ityp
+                  enddo  !nat 
+               else  !tvanp
+                  do na = 1, nat
+                     if ( ityp(na) == nt ) ijkb0 = ijkb0 + nh(nt)
+                  enddo
+               endif !tvanp
+            enddo !ntyp
+         end if ! any_uspp
          !
          !
 ! loops on bands
@@ -555,11 +576,12 @@ subroutine compute_mmn
 
       end do !ikp
    end do  !ik
-!
-   deallocate (becp, becp2, qb, Mkb, dxk)
-!
+
    close (iun_mmn)
-   deallocate( phase, aux, evcq, igkq )
+! 
+   deallocate (Mkb, dxk, phase, aux, evcq, igkq)
+   if(any_uspp) deallocate (becp, becp2, qb)
+!
    return
 end subroutine compute_mmn
 !
@@ -579,24 +601,37 @@ subroutine compute_amn
    use uspp,            only : nkb, vkb
    use becmod,          only : becp
    use wannier
+   USE ions_base,       only : nat, ntyp => nsp, ityp, tau
+   USE uspp_param,      ONLY : tvanp
+
    implicit none
    complex(DP) :: amn, ZDOTC
    complex(DP), allocatable :: sgf(:,:)
-   integer :: amn_tot, ik, ibnd, ibnd1, iw,i
-   integer :: ikevc
+   integer :: amn_tot, ik, ibnd, ibnd1, iw,i, ikevc, nt
+   character (len=9)  :: cdate,ctime
+   character (len=60) :: header
+   logical            :: any_uspp
 
    !call read_gf_definition.....>   this is done at the begin
+
+   any_uspp =ANY (tvanp(1:ntyp)) 
 
    iun_amn = find_free_unit()
    open (unit=iun_amn, file=TRIM(seedname)//".amn",form='formatted')
    amn_tot = iknum * nbnd * n_wannier
    write (stdout,*) "AMN"
-   write (iun_amn,*) amn_tot
+   CALL date_and_tim( cdate, ctime ) 
+   header='Created on '//cdate//' at '//ctime
+   write (iun_amn,*) header 
+   !write (iun_amn,*) amn_tot
    write (iun_amn,*) nbnd-nexband,  iknum, n_wannier 
    !
    allocate( sgf(npwx,n_wannier))
-   allocate ( becp(nkb,n_wannier))
-   CALL init_us_1
+   !
+   if (any_uspp) then
+      allocate ( becp(nkb,n_wannier))
+      CALL init_us_1
+   end if
    !
    do ik=1,iknum
       write (stdout,*) ik
@@ -607,13 +642,16 @@ subroutine compute_amn
       !
       !  USPP
       !
-      call init_us_2 (npw, igk, xk (1, ik), vkb)
-!      ! below we compute the product of beta functions with trial func.
-      call ccalbec (nkb, npwx, npw, n_wannier, becp, vkb, gf)
-!      ! and we use it for the product S|trial_func>
-      call s_psi (npwx, npw, n_wannier, gf, sgf)  
-       ! sgf(:,:) = gf(:,:)
-       !
+      if(any_uspp) then
+         call init_us_2 (npw, igk, xk (1, ik), vkb)
+         ! below we compute the product of beta functions with trial func.
+         call ccalbec (nkb, npwx, npw, n_wannier, becp, vkb, gf)
+         ! and we use it for the product S|trial_func>
+         call s_psi (npwx, npw, n_wannier, gf, sgf)  
+      else
+         sgf(:,:) = gf(:,:)
+      endif
+      !
       do iw = 1,n_wannier
          ibnd1 = 0 
          do ibnd = 1,nbnd
@@ -625,9 +663,8 @@ subroutine compute_amn
          end do
       end do
    end do  ! k-points
-   deallocate (sgf)
-   deallocate (becp)
-   deallocate (csph)
+   deallocate (sgf,csph)
+   if(any_uspp) deallocate (becp)
    !
    close (iun_amn)
    return
@@ -756,7 +793,7 @@ subroutine write_plot
       spin=ispinw
       if(ispinw.eq.0) spin=1
       write(wfnname,200) ikevc, spin
-200   format ('UNK',i5,'.',i1)
+200   format ('UNK',i5.5,'.',i1)
       if(wvfn_formatted) then
         open (unit=iun_plot, file=wfnname,form='formatted')
         write(iun_plot,*)  nr1s,nr2s,nr3s, ikevc, nbnd-nexband
