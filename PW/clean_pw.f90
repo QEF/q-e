@@ -20,7 +20,8 @@ SUBROUTINE clean_pw( lflag )
   USE reciprocal_vectors,   ONLY : ig_l2g
   USE symme,                ONLY : irt
   USE vlocal,               ONLY : strf, vloc, vnew
-  USE wvfct,                ONLY : igk, igk_l2g, g2kin, et, wg, gamma_only
+  USE wvfct,                ONLY : igk, igk_l2g, g2kin, &
+                                   et, wg, btype, gamma_only
   USE force_mod,            ONLY : force
   USE scf,                  ONLY : rho, vr, vltot, rho_core, vrs
   USE wavefunctions_module, ONLY : evc, psic, evc_nc, psic_nc
@@ -30,7 +31,6 @@ SUBROUTINE clean_pw( lflag )
   USE extfield,             ONLY : forcefield
   USE sticks,               ONLY : dfftp, dffts  
   USE stick_base,           ONLY : sticks_deallocate
-  ! USE berry_phase,          ONLY : berry_closeup
   USE fft_types,            ONLY : fft_dlay_deallocate
   USE spin_orb,             ONLY : lspinorb, fcoef
   USE noncollin_module,     ONLY : deallocate_noncol
@@ -41,7 +41,6 @@ SUBROUTINE clean_pw( lflag )
   LOGICAL, INTENT(IN) :: lflag
     ! if .TRUE. deallocate_ions_base is called 
     ! ( for instance neb and smd do not call it )
-  !
   !
   ! ... arrays allocated in input.f90, read_file.f90 or setup.f90
   !
@@ -86,7 +85,7 @@ SUBROUTINE clean_pw( lflag )
     IF ( ASSOCIATED( nls ) )     DEALLOCATE( nls )
   END IF
   IF ( doublegrid .AND. gamma_only ) THEN
-     IF ( ASSOCIATED( nlsm ))    DEALLOCATE( nlsm )
+     IF ( ASSOCIATED( nlsm ) )   DEALLOCATE( nlsm )
   END IF
   !
   ! ... arrays allocated in allocate_locpot.f90 ( and never deallocated )
@@ -115,10 +114,14 @@ SUBROUTINE clean_pw( lflag )
   !
   CALL deallocate_noncol() 
   !
-  ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
+  ! ... arrays allocated in init_run.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( et ) )         DEALLOCATE( et )
   IF ( ALLOCATED( wg ) )         DEALLOCATE( wg )
+  IF ( ALLOCATED( btype ) )      DEALLOCATE( btype )
+  !
+  ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
+  !
   IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
   IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
   IF ( ALLOCATED( evc_nc ) )     DEALLOCATE( evc_nc )
@@ -135,10 +138,6 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated for dynamics
   !
   CALL deallocate_dyn_vars()
-  !
-  ! ... deallocate indices used in calculation of polarizability at gamma
-  !
-  ! CALL berry_closeup()
   !
   RETURN
   !

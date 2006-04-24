@@ -232,6 +232,9 @@ MODULE control_flags
     max_cg_iter,      &! maximum number of iterations in a CG di
     diis_buff,        &! dimension of the buffer in diis
     diis_ndim          ! dimension of reduced basis in DIIS
+  LOGICAL, PUBLIC :: &
+    diago_full_acc     ! if true all the empty eigenvalues have the same
+                       ! accuracy of the occupied ones
   !
   ! ... wfc and rho extrapolation
   !
@@ -274,11 +277,11 @@ MODULE control_flags
   ! ... miscellany
   !
   LOGICAL, PUBLIC :: &
-    use_para_diago = .FALSE.  ! if .TRUE. a parallel Householder algorithm can used
+    use_para_diago = .FALSE.  ! if .TRUE. a parallel Householder algorithm 
+                              ! can be used
   INTEGER, PUBLIC :: &
-   para_diago_dim = 0         ! minimum matrix dimension above which a parallel algorithm is used
-  LOGICAL, PUBLIC :: &
-    wg_set = .FALSE.   ! if .TRUE. the occupations are known
+    para_diago_dim = 0        ! minimum matrix dimension above which a parallel
+                              ! algorithm is used
   !
   INTEGER  :: ortho_max = 0    ! maximum number of iterations in routine ortho
   REAL(DP) :: ortho_eps = 0.D0 ! threshold for convergence in routine ortho

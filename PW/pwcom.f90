@@ -277,6 +277,9 @@ MODULE wvfct
        et(:,:),          &! eigenvalues of the hamiltonian
        wg(:,:),          &! the weight of each k point and band
        g2kin(:)           ! kinetic energy
+  INTEGER, ALLOCATABLE :: &
+       btype(:,:)         ! one if the corresponding state has to be
+                          ! converged to full accuracy, zero otherwise
   LOGICAL :: &
        gamma_only         ! if .TRUE. only half G vectors are used
   !

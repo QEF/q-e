@@ -19,7 +19,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE kinds,            ONLY : DP
   USE input_parameters, ONLY : startingwfc, startingpot, diago_thr_init
   USE constants,        ONLY : e2
-  USE control_flags,    ONLY : conv_elec, istep, history, wg_set, &
+  USE control_flags,    ONLY : conv_elec, istep, history, &
                                alpha0, beta0, ethr, pot_order
   USE check_stop,       ONLY : check_stop_now
   USE vlocal,           ONLY : strf
@@ -226,8 +226,6 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
            CALL update_pot()
            !
         END IF
-        !
-        wg_set = .FALSE.
         !
         ! ... self-consistency loop
         !

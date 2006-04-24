@@ -17,6 +17,7 @@ SUBROUTINE sum_band()
   !
   USE kinds,                ONLY : DP
   USE wvfct,                ONLY : gamma_only
+  USE control_flags,        ONLY : diago_full_acc
   USE cell_base,            ONLY : at, bg, omega
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE ener,                 ONLY : eband, demet, ef, ef_up, ef_dw
@@ -38,8 +39,7 @@ SUBROUTINE sum_band()
   USE wavefunctions_module, ONLY : evc, psic, evc_nc, psic_nc
   USE noncollin_module,     ONLY : noncolin, bfield, npol
   USE spin_orb,             ONLY : lspinorb, domag, so, fcoef
-  USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
-  USE control_flags,        ONLY : wg_set
+  USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, btype
   USE mp_global,            ONLY : intra_image_comm, me_image, &
                                    root_image, npool, my_pool_id
   USE mp,                   ONLY : mp_bcast
@@ -70,12 +70,16 @@ SUBROUTINE sum_band()
      !
      ! ... calculate weights for the insulator case
      !
-     if (two_fermi_energies) then
+     IF ( two_fermi_energies ) THEN
+        !
         CALL iweights( nks, wk, nbnd, nelup, et, ef_up, wg, 1, isk )
         CALL iweights( nks, wk, nbnd, neldw, et, ef_dw, wg, 2, isk )
-     else
+        !
+     ELSE
+        !
         CALL iweights( nks, wk, nbnd, nelec, et, ef,    wg, 0, isk )
-     end if
+        !
+     END IF
      !
   ELSE IF ( ltetra ) THEN
      !
@@ -86,13 +90,17 @@ SUBROUTINE sum_band()
      IF ( me_image == root_image ) THEN
         !
         IF (two_fermi_energies) THEN
-           CALL tweights( nkstot, nspin, nbnd, nelup, ntetra, tetra, et, &
-                ef_up, wg, 1, isk )
-           CALL tweights( nkstot, nspin, nbnd, neldw, ntetra, tetra, et, &
-                ef_dw, wg, 2, isk )
+           !
+           CALL tweights( nkstot, nspin, nbnd, nelup, &
+                          ntetra, tetra, et, ef_up, wg, 1, isk )
+           CALL tweights( nkstot, nspin, nbnd, neldw, &
+                          ntetra, tetra, et, ef_dw, wg, 2, isk )
+           !
         ELSE
-           CALL tweights( nkstot, nspin, nbnd, nelec, ntetra, tetra, et, &
-                ef, wg, 0, isk )
+           !
+           CALL tweights( nkstot, nspin, nbnd, nelec, &
+                          ntetra, tetra, et, ef, wg, 0, isk )
+           !
         END IF
        !
      END IF
@@ -103,17 +111,22 @@ SUBROUTINE sum_band()
      !
   ELSE IF ( lgauss ) THEN
      !
-     if (two_fermi_energies) then
-        CALL gweights( nks, wk, nbnd, nelup, degauss, ngauss, et, ef_up, &
-                       demet_up, wg, 1, isk)
-        CALL gweights( nks, wk, nbnd, neldw, degauss, ngauss, et, ef_dw, &
-                       demet_dw, wg, 2, isk)
+     IF ( two_fermi_energies ) THEN
+        !
+        CALL gweights( nks, wk, nbnd, nelup, degauss, &
+                       ngauss, et, ef_up, demet_up, wg, 1, isk )
+        CALL gweights( nks, wk, nbnd, neldw, degauss, &
+                       ngauss, et, ef_dw, demet_dw, wg, 2, isk )
+        !
         demet = demet_up + demet_dw
-        bfield(3)=(ef_up-ef_dw)*0.5d0
-     else
-        CALL gweights( nks, wk, nbnd, nelec, degauss, ngauss, et, ef, &
-                       demet,    wg, 0, isk)
-     end if
+        !
+        bfield(3) = 0.5D0*( ef_up - ef_dw )
+        !
+     ELSE
+        !
+        CALL gweights( nks, wk, nbnd, nelec, degauss, &
+                       ngauss, et, ef, demet, wg, 0, isk)
+     END IF
      !
   ELSE IF ( tfixed_occ ) THEN
      !
@@ -128,7 +141,7 @@ SUBROUTINE sum_band()
         !
      END IF
      !
-     ef = - 1.0D+20
+     ef = - 1.D+20
      !
      DO is = 1, nspin
         !
@@ -142,7 +155,26 @@ SUBROUTINE sum_band()
      !
   END IF
   !
-  wg_set = .TRUE.
+  IF ( diago_full_acc ) THEN
+     !
+     ! ... for diagonalization purposes all the bands are considered occupied
+     !
+     btype(:,:) = 1
+     !
+  ELSE
+     !
+     ! ... for diagonalization purposes a band is considered empty when its 
+     ! ... occupation is less than 1.0 %
+     !
+     btype(:,:) = 1
+     !
+     FORALL( ik = 1:nks, wk(ik) > 0.D0 ) 
+        !
+        WHERE( wg(:,ik) / wk(ik) < 0.01D0 ) btype(:,ik) = 0
+        !
+     END FORALL
+     !
+  END IF
   !
   ! ... Needed for LDA+U
   !
@@ -250,9 +282,9 @@ SUBROUTINE sum_band()
        ! ... local variables
        !
        REAL(DP) :: w1, w2
-       ! weights
+         ! weights
        REAL(DP), ALLOCATABLE :: becp(:,:)
-       ! contains <beta|psi>
+         ! contains <beta|psi>
        !
        !
        ALLOCATE( becp( nkb, nbnd ) )

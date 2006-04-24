@@ -22,8 +22,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
                                  num_of_images, istep_path, suspended_image
   USE constraints_module, ONLY : lagrange, target, init_constraint, &
                                  deallocate_constraint
-  USE control_flags,      ONLY : istep, nstep, history, wg_set, ethr, &
-                                 conv_ions, ldamped
+  USE control_flags,      ONLY : istep, nstep, history, ethr, conv_ions, ldamped
   USE cell_base,          ONLY : alat, at
   USE ener,               ONLY : etot
   USE ions_base,          ONLY : nat, tau, ityp
@@ -192,8 +191,6 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         CALL init_constraint( nat, tau, ityp, alat )
         !
         CALL init_run()
-        !
-        wg_set = .FALSE.
         !
         ! ... the new values of the order-parameters are set here
         !

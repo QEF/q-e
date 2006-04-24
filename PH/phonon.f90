@@ -27,7 +27,7 @@ PROGRAM phonon
   USE ions_base,       ONLY : nat
   USE lsda_mod,        ONLY : nspin
   USE gvect,           ONLY : nrx1, nrx2, nrx3
-  USE control_flags,   ONLY : restart, lphonon, tr2, wg_set, &
+  USE control_flags,   ONLY : restart, lphonon, tr2, &
                               mixing_beta, lscf, david, isolve
   USE qpoint,          ONLY : xq, nksq
   USE disp,            ONLY : nqs, x_q
@@ -211,15 +211,14 @@ PROGRAM phonon
         !
         ! ... Setting the values for the nscf run
         !
-        lphonon        = .TRUE.
-        lscf           = .FALSE.
-        restart        = .FALSE.
-        restart_bfgs   = .FALSE.
-        startingconfig = 'input'
-        startingpot    = 'file'
-        startingwfc    = 'atomic'
-        wg_set         = .false.
-        tot_magnetization=-1
+        lphonon           = .TRUE.
+        lscf              = .FALSE.
+        restart           = .FALSE.
+        restart_bfgs      = .FALSE.
+        startingconfig    = 'input'
+        startingpot       = 'file'
+        startingwfc       = 'atomic'
+        tot_magnetization = -1
         !
         ! ... tr2 is set to a default value of 1.D-8
         !

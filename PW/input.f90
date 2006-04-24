@@ -114,8 +114,8 @@ SUBROUTINE iosys()
   USE a2F,           ONLY : la2F_ => la2F
   !
   USE exx,           ONLY : x_gamma_extrapolation_ => x_gamma_extrapolation, &
-                            nqx1_   => nq1,  &
-                            nqx2_   => nq2,  &
+                            nqx1_   => nq1, &
+                            nqx2_   => nq2, &
                             nqx3_   => nq3
   !
   USE realus,        ONLY : tqr_ => tqr
@@ -126,16 +126,17 @@ SUBROUTINE iosys()
   !
   USE relax,         ONLY : epse, epsf, epsp, starting_scf_threshold
   !
-  USE control_flags, ONLY : diis_ndim, isolve, &
-                            max_cg_iter, diis_buff, david, imix, nmix, &
-                            iverbosity, tr2, niter, pot_order, wfc_order, &
-                            tolp_        => tolp, &
-                            upscale_     => upscale, &
-                            mixing_beta_ => mixing_beta, &
-                            nstep_       => nstep, &
-                            iprint_      => iprint, &
-                            nosym_       => nosym, &
-                            modenum_     => modenum, &
+  USE control_flags, ONLY : diis_ndim, isolve, max_cg_iter, diis_buff, david, &
+                            imix, nmix, iverbosity, tr2, niter, pot_order,    &
+                            wfc_order, &
+                            diago_full_acc_ => diago_full_acc, &
+                            tolp_           => tolp, &
+                            upscale_        => upscale, &
+                            mixing_beta_    => mixing_beta, &
+                            nstep_          => nstep, &
+                            iprint_         => iprint, &
+                            nosym_          => nosym, &
+                            modenum_        => modenum, &
                             reduce_io, langevin_rescaling, ethr, lscf, lbfgs, &
                             lmd, lpath, lneb, lsmd, lphonon, ldamped, lbands, &
                             lrescale_t, lmetadyn, lconstrain, lcoarsegrained, &
@@ -213,7 +214,8 @@ SUBROUTINE iosys()
                                mixing_ndim, mixing_fixed_ns, conv_thr,     &
                                diago_thr_init, diago_cg_maxiter,           &
                                diago_david_ndim, diago_diis_ndim,          &
-                               diagonalization, startingwfc, startingpot
+                               diagonalization, diago_full_acc,            &
+                               startingwfc, startingpot
   !
   ! ... IONS namelist
   !
@@ -333,22 +335,22 @@ SUBROUTINE iosys()
      !
   CASE DEFAULT
      !
-     CALL errore( ' iosys ',' occupations ' // TRIM( occupations ) // &
+     CALL errore( 'iosys','occupations ' // TRIM( occupations ) // &
                 & 'not implemented', 1 )
      !
   END SELECT
   !
   IF( nbnd < 1 ) &
-     CALL errore( ' iosys ', ' nbnd less than 1 ', nbnd )
+     CALL errore( 'iosys', 'nbnd less than 1', nbnd )
   !
   IF( nelec < 0 ) &
-     CALL errore( ' iosys ', ' nelec less than 0 ', 1 )
+     CALL errore( 'iosys', 'nelec less than 0', 1 )
   !
   IF ( nelup < 0 ) &
-     CALL errore( ' iosys ', ' nelup less than 0 ', 1 )
+     CALL errore( 'iosys', 'nelup less than 0', 1 )
   !
   IF ( neldw < 0 ) &
-     CALL errore( ' iosys ', ' neldw less than 0 ', 1 )
+     CALL errore( 'iosys', 'neldw less than 0', 1 )
   !
   SELECT CASE( nspin )
   CASE( 1 ) 
@@ -359,8 +361,8 @@ SUBROUTINE iosys()
      !
      lsda = .TRUE.
      IF ( noncolin ) &
-        CALL errore( ' iosys ', &
-                     ' noncolin .and. nspin==2 are conflicting flags ', 1 )
+        CALL errore( 'iosys', &
+                     'noncolin .and. nspin==2 are conflicting flags', 1 )
      !
   CASE( 4 )
      !
@@ -368,7 +370,7 @@ SUBROUTINE iosys()
      !
   CASE DEFAULT 
      !
-     CALL errore( ' iosys ', 'wrong input value for nspin ', 1 )
+     CALL errore( 'iosys', 'wrong input value for nspin', 1 )
      !
   END SELECT
   !
@@ -382,10 +384,10 @@ SUBROUTINE iosys()
      two_fermi_energies = .TRUE.
      !
      IF ( .NOT. lsda ) &
-        CALL errore( ' iosys ', ' fixed nelup/neldw requires nspin=2 ', 1 )
+        CALL errore( 'iosys', 'fixed nelup/neldw requires nspin=2', 1 )
      !
      IF ( ABS( nelup + neldw - nelec ) > 1.D-10 ) &
-        CALL errore( ' iosys ', ' nelup + neldw must be equal to nelec ', 1 )
+        CALL errore( 'iosys', 'nelup + neldw must be equal to nelec', 1 )
      !
      !
   END IF
@@ -420,7 +422,7 @@ SUBROUTINE iosys()
         !
      ELSE
         !
-        CALL errore( 'iosys',' constrained total magnetization ' // &
+        CALL errore( 'iosys','constrained total magnetization ' // &
                    & 'requires nspin=2 or 4 ', 1 )
         !
      END IF
@@ -428,7 +430,7 @@ SUBROUTINE iosys()
   CASE( 'atomic' )
      !
      IF ( nspin == 1 ) &
-        CALL errore( 'iosys',' constrained atomic magnetizations ' // &
+        CALL errore( 'iosys','constrained atomic magnetizations ' // &
                    & 'require nspin=2 or 4 ', 1 )
      !
      i_cons = 1
@@ -447,7 +449,7 @@ SUBROUTINE iosys()
   CASE( 'atomic direction' )
      !
      IF ( nspin == 1 ) &
-        CALL errore( 'iosys',' constrained atomic magnetization ' // &
+        CALL errore( 'iosys','constrained atomic magnetization ' // &
                    & 'directions require nspin=2 or 4 ', 1 )
      !
      i_cons = 2
@@ -462,7 +464,7 @@ SUBROUTINE iosys()
      !
   CASE DEFAULT
      !
-     CALL errore( 'iosys',' constrained magnetization ' // &
+     CALL errore( 'iosys','constrained magnetization ' // &
                 & TRIM( constrained_magnetization ) // 'not implemented', 1 )
      !
   END SELECT
@@ -504,7 +506,7 @@ SUBROUTINE iosys()
      dual = ecutrho / ecutwfc
      !
      IF ( dual <= 1.D0 ) &
-        CALL errore( ' iosys ', ' invalid dual? ', 1 )
+        CALL errore( 'iosys', 'invalid dual?', 1 )
      !
   END IF
   !
@@ -540,8 +542,8 @@ SUBROUTINE iosys()
      !
   CASE DEFAULT
      !
-     CALL errore( ' iosys ', &
-                & ' unknown restart_mode ' // TRIM( restart_mode ), 1 )
+     CALL errore( 'iosys', &
+                & 'unknown restart_mode ' // TRIM( restart_mode ), 1 )
      !
   END SELECT
   !
@@ -627,7 +629,7 @@ SUBROUTINE iosys()
         lbfgs = .TRUE.
         !
         IF ( epse <= 20.D0 * ( tr2 / upscale ) ) &
-           CALL errore( 'iosys ', 'required etot_conv_thr is too small:' // &
+           CALL errore( 'iosys', 'required etot_conv_thr is too small:' // &
                       & ' conv_thr must be reduced', 1 )   
         !
      CASE ( 'damp' )
@@ -639,7 +641,7 @@ SUBROUTINE iosys()
         !
      CASE DEFAULT
         !
-        CALL errore( 'iosys ', 'calculation=' // TRIM( calculation ) // &
+        CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
                    & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
                    & ' not supported', 1 )
         !
@@ -693,14 +695,14 @@ SUBROUTINE iosys()
         !
      CASE DEFAULT
         !
-        CALL errore( 'iosys ', 'calculation=' // TRIM( calculation ) // &
+        CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
                    & ': cell_dynamics=' // TRIM( cell_dynamics ) // &
                    & ' not supported', 1 )
         !
      END SELECT
      !
      IF ( TRIM( ion_dynamics ) /= 'damp' ) &
-        CALL errore( ' iosys ', 'calculation=' // TRIM( calculation ) // &
+        CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
                    & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
                    & ' not supported', 1 )
      !
@@ -728,14 +730,14 @@ SUBROUTINE iosys()
         !
      CASE DEFAULT
         !
-        CALL errore( 'iosys ', 'calculation=' // TRIM( calculation ) // &
+        CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
                    & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
                    & ' not supported', 1 )
         !
      END SELECT
      !
      IF ( TRIM( ion_dynamics ) /= 'beeman' ) &
-        CALL errore( 'iosys ', 'calculation=' // TRIM( calculation ) // &
+        CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
                    & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
                    & ' not supported', 1 )
      !
@@ -759,7 +761,7 @@ SUBROUTINE iosys()
      !
   CASE DEFAULT
      !
-     CALL errore( 'iosys ', ' calculation ' // &
+     CALL errore( 'iosys', 'calculation ' // &
                 & TRIM( calculation ) // ' not implemented', 1 )
      !
   END SELECT
@@ -800,7 +802,7 @@ SUBROUTINE iosys()
      !
   CASE ( 'diis' )
      !
-     call errore ( ' input',' diis diagonalization disabled', 1)
+     CALL errore( 'iosys', 'diis diagonalization disabled', 1 )
      isolve = 2
      !
      max_cg_iter = diago_cg_maxiter
@@ -867,7 +869,7 @@ SUBROUTINE iosys()
   !
   IF ( wfc_order > 0 .AND. noncolin ) THEN
      !
-     CALL errore( 'iosys ', &
+     CALL errore( 'iosys', &
                 & 'wfc extrapolation not implemented in the ' // &
                 & 'noncollinear case', 1 )
      !
@@ -878,16 +880,16 @@ SUBROUTINE iosys()
      IF ( two_fermi_energies ) THEN
         !
         IF ( ABS( NINT( nelup ) - nelup ) > 1.D-10 ) &
-           CALL errore( 'iosys ', &
-                      & 'fixed occupations requires integer nelup ', 1 )
+           CALL errore( 'iosys', &
+                      & 'fixed occupations requires integer nelup', 1 )
         IF ( ABS( NINT( neldw ) - neldw ) > 1.D-10 ) &
-           CALL errore( 'iosys ', &
-                      & 'fixed occupations requires integer neldw ', 1 )
+           CALL errore( 'iosys', &
+                      & 'fixed occupations requires integer neldw', 1 )
         !
      ELSE
         !
-        CALL errore( 'iosys ', &
-                   & 'fixed occupations and lsda need nelup and neldw ', 1 )
+        CALL errore( 'iosys', &
+                   & 'fixed occupations and lsda need nelup and neldw', 1 )
         !
      END IF
      !
@@ -911,7 +913,7 @@ SUBROUTINE iosys()
         !
      CASE DEFAULT
         !
-        CALL errore( 'iosys ', 'calculation=' // TRIM( calculation ) // &
+        CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
                    & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
                    & ' not supported', 1 )
         !
@@ -926,14 +928,14 @@ SUBROUTINE iosys()
      nstep_path = nstep
      !
      IF ( num_of_images < 2 ) &
-        CALL errore( 'iosys ', 'calculation=' // TRIM( calculation ) // &
+        CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
                    & ': num_of_images must be at least 2', 1 )
      !
      IF ( ( CI_scheme /= "no-CI"  ) .AND. &
           ( CI_scheme /= "auto"   ) .AND. &
           ( CI_scheme /= "manual" ) ) THEN
         !
-        CALL errore( 'iosys ', 'calculation=' // TRIM( calculation ) // &
+        CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
                    & ': unknown CI_scheme', 1 )  
         !   
      END IF
@@ -962,13 +964,13 @@ SUBROUTINE iosys()
         llangevin = .TRUE.
         !
         IF ( lneb ) &
-           CALL errore( 'iosys ','calculation=' // TRIM( calculation ) // &
+           CALL errore( 'iosys','calculation=' // TRIM( calculation ) // &
                       & ': langevin dynamics not implemented', 1 )
         !
         temp_req = temp_req / ( eV_to_kelvin * au )
         !
         IF ( temp_req <= 0.D0 ) &
-           CALL errore( 'iosys ','calculation=' // TRIM( calculation ) // &
+           CALL errore( 'iosys','calculation=' // TRIM( calculation ) // &
                       & ': tepm_req has not been set', 1 )
         !
         IF ( use_freezing ) &
@@ -979,7 +981,7 @@ SUBROUTINE iosys()
         !
      CASE default
         !
-        CALL errore( 'iosys ','calculation=' // TRIM( calculation ) // &
+        CALL errore( 'iosys','calculation=' // TRIM( calculation ) // &
                    & ': unknown opt_scheme', 1 )  
         !
      END SELECT             
@@ -1007,8 +1009,8 @@ SUBROUTINE iosys()
      !
   CASE DEFAULT
      !
-     CALL errore( ' iosys ', 'unknown ion_temperature ' // &
-                & TRIM( ion_temperature ), 1 )
+     CALL errore( 'iosys', &
+                & 'unknown ion_temperature ' // TRIM( ion_temperature ), 1 )
      !
   END SELECT
   !
@@ -1027,11 +1029,11 @@ SUBROUTINE iosys()
      !
   CASE( 'potential' )
      !
-     CALL errore( 'iosys ', 'potential mixing no longer implemented', 1 )
+     CALL errore( 'iosys', 'potential mixing no longer implemented', 1 )
      !
   CASE DEFAULT
      !
-     CALL errore( 'iosys ', 'unknown mixing ' // TRIM( mixing_mode ), 1 )
+     CALL errore( 'iosys', 'unknown mixing ' // TRIM( mixing_mode ), 1 )
      !
   END SELECT
   !
@@ -1054,10 +1056,10 @@ SUBROUTINE iosys()
   lstres = ( tstress .AND. lscf )
   !
   IF ( lberry .AND. npool > 1 ) &
-     CALL errore( 'iosys ', 'Berry Phase not implemented with pools ', 1 )
+     CALL errore( 'iosys', 'Berry Phase not implemented with pools', 1 )
   !
   IF ( lberry .AND. nproc_pool > 1 .AND. gdir /= 3 ) &
-     CALL errore( 'iosys ', 'Berry Phase in parallel only for gdir=3', 1 )
+     CALL errore( 'iosys', 'Berry Phase in parallel only for gdir=3', 1 )
   !
   ! ... Copy values from input module to PW internals
   !
@@ -1100,9 +1102,10 @@ SUBROUTINE iosys()
   nelec_   = nelec
   nelup_   = nelup
   neldw_   = neldw
-  tot_charge_ = tot_charge
+  !
+  tot_charge_        = tot_charge
   tot_magnetization_ = tot_magnetization
-  multiplicity_ = multiplicity
+  multiplicity_      = multiplicity
   !
   lspinorb_ = lspinorb
   noncolin_ = noncolin
@@ -1125,15 +1128,17 @@ SUBROUTINE iosys()
 #if defined (EXX)
   !
   x_gamma_extrapolation_ = x_gamma_extrapolation
-  nqx1_   = nqx1
-  nqx2_   = nqx2
-  nqx3_   = nqx3
+  !
+  nqx1_ = nqx1
+  nqx2_ = nqx2
+  nqx3_ = nqx3
   !
 #endif
   !
-  startingwfc_ = startingwfc
-  startingpot_ = startingpot
-  mixing_beta_ = mixing_beta
+  diago_full_acc_ = diago_full_acc
+  startingwfc_    = startingwfc
+  startingpot_    = startingpot
+  mixing_beta_    = mixing_beta
   !
   upscale_     = upscale
   delta_t_     = delta_t
@@ -1201,7 +1206,7 @@ SUBROUTINE iosys()
      !
   ELSE IF ( celldm_(1) /= 0.D0 .AND. a /= 0.D0 ) THEN
      !
-     CALL errore( 'input', ' do not specify both celldm and a,b,c!', 1 )
+     CALL errore( 'input', 'do not specify both celldm and a,b,c!', 1 )
      !
   END IF
   !
@@ -1257,8 +1262,8 @@ SUBROUTINE iosys()
            !
         CASE DEFAULT
            !
-           CALL errore( 'iosys ','atomic_positions=' // &
-                      & TRIM( atomic_positions ) // ' not implemented ', 1 )
+           CALL errore( 'iosys','atomic_positions=' // &
+                      & TRIM( atomic_positions ) // ' not implemented', 1 )
            !
         END SELECT
         !
@@ -1298,8 +1303,8 @@ SUBROUTINE iosys()
         !
      CASE DEFAULT
         !
-        CALL errore( 'iosys ','atomic_positions=' // &
-                   & TRIM( atomic_positions ) // ' not implemented ', 1 )
+        CALL errore( 'iosys','atomic_positions=' // &
+                   & TRIM( atomic_positions ) // ' not implemented', 1 )
         !
      END SELECT
      !
@@ -1357,7 +1362,7 @@ SUBROUTINE iosys()
      IF ( cell_factor_ <= 0.D0 ) cell_factor_ = 1.2D0
      !
      IF ( cmass <= 0.D0 ) &
-        CALL errore( 'readin', &
+        CALL errore( 'iosys', &
                    & 'vcsmd: a positive value for cell mass is required', 1 )
      !
   ELSE
@@ -1444,9 +1449,9 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   CALL read_cards_base( 'PW' )
   !
   IF ( .NOT. taspc ) &
-       CALL errore( 'cards ', 'atomic species info missing', 1 )
+     CALL errore( 'read_cards', 'atomic species info missing', 1 )
   IF ( .NOT. tapos ) &
-       CALL errore( 'cards ', 'atomic position info missing', 1 )
+     CALL errore( 'read_cards', 'atomic position info missing', 1 )
   !
   DO is = 1, ntyp
      !
@@ -1454,8 +1459,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
      psfile(is) = atom_pfile(is)
      atm(is)    = atom_label(is)
      !
-     IF ( amass(is) <= 0.D0 ) &
-        CALL errore( ' iosys ', ' invalid  mass ', is )
+     IF ( amass(is) <= 0.D0 ) CALL errore( 'read_cards', 'invalid  mass', is )
      !
   END DO
   !
@@ -1599,9 +1603,9 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   END IF
   !
   IF ( ibrav == 0 .AND. .NOT. tcell ) &
-     CALL errore( 'cards', 'ibrav=0: must read cell parameters', 1 )
+     CALL errore( 'read_cards', 'ibrav=0: must read cell parameters', 1 )
   IF ( ibrav /= 0 .AND. tcell ) &
-     CALL errore( 'cards', 'redundant data for cell parameters', 2 )
+     CALL errore( 'read_cards', 'redundant data for cell parameters', 2 )
   !
   RETURN
   !

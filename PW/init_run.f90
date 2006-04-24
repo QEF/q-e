@@ -12,7 +12,7 @@ SUBROUTINE init_run()
   USE ions_base,       ONLY : nat, tau, ityp
   USE klist,           ONLY : nkstot
   USE force_mod,       ONLY : force
-  USE wvfct,           ONLY : gamma_only, nbnd, et, wg
+  USE wvfct,           ONLY : gamma_only, nbnd, et, wg, btype
   USE control_flags,   ONLY : lmd
   USE dynamics_module, ONLY : allocate_dyn_vars
   !
@@ -39,10 +39,12 @@ SUBROUTINE init_run()
   CALL allocate_locpot()
   CALL allocate_wfc()
   !
-  ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ) )
+  ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ), btype( nbnd, nkstot ) )
   !
   et(:,:) = 0.D0
   wg(:,:) = 0.D0
+  !
+  btype(:,:) = 1
   !
   CALL openfil()
   !
@@ -55,7 +57,7 @@ SUBROUTINE init_run()
   !
   IF ( lmd ) CALL allocate_dyn_vars()
   !
-  CALL stop_clock ( 'init_run' )
+  CALL stop_clock( 'init_run' )
   !
   RETURN
   !

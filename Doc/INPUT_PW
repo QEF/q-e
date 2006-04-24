@@ -522,8 +522,15 @@ diago_diis_ndim
                INTEGER ( default = 3 )
                For DIIS: dimension of the reduced space.
 
+diago_full_acc 
+               LOGICAL ( default = .FALSE. )
+               If .TRUE. all the empty states are diagonalized at the same level
+               of accuracy of the occupied ones. Otherwise the empty states are
+               diagonalized using a larger threshold (this should not affect
+               toltal energy, forces, and other ground-state properties).
+
 efield         REAL ( default = 0.D0 )
-               For finite electric field calculations (lelfield == .true.), 
+               For finite electric field calculations (lelfield == .TRUE.), 
                it defines the intensity of the field in a.u.
 
 startingpot    CHARACTER

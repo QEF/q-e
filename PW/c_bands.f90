@@ -19,9 +19,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   ! ... c_bands_k()       : for arbitrary BZ sampling (general algorithm)
   ! ... test_exit_cond()  : the test on the iterative diagonalization
   !
-  !
   USE kinds,                ONLY : DP
-  USE constants,            ONLY : eps4
   USE io_global,            ONLY : stdout
   USE wvfct,                ONLY : gamma_only
   USE io_files,             ONLY : iunigk, nwordatwfc, iunat, iunwfc, nwordwfc, iunefield
@@ -31,9 +29,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE gvect,                ONLY : g, gstart, ecfixed, qcutz, q2sigma, nrxx, &
                                    nr1, nr2, nr3  
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
-                                   npw, current_k
+                                   npw, current_k, btype
   USE control_flags,        ONLY : diis_ndim, istep, ethr, lscf, max_cg_iter, &
-                                   isolve, reduce_io, wg_set
+                                   isolve, reduce_io
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE scf,                  ONLY : vltot
   USE lsda_mod,             ONLY : current_spin, lsda, isk
@@ -68,8 +66,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
     ! number of notconverged elements
   LOGICAL :: lrot
     ! .TRUE. if the wfc have already be rotated
-  INTEGER, ALLOCATABLE :: btype(:)
-    ! type of band: valence (1) or conduction (0)  
   !
   ! ... external functions
   !
@@ -87,8 +83,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
   END IF
   !
-  ! ... allocate arrays
-  !
   IF ( noncolin ) THEN
      !
      ALLOCATE( h_diag_nc( npwx, npol ) )
@@ -101,11 +95,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
   END IF
   !
-  ALLOCATE( btype( nbnd ) )       
+  IF ( lelfield ) ALLOCATE( evcel( npwx, nbnd ) )
   !
-  IF (lelfield) ALLOCATE (evcel(npwx,nbnd))
-  !
-
   IF ( gamma_only ) THEN
      !
      CALL c_bands_gamma()
@@ -114,9 +105,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
      CALL c_bands_k()
      !
-  END IF  
-  !
-  ! ... deallocate arrays
+  END IF
   !
   IF ( noncolin ) THEN
      !
@@ -130,11 +119,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
   END IF
   !
-  IF (lelfield) DEALLOCATE (evcel)
+  IF ( lelfield ) DEALLOCATE( evcel )
   !
-
-  DEALLOCATE( btype )
-  !       
   CALL stop_clock( 'c_bands' )  
   !
   RETURN
@@ -221,7 +207,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           ! ... read in wavefunctions from the previous iteration
           !
           IF ( nks > 1 .OR. .NOT. reduce_io ) &
-             call davcio( evc, nwordwfc, iunwfc, ik, -1 )
+             CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
           !
           ! ... Needed for LDA+U
           !
@@ -243,13 +229,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              END DO
              !
           END IF
-          !
-          btype(:) = 1
-          !
-          ! ... a band is considered empty when its occupation is less 
-          ! ... than 1.0 %  ( the occupation is known after the first step )
-          !
-          IF ( wg_set ) WHERE( wg(:,ik)*wk(ik) < 0.01D0 ) btype(:) = 0
           !
           IF ( isolve == 1 ) THEN
              !
@@ -276,7 +255,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                    !
                 END IF
                 !
-                CALL rcgdiagg( npwx, npw, nbnd, evc, et(1,ik), btype, &
+                CALL rcgdiagg( npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
                                h_diag, ethr, max_cg_iter, .NOT. lscf, &
                                notconv, cg_iter )
                 !
@@ -310,7 +289,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              RMMDIIS_loop: DO
                 !
                 CALL rdiisg( npw, npwx, nbnd, evc, &
-                             et(1,ik), btype, notconv, diis_iter, iter )
+                             et(1,ik), btype(1,ik), notconv, diis_iter, iter )
                 !  
                 avg_iter = avg_iter + diis_iter
                 !
@@ -345,10 +324,11 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              david_loop: DO
                 !
-                lrot = .NOT. wg_set
+                lrot = ( iter == 1 )
                 !
-                CALL regterg( npw, npwx, nbnd, nbndx, evc, ethr, okvan, &
-                              gstart, et(1,ik), btype, notconv, lrot, dav_iter )
+                CALL regterg( npw, npwx, nbnd, nbndx, evc, ethr, &
+                              okvan, gstart, et(1,ik), btype(1,ik), &
+                              notconv, lrot, dav_iter )
                 !
                 avg_iter = avg_iter + dav_iter
                 !
@@ -435,9 +415,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
        END IF
        !
-       ! ... allocate specific array for DIIS
-       !
-       !
        IF ( isolve == 0 ) THEN
           !
           WRITE( stdout, '(5X,"Davidson diagonalization with overlap")')
@@ -470,9 +447,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        k_loop: DO ik = 1, nks
           !
-          !read wave function for electric field
+          ! ... read wave function for electric field
           !
-          IF (lelfield) CALL davcio(evcel,nwordwfc,iunefield,ik,-1)
+          IF ( lelfield ) CALL davcio( evcel, nwordwfc, iunefield, ik, -1 )
           !
           current_k = ik
           !
@@ -532,13 +509,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
           END IF
           !
-          btype(:) = 1
-          !
-          ! ... a band is considered empty when its occupation is less 
-          ! ... than 1.0 %  ( the occupation is known after the first step )
-          !
-          IF ( wg_set ) WHERE( wg(:,ik)*wk(ik) < 0.01D0 ) btype(:) = 0
-          !
           IF ( isolve == 1 ) THEN
              !
              ! ... Conjugate-Gradient diagonalization
@@ -592,13 +562,13 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 !
                 IF ( noncolin ) THEN
                    !
-                   CALL ccgdiagg( npwx, npw, nbnd, evc_nc, et(1,ik), btype, &
-                                  h_diag_nc, ethr, max_cg_iter, .NOT. lscf, &
-                                  notconv, cg_iter )
+                   CALL ccgdiagg( npwx, npw, nbnd, evc_nc, et(1,ik), &
+                                  btype(1,ik), h_diag_nc, ethr, max_cg_iter, &
+                                  .NOT. lscf, notconv, cg_iter )
                    !
                 ELSE
                    !
-                   CALL ccgdiagg( npwx, npw, nbnd, evc, et(1,ik), btype, &
+                   CALL ccgdiagg( npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
                                   h_diag, ethr, max_cg_iter, .NOT. lscf, &
                                   notconv, cg_iter )
                    !
@@ -657,13 +627,13 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 IF ( noncolin ) THEN
                    !
                    CALL cdiisg_nc( npw, npwx, nbnd, diis_ndim, &
-                                   evc_nc, et(1,ik), ethr, btype, &
+                                   evc_nc, et(1,ik), ethr, btype(1,ik), &
                                    notconv, diis_iter, iter, npol )
                    !
                 ELSE
                    !
-                   CALL cdiisg( npw, npwx, nbnd, evc, &
-                                et(1,ik), btype, notconv, diis_iter, iter )
+                   CALL cdiisg( npw, npwx, nbnd, evc, et(1,ik), &
+                                btype(1,ik), notconv, diis_iter, iter )
                    !
                 END IF
                 !  
@@ -723,17 +693,19 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              david_loop: DO
                 !
-                lrot = .NOT. wg_set
+                lrot = ( iter == 1 )
                 !
                 IF ( noncolin ) THEN
                    !
-                   CALL cegterg( npw, npwx, nbnd, nbndx, evc_nc, ethr, okvan, &
-                                 et(1,ik), btype, notconv, lrot, dav_iter )
+                   CALL cegterg( npw, npwx, nbnd, nbndx, evc_nc, &
+                                 ethr, okvan, et(1,ik), btype(1,ik), &
+                                 notconv, lrot, dav_iter )
                    !
                 ELSE
                    !
-                   CALL cegterg( npw, npwx, nbnd, nbndx, evc, ethr, okvan, &
-                                 et(1,ik), btype, notconv, lrot, dav_iter )
+                   CALL cegterg( npw, npwx, nbnd, nbndx, evc, ethr, &
+                                 okvan, et(1,ik), btype(1,ik), notconv, &
+                                 lrot, dav_iter )
                    !
                 END IF
                 !

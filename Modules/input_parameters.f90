@@ -19,8 +19,7 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nsx, npkx, nspinx, &
-                         lqmax, nhclm, max_nconstr
+  USE parameters, ONLY : nsx, npkx, nspinx, lqmax, nhclm, max_nconstr
   !
   IMPLICIT NONE
   !
@@ -286,7 +285,6 @@ MODULE input_parameters
           wfcdir, max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
           pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, &
           wf_collect, printwfc, scradir,lelfield, nberrycyc, refg, tqr, tefield2
-
 
 !
 !=----------------------------------------------------------------------------=!
@@ -828,6 +826,8 @@ MODULE input_parameters
         INTEGER :: diago_diis_ndim = 10
           ! NOT used in FPMD
 
+        LOGICAL :: diago_full_acc = .FALSE.
+
         REAL(DP) :: conv_thr = 1.d-6
           ! convergence threshold in electronic ONLY minimizations
           ! NOT used in FPMD
@@ -908,8 +908,7 @@ MODULE input_parameters
           diago_thr_init, n_inner, fermi_energy, rotmass, occmass,     &
           rotation_damping, occupation_damping, rotation_dynamics,     &
           occupation_dynamics, tcg, maxiter, etresh, passop, epol,     &
-          efield, epol2, efield2
-
+          efield, epol2, efield2, diago_full_acc
 
 !
 !=----------------------------------------------------------------------------=!
