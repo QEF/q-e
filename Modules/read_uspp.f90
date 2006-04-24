@@ -14,7 +14,7 @@ MODULE read_uspp_module
   !     
   USE kinds, ONLY: DP
   USE parameters, ONLY: nchix, lmaxx, nbrx, ndmx, nsx, lqmax, nqfx
-  USE io_global, ONLY: stdout
+  USE io_global, ONLY: stdout, meta_ionode
   USE funct, ONLY: set_dft_from_name, dft_is_hybrid, dft_is_meta, &
        set_dft_from_indices
   !
@@ -365,7 +365,7 @@ CONTAINS
     !     for compatibility with rho_atc in the non-US case)
     !
     if (nlcc (is) ) then
-       rho_atc(1,is) = 0.0
+       rho_atc(1,is) = 0.D0
        do ir=2,mesh(is)
           rho_atc(ir,is) = rho_atc(ir,is)/4.0/3.14159265/r(ir,is)**2
        enddo
@@ -613,11 +613,15 @@ CONTAINS
     read( iunps, '(i5)',err=100, iostat=ios ) &
          pseudotype
     tvanp(is) = (pseudotype == 3)
-    if ( tvanp(is) ) then
-       WRITE( stdout,'('' RRKJ3 Ultrasoft PP for '',a2)') titleps(7:8)
+    
+    if ( tvanp(is) .AND. meta_ionode ) then
+       WRITE( stdout, &
+              '(/,5X,"RRKJ3 Ultrasoft PP for ",a2,/)') titleps(7:8)
     else
-       WRITE( stdout,'('' RRKJ3 norm-conserving PP for '',a2)') titleps(7:8)
+       WRITE( stdout, &
+              '(/,5X,"RRKJ3 norm-conserving PP for ",a2,/)') titleps(7:8)
     endif
+    
     read( iunps, '(2l5)',err=100, iostat=ios ) &
          rel, nlcc(is)
     read( iunps, '(4i5)',err=100, iostat=ios ) &
