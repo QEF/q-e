@@ -21,7 +21,8 @@ module wannier
    complex(DP), allocatable :: gf(:,:)  ! guding_function(npwx,n_wannier)
    integer               :: ispinw, ikstart, ikstop, iknum
    character(LEN=15)     :: wan_mode    ! running mode
-   logical               :: logwann, wvfn_formatted, write_unk, write_am
+   logical               :: logwann, wvfn_formatted, write_unk, &
+                            write_amn, write_mmn
    ! input data from nnkp file
    real(DP), allocatable :: center_w(:,:)     ! center_w(3,n_wannier)
    integer, allocatable  :: l_w(:), mr_w(:) ! l and mr of wannier (n_wannier) as from table 3.1,3.2 of spec.

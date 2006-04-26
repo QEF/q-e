@@ -28,7 +28,8 @@ program pw2wannier90
    ! these are in wannier module.....-> integer :: ispinw, ikstart, ikstop, iknum
  
    namelist / inputpp / outdir, prefix, spin_component, wan_mode, &
-                        seedname, write_unk, write_am, wvfn_formatted
+                        seedname, write_unk, write_amn, write_mmn, &
+                        wvfn_formatted
 
    !
    call start_postproc (nd_nmbr)
@@ -42,7 +43,8 @@ program pw2wannier90
    wan_mode = 'standalone'
    wvfn_formatted = .false.
    write_unk = .false.
-   write_am = .true.
+   write_amn = .true.
+   write_mmn = .true.
    !
    !     reading the namelist inputpp
    !
@@ -97,7 +99,7 @@ program pw2wannier90
       call ylm_expansion
       write(stdout,*)
       write(stdout,*)
-      if(write_am) then
+      if(write_amn) then
         write(stdout,*) ' ---------------'
         write(stdout,*) ' *** Compute  A '
         write(stdout,*) ' ---------------'
@@ -110,12 +112,19 @@ program pw2wannier90
         write(stdout,*) ' -----------------------------'
         write(stdout,*)
       endif
-      write(stdout,*) ' ---------------'
-      write(stdout,*) ' *** Compute  M '
-      write(stdout,*) ' ---------------'
-      write(stdout,*) 
-      call compute_mmn
-      write(stdout,*)
+      if(write_mmn) then
+        write(stdout,*) ' ---------------'
+        write(stdout,*) ' *** Compute  M '
+        write(stdout,*) ' ---------------'
+        write(stdout,*) 
+        call compute_mmn
+        write(stdout,*)
+      else
+        write(stdout,*) ' -----------------------------'
+        write(stdout,*) ' *** M matrix is not computed '
+        write(stdout,*) ' -----------------------------'
+        write(stdout,*)
+      endif
       write(stdout,*) ' ----------------'
       write(stdout,*) ' *** Write bands '
       write(stdout,*) ' ----------------'
@@ -146,15 +155,11 @@ program pw2wannier90
    if(wan_mode.eq.'library') then
    !
       !call setup_nnkp
-      call compute_mmn
-      if(write_am) then
-         call compute_amn
-      endif
+      if(write_mmn) call compute_mmn
+      if(write_amn) call compute_amn
       call write_band
       !call run_wannier
-      if(write_unk) then
-         call write_plot
-      endif 
+      if(write_unk) call write_plot
       call stop_pp
    !
    endif
@@ -190,6 +195,13 @@ subroutine read_nnkp
    integer numwan, numk, i, j
    real(DP) :: rlatt(3,3), glatt(3,3), xx(3), bohr, box, xnorm, znorm, coseno
    CHARACTER(LEN=80) :: line1, line2
+   logical :: have_nnkp
+
+   inquire(file=TRIM(seedname)//".nnkp",exist=have_nnkp)
+   if(.not. have_nnkp) then
+     write(stdout,*) ' Could not find the file '//TRIM(seedname)//'.nnkp'
+     stop
+   end if
 
    iun_nnkp = find_free_unit()
    open (unit=iun_nnkp, file=TRIM(seedname)//".nnkp",form='formatted')
