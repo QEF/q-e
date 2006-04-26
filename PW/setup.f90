@@ -932,6 +932,10 @@ SUBROUTINE check_para_diag_efficiency()
   !
   use_para_diago = .FALSE.
   !
+  ! ... *** PARALLEL DAVIDSON DISABLED ***
+  !
+  RETURN
+  !
 #if defined(__AIX)
   !
   ! ... *** not yet working on IBM ***
@@ -942,9 +946,9 @@ SUBROUTINE check_para_diag_efficiency()
   !
   IF ( isolve /= 0 .OR. nproc_pool == 1 ) RETURN
   !
-  m_min = nbnd / nproc_pool * nproc_pool
+  m_min = ( nbnd / nproc_pool ) * nproc_pool
   !
-  m = 100 / nproc_pool * nproc_pool
+  m = ( 100 / nproc_pool ) * nproc_pool
   !
   IF ( m > nbndx ) RETURN
   !
