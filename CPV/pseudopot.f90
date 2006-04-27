@@ -721,8 +721,8 @@ CONTAINS
       !
       LOGICAL, INTENT(IN) :: tpre
       !
-      INTEGER :: is, iv, l, il, ltmp, i0, ir, nr
-      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:)
+      INTEGER :: is, iv, l, il, ir, nr
+      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:)
       REAL(DP) :: xg, xrg
       !
       IF( ALLOCATED( betagx  ) ) DEALLOCATE( betagx )
@@ -739,7 +739,6 @@ CONTAINS
          if ( tpre ) then
             allocate( dfint( nr ) )
             allocate( djl  ( nr ) )
-            allocate( jltmp( nr ) )
          end if
          !
          allocate( fint ( nr ) )
@@ -747,16 +746,16 @@ CONTAINS
          !
          do iv = 1, nh(is)
             !
-            l = nhtol(iv,is) + 1
+            l = nhtol(iv,is)
             !
             do il = 1, mmx
                !
                xg = sqrt( refg * (il-1) )
-               call sph_bes ( nr, r(1,is), xg, l-1, jl )
+               call sph_bes ( nr, r(1,is), xg, l, jl )
 !
                if( tpre )then
                   !
-                  call tpre_bess(l,il,nr,is,xg,jl,djl,jltmp)
+                  call sph_dbes1 ( nr, r(1,is), xg, l, jl, djl)
                   !
                endif
                !
@@ -789,7 +788,6 @@ CONTAINS
          deallocate(fint)
          !
          if (tpre) then
-            deallocate(jltmp)
             deallocate(djl)
             deallocate(dfint)
          end if
@@ -815,7 +813,7 @@ CONTAINS
       USE uspp_param, ONLY: nh, kkbeta, betar, nhm, nbetam, nqlc, qqq, &
            lmaxq, nbeta, oldvan
       USE atom,       ONLY: r, numeric, rab
-      USE uspp,       ONLY: nhtol, indv
+      USE uspp,       ONLY: indv
       USE betax,      only: refg, qradx, mmx, dqradx
       USE cvan,       only: ish, nvb
       use gvecb,      only: ngb
@@ -824,10 +822,9 @@ CONTAINS
       !
       LOGICAL, INTENT(IN) :: tpre
       !
-      INTEGER :: is, iv, l, il, ltmp, i0, ir, jv, ijv, ierr
+      INTEGER :: is, iv, l, il, ir, jv, ijv, ierr
       INTEGER :: nr
-      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:), &
-           qrl(:,:,:)
+      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), qrl(:,:,:)
       REAL(DP) :: xg, xrg
 
       IF( ALLOCATED(  qradx ) ) DEALLOCATE(  qradx )
@@ -849,7 +846,6 @@ CONTAINS
          !
          IF ( tpre ) THEN
             ALLOCATE( djl  ( nr ) )
-            ALLOCATE( jltmp( nr ) )
             ALLOCATE( dfint( nr ) )
          END IF
          !
@@ -869,7 +865,7 @@ CONTAINS
                !
                if( tpre ) then
                   !
-                  call tpre_bess( l,il,nr,is,xg,jl,djl,jltmp)
+                  call sph_dbes1 ( nr, r(1,is), xg, l-1, jl, djl)
                   !
                endif
                !
@@ -916,7 +912,6 @@ CONTAINS
          DEALLOCATE ( fint  )
          !
          if ( tpre ) then
-            DEALLOCATE(jltmp)
             DEALLOCATE(djl)
             DEALLOCATE ( dfint )
          end if
@@ -944,8 +939,8 @@ CONTAINS
            lmaxq, nbeta, oldvan
       use uspp_param, only: lmaxkb
       USE atom,       ONLY: r, numeric, rab
-      USE uspp,       ONLY: nhtol, indv
-      use uspp,       only: qq, nhtolm, beta
+      USE uspp,       ONLY: indv
+      use uspp,       only: qq, beta
       USE betax,      only: refg, qradx, mmx, dqradx
       USE cvan,       only: ish, nvb
       use gvecb,      only: ngb
@@ -963,10 +958,9 @@ CONTAINS
       !
       LOGICAL, INTENT(IN) :: tpre
       !
-      INTEGER :: is, iv, l, il, ltmp, i0, ir, jv, ijv, ierr
-      INTEGER :: lp, ig, i,j, jj, nr
-      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:), &
-           qrl(:,:,:)
+      INTEGER :: is, iv, l, il, ir, jv, ijv, ierr
+      INTEGER :: ig, i,j, jj, nr
+      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), qrl(:,:,:)
       REAL(DP) :: xg, xrg, c, betagl, dbetagl, gg
       REAL(DP), ALLOCATABLE :: dqradb(:,:,:,:)
       REAL(DP), ALLOCATABLE :: ylmb(:,:), dylmb(:,:,:,:)
@@ -991,7 +985,6 @@ CONTAINS
          !
          IF ( tpre ) THEN
             ALLOCATE( djl  ( nr ) )
-            ALLOCATE( jltmp( nr ) )
             ALLOCATE( dfint( nr ) )
          END IF
          !
@@ -1012,7 +1005,7 @@ CONTAINS
                !
                if( tpre ) then
                   !
-                  call tpre_bess( l,il,nr,is,xg,jl,djl,jltmp)
+                  call sph_dbes1 ( nr, r(1,is), xg, l-1, jl, djl)
                   !
                endif
                !
@@ -1059,7 +1052,6 @@ CONTAINS
          DEALLOCATE ( fint  )
          !
          if ( tpre ) then
-            DEALLOCATE(jltmp)
             DEALLOCATE(djl)
             DEALLOCATE ( dfint )
          end if
@@ -1358,7 +1350,7 @@ CONTAINS
 
       LOGICAL, INTENT(IN) :: tpre
 
-      integer  is, l, lp, ig, ir, iv, jv, ijv, i,j, jj, ierr
+      integer  is, l, ig, ir, iv, jv, ijv, i,j, jj, ierr
       real(8), allocatable:: fint(:), jl(:), dqradb(:,:,:,:)
       real(8), allocatable:: ylmb(:,:), dylmb(:,:,:,:)
       complex(8), allocatable:: dqgbs(:,:,:)
@@ -1525,8 +1517,8 @@ CONTAINS
       REAL(DP), ALLOCATABLE ::  ylm(:,:), dylm(:,:,:,:)
       REAL(DP) :: c, gg, betagl, dbetagl
       INTEGER :: is, iv, lp, ig, jj, i, j, nr
-      INTEGER :: l, il, ltmp, i0, ir
-      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:)
+      INTEGER :: l, il, ir
+      REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:)
       REAL(DP), ALLOCATABLE :: betagx ( :, :, : ), dbetagx( :, :, : )
       REAL(DP) :: xg, xrg
 
@@ -1544,7 +1536,6 @@ CONTAINS
          if ( tpre ) then
             allocate( dfint( nr ) )
             allocate( djl  ( nr ) )
-            allocate( jltmp( nr ) )
          end if
          !
          allocate( fint ( nr ) )
@@ -1552,16 +1543,16 @@ CONTAINS
          !
          do iv = 1, nh(is)
             !
-            l = nhtol(iv,is) + 1
+            l = nhtol(iv,is)
             !
             do il = 1, ngw
                !
                xg = sqrt( g( il ) * tpiba * tpiba )
-               call sph_bes (nr, r(1,is), xg, l-1, jl )
+               call sph_bes (nr, r(1,is), xg, l, jl )
                !
                if( tpre )then
                   !
-                  call tpre_bess( l,il,nr,is,xg,jl,djl,jltmp)
+                  call sph_dbes1 ( nr, r(1,is), xg, l, jl, djl)
                   !
                endif
                !
@@ -1594,7 +1585,6 @@ CONTAINS
          deallocate(fint)
          !
          if (tpre) then
-            deallocate(jltmp)
             deallocate(djl)
             deallocate(dfint)
          end if
@@ -1740,188 +1730,44 @@ CONTAINS
     end subroutine fill_qrl
 
 !
-    SUBROUTINE tpre_bess( l,il,nr,is,xg,jl,djl,jltmp)
+    SUBROUTINE sph_dbes1 ( nr, r, xg, l, jl, djl )
       !
-      !  this routine setups the arrays needed for the stress
-      !
-      USE atom, ONLY: r
+      ! calculates x*dj_l(x)/dx using the recursion formula
+      ! dj_l(x)/dx = j_(l-1)(x) - (l+1)/x *  j_l(x)
       !
       IMPLICIT NONE
-      real(DP) :: xg, djl(nr), jltmp(nr), jl(nr)
-      integer :: l,il,nr,is
-      real(DP) :: xrg
-      integer :: ltmp,i0,ir
+      REAL (DP), INTENT(IN) :: xg, jl(nr), r(nr)
+      REAL (DP), INTENT(OUT):: djl(nr)
+      INTEGER, INTENT(IN) :: l, nr
       !
-! This is what used to be here
-      if (.false.) then
-!
-         ltmp = l - 1
-         !
-         ! r(i0) is the first point such that r(i0) >0
-         !
-         i0 = 1
-         if ( r(1,is) < 1.0d-8 ) i0 = 2
-         ! special case q=0
-         if ( xg < 1.0d-8 ) then
-            if (l == 1) then
-               ! Note that dj_1/dx (x=0) = 1/3
-               jltmp(:) = 1.0d0/3.d0
-            else
-               jltmp(:) = 0.0d0
-            end if
+      REAL (DP), ALLOCATABLE :: jlm1(:)
+      REAL(DP) :: xrg
+      INTEGER :: i0, ir
+      !
+      ! r(i0) is the first point such that r(i0) >0
+      !
+      ALLOCATE ( jlm1 (nr) )
+      i0 = 1
+      if ( r(1) < 1.0d-8 ) i0 = 2
+      ! special case q=0
+      if ( xg < 1.0d-8 ) then
+         if (l == 1) then
+            ! Note that dj_1/dx (x=0) = 1/3
+            jlm1(:) = 1.0d0/3.d0
          else
-            call sph_bes ( nr + 1 - i0, r(i0,is), xg, ltmp-1, jltmp )
+            jlm1(:) = 0.0d0
          end if
-         do ir = i0, nr
-            xrg = r(ir,is) * xg
-            djl(ir) = jltmp(ir) * xrg - l * jl(ir)
-         end do
-         if (i0.eq.2) djl(1) = djl(2)
-!
       else
-!
-! This branch is the ancient code
-!
-         ltmp=l-1
-         call bess(xg,ltmp,nr,r(1,is),jltmp)
-         !                     call sph_bes &
-         !                          (nr, r(1,is), xg, ltmp-1, jltmp )
-         if(l.eq.1) then
-            djl(1)=0.0
-         else
-            xrg=r(1,is)*xg
-            djl(1)=jltmp(1)*xrg-l*jl(1)
-         endif
-         do ir=2,nr
-            xrg=r(ir,is)*xg
-            if((il.eq.1).and.(l.eq.1)) then
-               djl(ir)=0.0
-            else
-               djl(ir)=jltmp(ir)*xrg-l*jl(ir)
-            endif
-         end do
-         !
-      endif
-
-    end SUBROUTINE tpre_bess
-!
-      subroutine bess(xg,l,mmax,r,jl)
-!-----------------------------------------------------------------------
-!     calculates spherical bessel functions jl = j_l(xg*r(i)), i=1, mmax
-!     NOTA BENE: input l is l+1 !!! it is assumed that r(1)=0 always
-!
-      implicit none
-      integer, intent(in)      :: l, mmax
-      real(kind=8), intent(in) :: xg, r(mmax)
-      real(kind=8), intent(out):: jl(mmax)
-      real(kind=8), parameter  :: eps=1.0d-8
-      real(kind=8)             :: xrg, xrg2
-      integer                  :: i, ir
-!
-!    l=-1 (for derivative  calculations)
-!
-      if(l.eq.0) then
-         if(xg.lt.eps) then 
-            do i=1,mmax
-               jl(i)=0.d0
-            end do
-         else
-            jl(1)=0.d0
-            do ir=2,mmax
-               xrg=r(ir)*xg
-               jl(ir)=cos(xrg)/xrg
-            end do
-         end if
+         call sph_bes ( nr + 1 - i0, r(i0), xg, l-1, jlm1(i0) )
       end if
-!
-!    s part
-!
-      if(l.eq.1) then
-         if(xg.lt.eps) then 
-            do i=1,mmax
-               jl(i)=1.d0
-            end do
-         else
-            jl(1)=1.d0
-            do ir=2,mmax
-               xrg=r(ir)*xg
-               jl(ir)=sin(xrg)/xrg
-            end do
-         endif
-      endif
-!
-!     p-part
-! 
-      if(l.eq.2) then
-         if(xg.lt.eps) then
-            do i=1,mmax
-               jl(i)=0.d0
-            end do
-         else
-            jl(1)=0.d0
-            do ir=2,mmax
-               xrg=r(ir)*xg
-               jl(ir)=(sin(xrg)/xrg-cos(xrg))/xrg
-            end do
-         endif
-      endif
-!
-!     d part
-! 
-      if(l.eq.3) then
-         if(xg.lt.eps) then
-            do i=1,mmax
-               jl(i)=0.d0
-            end do
-         else
-            jl(1)=0.d0
-            do ir=2,mmax
-               xrg=r(ir)*xg
-               jl(ir)=(sin(xrg)*(3.d0/(xrg*xrg)-1.d0)                   &
-     &              -3.d0*cos(xrg)/xrg) /xrg
-            end do
-         endif
-      endif
-!
-!     f part
-!
-      if(l.eq.4) then
-         if(xg.lt.eps) then
-            do i=1,mmax
-               jl(i)=0.d0
-            end do
-         else
-            jl(1)=0.d0
-            do ir=2,mmax
-               xrg=r(ir)*xg
-               xrg2=xrg*xrg
-               jl(ir)=( sin(xrg)*(15.d0/(xrg2*xrg)-6.d0/xrg)            &
-     &              +cos(xrg)*(1.d0-15.d0/xrg2)           )/xrg
-            end do
-         endif
-      endif
-!
-!     g part
-!
-      if(l.eq.5) then
-         if(xg.lt.eps) then
-            do i=1,mmax
-               jl(i)=0.d0
-            end do
-         else
-            jl(1)=0.d0
-            do ir=2,mmax
-               xrg=r(ir)*xg
-               xrg2=xrg*xrg
-               jl(ir)=( sin(xrg)*(105.d0/(xrg2*xrg2)-45.d0/xrg2+1.d0)   &
-     &              +cos(xrg)*(10.d0/xrg-105.d0/(xrg2*xrg)) )/xrg
-            end do
-         endif
-      endif
-!
-      return
-    end subroutine bess
-
+      do ir = i0, nr
+         xrg = r(ir) * xg
+         djl(ir) = jlm1(ir) * xrg - (l+1) * jl(ir)
+      end do
+      if (i0 == 2) djl(1) = djl(2)
+      DEALLOCATE ( jlm1 )
+      !
+    end SUBROUTINE sph_dbes1
 
 !  ----------------------------------------------
    END MODULE pseudopotential
