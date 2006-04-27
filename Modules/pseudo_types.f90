@@ -15,7 +15,7 @@
 !  together with their allocation/deallocation routines
 
         USE kinds, ONLY: DP
-        USE parameters, ONLY: ndmx, cp_lmax
+        USE parameters, ONLY: ndmx, lmaxx
 
         IMPLICIT NONE
         SAVE
@@ -51,6 +51,7 @@
 
           INTEGER :: nv                 ! UPF file version number
           INTEGER :: lmax               ! maximum angular momentum component
+          INTEGER :: lloc               ! l-component chosen as local reference
           INTEGER :: mesh               ! number of point in the radial mesh
           INTEGER :: nwfc               ! number of wavefunctions
           INTEGER :: nbeta              ! number of projectors
@@ -86,26 +87,26 @@
           INTEGER :: igau
           INTEGER :: lloc
           INTEGER :: nbeta 
-          INTEGER :: lll(cp_lmax)
+          INTEGER :: lll(lmaxx+1)
           INTEGER :: nchan
           INTEGER :: mesh
           REAL(DP) ::  zv
           REAL(DP) ::  dx            ! r(i) = cost * EXP( xmin + dx * (i-1) )
           REAL(DP) ::  rab(ndmx)
           REAL(DP) ::  rw(ndmx)
-          REAL(DP) ::  vnl(ndmx, cp_lmax)
+          REAL(DP) ::  vnl(ndmx, lmaxx+1)
           REAL(DP) ::  vloc(ndmx)
-          REAL(DP) ::  vrps(ndmx, cp_lmax)
-          REAL(DP) ::  wgv(cp_lmax)
+          REAL(DP) ::  vrps(ndmx, lmaxx+1)
+          REAL(DP) ::  wgv(lmaxx+1)
           REAL(DP) ::  rc(2)
           REAL(DP) ::  wrc(2)
           REAL(DP) ::  rcl(3,3)
           REAL(DP) ::  al(3,3)
           REAL(DP) ::  bl(3,3)
           INTEGER :: nrps                     ! number of atomic wave function
-          INTEGER :: lrps(cp_lmax)            ! angular momentum
-          REAL(DP) :: oc(cp_lmax)            ! occupation for each rps
-          REAL(DP) :: rps(ndmx, cp_lmax)  ! atomic pseudo wave function
+          INTEGER :: lrps(lmaxx+1)            ! angular momentum
+          REAL(DP) :: oc(lmaxx+1)            ! occupation for each rps
+          REAL(DP) :: rps(ndmx, lmaxx+1)  ! atomic pseudo wave function
           REAL(DP) :: rhoc(ndmx)          ! core charge
         END TYPE pseudo_ncpp
 

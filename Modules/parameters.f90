@@ -17,7 +17,7 @@ MODULE parameters
        ntypx  = 10,     &! max number of different types of atom
        npsx   = ntypx,  &! max number of different PPs (obsolete)
        npk    = 40000,  &! max number of k-points               
-       lmaxx  = 3,      &! max non local angular momentum       
+       lmaxx  = 3,      &! max non local angular momentum (l=0 to lmaxx)      
        nchix  = 6,      &! max number of atomic wavefunctions per atom
        ndmx   = 2000     ! max number of points in the atomic radial mesh
   !
@@ -26,8 +26,6 @@ MODULE parameters
        lqmax= 2*lmaxx+1,   &! max number of angular momenta of Q
        nqfx = 8             ! max number of coefficients in Q smoothing
   !
-  INTEGER, PARAMETER :: cp_lmax = lmaxx + 1  ! max number of channels
-                                             ! (s,p,d,f)
   INTEGER, PARAMETER :: nacx    = 10         ! max number of averaged 
                                              ! quantities saved to the restart
   INTEGER, PARAMETER :: nsx     = ntypx      ! max number of species
