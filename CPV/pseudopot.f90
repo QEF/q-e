@@ -721,7 +721,7 @@ CONTAINS
       !
       LOGICAL, INTENT(IN) :: tpre
       !
-      INTEGER :: is, iv, l, il, ltmp, i0, ir
+      INTEGER :: is, iv, l, il, ltmp, i0, ir, nr
       REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:)
       REAL(DP) :: xg, xrg
       !
@@ -734,14 +734,16 @@ CONTAINS
       !
       do is = 1, nsp
          !
+         nr = kkbeta( is )
+         !
          if ( tpre ) then
-            allocate( dfint( kkbeta( is ) ) )
-            allocate( djl  ( kkbeta( is ) ) )
-            allocate( jltmp( kkbeta( is ) ) )
+            allocate( dfint( nr ) )
+            allocate( djl  ( nr ) )
+            allocate( jltmp( nr ) )
          end if
          !
-         allocate( fint ( kkbeta( is ) ) )
-         allocate( jl   ( kkbeta( is ) ) )
+         allocate( fint ( nr ) )
+         allocate( jl   ( nr ) )
          !
          do iv = 1, nh(is)
             !
@@ -750,62 +752,33 @@ CONTAINS
             do il = 1, mmx
                !
                xg = sqrt( refg * (il-1) )
-               call sph_bes (kkbeta(is), r(1,is), xg, l-1, jl )
+               call sph_bes ( nr, r(1,is), xg, l-1, jl )
 !
                if( tpre )then
                   !
-                  ltmp=l-1
-                  !
-                  ! r(i0) is the first point such that r(i0) >0
-                  !
-                  i0 = 1
-                  if ( r(1,is) < 1.0d-8 ) i0 = 2
-                  !
-                  if ( xg < 1.0d-8 ) then
-                     !
-                     ! special case q=0
-                     !
-                     if (l == 1) then
-                        ! Note that dj_1/dx (x=0) = 1/3
-                        jltmp(:) = 1.0d0/3.d0
-                     else
-                        jltmp(:) = 0.0d0
-                     end if
-                     !
-                  else
-                     !
-                     call sph_bes (kkbeta(is)+1-i0, r(i0,is), xg, ltmp-1, jltmp )
-                     !
-                  end if
-                  !
-                  do ir = i0, kkbeta(is)
-                     xrg = r(ir,is) * xg
-                     djl(ir) = jltmp(ir) * xrg - l * jl(ir)
-                  end do
-                  !
-                  if ( i0 == 2 ) djl(1) = djl(2)
+                  call tpre_bess(l,il,nr,is,xg,jl,djl,jltmp)
                   !
                endif
                !
                !     beta(ir)=r*beta(r)
                !
-               do ir = 1, kkbeta(is)
+               do ir = 1, nr
                   fint(ir) = r(ir,is) * betar( ir, indv(iv,is), is ) * jl(ir)
                end do
                if (oldvan(is)) then
-                  call herman_skillman_int(kkbeta(is),fint,rab(1,is),betagx(il,iv,is))
+                  call herman_skillman_int(nr,fint,rab(1,is),betagx(il,iv,is))
                else
-                  call simpson_cp90(kkbeta(is),fint,rab(1,is),betagx(il,iv,is))
+                  call simpson_cp90(nr,fint,rab(1,is),betagx(il,iv,is))
                endif
                ! 
                if(tpre) then
-                  do ir = 1, kkbeta(is)
+                  do ir = 1, nr
                      dfint(ir) = r(ir,is) * betar( ir, indv(iv,is), is ) * djl(ir)
                   end do
                   if (oldvan(is)) then
-                     call herman_skillman_int(kkbeta(is),dfint,rab(1,is),dbetagx(il,iv,is))
+                     call herman_skillman_int(nr,dfint,rab(1,is),dbetagx(il,iv,is))
                   else
-                     call simpson_cp90(kkbeta(is),dfint,rab(1,is),dbetagx(il,iv,is))
+                     call simpson_cp90(nr,dfint,rab(1,is),dbetagx(il,iv,is))
                   end if
                endif
                !
@@ -896,28 +869,8 @@ CONTAINS
                !
                if( tpre ) then
                   !
-                  ltmp = l - 1
+                  call tpre_bess( l,il,nr,is,xg,jl,djl,jltmp)
                   !
-                  ! r(i0) is the first point such that r(i0) >0
-                  !
-                  i0 = 1
-                  if ( r(1,is) < 1.0d-8 ) i0 = 2
-                  ! special case q=0
-                  if ( xg < 1.0d-8 ) then
-                     if (l == 1) then
-                        ! Note that dj_1/dx (x=0) = 1/3
-                        jltmp(:) = 1.0d0/3.d0
-                     else
-                        jltmp(:) = 0.0d0
-                     end if
-                  else
-                     call sph_bes ( nr + 1 - i0, r(i0,is), xg, ltmp-1, jltmp )
-                  end if
-                  do ir = i0, nr
-                     xrg = r(ir,is) * xg
-                     djl(ir) = jltmp(ir) * xrg - l * jl(ir)
-                  end do
-                  if (i0.eq.2) djl(1) = djl(2)
                endif
                !
                ! 
@@ -1059,28 +1012,8 @@ CONTAINS
                !
                if( tpre ) then
                   !
-                  ltmp = l - 1
+                  call tpre_bess( l,il,nr,is,xg,jl,djl,jltmp)
                   !
-                  ! r(i0) is the first point such that r(i0) >0
-                  !
-                  i0 = 1
-                  if ( r(1,is) < 1.0d-8 ) i0 = 2
-                  ! special case q=0
-                  if ( xg < 1.0d-8 ) then
-                     if (l == 1) then
-                        ! Note that dj_1/dx (x=0) = 1/3
-                        jltmp(:) = 1.0d0/3.d0
-                     else
-                        jltmp(:) = 0.0d0
-                     end if
-                  else
-                     call sph_bes ( nr + 1 - i0, r(i0,is), xg, ltmp-1, jltmp )
-                  end if
-                  do ir = i0, nr
-                     xrg = r(ir,is) * xg
-                     djl(ir) = jltmp(ir) * xrg - l * jl(ir)
-                  end do
-                  if (i0.eq.2) djl(1) = djl(2)
                endif
                !
                ! 
@@ -1591,7 +1524,7 @@ CONTAINS
  
       REAL(DP), ALLOCATABLE ::  ylm(:,:), dylm(:,:,:,:)
       REAL(DP) :: c, gg, betagl, dbetagl
-      INTEGER :: is, iv, lp, ig, jj, i, j
+      INTEGER :: is, iv, lp, ig, jj, i, j, nr
       INTEGER :: l, il, ltmp, i0, ir
       REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), jltmp(:)
       REAL(DP), ALLOCATABLE :: betagx ( :, :, : ), dbetagx( :, :, : )
@@ -1606,14 +1539,16 @@ CONTAINS
       !
       do is = 1, nsp
          !
+         nr = kkbeta(is)
+         !
          if ( tpre ) then
-            allocate( dfint( kkbeta( is ) ) )
-            allocate( djl  ( kkbeta( is ) ) )
-            allocate( jltmp( kkbeta( is ) ) )
+            allocate( dfint( nr ) )
+            allocate( djl  ( nr ) )
+            allocate( jltmp( nr ) )
          end if
          !
-         allocate( fint ( kkbeta( is ) ) )
-         allocate( jl   ( kkbeta( is ) ) )
+         allocate( fint ( nr ) )
+         allocate( jl   ( nr ) )
          !
          do iv = 1, nh(is)
             !
@@ -1622,54 +1557,33 @@ CONTAINS
             do il = 1, ngw
                !
                xg = sqrt( g( il ) * tpiba * tpiba )
-               call sph_bes (kkbeta(is), r(1,is), xg, l-1, jl )
+               call sph_bes (nr, r(1,is), xg, l-1, jl )
                !
                if( tpre )then
                   !
-                  ltmp = l - 1
-                  !
-                  ! r(i0) is the first point such that r(i0) >0
-                  !
-                  i0 = 1
-                  if ( r(1,is) < 1.0d-8 ) i0 = 2
-                  ! special case q=0
-                  if ( xg < 1.0d-8 ) then
-                     if (l == 1) then
-                        ! Note that dj_1/dx (x=0) = 1/3
-                        jltmp(:) = 1.0d0/3.d0
-                     else
-                        jltmp(:) = 0.0d0
-                     end if
-                  else
-                     call sph_bes (kkbeta(is)+1-i0, r(i0,is), xg, ltmp-1, jltmp )
-                  end if
-                  do ir = i0, kkbeta(is)
-                     xrg = r(ir,is) * xg
-                     djl(ir) = jltmp(ir) * xrg - l * jl(ir)
-                  end do
-                  if ( i0 == 2 ) djl(1) = djl(2)
+                  call tpre_bess( l,il,nr,is,xg,jl,djl,jltmp)
                   !
                endif
                !
                !     beta(ir)=r*beta(r)
                !
-               do ir = 1, kkbeta(is)
+               do ir = 1, nr
                   fint(ir) = r(ir,is) * betar( ir, indv(iv,is), is ) * jl(ir)
                end do
                if (oldvan(is)) then
-                  call herman_skillman_int(kkbeta(is),fint,rab(1,is),betagx(il,iv,is))
+                  call herman_skillman_int(nr,fint,rab(1,is),betagx(il,iv,is))
                else
-                  call simpson_cp90(kkbeta(is),fint,rab(1,is),betagx(il,iv,is))
+                  call simpson_cp90(nr,fint,rab(1,is),betagx(il,iv,is))
                endif
                ! 
                if(tpre) then
-                  do ir = 1, kkbeta(is)
+                  do ir = 1, nr
                      dfint(ir) = r(ir,is) * betar( ir, indv(iv,is), is ) * djl(ir)
                   end do
                   if (oldvan(is)) then
-                     call herman_skillman_int(kkbeta(is),dfint,rab(1,is),dbetagx(il,iv,is))
+                     call herman_skillman_int(nr,dfint,rab(1,is),dbetagx(il,iv,is))
                   else
-                     call simpson_cp90(kkbeta(is),dfint,rab(1,is),dbetagx(il,iv,is))
+                     call simpson_cp90(nr,dfint,rab(1,is),dbetagx(il,iv,is))
                   end if
                endif
                !
@@ -1826,6 +1740,188 @@ CONTAINS
     end subroutine fill_qrl
 
 !
+    SUBROUTINE tpre_bess( l,il,nr,is,xg,jl,djl,jltmp)
+      !
+      !  this routine setups the arrays needed for the stress
+      !
+      USE atom, ONLY: r
+      !
+      IMPLICIT NONE
+      real(DP) :: xg, djl(nr), jltmp(nr), jl(nr)
+      integer :: l,il,nr,is
+      real(DP) :: xrg
+      integer :: ltmp,i0,ir
+      !
+! This is what used to be here
+      if (.false.) then
+!
+         ltmp = l - 1
+         !
+         ! r(i0) is the first point such that r(i0) >0
+         !
+         i0 = 1
+         if ( r(1,is) < 1.0d-8 ) i0 = 2
+         ! special case q=0
+         if ( xg < 1.0d-8 ) then
+            if (l == 1) then
+               ! Note that dj_1/dx (x=0) = 1/3
+               jltmp(:) = 1.0d0/3.d0
+            else
+               jltmp(:) = 0.0d0
+            end if
+         else
+            call sph_bes ( nr + 1 - i0, r(i0,is), xg, ltmp-1, jltmp )
+         end if
+         do ir = i0, nr
+            xrg = r(ir,is) * xg
+            djl(ir) = jltmp(ir) * xrg - l * jl(ir)
+         end do
+         if (i0.eq.2) djl(1) = djl(2)
+!
+      else
+!
+! This branch is the ancient code
+!
+         ltmp=l-1
+         call bess(xg,ltmp,nr,r(1,is),jltmp)
+         !                     call sph_bes &
+         !                          (nr, r(1,is), xg, ltmp-1, jltmp )
+         if(l.eq.1) then
+            djl(1)=0.0
+         else
+            xrg=r(1,is)*xg
+            djl(1)=jltmp(1)*xrg-l*jl(1)
+         endif
+         do ir=2,nr
+            xrg=r(ir,is)*xg
+            if((il.eq.1).and.(l.eq.1)) then
+               djl(ir)=0.0
+            else
+               djl(ir)=jltmp(ir)*xrg-l*jl(ir)
+            endif
+         end do
+         !
+      endif
+
+    end SUBROUTINE tpre_bess
+!
+      subroutine bess(xg,l,mmax,r,jl)
+!-----------------------------------------------------------------------
+!     calculates spherical bessel functions jl = j_l(xg*r(i)), i=1, mmax
+!     NOTA BENE: input l is l+1 !!! it is assumed that r(1)=0 always
+!
+      implicit none
+      integer, intent(in)      :: l, mmax
+      real(kind=8), intent(in) :: xg, r(mmax)
+      real(kind=8), intent(out):: jl(mmax)
+      real(kind=8), parameter  :: eps=1.0d-8
+      real(kind=8)             :: xrg, xrg2
+      integer                  :: i, ir
+!
+!    l=-1 (for derivative  calculations)
+!
+      if(l.eq.0) then
+         if(xg.lt.eps) then 
+            do i=1,mmax
+               jl(i)=0.d0
+            end do
+         else
+            jl(1)=0.d0
+            do ir=2,mmax
+               xrg=r(ir)*xg
+               jl(ir)=cos(xrg)/xrg
+            end do
+         end if
+      end if
+!
+!    s part
+!
+      if(l.eq.1) then
+         if(xg.lt.eps) then 
+            do i=1,mmax
+               jl(i)=1.d0
+            end do
+         else
+            jl(1)=1.d0
+            do ir=2,mmax
+               xrg=r(ir)*xg
+               jl(ir)=sin(xrg)/xrg
+            end do
+         endif
+      endif
+!
+!     p-part
+! 
+      if(l.eq.2) then
+         if(xg.lt.eps) then
+            do i=1,mmax
+               jl(i)=0.d0
+            end do
+         else
+            jl(1)=0.d0
+            do ir=2,mmax
+               xrg=r(ir)*xg
+               jl(ir)=(sin(xrg)/xrg-cos(xrg))/xrg
+            end do
+         endif
+      endif
+!
+!     d part
+! 
+      if(l.eq.3) then
+         if(xg.lt.eps) then
+            do i=1,mmax
+               jl(i)=0.d0
+            end do
+         else
+            jl(1)=0.d0
+            do ir=2,mmax
+               xrg=r(ir)*xg
+               jl(ir)=(sin(xrg)*(3.d0/(xrg*xrg)-1.d0)                   &
+     &              -3.d0*cos(xrg)/xrg) /xrg
+            end do
+         endif
+      endif
+!
+!     f part
+!
+      if(l.eq.4) then
+         if(xg.lt.eps) then
+            do i=1,mmax
+               jl(i)=0.d0
+            end do
+         else
+            jl(1)=0.d0
+            do ir=2,mmax
+               xrg=r(ir)*xg
+               xrg2=xrg*xrg
+               jl(ir)=( sin(xrg)*(15.d0/(xrg2*xrg)-6.d0/xrg)            &
+     &              +cos(xrg)*(1.d0-15.d0/xrg2)           )/xrg
+            end do
+         endif
+      endif
+!
+!     g part
+!
+      if(l.eq.5) then
+         if(xg.lt.eps) then
+            do i=1,mmax
+               jl(i)=0.d0
+            end do
+         else
+            jl(1)=0.d0
+            do ir=2,mmax
+               xrg=r(ir)*xg
+               xrg2=xrg*xrg
+               jl(ir)=( sin(xrg)*(105.d0/(xrg2*xrg2)-45.d0/xrg2+1.d0)   &
+     &              +cos(xrg)*(10.d0/xrg-105.d0/(xrg2*xrg)) )/xrg
+            end do
+         endif
+      endif
+!
+      return
+    end subroutine bess
+
 
 !  ----------------------------------------------
    END MODULE pseudopotential
