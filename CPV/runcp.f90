@@ -813,7 +813,7 @@
            !1-3-5-7 and 2-4-6-8
            !----------------------------------------------------------------
 
-           call dforce( bec, betae, i, c0(1,i), c0(1,i+1), tg_c2, tg_c3, tg_rhos)
+           call dforce_bgl( bec, betae, i, c0(1,i), c0(1,i+1), tg_c2, tg_c3, tg_rhos)
 
            !-------------------------------------------------------
            !C. Bekas: This is not implemented yet! I need to see it

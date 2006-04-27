@@ -520,7 +520,7 @@
            IF( wfill%nspin > 1 ) &
               CALL errore( ' main ',' dipole with spin not yet implemented ', 0 )
            !
-           CALL ddipole( nfi, ht0, c0(:,:,1,1), atoms0, tfor, ngw, wfill%nbl( 1 ), wfill%nbl( 1 ), ngw )
+           CALL ddipole( nfi, c0(:,:,1,1), ngw, atoms0%taus, tfor, ngw, wfill%nbl( 1 ), ht0%a )
 
         END IF
 

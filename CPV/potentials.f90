@@ -36,6 +36,8 @@
         PUBLIC :: vofrhos, potential_init, potential_print_info, &
                   kspotential, print_vofrho_time, localisation, vofesr
 
+        PUBLIC :: self_vofhar
+
         REAL(DP), EXTERNAL :: cclock
 
 !=----------------------------------------------------------------------------=!
@@ -315,7 +317,7 @@
 ! ... declare other variables
 
       COMPLEX(DP), ALLOCATABLE :: vloc(:), self_vloc(:)
-      COMPLEX(DP), ALLOCATABLE :: rho12(:), rhoeg(:,:), self_rhoeg(:)
+      COMPLEX(DP), ALLOCATABLE :: rho12(:), rhoeg(:,:)
       COMPLEX(DP), ALLOCATABLE :: rhoetg(:,:)
       COMPLEX(DP), ALLOCATABLE :: psi(:)
       REAL(DP), ALLOCATABLE :: rhoetr(:,:)
@@ -331,7 +333,7 @@
 
       REAL(DP) ::  pail(3,3)
 
-      COMPLEX(DP) :: self_ehtep,ehtep
+      COMPLEX(DP) :: ehtep
       REAL(DP)    :: self_sxcp, self_vxc
 
       REAL(DP)  :: summing1, summing2
@@ -601,33 +603,18 @@
 
       IF ( ttsic ) THEN
 
-        ALLOCATE( self_vloc(ngm), self_rhoeg(ngm), STAT = ierr)
-        IF( ierr /= 0 )&
-          CALL errore(' vofrhos ', ' allocating self_vloc, self_rhoeg ', ierr)
+        ALLOCATE( self_vloc( ngm ) )
+        ALLOCATE( psi( nnrx ) )
 
-        self_rhoeg = rhoeg(:,1) - rhoeg(:,2)
-        !
-        self_vpot  = 0.d0
-
-        !  working on the total charge density
-
-        CALL self_vofloc( ttscreen, self_ehtep, self_vloc, self_rhoeg, box )
-        !
-        ! CALL pinvfft( self_vpot(:,1), self_vloc(:))
-
-        ALLOCATE( psi( SIZE( self_vpot, 1 ) ) )
+        CALL self_vofhar( ttscreen, edft%self_ehte, self_vloc, rhoeg, omega, box%hmat )
         !
         CALL rho2psi( 'Dense', psi, dfftp%nnr, self_vloc, ngm )
         CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
-
-        self_vpot(:,1) = sic_epsilon * DBLE( psi(:) )
         !
-        edft%self_ehte     = sic_epsilon * DBLE( self_ehtep )
- 
-        vpot(:,1) =  vpot(:,1) - self_vpot(:,1)
-        vpot(:,2) =  vpot(:,2) + self_vpot(:,1)
+        vpot(:,1) =  vpot(:,1) - DBLE( psi(:) )
+        vpot(:,2) =  vpot(:,2) + DBLE( psi(:) )
 
-        DEALLOCATE( self_vloc, self_rhoeg, psi )
+        DEALLOCATE( self_vloc, psi )
 
       END IF
 
@@ -782,30 +769,32 @@
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE cluster_bc( screen_coul, hg, box )
+  SUBROUTINE cluster_bc( screen_coul, hg, omega, hmat )
 
       USE green_functions, ONLY: greenf
-      USE mp_global, ONLY: me_image
-      USE fft_base, ONLY: dfftp
-      USE fft_module, ONLY: fwfft
-      USE gvecp, ONLY: ngm
-      USE cell_module, ONLY: boxdimensions, s_to_r, alat
-      USE constants, ONLY: gsmall, pi
-      USE cell_base, ONLY: tpiba2
+      USE mp_global,       ONLY: me_image
+      USE fft_base,        ONLY: dfftp
+      USE fft_module,      ONLY: fwfft
+      USE gvecp,           ONLY: ngm
+      USE cell_module,     ONLY: boxdimensions, s_to_r, alat
+      USE constants,       ONLY: gsmall, pi
+      USE cell_base,       ONLY: tpiba2
       use grid_dimensions, only: nr1, nr2, nr3, nr1l, nr2l, nr3l, nnrx
       
       REAL(DP), INTENT(IN) :: hg(:)
-      TYPE (boxdimensions),    INTENT(IN) :: box
+      REAL(DP), INTENT(IN) :: omega, hmat( 3, 3 )
       COMPLEX(DP) :: screen_coul(:)
 
-! ... declare external function
+      ! ... declare external function
+      !
       REAL(DP) :: erf, erfc
       EXTERNAL erf, erfc
 
-! ... Locals
+      ! ... Locals
+      !
       COMPLEX(DP), ALLOCATABLE :: grr(:)
       COMPLEX(DP), ALLOCATABLE :: grg(:)
-      REAL(DP) :: rc, r(3), s(3), rmod, g2, rc2, arg, omega, fact
+      REAL(DP) :: rc, r(3), s(3), rmod, g2, rc2, arg, fact
       INTEGER   :: ig, i, j, k, ir
       INTEGER   :: ir1, ir2, ir3
 
@@ -821,10 +810,10 @@
 
       grr = 0.0d0
 
-! ... Martina and Tuckerman convergence criterium
+      ! ... Martina and Tuckerman convergence criterium
+      !
       rc  = 7.0d0 / alat
       rc2 = rc**2
-      omega = box%deth
       fact  = omega / ( nr1 * nr2 * nr3 )
       IF( MOD(nr1 * nr2 * nr3, 2) /= 0 ) fact = -fact
 
@@ -834,7 +823,7 @@
           s(2) = DBLE ( (j-1) + (ir2 - 1) ) / nr2 - 0.5d0
           DO i = 1, nr1l
             s(1) = DBLE ( (i-1) + (ir1 - 1) ) / nr1 - 0.5d0
-            CALL S_TO_R(S, R, box)
+            CALL S_TO_R( S, R, hmat )
             rmod = SQRT( r(1)**2 + r(2)**2 + r(3)**2 )
             ir =  i + (j-1)*dfftp%nr1x + (k-1)*dfftp%nr1x*dfftp%nr2x
             IF( rmod < gsmall ) THEN
@@ -959,7 +948,7 @@
 
       IF( tscreen ) THEN
         ALLOCATE( screen_coul( ngm ) )
-        CALL cluster_bc( screen_coul, g, ht )
+        CALL cluster_bc( screen_coul, g, ht%deth, ht%hmat )
       END IF
 
 !=======================================================================
@@ -1313,58 +1302,55 @@
 !=----------------------------------------------------------------------------=!
 
 
-!  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE self_vofloc(tscreen, ehte, vloc, rhoeg, ht)
+!=----------------------------------------------------------------------------=!
+   SUBROUTINE self_vofhar( tscreen, self_ehte, vloc, rhoeg, omega, hmat )
+!=----------------------------------------------------------------------------=!
 
-!  adds the hartree part of the self interaction
-!
-!  ----------------------------------------------
-!  END manual
+      !  adds the hartree part of the self interaction
 
-      USE constants, ONLY: fpi
-      USE control_flags, ONLY: gamma_only
-      USE cell_module, ONLY: boxdimensions
-      USE cell_base, ONLY: tpiba2
-      USE gvecp, ONLY: ngm
+      USE constants,          ONLY: fpi
+      USE control_flags,      ONLY: gamma_only
+      USE cell_module,        ONLY: boxdimensions
+      USE cell_base,          ONLY: tpiba2
+      USE gvecp,              ONLY: ngm
       USE reciprocal_vectors, ONLY: gstart, g
+      USE sic_module,         ONLY: sic_epsilon, sic_alpha
 
       IMPLICIT NONE
 
-! ... Arguments
-      TYPE (boxdimensions), INTENT(in) :: ht
-      LOGICAL      :: tscreen
+      ! ... Arguments
+      LOGICAL     :: tscreen
       COMPLEX(DP) :: vloc(:)
-      COMPLEX(DP) :: rhoeg(:)
-      COMPLEX(DP) :: ehte
+      COMPLEX(DP) :: rhoeg(:,:)
+      REAL(DP)    :: self_ehte
+      REAL(DP), INTENT(IN) :: omega
+      REAL(DP), INTENT(IN) :: hmat( 3, 3 )
 
-! ... Locals
+      ! ... Locals
 
       INTEGER      :: ig
-      REAL(DP)    :: fpibg, omega
+      REAL(DP)    :: fpibg
       COMPLEX(DP) :: rhog
+      COMPLEX(DP) :: ehte
       COMPLEX(DP) :: vscreen
       COMPLEX(DP), ALLOCATABLE :: screen_coul(:)
 
-! ... Subroutine body ...
-
+      ! ... Subroutine body ...
 
       IF( tscreen ) THEN
         ALLOCATE( screen_coul( ngm ) )
-        CALL cluster_bc( screen_coul, g, ht )
+        CALL cluster_bc( screen_coul, g, omega, hmat )
       END IF
 
-!=======================================================================
-!==  HARTREE AND LOCAL PART OF THE PSEUDO ENERGIES                    ==
-!=======================================================================
+      !==  HARTREE ==
 
-      omega = ht%deth
       ehte = 0.D0
 
       DO IG = gstart, ngm
 
-        rhog  = rhoeg(ig)
+        rhog  = rhoeg(ig,1) - rhoeg(ig,2)
+
         IF( tscreen ) THEN
           FPIBG     = fpi / ( g(ig) * tpiba2 ) + screen_coul(ig)
         ELSE
@@ -1372,34 +1358,38 @@
         END IF
 
         vloc(ig) = fpibg * rhog
-        ehte       = ehte   +  fpibg *   rhog * CONJG(rhog)
+        ehte     = ehte   +  fpibg *   rhog * CONJG(rhog)
 
       END DO
-!!!! always for a comparison with the el-Hartree contribution from lda  
-
  
-! ... G = 0 element
+      ! ... G = 0 element
+      !
       IF ( gstart == 2 ) THEN
+        rhog    = rhoeg(1,1) - rhoeg(1,2)
         IF( tscreen ) THEN
           vscreen = screen_coul(1)
         ELSE
           vscreen = 0.0d0
         END IF
-        rhog    = rhoeg(1)
         vloc(1) = vscreen * rhog
-        ehte      = ehte   +  vscreen *  rhog * CONJG(rhog)
+        ehte    = ehte   +  vscreen *  rhog * CONJG(rhog)
       END IF
-! ...
+
+      ! ...
+
       IF( .NOT. gamma_only ) THEN
         ehte  = ehte  * 0.5d0
       END IF
-      ehte =        ehte * omega
+      !
+      self_ehte = DBLE(ehte) * omega * sic_epsilon
+      vloc = vloc * sic_epsilon
 
-! ...
-      IF(ALLOCATED(screen_coul)) DEALLOCATE(screen_coul)
+      IF( ALLOCATED( screen_coul ) ) DEALLOCATE( screen_coul )
 
       RETURN
-      END SUBROUTINE self_vofloc
+!=----------------------------------------------------------------------------=!
+   END SUBROUTINE self_vofhar
+!=----------------------------------------------------------------------------=!
 
 
 
@@ -1452,7 +1442,7 @@
 
       IF( .FALSE. ) THEN
         ALLOCATE( screen_coul( ngm ) )
-        CALL cluster_bc( screen_coul, g, ht )
+        CALL cluster_bc( screen_coul, g, ht%deth, ht%hmat )
       END IF
 
 

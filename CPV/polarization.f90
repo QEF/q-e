@@ -7,7 +7,8 @@
 !
 #include "f_defs.h"
 
-      MODULE polarization
+
+  MODULE polarization
 
         USE kinds
         USE berry_phase, only: indi_l, sour_indi, dest_indi, n_indi_rcv, n_indi_snd, icntix
@@ -23,87 +24,116 @@
         REAL(DP) :: p0( 3 ), p( 3 ), pdipole( 3 ), pdipolt( 3 ), pdipole0( 3 )
         REAL(DP) :: cost1, cost2, cost3, fac, bgm1( 3, 3 ), bg( 3, 3 )
         REAL(DP) :: d1old, d2old, d3old
-        LOGICAL :: first = .TRUE.
+        LOGICAL  :: first = .TRUE.
 
         PUBLIC :: deallocate_polarization, ddipole
-        PUBLIC :: p, pdipole, pdipolt
-
-      CONTAINS
+        PUBLIC :: print_dipole
 
 
-      subroutine deallocate_polarization
-         use berry_phase, only: berry_closeup
-         call berry_closeup()
-        return
-      end subroutine deallocate_polarization
+ CONTAINS
+
+
+   SUBROUTINE deallocate_polarization
+      use berry_phase, only: berry_closeup
+      call berry_closeup()
+      return
+   END SUBROUTINE deallocate_polarization
 
 
 
-      SUBROUTINE DDIPOLE(ISTEP,box,C2,atoms,TFOR,NGW,N,NX,NGWX)
+   SUBROUTINE print_dipole( uni, tfile, nfi, tps )
+      !
+      USE constants,  only : au
+      USE io_global,  ONLY : stdout, ionode
+      !
+      INTEGER,  INTENT(IN) :: uni
+      LOGICAL,  INTENT(IN) :: tfile
+      INTEGER,  INTENT(IN) :: nfi
+      REAL(DP), INTENT(IN) :: tps
 
-      USE mp, ONLY: mp_sum
-      USE constants, ONLY: pi
-      USE cell_base, ONLY: tpiba
-      USE cell_module, ONLY: boxdimensions, alat
-      USE cell_module, ONLY: S_TO_R
-      USE atoms_type_module, ONLY: atoms_type
-      USE ions_base, ONLY: zv
-      USE mp_global, ONLY: me_image, nproc_image, intra_image_comm
-      USE mp_wave, ONLY: pwscatter
+      INTEGER :: i
+
+      WRITE( stdout, 19 )
+      WRITE( stdout, 20 ) 'P0_e',  (pdipole0(i),i=1,3)
+      WRITE( stdout, 20 ) 'P_e',   (pdipole(i),i=1,3)
+      WRITE( stdout, 20 ) 'P0_I',  (p0(i),i=1,3)
+      WRITE( stdout, 20 ) 'P_I',   (p(i),i=1,3)
+      WRITE( stdout, 20 ) 'P_tot', (pdipolt(i),i=1,3)
+      !
+      IF (tfile) THEN
+         WRITE( uni, 30 ) nfi, tps
+         WRITE( uni, 20 ) 'P_e',   (pdipole(i),i=1,3)
+         WRITE( uni, 20 ) 'P_I',   (p(i),i=1,3)
+         WRITE( uni, 20 ) 'P_tot', (pdipolt(i),i=1,3)
+      END IF
+
+19    FORMAT(/,3X,'Dipole moment (AU)')
+20    FORMAT(3X,A10,3(F18.8,2X))
+30    FORMAT(I7,1X,F11.8)
+
+      RETURN
+   END SUBROUTINE print_dipole
+
+
+
+   SUBROUTINE ddipole( istep, c2, ngwx, taus, tfor, ngw, n, ht )
+
+      USE mp,          ONLY: mp_sum
+      USE constants,   ONLY: pi
+      USE cell_base,   ONLY: tpiba
+      USE cell_module, ONLY: alat
+      USE cell_module, ONLY: s_to_r
+      USE ions_base,   ONLY: zv, nat, nsp, na
+      USE mp_global,   ONLY: me_image, nproc_image, intra_image_comm
+      USE mp_wave,     ONLY: pwscatter
 
       IMPLICIT NONE 
 
-      COMPLEX(DP) ZDOTU, ZDOTC
-!
-! ... ARGUMENTS
-!
-      INTEGER NGW,N,NX,NGWX
-      type (boxdimensions) box
-      type (atoms_type) atoms
-      LOGICAL TFOR
-      COMPLEX(DP) C2(NGWX,NX)
-      INTEGER ISTEP
+      COMPLEX(DP) :: ZDOTU, ZDOTC
+      EXTERNAL ZDOTU, ZDOTC
+      !
+      ! ... ARGUMENTS
+      !
+      INTEGER,  INTENT(IN) :: istep
+      INTEGER,  INTENT(IN) :: ngw, n, ngwx
+      REAL(DP), INTENT(IN) :: ht( 3, 3 )  !  Transpose of matrix h
+      REAL(DP), INTENT(IN) :: taus( 3, nat )  !  Transpose of matrix h
+      LOGICAL,  INTENT(IN) :: tfor
+      COMPLEX(DP)          :: c2( ngwx, n )
 
+      !
+      ! ... LOCALS
+      !
+      REAL(DP)    :: taup( 3, nat )
+      REAL(DP)    :: d1, d2, d3
+      REAL(DP)    :: rb1, rb2, rb3
+      REAL(DP)    :: rb1m1, rb2m1, rb3m1
+      REAL(DP)    :: rdummy
+      REAL(DP)    :: bg( 3, 3 ), b1( 3 ), b2( 3 ), b3( 3 )
+      COMPLEX(DP) :: dumm( n, n ), det, aux( 2*n ), ptemp( ngwx )
+      COMPLEX(DP) :: detc( 2 ), ztmp
+      INTEGER     :: ipiv( n ), info
+      REAL(DP)    :: omega
+      REAL(DP)    :: htm1( 3, 3 ), h( 3, 3 )
+      INTEGER     :: i, j, is, in2, in1, me, isa
 
-!
-! ... LOCALS
-!
-
-      REAL(DP)  TAUP(3, atoms%nax, atoms%nsp)
-      REAL(DP)  d1,d2,d3
-      REAL(DP)  rb1,rb2,rb3
-      REAL(DP)  rb1m1,rb2m1,rb3m1
-      REAL(DP)  rdummy
-      REAL(DP)  bg(3,3), b1(3),b2(3),b3(3)
-!
-      COMPLEX(DP) DUMM(NX,NX),DET,AUX(2*NX),PTEMP(NGWX)
-      COMPLEX(DP) DETC(2),ZTMP
-      integer ipiv(nx),info
-!
-      REAL(DP)  omega
-      integer i,j,is,in2,in1,me, isa
-
-!
-! ... Subroutine body
-!
+      !
+      ! ... Subroutine body
+      !
 
       me = me_image + 1
-      omega = box%deth
+
+      h = TRANSPOSE( ht )
+
+      CALL invmat( 3, ht, htm1, omega )
 
       do i=1,3
-        b1(i) = alat * box%m1(i,1)
-        b2(i) = alat * box%m1(i,2)
-        b3(i) = alat * box%m1(i,3)
+        b1(i) = alat * htm1(i,1)
+        b2(i) = alat * htm1(i,2)
+        b3(i) = alat * htm1(i,3)
       enddo
 
-
-      isa = 0
-      DO I = 1, atoms%nsp
-        DO J = 1, atoms%na(i)
-          isa = isa + 1
-          CALL S_TO_R(atoms%taus(:,isa), TAUP(:,J,I), box)
-        END DO
-      END DO
+      CALL s_to_r( taus, taup, na, nsp, h )
 
       IF(FIRST) THEN
         FAC=2.D0
@@ -125,14 +155,17 @@
         CALL DAXPY(3,RB3M1,B3,1,BG(1,3),1)
         CALL invmat (3, BG, BGM1, rdummy)
 
-! t=0 initial ionic polarization, only if the atoms move.
-!
-        IF(TFOR) THEN
+        !
+        ! t=0 initial ionic polarization, only if the atoms move.
+        !
+        IF( tfor ) THEN
           DO J = 1, 3
             P0(J) = 0.D0
-            DO IS = 1, atoms%nsp
-              DO I = 1, atoms%na(is)
-                P0(J) = P0(J) + ZV(is) * TAUP(J,I,IS)
+            isa = 0
+            DO IS = 1, nsp
+              DO I = 1, na(is)
+                isa = isa + 1
+                P0(J) = P0(J) + ZV(is) * TAUP( j, isa )
               ENDDO
             ENDDO
             P0(J) = P0(J) / omega
@@ -140,13 +173,16 @@
         ENDIF
 !
       ENDIF
-!
-!..ionic contribution
+      !
+      !..ionic contribution
+      !
       DO J = 1, 3
         P(J) = 0.D0
-        DO IS = 1, atoms%nsp
-          DO I = 1, atoms%na(is)
-            P(J) = P(J) + ZV(is) * TAUP(J,I,IS)
+        isa = 0
+        DO IS = 1, nsp
+          DO I = 1, na(is)
+            isa = isa + 1
+            P(J) = P(J) + ZV(is) * TAUP(J,isa)
           ENDDO
         ENDDO
         P(J) = P(J) / omega
@@ -187,8 +223,8 @@
 !
 ! Compute determinant and then log(det) for P(1)
 !
-      CALL ZGEFA(DUMM,NX,N,IPIV,INFO)
-      CALL ZGEDI(DUMM,NX,N,IPIV,DETC,AUX,10)
+      CALL ZGEFA(DUMM,n,N,IPIV,INFO)
+      CALL ZGEDI(DUMM,n,N,IPIV,DETC,AUX,10)
       DET=DETC(1)*10.D0**DETC(2)
       D1= ATAN2 (AIMAG(DET),DBLE(DET))
       IF(.NOT.FIRST) THEN
@@ -232,8 +268,8 @@
 !
 ! Compute determinant and then log(det) for P(2)
 !
-      CALL ZGEFA(DUMM,NX,N,IPIV,INFO)
-      CALL ZGEDI(DUMM,NX,N,IPIV,DETC,AUX,10)
+      CALL ZGEFA(DUMM,n,N,IPIV,INFO)
+      CALL ZGEDI(DUMM,n,N,IPIV,DETC,AUX,10)
       DET=DETC(1)*10.D0**DETC(2)
       D2= ATAN2 (AIMAG(DET),DBLE(DET))
       IF(.NOT.FIRST) THEN
@@ -270,8 +306,8 @@
 !
 ! Compute determinant and then log(det) for P(3)
 !
-      CALL ZGEFA(DUMM,NX,N,IPIV,INFO)
-      CALL ZGEDI(DUMM,NX,N,IPIV,DETC,AUX,10)
+      CALL ZGEFA(DUMM,n,N,IPIV,INFO)
+      CALL ZGEDI(DUMM,n,N,IPIV,DETC,AUX,10)
       DET=DETC(1)*10.D0**DETC(2)
       D3= ATAN2 (AIMAG(DET),DBLE(DET))
       IF(.NOT.FIRST) THEN
@@ -301,4 +337,5 @@
       RETURN
       END subroutine ddipole
 
-    END MODULE POLARIZATION
+
+   END MODULE POLARIZATION

@@ -27,6 +27,7 @@
 
        PUBLIC :: pstress, print_stress_time
        PUBLIC :: pseudo_stress, compute_gagb, stress_har
+       PUBLIC :: stress_hartree, add_drhoph, stress_local
 
        INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
        INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
@@ -54,17 +55,14 @@
 
      CONTAINS
 
-!  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE pstress( strvxc, rhoeg, vxc, pail, desr, &
-        bec, c0, cdesc, occ, eigr, sfac, grho, v2xc, box, edft) 
+!------------------------------------------------------------------------------!
 
-!  this routine computes stress tensor from dft total energy
-!  ----------------------------------------------
-!  END manual
+   SUBROUTINE pstress( strvxc, rhoeg, vxc, pail, desr, bec, c0, cdesc, occ, &
+                       eigr, sfac, grho, v2xc, box, edft )
 
-! ... declare modules
+      !  this routine computes stress tensor from dft total energy
+
       USE cell_module,          ONLY: boxdimensions
       USE energies,             ONLY: dft_energy_type
       USE ions_base,            ONLY: nsp
@@ -76,15 +74,18 @@
       USE io_global,            ONLY: ionode
       USE exchange_correlation, ONLY: stress_xc
       USE control_flags,        ONLY: iprsta
-      USE reciprocal_vectors,   ONLY: gx
+      USE reciprocal_vectors,   ONLY: gx, gstart
       USE gvecp,                ONLY: ngm
-      USE local_pseudo,         ONLY: dvps
+      USE gvecs,                ONLY: ngs
+      USE local_pseudo,         ONLY: vps, dvps, rhops
       USE atom,                 ONLY: nlcc
       USE core,                 ONLY: drhocg
+      USE electrons_base,       ONLY: nspin
 
       IMPLICIT NONE
 
-! ... declare subroutine arguments
+      ! ... declare subroutine arguments
+
       REAL(DP) :: pail(:,:), desr(:), strvxc
       REAL(DP) :: grho(:,:,:), v2xc(:,:,:)
       REAL(DP) :: bec(:,:)
@@ -94,27 +95,29 @@
       COMPLEX(DP), INTENT(IN) :: c0(:,:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE (boxdimensions), INTENT(IN) :: box
-      COMPLEX(DP) :: eigr(:,:)
+      COMPLEX(DP), INTENT(IN) :: eigr(:,:)
       TYPE (dft_energy_type) :: edft
 
-! ... declare other variables
-      REAL(DP) :: s1, s2, s3, s4, s5, s6, s7, s8, s0
+      ! ... declare other variables
 
+      COMPLEX(DP), ALLOCATABLE :: rhog( : )
+      COMPLEX(DP), ALLOCATABLE :: drhog( :, : )
+      REAL(DP),    ALLOCATABLE :: gagb(:,:)
       REAL(DP), DIMENSION (6) :: dekin, deht, deps, denl, dexc, dvdw
       REAL(DP), DIMENSION (3,3) :: paiu
-      REAL(DP), ALLOCATABLE :: gagb(:,:)
+      REAL(DP) :: s1, s2, s3, s4, s5, s6, s7, s8, s0
       REAL(DP) :: omega, ehr
+      INTEGER  :: k, ig, is
 
-      INTEGER k, ig
-
-! ... end of declarations
-!  ----------------------------------------------
+      ! ... end of declarations
+      !
 
       IF( .NOT. cdesc%gamma ) &
         CALL errore( ' pstress ', ' k-point stress not yet implemented ', 1 )
 
       omega = box%deth
       ehr   = edft%eht - edft%esr + edft%eself
+
       
       IF(timing) s0 = cclock()
 
@@ -124,35 +127,67 @@
 
       IF(timing) s1 = cclock()
 
-! ... compute kinetic energy contribution
+      ! ... compute kinetic energy contribution
 
       CALL stress_kin( dekin, c0, cdesc, occ, gagb )
 
       IF(timing) s2 = cclock()
 
-! ... compute hartree energy contribution
-      CALL stress_har(deht, ehr, sfac, rhoeg, gagb, box%deth)
+      ! ... compute exchange & correlation energy contribution
+
+      CALL stress_xc(dexc, strvxc, sfac, vxc, grho, v2xc, gagb, nlcc, drhocg, box)
 
       IF(timing) s3 = cclock()
 
-! ... compute exchange & correlation energy contribution
-      CALL stress_xc(dexc, strvxc, sfac, vxc, grho, v2xc, gagb, &
-        nlcc, drhocg, box)
+      ALLOCATE( drhog( ngm, 6 ), rhog( ngm ) )
+      
+      ! sum up spin components
+      !  
+      rhog( 1:ngm ) = rhoeg( 1:ngm, 1 )
+      IF( nspin > 1 ) rhog( 1:ngm ) = rhog( 1:ngm ) + rhoeg( 1:ngm, 2 )
+      
+      ! add drho_e / dh       
+      !
+      DO k = 1, 6
+         drhog( 1:ngm, k ) = - rhog( 1:ngm ) * dalbe( k )
+      END DO
+
+      CALL stress_local( deps, edft%epseu, gagb, sfac, rhog, drhog, omega )
+
+      !    CALL pseudo_stress(deps, edft%epseu, gagb, sfac, dvps, rhoeg, box%deth)
 
       IF(timing) s4 = cclock()
 
-! ... compute esr contribution
-!      IF(tvdw) THEN
-!        CALL vdw_stress(c6, iesr, stau0, dvdw, na, nax, nsp)
-!      END IF
+      !    IF(tvdw) THEN
+      !       CALL vdw_stress(c6, iesr, stau0, dvdw, na, nax, nsp)
+      !    END IF
 
       IF(timing) s5 = cclock()
 
-      CALL pseudo_stress(deps, edft%epseu, gagb, sfac, dvps, rhoeg, box%deth)
+      ! ... compute hartree energy contribution
+
+      ! add Ionic pseudo charges  rho_I
+      !
+      DO is = 1, nsp
+         DO ig = gstart, ngs
+            rhog( ig ) = rhog( ig ) + sfac( ig, is ) * rhops( ig, is )
+         END DO
+      END DO
+      
+      ! add drho_I / dh
+      !
+      CALL add_drhoph( drhog, sfac, gagb )
+
+      CALL stress_hartree(deht, ehr, sfac, rhog, drhog, gagb, omega )
+
+      !    CALL stress_har(deht, ehr, sfac, rhoeg, gagb, box%deth)
+
+      DEALLOCATE( drhog, rhog )
 
       IF(timing) s6 = cclock()
 
-! ... compute enl (non-local) contribution
+      ! ... compute enl (non-local) contribution
+
       CALL stress_nl(denl, gagb, c0, cdesc, occ, eigr, bec, edft%enl, box%a, box%m1 )
 
       IF(timing) s7 = cclock()
@@ -161,10 +196,10 @@
          CALL stress_debug(dekin, deht, dexc, desr, deps, denl, box%m1 )
       END IF
 
-! ... total stress (pai-lowercase)
-      DO k=1,6
-        paiu(alpha(k),beta(k)) = -( dekin(k) + deht(k) + dexc(k) + &
-                       desr (k) + deps(k) + denl(k) )
+      ! ... total stress (pai-lowercase)
+
+      DO k = 1, 6
+        paiu(alpha(k),beta(k)) = -( dekin(k) + deht(k) + dexc(k) + desr (k) + deps(k) + denl(k) )
         paiu(beta(k),alpha(k)) = paiu(alpha(k),beta(k))
       END DO
 
@@ -172,7 +207,7 @@
     
       CALL mp_sum( pail, intra_image_comm )
   
-      DEALLOCATE(gagb)
+      DEALLOCATE( gagb )
 
       IF( timing ) THEN
         s8 = cclock()
@@ -191,7 +226,10 @@
 100   FORMAT(6X,A3,10X,F8.4)
 
       RETURN
-      END SUBROUTINE pstress
+   END SUBROUTINE pstress
+
+
+!------------------------------------------------------------------------------!
 
 
       SUBROUTINE print_stress_time( iunit )
@@ -224,17 +262,13 @@
       END SUBROUTINE print_stress_time
 
 
-
-!  BEGIN manual
-
-      SUBROUTINE stress_nl(denl, gagb, c0, cdesc, occ, eigr, bec, enl, ht, htm1)
-
-!  this routine computes nl part of the stress tensor from dft total energy
-!  ----------------------------------------------
-!  END manual
+!------------------------------------------------------------------------------!
 
 
-! ... declare modules
+   SUBROUTINE stress_nl(denl, gagb, c0, cdesc, occ, eigr, bec, enl, ht, htm1)
+
+      !  this routine computes nl part of the stress tensor from dft total energy
+
       USE constants, ONLY: pi, au_gpa
       USE pseudopotential, ONLY: nlin_stress, nlin, nspnl, nsanl
       USE ions_base, ONLY: nsp, na
@@ -556,10 +590,13 @@
       RETURN
       END SUBROUTINE stress_nl
 
-!  ----------------------------------------------
-!  ----------------------------------------------
 
-      SUBROUTINE pseudo_stress( deps, epseu, gagb, sfac, dvps, rhoeg, omega )
+
+!------------------------------------------------------------------------------!
+
+
+
+   SUBROUTINE pseudo_stress( deps, epseu, gagb, sfac, dvps, rhoeg, omega )
       !
       USE ions_base,          ONLY: nsp
       USE reciprocal_vectors, ONLY: gstart
@@ -576,33 +613,81 @@
 
       INTEGER     :: ig,k,is, ispin
       COMPLEX(DP) :: rhets, depst(6)
+      COMPLEX(DP), ALLOCATABLE :: rhoe( : )
+      COMPLEX(DP), ALLOCATABLE :: drhoe( :, : )
+      !
+      ALLOCATE( drhoe( ngs, 6 ), rhoe( ngs ) )
+
+      rhoe( 1:ngs ) = rhoeg( 1:ngs, 1 )
+      IF( nspin > 1 ) rhoe( 1:ngs ) = rhoe( 1:ngs ) + rhoeg( 1:ngs, 2 )
+
+      DO k = 1, 6
+         drhoe( 1:ngs, k ) = - rhoe( 1:ngs ) * dalbe( k )
+      END DO
+
+      CALL stress_local( deps, epseu, gagb, sfac, rhoe, drhoe, omega )
+
+      DEALLOCATE( drhoe, rhoe )
+
+      RETURN
+   END SUBROUTINE pseudo_stress
+
+!  ----------------------------------------------
+
+   SUBROUTINE stress_local( deps, epseu, gagb, sfac, rhoe, drhoe, omega )
+      !
+      USE ions_base,          ONLY: nsp
+      USE reciprocal_vectors, ONLY: gstart
+      USE gvecs,              ONLY: ngs
+      USE electrons_base,     ONLY: nspin
+      USE local_pseudo,       ONLY: vps, dvps
+
+      REAL(DP),     INTENT(IN)  :: omega
+      REAL(DP),     INTENT(OUT) :: deps(:)
+      REAL(DP),     INTENT(IN)  :: gagb(:,:)
+      COMPLEX(DP),  INTENT(IN)  :: rhoe(:)
+      COMPLEX(DP),  INTENT(IN)  :: drhoe(:,:)
+      COMPLEX(DP),  INTENT(IN)  :: sfac(:,:)
+      REAL(DP),     INTENT(IN)  :: epseu
+
+      INTEGER     :: ig,k,is, ispin
+      COMPLEX(DP) :: dsvp, svp, depst(6)
+      REAL(DP)    :: wz
       !
       depst = (0.d0,0.d0)
 
-      DO is = 1, nsp
-        DO ig = gstart, ngs
-          rhets = rhoeg(ig, 1)
-          IF( nspin > 1) THEN
-            rhets = rhets + rhoeg(ig, 2)
-          END IF
-          rhets = -2.d0 * sfac( ig, is ) * dvps(ig,is) * CONJG(rhets)
-          depst(1) = depst(1) + rhets * gagb(1,ig)
-          depst(2) = depst(2) + rhets * gagb(2,ig)
-          depst(3) = depst(3) + rhets * gagb(3,ig)
-          depst(4) = depst(4) + rhets * gagb(4,ig)
-          depst(5) = depst(5) + rhets * gagb(5,ig)
-          depst(6) = depst(6) + rhets * gagb(6,ig)
-        END DO
-      END DO
+      wz = 2.0d0
 
+      DO ig = gstart, ngs
+         svp = 0.0d0
+         DO is = 1, nsp
+            svp = svp + sfac( ig, is ) * vps( ig, is )
+         END DO
+         depst = depst + wz * CONJG( drhoe( ig, : ) ) * svp
+      END DO
       IF( gstart == 2 ) THEN
-        deps = 2.0_DP * omega * REAL(depst) - epseu * dalbe
-      ELSE
-        deps = 2.0_DP * omega * REAL(depst)
+         svp = 0.0d0
+         DO is = 1, nsp
+            svp = svp + sfac( 1, is ) * vps( 1, is )
+         END DO
+         depst = depst + CONJG( drhoe( 1, : ) ) * svp
       END IF
 
+      DO ig = gstart, ngs
+         dsvp = 0.0d0
+         DO is = 1, nsp
+            dsvp = dsvp + sfac( ig, is ) * dvps( ig, is )
+         END DO
+         DO k = 1, 6
+            depst( k ) = depst( k ) - wz * 2.0d0 * CONJG( rhoe( ig ) ) * dsvp * gagb( k, ig )
+         END DO
+      END DO
+
+      deps = omega * DBLE( depst )
+
       RETURN
-      END SUBROUTINE pseudo_stress
+   END SUBROUTINE stress_local
+
 
 !  ----------------------------------------------
 
@@ -682,10 +767,46 @@
 
 
 !  ----------------------------------------------
+
+   SUBROUTINE add_drhoph( drhot, sfac, gagb )
+      !
+      USE kinds,        ONLY: DP
+      USE gvecs,        ONLY: ngs
+      USE ions_base,    ONLY: nsp, rcmax
+      USE local_pseudo, ONLY: rhops
+      !
+      COMPLEX(DP), INTENT(INOUT) :: drhot( :, : )
+      COMPLEX(DP), INTENT(IN) :: sfac( :, : )
+      REAL(DP),    INTENT(IN) :: gagb( :, : )
+      !
+      INTEGER     :: ij, is, ig
+      COMPLEX(DP) :: drhop
+      !
+      DO ij = 1, 6
+         IF( dalbe( ij ) > 0.0d0 ) THEN
+            DO is = 1, nsp
+               DO ig = 1, ngs
+                  drhot(ig,ij) = drhot(ig,ij) - sfac(ig,is)*rhops(ig,is)
+               ENDDO
+            END DO
+         END IF
+      END DO
+      DO ig = 1, ngs
+         drhop = 0.0d0
+         DO is = 1, nsp
+           drhop = drhop - sfac( ig, is ) * rhops(ig,is) * rcmax(is)**2 * 0.5D0
+         END DO
+         DO ij = 1, 6
+             drhot(ig,ij) = drhot(ig,ij) - drhop * gagb( ij, ig )
+         END DO
+      END DO
+      RETURN
+   END SUBROUTINE add_drhoph
+
 !  ----------------------------------------------
 
 
-      SUBROUTINE stress_har(deht, ehr, sfac, rhoeg, gagb, omega ) 
+   SUBROUTINE stress_har(deht, ehr, sfac, rhoeg, gagb, omega ) 
 
       use ions_base,          only: nsp, rcmax
       USE cell_module,        only: boxdimensions
@@ -708,41 +829,130 @@
       COMPLEX(DP)    RHOP,DRHOP
       COMPLEX(DP)    RHET,RHOG,RHETS,RHOGS
       COMPLEX(DP)    CFACT
+      COMPLEX(DP), ALLOCATABLE :: rhot(:), drhot(:,:)
       REAL(DP)       hgm1
 
       INTEGER       ig, is, k, ispin
 
+
+      ALLOCATE( rhot( ngm ) )
+      ALLOCATE( drhot( ngm, 6 ) )
+
+      ! sum up spin components
+      !
+      DO ig = gstart, ngm
+         rhot( ig ) = rhoeg( ig, 1 )
+         IF( nspin > 1 ) rhot( ig ) = rhot( ig ) + rhoeg( ig, 2 )
+      END DO
+      !
+      ! add Ionic pseudo charges  rho_I
+      !
+      DO is = 1, nsp
+         DO ig = gstart, ngs
+            rhot( ig ) = rhot( ig ) + sfac( ig, is ) * rhops( ig, is )
+         END DO
+      END DO
+
+      ! add drho_e / dh
+      !
+      DO k = 1, 6
+         IF( dalbe( k ) > 0.0d0 ) THEN
+            drhot( :, k ) = - rhoeg( :, 1 )
+            IF( nspin > 1 ) drhot( :, k ) = drhot( :, k ) + rhoeg( :, 2 )
+         ELSE
+            drhot( :, k ) = 0.0d0
+         END IF
+      END DO
+
+      ! add drho_I / dh
+      !
+      CALL add_drhoph( drhot, sfac, gagb )
+
+      CALL stress_hartree(deht, ehr, sfac, rhot, drhot, gagb, omega ) 
+
+      DEALLOCATE( rhot, drhot )
+
+      RETURN
+   END SUBROUTINE stress_har
+
+!  ----------------------------------------------
+
+   SUBROUTINE stress_hartree(deht, ehr, sfac, rhot, drhot, gagb, omega ) 
+
+      ! This subroutine computes: d E_hartree / dh  =
+      !   E_hartree * h^t + 
+      !   4pi omega rho_t * CONJG( rho_t ) / G^2 / G^2 * G_alpha * G_beta +
+      !   4pi omega Re{ CONJG( rho_t ) * drho_t / G^2 }
+      ! where:
+      !   rho_t  = rho_e + rho_I
+      !   drho_t = d rho_t / dh = -rho_e + d rho_hard / dh  + d rho_I / dh
+
+      use ions_base,          only: nsp, rcmax
+      USE cell_module,        only: boxdimensions
+      use mp_global,          ONLY: me_image, root_image
+      USE constants,          ONLY: fpi
+      USE cell_base,          ONLY: tpiba2
+      USE reciprocal_vectors, ONLY: gstart, g
+      USE gvecs,              ONLY: ngs
+      USE gvecp,              ONLY: ngm
+      USE local_pseudo,       ONLY: rhops
+      USE electrons_base,     ONLY: nspin
+
+      IMPLICIT NONE
+
+      REAL(DP)    :: omega, DEHT(:), EHR, gagb(:,:)
+      COMPLEX(DP) :: rhot(:)  ! total charge: Sum_spin ( rho_e + rho_I )
+      COMPLEX(DP) :: drhot(:,:)
+      COMPLEX(DP), INTENT(IN) :: sfac(:,:)
+
+      COMPLEX(DP)    DEHC(6)
+      COMPLEX(DP)    CFACT
+      REAL(DP), ALLOCATABLE :: hgm1( : )
+      REAL(DP)    :: wz
+
+      INTEGER       ig, is, k, iss
+
       DEHC  = (0.D0,0.D0)
       DEHT  = 0.D0
 
+      wz = 2.0d0
+
+      ALLOCATE( hgm1( ngm ) )
+
+      hgm1( 1 ) = 0.0d0
       DO ig = gstart, ngm
-        RHOP  = (0.D0,0.D0)
-        DRHOP = (0.D0,0.D0)
-        IF( ig <= ngs ) THEN
-          DO IS = 1, NSP
-            RHOP  = RHOP  + sfac( IG, is ) * RHOPS(IG,is)
-            DRHOP = DRHOP - sfac( IG, is ) * RHOPS(IG,is) * rcmax(is)**2 * 0.5D0
-          END DO
-        END  IF
-        HGM1   = 1.D0 / g(IG) / TPIBA2 
-        RHET   = 0.0d0
-        DO ispin = 1, nspin
-          RHET   = RHET + RHOEG(ig,ispin)
-        END DO
-        RHOG   = RHET + RHOP
-        CFACT  = HGM1 * CONJG(RHOG) * ( RHOG * HGM1 - DRHOP )
-        DEHC   = DEHC + CFACT * gagb(:,ig)
+         hgm1( ig ) = 1.D0 / g(ig) / tpiba2
       END DO
 
+      ! Add term  rho_t * CONJG( rho_t ) / G^2 * G_alpha * G_beta / G^2
+
+      DO ig = gstart, ngm
+         cfact = rhot( ig ) * CONJG( rhot( ig ) ) * hgm1( ig ) ** 2 
+         dehc = dehc + cfact * gagb(:,ig)
+      END DO
+
+      ! Add term  2 * Re{ CONJG( rho_t ) * drho_t / G^2 }
+
+      DO ig = gstart, ngm
+         DO k = 1, 6
+            dehc( k ) = dehc( k ) +  rhot( ig ) * CONJG( drhot( ig, k ) ) * hgm1( ig )
+         END DO
+      END DO
+
+      ! term:  E_h * h^t
+
       if ( me_image == root_image ) then
-        deht = 2.0d0 * fpi * omega * DBLE(dehc) - ehr * dalbe
+        deht = wz * fpi * omega * DBLE(dehc) + ehr * dalbe
       else
-        deht = 2.0d0 * fpi * omega * DBLE(dehc)
+        deht = wz * fpi * omega * DBLE(dehc)
       end if
 
-      RETURN
-      END SUBROUTINE stress_har
+      DEALLOCATE( hgm1 )
 
+      RETURN
+      END SUBROUTINE stress_hartree
+
+!  ----------------------------------------------
 !  ----------------------------------------------
 !  ----------------------------------------------
 

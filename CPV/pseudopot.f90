@@ -1261,12 +1261,15 @@ CONTAINS
          c = fpi / sqrt(omega)
          do iv = 1, nh(is)
             lp = nhtolm( iv, is )
-            do ig = 1, ngw
+            do ig = gstart, ngw
                gg = g( ig ) * tpiba * tpiba / refg
                jj = int( gg ) + 1
                betagl = betagx( jj+1, iv, is ) * ( gg - DBLE(jj-1) ) + betagx( jj, iv, is ) * ( DBLE(jj) - gg )
                beta( ig, iv, is ) = c * ylm( ig, lp ) * betagl
             end do
+            if( gstart == 2 ) then
+               beta( 1, iv, is ) = c * ylm( 1, lp ) * betagx( 1, iv, is )
+            end if
          end do
       end do
 

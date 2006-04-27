@@ -375,7 +375,7 @@
 !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
 !
       USE kinds,              ONLY: DP
-      USE control_flags,      ONLY: iprint, iprsta, thdyn, tpre, trhor
+      USE control_flags,      ONLY: iprint, iprsta, thdyn, tpre, trhor, use_task_groups
       USE ions_base,          ONLY: nat
       USE gvecp,              ONLY: ngm
       USE gvecs,              ONLY: ngs, nps, nms
@@ -395,11 +395,13 @@
       USE mp,                 ONLY: mp_sum
       USE dener,              ONLY: denl, dekin
       USE io_global,          ONLY: stdout
-      USE mp_global,          ONLY: intra_image_comm
+      USE mp_global,          ONLY: intra_image_comm, nogrp, me_image, me_ogrp
+      USE task_groups,        ONLY: strd, tmp_npp, tmp_rhos, nolist
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
       USE cp_main_variables,  ONLY: rhopr
       USE fft_module,         ONLY: fwfft, invfft
+      USE fft_base,           ONLY: dffts
 !
       IMPLICIT NONE
       INTEGER nfi
@@ -421,22 +423,29 @@
       REAL(DP), EXTERNAL :: enkin, ennl
       COMPLEX(DP) ci,fp,fm
       COMPLEX(DP), ALLOCATABLE :: psi(:), psis(:)
+      REAL(DP), ALLOCATABLE :: long_rhos(:,:)
+
       LOGICAL, SAVE :: first = .TRUE.
       
       !
 
       CALL start_clock( 'rhoofr' )
 
-      ALLOCATE( psi( nnrx ) ) 
-      ALLOCATE( psis( nnrsx ) ) 
+      IF( use_task_groups ) THEN
+         ALLOCATE( psi( strd*(nogrp+1) ) ) !ALLOCATE ADDITIONAL MEMORY FOR TASK GROUPS
+         ALLOCATE( psis( strd*(nogrp+1) ) ) !ALLOCATE ADDITIONAL MEMORY FOR TASK GROUPS
+         ALLOCATE( long_rhos(strd*(nogrp+1), nspin))
+      ELSE
+         ALLOCATE( psi( nnrx ) ) 
+         ALLOCATE( psis( nnrsx ) ) 
+         ALLOCATE( long_rhos(1,1))
+      END IF
 
-      ci=(0.0,1.0)
+      ci = ( 0.0d0, 1.0d0 )
 
-      DO iss=1,nspin
-         rhor(:,iss) = 0.d0
-         rhos(:,iss) = 0.d0
-         rhog(:,iss) = (0.d0, 0.d0)
-      END DO
+      rhor = 0.d0
+      rhos = 0.d0
+      rhog = (0.d0, 0.d0)
       !
       !  calculation of kinetic energy ekin
       !
@@ -497,38 +506,50 @@
          !
          !     important: if n is odd then nx must be .ge.n+1 and c(*,n+1)=0.
          ! 
-         IF (MOD(n,2).NE.0) THEN
-            DO ig=1,ngw
-               c(ig,n+1)=(0.,0.)
-            END DO
+         IF ( MOD(n,2) .NE. 0 ) THEN
+            c( :, n+1 ) = ( 0.d0, 0.d0 )
          ENDIF
          !
-         DO i=1,n,2
-            psis (:) = (0.d0, 0.d0)
-            DO ig=1,ngw
-               psis(nms(ig))=CONJG(c(ig,i))+ci*CONJG(c(ig,i+1))
-               psis(nps(ig))=c(ig,i)+ci*c(ig,i+1)
-               ! write(6,'(I6,4F15.10)') ig, psis(nms(ig)), psis(nps(ig))
-            END DO
+         IF( use_task_groups ) THEN
+            !
+            CALL loop_over_states_tg()
+            !
+            DEALLOCATE(psi)
+            DEALLOCATE(psis) 
+            !
+            ALLOCATE( psi( nnrx ) ) 
+            ALLOCATE( psis( nnrsx ) ) 
+            !
+         ELSE
+            !
+            DO i=1,n,2
+               psis (:) = (0.d0, 0.d0)
+               DO ig=1,ngw
+                  psis(nms(ig))=CONJG(c(ig,i))+ci*CONJG(c(ig,i+1))
+                  psis(nps(ig))=c(ig,i)+ci*c(ig,i+1)
+                  ! write(6,'(I6,4F15.10)') ig, psis(nms(ig)), psis(nps(ig))
+               END DO
 
-            CALL invfft('Wave',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
-            !
-            iss1 = ispin(i)
-            sa1  = f(i) / omega
-            IF ( i .NE. n ) THEN
-               iss2 = ispin(i+1)
-               sa2  = f(i+1) / omega
-            ELSE
-               iss2 = iss1
-               sa2  = 0.0
-            END IF
-            !
-            DO ir = 1, nnrsx
-               rhos(ir,iss1) = rhos(ir,iss1) + sa1 * ( DBLE(psis(ir)))**2
-               rhos(ir,iss2) = rhos(ir,iss2) + sa2 * (AIMAG(psis(ir)))**2
+               CALL invfft('Wave',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+               !
+               iss1 = ispin(i)
+               sa1  = f(i) / omega
+               IF ( i .NE. n ) THEN
+                  iss2 = ispin(i+1)
+                  sa2  = f(i+1) / omega
+               ELSE
+                  iss2 = iss1
+                  sa2  = 0.0
+               END IF
+               !
+               DO ir = 1, nnrsx
+                  rhos(ir,iss1) = rhos(ir,iss1) + sa1 * ( DBLE(psis(ir)))**2
+                  rhos(ir,iss2) = rhos(ir,iss2) + sa2 * (AIMAG(psis(ir)))**2
+               END DO
+               !
             END DO
             !
-         END DO
+         END IF
          !
          !     smooth charge in g-space is put into rhog(ig)
          !
@@ -628,6 +649,7 @@
 
       DEALLOCATE( psi ) 
       DEALLOCATE( psis ) 
+      DEALLOCATE( long_rhos )
 
 10    FORMAT( /, 3X, 'from rhoofr: total integrated electronic density', &
             & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 )
@@ -669,6 +691,150 @@
 
          RETURN
       END SUBROUTINE
+
+      !
+      !
+
+      SUBROUTINE loop_over_states_tg
+         !
+         USE parallel_include
+         !
+         !        MAIN LOOP OVER THE EIGENSTATES
+         !           - This loop is also parallelized within the task-groups framework
+         !           - Each group works on a number of eigenstates in parallel
+         !
+         IMPLICIT NONE
+         !
+         INTEGER :: to, from, ii, eig_index, ierr, eig_offset
+         REAL(DP) :: tmp1(256)
+
+         do i = 1, n, 2*nogrp
+            !
+            !Initialize wave-functions in Fourier space (to be FFTed)
+            !The size of psis is nnr: which is equal to the total number
+            !of local fourier coefficients.
+            !
+            psis (:) = (0.d0, 0.d0)
+
+            !
+            !Loop for all local g-vectors (ngw)
+            !c: stores the Fourier expansion coefficients
+            !   the i-th column of c corresponds to the i-th state
+            !nms and nps matrices: hold conversion indices form 3D to
+            !                      1-D vectors. Columns along the z-dire-
+            !                      ction are stored contigiously
+            !The outer loop goes through i : i + 2*NOGRP to cover
+            !2*NOGRP eigenstates at each iteration
+            !
+            eig_offset = 0
+
+            do eig_index = 1, 2*nogrp, 2   
+               !
+               ! Outer loop for eigenvalues
+               !The  eig_index loop is executed only ONCE when NOGRP=1.
+               !Equivalent to the case with no task-groups
+               !dfft%nsw(me) holds the number of z-sticks for the current processor per wave-function
+               !We can either send these in the group with an mpi_allgather...or put the
+               !in the PSIS vector (in special positions) and send them with them.
+               !Otherwise we can do this once at the beginning, before the loop.
+               !we choose to do the latter one.
+
+               do ig=1,ngw
+                  psis(nms(ig)+eig_offset*strd)=conjg(c(ig,i+eig_index-1))+ci*conjg(c(ig,i+eig_index))
+                  psis(nps(ig)+eig_offset*strd)=c(ig,i+eig_index-1)+ci*c(ig,i+eig_index)
+               end do
+               !
+               eig_offset = eig_offset + 1
+               !
+            end do
+
+            !
+            !psis: holds the fourier coefficients of the current proccesor
+            !      for eigenstates i and i+2*NOGRP-1
+            !
+            CALL invfft('Wave',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+
+            iss1=ispin(i)
+            sa1=f(i)/omega
+            if (i.ne.n) then
+               iss2=ispin(i+1)
+               sa2=f(i+1)/omega
+            else
+               iss2=iss1
+               sa2=0.0
+            end if
+
+            !
+            !Compute local charge density
+            !
+            !This is the density within each orbital group...so it
+            !coresponds to 1 eignestate for each group and there are
+            !NOGRP such groups. Thus, during the loop across all
+            !occupied eigenstates, the total charge density must me
+            !accumulated across all different orbital groups.
+            !
+
+            IF ( .NOT. ( ALLOCATED( tmp_rhos ) ) ) THEN
+               ALLOCATE( tmp_rhos( nr1sx * nr2sx * tmp_npp(me_image+1), nspin ) )
+               tmp_rhos = 0D0
+            ENDIF
+
+            !This loop goes through all components of charge density that is local
+            !to each processor. In the original code this is nnrsx. In the task-groups
+            !code this should be equal to the total number of planes a processor has times the
+            !number of elements on each plane
+
+            do ir = 1, nr1sx * nr2sx * tmp_npp(me_image+1)
+               tmp_rhos(ir,iss1) = tmp_rhos(ir,iss1) + sa1*( real(psis(ir)))**2
+               tmp_rhos(ir,iss2) = tmp_rhos(ir,iss2) + sa2*(aimag(psis(ir)))**2
+            end do
+            !
+         END DO
+
+
+         IF ( NOGRP .NE. 1 ) THEN
+            CALL MPI_ALLREDUCE(tmp_rhos(1,1), long_rhos(1,1), nr1sx*nr2sx*tmp_npp(me_image+1), &
+                 MPI_DOUBLE_PRECISION, MPI_SUM, ME_OGRP, IERR)
+            IF ( nspin .EQ. 2 ) THEN
+               CALL MPI_ALLREDUCE(tmp_rhos(1,2), long_rhos(1,2), nr1sx*nr2sx*tmp_npp(me_image+1), &
+                    MPI_DOUBLE_PRECISION, MPI_SUM, ME_OGRP, IERR)
+            ENDIF
+         ENDIF
+
+         tmp_rhos(:,:) = 0D0
+
+         !
+         !BRING CHARGE DENSITY BACK TO ITS ORIGINAL POSITION
+         !
+         !If the current processor is not the "first" processor in its
+         !orbital group then does a local copy (reshuffling) of its data
+         !
+         IF ( me_image .NE. NOLIST(1) ) THEN
+            !
+            !  COPY THE PARTS OF THE EIGENVALUES NOT ASSIGNED TO THE FIRST ORBITAL GROUP
+            !
+            to = 1 !Where to copy initially
+            from = 1
+            DO ii=1, NOGRP
+               IF (NOLIST(ii).EQ.me_image) EXIT !Exit the loop
+               from = from +  nr1sx*nr2sx*dffts%npp(NOLIST(ii)+1)! From where to copy initially
+            ENDDO
+
+            CALL DCOPY(nr1sx*nr2sx*dffts%npp(me_image+1), long_rhos(from, 1), 1, long_rhos(to,1), 1)
+            IF (nspin.EQ.2) THEN
+               CALL DCOPY(nr1sx*nr2sx*dffts%npp(me_image+1), long_rhos(from, 2), 1, long_rhos(to,2), 1)
+            ENDIF
+
+         ENDIF
+         !
+         DO ir=1, nspin
+            CALL dcopy(nnrsx, long_rhos(1,ir), 1, rhos(1,ir), 1)
+         ENDDO
+
+
+
+         RETURN
+      END SUBROUTINE loop_over_states_tg
 
 !-----------------------------------------------------------------------
    END SUBROUTINE rhoofr_cp

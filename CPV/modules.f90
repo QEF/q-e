@@ -134,10 +134,11 @@ end module qradb_mod
 
 ! Variable cell
 module derho
+  use kinds, only: DP
   implicit none
   save
-  complex(8),allocatable:: drhog(:,:,:,:)
-  real(8),allocatable::     drhor(:,:,:,:)
+  complex(DP),allocatable:: drhog(:,:,:,:)
+  real(DP),allocatable::    drhor(:,:,:,:)
 contains
   subroutine deallocate_derho
       IF( ALLOCATED( drhog ) ) DEALLOCATE( drhog )

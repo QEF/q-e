@@ -49,24 +49,25 @@
        vnhh, xnhh0, vnhp, xnhp0, atot, ekin, epot )
 
       !
-      USE control_flags,    ONLY : iprint
-      USE energies,         ONLY : print_energies, dft_energy_type
-      USE printout_base,    ONLY : printout_base_open, printout_base_close, &
-                                   printout_pos, printout_cell, printout_stress
-      USE constants,        ONLY : factem, au_gpa, au, amu_si, bohr_radius_cm, scmass, BOHR_RADIUS_ANGS
-      USE ions_base,        ONLY : na, nsp, nat, ind_bck, atm, ityp, pmass, &
-                                   cdm_displacement, ions_displacement
-      USE cell_base,        ONLY : s_to_r, get_volume
-      USE efield_module,    ONLY : tefield, pberryel, pberryion, &
-                                   tefield2, pberryel2, pberryion2
-      USE cg_module,        ONLY : tcg, itercg
-      USE sic_module,       ONLY : self_interaction, sic_alpha, sic_epsilon
-      USE electrons_module, ONLY : print_eigenvalues
+      USE control_flags,     ONLY : iprint
+      USE energies,          ONLY : print_energies, dft_energy_type
+      USE printout_base,     ONLY : printout_base_open, printout_base_close, &
+                                    printout_pos, printout_cell, printout_stress
+      USE constants,         ONLY : factem, au_gpa, au, amu_si, bohr_radius_cm, scmass, BOHR_RADIUS_ANGS
+      USE ions_base,         ONLY : na, nsp, nat, ind_bck, atm, ityp, pmass, &
+                                    cdm_displacement, ions_displacement
+      USE cell_base,         ONLY : s_to_r, get_volume
+      USE efield_module,     ONLY : tefield, pberryel, pberryion, &
+                                    tefield2, pberryel2, pberryion2
+      USE cg_module,         ONLY : tcg, itercg
+      USE sic_module,        ONLY : self_interaction, sic_alpha, sic_epsilon
+      USE electrons_module,  ONLY : print_eigenvalues
 
-      USE xml_io_base,      ONLY : save_print_counter
+      USE xml_io_base,       ONLY : save_print_counter
       USE cp_main_variables, ONLY : nprint_nfi
-      USE io_files,         ONLY : scradir
-      USE control_flags,    ONLY : ndw
+      USE io_files,          ONLY : scradir
+      USE control_flags,     ONLY : ndw, tdipole
+      USE polarization,      ONLY : print_dipole
       !
       IMPLICIT NONE
       !
@@ -99,7 +100,7 @@
       !
       ! avoid double printing to files by refering to nprint_nfi
       !
-      tfile=tfilei.and.(nfi.gt.nprint_nfi)
+      tfile = tfilei .and. ( nfi .gt. nprint_nfi )
       !
       IF( ionode .AND. tfile .AND. tprint ) THEN
          CALL printout_base_open()
@@ -137,6 +138,8 @@
             CALL print_eigenvalues( 31, tfile, nfi, tps )
             !
             WRITE( stdout, * )
+            !
+            IF( tdipole ) CALL print_dipole( 32, tfile, nfi, tps )
             !
             CALL printout_cell( stdout, h )
             !
@@ -312,7 +315,6 @@
       use brillouin,        only: kpoints, kp
       use time_step,        ONLY: tps
       USE electrons_nose,   ONLY: electrons_nose_nrg, xnhe0, vnhe, qne, ekincw
-      USE polarization,     ONLY: pdipole, pdipolt, p
       USE sic_module,       ONLY: ind_localisation, pos_localisation, nat_localisation, &
                                   self_interaction, sic_rloc
       !!USE ions_base,        ONLY: ions_displacement, cdm_displacement

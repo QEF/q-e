@@ -361,6 +361,7 @@
          call fillgrad( nspin, rhog, gradr )
          ! 
       end if
+
 !
            !  allocate the sic_arrays
 !
@@ -420,6 +421,7 @@
       !
       if ( tpre ) then
          !
+         !  Add term: Vxc( r ) * Drhovan( r )_ij - Vxc( r ) * rho( r ) * ((H^-1)^t)_ij
          !
          do iss = 1, nspin
             do j=1,3

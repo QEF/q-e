@@ -198,6 +198,64 @@
       RETURN
       END SUBROUTINE denkin
 
+!-----------------------------------------------------------------------
+      subroutine denps(rhotmp,drhotmp,sfac,vtemp,dps)
+!-----------------------------------------------------------------------
+!
+! derivative of local potential energy wrt cell parameters h
+! Output in dps
+!
+! rhotmp input : rho(G) (up and down spin components summed)
+! drhotmp input
+! sfac   input : structure factors
+! wtemp work space
+!
+      use ions_base, only: nsp
+      use gvecs, only: ngs
+      use gvecp, only: ng => ngm
+      use reciprocal_vectors, only: gstart, gx
+      use cell_base, only: omega
+      use cell_base, only: ainv, tpiba2
+      use local_pseudo, only: vps, dvps
+      use mp, only: mp_sum
+
+      implicit none
+! input
+      complex(8) rhotmp(ng), drhotmp(ng,3,3), vtemp(ng), sfac(ngs,nsp)
+! output
+      real(8) dps(3,3)
+! local
+      integer i, j, ig, is
+      real(8) wz
+!
+!     wz = factor for g.neq.0 because of c*(g)=c(-g)
+!
+      wz=2.d0
+      do i=1,3
+         do j=1,3
+            do ig=1,ngs
+               vtemp(ig)=(0.,0.)
+            enddo
+            do is=1,nsp
+               do ig=1,ngs
+                  vtemp(ig)=vtemp(ig)-CONJG(rhotmp(ig))*sfac(ig,is)*    &
+     &                    dvps(ig,is)*2.d0*tpiba2*gx(i,ig)*             &
+     &                    (gx(1,ig)*ainv(j,1) +                         &
+     &                     gx(2,ig)*ainv(j,2) +                         &
+     &                     gx(3,ig)*ainv(j,3) ) +                       &
+     &                    CONJG(drhotmp(ig,i,j))*sfac(ig,is)*vps(ig,is)
+               enddo
+            enddo
+            dps(i,j)=omega*DBLE(wz*SUM(vtemp))
+            if (gstart == 2) dps(i,j)=dps(i,j)-omega*DBLE(vtemp(1))
+         enddo
+      enddo
+
+      call mp_sum( dps( 1:3, 1:3 ) )
+
+      return
+      end subroutine denps
+
 
 !
 !-----------------------------------------------------------------------
@@ -280,138 +338,6 @@
 
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE denh_box(rhotmp,drhotmp,sfac,vtemp,eh,dh)
-!-----------------------------------------------------------------------
-!
-! derivative of hartree energy wrt cell parameters h
-! Output in dh
-!
-! rhotmp input : total electronic + ionic broadened charge (G)
-! drhotmp input and work space
-! sfac   input : structure factors
-! wtemp work space
-! eh input: hartree energy
-!
-      USE kinds, ONLY:DP
-      USE constants, ONLY: pi, fpi, au_gpa
-      USE control_flags, ONLY: iprsta
-      USE io_global, ONLY: stdout
-      USE ions_base, ONLY: nsp
-      USE gvecs
-      USE gvecp, ONLY: ng => ngm
-      USE reciprocal_vectors, ONLY: gstart, gx, g
-      USE cell_base, ONLY: omega, h
-      USE cell_base, ONLY: ainv, tpiba2
-      USE local_pseudo, ONLY: rhops, drhops
-      USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: intra_image_comm
-
-      IMPLICIT NONE
-! input
-      COMPLEX(8) rhotmp(ng), drhotmp(ng,3,3), vtemp(ng), sfac(ngs,nsp)
-      REAL(8) eh
-! output
-      REAL(8) dh(3,3)
-      REAL(8) detmp(3,3)
-! local
-      INTEGER i, j, ig, is
-      REAL(8) wz
-!
-!     wz = factor for g.neq.0 because of c*(g)=c(-g)
-!
-      wz=2.d0
-      DO j=1,3
-         DO i=1,3
-            DO is=1,nsp
-               DO ig=1,ngs
-                  drhotmp(ig,i,j) = drhotmp(ig,i,j) -                   &
-     &                    sfac(ig,is)*rhops(ig,is)*ainv(j,i)
-               ENDDO
-            ENDDO
-            IF (gstart == 2) vtemp(1)=(0.d0,0.d0)
-            DO ig=gstart,ng
-               vtemp(ig)=  CONJG(rhotmp(ig))/(tpiba2*g(ig))*drhotmp(ig,i,j)
-            ENDDO
-            dh(i,j)=fpi*omega*DBLE(SUM(vtemp))*wz
-         ENDDO
-      ENDDO
-
-      CALL mp_sum( dh( 1:3, 1:3 ), intra_image_comm )
-
-      DO i=1,3
-         DO j=1,3
-            dh(i,j)=dh(i,j)+omega*eh*ainv(j,i)
-         END DO
-      END DO
-
-5555  FORMAT(1x,f12.5,1x,f12.5,1x,f12.5/                                &
-     &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
-     &       1x,f12.5,1x,f12.5,1x,f12.5//)     
-
-      RETURN
-      END SUBROUTINE denh_box
-
-
-!
-!-----------------------------------------------------------------------
-      SUBROUTINE denps_box( drhotmp, sfac, vtemp, dps)
-!-----------------------------------------------------------------------
-!
-! Charge density term of the
-! derivative of local potential energy wrt cell parameters h
-!
-! Output in dps
-!
-! drhotmp input
-! sfac   input : structure factors
-! vtemp work space
-!
-      USE kinds, ONLY: DP
-      USE ions_base, ONLY: nsp
-      USE gvecs, ONLY: ngs
-      USE gvecp, ONLY: ngm
-      USE reciprocal_vectors, ONLY: gstart
-      USE cell_base, ONLY: omega
-      USE local_pseudo, ONLY: vps
-      USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: intra_image_comm
-
-      IMPLICIT NONE
-      !
-      COMPLEX(DP), INTENT(IN) :: drhotmp( ngm, 3, 3 ), sfac( ngs, nsp )
-      COMPLEX(DP) :: vtemp( ngm )
-      !
-      REAL(DP), INTENT(OUT) :: dps( 3, 3 )
-      !
-      INTEGER  :: i, j, ig, is
-      REAL(DP) :: wz
-      !
-      !     wz = factor for g.neq.0 because of c*(g)=c(-g)
-      !
-      wz = 2.d0
-      !
-      DO i = 1, 3
-         DO j = 1, 3
-            vtemp( 1:ngs ) = (0.d0,0.d0)
-            DO is = 1, nsp
-               DO ig = 1, ngs
-                  vtemp(ig) = vtemp(ig) + &
-                              CONJG( drhotmp(ig,i,j) ) * sfac(ig,is) * vps(ig,is)
-               ENDDO
-            ENDDO
-            dps(i,j) = omega * DBLE( wz * SUM( vtemp(1:ngs) ) )
-            IF (gstart == 2) dps(i,j) = dps(i,j) - omega * DBLE( vtemp(1) )
-         ENDDO
-      ENDDO
-
-      CALL mp_sum( dps, intra_image_comm )
-
-      RETURN
-      END SUBROUTINE denps_box
-
-
-
-!-----------------------------------------------------------------------
       SUBROUTINE denlcc( nnr, nspin, vxcr, sfac, drhocg, dcc )
 !-----------------------------------------------------------------------
 !
@@ -491,7 +417,7 @@
 
 !
 !-------------------------------------------------------------------------
-      SUBROUTINE dforce (bec,betae,i,c,ca,df,da,v)
+      SUBROUTINE dforce ( bec, betae, i, c, ca, df, da, v )
 !-----------------------------------------------------------------------
 !computes: the generalized force df=CMPLX(dfr,dfi) acting on the i-th
 !          electron state at the gamma point of the brillouin zone
@@ -724,6 +650,8 @@
 !
       RETURN
       END SUBROUTINE dotcsc
+
+
 !-----------------------------------------------------------------------
       SUBROUTINE drhov(irb,eigrb,rhovan,rhog,rhor)
 !-----------------------------------------------------------------------
@@ -1730,6 +1658,8 @@
 !
       RETURN
       END SUBROUTINE newd
+
+
 !-------------------------------------------------------------------------
       SUBROUTINE nlfl(bec,becdr,lambda,fion)
 !-----------------------------------------------------------------------
@@ -1750,9 +1680,124 @@
 !
       INTEGER k, is, ia, iv, jv, i, j, inl, isa, iss, nss, istart
       REAL(8), ALLOCATABLE :: temp(:,:), tmpbec(:,:),tmpdr(:,:) 
+
+#if defined __BGL
+      COMPLEX*16 :: B, A1, A2, A3, C1, C2, C3
+      INTEGER :: FLP 
+#endif
+
       !
       CALL start_clock( 'nlfl' )
       !
+#if defined __BGL
+
+      ALLOCATE( temp( 3*nudx, nudx ), tmpbec( nhm, nudx ), tmpdr( 3*nudx, nhm ) )
+
+      !---------------------------------------------------
+      !The outer loop accross the x-y-z direction has been
+      !fused into the loop accross atoms
+      !---------------------------------------------------
+
+         isa = 0
+
+         do is=1,nvb 
+
+            do ia=1,na(is)
+
+               isa = isa + 1  
+!                       
+               DO iss = 1, nspin
+                  !
+                  nss = nupdwn( iss )
+                  istart = iupdwn( iss )
+
+                  tmpbec = 0.d0  
+                  tmpdr  = 0.d0  
+!                       
+                  do iv=1,nh(is) 
+                     do jv=1,nh(is)
+                        inl=ish(is)+(jv-1)*na(is)+ia
+                        if(abs(qq(iv,jv,is)).gt.1.e-5) then
+                           do i=1,nss
+                              tmpbec(iv,i)=tmpbec(iv,i)                    &
+     &                          + qq(iv,jv,is)*bec(inl,i+istart-1)
+                           end do
+                        endif
+                     end do
+                  end do
+
+                  do iv=1,nh(is)
+                     inl=ish(is)+(iv-1)*na(is)+ia
+                     CALL DCOPY(nss, becdr(inl,istart,1), 1, tmpdr(1,iv), 1)
+                     CALL DCOPY(nss, becdr(inl,istart,2), 1, tmpdr(n+1,iv), 1)
+                     CALL DCOPY(nss, becdr(inl,istart,3), 1, tmpdr(2*n+1,iv), 1)
+                  end do
+
+                  if ( nh(is) .gt. 0 )then
+!
+                     call MXMA                                             &
+     &                 (tmpdr,1,3*nudx,tmpbec,1,nhm,temp,1,3*nudx,nss,nh(is),nss)
+!
+                     !---------------------------------------------------------
+                     !BG/L 440d specific implementation:
+                     !At each inner i-loop 3 pairs of two consequtive elements
+                     !of the j-th column of matrix temp are performed.
+                     !Then, 3 parallel fused multiply add operations are issued
+                     !Any remaining data is handled after the loop
+                     !---------------------------------------------------------
+                     B =  (0D0,0D0)
+                     A1 = (0D0,0D0)
+                     A2 = (0D0,0D0)
+                     A3 = (0D0,0D0)
+                     C1 = (0D0,0D0)
+                     C2 = (0D0,0D0)
+                     C3 = (0D0,0D0)
+   
+                     do j=1,nss
+                        do i=1,nss,2
+                           A1 =  LOADFP(temp(i,j))
+                           B  =  LOADFP(lambda(i,j,iss))
+                           B  =  FPMUL(B,(2D0,2D0))
+                           C1 =  FPMADD(C1,A1,B)
+                           A2 =  LOADFP(temp(n+i,j))
+                           C2 =  FPMADD(C2,A2,B)
+                           A3 =  LOADFP(temp(2*n+i,j))
+                           C3 =  FPMADD(C3,A3,B)
+                        end do
+                        !-------------------------
+                        !Handle any remaining data
+                        !-------------------------
+                        IF (MOD(nss,2).NE.0) THEN
+                           fion(1,isa) = fion(1,isa) + 2*temp(nss,j)*lambda(nss,j,iss)
+                           fion(2,isa) = fion(2,isa) + 2*temp(2*nss,j)*lambda(nss,j,iss)
+                           fion(3,isa) = fion(3,isa) + 2*temp(3*nss,j)*lambda(nss,j,iss)
+                        ENDIF
+                     end do
+                     fion(1,isa) =  fion(1,isa) + DBLE(C1)+AIMAG(C1)
+                     fion(2,isa) =  fion(2,isa) + DBLE(C2)+AIMAG(C2)
+                     fion(3,isa) =  fion(3,isa) + DBLE(C3)+AIMAG(C3)
+
+                     !do j=1,n
+                     !   do i=1,n
+                     !      fion(1,isa) = fion(1,isa) +  2*temp(i,j)*lambda(i,j,iss)
+                     !      fion(2,isa) = fion(2,isa) +  2*temp(n+i,j)*lambda(i,j,iss)
+                     !      fion(3,isa) = fion(3,isa) +  2*temp(2*n+i,j)*lambda(i,j,iss)
+                     !   end do
+                     !end do
+
+
+                  endif
+
+               end do
+!
+            end do
+
+         end do
+
+
+#else
+
+
       ALLOCATE( temp( nudx, nudx ), tmpbec( nhm, nudx ), tmpdr( nudx, nhm ) )
 
       DO k=1,3
@@ -1802,6 +1847,7 @@
                      END DO
 !
                      fion(k,isa)=fion(k,isa)+2.*SUM(temp)
+
                   ENDIF
 
                END DO
@@ -1810,14 +1856,21 @@
          END DO
       END DO
       !
-      !     end of x/y/z loop
+
+#endif
+
 
       DEALLOCATE( temp, tmpbec, tmpdr )
       !
       CALL stop_clock( 'nlfl' )
       !
       RETURN
+
       END SUBROUTINE nlfl
+
+
+
+
 
 !
 !-----------------------------------------------------------------------
@@ -2131,11 +2184,11 @@
       USE electrons_base, ONLY: nspin
       USE gvecb
       USE gvecp, ONLY: ng => ngm
-      USE cell_base, ONLY: omega
+      USE cell_base, ONLY: omega, ainv
       USE small_box, ONLY: omegab
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
-      USE control_flags, ONLY: iprint, iprsta
+      USE control_flags, ONLY: iprint, iprsta, tpre
       USE qgb_mod
       USE recvecs_indexes, ONLY: np, nm
       USE fft_module, ONLY: fwfft, invfft
@@ -2150,7 +2203,7 @@
       COMPLEX(8),  INTENT(inout):: rhog(ng,nspin)
 !
       INTEGER isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,           &
-     &     isa, ia, ir
+     &     isa, ia, ir, i, j
       REAL(8) sumrho
       COMPLEX(8) ci, fp, fm, ca
       COMPLEX(8), ALLOCATABLE::  qgbt(:,:)
@@ -2278,9 +2331,10 @@
          !
          !  rhog(g) = total (smooth + US) charge density in G-space
          !
-         DO ig=1,ng
+         DO ig = 1, ng
             rhog(ig,iss)=rhog(ig,iss)+v(np(ig))
          END DO
+
 !
          IF(iprsta.GT.1) WRITE( stdout,'(a,2f12.8)')                          &
      &        ' rhov: n_v(g=0) = ',omega*DBLE(rhog(1,iss))
@@ -2376,6 +2430,7 @@
             rhog(ig,isup)=rhog(ig,isup) + 0.5*CMPLX(DBLE(fp),AIMAG(fm))
             rhog(ig,isdw)=rhog(ig,isdw) + 0.5*CMPLX(AIMAG(fp),-DBLE(fm))
          END DO
+
 !
          IF(iprsta.GT.2) WRITE( stdout,'(a,2f12.8)')                          &
      &        ' rhov: n_v(g=0) up   = ',omega*DBLE (rhog(1,isup))
@@ -2619,7 +2674,7 @@
       USE kinds,         ONLY: dp
       USE control_flags, ONLY: iprint, iprsta, thdyn, tpre, tfor, tprnfor
       USE io_global,     ONLY: stdout
-      USE ions_base,     ONLY: nsp, na, nat
+      USE ions_base,     ONLY: nsp, na, nat, rcmax
       USE gvecs
       USE gvecp, ONLY: ng => ngm
       USE cell_base, ONLY: omega, r_to_s
@@ -2644,8 +2699,9 @@
       USE fft_module, ONLY: fwfft, invfft
       USE sic_module, ONLY: self_interaction, sic_epsilon, sic_alpha
       USE energies,   ONLY: self_sxc, self_ehte
-      USE potentials,       ONLY: vofesr
-      USE stress,           ONLY: pseudo_stress, compute_gagb, stress_har
+      USE potentials,       ONLY: vofesr, self_vofhar
+      USE stress,           ONLY: pseudo_stress, compute_gagb, stress_hartree, &
+                                  add_drhoph, stress_local
 !
       IMPLICIT NONE
 !
@@ -2659,10 +2715,12 @@
       !
       INTEGER irb(3,nat)
       !
-      INTEGER iss, isup, isdw, ig, ir,i,j,k,is, ia
+      INTEGER iss, isup, isdw, ig, ir, i, j, k, ij, is, ia
       REAL(DP) vave, ebac, wz, eh, ehpre
-      COMPLEX(DP)  fp, fm, ci
-      COMPLEX(DP), ALLOCATABLE :: rhotmp(:), vtemp(:), drhotmp(:,:,:)
+      COMPLEX(DP)  fp, fm, ci, drhop
+      COMPLEX(DP), ALLOCATABLE :: rhotmp(:), vtemp(:)
+      ! COMPLEX(DP), ALLOCATABLE :: drhotmp(:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: drhot(:,:)
       COMPLEX(DP), ALLOCATABLE :: v(:), vs(:)
       REAL(DP), ALLOCATABLE    :: gagb(:,:)
       !
@@ -2675,10 +2733,16 @@
       LOGICAL                  :: ttsic
       REAL(DP)                 :: detmp( 3, 3 ), desr( 6 ), deps( 6 )
       REAL(DP)                 :: detmp2( 3, 3 )
+      REAL(DP)                 :: ht( 3, 3 )
       REAL(DP)                 :: deht( 6 )
 !
       INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
       INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
+
+      ! ...  dalbe(:) = delta( alpha(:), beta(:) )
+      REAL(DP),  DIMENSION(6), PARAMETER :: dalbe = &
+         (/ 1.0_DP, 0.0_DP, 0.0_DP, 1.0_DP, 0.0_DP, 1.0_DP /)
+
 
 
       CALL start_clock( 'vofrho' )
@@ -2689,13 +2753,16 @@
       !
       wz = 2.0
       !
+      ht = TRANSPOSE( h )
+      !
       ALLOCATE( v( nnr ) )
       ALLOCATE( vs( nnrsx ) )
       ALLOCATE( vtemp( ng ) )
       ALLOCATE( rhotmp( ng ) )
       !
       IF ( tpre ) THEN
-         ALLOCATE( drhotmp( ng, 3, 3 ) )
+         ! ALLOCATE( drhotmp( ng, 3, 3 ) )
+         ALLOCATE( drhot( ng, 6 ) )
          ALLOCATE( gagb( 6, ng ) )
          CALL compute_gagb( gagb, gx, ng, tpiba2 )
       END IF
@@ -2735,13 +2802,30 @@
 !
 
       rhotmp( 1:ng ) = rhog( 1:ng, 1 )
+      !
       IF( tpre ) THEN
-         drhotmp( 1:ng, :, : ) = drhog( 1:ng, 1, :, : )
+         ! drhotmp( 1:ng, :, : ) = drhog( 1:ng, 1, :, : )
+         DO ij = 1, 6
+            i = alpha( ij )
+            j = beta( ij )
+            drhot( :, ij ) = 0.0d0
+            DO k = 1, 3
+               drhot( :, ij ) = drhot( :, ij ) +  drhog( :, 1, i, k ) * ht( k, j )
+            END DO
+         END DO
       END IF
+      !
       IF( nspin == 2 ) THEN
          rhotmp( 1:ng ) = rhotmp( 1:ng ) + rhog( 1:ng, 2 )
          IF(tpre)THEN
-            drhotmp( 1:ng, :, : ) = drhotmp( 1:ng, :, : ) + drhog( 1:ng, 2, :, : )
+            ! drhotmp( 1:ng, :, : ) = drhotmp( 1:ng, :, : ) + drhog( 1:ng, 2, :, : )
+            DO ij = 1, 6
+               i = alpha( ij )
+               j = beta( ij )
+               DO k = 1, 3
+                  drhot( :, ij ) = drhot( :, ij ) +  drhog( :, 2, i, k ) * ht( k, j )
+               END DO
+            END DO
          ENDIF
       END IF
       !
@@ -2763,9 +2847,10 @@
 !
       IF( tpre ) THEN
          !
-         CALL denps_box( drhotmp, sfac, vtemp, dps )
+         !  CALL denps( rhotmp, drhotmp, sfac, vtemp, dps )
          !
-         CALL pseudo_stress( deps, 0.0d0, gagb, sfac, dvps, rhog, omega )
+         !
+         CALL stress_local( deps, epseu, gagb, sfac, rhotmp, drhot, omega )
          !
          call mp_sum( deps, intra_image_comm )
          !
@@ -2774,15 +2859,14 @@
             detmp( beta(k), alpha(k) ) = detmp( alpha(k), beta(k) )
          END DO
          !
-         dps = dps + MATMUL( detmp(:,:), TRANSPOSE( ainv(:,:) ) )
+         dps = MATMUL( detmp(:,:), TRANSPOSE( ainv(:,:) ) )
          !
       END IF
-
-!
-!     ===================================================================
-!     calculation hartree energy
-!     -------------------------------------------------------------------
-     !
+      !
+      !     
+      !     calculation hartree energy
+      !    
+      !
       self_ehtet = 0.d0  
       !
       IF( ttsic ) self_vloc = 0.d0 
@@ -2802,16 +2886,9 @@
 !
       IF ( ttsic ) THEN
          !
-         DO ig = gstart,ng
-            fpibg = fpi /(tpiba2 *g(ig))
-            self_rhoeg    = rhog(ig,1) - rhog(ig,2)
-            self_ehtet    = self_ehtet +  fpibg * DBLE(self_rhoeg * CONJG(self_rhoeg))
-            self_vloc(ig) = sic_epsilon * fpibg * self_rhoeg
-         ENDDO
-
-         IF(gstart == 2) self_vloc(1) = 0.D0
-         self_ehte = sic_epsilon * self_ehtet * wz * 0.5d0
-         eh = eh - self_ehte
+         CALL self_vofhar( .false., self_ehte, self_vloc, rhog, omega, h )
+         !
+         eh = eh - self_ehte / omega
 
          CALL mp_sum( self_ehte, intra_image_comm )
          !
@@ -2820,19 +2897,27 @@
       CALL mp_sum( eh, intra_image_comm )
       !
       IF(tpre) THEN
-         !CALL denh_box( rhotmp, drhotmp, sfac, vtemp, eh, dh )
-         !CALL stress_har( deht, 0.0d0, sfac, rhog, gagb, omega )
-         !call mp_sum( deht, intra_image_comm )
-         !DO k = 1, 6
-         !   detmp( alpha(k), beta(k) ) = deht(k)
-         !   detmp( beta(k), alpha(k) ) = detmp( alpha(k), beta(k) )
-         !END DO
-         !dh = dh + MATMUL( detmp(:,:), TRANSPOSE( ainv(:,:) ) )
-         !WRITE( stdout,*) 'DEBUG eh, dh = ', eh
-         !WRITE( stdout,5555) ((dh(i,j),j=1,3),i=1,3)
-         CALL denh( rhotmp, drhotmp, sfac, vtemp, eh, dh )
+         !
+         CALL add_drhoph( drhot, sfac, gagb )
+         !
+         CALL stress_hartree(deht, eh*omega, sfac, rhotmp, drhot, gagb, omega )
+         !
+         call mp_sum( deht, intra_image_comm )
+         !
+         DO k = 1, 6
+            detmp( alpha(k), beta(k) ) = deht(k)
+            detmp( beta(k), alpha(k) ) = detmp( alpha(k), beta(k) )
+         END DO
+         !
+         dh = MATMUL( detmp(:,:), TRANSPOSE( ainv(:,:) ) )
+         !
+         ! CALL denh( rhotmp, drhotmp, sfac, vtemp, eh, dh )
+         !
       END IF
-      IF(tpre) DEALLOCATE(drhotmp)
+      !
+      IF(tpre) THEN
+         DEALLOCATE( drhot )
+      END IF
 
       !    
       !     forces on ions, ionic term in reciprocal space
@@ -3092,3 +3177,305 @@
 !
 
       END SUBROUTINE vofrho
+
+
+
+
+
+!=========================================================================
+!C. Bekas, IBM Research Zurich.
+! dforce with Task Groups parallelization
+!=========================================================================
+!-------------------------------------------------------------------------
+      subroutine dforce_bgl (bec,betae,i,c,ca,df,da,v)
+!-----------------------------------------------------------------------
+!computes: the generalized force df=CMPLX(dfr,dfi) acting on the i-th
+!          electron state at the gamma point of the brillouin zone
+!          represented by the vector c=CMPLX(cr,ci)
+!
+!     d_n(g) = f_n { 0.5 g^2 c_n(g) + [vc_n](g) +
+!              sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
+!                                 e^-ig.r_i < beta_i,j | c_n >}
+      use kinds, only: dp
+      use control_flags, only: iprint
+      use gvecs
+      use gvecw, only: ngw
+      use cvan, only: ish
+      use uspp, only: nhsa=>nkb, dvan, deeq
+      use uspp_param, only: nhm, nh
+      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, &
+            nr1sx, nr2sx, nr3sx, nnrsx
+      use electrons_base, only: n => nbsp, ispin, f, nspin
+      use constants, only: pi, fpi
+      use ions_base, only: nsp, na, nat
+      use gvecw, only: ggp
+      use cell_base, only: tpiba2
+      use ensemble_dft, only: tens
+      use funct, only: dft_is_meta
+      USE task_groups
+      use fft_base,  only : dffts
+      use mp_global, only : nogrp, me_image, me_ogrp
+      use parallel_include
+!
+      implicit none
+!
+      !--------
+      !C. Bekas
+      !   c and ca hold the coefficients for the input eigenvalues
+      !   originaly they are vectors of length ngw
+      !   In the task-groups version they are matrices with
+      !   ngw rows and NOGRP columns
+      !-----------------------------------------------------------
+
+      !--------
+      !C. Bekas
+      !--------
+      !Observe the increased sizes for Task Groups
+      !C. Bekas: Increased size for matrix v
+      complex(DP) :: betae(ngw,nhsa), c(ngw,2*NOGRP), ca(ngw,2*NOGRP), df(ngw*(NOGRP+1)), da(ngw*(NOGRP+1)) 
+      real(DP) :: bec(nhsa,n), v( ( NOGRP + 1 ) * nr1sx * nr2sx * nr3sx, nspin ) 
+      integer i
+! local variables
+      integer iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
+      real(DP) fi, fip, dd
+      complex(DP) fp,fm,ci
+      real(DP),    ALLOCATABLE :: af(:,:), aa(:,:) 
+                               ! C. Bekas: increased size for automatic arrays
+      complex(DP), ALLOCATABLE :: dtemp(:,:)    
+      complex(DP), ALLOCATABLE :: psi(:)
+      COMPLEX(DP), ALLOCATABLE :: temp_psi( : )
+
+      !--------
+      !C. Bekas
+      !--------
+      INTEGER  ::  eig_index, index, index_df_da, ierr
+      INTEGER, DIMENSION(NOGRP) :: local_send_cnt, local_send_displ, local_recv_cnt, local_recv_displ
+!
+      call start_clock( 'dforce' ) 
+      !
+#ifdef __BGL
+
+      ALLOCATE( psi( strd * ( NOGRP+1 ) ))
+      ALLOCATE( temp_psi( 2 * (NOGRP+1) * dffts%nsw(1) * nr3sx ) )
+      ALLOCATE( af( nhsa, NOGRP ), aa( nhsa, NOGRP ), dtemp( ngw, NOGRP ) )
+!
+!     important: if n is odd => c(*,n+1)=0.
+! 
+      if ( MOD(n,2) .ne. 0 .and. i .eq. n ) then
+         do ig = 1, ngw
+            ca(ig,:) = 0.0d0
+         end do
+      end if
+!
+      ci = ( 0.0d0, 1.0d0 )
+!
+
+         psi(:) = (0D0,0D0)
+         index = 1
+         eig_offset = 0
+         do eig_index = 1, 2*NOGRP, 2! Outer loop for eigenvalues
+            !The  eig_index loop is executed only ONCE when NOGRP=1.
+            !Equivalent to the case with no task-groups
+            !dfft%nsw(me) holds the number of z-sticks for the current processor per wave-function
+            !We can either send these in the group with an mpi_allgather...or put the
+            !in the PSIS vector (in special positions) and send them with them.
+            !Otherwise we can do this once at the beginning, before the loop.
+            !we choose to do the latter one.
+
+            !---------------------------------------------
+            !strd is defined earlier in the rhoofr routine
+            !---------------------------------------------
+
+            do ig=1,ngw
+               psi(nms(ig)+eig_offset*strd)=conjg( c(ig,index) - ci*ca(ig,index) )
+               psi(nps(ig)+eig_offset*strd)=c(ig,index)+ci*ca(ig,index)
+            end do
+            eig_offset = eig_offset + 1
+            index = index + 2
+         end do
+
+         CALL invfft('Wave',psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)  
+
+         ! task group is managed inside the fft driver
+
+! 
+      !==================================================================
+      !C. Bekas
+      !This logic is altered in the TG case, see below
+      !------------------------------------------------------------------
+      iss1=ispin(i)
+
+!
+      if (i.ne.n) then
+         iss2=ispin(i+1)
+      else
+         iss2=iss1
+      end if
+      !==================================================================
+
+
+      !------------------------------------------------------------------
+      !Each wave function is multiplied term - to - term by the local
+      !potential, which is always the same for all eigenvalues
+      !The length of psi is so that it holds all parts of it in the
+      !plane-wave group
+      !------------------------------------------------------------------
+      do ir=1, nr1sx*nr2sx*tmp_npp(me_image+1)
+         psi(ir)=cmplx(v(ir,iss1)* DBLE(psi(ir)),                       &
+     &                 v(ir,iss2)*AIMAG(psi(ir)) )
+      end do
+!
+
+      !-----------------------------------------------
+      !CALL TASK GROUP PARALLEL FORWARD FFT
+      !Note that the wavefunctions are already
+      !distributed according to the TASK-GROUPS
+      !scheme
+      !-----------------------------------------------
+
+      CALL fwfft('Wave',psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+
+
+      !-------------------------------------------------
+      !Bring pencils back to their original distribution
+      !-------------------------------------------------
+      local_send_cnt(1) = nr3sx*dffts%nsw(NOLIST(1)+1)
+      local_send_displ(1) = 0
+      local_recv_cnt(1) = nr3sx*dffts%nsw(me_image+1)
+      local_recv_displ(1) = 0
+      DO index=2, NOGRP
+         local_send_cnt(index) = nr3sx*dffts%nsw(NOLIST(index)+1)
+         local_send_displ(index) = local_send_displ(index-1) + local_send_cnt(index-1)
+
+         local_recv_cnt(index) = nr3sx*dffts%nsw(me_image+1)
+         local_recv_displ(index)  = local_recv_displ(index-1) + local_recv_cnt(index-1)
+      ENDDO
+
+      CALL start_clock('DFORCE_ALL')
+#if defined __MPI
+      CALL MPI_Alltoallv(psi, &
+           local_send_cnt, local_send_displ, MPI_DOUBLE_COMPLEX, temp_psi, &
+           local_recv_cnt, local_recv_displ, MPI_DOUBLE_COMPLEX, ME_OGRP, IERR)
+#endif
+      CALL stop_clock('DFORCE_ALL')
+
+
+!
+!     note : the factor 0.5 appears 
+!       in the kinetic energy because it is defined as 0.5*g**2
+!       in the potential part because of the logics
+!
+   
+
+      !--------------------------------------------------------------
+      !Each processor will treat its own part of the eigenstate
+      !assigned to its ORBITAL group
+      !--------------------------------------------------------------
+      eig_offset = 0
+      index_df_da = 1
+      DO index = 1, 2*NOGRP, 2
+         do ig=1,ngw
+            if (tens) then
+               fi = -0.5
+               fip = -0.5
+            else
+               fi = -0.5*f(i+index-1)
+               fip = -0.5*f(i+index)
+            endif
+            fp= temp_psi(nps(ig)+eig_offset) +  temp_psi(nms(ig)+eig_offset)
+            fm= temp_psi(nps(ig)+eig_offset) -  temp_psi(nms(ig)+eig_offset)
+            df(index_df_da)= fi*(tpiba2 * ggp(ig) * c(ig,index)+cmplx(real(fp), aimag(fm)))
+            da(index_df_da)= fip*(tpiba2 * ggp(ig) * ca(ig,index)+cmplx(aimag(fp),-real(fm)))
+            index_df_da = index_df_da + 1
+         enddo
+         eig_offset = eig_offset + nr3sx * dffts%nsw(me_image+1)
+         !We take into account the number of elements received from other members of the orbital group
+      ENDDO
+
+      !--------------------------------------------------------------------------------------------
+      !C. Bekas: I am not sure whether this is implemented correctly...need to check this carefully 
+      if(dft_is_meta()) call dforce_meta(c,ca,df,da,psi,iss1,iss2,fi,fip) !METAGGA
+      !--------------------------------------------------------------------------------------------
+!
+!     aa_i,i,n = sum_j d_i,ij <beta_i,j|c_n>
+! 
+      IF( nhsa > 0 ) THEN
+
+         do inl=1,nhsa
+            af(inl,:)=0.0d0
+            aa(inl,:)=0.0d0
+         end do
+!
+         do is=1,nsp
+            do iv=1,nh(is)
+               do jv=1,nh(is)
+                  isa=0
+                  do ism=1,is-1
+                     isa=isa+na(ism)
+                  end do
+                  do ia=1,na(is)
+                     inl=ish(is)+(iv-1)*na(is)+ia
+                     jnl=ish(is)+(jv-1)*na(is)+ia
+                     isa=isa+1
+                     dd = deeq(iv,jv,isa,iss1)+dvan(iv,jv,is)
+                    
+                     !-------------------------------------------------
+                     !C. Bekas
+                     !Work on all currently treated (NOGRP) eigenvalues
+                     !-------------------------------------------------
+                     ig = 1
+                     DO index = 1, 2*NOGRP, 2
+                        if (tens) then 
+                           af(inl,ig) = af(inl,ig) -  dd*bec(jnl,  i+index-1 )
+                        else
+                           af(inl,ig) = af(inl,ig) -  f(i+index-1)*dd*bec(jnl,  i+index-1 )
+                        endif
+
+                        dd = deeq(iv,jv,isa,iss2)+dvan(iv,jv,is)
+                      
+                        if (tens) then
+                           if ((i+index-1).ne.n) aa(inl,ig) = aa(inl,ig) - dd*bec(jnl,i+index)
+                        else
+                           if ((i+index-1).ne.n) aa(inl,ig) = aa(inl,ig) - f(i+index)*dd*bec(jnl,i+index)
+                        endif    
+                        ig = ig + 1
+                     ENDDO
+                  end do
+               end do
+            end do
+         end do
+!
+         dtemp(:,:) = 0.0d0
+
+         call MXMA (betae, 1, 2*ngw, af, 1, nhsa, dtemp, 1, 2*ngw, 2*ngw, nhsa, NOGRP)
+
+         DO index = 1, NOGRP
+            DO ig = 1+(index-1)*ngw, index*ngw
+               df(ig) = df(ig) + dtemp(ig,index)
+            END DO
+         ENDDO
+
+         dtemp(:,:) = 0.0d0
+
+         call MXMA (betae, 1, 2*ngw, aa, 1, nhsa, dtemp, 1, 2*ngw, 2*ngw, nhsa, NOGRP)
+
+         DO index = 1, NOGRP
+            DO ig = 1+(index-1)*ngw, index*ngw
+               da(ig) = da(ig) + dtemp(ig,index)
+            ENDDO
+         ENDDO
+
+      END IF
+
+
+      DEALLOCATE( psi )
+      DEALLOCATE( temp_psi ) 
+      DEALLOCATE( af, aa, dtemp )
+
+#endif
+!
+      call stop_clock( 'dforce' ) 
+!
+      return
+      end subroutine dforce_bgl
+!
