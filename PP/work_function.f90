@@ -24,7 +24,7 @@ SUBROUTINE work_function (wf)
 
   REAL(DP) :: wmean1, wmean2, meancharge, wx1, wx2, wxm, vx, vc, ex, &
                    ec, rhox, rs, vcca, wf, etxc, vtxc
-  INTEGER :: n1, n2, ni, nmean
+  INTEGER :: n1, n2, ni, nmean, nspin0
   LOGICAL :: exst
   REAL(DP), ALLOCATABLE :: raux1 (:), vaux1 (:), vaux2(:), aux (:)
   REAL(DP), ALLOCATABLE :: vxc(:,:)
@@ -34,8 +34,8 @@ SUBROUTINE work_function (wf)
   ALLOCATE (vaux1( nrx1 * nrx2 * nrx3))    
   ALLOCATE (vaux2( nrx1 * nrx2 * nrx3))    
 
-  IF (nspin .EQ. 4) &
-     CALL errore ('work_function','spin-orbit not implemented',1)
+  nspin0=nspin
+  if (nspin==4) nspin0=1
 
   ALLOCATE (vxc(nrxx,nspin))
   CALL v_xc (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
@@ -50,14 +50,14 @@ SUBROUTINE work_function (wf)
 
   wf = 0.d0
 
-  DO current_spin=1,nspin
+  DO current_spin=1,nspin0
 
 #ifdef __PARA
      ALLOCATE (aux  ( nrxx))    
-     aux(:) = rho(:,current_spin) + rho_core(:)/nspin
+     aux(:) = rho(:,current_spin) + rho_core(:)/nspin0
      CALL gather (aux, raux1)
 #else
-     raux1(1:nrxx) = rho(1:nrxx,current_spin) + rho_core(1:nrxx)/nspin
+     raux1(1:nrxx) = rho(1:nrxx,current_spin) + rho_core(1:nrxx)/nspin0
 #endif
      !
 #ifdef __PARA
@@ -75,7 +75,7 @@ SUBROUTINE work_function (wf)
 #endif
      IF ( ionode ) THEN
         !
-        IF (nspin.EQ.2) THEN
+        IF (nspin == 2) THEN
            IF (current_spin.EQ.1) THEN
               WRITE(17,*) " SPIN UP "
               WRITE(19,*) " SPIN UP "
@@ -110,7 +110,7 @@ SUBROUTINE work_function (wf)
            wxm = dsqrt (wxm / DBLE (nr1 * nr2) - meancharge**2)
            IF (nmean.EQ. (nr3 + 1) / 2) THEN
               wf = wf + (wmean2 - ef)
-              IF (nspin.EQ.2) THEN
+              IF (nspin == 2) THEN
                  IF (current_spin.EQ.1) THEN
                     WRITE( stdout,*) " SPIN UP "
                  ELSE
@@ -128,7 +128,7 @@ SUBROUTINE work_function (wf)
      ENDIF
   !
   END DO
-  wf = wf / nspin
+  wf = wf / nspin0
   !
   CALL mp_bcast( wf, ionode_id )
 
