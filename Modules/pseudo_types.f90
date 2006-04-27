@@ -51,7 +51,6 @@
 
           INTEGER :: nv                 ! UPF file version number
           INTEGER :: lmax               ! maximum angular momentum component
-          INTEGER :: lloc               ! l-component chosen as local reference
           INTEGER :: mesh               ! number of point in the radial mesh
           INTEGER :: nwfc               ! number of wavefunctions
           INTEGER :: nbeta              ! number of projectors

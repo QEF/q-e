@@ -208,7 +208,7 @@ subroutine read_pseudo_header (upf, iunps)
   read (iunps, * ) upf%zp , dummy  
   read (iunps, * ) upf%etotps, dummy  
   read (iunps, * ) upf%ecutwfc, upf%ecutrho
-  read (iunps, * ) upf%lmax ,  upf%lloc
+  read (iunps, * ) upf%lmax , dummy
   read (iunps, *, err = 100, end = 100) upf%mesh , dummy  
   read (iunps, *, err = 100, end = 100) upf%nwfc, upf%nbeta , dummy
   read (iunps, '(a)', err = 100, end = 100) dummy
