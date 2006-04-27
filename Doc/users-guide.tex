@@ -193,7 +193,7 @@ The frozen-phonon code was contributed by Silviu Zilberman
 
 The calculation of the finite (imaginary) frequency molecular 
 polarizability using the approximated Thomas-Fermi  + von Weiz\"acker
-scheme was contributed by V.H. Nguyen (Sissa and Hanoi University).
+scheme was contributed by Huy-Viet Nguyen (Sissa),
 
 \hyphenation{fran-ce-sco}
 \hyphenation{ce-re-so-li}
@@ -224,7 +224,6 @@ Sergey Lisenkov,
 Kurt Maeder,
 Francesco Mauri,
 Nicolas Mounet,
-Huy-Viet Nguyen,
 Pasquale Pavone,
 Mickael Profeta,
 Guido Roma,
@@ -365,9 +364,13 @@ To install Quantum-ESPRESSO from source, you need C and Fortran-95
 compilers (Fortran-90 is not sufficient, but most "Fortran-90"
 compilers are actually Fortran-95-compliant).
 If you don't have a commercial Fortran-95 compiler, you may install
-the free \texttt{g95} compiler
+the free \texttt{g95}
 (\htmladdnormallink{\texttt{http://www.g95.org/}}%
-                   {http://www.g95.org/}).
+                   {http://www.g95.org/})
+or \texttt{gfortran} 
+(\htmladdnormallink{\texttt{http://www.gfortran.org/}}%
+                   {http://www.gfortran.org/})
+compiler.
 You also need a minimal Unix environment: basically, a command shell
 (e.g., \texttt{bash} or \texttt{tcsh}) and the utilities
 \texttt{make}, \texttt{awk} and \texttt{sed}.
@@ -902,7 +905,7 @@ Other utilities:
   \item \texttt{VdW/} contains the sources  for the calculation of the 
         finite (imaginary) frequency molecular polarizability using the
         approximated Thomas-Fermi  + von Weiz\"acker scheme, contributed
-        by V.H. Nguyen (Sissa and Hanoi University). Compile with
+        by H.-V. Nguyen (Sissa and Hanoi University). Compile with
         \texttt{make vdw}, executables in \texttt{VdW/vdw.x}, no
         documentation yet, but an example in \texttt{examples/example34}.
 \end{itemize}
@@ -1065,6 +1068,7 @@ You can specify multiple directories.
 Note: at the moment \texttt{check\_example} is in early development
 and (should be) guaranteed to work only on examples 01 to 04.
 \end{enumerate}
+
 
 \subsection{Installation issues}
   \label{installissues}
@@ -3127,7 +3131,59 @@ group of \textbf{q}, the code compares \textbf{q} and the rotated
 You may run into trouble if your \textbf{q}-point differs from a
 high-symmetry point by an amount in that order of magnitude.
 
-\section{Frequently Asked (and Seldom Answered) Questions}
+\section{Frequently Asked Questions}
+
+\subsection{Compilation/Installation}
+
+Most compilation problems have obvious origins and can be solved by 
+reading error messages and acting accordingly. Sometimes the reason 
+for a failure is less obvious. In such a case, you should look into 
+this guide, in the ``Installation Issues'' section, and into the 
+\texttt{pw\_forum} archive to see if a similar problem (with
+solution) is described. If you get really weird error messages 
+during installation, look for them with your preferred Internet
+search engine (such as Google).
+
+\begin{itemize}
+
+\item {\texttt{configure} \em says I have no fortran compiler!}
+You haven't one. Really. More exactly, you have none of the fortran 
+compilers \texttt{configure} is trying in your execution path. If 
+your hardware/software combination is supported, fix your 
+execution path.
+
+\item {\texttt{configure} \em says ``unsupported C/Fortran compilers 
+combination''!}
+Unless you have trouble in compilation/linking, never mind.
+
+\item {\texttt{configure} \em says ``unsupported architecture''!}
+If compilation/linking still works, never mind, Otherwise, see 
+instructions in \texttt{README.configure} on what to do. Note that 
+in most cases you may use \texttt{configure} to produce dependencies, 
+then edit the file \texttt{make.sys}.
+
+\item {\texttt{configure} \em doesn't find my (parallel/mathematical) 
+libraries!}
+\texttt{configure} tries to locate libraries (both mathematical and 
+parallel libraries) in logical places with logical names, but if they 
+have strange names or strange locations, you will have to rename/move 
+them, or to instruct \texttt{configure} to find them (see subsection 
+``Libraries''). Note that if MPI libraries are not found, parallel
+compilation is disabled.
+
+\item {\texttt{configure} \em doesn't recognize that I have a parallel 
+machine!}
+Yu do not have a properly configure parallel environment (libraries and
+compiler). \texttt{configure} tries to locate a parallel compiler in a 
+logical place with a logical name, but if it has a strange names or it 
+is located in a strange location, you will have to instruct 
+\texttt{configure} to find it. Note that in most PC clusters (Beowulf),
+there is no parallel Fortran-95 compiler: you have to configure an 
+appropriate script, such as \texttt{mpif90}. For libraries, see above.
+
+\end{itemize}
+
+\subsection{In general}
 
 \begin{itemize}
 \item {\em How can I choose parameters for variable-cell 
