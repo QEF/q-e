@@ -341,9 +341,9 @@ SUBROUTINE electrons()
            !
            descf = delta_escf()
            !
-           ! ... write the charge density to file
+           ! ... write the charge density to file - NO LONGER USED?
            !
-           CALL io_pot( 1, 'rho', rhonew, nspin )
+           !!! CALL io_pot( 1, 'rho', rhonew, nspin )
            !
            DEALLOCATE (rhonew )
            !
@@ -400,10 +400,6 @@ SUBROUTINE electrons()
      ! ... in the nonlocal potential.
      !
      CALL newd()
-     !
-     ! ... write the potential to file
-     !
-     CALL io_pot( 1, 'pot', vr, nspin )     
      !
      ! ... save converged wfc if they have not been written previously
      !     

@@ -308,12 +308,7 @@ MODULES = \
 
 TLDEPS=bindir mods libs libiotk
 
-all : tldeps memory.x pw.x
-
-memory.x : memory.o $(PWOBJS) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
-		memory.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin; ln -fs ../PW/$@ . )
+all : tldeps pw.x
 
 pw.x : pwscf.o $(PWOBJS) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
@@ -324,7 +319,7 @@ tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
-	- /bin/rm -f pw.x memory.x *.o *~ *.F90 *.d *.mod *.i work.pc
+	- /bin/rm -f pw.x *.o *~ *.F90 *.d *.mod *.i work.pc
 
 include make.depend
 

@@ -83,6 +83,7 @@ subroutine set_pseudo_upf (is, upf)
   dion(1:upf%nbeta, 1:upf%nbeta, is) = upf%dion(1:upf%nbeta, 1:upf%nbeta)
   !
   lmax(is) = upf%lmax
+  lloc(is) = upf%lloc
   nqlc(is) = upf%nqlc
   nqf (is) = upf%nqf
   lll(1:upf%nbeta,is) = upf%lll(1:upf%nbeta)
@@ -113,9 +114,6 @@ subroutine set_pseudo_upf (is, upf)
      rho_atc(:,is) = 0.d0
   end if
   rho_at (1:upf%mesh, is) = upf%rho_at (1:upf%mesh)
-  !!! TEMP
-  lloc(is) = 0
-  !!!
   vloc_at(1:upf%mesh,is) = upf%vloc(1:upf%mesh)
 
   zv(is) = zp(is)  !!! maybe not needed: it is done in setup
