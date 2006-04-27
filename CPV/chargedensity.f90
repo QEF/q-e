@@ -791,7 +791,7 @@
             !
          END DO
 
-
+#if defined (__PARA)
          IF ( NOGRP .NE. 1 ) THEN
             CALL MPI_ALLREDUCE(tmp_rhos(1,1), long_rhos(1,1), nr1sx*nr2sx*tmp_npp(me_image+1), &
                  MPI_DOUBLE_PRECISION, MPI_SUM, ME_OGRP, IERR)
@@ -800,6 +800,7 @@
                     MPI_DOUBLE_PRECISION, MPI_SUM, ME_OGRP, IERR)
             ENDIF
          ENDIF
+#endif
 
          tmp_rhos(:,:) = 0D0
 
