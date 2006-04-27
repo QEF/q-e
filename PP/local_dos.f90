@@ -70,7 +70,6 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   ! input checks
   !
   if (noncolin.and. lsign) call errore('local_dos','not available yet',1)
-  if (noncolin.and. iflag.ne. 0) call errore('local_dos','not available yet',1)
   if (noncolin.and. gamma_only) call errore('local_dos','not available yet',1)
   !
   if ( (iflag == 0) .and. ( kband < 1 .or. kband > nbnd ) ) &

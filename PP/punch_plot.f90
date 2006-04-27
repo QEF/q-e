@@ -24,7 +24,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   !              3                 the local density of states at e_fermi
   !              4                 the local density of electronic entropy
   !              5                 stm images
-  !              6                 spin polarisation (rho(up)-rho(down)
+  !              6                 spin polarisation (rho(up)-rho(down))
   !              7                 square of a wavefunction (see below)
   !              8                 electron localization function (ELF)
   !              9                 no longer implemented, see plan_avg.f90
@@ -203,7 +203,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   ELSEIF (plot_num == 10) THEN
 
-     if (noncolin) call errore('punch_plot','not implemented yet',1)
      CALL local_dos (3, lsign, kpoint, kband, emin, emax, raux)
 
   ELSEIF (plot_num == 11) THEN
