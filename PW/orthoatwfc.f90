@@ -122,6 +122,7 @@ SUBROUTINE orthoatwfc
         CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
      ENDIF
 
+   IF (orthogonalize_wfc) THEN
      !
      ! calculate overlap matrix
      !
@@ -135,14 +136,14 @@ SUBROUTINE orthoatwfc
 #ifdef __PARA
      CALL reduce (2 * natomwfc * natomwfc, overlap)
 #endif
-     IF (.not.orthogonalize_wfc) THEN
-        DO i = 1, natomwfc
-           DO j = i+1, natomwfc
-              overlap(i,j) = cmplx(0.d0,0.d0)
-              overlap(j,i) = cmplx(0.d0,0.d0)
-           ENDDO
-        ENDDO
-     END IF
+  !   IF (.not.orthogonalize_wfc) THEN
+  !      DO i = 1, natomwfc
+  !         DO j = i+1, natomwfc
+  !            overlap(i,j) = cmplx(0.d0,0.d0)
+  !            overlap(j,i) = cmplx(0.d0,0.d0)
+  !         ENDDO
+  !      ENDDO
+  !   END IF
      !
      ! find O^-.5
      !
@@ -179,6 +180,8 @@ SUBROUTINE orthoatwfc
         END IF
      ENDDO
         
+   END IF ! orthogonalize_wfc
+
      IF (noncolin) THEN
         CALL davcio (swfcatom_nc, nwordatwfc, iunat, ik, 1)
      ELSE
