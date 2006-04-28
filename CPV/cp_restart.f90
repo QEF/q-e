@@ -1387,9 +1387,11 @@ MODULE cp_restart
          !
       END IF
       !
-      DO ib = 1, SIZE( lambda0, 2 )
-         CALL mp_bcast( lambda0( :, ib), ionode_id, intra_image_comm )
-         CALL mp_bcast( lambdam( :, ib), ionode_id, intra_image_comm )
+      DO ispin = 1, nspin
+         DO ib = 1, SIZE( lambda0, 2 )
+            CALL mp_bcast( lambda0( :, ib, ispin), ionode_id, intra_image_comm )
+            CALL mp_bcast( lambdam( :, ib, ispin), ionode_id, intra_image_comm )
+         END DO
       END DO
       !
       s1 = cclock()
