@@ -231,7 +231,15 @@
                 djl(ir) = jl(ir) / ( r(ir) * xg ) - djl(ir) 
               end do
             ELSE
-              djl = 0.0d0
+              IF( xg > gsmall ) THEN
+                 call sph_bes ( mesh-1, r(2), xg, -1, djl(2) )
+                 do ir=2,mesh
+                   djl(ir) = jl(ir) / ( r(ir) * xg ) - djl(ir) 
+                 end do
+                 djl(1) = djl(2)
+              ELSE
+                 djl = 0.0d0
+              END IF
             END IF
             do ir=1,mesh
               fint(ir)=r(ir)**3*rho_atc(ir)*djl(ir)

@@ -204,6 +204,7 @@
         !detmp = MATMUL( detmp(:,:), box%m1(:,:) )
         !WRITE( stdout,*) "derivative of e(xc) - nlcc part"
         !WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+        !WRITE( stdout,*) SUM( rhocp(:,1) )
 
 
       END IF
@@ -362,15 +363,15 @@
          ! 
       end if
 
-!
-           !  allocate the sic_arrays
-!
+
       ttsic = (self_interaction /= 0 )
-!
-      IF ( ttsic .AND. dft_is_meta() ) CALL errore ('SIC and metadynamics not together', 1)
-      IF ( ttsic .AND. tpre ) CALL errore( 'SIC and stress not implemented', 1)
-!
+      !
       IF ( ttsic ) THEN
+         !
+         IF ( dft_is_meta() ) CALL errore ('SIC and metadynamics not together', 1)
+         IF ( tpre ) CALL errore( 'SIC and stress not implemented', 1)
+
+         !  allocate the sic_arrays
          !
          ALLOCATE( self_rho( nnr, nspin ) )
          ALLOCATE( self_rhog( ng, nspin ) )
@@ -461,7 +462,6 @@
          !
       end if
       !
-      !
       if (dft_is_gradient()) then
          !
          !  Add second part of the xc-potential to rhor
@@ -509,8 +509,8 @@
          !
          ! DEBUG
          !
-         ! write (stdout,*) "derivative of e(xc) - nlcc part"
-         ! write (stdout,5555) ((dcc(i,j),j=1,3),i=1,3)
+         !  write (stdout,*) "derivative of e(xc) - nlcc part"
+         !  write (stdout,5555) ((dcc(i,j),j=1,3),i=1,3)
          !
          dxc = dxc + dcc
          !
@@ -530,6 +530,7 @@
          end do
          !
       END IF
+      !
 
       IF( ALLOCATED( gradr ) ) DEALLOCATE( gradr )
 
