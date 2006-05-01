@@ -26,28 +26,20 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
   !
   IMPLICIT NONE
   !
-  ! ... first the dummy variables
-  !
-  INTEGER :: lda, n, nvecx, start, finish
+  INTEGER, INTENT(IN) :: &
+        lda, n, nvecx, start, finish
     ! input: leading dimension of the vectors
     ! input: physical dimension
     ! input: dimension of psi
     ! input: first vector to orthogonalize
     ! input: last vector to orthogonalize
-  COMPLEX(DP) :: psi(lda,nvecx), spsi(lda,nvecx), hpsi(lda,nvecx)
+  COMPLEX(DP), INTENT(INOUT) :: &
+        psi(lda,nvecx), spsi(lda,nvecx), hpsi(lda,nvecx)
     ! input/output: the vectors to be orthogonalized
   !
-  ! ... parameters
-  !
-  INTEGER, PARAMETER :: ierrx = 3
-    ! maximum number of errors
-  !
-  ! ... here the local variables
-  !
-  INTEGER :: vec, vecp, ierr
+  INTEGER :: vec, vecp
     ! counter on vectors
     ! counter on vectors
-    ! counter on errors
   REAL(DP) :: psi_norm
     ! the norm of a vector
   REAL(DP), EXTERNAL :: DDOT
@@ -85,17 +77,15 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
        !
        ALLOCATE( ps( finish ) )
        !
-       ierr = 0
-       !
        DO vec = start, finish
           !
           IF ( vec > 1 ) THEN
              !
              CALL DGEMV( 'T', 2*n, vec-1, 2.D0, &
-                  psi, 2*n, spsi(1,vec), 1, 0.D0, ps, 1 )
+                         psi, 2*lda, spsi(1,vec), 1, 0.D0, ps, 1 )
              !
              IF ( gstart == 2 ) &
-                  ps(1:vec-1) = ps(1:vec-1) - psi(1,1:vec-1) * spsi(1,vec)
+                ps(1:vec-1) = ps(1:vec-1) - psi(1,1:vec-1)*spsi(1,vec)
              !
              CALL reduce( ( vec - 1 ), ps )
              !
@@ -109,17 +99,17 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
              !
           END IF
           !
-          psi_norm = 2.D0 * DDOT( 2 * n, psi(1,vec), 1, spsi(1,vec), 1 )
+          psi_norm = 2.D0*DDOT( 2*n, psi(1,vec), 1, spsi(1,vec), 1 )
           !
           IF ( gstart == 2 ) psi_norm = psi_norm - psi(1,vec) * spsi(1,vec)
           !
           CALL reduce( 1, psi_norm )
           !
-          IF ( psi_norm < 0.D0 ) THEN
+          IF ( psi_norm < eps8 ) THEN
              !
              WRITE( stdout, '(/,5X,"norm = ",F16.10,I4,/)' ) psi_norm, vec
              !
-             CALL errore( 'cgramg1_gamma', 'negative norm in S ', 1 )
+             CALL errore( 'cgramg1_gamma', 'negative or zero norm in S ', 1 )
              !
           END IF
           !
@@ -128,16 +118,6 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
           psi(:,vec)  = psi_norm * psi(:,vec)
           hpsi(:,vec) = psi_norm * hpsi(:,vec)
           spsi(:,vec) = psi_norm * spsi(:,vec)
-          !
-          IF ( psi_norm < eps8 ) THEN
-             !
-             ierr = ierr + 1
-             !
-             IF ( ierr <= ierrx ) CYCLE
-             !
-             CALL errore( 'cgramg1_gamma', 'absurd correction vector', vec )
-             !
-          END IF
           !
        END DO
        !
@@ -155,27 +135,23 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
        !
        COMPLEX(DP), ALLOCATABLE :: ps(:)
        !
-       COMPLEX(DP) ::  ZDOTC
-       !
        !
        ALLOCATE( ps( finish ) )
-       !
-       ierr = 0
        !
        DO vec = start, finish
           !
           IF ( vec > 1 ) THEN
              !
              CALL ZGEMV( 'C', n, vec-1, ONE, &
-                  psi, n, spsi(1,vec), 1, ZERO, ps, 1 )
+                         psi(1,1), lda, spsi(1,vec), 1, ZERO, ps, 1 )
              !
              CALL reduce( 2*( vec - 1 ), ps )
              !
-             DO vecp = 1, ( vec - 1 )
+             DO vecp = 1, vec - 1
                 !
-                psi(:,vec)  = psi(:,vec)  - ps(vecp) * psi(:,vecp)
-                hpsi(:,vec) = hpsi(:,vec) - ps(vecp) * hpsi(:,vecp)
-                spsi(:,vec) = spsi(:,vec) - ps(vecp) * spsi(:,vecp)
+                psi(:,vec)  = psi(:,vec)  - ps(vecp)*psi(:,vecp)
+                hpsi(:,vec) = hpsi(:,vec) - ps(vecp)*hpsi(:,vecp)
+                spsi(:,vec) = spsi(:,vec) - ps(vecp)*spsi(:,vecp)
                 !
              END DO
              !
@@ -185,11 +161,11 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
           !
           CALL reduce( 1, psi_norm )
           !
-          IF ( psi_norm < 0.D0 ) THEN
+          IF ( psi_norm < eps8 ) THEN
              !
              WRITE( stdout, '(/,5X,"norm = ",F16.10,I4,/)' ) psi_norm, vec
              !
-             CALL errore( 'cgramg1_k', ' negative norm in S ', 1 )
+             CALL errore( 'cgramg1_k', 'negative or zero norm in S', 1 )
              !
           END IF
           !
@@ -198,16 +174,6 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
           psi(:,vec)  = psi_norm * psi(:,vec)
           hpsi(:,vec) = psi_norm * hpsi(:,vec)
           spsi(:,vec) = psi_norm * spsi(:,vec)
-          !
-          IF ( psi_norm < eps8 ) THEN
-             !
-             ierr = ierr + 1
-             !
-             IF ( ierr <= ierrx ) CYCLE
-             !
-             CALL errore( 'cgramg1_k', ' absurd correction vector', vec )
-             !
-          END IF
           !
        END DO
        !

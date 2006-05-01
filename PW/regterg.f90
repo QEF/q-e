@@ -12,7 +12,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
-                    overlap, gstart, e, btype, notcnv, lrot, dav_iter )
+                    uspp, gstart, e, btype, notcnv, lrot, dav_iter )
   !----------------------------------------------------------------------------
   !
   ! ... iterative solution of the eigenvalue problem:
@@ -20,7 +20,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   ! ... ( H - e S ) * evc = 0
   !
   ! ... where H is an hermitean operator, e is a real scalar,
-  ! ... S is an overlap matrix, evc is a complex vector
+  ! ... S is an uspp matrix, evc is a complex vector
   ! ... (real wavefunctions with only half plane waves stored)
   !
   USE io_global,     ONLY : stdout
@@ -42,7 +42,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   REAL(DP), INTENT(IN) :: ethr
   ! energy threshold for convergence: root improvement is stopped,
   ! when two consecutive estimates of the root differ by less than ethr.
-  LOGICAL, INTENT(IN) :: overlap
+  LOGICAL, INTENT(IN) :: uspp
   ! if .FALSE. : S|psi> not needed
   INTEGER, INTENT(IN) :: btype(nvec)
   ! band type ( 1 = occupied, 0 = empty )
@@ -152,7 +152,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
       !
       CALL h_psi( ndmx, ndim, nvec, psi, hpsi )
       !
-      IF ( overlap ) THEN
+      IF ( uspp ) THEN
          !
          CALL s_psi( ndmx, ndim, nvec, psi, spsi )
          !
@@ -277,7 +277,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          CALL h_psi( ndmx, ndim, notcnv, psi(1,nb1), hpsi(1,nb1) )
          !
-         IF ( overlap ) THEN
+         IF ( uspp ) THEN
             !
             CALL s_psi( ndmx, ndim, notcnv, psi(1,nb1), spsi(1,nb1) )
             !
@@ -291,7 +291,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          ! ... update the reduced hamiltonian
          !
-         CALL start_clock( 'overlap' )
+         CALL start_clock( 'uspp' )
          !
          CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, ndim2, 2.D0, psi, &
                      ndmx2, hpsi(1,nb1), ndmx2, 0.D0, hr(1,nb1), nvecx )
@@ -302,7 +302,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          CALL reduce( nvecx * notcnv, hr(1,nb1) )
          !
-         CALL stop_clock( 'overlap' )
+         CALL stop_clock( 'uspp' )
          !
          nbase = nbase + notcnv
          !
@@ -421,9 +421,11 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
       !
       IMPLICIT NONE
       !
-      ALLOCATE( psi( ndmx, nvecx ) )
+      ALLOCATE( psi(  ndmx, nvecx ) )
       ALLOCATE( hpsi( ndmx, nvecx ) )
-      IF ( overlap ) ALLOCATE( spsi( ndmx, nvecx ) )
+      !
+      IF ( uspp ) ALLOCATE( spsi( ndmx, nvecx ) )
+      !
       ALLOCATE( sr( nvecx, nvecx ) )
       ALLOCATE( hr( nvecx, nvecx ) )
       ALLOCATE( vr( nvecx, nvecx ) )
@@ -436,16 +438,17 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
       nbase  = nvec
       conv   = .FALSE.
       !
-      IF ( overlap ) spsi = ZERO
-      psi  = ZERO
+      IF ( uspp ) spsi = ZERO
+      !
       hpsi = ZERO
+      psi  = ZERO
       psi(:,1:nvec) = evc(:,1:nvec)
       !
       ! ... hpsi contains h times the basis vectors
       !
       CALL h_psi( ndmx, ndim, nvec, psi, hpsi )
       !
-      IF ( overlap ) CALL s_psi( ndmx, ndim, nvec, psi, spsi )
+      IF ( uspp ) CALL s_psi( ndmx, ndim, nvec, psi, spsi )
       !
       ! ... hr contains the projection of the hamiltonian onto the reduced
       ! ... space vr contains the eigenvectors of hr
@@ -462,7 +465,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
       !
       CALL reduce( nbase*nvecx, hr )
       !
-      IF ( overlap ) THEN
+      IF ( uspp ) THEN
          !
          CALL DGEMM( 'T', 'N', nbase, nbase, ndim2, 2.D0, &
                      psi, ndmx2, spsi, ndmx2, 0.D0, sr, nvecx )
@@ -537,7 +540,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          ! ... expand the basis set with new basis vectors ( H - e*S )|psi> ...
          !
-         IF ( overlap ) THEN
+         IF ( uspp ) THEN
             !
             CALL DGEMM( 'N', 'N', ndim2, notcnv, nbase, 1.D0, &
                         spsi, ndmx2, vr, nvecx, 0.D0, psi(1,nb1), ndmx2 )
@@ -590,12 +593,12 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          CALL h_psi( ndmx, ndim, notcnv, psi(1,nb1), hpsi(1,nb1) )
          !
-         IF ( overlap ) &
+         IF ( uspp ) &
             CALL s_psi( ndmx, ndim, notcnv, psi(1,nb1), spsi(1,nb1) )
          !
          ! ... update the reduced hamiltonian
          !
-         CALL start_clock( 'overlap' )
+         CALL start_clock( 'uspp' )
          !
          CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, ndim2, 2.D0, psi, &
                      ndmx2, hpsi(1,nb1), ndmx2, 0.D0, hr(1,nb1), nvecx )
@@ -606,7 +609,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          CALL reduce( nvecx * notcnv, hr(1,nb1) )
          !
-         IF ( overlap ) THEN
+         IF ( uspp ) THEN
             !
             CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, ndim2, 2.D0, psi, &
                         ndmx2, spsi(1,nb1), ndmx2, 0.D0, sr(1,nb1), nvecx )
@@ -628,7 +631,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          CALL reduce( nvecx*notcnv, sr(1,nb1) )
          !
-         CALL stop_clock( 'overlap' )
+         CALL stop_clock( 'uspp' )
          !
          nbase = nbase + notcnv
          !
@@ -702,7 +705,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
             !
             psi(:,1:nvec) = evc(:,1:nvec)
             !
-            IF ( overlap ) THEN
+            IF ( uspp ) THEN
                !
                CALL DGEMM( 'N', 'N', ndim2, nvec, nbase, 1.D0, spsi, &
                            ndmx2, vr, nvecx, 0.D0, psi(1,nvec+1), ndmx2 )
@@ -743,7 +746,9 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
       DEALLOCATE( vr )
       DEALLOCATE( hr )
       DEALLOCATE( sr )
-      IF ( overlap ) DEALLOCATE( spsi )
+      !
+      IF ( uspp ) DEALLOCATE( spsi )
+      !
       DEALLOCATE( hpsi )
       DEALLOCATE( psi )  
       !

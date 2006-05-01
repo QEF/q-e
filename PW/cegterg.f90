@@ -12,7 +12,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
-                    overlap, e, btype, notcnv, lrot, dav_iter )
+                    uspp, e, btype, notcnv, lrot, dav_iter )
   !----------------------------------------------------------------------------
   !
   ! ... iterative solution of the eigenvalue problem:
@@ -20,7 +20,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   ! ... ( H - e S ) * evc = 0
   !
   ! ... where H is an hermitean operator, e is a real scalar,
-  ! ... S is an overlap matrix, evc is a complex vector
+  ! ... S is an uspp matrix, evc is a complex vector
   !
   USE io_global,        ONLY : stdout
   USE kinds,            ONLY : DP
@@ -45,7 +45,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
     ! energy threshold for convergence :
     !   root improvement is stopped, when two consecutive estimates of the root
     !   differ by less than ethr.
-  LOGICAL, INTENT(IN) :: overlap
+  LOGICAL, INTENT(IN) :: uspp
     ! if .FALSE. : do not calculate S|psi>
   INTEGER, INTENT(IN) :: btype(nvec)
     ! band type ( 1 = occupied, 0 = empty )
@@ -79,8 +79,6 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
     ! work space, contains psi
     ! the product of H and psi
     ! the product of S and psi
-  COMPLEX(DP) :: eau
-    ! auxiliary complex variable
   REAL(DP), ALLOCATABLE :: ew(:)
     ! eigenvalues of the reduced hamiltonian
   LOGICAL, ALLOCATABLE  :: conv(:)
@@ -161,8 +159,8 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
       conv   = .FALSE.
       !
       spsi = ZERO
-      psi  = ZERO
       hpsi = ZERO
+      psi  = ZERO
       psi(:,:,1:nvec) = evc(:,:,1:nvec)
       !
       ! ... hpsi contains H times the basis vectors
@@ -173,7 +171,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          IF ( lelfield ) CALL h_epsi_her( ndmx, ndim, nvec, psi, hpsi )
          !
-         IF ( overlap ) THEN
+         IF ( uspp ) THEN
             !
             CALL s_psi_nc( ndmx, ndim, nvec, psi, spsi )
             !
@@ -191,7 +189,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          IF ( lelfield ) CALL h_epsi_her( ndmx, ndim, nvec, psi, hpsi )
          !
-         IF ( overlap ) THEN
+         IF ( uspp ) THEN
             !
             CALL s_psi( ndmx, ndim, nvec, psi, spsi )
             !
@@ -214,13 +212,14 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
       CALL ZGEMM( 'C', 'N', nbase, nbase, kdim, ONE, &
                   psi, kdmx, hpsi, kdmx, ZERO, hc, nvecx )
       !
-      CALL reduce( 2 * nbase * nvecx, hc )
+      CALL reduce( 2*nbase*nvecx, hc )
       !
       IF ( lrot ) THEN
          !
          DO n = 1, nbase
             !
-            e(n) = hc(n,n)
+            e(n) = REAL( hc(n,n) )
+            !
             vc(n,n) = ONE
             !
          END DO
@@ -276,7 +275,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          DO np = 1, notcnv
             !
-            psi(:,:,nbase+np) = - ew(nbase+np) * psi(:,:,nbase+np)
+            psi(:,:,nbase+np) = - ew(nbase+np)*psi(:,:,nbase+np)
             !
          END DO
          !
@@ -335,9 +334,10 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
             CALL h_psi_nc( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
             !
             IF ( lelfield ) &
-               CALL h_epsi_her( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+               CALL h_epsi_her( ndmx, ndim, &
+                                notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
             !
-            IF ( overlap ) THEN
+            IF ( uspp ) THEN
                !
                CALL s_psi_nc( ndmx, ndim, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
                !
@@ -355,9 +355,10 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
             CALL h_psi( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
             !
             IF ( lelfield ) &
-               CALL h_epsi_her( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+               CALL h_epsi_her( ndmx, ndim, &
+                                notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
             !
-            IF ( overlap ) THEN
+            IF ( uspp ) THEN
                !
                CALL s_psi( ndmx, ndim, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
                !
@@ -368,20 +369,20 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
             END IF
             !
             CALL cgramg1( kdmx, nvecx, kdim, &
-                 nb1, nbase+notcnv, psi, spsi, hpsi )
+                          nb1, nbase+notcnv, psi, spsi, hpsi )
             !
          END IF
          !
          ! ... update the reduced hamiltonian
          !
-         CALL start_clock( 'overlap' )
+         CALL start_clock( 'uspp' )
          !
          CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, kdim, ONE, psi, &
                      kdmx, hpsi(1,1,nb1), kdmx, ZERO, hc(1,nb1), nvecx )
          !
-         CALL reduce( 2 * nvecx * notcnv, hc(1,nb1) )
+         CALL reduce( 2*nvecx*notcnv, hc(1,nb1) )
          !
-         CALL stop_clock( 'overlap' )
+         CALL stop_clock( 'uspp' )
          !
          nbase = nbase + notcnv
          !
@@ -389,7 +390,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
             !
             ! ... the diagonal of hc must be strictly real 
             !
-            hc(n,n) = CMPLX( DBLE( hc(n,n) ), 0.D0 )
+            hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 )
             !
             DO  m = n + 1, nbase
                !
@@ -446,7 +447,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
                ! ... last iteration, some roots not converged: return
                !
                WRITE( stdout, '(5X,"WARNING: ",I5, &
-                    &   " eigenvalues not converged")' ) notcnv
+                    & " eigenvalues not converged")' ) notcnv
                !
                CALL stop_clock( 'last' )
                !
@@ -477,7 +478,8 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
             !
             DO n = 1, nbase
                !
-               hc(n,n) = e(n)
+               hc(n,n) = REAL( e(n) )
+               !
                vc(n,n) = ONE
                !
             END DO
@@ -504,9 +506,11 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
       !
       IMPLICIT NONE
       !
-      ALLOCATE(  psi( ndmx,  npol, nvecx ) )
-      ALLOCATE( hpsi( ndmx,  npol, nvecx ) )
-      IF ( overlap ) ALLOCATE( spsi( ndmx, npol, nvecx ) )
+      ALLOCATE(  psi( ndmx, npol, nvecx ) )
+      ALLOCATE( hpsi( ndmx, npol, nvecx ) )
+      !
+      IF ( uspp ) ALLOCATE( spsi( ndmx, npol, nvecx ) )
+      !
       ALLOCATE( sc( nvecx, nvecx ) )
       ALLOCATE( hc( nvecx, nvecx ) )
       ALLOCATE( vc( nvecx, nvecx ) )
@@ -517,9 +521,10 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
       nbase  = nvec
       conv   = .FALSE.
       !
-      IF ( overlap ) spsi = ZERO
-      psi  = ZERO
+      IF ( uspp ) spsi = ZERO
+      !
       hpsi = ZERO
+      psi  = ZERO
       psi(:,:,1:nvec) = evc(:,:,1:nvec)
       !
       ! ... hpsi contains h times the basis vectors
@@ -529,14 +534,14 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          CALL h_psi_nc( ndmx, ndim, nvec, psi, hpsi )
          !
          IF ( lelfield ) CALL h_epsi_her( ndmx, ndim, nvec, psi, hpsi )
-         IF ( overlap ) CALL s_psi_nc( ndmx, ndim, nvec, psi, spsi )
+         IF ( uspp ) CALL s_psi_nc( ndmx, ndim, nvec, psi, spsi )
          !
       ELSE
          !
          CALL h_psi( ndmx, ndim, nvec, psi, hpsi )
          !
          IF ( lelfield ) CALL h_epsi_her( ndmx, ndim, nvec, psi, hpsi )
-         IF ( overlap ) CALL s_psi( ndmx, ndim, nvec, psi, spsi )
+         IF ( uspp ) CALL s_psi( ndmx, ndim, nvec, psi, spsi )
          !
       END IF
       !
@@ -552,7 +557,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
       !
       CALL reduce( 2*nbase*nvecx, hc )
       !
-      IF ( overlap ) THEN
+      IF ( uspp ) THEN
          !
          CALL ZGEMM( 'C', 'N', nbase, nbase, kdim, ONE, &
                      psi, kdmx, spsi, kdmx, ZERO, sc, nvecx )
@@ -570,7 +575,8 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          DO n = 1, nbase
             !
-            e(n) = hc(n,n)
+            e(n) = REAL( hc(n,n) )
+            !
             vc(n,n) = ONE
             !
          END DO
@@ -621,7 +627,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          ! ... expand the basis set with new basis vectors ( H - e*S )|psi> ...
          !
-         IF ( overlap ) THEN
+         IF ( uspp ) THEN
             !
             CALL ZGEMM( 'N', 'N', kdim, notcnv, nbase, ONE, spsi, &
                         kdmx, vc, nvecx, ZERO, psi(1,1,nb1), kdmx )
@@ -635,7 +641,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          DO np = 1, notcnv
             !
-            psi(:,:,nbase+np) = - ew(nbase+np) * psi(:,:,nbase+np)
+            psi(:,:,nbase+np) = - ew(nbase+np)*psi(:,:,nbase+np)
             !
          END DO
          !
@@ -648,8 +654,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          IF ( noncolin ) THEN
             !
-            CALL g_psi_nc( ndmx, ndim, notcnv, &
-                 npol, psi(1,1,nb1), ew(nb1) )
+            CALL g_psi_nc( ndmx, ndim, notcnv, npol, psi(1,1,nb1), ew(nb1) )
             !
          ELSE
             !
@@ -665,7 +670,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          DO n = 1, notcnv
             !
-            nbn = nbase+n
+            nbn = nbase + n
             !
             IF ( npol == 1 ) THEN
                !
@@ -695,36 +700,35 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
             CALL h_psi_nc( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
             !
             IF ( lelfield ) &
-                 CALL h_epsi_her( ndmx, ndim, &
-                 notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
-
-            IF ( overlap ) &
-               CALL s_psi_nc( ndmx, ndim, notcnv, &
-                              psi(1,1,nb1), spsi(1,1,nb1) )
+               CALL h_epsi_her( ndmx, ndim, &
+                                notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+            !
+            IF ( uspp ) &
+               CALL s_psi_nc( ndmx, ndim, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
             !
          ELSE
             !
             CALL h_psi( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
             !
             IF ( lelfield ) &
-                 CALL h_epsi_her( ndmx, ndim, &
-                 notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
-
-            IF ( overlap ) &
-                 CALL s_psi( ndmx, ndim, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
+               CALL h_epsi_her( ndmx, ndim, &
+                                notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+            !
+            IF ( uspp ) &
+               CALL s_psi( ndmx, ndim, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
             !
          END IF
          !
          ! ... update the reduced hamiltonian
          !
-         CALL start_clock( 'overlap' )
+         CALL start_clock( 'uspp' )
          !
          CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, kdim, ONE, psi, &
                      kdmx, hpsi(1,1,nb1), kdmx, ZERO, hc(1,nb1), nvecx )
          !
          CALL reduce( 2*nvecx*notcnv, hc(1,nb1) )
          !
-         IF ( overlap ) THEN
+         IF ( uspp ) THEN
             !
             CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, kdim, ONE, psi, &
                         kdmx, spsi(1,1,nb1), kdmx, ZERO, sc(1,nb1), nvecx )
@@ -738,7 +742,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
          !
          CALL reduce( 2*nvecx*notcnv, sc(1,nb1) )
          !
-         CALL stop_clock( 'overlap' )
+         CALL stop_clock( 'uspp' )
          !
          nbase = nbase + notcnv
          !
@@ -746,8 +750,8 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
             !
             ! ... the diagonal of hc and sc must be strictly real 
             !
-            hc(n,n) = CMPLX( DBLE( hc(n,n) ), 0.D0 )
-            sc(n,n) = CMPLX( DBLE( sc(n,n) ), 0.D0 )
+            hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 )
+            sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 )
             !
             DO  m = n + 1, nbase
                !
@@ -817,7 +821,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
             !
             psi(:,:,1:nvec) = evc(:,:,1:nvec)
             !
-            IF ( overlap ) THEN
+            IF ( uspp ) THEN
                !
                CALL ZGEMM( 'N', 'N', kdim, nvec, nbase, ONE, spsi, &
                            kdmx, vc, nvecx, ZERO, psi(1,1,nvec+1), kdmx )
@@ -841,7 +845,8 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
             !
             DO n = 1, nbase
                !
-               hc(n,n) = e(n)
+               hc(n,n) = REAL( e(n) )
+               !
                sc(n,n) = ONE
                vc(n,n) = ONE
                !
@@ -858,7 +863,9 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
       DEALLOCATE( vc )
       DEALLOCATE( hc )
       DEALLOCATE( sc )
-      IF ( overlap ) DEALLOCATE( spsi )
+      !
+      IF ( uspp ) DEALLOCATE( spsi )
+      !
       DEALLOCATE( hpsi )
       DEALLOCATE( psi )
       !

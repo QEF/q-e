@@ -58,7 +58,7 @@ SUBROUTINE setup()
   USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                  tetra, ntetra, ltetra
   USE symme,              ONLY : s, t_rev, irt, ftau, nsym, invsym
-  USE atom,               ONLY : r, oc, chi, nchi, lchi, jchi, mesh
+  USE atom,               ONLY : oc, chi, nchi, lchi, jchi, mesh
   USE pseud,              ONLY : zp
   USE wvfct,              ONLY : nbnd, nbndx, gamma_only
   USE control_flags,      ONLY : tr2, ethr, alpha0, beta0, lscf, lmd, lpath, &
@@ -84,22 +84,15 @@ SUBROUTINE setup()
   !
   IMPLICIT NONE
   !
-  ! ... local variables
-  !
   REAL(DP), PARAMETER :: &
       eps  = 1.0D-12   !  small number
   INTEGER :: & 
       na,             &!
-      ir,             &!
       nt,             &!
       input_nks,      &!
       nrot,           &!
-      iter,           &!
-      ierr,           &!
       irot,           &!
       isym,           &!
-      ipol,           &!
-      jpol,           &!
       tipo,           &!
       is,             &!
       nb,             &!
@@ -111,13 +104,13 @@ SUBROUTINE setup()
       minus_q,        &!
       ltest            !
   REAL(DP) :: &
-      vionl,       &   !
+      vionl,          &!
       iocc             !
   INTEGER, EXTERNAL :: &
       n_atom_wfc,     &!
       set_Hubbard_l
   LOGICAL, EXTERNAL :: &
-      lchk_tauxk       ! tests that atomic coordinates do not overlap
+      lchk_tauxk       !  tests that atomic coordinates do not overlap
   !
   !
   ALLOCATE( m_loc( 3, nat ) )
@@ -854,14 +847,14 @@ FUNCTION n_atom_wfc( nat, npsx, ityp, nchix, nchi, oc, lchi, jchi )
   !
   USE kinds,            ONLY : DP
   use noncollin_module, ONLY : noncolin
-  use spin_orb,         ONLY : lspinorb, so
+  use spin_orb,         ONLY : so
   !
   IMPLICIT NONE
   !
-  INTEGER       :: n_atom_wfc
-  INTEGER       :: nat, npsx, ityp(nat), nchix, nchi(npsx), lchi(nchix,npsx)
+  INTEGER  :: n_atom_wfc
+  INTEGER  :: nat, npsx, ityp(nat), nchix, nchi(npsx), lchi(nchix,npsx)
   REAL(DP) :: oc(nchix,npsx), jchi(nchix,npsx)
-  INTEGER       :: na, nt, n
+  INTEGER  :: na, nt, n
   !
   !
   n_atom_wfc = 0
@@ -1068,7 +1061,7 @@ SUBROUTINE check_para_diag_efficiency()
      IF ( time_para < time_serial ) THEN
         !
         use_para_diago = .TRUE.
-        para_diago_dim = dim
+        
         !
         EXIT
         !
