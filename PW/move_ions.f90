@@ -35,7 +35,7 @@ SUBROUTINE move_ions()
   USE relax,                  ONLY : epse, epsf, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
   USE constraints_module,     ONLY : lagrange
-  USE metadyn_vars,           ONLY : dfe_acc, etot_av
+  USE metadyn_vars,           ONLY : dfe_acc, etot_av, ncolvar
   USE metadyn_base,           ONLY : set_target
   USE mp_global,              ONLY : intra_image_comm
   USE io_global,              ONLY : ionode_id, ionode
@@ -206,7 +206,7 @@ SUBROUTINE move_ions()
               !
               etot_av = etot_av + etot
               !
-              dfe_acc(:) = dfe_acc(:) - lagrange(:)
+              dfe_acc(:) = dfe_acc(:) - lagrange(1:ncolvar)
               !
            END IF
            !

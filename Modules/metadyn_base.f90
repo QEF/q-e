@@ -30,13 +30,14 @@ MODULE metadyn_base
       !
       USE kinds,              ONLY : DP
       USE input_parameters,   ONLY : restart_mode
-      USE constraints_module, ONLY : nconstr, target
+      USE constraints_module, ONLY : target
       USE control_flags,      ONLY : nstep, ndr
       USE constants,          ONLY : bohr_radius_angs
       USE cell_base,          ONLY : at, alat
-      USE metadyn_vars,       ONLY : fe_grad, g_amplitude, max_metadyn_iter, &
-                                     metadyn_history, metadyn_fmt, fe_step,  &
-                                     first_metadyn_iter, gaussian_pos
+      USE metadyn_vars,       ONLY : ncolvar, fe_grad, g_amplitude, fe_step,   &
+                                     max_metadyn_iter, metadyn_history,        &
+                                     metadyn_fmt, fe_step, first_metadyn_iter, &
+                                     gaussian_pos
       USE metadyn_io,         ONLY : read_metadyn_restart
       USE io_files,           ONLY : tmp_dir, scradir, prefix, iunaxsf, &
                                      iunmeta, delete_if_present
@@ -53,16 +54,17 @@ MODULE metadyn_base
       REAL(DP)           :: rdum
       LOGICAL            :: file_exists
       CHARACTER(LEN=256) :: dirname
-      CHARACTER(LEN=4)   :: c_nconstr
+      CHARACTER(LEN=4)   :: c_ncolvar
       CHARACTER(LEN=16)  :: fe_step_fmt
+      !
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
       !
-      c_nconstr  = int_to_char( nconstr )
+      c_ncolvar  = int_to_char( ncolvar )
       !
-      metadyn_fmt = '(I5,' // TRIM( c_nconstr ) // '(2X,F10.5),2X,F14.8,' // &
-                  & TRIM( c_nconstr ) // '(2X,F10.5),' // &
-                  & TRIM( c_nconstr ) // '(2X,F10.7))'
+      metadyn_fmt = '(I5,' // TRIM( c_ncolvar ) // '(2X,F10.5),2X,F14.8,' // &
+                  & TRIM( c_ncolvar ) // '(2X,F10.5),' // &
+                  & TRIM( c_ncolvar ) // '(2X,F10.7))'
       !
       IF ( nstep < 1 ) CALL errore( 'metadyn_init', 'nstep < 1', 1 )
       !
@@ -102,10 +104,10 @@ MODULE metadyn_base
             OPEN( UNIT = iunmeta, &
                   FILE = TRIM( prefix ) // '.metadyn', STATUS = 'NEW' )
             !
-            WRITE( iunmeta, '(2(2X,I5))' ) nconstr, max_metadyn_iter
+            WRITE( iunmeta, '(2(2X,I5))' ) ncolvar, max_metadyn_iter
             WRITE( iunmeta, '(2(2X,F12.8))' ) g_amplitude
             !
-            fe_step_fmt = '(' // TRIM( c_nconstr ) // '(2X,F12.8))'
+            fe_step_fmt = '(' // TRIM( c_ncolvar ) // '(2X,F12.8))'
             !
             WRITE( iunmeta, fe_step_fmt ) fe_step(:)
             !
@@ -155,7 +157,7 @@ MODULE metadyn_base
          !
       END IF
       !
-      gaussian_pos(:) = target(:)
+      gaussian_pos(:) = target(1:ncolvar)
       !
       RETURN
       !
@@ -165,9 +167,8 @@ MODULE metadyn_base
     SUBROUTINE add_gaussians( iter )
       !------------------------------------------------------------------------
       !
-      USE constraints_module, ONLY : nconstr
-      USE metadyn_vars,       ONLY : metadyn_history, fe_grad, fe_step, &
-                                     dfe_acc, g_amplitude
+      USE metadyn_vars, ONLY : ncolvar, metadyn_history, fe_grad, fe_step, &
+                               dfe_acc, g_amplitude
       USE basic_algebra_routines
       !
       IMPLICIT NONE
@@ -177,12 +178,11 @@ MODULE metadyn_base
       INTEGER               :: i
       REAL(DP), ALLOCATABLE :: delta(:)
       !
-      !
       ! ... history dependent term
       !
       IF ( iter == 1 ) RETURN
       !
-      ALLOCATE( delta( nconstr ) )
+      ALLOCATE( delta( ncolvar ) )
       !
       dfe_acc = 0.D0
       !
@@ -214,8 +214,8 @@ MODULE metadyn_base
       !
       ! ... where A is the amplitude of the gaussians used for meta-dynamics
       !
-      USE constraints_module, ONLY : nconstr, target, constr_type, dmax
-      USE metadyn_vars,       ONLY : fe_grad, g_amplitude
+      USE constraints_module, ONLY : target, constr_type, dmax
+      USE metadyn_vars,       ONLY : ncolvar, fe_grad, g_amplitude
       !
       IMPLICIT NONE
       !
@@ -229,7 +229,7 @@ MODULE metadyn_base
       !
       A = 12.D0 * g_amplitude
       !
-      DO i = 1, nconstr
+      DO i = 1, ncolvar
          !
          SELECT CASE( constr_type(i) )
          CASE( 1, 2 )
@@ -278,8 +278,8 @@ MODULE metadyn_base
       ! ... additional constraints imposed by the domain definition
       !
       USE constants,          ONLY : eps32
-      USE constraints_module, ONLY : nconstr, constr_type, target, dmax
-      USE metadyn_vars,       ONLY : fe_grad, fe_step, new_target, &
+      USE constraints_module, ONLY : constr_type, target, dmax
+      USE metadyn_vars,       ONLY : ncolvar, fe_grad, fe_step, new_target, &
                                      to_target, shake_nstep, gaussian_pos, &
                                      g_amplitude
       USE random_numbers,     ONLY : rndm
@@ -297,7 +297,7 @@ MODULE metadyn_base
       !
       IF ( g_amplitude > 0.D0 ) fe_grad(:) = fe_grad(:) / norm_fe_grad
       !
-      DO i = 1, nconstr
+      DO i = 1, ncolvar
          !
          gaussian_pos(i) = target(i) - fe_step(i) * fe_grad(i)
          !
@@ -309,7 +309,7 @@ MODULE metadyn_base
       !
       CALL impose_domain_constraints()
       !
-      to_target(:) = ( new_target(:) - target(:) ) / DBLE( shake_nstep )
+      to_target(:) = ( new_target(:) - target(1:ncolvar) ) / DBLE( shake_nstep )
       !
       RETURN
       !
@@ -319,15 +319,15 @@ MODULE metadyn_base
     SUBROUTINE impose_domain_constraints()
       !------------------------------------------------------------------------
       !
-      USE constraints_module, ONLY : nconstr, constr_type, dmax
-      USE metadyn_vars,       ONLY : new_target
+      USE constraints_module, ONLY : constr_type, dmax
+      USE metadyn_vars,       ONLY : ncolvar, new_target
       !
       IMPLICIT NONE
       !
       INTEGER :: i
       !
       !
-      DO i = 1, nconstr
+      DO i = 1, ncolvar
          !
          SELECT CASE( constr_type(i) )
          CASE( 1, 2 )
@@ -373,11 +373,12 @@ MODULE metadyn_base
     SUBROUTINE set_target()
       !------------------------------------------------------------------------
       !
-      USE metadyn_vars,       ONLY : to_target, to_new_target
+      USE metadyn_vars,       ONLY : ncolvar, to_target, to_new_target
       USE constraints_module, ONLY : target
       !
       !
-      IF ( to_new_target ) target(:) = target(:) + to_target(:)
+      IF ( to_new_target ) &
+         target(1:ncolvar) = target(1:ncolvar) + to_target(:)
       !
       RETURN
       !

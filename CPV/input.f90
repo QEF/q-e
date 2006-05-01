@@ -863,7 +863,8 @@ MODULE input
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nelup, neldw, nbnd,     &
            nelec, press, cell_damping, cell_dofree, tf_inp, nprnks_empty,      &
            refg, greash, grease, greasp, epol, efield, tcg, maxiter, etresh,   &
-           passop, tot_charge, multiplicity, tot_magnetization, nprnks_empty
+           passop, tot_charge, multiplicity, tot_magnetization, nprnks_empty,  &
+           ncolvar_inp
      !
      USE input_parameters, ONLY : wf_efield, wf_switch, sw_len, efx0, efy0,    &
                                   efz0, efx1, efy1, efz1, wfsd, wfdt, maxwfdt, &
@@ -1042,7 +1043,7 @@ MODULE input
      !
      ! ... variables for constrained dynamics are set here
      !
-     lconstrain = ( nconstr_inp > 0 )
+     lconstrain = ( ncolvar_inp + nconstr_inp > 0 )
      !
      IF ( lconstrain ) CALL init_constraint( nat, tau, ityp, 1.D0 )
      !

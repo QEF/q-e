@@ -14,8 +14,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE kinds,              ONLY : DP
   USE control_flags,      ONLY : program_name, nomore, ldamped, tconvthrs, &
                                  trane, ampre, nbeg, tfor, taurdr, ndr, isave
-  USE metadyn_vars,       ONLY : new_target, to_target, dfe_acc, &
-                                 shake_nstep, fe_nstep, to_new_target
+  USE metadyn_vars,       ONLY : ncolvar, new_target, to_target, dfe_acc, &
+                                 etot_av, shake_nstep, fe_nstep, to_new_target
   USE path_variables,     ONLY : pos, pes, grad_pes, frozen, &
                                  num_of_images, istep_path, suspended_image
   USE constraints_module, ONLY : lagrange, target, deallocate_constraint
@@ -179,7 +179,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         ! ... we read the previous positions for this image from a restart file
         !
-        filename = TRIM( outdir ) // "thermodinamic_average.restart"
+        filename = TRIM( outdir ) // "therm_average.restart"
         !
         INQUIRE( FILE = filename, EXIST = file_exists )
         !
@@ -189,7 +189,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
               !
               OPEN( UNIT = 1000, FILE = filename )
               !
-              READ( 1000, * ) tau
+              READ( 1000, * ) tau(:,:)
               !
               CLOSE( UNIT = 1000 )
               !
@@ -235,7 +235,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         new_target(:) = pos(:,image)
         !
-        to_target(:) = ( new_target(:) - target(:) ) / DBLE( shake_nstep )
+        to_target(:) = ( new_target(:) - &
+                         target(1:ncolvar) ) / DBLE( shake_nstep )
         !
         ! ... then the system is "adiabatically" moved to the new target
         !
@@ -255,6 +256,9 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         CALL cprmain( tau, fion, etot )
         !
         ! ... and finally the free energy gradients are computed
+        !
+        etot_av = 0.D0
+        dfe_acc = 0.D0
         !    
         nfi    = 0
         nomore = fe_nstep
@@ -263,11 +267,9 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         tconvthrs%active = .TRUE.
         to_new_target    = .FALSE.
         !
-        WRITE( stdout, '(/,5X,"calculation of the mean force",/)' )
-        !
         CALL reset_vel()
         !
-        dfe_acc(:) = 0.D0
+        WRITE( stdout, '(/,5X,"calculation of the mean force",/)' )
         !
         CALL cprmain( tau, fion, etot )
         !
@@ -277,7 +279,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
            ! ... zero temperature
            !
-           grad_pes(:,image) = - lagrange(:)
+           grad_pes(:,image) = - lagrange(1:ncolvar)
            !
            pes(image) = etot
            !
@@ -297,7 +299,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
            OPEN( UNIT = 1000, FILE = filename )
            !
-           WRITE( 1000, * ) tau
+           WRITE( 1000, * ) tau(:,:)
            !
            CLOSE( UNIT = 1000 )
            !
@@ -340,7 +342,7 @@ SUBROUTINE metadyn()
   !
   USE kinds,              ONLY : DP
   USE constants,          ONLY : eps8
-  USE constraints_module, ONLY : nconstr, target, lagrange
+  USE constraints_module, ONLY : target, lagrange
   USE cp_main_variables,  ONLY : nfi
   USE control_flags,      ONLY : program_name, nomore, ldamped, tconvthrs, &
                                  trane, ampre, nbeg, tfor, taurdr, ndr, ndw, &
@@ -349,11 +351,11 @@ SUBROUTINE metadyn()
                                  sort_tau, tau_srt, ind_srt
   USE io_global,          ONLY : stdout
   USE io_files,           ONLY : iunmeta, iunaxsf, scradir
-  USE metadyn_vars,       ONLY : fe_grad, new_target, to_target, metadyn_fmt, &
-                                 to_new_target, fe_step, metadyn_history,     &
-                                 max_metadyn_iter, first_metadyn_iter,        &
-                                 fe_nstep, shake_nstep, dfe_acc, etot_av,     &
-                                 gaussian_pos
+  USE metadyn_vars,       ONLY : ncolvar, fe_grad, new_target, to_target,   &
+                                 metadyn_fmt, to_new_target, fe_step,       &
+                                 metadyn_history, max_metadyn_iter,         &
+                                 first_metadyn_iter, fe_nstep, shake_nstep, &
+                                 dfe_acc, etot_av, gaussian_pos
   USE metadyn_base,       ONLY : add_gaussians, add_domain_potential, &
                                  evolve_collective_vars
   USE metadyn_io,         ONLY : write_axsf_file, write_metadyn_restart
@@ -473,7 +475,7 @@ SUBROUTINE metadyn()
         !
         etot_av = etot
         !
-        fe_grad(:) = - lagrange(:)
+        fe_grad(:) = - lagrange(1:ncolvar)
         !
      ELSE
         !
@@ -488,7 +490,7 @@ SUBROUTINE metadyn()
      IF ( ionode ) THEN
         !
         WRITE( UNIT = iunmeta, FMT = metadyn_fmt ) &
-            iter, target(:), etot_av, gaussian_pos(:), fe_grad(:)
+            iter, target(1:ncolvar), etot_av, gaussian_pos(:), fe_grad(:)
         !
         CALL flush_unit( iunmeta )
         CALL flush_unit( iunaxsf )

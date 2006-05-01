@@ -14,10 +14,14 @@
 !----------------------------------------------------------------------------
 MODULE constraints_module
   !----------------------------------------------------------------------------
-  ! 
+  !
   ! ... variables and methods for constraint Molecular Dynamics and
   ! ... constrained ionic relaxations (the SHAKE algorithm based on 
   ! ... lagrange multipliers) are defined here.
+  !
+  ! ... most of these variables and methods are also used for meta-dynamics
+  ! ... and free-energy smd : indeed the collective variables are implemented
+  ! ... as constraints.
   !
   ! ... written by Carlo Sbraccia ( 24/02/2004 )
   !
@@ -25,7 +29,6 @@ MODULE constraints_module
   !
   ! ... 1) M. P. Allen and D. J. Tildesley, Computer Simulations of Liquids,
   ! ...    Clarendon Press - Oxford (1986)
-  !
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : eps8, eps16, eps32, tpi, fpi
@@ -71,9 +74,6 @@ MODULE constraints_module
   REAL(DP)              :: dmax
   LOGICAL               :: monitor_constr
   !
-  INTEGER, PARAMETER :: tab_dim = 1000
-  REAL(DP)           :: sin_tab(0:tab_dim-1)
-  !
   CONTAINS
      !
      ! ... public methods
@@ -82,9 +82,17 @@ MODULE constraints_module
      SUBROUTINE init_constraint( nat, tau, ityp, tau_units )
        !-----------------------------------------------------------------------
        !
+       ! ... this routine is used to initialize constraints variables and
+       ! ... collective variables (notice that collective variables are
+       ! ... implemented as normal constraints but are read using specific
+       ! ... input variables)
+       !
        USE input_parameters, ONLY : nconstr_inp, constr_tol_inp, &
+                                    ncolvar_inp, colvar_tol_inp, &
                                     constr_type_inp, constr_inp, &
+                                    colvar_type_inp, colvar_inp, &
                                     constr_target, constr_target_set, &
+                                    colvar_target, colvar_target_set, &
                                     monitor_constr_ => monitor_constr
        !
        IMPLICIT NONE
@@ -95,7 +103,7 @@ MODULE constraints_module
        REAL(DP), INTENT(IN) :: tau_units
        !
        INTEGER     :: i, j, i_sin, i_cos
-       INTEGER     :: ia, ia0, ia1, ia2, ia3, n_type_coord1
+       INTEGER     :: n, ia, ia0, ia1, ia2, ia3, n_type_coord1
        REAL(DP)    :: d0(3), d1(3), d2(3)
        REAL(DP)    :: C00, C01, C02, C11, C12, C22
        REAL(DP)    :: D01, D12
@@ -108,29 +116,36 @@ MODULE constraints_module
        CHARACTER(LEN=6), EXTERNAL :: int_to_char
        !
        !
-       nconstr    = nconstr_inp
-       constr_tol = constr_tol_inp
+       nconstr    = ncolvar_inp + nconstr_inp
+       constr_tol = MIN( constr_tol_inp, colvar_tol_inp )
        !
        monitor_constr = monitor_constr_
        !
        ALLOCATE( lagrange(    nconstr ) )
        ALLOCATE( target(      nconstr ) )
        ALLOCATE( constr_type( nconstr ) )
+       ALLOCATE( constr( 6,   nconstr ) )
        !
-       ALLOCATE( constr( SIZE( constr_inp(:,:), DIM = 1 ), nconstr ) )
+       ! ... NB: the first "ncolvar" constraints are collective variables (used
+       ! ...     for meta-dynamics and free-energy smd), the remaining are real
+       ! ...     constraints
        !
-       constr(:,:) = constr_inp(:,1:nconstr)
+       constr(:,1:ncolvar_inp)         = colvar_inp(:,1:ncolvar_inp)
+       constr(:,ncolvar_inp+1:nconstr) = constr_inp(:,1:nconstr_inp)
        !
        ! ... set the largest possible distance among two atoms within
        ! ... the supercell
        !
-       IF ( ANY( constr_type_inp(:) == 'distance' ) ) CALL compute_dmax()
+       IF ( ANY( colvar_type_inp(:) == 'distance' ) .OR. &
+            ANY( constr_type_inp(:) == 'distance' ) ) CALL compute_dmax()
        !
-       ! ... target value of the constrain ( in bohr )
+       ! ... initializations of target values for the constraints :
        !
-       DO ia = 1, nconstr
+       ! ... first the initialization of the collective variables
+       !
+       DO ia = 1, ncolvar_inp
           !
-          SELECT CASE ( constr_type_inp(ia) )
+          SELECT CASE ( colvar_type_inp(ia) )
           CASE( 'type_coord' )
              !
              ! ... constraint on global coordination-number, i.e. the average 
@@ -138,49 +153,17 @@ MODULE constraints_module
              !
              constr_type(ia) = 1
              !
-             IF ( constr_target_set(ia) ) THEN
+             IF ( colvar_target_set(ia) ) THEN
                 !
-                target(ia) = constr_target(ia)
+                target(ia) = colvar_target(ia)
                 !
                 CYCLE
                 !
-             END IF
-             !
-             type_coord1 = ANINT( constr(1,ia) )
-             type_coord2 = ANINT( constr(2,ia) )
-             !
-             r_c  = constr(3,ia)
-             !
-             smoothing = 1.D0 / constr(4,ia)
-             !
-             target(ia) = 0.D0
-             !
-             n_type_coord1 = 0
-             !
-             DO ia1 = 1, nat
+             ELSE
                 !
-                IF ( ityp(ia1) /= type_coord1 ) CYCLE
+                CALL set_type_coord( ia )
                 !
-                DO ia2 = 1, nat
-                   !
-                   IF ( ia2 == ia1 ) CYCLE
-                   !
-                   IF ( ityp(ia2) /= type_coord2 ) CYCLE
-                   !
-                   dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
-                   !
-                   norm_dtau = norm( dtau(:) )
-                   !
-                   target(ia) = target(ia) + 1.D0 / &
-                                ( EXP( smoothing * ( norm_dtau - r_c ) ) + 1.D0 )
-                   !
-                END DO
-                !
-                n_type_coord1 = n_type_coord1 + 1
-                !
-             END DO
-             !
-             target(ia) = target(ia) / DBLE( n_type_coord1 )
+             END IF             
              !
           CASE( 'atom_coord' )
              !
@@ -189,47 +172,184 @@ MODULE constraints_module
              !
              constr_type(ia) = 2
              !
-             IF ( constr_target_set(ia) ) THEN
+             IF ( colvar_target_set(ia) ) THEN
                 !
-                target(ia) = constr_target(ia)
+                target(ia) = colvar_target(ia)
                 !
                 CYCLE
                 !
+             ELSE
+                !
+                CALL set_atom_coord( ia )
+                !
              END IF
-             !
-             ia1         = ANINT( constr(1,ia) )
-             type_coord1 = ANINT( constr(2,ia) )
-             !
-             r_c = constr(3,ia)
-             !
-             smoothing = 1.D0 / constr(4,ia)
-             !
-             target(ia) = 0.D0
-             !
-             DO ia2 = 1, nat
-                !
-                IF ( ia2 == ia1 ) CYCLE
-                !
-                IF ( ityp(ia2) /= type_coord1 ) CYCLE
-                !
-                dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
-                !
-                norm_dtau = norm( dtau(:) )
-                !
-                target(ia) = target(ia) + 1.D0 / &
-                             ( EXP( smoothing * ( norm_dtau - r_c ) ) + 1.D0 )
-                !
-             END DO
              !
           CASE( 'distance' )
              !
-             ! ... constraint on distance
+             constr_type(ia) = 3
+             !
+             IF ( colvar_target_set(ia) ) THEN
+                !
+                target(ia) = colvar_target(ia)
+                !
+             ELSE
+                !
+                ia1 = ANINT( constr(1,ia) )
+                ia2 = ANINT( constr(2,ia) )
+                !
+                dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
+                !
+                target(ia) = norm( dtau(:) )
+                !
+             END IF
+             !
+             IF ( target(ia) > dmax ) &
+                CALL errore( 'init_constraint', 'the target for coll.var. '  //&
+                           & TRIM( int_to_char( ia ) ) // ' is larger than ' //&
+                           & 'the largest possible value', 1 )
+             !
+          CASE( 'planar_angle' )
+             !
+             ! ... constraint on planar angle (for the notation used here see 
+             ! ... Appendix C of the Allen-Tildesley book)
+             !
+             constr_type(ia) = 4
+             !
+             IF ( colvar_target_set(ia) ) THEN
+                !
+                ! ... in the input target for the angle (in degrees) is 
+                ! ... converted to the cosine of the angle
+                !
+                target(ia) = COS( ( 180.D0 - colvar_target(ia) )* tpi / 360.D0 )
+                !
+                CYCLE
+                !
+             ELSE
+                !
+                CALL set_planar_angle( ia )
+                !
+             END IF
+             !
+          CASE( 'torsional_angle' )
+             !
+             ! ... constraint on torsional angle (for the notation used here 
+             ! ... see Appendix C of the Allen-Tildesley book)
+             !
+             constr_type(ia) = 5
+             !
+             IF ( colvar_target_set(ia) ) THEN
+                !
+                ! ... in the input target for the torsional angle (in degrees)
+                ! ... is converted to the cosine of the angle
+                !
+                target(ia) = COS( colvar_target(ia) * tpi / 360.D0 )
+                !
+                CYCLE
+                !
+             ELSE
+                !
+                CALL set_torsional_angle( ia )
+                !
+             END IF
+             !
+          CASE( 'structure_factor' )
+             !
+             ! ... constraint on structure factor at a given k-vector
+             !
+             constr_type(ia) = 6
+             !
+             IF ( colvar_target_set(ia) ) THEN
+                !
+                target(ia) = colvar_target(ia)
+                !
+                CYCLE
+                !
+             ELSE
+                !
+                CALL set_structure_factor( ia )
+                !
+             END IF
+             !
+          CASE( 'sph_structure_factor' )
+             !
+             ! ... constraint on spherical average of the structure factor for
+             ! ... a given k-vector of norm k
+             !
+             constr_type(ia) = 7
+             !
+             IF ( colvar_target_set(ia) ) THEN
+                !
+                target(ia) = colvar_target(ia)
+                !
+                CYCLE
+                !
+             ELSE
+                !
+                CALL set_sph_structure_factor( ia )
+                !
+             END IF
+             !
+          CASE DEFAULT
+             !
+             CALL errore( 'init_constraint', &
+                          'collective-variable type not implemented', 1 )
+             !
+          END SELECT
+          !
+       END DO       
+       !
+       ! ... then then the initialization of the real constraints
+       !
+       DO n = 1, nconstr_inp
+          !
+          ia = ncolvar_inp + n
+          !
+          SELECT CASE ( constr_type_inp(n) )
+          CASE( 'type_coord' )
+             !
+             ! ... constraint on global coordination-number, i.e. the average 
+             ! ... number of atoms of type B surrounding the atoms of type A
+             !
+             constr_type(ia) = 1
+             !
+             IF ( constr_target_set(n) ) THEN
+                !
+                target(ia) = constr_target(n)
+                !
+                CYCLE
+                !
+             ELSE
+                !
+                CALL set_type_coord( ia )
+                !
+             END IF             
+             !
+          CASE( 'atom_coord' )
+             !
+             ! ... constraint on local coordination-number, i.e. the average 
+             ! ... number of atoms of type A surrounding a specific atom
+             !
+             constr_type(ia) = 2
+             !
+             IF ( constr_target_set(n) ) THEN
+                !
+                target(ia) = constr_target(n)
+                !
+                CYCLE
+                !
+             ELSE
+                !
+                CALL set_atom_coord( ia )
+                !
+             END IF
+             !
+          CASE( 'distance' )
              !
              constr_type(ia) = 3
              !
-             IF ( constr_target_set(ia) ) THEN
+             IF ( constr_target_set(n) ) THEN
                 !
-                target(ia) = constr_target(ia)
+                target(ia) = constr_target(n)
                 !
              ELSE
                 !
@@ -244,7 +364,7 @@ MODULE constraints_module
              !
              IF ( target(ia) > dmax ) &
                 CALL errore( 'init_constraint', 'the target for constraint ' //&
-                           & TRIM( int_to_char( ia ) ) // ' is larger than ' //&
+                           & TRIM( int_to_char( n ) ) // ' is larger than ' //&
                            & 'the largest possible value', 1 )
              !
           CASE( 'planar_angle' )
@@ -254,28 +374,20 @@ MODULE constraints_module
              !
              constr_type(ia) = 4
              !
-             IF ( constr_target_set(ia) ) THEN
+             IF ( constr_target_set(n) ) THEN
                 !
                 ! ... in the input target for the angle (in degrees) is 
                 ! ... converted to the cosine of the angle
                 !
-                target(ia) = COS( ( 180.D0 - constr_target(ia) )* tpi / 360.D0 )
+                target(ia) = COS( ( 180.D0 - constr_target(n) )* tpi / 360.D0 )
                 !
                 CYCLE
                 !
+             ELSE
+                !
+                CALL set_planar_angle( ia )
+                !
              END IF
-             !
-             ia0 = ANINT( constr(1,ia) )
-             ia1 = ANINT( constr(2,ia) )
-             ia2 = ANINT( constr(3,ia) )
-             !
-             d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) ) * tau_units )
-             d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
-             !
-             d0(:) = d0(:) / norm( d0(:) )
-             d1(:) = d1(:) / norm( d1(:) )
-             !
-             target(ia) = d0(:) .dot. d1(:)
              !
           CASE( 'torsional_angle' )
              !
@@ -284,37 +396,20 @@ MODULE constraints_module
              !
              constr_type(ia) = 5
              !
-             IF ( constr_target_set(ia) ) THEN
+             IF ( constr_target_set(n) ) THEN
                 !
                 ! ... in the input target for the torsional angle (in degrees)
                 ! ... is converted to the cosine of the angle
                 !
-                target(ia) = COS( constr_target(ia) * tpi / 360.D0 )
+                target(ia) = COS( constr_target(n) * tpi / 360.D0 )
                 !
                 CYCLE
                 !
+             ELSE
+                !
+                CALL set_torsional_angle( ia )
+                !
              END IF
-             !
-             ia0 = ANINT( constr(1,ia) )
-             ia1 = ANINT( constr(2,ia) )
-             ia2 = ANINT( constr(3,ia) )
-             ia3 = ANINT( constr(4,ia) )
-             !
-             d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) ) * tau_units )
-             d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
-             d2(:) = pbc( ( tau(:,ia2) - tau(:,ia3) ) * tau_units )
-             !
-             C00 = d0(:) .dot. d0(:)
-             C01 = d0(:) .dot. d1(:)
-             C11 = d1(:) .dot. d1(:)
-             C02 = d0(:) .dot. d2(:)
-             C12 = d1(:) .dot. d2(:)
-             C22 = d2(:) .dot. d2(:)
-             !
-             D01 = C00 * C11 - C01 * C01
-             D12 = C11 * C22 - C12 * C12
-             !
-             target(ia) = ( C01 * C12 - C02 * C11 ) / SQRT( D01 * D12 )
              !
           CASE( 'structure_factor' )
              !
@@ -322,31 +417,17 @@ MODULE constraints_module
              !
              constr_type(ia) = 6
              !
-             IF ( constr_target_set(ia) ) THEN
+             IF ( constr_target_set(n) ) THEN
                 !
-                target(ia) = constr_target(ia)
+                target(ia) = constr_target(n)
                 !
                 CYCLE
                 !
+             ELSE
+                !
+                CALL set_structure_factor( ia )
+                !
              END IF
-             !
-             k(1) = constr(1,ia) * tpi / tau_units
-             k(2) = constr(2,ia) * tpi / tau_units
-             k(3) = constr(3,ia) * tpi / tau_units
-             !
-             struc_fac = ( 0.D0, 0.D0 )
-             !
-             DO i = 1, nat
-                !
-                dtau(:) = pbc( ( tau(:,i) - tau(:,1) ) * tau_units )
-                !
-                phase = k(:) .dot. dtau(:)
-                !
-                struc_fac = struc_fac + CMPLX( COS( phase ), SIN( phase ) )
-                !
-             END DO
-             !
-             target(ia) = ( CONJG( struc_fac ) * struc_fac ) / DBLE( nat )**2
              !
           CASE( 'sph_structure_factor' )
              !
@@ -355,43 +436,17 @@ MODULE constraints_module
              !
              constr_type(ia) = 7
              !
-             IF ( constr_target_set(ia) ) THEN
+             IF ( constr_target_set(n) ) THEN
                 !
-                target(ia) = constr_target(ia)
+                target(ia) = constr_target(n)
                 !
                 CYCLE
                 !
+             ELSE
+                !
+                CALL set_sph_structure_factor( ia )
+                !
              END IF
-             !
-             norm_k = constr(1,ia) * tpi / tau_units
-             !
-             target(ia) = 0.D0
-             !
-             DO i = 1, nat - 1
-                !
-                DO j = i + 1, nat
-                   !
-                   dtau(:) = pbc( ( tau(:,i) - tau(:,j) ) * tau_units )
-                   !
-                   norm_dtau = norm( dtau(:) )
-                   !
-                   phase = norm_k * norm_dtau
-                   !
-                   IF ( phase < eps32 ) THEN
-                      !
-                      target(ia) = target(ia) + 1.D0
-                      !
-                   ELSE
-                      !
-                      target(ia) = target(ia) + SIN( phase ) / phase
-                      !
-                   END IF
-                   !
-                END DO
-                !
-             END DO
-             !
-             target(ia) = 2.D0 * fpi * target(ia) / DBLE( nat )
              !
           CASE DEFAULT
              !
@@ -404,6 +459,197 @@ MODULE constraints_module
        !
        RETURN
        !
+       CONTAINS
+         !
+         !-------------------------------------------------------------------
+         SUBROUTINE set_type_coord( ia )
+           !-------------------------------------------------------------------
+           !
+           INTEGER, INTENT(IN) :: ia
+           !
+           type_coord1 = ANINT( constr(1,ia) )
+           type_coord2 = ANINT( constr(2,ia) )
+           !
+           r_c  = constr(3,ia)
+           !
+           smoothing = 1.D0 / constr(4,ia)
+           !
+           target(ia) = 0.D0
+           !
+           n_type_coord1 = 0
+           !
+           DO ia1 = 1, nat
+              !
+              IF ( ityp(ia1) /= type_coord1 ) CYCLE
+              !
+              DO ia2 = 1, nat
+                 !
+                 IF ( ia2 == ia1 ) CYCLE
+                 !
+                 IF ( ityp(ia2) /= type_coord2 ) CYCLE
+                 !
+                 dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
+                 !
+                 norm_dtau = norm( dtau(:) )
+                 !
+                 target(ia) = target(ia) + 1.D0 / &
+                              ( EXP( smoothing * ( norm_dtau - r_c ) ) + 1.D0 )
+                 !
+              END DO
+              !
+              n_type_coord1 = n_type_coord1 + 1
+              !
+           END DO
+           !
+           target(ia) = target(ia) / DBLE( n_type_coord1 )
+           !
+         END SUBROUTINE set_type_coord
+         !
+         !-------------------------------------------------------------------
+         SUBROUTINE set_atom_coord( ia )
+           !-------------------------------------------------------------------
+           !
+           INTEGER, INTENT(IN) :: ia
+           !
+           ia1         = ANINT( constr(1,ia) )
+           type_coord1 = ANINT( constr(2,ia) )
+           !
+           r_c = constr(3,ia)
+           !
+           smoothing = 1.D0 / constr(4,ia)
+           !
+           target(ia) = 0.D0
+           !
+           DO ia2 = 1, nat
+              !
+              IF ( ia2 == ia1 ) CYCLE
+              !
+              IF ( ityp(ia2) /= type_coord1 ) CYCLE
+              !
+              dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
+              !
+              norm_dtau = norm( dtau(:) )
+              !
+              target(ia) = target(ia) + 1.D0 / &
+                           ( EXP( smoothing * ( norm_dtau - r_c ) ) + 1.D0 )
+              !
+           END DO
+           !
+         END SUBROUTINE set_atom_coord
+         !
+         !-------------------------------------------------------------------
+         SUBROUTINE set_planar_angle( ia )
+           !-------------------------------------------------------------------
+           !
+           INTEGER, INTENT(IN) :: ia
+           !
+           ia0 = ANINT( constr(1,ia) )
+           ia1 = ANINT( constr(2,ia) )
+           ia2 = ANINT( constr(3,ia) )
+           !
+           d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) ) * tau_units )
+           d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
+           !
+           d0(:) = d0(:) / norm( d0(:) )
+           d1(:) = d1(:) / norm( d1(:) )
+           !
+           target(ia) = d0(:) .dot. d1(:)
+           !
+         END SUBROUTINE set_planar_angle
+         !
+         !-------------------------------------------------------------------
+         SUBROUTINE set_torsional_angle( ia )
+           !-------------------------------------------------------------------
+           !
+           INTEGER, INTENT(IN) :: ia
+           !
+           ia0 = ANINT( constr(1,ia) )
+           ia1 = ANINT( constr(2,ia) )
+           ia2 = ANINT( constr(3,ia) )
+           ia3 = ANINT( constr(4,ia) )
+           !
+           d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) ) * tau_units )
+           d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
+           d2(:) = pbc( ( tau(:,ia2) - tau(:,ia3) ) * tau_units )
+           !
+           C00 = d0(:) .dot. d0(:)
+           C01 = d0(:) .dot. d1(:)
+           C11 = d1(:) .dot. d1(:)
+           C02 = d0(:) .dot. d2(:)
+           C12 = d1(:) .dot. d2(:)
+           C22 = d2(:) .dot. d2(:)
+           !
+           D01 = C00 * C11 - C01 * C01
+           D12 = C11 * C22 - C12 * C12
+           !
+           target(ia) = ( C01 * C12 - C02 * C11 ) / SQRT( D01 * D12 )
+           !
+         END SUBROUTINE set_torsional_angle
+         !
+         !-------------------------------------------------------------------
+         SUBROUTINE set_structure_factor( ia )
+           !-------------------------------------------------------------------
+           !
+           INTEGER, INTENT(IN) :: ia
+           !
+           k(1) = constr(1,ia) * tpi / tau_units
+           k(2) = constr(2,ia) * tpi / tau_units
+           k(3) = constr(3,ia) * tpi / tau_units
+           !
+           struc_fac = ( 0.D0, 0.D0 )
+           !
+           DO i = 1, nat
+              !
+              dtau(:) = pbc( ( tau(:,i) - tau(:,1) ) * tau_units )
+              !
+              phase = k(:) .dot. dtau(:)
+              !
+              struc_fac = struc_fac + CMPLX( COS( phase ), SIN( phase ) )
+              !
+           END DO
+           !
+           target(ia) = ( CONJG( struc_fac ) * struc_fac ) / DBLE( nat*nat )
+           !
+         END SUBROUTINE set_structure_factor
+         !
+         !-------------------------------------------------------------------
+         SUBROUTINE set_sph_structure_factor( ia )
+           !-------------------------------------------------------------------
+           !
+           INTEGER, INTENT(IN) :: ia
+           !
+           norm_k = constr(1,ia) * tpi / tau_units
+           !
+           target(ia) = 0.D0
+           !
+           DO i = 1, nat - 1
+              !
+              DO j = i + 1, nat
+                 !
+                 dtau(:) = pbc( ( tau(:,i) - tau(:,j) ) * tau_units )
+                 !
+                 norm_dtau = norm( dtau(:) )
+                 !
+                 phase = norm_k * norm_dtau
+                 !
+                 IF ( phase < eps32 ) THEN
+                    !
+                    target(ia) = target(ia) + 1.D0
+                    !
+                 ELSE
+                    !
+                    target(ia) = target(ia) + SIN( phase ) / phase
+                    !
+                 END IF
+                 !
+              END DO
+              !
+           END DO
+           !
+           target(ia) = 2.D0 * fpi * target(ia) / DBLE( nat )
+           !
+         END SUBROUTINE set_sph_structure_factor
+         !
      END SUBROUTINE init_constraint
      !
      !-----------------------------------------------------------------------
@@ -419,8 +665,6 @@ MODULE constraints_module
        INTEGER,  INTENT(IN)  :: ityp(:)
        REAL(DP), INTENT(IN)  :: tau_units
        !
-       ! ... local variables
-       !
        INTEGER     :: i, j, i_sin, i_cos
        INTEGER     :: ia, ia0, ia1, ia2, ia3, n_type_coord1
        REAL(DP)    :: d0(3), d1(3), d2(3)
@@ -431,8 +675,6 @@ MODULE constraints_module
        REAL(DP)    :: dtau(3), norm_dtau
        REAL(DP)    :: k(3), phase, norm_k
        COMPLEX(DP) :: struc_fac
-       !
-       ! ... external function
        !
        REAL(DP), EXTERNAL :: DDOT
        !
@@ -646,8 +888,6 @@ MODULE constraints_module
        REAL(DP), INTENT(OUT) :: dg(:,:)
        REAL(DP), INTENT(OUT) :: g
        !
-       ! ... local variables
-       !
        INTEGER     :: i, j, i_sin, i_cos
        INTEGER     :: ia, ia0, ia1, ia2, ia3, n_type_coord1
        REAL(DP)    :: d0(3), d1(3), d2(3)
@@ -659,8 +899,6 @@ MODULE constraints_module
        REAL(DP)    :: dtau(3), norm_dtau, norm_dtau_sq, expo
        REAL(DP)    :: r0(3), ri(3), k(3), phase, ksin(3), norm_k, sinxx
        COMPLEX(DP) :: struc_fac
-       !
-       ! ... external function
        !
        REAL(DP), EXTERNAL :: DDOT
        !

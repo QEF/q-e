@@ -244,7 +244,7 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : pos, full_phs_path_flag
   !
-  USE input_parameters, ONLY : nconstr_inp
+  USE input_parameters, ONLY : nconstr_inp, ncolvar_inp
   !
   USE constraints_module,    ONLY : init_constraint
   USE metadyn_vars,          ONLY : init_metadyn_vars
@@ -1373,7 +1373,7 @@ SUBROUTINE iosys()
   !
   ! ... variables for constrained dynamics are set here
   !
-  lconstrain = ( nconstr_inp > 0 )
+  lconstrain = ( ncolvar_inp + nconstr_inp > 0 )
   !
   IF ( lconstrain ) CALL init_constraint( nat, tau, ityp, alat )
   !

@@ -111,11 +111,11 @@ cat > metadyn-pw.in << EOF
   pot_extrapolation = "second_order",
   wfc_extrapolation = "second_order",
 /
-CONSTRAINTS
+COLLECTIVE_VARS
 3
-'distance'  7   9
-'distance'  8  10
-'distance'  9  10
+"distance"  7   9
+"distance"  8  10
+"distance"  9  10
 ATOMIC_SPECIES
 H   1.0   H.vbc.UPF
 Si  1.0  Si.vbc.UPF
@@ -147,6 +147,7 @@ cat > metadyn-cp.in << EOF
   calculation    = "metadyn",
   prefix         = "metadyn-cp",
   outdir         = "$TMP_DIR/",
+  scradir        = "$TMP_DIR/",
   pseudo_dir     = "$PSEUDO_DIR/",
   nstep          = 15,
   etot_conv_thr  = 4.D-4,
@@ -167,7 +168,6 @@ cat > metadyn-cp.in << EOF
   electron_dynamics = "damp",
   electron_damping  = 0.2D0,
   emass             = 1500.D0,
-  emass_cutoff      = 3.D0,
   ortho_max         = 250,
 /
 &IONS
@@ -178,13 +178,13 @@ cat > metadyn-cp.in << EOF
   fe_nstep          = 80,
   shake_nstep       = 5,
   ion_dynamics      = "damp",
-  ion_damping       = 0.025D0,
+  ion_damping       = 0.005D0,
 /
-CONSTRAINTS
+COLLECTIVE_VARS
 3
-'distance'  7   9
-'distance'  8  10
-'distance'  9  10
+"distance"  7   9
+"distance"  8  10
+"distance"  9  10
 ATOMIC_SPECIES
 H   1.0   H.vbc.UPF
 Si  1.0  Si.vbc.UPF

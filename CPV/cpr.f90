@@ -119,7 +119,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                                        rhor, rhopr, bephi, becp, nfi
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
-  USE metadyn_vars,             ONLY : dfe_acc, etot_av
+  USE metadyn_vars,             ONLY : ncolvar, dfe_acc, etot_av
   USE cell_base,                ONLY : s_to_r, r_to_s
   USE phase_factors_module,     ONLY : strucf
   USE cpr_subroutines,          ONLY : print_lambda, print_atomic_var, &
@@ -361,7 +361,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
               !
               etot_av = etot_av + etot
               !
-              dfe_acc(:) = dfe_acc(:) - lagrange(:)
+              dfe_acc(:) = dfe_acc(:) - lagrange(1:ncolvar)
               !
            END IF
            !

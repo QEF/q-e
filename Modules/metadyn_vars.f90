@@ -21,6 +21,8 @@ MODULE metadyn_vars
   !
   SAVE
   !
+  INTEGER :: ncolvar
+  !
   INTEGER  :: fe_nstep
   INTEGER  :: shake_nstep
   !
@@ -54,33 +56,35 @@ MODULE metadyn_vars
     SUBROUTINE init_metadyn_vars()
       !------------------------------------------------------------------------
       !
-      USE input_parameters,   ONLY : g_amplitude_ => g_amplitude, &
+      USE input_parameters,   ONLY : ncolvar_inp, &
+                                     g_amplitude_ => g_amplitude, &
                                      fe_step_     => fe_step, &
                                      fe_nstep_    => fe_nstep, &
                                      shake_nstep_ => shake_nstep
-      USE constraints_module, ONLY : nconstr
       USE control_flags,      ONLY : lmetadyn, nstep
       !
       IMPLICIT NONE
       !
       !
-      ALLOCATE( fe_step(    nconstr ) )
-      ALLOCATE( dfe_acc(    nconstr ) )
-      ALLOCATE( fe_grad(    nconstr ) )
-      ALLOCATE( new_target( nconstr ) )
-      ALLOCATE( to_target(  nconstr ) )
+      ncolvar = ncolvar_inp
+      !
+      ALLOCATE( fe_step(    ncolvar ) )
+      ALLOCATE( dfe_acc(    ncolvar ) )
+      ALLOCATE( fe_grad(    ncolvar ) )
+      ALLOCATE( new_target( ncolvar ) )
+      ALLOCATE( to_target(  ncolvar ) )
       !
       IF ( lmetadyn ) THEN
          !
-         ALLOCATE( gaussian_pos( nconstr ) )
-         ALLOCATE( metadyn_history( nconstr, nstep ) )
+         ALLOCATE( gaussian_pos( ncolvar ) )
+         ALLOCATE( metadyn_history( ncolvar, nstep ) )
          !
       END IF
       !
       fe_nstep    = fe_nstep_
       shake_nstep = shake_nstep_
       g_amplitude = g_amplitude_
-      fe_step(:)  = fe_step_(1:nconstr)
+      fe_step(:)  = fe_step_(1:ncolvar)
       !
       RETURN
       !

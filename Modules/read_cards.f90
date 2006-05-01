@@ -209,6 +209,10 @@ MODULE read_cards_module
           !
           CALL card_constraints( input_line )
           !
+       ELSE IF ( TRIM(card) == 'COLLECTIVE_VARS' ) THEN
+          !
+          CALL card_collective_vars( input_line )
+          !   
        ELSE IF ( TRIM(card) == 'VHMEAN' ) THEN
           !
           CALL card_vhmean( input_line )
@@ -1483,10 +1487,6 @@ MODULE read_cards_module
      !      NCONSTR CONSTR_TOL
      !      CONSTR_TYPE(.) CONSTR(1,.) CONSTR(2,.) ... { CONSTR_TARGET(.) }
      !
-     ! Example:
-     !
-     !    ????
-     !
      ! Where:
      !
      !      NCONSTR(INTEGER)    number of constraints
@@ -1522,7 +1522,7 @@ MODULE read_cards_module
        LOGICAL            :: ltest
        LOGICAL, SAVE      :: tread = .FALSE.
        ! 
-       ! 
+       !
        IF ( tread ) CALL errore( 'card_constraints', 'two occurrence', 2 )
        !
        CALL read_line( input_line )
@@ -1545,18 +1545,6 @@ MODULE read_cards_module
        !
        CALL allocate_input_constr()
        !
-       IF ( cg_phs_path_flag ) THEN
-          !
-          input_images = 2
-          !
-          IF( ALLOCATED( pos ) ) DEALLOCATE( pos )
-          !
-          ALLOCATE( pos( nconstr_inp, input_images ) )
-          !
-          pos(:,:) = 0.D0
-          !
-       END IF
-       !
        DO i = 1, nconstr_inp
           !
           CALL read_line( input_line )
@@ -1565,9 +1553,7 @@ MODULE read_cards_module
           !
           CALL field_count( nfield, input_line )
           !
-          ltest = ( ( nfield < SIZE( constr_inp(:,:), DIM = 1 ) ) .OR. &
-                    ( cg_phs_path_flag .AND. &
-                      ( nfield < SIZE( constr_inp(:,:), DIM = 1 ) + 2 ) ) )
+          ltest = ( nfield < SIZE( constr_inp(:,:), DIM = 1 ) )
           !
           IF ( .NOT. ltest ) &
              CALL errore( 'card_constraints', &
@@ -1576,17 +1562,7 @@ MODULE read_cards_module
           SELECT CASE( constr_type_inp(i) )         
           CASE( 'type_coord', 'atom_coord' )
              !
-             IF ( cg_phs_path_flag ) THEN
-                !
-                READ( input_line, * ) constr_type_inp(i), &
-                                      constr_inp(1,i),    &
-                                      constr_inp(2,i),    &
-                                      constr_inp(3,i),    &
-                                      constr_inp(4,i),    &
-                                      pos(i,1),           &
-                                      pos(i,2)
-                !
-             ELSE IF ( nfield == 5 ) THEN
+             IF ( nfield == 5 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
                                       constr_inp(1,i), &
@@ -1613,15 +1589,7 @@ MODULE read_cards_module
              !
           CASE( 'distance' )
              !
-             IF ( cg_phs_path_flag ) THEN
-                !
-                READ( input_line, * ) constr_type_inp(i), &
-                                      constr_inp(1,i),    &
-                                      constr_inp(2,i),    &
-                                      pos(i,1),           &
-                                      pos(i,2)
-                !
-             ELSE IF ( nfield == 3 ) THEN
+             IF ( nfield == 3 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
                                       constr_inp(1,i), &
@@ -1644,16 +1612,7 @@ MODULE read_cards_module
              !
           CASE( 'planar_angle' )
              !
-             IF ( cg_phs_path_flag ) THEN
-                !
-                READ( input_line, * ) constr_type_inp(i), &
-                                      constr_inp(1,i),    &
-                                      constr_inp(2,i),    &
-                                      constr_inp(3,i),    &
-                                      pos(i,1),           &
-                                      pos(i,2)
-                !
-             ELSE IF ( nfield == 4 ) THEN
+             IF ( nfield == 4 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
                                       constr_inp(1,i), &
@@ -1678,17 +1637,7 @@ MODULE read_cards_module
              !
           CASE( 'torsional_angle' )
              !
-             IF ( cg_phs_path_flag ) THEN
-                !
-                READ( input_line, * ) constr_type_inp(i), &
-                                      constr_inp(1,i),    &
-                                      constr_inp(2,i),    &
-                                      constr_inp(3,i),    &
-                                      constr_inp(4,i),    &
-                                      pos(i,1),           &
-                                      pos(i,2)
-                !
-             ELSE IF ( nfield == 5 ) THEN
+             IF ( nfield == 5 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
                                       constr_inp(1,i), &
@@ -1713,68 +1662,6 @@ MODULE read_cards_module
                 !
              END IF
              !
-          CASE( 'structure_factor' )
-             !
-             IF ( cg_phs_path_flag ) THEN
-                !
-                READ( input_line, * ) constr_type_inp(i), &
-                                      constr_inp(1,i), &
-                                      constr_inp(2,i), &
-                                      constr_inp(3,i), &
-                                      pos(i,1),        &
-                                      pos(i,2)
-                !
-             ELSE IF ( nfield == 4 ) THEN
-                !
-                READ( input_line, * ) constr_type_inp(i), &
-                                      constr_inp(1,i), &
-                                      constr_inp(2,i), &
-                                      constr_inp(3,i)
-                !
-             ELSE IF ( nfield == 5 ) THEN
-                !
-                READ( input_line, * ) constr_type_inp(i), &
-                                      constr_inp(1,i), &
-                                      constr_inp(2,i), &
-                                      constr_inp(3,i), &
-                                      constr_target(i)
-                !
-                constr_target_set(i) = .TRUE.
-                !
-             ELSE
-                !
-                CALL errore( 'card_constraints', 'too many fields', nfield )
-                !
-             END IF   
-             !
-          CASE( 'sph_structure_factor' )
-             !
-             IF ( cg_phs_path_flag ) THEN
-                !
-                READ( input_line, * ) constr_type_inp(i), &
-                                      constr_inp(1,i), &
-                                      pos(i,1),        &
-                                      pos(i,2)
-                !
-             ELSE IF ( nfield == 2 ) THEN
-                !
-                READ( input_line, * ) constr_type_inp(i), &
-                                      constr_inp(1,i)
-                !
-             ELSE IF ( nfield == 3 ) THEN
-                !
-                READ( input_line, * ) constr_type_inp(i), &
-                                      constr_inp(1,i), &
-                                      constr_target(i)
-                !
-                constr_target_set(i) = .TRUE.
-                !
-             ELSE
-                !
-                CALL errore( 'card_constraints', 'too many fields', nfield )
-                !
-             END IF   
-             !
           CASE DEFAULT
              !
              CALL errore( 'card_constraints', 'unknown constraint ' // &
@@ -1785,10 +1672,228 @@ MODULE read_cards_module
        END DO
        ! 
        tread = .TRUE.
-       ! 
+       !
        RETURN
        !
      END SUBROUTINE card_constraints
+     !
+     SUBROUTINE card_collective_vars( input_line )
+       ! 
+       IMPLICIT NONE
+       ! 
+       CHARACTER(LEN=256) :: input_line
+       INTEGER            :: i, nfield
+       LOGICAL            :: ltest
+       LOGICAL, SAVE      :: tread = .FALSE.
+       ! 
+       !
+       IF ( tread ) CALL errore( 'card_collective_vars', 'two occurrence', 2 )
+       !
+       CALL read_line( input_line )
+       !
+       CALL field_count( nfield, input_line )
+       !
+       IF ( nfield == 1 ) THEN
+          !
+          READ( input_line, * ) ncolvar_inp
+          !
+       ELSE IF ( nfield == 2 ) THEN
+          !
+          READ( input_line, * ) ncolvar_inp, colvar_tol_inp
+          !
+       ELSE
+          !
+          CALL errore( 'card_collective_vars', 'too many fields', nfield )
+          !
+       END IF
+       !
+       CALL allocate_input_colvar()
+       !
+       IF ( cg_phs_path_flag ) THEN
+          !
+          input_images = 2
+          !
+          IF( ALLOCATED( pos ) ) DEALLOCATE( pos )
+          !
+          ALLOCATE( pos( ncolvar_inp, input_images ) )
+          !
+          pos(:,:) = 0.D0
+          !
+       END IF
+       !
+       DO i = 1, ncolvar_inp
+          !
+          CALL read_line( input_line )
+          !
+          READ( input_line, * ) colvar_type_inp(i)
+          !
+          CALL field_count( nfield, input_line )
+          !
+          ltest = ( ( nfield < SIZE( colvar_inp(:,:), DIM = 1 ) ) .OR. &
+                    ( cg_phs_path_flag .AND. &
+                      ( nfield < SIZE( colvar_inp(:,:), DIM = 1 ) + 2 ) ) )
+          !
+          IF ( .NOT. ltest ) &
+             CALL errore( 'card_collective_vars', &
+                          'too many fields for this constraint', i )
+          !
+          SELECT CASE( colvar_type_inp(i) )         
+          CASE( 'type_coord', 'atom_coord' )
+             !
+             IF ( cg_phs_path_flag ) THEN
+                !
+                READ( input_line, * ) colvar_type_inp(i), &
+                                      colvar_inp(1,i),    &
+                                      colvar_inp(2,i),    &
+                                      colvar_inp(3,i),    &
+                                      colvar_inp(4,i),    &
+                                      pos(i,1),           &
+                                      pos(i,2)
+                !
+             ELSE IF ( nfield == 5 ) THEN
+                !
+                READ( input_line, * ) colvar_type_inp(i), &
+                                      colvar_inp(1,i), &
+                                      colvar_inp(2,i), &
+                                      colvar_inp(3,i), &
+                                      colvar_inp(4,i)
+                !
+             ELSE
+                !
+                CALL errore( 'card_collective_vars', 'too many fields', nfield )
+                !
+             END IF
+             !
+          CASE( 'distance' )
+             !
+             IF ( cg_phs_path_flag ) THEN
+                !
+                READ( input_line, * ) colvar_type_inp(i), &
+                                      colvar_inp(1,i),    &
+                                      colvar_inp(2,i),    &
+                                      pos(i,1),           &
+                                      pos(i,2)
+                !
+             ELSE IF ( nfield == 3 ) THEN
+                !
+                READ( input_line, * ) colvar_type_inp(i), &
+                                      colvar_inp(1,i), &
+                                      colvar_inp(2,i)
+                !
+             ELSE
+                !
+                CALL errore( 'card_collective_vars', 'too many fields', nfield )
+                !
+             END IF
+             !
+          CASE( 'planar_angle' )
+             !
+             IF ( cg_phs_path_flag ) THEN
+                !
+                READ( input_line, * ) colvar_type_inp(i), &
+                                      colvar_inp(1,i),    &
+                                      colvar_inp(2,i),    &
+                                      colvar_inp(3,i),    &
+                                      pos(i,1),           &
+                                      pos(i,2)
+                !
+             ELSE IF ( nfield == 4 ) THEN
+                !
+                READ( input_line, * ) colvar_type_inp(i), &
+                                      colvar_inp(1,i), &
+                                      colvar_inp(2,i), &
+                                      colvar_inp(3,i)
+                !
+             ELSE
+                !
+                CALL errore( 'card_collective_vars', 'too many fields', nfield )
+                !
+             END IF
+             !
+          CASE( 'torsional_angle' )
+             !
+             IF ( cg_phs_path_flag ) THEN
+                !
+                READ( input_line, * ) colvar_type_inp(i), &
+                                      colvar_inp(1,i),    &
+                                      colvar_inp(2,i),    &
+                                      colvar_inp(3,i),    &
+                                      colvar_inp(4,i),    &
+                                      pos(i,1),           &
+                                      pos(i,2)
+                !
+             ELSE IF ( nfield == 5 ) THEN
+                !
+                READ( input_line, * ) colvar_type_inp(i), &
+                                      colvar_inp(1,i), &
+                                      colvar_inp(2,i), &
+                                      colvar_inp(3,i), &
+                                      colvar_inp(4,i)
+                !
+             ELSE
+                !
+                CALL errore( 'card_collective_vars', 'too many fields', nfield )
+                !
+             END IF
+             !
+          CASE( 'structure_factor' )
+             !
+             IF ( cg_phs_path_flag ) THEN
+                !
+                READ( input_line, * ) colvar_type_inp(i), &
+                                      colvar_inp(1,i), &
+                                      colvar_inp(2,i), &
+                                      colvar_inp(3,i), &
+                                      pos(i,1),        &
+                                      pos(i,2)
+                !
+             ELSE IF ( nfield == 4 ) THEN
+                !
+                READ( input_line, * ) colvar_type_inp(i), &
+                                      colvar_inp(1,i), &
+                                      colvar_inp(2,i), &
+                                      colvar_inp(3,i)
+                !
+             ELSE
+                !
+                CALL errore( 'card_collective_vars', 'too many fields', nfield )
+                !
+             END IF   
+             !
+          CASE( 'sph_structure_factor' )
+             !
+             IF ( cg_phs_path_flag ) THEN
+                !
+                READ( input_line, * ) colvar_type_inp(i), &
+                                      colvar_inp(1,i), &
+                                      pos(i,1),        &
+                                      pos(i,2)
+                !
+             ELSE IF ( nfield == 2 ) THEN
+                !
+                READ( input_line, * ) colvar_type_inp(i), &
+                                      colvar_inp(1,i)
+                !
+             ELSE
+                !
+                CALL errore( 'card_collective_vars', 'too many fields', nfield )
+                !
+             END IF   
+             !
+          CASE DEFAULT
+             !
+             CALL errore( 'card_collective_vars', 'unknown collective ' // &
+                        & 'variable' // TRIM( colvar_type_inp(i) ), 1 )
+             !
+          END SELECT
+          !
+       END DO
+       ! 
+       tread = .TRUE.
+       ! 
+       RETURN
+       !
+     END SUBROUTINE card_collective_vars
      !
      !------------------------------------------------------------------------
      !    BEGIN manual

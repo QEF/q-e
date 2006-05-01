@@ -35,11 +35,10 @@ MODULE metadyn_io
     SUBROUTINE write_metadyn_restart( dirname, iter, tau, energy, pos_unit )
       !------------------------------------------------------------------------
       !
-      USE metadyn_vars,       ONLY : max_metadyn_iter, g_amplitude, &
+      USE metadyn_vars,       ONLY : ncolvar, max_metadyn_iter, g_amplitude, &
                                      gaussian_pos, fe_grad, fe_step
-      USE constraints_module, ONLY : nconstr, target
+      USE constraints_module, ONLY : target
       USE io_global,          ONLY : ionode, ionode_id
-      USE mp_global,          ONLY : MPIME
       USE mp,                 ONLY : mp_bcast
       !
       IMPLICIT NONE
@@ -89,7 +88,7 @@ MODULE metadyn_io
                             ROOT = "METADYNAMICS", BINARY = .FALSE. )
       !
       CALL iotk_write_dat( iunit, &
-                           "NUM_OF_COLLECTIVE_VARIABLES", nconstr )
+                           "NUM_OF_COLLECTIVE_VARIABLES", ncolvar )
       !
       CALL iotk_write_dat( iunit, &
                            "NUM_OF_STEPS", max_metadyn_iter )
@@ -138,7 +137,7 @@ MODULE metadyn_io
       !
       CALL iotk_write_end( iunit, "IONS" )
       !
-      CALL iotk_write_dat( iunit, "COLLECTIVE_VARIABLES", target(:) )
+      CALL iotk_write_dat( iunit, "COLLECTIVE_VARIABLES", target(1:ncolvar) )
       !
       CALL iotk_write_dat( iunit, "GAUSSIAN_CENTERS", gaussian_pos(:) )
       !
@@ -159,9 +158,10 @@ MODULE metadyn_io
     SUBROUTINE read_metadyn_restart( dirname, tau, pos_unit )
       !------------------------------------------------------------------------
       !
-      USE metadyn_vars,       ONLY : g_amplitude, gaussian_pos, fe_grad, &
-                                     metadyn_history, first_metadyn_iter
-      USE constraints_module, ONLY : nconstr, target
+      USE metadyn_vars,       ONLY : ncolvar, g_amplitude, gaussian_pos, &
+                                     fe_grad, metadyn_history, &
+                                     first_metadyn_iter
+      USE constraints_module, ONLY : target
       USE io_global,          ONLY : ionode, ionode_id
       USE mp,                 ONLY : mp_bcast
       !
@@ -171,7 +171,7 @@ MODULE metadyn_io
       REAL(DP),         INTENT(OUT) :: tau(:,:)
       REAL(DP),         INTENT(IN)  :: pos_unit
       !
-      INTEGER            :: nconstr_in
+      INTEGER            :: ncolvar_in
       INTEGER            :: i, ia
       CHARACTER(LEN=256) :: filename, tag
       INTEGER            :: iunit, ierr
@@ -203,11 +203,11 @@ MODULE metadyn_io
       IF ( ionode ) THEN
          !
          CALL iotk_scan_dat( iunit, &
-                             "NUM_OF_COLLECTIVE_VARIABLES", nconstr_in )
+                             "NUM_OF_COLLECTIVE_VARIABLES", ncolvar_in )
          !
-         IF ( nconstr_in == nconstr ) THEN
+         IF ( ncolvar_in == ncolvar ) THEN
             !
-            nconstr = nconstr_in
+            ncolvar = ncolvar_in
             !
          ELSE
             !
@@ -253,7 +253,7 @@ MODULE metadyn_io
          !
          CALL iotk_scan_end( iunit, "IONS" )
          !
-         CALL iotk_scan_dat( iunit, "COLLECTIVE_VARIABLES", target(:) )
+         CALL iotk_scan_dat( iunit, "COLLECTIVE_VARIABLES", target(1:ncolvar) )
          CALL iotk_scan_dat( iunit, "GAUSSIAN_CENTERS", gaussian_pos(:) )
          CALL iotk_scan_dat( iunit, "POTENTIAL_OF_MEAN_FORCE", fe_grad(:) )
          !
@@ -267,7 +267,7 @@ MODULE metadyn_io
          !
       END IF
       !
-      CALL mp_bcast( nconstr,            ionode_id )
+      CALL mp_bcast( ncolvar,            ionode_id )
       CALL mp_bcast( first_metadyn_iter, ionode_id )
       CALL mp_bcast( metadyn_history,    ionode_id )
       CALL mp_bcast( tau,                ionode_id )

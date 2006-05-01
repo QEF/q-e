@@ -1467,13 +1467,24 @@ MODULE input_parameters
 !
 !    CONSTRAINTS
 !
-      INTEGER           :: nconstr_inp             = 0
-      REAL (DP)         :: constr_tol_inp          = 0.D0
+      INTEGER  :: nconstr_inp    = 0
+      REAL(DP) :: constr_tol_inp = 1.D-6
+      !
       CHARACTER(LEN=20), ALLOCATABLE :: constr_type_inp(:)
-      REAL (DP),         ALLOCATABLE :: constr_inp(:,:)
-      REAL (DP),         ALLOCATABLE :: constr_target(:)
+      REAL(DP),          ALLOCATABLE :: constr_inp(:,:)
+      REAL(DP),          ALLOCATABLE :: constr_target(:)
       LOGICAL,           ALLOCATABLE :: constr_target_set(:)
 
+!
+!    COLLECTIVE_VARS
+!
+      INTEGER  :: ncolvar_inp    = 0
+      REAL(DP) :: colvar_tol_inp = 1.D-6
+      !
+      CHARACTER(LEN=20), ALLOCATABLE :: colvar_type_inp(:)
+      REAL(DP),          ALLOCATABLE :: colvar_inp(:,:)
+      REAL(DP),          ALLOCATABLE :: colvar_target(:)
+      LOGICAL,           ALLOCATABLE :: colvar_target_set(:)
 
 !
 !    KOHN_SHAM
@@ -1514,8 +1525,9 @@ MODULE input_parameters
 CONTAINS
 
   SUBROUTINE allocate_input_ions( ntyp, nat )
+    !
     INTEGER, INTENT(IN) :: ntyp, nat
-
+    !
     IF( ALLOCATED( rd_pos ) ) DEALLOCATE( rd_pos )
     IF( ALLOCATED( sp_pos ) ) DEALLOCATE( sp_pos )
     IF( ALLOCATED( if_pos ) ) DEALLOCATE( if_pos )
@@ -1523,7 +1535,7 @@ CONTAINS
     IF( ALLOCATED( na_inp ) ) DEALLOCATE( na_inp )
     IF( ALLOCATED( rd_vel ) ) DEALLOCATE( rd_vel )
     IF( ALLOCATED( sp_vel ) ) DEALLOCATE( sp_vel )
-    
+    !
     ALLOCATE( rd_pos(3,nat) )
     ALLOCATE( sp_pos(nat)   )
     ALLOCATE( if_pos(3,nat) )
@@ -1539,8 +1551,9 @@ CONTAINS
     na_inp = 0
     rd_vel = 0.0d0
     sp_vel = 0
-
+    !
     RETURN
+    !
   END SUBROUTINE allocate_input_ions
 
   SUBROUTINE allocate_input_constr()
@@ -1561,53 +1574,81 @@ CONTAINS
     constr_target_set = .FALSE.
     !
     RETURN
+    !
   END SUBROUTINE allocate_input_constr
 
+  SUBROUTINE allocate_input_colvar()
+    !
+    IF( ALLOCATED( colvar_type_inp ) )   DEALLOCATE( colvar_type_inp ) 
+    IF( ALLOCATED( colvar_inp ) )        DEALLOCATE( colvar_inp )
+    IF( ALLOCATED( colvar_target ) )     DEALLOCATE( colvar_target )
+    IF( ALLOCATED( colvar_target_set ) ) DEALLOCATE( colvar_target_set )
+    !
+    ALLOCATE( colvar_type_inp(   ncolvar_inp ) ) 
+    ALLOCATE( colvar_inp( 6,     ncolvar_inp ) )
+    ALLOCATE( colvar_target(     ncolvar_inp ) )
+    ALLOCATE( colvar_target_set( ncolvar_inp ) )
+    !
+    colvar_type_inp   = ' '
+    colvar_inp        = 0.D0
+    colvar_target     = 0.D0
+    colvar_target_set = .FALSE.
+    !
+    RETURN
+    !
+  END SUBROUTINE allocate_input_colvar
+  !
   SUBROUTINE allocate_input_iprnks( nksx, nspin )
-     INTEGER, INTENT(IN) :: nksx, nspin
-     !
-     IF( ALLOCATED( iprnks ) ) DEALLOCATE( iprnks )
-     !
-     ALLOCATE( iprnks( MAX( 1, nksx), nspin ) )
-     !
-     iprnks = 0
-     !
-     RETURN
+    !
+    INTEGER, INTENT(IN) :: nksx, nspin
+    !
+    IF( ALLOCATED( iprnks ) ) DEALLOCATE( iprnks )
+    !
+    ALLOCATE( iprnks( MAX( 1, nksx), nspin ) )
+    !
+    iprnks = 0
+    !
+    RETURN
+    !
   END SUBROUTINE allocate_input_iprnks
 
   SUBROUTINE allocate_input_iprnks_empty( nksx, nspin )
-     INTEGER, INTENT(IN) :: nksx, nspin
-     !
-     IF( ALLOCATED( iprnks_empty ) ) DEALLOCATE( iprnks_empty )
-     !
-     ALLOCATE( iprnks_empty( MAX( 1, nksx), nspin ) )
-     !
-     iprnks_empty = 0
-     !
-     RETURN
+    !
+    INTEGER, INTENT(IN) :: nksx, nspin
+    !
+    IF( ALLOCATED( iprnks_empty ) ) DEALLOCATE( iprnks_empty )
+    !
+    ALLOCATE( iprnks_empty( MAX( 1, nksx), nspin ) )
+    !
+    iprnks_empty = 0
+    !
+    RETURN
+    !
   END SUBROUTINE allocate_input_iprnks_empty
 
   SUBROUTINE deallocate_input_parameters()
-     !
-     IF ( ALLOCATED( rd_pos ) ) DEALLOCATE( rd_pos )
-     IF ( ALLOCATED( sp_pos ) ) DEALLOCATE( sp_pos )
-     IF ( ALLOCATED( if_pos ) ) DEALLOCATE( if_pos )
-     IF ( ALLOCATED( id_loc ) ) DEALLOCATE( id_loc )
-     IF ( ALLOCATED( na_inp ) ) DEALLOCATE( na_inp )
-     IF ( ALLOCATED( rd_vel ) ) DEALLOCATE( rd_vel )
-     IF ( ALLOCATED( sp_vel ) ) DEALLOCATE( sp_vel )
-     !
-     IF ( ALLOCATED( pos )    )   DEALLOCATE( pos )
-     IF ( ALLOCATED( climbing ) ) DEALLOCATE( climbing )
-     !
-     IF ( ALLOCATED( constr_type_inp ) )   DEALLOCATE( constr_type_inp ) 
-     IF ( ALLOCATED( constr_inp ) )        DEALLOCATE( constr_inp )
-     IF ( ALLOCATED( constr_target ) )     DEALLOCATE( constr_target )
-     IF ( ALLOCATED( constr_target_set ) ) DEALLOCATE( constr_target_set )
-     !
-     IF ( ALLOCATED( iprnks ) )       DEALLOCATE( iprnks )
-     IF ( ALLOCATED( iprnks_empty ) ) DEALLOCATE( iprnks_empty )
-     RETURN
+    !
+    IF ( ALLOCATED( rd_pos ) ) DEALLOCATE( rd_pos )
+    IF ( ALLOCATED( sp_pos ) ) DEALLOCATE( sp_pos )
+    IF ( ALLOCATED( if_pos ) ) DEALLOCATE( if_pos )
+    IF ( ALLOCATED( id_loc ) ) DEALLOCATE( id_loc )
+    IF ( ALLOCATED( na_inp ) ) DEALLOCATE( na_inp )
+    IF ( ALLOCATED( rd_vel ) ) DEALLOCATE( rd_vel )
+    IF ( ALLOCATED( sp_vel ) ) DEALLOCATE( sp_vel )
+    !
+    IF ( ALLOCATED( pos )    )   DEALLOCATE( pos )
+    IF ( ALLOCATED( climbing ) ) DEALLOCATE( climbing )
+    !
+    IF ( ALLOCATED( constr_type_inp ) )   DEALLOCATE( constr_type_inp ) 
+    IF ( ALLOCATED( constr_inp ) )        DEALLOCATE( constr_inp )
+    IF ( ALLOCATED( constr_target ) )     DEALLOCATE( constr_target )
+    IF ( ALLOCATED( constr_target_set ) ) DEALLOCATE( constr_target_set )
+    !
+    IF ( ALLOCATED( iprnks ) )       DEALLOCATE( iprnks )
+    IF ( ALLOCATED( iprnks_empty ) ) DEALLOCATE( iprnks_empty )
+    !
+    RETURN
+    !
   END SUBROUTINE deallocate_input_parameters
   !
 !=----------------------------------------------------------------------------=!

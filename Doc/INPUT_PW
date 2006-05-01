@@ -615,14 +615,15 @@ nraise         INTEGER (default = 100 )
                calculations.
 
 monitor_constr LOGICAL (default = .FALSE.)
-               this keyword applies only when some constraint is defined in the
-               CONSTRAINTS card (see below). If true, the values of the
-               constraints are monitored, but the constraints are not imposed.
+               this keyword applies only when one or more constraints are 
+               defined in the CONSTRAINTS card (see below). 
+               If true, the values of the constraints are monitored, but the
+               constraints are not imposed.
 
 refold_pos     LOGICAL (default = .FALSE.)
                this keyword applies only in the case of molecular dynamics or
-               damped dynamics. If true the ions are refolded into the 
-               supercell at each step.
+               damped dynamics. If true the ions are refolded at each step into
+               the supercell.
 
 pot_extrapolation     
                CHARACTER ( default = "atomic" )
@@ -745,13 +746,14 @@ write_save     LOGICAL ( default = .FALSE. )
                post-processing )
 
 !
-! ... keywords used only in meta-dynamics calculations
+! ... keywords used only in meta-dynamics calculations ( see also the card
+! ... COLLECTIVE_VARS )
 !
 
 fe_step(i)     REAL ( default = 0.04 )
                meta-dynamics step length (in principle different for each
                collective variable), defined using the same units used 
-               to define the collective variables themselves (constraints).
+               to define the collective variables themselves.
                The step also defines the spread of the Gaussian-like bias
                potential.
 
@@ -764,7 +766,7 @@ fe_nstep       INTEGER ( default = 100 )
 
 shake_nstep    INTEGER ( default = 10 )
                Number of steps used to switch to the new values of the
-               collective variables (constraints).
+               collective variables.
 
 ===============================================================================
 NAMELIST &CELL ( only if calculation = 'vc-relax', 'vc-md' )
@@ -1031,6 +1033,32 @@ CONSTRAINTS
       constr_target                 REAL,   target for the constrain ( angles 
                                             are specified in degrees ).
                                             This variable is optional.
+
+-------------------------------------------------------------------------------
+
+COLLECTIVE_VARS
+
+   Collective variables used for meta-dynamics calculations
+
+ Syntax:
+
+    COLLECTIVE_VARS
+      ncolvars   { tolerance }
+      colvar_type(.)  colvar(1,.)  colvar(2,.) ... 
+
+ Where:
+
+      ncolvars     INTEGER, number of collective variables
+      tolerance    REAL,    tolerance used for SHAKE.
+
+      colvar_type(.) CHARACTER, type of collective variable :
+
+              ... see the definition of constr_type in the CONSTRAINTS card.
+
+      colvar(1,.) colvar(2,.) ...  REAL,  these variables have different 
+                                          meanings for different collective
+                                          variable types. See the definition of
+                                          constr in the CONSTRAINTS card.
 
 -------------------------------------------------------------------------------
 
