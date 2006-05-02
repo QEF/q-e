@@ -246,6 +246,7 @@ w1gauss.o \
 wfcinit.o \
 wgauss.o \
 write_ns.o \
+write_rho.o \
 wsweight.o
 
 MODULES = \
