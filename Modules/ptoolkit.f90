@@ -1350,7 +1350,11 @@
                  I1 = IL(I+1) + 1          ! I+1
                ENDIF
                NI1 = NRL - I1 + 1          ! N-I
-               ALPHA = -HALF*TAUI*ZDOTC(NI1,TAUL(1),1,AP(I1,I),1)
+               IF ( NI1 > 0 ) THEN
+                  ALPHA = -HALF*TAUI*ZDOTC(NI1,TAUL(1),1,AP(I1,I),1)
+               ELSE
+                  ALPHA = 0.D0
+               END IF
 
 #if defined __PARA
 #  if defined __MPI
@@ -1362,7 +1366,8 @@
 
 
 #if defined __PARA
-               CALL ZAXPY(NI1,ALPHA,AP(I1,I),1,TAUL(1),1)
+               IF ( NI1 > 0 ) CALL ZAXPY(NI1,ALPHA,AP(I1,I),1,TAUL(1),1)
+               
                JL = 1
                DO J = I, N
                  CTMPV(J) = ZERO
@@ -1661,7 +1666,7 @@
               I2 = IL(I+2) + 1          ! local ind. of the first element > I+2 
             ENDIF
             NI1 = NRL - I2 + 1          ! N-I-1
-            CALL ZSCAL( NI1, -TAU( I ), Q( I2, I+1 ), 1 )
+            IF ( NI1 > 0 ) CALL ZSCAL( NI1, -TAU( I ), Q( I2, I+1 ), 1 )
           END IF
 
           IF(OW(I+1).EQ.ME) THEN
