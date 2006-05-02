@@ -1654,9 +1654,9 @@ SUBROUTINE verify_tmpdir( tmp_dir )
      !
      IF ( ionode ) THEN
         !
-        ! ... save directory is removed
+        ! ... xml data file in save directory is removed
         !     
-        CALL delete_if_present( TRIM( file_path ) // '.save' )
+        CALL delete_if_present( TRIM( file_path ) // '.save/data-file.xml' )
         !
         ! ... extrapolation file is removed
         !     

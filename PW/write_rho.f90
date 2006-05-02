@@ -27,7 +27,7 @@ SUBROUTINE write_rho( rho )
   REAL(DP), INTENT(IN) :: rho(nrxx,nspin)
   !
   CHARACTER(LEN=256)    :: dirname, rho_file_base
-  REAL(DP), ALLOCATABLE :: rhosum(:)
+  REAL(DP), ALLOCATABLE :: rhoaux(:)
   !
   !
   dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
@@ -43,24 +43,21 @@ SUBROUTINE write_rho( rho )
      !
   ELSE IF ( nspin == 2 ) THEN
      !
-     ALLOCATE( rhosum( SIZE( rho, 1 ) ) )
+     ALLOCATE( rhoaux( SIZE( rho, 1 ) ) )
      !
-     rhosum = rho(:,1) + rho(:,2) 
+     rhoaux = rho(:,1) + rho(:,2) 
      !
-     CALL write_rho_xml( rho_file_base, rhosum, &
+     CALL write_rho_xml( rho_file_base, rhoaux, &
                          nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
      !
-     DEALLOCATE( rhosum )
+     rho_file_base = TRIM( dirname ) // '/spin-polarization'
      !
-     rho_file_base = TRIM( dirname ) // '/charge-density-up'
+     rhoaux = rho(:,1) - rho(:,2) 
      !
-     CALL write_rho_xml( rho_file_base, rho(:,1), &
+     CALL write_rho_xml( rho_file_base, rhoaux, &
                          nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
      !
-     rho_file_base = TRIM( dirname ) // '/charge-density-dw'
-     !
-     CALL write_rho_xml( rho_file_base, rho(:,2), &
-                         nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+     DEALLOCATE( rhoaux )
      !
   ELSE IF ( nspin == 4 ) THEN
      !

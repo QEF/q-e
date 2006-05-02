@@ -100,7 +100,7 @@ MODULE pw_restart
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: itmp(:,:)
       LOGICAL               :: lgvec, lwfc
-      REAL(DP), ALLOCATABLE :: rhosum(:)
+      REAL(DP), ALLOCATABLE :: rhoaux(:)
       !
       !
       lgvec = .FALSE.
@@ -357,7 +357,7 @@ MODULE pw_restart
       !
       IF ( ionode ) &
          CALL iotk_link( iunpun, "RHO", rho_file_base, &
-                         CREATE = .FALSE., BINARY = .FALSE. )
+                         CREATE = .FALSE., BINARY = .TRUE. )
       !
       rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )      
       !
@@ -368,36 +368,27 @@ MODULE pw_restart
          !
       ELSE IF ( nspin == 2 ) THEN
          !
-         ALLOCATE( rhosum( SIZE( rho, 1 ) ) )
+         ALLOCATE( rhoaux( SIZE( rho, 1 ) ) )
          !
-         rhosum = rho(:,1) + rho(:,2) 
+         rhoaux = rho(:,1) + rho(:,2) 
          !
-         CALL write_rho_xml( rho_file_base, rhosum, &
+         CALL write_rho_xml( rho_file_base, rhoaux, &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
-         DEALLOCATE( rhosum )
-         !
-         rho_file_base = 'charge-density-up'
+         rho_file_base = 'spin-polarization'
          !
          IF ( ionode ) &
-            CALL iotk_link( iunpun, "RHO_UP", rho_file_base, &
-                            CREATE = .FALSE., BINARY = .FALSE. )
+            CALL iotk_link( iunpun, "SPIN_POL", rho_file_base, &
+                            CREATE = .FALSE., BINARY = .TRUE. )
          !
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
          !
-         CALL write_rho_xml( rho_file_base, rho(:,1), &
+         rhoaux = rho(:,1) - rho(:,2) 
+         !
+         CALL write_rho_xml( rho_file_base, rhoaux, &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
-         rho_file_base = 'charge-density-dw'
-         !
-         IF ( ionode ) &
-            CALL iotk_link( iunpun, "RHO_DW", rho_file_base, &
-                            CREATE = .FALSE., BINARY = .FALSE. )
-         !
-         rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
-         !
-         CALL write_rho_xml( rho_file_base, rho(:,2), &
-                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         DEALLOCATE( rhoaux )
          !
       ELSE IF ( nspin == 4 ) THEN
          !
@@ -408,7 +399,7 @@ MODULE pw_restart
          !
          IF ( ionode ) &
             CALL iotk_link( iunpun, "MAG_X", rho_file_base, &
-                            CREATE = .FALSE., BINARY = .FALSE. )
+                            CREATE = .FALSE., BINARY = .TRUE. )
          !
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
          !
@@ -431,7 +422,7 @@ MODULE pw_restart
          !
          IF ( ionode ) &
             CALL iotk_link( iunpun, "MAG_Z", rho_file_base, &
-                            CREATE = .FALSE., BINARY = .FALSE. )
+                            CREATE = .FALSE., BINARY = .TRUE. )
          !
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
          !
@@ -2313,31 +2304,23 @@ MODULE pw_restart
       CHARACTER(LEN=256) :: rho_file_base
       !
       !
-      IF ( nspin == 1 ) THEN
+      rho_file_base = TRIM( dirname ) // '/charge-density'
+      !
+      CALL read_rho_xml( rho_file_base, rho(:,1), &
+           nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+      !
+      IF ( nspin == 2 ) THEN
          !
-         rho_file_base = TRIM( dirname ) // '/charge-density'
-         !
-         CALL read_rho_xml( rho_file_base, rho(:,1), &
-                            nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
-         !
-      ELSE IF ( nspin == 2 ) THEN
-         !
-         rho_file_base = TRIM( dirname ) // '/charge-density-up'
-         !
-         CALL read_rho_xml( rho_file_base, rho(:,1), &
-                            nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
-         !
-         rho_file_base = TRIM( dirname ) // '/charge-density-dw'
+         rho_file_base = TRIM( dirname ) // '/spin-polarization'
          !
          CALL read_rho_xml( rho_file_base, rho(:,2), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
+         rho(:,1) = ( rho(:,1) + rho(:,2) ) / 2.d0  ! ... this is rho_up ...
+         !
+         rho(:,2) = rho(:,1) - rho(:,2)             ! ... and this is rho_dw
+         !
       ELSE IF ( nspin == 4 ) THEN
-         !
-         rho_file_base = TRIM( dirname ) // '/charge-density'
-         !
-         CALL read_rho_xml( rho_file_base, rho(:,1), &
-                            nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          rho_file_base = TRIM( dirname ) // '/magnetization.x'
          !

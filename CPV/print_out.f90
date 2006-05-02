@@ -278,10 +278,10 @@
       END IF
 
       IF( tefield) THEN
-         IF(ionode) write(stdout,'( A14,F12.6,A14,F12.6)') 'Elct. dipole 1',-pberryel,'Ionic dipole 1',-pberryion
+         IF(ionode) write(stdout,'( A14,F12.6,2X,A14,F12.6)') 'Elct. dipole 1',-pberryel,'Ionic dipole 1',-pberryion
       ENDIF
       IF( tefield2) THEN
-         IF(ionode) write(stdout,'( A14,F12.6,A14,F12.6)') 'Elct. dipole 2',-pberryel2,'Ionic dipole 2',-pberryion2
+         IF(ionode) write(stdout,'( A14,F12.6,2X,A14,F12.6)') 'Elct. dipole 2',-pberryel2,'Ionic dipole 2',-pberryion2
       ENDIF
 
       !

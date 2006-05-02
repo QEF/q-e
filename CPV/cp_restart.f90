@@ -123,7 +123,7 @@ MODULE cp_restart
       INTEGER,  ALLOCATABLE :: ftmp(:,:)
       INTEGER,  ALLOCATABLE :: ityp(:)
       REAL(DP), ALLOCATABLE :: tau(:,:)
-      REAL(DP), ALLOCATABLE :: rhosum(:)
+      REAL(DP), ALLOCATABLE :: rhoaux(:)
       REAL(DP)              :: omega, htm1(3,3), h(3,3)
       REAL(DP)              :: a1(3), a2(3), a3(3)
       REAL(DP)              :: b1(3), b2(3), b3(3)
@@ -362,47 +362,38 @@ MODULE cp_restart
          !
          IF ( ionode )&
               CALL iotk_link( iunpun, "RHO", rho_file_base, &
-              CREATE = .FALSE., BINARY = .FALSE. )
+              CREATE = .FALSE., BINARY = .TRUE. )
          !
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
          !
          IF ( nspin == 1 ) THEN
             !
-            CALL write_rho_xml( rho_file_base, &
-                                rho(:,1), nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+            CALL write_rho_xml( rho_file_base, rho(:,1), &
+                                nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
             !
          ELSE IF ( nspin == 2 ) THEN
             !
-            ALLOCATE( rhosum( SIZE( rho, 1 ) ) )
+            ALLOCATE( rhoaux( SIZE( rho, 1 ) ) )
             !
-            rhosum = rho(:,1) + rho(:,2) 
+            rhoaux = rho(:,1) + rho(:,2) 
             !
-            CALL write_rho_xml( rho_file_base, &
-                                rhosum, nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+            CALL write_rho_xml( rho_file_base, rhoaux, &
+                                nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
             !
-            DEALLOCATE( rhosum )
-            !
-            rho_file_base = 'charge-density-up'
+            rho_file_base = 'spin-polarization'
             !
             IF ( ionode ) &
                  CALL iotk_link( iunpun, "RHO_UP", rho_file_base, &
-                 CREATE = .FALSE., BINARY = .FALSE. )
+                 CREATE = .FALSE., BINARY = .TRUE. )
             !
             rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
             !
-            CALL write_rho_xml( rho_file_base, &
-                                rho(:,1), nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+            rhoaux = rho(:,1) - rho(:,2) 
             !
-            rho_file_base = 'charge-density-dw'
+            CALL write_rho_xml( rho_file_base, rhoaux, &
+                                nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
             !
-            IF ( ionode ) &
-                 CALL iotk_link( iunpun, "RHO_DW", rho_file_base, &
-                 CREATE = .FALSE., BINARY = .FALSE. )
-            !
-            rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
-            !
-            CALL write_rho_xml( rho_file_base, &
-                                rho(:,2), nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+            DEALLOCATE( rhoaux )
             !
          END IF
          !

@@ -1010,7 +1010,7 @@ MODULE xml_io_base
       !
       IF ( ionode ) &
          CALL iotk_open_write( rhounit, &
-                               FILE = rho_file, BINARY = .FALSE., IERR = ierr )
+                               FILE = rho_file, BINARY = .TRUE., IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
@@ -1141,7 +1141,7 @@ MODULE xml_io_base
       !
       IF ( ionode ) &
          CALL iotk_open_read( rhounit, &
-                              FILE = rho_file, BINARY = .FALSE., IERR = ierr )
+                              FILE = rho_file, BINARY = .TRUE., IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
