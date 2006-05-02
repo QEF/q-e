@@ -1180,7 +1180,11 @@
               NI1 = NRL - I2 + 1          ! N-I-1
 
               IF((N-I-1).GT.0) THEN
-                XNORM = DZNRM2( NI1, AP( I2, I ), 1 )
+                IF( NI1 .GT. 0 ) THEN
+                   XNORM = DZNRM2( NI1, AP( I2, I ), 1 )
+                ELSE
+                   XNORM = 0.0d0
+                END IF
 #if defined __PARA
                 XNORM = XNORM ** 2 
 #  if defined __MPI
