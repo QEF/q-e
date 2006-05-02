@@ -341,13 +341,17 @@ SUBROUTINE electrons()
            !
            descf = delta_escf()
            !
-           ! ... write the charge density to file - NO LONGER USED?
+           ! ... write the charge density to file
            !
-           !!! CALL io_pot( 1, 'rho', rhonew, nspin )
+           CALL write_rho( rhonew )
            !
            DEALLOCATE (rhonew )
            !
         ELSE
+           !
+           ! ... write the self-consistent charge density to file
+           !
+           CALL write_rho( rho )
            !
            ! ... convergence reached: store V(out)-V(in) in vnew
            ! ... Used to correct the forces

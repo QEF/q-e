@@ -85,7 +85,6 @@ MODULE pw_restart
       USE mp_global,            ONLY : my_pool_id, intra_image_comm, &
                                        intra_pool_comm, inter_pool_comm
       USE mp,                   ONLY : mp_sum, mp_max
-      
       !
       IMPLICIT NONE
       !
@@ -781,22 +780,6 @@ MODULE pw_restart
       ierr = 0
       !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
-      !
-      IF ( ionode ) THEN
-         !
-         INQUIRE( FILE = TRIM( dirname )//'/'//TRIM( xmlpun ), EXIST = lexist )
-         !
-      END IF
-      !
-      CALL mp_bcast( lexist, ionode_id )
-      !
-      IF ( .NOT. lexist ) THEN
-         !
-         ierr = 1
-         !
-         RETURN
-         !
-      END IF
       !
       ! ... look for an empty unit
       !
@@ -1948,13 +1931,13 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( nelec, ionode_id )
+      CALL mp_bcast( nelec,    ionode_id )
       CALL mp_bcast( natomwfc, ionode_id )
-      CALL mp_bcast( nbnd,  ionode_id )
-      CALL mp_bcast( isk,   ionode_id )
-      CALL mp_bcast( et,    ionode_id )
-      CALL mp_bcast( wg,    ionode_id )
-      CALL mp_bcast( ef,    ionode_id )
+      CALL mp_bcast( nbnd,     ionode_id )
+      CALL mp_bcast( isk,      ionode_id )
+      CALL mp_bcast( et,       ionode_id )
+      CALL mp_bcast( wg,       ionode_id )
+      CALL mp_bcast( ef,       ionode_id )
       !
       lbs_read = .TRUE.
       !

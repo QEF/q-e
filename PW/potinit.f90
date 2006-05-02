@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 PWSCF group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -49,13 +49,11 @@ SUBROUTINE potinit()
   !
   IMPLICIT NONE
   !
-  ! ... local variables
-  !
-  REAL (DP) :: charge           ! the starting charge
-  REAL (DP) :: etotefield       ! 
-  INTEGER        :: ios
-  INTEGER        :: ldim             ! integer variable for I/O control
-  LOGICAL        :: exst 
+  REAL(DP)              :: charge           ! the starting charge
+  REAL(DP)              :: etotefield       ! 
+  INTEGER               :: ios
+  INTEGER               :: ldim             ! integer variable for I/O control
+  LOGICAL               :: exst 
   CHARACTER(LEN=256)    :: filename
   !
   !
@@ -73,23 +71,26 @@ SUBROUTINE potinit()
      ! 
      ! ... Cases a) and b): the charge density is read from file
      !
-     CALL pw_readfile ( 'rho', ios )
-     !       
+     CALL pw_readfile( 'rho', ios )
+     !
      IF ( ios /= 0 ) THEN
         !
-        WRITE( stdout, '(/5X,"Error reading from file:"/5X,A)' )&
-             TRIM( filename )
-        CALL errore ( 'potinit' , 'reading starting density' , ios)
+        WRITE( stdout, '(/5X,"Error reading from file :"/5X,A,/)' ) &
+            TRIM( filename )
+        !
+        CALL errore ( 'potinit' , 'reading starting density', ios)
         !
      ELSE IF ( lscf ) THEN
         !
-        WRITE( stdout, '(/5X,"The initial density is read from file:"/5X,A)' )&
-             TRIM( filename )
+        WRITE( stdout, '(/5X, &
+             & "The initial density is read from file :"/5X,A,/)' ) &
+            TRIM( filename )
         !
      ELSE
         !
-        WRITE( stdout, '(/5X,"The potential is recalculated from file:"/5X,A)')&
-             TRIM( filename )
+        WRITE( stdout, '(/5X, &
+             & "The potential is recalculated from file :"/5X,A,/)' ) &
+            TRIM( filename )
         !
      END IF
      !
@@ -144,13 +145,13 @@ SUBROUTINE potinit()
      !
      IF ( input_drho /= ' ' ) THEN
         !
-        IF ( lsda ) CALL errore( 'potinit', ' lsda not allowed in drho', 1 )
+        IF ( lsda ) CALL errore( 'potinit', 'lsda not allowed in drho', 1 )
         !
         CALL io_pot( -1, input_drho, vr, nspin )
         !
         WRITE( UNIT = stdout, &
-               FMT = '(/5X,"a scf correction to at. rho is read from", A20)' ) &
-            input_drho
+               FMT = '(/5X,"a scf correction to at. rho is read from",A)' ) &
+            TRIM( input_drho )
         !
         rho = rho + vr
         !
@@ -163,35 +164,35 @@ SUBROUTINE potinit()
   !
   IF ( nspin == 2 ) THEN
      !
-     charge = SUM ( rho (:, 1:nspin) ) * omega / ( nr1 * nr2 * nr3 )
+     charge = SUM ( rho(:,1:nspin) )*omega / ( nr1*nr2*nr3 )
      !
   ELSE
      !
-     charge = SUM ( rho (:, 1) ) * omega / ( nr1 * nr2 * nr3 )
+     charge = SUM ( rho(:,1) )*omega / ( nr1*nr2*nr3 )
      !
   END IF
   !
-  call reduce (1, charge)
+  CALL reduce( 1, charge )
   !
   IF ( lscf .AND. ABS( charge - nelec ) / charge > 1.D-6 ) THEN
      !
      WRITE( stdout, &
-          '(/,5X,"starting charge ",F10.5,", renormalised to ",F10.5)') &
-          charge, nelec
+            '(/,5X,"starting charge ",F10.5,", renormalised to ",F10.5)') &
+         charge, nelec
      !
      rho = rho / charge * nelec
      !
   ELSE IF ( .NOT. lscf .AND. ABS( charge - nelec ) / charge > 1.D-6 ) THEN
      !
-     CALL errore ( 'potinit', 'starting and expected charges differ', 1 )
+     CALL errore( 'potinit', 'starting and expected charges differ', 1 )
      !
   END IF
   !
   ! ... compute the potential and store it in vr
   !
   CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-       ehart, etxc, vtxc, etotefield, charge, vr )
+                 nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+                 ehart, etxc, vtxc, etotefield, charge, vr )
   !
   ! ... define the total local potential (external+scf)
   !
@@ -210,7 +211,8 @@ SUBROUTINE potinit()
      !
   END IF
   !
-  IF ( report /= 0 .AND. noncolin .AND. domag .AND. lscf ) CALL report_mag()
+  IF ( report /= 0 .AND. &
+       noncolin .AND. domag .AND. lscf ) CALL report_mag()
   !
   RETURN
   !
