@@ -925,18 +925,6 @@ SUBROUTINE check_para_diag_efficiency()
   !
   use_para_diago = .FALSE.
   !
-  ! ... *** PARALLEL DAVIDSON DISABLED ***
-  !
-  RETURN
-  !
-#if defined(__AIX)
-  !
-  ! ... *** not yet working on IBM ***
-  !
-  IF ( gamma_only ) RETURN
-  !
-#endif
-  !
   IF ( isolve /= 0 .OR. nproc_pool == 1 ) RETURN
   !
   m_min = ( nbnd / nproc_pool ) * nproc_pool
@@ -1061,7 +1049,7 @@ SUBROUTINE check_para_diag_efficiency()
      IF ( time_para < time_serial ) THEN
         !
         use_para_diago = .TRUE.
-        
+        para_diago_dim = dim
         !
         EXIT
         !

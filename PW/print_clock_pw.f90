@@ -13,7 +13,7 @@ SUBROUTINE print_clock_pw()
    ! ... it tries to construct the calling tree of the program.
    !
    USE io_global,     ONLY : stdout
-   USE control_flags, ONLY : isolve
+   USE control_flags, ONLY : isolve, use_para_diago
    USE force_mod,     ONLY : lforce, lstres
    USE mp_global,     ONLY : mpime, root
    !
@@ -90,6 +90,8 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'cdiaghg' )
       CALL print_clock( 'update' )
       CALL print_clock( 'last' )
+      !
+      IF ( use_para_diago ) CALL print_clock( 'cgramg1' )
       !
       WRITE( stdout, * )
       !
