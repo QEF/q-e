@@ -248,7 +248,7 @@
       real(DP),    allocatable :: gk(:)
       complex(DP), allocatable :: wrk2(:,:)
       !
-      integer   :: ig, is, iv, ia, k, l, ixr, ixi, inl, isa
+      integer   :: ig, is, iv, ia, k, l, ixr, ixi, inl, isa, i
       real(DP) :: signre, signim, arg
 !
       call start_clock( 'nlsm2' )
@@ -258,17 +258,20 @@
 
       becdr = 0.d0
 !
-      do k=1,3
+      do k = 1, 3
+
          do ig=1,ngw
             gk(ig)=gx(k,ig)*tpiba
          end do
 !
          isa = 0
+
          do is=1,nsp
+
             do iv=1,nh(is)
-!
-!     order of states:  s_1  p_x1  p_z1  p_y1  s_2  p_x2  p_z2  p_y2
-!
+               !
+               !     order of states:  s_1  p_x1  p_z1  p_y1  s_2  p_x2  p_z2  p_y2
+               !
                l=nhtol(iv,is)
                if (l.eq.0) then
                   ixr = 2
@@ -306,16 +309,21 @@
                   end do
                end do
                inl=ish(is)+(iv-1)*na(is)+1
-               call MXMA(wrk2,2*ngw,1,c,1,2*ngw,becdr(inl,1,k),1,       &
-     &                   nkb,na(is),2*ngw,n)
+               call MXMA(wrk2,2*ngw,1,c,1,2*ngw,becdr(inl,1,k),1, nkb,na(is),2*ngw,n)
             end do
 
             isa = isa + na(is)
 
          end do
+
+         IF( tred .AND. ( nproc_image > 1 ) ) THEN
+            DO i = 1, n
+               CALL mp_sum( becdr(:,i,k), intra_image_comm )
+            END DO
+         END IF
+
       end do
 
-      if( tred .AND. ( nproc_image > 1 ) ) call mp_sum( becdr, intra_image_comm )
 
       deallocate( gk )
       deallocate( wrk2 )
@@ -718,7 +726,7 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   !     contribution to fion due to nonlocal part
   !
   USE kinds,          ONLY : DP
-  use uspp,           only : nhsa=>nkb, dvan, deeq
+  use uspp,           only : nkb, dvan, deeq
   use uspp_param,     only : nhm, nh
   use cvan,           only : ish, nvb
   use ions_base,      only : nax, nat, nsp, na
@@ -728,8 +736,8 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   !
   implicit none
   !
-  real(DP),    intent(in)  :: bec( nhsa, n ), c( 2, ngw, n )
-  real(DP),    intent(out) :: becdr( nhsa, n, 3 )
+  real(DP),    intent(in)  :: bec( nkb, n ), c( 2, ngw, n )
+  real(DP),    intent(out) :: becdr( nkb, n, 3 )
   complex(DP), intent(in)  :: eigr( ngw, nat )
   real(DP),    intent(out) :: fion( 3, nat )
   !
@@ -744,7 +752,7 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   !
   !     nlsm2 fills becdr
   !
-  call nlsm2(ngw,nhsa,n,eigr,c,becdr,.true.)
+  call nlsm2(ngw,nkb,n,eigr,c,becdr,.true.)
   !
   !
   do k=1,3

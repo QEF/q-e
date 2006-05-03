@@ -14,7 +14,7 @@ MODULE io_global
   PRIVATE
   SAVE
   !
-  PUBLIC :: io_global_start, io_global_getionode
+  PUBLIC :: io_global_start, io_global_getionode, io_global_getmeta
   PUBLIC :: stdout, ionode, ionode_id, meta_ionode, meta_ionode_id
   !
   INTEGER :: stdout = 6            ! unit connected to standard output
@@ -68,7 +68,7 @@ MODULE io_global
        !
        !
        IF ( first ) &
-          CALL errore( ' get_ionode ', ' ionode not yet defined ', 1 )
+          CALL errore( ' io_global_getionode ', ' ionode not yet defined ', 1 )
        !
        ionode_out    = ionode
        ionode_id_out = ionode_id
@@ -77,4 +77,26 @@ MODULE io_global
        !
      END SUBROUTINE io_global_getionode
      !  
+     !  
+     !-----------------------------------------------------------------------
+     SUBROUTINE io_global_getmeta( ionode_out, ionode_id_out )
+       !-----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       LOGICAL, INTENT(OUT) :: ionode_out
+       INTEGER, INTENT(OUT) :: ionode_id_out
+       !
+       !
+       IF ( first ) &
+          CALL errore( ' io_global_getmeta ', ' meta_ionode not yet defined ', 1 )
+       !
+       ionode_out    = meta_ionode
+       ionode_id_out = meta_ionode_id
+       !
+       RETURN
+       !
+     END SUBROUTINE io_global_getmeta
+     !
+     !
 END MODULE io_global

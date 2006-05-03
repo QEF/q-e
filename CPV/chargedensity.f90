@@ -506,18 +506,23 @@
          !
          !     important: if n is odd then nx must be .ge.n+1 and c(*,n+1)=0.
          ! 
-         IF ( MOD(n,2) .NE. 0 ) THEN
+         IF ( MOD( n, 2 ) /= 0 ) THEN
+            !
+            IF( SIZE( c, 2 ) < n+1 ) &
+               CALL errore( ' rhoofr ', ' c second dimension too small ', SIZE( c, 2 ) )
+            !
             c( :, n+1 ) = ( 0.d0, 0.d0 )
+            !
          ENDIF
          !
          IF( use_task_groups ) THEN
             !
             CALL loop_over_states_tg()
             !
-            DEALLOCATE(psi)
-            DEALLOCATE(psis) 
+            DEALLOCATE( psi  )
+            DEALLOCATE( psis ) 
             !
-            ALLOCATE( psi( nnrx ) ) 
+            ALLOCATE( psi ( nnrx  ) ) 
             ALLOCATE( psis( nnrsx ) ) 
             !
          ELSE
@@ -791,16 +796,9 @@
             !
          END DO
 
-#if defined (__PARA)
-         IF ( NOGRP .NE. 1 ) THEN
-            CALL MPI_ALLREDUCE(tmp_rhos(1,1), long_rhos(1,1), nr1sx*nr2sx*tmp_npp(me_image+1), &
-                 MPI_DOUBLE_PRECISION, MPI_SUM, ME_OGRP, IERR)
-            IF ( nspin .EQ. 2 ) THEN
-               CALL MPI_ALLREDUCE(tmp_rhos(1,2), long_rhos(1,2), nr1sx*nr2sx*tmp_npp(me_image+1), &
-                    MPI_DOUBLE_PRECISION, MPI_SUM, ME_OGRP, IERR)
-            ENDIF
+         IF ( nogrp > 1 ) THEN
+            CALL mp_sum( tmp_rhos, long_rhos, gid = me_ogrp )
          ENDIF
-#endif
 
          tmp_rhos(:,:) = 0D0
 

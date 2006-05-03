@@ -577,7 +577,7 @@ MODULE read_namelists_module
        CALL mp_bcast( ndr,           ionode_id )
        CALL mp_bcast( ndw,           ionode_id )
        CALL mp_bcast( outdir,        ionode_id )
-       CALL mp_bcast( wfcdir,       ionode_id )
+       CALL mp_bcast( wfcdir,        ionode_id )
        CALL mp_bcast( scradir,       ionode_id )
        CALL mp_bcast( prefix,        ionode_id )
        CALL mp_bcast( max_seconds,   ionode_id )
@@ -588,7 +588,7 @@ MODULE read_namelists_module
        CALL mp_bcast( refg,          ionode_id )
        CALL mp_bcast( disk_io,       ionode_id )
        CALL mp_bcast( tefield,       ionode_id )
-       CALL mp_bcast( tefield2,       ionode_id )
+       CALL mp_bcast( tefield2,      ionode_id )
        CALL mp_bcast( dipfield,      ionode_id )
        CALL mp_bcast( lberry,        ionode_id )
        CALL mp_bcast( gdir,          ionode_id )
@@ -597,7 +597,6 @@ MODULE read_namelists_module
        CALL mp_bcast( printwfc,      ionode_id )
        CALL mp_bcast( lelfield,      ionode_id )
        CALL mp_bcast( nberrycyc,     ionode_id )
-
        ! 
        RETURN
        !

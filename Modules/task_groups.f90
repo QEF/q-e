@@ -71,15 +71,11 @@ END SUBROUTINE DEALLOCATE_GROUPS
 
 
 !-----------------------------------------------------------------------
-!=======================================================================
 !      SUBROUTINE GROUPS (added by C. Bekas)
 !      Define groups for task group parallilization
-!=======================================================================
 !-----------------------------------------------------------------------
-SUBROUTINE task_groups_init( nogrp_ , dffts )
-   !------------
-   !Modules used
-   !------------
+
+SUBROUTINE task_groups_init( dffts )
 
    USE mp_global,  ONLY : me_image, nproc_image, intra_image_comm, root
    USE mp_global,  ONLY : NOGRP, NPGRP, ME_OGRP, ME_PGRP  
@@ -92,7 +88,6 @@ SUBROUTINE task_groups_init( nogrp_ , dffts )
 
    IMPLICIT NONE 
 
-   INTEGER, INTENT(IN) :: nogrp_
    TYPE(fft_dlay_descriptor), INTENT(IN) :: dffts
 
    !----------------------------------
@@ -116,7 +111,7 @@ SUBROUTINE task_groups_init( nogrp_ , dffts )
 
    !  Find the number of processors and my rank
    !
-   SZ = nproc_image
+   sz = nproc_image
 
    !--------------------------------------------------------------
    !SUBDIVIDE THE PROCESSORS IN GROUPS
@@ -125,15 +120,13 @@ SUBROUTINE task_groups_init( nogrp_ , dffts )
    !OF PROCESSORS
    !--------------------------------------------------------------
 
-   IF( MOD( nproc_image, nogrp_ ) /= 0 ) &
+   IF( MOD( nproc_image, nogrp ) /= 0 ) &
       CALL errore( " groups ", " nogrp should be a divisor of nproc_image ", 1 )
  
-   ALLOCATE( PGROUP( nproc_image ) )
-   DO I = 1, nproc_image
-      PGROUP( I ) = I - 1
+   ALLOCATE( pgroup( nproc_image ) )
+   DO i = 1, nproc_image
+      pgroup( i ) = i - 1
    ENDDO
-
-   nogrp = nogrp_
 
    ALLOCATE( nnrsx_vec( sz ) )
 
@@ -146,12 +139,6 @@ SUBROUTINE task_groups_init( nogrp_ , dffts )
    strd = dffts%nnr 
 #endif
 
-
-   !---------------------------------------------------------------
-   !Broadcast the number of groups: NOGRP
-   !---------------------------------------------------------------
-
-   CALL mp_bcast( nogrp, root, intra_image_comm )
 
    !-------------------------------------------------------------------------------------
    !C. Bekas...TASK GROUP RELATED. FFT DATA STRUCTURES ARE ALREADY DEFINED ABOVE
@@ -178,10 +165,7 @@ SUBROUTINE task_groups_init( nogrp_ , dffts )
       tmp_npp(1)=-1
    ENDIF
 
-
    IF( NOGRP == 1 ) RETURN
-
-   NPGRP = nproc_image / NOGRP
 
    IF( NPGRP > MAXGRP ) THEN
       CALL errore( "groups", "too many npgrp", 1 )

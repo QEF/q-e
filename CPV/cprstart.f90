@@ -71,17 +71,18 @@ PROGRAM main
   !----------------------------------------------------------------------------
   !
   USE input,         ONLY : read_input_file, iosys_pseudo, iosys
-  USE io_global,     ONLY : io_global_start, io_global_getionode
+  USE io_global,     ONLY : io_global_start, io_global_getmeta
   USE mp_global,     ONLY : mp_global_start, init_pool
-  USE mp,            ONLY : mp_end, mp_start, mp_env
+  USE mp,            ONLY : mp_end, mp_start, mp_env, mp_bcast
   USE control_flags, ONLY : lneb, lsmd, lmetadyn, program_name
   USE environment,   ONLY : environment_start
   USE check_stop,    ONLY : check_stop_init
   !
   IMPLICIT NONE
   !
-  INTEGER            :: mpime, nproc, gid, ionode_id
-  LOGICAL            :: ionode
+  INTEGER            :: mpime, nproc, world, meta_ionode_id
+  INTEGER            :: nimage, ntask_groups
+  LOGICAL            :: meta_ionode
   INTEGER, PARAMETER :: root = 0
   !
   ! ... program starts here
@@ -91,18 +92,47 @@ PROGRAM main
   ! ... initialize MPI (parallel processing handling)
   !
   CALL mp_start()
-  CALL mp_env( nproc, mpime, gid )
-  CALL mp_global_start( root, mpime, gid, nproc )
+  !
+  ! ... get from communication sub-sistem basic parameters
+  ! ... to handle processors
+  !
+  CALL mp_env( nproc, mpime, world )
+  !
+  ! ... now initialize module holding processors and groups
+  ! ... variables
+  !
+  CALL mp_global_start( root, mpime, world, nproc )
   !
   ! ... mpime = processor number, starting from 0
   ! ... nproc = number of processors
-  ! ... gid   = group index
+  ! ... world = group index of all processors
   ! ... root  = index of the root processor
   !
   ! ... initialize input output
   !
   CALL io_global_start( mpime, root )
-  CALL io_global_getionode( ionode, ionode_id )
+  !
+  ! ... get the "meta" io node
+  !
+  CALL io_global_getmeta( meta_ionode, meta_ionode_id )
+  !
+  IF ( meta_ionode ) THEN
+     !
+     ! ... check for command line arguments
+     !
+     CALL get_arg_nimage( nimage )
+     !
+     nimage = MAX( nimage, 1 )
+     nimage = MIN( nimage, nproc )
+     !
+     CALL get_arg_ntg( ntask_groups )
+     !
+  END IF
+  !
+  CALL mp_bcast( nimage,       meta_ionode_id, world )
+  CALL mp_bcast( ntask_groups, meta_ionode_id, world )
+  !
+  ! ... start the environment
   !
   CALL environment_start( )
   !
@@ -110,8 +140,8 @@ PROGRAM main
   !
   CALL read_input_file()
   !
-  ! ... copy pseudopotential input parameter into internal variables
-  ! ... and read in pseudopotentials and wavefunctions files
+  ! ... read in pseudopotentials files and then
+  ! ... copy pseudopotential parameters into internal variables
   !
   CALL iosys_pseudo()
   !
@@ -121,7 +151,9 @@ PROGRAM main
   !
   CALL check_stop_init()
   !
-  CALL init_pool()
+  ! ... here reorganize processors in groups
+  !
+  CALL init_pool( nimage, ntask_groups )
   !
   IF ( lneb ) THEN
      !

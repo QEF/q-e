@@ -10,7 +10,6 @@ MODULE input
    !---------------------------------------------------------------------------
    !
    USE kinds,     ONLY: DP
-   USE io_global, ONLY: ionode, stdout
    !
    IMPLICIT NONE
    SAVE
@@ -37,6 +36,7 @@ MODULE input
      USE control_flags,         ONLY : lneb, lsmd, lpath, lwf, lmetadyn, &
                                        program_name
      USE printout_base,         ONLY : title_ => title
+     USE io_global,             ONLY : meta_ionode, stdout
      !
      IMPLICIT NONE
      !
@@ -45,7 +45,7 @@ MODULE input
      !
      prog = 'CP'
      !
-     IF ( ionode ) CALL input_from_file()
+     IF ( meta_ionode ) CALL input_from_file()
      !
      ! ... Read NAMELISTS 
      !
@@ -135,12 +135,13 @@ MODULE input
    SUBROUTINE iosys()
      !-------------------------------------------------------------------------
      !
-     USE control_flags, ONLY: fix_dependencies, program_name, lsmd, lneb
+     USE control_flags, ONLY : fix_dependencies, program_name, lsmd, lneb
+     USE io_global,     ONLY : meta_ionode, stdout
      !
      IMPLICIT NONE
      !
      !
-     IF ( ionode ) THEN
+     IF ( meta_ionode ) THEN
         !
         WRITE( UNIT = stdout, &
                FMT = "(//,3X,'Main Simulation Parameters (from input)',/ &
@@ -180,6 +181,7 @@ MODULE input
    SUBROUTINE set_control_flags()
      !-------------------------------------------------------------------------
      !
+     USE io_global,     ONLY : stdout
      USE autopilot,     ONLY : auto_check
      USE autopilot,     ONLY : restart_p
      USE control_flags, ONLY : lcoarsegrained, ldamped, lmetadyn
@@ -791,11 +793,9 @@ MODULE input
       ! force pairing
 
       force_pairing_ = force_pairing
-      IF( program_name == 'CP90' .AND. force_pairing_) &
-            WRITE(stdout, "(' force_pairing have no effects ')")
-
-      ! . Set internal flags according to the input .......................!
-
+      !
+      !
+      !
       IF( ( nvb > 0 ) .and. ( program_name == 'FPMD' ) ) &
         CALL errore(' iosys ',' USPP not yet implemented in FPMD ',1)
 
@@ -1204,13 +1204,14 @@ MODULE input
     USE control_flags,      ONLY: nbeg, iprint, ndr, ndw, nomore
     USE time_step,          ONLY: delt
     USE cp_electronic_mass, ONLY: emass, emass_cutoff
+    USE io_global,          ONLY: meta_ionode, stdout
 
     IMPLICIT NONE
 
     IF( .NOT. has_been_read ) &
       CALL errore( ' iosys ', ' input file has not been read yet! ', 1 )
 
-    IF( ionode ) THEN
+    IF( meta_ionode ) THEN
       WRITE( stdout, 500) nbeg, restart_mode, nomore, iprint, ndr, ndw
       WRITE( stdout, 505) delt
       WRITE( stdout, 510) emass
@@ -1255,6 +1256,7 @@ MODULE input
     USE cell_nose,            ONLY: cell_nose_info
     USE cell_base,            ONLY: frich
     USE efield_module,        ONLY: tefield, efield_info, tefield2, efield_info2
+    USE io_global,            ONLY: meta_ionode, stdout
     !
     !
     IMPLICIT NONE
@@ -1264,7 +1266,7 @@ MODULE input
     IF( .NOT. has_been_read ) &
       CALL errore( ' iosys ', ' input file has not been read yet! ', 1 )
 
-    IF( ionode ) THEN
+    IF( meta_ionode ) THEN
       !
       CALL cutoffs_print_info( )
       !

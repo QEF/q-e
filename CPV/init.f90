@@ -185,7 +185,7 @@
       !
 #if defined __BGL
       !
-      CALL task_groups_init( 1 , dffts )
+      CALL task_groups_init( dffts )
       !
 #endif
       !

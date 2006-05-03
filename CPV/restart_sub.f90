@@ -234,23 +234,22 @@ MODULE from_restart_module
        IF ( tzeroe .AND. ( .NOT. tcg ) ) THEN 
 
          IF( force_pairing ) THEN
-          CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
+             !
+             CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
                            bec, c0(:,:,1,1), cm(:,:,1,1), ei_unp, restart = .TRUE. )
-          lambda(1:nupdwn(2), 1:nupdwn(2), 2) = lambda(1:nupdwn(2), 1:nupdwn(2), 1) 
-!          lambda(nupdwn(1), nupdwn(1), 1) = ei_unp
-!          lambda(nupdwn(1), nupdwn(1), 2) = 0.d0 
-         ELSE
+             !          lambda(nupdwn(1), nupdwn(1), 1) = ei_unp
+             !          lambda(nupdwn(1), nupdwn(1), 2) = 0.d0 
+             lambdam( 1:nupdwn(2), 1:nupdwn(2), 2) = lambdam( 1:nupdwn(2), 1:nupdwn(2), 1)
+             lambda( 1:nupdwn(2), 1:nupdwn(2), 2) =  lambda( 1:nupdwn(2), 1:nupdwn(2), 1)
+             !
+          ELSE
 
-          CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
+             CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
                            bec, c0(:,:,1,1), cm(:,:,1,1), restart = .TRUE. )
-         ENDIF 
+          ENDIF 
+
        ENDIF 
 
-
-       IF( force_pairing ) THEN 
-           lambdam( 1:nupdwn(2), 1:nupdwn(2), 2) = lambdam( 1:nupdwn(2), 1:nupdwn(2), 1)
-            lambda( 1:nupdwn(2), 1:nupdwn(2), 2) =  lambda( 1:nupdwn(2), 1:nupdwn(2), 1)
-       END IF
 
        !
        ! ... nlfq needs deeq bec
@@ -362,14 +361,14 @@ MODULE from_restart_module
        !
        velh = ( h - hold ) / delt
        !
-       !===========================================================
+       !
        !     kinetic energy of the electrons
-       !===========================================================
+       !
        !
        IF( force_pairing ) THEN
-            cm( :,iupdwn(2):(iupdwn(2)-1+nupdwn(2)),1,1) =     cm( :,1:nupdwn(2),1,1) 
-            c0( :,iupdwn(2):(iupdwn(2)-1+nupdwn(2)),1,1) =     c0( :,1:nupdwn(2),1,1) 
-        lambda(1:nupdwn(2),1:nupdwn(2),2)                = lambda(1:nupdwn(2),1:nupdwn(2),1) 
+          cm( :,iupdwn(2):(iupdwn(2)-1+nupdwn(2)),1,1) =     cm( :,1:nupdwn(2),1,1) 
+          c0( :,iupdwn(2):(iupdwn(2)-1+nupdwn(2)),1,1) =     c0( :,1:nupdwn(2),1,1) 
+          lambda(1:nupdwn(2),1:nupdwn(2),2)                = lambda(1:nupdwn(2),1:nupdwn(2),1) 
        ENDIF 
        !
        lambdam = lambda

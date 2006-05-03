@@ -50,6 +50,7 @@ SUBROUTINE input_from_file( )
 END SUBROUTINE input_from_file
 !
 !----------------------------------------------------------------------------
+!
 SUBROUTINE get_file( input_file )
   !
   ! This subroutine reads, either from command line or from terminal,
@@ -86,3 +87,67 @@ SUBROUTINE get_file( input_file )
 20 PRINT  '(A,": reading file name ",A)', TRIM(prgname), TRIM(input_file)
   !
 END SUBROUTINE get_file
+!
+!----------------------------------------------------------------------------
+!
+SUBROUTINE get_arg_nimage( nimage )
+   !
+   IMPLICIT NONE
+   !
+   INTEGER :: nimage
+   !
+   INTEGER :: nargs, iiarg
+   CHARACTER(LEN=10) :: np
+   INTEGER :: iargc
+   !
+   nimage = 1
+   nargs = iargc()
+   !
+   DO iiarg = 1, ( nargs - 1 )
+      !
+      CALL getarg( iiarg, np )
+      !
+      IF ( TRIM( np ) == '-nimage' .OR. TRIM( np ) == '-nimages' ) THEN
+         !
+         CALL getarg( ( iiarg + 1 ), np )
+         READ( np, * ) nimage
+         !
+      END IF
+      !
+   END DO
+   !
+   RETURN
+END SUBROUTINE get_arg_nimage
+!
+!----------------------------------------------------------------------------
+!
+SUBROUTINE get_arg_ntg( ntask_groups )
+   !
+   IMPLICIT NONE
+   !
+   INTEGER :: ntask_groups
+   !
+   INTEGER :: nargs, iiarg
+   CHARACTER(LEN=20) :: np
+   INTEGER :: iargc
+   !
+   ntask_groups = 1
+   nargs = iargc()
+   !
+   DO iiarg = 1, ( nargs - 1 )
+      !
+      CALL getarg( iiarg, np )
+      !
+      IF ( TRIM( np ) == '-ntg' .OR. TRIM( np ) == '-ntask_groups' ) THEN
+         !
+         CALL getarg( ( iiarg + 1 ), np )
+         READ( np, * ) ntask_groups
+         !
+      END IF
+      !
+   END DO
+   !
+   RETURN
+END SUBROUTINE get_arg_ntg
+
+

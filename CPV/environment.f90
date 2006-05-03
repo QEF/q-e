@@ -32,9 +32,8 @@
 
         SUBROUTINE environment_start( )
 
-          USE io_global, ONLY: stdout, ionode
+          USE io_global, ONLY: stdout, meta_ionode
           USE mp_global, ONLY: mpime, nproc
-          use mp, only: mp_env
           USE cp_version
 
           LOGICAL           :: texst
@@ -54,7 +53,7 @@
 
           ! ...  search for file CRASH and delete it
 
-          IF( ionode ) THEN
+          IF( meta_ionode ) THEN
             INQUIRE( FILE=TRIM(crash_file), EXIST=texst )
             IF( texst ) THEN
               OPEN(  UNIT=crashunit, FILE=TRIM(crash_file), STATUS='OLD' )
@@ -65,7 +64,7 @@
           ! ...       each processor other than me=1 opens its own standard output file,
           ! ...       this is mainly for debugging, usually only ionode writes to stdout
 
-          IF( .NOT. ionode ) THEN
+          IF( .NOT. meta_ionode ) THEN
 
             uname = 'out.' // int_to_char( mpime )
             nchar = INDEX(uname,' ') - 1
@@ -73,6 +72,7 @@
             !
             ! useful for debugging purposes 
             !    open( unit = stdout, file = uname(1:nchar),status='unknown')
+            !
             open( unit = stdout, file='/dev/null', status='unknown' )
 
           END IF
@@ -98,16 +98,16 @@
 
         SUBROUTINE environment_end( )
 
-          USE io_global, ONLY: stdout, ionode
+          USE io_global, ONLY: stdout, meta_ionode
 
-          IF ( ionode ) WRITE( stdout, * )
+          IF ( meta_ionode ) WRITE( stdout, * )
 
           CALL stop_clock(  'CP' )
           CALL print_clock( 'CP' )
 
           CALL closing_date_and_time( )
 
-          IF(ionode) THEN
+          IF( meta_ionode ) THEN
             WRITE( stdout,'(A)')      '   JOB DONE.'
             WRITE( stdout,3335)
           END IF
@@ -120,19 +120,19 @@
 
         SUBROUTINE opening_date_and_time( version_str )
 
-          USE io_global, ONLY: stdout, ionode
+          USE io_global, ONLY: stdout, meta_ionode
 
           CHARACTER(LEN=*), INTENT(IN) :: version_str
           CHARACTER(LEN=9)  :: cdate, ctime
           CHARACTER(LEN=80) :: time_str
 
-          CALL date_and_tim(cdate, ctime)
+          CALL date_and_tim( cdate, ctime )
           time_str = 'This run was started on:  ' // ctime // ' ' // cdate
 
 ! ...     write program heading
 
 
-          IF(ionode) THEN
+          IF( meta_ionode ) THEN
             WRITE( stdout,3331) 
             WRITE( stdout,3332) version_str
             WRITE( stdout,3331) 
@@ -155,16 +155,16 @@
 
         SUBROUTINE closing_date_and_time( )
 
-          USE io_global, ONLY: stdout, ionode
+          USE io_global, ONLY: stdout, meta_ionode
 
           CHARACTER(LEN=9)  :: cdate, ctime
           CHARACTER(LEN=80) :: time_str
 
-          CALL date_and_tim(cdate, ctime)
+          CALL date_and_tim( cdate, ctime )
 
           time_str = 'This run was terminated on:  ' // ctime // ' ' // cdate
 
-          IF( ionode ) THEN
+          IF( meta_ionode ) THEN
             WRITE( stdout,*)
             WRITE( stdout,3334) time_str
             WRITE( stdout,3335)

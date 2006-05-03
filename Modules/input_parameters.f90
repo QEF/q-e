@@ -280,6 +280,7 @@ MODULE input_parameters
         INTEGER :: printwfc=1
           ! if <0 do nothing, if==0 print rho and fort.47, if == nband print band
 
+
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, &
           wfcdir, max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &

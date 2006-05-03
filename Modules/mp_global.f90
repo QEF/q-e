@@ -100,7 +100,7 @@ MODULE mp_global
      !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE init_pool()
+SUBROUTINE init_pool( nimage_ , ntask_groups_ )
   !----------------------------------------------------------------------------
   !
   ! ... This routine initialize the pool :  MPI division in pools and images
@@ -110,10 +110,21 @@ SUBROUTINE init_pool()
   !
   IMPLICIT NONE
   !
+  INTEGER, OPTIONAL, INTENT(IN) :: nimage_
+  INTEGER, OPTIONAL, INTENT(IN) :: ntask_groups_
+  !
   INTEGER :: ierr = 0
   ! 
   !
 #if defined (__PARA)
+  !
+  IF( PRESENT( nimage_ ) ) THEN
+     nimage = nimage_
+  END IF
+  !  
+  IF( PRESENT( ntask_groups_ ) ) THEN
+     nogrp = ntask_groups_
+  END IF
   !  
   ! ... here we set all parallel indeces (defined in mp_global): 
   !
@@ -183,6 +194,15 @@ SUBROUTINE init_pool()
   !
   call errore( 'init_pool', 'inter_pool_comm is wrong', ierr )
   !
+#endif
+  !
+#if defined __BGL
+  !
+  IF( MOD( nproc_image, nogrp ) /= 0 ) &
+      CALL errore( " init_pool ", " nogrp should be a divisor of nproc_image ", 1 )
+  !
+  npgrp = nproc_image / nogrp
+
 #endif
   !
   RETURN

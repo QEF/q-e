@@ -115,10 +115,10 @@
         alldata(taskid+1) = mydata
         CALL MPI_ALLGATHER(mydata, 1, MPI_INTEGER, alldata, 1, MPI_INTEGER, group, IERR)
         IF (ierr/=0) CALL mp_stop(8001)
+        mp_high_watermark = MAX( mp_high_watermark, 4 * msglen ) 
 #else
         alldata(1) = mydata
 #endif
-        mp_high_watermark = MAX( mp_high_watermark, 4 * msglen ) 
         RETURN
       END SUBROUTINE mp_excng_i
 
@@ -142,12 +142,12 @@
         IF( PRESENT( gid ) ) group = gid
         CALL MPI_GATHER(mydata, msglen, MPI_INTEGER, alldata, msglen, MPI_INTEGER, root, group, IERR)
         IF (ierr/=0) CALL mp_stop(8001)
+        mp_high_watermark = MAX( mp_high_watermark, 4 * msglen ) 
 #else
         msglen = SIZE(mydata)
         IF( msglen .NE. SIZE(alldata, 1) ) CALL mp_stop(8002)
         alldata(:,1) = mydata(:)
 #endif
-        mp_high_watermark = MAX( mp_high_watermark, 4 * msglen ) 
         RETURN
       END SUBROUTINE mp_gather_iv
 
@@ -170,11 +170,11 @@
         CALL MPI_GATHER(mydata, msglen, MPI_DOUBLE_COMPLEX, alldata, msglen, &
           MPI_DOUBLE_COMPLEX, root, group, IERR)
         IF (ierr/=0) CALL mp_stop(8001)
+        mp_high_watermark = MAX( mp_high_watermark, 16 * msglen ) 
 #else
         msglen = SIZE(mydata)
         alldata = mydata
 #endif
-        mp_high_watermark = MAX( mp_high_watermark, 16 * msglen ) 
         RETURN
       END SUBROUTINE mp_gather_cvv
 
@@ -197,11 +197,11 @@
         CALL MPI_GATHER(mydata, msglen, MPI_DOUBLE_PRECISION, alldata, msglen, &
           MPI_DOUBLE_PRECISION, root, group, IERR)
         IF (ierr/=0) CALL mp_stop(8001)
+        mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
 #else
         msglen = SIZE(mydata)
         alldata = mydata
 #endif
-        mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
         return
       END SUBROUTINE mp_gather_rvv
 
@@ -334,8 +334,10 @@
         IF (ierr/=0) CALL mp_stop(8023)
 #endif
       END SUBROUTINE mp_cart_create
+!
 !------------------------------------------------------------------------------!
 !..mp_bcast
+
       SUBROUTINE mp_bcast_i4b(msg,source,gid)
         IMPLICIT NONE
         INTEGER(i4b) :: msg
@@ -361,6 +363,7 @@
 
 !------------------------------------------------------------------------------!
 !..mp_bcast
+
       SUBROUTINE mp_bcast_i1(msg,source,gid)
         IMPLICIT NONE
         INTEGER :: msg
@@ -481,7 +484,11 @@
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8911)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
+#if defined __XD1
+        CALL bcast_real( msg, msglen, source, group, ierr )
+#else
         CALL mpi_bcast(msg,msglen,mpi_double_precision,source,group,ierr)
+#endif
         IF (ierr/=0) CALL mp_stop(8112)
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
 #endif
@@ -502,7 +509,11 @@
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8912)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
+#if defined __XD1
+        CALL bcast_real( msg, msglen, source, group, ierr )
+#else
         CALL mpi_bcast(msg,msglen,mpi_double_precision,source,group,ierr)
+#endif
         IF (ierr/=0) CALL mp_stop(8113)
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
 #endif
@@ -525,7 +536,11 @@
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8913)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
+#if defined __XD1
+        CALL bcast_real( msg, msglen, source, group, ierr )
+#else
         CALL mpi_bcast(msg,msglen,mpi_double_precision,source,group,ierr)
+#endif
         IF (ierr/=0) CALL mp_stop(8113)
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
 #endif
@@ -548,7 +563,11 @@
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8914)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
+#if defined __XD1
+        CALL bcast_real( msg, msglen, source, group, ierr )
+#else
         CALL mpi_bcast(msg, msglen, mpi_double_precision, source, group, ierr)
+#endif
         IF (ierr/=0) CALL mp_stop(8113)
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
 #endif
@@ -588,7 +607,11 @@
         IF( msglen*16 > mp_msgsiz_max ) CALL mp_stop(8916)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
+#if defined __XD1
+        CALL bcast_real( msg, 2 * msglen, source, group, ierr )
+#else
         CALL mpi_bcast(msg,msglen,mpi_double_complex,source,group,ierr)
+#endif
         IF (ierr/=0) CALL mp_stop(8122)
         mp_high_watermark = MAX( mp_high_watermark, 16 * msglen ) 
 #endif
@@ -608,7 +631,11 @@
         IF( msglen*16 > mp_msgsiz_max ) CALL mp_stop(8915)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
+#if defined __XD1
+        CALL bcast_real( msg, 2 * msglen, source, group, ierr )
+#else
         CALL mpi_bcast(msg,msglen,mpi_double_complex,source,group,ierr)
+#endif
         IF (ierr/=0) CALL mp_stop(8123)
         mp_high_watermark = MAX( mp_high_watermark, 16 * msglen )
 #endif
@@ -628,7 +655,11 @@
         IF( msglen*16 > mp_msgsiz_max ) CALL mp_stop(8915)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
+#if defined __XD1
+        CALL bcast_real( msg, 2 * msglen, source, group, ierr )
+#else
         CALL mpi_bcast(msg,msglen,mpi_double_complex,source,group,ierr)
+#endif
         IF (ierr/=0) CALL mp_stop(8123)
         mp_high_watermark = MAX( mp_high_watermark, 16 * msglen )
 #endif
@@ -649,7 +680,11 @@
         IF( msglen*16 > mp_msgsiz_max ) CALL mp_stop(8915)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
+#if defined __XD1
+        CALL bcast_real( msg, 2 * msglen, source, group, ierr )
+#else
         CALL mpi_bcast(msg,msglen,mpi_double_complex,source,group,ierr)
+#endif
         IF (ierr/=0) CALL mp_stop(8123)
         mp_high_watermark = MAX( mp_high_watermark, 16 * msglen ) 
 #endif
@@ -1427,12 +1462,16 @@
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8930)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
+#if defined __XD1
+        CALL PARALLEL_SUM_REAL( msg, msglen, group, ierr )
+#else
         ALLOCATE (res(1:msglen),STAT=ierr)
         IF (ierr/=0) CALL mp_stop(8204)
         CALL mpi_allreduce(msg,res,msglen,mpi_double_precision,mpi_sum,group, ierr)
         IF (ierr/=0) CALL mp_stop(8205)
         msg = res
         DEALLOCATE (res, STAT=ierr)
+#endif
         IF (ierr/=0) CALL mp_stop(8205)
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
 #endif
@@ -1451,10 +1490,12 @@
         REAL (DP), ALLOCATABLE :: resv(:)
 #if defined(__MPI)
         msglen = size(msg)
+        IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8931)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
-
-        IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8931)
+#if defined __XD1
+        CALL PARALLEL_SUM_REAL( msg, msglen, group, ierr )
+#else
         m1 = size(msg(:,1))
         m2 = size(msg(1,:))
         ALLOCATE (res(m1,m2),STAT=ierr)
@@ -1463,6 +1504,7 @@
         IF (ierr/=0) CALL mp_stop(8205)
         msg = res
         DEALLOCATE (res, STAT=ierr)
+#endif
         IF (ierr/=0) CALL mp_stop(8205)
 
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
@@ -1494,7 +1536,11 @@
         IF( PRESENT( root ) ) THEN
           CALL mpi_reduce(msg, res, msglen, mpi_double_precision, mpi_sum, root, group, ierr)
         ELSE
+#if defined __XD1
+          CALL PARALLEL_SUM_REAL_TO( msg, res, msglen, group, ierr )
+#else
           CALL mpi_allreduce(msg, res, msglen, mpi_double_precision, mpi_sum, group, ierr)
+#endif
         END IF
         IF (ierr/=0) CALL mp_stop(8205)
 
@@ -1518,10 +1564,13 @@
         INTEGER :: msglen, m1, m2, m3, ierr
         REAL (DP), ALLOCATABLE :: res(:,:,:)
 #if defined(__MPI)
-        group = mpi_comm_world
-        IF( PRESENT( gid ) ) group = gid
         msglen = size(msg)
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8933)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+#if defined __XD1
+        CALL PARALLEL_SUM_REAL( msg, msglen, group, ierr )
+#else
         m1 = size(msg,1)
         m2 = size(msg,2)
         m3 = size(msg,3)
@@ -1531,6 +1580,7 @@
         IF (ierr/=0) CALL mp_stop(8205)
         msg = res
         DEALLOCATE (res, STAT=ierr)
+#endif
         IF (ierr/=0) CALL mp_stop(8205)
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
 #endif
@@ -1553,12 +1603,16 @@
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8938)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
+#if defined __XD1
+        CALL PARALLEL_SUM_REAL( msg, msglen, group, ierr )
+#else
         ALLOCATE (res(size(msg,1),size(msg,2),size(msg,3),size(msg,4)), STAT=ierr)
         IF (ierr/=0) CALL mp_stop(8204)
         CALL mpi_allreduce(msg,res,msglen,mpi_double_precision,mpi_sum,group, ierr)
         IF (ierr/=0) CALL mp_stop(8205)
         msg = res
         DEALLOCATE (res, STAT=ierr)
+#endif
         IF (ierr/=0) CALL mp_stop(8205)
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen )
 #endif
@@ -1601,12 +1655,16 @@
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8934)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
+#if defined __XD1
+        CALL PARALLEL_SUM_REAL( msg, 2*msglen, group, ierr )
+#else
         ALLOCATE (res(1:size(msg)),STAT=ierr)
         IF (ierr/=0) CALL mp_stop(8206)
         CALL mpi_allreduce(msg(1),res(1),msglen,mpi_double_precision,mpi_sum,group, ierr)
         IF (ierr/=0) CALL mp_stop(8207)
         msg = res
         DEALLOCATE (res, STAT=ierr)
+#endif
         IF (ierr/=0) CALL mp_stop(8207)
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
 #endif
@@ -1626,6 +1684,9 @@
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8935)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
+#if defined __XD1
+        CALL PARALLEL_SUM_REAL( msg, 2*msglen, group, ierr )
+#else
         m1 = size(msg(:,1))
         m2 = size(msg(1,:))
         ALLOCATE (res(m1,m2),STAT=ierr)
@@ -1634,6 +1695,7 @@
         IF (ierr/=0) CALL mp_stop(8208)
         msg = res
         DEALLOCATE (res, STAT=ierr)
+#endif
         IF (ierr/=0) CALL mp_stop(8208)
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
 #endif
@@ -1654,7 +1716,11 @@
 #if defined(__MPI)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
+#  if defined __XD1
+        CALL PARALLEL_SUM_REAL_TO( msg, res, 2*msglen, group, ierr )
+#  else
         CALL mpi_allreduce(msg, res, msglen, mpi_double_precision, mpi_sum, group, ierr)
+#  endif
         IF (ierr/=0) CALL mp_stop(8208)
 #else
         res = msg
@@ -1680,12 +1746,16 @@
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8937)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
+#if defined __XD1
+        CALL PARALLEL_SUM_REAL( msg, 2*msglen, group, ierr )
+#else
         ALLOCATE (res(size(msg,1),size(msg,2),size(msg,3)),STAT=ierr)
         IF (ierr/=0) CALL mp_stop(8204)
         CALL mpi_allreduce(msg,res,msglen,mpi_double_precision,mpi_sum,group,ierr)
         IF (ierr/=0) CALL mp_stop(8208)
         msg = res
         DEALLOCATE (res, STAT=ierr)
+#endif
         IF (ierr/=0) CALL mp_stop(8208)
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
 #endif
@@ -1708,12 +1778,16 @@
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop(8938)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
+#if defined __XD1
+        CALL PARALLEL_SUM_REAL( msg, 2*msglen, group, ierr )
+#else
         ALLOCATE (res(size(msg,1),size(msg,2),size(msg,3),size(msg,4)), STAT=ierr)
         IF (ierr/=0) CALL mp_stop(8204)
         CALL mpi_allreduce(msg,res,msglen,mpi_double_precision,mpi_sum,group, ierr)
         IF (ierr/=0) CALL mp_stop(8208)
         msg = res
         DEALLOCATE (res, STAT=ierr)
+#endif
         IF (ierr/=0) CALL mp_stop(8208)
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
 #endif
@@ -1959,3 +2033,121 @@
 !------------------------------------------------------------------------------!
     END MODULE mp
 !------------------------------------------------------------------------------!
+
+
+
+#if defined __XD1
+
+#define __MSGSIZ_MAX 1000000
+
+      !
+      !  Wrapper for MPI with problems with large messages
+      !
+      !  In some Cray XD1 systems the communicaction subsystem
+      !  crashes when message exceed a given size, so we need
+      !  to break down MPI communications in smaller pieces
+      !
+
+      SUBROUTINE PARALLEL_SUM_REAL( ARRAY, N, GID, ierr )
+        IMPLICIT NONE
+        INTEGER :: N, GID, ierr
+        REAL*8 ARRAY(N)
+#if defined __MPI
+        INCLUDE 'mpif.h'
+        INTEGER, PARAMETER :: NSIZ = __MSGSIZ_MAX
+        INTEGER :: ib, nb, ip, nn
+        REAL*8, ALLOCATABLE :: ARRAY_TMP(:)
+        IF( n <= nsiz ) THEN
+          ALLOCATE( ARRAY_TMP( n ) )
+          CALL MPI_ALLREDUCE(ARRAY,ARRAY_TMP,N,MPI_DOUBLE_PRECISION, MPI_SUM,GID,ierr)
+          ARRAY(1:n) = ARRAY_TMP(1:n)
+          DEALLOCATE( ARRAY_TMP )
+        ELSE
+          ALLOCATE( ARRAY_TMP( nsiz ) )
+          nb = n / nsiz
+          DO ib = 1, nb
+            ip = ( ib - 1 ) * nsiz + 1
+            nn = ip + nsiz - 1
+            CALL MPI_ALLREDUCE( ARRAY(ip), ARRAY_TMP(1), nsiz, MPI_DOUBLE_PRECISION, MPI_SUM,GID,ierr)
+            ARRAY(ip:nn) = ARRAY_TMP(1:nsiz)
+          END DO
+          nn = MOD( n, nsiz )
+          IF( nn /= 0 ) THEN
+            ip = nb * nsiz + 1
+            CALL MPI_ALLREDUCE( ARRAY(ip), ARRAY_TMP(1), nn, MPI_DOUBLE_PRECISION, MPI_SUM,GID,ierr)
+            ARRAY(ip:n) = ARRAY_TMP(1:nn)
+          END IF
+          DEALLOCATE( ARRAY_TMP )
+        END IF
+#endif
+        RETURN
+      END SUBROUTINE PARALLEL_SUM_REAL
+
+!
+!=----------------------------------------------------------------------------=!
+!
+      SUBROUTINE PARALLEL_SUM_REAL_TO( ARRAY_IN, ARRAY_OUT, N, GID, ierr )
+        IMPLICIT NONE
+        INTEGER :: N, GID, ierr
+        REAL*8  :: ARRAY_IN(N)
+        REAL*8  :: ARRAY_OUT(N)
+#if defined __MPI
+        INCLUDE 'mpif.h'
+        INTEGER :: msgsiz_max = __MSGSIZ_MAX
+        INTEGER :: nblk, blksiz, iblk, istart
+        IF( n .LT. msgsiz_max) THEN
+          CALL MPI_ALLREDUCE(ARRAY_IN, ARRAY_OUT, N, MPI_DOUBLE_PRECISION, MPI_SUM, GID, ierr)
+        ELSE
+          nblk   = n / msgsiz_max
+          blksiz = msgsiz_max
+          DO iblk = 1, nblk
+            istart = (iblk-1)*msgsiz_max + 1
+            CALL MPI_ALLREDUCE(ARRAY_IN(istart), ARRAY_OUT(istart), blksiz, &
+                               MPI_DOUBLE_PRECISION, MPI_SUM, GID, ierr)
+          END DO
+          blksiz = MOD( n, msgsiz_max )
+          IF( blksiz .GT. 0 ) THEN
+            istart = nblk * msgsiz_max + 1
+            CALL MPI_ALLREDUCE(ARRAY_IN(istart), ARRAY_OUT(istart), blksiz, &
+                               MPI_DOUBLE_PRECISION, MPI_SUM, GID, ierr)
+          END IF
+        END IF
+#else
+        ARRAY_OUT = ARRAY_IN
+#endif
+        RETURN
+      END SUBROUTINE PARALLEL_SUM_REAL_TO
+
+!=----------------------------------------------------------------------------=!
+!
+
+      SUBROUTINE BCAST_REAL( array, n, root, gid, ierr )
+        IMPLICIT NONE
+        REAL*8  :: array(*)
+        INTEGER :: n, root, gid, ierr
+#if defined __MPI
+        INCLUDE 'mpif.h'
+        INTEGER :: msgsiz_max = __MSGSIZ_MAX
+        INTEGER :: nblk, blksiz, msgsiz, iblk, istart, i
+        IF( n <= msgsiz_max ) THEN
+           CALL MPI_BCAST( array, n, MPI_DOUBLE_PRECISION, root, gid, ierr )
+        ELSE
+           nblk   = n / msgsiz_max
+           blksiz = msgsiz_max
+           DO iblk = 1, nblk
+              istart = (iblk-1)*msgsiz_max + 1
+              CALL MPI_BCAST( array( istart ), blksiz, MPI_DOUBLE_PRECISION, root, gid, ierr )
+           END DO
+           blksiz = MOD( n, msgsiz_max )
+           IF( blksiz > 0 ) THEN
+              istart = nblk * msgsiz_max + 1
+              CALL MPI_BCAST( array( istart ), blksiz, MPI_DOUBLE_PRECISION, root, gid, ierr )
+           END IF
+        END IF
+#endif
+        RETURN
+      END SUBROUTINE BCAST_REAL 
+
+
+
+#endif

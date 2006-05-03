@@ -220,13 +220,13 @@
       END IF
 
       ! DEBUG
-      ! DO k=1,6
+      !DO k=1,6
       !   detmp(alpha(k),beta(k)) = dexc(k)
       !   detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
-      ! END DO
-      ! detmp = MATMUL( detmp(:,:), box%m1(:,:) )
-      ! WRITE( stdout,*) "derivative of e(xc)"
-      ! WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+      !END DO
+      !detmp = MATMUL( detmp(:,:), box%m1(:,:) )
+      !WRITE( stdout,*) "derivative of e(xc)"
+      !WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
 
       dexc = dexc + dcc
 
