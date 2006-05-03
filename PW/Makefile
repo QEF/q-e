@@ -119,6 +119,7 @@ input.o \
 interpolate.o \
 inverse_s.o \
 io_pot.o \
+io_rho_xml.o \
 ions.o \
 irrek.o \
 iweights.o \
@@ -246,7 +247,6 @@ w1gauss.o \
 wfcinit.o \
 wgauss.o \
 write_ns.o \
-write_rho.o \
 wsweight.o
 
 MODULES = \

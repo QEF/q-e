@@ -55,6 +55,7 @@ SUBROUTINE electrons()
                                    i_cons, bfield, lambda, vtcon, report
   USE spin_orb,             ONLY : domag
   USE bp,                   ONLY : lelfield, lberry, nberrycyc
+  USE io_rho_xml,           ONLY : write_rho
 #if defined (EXX)
   USE exx,                  ONLY : exxinit, init_h_wfc, exxenergy, exxenergy2 
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
@@ -240,19 +241,19 @@ SUBROUTINE electrons()
         !
         ! ... diagonalization of the KS hamiltonian
         !
-        if(lelfield) then
-          do inberry=1,nberrycyc
-            ALLOCATE (psi(npwx,nbnd))
-            do ik=1,nks
-               call davcio(psi,nwordwfc,iunwfc,ik,-1)
-               call davcio(psi,nwordwfc,iunefield,ik,1)
-             enddo
-             DEALLOCATE( psi)
-            CALL c_bands( iter, ik_, dr2 )
-          enddo
+        if ( lelfield ) then
+           do inberry=1,nberrycyc
+              ALLOCATE (psi(npwx,nbnd))
+              do ik=1,nks
+                 call davcio(psi,nwordwfc,iunwfc,ik,-1)
+                 call davcio(psi,nwordwfc,iunefield,ik,1)
+              end do
+              DEALLOCATE( psi)
+              CALL c_bands( iter, ik_, dr2 )
+           end do
         else
-          CALL c_bands( iter, ik_, dr2 )
-         endif
+           CALL c_bands( iter, ik_, dr2 )
+        end if
         !
         IF ( check_stop_now() ) RETURN
         !
@@ -289,7 +290,7 @@ SUBROUTINE electrons()
         end do
         !
         CALL mix_rho( rhognew, rhog, nsnew, ns, mixing_beta, &
-             dr2, tr2_min, iter, nmix, flmix, conv_elec )
+                      dr2, tr2_min, iter, nmix, flmix, conv_elec )
         !
         DEALLOCATE (rhognew)
         !
@@ -343,7 +344,7 @@ SUBROUTINE electrons()
            !
            ! ... write the charge density to file
            !
-           CALL write_rho( rhonew )
+           CALL write_rho( rhonew, nspin )
            !
            DEALLOCATE (rhonew )
            !
@@ -351,7 +352,7 @@ SUBROUTINE electrons()
            !
            ! ... write the self-consistent charge density to file
            !
-           CALL write_rho( rho )
+           CALL write_rho( rho, nspin )
            !
            ! ... convergence reached: store V(out)-V(in) in vnew
            ! ... Used to correct the forces
