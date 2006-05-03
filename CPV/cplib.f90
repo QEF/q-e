@@ -1683,13 +1683,13 @@
 
 #if defined __BGL
       COMPLEX*16 :: B, A1, A2, A3, C1, C2, C3
-      INTEGER :: FLP 
+      INTEGER :: FLP, N 
 #endif
 
       !
       CALL start_clock( 'nlfl' )
       !
-#if defined __BGL
+#if defined __TRUE_BGL
 
       ALLOCATE( temp( 3*nudx, nudx ), tmpbec( nhm, nudx ), tmpdr( 3*nudx, nhm ) )
 
@@ -3215,6 +3215,7 @@
       USE task_groups
       use fft_base,  only : dffts
       use mp_global, only : nogrp, me_image, me_ogrp
+      USE fft_module, ONLY: fwfft, invfft
       use parallel_include
 !
       implicit none
