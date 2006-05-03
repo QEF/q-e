@@ -167,12 +167,13 @@ SUBROUTINE extrapolate_charge( rho_extr )
                                i_cons, lambda, vtcon, report
   USE io_files,         ONLY : prefix
   USE klist,            ONLY : nelec
+  USE io_rho_xml,       ONLY : write_rho, read_rho
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: rho_extr
   !
-  REAL(DP), ALLOCATABLE :: work(:), work1(:)
+  REAL(DP), ALLOCATABLE :: work(:,:), work1(:,:)
     ! work is the difference between charge density and atomic charge 
     !   at time t
     ! work1 is the same thing at time t-dt
@@ -194,9 +195,9 @@ SUBROUTINE extrapolate_charge( rho_extr )
      !
   END IF
   !
-  ALLOCATE( work(nrxx) )
+  ALLOCATE( work(nrxx,1) )
   !
-  work(:) = 0.D0
+  work = 0.D0
   !
   ! ... in the lsda case the magnetization will follow rigidly the density
   ! ... keeping fixed the value of zeta = mag / rho_tot. 
@@ -225,9 +226,9 @@ SUBROUTINE extrapolate_charge( rho_extr )
   !
   ! ... subtract the old atomic charge density
   !
-  CALL atomic_rho( work, 1 )
+  CALL atomic_rho( work(1,1), 1 )
   !
-  rho(:,1) = rho(:,1) - work(:)
+  rho(:,1) = rho(:,1) - work(:,1)
   !
   IF ( lmovecell ) rho(:,1) = rho(:,1) * omega_old
   !
@@ -243,7 +244,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
      WRITE( stdout, &
             '(/5X,"NEW-OLD atomic charge density approx. for the potential")' )
      !
-     CALL io_pot( + 1, 'oldrho', rho, 1 )
+     CALL write_rho ( rho, 1, 'oldrho' )
      !
   ELSE IF ( rho_extr == 2 ) THEN
      !
@@ -252,43 +253,43 @@ SUBROUTINE extrapolate_charge( rho_extr )
      !
      ! ...   oldrho  ->  work
      !
-     CALL io_pot( - 1, 'oldrho',  work, 1 )
+     CALL read_rho ( work, 1,  'oldrho' )
      !
      ! ...   rho   ->  oldrho          
      ! ...   work  ->  oldrho2     
      !
-     CALL io_pot( + 1, 'oldrho',  rho,  1 )
-     CALL io_pot( + 1, 'old2rho', work, 1 )
+     CALL write_rho ( rho, 1, 'oldrho' )
+     CALL write_rho ( work, 1, 'old2rho' )
      !
      ! ... extrapolation
      !
-     rho(:,1) = 2.D0 * rho(:,1) - work(:)
+     rho(:,1) = 2.D0 * rho(:,1) - work(:,1)
      !
   ELSE IF ( rho_extr == 3 ) THEN  
      !
      WRITE( UNIT = stdout, &
             FMT = '(/5X,"second order charge density extrapolation")' )
      !
-     ALLOCATE( work1(nrxx) )
+     ALLOCATE( work1(nrxx,1) )
      !
-     work1(:) = 0.D0
+     work1 = 0.D0
      !
      ! ...   oldrho2  ->  work1
      ! ...   oldrho   ->  work
      !
-     CALL io_pot( - 1, 'old2rho', work1, 1 )
-     CALL io_pot( - 1, 'oldrho',  work,  1 )
+     CALL read_rho ( work1, 1, 'old2rho' )
+     CALL read_rho ( work, 1, 'oldrho' )
      !
      ! ...   rho   ->  oldrho     
      ! ...   work  ->  oldrho2     
      !
-     CALL io_pot( + 1, 'oldrho',  rho,  1 )
-     CALL io_pot( + 1, 'old2rho', work, 1 )
+     CALL write_rho ( rho, 1, 'oldrho' )
+     CALL write_rho ( work, 1, 'old2rho' )
      !
      ! ... alpha0 and beta0 have been calculated in move_ions
      !
-     rho(:,1) = rho(:,1) + alpha0 * ( rho(:,1) - work(:) ) + &
-                            beta0 * ( work(:) - work1(:) )
+     rho(:,1) = rho(:,1) + alpha0 * ( rho(:,1) - work(:,1) ) + &
+                            beta0 * ( work(:,1) - work1(:,1) )
      !
      DEALLOCATE( work1 )
      !
@@ -307,7 +308,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
   !
   CALL atomic_rho( work, 1 )
   !
-  rho(:,1) = rho(:,1) + work(:)
+  rho(:,1) = rho(:,1) + work(:,1)
   !
   CALL set_rhoc()
   !

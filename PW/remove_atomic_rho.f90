@@ -13,33 +13,33 @@ subroutine remove_atomic_rho
   USE io_files, ONLY: output_drho
   USE kinds, ONLY: DP
   USE gvect, ONLY: nrxx
-  USE lsda_mod, ONLY: lsda, nspin
+  USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho
+  USE io_rho_xml, ONLY : write_rho
   implicit none
   integer :: ir
   ! do-loop variable on FFT grid
 
-  real(DP), allocatable :: work (:)
-  real(DP)          :: charge
-  ! workspace, is the difference between t
-  ! charge density and the atomic one at t
-  ! charge
+  real(DP), allocatable :: work (:,:)
+  ! workspace, is the difference between the charge density
+  ! and the superposition of atomic charges
 
-  allocate (work( nrxx))    
-  work(:) = 0.d0
+  allocate ( work( nrxx, 1 ) )
+  work = 0.d0
   !
-  if (lsda) call errore ('rmv_at_rho', 'lsda not allowed', 1)
+  IF ( nspin > 1 ) CALL errore &
+       ( 'remove_atomic_rho', 'spin polarization not allowed in drho', 1 )
 
   WRITE( stdout, '(/5x,"remove atomic charge density from scf rho")')
   !
   !     subtract the old atomic charge density
   !
   call atomic_rho (work, nspin)
-  call DSCAL (nrxx, - 1.0d0, work, 1)
-  call DAXPY (nrxx, + 1.0d0, rho, 1, work, 1)
-
-  call io_pot ( + 1, output_drho, work, nspin)
-
+  !
+  work = rho - work
+  !
+  call write_rho ( work, 1, output_drho )
+  !
   deallocate(work)
   return
 

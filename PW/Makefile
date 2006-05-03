@@ -118,7 +118,6 @@ init_vloc.o \
 input.o \
 interpolate.o \
 inverse_s.o \
-io_pot.o \
 io_rho_xml.o \
 ions.o \
 irrek.o \

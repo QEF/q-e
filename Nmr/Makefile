@@ -216,7 +216,6 @@ PWOBJS = \
 ../PW/init_vloc.o \
 ../PW/interpolate.o \
 ../PW/inverse_s.o \
-../PW/io_pot.o \
 ../PW/irrek.o \
 ../PW/iweights.o \
 ../PW/kpoint_grid.o \

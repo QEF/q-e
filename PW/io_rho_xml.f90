@@ -160,7 +160,7 @@ MODULE io_rho_xml
             CALL errore( 'read_rho', 'file ' // &
                        & TRIM( file_base ) // '.xml nonexistent', 1 )
          !
-         CALL write_rho_xml( file_base, rhoaux, &
+         CALL read_rho_xml( file_base, rhoaux, &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          rho(:,1) = 0.5D0*( rho(:,1) + rhoaux(:) )

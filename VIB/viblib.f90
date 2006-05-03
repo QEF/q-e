@@ -432,7 +432,7 @@ subroutine set_guess_wfc ( disp_sign )
   USE ener,                 ONLY : ehart, etxc, vtxc
   USE extfield,             ONLY : etotefield
   USE vlocal,               ONLY : strf
-
+  USE io_rho_xml,           ONLY : read_rho
 #endif
   !
   ! ... input variables
@@ -465,7 +465,7 @@ subroutine set_guess_wfc ( disp_sign )
         !
         ! ... charge-density from file to memory
         !  
-        CALL io_pot( - 1, 'old2rho', rho, 1 )
+        CALL read_rho( rho, 1, 'old2rho' )
         !
         CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
              nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &

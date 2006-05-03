@@ -46,6 +46,7 @@ SUBROUTINE potinit()
   USE mp_global,        ONLY : intra_image_comm
   USE io_global,        ONLY : ionode, ionode_id
   USE pw_restart,       ONLY : pw_readfile
+  USE io_rho_xml,       ONLY : read_rho
   !
   IMPLICIT NONE
   !
@@ -145,9 +146,10 @@ SUBROUTINE potinit()
      !
      IF ( input_drho /= ' ' ) THEN
         !
-        IF ( lsda ) CALL errore( 'potinit', 'lsda not allowed in drho', 1 )
+        IF ( nspin > 1 ) CALL errore &
+             ( 'potinit', 'spin polarization not allowed in drho', 1 )
         !
-        CALL io_pot( -1, input_drho, vr, nspin )
+        CALL read_rho ( vr, 1, input_drho )
         !
         WRITE( UNIT = stdout, &
                FMT = '(/5X,"a scf correction to at. rho is read from",A)' ) &
