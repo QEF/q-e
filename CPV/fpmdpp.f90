@@ -86,7 +86,7 @@ PROGRAM fpmd_postproc
   nframes = 1                ! number of MD step to be read to buind the trajectory
   ndr   = 51                 ! restart file number
   atomic_number = 1          ! atomic number of the species in the restart file
-  charge_density = 'full'    ! specify the component to plot: 'full', 'up', 'down'
+  charge_density = 'full'    ! specify the component to plot: 'full', 'spin'
   print_state = ' '          ! specify the Kohn-Sham state to plot: 'KS_1'
 
   
@@ -466,10 +466,8 @@ SUBROUTINE read_fpmd( lforces, lcharge, cunit, punit, funit, dunit, &
 
      filename = restart_dir( scradir, ndr )
      !
-     IF( charge_density == 'up' ) THEN
-        filename = TRIM( filename ) // '/' // 'charge-density-up.xml'
-     ELSE IF( charge_density == 'down' .OR. charge_density == 'dw' ) THEN
-        filename = TRIM( filename ) // '/' // 'charge-density-dw.xml'
+     IF( charge_density == 'spin' ) THEN
+        filename = TRIM( filename ) // '/' // 'spin-polarization.xml'
      ELSE
         filename = TRIM( filename ) // '/' // 'charge-density.xml'
      END IF
@@ -504,7 +502,7 @@ SUBROUTINE read_density( filename, dunit, nr1, nr2, nr3, rho )
      !
      WRITE(*,'("Reading density from: ", A50)' ) TRIM( filename )
      !
-     CALL iotk_open_read( dunit, file = TRIM( filename ), BINARY = .FALSE., ROOT = attr, IERR = ierr )
+     CALL iotk_open_read( dunit, file = TRIM( filename ), BINARY = .TRUE., ROOT = attr, IERR = ierr )
 
      CALL iotk_scan_begin( dunit, "CHARGE-DENSITY" )
      CALL iotk_scan_empty( dunit, "INFO", attr )

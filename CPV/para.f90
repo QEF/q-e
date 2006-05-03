@@ -62,7 +62,7 @@
 !
 !
 !----------------------------------------------------------------------
-      subroutine read_rho( nspin, rhor )
+    SUBROUTINE read_rho( nspin, rhor )
 !----------------------------------------------------------------------
       !
       ! read rhor(nnr,nspin) from file
@@ -84,19 +84,25 @@
       !
       filename = restart_dir( scradir, ndr )
       !
-      do is=1,nspin
-        IF( nspin == 2 .AND. is == 1 ) THEN
-           filename = TRIM(filename) // '/' // 'charge-density-up'
-        ELSE IF( nspin == 2 .AND. is == 2 ) THEN
-           filename = TRIM(filename) // '/' // 'charge-density-dw'
-        ELSE
-           filename = TRIM(filename) // '/' // 'charge-density'
-        END IF
-        CALL read_rho_xml( filename, rhor(:,is), &
-                           nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
-      END DO
-      return
-      end subroutine read_rho
+      filename = TRIM(filename) // '/' // 'charge-density'
+      !
+      CALL read_rho_xml( filename, rhor(:,1), nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+      !
+      IF( nspin == 2 ) THEN
+         !
+         filename = TRIM(filename) // '/' // 'spin-polarization'
+         !
+         CALL read_rho_xml( filename, rhor(:,2), nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+         !
+         !  Convert rho_tot, spin_pol back to rho_up, rho_down
+         !
+         rhor(:,2) = 0.5d0 * ( rhor(:,1) - rhor(:,2) )
+         rhor(:,1) = rhor(:,1) - rhor(:,2)
+         !
+      END IF
+
+      RETURN
+    END SUBROUTINE read_rho
 !
 !----------------------------------------------------------------------
       subroutine old_write_rho( unit, nspin, rhor )

@@ -361,7 +361,7 @@ MODULE cp_restart
          rho_file_base = 'charge-density'
          !
          IF ( ionode )&
-              CALL iotk_link( iunpun, "RHO", rho_file_base, &
+              CALL iotk_link( iunpun, "CHARGE", rho_file_base, &
               CREATE = .FALSE., BINARY = .TRUE. )
          !
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
@@ -383,7 +383,7 @@ MODULE cp_restart
             rho_file_base = 'spin-polarization'
             !
             IF ( ionode ) &
-                 CALL iotk_link( iunpun, "RHO_UP", rho_file_base, &
+                 CALL iotk_link( iunpun, "SPIN-POLARIZATION", rho_file_base, &
                  CREATE = .FALSE., BINARY = .TRUE. )
             !
             rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
