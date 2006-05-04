@@ -170,7 +170,8 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
   INTEGER :: nrz, n2d 
   INTEGER :: i, il, j, jl, ixy, ig, jg, ipol, igper, k,      &
              ios, index, number, nprob, nteam, nteamnow,     &
-             status, info, kin, kfin, is, js
+             info, kin, kfin, is, js
+  INTEGER :: status(MPI_STATUS_SIZE)
   INTEGER, ALLOCATABLE :: fftxy(:,:)
   REAL(DP) :: edummy
   REAL(DP), ALLOCATABLE :: el(:), gp(:)
