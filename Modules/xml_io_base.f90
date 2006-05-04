@@ -23,6 +23,8 @@ MODULE xml_io_base
   !
   IMPLICIT NONE
   !
+  LOGICAL, PARAMETER :: rho_binary = .TRUE.
+  !
   PRIVATE
   !
   PUBLIC :: attr
@@ -1009,8 +1011,8 @@ MODULE xml_io_base
       rho_file = TRIM( rho_file_base ) // '.xml'
       !
       IF ( ionode ) &
-         CALL iotk_open_write( rhounit, &
-                               FILE = rho_file, BINARY = .TRUE., IERR = ierr )
+         CALL iotk_open_write( rhounit, FILE = rho_file, &
+                               BINARY = rho_binary, IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
@@ -1034,12 +1036,14 @@ MODULE xml_io_base
       !
       ! ... find the index of the pool that will write rho
       !
-      IF( ionode ) iopool_id = my_pool_id
+      IF ( ionode ) iopool_id = my_pool_id
+      !
       CALL mp_bcast( iopool_id, ionode_id, intra_image_comm )
       !
       ! ... find the index of the ionode within its own pool
       !
-      IF( ionode ) ionode_pool = me_pool
+      IF ( ionode ) ionode_pool = me_pool
+      !
       CALL mp_bcast( ionode_pool, ionode_id, intra_image_comm )
       !
       ! ... find out the owner of each "z" plane
@@ -1066,7 +1070,7 @@ MODULE xml_io_base
             !
             kk = k
             !
-            IF ( PRESENT( ipp ) ) kk = k - ipp( me_pool + 1 )
+            IF ( PRESENT( ipp ) ) kk = k - ipp(me_pool+1)
             ! 
             DO j = 1, nr2
                !
@@ -1080,7 +1084,7 @@ MODULE xml_io_base
             !
          END IF
          !
-         IF ( kowner( k ) /= ionode_pool .AND. my_pool_id == iopool_id ) &
+         IF ( kowner(k) /= ionode_pool .AND. my_pool_id == iopool_id ) &
             CALL mp_get( rho_plane, rho_plane, &
                          me_pool, ionode_pool, kowner(k), k, intra_pool_comm )
          !
@@ -1140,8 +1144,8 @@ MODULE xml_io_base
       rho_file = TRIM( rho_file_base ) // '.xml'
       !
       IF ( ionode ) &
-         CALL iotk_open_read( rhounit, &
-                              FILE = rho_file, BINARY = .TRUE., IERR = ierr )
+         CALL iotk_open_read( rhounit, FILE = rho_file, &
+                              BINARY = rho_binary, IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
@@ -1170,12 +1174,14 @@ MODULE xml_io_base
       !
       ! ... find the index of the pool that will write rho
       !
-      IF( ionode ) iopool_id = my_pool_id
+      IF ( ionode ) iopool_id = my_pool_id
+      !
       CALL mp_bcast( iopool_id, ionode_id, intra_image_comm )
       !
       ! ... find the index of the ionode within its own pool
       !
-      IF( ionode ) ionode_pool = me_pool
+      IF ( ionode ) ionode_pool = me_pool
+      !
       CALL mp_bcast( ionode_pool, ionode_id, intra_image_comm )
       !
       ! ... find out the owner of each "z" plane
@@ -1215,8 +1221,9 @@ MODULE xml_io_base
             !
             !  send to the destination proc
             !
-            IF ( kowner( k ) /= ionode_id ) &
-               CALL mp_put( rho_plane, rho_plane, me_image, ionode_id, kowner(k), k, intra_image_comm )
+            IF ( kowner(k) /= ionode_id ) &
+               CALL mp_put( rho_plane, rho_plane, me_image, &
+                            ionode_id, kowner(k), k, intra_image_comm )
             !
          END IF
          !
@@ -1224,7 +1231,7 @@ MODULE xml_io_base
             !
             kk = k
             !
-            IF ( PRESENT( ipp ) ) kk = k - ipp( me_pool + 1 )
+            IF ( PRESENT( ipp ) ) kk = k - ipp(me_pool+1)
             ! 
             DO j = 1, nr2
                !
@@ -1254,7 +1261,6 @@ MODULE xml_io_base
       RETURN
       !
     END SUBROUTINE read_rho_xml
-    !
     !
     ! ... methods to write and read wavefunctions
     !

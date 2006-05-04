@@ -28,7 +28,6 @@ MODULE io_rho_xml
       ! ... '.save' directory
       ! ... the '.save' directory is created if not already present
       !
-      USE kinds,    ONLY : DP
       USE io_files, ONLY : tmp_dir, prefix
       USE sticks,   ONLY : dfftp
       USE gvect,    ONLY : nr1, nr2, nr3, nrx1, nrx2, nrxx
@@ -40,9 +39,11 @@ MODULE io_rho_xml
       CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: extension
       !
       CHARACTER(LEN=256)    :: dirname, file_base
-      CHARACTER(LEN=256)    :: ext = ''
+      CHARACTER(LEN=256)    :: ext
       REAL(DP), ALLOCATABLE :: rhoaux(:)
       !
+      !
+      ext = ''
       !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
       !
@@ -108,7 +109,6 @@ MODULE io_rho_xml
       ! ... this routine reads the charge-density in xml format from the
       ! ... files saved into the '.save' directory
       !
-      USE kinds,    ONLY : DP
       USE io_files, ONLY : tmp_dir, prefix
       USE sticks,   ONLY : dfftp
       USE gvect,    ONLY : nr1, nr2, nr3, nrx1, nrx2, nrxx
@@ -121,9 +121,11 @@ MODULE io_rho_xml
       !
       LOGICAL               :: lexists
       CHARACTER(LEN=256)    :: dirname, file_base
-      CHARACTER(LEN=256)    :: ext = ''
+      CHARACTER(LEN=256)    :: ext
       REAL(DP), ALLOCATABLE :: rhoaux(:)
       !
+      !
+      ext = ''
       !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
       !
@@ -170,8 +172,8 @@ MODULE io_rho_xml
          !
       ELSE IF ( nspin == 4 ) THEN
          !
-         CALL write_rho_xml( file_base, rho(:,1), &
-                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         CALL read_rho_xml( file_base, rho(:,1), &
+                            nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
          !
@@ -181,8 +183,8 @@ MODULE io_rho_xml
             CALL errore( 'read_rho', 'file ' // &
                        & TRIM( file_base ) // '.xml nonexistent', 1 )
          !
-         CALL write_rho_xml( file_base, rho(:,2), &
-                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         CALL read_rho_xml( file_base, rho(:,2), &
+                            nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
          !
@@ -192,8 +194,8 @@ MODULE io_rho_xml
             CALL errore( 'read_rho', 'file ' // &
                        & TRIM( file_base ) // '.xml nonexistent', 1 )
          !
-         CALL write_rho_xml( file_base, rho(:,3), &
-                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         CALL read_rho_xml( file_base, rho(:,3), &
+                            nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
          !
@@ -203,8 +205,8 @@ MODULE io_rho_xml
             CALL errore( 'read_rho', 'file ' // &
                        & TRIM( file_base ) // '.xml nonexistent', 1 )
          !
-         CALL write_rho_xml( file_base, rho(:,4), &
-                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+         CALL read_rho_xml( file_base, rho(:,4), &
+                            nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
       END IF  
       !

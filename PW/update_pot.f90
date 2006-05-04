@@ -92,15 +92,15 @@ SUBROUTINE update_pot()
      !
      rho_extr = MIN( 1, history, pot_order )
      !
-     INQUIRE( FILE = TRIM( tmp_dir ) // &
-            & TRIM( prefix ) // '.oldrho', EXIST = exists )
+     INQUIRE( FILE = TRIM( tmp_dir ) // TRIM( prefix ) // &
+            & '.save/charge-density.old.xml', EXIST = exists )
      !
      IF ( exists ) THEN
         !
         rho_extr = MIN( 2, history, pot_order )
         !
-        INQUIRE( FILE = TRIM( tmp_dir ) // &
-               & TRIM( prefix ) // '.old2rho', EXIST = exists )     
+        INQUIRE( FILE = TRIM( tmp_dir ) // TRIM( prefix ) // &
+               & '.save/charge-density.old2.xml', EXIST = exists )
         !
         IF ( exists ) rho_extr = MIN( 3, history, pot_order )
         !
@@ -195,7 +195,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
      !
   END IF
   !
-  ALLOCATE( work(nrxx,1) )
+  ALLOCATE( work( nrxx, 1 ) )
   !
   work = 0.D0
   !
@@ -226,7 +226,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
   !
   ! ... subtract the old atomic charge density
   !
-  CALL atomic_rho( work(1,1), 1 )
+  CALL atomic_rho( work, 1 )
   !
   rho(:,1) = rho(:,1) - work(:,1)
   !
@@ -241,10 +241,10 @@ SUBROUTINE extrapolate_charge( rho_extr )
      ! ...                  density the "old" atomic charge and summing the 
      ! ...                  new one
      !
-     WRITE( stdout, &
-            '(/5X,"NEW-OLD atomic charge density approx. for the potential")' )
+     WRITE( UNIT = stdout, FMT = '(/5X, &
+          & "NEW-OLD atomic charge density approx. for the potential")' )
      !
-     CALL write_rho ( rho, 1, 'oldrho' )
+     CALL write_rho( rho, 1, 'old' )
      !
   ELSE IF ( rho_extr == 2 ) THEN
      !
@@ -253,43 +253,43 @@ SUBROUTINE extrapolate_charge( rho_extr )
      !
      ! ...   oldrho  ->  work
      !
-     CALL read_rho ( work, 1,  'oldrho' )
+     CALL read_rho( work, 1, 'old' )
      !
      ! ...   rho   ->  oldrho          
      ! ...   work  ->  oldrho2     
      !
-     CALL write_rho ( rho, 1, 'oldrho' )
-     CALL write_rho ( work, 1, 'old2rho' )
+     CALL write_rho( rho,  1, 'old' )
+     CALL write_rho( work, 1, 'old2' )
      !
      ! ... extrapolation
      !
-     rho(:,1) = 2.D0 * rho(:,1) - work(:,1)
+     rho(:,1) = 2.D0*rho(:,1) - work(:,1)
      !
   ELSE IF ( rho_extr == 3 ) THEN  
      !
      WRITE( UNIT = stdout, &
             FMT = '(/5X,"second order charge density extrapolation")' )
      !
-     ALLOCATE( work1(nrxx,1) )
+     ALLOCATE( work1( nrxx, 1 ) )
      !
      work1 = 0.D0
      !
      ! ...   oldrho2  ->  work1
      ! ...   oldrho   ->  work
      !
-     CALL read_rho ( work1, 1, 'old2rho' )
-     CALL read_rho ( work, 1, 'oldrho' )
+     CALL read_rho( work1, 1, 'old2' )
+     CALL read_rho( work,  1, 'old' )
      !
      ! ...   rho   ->  oldrho     
      ! ...   work  ->  oldrho2     
      !
-     CALL write_rho ( rho, 1, 'oldrho' )
-     CALL write_rho ( work, 1, 'old2rho' )
+     CALL write_rho( rho,  1, 'old' )
+     CALL write_rho( work, 1, 'old2' )
      !
      ! ... alpha0 and beta0 have been calculated in move_ions
      !
-     rho(:,1) = rho(:,1) + alpha0 * ( rho(:,1) - work(:,1) ) + &
-                            beta0 * ( work(:,1) - work1(:,1) )
+     rho(:,1) = rho(:,1) + alpha0*( rho(:,1) - work(:,1) ) + &
+                            beta0*( work(:,1) - work1(:,1) )
      !
      DEALLOCATE( work1 )
      !
