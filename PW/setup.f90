@@ -927,16 +927,23 @@ SUBROUTINE check_para_diag_efficiency()
   !
   IF ( isolve /= 0 .OR. nproc_pool == 1 ) RETURN
   !
+  IF ( ionode ) &
+     WRITE( stdout, '(/,5X,"looking for ", &
+                     &     "the optimal diagonalization algorithm ...",/)' )
+  !
   m_min = ( nbnd / nproc_pool ) * nproc_pool
   !
   m = ( 100 / nproc_pool ) * nproc_pool
   !
-  IF ( m > nbndx ) RETURN
+  IF ( m > nbndx .OR. nbndx < 200 )  THEN
+     !
+     IF ( ionode ) WRITE( stdout, '(5X,"a serial algorithm will be used",/)' )
+     !
+     RETURN
+     !
+  END IF
   !
   IF ( ionode ) THEN
-     !
-     WRITE( stdout, '(/,5X,"looking for ", &
-                     &     "the optimal diagonalization algorithm ...",/)' )
      !
      WRITE( stdout, '(5X,"dimension   time para (sec)   time serial (sec)")' )
      !

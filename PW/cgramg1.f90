@@ -87,9 +87,9 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
              IF ( gstart == 2 ) &
                 ps(1:vec-1) = ps(1:vec-1) - psi(1,1:vec-1)*spsi(1,vec)
              !
-             CALL reduce( ( vec - 1 ), ps )
+             CALL reduce( vec-1, ps )
              !
-             DO vecp = 1, ( vec - 1 )
+             DO vecp = 1, vec - 1
                 !
                 psi(:,vec)  = psi(:,vec)  - ps(vecp) * psi(:,vecp)
                 hpsi(:,vec) = hpsi(:,vec) - ps(vecp) * hpsi(:,vecp)
@@ -101,7 +101,7 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
           !
           psi_norm = 2.D0*DDOT( 2*n, psi(1,vec), 1, spsi(1,vec), 1 )
           !
-          IF ( gstart == 2 ) psi_norm = psi_norm - psi(1,vec) * spsi(1,vec)
+          IF ( gstart == 2 ) psi_norm = psi_norm - psi(1,vec)*spsi(1,vec)
           !
           CALL reduce( 1, psi_norm )
           !
@@ -145,13 +145,13 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
              CALL ZGEMV( 'C', n, vec-1, ONE, &
                          psi(1,1), lda, spsi(1,vec), 1, ZERO, ps, 1 )
              !
-             CALL reduce( 2*( vec - 1 ), ps )
+             CALL reduce( 2*(vec-1), ps )
              !
              DO vecp = 1, vec - 1
                 !
-                psi(:,vec)  = psi(:,vec)  - ps(vecp)*psi(:,vecp)
-                hpsi(:,vec) = hpsi(:,vec) - ps(vecp)*hpsi(:,vecp)
-                spsi(:,vec) = spsi(:,vec) - ps(vecp)*spsi(:,vecp)
+                psi(:,vec)  = psi(:,vec)  - ps(vecp) * psi(:,vecp)
+                hpsi(:,vec) = hpsi(:,vec) - ps(vecp) * hpsi(:,vecp)
+                spsi(:,vec) = spsi(:,vec) - ps(vecp) * spsi(:,vecp)
                 !
              END DO
              !
