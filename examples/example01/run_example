@@ -122,7 +122,7 @@ EOF
     # band structure calculation along delta, sigma and lambda lines
     cat > si.band.$diago.in << EOF
  &control
-    calculation='nscf'
+    calculation='bands'
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/',
     prefix='silicon'
@@ -191,9 +191,8 @@ EOF
     tstress = .true.
  /
  &system    
-    ibrav=  2, celldm(1) =7.50, nat=  1, ntyp= 1,
-    ecutwfc =15.0, occupations='smearing', smearing='methfessel-paxton',
-    degauss=0.05
+    ibrav=  2, celldm(1) =7.50, nat=  1, ntyp= 1, ecutwfc =15.0,
+    occupations='smearing', smearing='marzari-vanderbilt', degauss=0.05
  /
  &electrons
     diagonalization='$diago'
@@ -273,7 +272,7 @@ EOF
     # band structure calculation along delta, sigma and lambda lines
     cat > al.band.$diago.in << EOF
  &control
-    calculation='nscf'
+    calculation='bands'
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
     prefix='al'
@@ -343,7 +342,7 @@ EOF
  &system
     ibrav = 2, celldm(1) =6.73, nat= 1, ntyp= 1,
     ecutwfc = 25.0, ecutrho = 300.0
-    occupations='smearing', smearing='methfessel-paxton', degauss=0.02
+    occupations='smearing', smearing='gaussian', degauss=0.02
  /
  &electrons
     diagonalization='$diago'
@@ -364,7 +363,7 @@ EOF
     # band structure calculation along delta, sigma and lambda lines
     cat > cu.band.$diago.in << EOF
  &control
-    calculation='nscf'
+    calculation='bands'
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/',
     prefix='cu'
@@ -516,7 +515,7 @@ EOF
     # band structure calculation along delta, sigma and lambda lines
     cat > ni.band.$diago.in << EOF
  &control
-    calculation='nscf'
+    calculation='bands'
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
     prefix='ni'
