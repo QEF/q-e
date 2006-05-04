@@ -300,7 +300,7 @@ MODULE path_base
          END DO
          !
          WRITE( UNIT = iunpath, &
-                 FMT = '(5X,"initial path length",&
+                 FMT = '(/,5X,"initial path length",&
                         & T35," = ",F7.4," bohr")' ) path_length  
          !
          WRITE( UNIT = iunpath, &

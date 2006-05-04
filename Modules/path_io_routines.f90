@@ -110,8 +110,10 @@ MODULE path_io_routines
        !
        IMPLICIT NONE
        !
-       REAL(DP)          :: k_ratio
-       CHARACTER(LEN=20) :: nim_char, nstep_path_char
+       INTEGER            :: i
+       REAL(DP)           :: k_ratio
+       CHARACTER(LEN=256) :: outline
+       CHARACTER(LEN=20)  :: nim_char, nstep_path_char
        !
        CHARACTER(LEN=6), EXTERNAL :: int_to_char
        !
@@ -176,6 +178,23 @@ MODULE path_io_routines
        WRITE( UNIT = iunpath, &
               FMT = '(5X,"path_thr",T35," = ",1X,F6.4," eV / A")' ) path_thr
        !
+       IF ( CI_scheme == "manual" ) THEN
+          !
+          outline = ''
+          !
+          DO i = 2, num_of_images
+             !
+             IF ( climbing(i) ) outline = TRIM( outline ) // ' ' // &
+                                        & TRIM( int_to_char( i ) ) // ',' 
+             !
+          END DO
+          !
+          WRITE( UNIT = iunpath, &
+                 FMT = '(/,5X,"list of climbing images :",2X,A)' ) &
+              TRIM( outline )
+          !
+       END IF
+       !
        RETURN
        !
      END SUBROUTINE path_summary
@@ -196,11 +215,11 @@ MODULE path_io_routines
        !
        IMPLICIT NONE
        !
-       INTEGER             :: i, j, ia, ierr
-       INTEGER             :: nim_inp
-       CHARACTER (LEN=256) :: input_line
-       LOGICAL             :: exists
-       LOGICAL, EXTERNAL   :: matches
+       INTEGER            :: i, j, ia, ierr
+       INTEGER            :: nim_inp
+       CHARACTER(LEN=256) :: input_line
+       LOGICAL            :: exists
+       LOGICAL, EXTERNAL  :: matches
        !
        !
        IF ( meta_ionode ) THEN
@@ -453,8 +472,8 @@ MODULE path_io_routines
        !
        IMPLICIT NONE
        !
-       INTEGER             :: i, j, ia
-       CHARACTER (LEN=256) :: file
+       INTEGER            :: i, j, ia
+       CHARACTER(LEN=256) :: file
        !
        CHARACTER(LEN=6), EXTERNAL :: int_to_char
        !
@@ -651,7 +670,7 @@ MODULE path_io_routines
        REAL(DP), ALLOCATABLE :: a(:), b(:), c(:), d(:), f(:), s(:)
        REAL(DP)              :: ener, ener_0
        INTEGER               :: i, j, ia
-       INTEGER, PARAMETER    :: max_i = 100
+       INTEGER, PARAMETER    :: max_i = 250
        !
        !
        IF ( .NOT. meta_ionode ) RETURN
