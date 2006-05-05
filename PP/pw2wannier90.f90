@@ -827,13 +827,13 @@ subroutine write_plot
 #ifdef __PARA
          call cgather_smooth(psic,psic_all)
          if(wvfn_formatted) then
-            write (iun_plot,*) (psic_all(j),j=1,nr1s*nr2s*nr3s)
+            write (iun_plot,'(2ES20.10)') (psic_all(j),j=1,nr1s*nr2s*nr3s)
          else
             write (iun_plot) (psic_all(j),j=1,nr1s*nr2s*nr3s)
          endif
 #else
          if(wvfn_formatted) then 
-            write (iun_plot,*) (psic(j),j=1,nr1s*nr2s*nr3s)
+            write (iun_plot,'(2ES20.10)') (psic(j),j=1,nr1s*nr2s*nr3s)
          else
             write (iun_plot) (psic(j),j=1,nr1s*nr2s*nr3s)
          endif
