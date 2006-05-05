@@ -850,6 +850,7 @@ CONTAINS
     if (event_electron_damping(event_index)) then
        ! meaningful only if " electron_dynamics = 'damp' "
        electron_damping = rule_electron_damping(event_index)
+       frice = electron_damping
        write(*,*) 'RULE EVENT: electron_damping', electron_damping
     endif
 
