@@ -171,7 +171,9 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
   INTEGER :: i, il, j, jl, ixy, ig, jg, ipol, igper, k,      &
              ios, index, number, nprob, nteam, nteamnow,     &
              info, kin, kfin, is, js
+#ifdef __PARA
   INTEGER :: status(MPI_STATUS_SIZE)
+#endif
   INTEGER, ALLOCATABLE :: fftxy(:,:)
   REAL(DP) :: edummy
   REAL(DP), ALLOCATABLE :: el(:), gp(:)
