@@ -267,16 +267,6 @@ nosym          LOGICAL ( default = .FALSE. )
                of the lattice.  Use with care in low-symmetry large cells 
                if you cannot afford a k-point grid with the correct symmetry.
 
-starting_magnetization(i)   
-               REAL
-               starting spin polarization (values between -1 and 1)
-               on atomic type 'i' in a lsda calculation. Breaks the
-               symmetry and provides a starting point for self-consistency.
-               The default value is zero, BUT a value MUST be specified for
-               AT LEAST one atomic type in spin polarized calculations.
-               If zero starting magnetization is specified, zero final
-               magnetization will be obtained.
-
 occupations    CHARACTER
                'smearing':     gaussian smearing for metals
                                requires a value for degauss
@@ -305,17 +295,45 @@ smearing       CHARACTER
                'fermi-dirac', 'f-d', 'fd':
                     smearing with Fermi-Dirac function
 
-nelup, neldw   REAL
-               number of spin-up and spin-down electrons, respectively
-               The sum must yield nelec that must also be specified
-               explicitly in this case.
-
 nspin          INTEGER
                nspin = 1 :   non-polarized calculation (default)
-               nspin = 2 :  spin-polarized calculation
+               nspin = 2 :  spin-polarized calculation, LSDA
+                            (magnetization along z axis)
+               nspin = 4 :  spin-polarized calculation, noncolinear
+                            (magnetization in generic direction)
+                            DO NOT specify nspin in this case; 
+                            specify "noncolin=.TRUE." instead
+
+noncolin       LOGICAL
+               if .true. the program will perform a noncollinear calculation.
+               DEFAULT: .false.
+
+starting_magnetization(i)   
+               REAL
+               starting spin polarization (values between -1 and 1)
+               on atomic type 'i' in a spin-polarized calculation. 
+               Breaks the symmetry and provides a starting point for 
+               self-consistency. The default value is zero, BUT a value 
+               MUST be specified for AT LEAST one atomic type in spin 
+               polarized calculations. Note that if start from zero 
+               initial magnetization, you will get zero final magnetization
+               in any case. If you desire to start from an antiferromagnetic
+               state, you may need to define two different atomic species
+               corresponding to sublattices of the same atomic type.
+               If you fix the magnetization with "nelup/neldw" or with
+               "multiplicity" or with "tot_magnetization", you should
+               not specify starting_magnetization
+
+nelup, neldw   REAL
+               number of spin-up and spin-down electrons, respectively
+               Note that this fixes the final value of the magnetization.
+               The sum must yield nelec that must also be specified
+               explicitly in this case. Not valid for spin-unpolarized
+               or noncolinear calculations, only for LSDA. Obsolescent.
 
 multiplicity   INTEGER ( default = 0 [unspecified] )
                spin multiplicity (2s+1). 1 is singlet, 2 for doublet etc.
+               Note that this fixes the final value of the magnetization.
                if unspecified or a non-zero value is specified in nelup/neldw
                then multiplicity variable is ignored.
 
@@ -399,17 +417,16 @@ eamp           REAL ( default = 0.001 a.u. )
                Amplitude of the electric field (in a.u.) 
 	       ( 1 a.u. = 51.44 10^10 V/m )
 
-noncolin       LOGICAL
-               if .true. the program will perform a noncollinear calculation.
-               DEFAULT: .false.
 
 angle1(i)      REAL
                The angle expressed in degrees between the initial 
-               magnetization and the z-axis. I runs over the atom types.
+               magnetization and the z-axis. For noncolinear calculations
+               only. I runs over the atom types.
 
 angle2(i)      REAL
                The angle expressed in degrees between the projection
                of the initial magnetization on x-y plane and the x-axis.
+               For noncolinear calculations only.
 
 constrained_magnetization CHARACTER ( defalt = 'none' ) 
                Used to perform constrained calculations in magnetic systems
