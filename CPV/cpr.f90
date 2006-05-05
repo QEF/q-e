@@ -42,7 +42,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
                                        fricf, allocate_ensemble_dft,          &
                                        id_matrix_init, z0, c0diag, becdiag,   &
                                        bec0, v0s, vhxcs, becdrdiag, gibbsfe
-  USE cg_module,                ONLY : tcg, maxiter, etresh, passop, &
+  USE cg_module,                ONLY : tcg, maxiter, conv_thr, passop, &
                                        allocate_cg, cg_update, &
                                        itercg, c0old
   USE gvecp,                    ONLY : ngm

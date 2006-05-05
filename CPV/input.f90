@@ -862,7 +862,7 @@ MODULE input
            tvhmean_inp, vhasse_inp, nconstr_inp, iesr_inp, iprnks, nprnks,     &
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nelup, neldw, nbnd,     &
            nelec, press, cell_damping, cell_dofree, tf_inp, nprnks_empty,      &
-           refg, greash, grease, greasp, epol, efield, tcg, maxiter, etresh,   &
+           refg, greash, grease, greasp, epol, efield, tcg, maxiter, conv_thr,   &
            passop, tot_charge, multiplicity, tot_magnetization, nprnks_empty,  &
            ncolvar_inp
      !
@@ -1005,7 +1005,7 @@ MODULE input
 
      CALL efield_init( epol, efield )
 
-     CALL cg_init( tcg , maxiter , etresh , passop )
+     CALL cg_init( tcg , maxiter , conv_thr , passop )
 
      !
      IF( ( TRIM( sic ) /= 'none' ) .and. ( tpre .or. thdyn ) ) &

@@ -15,7 +15,7 @@ MODULE cg_module
 
       logical      :: tcg        = .false.   ! if true do conjugate gradient minimization for electrons
       integer      :: maxiter    = 100      ! maximum number of iterations
-      real(DP) :: etresh    = 1.d-5   !energy treshold 
+      real(DP) :: conv_thr    = 1.d-5   !energy treshold 
       real(DP) :: passop    =0.3d0    !small step for conjugate gradient
 
 !***
@@ -43,14 +43,14 @@ MODULE cg_module
 CONTAINS
 
 
-  SUBROUTINE cg_init( tcg_ , maxiter_ , etresh_ , passop_ )
+  SUBROUTINE cg_init( tcg_ , maxiter_ , conv_thr_ , passop_ )
     USE kinds, ONLY: DP
     LOGICAL, INTENT(IN) :: tcg_
     INTEGER, INTENT(IN) :: maxiter_
-    REAL(DP), INTENT(IN) :: etresh_ , passop_
+    REAL(DP), INTENT(IN) :: conv_thr_ , passop_
     tcg=tcg_
     maxiter=maxiter_
-    etresh=etresh_
+    conv_thr=conv_thr_
     passop=passop_
     IF (tcg) CALL cg_info()
     RETURN
@@ -59,15 +59,15 @@ CONTAINS
   SUBROUTINE cg_info()
     USE io_global, ONLY: stdout 
     if(tcg) then
-       write (stdout,400) maxiter,etresh,passop                         
+       write (stdout,400) maxiter,conv_thr,passop                         
     endif
-400 format (/4x,'====================================='                          &
-   &        /4x,'|  CONJUGATE GRADIENT               |'                          &
-   &        /4x,'====================================='                          &
-   &        /4x,'| iterations   =',i10,'            |'                             &
-   &        /4x,'| etresh       =',f10.5,' a.u.     |'                           &
-   &        /4x,'| passop       =',f10.5,' a.u.     |'                           &
-   &        /4x,'=====================================')
+400 format (/4x,'========================================'                          &
+   &        /4x,'|  CONJUGATE GRADIENT                  |'                          &
+   &        /4x,'========================================'                          &
+   &        /4x,'| iterations   =',i14,'         |'                             &
+   &        /4x,'| conv_thr     =',f14.11,' a.u.    |'                           &
+   &        /4x,'| passop       =',f14.5,' a.u.    |'                           &
+   &        /4x,'========================================')
     RETURN
   END SUBROUTINE cg_info
 

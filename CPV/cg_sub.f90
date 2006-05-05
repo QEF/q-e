@@ -64,7 +64,7 @@
       use uspp_param, only: nh
       use cg_module, only: ltresh, itercg, etotnew, etotold, tcutoff, &
           restartcg, passof, passov, passop, ene_ok, numok, maxiter, &
-          enever, etresh, ene0, esse, essenew, dene0, spasso, &
+          enever, conv_thr, ene0, esse, essenew, dene0, spasso, &
           ene1, passo, iter3, enesti, ninner_ef
       use ions_positions, only: tau0
       use wavefunctions_module, only: c0, cm, phi => cp
@@ -284,7 +284,7 @@
 
         
 
-        if(abs(etotnew-etotold).lt.etresh) then
+        if(abs(etotnew-etotold).lt.conv_thr) then
            numok=numok+1
         else 
            numok=0

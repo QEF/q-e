@@ -76,7 +76,7 @@
       USE cg_module,      ONLY: ltresh, itercg, etotnew, etotold, &
                                 tcutoff, restartcg, passof, passov, &
                                 passop, ene_ok, numok, maxiter, &
-                                enever, etresh, ene0, &
+                                enever, conv_thr, ene0, &
                                 esse, essenew, dene0, spasso, ene1, &
                                 passo, iter3, enesti, ninner_ef
       USE ions_positions, ONLY: tau0
