@@ -1745,29 +1745,33 @@ CONTAINS
       !
       REAL (DP), ALLOCATABLE :: jlm1(:)
       REAL(DP) :: xrg
+      REAL(DP), PARAMETER :: eps = 1.0D-8
       INTEGER :: i0, ir
       !
       ! r(i0) is the first point such that r(i0) >0
       !
       ALLOCATE ( jlm1 (nr) )
       i0 = 1
-      if ( r(1) < 1.0d-8 ) i0 = 2
+      if ( r(1) < eps ) i0 = 2
+      !
       ! special case q=0
-      if ( xg < 1.0d-8 ) then
-         if (l == 1) then
-            ! Note that dj_1/dx (x=0) = 1/3
-            jlm1(:) = 1.0d0/3.d0
-         else
-            jlm1(:) = 0.0d0
-         end if
+      ! note that x*dj_l(x)/dx = 0 for x = 0
+      !
+      if ( xg < eps ) then
+         !if (l == 1) then
+         ! Note that dj_1/dx (x=0) = 1/3
+         !   djl(:) = 1.0d0/3.d0
+         !else
+            djl(:) = 0.0d0
+         !end if
       else
          call sph_bes ( nr + 1 - i0, r(i0), xg, l-1, jlm1(i0) )
+         do ir = i0, nr
+            xrg = r(ir) * xg
+            djl(ir) = jlm1(ir) * xrg - (l+1) * jl(ir)
+         end do
+         if (i0 == 2) djl(1) = djl(2)
       end if
-      do ir = i0, nr
-         xrg = r(ir) * xg
-         djl(ir) = jlm1(ir) * xrg - (l+1) * jl(ir)
-      end do
-      if (i0 == 2) djl(1) = djl(2)
       DEALLOCATE ( jlm1 )
       !
     end SUBROUTINE sph_dbes1
