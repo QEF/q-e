@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.0 - Mon Oct 24 02:34:10 CEST 2005                         
+     Version: 3.1 - Wed May 3 10:11:42 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5:12:28  10Nov2005               
+   This run was started on:  14:54:17   5May2006               
 
    Serial Build
 Warning: card &CELL ignored
@@ -24,12 +24,12 @@ Warning: card / ignored
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /scr/giannozz/espresso/pseudo/O.pz-rrkjus.UPF
-   file type is 20
+   /home/umari/espresso/pseudo/O.pz-rrkjus.UPF
+   file type is 20: UPF
 
    Reading pseudopotential for specie #  2 from file :
-   /scr/giannozz/espresso/pseudo/Mg.pz-n-vbc.UPF
-   file type is 20
+   /home/umari/espresso/pseudo/Mg.pz-n-vbc.UPF
+   file type is 20: UPF
 
 
    Main Simulation Parameters (from input)
@@ -57,13 +57,13 @@ Warning: card / ignored
    b3    =     0.00000000    0.00000000    0.06284565
    omega =  4028.78703053
 
-    =====================================
-    |  CONJUGATE GRADIENT               |
-    =====================================
-    | iterations   =       250            |
-    | etresh       =   0.00000 a.u.     |
-    | passop       =   0.30000 a.u.     |
-    =====================================
+    ========================================
+    |  CONJUGATE GRADIENT                  |
+    ========================================
+    | iterations   =           250         |
+    | conv_thr     = 0.00000001000 a.u.    |
+    | passop       =       0.30000 a.u.    |
+    ========================================
 
    Energy Cut-offs
    ---------------
@@ -178,12 +178,13 @@ Warning: card / ignored
 
    Cell Dynamics Parameters (from STDIN)
    -------------------------------------
+   internal stress tensor calculated
    Starting cell generated from CELLDM
    Constant VOLUME Molecular dynamics
    cell parameters are not allowed to move
 
     =====================================
-    |  BERRY PHASE ELECTRIC FIELD        
+    |  BERRY PHASE ELECTRIC FIELD 1        
     =====================================
     | direction    =         3            
     | intensity    =   0.00000 a.u.     
@@ -375,15 +376,33 @@ Warning: card / ignored
  
    Short Legend and Physical Units in the Output
    ---------------------------------------------
-   NFI    [int]  - step index
+   NFI    [int]          - step index
    EKINC  [HARTREE A.U.] - kinetic energy of the fictitious electronic dynamics
-   TEMPH  [K]    - Temperature of the fictitious cell dynamics
-   TEMP   [K]    - Ionic temperature
+   TEMPH  [K]            - Temperature of the fictitious cell dynamics
+   TEMP   [K]            - Ionic temperature
    ETOT   [HARTREE A.U.] - Scf total energy (Kohn-Sham hamiltonian)
    ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
+
+
+   Wave Initialization: random initial wave-functions
+   Occupation number from init
+   nbnd =   128
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
 
    formf: eself= 676.60611
    formf:     vps(g=0)=  -0.0020774     rhops(g=0)=  -0.0014893
@@ -396,7 +415,6 @@ Initialize Berry phase electric field
 
  * Physical Quantities at step:     1
  PERFORMING CONJUGATE GRADIENT MINIMIZATION OF EL. STATES
- cg_sub: missed minimum, case 3, iteration           4
  
 
 
@@ -405,8 +423,8 @@ Initialize Berry phase electric field
         electrostatic energy =     -588.81031 Hartree a.u.
                          esr =        0.00000 Hartree a.u.
                        eself =      676.60611 Hartree a.u.
-      pseudopotential energy =     -167.88010 Hartree a.u.
-  n-l pseudopotential energy =      108.84077 Hartree a.u.
+      pseudopotential energy =     -167.88009 Hartree a.u.
+  n-l pseudopotential energy =      108.84076 Hartree a.u.
  exchange-correlation energy =     -134.85150 Hartree a.u.
            average potential =        0.00000 Hartree a.u.
 
@@ -439,10 +457,9 @@ Initialize Berry phase electric field
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-        0.00000000         0.00000000         0.00000000
-        0.00000000         0.00000000         0.00000000
-        0.00000000         0.00000000         0.00000000
- 
+      -51.88789966         0.00013157         0.00012837
+        0.00013157       -51.88790172         0.00013322
+        0.00012837         0.00013322       -51.88789712
    ATOMIC_POSITIONS
    Mg   0.663000E-01  0.663000E-01  0.663000E-01
    Mg   0.404430E+01  0.404430E+01  0.663000E-01
@@ -576,70 +593,71 @@ Initialize Berry phase electric field
    O    0.000000E+00  0.000000E+00  0.000000E+00
  
    Forces acting on atoms (au):
-   Mg   0.247153E-04  0.247148E-04  0.247164E-04
-   Mg   0.247064E-04  0.246944E-04  0.247089E-04
-   Mg   0.247331E-04  0.247167E-04  0.247168E-04
-   Mg   0.247079E-04  0.247124E-04  0.247235E-04
-   Mg   0.247156E-04  0.247132E-04  0.247130E-04
-   Mg   0.246983E-04  0.246866E-04  0.246922E-04
-   Mg   0.247163E-04  0.247019E-04  0.246987E-04
-   Mg   0.247197E-04  0.247182E-04  0.246960E-04
-   Mg   0.247111E-04  0.247014E-04  0.247099E-04
-   Mg   0.247032E-04  0.247096E-04  0.247070E-04
-   Mg   0.247144E-04  0.246968E-04  0.247168E-04
-   Mg   0.247022E-04  0.246941E-04  0.247106E-04
-   Mg   0.247150E-04  0.246973E-04  0.247184E-04
-   Mg   0.246978E-04  0.247210E-04  0.247042E-04
-   Mg   0.247070E-04  0.246970E-04  0.247087E-04
-   Mg   0.247129E-04  0.246880E-04  0.247016E-04
-   Mg   0.247185E-04  0.247158E-04  0.247263E-04
-   Mg   0.247088E-04  0.247035E-04  0.247192E-04
-   Mg   0.247052E-04  0.247012E-04  0.247144E-04
-   Mg   0.246986E-04  0.247002E-04  0.246989E-04
-   Mg   0.247103E-04  0.247083E-04  0.247000E-04
-   Mg   0.247255E-04  0.246872E-04  0.246947E-04
-   Mg   0.246969E-04  0.247106E-04  0.247009E-04
-   Mg   0.247068E-04  0.247052E-04  0.247156E-04
-   Mg   0.247145E-04  0.246996E-04  0.247130E-04
-   Mg   0.247069E-04  0.247081E-04  0.247179E-04
-   Mg   0.246996E-04  0.247025E-04  0.247115E-04
-   Mg   0.247162E-04  0.247051E-04  0.247129E-04
-   Mg   0.247123E-04  0.246982E-04  0.247129E-04
-   Mg   0.247117E-04  0.247204E-04  0.246894E-04
-   Mg   0.247038E-04  0.247078E-04  0.247170E-04
-   Mg   0.247002E-04  0.247009E-04  0.247118E-04
-   O   -0.469933E-04 -0.469534E-04 -0.469014E-04
-   O   -0.469636E-04 -0.469261E-04 -0.470095E-04
-   O   -0.468954E-04 -0.468716E-04 -0.470157E-04
-   O   -0.469401E-04 -0.470638E-04 -0.469635E-04
-   O   -0.469764E-04 -0.469981E-04 -0.470792E-04
-   O   -0.470295E-04 -0.469800E-04 -0.470712E-04
-   O   -0.468003E-04 -0.469294E-04 -0.470005E-04
-   O   -0.470565E-04 -0.469483E-04 -0.470696E-04
-   O   -0.469319E-04 -0.470883E-04 -0.469480E-04
-   O   -0.468773E-04 -0.470646E-04 -0.468615E-04
-   O   -0.469219E-04 -0.471617E-04 -0.468971E-04
-   O   -0.469946E-04 -0.470464E-04 -0.469553E-04
-   O   -0.469667E-04 -0.470312E-04 -0.470105E-04
-   O   -0.469351E-04 -0.471099E-04 -0.471482E-04
-   O   -0.469043E-04 -0.471254E-04 -0.470625E-04
-   O   -0.469845E-04 -0.471683E-04 -0.470301E-04
-   O   -0.469712E-04 -0.470040E-04 -0.469866E-04
-   O   -0.469881E-04 -0.470271E-04 -0.469230E-04
-   O   -0.470962E-04 -0.469793E-04 -0.469736E-04
-   O   -0.469327E-04 -0.470615E-04 -0.469481E-04
-   O   -0.469667E-04 -0.469996E-04 -0.469776E-04
-   O   -0.469193E-04 -0.469763E-04 -0.471357E-04
-   O   -0.470708E-04 -0.469145E-04 -0.469355E-04
-   O   -0.469784E-04 -0.470560E-04 -0.470526E-04
-   O   -0.470234E-04 -0.470292E-04 -0.469354E-04
-   O   -0.470370E-04 -0.471787E-04 -0.470822E-04
-   O   -0.470051E-04 -0.470788E-04 -0.470527E-04
-   O   -0.469835E-04 -0.470330E-04 -0.469778E-04
-   O   -0.469555E-04 -0.470334E-04 -0.470465E-04
-   O   -0.470299E-04 -0.469825E-04 -0.469799E-04
-   O   -0.470693E-04 -0.470935E-04 -0.469652E-04
-   O   -0.469588E-04 -0.470781E-04 -0.470346E-04
+   Mg   0.247305E-04  0.246663E-04  0.246639E-04
+   Mg   0.247320E-04  0.247111E-04  0.246810E-04
+   Mg   0.246993E-04  0.246878E-04  0.247388E-04
+   Mg   0.247025E-04  0.247046E-04  0.247055E-04
+   Mg   0.247140E-04  0.246837E-04  0.247238E-04
+   Mg   0.247044E-04  0.246599E-04  0.246997E-04
+   Mg   0.246929E-04  0.246804E-04  0.246966E-04
+   Mg   0.247067E-04  0.246767E-04  0.246815E-04
+   Mg   0.247138E-04  0.247193E-04  0.246971E-04
+   Mg   0.246856E-04  0.247071E-04  0.246929E-04
+   Mg   0.247177E-04  0.247022E-04  0.247102E-04
+   Mg   0.247366E-04  0.246975E-04  0.247046E-04
+   Mg   0.247121E-04  0.246809E-04  0.247017E-04
+   Mg   0.246817E-04  0.247067E-04  0.247203E-04
+   Mg   0.247028E-04  0.247128E-04  0.246902E-04
+   Mg   0.247360E-04  0.247034E-04  0.246943E-04
+   Mg   0.246815E-04  0.247060E-04  0.246812E-04
+   Mg   0.246956E-04  0.246943E-04  0.246828E-04
+   Mg   0.246926E-04  0.246941E-04  0.247348E-04
+   Mg   0.246844E-04  0.246768E-04  0.247203E-04
+   Mg   0.246826E-04  0.247051E-04  0.247238E-04
+   Mg   0.247020E-04  0.246947E-04  0.247219E-04
+   Mg   0.246938E-04  0.246910E-04  0.247030E-04
+   Mg   0.246857E-04  0.246813E-04  0.246776E-04
+   Mg   0.246990E-04  0.246925E-04  0.246884E-04
+   Mg   0.247304E-04  0.247030E-04  0.246801E-04
+   Mg   0.246909E-04  0.247085E-04  0.247068E-04
+   Mg   0.246842E-04  0.246743E-04  0.247103E-04
+   Mg   0.246873E-04  0.246738E-04  0.247111E-04
+   Mg   0.247247E-04  0.246818E-04  0.246984E-04
+   Mg   0.246970E-04  0.246841E-04  0.246741E-04
+   Mg   0.246863E-04  0.246758E-04  0.246924E-04
+   O   -0.468065E-04 -0.470110E-04 -0.471453E-04
+   O   -0.471018E-04 -0.468913E-04 -0.470420E-04
+   O   -0.470849E-04 -0.471176E-04 -0.470875E-04
+   O   -0.470090E-04 -0.468964E-04 -0.471798E-04
+   O   -0.469750E-04 -0.469297E-04 -0.469265E-04
+   O   -0.470573E-04 -0.470519E-04 -0.470316E-04
+   O   -0.468146E-04 -0.471889E-04 -0.470039E-04
+   O   -0.470933E-04 -0.469906E-04 -0.469485E-04
+   O   -0.471262E-04 -0.469333E-04 -0.469854E-04
+   O   -0.471056E-04 -0.470349E-04 -0.471315E-04
+   O   -0.469247E-04 -0.469081E-04 -0.469558E-04
+   O   -0.470771E-04 -0.469734E-04 -0.469803E-04
+   O   -0.469256E-04 -0.470142E-04 -0.469373E-04
+   O   -0.470373E-04 -0.470636E-04 -0.469189E-04
+   O   -0.469630E-04 -0.470326E-04 -0.469590E-04
+   O   -0.469833E-04 -0.470254E-04 -0.471509E-04
+   O   -0.468318E-04 -0.470252E-04 -0.469281E-04
+   O   -0.471527E-04 -0.468608E-04 -0.472377E-04
+   O   -0.469546E-04 -0.469177E-04 -0.470077E-04
+   O   -0.471172E-04 -0.469970E-04 -0.470423E-04
+   O   -0.469399E-04 -0.470841E-04 -0.470292E-04
+   O   -0.471207E-04 -0.470872E-04 -0.470469E-04
+   O   -0.470085E-04 -0.470442E-04 -0.470626E-04
+   O   -0.471093E-04 -0.469259E-04 -0.470974E-04
+   O   -0.470024E-04 -0.470373E-04 -0.471296E-04
+   O   -0.469844E-04 -0.470542E-04 -0.471544E-04
+   O   -0.470655E-04 -0.471858E-04 -0.469092E-04
+   O   -0.470064E-04 -0.470166E-04 -0.471179E-04
+   O   -0.471651E-04 -0.470728E-04 -0.469762E-04
+   O   -0.469939E-04 -0.470305E-04 -0.470566E-04
+   O   -0.471417E-04 -0.470495E-04 -0.471275E-04
+   O   -0.470655E-04 -0.470221E-04 -0.468966E-04
+ 
 
 
    Partial temperatures (for each ionic specie) 
@@ -650,53 +668,64 @@ Initialize Berry phase electric field
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
  
        nfi   tempp            E -T.S-mu.nbsp         +K_p #Iter
-Step     1       0   -547.27009   -547.27009   -547.27009    38
-  Elct. dipole   14.851589  Ionic dipole    1.060800
-
-
-              averaged quantities :
-         ekinc          ekin          epot          etot     tempp
-       0.00000     235.43106    -891.54191    -547.27009       0.0
-     initialize   :     6.42s CPU
-     total_time   :   910.82s CPU
-     formf        :     0.28s CPU
-     rhoofr       :    90.52s CPU (      79 calls,   1.146 s avg)
-     vofrho       :    96.17s CPU (      79 calls,   1.217 s avg)
-     dforce       :    99.24s CPU (    2432 calls,   0.041 s avg)
-     gram         :   123.41s CPU (      79 calls,   1.562 s avg)
-     newd         :   182.43s CPU (      38 calls,   4.801 s avg)
-     calbec       :    88.95s CPU (     344 calls,   0.259 s avg)
-     prefor       :     1.18s CPU (      40 calls,   0.029 s avg)
-     strucf       :     0.13s CPU (       2 calls,   0.065 s avg)
-     nlfl         :     0.04s CPU
-     nlfq         :     0.80s CPU
-     set_cc       :    11.48s CPU (      79 calls,   0.145 s avg)
-     rhov         :    23.40s CPU (      79 calls,   0.296 s avg)
-     nlsm1        :    88.95s CPU (     344 calls,   0.259 s avg)
-     nlsm2        :     0.77s CPU
-     forcecc      :    25.22s CPU (      79 calls,   0.319 s avg)
-     fft          :    33.18s CPU (     395 calls,   0.084 s avg)
-     ffts         :     2.84s CPU (     158 calls,   0.018 s avg)
-     fftw         :    81.63s CPU (    9920 calls,   0.008 s avg)
-     fftb         :   130.80s CPU (   30032 calls,   0.004 s avg)
+Step     1       0   -547.27009   -547.27009   -547.27009    40
+Elct. dipole 1   14.851609  Ionic dipole 1    1.060800
 
    writing restart file: .//mgo_50.save
-   restart file written in    5.433 sec.
+   restart file written in    0.295 sec.
 
 
 
-======================== end cp ========================
+   Averaged Physical Quantities
+                      accomulated      this run
+   ekinc         :        0.00000       0.00000 (AU)
+   ekin          :      235.43106     235.43106 (AU)
+   epot          :     -891.54191    -891.54191 (AU)
+   totel energy  :     -547.27009    -547.27009 (AU)
+   temperature   :        0.00000       0.00000 (K )
+   enthalpy      :        0.00000       0.00000 (AU)
+   econs         :     -547.27009    -547.27009 (AU)
+   pressure      :      -51.88790     -51.88790 (Gpa)
+   volume        :     4028.78703    4028.78703 (AU)
 
+
+     initialize   :     8.75s CPU
+     total_time   :  1120.50s CPU
+     formf        :     0.53s CPU
+     rhoofr       :   498.57s CPU (      80 calls,   6.232 s avg)
+     vofrho       :    73.09s CPU (      80 calls,   0.914 s avg)
+     dforce       :    66.81s CPU (    2560 calls,   0.026 s avg)
+     calphi       :     4.05s CPU (      40 calls,   0.101 s avg)
+     gram         :    80.66s CPU (      80 calls,   1.008 s avg)
+     newd         :   110.20s CPU (      40 calls,   2.755 s avg)
+     calbec       :    50.83s CPU (     277 calls,   0.184 s avg)
+     prefor       :     0.66s CPU (      42 calls,   0.016 s avg)
+     strucf       :     0.09s CPU (       2 calls,   0.043 s avg)
+     nlfl         :     0.02s CPU
+     nlfq         :     0.57s CPU
+     set_cc       :     7.37s CPU (      80 calls,   0.092 s avg)
+     rhov         :    13.99s CPU (      80 calls,   0.175 s avg)
+     nlsm1        :    50.83s CPU (     277 calls,   0.183 s avg)
+     nlsm2        :     0.55s CPU
+     forcecc      :    14.18s CPU (      80 calls,   0.177 s avg)
+     fft          :    47.87s CPU (    1200 calls,   0.040 s avg)
+     ffts         :     1.51s CPU (     160 calls,   0.009 s avg)
+     fftw         :    58.04s CPU (   10240 calls,   0.006 s avg)
+     fftb         :   104.64s CPU (   42880 calls,   0.002 s avg)
+     runcg_uspp   :  1120.19s CPU
+     pc2          :    91.47s CPU (     117 calls,   0.782 s avg)
+     pcdaga2      :    26.91s CPU (      39 calls,   0.690 s avg)
+     set_x_minus1 :     2.14s CPU (       2 calls,   1.070 s avg)
+     xminus1      :    37.18s CPU (      78 calls,   0.477 s avg)
+     emass_p_tpa  :     0.00s CPU
+ 
+ 
+ 
+     CP           : 18m49.57s CPU time
 
  
-     CP           : 15m22.56s CPU time
-
- 
-   This run was terminated on:   5:27:51  10Nov2005            
+   This run was terminated on:  15:13:30   5May2006            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:   923.0
    JOB DONE.
 =------------------------------------------------------------------------------=
-
-   MEMORY STATISTICS FROM PE(1) : 
