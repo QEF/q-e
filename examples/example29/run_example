@@ -86,7 +86,7 @@ cat > si2.ensemble-dyn.in << EOF
   nstep  = 5,
   iprint = 10,
   isave  = 10,
-  tstress = .FALSE.,
+  tstress = .TRUE.,
   tprnfor = .TRUE.,
   dt    = 10.0d0,
   prefix = 'Si_dimer',
@@ -128,7 +128,7 @@ cat > si2.ensemble-dyn.in << EOF
   tcg = .true.,
   passop=0.3,
   maxiter = 250,
-  etresh=1.d-6
+  conv_thr=1.d-6
 /
   
 &IONS

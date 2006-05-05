@@ -39,7 +39,7 @@ maxiter        INTEGER ( default = 100 )
                maximum number of conjugate gradient iterations for
                conjugate gradient minimizations of electronic states
  
-etresh         REAL ( default = 1.D-5 )
+conv_thr         REAL ( default = 1.D-6 )
                convergence criterion for energy in the case of
                conjugate gradient minimization of the electronic states
                 

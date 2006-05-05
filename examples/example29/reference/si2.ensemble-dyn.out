@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.0 - Mon Oct 24 02:34:10 CEST 2005                         
+     Version: 3.1 - Wed May 3 10:11:42 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5: 9:34  10Nov2005               
+   This run was started on:  14:46:17   5May2006               
 
    Serial Build
      from  system_checkin      : info #        -1
@@ -23,8 +23,8 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /scr/giannozz/espresso/pseudo/Si.pbe-rrkj.UPF
-   file type is 20
+   /home/umari/espresso/pseudo/Si.pbe-rrkj.UPF
+   file type is 20: UPF
 
 
    Main Simulation Parameters (from input)
@@ -52,13 +52,13 @@
    b3    =     0.00000000    0.00000000    0.06666667
    omega =  1500.00000000
 
-    =====================================
-    |  CONJUGATE GRADIENT               |
-    =====================================
-    | iterations   =       250            |
-    | etresh       =   0.00000 a.u.     |
-    | passop       =   0.30000 a.u.     |
-    =====================================
+    ========================================
+    |  CONJUGATE GRADIENT                  |
+    ========================================
+    | iterations   =           250         |
+    | conv_thr     = 0.00000100000 a.u.    |
+    | passop       =       0.30000 a.u.    |
+    ========================================
 
    Energy Cut-offs
    ---------------
@@ -107,6 +107,7 @@
 
    Cell Dynamics Parameters (from STDIN)
    -------------------------------------
+   internal stress tensor calculated
    Starting cell generated from CELLDM
    Constant VOLUME Molecular dynamics
    cell parameters are not allowed to move
@@ -211,44 +212,50 @@
  
    Short Legend and Physical Units in the Output
    ---------------------------------------------
-   NFI    [int]  - step index
+   NFI    [int]          - step index
    EKINC  [HARTREE A.U.] - kinetic energy of the fictitious electronic dynamics
-   TEMPH  [K]    - Temperature of the fictitious cell dynamics
-   TEMP   [K]    - Ionic temperature
+   TEMPH  [K]            - Temperature of the fictitious cell dynamics
+   TEMP   [K]            - Ionic temperature
    ETOT   [HARTREE A.U.] - Scf total energy (Kohn-Sham hamiltonian)
    ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
 
+
+   Wave Initialization: random initial wave-functions
+   Occupation number from init
+   nbnd =     8
+    1.00 1.00 1.00 1.00 1.00 1.00 1.00 1.00
+
    formf: eself=  15.95769
    formf:     vps(g=0)=  -0.0030619     rhops(g=0)=  -0.0026667
    formf: sum_g vps(g)=   0.1655508 sum_g rhops(g)=  -0.7026660
  PERFORMING CONJUGATE GRADIENT MINIMIZATION OF EL. STATES
- cg_sub: missed minimum, case 3, iteration           2
+ cg_sub: missed minimum, case 3, iteration           3
  
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
  
        nfi   tempp            E -T.S-mu.nbsp         +K_p #Iter
-Step     1       0     -7.56896     -7.70161     -7.70161    49
-Step     2       0     -7.56895     -7.70162     -7.70161     6
-Step     3       0     -7.56895     -7.70163     -7.70162     8
-Step     4       1     -7.56894     -7.70164     -7.70162     7
+Step     1       0     -7.56894     -7.70162     -7.70161    57
+Step     2       0     -7.56894     -7.70162     -7.70162     6
+Step     3       0     -7.56894     -7.70163     -7.70162     7
+Step     4       1     -7.56895     -7.70164     -7.70162     6
 
  * Physical Quantities at step:     5
  
 Occupations  :
- 1.999949 1.999450 1.627478 0.933442 0.933442 0.245828 0.245827 0.014583
+ 1.999949 1.999450 1.627461 0.933482 0.933475 0.245828 0.245825 0.014530
 
 
-                total energy =       -7.56895 Hartree a.u.
-              kinetic energy =        2.49432 Hartree a.u.
-        electrostatic energy =       -9.31538 Hartree a.u.
+                total energy =       -7.56896 Hartree a.u.
+              kinetic energy =        2.49418 Hartree a.u.
+        electrostatic energy =       -9.31529 Hartree a.u.
                          esr =        0.00000 Hartree a.u.
                        eself =       15.95769 Hartree a.u.
-      pseudopotential energy =       -0.50591 Hartree a.u.
-  n-l pseudopotential energy =        1.77988 Hartree a.u.
- exchange-correlation energy =       -2.02186 Hartree a.u.
+      pseudopotential energy =       -0.50590 Hartree a.u.
+  n-l pseudopotential energy =        1.77985 Hartree a.u.
+ exchange-correlation energy =       -2.02180 Hartree a.u.
            average potential =        0.00000 Hartree a.u.
 
 
@@ -268,68 +275,82 @@ Occupations  :
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-        0.00000000         0.00000000         0.00000000
-        0.00000000         0.00000000         0.00000000
-        0.00000000         0.00000000         0.00000000
- 
+        0.27080355         0.00034017        -0.00067707
+        0.00034017         0.27083381         0.00010906
+       -0.00067707         0.00010906        -4.61929655
    ATOMIC_POSITIONS
-   Si   0.434582E-07 -0.749941E-07  0.508179E-03
-   Si  -0.434582E-07  0.749941E-07  0.549949E+01
+   Si   0.113372E-06  0.181642E-07  0.507722E-03
+   Si  -0.113372E-06 -0.181642E-07  0.549949E+01
  
    ATOMIC_VELOCITIES
-   Si   0.117638E-08 -0.100027E-08  0.228523E-04
-   Si  -0.117638E-08  0.100027E-08 -0.228523E-04
+   Si   0.202775E-08  0.269520E-08  0.228340E-04
+   Si  -0.202775E-08 -0.269520E-08 -0.228340E-04
  
    Forces acting on atoms (au):
-   Si   0.235260E-05 -0.233712E-04  0.259522E-01
-   Si  -0.254040E-05 -0.227311E-04 -0.259814E-01
+   Si  -0.796889E-05  0.460214E-05  0.258931E-01
+   Si   0.132156E-04 -0.150011E-04 -0.259088E-01
+ 
 
 
    Partial temperatures (for each ionic specie) 
    Species  Temp (K)   Mean Square Displacement (a.u.)
         1       2.81     0.0000
-Step     5       2     -7.56895     -7.70165     -7.70162    10
-
-
-              averaged quantities :
-         ekinc          ekin          epot          etot     tempp
-       0.00000       2.49388     -11.84272      -7.56895       1.1
-     initialize   :     0.51s CPU
-     total_time   :   172.78s CPU (       5 calls,  34.556 s avg)
-     formf        :     0.07s CPU
-     rhoofr       :    29.27s CPU (    1359 calls,   0.022 s avg)
-     vofrho       :   109.51s CPU (    1359 calls,   0.081 s avg)
-     dforce       :    28.96s CPU (    5120 calls,   0.006 s avg)
-     gram         :     0.03s CPU (     159 calls,   0.000 s avg)
-     newd         :     1.69s CPU (    1355 calls,   0.001 s avg)
-     calbec       :     0.10s CPU (     622 calls,   0.000 s avg)
-     prefor       :     0.24s CPU (    1966 calls,   0.000 s avg)
-     strucf       :     0.00s CPU (       6 calls,   0.000 s avg)
-     nlfl         :     0.00s CPU (       5 calls,   0.000 s avg)
-     nlfq         :     0.00s CPU (       5 calls,   0.000 s avg)
-     nlsm1        :     0.10s CPU (     622 calls,   0.000 s avg)
-     nlsm2        :     0.01s CPU (      10 calls,   0.001 s avg)
-     fft          :    53.51s CPU (   10872 calls,   0.005 s avg)
-     ffts         :    12.27s CPU (    2718 calls,   0.005 s avg)
-     fftw         :    31.58s CPU (   15676 calls,   0.002 s avg)
+Step     5       2     -7.56896     -7.70165     -7.70162     6
 
    writing restart file: .//Si_dimer_50.save
-   restart file written in    0.461 sec.
+   restart file written in    0.027 sec.
 
 
 
-======================== end cp ========================
+   Averaged Physical Quantities
+                      accomulated      this run
+   ekinc         :        0.00000       0.00000 (AU)
+   ekin          :        2.49391       2.49391 (AU)
+   epot          :      -11.84268     -11.84268 (AU)
+   totel energy  :       -7.56895      -7.56895 (AU)
+   temperature   :        1.14557       1.14557 (K )
+   enthalpy      :        0.00000       0.00000 (AU)
+   econs         :       -7.70162      -7.70162 (AU)
+   pressure      :       -1.36159      -1.36159 (Gpa)
+   volume        :     1500.00000    1500.00000 (AU)
 
+
+     initialize   :     0.80s CPU
+     total_time   :   140.24s CPU (       5 calls,  28.048 s avg)
+     formf        :     0.12s CPU
+     rhoofr       :    26.74s CPU (    1479 calls,   0.018 s avg)
+     vofrho       :    91.59s CPU (    1479 calls,   0.062 s avg)
+     dforce       :    20.03s CPU (    5552 calls,   0.004 s avg)
+     calphi       :     0.00s CPU (      82 calls,   0.000 s avg)
+     gram         :     0.05s CPU (     163 calls,   0.000 s avg)
+     newd         :     0.01s CPU (    1470 calls,   0.000 s avg)
+     calbec       :     0.12s CPU (     567 calls,   0.000 s avg)
+     prefor       :     0.12s CPU (    1481 calls,   0.000 s avg)
+     strucf       :     0.00s CPU (       6 calls,   0.000 s avg)
+     nlfl         :     0.00s CPU (       5 calls,   0.000 s avg)
+     nlfq         :     0.00s CPU (       5 calls,   0.001 s avg)
+     nlsm1        :     0.12s CPU (     567 calls,   0.000 s avg)
+     nlsm2        :     0.01s CPU (      10 calls,   0.001 s avg)
+     fft          :    30.07s CPU (   11832 calls,   0.003 s avg)
+     ffts         :     7.55s CPU (    2958 calls,   0.003 s avg)
+     fftw         :    24.43s CPU (   17020 calls,   0.001 s avg)
+     runcg_uspp   :   140.23s CPU (       5 calls,  28.047 s avg)
+     inner_loop   :   125.17s CPU (      82 calls,   1.526 s avg)
+     rotate       :     0.19s CPU (    1479 calls,   0.000 s avg)
+     calcmt       :     0.01s CPU (    1542 calls,   0.000 s avg)
+     calcm        :     0.00s CPU (     653 calls,   0.000 s avg)
+     pc2          :     0.11s CPU (     231 calls,   0.000 s avg)
+     pcdaga2      :     0.04s CPU (      77 calls,   0.000 s avg)
+     xminus1      :     0.00s CPU (     154 calls,   0.000 s avg)
+     emass_p_tpa  :     0.00s CPU (       5 calls,   0.000 s avg)
+ 
+ 
+ 
+     CP           :  2m21.08s CPU time
 
  
-     CP           :  2m53.69s CPU time
-
- 
-   This run was terminated on:   5:12:28  10Nov2005            
+   This run was terminated on:  14:48:39   5May2006            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:   174.0
    JOB DONE.
 =------------------------------------------------------------------------------=
-
-   MEMORY STATISTICS FROM PE(1) : 
