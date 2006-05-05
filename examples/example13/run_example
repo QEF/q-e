@@ -91,7 +91,7 @@ Iron
     ibrav = 3, celldm(1) =5.217, nat= 1, ntyp= 1,
     ecutwfc = 25.0,ecutrho = 200.0,
     report=1,
-    occupations='smearing', smearing='gaussian', degauss=0.05
+    occupations='smearing', smearing='marzari-vanderbilt', degauss=0.05
     noncolin = .true.
     starting_magnetization(1) = 0.5
     angle1(1) = 90.0
@@ -128,7 +128,7 @@ cat > fe.band.in << EOF
 Fe
 Iron
  &control
-    calculation='nscf'
+    calculation='bands'
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/',
     prefix='fe'
@@ -203,7 +203,7 @@ cat > fe.pen.in << EOF
     ibrav = 3, celldm(1) =5.217, nat= 1, ntyp= 1,
     ecutwfc = 25.0,ecutrho = 200.0,
     report=1,
-    occupations='smearing', smearing='gaussian', degauss=0.05
+    occupations='smearing', smearing='marzari-vanderbilt', degauss=0.05
     noncolin = .true.
     starting_magnetization(1) = 0.5
     angle1(1) = 85.0
@@ -250,7 +250,7 @@ cat > fe.angl.in << EOF
     ibrav = 3, celldm(1) =5.217, nat= 1, ntyp= 1,
     ecutwfc = 25.0,ecutrho = 200.0,
     report=1,
-    occupations='smearing', smearing='gaussian', degauss=0.05
+    occupations='smearing', smearing='marzari-vanderbilt', degauss=0.05
     noncolin = .true.
     starting_magnetization(1) = 0.5
     angle1(1) = 90.0
@@ -302,7 +302,7 @@ cat > fe.total.in << EOF
     ibrav = 3, celldm(1) =5.217, nat= 1, ntyp= 1,
     ecutwfc = 25.0,ecutrho = 200.0,
     report=1,
-    occupations='smearing', smearing='gaussian', degauss=0.05
+    occupations='smearing', smearing='marzari-vanderbilt', degauss=0.05
     noncolin = .true.
     starting_magnetization(1) = 0.5
     angle1(1) = 45.0
@@ -369,7 +369,7 @@ $ECHO " done"
 # band structure calculation along delta, sigma and lambda lines
 cat > cu.band.in << EOF
  &control
-    calculation='nscf'
+    calculation='bands'
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/',
     prefix='cu'
@@ -602,7 +602,7 @@ $ECHO " done"
 # band structure calculation along delta, sigma and lambda lines
 cat > ni.band.in << EOF
  &control
-    calculation='nscf'
+    calculation='bands'
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
     prefix='ni'

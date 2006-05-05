@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.3.0    starts ...
-     Today is 11Nov2005 at  2:54: 4 
+     Program PWSCF     v.3.1    starts ...
+     Today is  5May2006 at 18:46: 2 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -64,7 +64,7 @@
      site n.     atom                  positions (a_0 units)
          1           Fe  tau(  1) = (   0.0000000   0.0000000   0.0000000  )
 
-     number of k points=   32  gaussian broad. (ryd)=  0.0500     ngauss =   0
+     number of k points=   32  gaussian broad. (ryd)=  0.0500     ngauss =  -1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.2500000), wk =   0.0312500
         k(    2) = (   0.0000000  -0.2500000   0.5000000), wk =   0.0312500
@@ -122,873 +122,872 @@
  ==============================================================================
      Starting wfc are atomic +   4 random wfc
 
-     total cpu time spent up to now is      1.70 secs
+     total cpu time spent up to now is      1.93 secs
 
      Self-consistent Calculation
 
      iteration #  1     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations = 13.2
-      External magnetic field:       0.13054      0.17239      0.21702
+      External magnetic field:       0.13054      0.17241      0.21703
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     5.938677
-     magnetization :         -2.529249   -3.348436   -4.198626
-     magnetization/charge:   -0.425894   -0.563835   -0.706997
-     polar coord.: r, theta, phi [deg] :     5.936125  135.015719 -127.065657
+     charge :     5.937014
+     magnetization :         -2.528539   -3.347551   -4.197461
+     magnetization/charge:   -0.425894   -0.563844   -0.706999
+     polar coord.: r, theta, phi [deg] :     5.934500  135.015518 -127.065214
 
  ==============================================================================
 
-     total cpu time spent up to now is      7.78 secs
+     total cpu time spent up to now is      9.65 secs
 
-     total energy              =   -49.83318390 ryd
-     estimated scf accuracy    <     2.47662963 ryd
+     total energy              =   -49.83004211 ryd
+     estimated scf accuracy    <     2.47689964 ryd
 
      total magnetization       =    -3.41    -4.51    -5.66 Bohr mag/cell
      absolute magnetization    =     8.00 Bohr mag/cell
-     Magnetic field            =   0.1305419   0.1723937   0.2170235 ryd
+     Magnetic field            =   0.1305423   0.1724076   0.2170284 ryd
      lambda                    =       0.50 ryd
 
      iteration #  2     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  1.00E-02,  avg # of iterations =  6.2
-      External magnetic field:      -0.20346     -0.26614     -0.33804
+     ethr =  1.00E-02,  avg # of iterations =  6.4
+      External magnetic field:      -0.20650     -0.27151     -0.34310
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.376207
-     magnetization :          1.420567    1.869291    2.361802
-     magnetization/charge:    0.222792    0.293167    0.370409
-     polar coord.: r, theta, phi [deg] :     3.330221   44.829898   52.767004
+     charge :     6.373249
+     magnetization :          1.429457    1.886825    2.376892
+     magnetization/charge:    0.224290    0.296054    0.372948
+     polar coord.: r, theta, phi [deg] :     3.354560   44.882486   52.852456
 
  ==============================================================================
 
-     total cpu time spent up to now is     11.93 secs
+     total cpu time spent up to now is     15.36 secs
 
-     total energy              =   -54.12293320 ryd
-     estimated scf accuracy    <     0.21978441 ryd
+     total energy              =   -54.07195309 ryd
+     estimated scf accuracy    <     0.22305410 ryd
 
-     total magnetization       =     1.59     2.09     2.65 Bohr mag/cell
-     absolute magnetization    =     3.73 Bohr mag/cell
-     Magnetic field            =  -0.2034571  -0.2661368  -0.3380357 ryd
+     total magnetization       =     1.61     2.12     2.67 Bohr mag/cell
+     absolute magnetization    =     3.77 Bohr mag/cell
+     Magnetic field            =  -0.2064989  -0.2715063  -0.3431019 ryd
      lambda                    =       0.50 ryd
 
      iteration #  3     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  2.75E-03,  avg # of iterations =  4.4
-      External magnetic field:       0.06790      0.08973      0.11294
+     ethr =  2.79E-03,  avg # of iterations =  3.4
+      External magnetic field:       0.07357      0.09718      0.12236
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.318701
-     magnetization :         -1.658558   -2.170750   -2.755240
-     magnetization/charge:   -0.262484   -0.343544   -0.436045
-     polar coord.: r, theta, phi [deg] :     3.879989  135.244303 -127.381575
+     charge :     6.311193
+     magnetization :         -1.677535   -2.204131   -2.786842
+     magnetization/charge:   -0.265803   -0.349242   -0.441571
+     polar coord.: r, theta, phi [deg] :     3.929225  135.174743 -127.274290
 
  ==============================================================================
 
-     total cpu time spent up to now is     14.46 secs
+     total cpu time spent up to now is     18.52 secs
 
-     total energy              =   -53.94924249 ryd
-     estimated scf accuracy    <     0.71535640 ryd
+     total energy              =   -53.83945813 ryd
+     estimated scf accuracy    <     0.73029629 ryd
 
-     total magnetization       =    -1.97    -2.58    -3.27 Bohr mag/cell
-     absolute magnetization    =     4.61 Bohr mag/cell
-     Magnetic field            =   0.0679013   0.0897284   0.1129419 ryd
+     total magnetization       =    -1.99    -2.62    -3.31 Bohr mag/cell
+     absolute magnetization    =     4.67 Bohr mag/cell
+     Magnetic field            =   0.0735682   0.0971778   0.1223612 ryd
      lambda                    =       0.50 ryd
 
      iteration #  4     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  2.75E-03,  avg # of iterations =  1.2
-      External magnetic field:      -0.00532     -0.00753     -0.00890
+     ethr =  2.79E-03,  avg # of iterations =  1.3
+      External magnetic field:      -0.00223     -0.00327     -0.00375
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.448802
-     magnetization :          1.248563    1.649781    2.077098
-     magnetization/charge:    0.193612    0.255827    0.322091
-     polar coord.: r, theta, phi [deg] :     2.931727   44.887840   52.881352
+     charge :     6.456763
+     magnetization :          1.249556    1.653489    2.078689
+     magnetization/charge:    0.193527    0.256086    0.321940
+     polar coord.: r, theta, phi [deg] :     2.935364   44.915114   52.921350
 
  ==============================================================================
 
-     total cpu time spent up to now is     16.40 secs
+     total cpu time spent up to now is     21.14 secs
 
-     total energy              =   -55.40594010 ryd
-     estimated scf accuracy    <     0.15430782 ryd
+     total energy              =   -55.41292826 ryd
+     estimated scf accuracy    <     0.15767639 ryd
 
-     total magnetization       =     1.36     1.79     2.26 Bohr mag/cell
-     absolute magnetization    =     3.18 Bohr mag/cell
-     Magnetic field            =  -0.0053161  -0.0075302  -0.0089021 ryd
+     total magnetization       =     1.36     1.80     2.26 Bohr mag/cell
+     absolute magnetization    =     3.20 Bohr mag/cell
+     Magnetic field            =  -0.0022315  -0.0032744  -0.0037472 ryd
      lambda                    =       0.50 ryd
 
      iteration #  5     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  1.93E-03,  avg # of iterations =  1.0
-      External magnetic field:      -0.00396     -0.00432     -0.00646
+     ethr =  1.97E-03,  avg # of iterations =  1.0
+      External magnetic field:      -0.00044     -0.00059     -0.00073
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.395697
-     magnetization :          0.267202    0.340352    0.443238
-     magnetization/charge:    0.041778    0.053216    0.069302
-     polar coord.: r, theta, phi [deg] :     0.619432   44.311290   51.865390
+     charge :     6.395950
+     magnetization :          0.395626    0.516360    0.657710
+     magnetization/charge:    0.061856    0.080732    0.102832
+     polar coord.: r, theta, phi [deg] :     0.925057   44.684140   52.541310
 
  ==============================================================================
 
-     total cpu time spent up to now is     18.31 secs
+     total cpu time spent up to now is     23.72 secs
 
-     total energy              =   -55.56148796 ryd
-     estimated scf accuracy    <     0.00190786 ryd
+     total energy              =   -55.54552938 ryd
+     estimated scf accuracy    <     0.00231319 ryd
 
-     total magnetization       =     0.25     0.32     0.42 Bohr mag/cell
-     absolute magnetization    =     0.66 Bohr mag/cell
-     Magnetic field            =  -0.0039645  -0.0043238  -0.0064650 ryd
+     total magnetization       =     0.39     0.51     0.65 Bohr mag/cell
+     absolute magnetization    =     0.95 Bohr mag/cell
+     Magnetic field            =  -0.0004388  -0.0005918  -0.0007277 ryd
      lambda                    =       0.50 ryd
 
      iteration #  6     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  2.38E-05,  avg # of iterations =  4.6
-      External magnetic field:      -0.00239     -0.00550     -0.00425
+     ethr =  2.89E-05,  avg # of iterations =  4.2
+      External magnetic field:      -0.02317     -0.01698     -0.03696
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.400280
-     magnetization :          0.305233    0.436990    0.512336
-     magnetization/charge:    0.047691    0.068277    0.080049
-     polar coord.: r, theta, phi [deg] :     0.739335   46.134389   55.066153
+     charge :     6.398907
+     magnetization :          0.449377    0.598640    0.748321
+     magnetization/charge:    0.070227    0.093554    0.116945
+     polar coord.: r, theta, phi [deg] :     1.058440   45.008316   53.105799
 
  ==============================================================================
 
-     total cpu time spent up to now is     20.93 secs
+     total cpu time spent up to now is     27.25 secs
 
-     total energy              =   -55.56213189 ryd
-     estimated scf accuracy    <     0.00083362 ryd
+     total energy              =   -55.53327939 ryd
+     estimated scf accuracy    <     0.00412040 ryd
 
-     total magnetization       =     0.29     0.42     0.49 Bohr mag/cell
-     absolute magnetization    =     0.77 Bohr mag/cell
-     Magnetic field            =  -0.0023883  -0.0054997  -0.0042545 ryd
+     total magnetization       =     0.45     0.60     0.74 Bohr mag/cell
+     absolute magnetization    =     1.08 Bohr mag/cell
+     Magnetic field            =  -0.0231694  -0.0169760  -0.0369577 ryd
      lambda                    =       0.50 ryd
 
      iteration #  7     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  1.04E-05,  avg # of iterations =  1.7
-      External magnetic field:       0.00924      0.01143      0.01513
+     ethr =  2.89E-05,  avg # of iterations =  3.6
+      External magnetic field:      -0.03106     -0.04285     -0.05181
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.401385
-     magnetization :          0.352282    0.396678    0.578016
-     magnetization/charge:    0.055032    0.061968    0.090295
-     polar coord.: r, theta, phi [deg] :     0.784575   42.546870   48.392371
+     charge :     6.384832
+     magnetization :         -0.341325    0.040999   -0.511595
+     magnetization/charge:   -0.053459    0.006421   -0.080127
+     polar coord.: r, theta, phi [deg] :     0.616371  146.099928  173.150627
 
  ==============================================================================
 
-     total cpu time spent up to now is     23.02 secs
+     total cpu time spent up to now is     30.38 secs
 
-     total energy              =   -55.56406106 ryd
-     estimated scf accuracy    <     0.00086354 ryd
+     total energy              =   -55.60502950 ryd
+     estimated scf accuracy    <     0.05490739 ryd
 
-     total magnetization       =     0.34     0.38     0.56 Bohr mag/cell
-     absolute magnetization    =     0.81 Bohr mag/cell
-     Magnetic field            =   0.0092382   0.0114333   0.0151261 ryd
+     total magnetization       =    -0.39     0.01    -0.58 Bohr mag/cell
+     absolute magnetization    =     0.71 Bohr mag/cell
+     Magnetic field            =  -0.0310630  -0.0428528  -0.0518102 ryd
      lambda                    =       0.50 ryd
 
      iteration #  8     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  1.04E-05,  avg # of iterations =  1.0
-      External magnetic field:       0.00481      0.00481      0.00698
+     ethr =  2.89E-05,  avg # of iterations =  2.0
+      External magnetic field:      -0.03128     -0.04285     -0.05214
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.418228
-     magnetization :          0.635830    0.822581    1.051770
-     magnetization/charge:    0.099066    0.128163    0.163872
-     polar coord.: r, theta, phi [deg] :     1.478898   44.668578   52.297059
+     charge :     6.382052
+     magnetization :         -0.547986   -0.774941   -0.915023
+     magnetization/charge:   -0.085864   -0.121425   -0.143374
+     polar coord.: r, theta, phi [deg] :     1.318366  133.952239 -125.265389
 
  ==============================================================================
 
-     total cpu time spent up to now is     24.94 secs
+     total cpu time spent up to now is     33.15 secs
 
-     total energy              =   -55.56558985 ryd
-     estimated scf accuracy    <     0.01709509 ryd
+     total energy              =   -55.62183694 ryd
+     estimated scf accuracy    <     0.13855481 ryd
 
-     total magnetization       =     0.65     0.83     1.07 Bohr mag/cell
-     absolute magnetization    =     1.51 Bohr mag/cell
-     Magnetic field            =   0.0048115   0.0048142   0.0069753 ryd
+     total magnetization       =    -0.60    -0.85    -1.01 Bohr mag/cell
+     absolute magnetization    =     1.45 Bohr mag/cell
+     Magnetic field            =  -0.0312755  -0.0428461  -0.0521406 ryd
      lambda                    =       0.50 ryd
 
      iteration #  9     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  1.04E-05,  avg # of iterations =  1.0
-      External magnetic field:       0.00272      0.00582      0.01004
+     ethr =  2.89E-05,  avg # of iterations =  1.0
+      External magnetic field:      -0.03584     -0.05000     -0.05848
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.414526
-     magnetization :          0.538423    0.670387    0.866580
-     magnetization/charge:    0.083938    0.104511    0.135097
-     polar coord.: r, theta, phi [deg] :     1.220770   44.776188   51.230251
+     charge :     6.382182
+     magnetization :         -0.553450   -0.774794   -0.923387
+     magnetization/charge:   -0.086718   -0.121400   -0.144682
+     polar coord.: r, theta, phi [deg] :     1.326370  134.121009 -125.538956
 
  ==============================================================================
 
-     total cpu time spent up to now is     26.86 secs
+     total cpu time spent up to now is     35.74 secs
 
-     total energy              =   -55.56794384 ryd
-     estimated scf accuracy    <     0.00739234 ryd
+     total energy              =   -55.64807370 ryd
+     estimated scf accuracy    <     0.13952922 ryd
 
-     total magnetization       =     0.54     0.67     0.87 Bohr mag/cell
-     absolute magnetization    =     1.25 Bohr mag/cell
-     Magnetic field            =   0.0027219   0.0058226   0.0100424 ryd
+     total magnetization       =    -0.61    -0.85    -1.02 Bohr mag/cell
+     absolute magnetization    =     1.46 Bohr mag/cell
+     Magnetic field            =  -0.0358362  -0.0499955  -0.0584811 ryd
      lambda                    =       0.50 ryd
 
      iteration # 10     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  1.04E-05,  avg # of iterations =  2.6
-      External magnetic field:       0.00147      0.00309      0.00373
+     ethr =  2.89E-05,  avg # of iterations =  1.0
+      External magnetic field:       0.00562     -0.00099     -0.00698
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.415209
-     magnetization :          0.471321    0.689402    0.943412
-     magnetization/charge:    0.073469    0.107464    0.147059
-     polar coord.: r, theta, phi [deg] :     1.259938   41.515527   55.640866
+     charge :     6.384561
+     magnetization :         -0.645597   -0.928875   -1.041513
+     magnetization/charge:   -0.101118   -0.145488   -0.163130
+     polar coord.: r, theta, phi [deg] :     1.537645  132.636326 -124.800478
 
  ==============================================================================
 
-     total cpu time spent up to now is     29.06 secs
+     total cpu time spent up to now is     38.33 secs
 
-     total energy              =   -55.56305481 ryd
-     estimated scf accuracy    <     0.00912839 ryd
+     total energy              =   -55.45332989 ryd
+     estimated scf accuracy    <     0.16454790 ryd
 
-     total magnetization       =     0.47     0.69     0.95 Bohr mag/cell
-     absolute magnetization    =     1.29 Bohr mag/cell
-     Magnetic field            =   0.0014661   0.0030931   0.0037335 ryd
+     total magnetization       =    -0.70    -1.01    -1.14 Bohr mag/cell
+     absolute magnetization    =     1.67 Bohr mag/cell
+     Magnetic field            =   0.0056227  -0.0009861  -0.0069790 ryd
      lambda                    =       0.50 ryd
 
      iteration # 11     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  1.04E-05,  avg # of iterations =  1.0
-      External magnetic field:      -0.03914     -0.05159     -0.06578
+     ethr =  2.89E-05,  avg # of iterations =  3.8
+      External magnetic field:      -0.00108      0.00032     -0.00134
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.409985
-     magnetization :          0.417920    0.590768    0.734661
-     magnetization/charge:    0.065198    0.092164    0.114612
-     polar coord.: r, theta, phi [deg] :     1.031208   44.567276   54.723745
+     charge :     6.403073
+     magnetization :          0.617956    0.535391    0.477084
+     magnetization/charge:    0.096509    0.083615    0.074509
+     polar coord.: r, theta, phi [deg] :     0.946638   59.736501   40.905343
 
  ==============================================================================
 
-     total cpu time spent up to now is     30.98 secs
+     total cpu time spent up to now is     41.55 secs
 
-     total energy              =   -55.53962562 ryd
-     estimated scf accuracy    <     0.00478497 ryd
+     total energy              =   -55.54430477 ryd
+     estimated scf accuracy    <     0.00461691 ryd
 
-     total magnetization       =     0.42     0.60     0.74 Bohr mag/cell
-     absolute magnetization    =     1.05 Bohr mag/cell
-     Magnetic field            =  -0.0391354  -0.0515888  -0.0657764 ryd
+     total magnetization       =     0.63     0.54     0.47 Bohr mag/cell
+     absolute magnetization    =     0.97 Bohr mag/cell
+     Magnetic field            =  -0.0010792   0.0003241  -0.0013396 ryd
      lambda                    =       0.50 ryd
 
      iteration # 12     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  1.04E-05,  avg # of iterations =  4.0
-      External magnetic field:      -0.03956     -0.05300     -0.06592
+     ethr =  2.89E-05,  avg # of iterations =  4.1
+      External magnetic field:      -0.00501     -0.00453     -0.00744
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.418650
-     magnetization :         -0.583831   -0.761592   -0.989176
-     magnetization/charge:   -0.090958   -0.118653   -0.154110
-     polar coord.: r, theta, phi [deg] :     1.378169  135.868741 -127.473502
+     charge :     6.405905
+     magnetization :          0.387615    0.572325    0.661386
+     magnetization/charge:    0.060509    0.089343    0.103246
+     polar coord.: r, theta, phi [deg] :     0.956678   46.264038   55.891669
 
  ==============================================================================
 
-     total cpu time spent up to now is     33.53 secs
+     total cpu time spent up to now is     44.74 secs
 
-     total energy              =   -55.65033277 ryd
-     estimated scf accuracy    <     0.18470483 ryd
+     total energy              =   -55.54380017 ryd
+     estimated scf accuracy    <     0.00308659 ryd
 
-     total magnetization       =    -0.67    -0.87    -1.13 Bohr mag/cell
-     absolute magnetization    =     1.57 Bohr mag/cell
-     Magnetic field            =  -0.0395649  -0.0529961  -0.0659152 ryd
+     total magnetization       =     0.39     0.58     0.66 Bohr mag/cell
+     absolute magnetization    =     0.98 Bohr mag/cell
+     Magnetic field            =  -0.0050087  -0.0045254  -0.0074380 ryd
      lambda                    =       0.50 ryd
 
      iteration # 13     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  1.04E-05,  avg # of iterations =  1.0
-      External magnetic field:      -0.00327     -0.00416     -0.00519
+     ethr =  2.89E-05,  avg # of iterations =  1.2
+      External magnetic field:      -0.01616     -0.01840     -0.02575
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.432354
-     magnetization :         -0.574604   -0.774111   -0.957278
-     magnetization/charge:   -0.089330   -0.120346   -0.148822
-     polar coord.: r, theta, phi [deg] :     1.358602  134.797674 -126.585616
+     charge :     6.401661
+     magnetization :          0.268428    0.427253    0.478854
+     magnetization/charge:    0.041931    0.066741    0.074802
+     polar coord.: r, theta, phi [deg] :     0.695629   46.498359   57.860320
 
  ==============================================================================
 
-     total cpu time spent up to now is     35.45 secs
+     total cpu time spent up to now is     47.35 secs
 
-     total energy              =   -55.48197916 ryd
-     estimated scf accuracy    <     0.19260020 ryd
+     total energy              =   -55.54695085 ryd
+     estimated scf accuracy    <     0.00110719 ryd
 
-     total magnetization       =    -0.66    -0.89    -1.10 Bohr mag/cell
-     absolute magnetization    =     1.56 Bohr mag/cell
-     Magnetic field            =  -0.0032745  -0.0041617  -0.0051939 ryd
+     total magnetization       =     0.26     0.42     0.47 Bohr mag/cell
+     absolute magnetization    =     0.72 Bohr mag/cell
+     Magnetic field            =  -0.0161614  -0.0184048  -0.0257490 ryd
      lambda                    =       0.50 ryd
 
      iteration # 14     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  1.04E-05,  avg # of iterations =  2.1
-      External magnetic field:      -0.00325     -0.00403     -0.00534
+     ethr =  1.38E-05,  avg # of iterations =  3.5
+      External magnetic field:      -0.00801     -0.00855     -0.01284
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.411982
-     magnetization :          0.308427    0.417309    0.522063
-     magnetization/charge:    0.048102    0.065083    0.081420
-     polar coord.: r, theta, phi [deg] :     0.736086   44.826776   53.532457
+     charge :     6.399097
+     magnetization :         -0.093657   -0.024336   -0.113991
+     magnetization/charge:   -0.014636   -0.003803   -0.017814
+     polar coord.: r, theta, phi [deg] :     0.149526  139.672168 -165.434518
 
  ==============================================================================
 
-     total cpu time spent up to now is     37.64 secs
+     total cpu time spent up to now is     50.45 secs
 
-     total energy              =   -55.56242346 ryd
-     estimated scf accuracy    <     0.00001667 ryd
+     total energy              =   -55.54004866 ryd
+     estimated scf accuracy    <     0.02635556 ryd
 
-     total magnetization       =     0.30     0.41     0.51 Bohr mag/cell
-     absolute magnetization    =     0.76 Bohr mag/cell
-     Magnetic field            =  -0.0032476  -0.0040251  -0.0053386 ryd
+     total magnetization       =    -0.12    -0.06    -0.16 Bohr mag/cell
+     absolute magnetization    =     0.22 Bohr mag/cell
+     Magnetic field            =  -0.0080130  -0.0085526  -0.0128412 ryd
      lambda                    =       0.50 ryd
 
      iteration # 15     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  2.08E-07,  avg # of iterations =  1.0
-      External magnetic field:      -0.00336     -0.00453     -0.00556
+     ethr =  1.38E-05,  avg # of iterations =  1.0
+      External magnetic field:      -0.00272     -0.00227     -0.00453
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.412269
-     magnetization :          0.310022    0.422724    0.518982
-     magnetization/charge:    0.048348    0.065924    0.080936
-     polar coord.: r, theta, phi [deg] :     0.737666   45.287792   53.744037
+     charge :     6.405166
+     magnetization :          0.190923    0.325446    0.335989
+     magnetization/charge:    0.029808    0.050810    0.052456
+     polar coord.: r, theta, phi [deg] :     0.505228   48.315762   59.601952
 
  ==============================================================================
 
-     total cpu time spent up to now is     39.56 secs
+     total cpu time spent up to now is     53.02 secs
 
-     total energy              =   -55.56242967 ryd
-     estimated scf accuracy    <     0.00001714 ryd
+     total energy              =   -55.54284468 ryd
+     estimated scf accuracy    <     0.00260831 ryd
 
-     total magnetization       =     0.30     0.41     0.51 Bohr mag/cell
-     absolute magnetization    =     0.76 Bohr mag/cell
-     Magnetic field            =  -0.0033571  -0.0045317  -0.0055619 ryd
+     total magnetization       =     0.18     0.31     0.31 Bohr mag/cell
+     absolute magnetization    =     0.54 Bohr mag/cell
+     Magnetic field            =  -0.0027168  -0.0022717  -0.0045288 ryd
      lambda                    =       0.50 ryd
 
      iteration # 16     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  2.08E-07,  avg # of iterations =  1.0
-      External magnetic field:      -0.00335     -0.00445     -0.00557
+     ethr =  1.38E-05,  avg # of iterations =  1.0
+      External magnetic field:      -0.00273     -0.00458     -0.00444
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.412823
-     magnetization :          0.306639    0.407046    0.512097
-     magnetization/charge:    0.047816    0.063474    0.079855
-     polar coord.: r, theta, phi [deg] :     0.722466   44.861186   53.008347
+     charge :     6.412052
+     magnetization :          0.362115    0.529945    0.603009
+     magnetization/charge:    0.056474    0.082648    0.094043
+     polar coord.: r, theta, phi [deg] :     0.880675   46.787036   55.654959
 
  ==============================================================================
 
-     total cpu time spent up to now is     41.48 secs
+     total cpu time spent up to now is     55.61 secs
 
-     total energy              =   -55.56243551 ryd
-     estimated scf accuracy    <     0.00000622 ryd
+     total energy              =   -55.54485158 ryd
+     estimated scf accuracy    <     0.00097384 ryd
 
-     total magnetization       =     0.30     0.40     0.50 Bohr mag/cell
-     absolute magnetization    =     0.75 Bohr mag/cell
-     Magnetic field            =  -0.0033473  -0.0044540  -0.0055679 ryd
+     total magnetization       =     0.36     0.53     0.60 Bohr mag/cell
+     absolute magnetization    =     0.90 Bohr mag/cell
+     Magnetic field            =  -0.0027314  -0.0045798  -0.0044423 ryd
      lambda                    =       0.50 ryd
 
      iteration # 17     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  7.78E-08,  avg # of iterations =  1.0
-      External magnetic field:      -0.00324     -0.00435     -0.00540
+     ethr =  1.22E-05,  avg # of iterations =  1.0
+      External magnetic field:      -0.00201     -0.00353     -0.00342
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.412999
-     magnetization :          0.306589    0.409044    0.511330
-     magnetization/charge:    0.047807    0.063784    0.079733
-     polar coord.: r, theta, phi [deg] :     0.723030   44.992083   53.147533
+     charge :     6.412122
+     magnetization :          0.363864    0.454930    0.609874
+     magnetization/charge:    0.056746    0.070948    0.095113
+     polar coord.: r, theta, phi [deg] :     0.843388   43.687069   51.346314
 
  ==============================================================================
 
-     total cpu time spent up to now is     43.40 secs
+     total cpu time spent up to now is     58.20 secs
 
-     total energy              =   -55.56243256 ryd
-     estimated scf accuracy    <     0.00000289 ryd
+     total energy              =   -55.54510892 ryd
+     estimated scf accuracy    <     0.00048152 ryd
 
-     total magnetization       =     0.30     0.40     0.50 Bohr mag/cell
-     absolute magnetization    =     0.75 Bohr mag/cell
-     Magnetic field            =  -0.0032433  -0.0043527  -0.0054040 ryd
+     total magnetization       =     0.36     0.45     0.60 Bohr mag/cell
+     absolute magnetization    =     0.86 Bohr mag/cell
+     Magnetic field            =  -0.0020119  -0.0035340  -0.0034236 ryd
      lambda                    =       0.50 ryd
 
      iteration # 18     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  3.61E-08,  avg # of iterations =  1.0
-      External magnetic field:      -0.00324     -0.00433     -0.00539
+     ethr =  6.02E-06,  avg # of iterations =  1.0
+      External magnetic field:      -0.00371     -0.00553     -0.00619
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.413120
-     magnetization :          0.309457    0.411757    0.515812
-     magnetization/charge:    0.048254    0.064205    0.080431
-     polar coord.: r, theta, phi [deg] :     0.728951   44.959313   53.073212
+     charge :     6.412043
+     magnetization :          0.385806    0.486842    0.640386
+     magnetization/charge:    0.060169    0.075926    0.099872
+     polar coord.: r, theta, phi [deg] :     0.892163   44.127690   51.604398
 
  ==============================================================================
 
-     total cpu time spent up to now is     45.34 secs
+     total cpu time spent up to now is     60.79 secs
 
-     total energy              =   -55.56243314 ryd
-     estimated scf accuracy    <     0.00000030 ryd
+     total energy              =   -55.54459450 ryd
+     estimated scf accuracy    <     0.00092552 ryd
 
-     total magnetization       =     0.30     0.40     0.50 Bohr mag/cell
-     absolute magnetization    =     0.75 Bohr mag/cell
-     Magnetic field            =  -0.0032440  -0.0043268  -0.0053876 ryd
+     total magnetization       =     0.38     0.48     0.64 Bohr mag/cell
+     absolute magnetization    =     0.91 Bohr mag/cell
+     Magnetic field            =  -0.0037148  -0.0055295  -0.0061867 ryd
      lambda                    =       0.50 ryd
 
      iteration # 19     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  3.71E-09,  avg # of iterations =  1.0
-      External magnetic field:      -0.00320     -0.00429     -0.00536
+     ethr =  6.02E-06,  avg # of iterations =  1.0
+      External magnetic field:      -0.00443     -0.00618     -0.00744
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.413140
-     magnetization :          0.309317    0.412329    0.516119
-     magnetization/charge:    0.048232    0.064294    0.080478
-     polar coord.: r, theta, phi [deg] :     0.729432   44.963026   53.123901
+     charge :     6.411172
+     magnetization :          0.335298    0.427756    0.558991
+     magnetization/charge:    0.052299    0.066720    0.087190
+     polar coord.: r, theta, phi [deg] :     0.779661   44.195362   51.908739
 
  ==============================================================================
 
-     total cpu time spent up to now is     47.27 secs
+     total cpu time spent up to now is     63.37 secs
 
-     total energy              =   -55.56243270 ryd
-     estimated scf accuracy    <     0.00000015 ryd
+     total energy              =   -55.54475019 ryd
+     estimated scf accuracy    <     0.00010614 ryd
 
-     total magnetization       =     0.30     0.40     0.50 Bohr mag/cell
-     absolute magnetization    =     0.75 Bohr mag/cell
-     Magnetic field            =  -0.0031990  -0.0042877  -0.0053636 ryd
+     total magnetization       =     0.33     0.42     0.55 Bohr mag/cell
+     absolute magnetization    =     0.80 Bohr mag/cell
+     Magnetic field            =  -0.0044291  -0.0061774  -0.0074425 ryd
      lambda                    =       0.50 ryd
 
      iteration # 20     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  1.92E-09,  avg # of iterations =  1.0
-      External magnetic field:      -0.00322     -0.00428     -0.00535
+     ethr =  1.33E-06,  avg # of iterations =  1.0
+      External magnetic field:      -0.00448     -0.00605     -0.00764
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.413128
-     magnetization :          0.310591    0.413435    0.516671
-     magnetization/charge:    0.048431    0.064467    0.080565
-     polar coord.: r, theta, phi [deg] :     0.730989   45.023960   53.084485
+     charge :     6.412008
+     magnetization :          0.315814    0.412213    0.524456
+     magnetization/charge:    0.049254    0.064288    0.081793
+     polar coord.: r, theta, phi [deg] :     0.738046   44.716236   52.542697
 
  ==============================================================================
 
-     total cpu time spent up to now is     49.20 secs
+     total cpu time spent up to now is     65.98 secs
 
-     total energy              =   -55.56243277 ryd
-     estimated scf accuracy    <     0.00000002 ryd
+     total energy              =   -55.54478320 ryd
+     estimated scf accuracy    <     0.00000192 ryd
 
-     total magnetization       =     0.30     0.40     0.50 Bohr mag/cell
-     absolute magnetization    =     0.75 Bohr mag/cell
-     Magnetic field            =  -0.0032158  -0.0042824  -0.0053502 ryd
+     total magnetization       =     0.31     0.40     0.51 Bohr mag/cell
+     absolute magnetization    =     0.76 Bohr mag/cell
+     Magnetic field            =  -0.0044773  -0.0060527  -0.0076416 ryd
      lambda                    =       0.50 ryd
 
      iteration # 21     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  2.74E-10,  avg # of iterations =  1.0
-      External magnetic field:      -0.00322     -0.00428     -0.00536
+     ethr =  2.40E-08,  avg # of iterations =  1.4
+      External magnetic field:      -0.00461     -0.00603     -0.00765
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.413107
-     magnetization :          0.310055    0.413548    0.517050
-     magnetization/charge:    0.048347    0.064485    0.080624
-     polar coord.: r, theta, phi [deg] :     0.731093   44.990112   53.139547
+     charge :     6.412293
+     magnetization :          0.314873    0.417262    0.518664
+     magnetization/charge:    0.049105    0.065072    0.080886
+     polar coord.: r, theta, phi [deg] :     0.736386   45.223983   52.961158
 
  ==============================================================================
 
-     total cpu time spent up to now is     51.12 secs
+     total cpu time spent up to now is     68.62 secs
 
-     total energy              =   -55.56243287 ryd
-     estimated scf accuracy    <        1.9E-09 ryd
+     total energy              =   -55.54478448 ryd
+     estimated scf accuracy    <     0.00000056 ryd
 
-     total magnetization       =     0.30     0.40     0.51 Bohr mag/cell
-     absolute magnetization    =     0.75 Bohr mag/cell
-     Magnetic field            =  -0.0032153  -0.0042836  -0.0053573 ryd
+     total magnetization       =     0.31     0.41     0.51 Bohr mag/cell
+     absolute magnetization    =     0.76 Bohr mag/cell
+     Magnetic field            =  -0.0046116  -0.0060280  -0.0076465 ryd
      lambda                    =       0.50 ryd
 
      iteration # 22     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  2.43E-11,  avg # of iterations =  1.0
-      External magnetic field:      -0.00321     -0.00428     -0.00536
+     ethr =  6.96E-09,  avg # of iterations =  1.1
+      External magnetic field:      -0.00453     -0.00606     -0.00759
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.413106
-     magnetization :          0.310066    0.413513    0.516825
-     magnetization/charge:    0.048349    0.064479    0.080589
-     polar coord.: r, theta, phi [deg] :     0.730918   45.001389   53.136155
+     charge :     6.412385
+     magnetization :          0.310468    0.418322    0.518937
+     magnetization/charge:    0.048417    0.065237    0.080927
+     polar coord.: r, theta, phi [deg] :     0.735309   45.110644   53.418153
 
  ==============================================================================
 
-     total cpu time spent up to now is     53.04 secs
+     total cpu time spent up to now is     71.23 secs
 
-     total energy              =   -55.56243289 ryd
-     estimated scf accuracy    <        5.0E-09 ryd
+     total energy              =   -55.54478373 ryd
+     estimated scf accuracy    <     0.00000097 ryd
 
-     total magnetization       =     0.30     0.40     0.51 Bohr mag/cell
-     absolute magnetization    =     0.75 Bohr mag/cell
-     Magnetic field            =  -0.0032132  -0.0042832  -0.0053576 ryd
+     total magnetization       =     0.30     0.41     0.51 Bohr mag/cell
+     absolute magnetization    =     0.76 Bohr mag/cell
+     Magnetic field            =  -0.0045320  -0.0060552  -0.0075872 ryd
      lambda                    =       0.50 ryd
 
      iteration # 23     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  2.43E-11,  avg # of iterations =  1.0
-      External magnetic field:      -0.00321     -0.00428     -0.00535
+     ethr =  6.96E-09,  avg # of iterations =  1.0
+      External magnetic field:      -0.00460     -0.00613     -0.00767
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.413103
-     magnetization :          0.310124    0.413513    0.516805
-     magnetization/charge:    0.048358    0.064479    0.080586
-     polar coord.: r, theta, phi [deg] :     0.730929   45.004447   53.131012
+     charge :     6.412193
+     magnetization :          0.312920    0.416908    0.520432
+     magnetization/charge:    0.048801    0.065018    0.081163
+     polar coord.: r, theta, phi [deg] :     0.736600   45.046520   53.109107
 
  ==============================================================================
 
-     total cpu time spent up to now is     54.96 secs
+     total cpu time spent up to now is     73.81 secs
 
-     total energy              =   -55.56243286 ryd
-     estimated scf accuracy    <        3.5E-09 ryd
+     total energy              =   -55.54478532 ryd
+     estimated scf accuracy    <     0.00000004 ryd
 
-     total magnetization       =     0.30     0.40     0.51 Bohr mag/cell
-     absolute magnetization    =     0.75 Bohr mag/cell
-     Magnetic field            =  -0.0032108  -0.0042782  -0.0053528 ryd
+     total magnetization       =     0.31     0.41     0.51 Bohr mag/cell
+     absolute magnetization    =     0.76 Bohr mag/cell
+     Magnetic field            =  -0.0046024  -0.0061304  -0.0076726 ryd
      lambda                    =       0.50 ryd
 
      iteration # 24     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  2.43E-11,  avg # of iterations =  1.0
-      External magnetic field:      -0.00321     -0.00428     -0.00535
+     ethr =  5.56E-10,  avg # of iterations =  3.4
+      External magnetic field:      -0.00458     -0.00611     -0.00763
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.413106
-     magnetization :          0.310182    0.413648    0.516926
-     magnetization/charge:    0.048367    0.064500    0.080605
-     polar coord.: r, theta, phi [deg] :     0.731116   45.005676   53.134895
+     charge :     6.412140
+     magnetization :          0.310814    0.414652    0.517984
+     magnetization/charge:    0.048473    0.064667    0.080782
+     polar coord.: r, theta, phi [deg] :     0.732700   45.012543   53.145562
 
  ==============================================================================
 
-     total cpu time spent up to now is     56.88 secs
+     total cpu time spent up to now is     77.01 secs
 
-     total energy              =   -55.56243290 ryd
-     estimated scf accuracy    <        1.1E-09 ryd
+     total energy              =   -55.54478492 ryd
+     estimated scf accuracy    <     0.00000048 ryd
 
-     total magnetization       =     0.30     0.40     0.51 Bohr mag/cell
-     absolute magnetization    =     0.75 Bohr mag/cell
-     Magnetic field            =  -0.0032118  -0.0042815  -0.0053540 ryd
+     total magnetization       =     0.30     0.40     0.50 Bohr mag/cell
+     absolute magnetization    =     0.76 Bohr mag/cell
+     Magnetic field            =  -0.0045819  -0.0061101  -0.0076347 ryd
      lambda                    =       0.50 ryd
 
      iteration # 25     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  1.43E-11,  avg # of iterations =  1.0
-      External magnetic field:      -0.00321     -0.00428     -0.00535
+     ethr =  5.56E-10,  avg # of iterations =  1.0
+      External magnetic field:      -0.00456     -0.00607     -0.00760
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.413104
-     magnetization :          0.310161    0.413550    0.516901
-     magnetization/charge:    0.048364    0.064485    0.080601
-     polar coord.: r, theta, phi [deg] :     0.731034   45.001980   53.130246
+     charge :     6.412128
+     magnetization :          0.311410    0.415184    0.519085
+     magnetization/charge:    0.048566    0.064750    0.080954
+     polar coord.: r, theta, phi [deg] :     0.734032   44.994907   53.128126
 
  ==============================================================================
 
-     total cpu time spent up to now is     58.80 secs
+     total cpu time spent up to now is     79.58 secs
 
-     total energy              =   -55.56243289 ryd
-     estimated scf accuracy    <        1.6E-09 ryd
+     total energy              =   -55.54478422 ryd
+     estimated scf accuracy    <     0.00000019 ryd
 
      total magnetization       =     0.30     0.40     0.51 Bohr mag/cell
-     absolute magnetization    =     0.75 Bohr mag/cell
-     Magnetic field            =  -0.0032084  -0.0042845  -0.0053505 ryd
+     absolute magnetization    =     0.76 Bohr mag/cell
+     Magnetic field            =  -0.0045594  -0.0060734  -0.0075965 ryd
      lambda                    =       0.50 ryd
 
      iteration # 26     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  1.43E-11,  avg # of iterations =  1.0
-      External magnetic field:      -0.00321     -0.00428     -0.00535
+     ethr =  5.56E-10,  avg # of iterations =  1.0
+      External magnetic field:      -0.00455     -0.00606     -0.00758
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.413105
-     magnetization :          0.310262    0.413476    0.517005
-     magnetization/charge:    0.048379    0.064474    0.080617
-     polar coord.: r, theta, phi [deg] :     0.731108   44.996303   53.116355
+     charge :     6.412144
+     magnetization :          0.312023    0.416217    0.520123
+     magnetization/charge:    0.048661    0.064911    0.081115
+     polar coord.: r, theta, phi [deg] :     0.735611   45.003561   53.142441
 
  ==============================================================================
 
-     total cpu time spent up to now is     60.72 secs
+     total cpu time spent up to now is     82.16 secs
 
-     total energy              =   -55.56243287 ryd
-     estimated scf accuracy    <        1.4E-09 ryd
+     total energy              =   -55.54478403 ryd
+     estimated scf accuracy    <     0.00000001 ryd
 
-     total magnetization       =     0.30     0.40     0.51 Bohr mag/cell
-     absolute magnetization    =     0.75 Bohr mag/cell
-     Magnetic field            =  -0.0032108  -0.0042769  -0.0053511 ryd
+     total magnetization       =     0.30     0.41     0.51 Bohr mag/cell
+     absolute magnetization    =     0.76 Bohr mag/cell
+     Magnetic field            =  -0.0045491  -0.0060641  -0.0075815 ryd
      lambda                    =       0.50 ryd
 
      iteration # 27     ecut=    25.00 ryd     beta=0.30
      Davidson diagonalization with overlap
-     ethr =  1.43E-11,  avg # of iterations =  1.0
-      External magnetic field:      -0.00316     -0.00432     -0.00527
+     ethr =  1.55E-10,  avg # of iterations =  1.0
+      External magnetic field:      -0.00455     -0.00611     -0.00759
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
-     charge :     6.413105
-     magnetization :          0.310181    0.413680    0.516979
-     magnetization/charge:    0.048367    0.064505    0.080613
-     polar coord.: r, theta, phi [deg] :     0.731171   45.004097   53.137052
+     charge :     6.412149
+     magnetization :          0.312329    0.416478    0.520558
+     magnetization/charge:    0.048709    0.064951    0.081183
+     polar coord.: r, theta, phi [deg] :     0.736195   45.001164   53.132676
 
  ==============================================================================
 
-     total cpu time spent up to now is     62.61 secs
+     total cpu time spent up to now is     84.73 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.2500 (   148 PWs)   bands (ev):
 
-     7.0863   7.1976  12.7305  12.7306  13.1035  13.1585  13.1585  13.5562
-    13.6879  14.2940  14.6382  15.3101  36.2118  36.2622  38.5520  38.5520
+     7.0427   7.2421  12.7594  12.7594  13.0875  13.0875  13.1316  13.4840
+    13.7021  14.2563  14.6496  15.2722  36.1711  36.3040  38.5021  38.5021
 
           k = 0.0000-0.2500 0.5000 (   151 PWs)   bands (ev):
 
-    10.0077  10.1557  12.0441  12.4260  12.4364  12.7574  13.9851  14.5201
-    15.2369  15.7620  15.9092  16.3547  26.4694  26.6071  33.9489  34.1647
+    10.0424  10.1071  12.0741  12.3672  12.4515  12.7150  14.0061  14.4648
+    15.2627  15.6867  15.9320  16.3130  26.5054  26.5555  33.9095  34.1128
 
           k =-0.2500 0.2500 0.2500 (   159 PWs)   bands (ev):
 
-     9.2959   9.3634  11.8084  11.8084  12.1888  12.1888  14.3787  14.3788
-    15.0276  15.0277  15.4059  15.8659  31.7895  31.7895  31.8203  31.8203
+     9.2501   9.4066  11.8380  11.8380  12.1232  12.1232  14.3920  14.3920
+    14.9864  14.9864  15.4337  15.7936  31.7728  31.7728  31.8293  31.8293
 
           k =-0.2500 0.7500-0.2500 (   146 PWs)   bands (ev):
 
-    11.3311  11.3311  11.6819  11.6819  11.8068  12.1502  14.7770  14.7770
-    15.3057  15.3057  22.6654  22.6655  22.8400  22.8400  25.1831  25.2598
+    11.3565  11.3565  11.6390  11.6390  11.8382  12.0834  14.8007  14.8007
+    15.2402  15.2402  22.6999  22.6999  22.7910  22.7910  25.2069  25.2216
 
           k = 0.5000-0.5000 0.2500 (   150 PWs)   bands (ev):
 
-    10.5547  10.8067  11.3346  11.6765  12.9119  13.1213  14.5184  14.6411
-    15.1576  15.3264  19.4621  19.6767  23.3189  23.5273  29.5550  29.5812
+    10.5874  10.7504  11.3661  11.6098  12.9469  13.0624  14.5330  14.6520
+    15.1122  15.2883  19.4976  19.6165  23.3530  23.4710  29.5321  29.5954
 
           k = 0.0000 0.0000 0.7500 (   144 PWs)   bands (ev):
 
-    10.3830  10.4875  10.7110  10.8908  14.5005  14.5005  14.9678  14.9678
-    15.0976  15.6214  20.2488  20.3680  27.7320  27.7320  27.7555  27.7555
+    10.4086  10.5101  10.6723  10.8528  14.5280  14.5280  14.8953  14.8953
+    15.1234  15.5461  20.2843  20.3240  27.6814  27.6814  27.7981  27.7981
 
           k = 0.2500 0.0000 0.0000 (   148 PWs)   bands (ev):
 
-     7.0863   7.1976  12.7305  12.7306  13.1035  13.1585  13.1585  13.5562
-    13.6879  14.2940  14.6382  15.3101  36.2118  36.2622  38.5520  38.5520
+     7.0427   7.2421  12.7594  12.7594  13.0875  13.0875  13.1316  13.4840
+    13.7021  14.2563  14.6496  15.2722  36.1711  36.3040  38.5021  38.5021
 
           k = 0.0000 0.2500 0.0000 (   148 PWs)   bands (ev):
 
-     7.0863   7.1976  12.7305  12.7306  13.1035  13.1585  13.1585  13.5562
-    13.6880  14.2940  14.6382  15.3101  36.2118  36.2622  38.5520  38.5520
+     7.0427   7.2421  12.7594  12.7594  13.0875  13.0875  13.1316  13.4840
+    13.7021  14.2563  14.6496  15.2722  36.1711  36.3040  38.5021  38.5021
 
           k = 0.0000 0.2500 0.5000 (   151 PWs)   bands (ev):
 
-    10.0077  10.1557  12.0441  12.4260  12.4364  12.7574  13.9851  14.5201
-    15.2369  15.7620  15.9092  16.3547  26.4694  26.6071  33.9489  34.1647
+    10.0424  10.1071  12.0741  12.3672  12.4515  12.7150  14.0061  14.4648
+    15.2627  15.6867  15.9320  16.3130  26.5054  26.5555  33.9095  34.1128
 
           k =-0.2500 0.0000-0.5000 (   151 PWs)   bands (ev):
 
-    10.0077  10.1557  12.0441  12.4260  12.4364  12.7573  13.9851  14.5201
-    15.2369  15.7620  15.9092  16.3547  26.4694  26.6071  33.9489  34.1647
+    10.0424  10.1071  12.0741  12.3672  12.4515  12.7150  14.0061  14.4648
+    15.2627  15.6867  15.9320  16.3130  26.5054  26.5555  33.9095  34.1128
 
           k = 0.2500 0.0000-0.5000 (   151 PWs)   bands (ev):
 
-    10.0077  10.1557  12.0441  12.4260  12.4364  12.7573  13.9851  14.5201
-    15.2369  15.7620  15.9092  16.3547  26.4694  26.6071  33.9489  34.1647
+    10.0424  10.1071  12.0741  12.3672  12.4515  12.7150  14.0061  14.4648
+    15.2627  15.6867  15.9320  16.3130  26.5054  26.5555  33.9094  34.0438
 
           k = 0.5000 0.2500 0.0000 (   151 PWs)   bands (ev):
 
-    10.0077  10.1557  12.0441  12.4260  12.4364  12.7574  13.9851  14.5201
-    15.2369  15.7620  15.9092  16.3547  26.4694  26.6071  33.9489  34.1647
+    10.0424  10.1071  12.0741  12.3672  12.4515  12.7150  14.0061  14.4648
+    15.2627  15.6867  15.9320  16.3130  26.5054  26.5555  33.9095  34.1128
 
           k =-0.5000 0.2500 0.0000 (   151 PWs)   bands (ev):
 
-    10.0077  10.1557  12.0441  12.4260  12.4364  12.7574  13.9851  14.5201
-    15.2369  15.7620  15.9092  16.3547  26.4694  26.6071  33.9489  34.1647
+    10.0424  10.1071  12.0741  12.3672  12.4515  12.7150  14.0061  14.4648
+    15.2627  15.6867  15.9320  16.3130  26.5054  26.5555  33.9095  34.1129
 
           k = 0.0000 0.5000-0.2500 (   151 PWs)   bands (ev):
 
-    10.0077  10.1557  12.0441  12.4260  12.4364  12.7574  13.9851  14.5201
-    15.2369  15.7620  15.9092  16.3547  26.4694  26.6071  33.9489  34.1647
+    10.0424  10.1071  12.0741  12.3672  12.4515  12.7150  14.0061  14.4648
+    15.2627  15.6867  15.9320  16.3130  26.5054  26.5555  33.9095  34.0437
 
           k = 0.0000 0.5000 0.2500 (   151 PWs)   bands (ev):
 
-    10.0077  10.1557  12.0441  12.4260  12.4364  12.7574  13.9851  14.5201
-    15.2369  15.7620  15.9091  16.3547  26.4694  26.6071  33.9489  34.1647
+    10.0424  10.1071  12.0741  12.3672  12.4515  12.7150  14.0061  14.4648
+    15.2627  15.6867  15.9320  16.3130  26.5054  26.5555  33.9095  34.1128
 
           k =-0.2500 0.5000 0.0000 (   151 PWs)   bands (ev):
 
-    10.0077  10.1557  12.0441  12.4260  12.4364  12.7573  13.9851  14.5201
-    15.2369  15.7620  15.9092  16.3547  26.4694  26.6071  33.9489  34.1647
+    10.0424  10.1071  12.0741  12.3672  12.4515  12.7150  14.0061  14.4648
+    15.2627  15.6867  15.9320  16.3130  26.5054  26.5555  33.9094  34.0437
 
           k = 0.2500 0.5000 0.0000 (   151 PWs)   bands (ev):
 
-    10.0077  10.1557  12.0441  12.4260  12.4364  12.7573  13.9851  14.5201
-    15.2369  15.7620  15.9092  16.3547  26.4694  26.6070  33.9489  34.1647
+    10.0424  10.1071  12.0741  12.3672  12.4515  12.7150  14.0061  14.4648
+    15.2627  15.6867  15.9320  16.3130  26.5054  26.5555  33.9094  34.0437
 
           k = 0.5000 0.0000-0.2500 (   151 PWs)   bands (ev):
 
-    10.0077  10.1557  12.0441  12.4260  12.4364  12.7574  13.9851  14.5201
-    15.2369  15.7620  15.9092  16.3547  26.4694  26.6071  33.9489  34.1647
+    10.0424  10.1071  12.0741  12.3672  12.4515  12.7150  14.0061  14.4648
+    15.2627  15.6867  15.9320  16.3130  26.5054  26.5555  33.9094  34.0438
 
           k = 0.5000 0.0000 0.2500 (   151 PWs)   bands (ev):
 
-    10.0077  10.1557  12.0441  12.4260  12.4364  12.7574  13.9851  14.5201
-    15.2369  15.7620  15.9092  16.3547  26.4694  26.6071  33.9489  34.1647
+    10.0424  10.1071  12.0741  12.3672  12.4515  12.7150  14.0061  14.4648
+    15.2627  15.6867  15.9320  16.3130  26.5054  26.5555  33.9094  34.0437
 
           k = 0.2500-0.2500 0.2500 (   159 PWs)   bands (ev):
 
-     9.2959   9.3634  11.8084  11.8084  12.1888  12.1888  14.3787  14.3788
-    15.0276  15.0277  15.4059  15.8659  31.7895  31.7895  31.8203  31.8203
+     9.2501   9.4066  11.8380  11.8380  12.1232  12.1232  14.3920  14.3920
+    14.9864  14.9864  15.4337  15.7936  31.7728  31.7728  31.8293  31.8293
 
           k = 0.2500 0.2500-0.2500 (   159 PWs)   bands (ev):
 
-     9.2959   9.3634  11.8084  11.8084  12.1888  12.1888  14.3787  14.3788
-    15.0276  15.0277  15.4059  15.8659  31.7895  31.7895  31.8203  31.8203
+     9.2501   9.4066  11.8380  11.8380  12.1232  12.1232  14.3920  14.3920
+    14.9864  14.9864  15.4337  15.7936  31.7728  31.7728  31.8293  31.8293
 
           k =-0.2500-0.2500-0.2500 (   159 PWs)   bands (ev):
 
-     9.2959   9.3634  11.8084  11.8084  12.1888  12.1888  14.3787  14.3788
-    15.0276  15.0277  15.4059  15.8659  31.7895  31.7895  31.8203  31.8203
+     9.2501   9.4066  11.8380  11.8380  12.1232  12.1232  14.3920  14.3920
+    14.9864  14.9864  15.4337  15.7936  31.7728  31.7728  31.8293  31.8293
 
           k = 0.2500-0.7500-0.2500 (   146 PWs)   bands (ev):
 
-    11.3311  11.3311  11.6819  11.6819  11.8068  12.1502  14.7770  14.7770
-    15.3057  15.3057  22.6654  22.6655  22.8400  22.8401  25.1832  25.2598
+    11.3565  11.3565  11.6390  11.6390  11.8382  12.0834  14.8007  14.8007
+    15.2402  15.2402  22.6999  22.6999  22.7910  22.7910  25.2069  25.2216
 
           k = 0.2500 0.7500 0.2500 (   146 PWs)   bands (ev):
 
-    11.3311  11.3311  11.6819  11.6819  11.8068  12.1502  14.7770  14.7770
-    15.3057  15.3057  22.6654  22.6655  22.8400  22.8401  25.1832  25.2598
+    11.3565  11.3565  11.6390  11.6390  11.8382  12.0834  14.8007  14.8007
+    15.2402  15.2402  22.6999  22.6999  22.7910  22.7910  25.2069  25.2216
 
           k =-0.2500-0.7500 0.2500 (   146 PWs)   bands (ev):
 
-    11.3311  11.3311  11.6819  11.6819  11.8068  12.1502  14.7770  14.7770
-    15.3057  15.3057  22.6654  22.6655  22.8400  22.8400  25.1832  25.2598
+    11.3565  11.3565  11.6390  11.6390  11.8382  12.0834  14.8007  14.8007
+    15.2402  15.2402  22.6999  22.6999  22.7910  22.7910  25.2069  25.2216
 
           k =-0.5000-0.5000-0.2500 (   150 PWs)   bands (ev):
 
-    10.5547  10.8067  11.3346  11.6765  12.9119  13.1213  14.5184  14.6411
-    15.1576  15.3264  19.4621  19.6767  23.3189  23.5273  29.5550  29.5812
+    10.5874  10.7504  11.3661  11.6098  12.9469  13.0624  14.5330  14.6520
+    15.1122  15.2883  19.4976  19.6165  23.3530  23.4710  29.5321  29.5954
 
           k = 0.2500 0.5000 0.5000 (   150 PWs)   bands (ev):
 
-    10.5547  10.8067  11.3346  11.6765  12.9119  13.1213  14.5185  14.6411
-    15.1576  15.3265  19.4621  19.6767  23.3189  23.5273  29.5550  29.5812
+    10.5874  10.7504  11.3661  11.6098  12.9469  13.0624  14.5330  14.6520
+    15.1122  15.2883  19.4976  19.6165  23.3530  23.4710  29.5321  29.5954
 
           k =-0.2500 0.5000-0.5000 (   150 PWs)   bands (ev):
 
-    10.5547  10.8067  11.3346  11.6765  12.9119  13.1213  14.5185  14.6411
-    15.1576  15.3265  19.4621  19.6767  23.3189  23.5273  29.5550  29.5812
+    10.5874  10.7504  11.3661  11.6098  12.9469  13.0624  14.5330  14.6520
+    15.1122  15.2883  19.4976  19.6165  23.3530  23.4710  29.5321  29.5954
 
           k =-0.5000 0.2500-0.5000 (   150 PWs)   bands (ev):
 
-    10.5547  10.8067  11.3346  11.6765  12.9119  13.1213  14.5184  14.6411
-    15.1576  15.3264  19.4621  19.6767  23.3189  23.5273  29.5550  29.5812
+    10.5874  10.7504  11.3661  11.6098  12.9469  13.0624  14.5330  14.6520
+    15.1122  15.2883  19.4976  19.6165  23.3530  23.4710  29.5321  29.5954
 
           k =-0.5000-0.2500 0.5000 (   150 PWs)   bands (ev):
 
-    10.5547  10.8067  11.3346  11.6765  12.9119  13.1213  14.5184  14.6411
-    15.1576  15.3264  19.4621  19.6767  23.3189  23.5273  29.5550  29.5812
+    10.5874  10.7504  11.3661  11.6098  12.9469  13.0624  14.5330  14.6520
+    15.1122  15.2883  19.4976  19.6165  23.3530  23.4710  29.5321  29.5954
 
           k = 0.7500 0.0000 0.0000 (   144 PWs)   bands (ev):
 
-    10.3830  10.4875  10.7110  10.8908  14.5005  14.5005  14.9678  14.9678
-    15.0976  15.6213  20.2488  20.3680  27.7320  27.7320  27.7555  27.7555
+    10.4086  10.5101  10.6723  10.8528  14.5280  14.5280  14.8953  14.8953
+    15.1234  15.5461  20.2843  20.3240  27.6814  27.6814  27.7981  27.7981
 
           k = 0.0000 0.7500 0.0000 (   144 PWs)   bands (ev):
 
-    10.3830  10.4875  10.7110  10.8908  14.5005  14.5005  14.9678  14.9678
-    15.0976  15.6214  20.2488  20.3680  27.7320  27.7320  27.7555  27.7555
+    10.4086  10.5101  10.6723  10.8528  14.5280  14.5280  14.8953  14.8953
+    15.1234  15.5461  20.2843  20.3240  27.6814  27.6814  27.7981  27.7981
 
-     the Fermi energy is    14.8114 ev
+     the Fermi energy is    14.8546 ev
 
-!    total energy              =   -55.56243245 ryd
-     estimated scf accuracy    <        5.5E-10 ryd
+!    total energy              =   -55.54478436 ryd
+     estimated scf accuracy    <        1.6E-10 ryd
 
-     band energy sum           =     7.21625692 ryd
-     one-electron contribution =     8.97976107 ryd
-     hartree contribution      =     6.03814409 ryd
-     xc contribution           =   -25.89604781 ryd
+     band energy sum           =     7.20055892 ryd
+     one-electron contribution =     8.97515363 ryd
+     hartree contribution      =     6.03001551 ryd
+     xc contribution           =   -25.89294064 ryd
      ewald contribution        =   -44.64461207 ryd
-     correction for metals     =    -0.03967774 ryd
+     correction for metals     =    -0.01240079 ryd
 
-     total magnetization       =     0.30     0.40     0.51 Bohr mag/cell
-     absolute magnetization    =     0.75 Bohr mag/cell
-     Magnetic field            =  -0.0031556  -0.0043209  -0.0052693 ryd
+     total magnetization       =     0.30     0.41     0.51 Bohr mag/cell
+     absolute magnetization    =     0.76 Bohr mag/cell
+     Magnetic field            =  -0.0045481  -0.0061064  -0.0075908 ryd
      lambda                    =       0.50 ryd
 
      convergence has been achieved
 
-     Writing output data file          fe.save
+     Writing output data file fe.save
  
-     PWSCF        :  1m 2.64s CPU time
+     PWSCF        :  1m24.99s CPU time
 
-     init_run     :     1.62s CPU
-     electrons    :    60.91s CPU
+     init_run     :     1.85s CPU
+     electrons    :    82.81s CPU
  
-     electrons    :    60.91s CPU
-     c_bands      :    44.99s CPU (      27 calls,   1.666 s avg)
-     sum_band     :    12.66s CPU (      27 calls,   0.469 s avg)
-     v_of_rho     :     0.36s CPU (      28 calls,   0.013 s avg)
-     newd         :     1.72s CPU (      28 calls,   0.061 s avg)
-     mix_rho      :     0.32s CPU (      27 calls,   0.012 s avg)
+     electrons    :    82.81s CPU
+     c_bands      :    62.59s CPU (      27 calls,   2.318 s avg)
+     sum_band     :    16.19s CPU (      27 calls,   0.600 s avg)
+     v_of_rho     :     0.40s CPU (      28 calls,   0.014 s avg)
+     newd         :     1.81s CPU (      28 calls,   0.065 s avg)
+     mix_rho      :     0.36s CPU (      27 calls,   0.013 s avg)
  
-     c_bands      :    44.99s CPU (      27 calls,   1.666 s avg)
+     c_bands      :    62.59s CPU (      27 calls,   2.318 s avg)
      init_us_2    :     0.47s CPU (    1760 calls,   0.000 s avg)
-     cegterg      :    43.43s CPU (     864 calls,   0.050 s avg)
+     cegterg      :    61.07s CPU (     864 calls,   0.071 s avg)
  
-     sum_band     :    12.66s CPU (      27 calls,   0.469 s avg)
-     becsum       :     0.19s CPU (     864 calls,   0.000 s avg)
-     addusdens    :     2.70s CPU (      27 calls,   0.100 s avg)
+     sum_band     :    16.19s CPU (      27 calls,   0.600 s avg)
+     becsum       :     0.17s CPU (     864 calls,   0.000 s avg)
+     addusdens    :     2.67s CPU (      27 calls,   0.099 s avg)
  
-     wfcrot       :     0.57s CPU (      32 calls,   0.018 s avg)
-     cegterg      :    43.43s CPU (     864 calls,   0.050 s avg)
-     h_psi        :    30.74s CPU (    2750 calls,   0.011 s avg)
-     g_psi        :     0.37s CPU (    1854 calls,   0.000 s avg)
-     overlap      :     1.44s CPU (    1854 calls,   0.001 s avg)
-     cdiaghg      :     4.99s CPU (    2718 calls,   0.002 s avg)
-     update       :     1.18s CPU (    1854 calls,   0.001 s avg)
-     last         :     0.73s CPU (     929 calls,   0.001 s avg)
+     wfcrot       :     0.79s CPU (      32 calls,   0.025 s avg)
+     cegterg      :    61.07s CPU (     864 calls,   0.071 s avg)
+     h_psi        :    47.66s CPU (    2995 calls,   0.016 s avg)
+     g_psi        :     0.46s CPU (    2099 calls,   0.000 s avg)
+     cdiaghg      :     5.37s CPU (    2963 calls,   0.002 s avg)
+     update       :     1.13s CPU (    2099 calls,   0.001 s avg)
+     last         :     0.74s CPU (     929 calls,   0.001 s avg)
  
-     h_psi        :    30.74s CPU (    2750 calls,   0.011 s avg)
-     init         :     0.66s CPU (    2750 calls,   0.000 s avg)
-     firstfft     :    16.06s CPU (   32552 calls,   0.000 s avg)
-     secondfft    :     9.19s CPU (   32552 calls,   0.000 s avg)
-     add_vuspsi   :     1.29s CPU (    2750 calls,   0.000 s avg)
-     s_psi        :     1.45s CPU (    2750 calls,   0.001 s avg)
+     h_psi        :    47.66s CPU (    2995 calls,   0.016 s avg)
+     init         :     0.80s CPU (    2995 calls,   0.000 s avg)
+     firstfft     :    24.79s CPU (   33151 calls,   0.001 s avg)
+     secondfft    :    16.98s CPU (   33151 calls,   0.001 s avg)
+     add_vuspsi   :     1.33s CPU (    2995 calls,   0.000 s avg)
+     s_psi        :     1.65s CPU (    2995 calls,   0.001 s avg)
  
      General routines
-     ccalbec      :     0.87s CPU (    3614 calls,   0.000 s avg)
-     cft3         :     1.24s CPU (     718 calls,   0.002 s avg)
-     cft3s        :    20.51s CPU (  158076 calls,   0.000 s avg)
-     interpolate  :     0.58s CPU (     220 calls,   0.003 s avg)
-     davcio       :     0.51s CPU (    2624 calls,   0.000 s avg)
+     ccalbec      :     1.02s CPU (    3859 calls,   0.000 s avg)
+     cft3         :     1.23s CPU (     718 calls,   0.002 s avg)
+     cft3s        :    39.86s CPU (  160472 calls,   0.000 s avg)
+     interpolate  :     0.57s CPU (     220 calls,   0.003 s avg)
+     davcio       :     0.39s CPU (    2624 calls,   0.000 s avg)
  
