@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.0 - Mon Oct 24 02:34:10 CEST 2005                         
+     Version: 3.1 - Mon Oct 24 02:34:10 CEST 2005                         
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   4:56:51  10Nov2005               
+   This run was started on:   5:15:59   6May2006               
 
    Serial Build
 
@@ -22,7 +22,7 @@
 
    Reading pseudopotential for specie #  1 from file :
    /scr/giannozz/espresso/pseudo/H_US.van
-   file type is  1
+   file type is  1: Vanderbilt US PP
 
     ============================================================
     |  pseudopotential report for atomic species:  1           |
@@ -251,7 +251,7 @@
   Allocation ended 
 
    reading restart file: .//cp_61.save
-   restart file read in    0.025 sec.
+   restart file read in    0.024 sec.
 
 
    formf: eself=   1.49603
@@ -299,7 +299,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: .//cp_67.save
-   restart file read in    0.025 sec.
+   restart file read in    0.024 sec.
 
 
    formf: eself=   1.49603
@@ -622,60 +622,57 @@
  
 
    writing restart file: .//cp_61.save
-   restart file written in    1.343 sec.
+   restart file written in    0.050 sec.
 
 
    writing restart file: .//cp_62.save
-   restart file written in    1.339 sec.
+   restart file written in    0.050 sec.
 
 
    writing restart file: .//cp_63.save
-   restart file written in    1.398 sec.
+   restart file written in    0.050 sec.
 
 
    writing restart file: .//cp_64.save
-   restart file written in    1.338 sec.
+   restart file written in    0.050 sec.
 
 
    writing restart file: .//cp_65.save
-   restart file written in    1.473 sec.
+   restart file written in    0.050 sec.
 
 
    writing restart file: .//cp_66.save
-   restart file written in    1.339 sec.
+   restart file written in    0.050 sec.
 
-     initialize   :     0.37s CPU
-     formf        :     0.07s CPU (       7 calls,   0.010 s avg)
-     rhoofr       :    11.68s CPU (     420 calls,   0.028 s avg)
-     vofrho       :    82.71s CPU (     420 calls,   0.197 s avg)
-     dforce       :     2.83s CPU (     840 calls,   0.003 s avg)
-     calphi       :     0.00s CPU (     420 calls,   0.000 s avg)
-     ortho        :     0.07s CPU (     420 calls,   0.000 s avg)
-     updatc       :     0.01s CPU (     420 calls,   0.000 s avg)
-     newd         :     1.14s CPU (     420 calls,   0.003 s avg)
-     calbec       :     0.01s CPU (     427 calls,   0.000 s avg)
-     prefor       :     0.01s CPU (     840 calls,   0.000 s avg)
-     strucf       :     0.14s CPU (     427 calls,   0.000 s avg)
-     rhov         :     4.44s CPU (     420 calls,   0.011 s avg)
+     initialize   :     0.33s CPU
+     formf        :     0.04s CPU (       7 calls,   0.006 s avg)
+     rhoofr       :    12.90s CPU (     420 calls,   0.031 s avg)
+     vofrho       :    82.93s CPU (     420 calls,   0.197 s avg)
+     dforce       :     3.40s CPU (     840 calls,   0.004 s avg)
+     calphi       :     0.01s CPU (     420 calls,   0.000 s avg)
+     ortho        :     0.05s CPU (     420 calls,   0.000 s avg)
+     updatc       :     0.00s CPU (     840 calls,   0.000 s avg)
+     newd         :     0.56s CPU (     420 calls,   0.001 s avg)
+     calbec       :     0.00s CPU (     427 calls,   0.000 s avg)
+     prefor       :     0.02s CPU (     840 calls,   0.000 s avg)
+     strucf       :     0.13s CPU (     427 calls,   0.000 s avg)
+     rhov         :     4.41s CPU (     420 calls,   0.010 s avg)
      nlsm1        :     0.02s CPU (    1267 calls,   0.000 s avg)
-     fft          :    33.15s CPU (    5880 calls,   0.006 s avg)
-     ffts         :     3.12s CPU (     840 calls,   0.004 s avg)
-     fftw         :     3.39s CPU (    2520 calls,   0.001 s avg)
+     fft          :    33.10s CPU (    5880 calls,   0.006 s avg)
+     ffts         :     2.75s CPU (     840 calls,   0.003 s avg)
+     fftw         :     4.48s CPU (    2520 calls,   0.002 s avg)
      fftb         :     0.76s CPU (    2100 calls,   0.000 s avg)
-     rsg          :     0.02s CPU (     840 calls,   0.000 s avg)
+     rsg          :     0.00s CPU (     840 calls,   0.000 s avg)
 
    writing restart file: .//cp_67.save
-   restart file written in    1.338 sec.
+   restart file written in    0.050 sec.
 
  
-     CP           :  1m48.55s CPU time
+     CP           :  1m40.99s CPU time
 
  
-   This run was terminated on:   4:58:41  10Nov2005            
+   This run was terminated on:   5:17:41   6May2006            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:   110.0
    JOB DONE.
 =------------------------------------------------------------------------------=
-
-   MEMORY STATISTICS FROM PE(1) : 

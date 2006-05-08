@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.0 - Mon Oct 24 02:34:10 CEST 2005                         
+     Version: 3.1 - Mon Oct 24 02:34:10 CEST 2005                         
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:33:58  10Nov2005               
+   This run was started on:   3:49:35   6May2006               
 
    Serial Build
 
@@ -22,7 +22,7 @@
 
    Reading pseudopotential for specie #  1 from file :
    /scr/giannozz/espresso/pseudo/O.BLYP.UPF
-   file type is 20
+   file type is 20: UPF
  
    Type is UPF        and NONLOCAL. 
    Local component is ..... :   1
@@ -50,7 +50,7 @@
 
    Reading pseudopotential for specie #  2 from file :
    /scr/giannozz/espresso/pseudo/H.fpmd.UPF
-   file type is 20
+   file type is 20: UPF
  
    Type is UPF        and LOCAL. 
    Local component is ..... :   0
@@ -233,7 +233,7 @@
 
    Estimated Sizes of the problem
    ------------------------------
-   dimension of the problem (byte/pe) :     52865976
+   dimension of the problem (byte/pe) :     51546096
 
 
    System geometry initialization
@@ -271,10 +271,10 @@
  
    Short Legend and Physical Units in the Output
    ---------------------------------------------
-   NFI    [int]  - step index
+   NFI    [int]          - step index
    EKINC  [HARTREE A.U.] - kinetic energy of the fictitious electronic dynamics
-   TEMPH  [K]    - Temperature of the fictitious cell dynamics
-   TEMP   [K]    - Ionic temperature
+   TEMPH  [K]            - Temperature of the fictitious cell dynamics
+   TEMP   [K]            - Ionic temperature
    ETOT   [HARTREE A.U.] - Scf total energy (Kohn-Sham hamiltonian)
    ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
@@ -298,62 +298,6 @@
 
    ESR (real part of Ewald sum) =   0.14127921D+00
 
-
-
-                total energy =       61.86338 Hartree a.u.
-              kinetic energy =       76.29949 Hartree a.u.
-        electrostatic energy =       -7.58597 Hartree a.u.
-                         esr =        0.14128 Hartree a.u.
-                       eself =       18.94976 Hartree a.u.
-      pseudopotential energy =       -4.65095 Hartree a.u.
-  n-l pseudopotential energy =        0.00945 Hartree a.u.
- exchange-correlation energy =       -2.20864 Hartree a.u.
-           average potential =        0.00000 Hartree a.u.
-
-
-
-   Eigenvalues (eV), kp =   1 , spin =  1
-
-    0.00    0.00    0.00    0.00
- 
-   CELL_PARAMETERS
-   12.00000000    0.00000000    0.00000000
-    0.00000000   12.00000000    0.00000000
-    0.00000000    0.00000000   12.00000000
-
-   System Density [g/cm^3] :     0.1167
-
-
-   Center of mass square displacement (a.u.):   0.000000
-
-   Total stress (GPa)
-      709.51739395       -27.90293914         3.77844897
-      -27.90293914       843.59458840        -2.65347369
-        3.77844897        -2.65347369       797.07057887
- 
-   ATOMIC_POSITIONS
-   O    0.990000E-02  0.990000E-02  0.000000E+00
-   H    0.183250E+01 -0.224300E+00 -0.100000E-03
-   H   -0.224300E+00  0.183250E+01  0.200000E-03
- 
-   ATOMIC_VELOCITIES
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
- 
-   Forces acting on atoms (au):
-   O   -0.254259E+01 -0.189845E+01  0.248835E-01
-   H    0.134063E+01 -0.865189E-01 -0.117355E-01
-   H   -0.273607E+00  0.146409E+01 -0.344967E-02
-
-
-   Partial temperatures (for each ionic specie) 
-   Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.00     0.0000
-        2       0.00     0.0000
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-    0  0.00000    0.0    0.0    61.86338    61.86338    61.86338    61.86338  0.0000  0.0000  0.0000  0.0000
     1  4.84602    0.0    0.0    52.25407    52.25407    52.25407    57.10009  0.0000  0.0000  0.0000  0.0000
     2  5.02770    0.0    0.0    42.02786    42.02786    42.02786    47.05556  0.0000  0.0000  0.0000  0.0000
     3  4.73041    0.0    0.0    32.25185    32.25185    32.25185    36.98226  0.0000  0.0000  0.0000  0.0000
@@ -374,6 +318,7 @@
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.132667D+01  0.1D-03  0.285121D+01  0.1D-08  0.559784D+00  0.1D+11
    MAIN: convergence NOT achieved for system relaxation
+
 
 
                 total energy =       -7.59671 Hartree a.u.
@@ -406,7 +351,6 @@
        53.72428967       -15.01280461         4.42132058
       -15.01280461        96.03055353        -0.99595806
         4.42132058        -0.99595806        71.06005707
- 
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -421,6 +365,7 @@
    O   -0.141049E+01  0.116133E-01 -0.242119E+00
    H    0.494871E+00  0.793124E-01 -0.101720E+00
    H   -0.109737E+00  0.559784E+00  0.116990E-01
+ 
 
 
    Partial temperatures (for each ionic specie) 
@@ -450,6 +395,7 @@
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.970185D-01  0.1D-03  0.204236D+00  0.1D-08  0.151660D+00  0.1D+11
    MAIN: convergence NOT achieved for system relaxation
+
 
 
                 total energy =      -15.84297 Hartree a.u.
@@ -482,7 +428,6 @@
         5.97517058        -6.15650577         0.47659264
        -6.15650577        12.99356899        -0.31820064
         0.47659264        -0.31820064         0.31769907
- 
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -497,6 +442,7 @@
    O   -0.677509E+00 -0.100162E+00  0.176949E+00
    H    0.774490E-01 -0.353442E-01 -0.130333E-02
    H   -0.926803E-02  0.151660E+00  0.285328E-01
+ 
 
 
    Partial temperatures (for each ionic specie) 
@@ -526,6 +472,7 @@
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.210357D-01  0.1D-03  0.432459D-01  0.1D-08  0.775230D-01  0.1D+11
    MAIN: convergence NOT achieved for system relaxation
+
 
 
                 total energy =      -16.72106 Hartree a.u.
@@ -558,7 +505,6 @@
         2.47589122        -2.20976775         0.30205401
        -2.20976775         1.09170681        -0.52115441
         0.30205401        -0.52115441        -5.63496598
- 
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -573,6 +519,7 @@
    O   -0.243766E+00 -0.806508E-01  0.811873E-01
    H   -0.171870E-01 -0.496637E-01  0.162754E-01
    H    0.787820E-02  0.775230E-01  0.165944E-01
+ 
 
 
    Partial temperatures (for each ionic specie) 
@@ -602,6 +549,7 @@
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.810303D-02  0.1D-03  0.165485D-01  0.1D-08  0.495996D-01  0.1D+11
    MAIN: convergence NOT achieved for system relaxation
+
 
 
                 total energy =      -16.98001 Hartree a.u.
@@ -634,7 +582,6 @@
         0.39897477        -0.80909581         0.22275552
        -0.80909581        -1.64210798        -0.47602549
         0.22275552        -0.47602549        -5.72749607
- 
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -649,6 +596,7 @@
    O   -0.782069E-01 -0.478895E-01  0.214321E-01
    H   -0.416626E-01 -0.367702E-01  0.132062E-01
    H    0.806755E-02  0.495996E-01  0.114189E-01
+ 
 
 
    Partial temperatures (for each ionic specie) 
@@ -678,6 +626,7 @@
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
    MAIN:   0.356834D-02  0.1D-03  0.727145D-02  0.1D-08  0.439046D-01  0.1D+11
    MAIN: convergence NOT achieved for system relaxation
+
 
 
                 total energy =      -17.08765 Hartree a.u.
@@ -710,7 +659,6 @@
        -0.77999699        -0.26869122         0.12274619
        -0.26869122        -2.25304965        -0.36805517
         0.12274619        -0.36805517        -4.86983456
- 
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -725,6 +673,7 @@
    O   -0.151260E-01 -0.307214E-01  0.193646E-02
    H   -0.439046E-01 -0.245742E-01  0.900714E-02
    H    0.622971E-02  0.333816E-01  0.887801E-02
+ 
 
 
    Partial temperatures (for each ionic specie) 
@@ -736,51 +685,44 @@
    50  0.00357    0.0    0.0   -17.08765   -17.08765   -17.08765   -17.08408  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: .//h2o_mol_51.save
-   restart file written in    5.287 sec.
+   restart file written in    0.173 sec.
 
- 
-   Execution time statistics (SEC)
-   Mean time for MD step ..       1.861
- 
-   Wave functions FFT execution time statistics
-   total number of ffts ..       306
-   average time per fft ..   0.05460
-   total fft time    .....  16.70692
- 
- 
-   Charge density and potential FFT execution statistics
-   total number of ffts ..       459
-   average time per fft ..   0.10921
-   total fft time    .....  50.12813
- 
-
-   PC3FFT TIMINGS
-    FFTXP    FFTYP    FFTZP    TRASP    FFTXW    FFTYW    FFTZW    TRASW
-    0.000    0.000    0.000    0.000    0.000    0.000    0.000    0.000
 
 
    Averaged Physical Quantities
-                 accomulated    this run
-   EKINC             0.76100     0.76100 (AU)
-   TOTEL ENERGY     -9.51218    -9.51218 (AU)
-   TEMPERATURE       0.00000     0.00000 (K )
-   ENTHALPY         -9.51218    -9.51218 (AU)
-   ECONS            -9.51218    -9.51218 (AU)
-   PRESSURE        156.36249   156.36249 (Gpa)
-   VOLUME         1728.00000  1728.00000 (AU)
+                      accomulated      this run
+   ekinc         :        0.76100       0.76100 (AU)
+   ekin          :       17.79268      17.79268 (AU)
+   epot          :      -28.83647     -28.83647 (AU)
+   totel energy  :       -9.51218      -9.51218 (AU)
+   temperature   :        0.00000       0.00000 (K )
+   enthalpy      :       -9.51218      -9.51218 (AU)
+   econs         :       -9.51218      -9.51218 (AU)
+   pressure      :      156.36249     156.36249 (Gpa)
+   volume        :     1728.00000    1728.00000 (AU)
 
 
+     initialize   :     4.39s CPU
+     main_loop    :    78.45s CPU (      50 calls,   1.569 s avg)
+     formf        :     1.45s CPU
+     calphi       :     0.08s CPU (      51 calls,   0.002 s avg)
+     ortho        :     0.45s CPU (      51 calls,   0.009 s avg)
+     updatc       :     0.09s CPU (      51 calls,   0.002 s avg)
+     gram         :     0.00s CPU
+     strucf       :     0.01s CPU
+     nlsm1        :     0.04s CPU (      51 calls,   0.001 s avg)
+     nlsm2        :     0.02s CPU (       6 calls,   0.003 s avg)
+     fft          :    32.03s CPU (     408 calls,   0.079 s avg)
+     fftw         :    14.04s CPU (     306 calls,   0.046 s avg)
+     rsg          :     0.00s CPU (      51 calls,   0.000 s avg)
  
-   mp_buffers: high_watermark (bytes):            0
  
-   mp: high_watermark (bytes):           12
  
-     CP           :  1m37.31s CPU time
+     CP           :  1m23.16s CPU time
 
  
-   This run was terminated on:   3:35:36  10Nov2005            
+   This run was terminated on:   3:50:59   6May2006            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:    98.0
    JOB DONE.
 =------------------------------------------------------------------------------=

@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.0 - Mon Oct 24 02:34:10 CEST 2005                         
+     Version: 3.1 - Mon Oct 24 02:34:10 CEST 2005                         
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   4:55:52  10Nov2005               
+   This run was started on:   5:15: 7   6May2006               
 
    Serial Build
 
@@ -22,7 +22,7 @@
 
    Reading pseudopotential for specie #  1 from file :
    /scr/giannozz/espresso/pseudo/H_US.van
-   file type is  1
+   file type is  1: Vanderbilt US PP
 
     ============================================================
     |  pseudopotential report for atomic species:  1           |
@@ -251,7 +251,7 @@
   Allocation ended 
 
    reading restart file: .//cp_61.save
-   restart file read in    0.026 sec.
+   restart file read in    0.024 sec.
 
 
    formf: eself=   1.49603
@@ -259,7 +259,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: .//cp_62.save
-   restart file read in    0.025 sec.
+   restart file read in    0.024 sec.
 
 
    formf: eself=   1.49603
@@ -267,7 +267,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: .//cp_63.save
-   restart file read in    0.025 sec.
+   restart file read in    0.023 sec.
 
 
    formf: eself=   1.49603
@@ -283,7 +283,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: .//cp_65.save
-   restart file read in    0.025 sec.
+   restart file read in    0.023 sec.
 
 
    formf: eself=   1.49603
@@ -291,7 +291,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: .//cp_66.save
-   restart file read in    0.025 sec.
+   restart file read in    0.024 sec.
 
 
    formf: eself=   1.49603
@@ -299,7 +299,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: .//cp_67.save
-   restart file read in    0.026 sec.
+   restart file read in    0.024 sec.
 
 
    formf: eself=   1.49603
@@ -734,60 +734,57 @@
  
 
    writing restart file: .//cp_61.save
-   restart file written in    1.339 sec.
+   restart file written in    0.050 sec.
 
 
    writing restart file: .//cp_62.save
-   restart file written in    1.341 sec.
+   restart file written in    0.049 sec.
 
 
    writing restart file: .//cp_63.save
-   restart file written in    1.345 sec.
+   restart file written in    0.049 sec.
 
 
    writing restart file: .//cp_64.save
-   restart file written in    1.508 sec.
+   restart file written in    0.049 sec.
 
 
    writing restart file: .//cp_65.save
-   restart file written in    1.339 sec.
+   restart file written in    0.049 sec.
 
 
    writing restart file: .//cp_66.save
-   restart file written in    1.340 sec.
+   restart file written in    0.049 sec.
 
-     initialize   :     0.37s CPU
-     formf        :     0.06s CPU (       7 calls,   0.009 s avg)
-     rhoofr       :     5.63s CPU (     210 calls,   0.027 s avg)
-     vofrho       :    41.90s CPU (     210 calls,   0.200 s avg)
-     dforce       :     1.35s CPU (     420 calls,   0.003 s avg)
-     calphi       :     0.03s CPU (     210 calls,   0.000 s avg)
-     ortho        :     0.04s CPU (     210 calls,   0.000 s avg)
-     updatc       :     0.01s CPU (     210 calls,   0.000 s avg)
-     newd         :     0.59s CPU (     210 calls,   0.003 s avg)
+     initialize   :     0.32s CPU
+     formf        :     0.05s CPU (       7 calls,   0.007 s avg)
+     rhoofr       :     6.37s CPU (     210 calls,   0.030 s avg)
+     vofrho       :    41.56s CPU (     210 calls,   0.198 s avg)
+     dforce       :     1.65s CPU (     420 calls,   0.004 s avg)
+     calphi       :     0.02s CPU (     210 calls,   0.000 s avg)
+     ortho        :     0.06s CPU (     210 calls,   0.000 s avg)
+     updatc       :     0.02s CPU (     420 calls,   0.000 s avg)
+     newd         :     0.39s CPU (     210 calls,   0.002 s avg)
      calbec       :     0.00s CPU (     217 calls,   0.000 s avg)
-     prefor       :     0.01s CPU (     420 calls,   0.000 s avg)
-     strucf       :     0.05s CPU (     217 calls,   0.000 s avg)
+     prefor       :     0.02s CPU (     420 calls,   0.000 s avg)
+     strucf       :     0.09s CPU (     217 calls,   0.000 s avg)
      rhov         :     2.18s CPU (     210 calls,   0.010 s avg)
-     nlsm1        :     0.04s CPU (     637 calls,   0.000 s avg)
-     fft          :    16.47s CPU (    2940 calls,   0.006 s avg)
-     ffts         :     1.25s CPU (     420 calls,   0.003 s avg)
-     fftw         :     1.57s CPU (    1260 calls,   0.001 s avg)
-     fftb         :     0.35s CPU (    1050 calls,   0.000 s avg)
-     rsg          :     0.00s CPU (     420 calls,   0.000 s avg)
+     nlsm1        :     0.02s CPU (     637 calls,   0.000 s avg)
+     fft          :    16.65s CPU (    2940 calls,   0.006 s avg)
+     ffts         :     1.28s CPU (     420 calls,   0.003 s avg)
+     fftw         :     2.15s CPU (    1260 calls,   0.002 s avg)
+     fftb         :     0.50s CPU (    1050 calls,   0.000 s avg)
+     rsg          :     0.01s CPU (     420 calls,   0.000 s avg)
 
    writing restart file: .//cp_67.save
-   restart file written in    1.339 sec.
+   restart file written in    0.049 sec.
 
  
-     CP           :    59.53s CPU time
+     CP           :    51.00s CPU time
 
  
-   This run was terminated on:   4:56:51  10Nov2005            
+   This run was terminated on:   5:15:59   6May2006            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:    59.0
    JOB DONE.
 =------------------------------------------------------------------------------=
-
-   MEMORY STATISTICS FROM PE(1) : 
