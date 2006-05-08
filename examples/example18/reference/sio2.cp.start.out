@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.0 - Mon Oct 24 02:34:10 CEST 2005                         
+     Version: 3.1 - Mon Oct 24 02:34:10 CEST 2005                         
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:32: 6  10Nov2005               
+   This run was started on:   3:47:46   6May2006               
 
    Serial Build
 
@@ -22,11 +22,11 @@
 
    Reading pseudopotential for specie #  1 from file :
    /scr/giannozz/espresso/pseudo/O.LDA.US.RRKJ3.UPF
-   file type is 20
+   file type is 20: UPF
 
    Reading pseudopotential for specie #  2 from file :
    /scr/giannozz/espresso/pseudo/Si.vbc.UPF
-   file type is 20
+   file type is 20: UPF
 
 
    Main Simulation Parameters (from input)
@@ -261,15 +261,25 @@
  
    Short Legend and Physical Units in the Output
    ---------------------------------------------
-   NFI    [int]  - step index
+   NFI    [int]          - step index
    EKINC  [HARTREE A.U.] - kinetic energy of the fictitious electronic dynamics
-   TEMPH  [K]    - Temperature of the fictitious cell dynamics
-   TEMP   [K]    - Ionic temperature
+   TEMPH  [K]            - Temperature of the fictitious cell dynamics
+   TEMP   [K]            - Ionic temperature
    ETOT   [HARTREE A.U.] - Scf total energy (Kohn-Sham hamiltonian)
    ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
+
+
+   Wave Initialization: random initial wave-functions
+   Occupation number from init
+   nbnd =    48
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
 
    formf: eself= 210.64152
    formf:     vps(g=0)=  -0.0099256     rhops(g=0)=  -0.0039295
@@ -283,23 +293,23 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
     1 16.13713    0.0    0.0    53.40051    53.40051    53.40051    69.53764  0.0000  0.0000  0.0000  0.0000
     2 30.93981    0.0    0.0    25.63036    25.63036    25.63036    56.57017  0.0000  0.0000  0.0000  0.0000
-    3 41.92289    0.0    0.0   -12.09298   -12.09298   -12.09298    29.82991  0.0000  0.0000  0.0000  0.0000
-    4 46.42659    0.0    0.0   -52.99528   -52.99528   -52.99528    -6.56869  0.0000  0.0000  0.0000  0.0000
+    3 41.92289    0.0    0.0   -12.09297   -12.09297   -12.09297    29.82992  0.0000  0.0000  0.0000  0.0000
+    4 46.42659    0.0    0.0   -52.99527   -52.99527   -52.99527    -6.56869  0.0000  0.0000  0.0000  0.0000
     5 44.45307    0.0    0.0   -90.76269   -90.76269   -90.76269   -46.30962  0.0000  0.0000  0.0000  0.0000
-    6 38.10853    0.0    0.0  -121.53272  -121.53272  -121.53272   -83.42418  0.0000  0.0000  0.0000  0.0000
-    7 30.09984    0.0    0.0  -144.41346  -144.41346  -144.41346  -114.31362  0.0000  0.0000  0.0000  0.0000
-    8 22.49007    0.0    0.0  -160.50051  -160.50051  -160.50051  -138.01044  0.0000  0.0000  0.0000  0.0000
-    9 16.31305    0.0    0.0  -171.59630  -171.59630  -171.59630  -155.28325  0.0000  0.0000  0.0000  0.0000
-   10 11.77977    0.0    0.0  -179.37986  -179.37986  -179.37986  -167.60009  0.0000  0.0000  0.0000  0.0000
-   11  8.65036    0.0    0.0  -185.08338  -185.08338  -185.08338  -176.43303  0.0000  0.0000  0.0000  0.0000
+    6 38.10853    0.0    0.0  -121.53271  -121.53271  -121.53271   -83.42418  0.0000  0.0000  0.0000  0.0000
+    7 30.09984    0.0    0.0  -144.41345  -144.41345  -144.41345  -114.31361  0.0000  0.0000  0.0000  0.0000
+    8 22.49007    0.0    0.0  -160.50051  -160.50051  -160.50051  -138.01043  0.0000  0.0000  0.0000  0.0000
+    9 16.31305    0.0    0.0  -171.59629  -171.59629  -171.59629  -155.28324  0.0000  0.0000  0.0000  0.0000
+   10 11.77977    0.0    0.0  -179.37986  -179.37986  -179.37986  -167.60008  0.0000  0.0000  0.0000  0.0000
+   11  8.65036    0.0    0.0  -185.08338  -185.08338  -185.08338  -176.43302  0.0000  0.0000  0.0000  0.0000
    12  6.53861    0.0    0.0  -189.47957  -189.47957  -189.47957  -182.94096  0.0000  0.0000  0.0000  0.0000
-   13  5.08872    0.0    0.0  -192.99883  -192.99883  -192.99883  -187.91011  0.0000  0.0000  0.0000  0.0000
-   14  4.04347    0.0    0.0  -195.86571  -195.86571  -195.86571  -191.82225  0.0000  0.0000  0.0000  0.0000
-   15  3.24599    0.0    0.0  -198.20415  -198.20415  -198.20415  -194.95816  0.0000  0.0000  0.0000  0.0000
-   16  2.61298    0.0    0.0  -200.09984  -200.09984  -200.09984  -197.48686  0.0000  0.0000  0.0000  0.0000
-   17  2.10384    0.0    0.0  -201.62796  -201.62796  -201.62796  -199.52412  0.0000  0.0000  0.0000  0.0000
-   18  1.69725    0.0    0.0  -202.85977  -202.85977  -202.85977  -201.16252  0.0000  0.0000  0.0000  0.0000
-   19  1.37788    0.0    0.0  -203.86032  -203.86032  -203.86032  -202.48244  0.0000  0.0000  0.0000  0.0000
+   13  5.08872    0.0    0.0  -192.99882  -192.99882  -192.99882  -187.91010  0.0000  0.0000  0.0000  0.0000
+   14  4.04347    0.0    0.0  -195.86571  -195.86571  -195.86571  -191.82224  0.0000  0.0000  0.0000  0.0000
+   15  3.24599    0.0    0.0  -198.20414  -198.20414  -198.20414  -194.95815  0.0000  0.0000  0.0000  0.0000
+   16  2.61298    0.0    0.0  -200.09983  -200.09983  -200.09983  -197.48685  0.0000  0.0000  0.0000  0.0000
+   17  2.10384    0.0    0.0  -201.62795  -201.62795  -201.62795  -199.52411  0.0000  0.0000  0.0000  0.0000
+   18  1.69725    0.0    0.0  -202.85977  -202.85977  -202.85977  -201.16251  0.0000  0.0000  0.0000  0.0000
+   19  1.37788    0.0    0.0  -203.86031  -203.86031  -203.86031  -202.48243  0.0000  0.0000  0.0000  0.0000
 
  * Physical Quantities at step:    20
 
@@ -311,7 +321,7 @@
                 total energy =     -204.68460 Hartree a.u.
               kinetic energy =      100.68432 Hartree a.u.
         electrostatic energy =     -198.81122 Hartree a.u.
-                         esr =        0.42692 Hartree a.u.
+                         esr =        0.42693 Hartree a.u.
                        eself =      210.64152 Hartree a.u.
       pseudopotential energy =      -96.69953 Hartree a.u.
   n-l pseudopotential energy =       38.08118 Hartree a.u.
@@ -342,7 +352,6 @@
         0.00000000         0.00000000         0.00000000
         0.00000000         0.00000000         0.00000000
         0.00000000         0.00000000         0.00000000
- 
    ATOMIC_POSITIONS
    O    0.318829E+01  0.148324E+02  0.122883E+01
    O    0.783231E+01  0.678704E+01  0.122883E+01
@@ -402,6 +411,7 @@
    Si   0.000000E+00  0.000000E+00  0.000000E+00
    Si   0.000000E+00  0.000000E+00  0.000000E+00
    Si   0.000000E+00  0.000000E+00  0.000000E+00
+ 
 
 
    Partial temperatures (for each ionic specie) 
@@ -410,51 +420,55 @@
         2       0.00     0.0000
  
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-   20  1.13098    0.0    0.0  -204.68460  -204.68460  -204.68460  -203.55362  0.0000  0.0000  0.0000  0.0000
-
-
-              averaged quantities :
-         ekinc          ekin          epot          etot     tempp
-      16.75804     135.74861    -310.36153    -141.45035       0.0
-     initialize   :     4.97s CPU
-     total_time   :    14.92s CPU (      20 calls,   0.746 s avg)
-     formf        :     0.29s CPU
-     rhoofr       :     3.69s CPU (      21 calls,   0.176 s avg)
-     vofrho       :     1.89s CPU (      21 calls,   0.090 s avg)
-     dforce       :     5.51s CPU (     504 calls,   0.011 s avg)
-     calphi       :     0.21s CPU (      21 calls,   0.010 s avg)
-     ortho        :     0.91s CPU (      21 calls,   0.043 s avg)
-     updatc       :     0.18s CPU (      21 calls,   0.009 s avg)
-     gram         :     0.09s CPU
-     newd         :     2.94s CPU (      21 calls,   0.140 s avg)
-     calbec       :     0.09s CPU (      22 calls,   0.004 s avg)
-     prefor       :     0.04s CPU (      22 calls,   0.002 s avg)
-     strucf       :     0.05s CPU (      21 calls,   0.002 s avg)
-     rhov         :     0.90s CPU (      21 calls,   0.043 s avg)
-     nlsm1        :     0.69s CPU (      64 calls,   0.011 s avg)
-     fft          :     1.83s CPU (      84 calls,   0.022 s avg)
-     ffts         :     0.30s CPU (      42 calls,   0.007 s avg)
-     fftw         :     4.62s CPU (    1512 calls,   0.003 s avg)
-     fftb         :     2.04s CPU (    4662 calls,   0.000 s avg)
-     rsg          :     0.03s CPU (      21 calls,   0.001 s avg)
+   20  1.13098    0.0    0.0  -204.68460  -204.68460  -204.68460  -203.55361  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: .//cp_91.save
-   restart file written in    1.586 sec.
+   restart file written in    0.215 sec.
 
 
 
-======================== end cp ========================
+   Averaged Physical Quantities
+                      accomulated      this run
+   ekinc         :       16.75804      16.75804 (AU)
+   ekin          :      135.74861     135.74861 (AU)
+   epot          :     -310.36152    -310.36152 (AU)
+   totel energy  :     -141.45035    -141.45035 (AU)
+   temperature   :        0.00000       0.00000 (K )
+   enthalpy      :     -141.45035    -141.45035 (AU)
+   econs         :     -141.45035    -141.45035 (AU)
+   pressure      :        0.00000       0.00000 (Gpa)
+   volume        :     1526.90154    1526.90154 (AU)
 
+
+     initialize   :     5.06s CPU
+     total_time   :    16.00s CPU (      20 calls,   0.800 s avg)
+     formf        :     0.29s CPU
+     rhoofr       :     4.52s CPU (      21 calls,   0.215 s avg)
+     vofrho       :     2.04s CPU (      21 calls,   0.097 s avg)
+     dforce       :     5.99s CPU (     504 calls,   0.012 s avg)
+     calphi       :     0.20s CPU (      21 calls,   0.010 s avg)
+     ortho        :     0.91s CPU (      21 calls,   0.043 s avg)
+     updatc       :     0.07s CPU (      21 calls,   0.003 s avg)
+     gram         :     0.09s CPU
+     newd         :     2.70s CPU (      21 calls,   0.129 s avg)
+     calbec       :     0.17s CPU (      22 calls,   0.008 s avg)
+     prefor       :     0.09s CPU (      22 calls,   0.004 s avg)
+     strucf       :     0.08s CPU (      21 calls,   0.004 s avg)
+     rhov         :     0.89s CPU (      21 calls,   0.042 s avg)
+     nlsm1        :     0.72s CPU (      64 calls,   0.011 s avg)
+     fft          :     2.01s CPU (      84 calls,   0.024 s avg)
+     ffts         :     0.28s CPU (      42 calls,   0.007 s avg)
+     fftw         :     5.61s CPU (    1512 calls,   0.004 s avg)
+     fftb         :     1.80s CPU (    4662 calls,   0.000 s avg)
+     rsg          :     0.03s CPU (      21 calls,   0.001 s avg)
+ 
+ 
+ 
+     CP           :    21.35s CPU time
 
  
-     CP           :    21.49s CPU time
-
- 
-   This run was terminated on:   3:32:27  10Nov2005            
+   This run was terminated on:   3:48: 8   6May2006            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:    21.0
    JOB DONE.
 =------------------------------------------------------------------------------=
-
-   MEMORY STATISTICS FROM PE(1) : 
