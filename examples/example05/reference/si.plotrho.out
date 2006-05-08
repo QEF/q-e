@@ -3,5 +3,5 @@ tau1 :   1.0000  1.0000  0.0000
 tau2 :   0.0000  0.0000  1.0000
 read   2 atomic positions
 output file > Read  56 * 40  grid
-Logarithmic scale (y/n)? > Bounds:     0.001411    0.087450
+Logarithmic scale (y/n)? > Bounds:     0.001411    0.087440
 min, max, # of levels > 

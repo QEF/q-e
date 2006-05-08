@@ -1,12 +1,6 @@
 
-     Program POST-PROC v.3.0    starts ...
-     Today is 10Nov2005 at  2:44: 0 
-
-     Reading file si.save ...      only dimensions
-     read complete
-
-     Reading file si.save ...      all except wavefuctions
-     read complete
+     Program POST-PROC v.3.1    starts ...
+     Today is  6May2006 at  2:47: 0 
 
      nbndx  =     4  nbnd   =     4  natomwfc =     8  npwx   =     350
      nelec  =   8.00  nkb   =     8  ngl    =      65
@@ -17,5 +11,5 @@
      Reading data from file  sicharge
 
      Writing data to be plotted to file si.rho.dat
-     Min, Max, imaginary charge:     0.001411    0.087448    0.000000
+     Min, Max, imaginary charge:     0.001411    0.087444    0.000000
      Plot Type: 2D contour             Output format: plotrho.x    
