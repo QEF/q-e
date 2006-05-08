@@ -1,6 +1,6 @@
 
      Program POST-PROC v.3.1    starts ...
-     Today is 30Mar2006 at  3: 6:31 
+     Today is  6May2006 at  3: 5:44 
 
      nbndx  =     6  nbnd   =     6  natomwfc =     9  npwx   =     654
      nelec  =   3.00  nkb   =     4  ngl    =     320
@@ -467,18 +467,18 @@
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
  
-     PWCOND       :    14.24s CPU time
+     PWCOND       :    13.79s CPU time
 
-     init         :     0.42s CPU
-     poten        :     0.00s CPU
-     local        :     0.63s CPU
+     init         :     0.22s CPU
+     poten        :     0.01s CPU
+     local        :     0.56s CPU
  
-     scatter_forw :     8.15s CPU (      71 calls,   0.115 s avg)
-     integrals    :     3.90s CPU (      71 calls,   0.055 s avg)
-     rotatef      :     1.49s CPU (     852 calls,   0.002 s avg)
-     rotateb      :     0.83s CPU (     852 calls,   0.001 s avg)
+     scatter_forw :     8.01s CPU (      71 calls,   0.113 s avg)
+     integrals    :     3.89s CPU (      71 calls,   0.055 s avg)
+     rotatef      :     0.98s CPU (     852 calls,   0.001 s avg)
+     rotateb      :     0.87s CPU (     852 calls,   0.001 s avg)
      scatter_back :     1.71s CPU (      71 calls,   0.024 s avg)
  
-     compbs       :     4.97s CPU (      71 calls,   0.070 s avg)
-     compbs_2     :     4.68s CPU (      71 calls,   0.066 s avg)
+     compbs       :     4.93s CPU (      71 calls,   0.069 s avg)
+     compbs_2     :     4.62s CPU (      71 calls,   0.065 s avg)
  

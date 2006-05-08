@@ -1,6 +1,6 @@
 
      Program POST-PROC v.3.1    starts ...
-     Today is 30Mar2006 at  3: 6:21 
+     Today is  6May2006 at  3: 5:34 
 
      nbndx  =     7  nbnd   =     7  natomwfc =    18  npwx   =     212
      nelec  =   6.00  nkb   =     8  ngl    =     155
@@ -127,7 +127,7 @@
  Nchannels of the left tip =            4
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.3172292   0.0000000   9.2000000
+  -0.3172270   0.0000000   9.2000000
   -0.3172292   0.0000000   9.2000000
   -0.3234973   0.0000000   9.2000000
   -0.4612823   0.0000000   9.2000000
@@ -378,18 +378,18 @@
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
  
-     PWCOND       :     7.61s CPU time
+     PWCOND       :     7.36s CPU time
 
-     init         :     0.29s CPU
-     poten        :     0.01s CPU
-     local        :     0.05s CPU
+     init         :     0.18s CPU
+     poten        :     0.00s CPU
+     local        :     0.06s CPU
  
-     scatter_forw :     5.79s CPU (      60 calls,   0.096 s avg)
-     integrals    :     3.33s CPU (      60 calls,   0.055 s avg)
-     rotatef      :     0.67s CPU (    1200 calls,   0.001 s avg)
-     rotateb      :     0.59s CPU (    1200 calls,   0.000 s avg)
+     scatter_forw :     5.70s CPU (      60 calls,   0.095 s avg)
+     integrals    :     3.27s CPU (      60 calls,   0.054 s avg)
+     rotatef      :     0.65s CPU (    1200 calls,   0.001 s avg)
+     rotateb      :     0.46s CPU (    1200 calls,   0.000 s avg)
      scatter_back :     1.03s CPU (      60 calls,   0.017 s avg)
  
-     compbs       :     1.45s CPU (      60 calls,   0.024 s avg)
-     compbs_2     :     1.27s CPU (      60 calls,   0.021 s avg)
+     compbs       :     1.40s CPU (      60 calls,   0.023 s avg)
+     compbs_2     :     1.28s CPU (      60 calls,   0.021 s avg)
  
