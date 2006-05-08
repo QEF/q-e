@@ -1,6 +1,6 @@
 
      Program PWSCF     v.3.1    starts ...
-     Today is  6Apr2006 at 11:46:11 
+     Today is  6May2006 at  2:51:24 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -105,7 +105,7 @@
      Davidson diagonalization with overlap
      ethr =  2.00E-03,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.79 secs
+     total cpu time spent up to now is      0.80 secs
 
      total energy              =    -4.18659468 ryd
      estimated scf accuracy    <     0.00591720 ryd
@@ -114,7 +114,7 @@
      Davidson diagonalization with overlap
      ethr =  1.97E-04,  avg # of iterations =  1.1
 
-     total cpu time spent up to now is      1.04 secs
+     total cpu time spent up to now is      1.06 secs
 
      total energy              =    -4.18659708 ryd
      estimated scf accuracy    <     0.00046252 ryd
@@ -123,16 +123,16 @@
      Davidson diagonalization with overlap
      ethr =  1.54E-05,  avg # of iterations =  1.4
 
-     total cpu time spent up to now is      1.30 secs
+     total cpu time spent up to now is      1.33 secs
 
      total energy              =    -4.18660009 ryd
      estimated scf accuracy    <     0.00000030 ryd
 
      iteration #  4     ecut=    15.00 ryd     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  9.92E-09,  avg # of iterations =  1.2
+     ethr =  9.92E-09,  avg # of iterations =  1.6
 
-     total cpu time spent up to now is      1.55 secs
+     total cpu time spent up to now is      1.60 secs
 
      End of self-consistent calculation
 
@@ -255,12 +255,12 @@
      the Fermi energy is     8.1819 ev
 
 !    total energy              =    -4.18660012 ryd
-     estimated scf accuracy    <        4.3E-09 ryd
+     estimated scf accuracy    <        4.4E-09 ryd
 
      band energy sum           =     0.82987867 ryd
-     one-electron contribution =     2.93990525 ryd
-     hartree contribution      =     0.01009306 ryd
-     xc contribution           =    -1.63485435 ryd
+     one-electron contribution =     2.93990534 ryd
+     hartree contribution      =     0.01009313 ryd
+     xc contribution           =    -1.63485451 ryd
      ewald contribution        =    -5.50183453 ryd
      correction for metals     =     0.00009045 ryd
 
@@ -270,16 +270,16 @@
  
      PWSCF        :     1.68s CPU time
 
-     init_run     :     0.19s CPU
-     electrons    :     1.35s CPU
+     init_run     :     0.20s CPU
+     electrons    :     1.41s CPU
  
-     electrons    :     1.35s CPU
-     c_bands      :     1.11s CPU (       5 calls,   0.222 s avg)
+     electrons    :     1.41s CPU
+     c_bands      :     1.13s CPU (       5 calls,   0.226 s avg)
      sum_band     :     0.23s CPU (       5 calls,   0.046 s avg)
-     v_of_rho     :     0.00s CPU (       5 calls,   0.000 s avg)
+     v_of_rho     :     0.02s CPU (       5 calls,   0.004 s avg)
      mix_rho      :     0.00s CPU (       5 calls,   0.000 s avg)
  
-     c_bands      :     1.11s CPU (       5 calls,   0.222 s avg)
+     c_bands      :     1.13s CPU (       5 calls,   0.226 s avg)
      init_us_2    :     0.01s CPU (     319 calls,   0.000 s avg)
      cegterg      :     1.10s CPU (     145 calls,   0.008 s avg)
  
@@ -287,22 +287,21 @@
  
      wfcrot       :     0.14s CPU (      29 calls,   0.005 s avg)
      cegterg      :     1.10s CPU (     145 calls,   0.008 s avg)
-     h_psi        :     1.11s CPU (     385 calls,   0.003 s avg)
-     g_psi        :     0.02s CPU (     211 calls,   0.000 s avg)
-     overlap      :     0.02s CPU (     211 calls,   0.000 s avg)
-     cdiaghg      :     0.05s CPU (     356 calls,   0.000 s avg)
-     update       :     0.00s CPU (     211 calls,   0.000 s avg)
+     h_psi        :     1.08s CPU (     396 calls,   0.003 s avg)
+     g_psi        :     0.00s CPU (     222 calls,   0.000 s avg)
+     cdiaghg      :     0.10s CPU (     338 calls,   0.000 s avg)
+     update       :     0.00s CPU (     222 calls,   0.000 s avg)
      last         :     0.01s CPU (     145 calls,   0.000 s avg)
  
-     h_psi        :     1.11s CPU (     385 calls,   0.003 s avg)
-     init         :     0.01s CPU (     385 calls,   0.000 s avg)
-     firstfft     :     0.44s CPU (    2178 calls,   0.000 s avg)
-     secondfft    :     0.58s CPU (    2178 calls,   0.000 s avg)
-     add_vuspsi   :     0.01s CPU (     385 calls,   0.000 s avg)
+     h_psi        :     1.08s CPU (     396 calls,   0.003 s avg)
+     init         :     0.01s CPU (     396 calls,   0.000 s avg)
+     firstfft     :     0.52s CPU (    2195 calls,   0.000 s avg)
+     secondfft    :     0.48s CPU (    2195 calls,   0.000 s avg)
+     add_vuspsi   :     0.00s CPU (     396 calls,   0.000 s avg)
  
      General routines
-     ccalbec      :     0.01s CPU (     385 calls,   0.000 s avg)
-     cft3         :     0.01s CPU (      21 calls,   0.000 s avg)
-     cft3s        :     1.19s CPU (    5226 calls,   0.000 s avg)
-     davcio       :     0.01s CPU (     464 calls,   0.000 s avg)
+     ccalbec      :     0.01s CPU (     396 calls,   0.000 s avg)
+     cft3         :     0.02s CPU (      21 calls,   0.001 s avg)
+     cft3s        :     1.13s CPU (    5260 calls,   0.000 s avg)
+     davcio       :     0.02s CPU (     464 calls,   0.000 s avg)
  
