@@ -840,6 +840,8 @@ subroutine write_plot
 #endif
       end do !ibnd
 
+      close (unit=iun_plot)
+
    end do  !ik
 #ifdef __PARA
    deallocate( psic_all )
