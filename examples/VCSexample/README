@@ -1,0 +1,19 @@
+
+This example shows how to use pw.x to optimize crystal structures at two 
+pressures for As. Arsenic is well known to undergo a phase transition from
+A7 structure to imple cubic at about 30 GPa. (See da Silva CR, Wentzcovitch RM,
+COMPUTATIONAL MATERIALS SCIENCE 8 (3): 219-227 JUL 1997). 
+
+1) make a vc-relax calculation with external (target) pressure = 0 kbar, using 
+   Wentzcovitch dynamics (cell_dynamics = 'damp-w' in CELL namelist), 
+   (input=As.vcs00.in, output=As.vcs00.out). In this case, the angle between 
+   cell vectors at the end of the calculation is 58 degrees and the internal 
+   coordinate is 0.2723, typical of A7 structure.
+
+2) make a vc-relax calculation with external (target) pressure = 500 kbar, also
+   using Wentzcovitch dynamics. (input=As.vcs500.in, output=As.vcs500.out). In 
+   this case, the angle between cell vectors at the end of the calculation is 
+   60 degrees and the internal coordinate is 0.25,  typical of sc structure.
+
+Both calculations start from the same initial structure with an angle of 
+60 degrees between vectors and internal coordinate 0.290010 .
