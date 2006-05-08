@@ -229,6 +229,65 @@ $ECHO "  running the calculation of the complex bands of Pt...\c"
 $PWCOND_COMMAND < pt.cond.in > pt.cond.out
 $ECHO " done"
 
+cat > pt4.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    pseudo_dir = '$PSEUDO_DIR',
+    outdir='$TMP_DIR',
+    prefix='pt4',
+ /
+ &system
+    ibrav = 6, 
+    celldm(1) =5.23, 
+    celldm(3) =2.8284, 
+    nat= 4, 
+    ntyp= 1,
+    noncolin=.true.,
+    lspinorb=.true.,
+    ecutwfc = 25.0, 
+    ecutrho = 150.0,
+    occupations='smearing', 
+    smearing='methfessel-paxton', 
+    degauss=0.02
+ /
+ &electrons
+    conv_thr = 1.0e-8
+    mixing_beta = 0.7
+ /
+ATOMIC_SPECIES
+ Pt 58.69 Ptrel.RRKJ3.UPF 
+ATOMIC_POSITIONS
+ Pt 0.  0.  0. 
+ Pt 0.5 0.5 0.7071
+ Pt 0.  0.  1.4142 
+ Pt 0.5 0.5 2.1213
+K_POINTS (automatic)
+ 2 2 1 1 1 1                
+EOF
+$ECHO "  running the self-consistent calculation of fcc-Pt with 4 atoms...\c"
+$PW_COMMAND < pt4.in > pt4.out
+$ECHO " done"
+
+# Calculation of the transmission of Pt 
+cat > pt.cond_t.in << EOF
+ &inputcond
+    outdir='$TMP_DIR/'     
+    prefixt='pt4'
+    bdl=1.4142,
+    ikind=1  
+    energy0=0.0d0
+    denergy=-0.2d0
+    ewind=4.d0
+    epsproj=1.d-7
+ /
+    1
+    0.0 0.0 1.0
+    1
+EOF
+$ECHO "  running the calculation of the transmission of fcc Pt...\c"
+$PWCOND_COMMAND < pt.cond_t.in > pt.cond_t.out
+$ECHO " done"
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"
