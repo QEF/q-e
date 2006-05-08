@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.0 - Mon Oct 24 02:34:10 CEST 2005                         
+     Version: 3.1 - Mon Oct 24 02:34:10 CEST 2005                         
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5: 6:57  10Nov2005               
+   This run was started on:   5:25:14   6May2006               
 
    Serial Build
 
@@ -22,11 +22,11 @@
 
    Reading pseudopotential for specie #  1 from file :
    /scr/giannozz/espresso/pseudo/Hmeta.tm.UPF
-   file type is 20
+   file type is 20: UPF
 
    Reading pseudopotential for specie #  2 from file :
    /scr/giannozz/espresso/pseudo/C.meta.tm.UPF
-   file type is 20
+   file type is 20: UPF
 
 
    Main Simulation Parameters (from input)
@@ -218,15 +218,22 @@
  
    Short Legend and Physical Units in the Output
    ---------------------------------------------
-   NFI    [int]  - step index
+   NFI    [int]          - step index
    EKINC  [HARTREE A.U.] - kinetic energy of the fictitious electronic dynamics
-   TEMPH  [K]    - Temperature of the fictitious cell dynamics
-   TEMP   [K]    - Ionic temperature
+   TEMPH  [K]            - Temperature of the fictitious cell dynamics
+   TEMP   [K]            - Ionic temperature
    ETOT   [HARTREE A.U.] - Scf total energy (Kohn-Sham hamiltonian)
    ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
+
+
+   Wave Initialization: random initial wave-functions
+   Occupation number from init
+   nbnd =    11
+    2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00 2.00
+    2.00
 
    formf: eself=  55.85192
    formf:     vps(g=0)=  -0.0015641     rhops(g=0)=  -0.0019531
@@ -376,7 +383,6 @@
         0.00000000         0.00000000         0.00000000
         0.00000000         0.00000000         0.00000000
         0.00000000         0.00000000         0.00000000
- 
    ATOMIC_POSITIONS
    H   -0.271695E+01 -0.245822E+01  0.236174E+01
    H   -0.291292E+01  0.249129E+01  0.952936E+00
@@ -412,6 +418,7 @@
    C    0.000000E+00  0.000000E+00  0.000000E+00
    C    0.000000E+00  0.000000E+00  0.000000E+00
    C    0.000000E+00  0.000000E+00  0.000000E+00
+ 
 
 
    Partial temperatures (for each ionic specie) 
@@ -461,47 +468,51 @@
    MAIN:   0.867441D-06  0.1D-05  0.446486D-06  0.1D-03  0.000000D+00  0.1D+11
    MAIN: convergence achieved for system relaxation
 
-
-              averaged quantities :
-         ekinc          ekin          epot          etot     tempp
-       1.00838      21.39908     -46.75196     -22.65501       0.0
-     initialize   :     0.98s CPU
-     total_time   :    34.22s CPU (     135 calls,   0.253 s avg)
-     formf        :     0.44s CPU
-     rhoofr       :     7.67s CPU (     136 calls,   0.056 s avg)
-     vofrho       :    15.65s CPU (     136 calls,   0.115 s avg)
-     dforce       :    10.47s CPU (     816 calls,   0.013 s avg)
-     calphi       :     0.03s CPU (     136 calls,   0.000 s avg)
-     ortho        :     0.16s CPU (     136 calls,   0.001 s avg)
-     updatc       :     0.09s CPU (     136 calls,   0.001 s avg)
-     gram         :     0.00s CPU
-     newd         :     0.18s CPU (     136 calls,   0.001 s avg)
-     calbec       :     0.01s CPU (     137 calls,   0.000 s avg)
-     prefor       :     0.02s CPU (     137 calls,   0.000 s avg)
-     strucf       :     0.12s CPU (     136 calls,   0.001 s avg)
-     nlsm1        :     0.01s CPU (     409 calls,   0.000 s avg)
-     fft          :     4.05s CPU (    1360 calls,   0.003 s avg)
-     ffts         :     1.78s CPU (     544 calls,   0.003 s avg)
-     fftw         :    13.48s CPU (    9792 calls,   0.001 s avg)
-     rsg          :     0.01s CPU (     136 calls,   0.000 s avg)
-
    writing restart file: .//cp_50.save
-   restart file written in    0.505 sec.
+   restart file written in    0.123 sec.
 
 
 
-======================== end cp ========================
+   Averaged Physical Quantities
+                      accomulated      this run
+   ekinc         :        1.00838       1.00838 (AU)
+   ekin          :       21.39908      21.39908 (AU)
+   epot          :      -46.75196     -46.75196 (AU)
+   totel energy  :      -22.65501     -22.65501 (AU)
+   temperature   :        0.00000       0.00000 (K )
+   enthalpy      :      -22.65501     -22.65501 (AU)
+   econs         :      -22.65501     -22.65501 (AU)
+   pressure      :        0.00000       0.00000 (Gpa)
+   volume        :      512.00000     512.00000 (AU)
 
+
+     initialize   :     1.01s CPU
+     total_time   :    37.62s CPU (     135 calls,   0.279 s avg)
+     formf        :     0.44s CPU
+     rhoofr       :     9.84s CPU (     136 calls,   0.072 s avg)
+     vofrho       :    15.55s CPU (     136 calls,   0.114 s avg)
+     dforce       :    11.92s CPU (     816 calls,   0.015 s avg)
+     calphi       :     0.06s CPU (     136 calls,   0.000 s avg)
+     ortho        :     0.18s CPU (     136 calls,   0.001 s avg)
+     updatc       :     0.03s CPU (     136 calls,   0.000 s avg)
+     gram         :     0.00s CPU
+     newd         :     0.00s CPU (     136 calls,   0.000 s avg)
+     calbec       :     0.04s CPU (     137 calls,   0.000 s avg)
+     prefor       :     0.05s CPU (     137 calls,   0.000 s avg)
+     strucf       :     0.14s CPU (     136 calls,   0.001 s avg)
+     nlsm1        :     0.04s CPU (     409 calls,   0.000 s avg)
+     fft          :     4.29s CPU (    1360 calls,   0.003 s avg)
+     ffts         :     1.85s CPU (     544 calls,   0.003 s avg)
+     fftw         :    16.08s CPU (    9792 calls,   0.002 s avg)
+     rsg          :     0.02s CPU (     136 calls,   0.000 s avg)
+ 
+ 
+ 
+     CP           :    38.81s CPU time
 
  
-     CP           :    35.65s CPU time
-
- 
-   This run was terminated on:   5: 7:34  10Nov2005            
+   This run was terminated on:   5:25:53   6May2006            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:    37.0
    JOB DONE.
 =------------------------------------------------------------------------------=
-
-   MEMORY STATISTICS FROM PE(1) : 
