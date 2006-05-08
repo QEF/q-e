@@ -1036,14 +1036,15 @@ END SUBROUTINE gshcount
         SUBROUTINE ecutoffs_setup( ecutwfc, ecutrho, ecfixed, qcutz, q2sigma,  &
                                    refg_ )
  
-          USE kinds, ONLY: DP
-          USE constants, ONLY: eps8
-          USE gvecw, ONLY: ecutw
-          USE gvecw, ONLY: ecfix, ecutz, ecsig
-          USE gvecp, ONLY: ecutp
-          USE gvecs, ONLY: ecuts, dual, doublegrid
-          use betax, only: mmx, refg
+          USE kinds,           ONLY: DP
+          USE constants,       ONLY: eps8
+          USE gvecw,           ONLY: ecutw
+          USE gvecw,           ONLY: ecfix, ecutz, ecsig
+          USE gvecp,           ONLY: ecutp
+          USE gvecs,           ONLY: ecuts, dual, doublegrid
+          use betax,           only: mmx, refg
           USE pseudopotential, only: tpstab
+          USE control_flags,   only: program_name
 
           IMPLICIT NONE
           REAL(DP), INTENT(IN) ::  ecutwfc, ecutrho, ecfixed, qcutz, q2sigma
@@ -1061,6 +1062,9 @@ END SUBROUTINE gshcount
              !
              IF ( dual <= 1.D0 ) &
                 CALL errore( ' ecutoffs_setup ', ' invalid dual? ', 1 )
+             !
+             IF( ( program_name == 'fpmd' ) .AND. ( dual /= 4.0d0 ) ) &
+                CALL errore( ' ecutoffs_setup ', ' dual /= 4 not allowed in fpmd ', 1 )
              !
           END IF
 

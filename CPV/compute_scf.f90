@@ -103,14 +103,14 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         WRITE( stdout, '(/,2X,"restarting from file",/)' )
         !
         nbeg   = 0
-        nomore = 200
+        nomore = 2000
         !
      ELSE
         !
         WRITE( stdout, '(/,2X,"restarting from scratch",/)' )
         !
         nbeg   = -1
-        nomore = 500
+        nomore = 5000
         trane  = .TRUE.
         ampre  = 0.02D0
         !
