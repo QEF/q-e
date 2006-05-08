@@ -25,7 +25,7 @@ variables see the appropriate INPUT_* file)
    The number of bands is set to a value somehow larger that half
    the number of electrons in the cell (this is a quantity to keep under
    control and provide explicitly if the default value is too small).
-   Methfessel-Paxton smearing of order one is used.
+   Marzari-Vanderbilt 'cold smearing' is used.
 
 4) make a band structure calculation for Al. (input=al.band.{david,cg}.in,
    output=al.band.{david,cg}.out).
@@ -35,7 +35,7 @@ variables see the appropriate INPUT_* file)
 
 5) make a self-consistent calculation for Cu (input=cu.scf.{david,cg}.in,
    output=cu.scf.{david,cg}.out).
-   Copper is also a metal. Methfessel-Paxton smearing of order one is used
+   Copper is also a metal. Simple Gaussian  smearing is used
    for the calculation of the Fermi energy. K-points are automatically
    generated.
 
@@ -51,7 +51,7 @@ variables see the appropriate INPUT_* file)
    performed by specifying nspin=2 and an initial guess for the
    magnetization of each atomic species. This initial guess is used to
    build spin-up and spin-down starting charges from superposition of
-   atomic charges.
+   atomic charges. Methfessel-Paxton smearing of order one is used.
 
 8) make a band structure calculation for Ni (input=ni.band.{david,cg}.in,
    output=ni.band.{david,cg}.out).
