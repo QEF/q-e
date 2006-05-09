@@ -31,6 +31,7 @@ MODULE io_rho_xml
       USE io_files, ONLY : tmp_dir, prefix
       USE sticks,   ONLY : dfftp
       USE gvect,    ONLY : nr1, nr2, nr3, nrx1, nrx2, nrxx
+      USE spin_orb, ONLY : domag
       !
       IMPLICIT NONE
       !
@@ -81,21 +82,22 @@ MODULE io_rho_xml
          CALL write_rho_xml( file_base, rho(:,1), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
-         file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
-         !
-         CALL write_rho_xml( file_base, rho(:,2), &
+         IF (domag) THEN
+            file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
+            !
+            CALL write_rho_xml( file_base, rho(:,2), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
-         !
-         file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
-         !
-         CALL write_rho_xml( file_base, rho(:,3), &
+            !
+            file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
+            !
+            CALL write_rho_xml( file_base, rho(:,3), &
+                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
+            !
+            file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
+            !
+            CALL write_rho_xml( file_base, rho(:,4), &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
-         !
-         file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
-         !
-         CALL write_rho_xml( file_base, rho(:,4), &
-                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
-         !
+         END IF 
       END IF  
       !
       RETURN
@@ -112,6 +114,7 @@ MODULE io_rho_xml
       USE io_files, ONLY : tmp_dir, prefix
       USE sticks,   ONLY : dfftp
       USE gvect,    ONLY : nr1, nr2, nr3, nrx1, nrx2, nrxx
+      USE spin_orb, ONLY : domag
       !
       IMPLICIT NONE
       !
@@ -175,39 +178,43 @@ MODULE io_rho_xml
          CALL read_rho_xml( file_base, rho(:,1), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
-         file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
-         !
-         INQUIRE( FILE = TRIM( file_base ) // '.xml', EXIST = lexists )
-         !
-         IF ( .NOT. lexists ) &
-            CALL errore( 'read_rho', 'file ' // &
+         IF (domag) THEN
+            file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
+            !
+            INQUIRE( FILE = TRIM( file_base ) // '.xml', EXIST = lexists )
+            !
+            IF ( .NOT. lexists ) &
+               CALL errore( 'read_rho', 'file ' // &
                        & TRIM( file_base ) // '.xml nonexistent', 1 )
-         !
-         CALL read_rho_xml( file_base, rho(:,2), &
+            !
+            CALL read_rho_xml( file_base, rho(:,2), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
-         !
-         file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
-         !
-         INQUIRE( FILE = TRIM( file_base ) // '.xml', EXIST = lexists )
-         !
-         IF ( .NOT. lexists ) &
-            CALL errore( 'read_rho', 'file ' // &
+            !
+            file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
+            !
+            INQUIRE( FILE = TRIM( file_base ) // '.xml', EXIST = lexists )
+            !
+            IF ( .NOT. lexists ) &
+               CALL errore( 'read_rho', 'file ' // &
                        & TRIM( file_base ) // '.xml nonexistent', 1 )
-         !
-         CALL read_rho_xml( file_base, rho(:,3), &
+            !
+            CALL read_rho_xml( file_base, rho(:,3), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
-         !
-         file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
-         !
-         INQUIRE( FILE = TRIM( file_base ) // '.xml', EXIST = lexists )
-         !
-         IF ( .NOT. lexists ) &
-            CALL errore( 'read_rho', 'file ' // &
+            !
+            file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
+            !
+            INQUIRE( FILE = TRIM( file_base ) // '.xml', EXIST = lexists )
+            !
+            IF ( .NOT. lexists ) &
+               CALL errore( 'read_rho', 'file ' // &
                        & TRIM( file_base ) // '.xml nonexistent', 1 )
-         !
-         CALL read_rho_xml( file_base, rho(:,4), &
+            !
+            CALL read_rho_xml( file_base, rho(:,4), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
-         !
+            !
+         ELSE
+            rho(:,2:4)=0.d0
+         ENDIF
       END IF  
       !
       RETURN
