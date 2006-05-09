@@ -23,15 +23,15 @@
 
         PRIVATE
  
-        INTEGER   :: max_emp = 0    !  maximum number of iterations
+        INTEGER  :: max_emp = 0    !  maximum number of iterations
         REAL(DP) :: ethr_emp       !  threshold for convergence
         REAL(DP) :: delt_emp       !  delt for the empty states updating
         REAL(DP) :: emass_emp      !  fictitious mass for the empty states
 
-        LOGICAL :: prn_emp       = .FALSE.
+        LOGICAL  :: prn_emp       = .FALSE.
 
         CHARACTER(LEN=256) :: fileempty
-        LOGICAL :: first = .TRUE.
+        LOGICAL  :: first = .TRUE.
 
         INTERFACE EMPTY
           MODULE PROCEDURE EMPTY_SD
@@ -76,14 +76,14 @@
 
       LOGICAL FUNCTION readempty( c_emp, wempt )
 
-! ...   This subroutine reads empty states from unit emptyunit
+        ! ...   This subroutine reads empty states from unit emptyunit
 
-        USE wave_types, ONLY: wave_descriptor
-        USE mp_global, ONLY: me_image, nproc_image, intra_image_comm
-        USE io_global, ONLY: stdout, ionode, ionode_id
-        USE mp, ONLY: mp_bcast
-        USE mp_wave, ONLY: splitwf
-        USE io_files, ONLY: scradir
+        USE wave_types,         ONLY: wave_descriptor
+        USE mp_global,          ONLY: me_image, nproc_image, intra_image_comm
+        USE io_global,          ONLY: stdout, ionode, ionode_id
+        USE mp,                 ONLY: mp_bcast
+        USE mp_wave,            ONLY: splitwf
+        USE io_files,           ONLY: scradir
         USE reciprocal_vectors, ONLY: ig_l2g
 
         IMPLICIT none
@@ -97,9 +97,10 @@
         INTEGER :: nk, ne(2), ngwm_g, nspin
 
         COMPLEX(DP), ALLOCATABLE :: ctmp(:)
-!
-! ... Subroutine Body
-!
+
+        !
+        ! ... Subroutine Body
+        !
 
         IF( wempt%nspin < 1 .OR. wempt%nspin > 2 ) &
           CALL errore( ' readempty ', ' nspin out of range ', 1 )
@@ -176,7 +177,7 @@
 
       SUBROUTINE writeempty( c_emp, wempt )
 
-! ...   This subroutine writes empty states to unit emptyunit
+        ! ...   This subroutine writes empty states to unit emptyunit
 
         USE wave_types, ONLY: wave_descriptor
         USE mp_global, ONLY: me_image, nproc_image, intra_image_comm
@@ -191,9 +192,9 @@
         INTEGER :: ig, i, ik, nl, ne(2), ngwm_g, nk, ispin, nspin, ngw
         LOGICAL :: exst
         COMPLEX(DP), ALLOCATABLE :: ctmp(:)
-!
-! ... Subroutine Body
-!
+        !
+        ! ... Subroutine Body
+        !
         IF( wempt%nspin < 1 .OR. wempt%nspin > 2 ) &
           CALL errore( ' writeempty ', ' nspin out of range ', 1 )
 
@@ -246,33 +247,34 @@
 
       SUBROUTINE gram_empty( ispin, tortho, cf, wfill, ce,  wempt )
 
-! This subroutine orthogonalize the empty states CE to the
-! filled states CF using gram-shmitd . 
-! If TORTHO is FALSE the subroutine orthonormalizes the 
-! empty states CE and orthogonalize them to the CF states.
+        ! This subroutine orthogonalize the empty states CE to the
+        ! filled states CF using gram-shmitd . 
+        ! If TORTHO is FALSE the subroutine orthonormalizes the 
+        ! empty states CE and orthogonalize them to the CF states.
 
       USE wave_types, ONLY: wave_descriptor
-      USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: nproc_image, intra_image_comm
+      USE mp,         ONLY: mp_sum
+      USE mp_global,  ONLY: nproc_image, intra_image_comm
 
       REAL(DP) SQRT, DNRM2
       
-! ... ARGUMENTS
+      ! ... ARGUMENTS
+
       LOGICAL, INTENT(IN) :: TORTHO
       COMPLEX(DP), INTENT(INOUT) :: CF(:,:), CE(:,:)
       type (wave_descriptor), INTENT(IN) :: wfill, wempt
       INTEGER, INTENT(IN) :: ispin
 
-! ... LOCALS
+      ! ... LOCALS
+
       INTEGER      :: i, j, ig, NF, NE, NGW, ldw
       REAL(DP)    :: ANORM
       REAL(DP)   , ALLOCATABLE :: SF(:),  SE(:),  TEMP(:)
       COMPLEX(DP), ALLOCATABLE :: CSF(:), CSE(:), CTEMP(:)
       COMPLEX(DP) :: czero, cone, cmone
-!
-! ... SUBROUTINE BODY
-!
-
+      !
+      ! ... SUBROUTINE BODY
+      !
       NF    = wfill%nbl( ispin )
       NE    = wempt%nbl( ispin )
       NGW   = wfill%ngwl
@@ -370,22 +372,24 @@
         USE control_flags, ONLY: force_pairing, gamma_only
         USE wave_functions, ONLY: wave_rand_init
 
-! ...   Arguments
+        ! ...   Arguments
+
         COMPLEX(DP), INTENT(INOUT) :: c_occ(:,:,:,:), c_emp(:,:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
         REAL(DP)                  :: ampre  
 
-! ...   Locals
+        ! ...   Locals
+
         INTEGER   :: ig_local
         INTEGER   :: ngw, ngwt
         INTEGER   :: ib, ik, ispin, ispin_wfc
         LOGICAL   :: tortho = .FALSE.
         COMPLEX(DP), ALLOCATABLE :: pwt( : )
-!
-! ...   Subroutine body
+        !
+        ! ...   Subroutine body
 
-! ...   initialize the wave functions in such a way that the values
-! ...   of the components are independent on the number of processors
+        ! ...   initialize the wave functions in such a way that the values
+        ! ...   of the components are independent on the number of processors
 
         ngwt  = wfill%ngwt
         ngw   = wfill%ngwl
@@ -458,6 +462,8 @@
       INTEGER   ::  i, k, j, iter, ik, nk
       INTEGER   ::  nspin, ispin, ispin_wfc
       INTEGER   ::  n_occ( wfill%nspin )
+      INTEGER   ::  nupdwn_emp( wfill%nspin )
+      INTEGER   ::  iupdwn_emp( wfill%nspin )
       INTEGER   ::  ig, iprinte, iks, nrl, jl, ngw
       REAL(DP) ::  dek, ekinc, ekinc_old
       REAL(DP) :: ampre
@@ -478,6 +484,10 @@
       n_occ     = wfill%nbt
       gamma     = wfill%gamma
       ampre     = 0.001d0
+
+      nupdwn_emp = n_emp
+      iupdwn_emp(1) = 1
+      IF( nspin == 2 ) iupdwn_emp(2) = 1+n_emp
 
       ekinc_old = 1.d+10
       ekinc     = 0.0d0
@@ -517,10 +527,11 @@
 
             CALL nlsm1 ( n_emp, 1, nspnl, eigr, c_emp( 1, 1, ik, ispin ), bece( 1, (ispin-1)*n_emp + 1 ) )
 
-            CALL dforce_all( ispin, c_emp(:,:,1,ispin), wempt, fi(:,1,ispin), eforce(:,:,1,ispin), &
-              vpot(:,ispin), eigr, bece )
+            CALL dforce_all( ispin, c_emp(:,:,1,ispin), fi(:,1,ispin), eforce(:,:,1,ispin), &
+                             vpot(:,ispin), eigr, bece, nupdwn_emp, iupdwn_emp )
 
             ! ...       Steepest descent
+
             DO i = 1, n_emp
               cp_emp(:,i,ik,ispin) = c_emp(:,i,ik,ispin) +  dt2bye(:) * eforce(:, i, ik, ispin)
             END DO
@@ -566,7 +577,7 @@
 
       END DO ITERATIONS
 
-      CALL empty_eigs( tortho, c_emp, wempt, fi, vpot, eforce, eigr, bece )
+      CALL empty_eigs( tortho, c_emp, wempt, fi, vpot, eforce, eigr, bece, nupdwn_emp, iupdwn_emp  )
 
       CALL writeempty( c_emp, wempt )
 
@@ -591,7 +602,7 @@
 !
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE empty_eigs( tortho, c_emp, wempt, fi, vpot, eforce, eigr, bece)
+    SUBROUTINE empty_eigs( tortho, c_emp, wempt, fi, vpot, eforce, eigr, bece, nupdwn_emp, iupdwn_emp)
 
       USE wave_types,       ONLY : wave_descriptor
       USE wave_constrains,  ONLY : update_lambda
@@ -611,6 +622,7 @@
       LOGICAL, INTENT(IN) :: TORTHO
       COMPLEX(DP) :: eigr(:,:)
       REAL (DP) :: bece(:,:)
+      INTEGER :: nupdwn_emp(:), iupdwn_emp(:)
 !
 ! ... LOCALS
 !
@@ -641,8 +653,8 @@
 
         ! ...   Calculate | dH / dpsi(j) >
         !
-        CALL dforce_all( ispin, c_emp(:,:,1,ispin), wempt, fi(:,1,ispin), eforce(:,:,1,ispin), &
-          vpot(:,ispin), eigr, bece )
+        CALL dforce_all( ispin, c_emp(:,:,1,ispin), fi(:,1,ispin), eforce(:,:,1,ispin), &
+          vpot(:,ispin), eigr, bece, nupdwn_emp, iupdwn_emp )
 
         ! ...     Calculate Eij = < psi(i) | H | psi(j) > = < psi(i) | dH / dpsi(j) >
         DO i = 1, n_emp

@@ -35,8 +35,8 @@
 
     SUBROUTINE dforce1( co, ce, dco, dce, fio, fie, hg, v, psi_stored )
 
-      USE fft_base, ONLY: dffts
-      USE gvecw, ONLY: ngw
+      USE fft_base,   ONLY: dffts
+      USE gvecw,      ONLY: ngw
       USE fft_module, ONLY: fwfft, invfft
 
       IMPLICIT NONE
@@ -187,7 +187,6 @@
 
       USE ions_base,       ONLY: na
       USE pseudopotential, ONLY: nspnl
-      USE electrons_base,  ONLY: iupdwn
       USE uspp_param,      only: nh
       USE uspp,            only: nhtol, nhtolm, indv, beta, dvan
       use cvan,            only: ish
@@ -262,24 +261,20 @@
 
      
 
-    SUBROUTINE dforce( ib, iss, c, cdesc, f, df, da, v, eigr, bec )
+    SUBROUTINE dforce( ib, iss, c, f, df, da, v, eigr, bec, nupdwn, iupdwn )
        !
-       USE wave_types, ONLY: wave_descriptor
-       USE turbo, ONLY: tturbo, nturbo, turbo_states
        USE reciprocal_vectors, ONLY: ggp, g, gx
-       USE electrons_base, ONLY: nupdwn, iupdwn
        !
        IMPLICIT NONE
        !
-       INTEGER,      INTENT(IN)  :: ib, iss     ! band and spin index
+       INTEGER,      INTENT(IN) :: ib, iss     ! band and spin index
        COMPLEX(DP), INTENT(IN)  :: c(:,:)
        COMPLEX(DP), INTENT(OUT) :: df(:), da(:)
        REAL (DP),   INTENT(IN)  :: v(:), bec(:,:), f(:)
        COMPLEX(DP), INTENT(IN)  :: eigr(:,:)
-       type (wave_descriptor), INTENT(IN) :: cdesc
+       INTEGER,      INTENT(IN) :: nupdwn(:), iupdwn(:)
        !
        COMPLEX(DP), ALLOCATABLE :: dum( : )   
-       ! COMPLEX(DP) :: df_( SIZE( df ) ) , da_( SIZE( da ) )   ! DEBUG
        !
        INTEGER :: ig, in
        !
@@ -295,9 +290,6 @@
           !
           CALL dforce2_bec( f(ib), f(ib), df , dum , eigr, bec( :, in ), bec( :, in ) )
           !
-          ! CALL dforce2( f(ib), f(ib), df, dum, fnl(:,:,ib), &
-          !    fnl(:,:,ib), g(:), gx(:,:), eigr, wsg, wnl )
-          !
           DEALLOCATE( dum )
           !
        ELSE
@@ -306,14 +298,6 @@
           !
           CALL dforce2_bec( f(ib), f(ib+1), df, da, eigr, bec( :, in ), bec( :, in+1 ) )
           !
-          ! CALL dforce2( f(ib), f(ib+1), df, da, fnl(:,:,ib), &
-          !    fnl(:,:,ib+1), g(:), gx(:,:), eigr, wsg, wnl )
-          !
-          ! DO ig = 1, SIZE( df ), 50
-          !    WRITE(6,*) ig, df(ig), df_(ig)
-          !    WRITE(6,*) ig, da(ig), da_(ig)
-          ! END DO
-          !
        END IF
        !
        return
@@ -321,33 +305,36 @@
 
 
 !  ----------------------------------------------
+  
 
-
-    SUBROUTINE dforce_all( ispin, c, cdesc, f, cgrad, vpot, eigr, bec )
-        !
-        USE wave_types,       ONLY: wave_descriptor
-        USE electrons_base,   ONLY: nupdwn
+    SUBROUTINE dforce_all( iss, c, f, cgrad, vpot, eigr, bec, nupdwn, iupdwn )
         !
         IMPLICIT NONE
 
-        INTEGER,                INTENT(IN)    :: ispin
+        INTEGER,               INTENT(IN)    :: iss
         COMPLEX(DP),           INTENT(INOUT) :: c(:,:)
-        type (wave_descriptor), INTENT(IN)    :: cdesc
         REAL(DP),              INTENT(IN)    :: vpot(:), f(:)
         COMPLEX(DP),           INTENT(OUT)   :: cgrad(:,:)
         COMPLEX(DP),           INTENT(IN)    :: eigr(:,:)
         REAL(DP),              INTENT(IN)    :: bec(:,:)
+        INTEGER,               INTENT(IN)    :: nupdwn(:), iupdwn(:)
        
         INTEGER :: ib
         !
-        IF( nupdwn( ispin ) > 0 ) THEN
+        IF( nupdwn( iss ) > 0 ) THEN
            !
            !   Process two states at the same time
            !
-           DO ib = 1, nupdwn( ispin ), 2
-              CALL dforce( ib, ispin, c, cdesc, f, cgrad(:,ib), cgrad(:,ib+1), &
-                  vpot, eigr, bec )
+           DO ib = 1, nupdwn( iss )-1, 2
+              CALL dforce( ib, iss, c, f, cgrad(:,ib), cgrad(:,ib+1), &
+                  vpot, eigr, bec, nupdwn, iupdwn )
            END DO
+           !
+           IF( MOD( nupdwn( iss ), 2 ) /= 0 ) THEN
+              ib = nupdwn( iss )
+              CALL dforce( ib, iss, c, f, cgrad(:,ib), cgrad(:,ib), &
+                  vpot, eigr, bec, nupdwn, iupdwn )
+           END IF
            !
         END IF
         !

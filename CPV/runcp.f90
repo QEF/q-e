@@ -47,7 +47,6 @@
       USE wave_base, ONLY: hpsi
       USE cell_module, ONLY: boxdimensions
       USE time_step, ONLY: delt
-      USE forces, ONLY: dforce
       USE orthogonalize, ONLY: ortho
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
@@ -167,6 +166,7 @@
 ! ...   declare modules
       USE kinds
       USE electrons_module, ONLY:  pmss
+      USE electrons_base, ONLY:  nupdwn, iupdwn
       USE cp_electronic_mass, ONLY: emass
       USE wave_base, ONLY: wave_steepest, wave_verlet
       USE time_step, ONLY: delt
@@ -252,7 +252,7 @@
           DO i = 1, nb, 2
 
             !WRITE( 6, * ) 'DEBUG = ', fi(i,1,is), fi(i+1,1,is)
-            CALL dforce( i, is, c0(:,:,1,is), cdesc, fi(:,1,is), c2, c3, vpot(:,is), eigr, bec )
+            CALL dforce( i, is, c0(:,:,1,is), fi(:,1,is), c2, c3, vpot(:,is), eigr, bec, nupdwn, iupdwn )
 
             IF( tlam ) THEN
                CALL update_lambda( i, gam( :, :,is), c0(:,:,1,is), cdesc, c2 )
@@ -283,7 +283,7 @@
 
             nb = nx
 
-            CALL dforce( nx, is, c0(:,:,1,is), cdesc, fi(:,1,is), c2, c3, vpot(:,is), eigr, bec )
+            CALL dforce( nx, is, c0(:,:,1,is), fi(:,1,is), c2, c3, vpot(:,is), eigr, bec, nupdwn, iupdwn )
 
             IF( tlam ) THEN
                CALL update_lambda( nb, gam( :, :,is), c0(:,:,1,is), cdesc, c2 )
@@ -332,7 +332,8 @@
       USE kinds
       USE mp_global, ONLY: intra_image_comm
       USE mp, ONLY: mp_sum
-      USE electrons_module, ONLY: pmss, eigs, nb_l, nupdwn, nspin
+      USE electrons_module, ONLY: pmss, eigs, nb_l
+      USE electrons_base, ONLY: iupdwn, nupdwn, nspin
       USE cp_electronic_mass, ONLY: emass
       USE wave_functions, ONLY : cp_kinetic_energy
       USE wave_base, ONLY: wave_steepest, wave_verlet
@@ -454,8 +455,8 @@
 
         DO i = 1, nb, 2
           !
-          CALL dforce( i, 2, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,1), eigr, bec )
-          CALL dforce( i, 2, c0(:,:,1,1), cdesc, fi(:,1,1), c4, c5, vpot(:,2), eigr, bec )
+          CALL dforce( i, 2, c0(:,:,1,1), fi(:,1,1), c2, c3, vpot(:,1), eigr, bec, nupdwn, iupdwn )
+          CALL dforce( i, 2, c0(:,:,1,1), fi(:,1,1), c4, c5, vpot(:,2), eigr, bec, nupdwn, iupdwn )
           !
           c2 = occup(i  , ik)* (c2 + c4)
           c3 = occup(i+1, ik)* (c3 + c5)
@@ -487,8 +488,8 @@
           !
           nb = n_unp - 1
           !
-          CALL dforce( nb, 2, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,1), eigr, bec )
-          CALL dforce( nb, 2, c0(:,:,1,1), cdesc, fi(:,1,2), c4, c5, vpot(:,2), eigr, bec )
+          CALL dforce( nb, 2, c0(:,:,1,1), fi(:,1,1), c2, c3, vpot(:,1), eigr, bec, nupdwn, iupdwn )
+          CALL dforce( nb, 2, c0(:,:,1,1), fi(:,1,2), c4, c5, vpot(:,2), eigr, bec, nupdwn, iupdwn )
 
           c2 = occup(nb , ik)* (c2 + c4)
 
@@ -506,7 +507,7 @@
         END IF
 
         !
-        CALL dforce( n_unp, 1, c0(:,:,1,1), cdesc, fi(:,1,1), c2, c3, vpot(:,1), eigr, bec )
+        CALL dforce( n_unp, 1, c0(:,:,1,1), fi(:,1,1), c2, c3, vpot(:,1), eigr, bec, nupdwn, iupdwn )
 
         intermed  = -2.d0 * sum( c2 * conjg( c0(:, n_unp, ik, 1 ) ) )
         IF ( gstart == 2 ) THEN

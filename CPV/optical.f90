@@ -68,6 +68,7 @@
           USE forces, ONLY: dforce_all
           USE brillouin, ONLY: kpoints, kp
           USE electrons_module, ONLY: ei, ei_emp
+          USE electrons_base, ONLY: nupdwn, iupdwn
           USE kohn_sham_states, ONLY: kohn_sham
           USE constants, ONLY: au, pi, k_boltzman_au, au_to_ohmcmm1
           USE cell_base, ONLY: tpiba2
@@ -107,6 +108,10 @@
           REAL(DP) :: FACT, ef, beta
           LOGICAL :: gamma_symmetry, gzero
 
+          INTEGER ::  nupdwn_emp( wfill%nspin )
+          INTEGER ::  iupdwn_emp( wfill%nspin )
+
+
 ! ...     SUBROUTINE BODY
 
           CALL errore( ' opticalp ', ' not working ', 1 )
@@ -138,13 +143,17 @@
             !
             CALL nlsm1 ( nb_l, 1, nspnl, eigr, cf(1,1,1,ispin), bec )
 
-            CALL dforce_all( ispin, cf(:,:,1,ispin), wfill, occ(:,1,ispin), eforce(:,:,1), &
-                             vpot(:,ispin), eigr, bec )
+            CALL dforce_all( ispin, cf(:,:,1,ispin), occ(:,1,ispin), eforce(:,:,1), &
+                             vpot(:,ispin), eigr, bec, nupdwn, iupdwn )
 
             CALL kohn_sham( ispin, cf(:,:,1,ispin), wfill, eforce(:,:,1) )
 
             ngw  = wempt%ngwl
             nb_l = wempt%nbl( ispin )
+            nupdwn_emp = nb_l
+            iupdwn_emp(1) = 1
+            IF( nspin == 2 ) iupdwn_emp(2) = 1+nb_l
+
 
             ALLOCATE( ff( nb_l, nk ) )
             DO ik = 1, nk
@@ -155,8 +164,8 @@
             !
             CALL nlsm1 ( nb_l, 1, nspnl, eigr, ce(1,1,1,ispin), bece )
             !
-            CALL dforce_all( ispin, ce(:,:,1,ispin), wempt, ff( :, 1), eforce(:,:,1), &
-                             vpot(:,ispin), eigr, bece )
+            CALL dforce_all( ispin, ce(:,:,1,ispin), ff( :, 1), eforce(:,:,1), &
+                             vpot(:,ispin), eigr, bece, nupdwn_emp, iupdwn_emp )
             !
             CALL kohn_sham( ispin, ce(:,:,1,ispin), wempt, eforce(:,:,1) )
 

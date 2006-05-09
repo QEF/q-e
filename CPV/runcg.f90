@@ -63,6 +63,7 @@
 ! ... declare modules
       USE energies, ONLY: dft_energy_type, print_energies
       USE electrons_module, ONLY: pmss, eigs, nb_l
+      USE electrons_base, ONLY: nupdwn, iupdwn
       USE cp_electronic_mass, ONLY: emass
       USE wave_functions, ONLY: cp_kinetic_energy, proj, fixwave
       USE wave_base, ONLY: dotp, hpsi
@@ -183,8 +184,8 @@
 ! ...     Calculate wave functions gradient (temporarely stored in cp)
 ! ...     |d H / dPsi_j > = H |Psi_j> - Sum{i} <Psi_i|H|Psi_j> |Psi_i>
 
-          CALL dforce_all( ispin, c0(:,:,1,ispin), cdesc, occ(:,1,ispin), cp(:,:,1,ispin), &
-            vpot(:,ispin), eigr, bec )
+          CALL dforce_all( ispin, c0(:,:,1,ispin), occ(:,1,ispin), cp(:,:,1,ispin), &
+            vpot(:,ispin), eigr, bec, nupdwn, iupdwn )
  
 ! ...     Project the gradient
           IF( gamma_symmetry ) THEN
@@ -317,8 +318,8 @@
       IF( tprint ) THEN
         DO ispin = 1, nspin
 
-          CALL dforce_all( ispin, c0(:,:,1,ispin), cdesc, occ(:,1,ispin), hacca(:,:,1,ispin), &
-            vpot(:,ispin), eigr, bec )
+          CALL dforce_all( ispin, c0(:,:,1,ispin), occ(:,1,ispin), hacca(:,:,1,ispin), &
+            vpot(:,ispin), eigr, bec, nupdwn, iupdwn )
 
           nb_g( ispin ) = cdesc%nbt( ispin )
 

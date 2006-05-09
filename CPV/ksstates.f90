@@ -163,6 +163,7 @@ CONTAINS
         USE brillouin, ONLY: kpoints, kp
         USE pseudo_projector, ONLY: projector
         USE control_flags, ONLY: timing, force_pairing
+        USE electrons_base, ONLY: nupdwn, iupdwn
 
         IMPLICIT NONE
 
@@ -176,6 +177,8 @@ CONTAINS
         ! ...   declare other variables
         INTEGER ::  i, ik, ib, nk, ig, ngw, nb_g, nb_l, ispin, nspin, iks
         INTEGER ::  ispin_wfc
+        INTEGER ::  nupdwn_emp( wfill%nspin )
+        INTEGER ::  iupdwn_emp( wfill%nspin )
         LOGICAL  :: tortho = .TRUE.
         CHARACTER(LEN=4) :: nom
         CHARACTER(LEN=256) :: file_name
@@ -211,8 +214,8 @@ CONTAINS
 
             ALLOCATE(  eforce( ngw,  nb_l ) )
 
-            CALL dforce_all( ispin, cf(:,:,1,ispin_wfc), wfill, occ(:,1,ispin), eforce, &
-              vpot(:,ispin), eigr, bec )
+            CALL dforce_all( ispin, cf(:,:,1,ispin_wfc), occ(:,1,ispin), eforce, &
+              vpot(:,ispin), eigr, bec, nupdwn, iupdwn )
 
             CALL kohn_sham( ispin, cf(:,:,1,ispin_wfc), wfill, eforce )
 
@@ -225,6 +228,10 @@ CONTAINS
             ngw  = wempt%ngwl
             nb_l = wempt%nbl( ispin )
 
+            nupdwn_emp = nb_l
+            iupdwn_emp(1) = 1
+            IF( nspin == 2 ) iupdwn_emp(2) = 1+nb_l
+
             IF( nb_l > 0 ) THEN
 
               ALLOCATE( fi( nb_l, nk ) )
@@ -234,8 +241,8 @@ CONTAINS
 
               ALLOCATE(  eforce( ngw,  nb_l ) )
 
-              CALL dforce_all( ispin, ce(:,:,1,ispin), wempt, fi(:,1), eforce, &
-                               vpot(:,ispin), eigr, bec )
+              CALL dforce_all( ispin, ce(:,:,1,ispin), fi(:,1), eforce, &
+                               vpot(:,ispin), eigr, bec, nupdwn_emp, iupdwn_emp )
 
               CALL kohn_sham( ispin, ce(:,:,1,ispin), wempt, eforce )
 
@@ -357,7 +364,7 @@ CONTAINS
         USE brillouin, ONLY: kpoints, kp
         USE pseudo_projector, ONLY: projector
         USE control_flags, ONLY: timing
-        USE electrons_module, ONLY: nupdwn, nspin
+        USE electrons_base, ONLY: iupdwn, nupdwn, nspin
 
         IMPLICIT NONE
 
@@ -378,6 +385,8 @@ CONTAINS
 
         COMPLEX(DP), ALLOCATABLE :: eforce(:,:,:)
         REAL(DP), ALLOCATABLE :: fi(:,:)
+        INTEGER ::  nupdwn_emp( wfill%nspin )
+        INTEGER ::  iupdwn_emp( wfill%nspin )
 
         CHARACTER (LEN=6), EXTERNAL :: int_to_char
         REAL(DP), EXTERNAL :: cclock
@@ -406,10 +415,8 @@ CONTAINS
 
           ALLOCATE(  eforce( ngw, nb, 2 ) )
 
-          CALL dforce_all( 1, cf(:,:,1,1), wfill, occ(:,1,1), eforce(:,:,1), &
-              vpot(:,1), eigr, bec )
-          CALL dforce_all( 2, cf(:,:,1,1), wfill, occ(:,1,2), eforce(:,:,2), &
-              vpot(:,2), eigr, bec )
+          CALL dforce_all( 1, cf(:,:,1,1), occ(:,1,1), eforce(:,:,1), vpot(:,1), eigr, bec, nupdwn, iupdwn )
+          CALL dforce_all( 2, cf(:,:,1,1), occ(:,1,2), eforce(:,:,2), vpot(:,2), eigr, bec, nupdwn, iupdwn )
 
           DO i = 1, nupdwn(2)
             eforce(:,i,1) = occ(i,1,1) * eforce(:,i,1) + occ(i,1,2) * eforce(:,i,2)
@@ -429,6 +436,10 @@ CONTAINS
           ngw  = wempt%ngwl
           nb_l = wempt%nbl( 1 )
 
+          nupdwn_emp = nb_l
+          iupdwn_emp(1) = 1
+          IF( nspin == 2 ) iupdwn_emp(2) = 1+nb_l
+
           IF( nb_l > 0 ) THEN
 
             ALLOCATE( fi( nb_l, nk ) )
@@ -438,13 +449,11 @@ CONTAINS
 
             ALLOCATE(  eforce( ngw,  nb_l, 1 ))
 
-            CALL dforce_all( 1, ce(:,:,1,1), wempt, fi(:,1), eforce(:,:,1), vpot(:,1), &
-                             eigr, bec )
+            CALL dforce_all( 1, ce(:,:,1,1), fi(:,1), eforce(:,:,1), vpot(:,1), eigr, bec, nupdwn_emp, iupdwn_emp )
 
             CALL kohn_sham( 1, ce(:,:,1,1), wempt, eforce(:,:,1) )
 
-            CALL dforce_all( 2, ce(:,:,1,2), wempt, fi(:,1), eforce(:,:,1), vpot(:,2), &
-                             eigr, bec )
+            CALL dforce_all( 2, ce(:,:,1,2), fi(:,1), eforce(:,:,1), vpot(:,2), eigr, bec, nupdwn_emp, iupdwn_emp )
 
             CALL kohn_sham( 2, ce(:,:,1,2), wempt, eforce(:,:,1) )
 

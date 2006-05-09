@@ -79,6 +79,7 @@ CONTAINS
       USE io_global, ONLY: stdout
       USE energies, ONLY: dft_energy_type
       USE electrons_module, ONLY: pmss
+      USE electrons_base, ONLY: nupdwn, iupdwn
       USE time_step, ONLY: delt
       USE wave_functions, ONLY: proj, crot
       USE phase_factors_module, ONLY: strucf, phfacs
@@ -263,7 +264,7 @@ CONTAINS
 
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fs, bec, becdr, eigr)
 
-          CALL dforce_all( 1, c0(:,:,1,1), cdesc, fi(:,1,1), cgrad(:,:,1,1), vpot(:,1), eigr, bec )
+          CALL dforce_all( 1, c0(:,:,1,1), fi(:,1,1), cgrad(:,:,1,1), vpot(:,1), eigr, bec, nupdwn, iupdwn )
 
           CALL proj( 1, cgrad(:,:,1,1), cdesc, c0(:,:,1,1), cdesc, lambda )
           CALL crot( 1, c0(:,:,1,1), cdesc, lambda, eig(:,1,1) )
@@ -272,7 +273,7 @@ CONTAINS
           call entropy_s(fi(1,1,1),temp_elec,cdesc%nbl(1),edft%ent)
 
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fs, bec, becdr, eigr)
-          CALL dforce_all( 1, c0(:,:,1,1), cdesc, fi(:,1,1), cgrad(:,:,1,1), vpot(:,1), eigr, bec )
+          CALL dforce_all( 1, c0(:,:,1,1), fi(:,1,1), cgrad(:,:,1,1), vpot(:,1), eigr, bec, nupdwn, iupdwn )
 
           DO ib = 1, cdesc%nbl( 1 )
             cgrad(:,ib,1,1) = cgrad(:,ib,1,1) + eig(ib,1,1)*c0(:,ib,1,1)
@@ -283,7 +284,7 @@ CONTAINS
 ! ...     DIIS on c0 at FIXED potential
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, fs, bec, becdr, eigr)
 
-          CALL dforce_all( 1, c0(:,:,1,1), cdesc, fi(:,1,1), cgrad(:,:,1,1), vpot(:,1), eigr, bec )
+          CALL dforce_all( 1, c0(:,:,1,1), fi(:,1,1), cgrad(:,:,1,1), vpot(:,1), eigr, bec, nupdwn, iupdwn )
 
           CALL proj( 1, cgrad(:,:,1,1), cdesc, c0(:,:,1,1), cdesc, lambda)
 
@@ -393,6 +394,7 @@ CONTAINS
       USE runcp_module, ONLY: runcp
       USE energies, ONLY: dft_energy_type
       USE electrons_module, ONLY: ei, pmss
+      USE electrons_base, ONLY: nupdwn, iupdwn
       USE time_step, ONLY: delt
       USE wave_functions, ONLY: proj, update_wave_functions
       USE diis
@@ -528,8 +530,8 @@ CONTAINS
 ! ...       of 1, ( row 1 to PE 1, row 2 to PE 2, .. row nproc_image+1 to PE 1 and
 ! ...       so on).
 
-            CALL dforce_all( ispin, c0(:,:,1,ispin), cdesc, fi(:,1,ispin), cgrad(:,:,1,ispin), &
-                             vpot(:,ispin), eigr, bec )
+            CALL dforce_all( ispin, c0(:,:,1,ispin), fi(:,1,ispin), cgrad(:,:,1,ispin), &
+                             vpot(:,ispin), eigr, bec, nupdwn, iupdwn )
 
             CALL proj( ispin, cgrad(:,:,1,ispin), cdesc, c0(:,:,1,ispin), cdesc, lambda)
 
@@ -604,6 +606,7 @@ CONTAINS
         USE constants, ONLY: au
         USE cell_base, ONLY: tpiba2
         USE electrons_module, ONLY: eigs, ei, pmss, emass, nb_l, ib_owner, ib_local
+        USE electrons_base, ONLY: iupdwn, nupdwn
         USE forces, ONLY: dforce_all
         USE orthogonalize
         USE pseudopotential,       ONLY: nspnl
@@ -653,8 +656,8 @@ CONTAINS
           CALL nlsm1( n, 1, nspnl, eigr, c(1,1,1,ispin), bec )
 
 ! ...     Calculate | dH / dpsi(j) >
-          CALL dforce_all( ispin, c(:,:,1,ispin), cdesc, fi(:,1,ispin), eforce(:,:,1,ispin), &
-                           vpot(:,ispin), eigr, bec )
+          CALL dforce_all( ispin, c(:,:,1,ispin), fi(:,1,ispin), eforce(:,:,1,ispin), &
+                           vpot(:,ispin), eigr, bec, nupdwn, iupdwn )
 
 ! ...       Calculate Eij = < psi(i) | H | psi(j) > = < psi(i) | dH / dpsi(j) >
             DO i = 1, n
