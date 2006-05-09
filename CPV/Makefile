@@ -212,7 +212,7 @@ tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
-	- /bin/rm -f cppp.x *.o *.mod version.h *.i core* *.F90 fort* \
+	- /bin/rm -f cppp.x *.o *.mod cpver.h *.i core* *.F90 fort* \
 		*.cpp *.d work.pc  *.s cp.x
 
 include make.depend
