@@ -10,9 +10,10 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to run a meta-dynamics simulation (at T=0)"
-$ECHO "(with both pw.x and cp.x) to explore different conformations of a"
-$ECHO "Si6H6 molecule."
+$ECHO "  This example shows how to run a meta-dynamics simulation (with both"
+$ECHO "  pw.x and cp.x) to explore different conformations of a Si6H6 molecule."
+$ECHO "  The first two simulations are performed at T=0 (pure conformational"
+$ECHO "  search) while the third is performed at finite temperature (T=300 K)."
 
 # set the needed environment variables
 . ../environment_variables
@@ -84,7 +85,7 @@ cat > metadyn-pw.in << EOF
   prefix         = "metadyn-pw",
   outdir         = "$TMP_DIR",
   pseudo_dir     = "$PSEUDO_DIR",
-  nstep          = 15,
+  nstep          = 10,
   etot_conv_thr  = 2.D-4,
   forc_conv_thr  = 2.D-3,
 /
@@ -94,7 +95,7 @@ cat > metadyn-pw.in << EOF
   celldm(1)      = 14.D0,
   nat            = 10,
   ntyp           = 2,
-  ecutwfc        = 12.0D0,
+  ecutwfc        = 12.D0,
 /
 &ELECTRONS
   conv_thr    = 1.D-7,
@@ -132,7 +133,7 @@ Si      -1.192213258  -1.124761111  -0.000001090
 Si       1.192211325  -1.124755647  -0.000001100
 K_POINTS gamma
 EOF
-$ECHO "  running the meta-dynamics calculation with pw.x ...\c"
+$ECHO "  running meta-dynamics calculation ( T = 0 K ) with pw.x ...\c"
 $PW_COMMAND < metadyn-pw.in > metadyn-pw.out
 $ECHO " done"
 
@@ -149,7 +150,7 @@ cat > metadyn-cp.in << EOF
   outdir         = "$TMP_DIR/",
   scradir        = "$TMP_DIR/",
   pseudo_dir     = "$PSEUDO_DIR/",
-  nstep          = 15,
+  nstep          = 10,
   etot_conv_thr  = 4.D-4,
   forc_conv_thr  = 4.D-3,
   restart_mode   = "from_scratch",
@@ -159,10 +160,7 @@ cat > metadyn-cp.in << EOF
   celldm(1) = 14.D0,
   nat       = 10,
   ntyp      = 2,
-  ecutwfc   = 12.0D0,
-  nr1b      = 10,
-  nr2b      = 10,
-  nr3b      = 10,
+  ecutwfc   = 12.D0,
 /
 &ELECTRONS
   electron_dynamics = "damp",
@@ -200,8 +198,78 @@ Si       1.081854851   1.199604160  -0.000001556
 Si      -1.192213258  -1.124761111  -0.000001090
 Si       1.192211325  -1.124755647  -0.000001100
 EOF
-$ECHO "  running the meta-dynamics calculation with cp.x ...\c"
+$ECHO "  running meta-dynamics calculation ( T = 0 K ) with cp.x ...\c"
 $CP_COMMAND < metadyn-cp.in > metadyn-cp.out
+$ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+cat > metadyn-cp-T=300K.in << EOF
+&CONTROL
+  dt             = 10.D0,
+  calculation    = "metadyn",
+  prefix         = "metadyn-cp-T=300",
+  outdir         = "$TMP_DIR/",
+  scradir        = "$TMP_DIR/",
+  pseudo_dir     = "$PSEUDO_DIR/",
+  nstep          = 10,
+  iprint         = 50,
+  isave          = 50,
+  restart_mode   = "from_scratch",
+/
+&SYSTEM
+  ibrav     = 1,
+  celldm(1) = 14.D0,
+  nat       = 10,
+  ntyp      = 2,
+  ecutwfc   = 12.D0,
+/
+&ELECTRONS
+  electron_dynamics = "damp",
+  electron_damping  = 0.1D0,
+  emass             = 250.D0,
+  ortho_max         = 250,
+/
+&IONS
+  fe_step(1)       = 0.3D0,
+  fe_step(2)       = 0.3D0,
+  fe_step(3)       = 0.3D0,
+  g_amplitude      = 0.01D0,
+  fe_nstep         = 150,
+  shake_nstep      = 20,
+  ion_dynamics     = "verlet",
+  ion_temperature  = "nose",
+  tempw            = 300.D0,
+  fnosep           = 15.D0 30.D0 60.D0 90.D0,
+  nhpcl            = 4,
+  nhptyp           = 2,
+  ndega            = -3,
+/
+COLLECTIVE_VARS
+3
+"distance"  7   9
+"distance"  8  10
+"distance"  9  10
+ATOMIC_SPECIES
+H   1.0   H.vbc.UPF
+Si  1.0  Si.vbc.UPF
+ATOMIC_POSITIONS { angstrom }
+H      -2.0191043824      2.6351289099     -0.2633113733
+H       2.2797056665      2.0772184560     -0.1691382538
+H      -1.9413452936     -1.7079914789      1.3180731488
+H       1.7561072281     -1.4806542743      1.4332125312
+H      -1.9548316562     -2.0063417838     -0.9590467354
+H       1.7780372781     -1.8826067153     -1.0609068540
+Si     -0.9178665234      1.5237834357     -0.0941531972
+Si      1.2089832543      1.0704132877     -0.3115309601
+Si     -1.2781468640     -1.2087708390      0.0928809177
+Si      1.0884612946     -1.2202229970      0.1139207771
+EOF
+$ECHO "  running meta-dynamics calculation ( T = 300 K ) with cp.x ...\c"
+$CP_COMMAND < metadyn-cp-T=300K.in > metadyn-cp-T=300K.out
 $ECHO " done"
 
 $ECHO
