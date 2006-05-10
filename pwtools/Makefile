@@ -53,7 +53,7 @@ MODULES = \
 TLDEPS= bindir mods libs pw
 
 all : tldeps band_plot.x dist.x dynmat.x ev.x fqha.x kpoints.x matdyn.x \
-      path_int.x pwi2xsf.x q2r.x bands_FS.x kvecs_FS.x 
+      path_int.x pwi2xsf.x q2r.x bands_FS.x kvecs_FS.x metadyn_pp.x
 
 band_plot.x : band_plot.o $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ band_plot.o $(LIBOBJS) $(LIBS)
