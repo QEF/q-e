@@ -135,8 +135,12 @@ MODULE input
    SUBROUTINE iosys()
      !-------------------------------------------------------------------------
      !
-     USE control_flags, ONLY : fix_dependencies, program_name, lsmd, lneb
-     USE io_global,     ONLY : meta_ionode, stdout
+     USE control_flags,      ONLY : fix_dependencies, program_name, &
+                                    lsmd, lconstrain, lmetadyn
+     USE io_global,          ONLY : meta_ionode, stdout
+     USE ions_base,          ONLY : nat, tau, ityp
+     USE constraints_module, ONLY : init_constraint
+     USE metadyn_vars,       ONLY : init_metadyn_vars     
      !
      IMPLICIT NONE
      !
@@ -160,6 +164,10 @@ MODULE input
      ! ... call the module specific setup routine
      !
      CALL modules_setup()
+     !
+     IF ( lconstrain ) CALL init_constraint( nat, tau, ityp, 1.D0 )
+     !
+     IF ( lmetadyn ) CALL init_metadyn_vars()
      !
      ! ... initialize SMD variables and path
      !
@@ -913,8 +921,6 @@ MODULE input
      USE electrons_base,     ONLY : electrons_base_initval
      USE ensemble_dft,       ONLY : ensemble_initval,tens
      USE wannier_base,       ONLY : wannier_init
-     USE constraints_module, ONLY : init_constraint
-     USE metadyn_vars,       ONLY : init_metadyn_vars
      USE efield_module,      ONLY : tefield
      !
      IMPLICIT NONE
@@ -1045,9 +1051,7 @@ MODULE input
      !
      lconstrain = ( ncolvar_inp + nconstr_inp > 0 )
      !
-     IF ( lconstrain ) CALL init_constraint( nat, tau, ityp, 1.D0 )
-     !
-     IF ( lmetadyn ) CALL init_metadyn_vars()
+
      !
      IF( program_name == 'FPMD' ) THEN
         !

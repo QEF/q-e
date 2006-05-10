@@ -13,11 +13,11 @@ MODULE read_cards_module
   ! ...  Written by Carlo Cavazzoni and modified for "path" implementation
   ! ...  by Carlo Sbraccia
   !
-  USE kinds
-  USE io_global,         ONLY: stdout 
-  USE constants,         ONLY: angstrom_au
-  USE parser,            ONLY: field_count, read_line
-  USE io_global,         ONLY: ionode, ionode_id
+  USE kinds,     ONLY : DP
+  USE io_global, ONLY : stdout 
+  USE constants, ONLY : angstrom_au
+  USE parser,    ONLY : field_count, read_line
+  USE io_global, ONLY : ionode, ionode_id
   !
   USE input_parameters
   !
@@ -1703,7 +1703,8 @@ MODULE read_cards_module
           !
        ELSE
           !
-          CALL errore( 'card_collective_vars', 'too many fields', nfield )
+          CALL errore( 'card_collective_vars', &
+                       'wrong number of fields', nfield )
           !
        END IF
        !
@@ -1760,7 +1761,8 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( 'card_collective_vars', 'too many fields', nfield )
+                CALL errore( 'card_collective_vars', &
+                             'wrong number of fields', nfield )
                 !
              END IF
              !
@@ -1782,7 +1784,8 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( 'card_collective_vars', 'too many fields', nfield )
+                CALL errore( 'card_collective_vars', &
+                             'wrong number of fields', nfield )
                 !
              END IF
              !
@@ -1806,7 +1809,8 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( 'card_collective_vars', 'too many fields', nfield )
+                CALL errore( 'card_collective_vars', &
+                             'wrong number of fields', nfield )
                 !
              END IF
              !
@@ -1832,7 +1836,8 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( 'card_collective_vars', 'too many fields', nfield )
+                CALL errore( 'card_collective_vars', &
+                             'wrong number of fields', nfield )
                 !
              END IF
              !
@@ -1856,7 +1861,8 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( 'card_collective_vars', 'too many fields', nfield )
+                CALL errore( 'card_collective_vars', &
+                             'wrong number of fields', nfield )
                 !
              END IF   
              !
@@ -1876,7 +1882,8 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( 'card_collective_vars', 'too many fields', nfield )
+                CALL errore( 'card_collective_vars', &
+                             'wrong number of fields', nfield )
                 !
              END IF   
              !

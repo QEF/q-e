@@ -117,7 +117,7 @@ MODULE constraints_module
        !
        !
        nconstr    = ncolvar_inp + nconstr_inp
-       constr_tol = MIN( constr_tol_inp, colvar_tol_inp )
+       constr_tol = MAX( constr_tol_inp, colvar_tol_inp )
        !
        monitor_constr = monitor_constr_
        !
