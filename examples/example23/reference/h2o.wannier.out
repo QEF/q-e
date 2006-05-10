@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1 - Mon Oct 24 02:34:10 CEST 2005                         
+     Version: 3.1 - Tue May 9 09:28:14 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   4:50:54   6May2006               
+   This run was started on:   4:51:53  10May2006               
 
    Serial Build
 
@@ -412,7 +412,7 @@
    MAIN: convergence achieved for system relaxation
 
    writing restart file: .//h2o_mol_50.save
-   restart file written in    0.169 sec.
+   restart file written in    0.165 sec.
 
 
 
@@ -429,34 +429,34 @@
    volume        :     8000.00000    8000.00000 (AU)
 
 
-     initialize   :     4.14s CPU
-     total_time   :   154.91s CPU (      92 calls,   1.684 s avg)
-     formf        :     0.19s CPU
-     rhoofr       :    36.80s CPU (      93 calls,   0.396 s avg)
-     vofrho       :    98.00s CPU (      93 calls,   1.054 s avg)
-     dforce       :    18.38s CPU (     186 calls,   0.099 s avg)
-     calphi       :     0.57s CPU (      93 calls,   0.006 s avg)
-     ortho        :     1.02s CPU (      93 calls,   0.011 s avg)
-     updatc       :     0.12s CPU (      93 calls,   0.001 s avg)
-     gram         :     0.00s CPU
-     newd         :     0.39s CPU (      93 calls,   0.004 s avg)
-     calbec       :     0.00s CPU (      94 calls,   0.000 s avg)
-     prefor       :     0.17s CPU (      94 calls,   0.002 s avg)
-     strucf       :     0.60s CPU (      93 calls,   0.006 s avg)
-     rhov         :     8.49s CPU (      93 calls,   0.091 s avg)
-     nlsm1        :     0.77s CPU (     280 calls,   0.003 s avg)
-     fft          :    57.78s CPU (     837 calls,   0.069 s avg)
-     ffts         :    12.92s CPU (     186 calls,   0.069 s avg)
-     fftw         :    22.21s CPU (     558 calls,   0.040 s avg)
-     fftb         :     1.23s CPU (   14115 calls,   0.000 s avg)
+     initialize   :     4.18s CPU
+     total_time   :   155.06s CPU (      92 calls,   1.685 s avg)
+     formf        :     0.18s CPU
+     rhoofr       :    37.07s CPU (      93 calls,   0.399 s avg)
+     vofrho       :    97.52s CPU (      93 calls,   1.049 s avg)
+     dforce       :    18.77s CPU (     186 calls,   0.101 s avg)
+     calphi       :     0.50s CPU (      93 calls,   0.005 s avg)
+     ortho        :     1.00s CPU (      93 calls,   0.011 s avg)
+     updatc       :     0.17s CPU (      93 calls,   0.002 s avg)
+     gram         :     0.01s CPU
+     newd         :     0.44s CPU (      93 calls,   0.005 s avg)
+     calbec       :     0.02s CPU (      94 calls,   0.000 s avg)
+     prefor       :     0.16s CPU (      94 calls,   0.002 s avg)
+     strucf       :     0.57s CPU (      93 calls,   0.006 s avg)
+     rhov         :     9.15s CPU (      93 calls,   0.098 s avg)
+     nlsm1        :     0.84s CPU (     280 calls,   0.003 s avg)
+     fft          :    57.86s CPU (     837 calls,   0.069 s avg)
+     ffts         :    12.64s CPU (     186 calls,   0.068 s avg)
+     fftw         :    22.80s CPU (     558 calls,   0.041 s avg)
+     fftb         :     1.26s CPU (   14115 calls,   0.000 s avg)
      rsg          :     0.00s CPU (      93 calls,   0.000 s avg)
  
  
  
-     CP           :  2m42.17s CPU time
+     CP           :  2m42.39s CPU time
 
  
-   This run was terminated on:   4:53:37   6May2006            
+   This run was terminated on:   4:54:35  10May2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

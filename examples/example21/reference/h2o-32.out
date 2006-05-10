@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1 - Mon Oct 24 02:34:10 CEST 2005                         
+     Version: 3.1 - Tue May 9 09:28:14 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:56:23   6May2006               
+   This run was started on:   3:55:22  10May2006               
 
    Serial Build
 Warning: card  1 4 ignored
@@ -878,8 +878,8 @@ Warning: card  1 4 ignored
    ---------------
               KS_1 integrated charge :        1.00000
               KS_4 integrated charge :        1.00000
-   time for KS ortho     =    46.23
-   time for KS print out =     0.89
+   time for KS ortho     =    49.40
+   time for KS print out =     1.32
 
 
    Averaged Physical Quantities
@@ -895,26 +895,26 @@ Warning: card  1 4 ignored
    volume        :     6486.88962    6486.88962 (AU)
 
 
-     initialize   :    67.09s CPU
-     main_loop    :   463.10s CPU (      10 calls,  46.310 s avg)
-     formf        :     1.41s CPU
-     calphi       :     2.88s CPU (      11 calls,   0.262 s avg)
-     ortho        :    31.10s CPU (      11 calls,   2.827 s avg)
-     updatc       :     7.18s CPU (      11 calls,   0.653 s avg)
-     gram         :    12.95s CPU
+     initialize   :    71.47s CPU
+     main_loop    :   478.93s CPU (      10 calls,  47.893 s avg)
+     formf        :     1.45s CPU
+     calphi       :     3.30s CPU (      11 calls,   0.300 s avg)
+     ortho        :    31.90s CPU (      11 calls,   2.900 s avg)
+     updatc       :     7.52s CPU (      11 calls,   0.684 s avg)
+     gram         :    13.56s CPU
      strucf       :     1.21s CPU
-     nlsm1        :     2.69s CPU (      11 calls,   0.245 s avg)
-     nlsm2        :     1.34s CPU (       2 calls,   0.670 s avg)
-     fft          :    24.51s CPU (      88 calls,   0.279 s avg)
-     fftw         :   338.92s CPU (    2242 calls,   0.151 s avg)
-     rsg          :     0.23s CPU (      11 calls,   0.021 s avg)
+     nlsm1        :     2.88s CPU (      11 calls,   0.262 s avg)
+     nlsm2        :     1.49s CPU (       2 calls,   0.745 s avg)
+     fft          :    25.20s CPU (      88 calls,   0.286 s avg)
+     fftw         :   343.71s CPU (    2242 calls,   0.153 s avg)
+     rsg          :     0.22s CPU (      11 calls,   0.020 s avg)
  
  
  
-     CP           :  9m39.32s CPU time
+     CP           : 10m 2.84s CPU time
 
  
-   This run was terminated on:   4: 6: 3   6May2006            
+   This run was terminated on:   4: 5:26  10May2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

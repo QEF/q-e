@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1 - Mon Oct 24 02:34:10 CEST 2005                         
+     Version: 3.1 - Tue May 9 09:28:14 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5:17:41   6May2006               
+   This run was started on:   5:18:45  10May2006               
 
    Serial Build
 
@@ -259,7 +259,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: .//cp_62.save
-   restart file read in    0.024 sec.
+   restart file read in    0.023 sec.
 
 
    formf: eself=   1.49603
@@ -267,7 +267,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: .//cp_63.save
-   restart file read in    0.024 sec.
+   restart file read in    0.023 sec.
 
 
    formf: eself=   1.49603
@@ -275,7 +275,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: .//cp_64.save
-   restart file read in    0.024 sec.
+   restart file read in    0.023 sec.
 
 
    formf: eself=   1.49603
@@ -283,7 +283,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: .//cp_65.save
-   restart file read in    0.024 sec.
+   restart file read in    0.023 sec.
 
 
    formf: eself=   1.49603
@@ -291,7 +291,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: .//cp_66.save
-   restart file read in    0.024 sec.
+   restart file read in    0.023 sec.
 
 
    formf: eself=   1.49603
@@ -299,7 +299,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: .//cp_67.save
-   restart file read in    0.024 sec.
+   restart file read in    0.023 sec.
 
 
    formf: eself=   1.49603
@@ -461,7 +461,7 @@
    in g-space =    1.000000   in r-space =   1.000000
 
    writing restart file: .//cp_61.save
-   restart file written in    0.052 sec.
+   restart file written in    0.051 sec.
 
 
    writing restart file: .//cp_62.save
@@ -481,7 +481,7 @@
 
 
    writing restart file: .//cp_66.save
-   restart file written in    0.111 sec.
+   restart file written in    0.051 sec.
 
 
    writing restart file: .//cp_67.save
@@ -899,7 +899,7 @@
 
 
    writing restart file: .//cp_62.save
-   restart file written in    0.049 sec.
+   restart file written in    0.050 sec.
 
 
    writing restart file: .//cp_63.save
@@ -911,40 +911,40 @@
 
 
    writing restart file: .//cp_65.save
-   restart file written in    0.049 sec.
+   restart file written in    0.050 sec.
 
 
    writing restart file: .//cp_66.save
-   restart file written in    0.049 sec.
+   restart file written in    0.050 sec.
 
-     initialize   :     0.31s CPU
-     formf        :     0.04s CPU (       7 calls,   0.006 s avg)
+     initialize   :     0.32s CPU
+     formf        :     0.06s CPU (       7 calls,   0.009 s avg)
      rhoofr       :    12.74s CPU (     420 calls,   0.030 s avg)
-     vofrho       :    83.16s CPU (     420 calls,   0.198 s avg)
-     dforce       :     3.47s CPU (     840 calls,   0.004 s avg)
-     calphi       :     0.03s CPU (     420 calls,   0.000 s avg)
-     ortho        :     0.07s CPU (     420 calls,   0.000 s avg)
+     vofrho       :    82.17s CPU (     420 calls,   0.196 s avg)
+     dforce       :     3.21s CPU (     840 calls,   0.004 s avg)
+     calphi       :     0.00s CPU (     420 calls,   0.000 s avg)
+     ortho        :     0.06s CPU (     420 calls,   0.000 s avg)
      updatc       :     0.00s CPU (     840 calls,   0.000 s avg)
-     newd         :     0.54s CPU (     420 calls,   0.001 s avg)
+     newd         :     0.66s CPU (     420 calls,   0.002 s avg)
      calbec       :     0.00s CPU (     427 calls,   0.000 s avg)
-     prefor       :     0.01s CPU (     840 calls,   0.000 s avg)
-     strucf       :     0.14s CPU (     427 calls,   0.000 s avg)
-     rhov         :     4.36s CPU (     420 calls,   0.010 s avg)
-     nlsm1        :     0.04s CPU (    1267 calls,   0.000 s avg)
-     fft          :    32.21s CPU (    5880 calls,   0.005 s avg)
-     ffts         :     2.83s CPU (     840 calls,   0.003 s avg)
-     fftw         :     4.54s CPU (    2520 calls,   0.002 s avg)
-     fftb         :     0.69s CPU (    2100 calls,   0.000 s avg)
-     rsg          :     0.01s CPU (     840 calls,   0.000 s avg)
+     prefor       :     0.00s CPU (     840 calls,   0.000 s avg)
+     strucf       :     0.17s CPU (     427 calls,   0.000 s avg)
+     rhov         :     4.31s CPU (     420 calls,   0.010 s avg)
+     nlsm1        :     0.01s CPU (    1267 calls,   0.000 s avg)
+     fft          :    32.92s CPU (    5880 calls,   0.006 s avg)
+     ffts         :     2.70s CPU (     840 calls,   0.003 s avg)
+     fftw         :     4.22s CPU (    2520 calls,   0.002 s avg)
+     fftb         :     0.88s CPU (    2100 calls,   0.000 s avg)
+     rsg          :     0.00s CPU (     840 calls,   0.000 s avg)
 
    writing restart file: .//cp_67.save
-   restart file written in    0.049 sec.
+   restart file written in    0.050 sec.
 
  
-     CP           :  1m41.53s CPU time
+     CP           :  1m40.50s CPU time
 
  
-   This run was terminated on:   5:19:24   6May2006            
+   This run was terminated on:   5:20:26  10May2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

@@ -4,7 +4,7 @@
      molecules and clusters in vacuum. The CP code is used as
      the undelying DFT egine.
 
-     Version: 3.0 - Fri Jul 15 23:24:44 EDT 2005                          
+     Version: 3.1 - Tue May 9 09:28:14 CEST 2006                          
      Authors of the normal-modes code: Silviu Zilberman
 
      Authors of the CP code: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
@@ -13,10 +13,9 @@
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   2:39:43   7Dec2005               
+   This run was started on:   6:52:55  10May2006               
 
-   MPI Parallel Build
-   Tasks =    1  This task id =    0
+   Serial Build
 Warning: card  &IONS ignored
 Warning: card     ION_DYNAMICS = 'NONE', ignored
 Warning: card     ION_RADIUS(1) = 0.8D0, ignored
@@ -30,12 +29,12 @@ Warning: card  / ignored
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /home/silviu/Work/O-sesame/pseudo/O.BLYP.UPF
-   file type is 20
+   /scr/giannozz/espresso/pseudo/O.BLYP.UPF
+   file type is 20: UPF
 
    Reading pseudopotential for specie #  2 from file :
-   /home/silviu/Work/O-sesame/pseudo/H.fpmd.UPF
-   file type is 20
+   /scr/giannozz/espresso/pseudo/H.fpmd.UPF
+   file type is 20: UPF
 
 
    Main Simulation Parameters (from input)
@@ -64,13 +63,13 @@ Warning: electron_velocities keyword has no effect
    b3    =     0.00000000    0.00000000    0.08333333
    omega =  1728.00000000
 
-    =====================================
-    |  CONJUGATE GRADIENT               |
-    =====================================
-    | iterations   =        40            |
-    | etresh       =   0.00000 a.u.     |
-    | passop       =   0.30000 a.u.     |
-    =====================================
+    ========================================
+    |  CONJUGATE GRADIENT                  |
+    ========================================
+    | iterations   =            40         |
+    | conv_thr     = 0.00000100000 a.u.    |
+    | passop       =       0.30000 a.u.    |
+    ========================================
 
    Energy Cut-offs
    ---------------
@@ -229,13 +228,21 @@ Warning: electron_velocities keyword has no effect
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
 
+
+   Wave Initialization: random initial wave-functions
+   Occupation number from init
+   nbnd =     4
+    2.00 2.00 2.00 2.00
+
    formf: eself=  30.31961
    formf:     vps(g=0)=  -0.0023656     rhops(g=0)=  -0.0034722
    formf: sum_g vps(g)=  -3.7395698 sum_g rhops(g)=  -4.3118270
    formf:     vps(g=0)=  -0.0004805     rhops(g=0)=  -0.0005787
    formf: sum_g vps(g)=  -2.1004248 sum_g rhops(g)=  -0.7186378
+ Using program CP90 as a DFT engine.
+ reading vib input...
  Input information is read from:
- /home/silviu/tmp//./h2o.vib.inp                                                
+ /scr/giannozz/tmp//./h2o.vib.inp                                               
                                                                                 
                                                                                 
                     
@@ -250,13 +257,19 @@ Warning: electron_velocities keyword has no effect
    trans_rot_inv_flag     =             T
    restart_label          =    auto      
    animate                =             T
+ 
+   001       O   16.0000
+   002       H    1.0000
+   003       H    1.0000
  ------------------------------------------------------
+ Done...
+ starting start_vibrations...
  ---------------------------------------
  STARTING A NEW NORMAL MODES CALCULATION 
  ---------------------------------------
  
  Restart information is saved to 
- /home/silviu/tmp//h2o.vib.restart                                              
+ /scr/giannozz/tmp//h2o.vib.restart                                             
                                                                                 
                                                                                 
                     
@@ -386,31 +399,61 @@ Warning: electron_velocities keyword has no effect
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
 
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+ cg_sub: missed minimum, case 1, iteration          21
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+ cg_sub: missed minimum, case 1, iteration          22
+     atom   1 type  1   force =     0.00099171    0.00099675    0.00000090
+     atom   2 type  2   force =     0.00001187   -0.00000119    0.00000854
+     atom   3 type  2   force =     0.00000002    0.00000279   -0.00000087
+
    writing restart file: .//h2o_51.save
-   restart file written in    2.749 sec.
+   restart file written in    0.172 sec.
 
  Done
  
-DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171     -0.0002
+           1          72
+           1          72
+           1          72
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171      0.0002
 DIPOLE MOMENT         (HARTREE A.U.)    0.7313
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0405   443.0390   469.9360
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5469   229.9164   229.9214
-QUADRUPOLE MOMENT              (HARTREE A.U.)1356.0155   0.0000
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0384   443.0401   469.9325
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5466   229.9116   229.9191
+QUADRUPOLE MOMENT              (HARTREE A.U.)1356.0109   0.0000
  
    ATOMIC_POSITIONS
   0.957000E-02  0.957000E-02  0.000000E+00
   0.183318E+01 -0.217650E+00 -0.150000E-03
  -0.217650E+00  0.183318E+01  0.280000E-03
  
-   Ground-state (reference) energy   :        -17.181116
+   Ground-state (reference) energy   :        -17.181116 hartree
    Ground-state dipole vector [debye]:       -1.314       -1.314        0.000
    Dipole moment [debye]             :        1.859
  
+ Done...
  
  Moving now atom #           1   Symbol:  O
  Displacement in direction: -X
  
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+ -0.104300E-01  0.957000E-02  0.000000E+00
+  0.183318E+01 -0.217650E+00 -0.150000E-03
+ -0.217650E+00  0.183318E+01  0.280000E-03
+ 
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -474,17 +517,23 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1356.0155   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+     atom   1 type  1   force =     0.01046057   -0.00024565   -0.00000029
+     atom   2 type  2   force =    -0.00906514    0.00038459    0.00000113
+     atom   3 type  2   force =    -0.00092227    0.00153683    0.00000076
+           1          72
+           1          72
+           1          72
 DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5250     -0.5157      0.0000
 DIPOLE MOMENT         (HARTREE A.U.)    0.7359
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 451.7876   442.9690   469.9590
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 221.4819   234.0005   229.9354
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 451.7872   442.9696   469.9587
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 221.4820   234.0002   229.9355
 QUADRUPOLE MOMENT              (HARTREE A.U.)1364.7156   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.180998
+   displacement total energy         :        -17.180998 hartree
    Ground-state dipole vector [debye]:       -1.334       -1.311        0.000
-   Dipole moment [debye]             :        1.870
+   Dipole moment [debye]             :        1.871
  
  
  Saving restart information...
@@ -494,6 +543,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1364.7156   0.0000
  Moving now atom #           1   Symbol:  O
  Displacement in direction: +X
  
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+  0.295700E-01  0.957000E-02  0.000000E+00
+  0.183318E+01 -0.217650E+00 -0.150000E-03
+ -0.217650E+00  0.183318E+01  0.280000E-03
+ 
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -539,15 +594,21 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1364.7156   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+     atom   1 type  1   force =    -0.01006735    0.00251076    0.00000271
+     atom   2 type  2   force =     0.00971581   -0.00047226    0.00000024
+     atom   3 type  2   force =     0.00096491   -0.00162422    0.00000067
+           1          72
+           1          72
+           1          72
 DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5092     -0.5186      0.0000
 DIPOLE MOMENT         (HARTREE A.U.)    0.7268
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 434.2593   443.1134   469.9099
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 213.6055   225.8326   229.9059
-QUADRUPOLE MOMENT              (HARTREE A.U.)1347.2826   0.0000
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 434.2587   443.1136   469.9092
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 213.6052   225.8315   229.9052
+QUADRUPOLE MOMENT              (HARTREE A.U.)1347.2815   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.181027
+   displacement total energy         :        -17.181027 hartree
    Ground-state dipole vector [debye]:       -1.294       -1.318        0.000
    Dipole moment [debye]             :        1.847
  
@@ -558,6 +619,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1347.2826   0.0000
  
  Moving now atom #           1   Symbol:  O
  Displacement in direction: -Y
+ 
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+  0.957000E-02 -0.104300E-01  0.000000E+00
+  0.183318E+01 -0.217650E+00 -0.150000E-03
+ -0.217650E+00  0.183318E+01  0.280000E-03
  
 
    from rhoofr: total integrated electronic density
@@ -629,15 +696,30 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1347.2826   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
-DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5157     -0.5250      0.0000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+     atom   1 type  1   force =    -0.00023514    0.01045839    0.00000245
+     atom   2 type  2   force =     0.00153729   -0.00092249    0.00000026
+     atom   3 type  2   force =     0.00038435   -0.00906347   -0.00000081
+           1          72
+           1          72
+           1          72
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5158     -0.5250      0.0000
 DIPOLE MOMENT         (HARTREE A.U.)    0.7359
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 442.9689   451.7887   469.9591
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 221.4825   229.9297   234.0068
-QUADRUPOLE MOMENT              (HARTREE A.U.)1364.7167   0.0000
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 442.9698   451.7873   469.9588
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 221.4821   229.9298   234.0061
+QUADRUPOLE MOMENT              (HARTREE A.U.)1364.7159   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.180998
+   displacement total energy         :        -17.180998 hartree
    Ground-state dipole vector [debye]:       -1.311       -1.334        0.000
    Dipole moment [debye]             :        1.871
  
@@ -649,6 +731,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1364.7167   0.0000
  Moving now atom #           1   Symbol:  O
  Displacement in direction: +Y
  
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+  0.957000E-02  0.295700E-01  0.000000E+00
+  0.183318E+01 -0.217650E+00 -0.150000E-03
+ -0.217650E+00  0.183318E+01  0.280000E-03
+ 
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -694,15 +782,21 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1364.7167   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
-DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5186     -0.5092      0.0000
+     atom   1 type  1   force =     0.00251253   -0.01009571    0.00000025
+     atom   2 type  2   force =    -0.00162561    0.00096526    0.00000152
+     atom   3 type  2   force =    -0.00047328    0.00972190    0.00000247
+           1          72
+           1          72
+           1          72
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5186     -0.5092      0.0001
 DIPOLE MOMENT         (HARTREE A.U.)    0.7268
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.1135   434.2592   469.9097
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 213.6055   229.9000   225.8382
-QUADRUPOLE MOMENT              (HARTREE A.U.)1347.2824   0.0000
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.1136   434.2589   469.9089
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 213.6053   229.8992   225.8373
+QUADRUPOLE MOMENT              (HARTREE A.U.)1347.2814   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.181027
+   displacement total energy         :        -17.181027 hartree
    Ground-state dipole vector [debye]:       -1.318       -1.294        0.000
    Dipole moment [debye]             :        1.847
  
@@ -714,6 +808,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1347.2824   0.0000
  Moving now atom #           1   Symbol:  O
  Displacement in direction: -Z
  
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+  0.957000E-02  0.957000E-02 -0.200000E-01
+  0.183318E+01 -0.217650E+00 -0.150000E-03
+ -0.217650E+00  0.183318E+01  0.280000E-03
+ 
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -771,36 +871,35 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1347.2824   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
- cg_sub: missed minimum, case 3, iteration           9
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
-DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171     -0.0127
+ cg_sub: missed minimum, case 2, iteration          10
+     atom   1 type  1   force =     0.00064801    0.00064986   -0.00107488
+     atom   2 type  2   force =    -0.00004447   -0.00000297    0.00000613
+     atom   3 type  2   force =    -0.00000271   -0.00004685    0.00000609
+           1          72
+           1          72
+           1          72
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171     -0.0129
 DIPOLE MOMENT         (HARTREE A.U.)    0.7314
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0370   443.0370   477.9835
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5460   233.5448   233.5506
-QUADRUPOLE MOMENT              (HARTREE A.U.)1364.0575   0.0000
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0369   443.0368   477.9852
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5458   233.5461   233.5519
+QUADRUPOLE MOMENT              (HARTREE A.U.)1364.0590   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.181129
-   Ground-state dipole vector [debye]:       -1.314       -1.314       -0.032
+   displacement total energy         :        -17.181129 hartree
+   Ground-state dipole vector [debye]:       -1.314       -1.314       -0.033
    Dipole moment [debye]             :        1.859
  
      from calc_hessian : info #        -1
      Warning: Reference structure is not converged!!!
+       reference energy:  -17.1811155740882       hartree
+       current   energy:  -17.1811285446668       hartree
  
  Saving restart information...
  Done.
@@ -809,6 +908,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1364.0575   0.0000
  Moving now atom #           1   Symbol:  O
  Displacement in direction: +Z
  
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+  0.957000E-02  0.957000E-02  0.200000E-01
+  0.183318E+01 -0.217650E+00 -0.150000E-03
+ -0.217650E+00  0.183318E+01  0.280000E-03
+ 
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -848,26 +953,38 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1364.0575   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ cg_sub: missed minimum, case 1, iteration           6
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+     atom   1 type  1   force =     0.00063031    0.00062436    0.00099845
+     atom   2 type  2   force =    -0.00006557   -0.00000530   -0.00000304
+     atom   3 type  2   force =    -0.00000497   -0.00006084   -0.00000076
+           1          72
+           1          72
+           1          72
 DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171      0.0130
 DIPOLE MOMENT         (HARTREE A.U.)    0.7314
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0376   443.0379   461.8405
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5459   226.2760   226.2820
-QUADRUPOLE MOMENT              (HARTREE A.U.)1347.9160   0.0000
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0378   443.0373   461.8397
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5458   226.2765   226.2820
+QUADRUPOLE MOMENT              (HARTREE A.U.)1347.9148   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.181129
+   displacement total energy         :        -17.181129 hartree
    Ground-state dipole vector [debye]:       -1.314       -1.314        0.033
    Dipole moment [debye]             :        1.859
  
      from calc_hessian : info #        -1
      Warning: Reference structure is not converged!!!
+       reference energy:  -17.1811155740882       hartree
+       current   energy:  -17.1811285807203       hartree
  
  Saving restart information...
  Done.
@@ -876,6 +993,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1347.9160   0.0000
  Moving now atom #           2   Symbol:  H
  Displacement in direction: -X
  
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+  0.957000E-02  0.957000E-02  0.000000E+00
+  0.181318E+01 -0.217650E+00 -0.150000E-03
+ -0.217650E+00  0.183318E+01  0.280000E-03
+ 
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -933,15 +1056,21 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1347.9160   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
-DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5147     -0.5180      0.0000
-DIPOLE MOMENT         (HARTREE A.U.)    0.7302
+     atom   1 type  1   force =    -0.00867436    0.00262460    0.00000103
+     atom   2 type  2   force =     0.00989596   -0.00146832   -0.00000080
+     atom   3 type  2   force =    -0.00020453   -0.00016218    0.00000031
+           1          72
+           1          72
+           1          72
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5148     -0.5180      0.0000
+DIPOLE MOMENT         (HARTREE A.U.)    0.7303
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.1014   443.0909   469.9108
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5122   229.8697   229.8906
-QUADRUPOLE MOMENT              (HARTREE A.U.)1356.1032   0.0000
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.1036   443.0897   469.9104
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5125   229.8704   229.8900
+QUADRUPOLE MOMENT              (HARTREE A.U.)1356.1038   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.181017
+   displacement total energy         :        -17.181017 hartree
    Ground-state dipole vector [debye]:       -1.308       -1.317        0.000
    Dipole moment [debye]             :        1.856
  
@@ -953,6 +1082,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1356.1032   0.0000
  Moving now atom #           2   Symbol:  H
  Displacement in direction: +X
  
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+  0.957000E-02  0.957000E-02  0.000000E+00
+  0.185318E+01 -0.217650E+00 -0.150000E-03
+ -0.217650E+00  0.183318E+01  0.280000E-03
+ 
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -974,6 +1109,7 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1356.1032   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ cg_sub: missed minimum, case 1, iteration           3
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -989,17 +1125,23 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1356.1032   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
-DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5195     -0.5163     -0.0001
+     atom   1 type  1   force =     0.01015114   -0.00054546    0.00000089
+     atom   2 type  2   force =    -0.00928738    0.00135732    0.00000291
+     atom   3 type  2   force =     0.00020516    0.00016811    0.00000129
+           1          72
+           1          72
+           1          72
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5195     -0.5163      0.0001
 DIPOLE MOMENT         (HARTREE A.U.)    0.7324
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 442.9757   442.9911   469.9583
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5806   229.9580   229.9503
-QUADRUPOLE MOMENT              (HARTREE A.U.)1355.9251   0.0000
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 442.9747   442.9921   469.9566
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5804   229.9561   229.9492
+QUADRUPOLE MOMENT              (HARTREE A.U.)1355.9234   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.181022
+   displacement total energy         :        -17.181022 hartree
    Ground-state dipole vector [debye]:       -1.320       -1.312        0.000
-   Dipole moment [debye]             :        1.862
+   Dipole moment [debye]             :        1.861
  
  
  Saving restart information...
@@ -1009,6 +1151,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1355.9251   0.0000
  Moving now atom #           2   Symbol:  H
  Displacement in direction: -Y
  
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+  0.957000E-02  0.957000E-02  0.000000E+00
+  0.183318E+01 -0.237650E+00 -0.150000E-03
+ -0.217650E+00  0.183318E+01  0.280000E-03
+ 
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -1054,6 +1202,7 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1355.9251   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ cg_sub: missed minimum, case 1, iteration           7
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -1063,19 +1212,22 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1355.9251   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
- cg_sub: missed minimum, case 3, iteration           8
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
-DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5176     -0.5115      0.0000
-DIPOLE MOMENT         (HARTREE A.U.)    0.7277
+ cg_sub: missed minimum, case 1, iteration           8
+     atom   1 type  1   force =     0.00147079    0.00004342   -0.00000032
+     atom   2 type  2   force =    -0.00143919    0.00116134    0.00000086
+     atom   3 type  2   force =     0.00098111   -0.00019689    0.00000046
+           1          72
+           1          72
+           1          72
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5176     -0.5116      0.0000
+DIPOLE MOMENT         (HARTREE A.U.)    0.7278
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0623   444.0851   469.9334
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.7989   229.9292   230.3932
-QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0809   0.0000
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0632   444.0871   469.9330
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.7996   229.9291   230.3938
+QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0833   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.181104
+   displacement total energy         :        -17.181104 hartree
    Ground-state dipole vector [debye]:       -1.316       -1.300        0.000
    Dipole moment [debye]             :        1.850
  
@@ -1087,6 +1239,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0809   0.0000
  Moving now atom #           2   Symbol:  H
  Displacement in direction: +Y
  
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+  0.957000E-02  0.957000E-02  0.000000E+00
+  0.183318E+01 -0.197650E+00 -0.150000E-03
+ -0.217650E+00  0.183318E+01  0.280000E-03
+ 
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -1108,6 +1266,7 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0809   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ cg_sub: missed minimum, case 1, iteration           3
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -1123,15 +1282,22 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0809   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
-DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5166     -0.5226     -0.0001
+ cg_sub: missed minimum, case 1, iteration           5
+     atom   1 type  1   force =     0.00060209    0.00193934    0.00000454
+     atom   2 type  2   force =     0.00138470   -0.00113069    0.00000327
+     atom   3 type  2   force =    -0.00099582    0.00020734    0.00000121
+           1          72
+           1          72
+           1          72
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5165     -0.5226      0.0001
 DIPOLE MOMENT         (HARTREE A.U.)    0.7348
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0153   441.9745   469.9367
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.2906   229.9001   229.4413
-QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9265   0.0000
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0153   441.9750   469.9347
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.2908   229.8978   229.4396
+QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9249   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.181104
+   displacement total energy         :        -17.181104 hartree
    Ground-state dipole vector [debye]:       -1.313       -1.328        0.000
    Dipole moment [debye]             :        1.868
  
@@ -1143,6 +1309,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9265   0.0000
  Moving now atom #           2   Symbol:  H
  Displacement in direction: -Z
  
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+  0.957000E-02  0.957000E-02  0.000000E+00
+  0.183318E+01 -0.217650E+00 -0.201500E-01
+ -0.217650E+00  0.183318E+01  0.280000E-03
+ 
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -1194,20 +1366,28 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9265   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+     atom   1 type  1   force =     0.00105688    0.00099644    0.00001965
+     atom   2 type  2   force =    -0.00005100    0.00000759   -0.00000763
+     atom   3 type  2   force =     0.00000071    0.00000301    0.00000468
+           1          72
+           1          72
+           1          72
 DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171      0.0065
 DIPOLE MOMENT         (HARTREE A.U.)    0.7313
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0386   443.0394   470.9811
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5465   230.2115   230.4895
-QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0591   0.0000
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0387   443.0394   470.9820
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5465   230.2121   230.4894
+QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0600   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.181116
-   Ground-state dipole vector [debye]:       -1.314       -1.314        0.017
+   displacement total energy         :        -17.181116 hartree
+   Ground-state dipole vector [debye]:       -1.314       -1.314        0.016
    Dipole moment [debye]             :        1.859
  
      from calc_hessian : info #        -1
      Warning: Reference structure is not converged!!!
+       reference energy:  -17.1811155740882       hartree
+       current   energy:  -17.1811156393248       hartree
  
  Saving restart information...
  Done.
@@ -1216,6 +1396,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0591   0.0000
  Moving now atom #           2   Symbol:  H
  Displacement in direction: +Z
  
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+  0.957000E-02  0.957000E-02  0.000000E+00
+  0.183318E+01 -0.217650E+00  0.198500E-01
+ -0.217650E+00  0.183318E+01  0.280000E-03
+ 
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -1249,31 +1435,41 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0591   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ cg_sub: missed minimum, case 3, iteration           5
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
- cg_sub: missed minimum, case 2, iteration           5
-DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171     -0.0065
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+     atom   1 type  1   force =     0.00103966    0.00099870    0.00000615
+     atom   2 type  2   force =    -0.00004497    0.00000811    0.00001109
+     atom   3 type  2   force =    -0.00000342    0.00000505   -0.00000120
+           1          72
+           1          72
+           1          72
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171     -0.0063
 DIPOLE MOMENT         (HARTREE A.U.)    0.7313
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0378   443.0385   468.8906
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5459   229.6162   229.3545
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0386   443.0394   468.8889
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5465   229.6145   229.3535
 QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9669   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.181116
-   Ground-state dipole vector [debye]:       -1.314       -1.314       -0.017
+   displacement total energy         :        -17.181116 hartree
+   Ground-state dipole vector [debye]:       -1.314       -1.314       -0.016
    Dipole moment [debye]             :        1.859
  
      from calc_hessian : info #        -1
      Warning: Reference structure is not converged!!!
-     from calc_hessian : info #        -1
-     Warning: consistency check
-     Numerical second derivative of the total energy, compared to
-     first derivative of the forces, for diagonal hessian element,
-     deviate by more then 10% :
-          Energy second derivative :    -0.0003
-          Force  first  derivative :     0.0004
+       reference energy:  -17.1811155740882       hartree
+       current   energy:  -17.1811156360661       hartree
  
  Saving restart information...
  Done.
@@ -1281,6 +1477,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9669   0.0000
  
  Moving now atom #           3   Symbol:  H
  Displacement in direction: -X
+ 
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+  0.957000E-02  0.957000E-02  0.000000E+00
+  0.183318E+01 -0.217650E+00 -0.150000E-03
+ -0.237650E+00  0.183318E+01  0.280000E-03
  
 
    from rhoofr: total integrated electronic density
@@ -1337,15 +1539,22 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9669   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ cg_sub: missed minimum, case 1, iteration           8
+     atom   1 type  1   force =     0.00004351    0.00147064   -0.00000001
+     atom   2 type  2   force =    -0.00019691    0.00098122    0.00000079
+     atom   3 type  2   force =     0.00116146   -0.00143929    0.00000026
+           1          72
+           1          72
+           1          72
 DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5116     -0.5176      0.0000
 DIPOLE MOMENT         (HARTREE A.U.)    0.7278
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 444.0875   443.0630   469.9334
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.7995   230.3882   229.9352
-QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0839   0.0000
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 444.0871   443.0632   469.9330
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.7996   230.3877   229.9349
+QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0833   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.181104
+   displacement total energy         :        -17.181104 hartree
    Ground-state dipole vector [debye]:       -1.300       -1.316        0.000
    Dipole moment [debye]             :        1.850
  
@@ -1357,6 +1566,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0839   0.0000
  Moving now atom #           3   Symbol:  H
  Displacement in direction: +X
  
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+  0.957000E-02  0.957000E-02  0.000000E+00
+  0.183318E+01 -0.217650E+00 -0.150000E-03
+ -0.197650E+00  0.183318E+01  0.280000E-03
+ 
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -1384,6 +1599,7 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0839   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ cg_sub: missed minimum, case 1, iteration           4
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -1393,15 +1609,21 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0839   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
-DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5226     -0.5166     -0.0001
+     atom   1 type  1   force =     0.00194858    0.00058905    0.00000216
+     atom   2 type  2   force =     0.00020447   -0.00099422   -0.00000062
+     atom   3 type  2   force =    -0.00113177    0.00137874    0.00000243
+           1          72
+           1          72
+           1          72
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5226     -0.5166      0.0000
 DIPOLE MOMENT         (HARTREE A.U.)    0.7348
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 441.9755   443.0150   469.9375
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.2909   229.4368   229.9063
-QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9280   0.0000
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 441.9745   443.0150   469.9355
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.2903   229.4345   229.9043
+QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9250   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.181104
+   displacement total energy         :        -17.181104 hartree
    Ground-state dipole vector [debye]:       -1.328       -1.313        0.000
    Dipole moment [debye]             :        1.868
  
@@ -1413,6 +1635,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9280   0.0000
  Moving now atom #           3   Symbol:  H
  Displacement in direction: -Y
  
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+  0.957000E-02  0.957000E-02  0.000000E+00
+  0.183318E+01 -0.217650E+00 -0.150000E-03
+ -0.217650E+00  0.181318E+01  0.280000E-03
+ 
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -1470,15 +1698,21 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9280   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
-DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5180     -0.5147      0.0000
-DIPOLE MOMENT         (HARTREE A.U.)    0.7302
+     atom   1 type  1   force =     0.00262456   -0.00867468   -0.00000133
+     atom   2 type  2   force =    -0.00016164   -0.00020473    0.00000007
+     atom   3 type  2   force =    -0.00146821    0.00989647    0.00000187
+           1          72
+           1          72
+           1          72
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5180     -0.5148      0.0000
+DIPOLE MOMENT         (HARTREE A.U.)    0.7303
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0908   443.1017   469.9107
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5124   229.8848   229.8757
-QUADRUPOLE MOMENT              (HARTREE A.U.)1356.1032   0.0000
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0897   443.1036   469.9103
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5124   229.8842   229.8762
+QUADRUPOLE MOMENT              (HARTREE A.U.)1356.1036   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.181017
+   displacement total energy         :        -17.181017 hartree
    Ground-state dipole vector [debye]:       -1.317       -1.308        0.000
    Dipole moment [debye]             :        1.856
  
@@ -1490,6 +1724,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1356.1032   0.0000
  Moving now atom #           3   Symbol:  H
  Displacement in direction: +Y
  
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+  0.957000E-02  0.957000E-02  0.000000E+00
+  0.183318E+01 -0.217650E+00 -0.150000E-03
+ -0.217650E+00  0.185318E+01  0.280000E-03
+ 
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -1511,6 +1751,7 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1356.1032   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ cg_sub: missed minimum, case 1, iteration           3
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -1520,23 +1761,34 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1356.1032   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ cg_sub: missed minimum, case 1, iteration           4
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
-DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5163     -0.5195     -0.0001
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+ cg_sub: missed minimum, case 1, iteration           5
+     atom   1 type  1   force =    -0.00052229    0.01007197    0.00000680
+     atom   2 type  2   force =     0.00017105    0.00020432    0.00000436
+     atom   3 type  2   force =     0.00135893   -0.00927654   -0.00000015
+           1          72
+           1          72
+           1          72
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5163     -0.5195      0.0002
 DIPOLE MOMENT         (HARTREE A.U.)    0.7324
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 442.9912   442.9755   469.9585
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5806   229.9447   229.9639
-QUADRUPOLE MOMENT              (HARTREE A.U.)1355.9252   0.0000
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 442.9908   442.9755   469.9562
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5806   229.9422   229.9620
+QUADRUPOLE MOMENT              (HARTREE A.U.)1355.9225   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.181022
+   displacement total energy         :        -17.181022 hartree
    Ground-state dipole vector [debye]:       -1.312       -1.320        0.000
-   Dipole moment [debye]             :        1.862
+   Dipole moment [debye]             :        1.861
  
  
  Saving restart information...
@@ -1546,6 +1798,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1355.9252   0.0000
  Moving now atom #           3   Symbol:  H
  Displacement in direction: -Z
  
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+  0.957000E-02  0.957000E-02  0.000000E+00
+  0.183318E+01 -0.217650E+00 -0.150000E-03
+ -0.217650E+00  0.183318E+01 -0.197200E-01
+ 
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -1597,20 +1855,28 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1355.9252   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
-DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171      0.0064
+     atom   1 type  1   force =     0.00099722    0.00105458    0.00002032
+     atom   2 type  2   force =     0.00000281    0.00000039    0.00000449
+     atom   3 type  2   force =     0.00000712   -0.00004850   -0.00000779
+           1          72
+           1          72
+           1          72
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171      0.0065
 DIPOLE MOMENT         (HARTREE A.U.)    0.7313
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0394   443.0387   470.9819
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5465   230.4838   230.2179
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0394   443.0386   470.9819
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5465   230.4835   230.2179
 QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0599   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.181116
+   displacement total energy         :        -17.181116 hartree
    Ground-state dipole vector [debye]:       -1.314       -1.314        0.016
    Dipole moment [debye]             :        1.859
  
      from calc_hessian : info #        -1
      Warning: Reference structure is not converged!!!
+       reference energy:  -17.1811155740882       hartree
+       current   energy:  -17.1811156353599       hartree
  
  Saving restart information...
  Done.
@@ -1619,6 +1885,12 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0599   0.0000
  Moving now atom #           3   Symbol:  H
  Displacement in direction: +Z
  
+   Perturbed geometry:
+   ATOMIC_POSITIONS
+  0.957000E-02  0.957000E-02  0.000000E+00
+  0.183318E+01 -0.217650E+00 -0.150000E-03
+ -0.217650E+00  0.183318E+01  0.202800E-01
+ 
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -1652,70 +1924,84 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1357.0599   0.0000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
-DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171     -0.0065
+     atom   1 type  1   force =     0.00100119    0.00104452    0.00000435
+     atom   2 type  2   force =     0.00000052    0.00000103   -0.00000115
+     atom   3 type  2   force =     0.00000746   -0.00005436    0.00000778
+           1          72
+           1          72
+           1          72
+DIPOLE XYZ-COMPONENTS (HARTREE A.U.)   -0.5171     -0.5171     -0.0064
 DIPOLE MOMENT         (HARTREE A.U.)    0.7313
   
-QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0386   443.0380   468.8909
-QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5461   229.3490   229.6223
-QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9675   0.0000
+QUADRUPOLE XX-YY-ZZ COMPONENTS (HARTREE A.U.) 443.0394   443.0381   468.8898
+QUADRUPOLE XY-XZ-YZ COMPONENTS (HARTREE A.U.) 217.5462   229.3482   229.6210
+QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9674   0.0000
  
  Done scf relaxation for displacement.
-   displacement total energy         :        -17.181116
-   Ground-state dipole vector [debye]:       -1.314       -1.314       -0.017
+   displacement total energy         :        -17.181116 hartree
+   Ground-state dipole vector [debye]:       -1.314       -1.314       -0.016
    Dipole moment [debye]             :        1.859
  
      from calc_hessian : info #        -1
      Warning: Reference structure is not converged!!!
+       reference energy:  -17.1811155740882       hartree
+       current   energy:  -17.1811156365377       hartree
  
  Saving restart information...
  Done.
  
  Results are written to file: 
- /home/silviu/tmp//h2o.vib.analysis                                             
+ /scr/giannozz/tmp//h2o.vib.analysis                                            
                                                                                 
                                                                                 
                     
 
 
-              averaged quantities :
-         ekinc          ekin          epot          etot     tempp
- NaN           NaN           NaN           NaN           NaN      
-     initialize   :     0.89s CPU
-     formf        :     0.55s CPU
-     rhoofr       :    72.26s CPU (     354 calls,   0.204 s avg)
-     vofrho       :   277.66s CPU (     335 calls,   0.829 s avg)
-     dforce       :    23.42s CPU (     340 calls,   0.069 s avg)
-     gram         :     0.36s CPU (     329 calls,   0.001 s avg)
-     newd         :     0.12s CPU (     170 calls,   0.001 s avg)
-     calbec       :     1.30s CPU (    1437 calls,   0.001 s avg)
-     prefor       :     0.06s CPU (     190 calls,   0.000 s avg)
-     strucf       :     0.11s CPU (      20 calls,   0.005 s avg)
+   Averaged Physical Quantities
+                      accomulated      this run
+   ekinc         :        0.00000       0.00000 (AU)
+   ekin          :        0.00000       0.00000 (AU)
+   epot          :        0.00000       0.00000 (AU)
+   totel energy  :        0.00000       0.00000 (AU)
+   temperature   :        0.00000       0.00000 (K )
+   enthalpy      :        0.00000       0.00000 (AU)
+   econs         :        0.00000       0.00000 (AU)
+   pressure      :        0.00000       0.00000 (Gpa)
+   volume        :        0.00000       0.00000 (AU)
+
+
+     initialize   :     1.31s CPU
+     formf        :     0.75s CPU
+     rhoofr       :   126.43s CPU (     362 calls,   0.349 s avg)
+     vofrho       :   404.62s CPU (     343 calls,   1.180 s avg)
+     dforce       :    39.35s CPU (     344 calls,   0.114 s avg)
+     calphi       :     0.23s CPU (     172 calls,   0.001 s avg)
+     gram         :     0.86s CPU (     350 calls,   0.002 s avg)
+     newd         :     0.01s CPU (     172 calls,   0.000 s avg)
+     calbec       :     1.25s CPU (    1168 calls,   0.001 s avg)
+     prefor       :     0.05s CPU (     192 calls,   0.000 s avg)
+     strucf       :     0.13s CPU (      20 calls,   0.006 s avg)
      nlfl         :     0.00s CPU (      19 calls,   0.000 s avg)
-     nlfq         :     0.03s CPU (      19 calls,   0.002 s avg)
-     nlsm1        :     1.30s CPU (    1437 calls,   0.001 s avg)
-     nlsm2        :     0.03s CPU (      19 calls,   0.002 s avg)
-     fft          :   134.94s CPU (    2699 calls,   0.050 s avg)
-     ffts         :    34.71s CPU (     689 calls,   0.050 s avg)
-     fftw         :    36.73s CPU (    1388 calls,   0.026 s avg)
-
-   writing restart file: .//h2o_51.save
-   restart file written in    2.629 sec.
-
-
-
-======================== end cp ========================
-
+     nlfq         :     0.06s CPU (      19 calls,   0.003 s avg)
+     nlsm1        :     1.23s CPU (    1168 calls,   0.001 s avg)
+     nlsm2        :     0.06s CPU (      19 calls,   0.003 s avg)
+     fft          :   211.67s CPU (    2763 calls,   0.077 s avg)
+     ffts         :    54.63s CPU (     705 calls,   0.077 s avg)
+     fftw         :    63.86s CPU (    1412 calls,   0.045 s avg)
+     runcg_uspp   :   571.84s CPU (      19 calls,  30.097 s avg)
+     pc2          :     2.05s CPU (     459 calls,   0.004 s avg)
+     pcdaga2      :     0.88s CPU (     153 calls,   0.006 s avg)
+     xminus1      :     0.12s CPU (     306 calls,   0.000 s avg)
+     emass_p_tpa  :     0.02s CPU (      19 calls,   0.001 s avg)
+ 
+ 
+ 
+     CP           :  9m43.74s CPU time
 
  
-     CP           :  6m27.06s CPU time
-
- 
-   This run was terminated on:   2:46:24   7Dec2005            
+   This run was terminated on:   7: 2:38  10May2006            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:   401.0
+   ELAPSED SECONDS:   583.0
    JOB DONE.
 =------------------------------------------------------------------------------=

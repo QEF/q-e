@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1 - Mon Oct 24 02:34:10 CEST 2005                         
+     Version: 3.1 - Tue May 9 09:28:14 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:49:10   6May2006               
+   This run was started on:   3:48:11  10May2006               
 
    Serial Build
 
@@ -312,7 +312,7 @@
  
 
    reading restart file: .//cp_93.save
-   restart file read in    0.055 sec.
+   restart file read in    0.058 sec.
 
 
    formf: eself= 210.64152
@@ -376,9 +376,9 @@
    Center of mass square displacement (a.u.):   0.000240
 
    Total stress (GPa)
-        3.61399765         0.02290587        -0.00722209
-        0.02290587        -0.45083832        -1.01524998
-       -0.00722209        -1.01524997       -11.34796405
+        3.61399765         0.02290587        -0.00722210
+        0.02290587        -0.45083832        -1.01524997
+       -0.00722210        -1.01524996       -11.34796404
    ATOMIC_POSITIONS
    O    0.319019E+01  0.148349E+02  0.122118E+01
    O    0.783928E+01  0.679098E+01  0.122216E+01
@@ -450,7 +450,7 @@
    10  0.00014  151.5    8.5  -211.98494  -211.93316  -211.93028  -211.93015  0.0000 -0.0009 -0.0001 -0.0140
 
    writing restart file: .//cp_94.save
-   restart file written in    0.214 sec.
+   restart file written in    0.210 sec.
 
 
 
@@ -467,36 +467,36 @@
    volume        :     1524.83295    1524.83295 (AU)
 
 
-     initialize   :     7.58s CPU
-     total_time   :    16.65s CPU (      10 calls,   1.665 s avg)
-     formf        :     0.70s CPU (      11 calls,   0.064 s avg)
-     rhoofr       :     6.36s CPU (      10 calls,   0.636 s avg)
+     initialize   :     7.55s CPU
+     total_time   :    16.39s CPU (      10 calls,   1.639 s avg)
+     formf        :     0.69s CPU (      11 calls,   0.063 s avg)
+     rhoofr       :     6.44s CPU (      10 calls,   0.644 s avg)
      vofrho       :     1.88s CPU (      10 calls,   0.188 s avg)
-     dforce       :     2.94s CPU (     240 calls,   0.012 s avg)
-     calphi       :     0.08s CPU (      10 calls,   0.008 s avg)
-     ortho        :     0.44s CPU (      10 calls,   0.044 s avg)
-     updatc       :     0.03s CPU (      10 calls,   0.003 s avg)
+     dforce       :     2.85s CPU (     240 calls,   0.012 s avg)
+     calphi       :     0.10s CPU (      10 calls,   0.010 s avg)
+     ortho        :     0.43s CPU (      10 calls,   0.043 s avg)
+     updatc       :     0.06s CPU (      10 calls,   0.006 s avg)
      newd         :     1.67s CPU (      10 calls,   0.167 s avg)
-     calbec       :     0.08s CPU (      11 calls,   0.007 s avg)
-     prefor       :     0.04s CPU (      20 calls,   0.002 s avg)
-     strucf       :     0.04s CPU (      11 calls,   0.004 s avg)
-     nlfl         :     0.02s CPU (      10 calls,   0.002 s avg)
-     nlfq         :     0.67s CPU (      10 calls,   0.067 s avg)
-     rhov         :     0.45s CPU (      10 calls,   0.045 s avg)
+     calbec       :     0.06s CPU (      11 calls,   0.005 s avg)
+     prefor       :     0.07s CPU (      20 calls,   0.004 s avg)
+     strucf       :     0.06s CPU (      11 calls,   0.005 s avg)
+     nlfl         :     0.03s CPU (      10 calls,   0.003 s avg)
+     nlfq         :     0.65s CPU (      10 calls,   0.065 s avg)
+     rhov         :     0.43s CPU (      10 calls,   0.043 s avg)
      nlsm1        :     0.35s CPU (      31 calls,   0.011 s avg)
-     nlsm2        :     0.65s CPU (      10 calls,   0.065 s avg)
-     fft          :     3.26s CPU (     130 calls,   0.025 s avg)
-     ffts         :     0.14s CPU (      20 calls,   0.007 s avg)
-     fftw         :     2.56s CPU (     720 calls,   0.004 s avg)
-     fftb         :     1.00s CPU (    2940 calls,   0.000 s avg)
+     nlsm2        :     0.63s CPU (      10 calls,   0.063 s avg)
+     fft          :     3.42s CPU (     130 calls,   0.026 s avg)
+     ffts         :     0.17s CPU (      20 calls,   0.008 s avg)
+     fftw         :     2.71s CPU (     720 calls,   0.004 s avg)
+     fftb         :     1.01s CPU (    2940 calls,   0.000 s avg)
      rsg          :     0.01s CPU (      10 calls,   0.001 s avg)
  
  
  
-     CP           :    24.52s CPU time
+     CP           :    24.22s CPU time
 
  
-   This run was terminated on:   3:49:34   6May2006            
+   This run was terminated on:   3:48:35  10May2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

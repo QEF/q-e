@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1 - Wed May 3 10:11:42 CEST 2006                          
+     Version: 3.1 - Tue May 9 09:28:14 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  15:19:29   5May2006               
+   This run was started on:   6:10:35  10May2006               
 
    Serial Build
 Warning: card &CELL ignored
@@ -24,11 +24,11 @@ Warning: card / ignored
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /home/umari/espresso/pseudo/O.pz-rrkjus.UPF
+   /scr/giannozz/espresso/pseudo/O.pz-rrkjus.UPF
    file type is 20: UPF
 
    Reading pseudopotential for specie #  2 from file :
-   /home/umari/espresso/pseudo/Mg.pz-n-vbc.UPF
+   /scr/giannozz/espresso/pseudo/Mg.pz-n-vbc.UPF
    file type is 20: UPF
 
 
@@ -393,7 +393,7 @@ Warning: card / ignored
  
 
    reading restart file: .//mgo_50.save
-   restart file read in    0.185 sec.
+   restart file read in    0.226 sec.
 
 
    formf: eself=1021.29224
@@ -423,7 +423,7 @@ Elct. dipole 1   15.749134  Ionic dipole 1    0.863604
    10  0.00007    0.0    0.5  -547.29415  -547.27747  -547.27733  -547.27726  0.0000  0.0000  0.0000  0.0000
 Elct. dipole 1   15.869688  Ionic dipole 1    0.802914
    11  0.00009    0.0    0.5  -547.26237  -547.27745  -547.27728  -547.27719  0.0000  0.0000  0.0000  0.0000
-Elct. dipole 1  -15.815030  Ionic dipole 1    0.737765
+Elct. dipole 1  -15.815030  Ionic dipole 1    0.737766
    12  0.00009    0.0    0.7  -547.26243  -547.27743  -547.27723  -547.27714  0.0000  0.0000  0.0000  0.0000
 Elct. dipole 1  -15.664188  Ionic dipole 1    0.666497
    13  0.00010    0.0    0.8  -547.26250  -547.27742  -547.27718  -547.27708  0.0000  0.0000  0.0000  0.0000
@@ -638,7 +638,7 @@ Elct. dipole 1  -13.976964  Ionic dipole 1   -0.187116
    Mg   0.178359E-05  0.178360E-05  0.709063E-03
    Mg   0.178359E-05  0.178364E-05  0.709063E-03
    Mg   0.178363E-05  0.178364E-05  0.709063E-03
-   Mg   0.178363E-05  0.178365E-05  0.709063E-03
+   Mg   0.178364E-05  0.178365E-05  0.709063E-03
    Mg   0.178358E-05  0.178364E-05  0.709063E-03
    Mg   0.178363E-05  0.178362E-05  0.709063E-03
    Mg   0.178363E-05  0.178361E-05  0.709063E-03
@@ -649,45 +649,45 @@ Elct. dipole 1  -13.976964  Ionic dipole 1   -0.187116
    Mg   0.178364E-05  0.178363E-05  0.709063E-03
    Mg   0.178361E-05  0.178360E-05  0.709063E-03
    Mg   0.178362E-05  0.178363E-05  0.709063E-03
-   Mg   0.178361E-05  0.178363E-05  0.709063E-03
+   Mg   0.178361E-05  0.178364E-05  0.709063E-03
    Mg   0.178360E-05  0.178362E-05  0.709063E-03
    Mg   0.178365E-05  0.178363E-05  0.709063E-03
    Mg   0.178363E-05  0.178362E-05  0.709063E-03
-   Mg   0.178364E-05  0.178364E-05  0.709063E-03
+   Mg   0.178365E-05  0.178364E-05  0.709063E-03
    Mg   0.178364E-05  0.178362E-05  0.709063E-03
    Mg   0.178365E-05  0.178367E-05  0.709063E-03
-   O   -0.614432E-05 -0.614440E-05  0.294007E-03
-   O   -0.614421E-05 -0.614440E-05  0.294007E-03
-   O   -0.614438E-05 -0.614440E-05  0.294007E-03
-   O   -0.614427E-05 -0.614429E-05  0.294007E-03
-   O   -0.614445E-05 -0.614422E-05  0.294007E-03
-   O   -0.614445E-05 -0.614420E-05  0.294007E-03
-   O   -0.614443E-05 -0.614440E-05  0.294007E-03
-   O   -0.614437E-05 -0.614424E-05  0.294007E-03
-   O   -0.614419E-05 -0.614432E-05  0.294007E-03
-   O   -0.614425E-05 -0.614425E-05  0.294007E-03
-   O   -0.614424E-05 -0.614422E-05  0.294007E-03
-   O   -0.614435E-05 -0.614436E-05  0.294007E-03
-   O   -0.614434E-05 -0.614426E-05  0.294007E-03
-   O   -0.614435E-05 -0.614430E-05  0.294007E-03
-   O   -0.614434E-05 -0.614423E-05  0.294007E-03
-   O   -0.614434E-05 -0.614435E-05  0.294007E-03
-   O   -0.614436E-05 -0.614439E-05  0.294007E-03
-   O   -0.614436E-05 -0.614438E-05  0.294007E-03
-   O   -0.614426E-05 -0.614427E-05  0.294007E-03
-   O   -0.614440E-05 -0.614437E-05  0.294007E-03
-   O   -0.614439E-05 -0.614427E-05  0.294007E-03
-   O   -0.614431E-05 -0.614435E-05  0.294007E-03
-   O   -0.614441E-05 -0.614421E-05  0.294007E-03
-   O   -0.614439E-05 -0.614430E-05  0.294007E-03
-   O   -0.614438E-05 -0.614424E-05  0.294007E-03
-   O   -0.614423E-05 -0.614425E-05  0.294007E-03
-   O   -0.614432E-05 -0.614445E-05  0.294007E-03
-   O   -0.614424E-05 -0.614425E-05  0.294007E-03
-   O   -0.614429E-05 -0.614442E-05  0.294007E-03
-   O   -0.614443E-05 -0.614434E-05  0.294007E-03
-   O   -0.614434E-05 -0.614437E-05  0.294007E-03
-   O   -0.614436E-05 -0.614428E-05  0.294007E-03
+   O   -0.614432E-05 -0.614441E-05  0.294008E-03
+   O   -0.614421E-05 -0.614440E-05  0.294008E-03
+   O   -0.614438E-05 -0.614440E-05  0.294008E-03
+   O   -0.614427E-05 -0.614429E-05  0.294008E-03
+   O   -0.614445E-05 -0.614422E-05  0.294008E-03
+   O   -0.614445E-05 -0.614420E-05  0.294008E-03
+   O   -0.614443E-05 -0.614440E-05  0.294008E-03
+   O   -0.614437E-05 -0.614424E-05  0.294008E-03
+   O   -0.614419E-05 -0.614432E-05  0.294008E-03
+   O   -0.614425E-05 -0.614425E-05  0.294008E-03
+   O   -0.614424E-05 -0.614422E-05  0.294008E-03
+   O   -0.614435E-05 -0.614436E-05  0.294008E-03
+   O   -0.614435E-05 -0.614426E-05  0.294008E-03
+   O   -0.614435E-05 -0.614430E-05  0.294008E-03
+   O   -0.614434E-05 -0.614423E-05  0.294008E-03
+   O   -0.614434E-05 -0.614435E-05  0.294008E-03
+   O   -0.614436E-05 -0.614439E-05  0.294008E-03
+   O   -0.614436E-05 -0.614438E-05  0.294008E-03
+   O   -0.614426E-05 -0.614427E-05  0.294008E-03
+   O   -0.614440E-05 -0.614437E-05  0.294008E-03
+   O   -0.614439E-05 -0.614427E-05  0.294008E-03
+   O   -0.614431E-05 -0.614435E-05  0.294008E-03
+   O   -0.614441E-05 -0.614421E-05  0.294008E-03
+   O   -0.614439E-05 -0.614430E-05  0.294008E-03
+   O   -0.614438E-05 -0.614423E-05  0.294008E-03
+   O   -0.614423E-05 -0.614425E-05  0.294008E-03
+   O   -0.614432E-05 -0.614445E-05  0.294008E-03
+   O   -0.614424E-05 -0.614425E-05  0.294008E-03
+   O   -0.614429E-05 -0.614442E-05  0.294008E-03
+   O   -0.614443E-05 -0.614434E-05  0.294008E-03
+   O   -0.614434E-05 -0.614437E-05  0.294008E-03
+   O   -0.614436E-05 -0.614428E-05  0.294008E-03
  
 
 
@@ -699,7 +699,7 @@ Elct. dipole 1  -13.976964  Ionic dipole 1   -0.187116
 Elct. dipole 1  -13.761933  Ionic dipole 1   -0.293250
 
    writing restart file: .//mgo_50.save
-   restart file written in    0.358 sec.
+   restart file written in    0.404 sec.
 
 
 
@@ -716,38 +716,38 @@ Elct. dipole 1  -13.761933  Ionic dipole 1   -0.293250
    volume        :     4028.78703    4028.78703 (AU)
 
 
-     initialize   :     4.86s CPU
-     total_time   :   281.34s CPU (      20 calls,  14.067 s avg)
-     formf        :     0.26s CPU
-     rhoofr       :    14.92s CPU (      20 calls,   0.746 s avg)
-     vofrho       :    15.23s CPU (      20 calls,   0.761 s avg)
-     dforce       :    32.94s CPU (    1280 calls,   0.026 s avg)
-     calphi       :     2.03s CPU (      20 calls,   0.102 s avg)
-     ortho        :     9.06s CPU (      20 calls,   0.453 s avg)
-     updatc       :     1.04s CPU (      20 calls,   0.052 s avg)
-     newd         :    55.10s CPU (      20 calls,   2.755 s avg)
-     calbec       :     5.12s CPU (      41 calls,   0.125 s avg)
-     prefor       :     0.63s CPU (      40 calls,   0.016 s avg)
-     strucf       :     0.91s CPU (      21 calls,   0.043 s avg)
-     nlfl         :     0.42s CPU (      20 calls,   0.021 s avg)
-     nlfq         :    11.29s CPU (      20 calls,   0.564 s avg)
-     set_cc       :     1.85s CPU (      20 calls,   0.093 s avg)
-     rhov         :     3.51s CPU (      20 calls,   0.175 s avg)
-     nlsm1        :    10.03s CPU (      81 calls,   0.124 s avg)
-     nlsm2        :    11.00s CPU (      20 calls,   0.550 s avg)
-     forcecc      :     3.57s CPU (      20 calls,   0.179 s avg)
-     fft          :     3.95s CPU (     100 calls,   0.039 s avg)
-     ffts         :     0.38s CPU (      40 calls,   0.009 s avg)
-     fftw         :    21.55s CPU (    3840 calls,   0.006 s avg)
-     fftb         :    34.34s CPU (   14080 calls,   0.002 s avg)
-     rsg          :     0.29s CPU (      20 calls,   0.015 s avg)
+     initialize   :     5.01s CPU
+     total_time   :   529.72s CPU (      20 calls,  26.486 s avg)
+     formf        :     0.28s CPU
+     rhoofr       :    28.61s CPU (      20 calls,   1.430 s avg)
+     vofrho       :    26.65s CPU (      20 calls,   1.333 s avg)
+     dforce       :    55.83s CPU (    1280 calls,   0.044 s avg)
+     calphi       :     2.93s CPU (      20 calls,   0.146 s avg)
+     ortho        :    13.18s CPU (      20 calls,   0.659 s avg)
+     updatc       :     1.33s CPU (      20 calls,   0.067 s avg)
+     newd         :    95.85s CPU (      20 calls,   4.793 s avg)
+     calbec       :     6.34s CPU (      41 calls,   0.155 s avg)
+     prefor       :     1.20s CPU (      40 calls,   0.030 s avg)
+     strucf       :     1.34s CPU (      21 calls,   0.064 s avg)
+     nlfl         :     0.88s CPU (      20 calls,   0.044 s avg)
+     nlfq         :    14.29s CPU (      20 calls,   0.714 s avg)
+     set_cc       :     2.92s CPU (      20 calls,   0.146 s avg)
+     rhov         :     5.87s CPU (      20 calls,   0.293 s avg)
+     nlsm1        :    13.22s CPU (      81 calls,   0.163 s avg)
+     nlsm2        :    13.75s CPU (      20 calls,   0.687 s avg)
+     forcecc      :     7.33s CPU (      20 calls,   0.367 s avg)
+     fft          :     8.90s CPU (     100 calls,   0.089 s avg)
+     ffts         :     0.87s CPU (      40 calls,   0.022 s avg)
+     fftw         :    39.54s CPU (    3840 calls,   0.010 s avg)
+     fftb         :    61.36s CPU (   14080 calls,   0.004 s avg)
+     rsg          :     0.27s CPU (      20 calls,   0.013 s avg)
  
  
  
-     CP           :  4m46.52s CPU time
+     CP           :  8m55.21s CPU time
 
  
-   This run was terminated on:  15:24:26   5May2006            
+   This run was terminated on:   6:19:31  10May2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1 - Mon Oct 24 02:34:10 CEST 2005                         
+     Version: 3.1 - Tue May 9 09:28:14 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:49:35   6May2006               
+   This run was started on:   3:48:36  10May2006               
 
    Serial Build
 
@@ -685,7 +685,7 @@
    50  0.00357    0.0    0.0   -17.08765   -17.08765   -17.08765   -17.08408  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: .//h2o_mol_51.save
-   restart file written in    0.173 sec.
+   restart file written in    0.171 sec.
 
 
 
@@ -702,26 +702,26 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     4.39s CPU
-     main_loop    :    78.45s CPU (      50 calls,   1.569 s avg)
-     formf        :     1.45s CPU
-     calphi       :     0.08s CPU (      51 calls,   0.002 s avg)
-     ortho        :     0.45s CPU (      51 calls,   0.009 s avg)
-     updatc       :     0.09s CPU (      51 calls,   0.002 s avg)
+     initialize   :     4.58s CPU
+     main_loop    :    78.65s CPU (      50 calls,   1.573 s avg)
+     formf        :     1.43s CPU
+     calphi       :     0.07s CPU (      51 calls,   0.001 s avg)
+     ortho        :     0.44s CPU (      51 calls,   0.009 s avg)
+     updatc       :     0.11s CPU (      51 calls,   0.002 s avg)
      gram         :     0.00s CPU
      strucf       :     0.01s CPU
      nlsm1        :     0.04s CPU (      51 calls,   0.001 s avg)
      nlsm2        :     0.02s CPU (       6 calls,   0.003 s avg)
-     fft          :    32.03s CPU (     408 calls,   0.079 s avg)
-     fftw         :    14.04s CPU (     306 calls,   0.046 s avg)
+     fft          :    32.55s CPU (     408 calls,   0.080 s avg)
+     fftw         :    13.61s CPU (     306 calls,   0.044 s avg)
      rsg          :     0.00s CPU (      51 calls,   0.000 s avg)
  
  
  
-     CP           :  1m23.16s CPU time
+     CP           :  1m23.51s CPU time
 
  
-   This run was terminated on:   3:50:59   6May2006            
+   This run was terminated on:   3:49:59  10May2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
