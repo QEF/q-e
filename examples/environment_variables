@@ -18,6 +18,7 @@
 
 PREFIX=`cd ../.. ; pwd`
 BIN_DIR=$PREFIX/bin
+BIN_DIR=/scr/giannozz/espresso/bin
 PSEUDO_DIR=$PREFIX/pseudo
 TMP_DIR=$HOME/tmp
 

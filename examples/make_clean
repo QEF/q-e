@@ -13,7 +13,7 @@ do
     then
         cd $dir
         $ECHO "cleaning `pwd`...\c"
-        /bin/rm -rf results
+        /bin/rm -rf results reference.old
         $ECHO " done"
         cd ..
     fi
