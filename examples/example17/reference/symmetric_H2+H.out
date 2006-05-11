@@ -1,6 +1,6 @@
 
      Program PWSCF     v.3.1    starts ...
-     Today is  6May2006 at  3:43:51 
+     Today is 11May2006 at 14:38: 1 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -37,13 +37,13 @@
      ------------------------------ iteration   1 ------------------------------
 
      tcpu =      0.0    self-consistency for image   1
-     tcpu =      1.6    self-consistency for image   2
-     tcpu =      3.2    self-consistency for image   3
-     tcpu =      5.1    self-consistency for image   4
-     tcpu =      6.8    self-consistency for image   5
-     tcpu =      8.6    self-consistency for image   6
-     tcpu =     10.5    self-consistency for image   7
-     tcpu =     12.1    self-consistency for image   8
+     tcpu =      1.7    self-consistency for image   2
+     tcpu =      3.6    self-consistency for image   3
+     tcpu =      5.7    self-consistency for image   4
+     tcpu =      7.7    self-consistency for image   5
+     tcpu =      9.6    self-consistency for image   6
+     tcpu =     11.8    self-consistency for image   7
+     tcpu =     13.6    self-consistency for image   8
 
      activation energy (->) =   1.627038 eV
      activation energy (<-) =   1.627038 eV
@@ -64,12 +64,12 @@
 
      ------------------------------ iteration   2 ------------------------------
 
-     tcpu =     13.6    self-consistency for image   2
-     tcpu =     15.0    self-consistency for image   3
-     tcpu =     16.7    self-consistency for image   4
-     tcpu =     18.5    self-consistency for image   5
-     tcpu =     20.3    self-consistency for image   6
-     tcpu =     22.0    self-consistency for image   7
+     tcpu =     15.3    self-consistency for image   2
+     tcpu =     16.9    self-consistency for image   3
+     tcpu =     18.9    self-consistency for image   4
+     tcpu =     21.0    self-consistency for image   5
+     tcpu =     23.1    self-consistency for image   6
+     tcpu =     25.0    self-consistency for image   7
 
      activation energy (->) =   1.385602 eV
      activation energy (<-) =   1.385602 eV
@@ -90,12 +90,12 @@
 
      ------------------------------ iteration   3 ------------------------------
 
-     tcpu =     23.5    self-consistency for image   2
-     tcpu =     24.8    self-consistency for image   3
-     tcpu =     26.5    self-consistency for image   4
-     tcpu =     28.1    self-consistency for image   5
-     tcpu =     29.8    self-consistency for image   6
-     tcpu =     31.5    self-consistency for image   7
+     tcpu =     26.7    self-consistency for image   2
+     tcpu =     28.2    self-consistency for image   3
+     tcpu =     30.2    self-consistency for image   4
+     tcpu =     32.1    self-consistency for image   5
+     tcpu =     34.1    self-consistency for image   6
+     tcpu =     36.1    self-consistency for image   7
 
      activation energy (->) =   1.058315 eV
      activation energy (<-) =   1.058315 eV
@@ -116,12 +116,12 @@
 
      ------------------------------ iteration   4 ------------------------------
 
-     tcpu =     32.8    self-consistency for image   2
-     tcpu =     34.4    self-consistency for image   3
-     tcpu =     36.0    self-consistency for image   4
-     tcpu =     37.4    self-consistency for image   5
-     tcpu =     38.9    self-consistency for image   6
-     tcpu =     40.5    self-consistency for image   7
+     tcpu =     37.6    self-consistency for image   2
+     tcpu =     39.4    self-consistency for image   3
+     tcpu =     41.2    self-consistency for image   4
+     tcpu =     42.9    self-consistency for image   5
+     tcpu =     44.5    self-consistency for image   6
+     tcpu =     46.4    self-consistency for image   7
 
      activation energy (->) =   0.730008 eV
      activation energy (<-) =   0.730008 eV
@@ -142,12 +142,12 @@
 
      ------------------------------ iteration   5 ------------------------------
 
-     tcpu =     42.0    self-consistency for image   2
-     tcpu =     43.6    self-consistency for image   3
-     tcpu =     45.2    self-consistency for image   4
-     tcpu =     46.8    self-consistency for image   5
-     tcpu =     48.4    self-consistency for image   6
-     tcpu =     50.0    self-consistency for image   7
+     tcpu =     48.2    self-consistency for image   2
+     tcpu =     50.0    self-consistency for image   3
+     tcpu =     51.8    self-consistency for image   4
+     tcpu =     53.6    self-consistency for image   5
+     tcpu =     55.5    self-consistency for image   6
+     tcpu =     57.3    self-consistency for image   7
 
      activation energy (->) =   0.437356 eV
      activation energy (<-) =   0.437356 eV
@@ -168,12 +168,12 @@
 
      ------------------------------ iteration   6 ------------------------------
 
-     tcpu =     51.6    self-consistency for image   2
-     tcpu =     53.2    self-consistency for image   3
-     tcpu =     54.7    self-consistency for image   4
-     tcpu =     56.2    self-consistency for image   5
-     tcpu =     57.6    self-consistency for image   6
-     tcpu =     59.2    self-consistency for image   7
+     tcpu =     59.1    self-consistency for image   2
+     tcpu =     60.9    self-consistency for image   3
+     tcpu =     62.8    self-consistency for image   4
+     tcpu =     64.4    self-consistency for image   5
+     tcpu =     66.1    self-consistency for image   6
+     tcpu =     67.9    self-consistency for image   7
 
      activation energy (->) =   0.230936 eV
      activation energy (<-) =   0.230936 eV
@@ -194,12 +194,12 @@
 
      ------------------------------ iteration   7 ------------------------------
 
-     tcpu =     60.8    self-consistency for image   2
-     tcpu =     62.3    self-consistency for image   3
-     tcpu =     63.8    self-consistency for image   4
-     tcpu =     65.5    self-consistency for image   5
-     tcpu =     67.2    self-consistency for image   6
-     tcpu =     68.7    self-consistency for image   7
+     tcpu =     69.8    self-consistency for image   2
+     tcpu =     71.6    self-consistency for image   3
+     tcpu =     73.2    self-consistency for image   4
+     tcpu =     75.2    self-consistency for image   5
+     tcpu =     77.2    self-consistency for image   6
+     tcpu =     78.8    self-consistency for image   7
 
      activation energy (->) =   0.298953 eV
      activation energy (<-) =   0.298953 eV
@@ -220,12 +220,12 @@
 
      ------------------------------ iteration   8 ------------------------------
 
-     tcpu =     70.3    self-consistency for image   2
-     tcpu =     71.6    self-consistency for image   3
-     tcpu =     73.0    self-consistency for image   4
-     tcpu =     74.6    self-consistency for image   5
-     tcpu =     76.2    self-consistency for image   6
-     tcpu =     77.6    self-consistency for image   7
+     tcpu =     80.7    self-consistency for image   2
+     tcpu =     82.2    self-consistency for image   3
+     tcpu =     83.8    self-consistency for image   4
+     tcpu =     85.7    self-consistency for image   5
+     tcpu =     87.5    self-consistency for image   6
+     tcpu =     89.2    self-consistency for image   7
 
      activation energy (->) =   0.225987 eV
      activation energy (<-) =   0.225987 eV
@@ -246,12 +246,12 @@
 
      ------------------------------ iteration   9 ------------------------------
 
-     tcpu =     78.9    self-consistency for image   2
-     tcpu =     80.0    self-consistency for image   3
-     tcpu =     81.2    self-consistency for image   4
-     tcpu =     82.8    self-consistency for image   5
-     tcpu =     84.3    self-consistency for image   6
-     tcpu =     85.5    self-consistency for image   7
+     tcpu =     90.7    self-consistency for image   2
+     tcpu =     91.9    self-consistency for image   3
+     tcpu =     93.3    self-consistency for image   4
+     tcpu =     95.2    self-consistency for image   5
+     tcpu =     97.0    self-consistency for image   6
+     tcpu =     98.4    self-consistency for image   7
 
      activation energy (->) =   0.196793 eV
      activation energy (<-) =   0.196793 eV
@@ -272,12 +272,12 @@
 
      ------------------------------ iteration  10 ------------------------------
 
-     tcpu =     86.6    self-consistency for image   2
-     tcpu =     87.7    self-consistency for image   3
-     tcpu =     89.0    self-consistency for image   4
-     tcpu =     90.5    self-consistency for image   5
-     tcpu =     91.9    self-consistency for image   6
-     tcpu =     93.2    self-consistency for image   7
+     tcpu =     99.7    self-consistency for image   2
+     tcpu =    100.9    self-consistency for image   3
+     tcpu =    102.5    self-consistency for image   4
+     tcpu =    104.1    self-consistency for image   5
+     tcpu =    105.8    self-consistency for image   6
+     tcpu =    107.4    self-consistency for image   7
 
      activation energy (->) =   0.189984 eV
      activation energy (<-) =   0.189984 eV
@@ -298,12 +298,12 @@
 
      ------------------------------ iteration  11 ------------------------------
 
-     tcpu =     94.3    self-consistency for image   2
-     tcpu =     95.5    self-consistency for image   3
-     tcpu =     96.8    self-consistency for image   4
-     tcpu =     97.9    self-consistency for image   5
-     tcpu =     99.1    self-consistency for image   6
-     tcpu =    100.3    self-consistency for image   7
+     tcpu =    108.6    self-consistency for image   2
+     tcpu =    110.0    self-consistency for image   3
+     tcpu =    111.4    self-consistency for image   4
+     tcpu =    112.8    self-consistency for image   5
+     tcpu =    114.2    self-consistency for image   6
+     tcpu =    115.6    self-consistency for image   7
 
      activation energy (->) =   0.191355 eV
      activation energy (<-) =   0.191355 eV
@@ -324,12 +324,12 @@
 
      ------------------------------ iteration  12 ------------------------------
 
-     tcpu =    101.6    self-consistency for image   2
-     tcpu =    103.1    self-consistency for image   3
-     tcpu =    104.8    self-consistency for image   4
-     tcpu =    106.6    self-consistency for image   5
-     tcpu =    108.3    self-consistency for image   6
-     tcpu =    110.0    self-consistency for image   7
+     tcpu =    117.0    self-consistency for image   2
+     tcpu =    118.9    self-consistency for image   3
+     tcpu =    120.8    self-consistency for image   4
+     tcpu =    122.8    self-consistency for image   5
+     tcpu =    124.7    self-consistency for image   6
+     tcpu =    126.7    self-consistency for image   7
 
      activation energy (->) =   0.352136 eV
      activation energy (<-) =   0.352136 eV
@@ -350,12 +350,12 @@
 
      ------------------------------ iteration  13 ------------------------------
 
-     tcpu =    111.6    self-consistency for image   2
-     tcpu =    113.0    self-consistency for image   3
-     tcpu =    114.6    self-consistency for image   4
-     tcpu =    116.1    self-consistency for image   5
-     tcpu =    117.8    self-consistency for image   6
-     tcpu =    119.3    self-consistency for image   7
+     tcpu =    128.5    self-consistency for image   2
+     tcpu =    130.2    self-consistency for image   3
+     tcpu =    132.0    self-consistency for image   4
+     tcpu =    133.8    self-consistency for image   5
+     tcpu =    135.6    self-consistency for image   6
+     tcpu =    137.5    self-consistency for image   7
 
      activation energy (->) =   0.187385 eV
      activation energy (<-) =   0.187385 eV
@@ -379,43 +379,43 @@
 
      neb: convergence achieved in  13 iterations
  
-     PWSCF        :  2m 0.79s CPU time
+     PWSCF        :  2m19.13s CPU time
 
-     init_run     :    13.85s CPU (      80 calls,   0.173 s avg)
-     electrons    :    94.91s CPU (      80 calls,   1.186 s avg)
-     forces       :     2.66s CPU (      80 calls,   0.033 s avg)
+     init_run     :    20.14s CPU (      80 calls,   0.252 s avg)
+     electrons    :   102.71s CPU (      80 calls,   1.284 s avg)
+     forces       :     3.62s CPU (      80 calls,   0.045 s avg)
  
-     electrons    :    94.91s CPU (      80 calls,   1.186 s avg)
-     c_bands      :    15.99s CPU (     696 calls,   0.023 s avg)
-     sum_band     :    15.28s CPU (     696 calls,   0.022 s avg)
-     v_of_rho     :    52.79s CPU (     834 calls,   0.063 s avg)
-     newd         :     3.31s CPU (     762 calls,   0.004 s avg)
-     mix_rho      :     1.58s CPU (     696 calls,   0.002 s avg)
+     electrons    :   102.71s CPU (      80 calls,   1.284 s avg)
+     c_bands      :    12.96s CPU (     696 calls,   0.019 s avg)
+     sum_band     :    14.14s CPU (     696 calls,   0.020 s avg)
+     v_of_rho     :    73.17s CPU (     834 calls,   0.088 s avg)
+     newd         :     2.73s CPU (     762 calls,   0.004 s avg)
+     mix_rho      :     1.59s CPU (     696 calls,   0.002 s avg)
  
-     c_bands      :    15.99s CPU (     696 calls,   0.023 s avg)
-     init_us_2    :     0.30s CPU (    2960 calls,   0.000 s avg)
-     cegterg      :    15.37s CPU (    1392 calls,   0.011 s avg)
+     c_bands      :    12.96s CPU (     696 calls,   0.019 s avg)
+     init_us_2    :     0.32s CPU (    2960 calls,   0.000 s avg)
+     cegterg      :    12.56s CPU (    1392 calls,   0.009 s avg)
  
-     sum_band     :    15.28s CPU (     696 calls,   0.022 s avg)
+     sum_band     :    14.14s CPU (     696 calls,   0.020 s avg)
      becsum       :     0.00s CPU (    1392 calls,   0.000 s avg)
-     addusdens    :     3.04s CPU (     696 calls,   0.004 s avg)
+     addusdens    :     2.73s CPU (     696 calls,   0.004 s avg)
  
-     cegterg      :    15.37s CPU (    1392 calls,   0.011 s avg)
-     h_psi        :    13.25s CPU (    3787 calls,   0.003 s avg)
-     g_psi        :     0.13s CPU (    2379 calls,   0.000 s avg)
-     cdiaghg      :     0.70s CPU (    3599 calls,   0.000 s avg)
-     update       :     0.17s CPU (    2379 calls,   0.000 s avg)
-     last         :     0.12s CPU (    1535 calls,   0.000 s avg)
+     cegterg      :    12.56s CPU (    1392 calls,   0.009 s avg)
+     h_psi        :    10.28s CPU (    3787 calls,   0.003 s avg)
+     g_psi        :     0.24s CPU (    2379 calls,   0.000 s avg)
+     cdiaghg      :     0.82s CPU (    3599 calls,   0.000 s avg)
+     update       :     0.18s CPU (    2379 calls,   0.000 s avg)
+     last         :     0.14s CPU (    1535 calls,   0.000 s avg)
  
-     h_psi        :    13.25s CPU (    3787 calls,   0.003 s avg)
-     init         :     0.06s CPU (    3787 calls,   0.000 s avg)
-     add_vuspsi   :     0.13s CPU (    3787 calls,   0.000 s avg)
+     h_psi        :    10.28s CPU (    3787 calls,   0.003 s avg)
+     init         :     0.11s CPU (    3787 calls,   0.000 s avg)
+     add_vuspsi   :     0.11s CPU (    3787 calls,   0.000 s avg)
      s_psi        :     0.14s CPU (    3787 calls,   0.000 s avg)
  
      General routines
-     ccalbec      :     0.02s CPU (    1392 calls,   0.000 s avg)
-     cft3         :    32.50s CPU (   24160 calls,   0.001 s avg)
-     cft3s        :    16.28s CPU (   27558 calls,   0.001 s avg)
-     interpolate  :     8.86s CPU (    2916 calls,   0.003 s avg)
-     davcio       :     0.28s CPU (    5684 calls,   0.000 s avg)
+     ccalbec      :     0.05s CPU (    1392 calls,   0.000 s avg)
+     cft3         :    21.45s CPU (   24160 calls,   0.001 s avg)
+     cft3s        :    12.89s CPU (   27558 calls,   0.000 s avg)
+     interpolate  :     5.82s CPU (    2916 calls,   0.002 s avg)
+     davcio       :     0.19s CPU (    5684 calls,   0.000 s avg)
  
