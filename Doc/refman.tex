@@ -291,6 +291,19 @@ that take little memory are replicated, those that
 take a lot of memory (wavefunctions, G-vectors, R-space
 grid) are distributed.
 
+Beware: replicated calculations may either be performed independently
+on each processor, or performed on one processor and broadcast to all
+others. The first approach requires less programming, but it is unsafe:
+in principle all processors should yield exactly the same results, if 
+they work on the same data, but sometimes they don't (depending on the 
+machine, compiler, and libraries). Even a tiny difference in the last
+significant digit can eventually cause serious trouble if allowed to 
+build up, especially when a replicated check is performed (in which 
+case the code may "hang" if the check yields different results on 
+different processors). Never assume that the value of a variable 
+produced by replicated calculations is exactly the same on all processors: 
+when in doubt, broadcast the value calculated on a specific processor.
+
 \subsection{Paradigms}
 \subsection{Implementation}
 \subsubsection{Data distribution}

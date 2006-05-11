@@ -109,7 +109,7 @@ All of the above work for both insulators and metals, in any crystal
 structure, for many exchange-correlation functionals (including spin
 polarization and LDA+U), for both norm-conserving (Hamann-Schl\"uter-Chiang)
 pseudopotentials in separable form, and --- with very few exceptions
---- for Ultrasoft (Vanderbilt) pseudopotentials.  Non-colinear
+--- for Ultrasoft (Vanderbilt) pseudopotentials.  Non-collinear
 magnetism and spin-orbit interactions are also implemented.  Finite
 electric fields are implemented in both the supercell and the 
 ``modern theory of polarization'' approaches (the latter is still 
@@ -141,46 +141,56 @@ Both are at an experimental stage.
 \hyphenation{gian-noz-zi}
 The maintenance and further development of the Quantum-ESPRESSO code is
 promoted by the DEMOCRITOS National Simulation Center of INFM (Italian
-institute for condensed matter physics) under the coordination of
+Institute for Condensed Matter Physics) under the coordination of
 Paolo Giannozzi (Scuola Normale Superiore, Pisa), with the strong
 support of the CINECA National Supercomputing Center in Bologna under
 the responsibility of Carlo Cavazzoni.
-Currently active developers include
-Gerardo Ballabio (CINECA),
-Stefano Fabris,
-Adriano Mosca Conte,
-Carlo Sbraccia (SISSA, Trieste),
-Anton Kokalj (Jo\v{z}ef Stefan Institute, Ljubljana).
 
 The PWscf package was originally developed by Stefano Baroni, Stefano
-de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and others.
+de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and many
+others, in particular:\\
+-- Matteo Cococcioni (MIT) and SdG implemented LDA+U. \\
+-- Michele Lazzeri (Paris VI) implemented the $2n+1$ code and Raman cross
+section calculation with 2nd-order response.\\
+-- Oswaldo Dieguez (Rutgers) implemented Berry's phase calculations.\\
+-- Ralph Gebauer (ICTP, Trieste) and Adriano Mosca Conte (SISSA, Trieste) 
+implemented noncolinear magnetism, AdC the spin-orbit.\\
+-- Mickael Profeta (Paris VI) implemented electric-field gradients.\\
+-- Carlo Sbraccia (Princeton) implemented NEB. \\
+-- Alexander Smogunov (SISSA) and AdC implemented ballistic conductance.\\
+-- Paolo Umari (MIT) implemented finite electric fields.\\
+-- Xiaofei Wang (Princeton) and Carlo Sbraccia implemented META-GGA.\\
+-- Renata Wentzcovitch (UMinn) implemented variable-cell molecular dynamics.\\
+-- Yudong Wu (Princeton) and Carlo Sbraccia implemented Metadynamics.
 
-The CP code is the result of the merging of two codes: CP and FPMD,
-both based on the original code written by Roberto Car and Michele
-Parrinello.
-CP was developed by
-Alfredo Pasquarello (IRRMA, Lausanne),
-Kari Laasonen (Oulu),
-Andrea Trave (LLNL),
-Roberto Car (Princeton),
-Nicola Marzari (MIT),
-Paolo Giannozzi,
-and others.
-FPMD was developed by
-Carlo Cavazzoni,
-Gerardo Ballabio (CINECA),
-Sandro Scandolo (ICTP, Trieste),
-Guido Chiarotti (SISSA),
-Paolo Focher,
-and others.
+The CP code is based on the original code written by Roberto Car and 
+Michele Parrinello. CP was developed by Alfredo Pasquarello (IRRMA, 
+Lausanne), Kari Laasonen (Oulu), Andrea Trave (LLNL), Roberto Car 
+(Princeton), Nicola Marzari (MIT), Paolo Giannozzi, and by former 
+FPMD team: Carlo Cavazzoni, Gerardo Ballabio (CINECA), Sandro Scandolo 
+(ICTP), Guido Chiarotti (SISSA), Paolo Focher, and others.
+In particular:\\
+-- Yosuke Kanai (Princeton) implemented Fourier strings method.\\
+-- Manu Sharma (Princeton) implemented dynamics with Wannier functions.\\
+-- Paolo Umari (MIT) implemented finite electric fields and conjugate 
+gradients.\\
+-- Paolo Umari and Ismaila Dabo (MIT) implemented ensemble-DFT.\\
+-- Xiaofei Wang (Princeton) and Carlo Sbraccia (Princeton) implemented META-GGA.\\
+-- Yudong Wu (Princeton) and Carlo Sbraccia implemented Metadynamics.\\
+-- Yudong Wu and Manu Sharma implemented maximally localized Wannier
+functions.\\
+-- The Autopilot feature was implemented by Targacept, Inc.
 
-PWgui was written by Anton Kokalj and is based on his GUIB concept
+Gerardo Ballabio implemented "configure" for Quantum-Espresso.
+
+PWgui was written by Anton Kokalj (Jo\v{z}ef Stefan Institute, Ljubljana)
+and is based on his GUIB concept
 (\htmladdnormallink{\texttt{http://www-k3.ijs.si/kokalj/guib/}}%
                    {http://www-k3.ijs.si/kokalj/guib/}).
 
 The pseudopotential generation package ``atomic'' was written by
 Andrea Dal Corso and it is the result of many additions to the
-original code by Paolo Giannozzi.
+original code by Paolo Giannozzi and others.
 
 \hyphenation{mo-de-na}
 The input/output toolkit ``iotk''
@@ -188,6 +198,9 @@ The input/output toolkit ``iotk''
                    {http://www.s3.infm.it/iotk/}) 
 was written by Giovanni Bussi (S3, Modena).
 
+The calculation of the finite (imaginary) frequency molecular 
+polarizability using the approximated Thomas-Fermi  + von Weizaecker
+scheme was contributed by Huy-Viet Nguyen (SISSA),
 The frozen-phonon code was contributed by Silviu Zilberman
 (Princeton).
 
@@ -213,33 +226,25 @@ Matteo Cococcioni,
 Cesar Da Silva, 
 Alberto Debernardi,
 Gernot Deinzer,
-Oswaldo Dieguez,
 Andrea Ferretti, 
 Guido Fratesi,
-Ralph Gebauer,
 Martin Hilgeman,
 Eyvaz Isaev, 
-Yosuke Kanai,
 Axel Kohlmeyer,
 Konstantin Kudin,
-Michele Lazzeri,
 Sergey Lisenkov,
 Kurt Maeder,
 Francesco Mauri,
+Riccardo Mazzarello,
 Nicolas Mounet,
 Pasquale Pavone,
-Mickael Profeta,
 Guido Roma,
-Manu Sharma,
-Alexander Smogunov,
 Kurt Stokbro,
+Paul Tangney, 
 Pascal Thibaudeau,
 Antonio Tilocca,
-Paolo Umari,
-Renata Wentzcovitch,
+Jaro Tobik,
 Malgorzata Wierzbowska,
-Xiaofei Wang,
-Yudong Wu,
 and let us apologize to everybody we have forgotten.
 
 This guide was mostly written by Paolo Giannozzi, Gerardo Ballabio,

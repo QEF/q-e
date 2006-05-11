@@ -299,7 +299,7 @@ nspin          INTEGER
                nspin = 1 :   non-polarized calculation (default)
                nspin = 2 :  spin-polarized calculation, LSDA
                             (magnetization along z axis)
-               nspin = 4 :  spin-polarized calculation, noncolinear
+               nspin = 4 :  spin-polarized calculation, noncollinear
                             (magnetization in generic direction)
                             DO NOT specify nspin in this case; 
                             specify "noncolin=.TRUE." instead
@@ -329,18 +329,21 @@ nelup, neldw   REAL
                Note that this fixes the final value of the magnetization.
                The sum must yield nelec that must also be specified
                explicitly in this case. Not valid for spin-unpolarized
-               or noncolinear calculations, only for LSDA. Obsolescent.
+               or noncollinear calculations, only for LSDA. Obsolescent:
+               use multiplicity or tot_magnetization instead.
 
 multiplicity   INTEGER ( default = 0 [unspecified] )
                spin multiplicity (2s+1). 1 is singlet, 2 for doublet etc.
                Note that this fixes the final value of the magnetization.
                if unspecified or a non-zero value is specified in nelup/neldw
                then multiplicity variable is ignored.
+               Do not specify both multiplicity and tot_magnetization.
 
 tot_magnetization INTEGER ( default = -1 [unspecified] )
                majority spin - minority spin (nelup - neldw).
                if unspecified or a non-zero value is specified in nelup/neldw
                then tot_magnetization variable is ignored.
+               Do not specify both multiplicity and tot_magnetization.
                YES, there is redundancy! nelup/neldw are enough to specify
                the spin state. However these variables are not very convenient
                and will be eliminated from the input in future versions.
@@ -420,13 +423,13 @@ eamp           REAL ( default = 0.001 a.u. )
 
 angle1(i)      REAL
                The angle expressed in degrees between the initial 
-               magnetization and the z-axis. For noncolinear calculations
+               magnetization and the z-axis. For noncollinear calculations
                only. I runs over the atom types.
 
 angle2(i)      REAL
                The angle expressed in degrees between the projection
                of the initial magnetization on x-y plane and the x-axis.
-               For noncolinear calculations only.
+               For noncollinear calculations only.
 
 constrained_magnetization CHARACTER ( defalt = 'none' ) 
                Used to perform constrained calculations in magnetic systems

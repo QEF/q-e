@@ -9,46 +9,66 @@ and of several utilities, in particular:
 - the "atomic" pseudopotential generation code.
 - the Input/Output Toolkit "iotk"
 
-The maintenance and further development of the Quantum-ESPRESSO code is
-promoted by the DEMOCRITOS National Simulation Center of the Italian
-INFM (http://www.democritos.it/), under the coordination of Paolo
-Giannozzi (p.giannozzi@sns.it) (Scuola Normale Superiore, Pisa), with
-the strong support of the CINECA National Supercomputing Center in
-Bologna (http://www.cineca.it/), under the responsibility of Carlo
-Cavazzoni (c.cavazzoni@cineca.it).
+The maintenance and further development of the Quantum-ESPRESSO code
+is promoted by the DEMOCRITOS National Simulation Center of the 
+Italian INFM (http://www.democritos.it/), under the coordination of 
+Paolo Giannozzi (Scuola Normale Superiore, Pisa), with the strong
+support of the CINECA National Supercomputing Center in Bologna 
+(http://www.cineca.it/), under the responsibility of Carlo 
+Cavazzoni (CINECA, Bologna).
 
-Currently active developers include Gerardo Ballabio (CINECA), 
-Stefano Fabris, Guido Fratesi, Adriano Mosca Conte (SISSA, Trieste), 
-Anton Kokalj (Joszef Stefan Institute, Ljubljana), Carlo Sbraccia 
-(Princeton).
+The PWscf package (http://www.pwscf.org) was developed by Stefano Baroni, 
+Stefano de Gironcoli, Andrea Dal Corso (SISSA, Trieste), Paolo Giannozzi, 
+and many others.
+Matteo Cococcioni (MIT) and SdG implemented LDA+U. 
+Michele Lazzeri (Paris VI) implemented the 2n+1 code and Raman cross
+section calculation with 2nd-order response.
+Oswaldo Dieguez (Rutgers) implemented Berry's phase calculations.
+Ralph Gebauer (ICTP, Trieste) and Adriano Mosca Conte (SISSA, Trieste) 
+implemented noncolinear magnetism, AdC the spin-orbit.
+Mickael Profeta (Paris VI) implemented electric-field gradients.
+Carlo Sbraccia (Princeton) implemented NEB. 
+Alexander Smogunov (SISSA) and AdC implemented ballistic conductance.
+Paolo Umari (MIT) implemented finite electric fields.
+Xiaofei Wang (Princeton) and Carlo Sbraccia implemented META-GGA.
+Renata Wentzcovitch (UMinn) implemented variable-cell molecular dynamics.
+Yudong Wu (Princeton) and Carlo Sbraccia implemented Metadynamics.
 
-The PWscf package was developed by Stefano Baroni, Stefano
-de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and others.
-The web site for PWSCF and related codes is: http://www.pwscf.org/
+The CP code is based on the original code written by Roberto Car and 
+Michele Parrinello. CP was developed by Alfredo Pasquarello (IRRMA, 
+Lausanne), Kari Laasonen (Oulu), Andrea Trave (LLNL), Roberto Car 
+(Princeton), Nicola Marzari (MIT), Paolo Giannozzi, and others.
+Also developed by former FPMD team: Carlo Cavazzoni, 
+Gerardo Ballabio (CINECA), Sandro Scandolo (ICTP), 
+Guido Chiarotti (SISSA), Paolo Focher, and others.
+Yosuke Kanai (Princeton) implemented Fourier strings method.
+Manu Sharma (Princeton) implemented dynamics with Wannier functions.
+Paolo Umari (MIT) implemented finite electric fields and conjugate gradients.
+Paolo Umari and Ismaila Dabo (MIT) implemented ensemble-DFT.
+Xiaofei Wang (Princeton) and Carlo Sbraccia (Princeton) implemented META-GGA.
+Yudong Wu (Princeton) and Carlo Sbraccia implemented Metadynamics.
+Yudong Wu and Manu Sharma implemented maximally localized Wannier
+functions.
+The Autopilot feature was implemented by Targacept, Inc.
 
-The CP code is based on the original code written by
-Roberto Car and Michele Parrinello.
+Gerardo Ballabio implemented "configure" for Quantum-Espresso.
 
-CP was developed by Alfredo Pasquarello (IRRMA, Lausanne), Kari
-Laasonen (Oulu), Andrea Trave (LLNL), Roberto Car (Princeton),
-Nicola Marzari (MIT), Paolo Giannozzi, and others.
-Also developed by former FPMD team: Carlo Cavazzoni, Gerardo Ballabio (CINECA),
-Sandro Scandolo (ICTP, Trieste), Guido Chiarotti (SISSA), Paolo
-Focher, and others.
-
-PWgui was written by Anton Kokalj (IJS) and is based on his GUIB
-concept (http://www-k3.ijs.si/kokalj/guib/).
+PWgui was written by Anton Kokalj (IJS, Ljubljana) and is based on his 
+GUIB concept (http://www-k3.ijs.si/kokalj/guib/).
 
 The pseudopotential generation package "atomic" was written by 
 Andrea Dal Corso and it is the result of many additions to 
-the original code by Paolo Giannozzi.
+the original code by Paolo Giannozzi and others.
 
 The input/output toolkit "iotk" (http://www.s3.infm.it/iotk)
-was written by Giovanni Bussi (S3 Modena).
+was written by Giovanni Bussi (S3, Modena).
+
+The frozen-phonon code was contributed by Silviu Zilberman
+(Princeton).
 
 The calculation of the finite (imaginary) frequency molecular 
 polarizability using the approximated Thomas-Fermi  + von Weizaecker
-scheme was contributed by Huy-Viet Nguyen (Sissa),
+scheme was contributed by Huy-Viet Nguyen (SISSA),
 
 The BlueGene porting was done by Costas Bekas and Alessandro Curioni
 (IBM Zurich).
@@ -56,14 +76,13 @@ The BlueGene porting was done by Costas Bekas and Alessandro Curioni
 A list of further contributors includes:
 Dario Alfe', Francesco Antoniella, Mauro Boero, Nicola Bonini, 
 Claudia Bungaro, Paolo Cazzato, Davide Ceresoli, Gabriele Cipriani,
-Matteo Cococcioni, Cesar Da Silva, Alberto Debernardi, Gernot Deinzer,
-Oswaldo Dieguez, Andrea Ferretti, Ralph Gebauer, Martin Hilgeman,
-Eyvaz Isaev,  Yosuke Kanai, Axel Kohlmeyer, Konstantin Kudin, 
-Michele Lazzeri, Sergey Lisenkov, Kurt Maeder, Francesco Mauri, 
-Nicolas Mounet, Pasquale Pavone, Mickael Profeta, Guido Roma, 
-Manu Sharma, Alexander Smogunov, Kurt Stokbro, Pascal Thibaudeau,
-Antonio Tilocca, Paolo Umari, Renata Wentzcovitch, Malgorzata Wierzbowska,
-Xiaofei Wang, Yudong Wu, and let us apologize to everybody we have forgotten.
+Cesar Da Silva, Alberto Debernardi, Gernot Deinzer, Andrea Ferretti, 
+Guido Fratesi, Martin Hilgeman, Eyvaz Isaev, Axel Kohlmeyer, 
+Konstantin Kudin, Sergey Lisenkov, Kurt Maeder, Francesco Mauri,
+Riccardo Mazzarello, Nicolas Mounet, Pasquale Pavone, Guido Roma,
+Kurt Stokbro, Paul Tangney, Pascal Thibaudeau, Antonio Tilocca, 
+Jaro Tobik, Malgorzata Wierzbowska,
+and let us apologize to everybody we have forgotten.
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU

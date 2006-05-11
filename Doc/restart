@@ -1,6 +1,6 @@
 
 Quantum-Espresso restart file specifications - VERY PRELIMINARY
-Paolo Giannozzi scripsit AD 2005-11-11
+Paolo Giannozzi scripsit AD 2005-11-11 - Last modified 2006-05-10
 
 0) rationale
 
@@ -31,12 +31,12 @@ Solutions:
       atomic structure, lattice, symmetries, parameters of the run, ...
     - pointers to other files or directories containing bulkier
       data, such as wavefunctions, charge density, potentials:
-      - File "charge_density.rho"
+      - File "charge_density.xml"
         contains the charge density
-      - File "charge_density.rhoup"
-        contains the spin-up charge density (LSDA calculations)
-      - File "charge_density.rhodw" 
-        contains the spin-down charge density (LSDA calculations)
+      - File "spin_polarization.xml"
+        contains the spin polarization (rhoup-rhodw) (LSDA calculations)
+      - Files "magnetization.x", "magnetization.y", "magnetization.z": 
+        contain the spin polarization (noncollinear calculations)
       - File "mat_z.1"
         contains occupations (ensemble-dynamics only)
       - File "lambda.dat"

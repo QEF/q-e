@@ -1,3 +1,11 @@
+Fixed in version 3.1:
+
+  *  various problems in stress calculation, both in PW and in CP
+
+  *  in phonon dispersion calculation, the threshold for diagonalization
+     was not always what was expected to be. Minor numerical differences 
+     could result.
+
 Fixed in version 3.0:
 
   *  latgen.f90 : case ibrav=13 bad
