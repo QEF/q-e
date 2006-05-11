@@ -8,7 +8,6 @@
 #include "f_defs.h"
 !
 #define __BFGS
-!#define __MIXEDBFGSMS
 !
 !----------------------------------------------------------------------------
 MODULE dynamics_module
@@ -20,7 +19,7 @@ MODULE dynamics_module
   USE io_files,  ONLY : prefix, tmp_dir
   USE constants, ONLY : tpi, fpi
   USE constants, ONLY : amconv, ry_to_kelvin, au_ps, bohr_radius_cm
-  USE constants, ONLY : eps8, eps16
+  USE constants, ONLY : eps8
   !
   USE basic_algebra_routines
   !
@@ -37,7 +36,6 @@ MODULE dynamics_module
   LOGICAL :: &
        refold_pos      ! if true the positions are refolded into the supercell
   !
-  
   REAL(DP), ALLOCATABLE :: tau_old(:,:), tau_new(:,:), tau_ref(:,:)
   REAL(DP), ALLOCATABLE :: vel(:,:), acc(:,:)
   REAL(DP), ALLOCATABLE :: mass(:)
@@ -191,7 +189,7 @@ MODULE dynamics_module
                 FMT = '(5X,"Time step",T27," = ",F8.2," a.u.,",F8.4, &
                          & " femto-seconds")' ) dt, ( dt * 2.D+3 * au_ps )
          !
-         ! ...  masses in rydberg atomic units
+         ! ... masses in rydberg atomic units
          !
          total_mass = 0.D0
          !
@@ -299,8 +297,8 @@ MODULE dynamics_module
          ELSE
             !
             ! ... we first remove the component of the force along the 
-            ! ... constraint gradient (this constitutes the initial guess 
-            ! ... for the calculation of the lagrange multipliers)
+            ! ... constraint gradient ( this constitutes the initial 
+            ! ... guess for the calculation of the lagrange multipliers )
             !
             CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
             !
@@ -402,14 +400,18 @@ MODULE dynamics_module
                      & 5X,"Ekin + Etot (const)   = ",F14.8," Ry")' ) &
           ekin, temp_new, ( ekin  + etot )
       !
-      ! ... total linear momentum must be zero if all atoms move
-      !
-      mlt = norm( ml(:) )
-      !
-      IF ( mlt > eps8 .AND. .NOT.( lconstrain .OR. lfixatom ) ) &
-         CALL infomsg ( 'dynamics', 'Total linear momentum <> 0', -1 )
-      !
-      WRITE( stdout, '(/,5X,"Linear momentum :",3(2X,F14.10))' ) ml
+      IF ( .NOT.( lconstrain .OR. lfixatom .OR. langevin_rescaling ) ) THEN
+         !
+         ! ... total linear momentum must be zero if all atoms move
+         !
+         mlt = norm( ml(:) )
+         !
+         IF ( mlt > eps8 ) &
+            CALL infomsg ( 'dynamics', 'Total linear momentum <> 0', -1 )
+         !
+         WRITE( stdout, '(/,5X,"Linear momentum :",3(2X,F14.10))' ) ml(:)
+         !
+      END IF
       !
       RETURN
       !
