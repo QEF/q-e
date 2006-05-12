@@ -1,31 +1,25 @@
-TODO LIST - Feb. 2006
+TODO LIST - May 2006
 
 BUGS TO EXAMINE
 
 - Zr pp buggy?
-- wavefunctions in Cu.pbe-d-rrkjus.UPF not normalized?
+- strange empty states with C blyp ?
+- O pseudopotentials?
 
 INSTALLATION/PORTING
 
-- replacement for FFTW on Intel/AMD?
+- replacement for FFTW on Intel/AMD
 
 COMMON
 
 - cleanup of the scratch directory mess: 
   outdir, tmp_dir, wfc_dir, scradir...
 
-- cleanup of FFT's
-
-- Extend to CP/FPMD the possibility to save wavefunctions
-  either 'distributed' or 'collected' in parallel execution
-
 - pseudopotentials: support new format (XML) if/when ready
 
 - adding/removing/modifying input variables is too complex
 
 - time steps in fs (both in input and in output)
-
-- better-structured (easily parsable) output format: XML?
 
 - fix shift in eigenvalues between CP/FPMD and PW
   The eigenvalues should be the same
@@ -51,8 +45,6 @@ PW
 
 - fix problem with j'_l(x)Y_lm(x) for x -> 0 and l=1
 
-- fix for good the case  j_l(x) and j'_l(x) for x -> 0
-
 - make hpsi/spsi/newd/addusdens/CG/DIIS  faster
   - remove complex factor i**l from beta fct and q(r) (preliminary)
   - shift structure factor from beta to psi when computing becp (reduce memory)
@@ -71,9 +63,6 @@ PW
   and also what are exactly the output quantites!
 
 - some symmetry-related routines such as sgama are too complex
-
-- split calculation='nscf' into 'bands' and 'nscf', or 'nscf' and 'dos',
-  in order to have a clear distinction between the two cases
 
 Low priority:
 
@@ -98,8 +87,6 @@ PH, D3, Gamma
 - move all phonon-specific stuff (symmetry etc) from pw into phonon
 
 - same input for Gamma and PH
-
-- new algorithm for electron-phonon: documentation, example
 
 - replace "use pwcom" into more "use" statements
 
