@@ -122,7 +122,6 @@ MODULE io_rho_xml
       INTEGER,          INTENT(IN)           :: nspin
       CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: extension
       !
-      LOGICAL               :: lexists
       CHARACTER(LEN=256)    :: dirname, file_base
       CHARACTER(LEN=256)    :: ext
       REAL(DP), ALLOCATABLE :: rhoaux(:)
@@ -135,12 +134,7 @@ MODULE io_rho_xml
       IF ( PRESENT( extension ) ) ext = '.' // TRIM( extension )
       !
       file_base = TRIM( dirname ) // '/charge-density' // TRIM( ext )
-      !
-      INQUIRE( FILE = TRIM( file_base ) // '.xml', EXIST = lexists )
-      !
-      IF ( .NOT. lexists ) &
-         CALL errore( 'read_rho', 'file ' // &
-                    & TRIM( file_base ) // '.xml nonexistent', 1 )
+      CALL para_inquire ( file_base )
       !
       IF ( nspin == 1 ) THEN
          !
@@ -158,12 +152,7 @@ MODULE io_rho_xml
          rho(:,2) = rhoaux(:)
          !
          file_base = TRIM( dirname ) // '/spin-polarization' // TRIM( ext )
-         !
-         INQUIRE( FILE = TRIM( file_base ) // '.xml', EXIST = lexists )
-         !
-         IF ( .NOT. lexists ) &
-            CALL errore( 'read_rho', 'file ' // &
-                       & TRIM( file_base ) // '.xml nonexistent', 1 )
+         CALL para_inquire ( file_base )
          !
          CALL read_rho_xml( file_base, rhoaux, &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
@@ -179,35 +168,24 @@ MODULE io_rho_xml
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
          !
          IF (domag) THEN
+            !
             file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
             !
-            INQUIRE( FILE = TRIM( file_base ) // '.xml', EXIST = lexists )
-            !
-            IF ( .NOT. lexists ) &
-               CALL errore( 'read_rho', 'file ' // &
-                       & TRIM( file_base ) // '.xml nonexistent', 1 )
+            CALL para_inquire ( file_base )
             !
             CALL read_rho_xml( file_base, rho(:,2), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
             !
             file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
             !
-            INQUIRE( FILE = TRIM( file_base ) // '.xml', EXIST = lexists )
-            !
-            IF ( .NOT. lexists ) &
-               CALL errore( 'read_rho', 'file ' // &
-                       & TRIM( file_base ) // '.xml nonexistent', 1 )
+            CALL para_inquire ( file_base )
             !
             CALL read_rho_xml( file_base, rho(:,3), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
             !
             file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
             !
-            INQUIRE( FILE = TRIM( file_base ) // '.xml', EXIST = lexists )
-            !
-            IF ( .NOT. lexists ) &
-               CALL errore( 'read_rho', 'file ' // &
-                       & TRIM( file_base ) // '.xml nonexistent', 1 )
+            CALL para_inquire ( file_base )
             !
             CALL read_rho_xml( file_base, rho(:,4), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
@@ -220,5 +198,33 @@ MODULE io_rho_xml
       RETURN
       !
     END SUBROUTINE read_rho
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE para_inquire ( file_base )
+      !------------------------------------------------------------------------
+      !
+      ! ... same as fortran function 'inquire' but the check is performed
+      ! ... on a single processor whether 'file_base'.xml exists
+      !
+      USE io_global,ONLY : ionode, ionode_id
+      USE mp,       ONLY : mp_bcast
+      !
+      IMPLICIT NONE
+      !
+      LOGICAL             :: lexists
+      CHARACTER(LEN=*)    :: file_base
+      !
+      IF ( ionode ) &
+           INQUIRE( FILE = TRIM( file_base ) // '.xml', EXIST = lexists )
+      !
+      CALL mp_bcast ( lexists, ionode_id )
+      !
+      IF ( .NOT. lexists ) &
+         CALL errore( 'read_rho', 'file ' // &
+                    & TRIM( file_base ) // '.xml nonexistent', 1 )
+      !
+      RETURN
+      !
+    END SUBROUTINE para_inquire
     !
 END MODULE io_rho_xml
