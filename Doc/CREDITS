@@ -27,12 +27,10 @@ Oswaldo Dieguez (Rutgers) implemented Berry's phase calculations.
 Ralph Gebauer (ICTP, Trieste) and Adriano Mosca Conte (SISSA, Trieste) 
 implemented noncolinear magnetism, AdC the spin-orbit.
 Mickael Profeta (Paris VI) implemented electric-field gradients.
-Carlo Sbraccia (Princeton) implemented NEB. 
+Carlo Sbraccia (Princeton) implemented NEB, Strings method, Metadynamics.
 Alexander Smogunov (SISSA) and AdC implemented ballistic conductance.
 Paolo Umari (MIT) implemented finite electric fields.
-Xiaofei Wang (Princeton) and Carlo Sbraccia implemented META-GGA.
 Renata Wentzcovitch (UMinn) implemented variable-cell molecular dynamics.
-Yudong Wu (Princeton) and Carlo Sbraccia implemented Metadynamics.
 
 The CP code is based on the original code written by Roberto Car and 
 Michele Parrinello. CP was developed by Alfredo Pasquarello (IRRMA, 
@@ -41,14 +39,13 @@ Lausanne), Kari Laasonen (Oulu), Andrea Trave (LLNL), Roberto Car
 Also developed by former FPMD team: Carlo Cavazzoni, 
 Gerardo Ballabio (CINECA), Sandro Scandolo (ICTP), 
 Guido Chiarotti (SISSA), Paolo Focher, and others.
-Yosuke Kanai (Princeton) implemented Fourier strings method.
-Manu Sharma (Princeton) implemented dynamics with Wannier functions.
+Yosuke Kanai (Princeton) implemented Strings method.
+Carlo Sbraccia (Princeton) implemented NEB and Metadynamics.
+Manu Sharma (Princeton) and  Yudong Wu (Princeton) implemented maximally
+localized Wannier functions and dynamics with Wannier functions.
 Paolo Umari (MIT) implemented finite electric fields and conjugate gradients.
 Paolo Umari and Ismaila Dabo (MIT) implemented ensemble-DFT.
-Xiaofei Wang (Princeton) and Carlo Sbraccia (Princeton) implemented META-GGA.
-Yudong Wu (Princeton) and Carlo Sbraccia implemented Metadynamics.
-Yudong Wu and Manu Sharma implemented maximally localized Wannier
-functions.
+Xiaofei Wang (Princeton) implemented META-GGA.
 The Autopilot feature was implemented by Targacept, Inc.
 
 Gerardo Ballabio implemented "configure" for Quantum-Espresso.
