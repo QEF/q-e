@@ -30,6 +30,9 @@ MODULE geomcell_cond
      nkpts,    &   !  number of kpts in the perpendicular direction
      n2d,      &   !  dimension of reduced vector space in XY
      nz1           !  number of subslabs in the slab
+  INTEGER   :: &
+            nk1ts, nk2ts, &    ! k-point mesh dimensions
+            k1ts, k2ts         ! k-point mesh shift
   INTEGER, ALLOCATABLE :: &
      ninsh(:)      !  number of G in shell
   REAL(DP)    :: &

@@ -17,7 +17,7 @@ SUBROUTINE do_cond(nodenumber)
   USE pwcom
   USE cond 
   USE io_files 
-  USE io_global, ONLY : ionode, ionode_id
+  USE io_global, ONLY : stdout, ionode, ionode_id
 
   USE mp
 
@@ -25,7 +25,7 @@ SUBROUTINE do_cond(nodenumber)
 
   CHARACTER(len=3) nodenumber
   REAL(DP) :: wtot
-  INTEGER :: ik, ien, ios 
+  INTEGER :: ik, ipol, ien, ios 
 
   NAMELIST /inputcond/ outdir, prefixt, prefixl, prefixs, prefixr,     &
                        band_file, tran_file, save_file, fil_loc,       &
@@ -82,18 +82,26 @@ SUBROUTINE do_cond(nodenumber)
      tmp_dir=trimcheck (outdir)
      !
      !     Reading 2D k-point
-     READ(5, *, err=300, iostat=ios ) nkpts
-     ALLOCATE( xyk(2,nkpts) )
-     ALLOCATE( wkpt(nkpts) )
-     wtot = 0.d0
-     DO ik = 1, nkpts
-        READ(5, *, err=300, iostat=ios) xyk(1,ik), xyk(2,ik), wkpt(ik)
-        wtot = wtot + wkpt(ik)
-     ENDDO
-     DO ik = 1, nkpts
-        wkpt(ik) = wkpt(ik)/wtot
-     ENDDO
-300  CALL errore ('do_cond','2D k-point',ABS(ios))
+     READ(5, *, err=250, iostat=ios ) nkpts
+250     CALL errore ('do_cond','reading number of kpoints',ABS(ios))
+     IF (nkpts>0) THEN
+        ALLOCATE( xyk(2,nkpts) )
+        ALLOCATE( wkpt(nkpts) )
+        wtot = 0.d0
+        DO ik = 1, nkpts
+           READ(5, *, err=300, iostat=ios) xyk(1,ik), xyk(2,ik), wkpt(ik)
+           wtot = wtot + wkpt(ik)
+        ENDDO
+        DO ik = 1, nkpts
+           wkpt(ik) = wkpt(ik)/wtot
+        ENDDO
+300     CALL errore ('do_cond','2D k-point',ABS(ios))
+     ELSE
+        ALLOCATE( xyk(2,npk) )
+        ALLOCATE( wkpt(npk) )
+        READ(5, *, err=350, iostat=ios) nk1ts, nk2ts, k1ts, k2ts
+350     CALL errore ('do_cond','2D k-point size or shift',ABS(ios))
+     ENDIF
 
      !
      !     To form the array of energies for calculation
@@ -151,15 +159,26 @@ SUBROUTINE do_cond(nodenumber)
   CALL mp_bcast( cutplot, ionode_id )
   CALL mp_bcast( nkpts, ionode_id )
   CALL mp_bcast( nenergy, ionode_id )
+  CALL mp_bcast( nk1ts, ionode_id )
+  CALL mp_bcast( nk2ts, ionode_id )
+  CALL mp_bcast( k1ts, ionode_id )
+  CALL mp_bcast( k2ts, ionode_id )
 
   IF ( .NOT. ionode ) THEN
-     ALLOCATE( xyk(2,nkpts) )
-     ALLOCATE( wkpt(nkpts) )
+     IF (nkpts>0) THEN
+        ALLOCATE( xyk(2,nkpts) )
+        ALLOCATE( wkpt(nkpts) )
+     ELSE
+        ALLOCATE( xyk(2,npk) )
+        ALLOCATE( wkpt(npk) )
+     ENDIF
      ALLOCATE( earr(nenergy) )
      ALLOCATE( tran_tot(nenergy) )
   ENDIF
-  CALL mp_bcast( xyk, ionode_id )
-  CALL mp_bcast( wkpt, ionode_id )
+  IF (nkpts>0) THEN
+     CALL mp_bcast( xyk, ionode_id )
+     CALL mp_bcast( wkpt, ionode_id )
+  ENDIF
   CALL mp_bcast( earr, ionode_id )
   CALL mp_bcast( tran_tot, ionode_id )
 
@@ -226,6 +245,20 @@ ELSE
   ENDIF
 ENDIF
 
+IF (nkpts==0) THEN
+   IF (ionode) THEN
+      CALL kpoint_grid( nsym, s, bg, npk, k1ts, k2ts, 0, &
+                        nk1ts, nk2ts, 1, nkpts, xk, wkpt )
+      DO ik=1,nkpts
+         xyk(1,ik)=xk(1,ik)
+         xyk(2,ik)=xk(2,ik)
+      ENDDO
+   ENDIF
+   CALL mp_bcast( xyk, ionode_id )
+   CALL mp_bcast( wkpt, ionode_id )
+ENDIF
+
+
 IF (lwrite_cond) then
   call save_cond (.true.,1,efl,nrzl,nocrosl,noinsl,         &
                   norbl,rl,rabl,betarl)
@@ -235,7 +268,7 @@ IF (lwrite_cond) then
                              noinsr,norbr,rr,rabr,betarr)
 endif
 
-  call cond_out
+  CALL cond_out
 
   CALL stop_clock('init')
 
@@ -244,52 +277,54 @@ endif
 
   do ik=1, nkpts
 
+    WRITE( stdout, '(/,8x,"k(",i5,") = (",2f12.7,"), wk =",f12.7,/)') ik, &
+         (xyk (ipol, ik) , ipol = 1, 2) , wkpt (ik)
+
     CALL init_gper(ik)
 
-    call local 
+    CALL local 
 
-    do ien=1, nenergy
+    DO ien=1, nenergy
       eryd = earr(ien)/rytoev + efl
-      call form_zk(n2d, nrzpl, zkrl, zkl, eryd, tpiba)
-      call scatter_forw(nrzl, nrzpl, zl, psiperl, zkl, norbl,     &
+      CALL form_zk(n2d, nrzpl, zkrl, zkl, eryd, tpiba)
+      CALL scatter_forw(nrzl, nrzpl, zl, psiperl, zkl, norbl,     &
                         tblml, crosl, taunewl, rl, rabl, betarl) 
-      call compbs(1, nocrosl, norbl, nchanl, kvall, kfunl, kfundl, &
+      CALL compbs(1, nocrosl, norbl, nchanl, kvall, kfunl, kfundl, &
                   kintl, kcoefl) 
 
       IF (ikind.EQ.2) THEN
         eryd = earr(ien)/rytoev + efr
-        call form_zk(n2d, nrzpr, zkrr, zkr, eryd, tpiba)
-        call scatter_forw(nrzr, nrzpr, zr, psiperr, zkr, norbr,    &
+        CALL form_zk(n2d, nrzpr, zkrr, zkr, eryd, tpiba)
+        CALL scatter_forw(nrzr, nrzpr, zr, psiperr, zkr, norbr,    &
                           tblmr, crosr, taunewr, rr, rabr, betarr)
-        call compbs(0, nocrosr, norbr, nchanr, kvalr, kfunr, kfundr,&
+        CALL compbs(0, nocrosr, norbr, nchanr, kvalr, kfunr, kfundr,&
                      kintr, kcoefr) 
       ENDIF
 
-      call summary_band(ik,ien)
+      CALL summary_band(ik,ien)
 
       IF (ikind.NE.0) THEN
-        eryd = earr(ien)/rytoev + efs
-        call form_zk(n2d, nrzps, zkrs, zks, eryd, tpiba)
-        call scatter_forw(nrzs, nrzps, zs, psipers, zks, norbs,    &
+         eryd = earr(ien)/rytoev + efs
+         CALL form_zk(n2d, nrzps, zkrs, zks, eryd, tpiba)
+         CALL scatter_forw(nrzs, nrzps, zs, psipers, zks, norbs,    &
                           tblms, cross, taunews, rs, rabs, betars)
 
-        write(6,*) 'to transmit'
+         WRITE(stdout,*) 'to transmit'
 
-        call transmit(ik, ien)
-      endif
+         CALL transmit(ik, ien)
+      ENDIF
 
 
-    enddo
-   call free_mem
-  enddo
+   ENDDO
+   CALL free_mem
+  ENDDO
 
-  IF(ikind.GT.0.AND.tran_file.NE.' ')  &
-   CALL summary_tran()
+  IF(ikind.GT.0.AND.tran_file.NE.' ') CALL summary_tran()
 
   CALL print_clock_pwcond()
   CALL stop_clock('PWCOND')
 
-  return
+  RETURN
 
 END SUBROUTINE do_cond
 
