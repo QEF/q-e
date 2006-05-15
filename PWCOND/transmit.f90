@@ -282,7 +282,7 @@ implicit none
     x2 = (0.d0,0.d0)
     call ZGEMM('n', 'n', ntran, nchanl, nchanl, x1, vec1, ntran,  &
               veceig, nchanl, x2, vec2, ntran)
-    write(6,*) 'Nchannel, Norbital, projection'
+    write(stdout,*) 'Nchannel, Norbital, projection'
 !---------------------------
 !   Angular momentum projection of eigenchannels
 !
@@ -299,7 +299,7 @@ implicit none
                xi1(ipol) = xi1(ipol)+intw2(iorba, ig)*vec2(2*n2d+ig, n)
             enddo
          enddo
-         write(6,'(2i5,2f20.12)') n, iorb-orbj_in+1,   &
+         write(stdout,'(2i5,2f20.12)') n, iorb-orbj_in+1,   &
                         ( DBLE(xi1(ipol))**2+AIMAG(xi1(ipol))**2,ipol=1,npol)
       enddo
      endif

@@ -134,7 +134,7 @@ subroutine compbs_2(nocros, norb, n2d, ntot, amat, bmat, &
 
 !
 ! Forming (2*n2d+norb, ntot) matrix of eigenvectors
-! cooficients, storing them in vec  
+! coeficients, storing them in vec  
 !
   vec=(0.d0,0.d0)
 

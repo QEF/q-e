@@ -174,7 +174,7 @@ IF (noncolin) THEN
 ENDIF
 
 !  do p = 1, nrz
-!    write(6,'(i5,2f12.6)') p, real(vppot(p,1,1,1)), imag(vppot(p,1,1,1))
+!    write(stdout,'(i5,2f12.6)') p, real(vppot(p,1,1,1)), imag(vppot(p,1,1,1))
 !  enddo
 !  stop
 

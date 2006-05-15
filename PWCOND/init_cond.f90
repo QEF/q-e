@@ -16,13 +16,14 @@ subroutine init_cond (nregion, flag)
 !    flag     -  'l'/'s'/'r'/'t' if the unit cell containes
 !                the left lead/scat. reg./right lead/all of them
 !
-  use pwcom
-  use io_files, only : save_file
+  USE io_global, ONLY : stdout
+  USE pwcom
+  USE io_files, ONLY : save_file
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_param, ONLY : nbrx, nbeta, lll, betar, tvanp
-  use atom, only: mesh, r
+  USE atom, ONLY: mesh, r
   USE ions_base,  ONLY : atm, nat, ityp, ntyp => nsp, tau
-  use cond 
+  USE cond 
 
   implicit none 
 
@@ -149,19 +150,19 @@ subroutine init_cond (nregion, flag)
 !----------------
 ! Some output
 
-  write(6,*)
+  write(stdout,*)
   if(flag.eq.'l') then
-    write(6,'(''===== INPUT FILE containing the left lead ====='')')
+    write(stdout,'(''===== INPUT FILE containing the left lead ====='')')
   elseif(flag.eq.'s') then
-    write(6,'(''===== INPUT FILE containing the scat. region ====='')')
+    write(stdout,'(''===== INPUT FILE containing the scat. region ====='')')
   elseif(flag.eq.'r') then
-    write(6,'(''===== INPUT FILE containing the right lead ====='')')
+    write(stdout,'(''===== INPUT FILE containing the right lead ====='')')
   elseif(flag.eq.'t') then
-    write(6,'(''===== INPUT FILE containing all the regions ====='')')
+    write(stdout,'(''===== INPUT FILE containing all the regions ====='')')
   endif
 
-  write(6,'(/,5x,''GEOMETRY:'')')
-  write (6, 100) alat, omega, sarea, zlen, nat, ntyp
+  write(stdout,'(/,5x,''GEOMETRY:'')')
+  write (stdout, 100) alat, omega, sarea, zlen, nat, ntyp
 100 format (/,5x,                                                     &
      &   'lattice parameter (a_0)   = ',f12.4,'  a.u.',/,5x,          &
      &   'the volume                = ',f12.4,' (a.u.)^3',/,5x,       &
@@ -170,17 +171,17 @@ subroutine init_cond (nregion, flag)
      &   'number of atoms/cell      = ',i12,/,5x,                     &
      &   'number of atomic types    = ',i12,/,5x)
 
-  write(6,'(5x,''crystal axes: (cart. coord. in units of a_0)'',/,    &
+  write(stdout,'(5x,''crystal axes: (cart. coord. in units of a_0)'',/,    &
       &     3(15x,''a('',i1,'') = ('',3f8.4,'' )  '',/ ) )')          &
       &     ( na, (at(nt,na), nt=1,3), na=1,3)
 
-  write(6,'(/,3x,''Cartesian axes'')')
-  write(6, '(/,5x,''site n.     atom        '',  &
+  write(stdout,'(/,3x,''Cartesian axes'')')
+  write(stdout, '(/,5x,''site n.     atom        '',  &
       &           ''          positions (a_0 units)'')')
-  write(6, '(7x,i4,8x,a6,'' tau('',i3,'')=('',3f8.4,''  )'')')  &
+  write(stdout, '(7x,i4,8x,a6,'' tau('',i3,'')=('',3f8.4,''  )'')')  &
       &         ( na,atm(ityp(na)),na,                          &
       &         ( tau(nt,na),nt=1,3),na=1,nat )
-  write (6, 300) nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s,     &
+  write (stdout, 300) nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s,     &
                  nr1, nr2, nr3, nrx1, nrx2, nrx3 
 300   format (/,5x,                                         &
         &      'nr1s                      = ',i12,/,5x,     &
@@ -196,11 +197,11 @@ subroutine init_cond (nregion, flag)
         &      'nrx2                      = ',i12,/,5x,     &
         &      'nrx3                      = ',i12,/,5x)
 
-  write(6,*) '_______________________________'
-  write(6,*) ' Radii of nonlocal spheres: '
-  write(6, '(/,5x,''type       ibeta     ang. mom.'',  &
+  write(stdout,*) '_______________________________'
+  write(stdout,*) ' Radii of nonlocal spheres: '
+  write(stdout, '(/,5x,''type       ibeta     ang. mom.'',  &
       &           ''          radius (a_0 units)'')')
-  write(6, '(7x,a6,3x,i3,7x,i3,14x,f12.4)')                     &
+  write(stdout, '(7x,a6,3x,i3,7x,i3,14x,f12.4)')                     &
       &        ( ( atm(nt), ib, lll(ib,nt), rsph(ib,nt),        &
       &         ib=1,nbeta(nt) ), nt=1,ntyp)
 
