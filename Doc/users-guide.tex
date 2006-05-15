@@ -370,13 +370,12 @@ To install Quantum-ESPRESSO from source, you need C and Fortran-95
 compilers (Fortran-90 is not sufficient, but most "Fortran-90"
 compilers are actually Fortran-95-compliant).
 If you don't have a commercial Fortran-95 compiler, you may install
-the free \texttt{g95}
+the free \texttt{g95} compiler:
 (\htmladdnormallink{\texttt{http://www.g95.org/}}%
                    {http://www.g95.org/})
-or \texttt{gfortran} 
+or the GNU fortran compiler \texttt{gfortran}:
 (\htmladdnormallink{\texttt{http://www.gfortran.org/}}%
-                   {http://www.gfortran.org/})
-compiler.
+                   {http://www.gfortran.org/}).
 You also need a minimal Unix environment: basically, a command shell
 (e.g., \texttt{bash} or \texttt{tcsh}) and the utilities
 \texttt{make}, \texttt{awk} and \texttt{sed}.
@@ -1387,11 +1386,48 @@ the following linkage error:
  _printf$LDBLStub
 \end{verbatim}
 Workaround: add \texttt{-lSystemStubs} to \texttt{LDFLAGS} in 
-\texttt{make.sys} (information by Fabrizio Cleri).
+\texttt{make.sys} (information by Fabrizio Cleri). 
+
+Other workaround: Set gcc version to 3.3. This is done with the command
+\begin{verbatim}
+sudo gcc_select 3.3
+\end{verbatim}
+If you get the message "Error trying to determine current cc version (got)" 
+change the order of directory in your \texttt{PATH} variable in order to make
+\texttt{/opt/ibm/...} to appear at its end. The \texttt{xlc} alias to 
+\texttt{cc} will stop working, but as soon you have set gcc version,
+you can change PATH to its normal directory order (information by Cesar 
+Da Silva).
+
+Because of an upgrade to a new release of GCC (4.0.1) with MacOSX 10.4.5, 
+the IBM fortran compiler does not work correctly with an error message
+such as
+\begin{verbatim}
+/usr/bin/ld: warning -L: directory name 
+    (/usr/lib/gcc/powerpc-apple-darwin8/4.0.0) does not exist
+/usr/bin/ld: can't locate file for: -lgcc
+\end{verbatim}
+and fails to run configure properly.
+
+The easiest way to correct this bug is to help the XLF compiler to  
+find the correct location of gcc. To do that, follow precisely the  
+two commands:
+\begin{enumerate}
+\item {\tt sudo mv /etc/opt/ibmcmp/xlf/8.1/xlf.cfg \\
+                   /etc/opt/ibmcmp/xlf/8.1/xlf.cfg.2006.MM.DD.HH.MM.SS} \\
+with MM.DD.HH.MM.SS is the current date (MM=month, DD=day etc...)
+\item {\tt
+sudo /opt/ibmcmp/xlf/8.1/bin/xlf\_configure -gcc /usr -install -smprt 
+    /opt/ibmcmp/xlsmp/1.4 -xlf /opt/ibmcmp/xlf/8.1 -xlfrt 
+    /opt/ibmcmp/xlf/8.1 -xlflic /opt/ibmcmp/xlf/8.1  \\
+   /opt/ibmcmp/xlf/8.1/etc/xlf.base.cfg}
+\end{enumerate}
+it replaces the xlf.cfg with the correct location (info by Pascal 
+Thibeadeau).
 
 \paragraph{T3E}
 
-T3D/T3E are no longer supported.
+T3D/T3E is no longer supported.
 
 \clearpage
 
