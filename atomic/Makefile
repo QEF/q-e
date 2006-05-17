@@ -68,6 +68,7 @@ set_sl3.o \
 sic_correction.o \
 starting_potential.o \
 start_potps.o \
+test_bessel.o \
 trou.o \
 vdpack.o \
 vext.o \

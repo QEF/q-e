@@ -61,18 +61,20 @@ subroutine run_pseudo
   !    compute an initial estimate of the potential
   !
   if (.not.lpaw) then
-     call start_potps
+     call start_potps ( )
   else
      ! Set starting occupations by rescaling those of the generating configuration
      nvalts=0._dp
      do ns=1,nbeta
         if (octs(ns)>0._dp) nvalts=nvalts+octs(ns)
      end do
-     ocstart(1:pawsetup%nwfc)=pawsetup%oc(1:pawsetup%nwfc)*nvalts/SUM(pawsetup%oc(1:pawsetup%nwfc))
+     ocstart(1:pawsetup%nwfc) = pawsetup%oc(1:pawsetup%nwfc) * nvalts &
+                               / SUM(pawsetup%oc(1:pawsetup%nwfc))
      iswstart=1
      ! Generate the corresponding local and nonlocal potentials
      CALL new_paw_hamiltonian (vpstot, ddd, etots, &
-          pawsetup, pawsetup%nwfc, pawsetup%l, 1,iswstart,ocstart, pawsetup%pswfc, pawsetup%enl)
+          pawsetup, pawsetup%nwfc, pawsetup%l, 1,iswstart,ocstart, &
+          pawsetup%pswfc, pawsetup%enl)
      vpstot(1:mesh,2)=vpstot(1:mesh,1)
      ddd(1:nbeta,1:nbeta,2)=ddd(1:nbeta,1:nbeta,1)
      do is=1,nspin
@@ -116,7 +118,7 @@ subroutine run_pseudo
         endif
      enddo
 
-     call normalize
+     call normalize ( )
 
      if (.not.lpaw) then
         !
@@ -197,9 +199,9 @@ subroutine run_pseudo
      endif
   enddo
 
-  call normalize
+  call normalize ( )
   if (.not.lpaw) then
-     call elsdps
+     call elsdps ( )
   else
      call new_paw_hamiltonian (vnew, dddnew, etots, &
           pawsetup, nwfts, llts, nspin, iswts, octs, phis, enls)
@@ -208,7 +210,6 @@ subroutine run_pseudo
   !   if iswitch=3 we write on the pseudopotential file the calculated 
   !   selfconsistent wavefunctions
   !
-
   if (iswitch.eq.3) then
      phits=0.0_dp
      do nst=1,nwfts
@@ -220,12 +221,12 @@ subroutine run_pseudo
      phits=phis
   endif
 
-  if (file_recon.ne.' ')  call write_paw_recon
+  if (file_recon.ne.' ')  call write_paw_recon ( )
 
   !
   !    compute logarithmic derivatives
   !
-  if (deld.gt.0.0_dp) call lderivps
+  if ( deld > 0.0_dp) call lderivps ( )
 
   return
 end subroutine run_pseudo

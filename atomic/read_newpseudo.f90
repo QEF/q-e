@@ -90,8 +90,10 @@ use funct, only: set_dft_from_indices
             else
               qq(nb,mb)=0.0_dp
               qq(mb,nb)=0.0_dp
-              ddd(nb,mb,1)=bmat(nb,mb)
-              ddd(mb,nb,1)=bmat(mb,nb)
+              do n=1,mesh
+                 qvan(n,mb,nb)=0.0_dp
+                 qvan(n,nb,mb)=0.0_dp
+              enddo
             endif
          enddo
       enddo

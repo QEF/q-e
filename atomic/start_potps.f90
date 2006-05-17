@@ -85,24 +85,7 @@ subroutine start_potps
   !
   !    screening the D coefficients
   !
-  if (pseudotype.eq.3) then
-     do ib=1,nbeta
-        do jb=1,ib
-           if (lls(ib).eq.lls(jb).and.abs(jjs(ib)-jjs(jb)).lt.1.e-7_dp) then
-              lam=lls(ib)
-              nst=(lam+1)*2
-              do is=1,nspin
-                 do n=1,ikk(ib)
-                    gi(n)=qvan(n,ib,jb)*vpstot(n,is)
-                 enddo
-                 ddd(ib,jb,is)= bmat(ib,jb) &
-                      + int_0_inf_dr(gi,r,r2,dx,ikk(ib),nst)
-                 ddd(jb,ib,is)=ddd(ib,jb,is)
-              enddo
-           endif
-        enddo
-     enddo
-  endif
-
+  call newd_at ( )
+  !
   return
 end subroutine start_potps

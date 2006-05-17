@@ -114,7 +114,7 @@ subroutine read_pseudoupf
           upf%qfunc(1:upf%mesh,1:upf%nbeta,1:upf%nbeta)
   else
      qq=0.0_dp
-     ddd(1:nbeta,1:nbeta,1)=bmat(1:nbeta,1:nbeta)
+     qvan=0.0_dp
   endif
   !
   !

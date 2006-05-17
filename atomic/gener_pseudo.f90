@@ -311,10 +311,8 @@ subroutine gener_pseudo
      enddo
   endif
 
-  do ib=1,nbeta
-     do jb=1,nbeta
-        ddd(ib,jb,1)=bmat(ib,jb)
-     enddo
+  do is=1,nspin
+     ddd(:,:,is)=bmat(:,:)
   enddo
   !
   !    generate a PAW dataset if required

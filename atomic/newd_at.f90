@@ -7,10 +7,10 @@
 !
 !
 !-------------------------------------------------------------------------
-subroutine newd_at
+subroutine newd_at ( )
   !-------------------------------------------------------------------------
   !
-  !     this ruotine computes the new D coeeficients
+  !     this routine computes the new D coefficients
   !
   !
   use ld1inc
@@ -25,7 +25,7 @@ subroutine newd_at
   !
   !    screening the D coefficients
   !
-  if (pseudotype.eq.3) then
+  if (pseudotype == 3) then
      do ib=1,nbeta
         do jb=1,ib
            if (lls(ib).eq.lls(jb).and.abs(jjs(ib)-jjs(jb)).lt.1.0e-7_dp) then
@@ -40,6 +40,13 @@ subroutine newd_at
               enddo
            endif
         enddo
+     enddo
+  else if (pseudotype == 2) then
+     !
+     !    non-US separable PP case: just copy unscreened D coeffs
+     !
+     do is=1,nspin
+        ddd(:,:,is)= bmat(:,:)
      enddo
   endif
 
