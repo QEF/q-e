@@ -25,8 +25,8 @@
       integer, intent(in) :: nspin, nx, nudx, nupdwn(nspin), iupdwn(nspin)
       real(DP), intent(in) :: lambda( nudx, nudx, nspin ), f( nx )
 ! local variables
-      real(DP), allocatable :: lambdar(:)
-      real(DP) wr(nx), fv1(nx),fm1(2,nx), zr(1)
+      real(DP), allocatable :: lambdar(:), wr(:)
+      real(DP) zr(1)
       integer :: iss, j, i, ierr, k, n, nspin_eig, npaired
       logical :: tsic
 !
@@ -48,7 +48,7 @@
             n = nupdwn(iss)
          END IF
 
-         allocate( lambdar( n * ( n + 1 ) / 2 ) )
+         allocate( lambdar( n * ( n + 1 ) / 2 ), wr(n) )
 
          k = 0
 
@@ -87,7 +87,7 @@
             !
          END IF
 
-         deallocate( lambdar )
+         deallocate( lambdar, wr )
 
       end do
       !
