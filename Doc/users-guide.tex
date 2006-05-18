@@ -1277,7 +1277,11 @@ Version 7 did not have this problem.
 
 \paragraph{ifort v.9}
 
-At least some versions of ifort 9 have a buggy preprocessor that 
+The current release (as of May 2006) of ifort 9.1 yields
+``Compiler Internal Error''. Downgrade to v. 9.0, or wait
+until Intel fixes the problem.
+
+At least some versions of ifort 9.0 have a buggy preprocessor that 
 either prevents compilation of \texttt{iotk}, or produces runtime 
 errors in \texttt{cft3}. Update to a more patched version, or
 modify \texttt{make.sys} to explicitly perform preprocessing 
