@@ -306,8 +306,10 @@ well-defined mathematical object.
 
 NOTE 3: if you generate a single-projector PP using a configuration
 with semicore states in the valence, remember that for each $l$
-only the state with lowest $n$ can be used to generate the PP, 
-and that the state with same $l$ and higher $n$ MUST BE EMPTY.
+only the state with lowest $n$ can be used to generate the PP. 
+It is not necessary that the state with same $l$ and higher $n$ 
+is empty, but you have to specify the correct configuration
+for unscreening.
 
 NOTE 4: PP could in principle be generated on a spin-polarized
 configuration, but a spin-unpolarized one is typically used.
@@ -447,21 +449,24 @@ Unfortunately the separable form is not guaranteed to have the
 correct ground state (the semilocal form is guaranteed, by 
 construction): ``ghost'' states, having the wrong number of nodes, 
 can appear among the occupied states or close to them, making the 
-PP completely useless. The freedom in choosing the ``local part'' 
-can (and usually must) be used in order to avoid the appearence 
-of ghosts.
+PP completely useless. This problem may show up with  multiple-projectors 
+and US PP's as well.
 
-For PW calculations it is convenient to choose as local part the
-highest $l$, because this removes more projectors ($2l+1$ per atom)
-than for low $l$. According to Murphy's law, this is also the choice 
-that more often gives raise to problems, and one is forced to use
-a different $l$. Another possibility is to generate a local potential
-by pseudizing the AE potential.
+The freedom in choosing the ``local part'' can (and usually must) be used 
+in order to avoid the appearence of ghosts. For PW calculations it is 
+convenient to choose as local part the highest $l$, because this removes
+more projectors ($2l+1$ per atom) than for low $l$. According to Murphy's 
+law, this is also the choice that more often gives raise to problems, 
+and one is forced to use a different $l$. Another possibility is to generate 
+a local potential by pseudizing the AE potential.
 
-Note that multiple-projectors PP's and US-PP's can also have
-ghosts. Also note that ghosts are invisible to atomic codes 
-like {\tt ld1.x}, because the algorithm used in the integration 
-of radial orbitals discards states with wrong number of nodes.
+Note that ghosts are invisible to atomic codes like {\tt ld1.x},
+because the algorithm used in the integration of radial orbitals discards 
+states with the wrong number of nodes (they may actually show up under
+the form of difficult convergence or mysterious errors). 
+A simple and safe way to check for the presence of a ghost is to diagonalize 
+the Kohn-Sham hamiltonian in a basis set of spherical Bessel functions. 
+This kind of test can be performed during transferability tests (See 3.10)
 
 \subsection{Generating the pseudopotential}
 
@@ -505,6 +510,13 @@ is very good, $\sim 0.01$ Ry may still be acceptable.
 The code {\tt ld1.x} has a ``testing'' mode in which it does
 exactly the above operation. You provide the input PP file and
 a number of test configurations.
+
+You are advised to perform also the test with a basis set of spherical
+Bessel functions $j_l (qr)$. In addition to revealing the presence of
+``ghosts'', this test also gives an idea of the smoothness of the 
+potential: the dependence of energy levels upon the cutoff in the kinetic 
+energy is basically the same for the pseudo-atom in the basis of $j_l (qr)$'s
+and for the same pseudo-atom in a solid-state calculation using PW's.
 
 Another way to check for transferability is to compare AE and PS 
 logarithmic derivatives, also calculated by {\tt ld1.x}. Typically 

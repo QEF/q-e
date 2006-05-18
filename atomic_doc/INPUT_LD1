@@ -192,6 +192,17 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
                     IMPORTANT: in the latter case, all calculations are done
                     using the SEMILOCAL form, not the separable nonlocal form.
                     Use the UPF format if you want to test the separable form!
+      ecutmin,      Parameters (Ry) used for test with a basis set of spherical
+        ecutmax,    Bessel functions j_l(qr) . The hamiltonian at fixed scf
+          decut     potential is diagonalized for various values of ecut:
+                    ecutmin, ecutmin+decut, ecutmin+2*decut ... up to ecutmax.
+                    This yields an indication of convergence with the
+                    corresponding plane-wave cutoff in solids, and shows 
+                    in an unambigouous way if there are "ghost" states
+                    (default: decut=5.0 Ry, ecutmin=ecutmax=0Ry; specify 
+                     ecutmin and ecutmax if you want to perform this test)
+      rm            Radius of the box used with spherical Bessel functions
+                    (default: 30 a.u.)
       configts(nc) = a string containing the test valence electronic
                      configuration nc, nc=1,nconf. Same syntax as for "config".
                      If configts(nc) is not set, the electron configuration 
