@@ -1,57 +1,82 @@
 !
+! Copyright (C) 2006 Quantum-Espresso group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 !---------------------------------------------------------------
 subroutine test_bessel ( )
   !---------------------------------------------------------------
+#include "f_defs.h"
   !
   !     diagonalization of the pseudo-atomic hamiltonian 
   !     in a basis of spherical Bessel functions: j_l (qr)
-  !     with zero boundary conditions at the border R: j_l (qR) = 0
+  !     with zero boundary conditions at the border R: 
+  !     j_l (q_l R) = 0
+  !     The basis sets contains all q_l's up to a kinetic
+  !     energy cutoff Ecut, such that q^2 <= Ecut (in Ry a.u.)
+  !     rm is the radius R of the box
   !
-  !     units: atomic rydberg units
-  !     ecut (Ry)   = energy cutoff (Ry)
-  !     rm          = radius of the box         (default  30 a.u.)
-  !
-  !
+  use kinds, only : dp
   use ld1inc, only: lmax, lmx, mesh, r, r2, dx
+  use ld1inc, only: ecutmin, ecutmax, decut, rm
   !
   implicit none
   !
-  real*8, parameter :: pi=3.141592653589793d0
-  real*8 ::  ecut =40.0,      & ! kinetic-energy cutoff (equivalent to PW)
-             rm =  30.d0         ! radius R of the box
+  real(kind=dp), parameter :: pi=3.141592653589793_dp, eps = 1.0d-4
+  real(kind=dp) ::  ecut   ! kinetic-energy cutoff (equivalent to PW)
   !
-  real*8, allocatable :: q(:,:)  ! quantized momenta in the spherical box
+  real(kind=dp), allocatable :: q(:,:) ! quantized momenta in the spherical box
   !
   integer :: nswx, &            ! max number of quantized momenta q
              nsw (0:lmx), &     ! number of q such that q^2 < Ecut
-             mesh_              ! mesh_ is such that r (mesh_) <= R
+             mesh_, &           ! mesh_ is such that r (mesh_) <= R
+             ncut, nc
   !
-  !   estimated max number of q needed for all values of l
-  !
-  nswx = int ( sqrt ( ecut*rm**2/pi**2 ) ) + lmax + 1
-  !
-  !   find grid point mesh_ such that r(mesh_) < R
-  !   note that mesh_ must be odd to perform simpson integration
-  !
-  do mesh_ = 1, mesh
-     if ( r(mesh_) >= rm ) go to 20
-  end do
-  call errore ('test_bessel','r(mesh) < Rmax', mesh_)
-20 continue
-  mesh_ = 2 * ( (mesh_-1) / 2 ) + 1 
-  !
-  !   find quantized momenta q
-  !
-  allocate ( q ( nswx, 0:lmax ) )
-  call q_fill ( nswx, lmax, rm, ecut, nsw, q )
-  !
-  !   fill and diagonalize Kohn-Sham pseudo-hamiltonian
+  if ( ecutmin < eps .or. ecutmax < eps .or. ecutmax < ecutmin + eps .or. &
+       decut < eps .or. rm < 5.0_dp ) return
   !
   write (6, "(/,5x,14('-'), ' Test with a basis set of Bessel functions ',&
        & 10('-'),/)")
-  write (6, "(5x,'Cutoff (Ry) : ',f6.1,'   Box size (a.u.) : ',f6.1)" ) &
-       ecut, rm
-  call h_diag ( mesh_, r, r2, dx, nswx, nsw, lmax, q )
+  !
+  write (6, "(5x,'Box size (a.u.) : ',f6.1)" ) rm
+  ncut = nint ( ( ecutmax-ecutmin ) / decut ) + 1
+  !
+  !  we redo everything for each cutoff: not really a smart implementation
+  !
+  do nc = 1, ncut
+     !
+     ecut = ecutmin + (nc-1) * decut
+     !
+     !   estimated max number of q needed for all values of l
+     !
+     nswx = int ( sqrt ( ecut*rm**2/pi**2 ) ) + lmax + 1
+     !
+     !   find grid point mesh_ such that r(mesh_) < R
+     !   note that mesh_ must be odd to perform simpson integration
+     !
+     do mesh_ = 1, mesh
+        if ( r(mesh_) >= rm ) go to 20
+     end do
+     call errore ('test_bessel','r(mesh) < Rmax', mesh_)
+20   continue
+     mesh_ = 2 * ( (mesh_-1) / 2 ) + 1 
+     !
+     !   find quantized momenta q
+     !
+     allocate ( q ( nswx, 0:lmax ) )
+     call q_fill ( nswx, lmax, rm, ecut, nsw, q )
+     !
+     !   fill and diagonalize Kohn-Sham pseudo-hamiltonian
+     !
+     write (6, "(/5x,'Cutoff (Ry) : ',f6.1)" ) ecut
+     call h_diag ( mesh_, nswx, nsw, lmax, q )
+     !
+     deallocate ( q )
+     !
+  end do
+  !
   write (6, "(/,5x,14('-'), ' End of Bessel function test ',24('-'),/)")
   !
 end subroutine test_bessel
@@ -62,15 +87,16 @@ subroutine q_fill ( nswx, lmax, rm, ecut, nsw, q )
   !
   !   find quantized momenta in a box of radius R = rm
   !
+  use kinds, only : dp
   implicit none
   integer, intent(in) :: nswx, lmax
-  real*8, intent(in)  :: rm, ecut
+  real(kind=dp), intent(in)  :: rm, ecut
   integer, intent(out) :: nsw(0:lmax)
-  real*8, intent(out) :: q(nswx,0:lmax)
+  real(kind=dp), intent(out) :: q(nswx,0:lmax)
   !
   integer :: i, l, iret
-  real*8, parameter :: pi=3.141592653589793d0, eps=1.0e-10
-  real*8, external :: find_root
+  real(kind=dp), parameter :: pi=3.141592653589793_dp, eps=1.0d-10
+  real(kind=dp), external :: find_root
   !
   !   l = 0 : j_0 (qR)=0  =>  q_i = i * (2pi/R)
   !
@@ -106,21 +132,23 @@ end subroutine q_fill
 !-----------------------------------------------------------------------
 function find_root   ( l, xt1, xt2, eps, iret )
   ! ----------------------------------------------------------------------
+  !
+  use kinds, only : dp
   implicit none
   !
   integer, intent (in) :: l
-  real*8, intent (in) :: xt1, xt2, eps
+  real(kind=dp), intent (in) :: xt1, xt2, eps
   !
   integer, intent (out) :: iret
-  real*8 :: find_root
+  real(kind=dp) :: find_root
   !
-  real*8 :: x1, x2, x0, f1, f2, f0
+  real(kind=dp) :: x1, x2, x0, f1, f2, f0
   !
   x1 = MIN (xt1, xt2) 
   x2 = MAX (xt1, xt2)
   !
-  call sph_bes ( 1, 1.d0, x1, l, f1 )
-  call sph_bes ( 1, 1.d0, x2, l, f2 )
+  call sph_bes ( 1, 1.0_dp, x1, l, f1 )
+  call sph_bes ( 1, 1.0_dp, x2, l, f2 )
   !
   iret = 0
   !
@@ -131,7 +159,7 @@ function find_root   ( l, xt1, xt2, eps, iret )
 !
   do while ( abs(x2-x1) > eps )
      x0 = 0.5*(x1+x2)
-     call sph_bes ( 1, 1.d0, x0, l, f0 )
+     call sph_bes ( 1, 1.0_dp, x0, l, f0 )
      if ( sign(f0,f1) == f0 ) then
         x1 = x0
         f1 = f0
@@ -147,34 +175,39 @@ function find_root   ( l, xt1, xt2, eps, iret )
 end function find_root
 !
 !-----------------------------------------------------------------------
-subroutine h_diag  ( mesh_, r, r2, dx, nswx, nsw, lmax, q )
+subroutine h_diag  ( mesh_, nswx, nsw, lmax, q )
   !-----------------------------------------------------------------------
   !
   ! diagonalize the radial Kohn-Sham hamiltonian 
   ! in the basis of spherical bessel functions
   ! Requires the self-consistent potential from a previous calculation!
   !
-  use ld1inc, only: lmx, nbeta, betas, qq, ddd, vpstot, vnl, lls, jjs, &
+  use kinds, only : dp
+  use ld1inc, only: lmx, r, r2, dx
+  use ld1inc, only: nbeta, betas, qq, ddd, vpstot, vnl, lls, jjs, &
        nspin, rel, pseudotype
   implicit none
   !
   ! input
   integer, intent (in) :: mesh_, lmax, nswx, nsw(0:lmx)
-  real*8, intent (in) :: r(mesh_), r2(mesh_), dx
-  real*8, intent (in) :: q(nswx,0:lmax)
+  real(kind=dp), intent (in) :: q(nswx,0:lmax)
   ! local
-  real*8, allocatable :: h(:,:), s0(:), & ! hamiltonian and overlap matrix
-                         chi (:,:), enl (:), & ! eigenvectors, eigenvalues
-                         betajl(:,:), betajld(:,:), vaux (:), & ! workspace
-                         jlq (:,:), work (:) ! workspace
-  real*8, external :: int_0_inf_dr
-  real*8 :: j
+  real(kind=dp), allocatable :: &
+       h(:,:), s(:,:),     & ! hamiltonian and overlap matrix
+       chi (:,:), enl (:), & ! eigenvectors and eigenvalues
+       s0(:),              & ! normalization factors for jl(qr)
+       betajl(:,:),        & ! matrix elements for beta
+       betajl_(:,:),       & ! work space:  \sum_m D_lm beta_m
+       vaux (:), jlq (:,:), work (:) ! more work space
+  real(kind=dp), external :: int_0_inf_dr
+  real(kind=dp) :: j
   character(len=2), dimension (2) :: spin = [ 'up', 'dw' ]
   integer :: n_states = 3, l, n, m, nb, mb, ind, is, nj
   !
   !
-  allocate ( h (nswx, nswx),  s0(nswx), chi (nswx, n_states), enl(nswx) )
+  allocate ( h (nswx, nswx), s0(nswx), chi (nswx, n_states), enl(nswx) )
   allocate ( jlq ( mesh_, nswx ), work (mesh_), vaux (mesh_) )
+  if ( pseudotype > 2 ) allocate ( s(nswx, nswx) )
   !
   write(6,"( 20x,3(7x,'N = ',i1) )" ) (n, n=1,n_states)
   !
@@ -182,17 +215,17 @@ subroutine h_diag  ( mesh_, r, r2, dx, nswx, nsw, lmax, q )
      !
      !  nj: number of j-components in fully relativistic case
      !
-     if ( rel < 2 .or. l == 0 ) then
-        nj=1
-     else
+     if ( rel == 2 .and. l > 0  ) then
         nj=2
+     else
+        nj=1
      endif
      !
      do n = 1, nsw(l)
         !
         call sph_bes ( mesh_, r, q(n,l), l, jlq(1,n) )
         !
-        !  s0 is the orthonormalization factor for j_l
+        !  s0 = < j_l(qr) | j_l (qr) >
         !
         work (:) = ( jlq(:,n) * r(1:mesh_) ) ** 2
         s0(n) = sqrt ( int_0_inf_dr ( work, r, r2, dx, mesh_, 2*l+2 ) )
@@ -206,20 +239,22 @@ subroutine h_diag  ( mesh_, r, r2, dx, nswx, nsw, lmax, q )
         !
         do ind = 1, nj
            !
-           if ( nj  == 2 ) then
-              j = l + (ind-1.5d0) ! this is J=L+S
+           if ( rel == 2 .and. l > 0 ) then
+              j = l + (ind-1.5_dp) ! this is J=L+S
+           else if ( rel == 2 .and. l == 0 ) then
+              j = 0.5_dp
            else
-              j = 0.d0
+              j = 0.0_dp
            end if
            !
            if (pseudotype == 1) then
               vaux(:) = vpstot (1:mesh_, is) + vnl (1:mesh_, l, ind)
            else
               vaux(:) = vpstot (1:mesh_, is)
-              allocate ( betajl ( nswx, nbeta ), betajld ( nswx, nbeta ) )
+              allocate ( betajl ( nswx, nbeta ), betajl_ ( nswx, nbeta ) )
            endif
            !
-           h (:,:) = 0.d0
+           h (:,:) = 0.0_dp
            !
            do n = 1, nsw(l)
               !
@@ -241,22 +276,25 @@ subroutine h_diag  ( mesh_, r, r2, dx, nswx, nsw, lmax, q )
                  do nb = 1, nbeta
                     if ( lls (nb) == l .and.  abs(jjs (nb) - j) < 0.001_8 ) then
                        work (:) = jlq(:,n) * betas( 1:mesh_, nb ) * r(1:mesh_)
-                       betajl (n, nb) = 1.d0 / s0(n) * &
+                       betajl (n, nb) = 1.0_dp / s0(n) * &
                             int_0_inf_dr ( work, r, r2, dx, mesh_, 2*l+2 )
                     end if
                  end do
               end if
            end do
            !
-           !    betajld(q,m) = \sum_n D_mn * < beta_n | j_l(qr) >
+           !  separable PP
            !
            if ( pseudotype > 1 ) then
-              betajld (:,:) = 0.d0
+              !
+              !    betajl_(q,m) = \sum_n D_mn * < beta_n | j_l(qr) >
+              !
+              betajl_ (:,:) = 0.0_dp
               do mb = 1, nbeta
                  if ( lls (mb) == l .and. abs(jjs (mb) - j) < 0.001_8 ) then
                     do nb = 1, nbeta
                        if ( lls (nb) == l .and. abs(jjs (nb) - j) < 0.001_8 ) then
-                          betajld (:, mb) = betajld (:, mb) + &
+                          betajl_ (:, mb) = betajl_ (:, mb) + &
                                ddd (mb,nb,is) * betajl (:, nb)
                        end if
                     end do
@@ -269,15 +307,56 @@ subroutine h_diag  ( mesh_, r, r2, dx, nswx, nsw, lmax, q )
                  do m = 1, n
                     do nb = 1, nbeta
                        if ( lls (nb) == l .and. abs(jjs (nb) - j) < 0.001_8 ) then
-                          h(m,n) = h(m,n) + betajld (m, nb) * betajl (n, nb)
+                          h(m,n) = h(m,n) + betajl_ (m, nb) * betajl (n, nb)
                        end if
                     end do
                  end do
               end do
-              deallocate ( betajld, betajl )
+              !
+              !  US PP
+              !
+              if ( pseudotype > 2 ) then
+                 !
+                 !    betajl_(q,m) = \sum_n D_mn * < beta_n | j_l(qr) >
+                 !
+                 betajl_ (:,:) = 0.0_dp
+                 do mb = 1, nbeta
+                    if ( lls (mb) == l .and. abs(jjs (mb) - j) < 0.001_8 ) then
+                       do nb = 1, nbeta
+                          if ( lls (nb) == l .and. &
+                               abs(jjs (nb) - j) < 0.001_8 ) then
+                             betajl_ (:, mb) = betajl_ (:, mb) + &
+                                  qq (mb,nb) * betajl (:, nb)
+                          end if
+                       end do
+                    end if
+                 end do
+                 !
+                 !    overlap matrix S
+                 !
+                 s (:,:) = 0.0_dp
+                 do n = 1, nsw(l)
+                    do m = 1, n
+                       do nb = 1, nbeta
+                          if ( lls (nb) == l .and. &
+                               abs(jjs (nb) - j) < 0.001_8 ) then
+                             s(m,n) = s(m,n) + betajl_ (m, nb) * betajl (n, nb)
+                          end if
+                       end do
+                    end do
+                    s(n,n) = s(n,n) + 1.0_dp
+                 end do
+              end if
+              !
+              deallocate ( betajl_, betajl )
+              !
            end if
            !
-           call rdiagd ( nsw(l), h, nswx, n_states, enl, chi, nswx)
+           if ( pseudotype > 2 ) then
+              call rdiags ( nsw(l), h, s, nswx, n_states, enl, chi, nswx)
+           else
+              call rdiagd ( nsw(l), h, nswx, n_states, enl, chi, nswx)
+           end if
            !
            if ( nspin == 2 ) then
               write(6,"( 5x,'E(L=',i1,',spin 'a2,') =',4(f10.4,' Ry') )" ) &
@@ -294,6 +373,7 @@ subroutine h_diag  ( mesh_, r, r2, dx, nswx, nsw, lmax, q )
      end do
   end do
   !
+  if ( pseudotype > 2 ) deallocate ( s )
   deallocate ( vaux, work, jlq )
   deallocate ( enl, chi, s0, h )
   !
@@ -304,8 +384,9 @@ end subroutine h_diag
 subroutine rdiagd ( n, h, ldh, m, e, v, ldv )
   !------------------------------------------------------------------
   !
-  !     LAPACK driver for matrix diagonalizer
+  !     LAPACK driver for eigenvalue problem H*x = ex
   !
+  use kinds, only : dp
   implicit none
   !
   integer, intent (in) :: &
@@ -313,25 +394,74 @@ subroutine rdiagd ( n, h, ldh, m, e, v, ldv )
        ldh,    & ! leading dimension of h, as declared in the calling pgm
        m,      & ! number of roots to be searched
        ldv       ! leading dimension of the v matrix
-  real*8, intent (inout) :: &
+  real(kind=dp), intent (inout) :: &
        h(ldh,n) ! matrix to be diagonalized, UPPER triangle
+                ! DESTROYED ON OUTPUT
+  real(kind=dp), intent (out) :: e(m), v(ldv,m) ! eigenvalues and eigenvectors 
   !
-  real*8, intent (out) :: e(m), v(ldv,m) ! eigenvalues and eigenvectors 
-  !
-  integer :: i, j, mo, lwork, info, iwork(5*n), ifail(n)
-  real*8  :: vl, vu, work(8*n)
+  integer :: mo, lwork, info
+  integer, allocatable :: iwork(:), ifail(:)
+  real(kind=dp)  :: vl, vu
+  real(kind=dp), allocatable  :: work(:)
   !
   lwork = 8*n
-  v (:,:) = 0.d0
-
-  call DSYEVX ( 'V', 'I', 'U', n, h, ldh, vl, vu, 1, m, 0.0d0, mo, e,&
+  allocate ( work (lwork), iwork(5*n), ifail(n) )
+  v (:,:) = 0.0_dp
+  !
+  call DSYEVX ( 'V', 'I', 'U', n, h, ldh, vl, vu, 1, m, 0.0_dp, mo, e,&
                v, ldv, work, lwork, iwork, ifail, info )
-  
+  !
   if ( info > 0) then
      call errore('rdiagd','failed to converge',info)
   else if(info < 0) then
      call errore('rdiagd','illegal arguments',-info)
   end if
-
+  deallocate ( ifail, iwork, work )
+  !
   return
 end subroutine rdiagd
+!
+!----------------------------------------------------------------------------
+SUBROUTINE rdiags( n, h, s, ldh, m, e, v, ldv )
+  !----------------------------------------------------------------------------
+  !
+  !     LAPACK driver for generalized eigenvalue problem H*x = e S*x
+  !
+  use kinds, only : dp
+  IMPLICIT NONE
+  !
+  integer, intent (in) :: &
+       n,      & ! dimension of the matrix to be diagonalized
+       ldh,    & ! leading dimension of h, as declared in the calling pgm
+       m,      & ! number of roots to be searched
+       ldv       ! leading dimension of the v matrix
+  real(kind=dp), intent (inout) :: &
+       h(ldh,n), & ! matrix to be diagonalized, UPPER triangle
+       s(ldh,n)    ! overlap matrix - both destroyed on output
+  !
+  real(kind=dp), intent (out) :: e(m), v(ldv,m) ! eigenvalues and eigenvectors 
+  !
+  ! ... LOCAL variables
+  !
+  integer :: mo, lwork, info
+  integer, allocatable :: iwork(:), ifail(:)
+  real(kind=dp), allocatable  :: work(:)
+
+  lwork = 8 * n
+  allocate ( work (lwork), iwork(5*n), ifail(n) )
+  v (:,:) = 0.0_dp
+  !
+  CALL DSYGVX( 1, 'V', 'I', 'U', n, h, ldh, s, ldh, &
+       0.0_dp, 0.0_dp, 1, m, 0.0_dp, mo, e, v, ldh, work, lwork, &
+       iwork, ifail, info )
+  !             
+  if ( info > 0) then
+     call errore('rdiagd','failed to converge',info)
+  else if(info < 0) then
+     call errore('rdiagd','illegal arguments',-info)
+  end if
+  deallocate ( ifail, iwork, work )  
+  !
+  return
+  !
+END SUBROUTINE rdiags

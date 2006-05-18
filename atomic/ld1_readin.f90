@@ -58,7 +58,11 @@ subroutine ld1_readin
   namelist /test/                 &
        nconf,         & ! the number of configurations
        configts,      & ! the configurations of the tests
-       file_pseudo      ! input file containing the pseudopotential
+       file_pseudo,   & ! input file containing the pseudopotential
+       ecutmin,       & ! for test with spherical Bessel functions:
+       ecutmax,       & ! min and max energy cutoff for j_l(qr),
+       decut,         & ! step: ecut = ecutmin, ecutmin+decut, ... , ecutmax
+       rm               ! radius of the box
 
   namelist /inputp/ &
        pseudotype,&! the pseudopotential type
@@ -117,7 +121,7 @@ subroutine ld1_readin
   lpaw = .false.
 
   vdw  = .false.
-
+  
   ! read the namelist input
 
   read(5,input,err=100,iostat=ios) 
@@ -292,9 +296,12 @@ subroutine ld1_readin
   
   nconf=1
   configts=' '
+  ecutmin = 0.0_dp
+  ecutmax = 0.0_dp
+  decut   = 5.0_dp
+  rm      =30.0_dp
 
   read(5,test,err=300,iostat=ios)
-
 300 continue
   !
   !  PP generation: if namelist test is not found, use defaults

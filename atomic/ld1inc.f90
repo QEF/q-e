@@ -256,4 +256,11 @@ module ld1inc
               du,     & ! step of frequency
               tr_s    ! threshold for scf solution of modified Sternheimer equation
   !
+  ! test on ghosts and convergences with spherical Bessel functions
+  !
+  real(DP) :: ecutmin, & ! min kinetic energy cutoff for j_l(qr)
+              ecutmax, & ! max energy cutoff
+              decut,   & ! step: ecut = ecutmin, ecutmin+decut, ... , ecutmax
+              rm         ! radius of the box
+  !
 end module ld1inc
