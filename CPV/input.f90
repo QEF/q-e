@@ -870,9 +870,8 @@ MODULE input
            tvhmean_inp, vhasse_inp, nconstr_inp, iesr_inp, iprnks, nprnks,     &
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nelup, neldw, nbnd,     &
            nelec, press, cell_damping, cell_dofree, tf_inp, nprnks_empty,      &
-           refg, greash, grease, greasp, epol, efield, tcg, maxiter, conv_thr,   &
-           passop, tot_charge, multiplicity, tot_magnetization, nprnks_empty,  &
-           ncolvar_inp
+           refg, greash, grease, greasp, epol, efield, tcg, maxiter, conv_thr, &
+           passop, tot_charge, multiplicity, tot_magnetization, ncolvar_inp
      !
      USE input_parameters, ONLY : wf_efield, wf_switch, sw_len, efx0, efy0,    &
                                   efz0, efx1, efy1, efz1, wfsd, wfdt, maxwfdt, &

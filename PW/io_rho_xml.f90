@@ -35,8 +35,8 @@ MODULE io_rho_xml
       !
       IMPLICIT NONE
       !
-      REAL(DP),         INTENT(IN)           :: rho(nrxx,nspin)
       INTEGER,          INTENT(IN)           :: nspin
+      REAL(DP),         INTENT(IN)           :: rho(nrxx,nspin)
       CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: extension
       !
       CHARACTER(LEN=256)    :: dirname, file_base
@@ -118,8 +118,8 @@ MODULE io_rho_xml
       !
       IMPLICIT NONE
       !
-      REAL(DP),         INTENT(OUT)          :: rho(nrxx,nspin)
       INTEGER,          INTENT(IN)           :: nspin
+      REAL(DP),         INTENT(OUT)          :: rho(nrxx,nspin)
       CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: extension
       !
       CHARACTER(LEN=256)    :: dirname, file_base

@@ -652,7 +652,7 @@ subroutine dennl( bec, denl )
   use cell_base,  only : h
   use io_global,  only : stdout
   !
-  use electrons_base,     only : n => nbsp, ispin, f, nspin, ispin
+  use electrons_base,     only : n => nbsp, ispin, f, nspin
   use reciprocal_vectors, only : gstart
 
   implicit none

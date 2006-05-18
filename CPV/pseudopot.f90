@@ -1739,9 +1739,9 @@ CONTAINS
       ! dj_l(x)/dx = j_(l-1)(x) - (l+1)/x *  j_l(x)
       !
       IMPLICIT NONE
+      INTEGER, INTENT(IN) :: l, nr
       REAL (DP), INTENT(IN) :: xg, jl(nr), r(nr)
       REAL (DP), INTENT(OUT):: djl(nr)
-      INTEGER, INTENT(IN) :: l, nr
       !
       REAL (DP), ALLOCATABLE :: jlm1(:)
       REAL(DP) :: xrg

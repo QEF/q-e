@@ -36,7 +36,7 @@ MODULE metadyn_base
       USE cell_base,          ONLY : at, alat
       USE metadyn_vars,       ONLY : ncolvar, fe_grad, g_amplitude, fe_step,   &
                                      max_metadyn_iter, metadyn_history,        &
-                                     metadyn_fmt, fe_step, first_metadyn_iter, &
+                                     metadyn_fmt, first_metadyn_iter,          &
                                      gaussian_pos
       USE metadyn_io,         ONLY : read_metadyn_restart
       USE io_files,           ONLY : tmp_dir, scradir, prefix, iunaxsf, &
