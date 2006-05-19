@@ -29,12 +29,10 @@ subroutine rotatef(app, bpp, bf, anlp, bnlp, bnlf, intw1, intw2,    &
           bnlf(n2d, norbnow*npol),  &      !          --  
           intw1(norbf*npol, 2*n2d), &      ! integral of loc. fun. 
           intw2(norbf*npol, norbf*npol)    ! integral of nonloc. fun.   
-  complex(DP), allocatable :: x(:), y(:), h(:,:), aux(:,:)
+  complex(DP), allocatable :: h(:,:), aux(:,:)
   complex(DP), parameter :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
 
   call start_clock('rotatef')
-  allocate( x( n2d ) )
-  allocate( y( n2d ) )
   allocate( h( n2d, n2d ) )
   allocate( ipiv( n2d ) )
 
@@ -86,8 +84,6 @@ subroutine rotatef(app, bpp, bf, anlp, bnlp, bnlf, intw1, intw2,    &
                      bnlp,n2d,one,intw2,norbf*npol)
   bnlp=(0.d0,0.d0)
 
-  deallocate(x)
-  deallocate(y)
   deallocate(h)
   deallocate(ipiv)
      
@@ -110,12 +106,10 @@ subroutine rotateb (app, bpp, af, intw1, n2d, norbf, norbnow, npol)
   integer, allocatable :: ipiv(:) 
   complex(DP) :: app(n2d,n2d), af(n2d,n2d), bpp(n2d,n2d), &
                       intw1(norbf*npol,2*n2d) 
-  complex(DP), allocatable :: x(:), y(:), h(:,:), aux(:,:), aux1(:,:)
+  complex(DP), allocatable :: h(:,:), aux(:,:), aux1(:,:)
   complex(DP), parameter :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
 
   call start_clock('rotateb')
-  allocate( x( n2d ) )
-  allocate( y( n2d ) )
   allocate( h( n2d, n2d ) )
   allocate( ipiv( n2d ) )  
 
@@ -161,8 +155,6 @@ subroutine rotateb (app, bpp, af, intw1, n2d, norbf, norbnow, npol)
   deallocate(aux)
   deallocate(aux1)
 
-  deallocate(x)
-  deallocate(y)
   deallocate(h)
   deallocate(ipiv)
 
