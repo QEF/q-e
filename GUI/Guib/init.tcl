@@ -137,6 +137,8 @@ namespace eval ::guib {
     # definiton of ::guib::widgets namespace variables !!!
     source [file join $library src widgets.itcl]
 
+    source [file join $library src keywidgets.itcl]
+
     #source [file join $library src keywordObj.itcl]
     #source [file join $library src moduleObj.itcl]
 }
