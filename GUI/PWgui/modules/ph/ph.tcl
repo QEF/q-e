@@ -21,6 +21,12 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    	-widget   entrydirselectquote
 	    	-fmt      %S
 	    }
+	    var recover {
+		-label "Restart from an interrupted run (recover):"
+		-textvalue {Yes No}
+	    	-value     {.true. .false.}
+	    	-widget    radiobox
+	    }
 	    var prefix -label "Prefix of data file saved by PW.X (prefix):" \
 		-widget   [list entrybutton "Prefix ..." [list ::pwscf::phSelectPunchFile $this prefix]] \
 		-fmt      %S
@@ -112,7 +118,22 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    	-fmt       %s
 	    }
 
-	    group ramanthreshold -name "Thresholds for Raman" {
+	    var fpol {
+		-label     "Compute dynamic polarizabilities (fpol):"
+		-textvalue {Yes No}
+	    	-value     {.true. .false.}
+	    	-widget    radiobox
+	    }
+
+	    var zue {
+	    	-label     "Compute effective charges from the phonon density responses (zue):"
+	    	-textvalue {Yes No}
+	    	-value     {.true. .false.}
+	    	-widget    radiobox
+	    	-fmt       %s
+	    }
+
+	    group ramanthreshold -name "Thresholds for Raman" -decor normal {
 		var eth_rps {
 		    -label    "Threshold for calculation of x|Psi> (eth_rps):"
 		    -validate fortranreal
@@ -126,20 +147,31 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 		    -validate fortranreal
 		}
 	    }
+
 	    var maxirr {
 	    	-label    "Maximum number of irreducible representation (maxirr):"
 	    	-widget   spinint
 	    	-fmt      %d
 	    }
 
-	    var zue {
-	    	-label     "Compute effective charges from the phonon density responses (zue):"
-	    	-textvalue {Yes No}
-	    	-value     {.true. .false.}
-	    	-widget    radiobox
-	    	-fmt       %s
+	    var modenum {
+		-label    "Mode number for single-mode calculation (modenum):"
+		-validate integer
+		-widget   spinint
+	    }
+	    
+	    var nrapp {
+		-label    "Number of representations to do (nrapp):"
+		-validate nonnegint
+		-widget   spinint
 	    }
 
+	    var nat_todo {
+		-label "Number of atom to be displaced (nat_todo):"
+		-validate nonnegint
+		-widget spinint
+	    }
+	    
 	    separator -label "--- Misc control options ---"
 
 	    var lnscf {
@@ -162,8 +194,8 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    	-widget    radiobox
 	    	-fmt       %s
 	    }
-	    var time_max {
-	    	-label    "Maximum allowed CPU run-time [in seconds] (time_max):"
+	    var max_seconds {
+	    	-label    "Maximum allowed CPU run-time [in seconds] (max_seconds):"
 		-validate posint
 	    	-widget   spinint
 	    	-fmt      %d
@@ -235,6 +267,18 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	}
     }
 
+    line representation_line -name "List of the representation to do:" {
+	var representation_list {
+	    -label "Indices of representations (comma or whitespace separated):"
+	}
+    }
+
+    line atom_disp_line -name "List of atoms to displace:" {
+	var atom_disp_list {
+	    -label "Indices of atoms (comma or whitespace separated):"
+	}
+    }
+    
     # ----------------------------------------------------------------------
     # take care of specialties
     # ----------------------------------------------------------------------

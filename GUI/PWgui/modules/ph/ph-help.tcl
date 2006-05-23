@@ -11,6 +11,11 @@ help outdir -vartype character -helpfmt txt2html -helptext {
 <p> ( default = './' )
 }
 
+help recover -vartype logical -helpfmt -helptext {   
+            if .true. restart from an interrupted run 
+<p> ( default = .false. )
+}
+
 help prefix -vartype character -helpfmt txt2html -helptext {
             prepended to input/output filenames
             must be the same used in the calculation
@@ -44,7 +49,7 @@ help iverbosity -vartype integer -helpfmt txt2html -helptext {
               iverbosity=0 short output, iverbosity=1 verbose output 0
 }
 
-help time_max  -vartype integer -helpfmt txt2html -helptext {
+help max_seconds  -vartype integer -helpfmt txt2html -helptext {
               maximum allowed run time before the job stops smoothly
 }
 
@@ -62,6 +67,7 @@ help filelph  -vartype character -helpfmt txt2html -helptext {
               file where electron-phonon matrix elements are written  
 <p> ( default = ' ' )
 }
+
 
 help fildvscf -vartype character -helpfmt txt2html -helptext {
               file where the the potential variation is written       
@@ -117,10 +123,17 @@ foreach var {xq1 xq2 xq3} {
     help $var -vartype real -helpfmt txt2html -helptext $_xq
 }
 
-help elph    -vartype logical -helpfmt html -helptext {
-              calculate nonresonant Raman coefficients using 
-              second-order response as in:<p>
-              M. Lazzeri and F. Mauri, Phys. Rev. Lett. 90, 036401 (2003)<p>
+help lraman -vartype logical -helpfmt txt2html -helptext {
+            if .true. calculate nonresonant Raman coefficients      
+            using second-order response as in:
+            M. Lazzeri and F. Mauri, Phys. Rev. Lett. 90, 036401 (2003)
+<p> ( default = .false. )
+
+            Optional variables for Raman:
+
+    eth_rps threshold for calculation of  Pc R |psi>                1.0d-9
+    eth_ns  threshold for non-scf wavefunction calculation          1.0e-12
+    dek     delta_xk used for wavefunction derivation wrt k         1.0e-3
 }
 
 help eth_rps -vartype real -helpfmt txt2html -helptext {
@@ -132,9 +145,40 @@ help eth_ns -vartype real -helpfmt txt2html -helptext {
     at k+dk, used in Raman calculation
     Default value: 1.0d-12
 }
-help eth_ns -vartype real -helpfmt txt2html -helptext {
+help dek -vartype real -helpfmt txt2html -helptext {
     dk used for finite-difference derivation of wavefunctions: dpsi_k/dk, 
     for Raman calculation
     Default value: 1.0e-3
 }
+
+
+help fpol -vartype real -helpfmt txt2html -helptext {
+    if .true. calculate dynamic polarizabilities            
+    ( experimantal stage, see example33 for calculation
+      of methane )
+<p> ( default = .false. )
+}
+
+
+
+help nrapp -vartype integer -helpfmt txt2html -helptext {                             
+    The representations to do.
+    (nrapp and nat_todo are not compatible)
+<p> ( default = 0 )
+}
+
+help nat_todo    -vartype integer -helpfmt txt2html -helptext {  
+    Number of atom to be displaced.
+    (nrapp and nat_todo are not compatible)
+<p> ( default = 0 )
+}
+
+help modenum  -vartype integer -helpfmt txt2html -helptext { 
+    Used for single mode calculation.
+    If not set here, will be read from file .save           
+    (if modenum.ne.0 => nat_todo = 0; nrapp = 1; list(1) = 
+     modenum)
+<p> ( default = -1 )
+}
+
 

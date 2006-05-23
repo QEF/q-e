@@ -89,7 +89,7 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 		    -value     {0 1}
 		    -default  0
 		}
-		var sic  {
+		var isic  {
 		    -label    "Self-Interaction Correction:"
 		    -widget    radiobox
 		    -textvalue {"No" "Yes"}

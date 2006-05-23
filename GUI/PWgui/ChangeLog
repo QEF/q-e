@@ -1,3 +1,5 @@
+Tue May 23 2006 Anton Kokalj (tone.kokalj@ijs.si)
+	* synchronizing PWgui modules with QE-3.1
 
 2005-09-14 19:23  giannozz
 
@@ -13,7 +15,7 @@
 
 	* modules/atomic/: atomic.tcl, atomic-event.tcl:
 
-	Elaborating a bit on Paolo's coding. In particular, making pages i
+	Elaborating a bit on Paolo's coding. In particular, making pages 
 	and event handlers ...
 
 2005-09-12 19:13  giannozz

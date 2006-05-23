@@ -345,6 +345,12 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 		    -fmt      %d
 		}
 
+		var tot_charge {
+		    -label    "Total system charge (tot_charge):"
+		    -validate fortranreal
+		    -fmt      %f
+		}
+		
 		separator -label "--- Occupations ---"
 
 		var occupations {
@@ -400,13 +406,30 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 		    -value     {1  2}
 		    -widget    radiobox
 		}
-
-		dimension starting_magnetization {
-		    -label "Starting magnetization (starting_magnetization):"
-		    -text  "Specify starting magnetization (between -1 and 1) for each \"magnetic\" species"
-		    -validate  fortranreal
-		    -start 1 -end 1
+		
+		group spin_polarization -decor none {
+ 
+		    dimension starting_magnetization {
+			-label "Starting magnetization (starting_magnetization):"
+			-text  "Specify starting magnetization (between -1 and 1) for each \"magnetic\" species"
+			-validate  fortranreal
+			-start 1 -end 1
+		    }
+		    
+		    var multiplicity {
+			-label     "Spin multiplicity (multiplicity):"
+			-validate  posint
+			-widget    spinint
+		    }
+		    
+		    var tot_magnetization {
+			-label     "Total magnetization, nelup - neldw (tot_magnetization):"
+			-validate  posint
+			-widget    spinint
+		    }
 		}
+		
+		# insert here ...
 
 		separator -label "--- Noncolinear calculation ---"
 
@@ -600,7 +623,7 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 		}
 
 		group unused_1 {
-		    separator -label "--- Unused variables ---"
+		    separator -label "--- Obsolete and unused variables ---"
 
 		    var nelup {
 			-label    "Number of spin-up electrons:"
@@ -720,6 +743,13 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 		    -validate fortranreal
 		}
 
+		var diago_full_acc {
+		    -label "Diagonalize empty states as precise as occupied states (diago_full_acc):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
+		}
+		
 		var diago_cg_maxiter {
 		    -text     "For CONJUGATE-GRADIENT DIAGONALIZATION only"
 		    -label    "Max. \# of iterations (diago_cg_maxiter):"
@@ -865,6 +895,20 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 			-label    "Rescaling interval (nraise):"
 			-validate fortraninteger
 		    }
+
+		    var monitor_constr {
+			-label "Only monitor (not impose) constraints (monitor_constr):"
+			-widget    radiobox
+			-textvalue { Yes No }	      
+			-value     { .true. .false. }
+		    }
+
+		    var refold_pos {
+			-label "Refolded ions at each step into the supercell (refold_pos):"
+			-widget    radiobox
+			-textvalue { Yes No }	      
+			-value     { .true. .false. }
+		    }
 		}
 
 		separator -label "--- BFGS Structural Optimization ---"
@@ -904,7 +948,7 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 			    -validate fortranreal
 			}
 			var w_2 {
-			    -label    "w_1:"
+			    -label    "w_2:"
 			    -validate fortranreal
 			}
 		    }
@@ -945,10 +989,10 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 			-widget optionmenu
 		    }
 
-		    var damp {
-			-label    "Damping coefficent for damped-dyn (damp):"
-			-validate fortranreal
-		    }
+		    #var damp {
+		    #	-label    "Damping coefficent for damped-dyn (damp):"
+		    #	-validate fortranreal
+		    #}
 		    
 		    var temp_req {
 			-label    "Temperature of elastic band for mol-dyn (temp_req):"
@@ -1019,31 +1063,31 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
               
                 }
                 
-                group smd {
-                
-                    var use_fourier {
-			-label "The path is described by its Fourier components (use_fourier):"
-			-textvalue { Yes No }
-			-value     { .TRUE. .FALSE. }
-			-widget    radiobox
-		    }
-
-		    var use_multistep {
-			-label "Images are sequentially added to the path (use_multistep):"
-			-textvalue { Yes No }
-			-value     { .TRUE. .FALSE. }
-			-widget    radiobox
-		    }
-                
-
-		    var free_energy {
-			-label "Evalute the free-energy profile (free_energy):"
-			-textvalue { Yes No }
-			-value     { .TRUE. .FALSE. }
-			-widget    radiobox
-		    }
-
-		}
+                #group smd {
+                #
+                #    #var use_fourier {
+		#    #	-label "The path is described by its Fourier components (use_fourier):"
+		#    #	-textvalue { Yes No }
+		#    #	-value     { .TRUE. .FALSE. }
+		#    #	-widget    radiobox
+		#    #}
+		#    
+		#    #var use_multistep {
+		#    #	-label "Images are sequentially added to the path (use_multistep):"
+		#    #	-textvalue { Yes No }
+		#    #	-value     { .TRUE. .FALSE. }
+		#    #	-widget    radiobox
+		#    #}
+                #    #
+		#    #
+		#    #var free_energy {
+		#    #	-label "Evalute the free-energy profile (free_energy):"
+		#    #	-textvalue { Yes No }
+		#    #	-value     { .TRUE. .FALSE. }
+		#    #	-widget    radiobox
+		#    #}
+		#
+		#}
 
 		separator -label "--- Meta-Dynamics ---"
 
@@ -1055,7 +1099,7 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 			-default 1
 		    }
 		    dimension fe_step {
-			-label "Meta-dinamics step length (fe_step):"
+			-label "Meta-dynamics step length (fe_step):"
 			-start 1 -end 1
 			-validate fortranreal
 		    }
@@ -1065,10 +1109,10 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 			-validate fortranreal
 		    }
                 
-  		    var g_sigma {
-			-label "Spread of the gaussians used in meta-dinamics (g_sigma):"
-			-validate fortranreal
-		    }
+  		    #var g_sigma {
+		    #	-label "Spread of the gaussians used in meta-dinamics (g_sigma):"
+		    #	-validate fortranreal
+		    #}
 
 		    var fe_nstep {
 			-label "Max. \# of steps to evaluate the potential of mean force (fe_nstep):"
@@ -1124,6 +1168,11 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 		-label    "Ficticious cell mass for variable-cell MD (wmass):"
 		-validate  fortranreal
 
+	    }
+	    
+	    var press_conv_thr {
+		-label     "Convergence pressure threshold \[in KBar\] (press_conv_thr):"
+		-validate  "fotranposreal"
 	    }
 	    
 	    var cell_factor {

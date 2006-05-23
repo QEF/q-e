@@ -15,7 +15,7 @@ tracevar calculation w {
     groupwidget vc_md  disable
     groupwidget path   disable
     groupwidget neb    disable
-    groupwidget smd    disable
+    #groupwidget smd    disable
     groupwidget metadyn disable
 
     switch -exact -- $calc {
@@ -27,7 +27,7 @@ tracevar calculation w {
 	    groupwidget vc_md  disable
 	    groupwidget path   disable
 	    groupwidget neb    disable
-            groupwidget smd    disable
+            #groupwidget smd    disable
 	    groupwidget metadyn disable
 	}
 	'phonon' {
@@ -37,7 +37,7 @@ tracevar calculation w {
 	    groupwidget vc_md  disable
 	    groupwidget path   disable
 	    groupwidget neb    disable
-            groupwidget smd    disable
+            #groupwidget smd    disable
 	    groupwidget metadyn disable
 	}
 	'relax' {
@@ -47,7 +47,7 @@ tracevar calculation w {
 	    groupwidget vc_md  disable
 	    groupwidget path   disable
 	    groupwidget neb    disable
-            groupwidget smd    disable
+            #groupwidget smd    disable
 	    groupwidget metadyn disable	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
@@ -63,7 +63,7 @@ tracevar calculation w {
 	    groupwidget vc_md  enable
 	    groupwidget path   disable
 	    groupwidget neb    disable
-            groupwidget smd    disable
+            #groupwidget smd    disable
 	    groupwidget metadyn disable	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
@@ -77,7 +77,7 @@ tracevar calculation w {
 	    groupwidget vc_md  disable
 	    groupwidget path   disable
 	    groupwidget neb    disable
-            groupwidget smd    disable
+            #groupwidget smd    disable
 	    groupwidget metadyn disable	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
@@ -92,7 +92,7 @@ tracevar calculation w {
 	    groupwidget vc_md  enable
 	    groupwidget path   disable
 	    groupwidget neb    disable
-            groupwidget smd    disable
+            #groupwidget smd    disable
 	    groupwidget metadyn disable	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
@@ -106,7 +106,7 @@ tracevar calculation w {
 	    groupwidget vc_md  disable
 	    groupwidget path   enable
 	    groupwidget neb    enable
-            groupwidget smd    disable
+            #groupwidget smd    disable
 	    groupwidget metadyn disable	    
 	}
 	'smd' {
@@ -116,7 +116,7 @@ tracevar calculation w {
 	    groupwidget vc_md  disable
 	    groupwidget path   enable
 	    groupwidget neb    disable
-            groupwidget smd    enable
+            #groupwidget smd    enable
 	    groupwidget metadyn disable	    
 	}
 	'metadyn' {
@@ -126,7 +126,7 @@ tracevar calculation w {
 	    groupwidget vc_md  disable
 	    groupwidget path   disable
 	    groupwidget neb    disable
-            groupwidget smd    disable
+            #groupwidget smd    disable
 	    groupwidget metadyn enable
 	}
     }
@@ -280,7 +280,7 @@ tracevar ntyp w {
 
 tracevar nspin w {
     if { [vartextvalue nspin] == "Yes" } {
-	widget starting_magnetization enable
+	groupwidget spin_polarization enable
 	widgetconfigure starting_magnetization -end [varvalue ntyp]
 
 	varset noncolin -value ""
@@ -291,7 +291,7 @@ tracevar nspin w {
 	}    
     } else {
 	if { [vartextvalue noncolin] != "Yes" } {
-	    widget starting_magnetization disable
+	    groupwidget spin_polarization disable
 	}
 	groupwidget noncolin_group disable
 	#widget angle1 disable
@@ -309,7 +309,7 @@ tracevar nspin w {
 
 tracevar noncolin w {
     if { [vartextvalue noncolin] == "Yes" } {
-	widget starting_magnetization enable
+	groupwidget spin_polarization enable
 	widgetconfigure starting_magnetization -end [varvalue ntyp]
 
 	varset nspin -value ""
@@ -320,7 +320,7 @@ tracevar noncolin w {
 	}
     } else {
 	if { [vartextvalue nspin] != "Yes" } {
-	    widget starting_magnetization disable
+	    groupwidget spin_polarization disable
 	}
 	groupwidget noncolin_group disable
 	#widget angle1 disable

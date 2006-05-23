@@ -4,6 +4,10 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 
     readfilter  ::pwscf::ppReadFilter
 
+    #
+    # Namelist: INPUTPP
+    #
+
     page extract -name "Choose Data to be plotted " {
 	namelist inputpp -name "INPUTPP" {
 	    
@@ -33,6 +37,7 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    "STM images"
 		    "spin polarization (= rho(up) - rho(down))"
 		    "|psi|^2"
+		    "|psi|^2 (noncollinear case)"
 		    "electron localization function (ELF)"
 		    "planar average of all |psi|^2"
 		    "integrated local density of states (ILDOS)"
@@ -40,7 +45,7 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    "the electric field potential"
 		    "the noncolinear magnetization"
 		}
-		-value { 0 1 2 3 4 5 6 7 8 9 10 11 12 13 }
+		-value { 0 1 2 3 4 5 6 7 7 8 9 10 11 12 13 }
 		-fmt %d
 	    }
 	    var spin_component {
@@ -112,6 +117,11 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 	    }
 	}
     }
+
+    #
+    # Namelist: PLOT
+    #
+
     page chdens -name "Specify Plot " {
 
 	namelist plot -name "PLOT" {

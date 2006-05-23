@@ -30,6 +30,19 @@ tracevar plot_num w {
 	    groupwidget psi2  enable  
 	    groupwidget ildos disable
 	}
+
+	"|psi|^2 (noncollinear case)" {
+	    widget spin_component enable
+	    widgetconfigure spin_component -textvalues {
+		"absolute value"
+		"x component of the magnetization"
+		"y component of the magnetization"
+		"z component of the magnetization"
+	    }	
+	    groupwidget stm   disable 
+	    groupwidget psi2  enable  
+	    groupwidget ildos disable
+	}
 	
 	"integrated local density of states (ILDOS)" {
 	    widget spin_component disable 
@@ -45,6 +58,10 @@ tracevar plot_num w {
 		"y component of the magnetization"
 		"z component of the magnetization"
 	    }	
+	    groupwidget stm   disable 
+	    groupwidget psi2  disable  
+	    groupwidget ildos disable
+	    
 	}
 	default {
 	    widget spin_component disable 

@@ -289,6 +289,16 @@ help nelec        -vartype real -helpfmt txt2html -helptext {
              to remove divergencies if the cell is not neutral
 }
 
+
+help tot_charge -vartype real -helpfmt txt2html -helptext { 
+               Total system charge. Used only if nelec is unspecified,
+               otherwise it is ignored.
+<p> ( default = 0.0 )
+}
+
+
+
+
 help ecutwfc      -vartype real -helpfmt txt2html -helptext { 
              kinetic energy cutoff (Ry) for wavefunctions
              (must be specified)
@@ -328,13 +338,41 @@ help nosym        -vartype logical -helpfmt txt2html -helptext {
 }
 
 help starting_magnetization -vartype real -helpfmt txt2html -helptext { 
-             starting spin polarization (values between -1 and 1)
-             on atomic type 'i' in a lsda calculation. Breaks the
-             symmetry and provides a starting point for self-consistency.
-             The default value is zero, BUT a value MUST be specified for
-             AT LEAST one atomic type in spin polarized calculations.
-             If zero starting magnetization is specified, zero final
-             magnetization will be obtained.
+               Starting spin polarization (values between -1 and 1)
+               on atomic type 'i' in a spin-polarized calculation. 
+               Breaks the symmetry and provides a starting point for 
+               self-consistency. The default value is zero, BUT a value 
+               MUST be specified for AT LEAST one atomic type in spin 
+               polarized calculations. Note that if start from zero 
+               initial magnetization, you will get zero final magnetization
+               in any case. If you desire to start from an antiferromagnetic
+               state, you may need to define two different atomic species
+               corresponding to sublattices of the same atomic type.
+               If you fix the magnetization with "nelup/neldw" or with
+               "multiplicity" or with "tot_magnetization", you should
+               not specify starting_magnetization.
+}
+
+help multiplicity -vartype  integer -helpfmt txt2html -helptext { 
+               Spin multiplicity (2s+1). 1 is singlet, 2 for doublet etc.
+               Note that this fixes the final value of the magnetization.
+               if unspecified or a non-zero value is specified in nelup/neldw
+               then multiplicity variable is ignored.
+               Do not specify both multiplicity and tot_magnetization.
+<p>  ( default = 0 [unspecified] )
+}
+
+help tot_magnetization -vartype integer -helpfmt txt2html -helptext {
+               Total magnetization: majority spin - minority spin (nelup - neldw).
+               If unspecified or a non-zero value is specified in nelup/neldw
+               then tot_magnetization variable is ignored.
+               Do not specify both multiplicity and tot_magnetization.
+               YES, there is redundancy! nelup/neldw are enough to specify
+               the spin state. However these variables are not very convenient
+               and will be eliminated from the input in future versions.
+               It is recommended to use either 'multiplicity' or equivalently
+               'tot_magnetization' to specify the spin state.
+ ( default = -1 [unspecified] )
 }
 
 help noncolin -vartype logical -helpfmt txt2html -helptext {
@@ -604,6 +642,14 @@ help diago_thr_init -vartype real -helpfmt txt2html -helptext {
 <p> ( default = 1.D-2 )
 }
 
+help diago_full_acc -vartype logical -helpfmt txt2html -helptext {
+               If .TRUE. all the empty states are diagonalized at the same level
+               of accuracy of the occupied ones. Otherwise the empty states are
+               diagonalized using a larger threshold (this should not affect
+               total energy, forces, and other ground-state properties).
+<p> ( default = .FALSE. )
+}
+
 help diago_cg_maxiter  -vartype integer -helpfmt txt2html -helptext { 
              For conjugate gradient diagonalization:
              max number of iterations
@@ -703,6 +749,40 @@ help tolp         -vartype real -helpfmt txt2html -helptext {
              not rescaled if the ratio of the run-averaged and 
              target temperature differs from unit less than tolp
 <p> ( default = 1.D-3 )
+}
+
+help delta_t  -vartype real -helpfmt txt2html -helptext { 
+               delta_t = 1                 : every 'nraise' step the actual 
+                                             temperature is rescaled to tempw
+               delta_t /= 1 && delta_T > 0 : at each step the temperature is 
+                                             multiplied by delta_t; this is 
+                                             done rescaling all the velocities.
+               delta_t < 0                 : every 'nraise' steps temperature
+                                             is reduced by -delta_T
+               This keyword is NOT used in the case of variable cell
+               calculations.
+<p> ( default = 1.D0 )
+}
+
+help nraise       -vartype  integer -helpfmt txt2html -helptext {
+               The temperature is reduced of -delta_T every 'nraise' steps.
+               This keyword is NOT used in the case of variable cell
+               calculations.
+<p>  ( default = 100 )
+}
+help monitor_constr -vartype logical -helpfmt txt2html -helptext {
+               This keyword applies only when one or more constraints are 
+               defined in the CONSTRAINTS card (see below). 
+               If true, the values of the constraints are monitored, but the
+               constraints are not imposed.
+<p> ( default = .FALSE. )
+}
+
+help refold_pos -vartype logical -helpfmt txt2html -helptext {
+               This keyword applies only in the case of molecular dynamics or
+               damped dynamics. If true the ions are refolded at each step into
+               the supercell.
+<p> ( default = .FALSE. )
 }
 
 help upscale      -vartype real -helpfmt txt2html -helptext { 
@@ -813,11 +893,11 @@ help opt_scheme  -vartype    character -helpfmt txt2html -helptext {
 <p> ( default = "quick-min" )
 }
 
-help damp        -vartype    real -helpfmt txt2html -helptext {
-               Damping coefficent. Ignored when "minimization_scheme"
-               is different from "damped-verlet"
-<p> ( default = 1.D0 )
-}
+#help damp        -vartype    real -helpfmt txt2html -helptext {
+#               Damping coefficent. Ignored when "minimization_scheme"
+#               is different from "damped-verlet"
+#<p> ( default = 1.D0 )
+#}
 
 help temp_req      -vartype  real -helpfmt txt2html -helptext {
                temperature associated to the elastic band. Each image has its 
@@ -864,18 +944,18 @@ help use_freezing  -vartype logical -helpfmt txt2html -helptext {
 <p> ( default = .FALSE. )
 }
 
-help use_fourier   -vartype logical -helpfmt txt2html -helptext {
-               Used in the evaluation of the free-energy profile with
-               finite-temperature string dynamics.
-<p> ( default = .FALSE. )
-}
+#help use_fourier   -vartype logical -helpfmt txt2html -helptext {
+#               Used in the evaluation of the free-energy profile with
+#               finite-temperature string dynamics.
+#<p> ( default = .FALSE. )
+#}
 
-help use_multistep -vartype logical -helpfmt txt2html -helptext {
-               In the string method images are sequentially added to the path: 
-               new images are added as soon as the pervious path is converged 
-               (this starting from 3 images up to num_of_images).
-<p> ( default = .FALSE. )
-}
+#help use_multistep -vartype logical -helpfmt txt2html -helptext {
+#               In the string method images are sequentially added to the path: 
+#               new images are added as soon as the pervious path is converged 
+#               (this starting from 3 images up to num_of_images).
+#<p> ( default = .FALSE. )
+#}
 
 help use_masses -vartype logical -helpfmt txt2html -helptext {
                If. TRUE. the optimisation of the path is performed using 
@@ -883,11 +963,11 @@ help use_masses -vartype logical -helpfmt txt2html -helptext {
 <p> ( default = .FALSE. )
 }
 
-help free_energy -vartype logical -helpfmt txt2html -helptext {
-               Used in the evaluation of the free-energy profile with
-               finite-temperature string dynamics.
-<p> ( default = .FALSE. )               
-}
+#help free_energy -vartype logical -helpfmt txt2html -helptext {
+#               Used in the evaluation of the free-energy profile with
+#               finite-temperature string dynamics.
+#<p> ( default = .FALSE. )               
+#}
 
 help fe_step -vartype logical -helpfmt txt2html -helptext {
                meta-dinamics step length (in principle different for each
@@ -901,11 +981,11 @@ help g_amplitude -vartype logical -helpfmt txt2html -helptext {
 <p> ( default = 0.005 Hartree )
 }
                 
-help g_sigma -vartype logical -helpfmt txt2html -helptext {
-               Spread  of the gaussians used in meta-dinamics, defined using the
-               same units used to define the colletive variables (constraints).
-<p>  ( default = 0.04 )
-}
+#help g_sigma -vartype logical -helpfmt txt2html -helptext {
+#               Spread  of the gaussians used in meta-dinamics, defined using the
+#               same units used to define the colletive variables (constraints).
+#<p>  ( default = 0.04 )
+#}
 
 help fe_nstep -vartype logical -helpfmt txt2html -helptext {
                Maximum number of steps used to evaluate the potential of
@@ -950,6 +1030,13 @@ help press        -vartype real -helpfmt txt2html -helptext {
 
 help wmass        -vartype real -helpfmt txt2html -helptext { 
              ficticious cell mass for variable-cell md simulations
+}
+
+help press_conv_thr -vartype real -helpfmt txt2html -helptext {
+               Convergence threshold on the pressure for variable cell
+               relaxation ('vc-relax' : note that the other convergence
+               thresholds for ionic relaxation apply as well).
+<p>  ( default = 0.5D0 Kbar )
 }
 
 help cell_factor  -vartype real -helpfmt txt2html -helptext { 
