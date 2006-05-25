@@ -201,7 +201,7 @@ subroutine h_diag  ( mesh_, nswx, nsw, lmax, q )
        vaux (:), jlq (:,:), work (:) ! more work space
   real(kind=dp), external :: int_0_inf_dr
   real(kind=dp) :: j
-  character(len=2), dimension (2) :: spin = [ 'up', 'dw' ]
+  character(len=2), dimension (2) :: spin = (/ 'up', 'dw' /)
   integer :: n_states = 3, l, n, m, nb, mb, ind, is, nj
   !
   !
