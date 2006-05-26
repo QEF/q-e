@@ -101,4 +101,7 @@ postprocess {
     varset nlcc -value .false.
     varset lpaw -value .false.
     varset tm   -value .false.
+    varset zval  -value 0.0
+    varset ecutmin -value 0.0
+    varset ecutmax -value 0.0
 }

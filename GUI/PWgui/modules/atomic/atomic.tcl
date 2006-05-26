@@ -96,6 +96,13 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 		    -value     {0 1}
 		    -default  0
 		}
+		var vdw {
+		    -label    "Calculation of van der Waals coefficients:"
+		    -widget    radiobox
+		    -textvalue {"No" "Yes"}
+		    -value     {.true. .false.}
+		    -default  .false.
+		}
 		separator -label "--- Grid: r(i)= exp (xmin + (i-1)*dx) / Z ---"
 		var xmin  {
 		    -label    "Grid parameter xmin:"
@@ -241,6 +248,10 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 		    -label    "Name of the file containing the output total and core charge:"
 		    -fmt      %S
 		}
+                var zval {
+		    -label    "Valence charge (for special cases only!):"
+		    -validate  fortranreal
+		}
 	    }
 	    #
 	}
@@ -284,6 +295,22 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 		-label     "Test electronic configurations"
 		-start     1
 		-end       1
+	    }
+	    var rm  {
+		-label    "Box radius for spherical Bessel basis set"
+		    -validate  fortranposreal
+	    }
+	    var ecutmin  {
+		-label    "Minimum energy cutoff (Ry) for ghost/convergence test:"
+		-validate  fortranposreal
+	    }
+	    var ecutmax {
+		-label    "Maximum energy cutoff (Ry) for ghost/convergence test:"
+		-validate  fortranposreal
+	    }
+	    var decut  {
+		-label    "Step (Ry) for cutoff in ghost/convergence test:"
+		-validate  fortranposreal
 	    }
 	}
     }

@@ -30,6 +30,13 @@ help title -vartype character -helpfmt txt2html -helptext {
             a string describing the job (optional)
 }
 
+help vdw -vartype logicalr -helpfmt txt2html -helptext {
+             If .true., the frequency dependent polarizability and van der
+             Waals coefficient C6 will be computed in Thomas-Fermi and 
+             von Weizsaecker approximation(only for closed-shell ions).
+             Gradient-corrected DFT not yet implemented.
+}
+
 help prefix -vartype character -helpfmt html -helptext {
             prefix for output file names  containing the orbitals,
             logarithmic derivatives, tests. Optional, default: 'ld1'.<p>
@@ -122,6 +129,14 @@ help lpaw -vartype logical -helpfmt txt2html -helptext {
            implemented only for pseudotype=3
 }
 
+help zval -vartype real -helpfmt html -helptext {
+          Zval is automatically calculated from available data. 
+          If one value of Zval is provided in input, it will be
+          checked versus the calculated value. The only case in
+          which you need to explicitly provide the value of Zval
+          is for nointeger Zval (i.e. half core-hole pseudopotentials)
+}
+
 help nwfs -vartype integer -helpfmt txt2html -helptext {
            number of wavefunctions to be pseudized
 }
@@ -162,4 +177,23 @@ help configts -vartype character -helpfmt html  -helptext {
               to make the unscreening<p>
            2) you want to specify additional states for PAW reconstruction
               of all-electron orbitals from pseudo-orbitals
+}
+
+
+help ecutmax -vartype real -helpfmt html  -helptext {
+              ecutmin, ecutmax, decut: parameters (Ry) used for test with a
+              basis set of spherical Bessel functions j<sub>l</sub>(qr) . The
+              hamiltonian at fixed scf potential is diagonalized for various
+              values of ecut:
+              ecutmin, ecutmin+decut, ecutmin+2*decut ... up to ecutmax.
+              This yields an indication of convergence with the corresponding
+              plane-wave cutoff in solids, and shows in an unambigouous way if
+              there are "ghost" states <p>
+              Default: decut=5.0 Ry, ecutmin=ecutmax=0Ry; specify ecutmin and 
+              ecutmax if you want to perform this test
+}
+
+help rm -vartype real -helpfmt html  -helptext {
+                    Radius (a.u.) of the box used with spherical Bessel
+                    functions (default: 30 a.u.)
 }
