@@ -225,12 +225,6 @@
 
 #elif defined __SCSL
 
-       write (6,*) "Warning:   FFTs have been heavily restructured, those using scsl are untested"
-       write (6,*) "Warning:   Please locate and remove the following line in Modules/fft_scalar.f90:"
-       write (6,*) "           call errore('cft_1z','scsl untested, please test',1)"
-       write (6,*) "Warning:   Please recompile, test, report if it works"
-       call errore('cft_1z','scsl untested, please test',1)
-
        CALL ZZFFTM (0, nz, 0, 0.0D0, DUMMY, 1, DUMMY, 1, &
                     tablez (1, icurrent), DUMMY, isys)
 
@@ -988,12 +982,6 @@
        CALL zfft3di( nx, ny, nz, table(1,icurrent) )
 
 #elif defined __SCSL
-
-       write (6,*) "Warning:   FFTs have been heavily restructured, those using scsl are untested"
-       write (6,*) "Warning:   Please locate and remove the following line in Modules/fft_scalar.f90:"
-       write (6,*) "           call errore('cfft3d','scsl untested, please test',1)"
-       write (6,*) "Warning:   Please recompile, test, report if it works"
-       call errore('cfft3d','scsl untested, please test',1)
 
        CALL zzfft3d (0, nx, ny, nz, 0.0D0, DUMMY, 1, 1, DUMMY, 1, 1, &
                      table(1,icurrent), work(1), isys)
