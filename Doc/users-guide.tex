@@ -1113,7 +1113,14 @@ the location of all needed libraries (LAPACK, BLAS, FFTW,
 machine-specific optimized libraries).  If you did, but symbols are
 still missing, see below (for Linux PC).
 
-\paragraph{SGI machines with MIPS compiler}
+\paragraph{SGI machines with IRIX/MIPS compiler}
+
+The script \texttt{moduldep.sh} used by \texttt{configure} doesn't
+work properly on old SGI machines: some strings are truncated
+(likely a IRIX weirdness). A workaround by Andrea Ferretti: 
+\htmladdnormallink%
+{\texttt{http://www.democritos.it/pipermail/pw\_forum/2006-May/004200.html}}
+{http://www.democritos.it/pipermail/pw\_forum/2006-May/004200.html}.
 
 Many versions of the MIPS compiler yield compilation errors in
 conjunction with with \texttt{FORALL} constructs. There is no

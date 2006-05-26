@@ -15,7 +15,7 @@
   !      containing the variables for step 2)
   !
   !      The two steps can be performed independently. In order to perform
-  !      only step 2), leave namelist &inputtpp blank. In order to perform
+  !      only step 2), leave namelist &inputpp blank. In order to perform
   !      only step 1), do not specify namelist &plot
   !
   !      Intermediate results from step 1 can be saved to disk (see

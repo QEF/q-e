@@ -166,13 +166,23 @@ pseudo_dir     CHARACTER ( default = '$HOME/pw/pseudo/' )
                directory containing pseudopotential files
 
 tefield        LOGICAL ( default = .FALSE. )
-               If .TRUE. a sawlike potential is added to the 
-               bare ionic potential. 
+               If .TRUE. a sawlike potential simulating an electric field
+               is added to the bare ionic potential. See variables
+               edir, eamp, emaxprog, eopreg for the form and size of
+               the added potential.
+
+dipfield       LOGICAL ( default = .FALSE. )
+               If .TRUE. and tefield=.TRUE. a dipole correction is also 
+               added to the bare ionic potential - implements the recipe
+               of L. Bengtsson, PRB 59, 12303 (1999). See variables edir,
+               emaxprog, eopreg for the form of the correction, that must 
+               be used only in a slab geometry, for surface calculations,
+               with the discontinuity in the empty space
 
 lelfield       LOGICAL ( default = .FALSE. )
-               If .TRUE. a homogeneous finite electric field
-               described through the modern theory of the polarization
-               is applied. 
+               If .TRUE. a homogeneous finite electric field described
+               through the modern theory of the polarization is applied. 
+               This is different from "tefield=.true." !
 
 lberry         LOGICAL  (default =  .FALSE.)
                If .TRUE. perform a Berry phase calculation
@@ -403,23 +413,26 @@ U_projection_type   CHARACTER   (default='atomic')
                    'atomic' choice.
 
 edir           INTEGER
-               1, 2 or 3. Used only if tefield is .TRUE.. The direction of the
-               electric field is parallel to the bg(:,edir) reciprocal 
-               lattice vector ( So the potential is constant in planes 
-               defined by the mesh points )
+               The direction of the electric field or dipole correction is 
+               parallel to the bg(:,edir) reciprocal lattice vector, so the
+               potential is constant in planes defined by FFT grid points;
+               edir = 1, 2 or 3. Used only if tefield is .TRUE.
 
 emaxpos        REAL ( default = 0.5D0 )
-               Position of the maximum of the sawlike potential within the 
-               unit cell ( 0 < emaxpos < 1 )
+               Position of the maximum of the sawlike potential along crystal
+               axis "edir", within the  unit cell (see below), 0 < emaxpos < 1
+               Used only if tefield is .TRUE.
 
 eopreg         REAL( default = 0.1D0 )
-               Part of the unit cell where the sawlike potential decreases.
-               ( 0 < eopreg < 1 )
+               Zone in the unit cell where the sawlike potential decreases.
+               ( see below, 0 < eopreg < 1 ). Used only if tefield is .TRUE.
 
 eamp           REAL ( default = 0.001 a.u. )
-               Amplitude of the electric field (in a.u.) 
-	       ( 1 a.u. = 51.44 10^10 V/m )
-
+               Amplitude of the electric field (in a.u. = 51.44 10^10 V/m )
+               The sawlike potential increases with slope "eamp" in the
+               region from (emaxpos+eopreg-1) to (emaxpos), then decreases
+               to 0 until (emaxpos+eopreg), in units of the crystal
+               vector "edir". Used only if tefield is .TRUE.
 
 angle1(i)      REAL
                The angle expressed in degrees between the initial 
