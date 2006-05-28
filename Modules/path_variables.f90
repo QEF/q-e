@@ -27,8 +27,6 @@ MODULE path_variables
   LOGICAL :: &
        first_last_opt,           &! if .TRUE. the first and the last image
                                   !           are optimised too.
-       use_multistep,            &! if .TRUE. a multistep algorithm is used 
-                                  !           in smd optimization
        use_masses,               &! if .TRUE. mass weighted coordinates are 
                                   !           used
        write_save,               &! if .TRUE. the save file is written for each

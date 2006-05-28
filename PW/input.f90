@@ -151,7 +151,6 @@ SUBROUTINE iosys()
                              ds_              => ds, &
                              write_save_      => write_save, &
                              use_masses_      => use_masses, &
-                             use_multistep_   => use_multistep, &
                              CI_scheme_       => CI_scheme, &
                              fixed_tan_       => fixed_tan, &
                              use_freezing_    => use_freezing, &
