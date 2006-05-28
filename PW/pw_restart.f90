@@ -1288,9 +1288,9 @@ MODULE pw_restart
             CALL iotk_scan_attr( attr, "NAME",       sname(i) )
             CALL iotk_scan_attr( attr, "EQ_IONS",    irt(i,:) )
             !
-            ftau(1,i) = tmp(1) * DBLE( nr1 )
-            ftau(2,i) = tmp(2) * DBLE( nr2 )
-            ftau(3,i) = tmp(3) * DBLE( nr3 )
+            ftau(1,i) = NINT(tmp(1) * DBLE( nr1 ))
+            ftau(2,i) = NINT(tmp(2) * DBLE( nr2 ))
+            ftau(3,i) = NINT(tmp(3) * DBLE( nr3 ))
             !
          END DO         
          !
