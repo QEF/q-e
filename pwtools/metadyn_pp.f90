@@ -83,7 +83,9 @@ PROGRAM metadyn_PP
   !
   NAMELIST / INPUT / filename, prefix, ix, iy, lsym, lrun_dynamics
   !
+#if defined __PGPLOT
   INTEGER, EXTERNAL :: PGOPEN
+#endif
   !
   ! ... the code starts here
   !
