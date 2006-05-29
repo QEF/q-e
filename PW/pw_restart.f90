@@ -42,6 +42,7 @@ MODULE pw_restart
              locc_read  = .FALSE., &
              lbz_read   = .FALSE., &
              lbs_read   = .FALSE., &
+             lefield_read = .FALSE., &
              lwfc_read  = .FALSE., &
              lsymm_read = .FALSE.
   !
@@ -81,6 +82,8 @@ MODULE pw_restart
       USE funct,                ONLY : get_dft_name
       USE scf,                  ONLY : rho
       USE sticks,               ONLY : dfftp
+      USE extfield,             ONLY : tefield, dipfield, edir, &
+                                       emaxpos, eopreg, eamp
       USE io_rho_xml,           ONLY : write_rho
       USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool
       USE mp_global,            ONLY : my_pool_id, intra_image_comm, &
@@ -283,6 +286,13 @@ MODULE pw_restart
          CALL write_symmetry( ibrav, symm_type, nsym, &
                           invsym, nr1, nr2, nr3, ftau, s, sname, irt, t_rev )
          !
+!-------------------------------------------------------------------------------
+! ... ELECTRIC FIELD
+!-------------------------------------------------------------------------------
+         !
+         CALL write_efield( tefield, dipfield, edir, emaxpos, eopreg, eamp) 
+         !
+!
 !-------------------------------------------------------------------------------
 ! ... PLANE_WAVES
 !-------------------------------------------------------------------------------
@@ -690,7 +700,7 @@ MODULE pw_restart
       CHARACTER(LEN=256) :: dirname      
       LOGICAL            :: lexist, lcell, lpw, lions, lspin, &
                             lxc, locc, lbz, lbs, lwfc, &
-                            lsymm, lph, lrho
+                            lsymm, lph, lrho, lefield
       !
       !
       ierr = 0
@@ -716,6 +726,7 @@ MODULE pw_restart
       lsymm = .FALSE.
       lph   = .FALSE.
       lrho  = .FALSE.
+      lefield = .FALSE.
       !
       SELECT CASE( what )
       CASE( 'dim' )
@@ -753,6 +764,7 @@ MODULE pw_restart
          lbz   = .TRUE.
          lbs   = .TRUE.
          lsymm = .TRUE.
+         lefield =.TRUE.
          lph   = .TRUE.
          !
       CASE( 'all' )
@@ -768,6 +780,7 @@ MODULE pw_restart
          lwfc  = .TRUE.
          lsymm = .TRUE.
          lph   = .TRUE.
+         lefield=.TRUE.
          lrho  = .TRUE.
          !
       CASE( 'reset' )
@@ -782,6 +795,7 @@ MODULE pw_restart
          lbs_read   = .FALSE.
          lwfc_read  = .FALSE.
          lsymm_read = .FALSE.
+         lefield_read = .FALSE.
          !
       CASE( 'ef' )
          CALL read_ef( dirname, ierr )
@@ -844,6 +858,12 @@ MODULE pw_restart
       IF ( lsymm ) THEN
          !
          CALL read_symmetry( dirname, ierr )
+         IF ( ierr > 0 ) RETURN
+         !
+      END IF
+      IF ( lefield ) THEN
+         !
+         CALL read_efield( dirname, ierr )
          IF ( ierr > 0 ) RETURN
          !
       END IF
@@ -1314,6 +1334,63 @@ MODULE pw_restart
       RETURN
       !
     END SUBROUTINE read_symmetry
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE read_efield( dirname, ierr )
+      !----------------------------------------------------------------------
+      !
+      USE extfield, ONLY : tefield, dipfield, edir, emaxpos, eopreg, eamp
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
+      !
+      !
+      IF ( lefield_read ) RETURN
+      !
+      IF ( ionode ) &
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_scan_begin( iunpun, "ELECTRIC_FIELD" )
+         !
+         CALL iotk_scan_dat( iunpun, "HAS_ELECTRIC_FIELD", tefield )
+         !
+         CALL iotk_scan_dat( iunpun, "HAS_DIPOLE_CORRECTION", dipfield )
+         !
+         CALL iotk_scan_dat( iunpun, "FIELD_DIRECTION", edir )
+         !
+         CALL iotk_scan_dat( iunpun, "MAXIMUM_POSITION", emaxpos )
+         !
+         CALL iotk_scan_dat( iunpun, "INVERSE_REGION", eopreg )
+         !
+         CALL iotk_scan_dat( iunpun, "FIELD_AMPLITUDE", eamp )
+         !
+         CALL iotk_scan_end( iunpun, "ELECTRIC_FIELD" )
+         !
+         CALL iotk_close_read( iunpun )
+         !
+      END IF
+      !
+      CALL mp_bcast( tefield,  ionode_id )
+      CALL mp_bcast( dipfield, ionode_id )
+      CALL mp_bcast( edir,     ionode_id )
+      CALL mp_bcast( emaxpos,  ionode_id )
+      CALL mp_bcast( eopreg,  ionode_id )
+      CALL mp_bcast( eamp,    ionode_id )
+      !
+      lefield_read = .TRUE.
+      !
+      RETURN
+      !
+    END SUBROUTINE read_efield
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_planewaves( dirname, ierr )

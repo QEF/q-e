@@ -32,6 +32,7 @@ MODULE xml_io_base
             restart_dir, check_restartfile, save_history,             &
             save_print_counter, read_print_counter, set_kpoints_vars, &
             write_cell, write_ions, write_symmetry, write_planewaves, &
+            write_efield,                                             &
             write_spin, write_xc, write_occ, write_bz, write_phonon,  &
             write_rho_xml, write_wfc, read_wfc, read_rho_xml
   !
@@ -720,6 +721,39 @@ MODULE xml_io_base
       CALL iotk_write_end( iunpun, "SYMMETRIES" )
       !
     END SUBROUTINE write_symmetry
+    !------------------------------------------------------------------------
+    SUBROUTINE write_efield(tefield, dipfield, edir, emaxpos, eopreg, eamp)
+      !------------------------------------------------------------------------
+      !
+      LOGICAL :: &
+           tefield,      &! if .TRUE. a finite electric field is added to the
+                          ! local potential
+           dipfield       ! if .TRUE. the dipole field is subtracted
+      INTEGER :: &
+           edir           ! direction of the field
+      REAL(DP) :: &
+           emaxpos,  &! position of the maximum of the field (0<emaxpos<1)
+           eopreg,   &! amplitude of the inverse region (0<eopreg<1)
+           eamp       ! field amplitude (in a.u.) (1 a.u. = 51.44 10^11 V/m)
+      !
+      !
+      CALL iotk_write_begin( iunpun, "ELECTRIC_FIELD" )
+      !
+      CALL iotk_write_dat( iunpun, "HAS_ELECTRIC_FIELD", tefield )
+      !
+      CALL iotk_write_dat( iunpun, "HAS_DIPOLE_CORRECTION", dipfield )
+      !
+      CALL iotk_write_dat( iunpun, "FIELD_DIRECTION", edir )
+      !
+      CALL iotk_write_dat( iunpun, "MAXIMUM_POSITION", emaxpos )
+      !
+      CALL iotk_write_dat( iunpun, "INVERSE_REGION", eopreg )
+      !
+      CALL iotk_write_dat( iunpun, "FIELD_AMPLITUDE", eamp )
+      !
+      CALL iotk_write_end( iunpun, "ELECTRIC_FIELD" )
+      !
+    END SUBROUTINE write_efield
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_planewaves( ecutwfc, dual, npwx, gamma_only, nr1, nr2, &
