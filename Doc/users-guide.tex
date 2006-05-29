@@ -2672,6 +2672,20 @@ You are trying to restart from a previous job that either produced
 corrupted files, or did not do what you think it did. No luck:
 you have to restart from scratch.
 
+\paragraph{\texttt{pw.x} stops with ``inconsistent DFT'' error.}
+
+As a rule, the flavor  of DFT used in the calculation should be the
+same as the one used in the generation of PP's, and all PP's should 
+be generated  using the same flavor of DFT. This is actually enforced: 
+the type of DFT is read from PP files and it is checked that the same 
+DFT is read from all PP's. If this does not hold, the code stops with 
+the above error message. 
+
+If you really want to use PP's generated with different DFT, or
+to perform a calculation with a DFT that differs from what used in
+PP generation, change the appropriate field in the PP file(s), at
+your own risk.
+
 \paragraph{\texttt{pw.x} stops with error in cdiagh or cdiaghg.}
 
 Possible reasons:
