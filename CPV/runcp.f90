@@ -908,12 +908,12 @@
        INTEGER(8), ALLOCATABLE:: occ(:)
        COMPLEX(8), ALLOCATABLE:: c4(:), c5(:)
 !
-! ... Controlling on sic applicanility
+! ... Controlling on sic applicability
 !
-       IF( lwf ) &
-            &  CALL errore('Wannier function and sic are not compatibile',1)
-       IF( tefield ) &
-            &  CALL errore('Electric field and sic are not implemeted',2)
+       IF( lwf ) CALL errore('runcp_uspp_force_pairing', &
+                           'Wannier function and sic are not compatibile',1)
+       IF( tefield ) CALL errore('runcp_uspp_force_pairing', &
+                           'Electric field and sic are not implemented',2)
 !       
        ALLOCATE( emadt2( ngw ) )
        ALLOCATE( emaver( ngw ) )      

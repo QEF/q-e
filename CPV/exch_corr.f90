@@ -368,8 +368,9 @@
       !
       IF ( ttsic ) THEN
          !
-         IF ( dft_is_meta() ) CALL errore ('SIC and metadynamics not together', 1)
-         IF ( tpre ) CALL errore( 'SIC and stress not implemented', 1)
+         IF ( dft_is_meta() ) CALL errore ('exch_corr_h', &
+                               'SIC and metadynamics not together', 1)
+         IF ( tpre ) CALL errore( 'exch_corr_h', 'SIC and stress not implemented', 1)
 
          !  allocate the sic_arrays
          !
