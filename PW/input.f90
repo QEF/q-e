@@ -1615,7 +1615,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   !-----------------------------------------------------------------------
   !
   USE input_parameters, ONLY : restart_mode
-  USE control_flags,    ONLY : lpath
+  USE control_flags,    ONLY : lpath, lbands
   USE io_files,         ONLY : prefix, nd_nmbr, delete_if_present
   USE path_variables,   ONLY : num_of_images
   USE mp_global,        ONLY : mpime, nproc
@@ -1655,7 +1655,8 @@ SUBROUTINE verify_tmpdir( tmp_dir )
         !
         ! ... xml data file in save directory is removed
         !     
-        CALL delete_if_present( TRIM( file_path ) // '.save/data-file.xml' )
+        IF (.NOT.lbands) &
+           CALL delete_if_present( TRIM( file_path ) // '.save/data-file.xml' )
         !
         ! ... extrapolation file is removed
         !     

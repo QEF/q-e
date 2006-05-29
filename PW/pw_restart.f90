@@ -783,6 +783,8 @@ MODULE pw_restart
          lwfc_read  = .FALSE.
          lsymm_read = .FALSE.
          !
+      CASE( 'ef' )
+         CALL read_ef( dirname, ierr )
       END SELECT
       !
       IF ( lcell ) THEN
@@ -2252,4 +2254,49 @@ MODULE pw_restart
       !
     END SUBROUTINE read_
     !
+    SUBROUTINE read_ef( dirname, ierr )
+      !------------------------------------------------------------------------
+      !
+      ! ... this routine reads only the Fermi energy
+      !
+      USE ener,             ONLY : ef
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
+      !
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      ! ... then selected tags are read from the other sections
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE" )
+         !
+         CALL iotk_scan_dat( iunpun, "FERMI_ENERGY", ef )
+         !
+         ef = ef * e2
+         !
+         CALL iotk_scan_end( iunpun, "BAND_STRUCTURE" )
+      END IF
+      !
+      CALL mp_bcast( ef,        ionode_id )
+      !
+      if (ionode) CALL iotk_close_read( iunpun )
+      !
+      RETURN
+      !
+    END SUBROUTINE read_ef
 END MODULE pw_restart

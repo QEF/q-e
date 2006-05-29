@@ -42,6 +42,7 @@ SUBROUTINE setup()
   USE constants,          ONLY : eps8
   USE parameters,         ONLY : npsx, nchix, npk
   USE io_global,          ONLY : stdout
+  USE io_files,           ONLY : tmp_dir, prefix, delete_if_present
   USE constants,          ONLY : pi, degspin
   USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, symm_type
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
@@ -54,6 +55,7 @@ SUBROUTINE setup()
                                  tot_charge, tot_magnetization, multiplicity
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
                                  starting_magnetization
+  USE ener,               ONLY : ef
   USE electrons_base,     ONLY : set_nelup_neldw
   USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                  tetra, ntetra, ltetra
@@ -77,6 +79,8 @@ SUBROUTINE setup()
   USE spin_orb,           ONLY : lspinorb, domag, so
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, mcons, &
                                  angle1, angle2, bfield
+  USE pw_restart,         ONLY : pw_readfile
+  USE input_parameters,   ONLY : restart_mode
 #if defined (EXX)
   USE exx,                ONLY : exx_grid_init
   USE funct,              ONLY : dft_is_hybrid
@@ -98,6 +102,7 @@ SUBROUTINE setup()
       nb,             &!
       nbe,            &!
       ind, ind1,      &!
+      ierr,           &!
       l,              &!
       ibnd             !
   LOGICAL :: &
@@ -704,9 +709,18 @@ SUBROUTINE setup()
   !
   IF ( lbands ) THEN
      !
-     ! ... if calculating bands, we leave k-points unchanged
+     ! ... if calculating bands, we leave k-points unchanged and read the
+     ! Fermi energy
      !
      nks = input_nks
+     CALL pw_readfile( 'reset', ierr )
+     CALL pw_readfile( 'ef',   ierr )
+     CALL errore( 'setup ', 'problem reading ef from file ' // &
+             & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
+
+     IF ( restart_mode == 'from_scratch' ) &
+           CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) &
+                                     //'.save/data-file.xml' )
      !
   ELSE IF ( ltetra ) THEN
      !
