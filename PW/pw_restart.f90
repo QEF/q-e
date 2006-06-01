@@ -989,7 +989,7 @@ MODULE pw_restart
          CALL iotk_scan_begin( iunpun, "OCCUPATIONS" )
          !
          CALL iotk_scan_dat( iunpun, &
-                             "NUMBER_OF_TETRAHEDRA", ntetra, DEFAULT = 1 )
+                             "NUMBER_OF_TETRAHEDRA", ntetra, DEFAULT = 0 )
          !
          CALL iotk_scan_end( iunpun, "OCCUPATIONS" )        
          !
