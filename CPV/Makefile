@@ -7,7 +7,6 @@ atoms_type.o \
 bessel.o \
 berryion.o \
 bforceion.o \
-brillouin.o \
 cg.o \
 cg_sub.o \
 cglib.o \
@@ -40,7 +39,6 @@ fnl.o \
 forces.o \
 fromscra.o \
 greenf.o \
-gsmesh.o \
 gtable.o \
 guess.o \
 init.o \
@@ -61,7 +59,6 @@ move_electrons.o \
 nl_base.o \
 nlcc.o \
 nl.o \
-optical.o \
 ortho_base.o \
 ortho.o \
 para.o \

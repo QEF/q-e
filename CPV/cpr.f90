@@ -123,7 +123,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE cell_base,                ONLY : s_to_r, r_to_s
   USE phase_factors_module,     ONLY : strucf
   USE cpr_subroutines,          ONLY : print_lambda, print_atomic_var, &
-                                       ions_cofmsub, elec_fakekine
+                                       ions_cofmsub
   USE wannier_subroutines,      ONLY : wannier_startup, wf_closing_options, &
                                        ef_enthalpy
   USE restart_file,             ONLY : readfile, writefile
@@ -135,6 +135,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE orthogonalize,            ONLY : ortho
   USE orthogonalize_base,       ONLY : updatc
   USE control_flags,            ONLY : force_pairing
+  USE wave_functions,           ONLY : elec_fakekine
   !
   IMPLICIT NONE
   !
@@ -276,9 +277,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !=======================================================================
      !
      IF( force_pairing ) THEN
-          c0(:,iupdwn(2):nbsp,1,1)       =     c0(:,1:nupdwn(2),1,1)
-          cm(:,iupdwn(2):nbsp,1,1)       =     cm(:,1:nupdwn(2),1,1)
-         phi(:,iupdwn(2):nbsp,1,1)       =    phi(:,1:nupdwn(2),1,1)
+          c0(:,iupdwn(2):nbsp,1)       =     c0(:,1:nupdwn(2),1)
+          cm(:,iupdwn(2):nbsp,1)       =     cm(:,1:nupdwn(2),1)
+         phi(:,iupdwn(2):nbsp,1)       =    phi(:,1:nupdwn(2),1)
       lambda(1:nupdwn(2),1:nupdwn(2), 2) = lambda(1:nupdwn(2),1:nupdwn(2), 1)
       lambda(nudx, nudx, 2) = 0.d0
      ENDIF
@@ -418,14 +419,14 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         IF ( tortho ) THEN
            !
-           CALL ortho( eigr, cm(:,:,1,1), phi(:,:,1,1), &
+           CALL ortho( eigr, cm(:,:,1), phi(:,:,1), &
                        lambda, bigr, iter, ccc, bephi, becp )
            !
         ELSE
            !
            CALL gram( vkb, bec, nkb, cm, ngw, nbsp )
            !
-           IF ( iprsta > 4 ) CALL dotcsc( eigr, cm )
+           IF ( iprsta > 4 ) CALL dotcsc( eigr, cm, ngw, nbsp )
            !
         END IF
         !
@@ -447,9 +448,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         END IF
         !
         IF( force_pairing ) THEN
-              c0(:,iupdwn(2):nbsp,1,1)       =     c0(:,1:nupdwn(2),1,1)
-              cm(:,iupdwn(2):nbsp,1,1)       =     cm(:,1:nupdwn(2),1,1)
-             phi(:,iupdwn(2):nbsp,1,1)       =    phi(:,1:nupdwn(2),1,1)
+              c0(:,iupdwn(2):nbsp,1)       =     c0(:,1:nupdwn(2),1)
+              cm(:,iupdwn(2):nbsp,1)       =     cm(:,1:nupdwn(2),1)
+             phi(:,iupdwn(2):nbsp,1)       =    phi(:,1:nupdwn(2),1)
           lambda(1:nupdwn(2),1:nupdwn(2), 2) = lambda(1:nupdwn(2),1:nupdwn(2), 1)
           lambda(nudx, nudx, 2) = 0.d0
         ENDIF
@@ -459,7 +460,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         IF ( tpre ) &
            CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .TRUE. )
         !
-        IF ( iprsta >= 3 ) CALL dotcsc( eigr, cm )
+        IF ( iprsta >= 3 ) CALL dotcsc( eigr, cm, ngw, nbsp )
         !
      END IF
      !
@@ -677,7 +678,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         IF ( tcg ) THEN
           !
-          CALL writefile( ndw, h, hold ,nfi, c0(:,:,1,1), c0old, taus, tausm,  &
+          CALL writefile( ndw, h, hold ,nfi, c0(:,:,1), c0old, taus, tausm,  &
                           vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,     &
                           vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
                           xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, &
@@ -685,7 +686,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            !
         ELSE
            !
-           CALL writefile( ndw, h, hold, nfi, c0(:,:,1,1), cm(:,:,1,1), taus,  &
+           CALL writefile( ndw, h, hold, nfi, c0(:,:,1), cm(:,:,1), taus,  &
                            tausm, vels, velsm, acc,  lambda, lambdam, xnhe0,   &
                            xnhem, vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm,&
                            xnhh0, xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass,&
@@ -795,7 +796,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   IF ( tcg ) THEN
      !
-     CALL writefile( ndw, h, hold, nfi, c0(:,:,1,1), c0old, taus, tausm, vels, &
+     CALL writefile( ndw, h, hold, nfi, c0(:,:,1), c0old, taus, tausm, vels, &
                      velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe, xnhp0,   &
                      xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm, vnhh,     &
                      velh, ecutp, ecutw, delt, pmass, ibrav, celldm, fion,     &
@@ -803,7 +804,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
      !
   ELSE
      !
-     CALL writefile( ndw, h, hold, nfi, c0(:,:,1,1), cm(:,:,1,1), taus, tausm, &
+     CALL writefile( ndw, h, hold, nfi, c0(:,:,1), cm(:,:,1), taus, tausm, &
                      vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe,    &
                      xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm,    &
                      vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, celldm,     &
@@ -827,6 +828,7 @@ SUBROUTINE terminate_run()
   USE cg_module,         ONLY : tcg, print_clock_tcg
   USE mp,                ONLY : mp_report
   USE print_out_module,  ONLY : printacc
+  USE control_flags,     ONLY : use_task_groups
   !
   IMPLICIT NONE
   !
@@ -861,7 +863,21 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'fftw' )
   CALL print_clock( 'fftb' )
   CALL print_clock( 'rsg' )
-  if (tcg) call print_clock_tcg()
+  !
+  IF (tcg) call print_clock_tcg()
+  !
+  IF( use_task_groups ) THEN
+     !
+     CALL print_clock( 'tg_invfftw')
+     CALL print_clock( 'tg_fftw')
+     CALL print_clock( '1D' )
+     CALL print_clock( '2D' )
+     CALL print_clock( 'SCATTER' )
+     CALL print_clock( 'ALLTOALL' )
+     CALL print_clock( 'ortho1' )
+     CALL print_clock( 'iterate' )
+     !
+  END IF
   !
   CALL mp_report()
   !

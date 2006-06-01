@@ -97,7 +97,7 @@ CONTAINS
 
 !  ----------------------------------------------
 
-   SUBROUTINE kohn_sham(ispin, c, cdesc, eforces )
+   SUBROUTINE kohn_sham(ispin, c, cdesc, eforces, nupdwn )
 
         ! ...   declare modules
         USE kinds
@@ -105,7 +105,6 @@ CONTAINS
         USE wave_constrains,  ONLY: update_lambda
         USE wave_types,       ONLY: wave_descriptor
         USE electrons_module, ONLY: nb_l
-        USE electrons_base,   ONLY: nupdwn
 
         IMPLICIT NONE
 
@@ -113,6 +112,7 @@ CONTAINS
         COMPLEX(DP), INTENT(INOUT) ::  c(:,:)
         TYPE (wave_descriptor), INTENT(IN) :: cdesc
         INTEGER, INTENT(IN) :: ispin
+        INTEGER, INTENT(IN) :: nupdwn(:)
         COMPLEX(DP) :: eforces(:,:)
 
         ! ...   declare other variables
@@ -151,148 +151,143 @@ CONTAINS
 
 !  ----------------------------------------------
 
-      SUBROUTINE ks_states(cf, wfill, ce, wempt, occ, vpot, eigr, bec )
+      SUBROUTINE ks_states(cf, wfill, occ, vpot, eigr, bec )
 
         ! ...   declare modules
         USE kinds
         USE mp_global, ONLY: intra_image_comm
         USE io_global, ONLY: ionode
         USE io_global, ONLY: stdout
-        USE wave_types, ONLY: wave_descriptor
+        USE wave_types, ONLY: wave_descriptor, wave_descriptor_init
         USE forces
-        USE brillouin, ONLY: kpoints, kp
         USE pseudo_projector, ONLY: projector
-        USE control_flags, ONLY: timing, force_pairing
-        USE electrons_base, ONLY: nupdwn, iupdwn
+        USE control_flags, ONLY: force_pairing
+        USE electrons_base, ONLY: nupdwn, iupdwn, nspin
+        USE electrons_module, ONLY: n_emp, nupdwn_emp, iupdwn_emp
+        USE empty_states, ONLY: readempty
 
         IMPLICIT NONE
 
         ! ...   declare subroutine arguments
-        COMPLEX(DP), INTENT(INOUT) :: cf(:,:,:,:), ce(:,:,:,:)
-        TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
+        COMPLEX(DP), INTENT(INOUT) :: cf(:,:,:)
+        TYPE (wave_descriptor), INTENT(IN) :: wfill
         COMPLEX(DP)  ::  eigr(:,:)
-        REAL(DP), INTENT(IN)  ::  occ(:,:,:), bec(:,:)
+        REAL(DP), INTENT(IN)  ::  occ(:,:), bec(:,:)
         REAL (DP) ::  vpot(:,:)
 
         ! ...   declare other variables
-        INTEGER ::  i, ik, ib, nk, ig, ngw, nb_g, nb_l, ispin, nspin, iks
+        INTEGER ::  i, ib, ig, ngw, nb_g, nb_l, ispin, iks
         INTEGER ::  ispin_wfc
-        INTEGER ::  nupdwn_emp( wfill%nspin )
-        INTEGER ::  iupdwn_emp( wfill%nspin )
         LOGICAL  :: tortho = .TRUE.
+        LOGICAL  :: exist 
         CHARACTER(LEN=4) :: nom
         CHARACTER(LEN=256) :: file_name
         CHARACTER(LEN=10), DIMENSION(2) :: spin_name
-        REAL(DP) :: s0, s1, s2, s3
 
         COMPLEX(DP), ALLOCATABLE :: eforce(:,:)
-        REAL(DP), ALLOCATABLE :: fi(:,:)
+        COMPLEX(DP), ALLOCATABLE :: ce(:,:,:)
+        REAL(DP), ALLOCATABLE :: fi(:)
 
-        REAL(DP), EXTERNAL :: cclock
         CHARACTER (LEN=6), EXTERNAL :: int_to_char
 
+        TYPE (wave_descriptor) :: wempt  ! wave function descriptor for empty states
 
         ! ...   end of declarations
 
-        nk    = wfill%nkl
-        nspin = wfill%nspin
+        ngw  = wfill%ngwl
 
-        IF( .NOT. wfill%gamma ) &
-          CALL errore( ' ks_states ', ' only gamma is implemented ', 1 )
+        IF( tksout ) THEN
 
-        IF( timing ) s0 = cclock()
+           DO ispin = 1, nspin
 
-        DO ispin = 1, nspin
+             nb_l = wfill%nbl( ispin )
 
-          ngw  = wfill%ngwl
-          nb_l = wfill%nbl( ispin )
+             ispin_wfc = ispin
+             IF( force_pairing ) ispin_wfc = 1
 
-          ispin_wfc = ispin
-          IF( force_pairing ) ispin_wfc = 1
+             IF( nb_l > 0 ) THEN
 
-          IF( nb_l > 0 ) THEN
+               ALLOCATE(  eforce( ngw,  nb_l ) )
 
-            ALLOCATE(  eforce( ngw,  nb_l ) )
+               CALL dforce_all( ispin, cf(:,:,ispin_wfc), occ(:,ispin), eforce, &
+                 vpot(:,ispin), eigr, bec, nupdwn, iupdwn )
 
-            CALL dforce_all( ispin, cf(:,:,1,ispin_wfc), occ(:,1,ispin), eforce, &
-              vpot(:,ispin), eigr, bec, nupdwn, iupdwn )
+               CALL kohn_sham( ispin, cf(:,:,ispin_wfc), wfill, eforce, nupdwn )
 
-            CALL kohn_sham( ispin, cf(:,:,1,ispin_wfc), wfill, eforce )
+               DEALLOCATE( eforce )
 
-            DEALLOCATE( eforce )
+             END IF
 
-          END IF
+           END DO
 
-          IF( tksout_emp ) THEN
+        END IF
 
-            ngw  = wempt%ngwl
+
+        IF( tksout_emp ) THEN
+
+          CALL wave_descriptor_init( wempt, ngw, wfill%ngwt, nupdwn_emp, nupdwn_emp, &
+                                 1, 1, nspin, 'gamma' , wfill%gzero )
+  
+          ALLOCATE( ce( ngw,  n_emp, nspin ) )
+
+          exist = readempty( ce, wempt )
+
+          IF( .NOT. exist ) &
+             CALL errore( ' ks_states ', ' empty states file not found', 1 )
+
+          DO ispin = 1, nspin
+
             nb_l = wempt%nbl( ispin )
-
-            nupdwn_emp = nb_l
-            iupdwn_emp(1) = 1
-            IF( nspin == 2 ) iupdwn_emp(2) = 1+nb_l
 
             IF( nb_l > 0 ) THEN
 
-              ALLOCATE( fi( nb_l, nk ) )
-              DO ik = 1, nk
-                fi( 1:nb_l, ik ) = 2.0d0 / nspin
-              END DO
+              ALLOCATE( fi( nb_l ) )
+              fi( 1:nb_l ) = 2.0d0 / nspin
 
               ALLOCATE(  eforce( ngw,  nb_l ) )
 
-              CALL dforce_all( ispin, ce(:,:,1,ispin), fi(:,1), eforce, &
+              CALL dforce_all( ispin, ce(:,:,ispin), fi(:), eforce, &
                                vpot(:,ispin), eigr, bec, nupdwn_emp, iupdwn_emp )
 
-              CALL kohn_sham( ispin, ce(:,:,1,ispin), wempt, eforce )
+              CALL kohn_sham( ispin, ce(:,:,ispin), wempt, eforce, nupdwn_emp )
 
               DEALLOCATE( eforce )
               DEALLOCATE( fi )
 
             END IF
 
-          END IF
+          END DO
 
-        END DO
-
-        IF( timing ) s1 = cclock()
+        END IF
 
         IF( tksout .OR. tksout_emp ) THEN
           CALL print_all_states(cf, wfill, ce, wempt )
         END IF
 
-        IF( timing ) THEN
-          s2 = cclock()
-          IF( ionode ) THEN
-            WRITE( stdout,fmt="(3X,'time for KS ortho     = ',F8.2)") (s1-s0)
-            WRITE( stdout,fmt="(3X,'time for KS print out = ',F8.2)") (s2-s1)
-          END IF
+        IF( tksout_emp ) THEN
+          DEALLOCATE( ce )
         END IF
-        ! ...
+
         RETURN
-        ! ...
+        !
       END SUBROUTINE ks_states
 
 !  ----------------------------------------------
 
       SUBROUTINE print_all_states(cf, wfill, ce, wempt )
 
-        ! ...   declare modules
-        USE kinds
-        USE mp_global, ONLY: intra_image_comm
-        USE io_global, ONLY: ionode
-        USE io_global, ONLY: stdout
-        USE wave_types, ONLY: wave_descriptor
-        USE forces
-        USE brillouin, ONLY: kpoints, kp
-        USE pseudo_projector, ONLY: projector
-        USE control_flags, ONLY: timing, force_pairing
+        USE kinds,         ONLY: DP
+        USE mp_global,     ONLY: intra_image_comm
+        USE io_global,     ONLY: ionode
+        USE io_global,     ONLY: stdout
+        USE wave_types,    ONLY: wave_descriptor
+        USE control_flags, ONLY: force_pairing
 
         IMPLICIT NONE
 
         ! ...   declare subroutine arguments
-        COMPLEX(DP), INTENT(INOUT) :: cf(:,:,:,:), ce(:,:,:,:)
-        TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
+        COMPLEX(DP),            INTENT(INOUT) :: cf(:,:,:), ce(:,:,:)
+        TYPE (wave_descriptor), INTENT(IN)    :: wfill, wempt
 
         ! ...   declare other variables
         INTEGER ::  i, ispin, iks, ispin_wfc
@@ -326,7 +321,7 @@ CONTAINS
                 IF( ( iks > 0 ) .AND. ( iks <= wfill%nbt( ispin ) ) ) THEN
                   file_name = TRIM( ks_file ) // &
                             & trim(spin_name(ispin)) // trim( int_to_char( iks ) )
-                  CALL print_ks_states( cf(:,iks,1,ispin_wfc), file_name )
+                  CALL print_ks_states( cf(:,iks,ispin_wfc), file_name )
                 END IF
               END DO
             END IF
@@ -336,7 +331,7 @@ CONTAINS
                 IF( ( iks > 0 ) .AND. ( iks <= wempt%nbt( ispin ) ) ) THEN
                   file_name = TRIM( ks_emp_file ) // &
                             & trim(spin_name(ispin)) // trim( int_to_char( iks ) )
-                  CALL print_ks_states( ce(:,iks,1,ispin), file_name )
+                  CALL print_ks_states( ce(:,iks,ispin), file_name )
                 END IF
               END DO
             END IF
@@ -352,53 +347,48 @@ CONTAINS
 !  ----------------------------------------------
 
 
-      SUBROUTINE ks_states_force_pairing(cf, wfill, ce, wempt, occ, vpot, eigr, bec )
+      SUBROUTINE ks_states_force_pairing(cf, wfill, occ, vpot, eigr, bec )
 
         ! ...   declare modules
         USE kinds
         USE mp_global, ONLY: intra_image_comm
         USE io_global, ONLY: ionode
         USE io_global, ONLY: stdout
-        USE wave_types, ONLY: wave_descriptor
+        USE wave_types, ONLY: wave_descriptor, wave_descriptor_init
         USE forces
-        USE brillouin, ONLY: kpoints, kp
         USE pseudo_projector, ONLY: projector
-        USE control_flags, ONLY: timing
         USE electrons_base, ONLY: iupdwn, nupdwn, nspin
+        USE electrons_module, ONLY: n_emp, iupdwn_emp, nupdwn_emp
+        USE empty_states, ONLY: readempty
 
         IMPLICIT NONE
 
         ! ...   declare subroutine arguments
-        COMPLEX(DP), INTENT(INOUT) :: cf(:,:,:,:), ce(:,:,:,:)
-        TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
+        COMPLEX(DP), INTENT(INOUT) :: cf(:,:,:)
+        TYPE (wave_descriptor), INTENT(IN) :: wfill
         COMPLEX(DP)  ::  eigr(:,:)
-        REAL(DP), INTENT(IN)  ::  occ(:,:,:), bec(:,:)
+        REAL(DP), INTENT(IN)  ::  occ(:,:), bec(:,:)
         REAL (DP) ::  vpot(:,:)
 
+        COMPLEX(DP), ALLOCATABLE :: ce(:,:,:)
+
         ! ...   declare other variables
-        INTEGER ::  i, ik, ib, nk, ig, ngw, nb_g, nb_l, iks, nb, ispin
+        INTEGER ::  i, ib, ig, ngw, nb_g, nb_l, iks, nb, ispin
         LOGICAL  :: tortho = .TRUE.
+        LOGICAL  :: exist
         CHARACTER(LEN=4) :: nom
         CHARACTER(LEN=256) :: file_name
         CHARACTER(LEN=10), DIMENSION(2) :: spin_name
-        REAL(DP) :: s0, s1, s2, s3
 
         COMPLEX(DP), ALLOCATABLE :: eforce(:,:,:)
-        REAL(DP), ALLOCATABLE :: fi(:,:)
-        INTEGER ::  nupdwn_emp( wfill%nspin )
-        INTEGER ::  iupdwn_emp( wfill%nspin )
+        REAL(DP), ALLOCATABLE :: fi(:)
 
         CHARACTER (LEN=6), EXTERNAL :: int_to_char
-        REAL(DP), EXTERNAL :: cclock
 
+        TYPE (wave_descriptor) :: wempt  ! wave function descriptor for empty states
 
         ! ...   end of declarations
         !  ----------------------------------------------
-
-        nk    = wfill%nkl
-
-        IF( .NOT. wfill%gamma ) &
-          CALL errore( ' ks_states_force_pairing ', ' only gamma is implemented ', 1 )
 
         IF( nspin == 1 ) &
           CALL errore(' ks_states_forced_pairing ',' inconsistent nspin ', 1)
@@ -406,56 +396,61 @@ CONTAINS
         IF( nupdwn(1) < nupdwn(2) ) &
           CALL errore(' ks_states_forced_pairing ',' inconsistent nupdwn ', 1)
 
-        IF( timing ) s0 = cclock()
-
         ngw  = wfill%ngwl
         nb   = nupdwn(1)
 
-        IF( nb > 0 ) THEN
+        IF( tksout_emp ) THEN
 
-          ALLOCATE(  eforce( ngw, nb, 2 ) )
+          IF( nb > 0 ) THEN
 
-          CALL dforce_all( 1, cf(:,:,1,1), occ(:,1,1), eforce(:,:,1), vpot(:,1), eigr, bec, nupdwn, iupdwn )
-          CALL dforce_all( 2, cf(:,:,1,1), occ(:,1,2), eforce(:,:,2), vpot(:,2), eigr, bec, nupdwn, iupdwn )
+            ALLOCATE(  eforce( ngw, nb, 2 ) )
 
-          DO i = 1, nupdwn(2)
-            eforce(:,i,1) = occ(i,1,1) * eforce(:,i,1) + occ(i,1,2) * eforce(:,i,2)
-          END DO
-          DO i = nupdwn(2)+1, nupdwn(1)
-            eforce(:,i,1) = occ(i,1,1) * eforce(:,i,1)
-          END DO
+            CALL dforce_all( 1, cf(:,:,1), occ(:,1), eforce(:,:,1), vpot(:,1), eigr, bec, nupdwn, iupdwn )
+            CALL dforce_all( 2, cf(:,:,1), occ(:,2), eforce(:,:,2), vpot(:,2), eigr, bec, nupdwn, iupdwn )
 
-          CALL kohn_sham( 1, cf(:,:,1,1), wfill, eforce(:,:,1) )
+            DO i = 1, nupdwn(2)
+              eforce(:,i,1) = occ(i,1) * eforce(:,i,1) + occ(i,2) * eforce(:,i,2)
+            END DO
+            DO i = nupdwn(2)+1, nupdwn(1)
+              eforce(:,i,1) = occ(i,1) * eforce(:,i,1)
+            END DO
 
-          DEALLOCATE( eforce )
+            CALL kohn_sham( 1, cf(:,:,1), wfill, eforce(:,:,1), nupdwn )
+
+            DEALLOCATE( eforce )
+
+          END IF
 
         END IF
 
         IF( tksout_emp ) THEN
 
-          ngw  = wempt%ngwl
+          CALL wave_descriptor_init( wempt, ngw, wfill%ngwt, nupdwn_emp, nupdwn_emp, &
+                                 1, 1, nspin, 'gamma' , wfill%gzero )
+
           nb_l = wempt%nbl( 1 )
 
-          nupdwn_emp = nb_l
-          iupdwn_emp(1) = 1
-          IF( nspin == 2 ) iupdwn_emp(2) = 1+nb_l
+          ALLOCATE( ce( ngw, n_emp, nspin ) )
+
+          exist = readempty( ce, wempt )
+
+          IF( .NOT. exist ) &
+             CALL errore( ' ks_states ', ' empty states file not found', 1 )
 
           IF( nb_l > 0 ) THEN
 
-            ALLOCATE( fi( nb_l, nk ) )
-            DO ik = 1, nk
-              fi( 1:nb_l, ik ) = 2.0d0
-            END DO
+            ALLOCATE( fi( nb_l ) )
+            fi = 2.0d0
 
             ALLOCATE(  eforce( ngw,  nb_l, 1 ))
 
-            CALL dforce_all( 1, ce(:,:,1,1), fi(:,1), eforce(:,:,1), vpot(:,1), eigr, bec, nupdwn_emp, iupdwn_emp )
+            CALL dforce_all( 1, ce(:,:,1), fi(:), eforce(:,:,1), vpot(:,1), eigr, bec, nupdwn_emp, iupdwn_emp )
 
-            CALL kohn_sham( 1, ce(:,:,1,1), wempt, eforce(:,:,1) )
+            CALL kohn_sham( 1, ce(:,:,1), wempt, eforce(:,:,1), nupdwn_emp )
 
-            CALL dforce_all( 2, ce(:,:,1,2), fi(:,1), eforce(:,:,1), vpot(:,2), eigr, bec, nupdwn_emp, iupdwn_emp )
+            CALL dforce_all( 2, ce(:,:,2), fi(:), eforce(:,:,1), vpot(:,2), eigr, bec, nupdwn_emp, iupdwn_emp )
 
-            CALL kohn_sham( 2, ce(:,:,1,2), wempt, eforce(:,:,1) )
+            CALL kohn_sham( 2, ce(:,:,2), wempt, eforce(:,:,1), nupdwn_emp )
 
             DEALLOCATE( eforce )
             DEALLOCATE( fi )
@@ -464,18 +459,12 @@ CONTAINS
 
         END IF
 
-        IF( timing ) s1 = cclock()
-
         IF( tksout .OR. tksout_emp ) THEN
           CALL print_all_states(cf, wfill, ce, wempt )
         END IF
 
-        IF( timing ) THEN
-          s2 = cclock()
-          IF( ionode ) THEN
-            WRITE( stdout,fmt="(3X,'time for KS ortho     = ',F8.2)") (s1-s0)
-            WRITE( stdout,fmt="(3X,'time for KS print out = ',F8.2)") (s2-s1)
-          END IF
+        IF( tksout_emp ) THEN
+          DEALLOCATE( ce )
         END IF
         !
         RETURN

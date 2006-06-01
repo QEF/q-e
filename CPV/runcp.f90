@@ -41,8 +41,9 @@
 
 ! ...   declare modules
       USE kinds
-      USE electrons_module, ONLY:  pmss, eigs, nb_l
+      USE electrons_module, ONLY:  eigs, nb_l
       USE cp_electronic_mass, ONLY: emass
+      USE cp_main_variables,  ONLY: ema0bg
       USE wave_functions, ONLY : cp_kinetic_energy
       USE wave_base, ONLY: hpsi
       USE cell_module, ONLY: boxdimensions
@@ -51,7 +52,6 @@
       USE wave_types, ONLY: wave_descriptor
       USE pseudo_projector, ONLY: projector
       USE wave_constrains, ONLY: update_lambda
-      USE reciprocal_space_mesh, ONLY: gkmask_l
       USE uspp,             ONLY : vkb, nkb
 
       IMPLICIT NONE
@@ -59,21 +59,21 @@
 ! ...   declare subroutine arguments
 
       LOGICAL :: ttprint, tortho, tsde
-      COMPLEX(DP) :: cm(:,:,:,:), c0(:,:,:,:), cp(:,:,:,:)
+      COMPLEX(DP) :: cm(:,:,:), c0(:,:,:), cp(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       COMPLEX(DP)  ::  eigr(:,:)
-      REAL(DP), INTENT(IN)  ::  fi(:,:,:)
+      REAL(DP), INTENT(IN)  ::  fi(:,:)
       REAL(DP), INTENT(IN)  ::  bec(:,:)
       TYPE (boxdimensions), INTENT(IN)  ::  ht
       REAL (DP) ::  vpot(:,:)
-      REAL(DP) :: ei(:,:,:)
+      REAL(DP) :: ei(:,:)
       REAL(DP) :: timerd, timeorto
       REAL(DP) :: ekinc(:)
       REAL(DP), INTENT(IN) :: fccc
 
 ! ...   declare other variables
       REAL(DP) :: s1, s2, s3, s4
-      INTEGER :: ik, nx, nb_lx, ierr, nkl, is
+      INTEGER :: nx, nb_lx, ierr, is
 
       COMPLEX(DP), ALLOCATABLE :: cgam(:,:,:)
       REAL(DP),    ALLOCATABLE :: gam(:,:,:)
@@ -108,10 +108,7 @@
       IF( ttprint ) THEN
         DO is = 1, cdesc%nspin
           nx = cdesc%nbt( is )
-          nkl  = cdesc%nkl
-          DO ik = 1, nkl
-              CALL eigs( nx, gam(:,:,is), cgam(:,:,is), tortho, fi(:,ik,is), ei(:,ik,is), cdesc%gamma )
-          END DO
+          CALL eigs( nx, gam(:,:,is), tortho, fi(:,is), ei(:,is) )
         END DO
       END IF
 
@@ -121,10 +118,10 @@
       !  Orthogonalize the new wave functions "cp"
 
       IF( tortho ) THEN
-         CALL ortho(c0, cp, cdesc, pmss, emass)
+         CALL ortho(c0, cp, cdesc )
       ELSE
          DO is = 1, cdesc%nspin
-            CALL gram( vkb, bec, nkb, cp(1,1,1,is), SIZE(cp,1), cdesc%nbt( is ) )
+            CALL gram( vkb, bec, nkb, cp(1,1,is), SIZE(cp,1), cdesc%nbt( is ) )
          END DO
       END IF
 
@@ -134,7 +131,7 @@
       !  Compute fictitious kinetic energy of the electrons at time t
 
       DO is = 1, cdesc%nspin
-        ekinc(is) = cp_kinetic_energy( is, cp(:,:,:,is), cm(:,:,:,is), cdesc, pmss, delt)
+        ekinc(is) = cp_kinetic_energy( is, cp(:,:,is), cm(:,:,is), cdesc, ema0bg, emass, delt)
       END DO
 
       DEALLOCATE( cgam, gam, STAT=ierr)
@@ -165,9 +162,9 @@
 
 ! ...   declare modules
       USE kinds
-      USE electrons_module, ONLY:  pmss
       USE electrons_base, ONLY:  nupdwn, iupdwn
       USE cp_electronic_mass, ONLY: emass
+      USE cp_main_variables,  ONLY: ema0bg
       USE wave_base, ONLY: wave_steepest, wave_verlet
       USE time_step, ONLY: delt
       USE forces, ONLY: dforce
@@ -175,18 +172,17 @@
       USE wave_constrains, ONLY: update_lambda
       USE control_flags, ONLY: tsde
       USE pseudo_projector, ONLY: projector
-      USE reciprocal_space_mesh, ONLY: gkmask_l
 
       IMPLICIT NONE
 
 ! ...   declare subroutine arguments
 
-      COMPLEX(DP) :: cm(:,:,:,:), c0(:,:,:,:), cp(:,:,:,:)
+      COMPLEX(DP) :: cm(:,:,:), c0(:,:,:), cp(:,:,:)
       COMPLEX(DP) :: cgam(:,:,:)
       REAL(DP)    :: gam(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       COMPLEX(DP) :: eigr(:,:)
-      REAL(DP), INTENT(IN)  ::  fi(:,:,:)
+      REAL(DP), INTENT(IN)  ::  fi(:,:)
       REAL (DP) ::  vpot(:,:)
       REAL (DP), INTENT(IN) ::  bec(:,:)
       REAL(DP), INTENT(IN) :: fccc
@@ -238,7 +234,7 @@
 
       svar1   = 2.d0 * fccc
       svar2   = 1.d0 - svar1
-      svar3( 1:ngw ) = delt * delt / pmss( 1:ngw ) * fccc
+      svar3( 1:ngw ) = delt * delt * ema0bg / emass * fccc
 
 
       DO is = 1, cdesc%nspin
@@ -251,31 +247,30 @@
 
           DO i = 1, nb, 2
 
-            !WRITE( 6, * ) 'DEBUG = ', fi(i,1,is), fi(i+1,1,is)
-            CALL dforce( i, is, c0(:,:,1,is), fi(:,1,is), c2, c3, vpot(:,is), eigr, bec, nupdwn, iupdwn )
+            CALL dforce( i, is, c0(:,:,is), fi(:,is), c2, c3, vpot(:,is), eigr, bec, nupdwn, iupdwn )
 
             IF( tlam ) THEN
-               CALL update_lambda( i, gam( :, :,is), c0(:,:,1,is), cdesc, c2 )
-               CALL update_lambda( i+1, gam( :, :,is), c0(:,:,1,is), cdesc, c3 )
+               CALL update_lambda( i, gam( :, :,is), c0(:,:,is), cdesc, c2 )
+               CALL update_lambda( i+1, gam( :, :,is), c0(:,:,is), cdesc, c3 )
             END IF
 
             IF( iflag == 2 ) THEN
-              c0(:,i,1,is) = cp(:,i,1,is)
-              c0(:,i+1,1,is) = cp(:,i+1,1,is)
+              c0(:,i,is) = cp(:,i,is)
+              c0(:,i+1,is) = cp(:,i+1,is)
             END IF
 
             IF ( ttsde ) THEN
-              CALL wave_steepest( cp(:,i,1,is), c0(:,i,1,is), svar3, c2 )
-              CALL wave_steepest( cp(:,i+1,1,is), c0(:,i+1,1,is), svar3, c3 )
+              CALL wave_steepest( cp(:,i,is), c0(:,i,is), svar3, c2 )
+              CALL wave_steepest( cp(:,i+1,is), c0(:,i+1,is), svar3, c3 )
             ELSE
-              cp(:,i,1,is) = cm(:,i,1,is)
-              cp(:,i+1,1,is) = cm(:,i+1,1,is)
-              CALL wave_verlet( cp(:,i,1,is), c0(:,i,1,is), svar1, svar2, svar3, c2 )
-              CALL wave_verlet( cp(:,i+1,1,is), c0(:,i+1,1,is), svar1, svar2, svar3, c3 )
+              cp(:,i,is) = cm(:,i,is)
+              cp(:,i+1,is) = cm(:,i+1,is)
+              CALL wave_verlet( cp(:,i,is), c0(:,i,is), svar1, svar2, svar3, c2 )
+              CALL wave_verlet( cp(:,i+1,is), c0(:,i+1,is), svar1, svar2, svar3, c3 )
             END IF
 
-            IF( cdesc%gzero ) cp(1,i,1,is)  = DBLE( cp(1,i,1,is) )
-            IF( cdesc%gzero ) cp(1,i+1,1,is)= DBLE( cp(1,i+1,1,is) )
+            IF( cdesc%gzero ) cp(1,i,is)  = DBLE( cp(1,i,is) )
+            IF( cdesc%gzero ) cp(1,i+1,is)= DBLE( cp(1,i+1,is) )
 
           END DO
 
@@ -283,23 +278,23 @@
 
             nb = nx
 
-            CALL dforce( nx, is, c0(:,:,1,is), fi(:,1,is), c2, c3, vpot(:,is), eigr, bec, nupdwn, iupdwn )
+            CALL dforce( nx, is, c0(:,:,is), fi(:,is), c2, c3, vpot(:,is), eigr, bec, nupdwn, iupdwn )
 
             IF( tlam ) THEN
-               CALL update_lambda( nb, gam( :, :,is), c0(:,:,1,is), cdesc, c2 )
+               CALL update_lambda( nb, gam( :, :,is), c0(:,:,is), cdesc, c2 )
             END IF
 
             IF( iflag == 2 ) THEN
-              c0(:,nb,1,is) = cp(:,nb,1,is)
+              c0(:,nb,is) = cp(:,nb,is)
             END IF
 
             IF ( ttsde ) THEN
-              CALL wave_steepest( cp(:,nb,1,is), c0(:,nb,1,is), svar3, c2 )
+              CALL wave_steepest( cp(:,nb,is), c0(:,nb,is), svar3, c2 )
             ELSE
-              cp(:,nb,1,is) = cm(:,nb,1,is)
-              CALL wave_verlet( cp(:,nb,1,is), c0(:,nb,1,is), svar1, svar2, svar3, c2 )
+              cp(:,nb,is) = cm(:,nb,is)
+              CALL wave_verlet( cp(:,nb,is), c0(:,nb,is), svar1, svar2, svar3, c2 )
             END IF
-            IF( cdesc%gzero ) cp(1,nb,1,is) = DBLE( cp(1,nb,1,is) )
+            IF( cdesc%gzero ) cp(1,nb,is) = DBLE( cp(1,nb,is) )
 
           END IF
 
@@ -332,9 +327,10 @@
       USE kinds
       USE mp_global, ONLY: intra_image_comm
       USE mp, ONLY: mp_sum
-      USE electrons_module, ONLY: pmss, eigs, nb_l
+      USE electrons_module, ONLY: eigs, nb_l
       USE electrons_base, ONLY: iupdwn, nupdwn, nspin
       USE cp_electronic_mass, ONLY: emass
+      USE cp_main_variables,  ONLY: ema0bg
       USE wave_functions, ONLY : cp_kinetic_energy
       USE wave_base, ONLY: wave_steepest, wave_verlet
       USE wave_base, ONLY: hpsi
@@ -346,7 +342,6 @@
       USE constants, ONLY: au
       USE io_global, ONLY: ionode
       USE wave_constrains, ONLY: update_lambda
-      USE reciprocal_space_mesh, ONLY: gkmask_l
       USE uspp,             ONLY : vkb, nkb
       use reciprocal_vectors, only : gstart
 
@@ -355,13 +350,13 @@
 ! ...   declare subroutine arguments
 
       LOGICAL :: ttprint, tortho, tsde
-      COMPLEX(DP) :: cm(:,:,:,:), c0(:,:,:,:), cp(:,:,:,:)
+      COMPLEX(DP) :: cm(:,:,:), c0(:,:,:), cp(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       COMPLEX(DP)  ::  eigr(:,:)
-      REAL(DP), INTENT(INOUT) ::  fi(:,:,:)
+      REAL(DP), INTENT(INOUT) ::  fi(:,:)
       TYPE (boxdimensions), INTENT(IN)  ::  ht
       REAL (DP) ::  vpot(:,:)
-      REAL(DP) :: ei(:,:,:)
+      REAL(DP) :: ei(:,:)
       REAL(DP), INTENT(IN) :: bec(:,:)
       REAL(DP) :: timerd, timeorto
       REAL(DP) :: ekinc(:)
@@ -370,9 +365,9 @@
 ! ...   declare other variables
       REAL(DP) :: s3, s4
       REAL(DP) ::  svar1, svar2
-      INTEGER :: i, ik,ig, nx, ngw, nb, j, nb_g, nb_lx, ierr, nkl, ibl
+      INTEGER :: i, ig, nx, ngw, nb, j, nb_g, nb_lx, ierr, ibl
       INTEGER :: ispin_wfc, n_unp 
-      REAL(DP), ALLOCATABLE :: occup(:,:), occdown(:,:), occsum(:)
+      REAL(DP), ALLOCATABLE :: occup(:), occdown(:), occsum(:)
       REAL(DP) :: intermed, intermed2, ei_unp_mem, ei_unp_wfc
       COMPLEX(DP) ::  intermed3, intermed4
 
@@ -384,7 +379,7 @@
       COMPLEX(DP), ALLOCATABLE :: cgam(:,:)
       REAL(DP),    ALLOCATABLE :: svar3(:)
       REAL(DP),    ALLOCATABLE :: gam(:,:)
-      REAL(DP),    ALLOCATABLE :: ei_t(:,:,:)
+      REAL(DP),    ALLOCATABLE :: ei_t(:,:)
 
       REAL(DP), EXTERNAL :: cclock
 
@@ -394,10 +389,6 @@
       IF( nspin == 1 ) &
         CALL errore(' runcp_forced_pairing ',' inconsistent nspin ', 1)
 
-      nkl  = cdesc%nkl
-      IF( nkl /= SIZE( fi, 2 ) ) &
-        CALL errore(' runcp_forced_pairing ',' inconsistent number of kpoints ', 1)
-
       ngw  = cdesc%ngwl
 
       ALLOCATE(c2(ngw), c3(ngw), c4(ngw), c5(ngw), svar3(ngw), STAT=ierr)
@@ -406,7 +397,7 @@
 
       svar1   = 2.d0 * fccc
       svar2   = 1.d0 - svar1
-      svar3(1:ngw) = delt * delt / pmss(1:ngw) * fccc
+      svar3(1:ngw) = delt * delt * ema0bg / emass * fccc
 
       ekinc    = 0.0d0
       timerd   = 0.0d0
@@ -433,20 +424,17 @@
       END IF
       IF( ierr /= 0 ) CALL errore(' runcp_forced_pairing ', ' allocating gam, prod ', ierr)
 
-      ALLOCATE( occup(nx,nkl), occdown(nx,nkl), STAT=ierr )
+      ALLOCATE( occup(nx), occdown(nx), STAT=ierr )
       if ( ierr/=0 ) CALL errore(' runcp_forced_pairing ', 'allocating occup, occdown', ierr)
 
-      ALLOCATE (ei_t(nx,nkl,2), STAT=ierr)
+      ALLOCATE (ei_t(nx,2), STAT=ierr)
       IF( ierr /= 0 ) CALL errore(' runcp_forced_pairing ', 'allocating iei_t', ierr)
 
       occup   = 0.D0
       occdown = 0.D0
-      occup(  1:nupdwn(1), 1:nkl )  = fi( 1:nupdwn(1), 1:nkl, 1 )
-      occdown( 1:nupdwn(2), 1:nkl ) = fi( 1:nupdwn(2), 1:nkl, 2 ) 
+      occup(  1:nupdwn(1) )  = fi( 1:nupdwn(1), 1 )
+      occdown( 1:nupdwn(2) ) = fi( 1:nupdwn(2), 2 ) 
 
-      !  ciclo sui punti K
-
-      KAPPA: DO ik = 1, nkl
 
         s4 = cclock()
 
@@ -455,31 +443,31 @@
 
         DO i = 1, nb, 2
           !
-          CALL dforce( i, 2, c0(:,:,1,1), fi(:,1,1), c2, c3, vpot(:,1), eigr, bec, nupdwn, iupdwn )
-          CALL dforce( i, 2, c0(:,:,1,1), fi(:,1,1), c4, c5, vpot(:,2), eigr, bec, nupdwn, iupdwn )
+          CALL dforce( i, 2, c0(:,:,1), fi(:,1), c2, c3, vpot(:,1), eigr, bec, nupdwn, iupdwn )
+          CALL dforce( i, 2, c0(:,:,1), fi(:,1), c4, c5, vpot(:,2), eigr, bec, nupdwn, iupdwn )
           !
-          c2 = occup(i  , ik)* (c2 + c4)
-          c3 = occup(i+1, ik)* (c3 + c5)
+          c2 = occup(i  )* (c2 + c4)
+          c3 = occup(i+1)* (c3 + c5)
 
           IF( ttprint ) then
             !
-            CALL update_lambda( i  , gam( :, :), c0(:,:,ik,1), cdesc, c2 )
-            CALL update_lambda( i+1, gam( :, :), c0(:,:,ik,1), cdesc, c3 )
+            CALL update_lambda( i  , gam( :, :), c0(:,:,1), cdesc, c2 )
+            CALL update_lambda( i+1, gam( :, :), c0(:,:,1), cdesc, c3 )
 
-          END IF ! ttprint
-
-          IF ( tsde ) THEN
-             CALL wave_steepest( cp(:,i,ik,1)  , c0(:,i,ik,1)  , svar3, c2 )
-             CALL wave_steepest( cp(:,i+1,ik,1), c0(:,i+1,ik,1), svar3, c3 )
-          ELSE
-            cp(:,i  ,ik,1) = cm(:,i  ,ik,1)
-            cp(:,i+1,ik,1) = cm(:,i+1,ik,1)
-            CALL wave_verlet( cp(:,i  ,ik,1), c0(:,i  ,ik,1), svar1, svar2, svar3, c2 )
-            CALL wave_verlet( cp(:,i+1,ik,1), c0(:,i+1,ik,1), svar1, svar2, svar3, c3 )
           END IF
 
-          IF( cdesc%gzero ) cp(1,i  ,ik,1)  = DBLE( cp(1,i  ,ik,1) )
-          IF( cdesc%gzero ) cp(1,i+1,ik,1)  = DBLE( cp(1,i+1,ik,1) )
+          IF ( tsde ) THEN
+             CALL wave_steepest( cp(:,i,1)  , c0(:,i,1)  , svar3, c2 )
+             CALL wave_steepest( cp(:,i+1,1), c0(:,i+1,1), svar3, c3 )
+          ELSE
+            cp(:,i  ,1) = cm(:,i  ,1)
+            cp(:,i+1,1) = cm(:,i+1,1)
+            CALL wave_verlet( cp(:,i  ,1), c0(:,i  ,1), svar1, svar2, svar3, c2 )
+            CALL wave_verlet( cp(:,i+1,1), c0(:,i+1,1), svar1, svar2, svar3, c3 )
+          END IF
+
+          IF( cdesc%gzero ) cp(1,i  ,1)  = DBLE( cp(1,i  ,1) )
+          IF( cdesc%gzero ) cp(1,i+1,1)  = DBLE( cp(1,i+1,1) )
 
         END DO ! bande
 
@@ -488,32 +476,32 @@
           !
           nb = n_unp - 1
           !
-          CALL dforce( nb, 2, c0(:,:,1,1), fi(:,1,1), c2, c3, vpot(:,1), eigr, bec, nupdwn, iupdwn )
-          CALL dforce( nb, 2, c0(:,:,1,1), fi(:,1,2), c4, c5, vpot(:,2), eigr, bec, nupdwn, iupdwn )
+          CALL dforce( nb, 2, c0(:,:,1), fi(:,1), c2, c3, vpot(:,1), eigr, bec, nupdwn, iupdwn )
+          CALL dforce( nb, 2, c0(:,:,1), fi(:,2), c4, c5, vpot(:,2), eigr, bec, nupdwn, iupdwn )
 
-          c2 = occup(nb , ik)* (c2 + c4)
+          c2 = occup(nb)* (c2 + c4)
 
           IF( ttprint ) THEN
-            CALL update_lambda( nb, gam( :, :), c0(:,:,ik,1), cdesc, c2 )
+            CALL update_lambda( nb, gam( :, :), c0(:,:,1), cdesc, c2 )
           END IF
 
           IF ( tsde ) THEN
-             CALL wave_steepest( cp(:,nb,ik,1), c0(:,nb,ik,1), svar3, c2 )
+             CALL wave_steepest( cp(:,nb,1), c0(:,nb,1), svar3, c2 )
           ELSE
-             cp(:,nb,ik,1) = cm(:,nb,ik,1)
-             CALL wave_verlet( cp(:,nb,ik,1), c0(:,nb,ik,1), svar1, svar2, svar3, c2 )
+             cp(:,nb,1) = cm(:,nb,1)
+             CALL wave_verlet( cp(:,nb,1), c0(:,nb,1), svar1, svar2, svar3, c2 )
           END IF
-          IF( cdesc%gzero ) cp(1,nb,ik,1) = DBLE( cp(1,nb,ik,1) )
+          IF( cdesc%gzero ) cp(1,nb,1) = DBLE( cp(1,nb,1) )
         END IF
 
         !
-        CALL dforce( n_unp, 1, c0(:,:,1,1), fi(:,1,1), c2, c3, vpot(:,1), eigr, bec, nupdwn, iupdwn )
+        CALL dforce( n_unp, 1, c0(:,:,1), fi(:,1), c2, c3, vpot(:,1), eigr, bec, nupdwn, iupdwn )
 
-        intermed  = -2.d0 * sum( c2 * conjg( c0(:, n_unp, ik, 1 ) ) )
+        intermed  = -2.d0 * sum( c2 * conjg( c0(:, n_unp, 1 ) ) )
         IF ( gstart == 2 ) THEN
-           intermed  = intermed + 1.d0 * c2(1) * conjg( c0( 1, n_unp, ik, 1 ) )
+           intermed  = intermed + 1.d0 * c2(1) * conjg( c0( 1, n_unp, 1 ) )
          END IF
-        intermed3 = sum(c0(:,n_unp, ik, 1) * conjg( c0(:, n_unp, ik, 1)))
+        intermed3 = sum(c0(:,n_unp, 1) * conjg( c0(:, n_unp, 1)))
 
         CALL mp_sum ( intermed, intra_image_comm )
         CALL mp_sum ( intermed3, intra_image_comm )
@@ -525,50 +513,48 @@
         !write(6,*) '  <psi|psi> = ', intermed3, '  ei_unp(au) = ', intermed
 
         IF ( tsde ) THEN
-           CALL wave_steepest( cp( :, n_unp, ik, 1 ), c0( :, n_unp, ik, 1 ), svar3, c2 )
+           CALL wave_steepest( cp( :, n_unp, 1 ), c0( :, n_unp, 1 ), svar3, c2 )
         ELSE
-          cp( :, n_unp, ik, 1 ) = cm( :, n_unp, ik, 1 )
-          CALL wave_verlet( cp( :, n_unp, ik, 1 ), c0( :, n_unp, ik, 1 ), svar1, svar2, svar3, c2 )
+          cp( :, n_unp, 1 ) = cm( :, n_unp, 1 )
+          CALL wave_verlet( cp( :, n_unp, 1 ), c0( :, n_unp, 1 ), svar1, svar2, svar3, c2 )
         END IF
-        IF( cdesc%gzero ) cp( 1, n_unp, ik, 1 ) = DBLE( cp( 1, n_unp, ik, 1 ) )
+        IF( cdesc%gzero ) cp( 1, n_unp, 1 ) = DBLE( cp( 1, n_unp, 1 ) )
 
 
         IF( ttprint ) THEN
 
             ALLOCATE( occsum( SIZE( fi, 1 ) ) )
-            occsum(:) = occup(:,ik) + occdown(:,ik)
+            occsum(:) = occup(:) + occdown(:)
 
             if( cdesc%gamma ) then
-               CALL eigs( nupdwn(2), gam, cgam, tortho, occsum, ei(:,ik,1), cdesc%gamma )
+               CALL eigs( nupdwn(2), gam, tortho, occsum, ei(:,1) )
             else
-               CALL eigs( nupdwn(2), gam, cgam, tortho, occsum, ei(:,ik,1), cdesc%gamma )
+               CALL eigs( nupdwn(2), gam, tortho, occsum, ei(:,1) )
             endif
             DEALLOCATE( occsum )
             DO i = 1, nupdwn(2)
-               ei( i, ik, 2 ) = ei( i , ik, 1)
+               ei( i, 2 ) = ei( i , 1)
             END DO
 
-            ei( nupdwn(1), ik, 1) = ei_unp_mem
-            ei( nupdwn(1), ik, 2) = 0.d0
+            ei( nupdwn(1), 1) = ei_unp_mem
+            ei( nupdwn(1), 2) = 0.d0
 
-            WRITE(6,*) 'SIC EIGENVALUES(eV), dwn and up electrons Kpoint',ik
-            WRITE(6,1004) ( ei( i, ik, 2 ) * au, i = 1, nupdwn(2) )
-            WRITE(6,1005) ( ei( i, ik, 1 ) * au, i = 1, nupdwn(1) )
+            WRITE(6,*) 'SIC EIGENVALUES(eV), dwn and up electrons Kpoint',1
+            WRITE(6,1004) ( ei( i, 2 ) * au, i = 1, nupdwn(2) )
+            WRITE(6,1005) ( ei( i, 1 ) * au, i = 1, nupdwn(1) )
 
 1004        FORMAT(/,3X,'SIC EIGENVALUES DW=',3X,10F8.2)
 1005        FORMAT(/,3X,'SIC EIGENVALUES UP=',3X,10F8.2)
 
         ENDIF
 
-      END DO KAPPA
-
       s3 = cclock()
       timerd = timerd + s3 - s4
 
       IF( tortho ) THEN
-         CALL ortho( 1, c0(:,:,:,1), cp(:,:,:,1), cdesc, pmss, emass )
+         CALL ortho( 1, c0(:,:,1), cp(:,:,1), cdesc )
       ELSE
-         CALL gram( vkb, bec, nkb, cp(1,1,1,1), SIZE(cp,1), cdesc%nbt( 1 ) )
+         CALL gram( vkb, bec, nkb, cp(1,1,1), SIZE(cp,1), cdesc%nbt( 1 ) )
       END IF
 
 
@@ -577,8 +563,8 @@
 
       !  Compute fictitious kinetic energy of the electrons at time t
 
-      ekinc(1) = cp_kinetic_energy( 1, cp(:,:,:,1), cm(:,:,:,1), cdesc, pmss, delt)
-      ekinc(2) = cp_kinetic_energy( 2, cp(:,:,:,1), cm(:,:,:,1), cdesc, pmss, delt)
+      ekinc(1) = cp_kinetic_energy( 1, cp(:,:,1), cm(:,:,1), cdesc, ema0bg, emass, delt)
+      ekinc(2) = cp_kinetic_energy( 2, cp(:,:,1), cm(:,:,1), cdesc, ema0bg, emass, delt)
 
 
       DEALLOCATE( ei_t, svar3, c2, c3, c4, c5, cgam, gam, occup, occdown, STAT=ierr)

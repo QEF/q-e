@@ -40,7 +40,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE cpr_subroutines,      ONLY : compute_stress
   USE ensemble_dft,         ONLY : compute_entropy2
   USE efield_module,        ONLY : berry_energy, berry_energy2
-  USE runcp_module,         ONLY : runcp_uspp, runcp_uspp_force_pairing
+  USE runcp_module,         ONLY : runcp_uspp, runcp_uspp_force_pairing, runcp_uspp_bgl
   USE wave_constrains,      ONLY : interpolate_lambda
   USE gvecw,                ONLY : ngw
   USE orthogonalize_base,   ONLY : calphi
@@ -76,7 +76,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
           CALL get_wannier_center( tfirst, cm, bec, becdr, eigr, &
                                    eigrb, taub, irb, ibrav, b1, b2, b3 )
      !
-     CALL rhoofr( nfi, c0(:,:,1,1), irb, eigrb, bec, &
+     CALL rhoofr( nfi, c0(:,:,1), irb, eigrb, bec, &
                      becsum, rhor, rhog, rhos, enl, ekin )
      !
      !
@@ -104,14 +104,14 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      !
      IF( tefield )  THEN
         !
-        CALL berry_energy( enb, enbi, bec, c0(:,:,1,1), fion )
+        CALL berry_energy( enb, enbi, bec, c0(:,:,1), fion )
         !
         etot = etot + enb + enbi
         !
      END IF
      IF( tefield2 )  THEN
         !
-        CALL berry_energy2( enb, enbi, bec, c0(:,:,1,1), fion )
+        CALL berry_energy2( enb, enbi, bec, c0(:,:,1), fion )
         !
         etot = etot + enb + enbi
         !
@@ -135,13 +135,18 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      IF( force_pairing ) THEN
         !
         CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, &
-                      rhos, bec, c0(:,:,1,1), cm(:,:,1,1), ei_unp )
+                      rhos, bec, c0(:,:,1), cm(:,:,1), ei_unp )
 !        lambda( nudx, nudx, 1) = ei_unp
         !
      ELSE
         !
+#if defined __BGL
+        CALL runcp_uspp_bgl( nfi, fccc, ccc, ema0bg, dt2bye, &
+                      rhos, bec, c0(:,:,1), cm(:,:,1) )
+#else
         CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, &
-                      rhos, bec, c0(:,:,1,1), cm(:,:,1,1) )
+                      rhos, bec, c0(:,:,1), cm(:,:,1) )
+#endif
         !
      ENDIF
      !

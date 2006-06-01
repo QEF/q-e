@@ -28,16 +28,18 @@
 
         LOGICAL :: band_first = .TRUE.
 
-        INTEGER :: n_emp       =  0  ! number of empty states
+        INTEGER :: n_emp               =  0  ! number of empty states
+        INTEGER :: nupdwn_emp(nspinx)  =  0  ! number of empty states
+        INTEGER :: iupdwn_emp(nspinx)  =  0  ! number of empty states
 
         INTEGER :: nb_l(nspinx)    =  0  ! local number of states ( for each spin components )
         INTEGER :: n_emp_l(nspinx) =  0
+        !
         INTEGER, ALLOCATABLE :: ib_owner(:)
         INTEGER, ALLOCATABLE :: ib_local(:)
 
-        REAL(DP), ALLOCATABLE :: ei(:,:,:)
-        REAL(DP), ALLOCATABLE :: ei_emp(:,:,:)
-        REAL(DP), ALLOCATABLE :: pmss(:)
+        REAL(DP), ALLOCATABLE :: ei(:,:)
+        REAL(DP), ALLOCATABLE :: ei_emp(:,:)
 
 !  ...  Fourier acceleration
 
@@ -48,11 +50,10 @@
         END INTERFACE
 
         PUBLIC :: electrons_setup, eigs, cp_eigs
-        PUBLIC :: pmss_init, occn_init, bmeshset, occn_info
+        PUBLIC :: occn_init, bmeshset, occn_info
         PUBLIC :: deallocate_electrons, fermi_energy
-        PUBLIC :: pmss, n_emp, emass, ei_emp, n_emp_l, ib_owner, ib_local, nb_l
-        PUBLIC :: ei, nspin, nelt, nupdwn
-        PUBLIC :: nbnd
+        PUBLIC :: n_emp, ei_emp, n_emp_l, ib_owner, ib_local, nb_l
+        PUBLIC :: ei, nupdwn_emp, iupdwn_emp
         PUBLIC :: print_eigenvalues
 
 !
@@ -63,24 +64,6 @@
 !=----------------------------------------------------------------------------=!
 
 
-   SUBROUTINE pmss_init( ema0bg, ngw )
-     !
-     !  Calculate: PMSS = EMASS * (2PI/Alat)^2 * |G|^2 / ECUTMASS 
-     !
-     REAL(DP), INTENT(IN) :: ema0bg(:)
-     INTEGER,   INTENT(IN) :: ngw
-     INTEGER :: ierr
-     !
-     ALLOCATE( pmss( ngw ), STAT=ierr)
-     IF( ierr/=0 ) CALL errore( ' pmss_init ',' allocating pmss ', ierr)
-     !
-     pmss = emass / ema0bg
-     !     
-     RETURN 
-   END SUBROUTINE pmss_init
-
-!  ----------------------------------------------
-!  ----------------------------------------------
 
    SUBROUTINE occn_init( occ )
 
@@ -89,28 +72,21 @@
 
      USE io_global, ONLY: stdout, ionode
 
-     REAL(DP) :: occ(:,:,:)
-     INTEGER   :: ik, i, nk, ispin
+     REAL(DP) :: occ(:,:)
+     INTEGER  :: i, ispin
 
      IF( SIZE( occ, 1 ) < nbnd ) &
        CALL errore(' occn_init ',' wrong dimension ', 1)
-     IF( SIZE( occ, 3 ) < nspin ) &
+     IF( SIZE( occ, 2 ) < nspin ) &
        CALL errore(' occn_init ',' wrong dimension ', 2)
 
-     nk  = SIZE( occ, 2 )
      occ = 0.0d0
      !     
      IF( nspin == 1 ) THEN
-       DO ik = 1, nk
-         occ( 1:nbnd, ik, 1 ) = f( 1:nbnd )
-       END DO
+       occ( 1:nbnd, 1 ) = f( 1:nbnd )
      ELSE IF( nspin == 2 ) THEN
-       DO ik = 1, nk
-         occ( 1:nupdwn(1), ik, 1 ) = f( 1:nupdwn(1) )
-       END DO
-       DO ik = 1, nk
-         occ( 1:nupdwn(2), ik, 2 ) = f( iupdwn(2) : ( iupdwn(2) + nupdwn(2) - 1 ) )
-       END DO
+       occ( 1:nupdwn(1), 1 ) = f( 1:nupdwn(1) )
+       occ( 1:nupdwn(2), 2 ) = f( iupdwn(2) : ( iupdwn(2) + nupdwn(2) - 1 ) )
      ELSE
        WRITE( stdout, * ) ' nspin = ', nspin
        CALL errore(' occn_init ',' nspin not implemented ', 3)
@@ -126,18 +102,18 @@
      !
      USE io_global, ONLY: stdout, ionode
      !
-     REAL(DP) :: occ(:,:,:)
-     INTEGER   :: ik, i, nk, ispin
+     REAL(DP) :: occ(:,:)
+     INTEGER  :: i, ispin
      !
      IF( ionode ) THEN
        WRITE( stdout, fmt="(3X,'Occupation number from init')" )
        IF( nspin == 1 ) THEN
          WRITE( stdout, fmt = " (3X, 'nbnd = ', I5 ) " ) nbnd
-         WRITE( stdout, fmt = " (3X,10F5.2)" ) ( occ( i, 1, 1 ), i = 1, nbnd )
+         WRITE( stdout, fmt = " (3X,10F5.2)" ) ( occ( i, 1 ), i = 1, nbnd )
        ELSE
          DO ispin = 1, nspin
            WRITE( stdout, fmt = " (3X,'spin = ', I3, ' nbnd = ', I5 ) " ) ispin, nupdwn( ispin )
-           WRITE( stdout, fmt = " (3X,10F5.2)" ) ( occ( i, 1, ispin ), i = 1, nupdwn( ispin ) )
+           WRITE( stdout, fmt = " (3X,10F5.2)" ) ( occ( i, ispin ), i = 1, nupdwn( ispin ) )
          END DO
        END IF
      END IF
@@ -202,12 +178,11 @@
 !  ----------------------------------------------
 
 
-   SUBROUTINE electrons_setup( n_emp_ , emass_inp, ecutmass_inp, nkp )
+   SUBROUTINE electrons_setup( n_emp_ , emass_inp, ecutmass_inp )
 
      IMPLICIT NONE
      INTEGER, INTENT(IN) :: n_emp_
      REAL(DP),  INTENT(IN) :: emass_inp, ecutmass_inp
-     INTEGER, INTENT(IN) :: nkp
      INTEGER :: ierr, i
  
 
@@ -215,18 +190,25 @@
        CALL errore( ' electrons_setup ', ' electrons_base not initialized ', 1 )
 
      n_emp = n_emp_
+     nupdwn_emp(1) = n_emp
+     iupdwn_emp(1) = 1
+
+     IF( nspin == 2 ) THEN
+        nupdwn_emp(2) = n_emp
+        iupdwn_emp(2) = 1 + n_emp
+     END IF
 
      IF( n_emp > nbndx ) &
        CALL errore( ' electrons_setup ', ' too many empty states ', 1 )
 
      IF( ALLOCATED( ei ) ) DEALLOCATE( ei )
-     ALLOCATE( ei( nbnd, nkp, nspin ), STAT=ierr)
+     ALLOCATE( ei( nbnd, nspin ), STAT=ierr)
      IF( ierr/=0 ) CALL errore( ' electrons ',' allocating ei ',ierr)
      ei = 0.0_DP
 
      IF( ALLOCATED( ei_emp ) ) DEALLOCATE( ei_emp )
      IF( n_emp > 0 ) THEN
-       ALLOCATE( ei_emp( n_emp, nkp, nspin ), STAT=ierr)
+       ALLOCATE( ei_emp( n_emp, nspin ), STAT=ierr)
        IF( ierr/=0 ) CALL errore( ' electrons ',' allocating ei_emp ',ierr)
        ei_emp = 0.0_DP
      END IF
@@ -255,38 +237,34 @@
       INTEGER,  INTENT(IN) :: nfi
       REAL(DP), INTENT(IN) :: tps
       !
-      INTEGER :: ik, i, j, nkpt
-      !
-      nkpt  = 1
+      INTEGER :: i, j, ik
       !
       IF ( tfile ) THEN
           WRITE(ei_unit,30) nfi, tps
       END IF
       !
-      DO ik = 1, nkpt
+      ik = 1
+      !
+      DO j = 1, nspin
          !
-         DO j = 1, nspin
-            !
-            WRITE( stdout,1002) ik, j
-            WRITE( stdout,1004) ( ei( i, ik, j ) * au, i = 1, nupdwn(j) )
-            !
+         WRITE( stdout,1002) ik, j
+         WRITE( stdout,1004) ( ei( i, j ) * au, i = 1, nupdwn(j) )
+         !
+         IF( n_emp .GT. 0 ) THEN
+            WRITE( stdout,1005) ik, j
+            WRITE( stdout,1004) ( ei_emp( i, j ) * au , i = 1, n_emp )
+            WRITE( stdout,1006) ( ei_emp( 1, j ) - ei( nupdwn(j), j ) ) * au
+         END IF
+         !
+         IF( tfile ) THEN
+            WRITE(ei_unit,1010) ik, j
+            WRITE(ei_unit,1020) ( ei( i, j ) * au, i = 1, nupdwn(j) )
             IF( n_emp .GT. 0 ) THEN
-               WRITE( stdout,1005) ik, j
-               WRITE( stdout,1004) ( ei_emp( i, ik, j ) * au , i = 1, n_emp )
-               WRITE( stdout,1006) ( ei_emp( 1, ik, j ) - ei( nupdwn(j), ik, j ) ) * au
+               WRITE(ei_unit,1011) ik, j
+               WRITE(ei_unit,1020) ( ei_emp( i, j ) * au , i = 1, n_emp )
+               WRITE(ei_unit,1021) ( ei_emp( 1, j ) - ei( nupdwn(j), j ) ) * au
             END IF
-            !
-            IF( tfile ) THEN
-               WRITE(ei_unit,1010) ik, j
-               WRITE(ei_unit,1020) ( ei( i, ik, j ) * au, i = 1, nupdwn(j) )
-               IF( n_emp .GT. 0 ) THEN
-                  WRITE(ei_unit,1011) ik, j
-                  WRITE(ei_unit,1020) ( ei_emp( i, ik, j ) * au , i = 1, n_emp )
-                  WRITE(ei_unit,1021) ( ei_emp( 1, ik, j ) - ei( nupdwn(j), ik, j ) ) * au
-               END IF
-            END IF
-            !
-         END DO
+         END IF
          !
       END DO
       !
@@ -307,33 +285,34 @@
 
 !=======================================================================
 
-        SUBROUTINE rceigs( nei, gam, cgam, tortho, f, ei, gamma_symmetry )
+        SUBROUTINE rceigs( nei, gam, tortho, f, ei )
 
           USE mp, ONLY: mp_sum
           USE mp_global, ONLY: me_image, nproc_image, intra_image_comm
           USE energies, only: eig_total_energy
           USE constants, only: au
 
-!OMPUTES:IF (THORTO) 
-!           COMPUTES THE EIGENVALUES OF THE COMPLEX HERMITIAN MATRIX GAM
-!           THE EIGENVALUES OF GAMMA ARE PRINTED OUT IN ELECTRON VOLTS.
-!        ELSE
-!           THE EIGENVALUES ARE CALCULATED IN MAIN AS <PSI|H|PSI>, PASSED
-!           IN ei() AND PRINTED OUT IN EELECTRON VOLTS.
-!        END IF
+          !OMPUTES:IF (THORTO) 
+          !           COMPUTES THE EIGENVALUES OF THE COMPLEX HERMITIAN MATRIX GAM
+          !           THE EIGENVALUES OF GAMMA ARE PRINTED OUT IN ELECTRON VOLTS.
+          !        ELSE
+          !           THE EIGENVALUES ARE CALCULATED IN MAIN AS <PSI|H|PSI>, PASSED
+          !           IN ei() AND PRINTED OUT IN EELECTRON VOLTS.
+          !        END IF
 !
       
 
-! ... ARGUMENTS
-          REAL(DP), INTENT(IN) :: f(:)
-          LOGICAL, INTENT(IN) :: tortho, gamma_symmetry
-          REAL(DP), INTENT(INOUT)     ::  gam(:,:)
-          COMPLEX(DP),  INTENT(INOUT) :: cgam(:,:)
-          REAL(DP)  ::  ei(:)
-          INTEGER, INTENT(IN) :: nei
+          ! ... ARGUMENTS
+
+          REAL(DP), INTENT(IN)    :: f(:)
+          LOGICAL,  INTENT(IN)    :: tortho
+          REAL(DP), INTENT(INOUT) :: gam(:,:)
+          REAL(DP)                :: ei(:)
+          INTEGER,  INTENT(IN)    :: nei
 
       
-! ... LOCALS
+          ! ... LOCALS
+
           INTEGER :: i, nrl, n, ierr
           INTEGER,     ALLOCATABLE :: index(:)
           REAL(DP),   ALLOCATABLE :: ftmp(:)
@@ -341,12 +320,9 @@
           REAL(DP),   ALLOCATABLE :: vv(:,:)
           REAL(DP),   ALLOCATABLE :: aux(:)
           REAL(DP),    ALLOCATABLE :: g(:,:)
-          COMPLEX(DP), ALLOCATABLE :: cg(:,:)
-          COMPLEX(DP), ALLOCATABLE :: caux(:)
-!
-! ... SUBROUTINE BODY
-!    
-
+          !
+          ! ... SUBROUTINE BODY
+          !    
           IF( nei < 1 ) THEN
             IF( SIZE( ei ) > 1 ) ei = 0.0d0
             RETURN
@@ -356,11 +332,7 @@
           nrl = n / nproc_image
           IF( me_image < MOD( n, nproc_image ) ) nrl = nrl + 1
 
-          IF ( gamma_symmetry ) THEN
-            IF( n > SIZE( gam, 2 ) ) CALL errore( ' eigs ',' n and gam inconsistent dimensions ',n )
-          ELSE
-            IF( n > SIZE( cgam, 2 ) ) CALL errore( ' eigs ',' n and cgam inconsistent dimensions ',n )
-          END IF
+          IF( n > SIZE( gam, 2 ) ) CALL errore( ' eigs ',' n and gam inconsistent dimensions ',n )
 
           IF( n < 1 ) CALL errore( ' eigs ',' n wrong value ',n )
           IF( n > SIZE( f ) ) CALL errore( ' eigs ',' n and f inconsistent dimensions ',n )
@@ -372,92 +344,51 @@
           ftmp = f( 1:n )
           WHERE ( ftmp < 1.d-6 ) ftmp = 1.d-6
 
-          IF ( gamma_symmetry ) THEN
-            ALLOCATE( g(nrl,n), STAT=ierr)
-            IF( ierr/=0 ) CALL errore( ' eigs ',' allocating g ',ierr )
-            g = gam(1:nrl,1:n)
-          ELSE
-            ALLOCATE(cg(nrl,n), STAT=ierr)
-            IF( ierr/=0 ) CALL errore( ' eigs ',' allocating cg ',ierr )
-            cg = cgam(1:nrl,1:n)
-          END IF
+          ALLOCATE( g(nrl,n), STAT=ierr)
+          IF( ierr/=0 ) CALL errore( ' eigs ',' allocating g ',ierr )
+          g = gam(1:nrl,1:n)
 
           IF (tortho) THEN
 
-            IF( gamma_symmetry ) THEN
-              IF ( ( nproc_image < 2 ) .OR. ( n < nproc_image ) ) THEN
+             IF ( ( nproc_image < 2 ) .OR. ( n < nproc_image ) ) THEN
                 ALLOCATE( aux( n*(n+1)/2 ), STAT=ierr)
                 IF( ierr/=0 ) CALL errore( ' eigs ',' allocating aux ',ierr )
-                ! debug
-                !WRITE( 6, * ) 
-                !WRITE( 6, * ) '  <psi|H|psi> '
-                !DO i = 1, SIZE( g, 2 )
-                !  WRITE( 6, fmt='(10D12.4)' ) g( :, i ) 
-                !END DO
-                !WRITE( 6, * ) 
                 CALL rpackgam( g, ftmp(:), aux )
                 CALL dspev_drv( 'N', 'L', n, aux, ei, g, n )
                 DEALLOCATE(aux, STAT=ierr)
                 IF( ierr/=0 ) CALL errore( ' eigs ',' deallocating aux ',ierr )
-              ELSE
+             ELSE
                 CALL rpackgam( g, ftmp(:) )
                 ALLOCATE( vv(nrl,n), STAT=ierr)
                 IF( ierr/=0 ) CALL errore( ' eigs ',' allocating vv ',ierr )
                 CALL pdspev_drv('N', g, nrl, ei, vv, nrl, nrl, n, nproc_image, me_image)
                 DEALLOCATE( vv, STAT=ierr)
                 IF( ierr/=0 ) CALL errore( ' eigs ',' deallocating vv ',ierr )
-              END IF
-            ELSE 
-              IF ( (nproc_image < 2) .OR. (n < nproc_image) ) THEN
-                ALLOCATE(caux(n*(n+1)/2), STAT=ierr)
-                IF( ierr/=0 ) CALL errore( ' eigs ',' allocating caux ',ierr )
-                CALL cpackgam( cg, ftmp(:), caux )
-                CALL zhpev_drv( 'N', 'L', n, caux, ei, cg, n )
-                DEALLOCATE(caux, STAT=ierr)
-                IF( ierr/=0 ) CALL errore( ' eigs ',' deallocating caux ',ierr )
-              ELSE
-                ALLOCATE(caux(1), STAT=ierr)
-                IF( ierr/=0 ) CALL errore( ' eigs ',' allocating caux ',ierr )
-                CALL cpackgam( cg, ftmp(:) )
-                CALL pzhpev_drv('N', cg, nrl, ei, caux, nrl, nrl, n, nproc_image, me_image)
-                DEALLOCATE(caux, STAT=ierr)
-                IF( ierr/=0 ) CALL errore( ' eigs ',' deallocating caux ',ierr )
-              END IF
-            END IF
+             END IF
 
           ELSE
 
-            ALLOCATE(index(n), STAT=ierr)
-            IF( ierr/=0 ) CALL errore( ' eigs ',' allocating index ',ierr )
-            ei = 0.0_DP
-            DO i = 1, n
-              IF ( ib_owner(i) == me_image ) THEN
-                IF ( gamma_symmetry ) THEN
-                  ei(i) = gam(ib_local(i),i) / ftmp(i)
-                ELSE
-                  ei(i) = DBLE(cgam(ib_local(i),i)) / ftmp(i)
+             ALLOCATE(index(n), STAT=ierr)
+             IF( ierr/=0 ) CALL errore( ' eigs ',' allocating index ',ierr )
+             ei = 0.0_DP
+             DO i = 1, n
+                IF ( ib_owner(i) == me_image ) THEN
+                   ei(i) = gam(ib_local(i),i) / ftmp(i)
                 END IF
-              END IF
-            END DO
-            CALL mp_sum(ei,intra_image_comm)
-            index(1) = 0
-            CALL hpsort(n, ei, index)
-            DEALLOCATE(index, STAT=ierr)
-            IF( ierr/=0 ) CALL errore( ' eigs ',' deallocating index ',ierr )
+             END DO
+             CALL mp_sum(ei,intra_image_comm)
+             index(1) = 0
+             CALL hpsort(n, ei, index)
+             DEALLOCATE(index, STAT=ierr)
+             IF( ierr/=0 ) CALL errore( ' eigs ',' deallocating index ',ierr )
 
           END IF
 
           DEALLOCATE(ftmp, STAT=ierr)
           IF( ierr/=0 ) CALL errore( ' eigs ',' deallocating ftmp ',ierr )
-          IF (gamma_symmetry) THEN
-            DEALLOCATE(g, STAT=ierr)
-            IF( ierr/=0 ) CALL errore( ' eigs ',' deallocating g ',ierr )
-            ! gam(1:nrl,1:n) = g
-          ELSE
-            DEALLOCATE(cg, STAT=ierr)
-            IF( ierr/=0 ) CALL errore( ' eigs ',' deallocating cg ',ierr )
-            ! cgam(1:nrl,1:n) cg
-          END IF
+          !
+          DEALLOCATE(g, STAT=ierr)
+          IF( ierr/=0 ) CALL errore( ' eigs ',' deallocating g ',ierr )
 
           RETURN
         END SUBROUTINE rceigs
@@ -467,10 +398,6 @@
 
         SUBROUTINE deallocate_electrons
           INTEGER :: ierr
-          IF(ALLOCATED(pmss))     THEN
-            DEALLOCATE(pmss, STAT=ierr)
-            IF( ierr/=0 ) CALL errore( ' deallocate_electrons ',' deallocating pmss ',ierr )
-          END IF
           IF(ALLOCATED(ei))       THEN
             DEALLOCATE(ei, STAT=ierr)
             IF( ierr/=0 ) CALL errore( ' deallocate_electrons ',' deallocating ei ',ierr )
@@ -597,15 +524,14 @@
 !  ----------------------------------------------
 !  END manual
 
-      USE brillouin, ONLY: kpoints, kp
       USE io_global, ONLY: stdout
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      REAL(DP) :: occ(:,:,:)
+      REAL(DP) :: occ(:,:)
       REAL(DP) ef, qtot, temp, sume
-      REAL(DP) eig(:,:,:), wke(:,:,:)
+      REAL(DP) eig(:,:), wke(:,:)
       REAL(DP), PARAMETER  :: tol = 1.d-10
       INTEGER,   PARAMETER  :: nitmax = 100
       INTEGER ne, nk, nspin
@@ -620,25 +546,25 @@
 !  end of declarations
 !  ----------------------------------------------
 
-      nspin = SIZE( occ, 3)
-      nk    = SIZE( occ, 2)
+      nspin = SIZE( occ, 2)
+      nk    = 1
       ne    = SIZE( occ, 1)
       sumq=0.d0
       sume=0.d0
-      emin=eig(1,1,1)
-      emax=eig(1,1,1)
+      emin=eig(1,1)
+      emax=eig(1,1)
       fac=2.d0
       IF (nspin.EQ.2) fac=1.d0
 
       DO ik=1,nk
         DO ispin=1,nspin
           DO ie=1,ne
-            wke(ie,ik,ispin) = kp%weight(ik) * fac
-            occ(ie,ik,ispin) = fac
-            sumq=sumq+wke(ie,ik,ispin)
-            sume=sume+wke(ie,ik,ispin)*eig(ie,ik,ispin)
-            emin=MIN(emin,eig(ie,ik,ispin))
-            emax=MAX(emax,eig(ie,ik,ispin))
+            wke(ie,ispin) = fac
+            occ(ie,ispin) = fac
+            sumq=sumq+wke(ie,ispin)
+            sume=sume+wke(ie,ispin)*eig(ie,ispin)
+            emin=MIN(emin,eig(ie,ispin))
+            emax=MAX(emax,eig(ie,ispin))
           END DO
         END DO
       END DO
@@ -660,10 +586,10 @@
         DO ik = 1, nk
           DO ispin = 1, nspin
             DO ie = 1, ne
-              wke(ie,ik,ispin) = fac / 2.d0 * kp%weight(ik) * stepf((eig(ie,ik,ispin)-ef)/t)
-              occ(ie,ik,ispin) = fac / 2.d0 * stepf((eig(ie,ik,ispin)-ef)/t)
-              sumq = sumq + wke(ie,ik,ispin)
-              sume = sume + wke(ie,ik,ispin) * eig(ie,ik,ispin)
+              wke(ie,ispin) = fac / 2.d0 * stepf((eig(ie,ispin)-ef)/t)
+              occ(ie,ispin) = fac / 2.d0 * stepf((eig(ie,ispin)-ef)/t)
+              sumq = sumq + wke(ie,ispin)
+              sume = sume + wke(ie,ispin) * eig(ie,ispin)
             END DO
           END DO
         END DO

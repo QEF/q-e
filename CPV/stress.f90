@@ -91,8 +91,8 @@
       REAL(DP) :: bec(:,:)
       COMPLEX(DP) :: rhoeg(:,:), vxc(:,:)
       COMPLEX(DP), INTENT(IN) :: sfac(:,:)
-      REAL(DP), INTENT(IN) :: occ(:,:,:)
-      COMPLEX(DP), INTENT(IN) :: c0(:,:,:,:)
+      REAL(DP), INTENT(IN) :: occ(:,:)
+      COMPLEX(DP), INTENT(IN) :: c0(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE (boxdimensions), INTENT(IN) :: box
       COMPLEX(DP), INTENT(IN) :: eigr(:,:)
@@ -290,8 +290,8 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      REAL(DP), INTENT(IN) :: occ(:,:,:)
-      COMPLEX(DP), INTENT(IN) :: c0(:,:,:,:)
+      REAL(DP), INTENT(IN) :: occ(:,:)
+      COMPLEX(DP), INTENT(IN) :: c0(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       REAL(DP), INTENT(OUT) :: denl(:)
       REAL(DP), INTENT(IN) :: gagb(:,:)
@@ -348,7 +348,7 @@
             ALLOCATE( btmp( nkb, nupdwn( iss ), 3, 3 ) )
             ! 
             CALL caldbec( cdesc%ngwl, nkb, nupdwn( iss ), 1, nspnl, eigr(1,1), &
-                          c0( 1, 1, 1, iss_wfc ), btmp( 1, 1, 1, 1 ), .false. )
+                          c0( 1, 1, iss_wfc ), btmp( 1, 1, 1, 1 ), .false. )
             !
             DO j = 1, 3
                DO i = 1, 3
@@ -522,11 +522,11 @@
               END DO
     
               CALL DGEMM( 'T', 'N', na(is), nx, 2*ngw, 1.0d0, auxc(1,1), &
-                2*ngw, c0(1,1,1,ispin_wfc), 2 * cdesc%ldg, 0.0d0, fnls(1,1), na(is) )
+                2*ngw, c0(1,1,ispin_wfc), 2 * cdesc%ldg, 0.0d0, fnls(1,1), na(is) )
 
               DO in = 1, nx
                 !
-                fac = 2.0d0 * occ( in, 1, ispin ) * wsg( ih, is)
+                fac = 2.0d0 * occ( in, ispin ) * wsg( ih, is)
                 !
                 DO ia = 1, na(is)
                   isa = iss + ia - 1
@@ -716,9 +716,9 @@
 
 ! ... declare subroutine arguments
       REAL(DP), INTENT(OUT) :: dekin(:)
-      COMPLEX(DP), INTENT(IN) :: c0(:,:,:,:)
+      COMPLEX(DP), INTENT(IN) :: c0(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      REAL(DP), INTENT(IN) :: occ(:,:,:)
+      REAL(DP), INTENT(IN) :: occ(:,:)
       REAL(DP) gagb(:,:)
 
 ! ... declare other variables
@@ -749,7 +749,7 @@
         DO ib = 1, cdesc%nbl( ispin )
           sk = 0.0_DP
           DO ig = gstart, ngw
-            scg = arg(ig) * CONJG( c0(ig,ib,1,ispin_wfc) ) * c0(ig,ib,1,ispin_wfc)
+            scg = arg(ig) * CONJG( c0(ig,ib,ispin_wfc) ) * c0(ig,ib,ispin_wfc)
             sk(1)  = sk(1) + scg * gagb(1,ig)
             sk(2)  = sk(2) + scg * gagb(2,ig)
             sk(3)  = sk(3) + scg * gagb(3,ig)
@@ -757,7 +757,7 @@
             sk(5)  = sk(5) + scg * gagb(5,ig)
             sk(6)  = sk(6) + scg * gagb(6,ig)
           END DO
-          dekin = dekin  + occ(ib,1,ispin) * sk
+          dekin = dekin  + occ(ib,ispin) * sk
         END DO
       END DO
       dekin = - 2.0_DP * dekin

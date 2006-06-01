@@ -66,7 +66,7 @@
                if ( f(iupdwn(iss)-1+i).gt.1.e-6) then
                   wr(i)=wr(i)/f(iupdwn(iss)-1+i)
                else
-                  wr(i)=0.0
+                  wr(i)=wr(i)/2.0d0 * nspin  ! fake occupation factor to print empty states
                end if
             end do
          end if
@@ -76,16 +76,19 @@
          IF( SIZE( ei, 1 ) < nupdwn(iss) ) &
             CALL errore( ' eigs0 ', ' wrong dimension array ei ', 1 )
 
-         ei( 1:n, 1, iss ) = wr( 1:n )
+         ei( 1:n, iss ) = wr( 1:n )
 
          IF( tsic ) THEN
             !
             !  store unpaired state
             !
-            ei( 1:n,       1, 1 ) = ei( 1:n, 1, 1 ) / 2.0d0
-            ei( nupdwn(1), 1, 1 ) = lambda( nupdwn(1), nupdwn(1), 1 )
+            ei( 1:n,       1 ) = ei( 1:n, 1 ) / 2.0d0
+            ei( nupdwn(1), 1 ) = lambda( nupdwn(1), nupdwn(1), 1 )
             !
          END IF
+
+         ! WRITE( stdout,*)  '---- DEBUG ----' ! debug
+         ! WRITE( stdout,14) ( wr( i ) * au / 2.0d0, i = 1, nupdwn(iss) ) ! debug
 
          deallocate( lambdar, wr )
 
@@ -95,7 +98,7 @@
       do iss = 1, nspin
 
          IF( tsic .AND. iss == 2 ) THEN
-            ei( 1:npaired, 1, 2 ) = ei( 1:npaired, 1, 1 )
+            ei( 1:npaired, 2 ) = ei( 1:npaired, 1 )
          END IF
 
          IF( tprint ) THEN
@@ -103,7 +106,7 @@
             !     print out eigenvalues
             !
             WRITE( stdout,12) 0., 0., 0.
-            WRITE( stdout,14) ( ei( i, 1, iss ) * au, i = 1, nupdwn(iss) )
+            WRITE( stdout,14) ( ei( i, iss ) * au, i = 1, nupdwn(iss) )
 
          ENDIF
 

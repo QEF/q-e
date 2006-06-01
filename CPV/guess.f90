@@ -60,8 +60,8 @@ MODULE guess
           IMPLICIT NONE
 
 ! ...     declare subroutine arguments
-          COMPLEX(DP), INTENT(INOUT) ::  c0(:,:,:,:)
-          COMPLEX(DP), INTENT(INOUT) ::  cm(:,:,:,:)
+          COMPLEX(DP), INTENT(INOUT) ::  c0(:,:,:)
+          COMPLEX(DP), INTENT(INOUT) ::  cm(:,:,:)
           REAL(DP), INTENT(INOUT) ::  bec(:,:)
           TYPE (wave_descriptor), INTENT(IN) ::  cdesc
           LOGICAL, INTENT(IN) :: tk
@@ -101,69 +101,18 @@ MODULE guess
 
           n   = cdesc%nbl( 1 )
           ngw = cdesc%ngwl
-          nk  = cdesc%nkl
+          nk  = 1
 
           IF( tguess ) THEN
 
 ! ...       uu(i,j)=<cm_i|c0_j>
-            IF(tk) THEN
-
-              ALLOCATE(cuu(n,n))
-              ALLOCATE(ca(n,n))
-              ALLOCATE(cap(n,n))
-              ALLOCATE(crot(ngw,n))
-
-              DO ik = 1, nk
-
-                CALL ucalc_kp(cm(:,:,ik,1),c0(:,:,ik,1),ngw,cdesc%gzero,n,cuu)
-                ! CALL cmatmulp('N','C',cuu,cuu,ca,n)
-                CALL errore(' guess ', ' complex matrix mult to be implemented ', 1 )
-                CALL cdiagonalize(1,ca,size(ca,1),costemp,cap,size(cap,1),n,nproc_image,me_image)
-                DO j=1,n
-                  DO i=1,n
-                    ca(i,j)=cap(i,n-j+1)
-                  END DO
-                END DO
-                DO i=1,n
-                  costh2(i)=1.0d0/sqrt(costemp(n-i+1))
-                END DO
-                !CALL cmatmulp('N','N',cuu,ca,cap,n)
-                CALL errore(' guess ', ' complex matrix mult to be implemented ', 1 )
-                DO j=1,n
-                  DO i=1,n
-                    cap(i,j)=cap(i,j) * costh2(i)
-                  END DO
-                END DO
-                crot = (0.d0,0.d0)
-                DO i=1,n
-                  DO j=1,n
-                    CALL zaxpy(ngw,ca(j,i),c0(1,j,ik,1),1,crot(1,i),1)
-                  END DO
-                END DO
-                c0(:,:,ik,1) = crot
-                crot = (0.d0,0.d0)
-                DO i=1,n
-                  DO j=1,n
-                    CALL zaxpy(ngw,cap(i,j),cm(1,j,ik,1),1,crot(1,i),1)
-                  END DO
-                END DO
-                cm(:,:,ik,1) = crot
-
-              END DO
-
-              DEALLOCATE(crot)
-              DEALLOCATE(cap)
-              DEALLOCATE(ca)
-              DEALLOCATE(cuu)
-
-            ELSE
 
               ALLOCATE(uu(n,n))
               ALLOCATE(a(n,n))
               ALLOCATE(ap(n,n))
               ALLOCATE(crot(ngw,n))
 
-              CALL ucalc(cm(:,:,1,1),c0(:,:,1,1),ngw,cdesc%gzero,n,uu)
+              CALL ucalc(cm(:,:,1),c0(:,:,1),ngw,cdesc%gzero,n,uu)
               CALL rep_matmul_drv('T','N',n,n,n,1.0d0,uu,n,uu,n,0.0d0,a,n,intra_image_comm)
               CALL diagonalize(1,a,SIZE(a,1),costemp,ap,SIZE(ap,1),n,nproc_image,me_image)
               DO j=1,n
@@ -183,30 +132,29 @@ MODULE guess
               crot = (0.d0,0.d0)
               DO i=1,n
                 DO j=1,n
-                  CALL daxpy(2*ngw,a(j,i),c0(1,j,1,1),1,crot(1,i),1)
+                  CALL daxpy(2*ngw,a(j,i),c0(1,j,1),1,crot(1,i),1)
                 END DO
               END DO
-              c0(:,:,1,1) = crot
+              c0(:,:,1) = crot
               crot = (0.d0,0.d0)
               DO i=1,n
                 DO j=1,n
-                  CALL daxpy(2*ngw,ap(i,j),cm(1,j,1,1),1,crot(1,i),1)
+                  CALL daxpy(2*ngw,ap(i,j),cm(1,j,1),1,crot(1,i),1)
                 END DO
               END DO
-              cm(:,:,1,1) = crot
+              cm(:,:,1) = crot
 
               DEALLOCATE(crot)
               DEALLOCATE(ap)
               DEALLOCATE(a)
               DEALLOCATE(uu)
 
-            END IF
 
             DO ik = 1, nk
               DO i=1,n
-                ctemp(:) = 2.d0*c0(:,i,ik,1) - cm(:,i,ik,1)
-                cm(:,i,ik,1) = c0(:,i,ik,1)
-                c0(:,i,ik,1) = ctemp(:)
+                ctemp(:) = 2.d0*c0(:,i,1) - cm(:,i,1)
+                cm(:,i,1) = c0(:,i,1)
+                c0(:,i,1) = ctemp(:)
               END DO
             END DO
 
@@ -216,7 +164,7 @@ MODULE guess
 
           END IF
 
-          CALL gram( vkb, bec, nkb, c0(1,1,1,1), SIZE(c0,1), cdesc%nbt( 1 ) )
+          CALL gram( vkb, bec, nkb, c0(1,1,1), SIZE(c0,1), cdesc%nbt( 1 ) )
 
           RETURN
           END SUBROUTINE guessc0
@@ -230,16 +178,15 @@ MODULE guess
 
              USE cell_module, only: boxdimensions
              use charge_density, only: rhoofr
-             use brillouin, only: kpoints, kp
              USE wave_types
              USE parameters, ONLY: nspinx
 
 ! ...        declare subroutine argument
              REAL(DP), INTENT(OUT) :: rho(:,:)
-             COMPLEX(DP), INTENT(IN) :: c0(:,:,:,:), cm(:,:,:,:)
+             COMPLEX(DP), INTENT(IN) :: c0(:,:,:), cm(:,:,:)
              TYPE (wave_descriptor), INTENT(IN) :: cdesc
              TYPE (boxdimensions), INTENT(IN) :: ht
-             REAL(DP), INTENT(IN) :: occ(:,:,:)
+             REAL(DP), INTENT(IN) :: occ(:,:)
 
 ! ...        declare other variables
              REAL(DP), ALLOCATABLE :: rho0( :, : )
@@ -271,34 +218,8 @@ MODULE guess
           END SUBROUTINE guessrho
 
 !  ----------------------------------------------
-!  ----------------------------------------------
-      SUBROUTINE ucalc_kp(a,b,ngw,gzero,n,lambda)
 
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
 
-! ...   declare modules
-        USE mp
-        USE mp_global, ONLY: intra_image_comm
-
-        IMPLICIT NONE
-
-! ...   declare subroutine arguments
-        INTEGER, INTENT(IN) :: n,ngw
-        LOGICAL, INTENT(IN) :: gzero 
-        COMPLEX(DP), INTENT(IN) :: a(ngw,*),b(ngw,*)
-        COMPLEX(DP), INTENT(OUT) :: lambda(n,n)
-
-! ...   end of declarations
-!  ----------------------------------------------
-
-        CALL DGEMM('C','N',n,n,ngw,1.0d0,a,n,b,ngw,0.0d0,lambda,n)
-        CALL mp_sum(lambda,intra_image_comm)
-
-        RETURN
-      END SUBROUTINE ucalc_kp
-
-!  ----------------------------------------------
 !  ----------------------------------------------
       SUBROUTINE ucalc(a,b,ngw,gzero,n,lambda)
 

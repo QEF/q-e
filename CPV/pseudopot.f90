@@ -575,7 +575,6 @@ CONTAINS
 
       USE ions_base,      ONLY: nsp
       USE cell_base,      ONLY: omega, tpiba
-      USE brillouin,      ONLY: kpoints, kp
       USE pseudo_base,    ONLY: nlin_base
       USE control_flags,  ONLY: gamma_only
       use uspp,           only: dvan
@@ -611,10 +610,9 @@ CONTAINS
       END IF
      
       wnl = 0.0d0
+      ik  = 1
 
       DO is = 1, nspnl
-         !
-         DO ik = 1, kp%nkpt
             !
             IF( tpstab ) THEN
                !
@@ -637,8 +635,6 @@ CONTAINS
                !
             END IF
             !
-         END DO
-         !
       END DO
 
       RETURN

@@ -312,7 +312,6 @@
       use energies,         only: print_energies, dft_energy_type
       use mp_global,        only: me_image, intra_image_comm
       use electrons_module, only: print_eigenvalues
-      use brillouin,        only: kpoints, kp
       use time_step,        ONLY: tps
       USE electrons_nose,   ONLY: electrons_nose_nrg, xnhe0, vnhe, qne, ekincw
       USE sic_module,       ONLY: ind_localisation, pos_localisation, nat_localisation, &
@@ -328,7 +327,6 @@
                                   printout_pos, printout_cell, printout_stress
       USE environment,      ONLY: start_cclock_val
       USE atoms_type_module,  ONLY: atoms_type
-      USE optical_properties, ONLY: write_dielec
 
       IMPLICIT NONE
 

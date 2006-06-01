@@ -62,15 +62,16 @@ CONTAINS
 !
 !   based on code written by Stefano de Gironcoli for PWSCF
 !
-      use mp_global, only: me_image, nproc_image, intra_image_comm
+      use kinds,      only: DP
+      use mp_global,  only: me_image, nproc_image, intra_image_comm
       use fft_scalar, only: cft_1z, cft_2xy
 !
       implicit none
       !
       integer, intent(in) :: nr1, nr2, nr3, nr1x, nr2x, nr3x, sign
       type (fft_dlay_descriptor), intent(in) :: dfft
-      complex(8) :: f( dfft%nnr )
-      complex(8), allocatable :: aux( : )
+      complex(DP) :: f( : )
+      complex(DP), allocatable :: aux( : )
 
       integer  mc, i, j, ii, proc, k, me
       integer planes(nr1x)
@@ -284,6 +285,7 @@ CONTAINS
 !
 !   based on code written by Stefano de Gironcoli for PWSCF
 !
+      USE kinds,      only: DP
       USE mp_global,  only: me_image, nproc_image, me_ogrp, me_pgrp, npgrp, nogrp, &
                             intra_image_comm
       USE fft_base,   only: fft_scatter, group_fft_scatter
@@ -296,7 +298,8 @@ CONTAINS
       INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x, sign
       TYPE (fft_dlay_descriptor), INTENT(IN) :: dfft
 
-      COMPLEX*16, DIMENSION((NOGRP+1)*strd), INTENT(INOUT) :: f
+      ! COMPLEX(DP), DIMENSION((NOGRP+1)*strd), INTENT(INOUT) :: f
+      COMPLEX(DP), INTENT(INOUT) :: f( : )
 
       integer  mc, i, j, ii, proc, k, nppx, me
       integer planes(nr1x)
@@ -306,7 +309,7 @@ CONTAINS
       !C. Bekas
       !--------------
       INTEGER :: HWMN, IT1, FLAG, num_planes, num_sticks
-      COMPLEX*16, DIMENSION(:), ALLOCATABLE  :: XF, YF, aux 
+      COMPLEX(DP), DIMENSION(:), ALLOCATABLE  :: XF, YF, aux 
       INTEGER, DIMENSION(NOGRP) :: local_send_cnt, local_send_displ, local_recv_cnt, local_recv_displ
       INTEGER  :: index
 

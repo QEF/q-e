@@ -108,19 +108,16 @@
 !  this routine computes:
 !  rhor = normalized electron density in real space
 !
-!    rhor(r) = (sum over ik) weight(ik)
-!              (sum over ib) f%s(ib,ik) |psi(r,ib,ik)|^2
+!    rhor(r) = (sum over ib) f%s(ib) |psi(r,ib)|^2
 !
 !    Using quantities in scaled space
 !    rhor(r) = rhor(s) / Omega
-!    rhor(s) = (sum over ik) weight(ik)
-!              (sum over ib) f%s(ib,ik) |psi(s,ib,ik)|^2 
+!    rhor(s) = (sum over ib) f%s(ib) |psi(s,ib)|^2 
 !
-!    f%s(ib,ik) = occupation numbers
-!    psi(r,ib,ik) = psi(s,ib,ik) / SQRT( Omega ) 
-!    psi(s,ib,ik) = INV_FFT (  c0(ik)%w(ig,ib)  )
+!    f%s(ib) = occupation numbers
+!    psi(r,ib) = psi(s,ib) / SQRT( Omega ) 
+!    psi(s,ib) = INV_FFT (  c0(ig,ib)  )
 !
-!    ik = index of k point
 !    ib = index of band
 !    ig = index of G vector
 !  ----------------------------------------------
@@ -137,7 +134,6 @@
     USE io_global,       ONLY: stdout, ionode
     USE control_flags,   ONLY: force_pairing, iprint
     USE parameters,      ONLY: nspinx
-    USE brillouin,       ONLY: kpoints, kp
     USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nnrx
     USE fft_module,      ONLY: invfft
 
@@ -148,15 +144,15 @@
 ! ... declare subroutine arguments
 
     INTEGER,              INTENT(IN) :: nfi
-    COMPLEX(DP)                     :: c0(:,:,:,:)
+    COMPLEX(DP)                     :: c0(:,:,:)
     TYPE (boxdimensions), INTENT(IN) :: box
-    REAL(DP),          INTENT(IN) :: fi(:,:,:)
+    REAL(DP),          INTENT(IN) :: fi(:,:)
     REAL(DP),            INTENT(OUT) :: rhor(:,:)
     TYPE (wave_descriptor), INTENT(IN) :: cdesc
 
 ! ... declare other variables
 
-    INTEGER :: i, is1, is2, j, k, ib, ik, nb, ispin
+    INTEGER :: i, is1, is2, j, ib, nb, ispin
     INTEGER :: nspin, nbnd, nnr
     REAL(DP)  :: r2, r1, coef3, coef4, omega, rsumg( nspinx ), rsumgs
     REAL(DP)  :: fact, rsumr( nspinx )
@@ -195,46 +191,44 @@
 
     DO ispin = 1, nspin
 
-      ! ... arrange for FFT of wave functions
+       ! ... arrange for FFT of wave functions
 
-      ispin_wfc = ispin
-      IF( force_pairing ) ispin_wfc = 1
+       ispin_wfc = ispin
+       IF( force_pairing ) ispin_wfc = 1
 
-      IF( kp % gamma_only ) THEN
+       ! ...  Gamma-point calculation: wave functions are real and can be
+       ! ...  Fourier-transformed two at a time as a complex vector
 
-        ! ...  Gamma-point calculation: wave functions are real and can be
-        ! ...  Fourier-transformed two at a time as a complex vector
+       psi2 = zero
 
-        psi2 = zero
+       nbnd = cdesc%nbl( ispin )
+       nb   = ( nbnd - MOD( nbnd, 2 ) )
 
-        nbnd = cdesc%nbl( ispin )
-        nb   = ( nbnd - MOD( nbnd, 2 ) )
+       DO ib = 1, nb / 2
 
-        DO ib = 1, nb / 2
+         is1 = 2*ib - 1       ! band index of the first wave function
+         is2 = is1  + 1       ! band index of the second wave function
 
-          is1 = 2*ib - 1       ! band index of the first wave function
-          is2 = is1  + 1       ! band index of the second wave function
+         ! ...  Fourier-transform wave functions to real-scaled space
+         ! ...  psi(s,ib,iss) = INV_FFT (  c0(ig,ib,iss)  )
 
-          ! ...  Fourier-transform wave functions to real-scaled space
-          ! ...  psi(s,ib,ik) = INV_FFT (  c0(ig,ib,ik)  )
+         CALL c2psi( psi2, dffts%nnr, c0( 1, is1, ispin_wfc ), c0( 1, is2, ispin_wfc ), cdesc%ngwl, 2 )
+         CALL invfft( 'Wave',psi2, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
 
-          CALL c2psi( psi2, dffts%nnr, c0( 1, is1, 1, ispin_wfc ), c0( 1, is2, 1, ispin_wfc ), cdesc%ngwl, 2 )
-          CALL invfft( 'Wave',psi2, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
-
-          IF( tturbo .AND. ( ib <= nturbo ) ) THEN
+         IF( tturbo .AND. ( ib <= nturbo ) ) THEN
             ! ...  store real-space wave functions to be used in force 
             turbo_states( :, ib ) = psi2( : )
-          END IF
+         END IF
 
-          ! ...  occupation numbers divided by cell volume
-          ! ...  Remember: rhor( r ) =  rhor( s ) / omega
+         ! ...  occupation numbers divided by cell volume
+         ! ...  Remember: rhor( r ) =  rhor( s ) / omega
 
-          coef3 = fi( is1, 1, ispin ) / omega
-          coef4 = fi( is2, 1, ispin ) / omega 
+         coef3 = fi( is1, ispin ) / omega
+         coef4 = fi( is2, ispin ) / omega 
 
-          ! ...  compute charge density from wave functions
+         ! ...  compute charge density from wave functions
 
-          DO i = 1, nnr
+         DO i = 1, nnr
 
                 ! ...  extract wave functions from psi2
 
@@ -245,26 +239,26 @@
 
                 rhor(i,ispin) = rhor(i,ispin) + coef3 * r1 * r1 + coef4 * r2 * r2
 
-          END DO
+         END DO
 
-        END DO
+      END DO
 
-        IF( MOD( nbnd, 2 ) /= 0 ) THEN
+      IF( MOD( nbnd, 2 ) /= 0 ) THEN
 
-          nb = nbnd
+         nb = nbnd
 
-          ! ...  Fourier-transform wave functions to real-scaled space
+         ! ...  Fourier-transform wave functions to real-scaled space
 
-          CALL c2psi( psi2, dffts%nnr, c0( 1, nb, 1, ispin_wfc ), c0( 1, nb, 1, ispin_wfc ), cdesc%ngwl, 1 )
-          CALL invfft( 'Wave', psi2, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
+         CALL c2psi( psi2, dffts%nnr, c0( 1, nb, ispin_wfc ), c0( 1, nb, ispin_wfc ), cdesc%ngwl, 1 )
+         CALL invfft( 'Wave', psi2, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
 
-          ! ...  occupation numbers divided by cell volume
+         ! ...  occupation numbers divided by cell volume
 
-          coef3 = fi( nb, 1, ispin ) / omega
+         coef3 = fi( nb, ispin ) / omega
 
-          ! ...  compute charge density from wave functions
+         ! ...  compute charge density from wave functions
 
-          DO i = 1, nnr
+         DO i = 1, nnr
 
              ! ...  extract wave functions from psi2
 
@@ -274,41 +268,7 @@
 
              rhor(i,ispin) = rhor(i,ispin) + coef3 * r1 * r1
 
-          END DO
-
-        END IF
-
-      ELSE
-
-        ! ...  calculation with generic k points: wave functions are complex
-
-        psi2 = zero
-
-        DO ik = 1, cdesc%nkl
-
-          DO ib = 1, cdesc%nbl( ispin )
-
-            ! ...  Fourier-transform wave function to real space
-
-            CALL c2psi( psi2, dffts%nnr, c0( 1, nb, 1, ispin_wfc ), c0( 1, nb, 1, ispin_wfc ), cdesc%ngwl, 0 )
-            CALL invfft( 'Wave', psi2, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
-
-            ! ...  occupation numbers divided by cell volume
-            ! ...  times the weight of this k point
-
-            coef3 = kp%weight(ik) * fi( ib, ik, ispin ) / omega
-
-            ! ...  compute charge density
-
-            DO i = 1, nnr
-
-                ! ...  add squared modulus to charge density
-
-                rhor(i,ispin) = rhor(i,ispin) + coef3 * DBLE( psi2(i) * CONJG(psi2(i)) )
-
-            END DO
-          END DO
-        END DO
+         END DO
 
       END IF
 
@@ -322,12 +282,9 @@
       DO ispin = 1, nspin
         ispin_wfc = ispin
         IF( force_pairing ) ispin_wfc = 1
-        DO ik = 1, cdesc%nkl
-          fact = kp%weight(ik)
-          IF( cdesc%gamma ) fact = fact * 2.d0
-          rsumgs = dft_total_charge( ispin, c0(:,:,ik,ispin_wfc), cdesc, fi(:,ik,ispin) )
-          rsumg( ispin ) = rsumg( ispin ) + fact * rsumgs
-        END DO
+        fact = 2.d0
+        rsumgs = dft_total_charge( ispin, c0(:,:,ispin_wfc), cdesc, fi(:,ispin) )
+        rsumg( ispin ) = rsumg( ispin ) + fact * rsumgs
       END DO
       !
       CALL mp_sum( rsumg( 1:nspin ), intra_image_comm )
@@ -527,13 +484,9 @@
             !
          ELSE
             !
-            DO i=1,n,2
-               psis (:) = (0.d0, 0.d0)
-               DO ig=1,ngw
-                  psis(nms(ig))=CONJG(c(ig,i))+ci*CONJG(c(ig,i+1))
-                  psis(nps(ig))=c(ig,i)+ci*c(ig,i+1)
-                  ! write(6,'(I6,4F15.10)') ig, psis(nms(ig)), psis(nps(ig))
-               END DO
+            DO i = 1, n, 2
+               !
+               CALL c2psi( psis, nnrsx, c( 1, i ), c( 1, i+1 ), ngw, 2 )
 
                CALL invfft('Wave',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
                !

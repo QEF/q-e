@@ -86,10 +86,9 @@ MODULE cp_main_variables
   REAL(DP),    ALLOCATABLE :: rhopr(:,:)  
   REAL(DP),    ALLOCATABLE :: vpot(:,:)
   !
-  TYPE (wave_descriptor) :: wfill, wempt    ! wave function descriptor
-                                            ! for filled and empty states
+  TYPE (wave_descriptor) :: wfill     ! wave function descriptor for filled
   !
-  REAL(DP), ALLOCATABLE :: occn(:,:,:)     ! occupation numbers for filled state
+  REAL(DP), ALLOCATABLE :: occn(:,:)  ! occupation numbers for filled state
   !
   TYPE(dft_energy_type) :: edft
   !
@@ -103,19 +102,16 @@ MODULE cp_main_variables
     SUBROUTINE allocate_mainvar( ngw, ngwt, ngb, ngs, ng, nr1, nr2, nr3, &
                                  nr1x, nr2x, npl, nnr, nnrsx, nat, nax,  &
                                  nsp, nspin, n, nx, n_emp, nupdwn, nhsa, &
-                                 gzero, nkpt, kscheme, smd )
+                                 gzero, smd )
       !------------------------------------------------------------------------
       !
       INTEGER,           INTENT(IN) :: ngw, ngwt, ngb, ngs, ng, nr1, nr2, nr3, &
                                        nnr, nnrsx, nat, nax, nsp, nspin, &
                                        n, nx, n_emp, nhsa, nr1x, nr2x, npl
       INTEGER,           INTENT(IN) :: nupdwn(:)
-      INTEGER,           INTENT(IN) :: nkpt
-      CHARACTER(LEN=*),  INTENT(IN) :: kscheme
       LOGICAL,           INTENT(IN) :: gzero
       LOGICAL, OPTIONAL, INTENT(IN) :: smd
       LOGICAL                       :: nosmd
-      INTEGER                       :: neupdwn( nspin )
       !
       INTEGER                       :: nudx
       !
@@ -188,17 +184,10 @@ MODULE cp_main_variables
       ALLOCATE( bephi( nhsa, n ) )
       ALLOCATE( becp(  nhsa, n ) )
       !
-      !  empty states, always same number of spin up and down states
-      !
-      neupdwn( 1:nspin ) = n_emp
-      !
       CALL wave_descriptor_init( wfill, ngw, ngwt, nupdwn,  nupdwn, &
-            nkpt, nkpt, nspin, kscheme, gzero )
+            1, 1, nspin, 'gamma', gzero )
       !
-      CALL wave_descriptor_init( wempt, ngw, ngwt, neupdwn, neupdwn, &
-            nkpt, nkpt, nspin, kscheme, gzero )
-      !
-      ALLOCATE( occn( wfill%ldb, wfill%ldk, wfill%lds ) )
+      ALLOCATE( occn( wfill%ldb, wfill%lds ) )
       !
       RETURN
       !

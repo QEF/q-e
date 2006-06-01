@@ -64,7 +64,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE control_flags,            ONLY : conv_elec, tconvthrs
   USE check_stop,               ONLY : check_stop_now
   USE cpr_subroutines,          ONLY : print_atomic_var, print_lambda, &
-                                       compute_stress, elec_fakekine2
+                                       compute_stress
   USE ions_positions,           ONLY : ions_hmove, ions_move
   USE cell_base,                ONLY : cell_kinene, cell_move, cell_gamma, &
                                        cell_hmove
@@ -93,6 +93,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE orthogonalize,            ONLY : ortho
   USE orthogonalize_base,       ONLY : updatc, calphi
   use charge_density,           only : rhoofr
+  USE wave_functions,           ONLY : wave_rand_init, elec_fakekine2
   !
 #if ! defined __NOSMD
   !
@@ -354,8 +355,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
 
   CALL allocate_mainvar &
        ( ngw, ngwt, ngb, ngs, ngm, nr1, nr2, nr3, dfftp%nr1x, dfftp%nr1x, dfftp%npl, &
-         nnrx, nnrsx, nat, nax, nsp, nspin, nbsp, nbspx, 0, nupdwn, nkb, gzero, 1,   &
-         'gamma', smd = .TRUE. )
+         nnrx, nnrsx, nat, nax, nsp, nspin, nbsp, nbspx, 0, nupdwn, nkb, gzero, smd = .TRUE. )
   !
   !
   CALL allocate_local_pseudo( ngs, nsp )
@@ -507,7 +507,8 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
               !       
               !     random initialization
               !
-              CALL randin(1,nbsp,gstart,ngw,ampre,rep_el(sm_k)%cm)
+              CALL wave_rand_init( rep_el(sm_k)%cm( :, 1:nbsp ) )
+              !
            ELSE
               rep_el(sm_k)%cm = rep_el(1)%cm
            ENDIF
@@ -528,7 +529,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         CALL gram( vkb, rep_el(sm_k)%bec, nkb, rep_el(sm_k)%cm, ngw, nbsp )
         !
-        IF(iprsta.GE.3) CALL dotcsc(eigr,rep_el(sm_k)%cm)
+        IF(iprsta.GE.3) CALL dotcsc(eigr,rep_el(sm_k)%cm, ngw, nbsp )
         !     
         nfi=0
         !
@@ -649,7 +650,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !     ==============================================================
         !     cm now orthogonalized
         !     ==============================================================
-        IF(iprsta.GE.3) CALL dotcsc(eigr,rep_el(sm_k)%c0)
+        IF(iprsta.GE.3) CALL dotcsc(eigr,rep_el(sm_k)%c0, ngw, nbsp )
         !     
         IF(thdyn) THEN
            CALL cell_force( fcell, ainv, stress, omega, press, wmass )
@@ -1142,7 +1143,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
                 & bigr,iter,ccc(sm_k),bephi,becp)
         ELSE
            CALL gram( vkb, rep_el(sm_k)%bec, nkb, rep_el(sm_k)%cm, ngw, nbsp )
-           IF(iprsta.GT.4) CALL dotcsc(eigr,rep_el(sm_k)%cm)
+           IF(iprsta.GT.4) CALL dotcsc(eigr,rep_el(sm_k)%cm, ngw, nbsp )
         ENDIF
         !
         !---------------------------------------------------------------------------
@@ -1162,7 +1163,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         CALL calbec (nvb+1,nsp,eigr,rep_el(sm_k)%cm,rep_el(sm_k)%bec)
         IF (tpre) CALL caldbec(ngw,nkb,nbsp,1,nsp,eigr,rep_el(sm_k)%cm,dbec,.true.)
         !
-        IF(iprsta.GE.3)  CALL dotcsc(eigr,rep_el(sm_k)%cm)
+        IF(iprsta.GE.3)  CALL dotcsc(eigr,rep_el(sm_k)%cm, ngw, nbsp )
         !
         !---------------------------------------------------------------------------
         !                  temperature monitored and controlled

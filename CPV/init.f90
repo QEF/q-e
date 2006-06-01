@@ -218,7 +218,6 @@
       USE fft_base,         ONLY: dfftb, fft_dlay_descriptor
       USE fft_types,        ONLY: fft_box_allocate
       USE cp_main_variables,     ONLY: ht0, htm, taub
-      USE brillouin,             ONLY: kp
       USE ions_module,           ONLY: atoms_init
       USE atoms_type_module,     ONLY: atoms_type
 
@@ -332,7 +331,6 @@
       !
       USE cell_base,             ONLY : a1, a2, a3, omega, alat, cell_base_reinit
       USE control_flags,         ONLY : program_name
-      USE reciprocal_space_mesh, ONLY : newgk
       !
       implicit none
       !
@@ -353,12 +351,6 @@
       !   generation of little box g-vectors
       !
       call newgb( a1, a2, a3, omega, alat )
-      !
-      IF( program_name == 'FPMD' ) THEN
-        !
-        CALL newgk( )
-        !
-      END IF
       !
       return
     end subroutine newinit

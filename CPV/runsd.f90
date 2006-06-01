@@ -58,7 +58,7 @@
 ! ... declare subroutine arguments
       LOGICAL   :: tortho, tprint, tforce, tcel, doions
       TYPE (atoms_type), INTENT(INOUT) :: atoms_0
-      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cp(:,:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:), cm(:,:,:), cp(:,:,:)
       TYPE (wave_descriptor) :: cdesc
       REAL(DP) :: rhoe(:,:)
       COMPLEX(DP) :: sfac(:,:)
@@ -67,12 +67,12 @@
       COMPLEX(DP) :: ei2(:,:)
       COMPLEX(DP) :: ei3(:,:)
       TYPE (boxdimensions), INTENT(INOUT) ::  ht0
-      REAL(DP)  :: occ(:,:,:)
+      REAL(DP)  :: occ(:,:)
       REAL(DP) :: bec(:,:)
       REAL(DP) :: becdr(:,:,:)
       TYPE (dft_energy_type) :: edft
 
-      REAL(DP)    :: ei(:,:,:)
+      REAL(DP)    :: ei(:,:)
       REAL(DP)    :: vpot(:,:)
 
       INTEGER   :: maxnstep   !  maximum number of iteration

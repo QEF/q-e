@@ -39,7 +39,6 @@
       ! ... declare modules
 
       USE energies, ONLY: dft_energy_type, print_energies
-      USE electrons_module, ONLY: emass, pmss, eigs
       USE wave_functions, ONLY: update_wave_functions
       USE wave_base, ONLY: dotp
       USE check_stop, ONLY: check_stop_now
@@ -62,7 +61,7 @@
       TYPE (atoms_type) :: atomsp
       TYPE (atoms_type) :: atoms0
       TYPE (atoms_type) :: atomsm
-      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cp(:,:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:), cm(:,:,:), cp(:,:,:)
       TYPE (wave_descriptor) :: cdesc
       REAL(DP) :: rhoe(:,:)
       REAL(DP) :: bec(:,:)
@@ -73,10 +72,10 @@
       COMPLEX(DP) :: ei3(:,:)
       COMPLEX(DP) :: sfac(:,:)
       TYPE (boxdimensions), INTENT(INOUT) ::  ht
-      REAL(DP)  :: occ(:,:,:)
+      REAL(DP)  :: occ(:,:)
       TYPE (dft_energy_type) :: edft
 
-      REAL(DP)    :: ei(:,:,:)
+      REAL(DP)    :: ei(:,:)
       REAL(DP)    :: vpot(:,:)
 
       INTEGER, INTENT(IN) :: maxnstep, maxiter
@@ -307,9 +306,9 @@
         REAL(DP) :: emin
         TYPE (atoms_type) :: atomsp
         TYPE (atoms_type) :: atoms0
-        COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:)
-        COMPLEX(DP), INTENT(INOUT) :: cp(:,:,:,:)
-        COMPLEX(DP), INTENT(INOUT) :: cm(:,:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: cp(:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: cm(:,:,:)
         TYPE (wave_descriptor) :: cdesc
         REAL(DP) :: rhoe(:,:)
         COMPLEX(DP) :: eigr(:,:)
@@ -318,14 +317,14 @@
         COMPLEX(DP) :: ei3(:,:)
         COMPLEX(DP) :: sfac(:,:)
         TYPE (boxdimensions), INTENT(INOUT) ::  ht
-        REAL(DP)  :: occ(:,:,:)
+        REAL(DP)  :: occ(:,:)
         TYPE (dft_energy_type) :: edft
         REAL (DP) ::  hacca(:,:)
         REAL (DP), INTENT(in) ::  vpot(:,:)
         REAL(DP) :: bec(:,:)
         REAL(DP) :: becdr(:,:,:)
 
-        REAL(DP)    :: ei(:,:,:)
+        REAL(DP)    :: ei(:,:)
 
         INTEGER :: maxnstep
         REAL(DP) :: sdthr

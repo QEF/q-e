@@ -214,7 +214,6 @@
      USE kinds, ONLY : DP
      USE cell_base, ONLY: tpiba
      USE cell_module, ONLY: boxdimensions
-     USE brillouin, ONLY: kpoints, kp
      USE atoms_type_module, ONLY: atoms_type
      USE grid_dimensions, ONLY: nr1, nr2, nr3
      USE reciprocal_vectors, ONLY: mill_l, gstart, gx, ngm
@@ -274,11 +273,7 @@
        END DO
 
        ! ...  each processor add its own contribution to the array FION
-       IF(kp%gamma_only) THEN
-         cost = 2.D0 * ht%deth * tpiba
-       ELSE
-         cost =        ht%deth * tpiba
-       END IF
+       cost = 2.D0 * ht%deth * tpiba
 
        DO isa = 1, atoms%nat
          FION(1,ISA) = FION(1,ISA) + DBLE(ftmp(1,ISA)) * cost

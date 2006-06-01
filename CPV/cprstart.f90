@@ -75,6 +75,7 @@ PROGRAM main
   USE mp_global,     ONLY : mp_global_start, init_pool
   USE mp,            ONLY : mp_end, mp_start, mp_env, mp_bcast
   USE control_flags, ONLY : lneb, lsmd, lmetadyn, program_name
+  USE control_flags, ONLY : use_task_groups
   USE environment,   ONLY : environment_start
   USE check_stop,    ONLY : check_stop_init
   !
@@ -131,6 +132,10 @@ PROGRAM main
   !
   CALL mp_bcast( nimage,       meta_ionode_id, world )
   CALL mp_bcast( ntask_groups, meta_ionode_id, world )
+  !
+  IF( ntask_groups > 1 ) THEN
+     use_task_groups = .TRUE.
+  END IF
   !
   ! ... start the environment
   !

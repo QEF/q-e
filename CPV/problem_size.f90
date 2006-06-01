@@ -21,7 +21,6 @@
       use ions_base, only: nsp, nax, nat
       use electrons_base, only: nx => nbnd, nspin
       use electrons_module, only: n_emp
-      use brillouin, only: get_kpoints_number
       use reciprocal_vectors, only: ngwx, ngmx, ngmt
       use uspp_param, only: nhm, lmaxkb
       USE io_global, ONLY: ionode
@@ -52,7 +51,7 @@
       nr2x  = dfftp%nr2x
       nr3x  = dfftp%nr3x
 
-      nk = get_kpoints_number()
+      nk = 1
 
       nhm_EMP = nhm 
       NGWXM_EMP = ngwx 

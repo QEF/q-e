@@ -20,7 +20,7 @@
        PRIVATE
 
        INTERFACE ortho
-         MODULE PROCEDURE ortho_s, ortho_v, ortho_m, ortho_cp
+         MODULE PROCEDURE ortho_s, ortho_m, ortho_cp
        END INTERFACE
 
        PUBLIC :: ortho
@@ -30,15 +30,15 @@
 !=----------------------------------------------------------------------------=!
 
 
-   SUBROUTINE ortho_s( ispin, c0, cp, cdesc, pmss, emass, success )
+   SUBROUTINE ortho_s( ispin, c0, cp, cdesc, success )
 
       USE control_flags,      ONLY: ortho_eps, ortho_max
       USE wave_types,         ONLY: wave_descriptor
       USE orthogonalize_base, ONLY: updatc, calphi
+      USE cp_main_variables,  ONLY: ema0bg
 
       COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cp(:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      REAL(DP) :: pmss(:), emass
       LOGICAL, INTENT(OUT), OPTIONAL :: success
       INTEGER, INTENT(IN) :: ispin
       !
@@ -46,7 +46,6 @@
       REAL(DP) :: diff, dum(2,2)
       COMPLEX(DP) :: cdum(2,2)
       REAL(DP),    ALLOCATABLE :: x0(:,:)
-      REAL(DP),    ALLOCATABLE :: aux(:)
       COMPLEX(DP), ALLOCATABLE :: phi(:,:)
       INTEGER  :: n, ngw, info
 
@@ -61,12 +60,7 @@
       ALLOCATE( phi( SIZE( c0, 1 ), SIZE( c0, 2 ) ), STAT = info )
       IF( info /= 0 ) CALL errore( ' ortho ', ' allocating phi ', 3 )
 
-      ALLOCATE( aux( ngw ) )
-      aux(:) = emass / pmss(:)  ! ema0bg
-
-      CALL calphi( c0, SIZE(c0,1), dum, 1, cdum, phi, n, aux )
-
-      DEALLOCATE( aux )
+      CALL calphi( c0, SIZE(c0,1), dum, 1, cdum, phi, n, ema0bg )
 
       ALLOCATE( x0( n, n ) )
 
@@ -95,36 +89,19 @@
       !
    END SUBROUTINE ortho_s
 
-!=----------------------------------------------------------------------------=!
-
-       SUBROUTINE ortho_v( ispin, c0, cp, cdesc, pmss, emass)
-         USE wave_types, ONLY: wave_descriptor
-         COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:), cp(:,:,:)
-         TYPE (wave_descriptor), INTENT(IN) :: cdesc
-         REAL(DP) :: pmss(:), emass
-         INTEGER, INTENT(IN) :: ispin
-         INTEGER :: ik
-         DO ik = 1, cdesc%nkl
-           CALL ortho_s( ispin, c0(:,:,ik), cp(:,:,ik), cdesc, pmss, emass)
-         END DO
-         RETURN
-       END SUBROUTINE ortho_v
 
 !=----------------------------------------------------------------------------=!
 
-       SUBROUTINE ortho_m(c0, cp, cdesc, pmss, emass)
+       SUBROUTINE ortho_m(c0, cp, cdesc)
          USE wave_types, ONLY: wave_descriptor
          USE control_flags, ONLY: force_pairing
-         COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:), cp(:,:,:,:)
+         COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:), cp(:,:,:)
          TYPE (wave_descriptor), INTENT(IN) :: cdesc
-         REAL(DP) :: pmss(:), emass
-         INTEGER :: ik, ispin, nspin
+         INTEGER :: ispin, nspin
          nspin = cdesc%nspin
          IF( force_pairing ) nspin = 1
          DO ispin = 1, nspin
-           DO ik = 1, cdesc%nkl
-             CALL ortho_s( ispin, c0(:,:, ik, ispin), cp(:,:,ik, ispin), cdesc, pmss, emass)
-           END DO
+             CALL ortho_s( ispin, c0(:,:,ispin), cp(:,:,ispin), cdesc)
          END DO
          RETURN
        END SUBROUTINE ortho_m

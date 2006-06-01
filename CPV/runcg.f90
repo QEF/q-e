@@ -62,9 +62,10 @@
 
 ! ... declare modules
       USE energies, ONLY: dft_energy_type, print_energies
-      USE electrons_module, ONLY: pmss, eigs, nb_l
+      USE electrons_module, ONLY: eigs, nb_l
       USE electrons_base, ONLY: nupdwn, iupdwn
       USE cp_electronic_mass, ONLY: emass
+      USE cp_main_variables,  ONLY: ema0bg
       USE wave_functions, ONLY: cp_kinetic_energy, proj, fixwave
       USE wave_base, ONLY: dotp, hpsi
       USE wave_constrains, ONLY: update_lambda
@@ -80,7 +81,6 @@
       USE atoms_type_module, ONLY: atoms_type
       USE control_flags, ONLY: force_pairing
       USE environment, ONLY: start_cclock_val
-      USE reciprocal_space_mesh, ONLY: gkmask_l
       USE uspp,             ONLY : vkb, nkb
 
       IMPLICIT NONE
@@ -88,7 +88,7 @@
 ! ... declare subroutine arguments
       LOGICAL   :: tortho, tprint, tcel, doions, tconv
       TYPE (atoms_type) :: atoms_0
-      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:), cp(:,:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:), cm(:,:,:), cp(:,:,:)
       TYPE (wave_descriptor) :: cdesc
       REAL(DP) :: rhoe(:,:)
       COMPLEX(DP) :: eigr(:,:)
@@ -97,14 +97,14 @@
       COMPLEX(DP) :: ei3(:,:)
       COMPLEX(DP) :: sfac(:,:)
       TYPE (boxdimensions), INTENT(INOUT) :: ht0
-      REAL(DP) :: occ(:,:,:)
+      REAL(DP) :: occ(:,:)
       REAL(DP) :: bec(:,:)
       REAL(DP) :: becdr(:,:,:)
       TYPE (dft_energy_type) :: edft
       INTEGER :: maxnstep
       REAL(DP) :: cgthr
 
-      REAL(DP)    :: ei(:,:,:)
+      REAL(DP)    :: ei(:,:)
       REAL(DP)    :: vpot(:,:)
 
 ! ... declare other variables
@@ -119,7 +119,7 @@
       REAL(DP)    :: gg, ggo, ekinc_old, emin, demin, dek, dt2fact
       COMPLEX(DP) :: lambda
 
-      COMPLEX(DP), ALLOCATABLE :: hacca(:,:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: hacca(:,:,:)
 
       INTEGER :: ib, ibl, ik, ispin, ngw, nfi_l, nspin, isteep, i
       INTEGER :: nk, iter, ierr
@@ -131,7 +131,7 @@
 ! ... end of declarations
 !  ----------------------------------------------
 
-      nk          = cdesc%nkl
+      nk          = 1
       nspin       = cdesc%nspin
       doions      = .FALSE.
       eold        = 1.0d10  ! a large number
@@ -153,11 +153,11 @@
       IF( force_pairing ) &
         CALL errore( ' runcg ', ' force pairing not implemented ', 1 )
 
-      ALLOCATE(hacca( ngw, MAXVAL( nb ), nk, nspin ), STAT=ierr )
+      ALLOCATE(hacca( ngw, MAXVAL( nb ), nspin ), STAT=ierr )
       IF( ierr/=0 ) CALL errore(' runcg ', ' allocating hacca ',ierr)
 
       ALLOCATE( dt2bye( ngw ) )
-      dt2bye = delt * delt / pmss
+      dt2bye = delt * delt * ema0bg / emass 
 
       WRITE(stdout,100) cgthr, maxnstep
  100  FORMAT(/,3X,'Using Conjugate Gradient for electronic minimization', &
@@ -184,17 +184,13 @@
 ! ...     Calculate wave functions gradient (temporarely stored in cp)
 ! ...     |d H / dPsi_j > = H |Psi_j> - Sum{i} <Psi_i|H|Psi_j> |Psi_i>
 
-          CALL dforce_all( ispin, c0(:,:,1,ispin), occ(:,1,ispin), cp(:,:,1,ispin), &
+          CALL dforce_all( ispin, c0(:,:,ispin), occ(:,ispin), cp(:,:,ispin), &
             vpot(:,ispin), eigr, bec, nupdwn, iupdwn )
  
-! ...     Project the gradient
-          IF( gamma_symmetry ) THEN
-            CALL proj( ispin, cp(:,:,1,ispin), cdesc, c0(:,:,1,ispin), cdesc )
-          ELSE
-            DO ik = 1, nk
-              CALL proj( ispin, ik, cp(:,:,:,ispin), cdesc, c0(:,:,:,ispin), cdesc)
-            END DO
-          END IF
+          ! ...     Project the gradient
+
+          CALL proj( ispin, cp(:,:,ispin), cdesc, c0(:,:,ispin), cdesc )
+
         END DO
 
         s3 = cclock()
@@ -203,23 +199,23 @@
         DO ispin = 1, nspin
           DO ik = 1, nk
             DO i = 1, nb( ispin )
-              cp(:, i, ik, ispin) = cp(:, i, ik, ispin) * dt2bye(:) * dt2fact
+              cp(:, i, ispin) = cp(:, i, ispin) * dt2bye(:) * dt2fact
               IF( iter > 1 ) THEN
                 IF( gamma_symmetry ) THEN
-                  ggo = dotp( gzero,  cm(:, i, ik, ispin), cm(:, i, ik, ispin) )
+                  ggo = dotp( gzero,  cm(:, i, ispin), cm(:, i, ispin) )
                 ELSE
-                  ggo = dotp( cm(:, i, ik, ispin), cm(:, i, ik, ispin) )
+                  ggo = dotp( cm(:, i, ispin), cm(:, i, ispin) )
                 END IF
-                cm(:, i, ik, ispin) = cp(:, i, ik, ispin) - cm(:, i, ik, ispin)
+                cm(:, i, ispin) = cp(:, i, ispin) - cm(:, i, ispin)
                 IF( gamma_symmetry ) THEN
-                  gg  = dotp( gzero,  cm(:, i, ik, ispin), cp(:, i, ik, ispin))
+                  gg  = dotp( gzero,  cm(:, i, ispin), cp(:, i, ispin))
                 ELSE
-                  gg  = dotp( cm(:, i, ik, ispin), cp(:, i, ik, ispin))
+                  gg  = dotp( cm(:, i, ispin), cp(:, i, ispin))
                 END IF
                 lambda = gg / ggo
-                hacca(:, i, ik, ispin) = cp(:, i, ik, ispin) + lambda * hacca(:, i, ik, ispin)
+                hacca(:, i, ispin) = cp(:, i, ispin) + lambda * hacca(:, i, ispin)
               ELSE
-                hacca(:, i, ik, ispin) = cp(:, i, ik, ispin)
+                hacca(:, i, ispin) = cp(:, i, ispin)
               END IF
             END DO
           END DO
@@ -250,13 +246,15 @@
 
           cp = c0 + cm
 
-          CALL fixwave( cp, cdesc, gkmask_l )
+          DO ispin = 1, nspin
+             CALL fixwave( ispin, cp(:,:,ispin), cdesc )
+          END DO
 
           IF( tortho ) THEN
-             CALL ortho( c0, cp, cdesc, pmss, emass )
+             CALL ortho( c0, cp, cdesc )
           ELSE
              DO ispin = 1, nspin
-                CALL gram( vkb, bec, nkb, cp(1,1,1,ispin), SIZE(cp,1), cdesc%nbt( ispin ) )
+                CALL gram( vkb, bec, nkb, cp(1,1,ispin), SIZE(cp,1), cdesc%nbt( ispin ) )
              END DO
           END IF
 
@@ -264,7 +262,7 @@
 
         ekinc = 0.0d0
         DO ispin = 1, nspin
-          ekinc = ekinc + cp_kinetic_energy( ispin, cp(:,:,:,ispin), c0(:,:,:,ispin), cdesc, pmss, delt)
+          ekinc = ekinc + cp_kinetic_energy( ispin, cp(:,:,ispin), c0(:,:,ispin), cdesc, ema0bg, emass, delt)
         END DO
         IF( iter > 1 ) THEN
           dek   = ekinc - ekinc_old
@@ -318,7 +316,7 @@
       IF( tprint ) THEN
         DO ispin = 1, nspin
 
-          CALL dforce_all( ispin, c0(:,:,1,ispin), occ(:,1,ispin), hacca(:,:,1,ispin), &
+          CALL dforce_all( ispin, c0(:,:,ispin), occ(:,ispin), hacca(:,:,ispin), &
             vpot(:,ispin), eigr, bec, nupdwn, iupdwn )
 
           nb_g( ispin ) = cdesc%nbt( ispin )
@@ -332,12 +330,12 @@
           DO ik = 1, nk
             DO i = 1, nb( ispin )
               IF( gamma_symmetry ) THEN
-                CALL update_lambda( i,  gam, c0(:,:,ik,ispin), cdesc, hacca(:,i,ik,ispin) )
+                CALL update_lambda( i,  gam, c0(:,:,ispin), cdesc, hacca(:,i,ispin) )
               ELSE
-                CALL update_lambda( i, cgam, c0(:,:,ik,ispin), cdesc, hacca(:,i,ik,ispin) )
+                CALL update_lambda( i, cgam, c0(:,:,ispin), cdesc, hacca(:,i,ispin) )
               END IF
             END DO
-            CALL eigs( nb( ispin ), gam, cgam, tortho, occ(:,ik,ispin), ei(:,ik,ispin), gamma_symmetry)
+            CALL eigs( nb( ispin ), gam, tortho, occ(:,ispin), ei(:,ispin) )
           END DO
           DEALLOCATE( cgam, gam, STAT=ierr )
           IF( ierr/=0 ) CALL errore(' runcg ', ' deallocating gam ',ierr)
@@ -372,7 +370,6 @@
         USE cell_module, ONLY: boxdimensions
         USE potentials, ONLY: kspotential
         USE atoms_type_module, ONLY: atoms_type
-        USE reciprocal_space_mesh, ONLY: gkmask_l
         USE uspp,             ONLY : vkb, nkb
 
         IMPLICIT NONE
@@ -381,8 +378,8 @@
         REAL(DP) :: ediff, emin
         LOGICAL :: tbad
         TYPE (atoms_type), INTENT(INOUT) :: atoms
-        COMPLEX(DP), INTENT(IN) :: c(:,:,:,:)
-        COMPLEX(DP), INTENT(INOUT) :: cp(:,:,:,:)
+        COMPLEX(DP), INTENT(IN) :: c(:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: cp(:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: cdesc
         REAL(DP) :: rhoe(:,:)
         COMPLEX(DP) :: sfac(:,:)
@@ -391,11 +388,11 @@
         COMPLEX(DP) :: ei2(:,:)
         COMPLEX(DP) :: ei3(:,:)
         TYPE (boxdimensions), INTENT(INOUT) ::  ht
-        REAL(DP), INTENT(IN) :: occ(:,:,:)
+        REAL(DP), INTENT(IN) :: occ(:,:)
         REAL(DP) :: bec(:,:)
         REAL(DP) :: becdr(:,:,:)
         TYPE (dft_energy_type) :: edft
-        COMPLEX (DP) ::  hacca(:,:,:,:)
+        COMPLEX (DP) ::  hacca(:,:,:)
         REAL (DP), INTENT(in) ::  vpot(:,:)
 
 !
@@ -592,10 +589,9 @@
 
         cp = c + hstep * hacca
 
-        CALL fixwave( cp, cdesc, gkmask_l )
-
         DO ispin = 1, cdesc%nspin
-           CALL gram( vkb, bec, nkb, cp(1,1,1,ispin), SIZE(cp,1), cdesc%nbt( ispin ) )
+           CALL fixwave( ispin, cp(:,:,ispin), cdesc )
+           CALL gram( vkb, bec, nkb, cp(1,1,ispin), SIZE(cp,1), cdesc%nbt( ispin ) )
         END DO
 
 

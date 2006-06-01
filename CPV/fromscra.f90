@@ -28,7 +28,7 @@ CONTAINS
                               enthal, etot, lambda, lambdam, lambdap, ema0bg,  &
                               dbec, delt, bephi, becp, velh, dt2bye, iforce,   &
                               fionm, xnhe0, xnhem, vnhe, ekincm, atoms, edft,  &
-                              ht, cdesc, edesc, fi, vpot )
+                              ht, cdesc, fi, vpot )
     !--------------------------------------------------------------------------
     !
     USE kinds,                ONLY : DP
@@ -48,13 +48,13 @@ CONTAINS
     USE cell_module,          ONLY : boxdimensions
     use electrons_base,       ONLY : nbsp
     USE electrons_base,       ONLY : f, nspin, nupdwn, iupdwn
-    USE electrons_module,     ONLY : pmss, occn_init, occn_info
+    USE electrons_module,     ONLY : occn_init, occn_info
     USE energies,             ONLY : entropy
     USE energies,             ONLY : dft_energy_type, debug_energies
     USE uspp,                 ONLY : vkb, becsum, deeq, nkb
     USE io_global,            ONLY : stdout, ionode
     USE cpr_subroutines,      ONLY : compute_stress, print_atomic_var, &
-                                     print_lambda, elec_fakekine
+                                     print_lambda
     USE core,                 ONLY : nlcc_any
     USE gvecw,                ONLY : ngw
     USE reciprocal_vectors,   ONLY : gstart, mill_l, gx
@@ -69,15 +69,16 @@ CONTAINS
                                      berry_energy2, dforce_efield2
     USE cg_module,            ONLY : tcg
     USE ensemble_dft,         ONLY : tens, compute_entropy
-    USE runcp_module,         ONLY : runcp_uspp, runcp_ncpp, runcp_uspp_force_pairing
+    USE runcp_module,         ONLY : runcp_uspp, runcp_ncpp, runcp_uspp_force_pairing, &
+                                     runcp_uspp_bgl
     USE phase_factors_module, ONLY : strucf, phfacs
     USE orthogonalize,        ONLY : ortho
     USE orthogonalize_base,   ONLY : updatc, calphi
     USE atoms_type_module,    ONLY : atoms_type
     USE wave_base,            ONLY : wave_steepest
-    USE wavefunctions_module, ONLY : c0, cm, phi => cp, ce
+    USE wavefunctions_module, ONLY : c0, cm, phi => cp
     USE wave_types,           ONLY : wave_descriptor
-    USE wave_functions,       ONLY : fixwave, wave_rand_init
+    USE wave_functions,       ONLY : fixwave, wave_rand_init, elec_fakekine
     USE nl,                   ONLY : nlrh_m
     USE charge_density,       ONLY : rhoofr
     USE potentials,           ONLY : vofrhos
@@ -112,8 +113,8 @@ CONTAINS
     TYPE(atoms_type)    ,    INTENT(OUT)   :: atoms
     TYPE(dft_energy_type) ,  INTENT(OUT)   :: edft
     TYPE(boxdimensions)  ,   INTENT(INOUT) :: ht
-    TYPE(wave_descriptor),   INTENT(IN)    :: cdesc, edesc
-    REAL(DP),                INTENT(OUT)   :: fi(:,:,:)
+    TYPE(wave_descriptor),   INTENT(IN)    :: cdesc
+    REAL(DP),                INTENT(OUT)   :: fi(:,:)
     REAL(DP),                INTENT(OUT)   :: vpot(:,:)
 
     !
@@ -156,37 +157,22 @@ CONTAINS
        !
     END IF
     !
-    IF( program_name == 'CP90' ) THEN
-       CALL phfac( tau0, ei1, ei2, ei3, eigr )
-       CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
-    ELSE
-       CALL phfacs( ei1, ei2, ei3, eigr, mill_l, &
-                 atoms%taus, nr1, nr2, nr3, atoms%nat )
-       CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
-    END IF
+    CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms%taus, nr1, nr2, nr3, atoms%nat )
+    !
+    CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
     !     
     CALL initbox ( tau0, taub, irb )
     !     
     CALL phbox( taub, eigrb )
+    !
+    !     random initialization
     !     
     IF( program_name == 'CP90' ) THEN
-       !
-       !     random initialization
        !     
-       CALL randin( 1, nbsp, gstart, ngw, ampre, cm )
+       CALL wave_rand_init( cm( :, 1:nbsp, 1 ) )
        !
        IF( force_pairing ) THEN
-            cm(:, iupdwn(2):(iupdwn(2) + nupdwn(2) - 1), 1, 1) =  cm(:, 1:nupdwn(2), 1, 1)
-            c0(:, iupdwn(2):(iupdwn(2) + nupdwn(2) - 1), 1, 1) =  c0(:, 1:nupdwn(2), 1, 1)
-           phi(:, iupdwn(2):(iupdwn(2) + nupdwn(2) - 1), 1, 1) = phi(:, 1:nupdwn(2), 1, 1)
-       !
-            lambda(1:nupdwn(2), 1:nupdwn(2), 2) =  lambda(:, 1:nupdwn(2), 1)
-           lambdam(1:nupdwn(2), 1:nupdwn(2), 2) = lambdam(:, 1:nupdwn(2), 1)
-           lambdap(1:nupdwn(2), 1:nupdwn(2), 2) = lambdap(:, 1:nupdwn(2), 1)
-
-            lambda(1:nupdwn(2), 1:nupdwn(2), 2) =  lambda(:, 1:nupdwn(2), 1)
-           lambdam(1:nupdwn(2), 1:nupdwn(2), 2) = lambdam(:, 1:nupdwn(2), 1)
-           lambdap(1:nupdwn(2), 1:nupdwn(2), 2) = lambdap(:, 1:nupdwn(2), 1)
+            cm(:, iupdwn(2):(iupdwn(2) + nupdwn(2) - 1), 1) =  cm(:, 1:nupdwn(2), 1)
        ENDIF
        !  
     ELSE
@@ -197,14 +183,16 @@ CONTAINS
        !
        DO iss = 1, nspin_wfc
           !
-          CALL wave_rand_init( cm( :, :, 1, iss ) )
+          CALL wave_rand_init( cm( :, :, iss ) )
           !
        END DO
 
     END IF
     !
+    !
     IF ( ionode ) &
        WRITE( stdout, fmt = '(//,3X, "Wave Initialization: random initial wave-functions" )' )
+    !
     !
     IF( program_name == 'CP90' ) THEN
 
@@ -215,13 +203,13 @@ CONTAINS
 
        CALL gram( vkb, bec, nkb, cm, ngw, nbsp )
 
-       if( iprsta .ge. 3 ) CALL dotcsc( eigr, cm )
+       if( iprsta .ge. 3 ) CALL dotcsc( eigr, cm, ngw, nbsp )
 
     ELSE
 
        DO iss = 1, nspin_wfc
           !
-          CALL gram( vkb, bec, nkb, cm(1,1,1,iss), SIZE(cm,1), cdesc%nbt( iss ) )
+          CALL gram( vkb, bec, nkb, cm(1,1,iss), SIZE(cm,1), cdesc%nbt( iss ) )
           !
        END DO
 
@@ -268,7 +256,7 @@ CONTAINS
          CALL initbox ( tau0, taub, irb )
          CALL phbox( taub, eigrb )
          !
-         CALL rhoofr ( nfi, cm(:,:,1,1), irb, eigrb, bec, becsum, rhor, rhog, rhos, enl, ekin )
+         CALL rhoofr ( nfi, cm(:,:,1), irb, eigrb, bec, becsum, rhor, rhog, rhos, enl, ekin )
          !
          !     put core charge (if present) in rhoc(r)
          !
@@ -284,11 +272,11 @@ CONTAINS
         &  tau0(1,1), fion(1,1) )
 
          IF( tefield ) THEN
-           CALL berry_energy( enb, enbi, bec, cm(:,:,1,1), fion ) 
+           CALL berry_energy( enb, enbi, bec, cm(:,:,1), fion ) 
            etot = etot + enb + enbi
          END IF
          IF( tefield2 ) THEN
-           CALL berry_energy2( enb, enbi, bec, cm(:,:,1,1), fion )
+           CALL berry_energy2( enb, enbi, bec, cm(:,:,1), fion )
            etot = etot + enb + enbi
          END IF
 
@@ -301,16 +289,22 @@ CONTAINS
 
 	 !
          IF( force_pairing ) THEN
-         !
-         CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:,1,1), &
-        &                 c0(:,:,1,1), ei_unp, fromscra = .TRUE. )
-!          lambda(nupdwn(1), nupdwn(1), 1) = ei_unp
-          lambda(nupdwn(1), nupdwn(1), 2) = 0.d0 
-         !
+            !
+            CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:,1), &
+        &                 c0(:,:,1), ei_unp, fromscra = .TRUE. )
+            ! lambda(nupdwn(1), nupdwn(1), 1) = ei_unp
+            lambda(nupdwn(1), nupdwn(1), 2) = 0.d0 
+            !
          ELSE
             !
-            CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:,1,1), &
-        &                 c0(:,:,1,1), fromscra = .TRUE. )
+#if defined __BGL
+            CALL runcp_uspp_bgl( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:,1), &
+        &                 c0(:,:,1), fromscra = .TRUE. )
+#else
+            CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:,1), &
+        &                 c0(:,:,1), fromscra = .TRUE. )
+#endif
+            !
          ENDIF
 
          !
@@ -324,11 +318,11 @@ CONTAINS
          CALL calphi( cm, ngw, bec, nkb, vkb, phi, nbsp, ema0bg )
          !
          IF( force_pairing ) &
-         &   phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1), 1 ,1 ) =    phi( :, 1:nupdwn(2), 1, 1)
+         &   phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1), 1 ) =    phi( :, 1:nupdwn(2), 1)
 
 
          if( tortho ) then
-            CALL ortho( eigr, c0(:,:,1,1), phi(:,:,1,1), lambda, bigr, iter, ccc, bephi, becp )
+            CALL ortho( eigr, c0(:,:,1), phi(:,:,1), lambda, bigr, iter, ccc, bephi, becp )
          else
             CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
          endif
@@ -351,18 +345,18 @@ CONTAINS
          END IF
          !
          IF( force_pairing ) THEN
-         !
-              c0( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1), 1 ,1 ) =     c0( :, 1:nupdwn(2), 1, 1)
-             phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1), 1 ,1 ) =    phi( :, 1:nupdwn(2), 1, 1)
-            lambda(1:nupdwn(2), 1:nupdwn(2), 2)                = lambda(1:nupdwn(2), 1:nupdwn(2), 1 )
-         !
+            !
+            c0 ( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1), 1 ) =  c0( :, 1:nupdwn(2), 1)
+            phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1), 1 ) = phi( :, 1:nupdwn(2), 1)
+            lambda(1:nupdwn(2), 1:nupdwn(2), 2) = lambda(1:nupdwn(2), 1:nupdwn(2), 1 )
+            !
          ENDIF
          !
          CALL calbec ( nvb+1, nsp, eigr, c0, bec )
 
          if ( tpre ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .true. )
 
-         if(iprsta.ge.3) CALL dotcsc(eigr,c0)
+         if(iprsta.ge.3) CALL dotcsc( eigr, c0, ngw, nbsp )
          !
 
          xnhp0=0.
@@ -391,7 +385,7 @@ CONTAINS
 
     ELSE
 
-       edft%enl = nlrh_m( cm, cdesc, ttforce, atoms, fi, bec, becdr, eigr )
+       edft%enl = nlrh_m( cm, cdesc, ttforce, atoms, bec, becdr, eigr )
        !
        CALL rhoofr( 0, cm, cdesc, fi, rhor, ht )
        !
@@ -416,13 +410,13 @@ CONTAINS
           !
           IF ( tortho .AND. ( .NOT. force_pairing ) ) THEN
              !
-             CALL ortho( cm, c0, cdesc, pmss, emass )
+             CALL ortho( cm, c0, cdesc )
              !
           ELSE
              !
              DO iss = 1, nspin_wfc
                !
-               CALL gram( vkb, bec, nkb, c0(1,1,1,iss), SIZE(c0,1), cdesc%nbt( iss ) )
+               CALL gram( vkb, bec, nkb, c0(1,1,iss), SIZE(c0,1), cdesc%nbt( iss ) )
                !
              END DO
              !

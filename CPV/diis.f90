@@ -35,8 +35,8 @@ MODULE diis
 
         REAL(DP) :: dethr
 
-        COMPLEX(sgl), ALLOCATABLE :: parame(:,:,:,:)
-        COMPLEX(sgl),  ALLOCATABLE :: grade(:,:,:,:)
+        COMPLEX(sgl), ALLOCATABLE :: parame(:,:,:)
+        COMPLEX(sgl),  ALLOCATABLE :: grade(:,:,:)
 
         LOGICAL    :: updstrfac
         REAL(DP)  :: gemax
@@ -99,12 +99,12 @@ CONTAINS
 
 !  ----------------------------------------------
 !  ----------------------------------------------
-        SUBROUTINE allocate_diis(ngwxm,nx,nk)
-          INTEGER, INTENT(IN) :: ngwxm,nx,nk
+        SUBROUTINE allocate_diis(ngwxm,nx)
+          INTEGER, INTENT(IN) :: ngwxm,nx
           INTEGER :: ierr
-          ALLOCATE( parame( ngwxm, nx, nk, max_diis ), STAT=ierr)
+          ALLOCATE( parame( ngwxm, nx, max_diis ), STAT=ierr)
           IF( ierr/=0 ) CALL errore(' allocate_diis ', ' allocating parame ', ierr)
-          ALLOCATE( grade( ngwxm, nx, nk, max_diis ), STAT=ierr)
+          ALLOCATE( grade( ngwxm, nx, max_diis ), STAT=ierr)
           IF( ierr/=0 ) CALL errore(' allocate_diis ', ' allocating grade ', ierr)
           RETURN
         END SUBROUTINE allocate_diis
@@ -287,9 +287,9 @@ CONTAINS
 !  ----------------------------------------------
       SUBROUTINE fermi_diis( ent, occ, nb, nel, eig, wke, efermi, sume, temp)
         USE electrons_module, ONLY: fermi_energy
-        REAL(DP)   :: occ(:,:,:)
-        REAL(DP)   :: wke(:,:,:)
-        REAL(DP)   :: eig(:,:,:), efermi, sume, ent, temp, entk, qtot
+        REAL(DP)   :: occ(:,:)
+        REAL(DP)   :: wke(:,:)
+        REAL(DP)   :: eig(:,:), efermi, sume, ent, temp, entk, qtot
         INTEGER :: ispin, nel, nb
 
         qtot = DBLE( nel ) 
@@ -297,8 +297,8 @@ CONTAINS
 
 ! ...   compute the entropic correction
         ent = 0.0d0
-        DO ispin = 1, SIZE( occ, 3 )
-            CALL entropy( occ(:,1,ispin), temp, nb, entk )
+        DO ispin = 1, SIZE( occ, 2 )
+            CALL entropy( occ(:,ispin), temp, nb, entk )
             ent = ent + entk
         END DO
       RETURN
@@ -332,7 +332,7 @@ CONTAINS
 ! hthrs_diis  (REAL(DP)  ) minimum value for a hessel matrix elm.
 ! etot   (REAL(DP)  ) Kohn-Sham energy
 
-      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:), cgrad(:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cgrad(:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       COMPLEX(DP) :: sfac(:,:) 
       COMPLEX(DP) :: eigr(:,:) 
@@ -383,7 +383,7 @@ CONTAINS
       END WHERE
 
 ! ... test for convergence
-      CALL converg( cgrad(:,:,1), cdesc, gemax, cnorm, .FALSE.)
+      CALL converg( cgrad(:,:), cdesc, gemax, cnorm, .FALSE.)
       doions = cnorm .LT. tol_diis
       IF( doions ) THEN
         GOTO 999
@@ -412,8 +412,8 @@ CONTAINS
 
 ! ...   reject last move, if it wasn't a reset
         IF( ndiis .NE. 0 ) THEN
-          c0(:,:,1)    = parame(:,:,1,nowv)
-          cgrad(:,:,1) = grade(:,:,1,nowv)
+          c0(:,:)    = parame(:,:,nowv)
+          cgrad(:,:) = grade(:,:,nowv)
           var2 = -svar2
         ELSE
           var2 = svar2
@@ -445,11 +445,11 @@ CONTAINS
             IF(oqnr_diis ) ff = fm1(k)
             fff=2.0d0*ff*ff*vvpp
             DO i=1,nsize-1
-              rri=DBLE(grade(l,k,1,i))
-              rii=AIMAG(grade(l,k,1,i))
+              rri=DBLE(grade(l,k,i))
+              rii=AIMAG(grade(l,k,i))
               DO j=1,i
-                rrj=DBLE(grade(l,k,1,j))
-                rij=AIMAG(grade(l,k,1,j))
+                rrj=DBLE(grade(l,k,j))
+                rij=AIMAG(grade(l,k,j))
                 bc(i,j)=bc(i,j)+(rri*rrj+rii*rij)*fff
               END DO
             END DO
@@ -461,9 +461,9 @@ CONTAINS
             IF(oqnr_diis ) ff = fm1(k)
             fff=ff*ff*vpp(1)*vpp(1)
             DO i=1,nsize-1
-              r1=DBLE(grade(1,k,1,i))
+              r1=DBLE(grade(1,k,i))
               DO j=1,i
-                r2=DBLE(grade(1,k,1,j))
+                r2=DBLE(grade(1,k,j))
                 bc(i,j)=bc(i,j)+r1*r2*fff
               END DO
             END DO
@@ -491,12 +491,12 @@ CONTAINS
         CALL solve(bc,max_diis+1,nsize,vc)
 
 ! ...   compute interpolated coefficient and gradient vectors
-        cm           = CMPLX(0.0d0,0.0d0)
-        c0(:,:,1)    = CMPLX(0.0d0,0.0d0)
+        cm         = CMPLX(0.0d0,0.0d0)
+        c0(:,:)    = CMPLX(0.0d0,0.0d0)
         DO i = 1, nsize-1
           DO j = 1, cdesc%nbl( 1 )
-            cm(:,j)   = cm(:,j)   + vc(i) *  grade(:,j,1,i)
-            c0(:,j,1) = c0(:,j,1) + vc(i) * parame(:,j,1,i)
+            cm(:,j) = cm(:,j)   + vc(i) *  grade(:,j,i)
+            c0(:,j) = c0(:,j) + vc(i) * parame(:,j,i)
           END DO
         END DO
 
@@ -504,7 +504,7 @@ CONTAINS
         ff = 1.0d0
         DO i = 1, cdesc%nbl( 1 )
           IF(oqnr_diis ) ff = fm1(i)
-          c0(:,i,1) = c0(:,i,1) - ff * vpp(:) * cm(:,i)
+          c0(:,i) = c0(:,i) - ff * vpp(:) * cm(:,i)
         END DO
 
         eold = etot
@@ -553,16 +553,16 @@ CONTAINS
         SUBROUTINE update_diis_buffers( c, cgrad, cdesc, nowv)
           USE wave_types, ONLY: wave_descriptor
           IMPLICIT NONE
-          COMPLEX(DP), INTENT(IN) :: cgrad(:,:,:)
-          COMPLEX(DP), INTENT(INOUT) :: c(:,:,:)
+          COMPLEX(DP), INTENT(IN) :: cgrad(:,:)
+          COMPLEX(DP), INTENT(INOUT) :: c(:,:)
           TYPE (wave_descriptor), INTENT(IN) :: cdesc
           INTEGER, INTENT(IN) :: nowv
           INTEGER :: ib
             DO ib = 1, cdesc%nbl( 1 )
-              CALL ZDSCAL( cdesc%ngwl, -1.0d0, cgrad(1,ib,1), 1 )
+              CALL ZDSCAL( cdesc%ngwl, -1.0d0, cgrad(1,ib), 1 )
             END DO
-            grade(:,:,1,nowv)  = cgrad(:,:,1)
-            parame(:,:,1,nowv) = c(:,:,1)
+            grade(:,:,nowv)  = cgrad(:,:)
+            parame(:,:,nowv) = c(:,:)
           RETURN
         END SUBROUTINE update_diis_buffers
 
@@ -571,13 +571,13 @@ CONTAINS
         SUBROUTINE diis_steepest(c, cgrad, cdesc, var2)
           USE wave_types, ONLY: wave_descriptor
           IMPLICIT NONE
-          COMPLEX(DP), INTENT(IN) :: cgrad(:,:,:)
-          COMPLEX(DP), INTENT(INOUT) :: c(:,:,:)
+          COMPLEX(DP), INTENT(IN) :: cgrad(:,:)
+          COMPLEX(DP), INTENT(INOUT) :: c(:,:)
           TYPE (wave_descriptor), INTENT(IN) :: cdesc
           REAL(DP), INTENT(IN) :: var2
-          c(:,:,1) = c(:,:,1) + var2 * cgrad(:,:,1)
+          c(:,:) = c(:,:) + var2 * cgrad(:,:)
           IF ( cdesc%gzero ) THEN
-             c(1,:,1) = CMPLX( DBLE( c(1,:,1) ), 0.d0 )
+             c(1,:) = CMPLX( DBLE( c(1,:) ), 0.d0 )
           END IF
           RETURN
         END SUBROUTINE diis_steepest

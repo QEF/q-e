@@ -90,7 +90,7 @@
                   nbeg, newnfi, tnewnfi, isave, iprint, tv0rd, nv0rd, tzeroc, tzerop, &
                   tfor, thdyn, tzeroe, tsde, tsdp, tsdc, taurdr, ndr, &
                   ndw, tortho, timing, memchk, iprsta, &
-                  tconjgrad, tprnsfac, toptical, tcarpar, &
+                  tconjgrad, tprnsfac, tcarpar, &
                   tdipole, t_diis, t_diis_simple, t_diis_rot, &
                   tnosee, tnosep, force_pairing, tconvthrs, convergence_criteria, tionstep, nstepe, &
                   tsteepdesc, ekin_conv_thr, ekin_maxiter, ionic_conjugate_gradient, &
@@ -106,14 +106,13 @@
       USE pseudopotential
       USE potentials, ONLY: vofrhos, localisation
       USE ions_module, ONLY: moveions, max_ion_forces, update_ions, resort_position
-      USE electrons_module, ONLY: ei, nspin, n_emp
+      USE electrons_module, ONLY: ei, n_emp
       USE diis, ONLY: allocate_diis
       USE charge_density, ONLY: rhoofr
       USE fft_base, ONLY: dfftp, dffts
       USE check_stop, ONLY: check_stop_now
       USE nl, ONLY: nlrh_m
       USE time_step, ONLY: tps, delt
-      USE brillouin, ONLY: kp
       USE rundiis_module, ONLY: rundiis, runsdiis
       USE wave_types
       use wave_base, only: frice
@@ -121,7 +120,6 @@
       USE kohn_sham_states, ONLY: ks_states_force_pairing
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
-      USE optical_properties, ONLY: opticalp
       USE wave_functions, ONLY: update_wave_functions
       USE runsd_module, ONLY: runsd
       USE input, ONLY: iosys
@@ -134,7 +132,7 @@
       USE sic_module, ONLY: self_interaction, nat_localisation
       USE ions_base, ONLY: if_pos, ind_srt, ions_thermal_stress
       USE constants, ONLY: au, au_ps
-      USE electrons_base, ONLY: nupdwn, nbnd
+      USE electrons_base, ONLY: nupdwn, nbnd, nspin
       USE electrons_nose, ONLY: electrons_nosevel, electrons_nose_shiftvar, electrons_noseupd, &
                                 vnhe, xnhe0, xnhem, xnhep, qne, ekincw
       USE cell_nose, ONLY: cell_nosevel, cell_noseupd, cell_nose_shiftvar, &
@@ -159,10 +157,9 @@
       USE recvecs_subroutines, ONLY: recvecs_init
       !
       USE wavefunctions_module, ONLY: & ! electronic wave functions
-           c0, & ! c0(:,:,:,:)  ! wave functions at time t
-           cm, & ! cm(:,:,:,:)  ! wave functions at time t-delta t
-           cp, & ! cp(:,:,:,:)  ! wave functions at time t+delta t
-           ce    ! ce(:,:,:,:)  ! empty states wave func. at time t
+           c0, & ! c0(:,:,:)  ! wave functions at time t
+           cm, & ! cm(:,:,:)  ! wave functions at time t-delta t
+           cp    ! cp(:,:,:)  ! wave functions at time t+delta t
       !
       USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
       USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
@@ -179,7 +176,7 @@
       USE io_files        , ONLY: outdir, prefix
       USE printout_base   , ONLY: printout_base_init
       USE cp_main_variables, ONLY : ei1, ei2, ei3, eigr, sfac, &
-                                    ht0, htm, htp, rhor, vpot, wfill, wempt,     &
+                                    ht0, htm, htp, rhor, vpot, wfill, &
                                     acc, acc_this_run, occn, edft, nfi, bec, becdr
       USE ions_positions,    ONLY : atoms0, atomsp, atomsm
       USE cg_module,         ONLY : tcg
@@ -207,7 +204,7 @@
       REAL(DP) :: temphh(3,3) = 0.0d0
 
       LOGICAL :: ttforce, tstress, ttdiis
-      LOGICAL :: ttprint, ttsave, ttdipole, ttoptical, ttexit
+      LOGICAL :: ttprint, ttsave, ttdipole, ttexit
       LOGICAL :: tstop, tconv, doions
       LOGICAL :: topen, ttcarpar, ttempst
       LOGICAL :: ttconvchk
@@ -221,7 +218,7 @@
       !
 
       IF( t_diis ) THEN 
-        CALL allocate_diis( ngw, nbnd, kp%nkpt )
+        CALL allocate_diis( ngw, nbnd )
       END IF
 
       erhoold   = 1.0d+20  ! a very large number
@@ -267,10 +264,9 @@
         ttconvchk =  tconvthrs%active .AND. ( MOD( nfi, tconvthrs%nstep ) == 0 )
         !
         ttdipole  =  ttprint .AND. tdipole
-        ttoptical =  ttprint .AND. toptical
         ttforce   =  tfor  .OR. ( ttprint .AND. tprnfor )
         tstress   =  thdyn .OR. ( ttprint .AND. tpre )
-        ttempst   =  ttprint .AND. ( MAXVAL( wempt%nbt ) > 0 )
+        ttempst   =  ttprint .AND. ( n_emp > 0 )
         ttcarpar  =  tcarpar
         ttdiis    =  t_diis 
         doions    = .TRUE.
@@ -376,7 +372,7 @@
         !
         atoms0%for = 0.0d0
         !
-        edft%enl = nlrh_m( c0, wfill, ttforce, atoms0, occn, bec, becdr, eigr)
+        edft%enl = nlrh_m( c0, wfill, ttforce, atoms0, bec, becdr, eigr)
 
         ! ...   compute the new charge density "rhor"
         !
@@ -510,7 +506,7 @@
         ! ...   Here find Empty states eigenfunctions and eigenvalues
         !
         IF ( ttempst ) THEN
-           CALL empty( tortho, atoms0, c0, wfill, ce, wempt, vpot, eigr )
+           CALL empty( tortho, atoms0, c0, wfill, vpot, eigr )
         END IF
 
         ! ...   dipole
@@ -520,20 +516,13 @@
            IF( wfill%nspin > 1 ) &
               CALL errore( ' main ',' dipole with spin not yet implemented ', 0 )
            !
-           CALL ddipole( nfi, c0(:,:,1,1), ngw, atoms0%taus, tfor, ngw, wfill%nbl( 1 ), ht0%a )
+           CALL ddipole( nfi, c0(:,:,1), ngw, atoms0%taus, tfor, ngw, wfill%nbl( 1 ), ht0%a )
 
-        END IF
-
-        ! ...   Optical properties
-        !
-        IF( ttoptical ) THEN
-           CALL errore( ' main ',' optical there are still problem ', 0 )
-           ! CALL opticalp(nfi, ht0, atoms0, c0, wfill, occn, ce, wempt, vpot, bec, eigr )
         END IF
 
         IF( self_interaction /= 0 ) THEN
            IF ( nat_localisation > 0 .AND. ttprint ) THEN
-              CALL localisation( cp( : , nupdwn(1), 1, 1 ), atoms0, ht0)
+              CALL localisation( cp( : , nupdwn(1), 1 ), atoms0, ht0)
            END IF
         END IF
 
@@ -700,12 +689,10 @@
         END DO
       END IF
       !
-      IF(tksout) THEN
-        IF ( force_pairing ) THEN 
-          CALL ks_states_force_pairing(c0, wfill, ce, wempt, occn, vpot, eigr, bec )
-        ELSE
-          CALL ks_states(c0, wfill, ce, wempt, occn, vpot, eigr, bec )
-        END IF
+      IF ( force_pairing ) THEN 
+        CALL ks_states_force_pairing(c0, wfill, occn, vpot, eigr, bec )
+      ELSE
+        CALL ks_states(c0, wfill, occn, vpot, eigr, bec )
       END IF
 
       IF(tprnsfac) THEN

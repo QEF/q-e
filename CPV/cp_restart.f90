@@ -36,7 +36,7 @@ MODULE cp_restart
                              taui, cdmi, stau0, svel0, staum, svelm, force,  &
                              vnhp, xnhp0, xnhpm,nhpcl,nhpdim, occ0, occm,    &
                              lambda0,lambdam, xnhe0, xnhem, vnhe, ekincm,    &
-                             et, rho, c04, cm4, c02, cm2, mat_z )
+                             et, rho, c03, cm3, c02, cm2, mat_z )
       !------------------------------------------------------------------------
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, reduce_io
@@ -63,6 +63,7 @@ MODULE cp_restart
       USE mp,                       ONLY : mp_sum
       USE parameters,               ONLY : nhclm
       USE fft_base,                 ONLY : dfftp
+      USE constants,                ONLY : pi
       !
       IMPLICIT NONE
       !
@@ -94,18 +95,18 @@ MODULE cp_restart
       REAL(DP),              INTENT(IN) :: vnhp(:)      ! 
       INTEGER,               INTENT(IN) :: nhpcl        ! 
       INTEGER,               INTENT(IN) :: nhpdim       ! 
-      REAL(DP),              INTENT(IN) :: occ0(:,:,:)  ! 
-      REAL(DP),              INTENT(IN) :: occm(:,:,:)  ! 
+      REAL(DP),              INTENT(IN) :: occ0(:,:)    ! 
+      REAL(DP),              INTENT(IN) :: occm(:,:)    ! 
       REAL(DP),              INTENT(IN) :: lambda0(:,:,:) ! 
       REAL(DP),              INTENT(IN) :: lambdam(:,:,:) ! 
       REAL(DP),              INTENT(IN) :: xnhe0        ! 
       REAL(DP),              INTENT(IN) :: xnhem        ! 
       REAL(DP),              INTENT(IN) :: vnhe         ! 
       REAL(DP),              INTENT(IN) :: ekincm       ! 
-      REAL(DP),              INTENT(IN) :: et(:,:,:)    ! 
+      REAL(DP),              INTENT(IN) :: et(:,:)      ! 
       REAL(DP),              INTENT(IN) :: rho(:,:)     ! 
-      COMPLEX(DP), OPTIONAL, INTENT(IN) :: c04(:,:,:,:) ! 
-      COMPLEX(DP), OPTIONAL, INTENT(IN) :: cm4(:,:,:,:) ! 
+      COMPLEX(DP), OPTIONAL, INTENT(IN) :: c03(:,:,:)   ! 
+      COMPLEX(DP), OPTIONAL, INTENT(IN) :: cm3(:,:,:)   ! 
       COMPLEX(DP), OPTIONAL, INTENT(IN) :: c02(:,:)     ! 
       COMPLEX(DP), OPTIONAL, INTENT(IN) :: cm2(:,:)     ! 
       REAL(DP),    OPTIONAL, INTENT(IN) :: mat_z(:,:,:) ! 
@@ -121,6 +122,7 @@ MODULE cp_restart
       INTEGER               :: is, ia, isa, iss, ise, ik, ierr
       INTEGER,  ALLOCATABLE :: mill(:,:)
       INTEGER,  ALLOCATABLE :: ftmp(:,:)
+      REAL(DP), ALLOCATABLE :: occ_(:)
       INTEGER,  ALLOCATABLE :: ityp(:)
       REAL(DP), ALLOCATABLE :: tau(:,:)
       REAL(DP), ALLOCATABLE :: rhoaux(:)
@@ -178,9 +180,9 @@ MODULE cp_restart
       k1  = 0
       k2  = 0
       k3  = 0
-      nk1 = 1
-      nk2 = 1
-      nk3 = 1
+      nk1 = 0
+      nk2 = 0
+      nk3 = 0
       !
       ! ... Compute Cell related variables
       !
@@ -191,8 +193,6 @@ MODULE cp_restart
       a1 = ht(1,:)
       a2 = ht(2,:)
       a3 = ht(3,:)
-      !
-      CALL recips( a1, a2, a3, b1, b2, b3 )
       !
       scalef = 1.D0 / SQRT( omega )
       !
@@ -290,6 +290,12 @@ MODULE cp_restart
 !-------------------------------------------------------------------------------
 ! ... CELL
 !-------------------------------------------------------------------------------
+         !
+         a1 = a1 / alat
+         a2 = a2 / alat
+         a3 = a3 / alat
+         !
+         CALL recips( a1, a2, a3, b1, b2, b3 )
          !
          CALL write_cell( ibrav, symm_type, &
                           celldm, alat, a1, a2, a3, b1, b2, b3 )
@@ -483,13 +489,16 @@ MODULE cp_restart
          !
          CALL iotk_write_end( iunpun, "TIMESTEPS" )
          !
-!-------------------------------------------------------------------------------
-! ... BAND_STRUCTURE
-!-------------------------------------------------------------------------------
+      END IF
+
+      !-------------------------------------------------------------------------------
+      ! ... BAND_STRUCTURE
+      !-------------------------------------------------------------------------------
+
+      IF ( ionode ) THEN
+
          ! 
          CALL iotk_write_begin( iunpun, "BAND_STRUCTURE" )
-         !
-         CALL iotk_write_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin )
          !
          nelec = nelt
          !
@@ -513,6 +522,8 @@ MODULE cp_restart
             !
          END IF
          !
+         CALL iotk_write_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin )
+         !
          CALL iotk_write_begin( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
          !
       END IF
@@ -529,20 +540,25 @@ MODULE cp_restart
             !
             CALL iotk_write_dat( iunpun, "WEIGHT", wk(ik) )
             !
+            ALLOCATE( occ_( SIZE( occ0, 1 ) ) )
+            !
             DO ispin = 1, nspin
                !
                cspin = iotk_index( ispin )
                !
                CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
                CALL iotk_write_dat( iunpun, "ET" // TRIM( cspin ), &
-                                    et(:,ik,ispin), ATTR = attr  )
+                                    et(:,ispin), ATTR = attr  )
                !
-               CALL iotk_write_dat( iunpun, &
-                                    "OCC0" // TRIM( cspin ), occ0(:,ik,ispin) )
-               CALL iotk_write_dat( iunpun, &
-                                    "OCCM" // TRIM( cspin ), occm(:,ik,ispin) )
+               occ_ = occ0( :, ispin ) / wk(ik)
+               CALL iotk_write_dat( iunpun, "OCC"  // TRIM( cspin ), occ_(:) )
+
+               occ_ = occm( :, ispin ) / wk(ik)
+               CALL iotk_write_dat( iunpun, "OCCM" // TRIM( cspin ), occ_(:) )
                !
             END DO
+            !
+            DEALLOCATE( occ_ )
             !
             ! ... G+K vectors
             !
@@ -589,10 +605,10 @@ MODULE cp_restart
             iss_wfc = ispin
             if( force_pairing ) iss_wfc = 1   ! only the WF for the first spin is allocated
             !
-            IF ( PRESENT( c04 ) ) THEN
+            IF ( PRESENT( c03 ) ) THEN
                !
                CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin,   &
-                               c04(:,:,ik,iss_wfc), ngwt, nbnd, ig_l2g, &
+                               c03(:,:,iss_wfc), ngwt, nbnd, ig_l2g, &
                                ngw, filename, scalef )
                !
             ELSE IF ( PRESENT( c02 ) ) THEN
@@ -632,10 +648,10 @@ MODULE cp_restart
                !
             END IF
             !
-            IF ( PRESENT( cm4 ) ) THEN
+            IF ( PRESENT( cm3 ) ) THEN
                !
                CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin,   &
-                              cm4(:,:,ik,iss_wfc), ngwt, nbnd, ig_l2g,  &
+                              cm3(:,:,iss_wfc), ngwt, nbnd, ig_l2g,  &
                               ngw, filename, scalef )
                !
             ELSE IF ( PRESENT( c02 ) ) THEN
@@ -729,7 +745,7 @@ MODULE cp_restart
                             taui, cdmi, stau0, svel0, staum, svelm, force,    &
                             vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ0, occm,      &
                             lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, vnhe, &
-                            ekincm, c04, cm4, c02, cm2, mat_z )
+                            ekincm, c03, cm3, c02, cm2, mat_z )
       !------------------------------------------------------------------------
       !
       USE control_flags,            ONLY : gamma_only, force_pairing
@@ -752,7 +768,7 @@ MODULE cp_restart
       USE mp,                       ONLY : mp_sum
       USE mp_global,                ONLY : intra_image_comm
       USE parameters,               ONLY : nhclm, ntypx
-      USE constants,                ONLY : eps8, angstrom_au
+      USE constants,                ONLY : eps8, angstrom_au, pi
       !
       IMPLICIT NONE
       !
@@ -784,8 +800,8 @@ MODULE cp_restart
       REAL(DP),              INTENT(INOUT) :: vnhp(:)      !  
       INTEGER,               INTENT(INOUT) :: nhpcl        !  
       INTEGER,               INTENT(INOUT) :: nhpdim       !  
-      REAL(DP),              INTENT(INOUT) :: occ0(:,:,:)  !
-      REAL(DP),              INTENT(INOUT) :: occm(:,:,:)  !
+      REAL(DP),              INTENT(INOUT) :: occ0(:,:)    !
+      REAL(DP),              INTENT(INOUT) :: occm(:,:)    !
       REAL(DP),              INTENT(INOUT) :: lambda0(:,:,:) !
       REAL(DP),              INTENT(INOUT) :: lambdam(:,:,:) !
       REAL(DP),              INTENT(INOUT) :: b1(3)        !
@@ -795,8 +811,8 @@ MODULE cp_restart
       REAL(DP),              INTENT(INOUT) :: xnhem        !
       REAL(DP),              INTENT(INOUT) :: vnhe         !  
       REAL(DP),              INTENT(INOUT) :: ekincm       !  
-      COMPLEX(DP), OPTIONAL, INTENT(INOUT) :: c04(:,:,:,:) ! 
-      COMPLEX(DP), OPTIONAL, INTENT(INOUT) :: cm4(:,:,:,:) ! 
+      COMPLEX(DP), OPTIONAL, INTENT(INOUT) :: c03(:,:,:)   ! 
+      COMPLEX(DP), OPTIONAL, INTENT(INOUT) :: cm3(:,:,:)   ! 
       COMPLEX(DP), OPTIONAL, INTENT(INOUT) :: c02(:,:)     ! 
       COMPLEX(DP), OPTIONAL, INTENT(INOUT) :: cm2(:,:)     ! 
       REAL(DP),    OPTIONAL, INTENT(INOUT) :: mat_z(:,:,:) ! 
@@ -895,9 +911,14 @@ MODULE cp_restart
       ALLOCATE( if_pos_( 3, nat ) )
       ALLOCATE( ityp_( nat ) )
       !
-      IF ( ionode ) &
+      IF ( ionode ) THEN
+         !
          CALL read_cell( ibrav_, symm_type_, celldm_, &
                          alat_, a1_, a2_, a3_, b1, b2, b3 )
+         !
+         CALL recips( a1_, a2_, a3_, b1, b2, b3 )
+         !
+      END IF
       !
       IF ( ionode ) THEN
          !
@@ -1114,9 +1135,7 @@ MODULE cp_restart
          !
          CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE" )
          !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin_ )
-         !
-         IF ( nspin_ == 2 ) THEN
+         IF ( nspin == 2 ) THEN
             !
             CALL iotk_scan_dat( iunpun, &
                                 "NUMBER_OF_ELECTRONS", nelec_, ATTR = attr )
@@ -1130,6 +1149,8 @@ MODULE cp_restart
             !
          END IF
          !
+         CALL iotk_scan_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin_ )
+         ! 
          IF ( ( nspin_ /= nspin ) .OR. &
               ( nbnd_ /= nbnd ) .OR. ( NINT( nelec_ ) /= nelt ) ) THEN 
             !
@@ -1139,7 +1160,7 @@ MODULE cp_restart
             GOTO 100
             !
          END IF
-         ! 
+         !
          CALL iotk_scan_begin( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
          !
       END IF
@@ -1165,27 +1186,29 @@ MODULE cp_restart
             IF ( ionode ) THEN
                !
                CALL iotk_scan_dat( iunpun, &
-                                   "OCC0" // TRIM( cspin ), occ0(:,ik,ispin),  &
+                                   "OCC" // TRIM( cspin ), occ0(:,ispin),  &
                                    FOUND = found, IERR = ierr )
                !
-               IF ( .NOT. found ) THEN
-                  !
-                  CALL iotk_scan_dat( iunpun, &
-                                      "OCC" // TRIM( cspin ), occ0(:,ik,ispin) )
-                  !
+               IF( ierr /= 0 ) THEN
+                  attr = "error reading OCC"
+                  GOTO 100
                END IF
                !
-               CALL iotk_scan_dat( iunpun, &
-                                   "OCCM" // TRIM( cspin ), occm(:,ik,ispin ), &
-                                   FOUND = found, IERR = ierr )
+               occ0(:,ispin) = occ0(:,ispin) * wk_
                !
-               occ0(:,ik,ispin) = occ0(:,ik,ispin) * wk_
+               CALL iotk_scan_dat( iunpun, &
+                                   "OCCM" // TRIM( cspin ), occm(:,ispin ), &
+                                   FOUND = found, IERR = ierr )
                !
                IF ( .NOT. found ) THEN
                   !
-                  occm(:,ik,ispin) = occ0(:,ik,ispin)
+                  occm(:,ispin) = occ0(:,ispin)
                   !
                   tread_cm = .FALSE.
+                  !
+               ELSE
+                  !
+                  occm(:,ispin) = occm(:,ispin) * wk_
                   !
                END IF
                !
@@ -1211,10 +1234,10 @@ MODULE cp_restart
                !
                ! Only WF with spin 1 are needed when force_pairing is active
                !
-               IF ( PRESENT( c04 ) ) THEN
+               IF ( PRESENT( c03 ) ) THEN
                   !
                   CALL read_wfc( iunout, ik_eff , nk, kunit, ispin_, nspin_, &
-                                 c04(:,:,ik,ispin), ngwt_, nbnd_, ig_l2g, &
+                                 c03(:,:,ispin), ngwt_, nbnd_, ig_l2g, &
                                  ngw, filename, scalef_ )
                   !
                ELSE IF ( PRESENT( c02 ) ) THEN
@@ -1250,10 +1273,10 @@ MODULE cp_restart
                   !
                   ! Only WF with spin 1 are needed when force_pairing is active
                   !
-                  IF ( PRESENT( cm4 ) ) THEN
+                  IF ( PRESENT( cm3 ) ) THEN
                      !
                      CALL read_wfc( iunout, ik_eff, nk, kunit, ispin_, nspin_,   &
-                                    cm4(:,:,ik,ispin), ngwt_, nbnd_, ig_l2g, &
+                                    cm3(:,:,ispin), ngwt_, nbnd_, ig_l2g, &
                                     ngw, filename, scalef_ )
                      !
                   ELSE IF( PRESENT( cm2 ) ) THEN
@@ -1270,9 +1293,9 @@ MODULE cp_restart
                !
             ELSE
                !
-               IF ( PRESENT( cm4 ) ) THEN
+               IF ( PRESENT( cm3 ) ) THEN
                   !
-                  cm4 = c04
+                  cm3 = c03
                   !
                ELSE IF( PRESENT( cm2 ) ) THEN
                   !
@@ -1345,8 +1368,8 @@ MODULE cp_restart
       !
       CALL mp_bcast( kunit, ionode_id, intra_image_comm )
 
-      CALL mp_bcast( occ0(:,:,:), ionode_id, intra_image_comm )
-      CALL mp_bcast( occm(:,:,:), ionode_id, intra_image_comm )
+      CALL mp_bcast( occ0(:,:), ionode_id, intra_image_comm )
+      CALL mp_bcast( occm(:,:), ionode_id, intra_image_comm )
       !
       IF ( PRESENT( mat_z ) ) &
          CALL mp_bcast( mat_z(:,:,:), ionode_id, intra_image_comm )

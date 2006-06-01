@@ -225,16 +225,19 @@
 
 
 !-----------------------------------------------------------------------
-      subroutine phfac( tau0, ei1, ei2, ei3, eigr)
-!-----------------------------------------------------------------------
-!  this subroutine generates the complex matrices ei1, ei2, and ei3
-!  used to compute the structure factor and forces on atoms :
-!     ei1(n1,ia,is) = exp(-i*n1*b1*tau(ia,is)) -nr1<n1<nr1
-!  and similar definitions for ei2 and ei3 ; and :
-!     eigr(n,ia,is) = ei1*ei2*ei3 = exp(-i g*tau(ia,is))
-!  The value of n1,n2,n3 for a vector g is supplied by arrays mill_l
-!  calculated in ggen .
-!
+
+   subroutine phfac( tau0, ei1, ei2, ei3, eigr)
+
+      !-----------------------------------------------------------------------
+      !  this subroutine generates the complex matrices ei1, ei2, and ei3
+      !  used to compute the structure factor and forces on atoms :
+      !     ei1(n1,ia,is) = exp(-i*n1*b1*tau(ia,is)) -nr1<n1<nr1
+      !  and similar definitions for ei2 and ei3 ; and :
+      !     eigr(n,ia,is) = ei1*ei2*ei3 = exp(-i g*tau(ia,is))
+      !  The value of n1,n2,n3 for a vector g is supplied by arrays mill_l
+      !  calculated in ggen .
+      !
+      use kinds,              only: DP
       use control_flags,      only: iprsta
       use io_global,          only: stdout
       use ions_base,          only: nsp, na, nat
@@ -245,13 +248,13 @@
       use phase_factors_module, only: phfacs
 !
       implicit none
-      real(8) tau0(3,nat)
+      real(DP) tau0(3,nat)
 !
-      complex(8) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),      &
+      complex(DP) ei1(-nr1:nr1,nat), ei2(-nr2:nr2,nat),      &
      &                ei3(-nr3:nr3,nat), eigr(ngw,nat)
 !
       integer :: i, isa
-      real(8), allocatable :: taus(:,:)
+      real(DP), allocatable :: taus(:,:)
 !
       allocate( taus(3,nat) )
 !
@@ -265,7 +268,7 @@
       deallocate( taus )
 !
       return
-      end subroutine phfac
+   end subroutine phfac
 
 
 !-----------------------------------------------------------------------

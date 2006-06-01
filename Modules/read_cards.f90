@@ -264,13 +264,13 @@ MODULE read_cards_module
        ELSE IF ( TRIM(card) == 'KSOUT' ) THEN
           !
           CALL card_ksout( input_line )
-          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+          IF ( ( prog == 'PW' ) .AND. ionode ) &
              WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'KSOUT_EMPTY' ) THEN
           !
           CALL card_ksout_empty( input_line )
-          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+          IF ( ( prog == 'PW' ) .AND. ionode ) &
              WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'CLIMBING_IMAGES' ) THEN

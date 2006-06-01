@@ -34,10 +34,9 @@
 
      ! electronic wave functions, FPMD code
      !
-     COMPLEX(DP), ALLOCATABLE :: c0(:,:,:,:)  ! wave functions at time t
-     COMPLEX(DP), ALLOCATABLE :: cm(:,:,:,:)  ! wave functions at time t-delta t
-     COMPLEX(DP), ALLOCATABLE :: cp(:,:,:,:)  ! wave functions at time t+delta t
-     COMPLEX(DP), ALLOCATABLE :: ce(:,:,:,:)  ! empty states wave func. at time t
+     COMPLEX(DP), ALLOCATABLE :: c0(:,:,:)  ! wave functions at time t
+     COMPLEX(DP), ALLOCATABLE :: cm(:,:,:)  ! wave functions at time t-delta t
+     COMPLEX(DP), ALLOCATABLE :: cp(:,:,:)  ! wave functions at time t+delta t
 
    CONTAINS
 
@@ -45,7 +44,6 @@
        IF( ALLOCATED( c0 ) ) DEALLOCATE( c0 )
        IF( ALLOCATED( cm ) ) DEALLOCATE( cm )
        IF( ALLOCATED( cp ) ) DEALLOCATE( cp )
-       IF( ALLOCATED( ce ) ) DEALLOCATE( ce )
        IF( ALLOCATED( psic_nc ) ) DEALLOCATE( psic_nc )
        IF( ALLOCATED( evc_nc ) ) DEALLOCATE( evc_nc )
        IF( ALLOCATED( psic ) ) DEALLOCATE( psic )

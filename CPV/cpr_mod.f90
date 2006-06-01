@@ -176,67 +176,6 @@ MODULE cpr_subroutines
     !
   END SUBROUTINE ions_cofmsub
   !
-  subroutine elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, n, delt )
-    use mp, only: mp_sum
-    use mp_global, only: intra_image_comm
-    use reciprocal_vectors, only: gstart
-    use wave_base, only: wave_speed2
-    real(8), intent(out) :: ekincm
-    real(8), intent(in)  :: ema0bg(:), delt, emass
-    complex(8), intent(in)  :: c0(:,:,:,:), cm(:,:,:,:)
-    integer, intent(in) :: ngw, n
-    real(8), allocatable :: emainv(:)
-    real(8) :: ftmp
-    integer :: i
-
-    ALLOCATE( emainv( ngw ) )
-    emainv = 1.0d0 / ema0bg
-    ftmp = 1.0d0
-    if( gstart == 2 ) ftmp = 0.5d0
-
-    ekincm=0.0d0
-    do i=1,n
-      ekincm = ekincm + 2.0d0 * &
-               wave_speed2( c0(:,i,1,1), cm(:,i,1,1), emainv, ftmp )
-    end do
-    ekincm = ekincm * emass / ( delt * delt )
-
-    CALL mp_sum( ekincm, intra_image_comm )
-    DEALLOCATE( emainv )
-
-    return
-  end subroutine elec_fakekine
-
-  subroutine elec_fakekine2( ekincm, ema0bg, emass, c0, cm, ngw, n, delt )
-    use mp, only: mp_sum
-    use mp_global, only: intra_image_comm
-    use reciprocal_vectors, only: gstart
-    use wave_base, only: wave_speed2
-    real(8), intent(out) :: ekincm
-    real(8), intent(in)  :: ema0bg(:), delt, emass
-    complex(8), intent(in)  :: c0(:,:), cm(:,:)
-    integer, intent(in) :: ngw, n
-    real(8), allocatable :: emainv(:)
-    real(8) :: ftmp
-    integer :: i
-
-    ALLOCATE( emainv( ngw ) )
-    emainv = 1.0d0 / ema0bg
-    ftmp = 1.0d0
-    if( gstart == 2 ) ftmp = 0.5d0
-
-    ekincm=0.0d0
-    do i=1,n
-      ekincm = ekincm + 2.0d0 * &
-               wave_speed2( c0(:,i), cm(:,i), emainv, ftmp )
-    end do
-    ekincm = ekincm * emass / ( delt * delt )
-
-    CALL mp_sum( ekincm, intra_image_comm )
-    DEALLOCATE( emainv )
-
-    return
-  end subroutine elec_fakekine2
 
  
   subroutine print_lambda( lambda, n, nshow, ccc, iunit )

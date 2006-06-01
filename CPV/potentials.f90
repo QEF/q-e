@@ -192,7 +192,7 @@
         LOGICAL   :: tcel
         INTEGER,              INTENT(IN)    :: nfi
         TYPE (atoms_type),    INTENT(INOUT) :: atoms
-        COMPLEX(DP),         INTENT(INOUT) :: c0(:,:,:,:)
+        COMPLEX(DP),         INTENT(INOUT) :: c0(:,:,:)
         TYPE (wave_descriptor),  INTENT(IN) :: cdesc
         REAL(DP) :: rhoe(:,:)
         COMPLEX(DP) :: ei1(:,:)
@@ -200,7 +200,7 @@
         COMPLEX(DP) :: ei3(:,:)
         COMPLEX(DP) :: eigr(:,:)
         TYPE (boxdimensions), INTENT(INOUT) ::  ht
-        REAL(DP), INTENT(IN) :: fi(:,:,:)
+        REAL(DP), INTENT(IN) :: fi(:,:)
         REAL(DP) :: bec(:,:)
         REAL(DP) :: becdr(:,:,:)
         TYPE (dft_energy_type) :: edft
@@ -209,7 +209,7 @@
         LOGICAL, INTENT(IN) :: tforce, tstress, tprint
         REAL(DP), INTENT(OUT) :: timepre
 
-        edft%enl = nlrh_m( c0, cdesc, tforce, atoms, fi, bec, becdr, eigr )
+        edft%enl = nlrh_m( c0, cdesc, tforce, atoms, bec, becdr, eigr )
 
         CALL rhoofr( nfi, c0, cdesc, fi, rhoe, ht )
 
@@ -293,13 +293,13 @@
 ! ... declare subroutine arguments
       LOGICAL, INTENT(IN) :: tprint, tforce, tstress
       REAL(DP)            :: vpot(:,:)
-      REAL(DP),    INTENT(IN) :: fi(:,:,:)
+      REAL(DP),    INTENT(IN) :: fi(:,:)
       REAL(DP)    :: bec(:,:)
       COMPLEX(DP) :: ei1(:,:)
       COMPLEX(DP) :: ei2(:,:)
       COMPLEX(DP) :: ei3(:,:)
       COMPLEX(DP) :: eigr(:,:)
-      COMPLEX(DP),   INTENT(IN) :: c0(:,:,:,:)
+      COMPLEX(DP),   INTENT(IN) :: c0(:,:,:)
       TYPE (atoms_type), INTENT(INOUT) :: atoms
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE (boxdimensions),    INTENT(INOUT) :: box
@@ -437,7 +437,7 @@
       DO iss = 1, nspin
         iswfc = iss
         IF( force_pairing ) iswfc = 1
-        edft%ekin  = edft%ekin + enkin( c0(1,1,1,iswfc), SIZE(c0,1), fi(1,1,iss), cdesc%nbl(iss) )
+        edft%ekin  = edft%ekin + enkin( c0(1,1,iswfc), SIZE(c0,1), fi(1,iss), cdesc%nbl(iss) )
       END DO
 
       IF(tprint) THEN

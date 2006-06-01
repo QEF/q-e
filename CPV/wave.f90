@@ -22,16 +22,13 @@
 
           PUBLIC :: crot, proj, fixwave
           INTERFACE crot
-            MODULE PROCEDURE crot_kp, crot_gamma
+            MODULE PROCEDURE  crot_gamma
           END INTERFACE
           INTERFACE proj
-            MODULE PROCEDURE proj_kp, proj_gamma, proj2
-          END INTERFACE
-          INTERFACE fixwave
-            MODULE PROCEDURE fixwave_s, fixwave_v, fixwave_m
+            MODULE PROCEDURE  proj_gamma, proj2
           END INTERFACE
 
-          PUBLIC :: cp_kinetic_energy
+          PUBLIC :: cp_kinetic_energy, elec_fakekine2, elec_fakekine
           PUBLIC :: update_wave_functions, wave_rand_init
 
 !=----------------------------------------------------------------------------=!
@@ -39,81 +36,98 @@
 !=----------------------------------------------------------------------------=!
 
 
-   SUBROUTINE fixwave_s ( ispin, c, cdesc, kmask )
+   SUBROUTINE fixwave ( ispin, c, cdesc )
 
       USE wave_types, ONLY: wave_descriptor
 
       IMPLICIT NONE
 
-      COMPLEX(DP), INTENT(INOUT) :: c(:,:)
-      INTEGER, INTENT(IN) :: ispin
-      TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      REAL(DP), INTENT(IN) :: kmask(:)
+      COMPLEX(DP),            INTENT(INOUT) :: c(:,:)
+      INTEGER,                INTENT(IN)    :: ispin
+      TYPE (wave_descriptor), INTENT(IN)    :: cdesc
+      !
       INTEGER :: i
 
-        IF( .NOT. cdesc%gamma ) THEN
-
-          IF( SIZE( c, 1 ) /= SIZE( kmask ) ) &
-            CALL errore( ' fixwave_s ', ' wrong dimensions ', 3 )
-
-          DO i = 1, cdesc%nbl( ispin )
-            c(:,i) = c(:,i) * kmask(:)
-          END DO
-
-        ELSE 
-
-          IF( cdesc%gzero ) THEN
-            DO i = 1, cdesc%nbl( ispin )
-              c( 1, i ) = DBLE( c( 1, i ) )
-            END DO
-          END IF
-
-        END IF
+      IF( cdesc%gzero ) THEN
+         DO i = 1, cdesc%nbl( ispin )
+            c( 1, i ) = DBLE( c( 1, i ) )
+         END DO
+      END IF
 
       RETURN
-   END SUBROUTINE fixwave_s
+   END SUBROUTINE fixwave
+
 
 !=----------------------------------------------------------------------------=!
 
-   SUBROUTINE fixwave_v ( ispin, c, cdesc, kmask )
-      USE wave_types, ONLY: wave_descriptor
-      IMPLICIT NONE
-      COMPLEX(DP), INTENT(INOUT) :: c(:,:,:)
-      TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      REAL(DP), INTENT(IN) :: kmask(:,:)
-      INTEGER, INTENT(IN) :: ispin
-      INTEGER :: i
-        DO i = 1, cdesc%nkl
-          CALL fixwave_s ( ispin, c(:,:,i), cdesc, kmask(:,i) )
-        END DO
-      RETURN
-   END SUBROUTINE fixwave_v
+  subroutine elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, n, delt )
+    use mp, only: mp_sum
+    use mp_global, only: intra_image_comm
+    use reciprocal_vectors, only: gstart
+    use wave_base, only: wave_speed2
+    real(8), intent(out) :: ekincm
+    real(8), intent(in)  :: ema0bg(:), delt, emass
+    complex(8), intent(in)  :: c0(:,:,:), cm(:,:,:)
+    integer, intent(in) :: ngw, n
+    real(8), allocatable :: emainv(:)
+    real(8) :: ftmp
+    integer :: i
+
+    ALLOCATE( emainv( ngw ) )
+    emainv = 1.0d0 / ema0bg
+    ftmp = 1.0d0
+    if( gstart == 2 ) ftmp = 0.5d0
+
+    ekincm=0.0d0
+    do i=1,n
+      ekincm = ekincm + 2.0d0 * &
+               wave_speed2( c0(:,i,1), cm(:,i,1), emainv, ftmp )
+    end do
+    ekincm = ekincm * emass / ( delt * delt )
+
+    CALL mp_sum( ekincm, intra_image_comm )
+    DEALLOCATE( emainv )
+
+    return
+  end subroutine elec_fakekine
 
 !=----------------------------------------------------------------------------=!
 
-   SUBROUTINE fixwave_m ( c, cdesc, kmask )
-      USE wave_types, ONLY: wave_descriptor
-      USE control_flags, ONLY: force_pairing
-      IMPLICIT NONE
-      COMPLEX(DP), INTENT(INOUT) :: c(:,:,:,:)
-      TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      REAL(DP), INTENT(IN) :: kmask(:,:)
-      INTEGER :: i, j, nspin
-      !
-      nspin = cdesc%nspin
-      IF( force_pairing ) nspin = 1
-      !
-      DO j = 1, nspin
-        DO i = 1, cdesc%nkl
-          CALL fixwave_s ( j, c(:,:,i,j), cdesc, kmask(:,i) )
-        END DO
-      END DO
-      RETURN
-   END SUBROUTINE fixwave_m
+  subroutine elec_fakekine2( ekincm, ema0bg, emass, c0, cm, ngw, n, delt )
+    use mp, only: mp_sum
+    use mp_global, only: intra_image_comm
+    use reciprocal_vectors, only: gstart
+    use wave_base, only: wave_speed2
+    real(8), intent(out) :: ekincm
+    real(8), intent(in)  :: ema0bg(:), delt, emass
+    complex(8), intent(in)  :: c0(:,:), cm(:,:)
+    integer, intent(in) :: ngw, n
+    real(8), allocatable :: emainv(:)
+    real(8) :: ftmp
+    integer :: i
+
+    ALLOCATE( emainv( ngw ) )
+    emainv = 1.0d0 / ema0bg
+    ftmp = 1.0d0
+    if( gstart == 2 ) ftmp = 0.5d0
+
+    ekincm=0.0d0
+    do i=1,n
+      ekincm = ekincm + 2.0d0 * &
+               wave_speed2( c0(:,i), cm(:,i), emainv, ftmp )
+    end do
+    ekincm = ekincm * emass / ( delt * delt )
+
+    CALL mp_sum( ekincm, intra_image_comm )
+    DEALLOCATE( emainv )
+
+    return
+  end subroutine elec_fakekine2
+
 
 !=----------------------------------------------------------------------------=!
 
-   REAL(DP) FUNCTION cp_kinetic_energy( ispin, cp, cm, cdesc, pmss, delt)
+   REAL(DP) FUNCTION cp_kinetic_energy( ispin, cp, cm, cdesc, ema0bg, emass, delt)
 
 !  (describe briefly what this routine does...)
 !  if ekinc_fp will hold the full electron kinetic energy (paired and unpaired) and
@@ -121,51 +135,48 @@
 !  ----------------------------------------------
 
 ! ... declare modules
-      USE mp, ONLY: mp_sum
-      USE mp_global, ONLY:  intra_image_comm
-      USE brillouin, ONLY: kpoints, kp
+      USE mp,         ONLY: mp_sum
+      USE mp_global,  ONLY: intra_image_comm
       USE wave_types, ONLY: wave_descriptor
-      USE wave_base, ONLY: wave_speed2
+      USE wave_base,  ONLY: wave_speed2
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      COMPLEX(DP), INTENT(IN) :: cp(:,:,:), cm(:,:,:)
+      COMPLEX(DP), INTENT(IN) :: cp(:,:), cm(:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       INTEGER, INTENT( IN ) :: ispin
       REAL(DP), INTENT(IN) :: delt
-      REAL(DP) :: pmss(:)
+      REAL(DP), INTENT(IN) :: ema0bg(:), emass
 
 ! ... declare other variables
-      COMPLEX(DP) speed
-      REAL(DP)  ekinc, ekinct, dt2, fact
-      INTEGER    ib, j, ik
+      REAL(DP)  ekinc, dt2, fact
+      INTEGER    ib, j
+      REAL(DP), ALLOCATABLE :: emainv(:)
 
 ! ... end of declarations
 !  ----------------------------------------------
 
-      ekinct  = 0.d0
-      dt2     = delt * delt 
+      dt2    = delt * delt 
+      ekinc  = 0.d0
+      fact   = 1.0d0
+      IF( cdesc%gzero ) fact =  0.5d0
 
-      DO ik = 1, cdesc%nkl 
+      ALLOCATE( emainv( SIZE( cp, 1 ) ) )
 
-        ekinc  = 0.d0
-        fact   = 1.0d0
-        IF( cdesc%gamma .AND. cdesc%gzero ) fact =  0.5d0
+      emainv = 1.0d0 / ema0bg
 
-        DO ib = 1, cdesc%nbl( ispin )
-          ekinc = ekinc + wave_speed2( cp(:,ib,ik),  cm(:,ib,ik), pmss, fact )
-        END DO
-
-        IF( cdesc%gamma ) ekinc = ekinc * 2.0d0
-
-        ekinct = ekinct + kp%weight(ik) * ekinc
-
+      DO ib = 1, cdesc%nbl( ispin )
+         ekinc = ekinc + wave_speed2( cp(:,ib),  cm(:,ib), emainv, fact )
       END DO
 
-      CALL mp_sum( ekinct, intra_image_comm )
+      IF( cdesc%gamma ) ekinc = ekinc * 2.0d0
 
-      cp_kinetic_energy = ekinct / (4.0d0 * dt2)
+      CALL mp_sum( ekinc, intra_image_comm )
+
+      cp_kinetic_energy = ekinc * emass / (4.0d0 * dt2)
+
+      DEALLOCATE( emainv )
 
       RETURN
    END FUNCTION cp_kinetic_energy
@@ -180,9 +191,9 @@
 
       IMPLICIT NONE
 
-      COMPLEX(DP), INTENT(IN) :: cp(:,:,:,:)
-      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:)
-      COMPLEX(DP), INTENT(OUT) :: cm(:,:,:,:)
+      COMPLEX(DP), INTENT(IN) :: cp(:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:)
+      COMPLEX(DP), INTENT(OUT) :: cm(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
 
       INTEGER :: ispin, ik, nspin
@@ -192,8 +203,8 @@
       
       DO ispin = 1, nspin
         DO ik = 1, cdesc%nkl
-          cm(:,:,ik,ispin) = c0(:,:,ik,ispin)
-          c0(:,:,ik,ispin) = cp(:,:,ik,ispin)
+          cm(:,:,ispin) = c0(:,:,ispin)
+          c0(:,:,ispin) = cp(:,:,ispin)
         END DO
       END DO
 
@@ -297,82 +308,6 @@
       RETURN
    END SUBROUTINE crot_gamma
 
-!=----------------------------------------------------------------------------=!
-
-   SUBROUTINE crot_kp ( ispin, ik, c0, cdesc, lambda, eig )
-
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
-
-! ... declare modules
-      USE mp, ONLY: mp_bcast
-      USE mp_global, ONLY: nproc_image, me_image, intra_image_comm
-      USE wave_types, ONLY: wave_descriptor
-      USE parallel_toolkit, ONLY: pzhpev_drv, zhpev_drv
-
-      IMPLICIT   NONE
-
-! ... declare subroutine arguments
-      INTEGER, INTENT(IN) :: ik
-      INTEGER, INTENT(IN) :: ispin
-      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:)
-      TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      COMPLEX(DP)  :: lambda(:,:)
-      REAL(DP)      :: eig(:)
-
-! ... declare other variables
-      INTEGER   ngw, nx
-      COMPLEX(DP), ALLOCATABLE :: c0rot(:,:)
-      COMPLEX(DP), ALLOCATABLE :: vv(:,:)
-      COMPLEX(DP), ALLOCATABLE :: uu(:,:)
-      INTEGER   i,j,jl,nrl,ip,nrl_ip
-
-! ... end of declarations
-!  ----------------------------------------------
-
-        nx  = cdesc%nbl( ispin )
-
-        IF( nx < 1 ) THEN
-          RETURN
-        END IF
-
-        ngw = cdesc%ngwl 
-        nrl = SIZE(lambda,1)
-
-        ALLOCATE( vv(nrl, nx), c0rot(ngw, nx) )
-        c0rot = (0.d0,0.d0)
-
-        ALLOCATE(uu(nrl,nx))
-        uu    = lambda
-        CALL pzhpev_drv( 'V', uu, nrl, eig, vv, nrl, nrl, nx, nproc_image, me_image)
-        DEALLOCATE(uu)
-
-        DO ip = 1,nproc_image
-          j = ip
-          nrl_ip = nx/nproc_image
-          IF((ip-1).LT.mod(nx,nproc_image)) THEN
-            nrl_ip = nrl_ip + 1
-          END IF
-          ALLOCATE(uu(nrl_ip,nx))
-          IF(me_image.EQ.(ip-1)) THEN
-            uu = vv
-          END IF
-          CALL mp_bcast(uu, (ip-1), intra_image_comm)
-          DO jl=1,nrl_ip
-            DO i=1,nx
-              CALL ZAXPY(ngw,uu(jl,i),c0(1,j,ik),1,c0rot(1,i),1)
-            END DO
-            j = j + nproc_image
-          END DO
-          DEALLOCATE(uu)
-        END DO
-
-        c0(:,:,ik) = c0rot(:,:)
-
-        DEALLOCATE(c0rot, vv)
-
-        RETURN
-   END SUBROUTINE crot_kp
 
 !=----------------------------------------------------------------------------=!
 
@@ -507,66 +442,6 @@
         DEALLOCATE(ee)
         RETURN
    END SUBROUTINE proj2
-
-!=----------------------------------------------------------------------------=!
-
-   SUBROUTINE proj_kp( ispin, ik, a, adesc, b, bdesc, lambda)
-
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
-
-! ...   declare modules
-        USE mp_global, ONLY: me_image, nproc_image
-        USE wave_types, ONLY: wave_descriptor
-        USE wave_base, ONLY: dotp
-
-        IMPLICIT NONE
-
-! ...   declare subroutine arguments
-        COMPLEX(DP), INTENT(INOUT) :: a(:,:,:), b(:,:,:)
-        TYPE (wave_descriptor), INTENT(IN) :: adesc, bdesc
-        COMPLEX(DP), OPTIONAL  :: lambda(:,:)
-        INTEGER, INTENT(IN) :: ik
-        INTEGER, INTENT(IN) :: ispin
-
-! ...   declare other variables
-        COMPLEX(DP), ALLOCATABLE :: ee(:)
-        INTEGER      :: ngwc, i, j
-        INTEGER      :: nstate_a, nstate_b
-
-! ... end of declarations
-!  ----------------------------------------------
-
-        ngwc     = adesc%ngwl
-        nstate_a = adesc%nbl( ispin )
-        nstate_b = bdesc%nbl( ispin )
-
-        IF( nstate_b < 1 ) THEN
-          RETURN
-        END IF
-
-! ...   lambda(i,j) = b(:,i,ik) dot a(:,j,ik)
-        ALLOCATE(ee(nstate_b))
-        DO i = 1, nstate_a
-          DO j = 1, nstate_b
-            ee(j) = -dotp(ngwc, b(:,j,ik), a(:,i,ik))
-          END DO
-          IF( PRESENT( lambda ) ) THEN
-            IF(mod((i-1),nproc_image).EQ.me_image) THEN
-              DO j = 1, MIN( SIZE( lambda, 2 ), SIZE( ee ) )
-                lambda((i-1)/nproc_image+1,j) = ee(j)
-              END DO
-            END IF
-          END IF
-! ...     a(:,i,ik) = a(:,i,ik) - (sum over j) lambda(i,j) b(:,j,ik)
-          DO j = 1, nstate_b
-            CALL ZAXPY(ngwc, ee(j), b(1,j,ik), 1, a(1,i,ik), 1)
-          END DO
-        END DO
-        DEALLOCATE(ee)
-
-        RETURN
-   END SUBROUTINE proj_kp
 
 
 

@@ -89,7 +89,7 @@ CONTAINS
     use gvecw, only: ngw
     use electrons_base, only: n => nbsp
     IMPLICIT NONE
-    COMPLEX(DP) :: c0( :, :, :, : )
+    COMPLEX(DP) :: c0( :, :, : )
     INTEGER :: nfi
     LOGICAL :: tfirst
     INTEGER :: i, ig
@@ -97,13 +97,13 @@ CONTAINS
       call DSWAP(2*ngw*n,c0,1,c0old,1)
       do i=1,n
         do ig=1,ngw
-          c0(ig,i,1,1)=-c0(ig,i,1,1)+2.d0*c0old(ig,i)
+          c0(ig,i,1)=-c0(ig,i,1)+2.d0*c0old(ig,i)
         enddo
       enddo
     else
       do i=1,n
         do ig=1,ngw
-          c0old(ig,i)=c0(ig,i,1,1)
+          c0old(ig,i)=c0(ig,i,1)
         enddo
       enddo
     endif

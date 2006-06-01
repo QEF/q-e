@@ -37,7 +37,7 @@
           MODULE PROCEDURE EMPTY_SD
         END INTERFACE
 
-        PUBLIC :: empty , empty_init , empty_print_info
+        PUBLIC :: empty , empty_init , empty_print_info, readempty
 
 ! ---------------------------------------------------------------------- !
       CONTAINS
@@ -88,7 +88,7 @@
 
         IMPLICIT none
 
-        COMPLEX(DP), INTENT(INOUT) :: c_emp(:,:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: c_emp(:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wempt
 
         LOGICAL :: exst
@@ -105,7 +105,7 @@
         IF( wempt%nspin < 1 .OR. wempt%nspin > 2 ) &
           CALL errore( ' readempty ', ' nspin out of range ', 1 )
 
-        nk        = wempt%nkl
+        nk        = 1
         nspin     = wempt%nspin
         ngwm_g    = wempt%ngwt 
         ne        = 0
@@ -152,7 +152,7 @@
                   READ(emptyunit) ( ctmp(ig), ig = 1, MIN( SIZE(ctmp), ngw_rd ) )
                 END IF
                 IF( i <= ne(ispin) ) THEN
-                  CALL splitwf(c_emp(:,i,ik,ispin), ctmp, wempt%ngwl, ig_l2g, me_image, &
+                  CALL splitwf(c_emp(:,i,ispin), ctmp, wempt%ngwl, ig_l2g, me_image, &
                        nproc_image, ionode_id, intra_image_comm)
                 END IF
               END DO
@@ -186,7 +186,7 @@
         USE io_global, ONLY: ionode, ionode_id
         USE reciprocal_vectors, ONLY: ig_l2g
 
-        COMPLEX(DP), INTENT(IN) :: c_emp(:,:,:,:)
+        COMPLEX(DP), INTENT(IN) :: c_emp(:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wempt
 
         INTEGER :: ig, i, ik, nl, ne(2), ngwm_g, nk, ispin, nspin, ngw
@@ -198,7 +198,7 @@
         IF( wempt%nspin < 1 .OR. wempt%nspin > 2 ) &
           CALL errore( ' writeempty ', ' nspin out of range ', 1 )
 
-        nk        = wempt%nkl
+        nk        = 1
         nspin     = wempt%nspin
         ngwm_g    = wempt%ngwt 
         ngw       = wempt%ngwl
@@ -223,7 +223,7 @@
           DO ik = 1, nk
             DO i = 1, ne(ispin)
               ctmp = 0.0d0
-              CALL MERGEWF( c_emp(:,i,ik,ispin), ctmp(:), ngw, ig_l2g, me_image, &
+              CALL MERGEWF( c_emp(:,i,ispin), ctmp(:), ngw, ig_l2g, me_image, &
                             nproc_image, ionode_id, intra_image_comm )
               IF( ionode ) THEN
                 WRITE (emptyunit) ( ctmp(ig), ig=1, ngwm_g )
@@ -282,8 +282,6 @@
       cone   = 1.0d0
       cmone  = -1.0d0
 
-      IF( wfill%gamma ) THEN
-
         ldw   = 2 * SIZE( cf, 1 )
         ALLOCATE( SF(nf), SE(ne), TEMP(2*ngw) )
         DO I = 1, NE
@@ -322,41 +320,6 @@
         END DO
         DEALLOCATE( SF, SE, TEMP )
     
-      ELSE
-
-        ldw   = SIZE( cf, 1 )
-        ALLOCATE( CSF(nf), CSE(ne), CTEMP(ngw) )
-        DO i = 1, NE
-          csf   = 0.0d0
-          CALL ZGEMV('C', ngw, nf, cone, cf(1,1), ldw, &
-            ce(1,i), 1, czero, csf(1), 1)
-          CALL mp_sum(csf, intra_image_comm)
-          CALL ZGEMV('N', ngw, nf, cone, cf(1,1), ldw, &
-            csf(1), 1, czero, ctemp, 1)
-          IF( .NOT. TORTHO ) THEN
-            cse   = 0.0d0
-            IF( i .GT. 1 ) THEN
-              CALL ZGEMV('C', ngw, i-1, cone, ce(1,1), ldw, &
-                ce(1,i), 1, czero, cse(1), 1)
-              CALL mp_sum(cse, intra_image_comm)
-              CALL ZGEMV('N', ngw, i-1, cone, ce(1,1), ldw, &
-                cse(1), 1, cone, ctemp, 1)
-            END IF
-          END IF
-          CALL ZAXPY(ngw, cmone, ctemp, 1, ce(1,i), 1)
-          IF(.NOT.TORTHO) THEN
-            anorm = 0.0d0
-            do ig = 1, ngw
-              anorm = anorm + DBLE( ce(ig,i) * CONJG(ce(ig,i)) )
-            enddo
-            CALL mp_sum(anorm,intra_image_comm)
-            anorm = 1.0d0 / MAX( sqrt(anorm), 1.d-14 )
-            CALL ZDSCAL(NGW, anorm, CE(1,i), 1)
-          END IF
-        END DO
-        DEALLOCATE( CSF, CSE, CTEMP )
-    
-      END IF
 
       RETURN
       END SUBROUTINE gram_empty
@@ -365,50 +328,40 @@
 !================================================================
 !
       SUBROUTINE sodomizza(c_occ, wfill, ampre, c_emp, wempt)
-        USE wave_types, ONLY: wave_descriptor
+        !
+        USE wave_types,         ONLY: wave_descriptor
         USE reciprocal_vectors, ONLY: ig_l2g
-        USE mp_global, ONLY: nproc_image
-        USE mp_wave, ONLY: splitwf
-        USE control_flags, ONLY: force_pairing, gamma_only
-        USE wave_functions, ONLY: wave_rand_init
+        USE mp_global,          ONLY: nproc_image
+        USE mp_wave,            ONLY: splitwf
+        USE control_flags,      ONLY: force_pairing, gamma_only
+        USE wave_functions,     ONLY: wave_rand_init
 
         ! ...   Arguments
 
-        COMPLEX(DP), INTENT(INOUT) :: c_occ(:,:,:,:), c_emp(:,:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: c_occ(:,:,:), c_emp(:,:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wfill, wempt
         REAL(DP)                  :: ampre  
 
         ! ...   Locals
 
-        INTEGER   :: ig_local
-        INTEGER   :: ngw, ngwt
-        INTEGER   :: ib, ik, ispin, ispin_wfc
+        INTEGER   :: ngw
+        INTEGER   :: ispin, ispin_wfc
         LOGICAL   :: tortho = .FALSE.
-        COMPLEX(DP), ALLOCATABLE :: pwt( : )
         !
-        ! ...   Subroutine body
-
         ! ...   initialize the wave functions in such a way that the values
         ! ...   of the components are independent on the number of processors
 
-        ngwt  = wfill%ngwt
         ngw   = wfill%ngwl
-
-        ALLOCATE( pwt( ngwt ) )
 
         DO ispin = 1, wempt%nspin
           ispin_wfc = ispin
           IF( force_pairing ) ispin_wfc = 1
-          DO ik = 1, wempt%nkl
-            CALL wave_rand_init( c_emp( :, :, ik, ispin ) )
-            IF ( wempt%gzero ) THEN
-              c_emp(1,:,ik,ispin) = (0.0d0, 0.0d0)
-            END IF
-            CALL gram_empty( ispin, tortho, c_occ(:,:,ik,ispin_wfc), wfill, c_emp(:,:,ik,ispin), wempt )
-          END DO
+          CALL wave_rand_init( c_emp( :, :, ispin ) )
+          IF ( wempt%gzero ) THEN
+            c_emp(1,:,ispin) = (0.0d0, 0.0d0)
+          END IF
+          CALL gram_empty( ispin, tortho, c_occ(:,:,ispin_wfc), wfill, c_emp(:,:,ispin), wempt )
         END DO
-
-        DEALLOCATE( pwt )
 
         RETURN
       END SUBROUTINE sodomizza
@@ -417,21 +370,20 @@
 !=======================================================================
 !
 
-    SUBROUTINE empty_sd( tortho, atoms, c_occ, wfill, c_emp, wempt, vpot, eigr)
+    SUBROUTINE empty_sd( tortho, atoms, c_occ, wfill, vpot, eigr)
 
-      USE wave_types, ONLY: wave_descriptor
+      USE wave_types, ONLY: wave_descriptor, wave_descriptor_init
       USE wave_functions, ONLY: cp_kinetic_energy, crot, fixwave
       USE wave_base, ONLY: hpsi, converg_base, dotp
       USE pseudopotential, ONLY: nsanl
       USE constants, ONLY: au
       USE cell_base, ONLY: tpiba2
-      USE electrons_module, ONLY: pmss, n_emp
+      USE electrons_module, ONLY: n_emp, nupdwn_emp, iupdwn_emp
+      USE electrons_base, ONLY: nspin
       USE cp_electronic_mass, ONLY: emass
       USE time_step, ONLY: delt
       USE forces, ONLY: dforce_all
-      USE brillouin, ONLY: kpoints, kp
       USE orthogonalize, ONLY: ortho
-      USE nl, ONLY: nlsm1_s
       USE mp, ONLY: mp_sum
       USE mp_global, ONLY: nproc_image
       USE check_stop, ONLY: check_stop_now
@@ -439,18 +391,18 @@
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
       USE control_flags, ONLY: force_pairing, gamma_only
-      USE reciprocal_space_mesh, ONLY: gkmask_l, gkx_l, gk_l
       USE reciprocal_vectors, ONLY: g, gx
       USE uspp_param, ONLY: nhm
       USE pseudopotential, ONLY: nspnl
       USE uspp,             ONLY : nkb
+      USE cp_main_variables,  ONLY: ema0bg
 
       IMPLICIT NONE
 
 ! ... ARGUMENTS
 !
-      COMPLEX(DP), INTENT(INOUT) ::  c_occ(:,:,:,:), c_emp(:,:,:,:)
-      TYPE (wave_descriptor), INTENT(IN) ::  wfill, wempt
+      COMPLEX(DP), INTENT(INOUT) ::  c_occ(:,:,:)
+      TYPE (wave_descriptor), INTENT(IN) ::  wfill
       TYPE (atoms_type), INTENT(INOUT) :: atoms ! ions structure
       REAL (DP), INTENT(IN) ::   vpot(:,:)
       LOGICAL, INTENT(IN) :: tortho
@@ -460,42 +412,47 @@
 !
 
       INTEGER   ::  i, k, j, iter, ik, nk
-      INTEGER   ::  nspin, ispin, ispin_wfc
-      INTEGER   ::  n_occ( wfill%nspin )
-      INTEGER   ::  nupdwn_emp( wfill%nspin )
-      INTEGER   ::  iupdwn_emp( wfill%nspin )
+      INTEGER   ::  ispin, ispin_wfc
+      INTEGER   ::  n_occ( nspin )
       INTEGER   ::  ig, iprinte, iks, nrl, jl, ngw
       REAL(DP) ::  dek, ekinc, ekinc_old
       REAL(DP) :: ampre
       REAL(DP), ALLOCATABLE :: dt2bye( : )
       REAL(DP), PARAMETER :: small    = 1.0d-14
       REAL(DP), ALLOCATABLE :: bece( :, : )
-      COMPLEX(DP), ALLOCATABLE :: eforce(:,:,:,:), cp_emp(:,:,:,:)
-      REAL(DP), ALLOCATABLE :: fi(:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: eforce(:,:,:), cp_emp(:,:,:), c_emp(:,:,:)
+      REAL(DP), ALLOCATABLE :: fi(:,:)
       LOGICAL       :: gamma
       LOGICAL, SAVE :: exst
+
+      TYPE (wave_descriptor) :: wempt  ! wave function descriptor for empty states
+
 !
 ! ... SUBROUTINE BODY
 !    
 
-      nk        = wfill%nkl
-      nspin     = wfill%nspin
+      nk        = 1
       ngw       = wfill%ngwl
-      n_occ     = wfill%nbt
       gamma     = wfill%gamma
       ampre     = 0.001d0
 
-      nupdwn_emp = n_emp
-      iupdwn_emp(1) = 1
-      IF( nspin == 2 ) iupdwn_emp(2) = 1+n_emp
+      CALL wave_descriptor_init( wempt, ngw, wfill%ngwt, nupdwn_emp, nupdwn_emp, &
+                                 1, 1, nspin, 'gamma' , wfill%gzero )
+
+
+      n_occ( 1 ) = wfill%nbt( 1 )
+      IF( nspin == 2 ) THEN
+         n_occ( 2 ) = wfill%nbt( 2 )
+      END IF
 
       ekinc_old = 1.d+10
       ekinc     = 0.0d0
 
       ALLOCATE( bece( nkb, n_emp * nspin ) )
-      ALLOCATE( eforce( ngw, wempt%ldb, nk, nspin ) )
-      ALLOCATE( fi( wempt%ldb, nk, nspin ) )
-      ALLOCATE( cp_emp( SIZE(c_emp,1), SIZE(c_emp,2), SIZE(c_emp,3), SIZE(c_emp,4) ) )
+      ALLOCATE( eforce( ngw, n_emp, nspin ) )
+      ALLOCATE( fi( n_emp, nspin ) )
+      ALLOCATE( c_emp( ngw, n_emp, nspin ) )
+      ALLOCATE( cp_emp( ngw, n_emp, nspin ) )
       ALLOCATE( dt2bye( ngw ) )
 
       IF( ionode ) WRITE( stdout,56)
@@ -506,7 +463,7 @@
         CALL sodomizza(c_occ, wfill, ampre, c_emp, wempt)
       END IF
 
-      dt2bye = delt * delt / pmss
+      dt2bye = delt * delt * ema0bg / emass 
       cp_emp = c_emp
       fi     = 2.0d0 / nspin
 
@@ -521,37 +478,34 @@
 
           IF( n_emp < 1 ) CYCLE SPIN_LOOP 
 
-          DO ik = 1, kp%nkpt
+          bece = 0.0d0
 
-            bece = 0.0d0
+          CALL nlsm1 ( n_emp, 1, nspnl, eigr, c_emp( 1, 1, ispin ), bece( 1, (ispin-1)*n_emp + 1 ) )
 
-            CALL nlsm1 ( n_emp, 1, nspnl, eigr, c_emp( 1, 1, ik, ispin ), bece( 1, (ispin-1)*n_emp + 1 ) )
-
-            CALL dforce_all( ispin, c_emp(:,:,1,ispin), fi(:,1,ispin), eforce(:,:,1,ispin), &
+          CALL dforce_all( ispin, c_emp(:,:,ispin), fi(:,ispin), eforce(:,:,ispin), &
                              vpot(:,ispin), eigr, bece, nupdwn_emp, iupdwn_emp )
 
-            ! ...       Steepest descent
+          ! ...       Steepest descent
 
-            DO i = 1, n_emp
-              cp_emp(:,i,ik,ispin) = c_emp(:,i,ik,ispin) +  dt2bye(:) * eforce(:, i, ik, ispin)
-            END DO
-
-            CALL fixwave( ispin, cp_emp(:,:,ik,ispin), wempt, gkmask_l(:,ik) )
-
-            IF (tortho) THEN
-
-              CALL ortho( ispin, c_emp(:,:,ik,ispin), cp_emp(:,:,ik,ispin), wempt, pmss, emass)
-
-              CALL gram_empty( ispin, tortho, c_occ(:,:,ik,ispin_wfc), wfill, cp_emp(:,:,ik,ispin), wempt)
-
-            ELSE
-
-              CALL gram_empty( ispin, .FALSE., c_occ(:,:,ik,ispin_wfc), wfill, cp_emp(:,:,ik,ispin), wempt)
-
-            END IF
-
+          DO i = 1, n_emp
+              cp_emp(:,i,ispin) = c_emp(:,i,ispin) +  dt2bye(:) * eforce(:, i, ispin)
           END DO
-          ekinc = ekinc + cp_kinetic_energy( ispin, cp_emp(:,:,:,ispin), c_emp(:,:,:,ispin), wempt, pmss, delt)
+
+          CALL fixwave( ispin, cp_emp(:,:,ispin), wempt )
+
+          IF (tortho) THEN
+
+              CALL ortho( ispin, c_emp(:,:,ispin), cp_emp(:,:,ispin), wempt)
+
+              CALL gram_empty( ispin, tortho, c_occ(:,:,ispin_wfc), wfill, cp_emp(:,:,ispin), wempt)
+
+          ELSE
+
+              CALL gram_empty( ispin, .FALSE., c_occ(:,:,ispin_wfc), wfill, cp_emp(:,:,ispin), wempt)
+
+          END IF
+
+          ekinc = ekinc + cp_kinetic_energy( ispin, cp_emp(:,:,ispin), c_emp(:,:,ispin), wempt, ema0bg, emass, delt)
 
         END DO SPIN_LOOP
 
@@ -583,6 +537,7 @@
 
       DEALLOCATE( eforce )
       DEALLOCATE( cp_emp )
+      DEALLOCATE( c_emp )
       DEALLOCATE( fi )
       DEALLOCATE( dt2bye )
       DEALLOCATE( bece )
@@ -615,10 +570,10 @@
 
 ! ... ARGUMENTS
 
-      COMPLEX(DP), INTENT(inout) ::  c_emp(:,:,:,:)
+      COMPLEX(DP), INTENT(inout) ::  c_emp(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) ::  wempt
-      REAL (DP), INTENT(in) ::  vpot(:,:), fi(:,:,:)
-      COMPLEX (DP) ::  eforce(:,:,:,:)
+      REAL (DP), INTENT(in) ::  vpot(:,:), fi(:,:)
+      COMPLEX (DP) ::  eforce(:,:,:)
       LOGICAL, INTENT(IN) :: TORTHO
       COMPLEX(DP) :: eigr(:,:)
       REAL (DP) :: bece(:,:)
@@ -628,17 +583,14 @@
 !
 
       INTEGER     i, ngw, nspin, ispin
-      LOGICAL     gamma
 
       REAL(DP),    ALLOCATABLE :: gam(:,:)
-      COMPLEX(DP) :: cgam(1,1)
 
 !
 ! ... SUBROUTINE BODY
 !
       nspin     = wempt%nspin
       ngw       = wempt%ngwl
-      gamma     = wempt%gamma
 
 !
 ! ... empty state diagonalization ==
@@ -649,19 +601,19 @@
 
         ALLOCATE( gam( n_emp_l(ispin), n_emp ) )
 
-        CALL nlsm1 ( n_emp, 1, nspnl, eigr, c_emp( 1, 1, 1, ispin ), bece( 1, (ispin-1)*n_emp + 1 ) )
+        CALL nlsm1 ( n_emp, 1, nspnl, eigr, c_emp( 1, 1, ispin ), bece( 1, (ispin-1)*n_emp + 1 ) )
 
         ! ...   Calculate | dH / dpsi(j) >
         !
-        CALL dforce_all( ispin, c_emp(:,:,1,ispin), fi(:,1,ispin), eforce(:,:,1,ispin), &
+        CALL dforce_all( ispin, c_emp(:,:,ispin), fi(:,ispin), eforce(:,:,ispin), &
           vpot(:,ispin), eigr, bece, nupdwn_emp, iupdwn_emp )
 
         ! ...     Calculate Eij = < psi(i) | H | psi(j) > = < psi(i) | dH / dpsi(j) >
         DO i = 1, n_emp
-           CALL update_lambda( i, gam, c_emp(:,:,1, ispin), wempt, eforce(:,i,1,ispin) )
+           CALL update_lambda( i, gam, c_emp(:,:,ispin), wempt, eforce(:,i,ispin) )
         END DO
 
-        CALL eigs( n_emp, gam, cgam, tortho, fi(:,1,ispin), ei_emp(:,1,ispin), gamma)
+        CALL eigs( n_emp, gam, tortho, fi(:,ispin), ei_emp(:,ispin) )
 
         DEALLOCATE( gam )
 

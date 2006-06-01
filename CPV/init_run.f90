@@ -32,11 +32,11 @@ SUBROUTINE init_run()
   USE grid_dimensions,          ONLY : nnrx, nr1, nr2, nr3
   USE fft_base,                 ONLY : dfftp
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
-  USE electrons_module,         ONLY : n_emp, pmss_init
+  USE electrons_module,         ONLY : n_emp
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
   USE core,                     ONLY : rhoc
   USE smooth_grid_dimensions,   ONLY : nnrsx
-  USE wavefunctions_module,     ONLY : c0, cm, cp, ce
+  USE wavefunctions_module,     ONLY : c0, cm, cp
   USE cdvan,                    ONLY : dbec, drhovan
   USE derho,                    ONLY : drhor, drhog
   USE ensemble_dft,             ONLY : tens, z0
@@ -51,7 +51,7 @@ SUBROUTINE init_run()
   USE cp_main_variables,        ONLY : lambda, lambdam, lambdap, ema0bg, bec,  &
                                        becdr, sfac, eigr, ei1, ei2, ei3, taub, &
                                        irb, eigrb, rhog, rhos, rhor, bephi,    &
-                                       becp, acc, acc_this_run, wfill, wempt,  &
+                                       becp, acc, acc_this_run, wfill, &
                                        edft, nfi, vpot, occn, ht0, htm
   USE cp_main_variables,        ONLY : allocate_mainvar
   USE energies,                 ONLY : eself, enl, ekin, etot, enthal, ekincm
@@ -66,7 +66,6 @@ SUBROUTINE init_run()
   USE pseudo_projector,         ONLY : fnl, projector
   USE pseudopotential,          ONLY : pseudopotential_indexes, nsanl
   !
-  USE brillouin,                ONLY : kpoints, kp
   USE efcalc,                   ONLY : clear_nbeg
   USE cpr_subroutines,          ONLY : print_atomic_var
   USE local_pseudo,             ONLY : allocate_local_pseudo
@@ -128,8 +127,7 @@ SUBROUTINE init_run()
 
   CALL allocate_mainvar( ngw, ngwt, ngb, ngs, ngm, nr1, nr2, nr3, dfftp%nr1x, &
                          dfftp%nr2x, dfftp%npl, nnrx, nnrsx, nat, nax, nsp,   &
-                         nspin, nbsp, nbspx, n_emp, nupdwn, nkb, gzero,       &
-                         kp%nkpt, kp%scheme )
+                         nspin, nbsp, nbspx, n_emp, nupdwn, nkb, gzero )
   !
   CALL allocate_local_pseudo( ngs, nsp )
   !
@@ -137,17 +135,15 @@ SUBROUTINE init_run()
   !
   IF( program_name == 'CP90' ) THEN
      !
-     ALLOCATE( c0( ngw, nbspx, 1, 1 ) )
-     ALLOCATE( cm( ngw, nbspx, 1, 1 ) )
-     ALLOCATE( cp( ngw, nbspx, 1, 1 ) )
-     ALLOCATE( ce( 1  , 1    , 1, 1 ) )
+     ALLOCATE( c0( ngw, nbspx, 1 ) )
+     ALLOCATE( cm( ngw, nbspx, 1 ) )
+     ALLOCATE( cp( ngw, nbspx, 1 ) )
      !
   ELSE IF( program_name == 'FPMD' ) THEN
      !
      IF ( iprsta > 2 ) THEN
         !
         CALL wave_descriptor_info( wfill, 'wfill', stdout )
-        CALL wave_descriptor_info( wempt, 'wempt', stdout )
         !
      END IF
      !
@@ -155,10 +151,9 @@ SUBROUTINE init_run()
      !
      IF ( force_pairing ) lds_wfc = 1
      !
-     ALLOCATE( cm( wfill%ldg, wfill%ldb, wfill%ldk, lds_wfc ) )
-     ALLOCATE( c0( wfill%ldg, wfill%ldb, wfill%ldk, lds_wfc ) )
-     ALLOCATE( cp( wfill%ldg, wfill%ldb, wfill%ldk, lds_wfc ) )
-     ALLOCATE( ce( wempt%ldg, wempt%ldb, wempt%ldk, wempt%lds ) )
+     ALLOCATE( cm( wfill%ldg, wfill%ldb, lds_wfc ) )
+     ALLOCATE( c0( wfill%ldg, wfill%ldb, lds_wfc ) )
+     ALLOCATE( cp( wfill%ldg, wfill%ldb, lds_wfc ) )
      !
   END IF
   !
@@ -225,20 +220,17 @@ SUBROUTINE init_run()
   !
   hnew = h
   !
-  cm(:,:,:,:) = ( 0.D0, 0.D0 )
-  c0(:,:,:,:) = ( 0.D0, 0.D0 )
-  cp(:,:,:,:) = ( 0.D0, 0.D0 )
-  ce(:,:,:,:) = ( 0.D0, 0.D0 )
+  cm(:,:,:) = ( 0.D0, 0.D0 )
+  c0(:,:,:) = ( 0.D0, 0.D0 )
+  cp(:,:,:) = ( 0.D0, 0.D0 )
   !
   IF ( tens ) CALL id_matrix_init( nupdwn, nspin )
   !
   IF ( lwf ) CALL wannier_startup( ibrav, alat, a1, a2, a3, b1, b2, b3 )
   !
-  ! ... Calculate: pmss = emass * (2pi/alat)^2 * |G|^2 / ecutmass
+  ! ... Calculate: ema0bg = ecutmass /  MAX( 1.0d0, (2pi/alat)^2 * |G|^2 )
   !
   CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emass_cutoff )
-  !
-  CALL pmss_init( ema0bg, ngw )
   !
   CALL print_legend( )
   !
@@ -256,7 +248,7 @@ SUBROUTINE init_run()
                         enthal, etot, lambda, lambdam, lambdap, ema0bg,   &
                         dbec, delt, bephi, becp, velh, dt2/emass, iforce, &
                         fionm, xnhe0, xnhem, vnhe, ekincm, atoms0, edft,   &
-                        ht0, wfill, wempt, occn, vpot )
+                        ht0, wfill, occn, vpot )
      !
   ELSE
      !
@@ -266,7 +258,7 @@ SUBROUTINE init_run()
      !
      IF( program_name == 'CP90' ) THEN
         !
-        CALL readfile( 1, ndr, h, hold, nfi, c0(:,:,1,1), cm(:,:,1,1), taus,   &
+        CALL readfile( 1, ndr, h, hold, nfi, c0(:,:,1), cm(:,:,1), taus,   &
                        tausm, vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, &
                        vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
                        vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, celldm,   &

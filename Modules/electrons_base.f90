@@ -28,6 +28,8 @@
       INTEGER :: nbspx      = 0    !  array dimension nbspx >= nbsp
 
       LOGICAL :: telectrons_base_initval = .FALSE.
+      LOGICAL :: keep_occ = .FALSE.  ! if .true. when reading restart file keep 
+                                     ! the occupations calculated in initval
 
       REAL(DP), ALLOCATABLE :: f(:)   ! occupation numbers ( at gamma )
       REAL(DP) :: qbac = 0.0d0        ! background neutralizing charge
@@ -140,6 +142,8 @@
             nupdwn (2)=nbnd
             iupdwn (2)=nbnd+1
          end if
+         !
+         keep_occ = .true.
          !
       CASE ('from_input')
          !

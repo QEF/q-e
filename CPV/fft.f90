@@ -53,7 +53,7 @@ CONTAINS
       INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x
       INTEGER, OPTIONAL, INTENT(IN) :: ia
       CHARACTER(LEN=*), INTENT(IN) :: grid_type
-      COMPLEX(DP) :: f(nr1x*nr2x*nr3x)
+      COMPLEX(DP) :: f(:)
       !
       INTEGER :: imin3, imax3, np3
 
@@ -148,7 +148,7 @@ CONTAINS
 
       INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x
       CHARACTER(LEN=*), INTENT(IN) :: grid_type
-      COMPLEX(DP) :: f(nr1x*nr2x*nr3x)
+      COMPLEX(DP) :: f(:)
 
       IF( grid_type == 'Dense' ) THEN
          call start_clock( 'fft' )
@@ -205,11 +205,12 @@ CONTAINS
 
 END MODULE fft_module
 
+
 !-----------------------------------------------------------------------
 
-     SUBROUTINE c2psi( psi, nnr, c, ca, ng, iflg )
+
+    SUBROUTINE c2psi( psi, nnr, c, ca, ng, iflg )
        !
-       use recvecs_indexes, only: nm, np
        use gvecs, only: nms, nps
        use kinds, only: DP
 
@@ -226,11 +227,11 @@ END MODULE fft_module
          !
          !  iflg "cases"
          !
-         !  0, 10   Do not use gamma symmetry
+         !  0   Do not use gamma symmetry
          !
-         !  1, 11   set psi using a wf with Gamma symmetry
-         !
-         !  2, 12   set psi combining two wf with Gamma symmetry
+         !  1   set psi using a wf with Gamma symmetry
+         
+         !  2   set psi combining two wf with Gamma symmetry
          !
 
          SELECT CASE ( iflg )
@@ -257,38 +258,18 @@ END MODULE fft_module
                psi( nps( ig ) ) = c( ig ) + ci * ca( ig )
              end do
 
-           !
-           !  Case 10, 11 and 12  DENSE MESH
-           !
-           CASE ( 10 )
-             !
-             do ig = 1, ng
-               psi( np( ig ) ) = c( ig )
-             end do
-             !
-           CASE ( 11 )
-             !
-             do ig = 1, ng
-               psi( nm( ig ) ) = CONJG( c( ig ) )
-               psi( np( ig ) ) = c( ig )
-             end do
-             !
-           CASE ( 12 )
-             !
-             do ig = 1, ng
-               psi( nm( ig ) ) = CONJG( c( ig ) ) + ci * conjg( ca( ig ) )
-               psi( np( ig ) ) = c( ig ) + ci * ca( ig )
-             end do
-             !
            CASE DEFAULT
              !
              CALL errore(" c2psi "," wrong value for iflg ", ABS( iflg ) )
 
          END SELECT
 
-       return
+        return
      END SUBROUTINE c2psi
 
+!
+!
+!
 
      SUBROUTINE rho2psi( grid_type, psi, nnr, rho, ng )
        !

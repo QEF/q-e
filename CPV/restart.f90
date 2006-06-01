@@ -76,8 +76,8 @@
 
       REAL(DP) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       integer :: nk = 1, ispin, i, ib
-      REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
-      REAL(DP), ALLOCATABLE :: occ_ ( :, :, : )
+      REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
+      REAL(DP), ALLOCATABLE :: occ_ ( :, : )
       REAL(DP) :: htm1(3,3), omega
 
 !
@@ -96,11 +96,11 @@
       gvel   = 0.0d0
       
 
-      ALLOCATE( occ_ ( nbnd, 1, nspin ) )
+      ALLOCATE( occ_ ( nbnd, nspin ) )
       occ_ = 0.0d0
       do ispin = 1, nspin
         do i = iupdwn ( ispin ), iupdwn ( ispin ) - 1 + nupdwn ( ispin )
-          occ_ ( i - iupdwn ( ispin ) + 1, 1, ispin ) = occ_f( i ) 
+          occ_ ( i - iupdwn ( ispin ) + 1, ispin ) = occ_f( i ) 
         end do
       end do
 
@@ -141,7 +141,7 @@
 ! read from file and distribute data calculated in preceding iterations
 !
       USE io_files,       ONLY : scradir
-      USE electrons_base, ONLY : nbnd, nbsp, nspin, nupdwn, iupdwn
+      USE electrons_base, ONLY : nbnd, nbsp, nspin, nupdwn, iupdwn, keep_occ
       USE gvecw,          ONLY : ngw, ngwt
       USE ions_base,      ONLY : nsp, na, cdmi, taui
       USE cp_restart,     ONLY : cp_readfile, cp_read_cell, cp_read_wfc
@@ -170,8 +170,8 @@
       !
       REAL(DP) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       integer :: nk = 1, ispin, i, ib
-      REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 1.0d0
-      REAL(DP), ALLOCATABLE :: occ_ ( :, :, : )
+      REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
+      REAL(DP), ALLOCATABLE :: occ_ ( :, : )
       REAL(DP) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
         
       LOGICAL::lopen
@@ -189,7 +189,7 @@
         RETURN
       END IF
 
-      ALLOCATE( occ_ ( nbnd, 1, nspin ) )
+      ALLOCATE( occ_ ( nbnd, nspin ) )
 
       IF( tens ) THEN
          CALL cp_readfile( ndr, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
@@ -219,11 +219,14 @@
          endif
       enddo
       
-      do ispin = 1, nspin
-        do i = iupdwn ( ispin ), iupdwn ( ispin ) - 1 + nupdwn ( ispin )
-          occ_f( i ) = occ_ ( i - iupdwn ( ispin ) + 1, 1, ispin )
-        end do
-      end do
+      IF( .NOT. keep_occ ) THEN
+         do ispin = 1, nspin
+            do i = iupdwn ( ispin ), iupdwn ( ispin ) - 1 + nupdwn ( ispin )
+               occ_f( i ) = occ_ ( i - iupdwn ( ispin ) + 1, ispin )
+            end do
+         end do
+      END IF
+
       DEALLOCATE( occ_ )
 
       h     = TRANSPOSE( ht )
@@ -242,7 +245,6 @@
      ht_m, ht_0, rho, vpot)
                                                                         
         USE cell_module, only: boxdimensions, r_to_s
-        USE brillouin, only: kpoints, kp
         USE wave_types, ONLY: wave_descriptor
         USE control_flags, ONLY: ndw, gamma_only
         USE control_flags, ONLY: twfcollect, force_pairing
@@ -261,8 +263,8 @@
         IMPLICIT NONE 
  
         INTEGER, INTENT(IN) :: nfi
-        COMPLEX(DP), INTENT(IN) :: c0(:,:,:,:), cm(:,:,:,:) 
-        REAL(DP), INTENT(IN) :: occ(:,:,:)
+        COMPLEX(DP), INTENT(IN) :: c0(:,:,:), cm(:,:,:) 
+        REAL(DP), INTENT(IN) :: occ(:,:)
         TYPE (boxdimensions), INTENT(IN) :: ht_m, ht_0
         TYPE (atoms_type), INTENT(IN) :: atoms_0, atoms_m
         REAL(DP), INTENT(IN) :: rho(:,:)
@@ -276,6 +278,9 @@
         REAL(DP), ALLOCATABLE :: lambda(:,:,:)
         REAL(DP) :: ekincm
         INTEGER   :: i, j, k, iss, ir
+
+        INTEGER  :: nkpt = 1
+        REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
              
         IF( ndw < 1 ) RETURN
         !
@@ -288,11 +293,11 @@
         ekincm = 0.0d0
         !
         !
-        CALL cp_writefile( ndw, scradir, .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
+        CALL cp_writefile( ndw, scradir, .TRUE., nfi, trutime, acc, nkpt, xk, wk, &
           ht_0%a, ht_m%a, ht_0%hvel, ht_0%gvel, xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
           xnhp0, xnhpm, nhpcl, nhpdim, occ, occ, lambda, lambda,  &
-          xnhe0, xnhem, vnhe, ekincm, ei, rho, c04 = c0, cm4 = cm )
+          xnhe0, xnhem, vnhe, ekincm, ei, rho, c03 = c0, cm3 = cm )
 
         DEALLOCATE( lambda )
 
@@ -309,7 +314,6 @@
                                                                         
         use electrons_base, only: nbsp, nspin, nudx
         USE cell_module, only: boxdimensions, cell_init, r_to_s, s_to_r
-        USE brillouin, only: kpoints, kp
         use parameters, only: npkx, nsx
         USE mp_global, ONLY: intra_image_comm
         USE mp_wave, ONLY: mergewf
@@ -332,8 +336,8 @@
         IMPLICIT NONE 
  
         INTEGER, INTENT(OUT) :: nfi
-        COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:,:), cm(:,:,:,:) 
-        REAL(DP), INTENT(INOUT) :: occ(:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:), cm(:,:,:) 
+        REAL(DP), INTENT(INOUT) :: occ(:,:)
         TYPE (boxdimensions), INTENT(INOUT) :: ht_m, ht_0
         TYPE (atoms_type), INTENT(INOUT) :: atoms_0, atoms_m
         REAL(DP), INTENT(INOUT) :: rho(:,:)
@@ -353,14 +357,17 @@
         REAL(DP) :: b1(3), b2(3), b3(3)
         LOGICAL :: tens = .FALSE.
 
+        INTEGER  :: nkpt = 1
+        REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
+
         ALLOCATE( lambda_( nudx , nudx, nspin ) )
         lambda_  = 0.0d0
 
-        CALL cp_readfile( ndr, scradir, .TRUE., nfi, trutime, acc, kp%nkpt, kp%xk, kp%weight, &
+        CALL cp_readfile( ndr, scradir, .TRUE., nfi, trutime, acc, nkpt, xk, wk, &
           hp0_ , hm1_ , hvel_ , gvel_ , xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
           xnhp0, xnhpm, nhpcl, nhpdim, occ, occ, lambda_ , lambda_ , b1, b2,   &
-          b3, xnhe0, xnhem, vnhe, ekincm, c04 = c0, cm4 = cm )
+          b3, xnhe0, xnhem, vnhe, ekincm, c03 = c0, cm3 = cm )
 
         DEALLOCATE( lambda_ )
 

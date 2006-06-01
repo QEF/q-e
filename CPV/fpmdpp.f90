@@ -67,7 +67,7 @@ PROGRAM fpmd_postproc
 
   dunit = 14
 
-  prefix    = 'fpmd'
+  prefix    = 'cp'
   fileout   = 'out'
   output    = 'xsf'  ! 'grd'
   outdir    = './'

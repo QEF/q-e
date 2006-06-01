@@ -198,144 +198,6 @@
       RETURN
       END SUBROUTINE denkin
 
-!-----------------------------------------------------------------------
-      subroutine denps(rhotmp,drhotmp,sfac,vtemp,dps)
-!-----------------------------------------------------------------------
-!
-! derivative of local potential energy wrt cell parameters h
-! Output in dps
-!
-! rhotmp input : rho(G) (up and down spin components summed)
-! drhotmp input
-! sfac   input : structure factors
-! wtemp work space
-!
-      use ions_base, only: nsp
-      use gvecs, only: ngs
-      use gvecp, only: ng => ngm
-      use reciprocal_vectors, only: gstart, gx
-      use cell_base, only: omega
-      use cell_base, only: ainv, tpiba2
-      use local_pseudo, only: vps, dvps
-      use mp, only: mp_sum
-
-      implicit none
-! input
-      complex(8) rhotmp(ng), drhotmp(ng,3,3), vtemp(ng), sfac(ngs,nsp)
-! output
-      real(8) dps(3,3)
-! local
-      integer i, j, ig, is
-      real(8) wz
-!
-!     wz = factor for g.neq.0 because of c*(g)=c(-g)
-!
-      wz=2.d0
-      do i=1,3
-         do j=1,3
-            do ig=1,ngs
-               vtemp(ig)=(0.,0.)
-            enddo
-            do is=1,nsp
-               do ig=1,ngs
-                  vtemp(ig)=vtemp(ig)-CONJG(rhotmp(ig))*sfac(ig,is)*    &
-     &                    dvps(ig,is)*2.d0*tpiba2*gx(i,ig)*             &
-     &                    (gx(1,ig)*ainv(j,1) +                         &
-     &                     gx(2,ig)*ainv(j,2) +                         &
-     &                     gx(3,ig)*ainv(j,3) ) +                       &
-     &                    CONJG(drhotmp(ig,i,j))*sfac(ig,is)*vps(ig,is)
-               enddo
-            enddo
-            dps(i,j)=omega*DBLE(wz*SUM(vtemp))
-            if (gstart == 2) dps(i,j)=dps(i,j)-omega*DBLE(vtemp(1))
-         enddo
-      enddo
-
-      call mp_sum( dps( 1:3, 1:3 ) )
-
-      return
-      end subroutine denps
-
-
-!
-!-----------------------------------------------------------------------
-      SUBROUTINE denh(rhotmp,drhotmp,sfac,vtemp,eh,dh)
-!-----------------------------------------------------------------------
-!
-! derivative of hartree energy wrt cell parameters h
-! Output in dh
-!
-! rhotmp input : total electronic + ionic broadened charge (G)
-! drhotmp input and work space
-! sfac   input : structure factors
-! wtemp work space
-! eh input: hartree energy
-!
-      USE constants, ONLY: pi, fpi, au_gpa
-      USE control_flags, ONLY: iprsta
-      USE io_global, ONLY: stdout
-      USE ions_base, ONLY: nsp
-      USE gvecs
-      USE gvecp, ONLY: ng => ngm
-      USE reciprocal_vectors, ONLY: gstart, gx, g
-      USE cell_base, ONLY: omega, h
-      USE cell_base, ONLY: ainv, tpiba2
-      USE local_pseudo, ONLY: rhops, drhops
-      USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: intra_image_comm
-
-      IMPLICIT NONE
-! input
-      COMPLEX(8) rhotmp(ng), drhotmp(ng,3,3), vtemp(ng), sfac(ngs,nsp)
-      REAL(8) eh
-! output
-      REAL(8) dh(3,3)
-      REAL(8) detmp(3,3)
-! local
-      INTEGER i, j, ig, is
-      REAL(8) wz
-!
-!     wz = factor for g.neq.0 because of c*(g)=c(-g)
-!
-      wz=2.d0
-      DO j=1,3
-         DO i=1,3
-            DO is=1,nsp
-               DO ig=1,ngs
-                  drhotmp(ig,i,j) = drhotmp(ig,i,j) -                   &
-     &                    sfac(ig,is)*drhops(ig,is)*                    &
-     &                    2.d0*tpiba2*gx(i,ig)*(gx(1,ig)*ainv(j,1)+     &
-     &                     gx(2,ig)*ainv(j,2)+gx(3,ig)*ainv(j,3))-      &
-     &                    sfac(ig,is)*rhops(ig,is)*ainv(j,i)
-               ENDDO
-            ENDDO
-            IF (gstart == 2) vtemp(1)=(0.d0,0.d0)
-            DO ig=gstart,ng
-               vtemp(ig)=CONJG(rhotmp(ig))*rhotmp(ig)/(tpiba2*g(ig))**2 &
-     &                 * tpiba2*gx(i,ig)*(gx(1,ig)*ainv(j,1)+           &
-     &                   gx(2,ig)*ainv(j,2)+gx(3,ig)*ainv(j,3)) +       &
-     &                 CONJG(rhotmp(ig))/(tpiba2*g(ig))*drhotmp(ig,i,j)
-            ENDDO
-            dh(i,j)=fpi*omega*DBLE(SUM(vtemp))*wz
-         ENDDO
-      ENDDO
-
-      CALL mp_sum( dh( 1:3, 1:3 ), intra_image_comm )
-
-      DO i=1,3
-         DO j=1,3
-            dh(i,j)=dh(i,j)+omega*eh*ainv(j,i)
-         END DO
-      END DO
-
-5555  FORMAT(1x,f12.5,1x,f12.5,1x,f12.5/                                &
-     &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
-     &       1x,f12.5,1x,f12.5,1x,f12.5//)     
-
-      RETURN
-      END SUBROUTINE denh
-
-
 !
 !-----------------------------------------------------------------------
       SUBROUTINE denlcc( nnr, nspin, vxcr, sfac, drhocg, dcc )
@@ -581,37 +443,38 @@
       END SUBROUTINE dforce
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE dotcsc(eigr,cp)
+      SUBROUTINE dotcsc( eigr, cp, ngw, n )
 !-----------------------------------------------------------------------
 !
-      USE ions_base, ONLY: na, nsp, nat
-      USE io_global, ONLY: stdout
-      USE gvecw, ONLY: ngw
-      USE electrons_base, ONLY: n => nbsp
+      USE kinds,              ONLY: DP
+      USE ions_base,          ONLY: na, nsp, nat
+      USE io_global,          ONLY: stdout
       USE reciprocal_vectors, ONLY: gstart
-      USE cvan, ONLY: ish, nvb
-      USE uspp, ONLY: nhsa=>nkb, qq
-      USE uspp_param, ONLY: nh
-      USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: intra_image_comm
+      USE cvan,               ONLY: ish, nvb
+      USE uspp,               ONLY: nkb, qq
+      USE uspp_param,         ONLY: nh
+      USE mp,                 ONLY: mp_sum
+      USE mp_global,          ONLY: intra_image_comm
 !
       IMPLICIT NONE
 !
-      COMPLEX(8)  eigr(ngw,nat), cp(ngw,n)
+      INTEGER, INTENT(IN) :: ngw, n
+      COMPLEX(DP) ::  eigr(ngw,nat), cp(ngw,n)
 ! local variables
-      REAL(8) rsum, csc(n) ! automatic array
-      COMPLEX(8) temp(ngw) ! automatic array
+      REAL(DP) rsum, csc(n) ! automatic array
+      COMPLEX(DP) temp(ngw) ! automatic array
  
-      REAL(8), ALLOCATABLE::  becp(:,:)
+      REAL(DP), ALLOCATABLE::  becp(:,:)
       INTEGER i,kmax,nnn,k,ig,is,ia,iv,jv,inl,jnl
 !
-      ALLOCATE(becp(nhsa,n))
+      ALLOCATE(becp(nkb,n))
 !
 !     < beta | phi > is real. only the i lowest:
 !
-      nnn=MIN(12,n)
-      DO i=nnn,1,-1
-         kmax=i
+      nnn = MIN( 12, n )
+
+      DO i = nnn, 1, -1
+         kmax = i
          CALL nlsm1(i,1,nvb,eigr,cp,becp)
 !
          DO k=1,kmax
@@ -2088,34 +1951,7 @@
       DEALLOCATE(wfc)
       RETURN
       END SUBROUTINE projwfc
-!---------------------------------------------------------------------
-      SUBROUTINE randin(nmin,nmax,gstart,ngw,ampre,c)
-!---------------------------------------------------------------------
-!
-      USE wave_functions, ONLY: wave_rand_init
-      IMPLICIT NONE
 
-! input
-      INTEGER nmin, nmax, gstart, ngw
-      REAL(8) ampre
-! output
-      COMPLEX(8) c(ngw,nmax)
-! local
-      INTEGER i,j
-      REAL(8) ranf1, randy, ranf2, ampexp
-!
-      CALL wave_rand_init( c )
-!      do i=nmin,nmax
-!         do j=gstart,ngw
-!            ranf1=.5-randy()
-!            ranf2=.5-randy()
-!            ampexp=ampre*exp(-(4.*j)/ngw)
-!            c(j,i)=c(j,i)+ampexp*CMPLX(ranf1,ranf2)
-!         end do
-!      end do
-!
-      RETURN
-      END SUBROUTINE randin
 !
 !-----------------------------------------------------------------------
       SUBROUTINE rdiag (n,h,ldh,e,v)
@@ -2797,7 +2633,6 @@
       rhotmp( 1:ng ) = rhog( 1:ng, 1 )
       !
       IF( tpre ) THEN
-         ! drhotmp( 1:ng, :, : ) = drhog( 1:ng, 1, :, : )
          DO ij = 1, 6
             i = alpha( ij )
             j = beta( ij )
@@ -2811,7 +2646,6 @@
       IF( nspin == 2 ) THEN
          rhotmp( 1:ng ) = rhotmp( 1:ng ) + rhog( 1:ng, 2 )
          IF(tpre)THEN
-            ! drhotmp( 1:ng, :, : ) = drhotmp( 1:ng, :, : ) + drhog( 1:ng, 2, :, : )
             DO ij = 1, 6
                i = alpha( ij )
                j = beta( ij )
@@ -2839,9 +2673,6 @@
 
 !
       IF( tpre ) THEN
-         !
-         !  CALL denps( rhotmp, drhotmp, sfac, vtemp, dps )
-         !
          !
          CALL stress_local( deps, epseu, gagb, sfac, rhotmp, drhot, omega )
          !
@@ -2903,8 +2734,6 @@
          END DO
          !
          dh = MATMUL( detmp(:,:), TRANSPOSE( ainv(:,:) ) )
-         !
-         ! CALL denh( rhotmp, drhotmp, sfac, vtemp, eh, dh )
          !
       END IF
       !
@@ -3443,20 +3272,29 @@
 
          call MXMA (betae, 1, 2*ngw, af, 1, nhsa, dtemp, 1, 2*ngw, 2*ngw, nhsa, NOGRP)
 
-         DO index = 1, NOGRP
-            DO ig = 1+(index-1)*ngw, index*ngw
-               df(ig) = df(ig) + dtemp(ig,index)
-            END DO
+!         DO index = 1, NOGRP
+!            DO ig = 1+(index-1)*ngw, index*ngw
+!               df(ig) = df(ig) + dtemp(ig,index)
+!            END DO
+!         ENDDO
+
+         DO ig = 1, NOGRP
+            df(1+(ig-1)*ngw:ig*ngw) = df(1+(ig-1)*ngw:ig*ngw) + dtemp(:,ig)
          ENDDO
+
 
          dtemp(:,:) = 0.0d0
 
          call MXMA (betae, 1, 2*ngw, aa, 1, nhsa, dtemp, 1, 2*ngw, 2*ngw, nhsa, NOGRP)
 
-         DO index = 1, NOGRP
-            DO ig = 1+(index-1)*ngw, index*ngw
-               da(ig) = da(ig) + dtemp(ig,index)
-            ENDDO
+!         DO index = 1, NOGRP
+!            DO ig = 1+(index-1)*ngw, index*ngw
+!               da(ig) = da(ig) + dtemp(ig,index)
+!            ENDDO
+!         ENDDO
+
+         DO ig = 1, NOGRP
+            da(1+(ig-1)*ngw:ig*ngw) = da(1+(ig-1)*ngw:ig*ngw) + dtemp(:,ig)
          ENDDO
 
       END IF

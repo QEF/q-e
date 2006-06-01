@@ -835,6 +835,9 @@ MODULE input
         CALL errore(' smiosys ',' cell_dynamics not implemented : '//TRIM(cell_dynamics), 1 )
       END IF
 
+      IF( toptical_ ) &
+        CALL errore(' iosys ',' Optical properties not implemented yet ',1)
+
       RETURN
    END SUBROUTINE set_control_flags
    !
@@ -892,7 +895,6 @@ MODULE input
      USE efield_module,    ONLY : efield_init
      USE cg_module,        ONLY : cg_init
      !
-     USE reciprocal_space_mesh,    ONLY: recvecs_units
      USE smallbox_grid_dimensions, ONLY: &
            nnrbx, &  !  variable is used to workaround internal compiler error (IBM xlf)
            nr1b_ => nr1b, &
@@ -908,8 +910,6 @@ MODULE input
            nr1s_ => nr1s, &
            nr2s_ => nr2s, &
            nr3s_ => nr3s
-     USE brillouin,          ONLY : kpoint_setup
-     USE optical_properties, ONLY : optical_setup
      USE guess,              ONLY : guess_setup
      USE empty_states,       ONLY : empty_init
      USE diis,               ONLY : diis_setup
@@ -953,11 +953,6 @@ MODULE input
      CALL ions_base_init( ntyp , nat , na_inp , sp_pos , rd_pos , rd_vel,  &
                           atom_mass, atom_label, if_pos, atomic_positions, &
                           alat_ , a1, a2, a3, ion_radius )
-
-
-     ! ...   Set units for Reciprocal vectors ( 2PI/alat by convention )
-
-     CALL recvecs_units( alat_ )
 
      ! ...   Set Values for the cutoff
 
@@ -1003,11 +998,6 @@ MODULE input
      IF ( .NOT. lneb ) &
         CALL printout_base_init( outdir, prefix )
 
-     IF ( noptical > 0 ) &
-        CALL optical_setup( woptical, noptical, boptical )
-
-     CALL kpoint_setup( k_points, nkstot, nk1, nk2, nk3, k1, k2, k3, xk, wk )
-
      CALL efield_init( epol, efield )
 
      CALL cg_init( tcg , maxiter , conv_thr , passop )
@@ -1037,7 +1027,7 @@ MODULE input
                                   neldw, nbnd, nspin, occupations, f_inp, &
                                   tot_charge, multiplicity, tot_magnetization )
 
-     CALL electrons_setup( empty_states_nbnd, emass, emass_cutoff, nkstot )
+     CALL electrons_setup( empty_states_nbnd, emass, emass_cutoff )
 
      CALL ensemble_initval( occupations, n_inner, fermi_energy, rotmass, &
                             occmass, rotation_damping, occupation_damping, &
@@ -1250,7 +1240,6 @@ MODULE input
     USE empty_states,         ONLY: empty_print_info
     USE diis,                 ONLY: diis_print_info
     USE potentials,           ONLY: potential_print_info
-    USE brillouin,            ONLY: kpoint_info
     USE runcg_module,         ONLY: runcg_info
     USE sic_module,           ONLY: sic_info
     USE wave_base,            ONLY: frice, grease
@@ -1320,7 +1309,6 @@ MODULE input
       !
       IF( program_name == 'FPMD' ) THEN
         CALL empty_print_info( stdout )
-        CALL kpoint_info( stdout )
       END IF
       !
       IF( tfor .AND. tnosep ) fricp = 0.0d0
