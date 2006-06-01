@@ -112,7 +112,7 @@ clean :
 	touch make.sys 
 	# make complains if they aren't there; same with make.depend below
 	for dir in \
-		CPV D3 Gamma Modules PH PP PW PWCOND Raman \
+		CPV D3 Gamma Modules PH PP PW PWCOND Raman VdW\
 		atomic clib flib pwtools upftools iotk \
 	; do \
 	    if test -d $$dir ; then \
