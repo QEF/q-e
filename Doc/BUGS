@@ -1,3 +1,10 @@
+Fixed in version 3.1.1:
+
+  *  Methfessel-Paxton broadening was hardcoded in the calculation of
+     the electron-phonon coefficients (ngauss1=1 in PH/elphon.f90).
+     There is no good reason to use this instead of simple gaussian
+     (ngauss1=0), which, moreover, guarantees positive definite results.
+
 Fixed in version 3.1:
 
   *  various problems in stress calculation, both in PW and in CP
@@ -5,6 +12,12 @@ Fixed in version 3.1:
   *  in phonon dispersion calculation, the threshold for diagonalization
      was not always what was expected to be. Minor numerical differences 
      could result.
+
+  *  the new algorithm for electron-phonon calculation removes a serious
+     bug in the old algorithm, present in v.2.1 to 3 included: when 
+     electron-phonon coefficients were calculated together with the 
+     dynamical matrix, the symmetrization of coeffcients was incorrect.
+     Results from separate calculations were correct.
 
 Fixed in version 3.0:
 

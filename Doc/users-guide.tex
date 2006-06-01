@@ -232,6 +232,7 @@ Axel Kohlmeyer,
 Konstantin Kudin,
 Sergey Lisenkov,
 Kurt Maeder,
+Andrea Marini,
 Francesco Mauri,
 Riccardo Mazzarello,
 Nicolas Mounet,
@@ -1153,9 +1154,8 @@ using glibc-2.2.4 and older seem ok: compile on these machines
 if you want to share precompiled binaries. Crashes due to multithreading 
 (e.g. when using a multithreaded ATLAS or MKL) on machines with 
 the newer threads (nptl) can be worked around by setting the 
-environment variable \texttt{LD\_ASSUME\_KERNEL} to `2.2.5'. For 
-the newest Intel compilers, \texttt{-static-libcxa} does the 
-trick most of the time. (info from Axel Kohlmeyer)
+environment variable \texttt{LD\_ASSUME\_KERNEL} to `2.2.5'.
+(info from Axel Kohlmeyer)
 
 Since there is no standard compiler for Linux, different compilers
 have different ideas about the right way to call external libraries.
@@ -1211,6 +1211,11 @@ the appropriate script --- located in the directory containing the
 compiler executable --- in your initialization files.
 Consult the documentation provided by Intel. 
 
+Starting from the latest v.8.1 patchlevel, the recommanded way to 
+statically link multithreaded libraries (such as for instance MKL)
+is \texttt{-i-static -openmp} (linking \texttt{libguide} is no longer
+needed). For previous version, try \texttt{-static-libcxa}. 
+
 Each major release of the Intel compiler differs a lot from
 the previous one. Do not mix compiled objects from different releases: 
 they are incompatible. 
@@ -1221,66 +1226,6 @@ of charge for Linux):
 \htmladdnormallink%
 {\texttt{http://developer.intel.com/software/products/support/\#premier}}%
 {http://developer.intel.com/software/products/support/\#premier}.
-
-\paragraph{ifc v.~6 and earlier}
-The I/O libraries used by older versions of ifc are incompatible with 
-those called by most precompiled BLAS/LAPACK libraries (including ATLAS): 
-you get error messages at linking stage.
-A workaround is to recompile BLAS/LAPACK with ifc, or (better) to
-replace the BLAS routine \texttt{xerbla} and LAPACK routine
-\texttt{dlamch} (the only two containing I/O calls) with recompiled
-objects:
-\begin{verbatim}
-    ifc -c xerbla.f
-    ifc -O0 -c dlamch.f
-\end{verbatim}
-(do not forget \texttt{-O0} --- \texttt{dlamch.f} \emph{must} be
-compiled without optimization) and replace them into the library, as
-in the following example:
-\begin{verbatim}
-    ar rv libatlas.a xerbla.o dlamch.o
-\end{verbatim}
-(assuming that the library and the two object files are in the same
-directory). See also Axel Kohlmeyer's web site.
-
-ifc 6 and earlier use a rather strange method to locate 
-where modules are: you need to specify a ``catalog file''. Such a file
-should be created in each directory as \texttt{intel.pcl} either by the 
-manual configuration script \texttt{configure.old} or by the newest
-\texttt{configure}. Starting with ifc 7, a more conventional method
-is used.
-
-\paragraph{ifc v.7}
-
-Some releases of ifc 7.0 and 7.1 yield ``Compiler Internal 
-Error''. Update to the last version (should be 7.1.41).
-
-Warnings ``size of symbol ... changed ...'' are produced by ifc 7.1 at
-the loading stage.
-These seem to be harmless, but they may cause the loader to stop,
-depending on your system configuration.
-If this happens and no executable is produced, add the following to
-\texttt{LDFLAGS}: \texttt{-Xlinker --noinhibit-exec}.
-
-Linux distributions using glibc 2.3 or later (such as e.g. RedHat 9)
-may be incompatible with ifc 7.0 and 7.1.
-The incompatibility shows up in the form of messages ``undefined
-reference to `errno' '' at linking stage.
-A workaround is available: see
-\htmladdnormallink%
-{\texttt{http://newweb.ices.utexas.edu/misc/ctype.c}}%
-{http://newweb.ices.utexas.edu/misc/ctype.c}.
-
-\paragraph{ifort v.8}
-
-Some releases of ifort 8 yield ``Compiler Internal Error''. 
-Update to a more patched version: 8.0.046 for v.~8.0,
-8.1.018 for v.~8.1.
-
-There is a well known problem with ifort 8 and pthreads 
-(that are used both in Debian Woody and Sarge) that causes
-``segmentation fault" errors (info from Lucas Fernandez Seivane). 
-Version 7 did not have this problem.
 
 \paragraph{ifort v.9}
 
@@ -1307,6 +1252,38 @@ On some versions of RedHat Linux, you may get an obscure error:
 \texttt{IPO link: can not find "(" ... }, due to a bad system
 configuration. Add option \texttt{-no-ipo} to \texttt{LDFLAGS} 
 in file \texttt{make.sys}.
+
+\paragraph{ifort v.8}
+
+Some releases of ifort 8 yield ``Compiler Internal Error''. 
+Update to a more patched version: 8.0.046 for v.~8.0,
+8.1.018 for v.~8.1.
+
+There is a well known problem with ifort 8 and pthreads 
+(that are used both in Debian Woody and Sarge) that causes
+``segmentation fault" errors (info from Lucas Fernandez Seivane). 
+Version 7 did not have this problem.
+
+\paragraph{ifc v.7}
+
+Some releases of ifc 7.0 and 7.1 yield ``Compiler Internal 
+Error''. Update to the last version (should be 7.1.41).
+
+Warnings ``size of symbol ... changed ...'' are produced by ifc 7.1 at
+the loading stage.
+These seem to be harmless, but they may cause the loader to stop,
+depending on your system configuration.
+If this happens and no executable is produced, add the following to
+\texttt{LDFLAGS}: \texttt{-Xlinker --noinhibit-exec}.
+
+Linux distributions using glibc 2.3 or later (such as e.g. RedHat 9)
+may be incompatible with ifc 7.0 and 7.1.
+The incompatibility shows up in the form of messages ``undefined
+reference to `errno' '' at linking stage.
+A workaround is available: see
+\htmladdnormallink%
+{\texttt{http://newweb.ices.utexas.edu/misc/ctype.c}}%
+{http://newweb.ices.utexas.edu/misc/ctype.c}.
 
 \paragraph{MKL}
 On Intel CPUs, it is very convenient to use Intel MKL libraries.
@@ -1397,7 +1374,7 @@ the following linkage error:
  _printf$LDBLStub
 \end{verbatim}
 Workaround: add \texttt{-lSystemStubs} to \texttt{LDFLAGS} in 
-\texttt{make.sys} (information by Fabrizio Cleri). 
+\texttt{make.sys} (information by Fabrizio Cleri, May 2006). 
 
 Other workaround: Set gcc version to 3.3. This is done with the command
 \begin{verbatim}
@@ -1408,7 +1385,7 @@ change the order of directory in your \texttt{PATH} variable in order to make
 \texttt{/opt/ibm/...} to appear at its end. The \texttt{xlc} alias to 
 \texttt{cc} will stop working, but as soon you have set gcc version,
 you can change PATH to its normal directory order (information by Cesar 
-Da Silva).
+Da Silva, May 2006).
 
 Because of an upgrade to a new release of GCC (4.0.1) with MacOSX 10.4.5, 
 the IBM fortran compiler does not work correctly with an error message
@@ -1418,27 +1395,28 @@ such as
     (/usr/lib/gcc/powerpc-apple-darwin8/4.0.0) does not exist
 /usr/bin/ld: can't locate file for: -lgcc
 \end{verbatim}
-and fails to run configure properly.
-
-The easiest way to correct this bug is to help the XLF compiler to  
-find the correct location of gcc. To do that, follow precisely the  
-two commands:
+and fails to run configure properly. The easiest way to correct this bug 
+is to help the XLF compiler to find the correct location of gcc. Do the
+following:
 \begin{enumerate}
 \item {\tt sudo mv /etc/opt/ibmcmp/xlf/8.1/xlf.cfg \\
                    /etc/opt/ibmcmp/xlf/8.1/xlf.cfg.2006.MM.DD.HH.MM.SS} \\
-with MM.DD.HH.MM.SS is the current date (MM=month, DD=day etc...)
+with MM.DD.HH.MM.SS is the current date (MM=month, DD=day etc...), then
 \item {\tt
 sudo /opt/ibmcmp/xlf/8.1/bin/xlf\_configure -gcc /usr -install -smprt 
     /opt/ibmcmp/xlsmp/1.4 -xlf /opt/ibmcmp/xlf/8.1 -xlfrt 
     /opt/ibmcmp/xlf/8.1 -xlflic /opt/ibmcmp/xlf/8.1  \\
    /opt/ibmcmp/xlf/8.1/etc/xlf.base.cfg}
 \end{enumerate}
-it replaces the xlf.cfg with the correct location (info by Pascal 
-Thibeadeau).
+replaces the xlf.cfg with the correct location (info by Pascal 
+Thibeadeau, April 2006).
+
+The Absoft 9.1 compiler on Mac OS-X does not work (info by Axel
+Kohlmeyer, June 2006).
 
 \paragraph{T3E}
 
-T3D/T3E is no longer supported.
+T3D/T3E is no longer supported since v.3.
 
 \clearpage
 
