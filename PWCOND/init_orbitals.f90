@@ -35,7 +35,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
 
   integer :: noins, lnocros, rnocros, nocros, norb, na, nt, ih, ih1,&
              ioins, ilocros, irocros, orbin, orbfin, ib, lsr, nrz,  &
-             m, k, ipol, iorb, iorb1, is     
+             m, k, ipol, iorb, iorb1, ind, is     
   integer, allocatable :: orbind(:,:), tblm(:,:), cros(:,:), natih(:,:)
   real(DP), parameter :: eps=1.d-8
   real(DP) :: ledge, redge, ledgel, redgel, ledger, redger, &
@@ -197,27 +197,35 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
 !
 !  order orbital in order of increasing taunew
 !
-  do iorb=1,ilocros
-     do iorb1=iorb+1,ilocros
-        if (taunew(3,iorb1).lt.taunew(3,iorb)-1.d-8)  &
-           call exchange(natih(1,iorb),tblm(1,iorb),taunew(1,iorb), &
-                         natih(1,iorb1),tblm(1,iorb1),taunew(1,iorb1) )
+  do iorb=1,lnocros
+     do iorb1=iorb+1,lnocros
+        if (taunew(3,iorb1).lt.taunew(3,iorb)-1.d-8) then 
+           do ind=iorb,iorb1-1
+              call exchange(natih(1,ind),tblm(1,ind),taunew(1,ind), &
+                           natih(1,iorb1),tblm(1,iorb1),taunew(1,iorb1) )
+           enddo
+        endif
      enddo
   enddo
 
   do iorb=lnocros+1,lnocros+noins
      do iorb1=iorb+1,lnocros+noins
-        if (taunew(3,iorb1).lt.taunew(3,iorb)-1.d-8)  &
-           call exchange(natih(1,iorb),tblm(1,iorb),taunew(1,iorb), &
+        if (taunew(3,iorb1).lt.taunew(3,iorb)-1.d-8) then
+           do ind=iorb,iorb1-1
+              call exchange(natih(1,ind),tblm(1,ind),taunew(1,ind), &
                          natih(1,iorb1),tblm(1,iorb1),taunew(1,iorb1) )
+           enddo
+        endif
      enddo
   enddo
 
   do iorb=lnocros+noins+1,lnocros+noins+rnocros
      do iorb1=iorb+1,lnocros+noins+rnocros
         if (taunew(3,iorb1).lt.taunew(3,iorb)-1.d-8)  then
-           call exchange(natih(1,iorb),tblm(1,iorb),taunew(1,iorb), &
-                         natih(1,iorb1),tblm(1,iorb1),taunew(1,iorb1) )
+           do ind=iorb,iorb1-1
+              call exchange(natih(1,ind),tblm(1,ind),taunew(1,ind), &
+                            natih(1,iorb1),tblm(1,iorb1),taunew(1,iorb1) )
+           enddo
         endif
      enddo
   enddo
