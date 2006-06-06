@@ -618,7 +618,7 @@ subroutine read_gamma (nqs, nat, ifn, xq, gaminp)
      READ(ifn,*)
      READ(ifn,*) 
      READ(ifn,*)
-     READ(ifn,'("     q = ( ",3F14.9)," )"')  (xq(i,iq),i=1,3)
+     READ(ifn,'(11X,3F14.9)," )"')  (xq(i,iq),i=1,3)
      !     write(*,*) 'xq    ',iq,(xq(i,iq),i=1,3)
      READ(ifn,*)
      do na=1,nat
