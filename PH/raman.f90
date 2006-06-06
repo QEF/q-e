@@ -16,8 +16,9 @@ subroutine raman
   USE ramanm, ONLY: lraman, elop
   implicit none
 
-  if (okvan) call errore ('raman','Vanderbilt not implemented',1)
-  if (lsda) call errore ('raman',' LSDA not implemented',1)
+  if (okvan) &
+      call errore ('raman','Ultrasoft pseudopotentials not implemented',1)
+  if (lsda) call errore ('raman',' spin-polarized case not implemented',1)
   if (degauss.ne.0.d0 .or..not.lgamma) &
       call errore ('raman','called in the wrong case',1)
   if (epsil.and..not.convt) &
