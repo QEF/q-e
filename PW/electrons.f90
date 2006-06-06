@@ -60,8 +60,8 @@ SUBROUTINE electrons()
   USE exx,                  ONLY : exxinit, init_h_wfc, exxenergy, exxenergy2 
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
 #endif
-  USE mp_global,       ONLY : intra_pool_comm
-  USE mp,              ONLY : mp_sum
+  USE mp_global,            ONLY : intra_pool_comm
+  USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -79,8 +79,7 @@ SUBROUTINE electrons()
       dr2,            &!  the norm of the diffence between potential
       charge,         &!  the total charge
       mag,            &!  local magnetization
-      ehomo, elumo,   &!  highest occupied and lowest onuccupied levels
-      tcpu             !  cpu time
+      ehomo, elumo     !  highest occupied and lowest onuccupied levels
    INTEGER :: &
       i,              &!  counter on polarization
       is,             &!  counter on spins
@@ -116,8 +115,8 @@ SUBROUTINE electrons()
   !
   ! ... variables needed for electric field calculation
   !
-  COMPLEX(DP), ALLOCATABLE  :: psi(:,:)
-  INTEGER                   :: inberry
+  COMPLEX(DP), ALLOCATABLE :: psi(:,:)
+  INTEGER                  :: inberry
   !
   !
   CALL start_clock( 'electrons' )
@@ -143,8 +142,7 @@ SUBROUTINE electrons()
      !
   END IF
   !
-  tcpu = get_clock( 'PWSCF' )
-  WRITE( stdout, 9000 ) tcpu
+  WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
   !
   CALL flush_unit( stdout )
   !
@@ -173,14 +171,14 @@ SUBROUTINE electrons()
   !
   ! ... Convergence threshold for iterative diagonalization
   !
-  ! ... for the first scf iteration of each ionic step after the first,
-  ! ... the threshold is fixed to a default value of 1.D-5
+  ! ... for the first scf iteration of each ionic step (after the first),
+  ! ... the threshold is fixed to a default value of 1.D-6
   !
 #if defined (EXX)
-10 continue
+10 CONTINUE
 #endif
-
-  IF ( istep > 1 ) ethr = 1.D-5
+  !
+  IF ( istep > 0 ) ethr = 1.D-6
   !
   WRITE( stdout, 9001 )
   !
@@ -192,17 +190,21 @@ SUBROUTINE electrons()
   !
   ! ... bring starting rho to G-space
   !
-  IF ( .not. ALLOCATED(rhog) ) ALLOCATE (rhog(ngm, nspin))
-  do is = 1, nspin
-     psic(:) = rho (:, is)
-     call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
-     rhog(:, is) = psic ( nl(:) )
-  end do
+  IF ( .NOT. ALLOCATED( rhog ) ) ALLOCATE( rhog( ngm, nspin ) )
+  !
+  DO is = 1, nspin
+     !
+     psic(:) = rho(:,is)
+     !
+     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+     !
+     rhog(:,is) = psic(nl(:))
+     !
+  END DO
   !
   DO idum = 1, niter
      !
      IF ( check_stop_now() ) RETURN
-     !
      !  
      iter = iter + 1
      !
@@ -210,8 +212,8 @@ SUBROUTINE electrons()
      !
      CALL flush_unit( stdout )
      !
-     ! ... Convergence threshold for iterative diagonalization
-     ! ... is automatically updated during self consistency
+     ! ... Convergence threshold for iterative diagonalization is
+     ! ... automatically updated during self consistency
      !
      IF ( iter > 1 .AND. ik_ == 0 ) THEN
         !
@@ -241,19 +243,30 @@ SUBROUTINE electrons()
         !
         ! ... diagonalization of the KS hamiltonian
         !
-        if ( lelfield ) then
-           do inberry=1,nberrycyc
-              ALLOCATE (psi(npwx,nbnd))
-              do ik=1,nks
-                 call davcio(psi,nwordwfc,iunwfc,ik,-1)
-                 call davcio(psi,nwordwfc,iunefield,ik,1)
-              end do
-              DEALLOCATE( psi)
+        IF ( lelfield ) THEN
+           !
+           DO inberry = 1, nberrycyc
+              !
+              ALLOCATE( psi( npwx, nbnd ) )
+              !
+              DO ik = 1, nks
+                 !
+                 CALL davcio( psi, nwordwfc, iunwfc,    ik, -1 )
+                 CALL davcio( psi, nwordwfc, iunefield, ik,  1 )
+                 !
+              END DO
+              !
+              DEALLOCATE( psi )
+              !
               CALL c_bands( iter, ik_, dr2 )
-           end do
-        else
+              !
+           END DO
+           !
+        ELSE
+           !
            CALL c_bands( iter, ik_, dr2 )
-        end if
+           !
+        END IF
         !
         IF ( check_stop_now() ) RETURN
         !
@@ -261,7 +274,7 @@ SUBROUTINE electrons()
         !
         IF ( lda_plus_u )  THEN
            !
-           ldim2 = ( 2 * Hubbard_lmax + 1 )**2
+           ldim2 = ( 2*Hubbard_lmax + 1 )**2
            !
            CALL write_ns()
            !
@@ -282,17 +295,22 @@ SUBROUTINE electrons()
         !
         ! ... bring newly calculated (in sum_band) rho to G-space for mixing
         !
-        ALLOCATE (rhognew(ngm, nspin))
-        do is = 1, nspin
-           psic(:) = rho (:, is)
-           call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
-           rhognew (:, is) = psic ( nl(:) )
-        end do
+        ALLOCATE( rhognew( ngm, nspin ) )
+        !
+        DO is = 1, nspin
+           !
+           psic(:) = rho(:,is)
+           !
+           CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+           !
+           rhognew(:,is) = psic(nl(:))
+           !
+        END DO
         !
         CALL mix_rho( rhognew, rhog, nsnew, ns, mixing_beta, &
                       dr2, tr2_min, iter, nmix, flmix, conv_elec )
         !
-        DEALLOCATE (rhognew)
+        DEALLOCATE( rhognew )
         !
         ! ... for the first scf iteration it is controlled that the 
         ! ... threshold is small enough for the diagonalization to 
@@ -322,19 +340,26 @@ SUBROUTINE electrons()
            !
            ! ... bring mixed rho from G- to R-space
            !
-           ALLOCATE (rhonew (nrxx, nspin) )
-           do is = 1, nspin
-              psic( :) = (0.d0, 0.d0)
-              psic( nl(:) ) = rhog (:, is)
-              if (gamma_only) psic( nlm(:) ) = CONJG (rhog (:, is))
-              call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
-              rhonew (:, is) = psic (:)
-           end do
+           ALLOCATE( rhonew( nrxx, nspin ) )
+           !
+           DO is = 1, nspin
+              !
+              psic(:) = ( 0.D0, 0.D0 )
+              !
+              psic(nl(:)) = rhog(:,is)
+              !
+              IF ( gamma_only ) psic(nlm(:)) = CONJG( rhog(:,is) )
+              !
+              CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+              !
+              rhonew(:,is) = psic(:)
+              !
+           END DO
            !
            ! ... no convergence yet: calculate new potential from 
            ! ... new estimate of the charge density 
            !
-           CALL v_of_rho( rhonew, rho_core, nr1, nr2, nr3, nrx1, nrx2,   &
+           CALL v_of_rho( rhonew, rho_core, nr1, nr2, nr3, nrx1, nrx2,     &
                           nrx3, nrxx, nl, ngm, gstart, nspin, g, gg, alat, &
                           omega, ehart, etxc, vtxc, etotefield, charge, vr )
            !
@@ -346,7 +371,7 @@ SUBROUTINE electrons()
            !
            CALL write_rho( rhonew, nspin )
            !
-           DEALLOCATE (rhonew )
+           DEALLOCATE( rhonew )
            !
         ELSE
            !
@@ -354,8 +379,8 @@ SUBROUTINE electrons()
            !
            CALL write_rho( rho, nspin )
            !
-           ! ... convergence reached: store V(out)-V(in) in vnew
-           ! ... Used to correct the forces
+           ! ... convergence reached: store V(out)-V(in) in vnew ( used 
+           ! ... to correct the forces )
            !
            CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
                           nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
@@ -422,7 +447,7 @@ SUBROUTINE electrons()
      !
      ! ... calculate the polarization
      !
-     IF ( lelfield ) CALL c_phase_field( )
+     IF ( lelfield ) CALL c_phase_field()
      !
      ! ... write recover file
      !
@@ -435,8 +460,7 @@ SUBROUTINE electrons()
         !
      END IF
      !
-     tcpu = get_clock( 'PWSCF' )
-     WRITE( stdout, 9000 ) tcpu
+     WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
      !
      IF ( conv_elec ) WRITE( stdout, 9101 )
      !
@@ -789,8 +813,7 @@ SUBROUTINE electrons()
        !
        CALL poolrecover( et, nbnd, nkstot, nks )
        !
-       tcpu = get_clock( 'PWSCF' )
-       WRITE( stdout, 9000 ) tcpu
+       WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
        !
        WRITE( stdout, 9102 )
        !
