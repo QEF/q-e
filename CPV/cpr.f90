@@ -151,7 +151,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   ! ... control variables
   !
   LOGICAL :: tfirst, tlast, tstop, tconv
-  LOGICAL :: ttprint    
+  LOGICAL :: ttprint, tfile
     !  logical variable used to control printout
   !
   ! ... forces on ions
@@ -218,6 +218,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      nfi     = nfi + 1
      tlast   = ( nfi == nomore )
      ttprint = ( MOD( nfi, iprint ) == 0 ).or.tlast
+     tfile = ( MOD( nfi, iprint ) == 0 )
      !
      IF ( ionode .AND. ttprint ) &
         WRITE( stdout, '(/," * Physical Quantities at step:",I6)' ) nfi
@@ -646,7 +647,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      tps = tps + delt * au_ps
      !
-     CALL printout_new( nfi, tfirst, ttprint, ttprint, tps, hold, stress, &
+     CALL printout_new( nfi, tfirst, tfile, ttprint, tps, hold, stress, &
                         tau0, vels, fion, ekinc, temphc, tempp, temps, etot, &
                         enthal, econs, econt, vnhh, xnhh0, vnhp, xnhp0, atot, &
                         ekin, epot )
