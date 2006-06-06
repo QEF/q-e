@@ -264,6 +264,7 @@ MODULE input
      !
      ! ...  Other modules
      !
+     USE cp_main_variables,        ONLY : nprint_nfi
      USE wave_base,          ONLY : frice_ => frice
      USE ions_base,          ONLY : fricp_ => fricp
      USE cell_base,          ONLY : frich_ => frich
@@ -353,7 +354,8 @@ MODULE input
      trhor_  = ( TRIM( calculation ) == 'nscf' )
      tvlocw_ = ( TRIM( disk_io ) == 'high' )     !  warning this is not working
      ! for now use reduce_io in CP to specify if the charge density is saved
-     reduce_io_ = ( TRIM( disk_io ) == 'low' )
+!     reduce_io_ = ( TRIM( disk_io ) == 'low' )
+     reduce_io_ = .not.( TRIM( disk_io ) == 'high' )
      !
      SELECT CASE( TRIM( verbosity ) )
        CASE( 'minimal' )
@@ -418,6 +420,7 @@ MODULE input
           nbeg_   =  1
           nomore_ = nstep
           nstep_  = nstep
+          nprint_nfi = -2
           !
        CASE( 'auto' )
           !
@@ -436,6 +439,7 @@ MODULE input
              restart_p = .TRUE.
              nomore_   = nstep
              nstep_    = nstep
+             nprint_nfi = -2
              !
              IF ( ion_positions == 'from_input' ) THEN
                 !
