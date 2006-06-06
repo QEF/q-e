@@ -32,6 +32,8 @@ subroutine addusdens_g
                                    ngm, nl, nlm, gg, g, eigts1, eigts2, &
                                    eigts3, ig1, ig2, ig3
   USE lsda_mod,             ONLY : nspin
+  USE spin_orb,             ONLY : domag
+  USE noncollin_module,     ONLY : noncolin
   USE scf,                  ONLY : rho
   USE uspp,                 ONLY : becsum, okvan
   USE uspp_param,           ONLY : lmaxq, tvanp, nh
@@ -43,7 +45,7 @@ subroutine addusdens_g
   !     here the local variables
   !
 
-  integer :: ig, na, nt, ih, jh, ijh, is
+  integer :: ig, na, nt, ih, jh, ijh, is, nspin0
   ! counters
 
   real(DP), allocatable :: qmod (:), ylmk0 (:,:)
@@ -59,7 +61,10 @@ subroutine addusdens_g
 
   call start_clock ('addusdens')
 
-  allocate (aux ( ngm, nspin))    
+  nspin0=nspin
+  if (noncolin.and..not.domag) nspin0=1
+
+  allocate (aux ( ngm, nspin0))    
   allocate (qmod( ngm))    
   allocate (qgm( ngm))    
   allocate (ylmk0( ngm, lmaxq * lmaxq))    
@@ -90,7 +95,7 @@ subroutine addusdens_g
 #ifdef DEBUG_ADDUSDENS
   call start_clock ('addus:aux')
 #endif
-                    do is = 1, nspin
+                    do is = 1, nspin0
                        do ig = 1, ngm
                           skk = eigts1 (ig1 (ig), na) * &
                                 eigts2 (ig2 (ig), na) * &
@@ -114,7 +119,7 @@ subroutine addusdens_g
   !
   !     convert aux to real space and add to the charge density
   !
-  do is = 1, nspin
+  do is = 1, nspin0
      psic(:) = (0.d0, 0.d0)
      psic( nl(:) ) = aux(:,is)
      if (gamma_only) psic( nlm(:) ) = CONJG(aux(:,is))

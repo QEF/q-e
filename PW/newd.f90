@@ -36,12 +36,12 @@ SUBROUTINE newd_g()
   USE uspp_param,           ONLY : lmaxq, nh, nhm, tvanp
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
-  USE spin_orb,             ONLY : lspinorb, so
+  USE spin_orb,             ONLY : lspinorb, so, domag
   USE noncollin_module,     ONLY : noncolin
   !
   IMPLICIT NONE
   !
-  INTEGER :: ig, nt, ih, jh, na, is, nht
+  INTEGER :: ig, nt, ih, jh, na, is, nht, nspin0
     ! counters on g vectors, atom type, beta functions x 2, atoms, spin
   COMPLEX(DP), ALLOCATABLE :: aux(:,:), qgm(:), qgm_na(:)
     ! work space
@@ -100,7 +100,10 @@ SUBROUTINE newd_g()
   !
   CALL start_clock( 'newd' )
   !
-  ALLOCATE( aux( ngm, nspin ), qgm_na( ngm ), &
+  nspin0=nspin
+  IF (noncolin.and..not.domag) nspin0=1
+  !
+  ALLOCATE( aux( ngm, nspin0 ), qgm_na( ngm ), &
             qgm( ngm ), qmod( ngm ), ylmk0( ngm, lmaxq*lmaxq ) )
   !
   deeq(:,:,:,:) = 0.D0
@@ -111,9 +114,9 @@ SUBROUTINE newd_g()
   !
   ! ... fourier transform of the total effective potential
   !
-  DO is = 1, nspin
+  DO is = 1, nspin0
      !
-     IF ( nspin == 4 .AND. is /= 1 ) THEN 
+     IF ( nspin0 == 4 .AND. is /= 1 ) THEN 
         !
         psic(:) = vr(:,is)
         !
@@ -156,7 +159,7 @@ SUBROUTINE newd_g()
                     !
                     ! ... and the product with the Q functions
                     !
-                    DO is = 1, nspin
+                    DO is = 1, nspin0
                        !
                        deeq(ih,jh,na,is) = fact * omega * &
                                         DDOT( 2 * ngm, aux(1,is), 1, qgm_na, 1 )
@@ -181,7 +184,7 @@ SUBROUTINE newd_g()
      !
   END DO
   !
-  CALL reduce( nhm * nhm * nat * nspin, deeq )
+  CALL reduce( nhm * nhm * nat * nspin0, deeq )
   !
   DO na = 1, nat
      !
@@ -249,18 +252,19 @@ SUBROUTINE newd_g()
             !
             ijs = ijs + 1
             !
-            DO ih = 1, nh(nt)
-               !
-               DO jh = 1, nh(nt)
+            IF (domag) THEN
+               DO ih = 1, nh(nt)
                   !
-                  deeq_nc(ih,jh,na,ijs) = dvan_so(ih,jh,ijs,nt)
-                  !
-                  DO kh = 1, nh(nt)
+                  DO jh = 1, nh(nt)
                      !
-                     DO lh = 1, nh(nt)
+                     deeq_nc(ih,jh,na,ijs) = dvan_so(ih,jh,ijs,nt)
+                     !
+                     DO kh = 1, nh(nt)
                         !
-                        deeq_nc(ih,jh,na,ijs) = deeq_nc(ih,jh,na,ijs) +   &
-                             deeq (kh,lh,na,1)*            &
+                        DO lh = 1, nh(nt)
+                           !
+                           deeq_nc(ih,jh,na,ijs) = deeq_nc(ih,jh,na,ijs) +   &
+                                deeq (kh,lh,na,1)*            &
                              (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt)  + &
                              fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt)) + &
                              deeq (kh,lh,na,2)*            &
@@ -272,6 +276,8 @@ SUBROUTINE newd_g()
                              deeq (kh,lh,na,4)*            &
                              (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt)  - &
                              fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt))   
+                           !
+                        END DO
                         !
                      END DO
                      !
@@ -279,7 +285,32 @@ SUBROUTINE newd_g()
                   !
                END DO
                !
-            END DO
+            ELSE
+               !
+               DO ih = 1, nh(nt)
+                  !
+                  DO jh = 1, nh(nt)
+                     !
+                     deeq_nc(ih,jh,na,ijs) = dvan_so(ih,jh,ijs,nt)
+                     !
+                     DO kh = 1, nh(nt)
+                        !
+                        DO lh = 1, nh(nt)
+                           !
+                           deeq_nc(ih,jh,na,ijs) = deeq_nc(ih,jh,na,ijs) +   &
+                                deeq (kh,lh,na,1)*            &
+                             (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt)  + &
+                             fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt) ) 
+                           !
+                        END DO
+                        !
+                     END DO
+                     !
+                  END DO
+                  !
+               END DO
+               !
+            END IF
             !
          END DO
          !
