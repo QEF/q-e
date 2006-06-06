@@ -29,7 +29,7 @@
 # We also use SHMEM as the parallel transport, which seems to be much
 # faster in the reduction routines
 CPPFLAGS     = -D__ALTIX -D__LINUX64 -D__SCSL -D__PARA \
-               -D__MPI -D__SHMEM -DSHMEM -I../include -I.
+               -D__MPI -D__SHMEM -I../include -I.
 
 ## Use precompiled fftw library (version <= 2.1.5, NOT v.3!)
 ## In this case, specify also how to load the fftw library (FFTW_LIB)
@@ -37,7 +37,7 @@ CPPFLAGS     = -D__ALTIX -D__LINUX64 -D__SCSL -D__PARA \
 # FFTW_LIB     = -L/usr/local/src/fftw-2.1.3/fftw/.libs -lfftw64
 # FFTW_INC_DIR = /usr/local/src/fftw-2.1.3/fftw
 # CPPFLAGS     = -D__ALTIX -D__LINUX64 -D__FFTW -D__PARA \
-#                -D__MPI -D__SHMEM -DSHMEM -I../include -I$(FFTW_INC_DIR)
+#                -D__MPI -D__SHMEM -I../include -I$(FFTW_INC_DIR)
 
 ## Use the local copy of fftw
 # CPPFLAGS     = -D__ALTIX -D__LINUX64 -D__FFTW \
