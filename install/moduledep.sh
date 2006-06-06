@@ -45,6 +45,6 @@ sort | uniq > moduledep.tmp2                   # remove duplicates
 # by applying the file of substitution patterns just created
 sed -f moduledep.tmp2 moduledep.tmp1 |
 awk '{if ($1 != $3) print}' |          # remove self dependencies
-sort -d | uniq                         # remove duplicates
+sort  | uniq                         # remove duplicates
 
 rm -f moduledep.tmp1 moduledep.tmp2 # remove temporary files

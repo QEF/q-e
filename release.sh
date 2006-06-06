@@ -1,6 +1,6 @@
 #!/bin/sh -x
 #
-VERSION=3.1
+VERSION=3.1.1
 TARGET_MACHINE=cibs.sns.it:public_html/public/
 #
 TMPDIR=espresso-$VERSION
@@ -14,7 +14,7 @@ GUI=PWgui-$GUI_VERSION
 #   2. convert (from Image-Magick)
 #   3. latex2html
 
-if test -d $TMPDIR.save; then /bin/rm -r $TMPDIR.save; fi
+if test -d $TMPDIR.save; then /bin/rm -rf $TMPDIR.save; fi
 if test -d $TMPDIR; then mv $TMPDIR $TMPDIR.save; fi
 mkdir $TMPDIR
 mkdir $TMPDIR/bin
