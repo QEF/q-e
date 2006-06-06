@@ -1147,15 +1147,11 @@ Most of its contents applies to the Quantum-ESPRESSO code as well:\hfill\break
 {\texttt{http://www.theochem.rub.de/\~{}axel.kohlmeyer/cpmd-linux.html}}%
 {http://www.theochem.rub.de/~axel.kohlmeyer/cpmd-linux.html}.
 
-On newer Linux machines, even statically linked binaries will try 
-to open some shared libraries, which will lead to crashes
-if libc/libm/libpthreads are not linked dynamically. Machines 
-using glibc-2.2.4 and older seem ok: compile on these machines
-if you want to share precompiled binaries. Crashes due to multithreading 
-(e.g. when using a multithreaded ATLAS or MKL) on machines with 
-the newer threads (nptl) can be worked around by setting the 
-environment variable \texttt{LD\_ASSUME\_KERNEL} to `2.2.5'.
-(info from Axel Kohlmeyer)
+It is convenient to create semi-statically linked executables
+(with only libc/libm/libpthread linked dynamically). If you want
+to produce a binary that runs on different machines, compile it
+on the oldest machine you have (i.e. the one with the oldest verison
+of the operating system).
 
 Since there is no standard compiler for Linux, different compilers
 have different ideas about the right way to call external libraries.
@@ -1211,10 +1207,13 @@ the appropriate script --- located in the directory containing the
 compiler executable --- in your initialization files.
 Consult the documentation provided by Intel. 
 
-Starting from the latest v.8.1 patchlevel, the recommanded way to 
-statically link multithreaded libraries (such as for instance MKL)
-is \texttt{-i-static -openmp} (linking \texttt{libguide} is no longer
-needed). For previous version, try \texttt{-static-libcxa}. 
+Starting from the latests v 8.1 patchlevels, the recommended way to
+build semi-statically linked binaries is to use the \texttt{-i-static}
+flag; for multi-threaded libraries the linker flag would be
+\texttt{-i-static -openmp} (linking \texttt{libguide} is no longer 
+needed and the compiler will pick the correct one). For previous 
+versions, try \texttt{-static-libcxa} (this will
+give an incomplete semi-static link on newer versions).
 
 Each major release of the Intel compiler differs a lot from
 the previous one. Do not mix compiled objects from different releases: 
