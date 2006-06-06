@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE cprmain( tau, fion_out, etot_out )
+SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !----------------------------------------------------------------------------
   !
   USE kinds,                    ONLY : DP
@@ -65,7 +65,8 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE smooth_grid_dimensions,   ONLY : nnrsx, nr1s, nr2s, nr3s
   USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
   USE local_pseudo,             ONLY : allocate_local_pseudo
-  USE io_global,                ONLY : io_global_start, stdout, ionode
+  USE io_global,                ONLY : io_global_start, &
+                                       stdout, ionode, ionode_id
   USE dener,                    ONLY : detot
   USE derho,                    ONLY : drhor, drhog
   USE cdvan,                    ONLY : dbec, drhovan
@@ -136,14 +137,16 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   USE orthogonalize_base,       ONLY : updatc
   USE control_flags,            ONLY : force_pairing
   USE wave_functions,           ONLY : elec_fakekine
+  USE mp,                       ONLY : mp_bcast
+  USE mp_global,                ONLY : intra_image_comm
   !
   IMPLICIT NONE
   !
   ! ... input/output variables
   !
-  REAL(DP), INTENT(INOUT) :: tau(3,nat)
-  REAL(DP), INTENT(OUT)   :: fion_out(3,nat)
-  REAL(DP), INTENT(OUT)   :: etot_out
+  REAL(DP), INTENT(OUT) :: tau_out(3,nat)
+  REAL(DP), INTENT(OUT) :: fion_out(3,nat)
+  REAL(DP), INTENT(OUT) :: etot_out
   !
   ! ... control variables
   !
@@ -172,6 +175,9 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
   !
   REAL(DP) :: stress_gpa(3,3), thstress(3,3)
   !
+  REAL(DP), ALLOCATABLE :: usrt_tau0(:,:), usrt_taup(:,:), usrt_fion(:,:)
+    ! temporary array used to store unsorted positions and forces for
+    ! constrained dynamics
   REAL(DP), ALLOCATABLE :: tauw(:,:)  
     ! temporary array used to printout positions
   CHARACTER(LEN=3) :: labelw( nat )
@@ -330,15 +336,30 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         IF ( lconstrain ) THEN
            !
-           IF ( lcoarsegrained ) CALL set_target()
-           !
-           ! ... we first remove the component of the force along the 
-           ! ... constrain gradient (this constitutes the initial guess 
-           ! ... for the lagrange multiplier)
-           !
-           CALL remove_constr_force( nat, tau0, &
-                                     iforce, ityp, 1.D0, fion(:3,:nat) )
-           !
+	   IF ( ionode ) THEN
+	      !
+              ALLOCATE( usrt_tau0( 3, nat ) )
+              ALLOCATE( usrt_taup( 3, nat ) )
+              ALLOCATE( usrt_fion( 3, nat ) )
+	      !
+	      usrt_tau0(:,:) = tau0(:,ind_bck(:))
+	      usrt_fion(:,:) = fion(:,ind_bck(:))
+	      !
+              IF ( lcoarsegrained ) CALL set_target()
+              !
+              ! ... we first remove the component of the force along the 
+              ! ... constrain gradient (this constitutes the initial guess 
+              ! ... for the lagrange multiplier)
+              !
+              CALL remove_constr_force( nat, usrt_tau0, &
+                                        if_pos, ityp, 1.D0, usrt_fion )
+              !
+              fion(:,:) = usrt_fion(:,ind_srt(:))
+	      !
+	   END IF
+	   !
+	   CALL mp_bcast( fion, ionode_id, intra_image_comm )
+	   !
         END IF
         !
         CALL ions_move( tausp, taus, tausm, iforce, pmass, fion, ainv, &
@@ -349,22 +370,36 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
            !
            ! ... constraints are imposed here
            !
-           CALL s_to_r( tausp, taup, na, nsp, hnew )
-           !
-           CALL check_constraint( nat, taup, tau0, fion(:3,:nat), &
-                                  iforce, ityp, 1.D0, delt, amu_au )
-           !
-           CALL r_to_s( taup, tausp, na, nsp, ainv )
-           !
-           ! ... average value of the lagrange multipliers
-           !
-           IF ( lcoarsegrained ) THEN
+           IF ( ionode ) THEN
+	      !
+              CALL s_to_r( tausp, taup, na, nsp, hnew )
               !
-              etot_av = etot_av + etot
+	      usrt_taup(:,:) = taup(:,ind_bck(:))
               !
-              dfe_acc(:) = dfe_acc(:) - lagrange(1:ncolvar)
+              CALL check_constraint( nat, usrt_taup, usrt_tau0, usrt_fion, &
+	                             if_pos, ityp, 1.D0, delt, amu_au )
               !
+	      taup(:,:) = usrt_taup(:,ind_srt(:))
+	      fion(:,:) = usrt_fion(:,ind_srt(:))
+              !
+              ! ... average value of the lagrange multipliers
+              !
+              IF ( lcoarsegrained ) THEN
+                 !
+                 etot_av = etot_av + etot
+                 !
+                 dfe_acc(:) = dfe_acc(:) - lagrange(1:ncolvar)
+                 !
+              END IF
+              !
+	      DEALLOCATE( usrt_tau0, usrt_taup, usrt_fion )
+	      !
            END IF
+           !
+	   CALL mp_bcast( taup, ionode_id, intra_image_comm )
+	   CALL mp_bcast( fion, ionode_id, intra_image_comm )
+	   !
+           CALL r_to_s( taup, tausp, na, nsp, ainv )
            !
         END IF
         !
@@ -782,7 +817,7 @@ SUBROUTINE cprmain( tau, fion_out, etot_out )
         !
         ipos = ind_srt( isa )
         !
-        tau(:,ipos) = tau0(:,isa)
+        tau_out(:,ipos) = tau0(:,isa)
         !
         fion_out(:,ipos) = fion(:,isa)
         !

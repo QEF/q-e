@@ -119,12 +119,10 @@ SUBROUTINE init_run()
   !
   CALL nlinit()
   !
-  !
   !=======================================================================
   !     allocation of all arrays not already allocated in init and nlinit
   !=======================================================================
   !
-
   CALL allocate_mainvar( ngw, ngwt, ngb, ngs, ngm, nr1, nr2, nr3, dfftp%nr1x, &
                          dfftp%nr2x, dfftp%npl, nnrx, nnrsx, nat, nax, nsp,   &
                          nspin, nbsp, nbspx, n_emp, nupdwn, nkb, gzero )
