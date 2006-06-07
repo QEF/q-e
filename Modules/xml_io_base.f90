@@ -28,13 +28,12 @@ MODULE xml_io_base
   PRIVATE
   !
   PUBLIC :: attr
-  PUBLIC :: create_directory, kpoint_dir, wfc_filename, copy_file,    &
-            restart_dir, check_restartfile, save_history,             &
-            save_print_counter, read_print_counter, set_kpoints_vars, &
-            write_cell, write_ions, write_symmetry, write_planewaves, &
-            write_efield,                                             &
-            write_spin, write_xc, write_occ, write_bz, write_phonon,  &
-            write_rho_xml, write_wfc, read_wfc, read_rho_xml
+  PUBLIC :: create_directory, kpoint_dir, wfc_filename, copy_file,       &
+            restart_dir, check_restartfile, pp_check_file, save_history, &
+            save_print_counter, read_print_counter, set_kpoints_vars,    &
+            write_cell, write_ions, write_symmetry, write_planewaves,    &
+            write_efield, write_spin, write_xc, write_occ, write_bz,     &
+            write_phonon, write_rho_xml, write_wfc, read_wfc, read_rho_xml
   !
   CHARACTER(iotk_attlenx) :: attr
   !
@@ -69,12 +68,12 @@ MODULE xml_io_base
       IF ( ionode ) THEN
          !
          OPEN( UNIT = 4, FILE = TRIM( dirname ) // '/test' // &
-              TRIM( int_to_char( me_image ) ), STATUS = 'UNKNOWN', IOSTAT = ierr )
+               TRIM( int_to_char( me_image ) ), IOSTAT = ierr )
          CLOSE( UNIT = 4, STATUS = 'DELETE' )
          !
       END IF
       !
-      CALL mp_bcast ( ierr, ionode_id, intra_image_comm )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       CALL errore( 'create_directory:', &
                    TRIM( dirname ) // ' non existent or non writable', ierr )
@@ -251,6 +250,46 @@ MODULE xml_io_base
     END FUNCTION check_restartfile
     !
     !------------------------------------------------------------------------
+    FUNCTION pp_check_file()
+      !------------------------------------------------------------------------
+      !
+      USE io_global, ONLY : ionode, ionode_id
+      USE mp_global, ONLY : intra_image_comm
+      !
+      IMPLICIT NONE
+      !
+      LOGICAL            :: pp_check_file
+      CHARACTER(LEN=256) :: dirname, filename
+      INTEGER            :: ierr
+      LOGICAL            :: lval
+      !
+      !
+      dirname  = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
+      filename = TRIM( dirname ) // '/' // TRIM( xmlpun )
+      !
+      IF ( ionode ) &
+         CALL iotk_open_read( iunpun, FILE = filename, IERR = ierr )
+      !
+      CALL errore( 'pp_check_file', 'file ' // &
+                 & TRIM( dirname ) // ' not found', ierr )
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_scan_dat( iunpun, "PP_CHECK_FLAG", lval )
+         !
+         CALL iotk_close_read( iunpun )
+         !
+      END IF
+      !
+      CALL mp_bcast( lval, ionode_id, intra_image_comm )
+      !
+      pp_check_file = lval
+      !
+      RETURN
+      !
+    END FUNCTION pp_check_file
+    !
+    !------------------------------------------------------------------------
     SUBROUTINE save_history( dirname, iter )
       !------------------------------------------------------------------------
       !
@@ -325,9 +364,9 @@ MODULE xml_io_base
       IF ( ierr > 0 ) THEN
          ! try to create the restart directory if non-existent
          CALL create_directory( TRIM( dirname ) )
-         IF( ionode ) THEN
+         IF ( ionode ) THEN
             CALL iotk_open_write( iunpun, FILE = filename, &
-                 & ROOT = "PRINT_COUNTER",  IERR = ierr )
+                                & ROOT = "PRINT_COUNTER", IERR = ierr )
          END IF
       END IF
       !
@@ -675,8 +714,8 @@ MODULE xml_io_base
     END SUBROUTINE write_ions
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_symmetry( ibrav, symm_type, nsym, &
-                       invsym, nr1, nr2, nr3, ftau, s, sname, irt, t_rev )
+    SUBROUTINE write_symmetry( ibrav, symm_type, nsym, invsym, &
+                               nr1, nr2, nr3, ftau, s, sname, irt, t_rev )
       !------------------------------------------------------------------------
       !
       INTEGER,          INTENT(IN) :: ibrav, nsym,  nr1, nr2, nr3
@@ -721,17 +760,18 @@ MODULE xml_io_base
       CALL iotk_write_end( iunpun, "SYMMETRIES" )
       !
     END SUBROUTINE write_symmetry
+    !
     !------------------------------------------------------------------------
-    SUBROUTINE write_efield(tefield, dipfield, edir, emaxpos, eopreg, eamp)
+    SUBROUTINE write_efield( tefield, dipfield, edir, emaxpos, eopreg, eamp )
       !------------------------------------------------------------------------
       !
-      LOGICAL :: &
+      LOGICAL, INTENT(IN) :: &
            tefield,      &! if .TRUE. a finite electric field is added to the
                           ! local potential
            dipfield       ! if .TRUE. the dipole field is subtracted
-      INTEGER :: &
+      INTEGER, INTENT(IN) :: &
            edir           ! direction of the field
-      REAL(DP) :: &
+      REAL(DP), INTENT(IN) :: &
            emaxpos,  &! position of the maximum of the field (0<emaxpos<1)
            eopreg,   &! amplitude of the inverse region (0<eopreg<1)
            eamp       ! field amplitude (in a.u.) (1 a.u. = 51.44 10^11 V/m)

@@ -16,8 +16,7 @@ PROGRAM pwscf
   USE global_version,   ONLY : version_number
   USE wvfct,            ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin
-  USE control_flags,    ONLY : nstep, istep, conv_elec, conv_ions, &
-                               lpath, lmetadyn
+  USE control_flags,    ONLY : conv_elec, conv_ions, lpath, lmetadyn
   USE io_files,         ONLY : nd_nmbr
   USE ions_base,        ONLY : tau
   USE path_variables,   ONLY : conv_path
@@ -85,8 +84,6 @@ PROGRAM pwscf
      !
   ELSE
      !
-     istep = 0
-     !
      IF ( lmetadyn ) THEN
         !
         ! ... meta-dynamics
@@ -103,8 +100,6 @@ PROGRAM pwscf
         !
         main_loop: DO
            !
-           istep = istep + 1
-           !
            ! ... electronic self-consistentcy
            !
            CALL electrons()
@@ -117,7 +112,7 @@ PROGRAM pwscf
            !
            ! ... exit condition (ionic convergence) is checked here
            !
-           IF ( conv_ions .OR. ( istep >= nstep ) ) EXIT main_loop
+           IF ( conv_ions ) EXIT main_loop
            !
            ! ... the ionic part of the hamiltonian is reinitialized
            !

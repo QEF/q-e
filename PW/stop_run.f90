@@ -16,7 +16,7 @@ SUBROUTINE stop_run( flag )
   USE io_global,          ONLY : stdout, ionode
   USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
                                  lcoarsegrained
-  USE io_files,           ONLY : prefix, iunwfc, iunigk, iunres, iunefield
+  USE io_files,           ONLY : prefix, iunwfc, iunigk, iunefield
   USE path_variables,     ONLY : path_deallocation
   USE path_io_routines,   ONLY : io_path_stop
   USE constraints_module, ONLY : deallocate_constraint
@@ -64,13 +64,10 @@ SUBROUTINE stop_run( flag )
      !
      ! ... all other files must be reopened and removed
      !
-     CALL seqopn( iunres, 'restart', 'UNFORMATTED', exst )
-     CLOSE( UNIT = iunres, STATUS = 'DELETE' )
-     !
-     CALL seqopn( 4, 'bfgs', 'UNFORMATTED', exst )
+     CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
-     CALL seqopn( 4, 'md', 'FORMATTED', exst )
+     CALL seqopn( 4, 'update', 'FORMATTED', exst )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
      CALL seqopn( 4, 'para', 'FORMATTED', exst )

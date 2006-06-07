@@ -31,7 +31,7 @@ SUBROUTINE move_ions()
   USE force_mod,              ONLY : force
   USE control_flags,          ONLY : upscale, lbfgs, lmd, ldamped, &
                                      lconstrain, lcoarsegrained, conv_ions, &
-                                     history, alpha0, beta0, tr2, istep
+                                     history, tr2, istep
   USE relax,                  ONLY : epse, epsf, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
   USE constraints_module,     ONLY : lagrange
@@ -43,14 +43,13 @@ SUBROUTINE move_ions()
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
   USE dynamics_module,        ONLY : diff_coeff
-  USE dynamics_module,        ONLY : verlet, proj_verlet, compute_averages
+  USE dynamics_module,        ONLY : verlet, proj_verlet
   !
   IMPLICIT NONE
   !
   LOGICAL, SAVE         :: lcheck_mag = .TRUE.
-    ! .TRUE. if the check of zero absolute magnetization is required
+    ! .TRUE. if a check on zero absolute magnetization is required
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
-    ! previous positions of atoms
   INTEGER               :: na  
   REAL(DP)              :: energy_error, gradient_error
   LOGICAL               :: step_accepted, exst
@@ -63,7 +62,7 @@ SUBROUTINE move_ions()
      !
      conv_ions = .FALSE.
      !
-     ALLOCATE( tauold( 3, nat, 3 ) )   
+     ALLOCATE( tauold( 3, nat, 3 ) )
      !
      ! ... the file containing old positions is opened 
      ! ... ( needed for extrapolation )
@@ -92,6 +91,21 @@ SUBROUTINE move_ions()
      tauold(:,:,3) = tauold(:,:,2)
      tauold(:,:,2) = tauold(:,:,1)
      tauold(:,:,1) = tau(:,:)
+     !
+     ! ... history is updated (a new ionic step has been done)
+     !
+     history = MIN( 3, ( history + 1 ) )
+     !
+     ! ... old positions are written on file
+     !
+     CALL seqopn( iunupdate, 'update', 'FORMATTED', exst ) 
+     !
+     WRITE( UNIT = iunupdate, FMT = * ) history
+     WRITE( UNIT = iunupdate, FMT = * ) tauold
+     !
+     CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
+     !  
+     DEALLOCATE( tauold )
      !
      ! ... do the minimization / dynamics step
      !
@@ -200,8 +214,6 @@ SUBROUTINE move_ions()
               !
            END IF
            !
-           CALL compute_averages( istep )
-           !
            IF ( lcoarsegrained ) THEN
               !
               etot_av = etot_av + etot
@@ -226,25 +238,6 @@ SUBROUTINE move_ions()
      CALL checkallsym( nsym, s, nat, tau, ityp, &
                        at, bg, nr1, nr2, nr3, irt, ftau )
      !
-     ! ... history is updated (a new ionic step has been done)
-     !
-     history = MIN( 3, ( history + 1 ) )
-     !
-     ! ... find the best coefficients for the extrapolation of the potential
-     !
-     CALL find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
-     !
-     ! ... old positions are written on file
-     !
-     CALL seqopn( iunupdate, 'update', 'FORMATTED', exst ) 
-     !
-     WRITE( UNIT = iunupdate, FMT = * ) history
-     WRITE( UNIT = iunupdate, FMT = * ) tauold
-     !
-     CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
-     !  
-     DEALLOCATE( tauold )
-     !
   END IF
   !  
   ! ... broadcast calculated quantities to all nodes
@@ -254,8 +247,6 @@ SUBROUTINE move_ions()
   CALL mp_bcast( force,     ionode_id, intra_image_comm )
   CALL mp_bcast( tr2,       ionode_id, intra_image_comm )
   CALL mp_bcast( conv_ions, ionode_id, intra_image_comm )
-  CALL mp_bcast( alpha0,    ionode_id, intra_image_comm )
-  CALL mp_bcast( beta0,     ionode_id, intra_image_comm )
   CALL mp_bcast( history,   ionode_id, intra_image_comm )
   !
   IF ( lmovecell ) THEN
@@ -287,113 +278,4 @@ SUBROUTINE move_ions()
            & /5X,'by performing a new scf iteration ',       & 
            &     'without any "electronic" history' )               
   !
-END SUBROUTINE move_ions     
-!
-! ... this routine is used also by compute_scf (NEB) and compute_fes_grads
-!
-!----------------------------------------------------------------------------
-SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
-  !----------------------------------------------------------------------------
-  !
-  ! ... This routine finds the best coefficients alpha0 and beta0 so that
-  !
-  ! ...    | tau(t+dt) - tau' | is minimum, where
-  !
-  ! ...    tau' = tau(t) + alpha0 * ( tau(t) - tau(t-dt) )
-  ! ...                  + beta0 * ( tau(t-dt) -tau(t-2*dt) )
-  !
-  USE constants,     ONLY : eps16
-  USE kinds,         ONLY : DP
-  USE io_global,     ONLY : stdout
-  USE control_flags, ONLY : history
-  !
-  IMPLICIT NONE
-  !
-  INTEGER  :: nat, na, ipol
-  REAL(DP) :: chi, alpha0, beta0, tau(3,nat), tauold(3,nat,3)
-  REAL(DP) :: a11, a12, a21, a22, b1, b2, c, det
-  !
-  !
-  IF ( history < 2 ) THEN
-     !
-     RETURN
-     !
-  ELSE IF ( history == 2 ) THEN  
-     !
-     alpha0 = 1.D0
-     beta0  = 0.D0
-     !
-     RETURN
-     !
-  END IF
-  !
-  ! ... solution of the linear system
-  !
-  a11 = 0.D0
-  a12 = 0.D0
-  a21 = 0.D0
-  a22 = 0.D0
-  b1  = 0.D0
-  b2  = 0.D0
-  c   = 0.D0
-  !
-  DO na = 1, nat
-     !
-     DO ipol = 1, 3
-        !
-        a11 = a11 + ( tauold(ipol,na,1) - tauold(ipol,na,2) )**2
-        !
-        a12 = a12 + ( tauold(ipol,na,1) - tauold(ipol,na,2) ) * &
-                    ( tauold(ipol,na,2) - tauold(ipol,na,3) )
-        !
-        a22 = a22 + ( tauold(ipol,na,2) - tauold(ipol,na,3) )**2
-        !
-        b1 = b1 - ( tauold(ipol,na,1) - tau(ipol,na) ) * &
-                  ( tauold(ipol,na,1) - tauold(ipol,na,2) )
-        !
-        b2 = b2 - ( tauold(ipol,na,1) - tau(ipol,na) ) * &
-                  ( tauold(ipol,na,2) - tauold(ipol,na,3) )
-        ! 
-        c = c + ( tauold(ipol,na,1) - tau(ipol,na) )**2
-        !
-     END DO
-     !
-  END DO
-  !
-  a21 = a12
-  !
-  det = a11 * a22 - a12 * a21
-  !
-  IF ( det < - eps16 ) THEN
-     !
-     alpha0 = 0.D0
-     beta0  = 0.D0
-     !
-     WRITE( UNIT = stdout, &
-            FMT = '(5X,"WARNING: in find_alpha_and_beta  det = ",F10.6)' ) det
-     !
-  END IF   
-  !
-  ! ... case det > 0:  a well defined minimum exists
-  !
-  IF ( det > eps16 ) THEN
-     !
-     alpha0 = ( b1 * a22 - b2 * a12 ) / det
-     beta0  = ( a11 * b2 - a21 * b1 ) / det
-     !
-  ELSE
-     !
-     ! ... case det = 0 : the two increments are linearly dependent, 
-     ! ...                chose solution with alpha = b1 / a11 and beta = 0 
-     ! ...                ( discard oldest configuration )
-     !
-     alpha0 = 0.D0
-     beta0  = 0.D0
-     !
-     IF ( a11 /= 0.D0 ) alpha0 = b1 / a11
-     !
-  END IF
-  !
-  RETURN
-  !
-END SUBROUTINE find_alpha_and_beta
+END SUBROUTINE move_ions

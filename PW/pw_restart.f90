@@ -22,6 +22,7 @@ MODULE pw_restart
   USE constants, ONLY : e2
   USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun
   USE io_global, ONLY : ionode, ionode_id, stdout
+  USE mp_global, ONLY : intra_image_comm
   USE mp,        ONLY : mp_bcast
   !
   IMPLICIT NONE
@@ -34,17 +35,17 @@ MODULE pw_restart
   !
   INTEGER, PRIVATE :: iunout
   !
-  LOGICAL :: lcell_read = .FALSE., &
-             lpw_read   = .FALSE., &
-             lions_read = .FALSE., &
-             lspin_read = .FALSE., &
-             lxc_read   = .FALSE., &
-             locc_read  = .FALSE., &
-             lbz_read   = .FALSE., &
-             lbs_read   = .FALSE., &
+  LOGICAL :: lcell_read   = .FALSE., &
+             lpw_read     = .FALSE., &
+             lions_read   = .FALSE., &
+             lspin_read   = .FALSE., &
+             lxc_read     = .FALSE., &
+             locc_read    = .FALSE., &
+             lbz_read     = .FALSE., &
+             lbs_read     = .FALSE., &
              lefield_read = .FALSE., &
-             lwfc_read  = .FALSE., &
-             lsymm_read = .FALSE.
+             lwfc_read    = .FALSE., &
+             lsymm_read   = .FALSE.
   !
   CONTAINS
     !
@@ -52,7 +53,7 @@ MODULE pw_restart
     SUBROUTINE pw_writefile( what )
       !------------------------------------------------------------------------
       !
-      USE control_flags,        ONLY : istep, modenum, twfcollect
+      USE control_flags,        ONLY : istep, modenum, twfcollect, conv_ions
       USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
                                        ibrav, symm_type, celldm
       USE reciprocal_vectors,   ONLY : ig_l2g
@@ -256,7 +257,7 @@ MODULE pw_restart
       END IF
       !
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       CALL errore( 'pw_writefile ', &
                    'cannot open restart file for writing', ierr )
@@ -264,6 +265,12 @@ MODULE pw_restart
       IF ( ionode ) THEN  
          !
          ! ... here we start writing the punch-file
+         !
+!-------------------------------------------------------------------------------
+! ... this flag is used to check is the file can be used for post-processing
+!-------------------------------------------------------------------------------
+         !
+         CALL iotk_write_dat( iunpun, "PP_CHECK_FLAG", conv_ions )
          !
 !-------------------------------------------------------------------------------
 ! ... CELL
@@ -283,8 +290,8 @@ MODULE pw_restart
 ! ... SYMMETRIES
 !-------------------------------------------------------------------------------
          !
-         CALL write_symmetry( ibrav, symm_type, nsym, &
-                          invsym, nr1, nr2, nr3, ftau, s, sname, irt, t_rev )
+         CALL write_symmetry( ibrav, symm_type, nsym, invsym, &
+                              nr1, nr2, nr3, ftau, s, sname, irt, t_rev )
          !
 !-------------------------------------------------------------------------------
 ! ... ELECTRIC FIELD
@@ -712,20 +719,20 @@ MODULE pw_restart
       CALL iotk_free_unit( iunout, ierr )
       !
       CALL errore( 'pw_readfile ', &
-                   'no free units to read wavefunctions', ierr )      
+                   'no free units to read wavefunctions', ierr )
       !
-      lcell = .FALSE.
-      lpw   = .FALSE.
-      lions = .FALSE.
-      lspin = .FALSE.
-      lxc   = .FALSE.
-      locc  = .FALSE.
-      lbz   = .FALSE.
-      lbs   = .FALSE.
-      lwfc  = .FALSE.
-      lsymm = .FALSE.
-      lph   = .FALSE.
-      lrho  = .FALSE.
+      lcell   = .FALSE.
+      lpw     = .FALSE.
+      lions   = .FALSE.
+      lspin   = .FALSE.
+      lxc     = .FALSE.
+      locc    = .FALSE.
+      lbz     = .FALSE.
+      lbs     = .FALSE.
+      lwfc    = .FALSE.
+      lsymm   = .FALSE.
+      lph     = .FALSE.
+      lrho    = .FALSE.
       lefield = .FALSE.
       !
       SELECT CASE( what )
@@ -755,50 +762,53 @@ MODULE pw_restart
          !
       CASE( 'nowave' )
          !
-         lcell = .TRUE.
-         lpw   = .TRUE.
-         lions = .TRUE.
-         lspin = .TRUE.
-         lxc   = .TRUE.
-         locc  = .TRUE.
-         lbz   = .TRUE.
-         lbs   = .TRUE.
-         lsymm = .TRUE.
-         lefield =.TRUE.
-         lph   = .TRUE.
+         lcell   = .TRUE.
+         lpw     = .TRUE.
+         lions   = .TRUE.
+         lspin   = .TRUE.
+         lxc     = .TRUE.
+         locc    = .TRUE.
+         lbz     = .TRUE.
+         lbs     = .TRUE.
+         lsymm   = .TRUE.
+         lefield = .TRUE.
+         lph     = .TRUE.
          !
       CASE( 'all' )
          !
-         lcell = .TRUE.
-         lpw   = .TRUE.
-         lions = .TRUE.
-         lspin = .TRUE.
-         lxc   = .TRUE.
-         locc  = .TRUE.
-         lbz   = .TRUE.
-         lbs   = .TRUE.
-         lwfc  = .TRUE.
-         lsymm = .TRUE.
-         lph   = .TRUE.
-         lefield=.TRUE.
-         lrho  = .TRUE.
+         lcell   = .TRUE.
+         lpw     = .TRUE.
+         lions   = .TRUE.
+         lspin   = .TRUE.
+         lxc     = .TRUE.
+         locc    = .TRUE.
+         lbz     = .TRUE.
+         lbs     = .TRUE.
+         lwfc    = .TRUE.
+         lsymm   = .TRUE.
+         lph     = .TRUE.
+         lefield = .TRUE.
+         lrho    = .TRUE.
          !
       CASE( 'reset' )
          !
-         lcell_read = .FALSE.
-         lpw_read   = .FALSE.
-         lions_read = .FALSE.
-         lspin_read = .FALSE.
-         lxc_read   = .FALSE.
-         locc_read  = .FALSE.
-         lbz_read   = .FALSE.
-         lbs_read   = .FALSE.
-         lwfc_read  = .FALSE.
-         lsymm_read = .FALSE.
+         lcell_read   = .FALSE.
+         lpw_read     = .FALSE.
+         lions_read   = .FALSE.
+         lspin_read   = .FALSE.
+         lxc_read     = .FALSE.
+         locc_read    = .FALSE.
+         lbz_read     = .FALSE.
+         lbs_read     = .FALSE.
+         lwfc_read    = .FALSE.
+         lsymm_read   = .FALSE.
          lefield_read = .FALSE.
          !
       CASE( 'ef' )
+         !
          CALL read_ef( dirname, ierr )
+         RETURN
+         !
       END SELECT
       !
       IF ( lcell ) THEN
@@ -925,7 +935,7 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
@@ -1020,28 +1030,28 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( nat,        ionode_id )
-      CALL mp_bcast( nsp,        ionode_id )
-      CALL mp_bcast( nsym,       ionode_id )
-      CALL mp_bcast( ecutwfc,    ionode_id )
-      CALL mp_bcast( dual,       ionode_id )
-      CALL mp_bcast( npwx,       ionode_id )
-      CALL mp_bcast( gamma_only, ionode_id )
-      CALL mp_bcast( nr1,        ionode_id )
-      CALL mp_bcast( nr2,        ionode_id )
-      CALL mp_bcast( nr3,        ionode_id )
-      CALL mp_bcast( ngm_g,      ionode_id )
-      CALL mp_bcast( nr1s,       ionode_id )
-      CALL mp_bcast( nr2s,       ionode_id )
-      CALL mp_bcast( nr3s,       ionode_id )
-      CALL mp_bcast( ngms_g,     ionode_id )
-      CALL mp_bcast( lsda,       ionode_id )
-      CALL mp_bcast( noncolin,   ionode_id )
-      CALL mp_bcast( ntetra,     ionode_id )
-      CALL mp_bcast( nkstot,     ionode_id )
-      CALL mp_bcast( nelec,      ionode_id )
-      CALL mp_bcast( nbnd,       ionode_id )
-      CALL mp_bcast( kunit,      ionode_id )
+      CALL mp_bcast( nat,        ionode_id, intra_image_comm )
+      CALL mp_bcast( nsp,        ionode_id, intra_image_comm )
+      CALL mp_bcast( nsym,       ionode_id, intra_image_comm )
+      CALL mp_bcast( ecutwfc,    ionode_id, intra_image_comm )
+      CALL mp_bcast( dual,       ionode_id, intra_image_comm )
+      CALL mp_bcast( npwx,       ionode_id, intra_image_comm )
+      CALL mp_bcast( gamma_only, ionode_id, intra_image_comm )
+      CALL mp_bcast( nr1,        ionode_id, intra_image_comm )
+      CALL mp_bcast( nr2,        ionode_id, intra_image_comm )
+      CALL mp_bcast( nr3,        ionode_id, intra_image_comm )
+      CALL mp_bcast( ngm_g,      ionode_id, intra_image_comm )
+      CALL mp_bcast( nr1s,       ionode_id, intra_image_comm )
+      CALL mp_bcast( nr2s,       ionode_id, intra_image_comm )
+      CALL mp_bcast( nr3s,       ionode_id, intra_image_comm )
+      CALL mp_bcast( ngms_g,     ionode_id, intra_image_comm )
+      CALL mp_bcast( lsda,       ionode_id, intra_image_comm )
+      CALL mp_bcast( noncolin,   ionode_id, intra_image_comm )
+      CALL mp_bcast( ntetra,     ionode_id, intra_image_comm )
+      CALL mp_bcast( nkstot,     ionode_id, intra_image_comm )
+      CALL mp_bcast( nelec,      ionode_id, intra_image_comm )
+      CALL mp_bcast( nbnd,       ionode_id, intra_image_comm )
+      CALL mp_bcast( kunit,      ionode_id, intra_image_comm )
       !
       RETURN
       !
@@ -1070,7 +1080,7 @@ MODULE pw_restart
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
@@ -1158,15 +1168,15 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( ibrav,     ionode_id )
-      CALL mp_bcast( symm_type, ionode_id )
-      CALL mp_bcast( alat,      ionode_id )
-      CALL mp_bcast( celldm,    ionode_id )
-      CALL mp_bcast( tpiba,     ionode_id )
-      CALL mp_bcast( tpiba2,    ionode_id )
-      CALL mp_bcast( omega,     ionode_id )
-      CALL mp_bcast( at,        ionode_id )
-      CALL mp_bcast( bg,        ionode_id )
+      CALL mp_bcast( ibrav,     ionode_id, intra_image_comm )
+      CALL mp_bcast( symm_type, ionode_id, intra_image_comm )
+      CALL mp_bcast( alat,      ionode_id, intra_image_comm )
+      CALL mp_bcast( celldm,    ionode_id, intra_image_comm )
+      CALL mp_bcast( tpiba,     ionode_id, intra_image_comm )
+      CALL mp_bcast( tpiba2,    ionode_id, intra_image_comm )
+      CALL mp_bcast( omega,     ionode_id, intra_image_comm )
+      CALL mp_bcast( at,        ionode_id, intra_image_comm )
+      CALL mp_bcast( bg,        ionode_id, intra_image_comm )
       !
       ! ... crystal is always set to empty string (see PW/input.f90)
       !
@@ -1204,7 +1214,7 @@ MODULE pw_restart
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
@@ -1246,14 +1256,14 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( nat,    ionode_id )
-      CALL mp_bcast( nsp,    ionode_id )
-      CALL mp_bcast( atm,    ionode_id )
-      CALL mp_bcast( amass,  ionode_id )
-      CALL mp_bcast( psfile, ionode_id )
-      CALL mp_bcast( ityp,   ionode_id )
-      CALL mp_bcast( tau,    ionode_id )
-      CALL mp_bcast( if_pos, ionode_id )
+      CALL mp_bcast( nat,    ionode_id, intra_image_comm )
+      CALL mp_bcast( nsp,    ionode_id, intra_image_comm )
+      CALL mp_bcast( atm,    ionode_id, intra_image_comm )
+      CALL mp_bcast( amass,  ionode_id, intra_image_comm )
+      CALL mp_bcast( psfile, ionode_id, intra_image_comm )
+      CALL mp_bcast( ityp,   ionode_id, intra_image_comm )
+      CALL mp_bcast( tau,    ionode_id, intra_image_comm )
+      CALL mp_bcast( if_pos, ionode_id, intra_image_comm )
       !
       lions_read = .TRUE.
       !
@@ -1287,7 +1297,7 @@ MODULE pw_restart
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
@@ -1322,12 +1332,12 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( nsym,   ionode_id )
-      CALL mp_bcast( invsym, ionode_id )
-      CALL mp_bcast( s,      ionode_id )
-      CALL mp_bcast( ftau,   ionode_id )
-      CALL mp_bcast( sname,  ionode_id )
-      CALL mp_bcast( irt,    ionode_id )
+      CALL mp_bcast( nsym,   ionode_id, intra_image_comm )
+      CALL mp_bcast( invsym, ionode_id, intra_image_comm )
+      CALL mp_bcast( s,      ionode_id, intra_image_comm )
+      CALL mp_bcast( ftau,   ionode_id, intra_image_comm )
+      CALL mp_bcast( sname,  ionode_id, intra_image_comm )
+      CALL mp_bcast( irt,    ionode_id, intra_image_comm )
       !
       lsymm_read = .TRUE.
       !
@@ -1353,7 +1363,7 @@ MODULE pw_restart
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
@@ -1379,12 +1389,12 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( tefield,  ionode_id )
-      CALL mp_bcast( dipfield, ionode_id )
-      CALL mp_bcast( edir,     ionode_id )
-      CALL mp_bcast( emaxpos,  ionode_id )
-      CALL mp_bcast( eopreg,  ionode_id )
-      CALL mp_bcast( eamp,    ionode_id )
+      CALL mp_bcast( tefield,  ionode_id, intra_image_comm )
+      CALL mp_bcast( dipfield, ionode_id, intra_image_comm )
+      CALL mp_bcast( edir,     ionode_id, intra_image_comm )
+      CALL mp_bcast( emaxpos,  ionode_id, intra_image_comm )
+      CALL mp_bcast( eopreg,   ionode_id, intra_image_comm )
+      CALL mp_bcast( eamp,     ionode_id, intra_image_comm )
       !
       lefield_read = .TRUE.
       !
@@ -1414,7 +1424,7 @@ MODULE pw_restart
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
@@ -1455,18 +1465,18 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( ecutwfc,    ionode_id )
-      CALL mp_bcast( dual,       ionode_id )
-      CALL mp_bcast( npwx,       ionode_id )
-      CALL mp_bcast( gamma_only, ionode_id )
-      CALL mp_bcast( nr1,        ionode_id )
-      CALL mp_bcast( nr2,        ionode_id )
-      CALL mp_bcast( nr3,        ionode_id )
-      CALL mp_bcast( ngm_g,      ionode_id )
-      CALL mp_bcast( nr1s,       ionode_id )
-      CALL mp_bcast( nr2s,       ionode_id )
-      CALL mp_bcast( nr3s,       ionode_id )
-      CALL mp_bcast( ngms_g,     ionode_id )
+      CALL mp_bcast( ecutwfc,    ionode_id, intra_image_comm )
+      CALL mp_bcast( dual,       ionode_id, intra_image_comm )
+      CALL mp_bcast( npwx,       ionode_id, intra_image_comm )
+      CALL mp_bcast( gamma_only, ionode_id, intra_image_comm )
+      CALL mp_bcast( nr1,        ionode_id, intra_image_comm )
+      CALL mp_bcast( nr2,        ionode_id, intra_image_comm )
+      CALL mp_bcast( nr3,        ionode_id, intra_image_comm )
+      CALL mp_bcast( ngm_g,      ionode_id, intra_image_comm )
+      CALL mp_bcast( nr1s,       ionode_id, intra_image_comm )
+      CALL mp_bcast( nr2s,       ionode_id, intra_image_comm )
+      CALL mp_bcast( nr3s,       ionode_id, intra_image_comm )
+      CALL mp_bcast( ngms_g,     ionode_id, intra_image_comm )
       !
       lpw_read = .TRUE.
       !
@@ -1494,7 +1504,7 @@ MODULE pw_restart
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
@@ -1539,11 +1549,11 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( lsda,     ionode_id )
-      CALL mp_bcast( nspin,    ionode_id )
-      CALL mp_bcast( noncolin, ionode_id )
-      CALL mp_bcast( npol,     ionode_id )
-      CALL mp_bcast( lspinorb, ionode_id )
+      CALL mp_bcast( lsda,     ionode_id, intra_image_comm )
+      CALL mp_bcast( nspin,    ionode_id, intra_image_comm )
+      CALL mp_bcast( noncolin, ionode_id, intra_image_comm )
+      CALL mp_bcast( npol,     ionode_id, intra_image_comm )
+      CALL mp_bcast( lspinorb, ionode_id, intra_image_comm )
       !
       lspin_read = .TRUE.
       !
@@ -1577,7 +1587,7 @@ MODULE pw_restart
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
@@ -1608,15 +1618,15 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( dft_name,   ionode_id )
-      CALL mp_bcast( lda_plus_u, ionode_id )
+      CALL mp_bcast( dft_name,   ionode_id, intra_image_comm )
+      CALL mp_bcast( lda_plus_u, ionode_id, intra_image_comm )
       !
       IF ( lda_plus_u ) THEN
          !
-         CALL mp_bcast( Hubbard_lmax,  ionode_id )
-         CALL mp_bcast( Hubbard_l ,    ionode_id )
-         CALL mp_bcast( Hubbard_U,     ionode_id )
-         CALL mp_bcast( Hubbard_alpha, ionode_id )
+         CALL mp_bcast( Hubbard_lmax,  ionode_id, intra_image_comm )
+         CALL mp_bcast( Hubbard_l ,    ionode_id, intra_image_comm )
+         CALL mp_bcast( Hubbard_U,     ionode_id, intra_image_comm )
+         CALL mp_bcast( Hubbard_alpha, ionode_id, intra_image_comm )
          !
       END IF
       !
@@ -1650,7 +1660,7 @@ MODULE pw_restart
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
@@ -1698,15 +1708,15 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( nkstot, ionode_id )
-      CALL mp_bcast( xk,     ionode_id )
-      CALL mp_bcast( wk,     ionode_id )
-      CALL mp_bcast( nk1, ionode_id )
-      CALL mp_bcast( nk2, ionode_id )
-      CALL mp_bcast( nk3, ionode_id )
-      CALL mp_bcast( k1, ionode_id )
-      CALL mp_bcast( k2, ionode_id )
-      CALL mp_bcast( k3, ionode_id )
+      CALL mp_bcast( nkstot, ionode_id, intra_image_comm )
+      CALL mp_bcast( xk,     ionode_id, intra_image_comm )
+      CALL mp_bcast( wk,     ionode_id, intra_image_comm )
+      CALL mp_bcast( nk1, ionode_id, intra_image_comm )
+      CALL mp_bcast( nk2, ionode_id, intra_image_comm )
+      CALL mp_bcast( nk3, ionode_id, intra_image_comm )
+      CALL mp_bcast( k1, ionode_id, intra_image_comm )
+      CALL mp_bcast( k2, ionode_id, intra_image_comm )
+      CALL mp_bcast( k3, ionode_id, intra_image_comm )
       !
       lbz_read = .TRUE.
       !
@@ -1738,7 +1748,7 @@ MODULE pw_restart
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
@@ -1798,27 +1808,27 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( lgauss, ionode_id )
+      CALL mp_bcast( lgauss, ionode_id, intra_image_comm )
       !
       IF ( lgauss ) THEN
          !
-         CALL mp_bcast( ngauss,  ionode_id )
-         CALL mp_bcast( degauss, ionode_id )
+         CALL mp_bcast( ngauss,  ionode_id, intra_image_comm )
+         CALL mp_bcast( degauss, ionode_id, intra_image_comm )
          !
       END IF
       !
-      CALL mp_bcast( ltetra, ionode_id )
+      CALL mp_bcast( ltetra, ionode_id, intra_image_comm )
       !
       IF ( ltetra ) THEN
          !
-         CALL mp_bcast( ntetra, ionode_id )
-         CALL mp_bcast( tetra,  ionode_id )
+         CALL mp_bcast( ntetra, ionode_id, intra_image_comm )
+         CALL mp_bcast( tetra,  ionode_id, intra_image_comm )
          !
       END IF
       !
-      CALL mp_bcast( tfixed_occ, ionode_id )
+      CALL mp_bcast( tfixed_occ, ionode_id, intra_image_comm )
       !
-      IF ( tfixed_occ ) CALL mp_bcast( f_inp, ionode_id )
+      IF ( tfixed_occ ) CALL mp_bcast( f_inp, ionode_id, intra_image_comm )
       !
       locc_read = .TRUE.
       !
@@ -1855,7 +1865,7 @@ MODULE pw_restart
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
@@ -1926,13 +1936,13 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( nelec,    ionode_id )
-      CALL mp_bcast( natomwfc, ionode_id )
-      CALL mp_bcast( nbnd,     ionode_id )
-      CALL mp_bcast( isk,      ionode_id )
-      CALL mp_bcast( et,       ionode_id )
-      CALL mp_bcast( wg,       ionode_id )
-      CALL mp_bcast( ef,       ionode_id )
+      CALL mp_bcast( nelec,    ionode_id, intra_image_comm )
+      CALL mp_bcast( natomwfc, ionode_id, intra_image_comm )
+      CALL mp_bcast( nbnd,     ionode_id, intra_image_comm )
+      CALL mp_bcast( isk,      ionode_id, intra_image_comm )
+      CALL mp_bcast( et,       ionode_id, intra_image_comm )
+      CALL mp_bcast( wg,       ionode_id, intra_image_comm )
+      CALL mp_bcast( ef,       ionode_id, intra_image_comm )
       !
       lbs_read = .TRUE.
       !
@@ -1992,7 +2002,7 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
@@ -2116,13 +2126,14 @@ MODULE pw_restart
             !
          END IF
          !
-         CALL mp_bcast( twfcollect, ionode_id )
+         CALL mp_bcast( twfcollect, ionode_id, intra_image_comm )
          !
          IF ( .NOT. twfcollect ) THEN
             !
             IF ( ionode ) THEN
                !
-               CALL iotk_scan_end( iunpun, "K-POINT" // TRIM( iotk_index( ik ) ) )
+               CALL iotk_scan_end( iunpun, &
+                                   "K-POINT" // TRIM( iotk_index( ik ) ) )
                !
             END IF
             !
@@ -2143,8 +2154,8 @@ MODULE pw_restart
             !
             !
             CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
-                 evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),   &
-                 ngk(ik-iks+1), filename, scalef )
+                           evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),   &
+                           ngk(ik-iks+1), filename, scalef )
             !
             IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                !
@@ -2265,7 +2276,7 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
@@ -2283,12 +2294,58 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( modenum, ionode_id )
-      CALL mp_bcast( xqq,     ionode_id )      
+      CALL mp_bcast( modenum, ionode_id, intra_image_comm )
+      CALL mp_bcast( xqq,     ionode_id, intra_image_comm )      
       !
       RETURN
       !
     END SUBROUTINE read_phonon
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE read_ef( dirname, ierr )
+      !------------------------------------------------------------------------
+      !
+      ! ... this routine reads only the Fermi energy
+      !
+      USE ener, ONLY : ef
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
+      !
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+         !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      ! ... then selected tags are read from the other sections
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE" )
+         !
+         CALL iotk_scan_dat( iunpun, "FERMI_ENERGY", ef )
+         !
+         ef = ef * e2
+         !
+         CALL iotk_scan_end( iunpun, "BAND_STRUCTURE" )
+      END IF
+      !
+      CALL mp_bcast( ef, ionode_id, intra_image_comm )
+      !
+      IF ( ionode ) CALL iotk_close_read( iunpun )
+      !
+      RETURN
+      !
+    END SUBROUTINE read_ef
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_( dirname, ierr )
@@ -2311,7 +2368,7 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( ierr, ionode_id )
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
@@ -2325,55 +2382,10 @@ MODULE pw_restart
          !
       END IF
       !
-      CALL mp_bcast( idum, ionode_id )
+      CALL mp_bcast( idum, ionode_id, intra_image_comm )
       !
       RETURN
       !
     END SUBROUTINE read_
     !
-    SUBROUTINE read_ef( dirname, ierr )
-      !------------------------------------------------------------------------
-      !
-      ! ... this routine reads only the Fermi energy
-      !
-      USE ener,             ONLY : ef
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
-      INTEGER,          INTENT(OUT) :: ierr
-      !
-      !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
-
-         !
-      END IF
-      !
-      CALL mp_bcast( ierr, ionode_id )
-      !
-      IF ( ierr > 0 ) RETURN
-      !
-      ! ... then selected tags are read from the other sections
-      !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE" )
-         !
-         CALL iotk_scan_dat( iunpun, "FERMI_ENERGY", ef )
-         !
-         ef = ef * e2
-         !
-         CALL iotk_scan_end( iunpun, "BAND_STRUCTURE" )
-      END IF
-      !
-      CALL mp_bcast( ef,        ionode_id )
-      !
-      if (ionode) CALL iotk_close_read( iunpun )
-      !
-      RETURN
-      !
-    END SUBROUTINE read_ef
 END MODULE pw_restart

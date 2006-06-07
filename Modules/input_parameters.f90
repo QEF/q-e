@@ -1043,8 +1043,6 @@ MODULE input_parameters
         
         LOGICAL :: refold_pos
         
-        LOGICAL :: monitor_constr = .FALSE.
-        
         !
         ! ... variables added for "path" calculations
         !
@@ -1179,9 +1177,9 @@ MODULE input_parameters
                           tempw, fnosep, nhpcl, nhptyp, ndega, tranp, amprp,   &
                           greasp, tolp, ion_nstepe, ion_maxstep, upscale,      &
                           delta_t, pot_extrapolation, wfc_extrapolation,       &
-                          nraise, monitor_constr, num_of_images, CI_scheme,    &
-                          opt_scheme, use_masses, first_last_opt, ds, k_max,   &
-                          k_min, write_save, temp_req, path_thr, fixed_tan,    &
+                          nraise, num_of_images, CI_scheme, opt_scheme,        &
+                          use_masses, first_last_opt, ds, k_max, k_min,        &
+                          write_save, temp_req, path_thr, fixed_tan,           &
                           use_freezing, trust_radius_max, trust_radius_min,    &
                           trust_radius_ini, w_1, w_2, bfgs_ndim, sic_rloc,     &
                           smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1,   &

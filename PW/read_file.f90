@@ -38,6 +38,7 @@ SUBROUTINE read_file()
   USE noncollin_module, ONLY : noncolin, npol
   USE mp_global,        ONLY : kunit
   USE pw_restart,       ONLY : pw_readfile
+  USE xml_io_base,      ONLY : pp_check_file
   USE uspp,             ONLY : okvan
   !
   IMPLICIT NONE
@@ -46,6 +47,12 @@ SUBROUTINE read_file()
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
   LOGICAL  :: exst
   !
+  !
+  ! ... first we check if the file can be used for post-processing
+  !
+  IF ( .NOT. pp_check_file() ) &
+     CALL errore( 'read_file', &
+                  'the available files cannot be used for post-processing', 1 )
   !
   ! ... here we read the variables that dimension the system
   ! ... in parallel execution, only root proc reads the file

@@ -28,13 +28,13 @@ MODULE dynamics_module
   SAVE
   !
   REAL(DP) :: &
-       dt,            &! time step
-       temperature,   &! starting temperature
-       delta_t         ! rate of thermalization
+       dt,          &! time step
+       temperature, &! starting temperature
+       delta_t       ! rate of thermalization
   INTEGER :: &
-       nraise          ! the frequency of temperature raising
+       nraise        ! the frequency of temperature raising
   LOGICAL :: &
-       refold_pos      ! if true the positions are refolded into the supercell
+       refold_pos    ! if true the positions are refolded into the supercell
   !
   REAL(DP), ALLOCATABLE :: tau_old(:,:), tau_new(:,:), tau_ref(:,:)
   REAL(DP), ALLOCATABLE :: vel(:,:), acc(:,:)
@@ -60,8 +60,8 @@ MODULE dynamics_module
       IF ( .NOT.ALLOCATED( tau_new ) ) ALLOCATE( tau_new( 3, nat ) )
       IF ( .NOT.ALLOCATED( tau_ref ) ) ALLOCATE( tau_ref( 3, nat ) )
       !
-      IF ( .NOT.ALLOCATED( vel )  ) ALLOCATE( vel( 3, nat ) )
-      IF ( .NOT.ALLOCATED( acc )  ) ALLOCATE( acc( 3, nat ) )
+      IF ( .NOT.ALLOCATED( vel ) ) ALLOCATE( vel( 3, nat ) )
+      IF ( .NOT.ALLOCATED( acc ) ) ALLOCATE( acc( 3, nat ) )
       !
       IF ( .NOT.ALLOCATED( diff_coeff ) ) ALLOCATE( diff_coeff( nat ) )
       !
@@ -133,7 +133,7 @@ MODULE dynamics_module
       REAL(DP) :: total_mass, temp_new, elapsed_time
       REAL(DP) :: ml(3), mlt
       INTEGER  :: i, na
-      LOGICAL  :: file_exists
+      LOGICAL  :: file_exists, leof
       !
       REAL(DP), EXTERNAL :: DNRM2
       !
@@ -143,22 +143,24 @@ MODULE dynamics_module
       vel(:,:)     = 0.D0
       acc(:,:)     = 0.D0
       !
-      IF ( istep == 1 ) THEN
-         !
-         WRITE( UNIT = stdout, &
-                   FMT = '(/,5X,"Molecular Dynamics Calculation")' )
-         !
-      END IF
-      !
       CALL seqopn( 4, 'md', 'FORMATTED', file_exists )
       !
       IF ( file_exists ) THEN
          !
-         ! ... the file is read
+         ! ... the file is read :  simulation is continuing
          !
-         READ( UNIT = 4, FMT = * ) &
-            etotold, temp_new, mass(:), total_mass, &
-            elapsed_time, istep, tau_old(:,:), tau_ref(:,:)
+         READ( UNIT = 4, FMT = * ) etotold, istep, tau_old(:,:), leof
+         !
+         IF ( leof ) THEN
+            !
+            CALL md_init()
+            !
+         ELSE
+            !
+            READ( UNIT = 4, FMT = * ) &
+               temp_new, mass(:), total_mass, elapsed_time, tau_ref(:,:)
+            !
+         END IF
          !
          CLOSE( UNIT = 4, STATUS = 'KEEP' )
          !
@@ -166,65 +168,25 @@ MODULE dynamics_module
          !
          CLOSE( UNIT = 4, STATUS = 'DELETE' )
          !
-         ! ... atoms are refold in the central box
+         ! ... the file is absent :  simulation is starting from scratch
          !
-         IF ( refold_pos ) CALL refold_tau()
+         CALL md_init()
          !
-         ! ... reference positions
+      END IF
+      !
+      IF ( istep >= nstep ) THEN
          !
-         tau_ref(:,:) = tau(:,:)
-         !
-         WRITE( UNIT = stdout, &
-                FMT = '(/,5X,"Starting temperature",T27," = ",F8.2," K")' ) &
-             temperature
-         !
-         DO na = 1, nsp
-            !
-            WRITE( UNIT = stdout, &
-                   FMT = '(5X,"mass ",A2,T27," = ",F8.2)' ) atm(na), amass(na)
-            !
-         END DO
+         conv_ions = .TRUE.
          !
          WRITE( UNIT = stdout, &
-                FMT = '(5X,"Time step",T27," = ",F8.2," a.u.,",F8.4, &
-                         & " femto-seconds")' ) dt, ( dt * 2.D+3 * au_ps )
+                FMT = '(/,5X,"The maximum number of steps has been reached.")' )
+         WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"End of molecular dynamics calculation")' )
          !
-         ! ... masses in rydberg atomic units
+         CALL print_averages()
          !
-         total_mass = 0.D0
-         !
-         DO na = 1, nat
-            !
-            mass(na) = amass( ityp(na) ) * amconv
-            !
-            total_mass = total_mass + mass(na)
-            !
-         END DO
-         !
-         IF ( lrescale_t ) THEN
-            !
-            ! ... initial thermalization. N.B. tau is in units of alat
-            !
-            CALL start_therm()
-            !
-            temp_new = temperature
-            !
-            ! ... the old positions are updated to reflect the initial 
-            ! ... velocities ( notice that vel is not the real velocity,
-            ! ... but just a displacement vector )
-            !
-            tau_old(:,:) = tau(:,:) - vel(:,:)
-            !
-         ELSE
-            !
-            tau_old(:,:) = tau(:,:)
-            !
-         END IF
-         !
-         elapsed_time = 0.D0
-         !
-         istep = 0
-         !
+         RETURN
+         !   
       END IF
       !
       ! ... elapsed_time is in picoseconds
@@ -268,7 +230,7 @@ MODULE dynamics_module
             WRITE( stdout, '(/,5X,"Thermalization: delta_t = ",F6.3, &
                                 & ", T = ",F6.1)' ) delta_t, temp_new * delta_t
             !
-            CALL thermalize( temp_new, temp_new * delta_t )
+            CALL thermalize( temp_new, temp_new*delta_t )
             !
          END IF
          !
@@ -282,27 +244,11 @@ MODULE dynamics_module
       !
       IF ( lconstrain ) THEN
          !
-         IF ( monitor_constr ) THEN
-            !
-            CALL constraint_val( nat, tau, ityp, alat )
-            !
-            WRITE( stdout, '(/,5X,"constraint values :")' )
-            !
-            DO i = 1, nconstr 
-               !
-               WRITE( *, '(5X,I3,2X,F16.10)' ) i, target(i)
-               !
-            END DO
-            !
-         ELSE
-            !
-            ! ... we first remove the component of the force along the 
-            ! ... constraint gradient ( this constitutes the initial 
-            ! ... guess for the calculation of the lagrange multipliers )
-            !
-            CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
-            !
-         END IF
+         ! ... we first remove the component of the force along the 
+         ! ... constraint gradient ( this constitutes the initial 
+         ! ... guess for the calculation of the lagrange multipliers )
+         !
+         CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
          !
       END IF
       !
@@ -319,7 +265,7 @@ MODULE dynamics_module
       !
       tau_new(:,:) = 2.D0 * tau(:,:) - tau_old(:,:) + dt**2 * acc(:,:)
       !
-      IF ( lconstrain .AND..NOT. monitor_constr ) THEN
+      IF ( lconstrain ) THEN
          !
          ! ... check if the new positions satisfy the constrain equation
          !
@@ -338,21 +284,6 @@ MODULE dynamics_module
          !
          WRITE( stdout, '(/5X,"Total force = ",F12.6)') DNRM2( 3*nat, force, 1 )
          !
-      END IF
-      !
-      IF ( istep == nstep ) THEN
-         !
-         conv_ions = .TRUE.
-         !
-         WRITE( UNIT = stdout, &
-                FMT = '(/,5X,"End of molecular dynamics calculation")' )
-         !
-         CALL output_tau( .TRUE. )
-         !
-         CALL print_averages()
-         !
-         RETURN
-         !   
       END IF
       !
       ! ... the linear momentum and the kinetic energy are computed here
@@ -377,13 +308,14 @@ MODULE dynamics_module
       !
       temp_new = 2.D0 / 3.D0 * ekin / nat * ry_to_kelvin
       !
-      ! ... save on file all the needed quantities
+      ! ... save all the needed quantities on file
       !
       CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
       !
+      WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:), .FALSE.
+      !
       WRITE( UNIT = 4, FMT = * ) &
-          etot, temp_new, mass(:), total_mass, &
-          elapsed_time, istep, tau(:,:), tau_ref(:,:)
+          temp_new, mass(:), total_mass, elapsed_time, tau_ref(:,:)
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
@@ -391,9 +323,9 @@ MODULE dynamics_module
       !
       tau(:,:) = tau_new(:,:)
       !
-      ! ... infos are written on the standard output
-      !
       CALL output_tau( .FALSE. )
+      !
+      ! ... infos are written on the standard output
       !
       WRITE( stdout, '(5X,"kinetic energy (Ekin) = ",F14.8," Ry",/,  &
                      & 5X,"temperature           = ",F14.8," K ",/,  &
@@ -407,14 +339,88 @@ MODULE dynamics_module
          mlt = norm( ml(:) )
          !
          IF ( mlt > eps8 ) &
-            CALL infomsg ( 'dynamics', 'Total linear momentum <> 0', -1 )
+            CALL infomsg( 'dynamics', 'Total linear momentum <> 0', -1 )
          !
          WRITE( stdout, '(/,5X,"Linear momentum :",3(2X,F14.10))' ) ml(:)
          !
       END IF
       !
+      ! ... compute the average quantities
+      !
+      CALL compute_averages( istep )
+      !
       RETURN
       !
+      CONTAINS
+        !
+        !--------------------------------------------------------------------
+        SUBROUTINE md_init()
+          !--------------------------------------------------------------------
+          !
+          IMPLICIT NONE
+          !
+          WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"Molecular Dynamics Calculation")' )
+          !
+          ! ... atoms are refold in the central box
+          !
+          IF ( refold_pos ) CALL refold_tau()
+          !
+          ! ... reference positions
+          !
+          tau_ref(:,:) = tau(:,:)
+          !
+          WRITE( UNIT = stdout, &
+                 FMT = '(/,5X,"Starting temperature",T27," = ",F8.2," K")' ) &
+              temperature
+          !
+          DO na = 1, nsp
+             !
+             WRITE( UNIT = stdout, &
+                    FMT = '(5X,"mass ",A2,T27," = ",F8.2)' ) atm(na), amass(na)
+             !
+          END DO
+          !
+          WRITE( UNIT = stdout, &
+                 FMT = '(5X,"Time step",T27," = ",F8.2," a.u.,",F8.4, &
+                          & " femto-seconds")' ) dt, dt*2.D+3*au_ps
+          !
+          ! ... masses in rydberg atomic units
+          !
+          total_mass = 0.D0
+          !
+          DO na = 1, nat
+             !
+             mass(na) = amass( ityp(na) ) * amconv
+             !
+             total_mass = total_mass + mass(na)
+             !
+          END DO
+          !
+          IF ( lrescale_t ) THEN
+             !
+             ! ... initial thermalization. N.B. tau is in units of alat
+             !
+             CALL start_therm()
+             !
+             temp_new = temperature
+             !
+             ! ... the old positions are updated to reflect the initial 
+             ! ... velocities ( notice that vel is not the real velocity,
+             ! ... but just a displacement vector )
+             !
+             tau_old(:,:) = tau(:,:) - vel(:,:)
+             !
+          ELSE
+             !
+             tau_old(:,:) = tau(:,:)
+             !
+          END IF
+          !
+          elapsed_time = 0.D0
+          !
+        END SUBROUTINE md_init
+        !
     END SUBROUTINE verlet
     !
     !------------------------------------------------------------------------
@@ -478,40 +484,24 @@ MODULE dynamics_module
       !
       IF ( lconstrain ) THEN
          !
-         IF ( monitor_constr ) THEN
-            !
-            CALL constraint_val( nat, tau, ityp, alat )
-            !
-            WRITE( stdout, '(/,5X,"constraint values :")' )
-            !
-            DO i = 1, nconstr 
-               !
-               WRITE( stdout, '(5X,I3,2X,F16.10)' ) i, target(i)
-               !
-            END DO
-            !
-         ELSE
-            !
-            ! ... we first remove the component of the force along the 
-            ! ... constraint gradient (this constitutes the initial guess 
-            ! ... for the calculation of the lagrange multipliers)
-            !
-            CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
-            !
-            WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
-            !
-            DO na = 1, nat
-               !
-               WRITE( stdout, &
-                      '(5X,"atom ",I3," type ",I2,3X,"force = ",3F14.8)' ) &
-                   na, ityp(na), force(:,na)
-               !
-            END DO
+         ! ... we first remove the component of the force along the 
+         ! ... constraint gradient (this constitutes the initial guess 
+         ! ... for the calculation of the lagrange multipliers)
+         !
+         CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
+         !
+         WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
+         !
+         DO na = 1, nat
             !
             WRITE( stdout, &
-                   '(/5X,"Total force = ",F12.6)') DNRM2( 3*nat, force, 1 )
+                   '(5X,"atom ",I3," type ",I2,3X,"force = ",3F14.8)' ) &
+                na, ityp(na), force(:,na)
             !
-         END IF
+         END DO
+         !
+         WRITE( stdout, &
+                '(/5X,"Total force = ",F12.6)') DNRM2( 3*nat, force, 1 )
          !
       END IF
       !
@@ -547,6 +537,21 @@ MODULE dynamics_module
          !
       END IF
       !
+      IF ( istep >= nstep ) THEN
+         !
+         conv_ions = .TRUE.
+         !
+         WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"The maximum number of steps has been reached.")' )
+         WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"End of damped dynamics calculation")' )
+         !
+         CALL output_tau( .TRUE. )
+         !
+         RETURN
+         !
+      END IF
+      !
       WRITE( stdout, '(/,5X,"Entering Dynamics:",&
                       & T28,"iteration",T37," = ",I5)' ) istep
       !
@@ -568,7 +573,7 @@ MODULE dynamics_module
       !
       tau_new(:,:) = tau(:,:) + step(:,:) * MIN( norm_step, step_max / alat )
       !
-      IF ( lconstrain .AND..NOT. monitor_constr ) THEN
+      IF ( lconstrain ) THEN
          !
          ! ... check if the new positions satisfy the constrain equation
          !
@@ -581,7 +586,7 @@ MODULE dynamics_module
       !
       CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
       !
-      WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:)
+      WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:), .TRUE.
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
@@ -661,17 +666,17 @@ MODULE dynamics_module
          !
       END DO
       !
-      diff_coeff(:) = msd(:) / ( 6.D0 * DBLE( istep ) * dt )
+      diff_coeff(:) = msd(:) / ( 6.D0*DBLE( istep )*dt )
       !
       ! ... conversion from Rydberg atomic units to cm^2/sec
       !
-      diff_coeff(:) = diff_coeff(:) * bohr_radius_cm**2 / ( 2.D-12 * au_ps )
+      diff_coeff(:) = diff_coeff(:) * bohr_radius_cm**2 / ( 2.D-12*au_ps )
       !
       OPEN( UNIT = 4, POSITION = 'APPEND', &
             FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".msd.dat" )
       !
       WRITE( 4, '(2(2X,F16.8))' ) &
-          (istep * dt * 2.D0 * au_ps), SUM( msd(:) ) / DBLE( nat - fixatom )
+          ( istep*dt*2.D0*au_ps ), SUM( msd(:) ) / DBLE( nat - fixatom )
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !

@@ -1672,7 +1672,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
         !
      END IF
      !
-  END IF    
+  END IF   
   !
   ! ... "path" optimisation specific :   in the scratch directory the tree of 
   ! ... subdirectories needed by "path" calculations are created

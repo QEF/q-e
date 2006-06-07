@@ -61,16 +61,19 @@ SUBROUTINE update_pot()
   ! ...                     + beta0*( tau(t-dt) -tau(t-2*dt) )
   !
   !
-  USE control_flags, ONLY : pot_order, wfc_order, history
-  USE io_files,      ONLY : prefix, tmp_dir, nd_nmbr
+  USE kinds,         ONLY : DP
+  USE control_flags, ONLY : pot_order, wfc_order, history, alpha0, beta0
+  USE io_files,      ONLY : prefix, iunupdate, tmp_dir, nd_nmbr
   USE io_global,     ONLY : ionode, ionode_id
+  USE ions_base,     ONLY : nat, tau
   USE mp,            ONLY : mp_bcast
   USE mp_global,     ONLY : intra_image_comm
   !
   IMPLICIT NONE
   !
-  INTEGER :: rho_extr, wfc_extr
-  LOGICAL :: exists
+  REAL(DP), ALLOCATABLE :: tauold(:,:,:)
+  INTEGER               :: rho_extr, wfc_extr
+  LOGICAL               :: exists
   !
   !
   CALL start_clock( 'update_pot' )
@@ -82,6 +85,37 @@ SUBROUTINE update_pot()
      RETURN
      !
   END IF 
+  !
+  IF ( ionode ) THEN
+     !
+     CALL seqopn( iunupdate, 'update', 'FORMATTED', exists ) 
+     !
+     IF ( exists ) THEN
+        !
+        ALLOCATE( tauold( 3, nat, 3 ) )
+        !
+        READ( UNIT = iunupdate, FMT = * ) history
+        READ( UNIT = iunupdate, FMT = * ) tauold
+        !
+        ! ... find the best coefficients for the extrapolation of the potential
+        ! ... and of the wavefunctions
+        !
+        CALL find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
+        !
+        DEALLOCATE( tauold )
+        !
+     ELSE
+        !
+        history = 0
+        !
+     END IF
+     !
+     CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
+     !
+  END IF
+  !
+  CALL mp_bcast( alpha0, ionode_id, intra_image_comm )
+  CALL mp_bcast( beta0,  ionode_id, intra_image_comm )
   !
   ! ... determines the maximum effective order of the extrapolation on the 
   ! ... basis of the files that are really available
@@ -637,3 +671,112 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   RETURN
   !
 END SUBROUTINE extrapolate_wfcs
+!
+! ... this routine is used also by compute_scf (NEB) and compute_fes_grads
+!
+!----------------------------------------------------------------------------
+SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
+  !----------------------------------------------------------------------------
+  !
+  ! ... This routine finds the best coefficients alpha0 and beta0 so that
+  !
+  ! ...    | tau(t+dt) - tau' | is minimum, where
+  !
+  ! ...    tau' = tau(t) + alpha0 * ( tau(t) - tau(t-dt) )
+  ! ...                  + beta0 * ( tau(t-dt) -tau(t-2*dt) )
+  !
+  USE constants,     ONLY : eps16
+  USE kinds,         ONLY : DP
+  USE io_global,     ONLY : stdout
+  USE control_flags, ONLY : history
+  !
+  IMPLICIT NONE
+  !
+  INTEGER  :: nat, na, ipol
+  REAL(DP) :: chi, alpha0, beta0, tau(3,nat), tauold(3,nat,3)
+  REAL(DP) :: a11, a12, a21, a22, b1, b2, c, det
+  !
+  !
+  IF ( history < 2 ) THEN
+     !
+     RETURN
+     !
+  ELSE IF ( history == 2 ) THEN  
+     !
+     alpha0 = 1.D0
+     beta0  = 0.D0
+     !
+     RETURN
+     !
+  END IF
+  !
+  ! ... solution of the linear system
+  !
+  a11 = 0.D0
+  a12 = 0.D0
+  a21 = 0.D0
+  a22 = 0.D0
+  b1  = 0.D0
+  b2  = 0.D0
+  c   = 0.D0
+  !
+  DO na = 1, nat
+     !
+     DO ipol = 1, 3
+        !
+        a11 = a11 + ( tauold(ipol,na,1) - tauold(ipol,na,2) )**2
+        !
+        a12 = a12 + ( tauold(ipol,na,1) - tauold(ipol,na,2) ) * &
+                    ( tauold(ipol,na,2) - tauold(ipol,na,3) )
+        !
+        a22 = a22 + ( tauold(ipol,na,2) - tauold(ipol,na,3) )**2
+        !
+        b1 = b1 - ( tauold(ipol,na,1) - tau(ipol,na) ) * &
+                  ( tauold(ipol,na,1) - tauold(ipol,na,2) )
+        !
+        b2 = b2 - ( tauold(ipol,na,1) - tau(ipol,na) ) * &
+                  ( tauold(ipol,na,2) - tauold(ipol,na,3) )
+        ! 
+        c = c + ( tauold(ipol,na,1) - tau(ipol,na) )**2
+        !
+     END DO
+     !
+  END DO
+  !
+  a21 = a12
+  !
+  det = a11 * a22 - a12 * a21
+  !
+  IF ( det < - eps16 ) THEN
+     !
+     alpha0 = 0.D0
+     beta0  = 0.D0
+     !
+     WRITE( UNIT = stdout, &
+            FMT = '(5X,"WARNING: in find_alpha_and_beta  det = ",F10.6)' ) det
+     !
+  END IF   
+  !
+  ! ... case det > 0:  a well defined minimum exists
+  !
+  IF ( det > eps16 ) THEN
+     !
+     alpha0 = ( b1 * a22 - b2 * a12 ) / det
+     beta0  = ( a11 * b2 - a21 * b1 ) / det
+     !
+  ELSE
+     !
+     ! ... case det = 0 : the two increments are linearly dependent, 
+     ! ...                chose solution with alpha = b1 / a11 and beta = 0 
+     ! ...                ( discard oldest configuration )
+     !
+     alpha0 = 0.D0
+     beta0  = 0.D0
+     !
+     IF ( a11 /= 0.D0 ) alpha0 = b1 / a11
+     !
+  END IF
+  !
+  RETURN
+  !
+END SUBROUTINE find_alpha_and_beta

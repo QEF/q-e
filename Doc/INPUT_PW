@@ -69,7 +69,10 @@ if (not automatic)
    list of images, separated by a comma ]   
 [ CONSTRAINTS
    nconstr   constr_tol
-   constr_type(.)   constr(1,.)   constr(2,.) { constr_target(.) } ]   
+   constr_type(.)   constr(1,.)   constr(2,.) { constr_target(.) } ]
+[ COLLECTIVE_VARS
+   nconstr   constr_tol
+   constr_type(.)   constr(1,.)   constr(2,.) { constr_target(.) } ]
 ===============================================================================
 NAMELIST &CONTROL
 
@@ -587,8 +590,7 @@ NAMELIST &IONS  ( only if calculation = 'relax', 'md',
 ion_dynamics   CHARACTER
                specify the type of ionic dynamics.
                For constrained dynamics or constrained optimisations add the
-               CONSTRAINTS card (see also the keyword monitor_constr in this
-               namelist)
+               CONSTRAINTS card.
                For different type of calculation different possibilities are 
                allowed and different default values apply:
                
@@ -647,12 +649,6 @@ nraise         INTEGER (default = 100 )
                This keyword is NOT used in the case of variable cell
                calculations.
 
-monitor_constr LOGICAL (default = .FALSE.)
-               this keyword applies only when one or more constraints are 
-               defined in the CONSTRAINTS card (see below). 
-               If true, the values of the constraints are monitored, but the
-               constraints are not imposed.
-
 refold_pos     LOGICAL (default = .FALSE.)
                this keyword applies only in the case of molecular dynamics or
                damped dynamics. If true the ions are refolded at each step into
@@ -664,7 +660,7 @@ pot_extrapolation
                'none'        :  no extrapolation
                'atomic'      :  extrapolate the potential as if it was a sum of
                                 atomic-like orbitals 
-               'first_order'  :  extrapolate the potential with first-order 
+               'first_order' :  extrapolate the potential with first-order 
                                 formula
                'second_order':  as above, with second order formula
 
@@ -672,7 +668,7 @@ wfc_extrapolation
                CHARACTER ( default = "none" )
                used to extrapolate the wavefunctions from preceding ionic steps
                'none'        :  no extrapolation
-               'first_order'  :  extrapolate the wave-functions with first-order
+               'first_order' :  extrapolate the wave-functions with first-order
                                 formula
                'second_order':  as above, with second order formula
 
