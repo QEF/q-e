@@ -33,7 +33,7 @@ MODULE vibrations
   !               frozen atoms are not displaced
   !
 #ifdef DFT_CP
-  COMPLEX (KIND=DP), ALLOCATABLE :: ref_c0(:,:,:,:)
+  COMPLEX (KIND=DP), ALLOCATABLE :: ref_c0(:,:,:)
   REAL    (KIND=DP), ALLOCATABLE :: ref_lambda(:,:,:)
 #endif
 
@@ -167,7 +167,7 @@ CONTAINS
     ! (1) Allocate arrays
     !
 #ifdef DFT_CP
-    ALLOCATE( ref_c0     ( ngw,   nbspx, 1, 1 ) )
+    ALLOCATE( ref_c0     ( ngw,   nbspx, 1    ) )
     ALLOCATE( ref_lambda ( nudx,  nudx, nspin ) )
 #endif
     ALLOCATE( ref_tau    ( 3,     natx        ) )
@@ -278,7 +278,7 @@ CONTAINS
 #ifdef DFT_CP
        IF ( tcg ) THEN
           !
-          CALL writefile( ndw, h, hold ,nfi, c0(:,:,1,1), c0old, taus, tausm, &
+          CALL writefile( ndw, h, hold ,nfi, c0(:,:,1), c0old, taus, tausm, &
                vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,    &
                vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
                xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass, ibrav,&
@@ -286,7 +286,7 @@ CONTAINS
           !
        ELSE
           !
-          CALL writefile( ndw, h, hold, nfi, c0(:,:,1,1), cm(:,:,1,1), taus,  &
+          CALL writefile( ndw, h, hold, nfi, c0(:,:,1), cm(:,:,1), taus,  &
                tausm, vels, velsm, acc,  lambda, lambdam, xnhe0,   &
                xnhem, vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm,&
                xnhh0, xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass,&
