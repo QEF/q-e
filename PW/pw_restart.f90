@@ -920,6 +920,7 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       REAL(DP) :: ecutrho
+      LOGICAL  :: found
       !
       !
       ! ... first the entire CELL section is read
@@ -951,11 +952,19 @@ MODULE pw_restart
          !
          CALL iotk_scan_end( iunpun, "IONS" )
          !
-         CALL iotk_scan_begin( iunpun, "SYMMETRIES" )
+         CALL iotk_scan_begin( iunpun, "SYMMETRIES", FOUND = found )
          !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_SYMMETRIES", nsym )
-         !
-         CALL iotk_scan_end( iunpun, "SYMMETRIES" )
+         IF ( .NOT. found ) THEN
+            !
+            nsym = 1
+            !
+         ELSE
+            !
+            CALL iotk_scan_dat( iunpun, "NUMBER_OF_SYMMETRIES", nsym )
+            !
+            CALL iotk_scan_end( iunpun, "SYMMETRIES" )
+            !
+         END IF
          !
          CALL iotk_scan_begin( iunpun, "PLANE_WAVES" )
          !
@@ -992,7 +1001,10 @@ MODULE pw_restart
          !
          CALL iotk_scan_dat( iunpun, "LSDA", lsda )
          !
-         CALL iotk_scan_dat( iunpun, "NON-COLINEAR_CALCULATION", noncolin )
+         CALL iotk_scan_dat( iunpun, "NON-COLINEAR_CALCULATION", &
+              noncolin, FOUND = found )
+         !
+         IF ( .NOT. found ) noncolin = .FALSE.
          !
          CALL iotk_scan_end( iunpun, "SPIN" )
          !
@@ -1019,12 +1031,20 @@ MODULE pw_restart
          !
          CALL iotk_scan_end( iunpun, "BAND_STRUCTURE" )
          !
-         CALL iotk_scan_begin( iunpun, "PARALLELISM" )
+         CALL iotk_scan_begin( iunpun, "PARALLELISM", FOUND = found )
          !
-         CALL iotk_scan_dat( iunpun, &
-                             "GRANULARITY_OF_K-POINTS_DISTRIBUTION", kunit )
-         !
-         CALL iotk_scan_end( iunpun, "PARALLELISM" )
+         IF ( .NOT. found ) THEN
+            !
+            kunit = 1
+            !
+         ELSE
+            !
+            CALL iotk_scan_dat( iunpun, &
+                 "GRANULARITY_OF_K-POINTS_DISTRIBUTION", kunit )
+            !
+            CALL iotk_scan_end( iunpun, "PARALLELISM" )
+            !
+         END IF
          !
          CALL iotk_close_read( iunpun )
          !
@@ -1286,6 +1306,7 @@ MODULE pw_restart
       !
       INTEGER  :: i
       REAL(DP) :: tmp(3)
+      LOGICAL  :: found
       !
       !
       IF ( lsymm_read ) RETURN
@@ -1303,32 +1324,51 @@ MODULE pw_restart
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_begin( iunpun, "SYMMETRIES" )
+         CALL iotk_scan_begin( iunpun, "SYMMETRIES", FOUND = found )
          !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_SYMMETRIES", nsym )
-         !
-         CALL iotk_scan_dat( iunpun, "INVERSION_SYMMETRY", invsym )
-         !
-         DO i = 1, nsym
+         IF ( .NOT. found ) THEN
             !
-            CALL iotk_scan_empty( iunpun, &
-                                  "SYMM" // TRIM( iotk_index( i ) ), attr )
+            nsym = 1
+            s (:,:,nsym) = 0
+            s (1,1,nsym) = 1
+            s (2,2,nsym) = 1
+            s (3,3,nsym) = 1
+            ftau (:,nsym)= 0
+            sname (nsym) = 'identity'
+            do i = 1, SIZE (irt, 2)
+               irt (nsym, i) = i
+            end do
+            invsym = .FALSE.
+            t_rev (nsym) = 0
             !
-            CALL iotk_scan_attr( attr, "ROT",        s(:,:,i) )
-            CALL iotk_scan_attr( attr, "T_REV",      t_rev(i) )
-            CALL iotk_scan_attr( attr, "FRAC_TRANS", tmp(:) )
-            CALL iotk_scan_attr( attr, "NAME",       sname(i) )
-            CALL iotk_scan_attr( attr, "EQ_IONS",    irt(i,:) )
+         ELSE
             !
-            ftau(1,i) = NINT(tmp(1) * DBLE( nr1 ))
-            ftau(2,i) = NINT(tmp(2) * DBLE( nr2 ))
-            ftau(3,i) = NINT(tmp(3) * DBLE( nr3 ))
+            CALL iotk_scan_dat( iunpun, "NUMBER_OF_SYMMETRIES", nsym )
             !
-         END DO         
-         !
-         CALL iotk_scan_end( iunpun, "SYMMETRIES" )
-         !
-         CALL iotk_close_read( iunpun )
+            CALL iotk_scan_dat( iunpun, "INVERSION_SYMMETRY", invsym )
+            !
+            DO i = 1, nsym
+               !
+               CALL iotk_scan_empty( iunpun, &
+                    "SYMM" // TRIM( iotk_index( i ) ), attr )
+               !
+               CALL iotk_scan_attr( attr, "ROT",        s(:,:,i) )
+               CALL iotk_scan_attr( attr, "T_REV",      t_rev(i) )
+               CALL iotk_scan_attr( attr, "FRAC_TRANS", tmp(:) )
+               CALL iotk_scan_attr( attr, "NAME",       sname(i) )
+               CALL iotk_scan_attr( attr, "EQ_IONS",    irt(i,:) )
+               !
+               ftau(1,i) = NINT(tmp(1) * DBLE( nr1 ))
+               ftau(2,i) = NINT(tmp(2) * DBLE( nr2 ))
+               ftau(3,i) = NINT(tmp(3) * DBLE( nr3 ))
+               !
+            END DO
+            !
+            CALL iotk_scan_end( iunpun, "SYMMETRIES" )
+            !
+            CALL iotk_close_read( iunpun )
+            !
+         END IF
          !
       END IF
       !
@@ -1338,6 +1378,7 @@ MODULE pw_restart
       CALL mp_bcast( ftau,   ionode_id, intra_image_comm )
       CALL mp_bcast( sname,  ionode_id, intra_image_comm )
       CALL mp_bcast( irt,    ionode_id, intra_image_comm )
+      CALL mp_bcast( t_rev,  ionode_id, intra_image_comm )
       !
       lsymm_read = .TRUE.
       !
@@ -1355,6 +1396,7 @@ MODULE pw_restart
       !
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
+      LOGICAL                       :: found
       !
       !
       IF ( lefield_read ) RETURN
@@ -1369,21 +1411,31 @@ MODULE pw_restart
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_begin( iunpun, "ELECTRIC_FIELD" )
+         CALL iotk_scan_begin( iunpun, "ELECTRIC_FIELD", FOUND = found )
          !
-         CALL iotk_scan_dat( iunpun, "HAS_ELECTRIC_FIELD", tefield )
-         !
-         CALL iotk_scan_dat( iunpun, "HAS_DIPOLE_CORRECTION", dipfield )
-         !
-         CALL iotk_scan_dat( iunpun, "FIELD_DIRECTION", edir )
-         !
-         CALL iotk_scan_dat( iunpun, "MAXIMUM_POSITION", emaxpos )
-         !
-         CALL iotk_scan_dat( iunpun, "INVERSE_REGION", eopreg )
-         !
-         CALL iotk_scan_dat( iunpun, "FIELD_AMPLITUDE", eamp )
-         !
-         CALL iotk_scan_end( iunpun, "ELECTRIC_FIELD" )
+         IF ( found ) THEN
+            !
+            CALL iotk_scan_dat( iunpun, "HAS_ELECTRIC_FIELD", tefield )
+            !
+            CALL iotk_scan_dat( iunpun, "HAS_DIPOLE_CORRECTION", dipfield )
+            !
+            CALL iotk_scan_dat( iunpun, "FIELD_DIRECTION", edir )
+            !
+            CALL iotk_scan_dat( iunpun, "MAXIMUM_POSITION", emaxpos )
+            !
+            CALL iotk_scan_dat( iunpun, "INVERSE_REGION", eopreg )
+            !
+            CALL iotk_scan_dat( iunpun, "FIELD_AMPLITUDE", eamp )
+            !
+            CALL iotk_scan_end( iunpun, "ELECTRIC_FIELD" )
+            !
+         ELSE
+            !
+            tefield  = .FALSE.
+            !
+            dipfield = .FALSE.
+            !
+         END IF
          !
          CALL iotk_close_read( iunpun )
          !
@@ -1497,6 +1549,7 @@ MODULE pw_restart
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
+      LOGICAL :: found
       !
       IF ( lspin_read ) RETURN
       !
@@ -1514,7 +1567,9 @@ MODULE pw_restart
          !
          CALL iotk_scan_dat( iunpun, "LSDA", lsda )
          !
-         CALL iotk_scan_dat( iunpun, "NON-COLINEAR_CALCULATION", noncolin )
+         CALL iotk_scan_dat( iunpun, "NON-COLINEAR_CALCULATION", &
+              noncolin, FOUND = found )
+         IF ( .not. found ) noncolin = .FALSE.
          !
          IF ( lsda ) THEN
             !
@@ -1540,8 +1595,13 @@ MODULE pw_restart
             !
          END IF
          !
-         CALL iotk_scan_dat( iunpun, "SPIN-ORBIT_CALCULATION", lspinorb )
-         CALL iotk_scan_dat( iunpun, "SPIN-ORBIT_DOMAG", domag )
+         CALL iotk_scan_dat( iunpun, "SPIN-ORBIT_CALCULATION", &
+              lspinorb, FOUND = found )
+         IF ( .NOT. found ) lspinorb = .FALSE.
+         !
+         CALL iotk_scan_dat( iunpun, "SPIN-ORBIT_DOMAG", domag, &
+               FOUND = found )
+         IF ( .NOT. found ) domag = .FALSE.
          !
          CALL iotk_scan_end( iunpun, "SPIN" )
          !
@@ -1554,6 +1614,7 @@ MODULE pw_restart
       CALL mp_bcast( noncolin, ionode_id, intra_image_comm )
       CALL mp_bcast( npol,     ionode_id, intra_image_comm )
       CALL mp_bcast( lspinorb, ionode_id, intra_image_comm )
+      CALL mp_bcast( domag,    ionode_id, intra_image_comm )
       !
       lspin_read = .TRUE.
       !
@@ -1576,6 +1637,7 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       CHARACTER(LEN=20) :: dft_name
+      LOGICAL           :: found
       !
       !
       IF ( lxc_read ) RETURN
@@ -1597,7 +1659,9 @@ MODULE pw_restart
          !
          CALL iotk_scan_dat( iunpun, "DFT", dft_name )
          !
-         CALL iotk_scan_dat( iunpun, "LDA_PLUS_U_CALCULATION", lda_plus_u )
+         CALL iotk_scan_dat( iunpun, "LDA_PLUS_U_CALCULATION", lda_plus_u, &
+                             FOUND = found )
+         IF ( .NOT. found ) lda_plus_u = .FALSE.
          !
          IF ( lda_plus_u ) THEN
             !
@@ -1740,6 +1804,7 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       INTEGER :: i
+      LOGICAL :: found
       !
       !
       IF ( locc_read ) RETURN
@@ -1756,7 +1821,9 @@ MODULE pw_restart
          !
          CALL iotk_scan_begin( iunpun, "OCCUPATIONS" )
          !
-         CALL iotk_scan_dat( iunpun, "SMEARING_METHOD", lgauss )
+         CALL iotk_scan_dat( iunpun, "SMEARING_METHOD", lgauss, &
+              FOUND = found )
+         IF ( .NOT. found ) lgauss = .FALSE.
          !
          IF ( lgauss ) THEN
             !
@@ -1768,7 +1835,9 @@ MODULE pw_restart
             !
          END IF
          !
-         CALL iotk_scan_dat( iunpun, "TETRAHEDRON_METHOD", ltetra )
+         CALL iotk_scan_dat( iunpun, "TETRAHEDRON_METHOD", ltetra, &
+              FOUND = found )
+         IF ( .NOT. found ) ltetra = .FALSE.
          !
          IF ( ltetra ) THEN
             !
@@ -1783,7 +1852,9 @@ MODULE pw_restart
             !
          END IF
          !
-         CALL iotk_scan_dat( iunpun, "FIXED_OCCUPATIONS", tfixed_occ )
+         CALL iotk_scan_dat( iunpun, "FIXED_OCCUPATIONS", tfixed_occ, &
+              FOUND = found )
+         IF ( .NOT. found ) tfixed_occ = .FALSE.
          !
          IF ( tfixed_occ ) THEN
             !
@@ -1852,6 +1923,7 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       INTEGER :: ik, ik_eff, num_k_points
+      LOGICAL :: found
       !
       !
       IF ( lbs_read ) RETURN
@@ -1875,13 +1947,19 @@ MODULE pw_restart
          !
          CALL iotk_scan_dat( iunpun, "NUMBER_OF_ELECTRONS", nelec )
          !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_ATOMIC_WFC", natomwfc )
+         CALL iotk_scan_dat( iunpun, "NUMBER_OF_ATOMIC_WFC", natomwfc, &
+              FOUND = found )
+         IF ( .NOT. found ) natomwfc = 0
          !
          CALL iotk_scan_dat( iunpun, "NUMBER_OF_BANDS", nbnd )
          !
-         CALL iotk_scan_dat( iunpun, "FERMI_ENERGY", ef )
+         CALL iotk_scan_dat( iunpun, "FERMI_ENERGY", ef, FOUND = found )
          !
-         ef = ef * e2
+         IF ( found ) THEN
+            ef = ef * e2
+         ELSE
+            ef = 0.d0
+         END IF
          !
          num_k_points = nkstot
          !
@@ -2267,6 +2345,7 @@ MODULE pw_restart
       !
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
+      LOGICAL                       :: found
       !
       !
       IF ( ionode ) THEN
@@ -2282,15 +2361,24 @@ MODULE pw_restart
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_begin( iunpun, "PHONON" )
+         CALL iotk_scan_begin( iunpun, "PHONON", FOUND = found )
          !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_MODES", modenum )
-         !
-         CALL iotk_scan_dat( iunpun, "Q-POINT", xqq(:) )
-         !
-         CALL iotk_scan_end( iunpun, "PHONON" )
-         !
-         CALL iotk_close_read( iunpun )
+         IF ( found ) THEN
+            !
+            CALL iotk_scan_dat( iunpun, "NUMBER_OF_MODES", modenum )
+            !
+            CALL iotk_scan_dat( iunpun, "Q-POINT", xqq(:) )
+            !
+            CALL iotk_scan_end( iunpun, "PHONON" )
+            !
+            CALL iotk_close_read( iunpun )
+            !
+         ELSE
+            !
+            modenum = 0
+            xqq(:) = 0.d0
+            !
+         END IF
          !
       END IF
       !
@@ -2314,6 +2402,8 @@ MODULE pw_restart
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
+      LOGICAL :: found
+      !
       !
       IF ( ionode ) THEN
          !
@@ -2332,9 +2422,13 @@ MODULE pw_restart
          !
          CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE" )
          !
-         CALL iotk_scan_dat( iunpun, "FERMI_ENERGY", ef )
+         CALL iotk_scan_dat( iunpun, "FERMI_ENERGY", ef, FOUND = found )
          !
-         ef = ef * e2
+         IF (found) THEN
+            ef = ef * e2
+         ELSE
+            ef = 0.d0
+         END IF
          !
          CALL iotk_scan_end( iunpun, "BAND_STRUCTURE" )
       END IF
