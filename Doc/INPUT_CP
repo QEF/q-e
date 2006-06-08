@@ -176,7 +176,9 @@ outdir         CHARACTER ( default = current directory ('./') )
 
 disk_io        CHARACTER
                'high', 'default', 'low', 'minimal'
-               'low' will skip writing charge density files in CP
+               'high' will write charge density files in CP
+               The charge density is not needed to restart but 
+               may be needed for other purposes
 
 pseudo_dir     CHARACTER ( default = current directory ('./') )
                directory containing pseudopotential files.
@@ -1639,7 +1641,7 @@ FORMER FPMD INPUT
  OCCUPATIONS
 
    use the specified occupation numbers for electronic states.
-   Note that you should specify 10 values per line maximum!
+   Note, maximum 10 values per line!
 
  Syntax (nspin == 1):
 
@@ -1671,7 +1673,10 @@ FORMER FPMD INPUT
       d(:) (real)  these are the occupation numbers
                    for LSD spin == 2 electronic states
 
-      Note, maximum 10 values per line!
+ Note: variable "nbnd" has to coincide with the number of states
+ with nonzero occupation in LDA case; with the largest number of
+ states with nonzero occupation between spin-up and spin-down in
+ LSD calculations !
 
  ----------------------------------------------------------------
 
