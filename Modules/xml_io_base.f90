@@ -261,7 +261,7 @@ MODULE xml_io_base
       LOGICAL            :: pp_check_file
       CHARACTER(LEN=256) :: dirname, filename
       INTEGER            :: ierr
-      LOGICAL            :: lval
+      LOGICAL            :: lval, found
       !
       !
       dirname  = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
@@ -275,7 +275,9 @@ MODULE xml_io_base
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_dat( iunpun, "PP_CHECK_FLAG", lval )
+         CALL iotk_scan_dat( iunpun, "PP_CHECK_FLAG", lval, FOUND = found)
+         !
+         IF ( .NOT. found ) lval = .FALSE. 
          !
          CALL iotk_close_read( iunpun )
          !
