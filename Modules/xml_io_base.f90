@@ -270,6 +270,8 @@ MODULE xml_io_base
       IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = filename, IERR = ierr )
       !
+      CALL mp_bcast ( ierr, ionode_id, intra_image_comm )
+      !
       CALL errore( 'pp_check_file', 'file ' // &
                  & TRIM( dirname ) // ' not found', ierr )
       !
