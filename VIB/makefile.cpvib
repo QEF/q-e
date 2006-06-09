@@ -32,8 +32,8 @@ CP_OBJS = \
 ../CPV/cpr.o \
 ../CPV/cprsub.o \
 ../CPV/dealloc.o \
-../CPV/diis.o \
 ../CPV/dforceb.o \
+../CPV/diis.o \
 ../CPV/efermi.o \
 ../CPV/efield.o \
 ../CPV/eigs0.o \
@@ -43,10 +43,10 @@ CP_OBJS = \
 ../CPV/exch_corr.o \
 ../CPV/fftdrv.o \
 ../CPV/fft.o \
+../CPV/fnl.o \
 ../CPV/forces.o \
 ../CPV/fromscra.o \
 ../CPV/greenf.o \
-../CPV/gsmesh.o \
 ../CPV/gtable.o \
 ../CPV/guess.o \
 ../CPV/init.o \
@@ -67,7 +67,6 @@ CP_OBJS = \
 ../CPV/nl_base.o \
 ../CPV/nlcc.o \
 ../CPV/nl.o \
-../CPV/optical.o \
 ../CPV/ortho_base.o \
 ../CPV/ortho.o \
 ../CPV/para.o \
