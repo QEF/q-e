@@ -24,14 +24,14 @@ SUBROUTINE move_ions()
   USE kinds,                  ONLY : DP
   USE cell_base,              ONLY : alat, at, bg, omega
   USE cellmd,                 ONLY : omega_old, at_old, lmovecell, calc
-  USE ions_base,              ONLY : nat, ityp, tau, atm, if_pos
+  USE ions_base,              ONLY : nat, ityp, tau, if_pos
   USE gvect,                  ONLY : nr1, nr2, nr3
   USE symme,                  ONLY : s, ftau, nsym, irt
   USE ener,                   ONLY : etot
   USE force_mod,              ONLY : force
-  USE control_flags,          ONLY : upscale, lbfgs, lmd, ldamped, &
+  USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, ldamped, &
                                      lconstrain, lcoarsegrained, conv_ions, &
-                                     history, tr2, istep
+                                     lmd, history, tr2
   USE relax,                  ONLY : epse, epsf, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
   USE constraints_module,     ONLY : lagrange
@@ -119,14 +119,15 @@ SUBROUTINE move_ions()
         !
         ! ... the bfgs procedure is used
         !  
-        ALLOCATE( pos(      3 * nat ) )
-        ALLOCATE( gradient( 3 * nat ) )
+        ALLOCATE( pos(      3*nat ) )
+        ALLOCATE( gradient( 3*nat ) )
         !
         pos      =   RESHAPE( tau,   (/ 3 * nat /) ) * alat
         gradient = - RESHAPE( force, (/ 3 * nat /) )
         !
         CALL bfgs( pos, etot, gradient, tmp_dir, stdout, epse, epsf, &
-                   energy_error, gradient_error, step_accepted, conv_ions )
+                   energy_error, gradient_error, istep, nstep,       &
+                   step_accepted, conv_ions )
         !
         IF ( conv_ions ) THEN
            !

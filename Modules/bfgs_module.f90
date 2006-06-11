@@ -5,7 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#define __MIXEDBFGSMS
+!#define __DFP
+#define __BFGS
+!#define __MIXEDBFGSMS
 !
 !----------------------------------------------------------------------------
 MODULE bfgs_module
@@ -13,7 +15,7 @@ MODULE bfgs_module
   !
   ! ... Ionic relaxation through the Broyden-Fletcher-Goldfarb-Shanno 
   ! ... minimization scheme and a "trust radius" line search based on the
-  ! ... Wolfe conditions ( bfgs() subroutine ).
+  ! ... Wolfe conditions.
   !
   ! ... Written by Carlo Sbraccia ( 5/12/2003 )
   !
@@ -76,14 +78,16 @@ MODULE bfgs_module
   !
   LOGICAL :: &
       tr_min_hit               ! .TRUE. if the trust_radius has already been set
-                               !        to the minimum value at the previous
-                               !        step
+                               ! to the minimum value at the previous step
+  !
+  LOGICAL :: &
+      conv_bfgs                ! .TRUE. when bfgs convergence has been achieved
   !
   ! ... default values for all these variables are set in 
   ! ... Modules/read_namelist.f90 (SUBROUTINE ions_defaults)
   !
   INTEGER :: &
-      bfgs_ndim                ! dimension of the subspace for L-BFGS
+      bfgs_ndim                ! dimension of the subspace for GDIIS
                                ! fixed to 1 for standard BFGS algorithm
   REAL(DP)  :: &
       trust_radius_max,       &! maximum allowed displacement
@@ -103,7 +107,8 @@ MODULE bfgs_module
     !
     !------------------------------------------------------------------------
     SUBROUTINE bfgs( pos, energy, grad, scratch, stdout, energy_thr, grad_thr, &
-                     energy_error, grad_error, step_accepted, conv_bfgs )
+                     energy_error, grad_error, istep, nstep, step_accepted,    &
+                     stop_bfgs )
       !------------------------------------------------------------------------
       !
       ! ... list of input/output arguments : 
@@ -118,7 +123,8 @@ MODULE bfgs_module
       !                    the largest component of grad( V(x) ) is considered
       !  energy_error   : energy difference | V(x_i) - V(x_i-1) |
       !  grad_error     : the largest component of 
-      !                    | grad(V(x_i)) - grad(V(x_i-1)) | 
+      !                    | grad(V(x_i)) - grad(V(x_i-1)) |
+      !  nstep          : the maximun nuber of scf-steps
       !  step_accepted  : .TRUE. if a new BFGS step is done
       !  conv_bfgs      : .TRUE. if BFGS convergence has been achieved
       !
@@ -127,13 +133,15 @@ MODULE bfgs_module
       ! ... input/output arguments
       !
       REAL(DP),         INTENT(INOUT) :: pos(:)
-      REAL(DP),         INTENT(INOUT) :: energy       
+      REAL(DP),         INTENT(INOUT) :: energy
       REAL(DP),         INTENT(INOUT) :: grad(:)
       CHARACTER(LEN=*), INTENT(IN)    :: scratch
       INTEGER,          INTENT(IN)    :: stdout
-      REAL(DP),         INTENT(IN)    :: energy_thr, grad_thr  
-      REAL(DP),         INTENT(OUT)   :: energy_error, grad_error       
-      LOGICAL,          INTENT(OUT)   :: step_accepted, conv_bfgs
+      REAL(DP),         INTENT(IN)    :: energy_thr, grad_thr
+      INTEGER,          INTENT(OUT)   :: istep
+      INTEGER,          INTENT(IN)    :: nstep
+      REAL(DP),         INTENT(OUT)   :: energy_error, grad_error
+      LOGICAL,          INTENT(OUT)   :: step_accepted, stop_bfgs
       !
       ! ... local variables
       !
@@ -168,19 +176,21 @@ MODULE bfgs_module
       !
       scf_iter = scf_iter + 1
       !
-      IF ( scf_iter == 1 ) &
-         WRITE( UNIT = stdout, FMT = '(/,5X,"BFGS Geometry Optimization")' )
-      !
       energy_error = ABS( energy_p - energy )
       grad_error   = 0.D0
       !
       ! ... convergence is checked here
       !
       grad_error = MAXVAL( ABS( grad(:) ) )
-      conv_bfgs  = energy_error < energy_thr      
-      conv_bfgs  = conv_bfgs .AND. ( grad_error < grad_thr )
       !
-      IF ( conv_bfgs ) RETURN
+      conv_bfgs = energy_error < energy_thr      
+      conv_bfgs = conv_bfgs .AND. ( grad_error < grad_thr )
+      !
+      stop_bfgs = conv_bfgs .OR. ( scf_iter >= nstep )
+      !
+      IF ( stop_bfgs ) RETURN
+      !
+      istep = scf_iter
       !
       ! ... some output is written
       !
@@ -514,6 +524,8 @@ MODULE bfgs_module
          !
          ! ... bfgs initialization
          !
+         WRITE( UNIT = stdout, FMT = '(/,5X,"BFGS Geometry Optimization")' )
+         !
          pos_p            = 0.D0
          grad_p           = 0.D0
          scf_iter         = 0
@@ -786,24 +798,37 @@ MODULE bfgs_module
       CHARACTER(LEN=*), INTENT(IN) :: scratch       
       !       
       !
-      WRITE( UNIT = stdout, &
-           & FMT = '(/,5X,"bfgs converged in ",I3," scf cycles and ", &
-           &         I3," bfgs steps")' ) scf_iter, bfgs_iter
-      WRITE( UNIT = stdout, &
-           & FMT = '(/,5X,"End of BFGS Geometry Optimization")' )
-      WRITE( UNIT = stdout, &
-           & FMT = '(/,5X,"Final energy = ",F18.10," ryd")' ) energy
-      !
-      WRITE( UNIT = stdout, &
-           & FMT = '(/,5X,"Saving the approximate inverse hessian",/)' )
-      !
-      OPEN( UNIT = iunbfgs, FILE = TRIM( scratch ) // TRIM( prefix ) // &
-          & '.hess_out', STATUS = 'UNKNOWN', ACTION = 'WRITE' )  
-      !
-      WRITE( iunbfgs, * ) SHAPE( inv_hess )
-      WRITE( iunbfgs, * ) inv_hess
-      !
-      CLOSE( UNIT = iunbfgs )
+      IF ( conv_bfgs ) THEN
+         !
+         WRITE( UNIT = stdout, &
+              & FMT = '(/,5X,"bfgs converged in ",I3," scf cycles and ", &
+              &         I3," bfgs steps")' ) scf_iter, bfgs_iter
+         WRITE( UNIT = stdout, &
+              & FMT = '(/,5X,"End of BFGS Geometry Optimization")' )
+         WRITE( UNIT = stdout, &
+              & FMT = '(/,5X,"Final energy = ",F18.10," ryd")' ) energy
+         !
+         WRITE( UNIT = stdout, &
+              & FMT = '(/,5X,"Saving the approximate inverse hessian",/)' )
+         !
+         OPEN( UNIT = iunbfgs, FILE = TRIM( scratch ) // TRIM( prefix ) // &
+             & '.hess_out', STATUS = 'UNKNOWN', ACTION = 'WRITE' )  
+         !
+         WRITE( iunbfgs, * ) SHAPE( inv_hess )
+         WRITE( iunbfgs, * ) inv_hess
+         !
+         CLOSE( UNIT = iunbfgs )
+         !
+         CALL delete_if_present( TRIM( scratch ) // TRIM( prefix ) // '.bfgs' )
+         !
+      ELSE
+         !
+         WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"The maximum number of steps has been reached.")' )
+         WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"End of BFGS Geometry Optimization")' )
+         !
+      END IF
       !
       DEALLOCATE( pos_p )
       DEALLOCATE( grad_p )
@@ -813,8 +838,6 @@ MODULE bfgs_module
       DEALLOCATE( step )
       DEALLOCATE( step_old )
       DEALLOCATE( pos_best )
-      !
-      CALL delete_if_present( TRIM( scratch ) // TRIM( prefix ) // '.bfgs' )
       !
     END SUBROUTINE terminate_bfgs
     !
