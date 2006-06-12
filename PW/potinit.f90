@@ -176,7 +176,7 @@ SUBROUTINE potinit()
   !
   CALL reduce( 1, charge )
   !
-  IF ( lscf .AND. ABS( charge - nelec ) / charge > 1.D-6 ) THEN
+  IF ( lscf .AND. ABS( charge - nelec ) / charge > 1.D-7 ) THEN
      !
      WRITE( stdout, &
             '(/,5X,"starting charge ",F10.5,", renormalised to ",F10.5)') &
@@ -184,7 +184,7 @@ SUBROUTINE potinit()
      !
      rho = rho / charge * nelec
      !
-  ELSE IF ( .NOT. lscf .AND. ABS( charge - nelec ) / charge > 1.D-6 ) THEN
+  ELSE IF ( .NOT. lscf .AND. ABS( charge - nelec ) / charge > 1.D-3 ) THEN
      !
      CALL errore( 'potinit', 'starting and expected charges differ', 1 )
      !
