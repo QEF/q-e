@@ -135,7 +135,7 @@ subroutine atomic_wfc_nc (ik, wfcatom)
                  if (n_starting_wfc.gt.natomwfc) &
                       call errore ('atomic_wfc_nc', 'too many wfcs', 1)
                  do is=1,2
-                   if (abs(fact(is)).gt.1.d-8) then
+                   IF (abs(fact(is)).gt.1.d-8) THEN
                      ind=lmaxx+1+sph_ind(l,j,m,is)
                      aux_so=(0.d0,0.d0)
                      do n1=1,2*l+1
@@ -147,6 +147,8 @@ subroutine atomic_wfc_nc (ik, wfcatom)
                        wfcatom (ig,is,n_starting_wfc) = lphase*fact(is)*&
                            sk(ig)*aux_so(ig)*chiq (ig, nb, nt)
                      END DO
+                   ELSE
+                     wfcatom (:,is,n_starting_wfc) = (0.d0,0.d0)
                    END IF
                  END DO
                END IF
