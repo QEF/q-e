@@ -23,6 +23,7 @@ latgen.o \
 linpack.o \
 matches.o \
 recips.o \
+remove_tot_torque.o \
 scnds.o \
 simpsn.o \
 sort.o \
