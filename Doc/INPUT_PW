@@ -539,8 +539,12 @@ diagonalization
 diago_thr_init     
                REAL  ( default = 1.D-2 )
                Convergence threshold for the first iterative diagonalization.
-               The threshold (ethr) is automatically updated along the
-               self consistency loop.
+               For scf calculations, the threshold (ethr) is automatically
+               updated along the self-consistency loop.
+               For non-scf calculations, this is the threshold used in the
+               iterative diagonalization
+               For 'phonon' calculations, this is ignored: the threshold is
+               set to  conv_thr / nelec 
 
 diago_cg_maxiter  
                INTEGER
