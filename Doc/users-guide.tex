@@ -2663,35 +2663,38 @@ to perform a calculation with a DFT that differs from what used in
 PP generation, change the appropriate field in the PP file(s), at
 your own risk.
 
-\paragraph{\texttt{pw.x} stops with error in cdiagh or cdiaghg.}
+\paragraph{\texttt{pw.x} stops with error in cdiaghg or rdiaghg.}
 
-Possible reasons:
+Possible reasons for such behavior are not always clear, but they
+typically fall into one of the following cases:
 \begin{itemize}
   \item
     serious error in data, such as bad atomic positions or bad crystal
     structure/supercell;
   \item
-    a bad PP (for instance, with a ghost);
+    a bad PP, typicall with a ghost, but also a US-PP with non-positive
+    charge density, leading to a violation of positiveness of the S 
+    matrix appearing in the US-PP formalism;
   \item
     a failure of the algorithm performing subspace diagonalization. 
-    The LAPACK algorithms used by cdiagh or cdiaghg are very robust 
+    The LAPACK algorithms used by cdiaghg/rdiaghg are very robust 
     and extensively tested. Still, it may seldom happen that such
-    algorithms fail. In at least one case the failures was tracked
-    to the non-positiveness of the S matrix appearing in the US-PP
-    formalism. In other cases, the error is found to be non reproducible
-    on different architectures and disappearing if the calculation
-    is repeated with even minimal changes in its parameters. 
-    In both cases, the reasons for such behavior are unclear and
-    the only advice is to use conjugate-gradient diagonalization
-    (\texttt{diagonalization='cg'}), a slower but very robust
+    algorithms fail. Try to use conjugate-gradient diagonalization 
+    (\texttt{diagonalization='cg'}), a slower but very robust 
     algorithm, and see what happens.
   \item
-    HP-Compaq alphas with \texttt{cxml} libraries: try to use compiled
-    BLAS and LAPACK (or better, ATLAS) instead of those contained in
-    \texttt{cxml} (just load them before \texttt{cxml}).
+    buggy libraries. Machine-optimized mathematical libraries are 
+    very fast but sometimes not so robust from a numerical point
+    of view. Suspicious behavior: you get an error that is not
+    reproducible on other architectures or that disappears if the 
+    calculation is repeated with even minimal changes in parameters.
+    One known case: HP-Compaq alphas with \texttt{cxml} libraries. 
+    Try to use compiled BLAS and LAPACK (or better, ATLAS) instead of
+    machine-optimized libraries.
 \end{itemize}
 
-\paragraph{\texttt{pw.x} crashes with ``floating invalid'' or ``floating divide by zero''.}
+\paragraph{\texttt{pw.x} crashes with ``floating invalid'' or 
+``floating divide by zero''.}
 
 If this happens on HP-Compaq True64 Alpha machines with an old
 version of the compiler: the compiler is most likely buggy.

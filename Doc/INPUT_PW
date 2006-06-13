@@ -537,14 +537,17 @@ diagonalization
                'diis' :  DIIS-like diagonalization - PRESENTLY DISABLED
 
 diago_thr_init     
-               REAL  ( default = 1.D-2 )
-               Convergence threshold for the first iterative diagonalization.
-               For scf calculations, the threshold (ethr) is automatically
-               updated along the self-consistency loop.
+               REAL
+               Convergence threshold for the first iterative diagonalization
+               (the check is on eigenvalue convergence).
+               For scf calculations, the default is 1.D-2 if starting from a
+               superposition of atomic orbitals; 1.D-5 if starting from a
+               charge density. During self consistency the threshold (ethr)
+               is automatically reduced when approaching convergence.
                For non-scf calculations, this is the threshold used in the
-               iterative diagonalization
-               For 'phonon' calculations, this is ignored: the threshold is
-               set to  conv_thr / nelec 
+               iterative diagonalization. The default is conv_thr / nelec.
+               For 'phonon' calculations, diago_thr_init is ignored: 
+               the threshold is always set to  conv_thr / nelec .
 
 diago_cg_maxiter  
                INTEGER
@@ -567,7 +570,7 @@ diago_full_acc
                If .TRUE. all the empty states are diagonalized at the same level
                of accuracy of the occupied ones. Otherwise the empty states are
                diagonalized using a larger threshold (this should not affect
-               toltal energy, forces, and other ground-state properties).
+               total energy, forces, and other ground-state properties).
 
 efield         REAL ( default = 0.D0 )
                For finite electric field calculations (lelfield == .TRUE.), 
