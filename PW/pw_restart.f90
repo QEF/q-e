@@ -919,6 +919,7 @@ MODULE pw_restart
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
+      INTEGER  :: npwx_
       REAL(DP) :: ecutrho
       LOGICAL  :: found
       !
@@ -977,7 +978,7 @@ MODULE pw_restart
          !
          dual = ecutrho / ecutwfc
          !
-         CALL iotk_scan_dat( iunpun, "MAX_NPW", npwx )
+         CALL iotk_scan_dat( iunpun, "MAX_NPW", npwx_ )
          !
          CALL iotk_scan_dat( iunpun, "GAMMA_ONLY", gamma_only )
          !
