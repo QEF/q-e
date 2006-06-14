@@ -355,7 +355,7 @@ SUBROUTINE elphsum ( )
   !
   ! workspace used for symmetrisation
   !
-  COMPLEX(DP), allocatable :: g0(:,:,:), g3(:,:,:), g1(:,:), g2(:,:), gf(:,:,:)
+  COMPLEX(DP), allocatable :: g1(:,:,:), g2(:,:,:), g0(:,:), gf(:,:,:)
   COMPLEX(DP), allocatable :: point(:), noint(:), ctemp(:)
   COMPLEX(DP) :: dyn22(3*nat,3*nat)
   !
@@ -375,7 +375,7 @@ SUBROUTINE elphsum ( )
   !
   !
   WRITE (6, '(5x,"electron-phonon interaction  ..."/)')
-  ngauss1 = 1
+  ngauss1 = 0
   nsig = 10
   !
   IF (npool > 1) CALL errore ('elphsum', 'pools and a2F not implemented', 1)
@@ -444,7 +444,7 @@ SUBROUTINE elphsum ( )
      ! recalculate Ef = effit and DOS at Ef N(Ef) = dosfit using dense grid 
      ! for value "deg" of gaussian broadening
      !
-     deg(isig) = 0.005d0*isig
+     deg(isig) = 0.01d0*isig
      !
      effit(isig) = efermig &
           ( etfit, nbnd, nksfit, nelec, wkfit, deg(isig), ngauss1, 0, isk)
@@ -519,41 +519,39 @@ SUBROUTINE elphsum ( )
   !
   do ibnd = 1, nbnd
      do jbnd = 1, nbnd
-        allocate (g3(nkBZ,3*nat,3*nat))
-        allocate (g0(nksq,3*nat,3*nat))
+        allocate (g2(nkBZ,3*nat,3*nat))
+        allocate (g1(nksq,3*nat,3*nat))
         do ik = 1, nksq
            do ii = 1, 3*nat
               do jj = 1, 3*nat
-                 g0(ik,ii,jj)=conjg(el_ph_mat(jbnd,ibnd,ik,ii))* &
+                 g1(ik,ii,jj)=conjg(el_ph_mat(jbnd,ibnd,ik,ii))* &
                       el_ph_mat(jbnd,ibnd,ik,jj)
               enddo    ! ipert
            enddo    !jpert
         enddo   ! ik
         !
-        allocate (g1(3*nat,3*nat))
-        allocate (g2(3*nat,3*nat))
+        allocate (g0(3*nat,3*nat))
         do i=1,nk1
            do j=1,nk2
               do k=1,nk3
                  nn = k-1 + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
                  itemp1 = eqBZ(nn)
-                 g1(:,:) = g0(itemp1,:,:)
+                 g0(:,:) = g1(itemp1,:,:)
                  itemp2 = sBZ(nn)
-                 call symm( g1, g2, u, xq, s, itemp2, rtau, irt, &
-                      at, bg, nat)
-                 g3(nn,:,:) = g2(:,:)
+                 call symm ( g0, u, xq, s, itemp2, rtau, irt, &
+                     at, bg, nat)
+                 g2(nn,:,:) = g0(:,:)
               enddo ! k
            enddo !j
         enddo !i
-        deallocate (g2)
-        deallocate (g1)
         deallocate (g0)
+        deallocate (g1)
         !
         allocate ( point(nkBZ), noint(nkfit), ctemp(nkfit) )
         do jpert = 1, 3 * nat
            do ipert = 1, 3 * nat
               !
-              point(:) = g3(:,ipert,jpert)
+              point(:) = g2(:,ipert,jpert)
               !
               CALL clinear(nk1,nk2,nk3,nti,ntj,ntk,point,noint)
               !
@@ -574,7 +572,7 @@ SUBROUTINE elphsum ( )
            enddo    ! ipert
         enddo    !jpert
         deallocate (point, noint, ctemp)
-        deallocate (g3)
+        deallocate (g2)
         ! 
      enddo    ! ibnd 
   enddo    ! jbnd
