@@ -1025,13 +1025,14 @@ MODULE input_parameters
         INTEGER   :: ion_maxstep = 1000
           ! maximum number of step in ionic minimization
 
-        REAL(DP) :: upscale = 0.0d0
+        REAL(DP) :: upscale = 1.D0
           ! This variable is NOT used in FPMD
 
         CHARACTER(LEN=80) :: pot_extrapolation = 'default', &
                              wfc_extrapolation = 'default'
           !  These variables are used only by PWSCF
-          ! NOT used in FPMD
+        
+        LOGICAL :: remove_rigid_rot = .FALSE.
         
         !
         ! ... delta_T, nraise are used to change the temperature in PWscf
@@ -1177,9 +1178,9 @@ MODULE input_parameters
                           tempw, fnosep, nhpcl, nhptyp, ndega, tranp, amprp,   &
                           greasp, tolp, ion_nstepe, ion_maxstep, upscale,      &
                           delta_t, pot_extrapolation, wfc_extrapolation,       &
-                          nraise, num_of_images, CI_scheme, opt_scheme,        &
-                          use_masses, first_last_opt, ds, k_max, k_min,        &
-                          write_save, temp_req, path_thr, fixed_tan,           &
+                          nraise, remove_rigid_rot, num_of_images, CI_scheme,  &
+                          opt_scheme, use_masses, first_last_opt, ds, k_max,   &
+                          k_min, write_save, temp_req, path_thr, fixed_tan,    &
                           use_freezing, trust_radius_max, trust_radius_min,    &
                           trust_radius_ini, w_1, w_2, bfgs_ndim, sic_rloc,     &
                           smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1,   &

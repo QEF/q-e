@@ -129,14 +129,15 @@ SUBROUTINE iosys()
   USE control_flags, ONLY : diis_ndim, isolve, max_cg_iter, diis_buff, david, &
                             imix, nmix, iverbosity, tr2, niter, pot_order,    &
                             wfc_order, &
-                            diago_full_acc_ => diago_full_acc, &
-                            tolp_           => tolp, &
-                            upscale_        => upscale, &
-                            mixing_beta_    => mixing_beta, &
-                            nstep_          => nstep, &
-                            iprint_         => iprint, &
-                            nosym_          => nosym, &
-                            modenum_        => modenum, &
+                            remove_rigid_rot_ => remove_rigid_rot, &
+                            diago_full_acc_   => diago_full_acc, &
+                            tolp_             => tolp, &
+                            upscale_          => upscale, &
+                            mixing_beta_      => mixing_beta, &
+                            nstep_            => nstep, &
+                            iprint_           => iprint, &
+                            nosym_            => nosym, &
+                            modenum_          => modenum, &
                             reduce_io, langevin_rescaling, ethr, lscf, lbfgs, &
                             lmd, lpath, lneb, lsmd, lphonon, ldamped, lbands, &
                             lrescale_t, lmetadyn, lconstrain, lcoarsegrained, &
@@ -220,8 +221,8 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : phase_space, ion_dynamics, ion_positions, tolp, &
                                tempw, delta_t, nraise, ion_temperature,        &
-                               refold_pos, upscale, pot_extrapolation,         &
-                               wfc_extrapolation,                              &
+                               refold_pos, remove_rigid_rot, upscale,          &
+                               pot_extrapolation,  wfc_extrapolation,          &
                                num_of_images, path_thr, CI_scheme, opt_scheme, &
                                use_masses, first_last_opt, temp_req, k_max,    &
                                k_min, ds, use_freezing, fixed_tan, write_save, &
@@ -1139,14 +1140,15 @@ SUBROUTINE iosys()
   startingpot_    = startingpot
   mixing_beta_    = mixing_beta
   !
-  upscale_     = upscale
-  delta_t_     = delta_t
-  nraise_      = nraise
-  refold_pos_  = refold_pos
-  press_       = press
-  cell_factor_ = cell_factor
-  modenum_     = modenum
-  xqq_         = xqq
+  remove_rigid_rot_ = remove_rigid_rot
+  upscale_          = upscale
+  delta_t_          = delta_t
+  nraise_           = nraise
+  refold_pos_       = refold_pos
+  press_            = press
+  cell_factor_      = cell_factor
+  modenum_          = modenum
+  xqq_              = xqq
   !
   ! ... "path"-optimization variables
   !

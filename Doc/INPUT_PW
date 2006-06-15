@@ -597,7 +597,8 @@ NAMELIST &IONS  ( only if calculation = 'relax', 'md',
 ion_dynamics   CHARACTER
                specify the type of ionic dynamics.
                For constrained dynamics or constrained optimisations add the
-               CONSTRAINTS card.
+               CONSTRAINTS card (when the card is present the SHAKE algorithm is
+               automatically used).
                For different type of calculation different possibilities are 
                allowed and different default values apply:
                
@@ -624,43 +625,6 @@ phase_space    CHARACTER ( defauld = 'full' )
                                   of constraints, is used for the ionic dynamics
                                   (used for calculation of free-energy barriers)
 
-ion_temperature   
-               CHARACTER
-               'rescaling'     : velocity rescaling
-               'langevin'      : ion dynamics is over-damped Langevin
-               'not_controlled': default
-
-tempw          REAL ( default = 300.D0 )
-               starting temperature (Kelvin) in MD runs 
-
-tolp           REAL ( default = 1.D-3 )
-               tolerance for velocity rescaling. Velocities are
-               not rescaled if the ratio of the run-averaged and
-               target temperature differs from unit less than tolp.
-               This keyword is used only in the case of variable cell
-               calculations.
-
-delta_t        REAL ( default = 1.D0 )
-               delta_t = 1                 : every 'nraise' step the actual 
-                                             temperature is rescaled to tempw
-               delta_t /= 1 && delta_T > 0 : at each step the temperature is 
-                                             multiplied by delta_t; this is 
-                                             done rescaling all the velocities.
-               delta_t < 0                 : every 'nraise' steps temperature
-                                             is reduced by -delta_T
-               This keyword is NOT used in the case of variable cell
-               calculations.
-
-nraise         INTEGER (default = 100 )
-               the temperature is reduced of -delta_T every 'nraise' steps.
-               This keyword is NOT used in the case of variable cell
-               calculations.
-
-refold_pos     LOGICAL (default = .FALSE.)
-               this keyword applies only in the case of molecular dynamics or
-               damped dynamics. If true the ions are refolded at each step into
-               the supercell.
-
 pot_extrapolation     
                CHARACTER ( default = "atomic" )
                used to extrapolate the potential from preceding ionic steps
@@ -678,6 +642,62 @@ wfc_extrapolation
                'first_order' :  extrapolate the wave-functions with first-order
                                 formula
                'second_order':  as above, with second order formula
+
+remove_rigid_rot
+               LOGICAL ( default = .FALSE. )
+               this keyword is useful when simulating the dynamics and/or the
+               thermodynamics of an isolated system. If set to true the total
+               torque of the internal forces is set to zero by adding new forces
+               that compensate the spurious interaction with the periodic
+               images. This allowes for the use of smaller supercells.
+               BEWARE: since the potential energy is no longer consistent with
+               the forces (it still contains the spurious interaction with the
+               repeated images), the total energy is not conserved anymore.
+               However the dynamical and thermodynamical properties should be
+               in closer agreement with those of an isolated system.
+               Also the final energy of a structural relaxation will be higher,
+               but the relaxation itself should be faster.
+
+!
+! ... keywords used for moleculer dynamics
+!
+
+ion_temperature   
+               CHARACTER
+               'rescaling'     : velocity rescaling
+               'langevin'      : ion dynamics is over-damped Langevin
+               'not_controlled': default
+
+tempw          REAL ( default = 300.D0 )
+               starting temperature (Kelvin) in MD runs 
+
+tolp           REAL ( default = 1.D-3 )
+               tolerance for velocity rescaling. Velocities are not rescaled 
+               if the ratio of the run-averaged and target temperature differs
+               from unit less than tolp.
+               This keyword is used only in the case of variable cell
+               calculations.
+
+delta_t        REAL ( default = 1.D0 )
+               delta_t = 1                 : every 'nraise' step the actual 
+                                             temperature is rescaled to tempw
+               delta_t /= 1 && delta_T > 0 : at each step the temperature is 
+                                             multiplied by delta_t; this is 
+                                             done rescaling all the velocities.
+               delta_t < 0                 : every 'nraise' steps temperature
+                                             is reduced by -delta_T
+               This keyword is NOT used in the case of variable cell
+               calculations.
+
+nraise         INTEGER ( default = 100 )
+               the temperature is reduced of -delta_T every 'nraise' steps.
+               This keyword is NOT used in the case of variable cell
+               calculations.
+
+refold_pos     LOGICAL ( default = .FALSE. )
+               this keyword applies only in the case of molecular dynamics or
+               damped dynamics. If true the ions are refolded at each step into
+               the supercell.
 
 !
 ! ... keywords used only in BFGS calculations

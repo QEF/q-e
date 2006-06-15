@@ -209,6 +209,10 @@ MODULE control_flags
     lcoarsegrained,     &! if .TRUE. a coarse-grained phase-space is used
     restart              ! if .TRUE. restart from results of a preceding run
   !
+  LOGICAL, PUBLIC :: &
+    remove_rigid_rot     ! if .TRUE. the total torque acting on the atoms is
+                         ! removed
+  !
   ! ... pw self-consistency
   !
   INTEGER, PUBLIC :: &

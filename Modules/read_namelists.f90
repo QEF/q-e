@@ -359,9 +359,11 @@ MODULE read_namelists_module
        ion_maxstep = 100
        delta_t     = 1.D0
        nraise      = 100
-       refold_pos  = .FALSE.
        !
-       upscale           = 10
+       refold_pos       = .FALSE.
+       remove_rigid_rot = .FALSE.
+       !
+       upscale           = 10.D0
        pot_extrapolation = 'atomic'
        wfc_extrapolation = 'none'
        !
@@ -820,6 +822,7 @@ MODULE read_namelists_module
        CALL mp_bcast( delta_t,           ionode_id )
        CALL mp_bcast( nraise,            ionode_id )
        CALL mp_bcast( refold_pos,        ionode_id )
+       CALL mp_bcast( remove_rigid_rot,  ionode_id )
        CALL mp_bcast( upscale,           ionode_id )
        CALL mp_bcast( pot_extrapolation, ionode_id )
        CALL mp_bcast( wfc_extrapolation, ionode_id )
