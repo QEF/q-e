@@ -37,24 +37,24 @@ MODULE path_base
     SUBROUTINE initialize_path()
       !-----------------------------------------------------------------------
       !
-      USE input_parameters,   ONLY : pos_      => pos, &
-                                     climbing_ => climbing, &
-                                     restart_mode, nstep, input_images
-      USE control_flags,      ONLY : conv_elec, lneb, lsmd, lcoarsegrained
-      USE ions_base,          ONLY : nat, amass, ityp, if_pos
-      USE constraints_module, ONLY : nconstr
-      USE io_files,           ONLY : prefix, tmp_dir, path_file, dat_file, &
-                                     int_file, xyz_file, axsf_file, broy_file
-      USE path_variables,     ONLY : climbing, pos, istep_path, nstep_path,   &
-                                     dim, num_of_images, pes, grad_pes, mass, &
-                                     use_masses, tangent, error, path_length, &
-                                     deg_of_freedom, ds, first_last_opt,      &
-                                     frozen, use_freezing, temp_req, k,       &
-                                     k_min, k_max, tune_load_balance, grad,   &
-                                     posold, elastic_grad, fixed_tan
-      USE mp_global,          ONLY : nimage
-      USE path_io_routines,   ONLY : read_restart
-      USE path_variables,     ONLY : path_allocation
+      USE input_parameters, ONLY : pos_      => pos, &
+                                   climbing_ => climbing, &
+                                   restart_mode, nstep, input_images
+      USE control_flags,    ONLY : conv_elec, lneb, lsmd, lcoarsegrained
+      USE ions_base,        ONLY : nat, amass, ityp, if_pos
+      USE metadyn_vars,     ONLY : ncolvar
+      USE io_files,         ONLY : prefix, tmp_dir, path_file, dat_file, &
+                                   int_file, xyz_file, axsf_file, broy_file
+      USE path_variables,   ONLY : climbing, pos, istep_path, nstep_path,   &
+                                   dim, num_of_images, pes, grad_pes, mass, &
+                                   use_masses, tangent, error, path_length, &
+                                   deg_of_freedom, ds, first_last_opt,      &
+                                   frozen, use_freezing, temp_req, k,       &
+                                   k_min, k_max, tune_load_balance, grad,   &
+                                   posold, elastic_grad, fixed_tan
+      USE mp_global,        ONLY : nimage
+      USE path_io_routines, ONLY : read_restart
+      USE path_variables,   ONLY : path_allocation
       !
       IMPLICIT NONE
       !
@@ -82,7 +82,7 @@ MODULE path_base
       !
       IF ( lcoarsegrained ) THEN
          !
-         dim = nconstr
+         dim = ncolvar
          !
          use_masses = .FALSE.
          !
