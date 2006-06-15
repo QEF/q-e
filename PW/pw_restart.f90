@@ -533,6 +533,10 @@ MODULE pw_restart
                      !
                      CALL davcio( evc, nwordwfc, iunwfc, (ik-iks+1), -1 )
                      !
+                     ! the following two line can be used to debug read_wfc
+                     ! WRITE(100+10*ik+me_pool,fmt="(2D18.10)") evc
+                     ! CLOSE(100+10*ik+me_pool )
+                     !
                   END IF
                   !
                END IF
@@ -1056,7 +1060,7 @@ MODULE pw_restart
       CALL mp_bcast( nsym,       ionode_id, intra_image_comm )
       CALL mp_bcast( ecutwfc,    ionode_id, intra_image_comm )
       CALL mp_bcast( dual,       ionode_id, intra_image_comm )
-      CALL mp_bcast( npwx,       ionode_id, intra_image_comm )
+      CALL mp_bcast( npwx_,      ionode_id, intra_image_comm )
       CALL mp_bcast( gamma_only, ionode_id, intra_image_comm )
       CALL mp_bcast( nr1,        ionode_id, intra_image_comm )
       CALL mp_bcast( nr2,        ionode_id, intra_image_comm )
@@ -1469,6 +1473,7 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       REAL(DP) :: ecutrho
+      INTEGER  :: npwx_
       !
       !
       IF ( lpw_read ) RETURN
@@ -1494,7 +1499,7 @@ MODULE pw_restart
          !
          dual = ecutrho / ecutwfc
          !
-         CALL iotk_scan_dat( iunpun, "MAX_NPW", npwx )
+         CALL iotk_scan_dat( iunpun, "MAX_NPW", npwx_ )
          !
          CALL iotk_scan_dat( iunpun, "GAMMA_ONLY", gamma_only )
          !
@@ -1520,7 +1525,7 @@ MODULE pw_restart
       !
       CALL mp_bcast( ecutwfc,    ionode_id, intra_image_comm )
       CALL mp_bcast( dual,       ionode_id, intra_image_comm )
-      CALL mp_bcast( npwx,       ionode_id, intra_image_comm )
+      CALL mp_bcast( npwx_,      ionode_id, intra_image_comm )
       CALL mp_bcast( gamma_only, ionode_id, intra_image_comm )
       CALL mp_bcast( nr1,        ionode_id, intra_image_comm )
       CALL mp_bcast( nr2,        ionode_id, intra_image_comm )
@@ -2047,7 +2052,7 @@ MODULE pw_restart
       USE io_files,             ONLY : nwordwfc, iunwfc
       USE gvect,                ONLY : ngm, ngm_g, ig1, ig2, ig3, g, ecutwfc
       USE noncollin_module,     ONLY : noncolin, npol                             
-      USE mp_global,            ONLY : kunit, nproc, nproc_pool
+      USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool
       USE mp_global,            ONLY : my_pool_id, &
                                        intra_pool_comm, inter_pool_comm
       USE mp,                   ONLY : mp_sum, mp_max
@@ -2291,6 +2296,8 @@ MODULE pw_restart
                   !
                END IF
                !
+               evc = 0.0d0
+               !
                CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,    &
                               evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),      &
                               ngk(ik-iks+1), filename, scalef )
@@ -2304,6 +2311,10 @@ MODULE pw_restart
                   CALL davcio( evc_nc, nwordwfc, iunwfc, (ik-iks+1), + 1 )
                   !
                ELSE
+                  !
+                  ! the following two line can be used to debug read_wfc
+                  ! WRITE(200+10*ik+me_pool,fmt="(2D18.10)") evc
+                  ! CLOSE(200+10*ik+me_pool )
                   !
                   CALL davcio( evc, nwordwfc, iunwfc, (ik-iks+1), + 1 )
                   !
