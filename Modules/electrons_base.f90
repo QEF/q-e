@@ -442,7 +442,7 @@
 !------------------------------------------------------------------------------!
 
   subroutine electrons_nose_init( ekincw_ , fnosee_ )
-     USE constants, ONLY: factem, pi, terahertz
+     USE constants, ONLY: factem, pi, au_terahertz
      REAL(DP), INTENT(IN) :: ekincw_, fnosee_
      ! set thermostat parameter for electrons
      qne     = 0.0d0
@@ -452,7 +452,7 @@
      xnhep   = 0.0d0
      xnhem   = 0.0d0
      vnhe    = 0.0d0
-     if( fnosee > 0.0d0 ) qne = 4.d0 * ekincw / ( fnosee * ( 2.d0 * pi ) * terahertz )**2
+     if( fnosee > 0.0d0 ) qne = 4.d0 * ekincw / ( fnosee * ( 2.d0 * pi ) * au_terahertz )**2
     return
   end subroutine electrons_nose_init
 
@@ -501,7 +501,7 @@
 
   SUBROUTINE electrons_nose_info()
 
-      use constants,     only: factem, terahertz, pi
+      use constants,     only: factem, au_terahertz, pi
       use time_step,     only: delt
       USE io_global,     ONLY: stdout
       USE control_flags, ONLY: tnosee
@@ -518,7 +518,7 @@
         IF( delt <= 0.D0) &
           CALL errore(' electrons_nose_info ', ' delt less than zero ', 1)
 
-        wnosee = fnosee * ( 2.d0 * pi ) * terahertz
+        wnosee = fnosee * ( 2.d0 * pi ) * au_terahertz
         nsvar  = ( 2.d0 * pi ) / ( wnosee * delt )
 
         WRITE( stdout,563) ekincw, nsvar, fnosee, qne

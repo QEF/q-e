@@ -50,7 +50,7 @@
 !------------------------------------------------------------------------------!
 
   subroutine ions_nose_init( tempw_ , fnosep_ , nhpcl_ , nhptyp_ , ndega_  )
-    use constants,      only: factem, pi, terahertz
+    use constants,      only: factem, pi, au_terahertz
     use control_flags,  only: tnosep
     use ions_base,      only: ndofp, tions_base_init, nsp, nat, na
     real(DP), intent(in)  :: tempw_ , fnosep_(:) 
@@ -143,14 +143,14 @@
 
       fnosep(1) = fnosep_ (1)
       if( fnosep(1) > 0.0d0 ) then
-        qnp_(1) = 2.d0 * gkbt / ( fnosep(1) * ( 2.d0 * pi ) * terahertz )**2
+        qnp_(1) = 2.d0 * gkbt / ( fnosep(1) * ( 2.d0 * pi ) * au_terahertz )**2
       end if
 
       if ( nhpcl > 1 ) then
         do i = 2, nhpcl
           fnosep(i) = fnosep_ (i)
           if( fnosep(i) > 0.0d0 ) then
-            qnp_(i) = 2.d0 * tempw / factem / ( fnosep(i) * ( 2.d0 * pi ) * terahertz )**2
+            qnp_(i) = 2.d0 * tempw / factem / ( fnosep(i) * ( 2.d0 * pi ) * au_terahertz )**2
           else
             qnp_(i) = qnp_(1) / DBLE(ndega)
           endif
@@ -227,7 +227,7 @@
 
   SUBROUTINE ions_nose_info()
 
-      use constants,     only: factem, terahertz, pi
+      use constants,     only: factem, au_terahertz, pi
       use time_step,     only: delt
       USE io_global,     ONLY: stdout
       USE control_flags, ONLY: tnosep
@@ -244,7 +244,7 @@
         IF( delt <= 0.D0) &
           CALL errore(' ions_nose_info ', ' delt less than zero ', 1)
 
-        wnosep = fnosep(1) * ( 2.d0 * pi ) * terahertz
+        wnosep = fnosep(1) * ( 2.d0 * pi ) * au_terahertz
         nsvar  = ( 2.d0 * pi ) / ( wnosep * delt )
 
         WRITE( stdout,563) tempw, nhpcl, ndega, nsvar

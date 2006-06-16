@@ -932,13 +932,14 @@
 CONTAINS
 
   subroutine cell_nose_init( temph_init, fnoseh_init )
-     USE constants, ONLY: factem, pi, terahertz
+     USE constants, ONLY: factem, pi, au_terahertz
      REAL(DP), INTENT(IN) :: temph_init, fnoseh_init
      ! set thermostat parameter for cell
      qnh    = 0.0d0
      temph  = temph_init
      fnoseh = fnoseh_init
-     if( fnoseh > 0.0d0 ) qnh = 2.d0 * ( 3 * 3 )*temph/factem/(fnoseh*(2.d0*pi)*terahertz)**2
+     if( fnoseh > 0.0d0 ) qnh = 2.d0 * ( 3 * 3 ) * temph / factem / &
+          (fnoseh*(2.d0*pi)*au_terahertz)**2
     return
   end subroutine cell_nose_init
 
@@ -1005,7 +1006,7 @@ CONTAINS
 
   SUBROUTINE cell_nose_info()
 
-      use constants,     only: factem, terahertz, pi
+      use constants,     only: factem, au_terahertz, pi
       use time_step,     only: delt
       USE io_global,     ONLY: stdout
       USE control_flags, ONLY: tnoseh
@@ -1022,7 +1023,7 @@ CONTAINS
         IF( delt <= 0.D0) &
           CALL errore(' cell_nose_info ', ' delt less than zero ', 1)
 
-        wnoseh = fnoseh * ( 2.d0 * pi ) * terahertz
+        wnoseh = fnoseh * ( 2.d0 * pi ) * au_terahertz
         nsvar  = ( 2.d0 * pi ) / ( wnoseh * delt )
 
         WRITE( stdout,563) temph, nsvar, fnoseh, qnh

@@ -54,8 +54,7 @@ MODULE constants
   REAL(DP), PARAMETER :: AUTOEV           = 27.211652D0    ! eV
   REAL(DP), PARAMETER :: RYTOEV           = 13.605826D0    ! eV
   REAL(DP), PARAMETER :: AMU_AU           = 1822.89D0   ! (mass of a proton)
-  REAL(DP), PARAMETER :: AU_TERAHERTZ     = 2.418D-5    ! THz
-  REAL(DP), PARAMETER :: TERAHERTZ        = 2.418D-5    ! from au to THz
+  REAL(DP), PARAMETER :: AU_TERAHERTZ     = 2.418D-5    ! from au to THz
   REAL(DP), PARAMETER :: AU_SEC           = 2.4189D-17  ! sec
   REAL(DP), PARAMETER :: AU_PS            = 2.4189D-5   ! sec
   REAL(DP), PARAMETER :: DIP_DEBYE        = 2.54168     ! hartree atomic units dipole to Debye
