@@ -260,7 +260,9 @@ ecutwfc        REAL
 ecutrho        REAL ( default = 4 * ecutwfc )
                kinetic energy cutoff (Ry) for charge density and potential
                May be larger ( for ultrasoft PP ) or somewhat smaller 
-               ( but not much smaller ) than the default value
+               ( but not much smaller ) than the default value. Note that
+               if you have norm-conserving PP only, setting it to a larger 
+               value than the default is a waste of time.
 
 nr1,nr2,nr3    INTEGER
                three-dimensional FFT mesh (hard grid) for charge
@@ -966,9 +968,9 @@ ATOMIC_POSITIONS { alat | bohr | crystal | angstrom }
 K_POINTS { tpiba | automatic | crystal | gamma }
 
    gamma    : use k = 0 ( do not read anything after this card )
-              Note that a set of subroutines optimized for calculations at 
-              the gamma point are used so that both memory and cpu requirements
-              are reduced
+              Note that a set of subroutines optimized for calculations 
+              at the gamma point are used so that both memory and cpu
+              requirements are reduced
    automatic: automatically generated uniform grid of k-points
               next card:
    nk1, nk2, nk3, k1, k2, k3
@@ -986,10 +988,16 @@ K_POINTS { tpiba | automatic | crystal | gamma }
    xk_x, xk_y, xk_z,  wk
               special points in the irreducible Brillouin Zone
               of the lattice (with all symmetries) and weights
+              (see the literature for lists of special points and
+              the corresponding weights)
               If the symmetry is lower than the full symmetry 
               of the lattice, additional points with appropriate
-              weights are generated
-	      
+              weights are generated. 
+              In a non-scf calculation, weights do not affect the results.
+              If you just need eigenvalues and eigenvectors (for instance,
+              for a band-structure plot), weights can be set to any value 
+              (for instance all equal to 1) 
+
 -------------------------------------------------------------------------------
 
 CELL_PARAMETERS

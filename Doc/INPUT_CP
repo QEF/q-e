@@ -216,7 +216,9 @@ ecutwfc        REAL
 ecutrho        REAL ( default = 4 * ecutwfc )
                kinetic energy cutoff (Ry) for charge density and potential
                May be larger ( for ultrasoft PP ) or somewhat smaller 
-               ( but not much smaller ) than the default value
+               ( but not much smaller ) than the default value. Note that
+               if you have norm-conserving PP only, setting it to a larger
+               value than the default is a waste of time.
 
 nelec          INTEGER
                number of electron in the unit cell. If not specified it is
