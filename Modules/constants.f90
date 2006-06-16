@@ -69,7 +69,7 @@ MODULE constants
   !
   REAL(DP), PARAMETER :: e2 = 2.D0      ! the square of the electron charge
   REAL(DP), PARAMETER :: degspin = 2.D0 ! the number of spins per level
-  REAL(DP), PARAMETER :: rytoev=13.6058d0      ! conversion from Ry to eV
+  REAL(DP), PARAMETER :: rytoev=RY      ! conversion from Ry to eV
   !
   ! ... mass conversion: a.m.u to a.u. (Ry)
   !
