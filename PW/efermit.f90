@@ -14,7 +14,8 @@ FUNCTION efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, is, isk)
   !     (see P. E. Bloechl et al, PRB49, 16223 (1994))
   !
   USE io_global, ONLY : stdout
-  USE kinds
+  USE kinds, ONLY: DP
+  USE constants, ONLY: rytoev
   implicit none
   integer, intent(in)  :: nks, nbnd, nspin, ntetra, tetra (4, ntetra)
   ! nks   : the number of k points
@@ -34,8 +35,7 @@ FUNCTION efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, is, isk)
   integer, parameter :: maxiter = 300
   ! the maximum number of iterations in bisection
 
-  real(DP), parameter :: rydtoev= 13.6058d0, eps= 1.0d-10
-  ! conversion factor from Ry to eV
+  real(DP), parameter :: eps= 1.0d-10
   ! a small quantity
   !
   !     here the local variables
@@ -101,7 +101,7 @@ FUNCTION efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, is, isk)
   sumkmid = sumkt (et, nbnd, nks, nspin, ntetra, tetra, ef, is, isk )
 
   if (is /= 0) WRITE(stdout, '(5x,"Spin Component #",i3)') is
-  WRITE( stdout, 9010) ef * rydtoev, sumkmid
+  WRITE( stdout, 9010) ef * rytoev, sumkmid
   !     converged exit:
 100 continue
   !     Check if Fermi level is above any of the highest eigenvalues
@@ -110,7 +110,7 @@ FUNCTION efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, is, isk)
         if (isk(ik) /= is ) cycle
      end if
      if (ef > et (nbnd, ik) + 1.d-4) &
-          WRITE( stdout, 9020) ef * rydtoev, ik, et (nbnd, ik) * rydtoev
+          WRITE( stdout, 9020) ef * rytoev, ik, et (nbnd, ik) * rytoev
   enddo
 
   efermit = ef

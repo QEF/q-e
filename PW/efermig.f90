@@ -13,14 +13,15 @@ FUNCTION efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
   !     (see Methfessel and Paxton, PRB 40, 3616 (1989 )
   !
   USE io_global, ONLY : stdout
-  USE kinds
+  USE kinds, ONLY : DP
+  USE constants, ONLY: rytoev
   implicit none
   !  I/O variables
   integer, intent(in) :: nks, nbnd, Ngauss, is, isk(nks)
   real(DP), intent(in) :: wk (nks), et (nbnd, nks), Degauss, nelec
   real(DP) :: efermig
   !
-  real(DP), parameter :: rydtoev= 13.6058d0, eps= 1.0d-10
+  real(DP), parameter :: eps= 1.0d-10
   integer, parameter :: maxiter = 300
   ! internal variables
   real(DP) :: Ef, Eup, Elw, sumkup, sumklw, sumkmid
@@ -66,7 +67,7 @@ FUNCTION efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
   if (is /= 0) WRITE(stdout, '(5x,"Spin Component #",i3)') is
   WRITE( stdout, '(5x,"Warning: too many iterations in bisection"/ &
        &      5x,"Ef = ",f10.6," sumk = ",f10.6," electrons")' ) &
-       Ef * rydtoev, sumkmid
+       Ef * rytoev, sumkmid
   !
   efermig = Ef
   return
