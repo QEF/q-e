@@ -229,7 +229,7 @@
 
    SUBROUTINE print_eigenvalues( ei_unit, tfile, nfi, tps )
       !
-      use constants,  only : au 
+      use constants,  only : autoev 
       USE io_global,  ONLY : stdout, ionode
       !
       INTEGER,  INTENT(IN) :: ei_unit
@@ -248,21 +248,21 @@
       DO j = 1, nspin
          !
          WRITE( stdout,1002) ik, j
-         WRITE( stdout,1004) ( ei( i, j ) * au, i = 1, nupdwn(j) )
+         WRITE( stdout,1004) ( ei( i, j ) * autoev, i = 1, nupdwn(j) )
          !
          IF( n_emp .GT. 0 ) THEN
             WRITE( stdout,1005) ik, j
-            WRITE( stdout,1004) ( ei_emp( i, j ) * au , i = 1, n_emp )
-            WRITE( stdout,1006) ( ei_emp( 1, j ) - ei( nupdwn(j), j ) ) * au
+            WRITE( stdout,1004) ( ei_emp( i, j ) * autoev , i = 1, n_emp )
+            WRITE( stdout,1006) ( ei_emp( 1, j ) - ei( nupdwn(j), j ) ) * autoev
          END IF
          !
          IF( tfile ) THEN
             WRITE(ei_unit,1010) ik, j
-            WRITE(ei_unit,1020) ( ei( i, j ) * au, i = 1, nupdwn(j) )
+            WRITE(ei_unit,1020) ( ei( i, j ) * autoev, i = 1, nupdwn(j) )
             IF( n_emp .GT. 0 ) THEN
                WRITE(ei_unit,1011) ik, j
-               WRITE(ei_unit,1020) ( ei_emp( i, j ) * au , i = 1, n_emp )
-               WRITE(ei_unit,1021) ( ei_emp( 1, j ) - ei( nupdwn(j), j ) ) * au
+               WRITE(ei_unit,1020) ( ei_emp( i, j ) * autoev , i = 1, n_emp )
+               WRITE(ei_unit,1021) ( ei_emp( 1, j ) - ei( nupdwn(j), j ) ) * autoev
             END IF
          END IF
          !
@@ -290,7 +290,7 @@
           USE mp, ONLY: mp_sum
           USE mp_global, ONLY: me_image, nproc_image, intra_image_comm
           USE energies, only: eig_total_energy
-          USE constants, only: au
+          USE constants, only: autoev
 
           !OMPUTES:IF (THORTO) 
           !           COMPUTES THE EIGENVALUES OF THE COMPLEX HERMITIAN MATRIX GAM

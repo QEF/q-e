@@ -43,7 +43,6 @@
 
    SUBROUTINE print_dipole( uni, tfile, nfi, tps )
       !
-      USE constants,  only : au
       USE io_global,  ONLY : stdout, ionode
       !
       INTEGER,  INTENT(IN) :: uni

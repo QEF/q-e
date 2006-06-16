@@ -17,7 +17,7 @@ MODULE path_base
   ! ... Written by Carlo Sbraccia ( 2003-2006 )
   !
   USE kinds,     ONLY : DP
-  USE constants, ONLY : eps32, pi, au, bohr_radius_angs, eV_to_kelvin
+  USE constants, ONLY : eps32, pi, autoev, bohr_radius_angs, eV_to_kelvin
   USE io_files,  ONLY : iunpath
   USE io_global, ONLY : meta_ionode, meta_ionode_id
   USE mp,        ONLY : mp_bcast
@@ -637,7 +637,7 @@ MODULE path_base
             ! ... the error is given by the largest component of the gradient 
             ! ... vector ( PES + SPRINGS in the neb case )
             !
-            error(i) = MAXVAL( ABS( grad(:,i) ) ) / bohr_radius_angs * au
+            error(i) = MAXVAL( ABS( grad(:,i) ) ) / bohr_radius_angs * autoev
             !
          END DO
          !
@@ -946,7 +946,7 @@ MODULE path_base
          !
          ! ... the forward activation energy is computed here
          !
-         activation_energy = ( pes(Emax_index) - pes(1) ) * au
+         activation_energy = ( pes(Emax_index) - pes(1) ) * autoev
          !
          ! ... the error is computed here (frozen images are also set here)
          !

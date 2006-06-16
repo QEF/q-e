@@ -1361,7 +1361,7 @@ END SUBROUTINE gshcount
          USE ions_base,     ONLY: tau_srt, tau_units, if_pos, ind_srt, nsp, na, &
                                   pmass, nat, fricp, greasp, rcmax
          USE ions_nose,     ONLY: tempw, ndega
-         USE constants,     ONLY: scmass
+         USE constants,     ONLY: amu_au
 
          IMPLICIT NONE
               
@@ -1400,7 +1400,7 @@ END SUBROUTINE gshcount
          WRITE(stdout,660) 
          isa = 0
          DO IS = 1, nsp
-           WRITE(stdout,1000) is, na(is), pmass(is), pmass(is) / scmass, rcmax(is)
+           WRITE(stdout,1000) is, na(is), pmass(is), pmass(is) / amu_au, rcmax(is)
            DO IA = 1, na(is)
              isa = isa + 1
              WRITE(stdout,1010) ( tau_srt(k,isa), K = 1,3 )

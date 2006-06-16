@@ -606,7 +606,6 @@ CONTAINS
         USE wave_functions, ONLY: crot
         USE wave_constrains, ONLY: update_lambda
         USE wave_base, ONLY: dotp
-        USE constants, ONLY: au
         USE cell_base, ONLY: tpiba2
         USE electrons_module, ONLY: eigs, ei, nb_l, ib_owner, ib_local
         USE electrons_base, ONLY: iupdwn, nupdwn

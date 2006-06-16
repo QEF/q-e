@@ -23,7 +23,7 @@ SUBROUTINE iosys()
   !
   USE kinds,         ONLY : DP
   USE funct,         ONLY : enforce_input_dft
-  USE constants,     ONLY : au, eV_to_kelvin, pi, rytoev, &
+  USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
                             uakbar, amconv, bohr_radius_angs
   USE mp_global,     ONLY : npool, nproc_pool
   !
@@ -967,7 +967,7 @@ SUBROUTINE iosys()
            CALL errore( 'iosys','calculation=' // TRIM( calculation ) // &
                       & ': langevin dynamics not implemented', 1 )
         !
-        temp_req = temp_req / ( eV_to_kelvin * au )
+        temp_req = temp_req / ( eV_to_kelvin * autoev )
         !
         IF ( temp_req <= 0.D0 ) &
            CALL errore( 'iosys','calculation=' // TRIM( calculation ) // &

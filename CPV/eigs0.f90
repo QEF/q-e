@@ -14,7 +14,7 @@
 !
       use kinds, only            : DP
       use io_global, only        : stdout
-      use constants, only        : au
+      use constants, only        : autoev
       use electrons_module, only : ei
       use parallel_toolkit, only : dspev_drv
       USE sic_module, only       : self_interaction
@@ -88,7 +88,7 @@
          END IF
 
          ! WRITE( stdout,*)  '---- DEBUG ----' ! debug
-         ! WRITE( stdout,14) ( wr( i ) * au / 2.0d0, i = 1, nupdwn(iss) ) ! debug
+         ! WRITE( stdout,14) ( wr( i ) * autoev / 2.0d0, i = 1, nupdwn(iss) ) ! debug
 
          deallocate( lambdar, wr )
 
@@ -106,7 +106,7 @@
             !     print out eigenvalues
             !
             WRITE( stdout,12) 0., 0., 0.
-            WRITE( stdout,14) ( ei( i, iss ) * au, i = 1, nupdwn(iss) )
+            WRITE( stdout,14) ( ei( i, iss ) * autoev, i = 1, nupdwn(iss) )
 
          ENDIF
 

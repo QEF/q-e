@@ -113,8 +113,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE time_step,                ONLY : delt, tps, dt2, dt2by2, twodelt
   USE electrons_module,         ONLY : cp_eigs
   USE print_out_module,         ONLY : cp_print_rho
-  USE cp_main_variables,        ONLY : allocate_mainvar, &
-                                       acc, bec, lambda, lambdam, lambdap, &
+  USE cp_main_variables,        ONLY : acc, bec, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, ei1, ei2, ei3,  &
                                        irb, becdr, taub, eigrb, rhog, rhos, &
                                        rhor, rhopr, bephi, becp, nfi

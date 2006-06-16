@@ -339,7 +339,7 @@
       USE forces, ONLY: dforce
       USE orthogonalize, ONLY: ortho
       USE wave_types, ONLY: wave_descriptor
-      USE constants, ONLY: au
+      USE constants, ONLY: autoev
       USE io_global, ONLY: ionode
       USE wave_constrains, ONLY: update_lambda
       USE uspp,             ONLY : vkb, nkb
@@ -540,8 +540,8 @@
             ei( nupdwn(1), 2) = 0.d0
 
             WRITE(6,*) 'SIC EIGENVALUES(eV), dwn and up electrons Kpoint',1
-            WRITE(6,1004) ( ei( i, 2 ) * au, i = 1, nupdwn(2) )
-            WRITE(6,1005) ( ei( i, 1 ) * au, i = 1, nupdwn(1) )
+            WRITE(6,1004) ( ei( i, 2 ) * autoev, i = 1, nupdwn(2) )
+            WRITE(6,1005) ( ei( i, 1 ) * autoev, i = 1, nupdwn(1) )
 
 1004        FORMAT(/,3X,'SIC EIGENVALUES DW=',3X,10F8.2)
 1005        FORMAT(/,3X,'SIC EIGENVALUES UP=',3X,10F8.2)

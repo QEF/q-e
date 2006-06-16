@@ -131,7 +131,7 @@
       USE ions_base, ONLY: taui, cdmi, nat, nsp
       USE sic_module, ONLY: self_interaction, nat_localisation
       USE ions_base, ONLY: if_pos, ind_srt, ions_thermal_stress
-      USE constants, ONLY: au, au_ps
+      USE constants, ONLY: au_ps
       USE electrons_base, ONLY: nupdwn, nbnd, nspin
       USE electrons_nose, ONLY: electrons_nosevel, electrons_nose_shiftvar, electrons_noseupd, &
                                 vnhe, xnhe0, xnhem, xnhep, qne, ekincw

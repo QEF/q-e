@@ -376,7 +376,6 @@
       USE wave_functions, ONLY: cp_kinetic_energy, crot, fixwave
       USE wave_base, ONLY: hpsi, converg_base, dotp
       USE pseudopotential, ONLY: nsanl
-      USE constants, ONLY: au
       USE cell_base, ONLY: tpiba2
       USE electrons_module, ONLY: n_emp, nupdwn_emp, iupdwn_emp
       USE electrons_base, ONLY: nspin
@@ -561,7 +560,6 @@
 
       USE wave_types,       ONLY : wave_descriptor
       USE wave_constrains,  ONLY : update_lambda
-      USE constants,        ONLY : au
       USE electrons_module, ONLY : eigs, ei_emp, n_emp, n_emp_l
       USE forces,           ONLY : dforce_all
       USE pseudopotential,  ONLY : nspnl

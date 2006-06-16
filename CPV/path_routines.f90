@@ -16,7 +16,7 @@ MODULE path_routines
   !
   USE io_global,  ONLY : stdout
   USE kinds,      ONLY : DP
-  USE constants,  ONLY : au, bohr_radius_angs, eV_to_kelvin
+  USE constants,  ONLY : bohr_radius_angs, eV_to_kelvin
   !
   PRIVATE
   !

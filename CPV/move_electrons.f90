@@ -15,7 +15,6 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   ! ... this routine updates the electronic degrees of freedom
   !
   USE kinds,                ONLY : DP
-  USE constants,            ONLY : au
   USE control_flags,        ONLY : lwf, tfor, tprnfor, thdyn
   USE cg_module,            ONLY : tcg
   USE cp_main_variables,    ONLY : eigr, bec, irb, eigrb, rhog, rhos, rhor, &

@@ -189,7 +189,7 @@
                                a3_, rcmax_ )
       !-------------------------------------------------------------------------
       !
-      USE constants, ONLY: scmass, bohr_radius_angs
+      USE constants, ONLY: amu_au, bohr_radius_angs
       USE io_global, ONLY: stdout
       !
       IMPLICIT NONE
@@ -372,7 +372,7 @@
       IF ( ANY( amass(1:nsp) <= 0.D0 ) ) &
          CALL errore( 'ions_base_init ', 'invalid  mass', 1 ) 
       !
-      pmass(1:nsp) = amass_(1:nsp) * scmass
+      pmass(1:nsp) = amass_(1:nsp) * amu_au
       !
       CALL ions_cofmass( tau_srt, pmass, na, nsp, cdmi )
       !

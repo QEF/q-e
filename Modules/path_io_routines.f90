@@ -17,7 +17,7 @@ MODULE path_io_routines
   ! ... Written by Carlo Sbraccia ( 2003-2006 )
   !
   USE kinds,      ONLY : DP
-  USE constants,  ONLY : pi, au, bohr_radius_angs, eV_to_kelvin
+  USE constants,  ONLY : pi, autoev, bohr_radius_angs, eV_to_kelvin
   USE io_global,  ONLY : meta_ionode, meta_ionode_id
   USE mp,         ONLY : mp_bcast
   !
@@ -171,7 +171,7 @@ MODULE path_io_routines
           IF ( llangevin ) &
              WRITE( UNIT = iunpath, &
                     FMT = '(5X,"required temperature",T35, &
-                           &" = ",F6.1," K")' ) temp_req * eV_to_kelvin * au
+                           &" = ",F6.1," K")' ) temp_req * eV_to_kelvin*autoev
           !
        END IF
        !
@@ -720,7 +720,7 @@ MODULE path_io_routines
        DO i = 1, num_of_images
           !
           WRITE( UNIT = iundat, FMT = dat_fmt ) &
-              ( s(i) / s(num_of_images) ), ( pes(i) - pes(1) )*au, error(i)
+              ( s(i) / s(num_of_images) ), ( pes(i) - pes(1) )*autoev, error(i)
           !
        END DO
        !
@@ -741,7 +741,7 @@ MODULE path_io_routines
           IF ( j == 0 ) ener_0 = ener
           !
           WRITE( UNIT = iunint, FMT = int_fmt ) &
-              ( r / s(num_of_images) ), ( ener - ener_0 )*au
+              ( r / s(num_of_images) ), ( ener - ener_0 )*autoev
           !
        END DO
        !
@@ -845,7 +845,7 @@ MODULE path_io_routines
               activation_energy
        WRITE( UNIT = iunpath, &
               FMT = '(5X,"activation energy (<-) = ",F10.6," eV",/)' ) &
-              activation_energy + ( pes(1) - pes(num_of_images) ) * au
+              activation_energy + ( pes(1) - pes(num_of_images) ) * autoev
        !
        WRITE( UNIT = iunpath, FMT = run_info )
        !
@@ -858,7 +858,7 @@ MODULE path_io_routines
                            norm( pos(:,image) - pos(:,image-1) )
           !
           WRITE( UNIT = iunpath, FMT = run_output ) &
-              image, pes(image) * au, error(image), frozen(image)
+              image, pes(image) * autoev, error(image), frozen(image)
           !
        END DO
        !

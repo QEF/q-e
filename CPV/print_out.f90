@@ -53,7 +53,7 @@
       USE energies,          ONLY : print_energies, dft_energy_type
       USE printout_base,     ONLY : printout_base_open, printout_base_close, &
                                     printout_pos, printout_cell, printout_stress
-      USE constants,         ONLY : factem, au_gpa, au, amu_si, bohr_radius_cm, scmass, BOHR_RADIUS_ANGS
+      USE constants,         ONLY : factem, au_gpa, amu_si, bohr_radius_cm, amu_au, BOHR_RADIUS_ANGS
       USE ions_base,         ONLY : na, nsp, nat, ind_bck, atm, ityp, pmass, &
                                     cdm_displacement, ions_displacement
       USE cell_base,         ONLY : s_to_r, get_volume
@@ -149,7 +149,7 @@
             !
             totalmass = 0.0d0
             DO is = 1, nsp
-              totalmass = totalmass + pmass(is) * na(is) / scmass
+              totalmass = totalmass + pmass(is) * na(is) / amu_au
             END DO
             totalmass = totalmass / volume * 11.2061 ! AMU_SI * 1000.0 / BOHR_RADIUS_CM**3 
             WRITE( stdout, fmt='(/,3X,"System Density [g/cm^3] : ",F10.4,/)' ) totalmass
@@ -308,7 +308,7 @@
 
       USE control_flags,    ONLY: tdipole, tnosee, tnosep, tnoseh, iprsta, iprint, &
                                   toptical, tconjgrad
-      use constants,        only: factem, au_gpa, au, amu_si, bohr_radius_cm, scmass
+      use constants,        only: factem, au_gpa, amu_si, bohr_radius_cm
       use energies,         only: print_energies, dft_energy_type
       use mp_global,        only: me_image, intra_image_comm
       use electrons_module, only: print_eigenvalues

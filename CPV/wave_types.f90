@@ -118,7 +118,6 @@
             desc % nbl( is ) = nbl( is )
           END IF
         END DO
-
         !  k - points
 
         IF( nkt <  0 ) &
