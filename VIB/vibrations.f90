@@ -1355,7 +1355,7 @@ CONTAINS
   SUBROUTINE print_eigenmodes(dim,cm_inv_flag,filep,eigval,eigvec, &
        mode_mass, mode_force_constant, intensity)
     !
-    USE constants,         ONLY : BOHR_RADIUS_ANGS, AU, AMU_AU
+    USE constants,         ONLY : BOHR_RADIUS_ANGS, AUTOEV, AMU_AU
     USE kinds,             ONLY : DP
     !
     ! ... input variables
@@ -1427,7 +1427,7 @@ CONTAINS
     DO i=1,dim
        WRITE (filep,204,ADVANCE='YES')                                         &
             eigval_loc(i), mode_mass(i)/ AMU_AU,                               &
-            mode_force_constant(i) * AU / BOHR_RADIUS_ANGS / BOHR_RADIUS_ANGS, &
+            mode_force_constant(i) * AUTOEV / BOHR_RADIUS_ANGS / BOHR_RADIUS_ANGS, &
             intensity_loc(i)
     END DO
     WRITE (filep,*)
