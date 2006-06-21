@@ -362,7 +362,18 @@ subroutine convert_ncpp
         if(iv >= nbeta) exit  ! skip additional pseudo wfns
      enddo
      deallocate (vnl, aux)
-
+!
+!   redetermine ikk2
+!
+     do iv=1,nbeta
+        ikk2(iv)=kkbeta
+        do ir = kkbeta,1,-1
+           if ( abs(betar(ir,iv)) > 1.d-12 ) then
+              ikk2(iv)=ir
+              exit
+           end if
+        end do
+     end do
   end if
   allocate (rho_at(mesh))
   rho_at = rho_at_
