@@ -1033,48 +1033,77 @@ CONSTRAINTS
  Syntax:
 
     CONSTRAINTS
-      nconstr   constr_tol
+      nconstr   { constr_tol }
       constr_type(.)  constr(1,.)  constr(2,.) ... { constr_target(.) }
 
  Where:
 
-      nconstr                      INTEGER, number of constraints
+      nconstr     INTEGER, number of constraints
+      constr_tol  REAL,    tolerance for keeping the constraints satisfied
 
-      constr_tol                   REAL,    tolerance for keeping the 
-                                            constraints satisfied
+      constr_type(.) CHARACTER, type of constrain :
+      
+        'type_coord'      : constraint on global coordination-number, i.e. the 
+                            average number of atoms of type B surrounding the 
+                            atoms of type A. The coordination is defined by
+                            using a Fermi-Dirac.
+                            (four indexes must be specified).
+ 
+        'atom_coord'      : constraint on local coordination-number, i.e. the 
+                            average number of atoms of type A surrounding a 
+                            specific atom. The coordination is defined by
+                            using a Fermi-Dirac.
+                            (four indexes must be specified).
+                            
+        'distance'        : constraint on interatomic distance (two atom indexes
+                            must be specified ).
+ 
+        'planar_angle'    : constraint on planar angle (three atom indexes must
+                            be specified).
+ 
+        'torsional_angle' : constraint on torsional angle (four atom indexes 
+                            must be specified).
 
-      constr_type(.)               INTEGER, type of constrain :
-                                       1,2: for fixed coordination numbers:
-                                            four indexes must be specified
-                                         3: for fixed distances: 
-                                            two atom indexes must be specified 
-                                         4: for fixed planar angles: 
-                                            three atom indexes must be specified
+        'bennett_proj'    : constraint on the projection onto a given direction
+                            of the vector defined by the position of one atom 
+                            minus the center of mass of the others.
+                            ( Ch.H. Bennett in Diffusion in Solids, Recent
+                              Developments, Ed. by A.S. Nowick and J.J. Burton,
+                              New York 1975 ).
 
-      constr(1,.) constr(2,.) ...  REAL,    these variables have different 
-                                            meanings for different constraint
-                                            types:
-                                         1: constr(1) is the first index of the
-                                            atomic type involved
-                                            constr(2) is the second index of the
-                                            atomic type involved
-                                            constr(3) is the cut-off radius for
-                                            estimating the coordination
-                                            constr(4) is a smoothing parameter     
-                                         2: constr(1) is the atom index of the
-                                            atom with constrained coordination
-                                            constr(2) is the index of the atomic
-                                            type involved in the coordination
-                                            constr(3) is the cut-off radius for
-                                            estimating the coordination
-                                            constr(4) is a smoothing parameter
-                                       3,4: atoms indices object of the 
-                                            constraint, as they appear in 
-                                            the 'POSITION' CARD
-                                        
-      constr_target                 REAL,   target for the constrain ( planar 
-                                            angles are specified in degrees ).
-                                            This variable is optional.
+      constr(1,.) constr(2,.) ...  REAL,  these variables have different 
+                                          meanings for different constraint
+                                          types:
+                           'type_coord' : constr(1) is the first index of the
+                                          atomic type involved
+                                          constr(2) is the second index of the
+                                          atomic type involved
+                                          constr(3) is the cut-off radius for
+                                          estimating the coordination
+                                          constr(4) is a smoothing parameter
+                           'atom_coord' : constr(1) is the atom index of the
+                                          atom with constrained coordination
+                                          constr(2) is the index of the atomic
+                                          type involved in the coordination
+                                          constr(3) is the cut-off radius for
+                                          estimating the coordination
+                                          constr(4) is a smoothing parameter
+                             'distance' : atoms indices object of the 
+                                          constraint, as they appear in 
+                                          the 'ATOMIC_POSITION' CARD
+      'planar_angle', 'torsional_angle' : atoms indices object of the 
+                                          constraint, as they appear in the 
+                                          'ATOMIC_POSITION' CARD (beware the
+                                          order)
+                         'bennett_proj' : constr(1) is the index of the atom
+                                          whose position is constrained.
+                                          constr(2:4) are the three coordinates
+                                          of the vector that specifies the
+                                          constraint direction.
+
+      constr_target               REAL,   target for the constrain ( angles are
+                                          specified in degrees ).
+                                          This variable is optional.
 
 -------------------------------------------------------------------------------
 
@@ -1872,74 +1901,6 @@ FORMER FPMD INPUT
    label (character(len=4))      atomic label
    Vx(:), Vy(:) and Vz(:) (REAL) x, y and z velocity components of
                                  the ions
-
--------------------------------------------------------------------------------
-
-CONSTRAINTS
-
-   Ionic Constraints
-
- Syntax:
-
-    CONSTRAINTS
-      nconstr   { constr_tol }
-      constr_type(.)  constr(1,.)  constr(2,.) ... { constr_target(.) }
-
- Where:
-
-      nconstr     INTEGER, number of constraints
-      constr_tol  REAL,    tolerance for keeping the constraints satisfied
-
-      constr_type(.) CHARACTER, type of constrain :
-      
-        'type_coord'      : constraint on global coordination-number, i.e. the 
-                            average number of atoms of type B surrounding the 
-                            atoms of type A. The coordination is defined by
-                            using a Fermi-Dirac.
-                            (four indexes must be specified).
- 
-        'atom_coord'      : constraint on local coordination-number, i.e. the 
-                            average number of atoms of type A surrounding a 
-                            specific atom. The coordination is defined by
-                            using a Fermi-Dirac.
-                            (four indexes must be specified).
-                            
-        'distance'        : constraint on interatomic distance (two atom indexes
-                            must be specified ).
- 
-        'planar_angle'    : constraint on planar angle (three atom indexes must 
-                            be specified).
- 
-        'torsional_angle' : constraint on torsional angle (four atom indexes 
-                            must be specified).
-
-      constr(1,.) constr(2,.) ...  REAL,    these variables have different
-                                            meanings for different constraint
-                                            types:
-                             'type_coord' : constr(1) is the first index of the
-                                            atomic type involved
-                                            constr(2) is the second index of the
-                                            atomic type involved
-                                            constr(3) is the cut-off radius for
-                                            estimating the coordination
-                                            constr(4) is a smoothing parameter
-                             'atom_coord' : constr(1) is the atom index of the
-                                            atom with constrained coordination
-                                            constr(2) is the index of the atomic
-                                            type involved in the coordination
-                                            constr(3) is the cut-off radius for
-                                            estimating the coordination
-                                            constr(4) is a smoothing parameter
-                               'distance' : atoms indices object of the 
-                                            constraint, as they appear in 
-                                            the 'POSITION' CARD
-        'planar_angle', 'torsional_angle' : atoms indices object of the 
-                                            constraint, as they appear in the 
-                                            'POSITION' CARD (beware the order)
-                                        
-      constr_target                 REAL,   target for the constrain ( angles 
-                                            are specified in degrees ).
-                                            This variable is optional.
 
 -------------------------------------------------------------------------------
 

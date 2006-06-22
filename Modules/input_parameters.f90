@@ -1466,6 +1466,9 @@ MODULE input_parameters
 !
 !    CONSTRAINTS
 !
+      INTEGER :: nc_fields = 4   ! max number of fields that is allowed to 
+                                 ! define a constraint
+
       INTEGER  :: nconstr_inp    = 0
       REAL(DP) :: constr_tol_inp = 1.D-6
       !
@@ -1562,10 +1565,11 @@ CONTAINS
     IF( ALLOCATED( constr_target ) )     DEALLOCATE( constr_target )
     IF( ALLOCATED( constr_target_set ) ) DEALLOCATE( constr_target_set )
     !
-    ALLOCATE( constr_type_inp(   nconstr_inp ) ) 
-    ALLOCATE( constr_inp( 6,     nconstr_inp ) )
+    ALLOCATE( constr_type_inp(   nconstr_inp ) )
     ALLOCATE( constr_target(     nconstr_inp ) )
     ALLOCATE( constr_target_set( nconstr_inp ) )
+    !
+    ALLOCATE( constr_inp( nc_fields, nconstr_inp ) )
     !
     constr_type_inp   = ' '
     constr_inp        = 0.D0
@@ -1583,10 +1587,11 @@ CONTAINS
     IF( ALLOCATED( colvar_target ) )     DEALLOCATE( colvar_target )
     IF( ALLOCATED( colvar_target_set ) ) DEALLOCATE( colvar_target_set )
     !
-    ALLOCATE( colvar_type_inp(   ncolvar_inp ) ) 
-    ALLOCATE( colvar_inp( 6,     ncolvar_inp ) )
+    ALLOCATE( colvar_type_inp(   ncolvar_inp ) )
     ALLOCATE( colvar_target(     ncolvar_inp ) )
     ALLOCATE( colvar_target_set( ncolvar_inp ) )
+    !
+    ALLOCATE( colvar_inp( nc_fields, ncolvar_inp ) )
     !
     colvar_type_inp   = ' '
     colvar_inp        = 0.D0
@@ -1642,6 +1647,11 @@ CONTAINS
     IF ( ALLOCATED( constr_inp ) )        DEALLOCATE( constr_inp )
     IF ( ALLOCATED( constr_target ) )     DEALLOCATE( constr_target )
     IF ( ALLOCATED( constr_target_set ) ) DEALLOCATE( constr_target_set )
+    !
+    IF ( ALLOCATED( colvar_type_inp ) )   DEALLOCATE( colvar_type_inp ) 
+    IF ( ALLOCATED( colvar_inp ) )        DEALLOCATE( colvar_inp )
+    IF ( ALLOCATED( colvar_target ) )     DEALLOCATE( colvar_target )
+    IF ( ALLOCATED( colvar_target_set ) ) DEALLOCATE( colvar_target_set )
     !
     IF ( ALLOCATED( iprnks ) )       DEALLOCATE( iprnks )
     IF ( ALLOCATED( iprnks_empty ) ) DEALLOCATE( iprnks_empty )

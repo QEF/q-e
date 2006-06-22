@@ -1064,11 +1064,18 @@ CONSTRAINTS
         'distance'        : constraint on interatomic distance (two atom indexes
                             must be specified ).
  
-        'planar_angle'    : constraint on planar angle (three atom indexes must 
+        'planar_angle'    : constraint on planar angle (three atom indexes must
                             be specified).
  
         'torsional_angle' : constraint on torsional angle (four atom indexes 
                             must be specified).
+
+        'bennett_proj'    : constraint on the projection onto a given direction
+                            of the vector defined by the position of one atom 
+                            minus the center of mass of the others.
+                            ( Ch.H. Bennett in Diffusion in Solids, Recent
+                              Developments, Ed. by A.S. Nowick and J.J. Burton,
+                              New York 1975 ).
 
       constr(1,.) constr(2,.) ...  REAL,  these variables have different 
                                           meanings for different constraint
@@ -1089,14 +1096,20 @@ CONSTRAINTS
                                           constr(4) is a smoothing parameter
                              'distance' : atoms indices object of the 
                                           constraint, as they appear in 
-                                          the 'POSITION' CARD
+                                          the 'ATOMIC_POSITION' CARD
       'planar_angle', 'torsional_angle' : atoms indices object of the 
                                           constraint, as they appear in the 
-                                          'POSITION' CARD (beware the order)
-                                        
-      constr_target                 REAL,   target for the constrain ( angles 
-                                            are specified in degrees ).
-                                            This variable is optional.
+                                          'ATOMIC_POSITION' CARD (beware the
+                                          order)
+                         'bennett_proj' : constr(1) is the index of the atom
+                                          whose position is constrained.
+                                          constr(2:4) are the three coordinates
+                                          of the vector that specifies the
+                                          constraint direction.
+
+      constr_target               REAL,   target for the constrain ( angles are
+                                          specified in degrees ).
+                                          This variable is optional.
 
 -------------------------------------------------------------------------------
 

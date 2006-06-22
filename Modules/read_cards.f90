@@ -1519,7 +1519,6 @@ MODULE read_cards_module
        ! 
        CHARACTER(LEN=256) :: input_line
        INTEGER            :: i, nfield
-       LOGICAL            :: ltest
        LOGICAL, SAVE      :: tread = .FALSE.
        ! 
        !
@@ -1553,9 +1552,7 @@ MODULE read_cards_module
           !
           CALL field_count( nfield, input_line )
           !
-          ltest = ( nfield < SIZE( constr_inp(:,:), DIM = 1 ) )
-          !
-          IF ( .NOT. ltest ) &
+          IF ( nfield > nc_fields + 2 ) &
              CALL errore( 'card_constraints', &
                           'too many fields for this constraint', i )
           !
@@ -1583,7 +1580,8 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( 'card_constraints', 'too many fields', nfield )
+                CALL errore( 'card_constraints', 'type_coord, ' // &
+                           & 'atom_coord: wrong number of fields', nfield )
                 !
              END IF
              !
@@ -1606,7 +1604,8 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( 'card_constraints', 'too many fields', nfield )
+                CALL errore( 'card_constraints', &
+                           & 'distance: wrong number of fields', nfield )
                 !
              END IF
              !
@@ -1631,7 +1630,8 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( 'card_constraints', 'too many fields', nfield )
+                CALL errore( 'card_constraints', &
+                           & 'planar_angle: wrong number of fields', nfield )
                 !
              END IF
              !
@@ -1658,14 +1658,43 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( 'card_constraints', 'too many fields', nfield )
+                CALL errore( 'card_constraints', &
+                           & 'torsional_angle: wrong number of fields', nfield )
+                !
+             END IF
+             !
+          CASE( 'bennett_proj' )
+             !
+             IF ( nfield == 5 ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i), &
+                                      constr_inp(2,i), &
+                                      constr_inp(3,i), &
+                                      constr_inp(4,i)
+                !
+             ELSE IF ( nfield == 6 ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i), &
+                                      constr_inp(2,i), &
+                                      constr_inp(3,i), &
+                                      constr_inp(4,i), &
+                                      constr_target(i)
+                !
+                constr_target_set(i) = .TRUE.
+                !
+             ELSE
+                !
+                CALL errore( 'card_constraints', &
+                           & 'bennett_proj: wrong number of fields', nfield )
                 !
              END IF
              !
           CASE DEFAULT
              !
              CALL errore( 'card_constraints', 'unknown constraint ' // &
-                        & 'type' // TRIM( constr_type_inp(i) ), 1 )
+                        & 'type: ' // TRIM( constr_type_inp(i) ), 1 )
              !
           END SELECT
           !
@@ -1703,8 +1732,7 @@ MODULE read_cards_module
           !
        ELSE
           !
-          CALL errore( 'card_collective_vars', &
-                       'wrong number of fields', nfield )
+          CALL errore( 'card_collective_vars', 'too many fields', nfield )
           !
        END IF
        !
@@ -1730,13 +1758,12 @@ MODULE read_cards_module
           !
           CALL field_count( nfield, input_line )
           !
-          ltest = ( ( nfield < SIZE( colvar_inp(:,:), DIM = 1 ) ) .OR. &
-                    ( cg_phs_path_flag .AND. &
-                      ( nfield < SIZE( colvar_inp(:,:), DIM = 1 ) + 2 ) ) )
+          ltest = ( ( nfield <= nc_fields + 2 ) .OR. &
+                    ( cg_phs_path_flag .AND. ( nfield <= nc_fields + 4 ) ) )
           !
           IF ( .NOT. ltest ) &
-             CALL errore( 'card_collective_vars', &
-                          'too many fields for this constraint', i )
+             CALL errore( 'card_collective_vars', 'too many fields for ' // &
+                        & 'this constraint: ' // TRIM( constr_type_inp(i) ), i )
           !
           SELECT CASE( colvar_type_inp(i) )         
           CASE( 'type_coord', 'atom_coord' )
@@ -1761,8 +1788,8 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( 'card_collective_vars', &
-                             'wrong number of fields', nfield )
+                CALL errore( 'card_collective_vars', 'type_coord, ' // &
+                           & 'atom_coord: wrong number of fields', nfield )
                 !
              END IF
              !
@@ -1785,7 +1812,7 @@ MODULE read_cards_module
              ELSE
                 !
                 CALL errore( 'card_collective_vars', &
-                             'wrong number of fields', nfield )
+                           & 'distance: wrong number of fields', nfield )
                 !
              END IF
              !
@@ -1810,7 +1837,7 @@ MODULE read_cards_module
              ELSE
                 !
                 CALL errore( 'card_collective_vars', &
-                             'wrong number of fields', nfield )
+                           & 'planar_angle: wrong number of fields', nfield )
                 !
              END IF
              !
@@ -1837,11 +1864,11 @@ MODULE read_cards_module
              ELSE
                 !
                 CALL errore( 'card_collective_vars', &
-                             'wrong number of fields', nfield )
+                           & 'torsional_angle: wrong number of fields', nfield )
                 !
              END IF
              !
-          CASE( 'structure_factor' )
+          CASE( 'struct_fac' )
              !
              IF ( cg_phs_path_flag ) THEN
                 !
@@ -1862,11 +1889,11 @@ MODULE read_cards_module
              ELSE
                 !
                 CALL errore( 'card_collective_vars', &
-                             'wrong number of fields', nfield )
+                           & 'struct_fac: wrong number of fields', nfield )
                 !
              END IF   
              !
-          CASE( 'sph_structure_factor' )
+          CASE( 'sph_struct_fac' )
              !
              IF ( cg_phs_path_flag ) THEN
                 !
@@ -1882,15 +1909,42 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( 'card_collective_vars', &
-                             'wrong number of fields', nfield )
+                CALL errore( 'card_collective_vars',  &
+                           & 'sph_struct_fac: wrong number of fields', nfield )
                 !
              END IF   
+             !
+          CASE( 'bennett_proj' )
+             !
+             IF ( cg_phs_path_flag ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i), &
+                                      constr_inp(2,i), &
+                                      constr_inp(3,i), &
+                                      constr_inp(4,i), &
+                                      pos(i,1),        &
+                                      pos(i,2)
+                !
+             ELSE IF ( nfield == 5 ) THEN
+                !
+                READ( input_line, * ) constr_type_inp(i), &
+                                      constr_inp(1,i), &
+                                      constr_inp(2,i), &
+                                      constr_inp(3,i), &
+                                      constr_inp(4,i)
+                !
+             ELSE
+                !
+                CALL errore( 'card_collective_vars', &
+                           & 'bennett_proj: wrong number of fields', nfield )
+                !
+             END IF
              !
           CASE DEFAULT
              !
              CALL errore( 'card_collective_vars', 'unknown collective ' // &
-                        & 'variable' // TRIM( colvar_type_inp(i) ), 1 )
+                        & 'variable: ' // TRIM( colvar_type_inp(i) ), 1 )
              !
           END SELECT
           !

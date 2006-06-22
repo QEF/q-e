@@ -89,7 +89,7 @@ MODULE constraints_module
                                     constr_type_inp, constr_inp, &
                                     colvar_type_inp, colvar_inp, &
                                     constr_target, constr_target_set, &
-                                    colvar_target, colvar_target_set
+                                    colvar_target, colvar_target_set, nc_fields
        !
        IMPLICIT NONE
        !
@@ -98,12 +98,12 @@ MODULE constraints_module
        INTEGER,  INTENT(IN) :: ityp(nat)
        REAL(DP), INTENT(IN) :: tau_units
        !
-       INTEGER     :: i, j, i_sin, i_cos
+       INTEGER     :: i, j
        INTEGER     :: n, ia, ia0, ia1, ia2, ia3, n_type_coord1
        REAL(DP)    :: d0(3), d1(3), d2(3)
        REAL(DP)    :: C00, C01, C02, C11, C12, C22
        REAL(DP)    :: D01, D12
-       REAL(DP)    :: smoothing, r_c, r_max
+       REAL(DP)    :: smoothing, r_c
        INTEGER     :: type_coord1, type_coord2
        REAL(DP)    :: dtau(3), norm_dtau
        REAL(DP)    :: k(3), phase, norm_k
@@ -118,7 +118,8 @@ MODULE constraints_module
        ALLOCATE( lagrange(    nconstr ) )
        ALLOCATE( target(      nconstr ) )
        ALLOCATE( constr_type( nconstr ) )
-       ALLOCATE( constr( 6,   nconstr ) )
+       !
+       ALLOCATE( constr( nc_fields, nconstr ) )
        !
        ! ... NB: the first "ncolvar" constraints are collective variables (used
        ! ...     for meta-dynamics and free-energy smd), the remaining are real
@@ -130,8 +131,15 @@ MODULE constraints_module
        ! ... set the largest possible distance among two atoms within
        ! ... the supercell
        !
-       IF ( ANY( colvar_type_inp(:) == 'distance' ) .OR. &
-            ANY( constr_type_inp(:) == 'distance' ) ) CALL compute_dmax()
+       IF ( ncolvar_inp > 0 ) THEN
+          !
+          IF ( ANY( colvar_type_inp(:) == 'distance' ) ) CALL compute_dmax()
+          !
+       ELSE IF ( nconstr_inp > 0 ) THEN
+          !
+          IF ( ANY( constr_type_inp(:) == 'distance' ) ) CALL compute_dmax()
+          !
+       END IF
        !
        ! ... initializations of target values for the constraints :
        !
@@ -197,10 +205,16 @@ MODULE constraints_module
                 !
              END IF
              !
-             IF ( target(ia) > dmax ) &
+             IF ( target(ia) > dmax )  THEN
+                !
+                WRITE( stdout, '(/,5X,"target = ",F12.8,/, &
+                                &  5X,"dmax   = ",F12.8)' ) target(ia), dmax
+                !
                 CALL errore( 'init_constraint', 'the target for coll.var. '  //&
                            & TRIM( int_to_char( ia ) ) // ' is larger than ' //&
                            & 'the largest possible value', 1 )
+                !
+             END IF
              !
           CASE( 'planar_angle' )
              !
@@ -246,7 +260,7 @@ MODULE constraints_module
                 !
              END IF
              !
-          CASE( 'structure_factor' )
+          CASE( 'struct_fac' )
              !
              ! ... constraint on structure factor at a given k-vector
              !
@@ -264,7 +278,7 @@ MODULE constraints_module
                 !
              END IF
              !
-          CASE( 'sph_structure_factor' )
+          CASE( 'sph_struct_fac' )
              !
              ! ... constraint on spherical average of the structure factor for
              ! ... a given k-vector of norm k
@@ -280,6 +294,28 @@ MODULE constraints_module
              ELSE
                 !
                 CALL set_sph_structure_factor( ia )
+                !
+             END IF
+             !
+          CASE( 'bennett_proj' )
+             !
+             ! ... constraint on the projection onto a given direction of the 
+             ! ... vector defined by the position of one atom minus the center
+             ! ... of mass of the others
+             ! ... ( Ch.H. Bennett in Diffusion in Solids, Recent Developments,
+             ! ...   Ed. by A.S. Nowick and J.J. Burton, New York 1975 )
+             !
+             constr_type(ia) = 8
+             !
+             IF ( colvar_target_set(ia) ) THEN
+                !
+                target(ia) = colvar_target(ia)
+                !
+                CYCLE
+                !
+             ELSE
+                !
+                CALL set_bennett_proj( ia )
                 !
              END IF
              !
@@ -356,10 +392,16 @@ MODULE constraints_module
                 !
              END IF
              !
-             IF ( target(ia) > dmax ) &
+             IF ( target(ia) > dmax )  THEN
+                !
+                WRITE( stdout, '(/,5X,"target = ",F12.8,/, &
+                                &  5X,"dmax   = ",F12.8)' ) target(ia), dmax
+                !
                 CALL errore( 'init_constraint', 'the target for constraint ' //&
-                           & TRIM( int_to_char( n ) ) // ' is larger than ' //&
+                           & TRIM( int_to_char( n ) ) // ' is larger than '  //&
                            & 'the largest possible value', 1 )
+                !
+             END IF
              !
           CASE( 'planar_angle' )
              !
@@ -405,7 +447,7 @@ MODULE constraints_module
                 !
              END IF
              !
-          CASE( 'structure_factor' )
+          CASE( 'struct_fac' )
              !
              ! ... constraint on structure factor at a given k-vector
              !
@@ -423,7 +465,7 @@ MODULE constraints_module
                 !
              END IF
              !
-          CASE( 'sph_structure_factor' )
+          CASE( 'sph_struct_fac' )
              !
              ! ... constraint on spherical average of the structure factor for
              ! ... a given k-vector of norm k
@@ -439,6 +481,28 @@ MODULE constraints_module
              ELSE
                 !
                 CALL set_sph_structure_factor( ia )
+                !
+             END IF
+             !
+          CASE( 'bennett_proj' )
+             !
+             ! ... constraint on the projection onto a given direction of the 
+             ! ... vector defined by the position of one atom minus the center
+             ! ... of mass of the others
+             ! ... ( Ch.H. Bennett in Diffusion in Solids, Recent Developments,
+             ! ...   Ed. by A.S. Nowick and J.J. Burton, New York 1975 )
+             !
+             constr_type(ia) = 8
+             !
+             IF ( constr_target_set(n) ) THEN
+                !
+                target(ia) = constr_target(n)
+                !
+                CYCLE
+                !
+             ELSE
+                !
+                CALL set_bennett_proj( ia )
                 !
              END IF
              !
@@ -644,6 +708,26 @@ MODULE constraints_module
            !
          END SUBROUTINE set_sph_structure_factor
          !
+         !-------------------------------------------------------------------
+         SUBROUTINE set_bennett_proj( ia )
+           !-------------------------------------------------------------------
+           !
+           INTEGER, INTENT(IN) :: ia
+           !
+           ia0 = ANINT( constr(1,ia) )
+           !
+           d0(:) = tau(:,ia0)
+           d1(:) = SUM( tau(:,:), DIM = 2 )
+           !
+           d1(:) = pbc( ( d1(:) - d0(:) )*tau_units ) / DBLE( nat - 1 ) - &
+                   pbc( d0(:)*tau_units )
+           !
+           d2(:) = constr(2:4,ia)
+           !
+           target(ia) = ( d1(:) .dot. d2(:) ) / tau_units
+           !
+         END SUBROUTINE set_bennett_proj
+         !
      END SUBROUTINE init_constraint
      !
      !-----------------------------------------------------------------------
@@ -665,13 +749,13 @@ MODULE constraints_module
        REAL(DP), INTENT(OUT) :: dg(:,:)
        REAL(DP), INTENT(OUT) :: g
        !
-       INTEGER     :: i, j, i_sin, i_cos
+       INTEGER     :: i, j
        INTEGER     :: ia, ia0, ia1, ia2, ia3, n_type_coord1
        REAL(DP)    :: d0(3), d1(3), d2(3)
        REAL(DP)    :: inv_den, fac
        REAL(DP)    :: C00, C01, C02, C11, C12, C22
        REAL(DP)    :: D01, D12, invD01, invD12
-       REAL(DP)    :: smoothing, r_c, r_max
+       REAL(DP)    :: smoothing, r_c
        INTEGER     :: type_coord1, type_coord2
        REAL(DP)    :: dtau(3), norm_dtau, norm_dtau_sq, expo
        REAL(DP)    :: r0(3), ri(3), k(3), phase, ksin(3), norm_k, sinxx
@@ -953,6 +1037,35 @@ MODULE constraints_module
           g = ( 2.D0 * fpi * g / DBLE( nat ) - target(index) )
           !
           dg(:,:) = 4.D0 * fpi * dg(:,:) / DBLE( nat )
+          !
+       CASE( 8 )
+          !
+          ! ... constraint on Bennett projection
+          !
+          ia0 = ANINT( constr(1,index) )
+          !
+          d0(:) = tau(:,ia0)
+          d1(:) = SUM( tau(:,:), DIM = 2 )
+          !
+          d1(:) = pbc( ( d1(:) - d0(:) )*tau_units ) / DBLE( nat - 1 ) - &
+                  pbc( d0(:)*tau_units )
+          !
+          d2(:) = constr(2:4,index)
+          !
+          g = ( d1(:) .dot. d2(:) ) / tau_units - target( index )
+          !
+          dg = 0.D0
+          !
+          C00 = ( 1.D0 / DBLE( nat - 1 ) ) / tau_units
+          C01 = -1.D0 / tau_units
+          !
+          DO i = 1, nat
+             !
+             dg(:,i) = d2(:)*C00
+             !
+          END DO
+          !
+          dg(:,ia0) = d2(:)*C01
           !
        END SELECT
        !
@@ -1282,17 +1395,23 @@ MODULE constraints_module
      SUBROUTINE compute_dmax()
        !-----------------------------------------------------------------------
        !
+       ! ... dmax corresponds to one half the shortest edge of the cell
+       !
        USE cell_base, ONLY : at, alat
        !
        IMPLICIT NONE
        !
-       dmax = norm( MATMUL( at(:,:), (/ 0.5D0, 0.D0, 0.D0 /) ) ) * alat
+       REAL(DP), PARAMETER :: x(3) = (/ 0.5D0, 0.0D0, 0.0D0 /), &
+                              y(3) = (/ 0.0D0, 0.5D0, 0.0D0 /), &
+                              z(3) = (/ 0.0D0, 0.0D0, 0.5D0 /)
        !
-       dmax = MIN( dmax, norm( MATMUL( at(:,:), &
-                                       (/ 0.0D0, 0.5D0, 0.0D0 /) ) ) * alat )
+       dmax = norm( MATMUL( at(:,:), x(:) ) )       
        !
-       dmax = MIN( dmax, norm( MATMUL( at(:,:), &
-                                       (/ 0.0D0, 0.0D0, 0.5D0 /) ) ) * alat )
+       dmax = MIN( dmax, norm( MATMUL( at(:,:), y(:) ) ) )
+       !
+       dmax = MIN( dmax, norm( MATMUL( at(:,:), z(:) ) ) )
+       !
+       dmax = dmax * alat
        !
        RETURN
        !
