@@ -278,7 +278,7 @@ SUBROUTINE electrons()
            !
            CALL write_ns()
            !
-           IF ( first .AND. istep == 1 .AND. &
+           IF ( first .AND. istep == 0 .AND. &
                 startingpot == 'atomic' ) CALL ns_adj()
            !
            IF ( iter <= niter_with_fixed_ns ) nsnew = ns 
