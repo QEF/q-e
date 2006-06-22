@@ -1507,11 +1507,38 @@ local scratch directories: there is presently no way to ensure that
 the distribution of processes on processors will follow the same
 pattern for different jobs).
 
+IMPORTANT: with the new file format (v.3.1 and later) all data 
+(except wavefunctions if \texttt{wf\_collect=.false.}) is written
+to and read from a single directory \texttt{outdir/prefix.save}. 
+A copy of pseudopotential files is also written there. There is 
+however an inconsistency that cannot be quickly fixed: pseudopotential 
+files must be read by each processor, so if \texttt{outdir/prefix.save}
+is not accessible by each processor, you will get an error message.
+A workaround that doesn't require to copy everything is just copying
+the pseudopotential files.
+
 Some implementations of the MPI library may have problems with
 input redirection in parallel.
 If this happens, use the option \texttt{-in} (or \texttt{-inp} or
 \texttt{-input}), followed by the input file name.
 Example: \texttt{pw.x -in input -npool 4 > output}.
+
+A bug in the \texttt{poe} environment of IBM sp5 machines
+may cause a dramatic slowdown of quantum-espresso in parallel 
+execution. Workaround: set environment variable 
+\texttt{MP\_STDINMODE} to 0, as in
+\begin{verbatim}
+  export MP_STDINMODE=0
+\end{verbatim}
+for sh/bash,
+\begin{verbatim}
+  setenv MP_STDINMODE 0
+\end{verbatim}
+for csh/tcsh; or start the code with option \texttt{-stdinmode 0} to 
+\texttt{poe}:
+\begin{verbatim}
+  poe -stdinmode 0 [options] [executable code] < input file
+\end{verbatim}
 
 Please note that all postprocessing codes \emph{not} reading data
 files produced by \texttt{pw.x} --- that is,
@@ -3158,7 +3185,7 @@ can trust your results.
 Possible reasons:
 \begin{itemize}
   \item
-    wrong data file file read.
+    wrong data file read.
   \item
     wrong atomic masses given in input will yield wrong frequencies
     (but the content of file {\tt fildyn} should be valid, since the
