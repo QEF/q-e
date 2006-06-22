@@ -302,13 +302,14 @@ PROGRAM average
            k = i + j
            IF (k.LE.0) k = k + npt
            IF (k.GT.npt) k = k - npt
-           macros (i) = macros (i) + gre (k)
+
+           if ( (2*j==nmacro) .or. (2*j==-nmacro) ) then
+              macros (i) = macros (i) + 0.5d0 * gre(k)
+           else
+              macros (i) = macros (i) + gre (k)
+           end if
         ENDDO
-        IF (MOD (nmacro, 2) .EQ.0) THEN
-           macros (i) = macros (i) / DBLE (nmacro + 1)
-        ELSE
-           macros (i) = macros (i) / DBLE (nmacro)
-        ENDIF
+        macros (i) = macros (i) / DBLE (nmacro)
      ENDDO
      !
      !     print the results on output
