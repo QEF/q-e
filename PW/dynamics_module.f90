@@ -32,7 +32,8 @@ MODULE dynamics_module
        temperature, &! starting temperature
        delta_t       ! rate of thermalization
   INTEGER :: &
-       nraise        ! the frequency of temperature raising
+       nraise,      &! the frequency of temperature raising
+       ndof          ! the number of degrees of freedom
   LOGICAL :: &
        refold_pos    ! if true the positions are refolded into the supercell
   !
@@ -125,18 +126,31 @@ MODULE dynamics_module
       USE control_flags, ONLY : istep, nstep, conv_ions, lconstrain, &
                                 lfixatom, lrescale_t, langevin_rescaling
       !
-      USE constraints_module
+      USE constraints_module, ONLY : nconstr
+      USE constraints_module, ONLY : remove_constr_force, check_constraint
       !
       IMPLICIT NONE
       !
       REAL(DP) :: ekin, etotold
       REAL(DP) :: total_mass, temp_new, elapsed_time
       REAL(DP) :: ml(3), mlt
-      INTEGER  :: i, na
+      INTEGER  :: na
       LOGICAL  :: file_exists, leof
       !
       REAL(DP), EXTERNAL :: DNRM2
       !
+      !
+      ! ... the number of degrees of freedom 
+      !
+      IF ( ANY( if_pos(:,:) == 0 ) ) THEN
+         !
+         ndof = 3*nat - COUNT( if_pos(:,:) == 0 ) - nconstr
+         !
+      ELSE
+         !
+         ndof = 3*nat - 3 - nconstr
+         !
+      END IF
       !
       tau_old(:,:) = tau(:,:)
       tau_new(:,:) = 0.D0
@@ -191,7 +205,7 @@ MODULE dynamics_module
       !
       ! ... elapsed_time is in picoseconds
       !
-      elapsed_time = elapsed_time + dt * 2.D0 * au_ps
+      elapsed_time = elapsed_time + dt*2.D0*au_ps
       !
       istep = istep + 1
       !
@@ -306,7 +320,7 @@ MODULE dynamics_module
       !
       ! ... find the new temperature
       !
-      temp_new = 2.D0 / 3.D0 * ekin / nat * ry_to_kelvin
+      temp_new = 2.D0 / DBLE( ndof ) * ekin * ry_to_kelvin
       !
       ! ... save all the needed quantities on file
       !
@@ -430,20 +444,20 @@ MODULE dynamics_module
       ! ... This routine performs one step of structural relaxation using
       ! ... the preconditioned-projected-Verlet algorithm. 
       !
-      USE ions_base,     ONLY : nat, nsp, ityp, tau, if_pos
+      USE ions_base,     ONLY : nat, ityp, tau, if_pos
       USE cell_base,     ONLY : alat
       USE ener,          ONLY : etot
       USE force_mod,     ONLY : force
       USE relax,         ONLY : epse, epsf
       USE control_flags, ONLY : istep, nstep, conv_ions, lconstrain
       !
-      USE constraints_module
+      USE constraints_module, ONLY : remove_constr_force, check_constraint
       !
       IMPLICIT NONE
       !
       REAL(DP), ALLOCATABLE :: step(:,:)
       REAL(DP)              :: norm_step, etotold
-      INTEGER               :: i, na
+      INTEGER               :: na
       LOGICAL               :: file_exists
       !
       REAL(DP), PARAMETER :: step_max = 0.6D0  ! bohr
@@ -778,7 +792,7 @@ MODULE dynamics_module
       USE ener,      ONLY : etot
       USE cell_base, ONLY : alat
       USE ions_base, ONLY : nat, tau
-      USE io_files,  ONLY : iunbfgs, iunbroy, tmp_dir
+      USE io_files,  ONLY : iunbfgs, tmp_dir
       !
       IMPLICIT NONE
       !
@@ -1046,7 +1060,7 @@ MODULE dynamics_module
       ! ... temperature is usually changed. Set again the temperature to the
       ! ... right value.
       !
-      system_temp = 2.D0 * ek / ( 3.D0 * nat ) * alat**2 * ry_to_kelvin
+      system_temp = 2.D0 / DBLE( ndof ) * ek * alat**2 * ry_to_kelvin
       !
       CALL thermalize( system_temp, temperature )
       !

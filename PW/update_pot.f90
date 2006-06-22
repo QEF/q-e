@@ -104,13 +104,15 @@ SUBROUTINE update_pot()
         !
         DEALLOCATE( tauold )
         !
+        CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
+        !
      ELSE
         !
         history = 0
         !
+        CLOSE( UNIT = iunupdate, STATUS = 'DELETE' )
+        !
      END IF
-     !
-     CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
      !
   END IF
   !
@@ -449,18 +451,16 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
      CALL diropn( iunoldwfc, 'oldwfc', nwordwfc, exst )
      !
-     IF ( wfc_order > 2 ) &
-        CALL diropn( iunoldwfc2, 'old2wfc', nwordwfc, exst )
+     IF ( wfc_order > 2 ) CALL diropn( iunoldwfc2, 'old2wfc', nwordwfc, exst )
      !
-     ALLOCATE( evcold(npwx,nbnd) )
+     ALLOCATE( evcold( npwx, nbnd ) )
      !
-     WRITE( UNIT = stdout, &
-            FMT = '(5X,"first order wave-functions extrapolation")' )
+     WRITE( stdout, '(5X,"first order wave-functions extrapolation")' )
      !
-     lwork = 5 * nbnd
+     lwork = 5*nbnd
      !
-     ALLOCATE( s_m(nbnd,nbnd), sp_m(nbnd,nbnd), u_m(nbnd,nbnd), &
-               w_m(nbnd,nbnd), work(lwork), ew(nbnd), rwork(lwork) )
+     ALLOCATE( s_m( nbnd, nbnd ), sp_m( nbnd, nbnd ), u_m( nbnd, nbnd ), &
+               w_m( nbnd, nbnd ), work( lwork ), ew( nbnd ), rwork( lwork ) )
      !
      IF ( nks > 1 ) REWIND( iunigk )
      !
@@ -475,22 +475,21 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         !
         ! ... construct s_m = <evcold|evc>
         !
-        CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ONE, evcold, npwx, evc, &
-                    npwx, ZERO, s_m, nbnd )
+        CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ONE, &
+                    evcold, npwx, evc, npwx, ZERO, s_m, nbnd )
         !            
-        CALL reduce( 2 * nbnd * nbnd, s_m )
+        CALL reduce( 2*nbnd*nbnd, s_m )
         !
         ! ... construct sp_m
         !
         DO i = 1, nbnd
-          ! 
-          sp_m(:,i) = CONJG( s_m (i,:) )
+          !
+          sp_m(:,i) = CONJG( s_m(i,:) )
           !
         END DO
         !
-        ! ... the unitary matrix [sp_m*s_m]^(-1/2)*sp_m (eq. 3.29)
-        ! ... by means the singular value decomposition (SVD) of
-        ! ... sp_m = u_m * diag(ew) * w_m 
+        ! ... the unitary matrix [sp_m*s_m]^(-1/2)*sp_m (eq. 3.29) by means the
+        ! ... singular value decomposition (SVD) of  sp_m = u_m*diag(ew)*w_m 
         ! ... becomes u_m * w_m
         !
         CALL ZGESVD( 'A', 'A', nbnd, nbnd, sp_m, nbnd, ew, u_m, &
@@ -544,17 +543,17 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      END DO
      !
      IF ( zero_ew > 0 ) &
-        WRITE( stdout, '(/,5X,"Message from extrapolate_wfcs: ",/,     &
-                        &  5X,"the matrix <psi(t-dt)|psi(t)> has ",I2, &
-                        &     " zero eigenvalues")' ) zero_ew     
+        WRITE( stdout, '(/,5X,"Message from extrapolate_wfcs: ",/,  &
+                        &  5X,"the matrix <psi(t-dt)|psi(t)> has ", &
+                        &  I2," zero eigenvalues")' ) zero_ew     
      !
      DEALLOCATE( s_m, sp_m, u_m, w_m, work, ew, rwork )
      !
      DEALLOCATE( evcold )
      !
      CLOSE( UNIT = iunoldwfc, STATUS = 'KEEP' )
-     IF ( wfc_order > 2 ) &
-        CLOSE( UNIT = iunoldwfc2, STATUS = 'KEEP' )     
+     !
+     IF ( wfc_order > 2 ) CLOSE( UNIT = iunoldwfc2, STATUS = 'KEEP' )     
      !
   ELSE
      !
@@ -565,8 +564,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
      ALLOCATE( evcold(npwx,nbnd) )
      !
-     WRITE( UNIT = stdout, &
-            FMT = '(5X,"second order wave-functions extrapolation")' )
+     WRITE( stdout, '(5X,"second order wave-functions extrapolation")' )
      !
      lwork = 5 * nbnd
      !
@@ -586,22 +584,21 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         !
         ! ... construct s_m = <evcold|evc>
         !
-        CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ONE, evcold, npwx, evc, &
-                    npwx, ZERO, s_m, nbnd )
+        CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ONE, &
+                    evcold, npwx, evc, npwx, ZERO, s_m, nbnd )
         !            
-        CALL reduce( 2 * nbnd * nbnd, s_m )
+        CALL reduce( 2*nbnd*nbnd, s_m )
         !
         ! ... construct sp_m
         !
         DO i = 1, nbnd
           ! 
-          sp_m(:,i) = CONJG( s_m (i,:) )
+          sp_m(:,i) = CONJG( s_m(i,:) )
           !
         END DO
         !
-        ! ... the unitary matrix [sp_m*s_m]^(-1/2)*sp_m (eq. 3.29)
-        ! ... by means the singular value decomposition (SVD) of
-        ! ... sp_m = u_m * diag(ew) * w_m 
+        ! ... the unitary matrix [sp_m*s_m]^(-1/2)*sp_m (eq. 3.29) by means the
+        ! ... singular value decomposition (SVD) of  sp_m = u_m*diag(ew)*w_m 
         ! ... becomes u_m * w_m
         !
         CALL ZGESVD( 'A', 'A', nbnd, nbnd, sp_m, nbnd, ew, u_m, &
@@ -631,7 +628,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         !
         CALL davcio( evc, nwordwfc, iunoldwfc, ik, - 1 )
         !
-        ! ... extrapolate the wfc's,
+        ! ... extrapolate the wfc's :
         ! ... if wfc_extr == 3 use the second order extrapolation formula
         ! ... alpha0 and beta0 are calculated in "move_ions"
         !
@@ -655,9 +652,9 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      END DO
      !
      IF ( zero_ew > 0 ) &
-        WRITE( stdout, '(/,5X,"Message from extrapolate_wfcs: ",/,     &
-                        &  5X,"the matrix <psi(t-dt)|psi(t)> has ",I2, &
-                        &     " zero eigenvalues")' ) zero_ew     
+        WRITE( stdout, '(/,5X,"Message from extrapolate_wfcs: ",/,  &
+                        &  5X,"the matrix <psi(t-dt)|psi(t)> has ", &
+                        &  I2," zero eigenvalues")' ) zero_ew     
      !
      DEALLOCATE( s_m, sp_m, u_m, w_m, work, ew, rwork )
      !

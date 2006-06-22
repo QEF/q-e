@@ -22,7 +22,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
                                  num_of_images, istep_path, suspended_image
   USE constraints_module, ONLY : lagrange, target, init_constraint, &
                                  deallocate_constraint
-  USE control_flags,      ONLY : istep, nstep, history, ethr, conv_ions, ldamped
+  USE control_flags,      ONLY : istep, nstep, ethr, conv_ions, ldamped
   USE cell_base,          ONLY : alat, at
   USE ener,               ONLY : etot
   USE ions_base,          ONLY : nat, tau, ityp
@@ -207,8 +207,6 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         ldamped = .FALSE.
         !
-        history = 0
-        !
         lfirst_scf = .TRUE.
         !
         CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.md' )
@@ -218,7 +216,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         nstep = shake_nstep
         !
-        DO istep = 1, shake_nstep
+        DO istep = 0, shake_nstep
            !
            CALL electronic_scf( lfirst_scf, stat )
            !
@@ -247,7 +245,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         nstep = fe_nstep
         !
-        DO istep = 1, fe_nstep
+        DO istep = 0, fe_nstep
            !
            CALL electronic_scf( .FALSE., stat )
            !
@@ -461,7 +459,7 @@ SUBROUTINE metadyn()
       !
       to_new_target = .FALSE.
       !
-      DO istep = 1, fe_nstep
+      DO istep = 0, fe_nstep
          !
          CALL electronic_scf( lfirst_scf, stat )
          !
@@ -526,7 +524,7 @@ SUBROUTINE metadyn()
       !
       nstep = shake_nstep
       !
-      DO istep = 1, shake_nstep
+      DO istep = 0, shake_nstep
          !
          CALL electronic_scf( lfirst_scf, stat )
          !
