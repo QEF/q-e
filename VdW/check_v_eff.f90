@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -26,7 +26,7 @@ SUBROUTINE check_v_eff ( veff, charge )
   USE io_files,             ONLY : iunigk, nwordatwfc, iunat, iunwfc, nwordwfc
   USE cell_base,            ONLY : tpiba2 
   USE klist,                ONLY : nkstot, nks, xk, nelec
-  USE uspp,                   ONLY : okvan
+  USE uspp,                 ONLY : okvan
   USE cell_base,            ONLY : omega
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g, gg, gstart, ecfixed, qcutz, q2sigma, nrxx, &
@@ -35,7 +35,7 @@ SUBROUTINE check_v_eff ( veff, charge )
                                    npw
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid  
-  USE control_flags,        ONLY : diis_ndim, istep, ethr, lscf, max_cg_iter, &
+  USE control_flags,        ONLY : diis_ndim, ethr, lscf, max_cg_iter, &
                                    isolve, reduce_io
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE scf,                  ONLY : rho, vltot, vrs
