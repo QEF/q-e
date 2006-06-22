@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -121,8 +121,11 @@ SUBROUTINE vcsmd()
   IF ( .NOT. exst ) THEN
      !
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
-     IF ( istep /= 1 ) &
-        CALL errore( 'vcsmd', ' previous MD history got lost', 1 )
+     !
+     IF ( istep /= 0 ) &
+        CALL errore( 'vcsmd', 'previous MD history got lost', 1 )
+     !
+     istep = 1
      !
      tnew  = 0.D0
      acu   = 0.D0

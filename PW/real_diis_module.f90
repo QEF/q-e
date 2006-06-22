@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -132,7 +132,7 @@ MODULE real_diis_module
       !
       ! ... initialization
       !
-      IF ( ( iter == 1 ) .AND. ( istep == 1 ) ) THEN
+      IF ( ( iter == 1 ) .AND. ( istep == 0 ) ) THEN
          !
          ! ... some sweeps over bands are performed at the first scf
          ! ... iteration of the first ionic step :  
