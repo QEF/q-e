@@ -9,6 +9,99 @@
 
 
 !=----------------------------------------------------------------------------=!
+   MODULE wave_constrains
+!=----------------------------------------------------------------------------=!
+
+     ! ...   include modules
+     USE kinds
+
+     IMPLICIT NONE
+     SAVE
+
+     PRIVATE
+
+     PUBLIC :: interpolate_lambda, update_lambda
+
+     INTERFACE update_lambda
+       MODULE PROCEDURE update_rlambda, update_clambda
+     END INTERFACE
+
+!=----------------------------------------------------------------------------=!
+   CONTAINS
+!=----------------------------------------------------------------------------=!
+
+     SUBROUTINE interpolate_lambda( lambdap, lambda, lambdam )
+       IMPLICIT NONE
+       REAL(DP) :: lambdap(:,:,:), lambda(:,:,:), lambdam(:,:,:) 
+       !
+       ! interpolate new lambda at (t+dt) from lambda(t) and lambda(t-dt):
+       !
+       lambdap= 2.d0*lambda - lambdam
+       lambdam=lambda 
+       lambda =lambdap
+       RETURN
+     END SUBROUTINE interpolate_lambda
+
+
+     SUBROUTINE update_rlambda( i, lambda, c0, cdesc, c2 )
+       USE electrons_module, ONLY: ib_owner, ib_local
+       USE mp_global, ONLY: me_image, intra_image_comm
+       USE mp, ONLY: mp_sum
+       USE wave_base, ONLY: hpsi
+       USE wave_types, ONLY: wave_descriptor
+       IMPLICIT NONE
+       REAL(DP) :: lambda(:,:)
+       COMPLEX(DP) :: c0(:,:), c2(:)
+       TYPE (wave_descriptor), INTENT(IN) :: cdesc
+       INTEGER :: i
+       !
+       REAL(DP), ALLOCATABLE :: prod(:)
+       INTEGER :: ibl
+       !
+       ALLOCATE( prod( SIZE( c0, 2 ) ) )
+       prod = hpsi( cdesc%gzero, c0(:,:), c2 )
+       CALL mp_sum( prod, intra_image_comm )
+       IF( me_image == ib_owner( i ) ) THEN
+           ibl = ib_local( i )
+           lambda( ibl, : ) = prod( : )
+       END IF
+       DEALLOCATE( prod )
+       RETURN
+     END SUBROUTINE update_rlambda
+
+     SUBROUTINE update_clambda( i, lambda, c0, cdesc, c2 )
+       USE electrons_module, ONLY: ib_owner, ib_local
+       USE mp_global, ONLY: me_image, intra_image_comm
+       USE mp, ONLY: mp_sum
+       USE wave_base, ONLY: hpsi
+       USE wave_types, ONLY: wave_descriptor
+       IMPLICIT NONE
+       COMPLEX(DP) :: lambda(:,:)
+       COMPLEX(DP) :: c0(:,:), c2(:)
+       TYPE (wave_descriptor), INTENT(IN) :: cdesc
+       INTEGER :: i
+       !
+       COMPLEX(DP), ALLOCATABLE :: prod(:)
+       INTEGER :: ibl
+       !
+       ALLOCATE( prod( SIZE( c0, 2 ) ) )
+       prod = hpsi( cdesc%gzero, c0(:,:), c2 )
+       CALL mp_sum( prod, intra_image_comm )
+       IF( me_image == ib_owner( i ) ) THEN
+           ibl = ib_local( i )
+           lambda( ibl, : ) = prod( : )
+       END IF
+       DEALLOCATE( prod )
+       RETURN
+     END SUBROUTINE update_clambda
+
+!=----------------------------------------------------------------------------=!
+   END MODULE wave_constrains
+!=----------------------------------------------------------------------------=!
+
+
+
+!=----------------------------------------------------------------------------=!
    MODULE wave_functions
 !=----------------------------------------------------------------------------=!
 
@@ -20,7 +113,7 @@
 
         PRIVATE
 
-          PUBLIC :: crot, proj, fixwave
+          PUBLIC :: crot, proj
           INTERFACE crot
             MODULE PROCEDURE  crot_gamma
           END INTERFACE
@@ -28,50 +121,34 @@
             MODULE PROCEDURE  proj_gamma, proj2
           END INTERFACE
 
-          PUBLIC :: cp_kinetic_energy, elec_fakekine2, elec_fakekine
-          PUBLIC :: update_wave_functions, wave_rand_init
+          PUBLIC :: elec_fakekine
+          PUBLIC :: update_wave_functions, wave_rand_init, kohn_sham
 
 !=----------------------------------------------------------------------------=!
       CONTAINS
 !=----------------------------------------------------------------------------=!
 
 
-   SUBROUTINE fixwave ( ispin, c, cdesc )
 
-      USE wave_types, ONLY: wave_descriptor
-
-      IMPLICIT NONE
-
-      COMPLEX(DP),            INTENT(INOUT) :: c(:,:)
-      INTEGER,                INTENT(IN)    :: ispin
-      TYPE (wave_descriptor), INTENT(IN)    :: cdesc
-      !
-      INTEGER :: i
-
-      IF( cdesc%gzero ) THEN
-         DO i = 1, cdesc%nbl( ispin )
-            c( 1, i ) = DBLE( c( 1, i ) )
-         END DO
-      END IF
-
-      RETURN
-   END SUBROUTINE fixwave
-
-
-!=----------------------------------------------------------------------------=!
-
-  subroutine elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, n, delt )
-    use mp, only: mp_sum
-    use mp_global, only: intra_image_comm
-    use reciprocal_vectors, only: gstart
-    use wave_base, only: wave_speed2
-    real(8), intent(out) :: ekincm
-    real(8), intent(in)  :: ema0bg(:), delt, emass
-    complex(8), intent(in)  :: c0(:,:,:), cm(:,:,:)
-    integer, intent(in) :: ngw, n
-    real(8), allocatable :: emainv(:)
-    real(8) :: ftmp
-    integer :: i
+  subroutine elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, n, noff, delt )
+    !
+    !  This subroutine computes the CP(fake) wave functions kinetic energy
+    
+    use mp,                 only : mp_sum
+    use mp_global,          only : intra_image_comm
+    use reciprocal_vectors, only : gstart
+    use wave_base,          only : wave_speed2
+    !
+    integer, intent(in)      :: ngw    !  number of plane wave coeff.
+    integer, intent(in)      :: n      !  number of bands
+    integer, intent(in)      :: noff   !  offset for band index
+    real(DP), intent(out)    :: ekincm
+    real(DP), intent(in)     :: ema0bg( ngw ), delt, emass
+    complex(DP), intent(in)  :: c0( ngw, n ), cm( ngw, n )
+    !
+    real(DP), allocatable :: emainv(:)
+    real(DP) :: ftmp
+    integer  :: i
 
     ALLOCATE( emainv( ngw ) )
     emainv = 1.0d0 / ema0bg
@@ -79,9 +156,8 @@
     if( gstart == 2 ) ftmp = 0.5d0
 
     ekincm=0.0d0
-    do i=1,n
-      ekincm = ekincm + 2.0d0 * &
-               wave_speed2( c0(:,i,1), cm(:,i,1), emainv, ftmp )
+    do i = noff, n + noff - 1
+      ekincm = ekincm + 2.0d0 * wave_speed2( c0(:,i), cm(:,i), emainv, ftmp )
     end do
     ekincm = ekincm * emass / ( delt * delt )
 
@@ -92,95 +168,6 @@
   end subroutine elec_fakekine
 
 !=----------------------------------------------------------------------------=!
-
-  subroutine elec_fakekine2( ekincm, ema0bg, emass, c0, cm, ngw, n, delt )
-    use mp, only: mp_sum
-    use mp_global, only: intra_image_comm
-    use reciprocal_vectors, only: gstart
-    use wave_base, only: wave_speed2
-    real(8), intent(out) :: ekincm
-    real(8), intent(in)  :: ema0bg(:), delt, emass
-    complex(8), intent(in)  :: c0(:,:), cm(:,:)
-    integer, intent(in) :: ngw, n
-    real(8), allocatable :: emainv(:)
-    real(8) :: ftmp
-    integer :: i
-
-    ALLOCATE( emainv( ngw ) )
-    emainv = 1.0d0 / ema0bg
-    ftmp = 1.0d0
-    if( gstart == 2 ) ftmp = 0.5d0
-
-    ekincm=0.0d0
-    do i=1,n
-      ekincm = ekincm + 2.0d0 * &
-               wave_speed2( c0(:,i), cm(:,i), emainv, ftmp )
-    end do
-    ekincm = ekincm * emass / ( delt * delt )
-
-    CALL mp_sum( ekincm, intra_image_comm )
-    DEALLOCATE( emainv )
-
-    return
-  end subroutine elec_fakekine2
-
-
-!=----------------------------------------------------------------------------=!
-
-   REAL(DP) FUNCTION cp_kinetic_energy( ispin, cp, cm, cdesc, ema0bg, emass, delt)
-
-!  (describe briefly what this routine does...)
-!  if ekinc_fp will hold the full electron kinetic energy (paired and unpaired) and
-!  the function returns the paired electrons' kinetic energy only
-!  ----------------------------------------------
-
-! ... declare modules
-      USE mp,         ONLY: mp_sum
-      USE mp_global,  ONLY: intra_image_comm
-      USE wave_types, ONLY: wave_descriptor
-      USE wave_base,  ONLY: wave_speed2
-
-      IMPLICIT NONE
-
-! ... declare subroutine arguments
-      COMPLEX(DP), INTENT(IN) :: cp(:,:), cm(:,:)
-      TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      INTEGER, INTENT( IN ) :: ispin
-      REAL(DP), INTENT(IN) :: delt
-      REAL(DP), INTENT(IN) :: ema0bg(:), emass
-
-! ... declare other variables
-      REAL(DP)  ekinc, dt2, fact
-      INTEGER    ib, j
-      REAL(DP), ALLOCATABLE :: emainv(:)
-
-! ... end of declarations
-!  ----------------------------------------------
-
-      dt2    = delt * delt 
-      ekinc  = 0.d0
-      fact   = 1.0d0
-      IF( cdesc%gzero ) fact =  0.5d0
-
-      ALLOCATE( emainv( SIZE( cp, 1 ) ) )
-
-      emainv = 1.0d0 / ema0bg
-
-      DO ib = 1, cdesc%nbl( ispin )
-         ekinc = ekinc + wave_speed2( cp(:,ib),  cm(:,ib), emainv, fact )
-      END DO
-
-      IF( cdesc%gamma ) ekinc = ekinc * 2.0d0
-
-      CALL mp_sum( ekinc, intra_image_comm )
-
-      cp_kinetic_energy = ekinc * emass / (4.0d0 * dt2)
-
-      DEALLOCATE( emainv )
-
-      RETURN
-   END FUNCTION cp_kinetic_energy
-
 !=----------------------------------------------------------------------------=!
 
    SUBROUTINE update_wave_functions(cm, c0, cp, cdesc)
@@ -196,16 +183,14 @@
       COMPLEX(DP), INTENT(OUT) :: cm(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
 
-      INTEGER :: ispin, ik, nspin
+      INTEGER :: ispin, nspin
 
       nspin = cdesc%nspin
       IF( force_pairing ) nspin = 1
       
       DO ispin = 1, nspin
-        DO ik = 1, cdesc%nkl
-          cm(:,:,ispin) = c0(:,:,ispin)
-          c0(:,:,ispin) = cp(:,:,ispin)
-        END DO
+         cm(:,:,ispin) = c0(:,:,ispin)
+         c0(:,:,ispin) = cp(:,:,ispin)
       END DO
 
       RETURN
@@ -516,100 +501,59 @@
     END SUBROUTINE wave_rand_init
 
 
+
+   SUBROUTINE kohn_sham(ispin, c, cdesc, eforces, nupdwn, nupdwnl )
+
+        ! ...   declare modules
+        USE kinds
+        USE wave_constrains,  ONLY: update_lambda
+        USE wave_types,       ONLY: wave_descriptor
+
+        IMPLICIT NONE
+
+        ! ...   declare subroutine arguments
+        COMPLEX(DP), INTENT(INOUT) ::  c(:,:)
+        TYPE (wave_descriptor), INTENT(IN) :: cdesc
+        INTEGER, INTENT(IN) :: ispin
+        INTEGER, INTENT(IN) :: nupdwn(:)   ! number of upper and down states
+        INTEGER, INTENT(IN) :: nupdwnl(:)  ! local (to the processor) number of up and down states
+        COMPLEX(DP) :: eforces(:,:)
+
+        ! ...   declare other variables
+        INTEGER ::  ib, nb_g, nrl
+        REAL(DP),    ALLOCATABLE :: gam(:,:)
+        REAL(DP),    ALLOCATABLE :: eig(:)
+        LOGICAL :: tortho = .TRUE.
+
+        ! ...   end of declarations
+
+        nb_g = nupdwn( ispin )
+        nrl  = nupdwnl( ispin )
+
+        IF( nb_g < 1 ) THEN
+
+           eforces = 0.0d0
+
+        ELSE
+
+           ALLOCATE( eig( nb_g ) )
+           ALLOCATE( gam( nrl, nb_g ) )
+
+           DO ib = 1, nb_g
+              CALL update_lambda( ib, gam, c(:,:), cdesc, eforces(:,ib) )
+           END DO
+           CALL crot( ispin, c(:,:), cdesc, gam, eig )
+
+           DEALLOCATE( gam, eig )
+
+        END IF
+
+        RETURN
+        ! ...
+   END SUBROUTINE kohn_sham
+
+
 !=----------------------------------------------------------------------------=!
    END MODULE wave_functions
 !=----------------------------------------------------------------------------=!
 
-
-!=----------------------------------------------------------------------------=!
-   MODULE wave_constrains
-!=----------------------------------------------------------------------------=!
-
-     ! ...   include modules
-     USE kinds
-
-     IMPLICIT NONE
-     SAVE
-
-     PRIVATE
-
-     PUBLIC :: interpolate_lambda, update_lambda
-
-     INTERFACE update_lambda
-       MODULE PROCEDURE update_rlambda, update_clambda
-     END INTERFACE
-
-!=----------------------------------------------------------------------------=!
-   CONTAINS
-!=----------------------------------------------------------------------------=!
-
-     SUBROUTINE interpolate_lambda( lambdap, lambda, lambdam )
-       IMPLICIT NONE
-       REAL(DP) :: lambdap(:,:,:), lambda(:,:,:), lambdam(:,:,:) 
-       !
-       ! interpolate new lambda at (t+dt) from lambda(t) and lambda(t-dt):
-       !
-       lambdap= 2.d0*lambda - lambdam
-       lambdam=lambda 
-       lambda =lambdap
-       RETURN
-     END SUBROUTINE interpolate_lambda
-
-
-     SUBROUTINE update_rlambda( i, lambda, c0, cdesc, c2 )
-       USE electrons_module, ONLY: ib_owner, ib_local
-       USE mp_global, ONLY: me_image, intra_image_comm
-       USE mp, ONLY: mp_sum
-       USE wave_base, ONLY: hpsi
-       USE wave_types, ONLY: wave_descriptor
-       IMPLICIT NONE
-       REAL(DP) :: lambda(:,:)
-       COMPLEX(DP) :: c0(:,:), c2(:)
-       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-       INTEGER :: i
-       !
-       REAL(DP), ALLOCATABLE :: prod(:)
-       INTEGER :: ibl
-       !
-       ALLOCATE( prod( SIZE( c0, 2 ) ) )
-       prod = hpsi( cdesc%gzero, c0(:,:), c2 )
-       CALL mp_sum( prod, intra_image_comm )
-       IF( me_image == ib_owner( i ) ) THEN
-           ibl = ib_local( i )
-           lambda( ibl, : ) = prod( : )
-       END IF
-       DEALLOCATE( prod )
-       RETURN
-     END SUBROUTINE update_rlambda
-
-     SUBROUTINE update_clambda( i, lambda, c0, cdesc, c2 )
-       USE electrons_module, ONLY: ib_owner, ib_local
-       USE mp_global, ONLY: me_image, intra_image_comm
-       USE mp, ONLY: mp_sum
-       USE wave_base, ONLY: hpsi
-       USE wave_types, ONLY: wave_descriptor
-       IMPLICIT NONE
-       COMPLEX(DP) :: lambda(:,:)
-       COMPLEX(DP) :: c0(:,:), c2(:)
-       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-       INTEGER :: i
-       !
-       COMPLEX(DP), ALLOCATABLE :: prod(:)
-       INTEGER :: ibl
-       !
-       ALLOCATE( prod( SIZE( c0, 2 ) ) )
-       prod = hpsi( cdesc%gzero, c0(:,:), c2 )
-       CALL mp_sum( prod, intra_image_comm )
-       IF( me_image == ib_owner( i ) ) THEN
-           ibl = ib_local( i )
-           lambda( ibl, : ) = prod( : )
-       END IF
-       DEALLOCATE( prod )
-       RETURN
-     END SUBROUTINE update_clambda
-
-
-
-!=----------------------------------------------------------------------------=!
-   END MODULE wave_constrains
-!=----------------------------------------------------------------------------=!

@@ -506,7 +506,7 @@
         ! ...   Here find Empty states eigenfunctions and eigenvalues
         !
         IF ( ttempst ) THEN
-           CALL empty( tortho, atoms0, c0, wfill, vpot, eigr )
+           CALL empty( nfi, tortho, c0, wfill, vpot, eigr, bec )
         END IF
 
         ! ...   dipole

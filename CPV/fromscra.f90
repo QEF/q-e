@@ -64,9 +64,9 @@ CONTAINS
     USE ions_nose,            ONLY : xnhp0,  xnhpm,  vnhp
     USE cp_electronic_mass,   ONLY : emass
     USE efield_module,        ONLY : tefield, efield_berry_setup, &
-                                     berry_energy, dforce_efield, &
+                                     berry_energy, &
                                      tefield2, efield_berry_setup2, &
-                                     berry_energy2, dforce_efield2
+                                     berry_energy2
     USE cg_module,            ONLY : tcg
     USE ensemble_dft,         ONLY : tens, compute_entropy
     USE runcp_module,         ONLY : runcp_uspp, runcp_ncpp, runcp_uspp_force_pairing, &
@@ -78,11 +78,10 @@ CONTAINS
     USE wave_base,            ONLY : wave_steepest
     USE wavefunctions_module, ONLY : c0, cm, phi => cp
     USE wave_types,           ONLY : wave_descriptor
-    USE wave_functions,       ONLY : fixwave, wave_rand_init, elec_fakekine
+    USE wave_functions,       ONLY : wave_rand_init, elec_fakekine
     USE nl,                   ONLY : nlrh_m
     USE charge_density,       ONLY : rhoofr
     USE potentials,           ONLY : vofrhos
-    USE forces,               ONLY : dforce_all
     USE grid_dimensions,      ONLY : nr1, nr2, nr3
     USE print_out_module,     ONLY : printout
 
@@ -322,7 +321,8 @@ CONTAINS
 
 
          if( tortho ) then
-            CALL ortho( eigr, c0(:,:,1), phi(:,:,1), lambda, bigr, iter, ccc, bephi, becp )
+            CALL ortho( eigr, c0(:,:,1), phi(:,:,1), ngw, lambda, SIZE(lambda,1), &
+                        bigr, iter, ccc, bephi, becp, nbsp, nspin, nupdwn, iupdwn )
          else
             CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
          endif
@@ -369,7 +369,7 @@ CONTAINS
          vnhh (:,:) =0.
          velh (:,:)=(h(:,:)-hold(:,:))/delt
          !
-         CALL elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, nbsp, delt )
+         CALL elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, nbsp, 1, delt )
 
          xnhe0=0.
          xnhem=0.

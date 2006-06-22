@@ -184,7 +184,7 @@
         DO i= 1, n, 2                      
           CALL dforce( bec, betae, i, c0(1,i), &
                        c0(1,i+1), h0c0(1,i), h0c0(1,i+1), &
-                       rhos)
+                       rhos, ispin, f, n, nspin )
         END DO
         
         ! calculates the Hamiltonian matrix in the basis {c0}           
@@ -322,7 +322,7 @@
         h0c0( :, : )= 0.D0
         DO  i= 1, n, 2
           CALL dforce( bec, betae, i, c0(1,i), c0(1,i+1), &
-                       h0c0(1,i), h0c0(1,i+1), rhos )
+                       h0c0(1,i), h0c0(1,i+1), rhos, ispin, f, n, nspin )
         END DO
         DO is= 1, nspin
           nss= nupdwn( is )

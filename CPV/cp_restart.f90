@@ -852,6 +852,7 @@ MODULE cp_restart
       INTEGER,  ALLOCATABLE :: ityp_(:) 
       INTEGER,  ALLOCATABLE :: isrt_(:) 
       REAL(DP), ALLOCATABLE :: tau_(:,:) 
+      REAL(DP), ALLOCATABLE :: occ_(:) 
       INTEGER,  ALLOCATABLE :: if_pos_(:,:) 
       CHARACTER(LEN=256)    :: psfile_(ntypx)
       CHARACTER(LEN=80)     :: pos_unit
@@ -1152,7 +1153,7 @@ MODULE cp_restart
          CALL iotk_scan_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin_ )
          ! 
          IF ( ( nspin_ /= nspin ) .OR. &
-              ( nbnd_ /= nbnd ) .OR. ( NINT( nelec_ ) /= nelt ) ) THEN 
+              ( nbnd_ < nbnd ) .OR. ( NINT( nelec_ ) /= nelt ) ) THEN 
             !
             attr = "electron, bands or spin do not match"
             ierr = 30
@@ -1185,9 +1186,13 @@ MODULE cp_restart
             !
             IF ( ionode ) THEN
                !
+               ALLOCATE( occ_ ( nbnd_ ) )
+               !
                CALL iotk_scan_dat( iunpun, &
-                                   "OCC" // TRIM( cspin ), occ0(:,ispin),  &
+                                   "OCC" // TRIM( cspin ), occ_ ,  &
                                    FOUND = found, IERR = ierr )
+               !
+               occ0( 1:nbnd, ispin ) = occ_ ( 1:nbnd )
                !
                IF( ierr /= 0 ) THEN
                   attr = "error reading OCC"
@@ -1197,7 +1202,7 @@ MODULE cp_restart
                occ0(:,ispin) = occ0(:,ispin) * wk_
                !
                CALL iotk_scan_dat( iunpun, &
-                                   "OCCM" // TRIM( cspin ), occm(:,ispin ), &
+                                   "OCCM" // TRIM( cspin ), occ_ , &
                                    FOUND = found, IERR = ierr )
                !
                IF ( .NOT. found ) THEN
@@ -1208,7 +1213,7 @@ MODULE cp_restart
                   !
                ELSE
                   !
-                  occm(:,ispin) = occm(:,ispin) * wk_
+                  occm( 1:nbnd, ispin ) = occ_ ( 1:nbnd ) * wk_
                   !
                END IF
                !
@@ -1391,11 +1396,10 @@ MODULE cp_restart
                   STATUS = 'OLD', FORM = 'UNFORMATTED' )
             !
             READ( 10 ) lambda0
-            READ( 10 ) lambdam
-            !
-            CLOSE( UNIT = 10 )
             !
          ELSE
+            !
+            lambda0 = 0.0d0 
             !
          END IF
          !
@@ -1404,9 +1408,31 @@ MODULE cp_restart
       DO ispin = 1, nspin
          DO ib = 1, SIZE( lambda0, 2 )
             CALL mp_bcast( lambda0( :, ib, ispin), ionode_id, intra_image_comm )
+         END DO
+      END DO
+      !
+      IF ( ionode ) THEN
+         !
+         IF ( found ) THEN
+            !
+            READ( 10 ) lambdam
+            !
+            CLOSE( UNIT = 10 )
+            !
+         ELSE
+            !
+            lambdam = 0.0d0 
+            !
+         END IF
+         !
+      END IF
+      !
+      DO ispin = 1, nspin
+         DO ib = 1, SIZE( lambda0, 2 )
             CALL mp_bcast( lambdam( :, ib, ispin), ionode_id, intra_image_comm )
          END DO
       END DO
+
       !
       s1 = cclock()
       !

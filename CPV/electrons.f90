@@ -13,7 +13,8 @@
         USE parameters,         ONLY: nspinx
         USE parallel_toolkit,   ONLY: pdspev_drv, dspev_drv, pzhpev_drv, zhpev_drv
         USE electrons_base,     ONLY: nbnd, nbndx, nbsp, nbspx, nspin, nel, nelt, &
-                                      nupdwn, iupdwn, telectrons_base_initval, f
+                                      nupdwn, iupdwn, telectrons_base_initval, f, &
+                                      nudx
         USE cp_electronic_mass, ONLY: ecutmass => emass_cutoff
         USE cp_electronic_mass, ONLY: emass
         USE cp_electronic_mass, ONLY: emass_precond
@@ -141,18 +142,22 @@
      END IF
 
      DO i = 1, nspin 
+       !
        IF( i > nspinx ) CALL errore( ' bmeshset ',' spin too large ', i)
+       !
        nb_l( i ) = nupdwn( i ) / nproc_image
        IF( me_image < MOD( nupdwn( i ), nproc_image ) ) nb_l( i ) = nb_l( i ) + 1
-       n_emp_l( i ) = n_emp / nproc_image
-       IF( me_image < MOD( n_emp, nproc_image ) ) n_emp_l( i ) = n_emp_l( i ) + 1
+       !
+       n_emp_l( i ) = nupdwn_emp( i ) / nproc_image
+       IF( me_image < MOD( nupdwn_emp( i ), nproc_image ) ) n_emp_l( i ) = n_emp_l( i ) + 1
+       !
      END DO
 
      IF( ALLOCATED( ib_owner ) ) DEALLOCATE( ib_owner )
-     ALLOCATE( ib_owner( nbndx ), STAT=ierr)
+     ALLOCATE( ib_owner( MAX( n_emp, nbndx ) ), STAT=ierr)
      IF( ierr/=0 ) CALL errore( ' bmeshset ',' allocating ib_owner ', ierr)
      IF( ALLOCATED( ib_local ) ) DEALLOCATE( ib_local )
-     ALLOCATE( ib_local( nbndx ), STAT=ierr)
+     ALLOCATE( ib_local( MAX( n_emp, nbndx ) ), STAT=ierr)
      IF( ierr/=0 ) CALL errore( ' bmeshset ',' allocating ib_local ', ierr)
 
      !  here define the association between processors and electronic states
@@ -160,7 +165,7 @@
 
      ib_local =  0
      ib_owner = -1
-     DO i = 1, nbndx
+     DO i = 1, MAX( n_emp, nbndx )
        ib_local( i ) = ( i - 1 ) / nproc_image        !  local index of the i-th band 
        ib_owner( i ) = MOD( ( i - 1 ), nproc_image )  !  owner of th i-th band
        IF( me_image <= ib_owner( i ) ) THEN
@@ -190,6 +195,11 @@
        CALL errore( ' electrons_setup ', ' electrons_base not initialized ', 1 )
 
      n_emp = n_emp_
+     !
+     ! assure that the number of empty states is an even number
+     !
+     n_emp = n_emp + MOD( n_emp, 2 )
+     !
      nupdwn_emp(1) = n_emp
      iupdwn_emp(1) = 1
 
@@ -198,11 +208,8 @@
         iupdwn_emp(2) = 1 + n_emp
      END IF
 
-     IF( n_emp > nbndx ) &
-       CALL errore( ' electrons_setup ', ' too many empty states ', 1 )
-
      IF( ALLOCATED( ei ) ) DEALLOCATE( ei )
-     ALLOCATE( ei( nbnd, nspin ), STAT=ierr)
+     ALLOCATE( ei( nudx, nspin ), STAT=ierr)
      IF( ierr/=0 ) CALL errore( ' electrons ',' allocating ei ',ierr)
      ei = 0.0_DP
 
@@ -623,9 +630,9 @@
      REAL(DP) :: lambda( :, :, : ), lambdap( :, :, : )
 
      if( .not. tens ) then
-         call eigs0( .false. , nspin, nupdwn, iupdwn, .true. , f, nx, lambda, nudx )
+         call eigs0( ei, .false. , nspin, nupdwn, iupdwn, .true. , f, nx, lambda, nudx )
      else
-         call eigs0( .false. , nspin, nupdwn, iupdwn, .false. , f, nx, lambdap, nudx )
+         call eigs0( ei, .false. , nspin, nupdwn, iupdwn, .false. , f, nx, lambdap, nudx )
      endif
 
      WRITE( stdout, * )

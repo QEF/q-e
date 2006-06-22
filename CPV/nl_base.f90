@@ -7,94 +7,6 @@
 !
 #include "f_defs.h"
 !
-
-!----------------------------------
- MODULE nl_base
-!----------------------------------
-
-   USE kinds, ONLY : DP
-
-   IMPLICIT NONE
-   SAVE
-
-   PRIVATE
-
-   PUBLIC :: ene_nl
-
-!----------------------------------
- CONTAINS
-!----------------------------------
-
-
-   REAL(DP) FUNCTION ene_nl(fnl, wsg, fi, nspnl, na)
-
-      !  this function computes and returns the nonlocal contribution to total
-      !  energy, for both Gamma point and Kpoints calculations
-      !
-      !    ene_nl =  (sum over ia,ib,igh,is) f(ib) wsg(igh,is) fnl(ia,igh,ib)**2
-      !
-      !    fi(ib,1)       = occupation numbers
-      !    fnl(ia,igh,ib) = Kleinman-Bylander factor (see nlsm1)
-      !    wsg(igh,is)    = inverse denominator in KB's formula
-      !
-      !    ia = index of ion
-      !    ib = index of band
-      !    igh = index of orbital
-      !    is = index of atomic species
-
-      USE pseudo_projector, ONLY: projector
-      USE control_flags,    ONLY: gamma_only
-
-      TYPE (projector), INTENT(IN) :: fnl
-      REAL(DP),        INTENT(IN) :: wsg(:,:), fi(:)
-      INTEGER,          INTENT(IN) :: nspnl
-      INTEGER,          INTENT(IN) :: na(:)
-
-      INTEGER   :: igh, isa, is, ia, ib, nb, ngh
-      REAL(DP) :: enl, fsum
-      COMPLEX(DP) :: tt
-
-
-      IF( gamma_only ) THEN
-         nb  = MIN( SIZE( fnl%r, 3), SIZE(fi) )
-         ngh = SIZE( fnl%r, 2)
-      ELSE
-         nb  = MIN( SIZE( fnl%c, 3), SIZE(fi) )
-         ngh = SIZE( fnl%c, 2)
-      END IF
-
-      enl=0.d0
-      DO igh = 1, ngh
-        DO ib = 1, nb
-          isa = 0
-          DO is = 1, nspnl
-            fsum = 0.0d0
-            IF( gamma_only ) THEN
-              DO ia = 1, na(is)
-                fsum = fsum + fnl%r(isa+ia,igh,ib)**2
-              END DO
-            ELSE
-              DO ia = 1, na(is)
-                tt = fnl%c(isa+ia,igh,ib)
-                fsum = fsum + DBLE( CONJG(tt) * tt )
-              END DO
-            END IF
-            enl = enl + fi(ib) * wsg(igh, is) * fsum
-            isa = isa + na(is)
-          END DO
-        END DO
-      END DO
-
-      ene_nl = enl
-
-      RETURN
-   END FUNCTION ene_nl
-
-!----------------------------------
- END MODULE nl_base
-!----------------------------------
-
-
 !-----------------------------------------------------------------------
    subroutine nlsm1 ( n, nspmn, nspmx, eigr, c, becp )
 !-----------------------------------------------------------------------
@@ -126,14 +38,15 @@
       real(DP), intent(in)  :: eigr( 2, ngw, nat ), c( 2, ngw, n )
       real(DP), intent(out) :: becp( nkb, n )
       !
-      complex(DP), allocatable :: wrk2(:,:)
 !
-      integer    :: isa, ig, is, iv, ia, l, ixr, ixi, inl, i
+      integer   :: isa, ig, is, iv, ia, l, ixr, ixi, inl, i, nhx
       real(DP)  :: signre, signim, arg
+      real(DP), allocatable :: becps( :, : )
+      real(DP), allocatable :: wrk2( :, :, : )
 !
       call start_clock( 'nlsm1' )
 
-      allocate( wrk2( ngw, nax ) )
+      allocate( wrk2( 2, ngw, nax ) )
 
       isa = 0
       do is = 1, nspmn - 1
@@ -141,6 +54,13 @@
       end do
 
       do is = nspmn, nspmx
+         !
+         IF( nproc_image > 1 ) THEN
+            nhx = nh( is ) * na( is )
+            IF( MOD( nhx, 2 ) /= 0 ) nhx = nhx + 1
+            ALLOCATE( becps( nhx, n ) )
+            becps = 0.0d0
+         END IF
          !
          do iv = 1, nh( is )
             !
@@ -173,36 +93,55 @@
                !  q = 0   component (with weight 1.0)
                !
                if (gstart == 2) then
-                  wrk2(1,ia)= &
-                       CMPLX(signre*beta(1,iv,is)*eigr(ixr,1,ia+isa),signim*beta(1,iv,is)*eigr(ixi,1,ia+isa) )
+                  wrk2( 1, 1, ia ) = signre*beta(1,iv,is)*eigr(ixr,1,ia+isa)
+                  wrk2( 2, 1, ia ) = signim*beta(1,iv,is)*eigr(ixi,1,ia+isa)
                end if
                !
                !   q > 0   components (with weight 2.0)
                !
                do ig = gstart, ngw
-                  arg = 2.0*beta(ig,iv,is)
-                  wrk2(ig,ia) = &
-                       CMPLX(signre*arg*eigr(ixr,ig,ia+isa),signim*arg*eigr(ixi,ig,ia+isa) )
+                  arg = 2.0d0 * beta(ig,iv,is)
+                  wrk2( 1, ig, ia ) = signre*arg*eigr(ixr,ig,ia+isa)
+                  wrk2( 2, ig, ia ) = signim*arg*eigr(ixi,ig,ia+isa)
                end do
                !
             end do
             
-            inl=ish(is)+(iv-1)*na(is)+1
             !
-            call MXMA( wrk2, 2*ngw, 1, c, 1, 2*ngw, becp(inl,1), 1, nkb,   &
-                       na(is), 2*ngw, n )
+            IF( nproc_image > 1 ) THEN
+               inl=(iv-1)*na(is)+1
+               ! CALL MXMA( wrk2, 2*ngw, 1, c, 1, 2*ngw, becps( inl, 1 ), 1, nhx, na(is), 2*ngw, n )
+               CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps( inl, 1 ), nhx )
+
+               ! subroutine mxma (a,na,iad,b,nb,ibd,c,nc,icd,nar,nac,nbc)
+               ! call DGEMM(mode1,mode2,nar,nbc,nac,1.d0,a,lda,b,ldb,0.d0,c,icd)
+
+            ELSE
+               inl=ish(is)+(iv-1)*na(is)+1
+               ! call MXMA( wrk2, 2*ngw, 1, c, 1, 2*ngw, becp( inl, 1 ), 1, nkb, na(is), 2*ngw, n )
+               CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becp( inl, 1 ), nkb )
+            END IF
 
          end do
 
 
          IF( nproc_image > 1 ) THEN
-            inl=ish(is)+1
-            do i=1,n
-               CALL mp_sum( becp( inl : (inl + na(is)*nh(is) - 1), i ), intra_image_comm )
+            !
+            inl = ish(is) + 1
+            !
+            CALL mp_sum( becps, intra_image_comm )
+
+            do i = 1, n
+               do iv = inl , ( inl + na(is) * nh(is) - 1 )
+                  becp( iv, i ) = becps( iv - inl + 1, i )
+               end do
             end do
+
+            DEALLOCATE( becps )
+
          END IF
 
-        isa = isa + na(is)
+         isa = isa + na(is)
 
       end do
 
@@ -245,8 +184,8 @@
       real(DP), intent(out) :: becdr(nkb,n,3)
       logical,   intent(in)  :: tred
       !
-      real(DP),    allocatable :: gk(:)
-      complex(DP), allocatable :: wrk2(:,:)
+      real(DP), allocatable :: gk(:)
+      real(DP), allocatable :: wrk2(:,:,:)
       !
       integer   :: ig, is, iv, ia, k, l, ixr, ixi, inl, isa, i
       real(DP) :: signre, signim, arg
@@ -254,7 +193,7 @@
       call start_clock( 'nlsm2' )
 
       allocate( gk( ngw ) )
-      allocate( wrk2( ngw, nax ) )
+      allocate( wrk2( 2, ngw, nax ) )
 
       becdr = 0.d0
 !
@@ -296,20 +235,21 @@
                endif
 !    
                do ia=1,na(is)
+                  !    q = 0   component (with weight 1.0)
                   if (gstart == 2) then
-!                             q = 0   component (with weight 1.0)
-                     wrk2(1,ia) = &
-                     CMPLX (signre*gk(1)*beta(1,iv,is)*eigr(ixr,1,ia+isa),signim*gk(1)*beta(1,iv,is)*eigr(ixi,1,ia+isa) )
-!                            q > 0   components (with weight 2.0)
+                     wrk2(1,1,ia) = signre*gk(1)*beta(1,iv,is)*eigr(ixr,1,ia+isa)
+                     wrk2(2,1,ia) = signim*gk(1)*beta(1,iv,is)*eigr(ixi,1,ia+isa)
                   end if
+                  !    q > 0   components (with weight 2.0)
                   do ig=gstart,ngw
                      arg = 2.0*gk(ig)*beta(ig,iv,is)
-                     wrk2(ig,ia) = &
-                          CMPLX (signre*arg*eigr(ixr,ig,ia+isa),signim*arg*eigr(ixi,ig,ia+isa) )
+                     wrk2(1,ig,ia) = signre*arg*eigr(ixr,ig,ia+isa)
+                     wrk2(2,ig,ia) = signim*arg*eigr(ixi,ig,ia+isa)
                   end do
                end do
                inl=ish(is)+(iv-1)*na(is)+1
-               call MXMA(wrk2,2*ngw,1,c,1,2*ngw,becdr(inl,1,k),1, nkb,na(is),2*ngw,n)
+               ! call MXMA(wrk2,2*ngw,1,c,1,2*ngw,becdr(inl,1,k),1, nkb,na(is),2*ngw,n)
+               CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becdr( inl, 1, k ), nkb )
             end do
 
             isa = isa + na(is)
@@ -317,9 +257,7 @@
          end do
 
          IF( tred .AND. ( nproc_image > 1 ) ) THEN
-            DO i = 1, n
-               CALL mp_sum( becdr(:,i,k), intra_image_comm )
-            END DO
+            CALL mp_sum( becdr(:,:,k), intra_image_comm )
          END IF
 
       end do
@@ -559,12 +497,12 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
   real(DP),    intent(out) :: dbec( nkb, n, 3, 3 )
   logical,      intent(in)  :: tred
   !
-  complex(DP), allocatable :: wrk2(:,:)
+  real(DP), allocatable :: wrk2(:,:,:)
   !
   integer   :: ig, is, iv, ia, l, ixr, ixi, inl, i, j, ii, isa
   real(DP) :: signre, signim, arg
   !
-  allocate( wrk2( ngw, nax ) )
+  allocate( wrk2( 2, ngw, nax ) )
   !
   !
   do j=1,3
@@ -605,19 +543,19 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
               do ia=1,na(is)
                  if (gstart == 2) then
                     !     q = 0   component (with weight 1.0)
-                    wrk2(1,ia)= &
-                    CMPLX(signre*dbeta(1,iv,is,i,j)*eigr(ixr,1,ia+isa),signim*dbeta(1,iv,is,i,j)*eigr(ixi,1,ia+isa) )
+                    wrk2(1,1,ia)= signre*dbeta(1,iv,is,i,j)*eigr(ixr,1,ia+isa)
+                    wrk2(2,1,ia)= signim*dbeta(1,iv,is,i,j)*eigr(ixi,1,ia+isa)
                  end if
                  !     q > 0   components (with weight 2.0)
                  do ig = gstart, ngw
                     arg = 2.0*dbeta(ig,iv,is,i,j)
-                    wrk2(ig,ia) = &
-                         CMPLX(signre*arg*eigr(ixr,ig,ia+isa),signim*arg*eigr(ixi,ig,ia+isa) )
+                    wrk2(1,ig,ia) = signre*arg*eigr(ixr,ig,ia+isa)
+                    wrk2(2,ig,ia) = signim*arg*eigr(ixi,ig,ia+isa)
                  end do
               end do
               inl=ish(is)+(iv-1)*na(is)+1
-              call MXMA(wrk2,2*ngw,1,c,1,2*ngw,dbec(inl,1,i,j),1,  &
- &                      nkb,na(is),2*ngw,n)
+              ! call MXMA(wrk2,2*ngw,1,c,1,2*ngw,dbec(inl,1,i,j),1,nkb,na(is),2*ngw,n)
+              CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, dbec( inl, 1, i, j ), nkb )
            end do
            if( ( nproc_image > 1 ) .AND. tred ) then
               inl=ish(is)+1

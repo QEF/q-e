@@ -55,7 +55,6 @@ SUBROUTINE deallocate_modules_var()
   USE ions_nose,            ONLY : ions_nose_deallocate
   USE metagga,              ONLY : deallocate_metagga
   USE ncpp,                 ONLY : deallocate_ncpp
-  USE pseudo_projector,     ONLY : fnl, projector, deallocate_projector
   USE task_groups,          ONLY : deallocate_groups
   USE ions_positions,       ONLY : deallocate_ions_positions
   USE guess,                ONLY : guess_closeup
@@ -72,11 +71,6 @@ SUBROUTINE deallocate_modules_var()
   IF ( ALLOCATED( dqrad ) )    DEALLOCATE( dqrad )
   IF ( ALLOCATED( dqgb ) )     DEALLOCATE( dqgb )
   IF ( ALLOCATED( dbeta ) )    DEALLOCATE( dbeta )
-  !
-  IF ( ALLOCATED( fnl ) ) THEN
-     CALL deallocate_projector( fnl )
-     DEALLOCATE( fnl )
-  END IF
   !
   CALL deallocate_mainvar()
   CALL deallocate_ions_positions()

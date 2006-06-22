@@ -289,8 +289,8 @@ MODULE from_restart_module
        !
        IF ( tortho ) THEN
           !
-          CALL ortho( eigr, cm(:,:,1), phi(:,:,1), lambda, bigr, iter, &
-                      dt2bye, bephi, becp )
+          CALL ortho( eigr, cm(:,:,1), phi(:,:,1), ngw, lambda, SIZE(lambda,1), &
+                      bigr, iter, dt2bye, bephi, becp, nbsp, nspin, nupdwn, iupdwn )
           !
           n_spin_start = nspin 
           IF( force_pairing ) n_spin_start = 1
@@ -380,7 +380,7 @@ MODULE from_restart_module
        !
        lambdam = lambda
        !
-       CALL elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, nbsp, delt )
+       CALL elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, nbsp, 1, delt )
        !
        xnhe0 = 0.D0
        xnhem = 0.D0
@@ -489,7 +489,6 @@ MODULE from_restart_module
     USE phase_factors_module,  ONLY : strucf, phfacs
     USE time_step,             ONLY : delt
     USE charge_density,        ONLY : rhoofr
-    USE wave_functions,        ONLY : fixwave
     USE wave_base,             ONLY : wave_verlet, rande_base
     USE electrons_module,      ONLY : occn_info
     USE electrons_base,        ONLY : nspin
@@ -502,12 +501,10 @@ MODULE from_restart_module
     USE cell_base,             ONLY : r_to_s, s_to_r
     USE nl,                    ONLY : nlrh_m
     USE potentials,            ONLY : vofrhos
-    USE forces,                ONLY : dforce_all
     USE orthogonalize,         ONLY : ortho
     USE io_global,             ONLY : ionode, ionode_id
     USE io_global,             ONLY : stdout
     USE wave_types,            ONLY : wave_descriptor
-    USE pseudo_projector,      ONLY : projector
     USE control_flags,         ONLY : tcarpar, nbeg, tranp, amprp, tfor, tsdp, &
                                       thdyn, tsdc, tbeg, tsde, tortho, tzeroe, &
                                       tzerop, tzeroc, taurdr, tv0rd, nv0rd,    &

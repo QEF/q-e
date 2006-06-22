@@ -279,7 +279,7 @@
 
 !
 !-------------------------------------------------------------------------
-      SUBROUTINE dforce ( bec, betae, i, c, ca, df, da, v )
+      SUBROUTINE dforce ( bec, betae, i, c, ca, df, da, v, ispin, f, n, nspin )
 !-----------------------------------------------------------------------
 !computes: the generalized force df=CMPLX(dfr,dfi) acting on the i-th
 !          electron state at the gamma point of the brillouin zone
@@ -297,7 +297,6 @@
       USE uspp_param, ONLY: nhm, nh
       USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, &
             nr1sx, nr2sx, nr3sx, nnrsx
-      USE electrons_base, ONLY: n => nbsp, ispin, f, nspin
       USE constants, ONLY: pi, fpi
       USE ions_base, ONLY: nsp, na, nat
       USE gvecw, ONLY: ggp
@@ -308,21 +307,28 @@
 !
       IMPLICIT NONE
 !
-      COMPLEX(8) betae(ngw,nhsa), c(ngw), ca(ngw), df(ngw), da(ngw)
-      REAL(8) bec(nhsa,n), v(nnrsx,nspin)
-      INTEGER i
-! local variables
+      INTEGER, INTENT(IN) :: i
+      INTEGER, INTENT(IN) :: n, nspin
+      INTEGER, INTENT(IN) :: ispin( n )
+      REAL(DP), INTENT(IN) :: f( n )
+      !
+      COMPLEX(DP) betae(ngw,nhsa), c(ngw), ca(ngw), df(ngw), da(ngw)
+      REAL(DP) bec(nhsa,n), v(nnrsx,nspin)
+      !
+      ! local variables
+      !
       INTEGER iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
-      REAL(8) fi, fip, dd
-      COMPLEX(8) fp,fm,ci
-      REAL(8) af(nhsa), aa(nhsa) ! automatic arrays
-      COMPLEX(8)  dtemp(ngw)    !
-      COMPLEX(8), ALLOCATABLE :: psi(:)
+      REAL(DP) fi, fip, dd
+      COMPLEX(DP) fp,fm,ci
+      REAL(DP) af(nhsa), aa(nhsa) ! automatic arrays
+      COMPLEX(DP), ALLOCATABLE :: dtemp(:)
+      COMPLEX(DP), ALLOCATABLE :: psi(:)
 !
 !
       CALL start_clock( 'dforce' ) 
       !
       ALLOCATE( psi( nnrsx ) )
+      ALLOCATE( dtemp( ngw ) )
 !
 !     important: if n is odd => c(*,n+1)=0.
 ! 
@@ -416,18 +422,14 @@
             END DO
          END DO
 !
-         DO ig=1,ngw
-            dtemp(ig)=(0.,0.)
-         END DO
+         dtemp = 0.0d0
          CALL MXMA                                                      &
      &        (betae,1,2*ngw,af,1,nhsa,dtemp,1,2*ngw,2*ngw,nhsa,1)
          DO ig=1,ngw
             df(ig)=df(ig)+dtemp(ig)
          END DO
 !
-         DO ig=1,ngw
-            dtemp(ig)=(0.,0.)
-         END DO
+         dtemp = 0.0d0
          CALL MXMA                                                      &
      &        (betae,1,2*ngw,aa,1,nhsa,dtemp,1,2*ngw,2*ngw,nhsa,1)
          DO ig=1,ngw
@@ -435,6 +437,7 @@
          END DO
       ENDIF
 
+      DEALLOCATE( dtemp )
       DEALLOCATE( psi )
 !
       CALL stop_clock( 'dforce' ) 
@@ -442,6 +445,7 @@
       RETURN
       END SUBROUTINE dforce
 !
+
 !-----------------------------------------------------------------------
       SUBROUTINE dotcsc( eigr, cp, ngw, n )
 !-----------------------------------------------------------------------
@@ -513,6 +517,68 @@
 !
       RETURN
       END SUBROUTINE dotcsc
+
+
+!-----------------------------------------------------------------------
+   SUBROUTINE dotcsv( csv, eigr, c, v, ngw )
+!-----------------------------------------------------------------------
+!
+      USE kinds,              ONLY: DP
+      USE ions_base,          ONLY: na, nsp, nat
+      USE io_global,          ONLY: stdout
+      USE reciprocal_vectors, ONLY: gstart
+      USE cvan,               ONLY: ish, nvb
+      USE uspp,               ONLY: nkb, qq
+      USE uspp_param,         ONLY: nh
+      USE mp,                 ONLY: mp_sum
+      USE mp_global,          ONLY: intra_image_comm
+!
+      IMPLICIT NONE
+!
+      INTEGER, INTENT(IN) :: ngw
+      COMPLEX(DP) ::  eigr(ngw,nat), c(ngw), v(ngw)
+      REAL(DP), INTENT(OUT) ::  csv
+
+      ! local variables
+      COMPLEX(DP) temp(ngw) ! automatic array
+ 
+      REAL(DP), ALLOCATABLE ::  bec(:), bev(:)
+      INTEGER ig,is,ia,iv,jv,inl,jnl
+!
+      ALLOCATE(bec(nkb))
+      ALLOCATE(bev(nkb))
+!
+!     < beta | c > is real. only the i lowest:
+!
+      CALL nlsm1(1,1,nvb,eigr,c,bec)
+      CALL nlsm1(1,1,nvb,eigr,v,bev)
+!
+      DO ig=1,ngw
+         temp(ig)=CONJG(c(ig))*v(ig)
+      END DO
+      csv = 2.0d0 * DBLE(SUM(temp))
+      IF (gstart == 2) csv = csv - DBLE(temp(1))
+
+      CALL mp_sum( csv, intra_image_comm )
+
+      DO is=1,nvb
+         DO iv=1,nh(is)
+            DO jv=1,nh(is)
+               DO ia=1,na(is)
+                  inl=ish(is)+(iv-1)*na(is)+ia
+                  jnl=ish(is)+(jv-1)*na(is)+ia
+                  csv = csv + qq(iv,jv,is)*bec(inl)*bev(jnl)
+               END DO
+            END DO
+         END DO
+      END DO
+      !
+      DEALLOCATE(bec)
+      DEALLOCATE(bev)
+      !
+      RETURN
+   END SUBROUTINE dotcsv
+
 
 
 !-----------------------------------------------------------------------
@@ -1097,6 +1163,127 @@
 !
       RETURN
       END SUBROUTINE gracsc
+
+
+!-------------------------------------------------------------------------
+      SUBROUTINE smooth_csv( c, v, ngwx, csv, n )
+!-----------------------------------------------------------------------
+
+      USE gvecw,              ONLY: ngw
+      USE kinds,              ONLY: DP
+      USE reciprocal_vectors, ONLY: gstart
+!
+      IMPLICIT NONE
+!
+      INTEGER, INTENT(IN) :: ngwx, n
+      REAL(DP)    :: c( 2, ngwx )
+      REAL(DP)    :: v( 2, ngwx, n )
+      REAL(DP)    :: csv( n )
+      INTEGER     :: k, ig
+      REAL(DP), ALLOCATABLE :: temp(:) 
+
+      !
+      !     calculate csv(k)=<c|v(k)>
+      !
+      ALLOCATE( temp( ngw ) )
+
+      DO k = 1, n
+         DO ig = 1, ngw
+            temp(ig) = v(1,ig,k) * c(1,ig) + v(2,ig,k) * c(2,ig)
+         END DO
+         csv(k) = 2.0d0 * SUM(temp)
+         IF (gstart == 2) csv(k) = csv(k) - temp(1)
+      END DO
+
+      DEALLOCATE( temp )
+!
+      RETURN
+      END SUBROUTINE smooth_csv
+
+
+!-------------------------------------------------------------------------
+      SUBROUTINE grabec( becc, nkbx, betae, c, ngwx )
+!-----------------------------------------------------------------------
+      !
+      !     on output: bec(i) is recalculated
+      !
+      USE uspp,           ONLY : nkb, nhsavb=>nkbus
+      USE gvecw,          ONLY: ngw
+      USE kinds,          ONLY: DP
+      USE reciprocal_vectors, ONLY: gstart
+!
+      IMPLICIT NONE
+!
+      INTEGER, INTENT(IN) :: nkbx, ngwx
+      COMPLEX(DP) :: betae( ngwx, nkb )
+      REAL(DP)    :: becc( nkbx ), c( 2, ngwx )
+      INTEGER     :: ig, inl
+      REAL(DP), ALLOCATABLE :: temp(:) 
+      !
+      ALLOCATE( temp( ngw ) )
+      !
+      !     calculate becc=<c|beta>
+      !
+      DO inl=1,nhsavb
+         DO ig=1,ngw
+            temp(ig)=c(1,ig)* DBLE(betae(ig,inl))+             &
+     &               c(2,ig)*AIMAG(betae(ig,inl))
+         END DO
+         becc(inl)=2.*SUM(temp)
+         IF (gstart == 2) becc(inl)= becc(inl)-temp(1)
+      END DO
+
+      DEALLOCATE( temp )
+
+      RETURN
+      END SUBROUTINE grabec
+
+
+!-------------------------------------------------------------------------
+      SUBROUTINE bec_csv( becc, becv, nkbx, csv, n )
+!-----------------------------------------------------------------------
+!     requires in input the updated becc and becv(k)
+!     on output: csv is updated
+!
+      USE ions_base,      ONLY: na
+      USE cvan,           ONLY :nvb, ish
+      USE uspp,           ONLY : nkb, nhsavb=>nkbus, qq
+      USE uspp_param,     ONLY:  nh
+      USE kinds,          ONLY: DP
+!
+      IMPLICIT NONE
+!
+      INTEGER, INTENT(IN) :: nkbx, n
+      REAL(DP)    :: becc( nkbx )
+      REAL(DP)    :: becv( nkbx, n )
+      REAL(DP)    :: csv( n )
+      INTEGER     :: k, is, iv, jv, ia, inl, jnl
+      REAL(DP)    :: rsum
+
+!     calculate csv(k) = csv(k) + <c| SUM_nm |beta(n)><beta(m)|v(k)>,  k<i
+!
+      DO k=1,n
+            rsum=0.
+            DO is=1,nvb
+               DO iv=1,nh(is)
+                  DO jv=1,nh(is)
+                     IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN 
+                        DO ia=1,na(is)
+                           inl=ish(is)+(iv-1)*na(is)+ia
+                           jnl=ish(is)+(jv-1)*na(is)+ia
+                           rsum = rsum + qq(iv,jv,is)*becc(inl)*becv(jnl,k)
+                        END DO
+                     ENDIF
+                  END DO
+               END DO
+            END DO
+            csv(k)=csv(k)+rsum
+      END DO
+!
+      RETURN
+      END SUBROUTINE bec_csv
+
+
 
 !-------------------------------------------------------------------------
       SUBROUTINE gram( betae, bec, nkbx, cp, ngwx, n )

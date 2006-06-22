@@ -29,6 +29,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
                                        esr, print_energies
   USE electrons_base,           ONLY : nbspx, nbsp, f, nspin, nudx
   USE electrons_base,           ONLY : nel, iupdwn, nupdwn
+  USE electrons_module,         ONLY : ei
   USE gvecp,                    ONLY : ngm
   USE gvecs,                    ONLY : ngs
   USE gvecb,                    ONLY : ngb
@@ -93,7 +94,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE orthogonalize,            ONLY : ortho
   USE orthogonalize_base,       ONLY : updatc, calphi
   use charge_density,           only : rhoofr
-  USE wave_functions,           ONLY : wave_rand_init, elec_fakekine2
+  USE wave_functions,           ONLY : wave_rand_init, elec_fakekine
   !
 #if ! defined __NOSMD
   !
@@ -611,8 +612,9 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !     ==========================================================
         !
         IF(tortho) THEN
-           CALL ortho  (eigr,rep_el(sm_k)%c0,rep_el(sm_k)%phi,rep_el(sm_k)%lambda, &
-                &                   bigr,iter,ccc(sm_k),bephi,becp)
+           CALL ortho  ( eigr, rep_el(sm_k)%c0, rep_el(sm_k)%phi, ngw, &
+                         rep_el(sm_k)%lambda, SIZE( rep_el(sm_k)%lambda, 1 ), &
+                         bigr, iter, ccc(sm_k), bephi, becp, nbsp, nspin, nupdwn, iupdwn)
         ELSE
            CALL gram( vkb, rep_el(sm_k)%bec, nkb, rep_el(sm_k)%c0, ngw, nbsp )
            !
@@ -780,7 +782,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
      !     ======================================================
      !
      ekincm(sm_k)=0.0
-     CALL elec_fakekine2( ekincm(sm_k), ema0bg, emass, rep_el(sm_k)%c0, rep_el(sm_k)%cm, ngw, nbsp, delt )
+     CALL elec_fakekine( ekincm(sm_k), ema0bg, emass, rep_el(sm_k)%c0, rep_el(sm_k)%cm, ngw, nbsp, 1, delt )
 
      xnhe0(sm_k)=0.
      xnhem(sm_k)=0.
@@ -1138,9 +1140,9 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !---------------------------------------------------------------------------
         !
         IF(tortho) THEN
-           CALL ortho                                                     &
-                &         (eigr,rep_el(sm_k)%cm,rep_el(sm_k)%phi,rep_el(sm_k)%lambda, &
-                & bigr,iter,ccc(sm_k),bephi,becp)
+           CALL ortho ( eigr, rep_el(sm_k)%cm, rep_el(sm_k)%phi, ngw, &
+                        rep_el(sm_k)%lambda, SIZE( rep_el(sm_k)%lambda, 1 ), &
+                        bigr, iter, ccc(sm_k), bephi, becp, nbsp, nspin, nupdwn, iupdwn )
         ELSE
            CALL gram( vkb, rep_el(sm_k)%bec, nkb, rep_el(sm_k)%cm, ngw, nbsp )
            IF(iprsta.GT.4) CALL dotcsc(eigr,rep_el(sm_k)%cm, ngw, nbsp )
@@ -1189,7 +1191,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         !     fake electronic kinetic energy
         !
-        CALL elec_fakekine2( ekinc0(sm_k), ema0bg, emass, rep_el(sm_k)%c0, rep_el(sm_k)%cm, ngw, nbsp, delt )
+        CALL elec_fakekine( ekinc0(sm_k), ema0bg, emass, rep_el(sm_k)%c0, rep_el(sm_k)%cm, ngw, nbsp, 1, delt )
         !
         !     ... previous ekinc
         !
@@ -1228,7 +1230,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         !
         IF(MOD(nfi-1,iprint).EQ.0 .OR. (nfi.EQ.(nomore))) THEN
-           CALL eigs0(.true.,nspin,nupdwn,iupdwn,.true.,f,nbspx,rep_el(sm_k)%lambda,nudx)
+           CALL eigs0( ei, .true.,nspin,nupdwn,iupdwn,.true.,f,nbspx,rep_el(sm_k)%lambda,nudx)
            WRITE( stdout,*)
         ENDIF
         !

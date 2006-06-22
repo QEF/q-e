@@ -214,7 +214,8 @@
 
 
 
-   SUBROUTINE ortho_cp( eigr, cp, phi, x0, diff, iter, ccc, bephi, becp )
+   SUBROUTINE ortho_cp( eigr, cp, phi, ngwx, x0, nudx, diff, iter, ccc, &
+                        bephi, becp, nbsp, nspin, nupdwn, iupdwn )
       !
       !     input = cp (non-orthonormal), beta
       !     input = phi |phi>=s'|c0>
@@ -232,7 +233,7 @@
       USE cvan,           ONLY: ish, nvb
       USE uspp,           ONLY: nkb, qq
       USE uspp_param,     ONLY: nh
-      USE electrons_base, ONLY: nbsp, nbspx, nudx, nspin, nupdwn, iupdwn, f
+      USE electrons_base, ONLY: f
       USE gvecw,          ONLY: ngw
       USE control_flags,  ONLY: iprint, iprsta, ortho_max
       USE control_flags,  ONLY: force_pairing
@@ -240,19 +241,20 @@
       !
       IMPLICIT NONE
 !
-      COMPLEX(DP) :: cp(ngw,nbsp), phi(ngw,nbsp), eigr(ngw,nat)
+      INTEGER     :: ngwx, nudx, nbsp, nspin
+      INTEGER     :: nupdwn( nspin ), iupdwn( nspin )
+      COMPLEX(DP) :: cp(ngwx,nbsp), phi(ngwx,nbsp), eigr(ngwx,nat)
       REAL(DP)    :: x0( nudx, nudx, nspin ), diff, ccc
       INTEGER     :: iter
       REAL(DP)    :: bephi(nkb,nbsp), becp(nkb,nbsp)
 !
       REAL(DP), ALLOCATABLE :: xloc(:,:)
-      REAL(DP), ALLOCATABLE:: qbephi(:,:), qbecp(:,:)
+      REAL(DP), ALLOCATABLE :: qbephi(:,:), qbecp(:,:)
 
-      INTEGER :: ngwx, nkbx
+      INTEGER :: nkbx
       INTEGER :: istart, nss, ifail, i, j, iss, iv, jv, ia, is, inl, jnl
       INTEGER :: nspin_sub
 
-      ngwx = ngw
       nkbx = nkb
       !
       !     calculation of becp and bephi

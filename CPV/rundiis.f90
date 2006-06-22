@@ -266,7 +266,7 @@ CONTAINS
 
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, bec, becdr, eigr)
 
-          CALL dforce_all( 1, c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), eigr, bec, nupdwn, iupdwn )
+          CALL dforce_all( c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), eigr, bec, nupdwn(1), iupdwn(1) )
 
           CALL proj( 1, cgrad(:,:,1), cdesc, c0(:,:,1), cdesc, lambda )
           CALL crot( 1, c0(:,:,1), cdesc, lambda, eig(:,1) )
@@ -275,7 +275,7 @@ CONTAINS
           call entropy_s(fi(1,1),temp_elec,cdesc%nbl(1),edft%ent)
 
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, bec, becdr, eigr)
-          CALL dforce_all( 1, c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), eigr, bec, nupdwn, iupdwn )
+          CALL dforce_all( c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), eigr, bec, nupdwn(1), iupdwn(1) )
 
           DO ib = 1, cdesc%nbl( 1 )
             cgrad(:,ib,1) = cgrad(:,ib,1) + eig(ib,1)*c0(:,ib,1)
@@ -286,7 +286,7 @@ CONTAINS
 ! ...     DIIS on c0 at FIXED potential
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, bec, becdr, eigr)
 
-          CALL dforce_all( 1, c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), eigr, bec, nupdwn, iupdwn )
+          CALL dforce_all( c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), eigr, bec, nupdwn(1), iupdwn(1) )
 
           CALL proj( 1, cgrad(:,:,1), cdesc, c0(:,:,1), cdesc, lambda)
 
@@ -533,8 +533,8 @@ CONTAINS
 ! ...       of 1, ( row 1 to PE 1, row 2 to PE 2, .. row nproc_image+1 to PE 1 and
 ! ...       so on).
 
-            CALL dforce_all( ispin, c0(:,:,ispin), fi(:,ispin), cgrad(:,:,ispin), &
-                             vpot(:,ispin), eigr, bec, nupdwn, iupdwn )
+            CALL dforce_all( c0(:,:,ispin), fi(:,ispin), cgrad(:,:,ispin), &
+                             vpot(:,ispin), eigr, bec, nupdwn(ispin), iupdwn(ispin) )
 
             CALL proj( ispin, cgrad(:,:,ispin), cdesc, c0(:,:,ispin), cdesc, lambda)
 
@@ -657,8 +657,8 @@ CONTAINS
           CALL nlsm1( n, 1, nspnl, eigr, c(1,1,ispin), bec )
 
 ! ...     Calculate | dH / dpsi(j) >
-          CALL dforce_all( ispin, c(:,:,ispin), fi(:,ispin), eforce(:,:,ispin), &
-                           vpot(:,ispin), eigr, bec, nupdwn, iupdwn )
+          CALL dforce_all( c(:,:,ispin), fi(:,ispin), eforce(:,:,ispin), &
+                           vpot(:,ispin), eigr, bec, nupdwn(ispin), iupdwn(ispin) )
 
 ! ...       Calculate Eij = < psi(i) | H | psi(j) > = < psi(i) | dH / dpsi(j) >
             DO i = 1, n

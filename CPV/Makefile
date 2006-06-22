@@ -35,7 +35,6 @@ environment.o \
 exch_corr.o \
 fftdrv.o \
 fft.o \
-fnl.o \
 forces.o \
 fromscra.o \
 greenf.o \
@@ -59,6 +58,7 @@ move_electrons.o \
 nl_base.o \
 nlcc.o \
 nl.o \
+optical.o \
 ortho_base.o \
 ortho.o \
 para.o \

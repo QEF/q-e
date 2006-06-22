@@ -69,7 +69,6 @@
       USE mp_global,            ONLY: intra_image_comm
       USE mp,                   ONLY: mp_sum
       USE wave_types,           ONLY: wave_descriptor
-      USE pseudo_projector,     ONLY: projector
       USE cell_base,            ONLY: tpiba2
       USE io_global,            ONLY: ionode
       USE exchange_correlation, ONLY: stress_xc
@@ -276,7 +275,6 @@
       USE mp_global, ONLY: intra_image_comm, root_image, me_image
       USE io_global, ONLY: stdout
       USE wave_types, ONLY: wave_descriptor
-      USE pseudo_projector, ONLY: projector
       USE cell_base, ONLY: tpiba2, omega
       USE control_flags, ONLY: force_pairing
       USE reciprocal_vectors, ONLY: gstart, gzero, g, gx

@@ -920,9 +920,7 @@ CONTAINS
 
          CALL DGEMM( 'N', 'T', nss, nkbus, nss, 1.0d0, x0, nudx, &
                   bephi( 1, istart ), nkbx, 0.0d0, wtemp, nss )
-
-         ! CALL MXMA(x0,1,nudx,bephi(1,istart),nkb,1,wtemp,1,nss,nss,nss,nkbus)
-!
+         !
          DO i = 1, nss
             DO inl = 1, nkbus
                bec( inl, i + istart - 1 ) = wtemp( i, inl ) + becp( inl, i + istart - 1 )
@@ -953,7 +951,7 @@ CONTAINS
 !
       IF ( ccc /= 1.0d0 ) THEN
          DO j=1,nss
-            CALL DSCAL(nss,1.0/ccc,x0(1,j),1)
+            CALL DSCAL(nss,1.0d0/ccc,x0(1,j),1)
          END DO
       END IF
 !

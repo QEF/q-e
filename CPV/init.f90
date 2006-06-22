@@ -179,7 +179,7 @@
       !
       IF( program_name == 'FPMD' ) THEN
         !
-        CALL cpsizes( nproc_image )
+        CALL cpsizes( )
         !
       END IF
       !

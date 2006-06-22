@@ -177,28 +177,28 @@
 
      
 
-    SUBROUTINE dforce( ib, iss, c, f, df, da, v, eigr, bec, nupdwn, iupdwn )
+    SUBROUTINE dforce( ib, c, f, df, da, v, eigr, bec, n, noffset )
        !
        USE reciprocal_vectors, ONLY: ggp, g, gx
        !
        IMPLICIT NONE
        !
-       INTEGER,      INTENT(IN) :: ib, iss     ! band and spin index
+       INTEGER,     INTENT(IN)  :: ib     ! band and spin index
        COMPLEX(DP), INTENT(IN)  :: c(:,:)
        COMPLEX(DP), INTENT(OUT) :: df(:), da(:)
        REAL (DP),   INTENT(IN)  :: v(:), bec(:,:), f(:)
        COMPLEX(DP), INTENT(IN)  :: eigr(:,:)
-       INTEGER,      INTENT(IN) :: nupdwn(:), iupdwn(:)
+       INTEGER,     INTENT(IN)  :: n, noffset  ! number of bands, and band index offset
        !
        COMPLEX(DP), ALLOCATABLE :: dum( : )   
        !
-       INTEGER :: ig, in
+       INTEGER :: in
        !
-       IF( ib > nupdwn( iss ) ) CALL errore( ' dforce ', ' ib out of range ', 1 )
+       IF( ib > n ) CALL errore( ' dforce ', ' ib out of range ', 1 )
        !
-       in = iupdwn( iss ) + ib - 1 
+       in = noffset + ib - 1 
        !
-       IF( ib == nupdwn( iss ) ) THEN
+       IF( ib == n ) THEN
           !
           ALLOCATE( dum( SIZE( da ) ) )
           !
@@ -223,33 +223,32 @@
 !  ----------------------------------------------
   
 
-    SUBROUTINE dforce_all( iss, c, f, cgrad, vpot, eigr, bec, nupdwn, iupdwn )
+    SUBROUTINE dforce_all( c, f, cgrad, vpot, eigr, bec, n, noffset )
         !
         IMPLICIT NONE
 
-        INTEGER,               INTENT(IN)    :: iss
         COMPLEX(DP),           INTENT(INOUT) :: c(:,:)
         REAL(DP),              INTENT(IN)    :: vpot(:), f(:)
         COMPLEX(DP),           INTENT(OUT)   :: cgrad(:,:)
         COMPLEX(DP),           INTENT(IN)    :: eigr(:,:)
         REAL(DP),              INTENT(IN)    :: bec(:,:)
-        INTEGER,               INTENT(IN)    :: nupdwn(:), iupdwn(:)
+        INTEGER,               INTENT(IN)    :: n, noffset
        
         INTEGER :: ib
         !
-        IF( nupdwn( iss ) > 0 ) THEN
+        IF( n > 0 ) THEN
            !
            !   Process two states at the same time
            !
-           DO ib = 1, nupdwn( iss )-1, 2
-              CALL dforce( ib, iss, c, f, cgrad(:,ib), cgrad(:,ib+1), &
-                  vpot, eigr, bec, nupdwn, iupdwn )
+           DO ib = 1, n-1, 2
+              CALL dforce( ib, c, f, cgrad(:,ib), cgrad(:,ib+1), &
+                  vpot, eigr, bec, n, noffset )
            END DO
            !
-           IF( MOD( nupdwn( iss ), 2 ) /= 0 ) THEN
-              ib = nupdwn( iss )
-              CALL dforce( ib, iss, c, f, cgrad(:,ib), cgrad(:,ib), &
-                  vpot, eigr, bec, nupdwn, iupdwn )
+           IF( MOD( n, 2 ) /= 0 ) THEN
+              ib = n
+              CALL dforce( ib, c, f, cgrad(:,ib), cgrad(:,ib), &
+                  vpot, eigr, bec, n, noffset )
            END IF
            !
         END IF

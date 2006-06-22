@@ -63,7 +63,6 @@ SUBROUTINE init_run()
   USE gvecp,                    ONLY : ecutp
   USE funct,                    ONLY : dft_is_meta
   USE metagga,                  ONLY : crosstaus, dkedtaus, gradwfc
-  USE pseudo_projector,         ONLY : fnl, projector
   USE pseudopotential,          ONLY : pseudopotential_indexes, nsanl
   !
   USE efcalc,                   ONLY : clear_nbeg
@@ -84,7 +83,6 @@ SUBROUTINE init_run()
   USE printout_base,            ONLY : printout_base_init
   USE print_out_module,         ONLY : print_legend
   USE wave_types,               ONLY : wave_descriptor_info
-  USE pseudo_projector,         ONLY : allocate_projector
   !
   IMPLICIT NONE
   !

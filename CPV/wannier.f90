@@ -457,7 +457,7 @@ MODULE wannier_subroutines
     USE electric_field_module,  ONLY : field_tune, e_tuned, par, rel1, rel2
     USE wannier_module,         ONLY : rhos1, rhos2, wfc
     USE smooth_grid_dimensions, ONLY : nnrsx
-    USE electrons_base,         ONLY : nbsp, nspin, nupdwn
+    USE electrons_base,         ONLY : nbsp, nspin, nupdwn, f, ispin
     USE cell_base,              ONLY : ainv, a1, a2, a3
     USE reciprocal_vectors,     ONLY : gstart
     USE control_flags,          ONLY : tsde
@@ -555,7 +555,7 @@ MODULE wannier_subroutines
           END DO
           CALL dforce_field(bec,deeq,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos1,rhos2)
        ELSE
-          CALL dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos)
+          CALL dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos,ispin,f,nbsp,nspin)
        END IF
        IF(tsde) THEN
           CALL wave_steepest( cm(:, i  ), c0(:, i  ), emadt2, c2 )

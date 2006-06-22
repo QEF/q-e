@@ -44,13 +44,12 @@
       USE electrons_module, ONLY:  eigs, nb_l
       USE cp_electronic_mass, ONLY: emass
       USE cp_main_variables,  ONLY: ema0bg
-      USE wave_functions, ONLY : cp_kinetic_energy
+      USE wave_functions, ONLY : elec_fakekine
       USE wave_base, ONLY: hpsi
       USE cell_module, ONLY: boxdimensions
       USE time_step, ONLY: delt
       USE orthogonalize, ONLY: ortho
       USE wave_types, ONLY: wave_descriptor
-      USE pseudo_projector, ONLY: projector
       USE wave_constrains, ONLY: update_lambda
       USE uspp,             ONLY : vkb, nkb
 
@@ -73,7 +72,7 @@
 
 ! ...   declare other variables
       REAL(DP) :: s1, s2, s3, s4
-      INTEGER :: nx, nb_lx, ierr, is
+      INTEGER :: nx, nb_lx, ierr, is, nb, ngw
 
       COMPLEX(DP), ALLOCATABLE :: cgam(:,:,:)
       REAL(DP),    ALLOCATABLE :: gam(:,:,:)
@@ -85,8 +84,10 @@
 
       s1 = cclock()
 
+      ngw = SIZE( cp, 1 )
       nb_lx = MAX( nb_l(1), nb_l(2) )
       nb_lx = MAX( nb_lx, 1 )
+      !
       IF( cdesc%gamma ) THEN
         ALLOCATE( cgam(1,1,1), gam( nb_lx, SIZE( c0, 2 ), cdesc%nspin ), STAT=ierr)
       ELSE
@@ -131,7 +132,8 @@
       !  Compute fictitious kinetic energy of the electrons at time t
 
       DO is = 1, cdesc%nspin
-        ekinc(is) = cp_kinetic_energy( is, cp(:,:,is), cm(:,:,is), cdesc, ema0bg, emass, delt)
+        nb  = cdesc%nbt( is )
+        CALL elec_fakekine( ekinc( is ), ema0bg, emass, cp(:,:,is), cm(:,:,is), ngw, nb, 1, 2.0d0 * delt )
       END DO
 
       DEALLOCATE( cgam, gam, STAT=ierr)
@@ -171,7 +173,6 @@
       USE wave_types, ONLY: wave_descriptor
       USE wave_constrains, ONLY: update_lambda
       USE control_flags, ONLY: tsde
-      USE pseudo_projector, ONLY: projector
 
       IMPLICIT NONE
 
@@ -247,7 +248,7 @@
 
           DO i = 1, nb, 2
 
-            CALL dforce( i, is, c0(:,:,is), fi(:,is), c2, c3, vpot(:,is), eigr, bec, nupdwn, iupdwn )
+            CALL dforce( i, c0(:,:,is), fi(:,is), c2, c3, vpot(:,is), eigr, bec, nupdwn(is), iupdwn(is) )
 
             IF( tlam ) THEN
                CALL update_lambda( i, gam( :, :,is), c0(:,:,is), cdesc, c2 )
@@ -278,7 +279,7 @@
 
             nb = nx
 
-            CALL dforce( nx, is, c0(:,:,is), fi(:,is), c2, c3, vpot(:,is), eigr, bec, nupdwn, iupdwn )
+            CALL dforce( nx, c0(:,:,is), fi(:,is), c2, c3, vpot(:,is), eigr, bec, nupdwn(is), iupdwn(is) )
 
             IF( tlam ) THEN
                CALL update_lambda( nb, gam( :, :,is), c0(:,:,is), cdesc, c2 )
@@ -331,7 +332,7 @@
       USE electrons_base, ONLY: iupdwn, nupdwn, nspin
       USE cp_electronic_mass, ONLY: emass
       USE cp_main_variables,  ONLY: ema0bg
-      USE wave_functions, ONLY : cp_kinetic_energy
+      USE wave_functions, ONLY : elec_fakekine
       USE wave_base, ONLY: wave_steepest, wave_verlet
       USE wave_base, ONLY: hpsi
       USE cell_module, ONLY: boxdimensions
@@ -443,8 +444,8 @@
 
         DO i = 1, nb, 2
           !
-          CALL dforce( i, 2, c0(:,:,1), fi(:,1), c2, c3, vpot(:,1), eigr, bec, nupdwn, iupdwn )
-          CALL dforce( i, 2, c0(:,:,1), fi(:,1), c4, c5, vpot(:,2), eigr, bec, nupdwn, iupdwn )
+          CALL dforce( i, c0(:,:,1), fi(:,1), c2, c3, vpot(:,1), eigr, bec, nupdwn(2), iupdwn(2) )
+          CALL dforce( i, c0(:,:,1), fi(:,1), c4, c5, vpot(:,2), eigr, bec, nupdwn(2), iupdwn(2) )
           !
           c2 = occup(i  )* (c2 + c4)
           c3 = occup(i+1)* (c3 + c5)
@@ -476,8 +477,8 @@
           !
           nb = n_unp - 1
           !
-          CALL dforce( nb, 2, c0(:,:,1), fi(:,1), c2, c3, vpot(:,1), eigr, bec, nupdwn, iupdwn )
-          CALL dforce( nb, 2, c0(:,:,1), fi(:,2), c4, c5, vpot(:,2), eigr, bec, nupdwn, iupdwn )
+          CALL dforce( nb, c0(:,:,1), fi(:,1), c2, c3, vpot(:,1), eigr, bec, nupdwn(2), iupdwn(2) )
+          CALL dforce( nb, c0(:,:,1), fi(:,2), c4, c5, vpot(:,2), eigr, bec, nupdwn(2), iupdwn(2) )
 
           c2 = occup(nb)* (c2 + c4)
 
@@ -495,7 +496,7 @@
         END IF
 
         !
-        CALL dforce( n_unp, 1, c0(:,:,1), fi(:,1), c2, c3, vpot(:,1), eigr, bec, nupdwn, iupdwn )
+        CALL dforce( n_unp, c0(:,:,1), fi(:,1), c2, c3, vpot(:,1), eigr, bec, nupdwn(1), iupdwn(1) )
 
         intermed  = -2.d0 * sum( c2 * conjg( c0(:, n_unp, 1 ) ) )
         IF ( gstart == 2 ) THEN
@@ -563,8 +564,8 @@
 
       !  Compute fictitious kinetic energy of the electrons at time t
 
-      ekinc(1) = cp_kinetic_energy( 1, cp(:,:,1), cm(:,:,1), cdesc, ema0bg, emass, delt)
-      ekinc(2) = cp_kinetic_energy( 2, cp(:,:,1), cm(:,:,1), cdesc, ema0bg, emass, delt)
+      CALL elec_fakekine( ekinc( 1 ), ema0bg, emass, cp(:,:,1), cm(:,:,1), ngw, cdesc%nbt(1), 1, 2.0d0 * delt )
+      CALL elec_fakekine( ekinc( 2 ), ema0bg, emass, cp(:,:,1), cm(:,:,1), ngw, cdesc%nbt(2), 1, 2.0d0 * delt )
 
 
       DEALLOCATE( ei_t, svar3, c2, c3, c4, c5, cgam, gam, occup, occdown, STAT=ierr)
@@ -585,7 +586,7 @@
      !use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
      use uspp, only : deeq, betae => vkb
      use reciprocal_vectors, only : gstart
-     use electrons_base, only : n=>nbsp
+     use electrons_base, only : n=>nbsp, ispin, f, nspin
      use wannier_subroutines, only: ef_potential
      use efield_module, only: dforce_efield, tefield, dforce_efield2, tefield2
 
@@ -645,7 +646,7 @@
         call ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, verl1, verl2, c2, c3 )
       else
         do i=1,n,2
-           call dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos)
+           call dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos,ispin,f,n,nspin)
            if( tefield ) then
              CALL dforce_efield ( bec, i, c0, c2, c3, rhos)
            end if
@@ -855,13 +856,14 @@
     SUBROUTINE runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, &
                                          intermed, fromscra, restart )
   !
-      USE wave_base, ONLY: wave_steepest, wave_verlet
-      USE control_flags, ONLY: lwf, tsde
-  !   use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
-      USE uspp, ONLY : deeq, betae => vkb
-      USE reciprocal_vectors, ONLY : gstart
-      USE wannier_subroutines, ONLY: ef_potential
-      USE efield_module, ONLY: dforce_efield, tefield
+      USE wave_base,           ONLY : wave_steepest, wave_verlet
+      USE control_flags,       ONLY : lwf, tsde
+  !   use uspp,                only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
+      USE uspp,                ONLY : deeq, betae => vkb
+      USE reciprocal_vectors,  ONLY : gstart
+      USE wannier_subroutines, ONLY : ef_potential
+      USE efield_module,       ONLY : dforce_efield, tefield
+      USE electrons_base,      ONLY : ispin, nspin, f, n=>nbsp
   !
       USE gvecw, ONLY: ngw
   !
@@ -958,8 +960,8 @@
 
       DO i = 1, npair, 2 
       !
-         CALL dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos(1,1))
-         CALL dforce(bec,betae,i,c0(1,i),c0(1,i+1),c4,c5,rhos(1,2))
+         CALL dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos(1,1),ispin,f,n,nspin)
+         CALL dforce(bec,betae,i,c0(1,i),c0(1,i+1),c4,c5,rhos(1,2),ispin,f,n,nspin)
       !
          c2 = occ( i )*(c2 + c4)  
          c3 = occ(i+1)*(c3 + c5) 
@@ -988,8 +990,8 @@
 
          npair = n_unp - 1 
 !
-         CALL dforce(bec,betae,npair,c0(1,npair),c0(1,nbspx),c2,c3,rhos(1,1))
-         CALL dforce(bec,betae,npair,c0(1,npair),c0(1,nbspx),c4,c5,rhos(1,2))
+         CALL dforce(bec,betae,npair,c0(1,npair),c0(1,nbspx),c2,c3,rhos(1,1),ispin,f,n,nspin)
+         CALL dforce(bec,betae,npair,c0(1,npair),c0(1,nbspx),c4,c5,rhos(1,2),ispin,f,n,nspin)
 !
          c2 = c2 + c4
 !
@@ -1018,7 +1020,7 @@
 ! "TRUE" ONLY WHEN THE POT is NORM_CONSERVING
 !
 
-      CALL dforce( bec, betae, n_unp, c0(1,n_unp), c0(1,n_unp), c2, c3, rhos(1,1) )
+      CALL dforce( bec, betae, n_unp, c0(1,n_unp), c0(1,n_unp), c2, c3, rhos(1,1),ispin,f,n,nspin )
       !
       intermed  = - 2.d0 * sum(c2 * conjg(c0(:,n_unp)))
       IF ( gstart == 2 ) THEN

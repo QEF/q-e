@@ -138,6 +138,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE wave_functions,           ONLY : elec_fakekine
   USE mp,                       ONLY : mp_bcast
   USE mp_global,                ONLY : intra_image_comm
+  USE empty_states,             ONLY : empty_cp
   !
   IMPLICIT NONE
   !
@@ -454,8 +455,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         IF ( tortho ) THEN
            !
-           CALL ortho( eigr, cm(:,:,1), phi(:,:,1), &
-                       lambda, bigr, iter, ccc, bephi, becp )
+           CALL ortho( eigr, cm(:,:,1), phi(:,:,1), ngw, lambda, SIZE(lambda,1), &
+                       bigr, iter, ccc, bephi, becp, nbsp, nspin, nupdwn, iupdwn )
            !
         ELSE
            !
@@ -531,7 +532,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF ( .NOT. tcg ) THEN
         !
-        CALL elec_fakekine( ekinc0, ema0bg, emass, c0, cm, ngw, nbsp, delt )
+        CALL elec_fakekine( ekinc0, ema0bg, emass, c0, cm, ngw, nbsp, 1, delt )
         !
         ekinc = ekinc0
         !
@@ -593,6 +594,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         CALL cp_eigs( nfi, lambdap, lambda )
         !
+        ! ... Compute empty states
+        !
+        CALL empty_cp ( nfi, c0, rhos )
         !
      END IF
      !
@@ -643,7 +647,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         econt = econt + electrons_nose_nrg( xnhe0, vnhe, qne, ekincw )
      IF ( tnoseh ) &
         econt = econt + cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
-     !
+     ! 
      tps = tps + delt * au_ps
      !
      CALL printout_new( nfi, tfirst, tfile, ttprint, tps, hold, stress, &
@@ -802,7 +806,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   END DO main_loop
   !
   !===================== end of main loop of molecular dynamics ===============
-  ! 
+  !
   ! ... Here copy relevant physical quantities into the output arrays/variables
   !
   etot_out = etot
