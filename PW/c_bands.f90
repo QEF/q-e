@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 PWSCF group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -30,7 +30,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                                    nr1, nr2, nr3  
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
                                    npw, current_k, btype
-  USE control_flags,        ONLY : diis_ndim, istep, ethr, lscf, max_cg_iter, &
+  USE control_flags,        ONLY : diis_ndim, ethr, lscf, max_cg_iter, &
                                    isolve, reduce_io
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE scf,                  ONLY : vltot
@@ -247,7 +247,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              CG_loop : DO
                 !
-                IF ( iter /= 1 .OR. istep /= 1 .OR. ntry > 0 ) THEN
+                IF ( iter == 1 .AND. ntry == 0 ) THEN
                    !
                    CALL rinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik) )
                    !
@@ -543,7 +543,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              CG_loop : DO
                 !
-                IF ( iter /= 1 .OR. istep /= 1 .OR. ntry > 0 ) THEN
+                IF ( iter == 1 .AND. ntry == 0 ) THEN
                    !
                    IF ( noncolin ) THEN
                       !
