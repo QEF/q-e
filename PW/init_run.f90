@@ -9,10 +9,8 @@
 SUBROUTINE init_run()
   !----------------------------------------------------------------------------
   !
-  USE ions_base,       ONLY : nat, tau, ityp
   USE klist,           ONLY : nkstot
-  USE force_mod,       ONLY : force
-  USE wvfct,           ONLY : gamma_only, nbnd, et, wg, btype
+  USE wvfct,           ONLY : nbnd, et, wg, btype
   USE control_flags,   ONLY : lmd
   USE dynamics_module, ONLY : allocate_dyn_vars
   !

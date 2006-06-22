@@ -34,14 +34,13 @@ MODULE metadyn_base
       USE control_flags,      ONLY : nstep, ndr
       USE constants,          ONLY : bohr_radius_angs
       USE cell_base,          ONLY : at, alat
-      USE metadyn_vars,       ONLY : ncolvar, fe_grad, g_amplitude, fe_step,   &
-                                     max_metadyn_iter, metadyn_history,        &
-                                     metadyn_fmt, first_metadyn_iter,          &
-                                     gaussian_pos
+      USE metadyn_vars,       ONLY : ncolvar, g_amplitude, fe_step, &
+                                     max_metadyn_iter, metadyn_fmt, &
+                                     first_metadyn_iter, gaussian_pos
       USE metadyn_io,         ONLY : read_metadyn_restart
       USE io_files,           ONLY : tmp_dir, scradir, prefix, iunaxsf, &
                                      iunmeta, delete_if_present
-      USE io_global,          ONLY : stdout, ionode, ionode_id
+      USE io_global,          ONLY : stdout, ionode
       USE mp,                 ONLY : mp_bcast
       USE xml_io_base,        ONLY : restart_dir
       !
@@ -50,9 +49,6 @@ MODULE metadyn_base
       CHARACTER(LEN=*), INTENT(IN)    :: progname
       REAL(DP),         INTENT(INOUT) :: tau(:,:)
       !
-      INTEGER            :: idum, i
-      REAL(DP)           :: rdum
-      LOGICAL            :: file_exists
       CHARACTER(LEN=256) :: dirname
       CHARACTER(LEN=4)   :: c_ncolvar
       CHARACTER(LEN=16)  :: fe_step_fmt
@@ -220,7 +216,7 @@ MODULE metadyn_base
       IMPLICIT NONE
       !
       INTEGER  :: i
-      REAL(DP) :: A, s, inv_s
+      REAL(DP) :: A, inv_s
       !
       REAL(DP), PARAMETER :: coord_sigma = 0.050D0
       REAL(DP), PARAMETER :: dist_sigma  = 0.050D0
@@ -278,7 +274,7 @@ MODULE metadyn_base
       ! ... additional constraints imposed by the domain definition
       !
       USE constants,          ONLY : eps32
-      USE constraints_module, ONLY : constr_type, target, dmax
+      USE constraints_module, ONLY : target
       USE metadyn_vars,       ONLY : ncolvar, fe_grad, fe_step, new_target, &
                                      to_target, shake_nstep, gaussian_pos, &
                                      g_amplitude

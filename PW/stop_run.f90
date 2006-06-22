@@ -13,10 +13,10 @@ SUBROUTINE stop_run( flag )
   ! ... Called at the end of the run with flag = .TRUE. (removes 'restart')
   ! ... or during execution with flag = .FALSE. (does not remove 'restart')
   !
-  USE io_global,          ONLY : stdout, ionode
+  USE io_global,          ONLY : ionode
   USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
                                  lcoarsegrained
-  USE io_files,           ONLY : prefix, iunwfc, iunigk, iunefield
+  USE io_files,           ONLY : iunwfc, iunigk, iunefield
   USE path_variables,     ONLY : path_deallocation
   USE path_io_routines,   ONLY : io_path_stop
   USE constraints_module, ONLY : deallocate_constraint

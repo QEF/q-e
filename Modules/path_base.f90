@@ -40,7 +40,7 @@ MODULE path_base
       USE input_parameters, ONLY : pos_      => pos, &
                                    climbing_ => climbing, &
                                    restart_mode, nstep, input_images
-      USE control_flags,    ONLY : conv_elec, lneb, lsmd, lcoarsegrained
+      USE control_flags,    ONLY : conv_elec, lcoarsegrained
       USE ions_base,        ONLY : nat, amass, ityp, if_pos
       USE metadyn_vars,     ONLY : ncolvar
       USE io_files,         ONLY : prefix, tmp_dir, path_file, dat_file, &
@@ -48,10 +48,9 @@ MODULE path_base
       USE path_variables,   ONLY : climbing, pos, istep_path, nstep_path,   &
                                    dim, num_of_images, pes, grad_pes, mass, &
                                    use_masses, tangent, error, path_length, &
-                                   deg_of_freedom, ds, first_last_opt,      &
-                                   frozen, use_freezing, temp_req, k,       &
-                                   k_min, k_max, tune_load_balance, grad,   &
-                                   posold, elastic_grad, fixed_tan
+                                   deg_of_freedom, frozen, use_freezing, k, &
+                                   k_min, tune_load_balance, grad, posold,  &
+                                   elastic_grad
       USE mp_global,        ONLY : nimage
       USE path_io_routines, ONLY : read_restart
       USE path_variables,   ONLY : path_allocation
@@ -229,7 +228,6 @@ MODULE path_base
       !
       USE input_parameters, ONLY : input_images
       USE path_variables,   ONLY : pos, dim, num_of_images, path_length
-      USE cell_base,        ONLY : alat
       USE path_formats,     ONLY : summary_fmt
       USE io_files,         ONLY : iunpath
       !
@@ -846,8 +844,7 @@ MODULE path_base
       USE path_variables,   ONLY : conv_path, istep_path, nstep_path,  &
                                    suspended_image, activation_energy, &
                                    err_max, pes, climbing, CI_scheme,  &
-                                   Emax_index, fixed_tan, pos, tangent, &
-                                   num_of_images
+                                   Emax_index, fixed_tan, tangent
       USE path_io_routines, ONLY : write_restart, write_dat_files, write_output
       USE check_stop,       ONLY : check_stop_now
       USE path_formats,     ONLY : scf_iter_fmt
@@ -857,7 +854,6 @@ MODULE path_base
       IMPLICIT NONE
       !
       LOGICAL :: stat
-      INTEGER :: i
       !
       REAL(DP), EXTERNAL :: get_clock
       !

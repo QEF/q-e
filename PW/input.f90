@@ -35,21 +35,18 @@ SUBROUTINE iosys()
                             lelfield_  => lelfield, &
                             efield_    => efield, &
                             nberrycyc_ => nberrycyc
-
   !
   USE cell_base,     ONLY : at, bg, alat, omega, &
                             celldm_ => celldm, &
                             ibrav_  => ibrav
   !
-  USE ions_base,     ONLY : if_pos, &
+  USE ions_base,     ONLY : if_pos, ityp, tau, &
                             ntyp_ => nsp, &
-                            nat_  => nat, &
-                            ityp, tau, atm  
+                            nat_  => nat
   !
-  USE basis,         ONLY : atomic_positions, &
+  USE basis,         ONLY : atomic_positions, startingconfig, &
                             startingwfc_ => startingwfc, &
-                            startingpot_ => startingpot, &
-                            startingconfig
+                            startingpot_ => startingpot
   !
   USE char,          ONLY : title_ => title, &
                             crystal
@@ -73,11 +70,10 @@ SUBROUTINE iosys()
                             eamp_     => eamp, &
                             forcefield
   !
-  USE io_files,      ONLY : input_drho, output_drho, &
+  USE io_files,      ONLY : input_drho, output_drho, trimcheck, &
                             psfile, tmp_dir, wfc_dir, &
                             prefix_     => prefix, &
-                            pseudo_dir_ => pseudo_dir, &
-                            trimcheck
+                            pseudo_dir_ => pseudo_dir
   !
   USE force_mod,     ONLY : lforce, lstres, force
   !
@@ -94,29 +90,29 @@ SUBROUTINE iosys()
                             nr2s_ => nr2s, &
                             nr3s_ => nr3s
   !
-  USE klist,         ONLY : xk, wk, nks, ngauss, two_fermi_energies, &
-                            xqq_     => xqq, &
-                            degauss_ => degauss, &
-                            nelec_   => nelec, &
-                            nelup_   => nelup, &
-                            neldw_   => neldw, &
-                            tot_charge_ => tot_charge, &
+  USE klist,         ONLY : ngauss, two_fermi_energies, &
+                            xqq_               => xqq, &
+                            degauss_           => degauss, &
+                            nelec_             => nelec, &
+                            nelup_             => nelup, &
+                            neldw_             => neldw, &
+                            tot_charge_        => tot_charge, &
                             tot_magnetization_ => tot_magnetization, &
-                            multiplicity_ => multiplicity
+                            multiplicity_      => multiplicity
   !
-  USE ktetra,        ONLY : nk1, nk2, nk3, k1, k2, k3, ltetra
+  USE ktetra,        ONLY : ltetra
   !
   USE ldaU,          ONLY : Hubbard_U_     => hubbard_u, &
                             Hubbard_alpha_ => hubbard_alpha, &
-                            niter_with_fixed_ns, starting_ns, U_projection, &
-                            lda_plus_u_ => lda_plus_u
+                            lda_plus_u_    => lda_plus_u, &
+                            niter_with_fixed_ns, starting_ns, U_projection
   !
   USE a2F,           ONLY : la2F_ => la2F
   !
   USE exx,           ONLY : x_gamma_extrapolation_ => x_gamma_extrapolation, &
-                            nqx1_   => nq1, &
-                            nqx2_   => nq2, &
-                            nqx3_   => nq3
+                            nqx1_ => nq1, &
+                            nqx2_ => nq2, &
+                            nqx3_ => nq3
   !
   USE realus,        ONLY : tqr_ => tqr
   !
@@ -126,9 +122,8 @@ SUBROUTINE iosys()
   !
   USE relax,         ONLY : epse, epsf, epsp, starting_scf_threshold
   !
-  USE control_flags, ONLY : diis_ndim, isolve, max_cg_iter, diis_buff, david, &
-                            imix, nmix, iverbosity, tr2, niter, pot_order,    &
-                            wfc_order, &
+  USE control_flags, ONLY : diis_ndim, isolve, max_cg_iter, david, tr2, imix, &
+                            nmix, iverbosity, niter, pot_order, wfc_order, &
                             remove_rigid_rot_ => remove_rigid_rot, &
                             diago_full_acc_   => diago_full_acc, &
                             tolp_             => tolp, &
@@ -190,23 +185,20 @@ SUBROUTINE iosys()
   ! ... SYSTEM namelist
   !
   USE input_parameters, ONLY : ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
-                               nat, ntyp, nbnd, nelec, nelup, neldw, &
+                               nat, ntyp, nbnd, nelec, nelup, neldw,        &
                                tot_charge, tot_magnetization, multiplicity, &
-                               ecutwfc, ecutrho, &
-                               nr1, nr2, nr3, nr1s, nr2s, nr3s, &
-                               nosym, starting_magnetization, &
-                               occupations, degauss, smearing, &
-                               nspin, ecfixed, qcutz, q2sigma, &
-                               lda_plus_U, Hubbard_U, Hubbard_alpha, &
-                               starting_ns_eigenvalue, U_projection_type, &
-                               input_dft, la2F, &
+                               ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s, &
+                               nr3s, nosym, starting_magnetization,         &
+                               occupations, degauss, smearing, nspin,       &
+                               ecfixed, qcutz, q2sigma, lda_plus_U,         &
+                               Hubbard_U, Hubbard_alpha, input_dft, la2F,   &
+                               starting_ns_eigenvalue, U_projection_type,   &
 #if defined (EXX)                               
                                x_gamma_extrapolation, nqx1, nqx2, nqx3, &
 #endif
-                               edir, emaxpos, eopreg, eamp, &
-                               noncolin, lambda, angle1, angle2, &
-                               constrained_magnetization, B_field, &
-                               fixed_magnetization, report, lspinorb
+                               edir, emaxpos, eopreg, eamp, noncolin, lambda, &
+                               angle1, angle2, constrained_magnetization,     &
+                               B_field, fixed_magnetization, report, lspinorb
   !
   ! ... ELECTRONS namelist
   !
@@ -228,13 +220,11 @@ SUBROUTINE iosys()
                                k_min, ds, use_freezing, fixed_tan, write_save, &
                                w_1, w_2, trust_radius_max, trust_radius_min,   &
                                trust_radius_ini, bfgs_ndim
-                               
   !
   ! ... CELL namelist
   !
-  USE input_parameters, ONLY : cell_parameters, cell_dynamics, press, &
-                               wmass, cell_temperature, cell_factor, &
-                               press_conv_thr
+  USE input_parameters, ONLY : cell_parameters, cell_dynamics, press, wmass, &
+                               cell_temperature, cell_factor, press_conv_thr
   !
   ! ... PHONON namelist
   !
@@ -252,10 +242,7 @@ SUBROUTINE iosys()
   !
   IMPLICIT NONE
   !
-  ! ... local variables
-  !
-  INTEGER  :: i, ia, ios, is, image, nt
-  LOGICAL  :: ltest
+  INTEGER  :: ia, image, nt
   REAL(DP) :: theta, phi
   !
   !
@@ -292,12 +279,13 @@ SUBROUTINE iosys()
   ! ... Set Values for electron and bands
   !
   tfixed_occ = .FALSE.
+  ltetra     = .FALSE.
   !
   SELECT CASE( TRIM( occupations ) )
   CASE( 'fixed' )
      !
      ngauss = 0
-     ltetra = .FALSE.
+     !
      IF ( degauss /= 0.D0 ) THEN
         CALL errore( ' iosys ', &
                    & ' fixed occupations, gauss. broadening ignored', -1 )
@@ -306,11 +294,10 @@ SUBROUTINE iosys()
      !
   CASE( 'smearing' )
      !
-     ltetra = .FALSE.
-     IF ( degauss == 0.D0 ) THEN
+     IF ( degauss == 0.D0 ) &
         CALL errore( ' iosys ', &
                    & ' smearing requires gaussian broadening', 1 )
-     END IF
+     !
      SELECT CASE ( TRIM( smearing ) )
      CASE ( 'gaussian' , 'gauss' )
         ngauss = 0
@@ -330,7 +317,6 @@ SUBROUTINE iosys()
   CASE( 'from_input' )
      !
      ngauss     = 0
-     ltetra     = .FALSE.
      tfixed_occ = .TRUE.
      !
   CASE DEFAULT
@@ -1414,9 +1400,9 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
                                  tapos, rd_pos, atomic_positions, if_pos,  &
                                  sp_pos, k_points, xk, wk, nk1, nk2, nk3,  &
                                  k1, k2, k3, nkstot, cell_symmetry, rd_ht, &
-                                 trd_ht, f_inp, calculation
+                                 trd_ht, f_inp
   USE wvfct,              ONLY : gamma_only
-  USE cell_base,          ONLY : at, ibrav, symm_type, celldm
+  USE cell_base,          ONLY : at, ibrav, symm_type
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm
   USE klist,              ONLY : nks
   USE ktetra,             ONLY : nk1_   => nk1, &
@@ -1442,7 +1428,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   CHARACTER (LEN=30)  :: atomic_positions_
   !
   LOGICAL :: tcell = .FALSE.
-  INTEGER :: i, is, ns, ia, ik
+  INTEGER :: is, ia
   !
   !
   amass = 0
@@ -1618,7 +1604,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   !
   USE input_parameters, ONLY : restart_mode
   USE control_flags,    ONLY : lpath, lbands
-  USE io_files,         ONLY : prefix, nd_nmbr, delete_if_present
+  USE io_files,         ONLY : prefix, delete_if_present
   USE path_variables,   ONLY : num_of_images
   USE mp_global,        ONLY : mpime, nproc
   USE io_global,        ONLY : ionode
@@ -1628,7 +1614,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   !
   CHARACTER(LEN=*), INTENT(INOUT) :: tmp_dir
   !
-  INTEGER             :: l, ios, image, proc
+  INTEGER             :: ios, image, proc
   CHARACTER (LEN=256) :: file_path, tmp_dir_saved
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char

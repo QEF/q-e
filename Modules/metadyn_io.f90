@@ -49,7 +49,7 @@ MODULE metadyn_io
       REAL(DP),         INTENT(IN) :: energy
       REAL(DP),         INTENT(IN) :: pos_unit
       !
-      INTEGER            :: i, ia
+      INTEGER            :: i
       CHARACTER(LEN=256) :: filename, metadyn_dir
       INTEGER            :: iunit, ierr
       !
@@ -158,9 +158,8 @@ MODULE metadyn_io
     SUBROUTINE read_metadyn_restart( dirname, tau, pos_unit )
       !------------------------------------------------------------------------
       !
-      USE metadyn_vars,       ONLY : ncolvar, g_amplitude, gaussian_pos, &
-                                     fe_grad, metadyn_history, &
-                                     first_metadyn_iter
+      USE metadyn_vars,       ONLY : ncolvar, gaussian_pos, fe_grad, &
+                                     metadyn_history, first_metadyn_iter
       USE constraints_module, ONLY : target
       USE io_global,          ONLY : ionode, ionode_id
       USE mp,                 ONLY : mp_bcast
@@ -172,7 +171,7 @@ MODULE metadyn_io
       REAL(DP),         INTENT(IN)  :: pos_unit
       !
       INTEGER            :: ncolvar_in
-      INTEGER            :: i, ia
+      INTEGER            :: i
       CHARACTER(LEN=256) :: filename, tag
       INTEGER            :: iunit, ierr
       !

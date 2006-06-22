@@ -20,11 +20,11 @@ SUBROUTINE move_ions()
   !
   USE constants,              ONLY : eps8
   USE io_global,              ONLY : stdout
-  USE io_files,               ONLY : tmp_dir, prefix, iunupdate
+  USE io_files,               ONLY : tmp_dir, iunupdate
   USE kinds,                  ONLY : DP
   USE cell_base,              ONLY : alat, at, bg, omega
   USE cellmd,                 ONLY : omega_old, at_old, lmovecell, calc
-  USE ions_base,              ONLY : nat, ityp, tau, if_pos
+  USE ions_base,              ONLY : nat, ityp, tau
   USE gvect,                  ONLY : nr1, nr2, nr3
   USE symme,                  ONLY : s, ftau, nsym, irt
   USE ener,                   ONLY : etot
@@ -42,7 +42,6 @@ SUBROUTINE move_ions()
   USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
-  USE dynamics_module,        ONLY : diff_coeff
   USE dynamics_module,        ONLY : verlet, proj_verlet
   !
   IMPLICIT NONE
@@ -50,7 +49,6 @@ SUBROUTINE move_ions()
   LOGICAL, SAVE         :: lcheck_mag = .TRUE.
     ! .TRUE. if a check on zero absolute magnetization is required
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
-  INTEGER               :: na  
   REAL(DP)              :: energy_error, gradient_error
   LOGICAL               :: step_accepted, exst
   REAL(DP), ALLOCATABLE :: pos(:), gradient(:)
@@ -269,8 +267,6 @@ SUBROUTINE move_ions()
   END IF
   ! 
   RETURN
-  !
-9000 FORMAT(5X,'atom ',I3,' type ',I2,'   force = ',3F14.8) 
   !
 9010 FORMAT( /5X,'lsda relaxation :  a final configuration with zero', &
            & /5X,'                   absolute magnetization has been found' )
