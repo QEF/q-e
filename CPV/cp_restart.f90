@@ -1217,6 +1217,8 @@ MODULE cp_restart
                   !
                END IF
                !
+               DEALLOCATE ( occ_ )
+               !
             END IF
             !
             CALL mp_bcast( tread_cm, ionode_id, intra_image_comm )
