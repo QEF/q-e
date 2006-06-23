@@ -56,7 +56,7 @@
       use derho
       use cdvan
       use stre
-      use constants, only: pi, factem, au_gpa
+      use constants, only: pi, au_gpa
       use io_files, only: psfile, pseudo_dir
       use io_files, only: outdir
 

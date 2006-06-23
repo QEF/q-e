@@ -227,7 +227,7 @@
 
   SUBROUTINE ions_nose_info()
 
-      use constants,     only: factem, au_terahertz, pi
+      use constants,     only: au_terahertz, pi
       use time_step,     only: delt
       USE io_global,     ONLY: stdout
       USE control_flags, ONLY: tnosep

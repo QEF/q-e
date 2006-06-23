@@ -68,7 +68,6 @@
       USE derho
       USE cdvan
       USE stre
-      USE constants,      ONLY: pi, factem
       USE io_files,       ONLY: psfile, pseudo_dir, outdir
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
                                 rhovan => becsum, deeq

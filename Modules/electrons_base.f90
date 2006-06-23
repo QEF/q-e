@@ -442,7 +442,7 @@
 !------------------------------------------------------------------------------!
 
   subroutine electrons_nose_init( ekincw_ , fnosee_ )
-     USE constants, ONLY: factem, pi, au_terahertz
+     USE constants, ONLY: pi, au_terahertz
      REAL(DP), INTENT(IN) :: ekincw_, fnosee_
      ! set thermostat parameter for electrons
      qne     = 0.0d0
@@ -501,7 +501,7 @@
 
   SUBROUTINE electrons_nose_info()
 
-      use constants,     only: factem, au_terahertz, pi
+      use constants,     only: au_terahertz, pi
       use time_step,     only: delt
       USE io_global,     ONLY: stdout
       USE control_flags, ONLY: tnosee

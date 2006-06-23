@@ -416,7 +416,7 @@
                a_ , b_ , c_ , cosab, cosac, cosbc, wc_ , total_ions_mass , press_ ,  &
                frich_ , greash_ , cell_dofree )
 
-    USE constants, ONLY: bohr_radius_angs, gpa_au, pi, amu_au
+    USE constants, ONLY: bohr_radius_angs, au_gpa, pi, amu_au
     USE io_global, ONLY: stdout
 
     IMPLICIT NONE
@@ -455,7 +455,7 @@
       CALL errore( ' cell_base_init ', ' do not specify both celldm and a,b,c!', 1 )
     END IF
 
-    press  = press_ * gpa_au
+    press  = press_ / au_gpa
     !  frich  = frich_   ! for the time being this is set elsewhere
     greash = greash_
 

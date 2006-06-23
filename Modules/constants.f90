@@ -50,7 +50,6 @@ MODULE constants
   REAL(DP), PARAMETER :: AU_KB            = 294210.0D0     ! Kbar
   REAL(DP), PARAMETER :: KB_AU            = 1.0D0/294210.0D0 ! au
   REAL(DP), PARAMETER :: AU_GPA           = 29421.0D0      ! GPa
-  REAL(DP), PARAMETER :: GPA_AU           = 1.0_DP/AU_GPA  ! au
   REAL(DP), PARAMETER :: AUTOEV           = 27.211652D0    ! eV
   REAL(DP), PARAMETER :: RYTOEV           = 13.605826D0    ! eV
   REAL(DP), PARAMETER :: AMU_AU           = 1822.89D0   ! (mass of a proton)

@@ -53,7 +53,7 @@
       USE energies,          ONLY : print_energies, dft_energy_type
       USE printout_base,     ONLY : printout_base_open, printout_base_close, &
                                     printout_pos, printout_cell, printout_stress
-      USE constants,         ONLY : factem, au_gpa, amu_si, bohr_radius_cm, amu_au, BOHR_RADIUS_ANGS
+      USE constants,         ONLY : au_gpa, amu_si, bohr_radius_cm, amu_au, BOHR_RADIUS_ANGS
       USE ions_base,         ONLY : na, nsp, nat, ind_bck, atm, ityp, pmass, &
                                     cdm_displacement, ions_displacement
       USE cell_base,         ONLY : s_to_r, get_volume
