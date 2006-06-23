@@ -1,7 +1,7 @@
 
 \documentclass[12pt,a4paper]{article}
- \def\version{3.1}
- \def\stableversion{3.0} % last stable release
+ \def\version{3.1.1}
+ \def\stableversion{3.1.1} % last stable release
 
  \usepackage{epsfig}
  \usepackage{html}
@@ -230,6 +230,8 @@ Martin Hilgeman,
 Eyvaz Isaev, 
 Axel Kohlmeyer,
 Konstantin Kudin,
+Nicolas Lacorne, 
+Stephane Lefranc,
 Sergey Lisenkov,
 Kurt Maeder,
 Andrea Marini,
@@ -575,7 +577,10 @@ options with rather obvious meaning :
 \texttt{\_\_FFTW}, \texttt{\_\_USE\_INTERNAL\_FFTW}, \texttt{\_\_FFTW3}.
 
 The FFTW library can also be replaced by vendor-specific FFT libraries, 
-when available.
+if available and if a driver is available in the code. Presently 
+drivers are present for IBM ESSL, Intel MKL v.8, SCSL and COMPLIB 
+scientific libraries from SGI, sunperf from SUN. Not all of them
+are automatically selected by \texttt{configure}, though.
 
 Finally, Quantum-ESPRESSO can use the MASS vector math library from
 IBM, if available (only on AIX).

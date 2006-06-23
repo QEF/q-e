@@ -85,6 +85,11 @@ PH, D3, Gamma
 - use charge mixing instead of potential mixing
 
 - move all phonon-specific stuff (symmetry etc) from pw into phonon
+  clean up the logic overall: there shouldn't be any longer the
+  present confusion on what symmetries are we dealing with. We should
+  either keep unchanged the crystal symmetries and use indices to
+  locate symmetries of the small group of q, or keep different copies 
+  for the symmetries of the crystal and of the small group of q
 
 - same input for Gamma and PH
 

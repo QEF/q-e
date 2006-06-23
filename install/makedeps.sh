@@ -39,7 +39,19 @@ do
         mv make.depend make.depend.tmp
         sed 's/@fftw.c@/fftw.c/' make.depend.tmp > make.depend
     fi
-        
+
+    if test "$DIR" = "Modules"
+    then
+	mv make.depend make.depend.tmp
+        sed 's/fft_scalar.o : @mkl_dfti.f90@//' make.depend.tmp > make.depend
+	mv make.depend make.depend.tmp
+	sed 's/fft_scalar.o : @mkl_dft_type@//' make.depend.tmp > make.depend
+   fi
+
+   
+
+ 
+       
     rm -f make.depend.tmp
 
     # check for missing dependencies

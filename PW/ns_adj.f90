@@ -14,8 +14,8 @@ subroutine ns_adj
    USE kinds,     ONLY : DP
    USE ions_base, ONLY : nat, ntyp => nsp, ityp
    USE ldaU,      ONLY : nsnew, Hubbard_lmax, Hubbard_l, Hubbard_U, starting_ns
-   USE lsda_mod,  ONLY : lsda, current_spin, nspin, isk, starting_magnetization
-   USE io_global, ONLY :  stdout
+   USE lsda_mod,  ONLY : nspin
+   USE io_global, ONLY : stdout
  
    implicit none
    !

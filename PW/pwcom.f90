@@ -564,7 +564,7 @@ END MODULE bp
 !
 MODULE pwcom
   !
-  USE constants, ONLY : e2, rytoev, amconv, uakbar, pi, tpi, fpi
+  USE constants, ONLY : e2, rytoev, amconv, pi, tpi, fpi
   USE cell_base, ONLY : celldm, at, bg, alat, omega, tpiba, tpiba2, &
                         ibrav, symm_type
   ! TEMP
