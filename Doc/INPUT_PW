@@ -337,7 +337,9 @@ starting_magnetization(i)
                corresponding to sublattices of the same atomic type.
                If you fix the magnetization with "nelup/neldw" or with
                "multiplicity" or with "tot_magnetization", you should
-               not specify starting_magnetization
+               not specify starting_magnetization. 
+               If you are restarting from a previous run, or from an
+               interrupted run, starting_magnetization is ignored.
 
 nelup, neldw   REAL
                number of spin-up and spin-down electrons, respectively
