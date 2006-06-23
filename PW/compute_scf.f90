@@ -62,7 +62,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   REAL(DP),         EXTERNAL :: get_clock
   !
   !
-  istep = istep_path + 1
+  istep = istep_path
   istat = 0
   !
   CALL flush_unit( iunpath )
