@@ -261,6 +261,7 @@ MODULE input
                                etot_maxiter_  => etot_maxiter, &
                                forc_maxiter_  => forc_maxiter
      USE control_flags, ONLY : force_pairing_ => force_pairing
+     USE control_flags, ONLY : remove_rigid_rot_ => remove_rigid_rot
      !
      ! ...  Other modules
      !
@@ -278,8 +279,9 @@ MODULE input
                                tefield2_    => tefield2,  &
                                epol2_       => epol2,     &
                                efield2_     => efield2
-
-
+     !
+     USE cvan, ONLY: nvb
+     !
      USE input_parameters,   ONLY: &
         electron_dynamics, electron_damping, diis_rot, electron_temperature,   &
         ion_dynamics, ekin_conv_thr, etot_conv_thr, forc_conv_thr, ion_maxstep,&
@@ -292,9 +294,7 @@ MODULE input
         tdipole_card, toptical_card, tnewnfi_card, newnfi_card,                &
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
         orthogonalization, electron_velocities, nat, if_pos, phase_space,      &
-        tefield, epol, efield, tefield2, epol2, efield2
-
-     USE cvan,               ONLY: nvb
+        tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot
      !
      IMPLICIT NONE
      !
@@ -316,16 +316,15 @@ MODULE input
      etot_conv_thr_ = etot_conv_thr
      forc_conv_thr_ = forc_conv_thr
      ekin_maxiter_  = electron_maxstep
-
-
-     tefield_       = tefield
-     epol_          = epol
-     efield_        = efield
-  
-     tefield2_       = tefield2
-     epol2_          = epol2
-     efield2_        = efield2
-
+     !
+     remove_rigid_rot_ = remove_rigid_rot
+     !
+     tefield_  = tefield
+     epol_     = epol
+     efield_   = efield
+     tefield2_ = tefield2
+     epol2_    = epol2
+     efield2_  = efield2
      !
      ! ... Set internal time step variables ( delt, twodelt, dt2 ... )
      !
@@ -354,8 +353,8 @@ MODULE input
      trhor_  = ( TRIM( calculation ) == 'nscf' )
      tvlocw_ = ( TRIM( disk_io ) == 'high' )     !  warning this is not working
      ! for now use reduce_io in CP to specify if the charge density is saved
-!     reduce_io_ = ( TRIM( disk_io ) == 'low' )
-     reduce_io_ = .not.( TRIM( disk_io ) == 'high' )
+     !
+     reduce_io_ = .NOT.( TRIM( disk_io ) == 'high' )
      !
      SELECT CASE( TRIM( verbosity ) )
        CASE( 'minimal' )
@@ -661,6 +660,8 @@ MODULE input
           CALL errore(' control_flags ',' unknown ion_dynamics '//TRIM(ion_dynamics), 1 )
       END SELECT
 
+      
+
       IF ( ANY( if_pos(:,1:nat) == 0 ) ) lfixatom = .TRUE.
 
       ! ... Ionic Temperature
@@ -805,8 +806,6 @@ MODULE input
       ! force pairing
 
       force_pairing_ = force_pairing
-      !
-      !
       !
       IF( ( nvb > 0 ) .and. ( program_name == 'FPMD' ) ) &
         CALL errore(' iosys ',' USPP not yet implemented in FPMD ',1)

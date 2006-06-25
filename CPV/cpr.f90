@@ -13,14 +13,13 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !
   USE kinds,                    ONLY : DP
   USE constants,                ONLY : bohr_radius_angs, amu_au
-  USE control_flags,            ONLY : iprint, isave, thdyn, tpre,       &
-                                       iprsta, tfor, tvlocw,      &
-                                       taurdr, tprnfor, tsdc, lconstrain, lwf, &
-                                       lneb, lcoarsegrained, ndr, ndw, nomore, &
-                                       tsde, tortho, tnosee, tnosep, trane,    &
-                                       tranp, tsdp, tcp, tcap, ampre, amprp,   &
-                                       tnoseh, tolp, ortho_eps, ortho_max,     &
-                                       printwfc
+  USE control_flags,            ONLY : iprint, isave, thdyn, tpre, iprsta,     &
+                                       tfor, tvlocw,remove_rigid_rot, taurdr,  &
+                                       tprnfor, tsdc, lconstrain, lwf, lneb,   &
+                                       lcoarsegrained, ndr, ndw, nomore, tsde, &
+                                       tortho, tnosee, tnosep, trane, tranp,   &
+                                       tsdp, tcp, tcap, ampre, amprp, tnoseh,  &
+                                       tolp, ortho_eps, ortho_max, printwfc
   USE core,                     ONLY : nlcc_any, rhoc
   USE uspp_param,               ONLY : nhm, nh
   USE cvan,                     ONLY : nvb, ish
@@ -156,7 +155,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !
   ! ... forces on ions
   !
-  REAL(DP) :: maxfion
+  REAL(DP) :: maxfion, fion_tot(3)
   !
   ! ... work variables
   !
@@ -168,11 +167,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   REAL(DP) :: delta_etot
   REAL(DP) :: ftmp, enb, enbi
   INTEGER  :: is, nacc, ia, j, iter, i, isa, ipos
-  INTEGER   :: k, ii, l, m, iss
-  !
+  INTEGER  :: k, ii, l, m, iss
   REAL(DP) :: hgamma(3,3), temphh(3,3)
   REAL(DP) :: fcell(3,3)
-  !
   REAL(DP) :: stress_gpa(3,3), thstress(3,3)
   !
   REAL(DP), ALLOCATABLE :: usrt_tau0(:,:), usrt_taup(:,:), usrt_fion(:,:)
@@ -181,8 +178,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   REAL(DP), ALLOCATABLE :: tauw(:,:)  
     ! temporary array used to printout positions
   CHARACTER(LEN=3) :: labelw( nat )
-  ! for force_pairing
+    ! for force_pairing
   INTEGER   :: nspin_sub 
+  !
   !
   dt2bye   = dt2 / emass
   etot_out = 0.D0
@@ -334,6 +332,13 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      IF ( tfor ) THEN
         !
         IF ( lwf ) CALL ef_force( fion, na, nsp, zv )
+        !
+        fion_tot(:) = SUM( fion(:,:), DIM = 2 ) / DBLE( nat )
+        !
+        FORALL( ia = 1:nat ) fion(:,ia) = fion(:,ia) - fion_tot(:)
+        !
+        IF ( remove_rigid_rot ) &
+           CALL remove_tot_torque( nat, tau0, pmass(ityp(ind_srt(:))), fion )
         !
         IF ( lconstrain ) THEN
            !

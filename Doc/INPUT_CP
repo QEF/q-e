@@ -564,6 +564,21 @@ amprp(i)       REAL ( default = 0.D0 )
 greasp         REAL ( default = 1.D0 )
                same as "grease", for ionic damped dynamics.
 
+remove_rigid_rot
+               LOGICAL ( default = .FALSE. )
+               this keyword is useful when simulating the dynamics and/or the
+               thermodynamics of an isolated system. If set to true the total
+               torque of the internal forces is set to zero by adding new forces
+               that compensate the spurious interaction with the periodic
+               images. This allowes for the use of smaller supercells.
+               BEWARE: since the potential energy is no longer consistent with
+               the forces (it still contains the spurious interaction with the
+               repeated images), the total energy is not conserved anymore.
+               However the dynamical and thermodynamical properties should be
+               in closer agreement with those of an isolated system.
+               Also the final energy of a structural relaxation will be higher,
+               but the relaxation itself should be faster.
+
 !
 ! ... keywords used only in NEB calculations
 !
