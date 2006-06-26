@@ -28,9 +28,9 @@ MODULE rundiis_module
 CONTAINS
 
 
-   SUBROUTINE rundiis( tprint, rhoe, atoms, &
-                 bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cgrad, cdesc, tcel, ht0, fi, eig, &
-                 vpot, doions, edft )
+   SUBROUTINE rundiis &
+              ( tprint, rhoe, atoms, bec, becdr, eigr, vkb, ei1, ei2, ei3,  &
+                sfac, c0, cm, cgrad, cdesc, tcel, ht0, fi, eig, vpot, doions, edft )
 
    !  this routine computes the electronic ground state via diagonalization
    !  by the DIIS method (Wood and Zunger, J.Phys.A 18,1343 (1985))
@@ -99,7 +99,7 @@ CONTAINS
       USE reciprocal_vectors, ONLY: mill_l
       USE gvecp, ONLY: ngm
       USE local_pseudo, ONLY: vps
-      USE uspp,             ONLY : vkb, nkb
+      USE uspp,             ONLY : nkb
 
       IMPLICIT NONE
 
@@ -114,6 +114,7 @@ CONTAINS
       REAL(DP) :: becdr(:,:,:)
       COMPLEX(DP) :: sfac(:,:)
       COMPLEX(DP) :: eigr(:,:)
+      COMPLEX(DP) :: vkb(:,:)
       COMPLEX(DP) :: ei1(:,:)
       COMPLEX(DP) :: ei2(:,:)
       COMPLEX(DP) :: ei3(:,:)
@@ -130,7 +131,7 @@ CONTAINS
       INTEGER idiis
       LOGICAL tlimit
       REAL(DP)  fions(3) 
-      REAL(DP)  timepre,s1,s2,s3,s4,s5
+      REAL(DP)  s1,s2,s3,s4,s5
       REAL(DP)  dene,etot_m,cnorm, drho
       REAL(DP)  ekinc,svar1,svar2,svar3_0
       REAL(DP)  efermi, sume, entk, rhos, eold, dum_kin, nel
@@ -235,7 +236,7 @@ CONTAINS
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, bec, becdr, eigr)
           CALL rhoofr( 1, c0, cdesc, fi, rhoe, ht0)
           CALL vofrhos(.FALSE., tforce, tstress, rhoe, atoms, &
-            vpot, bec, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht0, edft)
+            vpot, bec, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, ht0, edft)
 
 ! ...     density upgrade
           CALL newrho(rhoe(:,1), drho, idiis)
@@ -248,7 +249,7 @@ CONTAINS
 ! ...     recalculate potential
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, bec, becdr, eigr)
           CALL vofrhos(.FALSE., tforce, tstress, rhoe, atoms, &
-            vpot, bec, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre, ht0, edft)
+            vpot, bec, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, ht0, edft)
 
           IF( idiis /= 1 )THEN
             IF( drho < tolrhof .AND. dene < tolene) EXIT DIIS_LOOP
@@ -266,7 +267,7 @@ CONTAINS
 
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, bec, becdr, eigr)
 
-          CALL dforce_all( c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), eigr, bec, nupdwn(1), iupdwn(1) )
+          CALL dforce_all( c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 
           CALL proj( 1, cgrad(:,:,1), cdesc, c0(:,:,1), cdesc, lambda )
           CALL crot( 1, c0(:,:,1), cdesc, lambda, eig(:,1) )
@@ -275,7 +276,7 @@ CONTAINS
           call entropy_s(fi(1,1),temp_elec,cdesc%nbl(1),edft%ent)
 
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, bec, becdr, eigr)
-          CALL dforce_all( c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), eigr, bec, nupdwn(1), iupdwn(1) )
+          CALL dforce_all( c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 
           DO ib = 1, cdesc%nbl( 1 )
             cgrad(:,ib,1) = cgrad(:,ib,1) + eig(ib,1)*c0(:,ib,1)
@@ -286,7 +287,7 @@ CONTAINS
 ! ...     DIIS on c0 at FIXED potential
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms, bec, becdr, eigr)
 
-          CALL dforce_all( c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), eigr, bec, nupdwn(1), iupdwn(1) )
+          CALL dforce_all( c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 
           CALL proj( 1, cgrad(:,:,1), cdesc, c0(:,:,1), cdesc, lambda)
 
@@ -348,9 +349,9 @@ CONTAINS
 
 
 
-      SUBROUTINE runsdiis(tprint, rhoe, atoms, &
-                 bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cgrad, cdesc, tcel, ht0, fi, eig, &
-                 vpot, doions, edft )
+      SUBROUTINE runsdiis &
+                 ( tprint, rhoe, atoms, bec, becdr, eigr, vkb, ei1, ei2, ei3, &
+                   sfac, c0, cm, cgrad, cdesc, tcel, ht0, fi, eig, vpot, doions, edft )
 
 !  this routine computes the electronic ground state via diagonalization
 !  by the DIIS method (Wood and Zunger, J.Phys.A 18,1343 (1985))
@@ -411,7 +412,7 @@ CONTAINS
       USE wave_types
       USE atoms_type_module, ONLY: atoms_type
       USE local_pseudo, ONLY: vps
-      USE uspp,             ONLY : vkb, nkb
+      USE uspp,             ONLY : nkb
 
       IMPLICIT NONE
 
@@ -422,6 +423,7 @@ CONTAINS
       TYPE (wave_descriptor) :: cdesc
       REAL(DP) :: rhoe(:,:)
       COMPLEX(DP) :: eigr(:,:)
+      COMPLEX(DP) :: vkb(:,:)
       COMPLEX(DP) :: ei1(:,:)
       COMPLEX(DP) :: ei2(:,:)
       COMPLEX(DP) :: ei3(:,:)
@@ -444,11 +446,11 @@ CONTAINS
       INTEGER nspin
       INTEGER nx,nrl, ndiis,nowv, isteep
       REAL(DP)  ekinc(2), svar1, svar2, svar3_0
-      REAL(DP)  timepre, s0, s1, s2, s3, s4, s5
+      REAL(DP)  s0, s1, s2, s3, s4, s5
       REAL(DP) :: seconds_per_iter, old_clock_value
       REAL(DP)  dene, etot_m, cnorm,  drho
       REAL(DP)  efermi, sume, entk,rhos
-      REAL(DP)  eold, timerd, timeorto
+      REAL(DP)  eold
       REAL(DP)  fccc
       REAL(DP), ALLOCATABLE :: lambda(:,:)
       COMPLEX(DP), ALLOCATABLE :: clambda(:,:,:)
@@ -464,8 +466,6 @@ CONTAINS
       istate      = 0
       eold        = 1.0d10  ! a large number
       isteep      = 0
-      timerd      = 0
-      timeorto    = 0
       svar1       = 2.d0
       svar2       = -1.d0
       svar3_0     = delt * delt / emass
@@ -495,7 +495,7 @@ CONTAINS
         END IF
 
         CALL kspotential( 1, .FALSE., tforce, tstress, rhoe, &
-          atoms, bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, fi, vpot, edft, timepre )
+          atoms, bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, fi, vpot, edft )
 
         s0 = cclock()
         seconds_per_iter = (s0 - old_clock_value)
@@ -510,8 +510,7 @@ CONTAINS
 
           isteep = isteep + 1
           cm = c0
-          CALL runcp(.FALSE., tortho, tsde, cm, c0, cgrad, cdesc, vpot, eigr, fi, &
-            ekinc, timerd, timeorto, ht0, ei, bec, fccc )
+          CALL runcp(.FALSE., tortho, tsde, cm, c0, cgrad, cdesc, vpot, vkb, fi, ekinc, ht0, ei, bec, fccc )
           CALL update_wave_functions(cm, c0, cgrad, cdesc)
 
         ELSE
@@ -534,7 +533,7 @@ CONTAINS
 ! ...       so on).
 
             CALL dforce_all( c0(:,:,ispin), fi(:,ispin), cgrad(:,:,ispin), &
-                             vpot(:,ispin), eigr, bec, nupdwn(ispin), iupdwn(ispin) )
+                             vpot(:,ispin), vkb, bec, nupdwn(ispin), iupdwn(ispin) )
 
             CALL proj( ispin, cgrad(:,:,ispin), cdesc, c0(:,:,ispin), cdesc, lambda)
 
@@ -571,7 +570,7 @@ CONTAINS
       END IF
 
       IF ( tprint ) THEN
-        CALL diis_eigs(.TRUE., atoms, c0, cdesc, fi, vpot, cgrad, eigr, bec)
+        CALL diis_eigs(.TRUE., atoms, c0, cdesc, fi, vpot, cgrad, eigr, vkb, bec)
       END IF
 
       cgrad = c0
@@ -599,7 +598,7 @@ CONTAINS
 
 !  ----------------------------------------------
 
-      SUBROUTINE diis_eigs(tortho, atoms, c, cdesc, fi, vpot, eforce, eigr, bec )
+      SUBROUTINE diis_eigs(tortho, atoms, c, cdesc, fi, vpot, eforce, eigr, vkb, bec )
 
         USE kinds
         USE wave_types
@@ -628,6 +627,7 @@ CONTAINS
         REAL (DP) ::  bec(:,:)
         LOGICAL, INTENT(IN) :: TORTHO
         COMPLEX(DP) :: eigr(:,:)
+        COMPLEX(DP) :: vkb(:,:)
         TYPE(atoms_type), INTENT(INOUT)  :: atoms     
 
 ! ...   LOCALS
@@ -658,7 +658,7 @@ CONTAINS
 
 ! ...     Calculate | dH / dpsi(j) >
           CALL dforce_all( c(:,:,ispin), fi(:,ispin), eforce(:,:,ispin), &
-                           vpot(:,ispin), eigr, bec, nupdwn(ispin), iupdwn(ispin) )
+                           vpot(:,ispin), vkb, bec, nupdwn(ispin), iupdwn(ispin) )
 
 ! ...       Calculate Eij = < psi(i) | H | psi(j) > = < psi(i) | dH / dpsi(j) >
             DO i = 1, n

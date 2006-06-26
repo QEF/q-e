@@ -170,9 +170,10 @@ SUBROUTINE init_run()
      ALLOCATE( drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 ) )
   END IF
   !
+  ALLOCATE( vkb( ngw, nkb ) )
+  !
   IF( program_name == 'CP90' ) THEN
      !
-     ALLOCATE( vkb( ngw, nkb ) )
      IF ( tpre ) THEN
         ALLOCATE( drhog( ngm,  nspin, 3, 3 ) )
         ALLOCATE( drhor( nnrx, nspin, 3, 3 ) )

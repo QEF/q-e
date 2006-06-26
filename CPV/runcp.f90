@@ -25,64 +25,55 @@
 
 
 !  ----------------------------------------------
-!  BEGIN manual
 
-    SUBROUTINE runcp( ttprint, tortho, tsde, cm, c0, cp, cdesc, &
-      vpot, eigr, fi, ekinc, timerd, timeorto, ht, ei, bec, fccc )
+   SUBROUTINE runcp &
+      ( ttprint, tortho, tsde, cm, c0, cp, cdesc, vpot, vkb, fi, ekinc, ht, ei, bec, fccc )
 
-!     This subroutine performs a Car-Parrinello or Steepest-Descent step
-!     on the electronic variables, computing forces on electrons and,
-!     when required, the eigenvalues of the Hamiltonian 
-!
-!     On output "cp" contains the new plave waves coefficients, while
-!     "cm" and "c0" are not changed
-!  ----------------------------------------------
-!  END manual
+      !     This subroutine performs a Car-Parrinello or Steepest-Descent step
+      !     on the electronic variables, computing forces on electrons and,
+      !     when required, the eigenvalues of the Hamiltonian 
+      !
+      !     On output "cp" contains the new plave waves coefficients, while
+      !     "cm" and "c0" are not changed
+      !  ----------------------------------------------
 
-! ...   declare modules
+      ! ...   declare modules
       USE kinds
-      USE electrons_module, ONLY:  eigs, nb_l
-      USE cp_electronic_mass, ONLY: emass
-      USE cp_main_variables,  ONLY: ema0bg
-      USE wave_functions, ONLY : elec_fakekine
-      USE wave_base, ONLY: hpsi
-      USE cell_module, ONLY: boxdimensions
-      USE time_step, ONLY: delt
-      USE orthogonalize, ONLY: ortho
-      USE wave_types, ONLY: wave_descriptor
-      USE wave_constrains, ONLY: update_lambda
-      USE uspp,             ONLY : vkb, nkb
+      USE electrons_module,   ONLY : eigs, nb_l
+      USE cp_electronic_mass, ONLY : emass
+      USE cp_main_variables,  ONLY : ema0bg
+      USE wave_functions,     ONLY : elec_fakekine
+      USE wave_base,          ONLY : hpsi
+      USE cell_module,        ONLY : boxdimensions
+      USE time_step,          ONLY : delt
+      USE orthogonalize,      ONLY : ortho
+      USE wave_types,         ONLY : wave_descriptor
+      USE wave_constrains,    ONLY : update_lambda
+      USE uspp,               ONLY : nkb
 
       IMPLICIT NONE
 
-! ...   declare subroutine arguments
+      ! ...   declare subroutine arguments
 
       LOGICAL :: ttprint, tortho, tsde
       COMPLEX(DP) :: cm(:,:,:), c0(:,:,:), cp(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      COMPLEX(DP)  ::  eigr(:,:)
+      COMPLEX(DP)  ::  vkb(:,:)
       REAL(DP), INTENT(IN)  ::  fi(:,:)
       REAL(DP), INTENT(IN)  ::  bec(:,:)
       TYPE (boxdimensions), INTENT(IN)  ::  ht
       REAL (DP) ::  vpot(:,:)
       REAL(DP) :: ei(:,:)
-      REAL(DP) :: timerd, timeorto
       REAL(DP) :: ekinc(:)
       REAL(DP), INTENT(IN) :: fccc
 
-! ...   declare other variables
-      REAL(DP) :: s1, s2, s3, s4
+      ! ...   declare other variables
       INTEGER :: nx, nb_lx, ierr, is, nb, ngw
 
       COMPLEX(DP), ALLOCATABLE :: cgam(:,:,:)
       REAL(DP),    ALLOCATABLE :: gam(:,:,:)
 
-      REAL(DP), EXTERNAL :: cclock
-
-! ...   end of declarations
-!  ----------------------------------------------
-
-      s1 = cclock()
+      ! ...   end of declarations
 
       ngw = SIZE( cp, 1 )
       nb_lx = MAX( nb_l(1), nb_l(2) )
@@ -96,13 +87,10 @@
       IF( ierr /= 0 ) CALL errore(' runcp ', ' allocating gam, prod ', ierr)
 
       ekinc    = 0.0d0
-      timerd   = 0.0d0
-      timeorto = 0.0d0
 
       !  Compute electronic forces and move electrons
 
-      CALL runcp_ncpp( cm, c0, cp, cdesc, vpot, eigr, fi, bec, fccc, &
-           gam, cgam, lambda = ttprint )
+      CALL runcp_ncpp( cm, c0, cp, cdesc, vpot, vkb, fi, bec, fccc, gam, cgam, lambda = ttprint )
 
       !  Compute eigenstate
       !
@@ -113,9 +101,6 @@
         END DO
       END IF
 
-      s2 = cclock()
-      timerd = s2 - s1
-
       !  Orthogonalize the new wave functions "cp"
 
       IF( tortho ) THEN
@@ -125,9 +110,6 @@
             CALL gram( vkb, bec, nkb, cp(1,1,is), SIZE(cp,1), cdesc%nbt( is ) )
          END DO
       END IF
-
-      s3 = cclock()
-      timeorto = s3 - s2
 
       !  Compute fictitious kinetic energy of the electrons at time t
 
@@ -147,22 +129,18 @@
 !=----------------------------------------------------------------------------------=!
 
 
-!  ----------------------------------------------
-!  BEGIN manual
-
     SUBROUTINE runcp_ncpp( cm, c0, cp, cdesc, &
-      vpot, eigr, fi, bec, fccc, gam, cgam, lambda, fromscra, diis, restart )
+      vpot, vkb, fi, bec, fccc, gam, cgam, lambda, fromscra, diis, restart )
 
-!     This subroutine performs a Car-Parrinello or Steepest-Descent step
-!     on the electronic variables, computing forces on electrons and,
-!     when required, the eigenvalues of the Hamiltonian 
-!
-!     On output "cp" contains the new plave waves coefficients, while
-!     "cm" and "c0" are not changed
-!  ----------------------------------------------
-!  END manual
+       !     This subroutine performs a Car-Parrinello or Steepest-Descent step
+       !     on the electronic variables, computing forces on electrons and,
+       !     when required, the eigenvalues of the Hamiltonian 
+       !
+       !     On output "cp" contains the new plave waves coefficients, while
+       !     "cm" and "c0" are not changed
+       !  ----------------------------------------------
 
-! ...   declare modules
+       ! ...   declare modules
       USE kinds
       USE electrons_base, ONLY:  nupdwn, iupdwn
       USE cp_electronic_mass, ONLY: emass
@@ -182,7 +160,7 @@
       COMPLEX(DP) :: cgam(:,:,:)
       REAL(DP)    :: gam(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      COMPLEX(DP) :: eigr(:,:)
+      COMPLEX(DP) :: vkb(:,:)
       REAL(DP), INTENT(IN)  ::  fi(:,:)
       REAL (DP) ::  vpot(:,:)
       REAL (DP), INTENT(IN) ::  bec(:,:)
@@ -248,7 +226,7 @@
 
           DO i = 1, nb, 2
 
-            CALL dforce( i, c0(:,:,is), fi(:,is), c2, c3, vpot(:,is), eigr, bec, nupdwn(is), iupdwn(is) )
+            CALL dforce( i, c0(:,:,is), fi(:,is), c2, c3, vpot(:,is), vkb, bec, nupdwn(is), iupdwn(is) )
 
             IF( tlam ) THEN
                CALL update_lambda( i, gam( :, :,is), c0(:,:,is), cdesc, c2 )
@@ -279,7 +257,7 @@
 
             nb = nx
 
-            CALL dforce( nx, c0(:,:,is), fi(:,is), c2, c3, vpot(:,is), eigr, bec, nupdwn(is), iupdwn(is) )
+            CALL dforce( nx, c0(:,:,is), fi(:,is), c2, c3, vpot(:,is), vkb, bec, nupdwn(is), iupdwn(is) )
 
             IF( tlam ) THEN
                CALL update_lambda( nb, gam( :, :,is), c0(:,:,is), cdesc, c2 )
@@ -316,7 +294,7 @@
 !fnl if the factor non local
 
     SUBROUTINE runcp_force_pairing(ttprint, tortho, tsde, cm, c0, cp, cdesc, &
-        vpot, eigr, fi, ekinc, timerd, timeorto, ht, ei, bec, fccc)
+        vpot, vkb, fi, ekinc, ht, ei, bec, fccc)
 
 !  same as runcp, except that electrons are paired forcedly
 !  i.e. this handles a state dependant Hamiltonian for the paired and unpaired electrons
@@ -343,7 +321,7 @@
       USE constants, ONLY: autoev
       USE io_global, ONLY: ionode
       USE wave_constrains, ONLY: update_lambda
-      USE uspp,             ONLY : vkb, nkb
+      USE uspp,             ONLY : nkb
       use reciprocal_vectors, only : gstart
 
         IMPLICIT NONE
@@ -353,13 +331,12 @@
       LOGICAL :: ttprint, tortho, tsde
       COMPLEX(DP) :: cm(:,:,:), c0(:,:,:), cp(:,:,:)
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      COMPLEX(DP)  ::  eigr(:,:)
+      COMPLEX(DP)  ::  vkb(:,:)
       REAL(DP), INTENT(INOUT) ::  fi(:,:)
       TYPE (boxdimensions), INTENT(IN)  ::  ht
       REAL (DP) ::  vpot(:,:)
       REAL(DP) :: ei(:,:)
       REAL(DP), INTENT(IN) :: bec(:,:)
-      REAL(DP) :: timerd, timeorto
       REAL(DP) :: ekinc(:)
       REAL(DP), INTENT(IN) :: fccc
 
@@ -382,8 +359,6 @@
       REAL(DP),    ALLOCATABLE :: gam(:,:)
       REAL(DP),    ALLOCATABLE :: ei_t(:,:)
 
-      REAL(DP), EXTERNAL :: cclock
-
 ! ...   end of declarations
 !  ----------------------------------------------
 
@@ -401,8 +376,6 @@
       svar3(1:ngw) = delt * delt * ema0bg / emass * fccc
 
       ekinc    = 0.0d0
-      timerd   = 0.0d0
-      timeorto = 0.0d0
 
       nx    = cdesc%nbt( 1 )
       n_unp = nupdwn(1)
@@ -437,15 +410,13 @@
       occdown( 1:nupdwn(2) ) = fi( 1:nupdwn(2), 2 ) 
 
 
-        s4 = cclock()
-
         IF( MOD( n_unp, 2 ) == 0 ) nb =  n_unp - 1
         IF( MOD( n_unp, 2 ) /= 0 ) nb =  n_unp - 2
 
         DO i = 1, nb, 2
           !
-          CALL dforce( i, c0(:,:,1), fi(:,1), c2, c3, vpot(:,1), eigr, bec, nupdwn(2), iupdwn(2) )
-          CALL dforce( i, c0(:,:,1), fi(:,1), c4, c5, vpot(:,2), eigr, bec, nupdwn(2), iupdwn(2) )
+          CALL dforce( i, c0(:,:,1), fi(:,1), c2, c3, vpot(:,1), vkb, bec, nupdwn(2), iupdwn(2) )
+          CALL dforce( i, c0(:,:,1), fi(:,1), c4, c5, vpot(:,2), vkb, bec, nupdwn(2), iupdwn(2) )
           !
           c2 = occup(i  )* (c2 + c4)
           c3 = occup(i+1)* (c3 + c5)
@@ -477,8 +448,8 @@
           !
           nb = n_unp - 1
           !
-          CALL dforce( nb, c0(:,:,1), fi(:,1), c2, c3, vpot(:,1), eigr, bec, nupdwn(2), iupdwn(2) )
-          CALL dforce( nb, c0(:,:,1), fi(:,2), c4, c5, vpot(:,2), eigr, bec, nupdwn(2), iupdwn(2) )
+          CALL dforce( nb, c0(:,:,1), fi(:,1), c2, c3, vpot(:,1), vkb, bec, nupdwn(2), iupdwn(2) )
+          CALL dforce( nb, c0(:,:,1), fi(:,2), c4, c5, vpot(:,2), vkb, bec, nupdwn(2), iupdwn(2) )
 
           c2 = occup(nb)* (c2 + c4)
 
@@ -496,7 +467,7 @@
         END IF
 
         !
-        CALL dforce( n_unp, c0(:,:,1), fi(:,1), c2, c3, vpot(:,1), eigr, bec, nupdwn(1), iupdwn(1) )
+        CALL dforce( n_unp, c0(:,:,1), fi(:,1), c2, c3, vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 
         intermed  = -2.d0 * sum( c2 * conjg( c0(:, n_unp, 1 ) ) )
         IF ( gstart == 2 ) THEN
@@ -549,18 +520,11 @@
 
         ENDIF
 
-      s3 = cclock()
-      timerd = timerd + s3 - s4
-
       IF( tortho ) THEN
          CALL ortho( 1, c0(:,:,1), cp(:,:,1), cdesc )
       ELSE
          CALL gram( vkb, bec, nkb, cp(1,1,1), SIZE(cp,1), cdesc%nbt( 1 ) )
       END IF
-
-
-      s4 = cclock()
-      timeorto = timeorto + s4 - s3
 
       !  Compute fictitious kinetic energy of the electrons at time t
 

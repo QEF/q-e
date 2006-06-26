@@ -54,7 +54,7 @@
 !  BEGIN manual
 
    SUBROUTINE runcg_new(tortho, tprint, rhoe, atoms_0, &
-                bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht0, occ, ei, &
+                bec, becdr, eigr, vkb, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht0, occ, ei, &
                 vpot, doions, edft, maxnstep, cgthr, tconv )
 
 !  this routine computes the electronic ground state via ...
@@ -81,7 +81,7 @@
       USE atoms_type_module, ONLY: atoms_type
       USE control_flags, ONLY: force_pairing
       USE environment, ONLY: start_cclock_val
-      USE uspp,             ONLY : vkb, nkb
+      USE uspp,             ONLY : nkb
 
       IMPLICIT NONE
 
@@ -92,6 +92,7 @@
       TYPE (wave_descriptor) :: cdesc
       REAL(DP) :: rhoe(:,:)
       COMPLEX(DP) :: eigr(:,:)
+      COMPLEX(DP) :: vkb(:,:)
       COMPLEX(DP) :: ei1(:,:)
       COMPLEX(DP) :: ei2(:,:)
       COMPLEX(DP) :: ei3(:,:)
@@ -109,7 +110,7 @@
 
 ! ... declare other variables
       LOGICAL :: ttsde, ttprint, ttforce, ttstress, gzero
-      REAL(DP) :: timepre, s0, s1, s2, s3, s4, s5, s6, seconds_per_iter
+      REAL(DP) :: s0, s1, s2, s3, s4, s5, s6, seconds_per_iter
       REAL(DP) :: dene, eold, timerd, timeorto, ekinc
       COMPLEX(DP), ALLOCATABLE :: cgam(:,:)
       REAL(DP),    ALLOCATABLE :: gam(:,:)
@@ -175,7 +176,7 @@
         s1 = cclock()
 
         CALL kspotential( 1, ttprint, ttforce, ttstress, rhoe, &
-          atoms_0, bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, vpot, edft, timepre )
+          atoms_0, bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, vpot, edft )
 
         s2 = cclock()
 
@@ -185,7 +186,7 @@
 ! ...     |d H / dPsi_j > = H |Psi_j> - Sum{i} <Psi_i|H|Psi_j> |Psi_i>
 
           CALL dforce_all( c0(:,:,iss), occ(:,iss), cp(:,:,iss), &
-            vpot(:,iss), eigr, bec, nupdwn(iss), iupdwn(iss) )
+            vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
  
           ! ...     Project the gradient
 
@@ -229,8 +230,8 @@
 
         !  perform line minimization in the direction of "hacca"
 
-        CALL CGLINMIN(emin, demin, tbad, edft, cp, c0, cdesc, occ, vpot, rhoe, hacca, &
-          atoms_0, ht0, bec, becdr, eigr, ei1, ei2, ei3, sfac)
+        CALL cglinmin(emin, demin, tbad, edft, cp, c0, cdesc, occ, vpot, rhoe, hacca, &
+          atoms_0, ht0, bec, becdr, eigr, vkb, ei1, ei2, ei3, sfac)
 
         ! CALL print_energies( edft )
         s5 = cclock()
@@ -318,7 +319,7 @@
         DO iss = 1, nspin
 
           CALL dforce_all( c0(:,:,iss), occ(:,iss), hacca(:,:,iss), &
-            vpot(:,iss), eigr, bec, nupdwn(iss), iupdwn(iss) )
+            vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
 
           nb_g( iss ) = cdesc%nbt( iss )
 
@@ -359,7 +360,7 @@
 ! ---------------------------------------------------------------------- !
 
     SUBROUTINE cglinmin(emin, ediff, tbad, edft, cp, c, cdesc, occ, vpot, rhoe, hacca, &
-        atoms, ht, bec, becdr, eigr, ei1, ei2, ei3, sfac)
+        atoms, ht, bec, becdr, eigr, vkb, ei1, ei2, ei3, sfac)
 
 ! ... declare modules
 
@@ -370,7 +371,7 @@
         USE cell_module, ONLY: boxdimensions
         USE potentials, ONLY: kspotential
         USE atoms_type_module, ONLY: atoms_type
-        USE uspp,             ONLY : vkb, nkb
+        USE uspp,             ONLY : nkb
 
         IMPLICIT NONE
 
@@ -384,6 +385,7 @@
         REAL(DP) :: rhoe(:,:)
         COMPLEX(DP) :: sfac(:,:)
         COMPLEX(DP) :: eigr(:,:)
+        COMPLEX(DP) :: vkb(:,:)
         COMPLEX(DP) :: ei1(:,:)
         COMPLEX(DP) :: ei2(:,:)
         COMPLEX(DP) :: ei3(:,:)
@@ -543,7 +545,6 @@
               ENDIF
             ENDIF
           END DO
-          ! CALL errore('CGLINMIN', 'Brent exceed maximum iterations.',itmax)
           WRITE( stdout, fmt='(" CGLINMIN, WARNING: Brent exceed maximum iterations ")' )
 103       XMIN=X
           BRENT=FX
@@ -578,7 +579,6 @@
         ! ... LOCALS
 
         LOGICAL      ttprint, ttforce, ttstress, tcel
-        REAL(DP) :: timepre
 
         ! ...      SUBROUTINE BODY
 
@@ -599,7 +599,7 @@
 
 
         CALL kspotential( 1, ttprint, ttforce, ttstress, rhoe, &
-            atoms, bec, becdr, eigr, ei1, ei2, ei3, sfac, cp, cdesc, tcel, ht, occ, vpot, edft, timepre )
+            atoms, bec, becdr, eigr, ei1, ei2, ei3, sfac, cp, cdesc, tcel, ht, occ, vpot, edft )
 
         cgenergy = edft%etot
 

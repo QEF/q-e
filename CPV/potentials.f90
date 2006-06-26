@@ -179,7 +179,7 @@
 
       SUBROUTINE kspotential &
         ( nfi, tprint, tforce, tstress, rhoe, atoms, bec, becdr, eigr, &
-          ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht, fi, vpot, edft, timepre )
+          ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht, fi, vpot, edft )
 
         USE charge_density,    ONLY: rhoofr
         USE nl,                ONLY: nlrh_m
@@ -207,14 +207,13 @@
         REAL(DP)    :: vpot(:,:)
         COMPLEX(DP), INTENT(IN) :: sfac(:,:)
         LOGICAL, INTENT(IN) :: tforce, tstress, tprint
-        REAL(DP), INTENT(OUT) :: timepre
 
         edft%enl = nlrh_m( c0, cdesc, tforce, atoms, bec, becdr, eigr )
 
         CALL rhoofr( nfi, c0, cdesc, fi, rhoe, ht )
 
         CALL vofrhos( tprint, tforce, tstress, rhoe, atoms, vpot, bec, &
-                      c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, timepre,  &
+                      c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, &
                       ht, edft )
 
         RETURN
@@ -224,7 +223,7 @@
 
    SUBROUTINE vofrhos &
       ( tprint, tforce, tstress, rhoe, atoms, vpot, bec, c0, cdesc, fi, &
-        eigr, ei1, ei2, ei3, sfac, timepre, box, edft )
+        eigr, ei1, ei2, ei3, sfac, box, edft )
 
       !  this routine computes:
       !  ekin = dft_kinetic term of the DFT functional (see dft_kinetic_energy)
@@ -308,8 +307,6 @@
       COMPLEX(DP), INTENT(IN) :: sfac(:,:)
 
       TYPE (dft_energy_type) :: edft_self
-
-      REAL(DP) :: timepre
 
 ! ... declare functions
       REAL(DP)  DDOT
@@ -679,10 +676,8 @@
       ! ... compute stress tensor
       !
       IF( tstress ) THEN
-        s8 = cclock()
         CALL pstress( strvxc, rhoeg, rhoetg, pail, desr, bec, c0, cdesc, fi,  &
                       eigr, sfac, grho, v2xc, box, edft)
-        timepre = cclock() - s8
       END IF
 
 

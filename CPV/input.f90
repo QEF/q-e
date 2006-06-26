@@ -870,8 +870,8 @@ MODULE input
      USE input_parameters, ONLY: diis_achmix, diis_ethr, diis_wthr, diis_delt, &
            diis_nreset, diis_temp, diis_nrot, diis_maxstep, diis_fthr,         &
            diis_size, diis_hcut, diis_rothr, diis_chguess, diis_g0chmix,       &
-           diis_nchmix, diis_g1chmix, empty_states_maxstep, empty_states_delt, &
-           empty_states_emass, empty_states_ethr, empty_states_nbnd,           &
+           diis_nchmix, diis_g1chmix, empty_states_maxstep,                    &
+           empty_states_ethr, empty_states_nbnd,                               &
            iprnks_empty, vhrmax_inp, vhnr_inp, vhiunit_inp, vhrmin_inp,        &
            tvhmean_inp, vhasse_inp, nconstr_inp, iesr_inp, iprnks, nprnks,     &
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nelup, neldw, nbnd,     &
@@ -928,7 +928,7 @@ MODULE input
      IMPLICIT NONE
      !
      REAL(DP) :: alat_ , massa_totale
-     REAL(DP) :: delt_emp_inp, emass_emp_inp, ethr_emp_inp
+     REAL(DP) :: ethr_emp_inp
      ! ...   DIIS
      REAL(DP) :: tol_diis_inp, delt_diis_inp, tolene_inp
      LOGICAL :: o_diis_inp, oqnr_diis_inp
@@ -1014,11 +1014,9 @@ MODULE input
      !
      !  empty states
      !
-     delt_emp_inp  = dt
      ethr_emp_inp  = ekin_conv_thr
-     IF( empty_states_delt > 0.d0 )  delt_emp_inp  = empty_states_delt
      IF( empty_states_ethr > 0.d0 )  ethr_emp_inp  = empty_states_ethr
-     CALL empty_init( empty_states_maxstep, delt_emp_inp, ethr_emp_inp )
+     CALL empty_init( empty_states_maxstep, ethr_emp_inp )
 
      !
      CALL potential_init( tvhmean_inp,vhnr_inp, vhiunit_inp, &

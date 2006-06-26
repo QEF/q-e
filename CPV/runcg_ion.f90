@@ -30,7 +30,7 @@
 !  BEGIN manual
 
    SUBROUTINE runcg_ion(nfi, tortho, tprint, rhoe, atomsp, atoms0, atomsm, &
-      bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
+      bec, becdr, eigr, vkb, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
       vpot, doions, edft, etol, ftol, maxiter, sdthr, maxnstep )
 
 !  this routine computes the equilibrium ionic positions via conjugate gradient
@@ -67,6 +67,7 @@
       REAL(DP) :: bec(:,:)
       REAL(DP) :: becdr(:,:,:)
       COMPLEX(DP) :: eigr(:,:)
+      COMPLEX(DP) :: vkb(:,:)
       COMPLEX(DP) :: ei1(:,:)
       COMPLEX(DP) :: ei2(:,:)
       COMPLEX(DP) :: ei3(:,:)
@@ -85,7 +86,7 @@
 
       LOGICAL :: ttsde, ttprint, ttforce, ttstress, ttortho
       LOGICAL :: tbad
-      REAL(DP) :: timepre, s0, s1, s2, s3, s4, s5, s6, seconds_per_iter
+      REAL(DP) :: s0, s1, s2, s3, s4, s5, s6, seconds_per_iter
       REAL(DP) :: dene, eold, timerd, timeorto, ekinc
 
       REAL(DP)    :: gg, ggo, dgg, emin, demin, gam, fp, fret
@@ -152,9 +153,9 @@
       s1 = cclock()
       old_clock_value = s1
 
-      CALL runsd(ttortho, ttprint, ttforce, rhoe, atoms0, &
-         bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
-         vpot, doions, edft, maxnstep, sdthr )
+      CALL runsd(ttortho, ttprint, ttforce, rhoe, atoms0, bec, becdr, eigr, vkb, &
+                 ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, vpot, &
+                 doions, edft, maxnstep, sdthr )
 
       IF( ionode .AND. cg_prn ) THEN
         DO j = 1, atoms0%nat
@@ -180,8 +181,8 @@
         IF(ionode) &
           WRITE( stdout,fmt="(/,8X,'cgion: iter',I5,' line minimization along gradient starting')") iter
 
-        CALL CGLINMIN(fret, edft, cp, c0, cm, cdesc, occ, ei, vpot, rhoe, xi, atomsp, atoms0, &
-          ht, bec, becdr, eigr, ei1, ei2, ei3, sfac, maxnstep, sdthr, displ)
+        CALL cglinmin(fret, edft, cp, c0, cm, cdesc, occ, ei, vpot, rhoe, xi, atomsp, atoms0, &
+          ht, bec, becdr, eigr, vkb, ei1, ei2, ei3, sfac, maxnstep, sdthr, displ)
 
         IF( tbad ) THEN
 !          displ = displ * 2.0d0
@@ -195,9 +196,8 @@
           IF( ionode ) WRITE( stdout, fmt='(8X,"cgion: bad step")')  ! perform steepest descent
           displ = displ / 2.0d0
 
-          CALL runsd(ttortho, ttprint, ttforce, rhoe, atoms0, &
-            bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
-            vpot, doions, edft, maxnstep, sdthr )
+          CALL runsd(ttortho, ttprint, ttforce, rhoe, atoms0, bec, becdr, eigr, vkb, ei1, ei2, ei3, &
+                     sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, vpot, doions, edft, maxnstep, sdthr )
         
 !          tbad = .TRUE.
 
@@ -285,7 +285,7 @@
 ! ---------------------------------------------------------------------- !
 
       SUBROUTINE cglinmin(emin, edft, cp, c0, cm, cdesc, occ, ei, vpot, &
-        rhoe, hacca, atomsp, atoms0, ht, bec, becdr, eigr, ei1, ei2, ei3, sfac, &
+        rhoe, hacca, atomsp, atoms0, ht, bec, becdr, eigr, vkb, ei1, ei2, ei3, sfac, &
         maxnstep, sdthr, displ)
 
 ! ... declare modules
@@ -312,6 +312,7 @@
         TYPE (wave_descriptor) :: cdesc
         REAL(DP) :: rhoe(:,:)
         COMPLEX(DP) :: eigr(:,:)
+        COMPLEX(DP) :: vkb(:,:)
         COMPLEX(DP) :: ei1(:,:)
         COMPLEX(DP) :: ei2(:,:)
         COMPLEX(DP) :: ei3(:,:)
@@ -476,7 +477,6 @@
               ENDIF
             ENDIF
           END DO
-          ! CALL errore('CGLINMIN', 'Brent exceed maximum iterations.',itmax)
           WRITE( stdout, fmt='(" CGLINMIN, WARNING: Brent exceed maximum iterations ")' )
 103       XMIN=X
           BRENT=FX
@@ -540,9 +540,9 @@
          ! ...  Calculate Forces (fion) and DFT Total Energy (edft) for the new ionic
          ! ...  positions (atomsp)
 
-           CALL runsd(ttortho, ttprint, ttforce, rhoe, atomsp, &
-             bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
-             vpot, doions, edft, maxnstep, sdthr )
+           CALL runsd(ttortho, ttprint, ttforce, rhoe, atomsp, bec, becdr, eigr, &
+                      vkb, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
+                      vpot, doions, edft, maxnstep, sdthr )
 
            cgenergy = edft%etot
 

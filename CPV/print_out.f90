@@ -90,7 +90,7 @@
       REAL(DP) :: dis( nsp )
       REAL(DP) :: out_press, volume
       REAL(DP) :: totalmass
-      INTEGER  :: isa, is, ia
+      INTEGER  :: isa, is, ia, kilobytes
       REAL(DP),         ALLOCATABLE :: tauw( :, : )
       CHARACTER(LEN=3), ALLOCATABLE :: labelw( : )
       LOGICAL  :: tsic, tfile
@@ -101,6 +101,8 @@
       ! avoid double printing to files by refering to nprint_nfi
       !
       tfile = tfilei .and. ( nfi .gt. nprint_nfi )
+      !
+      CALL memstat( kilobytes )
       !
       IF( ionode .AND. tfile .AND. tprint ) THEN
          CALL printout_base_open()
@@ -136,6 +138,11 @@
             CALL print_energies( tsic, sic_alpha = sic_alpha, sic_epsilon = sic_epsilon )
             !
             CALL print_eigenvalues( 31, tfile, nfi, tps )
+            !
+            WRITE( stdout, * )
+            !
+            IF( kilobytes > 0 ) &
+               WRITE( stdout, fmt="(3X,'Allocated memory (kb) = ', I9 )" ) kilobytes
             !
             WRITE( stdout, * )
             !

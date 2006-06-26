@@ -130,7 +130,6 @@ CONTAINS
     LOGICAL                  :: ttforce
     LOGICAL                  :: tstress
     LOGICAL, PARAMETER       :: ttprint = .TRUE.
-    REAL(DP)                 :: timepre
     REAL(DP)                 :: ei_unp  
     INTEGER                  :: n_spin_start 
     !
@@ -192,17 +191,13 @@ CONTAINS
     IF ( ionode ) &
        WRITE( stdout, fmt = '(//,3X, "Wave Initialization: random initial wave-functions" )' )
     !
+    ! ... prefor calculates vkb (used by gram)
+    !
+    CALL prefor( eigr, vkb )
     !
     IF( program_name == 'CP90' ) THEN
-
-       ! ... prefor calculates vkb (used by gram)
        !
-       CALL prefor( eigr, vkb )
-       !
-
        CALL gram( vkb, bec, nkb, cm, ngw, nbsp )
-
-       if( iprsta .ge. 3 ) CALL dotcsc( eigr, cm, ngw, nbsp )
 
     ELSE
 
@@ -213,6 +208,8 @@ CONTAINS
        END DO
 
     END IF
+    !
+    if( iprsta .ge. 3 ) CALL dotcsc( eigr, cm, ngw, nbsp )
     !
     ! ... initialize bands
     !
@@ -284,9 +281,7 @@ CONTAINS
          if(iprsta.gt.2) CALL print_atomic_var( fion, na, nsp, ' fion ' )
 
          CALL newd( rhor, irb, eigrb, becsum, fion )
-         CALL prefor( eigr, vkb )
-
-	 !
+         !
          IF( force_pairing ) THEN
             !
             CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:,1), &
@@ -391,7 +386,7 @@ CONTAINS
        !
        CALL vofrhos( ttprint, ttforce, tstress, rhor, atoms, &
                   vpot, bec, cm, cdesc, fi, eigr, ei1, ei2, ei3, &
-                  sfac, timepre, ht, edft )
+                  sfac, ht, edft )
        !
        IF( iprsta > 1 ) CALL debug_energies( edft )
        !
@@ -399,7 +394,7 @@ CONTAINS
           !
           IF ( .NOT. force_pairing ) THEN
              !
-             CALL runcp_ncpp( cm, cm, c0, cdesc, vpot, eigr, fi, &
+             CALL runcp_ncpp( cm, cm, c0, cdesc, vpot, vkb, fi, &
                               bec, fccc, gam, cgam, fromscra = .TRUE. )
              !
           ELSE

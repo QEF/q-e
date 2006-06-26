@@ -99,7 +99,7 @@
       USE print_out_module, ONLY: printout, print_sfac, &
           printacc
       USE cell_module, ONLY: movecell, press, boxdimensions, updatecell
-      USE empty_states, ONLY: empty
+      USE empty_states, ONLY: empty_cp
       USE polarization, ONLY: ddipole
       USE energies, ONLY: dft_energy_type, debug_energies
       USE turbo, ONLY: tturbo
@@ -117,7 +117,6 @@
       USE wave_types
       use wave_base, only: frice
       USE kohn_sham_states, ONLY: ks_states, tksout, n_ksout, indx_ksout, ks_states_closeup
-      USE kohn_sham_states, ONLY: ks_states_force_pairing
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
       USE wave_functions, ONLY: update_wave_functions
@@ -139,6 +138,7 @@
                            vnhh, xnhh0, xnhhm, xnhhp, qnh, temph
       USE cell_base, ONLY: cell_gamma
       USE grid_subroutines, ONLY: realspace_grids_init, realspace_grids_para
+      USE uspp,             ONLY: vkb, nkb
       !
       USE reciprocal_vectors, ONLY: &
            g,      & ! G-vectors square modulus
@@ -197,8 +197,6 @@
       REAL(DP) :: ekinc, ekcell, ekinp, erhoold, maxfion
       REAL(DP) :: derho
       REAL(DP) :: ekincs( nspinx )
-      REAL(DP) :: timepre
-      REAL(DP) :: timerd, timeorto
       REAL(DP) :: ekmt(3,3) = 0.0d0
       REAL(DP) :: hgamma(3,3) = 0.0d0
       REAL(DP) :: temphh(3,3) = 0.0d0
@@ -225,9 +223,6 @@
       ekincs    = 0.0d0
       ekinc     = 0.0_DP
       ekcell    = 0.0_DP
-      timepre   = 0.0_DP
-      timerd    = 0.0_DP
-      timeorto  = 0.0_DP
       fccc      = 1.0d0
       nstep_this_run  = 0
 
@@ -304,6 +299,8 @@
            !
            CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
            !
+           CALL prefor( eigr, vkb )
+           !
         END IF
 
         IF( thdyn ) THEN
@@ -319,9 +316,8 @@
            !
            ! ...     perform DIIS minimization on electronic states
            !
-           CALL runsdiis(ttprint, rhor, atoms0, bec, becdr, &
-               eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
-               vpot, doions, edft )
+           CALL runsdiis(ttprint, rhor, atoms0, bec, becdr, eigr, vkb, ei1, ei2, ei3, &
+                         sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, vpot, doions, edft )
            !
         ELSE IF (ttdiis .AND. t_diis_rot) THEN
            !
@@ -329,33 +325,32 @@
            !
            IF( nspin > 1 ) CALL errore(' cpmain ',' lsd+diis not allowed ',0)
            !
-           CALL rundiis(ttprint, rhor, atoms0, bec, becdr, &
-               eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
-               vpot, doions, edft )
+           CALL rundiis(ttprint, rhor, atoms0, bec, becdr, eigr, vkb, ei1, ei2, ei3, &
+                        sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, vpot, doions, edft )
            !
         ELSE IF ( tconjgrad ) THEN
            !
            ! ...     on entry c0 should contain the wavefunctions to be optimized
            !
            CALL runcg(tortho, ttprint, rhor, atoms0, bec, becdr, &
-               eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
-               vpot, doions, edft, ekin_maxiter, etot_conv_thr, tconv_cg )
+                eigr, vkb, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
+                vpot, doions, edft, ekin_maxiter, etot_conv_thr, tconv_cg )
            !
            ! ...     on exit c0 and cp both contain the updated wave function
            ! ...     cm are overwritten (used as working space)
            !
         ELSE IF ( tsteepdesc ) THEN
            !
-           CALL runsd(tortho, ttprint, ttforce, rhor, atoms0, bec, becdr, &
-               eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
-               vpot, doions, edft, ekin_maxiter, ekin_conv_thr )
+           CALL runsd(tortho, ttprint, ttforce, rhor, atoms0, bec, becdr, eigr,   &
+                vkb, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
+                vpot, doions, edft, ekin_maxiter, ekin_conv_thr )
            !
         ELSE IF ( tconjgrad_ion%active ) THEN
            !
-           CALL runcg_ion(nfi, tortho, ttprint, rhor, atomsp, atoms0, &
-               atomsm, bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
-               vpot, doions, edft, tconvthrs%derho, tconvthrs%force, tconjgrad_ion%nstepix, &
-               tconvthrs%ekin, tconjgrad_ion%nstepex )
+           CALL runcg_ion(nfi, tortho, ttprint, rhor, atomsp, atoms0, atomsm, bec, &
+                becdr, eigr, vkb, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
+                vpot, doions, edft, tconvthrs%derho, tconvthrs%force, tconjgrad_ion%nstepix, &
+                tconvthrs%ekin, tconjgrad_ion%nstepex )
            !
            ! ...     when ions are being relaxed by this subroutine they 
            ! ...     shouldn't be moved by moveions
@@ -382,7 +377,7 @@
         ! ...   ionc forces "fion" and stress "pail".
         !
         CALL vofrhos(ttprint, ttforce, tstress, rhor, atoms0, &
-          vpot, bec, c0, wfill, occn, eigr, ei1, ei2, ei3, sfac, timepre, ht0, edft)
+          vpot, bec, c0, wfill, occn, eigr, ei1, ei2, ei3, sfac, ht0, edft)
 
         ! CALL debug_energies( edft ) ! DEBUG
 
@@ -414,12 +409,12 @@
               ! index band; and put equal for paired wf spin up and down
               !
               CALL runcp_force_pairing(ttprint, tortho, tsde, cm, c0, cp, wfill, &
-                vpot, eigr, occn, ekincs, timerd, timeorto, ht0, ei, bec, fccc )
+                vpot, vkb, occn, ekincs, ht0, ei, bec, fccc )
               !
            ELSE
               !
-              CALL runcp( ttprint, tortho, tsde, cm, c0, cp, wfill, vpot, eigr, &
-                         occn, ekincs, timerd, timeorto, ht0, ei, bec, fccc )
+              CALL runcp( ttprint, tortho, tsde, cm, c0, cp, wfill, vpot, vkb, &
+                         occn, ekincs, ht0, ei, bec, fccc )
               !
            END IF
 
@@ -506,7 +501,7 @@
         ! ...   Here find Empty states eigenfunctions and eigenvalues
         !
         IF ( ttempst ) THEN
-           CALL empty( nfi, tortho, c0, wfill, vpot, eigr, bec )
+           CALL empty_cp ( nfi, c0, vpot )
         END IF
 
         ! ...   dipole
@@ -689,11 +684,7 @@
         END DO
       END IF
       !
-      IF ( force_pairing ) THEN 
-        CALL ks_states_force_pairing(c0, wfill, occn, vpot, eigr, bec )
-      ELSE
-        CALL ks_states(c0, wfill, occn, vpot, eigr, bec )
-      END IF
+      CALL ks_states(c0, wfill, occn, vpot, eigr, vkb, bec )
 
       IF(tprnsfac) THEN
         CALL print_sfac(rhor, sfac)

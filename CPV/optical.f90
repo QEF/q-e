@@ -32,7 +32,7 @@ MODULE optical_properties
 CONTAINS
 
 
-   SUBROUTINE opticalp(nfi, omega, c0, wfill, ce, wempt, vpot, eigr, bec )
+   SUBROUTINE opticalp(nfi, omega, c0, wfill, ce, wempt, vpot, eigr, vkb, bec )
 
           USE wave_types,         ONLY: wave_descriptor
           USE pseudopotential,    ONLY: nsanl
@@ -59,6 +59,7 @@ CONTAINS
           REAL (DP), INTENT(in) ::   vpot(:,:)
           REAL (DP) ::   bec(:,:)
           COMPLEX(DP) :: eigr(:,:)
+          COMPLEX(DP) :: vkb(:,:)
 
           INTEGER :: iss, ngw
           INTEGER :: ie, if, nf, ne, idie, ig, ierr, i, nbt
@@ -115,7 +116,7 @@ CONTAINS
              !
              CALL nlsm1 ( nupdwn( iss ), 1, nspnl, eigr, cf(1,1,iss), bec )
 
-             CALL dforce_all( cf(:,:,iss), ff, eforce, vpot(:,iss), eigr, bec, &
+             CALL dforce_all( cf(:,:,iss), ff, eforce, vpot(:,iss), vkb, bec, &
                               nupdwn(iss), iupdwn(iss) )
 
              CALL kohn_sham( iss, cf(:,:,iss), wfill, eforce, nupdwn, nb_l )
@@ -127,7 +128,7 @@ CONTAINS
              !
              CALL nlsm1 ( nupdwn_emp( iss ), 1, nspnl, eigr, ce(1,1,iss), bece )
              !
-             CALL dforce_all( ce(:,:,iss), ff, eforce, vpot(:,iss), eigr, bece, &
+             CALL dforce_all( ce(:,:,iss), ff, eforce, vpot(:,iss), vkb, bece, &
                               nupdwn_emp(iss), iupdwn_emp(iss) )
              !
              CALL kohn_sham( iss, ce(:,:,iss), wempt, eforce, nupdwn_emp, n_emp_l )

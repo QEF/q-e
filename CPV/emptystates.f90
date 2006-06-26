@@ -25,19 +25,13 @@
  
         INTEGER  :: max_emp = 0    !  maximum number of iterations
         REAL(DP) :: ethr_emp       !  threshold for convergence
-        REAL(DP) :: delt_emp       !  delt for the empty states updating
-        REAL(DP) :: emass_emp      !  fictitious mass for the empty states
 
         LOGICAL  :: prn_emp       = .FALSE.
 
         CHARACTER(LEN=256) :: fileempty
         LOGICAL  :: first = .TRUE.
 
-        INTERFACE EMPTY
-          MODULE PROCEDURE EMPTY_SD
-        END INTERFACE
-
-        PUBLIC :: empty , empty_init , empty_print_info, readempty, empty_cp
+        PUBLIC :: empty_init , empty_print_info, readempty, empty_cp
 
 ! ---------------------------------------------------------------------- !
       CONTAINS
@@ -48,22 +42,20 @@
           USE electrons_module, ONLY: n_emp
           INTEGER, INTENT(IN) :: iunit
           !
-          IF ( n_emp > 0 ) WRITE (iunit,620) n_emp, max_emp, delt_emp
+          IF ( n_emp > 0 ) WRITE (iunit,620) n_emp, max_emp, ethr_emp
 620       FORMAT(3X,'Empty states minimization : states = ',I4, &
-             ' maxiter = ',I8,' delt = ',F8.4)
+             ' maxiter = ',I8,' ethr = ',D10.4)
           !
           RETURN
         END SUBROUTINE empty_print_info
 
 !----------------------------------------------------------------------
 
-        SUBROUTINE empty_init( max_emp_ , delt_emp_ , ethr_emp_ )
+        SUBROUTINE empty_init( max_emp_ , ethr_emp_ )
 
           INTEGER, INTENT(IN) :: max_emp_
-          REAL(DP), INTENT(IN) :: delt_emp_ , ethr_emp_
+          REAL(DP), INTENT(IN) :: ethr_emp_
 
-          delt_emp  = delt_emp_
-          emass_emp = 200.0d0
           max_emp   = max_emp_
           ethr_emp  = ethr_emp_
 
@@ -351,254 +343,6 @@
    END SUBROUTINE gram_empty
 
 
-!
-!=======================================================================
-!
-
-    SUBROUTINE empty_sd( nfi, tortho, c_occ, wfill, vpot, eigr, bec )
-
-      USE pseudopotential, ONLY: nsanl
-      USE cell_base, ONLY: tpiba2, omega
-      USE electrons_module, ONLY: n_emp, nupdwn_emp, iupdwn_emp, n_emp_l, ei_emp, eigs
-      USE electrons_base, ONLY: nspin, nupdwn
-      USE cp_electronic_mass, ONLY: emass
-      USE time_step, ONLY: delt
-      USE forces, ONLY: dforce_all
-      USE orthogonalize, ONLY: ortho
-      USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: nproc_image
-      USE check_stop, ONLY: check_stop_now
-      USE io_global, ONLY: ionode
-      USE io_global, ONLY: stdout
-      USE control_flags, ONLY: force_pairing, gamma_only, tsde
-      USE reciprocal_vectors, ONLY: g, gx, gstart
-      USE uspp_param, ONLY: nhm
-      USE pseudopotential, ONLY: nspnl
-      USE uspp,             ONLY : nkb, vkb
-      USE cp_main_variables,  ONLY: ema0bg
-      USE optical_properties, ONLY: opticalp
-      USE wave_functions,       ONLY : wave_rand_init, elec_fakekine
-      USE wave_base,            ONLY : wave_steepest, wave_verlet, frice
-      USE wave_constrains,  ONLY : update_lambda
-      USE wave_types, ONLY: wave_descriptor, wave_descriptor_init
-
-      IMPLICIT NONE
-
-! ... ARGUMENTS
-!
-      COMPLEX(DP), INTENT(INOUT) ::  c_occ(:,:,:)
-      TYPE (wave_descriptor), INTENT(IN) ::  wfill
-      REAL (DP), INTENT(IN) ::   vpot(:,:)
-      LOGICAL, INTENT(IN) :: tortho
-      INTEGER, INTENT(IN) :: nfi
-      COMPLEX(DP) :: eigr(:,:)
-      REAL(DP) :: bec(:,:)
-!
-! ... LOCALS
-!
-
-      INTEGER   ::  i, k, j, iter
-      INTEGER   ::  iss, ispin_wfc
-      INTEGER   ::  n_occ( nspin )
-      INTEGER   ::  ig, iprinte, nrl, jl, ngw, in_emp
-      REAL(DP) ::  dek, ekinc, ekinc_old
-      REAL(DP) :: ampre
-      REAL(DP), ALLOCATABLE :: dt2bye( : )
-      REAL(DP), PARAMETER :: small    = 1.0d-14
-      REAL(DP), ALLOCATABLE :: bece( :, : )
-      COMPLEX(DP), ALLOCATABLE :: eforce(:,:), cp_emp(:,:), c_emp(:,:)
-      REAL(DP), ALLOCATABLE :: fi(:,:)
-      REAL(DP), ALLOCATABLE :: gam(:,:)
-      REAL(DP) :: fccc, ccc
-      REAL(DP) :: verl1, verl2
-      REAL(DP), ALLOCATABLE :: verl3( : )
-      LOGICAL       :: gamma, tlast
-      LOGICAL, SAVE :: exst
-
-      TYPE (wave_descriptor) :: wempt  ! wave function descriptor for empty states
-
-!
-! ... SUBROUTINE BODY
-!    
-
-      ngw       = wfill%ngwl
-      gamma     = wfill%gamma
-      ampre     = 0.001d0
-
-      CALL wave_descriptor_init( wempt, ngw, wfill%ngwt, nupdwn_emp, nupdwn_emp, &
-                                 1, 1, nspin, 'gamma' , wfill%gzero )
-
-
-      n_occ( 1 ) = wfill%nbt( 1 )
-      IF( nspin == 2 ) THEN
-         n_occ( 2 ) = wfill%nbt( 2 )
-      END IF
-
-      ekinc_old = 1.d+10
-      ekinc     = 0.0d0
-
-      ALLOCATE( bece( nkb, n_emp * nspin ) )
-      ALLOCATE( eforce( ngw, n_emp ) )
-      ALLOCATE( fi( n_emp, nspin ) )
-      ALLOCATE( c_emp( ngw, n_emp * nspin ) )
-      ALLOCATE( cp_emp( ngw, n_emp * nspin ) )
-      ALLOCATE( dt2bye( ngw ) )
-      ALLOCATE( verl3( ngw ) )
-
-      IF( ionode ) WRITE( stdout,56)
-
-      exst = readempty( c_emp, n_emp * nspin )
-
-      IF( .NOT. exst ) THEN
-         !
-         CALL wave_rand_init( c_emp )
-         !
-         IF ( gstart == 2 ) THEN
-            c_emp( 1, : ) = DBLE( c_emp( 1, : ) )
-         END IF
-         !
-         DO iss = 1, wempt%nspin
-            ispin_wfc = iss
-            IF( force_pairing ) ispin_wfc = 1
-            CALL gram_empty( .false., eigr, vkb, bece, bec, nkb, c_emp(:,iupdwn_emp(iss):), &
-                              c_occ( :, :, ispin_wfc ), ngw, nupdwn_emp( iss ), nupdwn( iss ) )
-         END DO
-         !
-      END IF
-
-      dt2bye = delt * delt * ema0bg / emass 
-
-      cp_emp = c_emp
-
-      fi     = 2.0d0 / nspin
-
-      IF( tsde ) THEN
-          fccc = 1.0d0
-      ELSE
-          fccc = 1.0d0 / ( 1.0d0 + frice )
-      END IF
-
-      verl1 = 2.0d0 * fccc
-      verl2 = 1.0d0 - verl1
-      verl3 = dt2bye * fccc
-
-      tlast = .false.
-
-      ITERATIONS: DO iter = 1, max_emp
-
-        ekinc = 0.0d0
-
-        IF( iter == max_emp ) tlast = .true.
-
-        SPIN_LOOP: DO iss = 1, nspin
-
-          ispin_wfc = iss
-          IF( force_pairing ) ispin_wfc = 1
-
-          in_emp = iupdwn_emp(iss)
-
-          IF( n_emp < 1 ) CYCLE SPIN_LOOP 
-
-          bece = 0.0d0
-
-          CALL nlsm1 ( n_emp, 1, nspnl, eigr, c_emp( 1, in_emp ), bece( 1, in_emp ) )
-
-          ! ...   Calculate | dH / dpsi(j) >
-          !
-          CALL dforce_all( c_emp(:,in_emp:), fi(:,iss), eforce, &
-                             vpot(:,iss), eigr, bece, nupdwn_emp(iss), in_emp )
-
-          DO i = in_emp, in_emp + nupdwn_emp( iss ) - 1
-             !
-             IF ( tsde ) THEN
-                CALL wave_steepest( cp_emp(:,i), c_emp(:,i), verl3, eforce(:,i-in_emp+1) )
-             ELSE
-                CALL wave_verlet( cp_emp(:,i), c_emp(:,i), verl1, verl2, verl3, eforce(:,i-in_emp+1) )
-             END IF
-             !
-             if ( gstart == 2) THEN
-                 cp_emp( 1, i ) = CMPLX( DBLE( cp_emp( 1, i ) ), 0.d0 )
-             end if
-             !
-          END DO
-
-          CALL gram_empty( tortho, eigr, vkb, bece, bec, nkb, cp_emp(:,in_emp:), &
-                              c_occ( :, :, ispin_wfc ), ngw, nupdwn_emp( iss ), nupdwn( iss ) )
-          !
-          ! ...     Calculate Eij = < psi(i) | H | psi(j) > = < psi(i) | dH / dpsi(j) >
-          !
-          IF( tlast ) THEN
-             !
-             ALLOCATE( gam( n_emp_l(iss), n_emp ) )
-             !
-             DO i = 1, nupdwn_emp(iss)
-                CALL update_lambda( i, gam, c_emp(:,iupdwn_emp(iss):), wempt, eforce(:,i) )
-             END DO
-             !
-             CALL eigs( n_emp, gam, tortho, fi(:,iss), ei_emp(:,iss) )
-             !
-             DEALLOCATE( gam )
-             !
-          END IF
-
-          IF (tortho) THEN
-
-              CALL ortho( iss, c_emp(:,in_emp:), cp_emp(:,in_emp:), wempt)
-
-          END IF
-
-        END DO SPIN_LOOP
-
-        CALL elec_fakekine( ekinc, ema0bg, emass, cp_emp, c_emp, ngw, n_emp * nspin, 1, delt )
-
-        IF( tlast ) THEN
-           EXIT ITERATIONS
-        END IF
-
-        dek = ekinc - ekinc_old
-        IF( ionode ) WRITE( stdout,113) ITER, dek, ekinc
-
-        CALL dswap( 2*SIZE( c_emp ), c_emp, 1, cp_emp, 1 )
-
-        ! ...   check for exit
-        !
-        IF ( check_stop_now() ) THEN
-           tlast = .true. 
-        END IF
-
-        ! ...   check for convergence
-        !
-        IF( ( ekinc <  ethr_emp ) .AND. ( iter > 3 ) ) THEN
-           IF( ionode ) WRITE( stdout,112) 
-           tlast = .true.
-        END IF
-
-        ekinc_old = ekinc
-
-      END DO ITERATIONS
-
-
-      ! CALL opticalp( nfi, omega, c_occ, wfill, c_emp, wempt, vpot, eigr, bec )
-
-      CALL writeempty( c_emp, n_emp * nspin )
-
-      DEALLOCATE( eforce )
-      DEALLOCATE( cp_emp )
-      DEALLOCATE( c_emp )
-      DEALLOCATE( fi )
-      DEALLOCATE( dt2bye )
-      DEALLOCATE( verl3 )
-      DEALLOCATE( bece )
-              
- 55   FORMAT(1X,I8,4F12.6)
- 56   FORMAT(/,3X,'Empty states minimization starting ')
-111   FORMAT(I5,2X,F12.8)
-113   FORMAT(I5,2X,2D14.6)
-112   FORMAT(/,3X,'Empty states: convergence achieved') 
-
-    RETURN
-    END SUBROUTINE empty_sd
-
 
 !
 !
@@ -609,18 +353,17 @@
    SUBROUTINE empty_cp ( nfi, c0, v )
 
       USE kinds,                ONLY : DP
-      USE control_flags,        ONLY : force_pairing, iprsta, tsde
+      USE control_flags,        ONLY : force_pairing, iprsta, tsde, program_name
       USE io_global,            ONLY : ionode, stdout
-      USE cp_main_variables,    ONLY : eigr, rhos, ema0bg
-      USE cell_base,            ONLY : omega, ibrav, h
-      USE uspp,                 ONLY : becsum, vkb, nkb
+      USE cp_main_variables,    ONLY : eigr, ema0bg
+      USE cell_base,            ONLY : omega
+      USE uspp,                 ONLY : vkb, nkb
       USE grid_dimensions,      ONLY : nnrx
       USE electrons_base,       ONLY : nbsp, nspin, f, nudx, iupdwn, nupdwn
       USE electrons_module,     ONLY : iupdwn_emp, nupdwn_emp, n_emp, ei_emp
       USE ions_base,            ONLY : nat, nsp
       USE gvecw,                ONLY : ngw
       USE orthogonalize_base,   ONLY : calphi, updatc
-      USE electrons_base,       ONLY : nupdwn 
       USE reciprocal_vectors,   ONLY : gzero, gstart
       USE wave_functions,       ONLY : wave_rand_init, elec_fakekine
       USE wave_base,            ONLY : wave_steepest, wave_verlet, frice
@@ -638,7 +381,7 @@
       REAL(DP)               :: v(:,:)
       !
       INTEGER  :: i, iss, j, in, in_emp, iter, iter_ortho
-      INTEGER  :: n_occs, n_emps, n_empx
+      INTEGER  :: n_occs, n_emps, n_empx, issw
       LOGICAL  :: exst
       !
       REAL(DP) :: fccc, ccc, csv, dt2bye, bigr
@@ -659,9 +402,6 @@
       ! ...  quick exit if empty states have not to be computed
       !
       IF( n_emp < 1 ) RETURN
-      !
-      IF( force_pairing ) &
-         CALL errore(' empty_cp ', ' force pairing not implemented ', 1 )
       !
       ekinc_old = 1.d+10
       ekinc     = 0.0d0
@@ -707,7 +447,13 @@
       !
       DO iss = 1, nspin
          in = iupdwn( iss )
-         CALL nlsm1 ( nupdwn( iss ), 1, nvb, eigr, c0( 1, in, 1 ), bec_occ( 1, in ) )
+         IF( program_name == 'FPMD' ) THEN
+            issw = iss
+            IF( force_pairing ) issw = 1
+            CALL nlsm1 ( nupdwn( iss ), 1, nvb, eigr, c0( 1, 1, issw ), bec_occ( 1, in ) )
+         ELSE
+            CALL nlsm1 ( nupdwn( iss ), 1, nvb, eigr, c0( 1, in, 1 ), bec_occ( 1, in ) )
+         END IF
       END DO
       !
       IF( .NOT. exst ) THEN
@@ -727,8 +473,15 @@
             in     = iupdwn(iss)
             in_emp = iupdwn_emp(iss)
             !
-            CALL gram_empty( .false. , eigr, vkb, bec_emp( :, in_emp: ), bec_occ( :, in: ), nkb, &
+            IF( program_name == 'FPMD' ) THEN
+               issw = iss
+               IF( force_pairing ) issw = 1
+               CALL gram_empty( .false. , eigr, vkb, bec_emp( :, in_emp: ), bec_occ( :, in: ), nkb, &
+                                c0_emp( :, in_emp: ), c0( :, :, issw ), ngw, nupdwn_emp(iss), nupdwn(iss) )
+            ELSE
+               CALL gram_empty( .false. , eigr, vkb, bec_emp( :, in_emp: ), bec_occ( :, in: ), nkb, &
                                 c0_emp( :, in_emp: ), c0( :, in:, 1 ), ngw, nupdwn_emp(iss), nupdwn(iss) )
+            END IF
             !
          END DO
          !
@@ -819,8 +572,15 @@
             in     = iupdwn(iss)
             in_emp = iupdwn_emp(iss)
             !
-            CALL gram_empty( .true. , eigr, vkb, bec_emp( :, in_emp: ), bec_occ( :, in: ), nkb, &
+            IF( program_name == 'FPMD' ) THEN
+               issw = iss
+               IF( force_pairing ) issw = 1
+               CALL gram_empty( .true. , eigr, vkb, bec_emp( :, in_emp: ), bec_occ( :, in: ), nkb, &
+                         cm_emp( :, in_emp: ), c0( :, :, issw ), ngw, nupdwn_emp(iss), nupdwn(iss) )
+            ELSE
+               CALL gram_empty( .true. , eigr, vkb, bec_emp( :, in_emp: ), bec_occ( :, in: ), nkb, &
                          cm_emp( :, in_emp: ), c0( :, in:, 1 ), ngw, nupdwn_emp(iss), nupdwn(iss) )
+            END IF
             !
          END DO
 
@@ -877,6 +637,7 @@
 
       CALL writeempty( c0_emp, n_empx * nspin )
 
+      ! CALL opticalp( nfi, omega, c_occ, wfill, c_emp, wempt, vpot, eigr, vkb, bec )
       ! 
       DEALLOCATE( ispin_emp )
       DEALLOCATE( lambda_emp )

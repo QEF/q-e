@@ -148,17 +148,6 @@ MODULE from_restart_module
        !
     END IF
     !
-    IF ( trane .AND. trhor ) THEN
-       !
-       CALL prefor( eigr, vkb )
-       CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
-       !
-       IF( force_pairing ) c0(:,iupdwn(2):nbsp,1) = c0(:,1:nupdwn(2),1)
-       !
-       cm(:,1:nbsp,1) = c0(:,1:nbsp,1)
-       !
-    END IF
-    !
     IF ( tzeroc ) THEN
        !
        hold = h
@@ -183,6 +172,18 @@ MODULE from_restart_module
     CALL phfac( tau0, ei1, ei2, ei3, eigr )
     !
     CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
+    !
+    CALL prefor( eigr, vkb )
+    !
+    IF ( trane .AND. trhor ) THEN
+       !
+       CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
+       !
+       IF( force_pairing ) c0(:,iupdwn(2):nbsp,1) = c0(:,1:nupdwn(2),1)
+       !
+       cm(:,1:nbsp,1) = c0(:,1:nbsp,1)
+       !
+    END IF
     !
     CALL formf( tfirst, eself )
     !
@@ -441,16 +442,6 @@ MODULE from_restart_module
     !
     CALL s_to_r( taus,  tau0, na, nsp, h )
     !
-    IF ( trane .AND. trhor ) THEN
-       !
-       CALL prefor( eigr, vkb )
-       !
-       CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
-       !
-       cm(:,1:nbsp) = c0(:,1:nbsp)
-       !
-    END IF
-    !
     IF ( iprsta > 2 ) THEN
        !
        CALL print_atomic_var( taus, na, nsp, ' read: taus ' )
@@ -465,6 +456,16 @@ MODULE from_restart_module
     CALL phfac( tau0, ei1, ei2, ei3, eigr )
     !
     CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
+    !
+    CALL prefor( eigr, vkb )
+    !
+    IF ( trane .AND. trhor ) THEN
+       !
+       CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
+       !
+       cm(:,1:nbsp) = c0(:,1:nbsp)
+       !
+    END IF
     !
     CALL formf( tfirst, eself )
     !
@@ -541,7 +542,7 @@ MODULE from_restart_module
     TYPE(dft_energy_type)      :: edft
     !
     INTEGER     :: ig, ib, i, j, k, ik, nb, is, ia, ierr, isa, iss
-    REAL(DP)    :: timepre, fccc
+    REAL(DP)    :: fccc
     REAL(DP)    :: stau(3), rtau(3), hinv(3,3)
     COMPLEX(DP) :: cgam(1,1,1)
     REAL(DP)    :: gam(1,1,1)
@@ -634,19 +635,6 @@ MODULE from_restart_module
        !
     END IF
     !
-    IF ( trane ) THEN
-       !
-       WRITE( stdout, 515 ) ampre
-       !
-       DO iss = 1, cdesc%nspin
-          call rande_base( c0( :, :, iss), ampre )
-          CALL gram( vkb, bec, nkb, c0(1,1,iss), SIZE(c0,1), cdesc%nbt( iss ) )
-          call rande_base( cm( :, :, iss), ampre )
-          CALL gram( vkb, bec, nkb, cm(1,1,iss), SIZE(cm,1), cdesc%nbt( iss ) )
-       END DO
-       !
-    END IF
-    !
     IF ( tzeroc ) THEN
        !
        ht_m      = ht_0
@@ -682,7 +670,22 @@ MODULE from_restart_module
     !
     CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
     !
+    CALL prefor( eigr, vkb )
+    !
     CALL formf( .TRUE. , edft%eself )
+    !
+    IF ( trane ) THEN
+       !
+       WRITE( stdout, 515 ) ampre
+       !
+       DO iss = 1, cdesc%nspin
+          call rande_base( c0( :, :, iss), ampre )
+          CALL gram( vkb, bec, nkb, c0(1,1,iss), SIZE(c0,1), cdesc%nbt( iss ) )
+          call rande_base( cm( :, :, iss), ampre )
+          CALL gram( vkb, bec, nkb, cm(1,1,iss), SIZE(cm,1), cdesc%nbt( iss ) )
+       END DO
+       !
+    END IF
     !
     IF ( tzeroe .OR. tzerop ) THEN
        !
@@ -698,14 +701,13 @@ MODULE from_restart_module
        !
        CALL vofrhos( .true. , ttforce, tstress, rhoe, &
                      atoms_0, vpot, bec, c0, cdesc, fi, eigr, &
-                     ei1, ei2, ei3, sfac, timepre, ht_0, edft )
+                     ei1, ei2, ei3, sfac, ht_0, edft )
        !
        IF ( tzeroe ) THEN
           !
           IF ( tcarpar .AND. ( .NOT. force_pairing ) ) THEN
              !
-             CALL runcp_ncpp( cm, cm, c0, cdesc, vpot, eigr, &
-                              fi, bec, fccc, gam, cgam, restart = .TRUE. )
+             CALL runcp_ncpp( cm, cm, c0, cdesc, vpot, vkb, fi, bec, fccc, gam, cgam, restart = .TRUE. )
              !
              IF ( tortho ) THEN
                 !
