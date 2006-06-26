@@ -31,7 +31,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
                                    npw, current_k, btype
   USE control_flags,        ONLY : diis_ndim, ethr, lscf, max_cg_iter, &
-                                   isolve, reduce_io
+                                   isolve, istep, reduce_io
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE scf,                  ONLY : vltot
   USE lsda_mod,             ONLY : current_spin, lsda, isk
@@ -247,7 +247,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              CG_loop : DO
                 !
-                IF ( iter == 1 .AND. ntry == 0 ) THEN
+                IF ( iter > 1 .OR. istep > 0 .OR. ntry > 0 ) THEN
                    !
                    CALL rinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik) )
                    !
@@ -543,7 +543,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
              !
              CG_loop : DO
                 !
-                IF ( iter == 1 .AND. ntry == 0 ) THEN
+                IF ( iter > 1 .OR. istep > 0 .OR. ntry > 0 ) THEN
                    !
                    IF ( noncolin ) THEN
                       !
