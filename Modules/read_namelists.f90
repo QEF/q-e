@@ -247,8 +247,6 @@ MODULE read_namelists_module
        conv_thr = 1.D-6
        empty_states_nbnd = 0
        empty_states_maxstep = 100
-       empty_states_delt = 0.D0
-       empty_states_emass = 0.D0
        empty_states_ethr = 0.D0
        diis_size = 4
        diis_nreset = 3
@@ -719,8 +717,6 @@ MODULE read_namelists_module
        CALL mp_bcast( startingpot,          ionode_id )
        CALL mp_bcast( empty_states_nbnd,    ionode_id )
        CALL mp_bcast( empty_states_maxstep, ionode_id )
-       CALL mp_bcast( empty_states_delt,    ionode_id )
-       CALL mp_bcast( empty_states_emass,   ionode_id )
        CALL mp_bcast( empty_states_ethr,    ionode_id )
        CALL mp_bcast( diis_size,            ionode_id )
        CALL mp_bcast( diis_nreset,          ionode_id )
@@ -1247,12 +1243,6 @@ MODULE read_namelists_module
        IF( empty_states_maxstep < 0 ) &
           CALL errore( sub_name,&
                        & ' invalid empty_states_maxstep, less than 0 ',1)
-       IF( empty_states_delt < 0.D0 ) &
-          CALL errore( sub_name, &
-                       & ' invalid empty_states_delt, less than 0 ',1)
-       IF( empty_states_emass < 0.D0 ) &
-          CALL errore( sub_name, &
-                       & ' invalid empty_states_emass, less than 0 ',1)
        IF( empty_states_ethr < 0.D0 ) &
           CALL errore( sub_name, &
                        & ' invalid empty_states_ethr, less than 0 ',1)

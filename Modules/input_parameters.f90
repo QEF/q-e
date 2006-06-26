@@ -683,16 +683,6 @@ MODULE input_parameters
           ! maximum number of iteration in the empty states calculation
           ! default is 100
 
-        REAL(DP) :: empty_states_delt = 1.0d0
-          ! meaningful only with "empty_states_nbnd > 0 "
-          ! fictitious time step to be used in the empty states iteration
-          ! default value is "dt"
-
-        REAL(DP) :: empty_states_emass = 500.0d0
-          ! meaningful only with "empty_states_nbnd > 0 "
-          ! fictitious electronic mass to be used in the empty states iteration
-          ! default value is "emass"
-
         REAL(DP) :: empty_states_ethr = 1.d-4
           ! meaningful only with "empty_states_nbnd > 0 "
           ! wave function gradient threshold, for convergence of empty states
@@ -898,7 +888,7 @@ MODULE input_parameters
           electron_maxstep, ortho_eps, ortho_max, electron_dynamics,   &
           electron_damping, electron_velocities, electron_temperature, &
           ekincw, fnosee, ampre, grease, empty_states_nbnd,            &
-          empty_states_maxstep, empty_states_delt, empty_states_emass, &
+          empty_states_maxstep,                                        &
           empty_states_ethr, diis_size, diis_nreset, diis_hcut,        &
           diis_wthr, diis_delt, diis_maxstep, diis_rot, diis_fthr,     &
           diis_temp, diis_achmix, diis_g0chmix, diis_g1chmix,          &
