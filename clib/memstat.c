@@ -6,23 +6,26 @@
   or http://www.gnu.org/copyleft/gpl.txt .
 */
 
-#include <stdlib.h>
-
 #if !defined(__MAC)
 #include <malloc.h>
 #endif
 
-#include <stdio.h>
-
 #include "c_defs.h"
 
-void MEMSTAT(int *me)
+/* 
+  This function return the numer of kilobytes allocated
+  by the calling process. 
+  Auhor: Carlo Cavazzoni.
+*/
+
+void MEMSTAT(int *kilobytes)
 {
-  /* T3E: malloc_stats (0); */
-#if defined __AIX
-  struct mallinfo info;  info = mallinfo();
-  printf("\n   PE(%d) MEMORY STATISTICS ",*me);
-  printf("\n   total space in arena :%ld\n",info.arena);
+#if defined __AIX || defined __LINUX || defined __LINUX64
+  struct mallinfo info;  
+  info = mallinfo();
+  *kilobytes = info.arena / 1024 ;
+#else
+  *kilobytes = -1;
 #endif
 }
 
