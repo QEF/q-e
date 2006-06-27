@@ -581,6 +581,7 @@ MODULE read_namelists_module
        CALL mp_bcast( pseudo_dir,    ionode_id )
        CALL mp_bcast( refg,          ionode_id )
        CALL mp_bcast( disk_io,       ionode_id )
+       CALL mp_bcast( tqr,           ionode_id )
        CALL mp_bcast( tefield,       ionode_id )
        CALL mp_bcast( tefield2,      ionode_id )
        CALL mp_bcast( dipfield,      ionode_id )

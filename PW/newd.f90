@@ -330,35 +330,31 @@ SUBROUTINE newd_g()
       !
       nt = ityp(na)
       !
-      DO is = 1, nspin
+      DO ih = 1, nh(nt)
          !
-         DO ih = 1, nh(nt)
+         DO jh = 1, nh(nt)
             !
-            DO jh = 1, nh(nt)
+            IF (lspinorb) THEN
+               deeq_nc(ih,jh,na,1) = dvan_so(ih,jh,1,nt) + &
+                                     deeq(ih,jh,na,1) + deeq(ih,jh,na,4)
+               !                      
+               deeq_nc(ih,jh,na,4) = dvan_so(ih,jh,4,nt) + &
+                                     deeq(ih,jh,na,1) - deeq(ih,jh,na,4)
                !
-               IF (lspinorb) THEN
-                  deeq_nc(ih,jh,na,1) = dvan_so(ih,jh,1,nt) + &
-                                        deeq(ih,jh,na,1) + deeq(ih,jh,na,4)
-                  !                      
-                  deeq_nc(ih,jh,na,4) = dvan_so(ih,jh,4,nt) + &
-                                        deeq(ih,jh,na,1) - deeq(ih,jh,na,4)
-                  !
-               ELSE
-                  deeq_nc(ih,jh,na,1) = dvan(ih,jh,nt) + &
-                                        deeq(ih,jh,na,1) + deeq(ih,jh,na,4)
-                  !                      
-                  deeq_nc(ih,jh,na,4) = dvan(ih,jh,nt) + &
-                                        deeq(ih,jh,na,1) - deeq(ih,jh,na,4)
-                  !
-               END IF
-               deeq_nc(ih,jh,na,2) = deeq(ih,jh,na,2) - &
-                                     ( 0.D0, 1.D0 ) * deeq(ih,jh,na,3)
+            ELSE
+               deeq_nc(ih,jh,na,1) = dvan(ih,jh,nt) + &
+                                     deeq(ih,jh,na,1) + deeq(ih,jh,na,4)
                !                      
-               deeq_nc(ih,jh,na,3) = deeq(ih,jh,na,2) + &
-                                     ( 0.D0, 1.D0 ) * deeq(ih,jh,na,3)
-               !                      
-            END DO
-            !
+               deeq_nc(ih,jh,na,4) = dvan(ih,jh,nt) + &
+                                     deeq(ih,jh,na,1) - deeq(ih,jh,na,4)
+               !
+            END IF
+            deeq_nc(ih,jh,na,2) = deeq(ih,jh,na,2) - &
+                                  ( 0.D0, 1.D0 ) * deeq(ih,jh,na,3)
+            !                      
+            deeq_nc(ih,jh,na,3) = deeq(ih,jh,na,2) + &
+                                  ( 0.D0, 1.D0 ) * deeq(ih,jh,na,3)
+            !                      
          END DO
          !
       END DO
