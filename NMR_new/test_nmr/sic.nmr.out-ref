@@ -1,0 +1,131 @@
+
+     Program MAGN      v.3.1.1  starts ...
+     Today is 28Jun2006 at 14:18:21 
+
+     nbndx  =     4  nbnd   =     4  natomwfc =    18  npwx   =     754
+     nelec  =   8.00  nkb   =     8  ngl    =     108
+     MAGN         :     0.28s CPU time
+
+     Computing the magnetic susceptibility
+     k-point #    1 of     8
+     WARNING:     2 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     2 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     2 eigenvalues not converged
+     WARNING:     2 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     2 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     2 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     2 eigenvalues not converged
+     WARNING:     2 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     k-point #    2 of     8
+     WARNING:     1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     k-point #    3 of     8
+     WARNING:     1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     k-point #    4 of     8
+     WARNING:     2 eigenvalues not converged
+     WARNING:     2 eigenvalues not converged
+     WARNING:     2 eigenvalues not converged
+     WARNING:     2 eigenvalues not converged
+     k-point #    5 of     8
+     k-point #    6 of     8
+     WARNING:     1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     WARNING:     1 eigenvalues not converged
+     k-point #    7 of     8
+     k-point #    8 of     8
+     End of magnetic susceptibility calculation
+ 
+     f-sum rule:
+       -11.783578     -1.352557      4.383158
+        -1.343473     -7.085843     -1.519641
+         4.383158     -1.528725    -11.186944
+
+     f-sum rule (symmetrized):
+       -10.018788      0.000000      0.000000
+         0.000000    -10.018788      0.000000
+         0.000000      0.000000    -10.018788
+
+     chi_bare pGv (HH) in paratec units:
+      5624.894357  -3602.833943  -1542.099201
+     -3602.928312    685.573473    536.389269
+     -1542.099159    536.483494    211.756417
+
+      2174.074749      0.000000      0.000000
+         0.000000   2174.074749      0.000000
+         0.000000      0.000000   2174.074749
+
+     chi_bare vGv (VV) in paratec units:
+      4452.311437  -2829.550325  -1213.457861
+     -2829.550184    563.957852    421.945422
+     -1213.457838    421.945145    200.648538
+
+      1738.972609      0.000000      0.000000
+         0.000000   1738.972609      0.000000
+         0.000000      0.000000   1738.972609
+
+     chi_bare pGv (HH) in 10^{-6} cm^3/mol:
+     10331.395857      0.000000      0.000000
+         0.000000  10331.395857      0.000000
+         0.000000      0.000000  10331.395857
+
+     chi_bare vGv (VV) in 10^{-6} cm^3/mol:
+      8263.751933      0.000000      0.000000
+         0.000000   8263.751933      0.000000
+         0.000000      0.000000   8263.751933
+
+     NMR chemical shifts in ppm:
+ 
+     Atom  1  Si  pos: (  0.000000  0.000000  0.000000)  sigma:      -409.6702
+          -409.6702          0.0000          0.0000
+             0.0000       -409.6702          0.0000
+             0.0000          0.0000       -409.6702
+
+     Atom  2  C   pos: (  0.250000  0.250000  0.250000)  sigma:    -20271.3714
+        -20271.3714          0.0000          0.0000
+             0.0000     -20271.3714          0.0000
+             0.0000          0.0000     -20271.3714
+
+ 
+     INITIALIZATION: 
+     nmr_setup    :     0.06s CPU
+ 
+     greenf       :    65.25s CPU (     168 calls,   0.388 s avg)
+     cgsolve      :    65.10s CPU (     168 calls,   0.388 s avg)
+     ch_psi       :    64.01s CPU (    9298 calls,   0.007 s avg)
+     h_psiq       :    61.96s CPU (    9298 calls,   0.007 s avg)
+ 
+     u_kq         :    11.06s CPU (      56 calls,   0.198 s avg)
+     h_psi        :     9.91s CPU (    1333 calls,   0.007 s avg)
+ 
+     apply_p      :     0.02s CPU (     336 calls,   0.000 s avg)
+     apply_vel    :     0.41s CPU (     168 calls,   0.002 s avg)
+ 
+     j_para       :     6.34s CPU (      96 calls,   0.066 s avg)
+     biot_savart  :     0.04s CPU (       3 calls,   0.013 s avg)
+ 
+      General routines
+     ccalbec      :     1.51s CPU (   20473 calls,   0.000 s avg)
+     cft3         :     0.00s CPU (       3 calls,   0.001 s avg)
+     cft3s        :    67.83s CPU (   57978 calls,   0.001 s avg)
+     davcio       :     0.00s CPU (      64 calls,   0.000 s avg)
+ 

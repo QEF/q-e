@@ -1,0 +1,101 @@
+
+     Program MAGN      v.3.1.1  starts ...
+     Today is 28Jun2006 at 13:59: 4 
+
+     nbndx  =     4  nbnd   =     4  natomwfc =    18  npwx   =     347
+     nelec  =   8.00  nkb   =     8  ngl    =      65
+     MAGN         :     0.28s CPU time
+
+     Computing the magnetic susceptibility
+     k-point #    1 of    16
+     k-point #    2 of    16
+     k-point #    3 of    16
+     k-point #    4 of    16
+     k-point #    5 of    16
+     k-point #    6 of    16
+     k-point #    7 of    16
+     k-point #    8 of    16
+     k-point #    9 of    16
+     k-point #   10 of    16
+     k-point #   11 of    16
+     k-point #   12 of    16
+     k-point #   13 of    16
+     k-point #   14 of    16
+     k-point #   15 of    16
+     k-point #   16 of    16
+     End of magnetic susceptibility calculation
+ 
+     f-sum rule:
+       -10.412794     -1.177783      4.590081
+        -1.174387     -5.331013     -1.026182
+         4.590900     -1.028523    -10.241942
+
+     f-sum rule (symmetrized):
+        -8.661916      0.000000      0.000000
+         0.000000     -8.661916      0.000000
+         0.000000      0.000000     -8.661916
+
+     chi_bare pGv (HH) in paratec units:
+       -26.982611      5.554078    -10.091013
+         5.097941   -137.096138      1.416476
+       -10.065802      1.793253    -20.413983
+
+       -61.497577      0.000000      0.000000
+         0.000000    -61.497577      0.000000
+         0.000000      0.000000    -61.497577
+
+     chi_bare vGv (VV) in paratec units:
+       -23.221795      5.887150     -7.876335
+         5.886856   -126.353408      2.441587
+        -7.876335      2.441665    -17.021724
+
+       -55.532309      0.000000      0.000000
+         0.000000    -55.532309      0.000000
+         0.000000      0.000000    -55.532309
+
+     chi_bare pGv (HH) in 10^{-6} cm^3/mol:
+      -292.241936      0.000000      0.000000
+         0.000000   -292.241936      0.000000
+         0.000000      0.000000   -292.241936
+
+     chi_bare vGv (VV) in 10^{-6} cm^3/mol:
+      -263.894454      0.000000      0.000000
+         0.000000   -263.894454      0.000000
+         0.000000      0.000000   -263.894454
+
+     NMR chemical shifts in ppm:
+ 
+     Atom  1  Si  pos: (  0.000000  0.000000  0.000000)  sigma:   -15.469132
+       -15.469132      0.000000      0.000000
+         0.000000    -15.469132      0.000000
+         0.000000      0.000000    -15.469132
+
+     Atom  2  Si  pos: (  0.250000  0.250000  0.250000)  sigma:   -15.469132
+       -15.469132      0.000000      0.000000
+         0.000000    -15.469132      0.000000
+         0.000000      0.000000    -15.469132
+
+ 
+     INITIALIZATION: 
+     nmr_setup    :     0.02s CPU
+ 
+     greenf       :    33.20s CPU (     336 calls,   0.099 s avg)
+     cgsolve      :    33.09s CPU (     336 calls,   0.098 s avg)
+     ch_psi       :    32.59s CPU (   12773 calls,   0.003 s avg)
+     h_psiq       :    31.39s CPU (   12773 calls,   0.002 s avg)
+ 
+     u_kq         :     5.53s CPU (     112 calls,   0.049 s avg)
+     h_psi        :     4.66s CPU (    1601 calls,   0.003 s avg)
+ 
+     apply_p      :     0.00s CPU (     672 calls,   0.000 s avg)
+     apply_vel    :     0.28s CPU (     336 calls,   0.001 s avg)
+ 
+     j_para       :     4.27s CPU (     192 calls,   0.022 s avg)
+     biot_savart  :     0.01s CPU (       3 calls,   0.004 s avg)
+ 
+      General routines
+     ccalbec      :     0.99s CPU (   28235 calls,   0.000 s avg)
+     cft3         :     0.00s CPU (       3 calls,   0.001 s avg)
+     cft3s        :    35.78s CPU (   87880 calls,   0.000 s avg)
+     davcio       :     0.01s CPU (     128 calls,   0.000 s avg)
+ 

@@ -1,0 +1,6 @@
+&inputmagn
+	job = 'nmr'
+	prefix = 'si'
+	tmp_dir = './scratch/'
+	iverbosity = 1
+/
