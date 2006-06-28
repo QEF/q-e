@@ -95,7 +95,7 @@ contains
     maxbox=0
     !This finds the radii for integration
     if (.not.allocated(boxradius)) then
-       write (*,*) 'Genero boxradius' 
+!       write (*,*) 'Genero boxradius' 
        allocate (boxradius(ntyp))
        boxradius=0.D0
        do inat=1,ntyp
@@ -104,7 +104,7 @@ contains
                 do indm=kkbeta(inat),1,-1
                    if ((abs(qfunc(indm,inbrx1,inbrx2,inat))>10**(-6))) then
                       boxradius(inat)=max(r(indm,inat),boxradius(inat))
-                      write (*,*) 'radius for ',inat,' = ', boxradius(inat)
+!                      write (*,*) 'radius for ',inat,' = ', boxradius(inat)
                       exit
                    endif
                 end do
@@ -191,7 +191,7 @@ contains
 
           end do
        end do
-       write (*,*) 'saved ', maxbox (iat), ' of ', nrxx, ' for ',iat
+       write (6,*) 'saved ', maxbox (iat), ' of ', nrxx, ' for ',iat
     end do
 
     goodestimate=maxval(maxbox)
@@ -278,39 +278,39 @@ contains
 
 
     ndm = MAXVAL (kkbeta(1:ntyp))
-    ap (:,:,:)   = 0.d0
-    do nt=1,ntyp
-       nqlc(nt) = MIN ( nqlc(nt), lmaxq )
-       if ( nqlc(nt) < 0 )  nqlc(nt) = 0
-    end do
-    do nt = 1, ntyp
-       ih = 1
-       do nb = 1, nbeta (nt)
-          l = lll (nb, nt)
-          j = jjj (nb, nt)
-          do m = 1, 2 * l + 1
-             nhtol (ih, nt) = l
-             nhtolm(ih, nt) = l*l+m
-             nhtoj (ih, nt) = j
-             indv  (ih, nt) = nb
-             ih = ih + 1
-          enddo
-       enddo
-       do ih = 1, nh (nt)
-          do jh = 1, nh (nt)
-             if (nhtol (ih, nt) == nhtol (jh, nt) .and. &
-                  nhtolm(ih, nt) == nhtolm(jh, nt) ) then
-                ir = indv (ih, nt)
-                is = indv (jh, nt)
-                dvan (ih, jh, nt) = dion (ir, is, nt)
-             endif
-          enddo
-       enddo
-    enddo
+!    ap (:,:,:)   = 0.d0
+!    do nt=1,ntyp
+!       nqlc(nt) = MIN ( nqlc(nt), lmaxq )
+!       if ( nqlc(nt) < 0 )  nqlc(nt) = 0
+!    end do
+!    do nt = 1, ntyp
+!       ih = 1
+!       do nb = 1, nbeta (nt)
+!          l = lll (nb, nt)
+!          j = jjj (nb, nt)
+!          do m = 1, 2 * l + 1
+!             nhtol (ih, nt) = l
+!             nhtolm(ih, nt) = l*l+m
+!             nhtoj (ih, nt) = j
+!             indv  (ih, nt) = nb
+!             ih = ih + 1
+!          enddo
+!       enddo
+!       do ih = 1, nh (nt)
+!          do jh = 1, nh (nt)
+!             if (nhtol (ih, nt) == nhtol (jh, nt) .and. &
+!                  nhtolm(ih, nt) == nhtolm(jh, nt) ) then
+!                ir = indv (ih, nt)
+!!                is = indv (jh, nt)
+!                dvan (ih, jh, nt) = dion (ir, is, nt)
+!             endif
+!          enddo
+!       enddo
+!    enddo
     !
     !  compute Clebsch-Gordan coefficients
     !
-    if (okvan) call aainit (lmaxkb + 1)
+!    if (okvan) call aainit (lmaxkb + 1)
     do inat = 1, nat
        nt =ityp(inat)
        if (allocated(qtot)) deallocate (qtot)
@@ -404,108 +404,283 @@ contains
     call stop_clock('qpointlist')
   end subroutine qpointlist
 
-  subroutine newd_r
-
-!This subroutine is the real version of newd
-!This is faster
-
-    USE kinds,                ONLY : DP
-    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-    USE cell_base,            ONLY : omega
-    USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, g, gg, &
-         ngm, gstart, ig1, ig2, ig3, eigts1, eigts2, &
-         eigts3, nl, nrxx
-    USE lsda_mod,             ONLY : nspin
-    USE scf,                  ONLY : vr, vltot
-    USE uspp,                 ONLY : okvan
-    USE uspp,                 ONLY : deeq, dvan, nhtolm, nhtol
-    USE uspp_param,           ONLY : lmaxq, nh, nhm, tvanp
-    USE wvfct,                ONLY : gamma_only
-    USE wavefunctions_module, ONLY : psic
-    implicit none
+SUBROUTINE newd_r
+!
+!  This subroutine is the real version of newd
+!  This is faster
+!
+USE kinds,                ONLY : DP
+USE ions_base,            ONLY : nat, ntyp => nsp, ityp
+USE cell_base,            ONLY : omega
+USE gvect,                ONLY : nr1, nr2, nr3, nrxx
+USE lsda_mod,             ONLY : nspin
+USE scf,                  ONLY : vr, vltot
+USE uspp,                 ONLY : okvan
+USE uspp,                 ONLY : deeq, deeq_nc, dvan, dvan_so
+USE uspp_param,           ONLY : nh, nhm, tvanp
+USE noncollin_module,     ONLY : noncolin
+USE spin_orb,             ONLY : so, domag, lspinorb
+IMPLICIT NONE
     !
-    real(kind=DP) :: pi, fpi
-    parameter (pi = 3.14159265358979d0, fpi = 4.d0 * pi)
-    integer :: na,ih,jh,is,inat,inrxx,nt, lmi1,lmi2,lmj1,lmj2
+REAL(DP), PARAMETER  :: pi = 3.14159265358979d0, fpi = 4.d0 * pi
+REAL(DP), ALLOCATABLE :: aux(:,:)
+INTEGER :: na, ih, jh, is, ir, nt, nht, nspin0
 
-    if (.not.okvan) then
-       ! no ultrasoft potentials: use bare coefficients for projectors
-       do na = 1, nat
-          nt = ityp (na)
-          do is = 1, nspin
-             do ih = 1, nh (nt)
-                do jh = ih, nh (nt)
-                   deeq (ih, jh, na, is) = dvan (ih, jh, nt)
-                   deeq (jh, ih, na, is) = deeq (ih, jh, na, is)
-                enddo
-             enddo
-          enddo
-       end do
-    endif
-    call start_clock('newd')
-    deeq(:,:,:,:)=0.D0 !annulliamo deeq
+IF (.NOT.okvan) THEN
+   !
+   ! ... no ultrasoft potentials: use bare coefficients for projectors
+   !
+   DO na = 1, nat
+      !
+      nt  = ityp(na)
+      nht = nh(nt)
+      !
+      IF ( lspinorb ) THEN
+         !
+         deeq_nc(1:nht,1:nht,na,1:nspin) = dvan_so(1:nht,1:nht,1:nspin,nt)
+         !
+      ELSE IF ( noncolin ) THEN
+         !
+         deeq_nc(1:nht,1:nht,na,1) = dvan(1:nht,1:nht,nt)
+         deeq_nc(1:nht,1:nht,na,2) = ( 0.D0, 0.D0 )
+         deeq_nc(1:nht,1:nht,na,3) = ( 0.D0, 0.D0 )
+         deeq_nc(1:nht,1:nht,na,4) = dvan(1:nht,1:nht,nt)
+         !
+      ELSE
+         !
+         DO is = 1, nspin
+            !
+            deeq(1:nht,1:nht,na,is) = dvan(1:nht,1:nht,nt)
+            !
+         END DO
+         !
+      END IF
+      !
+   END DO
+   !
+   ! ... early return
+   !
+   RETURN
+   !
+END IF
+!
+CALL start_clock( 'newd' )
+!
+nspin0=nspin
+IF (noncolin.and..not.domag) nspin0=1
+!
+deeq(:,:,:,:)=0.D0 
+ALLOCATE(aux(nrxx,nspin0))
+DO is=1,nspin0
+   IF ( nspin0 == 4 .AND. is /= 1 ) then
+      aux(:,is) = vr(:,is)
+   ELSE
+      aux(:,is) = vltot(:) + vr(:,is)
+   END IF
+END DO
 
-    do inat=1,nat
+DO na=1,nat
+   nt=ityp(na)
+   DO ih=1,nh(nt)
+      DO jh=ih,nh(nt)
+         DO is=1,nspin0
+            DO ir=1,maxbox(na)
+               deeq (ih,jh,na,is)=deeq(ih,jh,na,is)+( qsave(ir,ih,jh,na) &
+                                 *aux(box(ir,na),is) )  
+            END DO
+            deeq(jh,ih,na,is) = deeq(ih,jh,na,is)
+         END DO
+      END DO
+   END DO
+END DO
+deeq=deeq*omega/(nr1*nr2*nr3)
+DEALLOCATE(aux)
 
-       do ih=1,nh(ityp(inat))
-
-          do jh=ih,nh(ityp(inat))
-
-             do is=1,nspin
-                do inrxx=1,maxbox(inat)
-
-
-
-
-                   deeq (ih,jh,inat,is)=deeq(ih,jh,inat,is)+((qsave(inrxx,ih,jh,inat) &
-                        & ) * &
-                        &(vltot(box(inrxx,inat))+&
-                        &vr(box(inrxx,inat),is )) )  
-
-                end do
-             end do
-          end do
-       end do
-    end do
-    deeq=deeq*omega/(nr1*nr2*nr3)
-
-!!$    write (55,*) 'scriviamo deeq'
-!!$    do inat=1,nat
-!!$       do ih=1,nh(ityp(inat))
-!!$          do jh=ih,nh(ityp(inat))
-!!$             do is=1,nspin
-!!$                write (55,*) inat,ih,jh,deeq(ih,jh,inat,is)
-!!$             end do
-!!$          end do
-!!$       end do
-!!$    end do
+!$    write (55,*) 'scriviamo deeq'
+!$    do inat=1,nat
+!$       do ih=1,nh(ityp(inat))
+!$          do jh=ih,nh(ityp(inat))
+!$             do is=1,nspin0
+!$                write (55,*) inat,ih,jh,deeq(ih,jh,inat,is)
+!$             end do
+!$          end do
+!$       end do
+!$    end do
     !stop
 
 #ifdef __PARA
-    call reduce (nhm * nhm * nat * nspin, deeq)
+    call reduce (nhm * nhm * nat * nspin0, deeq)
 #endif
-    do na = 1, nat
-       nt = ityp (na)
-       do is = 1, nspin
-          !           WRITE( stdout,'( "dmatrix atom ",i4, " spin",i4)') na,is
-          !           do ih = 1, nh(nt)
-          !              WRITE( stdout,'(8f9.4)') (deeq(ih,jh,na,is),jh=1,nh(nt))
-          !           end do
-          do ih = 1, nh (nt)
-             do jh = ih, nh (nt)
-                deeq (ih, jh, na, is) = deeq (ih, jh, na, is) + dvan (ih,jh,nt)
-                deeq (jh, ih, na, is) = deeq (ih, jh, na, is)
-             enddo
-          enddo
-       enddo
-       !        WRITE( stdout,'( "dion pseudo ",i4)') nt
-       !        do ih = 1, nh(nt)
-       !           WRITE( stdout,'(8f9.4)') (dvan(ih,jh,nt),jh=1,nh(nt))
-       !        end do
+DO na = 1, nat
+   nt = ityp (na)
+   IF ( noncolin ) THEN
+      !
+      IF (so(nt)) THEN
+         !
+         CALL newd_so(na)
+         !
+      ELSE
+         !
+         CALL newd_nc(na)
+         !
+      END IF
+      !
+   ELSE
+      DO is = 1, nspin0
+         DO ih = 1, nh (nt)
+            DO jh = ih, nh (nt)
+               deeq(ih, jh, na, is)=deeq(ih, jh, na, is)+dvan(ih,jh,nt)
+               deeq(jh, ih, na, is)=deeq(ih, jh, na, is)
+            END DO
+         END DO
+      END DO      
+   END IF
+   !        WRITE( stdout,'( "dion pseudo ",i4)') nt
+   !        do ih = 1, nh(nt)
+   !           WRITE( stdout,'(8f9.4)') (dvan(ih,jh,nt),jh=1,nh(nt))
+   !        end do
+ENDDO
 
-    enddo
-    call stop_clock('newd')
-  end subroutine newd_r
+CALL stop_clock('newd')
+
+RETURN
+
+  CONTAINS
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE newd_so(na)
+      !------------------------------------------------------------------------
+      !
+      USE spin_orb, ONLY : fcoef, so, domag, lspinorb
+      !
+      IMPLICIT NONE
+      !
+      INTEGER :: na
+
+      INTEGER :: ijs, is1, is2, kh, lh
+      !
+      !
+      nt=ityp(na)
+      ijs = 0
+      !
+      DO is1 = 1, 2
+         !
+         DO is2 =1, 2
+            !
+            ijs = ijs + 1
+            !
+            IF (domag) THEN
+               DO ih = 1, nh(nt)
+                  !
+                  DO jh = 1, nh(nt)
+                     !
+                     deeq_nc(ih,jh,na,ijs) = dvan_so(ih,jh,ijs,nt)
+                     !
+                     DO kh = 1, nh(nt)
+                        !
+                        DO lh = 1, nh(nt)
+                           !
+                           deeq_nc(ih,jh,na,ijs) = deeq_nc(ih,jh,na,ijs) +   &
+                                deeq (kh,lh,na,1)*            &
+                             (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt)  + &
+                             fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt)) + &
+                             deeq (kh,lh,na,2)*            &
+                             (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,2,is2,nt)  + &
+                             fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,1,is2,nt)) + &
+                             (0.D0,-1.D0)*deeq (kh,lh,na,3)*            &
+                             (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,2,is2,nt)  - &
+                             fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,1,is2,nt)) + &
+                             deeq (kh,lh,na,4)*            &
+                             (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt)  - &
+                             fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt))   
+                           !
+                        END DO
+                        !
+                     END DO
+                     !
+                  END DO
+                  !
+               END DO
+               !
+            ELSE
+               !
+               DO ih = 1, nh(nt)
+                  !
+                  DO jh = 1, nh(nt)
+                     !
+                     deeq_nc(ih,jh,na,ijs) = dvan_so(ih,jh,ijs,nt)
+                     !
+                     DO kh = 1, nh(nt)
+                        !
+                        DO lh = 1, nh(nt)
+                           !
+                           deeq_nc(ih,jh,na,ijs) = deeq_nc(ih,jh,na,ijs) +   &
+                                deeq (kh,lh,na,1)*            &
+                             (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt)  + &
+                             fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt) ) 
+                           !
+                        END DO
+                        !
+                     END DO
+                     !
+                  END DO
+                  !
+               END DO
+               !
+            END IF
+            !
+         END DO
+         !
+      END DO
+      !
+    RETURN
+      !
+    END SUBROUTINE newd_so
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE newd_nc(na)
+      !------------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      !
+      INTEGER :: na
+      !
+      nt = ityp(na)
+      !
+      DO ih = 1, nh(nt)
+         !
+         DO jh = 1, nh(nt)
+            !
+            IF (lspinorb) THEN
+               deeq_nc(ih,jh,na,1) = dvan_so(ih,jh,1,nt) + &
+                                     deeq(ih,jh,na,1) + deeq(ih,jh,na,4)
+               !                      
+               deeq_nc(ih,jh,na,4) = dvan_so(ih,jh,4,nt) + &
+                                     deeq(ih,jh,na,1) - deeq(ih,jh,na,4)
+               !
+            ELSE
+               deeq_nc(ih,jh,na,1) = dvan(ih,jh,nt) + &
+                                     deeq(ih,jh,na,1) + deeq(ih,jh,na,4)
+               !                      
+               deeq_nc(ih,jh,na,4) = dvan(ih,jh,nt) + &
+                                     deeq(ih,jh,na,1) - deeq(ih,jh,na,4)
+               !
+            END IF
+            deeq_nc(ih,jh,na,2) = deeq(ih,jh,na,2) - &
+                                  ( 0.D0, 1.D0 ) * deeq(ih,jh,na,3)
+            !                      
+            deeq_nc(ih,jh,na,3) = deeq(ih,jh,na,2) + &
+                                  ( 0.D0, 1.D0 ) * deeq(ih,jh,na,3)
+            !                      
+         END DO
+         !
+      END DO
+      !
+    RETURN
+    END SUBROUTINE newd_nc
+    !
+END SUBROUTINE newd_r
+
 
   subroutine setqfcorr (qfcoef, rho, r, nqf, ltot, mesh)
     !-----------------------------------------------------------------------
@@ -690,13 +865,15 @@ subroutine addusdens_r
   USE uspp_param,           ONLY : lmaxq, tvanp, nh
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
+  USE noncollin_module,     ONLY : noncolin
+  USE spin_orb,             ONLY : domag
   !
   implicit none
   !
   !     here the local variables
   !
 
-  integer :: na, nt, ir, ih, jh, ijh, is
+  integer :: na, nt, ir, ih, jh, ijh, is, nspin0
   ! counters
 
   ! work space for rho(G,nspin)
@@ -706,7 +883,10 @@ subroutine addusdens_r
 
   call start_clock ('addusdens')
 
-  do is=1, nspin
+  nspin0=nspin
+  IF (noncolin.AND..NOT.domag) nspin0=1
+
+  do is=1, nspin0
      do na=1,nat
         nt = ityp(na)
         if (tvanp(nt)) then
