@@ -460,13 +460,14 @@ contains
                    deeq (ih,jh,inat,is)=deeq(ih,jh,inat,is)+((qsave(inrxx,ih,jh,inat) &
                         & ) * &
                         &(vltot(box(inrxx,inat))+&
-                        &vr(box(inrxx,inat),is ))*(omega/nrxx) )  
+                        &vr(box(inrxx,inat),is )) )  
 
                 end do
              end do
           end do
        end do
     end do
+    deeq=deeq*omega/(nr1*nr2*nr3)
 
 !!$    write (55,*) 'scriviamo deeq'
 !!$    do inat=1,nat
