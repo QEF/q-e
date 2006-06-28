@@ -151,6 +151,7 @@ cat > metadyn-cp.in << EOF
   scradir        = "$TMP_DIR/",
   pseudo_dir     = "$PSEUDO_DIR/",
   nstep          = 10,
+  iprint         = 50,
   etot_conv_thr  = 4.D-4,
   forc_conv_thr  = 4.D-3,
   restart_mode   = "from_scratch",
@@ -217,7 +218,6 @@ cat > metadyn-cp-T=300K.in << EOF
   pseudo_dir     = "$PSEUDO_DIR/",
   nstep          = 10,
   iprint         = 50,
-  isave          = 50,
   restart_mode   = "from_scratch",
 /
 &SYSTEM
