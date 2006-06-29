@@ -204,7 +204,9 @@ SUBROUTINE electrons()
   !
   DO idum = 1, niter
      !
-     IF ( check_stop_now() ) RETURN
+     IF (idum > 1) THEN
+        IF ( check_stop_now() ) RETURN
+     END IF
      !  
      iter = iter + 1
      !
@@ -268,7 +270,9 @@ SUBROUTINE electrons()
            !
         END IF
         !
-        IF ( check_stop_now() ) RETURN
+        IF (iter > 1) THEN
+           IF ( check_stop_now() ) RETURN
+        END IF
         !
         CALL sum_band()
         !

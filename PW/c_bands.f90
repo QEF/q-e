@@ -395,6 +395,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        USE becmod,              ONLY : becp, becp_nc
        USE complex_diis_module, ONLY : cdiisg
+       USE check_stop,          ONLY : check_stop_now
        !
        IMPLICIT NONE
        !
@@ -747,6 +748,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           CALL save_in_cbands( iter, ik, dr2 )
           !
+          IF ( .not.lscf) THEN
+             IF (check_stop_now() ) call stop_run(.FALSE.)
+          ENDIF
        END DO k_loop
        !
        ik_ = 0
