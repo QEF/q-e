@@ -382,6 +382,12 @@ sumpdos.x : sumpdos.o
 	$(MPIF90) $(LDFLAGS) -o $@ sumpdos.o
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
+epsilon.x : epsilon.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(MPIF90) $(LDFLAGS) -o $@ epsilon.o $(PPOBJS) $(PWOBJS) $(MODULES) \
+	$(LIBOBJS) $(LIBS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+
  
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
