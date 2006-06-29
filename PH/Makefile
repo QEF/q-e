@@ -122,6 +122,7 @@ MODULES = \
 ../Modules/atom.o \
 ../Modules/autopilot.o \
 ../Modules/basic_algebra_routines.o \
+../Modules/bfgs_module.o \
 ../Modules/berry_phase.o \
 ../Modules/cell_base.o \
 ../Modules/check_stop.o \
@@ -140,12 +141,21 @@ MODULES = \
 ../Modules/ions_base.o \
 ../Modules/ions_nose.o \
 ../Modules/kind.o \
+../Modules/metadyn_base.o \
+../Modules/metadyn_io.o \
+../Modules/metadyn_vars.o \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \
+../Modules/path_base.o \
+../Modules/path_formats.o \
+../Modules/path_variables.o \
+../Modules/path_opt_routines.o \
+../Modules/path_io_routines.o \
+../Modules/path_reparametrisation.o \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
 ../Modules/ptoolkit.o \
@@ -195,6 +205,8 @@ PWOBJS = \
 ../PW/ccalbec.o \
 ../PW/ccalbec_nc.o \
 ../PW/ccgdiagg.o \
+../PW/compute_scf.o \
+../PW/compute_fes_grads.o \
 ../PW/rcgdiagg.o \
 ../PW/cdiagh.o \
 ../PW/cdiaghg.o \
@@ -289,6 +301,7 @@ PWOBJS = \
 ../PW/mix_pot.o \
 ../PW/mix_rho.o \
 ../PW/mode_group.o \
+../PW/move_ions.o \
 ../PW/multable.o \
 ../PW/n_plane_waves.o \
 ../PW/new_ns.o \
@@ -360,6 +373,7 @@ PWOBJS = \
 ../PW/spinor.o \
 ../PW/sph_ind.o \
 ../PW/startup.o \
+../PW/stop_run.o \
 ../PW/stres_cc.o \
 ../PW/stres_ewa.o \
 ../PW/stres_gradcorr.o \

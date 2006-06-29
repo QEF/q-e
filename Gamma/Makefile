@@ -3,6 +3,7 @@
 include ../make.sys
 
 PWOBJS = \
+../PW/a2fmod.o \
 ../PW/add_bfield.o \
 ../PW/add_efield.o \
 ../PW/addusdens.o \
@@ -41,6 +42,9 @@ PWOBJS = \
 ../PW/checksym.o \
 ../PW/cinitcgg.o \
 ../PW/clean_pw.o \
+../PW/close_files.o \
+../PW/compute_fes_grads.o \
+../PW/compute_scf.o \
 ../PW/compute_dip.o \
 ../PW/compute_rho.o \
 ../PW/coset.o \
@@ -115,6 +119,7 @@ PWOBJS = \
 ../PW/make_pointlists.o \
 ../PW/mix_rho.o \
 ../PW/mode_group.o \
+../PW/move_ions.o \
 ../PW/multable.o \
 ../PW/newd.o \
 ../PW/new_ns.o \
@@ -129,6 +134,7 @@ PWOBJS = \
 ../PW/print_clock_pw.o \
 ../PW/psymrho.o \
 ../PW/psymrho_mag.o \
+../PW/punch.o \
 ../PW/pwcom.o \
 ../PW/pw_gemm.o \
 ../PW/pw_restart.o \
@@ -144,6 +150,7 @@ PWOBJS = \
 ../PW/regterg.o \
 ../PW/remove_atomic_rho.o \
 ../PW/report_mag.o \
+../PW/reset_k_points.o \
 ../PW/restart_from_file.o \
 ../PW/restart_in_electrons.o \
 ../PW/restart_in_ions.o \
@@ -181,6 +188,7 @@ PWOBJS = \
 ../PW/sph_ind.o \
 ../PW/s_psi.o \
 ../PW/s_psi_nc.o \
+../PW/stop_run.o \
 ../PW/startup.o \
 ../PW/stres_cc.o \
 ../PW/stres_ewa.o \
@@ -229,6 +237,7 @@ PWOBJS = \
 
 MODULES = \
 ../Modules/atom.o \
+../Modules/bfgs_module.o \
 ../Modules/basic_algebra_routines.o \
 ../Modules/berry_phase.o \
 ../Modules/cell_base.o \
@@ -247,12 +256,21 @@ MODULES = \
 ../Modules/io_global.o \
 ../Modules/ions_base.o \
 ../Modules/kind.o \
+../Modules/metadyn_base.o \
+../Modules/metadyn_io.o \
+../Modules/metadyn_vars.o \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \
+../Modules/path_base.o \
+../Modules/path_formats.o \
+../Modules/path_variables.o \
+../Modules/path_opt_routines.o \
+../Modules/path_io_routines.o \
+../Modules/path_reparametrisation.o \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
 ../Modules/ptoolkit.o \
