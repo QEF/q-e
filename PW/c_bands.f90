@@ -72,9 +72,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   REAL(DP), EXTERNAL :: erf
     ! error function  
   !
-  !
-  CALL start_clock( 'c_bands' )
-  !
   IF ( ik_ == nks ) THEN
      !
      ik_ = 0
@@ -82,6 +79,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      RETURN
      !
   END IF
+  !
+  CALL start_clock( 'c_bands' )
   !
   IF ( noncolin ) THEN
      !
