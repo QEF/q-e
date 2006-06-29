@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1 - Tue May 9 09:28:14 CEST 2006                          
+     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   4:51:53  10May2006               
+   This run was started on:   4:49:59  29Jun2006               
 
    Serial Build
 
@@ -408,11 +408,11 @@
    92  0.00000    0.0    0.0   -17.20680   -17.20680   -17.20680   -17.20680  0.0000  0.0000  0.0000  0.0000
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.558612D-07  0.1D-03  0.696296D-10  0.1D-08  0.000000D+00  0.1D+11
+   MAIN:   0.558612D-07  0.1D-03  0.696225D-10  0.1D-08  0.000000D+00  0.1D+11
    MAIN: convergence achieved for system relaxation
 
    writing restart file: .//h2o_mol_50.save
-   restart file written in    0.165 sec.
+   restart file written in    0.110 sec.
 
 
 
@@ -429,34 +429,34 @@
    volume        :     8000.00000    8000.00000 (AU)
 
 
-     initialize   :     4.18s CPU
-     total_time   :   155.06s CPU (      92 calls,   1.685 s avg)
-     formf        :     0.18s CPU
-     rhoofr       :    37.07s CPU (      93 calls,   0.399 s avg)
-     vofrho       :    97.52s CPU (      93 calls,   1.049 s avg)
-     dforce       :    18.77s CPU (     186 calls,   0.101 s avg)
-     calphi       :     0.50s CPU (      93 calls,   0.005 s avg)
-     ortho        :     1.00s CPU (      93 calls,   0.011 s avg)
-     updatc       :     0.17s CPU (      93 calls,   0.002 s avg)
+     initialize   :     4.54s CPU
+     total_time   :   163.88s CPU (      92 calls,   1.781 s avg)
+     formf        :     0.38s CPU
+     rhoofr       :    39.42s CPU (      93 calls,   0.424 s avg)
+     vofrho       :   103.84s CPU (      93 calls,   1.117 s avg)
+     dforce       :    19.15s CPU (     186 calls,   0.103 s avg)
+     calphi       :     0.49s CPU (      93 calls,   0.005 s avg)
+     ortho        :     1.04s CPU (      93 calls,   0.011 s avg)
+     updatc       :     0.13s CPU (      93 calls,   0.001 s avg)
      gram         :     0.01s CPU
-     newd         :     0.44s CPU (      93 calls,   0.005 s avg)
-     calbec       :     0.02s CPU (      94 calls,   0.000 s avg)
-     prefor       :     0.16s CPU (      94 calls,   0.002 s avg)
-     strucf       :     0.57s CPU (      93 calls,   0.006 s avg)
-     rhov         :     9.15s CPU (      93 calls,   0.098 s avg)
-     nlsm1        :     0.84s CPU (     280 calls,   0.003 s avg)
-     fft          :    57.86s CPU (     837 calls,   0.069 s avg)
-     ffts         :    12.64s CPU (     186 calls,   0.068 s avg)
-     fftw         :    22.80s CPU (     558 calls,   0.041 s avg)
-     fftb         :     1.26s CPU (   14115 calls,   0.000 s avg)
-     rsg          :     0.00s CPU (      93 calls,   0.000 s avg)
+     newd         :     0.36s CPU (      93 calls,   0.004 s avg)
+     calbec       :     0.00s CPU (      94 calls,   0.000 s avg)
+     prefor       :     0.19s CPU (      93 calls,   0.002 s avg)
+     strucf       :     0.55s CPU (      93 calls,   0.006 s avg)
+     rhov         :     8.79s CPU (      93 calls,   0.095 s avg)
+     nlsm1        :     0.80s CPU (     280 calls,   0.003 s avg)
+     fft          :    63.59s CPU (     837 calls,   0.076 s avg)
+     ffts         :    15.01s CPU (     186 calls,   0.081 s avg)
+     fftw         :    23.28s CPU (     558 calls,   0.042 s avg)
+     fftb         :     1.46s CPU (   14115 calls,   0.000 s avg)
+     rsg          :     0.01s CPU (      93 calls,   0.000 s avg)
  
  
  
-     CP           :  2m42.39s CPU time
+     CP           :  2m51.63s CPU time
 
  
-   This run was terminated on:   4:54:35  10May2006            
+   This run was terminated on:   4:52:51  29Jun2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

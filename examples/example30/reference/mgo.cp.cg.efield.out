@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1 - Tue May 9 09:28:14 CEST 2006                          
+     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   6: 1:23  10May2006               
+   This run was started on:   6: 2: 3  29Jun2006               
 
    Serial Build
 Warning: card &CELL ignored
@@ -393,8 +393,10 @@ Warning: card / ignored
  
 
    reading restart file: .//mgo_50.save
-   restart file read in    0.216 sec.
+   restart file read in    0.220 sec.
 
+ nprint_nfi=           -2
+ nprint_nfi=            1
 
    formf: eself= 676.60611
    formf:     vps(g=0)=  -0.0020774     rhops(g=0)=  -0.0014893
@@ -437,6 +439,8 @@ Initialize Berry phase electric field
     1.75    1.75    1.75    1.75    1.75    1.87    1.87    1.87    1.87    1.87
     1.87    1.87    1.87    1.87    1.87    1.87    1.87    1.92    1.92    1.92
     1.92    1.92    1.92    1.92    1.92    2.46    2.46    2.46
+ 
+   Allocated memory (kb) =      1863
  
    CELL_PARAMETERS
    15.91200000    0.00000000    0.00000000
@@ -593,7 +597,7 @@ Initialize Berry phase electric field
    Mg   0.247041E-04  0.247041E-04  0.198668E-02
    Mg   0.247041E-04  0.247042E-04  0.198668E-02
    Mg   0.247041E-04  0.247041E-04  0.198668E-02
-   Mg   0.247041E-04  0.247041E-04  0.198668E-02
+   Mg   0.247041E-04  0.247040E-04  0.198668E-02
    Mg   0.247040E-04  0.247041E-04  0.198668E-02
    Mg   0.247041E-04  0.247040E-04  0.198668E-02
    Mg   0.247041E-04  0.247040E-04  0.198668E-02
@@ -604,7 +608,7 @@ Initialize Berry phase electric field
    Mg   0.247040E-04  0.247041E-04  0.198668E-02
    Mg   0.247041E-04  0.247041E-04  0.198668E-02
    Mg   0.247041E-04  0.247041E-04  0.198668E-02
-   Mg   0.247042E-04  0.247042E-04  0.198668E-02
+   Mg   0.247042E-04  0.247041E-04  0.198668E-02
    Mg   0.247041E-04  0.247041E-04  0.198668E-02
    Mg   0.247041E-04  0.247042E-04  0.198668E-02
    Mg   0.247041E-04  0.247040E-04  0.198668E-02
@@ -616,39 +620,39 @@ Initialize Berry phase electric field
    Mg   0.247041E-04  0.247041E-04  0.198668E-02
    Mg   0.247041E-04  0.247040E-04  0.198668E-02
    Mg   0.247041E-04  0.247042E-04  0.198668E-02
-   Mg   0.247040E-04  0.247040E-04  0.198668E-02
-   O   -0.470348E-04 -0.470346E-04 -0.200939E-02
-   O   -0.470345E-04 -0.470352E-04 -0.200939E-02
-   O   -0.470347E-04 -0.470346E-04 -0.200939E-02
-   O   -0.470346E-04 -0.470347E-04 -0.200939E-02
-   O   -0.470348E-04 -0.470348E-04 -0.200939E-02
-   O   -0.470346E-04 -0.470345E-04 -0.200939E-02
-   O   -0.470346E-04 -0.470349E-04 -0.200939E-02
-   O   -0.470347E-04 -0.470349E-04 -0.200939E-02
-   O   -0.470343E-04 -0.470349E-04 -0.200939E-02
-   O   -0.470349E-04 -0.470342E-04 -0.200939E-02
-   O   -0.470348E-04 -0.470347E-04 -0.200939E-02
-   O   -0.470347E-04 -0.470347E-04 -0.200939E-02
-   O   -0.470347E-04 -0.470346E-04 -0.200939E-02
-   O   -0.470344E-04 -0.470347E-04 -0.200939E-02
-   O   -0.470348E-04 -0.470343E-04 -0.200939E-02
-   O   -0.470347E-04 -0.470345E-04 -0.200939E-02
-   O   -0.470349E-04 -0.470349E-04 -0.200939E-02
-   O   -0.470348E-04 -0.470350E-04 -0.200939E-02
-   O   -0.470346E-04 -0.470345E-04 -0.200939E-02
-   O   -0.470348E-04 -0.470349E-04 -0.200939E-02
-   O   -0.470345E-04 -0.470344E-04 -0.200939E-02
-   O   -0.470345E-04 -0.470346E-04 -0.200939E-02
-   O   -0.470347E-04 -0.470349E-04 -0.200939E-02
-   O   -0.470344E-04 -0.470348E-04 -0.200939E-02
-   O   -0.470351E-04 -0.470345E-04 -0.200939E-02
-   O   -0.470348E-04 -0.470345E-04 -0.200939E-02
-   O   -0.470349E-04 -0.470348E-04 -0.200939E-02
-   O   -0.470350E-04 -0.470345E-04 -0.200939E-02
-   O   -0.470346E-04 -0.470347E-04 -0.200939E-02
-   O   -0.470350E-04 -0.470347E-04 -0.200939E-02
-   O   -0.470344E-04 -0.470346E-04 -0.200939E-02
-   O   -0.470349E-04 -0.470345E-04 -0.200939E-02
+   Mg   0.247040E-04  0.247041E-04  0.198668E-02
+   O   -0.470348E-04 -0.470346E-04 -0.200940E-02
+   O   -0.470345E-04 -0.470352E-04 -0.200940E-02
+   O   -0.470347E-04 -0.470346E-04 -0.200940E-02
+   O   -0.470346E-04 -0.470347E-04 -0.200940E-02
+   O   -0.470348E-04 -0.470348E-04 -0.200940E-02
+   O   -0.470346E-04 -0.470345E-04 -0.200940E-02
+   O   -0.470346E-04 -0.470349E-04 -0.200940E-02
+   O   -0.470347E-04 -0.470349E-04 -0.200940E-02
+   O   -0.470343E-04 -0.470349E-04 -0.200940E-02
+   O   -0.470349E-04 -0.470342E-04 -0.200940E-02
+   O   -0.470348E-04 -0.470347E-04 -0.200940E-02
+   O   -0.470347E-04 -0.470347E-04 -0.200940E-02
+   O   -0.470347E-04 -0.470346E-04 -0.200940E-02
+   O   -0.470344E-04 -0.470347E-04 -0.200940E-02
+   O   -0.470348E-04 -0.470343E-04 -0.200940E-02
+   O   -0.470347E-04 -0.470345E-04 -0.200940E-02
+   O   -0.470349E-04 -0.470349E-04 -0.200940E-02
+   O   -0.470348E-04 -0.470350E-04 -0.200940E-02
+   O   -0.470346E-04 -0.470345E-04 -0.200940E-02
+   O   -0.470348E-04 -0.470349E-04 -0.200940E-02
+   O   -0.470345E-04 -0.470344E-04 -0.200940E-02
+   O   -0.470345E-04 -0.470346E-04 -0.200940E-02
+   O   -0.470347E-04 -0.470349E-04 -0.200940E-02
+   O   -0.470344E-04 -0.470348E-04 -0.200940E-02
+   O   -0.470351E-04 -0.470345E-04 -0.200940E-02
+   O   -0.470348E-04 -0.470345E-04 -0.200940E-02
+   O   -0.470349E-04 -0.470348E-04 -0.200940E-02
+   O   -0.470350E-04 -0.470345E-04 -0.200940E-02
+   O   -0.470346E-04 -0.470347E-04 -0.200940E-02
+   O   -0.470350E-04 -0.470347E-04 -0.200940E-02
+   O   -0.470344E-04 -0.470346E-04 -0.200940E-02
+   O   -0.470349E-04 -0.470345E-04 -0.200940E-02
  
 
 
@@ -664,7 +668,7 @@ Step     2       0   -547.28628   -547.28628   -547.28628    17
 Elct. dipole 1   15.415235  Ionic dipole 1    1.060800
 
    writing restart file: .//mgo_50.save
-   restart file written in    0.404 sec.
+   restart file written in    0.310 sec.
 
 
 
@@ -681,42 +685,42 @@ Elct. dipole 1   15.415235  Ionic dipole 1    1.060800
    volume        :     4028.78703    4028.78703 (AU)
 
 
-     initialize   :     6.66s CPU
-     total_time   :   542.94s CPU
-     formf        :     0.28s CPU
-     rhoofr       :    45.98s CPU (      34 calls,   1.352 s avg)
-     vofrho       :    40.22s CPU (      33 calls,   1.219 s avg)
-     dforce       :    47.30s CPU (    1088 calls,   0.043 s avg)
-     calphi       :     2.25s CPU (      17 calls,   0.132 s avg)
-     gram         :    52.22s CPU (      33 calls,   1.582 s avg)
-     newd         :    84.60s CPU (      17 calls,   4.976 s avg)
-     calbec       :    26.49s CPU (     116 calls,   0.228 s avg)
-     prefor       :     0.54s CPU (      18 calls,   0.030 s avg)
-     strucf       :     0.12s CPU (       2 calls,   0.060 s avg)
+     initialize   :     6.77s CPU
+     total_time   :   541.71s CPU
+     formf        :     0.29s CPU
+     rhoofr       :    46.78s CPU (      34 calls,   1.376 s avg)
+     vofrho       :    39.54s CPU (      33 calls,   1.198 s avg)
+     dforce       :    48.33s CPU (    1088 calls,   0.044 s avg)
+     calphi       :     2.20s CPU (      17 calls,   0.129 s avg)
+     gram         :    52.30s CPU (      33 calls,   1.585 s avg)
+     newd         :    88.04s CPU (      17 calls,   5.179 s avg)
+     calbec       :    26.97s CPU (     116 calls,   0.233 s avg)
+     prefor       :     0.57s CPU (      19 calls,   0.030 s avg)
+     strucf       :     0.13s CPU (       2 calls,   0.065 s avg)
      nlfl         :     0.05s CPU
      nlfq         :     0.72s CPU
-     set_cc       :     5.56s CPU (      34 calls,   0.164 s avg)
-     rhov         :     9.81s CPU (      34 calls,   0.289 s avg)
-     nlsm1        :    26.49s CPU (     116 calls,   0.228 s avg)
+     set_cc       :     4.85s CPU (      34 calls,   0.143 s avg)
+     rhov         :     9.75s CPU (      34 calls,   0.287 s avg)
+     nlsm1        :    26.97s CPU (     116 calls,   0.233 s avg)
      nlsm2        :     0.69s CPU
-     forcecc      :    10.32s CPU (      33 calls,   0.313 s avg)
-     fft          :    13.68s CPU (     167 calls,   0.082 s avg)
-     ffts         :     1.43s CPU (      67 calls,   0.021 s avg)
-     fftw         :    42.89s CPU (    4352 calls,   0.010 s avg)
-     fftb         :    60.83s CPU (   13280 calls,   0.005 s avg)
-     runcg_uspp   :   542.61s CPU
-     pc2          :    68.48s CPU (      48 calls,   1.427 s avg)
-     pcdaga2      :    20.71s CPU (      16 calls,   1.294 s avg)
+     forcecc      :     9.83s CPU (      33 calls,   0.298 s avg)
+     fft          :    12.88s CPU (     167 calls,   0.077 s avg)
+     ffts         :     1.21s CPU (      67 calls,   0.018 s avg)
+     fftw         :    45.34s CPU (    4352 calls,   0.010 s avg)
+     fftb         :    64.06s CPU (   13280 calls,   0.005 s avg)
+     runcg_uspp   :   541.37s CPU
+     pc2          :    68.51s CPU (      48 calls,   1.427 s avg)
+     pcdaga2      :    20.52s CPU (      16 calls,   1.282 s avg)
      set_x_minus1 :     3.54s CPU (       2 calls,   1.770 s avg)
-     xminus1      :    24.78s CPU (      32 calls,   0.774 s avg)
+     xminus1      :    22.20s CPU (      32 calls,   0.694 s avg)
      emass_p_tpa  :     0.00s CPU
  
  
  
-     CP           :  9m10.08s CPU time
+     CP           :  9m 8.87s CPU time
 
  
-   This run was terminated on:   6:10:35  10May2006            
+   This run was terminated on:   6:11:13  29Jun2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

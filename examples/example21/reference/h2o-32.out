@@ -3,17 +3,16 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1 - Tue May 9 09:28:14 CEST 2006                          
+     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:55:22  10May2006               
+   This run was started on:   3:53:32  29Jun2006               
 
    Serial Build
-Warning: card  1 4 ignored
 
    Job Title:  Water 32 molecules
 
@@ -143,11 +142,6 @@ Warning: card  1 4 ignored
      Exchange functional: BECKE                                                       
      Correlation functional: PERDEW AND WANG                                             
      Exchange-correlation      = BLYP (1313)
- 
-   K points
-   --------
-   Gamma-point calculation
-   Wavefunction type: REAL
 
 
    Ions Simulation Parameters
@@ -341,7 +335,7 @@ Warning: card  1 4 ignored
 
    Estimated Sizes of the problem
    ------------------------------
-   dimension of the problem (byte/pe) :    527790400
+   dimension of the problem (byte/pe) :    432568032
 
 
    System geometry initialization
@@ -555,6 +549,8 @@ Warning: card  1 4 ignored
    25.20   26.17   26.31   26.84   27.31   27.62   27.71   28.38   29.41   29.77
    30.02   30.40   31.02   31.41   32.39   32.51   33.15   33.66   34.10   34.75
    34.95   35.36   35.58   36.45   37.09   37.41   38.27   38.98
+ 
+   Allocated memory (kb) =      1875
  
    CELL_PARAMETERS
    18.65000000    0.00000000    0.00000000
@@ -878,8 +874,6 @@ Warning: card  1 4 ignored
    ---------------
               KS_1 integrated charge :        1.00000
               KS_4 integrated charge :        1.00000
-   time for KS ortho     =    49.40
-   time for KS print out =     1.32
 
 
    Averaged Physical Quantities
@@ -895,26 +889,27 @@ Warning: card  1 4 ignored
    volume        :     6486.88962    6486.88962 (AU)
 
 
-     initialize   :    71.47s CPU
-     main_loop    :   478.93s CPU (      10 calls,  47.893 s avg)
-     formf        :     1.45s CPU
-     calphi       :     3.30s CPU (      11 calls,   0.300 s avg)
-     ortho        :    31.90s CPU (      11 calls,   2.900 s avg)
-     updatc       :     7.52s CPU (      11 calls,   0.684 s avg)
-     gram         :    13.56s CPU
-     strucf       :     1.21s CPU
-     nlsm1        :     2.88s CPU (      11 calls,   0.262 s avg)
-     nlsm2        :     1.49s CPU (       2 calls,   0.745 s avg)
-     fft          :    25.20s CPU (      88 calls,   0.286 s avg)
-     fftw         :   343.71s CPU (    2242 calls,   0.153 s avg)
-     rsg          :     0.22s CPU (      11 calls,   0.020 s avg)
+     initialize   :    72.14s CPU
+     main_loop    :   524.13s CPU (      10 calls,  52.413 s avg)
+     formf        :     1.37s CPU
+     calphi       :     3.32s CPU (      11 calls,   0.302 s avg)
+     ortho        :    31.16s CPU (      11 calls,   2.833 s avg)
+     updatc       :     6.87s CPU (      11 calls,   0.625 s avg)
+     gram         :    13.43s CPU
+     prefor       :     0.04s CPU
+     strucf       :     1.16s CPU
+     nlsm1        :     2.48s CPU (      11 calls,   0.225 s avg)
+     nlsm2        :     1.28s CPU (       2 calls,   0.640 s avg)
+     fft          :    25.59s CPU (      88 calls,   0.291 s avg)
+     fftw         :   390.56s CPU (    2242 calls,   0.174 s avg)
+     rsg          :     0.23s CPU (      11 calls,   0.021 s avg)
  
  
  
-     CP           : 10m 2.84s CPU time
+     CP           : 10m47.18s CPU time
 
  
-   This run was terminated on:   4: 5:26  10May2006            
+   This run was terminated on:   4: 4:21  29Jun2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

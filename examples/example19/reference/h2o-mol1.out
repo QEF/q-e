@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1 - Tue May 9 09:28:14 CEST 2006                          
+     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:48:36  10May2006               
+   This run was started on:   3:46:40  29Jun2006               
 
    Serial Build
 
@@ -128,11 +128,6 @@
      Exchange functional: BECKE                                                       
      Correlation functional: PERDEW AND WANG                                             
      Exchange-correlation      = BLYP (1313)
- 
-   K points
-   --------
-   Gamma-point calculation
-   Wavefunction type: REAL
 
 
    Ions Simulation Parameters
@@ -233,7 +228,7 @@
 
    Estimated Sizes of the problem
    ------------------------------
-   dimension of the problem (byte/pe) :     51546096
+   dimension of the problem (byte/pe) :     51756264
 
 
    System geometry initialization
@@ -337,6 +332,8 @@
 
   -33.18  -21.31   19.19   22.24
  
+   Allocated memory (kb) =      1911
+ 
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
@@ -413,6 +410,8 @@
    Eigenvalues (eV), kp =   1 , spin =  1
 
   -31.50  -15.99   -9.01   -4.37
+ 
+   Allocated memory (kb) =      1963
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -491,6 +490,8 @@
 
   -27.85  -14.23   -9.45   -6.64
  
+   Allocated memory (kb) =      1963
+ 
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
@@ -567,6 +568,8 @@
    Eigenvalues (eV), kp =   1 , spin =  1
 
   -26.38  -13.59   -9.22   -7.10
+ 
+   Allocated memory (kb) =      1963
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -645,6 +648,8 @@
 
   -25.68  -13.23   -9.10   -7.17
  
+   Allocated memory (kb) =      1963
+ 
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
@@ -685,7 +690,7 @@
    50  0.00357    0.0    0.0   -17.08765   -17.08765   -17.08765   -17.08408  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: .//h2o_mol_51.save
-   restart file written in    0.171 sec.
+   restart file written in    0.091 sec.
 
 
 
@@ -703,25 +708,26 @@
 
 
      initialize   :     4.58s CPU
-     main_loop    :    78.65s CPU (      50 calls,   1.573 s avg)
-     formf        :     1.43s CPU
-     calphi       :     0.07s CPU (      51 calls,   0.001 s avg)
+     main_loop    :    78.58s CPU (      50 calls,   1.572 s avg)
+     formf        :     1.39s CPU
+     calphi       :     0.13s CPU (      51 calls,   0.003 s avg)
      ortho        :     0.44s CPU (      51 calls,   0.009 s avg)
-     updatc       :     0.11s CPU (      51 calls,   0.002 s avg)
-     gram         :     0.00s CPU
+     updatc       :     0.13s CPU (      51 calls,   0.003 s avg)
+     gram         :     0.01s CPU
+     prefor       :     0.00s CPU
      strucf       :     0.01s CPU
-     nlsm1        :     0.04s CPU (      51 calls,   0.001 s avg)
-     nlsm2        :     0.02s CPU (       6 calls,   0.003 s avg)
-     fft          :    32.55s CPU (     408 calls,   0.080 s avg)
-     fftw         :    13.61s CPU (     306 calls,   0.044 s avg)
+     nlsm1        :     0.05s CPU (      51 calls,   0.001 s avg)
+     nlsm2        :     0.01s CPU (       6 calls,   0.002 s avg)
+     fft          :    32.19s CPU (     408 calls,   0.079 s avg)
+     fftw         :    14.09s CPU (     306 calls,   0.046 s avg)
      rsg          :     0.00s CPU (      51 calls,   0.000 s avg)
  
  
  
-     CP           :  1m23.51s CPU time
+     CP           :  1m23.39s CPU time
 
  
-   This run was terminated on:   3:49:59  10May2006            
+   This run was terminated on:   3:48: 4  29Jun2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

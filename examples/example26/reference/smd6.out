@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1 - Tue May 9 09:28:14 CEST 2006                          
+     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5:21:54  10May2006               
+   This run was started on:   5:20:32  29Jun2006               
 
    Serial Build
 
@@ -259,6 +259,16 @@
   Allocation ended 
 
    reading restart file: .//cp_71.save
+   restart file read in    0.025 sec.
+
+ nprint_nfi=           -2
+ nprint_nfi=           -1
+
+   formf: eself=   1.49603
+   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
+   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
+
+   reading restart file: .//cp_72.save
    restart file read in    0.024 sec.
 
 
@@ -266,16 +276,8 @@
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
-   reading restart file: .//cp_72.save
-   restart file read in    0.023 sec.
-
-
-   formf: eself=   1.49603
-   formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
-   formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
-
    reading restart file: .//cp_73.save
-   restart file read in    0.022 sec.
+   restart file read in    0.024 sec.
 
 
    formf: eself=   1.49603
@@ -283,7 +285,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: .//cp_74.save
-   restart file read in    0.022 sec.
+   restart file read in    0.023 sec.
 
 
    formf: eself=   1.49603
@@ -291,7 +293,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: .//cp_75.save
-   restart file read in    0.022 sec.
+   restart file read in    0.023 sec.
 
 
    formf: eself=   1.49603
@@ -299,7 +301,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: .//cp_76.save
-   restart file read in    0.022 sec.
+   restart file read in    0.024 sec.
 
 
    formf: eself=   1.49603
@@ -307,7 +309,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: .//cp_77.save
-   restart file read in    0.022 sec.
+   restart file read in    0.025 sec.
 
 
    formf: eself=   1.49603
@@ -722,59 +724,59 @@
  
 
    writing restart file: .//cp_71.save
-   restart file written in    0.049 sec.
+   restart file written in    0.024 sec.
 
 
    writing restart file: .//cp_72.save
-   restart file written in    0.049 sec.
+   restart file written in    0.024 sec.
 
 
    writing restart file: .//cp_73.save
-   restart file written in    0.049 sec.
+   restart file written in    0.024 sec.
 
 
    writing restart file: .//cp_74.save
-   restart file written in    0.049 sec.
+   restart file written in    0.024 sec.
 
 
    writing restart file: .//cp_75.save
-   restart file written in    0.048 sec.
+   restart file written in    0.024 sec.
 
 
    writing restart file: .//cp_76.save
-   restart file written in    0.049 sec.
+   restart file written in    0.025 sec.
 
      initialize   :     0.33s CPU
-     formf        :     0.06s CPU (       7 calls,   0.009 s avg)
-     rhoofr       :    10.62s CPU (     350 calls,   0.030 s avg)
-     vofrho       :    69.48s CPU (     350 calls,   0.199 s avg)
-     dforce       :     2.86s CPU (     700 calls,   0.004 s avg)
-     calphi       :     0.03s CPU (     350 calls,   0.000 s avg)
-     ortho        :     0.05s CPU (     350 calls,   0.000 s avg)
+     formf        :     0.05s CPU (       7 calls,   0.007 s avg)
+     rhoofr       :    10.88s CPU (     350 calls,   0.031 s avg)
+     vofrho       :    70.24s CPU (     350 calls,   0.201 s avg)
+     dforce       :     2.77s CPU (     700 calls,   0.004 s avg)
+     calphi       :     0.00s CPU (     350 calls,   0.000 s avg)
+     ortho        :     0.03s CPU (     350 calls,   0.000 s avg)
      updatc       :     0.01s CPU (     700 calls,   0.000 s avg)
-     newd         :     2.17s CPU (     350 calls,   0.006 s avg)
+     newd         :     2.19s CPU (     350 calls,   0.006 s avg)
      calbec       :     0.00s CPU (     364 calls,   0.000 s avg)
-     prefor       :     0.00s CPU (     700 calls,   0.000 s avg)
-     strucf       :     0.10s CPU (     357 calls,   0.000 s avg)
-     nlfl         :     0.01s CPU (     350 calls,   0.000 s avg)
+     prefor       :     0.01s CPU (     707 calls,   0.000 s avg)
+     strucf       :     0.13s CPU (     357 calls,   0.000 s avg)
+     nlfl         :     0.00s CPU (     350 calls,   0.000 s avg)
      nlfq         :     0.06s CPU (     350 calls,   0.000 s avg)
-     rhov         :     3.62s CPU (     350 calls,   0.010 s avg)
+     rhov         :     3.81s CPU (     350 calls,   0.011 s avg)
      nlsm1        :     0.01s CPU (    1064 calls,   0.000 s avg)
-     nlsm2        :     0.06s CPU (     350 calls,   0.000 s avg)
-     fft          :    27.25s CPU (    4900 calls,   0.006 s avg)
-     ffts         :     2.39s CPU (     700 calls,   0.003 s avg)
-     fftw         :     3.80s CPU (    2100 calls,   0.002 s avg)
-     fftb         :     1.70s CPU (    4900 calls,   0.000 s avg)
-     rsg          :     0.01s CPU (     700 calls,   0.000 s avg)
+     nlsm2        :     0.02s CPU (     350 calls,   0.000 s avg)
+     fft          :    27.57s CPU (    4900 calls,   0.006 s avg)
+     ffts         :     2.17s CPU (     700 calls,   0.003 s avg)
+     fftw         :     3.76s CPU (    2100 calls,   0.002 s avg)
+     fftb         :     1.78s CPU (    4900 calls,   0.000 s avg)
+     rsg          :     0.00s CPU (     700 calls,   0.000 s avg)
 
    writing restart file: .//cp_77.save
-   restart file written in    0.049 sec.
+   restart file written in    0.024 sec.
 
  
-     CP           :  1m26.41s CPU time
+     CP           :  1m27.08s CPU time
 
  
-   This run was terminated on:   5:23:21  10May2006            
+   This run was terminated on:   5:21:59  29Jun2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

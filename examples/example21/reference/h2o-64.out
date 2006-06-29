@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1 - Tue May 9 09:28:14 CEST 2006                          
+     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   4: 5:27  10May2006               
+   This run was started on:   4: 4:21  29Jun2006               
 
    Serial Build
 
@@ -155,11 +155,6 @@
      Exchange functional: BECKE                                                       
      Correlation functional: PERDEW AND WANG                                             
      Exchange-correlation      = BLYP (1313)
- 
-   K points
-   --------
-   Gamma-point calculation
-   Wavefunction type: REAL
 
 
    Ions Simulation Parameters
@@ -449,7 +444,7 @@
 
    Estimated Sizes of the problem
    ------------------------------
-   dimension of the problem (byte/pe) :   1844041184
+   dimension of the problem (byte/pe) :   1457489120
 
 
    System geometry initialization
@@ -785,6 +780,8 @@
    32.50   32.62   32.99   33.19   33.28   33.62   33.82   34.06   34.35   34.70
    34.80   35.11   35.28   35.31   35.85   35.93   36.11   36.24   36.81   37.15
    37.82   38.10   38.24   38.83   38.99   39.07
+ 
+   Allocated memory (kb) =      1887
  
    CELL_PARAMETERS
    18.65000000    0.00000000    0.00000000
@@ -1406,26 +1403,27 @@
    volume        :    12973.77925   12973.77925 (AU)
 
 
-     initialize   :   378.28s CPU
-     main_loop    :  2089.33s CPU (      10 calls, 208.933 s avg)
-     formf        :     1.63s CPU
-     calphi       :    12.12s CPU (      11 calls,   1.102 s avg)
-     ortho        :   227.53s CPU (      11 calls,  20.685 s avg)
-     updatc       :    50.30s CPU (      11 calls,   4.573 s avg)
-     gram         :   113.70s CPU
-     strucf       :     9.94s CPU
-     nlsm1        :    17.25s CPU (      11 calls,   1.568 s avg)
-     nlsm2        :     9.32s CPU (       2 calls,   4.660 s avg)
-     fft          :    53.37s CPU (      88 calls,   0.606 s avg)
-     fftw         :  1373.13s CPU (    4224 calls,   0.325 s avg)
-     rsg          :     1.72s CPU (      11 calls,   0.156 s avg)
+     initialize   :   358.59s CPU
+     main_loop    :  2107.94s CPU (      10 calls, 210.794 s avg)
+     formf        :     1.60s CPU
+     calphi       :    11.49s CPU (      11 calls,   1.045 s avg)
+     ortho        :   229.63s CPU (      11 calls,  20.875 s avg)
+     updatc       :    49.88s CPU (      11 calls,   4.535 s avg)
+     gram         :   110.92s CPU
+     prefor       :     0.19s CPU
+     strucf       :     9.13s CPU
+     nlsm1        :    17.44s CPU (      11 calls,   1.585 s avg)
+     nlsm2        :     9.23s CPU (       2 calls,   4.615 s avg)
+     fft          :    51.45s CPU (      88 calls,   0.585 s avg)
+     fftw         :  1406.54s CPU (    4224 calls,   0.333 s avg)
+     rsg          :     1.70s CPU (      11 calls,   0.155 s avg)
  
  
  
-     CP           : 41m16.61s CPU time
+     CP           : 41m15.28s CPU time
 
  
-   This run was terminated on:   4:46:49  10May2006            
+   This run was terminated on:   4:45:39  29Jun2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

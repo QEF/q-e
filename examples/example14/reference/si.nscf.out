@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.3.1    starts ...
-     Today is  6May2006 at  3:21:59 
+     Program PWSCF     v.3.1.1  starts ...
+     Today is 29Jun2006 at  3:15:48 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -103,13 +103,13 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is      1.06 secs
+     total cpu time spent up to now is      1.01 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  1.25E-10,  avg # of iterations = 11.9
 
-     total cpu time spent up to now is      6.21 secs
+     total cpu time spent up to now is      6.09 secs
 
      End of band structure calculation
 
@@ -123,7 +123,7 @@
 
           k =-0.3750 0.3750-0.1250     band energies (ev):
 
-    -4.5483   1.5828   3.8822   5.4511
+    -4.5483   1.5828   3.8822   5.4512
 
           k =-0.3750 0.3750 0.8750     band energies (ev):
 
@@ -143,31 +143,31 @@
 
           k = 0.1250-0.1250 1.3750     band energies (ev):
 
-    -3.9985   1.2999   3.5091   3.9850
+    -3.9986   1.2999   3.5091   3.9850
 
           k =-0.1250 0.6250 0.1250     band energies (ev):
 
-    -3.9985   1.2999   3.5091   3.9850
+    -3.9986   1.2999   3.5091   3.9850
 
           k =-0.1250 0.6250 1.1250     band energies (ev):
 
-    -2.2826  -0.7123   2.0739   3.2050
+    -2.2826  -0.7123   2.0739   3.2051
 
           k = 0.6250-0.1250 0.8750     band energies (ev):
 
-    -2.2826  -0.7123   2.0739   3.2050
+    -2.2826  -0.7123   2.0739   3.2051
 
           k = 0.6250-0.1250 1.8750     band energies (ev):
 
-    -3.9985   1.2999   3.5091   3.9850
+    -3.9986   1.2999   3.5091   3.9850
 
           k = 0.3750 0.1250 0.6250     band energies (ev):
 
-    -3.5604   0.3663   2.8491   4.2661
+    -3.5604   0.3664   2.8491   4.2661
 
           k = 0.3750 0.1250 1.6250     band energies (ev):
 
-    -4.5483   1.5828   3.8822   5.4511
+    -4.5483   1.5828   3.8822   5.4512
 
           k =-0.1250-0.8750 0.1250     band energies (ev):
 
@@ -191,15 +191,15 @@
 
           k = 0.3750-0.3750 2.1250     band energies (ev):
 
-    -4.5483   1.5828   3.8822   5.4511
+    -4.5483   1.5828   3.8822   5.4512
 
           k =-0.1250-0.3750-0.3750     band energies (ev):
 
-    -4.5483   1.5828   3.8822   5.4511
+    -4.5483   1.5828   3.8822   5.4512
 
           k =-0.1250-0.3750 0.6250     band energies (ev):
 
-    -3.5604   0.3663   2.8491   4.2661
+    -3.5604   0.3664   2.8491   4.2661
 
           k = 0.6250 0.3750 0.3750     band energies (ev):
 
@@ -215,11 +215,11 @@
 
           k = 0.3750 0.1250 1.1250     band energies (ev):
 
-    -2.2826  -0.7123   2.0739   3.2050
+    -2.2826  -0.7123   2.0739   3.2051
 
           k = 0.1250 0.1250 0.6250     band energies (ev):
 
-    -3.9985   1.2999   3.5091   3.9850
+    -3.9986   1.2999   3.5091   3.9850
 
           k = 0.1250 0.1250 1.6250     band energies (ev):
 
@@ -227,15 +227,15 @@
 
           k = 0.8750 0.1250 0.6250     band energies (ev):
 
-    -2.2826  -0.7123   2.0739   3.2050
+    -2.2826  -0.7123   2.0739   3.2051
 
           k = 0.8750 0.1250 1.6250     band energies (ev):
 
-    -2.2826  -0.7123   2.0739   3.2050
+    -2.2826  -0.7123   2.0739   3.2051
 
           k =-0.6250 0.8750-0.1250     band energies (ev):
 
-    -2.2826  -0.7123   2.0739   3.2050
+    -2.2826  -0.7123   2.0739   3.2051
 
           k =-0.6250 0.8750 0.8750     band energies (ev):
 
@@ -243,7 +243,7 @@
 
           k = 0.6250-0.1250 0.3750     band energies (ev):
 
-    -3.5604   0.3663   2.8491   4.2661
+    -3.5604   0.3664   2.8491   4.2661
 
           k = 0.6250-0.1250 1.3750     band energies (ev):
 
@@ -251,11 +251,11 @@
 
           k =-0.3750 0.6250 0.1250     band energies (ev):
 
-    -3.5604   0.3663   2.8491   4.2661
+    -3.5604   0.3664   2.8491   4.2661
 
           k =-0.3750 0.6250 1.1250     band energies (ev):
 
-    -3.5604   0.3663   2.8491   4.2661
+    -3.5604   0.3664   2.8491   4.2661
 
           k = 0.1250 0.1250-0.8750     band energies (ev):
 
@@ -271,43 +271,43 @@
 
           k = 1.1250 0.3750 1.3750     band energies (ev):
 
-    -3.5604   0.3663   2.8491   4.2661
+    -3.5604   0.3664   2.8491   4.2661
 
      Writing output data file si.save
  
-     PWSCF        :     6.56s CPU time
+     PWSCF        :     6.45s CPU time
 
-     init_run     :     1.05s CPU
-     electrons    :     5.15s CPU
+     init_run     :     1.00s CPU
+     electrons    :     5.08s CPU
  
-     electrons    :     5.15s CPU
-     c_bands      :     5.15s CPU
-     sum_band     :     0.23s CPU
+     electrons    :     5.08s CPU
+     c_bands      :     5.08s CPU
+     sum_band     :     0.24s CPU
      v_of_rho     :     0.01s CPU
  
-     c_bands      :     5.15s CPU
-     init_us_2    :     0.01s CPU (     120 calls,   0.000 s avg)
-     cegterg      :     5.13s CPU (      40 calls,   0.128 s avg)
+     c_bands      :     5.08s CPU
+     init_us_2    :     0.05s CPU (     120 calls,   0.000 s avg)
+     cegterg      :     5.05s CPU (      40 calls,   0.126 s avg)
  
-     sum_band     :     0.23s CPU
+     sum_band     :     0.24s CPU
  
-     wfcrot       :     0.91s CPU (      40 calls,   0.023 s avg)
-     cegterg      :     5.13s CPU (      40 calls,   0.128 s avg)
-     h_psi        :     5.37s CPU (     556 calls,   0.010 s avg)
-     g_psi        :     0.03s CPU (     476 calls,   0.000 s avg)
-     cdiaghg      :     0.25s CPU (     516 calls,   0.000 s avg)
-     update       :     0.10s CPU (     476 calls,   0.000 s avg)
-     last         :     0.08s CPU (     158 calls,   0.001 s avg)
+     wfcrot       :     0.84s CPU (      40 calls,   0.021 s avg)
+     cegterg      :     5.05s CPU (      40 calls,   0.126 s avg)
+     h_psi        :     5.36s CPU (     556 calls,   0.010 s avg)
+     g_psi        :     0.07s CPU (     476 calls,   0.000 s avg)
+     cdiaghg      :     0.13s CPU (     516 calls,   0.000 s avg)
+     update       :     0.08s CPU (     476 calls,   0.000 s avg)
+     last         :     0.06s CPU (     158 calls,   0.000 s avg)
  
-     h_psi        :     5.37s CPU (     556 calls,   0.010 s avg)
+     h_psi        :     5.36s CPU (     556 calls,   0.010 s avg)
      init         :     0.00s CPU (     556 calls,   0.000 s avg)
-     firstfft     :     2.46s CPU (    2084 calls,   0.001 s avg)
-     secondfft    :     2.53s CPU (    2084 calls,   0.001 s avg)
-     add_vuspsi   :     0.13s CPU (     556 calls,   0.000 s avg)
+     firstfft     :     2.50s CPU (    2084 calls,   0.001 s avg)
+     secondfft    :     2.52s CPU (    2084 calls,   0.001 s avg)
+     add_vuspsi   :     0.09s CPU (     556 calls,   0.000 s avg)
  
      General routines
-     ccalbec      :     0.06s CPU (     556 calls,   0.000 s avg)
+     ccalbec      :     0.09s CPU (     556 calls,   0.000 s avg)
      cft3         :     0.01s CPU (       3 calls,   0.003 s avg)
-     cft3s        :     4.95s CPU (    4328 calls,   0.001 s avg)
-     davcio       :     0.00s CPU (     160 calls,   0.000 s avg)
+     cft3s        :     5.10s CPU (    4328 calls,   0.001 s avg)
+     davcio       :     0.04s CPU (     160 calls,   0.000 s avg)
  

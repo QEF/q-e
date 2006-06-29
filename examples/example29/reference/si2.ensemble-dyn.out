@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1 - Tue May 9 09:28:14 CEST 2006                          
+     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5:34:49  10May2006               
+   This run was started on:   5:34:38  29Jun2006               
 
    Serial Build
      from  system_checkin      : info #        -1
@@ -264,6 +264,8 @@ Occupations  :
 
    -9.73   -8.12   -3.54   -2.45   -2.45   -1.20   -1.20    0.80
  
+   Allocated memory (kb) =      2051
+ 
    CELL_PARAMETERS
    10.00000000    0.00000000    0.00000000
     0.00000000   10.00000000    0.00000000
@@ -275,20 +277,20 @@ Occupations  :
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-        0.27080357         0.00034017        -0.00067707
-        0.00034017         0.27083385         0.00010907
-       -0.00067707         0.00010907        -4.61929672
+        0.27080352         0.00034016        -0.00067706
+        0.00034016         0.27083384         0.00010907
+       -0.00067706         0.00010907        -4.61929671
    ATOMIC_POSITIONS
-   Si   0.113398E-06  0.181290E-07  0.507722E-03
-   Si  -0.113398E-06 -0.181290E-07  0.549949E+01
+   Si   0.113394E-06  0.181270E-07  0.507722E-03
+   Si  -0.113394E-06 -0.181270E-07  0.549949E+01
  
    ATOMIC_VELOCITIES
-   Si   0.202842E-08  0.269445E-08  0.228340E-04
-   Si  -0.202842E-08 -0.269445E-08 -0.228340E-04
+   Si   0.202838E-08  0.269436E-08  0.228340E-04
+   Si  -0.202838E-08 -0.269436E-08 -0.228340E-04
  
    Forces acting on atoms (au):
-   Si  -0.797378E-05  0.461124E-05  0.258931E-01
-   Si   0.132173E-04 -0.150020E-04 -0.259088E-01
+   Si  -0.105954E-04  0.980683E-05  0.259009E-01
+   Si   0.105954E-04 -0.980683E-05 -0.259009E-01
  
 
 
@@ -298,7 +300,7 @@ Occupations  :
 Step     5       2     -7.56896     -7.70165     -7.70162     6
 
    writing restart file: .//Si_dimer_50.save
-   restart file written in    0.068 sec.
+   restart file written in    0.058 sec.
 
 
 
@@ -315,41 +317,41 @@ Step     5       2     -7.56896     -7.70165     -7.70162     6
    volume        :     1500.00000    1500.00000 (AU)
 
 
-     initialize   :     0.84s CPU
-     total_time   :   227.68s CPU (       5 calls,  45.536 s avg)
+     initialize   :     0.85s CPU
+     total_time   :   233.38s CPU (       5 calls,  46.676 s avg)
      formf        :     0.13s CPU
-     rhoofr       :    49.61s CPU (    1483 calls,   0.033 s avg)
-     vofrho       :   144.00s CPU (    1483 calls,   0.097 s avg)
-     dforce       :    31.73s CPU (    5568 calls,   0.006 s avg)
-     calphi       :     0.00s CPU (      82 calls,   0.000 s avg)
-     gram         :     0.04s CPU (     163 calls,   0.000 s avg)
-     newd         :     0.04s CPU (    1474 calls,   0.000 s avg)
-     calbec       :     0.09s CPU (     567 calls,   0.000 s avg)
-     prefor       :     0.22s CPU (    1485 calls,   0.000 s avg)
+     rhoofr       :    48.36s CPU (    1485 calls,   0.033 s avg)
+     vofrho       :   148.41s CPU (    1485 calls,   0.100 s avg)
+     dforce       :    33.83s CPU (    5576 calls,   0.006 s avg)
+     calphi       :     0.01s CPU (      82 calls,   0.000 s avg)
+     gram         :     0.08s CPU (     163 calls,   0.000 s avg)
+     newd         :     0.06s CPU (    1476 calls,   0.000 s avg)
+     calbec       :     0.15s CPU (     567 calls,   0.000 s avg)
+     prefor       :     0.28s CPU (    1487 calls,   0.000 s avg)
      strucf       :     0.00s CPU (       6 calls,   0.000 s avg)
      nlfl         :     0.00s CPU (       5 calls,   0.000 s avg)
      nlfq         :     0.00s CPU (       5 calls,   0.000 s avg)
-     nlsm1        :     0.09s CPU (     567 calls,   0.000 s avg)
-     nlsm2        :     0.00s CPU (      10 calls,   0.000 s avg)
-     fft          :    56.14s CPU (   11864 calls,   0.005 s avg)
-     ffts         :    13.80s CPU (    2966 calls,   0.005 s avg)
-     fftw         :    42.16s CPU (   17068 calls,   0.002 s avg)
-     runcg_uspp   :   227.68s CPU (       5 calls,  45.536 s avg)
-     inner_loop   :   201.86s CPU (      82 calls,   2.462 s avg)
-     rotate       :     0.33s CPU (    1483 calls,   0.000 s avg)
-     calcmt       :     0.01s CPU (    1546 calls,   0.000 s avg)
-     calcm        :     0.00s CPU (     655 calls,   0.000 s avg)
-     pc2          :     0.09s CPU (     231 calls,   0.000 s avg)
-     pcdaga2      :     0.07s CPU (      77 calls,   0.001 s avg)
+     nlsm1        :     0.15s CPU (     567 calls,   0.000 s avg)
+     nlsm2        :     0.01s CPU (      10 calls,   0.001 s avg)
+     fft          :    58.98s CPU (   11880 calls,   0.005 s avg)
+     ffts         :    14.47s CPU (    2970 calls,   0.005 s avg)
+     fftw         :    42.70s CPU (   17092 calls,   0.002 s avg)
+     runcg_uspp   :   233.38s CPU (       5 calls,  46.676 s avg)
+     inner_loop   :   208.69s CPU (      82 calls,   2.545 s avg)
+     rotate       :     0.27s CPU (    1485 calls,   0.000 s avg)
+     calcmt       :     0.01s CPU (    1548 calls,   0.000 s avg)
+     calcm        :     0.00s CPU (     656 calls,   0.000 s avg)
+     pc2          :     0.08s CPU (     231 calls,   0.000 s avg)
+     pcdaga2      :     0.03s CPU (      77 calls,   0.000 s avg)
      xminus1      :     0.00s CPU (     154 calls,   0.000 s avg)
      emass_p_tpa  :     0.00s CPU (       5 calls,   0.000 s avg)
  
  
  
-     CP           :  3m48.62s CPU time
+     CP           :  3m54.31s CPU time
 
  
-   This run was terminated on:   5:38:38  10May2006            
+   This run was terminated on:   5:38:32  29Jun2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

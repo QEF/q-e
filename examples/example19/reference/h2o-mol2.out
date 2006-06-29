@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1 - Tue May 9 09:28:14 CEST 2006                          
+     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:49:59  10May2006               
+   This run was started on:   3:48: 4  29Jun2006               
 
    Serial Build
 
@@ -127,11 +127,6 @@
      Exchange functional: BECKE                                                       
      Correlation functional: PERDEW AND WANG                                             
      Exchange-correlation      = BLYP (1313)
- 
-   K points
-   --------
-   Gamma-point calculation
-   Wavefunction type: REAL
 
 
    Ions Simulation Parameters
@@ -233,7 +228,7 @@
 
    Estimated Sizes of the problem
    ------------------------------
-   dimension of the problem (byte/pe) :     51546096
+   dimension of the problem (byte/pe) :     51756264
 
 
    System geometry initialization
@@ -288,8 +283,10 @@
  
 
    reading restart file: .//h2o_mol_51.save
-   restart file read in    0.047 sec.
+   restart file read in    0.045 sec.
 
+ nprint_nfi=           -2
+ nprint_nfi=           50
    Occupation number from init
    nbnd =     4
     2.00 2.00 2.00 2.00
@@ -349,6 +346,8 @@
    Eigenvalues (eV), kp =   1 , spin =  1
 
   -25.31  -13.02   -9.03   -7.12
+ 
+   Allocated memory (kb) =      1911
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -427,6 +426,8 @@
 
   -25.12  -12.90   -9.00   -7.06
  
+   Allocated memory (kb) =      1911
+ 
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
@@ -503,6 +504,8 @@
    Eigenvalues (eV), kp =   1 , spin =  1
 
   -25.02  -12.83   -8.98   -7.01
+ 
+   Allocated memory (kb) =      1911
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -581,6 +584,8 @@
 
   -24.96  -12.79   -8.97   -6.98
  
+   Allocated memory (kb) =      1911
+ 
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
@@ -658,6 +663,8 @@
 
   -24.93  -12.76   -8.96   -6.96
  
+   Allocated memory (kb) =      1911
+ 
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
@@ -698,7 +705,7 @@
   100  0.00010    0.0    0.0   -17.17818   -17.17818   -17.17818   -17.17808  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: .//h2o_mol_51.save
-   restart file written in    0.135 sec.
+   restart file written in    0.055 sec.
 
 
 
@@ -716,24 +723,25 @@
 
 
      initialize   :     4.67s CPU
-     main_loop    :    74.62s CPU (      50 calls,   1.492 s avg)
-     formf        :     1.46s CPU
-     calphi       :     0.10s CPU (      51 calls,   0.002 s avg)
+     main_loop    :    76.34s CPU (      50 calls,   1.527 s avg)
+     formf        :     1.45s CPU
+     calphi       :     0.13s CPU (      51 calls,   0.003 s avg)
      ortho        :     0.45s CPU (      51 calls,   0.009 s avg)
-     updatc       :     0.15s CPU (      51 calls,   0.003 s avg)
-     strucf       :     0.02s CPU
-     nlsm1        :     0.03s CPU (      51 calls,   0.001 s avg)
-     nlsm2        :     0.03s CPU (       6 calls,   0.005 s avg)
-     fft          :    31.97s CPU (     408 calls,   0.078 s avg)
-     fftw         :    13.67s CPU (     306 calls,   0.045 s avg)
-     rsg          :     0.00s CPU (      51 calls,   0.000 s avg)
+     updatc       :     0.10s CPU (      51 calls,   0.002 s avg)
+     prefor       :     0.00s CPU
+     strucf       :     0.01s CPU
+     nlsm1        :     0.08s CPU (      51 calls,   0.002 s avg)
+     nlsm2        :     0.02s CPU (       6 calls,   0.003 s avg)
+     fft          :    32.60s CPU (     408 calls,   0.080 s avg)
+     fftw         :    14.52s CPU (     306 calls,   0.047 s avg)
+     rsg          :     0.01s CPU (      51 calls,   0.000 s avg)
  
  
  
-     CP           :  1m19.54s CPU time
+     CP           :  1m21.23s CPU time
 
  
-   This run was terminated on:   3:51:19  10May2006            
+   This run was terminated on:   3:49:25  29Jun2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

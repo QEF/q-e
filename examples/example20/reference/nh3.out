@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1 - Tue May 9 09:28:14 CEST 2006                          
+     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:52:40  10May2006               
+   This run was started on:   3:50:47  29Jun2006               
 
    Serial Build
 
@@ -128,11 +128,6 @@
      Exchange functional: BECKE                                                       
      Correlation functional: PERDEW AND WANG                                             
      Exchange-correlation      = BLYP (1313)
- 
-   K points
-   --------
-   Gamma-point calculation
-   Wavefunction type: REAL
 
 
    Ions Simulation Parameters
@@ -241,7 +236,7 @@
 
    Estimated Sizes of the problem
    ------------------------------
-   dimension of the problem (byte/pe) :     52226344
+   dimension of the problem (byte/pe) :     52093112
 
 
    System geometry initialization
@@ -350,6 +345,8 @@
 
   -18.84   -1.04   17.27   25.45
  
+   Allocated memory (kb) =      1923
+ 
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
@@ -439,6 +436,8 @@
    Eigenvalues (eV), kp =   1 , spin =  1
 
   -22.45  -10.25   -7.74   -2.25
+ 
+   Allocated memory (kb) =      1975
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -530,6 +529,8 @@
 
   -21.68  -10.59   -9.90   -4.72
  
+   Allocated memory (kb) =      1975
+ 
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
@@ -619,6 +620,8 @@
    Eigenvalues (eV), kp =   1 , spin =  1
 
   -21.17  -10.70  -10.37   -5.43
+ 
+   Allocated memory (kb) =      1975
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -710,6 +713,8 @@
 
   -20.94  -10.77  -10.44   -5.74
  
+   Allocated memory (kb) =      1975
+ 
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
@@ -799,6 +804,8 @@
    Eigenvalues (eV), kp =   1 , spin =  1
 
   -20.84  -10.77  -10.46   -5.88
+ 
+   Allocated memory (kb) =      1975
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -890,6 +897,8 @@
 
   -20.79  -10.75  -10.47   -5.96
  
+   Allocated memory (kb) =      1975
+ 
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
@@ -979,6 +988,8 @@
    Eigenvalues (eV), kp =   1 , spin =  1
 
   -20.77  -10.73  -10.48   -5.99
+ 
+   Allocated memory (kb) =      1975
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -1070,6 +1081,8 @@
 
   -20.75  -10.71  -10.48   -6.01
  
+   Allocated memory (kb) =      1975
+ 
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
@@ -1160,6 +1173,8 @@
 
   -20.74  -10.70  -10.49   -6.02
  
+   Allocated memory (kb) =      1975
+ 
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
     0.00000000   12.00000000    0.00000000
@@ -1203,7 +1218,7 @@
   100  0.00007    0.0    0.0   -11.71674   -11.71674   -11.71673   -11.71667  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: .//nh3_mol_51.save
-   restart file written in    0.169 sec.
+   restart file written in    0.091 sec.
 
 
 
@@ -1220,26 +1235,27 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     4.89s CPU
-     main_loop    :   156.10s CPU (     100 calls,   1.561 s avg)
-     formf        :     1.72s CPU
-     calphi       :     0.22s CPU (     101 calls,   0.002 s avg)
-     ortho        :     0.81s CPU (     101 calls,   0.008 s avg)
-     updatc       :     0.17s CPU (     101 calls,   0.002 s avg)
+     initialize   :     4.52s CPU
+     main_loop    :   159.48s CPU (     100 calls,   1.595 s avg)
+     formf        :     1.38s CPU
+     calphi       :     0.26s CPU (     101 calls,   0.003 s avg)
+     ortho        :     0.80s CPU (     101 calls,   0.008 s avg)
+     updatc       :     0.18s CPU (     101 calls,   0.002 s avg)
      gram         :     0.00s CPU
-     strucf       :     0.93s CPU (     101 calls,   0.009 s avg)
-     nlsm1        :     0.07s CPU (     101 calls,   0.001 s avg)
-     nlsm2        :     0.31s CPU (     101 calls,   0.003 s avg)
-     fft          :    63.04s CPU (     808 calls,   0.078 s avg)
-     fftw         :    26.65s CPU (     606 calls,   0.044 s avg)
-     rsg          :     0.00s CPU (     101 calls,   0.000 s avg)
+     prefor       :     0.04s CPU (     101 calls,   0.000 s avg)
+     strucf       :     0.89s CPU (     101 calls,   0.009 s avg)
+     nlsm1        :     0.09s CPU (     101 calls,   0.001 s avg)
+     nlsm2        :     0.27s CPU (     101 calls,   0.003 s avg)
+     fft          :    65.65s CPU (     808 calls,   0.081 s avg)
+     fftw         :    27.69s CPU (     606 calls,   0.046 s avg)
+     rsg          :     0.01s CPU (     101 calls,   0.000 s avg)
  
  
  
-     CP           :  2m41.43s CPU time
+     CP           :  2m44.39s CPU time
 
  
-   This run was terminated on:   3:55:22  10May2006            
+   This run was terminated on:   3:53:32  29Jun2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

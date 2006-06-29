@@ -4,7 +4,7 @@
      molecules and clusters in vacuum. The CP code is used as
      the undelying DFT egine.
 
-     Version: 3.1 - Tue May 9 09:28:14 CEST 2006                          
+     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
      Authors of the normal-modes code: Silviu Zilberman
 
      Authors of the CP code: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
@@ -13,7 +13,7 @@
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   6:52:55  10May2006               
+   This run was started on:   6:49:38  29Jun2006               
 
    Serial Build
 Warning: card  &IONS ignored
@@ -420,7 +420,7 @@ Warning: electron_velocities keyword has no effect
      atom   3 type  2   force =     0.00000002    0.00000279   -0.00000087
 
    writing restart file: .//h2o_51.save
-   restart file written in    0.172 sec.
+   restart file written in    0.087 sec.
 
  Done
  
@@ -1970,38 +1970,38 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9674   0.0000
    volume        :        0.00000       0.00000 (AU)
 
 
-     initialize   :     1.31s CPU
-     formf        :     0.75s CPU
-     rhoofr       :   126.43s CPU (     362 calls,   0.349 s avg)
-     vofrho       :   404.62s CPU (     343 calls,   1.180 s avg)
-     dforce       :    39.35s CPU (     344 calls,   0.114 s avg)
-     calphi       :     0.23s CPU (     172 calls,   0.001 s avg)
-     gram         :     0.86s CPU (     350 calls,   0.002 s avg)
+     initialize   :     1.26s CPU
+     formf        :     0.70s CPU
+     rhoofr       :   135.41s CPU (     362 calls,   0.374 s avg)
+     vofrho       :   416.59s CPU (     343 calls,   1.215 s avg)
+     dforce       :    39.80s CPU (     344 calls,   0.116 s avg)
+     calphi       :     0.37s CPU (     172 calls,   0.002 s avg)
+     gram         :     0.81s CPU (     350 calls,   0.002 s avg)
      newd         :     0.01s CPU (     172 calls,   0.000 s avg)
-     calbec       :     1.25s CPU (    1168 calls,   0.001 s avg)
+     calbec       :     1.13s CPU (    1168 calls,   0.001 s avg)
      prefor       :     0.05s CPU (     192 calls,   0.000 s avg)
-     strucf       :     0.13s CPU (      20 calls,   0.006 s avg)
+     strucf       :     0.16s CPU (      20 calls,   0.008 s avg)
      nlfl         :     0.00s CPU (      19 calls,   0.000 s avg)
      nlfq         :     0.06s CPU (      19 calls,   0.003 s avg)
-     nlsm1        :     1.23s CPU (    1168 calls,   0.001 s avg)
+     nlsm1        :     1.13s CPU (    1168 calls,   0.001 s avg)
      nlsm2        :     0.06s CPU (      19 calls,   0.003 s avg)
-     fft          :   211.67s CPU (    2763 calls,   0.077 s avg)
-     ffts         :    54.63s CPU (     705 calls,   0.077 s avg)
-     fftw         :    63.86s CPU (    1412 calls,   0.045 s avg)
-     runcg_uspp   :   571.84s CPU (      19 calls,  30.097 s avg)
-     pc2          :     2.05s CPU (     459 calls,   0.004 s avg)
-     pcdaga2      :     0.88s CPU (     153 calls,   0.006 s avg)
+     fft          :   231.06s CPU (    2763 calls,   0.084 s avg)
+     ffts         :    56.60s CPU (     705 calls,   0.080 s avg)
+     fftw         :    64.89s CPU (    1412 calls,   0.046 s avg)
+     runcg_uspp   :   592.98s CPU (      19 calls,  31.209 s avg)
+     pc2          :     2.27s CPU (     459 calls,   0.005 s avg)
+     pcdaga2      :     0.72s CPU (     153 calls,   0.005 s avg)
      xminus1      :     0.12s CPU (     306 calls,   0.000 s avg)
-     emass_p_tpa  :     0.02s CPU (      19 calls,   0.001 s avg)
+     emass_p_tpa  :     0.00s CPU (      19 calls,   0.000 s avg)
  
  
  
-     CP           :  9m43.74s CPU time
+     CP           : 10m 4.83s CPU time
 
  
-   This run was terminated on:   7: 2:38  10May2006            
+   This run was terminated on:   6:59:43  29Jun2006            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:   583.0
+   ELAPSED SECONDS:   605.0
    JOB DONE.
 =------------------------------------------------------------------------------=

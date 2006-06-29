@@ -1,6 +1,6 @@
 
-     Program POST-PROC v.3.1    starts ...
-     Today is  6May2006 at  4:50: 2 
+     Program POST-PROC v.3.1.1  starts ...
+     Today is 29Jun2006 at  4:47:26 
 
      nbndx  =    28  nbnd   =    28  natomwfc =    36  npwx   =     570
      nelec  =  20.00  nkb   =    52  ngl    =     947
@@ -73,6 +73,10 @@
      ewind                 =         4.0E+00
      epsproj               =         1.0E-07
 
+
+     number of k_|| points=    1
+                       cart. coord. in units 2pi/a_0
+        k(    1) = (   0.0000000   0.0000000), wk =   1.0000000
 ----- Information about left lead ----- 
 
      nocros                   =           26
@@ -186,30 +190,33 @@
    23   1.2445 1.3011 0.0566   000000000000000000000000001111111111111111111111111111111111111111111111111111
    24   1.3011 1.3576 0.0566   000000000000000000000000001111111111111111111111111111111111111111111111111111
    25   1.3576 1.4142 0.0566   000000000000000000000000001111111111111111111111111111111111111111111111111111
+
+        k(    1) = (   0.0000000   0.0000000), wk =   1.0000000
+
  ngper, shell number =           69          13
  ngper, ngper*npol, n2d =           69         138         128
  Nchannels of the left tip =            6
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.0642190   0.0000000   0.0000000
-  -0.0642190   0.0000000   0.0000000
-  -0.1970614   0.0000000   0.0000000
-  -0.1970614   0.0000000   0.0000000
-  -0.3204355   0.0000000   0.0000000
-  -0.3204355   0.0000000   0.0000000
+  -0.0642268   0.0000000   0.0000000
+  -0.0642268   0.0000000   0.0000000
+  -0.1970628   0.0000000   0.0000000
+  -0.1970628   0.0000000   0.0000000
+  -0.3204412   0.0000000   0.0000000
+  -0.3204412   0.0000000   0.0000000
  
-     PWCOND       :    50.82s CPU time
+     PWCOND       :    56.18s CPU time
 
-     init         :     3.26s CPU
-     poten        :     0.04s CPU
-     local        :     2.30s CPU
+     init         :     2.82s CPU
+     poten        :     0.05s CPU
+     local        :     2.26s CPU
  
-     scatter_forw :    38.37s CPU
-     integrals    :    22.86s CPU
-     rotatef      :     1.32s CPU (      24 calls,   0.055 s avg)
-     rotateb      :     0.75s CPU (      24 calls,   0.031 s avg)
-     scatter_back :     6.86s CPU
+     scatter_forw :    44.16s CPU
+     integrals    :    24.11s CPU
+     rotatef      :     1.36s CPU (      24 calls,   0.057 s avg)
+     rotateb      :     0.88s CPU (      24 calls,   0.037 s avg)
+     scatter_back :     8.94s CPU
  
-     compbs       :     6.88s CPU
-     compbs_2     :     6.15s CPU
+     compbs       :     6.93s CPU
+     compbs_2     :     6.19s CPU
  

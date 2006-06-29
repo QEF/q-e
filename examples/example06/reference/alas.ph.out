@@ -1,6 +1,6 @@
 
-     Program PHONON    v.3.1    starts ...
-     Today is  6May2006 at  2:47: 9 
+     Program PHONON    v.3.1.1  starts ...
+     Today is 29Jun2006 at  2:42: 1 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -82,20 +82,20 @@
      Representation     1      3 modes - To be done
 
      Representation     2      3 modes - To be done
-     PHONON       :     0.28s CPU time
+     PHONON       :     0.31s CPU time
 
 
      Alpha used in Ewald sum =   0.7000
 
      Electric Fields Calculation
 
-      iter #   1 total cpu time :     1.3 secs   av.it.:   6.0
+      iter #   1 total cpu time :     1.4 secs   av.it.:   6.0
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.133E-05
 
       iter #   2 total cpu time :     1.9 secs   av.it.:   9.3
       thresh= 0.115E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.651E-07
 
-      iter #   3 total cpu time :     2.4 secs   av.it.:   9.3
+      iter #   3 total cpu time :     2.5 secs   av.it.:   9.3
       thresh= 0.255E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.641E-09
 
       iter #   4 total cpu time :     3.0 secs   av.it.:   9.7
@@ -108,9 +108,9 @@
 
           Dielectric constant in cartesian axis 
 
-          (      13.743958172       0.000000000       0.000000000 )
-          (       0.000000000      13.743958172       0.000000000 )
-          (       0.000000000       0.000000000      13.743958172 )
+          (      13.743958134       0.000000000       0.000000000 )
+          (       0.000000000      13.743958134       0.000000000 )
+          (       0.000000000       0.000000000      13.743958134 )
 
           Effective charges E-U in cartesian axis 
 
@@ -137,7 +137,7 @@
       iter #   3 total cpu time :     5.1 secs   av.it.:   9.0
       thresh= 0.151E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.378E-10
 
-      iter #   4 total cpu time :     5.7 secs   av.it.:   9.2
+      iter #   4 total cpu time :     5.6 secs   av.it.:   9.2
       thresh= 0.615E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.726E-12
 
      End of self-consistent calculation
@@ -149,20 +149,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :     6.1 secs   av.it.:   4.8
+      iter #   1 total cpu time :     6.0 secs   av.it.:   4.8
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.291E-07
 
-      iter #   2 total cpu time :     6.7 secs   av.it.:   9.8
-      thresh= 0.171E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.321E-09
+      iter #   2 total cpu time :     6.6 secs   av.it.:   9.8
+      thresh= 0.171E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.320E-09
 
-      iter #   3 total cpu time :     7.2 secs   av.it.:   9.3
-      thresh= 0.179E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.299E-10
+      iter #   3 total cpu time :     7.1 secs   av.it.:   9.3
+      thresh= 0.179E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.298E-10
 
-      iter #   4 total cpu time :     7.8 secs   av.it.:   9.5
-      thresh= 0.546E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.123E-11
+      iter #   4 total cpu time :     7.7 secs   av.it.:   9.5
+      thresh= 0.546E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.121E-11
 
-      iter #   5 total cpu time :     8.4 secs   av.it.:   9.5
-      thresh= 0.111E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.473E-15
+      iter #   5 total cpu time :     8.2 secs   av.it.:   9.5
+      thresh= 0.110E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.475E-15
 
      End of self-consistent calculation
 
@@ -205,12 +205,12 @@
      q = (    0.000000000   0.000000000   0.000000000 ) 
 
  **************************************************************************
-     omega( 1) =       0.167947 [THz] =       5.602146 [cm-1]
-     omega( 2) =       0.167947 [THz] =       5.602146 [cm-1]
-     omega( 3) =       0.167947 [THz] =       5.602146 [cm-1]
-     omega( 4) =      11.259177 [THz] =     375.568199 [cm-1]
-     omega( 5) =      11.259177 [THz] =     375.568199 [cm-1]
-     omega( 6) =      11.259177 [THz] =     375.568199 [cm-1]
+     omega( 1) =       0.168053 [THz] =       5.605684 [cm-1]
+     omega( 2) =       0.168053 [THz] =       5.605684 [cm-1]
+     omega( 3) =       0.168053 [THz] =       5.605684 [cm-1]
+     omega( 4) =      11.259177 [THz] =     375.568230 [cm-1]
+     omega( 5) =      11.259177 [THz] =     375.568230 [cm-1]
+     omega( 6) =      11.259177 [THz] =     375.568230 [cm-1]
  **************************************************************************
 
      Calculation of q =  -0.2500  0.2500 -0.2500
@@ -293,13 +293,13 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is      8.82 secs
+     total cpu time spent up to now is      8.61 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  1.25E-10,  avg # of iterations = 10.0
 
-     total cpu time spent up to now is     10.15 secs
+     total cpu time spent up to now is      9.90 secs
 
      End of band structure calculation
 
@@ -467,7 +467,7 @@
      Representation     3      1 modes - To be done
 
      Representation     4      1 modes - To be done
-     PHONON       :    10.50s CPU time
+     PHONON       :    10.28s CPU time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -477,19 +477,19 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    11.6 secs   av.it.:   6.0
+      iter #   1 total cpu time :    11.4 secs   av.it.:   5.9
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.131E-05
 
-      iter #   2 total cpu time :    13.2 secs   av.it.:   9.2
+      iter #   2 total cpu time :    12.9 secs   av.it.:   9.2
       thresh= 0.115E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.909E-07
 
-      iter #   3 total cpu time :    14.7 secs   av.it.:   9.1
-      thresh= 0.301E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.890E-10
+      iter #   3 total cpu time :    14.4 secs   av.it.:   9.1
+      thresh= 0.302E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.890E-10
 
-      iter #   4 total cpu time :    16.2 secs   av.it.:   9.2
-      thresh= 0.944E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.166E-11
+      iter #   4 total cpu time :    15.8 secs   av.it.:   9.2
+      thresh= 0.943E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.166E-11
 
-      iter #   5 total cpu time :    17.7 secs   av.it.:   9.1
+      iter #   5 total cpu time :    17.3 secs   av.it.:   9.1
       thresh= 0.129E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.187E-13
 
      End of self-consistent calculation
@@ -501,20 +501,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    18.6 secs   av.it.:   4.8
+      iter #   1 total cpu time :    18.2 secs   av.it.:   4.8
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.111E-06
 
-      iter #   2 total cpu time :    20.1 secs   av.it.:   8.9
-      thresh= 0.333E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.447E-08
+      iter #   2 total cpu time :    19.7 secs   av.it.:   8.9
+      thresh= 0.333E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.445E-08
 
-      iter #   3 total cpu time :    21.6 secs   av.it.:   8.6
-      thresh= 0.668E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.132E-09
+      iter #   3 total cpu time :    21.1 secs   av.it.:   8.6
+      thresh= 0.667E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.132E-09
 
-      iter #   4 total cpu time :    23.0 secs   av.it.:   8.6
+      iter #   4 total cpu time :    22.5 secs   av.it.:   8.6
       thresh= 0.115E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.692E-11
 
-      iter #   5 total cpu time :    24.4 secs   av.it.:   8.3
-      thresh= 0.263E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.108E-14
+      iter #   5 total cpu time :    23.9 secs   av.it.:   8.2
+      thresh= 0.263E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.109E-14
 
      End of self-consistent calculation
 
@@ -525,29 +525,29 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    25.0 secs   av.it.:   6.2
+      iter #   1 total cpu time :    24.5 secs   av.it.:   6.2
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.308E-02
 
-      iter #   2 total cpu time :    25.7 secs   av.it.:   7.6
+      iter #   2 total cpu time :    25.1 secs   av.it.:   7.6
       thresh= 0.555E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.296E-01
 
-      iter #   3 total cpu time :    26.3 secs   av.it.:   6.8
-      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.634E-05
+      iter #   3 total cpu time :    25.7 secs   av.it.:   6.8
+      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.635E-05
 
-      iter #   4 total cpu time :    26.9 secs   av.it.:   7.2
-      thresh= 0.252E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.139E-06
+      iter #   4 total cpu time :    26.3 secs   av.it.:   7.2
+      thresh= 0.252E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.140E-06
 
-      iter #   5 total cpu time :    27.6 secs   av.it.:   7.6
-      thresh= 0.372E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.377E-08
+      iter #   5 total cpu time :    26.9 secs   av.it.:   7.6
+      thresh= 0.375E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.640E-08
 
-      iter #   6 total cpu time :    28.2 secs   av.it.:   7.0
-      thresh= 0.614E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.546E-09
+      iter #   6 total cpu time :    27.5 secs   av.it.:   6.9
+      thresh= 0.800E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.473E-09
 
-      iter #   7 total cpu time :    28.9 secs   av.it.:   7.1
-      thresh= 0.234E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.358E-10
+      iter #   7 total cpu time :    28.2 secs   av.it.:   7.2
+      thresh= 0.217E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.354E-10
 
-      iter #   8 total cpu time :    29.5 secs   av.it.:   7.2
-      thresh= 0.598E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.183E-12
+      iter #   8 total cpu time :    28.8 secs   av.it.:   7.2
+      thresh= 0.595E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.162E-12
 
      End of self-consistent calculation
 
@@ -558,29 +558,29 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    30.1 secs   av.it.:   5.6
+      iter #   1 total cpu time :    29.3 secs   av.it.:   5.6
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.651E-03
 
-      iter #   2 total cpu time :    30.7 secs   av.it.:   7.6
+      iter #   2 total cpu time :    29.9 secs   av.it.:   7.6
       thresh= 0.255E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.593E-02
 
-      iter #   3 total cpu time :    31.3 secs   av.it.:   6.1
+      iter #   3 total cpu time :    30.5 secs   av.it.:   6.1
       thresh= 0.770E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.223E-06
 
-      iter #   4 total cpu time :    32.0 secs   av.it.:   8.1
-      thresh= 0.472E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.836E-08
+      iter #   4 total cpu time :    31.2 secs   av.it.:   8.2
+      thresh= 0.473E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.839E-08
 
-      iter #   5 total cpu time :    32.6 secs   av.it.:   8.1
-      thresh= 0.914E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.235E-08
+      iter #   5 total cpu time :    31.9 secs   av.it.:   8.1
+      thresh= 0.916E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.239E-08
 
-      iter #   6 total cpu time :    33.3 secs   av.it.:   6.9
-      thresh= 0.484E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.258E-09
+      iter #   6 total cpu time :    32.5 secs   av.it.:   6.9
+      thresh= 0.488E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.252E-09
 
-      iter #   7 total cpu time :    33.9 secs   av.it.:   7.5
-      thresh= 0.161E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.189E-10
+      iter #   7 total cpu time :    33.1 secs   av.it.:   7.6
+      thresh= 0.159E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.190E-10
 
-      iter #   8 total cpu time :    34.6 secs   av.it.:   7.5
-      thresh= 0.435E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.377E-12
+      iter #   8 total cpu time :    33.7 secs   av.it.:   7.5
+      thresh= 0.436E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.380E-12
 
      End of self-consistent calculation
 
@@ -603,12 +603,12 @@
      q = (   -0.250000000   0.250000000  -0.250000000 ) 
 
  **************************************************************************
-     omega( 1) =       1.764604 [THz] =      58.861255 [cm-1]
-     omega( 2) =       1.764604 [THz] =      58.861255 [cm-1]
-     omega( 3) =       4.536226 [THz] =     151.313224 [cm-1]
-     omega( 4) =      11.004982 [THz] =     367.089139 [cm-1]
-     omega( 5) =      11.004982 [THz] =     367.089139 [cm-1]
-     omega( 6) =      12.136706 [THz] =     404.839637 [cm-1]
+     omega( 1) =       1.764608 [THz] =      58.861378 [cm-1]
+     omega( 2) =       1.764608 [THz] =      58.861378 [cm-1]
+     omega( 3) =       4.536344 [THz] =     151.317144 [cm-1]
+     omega( 4) =      11.004983 [THz] =     367.089149 [cm-1]
+     omega( 5) =      11.004983 [THz] =     367.089149 [cm-1]
+     omega( 6) =      12.136702 [THz] =     404.839486 [cm-1]
  **************************************************************************
 
      Calculation of q =   0.5000 -0.5000  0.5000
@@ -682,13 +682,13 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is     34.78 secs
+     total cpu time spent up to now is     33.88 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  1.25E-10,  avg # of iterations = 10.4
 
-     total cpu time spent up to now is     35.45 secs
+     total cpu time spent up to now is     34.53 secs
 
      End of band structure calculation
 
@@ -806,7 +806,7 @@
      Representation     3      1 modes - To be done
 
      Representation     4      2 modes - To be done
-     PHONON       :    35.76s CPU time
+     PHONON       :    34.87s CPU time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -816,26 +816,26 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    36.1 secs   av.it.:   6.2
+      iter #   1 total cpu time :    35.2 secs   av.it.:   6.0
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.357E-03
 
-      iter #   2 total cpu time :    36.4 secs   av.it.:   8.2
+      iter #   2 total cpu time :    35.5 secs   av.it.:   8.2
       thresh= 0.189E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.102E-02
 
-      iter #   3 total cpu time :    36.8 secs   av.it.:   7.4
-      thresh= 0.320E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.526E-07
+      iter #   3 total cpu time :    35.9 secs   av.it.:   7.2
+      thresh= 0.320E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.521E-07
 
-      iter #   4 total cpu time :    37.1 secs   av.it.:   8.0
-      thresh= 0.229E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.811E-08
+      iter #   4 total cpu time :    36.2 secs   av.it.:   8.0
+      thresh= 0.228E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.816E-08
 
-      iter #   5 total cpu time :    37.5 secs   av.it.:   7.4
-      thresh= 0.901E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.429E-10
+      iter #   5 total cpu time :    36.5 secs   av.it.:   7.4
+      thresh= 0.903E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.434E-10
 
-      iter #   6 total cpu time :    37.8 secs   av.it.:   8.4
-      thresh= 0.655E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.455E-11
+      iter #   6 total cpu time :    36.9 secs   av.it.:   8.4
+      thresh= 0.659E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.452E-11
 
-      iter #   7 total cpu time :    38.2 secs   av.it.:   8.0
-      thresh= 0.213E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.808E-14
+      iter #   7 total cpu time :    37.2 secs   av.it.:   8.0
+      thresh= 0.213E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.812E-14
 
      End of self-consistent calculation
 
@@ -846,17 +846,17 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    38.8 secs   av.it.:   6.1
+      iter #   1 total cpu time :    37.8 secs   av.it.:   6.2
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.154E-05
 
-      iter #   2 total cpu time :    39.6 secs   av.it.:   9.2
+      iter #   2 total cpu time :    38.6 secs   av.it.:   9.2
       thresh= 0.124E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.130E-06
 
-      iter #   3 total cpu time :    40.3 secs   av.it.:   9.1
-      thresh= 0.361E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.896E-10
+      iter #   3 total cpu time :    39.4 secs   av.it.:   9.2
+      thresh= 0.361E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.897E-10
 
-      iter #   4 total cpu time :    41.1 secs   av.it.:   9.2
-      thresh= 0.946E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.702E-12
+      iter #   4 total cpu time :    40.1 secs   av.it.:   9.2
+      thresh= 0.947E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.699E-12
 
      End of self-consistent calculation
 
@@ -867,26 +867,26 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    41.4 secs   av.it.:   5.4
+      iter #   1 total cpu time :    40.4 secs   av.it.:   5.4
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.580E-04
 
-      iter #   2 total cpu time :    41.8 secs   av.it.:   8.2
+      iter #   2 total cpu time :    40.8 secs   av.it.:   8.2
       thresh= 0.762E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.145E-03
 
-      iter #   3 total cpu time :    42.1 secs   av.it.:   7.4
-      thresh= 0.120E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.674E-06
+      iter #   3 total cpu time :    41.1 secs   av.it.:   7.4
+      thresh= 0.121E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.670E-06
 
-      iter #   4 total cpu time :    42.4 secs   av.it.:   7.6
-      thresh= 0.821E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.404E-08
+      iter #   4 total cpu time :    41.4 secs   av.it.:   7.4
+      thresh= 0.818E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.403E-08
 
-      iter #   5 total cpu time :    42.8 secs   av.it.:   7.8
-      thresh= 0.635E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.716E-10
+      iter #   5 total cpu time :    41.8 secs   av.it.:   8.0
+      thresh= 0.635E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.723E-10
 
-      iter #   6 total cpu time :    43.1 secs   av.it.:   8.4
-      thresh= 0.846E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.123E-11
+      iter #   6 total cpu time :    42.1 secs   av.it.:   8.4
+      thresh= 0.850E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.124E-11
 
-      iter #   7 total cpu time :    43.5 secs   av.it.:   8.2
-      thresh= 0.111E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.235E-13
+      iter #   7 total cpu time :    42.5 secs   av.it.:   8.0
+      thresh= 0.111E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.233E-13
 
      End of self-consistent calculation
 
@@ -897,20 +897,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    44.0 secs   av.it.:   5.0
+      iter #   1 total cpu time :    43.0 secs   av.it.:   4.8
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.148E-06
 
-      iter #   2 total cpu time :    44.8 secs   av.it.:   9.0
-      thresh= 0.385E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.896E-08
+      iter #   2 total cpu time :    43.8 secs   av.it.:   9.0
+      thresh= 0.385E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.890E-08
 
-      iter #   3 total cpu time :    45.6 secs   av.it.:   9.0
-      thresh= 0.947E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.147E-09
+      iter #   3 total cpu time :    44.5 secs   av.it.:   9.0
+      thresh= 0.944E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.147E-09
 
-      iter #   4 total cpu time :    46.3 secs   av.it.:   9.1
-      thresh= 0.121E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.751E-11
+      iter #   4 total cpu time :    45.2 secs   av.it.:   9.2
+      thresh= 0.121E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.753E-11
 
-      iter #   5 total cpu time :    47.1 secs   av.it.:   8.4
-      thresh= 0.274E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.235E-14
+      iter #   5 total cpu time :    46.0 secs   av.it.:   8.4
+      thresh= 0.274E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.254E-14
 
      End of self-consistent calculation
 
@@ -928,12 +928,12 @@
      q = (    0.500000000  -0.500000000   0.500000000 ) 
 
  **************************************************************************
-     omega( 1) =       2.019484 [THz] =      67.363174 [cm-1]
-     omega( 2) =       2.019484 [THz] =      67.363174 [cm-1]
-     omega( 3) =       6.496152 [THz] =     216.689744 [cm-1]
-     omega( 4) =      10.940953 [THz] =     364.953345 [cm-1]
-     omega( 5) =      10.940953 [THz] =     364.953345 [cm-1]
-     omega( 6) =      11.551503 [THz] =     385.319238 [cm-1]
+     omega( 1) =       2.019572 [THz] =      67.366122 [cm-1]
+     omega( 2) =       2.019572 [THz] =      67.366122 [cm-1]
+     omega( 3) =       6.496176 [THz] =     216.690546 [cm-1]
+     omega( 4) =      10.941014 [THz] =     364.955353 [cm-1]
+     omega( 5) =      10.941014 [THz] =     364.955353 [cm-1]
+     omega( 6) =      11.551509 [THz] =     385.319428 [cm-1]
  **************************************************************************
 
      Calculation of q =   0.0000  0.5000  0.0000
@@ -1021,13 +1021,13 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is     47.59 secs
+     total cpu time spent up to now is     46.41 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  1.25E-10,  avg # of iterations = 10.3
 
-     total cpu time spent up to now is     49.20 secs
+     total cpu time spent up to now is     47.97 secs
 
      End of band structure calculation
 
@@ -1219,7 +1219,7 @@
      Representation     5      1 modes - To be done
 
      Representation     6      1 modes - To be done
-     PHONON       :    49.56s CPU time
+     PHONON       :    48.37s CPU time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -1229,20 +1229,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    50.2 secs   av.it.:   5.7
+      iter #   1 total cpu time :    49.0 secs   av.it.:   5.8
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.877E-05
 
-      iter #   2 total cpu time :    51.0 secs   av.it.:   8.4
+      iter #   2 total cpu time :    49.9 secs   av.it.:   8.4
       thresh= 0.296E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.118E-05
 
-      iter #   3 total cpu time :    51.9 secs   av.it.:   8.1
+      iter #   3 total cpu time :    50.7 secs   av.it.:   8.1
       thresh= 0.109E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.385E-09
 
-      iter #   4 total cpu time :    52.7 secs   av.it.:   8.0
+      iter #   4 total cpu time :    51.5 secs   av.it.:   8.0
       thresh= 0.196E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.153E-10
 
-      iter #   5 total cpu time :    53.5 secs   av.it.:   8.1
-      thresh= 0.391E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.665E-13
+      iter #   5 total cpu time :    52.3 secs   av.it.:   8.2
+      thresh= 0.391E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.668E-13
 
      End of self-consistent calculation
 
@@ -1253,20 +1253,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    54.1 secs   av.it.:   4.9
-      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.110E-05
+      iter #   1 total cpu time :    52.9 secs   av.it.:   4.9
+      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.109E-05
 
-      iter #   2 total cpu time :    54.9 secs   av.it.:   8.4
+      iter #   2 total cpu time :    53.7 secs   av.it.:   8.4
       thresh= 0.105E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.126E-06
 
-      iter #   3 total cpu time :    55.8 secs   av.it.:   8.2
-      thresh= 0.356E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.660E-09
+      iter #   3 total cpu time :    54.5 secs   av.it.:   8.2
+      thresh= 0.355E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.661E-09
 
-      iter #   4 total cpu time :    56.6 secs   av.it.:   7.9
+      iter #   4 total cpu time :    55.3 secs   av.it.:   7.9
       thresh= 0.257E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.211E-10
 
-      iter #   5 total cpu time :    57.4 secs   av.it.:   7.8
-      thresh= 0.459E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.375E-14
+      iter #   5 total cpu time :    56.1 secs   av.it.:   7.9
+      thresh= 0.459E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.379E-14
 
      End of self-consistent calculation
 
@@ -1277,29 +1277,29 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    58.1 secs   av.it.:   6.5
+      iter #   1 total cpu time :    56.8 secs   av.it.:   6.5
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.192E-02
 
-      iter #   2 total cpu time :    58.9 secs   av.it.:   8.0
+      iter #   2 total cpu time :    57.6 secs   av.it.:   8.0
       thresh= 0.438E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.160E-01
 
-      iter #   3 total cpu time :    59.6 secs   av.it.:   7.1
-      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.212E-05
+      iter #   3 total cpu time :    58.3 secs   av.it.:   7.0
+      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.213E-05
 
-      iter #   4 total cpu time :    60.4 secs   av.it.:   8.2
-      thresh= 0.145E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.258E-07
+      iter #   4 total cpu time :    59.1 secs   av.it.:   8.3
+      thresh= 0.146E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.254E-07
 
-      iter #   5 total cpu time :    61.3 secs   av.it.:   8.8
-      thresh= 0.160E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.138E-09
+      iter #   5 total cpu time :    60.0 secs   av.it.:   8.8
+      thresh= 0.159E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.812E-10
 
-      iter #   6 total cpu time :    62.1 secs   av.it.:   8.2
-      thresh= 0.117E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.378E-09
+      iter #   6 total cpu time :    60.9 secs   av.it.:   8.2
+      thresh= 0.901E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.275E-10
 
-      iter #   7 total cpu time :    62.8 secs   av.it.:   7.0
-      thresh= 0.194E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.222E-10
+      iter #   7 total cpu time :    61.6 secs   av.it.:   7.4
+      thresh= 0.524E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.200E-10
 
-      iter #   8 total cpu time :    63.6 secs   av.it.:   7.2
-      thresh= 0.472E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.275E-14
+      iter #   8 total cpu time :    62.3 secs   av.it.:   6.8
+      thresh= 0.447E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.480E-14
 
      End of self-consistent calculation
 
@@ -1310,20 +1310,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    64.2 secs   av.it.:   5.8
+      iter #   1 total cpu time :    63.0 secs   av.it.:   5.8
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.877E-05
 
-      iter #   2 total cpu time :    65.1 secs   av.it.:   8.4
+      iter #   2 total cpu time :    63.8 secs   av.it.:   8.4
       thresh= 0.296E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.118E-05
 
-      iter #   3 total cpu time :    65.9 secs   av.it.:   8.1
+      iter #   3 total cpu time :    64.6 secs   av.it.:   8.1
       thresh= 0.109E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.385E-09
 
-      iter #   4 total cpu time :    66.8 secs   av.it.:   8.0
+      iter #   4 total cpu time :    65.4 secs   av.it.:   8.0
       thresh= 0.196E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.153E-10
 
-      iter #   5 total cpu time :    67.6 secs   av.it.:   8.2
-      thresh= 0.391E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.664E-13
+      iter #   5 total cpu time :    66.2 secs   av.it.:   8.2
+      thresh= 0.391E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.669E-13
 
      End of self-consistent calculation
 
@@ -1334,29 +1334,26 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    68.2 secs   av.it.:   5.7
+      iter #   1 total cpu time :    66.9 secs   av.it.:   5.7
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.375E-03
 
-      iter #   2 total cpu time :    69.0 secs   av.it.:   7.9
+      iter #   2 total cpu time :    67.7 secs   av.it.:   8.0
       thresh= 0.194E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.291E-02
 
-      iter #   3 total cpu time :    69.8 secs   av.it.:   6.8
-      thresh= 0.539E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.570E-06
+      iter #   3 total cpu time :    68.4 secs   av.it.:   6.7
+      thresh= 0.539E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.566E-06
 
-      iter #   4 total cpu time :    70.6 secs   av.it.:   7.8
-      thresh= 0.755E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.571E-08
+      iter #   4 total cpu time :    69.2 secs   av.it.:   7.8
+      thresh= 0.753E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.575E-08
 
-      iter #   5 total cpu time :    71.4 secs   av.it.:   8.8
-      thresh= 0.756E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.672E-10
+      iter #   5 total cpu time :    70.0 secs   av.it.:   8.8
+      thresh= 0.759E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.526E-10
 
-      iter #   6 total cpu time :    72.3 secs   av.it.:   8.3
-      thresh= 0.820E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.157E-09
+      iter #   6 total cpu time :    70.8 secs   av.it.:   8.3
+      thresh= 0.725E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.614E-11
 
-      iter #   7 total cpu time :    73.0 secs   av.it.:   7.2
-      thresh= 0.125E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.190E-10
-
-      iter #   8 total cpu time :    73.8 secs   av.it.:   7.2
-      thresh= 0.435E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.180E-13
+      iter #   7 total cpu time :    71.6 secs   av.it.:   7.8
+      thresh= 0.248E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.221E-12
 
      End of self-consistent calculation
 
@@ -1367,20 +1364,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    74.4 secs   av.it.:   4.9
+      iter #   1 total cpu time :    72.2 secs   av.it.:   4.9
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.109E-05
 
-      iter #   2 total cpu time :    75.2 secs   av.it.:   8.4
+      iter #   2 total cpu time :    73.0 secs   av.it.:   8.4
       thresh= 0.105E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.126E-06
 
-      iter #   3 total cpu time :    76.0 secs   av.it.:   8.2
+      iter #   3 total cpu time :    73.8 secs   av.it.:   8.2
       thresh= 0.355E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.661E-09
 
-      iter #   4 total cpu time :    76.8 secs   av.it.:   7.8
-      thresh= 0.257E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.212E-10
+      iter #   4 total cpu time :    74.6 secs   av.it.:   7.9
+      thresh= 0.257E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.211E-10
 
-      iter #   5 total cpu time :    77.6 secs   av.it.:   7.9
-      thresh= 0.460E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.379E-14
+      iter #   5 total cpu time :    75.4 secs   av.it.:   7.9
+      thresh= 0.459E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.379E-14
 
      End of self-consistent calculation
 
@@ -1400,12 +1397,12 @@
      q = (    0.000000000   0.500000000   0.000000000 ) 
 
  **************************************************************************
-     omega( 1) =       2.423572 [THz] =      80.842201 [cm-1]
-     omega( 2) =       2.423572 [THz] =      80.842201 [cm-1]
-     omega( 3) =       4.608212 [THz] =     153.714433 [cm-1]
-     omega( 4) =      10.666834 [THz] =     355.809654 [cm-1]
-     omega( 5) =      10.666834 [THz] =     355.809654 [cm-1]
-     omega( 6) =      12.371449 [THz] =     412.669866 [cm-1]
+     omega( 1) =       2.423574 [THz] =      80.842260 [cm-1]
+     omega( 2) =       2.423574 [THz] =      80.842260 [cm-1]
+     omega( 3) =       4.608273 [THz] =     153.716459 [cm-1]
+     omega( 4) =      10.666832 [THz] =     355.809596 [cm-1]
+     omega( 5) =      10.666832 [THz] =     355.809596 [cm-1]
+     omega( 6) =      12.371541 [THz] =     412.672933 [cm-1]
  **************************************************************************
 
      Calculation of q =   0.7500 -0.2500  0.7500
@@ -1509,13 +1506,13 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is     78.57 secs
+     total cpu time spent up to now is     76.26 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  1.25E-10,  avg # of iterations =  9.9
 
-     total cpu time spent up to now is     81.37 secs
+     total cpu time spent up to now is     78.96 secs
 
      End of band structure calculation
 
@@ -1787,7 +1784,7 @@
      Representation     5      1 modes - To be done
 
      Representation     6      1 modes - To be done
-     PHONON       :  1m21.81s CPU time
+     PHONON       :  1m19.43s CPU time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -1797,32 +1794,32 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    83.1 secs   av.it.:   6.3
+      iter #   1 total cpu time :    80.7 secs   av.it.:   6.3
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.212E-03
 
-      iter #   2 total cpu time :    84.6 secs   av.it.:   8.8
+      iter #   2 total cpu time :    82.2 secs   av.it.:   8.7
       thresh= 0.146E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.493E-03
 
-      iter #   3 total cpu time :    86.0 secs   av.it.:   7.7
+      iter #   3 total cpu time :    83.5 secs   av.it.:   7.6
       thresh= 0.222E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.440E-06
 
-      iter #   4 total cpu time :    87.5 secs   av.it.:   8.7
-      thresh= 0.663E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.576E-08
+      iter #   4 total cpu time :    85.0 secs   av.it.:   8.6
+      thresh= 0.663E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.579E-08
 
-      iter #   5 total cpu time :    89.1 secs   av.it.:   8.6
-      thresh= 0.759E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.565E-09
+      iter #   5 total cpu time :    86.4 secs   av.it.:   8.4
+      thresh= 0.761E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.567E-09
 
-      iter #   6 total cpu time :    90.6 secs   av.it.:   8.6
-      thresh= 0.238E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.129E-10
+      iter #   6 total cpu time :    87.7 secs   av.it.:   8.6
+      thresh= 0.238E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.132E-10
 
-      iter #   7 total cpu time :    92.1 secs   av.it.:   8.4
-      thresh= 0.360E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.120E-11
+      iter #   7 total cpu time :    89.1 secs   av.it.:   8.4
+      thresh= 0.363E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.202E-11
 
-      iter #   8 total cpu time :    93.7 secs   av.it.:   8.8
-      thresh= 0.110E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.146E-11
+      iter #   8 total cpu time :    90.6 secs   av.it.:   8.6
+      thresh= 0.142E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.255E-11
 
-      iter #   9 total cpu time :    95.1 secs   av.it.:   7.8
-      thresh= 0.121E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.272E-13
+      iter #   9 total cpu time :    92.0 secs   av.it.:   7.8
+      thresh= 0.160E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.489E-13
 
      End of self-consistent calculation
 
@@ -1833,20 +1830,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    96.2 secs   av.it.:   5.8
+      iter #   1 total cpu time :    93.2 secs   av.it.:   5.8
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.102E-04
 
-      iter #   2 total cpu time :    97.7 secs   av.it.:   8.4
+      iter #   2 total cpu time :    94.6 secs   av.it.:   8.4
       thresh= 0.320E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.164E-05
 
-      iter #   3 total cpu time :    99.2 secs   av.it.:   8.2
+      iter #   3 total cpu time :    96.0 secs   av.it.:   8.2
       thresh= 0.128E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.398E-09
 
-      iter #   4 total cpu time :   100.6 secs   av.it.:   8.0
-      thresh= 0.199E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.143E-10
+      iter #   4 total cpu time :    97.4 secs   av.it.:   8.0
+      thresh= 0.199E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.142E-10
 
-      iter #   5 total cpu time :   102.1 secs   av.it.:   8.2
-      thresh= 0.378E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.565E-13
+      iter #   5 total cpu time :    98.9 secs   av.it.:   8.2
+      thresh= 0.377E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.565E-13
 
      End of self-consistent calculation
 
@@ -1857,26 +1854,26 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   103.2 secs   av.it.:   5.5
+      iter #   1 total cpu time :   100.0 secs   av.it.:   5.5
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.112E-04
 
-      iter #   2 total cpu time :   104.8 secs   av.it.:   8.8
+      iter #   2 total cpu time :   101.5 secs   av.it.:   8.8
       thresh= 0.335E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.143E-04
 
-      iter #   3 total cpu time :   106.2 secs   av.it.:   8.0
+      iter #   3 total cpu time :   102.9 secs   av.it.:   7.9
       thresh= 0.378E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.389E-06
 
-      iter #   4 total cpu time :   107.7 secs   av.it.:   8.1
-      thresh= 0.624E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.345E-08
+      iter #   4 total cpu time :   104.3 secs   av.it.:   8.2
+      thresh= 0.624E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.347E-08
 
-      iter #   5 total cpu time :   109.2 secs   av.it.:   8.4
-      thresh= 0.587E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.194E-09
+      iter #   5 total cpu time :   105.8 secs   av.it.:   8.4
+      thresh= 0.589E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.194E-09
 
-      iter #   6 total cpu time :   110.7 secs   av.it.:   8.7
-      thresh= 0.139E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.151E-10
+      iter #   6 total cpu time :   107.2 secs   av.it.:   8.7
+      thresh= 0.139E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.152E-10
 
-      iter #   7 total cpu time :   112.3 secs   av.it.:   8.8
-      thresh= 0.389E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.321E-12
+      iter #   7 total cpu time :   108.7 secs   av.it.:   8.8
+      thresh= 0.390E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.373E-12
 
      End of self-consistent calculation
 
@@ -1887,26 +1884,26 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   113.5 secs   av.it.:   6.2
-      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.504E-04
+      iter #   1 total cpu time :   110.0 secs   av.it.:   6.2
+      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.503E-04
 
-      iter #   2 total cpu time :   115.0 secs   av.it.:   8.8
+      iter #   2 total cpu time :   111.5 secs   av.it.:   8.8
       thresh= 0.710E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.712E-04
 
-      iter #   3 total cpu time :   116.5 secs   av.it.:   8.0
+      iter #   3 total cpu time :   112.9 secs   av.it.:   8.1
       thresh= 0.844E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.214E-05
 
-      iter #   4 total cpu time :   118.0 secs   av.it.:   8.1
-      thresh= 0.146E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.784E-08
+      iter #   4 total cpu time :   114.3 secs   av.it.:   8.1
+      thresh= 0.146E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.783E-08
 
-      iter #   5 total cpu time :   119.5 secs   av.it.:   8.7
-      thresh= 0.885E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.537E-09
+      iter #   5 total cpu time :   115.8 secs   av.it.:   8.7
+      thresh= 0.885E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.535E-09
 
-      iter #   6 total cpu time :   121.0 secs   av.it.:   8.5
-      thresh= 0.232E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.897E-11
+      iter #   6 total cpu time :   117.2 secs   av.it.:   8.4
+      thresh= 0.231E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.894E-11
 
-      iter #   7 total cpu time :   122.5 secs   av.it.:   8.6
-      thresh= 0.299E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.577E-12
+      iter #   7 total cpu time :   118.7 secs   av.it.:   8.5
+      thresh= 0.299E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.353E-12
 
      End of self-consistent calculation
 
@@ -1917,20 +1914,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   123.6 secs   av.it.:   4.8
+      iter #   1 total cpu time :   119.8 secs   av.it.:   4.7
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.137E-05
 
-      iter #   2 total cpu time :   125.1 secs   av.it.:   8.4
-      thresh= 0.117E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.199E-06
+      iter #   2 total cpu time :   121.2 secs   av.it.:   8.4
+      thresh= 0.117E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.198E-06
 
-      iter #   3 total cpu time :   126.5 secs   av.it.:   8.2
-      thresh= 0.446E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.675E-09
+      iter #   3 total cpu time :   122.7 secs   av.it.:   8.2
+      thresh= 0.445E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.675E-09
 
-      iter #   4 total cpu time :   128.0 secs   av.it.:   7.8
-      thresh= 0.260E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.181E-10
+      iter #   4 total cpu time :   124.0 secs   av.it.:   7.8
+      thresh= 0.260E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.180E-10
 
-      iter #   5 total cpu time :   129.3 secs   av.it.:   7.5
-      thresh= 0.425E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.645E-14
+      iter #   5 total cpu time :   125.4 secs   av.it.:   7.5
+      thresh= 0.425E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.646E-14
 
      End of self-consistent calculation
 
@@ -1941,26 +1938,26 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   130.5 secs   av.it.:   5.7
+      iter #   1 total cpu time :   126.5 secs   av.it.:   5.7
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.308E-04
 
-      iter #   2 total cpu time :   132.0 secs   av.it.:   8.8
+      iter #   2 total cpu time :   128.0 secs   av.it.:   8.8
       thresh= 0.555E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.610E-04
 
-      iter #   3 total cpu time :   133.5 secs   av.it.:   7.8
+      iter #   3 total cpu time :   129.4 secs   av.it.:   7.8
       thresh= 0.781E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.295E-06
 
-      iter #   4 total cpu time :   134.9 secs   av.it.:   8.3
+      iter #   4 total cpu time :   130.8 secs   av.it.:   8.2
       thresh= 0.543E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.315E-08
 
-      iter #   5 total cpu time :   136.5 secs   av.it.:   8.6
-      thresh= 0.561E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.268E-09
+      iter #   5 total cpu time :   132.3 secs   av.it.:   8.5
+      thresh= 0.561E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.269E-09
 
-      iter #   6 total cpu time :   138.0 secs   av.it.:   8.7
-      thresh= 0.164E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.141E-10
+      iter #   6 total cpu time :   133.8 secs   av.it.:   8.7
+      thresh= 0.164E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.140E-10
 
-      iter #   7 total cpu time :   139.5 secs   av.it.:   8.7
-      thresh= 0.375E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.503E-12
+      iter #   7 total cpu time :   135.3 secs   av.it.:   8.7
+      thresh= 0.375E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.481E-12
 
      End of self-consistent calculation
 
@@ -1999,12 +1996,12 @@
      q = (    0.750000000  -0.250000000   0.750000000 ) 
 
  **************************************************************************
-     omega( 1) =       2.623318 [THz] =      87.505047 [cm-1]
-     omega( 2) =       3.806152 [THz] =     126.960399 [cm-1]
-     omega( 3) =       5.901571 [THz] =     196.856532 [cm-1]
-     omega( 4) =      10.569120 [THz] =     352.550237 [cm-1]
-     omega( 5) =      10.587830 [THz] =     353.174343 [cm-1]
-     omega( 6) =      11.477927 [THz] =     382.864963 [cm-1]
+     omega( 1) =       2.623319 [THz] =      87.505089 [cm-1]
+     omega( 2) =       3.805931 [THz] =     126.953031 [cm-1]
+     omega( 3) =       5.901139 [THz] =     196.842111 [cm-1]
+     omega( 4) =      10.569107 [THz] =     352.549817 [cm-1]
+     omega( 5) =      10.587995 [THz] =     353.179845 [cm-1]
+     omega( 6) =      11.477905 [THz] =     382.864243 [cm-1]
  **************************************************************************
 
      Calculation of q =   0.5000  0.0000  0.5000
@@ -2108,13 +2105,13 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is    140.43 secs
+     total cpu time spent up to now is    136.11 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  1.25E-10,  avg # of iterations = 10.3
 
-     total cpu time spent up to now is    143.11 secs
+     total cpu time spent up to now is    138.94 secs
 
      End of band structure calculation
 
@@ -2386,7 +2383,7 @@
      Representation     5      1 modes - To be done
 
      Representation     6      1 modes - To be done
-     PHONON       :  2m23.53s CPU time
+     PHONON       :  2m19.38s CPU time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -2396,32 +2393,26 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   144.6 secs   av.it.:   5.6
+      iter #   1 total cpu time :   140.5 secs   av.it.:   5.6
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.606E-04
 
-      iter #   2 total cpu time :   145.8 secs   av.it.:   8.7
-      thresh= 0.778E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.219E-03
+      iter #   2 total cpu time :   141.9 secs   av.it.:   8.7
+      thresh= 0.778E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.220E-03
 
-      iter #   3 total cpu time :   147.0 secs   av.it.:   7.6
+      iter #   3 total cpu time :   143.2 secs   av.it.:   7.7
       thresh= 0.148E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.154E-06
 
-      iter #   4 total cpu time :   148.5 secs   av.it.:   8.7
-      thresh= 0.393E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.141E-08
+      iter #   4 total cpu time :   144.7 secs   av.it.:   8.7
+      thresh= 0.392E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.143E-08
 
-      iter #   5 total cpu time :   149.9 secs   av.it.:   8.5
-      thresh= 0.375E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.163E-09
+      iter #   5 total cpu time :   146.2 secs   av.it.:   8.6
+      thresh= 0.378E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.161E-09
 
-      iter #   6 total cpu time :   151.3 secs   av.it.:   8.4
-      thresh= 0.128E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.191E-10
+      iter #   6 total cpu time :   147.6 secs   av.it.:   8.4
+      thresh= 0.127E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.183E-10
 
-      iter #   7 total cpu time :   152.7 secs   av.it.:   8.6
-      thresh= 0.437E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.283E-11
-
-      iter #   8 total cpu time :   154.1 secs   av.it.:   8.2
-      thresh= 0.168E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.263E-11
-
-      iter #   9 total cpu time :   155.4 secs   av.it.:   7.8
-      thresh= 0.162E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.255E-12
+      iter #   7 total cpu time :   149.1 secs   av.it.:   8.7
+      thresh= 0.427E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.459E-12
 
      End of self-consistent calculation
 
@@ -2432,20 +2423,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   156.4 secs   av.it.:   5.8
+      iter #   1 total cpu time :   150.2 secs   av.it.:   5.8
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.650E-05
 
-      iter #   2 total cpu time :   157.8 secs   av.it.:   8.5
+      iter #   2 total cpu time :   151.7 secs   av.it.:   8.4
       thresh= 0.255E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.618E-06
 
-      iter #   3 total cpu time :   159.2 secs   av.it.:   8.1
-      thresh= 0.786E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.367E-09
+      iter #   3 total cpu time :   153.1 secs   av.it.:   8.1
+      thresh= 0.786E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.368E-09
 
-      iter #   4 total cpu time :   160.5 secs   av.it.:   7.9
+      iter #   4 total cpu time :   154.4 secs   av.it.:   7.9
       thresh= 0.192E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.117E-10
 
-      iter #   5 total cpu time :   161.9 secs   av.it.:   7.9
-      thresh= 0.342E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.688E-13
+      iter #   5 total cpu time :   155.8 secs   av.it.:   8.0
+      thresh= 0.342E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.690E-13
 
      End of self-consistent calculation
 
@@ -2456,32 +2447,32 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   163.0 secs   av.it.:   6.2
-      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.675E-04
+      iter #   1 total cpu time :   157.0 secs   av.it.:   6.1
+      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.674E-04
 
-      iter #   2 total cpu time :   164.5 secs   av.it.:   8.8
-      thresh= 0.822E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.173E-03
+      iter #   2 total cpu time :   158.5 secs   av.it.:   8.8
+      thresh= 0.821E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.172E-03
 
-      iter #   3 total cpu time :   165.8 secs   av.it.:   7.7
-      thresh= 0.131E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.331E-05
+      iter #   3 total cpu time :   159.8 secs   av.it.:   7.7
+      thresh= 0.131E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.332E-05
 
-      iter #   4 total cpu time :   167.2 secs   av.it.:   8.1
-      thresh= 0.182E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.562E-08
+      iter #   4 total cpu time :   161.2 secs   av.it.:   8.2
+      thresh= 0.182E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.550E-08
 
-      iter #   5 total cpu time :   168.6 secs   av.it.:   8.7
-      thresh= 0.750E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.527E-09
+      iter #   5 total cpu time :   162.7 secs   av.it.:   8.7
+      thresh= 0.741E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.524E-09
 
-      iter #   6 total cpu time :   170.0 secs   av.it.:   8.4
-      thresh= 0.230E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.889E-11
+      iter #   6 total cpu time :   164.1 secs   av.it.:   8.5
+      thresh= 0.229E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.903E-11
 
-      iter #   7 total cpu time :   171.4 secs   av.it.:   8.4
-      thresh= 0.298E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.290E-11
+      iter #   7 total cpu time :   165.5 secs   av.it.:   8.5
+      thresh= 0.301E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.415E-11
 
-      iter #   8 total cpu time :   172.8 secs   av.it.:   8.2
-      thresh= 0.170E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.440E-11
+      iter #   8 total cpu time :   166.9 secs   av.it.:   8.2
+      thresh= 0.204E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.444E-11
 
-      iter #   9 total cpu time :   174.1 secs   av.it.:   7.6
-      thresh= 0.210E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.132E-13
+      iter #   9 total cpu time :   168.3 secs   av.it.:   7.8
+      thresh= 0.211E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.205E-13
 
      End of self-consistent calculation
 
@@ -2492,20 +2483,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   175.0 secs   av.it.:   4.8
-      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.675E-06
+      iter #   1 total cpu time :   169.3 secs   av.it.:   4.8
+      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.676E-06
 
-      iter #   2 total cpu time :   176.4 secs   av.it.:   8.5
+      iter #   2 total cpu time :   170.7 secs   av.it.:   8.5
       thresh= 0.822E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.496E-07
 
-      iter #   3 total cpu time :   177.8 secs   av.it.:   8.2
+      iter #   3 total cpu time :   172.1 secs   av.it.:   8.2
       thresh= 0.223E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.584E-09
 
-      iter #   4 total cpu time :   179.1 secs   av.it.:   7.7
+      iter #   4 total cpu time :   173.5 secs   av.it.:   7.7
       thresh= 0.242E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.253E-10
 
-      iter #   5 total cpu time :   180.4 secs   av.it.:   7.5
-      thresh= 0.503E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.419E-14
+      iter #   5 total cpu time :   174.8 secs   av.it.:   7.5
+      thresh= 0.503E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.421E-14
 
      End of self-consistent calculation
 
@@ -2516,26 +2507,26 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   181.4 secs   av.it.:   5.5
-      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.338E-04
+      iter #   1 total cpu time :   175.9 secs   av.it.:   5.5
+      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.337E-04
 
-      iter #   2 total cpu time :   182.8 secs   av.it.:   8.5
-      thresh= 0.581E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.958E-04
+      iter #   2 total cpu time :   177.3 secs   av.it.:   8.5
+      thresh= 0.581E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.957E-04
 
-      iter #   3 total cpu time :   184.1 secs   av.it.:   7.5
-      thresh= 0.979E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.689E-06
+      iter #   3 total cpu time :   178.7 secs   av.it.:   7.5
+      thresh= 0.978E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.692E-06
 
-      iter #   4 total cpu time :   185.4 secs   av.it.:   8.1
-      thresh= 0.830E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.625E-08
+      iter #   4 total cpu time :   180.0 secs   av.it.:   8.2
+      thresh= 0.832E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.630E-08
 
-      iter #   5 total cpu time :   186.8 secs   av.it.:   8.0
-      thresh= 0.791E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.741E-10
+      iter #   5 total cpu time :   181.4 secs   av.it.:   8.0
+      thresh= 0.794E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.749E-10
 
-      iter #   6 total cpu time :   188.2 secs   av.it.:   8.4
-      thresh= 0.861E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.953E-11
+      iter #   6 total cpu time :   182.9 secs   av.it.:   8.5
+      thresh= 0.865E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.953E-11
 
-      iter #   7 total cpu time :   189.7 secs   av.it.:   8.8
-      thresh= 0.309E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.282E-12
+      iter #   7 total cpu time :   184.3 secs   av.it.:   8.8
+      thresh= 0.309E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.223E-12
 
      End of self-consistent calculation
 
@@ -2546,32 +2537,32 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   190.8 secs   av.it.:   6.3
+      iter #   1 total cpu time :   185.6 secs   av.it.:   6.4
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.417E-03
 
-      iter #   2 total cpu time :   192.2 secs   av.it.:   8.6
+      iter #   2 total cpu time :   187.0 secs   av.it.:   8.6
       thresh= 0.204E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.156E-02
 
-      iter #   3 total cpu time :   193.5 secs   av.it.:   7.5
+      iter #   3 total cpu time :   188.3 secs   av.it.:   7.7
       thresh= 0.395E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.785E-06
 
-      iter #   4 total cpu time :   194.9 secs   av.it.:   8.5
-      thresh= 0.886E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.104E-07
+      iter #   4 total cpu time :   189.8 secs   av.it.:   8.6
+      thresh= 0.886E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.103E-07
 
-      iter #   5 total cpu time :   196.3 secs   av.it.:   8.2
-      thresh= 0.102E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.353E-09
+      iter #   5 total cpu time :   191.2 secs   av.it.:   8.3
+      thresh= 0.101E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.356E-09
 
-      iter #   6 total cpu time :   197.7 secs   av.it.:   8.5
-      thresh= 0.188E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.100E-10
+      iter #   6 total cpu time :   192.6 secs   av.it.:   8.5
+      thresh= 0.189E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.962E-11
 
-      iter #   7 total cpu time :   199.1 secs   av.it.:   8.7
-      thresh= 0.317E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.542E-11
+      iter #   7 total cpu time :   194.1 secs   av.it.:   8.6
+      thresh= 0.310E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.255E-11
 
-      iter #   8 total cpu time :   200.5 secs   av.it.:   8.1
-      thresh= 0.233E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.445E-11
+      iter #   8 total cpu time :   195.4 secs   av.it.:   8.2
+      thresh= 0.160E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.370E-11
 
-      iter #   9 total cpu time :   201.8 secs   av.it.:   7.7
-      thresh= 0.211E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.184E-12
+      iter #   9 total cpu time :   196.8 secs   av.it.:   7.7
+      thresh= 0.192E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.115E-12
 
      End of self-consistent calculation
 
@@ -2597,12 +2588,12 @@
      q = (    0.500000000   0.000000000   0.500000000 ) 
 
  **************************************************************************
-     omega( 1) =       2.517469 [THz] =      83.974281 [cm-1]
-     omega( 2) =       3.827432 [THz] =     127.670249 [cm-1]
-     omega( 3) =       5.425008 [THz] =     180.959990 [cm-1]
-     omega( 4) =      10.717908 [THz] =     357.513309 [cm-1]
-     omega( 5) =      10.737746 [THz] =     358.175047 [cm-1]
-     omega( 6) =      11.301498 [THz] =     376.979888 [cm-1]
+     omega( 1) =       2.517476 [THz] =      83.974517 [cm-1]
+     omega( 2) =       3.826657 [THz] =     127.644399 [cm-1]
+     omega( 3) =       5.425713 [THz] =     180.983504 [cm-1]
+     omega( 4) =      10.720806 [THz] =     357.609984 [cm-1]
+     omega( 5) =      10.737747 [THz] =     358.175057 [cm-1]
+     omega( 6) =      11.301546 [THz] =     376.981516 [cm-1]
  **************************************************************************
 
      Calculation of q =   0.0000 -1.0000  0.0000
@@ -2672,13 +2663,13 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is    201.91 secs
+     total cpu time spent up to now is    196.85 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  1.25E-10,  avg # of iterations = 10.3
 
-     total cpu time spent up to now is    202.31 secs
+     total cpu time spent up to now is    197.22 secs
 
      End of band structure calculation
 
@@ -2776,7 +2767,7 @@
      Representation     3      2 modes - To be done
 
      Representation     4      1 modes - To be done
-     PHONON       :  3m22.62s CPU time
+     PHONON       :  3m17.56s CPU time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -2786,20 +2777,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   202.8 secs   av.it.:   5.7
+      iter #   1 total cpu time :   197.8 secs   av.it.:   5.7
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.135E-04
 
-      iter #   2 total cpu time :   203.1 secs   av.it.:   8.7
-      thresh= 0.368E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.758E-05
+      iter #   2 total cpu time :   198.0 secs   av.it.:   8.7
+      thresh= 0.368E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.760E-05
 
-      iter #   3 total cpu time :   203.3 secs   av.it.:   8.3
-      thresh= 0.275E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.178E-07
+      iter #   3 total cpu time :   198.2 secs   av.it.:   8.3
+      thresh= 0.276E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.176E-07
 
-      iter #   4 total cpu time :   203.5 secs   av.it.:   8.3
-      thresh= 0.133E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.176E-09
+      iter #   4 total cpu time :   198.4 secs   av.it.:   8.3
+      thresh= 0.133E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.175E-09
 
-      iter #   5 total cpu time :   203.7 secs   av.it.:   8.0
-      thresh= 0.133E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.788E-12
+      iter #   5 total cpu time :   198.6 secs   av.it.:   8.3
+      thresh= 0.132E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.710E-12
 
      End of self-consistent calculation
 
@@ -2810,20 +2801,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   204.1 secs   av.it.:   6.3
+      iter #   1 total cpu time :   198.9 secs   av.it.:   6.3
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.367E-05
 
-      iter #   2 total cpu time :   204.6 secs   av.it.:   9.5
+      iter #   2 total cpu time :   199.4 secs   av.it.:   9.5
       thresh= 0.192E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.838E-06
 
-      iter #   3 total cpu time :   205.1 secs   av.it.:   9.2
+      iter #   3 total cpu time :   199.9 secs   av.it.:   9.3
       thresh= 0.915E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.106E-09
 
-      iter #   4 total cpu time :   205.6 secs   av.it.:   9.3
-      thresh= 0.103E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.206E-11
+      iter #   4 total cpu time :   200.4 secs   av.it.:   9.3
+      thresh= 0.103E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.207E-11
 
-      iter #   5 total cpu time :   206.1 secs   av.it.:   9.2
-      thresh= 0.144E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.110E-13
+      iter #   5 total cpu time :   200.8 secs   av.it.:   9.3
+      thresh= 0.144E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.109E-13
 
      End of self-consistent calculation
 
@@ -2834,20 +2825,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   206.4 secs   av.it.:   5.2
+      iter #   1 total cpu time :   201.2 secs   av.it.:   5.3
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.582E-06
 
-      iter #   2 total cpu time :   206.9 secs   av.it.:   9.5
+      iter #   2 total cpu time :   201.7 secs   av.it.:   9.5
       thresh= 0.763E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.126E-06
 
-      iter #   3 total cpu time :   207.4 secs   av.it.:   9.2
+      iter #   3 total cpu time :   202.1 secs   av.it.:   9.3
       thresh= 0.355E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.182E-09
 
-      iter #   4 total cpu time :   207.9 secs   av.it.:   9.0
-      thresh= 0.135E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.176E-11
+      iter #   4 total cpu time :   202.6 secs   av.it.:   9.2
+      thresh= 0.135E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.174E-11
 
-      iter #   5 total cpu time :   208.4 secs   av.it.:   9.3
-      thresh= 0.132E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.248E-14
+      iter #   5 total cpu time :   203.1 secs   av.it.:   9.3
+      thresh= 0.132E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.249E-14
 
      End of self-consistent calculation
 
@@ -2858,23 +2849,23 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   208.6 secs   av.it.:   6.3
+      iter #   1 total cpu time :   203.3 secs   av.it.:   6.3
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.153E-03
 
-      iter #   2 total cpu time :   208.8 secs   av.it.:   8.7
-      thresh= 0.124E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.247E-03
+      iter #   2 total cpu time :   203.5 secs   av.it.:   8.7
+      thresh= 0.124E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.248E-03
 
-      iter #   3 total cpu time :   209.0 secs   av.it.:   8.0
-      thresh= 0.157E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.294E-08
+      iter #   3 total cpu time :   203.7 secs   av.it.:   8.0
+      thresh= 0.157E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.293E-08
 
-      iter #   4 total cpu time :   209.3 secs   av.it.:   8.7
-      thresh= 0.542E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.122E-09
+      iter #   4 total cpu time :   203.9 secs   av.it.:   8.7
+      thresh= 0.542E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.123E-09
 
-      iter #   5 total cpu time :   209.5 secs   av.it.:   8.3
-      thresh= 0.111E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.650E-11
+      iter #   5 total cpu time :   204.2 secs   av.it.:   8.3
+      thresh= 0.111E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.651E-11
 
-      iter #   6 total cpu time :   209.7 secs   av.it.:   8.3
-      thresh= 0.255E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.649E-14
+      iter #   6 total cpu time :   204.4 secs   av.it.:   8.3
+      thresh= 0.255E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.644E-14
 
      End of self-consistent calculation
 
@@ -2891,12 +2882,12 @@
      q = (    0.000000000  -1.000000000   0.000000000 ) 
 
  **************************************************************************
-     omega( 1) =       2.846895 [THz] =      94.962830 [cm-1]
-     omega( 2) =       2.846895 [THz] =      94.962830 [cm-1]
-     omega( 3) =       6.566780 [THz] =     219.045644 [cm-1]
-     omega( 4) =      10.443092 [THz] =     348.346376 [cm-1]
-     omega( 5) =      10.443092 [THz] =     348.346376 [cm-1]
-     omega( 6) =      12.210547 [THz] =     407.302715 [cm-1]
+     omega( 1) =       2.846911 [THz] =      94.963349 [cm-1]
+     omega( 2) =       2.846911 [THz] =      94.963349 [cm-1]
+     omega( 3) =       6.566788 [THz] =     219.045934 [cm-1]
+     omega( 4) =      10.443092 [THz] =     348.346365 [cm-1]
+     omega( 5) =      10.443092 [THz] =     348.346365 [cm-1]
+     omega( 6) =      12.210348 [THz] =     407.296068 [cm-1]
  **************************************************************************
 
      Calculation of q =  -0.5000 -1.0000  0.0000
@@ -2976,13 +2967,13 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is    210.08 secs
+     total cpu time spent up to now is    204.68 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  1.25E-10,  avg # of iterations = 10.2
 
-     total cpu time spent up to now is    211.15 secs
+     total cpu time spent up to now is    205.72 secs
 
      End of band structure calculation
 
@@ -3134,7 +3125,7 @@
      Representation     5      1 modes - To be done
 
      Representation     6      1 modes - To be done
-     PHONON       :  3m31.48s CPU time
+     PHONON       :  3m26.08s CPU time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -3144,20 +3135,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   211.9 secs   av.it.:   5.8
+      iter #   1 total cpu time :   206.6 secs   av.it.:   5.8
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.773E-05
 
-      iter #   2 total cpu time :   212.5 secs   av.it.:   9.2
-      thresh= 0.278E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.340E-05
+      iter #   2 total cpu time :   207.2 secs   av.it.:   9.2
+      thresh= 0.278E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.339E-05
 
-      iter #   3 total cpu time :   213.1 secs   av.it.:   8.2
-      thresh= 0.184E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.983E-09
+      iter #   3 total cpu time :   207.7 secs   av.it.:   8.2
+      thresh= 0.184E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.991E-09
 
-      iter #   4 total cpu time :   213.7 secs   av.it.:   8.2
-      thresh= 0.314E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.164E-10
+      iter #   4 total cpu time :   208.3 secs   av.it.:   8.2
+      thresh= 0.315E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.166E-10
 
-      iter #   5 total cpu time :   214.2 secs   av.it.:   8.2
-      thresh= 0.405E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.458E-13
+      iter #   5 total cpu time :   208.8 secs   av.it.:   8.2
+      thresh= 0.407E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.471E-13
 
      End of self-consistent calculation
 
@@ -3168,20 +3159,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   214.7 secs   av.it.:   6.2
+      iter #   1 total cpu time :   209.3 secs   av.it.:   6.2
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.699E-04
 
-      iter #   2 total cpu time :   215.3 secs   av.it.:   9.2
+      iter #   2 total cpu time :   209.9 secs   av.it.:   9.0
       thresh= 0.836E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.744E-04
 
-      iter #   3 total cpu time :   215.9 secs   av.it.:   8.2
-      thresh= 0.863E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.785E-09
+      iter #   3 total cpu time :   210.5 secs   av.it.:   8.1
+      thresh= 0.863E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.779E-09
 
-      iter #   4 total cpu time :   216.5 secs   av.it.:   9.0
-      thresh= 0.280E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.802E-10
+      iter #   4 total cpu time :   211.1 secs   av.it.:   9.0
+      thresh= 0.279E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.792E-10
 
-      iter #   5 total cpu time :   217.1 secs   av.it.:   8.2
-      thresh= 0.896E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.181E-12
+      iter #   5 total cpu time :   211.6 secs   av.it.:   8.2
+      thresh= 0.890E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.217E-12
 
      End of self-consistent calculation
 
@@ -3192,20 +3183,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   217.5 secs   av.it.:   5.5
+      iter #   1 total cpu time :   212.1 secs   av.it.:   5.5
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.894E-05
 
-      iter #   2 total cpu time :   218.1 secs   av.it.:   8.8
-      thresh= 0.299E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.613E-05
+      iter #   2 total cpu time :   212.7 secs   av.it.:   8.8
+      thresh= 0.299E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.612E-05
 
-      iter #   3 total cpu time :   218.7 secs   av.it.:   8.2
-      thresh= 0.248E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.691E-08
+      iter #   3 total cpu time :   213.2 secs   av.it.:   8.2
+      thresh= 0.247E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.699E-08
 
-      iter #   4 total cpu time :   219.3 secs   av.it.:   8.1
-      thresh= 0.831E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.799E-10
+      iter #   4 total cpu time :   213.8 secs   av.it.:   8.2
+      thresh= 0.836E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.805E-10
 
-      iter #   5 total cpu time :   219.9 secs   av.it.:   8.0
-      thresh= 0.894E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.115E-12
+      iter #   5 total cpu time :   214.3 secs   av.it.:   8.0
+      thresh= 0.897E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.115E-12
 
      End of self-consistent calculation
 
@@ -3216,20 +3207,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   220.4 secs   av.it.:   5.5
-      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.590E-05
+      iter #   1 total cpu time :   214.8 secs   av.it.:   5.5
+      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.589E-05
 
-      iter #   2 total cpu time :   221.0 secs   av.it.:   9.0
-      thresh= 0.243E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.366E-05
+      iter #   2 total cpu time :   215.4 secs   av.it.:   9.0
+      thresh= 0.243E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.365E-05
 
-      iter #   3 total cpu time :   221.6 secs   av.it.:   8.2
-      thresh= 0.191E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.852E-09
+      iter #   3 total cpu time :   215.9 secs   av.it.:   8.2
+      thresh= 0.191E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.853E-09
 
-      iter #   4 total cpu time :   222.1 secs   av.it.:   8.0
+      iter #   4 total cpu time :   216.4 secs   av.it.:   8.0
       thresh= 0.292E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.564E-10
 
-      iter #   5 total cpu time :   222.7 secs   av.it.:   8.0
-      thresh= 0.751E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.109E-13
+      iter #   5 total cpu time :   217.0 secs   av.it.:   8.0
+      thresh= 0.751E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.110E-13
 
      End of self-consistent calculation
 
@@ -3240,20 +3231,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   223.2 secs   av.it.:   6.2
+      iter #   1 total cpu time :   217.5 secs   av.it.:   6.2
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.501E-04
 
-      iter #   2 total cpu time :   223.9 secs   av.it.:   9.0
+      iter #   2 total cpu time :   218.1 secs   av.it.:   9.0
       thresh= 0.708E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.310E-04
 
-      iter #   3 total cpu time :   224.6 secs   av.it.:   8.2
-      thresh= 0.556E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.522E-09
+      iter #   3 total cpu time :   218.6 secs   av.it.:   8.2
+      thresh= 0.557E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.520E-09
 
-      iter #   4 total cpu time :   225.2 secs   av.it.:   8.5
-      thresh= 0.229E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.486E-10
+      iter #   4 total cpu time :   219.2 secs   av.it.:   8.5
+      thresh= 0.228E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.494E-10
 
-      iter #   5 total cpu time :   225.8 secs   av.it.:   8.2
-      thresh= 0.697E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.954E-13
+      iter #   5 total cpu time :   219.8 secs   av.it.:   8.2
+      thresh= 0.703E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.963E-13
 
      End of self-consistent calculation
 
@@ -3264,20 +3255,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   226.2 secs   av.it.:   6.2
+      iter #   1 total cpu time :   220.3 secs   av.it.:   6.2
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.282E-04
 
-      iter #   2 total cpu time :   226.8 secs   av.it.:   9.2
+      iter #   2 total cpu time :   220.9 secs   av.it.:   9.2
       thresh= 0.531E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.135E-04
 
-      iter #   3 total cpu time :   227.6 secs   av.it.:   8.2
-      thresh= 0.368E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.156E-08
+      iter #   3 total cpu time :   221.4 secs   av.it.:   8.2
+      thresh= 0.368E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.155E-08
 
-      iter #   4 total cpu time :   228.3 secs   av.it.:   8.8
-      thresh= 0.395E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.570E-10
+      iter #   4 total cpu time :   222.0 secs   av.it.:   8.8
+      thresh= 0.394E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.570E-10
 
-      iter #   5 total cpu time :   229.0 secs   av.it.:   8.8
-      thresh= 0.755E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.117E-12
+      iter #   5 total cpu time :   222.6 secs   av.it.:   8.8
+      thresh= 0.755E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.116E-12
 
      End of self-consistent calculation
 
@@ -3297,111 +3288,111 @@
      q = (   -0.500000000  -1.000000000   0.000000000 ) 
 
  **************************************************************************
-     omega( 1) =       3.748489 [THz] =     125.036950 [cm-1]
-     omega( 2) =       4.018608 [THz] =     134.047212 [cm-1]
-     omega( 3) =       5.967794 [THz] =     199.065512 [cm-1]
-     omega( 4) =      10.537366 [THz] =     351.491029 [cm-1]
-     omega( 5) =      10.644429 [THz] =     355.062289 [cm-1]
-     omega( 6) =      10.758893 [THz] =     358.880442 [cm-1]
+     omega( 1) =       3.748553 [THz] =     125.039084 [cm-1]
+     omega( 2) =       4.018624 [THz] =     134.047743 [cm-1]
+     omega( 3) =       5.967555 [THz] =     199.057534 [cm-1]
+     omega( 4) =      10.537401 [THz] =     351.492208 [cm-1]
+     omega( 5) =      10.644410 [THz] =     355.061646 [cm-1]
+     omega( 6) =      10.758902 [THz] =     358.880732 [cm-1]
  **************************************************************************
  
-     PWSCF        :   228.84s CPU
-     init_run     :     4.36s CPU (       7 calls,   0.623 s avg)
-     electrons    :    10.57s CPU (       7 calls,   1.510 s avg)
+     PWSCF        :   222.43s CPU
+     init_run     :     4.15s CPU (       7 calls,   0.593 s avg)
+     electrons    :    10.48s CPU (       7 calls,   1.497 s avg)
  
-     electrons    :    10.57s CPU (       7 calls,   1.510 s avg)
-     c_bands      :    10.56s CPU (       7 calls,   1.509 s avg)
-     sum_band     :     0.52s CPU (       7 calls,   0.074 s avg)
-     v_of_rho     :     0.03s CPU (       8 calls,   0.004 s avg)
+     electrons    :    10.48s CPU (       7 calls,   1.497 s avg)
+     c_bands      :    10.44s CPU (       7 calls,   1.491 s avg)
+     sum_band     :     0.51s CPU (       7 calls,   0.073 s avg)
+     v_of_rho     :     0.05s CPU (       8 calls,   0.006 s avg)
  
-     c_bands      :    10.56s CPU (       7 calls,   1.509 s avg)
-     init_us_2    :     1.11s CPU (    3888 calls,   0.000 s avg)
-     cegterg      :    10.44s CPU (     156 calls,   0.067 s avg)
+     c_bands      :    10.44s CPU (       7 calls,   1.491 s avg)
+     init_us_2    :     1.02s CPU (    3836 calls,   0.000 s avg)
+     cegterg      :    10.39s CPU (     156 calls,   0.067 s avg)
  
-     sum_band     :     0.52s CPU (       7 calls,   0.074 s avg)
+     sum_band     :     0.51s CPU (       7 calls,   0.073 s avg)
  
-     wfcrot       :     3.44s CPU (     156 calls,   0.022 s avg)
-     cegterg      :    10.44s CPU (     156 calls,   0.067 s avg)
-     h_psi        :    12.51s CPU (    1899 calls,   0.007 s avg)
-     g_psi        :     0.13s CPU (    1587 calls,   0.000 s avg)
+     wfcrot       :     3.27s CPU (     156 calls,   0.021 s avg)
+     cegterg      :    10.39s CPU (     156 calls,   0.067 s avg)
+     h_psi        :    12.31s CPU (    1899 calls,   0.006 s avg)
+     g_psi        :     0.18s CPU (    1587 calls,   0.000 s avg)
      cdiaghg      :     0.43s CPU (    1743 calls,   0.000 s avg)
-     update       :     0.32s CPU (    1587 calls,   0.000 s avg)
-     last         :     5.68s CPU (   28872 calls,   0.000 s avg)
+     update       :     0.25s CPU (    1587 calls,   0.000 s avg)
+     last         :     3.91s CPU (   28399 calls,   0.000 s avg)
  
-     h_psi        :    12.51s CPU (    1899 calls,   0.007 s avg)
-     init         :     2.12s CPU (   30255 calls,   0.000 s avg)
-     firstfft     :    77.94s CPU (  108998 calls,   0.001 s avg)
-     secondfft    :    74.92s CPU (  108998 calls,   0.001 s avg)
-     add_vuspsi   :     3.17s CPU (   30255 calls,   0.000 s avg)
-     s_psi        :     0.46s CPU (   59767 calls,   0.000 s avg)
+     h_psi        :    12.31s CPU (    1899 calls,   0.006 s avg)
+     init         :     1.84s CPU (   29782 calls,   0.000 s avg)
+     firstfft     :    77.24s CPU (  107407 calls,   0.001 s avg)
+     secondfft    :    75.04s CPU (  107407 calls,   0.001 s avg)
+     add_vuspsi   :     3.16s CPU (   29782 calls,   0.000 s avg)
+     s_psi        :     0.47s CPU (   58769 calls,   0.000 s avg)
  
      General routines
-     ccalbec      :     3.90s CPU (   64392 calls,   0.000 s avg)
-     cft3         :     1.04s CPU (     905 calls,   0.001 s avg)
-     cft3s        :   185.32s CPU (  268172 calls,   0.001 s avg)
-     davcio       :     1.92s CPU (   17133 calls,   0.000 s avg)
+     ccalbec      :     3.33s CPU (   63394 calls,   0.000 s avg)
+     cft3         :     1.09s CPU (     896 calls,   0.001 s avg)
+     cft3s        :   181.99s CPU (  264158 calls,   0.001 s avg)
+     davcio       :     1.90s CPU (   16837 calls,   0.000 s avg)
  
  
-     PHONON       :  3m48.99s CPU time
+     PHONON       :  3m42.61s CPU time
 
      INITIALIZATION: 
      phq_setup    :     0.03s CPU (       8 calls,   0.004 s avg)
-     phq_init     :     1.02s CPU (       8 calls,   0.127 s avg)
+     phq_init     :     1.00s CPU (       8 calls,   0.125 s avg)
  
-     phq_init     :     1.02s CPU (       8 calls,   0.127 s avg)
-     init_vloc    :     0.03s CPU (      16 calls,   0.002 s avg)
-     init_us_1    :     0.55s CPU (      15 calls,   0.037 s avg)
+     phq_init     :     1.00s CPU (       8 calls,   0.125 s avg)
+     init_vloc    :     0.05s CPU (      16 calls,   0.003 s avg)
+     init_us_1    :     0.53s CPU (      15 calls,   0.035 s avg)
  
      DYNAMICAL MATRIX:
-     dynmat0      :     0.13s CPU (       8 calls,   0.016 s avg)
-     phqscf       :   208.79s CPU (       8 calls,  26.099 s avg)
-     dynmatrix    :     0.09s CPU (       8 calls,   0.011 s avg)
+     dynmat0      :     0.15s CPU (       8 calls,   0.019 s avg)
+     phqscf       :   202.68s CPU (       8 calls,  25.335 s avg)
+     dynmatrix    :     0.12s CPU (       8 calls,   0.015 s avg)
  
-     phqscf       :   208.79s CPU (       8 calls,  26.099 s avg)
-     solve_linter :   208.24s CPU (      38 calls,   5.480 s avg)
-     drhodv       :     0.55s CPU (      38 calls,   0.014 s avg)
+     phqscf       :   202.68s CPU (       8 calls,  25.335 s avg)
+     solve_linter :   202.18s CPU (      38 calls,   5.321 s avg)
+     drhodv       :     0.49s CPU (      38 calls,   0.013 s avg)
  
-     dynmat0      :     0.13s CPU (       8 calls,   0.016 s avg)
-     dynmat_us    :     0.08s CPU (       8 calls,   0.010 s avg)
-     d2ionq       :     0.05s CPU (       8 calls,   0.006 s avg)
+     dynmat0      :     0.15s CPU (       8 calls,   0.019 s avg)
+     dynmat_us    :     0.11s CPU (       8 calls,   0.014 s avg)
+     d2ionq       :     0.04s CPU (       8 calls,   0.005 s avg)
  
-     dynmat_us    :     0.08s CPU (       8 calls,   0.010 s avg)
+     dynmat_us    :     0.11s CPU (       8 calls,   0.014 s avg)
  
-     phqscf       :   208.79s CPU (       8 calls,  26.099 s avg)
-     solve_linter :   208.24s CPU (      38 calls,   5.480 s avg)
+     phqscf       :   202.68s CPU (       8 calls,  25.335 s avg)
+     solve_linter :   202.18s CPU (      38 calls,   5.321 s avg)
  
-     solve_linter :   208.24s CPU (      38 calls,   5.480 s avg)
-     dvqpsi_us    :     3.70s CPU (     492 calls,   0.008 s avg)
-     ortho        :     0.50s CPU (    3019 calls,   0.000 s avg)
-     cgsolve      :   160.28s CPU (    3055 calls,   0.052 s avg)
-     incdrhoscf   :    21.04s CPU (    3049 calls,   0.007 s avg)
-     vpsifft      :    18.12s CPU (    2539 calls,   0.007 s avg)
-     dv_of_drho   :     1.12s CPU (     291 calls,   0.004 s avg)
-     mix_pot      :     1.22s CPU (     234 calls,   0.005 s avg)
-     symdvscf     :     2.15s CPU (     229 calls,   0.009 s avg)
+     solve_linter :   202.18s CPU (      38 calls,   5.321 s avg)
+     dvqpsi_us    :     3.73s CPU (     492 calls,   0.008 s avg)
+     ortho        :     0.46s CPU (    2967 calls,   0.000 s avg)
+     cgsolve      :   157.51s CPU (    3003 calls,   0.052 s avg)
+     incdrhoscf   :    20.76s CPU (    2997 calls,   0.007 s avg)
+     vpsifft      :    15.55s CPU (    2487 calls,   0.006 s avg)
+     dv_of_drho   :     1.22s CPU (     288 calls,   0.004 s avg)
+     mix_pot      :     1.19s CPU (     231 calls,   0.005 s avg)
+     symdvscf     :     1.96s CPU (     226 calls,   0.009 s avg)
  
-     dvqpsi_us    :     3.70s CPU (     492 calls,   0.008 s avg)
-     dvqpsi_us_on :     0.12s CPU (     492 calls,   0.000 s avg)
+     dvqpsi_us    :     3.73s CPU (     492 calls,   0.008 s avg)
+     dvqpsi_us_on :     0.13s CPU (     492 calls,   0.000 s avg)
  
-     cgsolve      :   160.28s CPU (    3055 calls,   0.052 s avg)
-     ch_psi       :   157.06s CPU (   28356 calls,   0.006 s avg)
+     cgsolve      :   157.51s CPU (    3003 calls,   0.052 s avg)
+     ch_psi       :   154.68s CPU (   27883 calls,   0.006 s avg)
  
-     ch_psi       :   157.06s CPU (   28356 calls,   0.006 s avg)
-     h_psiq       :   150.87s CPU (   28356 calls,   0.005 s avg)
-     last         :     5.68s CPU (   28872 calls,   0.000 s avg)
+     ch_psi       :   154.68s CPU (   27883 calls,   0.006 s avg)
+     h_psiq       :   150.23s CPU (   27883 calls,   0.005 s avg)
+     last         :     3.91s CPU (   28399 calls,   0.000 s avg)
  
-     h_psiq       :   150.87s CPU (   28356 calls,   0.005 s avg)
-     firstfft     :    77.94s CPU (  108998 calls,   0.001 s avg)
-     secondfft    :    74.92s CPU (  108998 calls,   0.001 s avg)
-     add_vuspsi   :     3.17s CPU (   30255 calls,   0.000 s avg)
+     h_psiq       :   150.23s CPU (   27883 calls,   0.005 s avg)
+     firstfft     :    77.24s CPU (  107407 calls,   0.001 s avg)
+     secondfft    :    75.04s CPU (  107407 calls,   0.001 s avg)
+     add_vuspsi   :     3.16s CPU (   29782 calls,   0.000 s avg)
  
-     incdrhoscf   :    21.04s CPU (    3049 calls,   0.007 s avg)
+     incdrhoscf   :    20.76s CPU (    2997 calls,   0.007 s avg)
  
  
       General routines
-     ccalbec      :     3.90s CPU (   64392 calls,   0.000 s avg)
-     cft3         :     1.04s CPU (     905 calls,   0.001 s avg)
-     cft3s        :   185.32s CPU (  268172 calls,   0.001 s avg)
-     davcio       :     1.92s CPU (   17133 calls,   0.000 s avg)
-     write_rec    :     0.34s CPU (     229 calls,   0.001 s avg)
+     ccalbec      :     3.33s CPU (   63394 calls,   0.000 s avg)
+     cft3         :     1.09s CPU (     896 calls,   0.001 s avg)
+     cft3s        :   181.99s CPU (  264158 calls,   0.001 s avg)
+     davcio       :     1.90s CPU (   16837 calls,   0.000 s avg)
+     write_rec    :     0.34s CPU (     226 calls,   0.002 s avg)
  
