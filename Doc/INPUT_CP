@@ -1276,16 +1276,6 @@ FORMER FPMD INPUT
           ! maximum number of iteration in the empty states calculation
           ! default is 100
 
-        REAL(dbl) :: empty_states_delt
-          ! meaningful only with "empty_states_nbnd > 0 "
-          ! fictitious time step to be used in the empty states iteration
-          ! default value is "dt"
-
-        REAL(dbl) :: empty_states_emass
-          ! meaningful only with "empty_states_nbnd > 0 "
-          ! fictitious electronic mass to be used in the empty states iteration
-          ! default value is "emass"
-
         REAL(dbl) :: empty_states_ethr
           ! meaningful only with "empty_states_nbnd > 0 "
           ! wave function gradient threshold, for convergence of empty states
