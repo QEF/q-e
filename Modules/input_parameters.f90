@@ -983,6 +983,10 @@ MODULE input_parameters
         INTEGER   :: nhptyp = 0
         ! this parameter set the nose hoover thermostat to more than one
 
+        INTEGER   ::  nhgrp(nsx)=-1
+          ! this is the array to assign thermostats to atomic types
+          ! allows to use various thermostat setups
+
         INTEGER   ::  ndega = 0
           ! this is the parameter to control active degrees of freedom
           ! used for temperature control and the Nose-Hoover chains
@@ -1164,7 +1168,7 @@ MODULE input_parameters
         !
         NAMELIST / ions / phase_space, ion_dynamics, ion_radius, ion_damping,  &
                           ion_positions, ion_velocities, ion_temperature,      &
-                          tempw, fnosep, nhpcl, nhptyp, ndega, tranp, amprp,   &
+                          tempw, fnosep, nhgrp, nhpcl, nhptyp, ndega, tranp, amprp,   &
                           greasp, tolp, ion_nstepe, ion_maxstep, upscale,      &
                           delta_t, pot_extrapolation, wfc_extrapolation,       &
                           nraise, remove_rigid_rot, num_of_images, CI_scheme,  &

@@ -18,9 +18,9 @@
 ! TOBIAS DJ, MARTYNA GJ, KLEIN ML
 ! JOURNAL OF PHYSICAL CHEMISTRY 97 (49): 12959-12966 DEC 9 1993
 !
-! currently "easy" input options allow one chain per atomic type (nhptyp=1)
-! and one chain per atom (nhptyp=2), but other options could be added too
 ! one chain for the whole system is specified by nhptyp=0 (or nothing)
+! currently input options allow one chain per atomic type (nhptyp=1),
+! one chain per atom (nhptyp=2), and fancy stuff with nhptyp=3 (& nhgrp)
 !
 ! nhpdim is the total number of the resulting NH chains
 ! nhpend is 1 if there is a chain above all chains, otherwise it is 0
@@ -49,12 +49,12 @@
   CONTAINS 
 !------------------------------------------------------------------------------!
 
-  subroutine ions_nose_init( tempw_ , fnosep_ , nhpcl_ , nhptyp_ , ndega_  )
+  subroutine ions_nose_init( tempw_ , fnosep_ , nhpcl_ , nhptyp_ , ndega_ , nhgrp_ )
     use constants,      only: factem, pi, au_terahertz
     use control_flags,  only: tnosep
     use ions_base,      only: ndofp, tions_base_init, nsp, nat, na
     real(DP), intent(in)  :: tempw_ , fnosep_(:) 
-    integer, intent(in) :: nhpcl_ , nhptyp_ , ndega_
+    integer, intent(in) :: nhpcl_ , nhptyp_ , ndega_ , nhgrp_(:)
     integer :: nsvar, i, j, iat, is, ia
 
     IF( .NOT. tions_base_init ) &
@@ -87,6 +87,10 @@
           do i=1,nat
              atm2nhp(i) = i
           enddo
+       elseif (abs(nhptyp_).eq.3) then
+          nhptyp = 3
+          if (nhptyp_.gt.0) nhpend = 1
+          call set_atmnhp(nhgrp_,atm2nhp,nhpdim)
        endif
        ! Add one more chain on top if needed
        nhpdim = nhpdim + nhpend
@@ -179,6 +183,54 @@
 
     return
   end subroutine ions_nose_init
+
+  subroutine set_atmnhp(nhgrp,atm2nhp,nhpdim)
+    !
+    use ions_base,      only: nsp, nat, na
+    IMPLICIT NONE
+    integer, intent(in) :: nhgrp(:)
+    integer, intent(out) :: nhpdim, atm2nhp(:)
+    !
+    integer :: i,iat,is,ia,igrpmax,ith
+    INTEGER, ALLOCATABLE   :: indtmp(:)
+    !
+    ! find maximum group
+    igrpmax = 0
+    do is=1,nsp
+       if (nhgrp(is).gt.0) igrpmax=max(igrpmax,nhgrp(is))
+    enddo
+    ! find out which groups are assigned (assuming gaps)
+    allocate(indtmp(igrpmax))
+    indtmp=0
+    do is=1,nsp
+       if (nhgrp(is).gt.0) indtmp(nhgrp(is)) = 1 
+    enddo
+    ! assign thermostat index to requested groups
+    ith = 0
+    do i=1,igrpmax
+       if (indtmp(i).gt.0) then
+          ith = ith + 1
+          indtmp(i) = ith
+       endif
+    enddo
+    ! assign thermostats to atoms depending on what is requested
+    iat = 0
+    do is=1,nsp
+       do ia=1,na(is)
+          iat = iat+1
+          if (nhgrp(is).gt.0) then
+             atm2nhp(iat) = indtmp(nhgrp(is))
+          else
+             ith = ith + 1
+             atm2nhp(iat) = ith
+          endif
+       enddo
+    enddo
+    nhpdim = ith
+    deallocate(indtmp)
+    return
+    !
+  end subroutine set_atmnhp
 
   SUBROUTINE ions_nose_allocate()
     !

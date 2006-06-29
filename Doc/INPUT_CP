@@ -536,9 +536,19 @@ nhptyp         INTEGER ( default = 0 )
                nhptyp=2 uses a NH chain per atom, this one is useful
                for extremely rapid equipartitioning (equilibration is a 
                different beast)
+               nhptyp=3 together with nhgrp allows fine grained thermostat
+               control
                NOTE: if using more than 1 thermostat per system there will
                be a common thermostat added on top of them all, to disable
                this common thermostat specify nhptyp=-X instead of nhptyp=X
+
+nhgrp(i)       INTEGER ( default = -1 )
+               specifies which thermostat group to use for given atomic type
+               when >0 assigns all the atoms in this type to thermostat
+               labeled nhgrp(i), when =-1 each atom in the type gets its own
+               thermostat. Example: H2CO, with types H (1), C(2), O(3); 
+               setting nhgrp={-1 2 2} will add a thermostat per H, and one
+               common thermostat for both C&O.
 
 ndega          INTEGER ( default = 0 )
                number of degrees of freedom used for temperature calculation
