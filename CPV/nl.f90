@@ -33,7 +33,7 @@
 
 
 
-   REAL(DP) FUNCTION nlrh_m( c0, cdesc, tforce, atoms, bec, becdr, eigr )
+   REAL(DP) FUNCTION nlrh_m( c0, cdesc, tforce, fion, bec, becdr, eigr )
 
       !  this routine computes:
       !  Kleinman-Bylander pseudopotential terms (see nlsm1)
@@ -43,7 +43,6 @@
       ! ... include modules
 
       USE wave_types,        ONLY: wave_descriptor
-      USE atoms_type_module, ONLY: atoms_type
       USE control_flags,     ONLY: force_pairing
       USE pseudopotential,   ONLY: nspnl
       USE electrons_base,    ONLY: iupdwn, nupdwn
@@ -57,7 +56,7 @@
       COMPLEX(DP),           INTENT(INOUT)  :: c0(:,:,:)     ! wave functions
       TYPE (wave_descriptor), INTENT(IN)    :: cdesc         ! wave functions descriptor
       LOGICAL,               INTENT(IN)     :: tforce        ! if .TRUE. compute forces on ions
-      TYPE(atoms_type),      INTENT(INOUT)  :: atoms         ! ions structure
+      REAL(DP), INTENT(INOUT)               :: fion(:,:)      ! atomic forces
       REAL(DP)                              :: bec(:,:)
       REAL(DP)                              :: becdr(:,:,:)
 
@@ -69,7 +68,6 @@
       INTEGER      :: iss, iss_wfc, i, j
       REAL(DP)    :: etmp
       REAL(DP), ALLOCATABLE :: btmp( :, :, : )
-      REAL(DP), ALLOCATABLE :: fion( :, : )
 
       ! ... end of declarations
       !
@@ -105,7 +103,7 @@
 
       IF( tforce ) THEN
          !
-         CALL force_nl( atoms%for, bec, becdr )
+         CALL force_nl( fion, bec, becdr )
          !
       END IF
       !

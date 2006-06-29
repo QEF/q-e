@@ -208,7 +208,7 @@
         COMPLEX(DP), INTENT(IN) :: sfac(:,:)
         LOGICAL, INTENT(IN) :: tforce, tstress, tprint
 
-        edft%enl = nlrh_m( c0, cdesc, tforce, atoms, bec, becdr, eigr )
+        edft%enl = nlrh_m( c0, cdesc, tforce, atoms%for, bec, becdr, eigr )
 
         CALL rhoofr( nfi, c0, cdesc, fi, rhoe, ht )
 

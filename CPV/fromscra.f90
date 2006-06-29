@@ -380,7 +380,7 @@ CONTAINS
 
     ELSE
 
-       edft%enl = nlrh_m( cm, cdesc, ttforce, atoms, bec, becdr, eigr )
+       edft%enl = nlrh_m( cm, cdesc, ttforce, atoms%for, bec, becdr, eigr )
        !
        CALL rhoofr( 0, cm, cdesc, fi, rhor, ht )
        !

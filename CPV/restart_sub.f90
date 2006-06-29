@@ -695,7 +695,7 @@ MODULE from_restart_module
        !
        atoms_0%for = 0.D0
        ! 
-       edft%enl = nlrh_m( c0, cdesc, ttforce, atoms_0, bec, becdr, eigr )
+       edft%enl = nlrh_m( c0, cdesc, ttforce, atoms_0%for, bec, becdr, eigr )
        !
        CALL rhoofr( nfi, c0, cdesc, fi, rhoe, ht_0 )
        !

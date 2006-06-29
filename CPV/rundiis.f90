@@ -233,7 +233,7 @@ CONTAINS
           END IF
 
 ! ...     self consistent energy
-          edft%enl = nlrh_m(c0, cdesc, tforce, atoms, bec, becdr, eigr)
+          edft%enl = nlrh_m(c0, cdesc, tforce, atoms%for, bec, becdr, eigr)
           CALL rhoofr( 1, c0, cdesc, fi, rhoe, ht0)
           CALL vofrhos(.FALSE., tforce, tstress, rhoe, atoms, &
             vpot, bec, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, ht0, edft)
@@ -247,7 +247,7 @@ CONTAINS
 45        FORMAT('etot  drho ',i3,1x,2(1x,f18.10))
 
 ! ...     recalculate potential
-          edft%enl = nlrh_m(c0, cdesc, tforce, atoms, bec, becdr, eigr)
+          edft%enl = nlrh_m(c0, cdesc, tforce, atoms%for, bec, becdr, eigr)
           CALL vofrhos(.FALSE., tforce, tstress, rhoe, atoms, &
             vpot, bec, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, ht0, edft)
 
@@ -265,7 +265,7 @@ CONTAINS
 
 ! ...     calculate lambda_i,j=<c_i| H |c_j>
 
-          edft%enl = nlrh_m(c0, cdesc, tforce, atoms, bec, becdr, eigr)
+          edft%enl = nlrh_m(c0, cdesc, tforce, atoms%for, bec, becdr, eigr)
 
           CALL dforce_all( c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 
@@ -275,7 +275,7 @@ CONTAINS
           call adjef_s(eig(1,1),fi(1,1),efermi,nel, cdesc%nbl( 1 ),temp_elec,sume)
           call entropy_s(fi(1,1),temp_elec,cdesc%nbl(1),edft%ent)
 
-          edft%enl = nlrh_m(c0, cdesc, tforce, atoms, bec, becdr, eigr)
+          edft%enl = nlrh_m(c0, cdesc, tforce, atoms%for, bec, becdr, eigr)
           CALL dforce_all( c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 
           DO ib = 1, cdesc%nbl( 1 )
@@ -285,7 +285,7 @@ CONTAINS
         ELSE
 
 ! ...     DIIS on c0 at FIXED potential
-          edft%enl = nlrh_m(c0, cdesc, tforce, atoms, bec, becdr, eigr)
+          edft%enl = nlrh_m(c0, cdesc, tforce, atoms%for, bec, becdr, eigr)
 
           CALL dforce_all( c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 

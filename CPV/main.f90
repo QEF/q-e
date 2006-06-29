@@ -367,7 +367,7 @@
         !
         atoms0%for = 0.0d0
         !
-        edft%enl = nlrh_m( c0, wfill, ttforce, atoms0, bec, becdr, eigr)
+        edft%enl = nlrh_m( c0, wfill, ttforce, atoms0%for, bec, becdr, eigr)
 
         ! ...   compute the new charge density "rhor"
         !
