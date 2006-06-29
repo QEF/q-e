@@ -260,7 +260,7 @@
 !
       if(iprsta.gt.3) then
          WRITE( stdout,*) ' phfac: tau0 '
-         WRITE( stdout,*) ( ( tau0(i,isa), i=1, 3 ), isa=1, SUM(na(1:nsp)) )
+         WRITE( stdout,*) ( ( tau0(i,isa), i=1, 3 ), isa=1, nat )
       endif
       CALL r_to_s( tau0, taus, na, nsp, ainv )
       CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
@@ -302,7 +302,7 @@
 !
       if(iprsta.gt.3) then
          WRITE( stdout,*) ' phbox: taub '
-         WRITE( stdout,*) ( (taub(i,isa), i=1, 3 ), isa=1, SUM(na(1:nsp)) )
+         WRITE( stdout,*) ( (taub(i,isa), i=1, 3 ), isa=1, nat )
       endif
       CALL r_to_s( taub, taus, na, nsp, ainvb )
       CALL phfacs( ei1b, ei2b, ei3b, eigrb, mill_b, taus, nr1b, nr2b, nr3b, nat )
