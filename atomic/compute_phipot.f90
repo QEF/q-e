@@ -94,7 +94,7 @@ subroutine compute_phipot(lam,ik,nwf0,ns,xc)
   !
   !   pseudowavefunction found
   !
-  signo= 1.0_dp !chir(ik+1,ns)/abs(chir(ik+1,ns))
+  signo= chir(ik+1,ns)/abs(chir(ik+1,ns))
   do i=1,ik
      phis(i,ns)=signo*r(i)**(lam+1)*exp(pr(cn,c2,r(i)))
   end do
