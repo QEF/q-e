@@ -915,6 +915,9 @@ MODULE xml_io_base
             CALL errore( 'write_exchange_correlation', &
                          ' variables for LDA+U not present', 1 )
          !
+! @AF@
+         CALL iotk_write_dat( iunpun, "NUMBER_OF_SPECIES", nsp )
+         !
          CALL iotk_write_dat( iunpun, "HUBBARD_LMAX", Hubbard_lmax )
          !
          CALL iotk_write_dat( iunpun, "HUBBARD_L", &
@@ -978,6 +981,14 @@ MODULE xml_io_base
       CALL iotk_write_dat( iunpun, "FIXED_OCCUPATIONS", tfixed_occ )
       !
       IF ( tfixed_occ ) THEN
+         !
+! @AF@
+         CALL iotk_write_attr( attr, "lsda" , lsda, FIRST = .TRUE. )
+         CALL iotk_write_attr( attr, "nelup", nelup )
+         CALL iotk_write_attr( attr, "neldw", neldw )
+         !
+         CALL iotk_write_empty( iunpun, 'INFO', ATTR = attr )
+! \ @AF@
          !
          CALL iotk_write_dat( iunpun, "INPUT_OCC_UP", f_inp(1:nelup,1) )
          !
