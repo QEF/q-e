@@ -52,6 +52,10 @@ MODULE nmr_module
   ! job: nmr, g_tensor
   CHARACTER(80) :: job
 
+  ! format for a rank-2 tensor
+  CHARACTER(*), PARAMETER :: tens_fmt = '(3(5X,3(F14.4,2X)/))'
+
+
   CONTAINS
   !-----------------------------------------------------------------------
   ! Read in the nmr input file.
