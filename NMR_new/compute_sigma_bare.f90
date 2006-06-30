@@ -18,6 +18,7 @@ SUBROUTINE compute_sigma_bare(chi_bare)
   USE ions_base,            ONLY : nat, tau, atm, ityp
   USE io_global,       ONLY : stdout
   USE symme,     ONLY : s, nsym, irt
+  USE mp_global, ONLY : me_pool
   USE pwcom
   USE nmr_module
 
@@ -38,6 +39,7 @@ SUBROUTINE compute_sigma_bare(chi_bare)
   write(stdout,'(5X,''NMR chemical shifts in ppm:'')')
   write(stdout,*)
   
+
   do na = 1, nat
     tmp_sigma(:,:) = 0.d0
 
@@ -55,6 +57,9 @@ SUBROUTINE compute_sigma_bare(chi_bare)
 
     sigma_bare(:,:,na) = real(tmp_sigma(:,:))
   enddo
+#ifdef __PARA
+  call reduce(9*na, sigma_bare)
+#endif
 
 #if 0
   ! symmetrize tensors ??
@@ -71,10 +76,7 @@ SUBROUTINE compute_sigma_bare(chi_bare)
     tr_sigma = (sigma_bare(1,1,na)+sigma_bare(2,2,na)+sigma_bare(3,3,na))/3.d0
     write(stdout,'(5X,''Atom'',I3,2X,A3,'' pos: ('',3(F10.6),&
           '')  sigma: '',F14.4)') na, atm(ityp(na)), tau(:,na), tr_sigma*1d6
-
-    write(stdout, '(3(5X,3(F14.4,2X)/))') sigma_bare(:,:,na) * 1d6
-    !!!call sym_cart_tensor(sigma_bare(:,:,na))
-    !!!write(stdout, '(3(5X,3(F12.6,2X)/))') sigma_bare(:,:,na) * 1d6
+    write(stdout, tens_fmt) sigma_bare(:,:,na) * 1d6
   enddo
 
 end subroutine compute_sigma_bare

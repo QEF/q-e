@@ -15,15 +15,17 @@ SUBROUTINE symmetrize_field(field, iflag)
   !     iflag = 0  => tensor         (e.g. induced B field)
   !     iflag = 1  => pseudo-tensor  (e.g. induced current)
   !
-  USE kinds,                ONLY : DP
-  USE symme,                ONLY : s, nsym
-  USE cell_base,            ONLY : at, bg
+  !     don't use nrxxs: in the parallel case nrx1s*nrx2s*nrx3s /= nrxxs
+  !
+  USE kinds,                           ONLY : DP
+  USE symme,                           ONLY : s, nsym
+  USE cell_base,                       ONLY : at, bg
   USE pwcom
   USE nmr_module
 
   !-- parameters ------------------------------------------------------
   IMPLICIT NONE
-  REAL(DP), INTENT(INOUT) :: field(nrxxs,3,3)
+  REAL(DP), INTENT(INOUT) :: field(nrx1s*nrx2s*nrx3s,3,3)
   INTEGER :: iflag
 
   !-- local variables ----------------------------------------------------
@@ -35,7 +37,7 @@ SUBROUTINE symmetrize_field(field, iflag)
   if (nsym.eq.1) return
 
   ! cartesian to crystal
-  do i = 1, nrxxs
+  do i = 1, nrx1s*nrx2s*nrx3s
     tmp(:,:) = field(i,:,:)
     call trntns (tmp, at, bg, -1)
     field(i,:,:) = tmp(:,:)
@@ -45,13 +47,60 @@ SUBROUTINE symmetrize_field(field, iflag)
   call syme2(field, iflag)
 
   ! crystal to cartesian
-  do i = 1, nrxxs
+  do i = 1, nrx1s*nrx2s*nrx3s
     tmp(:,:) = field(i,:,:)
     call trntns (tmp, at, bg, 1)
     field(i,:,:) = tmp(:,:)
   enddo
 
 END SUBROUTINE symmetrize_field
+
+
+!-----------------------------------------------------------------------
+SUBROUTINE psymmetrize_field(field, iflag)
+  !-----------------------------------------------------------------------
+  !
+  !     symmetrize a tensor field (e.g. current or induced magnetic field)
+  !     (parallel version)
+  !     iflag = 0  => tensor         (e.g. induced B field)
+  !     iflag = 1  => pseudo-tensor  (e.g. induced current)
+  !
+  USE kinds,                           ONLY : DP
+  USE pfft,                            ONLY : nxx
+  USE mp_global,                       ONLY : me_pool
+  USE pwcom
+  USE nmr_module
+
+  !-- parameters ------------------------------------------------------
+  IMPLICIT NONE
+  REAL(DP), INTENT(INOUT) :: field(nxx,3,3)
+  INTEGER :: iflag
+
+  !-- local variables ----------------------------------------------------
+  real(dp), allocatable :: aux(:,:,:)
+  integer :: i, j
+
+  ! if no symmetries, return
+  if (nsym.eq.1) return
+
+  allocate( aux(nrx1s*nrx2s*nrx3s,3,3) )
+  do i = 1, 3
+    do j = 1, 3
+      call gather(field(1,i,j), aux(1,i,j))
+    enddo
+  enddo
+
+  if ( me_pool == 0 ) call symmetrize_field(aux, iflag)
+
+  do i = 1, 3
+    do j = 1, 3
+      call scatter(aux(1,i,j), field(1,i,j))
+    enddo
+  enddo
+
+  deallocate(aux)
+END SUBROUTINE psymmetrize_field
+
 
 !
 ! Copyright (C) 2001 PWSCF group

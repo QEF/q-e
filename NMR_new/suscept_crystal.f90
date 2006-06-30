@@ -25,6 +25,7 @@ SUBROUTINE suscept_crystal
   USE lsda_mod,                    ONLY : current_spin, lsda, isk
   USE becmod,                      ONLY : becp  
   USE symme,                       ONLY : nsym, s, ftau
+  USE mp_global,                   ONLY : my_pool_id, npool, me_pool, root_pool
   USE pwcom
   USE nmr_module
 
@@ -54,8 +55,6 @@ SUBROUTINE suscept_crystal
   allocate ( p_evc(npwx,nbnd,3), vel_evc(npwx,nbnd,3), &
              aux(npwx,nbnd), g_vel_evc(npwx,nbnd,3) )
 
-  !nsym = 1 !! NO SYMMETRTY
-
   ! zero the Q tensors
   q_pGv(:,:,:) = 0.d0
   q_vGv(:,:,:) = 0.d0
@@ -70,11 +69,11 @@ SUBROUTINE suscept_crystal
   !====================================================================
   do ik = 1, nks
 #ifdef __PARA
-    if (my_pool_id == 0) &
-    write(*, '(5X,''k-point #'',I5,'' of '',I5,'' (my_pool_id='',I3)') &
-      ik, nks, my_pool_id
+    if (me_pool == root_pool) &
+    write(*, '(5X,''k-point #'',I5,'' of '',I5,6X,''pool #'',I3)') &
+      ik, nks, my_pool_id+1
 #else
-    write(*, '(5X,''k-point #'',I5,'' of '',I5)') ik, nks
+    write(stdout, '(5X,''k-point #'',I5,'' of '',I5)') ik, nks
 #endif
     current_k = ik
     current_spin = isk(ik)
@@ -109,9 +108,6 @@ SUBROUTINE suscept_crystal
         enddo
       enddo
     enddo
-#ifdef __PARA
-    call reduce(9, f_sum)
-#endif
 
     !------------------------------------------------------------------
     ! pGv and vGv contribution to chi_{bare}
@@ -149,12 +145,20 @@ SUBROUTINE suscept_crystal
 
     enddo  ! isign
   enddo  ! ik
-  ! TODO: put a lot of poolreduce here
+
 #ifdef __PARA
+  ! reduce over G-vectors
+  call reduce(9, f_sum)
+  call reduce(3*9, q_pGv)
+  call reduce(3*9, q_vGv)
+#endif
+
+#ifdef __PARA
+  ! reduce over k-points
   call poolreduce(9, f_sum)
-  call poolreduce(9, q_pGv)
-  call poolreduce(9, q_vGv)
-  ! TODO: non working yet in parallel!!!
+  call poolreduce(3*9, q_pGv)
+  call poolreduce(3*9, q_vGv)
+  call poolreduce(nrxxs*nspin*9, j_bare)
 #endif
 
   !====================================================================
@@ -166,11 +170,11 @@ SUBROUTINE suscept_crystal
   ! f-sum rule
   if (iverbosity > 0) then
     write(stdout, '(5X,''f-sum rule:'')')
-    write(stdout, '(3(5X,3(F12.6,2X)/))') f_sum
+    write(stdout, tens_fmt) f_sum
   endif
   call sym_cart_tensor(f_sum)
   write(stdout, '(5X,''f-sum rule (symmetrized):'')')
-  write(stdout, '(3(5X,3(F12.6,2X)/))') f_sum
+  write(stdout, tens_fmt) f_sum
 
   ! F_{ij} = (2 - \delta_{ij}) Q_{ij}
   do ipol = 1, 3
@@ -209,11 +213,11 @@ SUBROUTINE suscept_crystal
   ! convert from atomic units to 10^{-6} cm^3 / mol
   tmp(:,:) = chi_bare_pGv(:,:) * 1d6 * a0_to_cm**3.d0 * avogadro
   write(stdout, '(5X,''chi_bare pGv (HH) in 10^{-6} cm^3/mol:'')')
-  write(stdout, '(3(5X,3(F12.6,2X)/))') tmp(:,:)
+  write(stdout, tens_fmt) tmp(:,:)
 
   tmp(:,:) = chi_bare_vGv(:,:) * 1d6 * a0_to_cm**3.d0 * avogadro
   write(stdout, '(5X,''chi_bare vGv (VV) in 10^{-6} cm^3/mol:'')')
-  write(stdout, '(3(5X,3(F12.6,2X)/))') tmp(:,:)
+  write(stdout, tens_fmt) tmp(:,:)
 
   !--------------------------------------------------------------------
   ! now get the current, induced field and chemical shifts
@@ -221,9 +225,14 @@ SUBROUTINE suscept_crystal
   chi_bare_pGv(:,:) = chi_bare_pGv(:,:) / omega
   j_bare(:,:,:,:) = j_bare(:,:,:,:) / (2.d0 * q_nmr * tpiba * c * omega)
 
+  !nsym = 1
   ! either you symmetrize the current ...
   do i = 1, nspin
+#ifdef __PARA
+    call psymmetrize_field(j_bare(:,:,:,i),1)
+#else
     call symmetrize_field(j_bare(:,:,:,i),1)
+#endif
   enddo
 
   ! compute induced field
@@ -294,9 +303,9 @@ SUBROUTINE suscept_crystal
 
       enddo  ! ib
     enddo  ! ia
-#ifdef __PARA
-    call reduce(9, qt)
-#endif
+!#ifdef __PARA
+!    call reduce(9, qt)
+!#endif
   END SUBROUTINE add_to_tensor
 
 
