@@ -371,17 +371,11 @@ SUBROUTINE electrons()
            !
            descf = delta_escf()
            !
-           ! ... write the charge density to file
-           !
-           CALL write_rho( rhonew, nspin )
+           rho (:,:) = rhonew (:,:)
            !
            DEALLOCATE( rhonew )
            !
         ELSE
-           !
-           ! ... write the self-consistent charge density to file
-           !
-           CALL write_rho( rho, nspin )
            !
            ! ... convergence reached: store V(out)-V(in) in vnew ( used 
            ! ... to correct the forces )
@@ -396,9 +390,12 @@ SUBROUTINE electrons()
            !
            descf = 0.D0
            !
-           DEALLOCATE (rhog)
-           !
         END IF
+        !
+        ! ... write the charge density to file
+        !
+        CALL write_rho( rho, nspin )
+        !
 #if defined (EXX)
         if (exx_is_active()) then
            fock1 = exxenergy2()
@@ -411,6 +408,8 @@ SUBROUTINE electrons()
         EXIT scf_step
         !
      END DO scf_step
+     !
+     DEALLOCATE (rhog)
      !
      ! ... define the total local potential (external + scf)
      !

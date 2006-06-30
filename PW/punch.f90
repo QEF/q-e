@@ -21,14 +21,13 @@ SUBROUTINE punch( what )
   USE wavefunctions_module, ONLY : evc, evc_nc
   USE io_files,             ONLY : prefix, iunpun, iunwfc, nwordwfc
   USE noncollin_module,     ONLY : noncolin
-  USE pw_restart,           ONLY : pw_writefile, pw_readfile
+  USE pw_restart,           ONLY : pw_writefile
   USE a2F,                  ONLY : la2F, a2Fsave
   !
   IMPLICIT NONE
   !
   CHARACTER(LEN=*) :: what
   LOGICAL          :: exst
-  INTEGER          :: ios
   !
   !
   WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &
@@ -54,11 +53,7 @@ SUBROUTINE punch( what )
   ! ... with few k-points is followed by a non-self-consistent one with added
   ! ... k-points, whose weight is set to zero.
   !
-  IF ( .NOT. lscf .AND. .NOT. lbands ) then
-      CALL sum_band()
-  ELSE 
-      CALL pw_readfile( 'rho', ios )
-  ENDIF
+  IF ( .NOT. lscf .AND. .NOT. lbands ) CALL sum_band ( )
   !
   ! ... Write: general variables (including dimensions of the arrays),
   ! ... atomic positions, forces, k-points, eigenvalues
