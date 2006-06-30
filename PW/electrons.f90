@@ -377,6 +377,8 @@ SUBROUTINE electrons()
            !
         ELSE
            !
+           DEALLOCATE (rhog)
+           !
            ! ... convergence reached: store V(out)-V(in) in vnew ( used 
            ! ... to correct the forces )
            !
@@ -408,8 +410,6 @@ SUBROUTINE electrons()
         EXIT scf_step
         !
      END DO scf_step
-     !
-     DEALLOCATE (rhog)
      !
      ! ... define the total local potential (external + scf)
      !
