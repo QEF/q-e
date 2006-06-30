@@ -13,7 +13,6 @@ subroutine formf( tfirst, eself )
   !computes (a) the self-energy eself of the ionic pseudocharges;
   !         (b) the form factors of: (i) pseudopotential (vps),
   !             (ii) ionic pseudocharge (rhops)
-  !         all quantities are returned in common /pseu/
   !         also calculated the derivative of vps with respect to
   !         g^2 (dvps)
   ! 

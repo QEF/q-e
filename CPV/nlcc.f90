@@ -66,7 +66,6 @@
      !
      use control_flags,   ONLY : program_name
      use ions_base,       ONLY : nsp
-     use uspp_param,      ONLY : kkbeta
      use atom,            ONLY : nlcc, r, rab, mesh, rho_atc
      use gvecb,           ONLY : ngb, gb
      use small_box,       ONLY : omegab, tpibab
@@ -99,7 +98,7 @@
            IF( program_name == 'CP90' ) THEN
               !
               CALL compute_rhocg( rhocb(:,is), rhocb(:,is), r(:,is), rab(:,is), &
-                  rho_atc(:,is), gb, omegab, tpibab**2, kkbeta(is), ngb, 0 )
+                  rho_atc(:,is), gb, omegab, tpibab**2, mesh(is), ngb, 0 )
               !
            END IF
            !
@@ -122,7 +121,7 @@
               ELSE
 
                  CALL compute_rhocg( rhocg(:,is), drhocg(:,is), r(:,is), rab(:,is), &
-                                     rho_atc(:,is), g, omega, tpiba2, kkbeta(is), ngm, 1 )
+                                     rho_atc(:,is), g, omega, tpiba2, mesh(is), ngm, 1 )
 
               END IF
               !

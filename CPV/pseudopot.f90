@@ -419,7 +419,6 @@ CONTAINS
       USE cell_base,   ONLY : tpiba, tpiba2
       USE splines,     ONLY : init_spline, allocate_spline, kill_spline, nullify_spline
       USE pseudo_base, ONLY : compute_rhocg
-      USE uspp_param,  ONLY : kkbeta
       use reciprocal_vectors, ONLY : g, gstart
 
       IMPLICIT NONE
@@ -460,7 +459,7 @@ CONTAINS
             CALL allocate_spline( rhocp_sp(is), mmx, xgmin, xgmax )
             !
             CALL compute_rhocg( rhoc1_sp(is)%y, rhocp_sp(is)%y, r(:,is), &
-                 rab(:,is), rho_atc(:,is), xgtab, 1.0d0, tpiba2, kkbeta(is), mmx, 1 )
+                 rab(:,is), rho_atc(:,is), xgtab, 1.0d0, tpiba2, mesh(is), mmx, 1 )
             !
             CALL init_spline( rhoc1_sp(is) )
             CALL init_spline( rhocp_sp(is) )
