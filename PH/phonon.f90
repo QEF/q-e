@@ -37,6 +37,7 @@ PROGRAM phonon
   USE output,          ONLY : fildyn, fildrho
   USE global_version,  ONLY : version_number
   USE ramanm,          ONLY : lraman, elop
+  USE check_stop,      ONLY : check_stop_init
   !
   IMPLICIT NONE
   !
@@ -66,6 +67,8 @@ PROGRAM phonon
   ! ... and begin with the initialization part
   !
   CALL phq_readin()
+  !
+  CALL check_stop_init()
   !
   ! ... Checking the status of the calculation
   !
