@@ -304,7 +304,8 @@ MODULE pw_restart
 ! ... PLANE_WAVES
 !-------------------------------------------------------------------------------
          !
-         CALL write_planewaves( ecutwfc, dual, npwx, gamma_only, nr1, nr2, &
+! @AF@
+         CALL write_planewaves( ecutwfc, dual, npwx_g, gamma_only, nr1, nr2, &
                                 nr3, ngm_g, nr1s, nr2s, nr3s, ngms_g, nr1, &
                                 nr2, nr3, itmp, lgvec )
          !
@@ -379,12 +380,18 @@ MODULE pw_restart
          !
          CALL iotk_write_dat( iunpun, "NUMBER_OF_BANDS", nbnd )
          !
+! @AF@
+         CALL iotk_write_dat( iunpun, "NUMBER_OF_K-POINTS", num_k_points )
+         !
          CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
          CALL iotk_write_dat( iunpun, "FERMI_ENERGY", ef / e2, ATTR = attr )
          !
          CALL iotk_write_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin )
          !
          CALL iotk_write_begin( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
+         !
+! @AF@
+         CALL iotk_write_dat( iunpun, "MAX_NPW", npwx_g )
          !
       END IF
       !
@@ -454,6 +461,9 @@ MODULE pw_restart
                !
                ! ... G+K vectors
                !
+! @AF@ ! please, check that the dimension is actually correct !!
+               CALL iotk_write_dat( iunpun, "NUMBER_OF_GK-VECTORS", ngk_g(ik) )
+               !
                filename = wfc_filename( ".", 'gkvectors', ik )
                !
                CALL iotk_link( iunpun, "GK-VECTORS", &
@@ -485,7 +495,8 @@ MODULE pw_restart
                   !
                   filename = wfc_filename( ".", 'evc', ik, ispin )
                   !
-                  CALL iotk_link( iunpun, "WFC", filename, &
+! @AF@
+                  CALL iotk_link( iunpun, "WFC" // TRIM( iotk_index (ispin) ) , filename, &
                                   CREATE = .FALSE., BINARY = .TRUE. )
                   !
                   filename = wfc_filename( dirname, 'evc', ik, ispin )
@@ -510,7 +521,8 @@ MODULE pw_restart
                   !
                   filename = wfc_filename( ".", 'evc', ik, ispin )
                   !
-                  CALL iotk_link( iunpun, "WFC", filename, &
+! @AF@
+                  CALL iotk_link( iunpun, "WFC" // TRIM(iotk_index( ispin)) , filename, &
                                   CREATE = .FALSE., BINARY = .TRUE. )
                   !
                   filename = wfc_filename( dirname, 'evc', ik, ispin )
@@ -549,7 +561,8 @@ MODULE pw_restart
                         !
                         filename = wfc_filename( ".", 'evc', ik, ipol )
                         !
-                        CALL iotk_link( iunpun, "WFC", filename, &
+! @AF@
+                        CALL iotk_link( iunpun, "WFC" // TRIM(iotk_index(ipol)), filename, &
                                         CREATE = .FALSE., BINARY = .TRUE. )
                         !
                         filename = wfc_filename( dirname, 'evc', ik, ipol )
@@ -569,7 +582,7 @@ MODULE pw_restart
                      !
                      filename = wfc_filename( ".", 'evc', ik )
                      !
-                     CALL iotk_link( iunpun, "WFC", filename, &
+                     CALL iotk_link( iunpun, "WFC.1", filename, &
                                      CREATE = .FALSE., BINARY = .TRUE. )
                      !
                      filename = wfc_filename( dirname, 'evc', ik )
@@ -678,6 +691,11 @@ MODULE pw_restart
                                    FILE = TRIM( filename ), BINARY = .TRUE. )
              !
              CALL iotk_write_begin( iun,"K-POINT" // iotk_index( ik ), attr )
+             !
+! @AF@
+             CALL iotk_write_attr( attr, "NUMBER_OF_GK-VECTORS", ngk_g(ik), FIRST = .TRUE. )
+             CALL iotk_write_empty( iun, "INFO", ATTR = attr )
+! / @AF@
              !
              CALL iotk_write_dat( iun, "INDEX", igwk(1:ngk_g(ik),ik) )
              CALL iotk_write_dat( iun, "GRID", itmp(1:3,igwk(1:ngk_g(ik),ik)), &
@@ -2204,9 +2222,10 @@ MODULE pw_restart
             CALL iotk_scan_begin( iunpun, &
                                   "K-POINT" // TRIM( iotk_index( ik ) ) )
             !
-            CALL iotk_scan_begin( iunpun, "WFC", FOUND = twfcollect  )
+! @AF@
+            CALL iotk_scan_begin( iunpun, "WFC.1", FOUND = twfcollect  )
             !
-            IF ( twfcollect ) CALL iotk_scan_end( iunpun, "WFC" )
+            IF ( twfcollect ) CALL iotk_scan_end( iunpun, "WFC.1" )
             !
          END IF
          !
