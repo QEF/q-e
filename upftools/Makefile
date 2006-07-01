@@ -9,10 +9,11 @@ MODS = ../Modules/kind.o ../Modules/parameters.o ../Modules/pseudo_types.o \
        ../Modules/mp.o ../Modules/parallel_include.o ../Modules/constants.o
 SPLINE = ../Modules/splinelib.o
 FUNCT = ../Modules/functionals.o
+UPF_MOD =../Modules/read_upf.o ../flib/flush_unit.o ../flib/matches.o ../flib/error.o
 TLDEPS = mods libs libiotk
 
 all : tldeps cpmd2upf.x fhi2upf.x fpmd2upf.x ncpp2upf.x oldcp2upf.x \
-      rrkj2upf.x uspp2upf.x vdb2upf.x virtual.x
+      read_upf_tofile.x rrkj2upf.x uspp2upf.x vdb2upf.x virtual.x 
 
 cpmd2upf.x : cpmd2upf.o $(OBJS) $(MODS) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ cpmd2upf.o $(OBJS) $(MODS) $(LIBOBJS) $(LIBS)
@@ -31,6 +32,9 @@ oldcp2upf.x : oldcp2upf.o $(OBJS) $(MODS) $(LIBOBJS)
 
 read_upf.x : read_upf.o
 	$(MPIF90) $(LDFLAGS) -o $@ read_upf.o $(LIBS)
+
+read_upf_tofile.x : read_upf_tofile.o $(MODS) $(UPF_MOD) 
+	$(MPIF90) $(LDFLAGS) -o $@ read_upf_tofile.o $(UPF_MOD) $(MODS) $(LIBS)
 
 rrkj2upf.x : rrkj2upf.o $(OBJS) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ rrkj2upf.o $(OBJS) $(LIBOBJS) $(LIBS)
