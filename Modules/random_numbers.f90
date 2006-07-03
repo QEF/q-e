@@ -190,7 +190,7 @@ MODULE random_numbers
       IMPLICIT NONE
       !
       INTEGER, INTENT(IN) :: iseed
-      INTEGER             :: irand
+!      INTEGER             :: irand
       !
       REAL(DP) :: dummy
       !

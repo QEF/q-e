@@ -23,7 +23,7 @@ SUBROUTINE phq_readin()
   USE ions_base,     ONLY : nat, ntyp => nsp
   USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_bcast
-  USE check_stop,    ONLY : max_seconds
+  USE input_parameters, ONLY : max_seconds
   USE ions_base,     ONLY : amass
   USE klist,         ONLY : xqq, nks, degauss
   USE wvfct,         ONLY : gamma_only
