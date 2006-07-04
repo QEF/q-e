@@ -8,7 +8,7 @@ and a description of a method to compute the crucial U parameter
 are contained in Matteo Cococcioni's PhD thesis at SISSA and in the
 paper "Linear-response approach to the calculation of the effective"
 interaction parameters in the LDA+U method" by Matteo Cococcioni and
-Stefano de Gironcoli, cond-mat/0405160 and soon published in PRB.
+Stefano de Gironcoli, PRB 71, 035105 (2005).
 
 A classical example for LDA+U method is FeO that is incorrectly predicted
 to be a metal by LDA and GGA while it is an insulating antiferromagnetic
@@ -64,10 +64,10 @@ minority spin component one would like to occupy completely a single state
 leaving the other as empty as possible.
 
 So, in the third run, by mean of the starting_ns_eigenvalue variable,
-one enforces the complete occupation of the fifth eigenvalue of the
+one enforces the complete occupation of the third eigenvalue of the
 minority spin components of each Fe atomic type.
 
-Why the fifth eigenvalue ? Because from the "standard LDA+U" run we know
+Why the third eigenvalue ? Because from the "standard LDA+U" run we know
 that at the first iteration this is the one that is non-degenerate and 
 if occupied completely could lead to an insulating result.
 
