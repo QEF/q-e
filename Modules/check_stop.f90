@@ -41,10 +41,9 @@ MODULE check_stop
        !
        IMPLICIT NONE
        !
-       LOGICAL  :: tex
-       REAL(DP) :: seconds
-       REAL(DP) :: elapsed_seconds
-       EXTERNAL    elapsed_seconds
+       LOGICAL            :: tex
+       REAL(DP)           :: seconds
+       REAL(DP), EXTERNAL :: elapsed_seconds
        !
        IF ( tinit ) &
           WRITE( UNIT = stdout, &
@@ -82,17 +81,17 @@ MODULE check_stop
        !
        USE mp,        ONLY : mp_bcast
        USE mp_global, ONLY : intra_image_comm 
-       USE io_global, ONLY : meta_ionode, meta_ionode_id, stdout
+       USE io_global, ONLY : ionode, ionode_id, meta_ionode, stdout
        USE io_files,  ONLY : exit_file, stopunit, iunexit
        !
        IMPLICIT NONE
        !
        INTEGER, OPTIONAL, INTENT(IN) :: inunit
-       INTEGER                       :: unit
-       LOGICAL                       :: check_stop_now, tex
-       REAL(DP)                      :: seconds
-       REAL(DP)                      :: elapsed_seconds
-       EXTERNAL                         elapsed_seconds
+       !
+       INTEGER            :: unit
+       LOGICAL            :: check_stop_now, tex
+       REAL(DP)           :: seconds
+       REAL(DP), EXTERNAL :: elapsed_seconds
        !
        !
        ! ... elapsed_seconds is a C function returning the elapsed solar 
@@ -106,16 +105,13 @@ MODULE check_stop
        !
        check_stop_now = .FALSE.
        !  
-       IF ( meta_ionode ) THEN
+       IF ( ionode ) THEN
           !
           INQUIRE( FILE = TRIM( exit_file ), EXIST = tex )
           !
           IF ( tex ) THEN
              !     
              check_stop_now = .TRUE.
-             !
-             WRITE( UNIT = unit, &
-                    FMT = '(/,5X,"Program stopped by user request")' )
              !
              OPEN( UNIT = iunexit, FILE = TRIM( exit_file ) )
              CLOSE( UNIT = iunexit, STATUS = 'DELETE' )
@@ -124,9 +120,20 @@ MODULE check_stop
           !
           seconds = elapsed_seconds()
           !
-          IF ( seconds  >  max_seconds ) THEN
+          check_stop_now = ( seconds  >  max_seconds )
+          !
+       END IF
+       !
+       CALL mp_bcast( check_stop_now, ionode_id, intra_image_comm )
+       !
+       IF ( check_stop_now .AND. meta_ionode ) THEN
+          !
+          IF ( tex ) THEN
              !
-             check_stop_now = .TRUE.
+             WRITE( UNIT = unit, &
+                    FMT = '(/,5X,"Program stopped by user request")' )
+             !
+          ELSE
              !
              WRITE( UNIT = unit, &
                     FMT = '(/,5X,"Maximum CPU time exceeded")' )
@@ -138,8 +145,6 @@ MODULE check_stop
           END IF
           !
        END IF
-       !
-       CALL mp_bcast( check_stop_now, meta_ionode_id, intra_image_comm )
        !
        RETURN
        !
