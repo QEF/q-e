@@ -188,7 +188,7 @@ SUBROUTINE electrons()
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
-  ! ... bring starting rho to G-space
+  ! ... bring starting charge density (rho) to G-space (rhog)
   !
   IF ( .NOT. ALLOCATED( rhog ) ) ALLOCATE( rhog( ngm, nspin ) )
   !
@@ -276,6 +276,8 @@ SUBROUTINE electrons()
         !
         CALL sum_band()
         !
+        ! ... output charge density in real space is stored in rho
+        !
         IF ( lda_plus_u )  THEN
            !
            ldim2 = ( 2*Hubbard_lmax + 1 )**2
@@ -293,11 +295,13 @@ SUBROUTINE electrons()
         !
         IF ( lsda .OR. noncolin ) CALL compute_magnetization()
         !
-        ! ... delta_e = - int rho(r) (V_H + V_xc)(r) dr
-        !
+        ! ... eband  = \sum_v \epsilon_v    is calculated by sum_band
+        ! ... deband = - \sum_v <\psi_v | V_h + V_xc |\psi_v>
+        ! ... eband + deband = \sum_v <\psi_v | T + Vion |\psi_v>
+        ! 
         deband = delta_e()
         !
-        ! ... bring newly calculated (in sum_band) rho to G-space for mixing
+        ! ... bring output charge density (rho) to G-space (rhognew) for mixing
         !
         ALLOCATE( rhognew( ngm, nspin ) )
         !
@@ -316,17 +320,17 @@ SUBROUTINE electrons()
         !
         DEALLOCATE( rhognew )
         !
-        ! ... for the first scf iteration it is controlled that the 
-        ! ... threshold is small enough for the diagonalization to 
-        ! ... be adequate
+        ! ... rhog now contains mixed charge density in G-space
+        !
+        ! ... first scf iteration: check if the threshold on diagonalization
+        ! ... (ethr) was small enough wrt the error in self-consistency (dr2)
+        ! ... If not, perform a  new diagonalization with reduced threshold
         !
         IF ( first ) THEN
            !
            first = .FALSE.
            !
            IF ( dr2 < tr2_min ) THEN
-              !
-              ! ... a new diagonalization is needed       
               !
               WRITE( stdout, '(/,5X,"Threshold (ethr) on eigenvalues was ", &
                                &    "too large:",/,5X,                      &
@@ -342,7 +346,7 @@ SUBROUTINE electrons()
         !
         IF ( .NOT. conv_elec ) THEN
            !
-           ! ... bring mixed rho from G- to R-space
+           ! ... bring mixed charge density (rhog) from G- to R-space (rhonew)
            !
            ALLOCATE( rhonew( nrxx, nspin ) )
            !
@@ -361,13 +365,18 @@ SUBROUTINE electrons()
            END DO
            !
            ! ... no convergence yet: calculate new potential from 
-           ! ... new estimate of the charge density 
+           ! ... mixed charge density (i.e. the new estimate) 
            !
            CALL v_of_rho( rhonew, rho_core, nr1, nr2, nr3, nrx1, nrx2,     &
                           nrx3, nrxx, nl, ngm, gstart, nspin, g, gg, alat, &
                           omega, ehart, etxc, vtxc, etotefield, charge, vr )
            !
-           ! ... estimate correction needed to have variational energy 
+           ! ... estimate correction needed to have variational energy:
+           ! ... T + E_ion (eband + deband) are calculated in sum_band
+           ! ... and delta_e using the output charge density rho;
+           ! ... E_H (ehart) and E_xc (etxc) are calculated in v_of_rho
+           ! ... above, using the mixed charge density rhonew.
+           ! ... delta_escf corrects for this difference at first order
            !
            descf = delta_escf()
            !
@@ -379,8 +388,8 @@ SUBROUTINE electrons()
            !
            DEALLOCATE (rhog)
            !
-           ! ... convergence reached: store V(out)-V(in) in vnew ( used 
-           ! ... to correct the forces )
+           ! ... convergence reached: store V(out)-V(in) in vnew
+           ! ... (used later for scf correction to the forces )
            !
            CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
                           nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
@@ -388,13 +397,14 @@ SUBROUTINE electrons()
            !
            vnew = vnew - vr
            !
-           ! ... correction for variational energy no longer needed
+           ! ... note that rho is the output, not mixed, charge density
+           ! ... so correction for variational energy is no longer needed
            !
            descf = 0.D0
            !
         END IF
         !
-        ! ... write the charge density to file
+        ! ... write the charge density to file 
         !
         CALL write_rho( rho, nspin )
         !
@@ -1045,7 +1055,8 @@ SUBROUTINE electrons()
        !-----------------------------------------------------------------------
        !
        ! ... delta_escf = - \int \delta rho(r) V_scf(r)
-       ! ... this is the correction needed to have variational energy
+       ! ... calculates the difference between the Hartree and XC energy
+       ! ... at first order in the charge density difference \delta rho(r) 
        !
        USE kinds
        !
