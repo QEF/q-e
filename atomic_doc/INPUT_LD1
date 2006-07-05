@@ -44,16 +44,25 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
                not allowed if iswitch=3 (PP generation) or with full
                relativistic calculation
       dft = exchange-correlation functional. Examples:
-           'PZ'    Perdew and Zunger formula for LDA (default)
+           'PZ'    Perdew and Zunger formula for LDA
            'PW91'  Perdew and Wang GGA
            'BP'    Becke and Perdew GGA
            'PBE'   Perdew, Becke and Ernzerhof GGA
            'BLYP'  ...
             For the complete list, see module "which_dft" in ../Modules/
+            The default is 'PZ' for all-electron calculations,
+            it is read from the PP file in a PP calculation
 
       latt= 1 (0) : (no) Latter correction           (default: no)
       isic= 1 (0) : (no) Self-interaction correction (default: no)
                     (only for all-electron calculation)
+
+      vdw = .true. or .false.                         (default: .false.) 
+             If .true., the frequency dependent polarizability and van der
+             Waals coefficient C6 will be computed in Thomas-Fermi and 
+             von Weizsaecker approximation(only for closed-shell ions).
+             Gradient-corrected DFT not yet implemented. 
+
       prefix                                         (default: 'ld1')
              prefix for file names - only for output file names
              containing the orbitals, logarithmic derivatives, tests
@@ -72,13 +81,6 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       If config is empty the electronic configuration is read from
       the following cards:
 
-      vdw = .true. or .false.                         (default: .false.) 
-             If .true., the frequency dependent polarizability and van der
-             Waals coefficient C6 will be computed in Thomas-Fermi and 
-             von Weizsaecker approximation(only for closed-shell ions).
-             Up to now DFT with gradient correction for correlation energy 
-             has not been implemented yet in this calculation. 
-          
   1.1) optional cards for all-electron calculation
 
       nwf
@@ -184,9 +186,9 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       nconf =   the number of configurations to be tested    (default: 1)
       file_pseudo = file containing the PP                   (default: ' ')
                     (ignored if iswitch=3)
-                    If the file name contains "upf" or "UPF",
+                    If the file name contains  ".upf" or ".UPF",
                     the file is assumed to be in UPF format; 
-                    otherwise, if the file name contains "rrkj3" or "RRKJ3",
+                    otherwise, if the file name contains ".rrkj3" or ".RRKJ3",
                     the old RRKJ format is first tried;
                     otherwise, the old NC format is read.
                     IMPORTANT: in the latter case, all calculations are done
