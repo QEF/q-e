@@ -1,6 +1,6 @@
 
 Quantum-Espresso restart file specifications - VERY PRELIMINARY
-Paolo Giannozzi scripsit AD 2005-11-11 - Last modified 2006-05-10
+Paolo Giannozzi scripsit AD 2005-11-11 - Last modified 2006-06-30
 
 0) rationale
 
@@ -173,6 +173,7 @@ These are meant to be used only by iotk (actually they aren't)
      <INVERSION_SYMMETRY>
      For each symmetry $n:
         <SYMM.$n>
+  </SYMMETRIES>
 
   <PLANE_WAVES>
     <WFC_CUTOFF>
@@ -185,6 +186,7 @@ These are meant to be used only by iotk (actually they aren't)
     <SMOOTH_GVECT_NUMBER>
     <G-VECTORS_FILE>       link to file "gvectors.dat"
     <SMALLBOX_FFT_GRID>
+  </PLANE_WAVES>
 
   <SPIN>
     <LSDA>
@@ -195,18 +197,42 @@ These are meant to be used only by iotk (actually they aren't)
   <EXCHANGE_CORRELATION>
     <DFT>
     <LDA_PLUS_U_CALCULATION>
+    if LDA_PLUS_U_CALCULATION
+        <NUMBER_OF_SPECIES>
+        <HUBBARD_LMAX>
+        <HUBBARD_L>
+        <HUBBARD_U>
+        <HUBBARD_ALPHA>
+    endif
   </EXCHANGE_CORRELATION>
 
   <OCCUPATIONS>
     <SMEARING_METHOD>
+    if gaussian smearing
+        <SMEARING_TYPE>
+        <SMEARING_PARAMETER>
+    endif
     <TETRAHEDRON_METHOD>
+    if use tetrahedra
+        <NUMBER_OF_TETRAHEDRA>
+        for each tetrahedron $t
+           <TETRAHEDRON.$t>
+    endif
     <FIXED_OCCUPATIONS>
-    <INPUT_OCC_UP>
+    if using fixed occupations
+        <INFO>
+        <INPUT_OCC_UP>
+        if lsda
+           <INPUT_OCC_DOWN>
+        endif
+    endif
   </OCCUPATIONS>
 
   <BRILLOUIN_ZONE>
     <NUMBER_OF_K-POINTS>
     <UNITS_FOR_K-POINTS>
+    <MONKHORST_PACK_GRID>
+    <MONKHORST_PACK_OFFSET>
     For each k-point $n:
        <K-POINT.$n>
   </BRILLOUIN_ZONE>
@@ -251,17 +277,25 @@ These are meant to be used only by iotk (actually they aren't)
       <NUMBER_OF_SPIN_COMPONENTS>
       <NUMBER_OF_ELECTRONS>
       <NUMBER_OF_BANDS>
+      <NUMBER_OF_K-POINTS>
       <EIGENVALUES_AND_EIGENVECTORS>
-      For all kpoint $n:
-        <K-POINT.$n>
-           <K-POINT_COORDS>
-           <WEIGHT>
-           <ET.$n>
-           <OCC0.$n>
-           <OCCM.$n>   (optional)
-           <gkvectors> link to file "./K$n/gkvectors.dat"
-           <wfc>       link to file "./K$n/evc.dat" containing
-                       wavefunctions at current step
-           <wfcm>      link to file "./K$n/evcm.dat" (optional)
-                       containing wavefunctions at preceding step
-
+          <MAX_NPW>
+          For all kpoint $n:
+            <K-POINT.$n>
+               <K-POINT_COORDS>
+               <WEIGHT>
+               for each spin $s:
+                  <ET.$s>
+                  <OCC0.$s>
+                  <OCCM.$s>              (optional)
+               <NUMBER_OF_GK-VECTORS>  
+               <GK-VECTORS>              link to file "./K$n/gkvectors.dat"
+               for each spin $s:
+                  <WFC.$s>               link to file "./K$n/evc.dat" containing
+                                         wavefunctions at current step
+                  <WFCM.$s>              link to file "./K$n/evcm.dat" (optional)
+                                         containing wavefunctions at preceding step
+    
+            </K-POINT.$n>
+      </EIGENVALUES_AND_EIGENVECTORS>
+   </BAND_STRUCTURE>

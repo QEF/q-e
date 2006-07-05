@@ -1190,15 +1190,21 @@ With some precompiled lapack libraries, you may need to add
 \paragraph{Linux PCs with Portland Group compiler (pgf90)}
 
 \hfill\break
-Quantum-ESPRESSO does not work reliably, or not at all, with some 
-versions (in particular, 5.2) of the Portland Group compiler.
-We think that this is due to compiler bugs, not to Quantum-ESPRESSO
-bugs. In any event, use the latest version of each release of the 
-compiler, with patches if available: see the Portland Group web
-site,\hfill\break
+Quantum-ESPRESSO does not work reliably, or not at all, with many
+versions of the Portland Group compiler (in particular, v.5.2
+and 6.0). Version 5.1 used to work, v.6.1 is reported to work
+(info from Paolo Cazzato). Use the latest version of each release 
+of the compiler, with patches if available: see the Portland Group 
+web site,\hfill\break
 \htmladdnormallink%
 {\texttt{http://www.pgroup.com/faq/install.htm\#release\_info}}%
 {http://www.pgroup.com/faq/install.htm\#release\_info}
+
+\paragraph{Linux PCs with Pathscale compiler}
+
+Versions 2.3 ad 2.4 of the Pathscale compiler crash when compiling
+\texttt{CPV/phasefactors.f90}. Workaround: replace \texttt{SUM(na(1:nsp))}
+with \texttt{nat} (info by Paolo Cazzato; fixed in version \version).
 
 \paragraph{Linux PCs (Pentium) with Intel compiler (ifort, formerly
 ifc)}
@@ -1336,13 +1342,13 @@ something appropriate to your configuration):
 64-bit CPUs like the AMD Opteron and the Intel Itanium are
 supported and should work both in 32-bit emulation and in
 64-bit mode (in the latter case, \texttt{-D\_\_LINUX64} is 
-needed among the preprocessing flags). Both the PGI and the
+needed among the preprocessing flags). Both the Portland and the
 Intel compiler (v8.1 EM64T-edition, available via Intel Premier 
 support) should work. 64-bit executables can address a 
 much larger memory space, but apparently they are not especially
 faster than 32-bit executables. The Intel compiler has been 
 reported to be more reliable and to produce faster executables 
-wrt the PGI compiler. You may also try with g95.
+wrt the Portland compiler. You may also try with g95.
 
 \paragraph{Linux PC clusters with MPI}
 
