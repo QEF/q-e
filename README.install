@@ -12,8 +12,9 @@ http://www.pwscf.org/guide.htm
 To install Quantum-ESPRESSO from source, you need C and Fortran-95
 compilers (Fortran-90 is not sufficient, but most "Fortran-90"
 compilers are actually Fortran-95-compliant).
-If you don't have a commercial Fortran-95 compiler, you may install
-the free "g95" compiler (http://www.g95.org/).
+If you don't have a commercial Fortran-95 compiler, you may install the 
+free "g95" compiler (http://www.g95.org/) or the GNU fortran compiler 
+"gfortran" (http://www.gfortran.org/).
 You also need a minimal Unix environment: basically, a command shell
 (e.g., "bash" or "tcsh") and the utilities "make", "awk" and "sed".
 MS-Windows users need to have Cygwin (a UNIX environment which runs

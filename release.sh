@@ -97,7 +97,7 @@ tar -czf $TMPDIR/espresso-$VERSION.tar.gz \
                             $TMPDIR/PW/      $TMPDIR/PP/ $TMPDIR/PH/ \
                             $TMPDIR/Gamma/   $TMPDIR/PWCOND/ \
                             $TMPDIR/D3/      $TMPDIR/pwtools/ \
-                            $TMPDIR/CPV/  \
+                            $TMPDIR/CPV/     $TMPDIR/VIB/    \
 		            $TMPDIR/atomic/  $TMPDIR/atomic_doc/ \
                             $TMPDIR/pseudo/  $TMPDIR/examples/ $TMPDIR/$GUI
 cd $TMPDIR
