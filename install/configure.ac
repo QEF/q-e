@@ -1,4 +1,4 @@
-AC_INIT(ESPRESSO, 3.0, , espresso)
+AC_INIT(ESPRESSO, 3.1, , espresso)
 
 # -----------------------------
 # application-specific settings
@@ -56,7 +56,7 @@ AC_CANONICAL_BUILD
 
 # many HPC systems are configured so that running parallel programs
 # interactively is disabled: on those systems, AC_PROG_F77 and AC_PROG_CC
-# would fail because they can't run the compiled executables
+# would fail because they can't run the compiled executables.
 # to work around that, let's pretend we are cross-compiling even if we aren't
 # !!! this relies on undocumented Autoconf behavior !!! 
 if test "$host" = "" ; then host=$build ; fi
@@ -85,14 +85,14 @@ echo checking architecture... $arch
 case $arch in
 ia64 | amd64 )
 	try_mpif90="mpif90"
-	try_f90="ifort ifc efc pgf90 g95 f90"
+	try_f90="ifort ifc efc pgf90 pathf95 g95 f90"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX64"
 	;;
 ia32 )
 	try_mpif90="mpif90"
-	try_f90="ifort ifc pgf90 g95 f90"
+	try_f90="ifort ifc pgf90 pathf95 g95 f90"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__LINUX"
@@ -176,6 +176,7 @@ then
 		echo $ECHO_N "checking version of $mpif90... $ECHO_C"
 		ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
 		pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
+		eko_version=`$mpif90 -version 2>&1 | grep "EKOPath"`
 		g95_version=`$mpif90 -v 2>&1 | grep "g95"`
 		if test "$ifort_version" != ""
 		then
@@ -194,6 +195,11 @@ then
 			version=`echo $pgf_version | awk '{print $2}'`
 			try_f90="pgf90"
 			echo "${ECHO_T}pgf90 $version"
+		elif test "$eko_version" != ""
+		then
+			version=`echo $eko_version | awk '{print $6}'`
+			try_f90="pathf95"
+			echo "${ECHO_T}pathf95 $version"
 		elif test "$g95_version" != ""
 		then
 			version=`echo $g95_version | awk '{print $3}'`
@@ -253,6 +259,10 @@ case "$arch:$f90" in
 *:pgf90 )
 	try_cc="pgcc gcc cc"
 	try_f77="pgf77 $f90"
+	;;
+*:pathf95 )
+	try_cc="pathcc gcc cc"
+	try_f77="$f90"
 	;;
 *:g95 )
 	try_cc="gcc cc"
@@ -358,14 +368,17 @@ case "$arch:$cc:$f90" in
 ia32:icc:ifort* | ia32:icc:ifc* )   ;;
 ia32:gcc:ifort* | ia32:gcc:ifc* )   ;;
 ia32:pgcc:pgf90 )                   ;;
+ia32:pathcc:pathf95 )               ;;
 ia32:gcc:g95 )                      ;;
 ia64:icc:ifort* | ia64:icc:ifc* )   ;;
 ia64:gcc:ifort* | ia64:gcc:ifc* )   ;;
 ia64:pgcc:pgf90 )                   ;;
+ia64:pathcc:pathf95 )               ;;
 ia64:gcc:g95 )                      ;;
 amd64:icc:ifort* | amd64:icc:ifc* ) ;;
 amd64:gcc:ifort* | amd64:gcc:ifc* ) ;;
 amd64:pgcc:pgf90 )                  ;;
+amd64:pathcc:pathf95 )              ;;
 amd64:gcc:g95 )                     ;;
 aix:mpcc*:mpxlf* )                  ;;
 aix:xlc*:*xlf* | aix:cc:*xlf* )     ;;
@@ -418,6 +431,15 @@ ia64:pgf* | amd64:pgf* )
 	try_ldflags=""
 	try_ldflags_static="-Bstatic"
 	try_dflags="$try_dflags -D__PGI"
+	;;
+ia64:path* | amd64:path* )
+	try_fflags="-march=auto -O2"
+	try_f90flags="\$(FFLAGS)"
+	try_fflags_noopt="-O0"
+	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
+	try_ldflags=""
+	try_ldflags_static="-static"
+	try_dflags="$try_dflags -D__EKO"
 	;;
 ia32:ifort* )
         try_fflags="-O2 -tpp6 -assume byterecl"
@@ -478,6 +500,15 @@ ia32:pgf* )
 	try_ldflags=""
 	try_ldflags_static="-Bstatic"
 	try_dflags="$try_dflags -D__PGI"
+	;;
+ia32:path* )
+	try_fflags="-march=auto -O2"
+	try_f90flags="\$(FFLAGS)"
+	try_fflags_noopt="-O0"
+	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
+	try_ldflags=""
+	try_ldflags_static="-static"
+	try_dflags="$try_dflags -D__EKO"
 	;;
 *:g95 )
 	try_fflags="-O3 -cpp"
@@ -599,6 +630,11 @@ case "$arch:$cc" in
 	try_cflags="-fast"
 	c_ldflags=""
 	try_cpp="cpp"
+	;;
+*:pathcc )
+	try_cflags="-O3"
+	c_ldflags=""
+	try_cpp="pathcc -E"
 	;;
 cygwin:gcc )
         try_cflags="-O3 -fomit-frame-pointer"
@@ -749,6 +785,30 @@ then
 		AC_SEARCH_LIBS(dgemm, blas, have_blas=1 blas_libs="$LIBS")
 		;;
 
+	amd64:path* )
+		# check for acml
+                try_libdirs="/opt/acml*/pathscale64/lib/"
+                try_libdirs="$libdirs $try_libdirs $ld_library_path"
+
+		for dir in none $try_libdirs
+		do
+			unset ac_cv_search_dgemm # clear cached value
+			if test "$dir" = "none"
+			then
+				try_loption=
+			else
+				echo $ECHO_N "in $dir: " $ECHO_C
+				try_loption="-L$dir"
+			fi
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags $try_loption"
+ 			LIBS=""
+			AC_SEARCH_LIBS(dgemm, acml, have_blas=1 blas_libs="$try_loption $LIBS")
+			if test "$ac_cv_search_dgemm" != "no"
+			then break ; fi
+		done
+       	        ;;
+
 	ia64:* )
 		# check for mkl (in several directories)
 		try_libdirs="/opt/intel/mkl/8.0/lib/64
@@ -872,7 +932,7 @@ then
 
 	sparc:* )
 		# check for SUNperf library
-		unset ac_cv_search_zggev # clear cached value
+		unset ac_cv_search_dgemm # clear cached value
 		FFLAGS="$test_fflags"
 		LDFLAGS="$test_ldflags"
 		LIBS=""
@@ -968,7 +1028,29 @@ then
 	# search
 	case "$arch:$f90" in
 
-	ia32:* | ia64:* | amd64:* )
+	ia32:* | ia64:* )
+		# check for mkl_lapack
+		if test "$have_mkl" -ne 0
+		then
+			unset ac_cv_search_zggev # clear cached value
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags"
+			LIBS="$blas_libs"
+			AC_SEARCH_LIBS(zggev, mkl_lapack, have_lapack=1
+				       lapack_libs="-lmkl_lapack")
+		fi
+		;;
+
+        amd64:path* )
+                # check for acml
+                unset ac_cv_search_zggev # clear cached value
+                FFLAGS="$test_fflags"
+                LDFLAGS="$test_ldflags"
+                LIBS="$blas_libs"
+                AC_SEARCH_LIBS(zggev, acml, have_lapack=1 lapack_libs="$LIBS")
+                ;;
+
+	amd64:* )
 		# check for mkl_lapack
 		if test "$have_mkl" -ne 0
 		then

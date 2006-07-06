@@ -26,6 +26,7 @@ Compilers:
       __G95       g95 compiler
       __PGI       Portland Group compiler (workarounds for compiler bugs)
       __INTEL     Intel ifc and ifort compilers (workaround for compiler bugs)
+      __EKO       QLogic PathScale EKOPath compiler FOR AMD64 and EM64T
 Libraries:
       __FFTW      FFT routines from the FFTW library
       __FFTW3     as above, version 3

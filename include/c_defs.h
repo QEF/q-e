@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2002-2004 PWSCF,FPMD,CPV groups
+  Copyright (C) 2002-2006 Quantum-ESPRESSO group
   This file is distributed under the terms of the
   GNU General Public License. See the file `License'
   in the root directory of the present distribution,
@@ -12,7 +12,7 @@
       capital letters, no added underscores (leave as is)
    XLF (Aix, Mac OS-X), HP-UX:
       lowercase, with no added underscores 
-   G95, Alpha Linux:
+   G95, EKOPath, Alpha Linux:
       lowercase, with one added underscore if the name does
       not contain underscores, with two if it does!
    Most other cases: 
@@ -49,7 +49,7 @@
 #  define C_MKDIR c_mkdir
 #  define MEMSTAT memstat
 
-#  elif defined (__G95) || (defined __ALPHA && defined __LINUX64)
+#  elif defined (__G95) || defined (__EKO) || (defined __ALPHA && defined __LINUX64)
 
 /* convert to lowercase, add one or two underscores */
 
