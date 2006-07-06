@@ -1,6 +1,5 @@
 \documentclass[12pt,a4paper]{article}
- \def\version{3.1}
- \def\developersmail{\texttt{pwscf@pwscf.org}}
+ \def\version{3.1.1}
 
  \usepackage{epsfig}
  \usepackage{html}
@@ -151,21 +150,21 @@ You can contribute to a better Quantum-ESPRESSO by
   message alone is usually not a sufficient piece of information
 \item
   adding new features to the code. If you like to have something added
-  to Quantum-ESPRESSO, contact the developers at \developersmail. 
+  to Quantum-ESPRESSO, contact the developers.
   Unless there are technical reasons not to include your changes,
   we will try to make you happy (no warranty that we will actually succeed)
 \end{itemize}
   If your changes are straightforward, it will be sufficient to send 
-  the modified file(s), or patches, to \developersmail.
+  the modified file(s), or patches, to the developers.
 
-  For extensive changes, the ideal procedure is as follows:
+For extensive changes, the ideal procedure is as follows:
 \begin{itemize}
    \item download the current CVS version (see Sec.\ref{cvs})
     and work on that version
    \item when you are happy with your modified version, make a copy of it,
     then update your copy with \texttt{cvs update}
   \item if you get no conflicts and everything is still working, you have
-    won. Send the modified files to \developersmail.
+    won. Send the modified files to the developers.
   \item if you get conflicts, or if the updated code doesn't work any
     longer, you haven't yet won. Look into the conflicting section:
     in most cases conflicts are trivial (format changes, white spaces) 
@@ -183,14 +182,14 @@ You can contribute to a better Quantum-ESPRESSO by
     to update to the CVS version with tag {\em tag}.
     In all cases, use \texttt{cvs update -A} to revert to the last version.
 \end{itemize}
-% Presently the following parts of the distribution have a nonofficial
-% maintainer (i.e. somebody who knows better than the others what is 
-% going on there):
-% Configure, installation: Gerardo Ballabio
-% LDA+U, phonon: Stefano de Gironcoli
-% tetrahedra, gamma phonon: Paolo Giannozzi
-% spin-orbit: Andrea Dal Corso
-% FPMD: Carlo Cavazzoni
+
+Developers can be reached at the e-mail address \texttt{pwscf@pwscf.org}.
+Since this may change in the future, check the web site for 
+Quantum-ESPRESSO: 
+\htmladdnormallink{\texttt{http://www.quantum-espresso.org/}}%
+{http://www.quantum-espresso.org/}, or for
+PWscf: \htmladdnormallink{\texttt{http://www.pwscf.org}}%
+{http://www.pwscf.org/License.txt}.
 
 \section{Structure of the distribution}
 
