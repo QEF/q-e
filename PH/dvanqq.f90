@@ -47,7 +47,7 @@ subroutine dvanqq
   complex(DP), pointer :: qgmq (:)
   ! the augmentation function at q+G
 
-  if (recover) return
+  if (recover.and..not.ldisp) return
 
   if (.not.okvan) return
 

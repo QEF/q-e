@@ -33,7 +33,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   use pwcom
   USE uspp_param,           ONLY : nhm
   USE control_ph,           ONLY : irr0, niter_ph, nmix_ph, elph, tr2_ph, &
-                                   alpha_pv, lgamma, convt, nbnd_occ, alpha_mix
+                                   alpha_pv, lgamma, convt, nbnd_occ, &
+                                   alpha_mix, ldisp
   USE nlcc_ph,              ONLY : nlcc_any
   USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
                                    iuwfc, lrwfc, iunrec, iudvscf
@@ -244,7 +245,12 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
               !
               ! After the first iteration dvbare_q*psi_kpoint is read from file
               !
-              call davcio (dvpsi, lrbar, iubar, nrec, - 1)
+              if (ldisp.and.kter==1)  then
+                 call dvqpsi_us (ik, mode, u (1, mode), .false. )
+                 call davcio (dvpsi, lrbar, iubar, nrec, 1)
+              else
+                 call davcio (dvpsi, lrbar, iubar, nrec, - 1)
+              endif
               !
               ! calculates dvscf_q*psi_k in G_space, for all bands, k=kpoint
               ! dvscf_q from previous iteration (mix_potential)
