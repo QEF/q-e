@@ -31,7 +31,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, igk, &
                                    npw, current_k, btype
   USE control_flags,        ONLY : diis_ndim, ethr, lscf, max_cg_iter, &
-                                   isolve, istep, reduce_io
+                                   isolve, istep, reduce_io, conv_ions
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE scf,                  ONLY : vltot
   USE lsda_mod,             ONLY : current_spin, lsda, isk
@@ -395,6 +395,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        !
        USE becmod,              ONLY : becp, becp_nc
        USE complex_diis_module, ONLY : cdiisg
+       USE control_flags,       ONLY : lbands
        USE check_stop,          ONLY : check_stop_now
        !
        IMPLICIT NONE
@@ -748,8 +749,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           CALL save_in_cbands( iter, ik, dr2 )
           !
-          IF ( .not.lscf) THEN
-             IF (check_stop_now() ) call stop_run(.FALSE.)
+          IF (lbands) THEN
+             IF (check_stop_now() )  call stop_run(.FALSE.)
           ENDIF
        END DO k_loop
        !

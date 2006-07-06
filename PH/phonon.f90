@@ -28,7 +28,7 @@ PROGRAM phonon
   USE lsda_mod,        ONLY : nspin
   USE gvect,           ONLY : nrx1, nrx2, nrx3
   USE control_flags,   ONLY : restart, lphonon, tr2, &
-                              mixing_beta, lscf, david, isolve
+                              mixing_beta, lscf, lbands, david, isolve
   USE qpoint,          ONLY : xq, nksq
   USE disp,            ONLY : nqs, x_q
   USE control_ph,      ONLY : ldisp, lnscf, lgamma, convt, epsil, trans, &
@@ -216,6 +216,7 @@ PROGRAM phonon
         !
         lphonon           = .TRUE.
         lscf              = .FALSE.
+        lbands            = .FALSE.
         restart           = .FALSE.
         restart_bfgs      = .FALSE.
         startingconfig    = 'input'
