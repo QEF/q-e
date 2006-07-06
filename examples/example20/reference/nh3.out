@@ -10,7 +10,7 @@
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:50:47  29Jun2006               
+   This run was started on:   3:50:17   6Jul2006               
 
    Serial Build
 
@@ -345,7 +345,7 @@
 
   -18.84   -1.04   17.27   25.45
  
-   Allocated memory (kb) =      1923
+   Allocated memory (kb) =      1922
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -437,7 +437,7 @@
 
   -22.45  -10.25   -7.74   -2.25
  
-   Allocated memory (kb) =      1975
+   Allocated memory (kb) =      1974
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -529,7 +529,7 @@
 
   -21.68  -10.59   -9.90   -4.72
  
-   Allocated memory (kb) =      1975
+   Allocated memory (kb) =      1974
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -621,7 +621,7 @@
 
   -21.17  -10.70  -10.37   -5.43
  
-   Allocated memory (kb) =      1975
+   Allocated memory (kb) =      1974
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -713,7 +713,7 @@
 
   -20.94  -10.77  -10.44   -5.74
  
-   Allocated memory (kb) =      1975
+   Allocated memory (kb) =      1974
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -805,7 +805,7 @@
 
   -20.84  -10.77  -10.46   -5.88
  
-   Allocated memory (kb) =      1975
+   Allocated memory (kb) =      1974
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -897,7 +897,7 @@
 
   -20.79  -10.75  -10.47   -5.96
  
-   Allocated memory (kb) =      1975
+   Allocated memory (kb) =      1974
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -989,7 +989,7 @@
 
   -20.77  -10.73  -10.48   -5.99
  
-   Allocated memory (kb) =      1975
+   Allocated memory (kb) =      1974
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -1081,7 +1081,7 @@
 
   -20.75  -10.71  -10.48   -6.01
  
-   Allocated memory (kb) =      1975
+   Allocated memory (kb) =      1974
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -1173,7 +1173,7 @@
 
   -20.74  -10.70  -10.49   -6.02
  
-   Allocated memory (kb) =      1975
+   Allocated memory (kb) =      1974
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -1218,7 +1218,7 @@
   100  0.00007    0.0    0.0   -11.71674   -11.71674   -11.71673   -11.71667  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: .//nh3_mol_51.save
-   restart file written in    0.091 sec.
+   restart file written in    0.092 sec.
 
 
 
@@ -1235,27 +1235,27 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     4.52s CPU
-     main_loop    :   159.48s CPU (     100 calls,   1.595 s avg)
-     formf        :     1.38s CPU
-     calphi       :     0.26s CPU (     101 calls,   0.003 s avg)
-     ortho        :     0.80s CPU (     101 calls,   0.008 s avg)
-     updatc       :     0.18s CPU (     101 calls,   0.002 s avg)
-     gram         :     0.00s CPU
-     prefor       :     0.04s CPU (     101 calls,   0.000 s avg)
-     strucf       :     0.89s CPU (     101 calls,   0.009 s avg)
-     nlsm1        :     0.09s CPU (     101 calls,   0.001 s avg)
-     nlsm2        :     0.27s CPU (     101 calls,   0.003 s avg)
-     fft          :    65.65s CPU (     808 calls,   0.081 s avg)
-     fftw         :    27.69s CPU (     606 calls,   0.046 s avg)
+     initialize   :     4.49s CPU
+     main_loop    :   157.27s CPU (     100 calls,   1.573 s avg)
+     formf        :     1.39s CPU
+     calphi       :     0.25s CPU (     101 calls,   0.002 s avg)
+     ortho        :     0.79s CPU (     101 calls,   0.008 s avg)
+     updatc       :     0.14s CPU (     101 calls,   0.001 s avg)
+     gram         :     0.01s CPU
+     prefor       :     0.06s CPU (     101 calls,   0.001 s avg)
+     strucf       :     0.88s CPU (     101 calls,   0.009 s avg)
+     nlsm1        :     0.10s CPU (     101 calls,   0.001 s avg)
+     nlsm2        :     0.25s CPU (     101 calls,   0.002 s avg)
+     fft          :    64.14s CPU (     808 calls,   0.079 s avg)
+     fftw         :    27.53s CPU (     606 calls,   0.045 s avg)
      rsg          :     0.01s CPU (     101 calls,   0.000 s avg)
  
  
  
-     CP           :  2m44.39s CPU time
+     CP           :  2m42.20s CPU time
 
  
-   This run was terminated on:   3:53:32  29Jun2006            
+   This run was terminated on:   3:53: 0   6Jul2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

@@ -10,7 +10,7 @@
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:49:25  29Jun2006               
+   This run was started on:   3:48:56   6Jul2006               
 
    Serial Build
 
@@ -292,7 +292,7 @@
  
 
    reading restart file: .//h2o_mol_51.save
-   restart file read in    0.045 sec.
+   restart file read in    0.046 sec.
 
  nprint_nfi=           -2
  nprint_nfi=          100
@@ -353,7 +353,7 @@
 
   -24.88  -12.71   -8.94   -6.92
  
-   Allocated memory (kb) =      1911
+   Allocated memory (kb) =      1914
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -427,7 +427,7 @@
 
   -24.90  -12.72   -8.96   -6.94
  
-   Allocated memory (kb) =      1911
+   Allocated memory (kb) =      1914
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -501,7 +501,7 @@
 
   -24.89  -12.72   -8.97   -6.95
  
-   Allocated memory (kb) =      1911
+   Allocated memory (kb) =      1914
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -575,7 +575,7 @@
 
   -24.87  -12.69   -8.95   -6.93
  
-   Allocated memory (kb) =      1911
+   Allocated memory (kb) =      1914
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -649,7 +649,7 @@
 
   -24.89  -12.69   -8.98   -6.94
  
-   Allocated memory (kb) =      1911
+   Allocated memory (kb) =      1914
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -708,26 +708,26 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     4.57s CPU
-     main_loop    :    76.15s CPU (      50 calls,   1.523 s avg)
-     formf        :     1.43s CPU
-     calphi       :     0.10s CPU (      51 calls,   0.002 s avg)
-     ortho        :     0.40s CPU (      51 calls,   0.008 s avg)
-     updatc       :     0.12s CPU (      51 calls,   0.002 s avg)
-     prefor       :     0.04s CPU (      51 calls,   0.001 s avg)
-     strucf       :     0.37s CPU (      51 calls,   0.007 s avg)
-     nlsm1        :     0.07s CPU (      51 calls,   0.001 s avg)
-     nlsm2        :     0.09s CPU (      51 calls,   0.002 s avg)
-     fft          :    32.24s CPU (     408 calls,   0.079 s avg)
-     fftw         :    13.84s CPU (     306 calls,   0.045 s avg)
+     initialize   :     4.60s CPU
+     main_loop    :    76.16s CPU (      50 calls,   1.523 s avg)
+     formf        :     1.45s CPU
+     calphi       :     0.04s CPU (      51 calls,   0.001 s avg)
+     ortho        :     0.38s CPU (      51 calls,   0.007 s avg)
+     updatc       :     0.10s CPU (      51 calls,   0.002 s avg)
+     prefor       :     0.05s CPU (      51 calls,   0.001 s avg)
+     strucf       :     0.38s CPU (      51 calls,   0.007 s avg)
+     nlsm1        :     0.06s CPU (      51 calls,   0.001 s avg)
+     nlsm2        :     0.04s CPU (      51 calls,   0.001 s avg)
+     fft          :    32.44s CPU (     408 calls,   0.080 s avg)
+     fftw         :    13.76s CPU (     306 calls,   0.045 s avg)
      rsg          :     0.00s CPU (      51 calls,   0.000 s avg)
  
  
  
-     CP           :  1m20.93s CPU time
+     CP           :  1m20.95s CPU time
 
  
-   This run was terminated on:   3:50:46  29Jun2006            
+   This run was terminated on:   3:50:17   6Jul2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

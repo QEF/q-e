@@ -10,7 +10,7 @@
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:48: 4  29Jun2006               
+   This run was started on:   3:47:35   6Jul2006               
 
    Serial Build
 
@@ -347,7 +347,7 @@
 
   -25.31  -13.02   -9.03   -7.12
  
-   Allocated memory (kb) =      1911
+   Allocated memory (kb) =      1914
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -426,7 +426,7 @@
 
   -25.12  -12.90   -9.00   -7.06
  
-   Allocated memory (kb) =      1911
+   Allocated memory (kb) =      1914
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -505,7 +505,7 @@
 
   -25.02  -12.83   -8.98   -7.01
  
-   Allocated memory (kb) =      1911
+   Allocated memory (kb) =      1914
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -584,7 +584,7 @@
 
   -24.96  -12.79   -8.97   -6.98
  
-   Allocated memory (kb) =      1911
+   Allocated memory (kb) =      1914
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -663,7 +663,7 @@
 
   -24.93  -12.76   -8.96   -6.96
  
-   Allocated memory (kb) =      1911
+   Allocated memory (kb) =      1914
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -722,26 +722,26 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     4.67s CPU
-     main_loop    :    76.34s CPU (      50 calls,   1.527 s avg)
-     formf        :     1.45s CPU
-     calphi       :     0.13s CPU (      51 calls,   0.003 s avg)
-     ortho        :     0.45s CPU (      51 calls,   0.009 s avg)
+     initialize   :     4.60s CPU
+     main_loop    :    75.70s CPU (      50 calls,   1.514 s avg)
+     formf        :     1.44s CPU
+     calphi       :     0.15s CPU (      51 calls,   0.003 s avg)
+     ortho        :     0.41s CPU (      51 calls,   0.008 s avg)
      updatc       :     0.10s CPU (      51 calls,   0.002 s avg)
      prefor       :     0.00s CPU
      strucf       :     0.01s CPU
-     nlsm1        :     0.08s CPU (      51 calls,   0.002 s avg)
-     nlsm2        :     0.02s CPU (       6 calls,   0.003 s avg)
-     fft          :    32.60s CPU (     408 calls,   0.080 s avg)
-     fftw         :    14.52s CPU (     306 calls,   0.047 s avg)
-     rsg          :     0.01s CPU (      51 calls,   0.000 s avg)
+     nlsm1        :     0.07s CPU (      51 calls,   0.001 s avg)
+     nlsm2        :     0.04s CPU (       6 calls,   0.007 s avg)
+     fft          :    32.77s CPU (     408 calls,   0.080 s avg)
+     fftw         :    14.16s CPU (     306 calls,   0.046 s avg)
+     rsg          :     0.00s CPU (      51 calls,   0.000 s avg)
  
  
  
-     CP           :  1m21.23s CPU time
+     CP           :  1m20.50s CPU time
 
  
-   This run was terminated on:   3:49:25  29Jun2006            
+   This run was terminated on:   3:48:56   6Jul2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
