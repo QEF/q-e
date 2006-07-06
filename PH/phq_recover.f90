@@ -46,6 +46,7 @@ subroutine phq_recover
      !
      ! partially calculated results
      !
+     if (okvan.and.irr0>0) read (iunrec) int1, int2
      read (iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, &
           zstarue0
      !

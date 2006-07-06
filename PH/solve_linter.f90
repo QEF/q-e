@@ -514,6 +514,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
      write (iunrec) irr
      !
+     if (okvan) write (iunrec) int1, int2
+     !
      ! partially calculated results
      !
      write (iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, zstarue0
