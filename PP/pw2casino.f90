@@ -67,7 +67,7 @@ SUBROUTINE compute_casino
        nrxx, g, gg, ecutwfc, gcutm, nl, igtongl
   USE klist , ONLY: nks, nelec, xk
   USE lsda_mod, ONLY: lsda, nspin
-  USE scf, ONLY: rho, rho_core
+  USE scf, ONLY: rho, rho_core, rhog, rhog_core
   USE vlocal, ONLY: vloc, vnew, strf
   USE wvfct, ONLY: npw, npwx, nbnd, gamma_only, igk, g2kin, wg, et
   USE uspp, ONLY: nkb, vkb, dvan
@@ -216,9 +216,8 @@ SUBROUTINE compute_casino
   !
   ! compute hartree and xc contribution
   !
-  CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-       nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-       ehart, etxc, vtxc, etotefield, charge, vnew )
+  CALL v_of_rho( rho, rhog, rho_core, rhog_core, &
+                 ehart, etxc, vtxc, etotefield, charge, vnew )
   !
   etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)
   !

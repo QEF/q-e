@@ -44,14 +44,13 @@ subroutine cg_setupdgc
   fac=1.d0/DBLE(nspin)
   if (nlcc_any) then
      do is=1,nspin
-        do k=1,nrxx
-           rho(k,is)=rho(k,is)+ rho_core(k)*fac
-        enddo
+        rho(:,is)  = fac * rho_core(:)  + rho(:,is)
+        rhog(:,is) = fac * rhog_core(:) + rhog(:,is)
      enddo
   endif
   do is=1,nspin
-     call gradient (nrx1,nrx2,nrx3,nr1,nr2,nr3,nrxx,rho(1,is),   &
-          ngm,g,nl,alat,grho(1,1,is))
+     call gradrho (nrx1,nrx2,nrx3,nr1,nr2,nr3,nrxx,rhog(1,is),   &
+          ngm,g,nl,grho(1,1,is))
   enddo
   !
   if (nspin.eq.1) then
@@ -118,9 +117,8 @@ subroutine cg_setupdgc
   endif
   if (nlcc_any) then
      do is=1,nspin
-        do k=1,nrxx
-           rho(k,is)=rho(k,is)- rho_core(k)*fac
-        enddo
+        rho(:,is)  = rho(:,is)  - fac * rho_core(:)
+        rhog(:,is) = rhog(:,is) - fac * rhog_core(:)
      enddo
   endif
   call stop_clock('setup_dgc')

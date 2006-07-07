@@ -342,6 +342,9 @@ MODULE scf
        vltot(:),       &! the local potential in real space
        vrs(:,:),       &! the total pot. in real space (smooth grig)
        rho_core(:)      ! the core charge in real space
+  COMPLEX(DP), ALLOCATABLE :: &
+       rhog(:,:),      &! the charge density in reciprocal space
+       rhog_core(:)     ! the core charge in reciprocal space
   !
 END MODULE scf
 !

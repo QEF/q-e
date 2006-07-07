@@ -1,10 +1,11 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine allocate_fft
@@ -13,14 +14,13 @@ subroutine allocate_fft
   !     grid and allocate memory for all the arrays which depend upon
   !     these dimensions
   !
-#include "f_defs.h"
   USE io_global, ONLY : stdout
   USE gvect,     ONLY : nr1, nr2, nr3, nrxx, ngm, g, gg, nl, nlm, &
        ig1, ig2, ig3, eigts1, eigts2, eigts3, igtongl
   USE gsmooth,   ONLY : nr1s,nr2s,nr3s,nrxxs,ngms, nls, nlsm, doublegrid
   USE ions_base, ONLY : nat
   USE lsda_mod,  ONLY : nspin
-  USE scf,       ONLY : rho, vr, vltot, vrs, rho_core
+  USE scf,       ONLY : rho, rhog, vr, vltot, vrs, rho_core, rhog_core
   USE vlocal,    ONLY : vnew
   USE wvfct,     ONLY : gamma_only
   USE noncollin_module, ONLY : pointlist, factlist, pointnum, r_loc, &
@@ -60,11 +60,13 @@ subroutine allocate_fft
   allocate (ig1(  ngm))    
   allocate (ig2(  ngm))    
   allocate (ig3(  ngm))    
-  allocate (rho( nrxx, nspin))    
+  allocate (rho( nrxx, nspin))
+  ALLOCATE( rhog( ngm, nspin ) )
   allocate (vr( nrxx,nspin))    
   allocate (vltot( nrxx))    
   allocate (vnew  ( nrxx, nspin))    
-  allocate (rho_core( nrxx))    
+  allocate (rho_core( nrxx))
+  ALLOCATE( rhog_core( ngm ) )
   allocate (psic( nrxx))    
   allocate (vrs( nrxx, nspin))    
   if (doublegrid) then

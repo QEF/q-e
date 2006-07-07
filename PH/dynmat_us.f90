@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,14 +14,23 @@ SUBROUTINE dynmat_us()
   !  This routine calculates the electronic term: <psi|V"|psi>
   !  of the dynamical matrix.
   !
-  USE ions_base, ONLY : nat, ityp, ntyp => nsp, tau
-  USE pwcom
-  USE wavefunctions_module,  ONLY: evc
-  USE io_files, ONLY: iunigk
-  USE kinds, ONLY : DP
-  USE uspp_param, ONLY: nh
+  USE kinds,                ONLY : DP
+  USE constants,            ONLY : tpi
+  USE ions_base,            ONLY : nat, ityp, ntyp => nsp, tau
+  USE uspp,                 ONLY : deeq, nkb, vkb, qq
+  USE scf,                  ONLY : rho
+  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+  USE gvect,                ONLY : g, ngm, nl, igtongl
+  USE wvfct,                ONLY : npw, npwx, nbnd, igk, wg, et
+  USE lsda_mod,             ONLY : nspin, lsda, current_spin, isk
+  USE vlocal,               ONLY : vloc
+  USE klist,                ONLY : xk
+  USE wavefunctions_module, ONLY : evc
+  USE cell_base,            ONLY : omega, tpiba2
+  USE io_files,             ONLY : iunigk
+  USE uspp_param,           ONLY : nh
   USE phcom
-  USE mp_global, ONLY : my_pool_id
+  USE mp_global,            ONLY : my_pool_id
 
   IMPLICIT NONE
   INTEGER :: icart, jcart, na_icart, na_jcart, na, nb, ng, nt, ik, &

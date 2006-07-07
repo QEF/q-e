@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,20 +8,28 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------
-subroutine d3vrho
+subroutine d3vrho()
   !-----------------------------------------------------------------------
   !
   !  This routine calculates the electronic term: <psi|V"'|psi>
   !  of the third order dynamical matrix.
   !
-  USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
-  USE kinds, only : DP
-  use pwcom
-  USE uspp_param, ONLY: nh
-  USE wavefunctions_module,  ONLY: evc
-  USE io_files,      ONLY : iunigk
-  use phcom
-  use d3com
+  USE kinds,                ONLY : DP
+  USE constants,            ONLY : tpi
+  USE ions_base,            ONLY : nat, ityp, ntyp => nsp, tau
+  USE uspp,                 ONLY : dvan
+  USE scf,                  ONLY : rho
+  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+  USE gvect,                ONLY : g, ngm, nl, igtongl
+  USE wvfct,                ONLY : npw, npwx, nbnd, igk, wg
+  USE vlocal,               ONLY : vloc
+  USE klist,                ONLY : xk  
+  USE cell_base,            ONLY : omega, tpiba, tpiba2
+  USE uspp_param,           ONLY : nh
+  USE wavefunctions_module, ONLY : evc
+  USE io_files,             ONLY : iunigk
+  USE phcom
+  USE d3com
   !
   implicit none
   integer :: icart, jcart, kcart, na_i, na_j, na_k, na, ng, ir, nt, &

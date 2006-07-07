@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,7 +23,8 @@ SUBROUTINE clean_pw( lflag )
   USE wvfct,                ONLY : igk, igk_l2g, g2kin, &
                                    et, wg, btype, gamma_only
   USE force_mod,            ONLY : force
-  USE scf,                  ONLY : rho, vr, vltot, rho_core, vrs
+  USE scf,                  ONLY : rho, rhog, vr, vltot, &
+                                   rho_core, rhog_core,vrs
   USE wavefunctions_module, ONLY : evc, psic, evc_nc, psic_nc
   USE us,                   ONLY : qrad, tab, tab_at
   USE uspp,                 ONLY : deallocate_uspp
@@ -74,10 +75,12 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( ig2 ) )        DEALLOCATE( ig2 )
   IF ( ALLOCATED( ig3 ) )        DEALLOCATE( ig3 )
   IF ( ALLOCATED( rho ) )        DEALLOCATE( rho )
+  IF ( ALLOCATED( rhog ) )       DEALLOCATE( rhog )
   IF ( ALLOCATED( vr ) )         DEALLOCATE( vr )
   IF ( ALLOCATED( vltot ) )      DEALLOCATE( vltot )
   IF ( ALLOCATED( vnew ) )       DEALLOCATE( vnew )
   IF ( ALLOCATED( rho_core ) )   DEALLOCATE( rho_core )
+  IF ( ALLOCATED( rhog_core ) )  DEALLOCATE( rhog_core )
   IF ( ALLOCATED( psic ) )       DEALLOCATE( psic )
   IF ( ALLOCATED( psic_nc ) )    DEALLOCATE( psic_nc )
   IF ( ALLOCATED( vrs ) )        DEALLOCATE( vrs )

@@ -184,34 +184,33 @@ END SUBROUTINE update_pot
 SUBROUTINE extrapolate_charge( rho_extr )
   !----------------------------------------------------------------------------
   !
-  USE constants,        ONLY : eps32
-  USE io_global,        ONLY : stdout
-  USE kinds,            ONLY : DP
-  USE cell_base,        ONLY : omega, bg, alat
-  USE ions_base,        ONLY : nat, tau, nsp, ityp
-  USE gvect,            ONLY : nrxx, ngm, g, gg, gstart,  nr1, nr2, nr3, nl, &
-                               eigts1, eigts2, eigts3, nrx1, nrx2, nrx3
-  USE lsda_mod,         ONLY : lsda, nspin
-  USE scf,              ONLY : rho, rho_core, vr
-  USE control_flags,    ONLY : alpha0, beta0
-  USE ener,             ONLY : ehart, etxc, vtxc
-  USE extfield,         ONLY : etotefield
-  USE cellmd,           ONLY : lmovecell, omega_old
-  USE vlocal,           ONLY : strf
-  USE noncollin_module, ONLY : noncolin
-  USE noncollin_module, ONLY : factlist, pointlist, pointnum, mcons,&
-                               i_cons, lambda, vtcon, report
-  USE io_files,         ONLY : prefix
-  USE klist,            ONLY : nelec
-  USE io_rho_xml,       ONLY : write_rho, read_rho
+  USE constants,            ONLY : eps32
+  USE io_global,            ONLY : stdout
+  USE kinds,                ONLY : DP
+  USE cell_base,            ONLY : omega, bg, alat
+  USE ions_base,            ONLY : nat, tau, nsp, ityp
+  USE gvect,                ONLY : nrxx, ngm, g, gg, gstart, nr1, nr2, nr3, &
+                                   nl, eigts1, eigts2, eigts3, nrx1, nrx2, nrx3
+  USE lsda_mod,             ONLY : lsda, nspin
+  USE scf,                  ONLY : rho, rhog, rho_core, rhog_core, vr
+  USE wavefunctions_module, ONLY : psic
+  USE control_flags,        ONLY : alpha0, beta0
+  USE ener,                 ONLY : ehart, etxc, vtxc
+  USE extfield,             ONLY : etotefield
+  USE cellmd,               ONLY : lmovecell, omega_old
+  USE vlocal,               ONLY : strf
+  USE noncollin_module,     ONLY : noncolin, factlist, pointlist, pointnum, &
+                                   mcons, i_cons, lambda, vtcon, report
+  USE io_files,             ONLY : prefix
+  USE klist,                ONLY : nelec
+  USE io_rho_xml,           ONLY : write_rho, read_rho
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN) :: rho_extr
   !
   REAL(DP), ALLOCATABLE :: work(:,:), work1(:,:)
-    ! work is the difference between charge density and atomic charge 
-    !   at time t
+    ! work  is the difference between rho and atomic rho at time t
     ! work1 is the same thing at time t-dt
   REAL(DP) :: charge
   !
@@ -370,8 +369,19 @@ SUBROUTINE extrapolate_charge( rho_extr )
      !
   END IF
   !
-  CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                 nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+  ! ... bring extrapolated rho to G-space
+  !
+  DO is = 1, nspin
+     !
+     psic(:) = rho(:,is)
+     !
+     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+     !
+     rhog(:,is) = psic(nl(:))
+     !
+  END DO
+  !
+  CALL v_of_rho( rho, rhog, rho_core, rhog_core, &
                  ehart, etxc, vtxc, etotefield, charge, vr )
   !
   IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
@@ -380,7 +390,8 @@ SUBROUTINE extrapolate_charge( rho_extr )
             '(/,5X,"extrapolated charge ",F10.5,", renormalised to ",F10.5)') &
          charge, nelec
      !
-     rho = rho / charge * nelec
+     rho  = rho  / charge * nelec
+     rhog = rhog / charge * nelec
      !
   END IF
   !

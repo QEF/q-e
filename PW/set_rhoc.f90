@@ -23,7 +23,7 @@ subroutine set_rhoc
   USE gvect,     ONLY : ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                         nrxx, nl, nlm, ngl, gl, igtongl
   USE pseud,     ONLY : a_nlcc, b_nlcc, alpha_nlcc
-  USE scf,       ONLY : rho_core
+  USE scf,       ONLY : rho_core, rhog_core
   USE vlocal,    ONLY : strf
   USE wvfct,     ONLY : gamma_only
   !
@@ -52,7 +52,9 @@ subroutine set_rhoc
   do nt = 1, ntyp
      if (nlcc (nt) ) goto 10
   enddo
-  rho_core(:) = 0.d0
+  
+  rhog_core(:) = 0.D0
+  rho_core(:)  = 0.d0
 
   return
 
@@ -84,6 +86,8 @@ subroutine set_rhoc
         aux(nlm(ng)) = CONJG(aux(nl (ng)))
      end do
   end if
+  !
+  rhog_core(:) = aux(nl(:))
   !
   !   the core charge in real space
   !

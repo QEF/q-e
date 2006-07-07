@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,7 +24,7 @@ SUBROUTINE electrons()
   USE constants,            ONLY : eps8, rytoev
   USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
-  USE ions_base,            ONLY : zv, nat, ntyp => nsp, ityp, tau
+  USE ions_base,            ONLY : zv, nat, nsp, ityp, tau
   USE basis,                ONLY : startingpot
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
                                    nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
@@ -39,15 +39,15 @@ SUBROUTINE electrons()
   USE fixed_occ,            ONLY : f_inp, tfixed_occ
   USE ener,                 ONLY : etot, eband, deband, ehart, vtxc, etxc, &
                                    etxcc, ewld, demet, ef, ef_up, ef_dw 
-  USE scf,                  ONLY : rho, vr, vltot, vrs, rho_core
-  USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix,       &
-                                   iprint, istep, lscf, lmd, conv_elec,       &
+  USE scf,                  ONLY : rho, rhog, rho_core, rhog_core, &
+                                   vr, vltot, vrs 
+  USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
+                                   iprint, istep, lscf, lmd, conv_elec, &
                                    lbands, restart, reduce_io, iverbosity
   USE io_files,             ONLY : prefix, iunwfc, iunocc, nwordwfc, iunpath, &
                                    output_drho, iunefield
-  USE ldaU,                 ONLY : ns, nsnew, eth, Hubbard_U, &
-                                   niter_with_fixed_ns, Hubbard_lmax, &
-                                   lda_plus_u  
+  USE ldaU,                 ONLY : ns, nsnew, eth, Hubbard_U, Hubbard_lmax, &
+                                   niter_with_fixed_ns, lda_plus_u  
   USE extfield,             ONLY : tefield, etotefield  
   USE wavefunctions_module, ONLY : evc, evc_nc, psic
   USE noncollin_module,     ONLY : noncolin, npol, magtot_nc
@@ -69,7 +69,7 @@ SUBROUTINE electrons()
   !  
 #if defined (EXX)
   REAL(DP) :: dexx
-  REAL(DP) :: fock0,  fock1,  fock2
+  REAL(DP) :: fock0, fock1, fock2
 #endif
   INTEGER :: &
       ngkp(npk)        !  number of plane waves summed on all nodes
@@ -81,16 +81,16 @@ SUBROUTINE electrons()
       mag,            &!  local magnetization
       ehomo, elumo     !  highest occupied and lowest onuccupied levels
    INTEGER :: &
-      i,              &!  counter on polarization
-      is,             &!  counter on spins
-      ig,             &!  counter on G-vectors
-      ik,             &!  counter on k points
-      kbnd,           &!  counter on bands
+      i,                 &!  counter on polarization
+      is,                &!  counter on spins
+      ig,                &!  counter on G-vectors
+      ik,                &!  counter on k points
+      kbnd,              &!  counter on bands
       ibnd_up,ibnd_down, &!  counter on bands
-      ibnd,           &!  counter on bands
-      idum,           &!  dummy counter on iterations
-      iter,           &!  counter on iterations
-      ik_              !  used to read ik from restart file
+      ibnd,              &!  counter on bands
+      idum,              &!  dummy counter on iterations
+      iter,              &!  counter on iterations
+      ik_                 !  used to read ik from restart file
   INTEGER :: &
       ldim2           !
   REAL(DP) :: &
@@ -109,14 +109,13 @@ SUBROUTINE electrons()
   !
   ! ... auxiliary variables for calculating and storing rho in G-space
   !
-  COMPLEX(DP), ALLOCATABLE :: rhog(:,:)
   COMPLEX(DP), ALLOCATABLE :: rhognew(:,:)
   REAL(DP),    ALLOCATABLE :: rhonew(:,:)
   !
   ! ... variables needed for electric field calculation
   !
-  COMPLEX(DP), ALLOCATABLE :: psi(:,:)
   INTEGER                  :: inberry
+  COMPLEX(DP), ALLOCATABLE :: psi(:,:)
   !
   !
   CALL start_clock( 'electrons' )
@@ -156,7 +155,7 @@ SUBROUTINE electrons()
   !
   ! ... calculates the ewald contribution to total energy
   !
-  ewld = ewald( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
+  ewld = ewald( alat, nat, nsp, ityp, zv, at, bg, tau, omega, &
                 g, gg, ngm, gcutm, gstart, gamma_only, strf )
   !               
   IF ( reduce_io ) THEN
@@ -188,25 +187,9 @@ SUBROUTINE electrons()
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
-  ! ... bring starting charge density (rho) to G-space (rhog)
-  !
-  IF ( .NOT. ALLOCATED( rhog ) ) ALLOCATE( rhog( ngm, nspin ) )
-  !
-  DO is = 1, nspin
-     !
-     psic(:) = rho(:,is)
-     !
-     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
-     !
-     rhog(:,is) = psic(nl(:))
-     !
-  END DO
-  !
   DO idum = 1, niter
      !
-     IF (idum > 1) THEN
-        IF ( check_stop_now() ) RETURN
-     END IF
+     IF ( idum > 1 .AND. check_stop_now() ) RETURN
      !  
      iter = iter + 1
      !
@@ -233,15 +216,9 @@ SUBROUTINE electrons()
         ! ... tr2_min is set to an estimate of the error on the energy
         ! ... due to diagonalization - used only in the first scf iteration
         !
-        IF ( first ) THEN
-           !
-           tr2_min = nelec * ethr
-           !
-        ELSE
-           !
-           tr2_min = 0.D0
-           !
-        END IF
+        tr2_min = 0.D0
+        !
+        IF ( first ) tr2_min = nelec * ethr
         !
         ! ... diagonalization of the KS hamiltonian
         !
@@ -270,9 +247,7 @@ SUBROUTINE electrons()
            !
         END IF
         !
-        IF (iter > 1) THEN
-           IF ( check_stop_now() ) RETURN
-        END IF
+        IF ( iter > 1 .AND. check_stop_now() ) RETURN
         !
         CALL sum_band()
         !
@@ -342,7 +317,7 @@ SUBROUTINE electrons()
               !
            END IF
            !
-        END IF             
+        END IF
         !
         IF ( .NOT. conv_elec ) THEN
            !
@@ -367,9 +342,8 @@ SUBROUTINE electrons()
            ! ... no convergence yet: calculate new potential from 
            ! ... mixed charge density (i.e. the new estimate) 
            !
-           CALL v_of_rho( rhonew, rho_core, nr1, nr2, nr3, nrx1, nrx2,     &
-                          nrx3, nrxx, nl, ngm, gstart, nspin, g, gg, alat, &
-                          omega, ehart, etxc, vtxc, etotefield, charge, vr )
+           CALL v_of_rho( rhonew, rhog, rho_core, rhog_core, &
+                          ehart, etxc, vtxc, etotefield, charge, vr )
            !
            ! ... estimate correction needed to have variational energy:
            ! ... T + E_ion (eband + deband) are calculated in sum_band
@@ -380,19 +354,20 @@ SUBROUTINE electrons()
            !
            descf = delta_escf()
            !
-           rho (:,:) = rhonew (:,:)
+           rho(:,:) = rhonew(:,:)
            !
            DEALLOCATE( rhonew )
            !
+           ! ... write the charge density to file
+           !
+           CALL write_rho( rho, nspin )
+           !
         ELSE
            !
-           DEALLOCATE (rhog)
+           ! ... convergence reached: store V(out)-V(in) in vnew ( used 
+           ! ... to correct the forces )
            !
-           ! ... convergence reached: store V(out)-V(in) in vnew
-           ! ... (used later for scf correction to the forces )
-           !
-           CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+           CALL v_of_rho( rho, rhog, rho_core, rhog_core, &
                           ehart, etxc, vtxc, etotefield, charge, vnew )
            !
            vnew = vnew - vr
@@ -404,17 +379,17 @@ SUBROUTINE electrons()
            !
         END IF
         !
-        ! ... write the charge density to file 
-        !
-        CALL write_rho( rho, nspin )
-        !
 #if defined (EXX)
-        if (exx_is_active()) then
+        IF ( exx_is_active() ) THEN
+           !
            fock1 = exxenergy2()
            fock2 = fock0
-        else
-           fock0 = 0.d0
-        end if
+           !
+        ELSE
+           !
+           fock0 = 0.D0
+           !
+        END IF
 #endif
         !
         EXIT scf_step
@@ -466,10 +441,10 @@ SUBROUTINE electrons()
      !
      CALL save_in_electrons( iter, dr2 )
      !
-     IF ( ( MOD(iter,report) == 0 ).OR. &
+     IF ( ( MOD( iter, report ) == 0 ) .OR. &
           ( report /= 0 .AND. conv_elec ) ) THEN
         !
-        IF ( noncolin .and. domag ) CALL report_mag()
+        IF ( noncolin .AND. domag ) CALL report_mag()
         !
      END IF
      !
@@ -583,7 +558,7 @@ SUBROUTINE electrons()
      !
 #if defined (EXX)
      !
-     etot = etot - 0.5d0 * fock0
+     etot = etot - 0.5D0*fock0
      !
      IF ( dft_is_hybrid() .AND. conv_elec ) THEN
         !
@@ -595,14 +570,13 @@ SUBROUTINE electrons()
            !
            fock0 = exxenergy2()
            !
-           CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                          nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+           CALL v_of_rho( rho, rhog, rho_core, rhog_core, &
                           ehart, etxc, vtxc, etotefield, charge, vr )
            !
            CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
            !
-           WRITE (stdout,*) " NOW GO BACK TO REFINE HYBRID CALCULATION"
-           WRITE (stdout,*) fock0
+           WRITE( stdout, * ) " NOW GO BACK TO REFINE HYBRID CALCULATION"
+           WRITE( stdout, * ) fock0
            !
            iter = 0
            !
@@ -612,11 +586,11 @@ SUBROUTINE electrons()
         !
         fock2 = exxenergy2()
         !
-        dexx = fock1 - 0.5D0 * ( fock0 + fock2 )
+        dexx = fock1 - 0.5D0*( fock0 + fock2 )
         !
         etot = etot  - dexx
         !
-        WRITE( stdout,*) fock0, fock1, fock2
+        WRITE( stdout, * ) fock0, fock1, fock2
         WRITE( stdout, 9066 ) dexx
         !
         fock0 = fock2
@@ -628,8 +602,7 @@ SUBROUTINE electrons()
      IF ( lda_plus_u ) etot = etot + eth
      IF ( tefield )    etot = etot + etotefield
      !
-     IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. &
-          ( .NOT. lmd ) ) THEN
+     IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. .NOT. lmd ) THEN
         !  
         IF ( dr2 > eps8 ) THEN
            WRITE( stdout, 9081 ) etot, dr2
@@ -673,10 +646,10 @@ SUBROUTINE electrons()
      IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
      !
      IF ( noncolin .AND. domag ) &
-        WRITE( stdout, 9018 ) ( magtot_nc(i), i = 1, 3 ), absmag
+        WRITE( stdout, 9018 ) magtot_nc(1:3), absmag
      !
      IF ( i_cons == 3 .OR. i_cons == 4 )  &
-        WRITE( stdout, 9071 ) bfield(1), bfield(2),bfield(3)
+        WRITE( stdout, 9071 ) bfield(1), bfield(2), bfield(3)
      IF ( i_cons == 5 ) &
         WRITE( stdout, 9072 ) bfield(3)
      IF ( i_cons /= 0 .AND. i_cons < 4 ) &
@@ -782,7 +755,6 @@ SUBROUTINE electrons()
      !-----------------------------------------------------------------------
      SUBROUTINE non_scf()
        !-----------------------------------------------------------------------
-       !
        !
        IMPLICIT NONE
        !
@@ -903,8 +875,6 @@ SUBROUTINE electrons()
        !
        IF ( lberry ) CALL c_phase()
        !
-       IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
-       !
        CALL stop_clock( 'electrons' )
        !
 9000 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs' )
@@ -942,8 +912,8 @@ SUBROUTINE electrons()
              !
           END DO
           !
-          magtot = magtot * omega / ( nr1 * nr2 * nr3 )
-          absmag = absmag * omega / ( nr1 * nr2 * nr3 )
+          magtot = magtot * omega / ( nr1*nr2*nr3 )
+          absmag = absmag * omega / ( nr1*nr2*nr3 )
           !
           CALL mp_sum ( magtot, intra_pool_comm )
           CALL mp_sum ( absmag, intra_pool_comm )
@@ -968,15 +938,15 @@ SUBROUTINE electrons()
           END DO
           !
           CALL mp_sum( magtot_nc, intra_pool_comm )
-          CALL mp_sum( absmag, intra_pool_comm )
+          CALL mp_sum( absmag,    intra_pool_comm )
           !
           DO i = 1, 3
              !
-             magtot_nc(i) = magtot_nc(i) * omega / ( nr1 * nr2 * nr3 )
+             magtot_nc(i) = magtot_nc(i) * omega / ( nr1*nr2*nr3 )
              !
           END DO
           !
-          absmag = absmag * omega / ( nr1 * nr2 * nr3 )
+          absmag = absmag * omega / ( nr1*nr2*nr3 )
           !
        ENDIF
        !
@@ -1020,16 +990,16 @@ SUBROUTINE electrons()
      END FUNCTION check_stop_now
      !
      !-----------------------------------------------------------------------
-     FUNCTION delta_e ( )
+     FUNCTION delta_e()
        !-----------------------------------------------------------------------
        !
        ! ... delta_e = - \int rho(r) V_scf(r)
        !
-       USE kinds
+       USE kinds, ONLY : DP
        !
        IMPLICIT NONE
        !   
-       REAL (DP) :: delta_e
+       REAL(DP) :: delta_e
        !
        INTEGER :: ipol
        !
@@ -1038,11 +1008,11 @@ SUBROUTINE electrons()
        !
        DO ipol = 1, nspin
           !
-          delta_e = delta_e - SUM( rho(:,ipol) * vr(:,ipol) )
+          delta_e = delta_e - SUM( rho(:,ipol)*vr(:,ipol) )
           !
        END DO
        !
-       delta_e = omega * delta_e / ( nr1 * nr2 * nr3 )
+       delta_e = omega * delta_e / ( nr1*nr2*nr3 )
        !
        CALL mp_sum( delta_e, intra_pool_comm )
        !
@@ -1051,14 +1021,14 @@ SUBROUTINE electrons()
      END FUNCTION delta_e
      !
      !-----------------------------------------------------------------------
-     FUNCTION delta_escf ( )
+     FUNCTION delta_escf()
        !-----------------------------------------------------------------------
        !
        ! ... delta_escf = - \int \delta rho(r) V_scf(r)
        ! ... calculates the difference between the Hartree and XC energy
        ! ... at first order in the charge density difference \delta rho(r) 
        !
-       USE kinds
+       USE kinds, ONLY : DP
        !
        IMPLICIT NONE
        !   
@@ -1072,13 +1042,13 @@ SUBROUTINE electrons()
        DO ipol = 1, nspin
           !
           delta_escf = delta_escf - &
-                       SUM( ( rhonew(:,ipol) - rho(:,ipol) ) * vr(:,ipol) )
+                       SUM( ( rhonew(:,ipol) - rho(:,ipol) )*vr(:,ipol) )
           !
        END DO
        !
-       delta_escf = omega * delta_escf / ( nr1 * nr2 * nr3 )
+       delta_escf = omega * delta_escf / ( nr1*nr2*nr3 )
        !
-       CALL mp_sum ( delta_escf, intra_pool_comm )
+       CALL mp_sum( delta_escf, intra_pool_comm )
        !
        RETURN
        !

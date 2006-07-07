@@ -418,7 +418,7 @@ subroutine set_guess_wfc ( disp_sign )
   USE vibrations,           ONLY : ref_c0
 #endif
 #ifdef DFT_PW
-  USE scf,                  ONLY : rho
+  USE scf,                  ONLY : rho, rhog, rho_core, rhog_core
   USE wavefunctions_module, ONLY : evc
   USE io_files,             ONLY : nwordwfc, iunwfc, iunoldwfc2, prefix
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
@@ -467,9 +467,8 @@ subroutine set_guess_wfc ( disp_sign )
         !  
         CALL read_rho( rho, 1, 'old2rho' )
         !
-        CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-             nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
-             ehart, etxc, vtxc, etotefield, charge, vr )
+        CALL v_of_rho( rho, rhog, rho_core, rhog_core, &
+                       ehart, etxc, vtxc, etotefield, charge, vr )
         !
         ! .. swapping the wavefunctions
         !

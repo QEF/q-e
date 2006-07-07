@@ -1,24 +1,25 @@
-
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-!
-!--------------------------------------------------------------------
-subroutine stres_gradcorr (rho, rho_core, nspin, nr1, nr2, nr3, &
-     nrx1, nrx2, nrx3, nrxx, nl, ngm, g, alat, omega, sigmaxc)
-  !--------------------------------------------------------------------
 #include "f_defs.h"
-  USE kinds
+!
+!----------------------------------------------------------------------------
+subroutine stres_gradcorr( rho, rho_core, nspin, nr1, nr2, nr3, nrx1, &
+                           nrx2, nrx3, nrxx, nl, ngm, g, alat, omega, sigmaxc )
+  !----------------------------------------------------------------------------
+  !
+  USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : noncolin
-  use funct, ONLY: gcxc, gcx_spin, gcc_spin, gcc_spin_more, &
-                   dft_is_gradient, get_igcc
-  implicit none
-
+  USE scf,              ONLY : rhog, rhog_core
+  use funct,            ONLY : gcxc, gcx_spin, gcc_spin, gcc_spin_more, &
+                               dft_is_gradient, get_igcc
+  !
+  IMPLICIT NONE
+  !
   integer :: nspin, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, &
        nl (ngm)
   real(DP) :: rho (nrxx, nspin), rho_core (nrxx), g (3, ngm), &
@@ -47,12 +48,16 @@ subroutine stres_gradcorr (rho, rho_core, nspin, nr1, nr2, nr3, &
   !
   !    calculate the gradient of rho+rhocore in real space
   !
-  do is = 1, nspin0
-     call DAXPY (nrxx, fac, rho_core, 1, rho (1, is), 1)
-     call gradient (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, rho (1, is), &
-          ngm, g, nl, alat, grho (1, 1, is) )
-
-  enddo
+  DO is = 1, nspin0
+     !
+     rho(:,is)  = fac * rho_core(:)  + rho(:,is)
+     rhog(:,is) = fac * rhog_core(:) + rhog(:,is)
+     !
+     CALL gradrho( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+                   nrxx, rhog(1,is), ngm, g, nl, grho(1,1,is) )
+     !
+  END DO
+  !
   if (nspin.eq.1) then
      !
      !    This is the LDA case
@@ -148,10 +153,14 @@ subroutine stres_gradcorr (rho, rho_core, nspin, nr1, nr2, nr3, &
   call DSCAL (9, 1.d0 / (nr1 * nr2 * nr3), sigma_gradcorr, 1)
 
   call DAXPY (9, 1.d0, sigma_gradcorr, 1, sigmaxc, 1)
-  do is = 1, nspin
-     call DAXPY (nrxx, - fac, rho_core, 1, rho (1, is), 1)
-
-  enddo
+  
+  DO is = 1, nspin0
+     !
+     rho(:,is)  = rho(:,is)  - fac * rho_core(:)
+     rhog(:,is) = rhog(:,is) - fac * rhog_core(:)
+     !
+  END DO
+  !
   deallocate(grho)
   return
 

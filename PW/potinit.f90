@@ -23,36 +23,38 @@ SUBROUTINE potinit()
   ! 
   ! ... In all cases the scf potential is recalculated and saved in vr
   !
-  USE kinds,            ONLY : DP
-  USE io_global,        ONLY : stdout
-  USE cell_base,        ONLY : alat, omega
-  USE ions_base,        ONLY : nat, ityp, ntyp => nsp
-  USE basis,            ONLY : startingpot
-  USE klist,            ONLY : nelec
-  USE lsda_mod,         ONLY : lsda, nspin
-  USE gvect,            ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                               nrxx, nl, g, gg
-  USE gsmooth,          ONLY : doublegrid
-  USE control_flags,    ONLY : lscf
-  USE scf,              ONLY : rho, rho_core, vltot, vr, vrs
-  USE ener,             ONLY : ehart, etxc, vtxc
-  USE ldaU,             ONLY : niter_with_fixed_ns
-  USE ldaU,             ONLY : lda_plus_u, Hubbard_lmax, ns, nsnew
-  USE noncollin_module, ONLY : noncolin, factlist, pointlist, pointnum, &
-                               mcons, i_cons, lambda, vtcon, report
-  USE io_files,         ONLY : tmp_dir, prefix, iunocc, input_drho
-  USE spin_orb,         ONLY : domag
-  USE mp,               ONLY : mp_bcast
-  USE mp_global,        ONLY : intra_image_comm
-  USE io_global,        ONLY : ionode, ionode_id
-  USE pw_restart,       ONLY : pw_readfile
-  USE io_rho_xml,       ONLY : read_rho
+  USE kinds,                ONLY : DP
+  USE io_global,            ONLY : stdout
+  USE cell_base,            ONLY : alat, omega
+  USE ions_base,            ONLY : nat, ityp, ntyp => nsp
+  USE basis,                ONLY : startingpot
+  USE klist,                ONLY : nelec
+  USE lsda_mod,             ONLY : lsda, nspin
+  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+                                   ngm, gstart, nl, g, gg
+  USE gsmooth,              ONLY : doublegrid
+  USE control_flags,        ONLY : lscf
+  USE scf,                  ONLY : rho, rhog, rho_core, rhog_core, &
+                                   vltot, vr, vrs
+  USE wavefunctions_module, ONLY : psic
+  USE ener,                 ONLY : ehart, etxc, vtxc
+  USE ldaU,                 ONLY : niter_with_fixed_ns
+  USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, ns, nsnew
+  USE noncollin_module,     ONLY : noncolin, factlist, pointlist, pointnum, &
+                                   mcons, i_cons, lambda, vtcon, report
+  USE io_files,             ONLY : tmp_dir, prefix, iunocc, input_drho
+  USE spin_orb,             ONLY : domag
+  USE mp,                   ONLY : mp_bcast
+  USE mp_global,            ONLY : intra_image_comm
+  USE io_global,            ONLY : ionode, ionode_id
+  USE pw_restart,           ONLY : pw_readfile
+  USE io_rho_xml,           ONLY : read_rho
   !
   IMPLICIT NONE
   !
   REAL(DP)              :: charge           ! the starting charge
   REAL(DP)              :: etotefield       ! 
-  INTEGER               :: ios
+  INTEGER               :: is, ios
   INTEGER               :: ldim             ! integer variable for I/O control
   LOGICAL               :: exst 
   CHARACTER(LEN=256)    :: filename
@@ -190,10 +192,21 @@ SUBROUTINE potinit()
      !
   END IF
   !
+  ! ... bring starting rho to G-space
+  !
+  DO is = 1, nspin
+     !
+     psic(:) = rho(:,is)
+     !
+     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+     !
+     rhog(:,is) = psic(nl(:))
+     !
+  END DO
+  !
   ! ... compute the potential and store it in vr
   !
-  CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-                 nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+  CALL v_of_rho( rho, rhog, rho_core, rhog_core, &
                  ehart, etxc, vtxc, etotefield, charge, vr )
   !
   ! ... define the total local potential (external+scf)

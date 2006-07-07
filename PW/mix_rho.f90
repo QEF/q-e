@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2004 PWSCF group
+! Copyright (C) 2002-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,6 +8,7 @@
 #include "f_defs.h"
 !
 #define ZERO ( 0.D0, 0.D0 )
+#define ONLY_SMOOTH_G
 !
 !----------------------------------------------------------------------------
 SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
@@ -20,14 +21,12 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   ! ... On output: the mixed density is in rhocin
   !
   USE kinds,                ONLY : DP
-  USE io_global,            ONLY : stdout
   USE ions_base,            ONLY : nat
-  USE gvect,                ONLY : ngm, nl, nlm, gstart
+  USE gvect,                ONLY : ngm
+  USE gsmooth,              ONLY : ngms
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax
   USE lsda_mod,             ONLY : nspin
-  USE control_flags,        ONLY : imix, tr2
-  USE wvfct,                ONLY : gamma_only
-  USE wavefunctions_module, ONLY : psic
+  USE control_flags,        ONLY : imix, ngm0, tr2
   USE io_files,             ONLY : find_free_unit
   USE cell_base,            ONLY : omega
   !
@@ -36,22 +35,21 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   ! ... First the I/O variable
   !
   CHARACTER(LEN=256) :: &
-    file_extension          !  (in) I/O filename extension for mixing history
-                            !  if absent everything is kept in memory
+    file_extension          !  (in)  I/O filename extension for mixing history
+                            !        if absent everything is kept in memory
   INTEGER :: &
     iter,                  &!  (in)  counter of the number of iterations
     n_iter                  !  (in)  numb. of iterations used in mixing
   COMPLEX(DP) :: &
-    rhocin (ngm,nspin), &
-    rhocout(ngm,nspin)
+    rhocin(ngm,nspin), rhocout(ngm,nspin)
   REAL(DP) :: &
     nsout(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat), &!
     nsin(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat),  &!
     alphamix,              &! (in) mixing factor
     dr2                     ! (out) the estimated errr on the energy
   REAL (DP) :: &
-    tr2_min       ! estimated error from diagonalization. If the estimated scf 
-                  ! error is smaller than this, exit: a more accurate 
+    tr2_min       ! estimated error from diagonalization. If the estimated
+                  ! scf error is smaller than this, exit: a more accurate 
                   ! diagonalization is needed
   LOGICAL :: &
     conv                    ! (out) if true the convergence has been reached
@@ -63,26 +61,22 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   INTEGER ::    &
     iunmix,        &! I/O unit number of charge density file
     iunmix2,       &! I/O unit number of ns file
-    iunit,         &! counter on I/O unit numbers
     iter_used,     &! actual number of iterations used
     ipos,          &! index of the present iteration
     inext,         &! index of the next iteration
     i, j,          &! counters on number of iterations
-    is,            &! counter on spin component
-    ig,            &! counter on G-vectors
     iwork(maxmix), &! dummy array used as output by libr. routines
     info,          &! flag saying if the exec. of libr. routines was ok
     ldim            ! 2 * Hubbard_lmax + 1
   COMPLEX(DP), ALLOCATABLE :: &
-    rhoinsave(:,:),     &! rhoinsave(ngm,nspin): work space
-    rhoutsave(:,:),     &! rhoutsave(ngm,nspin): work space
+    rhoinsave(:,:),     &! rhoinsave(ngm0,nspin): work space
+    rhoutsave(:,:),     &! rhoutsave(ngm0,nspin): work space
     nsinsave(:,:,:,:),  &!
     nsoutsave(:,:,:,:)   !
   REAL(DP) :: &
     betamix(maxmix,maxmix), &
     gamma0,                 &
-    work(maxmix),           &
-    charge
+    work(maxmix)
   LOGICAL :: &
     savetofile,   &! save intermediate steps on file "prefix"."file_extension"
     exst           ! if true the file exists
@@ -100,10 +94,16 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   !
   ! ... external functions
   !
-  REAL(DP), EXTERNAL :: rho_dot_product, ns_dot_product
+  REAL(DP), EXTERNAL :: rho_ddot, ns_ddot
   !
   !
   CALL start_clock( 'mix_rho' )
+  !
+#if defined (ONLY_SMOOTH_G)
+  ngm0 = ngms
+#else
+  ngm0 = ngm
+#endif
   !
   mixrho_iter = iter
   !
@@ -117,7 +117,9 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   !
   IF ( lda_plus_u ) nsout(:,:,:,:) = nsout(:,:,:,:) - nsin(:,:,:,:)
   !
-  dr2 = rho_dot_product( rhocout, rhocout ) + ns_dot_product( nsout, nsout )
+  dr2 = rho_ddot( rhocout, rhocout, ngm, ngm, nspin, ngm )
+  !
+  IF ( lda_plus_u ) dr2 = dr2 + ns_ddot( nsout, nsout, nspin )
   !
   conv = ( dr2 < tr2 )
   !
@@ -127,12 +129,14 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   !
   IF ( conv .OR. dr2 < tr2_min ) THEN
      !
-     IF ( ALLOCATED ( df ) ) DEALLOCATE ( df )
-     IF ( ALLOCATED ( dv ) ) DEALLOCATE ( dv )
-     IF ( lda_plus_u .AND. ALLOCATED ( df_ns ) ) DEALLOCATE ( df_ns )
-     IF ( lda_plus_u .AND. ALLOCATED ( dv_ns ) ) DEALLOCATE ( dv_ns )
+     IF ( ALLOCATED( df ) )    DEALLOCATE( df )
+     IF ( ALLOCATED( dv ) )    DEALLOCATE( dv )
+     IF ( ALLOCATED( df_ns ) ) DEALLOCATE( df_ns )
+     IF ( ALLOCATED( dv_ns ) ) DEALLOCATE( dv_ns )
      !
      rhocout(:,:) = rhocout(:,:) + rhocin(:,:)
+     !
+     IF ( conv ) rhocin(:,:) = rhocout(:,:)
      !
      CALL stop_clock( 'mix_rho' )
      !
@@ -140,21 +144,20 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
      !
   END IF
   !
-  !
   IF ( savetofile ) THEN
      !
      iunmix = find_free_unit()
-     CALL diropn( iunmix, file_extension, ( 2 * ngm * nspin ), exst )
+     CALL diropn( iunmix, file_extension, 2*ngm0*nspin, exst )
      !
-     IF ( lda_plus_u ) then
+     IF ( lda_plus_u ) THEN
         iunmix2 = find_free_unit()
         CALL diropn( iunmix2, TRIM( file_extension ) // '.ns', &
-                     ( ldim * ldim * nspin * nat ), exst )
+                     ldim*ldim*nspin*nat, exst )
      END IF
      !
      IF ( mixrho_iter > 1 .AND. .NOT. exst ) THEN
         !
-        CALL infomsg( 'mix_rho','file not found, restarting', -1 )
+        CALL infomsg( 'mix_rho', 'file not found, restarting', -1 )
         mixrho_iter = 1
         !
      END IF
@@ -162,16 +165,16 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   END IF
   !
   IF ( savetofile .OR. mixrho_iter == 1 ) THEN
-
-     IF ( .NOT. ALLOCATED( df ) ) ALLOCATE( df( ngm, nspin, n_iter ) )
-     IF ( .NOT. ALLOCATED( dv ) ) ALLOCATE( dv( ngm, nspin, n_iter ) )
+     !
+     IF ( .NOT. ALLOCATED( df ) ) ALLOCATE( df( ngm0, nspin, n_iter ) )
+     IF ( .NOT. ALLOCATED( dv ) ) ALLOCATE( dv( ngm0, nspin, n_iter ) )
      !
      IF ( lda_plus_u ) THEN
         !
         IF ( .NOT. ALLOCATED( df_ns ) ) &
-             ALLOCATE( df_ns( ldim, ldim, nspin, nat, n_iter ) )
+           ALLOCATE( df_ns( ldim, ldim, nspin, nat, n_iter ) )
         IF ( .NOT. ALLOCATED( dv_ns ) ) &
-             ALLOCATE( dv_ns( ldim, ldim, nspin, nat, n_iter ) )
+           ALLOCATE( dv_ns( ldim, ldim, nspin, nat, n_iter ) )
         !
      END IF
      !
@@ -191,8 +194,8 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
      !
      IF ( savetofile ) THEN
         !
-        CALL davcio( df(1,1,ipos), 2*ngm*nspin, iunmix, 1, -1 )
-        CALL davcio( dv(1,1,ipos), 2*ngm*nspin, iunmix, 2, -1 )
+        CALL davcio( df(1,1,ipos), 2*ngm0*nspin, iunmix, 1, -1 )
+        CALL davcio( dv(1,1,ipos), 2*ngm0*nspin, iunmix, 2, -1 )
         !
         IF ( lda_plus_u ) THEN
            !
@@ -204,7 +207,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
      END IF
      !
      df(:,:,ipos) = df(:,:,ipos) - rhocout(:,:)
-     dv(:,:,ipos) = dv(:,:,ipos) - rhocin (:,:)
+     dv(:,:,ipos) = dv(:,:,ipos) - rhocin(:,:)
      !
      IF ( lda_plus_u ) THEN
         !
@@ -221,8 +224,8 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
         !
         IF ( i /= ipos ) THEN
            !
-           CALL davcio( df(1,1,i), 2*ngm*nspin, iunmix, 2*i+1, -1 )
-           CALL davcio( dv(1,1,i), 2*ngm*nspin, iunmix, 2*i+2, -1 )
+           CALL davcio( df(1,1,i), 2*ngm0*nspin, iunmix, 2*i+1, -1 )
+           CALL davcio( dv(1,1,i), 2*ngm0*nspin, iunmix, 2*i+2, -1 )
            !
            IF ( lda_plus_u ) THEN
               !
@@ -235,13 +238,13 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
         !
      END DO
      !
-     CALL davcio( rhocout, 2*ngm*nspin, iunmix, 1, 1 )
-     CALL davcio( rhocin , 2*ngm*nspin, iunmix, 2, 1 )
+     CALL davcio( rhocout, 2*ngm0*nspin, iunmix, 1, 1 )
+     CALL davcio( rhocin,  2*ngm0*nspin, iunmix, 2, 1 )
      !
      IF ( mixrho_iter > 1 ) THEN
         !
-        CALL davcio( df(1,1,ipos), 2*ngm*nspin, iunmix, 2*ipos+1, 1 )
-        CALL davcio( dv(1,1,ipos), 2*ngm*nspin, iunmix, 2*ipos+2, 1 )
+        CALL davcio( df(1,1,ipos), 2*ngm0*nspin, iunmix, 2*ipos+1, 1 )
+        CALL davcio( dv(1,1,ipos), 2*ngm0*nspin, iunmix, 2*ipos+2, 1 )
         !
      END IF
      !
@@ -252,25 +255,25 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
         !
         IF ( mixrho_iter > 1 ) THEN
            !
-           CALL davcio( df_ns(1,1,1,1,ipos), ldim*ldim*nspin*nat, &
-                        iunmix2, 2*ipos+1, 1 )
-           CALL davcio( dv_ns(1,1,1,1,ipos), ldim*ldim*nspin*nat, &
-                        iunmix2, 2*ipos+2, 1 )
+           CALL davcio( df_ns(1,1,1,1,ipos), &
+                        ldim*ldim*nspin*nat, iunmix2, 2*ipos+1, 1 )
+           CALL davcio( dv_ns(1,1,1,1,ipos), &
+                        ldim*ldim*nspin*nat, iunmix2, 2*ipos+2, 1 )
         END IF
         !
      END IF
      !
   ELSE
      !
+     ALLOCATE( rhoinsave( ngm0, nspin ), rhoutsave( ngm0, nspin ) )
      !
-     ALLOCATE( rhoinsave(ngm,nspin), rhoutsave(ngm,nspin) )
-     rhoinsave = rhocin (:,:)
-     rhoutsave = rhocout(:,:)
+     rhoinsave = rhocin(1:ngm0,:)
+     rhoutsave = rhocout(1:ngm0,:)
      !
      IF ( lda_plus_u ) THEN
         !
-        ALLOCATE( nsinsave (ldim,ldim,nspin,nat), &
-                  nsoutsave(ldim,ldim,nspin,nat) )
+        ALLOCATE( nsinsave(  ldim, ldim, nspin, nat ), &
+                  nsoutsave( ldim, ldim, nspin, nat ) )
         nsinsave  = nsin
         nsoutsave = nsout
         !
@@ -282,11 +285,11 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
      !
      DO j = i, iter_used
         !
-        betamix(i,j) = rho_dot_product( df(1,1,j), df(1,1,i) ) 
+        betamix(i,j) = rho_ddot( df(1,1,j), df(1,1,i), ngm0, ngm0, nspin, ngm0 )
         !
         IF ( lda_plus_u ) &
            betamix(i,j) = betamix(i,j) + &
-                          ns_dot_product( df_ns(1,1,1,1,j), df_ns(1,1,1,1,i) )
+                          ns_ddot( df_ns(1,1,1,1,j), df_ns(1,1,1,1,i), nspin )
         !
      END DO
      !
@@ -298,29 +301,29 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   CALL DSYTRI( 'U', iter_used, betamix, maxmix, iwork, work, info )
   CALL errore( 'broyden', 'DSYTRI', info )
   !
-  FORALL( i = 1 : iter_used, &
-          j = 1 : iter_used, j > i ) betamix(j,i) = betamix(i,j)
+  FORALL( i = 1:iter_used, &
+          j = 1:iter_used, j > i ) betamix(j,i) = betamix(i,j)
   !
   DO i = 1, iter_used
      !
-     work(i) = rho_dot_product( df(1,1,i), rhocout )
+     work(i) = rho_ddot( df(1,1,i), rhocout, ngm0, ngm, nspin, ngm0 )
      !
      IF ( lda_plus_u ) &
-        work(i) = work(i) + ns_dot_product( df_ns(1,1,1,1,i), nsout )
+        work(i) = work(i) + ns_ddot( df_ns(1,1,1,1,i), nsout, nspin )
      !
   END DO
   !
   DO i = 1, iter_used
      !
-     gamma0 = SUM( betamix(1:iter_used,i) * work(1:iter_used) )
+     gamma0 = SUM( betamix(1:iter_used,i)*work(1:iter_used) )
      !
-     rhocin (:,:) = rhocin (:,:) - gamma0 * dv(:,:,i)
-     rhocout(:,:) = rhocout(:,:) - gamma0 * df(:,:,i)
+     rhocin(1:ngm0,:)  = rhocin(1:ngm0,:)  - gamma0*dv(:,:,i)
+     rhocout(1:ngm0,:) = rhocout(1:ngm0,:) - gamma0*df(:,:,i)
      !
      IF ( lda_plus_u ) THEN
         !
-        nsin  = nsin  - gamma0 * dv_ns(:,:,:,:,i)
-        nsout = nsout - gamma0 * df_ns(:,:,:,:,i)
+        nsin  = nsin  - gamma0*dv_ns(:,:,:,:,i)
+        nsout = nsout - gamma0*df_ns(:,:,:,:,i)
         !
      END IF
      !
@@ -387,7 +390,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
 END SUBROUTINE mix_rho
 !
 !----------------------------------------------------------------------------
-FUNCTION rho_dot_product( rho1, rho2 ) RESULT( rho_ddot )
+FUNCTION rho_ddot( rho1, rho2, ngm1, ngm2, nspin, gf )
   !----------------------------------------------------------------------------
   !
   ! ... calculates 4pi/G^2*rho1(-G)*rho2(G) = V1_Hartree(-G)*rho2(G)
@@ -396,32 +399,32 @@ FUNCTION rho_dot_product( rho1, rho2 ) RESULT( rho_ddot )
   USE kinds,         ONLY : DP
   USE constants,     ONLY : e2, tpi, fpi
   USE cell_base,     ONLY : omega, tpiba2
-  USE gvect,         ONLY : gg, gstart, ngm
-  USE lsda_mod,      ONLY : nspin
+  USE gvect,         ONLY : gg, gstart
   USE wvfct,         ONLY : gamma_only
   !
   IMPLICIT NONE
   !
-  ! ... I/O variables
-  !
-  COMPLEX(DP), INTENT(IN) :: rho1(ngm,nspin), rho2(ngm,nspin)
-  !
+  INTEGER,     INTENT(IN) :: ngm1, ngm2, nspin, gf
+  COMPLEX(DP), INTENT(IN) :: rho1(ngm1,nspin), rho2(ngm2,nspin)
   REAL(DP)                :: rho_ddot
   !
-  ! ... and the local variables
+  REAL(DP) :: fac
+  INTEGER  :: ig
   !
-  REAL(DP) :: fac   ! a multiplicative factors
-  INTEGER       :: ig, gi
-  !
-  !
-  gi = gstart
   !
   fac = e2 * fpi / tpiba2
   !
+  rho_ddot = 0.D0
+  !
   IF ( nspin == 1 ) THEN
      !
-     rho_ddot = fac * SUM( DBLE( CONJG( rho1(gi:,1) ) * &
-                                        rho2(gi:,1) ) / gg(gi:) )
+     DO ig = gstart, gf
+        !
+        rho_ddot = rho_ddot + REAL( CONJG( rho1(ig,1) )*rho2(ig,1) ) / gg(ig)
+        !
+     END DO
+     !
+     rho_ddot = fac*rho_ddot
      !
      IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
      !
@@ -429,8 +432,14 @@ FUNCTION rho_dot_product( rho1, rho2 ) RESULT( rho_ddot )
      !
      ! ... first the charge
      !
-     rho_ddot = fac * SUM( DBLE( CONJG( rho1(gi:,1)+rho1(gi:,2) ) * &
-                                      ( rho2(gi:,1)+rho2(gi:,2) ) ) / gg(gi:) )
+     DO ig = gstart, gf
+        !
+        rho_ddot = rho_ddot + REAL( CONJG( rho1(ig,1)+rho1(ig,2) ) * &
+                                         ( rho2(ig,1)+rho2(ig,2) ) ) / gg(ig)
+        !
+     END DO
+     !
+     rho_ddot = fac*rho_ddot
      !
      IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
      !
@@ -442,23 +451,29 @@ FUNCTION rho_dot_product( rho1, rho2 ) RESULT( rho_ddot )
      !
      IF ( gstart == 2 ) THEN
         !
-        rho_ddot = rho_ddot + &
-                   fac * DBLE( CONJG( rho1(1,1) - rho1(1,2) ) * &
-                                    ( rho2(1,1) - rho2(1,2) ) )
+        rho_ddot = rho_ddot + fac * REAL( CONJG( rho1(1,1) - rho1(1,2) ) * &
+                                               ( rho2(1,1) - rho2(1,2) ) )
         !
      END IF
      !
      IF ( gamma_only ) fac = 2.D0 * fac
      !
-     rho_ddot = rho_ddot + fac * &
-                SUM( DBLE( CONJG( rho1(gi:,1) - rho1(gi:,2) ) * &
-                                ( rho2(gi:,1) - rho2(gi:,2) ) ) )
+     DO ig = gstart, gf
+        !
+        rho_ddot = rho_ddot + fac * REAL( CONJG( rho1(ig,1) - rho1(ig,2) ) * &
+                                               ( rho2(ig,1) - rho2(ig,2) ) )
+        !
+     END DO
      !
-
   ELSE IF ( nspin == 4 ) THEN
-
-     rho_ddot = fac * SUM( DBLE( CONJG( rho1(gi:,1) ) * &
-                                        rho2(gi:,1) ) / gg(gi:) )
+     !
+     DO ig = gstart, gf
+        !
+        rho_ddot = rho_ddot + REAL( CONJG( rho1(ig,1) )*rho2(ig,1) ) / gg(ig)
+        !
+     END DO
+     !
+     rho_ddot = fac*rho_ddot
      !
      IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
      !
@@ -467,18 +482,22 @@ FUNCTION rho_dot_product( rho1, rho2 ) RESULT( rho_ddot )
      IF ( gstart == 2 ) THEN
         !
         rho_ddot = rho_ddot + &
-             fac *  DBLE( CONJG( rho1(1,2))*(rho2(1,2) )) + &
-                    DBLE( CONJG( rho1(1,3))*(rho2(1,3) )) + &
-                    DBLE( CONJG( rho1(1,4))*(rho2(1,4) ))
+                   fac * ( REAL( CONJG( rho1(1,2))*(rho2(1,2) ) ) + &
+                           REAL( CONJG( rho1(1,3))*(rho2(1,3) ) ) + &
+                           REAL( CONJG( rho1(1,4))*(rho2(1,4) ) ) )
         !
      END IF
      !
      IF ( gamma_only ) fac = 2.D0 * fac
      !
-     rho_ddot = rho_ddot + &
-          fac * SUM ( DBLE( CONJG( rho1(gi:,2))*(rho2(gi:,2) )) + &
-                      DBLE( CONJG( rho1(gi:,3))*(rho2(gi:,3) )) + &
-                      DBLE( CONJG( rho1(gi:,4))*(rho2(gi:,4) )) )
+     DO ig = gstart, gf
+        !
+        rho_ddot = rho_ddot + &
+                   fac * ( REAL( CONJG( rho1(ig,2))*(rho2(ig,2) ) ) + &
+                           REAL( CONJG( rho1(ig,3))*(rho2(ig,3) ) ) + &
+                           REAL( CONJG( rho1(ig,4))*(rho2(ig,4) ) ) )
+        !
+     END DO
      !
   END IF
   !
@@ -488,38 +507,32 @@ FUNCTION rho_dot_product( rho1, rho2 ) RESULT( rho_ddot )
   !
   RETURN
   !
-END FUNCTION rho_dot_product
+END FUNCTION rho_ddot
 !
 !----------------------------------------------------------------------------
-FUNCTION ns_dot_product( ns1, ns2 )
+FUNCTION ns_ddot( ns1, ns2, nspin )
   !----------------------------------------------------------------------------
   !
   ! ... calculates U/2 \sum_i ns1(i)*ns2(i)
   ! ... used as an estimate of the self-consistency error on the 
   ! ... LDA+U correction to the energy
   !
-  USE kinds,      ONLY : DP
-  USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, Hubbard_U, &
-                         Hubbard_alpha
-  USE ions_base,  ONLY : nat, ityp
-  USE lsda_mod,   ONLY : nspin
+  USE kinds,     ONLY : DP
+  USE ldaU,      ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, Hubbard_U, &
+                        Hubbard_alpha
+  USE ions_base, ONLY : nat, ityp
   !
   IMPLICIT NONE  
   !
-  ! ... I/O variables
-  !
-  REAL(DP) :: &
-    ns_dot_product                           ! (out) the function value
-  REAL(DP), INTENT(IN) :: &
-    ns1(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat), &
-    ns2(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)  ! (in) the two ns 
-  !
-  ! ... and the local variables
+  INTEGER,  INTENT(IN) :: nspin
+  REAL(DP), INTENT(IN) :: ns1(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat), &
+                          ns2(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+  REAL(DP)             :: ns_ddot
   !
   INTEGER :: na, nt, m1, m2
   !
   !
-  ns_dot_product = 0.D0
+  ns_ddot = 0.D0
   !
   IF ( .NOT. lda_plus_u ) RETURN
   !
@@ -532,18 +545,18 @@ FUNCTION ns_dot_product( ns1, ns2 )
         m1 = 2 * Hubbard_l(nt) + 1
         m2 = 2 * Hubbard_l(nt) + 1
         !
-        ns_dot_product = ns_dot_product + 0.5D0 * Hubbard_U(nt) * &
-                         SUM( ns1(:m1,:m2,:nspin,na) * ns2(:m1,:m2,:nspin,na) )
+        ns_ddot = ns_ddot + 0.5D0 * Hubbard_U(nt) * &
+                            SUM( ns1(:m1,:m2,:nspin,na)*ns2(:m1,:m2,:nspin,na) )
         !
      END IF
      !
   END DO
   !
-  IF ( nspin == 1 ) ns_dot_product = 2.D0 * ns_dot_product
+  IF ( nspin == 1 ) ns_ddot = 2.D0*ns_ddot
   !
   RETURN
   !
-END FUNCTION ns_dot_product
+END FUNCTION ns_ddot
 !
 !----------------------------------------------------------------------------
 SUBROUTINE approx_screening( drho )
@@ -551,24 +564,20 @@ SUBROUTINE approx_screening( drho )
   !
   ! ... apply an average TF preconditioning to drho
   !
-  USE kinds,          ONLY : DP
-  USE constants,      ONLY : e2, pi, fpi
-  USE cell_base,      ONLY : omega, tpiba2
-  USE gvect,          ONLY : gstart, gg, ngm
-  USE klist,          ONLY : nelec
-  USE lsda_mod,       ONLY : nspin
+  USE kinds,         ONLY : DP
+  USE constants,     ONLY : e2, pi, fpi
+  USE cell_base,     ONLY : omega, tpiba2
+  USE gvect,         ONLY : gg, ngm
+  USE klist,         ONLY : nelec
+  USE lsda_mod,      ONLY : nspin
+  USE control_flags, ONLY : ngm0
   !
   IMPLICIT NONE  
   !
-  ! ... I/O variables
-  !
-  COMPLEX(DP) :: &
-    drho(ngm,nspin) ! (in/out)
-  !
-  ! ... and the local variables
+  COMPLEX(DP), INTENT(INOUT) :: drho(ngm,nspin) ! (in/out)
   !
   REAL(DP) :: rrho, rmag, rs, agg0
-  INTEGER       :: ig
+  INTEGER  :: ig
   !
   !
   rs = ( 3.D0 * omega / fpi / nelec )**( 1.D0 / 3.D0 )
@@ -577,17 +586,17 @@ SUBROUTINE approx_screening( drho )
   !
   IF ( nspin == 1 .OR. nspin == 4 ) THEN
      !
-     drho(:,1) =  drho(:,1) * gg(:) / ( gg(:) + agg0 )
+     drho(:ngm0,1) =  drho(:ngm0,1) * gg(:ngm0) / ( gg(:ngm0) + agg0 )
      !
   ELSE IF ( nspin == 2 ) THEN
      !
-     DO ig = 1, ngm
+     DO ig = 1, ngm0
         !
         rrho = ( drho(ig,1) + drho(ig,2) ) * gg(ig) / ( gg(ig) + agg0 )
         rmag = ( drho(ig,1) - drho(ig,2) )
         !
-        drho(ig,1) =  0.5D0 * ( rrho + rmag )
-        drho(ig,2) =  0.5D0 * ( rrho - rmag )
+        drho(ig,1) =  0.5D0*( rrho + rmag )
+        drho(ig,2) =  0.5D0*( rrho - rmag )
         !
      END DO
      !
@@ -597,6 +606,7 @@ SUBROUTINE approx_screening( drho )
   !
 END SUBROUTINE approx_screening
 !
+#if defined (ONLY_SMOOTH_G)
 !----------------------------------------------------------------------------
 SUBROUTINE approx_screening2( drho, rhobest )
   !----------------------------------------------------------------------------
@@ -606,50 +616,48 @@ SUBROUTINE approx_screening2( drho, rhobest )
   USE kinds,                ONLY : DP
   USE constants,            ONLY : e2, pi, tpi, fpi, eps8, eps32
   USE cell_base,            ONLY : omega, tpiba2
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-                                   nl, nlm, ngm, gg
+  USE gsmooth,              ONLY : nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, &
+                                   nrxxs, nls, nlsm
+  USE gvect,                ONLY : gg, ngm
+  USE wavefunctions_module, ONLY : psic
   USE klist,                ONLY : nelec
   USE lsda_mod,             ONLY : nspin
   USE wvfct,                ONLY : gamma_only
-  USE wavefunctions_module, ONLY : psic
+  USE control_flags,        ONLY : ngm0
   !
   IMPLICIT NONE
   !
-  ! ... I/O variables
-  !
-  COMPLEX(DP) :: &
-    drho(ngm,nspin), rhobest(ngm,nspin)
-  !
-  ! ... and the local variables
+  COMPLEX(DP), INTENT(INOUT) :: drho(ngm,nspin)
+  COMPLEX(DP), INTENT(IN)    :: rhobest(ngm,nspin)
   !
   INTEGER, PARAMETER :: mmx = 12
   !
   INTEGER :: &
-    iwork(mmx), i, j, m, info, nspin_save
+    iwork(mmx), i, j, m, info
   REAL(DP) :: &
-    rs, min_rs, max_rs, avg_rsm1, target, dr2_best, ccc, cbest, l2smooth
+    rs, min_rs, max_rs, avg_rsm1, target, dr2_best
   REAL(DP) :: &
     aa(mmx,mmx), invaa(mmx,mmx), bb(mmx), work(mmx), vec(mmx), agg0
   COMPLEX(DP), ALLOCATABLE :: &
-    v(:,:),     &! v(ngm,mmx)
-    w(:,:),     &! w(ngm,mmx)
-    dv(:),      &! dv(ngm)
-    vbest(:),   &! vbest(ngm)
-    wbest(:)     ! wbest(ngm)
+    v(:,:),     &! v(ngm0,mmx)
+    w(:,:),     &! w(ngm0,mmx)
+    dv(:),      &! dv(ngm0)
+    vbest(:),   &! vbest(ngm0)
+    wbest(:)     ! wbest(ngm0)
   REAL(DP), ALLOCATABLE :: &
-    alpha(:)     ! alpha(nrxx)
+    alpha(:)     ! alpha(nrxxs)
   !
   COMPLEX(DP) :: rrho, rmag
-  INTEGER          :: ir, ig
+  INTEGER     :: ir, ig
   !
   REAL(DP), PARAMETER :: one_third = 1.D0 / 3.D0
   !
-  REAL(DP), EXTERNAL :: rho_dot_product
+  REAL(DP), EXTERNAL :: rho_ddot
   !
   !
   IF ( nspin == 2 ) THEN
      !
-     DO ig = 1, ngm
+     DO ig = 1, ngm0
         !
         rrho = drho(ig,1) + drho(ig,2)
         rmag = drho(ig,1) - drho(ig,2)
@@ -661,14 +669,13 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
   END IF
   !
-  nspin_save = nspin
-  nspin      = 1
-  target     = 0.D0
+  target = 0.D0
   !
   IF ( gg(1) < eps8 ) drho(1,1) = ZERO
   !
-  ALLOCATE( alpha(nrxx), v(ngm,mmx), w(ngm,mmx), &
-            dv(ngm), vbest(ngm), wbest(ngm) )
+  ALLOCATE( alpha( nrxxs ) )
+  ALLOCATE( v( ngm0, mmx ), &
+            w( ngm0, mmx ), dv( ngm0 ), vbest( ngm0 ), wbest( ngm0 ) )
   !
   v(:,:)   = ZERO
   w(:,:)   = ZERO
@@ -676,34 +683,31 @@ SUBROUTINE approx_screening2( drho, rhobest )
   vbest(:) = ZERO
   wbest(:) = ZERO
   !
-  ! ... calculate alpha from density smoothed with a lambda=0 a.u.
-  !
-  l2smooth = 0.D0
+  ! ... calculate alpha from density
   !
   psic(:) = ZERO
   !
-  IF ( nspin_save == 2 ) THEN
+  IF ( nspin == 2 ) THEN
      !
-     psic(nl(:)) = ( rhobest(:,1) + rhobest(:,2) ) !* &
-     !              EXP( - 0.5D0 * l2smooth * tpiba2 * gg(:) )
+     psic(nls(:ngm0)) = ( rhobest(:ngm0,1) + rhobest(:ngm0,2) )
      !
   ELSE
      !
-     psic(nl(:)) = rhobest(:,1) !* EXP( - 0.5D0 * l2smooth * tpiba2 * gg(:) )
+     psic(nls(:ngm0)) = rhobest(:ngm0,1)
      !
   END IF
   !
-  IF ( gamma_only ) psic(nlm(:)) = CONJG( psic(nl(:)) )
+  IF ( gamma_only ) psic(nlsm(:ngm0)) = CONJG( psic(nls(:ngm0)) )
   !
-  CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+  CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1 )
   !
-  alpha(:) = DBLE( psic(:) )
+  alpha(:) = REAL( psic(:) )
   !
   min_rs   = ( 3.D0 * omega / fpi / nelec )**one_third
   max_rs   = min_rs
   avg_rsm1 = 0.D0
   !
-  DO ir = 1, nrxx
+  DO ir = 1, nrxxs
      !
      alpha(ir) = ABS( alpha(ir) )
      !
@@ -726,7 +730,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   alpha = 3.D0 * ( tpi / 3.D0 )**( 5.D0 / 3.D0 ) * alpha
   !
-  avg_rsm1 = ( nr1 * nr2 * nr3 ) / avg_rsm1
+  avg_rsm1 = ( nr1s*nr2s*nr3s ) / avg_rsm1
   rs       = ( 3.D0 * omega / fpi / nelec )**one_third
   agg0     = ( 12.D0 / pi )**( 2.D0 / 3.D0 ) / tpiba2 / avg_rsm1
   !
@@ -734,21 +738,20 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   psic(:) = ZERO
   !
-  psic(nl(:)) = drho(:,1)
+  psic(nls(:ngm0)) = drho(:,1)
   !
-  IF ( gamma_only ) psic(nlm(:)) = CONJG( psic(nl(:)) )
+  IF ( gamma_only ) psic(nlsm(:ngm0)) = CONJG( psic(nls(:ngm0)) )
   !
-  CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+  CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +1 )
   !
   psic(:) = psic(:) * alpha(:)
   !
-  CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1 )
+  CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
   !
-  dv(:) = psic(nl(:)) * gg(:) * tpiba2
-  v(:,1)= psic(nl(:)) * gg(:) / ( gg(:) + agg0 )
+  dv(:) = psic(nls(:ngm0)) * gg(:ngm0) * tpiba2
+  v(:,1)= psic(nls(:ngm0)) * gg(:ngm0) / ( gg(:ngm0) + agg0 )
   !
   m       = 1
-  ccc     = rho_dot_product( dv, dv )
   aa(:,:) = 0.D0
   bb(:)   = 0.D0
   !
@@ -760,29 +763,29 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      psic(:) = ZERO
      !
-     psic(nl(:)) = v(:,m)
+     psic(nls(:ngm0)) = v(:,m)
      !
-     IF ( gamma_only ) psic(nlm(:)) = CONJG( psic(nl(:)) )
+     IF ( gamma_only ) psic(nlsm(:ngm0)) = CONJG( psic(nls(:ngm0)) )
      !
-     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+     CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +1 )
      !
      psic(:) = psic(:) * alpha(:)
      !
-     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1 )
+     CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
      !
-     w(:,m) = w(:,m) + gg(:) * tpiba2 * psic(nl(:))
+     w(:,m) = w(:,m) + gg(:ngm0) * tpiba2 * psic(nls(:ngm0))
      !
      ! ... build the linear system
      !
      DO i = 1, m
         !
-        aa(i,m) = rho_dot_product( w(1,i), w(1,m) )
+        aa(i,m) = rho_ddot( w(1,i), w(1,m), ngm0, ngm0, 1, ngm0)
         !
         aa(m,i) = aa(i,m)
         !
      END DO
      !
-     bb(m) = rho_dot_product( w(1,m), dv )
+     bb(m) = rho_ddot( w(1,m), dv, ngm0, ngm0, 1, ngm0 )
      !
      ! ... solve it -> vec
      !
@@ -794,9 +797,9 @@ SUBROUTINE approx_screening2( drho, rhobest )
      CALL DSYTRI( 'U', m, invaa, mmx, iwork, work, info )
      CALL errore( 'broyden', 'DSYTRI', info )
      !     
-     FORALL( i = 1 : m, j = 1 : m, j > i ) invaa(j,i) = invaa(i,j)
+     FORALL( i = 1:m, j = 1:m, j > i ) invaa(j,i) = invaa(i,j)
      !
-     FORALL( i = 1 : m ) vec(i) = SUM( invaa(i,:) * bb(:) )
+     FORALL( i = 1:m ) vec(i) = SUM( invaa(i,:)*bb(:) )
      !
      vbest(:) = ZERO
      wbest(:) = dv(:)
@@ -808,21 +811,17 @@ SUBROUTINE approx_screening2( drho, rhobest )
         !
      END DO
      !
-     cbest = ccc - SUM( bb(:) * vec(:) )
-     !
-     dr2_best = rho_dot_product( wbest, wbest )
+     dr2_best = rho_ddot( wbest, wbest, ngm0, ngm0, 1, ngm0 )
      !
      IF ( target == 0.D0 ) target = 1.D-6 * dr2_best
      !
      IF ( dr2_best < target ) THEN
         !
-        drho(:,1) = vbest(:)
-        !
-        nspin = nspin_save
+        drho(:ngm0,1) = vbest(:)
         !
         IF ( nspin == 2 ) THEN
            !
-           DO ig = 1, ngm
+           DO ig = 1, ngm0
               !
               rrho = drho(ig,1)
               rmag = drho(ig,2)
@@ -852,10 +851,261 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      m = m + 1
      !
-     v(:,m) = wbest(:) / ( gg(:) + agg0 )
+     v(:,m) = wbest(:) / ( gg(:ngm0) + agg0 )
      !
   END DO repeat_loop
   !
   RETURN
   !
 END SUBROUTINE approx_screening2
+#else
+!----------------------------------------------------------------------------
+SUBROUTINE approx_screening2( drho, rhobest )
+  !----------------------------------------------------------------------------
+  !
+  ! ... apply a local-density dependent TF preconditioning to drho
+  !
+  USE kinds,                ONLY : DP
+  USE constants,            ONLY : e2, pi, tpi, fpi, eps8, eps32
+  USE cell_base,            ONLY : omega, tpiba2
+  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+                                   nl, nlm, gg, ngm
+  USE klist,                ONLY : nelec
+  USE lsda_mod,             ONLY : nspin
+  USE wvfct,                ONLY : gamma_only
+  USE wavefunctions_module, ONLY : psic
+  USE control_flags,        ONLY : ngm0
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP), INTENT(INOUT) :: drho(ngm,nspin)
+  COMPLEX(DP), INTENT(IN)    :: rhobest(ngm,nspin)
+  !
+  INTEGER, PARAMETER :: mmx = 12
+  !
+  INTEGER :: &
+    iwork(mmx), i, j, m, info
+  REAL(DP) :: &
+    rs, min_rs, max_rs, avg_rsm1, target, dr2_best
+  REAL(DP) :: &
+    aa(mmx,mmx), invaa(mmx,mmx), bb(mmx), work(mmx), vec(mmx), agg0
+  COMPLEX(DP), ALLOCATABLE :: &
+    v(:,:),     &! v(ngm0,mmx)
+    w(:,:),     &! w(ngm0,mmx)
+    dv(:),      &! dv(ngm0)
+    vbest(:),   &! vbest(ngm0)
+    wbest(:)     ! wbest(ngm0)
+  REAL(DP), ALLOCATABLE :: &
+    alpha(:)     ! alpha(nrxx)
+  !
+  COMPLEX(DP) :: rrho, rmag
+  INTEGER     :: ir, ig
+  !
+  REAL(DP), PARAMETER :: one_third = 1.D0 / 3.D0
+  !
+  REAL(DP), EXTERNAL :: rho_ddot
+  !
+  !
+  IF ( nspin == 2 ) THEN
+     !
+     DO ig = 1, ngm0
+        !
+        rrho = drho(ig,1) + drho(ig,2)
+        rmag = drho(ig,1) - drho(ig,2)
+        !        
+        drho(ig,1) = rrho
+        drho(ig,2) = rmag
+        !
+     END DO
+     !
+  END IF
+  !
+  target = 0.D0
+  !
+  IF ( gg(1) < eps8 ) drho(1,1) = ZERO
+  !
+  ALLOCATE( alpha( nrxx ), v( ngm0, mmx ), &
+            w( ngm0, mmx ), dv( ngm0 ), vbest( ngm0 ), wbest( ngm0 ) )
+  !
+  v(:,:)   = ZERO
+  w(:,:)   = ZERO
+  dv(:)    = ZERO
+  vbest(:) = ZERO
+  wbest(:) = ZERO
+  !
+  ! ... calculate alpha from density
+  !
+  psic(:) = ZERO
+  !
+  IF ( nspin == 2 ) THEN
+     !
+     psic(nl(:ngm0)) = ( rhobest(:ngm0,1) + rhobest(:ngm0,2) )
+     !
+  ELSE
+     !
+     psic(nl(:ngm0)) = rhobest(:ngm0,1)
+     !
+  END IF
+  !
+  IF ( gamma_only ) psic(nlm(:ngm0)) = CONJG( psic(nl(:ngm0)) )
+  !
+  CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+  !
+  alpha(:) = REAL( psic(:) )
+  !
+  min_rs   = ( 3.D0 * omega / fpi / nelec )**one_third
+  max_rs   = min_rs
+  avg_rsm1 = 0.D0
+  !
+  DO ir = 1, nrxx
+     !
+     alpha(ir) = ABS( alpha(ir) )
+     !
+     IF ( alpha(ir) > eps32 ) THEN
+        !
+        rs        = ( 3.D0 / fpi / alpha(ir) )**one_third
+        min_rs    = MIN( min_rs, rs )
+        avg_rsm1  = avg_rsm1 + 1.D0 / rs
+        max_rs    = MAX( max_rs, rs )
+        alpha(ir) = rs
+        !
+     END IF   
+     !
+  END DO
+  !
+  CALL reduce( 1, avg_rsm1 )
+  !
+  CALL extreme( min_rs, -1 )
+  CALL extreme( max_rs, +1 )
+  !
+  alpha = 3.D0 * ( tpi / 3.D0 )**( 5.D0 / 3.D0 ) * alpha
+  !
+  avg_rsm1 = ( nr1*nr2*nr3 ) / avg_rsm1
+  rs       = ( 3.D0 * omega / fpi / nelec )**one_third
+  agg0     = ( 12.D0 / pi )**( 2.D0 / 3.D0 ) / tpiba2 / avg_rsm1
+  !
+  ! ... calculate deltaV and the first correction vector
+  !
+  psic(:) = ZERO
+  !
+  psic(nl(:ngm0)) = drho(:,1)
+  !
+  IF ( gamma_only ) psic(nlm(:ngm0)) = CONJG( psic(nl(:ngm0)) )
+  !
+  CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, +1 )
+  !
+  psic(:) = psic(:) * alpha(:)
+  !
+  CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+  !
+  dv(:) = psic(nl(:ngm0)) * gg(:ngm0) * tpiba2
+  v(:,1)= psic(nl(:ngm0)) * gg(:ngm0) / ( gg(:ngm0) + agg0 )
+  !
+  m       = 1
+  aa(:,:) = 0.D0
+  bb(:)   = 0.D0
+  !
+  repeat_loop: DO
+     !
+     ! ... generate the vector w
+     !     
+     w(:,m) = fpi * e2 * v(:,m)
+     !
+     psic(:) = ZERO
+     !
+     psic(nl(:ngm0)) = v(:,m)
+     !
+     IF ( gamma_only ) psic(nlm(:ngm0)) = CONJG( psic(nl(:ngm0)) )
+     !
+     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, +1 )
+     !
+     psic(:) = psic(:) * alpha(:)
+     !
+     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+     !
+     w(:,m) = w(:,m) + gg(:ngm0) * tpiba2 * psic(nl(:ngm0))
+     !
+     ! ... build the linear system
+     !
+     DO i = 1, m
+        !
+        aa(i,m) = rho_ddot( w(1,i), w(1,m), ngm0, ngm0, 1, ngm0)
+        !
+        aa(m,i) = aa(i,m)
+        !
+     END DO
+     !
+     bb(m) = rho_ddot( w(1,m), dv, ngm0, ngm0, 1, ngm0 )
+     !
+     ! ... solve it -> vec
+     !
+     invaa = aa
+     !
+     CALL DSYTRF( 'U', m, invaa, mmx, iwork, work, mmx, info )
+     CALL errore( 'broyden', 'factorization', info )
+     !
+     CALL DSYTRI( 'U', m, invaa, mmx, iwork, work, info )
+     CALL errore( 'broyden', 'DSYTRI', info )
+     !     
+     FORALL( i = 1:m, j = 1:m, j > i ) invaa(j,i) = invaa(i,j)
+     !
+     FORALL( i = 1:m ) vec(i) = SUM( invaa(i,:)*bb(:) )
+     !
+     vbest(:) = ZERO
+     wbest(:) = dv(:)
+     !
+     DO i = 1, m
+        !
+        vbest = vbest + vec(i) * v(:,i)
+        wbest = wbest - vec(i) * w(:,i)
+        !
+     END DO
+     !
+     dr2_best = rho_ddot( wbest, wbest, ngm0, ngm0, 1, ngm0 )
+     !
+     IF ( target == 0.D0 ) target = 1.D-6 * dr2_best
+     !
+     IF ( dr2_best < target ) THEN
+        !
+        drho(:ngm0,1) = vbest(:)
+        !
+        IF ( nspin == 2 ) THEN
+           !
+           DO ig = 1, ngm0
+              !
+              rrho = drho(ig,1)
+              rmag = drho(ig,2)
+              !
+              drho(ig,1) = 0.5D0 * ( rrho + rmag )
+              drho(ig,2) = 0.5D0 * ( rrho - rmag )
+              !
+           END DO
+           !
+        END IF
+        !
+        DEALLOCATE( alpha, v, w, dv, vbest, wbest )
+        !
+        EXIT repeat_loop
+        !
+     ELSE IF ( m >= mmx ) THEN
+        !
+        m = 1
+        !
+        v(:,m)  = vbest(:)
+        aa(:,:) = 0.D0
+        bb(:)   = 0.D0
+        !
+        CYCLE repeat_loop
+        !
+     END IF
+     !
+     m = m + 1
+     !
+     v(:,m) = wbest(:) / ( gg(:ngm0) + agg0 )
+     !
+  END DO repeat_loop
+  !
+  RETURN
+  !
+END SUBROUTINE approx_screening2
+#endif

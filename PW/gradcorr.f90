@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 PWSCF group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,42 +8,44 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                     nrxx, nl, ngm, g, alat, omega, nspin, etxc, vtxc, v )
+SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !----------------------------------------------------------------------------
   !
-  USE constants, ONLY : e2
-  USE kinds,     ONLY : DP
-  USE funct,     ONLY : gcxc, gcx_spin, gcc_spin, gcc_spin_more, dft_is_gradient, get_igcc
-  USE spin_orb, ONLY : domag
-
+  USE constants,            ONLY : e2
+  USE kinds,                ONLY : DP
+  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+                                   nl, ngm, g
+  USE lsda_mod,             ONLY : nspin
+  USE cell_base,            ONLY : omega, alat
+  USE funct,                ONLY : gcxc, gcx_spin, gcc_spin, &
+                                   gcc_spin_more, dft_is_gradient, get_igcc
+  USE spin_orb,             ONLY : domag
+  USE wavefunctions_module, ONLY : psic
   !
   IMPLICIT NONE
   !
-  INTEGER,        INTENT(IN)    :: nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                                   nrxx, ngm, nl(ngm), nspin
-  REAL (DP), INTENT(IN)    :: rho_core(nrxx), g(3,ngm), alat, omega
-  REAL (DP), INTENT(OUT)   :: v(nrxx,nspin)
-  REAL (DP), INTENT(INOUT) :: rho(nrxx,nspin), vtxc, etxc
+  REAL(DP),    INTENT(IN)    :: rho(nrxx,nspin), rho_core(nrxx)
+  COMPLEX(DP), INTENT(IN)    :: rhog(ngm,nspin), rhog_core(ngm)
+  REAL(DP),    INTENT(OUT)   :: v(nrxx,nspin)
+  REAL(DP),    INTENT(INOUT) :: vtxc, etxc
   !
   INTEGER :: k, ipol, is, nspin0
   !
-  REAL (DP), ALLOCATABLE :: grho(:,:,:), h(:,:,:), dh(:)
-  REAL (DP), ALLOCATABLE :: rhoout(:,:), segni(:), vgg(:,:), vsave(:,:)
+  REAL(DP),    ALLOCATABLE :: grho(:,:,:), h(:,:,:), dh(:)
+  REAL(DP),    ALLOCATABLE :: rhoout(:,:), segni(:), vgg(:,:), vsave(:,:)
+  COMPLEX(DP), ALLOCATABLE :: rhogsum(:,:)
   !
-  REAL (DP) :: grho2(2), sx, sc, v1x, v2x, v1c, v2c, &
-                    v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw , &
-                    etxcgc, vtxcgc, segno, arho, fac, zeta, rh, grh2, amag 
+  LOGICAL  :: igcc_is_lyp
+  REAL(DP) :: grho2(2), sx, sc, v1x, v2x, v1c, v2c, &
+              v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw , &
+              etxcgc, vtxcgc, segno, arho, fac, zeta, rh, grh2, amag 
+  REAL(DP) :: v2cup, v2cdw,  v2cud, rup, rdw, &
+              grhoup, grhodw, grhoud, grup, grdw
   !
-  REAL (DP) :: v2cup, v2cdw,  v2cud, rup, rdw, &
-                    grhoup, grhodw, grhoud, grup, grdw
-
-  REAL (DP), PARAMETER :: epsr = 1.D-6, epsg = 1.D-10
- 
-  logical :: igcc_is_lyp
+  REAL(DP), PARAMETER :: epsr = 1.D-6, epsg = 1.D-10
   !
   !
-  IF ( .not. dft_is_gradient() ) RETURN
+  IF ( .NOT. dft_is_gradient() ) RETURN
 
   igcc_is_lyp = (get_igcc() == 3)
   !
@@ -53,7 +55,7 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   nspin0=nspin
   if (nspin==4) nspin0=1
   if (nspin==4.and.domag) nspin0=2
-
+  !
   ALLOCATE(    h( 3, nrxx, nspin0) )
   ALLOCATE( grho( 3, nrxx, nspin0) )
   ALLOCATE( rhoout( nrxx, nspin0) )
@@ -63,14 +65,30 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
      ALLOCATE( vsave( nrxx, nspin ) )
      vsave=v
      v=0.d0
-  ENDIF 
-
-  IF (nspin==4.AND.domag) THEN
-     CALL compute_rho(rho,rhoout,segni,nrxx) 
-  ELSE
-     DO is=1,nspin0
-        rhoout(:,is) = rho(:,is)
+  ENDIF
+  !
+  ALLOCATE( rhogsum( ngm, nspin0 ) )
+  !
+  IF ( nspin == 4 .AND. domag ) THEN
+     !
+     CALL compute_rho(rho,rhoout,segni,nrxx)
+     !
+     ! ... bring starting rhoout to G-space
+     !
+     DO is = 1, nspin0
+        !
+        psic(:) = rhoout(:,is)
+        !
+        CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+        !
+        rhogsum(:,is) = psic(nl(:))
+        !
      END DO
+  ELSE
+     !
+     rhoout(:,1:nspin0)  = rho(:,1:nspin0)
+     rhogsum(:,1:nspin0) = rhog(:,1:nspin0)
+     !
   ENDIF
   !
   ! ... calculate the gradient of rho + rho_core in real space
@@ -79,12 +97,15 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   !
   DO is = 1, nspin0
      !
-     rhoout(:,is) = fac * rho_core(:) + rhoout(:,is)
+     rhoout(:,is)  = fac * rho_core(:)  + rhoout(:,is)
+     rhogsum(:,is) = fac * rhog_core(:) + rhogsum(:,is)
      !
-     CALL gradient( nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
-                    rhoout(1,is), ngm, g, nl, alat, grho(1,1,is) )
+     CALL gradrho( nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
+                   rhogsum(1,is), ngm, g, nl, grho(1,1,is) )
      !
   END DO
+  !
+  DEALLOCATE( rhogsum )
   !
   IF ( nspin0 == 1 ) THEN
      !
@@ -272,8 +293,67 @@ SUBROUTINE gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
 END SUBROUTINE gradcorr
 !
 !----------------------------------------------------------------------------
-SUBROUTINE gradient( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
-                     nrxx, a, ngm, g, nl, alat, ga )
+SUBROUTINE gradrho( nrx1, nrx2, nrx3, &
+                    nr1, nr2, nr3, nrxx, a, ngm, g, nl, ga )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Calculates ga = \grad a in R-space (a is in G-space)
+  !
+  USE kinds,     ONLY : DP
+  USE constants, ONLY : tpi
+  USE cell_base, ONLY : tpiba
+  USE gvect,     ONLY : nlm
+  USE wvfct,     ONLY : gamma_only
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,     INTENT(IN)  :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx
+  INTEGER,     INTENT(IN)  :: ngm, nl(ngm)
+  COMPLEX(DP), INTENT(IN)  :: a(ngm)
+  REAL(DP),    INTENT(IN)  :: g(3,ngm)
+  REAL(DP),    INTENT(OUT) :: ga(3,nrxx)
+  !
+  INTEGER                  :: n, ipol
+  COMPLEX(DP), ALLOCATABLE :: gaux(:)
+  !
+  !
+  ALLOCATE( gaux( nrxx ) )
+  !
+  ! ... multiply by (iG) to get (\grad_ipol a)(G) ...
+  !
+  ga(:,:) = 0.D0
+  !
+  DO ipol = 1, 3
+     !
+     gaux(:) = 0.D0
+     !
+     gaux(nl(:)) = g(ipol,:) * CMPLX( -AIMAG( a(:) ), REAL( a(:) ) )
+     !
+     IF ( gamma_only ) THEN
+        !
+        gaux(nlm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) )
+        !
+     END IF
+     !
+     ! ... bring back to R-space, (\grad_ipol a)(r) ...
+     !
+     CALL cft3( gaux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+     !
+     ! ...and add the factor 2\pi/a  missing in the definition of G
+     !
+     ga(ipol,:) = ga(ipol,:) + tpiba * REAL( gaux(:) )
+     !
+  END DO
+  !
+  DEALLOCATE( gaux )
+  !
+  RETURN
+  !
+END SUBROUTINE gradrho
+!
+!----------------------------------------------------------------------------
+SUBROUTINE gradient( nrx1, nrx2, nrx3, &
+                     nr1, nr2, nr3, nrxx, a, ngm, g, nl, ga )
   !----------------------------------------------------------------------------
   !
   ! ... Calculates ga = \grad a in R-space (a is also in R-space)
@@ -286,13 +366,13 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   !
   IMPLICIT NONE
   !
-  INTEGER,        INTENT(IN)     :: nrx1, nrx2, nrx3, nr1, nr2, nr3, &
-                                    nrxx, ngm, nl(ngm)
-  REAL (DP), INTENT(IN)     :: a(nrxx), g(3,ngm), alat
-  REAL (DP), INTENT(OUT)    :: ga(3,nrxx)
+  INTEGER,  INTENT(IN)  :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx
+  INTEGER,  INTENT(IN)  :: ngm, nl(ngm)
+  REAL(DP), INTENT(IN)  :: a(nrxx), g(3,ngm)
+  REAL(DP), INTENT(OUT) :: ga(3,nrxx)
   !
-  INTEGER                        :: n, ipol
-  COMPLEX (DP), ALLOCATABLE :: aux(:), gaux(:)
+  INTEGER                  :: n, ipol
+  COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:)
   !
   !
   ALLOCATE(  aux( nrxx ) )
@@ -313,17 +393,11 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
      gaux(:) = 0.D0
      !
      gaux(nl(:)) = g(ipol,:) * &
-          CMPLX( -AIMAG( aux(nl(:)) ) , DBLE( aux(nl(:)) ) )
+                   CMPLX( -AIMAG( aux(nl(:)) ), REAL( aux(nl(:)) ) )
      !
      IF ( gamma_only ) THEN
         !
-        ! gaux(nlm(:)) = CMPLX( DBLE( gaux(nl(:)) ) , -AIMAG( gaux(nl(:)) ) )
-        !
-        ! Workaround for intel ifort bugginess
-        !
-        DO n = 1, ngm
-           gaux(nlm(n)) = CONJG ( gaux(nl(n)) )
-        END DO
+        gaux(nlm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) )
         !
      END IF
      !
@@ -359,17 +433,16 @@ SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   !
   IMPLICIT NONE
   !
-  INTEGER,        INTENT(IN)     :: nrx1, nrx2, nrx3, nr1, nr2, nr3, &
-                                    nrxx, ngm, nl(ngm)
-  REAL (DP), INTENT(IN)     :: a(3,nrxx), g(3,ngm), alat
-  REAL (DP), INTENT(OUT)    :: da(nrxx)
+  INTEGER,  INTENT(IN)     :: nrx1, nrx2, nrx3, nr1, nr2, nr3, &
+                              nrxx, ngm, nl(ngm)
+  REAL(DP), INTENT(IN)     :: a(3,nrxx), g(3,ngm), alat
+  REAL(DP), INTENT(OUT)    :: da(nrxx)
   !
-  INTEGER                        :: n, ipol
-  COMPLEX (DP), ALLOCATABLE :: aux(:), gaux(:)
+  INTEGER                  :: n, ipol
+  COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:)
   !
   !
-  ALLOCATE(  aux( nrxx ) )
-  ALLOCATE( gaux( nrxx ) )
+  ALLOCATE( aux( nrxx ), gaux( nrxx ) )
   !
   gaux(:) = 0.D0
   !
@@ -381,26 +454,21 @@ SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
      !
      CALL cft3( aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
      !
-     !gaux(nl(:)) = gaux(nl(:)) + g(ipol,:) * &
-     !     CMPLX( -AIMAG( aux(nl(:)) ) , DBLE( aux(nl(:)) ) )
-     !
-     ! Workaround for intel ifort bugginess
-     !
      DO n = 1, ngm
+        !
         gaux(nl(n)) = gaux(nl(n)) + g(ipol,n) * &
-          CMPLX( -AIMAG( aux(nl(n)) ) , DBLE( aux(nl(n)) ) )
+                      CMPLX( -AIMAG( aux(nl(n)) ), REAL( aux(nl(n)) ) )
+        !
      END DO
     !
   END DO
   !
   IF ( gamma_only ) THEN
      !
-     ! gaux(nlm(:)) = CMPLX( DBLE( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) )
-     !
-     ! Workaround for intel ifort bugginess
-     !
      DO n = 1, ngm
-        gaux(nlm(n)) = CONJG ( gaux(nl(n)) )
+        !
+        gaux(nlm(n)) = CONJG( gaux(nl(n)) )
+        !
      END DO
      !
   END IF
@@ -411,10 +479,9 @@ SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   !
   ! ... add the factor 2\pi/a  missing in the definition of G and sum
   !
-  da(:) = tpiba * DBLE( gaux(:) )
+  da(:) = tpiba * REAL( gaux(:) )
   !
-  DEALLOCATE( gaux )
-  DEALLOCATE( aux )
+  DEALLOCATE( aux, gaux )
   !
   RETURN
   !

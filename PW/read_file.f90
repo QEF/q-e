@@ -14,36 +14,37 @@ SUBROUTINE read_file()
   ! ... This routine allocates space for all quantities already computed
   ! ... in the pwscf program and reads them from the data file.
   !
-  USE kinds,            ONLY : DP
-  USE ions_base,        ONLY : nat, nsp, ityp, tau, if_pos
-  USE basis,            ONLY : natomwfc
-  USE cell_base,        ONLY : tpiba2, alat,omega,  at, bg
-  USE force_mod,        ONLY : force
-  USE klist,            ONLY : nkstot, nks, xk, wk
-  USE lsda_mod,         ONLY : lsda, nspin, current_spin, isk
-  USE wvfct,            ONLY : nbnd, nbndx, et, wg, npwx
-  USE symme,            ONLY : irt, nsym, ftau, s
-  USE ktetra,           ONLY : tetra, ntetra 
-  USE extfield,         ONLY : forcefield, tefield
-  USE cellmd,           ONLY : cell_factor, lmovecell
-  USE gvect,            ONLY : gg, ecutwfc, ngm, g, nr1, nr2, nr3, nrxx,&
-                               nrx1, nrx2, nrx3, eigts1, eigts2, eigts3, &
-                               nl, gstart
-  USE gsmooth,          ONLY : ngms, nls, nrx1s, nr1s, nr2s, nr3s
-  USE spin_orb,         ONLY : so
-  USE scf,              ONLY : rho, rho_core, vr
-  USE vlocal,           ONLY : strf
-  USE io_files,         ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
-  USE uspp_param,       ONLY : nbeta, jjj, tvanp
-  USE noncollin_module, ONLY : noncolin, npol
-  USE mp_global,        ONLY : kunit
-  USE pw_restart,       ONLY : pw_readfile
-  USE xml_io_base,      ONLY : pp_check_file
-  USE uspp,             ONLY : okvan
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : nat, nsp, ityp, tau, if_pos
+  USE basis,                ONLY : natomwfc
+  USE cell_base,            ONLY : tpiba2, alat,omega,  at, bg
+  USE force_mod,            ONLY : force
+  USE klist,                ONLY : nkstot, nks, xk, wk
+  USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
+  USE wvfct,                ONLY : nbnd, nbndx, et, wg, npwx
+  USE symme,                ONLY : irt, nsym, ftau, s
+  USE ktetra,               ONLY : tetra, ntetra 
+  USE extfield,             ONLY : forcefield, tefield
+  USE cellmd,               ONLY : cell_factor, lmovecell
+  USE gvect,                ONLY : gg, ecutwfc, ngm, g, nr1, nr2, nr3, nrxx,&
+                                   nrx1, nrx2, nrx3, eigts1, eigts2, eigts3, &
+                                   nl, gstart
+  USE gsmooth,              ONLY : ngms, nls, nrx1s, nr1s, nr2s, nr3s
+  USE spin_orb,             ONLY : so
+  USE scf,                  ONLY : rho, rhog, rho_core, rhog_core, vr
+  USE wavefunctions_module, ONLY : psic
+  USE vlocal,               ONLY : strf
+  USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
+  USE uspp_param,           ONLY : nbeta, jjj, tvanp
+  USE noncollin_module,     ONLY : noncolin, npol
+  USE mp_global,            ONLY : kunit
+  USE pw_restart,           ONLY : pw_readfile
+  USE xml_io_base,          ONLY : pp_check_file
+  USE uspp,                 ONLY : okvan
   !
   IMPLICIT NONE
   !
-  INTEGER  :: i, ik, ibnd, nb, nt, ios, ierr
+  INTEGER  :: i, is, ik, ibnd, nb, nt, ios, ierr
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
   LOGICAL  :: exst
   !
@@ -188,10 +189,21 @@ SUBROUTINE read_file()
   !
   CALL set_rhoc()
   !
+  ! ... bring rho to G-space
+  !
+  DO is = 1, nspin
+     !
+     psic(:) = rho(:,is)
+     !
+     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+     !
+     rhog(:,is) = psic(nl(:))
+     !
+  END DO
+  !
   ! ... recalculate the potential
   !
-  CALL v_of_rho( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3,   &
-                 nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega, &
+  CALL v_of_rho( rho, rhog, rho_core, rhog_core, &
                  ehart, etxc, vtxc, etotefield, charge, vr )
   !
   ! ... reads the wavefunctions and writes them in 'distributed' form 

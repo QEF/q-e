@@ -18,7 +18,8 @@ subroutine restart_in_ions (iter, ik_, dr2)
        nrxx
   USE klist, ONLY: nks
   USE lsda_mod, ONLY: nspin
-  USE scf, ONLY : rho, rho_core
+  USE scf, ONLY : rho, rhog, rho_core, rhog_core
+  USE wavefunctions_module, ONLY : psic
   USE control_flags, ONLY: restart, tr2, ethr
   USE vlocal, ONLY: vnew
   USE wvfct, ONLY: nbnd, et
@@ -28,7 +29,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   implicit none
   character :: where * 20
   ! are we in the right place?
-  integer :: ik, ibnd, ik_, iter
+  integer :: ik, is, ibnd, ik_, iter
   ! counters
   ! last completed kpoint
   ! last completed iteration
@@ -68,11 +69,22 @@ subroutine restart_in_ions (iter, ik_, dr2)
   !
   call sum_band
   !
+  ! ... bring rho to G-space
+  !
+  DO is = 1, nspin
+     !
+     psic(:) = rho(:,is)
+     !
+     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+     !
+     rhog(:,is) = psic(nl(:))
+     !
+  END DO
+  
   ! recalculate etxc, vtxc, ehart, needed by stress calculation
   !
-  call v_of_rho (rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-        nrxx, nl, ngm, gstart, nspin, g, gg, alat, omega,         &
-        ehart, etxc, vtxc, etotefield, charge, psic)
+  CALL v_of_rho( rho, rhog, rho_core, rhog_core, &
+                 ehart, etxc, vtxc, etotefield, charge, psic )
   !
   !  restart procedure completed
   !
