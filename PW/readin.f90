@@ -111,6 +111,8 @@ subroutine readpp
            ! numeric is read inside read_ncpp
            call read_ncpp (nt, iunps)
            !
+           zv(nt)=zp(nt)
+           !
         endif
      endif
      close (iunps)
