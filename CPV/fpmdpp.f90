@@ -50,6 +50,7 @@ PROGRAM fpmd_postproc
   CHARACTER(len=3)   :: atm( maxsp ), lab
   CHARACTER(len=4)   :: charge_density
   LOGICAL            :: lcharge, lforces, ldynamics, lpdb, lrotation
+  LOGICAL            :: lbinary
   INTEGER            :: nframes
   INTEGER            :: ios, nat, ndr
 
@@ -61,7 +62,8 @@ PROGRAM fpmd_postproc
   NAMELIST /inputpp/ prefix, outdir, fileout, output, scradir, &
                      lcharge, lforces, ldynamics, lpdb, lrotation, &
                      ns1, ns2, ns3, np1, np2, np3, print_state, &
-                     atomic_number, nframes, ndr, charge_density
+                     atomic_number, nframes, ndr, charge_density, &
+                     lbinary
 
   ! default values
 
@@ -88,6 +90,7 @@ PROGRAM fpmd_postproc
   atomic_number = 1          ! atomic number of the species in the restart file
   charge_density = 'full'    ! specify the component to plot: 'full', 'spin'
   print_state = ' '          ! specify the Kohn-Sham state to plot: 'KS_1'
+  lbinary = .TURE.
 
   
 
@@ -272,7 +275,7 @@ PROGRAM fpmd_postproc
      IF (ldynamics) WRITE(*,'("frame",1X,I4)') n
 
      ! read data from files produced by fpmd
-     CALL read_fpmd( lforces, lcharge, cunit, punit, funit, dunit, &
+     CALL read_fpmd( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
                      natoms, nr1, nr2, nr3, ispin, at, tau_in, force, &
                      rho_in, prefix, scradir, ndr, charge_density )
 
@@ -407,7 +410,7 @@ END PROGRAM fpmd_postproc
 !
 
 
-SUBROUTINE read_fpmd( lforces, lcharge, cunit, punit, funit, dunit, &
+SUBROUTINE read_fpmd( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
                       natoms, nr1, nr2, nr3, ispin, at, tau, force, &
                       rho, prefix, scradir, ndr, charge_density )
 
@@ -418,7 +421,7 @@ SUBROUTINE read_fpmd( lforces, lcharge, cunit, punit, funit, dunit, &
 
   IMPLICIT NONE
 
-  LOGICAL, INTENT(in)   :: lforces, lcharge
+  LOGICAL, INTENT(in)   :: lforces, lcharge, lbinary
   INTEGER, INTENT(in)   :: cunit, punit, funit, dunit
   INTEGER, INTENT(in)   :: natoms, nr1, nr2, nr3, ispin, ndr
   REAL(DP), INTENT(out) :: at(3, 3), tau(3, natoms), force(3, natoms)
@@ -472,7 +475,7 @@ SUBROUTINE read_fpmd( lforces, lcharge, cunit, punit, funit, dunit, &
         filename = TRIM( filename ) // '/' // 'charge-density.xml'
      END IF
      !
-     CALL read_density( filename, dunit, nr1, nr2, nr3, rho )
+     CALL read_density( filename, dunit, nr1, nr2, nr3, rho, lbinary )
      !
   END IF
 
@@ -481,7 +484,7 @@ END SUBROUTINE read_fpmd
 
 
 
-SUBROUTINE read_density( filename, dunit, nr1, nr2, nr3, rho )
+SUBROUTINE read_density( filename, dunit, nr1, nr2, nr3, rho, lbinary )
 
    USE kinds,      ONLY: DP
    USE xml_io_base
@@ -489,6 +492,7 @@ SUBROUTINE read_density( filename, dunit, nr1, nr2, nr3, rho )
 
    IMPLICIT NONE
 
+   LOGICAL, INTENT(in)   :: lbinary
    INTEGER, INTENT(in)   :: dunit
    INTEGER, INTENT(in)   :: nr1, nr2, nr3
    REAL(DP), INTENT(out) :: rho(nr1, nr2, nr3)
@@ -502,7 +506,7 @@ SUBROUTINE read_density( filename, dunit, nr1, nr2, nr3, rho )
      !
      WRITE(*,'("Reading density from: ", A50)' ) TRIM( filename )
      !
-     CALL iotk_open_read( dunit, file = TRIM( filename ), BINARY = .TRUE., ROOT = attr, IERR = ierr )
+     CALL iotk_open_read( dunit, file = TRIM( filename ), BINARY = lbinary, ROOT = attr, IERR = ierr )
 
      CALL iotk_scan_begin( dunit, "CHARGE-DENSITY" )
      CALL iotk_scan_empty( dunit, "INFO", attr )
