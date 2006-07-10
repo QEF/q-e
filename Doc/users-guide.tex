@@ -179,7 +179,7 @@ gradients.\\
 -- Xiaofei Wang (Princeton) implemented META-GGA.\\
 -- The Autopilot feature was implemented by Targacept, Inc.
 
-Gerardo Ballabio implemented "configure" for Quantum-Espresso.
+Gerardo Ballabio implemented ``configure" for Quantum-Espresso.
 
 PWgui was written by Anton Kokalj (Jo\v{z}ef Stefan Institute, Ljubljana)
 and is based on his GUIB concept
@@ -371,7 +371,7 @@ CVS (Concurrent Version System): see the file \texttt{README.cvs}
 contained in the distribution.
 
 To install Quantum-ESPRESSO from source, you need C and Fortran-95
-compilers (Fortran-90 is not sufficient, but most "Fortran-90"
+compilers (Fortran-90 is not sufficient, but most ``Fortran-90"
 compilers are actually Fortran-95-compliant).
 If you don't have a commercial Fortran-95 compiler, you may install
 the free \texttt{g95} compiler:
@@ -833,8 +833,8 @@ The codes for data postprocessing in \texttt{PP/} are:
   \item \texttt{plotrho.x} produces PostScript 2-d contour plots
   \item \texttt{plotband.x} reads the output of \texttt{bands.x},
         produces band structure PostScript plots
-  \item \texttt{average.x} calculates planar averages of
-        potentials
+  \item \texttt{average.x} calculates planar averages of quantities
+        produced by pp.x (potentials, charge, magnetization densities,...)
   \item \texttt{voronoy.x} divides the charge density into Voronoy
         polyhedra (obsolete, use at your own risk)
   \item \texttt{dos.x} calculates electronic Density of States
@@ -903,7 +903,7 @@ The utility programs in \texttt{pwtools/} are:
         images. The initial and final points of the new path can differ
         from those in the original one. Useful for NEB calculations.
   \item \texttt{kvecs\_FS.x, bands\_FS.x}: utilities for Fermi Surface
-        plotting usingX CrySDen
+        plotting using XCrySDen
 \end{itemize}
 
 Other utilities: 
@@ -1376,7 +1376,7 @@ execution, read the ``Parallelization issues'' section.
 
 \paragraph{Mac OS X}
 
-Compilation with \texttt{xlf} under Mac OSX 10.4 ("Tiger") may produce
+Compilation with \texttt{xlf} under Mac OSX 10.4 (``Tiger") may produce
 the following linkage error:
 \begin{verbatim}
  ld: Undefined symbols:
@@ -1391,7 +1391,7 @@ Other workaround: Set gcc version to 3.3. This is done with the command
 \begin{verbatim}
 sudo gcc_select 3.3
 \end{verbatim}
-If you get the message "Error trying to determine current cc version (got)" 
+If you get the message ``Error trying to determine current cc version (got)" 
 change the order of directory in your \texttt{PATH} variable in order to make
 \texttt{/opt/ibm/...} to appear at its end. The \texttt{xlc} alias to 
 \texttt{cc} will stop working, but as soon you have set gcc version,
@@ -1941,7 +1941,7 @@ Such quantities are saved by \texttt{pw.x} into the output data
 file(s).
 
 The main postprocessing code \texttt{pp.x} reads data file(s),
-extracts or calculated the selected quantity, writes it into
+extracts or calculates the selected quantity, writes it into
 a format that is suitable for plotting. Quantities that can
 be read or calculated are:
 
@@ -2945,7 +2945,7 @@ The code will stop if too small values are required, it will waste CPU
 time and memory for too large values.
 
 Note that in parallel execution, it is very convenient to have FFT
-grid dimensions along z that are a multiple of the number of
+grid dimensions along $z$ that are a multiple of the number of
 processors.
 
 \paragraph{``warning: symmetry operation \# N not allowed''.}
@@ -3044,7 +3044,7 @@ process, but with some compilers it is actually the wall time.
 This is a warning message that can be safely ignored if it
 is not present in the last steps of self-consistency. If it 
 is still present in the last steps of self-consistency, and
-if the number of unconverged eigevector is a significant 
+if the number of unconverged eigenvector is a significant 
 part of the total, it may signal serious trouble in self-consistency
 (see next point) or something badly wrong in input data.
 
@@ -3160,7 +3160,7 @@ the number of processors and pools for the phonon run should be the
 same as for the self-consistent run; all files must be visible to all 
 processors.
 
-\paragraph{\texttt{ph.x} mumbles` something like ``cannot recover'' or
+\paragraph{\texttt{ph.x} mumbles something like ``cannot recover'' or
            ``error reading recover file''.}
 
 You have a bad restart file from a preceding failed execution.
@@ -3272,7 +3272,7 @@ compilation is disabled.
 
 \item {\texttt{configure} \em doesn't recognize that I have a parallel 
 machine!}
-Yu do not have a properly configure parallel environment (libraries and
+You do not have a properly configure parallel environment (libraries and
 compiler). \texttt{configure} tries to locate a parallel compiler in a 
 logical place with a logical name, but if it has a strange names or it 
 is located in a strange location, you will have to instruct 
