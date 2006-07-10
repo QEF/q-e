@@ -109,3 +109,7 @@ charge_density CHARACTER ( default = 'full' )
 
 state          CHARACTER ( default = ' ' )
                specify the Kohn-Sham state to plot, example: 'KS_1'
+
+lbinary        LOGICAL ( default = .TRUE. )
+               specify the file format of the wave function files
+               to be read and plotted
