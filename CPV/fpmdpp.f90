@@ -90,7 +90,7 @@ PROGRAM fpmd_postproc
   atomic_number = 1          ! atomic number of the species in the restart file
   charge_density = 'full'    ! specify the component to plot: 'full', 'spin'
   print_state = ' '          ! specify the Kohn-Sham state to plot: 'KS_1'
-  lbinary = .TURE.
+  lbinary = .TRUE.
 
   
 
@@ -134,14 +134,18 @@ PROGRAM fpmd_postproc
   IF (.NOT. ldynamics) nframes = 1
 
   IF (ldynamics .AND. lcharge) THEN
-     WRITE(*,*) 'Error: dynamics with charge density non supported'
+     WRITE(*,*) 'Error: dynamics with charge density not supported'
      STOP
   END IF
 
-  IF (output == 'grd' .AND. .NOT. lcharge) THEN
-     WRITE(*,*) 'Error: grd file requested, but no charge density'
+  IF (ldynamics .AND. ( print_state /= ' ' ) ) THEN
+     WRITE(*,*) 'Error: dynamics with print_state not supported'
      STOP
   END IF
+
+  !
+  !  Now read the XML data file
+  !
 
   filepp = restart_dir( scradir, ndr )
   !
@@ -211,6 +215,10 @@ PROGRAM fpmd_postproc
      !
   CALL iotk_close_read( dunit )
 
+  !
+  !   End of reading from data file
+  !
+
   IF ( nsp > maxsp ) THEN
      WRITE(*,*) 'Error: too many atomic species'
      STOP
@@ -239,42 +247,57 @@ PROGRAM fpmd_postproc
   ! allocate arrays
   ALLOCATE(tau_in(3, nat))                  ! atomic positions, angstroms
   ALLOCATE(tau_out(3, nat * np))            ! replicated positions
-  ALLOCATE(sigma(3, nat ) )                   ! scaled coordinates
+  ALLOCATE(sigma(3, nat ) )                 ! scaled coordinates
   !
   IF (lforces) ALLOCATE( force( 3, nat * np ) )
 
   ! charge density
-  IF (lcharge) THEN
+  IF ( lcharge .OR. print_state /= ' ' ) THEN
      IF (ns1 == 0) ns1 = nr1
      IF (ns2 == 0) ns2 = nr2
      IF (ns3 == 0) ns3 = nr3
-     ALLOCATE(rho_in(nr1, nr2, nr3))      ! original charge density
-     ALLOCATE(rho_out(ns1, ns2, ns3))     ! rescaled charge density
+     ALLOCATE( rho_in ( nr1, nr2, nr3 ) )     ! original charge density
+     ALLOCATE( rho_out( ns1, ns2, ns3 ) )     ! rescaled charge density
   END IF
 
-  ! open files
+  ! open output file for trajectories or charge density 
+  !
   ounit = 10
-  cunit = 11
-  punit = 12
-  funit = 13
-  bunit = 15
   OPEN(ounit, file=fileout, status='unknown')
-  OPEN(punit, file=filepos, status='old')
+
+  ! open Cell trajectory file
+  !
+  cunit = 11
   OPEN(cunit, file=filecel, status='old')
+
+  ! open Positions trajectory file
+  !
+  punit = 12
+  OPEN(punit, file=filepos, status='old')
+
+  ! open Force trajectory file
+  !
+  funit = 13
   if (lforces) OPEN(funit, file=filefor, status='old')
+
+  ! open PDB file
+  !
+  bunit = 15
   OPEN(bunit, file=filepdb, status='unknown')
 
   ! XSF file header
-  IF (output == 'xsf') THEN
-     IF (ldynamics) WRITE(ounit,*) 'ANIMSTEPS', nframes
-     WRITE(ounit,*) 'CRYSTAL'
+  !
+  IF ( output == 'xsf' ) THEN
+     IF ( ldynamics ) WRITE(ounit,*) 'ANIMSTEPS', nframes
+     WRITE( ounit, * ) 'CRYSTAL'
   END IF
 
   DO n = 1, nframes
      !
-     IF (ldynamics) WRITE(*,'("frame",1X,I4)') n
+     IF ( ldynamics ) WRITE(*,'("frame",1X,I4)') n
 
      ! read data from files produced by fpmd
+     !
      CALL read_fpmd( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
                      natoms, nr1, nr2, nr3, ispin, at, tau_in, force, &
                      rho_in, prefix, scradir, ndr, charge_density )
@@ -355,29 +378,39 @@ PROGRAM fpmd_postproc
      euler(2) = euler(2) * np2
      euler(3) = euler(3) * np3
 
-     IF (lcharge) &
+     IF ( lcharge ) &
         CALL scale_charge( rho_in, rho_out, nr1, nr2, nr3, ns1, ns2, ns3, &
                            np1, np2, np3 )
 
-     IF (output == 'xsf') THEN
+     IF ( output == 'xsf' ) THEN
         ! write data as XSF format
         CALL write_xsf( ldynamics, lforces, lcharge, ounit, n, at, &
                         natoms, ityp, tau_out, force, rho_out, &
                         ns1, ns2, ns3 )
+     ELSE IF( output == 'grd' ) THEN
+        ! write data as GRD format
+        CALL write_grd( ounit, at, rho_out, ns1, ns2, ns3 )
      END IF
+
   END DO
 
-  IF ( output == 'grd') THEN
-     ! write data as GRD format
-     CALL write_grd( ounit, at, rho_out, ns1, ns2, ns3 )
-  END IF
-
   IF ( print_state /= ' ' ) THEN
-     CALL read_density( TRIM( print_state ) // '.xml', dunit, nr1, nr2, nr3, rho_in )
+     !
+     CALL read_density( TRIM( print_state ) // '.xml', dunit, nr1, nr2, nr3, rho_in, lbinary )
      CALL scale_charge( rho_in, rho_out, nr1, nr2, nr3, ns1, ns2, ns3, np1, np2, np3 )
-     OPEN( unit = dunit, file = TRIM( print_state ) // '.grd' )
-     CALL write_grd( dunit, at, rho_out, ns1, ns2, ns3 )
+     !
+     IF (output == 'xsf') THEN
+        ! write data as XSF format
+        OPEN( unit = dunit, file = TRIM( print_state ) // '.xsf' )
+        CALL write_xsf( ldynamics, lforces, .true., dunit, n, at, &
+                        natoms, ityp, tau_out, force, rho_out, ns1, ns2, ns3 )
+     ELSE IF( output == 'grd' ) THEN
+        OPEN( unit = dunit, file = TRIM( print_state ) // '.grd' )
+        CALL write_grd( dunit, at, rho_out, ns1, ns2, ns3 )
+     END IF
+     !
      CLOSE( dunit )
+     !
   END IF
 
   ! write atomic positions as PDB format
@@ -392,11 +425,9 @@ PROGRAM fpmd_postproc
   DEALLOCATE(tau_in)
   DEALLOCATE(tau_out)
   DEALLOCATE(ityp)
-  IF (lforces) DEALLOCATE(force)
-  IF (lcharge) THEN
-     DEALLOCATE(rho_in)
-     DEALLOCATE(rho_out)
-  END IF
+  IF( ALLOCATED( force  ) ) DEALLOCATE(force)
+  IF( ALLOCATED( rho_in ) ) DEALLOCATE(rho_in)
+  IF( ALLOCATED( rho_ot ) ) DEALLOCATE(rho_out)
   DEALLOCATE( stau0 )
   DEALLOCATE( svel0 )
   DEALLOCATE( force0 )
