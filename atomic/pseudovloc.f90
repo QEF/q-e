@@ -148,12 +148,18 @@ subroutine pseudovloc
            call errore('pseudovloc','wrong matching point',1)
         rcloc=rcut(nsloc+indi)
         if (rep == 0) then
-           write(6,"(/,5x,' Generating local potential: lloc=',i1, &
+           write(6,"(/,5x,' Generating local pot.: lloc=',i1, &
                   & ', matching radius rcloc = ',f8.4)") lloc, rcloc
         else
-           write(6,"(/,5x,' Generating local potential: lloc=',i1, &
+           if (rel==2) then
+              write(6,"(/,5x,' Generating local pot.: lloc=',i1, &
+                  &', j=',f5.2,', matching radius rcloc = ',f8.4)") &
+                  lloc, lloc-0.5+indi, rcloc
+           else
+              write(6,"(/,5x,' Generating local pot.: lloc=',i1, &
                   &', spin=',i1,', matching radius rcloc = ',f8.4)") &
                   lloc, indi+1, rcloc
+           endif
         endif
         !
         !   compute the phi functions

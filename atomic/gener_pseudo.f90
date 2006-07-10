@@ -71,13 +71,13 @@ subroutine gener_pseudo
 
   if (lpaw) then
      write(6, &
-          '(/,5x,15(''-''),''  Generating PAW atomic setup  '',15(''-''),/)')
+          '(/,5x,21(''-''),'' Generating PAW atomic setup '',20(''-''),/)')
   elseif (pseudotype == 1.or.pseudotype == 2) then
      write(6, &
-          '(/,5x,15(''-''),'' Generating NC pseudopotential '',15(''-''),/)')
+          '(/,5x,21(''-''),'' Generating NC pseudopotential '',21(''-''),/)')
   elseif (pseudotype == 3) then
      write(6, &
-          '(/,5x,15(''-''),'' Generating US pseudopotential '',21(''-''),/)')
+          '(/,5x,21(''-''),'' Generating US pseudopotential '',21(''-''),/)')
   else
      call errore('gener_pseudo','pseudotype not programmed',1)
   endif
@@ -398,7 +398,7 @@ subroutine gener_pseudo
      enddo
   endif
 
-  write(6,"(/,5x,12('-'),' End of pseudopotential generation ',20('-'),/)")
+  write(6,"(/,5x,19('-'),' End of pseudopotential generation ',19('-'),/)")
 
   return
 end subroutine gener_pseudo

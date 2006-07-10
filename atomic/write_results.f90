@@ -19,7 +19,7 @@ subroutine write_results
   !
   !
   dft_name = get_dft_name()
-  write(6,'(5x,20(''-''),'' All-electron run '',30(''-''),/)')
+  write(6,'(5x,27(''-''),'' All-electron run '',28(''-''),/)')
   write(6,1150) title
   if(rel.eq.1) write(6,'(5x,''scalar relativistic calculation'')')
   if(rel.eq.2) write(6,'(5x,''dirac relativistic calculation'')')
@@ -143,7 +143,8 @@ subroutine write_results
 
   do i=1,nwf
      do j=i,nwf
-        if (ll(i)==ll(j).and.jj(i)==jj(j).and.isw(i).eq.isw(j)) then
+        if (ll(i)==ll(j).and.jj(i)==jj(j).and.isw(i).eq.isw(j).and. &
+            oc(i).ge.-1.d-12.and.oc(j).ge.-1.d-12) then
            if (rel<2) then
               do m=1,mesh
                  work(m)=psi(m,1,i)*psi(m,1,j)
@@ -184,7 +185,7 @@ subroutine write_results
      enddo
      close(15)
   endif
-  write(6,'(/,5x,20(''-''), '' End of All-electron run '',22(''-''),/)')
+  write(6,'(/,5x,24(''-''), '' End of All-electron run '',24(''-''),/)')
 
   return
 end subroutine write_results

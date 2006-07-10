@@ -19,7 +19,7 @@ subroutine write_resultsps
   !
   dft_name = get_dft_name()
   write(6,110)
-110 format (/,5x,14('-'),' Testing the pseudopotential ',24('-'),/)
+110 format (/,5x,22('-'),' Testing the pseudopotential ',22('-'),/)
   write(6,1150) title
   if(rel.eq.1) write(6,'(5x,''scalar relativistic calculation'')')
   if(rel.eq.2) write(6,'(5x,''dirac relativistic calculation'')')
@@ -91,7 +91,7 @@ subroutine write_resultsps
   if(isic.ne.0) write(6,1300) dhrsic+dxcsic, dhrsic, dxcsic
 1300 format(5x,'desic:'/5x,0pf12.4,24x,2(0pf12.4))
   write(6,120)
-120 format (/,5x,14('-'), ' End of pseudopotential test ',24('-'),/)
+120 format (/,5x,22('-'), ' End of pseudopotential test ',22('-'),/)
   !
   write(13,*)
   if (file_wavefunctionsps.ne.' ') then
