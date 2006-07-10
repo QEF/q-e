@@ -427,7 +427,7 @@ PROGRAM fpmd_postproc
   DEALLOCATE(ityp)
   IF( ALLOCATED( force  ) ) DEALLOCATE(force)
   IF( ALLOCATED( rho_in ) ) DEALLOCATE(rho_in)
-  IF( ALLOCATED( rho_ot ) ) DEALLOCATE(rho_out)
+  IF( ALLOCATED( rho_out ) ) DEALLOCATE(rho_out)
   DEALLOCATE( stau0 )
   DEALLOCATE( svel0 )
   DEALLOCATE( force0 )
