@@ -116,11 +116,13 @@ MODULE check_stop
              OPEN( UNIT = iunexit, FILE = TRIM( exit_file ) )
              CLOSE( UNIT = iunexit, STATUS = 'DELETE' )
              !
+          ELSE
+             !
+             seconds = elapsed_seconds()
+             !
+             check_stop_now = ( seconds  >  max_seconds )
+             !
           END IF
-          !
-          seconds = elapsed_seconds()
-          !
-          check_stop_now = ( seconds  >  max_seconds )
           !
        END IF
        !
