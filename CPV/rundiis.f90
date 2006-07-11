@@ -225,7 +225,7 @@ CONTAINS
 
              ! ...       bring wave functions onto KS states
 
-             CALL crot( 1, c0(:,:,1), cdesc, lambda, eig(:,1) )
+             CALL crot( c0(:,:,1), cdesc%ngwl, cdesc%nbl( 1 ), lambda, SIZE(lambda,1), eig(:,1) )
 
              call adjef_s(eig(1,1),fi(1,1),efermi,nel, cdesc%nbl( 1 ),temp_elec,sume)
              call entropy_s(fi(1,1),temp_elec,cdesc%nbl( 1 ),edft%ent)
@@ -270,7 +270,7 @@ CONTAINS
           CALL dforce_all( c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 
           CALL proj( 1, cgrad(:,:,1), cdesc, c0(:,:,1), cdesc, lambda )
-          CALL crot( 1, c0(:,:,1), cdesc, lambda, eig(:,1) )
+          CALL crot( c0(:,:,1), cdesc%ngwl, cdesc%nbl( 1 ), lambda, SIZE(lambda,1), eig(:,1) )
 
           call adjef_s(eig(1,1),fi(1,1),efermi,nel, cdesc%nbl( 1 ),temp_elec,sume)
           call entropy_s(fi(1,1),temp_elec,cdesc%nbl(1),edft%ent)

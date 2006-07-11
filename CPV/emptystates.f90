@@ -165,6 +165,7 @@
 
         ! ...   This subroutine writes empty states to unit emptyunit
 
+        USE xml_io_base
         USE mp_global,          ONLY: me_image, nproc_image, intra_image_comm
         USE mp_wave,            ONLY: mergewf
         USE mp,                 ONLY: mp_sum

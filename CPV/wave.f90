@@ -198,7 +198,7 @@
 
 !=----------------------------------------------------------------------------=!
 
-   SUBROUTINE crot_gamma ( ispin, c0, cdesc, lambda, eig )
+   SUBROUTINE crot_gamma ( c0, ngwl, nx, lambda, nrl, eig )
 
 !  this routine rotates the wave functions to the Kohn-Sham base
 !  it works with a block-like distributed matrix
@@ -226,69 +226,95 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
+      INTEGER, INTENT(IN) :: ngwl, nx, nrl
       COMPLEX(DP), INTENT(INOUT) :: c0(:,:)
-      TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      INTEGER, INTENT(IN) :: ispin
       REAL(DP) :: lambda(:,:)
       REAL(DP) :: eig(:)
 
 ! ... declare other variables
-      INTEGER   ::  nx, ngw, nrl
       COMPLEX(DP), ALLOCATABLE :: c0rot(:,:)
-      REAL(DP), ALLOCATABLE :: uu(:,:), vv(:,:)
+      REAL(DP), ALLOCATABLE :: uu(:,:), vv(:,:), ap(:)
       INTEGER   :: i, j, k, ip
       INTEGER   :: jl, nrl_ip
 
 ! ... end of declarations
 !  ----------------------------------------------
 
-      nx  = cdesc%nbl( ispin )
-  
       IF( nx < 1 ) THEN
         RETURN
       END IF
 
-      ngw = cdesc%ngwl
-      nrl = SIZE(lambda, 1)
-      ALLOCATE(uu(nrl,nx))
-      ALLOCATE(vv(nrl,nx))
-      ALLOCATE(c0rot(ngw,nx))
+      ALLOCATE( vv( nrl, nx ) )
+      ALLOCATE( c0rot( ngwl, nx ) )
 
       c0rot = 0.0d0
-      uu    = lambda
 
-      CALL pdspev_drv( 'V', uu, nrl, eig, vv, nrl, nrl, nx, nproc_image, me_image)
+      IF( nrl /= nx ) THEN
 
-      DEALLOCATE(uu)
+         ! Distributed lambda
 
-      DO ip = 1, nproc_image
+         ALLOCATE( uu( nrl, nx ) )
 
-        nrl_ip = nx/nproc_image
-        IF((ip-1).LT.mod(nx,nproc_image)) THEN
-          nrl_ip = nrl_ip + 1
-        END IF
+         uu    = lambda
 
-        ALLOCATE(uu(nrl_ip,nx))
-        IF(me_image.EQ.(ip-1)) THEN
-          uu = vv
-        END IF
-        CALL mp_bcast(uu, (ip-1), intra_image_comm)
+         CALL pdspev_drv( 'V', uu, nrl, eig, vv, nrl, nrl, nx, nproc_image, me_image)
 
-        j      = ip
-        DO jl = 1, nrl_ip
-          DO i = 1, nx
-            CALL DAXPY(2*ngw,uu(jl,i),c0(1,j),1,c0rot(1,i),1)
+         DEALLOCATE(uu)
+
+         DO ip = 1, nproc_image
+
+            nrl_ip = nx/nproc_image
+            IF((ip-1).LT.mod(nx,nproc_image)) THEN
+              nrl_ip = nrl_ip + 1
+            END IF
+ 
+            ALLOCATE(uu(nrl_ip,nx))
+            IF(me_image.EQ.(ip-1)) THEN
+              uu = vv
+            END IF
+            CALL mp_bcast(uu, (ip-1), intra_image_comm)
+ 
+            j      = ip
+            DO jl = 1, nrl_ip
+              DO i = 1, nx
+                CALL DAXPY(2*ngwl,uu(jl,i),c0(1,j),1,c0rot(1,i),1)
+              END DO
+              j = j + nproc_image
+            END DO
+            DEALLOCATE(uu)
+ 
+         END DO
+
+      ELSE
+
+         ! NON distributed lambda
+
+         ALLOCATE( ap( nx * ( nx + 1 ) / 2 ) )
+
+         K = 0
+         DO J = 1, nx
+            DO I = J, nx
+               K = K + 1
+               ap( k ) = lambda( i, j )
+            END DO
           END DO
-          j = j + nproc_image
-        END DO
-        DEALLOCATE(uu)
 
-      END DO
+         CALL dspev_drv( 'V', 'L', nx, ap, eig, vv, nx )
+
+         DEALLOCATE( ap )
+
+         DO j = 1, nrl
+            DO i = 1, nx
+               CALL DAXPY( 2*ngwl, vv(j,i), c0(1,j), 1, c0rot(1,i), 1 )
+            END DO
+         END DO
+
+      END IF
 
       c0(:,:) = c0rot(:,:)
 
-      DEALLOCATE(vv)
-      DEALLOCATE(c0rot)
+      DEALLOCATE( vv )
+      DEALLOCATE( c0rot )
 
       RETURN
    END SUBROUTINE crot_gamma
@@ -503,8 +529,9 @@
 
 
    SUBROUTINE kohn_sham(ispin, c, cdesc, eforces, nupdwn, nupdwnl )
-
+        !
         ! ...   declare modules
+
         USE kinds
         USE wave_constrains,  ONLY: update_lambda
         USE wave_types,       ONLY: wave_descriptor
@@ -542,7 +569,7 @@
            DO ib = 1, nb_g
               CALL update_lambda( ib, gam, c(:,:), cdesc, eforces(:,ib) )
            END DO
-           CALL crot( ispin, c(:,:), cdesc, gam, eig )
+           CALL crot( c(:,:), cdesc%ngwl, nupdwn(ispin), gam, nupdwnl(ispin), eig )
 
            DEALLOCATE( gam, eig )
 

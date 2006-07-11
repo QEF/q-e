@@ -562,6 +562,9 @@ MODULE cp_restart
             !
             ! ... G+K vectors
             !
+            CALL iotk_write_dat( iunpun, "NUMBER_OF_GK-VECTORS", ngwt )
+            !
+            !
             filename = TRIM( wfc_filename( ".", 'gkvectors', ik ) )
             !
             CALL iotk_link( iunpun, "gkvectors", &
@@ -570,6 +573,9 @@ MODULE cp_restart
             filename = TRIM( wfc_filename( dirname, 'gkvectors', ik ) )
             !
          END IF
+         !
+         CALL write_gk( iunout, ik, mill, filename )
+         !
          !
          DO ispin = 1, nspin
             ! 
@@ -587,7 +593,7 @@ MODULE cp_restart
                   !
                END IF
                !
-               CALL iotk_link( iunpun, "wfc", &
+               CALL iotk_link( iunpun, "WFC" // TRIM( iotk_index (ispin) ), &
                                filename, CREATE = .FALSE., BINARY = .TRUE. )
                !
                IF ( nspin == 1 ) THEN
@@ -1824,5 +1830,87 @@ MODULE cp_restart
       RETURN
       !
     END SUBROUTINE read_ions
+    !
+    !
+    !
+    SUBROUTINE write_gk( iun, ik, mill, filename )
+       !
+       USE gvecw,                    ONLY : ngw, ngwt
+       USE reciprocal_vectors,       ONLY : ig_l2g, mill_l
+       USE mp,                       ONLY : mp_sum
+       USE mp_global,                ONLY : intra_image_comm
+       USE io_global,                ONLY : ionode
+       !
+       IMPLICIT NONE
+       !
+       INTEGER,            INTENT(IN) :: iun, ik
+       INTEGER,            INTENT(IN) :: mill(:,:)
+       CHARACTER(LEN=256), INTENT(IN) :: filename
+       !
+       INTEGER, ALLOCATABLE :: igwk(:)
+       INTEGER, ALLOCATABLE :: itmp1(:)
+       INTEGER  :: npwx_g, npw_g, ig, ngg
+
+       npwx_g = ngwt
+       npw_g  = ngwt
+
+       ALLOCATE( igwk( npwx_g ) )
+       ! 
+       igwk = 0
+       !
+       ALLOCATE( itmp1( npw_g ) )
+       !
+       itmp1 = 0
+       !
+       !
+       DO ig = 1, ngw
+          !
+          itmp1( ig_l2g( ig ) ) = ig_l2g( ig )
+          !
+       END DO
+       !
+       CALL mp_sum( itmp1, intra_image_comm )
+       !
+       ngg = 0
+       !
+       DO ig = 1, npw_g
+          !
+          IF ( itmp1(ig) == ig ) THEN
+             !
+             ngg = ngg + 1
+             !
+             igwk( ngg ) = ig
+             !
+          END IF
+          !
+       END DO
+
+       DEALLOCATE( itmp1 )
+       !
+       IF ( ionode ) THEN
+          !
+          CALL iotk_open_write( iun, FILE = TRIM( filename ), BINARY = .TRUE. )
+          !
+          CALL iotk_write_begin( iun,"K-POINT" // iotk_index( ik ), attr )
+          !
+          CALL iotk_write_attr( attr, "NUMBER_OF_GK-VECTORS", npw_g, FIRST = .TRUE. )
+          CALL iotk_write_empty( iun, "INFO", ATTR = attr )
+          !
+          CALL iotk_write_dat( iun, "INDEX", igwk( 1:npw_g ) )
+          CALL iotk_write_dat( iun, "GRID", mill( 1:3, igwk( 1:npw_g ) ), COLUMNS = 3 )
+          !
+          CALL iotk_write_end( iun, "K-POINT" // iotk_index( ik ) )
+          !
+          CALL iotk_close_write( iun )
+          !
+       END IF
+       !
+       DEALLOCATE( igwk )
+
+       RETURN
+
+    END SUBROUTINE
+    !
+    !
     !
 END MODULE cp_restart
