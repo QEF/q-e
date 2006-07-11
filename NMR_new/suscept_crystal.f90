@@ -240,6 +240,14 @@ SUBROUTINE suscept_crystal
     call biot_savart(ipol)
   enddo
 
+  do i = 1, nspin
+    if (trim(filcurr) /= '') &
+      call write_tensor_field(filcurr, i, j_bare(1,1,1,i))
+  enddo
+  if (trim(filfield) /= '') &
+    call write_tensor_field(filfield, 0, b_ind_r)
+
+
   ! ... or you symmetrize the induced field
   !call symmetrize_field(b_ind_r,0)
   !call field_to_reciprocal_space

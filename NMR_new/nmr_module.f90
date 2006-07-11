@@ -55,6 +55,8 @@ MODULE nmr_module
   ! format for a rank-2 tensor
   CHARACTER(*), PARAMETER :: tens_fmt = '(3(5X,3(F14.4,2X)/))'
 
+  ! for plotting the induced current and induced field
+  CHARACTER(80) :: filcurr, filfield
 
   CONTAINS
   !-----------------------------------------------------------------------
@@ -65,6 +67,8 @@ MODULE nmr_module
   !              job = 'nmr' or 'g_tensor'
   !              conv_threshold = 1d-14
   !              q_nmr = 0.01d0
+  !              filcurr = '...'
+  !              filfield = '...'
   !              iverbosity = 0
   !         /
   !-----------------------------------------------------------------------
@@ -74,7 +78,7 @@ MODULE nmr_module
     IMPLICIT NONE
     INTEGER :: ios
     NAMELIST /inputmagn/ job, prefix, tmp_dir, conv_threshold, &
-                         q_nmr, iverbosity
+                         q_nmr, iverbosity, filcurr, filfield
    
     if ( .not. ionode ) goto 400
 
@@ -84,6 +88,8 @@ MODULE nmr_module
     conv_threshold = 1d-14
     q_nmr = 0.01d0
     iverbosity = 0
+    filcurr = ''
+    filfield = ''
     read( 5, inputmagn, err = 200, iostat = ios )
 200 call errore( 'nmr_readin', 'reading inputmagn namelist', abs( ios ) )
 400 continue
@@ -108,6 +114,8 @@ MODULE nmr_module
     call mp_bcast(conv_threshold, root)
     call mp_bcast(q_nmr, root)
     call mp_bcast(iverbosity, root)
+    call mp_bcast(filcurr, root)
+    call mp_bcast(filfield, root)
 #endif
   END SUBROUTINE nmr_bcast_input
 
