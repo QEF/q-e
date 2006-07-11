@@ -24,6 +24,64 @@ compute_sigma_bare.o \
 init_us_2_no_phase.o \
 g_tensor_crystal.o
 
+MODULES = \
+../Modules/atom.o \
+../Modules/autopilot.o \
+../Modules/basic_algebra_routines.o \
+../Modules/bfgs_module.o \
+../Modules/berry_phase.o \
+../Modules/cell_base.o \
+../Modules/check_stop.o \
+../Modules/clocks.o \
+../Modules/constants.o \
+../Modules/constraints_module.o \
+../Modules/control_flags.o \
+../Modules/electrons_base.o \
+../Modules/fft_base.o \
+../Modules/fft_scalar.o \
+../Modules/fft_types.o \
+../Modules/functionals.o \
+../Modules/input_parameters.o \
+../Modules/io_files.o \
+../Modules/io_global.o \
+../Modules/ions_base.o \
+../Modules/ions_nose.o \
+../Modules/kind.o \
+../Modules/metadyn_base.o \
+../Modules/metadyn_io.o \
+../Modules/metadyn_vars.o \
+../Modules/mp_global.o \
+../Modules/mp_wave.o \
+../Modules/mp.o \
+../Modules/parallel_include.o \
+../Modules/parameters.o \
+../Modules/parser.o \
+../Modules/path_base.o \
+../Modules/path_formats.o \
+../Modules/path_variables.o \
+../Modules/path_opt_routines.o \
+../Modules/path_io_routines.o \
+../Modules/path_reparametrisation.o \
+../Modules/printout_base.o \
+../Modules/pseudo_types.o \
+../Modules/ptoolkit.o \
+../Modules/random_numbers.o \
+../Modules/read_cards.o \
+../Modules/read_namelists.o \
+../Modules/read_uspp.o \
+../Modules/read_upf.o \
+../Modules/recvec.o \
+../Modules/splinelib.o \
+../Modules/stick_base.o \
+../Modules/shmem_include.o \
+../Modules/task_groups.o \
+../Modules/timestep.o \
+../Modules/uspp.o \
+../Modules/version.o \
+../Modules/wavefunctions.o \
+../Modules/wave_base.o \
+../Modules/xml_io_base.o
+
 PWOBJS = \
 ../PW/a2fmod.o \
 ../PW/add_bfield.o \
@@ -53,6 +111,8 @@ PWOBJS = \
 ../PW/ccalbec.o \
 ../PW/ccalbec_nc.o \
 ../PW/ccgdiagg.o \
+../PW/compute_scf.o \
+../PW/compute_fes_grads.o \
 ../PW/rcgdiagg.o \
 ../PW/cdiagh.o \
 ../PW/cdiaghg.o \
@@ -147,6 +207,7 @@ PWOBJS = \
 ../PW/mix_pot.o \
 ../PW/mix_rho.o \
 ../PW/mode_group.o \
+../PW/move_ions.o \
 ../PW/multable.o \
 ../PW/n_plane_waves.o \
 ../PW/new_ns.o \
@@ -218,6 +279,7 @@ PWOBJS = \
 ../PW/spinor.o \
 ../PW/sph_ind.o \
 ../PW/startup.o \
+../PW/stop_run.o \
 ../PW/stres_cc.o \
 ../PW/stres_ewa.o \
 ../PW/stres_gradcorr.o \
@@ -263,54 +325,6 @@ PWOBJS = \
 ../PW/write_ns.o \
 ../PW/wsweight.o
 
-MODULES = \
-../Modules/atom.o \
-../Modules/autopilot.o \
-../Modules/basic_algebra_routines.o \
-../Modules/berry_phase.o \
-../Modules/cell_base.o \
-../Modules/check_stop.o \
-../Modules/clocks.o \
-../Modules/constants.o \
-../Modules/constraints_module.o \
-../Modules/control_flags.o \
-../Modules/electrons_base.o \
-../Modules/fft_base.o \
-../Modules/fft_scalar.o \
-../Modules/fft_types.o \
-../Modules/functionals.o \
-../Modules/input_parameters.o \
-../Modules/io_files.o \
-../Modules/io_global.o \
-../Modules/ions_base.o \
-../Modules/ions_nose.o \
-../Modules/kind.o \
-../Modules/mp_global.o \
-../Modules/mp_wave.o \
-../Modules/mp.o \
-../Modules/parallel_include.o \
-../Modules/parameters.o \
-../Modules/parser.o \
-../Modules/printout_base.o \
-../Modules/pseudo_types.o \
-../Modules/ptoolkit.o \
-../Modules/random_numbers.o \
-../Modules/read_cards.o \
-../Modules/read_namelists.o \
-../Modules/read_uspp.o \
-../Modules/read_upf.o \
-../Modules/recvec.o \
-../Modules/splinelib.o \
-../Modules/stick_base.o \
-../Modules/shmem_include.o \
-../Modules/task_groups.o \
-../Modules/timestep.o \
-../Modules/uspp.o \
-../Modules/version.o \
-../Modules/wavefunctions.o \
-../Modules/wave_base.o \
-../Modules/xml_io_base.o
-
 TLDEPS=bindir mods libs libiotk
 
 all : tldeps magn.x
@@ -329,3 +343,4 @@ clean :
 include make.depend
 
 # DO NOT DELETE
+
