@@ -43,7 +43,6 @@ CP_OBJS = \
 ../CPV/exch_corr.o \
 ../CPV/fftdrv.o \
 ../CPV/fft.o \
-../CPV/fnl.o \
 ../CPV/forces.o \
 ../CPV/fromscra.o \
 ../CPV/greenf.o \
