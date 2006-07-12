@@ -1389,9 +1389,9 @@ MODULE pw_restart
             !
             CALL iotk_scan_end( iunpun, "SYMMETRIES" )
             !
-            CALL iotk_close_read( iunpun )
-            !
          END IF
+         !
+         CALL iotk_close_read( iunpun )
          !
       END IF
       !
@@ -2222,7 +2222,6 @@ MODULE pw_restart
             CALL iotk_scan_begin( iunpun, &
                                   "K-POINT" // TRIM( iotk_index( ik ) ) )
             !
-! @AF@
             CALL iotk_scan_begin( iunpun, "WFC.1", FOUND = twfcollect  )
             !
             IF ( twfcollect ) CALL iotk_scan_end( iunpun, "WFC.1" )
@@ -2402,8 +2401,6 @@ MODULE pw_restart
             !
             CALL iotk_scan_end( iunpun, "PHONON" )
             !
-            CALL iotk_close_read( iunpun )
-            !
          ELSE
             !
             modenum = 0
@@ -2411,6 +2408,8 @@ MODULE pw_restart
             !
          END IF
          !
+         CALL iotk_close_read( iunpun )
+         ! 
       END IF
       !
       CALL mp_bcast( modenum, ionode_id, intra_image_comm )
