@@ -116,13 +116,13 @@
           ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi , taus, &
           vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_ , &
           occ_ , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei, &
-          rho, c02 = c0, cm2 = cm, mat_z = mat_z  )
+          rho, c0, cm, mat_z = mat_z  )
       ELSE
         CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
           ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi , taus, &
           vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_ , &
           occ_ , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei, &
-          rho, c02 = c0, cm2 = cm  )
+          rho, c0, cm  )
       END IF
 
       DEALLOCATE( occ_ )
@@ -196,13 +196,13 @@
                 ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, taus, &
                 vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ_ , &
                 occ_ , lambda, lambdam, b1, b2, b3, &
-                xnhe0, xnhem, vnhe, ekincm, c02 = c0, cm2 = cm, mat_z = mat_z )
+                xnhe0, xnhem, vnhe, ekincm, c0, cm, mat_z = mat_z )
       ELSE
          CALL cp_readfile( ndr, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
                 ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, taus, &
                 vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ_ , &
                 occ_ , lambda, lambdam, b1, b2, b3, &
-                xnhe0, xnhem, vnhe, ekincm, c02 = c0, cm2 = cm )
+                xnhe0, xnhem, vnhe, ekincm, c0, cm )
       END IF
 
       ! AutoPilot (Dynamic Rules) Implementation
@@ -240,7 +240,7 @@
 !=----------------------------------------------------------------------------=!
 
 
-   SUBROUTINE writefile_fpmd( nfi, trutime, c0, cm, cdesc, occ, &
+   SUBROUTINE writefile_fpmd( nfi, trutime, c0, cm, occ, &
      atoms_0, atoms_m, acc, taui, cdmi, &
      ht_m, ht_0, rho, vpot)
                                                                         
@@ -263,12 +263,11 @@
         IMPLICIT NONE 
  
         INTEGER, INTENT(IN) :: nfi
-        COMPLEX(DP), INTENT(IN) :: c0(:,:,:), cm(:,:,:) 
+        COMPLEX(DP), INTENT(IN) :: c0(:,:), cm(:,:) 
         REAL(DP), INTENT(IN) :: occ(:,:)
         TYPE (boxdimensions), INTENT(IN) :: ht_m, ht_0
         TYPE (atoms_type), INTENT(IN) :: atoms_0, atoms_m
         REAL(DP), INTENT(IN) :: rho(:,:)
-        TYPE (wave_descriptor) :: cdesc
         REAL(DP), INTENT(INOUT) :: vpot(:,:)
                                                                         
         REAL(DP), INTENT(IN) :: taui(:,:)
@@ -297,7 +296,7 @@
           ht_0%a, ht_m%a, ht_0%hvel, ht_0%gvel, xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
           xnhp0, xnhpm, nhpcl, nhpdim, occ, occ, lambda, lambda,  &
-          xnhe0, xnhem, vnhe, ekincm, ei, rho, c03 = c0, cm3 = cm )
+          xnhe0, xnhem, vnhe, ekincm, ei, rho, c0, cm )
 
         DEALLOCATE( lambda )
 
@@ -309,7 +308,7 @@
 !=----------------------------------------------------------------------------=!
 
         SUBROUTINE readfile_fpmd( nfi, trutime, &
-          c0, cm, cdesc, occ, atoms_0, atoms_m, acc, taui, cdmi, &
+          c0, cm, occ, atoms_0, atoms_m, acc, taui, cdmi, &
           ht_m, ht_0, rho, vpot )
                                                                         
         use electrons_base, only: nbsp, nspin, nudx
@@ -336,12 +335,11 @@
         IMPLICIT NONE 
  
         INTEGER, INTENT(OUT) :: nfi
-        COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:), cm(:,:,:) 
+        COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cm(:,:) 
         REAL(DP), INTENT(INOUT) :: occ(:,:)
         TYPE (boxdimensions), INTENT(INOUT) :: ht_m, ht_0
         TYPE (atoms_type), INTENT(INOUT) :: atoms_0, atoms_m
         REAL(DP), INTENT(INOUT) :: rho(:,:)
-        TYPE (wave_descriptor) :: cdesc
         REAL(DP), INTENT(INOUT) :: vpot(:,:)
                                                                         
         REAL(DP), INTENT(OUT) :: taui(:,:)
@@ -367,7 +365,7 @@
           hp0_ , hm1_ , hvel_ , gvel_ , xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
           xnhp0, xnhpm, nhpcl, nhpdim, occ, occ, lambda_ , lambda_ , b1, b2,   &
-          b3, xnhe0, xnhem, vnhe, ekincm, c03 = c0, cm3 = cm )
+          b3, xnhe0, xnhem, vnhe, ekincm, c0, cm )
 
         DEALLOCATE( lambda_ )
 

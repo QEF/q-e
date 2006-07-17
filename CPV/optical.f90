@@ -53,8 +53,8 @@ CONTAINS
 
           INTEGER,  INTENT(IN) :: nfi
           REAL(DP), INTENT(IN) :: omega
-          COMPLEX(DP), INTENT(IN) :: c0(:,:,:)
-          COMPLEX(DP), INTENT(INOUT) :: ce(:,:,:)
+          COMPLEX(DP), INTENT(IN) :: c0(:,:)
+          COMPLEX(DP), INTENT(INOUT) :: ce(:,:)
           TYPE(wave_descriptor), INTENT(IN) :: wempt, wfill
           REAL (DP), INTENT(in) ::   vpot(:,:)
           REAL (DP) ::   bec(:,:)
@@ -62,12 +62,12 @@ CONTAINS
           COMPLEX(DP) :: vkb(:,:)
 
           INTEGER :: iss, ngw
-          INTEGER :: ie, if, nf, ne, idie, ig, ierr, i, nbt
+          INTEGER :: ie, if, nf, ne, idie, ig, ierr, i, nbt, nsst
           COMPLEX(DP), ALLOCATABLE :: eforce(:,:)
           REAL (DP), ALLOCATABLE ::   bece(:,:)
           REAL(DP) :: curr(3), currt, wef, w, wg2, p2
           COMPLEX(DP) :: ccurr(3), ccurrt
-          COMPLEX(DP), ALLOCATABLE :: diet(:), cf(:,:,:)
+          COMPLEX(DP), ALLOCATABLE :: diet(:), cf(:,:)
           INTEGER :: cif, cie
           REAL(DP), ALLOCATABLE :: sigma(:), fi(:), eig(:), ff(:), dipole(:,:,:,:)
           REAL(DP), ALLOCATABLE :: epsilon2(:), dos(:)
@@ -92,7 +92,7 @@ CONTAINS
           IF( nspin > 1 ) nbt = MAX( nbt, wfill%nbl( 2 ) + wempt%nbl( 2 ) )
 
           ALLOCATE( diet(nfreq), ndiet(nfreq), sigma(nfreq) )
-          ALLOCATE( cf( SIZE(c0,1), SIZE(c0,2), SIZE(c0,3) ) )
+          ALLOCATE( cf( SIZE(c0,1), SIZE(c0,2) ) )
           ALLOCATE( dipole( 3, nbt, nbt, nspin ) )
           ALLOCATE( epsilon2( nfreq ) )
           ALLOCATE( dos( nfreq ) )
@@ -106,38 +106,37 @@ CONTAINS
 
           cf = c0
 
+          ALLOCATE( eforce( ngw,  MAX( SIZE( c0, 2 ), SIZE( ce, 2 ) ) ) )
+
+          nsst = nupdwn( 1 )
+          IF( nspin == 2 ) nsst = nsst + nupdwn( 2 )
+          CALL nlsm1 ( nsst, 1, nspnl, eigr, cf, bec )
+          !
+          nsst = nupdwn_emp( 1 )
+          IF( nspin == 2 ) nsst = nsst + nupdwn_emp( 2 )
+          ALLOCATE( bece( nkb, nsst ) ) 
+          CALL nlsm1 ( nsst, 1, nspnl, eigr, ce, bece )
+
           DO iss = 1, nspin
 
              ALLOCATE( ff( MAX( nupdwn( iss ), nupdwn_emp( iss ) ) ) )
 
              ff = 2.0d0 / nspin
-
-             ALLOCATE( eforce( ngw,  nupdwn( iss ) ) )
              !
-             CALL nlsm1 ( nupdwn( iss ), 1, nspnl, eigr, cf(1,1,iss), bec )
+             CALL dforce_all( cf, ff, eforce, vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
 
-             CALL dforce_all( cf(:,:,iss), ff, eforce, vpot(:,iss), vkb, bec, &
-                              nupdwn(iss), iupdwn(iss) )
-
-             CALL kohn_sham( iss, cf(:,:,iss), wfill, eforce, nupdwn, nb_l )
-
-             DEALLOCATE( eforce )
-
-             ALLOCATE( bece( nkb, nupdwn_emp( iss ) ) ) 
-             ALLOCATE( eforce( ngw,  nupdwn_emp( iss ) ) )
+             CALL kohn_sham( cf, ngw, eforce, nupdwn(iss), nb_l(iss), iupdwn(iss) )
              !
-             CALL nlsm1 ( nupdwn_emp( iss ), 1, nspnl, eigr, ce(1,1,iss), bece )
+             CALL dforce_all( ce, ff, eforce, vpot(:,iss), vkb, bece, nupdwn_emp(iss), iupdwn_emp(iss) )
              !
-             CALL dforce_all( ce(:,:,iss), ff, eforce, vpot(:,iss), vkb, bece, &
-                              nupdwn_emp(iss), iupdwn_emp(iss) )
-             !
-             CALL kohn_sham( iss, ce(:,:,iss), wempt, eforce, nupdwn_emp, n_emp_l )
+             CALL kohn_sham( ce, ngw, eforce, nupdwn_emp(iss), n_emp_l(iss), iupdwn_emp(iss) )
 
-             DEALLOCATE( bece )
              DEALLOCATE( ff )
 
           END DO
 
+          DEALLOCATE( bece )
+          DEALLOCATE( eforce )
 
 
           WRITE( stdout, * ) 'epsilon: '
@@ -186,11 +185,11 @@ CONTAINS
 
                       DO ig = 1, ngw
                         ccurr(1) = ccurr(1) + gx(1,ig) * &
-                           ce( ig, cie, iss ) * CONJG( cf( ig, cif, iss ) )
+                           ce( ig, cie + iupdwn_emp(iss) - 1 ) * CONJG( cf( ig, cif + iupdwn(iss) - 1 ) )
                         ccurr(2) = ccurr(2) + gx(2,ig) * &
-                           ce( ig, cie, iss ) * CONJG( cf( ig, cif, iss ) )
+                           ce( ig, cie + iupdwn_emp(iss) - 1 ) * CONJG( cf( ig, cif + iupdwn(iss) - 1 ) )
                         ccurr(3) = ccurr(3) + gx(3,ig) * &
-                           ce( ig, cie, iss ) * CONJG( cf( ig, cif, iss ) )
+                           ce( ig, cie + iupdwn_emp(iss) - 1 ) * CONJG( cf( ig, cif + iupdwn(iss) - 1 ) )
                       END DO
                       !
                       CALL mp_sum( ccurr, intra_image_comm ) 

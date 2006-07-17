@@ -108,7 +108,7 @@ CONTAINS
         USE wave_functions,   ONLY : kohn_sham
         USE forces
         USE control_flags,    ONLY : force_pairing
-        USE electrons_base,   ONLY : nupdwn, iupdwn, nspin
+        USE electrons_base,   ONLY : nupdwn, iupdwn, nspin, nbsp
         USE electrons_module, ONLY : n_emp, nupdwn_emp, iupdwn_emp, nb_l, n_emp_l
         USE empty_states,     ONLY : readempty
         USE uspp,             ONLY : nkb
@@ -116,7 +116,7 @@ CONTAINS
         IMPLICIT NONE
 
         ! ...   declare subroutine arguments
-        COMPLEX(DP), INTENT(INOUT) :: cf(:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: cf(:,:)
         TYPE (wave_descriptor), INTENT(IN) :: wfill
         COMPLEX(DP)  ::  eigr(:,:)
         COMPLEX(DP)  ::  vkb(:,:)
@@ -124,12 +124,12 @@ CONTAINS
         REAL(DP) ::  vpot(:,:)
 
         ! ...   declare other variables
-        INTEGER  ::  i, ib, ig, ngw, nb_g, iss, iks, nspinw
-        INTEGER  ::  issw, n_emps, in, ns
+        INTEGER  :: i, ib, ig, ngw, nb_g, iss, iks
+        INTEGER  :: n_emps, in, ns
         LOGICAL  :: tortho = .TRUE.
         LOGICAL  :: exist 
 
-        COMPLEX(DP), ALLOCATABLE :: fforce(:,:,:)
+        COMPLEX(DP), ALLOCATABLE :: fforce(:,:)
         COMPLEX(DP), ALLOCATABLE :: eforce(:,:)
         COMPLEX(DP), ALLOCATABLE :: ce(:,:)
         REAL(DP), ALLOCATABLE :: bec_emp(:,:)
@@ -145,17 +145,13 @@ CONTAINS
 
         IF( tksout ) THEN
 
-           ALLOCATE( fforce( ngw, SIZE( cf, 2 ), nspin ) )
+           ALLOCATE( fforce( ngw, nbsp ) )
 
            DO iss = 1, nspin
 
-              issw = iss
-              IF( force_pairing ) issw = 1
-
               IF( nupdwn( iss ) > 0 ) THEN
 
-                 CALL dforce_all( cf(:,:,issw), occ(:,iss), fforce(:,:,iss), &
-                   vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
+                 CALL dforce_all( cf, occ(:,iss), fforce, vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
 
               END IF
 
@@ -163,18 +159,18 @@ CONTAINS
 
            IF( force_pairing ) THEN 
               DO i = 1, nupdwn(2)
-                 fforce(:,i,1) = occ(i,1) * fforce(:,i,1) + occ(i,2) * fforce(:,i,2)
+                 fforce(:,i) = occ(i,1) * fforce(:,i) + occ(i,2) * fforce(:,i+iupdwn(2)-1)
               END DO
               DO i = nupdwn(2)+1, nupdwn(1)
-                 fforce(:,i,1) = occ(i,1) * fforce(:,i,1)
+                 fforce(:,i) = occ(i,1) * fforce(:,i)
+              END DO
+              DO i = iupdwn(2), iupdwn(2) + nupdwn(2) - 1
+                 fforce(:,i) = fforce(:,i-iupdwn(2)+1)
               END DO
            END IF
 
-           nspinw = nspin
-           IF( force_pairing ) nspinw = 1
-
-           DO iss = 1, nspinw
-              CALL kohn_sham( iss, cf(:,:,iss), wfill, fforce(:,:,iss), nupdwn, nb_l )
+           DO iss = 1, nspin
+              CALL kohn_sham( cf, ngw, fforce, nupdwn( iss ), nb_l(iss), iupdwn( iss ) )
            END DO
 
            DEALLOCATE( fforce )
@@ -201,6 +197,8 @@ CONTAINS
 
           CALL nlsm1 ( n_emps, 1, nsp, eigr, ce, bec_emp )
 
+          ALLOCATE( eforce( ngw, SIZE( ce, 2 ) ) )
+
           DO iss = 1, nspin
 
             in = iupdwn_emp( iss )
@@ -209,20 +207,20 @@ CONTAINS
             IF( ns > 0 ) THEN
 
               ALLOCATE( fi( ns ) )
-              ALLOCATE( eforce( ngw, ns ) )
 
               fi = 2.0d0 / nspin
 
-              CALL dforce_all( ce(:,in:in+ns-1), fi, eforce, vpot(:,iss), vkb, bec_emp, ns, in ) 
+              CALL dforce_all( ce, fi, eforce, vpot(:,iss), vkb, bec_emp, ns, in ) 
 
-              CALL kohn_sham( iss, ce(:,in:in+ns-1), wempt, eforce, nupdwn_emp, n_emp_l )
+              CALL kohn_sham( ce, ngw, eforce, ns, n_emp_l(iss), in )
 
-              DEALLOCATE( eforce )
               DEALLOCATE( fi )
 
             END IF
 
           END DO
+
+          DEALLOCATE( eforce )
 
           DEALLOCATE( bec_emp )
 
@@ -246,17 +244,16 @@ CONTAINS
         USE mp_global,        ONLY : intra_image_comm
         USE io_global,        ONLY : ionode
         USE io_global,        ONLY : stdout
-        USE control_flags,    ONLY : force_pairing
         USE electrons_module, ONLY : iupdwn_emp, nupdwn_emp
         USE electrons_base,   ONLY : nupdwn, iupdwn, nspin
 
         IMPLICIT NONE
 
         ! ...   declare subroutine arguments
-        COMPLEX(DP),            INTENT(INOUT) :: cf(:,:,:), ce(:,:)
+        COMPLEX(DP),            INTENT(INOUT) :: cf(:,:), ce(:,:)
 
         ! ...   declare other variables
-        INTEGER ::  i, iss, iks, issw
+        INTEGER ::  i, iss, iks
 
         CHARACTER(LEN=256) :: file_name
         CHARACTER(LEN=10), DIMENSION(2) :: spin_name
@@ -279,15 +276,13 @@ CONTAINS
           END IF
 
           DO iss = 1, nspin
-            issw = iss
-            IF( force_pairing ) issw = 1
             IF( tksout ) THEN
               DO i = 1, n_ksout(iss)
                 iks = indx_ksout(i, iss)
                 IF( ( iks > 0 ) .AND. ( iks <= nupdwn( iss ) ) ) THEN
                   file_name = TRIM( ks_file ) // &
                             & trim(spin_name(iss)) // trim( int_to_char( iks ) )
-                  CALL print_ks_states( cf(:,iks,issw), file_name )
+                  CALL print_ks_states( cf(:,iks+iupdwn(iss)-1), file_name )
                 END IF
               END DO
             END IF

@@ -508,7 +508,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
               !       
               !     random initialization
               !
-              CALL wave_rand_init( rep_el(sm_k)%cm( :, 1:nbsp ) )
+              CALL wave_rand_init( rep_el(sm_k)%cm, nbsp, 1 )
               !
            ELSE
               rep_el(sm_k)%cm = rep_el(1)%cm

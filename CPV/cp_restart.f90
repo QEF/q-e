@@ -36,7 +36,7 @@ MODULE cp_restart
                              taui, cdmi, stau0, svel0, staum, svelm, force,  &
                              vnhp, xnhp0, xnhpm,nhpcl,nhpdim, occ0, occm,    &
                              lambda0,lambdam, xnhe0, xnhem, vnhe, ekincm,    &
-                             et, rho, c03, cm3, c02, cm2, mat_z )
+                             et, rho, c02, cm2, mat_z )
       !------------------------------------------------------------------------
       !
       USE control_flags,            ONLY : gamma_only, force_pairing, reduce_io
@@ -105,10 +105,8 @@ MODULE cp_restart
       REAL(DP),              INTENT(IN) :: ekincm       ! 
       REAL(DP),              INTENT(IN) :: et(:,:)      ! 
       REAL(DP),              INTENT(IN) :: rho(:,:)     ! 
-      COMPLEX(DP), OPTIONAL, INTENT(IN) :: c03(:,:,:)   ! 
-      COMPLEX(DP), OPTIONAL, INTENT(IN) :: cm3(:,:,:)   ! 
-      COMPLEX(DP), OPTIONAL, INTENT(IN) :: c02(:,:)     ! 
-      COMPLEX(DP), OPTIONAL, INTENT(IN) :: cm2(:,:)     ! 
+      COMPLEX(DP),           INTENT(IN) :: c02(:,:)     ! 
+      COMPLEX(DP),           INTENT(IN) :: cm2(:,:)     ! 
       REAL(DP),    OPTIONAL, INTENT(IN) :: mat_z(:,:,:) ! 
       !
       LOGICAL               :: write_charge_density
@@ -611,21 +609,11 @@ MODULE cp_restart
             iss_wfc = ispin
             if( force_pairing ) iss_wfc = 1   ! only the WF for the first spin is allocated
             !
-            IF ( PRESENT( c03 ) ) THEN
-               !
-               CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin,   &
-                               c03(:,:,iss_wfc), ngwt, nbnd, ig_l2g, &
-                               ngw, filename, scalef )
-               !
-            ELSE IF ( PRESENT( c02 ) ) THEN
-               !
-               ib = iupdwn( iss_wfc )
-               !
-               CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin, &
-                               c02(:,ib:), ngwt, nbnd, ig_l2g, ngw, &
-                               filename, scalef )
-               !
-            END IF
+            ib = iupdwn( iss_wfc )
+            !
+            CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin, &
+                            c02(:,ib:), ngwt, nbnd, ig_l2g, ngw, &
+                            filename, scalef )
             !
             IF ( ionode ) THEN
                !
@@ -654,21 +642,12 @@ MODULE cp_restart
                !
             END IF
             !
-            IF ( PRESENT( cm3 ) ) THEN
-               !
-               CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin,   &
-                              cm3(:,:,iss_wfc), ngwt, nbnd, ig_l2g,  &
-                              ngw, filename, scalef )
-               !
-            ELSE IF ( PRESENT( c02 ) ) THEN
-               !
-               ib = iupdwn(iss_wfc)
-               !
-               CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin, &
-                               cm2(:,ib:SIZE(cm2,2)), ngwt, nbnd, ig_l2g, ngw, &
-                               filename, scalef )
-               !
-            END IF
+            !
+            ib = iupdwn(iss_wfc)
+            !
+            CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin, &
+                            cm2(:,ib:SIZE(cm2,2)), ngwt, nbnd, ig_l2g, ngw, &
+                            filename, scalef )
             !
          END DO
          !
@@ -751,7 +730,7 @@ MODULE cp_restart
                             taui, cdmi, stau0, svel0, staum, svelm, force,    &
                             vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ0, occm,      &
                             lambda0, lambdam, b1, b2, b3, xnhe0, xnhem, vnhe, &
-                            ekincm, c03, cm3, c02, cm2, mat_z )
+                            ekincm, c02, cm2, mat_z )
       !------------------------------------------------------------------------
       !
       USE control_flags,            ONLY : gamma_only, force_pairing
@@ -817,10 +796,8 @@ MODULE cp_restart
       REAL(DP),              INTENT(INOUT) :: xnhem        !
       REAL(DP),              INTENT(INOUT) :: vnhe         !  
       REAL(DP),              INTENT(INOUT) :: ekincm       !  
-      COMPLEX(DP), OPTIONAL, INTENT(INOUT) :: c03(:,:,:)   ! 
-      COMPLEX(DP), OPTIONAL, INTENT(INOUT) :: cm3(:,:,:)   ! 
-      COMPLEX(DP), OPTIONAL, INTENT(INOUT) :: c02(:,:)     ! 
-      COMPLEX(DP), OPTIONAL, INTENT(INOUT) :: cm2(:,:)     ! 
+      COMPLEX(DP),           INTENT(INOUT) :: c02(:,:)     ! 
+      COMPLEX(DP),           INTENT(INOUT) :: cm2(:,:)     ! 
       REAL(DP),    OPTIONAL, INTENT(INOUT) :: mat_z(:,:,:) ! 
       !
       CHARACTER(LEN=256)   :: dirname, kdirname, filename
@@ -1247,21 +1224,11 @@ MODULE cp_restart
                !
                ! Only WF with spin 1 are needed when force_pairing is active
                !
-               IF ( PRESENT( c03 ) ) THEN
-                  !
-                  CALL read_wfc( iunout, ik_eff , nk, kunit, ispin_, nspin_, &
-                                 c03(:,:,ispin), ngwt_, nbnd_, ig_l2g, &
-                                 ngw, filename, scalef_ )
-                  !
-               ELSE IF ( PRESENT( c02 ) ) THEN
-                  !
-                  ib = iupdwn(ispin)
-                  !
-                  CALL read_wfc( iunout, ik_eff , nk, kunit, ispin_, nspin_, &
-                                 c02(:,ib:), ngwt_, nbnd_, ig_l2g, ngw, &
-                                 filename, scalef_ )
-                  !
-               END IF
+               ib = iupdwn(ispin)
+               !
+               CALL read_wfc( iunout, ik_eff , nk, kunit, ispin_, nspin_, &
+                              c02(:,ib:), ngwt_, nbnd_, ig_l2g, ngw, &
+                              filename, scalef_ )
                !
             END IF
             !
@@ -1286,35 +1253,17 @@ MODULE cp_restart
                   !
                   ! Only WF with spin 1 are needed when force_pairing is active
                   !
-                  IF ( PRESENT( cm3 ) ) THEN
-                     !
-                     CALL read_wfc( iunout, ik_eff, nk, kunit, ispin_, nspin_,   &
-                                    cm3(:,:,ispin), ngwt_, nbnd_, ig_l2g, &
-                                    ngw, filename, scalef_ )
-                     !
-                  ELSE IF( PRESENT( cm2 ) ) THEN
-                     !
-                     ib = iupdwn(ispin)
-                     !
-                     CALL read_wfc( iunout, ik_eff, nk, kunit, ispin_, nspin_, &
-                                    cm2(:,ib:), ngwt_, nbnd_, ig_l2g, ngw, &
-                                    filename, scalef_ )
-                     !
-                  END IF
+                  ib = iupdwn(ispin)
+                  !
+                  CALL read_wfc( iunout, ik_eff, nk, kunit, ispin_, nspin_, &
+                                 cm2(:,ib:), ngwt_, nbnd_, ig_l2g, ngw, &
+                                 filename, scalef_ )
                   !
                END IF
                !
             ELSE
                !
-               IF ( PRESENT( cm3 ) ) THEN
-                  !
-                  cm3 = c03
-                  !
-               ELSE IF( PRESENT( cm2 ) ) THEN
-                  !
-                  cm2 = c02
-                  !
-               END IF
+               cm2 = c02
                !
             END IF
             !

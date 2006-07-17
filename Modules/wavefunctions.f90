@@ -34,9 +34,9 @@
 
      ! electronic wave functions, FPMD code
      !
-     COMPLEX(DP), ALLOCATABLE :: c0(:,:,:)  ! wave functions at time t
-     COMPLEX(DP), ALLOCATABLE :: cm(:,:,:)  ! wave functions at time t-delta t
-     COMPLEX(DP), ALLOCATABLE :: cp(:,:,:)  ! wave functions at time t+delta t
+     COMPLEX(DP), ALLOCATABLE :: c0(:,:)  ! wave functions at time t
+     COMPLEX(DP), ALLOCATABLE :: cm(:,:)  ! wave functions at time t-delta t
+     COMPLEX(DP), ALLOCATABLE :: cp(:,:)  ! wave functions at time t+delta t
 
    CONTAINS
 

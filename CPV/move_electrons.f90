@@ -75,7 +75,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
           CALL get_wannier_center( tfirst, cm, bec, becdr, eigr, &
                                    eigrb, taub, irb, ibrav, b1, b2, b3 )
      !
-     CALL rhoofr( nfi, c0(:,:,1), irb, eigrb, bec, &
+     CALL rhoofr( nfi, c0, irb, eigrb, bec, &
                      becsum, rhor, rhog, rhos, enl, ekin )
      !
      !
@@ -103,14 +103,14 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      !
      IF( tefield )  THEN
         !
-        CALL berry_energy( enb, enbi, bec, c0(:,:,1), fion )
+        CALL berry_energy( enb, enbi, bec, c0, fion )
         !
         etot = etot + enb + enbi
         !
      END IF
      IF( tefield2 )  THEN
         !
-        CALL berry_energy2( enb, enbi, bec, c0(:,:,1), fion )
+        CALL berry_energy2( enb, enbi, bec, c0, fion )
         !
         etot = etot + enb + enbi
         !
@@ -134,17 +134,17 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      IF( force_pairing ) THEN
         !
         CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, &
-                      rhos, bec, c0(:,:,1), cm(:,:,1), ei_unp )
+                      rhos, bec, c0, cm, ei_unp )
 !        lambda( nudx, nudx, 1) = ei_unp
         !
      ELSE
         !
 #if defined __BGL
         CALL runcp_uspp_bgl( nfi, fccc, ccc, ema0bg, dt2bye, &
-                      rhos, bec, c0(:,:,1), cm(:,:,1) )
+                      rhos, bec, c0, cm )
 #else
         CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, &
-                      rhos, bec, c0(:,:,1), cm(:,:,1) )
+                      rhos, bec, c0, cm )
 #endif
         !
      ENDIF

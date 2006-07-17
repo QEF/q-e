@@ -63,7 +63,7 @@
 ! ... declare modules
       USE energies, ONLY: dft_energy_type, print_energies
       USE electrons_module, ONLY: eigs, nb_l
-      USE electrons_base, ONLY: nupdwn, iupdwn
+      USE electrons_base, ONLY: nupdwn, iupdwn, nbsp
       USE cp_electronic_mass, ONLY: emass
       USE cp_main_variables,  ONLY: ema0bg
       USE wave_functions, ONLY: elec_fakekine, proj
@@ -88,7 +88,7 @@
 ! ... declare subroutine arguments
       LOGICAL   :: tortho, tprint, tcel, doions, tconv
       TYPE (atoms_type) :: atoms_0
-      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:), cm(:,:,:), cp(:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cm(:,:), cp(:,:)
       TYPE (wave_descriptor) :: cdesc
       REAL(DP) :: rhoe(:,:)
       COMPLEX(DP) :: eigr(:,:)
@@ -120,10 +120,10 @@
       REAL(DP)    :: gg, ggo, ekinc_old, emin, demin, dek, dt2fact, eks
       COMPLEX(DP) :: lambda
 
-      COMPLEX(DP), ALLOCATABLE :: hacca(:,:,:)
+      COMPLEX(DP), ALLOCATABLE :: hacca(:,:)
 
       INTEGER :: ib, ibl, ik, iss, ngw, nfi_l, nspin, isteep, i
-      INTEGER :: nk, iter, ierr
+      INTEGER :: nk, iter, ierr, iwfc, nwfc
       LOGICAL :: gamma_symmetry
       LOGICAL :: tbad
       INTEGER :: nb  ( cdesc%nspin )
@@ -154,7 +154,7 @@
       IF( force_pairing ) &
         CALL errore( ' runcg ', ' force pairing not implemented ', 1 )
 
-      ALLOCATE(hacca( ngw, MAXVAL( nb ), nspin ), STAT=ierr )
+      ALLOCATE(hacca( ngw, SIZE( c0, 2 ) ), STAT=ierr )
       IF( ierr/=0 ) CALL errore(' runcg ', ' allocating hacca ',ierr)
 
       ALLOCATE( dt2bye( ngw ) )
@@ -182,15 +182,17 @@
 
         DO iss = 1, nspin
 
+          iwfc = iupdwn( iss )
+          nwfc = nupdwn( iss )
+
 ! ...     Calculate wave functions gradient (temporarely stored in cp)
 ! ...     |d H / dPsi_j > = H |Psi_j> - Sum{i} <Psi_i|H|Psi_j> |Psi_i>
 
-          CALL dforce_all( c0(:,:,iss), occ(:,iss), cp(:,:,iss), &
-            vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
+          CALL dforce_all( c0, occ(:,iss), cp, vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
  
           ! ...     Project the gradient
 
-          CALL proj( iss, cp(:,:,iss), cdesc, c0(:,:,iss), cdesc )
+          CALL proj( cp, c0, ngw, nwfc, iwfc )
 
         END DO
 
@@ -200,23 +202,24 @@
         DO iss = 1, nspin
           DO ik = 1, nk
             DO i = 1, nb( iss )
-              cp(:, i, iss) = cp(:, i, iss) * dt2bye(:) * dt2fact
+              iwfc = iupdwn( iss ) + i - 1
+              cp( :, iwfc ) = cp(:, iwfc) * dt2bye(:) * dt2fact
               IF( iter > 1 ) THEN
                 IF( gamma_symmetry ) THEN
-                  ggo = dotp( gzero,  cm(:, i, iss), cm(:, i, iss) )
+                  ggo = dotp( gzero,  cm(:, iwfc), cm(:, iwfc) )
                 ELSE
-                  ggo = dotp( cm(:, i, iss), cm(:, i, iss) )
+                  ggo = dotp( cm(:, iwfc), cm(:, iwfc) )
                 END IF
-                cm(:, i, iss) = cp(:, i, iss) - cm(:, i, iss)
+                cm(:, iwfc) = cp(:, iwfc) - cm(:, iwfc)
                 IF( gamma_symmetry ) THEN
-                  gg  = dotp( gzero,  cm(:, i, iss), cp(:, i, iss))
+                  gg  = dotp( gzero,  cm(:, iwfc), cp(:, iwfc))
                 ELSE
-                  gg  = dotp( cm(:, i, iss), cp(:, i, iss))
+                  gg  = dotp( cm(:, iwfc), cp(:, iwfc))
                 END IF
                 lambda = gg / ggo
-                hacca(:, i, iss) = cp(:, i, iss) + lambda * hacca(:, i, iss)
+                hacca(:, iwfc) = cp(:, iwfc) + lambda * hacca(:, iwfc)
               ELSE
-                hacca(:, i, iss) = cp(:, i, iss)
+                hacca(:, iwfc) = cp(:, iwfc)
               END IF
             END DO
           END DO
@@ -247,25 +250,23 @@
 
           cp = c0 + cm
 
-          DO iss = 1, nspin
-             IF( gzero ) cp( 1, :, iss ) = DBLE( cp( 1, :, iss ) )
-          END DO
+          IF( gzero ) cp( 1, : ) = DBLE( cp( 1, : ) )
 
           IF( tortho ) THEN
-             CALL ortho( c0, cp, cdesc )
+             CALL ortho( c0, cp, nupdwn, iupdwn, nspin )
           ELSE
              DO iss = 1, nspin
-                CALL gram( vkb, bec, nkb, cp(1,1,iss), SIZE(cp,1), cdesc%nbt( iss ) )
+                iwfc = iupdwn( iss )
+                CALL gram( vkb, bec, nkb, cp(1,iwfc), SIZE(cp,1), cdesc%nbt( iss ) )
              END DO
           END IF
 
         END IF
 
         ekinc = 0.0d0
-        DO iss = 1, nspin
-          CALL elec_fakekine( eks, ema0bg, emass, cp(:,:,iss), c0(:,:,iss), ngw, nb( iss ), 1, delt )
-          ekinc = ekinc + eks
-        END DO
+        !
+        CALL elec_fakekine( ekinc, ema0bg, emass, cp, c0, ngw, nbsp, 1, delt )
+        !
         IF( iter > 1 ) THEN
           dek   = ekinc - ekinc_old
         ELSE
@@ -318,8 +319,10 @@
       IF( tprint ) THEN
         DO iss = 1, nspin
 
-          CALL dforce_all( c0(:,:,iss), occ(:,iss), hacca(:,:,iss), &
-            vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
+          iwfc = iupdwn( iss )
+          nwfc = nupdwn( iss )
+
+          CALL dforce_all( c0, occ(:,iss), hacca, vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
 
           nb_g( iss ) = cdesc%nbt( iss )
 
@@ -329,16 +332,10 @@
             ALLOCATE(cgam(nb_l( iss ),nb_g( iss )), gam(1,1), STAT=ierr)
           END IF
           IF( ierr/=0 ) CALL errore(' runcg ', ' allocating gam ',ierr)
-          DO ik = 1, nk
-            DO i = 1, nb( iss )
-              IF( gamma_symmetry ) THEN
-                CALL update_lambda( i,  gam, c0(:,:,iss), cdesc, hacca(:,i,iss) )
-              ELSE
-                CALL update_lambda( i, cgam, c0(:,:,iss), cdesc, hacca(:,i,iss) )
-              END IF
-            END DO
-            CALL eigs( nb( iss ), gam, tortho, occ(:,iss), ei(:,iss) )
+          DO i = 1, nb( iss )
+              CALL update_lambda( i,  gam, c0, hacca(:,iwfc+i-1), nwfc, iwfc )
           END DO
+          CALL eigs( nb( iss ), gam, tortho, occ(:,iss), ei(:,iss) )
           DEALLOCATE( cgam, gam, STAT=ierr )
           IF( ierr/=0 ) CALL errore(' runcg ', ' deallocating gam ',ierr)
         END DO
@@ -365,13 +362,14 @@
 ! ... declare modules
 
         USE wave_types
-        USE energies, ONLY: dft_energy_type
-        USE io_global, ONLY: ionode
-        USE io_global, ONLY: stdout
-        USE cell_module, ONLY: boxdimensions
-        USE potentials, ONLY: kspotential
+        USE energies,          ONLY: dft_energy_type
+        USE io_global,         ONLY: ionode
+        USE io_global,         ONLY: stdout
+        USE cell_module,       ONLY: boxdimensions
+        USE potentials,        ONLY: kspotential
         USE atoms_type_module, ONLY: atoms_type
-        USE uspp,             ONLY : nkb
+        USE uspp,              ONLY: nkb
+        USE electrons_base,    ONLY: iupdwn, nupdwn
 
         IMPLICIT NONE
 
@@ -379,8 +377,8 @@
         REAL(DP) :: ediff, emin
         LOGICAL :: tbad
         TYPE (atoms_type), INTENT(INOUT) :: atoms
-        COMPLEX(DP), INTENT(IN) :: c(:,:,:)
-        COMPLEX(DP), INTENT(INOUT) :: cp(:,:,:)
+        COMPLEX(DP), INTENT(IN) :: c(:,:)
+        COMPLEX(DP), INTENT(INOUT) :: cp(:,:)
         TYPE (wave_descriptor), INTENT(IN) :: cdesc
         REAL(DP) :: rhoe(:,:)
         COMPLEX(DP) :: sfac(:,:)
@@ -394,7 +392,7 @@
         REAL(DP) :: bec(:,:)
         REAL(DP) :: becdr(:,:,:)
         TYPE (dft_energy_type) :: edft
-        COMPLEX (DP) ::  hacca(:,:,:)
+        COMPLEX (DP) ::  hacca(:,:)
         REAL (DP), INTENT(in) ::  vpot(:,:)
 
 !
@@ -589,12 +587,10 @@
 
         cp = c + hstep * hacca
 
-        DO iss = 1, cdesc%nspin
-           IF( cdesc%gzero ) cp( 1, :, iss ) = DBLE( cp( 1, :, iss ) )
-        END DO
+        IF( cdesc%gzero ) cp( 1, : ) = DBLE( cp( 1, : ) )
         !
         DO iss = 1, cdesc%nspin
-           CALL gram( vkb, bec, nkb, cp(1,1,iss), SIZE(cp,1), cdesc%nbt( iss ) )
+           CALL gram( vkb, bec, nkb, cp(1,iupdwn(iss)), SIZE(cp,1), cdesc%nbt( iss ) )
         END DO
 
 

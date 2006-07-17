@@ -60,8 +60,8 @@ MODULE guess
           IMPLICIT NONE
 
 ! ...     declare subroutine arguments
-          COMPLEX(DP), INTENT(INOUT) ::  c0(:,:,:)
-          COMPLEX(DP), INTENT(INOUT) ::  cm(:,:,:)
+          COMPLEX(DP), INTENT(INOUT) ::  c0(:,:)
+          COMPLEX(DP), INTENT(INOUT) ::  cm(:,:)
           REAL(DP), INTENT(INOUT) ::  bec(:,:)
           TYPE (wave_descriptor), INTENT(IN) ::  cdesc
           LOGICAL, INTENT(IN) :: tk
@@ -112,7 +112,7 @@ MODULE guess
               ALLOCATE(ap(n,n))
               ALLOCATE(crot(ngw,n))
 
-              CALL ucalc(cm(:,:,1),c0(:,:,1),ngw,cdesc%gzero,n,uu)
+              CALL ucalc(cm(:,:),c0(:,:),ngw,cdesc%gzero,n,uu)
               CALL rep_matmul_drv('T','N',n,n,n,1.0d0,uu,n,uu,n,0.0d0,a,n,intra_image_comm)
               CALL diagonalize(1,a,SIZE(a,1),costemp,ap,SIZE(ap,1),n,nproc_image,me_image)
               DO j=1,n
@@ -132,17 +132,17 @@ MODULE guess
               crot = (0.d0,0.d0)
               DO i=1,n
                 DO j=1,n
-                  CALL daxpy(2*ngw,a(j,i),c0(1,j,1),1,crot(1,i),1)
+                  CALL daxpy(2*ngw,a(j,i),c0(1,j),1,crot(1,i),1)
                 END DO
               END DO
-              c0(:,:,1) = crot
+              c0(:,:) = crot
               crot = (0.d0,0.d0)
               DO i=1,n
                 DO j=1,n
-                  CALL daxpy(2*ngw,ap(i,j),cm(1,j,1),1,crot(1,i),1)
+                  CALL daxpy(2*ngw,ap(i,j),cm(1,j),1,crot(1,i),1)
                 END DO
               END DO
-              cm(:,:,1) = crot
+              cm(:,:) = crot
 
               DEALLOCATE(crot)
               DEALLOCATE(ap)
@@ -152,9 +152,9 @@ MODULE guess
 
             DO ik = 1, nk
               DO i=1,n
-                ctemp(:) = 2.d0*c0(:,i,1) - cm(:,i,1)
-                cm(:,i,1) = c0(:,i,1)
-                c0(:,i,1) = ctemp(:)
+                ctemp(:) = 2.d0*c0(:,i) - cm(:,i)
+                cm(:,i) = c0(:,i)
+                c0(:,i) = ctemp(:)
               END DO
             END DO
 
@@ -164,7 +164,7 @@ MODULE guess
 
           END IF
 
-          CALL gram( vkb, bec, nkb, c0(1,1,1), SIZE(c0,1), cdesc%nbt( 1 ) )
+          CALL gram( vkb, bec, nkb, c0(1,1), SIZE(c0,1), cdesc%nbt( 1 ) )
 
           RETURN
           END SUBROUTINE guessc0
@@ -183,7 +183,7 @@ MODULE guess
 
 ! ...        declare subroutine argument
              REAL(DP), INTENT(OUT) :: rho(:,:)
-             COMPLEX(DP), INTENT(IN) :: c0(:,:,:), cm(:,:,:)
+             COMPLEX(DP), INTENT(IN) :: c0(:,:), cm(:,:)
              TYPE (wave_descriptor), INTENT(IN) :: cdesc
              TYPE (boxdimensions), INTENT(IN) :: ht
              REAL(DP), INTENT(IN) :: occ(:,:)

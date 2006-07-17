@@ -157,9 +157,9 @@
       USE recvecs_subroutines, ONLY: recvecs_init
       !
       USE wavefunctions_module, ONLY: & ! electronic wave functions
-           c0, & ! c0(:,:,:)  ! wave functions at time t
-           cm, & ! cm(:,:,:)  ! wave functions at time t-delta t
-           cp    ! cp(:,:,:)  ! wave functions at time t+delta t
+           c0, & ! c0(:,:)  ! wave functions at time t
+           cm, & ! cm(:,:)  ! wave functions at time t-delta t
+           cp    ! cp(:,:)  ! wave functions at time t+delta t
       !
       USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
       USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
@@ -196,7 +196,6 @@
 
       REAL(DP) :: ekinc, ekcell, ekinp, erhoold, maxfion
       REAL(DP) :: derho
-      REAL(DP) :: ekincs( nspinx )
       REAL(DP) :: ekmt(3,3) = 0.0d0
       REAL(DP) :: hgamma(3,3) = 0.0d0
       REAL(DP) :: temphh(3,3) = 0.0d0
@@ -220,7 +219,6 @@
       END IF
 
       erhoold   = 1.0d+20  ! a very large number
-      ekincs    = 0.0d0
       ekinc     = 0.0_DP
       ekcell    = 0.0_DP
       fccc      = 1.0d0
@@ -408,17 +406,15 @@
               ! unpaired electron is assumed of spinup and in highest 
               ! index band; and put equal for paired wf spin up and down
               !
-              CALL runcp_force_pairing(ttprint, tortho, tsde, cm, c0, cp, wfill, &
-                vpot, vkb, occn, ekincs, ht0, ei, bec, fccc )
+              CALL runcp_force_pairing(ttprint, tortho, tsde, cm, c0, cp, &
+                vpot, vkb, occn, ekinc, ht0, ei, bec, fccc )
               !
            ELSE
               !
-              CALL runcp( ttprint, tortho, tsde, cm, c0, cp, wfill, vpot, vkb, &
-                         occn, ekincs, ht0, ei, bec, fccc )
+              CALL runcp( ttprint, tortho, tsde, cm, c0, cp, vpot, vkb, &
+                         occn, ekinc, ht0, ei, bec, fccc )
               !
            END IF
-
-           ekinc = SUM( ekincs )
            !
            !   ...     propagate thermostat for the electronic variables
            !
@@ -511,13 +507,13 @@
            IF( wfill%nspin > 1 ) &
               CALL errore( ' main ',' dipole with spin not yet implemented ', 0 )
            !
-           CALL ddipole( nfi, c0(:,:,1), ngw, atoms0%taus, tfor, ngw, wfill%nbl( 1 ), ht0%a )
+           CALL ddipole( nfi, c0, ngw, atoms0%taus, tfor, ngw, wfill%nbl( 1 ), ht0%a )
 
         END IF
 
         IF( self_interaction /= 0 ) THEN
            IF ( nat_localisation > 0 .AND. ttprint ) THEN
-              CALL localisation( cp( : , nupdwn(1), 1 ), atoms0, ht0)
+              CALL localisation( cp( : , nupdwn(1) ), atoms0, ht0)
            END IF
         END IF
 
@@ -580,7 +576,7 @@
 
         IF ( .NOT. ttdiis ) THEN
            !
-           CALL update_wave_functions( cm, c0, cp, wfill )
+           CALL update_wave_functions( cm, c0, cp )
            !
            IF ( tnosee ) THEN
               CALL electrons_nose_shiftvar( xnhep, xnhe0, xnhem )
@@ -662,7 +658,7 @@
         ! ...   write the restart file
         !
         IF( ttsave .OR. ttexit ) THEN
-          CALL writefile( nfi, tps, c0, cm, wfill, occn, atoms0, atomsm, acc,  &
+          CALL writefile( nfi, tps, c0, cm, occn, atoms0, atomsm, acc,  &
                           taui, cdmi, htm, ht0, rhor, vpot )
         END IF
 

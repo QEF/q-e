@@ -209,40 +209,29 @@
 !==----------------------------------------------==!
 !==----------------------------------------------==!
 
-      FUNCTION hpsi_gamma( gzero, c, dc )
-
-!  (describe briefly what this routine does...)
-!  ----------------------------------------------
+      FUNCTION hpsi_gamma( gzero, c, ngw, dc, n, noff )
 
       IMPLICIT NONE
 
       COMPLEX(DP) :: c(:,:)
       COMPLEX(DP) :: dc(:)
       LOGICAL, INTENT(IN) :: gzero
+      INTEGER, INTENT(IN) :: n, noff, ngw
 
-      REAL(DP), DIMENSION( SIZE( c, 2 ) ) :: hpsi_gamma
+      REAL(DP), DIMENSION( n ) :: hpsi_gamma
 
       COMPLEX(DP) :: ZDOTC
 
-      INTEGER :: jb, ngw, nx
-
-! ... end of declarations
-!  ----------------------------------------------
-
-      IF( SIZE( c, 1 ) /= SIZE( dc ) ) &
-        CALL errore(' hpsi_kp ', ' wrong sizes ', 1 )
-
-      ngw = SIZE( c, 1)
-      nx  = SIZE( c, 2)
+      INTEGER :: j
 
       IF(gzero) THEN
-        DO jb = 1, nx
-          hpsi_gamma(jb) = &
-            - DBLE( (2.d0 * ZDOTC(ngw-1, c(2,jb), 1, dc(2), 1) + c(1,jb)*dc(1)) )
+        DO j = 1, n
+          hpsi_gamma(j) = &
+            - DBLE( (2.d0 * ZDOTC(ngw-1, c(2,j+noff-1), 1, dc(2), 1) + c(1,j+noff-1)*dc(1)) )
         END DO
       ELSE
-        DO jb = 1, nx
-          hpsi_gamma(jb) = - DBLE( (2.d0 * ZDOTC(ngw, c(1,jb), 1, dc(1), 1)) )
+        DO j = 1, n
+          hpsi_gamma(j) = - DBLE( (2.d0 * ZDOTC(ngw, c(1,j+noff-1), 1, dc(1), 1)) )
         END DO
       END IF
       RETURN

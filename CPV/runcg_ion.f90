@@ -61,7 +61,7 @@
       TYPE (atoms_type) :: atomsp
       TYPE (atoms_type) :: atoms0
       TYPE (atoms_type) :: atomsm
-      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:), cm(:,:,:), cp(:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cm(:,:), cp(:,:)
       TYPE (wave_descriptor) :: cdesc
       REAL(DP) :: rhoe(:,:)
       REAL(DP) :: bec(:,:)
@@ -306,9 +306,9 @@
         REAL(DP) :: emin
         TYPE (atoms_type) :: atomsp
         TYPE (atoms_type) :: atoms0
-        COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:)
-        COMPLEX(DP), INTENT(INOUT) :: cp(:,:,:)
-        COMPLEX(DP), INTENT(INOUT) :: cm(:,:,:)
+        COMPLEX(DP), INTENT(INOUT) :: c0(:,:)
+        COMPLEX(DP), INTENT(INOUT) :: cp(:,:)
+        COMPLEX(DP), INTENT(INOUT) :: cm(:,:)
         TYPE (wave_descriptor) :: cdesc
         REAL(DP) :: rhoe(:,:)
         COMPLEX(DP) :: eigr(:,:)

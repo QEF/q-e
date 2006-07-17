@@ -129,27 +129,13 @@ SUBROUTINE init_run()
   !
   !  initialize wave functions descriptors and allocate wf
   !
-  IF( program_name == 'CP90' ) THEN
+  ALLOCATE( c0( ngw, nbspx ) )
+  ALLOCATE( cm( ngw, nbspx ) )
+  ALLOCATE( cp( ngw, nbspx ) )
+  !
+  IF ( iprsta > 2 ) THEN
      !
-     ALLOCATE( c0( ngw, nbspx, 1 ) )
-     ALLOCATE( cm( ngw, nbspx, 1 ) )
-     ALLOCATE( cp( ngw, nbspx, 1 ) )
-     !
-  ELSE IF( program_name == 'FPMD' ) THEN
-     !
-     IF ( iprsta > 2 ) THEN
-        !
-        CALL wave_descriptor_info( wfill, 'wfill', stdout )
-        !
-     END IF
-     !
-     lds_wfc = wfill%lds
-     !
-     IF ( force_pairing ) lds_wfc = 1
-     !
-     ALLOCATE( cm( wfill%ldg, wfill%ldb, lds_wfc ) )
-     ALLOCATE( c0( wfill%ldg, wfill%ldb, lds_wfc ) )
-     ALLOCATE( cp( wfill%ldg, wfill%ldb, lds_wfc ) )
+     CALL wave_descriptor_info( wfill, 'wfill', stdout )
      !
   END IF
   !
@@ -217,9 +203,9 @@ SUBROUTINE init_run()
   !
   hnew = h
   !
-  cm(:,:,:) = ( 0.D0, 0.D0 )
-  c0(:,:,:) = ( 0.D0, 0.D0 )
-  cp(:,:,:) = ( 0.D0, 0.D0 )
+  cm = ( 0.D0, 0.D0 )
+  c0 = ( 0.D0, 0.D0 )
+  cp = ( 0.D0, 0.D0 )
   !
   IF ( tens ) CALL id_matrix_init( nupdwn, nspin )
   !
@@ -255,7 +241,7 @@ SUBROUTINE init_run()
      !
      IF( program_name == 'CP90' ) THEN
         !
-        CALL readfile( 1, ndr, h, hold, nfi, c0(:,:,1), cm(:,:,1), taus,   &
+        CALL readfile( 1, ndr, h, hold, nfi, c0, cm, taus,   &
                        tausm, vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, &
                        vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
                        vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, celldm,   &
@@ -263,7 +249,7 @@ SUBROUTINE init_run()
         !
      ELSE IF( program_name == 'FPMD' ) THEN
         !
-        CALL readfile( nfi, tps, c0, cm, wfill, occn, atoms0, atomsm, acc,     &
+        CALL readfile( nfi, tps, c0, cm, occn, atoms0, atomsm, acc,     &
                        taui, cdmi, htm, ht0, rhor, vpot)
         !
      END IF

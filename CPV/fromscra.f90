@@ -124,7 +124,6 @@ CONTAINS
     REAL(DP)                 :: adum( nacx )
     INTEGER                  :: i, j, iter, iss, ierr, nspin_wfc
     LOGICAL                  :: tlast = .FALSE.
-    COMPLEX(DP)              :: cgam(1,1,1)
     REAL(DP)                 :: gam(1,1,1)
     REAL(DP)                 :: fcell(3,3), ccc, enb, enbi, fccc
     LOGICAL                  :: ttforce
@@ -165,28 +164,7 @@ CONTAINS
     !
     !     random initialization
     !     
-    IF( program_name == 'CP90' ) THEN
-       !     
-       CALL wave_rand_init( cm( :, 1:nbsp, 1 ) )
-       !
-       IF( force_pairing ) THEN
-            cm(:, iupdwn(2):(iupdwn(2) + nupdwn(2) - 1), 1) =  cm(:, 1:nupdwn(2), 1)
-       ENDIF
-       !  
-    ELSE
-       !
-       nspin_wfc = nspin
-       !
-       IF( force_pairing ) nspin_wfc = 1
-       !
-       DO iss = 1, nspin_wfc
-          !
-          CALL wave_rand_init( cm( :, :, iss ) )
-          !
-       END DO
-
-    END IF
-    !
+    CALL wave_rand_init( cm, nbsp, 1 )
     !
     IF ( ionode ) &
        WRITE( stdout, fmt = '(//,3X, "Wave Initialization: random initial wave-functions" )' )
@@ -195,19 +173,16 @@ CONTAINS
     !
     CALL prefor( eigr, vkb )
     !
-    IF( program_name == 'CP90' ) THEN
+    nspin_wfc = nspin
+    IF( force_pairing ) nspin_wfc = 1
+
+    DO iss = 1, nspin_wfc
        !
-       CALL gram( vkb, bec, nkb, cm, ngw, nbsp )
+       CALL gram( vkb, bec, nkb, cm(1,iupdwn(iss)), ngw, nupdwn(iss) )
+       !
+    END DO
 
-    ELSE
-
-       DO iss = 1, nspin_wfc
-          !
-          CALL gram( vkb, bec, nkb, cm(1,1,iss), SIZE(cm,1), cdesc%nbt( iss ) )
-          !
-       END DO
-
-    END IF
+    IF( force_pairing ) cm(1,iupdwn(2):iupdwn(2)+nupdwn(2)-1) = cm(1,1:nupdwn(2))
     !
     if( iprsta .ge. 3 ) CALL dotcsc( eigr, cm, ngw, nbsp )
     !
@@ -252,7 +227,7 @@ CONTAINS
          CALL initbox ( tau0, taub, irb )
          CALL phbox( taub, eigrb )
          !
-         CALL rhoofr ( nfi, cm(:,:,1), irb, eigrb, bec, becsum, rhor, rhog, rhos, enl, ekin )
+         CALL rhoofr ( nfi, cm(:,:), irb, eigrb, bec, becsum, rhor, rhog, rhos, enl, ekin )
          !
          !     put core charge (if present) in rhoc(r)
          !
@@ -268,11 +243,11 @@ CONTAINS
         &  tau0(1,1), fion(1,1) )
 
          IF( tefield ) THEN
-           CALL berry_energy( enb, enbi, bec, cm(:,:,1), fion ) 
+           CALL berry_energy( enb, enbi, bec, cm(:,:), fion ) 
            etot = etot + enb + enbi
          END IF
          IF( tefield2 ) THEN
-           CALL berry_energy2( enb, enbi, bec, cm(:,:,1), fion )
+           CALL berry_energy2( enb, enbi, bec, cm(:,:), fion )
            etot = etot + enb + enbi
          END IF
 
@@ -284,19 +259,19 @@ CONTAINS
          !
          IF( force_pairing ) THEN
             !
-            CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:,1), &
-        &                 c0(:,:,1), ei_unp, fromscra = .TRUE. )
+            CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:), &
+        &                 c0(:,:), ei_unp, fromscra = .TRUE. )
             ! lambda(nupdwn(1), nupdwn(1), 1) = ei_unp
             lambda(nupdwn(1), nupdwn(1), 2) = 0.d0 
             !
          ELSE
             !
 #if defined __BGL
-            CALL runcp_uspp_bgl( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:,1), &
-        &                 c0(:,:,1), fromscra = .TRUE. )
+            CALL runcp_uspp_bgl( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm, &
+        &                 c0(:,:), fromscra = .TRUE. )
 #else
-            CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:,1), &
-        &                 c0(:,:,1), fromscra = .TRUE. )
+            CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm, &
+        &                 c0(:,:), fromscra = .TRUE. )
 #endif
             !
          ENDIF
@@ -312,11 +287,11 @@ CONTAINS
          CALL calphi( cm, ngw, bec, nkb, vkb, phi, nbsp, ema0bg )
          !
          IF( force_pairing ) &
-         &   phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1), 1 ) =    phi( :, 1:nupdwn(2), 1)
+         &   phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =    phi( :, 1:nupdwn(2))
 
 
          if( tortho ) then
-            CALL ortho( eigr, c0(:,:,1), phi(:,:,1), ngw, lambda, SIZE(lambda,1), &
+            CALL ortho( eigr, c0, phi, ngw, lambda, SIZE(lambda,1), &
                         bigr, iter, ccc, bephi, becp, nbsp, nspin, nupdwn, iupdwn )
          else
             CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
@@ -329,11 +304,8 @@ CONTAINS
 
          if ( tpre ) CALL nlfh( bec, dbec, lambda )
          !
-         n_spin_start = nspin
-         IF( force_pairing ) n_spin_start = 1
-         !
          IF ( tortho ) THEN
-            DO iss = 1, n_spin_start
+            DO iss = 1, nspin_wfc
                CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
                             bephi, SIZE(bephi,1), becp, bec, c0, nupdwn(iss), iupdwn(iss) )
             END DO
@@ -341,8 +313,8 @@ CONTAINS
          !
          IF( force_pairing ) THEN
             !
-            c0 ( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1), 1 ) =  c0( :, 1:nupdwn(2), 1)
-            phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1), 1 ) = phi( :, 1:nupdwn(2), 1)
+            c0 ( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =  c0( :, 1:nupdwn(2))
+            phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = phi( :, 1:nupdwn(2))
             lambda(1:nupdwn(2), 1:nupdwn(2), 2) = lambda(1:nupdwn(2), 1:nupdwn(2), 1 )
             !
          ENDIF
@@ -394,8 +366,7 @@ CONTAINS
           !
           IF ( .NOT. force_pairing ) THEN
              !
-             CALL runcp_ncpp( cm, cm, c0, cdesc, vpot, vkb, fi, &
-                              bec, fccc, gam, cgam, fromscra = .TRUE. )
+             CALL runcp_ncpp( cm, cm, c0, vpot, vkb, fi, bec, fccc, gam, fromscra = .TRUE. )
              !
           ELSE
              !
@@ -405,15 +376,17 @@ CONTAINS
           !
           IF ( tortho .AND. ( .NOT. force_pairing ) ) THEN
              !
-             CALL ortho( cm, c0, cdesc )
+             CALL ortho( cm, c0, nupdwn, iupdwn, nspin )
              !
           ELSE
              !
              DO iss = 1, nspin_wfc
                !
-               CALL gram( vkb, bec, nkb, c0(1,1,iss), SIZE(c0,1), cdesc%nbt( iss ) )
+               CALL gram( vkb, bec, nkb, c0(1,iupdwn(iss)), SIZE(c0,1), cdesc%nbt( iss ) )
                !
              END DO
+             !
+             IF( force_pairing ) c0(1,iupdwn(2):iupdwn(2)+nupdwn(2)-1) = c0(1,1:nupdwn(2))
              !
           END IF
           !

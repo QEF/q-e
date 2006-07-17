@@ -161,9 +161,9 @@ MODULE from_restart_module
        !
        lambdam = lambda
        !
-       IF( force_pairing ) c0(:,iupdwn(2):nbsp,1) = c0(:,1:nupdwn(2),1)
+       IF( force_pairing ) c0(:,iupdwn(2):nbsp) = c0(:,1:nupdwn(2))
        !
-       cm(:,1:nbsp,1) = c0(:,1:nbsp,1)
+       cm = c0
        !
        WRITE( stdout, '(" Electronic velocities set to zero")' )
        !
@@ -179,9 +179,9 @@ MODULE from_restart_module
        !
        CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
        !
-       IF( force_pairing ) c0(:,iupdwn(2):nbsp,1) = c0(:,1:nupdwn(2),1)
+       IF( force_pairing ) c0(:,iupdwn(2):nbsp) = c0(:,1:nupdwn(2))
        !
-       cm(:,1:nbsp,1) = c0(:,1:nbsp,1)
+       cm = c0
        !
     END IF
     !
@@ -204,7 +204,7 @@ MODULE from_restart_module
           CALL get_wannier_center( tfirst, c0, bec, becdr, eigr, &
                                    eigrb, taub, irb, ibrav, b1, b2, b3 )
        !
-       CALL rhoofr( nfi, c0(:,:,1), irb, eigrb, bec, &
+       CALL rhoofr( nfi, c0, irb, eigrb, bec, &
                     becsum, rhor, rhog, rhos, enl, ekin )
        !
        ! ... put core charge (if present) in rhoc(r)
@@ -238,7 +238,7 @@ MODULE from_restart_module
          IF( force_pairing ) THEN
              !
              CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
-                           bec, c0(:,:,1), cm(:,:,1), ei_unp, restart = .TRUE. )
+                           bec, c0, cm, ei_unp, restart = .TRUE. )
              !          lambda(nupdwn(1), nupdwn(1), 1) = ei_unp
              !          lambda(nupdwn(1), nupdwn(1), 2) = 0.d0 
              lambdam( 1:nupdwn(2), 1:nupdwn(2), 2) = lambdam( 1:nupdwn(2), 1:nupdwn(2), 1)
@@ -248,10 +248,10 @@ MODULE from_restart_module
              !
 #if defined __BGL
              CALL runcp_uspp_bgl( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
-                           bec, c0(:,:,1), cm(:,:,1), restart = .TRUE. )
+                           bec, c0, cm, restart = .TRUE. )
 #else
              CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
-                           bec, c0(:,:,1), cm(:,:,1), restart = .TRUE. )
+                           bec, c0, cm, restart = .TRUE. )
 #endif
              !
           ENDIF 
@@ -290,7 +290,7 @@ MODULE from_restart_module
        !
        IF ( tortho ) THEN
           !
-          CALL ortho( eigr, cm(:,:,1), phi(:,:,1), ngw, lambda, SIZE(lambda,1), &
+          CALL ortho( eigr, cm, phi, ngw, lambda, SIZE(lambda,1), &
                       bigr, iter, dt2bye, bephi, becp, nbsp, nspin, nupdwn, iupdwn )
           !
           n_spin_start = nspin 
@@ -308,9 +308,9 @@ MODULE from_restart_module
        END IF
        !
        IF( force_pairing ) THEN
-            cm( :,iupdwn(2):(iupdwn(2)-1+nupdwn(2)),1) =     cm( :,1:nupdwn(2),1) 
-           phi( :,iupdwn(2):(iupdwn(2)-1+nupdwn(2)),1) =    phi( :,1:nupdwn(2),1)
-        lambda(1:nupdwn(2),1:nupdwn(2),2)                = lambda(1:nupdwn(2),1:nupdwn(2),1) 
+            cm( :,iupdwn(2):(iupdwn(2)-1+nupdwn(2))) =     cm( :,1:nupdwn(2)) 
+           phi( :,iupdwn(2):(iupdwn(2)-1+nupdwn(2))) =    phi( :,1:nupdwn(2))
+        lambda(1:nupdwn(2),1:nupdwn(2),2)            = lambda(1:nupdwn(2),1:nupdwn(2),1) 
        ENDIF 
        !
        CALL calbec( nvb+1, nsp, eigr, cm, bec )
@@ -374,8 +374,8 @@ MODULE from_restart_module
        !
        !
        IF( force_pairing ) THEN
-          cm( :,iupdwn(2):(iupdwn(2)-1+nupdwn(2)),1) =     cm( :,1:nupdwn(2),1) 
-          c0( :,iupdwn(2):(iupdwn(2)-1+nupdwn(2)),1) =     c0( :,1:nupdwn(2),1) 
+          cm( :,iupdwn(2):(iupdwn(2)-1+nupdwn(2))) =     cm( :,1:nupdwn(2)) 
+          c0( :,iupdwn(2):(iupdwn(2)-1+nupdwn(2))) =     c0( :,1:nupdwn(2)) 
           lambda(1:nupdwn(2),1:nupdwn(2),2)                = lambda(1:nupdwn(2),1:nupdwn(2),1) 
        ENDIF 
        !
@@ -492,7 +492,7 @@ MODULE from_restart_module
     USE charge_density,        ONLY : rhoofr
     USE wave_base,             ONLY : wave_verlet, rande_base
     USE electrons_module,      ONLY : occn_info
-    USE electrons_base,        ONLY : nspin
+    USE electrons_base,        ONLY : nspin, iupdwn, nupdwn
     USE ions_base,             ONLY : na, nsp, nax, randpos, taui, cdmi
     USE ions_module,           ONLY : set_reference_positions, &
                                       print_scaled_positions, &
@@ -531,7 +531,7 @@ MODULE from_restart_module
     COMPLEX(DP)                :: ei1(:,:)
     COMPLEX(DP)                :: ei2(:,:)
     COMPLEX(DP)                :: ei3(:,:)
-    COMPLEX(DP), INTENT(INOUT) :: cm(:,:,:), c0(:,:,:)
+    COMPLEX(DP), INTENT(INOUT) :: cm(:,:), c0(:,:)
     REAL(DP)                   :: fi(:,:)
     TYPE(boxdimensions)        :: ht_m, ht_0
     REAL(DP)                   :: rhoe(:,:)
@@ -544,7 +544,6 @@ MODULE from_restart_module
     INTEGER     :: ig, ib, i, j, k, ik, nb, is, ia, ierr, isa, iss
     REAL(DP)    :: fccc
     REAL(DP)    :: stau(3), rtau(3), hinv(3,3)
-    COMPLEX(DP) :: cgam(1,1,1)
     REAL(DP)    :: gam(1,1,1)
     LOGICAL     :: ttforce
     LOGICAL     :: tstress
@@ -678,11 +677,11 @@ MODULE from_restart_module
        !
        WRITE( stdout, 515 ) ampre
        !
+       call rande_base( c0, ampre )
+       call rande_base( cm, ampre )
        DO iss = 1, cdesc%nspin
-          call rande_base( c0( :, :, iss), ampre )
-          CALL gram( vkb, bec, nkb, c0(1,1,iss), SIZE(c0,1), cdesc%nbt( iss ) )
-          call rande_base( cm( :, :, iss), ampre )
-          CALL gram( vkb, bec, nkb, cm(1,1,iss), SIZE(cm,1), cdesc%nbt( iss ) )
+          CALL gram( vkb, bec, nkb, c0(1,iupdwn(iss)), SIZE(c0,1), nupdwn( iss ) )
+          CALL gram( vkb, bec, nkb, cm(1,iupdwn(iss)), SIZE(cm,1), nupdwn( iss ) )
        END DO
        !
     END IF
@@ -707,17 +706,17 @@ MODULE from_restart_module
           !
           IF ( tcarpar .AND. ( .NOT. force_pairing ) ) THEN
              !
-             CALL runcp_ncpp( cm, cm, c0, cdesc, vpot, vkb, fi, bec, fccc, gam, cgam, restart = .TRUE. )
+             CALL runcp_ncpp( cm, cm, c0, vpot, vkb, fi, bec, fccc, gam, restart = .TRUE. )
              !
              IF ( tortho ) THEN
                 !
-                CALL ortho( cm, c0, cdesc )
+                CALL ortho( cm, c0, nupdwn, iupdwn, nspin )
                 !
              ELSE
                 !
                 DO iss = 1, nspin
                    ! 
-                   CALL gram( vkb, bec, nkb, c0(1,1,iss), SIZE(c0,1), cdesc%nbt( iss ) )
+                   CALL gram( vkb, bec, nkb, c0(1,iupdwn(iss)), SIZE(c0,1), nupdwn( iss ) )
                    ! 
                 END DO
                 !

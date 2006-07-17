@@ -93,7 +93,7 @@
 !=----------------------------------------------------------------------------=!
 
 
-    SUBROUTINE dforce2_bec( fio, fie, df, da, vkb, beco, bece )
+    SUBROUTINE dforce2( fio, fie, df, da, vkb, beco, bece )
 
         !  this routine computes:
         !  the generalized force df=CMPLX(dfr,dfi) acting on the i-th
@@ -151,7 +151,7 @@
       !
 
       RETURN
-    END SUBROUTINE dforce2_bec
+    END SUBROUTINE dforce2
 
 
 
@@ -184,17 +184,17 @@
           !
           ALLOCATE( dum( SIZE( da ) ) )
           !
-          CALL dforce1( c(:,ib), c(:,ib), df, dum, f(ib), f(ib), ggp, v )
+          CALL dforce1( c( :, in ), c( :, in ), df, dum, f(ib), f(ib), ggp, v )
           !
-          CALL dforce2_bec( f(ib), f(ib), df , dum , vkb, bec( :, in ), bec( :, in ) )
+          CALL dforce2( f(ib), f(ib), df , dum , vkb, bec( :, in ), bec( :, in ) )
           !
           DEALLOCATE( dum )
           !
        ELSE
           !
-          CALL dforce1( c(:,ib), c(:,ib+1), df, da, f(ib), f(ib+1), ggp, v )
+          CALL dforce1( c( :, in ), c( :, in+1 ), df, da, f(ib), f(ib+1), ggp, v )
           !
-          CALL dforce2_bec( f(ib), f(ib+1), df, da, vkb, bec( :, in ), bec( :, in+1 ) )
+          CALL dforce2( f(ib), f(ib+1), df, da, vkb, bec( :, in ), bec( :, in+1 ) )
           !
        END IF
        !
@@ -216,21 +216,26 @@
         REAL(DP),              INTENT(IN)    :: bec(:,:)
         INTEGER,               INTENT(IN)    :: n, noffset
        
-        INTEGER :: ib
+        INTEGER :: ib, in
         !
         IF( n > 0 ) THEN
            !
            !   Process two states at the same time
            !
            DO ib = 1, n-1, 2
-              CALL dforce( ib, c, f, cgrad(:,ib), cgrad(:,ib+1), &
-                  vpot, vkb, bec, n, noffset )
+              !
+              in = ib + noffset - 1
+              !
+              CALL dforce( ib, c, f, cgrad(:,in), cgrad(:,in+1), vpot, vkb, bec, n, noffset )
+              !
            END DO
+           !
+           !   and now process the last state in case that n is odd
            !
            IF( MOD( n, 2 ) /= 0 ) THEN
               ib = n
-              CALL dforce( ib, c, f, cgrad(:,ib), cgrad(:,ib), &
-                  vpot, vkb, bec, n, noffset )
+              in = ib + noffset - 1
+              CALL dforce( ib, c, f, cgrad(:,in), cgrad(:,in), vpot, vkb, bec, n, noffset )
            END IF
            !
         END IF

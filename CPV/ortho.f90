@@ -30,46 +30,30 @@
 !=----------------------------------------------------------------------------=!
 
 
-   SUBROUTINE ortho_s( ispin, c0, cp, cdesc, success )
+   SUBROUTINE ortho_s( c0, cp, phi, n, nss, istart, success )
 
       USE control_flags,      ONLY: ortho_eps, ortho_max
-      USE wave_types,         ONLY: wave_descriptor
       USE orthogonalize_base, ONLY: updatc, calphi
-      USE cp_main_variables,  ONLY: ema0bg
 
-      COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cp(:,:)
-      TYPE (wave_descriptor), INTENT(IN) :: cdesc
-      LOGICAL, INTENT(OUT), OPTIONAL :: success
-      INTEGER, INTENT(IN) :: ispin
+      INTEGER,     INTENT(IN)    :: n, nss, istart
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cp(:,:), phi(:,:)
+      LOGICAL,     INTENT(OUT), OPTIONAL :: success
       !
-      INTEGER  :: iter
-      REAL(DP) :: diff, dum(2,2)
+      INTEGER     :: iter
+      REAL(DP)    :: diff, dum(2,2)
       COMPLEX(DP) :: cdum(2,2)
       REAL(DP),    ALLOCATABLE :: x0(:,:)
-      COMPLEX(DP), ALLOCATABLE :: phi(:,:)
-      INTEGER  :: n, ngw, info
-
-
-      CALL start_clock( 'ortho' )  
-
-      n   = cdesc%nbl( ispin )
-      ngw = cdesc%ngwl
 
       ! ...   Scale wave functions
 
-      ALLOCATE( phi( SIZE( c0, 1 ), SIZE( c0, 2 ) ), STAT = info )
-      IF( info /= 0 ) CALL errore( ' ortho ', ' allocating phi ', 3 )
-
-      CALL calphi( c0, SIZE(c0,1), dum, 1, cdum, phi, n, ema0bg )
-
-      ALLOCATE( x0( n, n ) )
+      ALLOCATE( x0( nss, nss ) )
 
       CALL ortho_gamma( 1, cp, SIZE(cp,1), phi, dum, dum, 2, dum, dum, &
-                           x0, n, diff, iter, n, n, 1 )
+                           x0, nss, diff, iter, n, nss, istart )
 
-      CALL updatc( 1.0d0, n, x0, n, phi, SIZE(phi,1), dum, 1, dum, dum, cp, n, 1 )
+      CALL updatc( 1.0d0, n, x0, nss, phi, SIZE(phi,1), dum, 1, dum, dum, cp, nss, istart )
 
-      DEALLOCATE( phi, x0 )
+      DEALLOCATE( x0 )
 
       IF( PRESENT( success ) ) THEN
              success = .TRUE.
@@ -83,8 +67,6 @@
          END IF
       END IF
       !
-      CALL stop_clock( 'ortho' )
-      !
       RETURN
       !
    END SUBROUTINE ortho_s
@@ -92,19 +74,42 @@
 
 !=----------------------------------------------------------------------------=!
 
-       SUBROUTINE ortho_m(c0, cp, cdesc)
-         USE wave_types, ONLY: wave_descriptor
-         USE control_flags, ONLY: force_pairing
-         COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:), cp(:,:,:)
-         TYPE (wave_descriptor), INTENT(IN) :: cdesc
-         INTEGER :: ispin, nspin
-         nspin = cdesc%nspin
-         IF( force_pairing ) nspin = 1
-         DO ispin = 1, nspin
-             CALL ortho_s( ispin, c0(:,:,ispin), cp(:,:,ispin), cdesc)
-         END DO
-         RETURN
-       END SUBROUTINE ortho_m
+   SUBROUTINE ortho_m( c0, cp, nupdwn, iupdwn, nspin )
+      !
+      USE control_flags,      ONLY: force_pairing
+      USE orthogonalize_base, ONLY: calphi
+      USE cp_main_variables,  ONLY: ema0bg
+      !
+      INTEGER,     INTENT(IN)    :: nupdwn(:), iupdwn(:), nspin
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cp(:,:)
+      !
+      COMPLEX(DP), ALLOCATABLE :: phi(:,:)
+      INTEGER :: iss, nss, iwfc, nwfc, info
+      REAL(DP)    :: dum(2,2)
+      COMPLEX(DP) :: cdum(2,2)
+      !
+      CALL start_clock( 'ortho' )  
+
+      ALLOCATE( phi( SIZE( c0, 1 ), SIZE( c0, 2 ) ), STAT = info )
+      IF( info /= 0 ) CALL errore( ' ortho ', ' allocating phi ', 3 )
+
+      CALL calphi( c0, SIZE(c0,1), dum, 1, cdum, phi, SIZE(c0,2), ema0bg )
+      !
+      nss = nspin
+      IF( force_pairing ) nss = 1
+      !
+      DO iss = 1, nss
+          CALL ortho_s( c0, cp, phi, SIZE(c0,2), nupdwn(iss), iupdwn(iss) )
+      END DO
+      !
+      IF( force_pairing ) cp(:, iupdwn(2):iupdwn(2)+nupdwn(2)-1 ) = cp(:,1:nupdwn(2))
+      !
+      DEALLOCATE( phi )
+      !
+      CALL stop_clock( 'ortho' )
+      !
+      RETURN
+   END SUBROUTINE ortho_m
 
 
 !=----------------------------------------------------------------------------=!

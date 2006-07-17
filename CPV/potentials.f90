@@ -192,7 +192,7 @@
         LOGICAL   :: tcel
         INTEGER,              INTENT(IN)    :: nfi
         TYPE (atoms_type),    INTENT(INOUT) :: atoms
-        COMPLEX(DP),         INTENT(INOUT) :: c0(:,:,:)
+        COMPLEX(DP),         INTENT(INOUT) :: c0(:,:)
         TYPE (wave_descriptor),  INTENT(IN) :: cdesc
         REAL(DP) :: rhoe(:,:)
         COMPLEX(DP) :: ei1(:,:)
@@ -259,7 +259,7 @@
 
       ! ... include modules
 
-      USE control_flags,  ONLY: tscreen, tchi2, iprsta, force_pairing
+      USE control_flags,  ONLY: tscreen, tchi2, iprsta
       USE mp_global,      ONLY: nproc_image, me_image, intra_image_comm
       USE mp,             ONLY: mp_sum
       USE cell_module,    ONLY: boxdimensions
@@ -281,6 +281,7 @@
       USE core,           ONLY: nlcc_any, rhocg
       USE core,           ONLY: add_core_charge, core_charge_forces
       USE fft_module,     ONLY: fwfft, invfft
+      USE electrons_base, ONLY: iupdwn, nupdwn
       !
       USE reciprocal_vectors,        ONLY: gx
       USE atoms_type_module,         ONLY: atoms_type
@@ -298,7 +299,7 @@
       COMPLEX(DP) :: ei2(:,:)
       COMPLEX(DP) :: ei3(:,:)
       COMPLEX(DP) :: eigr(:,:)
-      COMPLEX(DP),   INTENT(IN) :: c0(:,:,:)
+      COMPLEX(DP),   INTENT(IN) :: c0(:,:)
       TYPE (atoms_type), INTENT(INOUT) :: atoms
       TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE (boxdimensions),    INTENT(INOUT) :: box
@@ -344,7 +345,7 @@
       LOGICAL :: ttscreen, ttsic, tgc
 
       INTEGER ig1, ig2, ig3, is, ia, ig, isc, iflag, iss
-      INTEGER ik, i, j, k, isa, idum, nspin, iswfc
+      INTEGER ik, i, j, k, isa, idum, nspin
       INTEGER :: ierr
 
       DATA iflag / 0 /
@@ -432,9 +433,7 @@
       edft%emkin = 0.0_DP
 
       DO iss = 1, nspin
-        iswfc = iss
-        IF( force_pairing ) iswfc = 1
-        edft%ekin  = edft%ekin + enkin( c0(1,1,iswfc), SIZE(c0,1), fi(1,iss), cdesc%nbl(iss) )
+        edft%ekin  = edft%ekin + enkin( c0( 1, iupdwn(iss) ), SIZE( c0, 1 ), fi( 1, iss ), nupdwn(iss) )
       END DO
 
       IF(tprint) THEN
@@ -676,7 +675,7 @@
       ! ... compute stress tensor
       !
       IF( tstress ) THEN
-        CALL pstress( strvxc, rhoeg, rhoetg, pail, desr, bec, c0, cdesc, fi,  &
+        CALL pstress( strvxc, rhoeg, rhoetg, pail, desr, bec, c0, fi,  &
                       eigr, sfac, grho, v2xc, box, edft)
       END IF
 

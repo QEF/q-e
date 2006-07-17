@@ -132,11 +132,11 @@
     USE cell_module,     ONLY: boxdimensions
     USE wave_types,      ONLY: wave_descriptor
     USE io_global,       ONLY: stdout, ionode
-    USE control_flags,   ONLY: force_pairing, iprint
+    USE control_flags,   ONLY: iprint
     USE parameters,      ONLY: nspinx
     USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nnrx
     USE fft_module,      ONLY: invfft
-
+    USE electrons_base,  ONLY: iupdwn, nupdwn
 
 
     IMPLICIT NONE
@@ -144,7 +144,7 @@
 ! ... declare subroutine arguments
 
     INTEGER,              INTENT(IN) :: nfi
-    COMPLEX(DP)                     :: c0(:,:,:)
+    COMPLEX(DP)                     :: c0(:,:)
     TYPE (boxdimensions), INTENT(IN) :: box
     REAL(DP),          INTENT(IN) :: fi(:,:)
     REAL(DP),            INTENT(OUT) :: rhor(:,:)
@@ -153,11 +153,11 @@
 ! ... declare other variables
 
     INTEGER :: i, is1, is2, j, ib, nb, ispin
-    INTEGER :: nspin, nbnd, nnr
+    INTEGER :: nspin, nnr, iwfc1, iwfc2
     REAL(DP)  :: r2, r1, coef3, coef4, omega, rsumg( nspinx ), rsumgs
     REAL(DP)  :: fact, rsumr( nspinx )
     COMPLEX(DP), ALLOCATABLE :: psi2(:)
-    INTEGER :: ierr, ispin_wfc
+    INTEGER :: ierr
     LOGICAL :: ttprint
 
 ! ... end of declarations
@@ -191,28 +191,26 @@
 
     DO ispin = 1, nspin
 
-       ! ... arrange for FFT of wave functions
-
-       ispin_wfc = ispin
-       IF( force_pairing ) ispin_wfc = 1
-
+       ! ...  arrange for FFT of wave functions
        ! ...  Gamma-point calculation: wave functions are real and can be
        ! ...  Fourier-transformed two at a time as a complex vector
 
        psi2 = zero
 
-       nbnd = cdesc%nbl( ispin )
-       nb   = ( nbnd - MOD( nbnd, 2 ) )
+       nb   = ( nupdwn(ispin) - MOD( nupdwn(ispin), 2 ) )
 
        DO ib = 1, nb / 2
 
          is1 = 2*ib - 1       ! band index of the first wave function
          is2 = is1  + 1       ! band index of the second wave function
 
+         iwfc1 = is1 + iupdwn( ispin ) - 1
+         iwfc2 = is2 + iupdwn( ispin ) - 1
+
          ! ...  Fourier-transform wave functions to real-scaled space
          ! ...  psi(s,ib,iss) = INV_FFT (  c0(ig,ib,iss)  )
 
-         CALL c2psi( psi2, dffts%nnr, c0( 1, is1, ispin_wfc ), c0( 1, is2, ispin_wfc ), cdesc%ngwl, 2 )
+         CALL c2psi( psi2, dffts%nnr, c0( 1, iwfc1 ), c0( 1, iwfc2 ), cdesc%ngwl, 2 )
          CALL invfft( 'Wave',psi2, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
 
          IF( tturbo .AND. ( ib <= nturbo ) ) THEN
@@ -243,13 +241,15 @@
 
       END DO
 
-      IF( MOD( nbnd, 2 ) /= 0 ) THEN
+      IF( MOD( nupdwn(ispin), 2 ) /= 0 ) THEN
 
-         nb = nbnd
+         nb = nupdwn(ispin)
+
+         iwfc1 = nb + iupdwn( ispin ) - 1
 
          ! ...  Fourier-transform wave functions to real-scaled space
 
-         CALL c2psi( psi2, dffts%nnr, c0( 1, nb, ispin_wfc ), c0( 1, nb, ispin_wfc ), cdesc%ngwl, 1 )
+         CALL c2psi( psi2, dffts%nnr, c0( 1, iwfc1 ), c0( 1, iwfc1 ), cdesc%ngwl, 1 )
          CALL invfft( 'Wave', psi2, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
 
          ! ...  occupation numbers divided by cell volume
@@ -280,10 +280,9 @@
     IF( ttprint ) THEN
       !
       DO ispin = 1, nspin
-        ispin_wfc = ispin
-        IF( force_pairing ) ispin_wfc = 1
         fact = 2.d0
-        rsumgs = dft_total_charge( ispin, c0(:,:,ispin_wfc), cdesc, fi(:,ispin) )
+        iwfc1 = iupdwn( ispin )
+        rsumgs = dft_total_charge( ispin, c0( :, iwfc1 : iwfc1+nupdwn(ispin)-1 ), cdesc, fi(:,ispin) )
         rsumg( ispin ) = rsumg( ispin ) + fact * rsumgs
       END DO
       !

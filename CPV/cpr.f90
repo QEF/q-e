@@ -282,9 +282,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !=======================================================================
      !
      IF( force_pairing ) THEN
-          c0(:,iupdwn(2):nbsp,1)       =     c0(:,1:nupdwn(2),1)
-          cm(:,iupdwn(2):nbsp,1)       =     cm(:,1:nupdwn(2),1)
-         phi(:,iupdwn(2):nbsp,1)       =    phi(:,1:nupdwn(2),1)
+          c0(:,iupdwn(2):nbsp)       =     c0(:,1:nupdwn(2))
+          cm(:,iupdwn(2):nbsp)       =     cm(:,1:nupdwn(2))
+         phi(:,iupdwn(2):nbsp)       =    phi(:,1:nupdwn(2))
       lambda(1:nupdwn(2),1:nupdwn(2), 2) = lambda(1:nupdwn(2),1:nupdwn(2), 1)
       lambda(nudx, nudx, 2) = 0.d0
      ENDIF
@@ -460,7 +460,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         IF ( tortho ) THEN
            !
-           CALL ortho( eigr, cm(:,:,1), phi(:,:,1), ngw, lambda, SIZE(lambda,1), &
+           CALL ortho( eigr, cm, phi, ngw, lambda, SIZE(lambda,1), &
                        bigr, iter, ccc, bephi, becp, nbsp, nspin, nupdwn, iupdwn )
            !
         ELSE
@@ -489,9 +489,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         END IF
         !
         IF( force_pairing ) THEN
-              c0(:,iupdwn(2):nbsp,1)       =     c0(:,1:nupdwn(2),1)
-              cm(:,iupdwn(2):nbsp,1)       =     cm(:,1:nupdwn(2),1)
-             phi(:,iupdwn(2):nbsp,1)       =    phi(:,1:nupdwn(2),1)
+              c0(:,iupdwn(2):nbsp)       =     c0(:,1:nupdwn(2))
+              cm(:,iupdwn(2):nbsp)       =     cm(:,1:nupdwn(2))
+             phi(:,iupdwn(2):nbsp)       =    phi(:,1:nupdwn(2))
           lambda(1:nupdwn(2),1:nupdwn(2), 2) = lambda(1:nupdwn(2),1:nupdwn(2), 1)
           lambda(nudx, nudx, 2) = 0.d0
         ENDIF
@@ -722,7 +722,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         IF ( tcg ) THEN
           !
-          CALL writefile( ndw, h, hold ,nfi, c0(:,:,1), c0old, taus, tausm,  &
+          CALL writefile( ndw, h, hold ,nfi, c0, c0old, taus, tausm,  &
                           vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,     &
                           vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
                           xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, &
@@ -730,7 +730,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            !
         ELSE
            !
-           CALL writefile( ndw, h, hold, nfi, c0(:,:,1), cm(:,:,1), taus,  &
+           CALL writefile( ndw, h, hold, nfi, c0, cm, taus,  &
                            tausm, vels, velsm, acc,  lambda, lambdam, xnhe0,   &
                            xnhem, vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm,&
                            xnhh0, xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass,&
@@ -840,7 +840,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !
   IF ( tcg ) THEN
      !
-     CALL writefile( ndw, h, hold, nfi, c0(:,:,1), c0old, taus, tausm, vels, &
+     CALL writefile( ndw, h, hold, nfi, c0, c0old, taus, tausm, vels, &
                      velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe, xnhp0,   &
                      xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm, vnhh,     &
                      velh, ecutp, ecutw, delt, pmass, ibrav, celldm, fion,     &
@@ -848,7 +848,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
   ELSE
      !
-     CALL writefile( ndw, h, hold, nfi, c0(:,:,1), cm(:,:,1), taus, tausm, &
+     CALL writefile( ndw, h, hold, nfi, c0, cm, taus, tausm, &
                      vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe,    &
                      xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm,    &
                      vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, celldm,     &

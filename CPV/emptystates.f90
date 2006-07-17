@@ -354,7 +354,7 @@
    SUBROUTINE empty_cp ( nfi, c0, v )
 
       USE kinds,                ONLY : DP
-      USE control_flags,        ONLY : force_pairing, iprsta, tsde, program_name
+      USE control_flags,        ONLY : iprsta, tsde, program_name
       USE io_global,            ONLY : ionode, stdout
       USE cp_main_variables,    ONLY : eigr, ema0bg
       USE cell_base,            ONLY : omega
@@ -378,7 +378,7 @@
       IMPLICIT NONE
       !
       INTEGER,    INTENT(IN) :: nfi
-      COMPLEX(DP)            :: c0(:,:,:)
+      COMPLEX(DP)            :: c0(:,:)
       REAL(DP)               :: v(:,:)
       !
       INTEGER  :: i, iss, j, in, in_emp, iter, iter_ortho
@@ -447,21 +447,15 @@
       CALL prefor( eigr, vkb )
       !
       DO iss = 1, nspin
-         in = iupdwn( iss )
-         IF( program_name == 'FPMD' ) THEN
-            issw = iss
-            IF( force_pairing ) issw = 1
-            CALL nlsm1 ( nupdwn( iss ), 1, nvb, eigr, c0( 1, 1, issw ), bec_occ( 1, in ) )
-         ELSE
-            CALL nlsm1 ( nupdwn( iss ), 1, nvb, eigr, c0( 1, in, 1 ), bec_occ( 1, in ) )
-         END IF
+         issw = iupdwn( iss )
+         CALL nlsm1 ( nupdwn( iss ), 1, nvb, eigr, c0( 1, issw ), bec_occ( 1, iupdwn( iss ) ) )
       END DO
       !
       IF( .NOT. exst ) THEN
          !
          ! ...  initial random states orthogonal to filled ones
          !
-         CALL wave_rand_init( c0_emp )
+         CALL wave_rand_init( c0_emp, n_empx * nspin, 1 )
          !
          IF ( gzero ) THEN
             c0_emp( 1, : ) = (0.0d0, 0.0d0)
@@ -474,15 +468,10 @@
             in     = iupdwn(iss)
             in_emp = iupdwn_emp(iss)
             !
-            IF( program_name == 'FPMD' ) THEN
-               issw = iss
-               IF( force_pairing ) issw = 1
-               CALL gram_empty( .false. , eigr, vkb, bec_emp( :, in_emp: ), bec_occ( :, in: ), nkb, &
-                                c0_emp( :, in_emp: ), c0( :, :, issw ), ngw, nupdwn_emp(iss), nupdwn(iss) )
-            ELSE
-               CALL gram_empty( .false. , eigr, vkb, bec_emp( :, in_emp: ), bec_occ( :, in: ), nkb, &
-                                c0_emp( :, in_emp: ), c0( :, in:, 1 ), ngw, nupdwn_emp(iss), nupdwn(iss) )
-            END IF
+            issw   = iupdwn( iss )
+            !
+            CALL gram_empty( .false. , eigr, vkb, bec_emp( :, in_emp: ), bec_occ( :, in: ), nkb, &
+                             c0_emp( :, in_emp: ), c0( :, issw: ), ngw, nupdwn_emp(iss), nupdwn(iss) )
             !
          END DO
          !
@@ -573,15 +562,10 @@
             in     = iupdwn(iss)
             in_emp = iupdwn_emp(iss)
             !
-            IF( program_name == 'FPMD' ) THEN
-               issw = iss
-               IF( force_pairing ) issw = 1
-               CALL gram_empty( .true. , eigr, vkb, bec_emp( :, in_emp: ), bec_occ( :, in: ), nkb, &
-                         cm_emp( :, in_emp: ), c0( :, :, issw ), ngw, nupdwn_emp(iss), nupdwn(iss) )
-            ELSE
-               CALL gram_empty( .true. , eigr, vkb, bec_emp( :, in_emp: ), bec_occ( :, in: ), nkb, &
-                         cm_emp( :, in_emp: ), c0( :, in:, 1 ), ngw, nupdwn_emp(iss), nupdwn(iss) )
-            END IF
+            issw   = iupdwn( iss )
+            !
+            CALL gram_empty( .true. , eigr, vkb, bec_emp( :, in_emp: ), bec_occ( :, in: ), nkb, &
+                        cm_emp( :, in_emp: ), c0( :, issw: ), ngw, nupdwn_emp(iss), nupdwn(iss) )
             !
          END DO
 

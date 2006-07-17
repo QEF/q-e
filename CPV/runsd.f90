@@ -59,7 +59,7 @@
 ! ... declare subroutine arguments
       LOGICAL   :: tortho, tprint, tforce, tcel, doions
       TYPE (atoms_type), INTENT(INOUT) :: atoms_0
-      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:), cm(:,:,:), cp(:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cm(:,:), cp(:,:)
       TYPE (wave_descriptor) :: cdesc
       REAL(DP) :: rhoe(:,:)
       COMPLEX(DP) :: sfac(:,:)
@@ -86,7 +86,6 @@
 
       REAL(DP) :: s0, s1, s2, s3, s4, s5, s6, seconds_per_iter
       REAL(DP) :: eold, ekinc, fccc
-      REAL(DP) :: ekincs( cdesc%nspin )
       REAL(DP) :: ekinc_old, emin, demin
 
       INTEGER :: ispin, nspin, iter, ierr
@@ -132,9 +131,8 @@
 
         s2 = cclock()
 
-        CALL runcp( ttprint, ttortho, ttsde, cm, c0, cp, cdesc, vpot, vkb, occ, ekincs, ht0, ei, bec, fccc)
+        CALL runcp( ttprint, ttortho, ttsde, cm, c0, cp, vpot, vkb, occ, ekinc, ht0, ei, bec, fccc)
 
-        ekinc = SUM( ekincs )
         emin  = edft%etot
         demin = eold - emin
         eold  = emin
@@ -148,7 +146,7 @@
 113         FORMAT(10X,I5,2X,F14.6,2X,3D12.4)
         END IF
         
-        CALL update_wave_functions(cm, c0, cp, cdesc)
+        CALL update_wave_functions( cm, c0, cp )
 
         s6 = cclock()
 

@@ -22,10 +22,6 @@
 
      PUBLIC :: interpolate_lambda, update_lambda
 
-     INTERFACE update_lambda
-       MODULE PROCEDURE update_rlambda, update_clambda
-     END INTERFACE
-
 !=----------------------------------------------------------------------------=!
    CONTAINS
 !=----------------------------------------------------------------------------=!
@@ -43,23 +39,23 @@
      END SUBROUTINE interpolate_lambda
 
 
-     SUBROUTINE update_rlambda( i, lambda, c0, cdesc, c2 )
-       USE electrons_module, ONLY: ib_owner, ib_local
-       USE mp_global, ONLY: me_image, intra_image_comm
-       USE mp, ONLY: mp_sum
-       USE wave_base, ONLY: hpsi
-       USE wave_types, ONLY: wave_descriptor
+     SUBROUTINE update_lambda( i, lambda, c0, c2, n, noff )
+       USE electrons_module,   ONLY: ib_owner, ib_local
+       USE mp_global,          ONLY: me_image, intra_image_comm
+       USE mp,                 ONLY: mp_sum
+       USE wave_base,          ONLY: hpsi
+       USE reciprocal_vectors, ONLY: gzero
        IMPLICIT NONE
-       REAL(DP) :: lambda(:,:)
-       COMPLEX(DP) :: c0(:,:), c2(:)
-       TYPE (wave_descriptor), INTENT(IN) :: cdesc
+       INTEGER, INTENT(IN) :: n, noff
+       REAL(DP)            :: lambda(:,:)
+       COMPLEX(DP)         :: c0(:,:), c2(:)
        INTEGER :: i
        !
        REAL(DP), ALLOCATABLE :: prod(:)
        INTEGER :: ibl
        !
-       ALLOCATE( prod( SIZE( c0, 2 ) ) )
-       prod = hpsi( cdesc%gzero, c0(:,:), c2 )
+       ALLOCATE( prod( n ) )
+       prod = hpsi( gzero, c0, SIZE( c0, 1 ), c2, n, noff )
        CALL mp_sum( prod, intra_image_comm )
        IF( me_image == ib_owner( i ) ) THEN
            ibl = ib_local( i )
@@ -67,33 +63,7 @@
        END IF
        DEALLOCATE( prod )
        RETURN
-     END SUBROUTINE update_rlambda
-
-     SUBROUTINE update_clambda( i, lambda, c0, cdesc, c2 )
-       USE electrons_module, ONLY: ib_owner, ib_local
-       USE mp_global, ONLY: me_image, intra_image_comm
-       USE mp, ONLY: mp_sum
-       USE wave_base, ONLY: hpsi
-       USE wave_types, ONLY: wave_descriptor
-       IMPLICIT NONE
-       COMPLEX(DP) :: lambda(:,:)
-       COMPLEX(DP) :: c0(:,:), c2(:)
-       TYPE (wave_descriptor), INTENT(IN) :: cdesc
-       INTEGER :: i
-       !
-       COMPLEX(DP), ALLOCATABLE :: prod(:)
-       INTEGER :: ibl
-       !
-       ALLOCATE( prod( SIZE( c0, 2 ) ) )
-       prod = hpsi( cdesc%gzero, c0(:,:), c2 )
-       CALL mp_sum( prod, intra_image_comm )
-       IF( me_image == ib_owner( i ) ) THEN
-           ibl = ib_local( i )
-           lambda( ibl, : ) = prod( : )
-       END IF
-       DEALLOCATE( prod )
-       RETURN
-     END SUBROUTINE update_clambda
+     END SUBROUTINE update_lambda
 
 !=----------------------------------------------------------------------------=!
    END MODULE wave_constrains
@@ -118,7 +88,7 @@
             MODULE PROCEDURE  crot_gamma
           END INTERFACE
           INTERFACE proj
-            MODULE PROCEDURE  proj_gamma, proj2
+            MODULE PROCEDURE  proj_gamma
           END INTERFACE
 
           PUBLIC :: elec_fakekine
@@ -170,75 +140,61 @@
 !=----------------------------------------------------------------------------=!
 !=----------------------------------------------------------------------------=!
 
-   SUBROUTINE update_wave_functions(cm, c0, cp, cdesc)
-
-      USE energies, ONLY: dft_energy_type
-      USE wave_types, ONLY: wave_descriptor
-      USE control_flags, ONLY: force_pairing
+   SUBROUTINE update_wave_functions( cm, c0, cp )
 
       IMPLICIT NONE
 
-      COMPLEX(DP), INTENT(IN) :: cp(:,:,:)
-      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:)
-      COMPLEX(DP), INTENT(OUT) :: cm(:,:,:)
-      TYPE (wave_descriptor), INTENT(IN) :: cdesc
+      COMPLEX(DP), INTENT(IN)    :: cp(:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:)
+      COMPLEX(DP), INTENT(OUT)   :: cm(:,:)
 
-      INTEGER :: ispin, nspin
-
-      nspin = cdesc%nspin
-      IF( force_pairing ) nspin = 1
-      
-      DO ispin = 1, nspin
-         cm(:,:,ispin) = c0(:,:,ispin)
-         c0(:,:,ispin) = cp(:,:,ispin)
-      END DO
+      cm(:,:) = c0(:,:)
+      c0(:,:) = cp(:,:)
 
       RETURN
    END SUBROUTINE update_wave_functions
 
 !=----------------------------------------------------------------------------=!
 
-   SUBROUTINE crot_gamma ( c0, ngwl, nx, lambda, nrl, eig )
+   SUBROUTINE crot_gamma ( c0, ngwl, nx, noff, lambda, nrl, eig )
 
-!  this routine rotates the wave functions to the Kohn-Sham base
-!  it works with a block-like distributed matrix
-!  of the Lagrange multipliers ( lambda ).
-!  no replicated data are used, allowing scalability for large problems.
-!  the layout of lambda is as follows :
-!
-!  (PE 0)                 (PE 1)               ..  (PE NPE-1)
-!  lambda(1      ,1:nx)   lambda(2      ,1:nx) ..  lambda(NPE      ,1:nx)
-!  lambda(1+  NPE,1:nx)   lambda(2+  NPE,1:nx) ..  lambda(NPE+  NPE,1:nx)
-!  lambda(1+2*NPE,1:nx)   lambda(2+2*NPE,1:nx) ..  lambda(NPE+2*NPE,1:nx)
-!
-!  distributes lambda's rows across processors with a blocking factor
-!  of 1, ( row 1 to PE 1, row 2 to PE 2, .. row nproc_image+1 to PE 1 and
-!  so on).
-!  nrl = local number of rows
-!  ----------------------------------------------
+      !  this routine rotates the wave functions to the Kohn-Sham base
+      !  it works with a block-like distributed matrix
+      !  of the Lagrange multipliers ( lambda ).
+      !  no replicated data are used, allowing scalability for large problems.
+      !  the layout of lambda is as follows :
+      !
+      !  (PE 0)                 (PE 1)               ..  (PE NPE-1)
+      !  lambda(1      ,1:nx)   lambda(2      ,1:nx) ..  lambda(NPE      ,1:nx)
+      !  lambda(1+  NPE,1:nx)   lambda(2+  NPE,1:nx) ..  lambda(NPE+  NPE,1:nx)
+      !  lambda(1+2*NPE,1:nx)   lambda(2+2*NPE,1:nx) ..  lambda(NPE+2*NPE,1:nx)
+      !
+      !  distributes lambda's rows across processors with a blocking factor
+      !  of 1, ( row 1 to PE 1, row 2 to PE 2, .. row nproc_image+1 to PE 1 and
+      !  so on).
+      !  nrl = local number of rows
+      !  ----------------------------------------------
 
-! ... declare modules
-      USE mp, ONLY: mp_bcast
-      USE mp_global, ONLY: nproc_image, me_image, intra_image_comm
-      USE wave_types, ONLY: wave_descriptor
+      ! ... declare modules
+
+      USE mp,               ONLY: mp_bcast
+      USE mp_global,        ONLY: nproc_image, me_image, intra_image_comm
       USE parallel_toolkit, ONLY: pdspev_drv, dspev_drv
 
       IMPLICIT NONE
 
-! ... declare subroutine arguments
-      INTEGER, INTENT(IN) :: ngwl, nx, nrl
+      ! ... declare subroutine arguments
+
+      INTEGER, INTENT(IN) :: ngwl, nx, nrl, noff
       COMPLEX(DP), INTENT(INOUT) :: c0(:,:)
       REAL(DP) :: lambda(:,:)
       REAL(DP) :: eig(:)
 
-! ... declare other variables
+      ! ... declare other variables
       COMPLEX(DP), ALLOCATABLE :: c0rot(:,:)
-      REAL(DP), ALLOCATABLE :: uu(:,:), vv(:,:), ap(:)
+      REAL(DP),    ALLOCATABLE :: uu(:,:), vv(:,:), ap(:)
       INTEGER   :: i, j, k, ip
       INTEGER   :: jl, nrl_ip
-
-! ... end of declarations
-!  ----------------------------------------------
 
       IF( nx < 1 ) THEN
         RETURN
@@ -277,7 +233,7 @@
             j      = ip
             DO jl = 1, nrl_ip
               DO i = 1, nx
-                CALL DAXPY(2*ngwl,uu(jl,i),c0(1,j),1,c0rot(1,i),1)
+                CALL DAXPY(2*ngwl,uu(jl,i),c0(1,j+noff-1),1,c0rot(1,i),1)
               END DO
               j = j + nproc_image
             END DO
@@ -305,13 +261,13 @@
 
          DO j = 1, nrl
             DO i = 1, nx
-               CALL DAXPY( 2*ngwl, vv(j,i), c0(1,j), 1, c0rot(1,i), 1 )
+               CALL DAXPY( 2*ngwl, vv(j,i), c0(1,j+noff-1), 1, c0rot(1,i), 1 )
             END DO
          END DO
 
       END IF
 
-      c0(:,:) = c0rot(:,:)
+      c0(:,noff:noff+nx-1) = c0rot(:,:)
 
       DEALLOCATE( vv )
       DEALLOCATE( c0rot )
@@ -322,66 +278,60 @@
 
 !=----------------------------------------------------------------------------=!
 
-   SUBROUTINE proj_gamma( ispin, a, adesc, b, bdesc, lambda)
+   SUBROUTINE proj_gamma( a, b, ngw, n, noff, lambda)
 
-!  projection A=A-SUM{B}<B|A>B
-!  no replicated data are used, allowing scalability for large problems.
-!  The layout of lambda is as follows :
-!
-!  (PE 0)                 (PE 1)               ..  (PE NPE-1)
-!  lambda(1      ,1:nx)   lambda(2      ,1:nx) ..  lambda(NPE      ,1:nx)
-!  lambda(1+  NPE,1:nx)   lambda(2+  NPE,1:nx) ..  lambda(NPE+  NPE,1:nx)
-!  lambda(1+2*NPE,1:nx)   lambda(2+2*NPE,1:nx) ..  lambda(NPE+2*NPE,1:nx)
-!
-!  distribute lambda's rows across processors with a blocking factor
-!  of 1, ( row 1 to PE 1, row 2 to PE 2, .. row nproc_image+1 to PE 1 and so on).
-!  ----------------------------------------------
-
+        !  projection A=A-SUM{B}<B|A>B
+        !  no replicated data are used, allowing scalability for large problems.
+        !  The layout of lambda is as follows :
+        !
+        !  (PE 0)                 (PE 1)               ..  (PE NPE-1)
+        !  lambda(1      ,1:nx)   lambda(2      ,1:nx) ..  lambda(NPE      ,1:nx)
+        !  lambda(1+  NPE,1:nx)   lambda(2+  NPE,1:nx) ..  lambda(NPE+  NPE,1:nx)
+        !  lambda(1+2*NPE,1:nx)   lambda(2+2*NPE,1:nx) ..  lambda(NPE+2*NPE,1:nx)
+        !
+        !  distribute lambda's rows across processors with a blocking factor
+        !  of 1, ( row 1 to PE 1, row 2 to PE 2, .. row nproc_image+1 to PE 1 and so on).
+        !  ----------------------------------------------
+         
 ! ...   declare modules
-        USE mp_global, ONLY: nproc_image,me_image,intra_image_comm
-        USE wave_types, ONLY: wave_descriptor
-        USE wave_base, ONLY: dotp
+        USE mp_global,          ONLY: nproc_image, me_image, intra_image_comm
+        USE wave_base,          ONLY: dotp
+        USE reciprocal_vectors, ONLY: gzero
 
         IMPLICIT NONE
 
 ! ...   declare subroutine arguments
+        INTEGER,     INTENT( IN )  :: ngw, n, noff
         COMPLEX(DP), INTENT(INOUT) :: a(:,:), b(:,:)
-        TYPE (wave_descriptor), INTENT(IN) :: adesc, bdesc
-        REAL(DP), OPTIONAL :: lambda(:,:)
-        INTEGER, INTENT( IN ) :: ispin
+        REAL(DP),    OPTIONAL      :: lambda(:,:)
 
 ! ...   declare other variables
         REAL(DP), ALLOCATABLE :: ee(:)
-        INTEGER :: i, j, ngwc, jl
-        INTEGER :: nstate_a, nstate_b
+        INTEGER :: i, j, jl
         COMPLEX(DP) :: alp
 
 ! ... end of declarations
 !  ----------------------------------------------
 
-        ngwc     = adesc%ngwl
-        nstate_a = adesc%nbl( ispin )
-        nstate_b = bdesc%nbl( ispin )
-
-        IF( nstate_b < 1 ) THEN
+        IF( n < 1 ) THEN
           RETURN
         END IF
 
-        ALLOCATE( ee( nstate_b ) )
-        DO i = 1, nstate_a
-          DO j = 1, nstate_b
-            ee(j) = -dotp(adesc%gzero, ngwc, b(:,j), a(:,i))
+        ALLOCATE( ee( n ) )
+        DO i = 1, n
+          DO j = 1, n
+            ee(j) = -dotp( gzero, ngw, b(:,j+noff-1), a(:,i+noff-1) )
           END DO
           IF( PRESENT(lambda) ) THEN
             IF( MOD( (i-1), nproc_image ) == me_image ) THEN
-              DO j = 1, MIN( SIZE( lambda, 2 ), SIZE( ee ) )
+              DO j = 1, n
                 lambda( (i-1) / nproc_image + 1, j ) = ee(j)
               END DO
             END IF
           END IF
-          DO j = 1, nstate_b
+          DO j = 1, n
             alp = CMPLX(ee(j),0.0d0)
-            CALL ZAXPY(ngwc,alp,b(1,j),1,a(1,i),1)
+            CALL ZAXPY( ngw, alp, b(1,j+noff-1), 1, a(1,i+noff-1), 1 )
           END DO
         END DO
         DEALLOCATE(ee)
@@ -389,114 +339,46 @@
         RETURN
    END SUBROUTINE proj_gamma
 
+
 !=----------------------------------------------------------------------------=!
 
-   SUBROUTINE proj2( ispin, a, adesc, b, bdesc, c, cdesc)
 
-!  projection A=A-SUM{B}<B|A>B-SUM{C}<C|A>
-!
-!  ----------------------------------------------
-
-! ...   declare modules
-        USE mp_global, ONLY: nproc_image,me_image,intra_image_comm
-        USE wave_types, ONLY: wave_descriptor
-        USE wave_base, ONLY: dotp
-
-        IMPLICIT NONE
-
-! ...   declare subroutine arguments
-        COMPLEX(DP), INTENT(INOUT) :: a(:,:), b(:,:), c(:,:)
-        TYPE (wave_descriptor), INTENT(IN) :: adesc, bdesc, cdesc
-        INTEGER, INTENT( IN ) :: ispin
-
-! ...   declare other variables
-        COMPLEX(DP), ALLOCATABLE :: ee(:)
-        INTEGER :: i, j, ngwc, jl
-        INTEGER :: nstate_a, nstate_b, nstate_c
-
-! ... end of declarations
-!  ----------------------------------------------
-
-        ngwc     = adesc%ngwl
-        nstate_a = adesc%nbl( ispin )
-        nstate_b = bdesc%nbl( ispin )
-        nstate_c = cdesc%nbl( ispin )
-
-        ALLOCATE( ee( MAX( nstate_b, nstate_c, 1 ) ) )
-
-        DO i = 1, nstate_a
-          DO j = 1, nstate_b
-            IF( adesc%gamma ) THEN
-              ee(j) = -dotp(adesc%gzero, ngwc, b(:,j), a(:,i))
-            ELSE
-              ee(j) = -dotp(ngwc, b(:,j), a(:,i))
-            END IF
-          END DO
-! ...     a(:,i) = a(:,i) - (sum over j) e(i,j) b(:,j)
-          DO j = 1, nstate_b
-            CALL ZAXPY(ngwc, ee(j), b(1,j), 1, a(1,i), 1)
-          END DO
-        END DO
-
-        DO i = 1, nstate_a
-          DO j = 1, nstate_c
-            IF( adesc%gamma ) THEN
-              ee(j) = -dotp(adesc%gzero, ngwc, c(:,j), a(:,i))
-            ELSE
-              ee(j) = -dotp(ngwc, c(:,j), a(:,i))
-            END IF
-          END DO
-          DO j = 1, nstate_c
-            CALL ZAXPY(ngwc, ee(j), c(1,j), 1, a(1,i), 1)
-          END DO
-        END DO
-        DEALLOCATE(ee)
-        RETURN
-   END SUBROUTINE proj2
-
-
-
-   SUBROUTINE wave_rand_init( cm )
+   SUBROUTINE wave_rand_init( cm, n, noff )
 
 !  this routine sets the initial wavefunctions at random
 !  ----------------------------------------------
 
 ! ... declare modules
-      USE mp, ONLY: mp_sum
-      USE mp_wave, ONLY: splitwf
-      USE mp_global, ONLY: me_image, nproc_image, root_image, intra_image_comm
+      USE mp,                 ONLY: mp_sum
+      USE mp_wave,            ONLY: splitwf
+      USE mp_global,          ONLY: me_image, nproc_image, root_image, intra_image_comm
       USE reciprocal_vectors, ONLY: ig_l2g, ngw, ngwt, gzero
-      USE io_global, ONLY: stdout
-      USE random_numbers, ONLY : rranf
+      USE io_global,          ONLY: stdout
+      USE random_numbers,     ONLY: rranf
       
       IMPLICIT NONE
 
-! ... declare module-scope variables
-
-! ... declare subroutine arguments 
+      ! ... declare subroutine arguments 
+      INTEGER,     INTENT(IN)  :: n, noff
       COMPLEX(DP), INTENT(OUT) :: cm(:,:)
 
-! ... declare other variables
+      ! ... declare other variables
       INTEGER :: ntest, ig, ib
       REAL(DP) ::  rranf1, rranf2, ampre
       COMPLEX(DP), ALLOCATABLE :: pwt( : )
 
-! ... end of declarations
-!  ----------------------------------------------
+      ! ... Check array dimensions
 
-! 
-! ... Check array dimensions
       IF( SIZE( cm, 1 ) < ngw ) THEN 
         CALL errore(' wave_rand_init ', ' wrong dimensions ', 3)
       END IF
 
-! ... Reset them to zero
-!
-      cm = 0.0d0
+      ! ... Reset them to zero
+ 
+      cm( :, noff : noff + n - 1 ) = 0.0d0
 
-! ... initialize the wave functions in such a way that the values
-! ... of the components are independent on the number of processors
-!
+      ! ... initialize the wave functions in such a way that the values
+      ! ... of the components are independent on the number of processors
 
       ampre = 0.01d0
       ALLOCATE( pwt( ngwt ) )
@@ -508,7 +390,7 @@
       !
       ! ... assign random values to wave functions
       !
-      DO ib = 1, SIZE( cm, 2 )
+      DO ib = noff, noff + n - 1
         pwt( : ) = 0.0d0
         DO ig = 3, ntest
           rranf1 = 0.5d0 - rranf()
@@ -518,7 +400,7 @@
         CALL splitwf ( cm( :, ib ), pwt, ngw, ig_l2g, me_image, nproc_image, root_image, intra_image_comm )
       END DO
       IF ( gzero ) THEN
-        cm( 1, : ) = (0.0d0, 0.0d0)
+        cm( 1, noff : noff + n - 1 ) = (0.0d0, 0.0d0)
       END IF
 
       DEALLOCATE( pwt )
@@ -528,48 +410,43 @@
 
 
 
-   SUBROUTINE kohn_sham(ispin, c, cdesc, eforces, nupdwn, nupdwnl )
+   SUBROUTINE kohn_sham( c, ngw, eforces, n, nl, noff )
         !
         ! ...   declare modules
 
         USE kinds
         USE wave_constrains,  ONLY: update_lambda
-        USE wave_types,       ONLY: wave_descriptor
 
         IMPLICIT NONE
 
         ! ...   declare subroutine arguments
+        INTEGER, INTENT(IN) :: ngw   ! number of plane waves
+        INTEGER, INTENT(IN) :: n     ! number of ks states
+        INTEGER, INTENT(IN) :: nl    ! local (to the processor) number of states
+        INTEGER, INTENT(IN) :: noff  ! offset of the first state in array "c"
         COMPLEX(DP), INTENT(INOUT) ::  c(:,:)
-        TYPE (wave_descriptor), INTENT(IN) :: cdesc
-        INTEGER, INTENT(IN) :: ispin
-        INTEGER, INTENT(IN) :: nupdwn(:)   ! number of upper and down states
-        INTEGER, INTENT(IN) :: nupdwnl(:)  ! local (to the processor) number of up and down states
         COMPLEX(DP) :: eforces(:,:)
 
         ! ...   declare other variables
-        INTEGER ::  ib, nb_g, nrl
-        REAL(DP),    ALLOCATABLE :: gam(:,:)
-        REAL(DP),    ALLOCATABLE :: eig(:)
-        LOGICAL :: tortho = .TRUE.
+        INTEGER ::  ib
+        REAL(DP),  ALLOCATABLE :: gam(:,:)
+        REAL(DP),  ALLOCATABLE :: eig(:)
 
         ! ...   end of declarations
 
-        nb_g = nupdwn( ispin )
-        nrl  = nupdwnl( ispin )
-
-        IF( nb_g < 1 ) THEN
+        IF( n < 1 ) THEN
 
            eforces = 0.0d0
 
         ELSE
 
-           ALLOCATE( eig( nb_g ) )
-           ALLOCATE( gam( nrl, nb_g ) )
+           ALLOCATE( eig( n ) )
+           ALLOCATE( gam( nl, n ) )
 
-           DO ib = 1, nb_g
-              CALL update_lambda( ib, gam, c(:,:), cdesc, eforces(:,ib) )
+           DO ib = 1, n
+              CALL update_lambda( ib, gam, c, eforces(:,ib+noff-1), n, noff )
            END DO
-           CALL crot( c(:,:), cdesc%ngwl, nupdwn(ispin), gam, nupdwnl(ispin), eig )
+           CALL crot( c, ngw, n, noff, gam, nl, eig )
 
            DEALLOCATE( gam, eig )
 

@@ -107,7 +107,7 @@ CONTAINS
       !
       LOGICAL    :: tcel, tprint, doions
       TYPE (atoms_type) :: atoms
-      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:), cm(:,:,:), cgrad(:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cm(:,:), cgrad(:,:)
       TYPE (wave_descriptor) :: cdesc
       REAL(DP) :: rhoe(:,:)
       REAL(DP) :: bec(:,:)
@@ -225,7 +225,7 @@ CONTAINS
 
              ! ...       bring wave functions onto KS states
 
-             CALL crot( c0(:,:,1), cdesc%ngwl, cdesc%nbl( 1 ), lambda, SIZE(lambda,1), eig(:,1) )
+             CALL crot( c0(:,:), cdesc%ngwl, cdesc%nbl( 1 ), 1, lambda, SIZE(lambda,1), eig(:,1) )
 
              call adjef_s(eig(1,1),fi(1,1),efermi,nel, cdesc%nbl( 1 ),temp_elec,sume)
              call entropy_s(fi(1,1),temp_elec,cdesc%nbl( 1 ),edft%ent)
@@ -267,19 +267,19 @@ CONTAINS
 
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms%for, bec, becdr, eigr)
 
-          CALL dforce_all( c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
+          CALL dforce_all( c0, fi(:,1), cgrad, vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 
-          CALL proj( 1, cgrad(:,:,1), cdesc, c0(:,:,1), cdesc, lambda )
-          CALL crot( c0(:,:,1), cdesc%ngwl, cdesc%nbl( 1 ), lambda, SIZE(lambda,1), eig(:,1) )
+          CALL proj( cgrad, c0, cdesc%ngwl, cdesc%nbl( 1 ), 1, lambda )
+          CALL crot( c0, cdesc%ngwl, cdesc%nbl( 1 ), 1, lambda, SIZE(lambda,1), eig(:,1) )
 
           call adjef_s(eig(1,1),fi(1,1),efermi,nel, cdesc%nbl( 1 ),temp_elec,sume)
           call entropy_s(fi(1,1),temp_elec,cdesc%nbl(1),edft%ent)
 
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms%for, bec, becdr, eigr)
-          CALL dforce_all( c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
+          CALL dforce_all( c0, fi(:,1), cgrad, vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 
           DO ib = 1, cdesc%nbl( 1 )
-            cgrad(:,ib,1) = cgrad(:,ib,1) + eig(ib,1)*c0(:,ib,1)
+            cgrad(:,ib) = cgrad(:,ib) + eig(ib,1)*c0(:,ib)
           END DO
 
         ELSE
@@ -287,9 +287,9 @@ CONTAINS
 ! ...     DIIS on c0 at FIXED potential
           edft%enl = nlrh_m(c0, cdesc, tforce, atoms%for, bec, becdr, eigr)
 
-          CALL dforce_all( c0(:,:,1), fi(:,1), cgrad(:,:,1), vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
+          CALL dforce_all( c0, fi(:,1), cgrad, vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 
-          CALL proj( 1, cgrad(:,:,1), cdesc, c0(:,:,1), cdesc, lambda)
+          CALL proj( cgrad, c0, cdesc%ngwl, cdesc%nbl( 1 ), 1, lambda)
 
         END IF
 
@@ -306,11 +306,11 @@ CONTAINS
         svar1   = 2.d0
         svar2   = -1.d0
         svar3_0 = delt * delt / emass
-        CALL simupd(ekinc,doions,c0(:,:,1),cgrad(:,:,1),cdesc, svar1,svar2, &
+        CALL simupd(ekinc,doions,c0(:,:),cgrad(:,:),cdesc, svar1,svar2, &
                   svar3_0,edft%etot,fs(:,1),eigr,sfac,vps, &
                   treset_diis,istate,cnorm,eold,ndiis,nowv)
 
-        CALL gram( vkb, bec, nkb, c0(1,1,1), SIZE(c0,1), cdesc%nbt( 1 ) )
+        CALL gram( vkb, bec, nkb, c0(1,1), SIZE(c0,1), cdesc%nbt( 1 ) )
 
       END DO DIIS_LOOP
 
@@ -419,7 +419,7 @@ CONTAINS
 ! ... declare subroutine arguments
       LOGICAL   :: tprint, tcel, doions
       TYPE (atoms_type) :: atoms
-      COMPLEX(DP), INTENT(INOUT) :: c0(:,:,:), cm(:,:,:), cgrad(:,:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cm(:,:), cgrad(:,:)
       TYPE (wave_descriptor) :: cdesc
       REAL(DP) :: rhoe(:,:)
       COMPLEX(DP) :: eigr(:,:)
@@ -444,7 +444,7 @@ CONTAINS
       INTEGER ig, ib, ibg, j, k, ibl, ispin
       INTEGER nfi_l,nrt,istate
       INTEGER nspin
-      INTEGER nx,nrl, ndiis,nowv, isteep
+      INTEGER nx,nrl, ndiis,nowv, isteep, iwfc, nwfc
       REAL(DP)  ekinc(2), svar1, svar2, svar3_0
       REAL(DP)  s0, s1, s2, s3, s4, s5
       REAL(DP) :: seconds_per_iter, old_clock_value
@@ -510,8 +510,8 @@ CONTAINS
 
           isteep = isteep + 1
           cm = c0
-          CALL runcp(.FALSE., tortho, tsde, cm, c0, cgrad, cdesc, vpot, vkb, fi, ekinc, ht0, ei, bec, fccc )
-          CALL update_wave_functions(cm, c0, cgrad, cdesc)
+          CALL runcp(.FALSE., tortho, tsde, cm, c0, cgrad, vpot, vkb, fi, ekinc, ht0, ei, bec, fccc )
+          CALL update_wave_functions(cm, c0, cgrad)
 
         ELSE
 
@@ -532,17 +532,19 @@ CONTAINS
 ! ...       of 1, ( row 1 to PE 1, row 2 to PE 2, .. row nproc_image+1 to PE 1 and
 ! ...       so on).
 
-            CALL dforce_all( c0(:,:,ispin), fi(:,ispin), cgrad(:,:,ispin), &
-                             vpot(:,ispin), vkb, bec, nupdwn(ispin), iupdwn(ispin) )
+            iwfc = iupdwn( ispin )
+            nwfc = nupdwn( ispin )
 
-            CALL proj( ispin, cgrad(:,:,ispin), cdesc, c0(:,:,ispin), cdesc, lambda)
+            CALL dforce_all( c0, fi(:,ispin), cgrad, vpot(:,ispin), vkb, bec, nupdwn(ispin), iupdwn(ispin) )
+
+            CALL proj( cgrad, c0, cdesc%ngwl, nwfc, iwfc, lambda)
 
             s4 = cclock()
-            CALL simupd(ekinc(ispin), ddoions(ispin), c0(:,:,ispin), cgrad(:,:,ispin), cdesc, &
+            CALL simupd(ekinc(ispin), ddoions(ispin), c0(:,iwfc:iwfc+nwfc-1), cgrad(:,iwfc:iwfc+nwfc-1), cdesc, &
                 svar1, svar2, svar3_0, edft%etot, fi(:,ispin), eigr, sfac, &
                 vps, ttreset_diis(ispin), istate, cnorm, &
                 eold, ndiis, nowv)
-            CALL gram( vkb, bec, nkb, c0(1,1,ispin), SIZE(c0,1), cdesc%nbt( ispin ) )
+            CALL gram( vkb, bec, nkb, c0(1,iwfc), SIZE(c0,1), nwfc )
             DEALLOCATE(lambda)
           END DO SPIN
 
@@ -602,7 +604,6 @@ CONTAINS
 
         USE kinds
         USE wave_types
-        USE wave_functions, ONLY: crot
         USE wave_constrains, ONLY: update_lambda
         USE wave_base, ONLY: dotp
         USE cell_base, ONLY: tpiba2
@@ -620,8 +621,8 @@ CONTAINS
         IMPLICIT NONE
 
 ! ...   ARGUMENTS
-        COMPLEX(DP), INTENT(inout) ::  c(:,:,:)
-        COMPLEX(DP), INTENT(inout) ::  eforce(:,:,:)
+        COMPLEX(DP), INTENT(inout) ::  c(:,:)
+        COMPLEX(DP), INTENT(inout) ::  eforce(:,:)
         TYPE (wave_descriptor), INTENT(in) :: cdesc
         REAL (DP), INTENT(in) ::  vpot(:,:), fi(:,:)
         REAL (DP) ::  bec(:,:)
@@ -633,7 +634,7 @@ CONTAINS
 ! ...   LOCALS
         INTEGER     kk, i, k, j, iopt, iter, nwh
         INTEGER     ngw, ngw_g, n_occ, n, n_l, nspin, ispin
-        INTEGER     ig, iprinte, nrl, jl, ibl
+        INTEGER     ig, iprinte, nrl, jl, ibl, iwfc, nwfc
         LOGICAL     gamma_symmetry, gzero
 
         REAL(DP),    ALLOCATABLE :: gam(:,:)
@@ -654,19 +655,17 @@ CONTAINS
 ! ...   electronic state diagonalization ==
         DO ispin = 1, nspin
 
-          CALL nlsm1( n, 1, nspnl, eigr, c(1,1,ispin), bec )
+          iwfc = iupdwn( ispin )
+          nwfc = nupdwn( ispin )
+
+          CALL nlsm1( n, 1, nspnl, eigr, c(1,iwfc), bec )
 
 ! ...     Calculate | dH / dpsi(j) >
-          CALL dforce_all( c(:,:,ispin), fi(:,ispin), eforce(:,:,ispin), &
-                           vpot(:,ispin), vkb, bec, nupdwn(ispin), iupdwn(ispin) )
+          CALL dforce_all( c, fi(:,ispin), eforce, vpot(:,ispin), vkb, bec, nupdwn(ispin), iupdwn(ispin) )
 
 ! ...       Calculate Eij = < psi(i) | H | psi(j) > = < psi(i) | dH / dpsi(j) >
             DO i = 1, n
-              IF( gamma_symmetry ) THEN
-                CALL update_lambda( i,  gam, c( :, :, ispin), cdesc, eforce( :, i, ispin) ) 
-              ELSE
-                CALL update_lambda( i, cgam, c( :, :, ispin), cdesc, eforce( :, i, ispin) ) 
-              END IF
+               CALL update_lambda( i,  gam, c, eforce( :, i+iwfc-1), nwfc, iwfc ) 
             END DO
 
             CALL eigs( n, gam, tortho, fi(:,ispin), ei(:,ispin) )

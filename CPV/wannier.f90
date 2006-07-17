@@ -296,7 +296,7 @@ MODULE wannier_subroutines
     IMPLICIT NONE
     !
     LOGICAL, INTENT(in) :: tfirst
-    COMPLEX(DP)   :: cm(:,:,:)
+    COMPLEX(DP)   :: cm(:,:)
     REAL(DP)      :: bec(:,:), becdr(:,:,:)
     COMPLEX(DP)   :: eigrb(:,:), eigr(:,:)
     INTEGER             :: irb(:,:)
@@ -314,7 +314,7 @@ MODULE wannier_subroutines
           !
           jwf = 1
           !
-          CALL wf( calwf,cm(:,:,1), bec, eigr, eigrb, taub, irb, &
+          CALL wf( calwf,cm, bec, eigr, eigrb, taub, irb, &
                    b1, b2, b3, utwf, becdr, what1, wfc, jwf, ibrav )
           !
           what1 = .FALSE.
@@ -391,7 +391,7 @@ MODULE wannier_subroutines
     !
     LOGICAL, INTENT(IN) :: tfirst
     INTEGER             :: nfi
-    COMPLEX(DP)   :: cm(:,:,:)
+    COMPLEX(DP)   :: cm(:,:)
     REAL(DP)      :: bec(:,:), becdr(:,:,:)
     REAL(DP)      :: rhovan(:,:,:)
     COMPLEX(DP)   :: eigrb(:,:), eigr(:,:)
@@ -426,7 +426,7 @@ MODULE wannier_subroutines
        !
        jwf=1
        !
-       CALL wf (calwf,cm(:,:,1),bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,becdr,what1,wfc,jwf,ibrav)
+       CALL wf (calwf,cm,bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,becdr,what1,wfc,jwf,ibrav)
        !
        CALL stop_run( .TRUE. )
        !
@@ -435,7 +435,7 @@ MODULE wannier_subroutines
     IF (calwf.EQ.5) THEN
        !
        jwf=iplot(1)
-       CALL wf (calwf,cm(:,:,1),bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,becdr,what1,wfc,jwf,ibrav)
+       CALL wf (calwf,cm,bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,becdr,what1,wfc,jwf,ibrav)
        !
        CALL stop_run( .TRUE. )
        !
@@ -663,8 +663,8 @@ MODULE wannier_subroutines
     IMPLICIT NONE
     !
     INTEGER           :: nfi
-    COMPLEX(DP) :: c0(:,:,:)
-    COMPLEX(DP) :: cm(:,:,:)
+    COMPLEX(DP) :: c0(:,:)
+    COMPLEX(DP) :: cm(:,:)
     REAL(DP)    :: bec(:,:), becdr(:,:,:)
     COMPLEX(DP) :: eigrb(:,:), eigr(:,:)
     INTEGER           :: irb(:,:)
@@ -689,21 +689,21 @@ MODULE wannier_subroutines
        !
        jwf = 1
        !
-       CALL wf( calwf, c0(:,:,1), bec, eigr, eigrb, taub, irb, &
+       CALL wf( calwf, c0, bec, eigr, eigrb, taub, irb, &
                 b1, b2, b3, utwf, becdr, what1, wfc, jwf, ibrav )
        !
        IF ( nvb == 0 ) THEN
           !
-          CALL wf( calwf, cm(:,:,1), bec, eigr, eigrb, taub, irb, &
+          CALL wf( calwf, cm, bec, eigr, eigrb, taub, irb, &
                    b1, b2, b3, utwf, becdr, what1, wfc, jwf, ibrav )
           !
        ELSE
           !
-          cm(1:nbsp,1:ngw,1) = c0(1:nbsp,1:ngw,1)
+          cm = c0
           !
        END IF
        !
-       CALL writefile( ndw, h, hold, nfi, c0(:,:,1), cm(:,:,1), taus, &
+       CALL writefile( ndw, h, hold, nfi, c0, cm, taus, &
                        tausm, vels, velsm,acc, lambda, lambdam, xnhe0, xnhem, &
                        vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
                        vnhh, velh, ecut, ecutw, delt, pmass, ibrav, celldm,   &
@@ -719,7 +719,7 @@ MODULE wannier_subroutines
        !
        jwf = 1
        !
-       CALL wf( calwf, c0(:,:,1), bec, eigr, eigrb, taub, irb, &
+       CALL wf( calwf, c0, bec, eigr, eigrb, taub, irb, &
                 b1, b2, b3, utwf, becdr, what1, wfc, jwf, ibrav )
        !
     END IF

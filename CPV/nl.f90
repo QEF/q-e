@@ -43,7 +43,6 @@
       ! ... include modules
 
       USE wave_types,        ONLY: wave_descriptor
-      USE control_flags,     ONLY: force_pairing
       USE pseudopotential,   ONLY: nspnl
       USE electrons_base,    ONLY: iupdwn, nupdwn
       USE uspp,              ONLY: becsum, nkb
@@ -53,7 +52,7 @@
       ! ... declare subroutine arguments
 
       COMPLEX(DP)                           :: eigr(:,:)     ! exp(i G dot r)
-      COMPLEX(DP),           INTENT(INOUT)  :: c0(:,:,:)     ! wave functions
+      COMPLEX(DP),           INTENT(INOUT)  :: c0(:,:)       ! wave functions
       TYPE (wave_descriptor), INTENT(IN)    :: cdesc         ! wave functions descriptor
       LOGICAL,               INTENT(IN)     :: tforce        ! if .TRUE. compute forces on ions
       REAL(DP), INTENT(INOUT)               :: fion(:,:)      ! atomic forces
@@ -61,11 +60,11 @@
       REAL(DP)                              :: becdr(:,:,:)
 
       REAL(DP)    :: ennl
-      EXTERNAL     :: ennl
+      EXTERNAL    :: ennl
 
       ! ... declare other variables
       !
-      INTEGER      :: iss, iss_wfc, i, j
+      INTEGER     :: iss, i, j
       REAL(DP)    :: etmp
       REAL(DP), ALLOCATABLE :: btmp( :, :, : )
 
@@ -74,18 +73,15 @@
 
       DO iss = 1, cdesc%nspin
          !
-         iss_wfc = iss
-         IF( force_pairing ) iss_wfc = 1
-         !
          CALL nlsm1 ( cdesc%nbl( iss ), 1, nspnl, eigr(1,1),    &
-                      c0( 1, 1, iss_wfc ), bec(1, iupdwn( iss ) ) )
+                      c0( 1, iupdwn( iss ) ), bec(1, iupdwn( iss ) ) )
          !
          IF( tforce ) THEN
             !
             ALLOCATE( btmp( nkb, nupdwn( iss ), 3 ) ) 
             !
             CALL nlsm2( cdesc%ngwl, nkb, nupdwn( iss ), eigr(1,1), &
-                        c0( 1, 1, iss_wfc ), btmp( 1, 1, 1 ), .false. )
+                        c0( 1, iupdwn( iss ) ), btmp( 1, 1, 1 ), .false. )
             !
             DO i = 1, 3
                DO j = iupdwn( iss ), iupdwn( iss ) + nupdwn( iss ) - 1

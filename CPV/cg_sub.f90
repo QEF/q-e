@@ -224,7 +224,7 @@
         ENERGY_CHECK: if(.not. ene_ok ) then
           call calbec(1,nsp,eigr,c0,bec)
           if(.not.tens) then
-            call rhoofr(nfi,c0(:,:,1),irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
+            call rhoofr(nfi,c0(:,:),irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
           else
 
            if(newscheme.or.firstiter) then 
@@ -233,7 +233,7 @@
                firstiter=.false.
            endif
             !     calculation of the rotated quantities
-            call rotate(z0,c0(:,:,1),bec,c0diag,becdiag)
+            call rotate(z0,c0(:,:),bec,c0diag,becdiag)
             !     calculation of rho corresponding to the rotated wavefunctions
             call rhoofr(nfi,c0diag,irb,eigrb,becdiag                         &
                      &                    ,rhovan,rhor,rhog,rhos,enl,ekin)
@@ -259,12 +259,12 @@
 
           if(tefield  ) then!just in this case calculates elfield stuff at zeo field-->to be bettered
             
-             call berry_energy( enb, enbi, bec, c0(:,:,1), fion )
+             call berry_energy( enb, enbi, bec, c0(:,:), fion )
              etot=etot+enb+enbi
           endif
           if(tefield2  ) then!just in this case calculates elfield stuff at zeo field-->to be bettered
 
-             call berry_energy2( enb, enbi, bec, c0(:,:,1), fion )
+             call berry_energy2( enb, enbi, bec, c0(:,:), fion )
              etot=etot+enb+enbi
           endif
 
@@ -311,7 +311,7 @@
         call prefor(eigr,betae)!ATTENZIONE
 
         do i=1,n,2
-          call dforce(bec,betae,i,c0(1,i,1),c0(1,i+1,1),c2,c3,rhos,ispin,f,n,nspin)
+          call dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos,ispin,f,n,nspin)
           if(tefield .and. (evalue.ne.0.d0)) then
             call dforceb(c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
             c2(1:ngw)=c2(1:ngw)+evalue*df(1:ngw)
@@ -513,7 +513,7 @@
 
         !calculates wave-functions on a point on direction hi
 
-        cm(1:ngw,1:n,1)=c0(1:ngw,1:n,1)+spasso*passof*hi(1:ngw,1:n)
+        cm(1:ngw,1:n)=c0(1:ngw,1:n)+spasso*passof*hi(1:ngw,1:n)
 
 
         !orthonormalize
@@ -524,13 +524,13 @@
                
         !calculate energy
         if(.not.tens) then
-          call rhoofr(nfi,cm(:,:,1),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
+          call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
         else
           if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
            rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm  )
 
           !     calculation of the rotated quantities
-          call rotate(z0,cm(:,:,1),becm,c0diag,becdiag)
+          call rotate(z0,cm(:,:),becm,c0diag,becdiag)
           !     calculation of rho corresponding to the rotated wavefunctions
           call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin)
         endif
@@ -545,11 +545,11 @@
                       &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
 
         if( tefield  ) then!to be bettered
-          call berry_energy( enb, enbi, becm, cm(:,:,1), fion )
+          call berry_energy( enb, enbi, becm, cm(:,:), fion )
           etot=etot+enb+enbi
         endif
         if( tefield2  ) then!to be bettered
-          call berry_energy2( enb, enbi, becm, cm(:,:,1), fion )
+          call berry_energy2( enb, enbi, becm, cm(:,:), fion )
           etot=etot+enb+enbi
         endif
 
@@ -573,9 +573,9 @@
               
         !calculates wave-functions at minimum
 
-        cm(1:ngw,1:n,1)=c0(1:ngw,1:n,1)+spasso*passo*hi(1:ngw,1:n)
+        cm(1:ngw,1:n)=c0(1:ngw,1:n)+spasso*passo*hi(1:ngw,1:n)
         if(ng0.eq.2) then
-          cm(1,:,1)=0.5d0*(cm(1,:,1)+CONJG(cm(1,:,1)))
+          cm(1,:)=0.5d0*(cm(1,:)+CONJG(cm(1,:)))
         endif
 
         call calbec(1,nsp,eigr,cm,becm)
@@ -585,12 +585,12 @@
 
         !call calbec(1,nsp,eigr,cm,becm)
         if(.not.tens) then
-          call rhoofr(nfi,cm(:,:,1),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
+          call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
         else
           if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
               rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm  )
           !     calculation of the rotated quantities
-          call rotate(z0,cm(:,:,1),becm,c0diag,becdiag)
+          call rotate(z0,cm(:,:),becm,c0diag,becdiag)
           !     calculation of rho corresponding to the rotated wavefunctions
           call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin)
         endif
@@ -605,11 +605,11 @@
                        &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
 
         if( tefield )  then!to be bettered
-          call berry_energy( enb, enbi, becm, cm(:,:,1), fion )
+          call berry_energy( enb, enbi, becm, cm(:,:), fion )
           etot=etot+enb+enbi
         endif
         if( tefield2 )  then!to be bettered
-          call berry_energy2( enb, enbi, becm, cm(:,:,1), fion )
+          call berry_energy2( enb, enbi, becm, cm(:,:), fion )
           etot=etot+enb+enbi
         endif
 
@@ -636,14 +636,14 @@
 
         !if the energy has diminished with respect to  ene0 and ene1 , everything ok
         if( ((enever.lt.ene0) .and. (enever.lt.ene1)).or.(tefield.or.tefield2)) then
-          c0(:,:,1)=cm(:,:,1)
+          c0(:,:)=cm(:,:)
           bec(:,:)=becm(:,:)
           ene_ok=.true.
         elseif( (enever.ge.ene1) .and. (enever.lt.ene0)) then
           if(ionode) then
              write(stdout,*) 'cg_sub: missed minimum, case 1, iteration',itercg
           endif
-          c0(1:ngw,1:n,1)=c0(1:ngw,1:n,1)+spasso*passov*hi(1:ngw,1:n)
+          c0(1:ngw,1:n)=c0(1:ngw,1:n)+spasso*passov*hi(1:ngw,1:n)
           restartcg=.true.
           call calbec(1,nsp,eigr,c0,bec)
           call gram(betae,bec,nhsa,c0,ngw,n)
@@ -653,7 +653,7 @@
           if(ionode) then
              write(stdout,*) 'cg_sub: missed minimum, case 2, iteration',itercg
           endif  
-          c0(1:ngw,1:n,1)=c0(1:ngw,1:n,1)+spasso*passov*hi(1:ngw,1:n)
+          c0(1:ngw,1:n)=c0(1:ngw,1:n)+spasso*passov*hi(1:ngw,1:n)
           restartcg=.true.!ATTENZIONE
           call calbec(1,nsp,eigr,c0,bec)
           call gram(betae,bec,nhsa,c0,ngw,n)
@@ -668,19 +668,19 @@
           do while(enever.gt.ene0 .and. iter3.lt.maxiter3)
             iter3=iter3+1
             passov=passov*0.5d0
-            cm(1:ngw,1:n,1)=c0(1:ngw,1:n,1)+spasso*passov*hi(1:ngw,1:n)
+            cm(1:ngw,1:n)=c0(1:ngw,1:n)+spasso*passov*hi(1:ngw,1:n)
             ! chenge the searching direction
             spasso=spasso*(-1.d0)
             call calbec(1,nsp,eigr,cm,becm)
             call gram(betae,bec,nhsa,cm,ngw,n)
             call calbec(1,nsp,eigr,cm,becm)
             if(.not.tens) then
-              call rhoofr(nfi,cm(:,:,1),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
+              call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
             else
               if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
               rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm  )
               !     calculation of the rotated quantities
-              call rotate(z0,cm(:,:,1),becm,c0diag,becdiag)
+              call rotate(z0,cm(:,:),becm,c0diag,becdiag)
               !     calculation of rho corresponding to the rotated wavefunctions
               call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin)
             endif
@@ -695,11 +695,11 @@
                         &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
 
             if( tefield)  then !to be bettered
-              call berry_energy( enb, enbi, becm, cm(:,:,1), fion )
+              call berry_energy( enb, enbi, becm, cm(:,:), fion )
               etot=etot+enb+enbi
             endif
             if( tefield2)  then !to be bettered
-              call berry_energy2( enb, enbi, becm, cm(:,:,1), fion )
+              call berry_energy2( enb, enbi, becm, cm(:,:), fion )
               etot=etot+enb+enbi
             endif
 
@@ -711,7 +711,7 @@
 
           end do
           if(iter3 == maxiter3) write(stdout,*) 'missed minimun: iter3 = maxiter3'
-          c0(:,:,1)=cm(:,:,1)
+          c0(:,:)=cm(:,:)
           restartcg=.true.
           ene_ok=.false.
         end if
@@ -753,11 +753,11 @@
           call  calbec(1,nsp,eigr,c0,bec)
           if(.not.tens) then
             call  caldbec( ngw, nhsa, n, 1, nsp, eigr, c0, dbec, .true. )
-            call rhoofr(nfi,c0(:,:,1),irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
+            call rhoofr(nfi,c0(:,:),irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
           else
 
             !     calculation of the rotated quantities
-            call rotate(z0,c0(:,:,1),bec,c0diag,becdiag)
+            call rotate(z0,c0(:,:),bec,c0diag,becdiag)
             !     calculation of rho corresponding to the rotated wavefunctions
             call  caldbec( ngw, nhsa, n, 1, nsp, eigr, c0diag, dbec, .true. )
             call rhoofr(nfi,c0diag,irb,eigrb,becdiag                         &
@@ -792,7 +792,7 @@
   
         call prefor(eigr,betae)
         do i=1,n,2
-          call dforce(bec,betae,i,c0(1,i,1),c0(1,i+1,1),c2,c3,rhos,ispin,f,n,nspin)
+          call dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos,ispin,f,n,nspin)
           if(tefield.and.(evalue .ne. 0.d0)) then
             call dforceb &
                (c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
@@ -840,11 +840,11 @@
                  jj = j + istart - 1
                  do ig = 1, ngw
                     lambda( i, j, is ) = lambda( i, j, is ) - &
-                       2.d0 * DBLE( CONJG( c0( ig, ii, 1 ) ) * gi( ig, jj) )
+                       2.d0 * DBLE( CONJG( c0( ig, ii ) ) * gi( ig, jj) )
                  enddo
                  if( ng0 == 2 ) then
                     lambda( i, j, is ) = lambda( i, j, is ) + &
-                       DBLE( CONJG( c0( 1, ii, 1 ) ) * gi( 1, jj ) )
+                       DBLE( CONJG( c0( 1, ii ) ) * gi( 1, jj ) )
                  endif
                  lambda( j, i, is ) = lambda( i, j, is )
               enddo
@@ -882,7 +882,7 @@
               enddo
            end do
            !
-           call nlsm2(ngw,nhsa,n,eigr,c0(:,:,1),becdr,.true.)
+           call nlsm2(ngw,nhsa,n,eigr,c0(:,:),becdr,.true.)
            !
         endif
         !
