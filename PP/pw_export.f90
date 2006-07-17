@@ -303,12 +303,21 @@ program pp_punch
   !    Reading input file
   !
   IF ( ionode ) THEN
+      !
+      CALL input_from_file ( )
+      !
       READ(5,inputpp,IOSTAT=ios)
+      !
       IF (ios /= 0) CALL errore ('pw_export', 'reading inputpp namelist', ABS(ios) )
+      !
       IF( pp_file == ' ' ) THEN
+          !
           pp_file = TRIM(prefix)//".export/index.xml"
-          if(ionode) ios = C_MKDIR( TRIM(outdir)//"/"//TRIM(prefix)//".export" , LEN(TRIM(outdir)//"/"//TRIM(prefix)//".export") )
+          !
+          if(ionode) ios = C_MKDIR( TRIM(outdir)//"/"//TRIM(prefix)// &
+                           ".export" , LEN(TRIM(outdir)//"/"//TRIM(prefix)//".export") )
       ENDIF
+      !
   ENDIF
   !
   ! ... Broadcasting variables
