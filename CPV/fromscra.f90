@@ -182,7 +182,7 @@ CONTAINS
        !
     END DO
 
-    IF( force_pairing ) cm(1,iupdwn(2):iupdwn(2)+nupdwn(2)-1) = cm(1,1:nupdwn(2))
+    IF( force_pairing ) cm(:,iupdwn(2):iupdwn(2)+nupdwn(2)-1) = cm(:,1:nupdwn(2))
     !
     if( iprsta .ge. 3 ) CALL dotcsc( eigr, cm, ngw, nbsp )
     !
