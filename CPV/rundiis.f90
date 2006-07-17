@@ -445,7 +445,7 @@ CONTAINS
       INTEGER nfi_l,nrt,istate
       INTEGER nspin
       INTEGER nx,nrl, ndiis,nowv, isteep, iwfc, nwfc
-      REAL(DP)  ekinc(2), svar1, svar2, svar3_0
+      REAL(DP)  ekinc, svar1, svar2, svar3_0
       REAL(DP)  s0, s1, s2, s3, s4, s5
       REAL(DP) :: seconds_per_iter, old_clock_value
       REAL(DP)  dene, etot_m, cnorm,  drho
@@ -540,7 +540,7 @@ CONTAINS
             CALL proj( cgrad, c0, cdesc%ngwl, nwfc, iwfc, lambda)
 
             s4 = cclock()
-            CALL simupd(ekinc(ispin), ddoions(ispin), c0(:,iwfc:iwfc+nwfc-1), cgrad(:,iwfc:iwfc+nwfc-1), cdesc, &
+            CALL simupd(ekinc, ddoions(ispin), c0(:,iwfc:iwfc+nwfc-1), cgrad(:,iwfc:iwfc+nwfc-1), cdesc, &
                 svar1, svar2, svar3_0, edft%etot, fi(:,ispin), eigr, sfac, &
                 vps, ttreset_diis(ispin), istate, cnorm, &
                 eold, ndiis, nowv)
