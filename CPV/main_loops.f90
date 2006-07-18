@@ -51,8 +51,6 @@ SUBROUTINE smd_loop( nloop )
      !
      CALL smdmain( tau, fion, etot, nat )
      !
-     CALL memstat( 1 )
-     !
   END DO
   !
   DEALLOCATE( tau, fion, etot )
@@ -139,8 +137,6 @@ SUBROUTINE cpr_loop( nloop )
            CALL cpmain( tau, fion, etot )
            !
         END IF
-        !
-        CALL memstat( 1 )
         !
      END DO
      !

@@ -705,10 +705,6 @@
         CALL deallocate_chi2
       END IF
 
-      IF(iprsta>2) THEN
-        CALL memstat(me_image)
-      END IF
-
       IF(timing) THEN
         s7 = cclock()
         timtot   = (s7 - s0) + timtot

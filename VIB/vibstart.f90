@@ -228,7 +228,6 @@ subroutine start_cp
   !
   CALL init_run()
   !     
-  !  CALL memstat( 1 )
 #endif
   return
 end subroutine start_cp
