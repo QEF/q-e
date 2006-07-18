@@ -123,7 +123,7 @@
               END DO
             END DO
           END DO
-          gcpail(ic) = - DBLE(nspin) * stre * omega / DBLE(nr1*nr2*nr3)
+          gcpail(ic) = - stre * omega / DBLE(nr1*nr2*nr3)
         END DO
 
       RETURN
