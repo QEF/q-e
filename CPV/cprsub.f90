@@ -203,6 +203,10 @@ subroutine nlfh( bec, dbec, lambda )
   !
   REAL(DP), ALLOCATABLE :: tmpbec(:,:), tmpdh(:,:), temp(:,:)
   !
+#if defined __TRUE_BGL
+  COMPLEX*16  :: A1, C1, B
+#endif
+  !
   ALLOCATE ( tmpbec(nhm,nudx), tmpdh(nudx,nhm), temp(nudx,nudx) )
   !
       fpre(:,:) = 0.d0
@@ -245,13 +249,35 @@ subroutine nlfh( bec, dbec, lambda )
 
                         call MXMA                                          &
      &                    (tmpdh,1,nudx,tmpbec,1,nhm,temp,1,nudx,nss,nh(is),nss)
+#if defined __TRUE_BGL
+                        B  = (0D0,0D0)
+                        A1 = (0D0,0D0)
+                        C1 = (0D0,0D0)
+
+                        do j=1,nss
+                           do i=1,nss,2
+                              A1 =  LOADFP(temp(i,j))
+                              B  =  LOADFP(lambda(i,j,iss))
+                              B  =  FPMUL(B,(2D0,2D0))
+                              C1 =  FPMADD(C1,A1,B)
+                           end do
+                           !-------------------------
+                           !Handle any remaining data
+                           !-------------------------
+                           IF (MOD(nss,2).NE.0) THEN
+                              fpre(ii,jj) = fpre(ii,jj) + 2D0*temp(nss,j)*lambda(nss,j,iss)
+                           ENDIF
+                        end do
+                        fpre(ii,jj) = fpre(ii,jj) + DBLE(C1)+AIMAG(C1)
+#else
+
 
                         do j=1,nss
                            do i=1,nss
-                              temp(i,j)=temp(i,j)*lambda(i,j,iss)
+                              fpre(ii,jj) = fpre(ii,jj) + 2D0*temp(i,j)*lambda(i,j,iss)
                            end do
                         end do
-                        fpre(ii,jj)=fpre(ii,jj)+2.0d0*SUM(temp(1:nss,1:nss))
+#endif
                        
                      endif
                      !

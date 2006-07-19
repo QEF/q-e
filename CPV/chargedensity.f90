@@ -663,7 +663,7 @@
          IMPLICIT NONE
          !
          INTEGER :: to, from, ii, eig_index, ierr, eig_offset
-         REAL(DP) :: tmp1(256)
+         COMPLEX*16 :: tmp1(256) !CHANGE
 
          do i = 1, n, 2*nogrp
             !
@@ -686,6 +686,7 @@
             eig_offset = 0
 
             do eig_index = 1, 2*nogrp, 2   
+               IF ((i+eig_index-1).LE.n) THEN
                !
                ! Outer loop for eigenvalues
                !The  eig_index loop is executed only ONCE when NOGRP=1.
@@ -702,6 +703,7 @@
                end do
                !
                eig_offset = eig_offset + 1
+               ENDIF
                !
             end do
 

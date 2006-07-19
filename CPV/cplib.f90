@@ -1565,12 +1565,9 @@
       !
 #if defined __TRUE_BGL
 
-      ALLOCATE( temp( 3*nudx, nudx ), tmpbec( nhm, nudx ), tmpdr( 3*nudx, nhm ) )
+      ALLOCATE( temp( nudx, nudx ), tmpbec( nhm, nudx ), tmpdr( nudx, nhm ) )
 
-      !---------------------------------------------------
-      !The outer loop accross the x-y-z direction has been
-      !fused into the loop accross atoms
-      !---------------------------------------------------
+      do k=1, 3
 
          isa = 0
 
@@ -1603,29 +1600,23 @@
                   do iv=1,nh(is)
                      inl=ish(is)+(iv-1)*na(is)+ia
                      CALL DCOPY(nss, becdr(inl,istart,1), 1, tmpdr(1,iv), 1)
-                     CALL DCOPY(nss, becdr(inl,istart,2), 1, tmpdr(n+1,iv), 1)
-                     CALL DCOPY(nss, becdr(inl,istart,3), 1, tmpdr(2*n+1,iv), 1)
                   end do
 
                   if ( nh(is) .gt. 0 )then
 !
                      call MXMA                                             &
-     &                 (tmpdr,1,3*nudx,tmpbec,1,nhm,temp,1,3*nudx,nss,nh(is),nss)
+     &                 (tmpdr,1,nudx,tmpbec,1,nhm,temp,1,nudx,nss,nh(is),nss)
 !
                      !---------------------------------------------------------
                      !BG/L 440d specific implementation:
-                     !At each inner i-loop 3 pairs of two consequtive elements
+                     !At each inner i-loop 1 pair of two consequtive elements
                      !of the j-th column of matrix temp are performed.
-                     !Then, 3 parallel fused multiply add operations are issued
+                     !Then, a parallel fused multiply add operation is issued
                      !Any remaining data is handled after the loop
                      !---------------------------------------------------------
                      B =  (0D0,0D0)
                      A1 = (0D0,0D0)
-                     A2 = (0D0,0D0)
-                     A3 = (0D0,0D0)
                      C1 = (0D0,0D0)
-                     C2 = (0D0,0D0)
-                     C3 = (0D0,0D0)
    
                      do j=1,nss
                         do i=1,nss,2
@@ -1633,33 +1624,15 @@
                            B  =  LOADFP(lambda(i,j,iss))
                            B  =  FPMUL(B,(2D0,2D0))
                            C1 =  FPMADD(C1,A1,B)
-                           A2 =  LOADFP(temp(n+i,j))
-                           C2 =  FPMADD(C2,A2,B)
-                           A3 =  LOADFP(temp(2*n+i,j))
-                           C3 =  FPMADD(C3,A3,B)
                         end do
                         !-------------------------
                         !Handle any remaining data
                         !-------------------------
                         IF (MOD(nss,2).NE.0) THEN
-                           fion(1,isa) = fion(1,isa) + 2*temp(nss,j)*lambda(nss,j,iss)
-                           fion(2,isa) = fion(2,isa) + 2*temp(2*nss,j)*lambda(nss,j,iss)
-                           fion(3,isa) = fion(3,isa) + 2*temp(3*nss,j)*lambda(nss,j,iss)
+                           fion(k,isa) = fion(k,isa) + 2*temp(nss,j)*lambda(nss,j,iss)
                         ENDIF
                      end do
-                     fion(1,isa) =  fion(1,isa) + DBLE(C1)+AIMAG(C1)
-                     fion(2,isa) =  fion(2,isa) + DBLE(C2)+AIMAG(C2)
-                     fion(3,isa) =  fion(3,isa) + DBLE(C3)+AIMAG(C3)
-
-                     !do j=1,n
-                     !   do i=1,n
-                     !      fion(1,isa) = fion(1,isa) +  2*temp(i,j)*lambda(i,j,iss)
-                     !      fion(2,isa) = fion(2,isa) +  2*temp(n+i,j)*lambda(i,j,iss)
-                     !      fion(3,isa) = fion(3,isa) +  2*temp(2*n+i,j)*lambda(i,j,iss)
-                     !   end do
-                     !end do
-
-
+                     fion(k,isa) =  fion(k,isa) + DBLE(C1)+AIMAG(C1)
                   endif
 
                end do
@@ -1667,6 +1640,8 @@
             end do
 
          end do
+
+      end do
 
 
 #else
@@ -1716,12 +1691,10 @@
 !
                      DO j=1,nss
                         DO i=1,nss
-                           temp(i,j)=temp(i,j)*lambda(i,j,iss)
+                           fion(k,isa) = fion(k,isa) + 2D0*temp(i,j)*lambda(i,j,iss)
                         END DO
                      END DO
 !
-                     fion(k,isa)=fion(k,isa)+2.*SUM(temp)
-
                   ENDIF
 
                END DO
