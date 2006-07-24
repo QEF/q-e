@@ -811,7 +811,8 @@ then
 
 	ia64:* )
 		# check for mkl (in several directories)
-		try_libdirs="/opt/intel/mkl/8.0/lib/64
+		try_libdirs="/opt/intel/mkl/8.1/lib/64
+                             /opt/intel/mkl/8.0/lib/64
 			     /opt/intel/mkl721/lib/64
 			     /opt/intel/mkl72/lib/64
 			     /opt/intel/mkl701/lib/64
@@ -842,7 +843,8 @@ then
 		;;
 
 	amd64:* )
-		try_libdirs="/opt/intel/mkl/8.0/lib/em64t
+		try_libdirs="/opt/intel/mkl/8.1/lib/em64t
+                             /opt/intel/mkl/8.0/lib/em64t
 			     /opt/intel/mkl721/lib/em64t"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
@@ -868,7 +870,8 @@ then
 
 	ia32:* )
 		# check for mkl (in several directories)
-		try_libdirs="/opt/intel/mkl/8.0/lib/32
+		try_libdirs="/opt/intel/mkl/8.1/lib/32
+                             /opt/intel/mkl/8.0/lib/32
 			     /opt/intel/mkl721/lib/32
 			     /opt/intel/mkl72/lib/32
 			     /opt/intel/mkl701/lib/32

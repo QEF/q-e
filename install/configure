@@ -3976,30 +3976,12 @@ ia32:ifc* )
 	if test `echo $version | sed 's/\..*//'` -lt 7
 	then
 		# old versions of ifc require this stuff
-		echo $ECHO_N "setting up ifc environment... $ECHO_C"
 		try_f90flags="\$(FFLAGS) -cl,./intel.pcl"
 		try_f90flags_noopt="\$(FFLAGS_NOOPT) -cl,./intel.pcl"
-		pcl_ph="D3 Raman"
-		pcl_pw="PH PP Gamma PWCOND pwtools $pcl_ph"
-		pcl_modules="PW CPV flib upftools atomic $pcl_pw"
-		pcl_dot=". Modules $pcl_modules"
-		for dir in $pcl_dot
-		do
-			echo work.pc > $topdir/$dir/intel.pcl
-		done
-		for dir in $pcl_modules
-		do
-			echo ../Modules/work.pc >> $topdir/$dir/intel.pcl
-		done
-		for dir in $pcl_pw
-		do
-			echo ../PW/work.pc >> $topdir/$dir/intel.pcl
-		done
-		for dir in $pcl_ph
-		do
-			echo ../PH/work.pc >> $topdir/$dir/intel.pcl
-		done
-		echo "${ECHO_T}done"
+                if test -x $topdir/ifcmods.sh
+                then
+		   ./ifcmods.sh
+                fi
 	fi
 	;;
 ia32:pgf* )
@@ -4860,7 +4842,8 @@ fi
 
 	ia64:* )
 		# check for mkl (in several directories)
-		try_libdirs="/opt/intel/mkl/8.0/lib/64
+		try_libdirs="/opt/intel/mkl/8.1/lib/64
+                             /opt/intel/mkl/8.0/lib/64
 			     /opt/intel/mkl721/lib/64
 			     /opt/intel/mkl72/lib/64
 			     /opt/intel/mkl701/lib/64
@@ -4982,7 +4965,8 @@ fi
 		;;
 
 	amd64:* )
-		try_libdirs="/opt/intel/mkl/8.0/lib/em64t
+		try_libdirs="/opt/intel/mkl/8.1/lib/em64t
+                             /opt/intel/mkl/8.0/lib/em64t
 			     /opt/intel/mkl721/lib/em64t"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
@@ -5099,7 +5083,8 @@ fi
 
 	ia32:* )
 		# check for mkl (in several directories)
-		try_libdirs="/opt/intel/mkl/8.0/lib/32
+		try_libdirs="/opt/intel/mkl/8.1/lib/32
+                             /opt/intel/mkl/8.0/lib/32
 			     /opt/intel/mkl721/lib/32
 			     /opt/intel/mkl72/lib/32
 			     /opt/intel/mkl701/lib/32

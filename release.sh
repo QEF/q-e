@@ -65,7 +65,8 @@ cd ../
 tar -czf $TMPDIR/cp-$VERSION.tar.gz \
                             $TMPDIR/bin/     $TMPDIR/config* $TMPDIR/README* \
                             $TMPDIR/Make*    $TMPDIR/make*   $TMPDIR/install-sh \
-                            $TMPDIR/install/ $TMPDIR/moduledep.sh $TMPDIR/includedep.sh \
+                            $TMPDIR/install/ $TMPDIR/moduledep.sh \
+                            $TMPDIR/includedep.sh $TMPDIR/ifcmods.sh \
                             $TMPDIR/License  $TMPDIR/upftools/     \
                             $TMPDIR/include/ $TMPDIR/Doc/    $TMPDIR/Modules/ \
                             $TMPDIR/iotk/    $TMPDIR/clib/    $TMPDIR/flib/ \
@@ -76,7 +77,8 @@ tar -czf $TMPDIR/$GUI.tar.gz $TMPDIR/$GUI
 tar -czf $TMPDIR/pw-$VERSION.tar.gz \
                             $TMPDIR/bin/     $TMPDIR/config* $TMPDIR/README* \
                             $TMPDIR/Make*    $TMPDIR/make*   $TMPDIR/install-sh \
-                            $TMPDIR/install/ $TMPDIR/moduledep.sh  $TMPDIR/includedep.sh \
+                            $TMPDIR/install/ $TMPDIR/moduledep.sh \
+                            $TMPDIR/includedep.sh $TMPDIR/ifcmods.sh \
                             $TMPDIR/License  $TMPDIR/upftools/     \
                             $TMPDIR/include/ $TMPDIR/Doc/ $TMPDIR/Modules/ \
                             $TMPDIR/iotk/    $TMPDIR/clib/ $TMPDIR/flib/ \
@@ -90,7 +92,8 @@ tar -czf $TMPDIR/examples-$VERSION.tar.gz $TMPDIR/examples/ $TMPDIR/pseudo/
 tar -czf $TMPDIR/espresso-$VERSION.tar.gz \
                             $TMPDIR/bin/     $TMPDIR/config* $TMPDIR/README* \
                             $TMPDIR/Make*    $TMPDIR/make*   $TMPDIR/install-sh \
-                            $TMPDIR/install/ $TMPDIR/moduledep.sh $TMPDIR/includedep.sh \
+                            $TMPDIR/install/ $TMPDIR/moduledep.sh \
+                            $TMPDIR/includedep.sh $TMPDIR/ifcmods.sh \
                             $TMPDIR/License  $TMPDIR/upftools/     \
                             $TMPDIR/include/ $TMPDIR/Doc/    $TMPDIR/Modules/ \
                             $TMPDIR/iotk/    $TMPDIR/clib/   $TMPDIR/flib/ \

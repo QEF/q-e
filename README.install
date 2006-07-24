@@ -9,12 +9,15 @@ http://www.pwscf.org/guide.htm
 
 ----------------------------------------------------------------------
 
-To install Quantum-ESPRESSO from source, you need C and Fortran-95
-compilers (Fortran-90 is not sufficient, but most "Fortran-90"
-compilers are actually Fortran-95-compliant).
+To install Quantum-ESPRESSO from source, you need working C and 
+Fortran-95 compilers (Fortran-90 is not sufficient, but most 
+"Fortran-90" compilers are actually Fortran-95-compliant).
+These compilers must be in your PATH or otherwise their full
+path must be explicitly given.
 If you don't have a commercial Fortran-95 compiler, you may install the 
 free "g95" compiler (http://www.g95.org/) or the GNU fortran compiler 
 "gfortran" (http://www.gfortran.org/).
+
 You also need a minimal Unix environment: basically, a command shell
 (e.g., "bash" or "tcsh") and the utilities "make", "awk" and "sed".
 MS-Windows users need to have Cygwin (a UNIX environment which runs
@@ -42,7 +45,8 @@ Presently it is expected to work on most Linux 32- and 64-bit (Itanium
 and Opteron) PCs and clusters, IBM SP machines, SGI Origin, some
 HP-Compaq Alpha machines, Cray X1, Mac OS X, MS-Windows PCs.
 It may work with some assistance also on other architectures (see
-below).
+below). If it fails and you do not manage to convince it to work,
+see the MANUAL INSTALLATION section  below.
 
 For cross-compilation, you have to specify the target machine with the
 "--host" option (see below).  This feature hasn't been tested
@@ -131,6 +135,9 @@ Finally, "configure" recognizes the following command-line options:
 If you want to modify the "configure" script itself (advanced users
 only!), read the instructions in "README.configure" first.  You'll
 need GNU Autoconf (http://www.gnu.org/software/autoconf/).
+
+If "configure" fail and you cannot find a way to have it produce a
+make.sys file, see the "MANUAL INSTALLATION PROCEDURE" section below
 
 ----------------------------------------------------------------------
 LIBRARIES
@@ -223,7 +230,7 @@ For example:
   ./configure INCLUDEFFTW="/usr/lib/fftw-2.1.3/fftw"
 
 If everything else fails, you'll have to write the "make.sys" file
-manually: see the Quantum-ESPRESSO User's Guide for instructions.
+manually: see the "MANUAL INSTALLATION PROCEDURE" section below
 
 *** Please note ***
 If you change any settings after a previous (successful or failed)
@@ -271,3 +278,65 @@ Here is a list:
   make tar          build a tarball of the current source tree
 
 For more detailed information, see the Quantum-ESPRESSO User's Guide.
+
+----------------------------------------------------------------------
+MANUAL INSTALLATION PROCEDURE
+----------------------------------------------------------------------
+
+This installation procedure is provided for architectures that are
+not yet or no longer supported by "configure".
+
+From the the top directory of the Quantum-ESPRESSO source tree,
+at the shell prompt, issue the following command:
+     
+     ls install/Make.*
+  
+There should be architecture-dependent templates for the following
+machines;
+
+  alpha       HP-Compaq alpha workstations
+  alphaMPI    HP-Compaq alpha parallel machines
+  altix       SGI Altix 350/3000 with Linux, Intel compiler
+  beo_ifc     Linux clusters of PCs, Intel compiler
+  beowulf     Linux clusters of PCs, Portland compiler
+  bgl         IBM BG/L 
+  cray-xd1    CRAY XD1
+  cray-xt3    CRAY XTr3
+  cygwin      Windows PC, Intel compiler
+  fujitsu     Fujitsu vector machines
+  gfortran    GNU gfortran
+  hitachi     Hitachi SR8000
+  hp          HP PA-RISC workstations
+  hpMPI       HP PA-RISC parallel machines
+  ia64        HP Itanium workstations
+  ibm         IBM RS6000 workstations
+  ibmsp       IBM SP machines
+  irix        SGI workstations
+  macos       MAC OS-X for PPC machines with xlf
+  origin      SGI Origin 2000/3000
+  pc_abs      Linux PCs, Absoft compiler
+  pc_ifc      Linux PCs, Intel compiler
+  pc_lahey    Linux PCs, Lahey compiler
+  pc_pgi      Linux PCs, Portland compiler
+  sun         Sun workstations
+  sunMPI      Sun parallel machines
+  sxcross     NEC SX-6 (cross-compilation)
+
+Note that some of them may be obsolete or badly outdated.
+Choose a suitable Make.* and copy it into make.sys:
+
+     cp install/Make."the chosen architecture" make.sys
+
+Edit the file "make.sys" to adapt to your local configuration:
+typically, you'll have to specify where libraries are placed on
+your system. Follow the explanations inside the file make.sys.
+
+If you are using an old version of the ifc compiler, you need
+to run the script "./ifcmods.sh".
+
+Finally, create the files with dependencies, */make.depend:
+
+     ./makedeps.sh
+
+(if you modify the program sources, you might need to rerun it).
+At this stage you are ready to move back to the 'COMPILE" section above
