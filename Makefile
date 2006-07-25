@@ -127,7 +127,7 @@ clean :
 distclean veryclean : clean
 	- /bin/rm -rf make.sys \
 		      config.log configure.msg config.status autom4te.cache \
-		      espresso.tar.gz CPV/version.h \
+		      espresso.tar.gz CPV/version.h ChangeLog* \
 		      intel.pcl */intel.pcl
 	- cd examples ; ./make_clean
 	- cd atomic_doc ; ./make_clean
@@ -143,6 +143,7 @@ tar :
             install-sh \
 	    make.sys.in \
 	    makedeps.sh moduledep.sh includedep.sh ifcmods.sh \
+	    configure.old ChangeLog ChangeLog.html \
 	    */*.f90 */*.c */*.f clib/*.h include/*.h* upftools/UPF \
 	    pwtools/*.awk pwtools/*.sh
 	# remove unneeded stuff from iotk

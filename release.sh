@@ -27,6 +27,10 @@ find . -type f -name *~ -exec /bin/rm {} \;
 find . -type f -name .#* -exec /bin/rm {} \;
 if test -f espresso.tar.gz ; then /bin/rm espresso.tar.gz ; fi
 
+# produce updated ChangeLogs
+
+make log
+
 # package the entire distribution and the GUI using Makefile:
 
 make tar tar-gui
@@ -67,6 +71,7 @@ tar -czf $TMPDIR/cp-$VERSION.tar.gz \
                             $TMPDIR/Make*    $TMPDIR/make*   $TMPDIR/install-sh \
                             $TMPDIR/install/ $TMPDIR/moduledep.sh \
                             $TMPDIR/includedep.sh $TMPDIR/ifcmods.sh \
+                            $TMPDIR/cvs2cl.pl $TMPDIR/ChangeLog*     \
                             $TMPDIR/License  $TMPDIR/upftools/     \
                             $TMPDIR/include/ $TMPDIR/Doc/    $TMPDIR/Modules/ \
                             $TMPDIR/iotk/    $TMPDIR/clib/    $TMPDIR/flib/ \
@@ -79,6 +84,7 @@ tar -czf $TMPDIR/pw-$VERSION.tar.gz \
                             $TMPDIR/Make*    $TMPDIR/make*   $TMPDIR/install-sh \
                             $TMPDIR/install/ $TMPDIR/moduledep.sh \
                             $TMPDIR/includedep.sh $TMPDIR/ifcmods.sh \
+                            $TMPDIR/cvs2cl.pl $TMPDIR/ChangeLog*     \
                             $TMPDIR/License  $TMPDIR/upftools/     \
                             $TMPDIR/include/ $TMPDIR/Doc/ $TMPDIR/Modules/ \
                             $TMPDIR/iotk/    $TMPDIR/clib/ $TMPDIR/flib/ \
@@ -94,6 +100,7 @@ tar -czf $TMPDIR/espresso-$VERSION.tar.gz \
                             $TMPDIR/Make*    $TMPDIR/make*   $TMPDIR/install-sh \
                             $TMPDIR/install/ $TMPDIR/moduledep.sh \
                             $TMPDIR/includedep.sh $TMPDIR/ifcmods.sh \
+                            $TMPDIR/cvs2cl.pl $TMPDIR/ChangeLog*     \
                             $TMPDIR/License  $TMPDIR/upftools/     \
                             $TMPDIR/include/ $TMPDIR/Doc/    $TMPDIR/Modules/ \
                             $TMPDIR/iotk/    $TMPDIR/clib/   $TMPDIR/flib/ \
