@@ -155,7 +155,8 @@ example08:
 
 example09:
     This example shows how to use pw.x and phcg.x to calculate the
-    normal modes of a molecule (SiH4) at Gamma.
+    normal modes of a molecule (SiH4) at Gamma. It shows also the
+    use of ph.x for molecules (CH4) at Gamma.
 
 example10:
     This example shows how to calculate the polarization via Berry
@@ -216,7 +217,8 @@ example21:
 example22:
     This example shows how to use pw.x to calculate the total energy
     and the band structure of fcc-Pt with a fully relativistic US-PP
-    which includes spin-orbit effects.
+    which includes spin-orbit effects. pwcond.x is used to calculate the 
+    complex bands including spin-orbit coupling.
 
 example23:
     This example shows how to use cp.x to calculate Wannier functions
