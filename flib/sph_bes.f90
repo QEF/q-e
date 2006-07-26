@@ -26,7 +26,10 @@ subroutine sph_bes (msh, r, q, l, jl)
   integer :: msh, l
   real(DP) :: r (msh), q, jl (msh)
   !
-  integer :: ir0
+  ! xseries = convergence radius of the series for small x of j_l(x)
+  real(DP) :: x, xseries = 0.01_dp
+  integer :: ir, ir0
+  integer, external:: semifact
   !
 #if defined (__MASS)
   real(DP) :: qr(msh), sin_qr(msh), cos_qr(msh)
@@ -68,7 +71,27 @@ subroutine sph_bes (msh, r, q, l, jl)
 
 #endif
 
-     elseif (l == 0) then
+     else
+
+        do ir = 1, msh
+           if ( abs (q * r (ir) ) > xseries ) then
+              ir0 = ir
+              exit
+           end if
+        end do
+
+        do ir = 1, ir0 - 1
+           x = q * r (ir)
+           jl (ir) = x**l/semifact(2*l+1) * &
+                ( 1.0_dp - x**2/1.0_dp/2.0_dp/(2.0_dp*l+3) * &
+                ( 1.0_dp - x**2/2.0_dp/2.0_dp/(2.0_dp*l+5) * &
+                ( 1.0_dp - x**2/3.0_dp/2.0_dp/(2.0_dp*l+7) * &
+                ( 1.0_dp - x**2/4.0_dp/2.0_dp/(2.0_dp*l+9) ) ) ) )
+        end do
+        
+     end if
+
+     if (l == 0) then
 
 #if defined (__MASS)
 
