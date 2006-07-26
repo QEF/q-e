@@ -44,7 +44,7 @@ MODULE io_rho_xml
       REAL(DP), ALLOCATABLE :: rhoaux(:)
       !
       !
-      ext = ''
+      ext = ' '
       !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
       !
@@ -127,7 +127,7 @@ MODULE io_rho_xml
       REAL(DP), ALLOCATABLE :: rhoaux(:)
       !
       !
-      ext = ''
+      ext = ' '
       !
       dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
       !
