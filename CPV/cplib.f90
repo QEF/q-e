@@ -1564,8 +1564,8 @@
       CALL start_clock( 'nlfl' )
       !
 #if defined __TRUE_BGL
-
       ALLOCATE( temp( nudx, nudx ), tmpbec( nhm, nudx ), tmpdr( nudx, nhm ) )
+
 
       do k=1, 3
 
@@ -1597,13 +1597,18 @@
                      end do
                   end do
 
-                  do iv=1,nh(is)
+                  DO iv=1,nh(is)
                      inl=ish(is)+(iv-1)*na(is)+ia
-                     CALL DCOPY(nss, becdr(inl,istart,1), 1, tmpdr(1,iv), 1)
-                  end do
+                     DO i=1,nss
+                        tmpdr(i,iv)=becdr(inl,i+istart-1,k)
+                     END DO
+                  END DO
+
 
                   if ( nh(is) .gt. 0 )then
 !
+                     temp = 0d0
+
                      call MXMA                                             &
      &                 (tmpdr,1,nudx,tmpbec,1,nhm,temp,1,nudx,nss,nh(is),nss)
 !
@@ -1629,7 +1634,7 @@
                         !Handle any remaining data
                         !-------------------------
                         IF (MOD(nss,2).NE.0) THEN
-                           fion(k,isa) = fion(k,isa) + 2*temp(nss,j)*lambda(nss,j,iss)
+                           fion(k,isa) = fion(k,isa) + 2D0*temp(nss,j)*lambda(nss,j,iss)
                         ENDIF
                      end do
                      fion(k,isa) =  fion(k,isa) + DBLE(C1)+AIMAG(C1)
