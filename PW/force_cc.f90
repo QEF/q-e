@@ -64,7 +64,7 @@ subroutine force_cc (forcecc)
   !
   allocate ( vxc(nrxx,nspin) )
   !
-  call v_xc (rho, rhog, rho_core, rho_core, etxc, vtxc, vxc)
+  call v_xc (rho, rhog, rho_core, rhog_core, etxc, vtxc, vxc)
   !
   if (nspin == 1 .or. nspin == 4) then
      do ir = 1, nrxx
