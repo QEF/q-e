@@ -666,11 +666,11 @@ MODULE xml_io_base
       !
       CALL iotk_write_dat( iunpun, "NUMBER_OF_SPECIES", nsp )
       !
+      flen = LEN_TRIM( pseudo_dir )
+      !
       DO i = 1, nsp
          !
          CALL iotk_write_dat( iunpun, "ATOM_TYPE", atm(i) )
-         !
-         flen = LEN_TRIM( pseudo_dir )
          !
          IF ( pseudo_dir(flen:flen) /= '/' ) THEN
             !
@@ -697,6 +697,12 @@ MODULE xml_io_base
                             & TRIM( atm(i) ), TRIM( psfile(i) ) )
          !
       END DO
+      !
+      ! BEWARE: the following instruction is part of a ugly hack to allow
+      !         restarting in parallel execution in machines without a
+      !         parallel file system - See read_ions in pw_restart.f90
+      !
+      CALL iotk_write_dat( iunpun, "PSEUDO_DIR", TRIM( pseudo_dir) )
       !
       CALL iotk_write_attr( attr, "UNITS", "Bohr", FIRST = .TRUE. )
       CALL iotk_write_empty( iunpun, "UNITS_FOR_ATOMIC_POSITIONS", attr )

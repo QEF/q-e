@@ -1239,6 +1239,7 @@ MODULE pw_restart
       USE ions_base, ONLY : nat, nsp, ityp, amass, atm, tau, if_pos
       USE cell_base, ONLY : alat
       USE io_files,  ONLY : psfile, pseudo_dir
+      USE mp,        ONLY : mp_sum
       !
       IMPLICIT NONE
       !
@@ -1246,6 +1247,7 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       INTEGER :: i
+      LOGICAL :: exst
       !
       !
       IF ( lions_read ) RETURN
@@ -1279,6 +1281,46 @@ MODULE pw_restart
                                 "PSEUDO_FOR_" // TRIM( atm(i) ), psfile(i) )
             !
          END DO
+         !
+      END IF
+      !--------------------------------------------------------------
+      ! BEWARE: the following instructions are a ugly hack to allow
+      !         restarting in parallel execution in machines without a
+      !         parallel file system. Ideally, PP files should be read
+      !         by ionode only and broadcast to all other processors.
+      !         Since this is not implemented, all processors read PP
+      !         files. This creates a serious problem however when the
+      !         data directory is not visible to all processors,
+      !         as in PC clusters without a parallel file system.
+      !
+      CALL mp_bcast( psfile(1), ionode_id, intra_image_comm )
+      !
+      INQUIRE ( FILE =  TRIM( dirname ) // '/' //  TRIM( psfile(1) ), &
+           EXIST = exst )
+      !
+      ierr = 0
+      IF ( .NOT. exst ) ierr = -1 
+      CALL mp_sum( ierr, intra_image_comm )
+      !
+      IF ( ierr < 0 ) THEN
+         !
+         ! PP files in data directory are NOT visible to all processors:
+         ! PP files are read from the original location
+         !
+         IF ( ionode ) THEN
+            CALL iotk_scan_dat( iunpun, "PSEUDO_DIR", pseudo_dir )
+         END IF
+         !
+         CALL mp_bcast( pseudo_dir, ionode_id, intra_image_comm )
+         !
+         CALL infomsg( 'read_ions ', 'PP will be read from ' // &
+              TRIM ( pseudo_dir ), -1)
+         !
+      END IF
+      !
+      ! End of ugly hack
+      !--------------------------------------------------------------
+      IF ( ionode ) THEN
          !
          DO i = 1, nat
             !
