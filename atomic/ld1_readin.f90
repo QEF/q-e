@@ -231,6 +231,10 @@ subroutine ld1_readin
           call errore('ld1_readin','rcloc must be positive',1)
      if (pseudotype < 1.or.pseudotype > 3) &
           call errore('ld1_readin','specify correct pseudotype',1)
+     if (rel==2 .and. pseudotype==1 ) &
+          call errore('ld1_readin','Generation of a FR PP with'// & 
+                  &     ' pseudotype=1 not allowed',1)
+
      !
      call read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
           isws, jjs, enls, rcut, rcutus )
