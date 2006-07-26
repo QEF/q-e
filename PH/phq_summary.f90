@@ -257,7 +257,7 @@ subroutine phq_summary
              &        "   lloc=",i2)') nt, psd (nt) , ps, zp (nt) , lmax (nt) &
              &, lloc (nt)
         if (numeric (nt) ) then
-           WRITE( stdout, '(5x,"(in numerical form: ",i3,&
+           WRITE( stdout, '(5x,"(in numerical form: ",i4,&
                 &" grid points",", xmin = ",f5.2,", dx = ",&
                 &f6.4,")")' )  mesh (nt) , xmin (nt) , dx (nt)
         else
@@ -297,8 +297,18 @@ subroutine phq_summary
         WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
              &             " modes - To be done")') irr, npert (irr)
      elseif (comp_irr (irr) .eq.0) then
-        WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
+        if (lgamma_gamma) then
+            if ((irr-1)/3+1==nasr) then
+               WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
+                 &     " modes - Calculated using asr")') irr, npert (irr)
+            else
+               WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
+                 &     " modes - Calculated using symmetry")') irr, npert (irr)
+            endif
+        else
+            WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
              &     " modes - Not done in this run")') irr, npert (irr)
+        endif
      endif
      if (iverbosity.eq.1) then
 

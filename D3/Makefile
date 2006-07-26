@@ -109,6 +109,7 @@ PHOBJS = \
 ../PH/dynmatcc.o \
 ../PH/ef_shift.o \
 ../PH/elph.o \
+../PH/find_equiv_sites.o \
 ../PH/h_psiq.o \
 ../PH/incdrhoscf.o \
 ../PH/incdrhous.o \

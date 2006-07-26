@@ -296,10 +296,14 @@ subroutine solve_e
      !
 #ifdef __PARA
      call poolreduce (2 * 3 * nrxx *nspin, dvscfout)
-     call psyme (dvscfout)
-#else
-     call syme (dvscfout)
 #endif
+     if (.not.lgamma_gamma) then
+#ifdef __PARA
+        call psyme (dvscfout)
+#else
+        call syme (dvscfout)
+#endif
+     endif
      !
      !   save the symmetrized linear charge response to file
      !   calculate the corresponding linear potential response

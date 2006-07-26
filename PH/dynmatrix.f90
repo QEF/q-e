@@ -51,37 +51,53 @@ subroutine dynmatrix
   ! 
   !     set all noncomputed elements to zero
   !
-  imode0 = 0
-  do irr = 1, nirr
-     jmode0 = 0
-     do jrr = 1, nirr
-        if (done_irr (irr) .eq.0.and.done_irr (jrr) .eq.0) then
-           do ipert = 1, npert (irr)
-              mu = imode0 + ipert
-              do jpert = 1, npert (jrr)
-                 nu = jmode0 + jpert
-                 dyn (mu, nu) = CMPLX (0.d0, 0.d0)
+  if (.not.lgamma_gamma) then
+     imode0 = 0
+     do irr = 1, nirr
+        jmode0 = 0
+        do jrr = 1, nirr
+           if (done_irr (irr) .eq.0.and.done_irr (jrr) .eq.0) then
+              do ipert = 1, npert (irr)
+                 mu = imode0 + ipert
+                 do jpert = 1, npert (jrr)
+                    nu = jmode0 + jpert
+                    dyn (mu, nu) = CMPLX (0.d0, 0.d0)
+                 enddo
               enddo
-           enddo
-        elseif (done_irr (irr) .eq.0.and.done_irr (jrr) .ne.0) then
-           do ipert = 1, npert (irr)
-              mu = imode0 + ipert
-              do jpert = 1, npert (jrr)
-                 nu = jmode0 + jpert
-                 dyn (mu, nu) = CONJG(dyn (nu, mu) )
+           elseif (done_irr (irr) .eq.0.and.done_irr (jrr) .ne.0) then
+              do ipert = 1, npert (irr)
+                 mu = imode0 + ipert
+                 do jpert = 1, npert (jrr)
+                    nu = jmode0 + jpert
+                    dyn (mu, nu) = CONJG(dyn (nu, mu) )
+                 enddo
               enddo
+           endif
+           jmode0 = jmode0 + npert (jrr)
+        enddo
+        imode0 = imode0 + npert (irr)
+     enddo
+  else
+     do irr = 1, nirr
+        if (comp_irr(irr)==0) then
+           do nu=1,3*nat
+              dyn(irr,nu)=(0.d0,0.d0)
            enddo
         endif
-        jmode0 = jmode0 + npert (jrr)
      enddo
-     imode0 = imode0 + npert (irr)
-  enddo
+  endif
   !
   !   Symmetrizes the dynamical matrix w.r.t. the small group of q
   !
 
-  call symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, bg, &
-       nsymq, nat, irotmq, minus_q)
+  IF (lgamma_gamma) THEN
+     CALL generate_dynamical_matrix &
+          (nat,nsym,s,irt,at,bg, n_diff_sites,equiv_atoms,has_equivalent,dyn)
+     IF (asr) CALL set_asr_c(nat,nasr,dyn)
+  ELSE
+     CALL symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, bg, &
+          nsymq, nat, irotmq, minus_q)
+  ENDIF
   !
   !  if only one mode is computed write the dynamical matrix and stop
   !

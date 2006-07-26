@@ -63,6 +63,8 @@ dynmatrix.o \
 ef_shift.o \
 elph.o \
 elphon.o \
+find_equiv_sites.o \
+generate_dynamical_matrix_c.o \
 gmressolve_all.o \
 h_psiq.o \
 incdrhoscf.o \
@@ -90,6 +92,7 @@ q_points.o \
 q2qstar_ph.o \
 random_matrix.o \
 rotate_and_add_dyn.o \
+set_asr_c.o \
 set_drhoc.o \
 set_irr.o \
 set_irr_mode.o \

@@ -31,8 +31,8 @@ PROGRAM phonon
                               mixing_beta, lscf, lbands, david, isolve
   USE qpoint,          ONLY : xq, nksq
   USE disp,            ONLY : nqs, x_q
-  USE control_ph,      ONLY : ldisp, lnscf, lgamma, convt, epsil, trans, &
-                              elph, zue, recover, maxirr, irr0
+  USE control_ph,      ONLY : ldisp, lnscf, lgamma, lgamma_gamma, convt, &
+                              epsil, trans, elph, zue, recover, maxirr, irr0
   USE freq_ph
   USE output,          ONLY : fildyn, fildrho
   USE global_version,  ONLY : version_number

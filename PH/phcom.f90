@@ -227,6 +227,18 @@ MODULE partial
   !
 END MODULE partial
 !
+MODULE gamma_gamma
+  INTEGER, ALLOCATABLE :: &
+           has_equivalent(:),  &  ! 0 if the atom has to be calculated
+           n_equiv_atoms(:),   &  ! number of equivalent atoms
+           equiv_atoms(:,:)       ! which atoms are equivalent
+
+  INTEGER :: n_diff_sites,    &   ! Number of different sites
+             nasr                 ! atom calculated with asr
+                                  !
+  LOGICAL :: asr                  ! if true apply the asr
+
+END MODULE gamma_gamma
 !
 MODULE control_ph
   USE kinds, ONLY :  DP
@@ -250,8 +262,9 @@ MODULE control_ph
   ! the mixing parameter
   ! CPU time up to now
   ! the alpha value for shifting the bands
-  LOGICAL :: lgamma, convt, epsil, trans, elph, zue, recover
+  LOGICAL :: lgamma, lgamma_gamma, convt, epsil, trans, elph, zue, recover
   ! lgamma: if .TRUE. this is a q=0 computation
+  ! lgamma_gamma: if .TRUE. this is a q=0 computation with k=0 only 
   ! convt : if .TRUE. the phonon has converged
   ! epsil : if .TRUE. computes dielec. const and eff. charges
   ! trans : if .TRUE. computes phonons
@@ -364,5 +377,6 @@ MODULE phcom
   USE freq_ph
   USE units_ph
   USE output
+  USE gamma_gamma
   USE disp 
 END MODULE phcom

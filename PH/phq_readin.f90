@@ -25,14 +25,16 @@ SUBROUTINE phq_readin()
   USE mp,            ONLY : mp_bcast
   USE input_parameters, ONLY : max_seconds
   USE ions_base,     ONLY : amass
-  USE klist,         ONLY : xqq, nks, degauss
+  USE klist,         ONLY : xqq, xk, nks, degauss
   USE wvfct,         ONLY : gamma_only
   USE fixed_occ,     ONLY : tfixed_occ
-  USE lsda_mod,      ONLY : lsda
+  USE lsda_mod,      ONLY : lsda, nspin
   USE printout_base, ONLY : title
-  USE control_ph,    ONLY : maxter, alpha_mix, lgamma, epsil, zue, trans, &
+  USE control_ph,    ONLY : maxter, alpha_mix, lgamma, lgamma_gamma, epsil, &
+                            zue, trans, &
                             elph, tr2_ph, niter_ph, nmix_ph, maxirr, lnscf, &
                             ldisp, recover
+  USE gamma_gamma,   ONLY : asr
   USE qpoint,        ONLY : nksq, xq
   USE partial,       ONLY : atomo, list, nat_todo, nrapp
   USE output,        ONLY : fildyn, filelph, fildvscf, fildrho
@@ -70,7 +72,7 @@ SUBROUTINE phq_readin()
                        prefix, fildyn, filelph, fildvscf, fildrho,   &
                        lnscf, ldisp, nq1, nq2, nq3, modenum,         &
                        eth_rps, eth_ns, lraman, elop, dek, recover, &
-                       fpol
+                       fpol, asr
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
   ! alpha_mix    : the mixing parameter
@@ -98,7 +100,7 @@ SUBROUTINE phq_readin()
   ! eth_ns       : threshold for non-scf wavefunction calculation (Raman)
   ! dek          : delta_xk used for wavefunctions derivation (Raman)
   ! recover      : recover=.true. to restart from an interrupted run
-  !
+  ! asr          : in the gamma_gamma case apply acoustic sum rule
   !
   IF ( .NOT. ionode ) GOTO 400
   !
@@ -149,6 +151,7 @@ SUBROUTINE phq_readin()
   modenum      = -1
   dek          = 1.0d-3
   recover      = .FALSE.
+  asr          = .FALSE.
   !
   ! ...  reading the namelist inputph
   !
@@ -246,6 +249,10 @@ SUBROUTINE phq_readin()
      !
      amass(it) = amconv * amass(it)
   ENDDO
+  lgamma_gamma=.FALSE.
+  IF (nspin==nks) lgamma_gamma=lgamma.AND.xk(1,1).EQ.0.D0 &
+                                     .AND.xk(2,1).EQ.0.D0 &
+                                     .AND.xk(3,1).EQ.0.D0
   !
   IF (lgamma) THEN
      nksq = nks
@@ -304,6 +311,14 @@ SUBROUTINE phq_readin()
   IF (modenum.ne.0 .AND. ldisp) &
        CALL errore('phq_readin','Dispersion calculation and &
        & single mode calculation not possibile !',1)
+
+  IF (modenum.ne.0) lgamma_gamma=.FALSE.
+
+  IF (ldisp) lgamma_gamma=.FALSE.
+
+  IF (lraman) lgamma_gamma=.FALSE.
+
+  IF (.not.lgamma_gamma) asr=.FALSE.
   !
   !  broadcast the values of nq1, nq2, nq3
   !

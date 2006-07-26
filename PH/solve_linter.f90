@@ -33,8 +33,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   use pwcom
   USE uspp_param,           ONLY : nhm
   USE control_ph,           ONLY : irr0, niter_ph, nmix_ph, elph, tr2_ph, &
-                                   alpha_pv, lgamma, convt, nbnd_occ, &
-                                   alpha_mix, ldisp
+                                   alpha_pv, lgamma, lgamma_gamma, convt, &
+                                   nbnd_occ, alpha_mix, ldisp
   USE nlcc_ph,              ONLY : nlcc_any
   USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
                                    iuwfc, lrwfc, iunrec, iudvscf
@@ -457,11 +457,13 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !   in the charge density for each mode of this representation. 
      !   Here we symmetrize them ...
      !
+     IF (.not.lgamma_gamma) THEN
 #ifdef __PARA
-     call psymdvscf (npert (irr), irr, drhoscfh)
+        call psymdvscf (npert (irr), irr, drhoscfh)
 #else
-     call symdvscf (npert (irr), irr, drhoscfh)
+        call symdvscf (npert (irr), irr, drhoscfh)
 #endif
+     END IF
      ! 
      !   ... save them on disk and 
      !   compute the corresponding change in scf potential 

@@ -228,7 +228,7 @@ subroutine phq_setup
           irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
           nirr, gi, gimq, iverbosity, modenum)
   else
-     if (nsym > 1) then
+     if (nsym > 1.and..not.lgamma_gamma) then
         call set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
              irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
              nirr, gi, gimq, iverbosity)
@@ -238,6 +238,31 @@ subroutine phq_setup
              nirr, gi, gimq, iverbosity)
      endif
   endif
+
+  IF (lgamma_gamma) THEN
+     ALLOCATE(has_equivalent(nat))
+     ALLOCATE(n_equiv_atoms(nat))
+     ALLOCATE(equiv_atoms(nat,nat))
+     CALL find_equiv_sites (nat,nat,nsym,irt,has_equivalent,n_diff_sites, &
+                       n_equiv_atoms,equiv_atoms)
+
+     IF (n_diff_sites .LE. 0 .OR. n_diff_sites .GT. nat)            &
+          &      CALL errore('phq_setup','problem with n_diff_sites',1)
+     !
+     ! look if ASR can be exploited to reduce the number of calculations
+     ! we need to locate an independent atom with no equivalent atoms
+     nasr=0
+     IF (asr.AND.n_diff_sites.GT.1) THEN
+        DO na = 1, n_diff_sites
+           IF (n_equiv_atoms(na).EQ.1 ) THEN
+              nasr = equiv_atoms(na, 1)
+              GO TO 1
+           END IF
+        END DO
+ 1      CONTINUE
+     END IF
+  END IF
+
 
   if (fildrho.ne.' ') call io_pattern (fildrho,nirr,npert,u,+1)
 
@@ -356,6 +381,21 @@ subroutine phq_setup
   !
   !   Initialize done_irr, find max dimension of the irreps
   !
+  if (lgamma_gamma) then
+     comp_irr=0
+     do na=1,nat
+        if (has_equivalent(na)==0) then
+            do ipol=1,3
+               comp_irr(3*(na-1)+ipol)=1
+            enddo
+        endif
+     enddo
+     if (nasr>0) then
+        do ipol=1,3
+           comp_irr(3*(nasr-1)+ipol)=0
+        enddo
+     endif     
+  endif
   all_comp = nat_todo.eq.nat
   npertx = 0
   do irr = 1, nirr
