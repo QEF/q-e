@@ -65,10 +65,9 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
   !    prepare for the first iteration  
   !
   qmax=0.1_dp
-  if (flag.eq.0) then 
-     call sph_bes(7,r(ik-3),qmax,lam,j1)
-  else
-     call sph_besr(7,r(ik-3),qmax,lam,j1)
+  call sph_bes(7,r(ik-3),qmax,lam,j1)
+  if (flag.ne.0) then 
+     j1(1:7) = j1(1:7)*r(ik-3:ik+3)
   endif
   logdermax=compute_log(j1,r(ik),dx)-logderae
 
@@ -80,10 +79,9 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
      logdermin=logdermax
      do iq=1,imax
         xc(nc)=qmin+dq*iq
-        if (flag.eq.0) then
-           call sph_bes(7,r(ik-3),xc(nc),lam,j1)
-        else
-           call sph_besr(7,r(ik-3),xc(nc),lam,j1)
+        call sph_bes(7,r(ik-3),xc(nc),lam,j1)
+        if (flag.ne.0) then
+           j1(1:7) = j1(1:7)*r(ik-3:ik+3)
         endif
         logdermax=compute_log(j1,r(ik),dx)-logderae
         !
@@ -102,10 +100,9 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
      !      start bisection loop
      !
      xc(nc)=(qmax+qmin)/2.0_dp
-     if (flag.eq.0) then
-        call sph_bes(7,r(ik-3),xc(nc),lam,j1)
-     else
-        call sph_besr(7,r(ik-3),xc(nc),lam,j1)
+     call sph_bes(7,r(ik-3),xc(nc),lam,j1)
+     if (flag.ne.0) then
+        j1(1:7) = j1(1:7)*r(ik-3:ik+3)
      endif
      logder=compute_log(j1,r(ik),dx)-logderae
      if (logder*logdermin.lt.0.0_dp) then

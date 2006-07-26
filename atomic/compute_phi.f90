@@ -133,11 +133,11 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
      !    compute the bessel functions
      !
      do nc=1,nbes
-        call sph_besr(ik+5,r,xc(nbes+nc),lam,j1(1,nc))
-        jnor=j1(ik,nc)
+        call sph_bes(ik+5,r,xc(nbes+nc),lam,j1(1,nc))
+        jnor=j1(ik,nc)*r(ik)
         fact(nc)=chir(ik,ns)/jnor
         do n=1,ik+5
-           j1(n,nc)=j1(n,nc)*chir(ik,ns)/jnor
+           j1(n,nc)=j1(n,nc)*r(n)*chir(ik,ns)/jnor
         enddo
      enddo
   !

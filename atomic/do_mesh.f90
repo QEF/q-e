@@ -27,14 +27,14 @@
          call errore('do_mesh','ndm is too small',1)
       if(ibound == 1) xmin=xmax-dx*(mesh-1)
 !
+      !!! r(0)=0.0_dp
       do i=1,mesh
          x=xmin+DBLE(i-1)*dx
          r(i)=exp(x)/zmesh
-         rab(i)=(r(i)+exp(xmin)/zmesh)*dx
-         !!! r(i)=exp(xmin)*(exp((i-1)*dx)-1.0_dp)/zmesh
-         !!! rab(i)=r(i)*dx
-         r2(i)=r(i)*r(i)
          rab(i)=r(i)*dx
+         !!! r(i)=exp(xmin)*(exp(i*dx)-1.0_dp)/zmesh
+         !!! rab(i)=(r(i)+exp(xmin)/zmesh)*dx
+         r2(i)=r(i)*r(i)
          sqr(i)=sqrt(r(i))
       end do
 !

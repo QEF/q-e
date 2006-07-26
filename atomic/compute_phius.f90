@@ -73,10 +73,10 @@ use ld1inc
 !    compute the functions
 !
       do nc=1,2
-         call sph_besr(ik+5,r,xc(3+nc),lam,j1(1,nc))
-         fact(nc)=psipsus(ik,ns)/j1(ik,nc)
+         call sph_bes(ik+5,r,xc(3+nc),lam,j1(1,nc))
+         fact(nc)=psipsus(ik,ns)/(j1(ik,nc)*r(ik))
          do n=1,ik+5
-            j1(n,nc)=j1(n,nc)*fact(nc)
+            j1(n,nc)=j1(n,nc)*r(n)*fact(nc)
          enddo
       enddo
 !
