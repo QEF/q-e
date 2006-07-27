@@ -19,8 +19,6 @@
           REAL(DP)  :: ETOT
           REAL(DP)  :: SKIN
           REAL(DP)  :: EMKIN
-          REAL(DP)  :: SELF_SXC
-          REAL(DP)  :: SXC
           REAL(DP)  :: EHT
           REAL(DP)  :: EH
           REAL(DP)  :: SELF_EHTE
@@ -31,6 +29,8 @@
           REAL(DP)  :: ENT
           REAL(DP)  :: VXC
           REAL(DP)  :: EXC
+          REAL(DP)  :: SELF_VXC
+          REAL(DP)  :: SELF_EXC
           REAL(DP)  :: ESELF
           REAL(DP)  :: ESR
           REAL(DP)  :: EVDW
@@ -47,8 +47,8 @@
         REAL(DP)  :: EHTI = 0.0_DP
         REAL(DP)  :: EH = 0.0_DP
         REAL(DP)  :: EHT = 0.0_DP
-        REAL(DP)  :: SXC = 0.0_DP
-        REAL(DP)  :: SELF_SXC = 0.0_DP
+        REAL(DP)  :: SELF_EXC = 0.0_DP
+        REAL(DP)  :: SELF_VXC = 0.0_DP
         REAL(DP)  :: EKIN = 0.0_DP
         REAL(DP)  :: ESELF = 0.0_DP
         REAL(DP)  :: EVDW = 0.0_DP
@@ -59,7 +59,6 @@
         REAL(DP)  :: ESR = 0.0_DP
         REAL(DP)  :: EXC = 0.0_DP
         REAL(DP)  :: VXC = 0.0_DP
-        REAL(DP)  :: SELF_VXC = 0.0_DP
         REAL(DP)  :: EBAND = 0.0_DP
         REAL(DP)  :: ATOT = 0.0_DP
         REAL(DP)  :: ENTROPY = 0.0_DP
@@ -72,7 +71,7 @@
                   print_energies, debug_energies
 
         PUBLIC :: etot, eself, enl, ekin, epseu, esr, eht, exc, ekincm
-        PUBLIC :: self_sxc, self_ehte
+        PUBLIC :: self_exc, self_ehte
 
         PUBLIC :: atot, entropy, egrand, enthal, vave
 
@@ -80,40 +79,25 @@
 
 ! ---------------------------------------------------------------------------- !
 
-        SUBROUTINE total_energy( edft, omega, vvxc, eps, self_vxc_in, nnr)
+        SUBROUTINE total_energy( edft )
 
           TYPE (dft_energy_type) :: edft
-          REAL(DP), INTENT(IN) :: OMEGA, VVXC
-          REAL(DP) :: VXC
-          REAL(DP) :: self_vxc_in
-          COMPLEX(DP), INTENT(IN) :: EPS
-          INTEGER, INTENT(IN) :: nnr 
 
           eself      = edft%eself
+          epseu      = edft%epseu
           ent        = edft%ent
           enl        = edft%enl
           evdw       = edft%evdw
           esr        = edft%esr
           ekin       = edft%ekin
-          sxc        = edft%sxc
+          vxc        = edft%vxc
           ehti       = edft%ehti
           ehte       = edft%ehte
-          self_ehte  = edft%self_ehte * omega / DBLE(NNR)
-          self_sxc   = edft%self_sxc * omega / DBLE(NNR)
-
-          self_vxc = self_vxc_in
-
-          EXC   = edft%sxc * omega / DBLE(NNR) 
-          VXC   = VVXC * omega / DBLE(NNR)
-
-          edft%exc  = exc
-          edft%vxc  = vxc
-
-          edft%eht = edft%eh + esr - eself ! = eht
-          eht      = edft%eht
-
-          epseu      = DBLE(eps)
-          edft%epseu = epseu
+          self_ehte  = edft%self_ehte
+          self_exc   = edft%self_exc
+          self_vxc   = edft%self_vxc
+          exc        = edft%exc
+          eht        = edft%eht
 
           etot  = ekin + eht + epseu + enl + exc + evdw - ent
           !
@@ -191,7 +175,7 @@
              !  correggo lo exc e hartree
              !           
              WRITE( stdout, 14 ) self_ehte, sic_epsilon
-             WRITE( stdout, 15 ) self_sxc, sic_alpha
+             WRITE( stdout, 15 ) self_exc, sic_alpha
           END IF
           !
 1         FORMAT(6X,'                total energy = ',F18.10,' Hartree a.u.')
@@ -231,10 +215,10 @@
           IF( PRESENT ( edft ) ) THEN
             WRITE( stdout,2) edft%ETOT, edft%EKIN, edft%EHT, &
               edft%ESELF, edft%ESR, edft%EH, &
-              edft%EPSEU, edft%ENL, edft%SXC, edft%VXC, edft%EVDW, edft%EHTE, &
-              edft%EHTI, edft%ENT, edft%EBAND, (edft%SXC-edft%VXC), &
+              edft%EPSEU, edft%ENL, edft%EXC, edft%VXC, edft%EVDW, edft%EHTE, &
+              edft%EHTI, edft%ENT, edft%EBAND, (edft%EXC-edft%VXC), &
               (edft%EHTI+edft%ESR-edft%ESELF), &
-              edft%EBAND-edft%EHTE+(edft%SXC-edft%VXC)+(edft%EHTI+edft%ESR-edft%ESELF)
+              edft%EBAND-edft%EHTE+(edft%EXC-edft%VXC)+(edft%EHTI+edft%ESR-edft%ESELF)
           ELSE
             WRITE( stdout,2) ETOT, EKIN, EHT, ESELF, ESR, EH, EPSEU, ENL, EXC, VXC, &
               EVDW, EHTE, EHTI, ENT, EBAND, (EXC-VXC), (EHTI+ESR-ESELF), &
