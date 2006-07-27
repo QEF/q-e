@@ -62,6 +62,9 @@
 ! ...       st(i,j) will contain the number of G vectors of the stick whose
 ! ...       indices are (i,j). 
  
+#if defined (__EKO)
+          write(*,*) ! Workaround for EKOPath compiler bug
+#endif
           IF( .NOT. tk ) THEN
 
             kip = 0 + ABS(lb(3)) + 1
