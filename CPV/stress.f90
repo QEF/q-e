@@ -19,15 +19,11 @@
   MODULE stress
 
        USE kinds
-       USE control_flags, ONLY: timing
 
        IMPLICIT NONE
        PRIVATE
        SAVE
 
-       PUBLIC :: pstress, print_stress_time
-       PUBLIC :: pseudo_stress, compute_gagb, stress_har
-       PUBLIC :: stress_hartree, add_drhoph, stress_local
 
        INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
        INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
@@ -38,149 +34,41 @@
               0.0_DP, 0.0_DP, 1.0_DP  &
             /), (/ 3, 3 /) )
 
-! ...  dalbe(:) = delta(alpha(:),beta(:))
+       ! ...  dalbe(:) = delta(alpha(:),beta(:))
+       !
        REAL(DP),  DIMENSION(6), PARAMETER :: dalbe = &
          (/ 1.0_DP, 0.0_DP, 0.0_DP, 1.0_DP, 0.0_DP, 1.0_DP /)
 
-       REAL(DP) :: timeek = 0.0d0
-       REAL(DP) :: timeex = 0.0d0
-       REAL(DP) :: timeesr = 0.0d0
-       REAL(DP) :: timeeh = 0.0d0
-       REAL(DP) :: timeel = 0.0d0
-       REAL(DP) :: timeenl = 0.0d0
-       REAL(DP) :: timetot = 0.0d0
-       INTEGER   :: timcnt = 0
-
-       REAL(DP), EXTERNAL  :: cclock
+       PUBLIC :: pstress
+       PUBLIC :: pseudo_stress, compute_gagb, stress_har
+       PUBLIC :: stress_hartree, add_drhoph, stress_local
+       PUBLIC :: stress_kin, stress_nl
+       PUBLIC :: dalbe
 
      CONTAINS
 
 
 !------------------------------------------------------------------------------!
 
-   SUBROUTINE pstress( strvxc, rhoeg, vxc, pail, desr, bec, c0, occ, &
-                       eigr, sfac, grho, v2xc, box, edft )
+   SUBROUTINE pstress( pail, desr, dekin, denl, deps, deht, dexc, box )
 
-      !  this routine computes stress tensor from dft total energy
+      !  this routine sum up stress tensor from partial contributions
 
       USE cell_module,          ONLY: boxdimensions
-      USE energies,             ONLY: dft_energy_type
-      USE ions_base,            ONLY: nsp
       USE mp_global,            ONLY: intra_image_comm
       USE mp,                   ONLY: mp_sum
-      USE cell_base,            ONLY: tpiba2
-      USE io_global,            ONLY: ionode
-      USE exchange_correlation, ONLY: stress_xc
       USE control_flags,        ONLY: iprsta
-      USE reciprocal_vectors,   ONLY: gx, gstart
-      USE gvecp,                ONLY: ngm
-      USE gvecs,                ONLY: ngs
-      USE local_pseudo,         ONLY: vps, dvps, rhops
-      USE atom,                 ONLY: nlcc
-      USE core,                 ONLY: drhocg
-      USE electrons_base,       ONLY: nspin
 
       IMPLICIT NONE
 
       ! ... declare subroutine arguments
 
-      REAL(DP) :: pail(:,:), desr(:), strvxc
-      REAL(DP) :: grho(:,:,:), v2xc(:,:,:)
-      REAL(DP) :: bec(:,:)
-      COMPLEX(DP) :: rhoeg(:,:), vxc(:,:)
-      COMPLEX(DP), INTENT(IN) :: sfac(:,:)
-      REAL(DP), INTENT(IN) :: occ(:,:)
-      COMPLEX(DP), INTENT(IN) :: c0(:,:)
+      REAL(DP) :: pail(3,3)
       TYPE (boxdimensions), INTENT(IN) :: box
-      COMPLEX(DP), INTENT(IN) :: eigr(:,:)
-      TYPE (dft_energy_type) :: edft
+      REAL(DP) :: desr(6), dekin(6), denl(6), deps(6), deht(6), dexc(6)
 
-      ! ... declare other variables
-
-      COMPLEX(DP), ALLOCATABLE :: rhog( : )
-      COMPLEX(DP), ALLOCATABLE :: drhog( :, : )
-      REAL(DP),    ALLOCATABLE :: gagb(:,:)
-      REAL(DP), DIMENSION (6) :: dekin, deht, deps, denl, dexc, dvdw
-      REAL(DP), DIMENSION (3,3) :: paiu
-      REAL(DP) :: s1, s2, s3, s4, s5, s6, s7, s8, s0
-      REAL(DP) :: omega, ehr
-      INTEGER  :: k, ig, is
-
-      ! ... end of declarations
-      !
-
-      omega = box%deth
-      ehr   = edft%eht - edft%esr + edft%eself
-
-      
-      IF(timing) s0 = cclock()
-
-      ALLOCATE( gagb( 6, ngm ) )
-      !
-      CALL compute_gagb( gagb, gx, ngm, tpiba2 )
-
-      IF(timing) s1 = cclock()
-
-      ! ... compute kinetic energy contribution
-
-      CALL stress_kin( dekin, c0, occ, gagb )
-
-      IF(timing) s2 = cclock()
-
-      ! ... compute exchange & correlation energy contribution
-
-      CALL stress_xc(dexc, strvxc, sfac, vxc, grho, v2xc, gagb, nlcc, drhocg, box)
-
-      IF(timing) s3 = cclock()
-
-      ALLOCATE( drhog( ngm, 6 ), rhog( ngm ) )
-      
-      ! sum up spin components
-      !  
-      rhog( 1:ngm ) = rhoeg( 1:ngm, 1 )
-      IF( nspin > 1 ) rhog( 1:ngm ) = rhog( 1:ngm ) + rhoeg( 1:ngm, 2 )
-      
-      ! add drho_e / dh       
-      !
-      DO k = 1, 6
-         drhog( 1:ngm, k ) = - rhog( 1:ngm ) * dalbe( k )
-      END DO
-
-      CALL stress_local( deps, edft%epseu, gagb, sfac, rhog, drhog, omega )
-
-      IF(timing) s4 = cclock()
-
-      !    IF(tvdw) THEN
-      !       CALL vdw_stress(c6, iesr, stau0, dvdw, na, nax, nsp)
-      !    END IF
-
-      IF(timing) s5 = cclock()
-
-      ! ... compute hartree energy contribution
-
-      ! add Ionic pseudo charges  rho_I
-      !
-      DO is = 1, nsp
-         DO ig = gstart, ngs
-            rhog( ig ) = rhog( ig ) + sfac( ig, is ) * rhops( ig, is )
-         END DO
-      END DO
-      
-      ! add drho_I / dh
-      !
-      CALL add_drhoph( drhog, sfac, gagb )
-
-      CALL stress_hartree(deht, ehr, sfac, rhog, drhog, gagb, omega )
-
-      DEALLOCATE( drhog, rhog )
-
-      IF(timing) s6 = cclock()
-
-      ! ... compute enl (non-local) contribution
-
-      CALL stress_nl(denl, gagb, c0, occ, eigr, bec, edft%enl, box%a, box%m1 )
-
-      IF(timing) s7 = cclock()
+      REAL(DP) :: paiu(3,3)
+      INTEGER  :: k
 
       IF( iprsta >= 2 ) THEN
          CALL stress_debug(dekin, deht, dexc, desr, deps, denl, box%m1 )
@@ -189,28 +77,14 @@
       ! ... total stress (pai-lowercase)
 
       DO k = 1, 6
-        paiu(alpha(k),beta(k)) = -( dekin(k) + deht(k) + dexc(k) + desr (k) + deps(k) + denl(k) )
-        paiu(beta(k),alpha(k)) = paiu(alpha(k),beta(k))
+        paiu( alpha(k), beta(k)  ) = -( dekin(k) + deht(k) + dexc(k) + desr (k) + deps(k) + denl(k) )
+        paiu( beta(k),  alpha(k) ) = paiu(alpha(k),beta(k))
       END DO
 
       pail(:,:) = matmul( paiu(:,:), box%m1(:,:) )
     
       CALL mp_sum( pail, intra_image_comm )
   
-      DEALLOCATE( gagb )
-
-      IF( timing ) THEN
-        s8 = cclock()
-        timeek  = (s2 - s1) + timeek
-        timeeh  = (s3 - s2) + timeeh
-        timeex  = (s4 - s3) + timeex
-        timeesr = (s5 - s4) + timeesr 
-        timeel  = (s6 - s5) + timeel
-        timeenl = (s7 - s6) + timeenl
-        timetot = (s8 - s0) + timetot
-        timcnt = timcnt + 1
-      END IF
-
  50   FORMAT(6X,3(F20.12))
  60   FORMAT(6X,6(F20.12))
 100   FORMAT(6X,A3,10X,F8.4)
@@ -221,38 +95,6 @@
 
 !------------------------------------------------------------------------------!
 
-
-      SUBROUTINE print_stress_time( iunit )
-        USE io_global, ONLY: ionode
-        IMPLICIT NONE
-        INTEGER, INTENT(IN) :: iunit
-        IF( timing .AND. timcnt > 0 ) THEN
-          timeek  = timeek/timcnt
-          timeeh  = timeeh/timcnt
-          timeex  = timeex/timcnt
-          timeesr = timeesr/timcnt
-          timeel  = timeel/timcnt
-          timeenl = timeenl/timcnt
-          timetot = timetot/timcnt
-          IF(ionode) THEN
-            WRITE( iunit, 999 ) timeek, timeex, timeesr, timeeh, timeel, timeenl, timetot
-          END IF
-        END IF
-        timeek = 0.0d0 
-        timeex = 0.0d0
-        timeesr = 0.0d0
-        timeeh = 0.0d0 
-        timeel = 0.0d0
-        timeenl = 0.0d0
-        timetot = 0.0d0
-        timcnt = 0
-999     FORMAT(1X,7(1X,F9.3))
-
-        RETURN
-      END SUBROUTINE print_stress_time
-
-
-!------------------------------------------------------------------------------!
 
 
    SUBROUTINE stress_nl(denl, gagb, c0, occ, eigr, bec, enl, ht, htm1)

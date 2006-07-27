@@ -16,7 +16,6 @@
 !=----------------------------------------------------------------------------=!
 
         USE kinds,         ONLY: DP
-        USE control_flags, ONLY: timing
 
         IMPLICIT NONE 
         PRIVATE
@@ -29,16 +28,10 @@
 
         INTEGER   :: iesr
 
-        REAL(DP)  :: timtot, timfwft, timesr, timsumg, timforc, timinvft, timscat
-        REAL(DP)  :: timxc, timhar, timstr
-        INTEGER   :: timcnt = 0
-
         PUBLIC :: vofrhos, potential_init, potential_print_info, &
-                  kspotential, print_vofrho_time, localisation, vofesr
+                  kspotential, localisation, vofesr
 
         PUBLIC :: self_vofhar
-
-        REAL(DP), EXTERNAL :: cclock
 
 !=----------------------------------------------------------------------------=!
   CONTAINS
@@ -61,18 +54,6 @@
           vhrmax  = vhrmax_inp
           vhasse  = vhasse_inp
           iesr    = iesr_inp
-
-          timtot = 0.0d0
-          timfwft = 0.0d0
-          timesr = 0.0d0
-          timsumg = 0.0d0
-          timforc = 0.0d0
-          timinvft = 0.0d0
-          timscat  = 0.0d0
-          timxc  = 0.0d0 
-          timhar = 0.0d0
-          timstr = 0.0d0
-          timcnt = 0
 
         RETURN
       END SUBROUTINE potential_init
@@ -259,18 +240,18 @@
 
       ! ... include modules
 
-      USE control_flags,  ONLY: tscreen, tchi2, iprsta
+      USE control_flags,  ONLY: tscreen, iprsta
       USE mp_global,      ONLY: nproc_image, me_image, intra_image_comm
       USE mp,             ONLY: mp_sum
       USE cell_module,    ONLY: boxdimensions
       USE cell_base,      ONLY: tpiba2
-      USE ions_base,      ONLY: rcmax, zv
+      USE ions_base,      ONLY: rcmax, zv, nsp
       USE fft_base,       ONLY: dfftp
       USE energies,       ONLY: total_energy, dft_energy_type
-      USE stress,         ONLY: pstress
+      USE stress,         ONLY: pstress, stress_kin, compute_gagb, stress_nl, &
+                                dalbe, stress_local, add_drhoph, stress_hartree
       USE funct,          ONLY: dft_is_gradient
       USE charge_density, ONLY: fillgrad
-      USE chi2,           ONLY: rhochi, allocate_chi2, deallocate_chi2
       USE vanderwaals,    ONLY: tvdw, vdw
       USE wave_types,     ONLY: wave_descriptor
       USE io_global,      ONLY: ionode, stdout
@@ -278,15 +259,16 @@
       USE gvecp,          ONLY: ngm
       USE local_pseudo,   ONLY: vps, rhops
       USE atom,           ONLY: nlcc
-      USE core,           ONLY: nlcc_any, rhocg
+      USE core,           ONLY: nlcc_any, rhocg, drhocg
       USE core,           ONLY: add_core_charge, core_charge_forces
       USE fft_module,     ONLY: fwfft, invfft
-      USE electrons_base, ONLY: iupdwn, nupdwn
+      USE electrons_base, ONLY: iupdwn, nupdwn, nspin
       !
-      USE reciprocal_vectors,        ONLY: gx
-      USE atoms_type_module,         ONLY: atoms_type
-      USE exchange_correlation,      ONLY: exch_corr_energy
-      use grid_dimensions,           only: nr1, nr2, nr3, nnrx
+      USE reciprocal_vectors,   ONLY: gx, g, gstart
+      USE atoms_type_module,    ONLY: atoms_type
+      USE exchange_correlation, ONLY: exch_corr_energy
+      use grid_dimensions,      only: nr1, nr2, nr3, nnrx
+      USE exchange_correlation, ONLY: stress_xc
 
       IMPLICIT NONE
 
@@ -315,37 +297,40 @@
 ! ... declare other variables
 
       COMPLEX(DP), ALLOCATABLE :: vloc(:), self_vloc(:)
-      COMPLEX(DP), ALLOCATABLE :: rho12(:), rhoeg(:,:)
-      COMPLEX(DP), ALLOCATABLE :: rhoetg(:,:)
+      COMPLEX(DP), ALLOCATABLE :: rhog(:), drhog(:,:), rhoeg(:,:)
       COMPLEX(DP), ALLOCATABLE :: psi(:)
-      REAL(DP), ALLOCATABLE :: rhoetr(:,:)
-      REAL(DP), ALLOCATABLE :: fion_vdw(:,:)
-      REAL(DP), ALLOCATABLE :: grho(:,:,:)
-      REAL(DP), ALLOCATABLE :: v2xc(:,:,:)
-      REAL(DP), ALLOCATABLE :: fion(:,:)
+      COMPLEX(DP), ALLOCATABLE :: screen_coul(:)
+      !
+      REAL(DP),    ALLOCATABLE :: rhoetr(:,:)
+      REAL(DP),    ALLOCATABLE :: fion_vdw(:,:)
+      REAL(DP),    ALLOCATABLE :: grho(:,:,:)
+      REAL(DP),    ALLOCATABLE :: v2xc(:,:,:)
+      REAL(DP),    ALLOCATABLE :: fion(:,:)
 
-      REAL(DP), ALLOCATABLE :: self_rho(:,:)
-      REAL(DP), ALLOCATABLE :: self_vpot(:,:)
-      REAL(DP), ALLOCATABLE :: self_grho(:,:,:)
-      REAL(DP), ALLOCATABLE :: self_v2xc(:,:,:)
+      REAL(DP),    ALLOCATABLE :: self_rho(:,:)
+      REAL(DP),    ALLOCATABLE :: self_vpot(:,:)
+      REAL(DP),    ALLOCATABLE :: self_grho(:,:,:)
+      REAL(DP),    ALLOCATABLE :: self_v2xc(:,:,:)
+
+      REAL(DP),    ALLOCATABLE :: gagb(:,:)
 
       REAL(DP) ::  pail(3,3)
 
       COMPLEX(DP) :: ehtep
-      REAL(DP)    :: self_sxcp, self_vxc
+      REAL(DP)    :: self_exc, self_vxc
 
       REAL(DP)  :: summing1, summing2
 
       COMPLEX(DP) :: ehp, eps
 
-      REAL(DP)  :: dum, sxcp, vxc, ehr, strvxc
+      REAL(DP)  :: dum, exc, vxc, ehr, strvxc
       REAL(DP)  :: omega, desr(6), pesum(16)
-      REAL(DP)  :: s0, s1, s2, s3, s4, s5, s6, s7, s8
+      REAL(DP), DIMENSION (6) :: dekin, deht, deps, denl, dexc, dvdw
 
       LOGICAL :: ttscreen, ttsic, tgc
 
       INTEGER ig1, ig2, ig3, is, ia, ig, isc, iflag, iss
-      INTEGER ik, i, j, k, isa, idum, nspin
+      INTEGER ik, i, j, k, isa, idum
       INTEGER :: ierr
 
       DATA iflag / 0 /
@@ -353,409 +338,423 @@
 
       REAL(DP), EXTERNAL :: enkin
 
-!  end of declarations
-!  ----------------------------------------------
+      !  end of declarations
+      !  ----------------------------------------------
 
-      IF(timing) s0 = cclock()
+      CALL start_clock( 'vofrho' )
 
-      nspin = SIZE( rhoe, 2 )
-      
       edft%evdw = 0.0d0
       !
-      ! ttscreen = .TRUE.
-      ttscreen = .FALSE.
+      ttscreen = .FALSE.   ! .TRUE. to enable cluster boundary conditions
       !
       ttsic    = ( ABS(self_interaction) /= 0  ) 
 
       omega    = box%deth
       !
+      pail     = box%pail
+
       tgc      = dft_is_gradient()
-
-      IF(tchi2) THEN
-        CALL allocate_chi2(ngm)
+      !
+      !
+      !   Allocate local array
+      !
+      IF( tstress ) THEN
+         !
+         ALLOCATE( gagb( 6, ngm ) )
+         ALLOCATE( drhog( ngm, 6 ) )
+         !
+         CALL compute_gagb( gagb, gx, ngm, tpiba2 )
+         !
       END IF
-
-      ALLOCATE( rhoetr( nnrx, nspin ) )
-      rhoetr = 0.0d0
-
+      
       ALLOCATE( fion( 3, atoms%nat ) )
 
       fion = atoms%for( 1:3, 1:atoms%nat )
       !
-      pail = box%pail
+
+      ALLOCATE( rhoeg ( ngm, nspin ) )
+      ALLOCATE( rhog( ngm ) )
+      ALLOCATE( vloc( ngm ) )
+      ALLOCATE( psi( SIZE( rhoe, 1 ) ) )
+
+
+
+      ! ... compute kinetic energy
+
+      edft%ekin  = 0.0d0
+      edft%emkin = 0.0d0
+
+      DO iss = 1, nspin
+         edft%ekin  = edft%ekin + enkin( c0( 1, iupdwn(iss) ), SIZE( c0, 1 ), fi( 1, iss ), nupdwn(iss) )
+      END DO
+
+
+      IF( tstress ) THEN
+         !
+         !
+         ! ... compute kinetic energy contribution
+         !
+         CALL stress_kin( dekin, c0, fi, gagb )
+         !
+         ! ... compute enl (non-local) contribution
+         !
+         CALL stress_nl( denl, gagb, c0, fi, eigr, bec, edft%enl, box%a, box%m1 )
+         !
+      END IF
+
+      !
+      !
+      IF( tscreen ) THEN
+         !
+         IF( tprint .AND. ionode ) THEN
+            WRITE( stdout,fmt="(3X,'Using screened Coulomb potential for cluster calculation')")
+         END IF
+         !
+         ALLOCATE( screen_coul( ngm ) )
+         !
+         CALL cluster_bc( screen_coul, g, box%deth, box%hmat )
+         !
+      END IF
+
+      !
+      !
+      IF( tstress .OR. tforce .OR. iflag == 0 )  THEN
+         !
+         CALL vofesr( iesr, edft%esr, desr, fion, atoms%taus, tstress, box%hmat )
+         !
+         IF( iflag == 0 ) &
+            WRITE( stdout, fmt="(/,3X,'ESR (real part of Ewald sum) = ',D16.8,/)" ) edft%esr
+         iflag = 1
+         !
+      END IF
+
+      ! ... Van Der Waals energy and forces
+      !
+      IF ( tvdw ) THEN
+         CALL VdW( edft%evdw, atoms, fion, box )
+         IF( tstress ) THEN
+            ! CALL vdw_stress(c6, iesr, stau0, dvdw, na, nax, nsp)
+         END IF
+      END IF
+
+
+      ! ... FFT: rho(r) --> rho(g)  
+      !
+      DO iss = 1, nspin
+
+         psi = rhoe(:,iss)
+
+         CALL fwfft(   'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+         CALL psi2rho( 'Dense', psi, dfftp%nnr, rhoeg(:,iss), ngm )
+ 
+      END DO
+
+      rhog( 1:ngm ) = rhoeg( 1:ngm, 1 )
+      IF( nspin > 1 ) rhog( 1:ngm ) = rhog( 1:ngm ) + rhoeg( 1:ngm, 2 )
+
+      IF( tstress ) THEN
+         !
+         ! add drho_e / dh
+         !
+         DO k = 1, 6
+            drhog( 1:ngm, k ) = - rhog( 1:ngm ) * dalbe( k )
+         END DO
+         !
+      END IF
+
+      ! ... Calculate local part of the pseudopotential and its energy contribution (eps)
+
+      CALL vofps( eps, vloc, rhog, vps, sfac, box%deth )
+
+      edft%epseu = DBLE(eps)
+
+      IF( tstress ) THEN
+         !
+         CALL stress_local( deps, edft%epseu, gagb, sfac, rhog, drhog, box%deth )
+         !
+      END IF
+
+      ! ... Calculate hartree potential and energy (eh)
+      !
+      CALL vofloc( tscreen, edft%ehte, edft%ehti, ehp, vloc, rhog, &
+                   rhops, vps, sfac, box%deth, screen_coul )
+
+      IF( tforce ) THEN
+         !
+         CALL force_loc( tscreen, rhog, fion, rhops, vps, eigr, &
+                         ei1, ei2, ei3, sfac, box%deth, screen_coul )
+         !
+      END IF
+
+      edft%self_ehte = 0.d0
+
+      IF( ttsic ) THEN
+         !
+         ! ... Calculate Self-interaction correction --- Hartree part
+         !
+         ALLOCATE ( self_vloc( ngm ) )
+         CALL self_vofhar( ttscreen, edft%self_ehte, self_vloc, rhoeg, omega, box%hmat )
+         !
+      END IF 
+
+      edft%eh  = DBLE( ehp ) - edft%self_ehte
+      edft%eht = edft%eh + edft%esr - edft%eself 
+     
+      IF( tprint .AND. tvhmean ) THEN
+         !
+         CALL vofmean( sfac, rhops, rhog )
+         !
+      END IF
+
+      IF( tstress ) THEN
+         !
+         ! add Ionic pseudo charges  rho_I
+         !
+         DO is = 1, nsp
+            DO ig = gstart, ngm
+               rhog( ig ) = rhog( ig ) + sfac( ig, is ) * rhops( ig, is )
+            END DO
+         END DO
+         !
+         ! add drho_I / dh
+         !
+         CALL add_drhoph( drhog, sfac, gagb )
+         !
+         CALL stress_hartree( deht, edft%eh, sfac, rhog, drhog, gagb, box%deth )
+
+         DEALLOCATE( drhog )
+         !
+      END IF
+
+      DEALLOCATE( rhog )
+
+      ALLOCATE( rhoetr( nnrx, nspin ) )
+      !
+      rhoetr = 0.0d0
+
+      DO iss = 1, nspin
+
+         ! ... add core contribution to the charge
+
+         CALL DCOPY( nnrx, rhoe(1,iss), 1, rhoetr(1,iss), 1 )
+
+         IF( nlcc_any ) THEN
+
+            ! ...     add core correction:  rhoeg = rhoeg + cc;  rhoetr = rhoe  + cc
+
+            CALL add_core_charge( rhoeg(:,iss), rhoetr(:,iss), sfac, rhocg, atoms%nsp )
+
+         END IF
+
+      END DO
+
+      !
+      !
+      !  exchange and correlation potential
+      !
+      !
 
       IF(tgc) THEN
-        ALLOCATE( grho( nnrx, 3, nspin ) )
-        ALLOCATE( v2xc( nnrx, nspin, nspin) )
+         ALLOCATE( grho( nnrx, 3, nspin ) )
+         ALLOCATE( v2xc( nnrx, nspin, nspin ) )
       ELSE
-        ALLOCATE( grho( 1, 1, 1 ) )
-        ALLOCATE( v2xc( 1, 1, 1 ) )
+         ALLOCATE( grho( 1, 1, 1 ) )
+         ALLOCATE( v2xc( 1, 1, 1 ) )
       END IF
 
       grho = 0.0d0
       v2xc = 0.0d0
 
-      ALLOCATE( rhoeg (ngm, nspin) )
-      ALLOCATE( rhoetg(ngm, nspin) )
-
-      IF( ttsic ) THEN
-      
-        IF ( tgc ) THEN
-
-          ALLOCATE(self_grho( nnrx, 3, nspin ), STAT = ierr)
-          IF( ierr /= 0 ) CALL errore(' vofrhos ', ' allocating self_grho ', ierr)
-    
-          ALLOCATE(self_v2xc( nnrx, nspin, nspin ), STAT = ierr)
-          IF( ierr /= 0 ) CALL errore(' vofrhos ', ' allocating self_v2xc ', ierr)
-  
-          self_grho  = 0.D0
-          self_v2xc  = 0.D0
-
-        END IF !on tgc
-
-        ALLOCATE (self_vpot( nnrx, 2 ), STAT = ierr)
-        IF( ierr /= 0 ) CALL errore(' vofrhos ', ' allocating self_vpot ', ierr)
-   
-        self_vpot  = 0.D0
-     
-        ALLOCATE (self_rho( nnrx, 2), STAT = ierr)
-        IF( ierr /= 0 ) CALL errore(' vofrhos ', ' allocating self_rho ', ierr)
-
-        self_rho  = 0.D0
-
-      END IF !on self_interaction
-
-      IF(timing) s1 = cclock()
-
-      ! ... compute kinetic energy
-
-      edft%ekin  = 0.0_DP
-      edft%emkin = 0.0_DP
-
-      DO iss = 1, nspin
-        edft%ekin  = edft%ekin + enkin( c0( 1, iupdwn(iss) ), SIZE( c0, 1 ), fi( 1, iss ), nupdwn(iss) )
-      END DO
-
-      IF(tprint) THEN
-        IF( ionode .AND.  ttscreen ) &
-           WRITE( stdout,fmt="(3X,'Using screened Coulomb potential for cluster calculation')")
-      END IF
-
-      IF( tstress .OR. tforce .OR. iflag == 0 )  THEN
-         CALL vofesr( iesr, edft%esr, desr, fion, atoms%taus, tstress, box%hmat )
-         IF( iflag == 0 ) &
-            WRITE( stdout, fmt="(/,3X,'ESR (real part of Ewald sum) = ',D16.8,/)" ) edft%esr
-         iflag = 1
-         ! WRITE(6,*) 'DEBUG esr = ', SUM(fion)
-      END IF
-
-
-      IF(timing) s2 = cclock()
-
-      DO iss = 1, nspin
-
-        ! ... FFT: rho(r) --> rho(g)  
-
-        ALLOCATE( psi( SIZE( rhoe, 1 ) ) )
-
-        psi = rhoe(:,iss)
-
-        CALL fwfft(   'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
-        CALL psi2rho( 'Dense', psi, dfftp%nnr, rhoeg(:,iss), ngm )
- 
-        DEALLOCATE( psi )
-
-        ! ... add core contribution to the charge
-
-        CALL ZCOPY( SIZE(rhoeg,1) , rhoeg(1,iss), 1, rhoetg(1,iss), 1 )
-        CALL DCOPY( nnrx, rhoe(1,iss), 1, rhoetr(1,iss), 1 )
-
-        IF( nlcc_any ) THEN
-
-          ! ...     add core correction
-          ! ...     rhoetg = rhoeg + cc
-          ! ...     rhoetr = rhoe  + cc
-
-          CALL add_core_charge( rhoetg(:,iss), rhoetr(:,iss), sfac, rhocg, atoms%nsp )
-
-        ELSE
-
-          ! ...     no core correction
-          ! ...     rhoetg = rhoeg
-          ! ...     rhoetr = rhoe
-
-          ! ...     chi2
-
-          IF( tchi2 ) THEN
-            IF(nspin.GT.1) CALL errore(' vofrho ',' spin + tchi ',nspin)
-            rhochi = rhoeg(:,1)
-          END IF
-
-        END IF
-
-      END DO
-
       IF( tgc ) THEN
-         CALL fillgrad( nspin, rhoetg, grho )
+         !
+         CALL fillgrad( nspin, rhoeg, grho )
+         !
       END IF
 
-      IF(timing) s3 = cclock()
+      CALL exch_corr_energy( rhoetr, grho, vpot, exc, vxc, v2xc )
 
-
-      CALL exch_corr_energy(rhoetr, grho, vpot, sxcp, vxc, v2xc)
-
-      edft%sxc       = sxcp
-      edft%self_sxc  = 0.d0
-      self_vxc       = 0.d0
+      self_exc  = 0.d0
+      self_vxc  = 0.d0
       !
       IF ( ttsic ) THEN                
 
+         ALLOCATE (self_rho( nnrx, 2), STAT = ierr)
+         IF( ierr /= 0 ) CALL errore(' vofrhos ', ' allocating self_rho ', ierr)
+         !
          self_rho(:,1) = rhoetr(:,2)
          self_rho(:,2) = rhoetr(:,2)
 
-         IF (tgc) THEN
+         IF ( tgc ) THEN
+            !
+            ALLOCATE(self_grho( nnrx, 3, nspin ), STAT = ierr)
+            IF( ierr /= 0 ) CALL errore(' vofrhos ', ' allocating self_grho ', ierr)
+            !
             self_grho(:,:,1) = grho(:,:,2)
             self_grho(:,:,2) = grho(:,:,2)
+            !
+            ALLOCATE(self_v2xc( nnrx, nspin, nspin ), STAT = ierr)
+            IF( ierr /= 0 ) CALL errore(' vofrhos ', ' allocating self_v2xc ', ierr)
+            !
          ENDIF
 
-         CALL exch_corr_energy( self_rho, self_grho, self_vpot, &
-                 self_sxcp, self_vxc, self_v2xc )
+         ALLOCATE ( self_vpot( nnrx, 2 ), STAT = ierr )
+         IF( ierr /= 0 ) CALL errore(' vofrhos ', ' allocating self_vpot ', ierr)
+   
+         self_vpot  = 0.D0
+
+         CALL exch_corr_energy( self_rho, self_grho, self_vpot, self_exc, self_vxc, self_v2xc )
 
          vpot (:,1) = ( 1.0d0 - sic_alpha ) * vpot(:,1)
-         ! 
-         vpot (:,2) = ( 1.0d0 - sic_alpha ) * vpot(:,2) + &
-                      sic_alpha * ( self_vpot(:,2) + self_vpot(:,1) )
+         vpot (:,2) = ( 1.0d0 - sic_alpha ) * vpot(:,2) + sic_alpha * ( self_vpot(:,2) + self_vpot(:,1) )
 
          IF (tgc) THEN
            !
            v2xc(:,1,1) = ( 1.0d0 - sic_alpha ) * v2xc(:,1,1)
-           !
-           v2xc(:,2,2) = ( 1.0d0 - sic_alpha ) * v2xc(:,2,2) + & 
-                         sic_alpha * ( self_v2xc(:,2,2) + self_v2xc(:,1,1) )
+           v2xc(:,2,2) = ( 1.0d0 - sic_alpha ) * v2xc(:,2,2) + sic_alpha * ( self_v2xc(:,2,2) + self_v2xc(:,1,1) )
            !
          END IF
 
-         edft%self_sxc = sic_alpha * ( sxcp - self_sxcp )
+         self_exc = sic_alpha * ( exc - self_exc )
          !
-         edft%sxc      = sxcp - edft%self_sxc
+         exc      = exc - self_exc
          !
-         self_vxc      = sic_alpha * ( vxc - self_vxc )
+         self_vxc = sic_alpha * ( vxc - self_vxc )
          !
-         vxc           = vxc - self_vxc
+         vxc      = vxc - self_vxc
          !
       END IF  
 
       IF ( tstress ) THEN
-        strvxc = ( edft%sxc - vxc ) * omega / DBLE( nr1 * nr2 * nr3 )
+         !
+         strvxc = ( exc - vxc ) * omega / DBLE( nr1 * nr2 * nr3 )
+         ! 
       END IF
+
+      edft%exc       = exc      * omega / DBLE( nr1 * nr2 * nr3 )
+      edft%vxc       = vxc      * omega / DBLE( nr1 * nr2 * nr3 )
+      edft%self_exc  = self_exc * omega / DBLE( nr1 * nr2 * nr3 )
+      edft%self_vxc  = self_vxc * omega / DBLE( nr1 * nr2 * nr3 )
+
+      CALL mp_sum( edft%vxc,      intra_image_comm )
+      CALL mp_sum( edft%exc,      intra_image_comm )
+      CALL mp_sum( edft%self_exc, intra_image_comm )
+      CALL mp_sum( edft%self_vxc, intra_image_comm )
+
 
       IF( nlcc_any ) THEN
         !
         ! ...   xc potential (vpot) from real to G space, to compute nlcc forces
-        ! ...   rhoetg = fwfft(vpot)
+        ! ...   rhoeg = fwfft(vpot)
         !
-        ALLOCATE( psi( SIZE( vpot, 1 ) ) )
-
         DO iss = 1, nspin
            !
            psi = vpot(:,iss)
            !
            CALL fwfft(   'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
-           CALL psi2rho( 'Dense', psi, dfftp%nnr, rhoetg(:,iss), ngm )
+           CALL psi2rho( 'Dense', psi, dfftp%nnr, rhoeg(:,iss), ngm )
            ! 
         END DO
-
-        DEALLOCATE( psi )
         !
-        ! ...   now rhoetg contains the xc potential
+        ! ...   now rhoeg contains the xc potential
         !
         IF (tforce) THEN
-          CALL core_charge_forces( fion, rhoetg, rhocg, nlcc, atoms, box, ei1, ei2, ei3 )
+           !
+           CALL core_charge_forces( fion, rhoeg, rhocg, nlcc, atoms, box, ei1, ei2, ei3 )
+           !
         END IF
         !
       END IF
 
-
-      ! ... Van Der Waals energy and forces
       !
-      IF ( tvdw ) THEN
-        CALL VdW( edft%evdw, atoms, fion, box )
-      END IF
-
-      IF(timing) s4 = cclock()
-
-
-      ! ... Calculate hartree potential and energy (eh), and
-      ! ... local part of the pseudopotential and its energy contribution (eps)
-      ! ... Self-interaction correction --- Hartree part
-
-      ALLOCATE( vloc( ngm ) )
+      ! ... vloc(g): hartree and local part of the pseudo potentials (in
+      ! ...          reciprocal space)
       !
-      CALL vofloc(ttscreen, tforce, edft%ehte, edft%ehti, ehp, & 
-           eps, vloc, rhoeg, fion, atoms, rhops, vps, eigr, &
-           ei1, ei2, ei3, sfac, box )
-      !
-      edft%self_ehte = 0.d0
 
       IF ( ttsic ) THEN
 
-        ALLOCATE( self_vloc( ngm ) )
-        ALLOCATE( psi( nnrx ) )
-
-        CALL self_vofhar( ttscreen, edft%self_ehte, self_vloc, rhoeg, omega, box%hmat )
-        !
         CALL rho2psi( 'Dense', psi, dfftp%nnr, self_vloc, ngm )
         CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
         !
         vpot(:,1) =  vpot(:,1) - DBLE( psi(:) )
         vpot(:,2) =  vpot(:,2) + DBLE( psi(:) )
 
-        DEALLOCATE( self_vloc, psi )
-
       END IF
 
-      edft%eh = DBLE( ehp ) - edft%self_ehte
-     
-      IF( ALLOCATED( self_grho  ) ) DEALLOCATE( self_grho  )
-      IF( ALLOCATED( self_v2xc  ) ) DEALLOCATE( self_v2xc  )
-      IF( ALLOCATED( self_vpot  ) ) DEALLOCATE( self_vpot )
-      IF( ALLOCATED( self_rho   ) ) DEALLOCATE( self_rho  )
+      ! ...   add hartree end local pseudo potentials ( invfft(vloc) )
+      ! ...   to xc potential (vpot).
+      ! ...   vpot = vpot + invfft(vloc)
 
-      ! ... vloc(g): hartree and local part of the pseudo potentials (in
-      ! ...          reciprocal space
- 
-      IF(timing) s5 = cclock()
+      CALL rho2psi( 'Dense', psi, dfftp%nnr, vloc, ngm )
+      CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
 
-
-      ALLOCATE( psi( SIZE( vpot, 1 ) ) )
+      ! ... now potentials are in real space
+      ! ... vpot(r) = hartree + xc + local
 
       DO iss = 1, nspin
-
-        ! ...   add hartree end local pseudo potentials ( invfft(vloc) )
-        ! ...   to xc potential (vpot).
-        ! ...   vpot = vpot + invfft(vloc)
-
-        CALL rho2psi( 'Dense', psi, dfftp%nnr, vloc, ngm )
-        CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
-
-        vpot(:,iss) = vpot(:,iss) + DBLE( psi )
-
+         vpot(:,iss) = vpot(:,iss) + DBLE( psi )
       END DO
 
-      DEALLOCATE( vloc, psi )
-
-! ... now potentials are in real space
-! ... vpot(r) = hartree + xc + local
-
-      IF(timing) s6 = cclock()
-
-! ... sum up forces
-      IF (tforce) THEN
-        CALL mp_sum(fion, intra_image_comm)
+      IF( ttsic ) THEN
+         IF( tgc ) THEN
+            DEALLOCATE( self_grho  )
+            DEALLOCATE( self_v2xc  )
+         END IF
+         DEALLOCATE( self_vpot )
+         DEALLOCATE( self_rho  )
+         DEALLOCATE( self_vloc )
       END IF
-      ! WRITE(6,*) 'DEBUG end = ', SUM(fion)
 
-! ... sum up energies
-      CALL mp_sum(eps, intra_image_comm)
-      CALL mp_sum(edft%sxc, intra_image_comm)
-      CALL mp_sum(edft%self_sxc, intra_image_comm)
-      CALL mp_sum(vxc, intra_image_comm)
-      CALL mp_sum(edft%eh, intra_image_comm)
-      CALL mp_sum(edft%ehte, intra_image_comm)
-      CALL mp_sum(edft%ehti, intra_image_comm)
-      CALL mp_sum(edft%self_ehte, intra_image_comm)
-      ! CALL mp_sum(edft%ekin, group)  ! already summed up
-      CALL mp_sum(edft%emkin, intra_image_comm)
+      IF( tstress ) THEN
+         !
+         ! ... compute exchange & correlation energy contribution
+         ! 
+         CALL stress_xc( dexc, strvxc, sfac, rhoeg, grho, v2xc, gagb, nlcc, drhocg, box )
+         !
+      END IF
 
-      CALL total_energy(edft,omega,vxc,eps,self_vxc,nr1*nr2*nr3)
+      ! ... sum up forces
+      !
+      IF (tforce) THEN
+         CALL mp_sum(fion, intra_image_comm)
+      END IF
 
-!fran: the output is introduced only in the print_energies.f90
-!fran: in this way you print only each print_step
+      ! ... sum up energy contributions
+      !
+      CALL total_energy( edft )
 
-      ! ... compute stress tensor
+
+      ! ... sum up stress tensor
       !
       IF( tstress ) THEN
-        CALL pstress( strvxc, rhoeg, rhoetg, pail, desr, bec, c0, fi,  &
-                      eigr, sfac, grho, v2xc, box, edft)
+         CALL pstress( pail, desr, dekin, denl, deps, deht, dexc, box )
       END IF
 
 
-! ... Copy new atomic forces on for type member
-!
+      ! ... Copy new atomic forces on for type member
+      !
       atoms%for( 1:3, 1:atoms%nat ) = fion
       box%pail = pail
 
-! ... print out energies, stress and forces on file 6
-! ... just a proof to calculate vhmean for sic
+      DEALLOCATE( rhoeg, rhoetr, grho, v2xc, fion )
+      DEALLOCATE( vloc, psi )
 
-      IF(tprint.AND.tvhmean) THEN
-        IF(nspin.GT.2) CALL errore(' vofrho ',' spin + vmean ',nspin)
-        IF(nspin==1) CALL vofmean( sfac, rhops, rhoeg(:,1) )
-        IF(nspin==2) THEN
-             ALLOCATE(rho12(ngm))
-            rho12 (:) = rhoeg(:,1)+rhoeg(:,2)
-          CALL vofmean( sfac, rhops, rho12)
-           DEALLOCATE(rho12)
-        END IF
+      !
+      IF( tscreen ) THEN
+         DEALLOCATE( screen_coul )
+      END IF
+      !
+      IF( tstress ) THEN
+         DEALLOCATE( gagb )
       END IF
 
-      DEALLOCATE( rhoeg, rhoetg, rhoetr, grho, v2xc, fion )
+      CALL stop_clock( 'vofrho' )
 
-      IF(tchi2) THEN
-        CALL deallocate_chi2
-      END IF
+      ! ... Flush stdout
 
-      IF(timing) THEN
-        s7 = cclock()
-        timtot   = (s7 - s0) + timtot
-        timstr   = (s7 - s6) + timstr
-        timinvft = (s6 - s5) + timinvft
-        timhar   = (s5 - s4) + timhar
-        timxc    = (s4 - s3) + timxc
-        timfwft  = (s3 - s2) + timfwft
-        timesr   = (s2 - s1) + timesr
-        timcnt   = timcnt + 1
-      END IF
-
-! ... Flush stdout
-!
       CALL flush_unit( stdout )
 
       RETURN
       END SUBROUTINE vofrhos
-
-!=----------------------------------------------------------------------------=!
-
-      SUBROUTINE print_vofrho_time( iunit )
-        USE io_global, ONLY: ionode
-        INTEGER, INTENT(IN) :: iunit
-        IF( timing .AND. timcnt > 0 ) THEN
-          timesr  = timesr/timcnt
-          timfwft  = timfwft/timcnt
-          timxc  = timxc/timcnt
-          timhar = timhar/timcnt
-          timinvft  = timinvft/timcnt
-          timstr  = timstr/timcnt
-          timtot   = timtot/timcnt
-          IF(ionode) THEN
-            WRITE( iunit, 999 ) timesr, timfwft, timxc, timhar, timinvft, timstr, timtot
-          END IF
-999       FORMAT(1X,7(1X,F9.3))
-        END IF
-        timtot = 0.0d0
-        timfwft = 0.0d0
-        timesr = 0.0d0
-        timsumg = 0.0d0
-        timforc = 0.0d0
-        timinvft = 0.0d0
-        timscat  = 0.0d0
-        timxc  = 0.0d0 
-        timhar = 0.0d0
-        timstr = 0.0d0
-        timcnt = 0
-        RETURN
-      END SUBROUTINE print_vofrho_time
-     
 
 !=----------------------------------------------------------------------------=!
 
@@ -848,128 +847,250 @@
 
 !=----------------------------------------------------------------------------=!
 
-!  ----------------------------------------------
-!  BEGIN manual
 
-      SUBROUTINE vofloc(tscreen, tforce, ehte, ehti, eh, eps, vloc, rhoeg, &
-                 fion, atoms, rhops, vps, eigr, ei1, ei2, ei3, sfac, ht )
+   SUBROUTINE vofps( eps, vloc, rhoeg, vps, sfac, omega )
 
-!  this routine computes:
-!  omega = ht%deth
-!  rho_e(ig)    =  (sum over iss) rhoeg(ig,iss) 
-!  rho_I(ig)    =  (sum over is) sfac(is,ig) * rhops(ig,is) 
-!  vloc_h(ig)   =  fpi / ( g(ig) * tpiba2 ) * { rho_e(ig) + rho_I(ig) }
-!  vloc_ps(ig)  =  (sum over is) sfac(is,ig) * vps(ig,is)
-!
-!  Eps = Fact * omega * (sum over ig) cmplx ( rho_e(ig) ) * vloc_ps(ig)
-!  if Gamma symmetry Fact = 2 else Fact = 1
-!
-!  Eh  = Fact * omega * (sum over ig) * fpi / ( g(ig) * tpiba2 ) *
-!        { rho_e(ig) + rho_I(ig) } * conjugate { rho_e(ig) + rho_I(ig) }
-!  if Gamma symmetry Fact = 1 else Fact = 1/2
-!
-!  Hatree potential and local pseudopotential
-!  vloc(ig)     =  vloc_h(ig) + vloc_ps(ig) 
-!
-!  Local contribution to the forces on the ions
-!  eigrx(ig,isa)   = ei1( mill(1,ig), isa)
-!  eigry(ig,isa)   = ei2( mill(2,ig), isa)
-!  eigrz(ig,isa)   = ei3( mill(3,ig), isa)
-!  fpibg           = fpi / ( g(ig) * tpiba2 )
-!  tx_h(ig,is)     = fpibg * rhops(ig, is) * CONJG( rho_e(ig) + rho_I(ig) )
-!  tx_ps(ig,is)    = vps(ig,is) * CONJG( rho_e(ig) )
-!  gx(ig)          = CMPLX(0.D0, gx(1,ig)) * tpiba
-!  fion(x,isa)     = fion(x,isa) + 
-!      Fact * omega * ( sum over ig, iss) (tx_h(ig,is) + tx_ps(ig,is)) * 
-!      gx(ig) * eigrx(ig,isa) * eigry(ig,isa) * eigrz(ig,isa) 
-!  if Gamma symmetry Fact = 2.0 else Fact = 1
-!
-!  ----------------------------------------------
-!  END manual
+      !  this routine computes:
+      !  omega = ht%deth
+      !  vloc_ps(ig)  =  (sum over is) sfac(is,ig) * vps(ig,is)
+      !
+      !  Eps = Fact * omega * (sum over ig) cmplx ( rho_e(ig) ) * vloc_ps(ig)
+      !  if Gamma symmetry Fact = 2 else Fact = 1
+      !
 
-      USE constants, ONLY: fpi
-      USE control_flags, ONLY: gamma_only
-      USE cell_base, ONLY: tpiba2, tpiba
-      USE cell_module, ONLY: boxdimensions
-      USE atoms_type_module, ONLY: atoms_type
-      USE io_global, ONLY: stdout
-      USE grid_dimensions, ONLY: nr1, nr2, nr3
-      USE reciprocal_vectors, ONLY: mill_l
-      USE ions_base, ONLY: nat
-      USE gvecp, ONLY: ngm
+      USE io_global,          ONLY: stdout
+      USE ions_base,          ONLY: nsp
+      USE gvecp,              ONLY: ngm
       USE reciprocal_vectors, ONLY: gstart, gx, g
+      USE mp_global,          ONLY: intra_image_comm
+      USE mp,                 ONLY: mp_sum
 
       IMPLICIT NONE
 
-! ... Arguments
+      ! ... Arguments
 
-      TYPE (atoms_type) :: atoms
-      TYPE (boxdimensions), INTENT(in) :: ht
-      LOGICAL      :: tforce
-      LOGICAL      :: tscreen
+      REAL(DP),    INTENT(IN)  :: vps(:,:)
+      REAL(DP),    INTENT(IN)  :: omega
+      COMPLEX(DP), INTENT(OUT) :: vloc(:)
+      COMPLEX(DP), INTENT(IN)  :: rhoeg(:)
+      COMPLEX(DP), INTENT(IN)  :: sfac(:,:)
+      COMPLEX(DP), INTENT(OUT) :: eps
+
+      ! ... Locals
+
+      INTEGER     :: is, ig
+      COMPLEX(DP) :: vp
+
+      ! ... Subroutine body ...
+      !
+      eps   = (0.D0,0.D0)
+      !
+      DO ig = gstart, ngm 
+
+        vp   = (0.D0,0.D0)
+        DO is = 1, nsp
+          vp = vp + sfac( ig, is ) * vps( ig, is )
+        END DO
+
+        vloc(ig) = vp
+        eps      = eps  +     vp * CONJG( rhoeg( ig ) )
+
+      END DO
+      ! ... 
+      ! ... G = 0 element
+      !
+      IF ( gstart == 2 ) THEN
+        vp = (0.D0,0.D0)
+        DO is = 1, nsp
+          vp = vp + sfac( 1, is) * vps(1, is)
+        END DO
+        vloc(1) = VP
+        eps     = eps + vp * CONJG( rhoeg(1) ) * 0.5d0
+      END IF
+      !
+      eps = 2.D0 * eps  * omega
+      !
+      CALL mp_sum( eps, intra_image_comm )
+
+      RETURN
+   END SUBROUTINE vofps
+
+
+!=----------------------------------------------------------------------------=!
+
+  SUBROUTINE vofloc( tscreen, ehte, ehti, eh, vloc, rhoeg, &
+                     rhops, vps, sfac, omega, screen_coul )
+
+      !  this routine computes:
+      !  omega = ht%deth
+      !  rho_e(ig)    =  (sum over iss) rhoeg(ig,iss) 
+      !  rho_I(ig)    =  (sum over is) sfac(is,ig) * rhops(ig,is) 
+      !  vloc_h(ig)   =  fpi / ( g(ig) * tpiba2 ) * { rho_e(ig) + rho_I(ig) }
+      !
+      !  Eh  = Fact * omega * (sum over ig) * fpi / ( g(ig) * tpiba2 ) *
+      !        { rho_e(ig) + rho_I(ig) } * conjugate { rho_e(ig) + rho_I(ig) }
+      !  if Gamma symmetry Fact = 1 else Fact = 1/2
+      !
+      !  Hatree potential and local pseudopotential
+      !  vloc(ig)     =  vloc_h(ig) + vloc_ps(ig) 
+      !
+
+      USE constants,          ONLY: fpi
+      USE cell_base,          ONLY: tpiba2, tpiba
+      USE io_global,          ONLY: stdout
+      USE reciprocal_vectors, ONLY: gstart, g
+      USE ions_base,          ONLY: nsp
+      USE gvecp,              ONLY: ngm
+      USE mp_global,          ONLY: intra_image_comm
+      USE mp,                 ONLY: mp_sum
+
+      IMPLICIT NONE
+
+      ! ... Arguments
+
+      LOGICAL,     INTENT(IN)    :: tscreen
+      REAL(DP),    INTENT(IN)    :: rhops(:,:), vps(:,:)
+      COMPLEX(DP), INTENT(INOUT) :: vloc(:)
+      COMPLEX(DP), INTENT(IN)    :: rhoeg(:)
+      COMPLEX(DP), INTENT(IN)    :: sfac(:,:)
+      REAL(DP),    INTENT(OUT)   :: ehte, ehti
+      REAL(DP),    INTENT(IN)    :: omega
+      COMPLEX(DP), INTENT(OUT)   :: eh
+      COMPLEX(DP), INTENT(IN)    :: screen_coul(:)
+
+      ! ... Locals
+
+      INTEGER     :: is, ig
+      REAL(DP)    :: fpibg, cost
+      COMPLEX(DP) :: rhet, rhog, rp, vscreen
+
+      ! ... Subroutine body ...
+
+      eh    = 0.0d0
+      ehte  = 0.0d0
+      ehti  = 0.0d0
+
+      DO ig = gstart, ngm 
+
+        rp   = (0.D0,0.D0)
+        DO is = 1, nsp
+          rp = rp + sfac( ig, is ) * rhops( ig, is )
+        END DO
+
+        rhet  = rhoeg( ig )
+        rhog  = rhet + rp
+
+        IF( tscreen ) THEN
+          fpibg     = fpi / ( g(ig) * tpiba2 ) + screen_coul(ig)
+        ELSE
+          fpibg     = fpi / ( g(ig) * tpiba2 )
+        END IF
+
+        vloc(ig) = vloc(ig)  +  fpibg *        rhog 
+        eh       = eh        +  fpibg *        rhog * CONJG(rhog)
+        ehte     = ehte      +  fpibg *   DBLE(rhet * CONJG(rhet))
+        ehti     = ehti      +  fpibg *   DBLE(  rp * CONJG(rp))
+
+      END DO
+      ! ... 
+      ! ... G = 0 element
+      !
+      IF ( gstart == 2 ) THEN
+        rp = (0.D0,0.D0)
+        IF( tscreen ) THEN
+          vscreen = screen_coul(1)
+        ELSE
+          vscreen = 0.0d0
+        END IF
+        DO IS = 1, nsp
+          rp = rp + sfac( 1, is) * rhops(1, is)
+        END DO
+        rhet    = rhoeg(1)
+        rhog    = rhet + rp
+        vloc(1) = vloc(1)   +  vscreen *   rhog
+        eh      = eh        +  vscreen *        rhog * CONJG(rhog)
+        ehte    = ehte      +  vscreen *   DBLE(rhet * CONJG(rhet))
+        ehti    = ehti      +  vscreen *   DBLE(  rp * CONJG(rp))
+      END IF
+      ! ...
+      eh   =        eh   * omega
+      ehte =        ehte * omega
+      ehti =        ehti * omega
+      ! ...
+      CALL mp_sum(eh  , intra_image_comm)
+      CALL mp_sum(ehte, intra_image_comm)
+      CALL mp_sum(ehti, intra_image_comm)
+      !
+      RETURN
+  END SUBROUTINE vofloc
+
+
+  SUBROUTINE force_loc( tscreen, rhoeg, fion, rhops, vps, eigr, ei1, ei2, ei3, &
+                        sfac, omega, screen_coul )
+
+      !  this routine computes:
+      !
+      !  Local contribution to the forces on the ions
+      !  eigrx(ig,isa)   = ei1( mill(1,ig), isa)
+      !  eigry(ig,isa)   = ei2( mill(2,ig), isa)
+      !  eigrz(ig,isa)   = ei3( mill(3,ig), isa)
+      !  fpibg           = fpi / ( g(ig) * tpiba2 )
+      !  tx_h(ig,is)     = fpibg * rhops(ig, is) * CONJG( rho_e(ig) + rho_I(ig) )
+      !  tx_ps(ig,is)    = vps(ig,is) * CONJG( rho_e(ig) )
+      !  gx(ig)          = CMPLX(0.D0, gx(1,ig)) * tpiba
+      !  fion(x,isa)     = fion(x,isa) + 
+      !      Fact * omega * ( sum over ig, iss) (tx_h(ig,is) + tx_ps(ig,is)) * 
+      !      gx(ig) * eigrx(ig,isa) * eigry(ig,isa) * eigrz(ig,isa) 
+      !  if Gamma symmetry Fact = 2.0 else Fact = 1
+      !
+
+      USE constants,          ONLY: fpi
+      USE cell_base,          ONLY: tpiba2, tpiba
+      USE io_global,          ONLY: stdout
+      USE grid_dimensions,    ONLY: nr1, nr2, nr3
+      USE reciprocal_vectors, ONLY: mill_l, gstart, gx, g
+      USE ions_base,          ONLY: nat, nsp, na
+      USE gvecp,              ONLY: ngm
+
+      IMPLICIT NONE
+
+      ! ... Arguments
+
+      LOGICAL     :: tscreen
       REAL(DP)    :: fion(:,:)
       REAL(DP)    :: rhops(:,:), vps(:,:)
-      COMPLEX(DP) :: vloc(:)
-      COMPLEX(DP) :: rhoeg(:,:)
+      COMPLEX(DP) :: rhoeg(:)
       COMPLEX(DP), INTENT(IN) :: sfac(:,:)
-      REAL(DP)    :: ehte, ehti
-      COMPLEX(DP) :: eh, eps
       COMPLEX(DP) :: ei1(-nr1:nr1,nat)
       COMPLEX(DP) :: ei2(-nr2:nr2,nat)
       COMPLEX(DP) :: ei3(-nr3:nr3,nat)
       COMPLEX(DP) :: eigr(:,:)
+      REAL(DP)    :: omega
+      COMPLEX(DP) :: screen_coul(:)
 
-! ... Locals
+      ! ... Locals
 
-      INTEGER      :: is, ia, isa, ig, ig1, ig2, ig3, nspin, iss
-      REAL(DP)    :: fpibg, cost, omega
+      INTEGER     :: is, ia, isa, ig, ig1, ig2, ig3
+      REAL(DP)    :: fpibg
       COMPLEX(DP) :: cxc, rhet, rhog, vp, rp, gxc, gyc, gzc
-      COMPLEX(DP) :: teigr, cnvg, cvn, tx, ty, tz, vscreen
+      COMPLEX(DP) :: teigr, cnvg, cvn, tx, ty, tz
       COMPLEX(DP), ALLOCATABLE :: ftmp(:,:)
-      COMPLEX(DP), ALLOCATABLE :: screen_coul(:)
 
-! ... Subroutine body ...
+      ! ... Subroutine body ...
 
-      nspin = SIZE(rhoeg,2)
-      IF(TFORCE) THEN
-        ALLOCATE( ftmp(3, SIZE(fion, 2) ) )
-        ftmp = CMPLX(0.0_DP,0.0_DP)
-      END IF
-
-      IF( tscreen ) THEN
-        ALLOCATE( screen_coul( ngm ) )
-        CALL cluster_bc( screen_coul, g, ht%deth, ht%hmat )
-      END IF
-
-!=======================================================================
-!==  HARTREE AND LOCAL PART OF THE PSEUDO ENERGIES                    ==
-!=======================================================================
-
-      omega = ht%deth
-      EH    = (0.D0,0.D0)
-      EPS   = (0.D0,0.D0)
-      ehte  = 0.0d0
-      ehti  = 0.0d0
+      ALLOCATE( ftmp( 3, SIZE( fion, 2 ) ) )
+      
+      ftmp = 0.0d0
 
       DO IG = gstart, ngm 
 
         RP   = (0.D0,0.D0)
-        VP   = (0.D0,0.D0)
-        DO IS = 1, atoms%nsp
-          VP = VP + sfac( ig, is ) * vps( ig, is )
+        DO IS = 1, nsp
           RP = RP + sfac( ig, is ) * rhops( ig, is )
         END DO
 
-        ! WRITE( stdout,*) 'vp ',ig, vp  ! DEBUG
-        ! WRITE( stdout,*) 'rp ',ig, rp  ! DEBUG
-        ! WRITE( stdout,*) 'rhoeg ',ig, SUM( RHOEG( ig, : ) )  ! DEBUG
-        ! WRITE( stdout,*) 'mill ',ig, mill(1,ig),mill(2,ig),mill(3,ig)
-
-        RHET  = SUM( RHOEG( ig, : ) )
+        RHET  = RHOEG( ig )
         RHOG  = RHET + RP
-
-        ! WRITE( stdout,*) 'rhet ',ig, rhet  ! DEBUG
-        ! WRITE( stdout,*) 'rhog ',ig, rhog  ! DEBUG
 
         IF( tscreen ) THEN
           FPIBG     = fpi / ( g(ig) * tpiba2 ) + screen_coul(ig)
@@ -977,92 +1098,37 @@
           FPIBG     = fpi / ( g(ig) * tpiba2 )
         END IF
 
-        ! WRITE( stdout,*) 'fpibg ',ig, fpibg  ! DEBUG
-        
-        vloc(ig) = vp   +  fpibg *        rhog 
-        eh       = eh   +  fpibg *        rhog * CONJG(rhog)
-        eps      = eps  +     vp * CONJG(rhet)
-        ehte     = ehte +  fpibg *   DBLE(rhet * CONJG(rhet))
-        ehti     = ehti +  fpibg *   DBLE(  rp * CONJG(rp))
-
-        IF(TFORCE) THEN
-          ig1  = mill_l(1,IG)
-          ig2  = mill_l(2,IG)
-          ig3  = mill_l(3,IG)
-          GXC  = CMPLX(0.D0,gx(1,IG))
-          GYC  = CMPLX(0.D0,gx(2,IG))
-          GZC  = CMPLX(0.D0,gx(3,IG))
-          isa = 1
-          DO IS = 1, atoms%nsp
-            CNVG  = RHOPS(IG,is) * FPIBG * CONJG(rhog)
-            CVN   = VPS(ig, is)  * CONJG(rhet)
-            TX = (CNVG+CVN) * GXC
-            TY = (CNVG+CVN) * GYC
-            TZ = (CNVG+CVN) * GZC
-            DO IA = 1, atoms%na(is)
+        ig1  = mill_l(1,IG)
+        ig2  = mill_l(2,IG)
+        ig3  = mill_l(3,IG)
+        GXC  = CMPLX(0.D0,gx(1,IG))
+        GYC  = CMPLX(0.D0,gx(2,IG))
+        GZC  = CMPLX(0.D0,gx(3,IG))
+        isa = 1
+        DO IS = 1, nsp
+           CNVG  = RHOPS(IG,is) * FPIBG * CONJG(rhog)
+           CVN   = VPS(ig, is)  * CONJG(rhet)
+           TX = (CNVG+CVN) * GXC
+           TY = (CNVG+CVN) * GYC
+           TZ = (CNVG+CVN) * GZC
+           DO IA = 1, na(is)
               TEIGR = ei1(IG1,ISA) * ei2(IG2,ISA) * ei3(IG3,ISA)
               ftmp(1,ISA) = ftmp(1,ISA) + TEIGR*TX
               ftmp(2,ISA) = ftmp(2,ISA) + TEIGR*TY
               ftmp(3,ISA) = ftmp(3,ISA) + TEIGR*TZ
               isa = isa + 1
-            END DO
-          END DO
-        END IF
+           END DO
+        END DO
 
       END DO
-! ... 
-      IF(TFORCE) THEN
-! ...   each processor add its own contribution to the array FION
-        IF( gamma_only ) THEN
-          cost = 2.D0 * omega * tpiba
-        ELSE
-          cost = omega * tpiba
-        END IF
-        FION = FION + DBLE(ftmp) * cost
-      END IF
+      !
+      fion = fion + DBLE(ftmp) * 2.D0 * omega * tpiba
 
-! ... G = 0 element
-      IF ( gstart == 2 ) THEN
-        vp = (0.D0,0.D0)
-        rp = (0.D0,0.D0)
-        IF( tscreen ) THEN
-          vscreen = screen_coul(1)
-        ELSE
-          vscreen = 0.0d0
-        END IF
-        DO IS = 1, atoms%nsp
-          vp = vp + sfac( 1, is) * vps(1, is)
-          rp = rp + sfac( 1, is) * rhops(1, is)
-        END DO
-        rhet    = SUM( rhoeg(1, :) )
-        rhog    = rhet + rp
-        vloc(1) = VP   +  vscreen *   rhog
-        eh      = eh   +  vscreen *        rhog * CONJG(rhog)
-        ehte    = ehte +  vscreen *   DBLE(rhet * CONJG(rhet))
-        ehti    = ehti +  vscreen *   DBLE(  rp * CONJG(rp))
-        DO iss = 1, nspin
-          IF( gamma_only ) THEN
-            eps = eps + vp * CONJG(RHOEG(1,iss)) * 0.5d0
-          ELSE
-            eps = eps + vp * CONJG(RHOEG(1,iss))
-          END IF
-        END DO
-      END IF
-! ...
-      IF( .NOT. gamma_only ) THEN
-        EPS = EPS * 0.5d0
-        EH  = EH  * 0.5d0
-      END IF
-      eh   =        eh   * omega
-      eps  = 2.D0 * eps  * omega
-      ehte =        ehte * omega
-      ehti =        ehti * omega
-! ...
-      IF(ALLOCATED(ftmp)) DEALLOCATE(ftmp)
-      IF(ALLOCATED(screen_coul)) DEALLOCATE(screen_coul)
+      DEALLOCATE( ftmp )
        
       RETURN
-      END SUBROUTINE vofloc
+      END SUBROUTINE force_loc
+
 
 !
 !=----------------------------------------------------------------------------=!
@@ -1306,6 +1372,8 @@
       USE gvecp,              ONLY: ngm
       USE reciprocal_vectors, ONLY: gstart, g
       USE sic_module,         ONLY: sic_epsilon, sic_alpha
+      USE mp_global,          ONLY: intra_image_comm
+      USE mp,                 ONLY: mp_sum
 
       IMPLICIT NONE
 
@@ -1373,6 +1441,8 @@
       !
       self_ehte = DBLE(ehte) * omega * sic_epsilon
       vloc = vloc * sic_epsilon
+
+      CALL mp_sum( self_ehte, intra_image_comm )
 
       IF( ALLOCATED( screen_coul ) ) DEALLOCATE( screen_coul )
 

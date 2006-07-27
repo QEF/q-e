@@ -1045,6 +1045,7 @@ END SUBROUTINE gshcount
           use betax,           only: mmx, refg
           USE pseudopotential, only: tpstab
           USE control_flags,   only: program_name
+          USE io_global,       only: stdout, ionode
 
           IMPLICIT NONE
           REAL(DP), INTENT(IN) ::  ecutwfc, ecutrho, ecfixed, qcutz, q2sigma
@@ -1063,8 +1064,13 @@ END SUBROUTINE gshcount
              IF ( dual <= 1.D0 ) &
                 CALL errore( ' ecutoffs_setup ', ' invalid dual? ', 1 )
              !
-             IF( ( program_name == 'fpmd' ) .AND. ( dual /= 4.0d0 ) ) &
-                CALL errore( ' ecutoffs_setup ', ' dual /= 4 not allowed in fpmd ', 1 )
+             IF( ( program_name == 'FPMD' ) .AND. ( dual /= 4.0d0 ) ) THEN
+                IF( ionode ) THEN
+                   WRITE( stdout, * ) 'WARNING from ecutoffs_setup: dual /= 4 not allowed in fpmd'
+                   WRITE( stdout, * ) 'WARNING continuing with dual = 4'
+                END IF
+                dual = 4.0d0
+             END IF
              !
           END IF
 

@@ -104,6 +104,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
         nbeg   = 0
         nomore = 2000
+        trane  = .FALSE.
+        ampre  = 0.0D0
         !
      ELSE
         !

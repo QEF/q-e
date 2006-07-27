@@ -242,7 +242,7 @@
 !=----------------------------------------------------------------------------=!
 
 
-     SUBROUTINE exch_corr_energy(rhoetr, grho, vpot, sxc, vxc, v2xc)
+     SUBROUTINE exch_corr_energy(rhoetr, grho, vpot, exc, vxc, v2xc)
 
         USE kinds,           ONLY: DP
         use grid_dimensions, only: nnrx
@@ -251,7 +251,7 @@
         REAL (DP) :: rhoetr(:,:)
         REAL (DP) :: grho(:,:,:)
         REAL (DP) :: vpot(:,:)
-        REAL (DP) :: sxc              ! E_xc   energy
+        REAL (DP) :: exc              ! E_xc   energy ( not multiplied by Omega/nnr )
         REAL (DP) :: vxc              ! SUM ( v(r) * rho(r) )
         REAL (DP) :: v2xc(:,:,:)
         !
@@ -270,7 +270,7 @@
         IF( SIZE( vpot, 1 ) /= nnrx ) &
            CALL errore(" exch_corr_energy ", " inconsistent size for vpot ", 1 )
         !
-        CALL exch_corr_wrapper( nnrx, nspin, grho(1,1,1), rhoetr(1,1), sxc, vpot(1,1), v2xc(1,1,1) )
+        CALL exch_corr_wrapper( nnrx, nspin, grho(1,1,1), rhoetr(1,1), exc, vpot(1,1), v2xc(1,1,1) )
         !
         IF( dft_is_gradient() ) THEN
           ! ... vpot additional term for gradient correction

@@ -2524,7 +2524,7 @@
       USE funct, ONLY: dft_is_meta
       USE fft_module, ONLY: fwfft, invfft
       USE sic_module, ONLY: self_interaction, sic_epsilon, sic_alpha
-      USE energies,   ONLY: self_sxc, self_ehte
+      USE energies,   ONLY: self_exc, self_ehte
       USE potentials,       ONLY: vofesr, self_vofhar
       USE stress,           ONLY: pseudo_stress, compute_gagb, stress_hartree, &
                                   add_drhoph, stress_local
@@ -2587,7 +2587,6 @@
       ALLOCATE( rhotmp( ng ) )
       !
       IF ( tpre ) THEN
-         ! ALLOCATE( drhotmp( ng, 3, 3 ) )
          ALLOCATE( drhot( ng, 6 ) )
          ALLOCATE( gagb( 6, ng ) )
          CALL compute_gagb( gagb, gx, ng, tpiba2 )
@@ -2771,7 +2770,7 @@
 !     -------------------------------------------------------------------
       IF ( nlcc_any ) CALL add_cc( rhoc, rhog, rhor )
 !
-      CALL exch_corr_h( nspin, rhog, rhor, rhoc, sfac, exc, dxc, self_sxc )
+      CALL exch_corr_h( nspin, rhog, rhor, rhoc, sfac, exc, dxc, self_exc )
 
 !
 !     rhor contains the xc potential in r-space
