@@ -654,6 +654,7 @@ Currently available systems are:
   \texttt{altix}:     SGI Altix 350/3000 with Linux, Intel compiler\\
   \texttt{beo\_ifc}:  Linux clusters of PCs, Intel compiler\\
   \texttt{beowulf}:   Linux clusters of PCs, Portland compiler\\
+  \texttt{bgl}:       IBM Blue Gene/L machines\\
   \texttt{cygwin}:    Windows PC, Intel compiler\\
   \texttt{fujitsu}:   Fujitsu vector machines\\
   \texttt{hitachi}:   Hitachi SR8000\\
@@ -670,27 +671,16 @@ Currently available systems are:
   \texttt{pc\_pgi}:   Linux PCs, Portland compiler\\
   \texttt{sun}:       Sun workstations\\
   \texttt{sunMPI}:    Sun parallel machines\\
-  \texttt{sxcross}:   NEC SX-6 (cross-compilation)\\
-  \texttt{t3e}:       Cray T3E
+  \texttt{sxcross}:   NEC SX-6 (cross-compilation)
 \end{quote}
 \textbf{Please note:}
 Most of these files are old and haven't been tested for a long time.
 They may or may not work.
 
-To select the appropriate templates, you can run:
-\medskip
-
-\texttt{./configure.old} \emph{system}
-\medskip
-
-\noindent
-where \emph{system} is the best match to your configuration;
-\texttt{configure.old} with no arguments prints the up-to-date list of
-available systems.
-
-That will copy \texttt{Make.}\emph{system} to \texttt{make.sys}; for
-convenience, it'll also run \texttt{makedeps.sh} to generate
-\texttt{*/make.depend} files.
+Copy \texttt{Make.}\emph{system} to \texttt{make.sys}. If you
+have the Intel compiler \texttt{ifc} v.6 or earlier, you will have
+to run the script \texttt{ifcmods.sh}. Finally, run
+\texttt{makedeps.sh} to generate \texttt{*/make.depend} files.
 
 Most probably (and even more so if there isn't an exact match to your
 machine type), you'll have to tweak \texttt{make.sys} by hand.
@@ -700,7 +690,7 @@ You'll also have to set the \texttt{MYLIB} variable to:
 \begin{quote}
   \texttt{blas\_and\_lapack} to compile BLAS and LAPACK from source;\\
   \texttt{lapack\_mkl} to use the Intel MKL library;\\
-  \texttt{lapack\_t3e} to use the LAPACK for Cray T3E;\\
+  \texttt{lapack\_essl} to use IBM ESSL libraries;\\
   otherwise, leave it empty.
 \end{quote}
 
@@ -1082,7 +1072,7 @@ and (should be) guaranteed to work only on examples 01 to 04.
 \end{enumerate}
 
 
-\subsection{Installation issues}
+\subsection{Installation Issues}
   \label{installissues}
 
 The main development platforms are IBM SP and Intel/AMD PC with Linux
@@ -1119,6 +1109,13 @@ If many symbols are missing in the loading phase, you did not specify
 the location of all needed libraries (LAPACK, BLAS, FFTW,
 machine-specific optimized libraries).  If you did, but symbols are
 still missing, see below (for Linux PC).
+
+\paragraph{IBM AIX}
+
+On some IBM machines running AIX, the command \texttt{/usr/bin/oslevel}
+used by \texttt{configure} to get info about the type of system is not 
+executable to normal users. As a consequence \texttt{configure} stops.'
+Complain with your system manager.
 
 \paragraph{SGI machines with IRIX/MIPS compiler}
 
@@ -1240,9 +1237,8 @@ of charge for Linux):
 
 \paragraph{ifort v.9}
 
-The current release (as of May 2006) of ifort 9.1 yields
-``Compiler Internal Error''. Downgrade to v. 9.0, or wait
-until Intel fixes the problem.
+The latest (July 2006) 32-bit version of ifort 9.1 works flawlessy.
+Earlier versions yielded ``Compiler Internal Error''.
 
 At least some versions of ifort 9.0 have a buggy preprocessor that 
 either prevents compilation of \texttt{iotk}, or produces runtime 
@@ -1316,9 +1312,10 @@ Note that \texttt{pwcond.x} works only with recent versions
 When using/testing/benchmarking MKL on SMP (multiprocessor)
 machines, one should set the environmental variable 
 \texttt{OMP\_NUM\_THREADS} to 1, unless the OpenMP 
-parallelization is desired. MKL by default sets the
-variable to the number of CPUs installed and thus gives
-the impression of a much better performance, as the CPUu time
+parallelization is desired (do not confuse OpenMP and OpenMPI!!!
+they refer to different parallelization paradigms). 
+MKL by default sets the variable to the number of CPUs installed and 
+thus gives the impression of a much better performance, as the CPU time
 is only measured for the master thread (info from Axel Kohlmeyer).
 
 \paragraph{AMD CPUs, Intel Itanium}
@@ -1354,10 +1351,11 @@ wrt the Portland compiler. You may also try with g95.
 \paragraph{Linux PC clusters with MPI}
 
 PC clusters running some version of MPI are a very popular 
-computational platform nowadays. Two major MPI implementations 
-(MPICH, LAM-MPI) are available. The number of possible
-configurations, in terms of type and version of the MPI 
-libraries, kernels, system libraries, compilers, is very large. 
+computational platform nowadays. Quantum-ESPRESSO is known to work
+with at least two of the major MPI implementations (MPICH, LAM-MPI), 
+plus with the newer OpenMPI implementation. 
+The number of possible configurations, in terms of type and version of 
+the MPI libraries, kernels, system libraries, compilers, is very large. 
 Quantum-ESPRESSO compiles and works on all non-buggy, properly configured 
 hardware and software combinations. You may have to recompile MPI 
 libraries in order 
@@ -2597,17 +2595,22 @@ A too large number of processors will yield performance degradation,
 or may cause the parallelization algorithm to fail in distributing
 properly R- and G-space grids.
 
-Note also that Beowulf-style machines (PC clusters) may have
-disappointing parallelization performances unless they have a decent
-communication hardware (at least Gigabit ethernet).
+Actual parallel performances will also depend a lot on the available 
+software (MPI libraries) and on the available communication hardware. 
+For Beowulf-style machines (clusters of PC) the newest version 1.1
+of the OpenMPI libraries (\htmladdnormallink{\texttt{http://www.openmpi.org/}}%
+{http://www.openmpi.org/}) seems to yield better performances 
+than other implementations (info by Kostantin Kudin). 
+Note however that you need a decent communication hardware (at least 
+Gigabit ethernet) in order to have acceptable performances with PW 
+parallelization.
 Do not expect good scaling with cheap hardware: plane-wave
-calculations are not at all an ``embarrassing parallel" problem. 
-Note that multiprocessor motherboards for Intel Pentium CPUs typically
-have just one memory bus for all processors.
-This dramatically slows down any code doing massive access to memory
-(as most codes in the Quantum-ESPRESSO package do) that runs on processors of
-the same motherboard.
+calculations are by no means an ``embarrassing parallel" problem. 
 
+Also note that multiprocessor motherboards for Intel Pentium CPUs 
+typically have just one memory bus for all processors. This dramatically 
+slows down any code doing massive access to memory (as most codes in the 
+Quantum-ESPRESSO package do) that runs on processors of the same motherboard.
 \clearpage
 
 \section{Troubleshooting (PWscf)}
@@ -3250,6 +3253,12 @@ You haven't one. Really. More exactly, you have none of the fortran
 compilers \texttt{configure} is trying in your execution path. If 
 your hardware/software combination is supported, fix your 
 execution path.
+
+\item {\texttt{configure} \em complains that it has no permission 
+to run /usr/bin/oslevel and stops!} On some IBM AIX machines, the command
+\texttt{/usr/bin/oslevel} used by \texttt{configure} to get info about
+the type of system is not executable to normal users. Complain with
+your system manager.
 
 \item {\texttt{configure} \em says ``unsupported C/Fortran compilers 
 combination''!}
