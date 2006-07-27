@@ -218,56 +218,40 @@
 
         c = fpi / omegab
         do ig = 1, ngb
-          xg = sqrt( gb(ig) * tpibab2 )
-          call sph_bes ( mesh, r(1), xg, 0, jl )
-          do ir=1,mesh
-            fint(ir)=r(ir)**2*rho_atc(ir)*jl(ir)
-          end do
-          call simpson_cp90( mesh,fint,rab(1),rhocb(ig))
-          if( what == 1 ) then
-            IF( abs(xg*r(1)) > gsmall ) THEN
-              call sph_bes ( mesh, r(1), xg, -1, djl )
+           xg = sqrt( gb(ig) * tpibab2 )
+           call sph_bes ( mesh, r(1), xg, 0, jl )
+           do ir=1,mesh
+              fint(ir)=r(ir)**2*rho_atc(ir)*jl(ir)
+           end do
+           call simpson_cp90( mesh,fint,rab(1),rhocb(ig))
+           if( what == 1 ) then
+              ! djl = - d j_0(x) /dx = + j_1(x) 
+              call sph_bes ( mesh, r(1), xg, +1, djl )
               do ir=1,mesh
-                djl(ir) = jl(ir) / ( r(ir) * xg ) - djl(ir) 
+                 fint(ir)=r(ir)**3*rho_atc(ir)*djl(ir)
               end do
-            ELSE
-              IF( xg > gsmall ) THEN
-                 call sph_bes ( mesh-1, r(2), xg, -1, djl(2) )
-                 do ir=2,mesh
-                   djl(ir) = jl(ir) / ( r(ir) * xg ) - djl(ir) 
-                 end do
-                 djl(1) = djl(2)
-              ELSE
-                 djl = 0.0d0
-              END IF
-            END IF
-            do ir=1,mesh
-              fint(ir)=r(ir)**3*rho_atc(ir)*djl(ir)
-            end do
-            call simpson_cp90( mesh, fint, rab(1), drhocb(ig) )
-          end if
+              call simpson_cp90( mesh, fint, rab(1), drhocb(ig) )
+           end if
         end do
         do ig=1,ngb
-          rhocb(ig) = c * rhocb(ig)
+           rhocb(ig) = c * rhocb(ig)
         end do
         if( what == 1 ) then
-          do ig=1,ngb
-            drhocb(ig) = c * drhocb(ig)
-          end do
+           do ig=1,ngb
+              drhocb(ig) = c * drhocb(ig)
+           end do
         end if
-        if(iprsta >= 4) &
-          WRITE( stdout,'(a,f12.8)') ' integrated core charge= ',omegab*rhocb(1)
 
+        if(iprsta >= 4) &
+             WRITE( stdout,'(a,f12.8)') ' integrated core charge= ',omegab*rhocb(1)
+        
         deallocate( jl, fint )
         if( what == 1 ) then
-          deallocate(djl)
+           deallocate(djl)
         end if
-       
 
         return
       end subroutine compute_rhocg
-
-
 
 !-----------------------------------------------------------------------
       subroutine compute_rhops( rhops, drhops, zv, rcmax, g, omega, tpiba2, ngs, tpre )

@@ -107,3 +107,41 @@ SUBROUTINE sph_dbes( MMAX, R, XG, L, DJL )
   RETURN
   !
 END SUBROUTINE sph_dbes
+
+!
+SUBROUTINE sph_dbes1 ( nr, r, xg, l, jl, djl )
+  !
+  ! calculates x*dj_l(x)/dx using the recursion formula
+  !    dj_l(x)/dx = l/x*j_l(x) -  j_(l+1)(x)
+  ! for l=0, and for l>0 :
+  !    dj_l(x)/dx = j_(l-1)(x) - (l+1)/x *  j_l(x)
+  ! requires j_l(r) in input
+  !
+  USE kinds,     ONLY : DP
+  USE constants, ONLY : eps8
+  !
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: l, nr
+  REAL (DP), INTENT(IN) :: xg, jl(nr), r(nr)
+  REAL (DP), INTENT(OUT):: djl(nr)
+  !
+  if ( xg < eps8 ) then
+     !
+     ! special case q=0
+     ! note that x*dj_l(x)/dx = 0 for x = 0
+     !
+     djl(:) = 0.0d0
+  else
+     !
+     if ( l > 0 ) then
+        call sph_bes ( nr, r, xg, l-1, djl )
+        djl(:) = djl(:) * (xg * r(:) ) - (l+1) * jl(:)
+     else if ( l == 0 ) then
+        call sph_bes ( nr, r, xg, l+1, djl )
+        djl(:) = - djl(:) * (xg * r(:) )
+     else
+        call errore('sph_dbes','l < 0 not implemented', abs(l) )
+     end if
+  end if
+  !
+end SUBROUTINE sph_dbes1

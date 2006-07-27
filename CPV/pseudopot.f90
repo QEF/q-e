@@ -718,7 +718,7 @@ CONTAINS
       !
       INTEGER :: is, iv, l, il, ir, nr
       REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:)
-      REAL(DP) :: xg, xrg
+      REAL(DP) :: xg
       !
       IF( ALLOCATED( betagx  ) ) DEALLOCATE( betagx )
       IF( ALLOCATED( dbetagx ) ) DEALLOCATE( dbetagx )
@@ -820,7 +820,7 @@ CONTAINS
       INTEGER :: is, iv, l, il, ir, jv, ijv, ierr
       INTEGER :: nr
       REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), qrl(:,:,:)
-      REAL(DP) :: xg, xrg
+      REAL(DP) :: xg
 
       IF( ALLOCATED(  qradx ) ) DEALLOCATE(  qradx )
       IF( ALLOCATED( dqradx ) ) DEALLOCATE( dqradx )
@@ -956,7 +956,7 @@ CONTAINS
       INTEGER :: is, iv, l, il, ir, jv, ijv, ierr
       INTEGER :: ig, i,j, jj, nr
       REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), qrl(:,:,:)
-      REAL(DP) :: xg, xrg, c, betagl, dbetagl, gg
+      REAL(DP) :: xg, c, betagl, dbetagl, gg
       REAL(DP), ALLOCATABLE :: dqradb(:,:,:,:)
       REAL(DP), ALLOCATABLE :: ylmb(:,:), dylmb(:,:,:,:)
       COMPLEX(DP), ALLOCATABLE :: dqgbs(:,:,:)
@@ -1518,7 +1518,7 @@ CONTAINS
       INTEGER :: l, il, ir
       REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:)
       REAL(DP), ALLOCATABLE :: betagx ( :, :, : ), dbetagx( :, :, : )
-      REAL(DP) :: xg, xrg
+      REAL(DP) :: xg
 
       ALLOCATE( ylm( ngw, (lmaxkb+1)**2 ) )
       ALLOCATE( betagx ( ngw, nhm, nsp ) )
@@ -1726,50 +1726,6 @@ CONTAINS
          end do
       end do
     end subroutine fill_qrl
-
-!
-    SUBROUTINE sph_dbes1 ( nr, r, xg, l, jl, djl )
-      !
-      ! calculates x*dj_l(x)/dx using the recursion formula
-      ! dj_l(x)/dx = j_(l-1)(x) - (l+1)/x *  j_l(x)
-      !
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: l, nr
-      REAL (DP), INTENT(IN) :: xg, jl(nr), r(nr)
-      REAL (DP), INTENT(OUT):: djl(nr)
-      !
-      REAL (DP), ALLOCATABLE :: jlm1(:)
-      REAL(DP) :: xrg
-      REAL(DP), PARAMETER :: eps = 1.0D-8
-      INTEGER :: i0, ir
-      !
-      ! r(i0) is the first point such that r(i0) >0
-      !
-      ALLOCATE ( jlm1 (nr) )
-      i0 = 1
-      if ( r(1) < eps ) i0 = 2
-      !
-      ! special case q=0
-      ! note that x*dj_l(x)/dx = 0 for x = 0
-      !
-      if ( xg < eps ) then
-         !if (l == 1) then
-         ! Note that dj_1/dx (x=0) = 1/3
-         !   djl(:) = 1.0d0/3.d0
-         !else
-            djl(:) = 0.0d0
-         !end if
-      else
-         call sph_bes ( nr + 1 - i0, r(i0), xg, l-1, jlm1(i0) )
-         do ir = i0, nr
-            xrg = r(ir) * xg
-            djl(ir) = jlm1(ir) * xrg - (l+1) * jl(ir)
-         end do
-         if (i0 == 2) djl(1) = djl(2)
-      end if
-      DEALLOCATE ( jlm1 )
-      !
-    end SUBROUTINE sph_dbes1
 
 !  ----------------------------------------------
    END MODULE pseudopotential

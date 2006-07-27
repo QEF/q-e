@@ -31,7 +31,7 @@
 
 !  This subroutine Compute:
 !     JL(x)  =  J_0(x);   
-!     DJL(x) =  d J_0(x) / dx ;   
+!     DJL(x) =  d J_0(x) / dx ; (I think there is a minus sign - PG)
 !     x = XG * RW(i);  i = 1, ..., mmax
 
 ! END manual
@@ -57,21 +57,11 @@
         CALL errore( ' bessel1',' xg too small ', 1)
       END IF
 
-      IF( rw( 1 ) < eps14 ) THEN
-         mmin = 2
-      ELSE
-         mmin = 1
-      END IF
-      !
-      CALL sph_bes( mmax, rw(1), xg,  0, jl(1) )
-      !
-      CALL sph_bes( (mmax-mmin+1), rw(mmin), xg, -1, djl(mmin) )
-      !
-      DO ir = mmin, mmax
-         djl( ir ) = jl( ir ) / ( rw( ir ) * xg ) - djl( ir )
-      END DO
+      CALL sph_bes( mmax, rw(1), xg,  0,  jl(1) )
 
-      IF( mmin == 2 ) djl( 1 ) = djl( 2 )  !  1.0d/3.0d0
+      ! djl = - d j_0(x) /dx = + j_1(x) 
+
+      CALL sph_bes( mmax, rw(1), xg, +1, djl(1) )
 
       RETURN
 
