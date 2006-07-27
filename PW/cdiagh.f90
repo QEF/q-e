@@ -149,7 +149,13 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
          !
          ! ... allocate workspace
          !
+#ifdef __PGI
+         !     workaround for PGI compiler bug
+         !
+         v(1:ldh,1:n) = h(1:ldh,1:n)
+#else
          v = h
+#endif
          !
          ALLOCATE( work( lwork ) )    
          ALLOCATE( rwork( 3 * n - 2 ) )    
@@ -165,8 +171,15 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
          !
       END IF
       !
+#ifdef __PGI
+      !      workaround for PGI compiler bug
+      !
+      CALL mp_bcast( e(1:n), root_pool, intra_pool_comm )
+      CALL mp_bcast( v(1:ldh,1:n), root_pool, intra_pool_comm )      
+#else
       CALL mp_bcast( e, root_pool, intra_pool_comm )
       CALL mp_bcast( v, root_pool, intra_pool_comm )      
+#endif
       !
       RETURN
       !
