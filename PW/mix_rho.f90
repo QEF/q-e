@@ -9,6 +9,7 @@
 !
 #define ZERO ( 0.D0, 0.D0 )
 #define ONLY_SMOOTH_G
+!#define __SVD
 !
 !----------------------------------------------------------------------------
 SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
@@ -20,15 +21,15 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   !
   ! ... On output: the mixed density is in rhocin
   !
-  USE kinds,                ONLY : DP
-  USE ions_base,            ONLY : nat
-  USE gvect,                ONLY : ngm
-  USE gsmooth,              ONLY : ngms
-  USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax
-  USE lsda_mod,             ONLY : nspin
-  USE control_flags,        ONLY : imix, ngm0, tr2
-  USE io_files,             ONLY : find_free_unit
-  USE cell_base,            ONLY : omega
+  USE kinds,          ONLY : DP
+  USE ions_base,      ONLY : nat
+  USE gvect,          ONLY : ngm
+  USE gsmooth,        ONLY : ngms
+  USE ldaU,           ONLY : lda_plus_u, Hubbard_lmax
+  USE lsda_mod,       ONLY : nspin
+  USE control_flags,  ONLY : imix, ngm0, tr2
+  USE io_files,       ONLY : find_free_unit
+  USE cell_base,      ONLY : omega
   !
   IMPLICIT NONE
   !
@@ -81,6 +82,10 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
     savetofile,   &! save intermediate steps on file "prefix"."file_extension"
     exst           ! if true the file exists
   !
+  REAL(DP), ALLOCATABLE :: diag(:), umat(:,:), vmat(:,:), svdw(:)
+  REAL(DP)              :: wmax
+  INTEGER               :: lsvdw
+
   ! ... saved variables and arrays
   !
   INTEGER, SAVE :: &
@@ -291,15 +296,63 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
            betamix(i,j) = betamix(i,j) + &
                           ns_ddot( df_ns(1,1,1,1,j), df_ns(1,1,1,1,i), nspin )
         !
+        betamix(j,i) = betamix(i,j)
+        !
      END DO
      !
   END DO
+  !
+#if defined (__SVD)
+  !
+  IF ( iter_used > 0 ) THEN
+     !
+     lsvdw = 6*iter_used
+     !
+     ALLOCATE( diag( iter_used ), umat( iter_used, iter_used ), &
+               vmat( iter_used, iter_used ), svdw( lsvdw ) )
+     !
+     CALL DGESVD( 'A', 'A', iter_used, iter_used, betamix, maxmix, &
+                  diag, umat, iter_used, vmat, iter_used, svdw, lsvdw, info )
+     !
+     umat(:,:) = TRANSPOSE( umat(:,:) )
+     vmat(:,:) = TRANSPOSE( vmat(:,:) )
+     !
+     PRINT *, "SINGULAR VALUES"
+     PRINT *, diag(:)
+     
+     wmax = MAXVAL( diag(:) )
+     !
+     WHERE( diag(:) / wmax > 1.D-12 )
+        !
+        diag(:) = 1.D0 / diag(:)
+        !
+     ELSEWHERE
+        !
+        diag(:) = 0.D0
+        !
+     END WHERE
+     !
+     DO i = 1, iter_used
+        !
+        umat(i,:) = diag(i)*umat(i,:)
+        !
+     END DO
+     !
+     betamix(1:iter_used,1:iter_used) = MATMUL( vmat(:,:), umat(:,:) )
+     !
+     DEALLOCATE( diag, umat, vmat, svdw )
+     !
+  END IF
+  !
+#else  
   !
   CALL DSYTRF( 'U', iter_used, betamix, maxmix, iwork, work, maxmix, info )
   CALL errore( 'broyden', 'factorization', info )
   !
   CALL DSYTRI( 'U', iter_used, betamix, maxmix, iwork, work, info )
   CALL errore( 'broyden', 'DSYTRI', info )
+  !
+#endif
   !
   FORALL( i = 1:iter_used, &
           j = 1:iter_used, j > i ) betamix(j,i) = betamix(i,j)
@@ -647,12 +700,10 @@ SUBROUTINE approx_screening2( drho, rhobest )
   REAL(DP), ALLOCATABLE :: &
     alpha(:)     ! alpha(nrxxs)
   !
-  COMPLEX(DP) :: rrho, rmag
-  INTEGER     :: ir, ig
-  !
+  COMPLEX(DP)         :: rrho, rmag
+  INTEGER             :: ir, ig
   REAL(DP), PARAMETER :: one_third = 1.D0 / 3.D0
-  !
-  REAL(DP), EXTERNAL :: rho_ddot
+  REAL(DP), EXTERNAL  :: rho_ddot
   !
   !
   IF ( nspin == 2 ) THEN
@@ -744,7 +795,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +1 )
   !
-  psic(:) = psic(:) * alpha(:)
+  psic(:nrxxs) = psic(:nrxxs) * alpha(:)
   !
   CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
   !
@@ -769,7 +820,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
      !
      CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +1 )
      !
-     psic(:) = psic(:) * alpha(:)
+     psic(:nrxxs) = psic(:nrxxs) * alpha(:)
      !
      CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
      !
@@ -898,12 +949,10 @@ SUBROUTINE approx_screening2( drho, rhobest )
   REAL(DP), ALLOCATABLE :: &
     alpha(:)     ! alpha(nrxx)
   !
-  COMPLEX(DP) :: rrho, rmag
-  INTEGER     :: ir, ig
-  !
+  COMPLEX(DP)         :: rrho, rmag
+  INTEGER             :: ir, ig
   REAL(DP), PARAMETER :: one_third = 1.D0 / 3.D0
-  !
-  REAL(DP), EXTERNAL :: rho_ddot
+  REAL(DP), EXTERNAL  :: rho_ddot
   !
   !
   IF ( nspin == 2 ) THEN
