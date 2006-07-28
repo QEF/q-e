@@ -46,6 +46,16 @@ subroutine sph_bes (msh, r, q, l, jl)
      return
   end if 
 
+  ! series expansion for small values of the argument
+
+  ir0 = 1
+  do ir = 1, msh
+     if ( abs (q * r (ir) ) > xseries ) then
+        ir0 = ir
+        exit
+     end if
+  end do
+
   if (l == - 1) then
      if (abs (q * r (1) ) < eps14) then
         call errore ('sph_bes', 'j_{-1}(0) ?!?', 2)
@@ -65,16 +75,6 @@ subroutine sph_bes (msh, r, q, l, jl)
 
       return
   end if
-
-  ! series expansion for small values of the argument
-
-  ir0 = 1
-  do ir = 1, msh
-     if ( abs (q * r (ir) ) > xseries ) then
-        ir0 = ir
-        exit
-     end if
-  end do
 
   do ir = 1, ir0 - 1
      x = q * r (ir)
