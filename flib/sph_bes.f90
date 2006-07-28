@@ -34,7 +34,9 @@ subroutine sph_bes (msh, r, q, l, jl)
 #if defined (__MASS)
   real(DP) :: qr(msh), sin_qr(msh), cos_qr(msh)
 #endif
-  !
+ 
+  !  case q=0
+
   if (abs (q) < eps14) then
      if (l == -1) then
         call errore ('sph_bes', 'j_{-1}(0) ?!?', 1)
@@ -46,19 +48,14 @@ subroutine sph_bes (msh, r, q, l, jl)
      return
   end if 
 
-  ! series expansion for small values of the argument
-
-  ir0 = 1
-  do ir = 1, msh
-     if ( abs (q * r (ir) ) > xseries ) then
-        ir0 = ir
-        exit
-     end if
-  end do
+  !  case l=-1
 
   if (l == - 1) then
      if (abs (q * r (1) ) < eps14) then
-        call errore ('sph_bes', 'j_{-1}(0) ?!?', 2)
+        call errore ('sph_bes', 'j_{-1}(0) ?!?',-1)
+        ir0 = 2
+     else
+        ir0 = 1
      end if
 
 #if defined (__MASS)
@@ -73,8 +70,19 @@ subroutine sph_bes (msh, r, q, l, jl)
 
 #endif
 
+        if (ir0 == 2) jl(1) = jl(2)
       return
   end if
+
+  ! series expansion for small values of the argument
+
+  ir0 = 1
+  do ir = 1, msh
+     if ( abs (q * r (ir) ) > xseries ) then
+        ir0 = ir
+        exit
+     end if
+  end do
 
   do ir = 1, ir0 - 1
      x = q * r (ir)
