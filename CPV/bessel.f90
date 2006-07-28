@@ -6,68 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-!=----------------------------------------------------------------------------=!
-   MODULE bessel_functions
-!=----------------------------------------------------------------------------=!
-
-        USE kinds,     ONLY: DP
-        USE constants, ONLY: eps14
-
-        IMPLICIT NONE
-        SAVE
- 
-        PRIVATE
-
-        PUBLIC :: bessel1, bessel2, bessel3
-
-!=----------------------------------------------------------------------------=!
-   CONTAINS
-!=----------------------------------------------------------------------------=!
-
-! ----------------------------------------------------------------------------
-! BEGIN manual
-
-  SUBROUTINE BESSEL1(XG, RW, JL, DJL, MMAX)
-
-!  This subroutine Compute:
-!     JL(x)  =  J_0(x);   
-!     DJL(x) =  d J_0(x) / dx ; (I think there is a minus sign - PG)
-!     x = XG * RW(i);  i = 1, ..., mmax
-
-! END manual
-! ----------------------------------------------------------------------------
-
-      IMPLICIT NONE
-
-! ... Argument Variables
-
-      REAL(DP), INTENT(IN)  :: XG
-      REAL(DP), INTENT(IN)  :: RW(:)
-      REAL(DP), INTENT(OUT) :: JL(:)
-      REAL(DP), INTENT(OUT) :: DJL(:)
-      INTEGER, INTENT(IN) :: MMAX
-
-! ... Local Variables
-
-      INTEGER :: IR, mmin
-
-! ... Subroutine Body
-
-      IF( ABS(XG) < eps14 ) THEN 
-        CALL errore( ' bessel1',' xg too small ', 1)
-      END IF
-
-      CALL sph_bes( mmax, rw(1), xg,  0,  jl(1) )
-
-      ! djl = - d j_0(x) /dx = + j_1(x) 
-
-      CALL sph_bes( mmax, rw(1), xg, +1, djl(1) )
-
-      RETURN
-
-  END SUBROUTINE bessel1
-
-
 ! ----------------------------------------------------------------------------
 ! BEGIN manual
 
@@ -79,6 +17,10 @@
 
 ! END manual
 ! ----------------------------------------------------------------------------
+
+      USE kinds,     ONLY: DP
+      USE constants, ONLY: eps14
+      USE cp_interfaces
 
       IMPLICIT NONE
 
@@ -161,6 +103,10 @@
 ! END manual
 ! ----------------------------------------------------------------------------
 
+      USE kinds,     ONLY: DP
+      USE constants, ONLY: eps14
+      USE cp_interfaces
+
       IMPLICIT NONE
 
 ! ... Argument Variables
@@ -177,12 +123,11 @@
       REAL(DP) :: F1(MMAX)
       REAL(DP) :: F2(MMAX)
       REAL(DP) :: F3(MMAX)
-      INTEGER :: IR, L, LL, LMAX, mmin
+      INTEGER  :: IR, L, LL, LMAX, mmin
 
 ! ... Subroutine Body
 
       LMAX = MAXVAL( INDL ) + 1
-
 
       IF( ABS( xg * rw( 1 ) ) < eps14 ) THEN
          mmin = 2
@@ -252,7 +197,3 @@
       RETURN
       END SUBROUTINE bessel3
 
-
-!=----------------------------------------------------------------------------=!
-   END MODULE bessel_functions
-!=----------------------------------------------------------------------------=!

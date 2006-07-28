@@ -17,6 +17,7 @@ compute_fes_grads.o \
 compute_scf.o \
 cp_emass.o \
 cp_fpmd.o \
+cp_interfaces.o \
 cp_restart.o \
 cplib.o \
 cpr_mod.o \

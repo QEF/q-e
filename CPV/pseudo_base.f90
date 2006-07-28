@@ -13,7 +13,7 @@
 
 
       USE kinds
-      USE bessel_functions, ONLY: bessel1, bessel2, bessel3
+      USE cp_interfaces, ONLY: bessel2, bessel3
       USE constants, ONLY: gsmall, fpi, pi 
       USE cell_base, ONLY: tpiba
 
