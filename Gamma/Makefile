@@ -75,6 +75,7 @@ PWOBJS = \
 ../PW/estimate.o \
 ../PW/exx.o \
 ../PW/ewald.o \
+../PW/find_group.o \
 ../PW/force_cc.o \
 ../PW/force_corr.o \
 ../PW/force_ew.o \

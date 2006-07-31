@@ -142,6 +142,7 @@ PWOBJS = \
 ../PW/exx.o \
 ../PW/ewald.o \
 ../PW/ewald_dipole.o \
+../PW/find_group.o \
 ../PW/fftw.o \
 ../PW/g_psi.o \
 ../PW/g_psi_nc.o \

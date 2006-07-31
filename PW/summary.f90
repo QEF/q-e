@@ -63,7 +63,7 @@ SUBROUTINE summary()
     ! counter on types
     ! counter on angular momenta
     ! total number of G-vectors (parallel executio
-  REAL(DP) :: sr(3,3), ft1, ft2, ft3
+  REAL(DP) :: sr(3,3,48), ft1, ft2, ft3
     ! symmetry matrix in real axes
     ! fractionary translation
   REAL(DP), ALLOCATABLE :: xau(:,:)
@@ -71,7 +71,7 @@ SUBROUTINE summary()
   REAL(DP) :: xkg(3)
     ! coordinates of the k point in crystal axes
   CHARACTER :: mixing_style * 9
-  CHARACTER :: ps * 5
+  CHARACTER :: ps * 5, gname * 4 
     ! name of pseudo type
   REAL(DP) :: xp
     ! fraction contributing to a given atom type (obsolescent)
@@ -257,7 +257,7 @@ SUBROUTINE summary()
      DO isym = 1, nsym
         WRITE( stdout, '(/6x,"isym = ",i2,5x,a45/)') isym, sname(isym)
         IF(noncolin.and.domag) WRITE(stdout,*) 'Time Reversal ', t_rev(isym)
-        CALL s_axis_to_cart (s(1,1,isym), sr, at, bg)
+        CALL s_axis_to_cart (s(1,1,isym), sr(1,1,isym), at, bg)
         IF (ftau(1,isym).NE.0.OR.ftau(2,isym).NE.0.OR.ftau(3,isym).NE.0) THEN
            ft1 = at(1,1)*ftau(1,isym)/nr1 + at(1,2)*ftau(2,isym)/nr2 + &
                  at(1,3)*ftau(3,isym)/nr3
@@ -274,22 +274,24 @@ SUBROUTINE summary()
                        (s(3,ipol,isym),ipol=1,3), DBLE(ftau(3,isym))/DBLE(nr3)
            WRITE( stdout, '(1x,"cart. ",3x,"s(",i2,") = (",3f11.7, &
                  &        " )    f =( ",f10.7," )")') &
-                 isym, (sr(1,ipol),ipol=1,3), ft1
+                 isym, (sr(1,ipol,isym),ipol=1,3), ft1
            WRITE( stdout, '(17x," (",3f11.7, " )       ( ",f10.7," )")') &
-                       (sr(2,ipol),ipol=1,3), ft2
+                       (sr(2,ipol,isym),ipol=1,3), ft2
            WRITE( stdout, '(17x," (",3f11.7, " )       ( ",f10.7," )"/)') &
-                       (sr(3,ipol),ipol=1,3), ft3
+                       (sr(3,ipol,isym),ipol=1,3), ft3
         ELSE
            WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), " )")') &
                                      isym,  (s (1, ipol, isym) , ipol = 1,3)
            WRITE( stdout, '(17x," (",3(i6,5x)," )")')  (s(2,ipol,isym), ipol=1,3)
            WRITE( stdout, '(17x," (",3(i6,5x)," )"/)') (s(3,ipol,isym), ipol=1,3)
            WRITE( stdout, '(1x,"cart. ",3x,"s(",i2,") = (",3f11.7," )")') &
-                                         isym,  (sr (1, ipol) , ipol = 1, 3)
-           WRITE( stdout, '(17x," (",3f11.7," )")')  (sr (2, ipol) , ipol = 1, 3)
-           WRITE( stdout, '(17x," (",3f11.7," )"/)') (sr (3, ipol) , ipol = 1, 3)
+                                         isym,  (sr (1, ipol,isym) , ipol = 1, 3)
+           WRITE( stdout, '(17x," (",3f11.7," )")')  (sr (2, ipol,isym) , ipol = 1, 3)
+           WRITE( stdout, '(17x," (",3f11.7," )"/)') (sr (3, ipol,isym) , ipol = 1, 3)
         ENDIF
      ENDDO
+     CALL find_group(nsym,sr,gname)
+     WRITE(6,'(5x,"the point group is ",a4)') gname
 
   ENDIF
   !

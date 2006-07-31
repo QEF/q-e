@@ -80,6 +80,7 @@ ewald.o \
 ewald_dipole.o \
 exx.o \
 fftw.o \
+find_group.o \
 force_cc.o \
 force_corr.o \
 force_ew.o \
