@@ -59,7 +59,11 @@ MODULE pw_restart
       USE reciprocal_vectors,   ONLY : ig_l2g
       USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, if_pos
       USE noncollin_module,     ONLY : noncolin, npol
-      USE io_files,             ONLY : nwordwfc, iunwfc, psfile, pseudo_dir
+      USE io_files,             ONLY : nwordwfc, iunwfc, psfile
+      USE input_parameters,     ONLY : pseudo_dir 
+                                     ! warning, pseudo_dir in the data-file
+                                     ! should always point to the original
+                                     ! dir specified in the input.
       USE wavefunctions_module, ONLY : evc, evc_nc
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
                                        lgauss, ngauss, degauss, nelec, xqq
