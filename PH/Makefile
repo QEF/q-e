@@ -256,6 +256,7 @@ PWOBJS = \
 ../PW/exx.o \
 ../PW/ewald.o \
 ../PW/ewald_dipole.o \
+../PW/find_group.o \
 ../PW/fftw.o \
 ../PW/force_cc.o \
 ../PW/force_corr.o \
